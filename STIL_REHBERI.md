@@ -3,9 +3,9 @@
 Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil-99.js` dosyasında durur; bu rehber o değerlerin ne anlama geldiğini ve neden seçildiğini anlatır.
 
 ## 1. Ekran
-- 4:3 tüplü televizyon. İç çözünürlük 400×300.
+- 4:3 ekran. İç çözünürlük 400×300.
 - Büyütülürken pikseller yumuşatılmaz (en yakın komşu).
-- Tüplü TV katmanı: tarama çizgileri, kavisli köşeler, kenar kararması. Arayüzden kapatılabilir.
+- Maç başkanın gözünden görülür; bu yüzden TV kasası, tarama çizgisi ya da kavisli köşe yoktur. '99 görünümü (piksel, renk titremesi, köşe titremesi) sabittir, arayüzden kapatılmaz.
 
 ## 2. Renk
 - Kanal başına 5 bit (15 bit renk) ve 4×4 düzenli titreme (Bayer). Dönemin ekran kartları gibi.
@@ -42,18 +42,27 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 - Gece maçında her projektör için bir soluk, uzun gölge (90'ların dörtlü gölgesi).
 - Gündüz maçı için tek ve kısa gölge (henüz yapılmadı).
 
-## 7. Tribün ve atmosfer
-- Seyirci dokusu 128×64 piksel, kişi başı 4×8 piksel, iki kareyle sallanır (0,3 sn).
-- Paletler: ev sahibi, karışık, deplasman.
+## 7. Stat
+- Her stat bir tariftir (`js/stadyum-tarifleri.js`): tribünler, çatı, pist, tel örgü, projektörler, skor tabelası, çevre.
+- Küçük stat dökük görünür: toprak pist, direkli zayıf projektörler, seyrek reklam panosu, elle değiştirilen skor tabelası, arkada ışıkları yanan apartmanlar.
+- Zemin kalitesi (0–1) düştükçe çim sararır, kale ağızlarında ve sahada kel ve çamurlu alanlar çoğalır, çizgiler solar, biçme deseni silikleşir. Çok iyi zeminde çapraz biçme deseni görünür.
+- Malzeme renkleri (beton, çatı, toprak pist, çamur) `STIL.stadyum` içindedir.
+
+## 7b. Tribün ve atmosfer
+- Her seyirci kutulardan kurulu küçük bir insandır: gövde, kollar, bacak, baş, saç ya da bere (kelleri de var). Boyu ve yapısı kişiden kişiye değişir. Başkana uzak olanlar daha az parçayla çizilir.
+- Koltuklu tribünde oturur; beton basamakta ve toprak sette ayakta durur. Ev taraftarının bir kısmı koltukta da ayaktadır.
+- Koltuklar tek tek görünür, boş koltuklar seçilir. Doluluk düşükken tribün seyrektir.
+- Seyirciler iki kareyle sallanır (0,3 sn).
+- Paletler (üst giysi): ev sahibi, karışık, deplasman, başkan bölümü (koyu takım elbise).
+- Başkan bölümü: ana tribünün ortasında dört sıra koyu kırmızı döşemeli koltuk. Başkan ön sıradadır; önünde boş bir geçit ve metal korkuluk vardır.
 - Meşale: parlak çekirdek, kırmızı hale ve yükselen duman. Tel örgü, pankart, ampullü skor tabelası, projektör parıltısı.
 
 ## 8. Arayüz
-- 3×5 piksel yazı (Türkçe karakterli), tek font.
-- TV açısı: skor bandı sol üstte, CANLI sağ üstte, oyuncu ismi sol altta, radar sağ altta.
-- Loca açısı: yayın grafiği yok. Sadece kendi oyuncularının üstünde küçük numara etiketi var; amber etiket yeni transferi gösterir.
+- 3×5 piksel yazı (Türkçe karakterli), tek font. Stattaki yazılar (reklam panosu, pankart, skor tabelası) bu yazıyla yazılır.
+- Maç ekranında ekran üstü grafik yoktur: yayın bandı, radar ya da oyuncu etiketi gösterilmez. Tek istisna dürbün maskesidir.
 
 ## 9. Kameralar
-- Başkan locası (ana açı), dürbün ve TV yayını. Konumlar stil dosyasındadır.
+- Tek açı başkanın gözüdür: açık ana tribünün ortasındaki başkan koltuğunda, göz hizası. Dürbün isteğe bağlı yakınlaştırmadır. Konumlar stil dosyasındadır.
 
 ## 10. Sınırlar
 - Gerçek kulüp, marka ya da logo kullanılmaz.

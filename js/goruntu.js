@@ -30,14 +30,20 @@ function tx(cv,mode,rep){const t=new THREE.CanvasTexture(cv);
   else if(mode==='m'){t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;}
   else t.anisotropy=4;
   if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);}return t;}
+/* birden çok kutuyu tek geometride birleştirir; her parçanın köşe rengi olur (varsayılan beyaz, örnek rengiyle çarpılır) */
+function kutuBirlestir(parcalar){const pos=[],nor=[],col=[],idx=[];
+  for(const p of parcalar){const g=new THREE.BoxGeometry(p.w,p.h,p.d);g.translate(p.x||0,p.y||0,p.z||0);const o=pos.length/3;
+    pos.push(...g.attributes.position.array);nor.push(...g.attributes.normal.array);for(const i of g.index.array)idx.push(o+i);
+    const c=p.renk||[1,1,1];for(let i=0;i<g.attributes.position.count;i++)col.push(c[0],c[1],c[2]);g.dispose();}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);return g;}
 function box(w,h,d,m,x,y,z,parent){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);(parent||scene).add(b);return b;}
 const GLOWT=(()=>{const cv=mk(32,32),g=cv.getContext('2d'),gr=g.createRadialGradient(16,16,0,16,16,16);
   gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(0.3,'rgba(255,255,255,0.45)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,32,32);return tx(cv,'l');})();
 function glow(color,size,op){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOWT,color,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));s.scale.set(size,size,1);return s;}
 
 /* ---- ışık ve gökyüzü ---- */
-{const I=STIL.isik;scene.add(new THREE.AmbientLight(I.ortam.renk,I.ortam.guc));
- const k1=new THREE.DirectionalLight(I.ana.renk,I.ana.guc);k1.position.set(...I.ana.konum);scene.add(k1);
+{const I=STIL.isik,G=STAT.projektor.guc;scene.add(new THREE.AmbientLight(I.ortam.renk,I.ortam.guc*(0.6+0.4*G)));
+ const k1=new THREE.DirectionalLight(I.ana.renk,I.ana.guc*G);k1.position.set(...I.ana.konum);scene.add(k1);
  const k2=new THREE.DirectionalLight(I.dolgu.renk,I.dolgu.guc);k2.position.set(...I.dolgu.konum);scene.add(k2);}
 {const g=new THREE.SphereGeometry(700,16,10),p=g.attributes.position,col=[];
  for(let i=0;i<p.count;i++){const t=clamp(p.getY(i)/700*2.4,0,1);const U=STIL.gokyuzu.ufuk,Q=STIL.gokyuzu.tepe;col.push(U[0]*(1-t)+Q[0]*t,U[1]*(1-t)+Q[1]*t,U[2]*(1-t)+Q[2]*t);}

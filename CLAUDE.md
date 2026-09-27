@@ -5,8 +5,9 @@ Bu dosyayı her oturumun başında oku. Oturumlar birbirini hatırlamaz; kalıc�
 ## Oyun
 - Kulüp başkanlığı (futbol yönetim) oyunu. Oyuncu, kurgusal Demirkapı SK'nın başkanıdır.
 - Kariyer 3. Lig'den başlar, 1. Lig'e ve Avrupa kupalarına uzanır. İç saha ve deplasman maçları oynanır.
-- Maçlar başkan locasından izlenir; bu ana açıdır. TV yayını açısı ikinci seçenektir.
-- Hedeflenen his 90'lar futbol nostaljisidir.
+- Maçlar başkanın gözünden izlenir: açık ana tribündeki başkan bölümünden, taraftarın arasından. Kapalı loca ve TV yayını açısı yoktur; dürbün isteğe bağlıdır.
+- Oyun bugün geçer (VAR var), görünüm ve his 90'lar futbol nostaljisidir.
+- Hedef platform bilgisayardır (Steam). Geliştirme tarayıcıda sürer; paketleme son aşamada yapılır.
 
 ## Görsel yön: Demirkapı '99
 - FIFA 99 / PS1 dönemi 3B görünüm. Kurallar `STIL_REHBERI.md` dosyasındadır; yeni eklenen her şey bu kurallara uyar.

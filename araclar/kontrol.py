@@ -6,13 +6,15 @@ Sayfayı başsız Chromium'da açar, hataları listeler ve ekran görüntüsü a
 Kullanım:
   python3 araclar/kontrol.py                     # index.html
   python3 araclar/kontrol.py prototipler/1-retro-2b-baskan-locasi.html
+  python3 araclar/kontrol.py "index.html?stat=sehir&doluluk=0.8"   # adres parametreleriyle
 
-Çıktı: araclar/son-kontrol-<sayfa>.png (depoya eklenmez).
+Çıktı: araclar/son-kontrol-<sayfa>[-<parametreler>].png (depoya eklenmez).
 Three.js cdnjs yerine npm'den indirilen yerel kopyadan yüklenir; depodaki dosyalar değişmez.
 Hata bulunursa çıkış kodu 1 olur.
 """
 import asyncio
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -60,9 +62,11 @@ async def kontrol_et(tarayici, site, sayfa):
             hatalar.append("Yüklenemedi: " + istek.url)
 
     pg.on("requestfailed", istek_basarisiz)
-    await pg.goto((site / sayfa).as_uri())
+    yol, _, sorgu = sayfa.partition("?")
+    await pg.goto((site / yol).as_uri() + ("?" + sorgu if sorgu else ""))
     await pg.wait_for_timeout(BEKLE_MS)
-    goruntu = ARAC / f"son-kontrol-{pathlib.Path(sayfa).stem}.png"
+    ek = ("-" + re.sub(r"[^0-9A-Za-z.]+", "-", sorgu).strip("-")) if sorgu else ""
+    goruntu = ARAC / f"son-kontrol-{pathlib.Path(yol).stem}{ek}.png"
     await pg.screenshot(path=str(goruntu))
     await pg.close()
     return hatalar, goruntu
