@@ -5,14 +5,14 @@ const screenEl=$('screen'),canvas=$('view'),hud=$('hud'),hg=hud.getContext('2d')
 let renderer=null;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:false,preserveDrawingBuffer:true});}catch(e){renderer=null;}
 if(!renderer){screenEl.insertAdjacentHTML('beforeend','<p class="nogl">Bu cihazda 3B görüntü (WebGL) açılamadı.</p>');throw new Error('WebGL yok');}
-renderer.setPixelRatio(1);renderer.setSize(RW,RH,false);renderer.autoClear=false;
+renderer.setPixelRatio(1);renderer.setSize(RW,RH,false);hud.width=RW;hud.height=RH;renderer.autoClear=false;
 const rt=new THREE.WebGLRenderTarget(RW,RH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
 const scene=new THREE.Scene();scene.fog=new THREE.Fog(STIL.sis.renk,STIL.sis.yakin,STIL.sis.uzak);
 const camera=new THREE.PerspectiveCamera(30,4/3,0.3,1200);
 
 /* ---- son işlem: 15 bit renk + 4x4 düzenli titreme (dönemin ekran kartları gibi) ---- */
 const post=new THREE.Scene(),postCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-const postMat=new THREE.ShaderMaterial({uniforms:{tD:{value:rt.texture},uDither:{value:STIL.ekran.titreme?1:0},uLv:{value:Math.pow(2,STIL.ekran.renkBiti)-1}},depthTest:false,depthWrite:false,
+const postMat=new THREE.ShaderMaterial({uniforms:{tD:{value:rt.texture},uDither:{value:STIL.ekran.titreme?STIL.ekran.titremeGucu:0},uLv:{value:Math.pow(2,STIL.ekran.renkBiti)-1}},depthTest:false,depthWrite:false,
   vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
   fragmentShader:`uniform sampler2D tD;uniform float uDither,uLv;varying vec2 vUv;
   float b2(vec2 a){a=floor(a);return fract(dot(a,vec2(0.5,a.y*0.75)));}

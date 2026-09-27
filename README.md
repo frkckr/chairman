@@ -16,14 +16,16 @@ Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig
 | `YOL_HARITASI.md` | Yapılacaklar, alınan ve bekleyen kararlar |
 | `js/stil-99.js` | Görünüşe dair bütün ayarlar: renkler, çözünürlük, kameralar |
 | `js/stadyum-tarifleri.js` | Stat tarifleri (3. Lig kasaba, 1. Lig şehir, Avrupa arenası) ve maç günü doluluğu; yalnızca veri |
+| `js/kadrolar.js` | Takım kadroları: as, yedek, teknik direktör; her oyuncu tek kayıt |
 | `js/goruntu.js` | Ekran, renk titremesi, ışık, gökyüzü |
 | `js/stadyum.js` | Seçili tarife göre stadı kurar: zemin, tribünler, reklam panoları, projektörler, kaleler |
 | `js/seyirci.js` | Tribündeki insanlar: doluluğa göre koltuklara oturur, iki kareyle sallanır |
-| `js/oyuncular.js` | Oyuncu modelleri, pozlar, top |
+| `js/oyuncular.js` | Oyuncu modelleri ve pozlar |
+| `js/mac-sahnesi.js` | Maç motorunu sahneye bağlar: oyuncu hareketi, top, kulübeler, tören, bakış, radyo satırı |
 | `js/efektler.js` | Meşale ve duman |
 | `js/arayuz.js` | Kamera, dürbün, düğmeler, çizim döngüsü |
 | `js/ortak.js` | Ortak araçlar: piksel yazı, kulüpler, Türkçe ekler |
-| `js/mac-motoru.js` | Maç motoru (henüz '99 sahnesine bağlı değil) |
+| `js/mac-motoru.js` | Maç motoru: tören, yazı tura, oyun, duran toplar, devreler (görüntüden bağımsız) |
 | `araclar/kontrol.py` | Sayfayı görünmez bir tarayıcıda açıp hata ve ekran görüntüsü kontrolü yapar |
 | `AGENTS.md` | Codex gibi başka araçları `CLAUDE.md`'deki talimatlara yönlendirir |
 

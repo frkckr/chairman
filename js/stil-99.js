@@ -5,8 +5,9 @@
 const STIL={
   ad:"Demirkapı '99",
 
-  /* Ekran: 4:3 tüplü TV, düşük iç çözünürlük, 15 bit renk + 4x4 titreme, PS1 köşe titremesi */
-  ekran:{genislik:400,yukseklik:300,renkBiti:5,titreme:true,koseTitremesi:true,arkaPlan:0x070b16},
+  /* Ekran: 4:3, PS1'in yüksek çözünürlük modu (640x480), 15 bit renk + 4x4 titreme.
+     Köşe titremesi (köşelerin piksellere yapışması) kapalı: hareket pürüzsüz aksın diye. titremeGucu: renk titremesinin şiddeti (0–1). */
+  ekran:{genislik:640,yukseklik:480,renkBiti:5,titreme:true,titremeGucu:0.7,koseTitremesi:false,arkaPlan:0x070b16},
 
   /* Gece havası */
   sis:{renk:0x0c1322,yakin:150,uzak:380},
@@ -29,6 +30,8 @@ const STIL={
     vip:['#1e1f24','#2a2c33','#3a3228','#23262e','#2e2a26'],
     sac:['#241a12','#3c2616','#141212','#5a4028','#8a8680','#1c1714'],
     bere:0.16,kel:0.1,
+    /* maç olaylarında tribünün heyecanı (0–1) ve sönme süresi (sn) */
+    heyecan:{giris:0.8,santra:0.5,sut:0.35,kurtaris:0.4,direk:0.6,gol:1,macSonu:0.8,sonme:6},
     vipKoltuk:'#8a1c16',vipKorkuluk:0xb8bcc2,
     kareSuresi:0.3
   },
@@ -36,14 +39,22 @@ const STIL={
   /* Formalar (anahtarlar kodda kullanılır: shirt=forma, trim=yaka/numara, shorts=şort, socks=çorap, out=numara kenarı, sash=çapraz şerit) */
   formalar:{
     ev:{shirt:'#c8281e',trim:'#f2ede2',shorts:'#f2ede2',socks:'#c8281e',out:'#6e140e'},
+    evKaleci:{shirt:'#e0b828',trim:'#141414',shorts:'#1c1c1e',socks:'#e0b828',glove:'#f2f2f2',gk:true},
     deplasman:{shirt:'#eef0f3',trim:'#22347a',shorts:'#22347a',socks:'#eef0f3',sash:'#22347a'},
     deplasmanKaleci:{shirt:'#3c9254',trim:'#141414',shorts:'#1c1c1e',socks:'#3c9254',glove:'#f2f2f2',gk:true},
-    hakem:{shirt:'#1a1a1c',trim:'#f2f2f2',shorts:'#1a1a1c',socks:'#1a1a1c'}
+    hakem:{shirt:'#1a1a1c',trim:'#f2f2f2',shorts:'#1a1a1c',socks:'#1a1a1c'},
+    /* yedekler eşofmanla, teknik direktör takım elbiseyle (pant: uzun pantolon, ls: uzun kol) */
+    yedekEv:{shirt:'#7a1812',trim:'#f2ede2',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
+    yedekDeplasman:{shirt:'#22347a',trim:'#eef0f3',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
+    takimElbise:{shirt:'#23262e',trim:'#e8e4da',shorts:'#23262e',socks:'#23262e',ls:true,pant:true,boots:'#0e0e10'}
   },
   tenler:['#e2b48c','#cf9a70','#b07650','#8a5a3c','#ecc49e'],
 
   /* Gece maçında her projektör için bir soluk gölge (90'ların dörtlü gölgesi). Projektörlerin yeri stadyum tarifindedir. */
   golge:{opaklik:0.16},
+
+  /* Başkan bölümü: halı, ahşap bölmeler, başkanın masası ve koltuğu */
+  baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
 
   /* Stat yapı malzemeleri (tribün betonu, çatı, direk, toprak pist, set, kötü zemin renkleri, kasaba apartmanları) */
   stadyum:{
@@ -52,14 +63,19 @@ const STIL={
     apartman:['#3a3530','#463d34','#34363a','#3e362c'],pencere:'#ffd98a'
   },
 
+  /* tünel ağzı ve yedek kulübeleri */
+  kulube:{duvar:0x2c2f36,cam:0xa8c4d8,bank:0x3a3d44,serit:0xc8281e},
+
   tabela:{zemin:'#140c04',ampul:'#ffb530',ikincil:'#ffd98a',elleZemin:'#1d2a22',elleYazi:'#f0ece0'},
   pankart:{zemin:'#efe9dc',yazi:'#c8281e'},
 
   /* Kameralar: hedef [x,y,z], aci = dikey görüş açısı (derece).
      Maç başkanın gözünden izlenir: ana tribünün ortasında, açık tribündeki başkan koltuğu. Dürbün isteğe bağlı. */
   kameralar:{
-    /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre) */
-    baskan:{goz:0.78,hedef:[34,-7,-6],aci:44},
-    durbun:{goz:0.78,hedef:[43,1.1,-1],aci:9}
+    /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre).
+       Bakış topu ve olan biteni yumuşak bir yayla izler: yay = yayın sertliği, egim = bakışın odağın ne kadar altına indiği (masa ve ön sıralar görünsün),
+       asagiSinir = bakışın en fazla kaç radyan aşağı inebileceği. */
+    baskan:{goz:0.78,hedef:[0,1,-30],aci:30,egim:0.09,yay:2.2,asagiSinir:0.38},
+    durbun:{goz:0.78,aci:11}
   }
 };
