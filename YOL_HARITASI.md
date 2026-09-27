@@ -9,6 +9,7 @@ Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter
 - [x] Görünüş ayarları tek dosyada toplandı (`js/stil-99.js`).
 - [x] Maç motoru var (`js/mac-motoru.js`), ama '99 sahnesine bağlı değil. Retro ve 3B prototiplerde çalışıyor (`prototipler/`).
 - [x] Bulutta test için kontrol aracı hazır (`araclar/kontrol.py`); adres parametreleriyle de çalışıyor.
+- [x] Maç baştan sona oynanıyor: tünelden çıkış, İstiklal Marşı töreni, yazı tura, iki devre, devre arası, maç sonu (~10 dakika). Skor stadın tabelasında ve ekranın altındaki radyo satırında.
 - [x] Stat tariflerden kuruluyor; tribünlerde kutulardan kurulu insanlar ve tek tek koltuklar var. Ekran altındaki geçici deneme panelinden stat, doluluk ve zemin değiştirilebiliyor.
 
 ## Kararlar
@@ -30,6 +31,13 @@ Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter
 - 2026-09-27: Seyirciler kutulardan kurulu küçük insanlardır; binlerce kişi tek çizimle (InstancedMesh) çizilir, başkana uzak olanlar daha az parçayla. Koltuklar tek tek görünür.
 - 2026-09-27: Başkan, ana tribünün ortasındaki başkan bölümünün ön sırasında oturur; önünde geçit ve korkuluk, arkasında ve yanında yöneticiler vardır.
 - 2026-09-27: Ekonomi gelene kadar stat, doluluk ve zemin kalitesi ekran altındaki geçici deneme panelinden ya da adres satırından (`?stat=sehir&doluluk=0.8&zemin=0.5`) seçilir. Oyun ekranında seçenek yoktur.
+- 2026-09-27: İç çözünürlük 640×480 (PS1 yüksek çözünürlük modu); köşe titremesi kapalı. Görünüm retro, hareket pürüzsüz. Normal bakış 30°, dürbün 11°.
+- 2026-09-27: Avrupa arenası şimdilik kaldırıldı; yalnızca 3. Lig kasaba ve 1. Lig şehir statı var. 1. Lig'de başkan 17. sırada oturur.
+- 2026-09-27: Başkan bölümünde başkanın önünde küçük bir masa ve çay; iki yanda ahşap bölme, yerde bordo halı. Alan açık kalır.
+- 2026-09-27: Tribün sakin durur; seyirci maçtaki heyecana göre (giriş, santra, şut, direk, gol, maç sonu) hareketlenir. Başkanın yakınındakiler daha sakindir.
+- 2026-09-27: Bir maç yaklaşık 10 dakika sürer (her devre ~5 dk); tören ve devre arası ayrıca ~1,5 dk. Gol dengesi maç başına ~2,5 gol, ~25 şut.
+- 2026-09-27: Ekrana grafik konmaz; skor ve dakika stadın skor tabelasından ve ekranın altındaki radyo satırından okunur.
+- 2026-09-27: İstiklal Marşı töreni görsel olarak var; müziği ses aşamasında (Aşama 7) eklenecek.
 
 ## Açık kararlar
 - Şu an açık karar yok.
@@ -42,9 +50,10 @@ Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter
 - [ ] Deplasman: ev sahibinin renkleri ve taraftar dağılımı.
 
 ## Aşama 2 — Maçı hareketlendir
-- [ ] Maç motorunu '99 sahnesine bağla: oyuncular ve top motora göre hareket etsin.
-- [ ] Başkanın bakışı topu izlesin (baş çevirme); dürbün çalışsın.
-- [ ] Oyuncu verisi: boy, yapı, saç, numara ve yetenek değerleri tek kayıtta dursun.
+- [x] Maç motorunu '99 sahnesine bağla: oyuncular ve top motora göre hareket etsin.
+- [x] Başkanın bakışı topu izlesin (baş çevirme); dürbün çalışsın.
+- [x] Oyuncu verisi: boy, yapı, saç, numara ve yetenek değerleri tek kayıtta dursun (`js/kadrolar.js`).
+- [ ] Kayarak müdahale ve faul; sarı/kırmızı kart; ofsayt bayrağı.
 
 ## Aşama 3 — Yönetim çekirdeği
 - [ ] Kadro, transfer, bütçe.
@@ -58,8 +67,10 @@ Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter
 - [ ] Ayakların yere düzgün basması.
 
 ## Aşama 5 — Maç sahneleri
-- [ ] Sahaya çıkış ve seremoni.
-- [ ] Yedek kulübesi, teknik direktör, kenarda ısınma, oyuncu değişikliği.
+- [x] Sahaya çıkış ve seremoni (ilk sürüm: tünelden çıkış, İstiklal Marşı töreni, yazı tura; marşın müziği Aşama 7'de).
+- [x] Yedek kulübesi ve teknik direktör (ilk sürüm: yedekler oturuyor, golde fırlıyor; teknik direktör teknik alanda geziniyor).
+- [ ] Kenarda ısınma, oyuncu değişikliği, dördüncü hakemin tabelası.
+- [ ] Marş sırasında tribünün ayağa kalkması.
 - [ ] İtiraz ve VAR incelemesi.
 
 ## Aşama 6 — Tribün

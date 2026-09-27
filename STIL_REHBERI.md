@@ -36,7 +36,9 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 - Her oyuncunun kendine ait görünümü vardır: boy 0,9–1,1, yapı 0,93–1,12 ölçek.
 - Saç stilleri: kısa, kel, uzun, mullet, kıvırcık. Bıyık ve sakal. Krampon rengi. Sıyrık çorap. Kalecide uzun kol ve eldiven.
 - Numara sırtta büyük (2 kat piksel yazı, koyu kenarlı), göğüste küçük.
-- Pozlar: şut, koşu (iki kare), kayarak müdahale, kaleci uçuşu, bekleme. Yeni hareketler aynı poz sistemine eklenir.
+- Pozlar: şut, koşu, kafa, taç, kaleci uçuşu ve topu tutuş, sevinç, marşta el göğüste, oturuş (yedekler), bekleme. Yeni hareketler aynı poz sistemine (`POSE`) eklenir.
+- Hareket pürüzsüzdür: koşu hıza bağlı sürekli bir dalgayla döner, pozlar birbirine yumuşakça karışır, dönüşler yavaşça yapılır. Motor sabit adımla ilerler, çizim adımlar arasında ara değer alır.
+- Yedekler takım renginde eşofmanla, teknik direktör takım elbiseyle görünür.
 
 ## 6. Işık ve gölge
 - Gece maçında her projektör için bir soluk, uzun gölge (90'ların dörtlü gölgesi).
@@ -60,9 +62,11 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 ## 8. Arayüz
 - 3×5 piksel yazı (Türkçe karakterli), tek font. Stattaki yazılar (reklam panosu, pankart, skor tabelası) bu yazıyla yazılır.
 - Maç ekranında ekran üstü grafik yoktur: yayın bandı, radar ya da oyuncu etiketi gösterilmez. Tek istisna dürbün maskesidir.
+- Skor ve dakika stadın skor tabelasında (ampullü ya da elle) yazar. Ekranın hemen altında, oyun görüntüsünün dışında bir radyo satırı skoru ve spikerin cümlesini gösterir.
 
 ## 9. Kameralar
 - Tek açı başkanın gözüdür: açık ana tribünün ortasındaki başkan koltuğunda, göz hizası. Dürbün isteğe bağlı yakınlaştırmadır. Konumlar stil dosyasındadır.
+- Bakış topu ve olan biteni yumuşak bir yayla izler: tünelden çıkışta tünele, törende oyuncu sırasına, yazı turada orta noktaya, golde gol atana bakar. Bakış belli bir açıdan fazla aşağı inmez.
 
 ## 10. Sınırlar
 - Gerçek kulüp, marka ya da logo kullanılmaz.
