@@ -3,9 +3,9 @@
 Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil-99.js` dosyasında durur; bu rehber o değerlerin ne anlama geldiğini ve neden seçildiğini anlatır.
 
 ## 1. Ekran
-- 4:3 tüplü televizyon. İç çözünürlük 400×300.
+- 4:3 ekran. İç çözünürlük 400×300.
 - Büyütülürken pikseller yumuşatılmaz (en yakın komşu).
-- Tüplü TV katmanı: tarama çizgileri, kavisli köşeler, kenar kararması. Arayüzden kapatılabilir.
+- Maç başkanın gözünden görülür; bu yüzden TV kasası, tarama çizgisi ya da kavisli köşe yoktur. '99 görünümü (piksel, renk titremesi, köşe titremesi) sabittir, arayüzden kapatılmaz.
 
 ## 2. Renk
 - Kanal başına 5 bit (15 bit renk) ve 4×4 düzenli titreme (Bayer). Dönemin ekran kartları gibi.
@@ -48,12 +48,11 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 - Meşale: parlak çekirdek, kırmızı hale ve yükselen duman. Tel örgü, pankart, ampullü skor tabelası, projektör parıltısı.
 
 ## 8. Arayüz
-- 3×5 piksel yazı (Türkçe karakterli), tek font.
-- TV açısı: skor bandı sol üstte, CANLI sağ üstte, oyuncu ismi sol altta, radar sağ altta.
-- Loca açısı: yayın grafiği yok. Sadece kendi oyuncularının üstünde küçük numara etiketi var; amber etiket yeni transferi gösterir.
+- 3×5 piksel yazı (Türkçe karakterli), tek font. Stattaki yazılar (reklam panosu, pankart, skor tabelası) bu yazıyla yazılır.
+- Maç ekranında ekran üstü grafik yoktur: yayın bandı, radar ya da oyuncu etiketi gösterilmez. Tek istisna dürbün maskesidir.
 
 ## 9. Kameralar
-- Başkan locası (ana açı), dürbün ve TV yayını. Konumlar stil dosyasındadır.
+- Tek açı başkanın gözüdür: açık ana tribünün ortasındaki başkan koltuğunda, göz hizası. Dürbün isteğe bağlı yakınlaştırmadır. Konumlar stil dosyasındadır.
 
 ## 10. Sınırlar
 - Gerçek kulüp, marka ya da logo kullanılmaz.

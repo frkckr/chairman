@@ -43,10 +43,10 @@ const STIL={
   tabela:{zemin:'#140c04',ampul:'#ffb530',ikincil:'#ffd98a'},
   pankart:{zemin:'#efe9dc',yazi:'#c8281e'},
 
-  /* Kameralar: konum [x,y,z], hedef [x,y,z], aci = dikey görüş açısı (derece) */
+  /* Kameralar: konum [x,y,z], hedef [x,y,z], aci = dikey görüş açısı (derece).
+     Maç başkanın gözünden izlenir: ana tribünün ortasında, açık tribündeki başkan koltuğu. Dürbün isteğe bağlı. */
   kameralar:{
-    loca:{konum:[0,12,60.5],hedef:[44,2,-4],aci:20},
-    durbun:{konum:[0,12,60.5],hedef:[41.8,1.1,-0.9],aci:7.5},
-    tv:{konum:[10,18,30],hedef:[46,3,-6],aci:30}
+    baskan:{konum:[0,6.3,-49.5],hedef:[34,-1.5,-6],aci:40},
+    durbun:{konum:[0,6.3,-49.5],hedef:[43,1.1,-1],aci:9}
   }
 };

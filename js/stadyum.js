@@ -67,7 +67,7 @@ function stand(o){
   g.position.set(o.pos[0],0,o.pos[1]);g.rotation.y=o.rot;scene.add(g);return g;
 }
 stand({len:124,d:22,y0:1.2,y1:17,pos:[0,-44],rot:0,roof:{y:21,f:-10,b:-24},
-  sec:[{from:-62,to:34,pal:PAL_MIX,seed:11},{from:34,to:38},{from:38,to:62,pal:PAL_AWAY,seed:23}]});
+  sec:[{from:-62,to:-4,pal:PAL_MIX,seed:11},{from:-4,to:4},{from:4,to:34,pal:PAL_MIX,seed:13},{from:34,to:38},{from:38,to:62,pal:PAL_AWAY,seed:23}]}); // -4..4: başkan koltuğu (geçici boşluk)
 const endR=stand({len:80,d:20,y0:1.2,y1:15,pos:[64,0],rot:-Math.PI/2,roof:{y:19,f:-9,b:-22},sec:[{from:-40,to:40,pal:PAL_HOME,seed:37}]});
 stand({len:80,d:20,y0:1.2,y1:15,pos:[-64,0],rot:Math.PI/2,roof:{y:19,f:-9,b:-22},sec:[{from:-40,to:40,pal:PAL_MIX,seed:53}]});
 stand({len:124,d:12,y0:1.2,y1:8.5,pos:[0,44],rot:Math.PI,sec:[{from:-62,to:62,pal:PAL_MIX,seed:71}]});
@@ -77,7 +77,7 @@ const FENCE_CV=(()=>{const cv=mk(8,8),g=cv.getContext('2d');g.fillStyle='rgba(17
 function fence(len,x,z,rot){const gr=new THREE.Group();gr.position.set(x,0,z);gr.rotation.y=rot;scene.add(gr);
   const f=new THREE.Mesh(new THREE.PlaneGeometry(len,3,8,1),LAM({map:tx(FENCE_CV,'m',[len/0.4,3/0.4]),transparent:true,depthWrite:false,side:THREE.DoubleSide}));f.position.y=1.5;gr.add(f);
   const pm=LAM({color:0x7a7f86});box(len,0.08,0.08,pm,0,3,0,gr);for(let u=-len/2;u<=len/2+0.1;u+=4)box(0.08,3,0.08,pm,u,1.5,0,gr);}
-fence(80,62.6,0,-Math.PI/2);fence(124,0,-42.6,0);
+fence(80,62.6,0,-Math.PI/2);
 {const s='DEMİRKAPI SENİ SEVİYORUZ',cv=mk(textW(s,1)+6,11),g=cv.getContext('2d');g.fillStyle=STIL.pankart.zemin;g.fillRect(0,0,cv.width,11);g.fillStyle=STIL.pankart.yazi;g.fillRect(0,0,cv.width,1);g.fillRect(0,10,cv.width,1);
  ctxText(g,s,3,2,STIL.pankart.yazi,1);const b=new THREE.Mesh(new THREE.PlaneGeometry(34,3.2),LAM({map:tx(cv,'m')}));b.position.set(-13,2.8,-1.2);b.rotation.x=-0.25;endR.add(b);}
 const FLAG_CV=[(()=>{const cv=mk(24,16),g=cv.getContext('2d');g.fillStyle='#d61e24';g.fillRect(0,0,24,16);g.fillStyle='#fff';

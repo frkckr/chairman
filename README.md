@@ -1,6 +1,6 @@
 # Demirkapı '99
 
-Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig'den Avrupa kupalarına uzanan bir kariyer. Maçlar başkan locasından, 90'ların futbol oyunlarını hatırlatan bir görünümle izlenir. Tüm görseller kodla üretilir.
+Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig'den Avrupa kupalarına uzanan bir kariyer. Maçlar başkanın gözünden, açık tribündeki başkan koltuğundan, 90'ların futbol oyunlarını hatırlatan bir görünümle izlenir. Tüm görseller kodla üretilir.
 
 ## Oyunu açmak
 - **GitHub Pages açıksa:** `https://frkckr.github.io/demirkapi-99/`
@@ -10,7 +10,7 @@ Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig
 ## Dosyalar
 | Dosya | Ne işe yarar |
 |---|---|
-| `index.html` | Açılış sayfası: '99 sahnesi, başkan locası, dürbün, TV açısı |
+| `index.html` | Açılış sayfası: '99 sahnesi, başkanın gözünden görünüm, dürbün |
 | `CLAUDE.md` | Claude'un her oturumda okuduğu proje talimatı |
 | `STIL_REHBERI.md` | Görsel kurallar |
 | `YOL_HARITASI.md` | Yapılacaklar, alınan ve bekleyen kararlar |
@@ -19,8 +19,7 @@ Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig
 | `js/stadyum.js` | Saha, tribünler, reklam panoları, kaleler |
 | `js/oyuncular.js` | Oyuncu modelleri, pozlar, top |
 | `js/efektler.js` | Meşale ve duman |
-| `js/loca.js` | Başkan locası: masa, çay, radyo, telefon |
-| `js/arayuz.js` | Yayın grafikleri, numara etiketleri, düğmeler, çizim döngüsü |
+| `js/arayuz.js` | Kamera, dürbün, düğmeler, çizim döngüsü |
 | `js/ortak.js` | Ortak araçlar: piksel yazı, kulüpler, Türkçe ekler |
 | `js/mac-motoru.js` | Maç motoru (henüz '99 sahnesine bağlı değil) |
 | `araclar/kontrol.py` | Sayfayı görünmez bir tarayıcıda açıp hata ve ekran görüntüsü kontrolü yapar |
@@ -40,7 +39,7 @@ Oturumlar birbirini hatırlamaz. Kalıcı olan her şey bu depodaki dosyalardır
 ## Örnek mesajlar
 - **İlk oturum:** "Merhaba! Bu depo, kulüp başkanlığı oyunum Demirkapı '99'un başlangıç paketi. Önce CLAUDE.md, STIL_REHBERI.md ve YOL_HARITASI.md dosyalarını oku, sonra kodu incele. Ardından projenin şu anki durumunu bana sade bir dille kısaca özetle ve YOL_HARITASI'ndaki açık kararları tek tek sor. Şimdilik hiçbir dosyayı değiştirme."
 - **Kararlardan sonra:** "Kararlarımı YOL_HARITASI.md'ye yaz. Sonra Aşama 1'in ilk adımına başla: stadyum tarifini kur ve 3. Lig kasaba statını üret."
-- **Maçı hareketlendirmek:** "Aşama 2'ye geç: mac-motoru.js'i '99 sahnesine bağla, loca kamerası topu izlesin."
+- **Maçı hareketlendirmek:** "Aşama 2'ye geç: mac-motoru.js'i '99 sahnesine bağla, başkanın bakışı topu izlesin."
 - **Sadece fikir almak:** "Kalecinin uçuşunu nasıl daha akıcı yapabiliriz? Önce düşün, dosyalara dokunma."
 
 ## Oyun linki (GitHub Pages)
