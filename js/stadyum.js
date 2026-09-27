@@ -59,66 +59,68 @@ if(STAT.reklam>=1){board(112,0,-38.2,0);board(76,57.8,0,-Math.PI/2);board(76,-57
 else{let n=0;for(const [len,cx,cz,rot] of[[112,0,-38.2,0],[76,57.8,0,-Math.PI/2],[76,-57.8,0,Math.PI/2],[112,0,38.2,Math.PI]]){
   const k=Math.floor(len/8);for(let i=0;i<k;i++){if(h2(i,n*7+3)>STAT.reklam)continue;const u=-len/2+4+i*8,c=Math.cos(rot),s=Math.sin(rot);board(8,cx+u*c,cz-u*s,rot,((i+n*3)%8)/8);}n++;}}
 
-/* ---- tribünler: tarifteki her tribün; seyirci düz dokuyla çiziliyor, doluluk kadar kişi var ---- */
-const PAL={ev:STIL.seyirci.ev,karisik:STIL.seyirci.karisik,deplasman:STIL.seyirci.deplasman};
-function crowdCv(pal,seed,frame,fill){
-  const cv=mk(128,64),g=cv.getContext('2d');g.fillStyle='#26262b';g.fillRect(0,0,128,64);
-  for(let r=0;r<8;r++){g.fillStyle='#4e4e55';g.fillRect(0,r*8+6,128,2);
-    for(let c=0;c<32;c++){
-      if(h2(c+seed,r+seed*3)>fill)continue;
-      const up=frame&&h2(c+seed,r+77)>0.45?1:0,x=c*4,y=r*8-up,sh=pal[Math.floor(h2(c*3+seed,r*5)*pal.length)];
-      g.fillStyle=sh;g.fillRect(x,y+3,3,4);
-      g.fillStyle=h2(c,r*3+seed)<0.22?'#8a5a3c':'#d6a27a';g.fillRect(x+(r&1),y+1,2,2);
-      if(h2(c+9,r+seed)>0.45){g.fillStyle='#24180f';g.fillRect(x+(r&1),y+1,2,1);}
-      if(frame&&h2(c+seed,r+31)>0.72){g.fillStyle=sh;g.fillRect(x,y-1,1,3);g.fillRect(x+2,y-1,1,3);}
-    }}
-  return cv;
-}
-const crowdMats=[];
-function crowdMat(pal,seed,len,rows,fill){const rep=[len/16,rows/8],t0=tx(crowdCv(pal,seed,0,fill),'m',rep),t1=tx(crowdCv(pal,seed,1,fill),'m',rep),m=LAM({map:t0});crowdMats.push({m,t0,t1});return m;}
-
+/* ---- tribünler: tarifteki her tribün. Basamaklar ve koltuklar burada; seyirciler js/seyirci.js'te koltuk yerlerine oturur ---- */
 /* tribün ölçüleri ve kapasite (kişi) */
 function tribunOlcu(t){
   const S=SIRA[t.tip],eg=t.egim||S.egim,y0=t.tip==='set'?0.2:PISTLI?1.2:1.0;
   return{S,dp:S.derinlik,eg,y0,D:t.sira*S.derinlik,y1:y0+t.sira*eg,kap:Math.floor(t.uzunluk/S.kisi)*t.sira};
 }
 const STAT_KAPASITE=STAT.tribunler.reduce((s,t)=>s+tribunOlcu(t).kap,0);
-const SEYIRCI_SAYISI=Math.round(STAT_KAPASITE*MAC_GUNU.doluluk);
 function tribunYeri(yer){return{ana:{pos:[0,-YAN_MESAFE],rot:0},karsi:{pos:[0,YAN_MESAFE],rot:Math.PI},kale1:{pos:[-KALE_MESAFE,0],rot:Math.PI/2},kale2:{pos:[KALE_MESAFE,0],rot:-Math.PI/2}}[yer];}
-/* bölümlerin doluluğu: ev taraftarı önce dolar, deplasman bölümü deplasman oranı kadar */
-function bolumDoluluk(taraftar,t,kap){
-  const d=MAC_GUNU.doluluk;
-  if(taraftar==='deplasman')return clamp(SEYIRCI_SAYISI*MAC_GUNU.deplasman/Math.max(1,kap),0,1);
-  if(taraftar==='ev')return clamp(d*1.35+0.03,0,1);
-  return clamp(d*(t.yer==='ana'?1.1:t.yer==='karsi'?1:0.8),0,1);
-}
-const lamps=[],TRIBUNLER={};
+/* koltuk: oturak, sırtlık ve ayak; başlangıç noktası basamak yüzeyi, yüzü sahaya (+z) */
+const KOLTUK_GEO=kutuBirlestir([{w:0.44,h:0.08,d:0.4,y:0.38,z:0.02},{w:0.44,h:0.4,d:0.06,y:0.6,z:-0.19},{w:0.3,h:0.34,d:0.06,y:0.17,z:0.1,renk:[0.3,0.3,0.32]}]);
+const KOLTUK_UZAK_GEO=kutuBirlestir([{w:0.44,h:0.62,d:0.3,y:0.31,z:-0.07}]); // uzaktan tek parça
+const KOLTUK_YUKSEKLIGI=0.42;
+/* YERLER: seyircinin oturabileceği ya da durabileceği her nokta (dünya matrisi, tip, bölüm) */
+const lamps=[],TRIBUNLER={},YERLER=[];
 let BASKAN_KOLTUGU=null;
 function stand(t){
-  const O=tribunOlcu(t),{D,y0,y1}=O,L=t.uzunluk,Y=tribunYeri(t.yer),g=new THREE.Group(),sl=Math.hypot(y1-y0,D),ang=Math.atan2(y1-y0,D);
-  const zeminRenk=t.tip==='set'?SK.set:t.tip==='ayakta'?SK.basamak:0x5c5d62;
-  /* bölümler: tribün boyunca parçalara ayır; başkan bölümü (ana tribün ortası) şimdilik boş */
-  const cuts=[{from:-L/2,to:L/2,taraftar:t.taraftar},...(t.bolumler||[])];
-  if(t.baskanSira!=null)cuts.push({from:-3,to:3,taraftar:'baskan'});
-  const edges=[...new Set(cuts.flatMap(c=>[c.from,c.to]))].filter(v=>v>=-L/2&&v<=L/2).sort((a,b)=>a-b);
-  edges.forEach((a,i)=>{const b=edges[i+1];if(b==null||b-a<0.01)return;const mid=(a+b)/2;let tr=t.taraftar;for(const c of cuts)if(mid>c.from&&mid<c.to)tr=c.taraftar;
-    const kap=Math.floor((b-a)/O.S.kisi)*t.sira,pal=PAL[tr],fill=pal?bolumDoluluk(tr,t,kap):0;
-    const m=pal&&fill>0?crowdMat(pal,Math.round(mid*7+t.sira*13)&255,b-a,t.sira,fill):LAM({color:zeminRenk});
-    const pl=new THREE.Mesh(new THREE.PlaneGeometry(b-a,sl,Math.max(2,Math.round((b-a)/8)),4),m);
-    pl.rotation.x=-(Math.PI/2-ang);pl.position.set(mid,(y0+y1)/2,-D/2);g.add(pl);});
-  if(t.tip!=='set'){
+  const O=tribunOlcu(t),{D,y0,y1,dp,eg}=O,L=t.uzunluk,Y=tribunYeri(t.yer),g=new THREE.Group();
+  g.position.set(Y.pos[0],0,Y.pos[1]);g.rotation.y=Y.rot;scene.add(g);g.updateMatrixWorld(true);
+  /* basamaklar (set tipinde düz eğimli toprak) */
+  if(t.tip==='set'){const sl=Math.hypot(y1-y0,D),pl=new THREE.Mesh(new THREE.PlaneGeometry(L,sl,Math.max(2,Math.round(L/8)),4),LAM({color:SK.set}));
+    pl.rotation.x=-(Math.PI/2-Math.atan2(y1-y0,D));pl.position.set(0,(y0+y1)/2,-D/2);g.add(pl);}
+  else{const bm=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),LAM({color:t.tip==='ayakta'?SK.basamak:SK.beton}),t.sira),M=new THREE.Matrix4();
+    for(let r=0;r<t.sira;r++){const yr=y0+r*eg;M.makeScale(L,eg,dp).setPosition(0,yr-eg/2,-(r+0.5)*dp);bm.setMatrixAt(r,M);}bm.frustumCulled=false;g.add(bm);
     box(L,y0,0.4,LAM({color:SK.beton}),0,y0/2,0.2,g);
     box(L,y1+1,0.6,LAM({color:SK.betonKoyu}),0,(y1+1)/2,-D-0.3,g);
-    for(const sx of[-1,1])box(0.5,y1+1,D,LAM({color:SK.yanDuvar}),sx*(L/2+0.25),(y1+1)/2,-D/2,g);
-  }
-  if(t.tip==='ayakta')for(let r=3;r<t.sira;r+=3)box(L-1,0.06,0.06,LAM({color:SK.direk}),0,y0+r*O.eg+1.0,-r*O.dp,g); // korkuluklar
+    for(const sx of[-1,1])box(0.5,y1+1,D,LAM({color:SK.yanDuvar}),sx*(L/2+0.25),(y1+1)/2,-D/2,g);}
+  if(t.tip==='ayakta')for(let r=3;r<t.sira;r+=3)box(L-1,0.06,0.06,LAM({color:SK.direk}),0,y0+r*eg+1.0,-r*dp,g); // korkuluklar
   if(t.cati){const f=-D*(1-t.cati),b=-D-1,ry=y1+4;
     box(L+4,0.6,f-b,LAM({color:SK.cati}),0,ry,(f+b)/2,g);box(L+4,1,0.8,LAM({color:SK.catiKenar}),0,ry-0.7,f,g);
     for(let x=-L/2;x<=L/2+0.1;x+=L/Math.max(2,Math.round(L/20)))box(0.5,ry,0.5,LAM({color:SK.direk}),x,ry/2,b+0.5,g);
     if(STAT.projektor.tip==='cati')for(let x=-L/2+4;x<=L/2-3.9;x+=8){box(2,0.5,0.4,BAS({color:0xfff4d8}),x,ry-1.3,f+0.3,g);
       const s=glow(0xffe9c0,7,0.55*STAT.projektor.guc);s.position.set(x,ry-1.3,f+1.2);g.add(s);lamps.push(s);}}
-  g.position.set(Y.pos[0],0,Y.pos[1]);g.rotation.y=Y.rot;scene.add(g);g.updateMatrixWorld(true);
-  if(t.baskanSira!=null){const r=t.baskanSira+0.5;BASKAN_KOLTUGU=g.localToWorld(new THREE.Vector3(0,y0+r*O.eg,-r*O.dp));}
+  /* bölümler: tribün boyunca parçalar. Başkan bölümü ana tribünün ortasında 4 sıra; başkan ön sırada, önünde boş bir geçit ve korkuluk var */
+  const VG=4.2,cuts=[{from:-L/2,to:L/2,taraftar:t.taraftar},...(t.bolumler||[])],bs=t.baskanSira,vipSira=r=>bs!=null&&r>=bs&&r<=bs+3;
+  if(bs!=null)cuts.push({from:-VG,to:VG,taraftar:'baskan'});
+  const edges=[...new Set(cuts.flatMap(c=>[c.from,c.to]))].filter(v=>v>=-L/2&&v<=L/2).sort((a,b)=>a-b);
+  const koltuklar=[],K=new THREE.Matrix4(),P=new THREE.Matrix4(),Q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Y.rot),V=new THREE.Vector3(),BIR=new THREE.Vector3(1,1,1);
+  const yer=(x,y,z,bolum,r,ek)=>{V.set(x,y,z);g.localToWorld(V);YERLER.push({m:new THREE.Matrix4().compose(V.clone(),Q,BIR),tip:t.tip,bolum,r,u:2*x/L,...ek});};
+  edges.forEach((a,i)=>{const b=edges[i+1];if(b==null||b-a<0.01)return;const mid=(a+b)/2;let tr=t.taraftar;for(const c of cuts)if(mid>c.from&&mid<c.to)tr=c.taraftar;
+    const bolum={taraftar:tr==='baskan'?t.taraftar:tr,yer:t.yer,kap:Math.floor((b-a)/O.S.kisi)*t.sira};
+    for(let r=0;r<t.sira;r++){const yr=y0+r*eg;
+      if(tr==='baskan'&&r===bs-1)continue; // geçit
+      if(tr==='baskan'&&vipSira(r)){/* başkan bölümü: döşemeli koltuklar, yöneticiler */
+        for(let k=-6;k<=6;k++){const x=k*0.6,z=-(r+0.55)*dp;koltuklar.push([x,yr,z,1.2,STIL.seyirci.vipKoltuk]);
+          if(r===bs&&k===0){V.set(x,yr+KOLTUK_YUKSEKLIGI,z);BASKAN_KOLTUGU=g.localToWorld(V.clone());continue;}
+          yer(x,yr+KOLTUK_YUKSEKLIGI,z,{taraftar:'vip',yer:t.yer,kap:1},r,{vip:true});}
+        continue;}
+      const n=Math.floor((b-a)/O.S.kisi);
+      for(let k=0;k<n;k++){const x=a+(k+0.5)*(b-a)/n;
+        if(t.tip==='oturma'){const z=-(r+0.55)*dp;koltuklar.push([x,yr,z,1,t.koltuk]);yer(x,yr+KOLTUK_YUKSEKLIGI,z,bolum,r);}
+        else{const jx=(h2(k,r*31+i)-0.5)*0.24,jz=(h2(k+7,r*17+i)-0.5)*0.16*dp;
+          yer(x+jx,t.tip==='set'?y0+(r+0.5)*eg:yr,-(r+0.5)*dp+jz,bolum,r);}}
+    }});
+  /* koltuklar: başkana yakın olanlar ayrıntılı, uzaktakiler tek parça */
+  if(koltuklar.length){const C=new THREE.Color(),yakin=[],uzak=[];
+    koltuklar.forEach((k,j)=>{V.set(k[0],k[1],k[2]);g.localToWorld(V);(bs!=null&&Math.abs(k[0])<14&&k[1]<y0+(bs+8)*eg?yakin:uzak).push([...k,j]);});
+    for(const [liste,geo] of[[yakin,KOLTUK_GEO],[uzak,KOLTUK_UZAK_GEO]]){if(!liste.length)continue;const km=new THREE.InstancedMesh(geo,LAM({vertexColors:true}),liste.length);
+      liste.forEach(([x,y,z,sc,renk,j],n)=>{K.makeScale(sc,sc*0.95,sc).setPosition(x,y,z);km.setMatrixAt(n,K);C.set(renk).multiplyScalar(0.85+0.2*h2(j,t.sira));km.setColorAt(n,C);});
+      km.frustumCulled=false;g.add(km);}}
+  if(bs!=null){/* başkan bölümünün önünde korkuluk */
+    const yr=y0+(bs-1)*eg,z=-(bs-1)*dp-0.05,rm=LAM({color:STIL.seyirci.vipKorkuluk});box(2*VG,0.05,0.05,rm,0,yr+0.95,z,g);
+    for(let x=-VG;x<=VG+0.01;x+=VG/3)box(0.04,0.95,0.04,rm,x,yr+0.47,z,g);}
   TRIBUNLER[t.yer]={t,g,O};
   return g;
 }

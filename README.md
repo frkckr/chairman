@@ -18,6 +18,7 @@ Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig
 | `js/stadyum-tarifleri.js` | Stat tarifleri (3. Lig kasaba, 1. Lig şehir, Avrupa arenası) ve maç günü doluluğu; yalnızca veri |
 | `js/goruntu.js` | Ekran, renk titremesi, ışık, gökyüzü |
 | `js/stadyum.js` | Seçili tarife göre stadı kurar: zemin, tribünler, reklam panoları, projektörler, kaleler |
+| `js/seyirci.js` | Tribündeki insanlar: doluluğa göre koltuklara oturur, iki kareyle sallanır |
 | `js/oyuncular.js` | Oyuncu modelleri, pozlar, top |
 | `js/efektler.js` | Meşale ve duman |
 | `js/arayuz.js` | Kamera, dürbün, düğmeler, çizim döngüsü |

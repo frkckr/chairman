@@ -22,10 +22,10 @@ btnBino.onclick=()=>{bino=!bino;press(btnBino,bino);};
    el.oninput=()=>{out.textContent=el.value+'%';};el.onchange=()=>ayarla(id,(el.value/100).toFixed(2));}
  $('statBilgi').textContent=STAT.ad+' · '+STAT.lig+' · kapasite '+STAT_KAPASITE.toLocaleString('tr-TR')+' · bu akşam '+SEYIRCI_SAYISI.toLocaleString('tr-TR')+' seyirci';}
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let last=0,time=0,swapT=0,crowdF=0;
+let last=0,time=0;
 function frame(now){
   const dt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;time+=dt;
-  swapT+=dt;if(swapT>STIL.seyirci.kareSuresi){swapT=0;crowdF^=1;for(const c of crowdMats)c.m.map=crowdF?c.t1:c.t0;}
+  if(!reduce)SEYIRCI_ZAMAN.value=time;
   for(const f of flags){const pa=f.m.geometry.attributes.position,a=pa.array;for(let i=0;i<pa.count;i++){const u=(f.base[i*3]+1.3)/2.6;a[i*3+2]=f.base[i*3+2]+Math.sin(time*5.5-u*4+f.ph)*0.2*u;}pa.needsUpdate=true;}
   fx(dt,time);
   const V=curView(),sw=reduce?0:1,hs=bino?sw:0;

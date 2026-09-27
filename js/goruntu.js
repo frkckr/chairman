@@ -30,6 +30,12 @@ function tx(cv,mode,rep){const t=new THREE.CanvasTexture(cv);
   else if(mode==='m'){t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;}
   else t.anisotropy=4;
   if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);}return t;}
+/* birden çok kutuyu tek geometride birleştirir; her parçanın köşe rengi olur (varsayılan beyaz, örnek rengiyle çarpılır) */
+function kutuBirlestir(parcalar){const pos=[],nor=[],col=[],idx=[];
+  for(const p of parcalar){const g=new THREE.BoxGeometry(p.w,p.h,p.d);g.translate(p.x||0,p.y||0,p.z||0);const o=pos.length/3;
+    pos.push(...g.attributes.position.array);nor.push(...g.attributes.normal.array);for(const i of g.index.array)idx.push(o+i);
+    const c=p.renk||[1,1,1];for(let i=0;i<g.attributes.position.count;i++)col.push(c[0],c[1],c[2]);g.dispose();}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);return g;}
 function box(w,h,d,m,x,y,z,parent){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);(parent||scene).add(b);return b;}
 const GLOWT=(()=>{const cv=mk(32,32),g=cv.getContext('2d'),gr=g.createRadialGradient(16,16,0,16,16,16);
   gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(0.3,'rgba(255,255,255,0.45)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,32,32);return tx(cv,'l');})();

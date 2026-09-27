@@ -20,11 +20,16 @@ const STIL={
   /* Saha dokusu (metre başına piksel = pikselMetre) */
   saha:{pist:'#8c3f2f',pistCizgi:'#d8cbb8',cimKoyu:'#2f7a2a',cimAcik:'#3a8c33',seritGenisligi:5.25,cizgi:'#f2f2ea',asinma:'112,92,52',pikselMetre:8},
 
-  /* Tribün: her kişi 4x8 piksel, iki kareyle sallanır */
+  /* Tribün: her seyirci kutulardan kurulu küçük bir insan (gövde, kollar, bacak, baş, saç/bere); iki kareyle sallanır.
+     Paletler üst giysi renkleridir. bere: başında bere/şapka olma olasılığı, kel: kel olma olasılığı. */
   seyirci:{
     ev:['#c8281e','#c8281e','#c8281e','#ece6da','#ece6da','#1c1c20','#d8b030'],
-    karisik:['#c8281e','#ece6da','#3a3c44','#5a4630','#2a4a8a','#1c1c20','#7a6a50','#c8281e'],
+    karisik:['#c8281e','#ece6da','#3a3c44','#5a4630','#2a4a8a','#1c1c20','#7a6a50','#c8281e','#4a5a3a','#6a2a2a'],
     deplasman:['#e8eaee','#22347a','#e8eaee','#1c1c20'],
+    vip:['#1e1f24','#2a2c33','#3a3228','#23262e','#2e2a26'],
+    sac:['#241a12','#3c2616','#141212','#5a4028','#8a8680','#1c1714'],
+    bere:0.16,kel:0.1,
+    vipKoltuk:'#8a1c16',vipKorkuluk:0xb8bcc2,
     kareSuresi:0.3
   },
 
@@ -54,7 +59,7 @@ const STIL={
      Maç başkanın gözünden izlenir: ana tribünün ortasında, açık tribündeki başkan koltuğu. Dürbün isteğe bağlı. */
   kameralar:{
     /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre) */
-    baskan:{goz:1.15,hedef:[34,-1.5,-6],aci:40},
-    durbun:{goz:1.15,hedef:[43,1.1,-1],aci:9}
+    baskan:{goz:0.78,hedef:[34,-7,-6],aci:44},
+    durbun:{goz:0.78,hedef:[43,1.1,-1],aci:9}
   }
 };
