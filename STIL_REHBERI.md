@@ -52,7 +52,7 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 - Her seyirci kutulardan kurulu küçük bir insandır: gövde, kollar, bacak, baş, saç ya da bere (kelleri de var). Boyu ve yapısı kişiden kişiye değişir. Başkana uzak olanlar daha az parçayla çizilir.
 - Koltuklu tribünde oturur; beton basamakta ve toprak sette ayakta durur. Ev taraftarının bir kısmı koltukta da ayaktadır.
 - Koltuklar tek tek görünür, boş koltuklar seçilir. Doluluk düşükken tribün seyrektir.
-- Seyirciler iki kareyle sallanır (0,3 sn).
+- Tribün sakin durur; birkaç kişi ara sıra hafifçe kıpırdar. Maçtaki heyecan arttıkça (giriş, santra, şut, direk, gol, maç sonu) zıplayanlar çoğalır; iki kareli zıplama (0,3 sn). Gol atan tarafın taraftarı zıplar, öbürü susar. Başkanın yakınındakiler ve başkan bölümü daha sakindir.
 - Paletler (üst giysi): ev sahibi, karışık, deplasman, başkan bölümü (koyu takım elbise).
 - Başkan bölümü: ana tribünün ortasında dört sıra koyu kırmızı döşemeli koltuk. Başkan ön sıradadır; önünde boş bir geçit ve metal korkuluk vardır.
 - Meşale: parlak çekirdek, kırmızı hale ve yükselen duman. Tel örgü, pankart, ampullü skor tabelası, projektör parıltısı.

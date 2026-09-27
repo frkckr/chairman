@@ -30,6 +30,8 @@ const STIL={
     vip:['#1e1f24','#2a2c33','#3a3228','#23262e','#2e2a26'],
     sac:['#241a12','#3c2616','#141212','#5a4028','#8a8680','#1c1714'],
     bere:0.16,kel:0.1,
+    /* maç olaylarında tribünün heyecanı (0–1) ve sönme süresi (sn) */
+    heyecan:{giris:0.8,santra:0.5,sut:0.35,kurtaris:0.4,direk:0.6,gol:1,macSonu:0.8,sonme:6},
     vipKoltuk:'#8a1c16',vipKorkuluk:0xb8bcc2,
     kareSuresi:0.3
   },

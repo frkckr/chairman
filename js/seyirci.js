@@ -1,12 +1,17 @@
 /* ============ Demirkapı '99 — seyirci: tribündeki insanlar ============
    js/stadyum.js'in çıkardığı YERLER'e (koltuk ve basamak noktaları) maç günü doluluğuna göre insan oturtur.
-   Her seyirci kutulardan kurulu küçük bir insandır. Binlerce kişi tek çizimle (InstancedMesh) çizilir, iki kareyle sallanır. */
-const SEYIRCI_ZAMAN={value:0};
+   Her seyirci kutulardan kurulu küçük bir insandır. Binlerce kişi tek çizimle (InstancedMesh) çizilir.
+   Tribün sakin durur; birkaç kişi ara sıra hafifçe kıpırdar. Maçtaki heyecan arttıkça (SEYIRCI_HEYECAN: x = ev, y = deplasman)
+   zıplayanlar çoğalır. Başkanın yakınındakiler ve başkan bölümü daha sakindir (aSakin). */
+const SEYIRCI_ZAMAN={value:0},SEYIRCI_HEYECAN={value:new THREE.Vector2(0,0)};
 function seyirciMat(){
   const m=new THREE.MeshLambertMaterial({vertexColors:true}),K2=(2*STIL.seyirci.kareSuresi).toFixed(3);
-  m.onBeforeCompile=s=>{s.uniforms.uZaman=SEYIRCI_ZAMAN;
-    s.vertexShader='uniform float uZaman;\nattribute float aFaz;\n'+s.vertexShader.replace('#include <begin_vertex>',
-      '#include <begin_vertex>\ntransformed.y+=step(0.5,fract(uZaman/'+K2+'+aFaz))*step(0.35,aFaz)*0.05;');
+  m.onBeforeCompile=s=>{s.uniforms.uZaman=SEYIRCI_ZAMAN;s.uniforms.uHeyecan=SEYIRCI_HEYECAN;
+    s.vertexShader='uniform float uZaman;\nuniform vec2 uHeyecan;\nattribute float aFaz;\nattribute float aTaraf;\nattribute float aSakin;\n'+s.vertexShader.replace('#include <begin_vertex>',
+      '#include <begin_vertex>\n'+
+      'float hy=mix(uHeyecan.x,uHeyecan.y,aTaraf)*aSakin;\n'+
+      'transformed.y+=step(0.94,aFaz)*0.012*sin(uZaman*1.1+aFaz*50.0);\n'+
+      'transformed.y+=step(0.5,fract(uZaman/'+K2+'+aFaz))*step(1.0-hy,fract(aFaz*7.31))*(0.05+0.13*hy);');
     if(STIL.ekran.koseTitremesi)s.vertexShader=s.vertexShader.replace('#include <project_vertex>',SNAP);};
   return m;
 }
@@ -48,14 +53,15 @@ const SEYIRCILER={otur:[],ayak:[],oturUzak:[],ayakUzak:[]},YP=new THREE.Vector3(
   const M=y.m.clone();if(y.tip==='oturma'&&ayakta)M.multiply(new THREE.Matrix4().makeTranslation(0,-KOLTUK_YUKSEKLIGI,0.12));
   const w=0.9+h2(i,29)*0.22,h=0.92+h2(i,31)*0.16;M.multiply(new THREE.Matrix4().makeScale(w,h,w));
   const uzak=YP.setFromMatrixPosition(y.m).distanceTo(BASKAN_KOLTUGU)>UZAK_MESAFE;
-  SEYIRCILER[(ayakta?'ayak':'otur')+(uzak?'Uzak':'')].push({M,giysi,ten,sac:kel?new THREE.Color(ten).multiplyScalar(0.88):sac,faz:h2(i,37)});
+  const mesafe=YP.distanceTo(BASKAN_KOLTUGU),sakin=y.vip?0.2:mesafe<12?0.35:1;
+  SEYIRCILER[(ayakta?'ayak':'otur')+(uzak?'Uzak':'')].push({M,giysi,ten,sac:kel?new THREE.Color(ten).multiplyScalar(0.88):sac,faz:h2(i,37),taraf:y.bolum.taraftar==='deplasman'?1:0,sakin});
  });}
 const SEYIRCI_SAYISI=Object.values(SEYIRCILER).reduce((s,L)=>s+L.length,0);
 for(const d in SEYIRCILER){
   const L=SEYIRCILER[d],n=L.length;if(!n)continue;
-  const faz=new THREE.InstancedBufferAttribute(new Float32Array(L.map(k=>k.faz)),1),C=new THREE.Color();
+  const at=a=>new THREE.InstancedBufferAttribute(new Float32Array(L.map(k=>k[a])),1),faz=at('faz'),taraf=at('taraf'),sakin=at('sakin'),C=new THREE.Color();
   for(const [parca,renk] of[['govde','giysi'],['bas','ten'],['sac','sac']]){
-    const geo=DURUS[d][parca].clone();geo.setAttribute('aFaz',faz);
+    const geo=DURUS[d][parca].clone();geo.setAttribute('aFaz',faz);geo.setAttribute('aTaraf',taraf);geo.setAttribute('aSakin',sakin);
     const im=new THREE.InstancedMesh(geo,seyirciMat(),n);im.frustumCulled=false;
     L.forEach((k,j)=>{im.setMatrixAt(j,k.M);im.setColorAt(j,C.set(k[renk]));});
     scene.add(im);
