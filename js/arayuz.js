@@ -6,7 +6,7 @@ function drawHUD(){
   hg.clearRect(0,0,RW,RH);
   if(!bino)return;
   hg.fillStyle='#030303';hg.fillRect(0,0,RW,RH);hg.globalCompositeOperation='destination-out';
-  for(const cx of[RW/2-60,RW/2+60]){hg.beginPath();hg.arc(cx,RH/2,122,0,6.3);hg.fill();}
+  for(const cx of[RW*0.35,RW*0.65]){hg.beginPath();hg.arc(cx,RH/2,RH*0.407,0,6.3);hg.fill();}
   hg.globalCompositeOperation='source-over';
 }
 

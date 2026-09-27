@@ -5,8 +5,9 @@
 const STIL={
   ad:"Demirkapı '99",
 
-  /* Ekran: 4:3 tüplü TV, düşük iç çözünürlük, 15 bit renk + 4x4 titreme, PS1 köşe titremesi */
-  ekran:{genislik:400,yukseklik:300,renkBiti:5,titreme:true,koseTitremesi:true,arkaPlan:0x070b16},
+  /* Ekran: 4:3, PS1'in yüksek çözünürlük modu (640x480), 15 bit renk + 4x4 titreme.
+     Köşe titremesi (köşelerin piksellere yapışması) kapalı: hareket pürüzsüz aksın diye. titremeGucu: renk titremesinin şiddeti (0–1). */
+  ekran:{genislik:640,yukseklik:480,renkBiti:5,titreme:true,titremeGucu:0.7,koseTitremesi:false,arkaPlan:0x070b16},
 
   /* Gece havası */
   sis:{renk:0x0c1322,yakin:150,uzak:380},
@@ -59,7 +60,7 @@ const STIL={
      Maç başkanın gözünden izlenir: ana tribünün ortasında, açık tribündeki başkan koltuğu. Dürbün isteğe bağlı. */
   kameralar:{
     /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre) */
-    baskan:{goz:0.78,hedef:[34,-7,-6],aci:44},
-    durbun:{goz:0.78,hedef:[43,1.1,-1],aci:9}
+    baskan:{goz:0.78,hedef:[34,-7,-6],aci:30},
+    durbun:{goz:0.78,hedef:[43,1.1,-1],aci:11}
   }
 };

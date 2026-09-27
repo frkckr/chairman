@@ -3,12 +3,12 @@
 Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil-99.js` dosyasında durur; bu rehber o değerlerin ne anlama geldiğini ve neden seçildiğini anlatır.
 
 ## 1. Ekran
-- 4:3 ekran. İç çözünürlük 400×300.
+- 4:3 ekran. İç çözünürlük 640×480 (PS1'in yüksek çözünürlük modu). 400×300'de maç dürbünsüz izlenemiyordu; bu çözünürlükte oyuncular ve reklam yazıları normal bakışta da seçilir.
 - Büyütülürken pikseller yumuşatılmaz (en yakın komşu).
 - Maç başkanın gözünden görülür; bu yüzden TV kasası, tarama çizgisi ya da kavisli köşe yoktur. '99 görünümü (piksel, renk titremesi, köşe titremesi) sabittir, arayüzden kapatılmaz.
 
 ## 2. Renk
-- Kanal başına 5 bit (15 bit renk) ve 4×4 düzenli titreme (Bayer). Dönemin ekran kartları gibi.
+- Kanal başına 5 bit (15 bit renk) ve 4×4 düzenli titreme (Bayer). Dönemin ekran kartları gibi. Titreme deseni ekrana sabittir ve şiddeti %70'tir (`titremeGucu`).
 - Işık hesabı renk yönetimi olmadan yapılır; köşe başına aydınlatma kullanılır (Lambert/Gouraud).
 - Gece maçı paleti: sıcak projektör sarısı, gece laciverti, sis.
 
@@ -26,7 +26,7 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 
 ## 3. Geometri
 - Az poligon. Oyuncu gövdesi kutulardan oluşur; top 20 yüzlü.
-- Köşeler ekran piksellerine yapışır (PS1 titremesi). Stil dosyasından kapatılabilir.
+- Köşeler ekran piksellerine yapışmaz: PS1 köşe titremesi hareketi piksel piksel zıplattığı için kapalıdır (`koseTitremesi:false`). Görünüm retro, hareket pürüzsüzdür.
 
 ## 4. Dokular
 - 8 ile 64 piksel arası. Hepsi kodla üretilir.
