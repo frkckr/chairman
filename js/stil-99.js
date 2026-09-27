@@ -39,9 +39,14 @@ const STIL={
   /* Formalar (anahtarlar kodda kullanılır: shirt=forma, trim=yaka/numara, shorts=şort, socks=çorap, out=numara kenarı, sash=çapraz şerit) */
   formalar:{
     ev:{shirt:'#c8281e',trim:'#f2ede2',shorts:'#f2ede2',socks:'#c8281e',out:'#6e140e'},
+    evKaleci:{shirt:'#e0b828',trim:'#141414',shorts:'#1c1c1e',socks:'#e0b828',glove:'#f2f2f2',gk:true},
     deplasman:{shirt:'#eef0f3',trim:'#22347a',shorts:'#22347a',socks:'#eef0f3',sash:'#22347a'},
     deplasmanKaleci:{shirt:'#3c9254',trim:'#141414',shorts:'#1c1c1e',socks:'#3c9254',glove:'#f2f2f2',gk:true},
-    hakem:{shirt:'#1a1a1c',trim:'#f2f2f2',shorts:'#1a1a1c',socks:'#1a1a1c'}
+    hakem:{shirt:'#1a1a1c',trim:'#f2f2f2',shorts:'#1a1a1c',socks:'#1a1a1c'},
+    /* yedekler eşofmanla, teknik direktör takım elbiseyle (pant: uzun pantolon, ls: uzun kol) */
+    yedekEv:{shirt:'#7a1812',trim:'#f2ede2',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
+    yedekDeplasman:{shirt:'#22347a',trim:'#eef0f3',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
+    takimElbise:{shirt:'#23262e',trim:'#e8e4da',shorts:'#23262e',socks:'#23262e',ls:true,pant:true,boots:'#0e0e10'}
   },
   tenler:['#e2b48c','#cf9a70','#b07650','#8a5a3c','#ecc49e'],
 
@@ -58,14 +63,19 @@ const STIL={
     apartman:['#3a3530','#463d34','#34363a','#3e362c'],pencere:'#ffd98a'
   },
 
+  /* tünel ağzı ve yedek kulübeleri */
+  kulube:{duvar:0x2c2f36,cam:0xa8c4d8,bank:0x3a3d44,serit:0xc8281e},
+
   tabela:{zemin:'#140c04',ampul:'#ffb530',ikincil:'#ffd98a',elleZemin:'#1d2a22',elleYazi:'#f0ece0'},
   pankart:{zemin:'#efe9dc',yazi:'#c8281e'},
 
   /* Kameralar: hedef [x,y,z], aci = dikey görüş açısı (derece).
      Maç başkanın gözünden izlenir: ana tribünün ortasında, açık tribündeki başkan koltuğu. Dürbün isteğe bağlı. */
   kameralar:{
-    /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre) */
-    baskan:{goz:0.78,hedef:[34,-7,-6],aci:30},
-    durbun:{goz:0.78,hedef:[43,1.1,-1],aci:11}
+    /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre).
+       Bakış topu ve olan biteni yumuşak bir yayla izler: yay = yayın sertliği, egim = bakışın odağın ne kadar altına indiği (masa ve ön sıralar görünsün),
+       asagiSinir = bakışın en fazla kaç radyan aşağı inebileceği. */
+    baskan:{goz:0.78,hedef:[0,1,-30],aci:30,egim:0.09,yay:2.2,asagiSinir:0.38},
+    durbun:{goz:0.78,aci:11}
   }
 };

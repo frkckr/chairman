@@ -1,6 +1,11 @@
-/* ============ Demirkapı '99 — maç motoru: görüntüden bağımsız oyun mantığı. Henüz '99 sahnesine bağlı değil; retro ve 3B prototiplerde çalışıyor ============ */
-/* ============ maç motoru ============ */
-const PL=52.5,PW=68,MZ=34,GH=2.44,GW2=3.66,ROLL=3.0,GPR=18; // GPR: 1 gerçek saniye = 18 maç saniyesi (90 dk ≈ 5 dk)
+/* ============ Demirkapı '99 — maç motoru: görüntüden bağımsız oyun mantığı ============
+   Koordinatlar: x −52,5…52,5 (kaleler), z 0…68 (z=0 ana tribün tarafındaki taç çizgisi). Görüntü katmanı z'den 34 çıkarır.
+   Evreler: giris (tünelden çıkış) → toren (İstiklal Marşı) → yazitura → kickoff → play/setpiece/goal → halftime → kickoff … → fulltime.
+   Olaylar on(ad, veri) ile bildirilir; görüntü bunları dinler. */
+const PL=52.5,PW=68,MZ=34,GH=2.44,GW2=3.66,ROLL=3.0,GPR=9; // GPR: 1 gerçek saniye = 9 maç saniyesi (90 dk ≈ 10 dk)
+const MAC_ONCESI=['giris','toren','yazitura'],MARS_SURESI=20,DEVRE_ARASI=25;
+/* gol dengesi: maç başına ~2–3 gol, ~20–25 şut olacak şekilde ayarlı (Node ile çok maç oynatılarak ölçüldü) */
+const SUT_ISTEGI=0.15,SUT_SAPMA=1.6,KURTARIS_KOLAYLIGI=0.19,KALECI_ERISIM=1.5;
 const FORM=[['GK',-0.95,34],['DEF',-0.64,10],['DEF',-0.68,26],['DEF',-0.68,42],['DEF',-0.64,58],
   ['MID',-0.26,12],['MID',-0.32,28],['MID',-0.32,40],['MID',-0.26,56],['FWD',0.06,28],['FWD',0.1,41]];
 const SKINS=[[226,178,138],[204,150,108],[176,120,84],[140,94,64],[236,196,160]];
@@ -8,28 +13,31 @@ const HAIRS=[[36,24,16],[60,38,22],[20,18,18],[96,70,40],[170,130,70]];
 function segD(px,pz,ax,az,bx,bz){const vx=bx-ax,vz=bz-az,wx=px-ax,wz=pz-az;const L2=vx*vx+vz*vz||1;const t=clamp((vx*wx+vz*wz)/L2,0,1);return Math.hypot(px-ax-vx*t,pz-az-vz*t);}
 
 class Match{
-  constructor(on){this.on=on||(()=>{});this.reset();}
+  /* secenek.kadro: [ev, konuk] (js/kadrolar.js), secenek.tunel: {x,z} tünel ağzı (motor koordinatı) */
+  constructor(on,secenek){secenek=secenek||{};this.on=on||(()=>{});this.kadro=secenek.kadro||null;this.tunel=secenek.tunel||{x:0,z:-6};this.reset();}
   reset(){
+    this.yaziTura=null;this.ilkSantra=0;this.tuneleGitti=false;
     this.score=[0,0];this.shots=[0,0];this.poss=[0,0];this.half=1;this.gameSec=0;
     this.added=[60+Math.floor(rnd()*100),60+Math.floor(rnd()*170)];
     this.dir=[1,-1];this.t=0;this.phase='kickoff';this.phaseT=0;this.sp=null;this.celeb=null;
     this.players=[];this.teams=[[],[]];
     for(let t=0;t<2;t++)for(let i=0;i<11;i++){
-      const f=FORM[i],s=h2(i*7+3,t*13+5);
-      const p={team:t,n:i,role:f[0],ba:f[1],bz:f[2],name:TEAMS[t].names[i],x:0,z:MZ,vx:0,vz:0,tx:0,tz:MZ,face:1,anim:rnd()*4,spd:0,
+      const f=FORM[i],s=h2(i*7+3,t*13+5),k=this.kadro&&this.kadro[t].oyuncular[i];
+      const p={team:t,n:i,role:f[0],ba:f[1],bz:f[2],name:k?k.ad:TEAMS[t].names[i],no:k?k.no:i+1,kaptan:!!(k&&k.kaptan),kayit:k||null,bak:null,x:0,z:MZ,vx:0,vz:0,tx:0,tz:MZ,face:1,anim:rnd()*4,spd:0,
         pose:'stand',poseT:0,kickCd:0,decT:0,skill:0.55+s*0.4,maxSpd:f[0]==='GK'?6.4:7+h2(i,t)*1.3,
         skin:SKINS[Math.floor(h2(i,t+9)*5)],hair:HAIRS[Math.floor(h2(i+3,t)*5)],mus:h2(i,t+21)<0.45,
         jx:0,jz:0,jT:0,walk:false,dribble:false,hold:0,celeb:false,dived:false,diveY:0.5};
+      if(k&&k.yetenek!=null)p.skill=k.yetenek;
       this.players.push(p);this.teams[t].push(p);
     }
-    const mk=(kind,x,z)=>({kind,x,z,vx:0,vz:0,tx:x,tz:z,face:1,anim:0,spd:0,maxSpd:7,pose:'stand',poseT:0,kickCd:0,walk:false});
+    const mk=(kind,x,z)=>({kind,x,z,vx:0,vz:0,tx:x,tz:z,face:1,anim:0,spd:0,maxSpd:7,pose:'stand',poseT:0,kickCd:0,walk:false,bak:null});
     this.refs=[mk('ref',-6,26),mk('lin',20,PW+1.3),mk('lin',-20,-1.3)];
     this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,owner:null,lastTeam:0,lastP:null,shot:null,intended:null,wood:false,inNet:false,prevX:0};
-    this.setupKickoff(0,true);
+    this.girisHazirla();
   }
   focus(){const c=this.celeb;if(this.phase==='goal'&&c&&c.scorer&&!c.own)return{x:c.scorer.x,y:1,z:c.scorer.z};const b=this.ball;return{x:b.x,y:b.y,z:b.z};}
   minuteLabel(){
-    if(this.phase==='halftime')return 'İY';if(this.phase==='fulltime')return 'MS';
+    if(this.phase==='halftime')return 'İY';if(this.phase==='fulltime')return 'MS';if(MAC_ONCESI.includes(this.phase))return '';
     const s=this.gameSec;
     if(this.half===1&&s>=2700)return '45+'+(Math.floor((s-2700)/60)+1);
     if(this.half===2&&s>=5400)return '90+'+(Math.floor((s-5400)/60)+1);
@@ -37,9 +45,12 @@ class Match{
   }
   step(dt){
     this.t+=dt;this.phaseT+=dt;
-    if(this.phase!=='halftime'&&this.phase!=='fulltime')this.gameSec+=dt*GPR;
+    if(this.phase!=='halftime'&&this.phase!=='fulltime'&&!MAC_ONCESI.includes(this.phase))this.gameSec+=dt*GPR;
     this.refsAI();
     switch(this.phase){
+      case 'giris':this.stepGiris(dt);break;
+      case 'toren':this.stepToren(dt);break;
+      case 'yazitura':this.stepYazitura(dt);break;
       case 'kickoff':this.stepKick(dt);break;
       case 'play':this.stepPlay(dt);break;
       case 'setpiece':this.stepSet(dt);break;
@@ -50,6 +61,46 @@ class Match{
       const lim=this.half===1?2700+this.added[0]:5400+this.added[1];
       if(this.gameSec>=lim&&(Math.abs(this.ball.x)<38||this.gameSec>lim+120))this.endHalf();
     }
+  }
+
+  /* ---- maç öncesi: tünelden çıkış, tören (İstiklal Marşı), yazı tura ---- */
+  girisHazirla(){
+    const T=this.tunel;this.phase='giris';this.phaseT=0;this.sp=null;this.celeb=null;
+    Object.assign(this.ball,{x:0,z:MZ,y:0,vx:0,vz:0,vy:0,owner:null,shot:null,intended:null,wood:false,inNet:false,prevX:0});
+    /* tünelde sıra: önde hakemler, arkada iki takım yan yana */
+    this.sira=[];const SZ=MZ-9;
+    this.refs.forEach((r,i)=>{r.x=T.x+(i-1)*0.8;r.z=T.z-0.6;r.hedef={x:(i-1)*1.1,z:SZ};this.sira.push(r);});
+    for(let i=0;i<11;i++)for(let t=0;t<2;t++){const p=this.teams[t][i];
+      p.x=T.x+(t?0.6:-0.6);p.z=T.z-1.6-i*0.9;p.hedef={x:(t?1:-1)*(2.4+i*1.05),z:SZ};this.sira.push(p);}
+    for(const p of this.sira){p.vx=p.vz=0;p.tx=p.x;p.tz=p.z;p.walk=true;p.dribble=false;p.pose='stand';p.poseT=0;p.bak=null;}
+    this.on('giris',{});
+  }
+  stepGiris(dt){
+    let hazir=true;
+    this.sira.forEach((p,k)=>{if(this.phaseT>k*0.45){p.tx=p.hedef.x;p.tz=p.hedef.z;}
+      if(Math.hypot(p.x-p.hedef.x,p.z-p.hedef.z)>0.5)hazir=false;else p.bak={x:p.x,z:-60};});
+    this.moveAll(dt,true);
+    if((hazir&&this.phaseT>4)||this.phaseT>60){
+      for(const p of this.sira){p.tx=p.hedef.x;p.tz=p.hedef.z;p.bak={x:p.x,z:-60};}
+      this.phase='toren';this.phaseT=0;this.on('mars',{});
+    }
+  }
+  stepToren(dt){
+    this.moveAll(dt,true);
+    if(this.phaseT>MARS_SURESI){
+      this.phase='yazitura';this.phaseT=0;this.on('marsBitti',{});
+      const r=this.refs[0];r.tx=0;r.tz=MZ;r.walk=true;
+      for(const p of this.players){p.bak=null;p.walk=true;
+        if(p.kaptan){p.tx=p.team?1.2:-1.2;p.tz=MZ-0.4;}
+        else{const d=this.dir[p.team];p.tx=Math.min(p.ba,-0.06)*50*d;p.tz=p.bz;p.walk=false;}}
+    }
+  }
+  stepYazitura(dt){
+    const r=this.refs[0];r.tx=0;r.tz=MZ;
+    for(const p of this.players)if(p.kaptan)p.bak={x:0,z:MZ};
+    this.moveAll(dt,true);
+    if(this.yaziTura==null&&this.phaseT>4.5){this.yaziTura=rnd()<0.5?0:1;this.on('yazitura',{takim:this.yaziTura,x:r.x,z:r.z});}
+    if(this.phaseT>9){for(const p of this.players)p.bak=null;this.ilkSantra=this.yaziTura;this.setupKickoff(this.yaziTura,false);}
   }
 
   /* ---- santra ---- */
@@ -70,7 +121,7 @@ class Match{
   stepKick(dt){
     this.moveAll(dt);this.ballPhys(dt);
     let ready=true;for(const p of this.players)if(Math.hypot(p.tx-p.x,p.tz-p.z)>1.3){ready=false;break;}
-    if(this.phaseT>1.6&&(ready||this.phaseT>8)){
+    if(this.phaseT>1.6&&(ready||this.phaseT>20)){
       const tm=this.teams[this.kickTeam],tk=tm[9],rc=tm[6];
       this.on('kickoff',{team:this.kickTeam,half:this.half});
       this.phase='play';this.phaseT=0;
@@ -145,6 +196,8 @@ class Match{
       }
     }
     const bd=Math.hypot(b.x-gx,b.z-MZ),inBox=Math.abs(b.x-gx)<16.5&&Math.abs(b.z-MZ)<20.2;
+    /* top kaleciyle çizgi arasına girdiyse çizgiye ve yakın direğe dön */
+    if(Math.abs(b.x-gx)<Math.abs(p.x-gx)+1.5&&Math.abs(b.z-MZ)<18){p.tx=gx+d*0.5;p.tz=MZ+clamp(b.z-MZ,-3.2,3.2);return;}
     if(!b.owner&&inBox&&!sh&&Math.hypot(b.x-p.x,b.z-p.z)<10&&Math.hypot(b.vx,b.vz)<10){this.intercept(p);return;}
     const adv=bd<35?1.2+(35-bd)*0.07:1.4;
     p.tx=gx+d*adv;p.tz=MZ+clamp((b.z-MZ)*0.2,-3,3);
@@ -165,7 +218,7 @@ class Match{
     p.decT=0.3+rnd()*0.55;
     const pressure=nd<3.2,fa=p.x*d/50;
     if(p.role==='GK'){const q=this.pickLong(p);this.kickTo(p,q.x+d*4,q.z,'lofted',q);return;}
-    if(dist<27&&Math.abs(dzg)<22){let ps=dist<11?0.8:dist<17?0.5:dist<22?0.26:0.12;if(pressure)ps*=1.25;if(rnd()<ps){this.shoot(p);return;}}
+    if(dist<27&&Math.abs(dzg)<22){let ps=(dist<11?0.8:dist<17?0.5:dist<22?0.26:0.12)*SUT_ISTEGI;if(pressure)ps*=1.25;if(rnd()<ps){this.shoot(p);return;}}
     if(fa>0.6&&Math.abs(p.z-MZ)>17&&rnd()<0.45){this.cross(p);return;}
     const bp=this.bestPass(p);
     if(bp&&(bp.score>1.0||(pressure&&bp.score>0.1)||rnd()<0.13)){this.kickTo(p,bp.x,bp.z,bp.long?'lofted':'ground',bp.q);this.on('pass',{p,q:bp.q,long:bp.long});return;}
@@ -210,7 +263,7 @@ class Match{
   shoot(p){
     const b=this.ball,d=this.dir[p.team],gx=d*PL,dist=Math.hypot(gx-p.x,MZ-p.z);
     let tz=MZ+(rnd()<0.5?-1:1)*(1.1+rnd()*2.5);
-    tz+=(dist/25)*(1.25-p.skill*0.5)*(rnd()*2-1)*3.2;
+    tz+=(dist/25)*(1.25-p.skill*0.5)*(rnd()*2-1)*3.2*SUT_SAPMA;
     const ty=rnd()*rnd()*2.7,speed=23+rnd()*8-dist*0.05;
     const dx=gx-b.x,dz=tz-b.z,L=Math.hypot(dx,dz),T=L/speed;
     b.vx=dx/L*speed;b.vz=dz/L*speed;b.y=0.12;b.vy=(ty-0.12+4.905*T*T)/T;
@@ -263,9 +316,9 @@ class Match{
     const def=1-sh.team,gk=this.teams[def][0],d=this.dir[def];
     if(b.vx*d>=0||Math.abs(b.x-gk.x)>0.8)return;
     sh.gkDone=true;
-    const rz=Math.abs(b.z-gk.z),dive=gk.pose==='dive',maxR=dive?2.4:1.15;
+    const rz=Math.abs(b.z-gk.z),dive=gk.pose==='dive',maxR=(dive?2.4:1.15)*KALECI_ERISIM;
     if(rz>maxR||b.y>2.6)return;
-    const spd=Math.hypot(b.vx,b.vz),ps=0.94-rz*0.19-(spd-20)*0.018+gk.skill*0.08-(b.y>1.9?0.1:0);
+    const spd=Math.hypot(b.vx,b.vz),ps=0.94+KURTARIS_KOLAYLIGI-rz*0.19-(spd-20)*0.018+gk.skill*0.08-(b.y>1.9?0.1:0);
     if(rnd()>=ps)return;
     if(!dive&&rz<0.8&&rnd()<0.65){b.owner=gk;b.vx=b.vz=b.vy=0;b.y=0;b.lastTeam=def;b.lastP=gk;b.shot=null;b.intended=null;gk.hold=1.3+rnd();this.on('save',{p:gk,catch:true});}
     else{b.vx=-b.vx*(0.22+rnd()*0.25);b.vz=b.vz*0.3+(rnd()-0.5)*12;b.vy=2+rnd()*4;b.lastTeam=def;b.lastP=gk;gk.kickCd=0.5;b.shot=null;this.on('save',{p:gk,catch:false});}
@@ -378,27 +431,39 @@ class Match{
   endHalf(){
     const b=this.ball;b.owner=null;b.vx*=0.3;b.vz*=0.3;b.shot=null;b.intended=null;this.sp=null;this.clearDives();
     const first=this.half===1;this.phase=first?'halftime':'fulltime';this.phaseT=0;this.gameSec=first?2700:5400;
-    for(const p of this.players){p.walk=true;p.dribble=false;p.celeb=false;p.hold=0;p.pose='stand';p.tx=(rnd()-0.5)*8;p.tz=-2.5;}
+    /* devre arasında tünele; maç sonunda önce orta sahada toplanıp tokalaşma, sonra tünel */
+    const T=this.tunel;
+    for(const p of this.players){p.walk=true;p.dribble=false;p.celeb=false;p.hold=0;p.pose='stand';
+      if(first){p.tx=T.x+(p.team?0.5:-0.5);p.tz=T.z-4-p.n*0.6;}else{p.tx=(p.team?1:-1)*(1+p.n*0.9);p.tz=MZ-6+(p.n%2)*1.2;}}
     this.on(first?'halftime':'fulltime',{score:this.score.slice(),shots:this.shots.slice(),poss:this.poss.slice()});
   }
   stepBreak(dt){
+    const T=this.tunel;
+    if(this.phase==='fulltime'&&this.phaseT>9&&!this.tuneleGitti){this.tuneleGitti=true;for(const p of this.players){p.tx=T.x+(p.team?0.5:-0.5);p.tz=T.z-4-p.n*0.6;}}
     this.moveAll(dt);this.ballPhys(dt);
-    if(this.phase==='halftime'&&this.phaseT>8){this.half=2;this.dir=[-1,1];this.setupKickoff(1,true);this.on('secondhalf',{});}
+    if(this.phase==='halftime'&&this.phaseT>DEVRE_ARASI){
+      this.half=2;this.dir=[-1,1];
+      for(const p of this.players){p.x=T.x+(p.team?0.6:-0.6);p.z=T.z-1.6-p.n*0.9;p.vx=p.vz=0;}
+      this.setupKickoff(1-(this.ilkSantra||0),false);this.on('secondhalf',{});}
   }
 
   /* ---- hareket ---- */
   refsAI(){
-    const b=this.ball,r=this.refs;
-    if(this.phase==='halftime'||this.phase==='fulltime'){for(const q of r){q.walk=true;q.tz=-2.5;}r[0].tx=2;return;}
+    const b=this.ball,r=this.refs,T=this.tunel;
+    if(this.phase==='giris'||this.phase==='toren')return;
+    if(this.phase==='yazitura'){r[1].tx=0;r[1].tz=PW+1.3;r[2].tx=0;r[2].tz=-1.3;r[1].walk=r[2].walk=true;return;}
+    if(this.phase==='halftime'||(this.phase==='fulltime'&&this.phaseT>9)){r.forEach((q,i)=>{q.walk=true;q.tx=T.x+(i-1)*0.5;q.tz=T.z-3;});return;}
+    if(this.phase==='fulltime'){r.forEach((q,i)=>{q.walk=true;q.tx=(i-1)*1.2;q.tz=MZ-3;});return;}
     for(const q of r)q.walk=false;
     r[0].tx=clamp(b.x-Math.sign(b.x||1)*8,-45,45);r[0].tz=clamp(b.z+(b.z<MZ?11:-11),5,63);
     r[1].tx=clamp(this.offLine(1),0,PL-1);r[1].tz=PW+1.3;
     r[2].tx=clamp(-this.offLine(-1),-(PL-1),0);r[2].tz=-1.3;
   }
   offLine(side){const def=this.dir[0]===-side?0:1;const xs=this.teams[def].map(p=>p.x*side).sort((a,b)=>b-a);return Math.max(xs[1],this.ball.x*side,0);}
-  moveAll(dt){
+  moveAll(dt,carpismaYok){
     const P=this.players;
     for(const p of P)this.moveP(p,dt);
+    if(carpismaYok){for(const r of this.refs)this.moveP(r,dt);return;}
     for(let i=0;i<P.length;i++){const a=P[i];if(a.pose==='dive')continue;
       for(let j=i+1;j<P.length;j++){const c=P[j];const dx=c.x-a.x,dz=c.z-a.z,d2=dx*dx+dz*dz;
         if(d2<0.81&&d2>1e-6){const dd=Math.sqrt(d2),push=(0.9-dd)*0.25,ux=dx/dd,uz=dz/dd;a.x-=ux*push;a.z-=uz*push;c.x+=ux*push;c.z+=uz*push;}}}
@@ -408,7 +473,11 @@ class Match{
     if(p.kickCd>0)p.kickCd-=dt;
     if(p.poseT>0){p.poseT-=dt;if(p.poseT<=0)p.pose='stand';}
     if(p.pose==='dive'){p.z+=p.vz*dt;p.vz*=Math.pow(0.08,dt);p.spd=0;return;}
-    const dx=p.tx-p.x,dz=p.tz-p.z,d=Math.hypot(dx,dz);
+    /* tünelden geçerken önce ağza yürü (tribün duvarının içinden geçmesin) */
+    let tx=p.tx,tz=p.tz;const T=this.tunel,ic=p.z<T.z+0.5;
+    if(ic!==(tz<T.z+0.5)){const ax=T.x+clamp(p.x-T.x,-0.7,0.7);
+      if(ic){tx=ax;tz=Math.abs(p.x-ax)>0.2?p.z:T.z+2;}else if(Math.hypot(p.x-ax,p.z-T.z-1.5)>0.6){tx=ax;tz=T.z+1.5;}else tx=ax;}
+    const dx=tx-p.x,dz=tz-p.z,d=Math.hypot(dx,dz);
     const want=p.maxSpd*(p.walk?0.3:1)*(p.dribble?0.84:1)*(d<4?d/4:1);
     let ax=(d>0.05?dx/d*want:0)-p.vx,az=(d>0.05?dz/d*want:0)-p.vz;
     const al=Math.hypot(ax,az),mx=15*dt;if(al>mx){ax*=mx/al;az*=mx/al;}

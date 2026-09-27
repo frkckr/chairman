@@ -55,9 +55,11 @@ const ADS_CV=(()=>{const cv=mk(1024,16),g=cv.getContext('2d');ADS.forEach((a,i)=
   ctxText(g,a[0],x+((128-textW(a[0],2))>>1),1,'rgb('+a[2]+')',2);g.fillStyle='rgba(0,0,0,0.35)';g.fillRect(x,0,1,16);});return cv;})();
 function board(len,x,z,rot,ofs){const side=LAM({color:0x202226}),t=tx(ADS_CV,'m',[len/64,1]);t.offset.x=ofs||0;const face=BAS({map:t});
   const b=new THREE.Mesh(new THREE.BoxGeometry(len,0.9,0.12),[side,side,side,side,face,side]);b.position.set(x,0.45,z);b.rotation.y=rot;scene.add(b);}
-if(STAT.reklam>=1){board(112,0,-38.2,0);board(76,57.8,0,-Math.PI/2);board(76,-57.8,0,Math.PI/2);board(112,0,38.2,Math.PI);}
+/* ana tribün tarafında orta çizginin iki yanı boş: tünel ağzı ve yedek kulübeleri orada */
+const KULUBE_BOSLUK=16,TUNEL_X=STAT.tunelX||0;
+if(STAT.reklam>=1&&!TUNEL_X){board(56-KULUBE_BOSLUK,-(56+KULUBE_BOSLUK)/2,-38.2,0);board(56-KULUBE_BOSLUK,(56+KULUBE_BOSLUK)/2,-38.2,0,0.5);board(76,57.8,0,-Math.PI/2);board(76,-57.8,0,Math.PI/2);board(112,0,38.2,Math.PI);}
 else{let n=0;for(const [len,cx,cz,rot] of[[112,0,-38.2,0],[76,57.8,0,-Math.PI/2],[76,-57.8,0,Math.PI/2],[112,0,38.2,Math.PI]]){
-  const k=Math.floor(len/8);for(let i=0;i<k;i++){if(h2(i,n*7+3)>STAT.reklam)continue;const u=-len/2+4+i*8,c=Math.cos(rot),s=Math.sin(rot);board(8,cx+u*c,cz-u*s,rot,((i+n*3)%8)/8);}n++;}}
+  const k=Math.floor(len/8);for(let i=0;i<k;i++){const u=-len/2+4+i*8;if((STAT.reklam<1&&h2(i,n*7+3)>STAT.reklam)||(n===0&&(Math.abs(u)<KULUBE_BOSLUK||Math.abs(u-TUNEL_X)<4)))continue;const c=Math.cos(rot),s=Math.sin(rot);board(8,cx+u*c,cz-u*s,rot,((i+n*3)%8)/8);}n++;}}
 
 /* ---- tribünler: tarifteki her tribün. Basamaklar ve koltuklar burada; seyirciler js/seyirci.js'te koltuk yerlerine oturur ---- */
 /* tribün ölçüleri ve kapasite (kişi) */
@@ -169,22 +171,39 @@ const flags=[],MESALE_YERLERI=[];
   for(const [u,f] of[[-0.38,0.3],[-0.3,0.55],[-0.21,0.2],[-0.14,0.45],[-0.06,0.35],[0.01,0.6],[-0.44,0.5]].slice(0,n)){const [x,y,lz]=at(u*L,f);MESALE_YERLERI.push(g.localToWorld(new THREE.Vector3(x,y+1,lz)));}
  }}
 
-/* ---- skor tabelası: büyük statta ampullü, kasabada elle değiştirilen ---- */
+/* ---- skor tabelası: büyük statta ampullü, kasabada elle değiştirilen. TABELA.ciz() maç sırasında yeniden yazar ---- */
+const TABELA={ciz(){}};
 {const T=STAT.tabela,sb=new THREE.Group();sb.position.set(T.konum[0],0,T.konum[1]);sb.rotation.y=Math.atan2(-T.konum[0],-T.konum[1]);scene.add(sb);
  const lm=LAM({color:0x3a3d42});
  if(T.tip==='ampullu'){
-  const cv=mk(96,24),g=cv.getContext('2d');g.fillStyle=STIL.tabela.zemin;g.fillRect(0,0,96,24);g.fillStyle='#24160a';for(let y=0;y<24;y+=2)for(let x=(y>>1)&1;x<96;x+=2)g.fillRect(x,y,1,1);
-  ctxText(g,'DEM 1-1 AKD',(96-textW('DEM 1-1 AKD',2))>>1,0,STIL.tabela.ampul,2);ctxText(g,'DAKİKA 89',(96-textW('DAKİKA 89',1))>>1,16,STIL.tabela.ikincil,1);
+  const cv=mk(96,24),g=cv.getContext('2d'),dk=tx(cv,'n');
+  TABELA.ciz=(ev,dep,skor,alt)=>{g.fillStyle=STIL.tabela.zemin;g.fillRect(0,0,96,24);g.fillStyle='#24160a';for(let y=0;y<24;y+=2)for(let x=(y>>1)&1;x<96;x+=2)g.fillRect(x,y,1,1);
+    const ust=ev+' '+skor[0]+'-'+skor[1]+' '+dep;ctxText(g,ust,(96-textW(ust,2))>>1,0,STIL.tabela.ampul,2);ctxText(g,alt,(96-textW(alt,1))>>1,16,STIL.tabela.ikincil,1);dk.needsUpdate=true;};
   box(0.6,5.6,0.6,lm,-4.5,2.8,0,sb);box(0.6,5.6,0.6,lm,4.5,2.8,0,sb);box(13.4,4.8,1,LAM({color:0x1c1d20}),0,7.6,-0.3,sb);
-  const f=new THREE.Mesh(new THREE.PlaneGeometry(12.6,3.9),BAS({map:tx(cv,'n')}));f.position.set(0,7.6,0.22);sb.add(f);
+  const f=new THREE.Mesh(new THREE.PlaneGeometry(12.6,3.9),BAS({map:dk}));f.position.set(0,7.6,0.22);sb.add(f);
   const s=glow(0xffb530,16,0.28);s.position.set(0,7.6,1.2);sb.add(s);
  }else{
-  const cv=mk(48,16),g=cv.getContext('2d');g.fillStyle=STIL.tabela.elleZemin;g.fillRect(0,0,48,16);g.fillStyle=STIL.tabela.elleYazi;g.fillRect(0,0,48,1);g.fillRect(0,15,48,1);
-  ctxText(g,'DEM',3,1,STIL.tabela.elleYazi,1);ctxText(g,'AKD',45-textW('AKD',1),1,STIL.tabela.elleYazi,1);
-  ctxText(g,'1',5,9,STIL.tabela.elleYazi,1);ctxText(g,'1',39,9,STIL.tabela.elleYazi,1);
+  const cv=mk(48,16),g=cv.getContext('2d'),dk=tx(cv,'n'),Y=STIL.tabela.elleYazi;
+  TABELA.ciz=(ev,dep,skor)=>{g.fillStyle=STIL.tabela.elleZemin;g.fillRect(0,0,48,16);g.fillStyle=Y;g.fillRect(0,0,48,1);g.fillRect(0,15,48,1);
+    ctxText(g,ev,3,1,Y,1);ctxText(g,dep,45-textW(dep,1),1,Y,1);ctxText(g,String(skor[0]),5,9,Y,1);ctxText(g,String(skor[1]),43-textW(String(skor[1]),1),9,Y,1);dk.needsUpdate=true;};
   box(0.25,3.2,0.25,lm,-2.6,1.6,0,sb);box(0.25,3.2,0.25,lm,2.6,1.6,0,sb);
-  const f=new THREE.Mesh(new THREE.PlaneGeometry(6,2),LAM({map:tx(cv,'n')}));f.position.set(0,3.6,0.05);sb.add(f);box(6.2,2.2,0.12,LAM({color:0x2a2c30}),0,3.6,-0.04,sb);
- }}
+  const f=new THREE.Mesh(new THREE.PlaneGeometry(6,2),LAM({map:dk}));f.position.set(0,3.6,0.05);sb.add(f);box(6.2,2.2,0.12,LAM({color:0x2a2c30}),0,3.6,-0.04,sb);
+ }
+ TABELA.ciz('DEM','AKD',[0,0],'MAÇ ÖNCESİ');}
+
+/* ---- tünel ağzı ve yedek kulübeleri (ana tribün önünde, orta çizginin iki yanında) ---- */
+const TUNEL={x:TUNEL_X,z:-(YAN_MESAFE-2.2)},KULUBELER=[]; // tünel ağzı tribün önünde kısa bir körük
+{const K=STIL.kulube,duvar=LAM({color:K.duvar}),cam=LAM({color:K.cam,transparent:true,opacity:0.35,depthWrite:false}),ic=BAS({color:0x050507});
+ const L=YAN_MESAFE-(-TUNEL.z),zc=TUNEL.z-L/2;
+ const tx0=TUNEL.x;for(const sx of[-1,1])box(0.15,2.3,L,duvar,tx0+sx*1.45,1.15,zc);box(3.05,0.12,L,duvar,tx0,2.35,zc);box(2.8,2.2,0.05,ic,tx0,1.1,-YAN_MESAFE+0.1);
+ box(3.2,0.25,0.2,LAM({color:K.serit}),tx0,2.3,TUNEL.z);
+ for(const [takim,cx] of[[0,-11.5],[1,11.5]]){
+   const g=new THREE.Group();g.position.set(cx,0,-39.2);scene.add(g);
+   box(6.5,2.1,0.12,duvar,0,1.05,-0.9,g);for(const sx of[-1,1])box(0.06,1.9,1.8,cam,sx*3.25,0.95,0,g);
+   const cati=box(6.7,0.06,2.1,cam,0,2.12,-0.05,g);cati.rotation.x=0.08;box(6.5,0.12,0.12,duvar,0,2.14,0.95,g);
+   box(6.2,0.45,0.5,LAM({color:K.bank}),0,0.22,-0.55,g);box(6.2,0.08,0.52,LAM({color:takim?STIL.formalar.deplasman.trim:STIL.formalar.ev.shirt}),0,0.49,-0.55,g);
+   const koltuklar=[];for(let i=0;i<6;i++)koltuklar.push({x:cx-2.6+i*1.04,y:0.53,z:-39.2-0.55});
+   KULUBELER.push({takim,x:cx,z:-39.2,koltuklar,alan:{x:cx,z:-36.4}});}}
 
 /* ---- projektör direkleri (küçük statta) ---- */
 if(STAT.projektor.tip==='direk')for(const [x,z] of STAT.projektor.konumlar){

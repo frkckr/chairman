@@ -7,16 +7,17 @@
    cati: tribünün arkadan ne kadarının örtülü olduğu (0 = çatısız, 1 = tamamı).
    taraftar: ev | karisik. bolumler: tribünün bir kısmını başka taraftara ayırır (from/to metre, tribün ortasına göre).
    zemin: 0 (tarla) – 1 (halı gibi). pist: yok | toprak | tartan.
-   projektor.tip: direk = köşelerde direk, cati = çatı kenarında lamba sırası. */
+   projektor.tip: direk = köşelerde direk, cati = çatı kenarında lamba sırası.
+   tunelX: oyuncuların sahaya çıktığı tünelin yeri (ana tribün önünde, orta çizgiden metre; verilmezse 0 = başkanın altı). */
 const STADYUMLAR={
   kasaba:{
     ad:'Demirkapı İlçe Stadı',lig:'3. Lig',
     pist:'toprak',zemin:0.22,cevre:'apartman',
     projektor:{tip:'direk',konumlar:[[-60,-42],[60,-42],[-60,42],[60,42]],yukseklik:22,guc:0.8},
     reklam:0.45,telOrgu:['karsi','kale1','kale2'],
-    tabela:{tip:'elle',konum:[-63,-30]},
+    tabela:{tip:'elle',konum:[-63,-30]},tunelX:-19,
     tribunler:[
-      {yer:'ana',tip:'oturma',uzunluk:46,sira:10,cati:0.5,koltuk:'#b8b2a4',taraftar:'karisik',baskanSira:3},
+      {yer:'ana',tip:'oturma',uzunluk:46,sira:10,cati:0.3,koltuk:'#b8b2a4',taraftar:'karisik',baskanSira:5},
       {yer:'karsi',tip:'ayakta',uzunluk:72,sira:7,taraftar:'ev',mesale:true},
       {yer:'kale1',tip:'set',uzunluk:40,sira:6,taraftar:'karisik',bolumler:[{from:-20,to:20,taraftar:'deplasman'}]},
       {yer:'kale2',tip:'set',uzunluk:36,sira:5,taraftar:'karisik'}

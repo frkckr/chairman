@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — oyuncular: model, pozlar, donmuş an dizilimi, top ============ */
+/* ============ Demirkapı '99 — oyuncular: kutulardan kurulu model ve pozlar. Maçtaki hareketi js/mac-sahnesi.js verir ============ */
 /* ============ oyuncular: kutulardan kurulu az poligonlu modeller, 16 piksellik dokular ============ */
 function dk(hex,f){const n=parseInt(hex.slice(1),16);return 'rgb('+(((n>>16)&255)*f|0)+','+(((n>>8)&255)*f|0)+','+((n&255)*f|0)+')';}
 function numText(g,s,x,y,col,out,sc){if(out)for(const d of[[-1,0],[1,0],[0,-1],[0,1]])ctxText(g,s,x+d[0],y+d[1],out,sc);ctxText(g,s,x,y,col,sc);}
@@ -38,7 +38,7 @@ function player(k){
   if(k.style==='curly'){B(0.28,0.11,0.28,hairM,head,0,0.16,0);B(0.26,0.12,0.06,hairM,head,0,0.04,-0.14);}
   const arm=sx=>{const a=new THREE.Group();a.position.set(sx*0.27,0.6,0);hip.add(a);B(0.12,0.15,0.12,sS,a,0,-0.06,0);B(0.1,0.3,0.1,ls?sS:skin,a,0,-0.15,0);
     const e=new THREE.Group();e.position.y=-0.3;a.add(e);B(0.09,0.27,0.09,ls?sS:skin,e,0,-0.135,0);B(0.09,0.09,0.08,k.glove?c(k.glove):skin,e,0,-0.3,0);return[a,e];};
-  const leg=sx=>{const l=new THREE.Group();l.position.set(sx*0.1,-0.04,0);hip.add(l);B(0.17,0.2,0.18,c(k.shorts),l,0,-0.08,0);B(0.15,0.44,0.16,skin,l,0,-0.22,0);
+  const leg=sx=>{const l=new THREE.Group();l.position.set(sx*0.1,-0.04,0);hip.add(l);B(0.17,0.2,0.18,c(k.shorts),l,0,-0.08,0);B(0.15,0.44,0.16,k.pant?c(k.shorts):skin,l,0,-0.22,0);
     const kn=new THREE.Group();kn.position.y=-0.44;l.add(kn);
     if(k.rolled){B(0.12,0.2,0.13,skin,kn,0,-0.1,0);B(0.14,0.05,0.15,c(k.socks),kn,0,-0.21,0);B(0.12,0.22,0.13,c(k.socks),kn,0,-0.33,0);}
     else B(0.12,0.44,0.13,c(k.socks),kn,0,-0.22,0);
@@ -58,30 +58,17 @@ const POSE={
   runB:{lean:0.2,lL:0.6,kL:1.35,lR:-0.75,kR:0.35,aL:-0.7,aR:0.65,eL:-1.1,eR:-1.1,aLz:-0.1,aRz:0.1},
   slide:{lean:-1.05,dy:-0.5,lR:-1.5,kR:0.05,lL:-0.55,kL:1.5,aL:0.3,aLz:-0.9,aR:0.6,aRz:0.6,eL:-0.2,eR:-0.4,hx:0.5},
   dive:{lL:0.25,kL:0.5,lR:-0.35,kR:0.2,aLz:-2.9,aRz:2.9,eL:-0.1,eR:-0.1},
-  ready:{lean:0.25,dy:-0.08,lL:-0.2,kL:0.45,lR:0.15,kR:0.4,aL:-0.3,aR:-0.3,aLz:-0.35,aRz:0.35,eL:-0.6,eR:-0.6}
+  ready:{lean:0.25,dy:-0.08,lL:-0.2,kL:0.45,lR:0.15,kR:0.4,aL:-0.3,aR:-0.3,aLz:-0.35,aRz:0.35,eL:-0.6,eR:-0.6},
+  otur:{dy:-0.4,lL:-1.45,kL:1.45,lR:-1.45,kR:1.45,aL:-0.35,aR:-0.35,eL:-0.9,eR:-0.9,aLz:-0.05,aRz:0.05},
+  sevinc:{aLz:-2.6,aRz:2.6,eL:-0.2,eR:-0.2,hx:-0.25},
+  kafa:{hx:-0.45,dy:0.25,aLz:-0.5,aRz:0.5,lL:-0.2,kL:0.5},
+  tac:{aL:-2.8,aR:-2.8,eL:-0.5,eR:-0.5,lean:-0.15},
+  tutus:{aL:-1.1,aR:-1.1,eL:-0.8,eR:-0.8},
+  mars:{aR:-0.55,eR:-1.95,aRz:0.3,aL:0.02,aLz:-0.05},
+  isaret:{aR:-2.2,eR:-0.1,aRz:0.4}
 };
-const KIT={home:STIL.formalar.ev,away:STIL.formalar.deplasman,agk:STIL.formalar.deplasmanKaleci,ref:STIL.formalar.hakem};
-const SKIN=STIL.tenler;
-const LIGHTS=STAT.projektor.konumlar,SHADOW=BAS({color:0x000000,transparent:true,opacity:STIL.golge.opaklik,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
-function shadows(x,z,h){for(const L of LIGHTS){const dx=x-L[0],dz=z-L[1],d=Math.hypot(dx,dz),len=1.85*(h||1)*d/(STAT.projektor.yukseklik-2),g=new THREE.Group();g.position.set(x,0.04,z);g.rotation.y=Math.atan2(dx,dz);
-  const p=new THREE.Mesh(new THREE.PlaneGeometry(0.36,len),SHADOW);p.rotation.x=-Math.PI/2;p.position.z=len/2;g.add(p);scene.add(g);}}
-function put(o,x,z,face,P,air){
-  const K={...KIT[o.kit],num:o.num,skin:SKIN[o.si||0],hair:o.hc||'#241a12',mus:o.mus,beard:o.beard,style:o.style||'short',h:o.h||1,w:o.w||1,boots:o.boots,rolled:o.rolled,ls:o.ls};
-  const r=player(K);
-  r.root.position.set(x,air?air.y:0,z);r.root.rotation.set(0,Math.atan2(face[0]-x,face[1]-z),air?air.tilt:0);pose(r,P);scene.add(r.root);
-  shadows(x,z,o.h);
-  return r;
-}
-/* donmuş an: 89. dakika, Kadir uzak köşeye vuruyor, kaleci uçuyor. Her oyuncunun boyu, yapısı ve saçı farklı. */
-put({kit:'home',num:9,si:1,hc:'#241a12',mus:true,h:1.02,w:1.06},38.6,-0.4,[52.5,-3],POSE.shoot);
-put({kit:'home',num:10,si:4,hc:'#dcb660',style:'mullet',h:1.09,w:0.93,boots:'#f2f2f2'},45.2,7.6,[50,2],POSE.runB);
-put({kit:'home',num:7,si:3,hc:'#141212',style:'curly',h:0.9,w:1.08,rolled:true},35.5,-13.5,[45,-8],POSE.runA);
-put({kit:'agk',num:1,si:0,hc:'#141212',style:'bald',h:1.1},51.2,-0.5,[40,-0.5],POSE.dive,{y:0.8,tilt:1.35});
-put({kit:'away',num:4,si:2,hc:'#3c2616',beard:true,w:1.12},41.0,1.8,[38.6,-0.6],POSE.slide);
-put({kit:'away',num:5,si:4,hc:'#5a4028',style:'long',h:1.06},46.8,-7.4,[52,-2],POSE.runA);
-put({kit:'away',num:6,si:1,hc:'#241a12',style:'bald',mus:true,h:0.93,w:1.05},48.6,3.6,[38.6,-0.4],POSE.ready);
-put({kit:'away',num:8,si:0,hc:'#a0522d',rolled:true},34.2,3.2,[38.6,-0.4],POSE.runB);
-put({kit:'ref',num:0,si:1,hc:'#8a8680',style:'bald',mus:true,w:1.06},29.5,-9.6,[40,-6],POSE.runA);
-{const lin=put({kit:'ref',num:0,si:4,hc:'#3c2616'},42,-35.3,[50,-35.3],POSE.runB);box(0.3,0.2,0.02,LAM({color:0xf2c11d}),0,-0.36,0.12,lin.eR);}
-const ballM=new THREE.Mesh(new THREE.IcosahedronGeometry(0.13,0),LAM({color:0xf6f6f2}));ballM.position.set(43.6,1.05,-1.25);scene.add(ballM);
-{const s=new THREE.Mesh(new THREE.CircleGeometry(0.15,8),SHADOW);s.rotation.x=-Math.PI/2;s.position.set(43.6,0.04,-1.25);scene.add(s);}
+/* formalar: kadrodaki forma adı → STIL.formalar */
+const KIT=STIL.formalar;
+const SAC_STILI={kisa:'short',kel:'bald',uzun:'long',mullet:'mullet',kivircik:'curly'};
+/* kadro kaydından (js/kadrolar.js) model tarifi */
+function kitKaydi(forma,k,num){return{...KIT[forma],num,skin:STIL.tenler[k.ten||0],hair:k.sacRenk||'#241a12',mus:k.biyik,beard:k.sakal,style:SAC_STILI[k.sac]||'short',h:k.boy||1,w:k.yapi||1,boots:k.krampon,rolled:k.sirik};}
