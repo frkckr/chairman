@@ -1,6 +1,6 @@
 /* ============ ekran üstü: yalnızca dürbün maskesi ============ */
 let bino=false;
-const KMR=k=>({p:k.konum,t:k.hedef,fov:k.aci}),VIEWS={baskan:KMR(STIL.kameralar.baskan),durbun:KMR(STIL.kameralar.durbun)};
+const KMR=k=>({p:[BASKAN_KOLTUGU.x,BASKAN_KOLTUGU.y+k.goz,BASKAN_KOLTUGU.z],t:k.hedef,fov:k.aci}),VIEWS={baskan:KMR(STIL.kameralar.baskan),durbun:KMR(STIL.kameralar.durbun)};
 const curView=()=>bino?VIEWS.durbun:VIEWS.baskan;
 function drawHUD(){
   hg.clearRect(0,0,RW,RH);
@@ -14,6 +14,13 @@ function drawHUD(){
 function press(b,on){b.setAttribute('aria-pressed',on?'true':'false');}
 const btnBino=$('btnBino');
 btnBino.onclick=()=>{bino=!bino;press(btnBino,bino);};
+/* deneme paneli: stat, doluluk ve zemin adres satırına yazılır, sayfa yeni ayarla yeniden açılır */
+{const ayarla=(k,v)=>{const q=new URLSearchParams(location.search);q.set(k,v);if(k==='stat'){q.delete('doluluk');q.delete('zemin');}location.search=q.toString();};
+ for(const b of $('statSeg').querySelectorAll('button')){press(b,b.dataset.stat===MAC_GUNU.stat);b.onclick=()=>ayarla('stat',b.dataset.stat);}
+ const yuzde=v=>Math.round(v*100)+'%';
+ for(const [id,deger] of[['doluluk',MAC_GUNU.doluluk],['zemin',MAC_GUNU.zemin]]){const el=$(id),out=$(id+'Deger');el.value=Math.round(deger*100);out.textContent=yuzde(deger);
+   el.oninput=()=>{out.textContent=el.value+'%';};el.onchange=()=>ayarla(id,(el.value/100).toFixed(2));}
+ $('statBilgi').textContent=STAT.ad+' · '+STAT.lig+' · kapasite '+STAT_KAPASITE.toLocaleString('tr-TR')+' · bu akşam '+SEYIRCI_SAYISI.toLocaleString('tr-TR')+' seyirci';}
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let last=0,time=0,swapT=0,crowdF=0;
 function frame(now){

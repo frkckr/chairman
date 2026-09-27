@@ -36,8 +36,8 @@ const GLOWT=(()=>{const cv=mk(32,32),g=cv.getContext('2d'),gr=g.createRadialGrad
 function glow(color,size,op){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOWT,color,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));s.scale.set(size,size,1);return s;}
 
 /* ---- ışık ve gökyüzü ---- */
-{const I=STIL.isik;scene.add(new THREE.AmbientLight(I.ortam.renk,I.ortam.guc));
- const k1=new THREE.DirectionalLight(I.ana.renk,I.ana.guc);k1.position.set(...I.ana.konum);scene.add(k1);
+{const I=STIL.isik,G=STAT.projektor.guc;scene.add(new THREE.AmbientLight(I.ortam.renk,I.ortam.guc*(0.6+0.4*G)));
+ const k1=new THREE.DirectionalLight(I.ana.renk,I.ana.guc*G);k1.position.set(...I.ana.konum);scene.add(k1);
  const k2=new THREE.DirectionalLight(I.dolgu.renk,I.dolgu.guc);k2.position.set(...I.dolgu.konum);scene.add(k2);}
 {const g=new THREE.SphereGeometry(700,16,10),p=g.attributes.position,col=[];
  for(let i=0;i<p.count;i++){const t=clamp(p.getY(i)/700*2.4,0,1);const U=STIL.gokyuzu.ufuk,Q=STIL.gokyuzu.tepe;col.push(U[0]*(1-t)+Q[0]*t,U[1]*(1-t)+Q[1]*t,U[2]*(1-t)+Q[2]*t);}

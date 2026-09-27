@@ -42,7 +42,13 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 - Gece maçında her projektör için bir soluk, uzun gölge (90'ların dörtlü gölgesi).
 - Gündüz maçı için tek ve kısa gölge (henüz yapılmadı).
 
-## 7. Tribün ve atmosfer
+## 7. Stat
+- Her stat bir tariftir (`js/stadyum-tarifleri.js`): tribünler, çatı, pist, tel örgü, projektörler, skor tabelası, çevre.
+- Küçük stat dökük görünür: toprak pist, direkli zayıf projektörler, seyrek reklam panosu, elle değiştirilen skor tabelası, arkada ışıkları yanan apartmanlar.
+- Zemin kalitesi (0–1) düştükçe çim sararır, kale ağızlarında ve sahada kel ve çamurlu alanlar çoğalır, çizgiler solar, biçme deseni silikleşir. Çok iyi zeminde çapraz biçme deseni görünür.
+- Malzeme renkleri (beton, çatı, toprak pist, çamur) `STIL.stadyum` içindedir.
+
+## 7b. Tribün ve atmosfer
 - Seyirci dokusu 128×64 piksel, kişi başı 4×8 piksel, iki kareyle sallanır (0,3 sn).
 - Paletler: ev sahibi, karışık, deplasman.
 - Meşale: parlak çekirdek, kırmızı hale ve yükselen duman. Tel örgü, pankart, ampullü skor tabelası, projektör parıltısı.

@@ -38,6 +38,13 @@ button{font:inherit;font-size:12.5px;color:var(--text);background:#23211e;border
 button:hover{border-color:#5a5446}
 button[aria-pressed="true"]{color:#1a1203;background:var(--amber);border-color:#b9791a}
 button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.deneme{border:1px dashed var(--line);border-radius:6px;padding:12px 14px;display:grid;gap:10px}
+.deneme h2{margin:0;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.deneme .satir{display:flex;flex-wrap:wrap;gap:12px 26px;align-items:flex-end}
+.deneme label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.deneme input[type=range]{width:180px;accent-color:var(--amber)}
+.deneme output{color:var(--text);font-variant-numeric:tabular-nums}
+.deneme .bilgi{color:var(--muted);font-size:12px}
 .rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 26px;border-top:1px solid var(--line);padding-top:16px}
 .rules h2{margin:0 0 4px;font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.03em;color:var(--amber)}
 .rules p{margin:0;color:#cfc6b4;font-size:13px;max-width:60ch}
@@ -70,6 +77,22 @@ html,body{margin:0}
     </div>
   </div>
 
+  <section class="deneme" aria-label="Deneme ayarları">
+    <h2>Deneme ayarları · geçici, ileride oyun ekonomisi belirleyecek</h2>
+    <div class="satir">
+      <div class="grp"><span class="lbl">Stat</span>
+        <div class="seg" id="statSeg">
+          <button type="button" data-stat="kasaba" aria-pressed="false">3. Lig kasaba</button>
+          <button type="button" data-stat="sehir" aria-pressed="false">1. Lig şehir</button>
+          <button type="button" data-stat="arena" aria-pressed="false">Avrupa arenası</button>
+        </div>
+      </div>
+      <label>Doluluk <output id="dolulukDeger"></output><input type="range" id="doluluk" min="0" max="100" step="5"></label>
+      <label>Zemin kalitesi <output id="zeminDeger"></output><input type="range" id="zemin" min="0" max="100" step="5"></label>
+    </div>
+    <p class="bilgi" id="statBilgi"></p>
+  </section>
+
   <section class="rules">
     <div><h2>Ekran</h2><p>4:3 ekran ve 400×300 iç çözünürlük. Görüntü büyütülürken pikseller yumuşatılmıyor; 1999 oyunlarındaki gibi keskin ve pikselli.</p></div>
     <div><h2>Renk</h2><p>Dönemin 15 bitlik rengi ve düzenli renk titremesi. Gece projektör ışığında sıcak sarı ile lacivert.</p></div>
@@ -91,6 +114,7 @@ html,body{margin:0}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/ortak.js"></script>
 <script src="js/stil-99.js"></script>
+<script src="js/stadyum-tarifleri.js"></script>
 <script src="js/goruntu.js"></script>
 <script src="js/stadyum.js"></script>
 <script src="js/oyuncular.js"></script>

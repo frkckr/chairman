@@ -62,8 +62,8 @@ const POSE={
 };
 const KIT={home:STIL.formalar.ev,away:STIL.formalar.deplasman,agk:STIL.formalar.deplasmanKaleci,ref:STIL.formalar.hakem};
 const SKIN=STIL.tenler;
-const LIGHTS=STIL.golge.projektorler,SHADOW=BAS({color:0x000000,transparent:true,opacity:STIL.golge.opaklik,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
-function shadows(x,z,h){for(const L of LIGHTS){const dx=x-L[0],dz=z-L[1],d=Math.hypot(dx,dz),len=1.85*(h||1)*d/(STIL.golge.projektorYuksekligi-2),g=new THREE.Group();g.position.set(x,0.04,z);g.rotation.y=Math.atan2(dx,dz);
+const LIGHTS=STAT.projektor.konumlar,SHADOW=BAS({color:0x000000,transparent:true,opacity:STIL.golge.opaklik,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+function shadows(x,z,h){for(const L of LIGHTS){const dx=x-L[0],dz=z-L[1],d=Math.hypot(dx,dz),len=1.85*(h||1)*d/(STAT.projektor.yukseklik-2),g=new THREE.Group();g.position.set(x,0.04,z);g.rotation.y=Math.atan2(dx,dz);
   const p=new THREE.Mesh(new THREE.PlaneGeometry(0.36,len),SHADOW);p.rotation.x=-Math.PI/2;p.position.z=len/2;g.add(p);scene.add(g);}}
 function put(o,x,z,face,P,air){
   const K={...KIT[o.kit],num:o.num,skin:SKIN[o.si||0],hair:o.hc||'#241a12',mus:o.mus,beard:o.beard,style:o.style||'short',h:o.h||1,w:o.w||1,boots:o.boots,rolled:o.rolled,ls:o.ls};

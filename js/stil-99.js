@@ -37,16 +37,24 @@ const STIL={
   },
   tenler:['#e2b48c','#cf9a70','#b07650','#8a5a3c','#ecc49e'],
 
-  /* Gece maçında her projektör için bir soluk gölge (90'ların dörtlü gölgesi) */
-  golge:{opaklik:0.16,projektorler:[[-72,-58],[72,-58],[-72,58],[72,58]],projektorYuksekligi:40},
+  /* Gece maçında her projektör için bir soluk gölge (90'ların dörtlü gölgesi). Projektörlerin yeri stadyum tarifindedir. */
+  golge:{opaklik:0.16},
 
-  tabela:{zemin:'#140c04',ampul:'#ffb530',ikincil:'#ffd98a'},
+  /* Stat yapı malzemeleri (tribün betonu, çatı, direk, toprak pist, set, kötü zemin renkleri, kasaba apartmanları) */
+  stadyum:{
+    beton:0x6d6e72,betonKoyu:0x4d4e53,yanDuvar:0x5a5b60,basamak:0x66665f,set:0x4c5a2c,cati:0x8c9096,catiKenar:0x3c3f44,direk:0x4a4d52,disZemin:0x232428,
+    toprakPist:'#6e4a33',pistsizKenar:'#2a6526',kuruCim:'#8f8a44',camur:'78,56,34',
+    apartman:['#3a3530','#463d34','#34363a','#3e362c'],pencere:'#ffd98a'
+  },
+
+  tabela:{zemin:'#140c04',ampul:'#ffb530',ikincil:'#ffd98a',elleZemin:'#1d2a22',elleYazi:'#f0ece0'},
   pankart:{zemin:'#efe9dc',yazi:'#c8281e'},
 
-  /* Kameralar: konum [x,y,z], hedef [x,y,z], aci = dikey görüş açısı (derece).
+  /* Kameralar: hedef [x,y,z], aci = dikey görüş açısı (derece).
      Maç başkanın gözünden izlenir: ana tribünün ortasında, açık tribündeki başkan koltuğu. Dürbün isteğe bağlı. */
   kameralar:{
-    baskan:{konum:[0,6.3,-49.5],hedef:[34,-1.5,-6],aci:40},
-    durbun:{konum:[0,6.3,-49.5],hedef:[43,1.1,-1],aci:9}
+    /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre) */
+    baskan:{goz:1.15,hedef:[34,-1.5,-6],aci:40},
+    durbun:{goz:1.15,hedef:[43,1.1,-1],aci:9}
   }
 };

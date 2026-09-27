@@ -1,14 +1,30 @@
-/* ============ Demirkapı '99 — stadyum: saha, reklam panoları, tribünler, tel örgü, pankart, bayraklar, skor tabelası, kaleler ============ */
-/* ---- saha ---- */
-function pitchCv(){
-  const S=STIL.saha.pikselMetre,W=132*S,H=92*S,cv=mk(W,H),g=cv.getContext('2d'),X=x=>(x+66)*S,Z=z=>(z+46)*S;
-  g.fillStyle=STIL.saha.pist;g.fillRect(0,0,W,H);
-  g.fillStyle=STIL.saha.pistCizgi;for(let k=0;k<5;k++){const d=41.2+k*1.22;g.fillRect(0,Z(-d),W,1);g.fillRect(0,Z(d),W,1);g.fillRect(X(-d-20.5),0,1,H);g.fillRect(X(d+20.5),0,1,H);}
-  g.fillStyle=STIL.saha.cimKoyu;g.fillRect(X(-60.5),Z(-40.5),121*S,81*S);
-  {const SW=STIL.saha.seritGenisligi;g.fillStyle=STIL.saha.cimAcik;for(let x0=-52.5-2*SW;x0<60.5;x0+=2*SW){const p=Math.max(-60.5,x0),q=Math.min(60.5,x0+SW);if(q>p)g.fillRect(X(p),Z(-40.5),(q-p)*S,81*S);}}
-  const wear=(cx,cz,r,a)=>{const gr=g.createRadialGradient(X(cx),Z(cz),0,X(cx),Z(cz),r*S);gr.addColorStop(0,'rgba('+STIL.saha.asinma+','+a+')');gr.addColorStop(1,'rgba('+STIL.saha.asinma+',0)');g.fillStyle=gr;g.fillRect(X(cx)-r*S,Z(cz)-r*S,2*r*S,2*r*S);};
-  wear(48.5,0,6,0.6);wear(-48.5,0,6,0.6);wear(0,0,5,0.35);wear(41.5,0,3,0.35);
-  g.strokeStyle=STIL.saha.cizgi;g.fillStyle=STIL.saha.cizgi;g.lineWidth=2;
+/* ============ Demirkapı '99 — stadyum: seçili tarifi (STAT, js/stadyum-tarifleri.js) okuyup statı kurar ============
+   saha ve zemin kalitesi, reklam panoları, tribünler, tel örgü, pankart, bayraklar, skor tabelası, projektörler, çevre, kaleler */
+const SK=STIL.stadyum;
+const PISTLI=STAT.pist!=='yok';
+const YAN_MESAFE={tartan:44,toprak:42,yok:40}[STAT.pist],KALE_MESAFE={tartan:64,toprak:61,yok:59}[STAT.pist];
+const SIRA={oturma:{derinlik:0.8,egim:0.5,kisi:0.5},ayakta:{derinlik:0.55,egim:0.28,kisi:0.45},set:{derinlik:1,egim:0.4,kisi:0.6}};
+
+/* ---- saha: zemin kalitesi düştükçe çim sararır, kel ve çamurlu alanlar çoğalır, çizgiler solar ---- */
+const RGB=h=>{const n=parseInt(h.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255];},mixRGB=(a,b,t)=>'rgb('+a.map((v,i)=>Math.round(v*(1-t)+b[i]*t)).join(',')+')';
+function pitchCv(q){
+  const S=STIL.saha.pikselMetre,W=132*S,H=92*S,cv=mk(W,H),g=cv.getContext('2d'),X=x=>(x+66)*S,Z=z=>(z+46)*S,kuru=(1-q)*0.4;
+  if(STAT.pist==='tartan'){
+    g.fillStyle=STIL.saha.pist;g.fillRect(0,0,W,H);
+    g.fillStyle=STIL.saha.pistCizgi;for(let k=0;k<5;k++){const d=41.2+k*1.22;g.fillRect(0,Z(-d),W,1);g.fillRect(0,Z(d),W,1);g.fillRect(X(-d-20.5),0,1,H);g.fillRect(X(d+20.5),0,1,H);}
+  }else if(STAT.pist==='toprak'){
+    g.fillStyle=SK.toprakPist;g.fillRect(0,0,W,H);
+    for(let i=0;i<5000;i++){g.fillStyle=h2(i,7)>0.5?'rgba(0,0,0,0.12)':'rgba(255,230,200,0.08)';g.fillRect(h2(i,1)*W|0,h2(i,2)*H|0,2,2);}
+  }else{g.fillStyle=SK.pistsizKenar;g.fillRect(0,0,W,H);}
+  const koyu=mixRGB(RGB(STIL.saha.cimKoyu),RGB(SK.kuruCim),kuru),acik=mixRGB(RGB(STIL.saha.cimAcik),RGB(SK.kuruCim),kuru);
+  g.fillStyle=koyu;g.fillRect(X(-60.5),Z(-40.5),121*S,81*S);
+  {const SW=STIL.saha.seritGenisligi;g.fillStyle=acik;g.globalAlpha=0.2+0.8*q;
+   for(let x0=-52.5-2*SW;x0<60.5;x0+=2*SW){const p=Math.max(-60.5,x0),r=Math.min(60.5,x0+SW);if(r>p)g.fillRect(X(p),Z(-40.5),(r-p)*S,81*S);}
+   if(q>0.85){g.globalAlpha=0.08;for(let z0=-40.5;z0<40.5;z0+=2*SW)g.fillRect(X(-60.5),Z(z0),121*S,SW*S);}
+   g.globalAlpha=1;}
+  /* düzensiz renk lekeleri: kötü sahada çim yamalı görünür */
+  for(let i=0;i<Math.round(60*(1-q));i++){const x=-55+h2(i,41)*110,z=-37+h2(i,43)*74,r=2+h2(i,47)*5;g.fillStyle='rgba(120,110,50,'+(0.12+0.18*(1-q)).toFixed(2)+')';g.beginPath();g.ellipse(X(x),Z(z),r*S,r*0.7*S,h2(i,5)*3,0,6.3);g.fill();}
+  g.strokeStyle=STIL.saha.cizgi;g.fillStyle=STIL.saha.cizgi;g.lineWidth=2;g.globalAlpha=0.45+0.55*q;
   const arc=(cx,cz,r,a0,a1)=>{g.beginPath();g.arc(X(cx),Z(cz),r*S,a0,a1);g.stroke();};
   g.strokeRect(X(-52.5),Z(-34),105*S,68*S);g.beginPath();g.moveTo(X(0),Z(-34));g.lineTo(X(0),Z(34));g.stroke();
   arc(0,0,9.15,0,Math.PI*2);g.fillRect(X(0)-2,Z(0)-2,4,4);
@@ -19,25 +35,37 @@ function pitchCv(){
     g.fillRect(X(sd*41.5)-2,Z(0)-2,4,4);
     for(const t of[-1,1]){const a0=sd>0?(t>0?Math.PI:Math.PI/2):(t>0?1.5*Math.PI:0);arc(sd*52.5,t*34,1,a0,a0+Math.PI/2);}
   }
+  g.globalAlpha=1;
+  /* aşınma: kale ağızları ve orta saha her sahada, kötü sahada kel ve çamurlu alanlar da (çizgilerin üstünü örter) */
+  const wear=(cx,cz,r,a,col)=>{const gr=g.createRadialGradient(X(cx),Z(cz),0,X(cx),Z(cz),r*S);gr.addColorStop(0,'rgba('+col+','+a.toFixed(2)+')');gr.addColorStop(0.6,'rgba('+col+','+(a*0.6).toFixed(2)+')');gr.addColorStop(1,'rgba('+col+',0)');g.fillStyle=gr;g.fillRect(X(cx)-r*S,Z(cz)-r*S,2*r*S,2*r*S);};
+  const u=1-q;
+  wear(48.5,0,5+4*u,0.3+0.6*u,STIL.saha.asinma);wear(-48.5,0,5+4*u,0.3+0.6*u,STIL.saha.asinma);wear(0,0,4+4*u,0.15+0.55*u,STIL.saha.asinma);
+  wear(41.5,0,2.5+2*u,0.2+0.4*u,STIL.saha.asinma);wear(-41.5,0,2.5+2*u,0.2+0.4*u,STIL.saha.asinma);
+  if(u>0.35){wear(50.5,0,2.5*u+1,0.7*u,SK.camur);wear(-50.5,0,2.5*u+1,0.7*u,SK.camur);}
+  for(let i=0;i<Math.round(Math.pow(u,1.5)*34);i++){
+    const x=-50+h2(i,11)*100,z=-32+h2(i,13)*64,mud=h2(i,17)<0.3;
+    wear(x,z,1.2+h2(i,19)*3.5,(0.35+0.4*h2(i,23))*u,mud?SK.camur:STIL.saha.asinma);}
   return cv;
 }
-{const gr=new THREE.Mesh(new THREE.PlaneGeometry(132,92,24,16),LAM({map:tx(pitchCv(),'l')}));gr.rotation.x=-Math.PI/2;scene.add(gr);
- const out=new THREE.Mesh(new THREE.PlaneGeometry(600,600),new THREE.MeshLambertMaterial({color:0x36373b}));out.rotation.x=-Math.PI/2;out.position.y=-3;scene.add(out);}
+{const gr=new THREE.Mesh(new THREE.PlaneGeometry(132,92,24,16),LAM({map:tx(pitchCv(STAT.zemin),'l')}));gr.rotation.x=-Math.PI/2;scene.add(gr);
+ const out=new THREE.Mesh(new THREE.PlaneGeometry(700,700),new THREE.MeshLambertMaterial({color:SK.disZemin}));out.rotation.x=-Math.PI/2;out.position.y=-0.3;scene.add(out);}
 
-/* ---- reklam panoları (piksel yazı) ---- */
+/* ---- reklam panoları (piksel yazı); küçük statta panolar seyrek ---- */
 const ADS_CV=(()=>{const cv=mk(1024,16),g=cv.getContext('2d');ADS.forEach((a,i)=>{const x=i*128;g.fillStyle='rgb('+a[1]+')';g.fillRect(x,0,128,16);
   ctxText(g,a[0],x+((128-textW(a[0],2))>>1),1,'rgb('+a[2]+')',2);g.fillStyle='rgba(0,0,0,0.35)';g.fillRect(x,0,1,16);});return cv;})();
-function board(len,x,z,rot){const side=LAM({color:0x202226}),face=BAS({map:tx(ADS_CV,'m',[len/64,1])});
+function board(len,x,z,rot,ofs){const side=LAM({color:0x202226}),t=tx(ADS_CV,'m',[len/64,1]);t.offset.x=ofs||0;const face=BAS({map:t});
   const b=new THREE.Mesh(new THREE.BoxGeometry(len,0.9,0.12),[side,side,side,side,face,side]);b.position.set(x,0.45,z);b.rotation.y=rot;scene.add(b);}
-board(112,0,-38.2,0);board(76,57.8,0,-Math.PI/2);board(76,-57.8,0,Math.PI/2);board(112,0,38.2,Math.PI);
+if(STAT.reklam>=1){board(112,0,-38.2,0);board(76,57.8,0,-Math.PI/2);board(76,-57.8,0,Math.PI/2);board(112,0,38.2,Math.PI);}
+else{let n=0;for(const [len,cx,cz,rot] of[[112,0,-38.2,0],[76,57.8,0,-Math.PI/2],[76,-57.8,0,Math.PI/2],[112,0,38.2,Math.PI]]){
+  const k=Math.floor(len/8);for(let i=0;i<k;i++){if(h2(i,n*7+3)>STAT.reklam)continue;const u=-len/2+4+i*8,c=Math.cos(rot),s=Math.sin(rot);board(8,cx+u*c,cz-u*s,rot,((i+n*3)%8)/8);}n++;}}
 
-/* ---- tribünler: düz dokulu seyirci, iki kareyle sallanıyor ---- */
-const PAL_HOME=STIL.seyirci.ev,PAL_MIX=STIL.seyirci.karisik,PAL_AWAY=STIL.seyirci.deplasman;
-function crowdCv(pal,seed,frame){
+/* ---- tribünler: tarifteki her tribün; seyirci düz dokuyla çiziliyor, doluluk kadar kişi var ---- */
+const PAL={ev:STIL.seyirci.ev,karisik:STIL.seyirci.karisik,deplasman:STIL.seyirci.deplasman};
+function crowdCv(pal,seed,frame,fill){
   const cv=mk(128,64),g=cv.getContext('2d');g.fillStyle='#26262b';g.fillRect(0,0,128,64);
   for(let r=0;r<8;r++){g.fillStyle='#4e4e55';g.fillRect(0,r*8+6,128,2);
     for(let c=0;c<32;c++){
-      if(h2(c+seed,r+seed*3)>0.94)continue;
+      if(h2(c+seed,r+seed*3)>fill)continue;
       const up=frame&&h2(c+seed,r+77)>0.45?1:0,x=c*4,y=r*8-up,sh=pal[Math.floor(h2(c*3+seed,r*5)*pal.length)];
       g.fillStyle=sh;g.fillRect(x,y+3,3,4);
       g.fillStyle=h2(c,r*3+seed)<0.22?'#8a5a3c':'#d6a27a';g.fillRect(x+(r&1),y+1,2,2);
@@ -47,56 +75,115 @@ function crowdCv(pal,seed,frame){
   return cv;
 }
 const crowdMats=[];
-function crowdMat(pal,seed,len,sl){const rep=[len/16,sl/7.2],t0=tx(crowdCv(pal,seed,0),'m',rep),t1=tx(crowdCv(pal,seed,1),'m',rep),m=LAM({map:t0});crowdMats.push({m,t0,t1,ph:rnd()});return m;}
-const lamps=[];
-function stand(o){
-  const g=new THREE.Group(),D=o.d,sl=Math.hypot(o.y1-o.y0,D),ang=Math.atan2(o.y1-o.y0,D);
-  for(const s of o.sec){
-    const L=s.to-s.from,m=s.pal?crowdMat(s.pal,s.seed,L,sl):LAM({color:0x5c5d62});
-    const pl=new THREE.Mesh(new THREE.PlaneGeometry(L,sl,Math.max(2,Math.round(L/8)),4),m);
-    pl.rotation.x=-(Math.PI/2-ang);pl.position.set((s.from+s.to)/2,(o.y0+o.y1)/2,-D/2);g.add(pl);
-  }
-  box(o.len,o.y0,0.4,LAM({color:0x6d6e72}),0,o.y0/2,0.2,g);
-  box(o.len,o.y1+1,0.6,LAM({color:0x4d4e53}),0,(o.y1+1)/2,-D-0.3,g);
-  for(const sx of[-1,1]){const w=box(0.5,o.y1+1,D,LAM({color:0x5a5b60}),sx*(o.len/2+0.25),(o.y1+1)/2,-D/2,g);w.scale.y=1;}
-  if(o.roof){const R=o.roof;box(o.len+4,0.6,R.f-R.b,LAM({color:0x8c9096}),0,R.y,(R.f+R.b)/2,g);
-    box(o.len+4,1,0.8,LAM({color:0x3c3f44}),0,R.y-0.7,R.f,g);
-    for(let x=-o.len/2;x<=o.len/2+0.1;x+=o.len/6)box(0.5,R.y,0.5,LAM({color:0x4a4d52}),x,R.y/2,R.b+0.5,g);
-    for(let x=-o.len/2+4;x<=o.len/2-3.9;x+=8){box(2,0.5,0.4,BAS({color:0xfff4d8}),x,R.y-1.3,R.f+0.3,g);
-      const s=glow(0xffe9c0,7,0.55);s.position.set(x,R.y-1.3,R.f+1.2);g.add(s);lamps.push(s);}}
-  g.position.set(o.pos[0],0,o.pos[1]);g.rotation.y=o.rot;scene.add(g);return g;
-}
-stand({len:124,d:22,y0:1.2,y1:17,pos:[0,-44],rot:0,roof:{y:21,f:-10,b:-24},
-  sec:[{from:-62,to:-4,pal:PAL_MIX,seed:11},{from:-4,to:4},{from:4,to:34,pal:PAL_MIX,seed:13},{from:34,to:38},{from:38,to:62,pal:PAL_AWAY,seed:23}]}); // -4..4: başkan koltuğu (geçici boşluk)
-const endR=stand({len:80,d:20,y0:1.2,y1:15,pos:[64,0],rot:-Math.PI/2,roof:{y:19,f:-9,b:-22},sec:[{from:-40,to:40,pal:PAL_HOME,seed:37}]});
-stand({len:80,d:20,y0:1.2,y1:15,pos:[-64,0],rot:Math.PI/2,roof:{y:19,f:-9,b:-22},sec:[{from:-40,to:40,pal:PAL_MIX,seed:53}]});
-stand({len:124,d:12,y0:1.2,y1:8.5,pos:[0,44],rot:Math.PI,sec:[{from:-62,to:62,pal:PAL_MIX,seed:71}]});
+function crowdMat(pal,seed,len,rows,fill){const rep=[len/16,rows/8],t0=tx(crowdCv(pal,seed,0,fill),'m',rep),t1=tx(crowdCv(pal,seed,1,fill),'m',rep),m=LAM({map:t0});crowdMats.push({m,t0,t1});return m;}
 
-/* ---- tel örgü, pankart, bayraklar ---- */
+/* tribün ölçüleri ve kapasite (kişi) */
+function tribunOlcu(t){
+  const S=SIRA[t.tip],eg=t.egim||S.egim,y0=t.tip==='set'?0.2:PISTLI?1.2:1.0;
+  return{S,dp:S.derinlik,eg,y0,D:t.sira*S.derinlik,y1:y0+t.sira*eg,kap:Math.floor(t.uzunluk/S.kisi)*t.sira};
+}
+const STAT_KAPASITE=STAT.tribunler.reduce((s,t)=>s+tribunOlcu(t).kap,0);
+const SEYIRCI_SAYISI=Math.round(STAT_KAPASITE*MAC_GUNU.doluluk);
+function tribunYeri(yer){return{ana:{pos:[0,-YAN_MESAFE],rot:0},karsi:{pos:[0,YAN_MESAFE],rot:Math.PI},kale1:{pos:[-KALE_MESAFE,0],rot:Math.PI/2},kale2:{pos:[KALE_MESAFE,0],rot:-Math.PI/2}}[yer];}
+/* bölümlerin doluluğu: ev taraftarı önce dolar, deplasman bölümü deplasman oranı kadar */
+function bolumDoluluk(taraftar,t,kap){
+  const d=MAC_GUNU.doluluk;
+  if(taraftar==='deplasman')return clamp(SEYIRCI_SAYISI*MAC_GUNU.deplasman/Math.max(1,kap),0,1);
+  if(taraftar==='ev')return clamp(d*1.35+0.03,0,1);
+  return clamp(d*(t.yer==='ana'?1.1:t.yer==='karsi'?1:0.8),0,1);
+}
+const lamps=[],TRIBUNLER={};
+let BASKAN_KOLTUGU=null;
+function stand(t){
+  const O=tribunOlcu(t),{D,y0,y1}=O,L=t.uzunluk,Y=tribunYeri(t.yer),g=new THREE.Group(),sl=Math.hypot(y1-y0,D),ang=Math.atan2(y1-y0,D);
+  const zeminRenk=t.tip==='set'?SK.set:t.tip==='ayakta'?SK.basamak:0x5c5d62;
+  /* bölümler: tribün boyunca parçalara ayır; başkan bölümü (ana tribün ortası) şimdilik boş */
+  const cuts=[{from:-L/2,to:L/2,taraftar:t.taraftar},...(t.bolumler||[])];
+  if(t.baskanSira!=null)cuts.push({from:-3,to:3,taraftar:'baskan'});
+  const edges=[...new Set(cuts.flatMap(c=>[c.from,c.to]))].filter(v=>v>=-L/2&&v<=L/2).sort((a,b)=>a-b);
+  edges.forEach((a,i)=>{const b=edges[i+1];if(b==null||b-a<0.01)return;const mid=(a+b)/2;let tr=t.taraftar;for(const c of cuts)if(mid>c.from&&mid<c.to)tr=c.taraftar;
+    const kap=Math.floor((b-a)/O.S.kisi)*t.sira,pal=PAL[tr],fill=pal?bolumDoluluk(tr,t,kap):0;
+    const m=pal&&fill>0?crowdMat(pal,Math.round(mid*7+t.sira*13)&255,b-a,t.sira,fill):LAM({color:zeminRenk});
+    const pl=new THREE.Mesh(new THREE.PlaneGeometry(b-a,sl,Math.max(2,Math.round((b-a)/8)),4),m);
+    pl.rotation.x=-(Math.PI/2-ang);pl.position.set(mid,(y0+y1)/2,-D/2);g.add(pl);});
+  if(t.tip!=='set'){
+    box(L,y0,0.4,LAM({color:SK.beton}),0,y0/2,0.2,g);
+    box(L,y1+1,0.6,LAM({color:SK.betonKoyu}),0,(y1+1)/2,-D-0.3,g);
+    for(const sx of[-1,1])box(0.5,y1+1,D,LAM({color:SK.yanDuvar}),sx*(L/2+0.25),(y1+1)/2,-D/2,g);
+  }
+  if(t.tip==='ayakta')for(let r=3;r<t.sira;r+=3)box(L-1,0.06,0.06,LAM({color:SK.direk}),0,y0+r*O.eg+1.0,-r*O.dp,g); // korkuluklar
+  if(t.cati){const f=-D*(1-t.cati),b=-D-1,ry=y1+4;
+    box(L+4,0.6,f-b,LAM({color:SK.cati}),0,ry,(f+b)/2,g);box(L+4,1,0.8,LAM({color:SK.catiKenar}),0,ry-0.7,f,g);
+    for(let x=-L/2;x<=L/2+0.1;x+=L/Math.max(2,Math.round(L/20)))box(0.5,ry,0.5,LAM({color:SK.direk}),x,ry/2,b+0.5,g);
+    if(STAT.projektor.tip==='cati')for(let x=-L/2+4;x<=L/2-3.9;x+=8){box(2,0.5,0.4,BAS({color:0xfff4d8}),x,ry-1.3,f+0.3,g);
+      const s=glow(0xffe9c0,7,0.55*STAT.projektor.guc);s.position.set(x,ry-1.3,f+1.2);g.add(s);lamps.push(s);}}
+  g.position.set(Y.pos[0],0,Y.pos[1]);g.rotation.y=Y.rot;scene.add(g);g.updateMatrixWorld(true);
+  if(t.baskanSira!=null){const r=t.baskanSira+0.5;BASKAN_KOLTUGU=g.localToWorld(new THREE.Vector3(0,y0+r*O.eg,-r*O.dp));}
+  TRIBUNLER[t.yer]={t,g,O};
+  return g;
+}
+for(const t of STAT.tribunler)stand(t);
+if(!BASKAN_KOLTUGU)BASKAN_KOLTUGU=new THREE.Vector3(0,6,-YAN_MESAFE-6);
+
+/* ---- tel örgü ---- */
 const FENCE_CV=(()=>{const cv=mk(8,8),g=cv.getContext('2d');g.fillStyle='rgba(176,182,190,0.95)';for(let i=0;i<8;i++){g.fillRect(i,i,1,1);g.fillRect(7-i,i,1,1);}return cv;})();
 function fence(len,x,z,rot){const gr=new THREE.Group();gr.position.set(x,0,z);gr.rotation.y=rot;scene.add(gr);
   const f=new THREE.Mesh(new THREE.PlaneGeometry(len,3,8,1),LAM({map:tx(FENCE_CV,'m',[len/0.4,3/0.4]),transparent:true,depthWrite:false,side:THREE.DoubleSide}));f.position.y=1.5;gr.add(f);
   const pm=LAM({color:0x7a7f86});box(len,0.08,0.08,pm,0,3,0,gr);for(let u=-len/2;u<=len/2+0.1;u+=4)box(0.08,3,0.08,pm,u,1.5,0,gr);}
-fence(80,62.6,0,-Math.PI/2);
-{const s='DEMİRKAPI SENİ SEVİYORUZ',cv=mk(textW(s,1)+6,11),g=cv.getContext('2d');g.fillStyle=STIL.pankart.zemin;g.fillRect(0,0,cv.width,11);g.fillStyle=STIL.pankart.yazi;g.fillRect(0,0,cv.width,1);g.fillRect(0,10,cv.width,1);
- ctxText(g,s,3,2,STIL.pankart.yazi,1);const b=new THREE.Mesh(new THREE.PlaneGeometry(34,3.2),LAM({map:tx(cv,'m')}));b.position.set(-13,2.8,-1.2);b.rotation.x=-0.25;endR.add(b);}
-const FLAG_CV=[(()=>{const cv=mk(24,16),g=cv.getContext('2d');g.fillStyle='#d61e24';g.fillRect(0,0,24,16);g.fillStyle='#fff';
-   g.beginPath();g.arc(9,8,4.4,0,6.3);g.fill();g.fillStyle='#d61e24';g.beginPath();g.arc(10.3,8,3.5,0,6.3);g.fill();g.fillStyle='#fff';g.fillRect(14,7,2,2);g.fillRect(15,6,1,4);g.fillRect(14,8,3,1);return cv;})(),
-  (()=>{const cv=mk(24,16),g=cv.getContext('2d');g.fillStyle='#c8281e';g.fillRect(0,0,24,8);g.fillStyle='#efe9dc';g.fillRect(0,8,24,8);return cv;})()];
-const flags=[];
-for(const [u,t,k] of[[-30,0.35,1],[-22,0.62,0],[-8,0.28,1],[-1,0.5,0],[-35,0.7,0],[4,0.25,1]]){
-  const y=1.2+t*13.8,lz=-t*20,m=new THREE.Mesh(new THREE.PlaneGeometry(2.6,1.7,6,1),LAM({map:tx(FLAG_CV[k],'n'),side:THREE.DoubleSide}));
-  m.position.set(u+1.3,y+2.4,lz);endR.add(m);box(0.05,2.8,0.05,LAM({color:0x9a9a9a}),u,y+1.6,lz,endR);
-  flags.push({m,base:Float32Array.from(m.geometry.attributes.position.array),ph:rnd()*6});}
+for(const yer of STAT.telOrgu){const T=TRIBUNLER[yer];if(!T)continue;const Y=tribunYeri(yer),n=[Math.sign(Y.pos[0]),Math.sign(Y.pos[1])];
+  fence(T.t.uzunluk,Y.pos[0]-n[0]*1.4,Y.pos[1]-n[1]*1.4,Y.rot);}
 
-/* ---- ampullü skor tabelası (köşede) ---- */
-const SB_CV=mk(96,24);
-{const g=SB_CV.getContext('2d');g.fillStyle=STIL.tabela.zemin;g.fillRect(0,0,96,24);g.fillStyle='#24160a';for(let y=0;y<24;y+=2)for(let x=(y>>1)&1;x<96;x+=2)g.fillRect(x,y,1,1);
- ctxText(g,'DEM 1-1 AKD',(96-textW('DEM 1-1 AKD',2))>>1,0,STIL.tabela.ampul,2);ctxText(g,'DAKİKA 89',(96-textW('DAKİKA 89',1))>>1,16,STIL.tabela.ikincil,1);
- const sb=new THREE.Group();sb.position.set(74,0,-46);sb.rotation.y=Math.atan2(-74,46);scene.add(sb);
- const lm=LAM({color:0x3a3d42});box(0.6,5.6,0.6,lm,-4.5,2.8,0,sb);box(0.6,5.6,0.6,lm,4.5,2.8,0,sb);box(13.4,4.8,1,LAM({color:0x1c1d20}),0,7.6,-0.3,sb);
- const f=new THREE.Mesh(new THREE.PlaneGeometry(12.6,3.9),BAS({map:tx(SB_CV,'n')}));f.position.set(0,7.6,0.22);sb.add(f);
- const s=glow(0xffb530,16,0.28);s.position.set(0,7.6,1.2);sb.add(s);}
+/* ---- taraftar çekirdeği: pankart, bayraklar, meşaleler (tarifte mesale:true olan tribün) ---- */
+const flags=[],MESALE_YERLERI=[];
+{const T=STAT.tribunler.map(t=>TRIBUNLER[t.yer]).find(T=>T.t.mesale);
+ if(T&&MAC_GUNU.doluluk>0.12){
+  const{g,O,t}=T,L=t.uzunluk,at=(u,f)=>[u,O.y0+f*(O.y1-O.y0),-f*O.D];
+  {const s='DEMİRKAPI SENİ SEVİYORUZ',cv=mk(textW(s,1)+6,11),c=cv.getContext('2d');c.fillStyle=STIL.pankart.zemin;c.fillRect(0,0,cv.width,11);c.fillStyle=STIL.pankart.yazi;c.fillRect(0,0,cv.width,1);c.fillRect(0,10,cv.width,1);
+   ctxText(c,s,3,2,STIL.pankart.yazi,1);const bw=Math.min(34,L*0.45),b=new THREE.Mesh(new THREE.PlaneGeometry(bw,bw*3.2/34),LAM({map:tx(cv,'m')}));b.position.set(-L*0.12,O.y0+1.6,-1.2);b.rotation.x=-0.25;g.add(b);}
+  const FLAG_CV=[(()=>{const cv=mk(24,16),c=cv.getContext('2d');c.fillStyle='#d61e24';c.fillRect(0,0,24,16);c.fillStyle='#fff';
+     c.beginPath();c.arc(9,8,4.4,0,6.3);c.fill();c.fillStyle='#d61e24';c.beginPath();c.arc(10.3,8,3.5,0,6.3);c.fill();c.fillStyle='#fff';c.fillRect(14,7,2,2);c.fillRect(15,6,1,4);c.fillRect(14,8,3,1);return cv;})(),
+    (()=>{const cv=mk(24,16),c=cv.getContext('2d');c.fillStyle='#c8281e';c.fillRect(0,0,24,8);c.fillStyle='#efe9dc';c.fillRect(0,8,24,8);return cv;})()];
+  for(const [u,f,k] of[[-0.38,0.35,1],[-0.27,0.62,0],[-0.1,0.28,1],[-0.01,0.5,0],[-0.44,0.7,0],[0.05,0.25,1]]){
+    const [x,y,lz]=at(u*L,f),m=new THREE.Mesh(new THREE.PlaneGeometry(2.6,1.7,6,1),LAM({map:tx(FLAG_CV[k],'n'),side:THREE.DoubleSide}));
+    m.position.set(x+1.3,y+2.4,lz);g.add(m);box(0.05,2.8,0.05,LAM({color:0x9a9a9a}),x,y+1.6,lz,g);
+    flags.push({m,base:Float32Array.from(m.geometry.attributes.position.array),ph:rnd()*6});}
+  const n=Math.round(clamp(MAC_GUNU.doluluk*1.5,0.3,1)*7);
+  for(const [u,f] of[[-0.38,0.3],[-0.3,0.55],[-0.21,0.2],[-0.14,0.45],[-0.06,0.35],[0.01,0.6],[-0.44,0.5]].slice(0,n)){const [x,y,lz]=at(u*L,f);MESALE_YERLERI.push(g.localToWorld(new THREE.Vector3(x,y+1,lz)));}
+ }}
+
+/* ---- skor tabelası: büyük statta ampullü, kasabada elle değiştirilen ---- */
+{const T=STAT.tabela,sb=new THREE.Group();sb.position.set(T.konum[0],0,T.konum[1]);sb.rotation.y=Math.atan2(-T.konum[0],-T.konum[1]);scene.add(sb);
+ const lm=LAM({color:0x3a3d42});
+ if(T.tip==='ampullu'){
+  const cv=mk(96,24),g=cv.getContext('2d');g.fillStyle=STIL.tabela.zemin;g.fillRect(0,0,96,24);g.fillStyle='#24160a';for(let y=0;y<24;y+=2)for(let x=(y>>1)&1;x<96;x+=2)g.fillRect(x,y,1,1);
+  ctxText(g,'DEM 1-1 AKD',(96-textW('DEM 1-1 AKD',2))>>1,0,STIL.tabela.ampul,2);ctxText(g,'DAKİKA 89',(96-textW('DAKİKA 89',1))>>1,16,STIL.tabela.ikincil,1);
+  box(0.6,5.6,0.6,lm,-4.5,2.8,0,sb);box(0.6,5.6,0.6,lm,4.5,2.8,0,sb);box(13.4,4.8,1,LAM({color:0x1c1d20}),0,7.6,-0.3,sb);
+  const f=new THREE.Mesh(new THREE.PlaneGeometry(12.6,3.9),BAS({map:tx(cv,'n')}));f.position.set(0,7.6,0.22);sb.add(f);
+  const s=glow(0xffb530,16,0.28);s.position.set(0,7.6,1.2);sb.add(s);
+ }else{
+  const cv=mk(48,16),g=cv.getContext('2d');g.fillStyle=STIL.tabela.elleZemin;g.fillRect(0,0,48,16);g.fillStyle=STIL.tabela.elleYazi;g.fillRect(0,0,48,1);g.fillRect(0,15,48,1);
+  ctxText(g,'DEM',3,1,STIL.tabela.elleYazi,1);ctxText(g,'AKD',45-textW('AKD',1),1,STIL.tabela.elleYazi,1);
+  ctxText(g,'1',5,9,STIL.tabela.elleYazi,1);ctxText(g,'1',39,9,STIL.tabela.elleYazi,1);
+  box(0.25,3.2,0.25,lm,-2.6,1.6,0,sb);box(0.25,3.2,0.25,lm,2.6,1.6,0,sb);
+  const f=new THREE.Mesh(new THREE.PlaneGeometry(6,2),LAM({map:tx(cv,'n')}));f.position.set(0,3.6,0.05);sb.add(f);box(6.2,2.2,0.12,LAM({color:0x2a2c30}),0,3.6,-0.04,sb);
+ }}
+
+/* ---- projektör direkleri (küçük statta) ---- */
+if(STAT.projektor.tip==='direk')for(const [x,z] of STAT.projektor.konumlar){
+  const H=STAT.projektor.yukseklik,d=new THREE.Group();d.position.set(x,0,z);d.rotation.y=Math.atan2(-x,-z);scene.add(d);
+  box(0.5,H,0.5,LAM({color:SK.direk}),0,H/2,0,d);box(4.4,2.6,0.4,LAM({color:0x2a2c30}),0,H+0.6,0,d);
+  for(let i=0;i<4;i++)for(let j=0;j<2;j++)box(0.8,0.8,0.1,BAS({color:0xfff2cc}),-1.5+i,H+0.05+j*1.1,0.25,d);
+  const s=glow(0xffe9c0,10,0.5*STAT.projektor.guc);s.position.set(0,H+0.6,1.2);d.add(s);lamps.push(s);}
+
+/* ---- çevre: kasaba statının arkasında ışıkları yanan apartmanlar ---- */
+if(STAT.cevre==='apartman'){
+  const wcv=seed=>{const cv=mk(16,32),g=cv.getContext('2d'),dv=SK.apartman[seed%SK.apartman.length];g.fillStyle=dv;g.fillRect(0,0,16,32);
+    for(let f=0;f<4;f++)for(let w=0;w<3;w++){g.fillStyle=h2(seed*9+w,f*5)<0.35?SK.pencere:'#15171c';g.fillRect(1+w*5,f*8+2,3,4);}return cv;};
+  for(let i=0;i<34;i++){
+    const a=i/34*Math.PI*2+h2(i,3)*0.1,r=112+h2(i,5)*45,x=Math.cos(a)*r*1.15,z=Math.sin(a)*r*0.85,fl=3+Math.floor(h2(i,7)*4),w=12+h2(i,9)*10,dp=10+h2(i,11)*6,h=fl*3;
+    const side=BAS({map:tx(wcv(i),'m',[w/9,fl/4])}),roof=BAS({color:0x1c1d21});
+    const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,dp),[side,side,roof,roof,side,side]);b.position.set(x,h/2-0.3,z);b.rotation.y=-a+h2(i,13)*0.4;scene.add(b);}
+}
 
 /* ---- kaleler ---- */
 const NET_CV=(()=>{const cv=mk(8,8),g=cv.getContext('2d');g.fillStyle='rgba(235,235,235,1)';g.fillRect(0,0,8,1);g.fillRect(0,0,1,8);return cv;})();
