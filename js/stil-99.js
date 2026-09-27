@@ -46,6 +46,9 @@ const STIL={
   /* Gece maçında her projektör için bir soluk gölge (90'ların dörtlü gölgesi). Projektörlerin yeri stadyum tarifindedir. */
   golge:{opaklik:0.16},
 
+  /* Başkan bölümü: halı, ahşap bölmeler, başkanın masası ve koltuğu */
+  baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
+
   /* Stat yapı malzemeleri (tribün betonu, çatı, direk, toprak pist, set, kötü zemin renkleri, kasaba apartmanları) */
   stadyum:{
     beton:0x6d6e72,betonKoyu:0x4d4e53,yanDuvar:0x5a5b60,basamak:0x66665f,set:0x4c5a2c,cati:0x8c9096,catiKenar:0x3c3f44,direk:0x4a4d52,disZemin:0x232428,
