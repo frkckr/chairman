@@ -1,0 +1,61 @@
+# Demirkapı '99 — stil rehberi
+
+Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil-99.js` dosyasında durur; bu rehber o değerlerin ne anlama geldiğini ve neden seçildiğini anlatır.
+
+## 1. Ekran
+- 4:3 tüplü televizyon. İç çözünürlük 400×300.
+- Büyütülürken pikseller yumuşatılmaz (en yakın komşu).
+- Tüplü TV katmanı: tarama çizgileri, kavisli köşeler, kenar kararması. Arayüzden kapatılabilir.
+
+## 2. Renk
+- Kanal başına 5 bit (15 bit renk) ve 4×4 düzenli titreme (Bayer). Dönemin ekran kartları gibi.
+- Işık hesabı renk yönetimi olmadan yapılır; köşe başına aydınlatma kullanılır (Lambert/Gouraud).
+- Gece maçı paleti: sıcak projektör sarısı, gece laciverti, sis.
+
+| Ad | Değer |
+|---|---|
+| Demirkapı kırmızısı | `#c8281e` |
+| Demirkapı beyazı | `#f2ede2` |
+| Çim koyu / açık | `#2f7a2a` / `#3a8c33` |
+| Saha çizgisi | `#f2f2ea` |
+| Atletizm pisti | `#8c3f2f` |
+| Sis | `#0c1322` |
+| Meşale | `#ff4a1e` |
+| Tabela amberi | `#ffb530` |
+| Akdeniz FK beyazı / laciverti | `#eef0f3` / `#22347a` |
+
+## 3. Geometri
+- Az poligon. Oyuncu gövdesi kutulardan oluşur; top 20 yüzlü.
+- Köşeler ekran piksellerine yapışır (PS1 titremesi). Stil dosyasından kapatılabilir.
+
+## 4. Dokular
+- 8 ile 64 piksel arası. Hepsi kodla üretilir.
+- Oyuncu ve bayrak dokularında yumuşatma yoktur. Seyirci, reklam panosu ve çimde uzakta titreşmeyi önlemek için mipmap kullanılır.
+
+## 5. Oyuncular
+- Her oyuncunun kendine ait görünümü vardır: boy 0,9–1,1, yapı 0,93–1,12 ölçek.
+- Saç stilleri: kısa, kel, uzun, mullet, kıvırcık. Bıyık ve sakal. Krampon rengi. Sıyrık çorap. Kalecide uzun kol ve eldiven.
+- Numara sırtta büyük (2 kat piksel yazı, koyu kenarlı), göğüste küçük.
+- Pozlar: şut, koşu (iki kare), kayarak müdahale, kaleci uçuşu, bekleme. Yeni hareketler aynı poz sistemine eklenir.
+
+## 6. Işık ve gölge
+- Gece maçında her projektör için bir soluk, uzun gölge (90'ların dörtlü gölgesi).
+- Gündüz maçı için tek ve kısa gölge (henüz yapılmadı).
+
+## 7. Tribün ve atmosfer
+- Seyirci dokusu 128×64 piksel, kişi başı 4×8 piksel, iki kareyle sallanır (0,3 sn).
+- Paletler: ev sahibi, karışık, deplasman.
+- Meşale: parlak çekirdek, kırmızı hale ve yükselen duman. Tel örgü, pankart, ampullü skor tabelası, projektör parıltısı.
+
+## 8. Arayüz
+- 3×5 piksel yazı (Türkçe karakterli), tek font.
+- TV açısı: skor bandı sol üstte, CANLI sağ üstte, oyuncu ismi sol altta, radar sağ altta.
+- Loca açısı: yayın grafiği yok. Sadece kendi oyuncularının üstünde küçük numara etiketi var; amber etiket yeni transferi gösterir.
+
+## 9. Kameralar
+- Başkan locası (ana açı), dürbün ve TV yayını. Konumlar stil dosyasındadır.
+
+## 10. Sınırlar
+- Gerçek kulüp, marka ya da logo kullanılmaz.
+- Fotoğraf gerçekliğinde doku kullanılmaz.
+- Ekran oranı 4:3 dışına çıkmaz.

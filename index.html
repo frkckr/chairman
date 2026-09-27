@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Demirkapı '99</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Jersey+10&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --room:#12110f;
+  --panel:#1a1917;
+  --line:#2e2b26;
+  --text:#efe7d6;
+  --muted:#9a9282;
+  --amber:#ffb530;
+  --club:#c8281e;
+  --display:"Jersey 10","Arial Narrow",Impact,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{background:var(--room);color:var(--text)}
+body{font-family:var(--mono);font-size:14px;line-height:1.55;padding-inline:16px;padding-block:18px 48px}
+.wrap{max-width:1040px;margin-inline:auto;display:grid;gap:18px}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 18px}
+.top h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(40px,6vw,64px);line-height:.85;letter-spacing:.02em}
+.top h1 span{color:var(--club)}
+.top p{margin:0;color:var(--muted);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase}
+.set{position:relative;width:100%;max-width:900px;margin-inline:auto;padding:clamp(10px,2.4vw,24px) clamp(10px,2.4vw,24px) clamp(30px,5vw,52px);
+  background:radial-gradient(120% 80% at 50% 0%,#2c2d31,#18191c 70%);border-radius:clamp(14px,3vw,30px);
+  box-shadow:0 24px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07),inset 0 -2px 0 rgba(0,0,0,.45)}
+.screen{position:relative;width:100%;max-width:100%;aspect-ratio:4/3;border-radius:4%/5.3%;overflow:hidden;background:#000;box-shadow:inset 0 0 0 2px #0b0b0c}
+.screen canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+.screen .scan,.screen .glass{position:absolute;inset:0;pointer-events:none}
+.screen .scan{background:linear-gradient(to bottom,rgba(0,0,0,0) 0 50%,rgba(0,0,0,.3) 50% 100%);background-size:100% calc(100% / 300)}
+.screen .glass{background:radial-gradient(130% 120% at 50% 50%,rgba(0,0,0,0) 58%,rgba(0,0,0,.55) 100%),linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,0) 42%)}
+.screen.flat .scan,.screen.flat .glass{display:none}
+.screen:not(.flat) canvas{filter:saturate(1.1) contrast(1.05) brightness(1.06)}
+.plate{position:absolute;left:50%;bottom:clamp(7px,1.6vw,16px);transform:translateX(-50%);font-family:var(--display);letter-spacing:.35em;color:#67686c;font-size:clamp(11px,1.6vw,15px)}
+.led{position:absolute;right:clamp(16px,3vw,34px);bottom:clamp(12px,2.2vw,22px);width:7px;height:7px;border-radius:50%;background:#ff3b24;box-shadow:0 0 8px #ff3b24}
+.controls{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 22px}
+.grp{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.lbl{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+button{font:inherit;font-size:12.5px;color:var(--text);background:#23211e;border:1px solid #3b372f;border-bottom-width:3px;border-radius:4px;padding:6px 11px 5px;cursor:pointer;line-height:1.2}
+button:hover{border-color:#5a5446}
+button[aria-pressed="true"]{color:#1a1203;background:var(--amber);border-color:#b9791a}
+button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 26px;border-top:1px solid var(--line);padding-top:16px}
+.rules h2{margin:0 0 4px;font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.03em;color:var(--amber)}
+.rules p{margin:0;color:#cfc6b4;font-size:13px;max-width:60ch}
+.pal{display:flex;flex-wrap:wrap;gap:10px 16px}
+.sw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.sw i{width:22px;height:22px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.sw b{color:var(--text);font-weight:500;font-variant-numeric:tabular-nums}
+.nogl{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:24px;text-align:center;color:var(--muted)}
+html,body{margin:0}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Demirkapı <span>'99</span></h1>
+    <p>Görsel yön denemesi · başkan locası · 89. dakika</p>
+  </header>
+
+  <div class="set">
+    <div class="screen" id="screen">
+      <canvas id="view" width="400" height="300" aria-label="1999 tarzı futbol oyunu karesi, başkan locasından: son dakika şutu, kaleci uçuyor, kale arkasında meşaleler"></canvas>
+      <canvas id="hud" width="400" height="300" aria-hidden="true"></canvas>
+      <div class="scan"></div>
+      <div class="glass"></div>
+    </div>
+    <span class="plate">STEREO</span>
+    <span class="led"></span>
+  </div>
+
+  <div class="controls">
+    <div class="grp"><span class="lbl">Açı</span>
+      <div class="seg" id="viewSeg">
+        <button type="button" data-v="box" aria-pressed="true">Başkan locası</button>
+        <button type="button" data-v="tv" aria-pressed="false">TV yayını</button>
+      </div>
+    </div>
+    <div class="grp"><span class="lbl">Loca</span>
+      <div class="seg">
+        <button type="button" id="btnBino" aria-pressed="false">Dürbün</button>
+        <button type="button" id="btnTags" aria-pressed="true">Numara etiketi</button>
+      </div>
+    </div>
+    <div class="grp"><span class="lbl">Ekran</span>
+      <div class="seg">
+        <button type="button" id="btnCrt" aria-pressed="true">Tüplü TV</button>
+        <button type="button" id="btnDither" aria-pressed="true">Renk titremesi</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="rules">
+    <div><h2>Ekran</h2><p>4:3 tüplü televizyon ve 400×300 iç çözünürlük. Görüntü büyütülürken pikseller yumuşatılmıyor, köşeler kavisli.</p></div>
+    <div><h2>Renk</h2><p>Dönemin 15 bitlik rengi ve düzenli renk titremesi. Gece projektör ışığında sıcak sarı ile lacivert.</p></div>
+    <div><h2>Oyuncular</h2><p>Kutulardan kurulu az poligonlu modeller. Her oyuncunun boyu, yapısı ve saçı farklı: uzun sarı saçlı, kıvırcık, kel, bıyıklı, sakallı, çorabı sıyrık. Tribünden bakınca bile kim olduğu seçiliyor.</p></div>
+    <div><h2>Locadan izlemek</h2><p>Kendi oyuncularının numarası küçük bir etiketle görünüyor; amber etiket yeni transferi, 10 numara Erdal'ı gösteriyor. Dürbünle yaklaşınca yüzler ve forma numaraları seçiliyor.</p></div>
+    <div><h2>Tribün</h2><p>Düz dokulu seyirci iki kareyle sallanıyor. Meşale, duman, tel örgü, pankart ve ampullü eski skor tabelası.</p></div>
+    <div><h2>Yayın dili</h2><p>90'ların yayın grafiği: skor bandı, CANLI yazısı, oyuncu ismi ve küçük radar. Hepsi aynı piksel yazıyla.</p></div>
+  </section>
+
+  <div class="pal" aria-label="Oyunun renk paleti">
+    <span class="sw"><i style="background:#c8281e"></i><b>Demirkapı kırmızısı</b></span>
+    <span class="sw"><i style="background:#3a8c33"></i><b>Çim</b></span>
+    <span class="sw"><i style="background:#ffe2a0"></i><b>Projektör</b></span>
+    <span class="sw"><i style="background:#0b1222"></i><b>Gece laciverti</b></span>
+    <span class="sw"><i style="background:#ff4a1e"></i><b>Meşale</b></span>
+    <span class="sw"><i style="background:#ffb530"></i><b>Tabela amberi</b></span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/ortak.js"></script>
+<script src="js/stil-99.js"></script>
+<script src="js/goruntu.js"></script>
+<script src="js/stadyum.js"></script>
+<script src="js/oyuncular.js"></script>
+<script src="js/efektler.js"></script>
+<script src="js/loca.js"></script>
+<script src="js/arayuz.js"></script>
+</body>
+</html>
