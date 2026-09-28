@@ -5,7 +5,7 @@
    canlı skor tabelası, başkanın bakışı ve ekranın altındaki radyo satırı. */
 const MOTOR_Z=34,ADIM=1/60;
 const MAC_HIZ={deger:(()=>{try{const v=parseFloat(new URLSearchParams(location.search).get('hiz'));return [1,2,4,8,16].includes(v)?v:1;}catch(e){return 1;}})()};
-const olayKuyrugu=[];
+const olayKuyrugu=[],DURAKLAT={aktif:false};
 const mac=new Match((ad,v)=>olayKuyrugu.push([ad,v]),{kadro:MAC_KADRO,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z}});
 
 /* ---- gölgeler: her projektör için bir soluk, uzun gölge; her karede güncellenir ---- */
@@ -53,7 +53,8 @@ const PARA={t:-1,x:0,z:0};
 const H=STIL.seyirci.heyecan,HEY={ev:0,dep:0,tutEv:0,tutDep:0};
 function heyecanla(takim,deger,tut){if(takim!==1){HEY.ev=Math.max(HEY.ev,deger);if(tut)HEY.tutEv=tut;}if(takim!==0){HEY.dep=Math.max(HEY.dep,deger);if(tut)HEY.tutDep=tut;}}
 const radyoMetin=$('radyoMetin'),radyoSkor=$('radyoSkor');
-function soyle(s){if(radyoMetin)radyoMetin.textContent=s;}
+let SON_SOZ='';
+function soyle(s){SON_SOZ=s;if(radyoMetin&&!DURAKLAT.aktif)radyoMetin.textContent=s;}
 const tAd=t=>MAC_KADRO[t].ad;
 let tabelaAnahtar='';
 function tabelaGuncelle(){

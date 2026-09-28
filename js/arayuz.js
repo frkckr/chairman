@@ -14,6 +14,12 @@ function drawHUD(){
 function press(b,on){b.setAttribute('aria-pressed',on?'true':'false');}
 const btnBino=$('btnBino');
 btnBino.onclick=()=>{bino=!bino;press(btnBino,bino);};
+/* duraklat: maç, tribün, bayraklar ve meşaleler durur; dürbün ve bakış çalışır. Kısayol: boşluk tuşu */
+const btnDuraklat=$('btnDuraklat');
+function duraklatDegistir(){DURAKLAT.aktif=!DURAKLAT.aktif;press(btnDuraklat,DURAKLAT.aktif);btnDuraklat.textContent=DURAKLAT.aktif?'Devam':'Duraklat';
+  if(radyoMetin)radyoMetin.textContent=DURAKLAT.aktif?'Duraklatıldı. Devam etmek için Devam düğmesine ya da boşluk tuşuna bas.':SON_SOZ;}
+btnDuraklat.onclick=duraklatDegistir;
+addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat)return;const t=e.target&&e.target.tagName;if(t==='BUTTON'||t==='INPUT'||t==='TEXTAREA')return;e.preventDefault();duraklatDegistir();});
 /* maç hızı ve baştan başlatma */
 {const ayarlaHiz=v=>{MAC_HIZ.deger=v;for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))press(b,+b.dataset.hiz===v);};
  for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))b.onclick=()=>ayarlaHiz(+b.dataset.hiz);ayarlaHiz(MAC_HIZ.deger);
@@ -28,7 +34,8 @@ btnBino.onclick=()=>{bino=!bino;press(btnBino,bino);};
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let last=0,time=0;
 function frame(now){
-  const dt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;time+=dt;
+  const gercekDt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;
+  const dt=DURAKLAT.aktif?0:gercekDt;time+=dt;
   if(!reduce)SEYIRCI_ZAMAN.value=time;
   for(const f of flags){const pa=f.m.geometry.attributes.position,a=pa.array;for(let i=0;i<pa.count;i++){const u=(f.base[i*3]+1.3)/2.6;a[i*3+2]=f.base[i*3+2]+Math.sin(time*5.5-u*4+f.ph)*0.2*u;}pa.needsUpdate=true;}
   fx(dt,time);
