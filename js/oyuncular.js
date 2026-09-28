@@ -2,50 +2,90 @@
 /* ============ oyuncular: kutulardan kurulu az poligonlu modeller, 16 piksellik dokular ============ */
 function dk(hex,f){const n=parseInt(hex.slice(1),16);return 'rgb('+(((n>>16)&255)*f|0)+','+(((n>>8)&255)*f|0)+','+((n&255)*f|0)+')';}
 function numText(g,s,x,y,col,out,sc){if(out)for(const d of[[-1,0],[1,0],[0,-1],[0,1]])ctxText(g,s,x+d[0],y+d[1],out,sc);ctxText(g,s,x,y,col,sc);}
-function shirtFront(k){const cv=mk(16,16),g=cv.getContext('2d');g.fillStyle=k.shirt;g.fillRect(0,0,16,16);
-  if(k.sash){g.fillStyle=k.sash;for(let i=0;i<16;i++)g.fillRect(i,13-i,1,4);}
-  g.fillStyle=k.trim;g.fillRect(5,0,6,1);g.fillRect(6,1,1,1);g.fillRect(9,1,1,1);g.fillRect(7,2,2,1);g.fillRect(3,4,2,2);
-  if(k.num&&!k.sash){const s=String(k.num);numText(g,s,13-textW(s,1),4,k.trim,k.out,1);}
-  g.fillStyle=dk(k.shirt,0.78);g.fillRect(0,15,16,1);return cv;}
-function shirtBack(k){const cv=mk(16,16),g=cv.getContext('2d');g.fillStyle=k.shirt;g.fillRect(0,0,16,16);g.fillStyle=k.trim;g.fillRect(5,0,6,1);
-  if(k.num){const s=String(k.num);numText(g,s,(16-textW(s,2))>>1,1,k.trim,k.out,2);}return cv;}
-function headMats(k){
+/* ---- doku atlası: her insanın 64x64'lük tek dokusu. 16'lık kareler: forma önü/arkası, yüz, başın yanı ve arkası; altta düz renk kareleri ---- */
+const ATLAS=64,KARE={formaOn:[0,0],formaArka:[16,0],yuz:[32,0],basYan:[48,0],basArka:[0,16]};
+const RENK_KARE=['shirt','shorts','socks','skin','hair','boots','glove','trim','ek1','ek2','ek3','ek4'];
+function shirtFront(g,k,ox,oy){g.fillStyle=k.shirt;g.fillRect(ox,oy,16,16);
+  if(k.sash){g.fillStyle=k.sash;for(let i=0;i<16;i++)g.fillRect(ox+i,oy+13-i,1,4);}
+  g.fillStyle=k.trim;g.fillRect(ox+5,oy,6,1);g.fillRect(ox+6,oy+1,1,1);g.fillRect(ox+9,oy+1,1,1);g.fillRect(ox+7,oy+2,2,1);g.fillRect(ox+3,oy+4,2,2);
+  if(k.num&&!k.sash){const s=String(k.num);numText(g,s,ox+13-textW(s,1),oy+4,k.trim,k.out,1);}
+  g.fillStyle=dk(k.shirt,0.78);g.fillRect(ox,oy+15,16,1);}
+function shirtBack(g,k,ox,oy){g.fillStyle=k.shirt;g.fillRect(ox,oy,16,16);g.fillStyle=k.trim;g.fillRect(ox+5,oy,6,1);
+  if(k.num){const s=String(k.num);numText(g,s,ox+((16-textW(s,2))>>1),oy+1,k.trim,k.out,2);}}
+function headTiles(g,k){
   const bald=k.style==='bald',curly=k.style==='curly',longH=k.style==='long'||k.style==='mullet',hr=k.hair,sk=k.skin;
-  const F=mk(16,16),g=F.getContext('2d');g.fillStyle=sk;g.fillRect(0,0,16,16);g.fillStyle=hr;
-  if(bald){g.fillRect(0,5,2,3);g.fillRect(14,5,2,3);}else{g.fillRect(0,0,16,curly?5:4);g.fillRect(0,4,2,4);g.fillRect(14,4,2,4);}
-  if(k.beard){g.fillRect(1,10,14,6);g.fillStyle=sk;g.fillRect(4,10,8,1);}
-  g.fillStyle='#16110d';g.fillRect(4,7,2,2);g.fillRect(10,7,2,2);g.fillStyle=dk(sk,0.82);g.fillRect(7,8,2,3);
-  if(k.mus){g.fillStyle=hr;g.fillRect(4,11,8,1);}g.fillStyle='#7a3c30';g.fillRect(6,13,4,1);
-  const S=mk(16,16),s=S.getContext('2d');s.fillStyle=sk;s.fillRect(0,0,16,16);s.fillStyle=hr;
-  if(bald)s.fillRect(0,6,16,3);else s.fillRect(0,0,16,longH?9:5);
-  if(k.beard)s.fillRect(0,11,16,5);
-  s.fillStyle=dk(sk,0.8);s.fillRect(7,7,2,3);
-  const Bk=mk(16,16),b=Bk.getContext('2d');b.fillStyle=sk;b.fillRect(0,0,16,16);b.fillStyle=hr;
-  if(bald)b.fillRect(0,6,16,5);else b.fillRect(0,0,16,longH?16:11);
-  const side=LAM({map:tx(S,'n')});
-  return[side,side,LAM({color:bald?sk:hr}),LAM({color:sk}),LAM({map:tx(F,'n')}),LAM({map:tx(Bk,'n')})];
+  let [x,y]=KARE.yuz;g.fillStyle=sk;g.fillRect(x,y,16,16);g.fillStyle=hr;
+  if(bald){g.fillRect(x,y+5,2,3);g.fillRect(x+14,y+5,2,3);}else{g.fillRect(x,y,16,curly?5:4);g.fillRect(x,y+4,2,4);g.fillRect(x+14,y+4,2,4);}
+  if(k.beard){g.fillRect(x+1,y+10,14,6);g.fillStyle=sk;g.fillRect(x+4,y+10,8,1);}
+  g.fillStyle='#16110d';g.fillRect(x+4,y+7,2,2);g.fillRect(x+10,y+7,2,2);g.fillStyle=dk(sk,0.82);g.fillRect(x+7,y+8,2,3);
+  if(k.mus){g.fillStyle=hr;g.fillRect(x+4,y+11,8,1);}g.fillStyle='#7a3c30';g.fillRect(x+6,y+13,4,1);
+  [x,y]=KARE.basYan;g.fillStyle=sk;g.fillRect(x,y,16,16);g.fillStyle=hr;
+  if(bald)g.fillRect(x,y+6,16,3);else g.fillRect(x,y,16,longH?9:5);
+  if(k.beard)g.fillRect(x,y+11,16,5);
+  g.fillStyle=dk(sk,0.8);g.fillRect(x+7,y+7,2,3);
+  [x,y]=KARE.basArka;g.fillStyle=sk;g.fillRect(x,y,16,16);g.fillStyle=hr;
+  if(bald)g.fillRect(x,y+6,16,5);else g.fillRect(x,y,16,longH?16:11);
 }
-function player(k){
-  const c=col=>LAM({color:col}),sS=c(k.shirt),skin=c(k.skin),ls=k.gk||k.ls,hairM=c(k.hair);
-  const B=(w,h,d,m,p,x,y,z)=>{const me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);me.position.set(x,y,z);p.add(me);return me;};
-  const root=new THREE.Group(),hip=new THREE.Group();hip.position.y=0.95;root.add(hip);
-  B(0.34,0.22,0.21,c(k.shorts),hip,0,0.02,0);
-  B(0.42,0.54,0.23,[sS,sS,sS,sS,LAM({map:tx(shirtFront(k),'n')}),LAM({map:tx(shirtBack(k),'n')})],hip,0,0.39,0);
-  B(0.1,0.08,0.1,skin,hip,0,0.7,0);
-  const head=new THREE.Group();head.position.y=0.84;hip.add(head);B(0.22,0.26,0.24,headMats(k),head,0,0,0);
-  if(k.style==='long')B(0.23,0.26,0.07,hairM,head,0,-0.12,-0.13);
-  if(k.style==='mullet')B(0.2,0.2,0.06,hairM,head,0,-0.15,-0.13);
-  if(k.style==='curly'){B(0.28,0.11,0.28,hairM,head,0,0.16,0);B(0.26,0.12,0.06,hairM,head,0,0.04,-0.14);}
-  const arm=sx=>{const a=new THREE.Group();a.position.set(sx*0.27,0.6,0);hip.add(a);B(0.12,0.15,0.12,sS,a,0,-0.06,0);B(0.1,0.3,0.1,ls?sS:skin,a,0,-0.15,0);
-    const e=new THREE.Group();e.position.y=-0.3;a.add(e);B(0.09,0.27,0.09,ls?sS:skin,e,0,-0.135,0);B(0.09,0.09,0.08,k.glove?c(k.glove):skin,e,0,-0.3,0);return[a,e];};
-  const leg=sx=>{const l=new THREE.Group();l.position.set(sx*0.1,-0.04,0);hip.add(l);B(0.17,0.2,0.18,c(k.shorts),l,0,-0.08,0);B(0.15,0.44,0.16,k.pant?c(k.shorts):skin,l,0,-0.22,0);
-    const kn=new THREE.Group();kn.position.y=-0.44;l.add(kn);
-    if(k.rolled){B(0.12,0.2,0.13,skin,kn,0,-0.1,0);B(0.14,0.05,0.15,c(k.socks),kn,0,-0.21,0);B(0.12,0.22,0.13,c(k.socks),kn,0,-0.33,0);}
-    else B(0.12,0.44,0.13,c(k.socks),kn,0,-0.22,0);
-    B(0.12,0.08,0.26,c(k.boots||'#18181a'),kn,0,-0.46,0.05);return[l,kn];};
-  const[aL,eL]=arm(-1),[aR,eR]=arm(1),[lL,kL]=leg(-1),[lR,kR]=leg(1);
-  root.scale.set(k.w||1,k.h||1,k.w||1);
-  return{root,hip,head,aL,eL,aR,eR,lL,kL,lR,kR};
+function atlasCiz(k,ekRenkler){
+  const cv=mk(ATLAS,ATLAS),g=cv.getContext('2d');
+  shirtFront(g,k,...KARE.formaOn);shirtBack(g,k,...KARE.formaArka);headTiles(g,k);
+  const renk={shirt:k.shirt,shorts:k.shorts,socks:k.socks,skin:k.skin,hair:k.hair,boots:k.boots||'#18181a',glove:k.glove||k.skin,trim:k.trim,...(ekRenkler||{})};
+  RENK_KARE.forEach((ad,i)=>{g.fillStyle=renk[ad]||'#ff00ff';g.fillRect((i%8)*8,32+Math.floor(i/8)*8,8,8);});
+  return cv;
+}
+/* atlas içinde bir yüzün uv dikdörtgeni: doku karesi ya da düz renk karesinin ortası */
+function uvKare(ad){const [x,y]=KARE[ad];return[x/ATLAS,1-(y+16)/ATLAS,(x+16)/ATLAS,1-y/ATLAS];}
+function uvRenk(ad){const i=RENK_KARE.indexOf(ad),x=(i%8)*8+4,y=32+Math.floor(i/8)*8+4;return[x/ATLAS,1-y/ATLAS,x/ATLAS,1-y/ATLAS];}
+
+/* ---- insan modeli: kutular tek bir kemikli modelde (SkinnedMesh) birleşir; her kutu tek kemiğe bağlıdır.
+   Dönen nesne eski arayüzle aynıdır: root, hip, head, aL, eL, aR, eR, lL, kL, lR, kR (hepsi kemik) ---- */
+const YUZ_SIRASI=['px','nx','py','ny','pz','nz'];
+function player(k,ekRenkler){
+  const ls=k.gk||k.ls,uv={};
+  const R=ad=>uv[ad]||(uv[ad]=uvRenk(ad));
+  const kemik=(ad,parent,x,y,z)=>{const b=new THREE.Bone();b.name=ad;b.position.set(x,y,z);if(parent)parent.add(b);return b;};
+  const hip=kemik('hip',null,0,0.95,0),head=kemik('head',hip,0,0.84,0);
+  const aL=kemik('aL',hip,-0.27,0.6,0),eL=kemik('eL',aL,0,-0.3,0),aR=kemik('aR',hip,0.27,0.6,0),eR=kemik('eR',aR,0,-0.3,0);
+  const lL=kemik('lL',hip,-0.1,-0.04,0),kL=kemik('kL',lL,0,-0.44,0),lR=kemik('lR',hip,0.1,-0.04,0),kR=kemik('kR',lR,0,-0.44,0);
+  const kemikler=[hip,head,aL,eL,aR,eR,lL,kL,lR,kR];
+  const parcalar=[];
+  const kutu=(kem,w,h,d,x,y,z,yuzler)=>parcalar.push({kem,w,h,d,x,y,z,yuzler});
+  const tek=ad=>{const u=R(ad);return[u,u,u,u,u,u];};
+  kutu(hip,0.34,0.22,0.21,0,0.02,0,tek('shorts'));
+  {const f=R('shirt');kutu(hip,0.42,0.54,0.23,0,0.39,0,[f,f,f,f,uvKare('formaOn'),uvKare('formaArka')]);}
+  kutu(hip,0.1,0.08,0.1,0,0.7,0,tek('skin'));
+  {const yan=uvKare('basYan');kutu(head,0.22,0.26,0.24,0,0,0,[yan,yan,R(k.style==='bald'?'skin':'hair'),R('skin'),uvKare('yuz'),uvKare('basArka')]);}
+  if(k.style==='long')kutu(head,0.23,0.26,0.07,0,-0.12,-0.13,tek('hair'));
+  if(k.style==='mullet')kutu(head,0.2,0.2,0.06,0,-0.15,-0.13,tek('hair'));
+  if(k.style==='curly'){kutu(head,0.28,0.11,0.28,0,0.16,0,tek('hair'));kutu(head,0.26,0.12,0.06,0,0.04,-0.14,tek('hair'));}
+  for(const [a,e] of[[aL,eL],[aR,eR]]){
+    kutu(a,0.12,0.15,0.12,0,-0.06,0,tek('shirt'));kutu(a,0.1,0.3,0.1,0,-0.15,0,tek(ls?'shirt':'skin'));
+    kutu(e,0.09,0.27,0.09,0,-0.135,0,tek(ls?'shirt':'skin'));kutu(e,0.09,0.09,0.08,0,-0.3,0,tek(k.glove?'glove':'skin'));}
+  for(const [l,kn] of[[lL,kL],[lR,kR]]){
+    kutu(l,0.17,0.2,0.18,0,-0.08,0,tek('shorts'));kutu(l,0.15,0.44,0.16,0,-0.22,0,tek(k.pant?'shorts':'skin'));
+    if(k.rolled){kutu(kn,0.12,0.2,0.13,0,-0.1,0,tek('skin'));kutu(kn,0.14,0.05,0.15,0,-0.21,0,tek('socks'));kutu(kn,0.12,0.22,0.13,0,-0.33,0,tek('socks'));}
+    else kutu(kn,0.12,0.44,0.13,0,-0.22,0,tek('socks'));
+    kutu(kn,0.12,0.08,0.26,0,-0.46,0.05,tek('boots'));}
+  if(k.ekParcalar)for(const e of k.ekParcalar)kutu({hip,head,aL,eL,aR,eR,lL,kL,lR,kR}[e.kemik],e.w,e.h,e.d,e.x,e.y,e.z,tek(e.renk));
+  /* geometri: kutuların köşeleri kemiklerin bağlanma (düz duruş) konumuna yerleşir */
+  hip.updateMatrixWorld(true);
+  const pos=[],nor=[],uvs=[],si=[],sw=[],idx=[],V=new THREE.Vector3();
+  for(const pc of parcalar){
+    const g=new THREE.BoxGeometry(pc.w,pc.h,pc.d),P=g.attributes.position,N=g.attributes.normal,U=g.attributes.uv,o=pos.length/3,bi=kemikler.indexOf(pc.kem);
+    for(let i=0;i<P.count;i++){
+      V.set(P.getX(i)+pc.x,P.getY(i)+pc.y,P.getZ(i)+pc.z).applyMatrix4(pc.kem.matrixWorld);pos.push(V.x,V.y,V.z);
+      nor.push(N.getX(i),N.getY(i),N.getZ(i));
+      const r=pc.yuzler[Math.floor(i/4)];uvs.push(r[0]+U.getX(i)*(r[2]-r[0]),r[1]+U.getY(i)*(r[3]-r[1]));
+      si.push(bi,0,0,0);sw.push(1,0,0,0);}
+    for(const j of g.index.array)idx.push(o+j);g.dispose();}
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(si,4));geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(sw,4));geo.setIndex(idx);
+  geo.computeBoundingSphere();geo.boundingSphere.radius+=0.6;
+  const mesh=new THREE.SkinnedMesh(geo,LAM({map:tx(atlasCiz(k,ekRenkler),'n'),skinning:true}));
+  mesh.add(hip);mesh.bind(new THREE.Skeleton(kemikler));
+  const root=new THREE.Group();root.add(mesh);root.scale.set(k.w||1,k.h||1,k.w||1);
+  return{root,mesh,hip,head,aL,eL,aR,eR,lL,kL,lR,kR,kemikler};
 }
 function pose(r,P){
   r.hip.rotation.set(P.lean||0,0,0);r.hip.position.y=0.95+(P.dy||0);r.head.rotation.x=P.hx||0;
