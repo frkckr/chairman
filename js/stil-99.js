@@ -54,7 +54,11 @@ const STIL={
      opaklik: tek bir ışığın gölgesinin koyuluğu. Projektörlerin yeri stadyum tarifindedir. */
   golge:{opaklik:0.2},
 
-  /* Başkan bölümü: halı, ahşap bölmeler, başkanın masası ve koltuğu */
+  /* Başkanın bedeni (ön plan katmanı, js/baskan.js): masa, takım elbise, ten, saat renkleri.
+     aci: ön plan kamerasının görüş açısı; dinlenmeEgimi: bakışın sahaya dinlenirken eğimi (radyan). */
+  baskan:{aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.2},
+
+  /* Başkan bölümü: halı, ahşap bölmeler, başkanın koltuğu */
   baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
 
   /* Stat yapı malzemeleri (tribün betonu, çatı, direk, toprak pist, set, kötü zemin renkleri, kasaba apartmanları) */

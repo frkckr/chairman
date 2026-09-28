@@ -56,6 +56,7 @@ function tabelaGuncelle(){
   if(radyoSkor)radyoSkor.textContent=MAC_KADRO[0].kisa+' '+mac.score[0]+'-'+mac.score[1]+' '+MAC_KADRO[1].kisa+' · '+(alt.startsWith('DAKİKA')?dk+"'":alt.toLocaleLowerCase('tr-TR'));
 }
 function olay(ad,v){
+  if(typeof baskanOlay==='function')baskanOlay(ad,v);
   switch(ad){
     case 'giris':soyle('Takımlar hakemlerin arkasından sahaya çıkıyor. Tribünler ayakta!');heyecanla(-1,H.giris,6);break;
     case 'mars':soyle('İstiklal Marşı okunuyor.');HEY.ev=HEY.dep=0;HEY.tutEv=HEY.tutDep=0;break;
