@@ -257,11 +257,12 @@ Object.assign(Match.prototype,{
   mudahaleDene(p,s,dt){
     if(p.eylem||p.kickCd>0||!s)return;
     const b=this.ball,db=hyp(b.x-p.x,b.z-p.z),ds=hyp(s.x-p.x,s.z-p.z)||1;
-    /* top açıkta: sürenin ayağından uzaklaşmış ya da müdahale edene sürenden yakın */
-    const ayakX=s.x+Math.cos(s.yon)*0.35,ayakZ=s.z+Math.sin(s.yon)*0.35,acik=hyp(b.x-ayakX,b.z-ayakZ)>0.5||db<hyp(b.x-s.x,b.z-s.z)-0.1;
+    /* top açıkta: sürenden 0,9 m'den fazla uzaklaşmış (uzun dokunuş) ya da müdahale edene sürenden belirgin yakın.
+       Vuruş hazırlığında dönen oyuncunun ayağındaki top açıkta sayılmaz */
+    const dSur=hyp(b.x-s.x,b.z-s.z),acik=dSur>0.9||db<dSur-0.3;
     const istek=MOTOR_AYAR.mudahaleIstegi*(0.55+p.oz.mudahale*0.8)*(0.75+this.taktik[p.team].pres*0.5);
     const a=Math.atan2(b.z-p.z,b.x-p.x);
-    if(db<1.1&&(acik&&this.rast()<dt*9*istek||this.rast()<dt*1.4*istek)){
+    if(db<1.1&&(acik&&this.rast()<dt*3*istek||this.rast()<dt*0.35*istek)){
       p.eylem={ad:'mudahale',t:0,sure:0.5,temas:0.16};p.yonHedef=a;p.tx=b.x;p.tz=b.z;return;}
     const kacis=(s.vx*(s.x-p.x)+s.vz*(s.z-p.z))/ds;
     if(db>1.2&&db<2.6&&kacis>2.5&&this.rast()<dt*(0.25+p.oz.sertlik*0.7)*istek){
@@ -285,9 +286,9 @@ Object.assign(Match.prototype,{
     const topaDegdi=dTop<menzil&&b.y<0.6;
     let kazan=false;
     if(topaDegdi){
-      const sur=rakip?rakip.oz.surus:0.4,acik=s?hyp(b.x-s.x-Math.cos(s.yon)*0.35,b.z-s.z-Math.sin(s.yon)*0.35)>0.5||dTop<hyp(b.x-s.x,b.z-s.z)-0.1:true;
-      kazan=this.rast()<clamp(0.42+(p.oz.mudahale-sur)*0.8+(acik?0.2:0)+(kayma?0.08:0)-(arkadan?0.15:0),0.12,0.9);
-      if(kazan){const a=p.yon+this.normal()*0.7,v=kayma?4+this.rast()*4:1.5+this.rast()*3.5;
+      const sur=rakip?rakip.oz.surus:0.4,acik=s?hyp(b.x-s.x,b.z-s.z)>0.9||dTop<hyp(b.x-s.x,b.z-s.z)-0.3:true;
+      kazan=this.rast()<clamp(0.34+(p.oz.mudahale-sur)*0.6+(acik?0.25:0)+(kayma?0.06:0)-(arkadan?0.15:0),0.1,0.85);
+      if(kazan){const a=p.yon+this.normal()*(kayma?1.1:0.8),v=kayma?4+this.rast()*5:1.5+this.rast()*4;
         b.vx=Math.cos(a)*v;b.vz=Math.sin(a)*v;b.vy=0;b.egri=0;if(b.sahip)b.sahip.surus=null;b.sahip=null;this.dokunus(p,true);
         if(!kayma&&this.rast()<0.45+p.oz.mudahale*0.3){this.sahipYap(p);b.vx*=0.3;b.vz*=0.3;}
         this.on('steal',{p,kayma});}
@@ -298,7 +299,15 @@ Object.assign(Match.prototype,{
       const P=(kayma?0.28:0.12)*(arkadan?2.6:1)*(1.35-p.oz.mudahale*0.7)*(0.7+p.oz.sertlik*0.6)*(kazan?0.3:1.25)*(topaDegdi?1:1.8)*MOTOR_AYAR.faulOrani;
       if(this.rast()<P){this.faul(p,rakip,{kayma,arkadan,ciddiyet,x:rakip.x,z:rakip.z});return;}
     }
-    if(!kazan&&kayma)p.kickCd=0.6;
+    /* başarısız müdahale: savunmacı geçilir, bir an toparlanamaz */
+    if(!kazan){p.kickCd=kayma?0.8:0.55;p.gir=0;}
+  },
+  /* topu alan oyuncuya arkadan itme ya da forma çekme */
+  sirtFaulu(p){
+    for(const o of this.teams[1-p.team]){if(!o.oyunda||o.rol==='GK'||(o.eylem&&o.eylem.kilit))continue;
+      const dx=o.x-p.x,dz=o.z-p.z,d=hyp(dx,dz);if(d>1.0)continue;
+      const arkada=(dx*Math.cos(p.yon)+dz*Math.sin(p.yon))/(d||1)<0.2;
+      if(this.rast()<(arkada?0.09:0.04)*(0.6+o.oz.sertlik*0.8)*MOTOR_AYAR.faulOrani){this.faul(o,p,{ciddiyet:0.1+this.rast()*0.3,x:p.x,z:p.z,itme:true});return;}}
   },
   /* hava topunda itme ya da tutma */
   havaFaulu(kazanan,kaybeden){

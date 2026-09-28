@@ -19,18 +19,19 @@ const VARSAYILAN_TAKTIK={dizilis:'4-4-2',sakin:0.5,direkt:0.5,risk:1,pres:0.5,te
 /* ayar katsayıları: araclar/mac-deneme.js ile hedef tabloya göre ayarlanır */
 const MOTOR_AYAR={
   kararGecikme:[0.12,0.36],   // topu kontrol ettikten sonra karar süresi (sn): tempo yüksekse kısa
-  ilerleme:0.035,              // topu ileri taşımanın metre başına değeri (puan): oyunun ne kadar dikine aktığı
-  risk:0.8,                    // top kaybından çekinme çarpanı (takımın risk ayarıyla çarpılır)
+  ilerleme:0.022,              // topu ileri taşımanın metre başına değeri (puan): oyunun ne kadar dikine aktığı
+  risk:1.0,                    // top kaybından çekinme çarpanı (takımın risk ayarıyla çarpılır)
   surusKarar:[0.3,0.62],       // top sürerken yeniden karar aralığı
   vurusHizalama:0.36,          // vuruş için gövdenin hedefe en fazla sapması (rad); gelişine vuruşta 1,05
-  sutIstegi:1.3,               // şut seçeneğinin değer çarpanı
+  sutIstegi:1.8,               // şut seçeneğinin değer çarpanı
+  ortaIstegi:1.3,              // orta ve geri çevirmenin değer çarpanı
   sutSapma:1.0,                // şut isabet hatası çarpanı
   pasSapma:1.0,                // pas yön hatası çarpanı
-  kontrolZorluk:1.0,           // ilk dokunuş hatası çarpanı
+  kontrolZorluk:0.7,           // ilk dokunuş hatası çarpanı
   kaleciTepki:0.2,             // kalecinin şuta tepki süresi (sn), kalecilik özelliğiyle kısalır
   kaleciErisim:1.0,            // kurtarış erişimi çarpanı
   mudahaleIstegi:1.0,          // pres yapan oyuncunun müdahaleye girme isteği
-  faulOrani:1.0                // müdahalede faul olasılığı çarpanı
+  faulOrani:2.2                // müdahalede faul olasılığı çarpanı
 };
 
 /* ---- açı ve geometri yardımcıları (Math.hypot yavaş olduğu için karekökle) ---- */
@@ -38,13 +39,22 @@ const hyp=(a,b)=>Math.sqrt(a*a+b*b),hyp3=(a,b,c)=>Math.sqrt(a*a+b*b+c*c);
 const aciNorm=a=>a-2*Math.PI*Math.floor((a+Math.PI)/(2*Math.PI));
 const aciFark=(a,b)=>aciNorm(a-b);
 function segD(px,pz,ax,az,bx,bz){const vx=bx-ax,vz=bz-az,wx=px-ax,wz=pz-az;const L2=vx*vx+vz*vz||1;const t=clamp((vx*wx+vz*wz)/L2,0,1);return hyp(px-ax-vx*t,pz-az-vz*t);}
+/* bir oyuncunun bir noktaya varış süresi (sn): önce tepki süresince mevcut hızıyla devam eder, sonra en yüksek hızla koşar;
+   koştuğu yönden sapmak için yavaşlaması gerekir (ters yöne dönmek en pahalısı). menzil: ayağın/elin uzandığı mesafe */
+function varisZamani(p,x,z,menzil,tepki){
+  const tp=tepki!=null?tepki:0.2,rx=p.x+p.vx*tp,rz=p.z+p.vz*tp,dx=x-rx,dz=z-rz,d=Math.max(0,hyp(dx,dz)-(menzil||0));
+  const sp=hyp(p.vx,p.vz);let ceza=0;
+  if(sp>1&&d>0.3){const c=(dx*p.vx+dz*p.vz)/((hyp(dx,dz)||1)*sp),k=(1-c)/2;ceza=k*Math.sqrt(k)*sp/7;}
+  else if(d>0.3){const c=(dx*Math.cos(p.yon)+dz*Math.sin(p.yon))/(hyp(dx,dz)||1);ceza=(1-c)*0.12;}
+  return tp+d/(p.maxSpd*0.95)+ceza;
+}
 function ozellikler(k){const v=(k&&k.oz)||VARSAYILAN_OZ,o={};OZ_SIRA.forEach((a,i)=>{o[a]=(v[i]!=null?v[i]:VARSAYILAN_OZ[i])/100;});return o;}
 /* yerde yuvarlanan top: v² mesafeyle üstel azalır (R sabit sürtünme, c hava direnci). Buradan hız, ilk hız ve süre */
 function yerHiz(v0,s,R){const c=HAVA_DIRENCI*0.5,k=R/c,w=(v0*v0+k)*Math.exp(-2*c*s)-k;return w>0?Math.sqrt(w):0;}
 function yerIlkHiz(L,varis,R){const c=HAVA_DIRENCI*0.5,k=R/c;return Math.sqrt((varis*varis+k)*Math.exp(2*c*L)-k);}
 function yerSure(v0,s,R){let t=0,v=v0;const ds=s/4;for(let i=1;i<=4;i++){const v2=yerHiz(v0,ds*i,R||ROLL);if(v2<=0.05)return 99;t+=ds/((v+v2)/2);v=v2;}return t;}
 /* pasın alıcıya varış hızı: kısa pas yumuşak, uzun pas sert */
-const pasVarisHizi=L=>clamp(5+L*0.14,6,10);
+const pasVarisHizi=L=>clamp(7+L*0.15,8,12);
 /* tek adım top fiziği (gerçek top da tahmin de bununla ilerler). ucus: yere çarpmayı yok say (vuruş çözümü için). R: yuvarlanma */
 function topFizikAdim(b,dt,ucus,R){
   if(ucus||b.y>0.001||b.vy>0.001){
@@ -96,7 +106,7 @@ class Match{
     return Object.assign({tur,kind:null,team:null,n:-1,rol:null,mevki:null,name:'',no:0,kaptan:false,kayit:null,oz:null,ayak:'sag',boy:1,
       x,z,vx:0,vz:0,spd:0,yon:0,maxSpd:7,tx:x,tz:z,hizOran:1,bak:null,yonHedef:null,eylem:null,kickCd:0,kararT:0,dokunT:0,surus:null,
       oyunda:false,cikiyor:false,kart:0,yorgunluk:0,destek:null,kosu:null,gorev:null,sevinc:false,hedef:null,tutus:null,_cikis:null,
-      ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,kartSira:null},ek);
+      ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,kartSira:null,gir:0,birak:false,_kar:null},ek);
   }
   oyuncuKur(t,n,k,mevki){
     const oz=ozellikler(k),rol=mevki.cizgi==='KL'?'GK':mevki.cizgi;
@@ -236,7 +246,7 @@ class Match{
 
   /* ============ top ============ */
   topuSifirla(x,z){const b=this.ball;Object.assign(b,{x,z,y:0,vx:0,vz:0,vy:0,egri:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,agda:false,direk:false});b.surum++;}
-  topDegisti(){this.ball.surum++;}
+  topDegisti(){this.ball.surum++;this._degisimT=this.t;}
   /* topun gelecekteki yolu (3,5 sn, 1/60 adım). Top her dokunuşta değişir; o zamana kadar hesap önbellekte kalır */
   topYolu(){
     const b=this.ball;
@@ -326,7 +336,8 @@ class Match{
     /* bakış: açıkça verilmişse ona; yavaş ve kısa hareketlerde bakılan şeye (topa); koşuda gidilen yöne */
     let yh=p.yonHedef;
     if(yh==null){
-      if(hedefHiz>2.6&&!(p.bak&&d<4.5))yh=Math.atan2(dz,dx);
+      /* hızlı gitmesi gereken oyuncu gideceği yöne döner ve koşar; bir iki adımlık ayarda yüzü topa (bakılan şeye) dönük kalır */
+      if(hedefHiz>2.8&&d>1.2)yh=Math.atan2(dz,dx);
       else if(p.bak){const bx=p.bak.x-p.x,bz=p.bak.z-p.z;if(bx*bx+bz*bz>0.04)yh=Math.atan2(bz,bx);}
       else if(hedefHiz>0.4)yh=Math.atan2(dz,dx);
     }
@@ -377,7 +388,10 @@ class Match{
       /* hareketli top: ayağa ne zaman gelir (yol boyunca uzaklık / hız) ve yoldan ne kadar yanda */
       let gelir=false;if(topHiz>1.5){const yol=((ax-b.x)*b.vx+(az-b.z)*b.vz)/topHiz,yan2=Math.abs((ax-b.x)*b.vz-(az-b.z)*b.vx)/topHiz;
         gelir=yol>0&&yol/topHiz<=e.geri+0.03&&yan2<0.45;}
-      if(sapma<sinir&&(ayakD<(sec.ilk?0.62:0.5)||(sec.ilk&&gelir))&&b.y<(sec.tur==='sut'||sec.ilk?1.1:0.6)){e.faz='geri';e.ft=0;e.hizalanma=sapma;e.sabit=sec.ilk&&topHiz>1.5;}
+      if(sapma<sinir&&(ayakD<(sec.ilk?0.62:0.5)||(sec.ilk&&gelir))&&b.y<(sec.tur==='sut'||sec.ilk?1.1:0.6)){
+        /* son an kontrolü: yerden pas hattı bu arada kapandıysa pastan vazgeç, yeniden karar ver */
+        if(sec.tip==='yer'&&sec.tur!=='sut'&&!sec.ilk&&this.hatKapali(p,a)){p.eylem=null;p.yonHedef=null;p.kararT=0.05;this.on('vazgecti',{p});return;}
+        e.faz='geri';e.ft=0;e.hizalanma=sapma;e.sabit=sec.ilk&&topHiz>1.5;}
       else if(e.t>(sec.ilk?2.2:1.3)){p.eylem=null;p.yonHedef=null;p.kararT=0;if(b.sahip===p&&b.hedefOyuncu)b.hedefOyuncu=null;}
     }else if(e.faz==='geri'){
       if(!e.sabit){p.tx=b.x+b.vx*0.1-Math.cos(p.yon)*0.3;p.tz=b.z+b.vz*0.1-Math.sin(p.yon)*0.3;}
@@ -388,6 +402,9 @@ class Match{
       }
     }else if(e.ft>=0.26){p.eylem=null;p.yonHedef=null;}
   }
+  /* pas hattının ilk metrelerinde rakip bacağı var mı */
+  hatKapali(p,a){const b=this.ball,ux=Math.cos(a),uz=Math.sin(a);
+    for(const o of this.teams[1-p.team]){if(!o.oyunda)continue;if(segD(o.x,o.z,b.x,b.z,b.x+ux*4,b.z+uz*4)<0.7)return true;}return false;}
   /* topa vur: hedefe göre başlangıç hızını çöz, hatayı ekle */
   vurusYap(p,e){
     const b=this.ball,sec=e.sec,oz=p.oz,d=this.dir[p.team],baski=baskiAltinda(this,p);
@@ -432,7 +449,7 @@ class Match{
     }
     b.sahip=null;b.tasiyan=null;p.kickCd=0.3;p.surus=null;
     this.dokunus(p,true);
-    b.hedefOyuncu=sec.alici||null;
+    b.hedefOyuncu=sec.alici||null;b.pasHedef=sec.alici?{x:hx,z:hz,tur:sec.tur}:null;
     const tur=sec.tur;
     if(tur==='sut'){b.sut={team:p.team,by:p,gkDone:false,cerceve:this.cerceveyeGider(p.team),xg:sec.xg||0,t:this.t};this.ist.sut[p.team]++;
       this.ofsaytPasAni(p);this.on('shot',{p,dist:L,xg:sec.xg||0});}
@@ -461,11 +478,16 @@ class Match{
     for(let i=1;i<yol.length;i++){const a=yol[i-1],c=yol[i];if((a.x-gx)*(c.x-gx)<=0){const f=(gx-a.x)/((c.x-a.x)||1),z=a.z+(c.z-a.z)*f,y=a.y+(c.y-a.y)*f;return Math.abs(z-MZ)<GW2&&y<GH;}}
     return false;
   }
-  /* pasın hedefi vuruş anında tazelenir: alıcı koşuyorsa önüne */
+  /* pasın hedefi vuruş anında tazelenir: top ile alıcının buluşacağı nokta. Alıcı koşusunu ~1 sn sürdürür sonra yavaşlar;
+     top o noktaya pasın hızıyla ne zaman varırsa, alıcının orada olacağı ilk an seçilir. Ara pasında koşunun önündeki boşluğa */
   hedefGuncelle(p,sec){
     const q=sec.alici,b=this.ball;if(!q)return;
-    const L=hyp(q.x-b.x,q.z-b.z),t=sec.tip==='yer'?yerSure(Math.min(29,yerIlkHiz(L,pasVarisHizi(L),this.R)),L,this.R):0.75+L/28;
-    const k=sec.tur==='ara'?1.25:0.8;sec.hx=clamp(q.x+q.vx*t*k,-PL+0.5,PL-0.5);sec.hz=clamp(q.z+q.vz*t*k,0.8,PW-0.8);
+    const hava=sec.tip==='hava',surdur=sec.tur==='ara'?2.2:1.0;
+    for(let t=0.2;t<=3.5;t+=0.05){
+      const k=Math.min(t,surdur),x=q.x+q.vx*k,z=q.z+q.vz*k,L=hyp(x-b.x,z-b.z);
+      const tb=hava?0.75+L/28:yerSure(Math.min(29,yerIlkHiz(L,pasVarisHizi(L),this.R)),L,this.R);
+      if(tb<=t){sec.hx=clamp(x,-PL+0.5,PL-0.5);sec.hz=clamp(z,0.8,PW-0.8);return;}}
+    sec.hx=clamp(q.x+q.vx*surdur,-PL+0.5,PL-0.5);sec.hz=clamp(q.z+q.vz*surdur,0.8,PW-0.8);
   }
 
   /* ============ topla oyuncu: karar, top sürme, koruma ============ */
@@ -485,8 +507,10 @@ class Match{
       case 'sut':this.vurusBaslat(p,{tur:'sut',hx:this.dir[p.team]*PL,hz:MZ,xg:s.xg});break;
       case 'pas':case 'ara':case 'uzun':case 'orta':case 'geriCevir':
         this.vurusBaslat(p,{tur:s.tur,hx:s.hx,hz:s.hz,tip:s.tip,alici:s.alici,guncelle:s.tur==='pas'||s.tur==='uzun'});break;
-      case 'uzaklastir':{/* uzağa ve kanada, çoğu zaman hedefsiz: taç ya da kornere de gidebilir */
-        const d=this.dir[p.team],yan=p.z<MZ?-1:1,hx=clamp(p.x+d*(28+this.rast()*22),-PL+4,PL-4),hz=p.z+yan*(10+this.rast()*26);
+      case 'uzaklastir':{/* uzağa ve kanada, çoğu zaman hedefsiz; baskı altında ayağın kenarından kaçıp taça ya da kornere gidebilir */
+        const d=this.dir[p.team],yan=p.z<MZ?-1:1,kacti=this.rast()<0.15+baskiAltinda(this,p)*0.2;
+        let hx=clamp(p.x+d*(28+this.rast()*22),-PL+4,PL-4),hz=p.z+yan*(10+this.rast()*26);
+        if(kacti){hx=p.x+d*(this.rast()*14-4);hz=p.z+yan*(18+this.rast()*20);}
         this.vurusBaslat(p,{tur:'uzaklastir',hx,hz,tip:'hava'});break;}
       case 'koru':{const {o}=enYakinRakip(this,p.x,p.z,p.team);const a=o?Math.atan2(p.z-o.z,p.x-o.x):p.yon;p.surus={yon:a,hiz:0.22,koru:true};
         p.kararT=0.28+this.rast()*0.2;break;}
@@ -577,10 +601,12 @@ class Match{
   kontrolEt(p){
     const b=this.ball,v=hyp3(b.vx,b.vz,b.vy),baski=baskiAltinda(this,p),teknik=p.oz.surus*0.55+p.oz.pas*0.45;
     const zorluk=(clamp((v-5)/18,0,1)*0.55+(b.y>0.3?0.14:0)+baski*0.14)*MOTOR_AYAR.kontrolZorluk;
-    const iyi=this.rast()<clamp(0.985-zorluk*(1.3-teknik),0.3,0.99);
+    const iyi=this.rast()<clamp(0.99-zorluk*(1.1-teknik)*0.6,0.4,0.995);
     const a=this.kontrolYonu(p);
     if(iyi){const h=clamp(p.spd*0.75,0,4.5)+0.5;b.vx=Math.cos(a)*h;b.vz=Math.sin(a)*h;b.vy=0;b.y=Math.min(b.y,0.05);b.egri=0;
-      this.dokunus(p,true);this.sahipYap(p);p.eylem={ad:'kontrol',t:0,sure:0.22};p.kickCd=0.06;}
+      this.dokunus(p,true);this.sahipYap(p);p.eylem={ad:'kontrol',t:0,sure:0.22};p.kickCd=0.06;
+      /* topu alırken arkasına yapışan rakip itebilir ya da tutabilir */
+      if(this.phase==='play')this.sirtFaulu(p);}
     else{const ra=a+this.normal()*1.3,h=1.8+v*0.2;b.vx=Math.cos(ra)*h;b.vz=Math.sin(ra)*h;b.vy=b.y>0.3?1+this.rast()*2:0;
       this.dokunus(p,false);if(b.sahip===p)b.sahip=null;p.eylem={ad:'kontrol',t:0,sure:0.3,kotu:true};p.kickCd=0.32;this.on('kotuKontrol',{p});}
   }
@@ -598,8 +624,11 @@ class Match{
     const a=Math.atan2(z,x),f=aciFark(a,p.yon);return aciNorm(p.yon+clamp(f,-1.2,1.2));
   }
   blok(p){
-    const b=this.ball,v=hyp(b.vx,b.vz);
-    b.vx=-b.vx*(0.12+this.rast()*0.2)+this.normal()*3;b.vz=b.vz*0.3+this.normal()*5;b.vy=1.5+this.rast()*4;
+    /* blok: top sekerek yön değiştirir; çoğu zaman yana ya da kale çizgisine doğru (korner), bazen geri */
+    const b=this.ball,v=hyp(b.vx,b.vz),ileri=this.rast()<0.55;
+    if(ileri){b.vx=b.vx*(0.2+this.rast()*0.35);b.vz=b.vz*0.4+(this.rast()<0.5?-1:1)*(3+this.rast()*6);}
+    else{b.vx=-b.vx*(0.12+this.rast()*0.2)+this.normal()*3;b.vz=b.vz*0.3+this.normal()*5;}
+    b.vy=1.5+this.rast()*4;
     b.sut=null;this.dokunus(p,false);p.kickCd=0.35;p.eylem={ad:'blok',t:0,sure:0.45};this.on('block',{p,v});
   }
 
@@ -667,6 +696,9 @@ class Match{
   }
   kafaVur(p){
     const b=this.ball,k=kafaKarari(this,p);
+    /* kendi kalesine dönük savunmacının kafası çoğu zaman topu çizgiden dışarı atar (korner) */
+    const d=this.dir[p.team],kaleyeDonuk=Math.cos(p.yon)*d<-0.3,kendiCeza=this.kendiCezaSahasinda(p,b.x,b.z);
+    if(k.tur==='uzaklastir'&&kendiCeza&&this.rast()<(kaleyeDonuk?0.45:0.18)){k.hx=b.x-d*12;k.hz=b.z+(b.z<MZ?-1:1)*(4+this.rast()*8);k.vy=3+this.rast()*3;}
     const L=hyp(k.hx-b.x,k.hz-b.z)||1,sig=(0.05+0.1*(1-p.oz.kafa))*(1+baskiAltinda(this,p)*0.5);
     const a=Math.atan2(k.hz-b.z,k.hx-b.x)+this.normal()*sig,v=k.v*(0.9+this.rast()*0.2);
     b.vx=Math.cos(a)*v;b.vz=Math.sin(a)*v;b.vy=k.vy+this.normal()*sig*6;b.egri=0;
