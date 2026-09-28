@@ -8,19 +8,11 @@ const MAC_HIZ={deger:(()=>{try{const v=parseFloat(new URLSearchParams(location.s
 const olayKuyrugu=[],DURAKLAT={aktif:false};
 const mac=new Match((ad,v)=>olayKuyrugu.push([ad,v]),{kadro:MAC_KADRO,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z}});
 
-/* ---- gölgeler: her projektör için bir soluk, uzun gölge; her karede güncellenir ---- */
-const GOLGE_MAT=BAS({color:0x000000,transparent:true,opacity:STIL.golge.opaklik,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
-const GOLGE_GEO=new THREE.PlaneGeometry(0.36,1).translate(0,0.5,0).rotateX(-Math.PI/2);
-function golgeKur(){return STAT.projektor.konumlar.map(()=>{const m=new THREE.Mesh(GOLGE_GEO,GOLGE_MAT);scene.add(m);return m;});}
-function golgeGuncelle(G,x,z,h,gorunur){STAT.projektor.konumlar.forEach((L,i)=>{const m=G[i];m.visible=gorunur;if(!gorunur)return;
-  const dx=x-L[0],dz=z-L[1],d=Math.hypot(dx,dz),len=1.85*h*d/(STAT.projektor.yukseklik-2);
-  m.position.set(x,0.04,z);m.rotation.y=Math.atan2(-dx,-dz);m.scale.set(1,1,len);});}
-
 /* ---- aktörler: motordaki her oyuncu ve hakem için bir model ---- */
 const EKLEM=['lean','dy','hx','lL','kL','lR','kR','aL','aR','aLz','aRz','eL','eR'];
 function aktorKur(K,kaynak,boy){
-  const m=player(K);scene.add(m.root);
-  return{m,kaynak,boy:boy||1,J:{},yaw:0,ph:rnd()*6,amp:0,w:{},px:kaynak?kaynak.x:0,pz:kaynak?kaynak.z:0,x:0,z:0,G:golgeKur()};
+  const m=player(K);scene.add(m.root);golgeEkle(m);
+  return{m,kaynak,boy:boy||1,J:{},yaw:0,ph:rnd()*6,amp:0,w:{},px:kaynak?kaynak.x:0,pz:kaynak?kaynak.z:0,x:0,z:0};
 }
 const AKTORLER=[];
 mac.players.forEach(p=>{const kd=MAC_KADRO[p.team],k=p.kayit||{},forma=p.role==='GK'?kd.kaleciForma:kd.forma;
@@ -42,7 +34,7 @@ const TOP_R=0.14;
 const topMesh=(()=>{const cv=mk(32,16),g=cv.getContext('2d');g.fillStyle='#f4f4ee';g.fillRect(0,0,32,16);g.fillStyle='#18181c';
   for(const [x,y] of[[2,3],[10,9],[18,3],[26,9],[6,13],[22,13]])g.fillRect(x,y,3,3);
   const m=new THREE.Mesh(new THREE.SphereGeometry(TOP_R,12,8),LAM({map:tx(cv,'n')}));scene.add(m);return m;})();
-const topGolge=new THREE.Mesh(new THREE.CircleGeometry(0.17,10).rotateX(-Math.PI/2),BAS({color:0x000000,transparent:true,opacity:0.35,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));scene.add(topGolge);
+golgeTop(topMesh,TOP_R);
 const TOP={px:0,py:0,pz:0,q:new THREE.Quaternion(),eksen:new THREE.Vector3(),dq:new THREE.Quaternion()};
 
 /* ---- yazı tura parası ---- */
@@ -145,13 +137,12 @@ function macKare(dt){
     const J=pozla(a,p,spd,dts,bx,bz);uygula(a,J);
     const dw=a.w.dive||0,yan=Math.sign((p.vx*Math.cos(a.yaw)-p.vz*Math.sin(a.yaw))||1);
     a.m.root.position.set(a.x,dw*(p.diveY||0.5)*0.9,a.z);a.m.root.rotation.set(0,a.yaw,-yan*1.35*dw);
-    golgeGuncelle(a.G,a.x,a.z,a.boy,gorunur);
   }
   /* kulübe: yedekler oturur (golde ayağa fırlar), teknik direktör topu izleyerek gezinir */
   for(const a of KENAR){
     if(a.oturur){a.sevinc=Math.max(0,(a.sevinc||0)-dts);const kalk=yumusak(a,'kalk',a.sevinc>0?1:0,5,dts);
       const J=pozla(a,null,0,dts);kar(J,POSE.otur,1-kalk);if(kalk>0.5){kar(J,POSE.sevinc,kalk);J.dy+=Math.abs(Math.sin(zaman*7))*0.25*kalk;}
-      uygula(a,J);a.m.root.rotation.y=0;golgeGuncelle(a.G,a.x,a.z,a.boy,false);continue;}
+      uygula(a,J);a.m.root.rotation.y=0;continue;}
     let hx=a.x;
     if(a.td){const oyunda=['play','setpiece','kickoff','goal'].includes(mac.phase);hx=oyunda?clamp(bx*0.25+a.td.alan.x,a.td.alan.x-3.5,a.td.alan.x+3.5):a.td.alan.x;}
     const dx=hx-a.x,spd=Math.min(1.6,Math.abs(dx)*1.5);a.x+=Math.sign(dx)*Math.min(Math.abs(dx),spd*dts);
@@ -159,14 +150,13 @@ function macKare(dt){
     const J=pozla(a,null,spd>0.3?spd:0,dts);
     if(a.td){a.sevinc=Math.max(0,(a.sevinc||0)-dts);kar(J,POSE.sevinc,yumusak(a,'sevinc',a.sevinc>0?1:0,6,dts));
       kar(J,POSE.isaret,yumusak(a,'isaret',Math.sin(zaman*0.7+a.takim*2)>0.85&&mac.phase==='play'?1:0,4,dts));}
-    uygula(a,J);a.m.root.position.set(a.x,0,a.z);a.m.root.rotation.set(0,a.yaw,0);golgeGuncelle(a.G,a.x,a.z,a.boy,true);
+    uygula(a,J);a.m.root.position.set(a.x,0,a.z);a.m.root.rotation.set(0,a.yaw,0);
   }
   /* top */
   {const by=lerp(TOP.py,b.y,al),vx=b.vx,vz=b.vz,v=Math.hypot(vx,vz);
    topMesh.position.set(bx,TOP_R+by,bz);
    if(v>0.05){TOP.eksen.set(vz/v,0,-vx/v);TOP.dq.setFromAxisAngle(TOP.eksen,v*dts/TOP_R);TOP.q.premultiply(TOP.dq);topMesh.quaternion.copy(TOP.q);}
-   topGolge.position.set(bx,0.035,bz);topGolge.material.opacity=0.35*clamp(1-by/6,0.2,1);const gs=1+by*0.08;topGolge.scale.set(gs,1,gs);
-   const icerde=b.z<T.z-0.8;topMesh.visible=topGolge.visible=!icerde;}
+   const icerde=b.z<T.z-0.8;topMesh.visible=!icerde;}
   /* yazı tura */
   if(PARA.t>=0){PARA.t+=dts;const t=PARA.t;para.visible=t<3;
     const y=t<1.1?1.4+5.2*t-4.905*t*t*1.9:0.02;para.position.set(PARA.x+0.4,Math.max(0.02,y),PARA.z+0.3);para.rotation.x=t<1.1?t*40:Math.PI/2*0;if(t>3)PARA.t=-1;}
@@ -175,6 +165,7 @@ function macKare(dt){
   if(HEY.tutEv<=0)HEY.ev=Math.max(0,HEY.ev-dts/H.sonme);if(HEY.tutDep<=0)HEY.dep=Math.max(0,HEY.dep-dts/H.sonme);
   SEYIRCI_HEYECAN.value.set(HEY.ev,HEY.dep);MESALE_COSKU=HEY.ev;
   tabelaGuncelle();
+  golgeleriGuncelle();
   /* bakış yayı */
   bakisOdagi();const k=STIL.kameralar.baskan.yay,d=Math.min(dt,0.05);
   BAKIS_HIZ.addScaledVector(BAKIS_HEDEF.clone().sub(BAKIS),k*k*d).multiplyScalar(Math.max(0,1-2*k*d));BAKIS.addScaledVector(BAKIS_HIZ,d);
