@@ -41,7 +41,8 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 - Yedekler takım renginde eşofmanla, teknik direktör takım elbiseyle görünür.
 
 ## 6. Işık ve gölge
-- Gece maçında her projektör için bir soluk, uzun gölge (90'ların dörtlü gölgesi).
+- Gece maçında her projektör için bir gölge (90'ların dörtlü gölgesi; FIFA 98'in gece maçlarındaki gibi). Gölge, oyuncunun kemiklerine bağlı kutuların ışıktan zemine izdüşümüdür: gerçek silüettir, bacak ve kollarla oynar, ışıktan uzaklaştıkça uzar (`js/golgeler.js`).
+- Aynı ışığın gölgesi bir pikseli bir kez koyulaştırır (stencil); farklı ışıkların gölgeleri üst üste binince koyulaşır. Top da gölge verir.
 - Gündüz maçı için tek ve kısa gölge (henüz yapılmadı).
 
 ## 7. Stat
@@ -66,6 +67,7 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 
 ## 9. Kameralar
 - Tek açı başkanın gözüdür: açık ana tribünün ortasındaki başkan koltuğunda, göz hizası. Dürbün isteğe bağlı yakınlaştırmadır. Konumlar stil dosyasındadır.
+- Başkanın bedeni ekranın altında her zaman görünür (ön plan katmanı, `js/baskan.js`): ceviz masa, lacivert takım elbise kolları, sol bilekte saat, ince belli bardakta çay, maç programı, telefon. Eller maça tepki verir (gol sevinci ve ayağa kalkma, yenilen golde eller başa, masaya yumruk, itiraz, alkış); dürbün elle kaldırılır.
 - Bakış topu ve olan biteni yumuşak bir yayla izler: tünelden çıkışta tünele, törende oyuncu sırasına, yazı turada orta noktaya, golde gol atana bakar. Bakış belli bir açıdan fazla aşağı inmez.
 
 ## 10. Sınırlar

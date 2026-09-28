@@ -38,6 +38,10 @@ Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter
 - 2026-09-27: Bir maç yaklaşık 10 dakika sürer (her devre ~5 dk); tören ve devre arası ayrıca ~1,5 dk. Gol dengesi maç başına ~2,5 gol, ~25 şut.
 - 2026-09-27: Ekrana grafik konmaz; skor ve dakika stadın skor tabelasından ve ekranın altındaki radyo satırından okunur.
 - 2026-09-27: İstiklal Marşı töreni görsel olarak var; müziği ses aşamasında (Aşama 7) eklenecek.
+- 2026-09-28: Maç izleme "10 dakika, kesintisiz ama sık" kalır: olaylar gerçeğe göre daha sık yaşanır, maç sonu sayıları gerçek maça benzer.
+- 2026-09-28: Başkanın bedeni ekranın altında görünür: masa ve eller (çay, program, telefon); eller maça tepki verir.
+- 2026-09-28: Maç öncesi ~6 dakika sürer (tribün dolar, ısınmalar, çıkış, marş, tokalaşma, fotoğraf, yazı tura); "Maça geç" ile atlanabilir.
+- 2026-09-28: Gölgeler oyuncu silüetinin her projektörden zemine izdüşümüdür; insan modelleri tek parça (kemikli, tek dokulu) çizilir.
 
 ## Açık kararlar
 - Şu an açık karar yok.

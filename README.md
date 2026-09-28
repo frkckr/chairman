@@ -20,8 +20,10 @@ Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig
 | `js/goruntu.js` | Ekran, renk titremesi, ışık, gökyüzü |
 | `js/stadyum.js` | Seçili tarife göre stadı kurar: zemin, tribünler, reklam panoları, projektörler, kaleler |
 | `js/seyirci.js` | Tribündeki insanlar: doluluğa göre koltuklara oturur, iki kareyle sallanır |
-| `js/oyuncular.js` | Oyuncu modelleri ve pozlar |
+| `js/oyuncular.js` | İnsan modeli (tek parça, kemikli, tek dokulu) ve pozlar |
+| `js/golgeler.js` | Oyuncu ve top gölgeleri: her projektörden zemine izdüşüm |
 | `js/mac-sahnesi.js` | Maç motorunu sahneye bağlar: oyuncu hareketi, top, kulübeler, tören, bakış, radyo satırı |
+| `js/baskan.js` | Başkanın bedeni: masa, eller, çay, program, telefon; olaylara tepkiler ve dürbün |
 | `js/efektler.js` | Meşale ve duman |
 | `js/arayuz.js` | Kamera, dürbün, düğmeler, çizim döngüsü |
 | `js/ortak.js` | Ortak araçlar: piksel yazı, kulüpler, Türkçe ekler |
