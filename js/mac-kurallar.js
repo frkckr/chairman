@@ -7,7 +7,59 @@
    gerekirse kart; faul yiyen takım iyi durumdaysa avantaj. Ofsayt: pas anında ölçülür, oyuna karışınca yan hakem bayrak kaldırır.
    Hakem çapraz sistemle koşar; yan hakemler sondan ikinci savunmacı (ya da top) hizasında durur. */
 Object.assign(Match.prototype,{
-  kuralHazirla(){this.avantaj=null;this.sonKullanim=null;},
+  kuralHazirla(){this.avantaj=null;this.sonKullanim=null;this.degisiklik=null;},
+
+  /* ============ yedekler ve oyuncu değişikliği ============ */
+  yedekleriKur(){
+    this.yedekler=[[],[]];
+    for(let t=0;t<2;t++){const kd=this.kadro&&this.kadro[t];if(!kd)continue;
+      (kd.yedekler||[]).forEach((k,i)=>{const s=this.kulubeler[t].koltuklar[i]||{x:t?11.5:-11.5,z:-5.8},oz=ozellikler(k);
+        this.yedekler[t].push(this.varlik('yedek',s.x,s.z,{team:t,rol:k.mevki==='KL'?'GK':(k.mevki||'OS'),name:k.ad,no:k.no,kayit:k,oz,ayak:k.ayak||'sag',boy:k.boy||1,
+          maxSpd:6.4+2.4*oz.hiz,yon:Math.PI/2,oturuyor:true,koltuk:s}));});}
+    /* değişiklik planı: her takım ikinci yarıda 2–4 değişiklik, 55. ile 87. dakika arasında */
+    this.degisimPlani=[0,1].map(()=>{const n=2+Math.floor(this.rast()*3),L=[];for(let i=0;i<n;i++)L.push(3300+this.rast()*1920);return L.sort((a,b)=>a-b);});
+  },
+  /* duruşta sırası gelen değişiklik başlar: yorgun (ya da sarı kartlı) oyuncu çıkar, aynı mevkiden yedek girer */
+  degisiklikBaslat(du){
+    if(this.degisiklik||this.half!==2||!['tac','kaleVurusu','serbest'].includes(du.tur))return;
+    for(const t of[du.takim,1-du.takim]){
+      const plan=this.degisimPlani[t];if(!plan.length||this.gameSec<plan[0]||this.ist.degisiklik[t]>=5)continue;
+      const yedek=this.yedekler[t].filter(p=>!p.cikti&&p.rol!=='GK');if(!yedek.length){plan.length=0;continue;}
+      const saha=this.teams[t].filter(p=>p.oyunda&&p.rol!=='GK'&&p!==du.kullanan&&!(p.eylem&&p.eylem.kilit));if(!saha.length)continue;
+      const puan=p=>p.yorgunluk+(p.kart===1&&p.rol==='DEF'?0.25:0)+this.rast()*0.15-Math.min(p.z,PW-p.z)*0.004;
+      const cikan=saha.reduce((a,c)=>puan(c)>puan(a)?c:a);
+      const giren=yedek.find(y=>y.rol===cikan.rol)||yedek[0];
+      plan.shift();
+      giren.oturuyor=false;giren.tx=0;giren.tz=-0.7;giren.hizOran=0.5;giren.bak=cikan;
+      /* çıkan oyuncu en yakın çizgiden çıkar; ana tribün tarafındaysa kulübeye yürür */
+      cikan.hizOran=0.35;
+      this.degisiklik={t,cikan,giren,t0:this.t,girdi:false};
+      this.duranSure[this.half-1]+=30;
+      this.on('degisiklik',{takim:t,cikan,giren});
+      return;}
+  },
+  degisiklikAdim(dt){
+    const dg=this.degisiklik;if(!dg)return;
+    const {cikan,giren,t}=dg;
+    /* çıkan: en yakın çizgiye yürür (kulübe tarafına), geçince kulübeye */
+    if(!dg.girdi){cikan.tx=clamp(cikan.x,-PL+2,PL-2);cikan.tz=cikan.z<MZ?-0.8:PW+0.8;cikan.hizOran=0.6;cikan.bak=null;cikan.yonHedef=null;
+      giren.tx=0;giren.tz=-0.7;giren.hizOran=0.55;
+      const disarida=cikan.z<0.2||cikan.z>PW-0.2,girenHazir=hyp(giren.x,giren.z+0.7)<1.2;
+      if((disarida&&girenHazir)||this.t-dg.t0>14){
+        const n=cikan.n,i=this.players.indexOf(cikan);
+        Object.assign(giren,{tur:'oyuncu',n,mevki:cikan.mevki,rol:cikan.rol,oyunda:true,oturuyor:false,yorgunluk:0,hizOran:0.8});
+        this.teams[t][n]=giren;if(i>=0)this.players[i]=giren;
+        Object.assign(cikan,{tur:'yedek',oyunda:false,cikti:true,koltuk:giren.koltuk,eylem:null,surus:null});
+        const Y=this.yedekler[t];Y.splice(Y.indexOf(giren),1,cikan);
+        if(this.ball.sahip===cikan)this.ball.sahip=null;
+        this.ist.degisiklik[t]++;dg.girdi=true;dg.t1=this.t;
+        this.on('oyuncuGirdi',{takim:t,cikan,giren});}}
+    else{/* çıkan kulübedeki boş koltuğa oturur */const k=cikan.koltuk;
+      if(cikan.z>MZ){cikan.tx=clamp(cikan.x,-PL,PL);cikan.tz=PW+2;}else{cikan.tx=k.x;cikan.tz=k.z;}
+      cikan.hizOran=0.35;cikan.bak=null;
+      if(hyp(cikan.x-k.x,cikan.z-k.z)<0.4){cikan.oturuyor=true;cikan.x=k.x;cikan.z=k.z;cikan.vx=cikan.vz=0;cikan.yon=Math.PI/2;}
+      if(cikan.oturuyor||this.t-dg.t1>10){if(!cikan.oturuyor){cikan.oturuyor=true;cikan.x=k.x;cikan.z=k.z;}this.degisiklik=null;}}
+  },
 
   /* ============ top toplayıcılar ============ */
   topculariKur(){
@@ -82,6 +134,7 @@ Object.assign(Match.prototype,{
     if(tur==='korner'||tur==='kaleVurusu'){const yh=b.x>0?this.refs[1]:this.refs[2];yh.eylem={ad:'bayrak',t:0,sure:1.6,tur};}
     const eski={tac:'throw',korner:'corner',kaleVurusu:'goalkick'}[tur];
     this.on(tur,{team:takim,taker:du.kullanan,x,z});if(eski)this.on(eski,{team:takim,taker:du.kullanan});
+    this.degisiklikBaslat(du);
   },
   kullananSec(du){
     const tm=this.sahadakiler(du.takim);
@@ -130,8 +183,10 @@ Object.assign(Match.prototype,{
       du.hazirT+=dt;
       if(du.tur!=='tac'){tk.tx=du.geriX;tk.tz=du.geriZ;tk.hizOran=0.4;tk.yonHedef=du.aci;tk.bak=null;b.x=du.x;b.z=du.z;b.vx=b.vz=0;}
       const bekle={tac:0.5,korner:1.4,kaleVurusu:1.0,serbest:du.baraj?3.2:0.9,penalti:3.0}[du.tur]||1;
-      if(du.hazirT>=bekle&&(du.tur==='tac'||hyp(tk.x-du.geriX,tk.z-du.geriZ)<0.5||du.hazirT>bekle+2))this.durusKullan(du);
+      const degisimBekle=this.degisiklik&&!this.degisiklik.girdi;
+      if(!degisimBekle&&du.hazirT>=bekle&&(du.tur==='tac'||hyp(tk.x-du.geriX,tk.z-du.geriZ)<0.5||du.hazirT>bekle+2))this.durusKullan(du);
     }
+    this.degisiklikAdim(dt);
     this.hareketHepsi(dt);this.topAdim(dt);
   },
   /* atanın bakacağı yön: kaleye ya da oyunun içine */
@@ -328,7 +383,7 @@ Object.assign(Match.prototype,{
     let kart=null;const r=this.rast();
     if(v.ciddiyet>0.95&&v.kayma&&r<0.25)kart='kirmizi';
     else if(sonAdam&&!this.cezaSahasi(yapan.team,x,z)&&v.ciddiyet>0.5&&r<0.45)kart='kirmizi';
-    else if(r<clamp(v.ciddiyet*0.28+(atak?0.08:0)+(v.kayma&&v.arkadan?0.22:0)-(v.hava?0.08:0)+(sonAdam?0.3:0)-0.06,0,0.9))kart='sari';
+    else if(r<clamp(v.ciddiyet*0.5+(atak?0.12:0)+(v.kayma&&v.arkadan?0.25:0)-(v.hava?0.08:0)-(v.itme?0.05:0)+(sonAdam?0.3:0)-0.02,0,0.9))kart='sari';
     const penalti=this.cezaSahasi(yapan.team,x,z)&&!v.hava||(v.hava&&this.cezaSahasi(yapan.team,x,z)&&this.rast()<0.5);
     /* avantaj: faul yiyen takım topla ilerliyor ve ciddi bir faul değil */
     if(!penalti&&kart!=='kirmizi'&&this.avantajVar(yiyen,yu)){
@@ -366,6 +421,7 @@ Object.assign(Match.prototype,{
   /* her karede: avantajın süresi, kaleci elde, kayma teması */
   kuralAdim(dt){
     const b=this.ball;
+    if(this.degisiklik&&this.degisiklik.girdi)this.degisiklikAdim(dt);
     if(b.tasiyan&&b.tasiyan.rol==='GK')this.kaleciElde(dt);
     for(const p of this.players)if(p.eylem&&p.eylem.ad==='kayma')this.kaymaTemas(p);
     const a=this.avantaj;

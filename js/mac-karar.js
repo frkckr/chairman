@@ -37,7 +37,7 @@ function pasAnaliz(m,p,hx,hz,tip,alici){
   let ir=N-1,tr=tb[N-1];
   if(alici){for(let i=tip==='hava'?N-2:0;i<N;i++){const t=varisSuresi(alici,px[i],pz[i],0.6);if(t<=tb[i]+0.05){ir=i;tr=Math.max(t,tb[i]);break;}if(i===N-1)tr=t;}}
   const sureT=Math.max(tb[ir],tr);
-  let kalma=1;const ux=(hx-b.x)/(L||1),uz=(hz-b.z)/(L||1);
+  let kalma=1,enIyiHava=0,kalabalik=0;const ux=(hx-b.x)/(L||1),uz=(hz-b.z)/(L||1);
   for(const o of rakip){
     if(!o.oyunda)continue;
     const ds=segD(o.x,o.z,b.x,b.z,hx,hz);if(ds>o.maxSpd*(sureT+0.2)+1.5)continue;
@@ -53,7 +53,10 @@ function pasAnaliz(m,p,hx,hz,tip,alici){
          Havadan gelen topta iniş yeri bir hava mücadelesidir: rakip biraz geç kalsa da kafaya girebilir */
       const pr=i<ir?sigma((tb[i]-to-0.1)/0.14):tip==='hava'?0.75*sigma((Math.min(tr,tb[i]+0.3)-to+0.25)/0.3):0.7*sigma((Math.min(tr,tb[i]+0.3)-to-0.05)/0.16);
       if(pr>enIyi)enIyi=pr;}
-    kalma*=1-Math.min(0.97,enIyi);}
+    /* yerden pasta her rakip ayrı ayrı araya girebilir; havadan topta iniş yerinde asıl çekişme en iyi rakiple */
+    if(tip==='hava'){enIyiHava=Math.max(enIyiHava,enIyi);if(enIyi>0.15)kalabalik++;}
+    else kalma*=1-Math.min(0.97,enIyi);}
+  if(tip==='hava')kalma=(1-Math.min(0.95,enIyiHava))*Math.pow(0.95,Math.max(0,kalabalik-1));
   let alinma=1;
   if(alici){if(tr>tb[N-1]+0.6)alinma=0.6;else if(tr>tb[N-1]+0.25)alinma=0.85;}
   const oz=p.oz,baski=baskiAltinda(m,p);
@@ -74,12 +77,17 @@ function secenekler(m,p){
   /* ofsayt çizgisini oyuncu hatasız göremez: görüşü düşük olan daha çok yanılır */
   const ofs=ofsaytCizgisi(m,p.team)+m.normal()*1.4*(1.2-oz.gorus);
   const kayip=(x,z)=>0.3+xT(-x*d,z)*100;
-  const gorur=(x,z,uzun)=>{const a=Math.abs(aciFark(Math.atan2(z-p.z,x-p.x),p.yon));if(a<1.9)return true;return m.rast()<oz.gorus*(uzun?0.45:0.8)*(1-(a-1.9)/1.3);};
+  /* görüş: önündekileri hep görür; arkasındakileri daha önce etrafı taradıysa (görüş özelliği) */
+  const gorur=(x,z,uzun)=>{const a=Math.abs(aciFark(Math.atan2(z-p.z,x-p.x),p.yon));if(a<1.9)return true;return m.rast()<oz.gorus*(uzun?0.5:0.95)*(1-(a-1.9)/2.6);};
   /* şut */
-  /* şut: iyi pozisyonda (xG ≥ 0,03) istekle; uzaktan ancak iyi şutçu ve önü boşsa */
-  if(u>PL-38){const x=xG(u,w,'ayak',baski*0.6);
-    if(x>=0.03)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*MOTOR_AYAR.sutIstegi-(1-x)*0.4,xg:x});
-    else if(x>=0.012&&oz.sut>0.68&&baski<0.4)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)-(1-x)*0.4,xg:x});}
+  /* şut: iyi pozisyonda istekle; uzaktan ancak iyi şutçu ve önü boşsa. Atış hattındaki savunmacı bloklayabilir */
+  if(u>PL-38){let x=xG(u,w,'ayak',baski*0.6);
+    const gx=d*PL,Lk=hyp(gx-b.x,MZ-b.z);let acik=1;
+    for(const o of m.teams[1-p.team]){if(!o.oyunda||o.rol==='GK')continue;const on=((o.x-b.x)*(gx-b.x)+(o.z-b.z)*(MZ-b.z))/Lk;if(on<0.5||on>Math.min(14,Lk-1))continue;
+      const yan=segD(o.x,o.z,b.x,b.z,gx,MZ);if(yan<1.3)acik*=1-0.75*(1-yan/1.3);}
+    x*=acik;
+    if(x>=0.02)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*MOTOR_AYAR.sutIstegi-(1-x)*0.4,xg:x});
+    else if(x>=0.01&&oz.sut>0.6&&baski<0.5)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*(0.5+0.5*MOTOR_AYAR.sutIstegi)-(1-x)*0.4,xg:x});}
   /* paslar */
   for(const q of m.teams[p.team]){
     if(q===p||!q.oyunda)continue;const qu=q.x*d;
@@ -99,7 +107,7 @@ function secenekler(m,p){
       /* alıcı topu aldığı an sıkıştırılacaksa o yerin değeri tam gerçekleşmez (topu tutamaz, geri döner) */
       const qBaski=enYakinRakip(m,hx,hz,p.team).d,sikisma=clamp((4-qBaski)/3,0,1);
       let deger=xT(hu,hz)*100*(1-0.55*sikisma)+ilerleme*(MOTOR_AYAR.ilerleme+0.015*takim.direkt)*(ilerleme<0?0.3:1-0.5*sikisma);
-      if(ilerleme<-4)deger+=takim.sakin*0.3+baski*0.5;     /* geri pas: topu tutmak, baskıda güvenli çıkış */
+      if(ilerleme<-4)deger+=takim.sakin*0.45+baski*0.8;    /* geri pas: topu tutmak, baskıda güvenli çıkış */
       if(alt==='ara')deger+=0.3+takim.direkt*0.3;
       if(tip==='hava')deger+=takim.direkt*0.4-0.85;        /* havadan pas: kontrolü zor, uzun top takımın tarzına bağlı */
       if(q.rol==='GK')deger-=0.3;
@@ -122,10 +130,14 @@ function secenekler(m,p){
    for(const sapma of[0,-0.6,0.6,-1.2,1.2]){
      const a=(d>0?0:Math.PI)+(d>0?1:-1)*(hedefYon+sapma),k=6,x=b.x+Math.cos(a)*k,z=clamp(b.z+Math.sin(a)*k,1.5,PW-1.5);
      if(Math.abs(x)>PL-1)continue;
-     const {o}=enYakinRakip(m,x,z,p.team),onunde=o?hyp(o.x-x,o.z-z):99;
-     /* hedefin çevresindeki her ek rakip (kaleci dahil) sürmeyi zorlaştırır */
-     let kalabalik=0;for(const r of m.teams[1-p.team])if(r.oyunda&&r!==o&&hyp(r.x-x,r.z-z)<5.5)kalabalik++;
-     const P=clamp((0.55+oz.surus*0.35-clamp((5-onunde)/5,0,1)*0.55*(1.1-oz.surus*0.4))*Math.pow(0.8,kalabalik),0.06,0.95);
+     /* sürme yolu: yolun üstündeki ya da yoluna yetişebilecek her rakip (kaleci dahil) topu kesebilir.
+        Yolun önündeki rakip en tehlikelisi; yandaki/arkadaki ancak sürenden önce yola girebilirse */
+     let P=0.6+oz.surus*0.35;const tSur=1.1;
+     for(const r of m.teams[1-p.team]){if(!r.oyunda)continue;const dy=segD(r.x,r.z,b.x,b.z,x,z);if(dy>3.2)continue;
+       const ileri=((r.x-b.x)*Math.cos(a)+(r.z-b.z)*Math.sin(a)),onde=ileri>0.5,tr=varisZamani(r,b.x+(x-b.x)*0.5,b.z+(z-b.z)*0.5,0.8,0.15);
+       const kes=(1-dy/3.2)*(onde?0.75:0.45)*(0.6+r.oz.mudahale*0.6)*(tr<tSur?1:0.4)*(1.15-oz.surus*0.3);
+       P*=1-clamp(kes,0,0.9);}
+     P=clamp(P,0.05,0.95);
      /* sürmekle kazanılan değer sınırlıdır: savunma ve kaleci kapanır (kalenin dibine kadar sürme olmaz) */
      let deger=Math.min(xT(x*d,z)*100,buradaXT+2.5)+(x*d-u)*MOTOR_AYAR.ilerleme*0.8;
      if(u>PL-18&&Math.abs(z-MZ)>Math.abs(w-MZ)+1&&Math.abs(z-MZ)>GW2+3)deger-=0.8;  /* kalenin dibine, çizgiye doğru sürme */

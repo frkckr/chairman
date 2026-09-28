@@ -20,7 +20,7 @@ const DIZILISLER={
 /* blok ayarları: hat aralıkları (m), topa kayma oranları, genişlik çarpanları */
 const BLOK={
   hucum:{cizgi:(bu)=>clamp(bu*0.55-17,-38,12),os:15,fv:17,kayma:{DEF:0.3,OS:0.42,FV:0.32},genislik:1.14,bekIleri:10,kanatIleri:11},
-  savunma:{cizgi:(bu)=>clamp(bu*0.6-22,-42,-3),os:10,fv:12,kayma:{DEF:0.3,OS:0.4,FV:0.25},genislik:0.84,bekIleri:0,kanatIleri:-2}
+  savunma:{cizgi:(bu)=>clamp(bu*0.6-22,-42,-3),os:11,fv:12,kayma:{DEF:0.3,OS:0.4,FV:0.25},genislik:0.9,bekIleri:0,kanatIleri:-2}
 };
 /* bir mevkinin hedef konumu (takımın hücum çerçevesinde): bu = topun u'su, bw = topun w'su, sahip = top takımda mı */
 function dizilisKonumu(diz,n,bu,bw,sahip){
@@ -74,10 +74,18 @@ Object.assign(Match.prototype,{
       /* pas bir takım arkadaşına gidiyorsa, o takımın kovalayanı alıcıdır */
       if(b.hedefOyuncu&&b.hedefOyuncu.oyunda&&!(b.hedefOyuncu.eylem&&b.hedefOyuncu.eylem.kilit)){kovalayan=kovalayan.slice();kovalayan[b.hedefOyuncu.team]=b.hedefOyuncu;}
     }
-    this._ofs=[ofsaytCizgisi(this,0),ofsaytCizgisi(this,1)];
+    /* hücumcular ofsayt çizgisini ~0,5 sn gecikmeyle okur: çizgi öne çıkınca ofsayta düşebilirler */
+    const OF=this._ofsGecmis||(this._ofsGecmis={a:[],i:0});if(this.kare%6===0){OF.a[OF.i%6]=[ofsaytCizgisi(this,0),ofsaytCizgisi(this,1)];OF.i++;}
+    this._ofs=OF.i>=5?OF.a[(OF.i-5)%6]:[ofsaytCizgisi(this,0),ofsaytCizgisi(this,1)];
+    /* savunma bloğu topun yerine anında değil, ~0,4 sn gecikmeyle kayar (hızlı pas dolaşımı boşluk açar) */
+    const G=this._topGecmis||(this._topGecmis={x:[],z:[],i:0});if(this.kare%6===0){G.x[G.i%5]=b.x;G.z[G.i%5]=b.z;G.i++;}
+    const eski=G.i>=4?(G.i-4)%5:0,gecikmeli=du?odak:{x:G.x[eski]!=null?G.x[eski]:odak.x,z:G.z[eski]!=null?G.z[eski]:odak.z,sahip:odak.sahip,takim:odak.takim};
+    /* geçiş: topu kaybeden takım savunma düzenine bir gecikmeyle geçer (kontra atak anı) */
+    if(sahipTakim>=0&&sahipTakim!==this._sonSahipTakim){this._sonSahipTakim=sahipTakim;this._sahiplikBas=this.t;}
+    const gecisSure=du?0:this.t-(this._sahiplikBas||0);
     for(let t=0;t<2;t++){
       const d=this.dir[t],bu=odak.x*d,tk=this.taktik[t];
-      const hucum=sahipTakim===t||(sahipTakim<0&&b.sonTakim===t);
+      const hucum=sahipTakim===t||(sahipTakim<0&&b.sonTakim===t)||(sahipTakim===1-t&&gecisSure<MOTOR_AYAR.gecis);
       /* bölgesel pres: topa, top kendi bölgesine giren oyuncu çıkar (1. adam); diğerleri yerini korur.
          2. adam (kapatan) yalnızca kendi ceza sahası önünde ya da ileri preste */
       let pres1=null,pres2=null;
@@ -96,12 +104,13 @@ Object.assign(Match.prototype,{
         if(!p.oyunda||p===b.sahip||b.tasiyan===p)continue;
         const e=p.eylem;if(e&&(e.kilit||e.ad==='vurus'||e.ad==='tac'||e.ad==='mudahale'))continue;
         if(du&&du.kullanan===p)continue;
+        if(this.degisiklik&&(this.degisiklik.cikan===p||this.degisiklik.giren===p)&&!this.degisiklik.girdi)continue;
         p.yonHedef=null;p.bak=b;p.hizOran=0.7;
         if(p.rol==='GK'){this.kaleciKonum(p,dt);continue;}
         if(p===kovalayan[t]||p===kovalayan[2+t]){this.kovala(p);continue;}
         if(p===pres1){this.presYap(p,b.sahip,dt);continue;}
         if(p===pres2){this.kapat(p,b.sahip);continue;}
-        this.bolgeKonumu(p,t,hucum,cizgi,dt,odak);
+        this.bolgeKonumu(p,t,hucum,cizgi,dt,hucum?odak:gecikmeli);
       }
     }
   },
@@ -199,8 +208,9 @@ Object.assign(Match.prototype,{
     }
     u=clamp(u,-PL+0.5,PL-0.8);w=clamp(w,0.8,PW-0.8);
     p.tx=u*d;p.tz=w;
-    /* hedefe uzaklığa göre hız: yakınsa yürür/tırıs, uzaksa koşar (geçişlerde takım hızla yerleşir) */
+    /* hedefe uzaklığa göre hız: yakınsa yürür/tırıs, uzaksa koşar. Savunmaya dönüşte topa uzak olan tam hızla koşmaz */
     const uzak=hyp(p.tx-p.x,p.tz-p.z);p.hizOran=Math.max(p.hizOran,clamp(0.45+uzak/16,0.45,1));if(uzak<2.5)p.hizOran=Math.min(p.hizOran,0.55);
+    if(!hucum&&hyp(p.x-this.ball.x,p.z-this.ball.z)>15)p.hizOran=Math.min(p.hizOran,MOTOR_AYAR.donus);
   },
   destekci(p,s){
     if(p.rol==='GK'||p===s)return false;
