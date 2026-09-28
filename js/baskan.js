@@ -91,7 +91,8 @@ function baskanOlay(ad,v){
   else if(ad==='kickoff'&&mac.half===1)baskanEylem('alkis',2);
   else if(ad==='wood'&&v.p&&v.p.team===0)baskanEylem('yumruk',3);
   else if(ad==='save'&&v.p&&v.p.team===1&&rnd()<0.45)baskanEylem('yumruk',3);
-  else if((ad==='faul'||ad==='kart')&&v.takim===1)baskanEylem('itiraz',3);
+  /* aleyhimize karar (faul, kart, ofsayt): başkan itiraz eder */
+  else if((ad==='faul'||ad==='kart'||ad==='ofsayt')&&v.aleyhe===0)baskanEylem('itiraz',3);
   else if(ad==='halftime'){BASKAN.cay=1;BASKAN.caySicak=1;baskanEylem('telefon',2);}
   else if(ad==='fulltime'){const s=v.score;baskanEylem(s[0]>s[1]?'alkis':s[0]<s[1]?'golYedik':'itiraz',4);}
 }

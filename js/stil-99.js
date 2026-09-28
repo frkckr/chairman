@@ -46,8 +46,11 @@ const STIL={
     /* yedekler eşofmanla, teknik direktör takım elbiseyle (pant: uzun pantolon, ls: uzun kol) */
     yedekEv:{shirt:'#7a1812',trim:'#f2ede2',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
     yedekDeplasman:{shirt:'#22347a',trim:'#eef0f3',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
-    takimElbise:{shirt:'#23262e',trim:'#e8e4da',shorts:'#23262e',socks:'#23262e',ls:true,pant:true,boots:'#0e0e10'}
+    takimElbise:{shirt:'#23262e',trim:'#e8e4da',shorts:'#23262e',socks:'#23262e',ls:true,pant:true,boots:'#0e0e10'},
+    /* top toplayıcı çocuklar: lacivert eşofman, sarı yelek (çocuk boyu, bkz. topcuBoy) */
+    topcu:{shirt:'#e8c21e',trim:'#1e2a5a',shorts:'#1e2a5a',socks:'#1e2a5a',ls:true,pant:true}
   },
+  topcuBoy:{h:0.74,w:0.8},
   tenler:['#e2b48c','#cf9a70','#b07650','#8a5a3c','#ecc49e'],
 
   /* Gece maçında her projektör için bir gölge (90'ların dörtlü gölgesi): oyuncunun silüeti ışıktan zemine izdüşer (js/golgeler.js).

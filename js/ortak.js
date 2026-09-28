@@ -71,6 +71,7 @@ const sLoc=n=>n+"'"+(hardEnd(n)?'t':'d')+(isBack(lastV(n))?'a':'e');
 const sAbl=n=>n+"'"+(hardEnd(n)?'t':'d')+(isBack(lastV(n))?'an':'en');
 const sDat=n=>n+"'"+(endsV(n)?'y':'')+(isBack(lastV(n))?'a':'e');
 function sGen(n){const h={a:'ı',ı:'ı',o:'u',u:'u',e:'i',i:'i',ö:'ü',ü:'ü'}[lastV(n)]||'i';return n+"'"+(endsV(n)?'n':'')+h+'n';}
+function sAcc(n){const h={a:'ı',ı:'ı',o:'u',u:'u',e:'i',i:'i',ö:'ü',ü:'ü'}[lastV(n)]||'i';return n+"'"+(endsV(n)?'y':'')+h;}
 
 /* ============ dokular: reklam panoları, pankart, skor tabelası ============ */
 const ADS=[['ŞİMŞEK PİL',[250,210,40],[196,28,28]],['LALE KOLONYA',[246,244,236],[28,110,62]],['ÇINAR BİSKÜVİ',[186,30,40],[250,238,214]],

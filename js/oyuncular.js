@@ -105,8 +105,35 @@ const POSE={
   tac:{aL:-2.8,aR:-2.8,eL:-0.5,eR:-0.5,lean:-0.15},
   tutus:{aL:-1.1,aR:-1.1,eL:-0.8,eR:-0.8},
   mars:{aR:-0.55,eR:-1.95,aRz:0.3,aL:0.02,aLz:-0.05},
-  isaret:{aR:-2.2,eR:-0.1,aRz:0.4}
+  isaret:{aR:-2.2,eR:-0.1,aRz:0.4},
+  /* maç eylemleri. Modelde L harfli kemikler (yerel −x) oyuncunun sağ tarafıdır; aşağıdakiler sağ ayak/kol içindir,
+     sol ayaklı oyuncuda aynala() ile çevrilir */
+  vurusGeri:{lean:0.06,lL:0.8,kL:1.3,lR:-0.12,kR:0.3,aL:0.35,aLz:-0.55,aR:-0.4,aRz:0.7,eL:-0.4,eR:-0.3,hx:0.18},
+  vurusTakip:{lean:-0.28,lL:-1.35,kL:0.12,lR:0.22,kR:0.35,aL:-0.35,aLz:-0.9,aR:0.5,aRz:1.0,eL:-0.4,eR:-0.3,hx:0.2},
+  pasGeri:{lean:0.04,lL:0.45,kL:0.7,lR:-0.08,kR:0.25,aL:0.2,aLz:-0.35,aR:-0.2,aRz:0.4,eL:-0.4,eR:-0.4,hx:0.2},
+  pasTakip:{lean:-0.12,lL:-0.75,kL:0.2,lR:0.12,kR:0.3,aL:-0.2,aLz:-0.5,aR:0.3,aRz:0.55,eL:-0.4,eR:-0.4,hx:0.2},
+  kontrol:{lean:0.12,lL:-0.35,kL:0.55,lR:0.05,kR:0.25,aLz:-0.35,aRz:0.35,hx:0.35},
+  gogus:{lean:-0.32,aL:-0.4,aR:-0.4,aLz:-0.85,aRz:0.85,eL:-0.3,eR:-0.3,hx:0.3,lL:-0.1,kL:0.3,lR:0.1,kR:0.3},
+  mudahale:{lean:-0.12,dy:-0.12,lL:-1.05,kL:0.15,lR:0.35,kR:0.95,aL:0.35,aR:-0.4,aLz:-0.6,aRz:0.6,eL:-0.5,eR:-0.5},
+  blok:{lean:0.05,aL:0.15,aR:0.15,aLz:-0.12,aRz:0.12,eL:-2.3,eR:-2.3,lL:-0.2,kL:0.3,lR:0.2,kR:0.3},
+  dusus:{aL:-2.2,aR:-2.2,eL:-0.2,eR:-0.2,lL:0.2,lR:-0.1,kL:0.4,kR:0.3,hx:-0.4},
+  yerde:{aL:-2.6,aR:-0.4,aLz:-0.4,aRz:0.3,eL:-0.4,eR:-0.6,lL:0.1,kL:0.6,lR:-0.2,kR:0.2,hx:-0.3},
+  yumruk:{aL:-3.0,aR:-3.0,eL:-0.05,eR:-0.05,dy:0.18,hx:-0.35,lL:-0.3,kL:0.6},
+  elleAtis:{lean:0.15,aL:-2.2,eL:-0.2,aR:0.4,aRz:0.3,lL:0.2,lR:-0.4,kR:0.3},
+  tacAt:{lean:0.25,aL:-1.1,aR:-1.1,eL:-0.4,eR:-0.4,lL:0.25,lR:-0.35,kL:0.2,kR:0.4},
+  tasi:{aL:-0.85,aR:-0.85,eL:-0.9,eR:-0.9,aLz:0.15,aRz:-0.15},
+  itiraz:{aL:-0.5,aR:-0.5,aLz:-0.7,aRz:0.7,eL:-1.25,eR:-1.25,hx:-0.15},
+  hakemDuduk:{aL:-2.5,eL:-0.2,aLz:-0.15,hx:-0.1},
+  hakemYon:{aL:-1.55,eL:0,aLz:0},
+  hakemAvantaj:{aL:-1.35,aR:-1.35,eL:0,eR:0,aLz:0.25,aRz:-0.25},
+  hakemKart:{aL:-3.0,eL:0,aLz:-0.1,hx:-0.15},
+  hakemPenalti:{aL:-1.0,eL:0,aLz:0},
+  bayrak:{aR:-3.0,eR:0,aRz:0.05},
+  tabela:{aL:-2.9,aR:-2.9,eL:-0.3,eR:-0.3,aLz:0.2,aRz:-0.2}
 };
+/* sağ ayak/kol pozunu sol tarafa çevir */
+const AYNA={lL:'lR',lR:'lL',kL:'kR',kR:'kL',aL:'aR',aR:'aL',eL:'eR',eR:'eL',aLz:'aRz',aRz:'aLz'},AYNA_ONBELLEK=new Map();
+function aynala(P){let A=AYNA_ONBELLEK.get(P);if(A)return A;A={};for(const k in P){const h=AYNA[k]||k;A[h]=(k==='aLz'||k==='aRz')?-P[k]:P[k];}AYNA_ONBELLEK.set(P,A);return A;}
 /* formalar: kadrodaki forma adı → STIL.formalar */
 const KIT=STIL.formalar;
 const SAC_STILI={kisa:'short',kel:'bald',uzun:'long',mullet:'mullet',kivircik:'curly'};
