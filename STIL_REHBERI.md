@@ -36,9 +36,12 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 - Her oyuncunun kendine ait görünümü vardır: boy 0,9–1,1, yapı 0,93–1,12 ölçek.
 - Saç stilleri: kısa, kel, uzun, mullet, kıvırcık. Bıyık ve sakal. Krampon rengi. Sıyrık çorap. Kalecide uzun kol ve eldiven.
 - Numara sırtta büyük (2 kat piksel yazı, koyu kenarlı), göğüste küçük.
-- Pozlar: şut, koşu, kafa, taç, kaleci uçuşu ve topu tutuş, sevinç, marşta el göğüste, oturuş (yedekler), bekleme. Yeni hareketler aynı poz sistemine (`POSE`) eklenir.
+- Pozlar: koşu; pas ve şut (hazırlık, geri salınım, temas, takip); ilk dokunuş, göğüs kontrolü, kafa; ayakta ve kayarak müdahale, blok; düşüş, yerde yatma, kalkma; taç; itiraz; sevinç; kaleci uçuşu, yumruklama, topu tutuş, elle atış ve degaj; marşta el göğüste, oturuş (yedekler), bekleme. Hakem işaretleri (düdük, yön, avantaj, kart, penaltı), yan hakem bayrağı ve dördüncü hakemin tabelası da pozdur. Yeni hareketler aynı poz sistemine (`POSE`) eklenir.
+- Gövde motorun gerçek bakış yönüne döner; oyuncu vuruştan önce hedefe döner. Sol ayaklı oyuncuların vuruş pozları aynalanır: vuran bacak gerçekten sol bacaktır.
 - Hareket pürüzsüzdür: koşu hıza bağlı sürekli bir dalgayla döner, pozlar birbirine yumuşakça karışır, dönüşler yavaşça yapılır. Motor sabit adımla ilerler, çizim adımlar arasında ara değer alır.
-- Yedekler takım renginde eşofmanla, teknik direktör takım elbiseyle görünür.
+- Yedekler takım renginde eşofmanla, teknik direktör takım elbiseyle görünür. Oyuna giren yedeğin eşofmanı çıkar, forması görünür.
+- Top toplayıcı çocuklar sarı forma, lacivert şort ve eşofman altı giyer; boyları yetişkinlerin ~3/4'üdür. Sahanın çevresinde 12 çocuk elinde yedek topla bekler (çoklu top sistemi). Dışarı çıkan top yuvarlanıp panoda durur, bir çocuk onu toplar.
+- Dördüncü hakemin tabelası kırmızı ve yeşil ışıklı sayılar gösterir: uzatmada dakika, değişiklikte çıkan (kırmızı) ve giren (yeşil) numara.
 
 ## 6. Işık ve gölge
 - Gece maçında her projektör için bir gölge (90'ların dörtlü gölgesi; FIFA 98'in gece maçlarındaki gibi). Gölge, oyuncunun kemiklerine bağlı kutuların ışıktan zemine izdüşümüdür: gerçek silüettir, bacak ve kollarla oynar, ışıktan uzaklaştıkça uzar (`js/golgeler.js`).

@@ -92,7 +92,7 @@ function olay(ad,v){
     case 'header':if(v.shot){soyle(v.p.name+' kafayı vurdu!');heyecanla(v.p.team,H.sut);}else if(v.tur==='indirme')soyle(v.p.name+' kafayla indirdi.');break;
     case 'cross':soyle(v.p.name+' ortaladı…');heyecanla(v.p.team,H.sut*0.6);break;
     case 'save':soyle(v.p.name+(v.catch?' topu kucakladı.':' uçtu, çeldi!'));heyecanla(v.p.team,H.kurtaris);break;
-    case 'block':soyle(v.p.name+' şutu vücuduyla kesti.');break;
+    case 'block':soyle(v.orta?v.p.name+' ortayı kesti.':v.p.name+' şutu vücuduyla kesti.');break;
     case 'yumruk':soyle(v.p.name+' yumrukla uzaklaştırdı.');break;
     case 'wood':soyle('Direk! Top direkten döndü!');if(v.p)heyecanla(v.p.team,H.direk);break;
     case 'yanAg':soyle('Yan ağlar! Tribünler gol sandı.');if(v.p)heyecanla(v.p.team,H.sut);break;

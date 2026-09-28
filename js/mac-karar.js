@@ -86,8 +86,10 @@ function secenekler(m,p){
     for(const o of m.teams[1-p.team]){if(!o.oyunda||o.rol==='GK')continue;const on=((o.x-b.x)*(gx-b.x)+(o.z-b.z)*(MZ-b.z))/Lk;if(on<0.5||on>Math.min(14,Lk-1))continue;
       const yan=segD(o.x,o.z,b.x,b.z,gx,MZ);if(yan<1.3)acik*=1-0.75*(1-yan/1.3);}
     x*=acik;
-    if(x>=0.02)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*MOTOR_AYAR.sutIstegi-(1-x)*0.4,xg:x});
-    else if(x>=0.01&&oz.sut>0.6&&baski<0.5)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*(0.5+0.5*MOTOR_AYAR.sutIstegi)-(1-x)*0.4,xg:x});}
+    /* şut isteği iyi pozisyonda tam, uzaklaştıkça azalır: 18 m'ye kadar tam, 30 m'de yalnız şutun kendi değeri */
+    const istek=1+(MOTOR_AYAR.sutIstegi-1)*clamp((30-Lk)/12,0,1);
+    if(x>=0.02)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*istek-(1-x)*0.4,xg:x});
+    else if(x>=0.01&&oz.sut>0.6&&baski<0.5)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*(0.5+0.5*istek)-(1-x)*0.4,xg:x});}
   /* paslar */
   for(const q of m.teams[p.team]){
     if(q===p||!q.oyunda)continue;const qu=q.x*d;
@@ -106,8 +108,8 @@ function secenekler(m,p){
       const A=pasAnaliz(m,p,hx,hz,tip,q),hu=hx*d,ilerleme=hu-u;
       /* alıcı topu aldığı an sıkıştırılacaksa o yerin değeri tam gerçekleşmez (topu tutamaz, geri döner) */
       const qBaski=enYakinRakip(m,hx,hz,p.team).d,sikisma=clamp((4-qBaski)/3,0,1);
-      let deger=xT(hu,hz)*100*(1-0.55*sikisma)+ilerleme*(MOTOR_AYAR.ilerleme+0.015*takim.direkt)*(ilerleme<0?0.3:1-0.5*sikisma);
-      if(ilerleme<-4)deger+=takim.sakin*0.45+baski*0.8;    /* geri pas: topu tutmak, baskıda güvenli çıkış */
+      let deger=xT(hu,hz)*100*(1-MOTOR_AYAR.sikisma*sikisma)+ilerleme*(MOTOR_AYAR.ilerleme+0.015*takim.direkt)*(ilerleme<0?0.3:1-0.5*sikisma);
+      if(ilerleme<-4)deger+=takim.sakin*MOTOR_AYAR.geriPas+baski*0.8;    /* geri pas: topu tutmak, baskıda güvenli çıkış */
       if(alt==='ara')deger+=0.3+takim.direkt*0.3;
       if(tip==='hava')deger+=takim.direkt*0.4-0.85;        /* havadan pas: kontrolü zor, uzun top takımın tarzına bağlı */
       if(q.rol==='GK')deger-=0.3;
@@ -115,7 +117,7 @@ function secenekler(m,p){
       S.push({tur:alt==='ara'?'ara':(tip==='hava'&&L>34?'uzun':'pas'),alici:q,hx,hz,tip,deger:U,P:A.P,v0:A.v0,sure:A.sure,L:A.L});}
   }
   /* orta ve geri çevirme: kanatta, son üçte birde */
-  if(u>PL-26&&Math.abs(w-MZ)>10){
+  if(u>PL-30&&Math.abs(w-MZ)>9){
     const yakin=Math.sign(w-MZ);
     for(const [tu,tw,tip,ad] of[[PL-5,MZ+yakin*2.5,'hava','onDirek'],[PL-6.5,MZ-yakin*4,'hava','arkaDirek'],[PL-11,MZ,'hava','penalti'],[PL-12.5,MZ+yakin*6,'yer','geriCevir']]){
       const hx=tu*d,hz=tw;let en=null,enT=99;
@@ -182,7 +184,7 @@ function ilkDokunusSutu(m,p,x,z,y){
   const parca=y>1.4?'kafa':y>0.45?'vole':'ayak',x2=xG(u,z,parca,baskiAltinda(m,p)*0.7);
   if(parca==='kafa')return null;  /* kafayı temas anı belirler */
   const esik=0.07-p.oz.sut*0.03;
-  return x2>esik&&m.rast()<0.35+x2*3?{tur:'sut',hx:d*PL,hz:MZ,xg:x2,ilk:true}:null;
+  return x2>esik&&m.rast()<0.5+x2*4?{tur:'sut',hx:d*PL,hz:MZ,xg:x2,ilk:true}:null;
 }
 /* ---- kaleci topu elinde: kısa atış (açıktaki arkadaşa) ya da uzun degaj (forvete) ---- */
 function kaleciDagitim(m,gk){

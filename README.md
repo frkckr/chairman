@@ -27,8 +27,12 @@ Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig
 | `js/efektler.js` | Meşale ve duman |
 | `js/arayuz.js` | Kamera, dürbün, düğmeler, çizim döngüsü |
 | `js/ortak.js` | Ortak araçlar: piksel yazı, kulüpler, Türkçe ekler |
-| `js/mac-motoru.js` | Maç motoru: tören, yazı tura, oyun, duran toplar, devreler (görüntüden bağımsız) |
+| `js/mac-motoru.js` | Maç motoru: oyuncu hareketi ve eylemleri (bakış yönü, vuruş, top sürme), top fiziği, temaslar, kaleci, tören, devreler (görüntüden bağımsız) |
+| `js/mac-karar.js` | Topla karar: şutun gol beklentisi (xG), bölge tehdidi (xT), pas başarısı, seçenekler ve seçim |
+| `js/mac-dizilis.js` | Topsuz oyun: diziliş, savunma çizgisi, pres, destek, koşular, markaj, kaleci konumu |
+| `js/mac-kurallar.js` | Kurallar: duran toplar, top toplayıcılar, müdahale, faul, kart, avantaj, ofsayt, oyuncu değişikliği, hakemler |
 | `araclar/kontrol.py` | Sayfayı görünmez bir tarayıcıda açıp hata ve ekran görüntüsü kontrolü yapar |
+| `araclar/mac-deneme.js` | Maç motorunu görüntüsüz ve hızlı oynatıp istatistikleri hedef tabloyla karşılaştırır |
 | `AGENTS.md` | Codex gibi başka araçları `CLAUDE.md`'deki talimatlara yönlendirir |
 
 ## Claude ile çalışma döngüsü
