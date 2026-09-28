@@ -6,6 +6,8 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const rnd=Math.random;
 /* tohumlu rastgele sayı (mulberry32): aynı tohum hep aynı sayı dizisini verir. Maç motoru bunu kullanır; aynı tohumla aynı maç oynanır */
 function tohumluRastgele(tohum){let a=tohum>>>0;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+/* parçalı doğrusal eğri: noktalar [[x,y],...] (x artan); aralık dışında uçtaki değer */
+function cizgiDegeri(N,x){if(x<=N[0][0])return N[0][1];for(let i=1;i<N.length;i++)if(x<=N[i][0]){const a=N[i-1],b=N[i];return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);}return N[N.length-1][1];}
 function h2(x,y){let h=(Math.imul(x|0,374761393)+Math.imul(y|0,668265263))|0;h=Math.imul(h^(h>>>13),1274126177);h^=h>>>16;return (h>>>0)/4294967296;}
 function vnoise(x,y){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;const u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);const a=h2(xi,yi),b=h2(xi+1,yi),c=h2(xi,yi+1),d=h2(xi+1,yi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;}
 

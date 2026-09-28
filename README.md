@@ -31,6 +31,8 @@ Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig
 | `js/mac-karar.js` | Topla karar: şutun gol beklentisi (xG), bölge tehdidi (xT), pas başarısı, seçenekler ve seçim |
 | `js/mac-dizilis.js` | Topsuz oyun: diziliş, savunma çizgisi, pres, destek, koşular, markaj, kaleci konumu |
 | `js/mac-kurallar.js` | Kurallar: duran toplar, top toplayıcılar, müdahale, faul, kart, avantaj, ofsayt, oyuncu değişikliği, hakemler |
+| `js/mac-senaryo.js` | Maç günü çizelgesi (yalnızca veri): ısınma, kulübeler, çıkış, marş, tokalaşma, fotoğraf, yazı tura |
+| `js/mac-oncesi.js` | Maç gününü yürütür: maç öncesi, devre arası, maç sonu; teknik ekip, fotoğrafçılar ve "Maça geç" |
 | `araclar/kontrol.py` | Sayfayı görünmez bir tarayıcıda açıp hata ve ekran görüntüsü kontrolü yapar |
 | `araclar/mac-deneme.js` | Maç motorunu görüntüsüz ve hızlı oynatıp istatistikleri hedef tabloyla karşılaştırır |
 | `AGENTS.md` | Codex gibi başka araçları `CLAUDE.md`'deki talimatlara yönlendirir |

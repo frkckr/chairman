@@ -75,9 +75,12 @@ Object.assign(Match.prototype,{
     for(const o of this.disToplar){if(o.alan||hyp(o.vx,o.vz)>3||o.y>0.5)continue;
       let en=null,ed=1e9;for(const k of this.topcular){if(k.top||k.gorev)continue;const dd=hyp(k.x-o.x,k.z-o.z);if(dd<ed){ed=dd;en=k;}}
       if(en&&ed<45){en.gorev={tur:'al',top:o};o.alan=en;}}
+    const oncesi=MAC_ONCESI.includes(this.phase);
     for(const k of this.topcular){
       const g=k.gorev;k.yonHedef=null;
-      if(!g){k.tx=k.ev.x;k.tz=k.ev.z;k.hizOran=0.4;k.bak=b.tasiyan&&b.tasiyan!==k?b.tasiyan:b;}
+      /* maç öncesi: çocuklar tünelden sırayla çıkıp yerlerine geçer, sahaya bakar */
+      if(oncesi&&k.cikisT!=null&&this.sen&&this.sen.t<k.cikisT){this.moveP(k,dt);continue;}
+      if(!g){k.tx=k.ev.x;k.tz=k.ev.z;k.hizOran=0.4;k.bak=oncesi?{x:k.ev.x*0.8,z:MZ}:b.tasiyan&&b.tasiyan!==k?b.tasiyan:b;}
       else if(g.tur==='al'){const o=g.top;k.tx=o.x;k.tz=o.z;k.hizOran=0.75;k.bak=o;
         if(hyp(k.x-o.x,k.z-o.z)<0.55){const i=this.disToplar.indexOf(o);if(i>=0)this.disToplar.splice(i,1);k.top=true;k.gorev=null;}}
       else if(g.tur==='ver'){const du=this.durus;
@@ -461,8 +464,7 @@ Object.assign(Match.prototype,{
   /* ============ hakemler ============ */
   hakemAI(dt){
     const b=this.ball,r=this.refs,T=this.tunel,ph=this.phase;
-    if(ph==='giris'||ph==='toren')return;
-    if(ph==='yazitura'){r[1].tx=0;r[1].tz=PW+1.3;r[2].tx=0;r[2].tz=-1.3;r[1].hizOran=r[2].hizOran=0.3;return;}
+    if(MAC_ONCESI.includes(ph))return;
     if(ph==='halftime'||(ph==='fulltime'&&this.phaseT>9)){r.forEach((q,i)=>{q.hizOran=0.3;q.tx=T.x+(i-1)*0.5;q.tz=T.z-3;q.bak=null;q.yonHedef=null;});return;}
     if(ph==='fulltime'){r.forEach((q,i)=>{q.hizOran=0.3;q.tx=(i-1)*1.2;q.tz=MZ-3;});return;}
     /* orta hakem: çapraz çizgi, oyunu kendisiyle aktif yan hakem arasında tutar, 12–20 m uzakta */

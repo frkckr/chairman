@@ -82,7 +82,7 @@ function player(k,ekRenkler){
   geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
   geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(si,4));geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(sw,4));geo.setIndex(idx);
   geo.computeBoundingSphere();geo.boundingSphere.radius+=0.6;
-  const mesh=new THREE.SkinnedMesh(geo,LAM({map:tx(atlasCiz(k,ekRenkler),'n'),skinning:true}));
+  const mesh=new THREE.SkinnedMesh(geo,LAM({map:tx(atlasCiz(k,ekRenkler||k.ekRenkler),'n'),skinning:true}));
   mesh.add(hip);mesh.bind(new THREE.Skeleton(kemikler));
   const root=new THREE.Group();root.add(mesh);root.scale.set(k.w||1,k.h||1,k.w||1);
   return{root,mesh,hip,head,aL,eL,aR,eR,lL,kL,lR,kR,kemikler};
@@ -129,7 +129,17 @@ const POSE={
   hakemKart:{aL:-3.0,eL:0,aLz:-0.1,hx:-0.15},
   hakemPenalti:{aL:-1.0,eL:0,aLz:0},
   bayrak:{aR:-3.0,eR:0,aRz:0.05},
-  tabela:{aL:-2.9,aR:-2.9,eL:-0.3,eR:-0.3,aLz:0.2,aRz:-0.2}
+  tabela:{aL:-2.9,aR:-2.9,eL:-0.3,eR:-0.3,aLz:0.2,aRz:-0.2},
+  /* maç günü: ısınma, tören, fotoğraf, maç sonu */
+  esneme1:{lean:0.35,dy:-0.25,lL:-0.9,kL:1.1,lR:0.6,kR:0.2,aL:-0.2,aR:-0.2,aLz:-0.2,aRz:0.2},
+  esneme2:{aL:-2.9,aR:-2.9,aLz:0.3,aRz:-0.3,eL:-0.2,eR:-0.2,lean:-0.05},
+  tokalas:{aL:-1.1,eL:-0.35,aLz:0.15},
+  comel:{dy:-0.45,lR:-1.5,kR:1.5,lL:0.1,kL:1.6,lean:0.1,aL:-0.7,eL:-0.9,aR:-0.7,eR:-0.9},
+  fotoCek:{dy:-0.45,lR:-1.5,kR:1.5,lL:0.1,kL:1.6,lean:0.05,aL:-1.45,eL:-1.35,aR:-1.45,eR:-1.35,aLz:0.25,aRz:-0.25},
+  foto:{aL:-0.35,aR:-0.35,eL:-1.9,eR:-1.9,aLz:0.25,aRz:-0.25},
+  alkis:{aL:-1.0,aR:-1.0,eL:-1.0,eR:-1.0,aLz:0.35,aRz:-0.35},
+  cember:{lean:0.45,aL:-1.6,aR:-1.6,aLz:-1.0,aRz:1.0,eL:-0.2,eR:-0.2,hx:0.3},
+  yorgun:{lean:0.75,dy:-0.08,aL:-0.55,aR:-0.55,eL:-0.35,eR:-0.35,lL:-0.2,lR:-0.2,kL:0.35,kR:0.35,hx:-0.3}
 };
 /* sağ ayak/kol pozunu sol tarafa çevir */
 const AYNA={lL:'lR',lR:'lL',kL:'kR',kR:'kL',aL:'aR',aR:'aL',eL:'eR',eR:'eL',aLz:'aRz',aRz:'aLz'},AYNA_ONBELLEK=new Map();
