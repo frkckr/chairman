@@ -1,39 +1,57 @@
-# Chairman — Claude için proje talimatı
+# Chairman — proje çalışma talimatı
 
-Bu dosyayı her oturumun başında oku. Oturumlar birbirini hatırlamaz; kalıcı bilgi yalnızca bu depodaki dosyalardır. Ardından `YOL_HARITASI.md` dosyasını oku: nerede kaldığımız, alınan kararlar ve sıradaki adım orada.
+Bu talimatlar bütün geliştirme araçları için geçerlidir. Kalıcı proje bilgisi depodaki belgelerdir.
 
-## Oyun
-- Kulüp başkanlığı (futbol yönetim) oyunu. Oyuncu, kurgusal Demirkapı SK'nın başkanıdır.
-- Kariyer 3. Lig'den başlar, 1. Lig'e ve Avrupa kupalarına uzanır. İç saha ve deplasman maçları oynanır.
-- Maçlar başkanın gözünden izlenir: açık ana tribündeki başkan bölümünden, taraftarın arasından. Kapalı loca ve TV yayını açısı yoktur; dürbün isteğe bağlıdır.
-- Oyun bugün geçer (VAR var), görünüm ve his 90'lar futbol nostaljisidir.
-- Hedef platform bilgisayardır (Steam). Geliştirme tarayıcıda sürer; paketleme son aşamada yapılır.
+## Okuma sırası ve bilgi kaynakları
 
-## Görsel yön: '99 görünümü
-- FIFA 99 / PS1 dönemi 3B görünüm. Kurallar `STIL_REHBERI.md` dosyasındadır; yeni eklenen her şey bu kurallara uyar.
-- Tüm görseller kodla üretilir. Harici model, doku ya da fotoğraf dosyası kullanılmaz (bu karar açıkça değişmedikçe).
-- Gerçek kulüp, oyuncu, marka ya da logo kullanılmaz. Her şey kurgusaldır.
+Oturum başında bu dosyayı, ardından [YOL_HARITASI.md](YOL_HARITASI.md) ve [STIL_REHBERI.md](STIL_REHBERI.md) dosyalarını oku. Oyun davranışı veya içerik çalışmadan önce [OYUN_TASARIMI.md](OYUN_TASARIMI.md), kod veya mimari çalışmadan önce ayrıca [TEKNIK_PLAN.md](TEKNIK_PLAN.md) içindeki ilgili bölümleri oku.
 
-## Mimari kuralları
-- Oyun mantığı (maç motoru, yönetim, veriler) görüntüden ayrı durur. Mantık dosyalarında çizim kodu olmaz.
-- Görünüşe dair her sabit `js/stil-99.js` dosyasındadır. Stil değişikliği önce bu dosyadan yapılır.
-- Stadyum, oyuncu ve maç senaryosu gibi şeyler veri (tarif) olarak tanımlanır; görüntü katmanı bu tarifleri okur.
-- Three.js r128 cdnjs'den yüklenir. Derleme aracı yoktur, dosyalar tarayıcıda doğrudan çalışır. `index.html` açılınca oyun görünür.
-- Betikler sırayla yüklenir (bkz. `index.html`). Hepsi klasik betik; dosyalar birbirinin üst düzey tanımlarını paylaşır. Yeni dosya eklenirse doğru sıraya konur ve aynı adı iki dosyada tanımlamaktan kaçınılır.
-- Oyun GitHub Pages üzerinden yayınlanır; bu yüzden `index.html` depo kökünde kalır ve dosya yolları görelidir.
+- [README.md](README.md): projenin kısa tanıtımı, bugün çalışanlar ve açılış bilgileri.
+- OYUN_TASARIMI: onaylı oyun yönü, tasarım ilkeleri ve açık ürün kararları.
+- TEKNIK_PLAN: mevcut mimari, hedef altyapı ve teknik kabul koşulları.
+- YOL_HARITASI: iş sırası, bağımlılıklar, tamamlanma durumu ve sıradaki adım.
+- STIL_REHBERI: mevcut görsel dil ve yeni sahnelerin sunum kuralları.
+
+Bir kararın ayrıntısını tek belgede tut, diğerlerinden bağlantı ver. Bugün çalışan özellik, onaylı hedef, uygulama önerisi ve açık karar birbirinden ayrılmalıdır. Kullanıcının güncel açık kararı önceliklidir; açık kararları sessizce kesinleştirme.
+
+## Oyun yönü
+
+- Türkiye'de geçen, tek kurgusal kulüpte uzun bir başkanlık kariyeri. Taraftarlıktan adaylığa, başkanlığa, seçim kaybında kulübü dışarıdan takip etmeye ve yeniden adaylığa uzanır.
+- Başarılı final, Avrupa'nın en büyük kulüp kupasını kazanıp görevi bırakmaktır. Kupa kazanılmadan da kariyer bitebilir. Ayrıntılar OYUN_TASARIMI'ndadır.
+- Oyuncu başkanı yönetir; teknik direktörün kadro ve saha kararları ona aittir. Futbolcu ve teknik direktör yetenek puanları kullanıcıya gösterilmez.
+- Bu kariyer sistemleri hedeftir. Mevcut uygulama, maç motoruna bağlı bir 3B maç günü prototipidir.
+- Mevcut kulüp adı Demirkapı SK'dır; nihai isim ve şehir açık karardır. Türkiye gerçektir; kulüpler, kişiler ve markalar kurgusaldır. İlk içerik dili Türkçedir.
+
+## Mevcut kod ve mimari
+
+- Oyun mantığı, veriler ve görüntü ayrı tutulur. Mantık dosyalarında çizim kodu olmaz.
+- Mevcut maç motorunu koruyarak küçük adımlarla ilerle. Kariyer ile motor arasına açık bir veri bağlantısı kur; yönetim sistemlerini sahne dosyalarına yığma.
+- Ortak görsel ayarlar `js/stil-99.js` üzerinden yönetilir. Dağınık görsel sabitler değiştirildikçe uygun yere taşınır. Stadyum ve maç günü gibi içerikler tariflerden okunur.
+- Three.js r128 bugün CDN'den yüklenir. Derleme aracı yoktur. Betikler `index.html` içinde sırayla yüklenen klasik betiklerdir; yükleme sırasını ve paylaşılan üst düzey adları kontrol et.
+- Kayıt/yükleme, sürüm geçişleri ve çevrimdışı masaüstü denemesi yol haritasının erken aşamasındadır. Modül veya paketleme değişikliği somut gereksinime göre yapılır; motor değişikliği varsayılmaz.
+- Tarayıcı prototipinde `index.html` depo kökünde, yollar göreli kalır. Steam hedefi için platform işlemleri oyun mantığından ayrılır.
+- Mevcut '99 görsel dili referanstır. Tüm oyun görselleri kodla üretilir; harici model, doku veya fotoğraf kullanımı ayrıca kararlaştırılmalıdır. Reddedilen görsel konseptler uygulanmaz.
 
 ## Kullanıcıyla çalışma
-- Kullanıcıyla Türkçe konuş. Açıklamaları teknik olmayan, sade bir dille yap; ne değiştiğini oyunda nasıl görüneceğiyle anlat.
-- Kullanıcı "düşün", "kafanda ne var" gibi bir şey sorduğunda dosyalara dokunmadan önce fikrini ve gerekçeni anlat. Soru soruyorsa önce cevap ver; açıkça istemedikçe dosya değiştirme.
-- Kendin araştırabileceğin ya da kodda bulabileceğin şeyleri kullanıcıya sorma. Yalnızca gerçekten ona ait kararları sor: oyunun dönemi, platform, isimler, lisans, para harcamak gibi.
-- `YOL_HARITASI.md`'deki sırayla, küçük adımlarla ilerle. Her adım çalışan bir sonuçla biter. Büyük yeniden yazım yerine mevcut kodu geliştir.
-- Adım bitince:
-  1. `YOL_HARITASI.md`'de maddeyi işaretle.
-  2. Alınan kararları "Kararlar" bölümüne tarihle yaz.
-  3. Kullanıcıya kısa bir özet ver ve sonucu nasıl göreceğini söyle: PR birleştikten birkaç dakika sonra GitHub Pages linkinde güncellenir.
+
+- Türkçe ve sade anlat. Değişikliğin oyundaki karşılığını, doğrulama sonucunu ve önemli sınırlamasını belirt.
+- Fikir veya plan talebi dosya değiştirme izni değildir. Kullanıcının onayladığı kapsamı uygula; belge onayı kendiliğinden oyun kodu geliştirme izni sayılmaz.
+- Depodan öğrenilebilecek şeyleri kullanıcıya sorma. Gerçek tercih ve kapsam kararlarını gerektiğinde sor.
+- İşe başlamadan Git durumunu kontrol et, mevcut kullanıcı değişikliklerini koru. İstenmeden commit, push veya yayın yapma.
+- Yol haritasındaki sırayla, küçük ve doğrulanabilir adımlarla ilerle. Yalnızca tamamlanan ve kontrol edilen maddeleri işaretle. Yeni kararları ilgili ana belgeye, yön değişikliklerinin tarihli özetini yol haritasına yaz.
+- Yerel değişiklik, yayınlanmış değişiklik değildir. Doğrulanmadan GitHub Pages veya Steam sürümünün güncellendiğini söyleme.
 
 ## Kontrol
-- Her değişiklikten sonra `python3 araclar/kontrol.py` çalıştır. Araç `index.html`'i başsız Chromium'da açar, hataları listeler ve `araclar/son-kontrol-index.png` ekran görüntüsünü alır. Görüntüye bakıp sonucun beklendiği gibi olduğunu doğrula.
-- Başka bir sayfayı kontrol etmek için yolunu ver: `python3 araclar/kontrol.py prototipler/1-retro-2b-baskan-locasi.html`.
-- Araç Three.js'i cdnjs yerine npm'den indirdiği yerel kopyadan yükler, çünkü bulut ortamı cdnjs'e erişemeyebilir. Depodaki dosyalar değişmez; geçici dosyaları `.gitignore` dışarıda tutar.
-- Maç motoru (`js/mac-*.js`) ya da kadrolar değiştiyse ayrıca `node araclar/mac-deneme.js` çalıştır. Araç 40 maçı görüntüsüz, işlemci çekirdekleri kadar paralel oynatır (~1–2 dakika) ve istatistikleri (gol, şut, korner, taç, faul, pas…) hedef tabloyla karşılaştırır; hedef dışındaki satırlar "!" ile işaretlenir. Maç sayısı ve ilk tohum verilebilir: `node araclar/mac-deneme.js 10 5`. Aynı tohum aynı maçı verir.
+
+### Yalnızca belge değişikliği
+
+Yerel bağlantıları, mevcut durum ile hedef ayrımını, belgeler arası tutarlılığı ve `git diff --check` sonucunu kontrol et. Değişen dosyaların onaylı kapsamda kaldığını doğrula. Oyun kodu değişmediyse tarayıcı ve maç simülasyonu çalıştırmak gerekmez.
+
+### Oyun kodu veya görsel değişikliği
+
+- `python3 araclar/kontrol.py` çalıştır. Araç sayfayı başsız Chromium'da açar, hataları ve `araclar/son-kontrol-index.png` ekran görüntüsünü üretir. Görüntüyü incele; yalnızca komutun bitmesini başarı sayma.
+- Başka bir sayfa için yolu ver: `python3 araclar/kontrol.py prototipler/1-retro-2b-baskan-locasi.html`.
+- Araç Python, Playwright/Chromium ve yerel Three.js kopyasını hazırlamak için npm/tar gerektirir. Three.js kontrol sırasında yerel kopyadan yüklenir; geçici dosyalar Git dışında tutulur. Eksik bağımlılık varsa bildir; eşdeğer kontrol kullanıldıysa ne yapıldığını açıkla.
+- Maç motoru (`js/mac-*.js`) veya kadrolar değişirse ayrıca `node araclar/mac-deneme.js` çalıştır. Varsayılan 40 maçtır. Hedef dışındaki `!` satırlarını değerlendir; başarılı çıkış kodu tek başına denge onayı değildir.
+- `node araclar/mac-deneme.js 10 5` gibi küçük denemeler hızlı inceleme içindir; tam örneklem yerine geçtiğini söyleme. Aynı başlangıç verisi ve tohumla tekrarlanabilirlik korunmalıdır.
+- Kariyer sistemleri eklendikçe para, takvim, bir kez uygulanması gereken sonuçlar, kayıt/yükleme ve uzun kariyer tutarlılığı ilgili değişikliğin riskine göre sınanır. Kabul koşulları TEKNIK_PLAN ve YOL_HARITASI'ndadır.

@@ -1,109 +1,186 @@
 # Chairman — yol haritası
 
-Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter; bitince kutusu işaretlenir.
+Son güncelleme: 2026-09-29. Bu dosya iş sırasının ve tamamlanma durumunun ana kaynağıdır. Oyun kuralları [OYUN_TASARIMI.md](OYUN_TASARIMI.md), mimari yaklaşım [TEKNIK_PLAN.md](TEKNIK_PLAN.md), sunum kuralları [STIL_REHBERI.md](STIL_REHBERI.md) içindedir.
 
-## Şu an neredeyiz
-- [x] Görsel yön seçildi: '99 görünümü (FIFA 99 / PS1 dönemi).
-- [x] Tek kare sahne hazır: ayırt edilebilir oyuncular, dürbün (`index.html`).
-- [x] Maç başkanın gözünden, açık ana tribündeki başkan koltuğundan izleniyor; TV açısı, kapalı loca ve ekran seçenekleri kaldırıldı.
-- [x] Görünüş ayarları tek dosyada toplandı (`js/stil-99.js`).
-- [x] Maç motoru var (`js/mac-motoru.js`), ama '99 sahnesine bağlı değil. Retro ve 3B prototiplerde çalışıyor (`prototipler/`).
-- [x] Bulutta test için kontrol aracı hazır (`araclar/kontrol.py`); adres parametreleriyle de çalışıyor.
-- [x] Maç baştan sona oynanıyor: tünelden çıkış, İstiklal Marşı töreni, yazı tura, iki devre, devre arası, maç sonu (~10 dakika). Skor stadın tabelasında ve ekranın altındaki radyo satırında.
-- [x] Stat tariflerden kuruluyor; tribünlerde kutulardan kurulu insanlar ve tek tek koltuklar var. Ekran altındaki geçici deneme panelinden stat, doluluk ve zemin değiştirilebiliyor.
-- [x] Maç motoru baştan yazıldı (`js/mac-*.js`): oyuncular hedefe dönüp vuruyor, topu dokunuşlarla sürüyor, seçeneklerini tartarak karar veriyor. Taç, korner, aut, serbest vuruş ve penaltı; top toplayıcılar; faul, kart, avantaj, ofsayt; oyuncu değişikliği ve uzatma tabelası var. Ayarlar `araclar/mac-deneme.js` ile ölçülüyor.
-- [x] Maç günü baştan sona gerçek sırayla akıyor (~6 dk, "Maça geç" ile atlanabilir): tribün yavaş yavaş doluyor; kaleciler, hakemler ve takımlar ısınıyor, içeri giriyor; yedekler, antrenörler, 4. hakem, fotoğrafçılar ve en son teknik direktörler çıkıyor; önde üç hakemle çıkış, marş (tribün ayakta), TFF sırasıyla tokalaşma, iki takım fotoğrafı, yazı tura, kenetlenme ve santra. Devre arasında yedekler şut çalışıyor; maç sonunda tokalaşma ve taraftarı alkışlama var.
-- [x] Oyun maç öncesi bülteniyle açılıyor: iki takımın ligdeki yeri ve formu, olası ilk 11'ler, sakat ve cezalılar, son 5 maç, puan durumu, aradaki son maçlar. "İlerle" ile stada geçiliyor. Veriler şimdilik sabit (`js/lig.js`, `js/kadrolar.js`).
+## Şu an neredeyiz?
 
-## Kararlar
-- 2026-09-26: Görsel yön Demirkapı '99 (FIFA 99 / PS1 dönemi). Tüm görseller kodla üretilir.
-- 2026-09-26: Ana açı başkan locası; TV yayını açısı ikinci seçenek. (2026-09-27'de değişti, aşağıya bak.)
-- 2026-09-26: Kariyer 3. Lig'den başlar, 1. Lig ve Avrupa kupalarına uzanır; iç saha ve deplasman maçları var.
-- 2026-09-26: Oyuncular uzaktan tanınır olmalı: boy, yapı ve saç farkı; belirgin numara; locadan bakarken kendi oyuncularında numara etiketi. (Numara etiketi 2026-09-27'de iptal edildi.)
-- 2026-09-26: Görünüş ayarları tek dosyada (`js/stil-99.js`); stil değişikliği önce oradan yapılır.
-- 2026-09-27: Çalışma ortamı Claude Code bulut oturumları + GitHub (depo: github.com/frkckr/demirkapi-99); oyun GitHub Pages'ten izlenir. (Depo adı 2026-09-29'da değişti, aşağıya bak.)
-- 2026-09-27: Oyun bugün geçer; VAR var. Görünüm yine '99 tarzı.
-- 2026-09-27: Hedef platform bilgisayar (Steam). Geliştirme tarayıcıda sürer, GitHub Pages test linki olarak kalır; Steam paketi son aşamada yapılır.
-- 2026-09-27: Kulüp, lig, oyuncu ve marka isimleri tamamen kurgusal.
-- 2026-09-27: Numara etiketi özelliği iptal; ekranda hiçbir oyuncunun üstünde etiket yok. Formadaki numaralar kalır.
-- 2026-09-27: Maç başkanın gözünden izlenir. Başkan kapalı bir locada değil, açık ana tribündeki başkan bölümünde oturur; etrafında tribünler ve seyirci var. Tek açı budur; dürbün isteğe bağlı.
-- 2026-09-27: TV yayını açısı iptal.
-- 2026-09-27: Ekran seçenekleri (tüplü TV, renk titremesi düğmeleri) kaldırıldı. TV çerçevesi, tarama çizgileri ve kavisli köşeler yok; '99 piksel görünümü ve dönemin renkleri sabit. Ekran oranı 4:3.
-- 2026-09-27: Kariyer 3. Lig'de kötü bir statta (az seyirci, kötü zemin) başlar; para harcandıkça ve başarı geldikçe stat gelişir, tribünler dolar. Grafik bu değerlere göre ayarlanabilir olmalı. Tribündeki seyirciler insan gibi görünmeli.
-- 2026-09-27: Statlar `js/stadyum-tarifleri.js`'te tarif olarak durur; maç günü doluluğu (doluluk, deplasman oranı) tariften ayrıdır. Kariyer açılışı 3. Lig kasaba statıdır.
-- 2026-09-27: Seyirciler kutulardan kurulu küçük insanlardır; binlerce kişi tek çizimle (InstancedMesh) çizilir, başkana uzak olanlar daha az parçayla. Koltuklar tek tek görünür.
-- 2026-09-27: Başkan, ana tribünün ortasındaki başkan bölümünün ön sırasında oturur; önünde geçit ve korkuluk, arkasında ve yanında yöneticiler vardır.
-- 2026-09-27: Ekonomi gelene kadar stat, doluluk ve zemin kalitesi ekran altındaki geçici deneme panelinden ya da adres satırından (`?stat=sehir&doluluk=0.8&zemin=0.5`) seçilir. Oyun ekranında seçenek yoktur.
-- 2026-09-27: İç çözünürlük 640×480 (PS1 yüksek çözünürlük modu); köşe titremesi kapalı. Görünüm retro, hareket pürüzsüz. Normal bakış 30°, dürbün 11°.
-- 2026-09-27: Avrupa arenası şimdilik kaldırıldı; yalnızca 3. Lig kasaba ve 1. Lig şehir statı var. 1. Lig'de başkan 17. sırada oturur.
-- 2026-09-27: Başkan bölümünde başkanın önünde küçük bir masa ve çay; iki yanda ahşap bölme, yerde bordo halı. Alan açık kalır.
-- 2026-09-27: Tribün sakin durur; seyirci maçtaki heyecana göre (giriş, santra, şut, direk, gol, maç sonu) hareketlenir. Başkanın yakınındakiler daha sakindir.
-- 2026-09-27: Bir maç yaklaşık 10 dakika sürer (her devre ~5 dk); tören ve devre arası ayrıca ~1,5 dk. Gol dengesi maç başına ~2,5 gol, ~25 şut.
-- 2026-09-27: Ekrana grafik konmaz; skor ve dakika stadın skor tabelasından ve ekranın altındaki radyo satırından okunur.
-- 2026-09-27: İstiklal Marşı töreni görsel olarak var; müziği ses aşamasında (Aşama 7) eklenecek.
-- 2026-09-28: Maç izleme "10 dakika, kesintisiz ama sık" kalır: olaylar gerçeğe göre daha sık yaşanır, maç sonu sayıları gerçek maça benzer.
-- 2026-09-28: Başkanın bedeni ekranın altında görünür: masa ve eller (çay, program, telefon); eller maça tepki verir.
-- 2026-09-28: Maç öncesi ~6 dakika sürer (tribün dolar, ısınmalar, çıkış, marş, tokalaşma, fotoğraf, yazı tura); "Maça geç" ile atlanabilir.
-- 2026-09-28: Gölgeler oyuncu silüetinin her projektörden zemine izdüşümüdür; insan modelleri tek parça (kemikli, tek dokulu) çizilir.
-- 2026-09-28: Maç motoru dört mantık dosyasına ayrıldı: `mac-motoru.js` (hareket, eylemler, top fiziği, temaslar, kaleci), `mac-karar.js` (topla karar), `mac-dizilis.js` (topsuz oyun), `mac-kurallar.js` (kurallar, duran toplar, hakemler). Kararlar şutun gol beklentisine (xG) ve bölge tehdidine (xT) dayanır; pasın başarısı topun ve rakiplerin varış zamanlarından hesaplanır. Motor tohumlu rastgele sayı kullanır: aynı tohum aynı maçı verir.
-- 2026-09-28: Duran toplarda çoklu top sistemi: 12 top toplayıcı sahanın çevresinde yedek topla bekler; top çıkınca en yakını yeni topu verir. Faulde oyun durur (düşme, düdük, itiraz, kart; avantaj kuralı), ofsayt pas anında kontrol edilir ve yan hakem bayrak kaldırır. Uzatma duruşlardan biriken süreyle hesaplanır, 4. hakem tabelayla gösterir; ikinci yarıda her takım 2–4 değişiklik yapar.
-- 2026-09-28: Topu süren oyuncudan top ancak müdahaleyle alınır (başarısı ve faul olasılığı var); yalnız uzun kaçan dokunuşta araya girilebilir. Kaleci uzaktan gelen şutta önce yana kayar, top gelmeden hemen önce uçar.
-- 2026-09-28: Maç deneme aracının hedef tablosu gözden geçirildi. Oyuncular gerçek hızda koştuğu için 10 dakikalık maçta ~7 dakika oyun oynanır; gerçekçi kararlarla önemli olaylar gerçek maçın dakika başına 2,5–3 katı sıklıkta yaşanır. 40 maçlık ortalama: 1,9 gol, 9,7 şut (%41 isabet), 2,3 korner, 7,3 taç, 9,9 faul, 1,8 sarı kart, 0,4 ofsayt, 130 pas (%69 isabet), uzatma 2,8 / 4,8 dk, takım başına 2,5 değişiklik. Gerçek maçın şut, korner ve taç sayısına ulaşmak için ya maç uzamalı ya da oyun yapaylaşmalı (bkz. Açık kararlar).
-- 2026-09-28: Maç günü akışı `js/mac-senaryo.js` (veri) ve `js/mac-oncesi.js` (yürütücü) dosyalarındadır. Sıra Premier League ısınma protokolüne ve TFF statüsüne göre: kaleciler ~45 dk, takımlar ~35 dk önce ısınmaya çıkar; hakemler orta çizgi boyunca koşar; saha ~10 dk önce boşalır; teknik direktörler en son çıkar. Tokalaşmada misafir takım kaptanı önde önce hakemlerle, sonra ev sahibi oyuncularla tokalaşır; ardından hakemler ev sahibiyle. Önce ev sahibi yerinde, misafir kendi yarısında fotoğraf çektirir. Yazı turayı kazanan santrayı ya da kaleyi seçer (Kural 8). Maç öncesinin rastgeleliği ayrı bir tohumdan gelir; maçın kendisini değiştirmez.
-- 2026-09-28: Devre arası ~45 sn (yedekler kale önünde şut çalışır, teknik direktörler soyunma odasına gidip döner). Maç sonunda üç düdük, kazananların sevinci, kaybedenlerin yorgunluğu, rakiple tokalaşma, iki takımın kendi taraftarını alkışlaması ve tünele dönüş vardır.
-- 2026-09-29: Projenin adı şimdilik "Chairman" (eskiden "Demirkapı '99"). Depo github.com/frkckr/chairman, oyun linki frkckr.github.io/chairman/. Oyuncunun kulübü yine kurgusal Demirkapı SK; statların adı ve kulüp renkleri değişmedi. Görsel yön "'99 görünümü" diye anılır. `prototipler/` eski halleriyle arşiv olarak kalır.
-- 2026-09-29: Oyun fareyle oynanır (Steam). Maçtan önce tek bir menü ekranı ("maç bülteni") vardır; "İlerle" ile maç gününe geçilir. Menü açıkken maç günü başlamaz, stat arkada donuk durur. Menü 4:3 oyun karesinin içindedir ve kareyle orantılı büyür. `?ekran=mac` adres parametresi menüyü atlar.
-- 2026-09-29: Lig, fikstür ve kadro bilgileri şimdilik sabittir (her açılışta aynı, rastgele üretilmez): lig `js/lig.js`'te (16 kurgusal takım, 3. Lig 2. Grup, 13. hafta), sakat/cezalı, kart ve gol bilgisi `js/kadrolar.js`'te. İleride kalıcı kayıt (veritabanı) bu dosyaların yerini alır; ekranlar veriyi yalnızca buralardan okur. Puan ve averaj elle yazılmaz, tablodan hesaplanır. Bu maçın ev sahibi ve konuğu (`MAC_KADRO`) fikstürden (`LIG.buMac`) gelir.
+Çalışan ürün bir maç günü prototipidir. Aşağıdaki kariyer aşamaları henüz uygulanmamıştır.
 
-## Açık kararlar
-- Maç süresi ve olay sıklığı: 10 dakikada, gerçekçi akışla maç başına ~2 gol ve ~10 şut çıkıyor (gerçek maçta ~2,7 gol, ~25 şut). Daha çok olay istenirse iki yol var: maçı uzatmak (15–20 dakika) ya da oyunu yapaylaştırmak (hücumlar daha kolay sonuçlanır, daha çok uzaktan şut). Şimdilik gerçekçi akış ve 10 dakika kaldı.
+- [x] Maç motoru '99 sahnesine bağlı; maç baştan sona oynanıyor.
+- [x] Başkan bakışı, dürbün, başkanın elleri/masası ve olaylara tepkiler var.
+- [x] Kadro verisi, tohumlu maç mantığı, top fiziği, oyuncu kararları ve topsuz oyun var.
+- [x] Taç, korner, aut, faul, kart, ofsayt, oyuncu değişikliği, top toplayıcılar ve uzatma sunumu var.
+- [x] Isınma, çıkış, tören, tokalaşma, fotoğraf, yazı tura, devre arası ve maç sonu akışı var.
+- [x] İki stat tarifi var: 3. Lig kasaba ve 1. Lig şehir. Avrupa arenası şu an mevcut değil.
+- [x] Zemin, seyirci doluluğu, koltuklar ve tribün tepkilerinin görsel temeli var; değerler geçici deneme panelinden geliyor.
+- [x] Tarayıcı kontrolü ve görüntüsüz maç ölçüm araçları var. Her ortamda bağımlılıklarının hazır olduğu varsayılmaz.
+- [x] Sabit lig/kadro verisiyle çalışan maç öncesi bülteni var: lig durumu, form, olası 11'ler, eksikler ve son maçlar; “İlerle” ile maç gününe geçiliyor.
+- [ ] Kalıcı kariyer, kayıt, ekonomi, seçim, yönetim, sezon ve Avrupa sistemleri.
+- [ ] Ticari masaüstü paketi ve uzun kariyer doğrulaması.
 
-## Aşama 1 — Stadyum üretici
-- [x] Stadyumu tarif olarak tanımla: tribün sayısı ve boyu, çatı, pist, tel örgü, kapasite, renkler.
-- [x] Üç örnek stat: 3. Lig kasaba statı, 1. Lig şehir stadı, Avrupa arenası.
-- [x] Zemin kalitesi: kel alanlar, çamur, çizgi aşınması, biçme deseni.
-- [ ] Hava ve saat: gündüz, gün batımı, gece; yağmur, kar, sis.
-- [ ] Deplasman: ev sahibinin renkleri ve taraftar dağılımı.
+## Güncel karar özeti
 
-## Aşama 2 — Maçı hareketlendir
-- [x] Maç motorunu '99 sahnesine bağla: oyuncular ve top motora göre hareket etsin.
-- [x] Başkanın bakışı topu izlesin (baş çevirme); dürbün çalışsın.
-- [x] Oyuncu verisi: boy, yapı, saç, numara ve yetenek değerleri tek kayıtta dursun (`js/kadrolar.js`).
-- [x] Kayarak müdahale ve faul; sarı/kırmızı kart; ofsayt bayrağı.
+- **2026-09-26/27, geçerli:** Görseller kodla üretilir. Mevcut '99 görünümü, karakterin gözünden maç izleme ve kurgusal kulüp/kişi kimlikleri korunur. Reddedilen konsept denemeleri ürüne alınmaz.
+- **2026-09-29, geçerli:** Proje adı Chairman; mevcut kulüp Demirkapı SK. Nihai kimlik açık karar.
+- **2026-09-29, kullanıcı kararları:** Türkiye, Türkçe ilk içerik, tek kulüp, taraftar iş insanından adaylığa hikâye, tekrarlanan seçimler ve görev dışında yeniden adaylığa hazırlanma dönemi.
+- **2026-09-29, kullanıcı kararları:** Yetenek puanları görünmez; insanlar ve başkan yaşlanır. Uzun oyun günleri ve ağır kariyer temposu hedeflenir. Kişisel katkı sınırlı kurallarla mümkündür; şirket yönetimi yoktur.
+- **2026-09-29, kullanıcı kararları:** Üç lig kademesi ve Avrupa kupaları. Başarı finali en büyük Avrupa kupasını kazanıp bırakmaktır; kupasız sonlar mümkündür. Seçim kaybı tek başına kariyer sonu değildir.
+- **2026-09-29, onaylı plan:** Öncelik başkanlık döngüsüdür. Kayıt ve masaüstü denemesi başlangıca alınır. Eski görsel işler ilgili aşamalara taşınır. Belge düzenlemesi, sonraki kod aşamalarının uygulanmış olduğu anlamına gelmez.
+- **2026-09-29, mevcut uygulama:** Maç öncesi bülteni `js/lig.js` ve kadro verilerinden lig durumu, form, olası 11, eksikler ve son maçları gösterir. Bu veri henüz kalıcı kariyer kaydı değildir; Aşama 1 ve 3'te yeni yapıya bağlanacaktır.
 
-## Aşama 3 — Yönetim çekirdeği
-- [x] Maç öncesi ekranı (ilk sürüm, sabit veriyle): lig durumu, form, olası 11'ler, eksikler, son maçlar; "İlerle" ile maça geçiş.
-- [ ] Verinin kalıcı kayıttan (veritabanı) gelmesi; maç sonucunun puan durumuna işlenmesi.
-- [ ] Kadro, transfer, bütçe.
-- [ ] Lig yapısı: 3. Lig → 2. Lig → 1. Lig → Avrupa.
-- [ ] Maç sonuçlarının motordan gelmesi; diğer maçların görüntüsüz hızlı oynatılması.
-- [ ] Stat geliştirme ve doluluğun para ve başarıya bağlanması (stadyum tarifi ve doluluk değerleri ekonomiden gelir).
+Eski kararların kronolojisi Git geçmişinde korunur. Bu dosyada geçerli kararlar ve gerekli gerekçeler tutulur.
 
-## Aşama 4 — Hareket
-- [x] Poz kütüphanesi ve pozlar arası yumuşak geçiş.
-- [x] Şut, pas, kafa, kayarak müdahale, kaleci uçuşu, sevinç.
-- [ ] Ayakların yere düzgün basması.
+## Çalışma biçimi
 
-## Aşama 5 — Maç sahneleri
-- [x] Sahaya çıkış ve seremoni (ilk sürüm: tünelden çıkış, İstiklal Marşı töreni, yazı tura; marşın müziği Aşama 7'de).
-- [x] Yedek kulübesi ve teknik direktör (ilk sürüm: yedekler oturuyor, golde fırlıyor; teknik direktör teknik alanda geziniyor).
-- [x] Oyuncu değişikliği ve dördüncü hakemin tabelası (değişiklik ve uzatma).
-- [x] Maç günü tam sürüm: ısınma, kulübeler, çıkış, marş, TFF tokalaşması, takım fotoğrafları, yazı tura, kenetlenme; devre arası ve maç sonu.
-- [ ] Yedeklerin ikinci yarıda kenar çizgisinde ısınması (maç öncesinde ve devre arasında ısınıyorlar).
-- [x] Marş sırasında tribünün ayağa kalkması.
-- [x] İtiraz: faul ve kartta oyuncular hakeme, başkan masada itiraz eder.
-- [ ] VAR incelemesi.
+Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz.
 
-## Aşama 6 — Tribün
-- [x] Doluluğa göre tribün: boş koltuklar, deplasman tarafının büyüklüğü (grafik temeli hazır; değerleri ileride ekonomi verecek).
-- [ ] Başkanın yakınındaki seyirciler: yüz, atkı, gol sevincinde ayağa kalkma.
-- [ ] Taraftar havası: gol sevinci, erken çıkış, tezahürat, koreografi.
-- [ ] Sesin tribünle birlikte değişmesi.
+**Sıradaki kod işi: 1.1 — küçük örnek kariyer verisi ve veri sözleşmesi.** Önce kalıcı kimlikler, tarih/görev durumu ve kaydedilebilir sade veri hazırlanır. Seçim veya ekonomi sistemi topluca yazılmaz. Açık isimler ve denge sayıları için yalnız açıkça etiketlenmiş test verileri kullanılır.
 
-## Aşama 7 — Ses ve yayın
-- [ ] Tribün uğultusu, düdük, spiker satırları (prototiplerde örnekleri var).
+## Aşama 0 — Plan ve belge düzeni
 
-## Aşama 8 — Yayına hazırlık
-- [ ] Steam için bilgisayar paketi, kayıt sistemi, ayarlar menüsü.
-- [ ] Performans: dolu büyük statlarda seyirci ve koltuk sayısı yüksek; zayıf ekran kartlarında gerekirse uzak tribünler sadeleştirilir.
-- [ ] Geçici deneme panelinin kaldırılması (ekonomi statı ve doluluğu belirlediğinde).
+- [x] Kullanıcıyla ana tasarımı ve belge güncelleme planını kesinleştir.
+- [x] Oyun tasarımı ve teknik planı ayır; mevcut beş belgeyi yeni sıraya göre düzenle.
+- [x] Mevcut uygulama, hedef sistem ve açık kararları ayır; eski çelişkileri gider.
+- [x] Bağlantı, kapsam ve tutarlılık kontrolünü tamamla.
+
+**Bitiş ölçütü:** Yeni oturum mevcut durumu, sıradaki işi ve açık kararları aynı şekilde yorumlayabiliyor.
+
+## Aşama 1 — Kariyer temeli
+
+**Bağımlılık:** Aşama 0.
+
+- [ ] **1.1** Kalıcı kulüp/kişi kimlikleri, tarih, görev durumu ve başlangıç verisi için küçük örnek kariyer oluştur; çizimden bağımsız oku/doğrula.
+- [ ] **1.2** Gün ve gün içi zaman ilerlemesini kur; bir bekleyen işi belirtilen tarihte yalnız bir kez tamamlat.
+- [ ] **1.3** Para hareketi ve gelecekteki ödeme için temel kayıt kur; mevcut para ile taahhütleri ayır.
+- [ ] **1.4** Sürümlü yerel kayıt/yükleme, önceki sağlam kayıt ve hatalı kayıt bildirimi ekle; bekleyen işin yükleme sonrası iki kez çalışmadığını doğrula.
+- [ ] **1.5** Hedef işletim sistemi ve paketleme için küçük deneme yap; gerekli kaynakları çevrimdışı açılışa hazırla, kayıt yolunu ve Türkçe karakterli yolları dene.
+
+**Bitiş ölçütü:** Birkaç gün ilerleyen küçük kariyer kaydediliyor, kapatılıp aynı durumdan devam ediyor. Erken masaüstü denemesinin seçimi veya somut engeli belgelenmiş durumda.
+
+## Aşama 2 — İlk oynanabilir başkanlık dönemi
+
+**Bağımlılık:** Aşama 1. Ekip koltuklarının ilk kapsamı bu aşamadan önce seçilir.
+
+- [ ] **2.1** Ajanda ve kulüp durumunu göster; zorunlu/ertelenebilir işleri ve günü bitirmeyi anlaşılır yap.
+- [ ] **2.2** Sınırlı aday havuzundan yönetim ekibi kur; farklı katkıları ve yetki sınırlarını bir örnek işte göster.
+- [ ] **2.3** Hoca görüşmesi ve bütçe önceliği kararı ekle; şimdilik test başlangıcı görevdeki başkan olabilir.
+- [ ] **2.4** Bir söz/ilişki kaydı ve günlere yayılan olay zinciri kur; önceki kararın sonucu geri gelsin.
+- [ ] **2.5** Sakin zaman ve isteğe bağlı gözlem alanının ilk örneğini ekle. Mevcut ısınma görselleri kullanılabilir; ayrı antrenman simülasyonunun hazır olduğu varsayılmaz.
+- [ ] **2.6** Kısa bir yönetim döneminde gerçek oynama süresi, tekrarlar ve kriz yoğunluğunu değerlendir.
+
+Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. Tam maç bağlantısı Aşama 3'tedir.
+
+**Bitiş ölçütü:** Oyuncu bilgi alıyor, karar veriyor, günleri ilerletiyor ve önceki kararın anlaşılır sonucuyla karşılaşıyor. İyi yönetim rahatlık sağlayabiliyor.
+
+## Aşama 3 — Futbol ve yönetimin bağlanması
+
+**Bağımlılık:** Aşama 2.
+
+- [ ] **3.1** Gizli özelliklerden kaynağı/tarihi/belirsizliği olan rapor üret; yetenek sayısı/yıldızı göstermeden karar verilebildiğini kontrol et.
+- [ ] **3.2** Hocanın bilgisi ve tercihleriyle kadro/taktik seçiminin ilk sürümünü kur.
+- [ ] **3.3** Kariyerin kadro ve koşullarını mevcut Match girdisine dönüştür.
+- [ ] **3.4** Maç sonucunu kariyere kimliğiyle yalnız bir kez uygula; istatistik ve geçmiş kaydını bağla.
+- [ ] **3.5** Tohum tutarlılığını, izleme hızının etkisini ve görüntüsüz maçların maliyetini ölç.
+- [ ] **3.6** Birkaç haftalık yönetim bölümünü maçlarla tamamla; maç günü süresini ve mevcut atlama seçeneklerini ağır kariyer temposuyla değerlendir.
+
+**Bitiş ölçütü:** Hoca ve kadro kararları sahaya giriyor; maç sonucu yeni gündem ve geçmiş üretiyor. Kayıt yükleme sonucu tekrar uygulamıyor.
+
+## Aşama 4 — Transfer, sözleşme ve mali anlaşmalar
+
+**Bağımlılık:** Aşama 3. Kişisel katkı ve ilk mali kurallar seçilmiş olmalı.
+
+- [ ] **4.1** Sözleşmeler, maaşlar, taksitler, primler ve sponsor ödeme takvimini kur.
+- [ ] **4.2** Bir transferi araştırma, temas, karşı teklif ve imzayla bitir; basit/sorunsuz yol da çalışsın.
+- [ ] **4.3** Menajer talebi, rakip teklif ve sızıntı gibi koşula bağlı dallar ekle; aynı olayın durmadan tekrarlanmasını önle.
+- [ ] **4.4** Sponsor görüşmesi ve sınırlı kişisel katkıyı mali kayıtlarla bağla.
+- [ ] **4.5** Yetki devrini bütçe ve süre sınırlarıyla çalıştır; önemli eşikte başkana geri dön.
+- [ ] **4.6** Geciken gelir veya artan giderin birden çok güne yayılan etkisini dene; sürekli kriz ve kolay sınırsız para yollarını değerlendir.
+
+**Bitiş ölçütü:** Anlaşmalar yalnız konuşma sonucu olmaktan çıkıp kulübün gelecekteki parasına, kadrosuna ve ilişkilerine işleniyor.
+
+## Aşama 5 — Taraftarlıktan adaylığa hikâye
+
+**Bağımlılık:** Aşama 4. Kulüp geçmişi ve ilk seçim kuralları seçilmiş olmalı.
+
+- [ ] **5.1** Kulüp/şehir geçmişini ve tekrar karşılaşılacak temel kişileri yaz; geçmiş ile kariyerde oluşacak olayları ayır.
+- [ ] **5.2** Tribün, gazete, çevreyle görüşme ve adaylığa davet sahnelerini kur; oyuncuya girişte anlamlı seçimler ver.
+- [ ] **5.3** Adaylık açıklaması, yönetim havuzu, ekipçe vaat hazırlama ve rakip aday karşılaşmaları ekle.
+- [ ] **5.4** Röportaj, hazırlıksız yakalanma ve seçim günü akışını kur; ilk seçim çoğunlukla ulaşılabilir olsun fakat kaybetme yolu bulunsun.
+- [ ] **5.5** Süreli cevap, süre dolması ve okuma/flaş/sarsıntı seçeneklerinin ilk sürümünü dene.
+- [ ] **5.6** Kazanma ve kaybetme geçişlerini kaydet; görev dışı takip için temel giriş sun. Uzun görev dışı yıllar Aşama 7'de tamamlanır.
+
+**Bitiş ölçütü:** Gerçek oyun başlangıcından kampanyaya ve seçimin iki sonucuna gidiliyor. Seçilen ekip ve verilen vaatler devam eden kariyere taşınıyor.
+
+## Aşama 6 — Bir tam sezon
+
+**Bağımlılık:** Aşama 5. İlk lig formatı ve sezon takvimi seçilmiş olmalı.
+
+- [ ] **6.1** Fikstür, diğer kulüpler, puan durumu ve transfer dönemlerini kur; sezon geçişini tamamla.
+- [ ] **6.2** Diğer maçları arayüzü kilitlemeden üret; toplam maliyeti ve sonuç tutarlılığını ölç.
+- [ ] **6.3** Ev/deplasman kimliklerini, taraftar dağılımını ve başkan bölümündeki komşu kişileri bağla.
+- [ ] **6.4** Taraftar, medya/TV ve hakem-federasyon gündeminin temelini sezon olaylarına bağla; rakip başkan ilişkilerini kullan.
+- [ ] **6.5** Bilet, doluluk ve yayın/sponsor gelirlerini takvime bağla; ekonomik şartların ilk etkilerini ekle.
+- [ ] **6.6** Sezonu baştan sona oyna; dönem sonu ödemeler, sözleşmeler, geçmiş ve yeni sezon hazırlığını doğrula.
+
+**Bitiş ölçütü:** Bir sezon boyunca hem maç hem yönetim ilerliyor; son tarihler, para ve sonuçlar tutarlı kalıyor.
+
+## Aşama 7 — Uzun kariyer, görev kaybı ve yaşlanma
+
+**Bağımlılık:** Aşama 6. Yaş modeli ve kupasız kariyer sonlarının ilk şartları seçilmiş olmalı.
+
+- [ ] **7.1** Tekrar seçimde görev geçmişini, vaatleri ve rakipleri kullan.
+- [ ] **7.2** Görev kaybında yetkileri kaldır; yeni yönetimin kulübü yönetmesini ve daha hızlı takip takvimini çalıştır.
+- [ ] **7.3** Kulis, açıklama, farklı koltuktan maç izleme ve yeniden adaylığa hazırlanmayı ekle.
+- [ ] **7.4** Başkanın yaşlanmasını, tecrübesini ve ekip ihtiyacını zamanla değiştir; kullanıcının seçimini rastgele değiştirme.
+- [ ] **7.5** İnsanların geçmişini, ayrılmasını, emekliliğini ve yerine yenilerinin gelmesini çalıştır.
+- [ ] **7.6** Kupasız son koşullarını ve geçmişe göre kapanışın temelini kur; görev kaybıyla karıştırma.
+- [ ] **7.7** Birkaç seçim döngüsünü geliştirici hızında ve seçilen bölümleri normal tempoda doğrula.
+
+**Bitiş ölçütü:** Aynı dünya görevde ve görev dışında sürüyor; yeniden adaylık, kuşak değişimi ve olası kariyer sonu kayıttan devam edebiliyor.
+
+## Aşama 8 — Kulübün büyümesi
+
+**Bağımlılık:** Aşama 7. Üç kademe arasındaki geçişler ve alt sınır seçilmiş olmalı.
+
+- [ ] **8.1** Üç ligin kulüp kimliklerini, yükselme/düşme ve sezon geçişlerini tamamla.
+- [ ] **8.2** Altyapıdan yeni oyuncu, gelişim, sakatlık sonrası dönüş ve yaş etkilerini uzun kariyere bağla.
+- [ ] **8.3** Tesis/stat yatırımını maliyet, takvim ve aşamalı sonuçla çalıştır; tamamlanan iş görüntüye yansısın.
+- [ ] **8.4** Kulüp büyüdükçe kadro, yönetim havuzu, sponsorluk ve kamuoyu ölçeğini değiştir.
+- [ ] **8.5** Odalardaki kupalar, fotoğraflar ve kişisel geçmişi güncelle; isteğe bağlı antrenman ve kulüp ortamlarını genişlet.
+
+**Bitiş ölçütü:** Kulüp ilerliyor veya geriliyor; insanlar ve mali yapı bu değişimi taşıyor. Gelişim ve yatırım otomatik başarı garantisi vermiyor.
+
+## Aşama 9 — Avrupa ve finaller
+
+**Bağımlılık:** Aşama 8. Kupa formatları, katılım şartları ve başarı finalinin özel durumları seçilmiş olmalı.
+
+- [ ] **9.1** Avrupa kupaları, dış rakipler ve yabancı oyuncu kaynaklarının gerekli temsilini kur.
+- [ ] **9.2** Büyük Avrupa statları, deplasman ortamları ve başkan ilişkilerini ekle.
+- [ ] **9.3** Üst ligde doğan Avrupa hayalini ve bırakma hedefini hikâyeye bağla.
+- [ ] **9.4** Yalnız en büyük kupanın uygun kariyer sonucuyla başarı finalini tetiklemesini doğrula; küçük kupa ve görev dışı durumları ayrı değerlendir.
+- [ ] **9.5** Kutlama, dönüş, veda ve geçmişe göre farklılaşan kupasız finalleri tamamla.
+- [ ] **9.6** Kupaya giden birden fazla zor ama mümkün yolu test et; yapay rakip güçlendirmesi ve açıklanamayan engeller kullanma.
+
+**Bitiş ölçütü:** Kariyerin başarı ve başarısızlık yolları tamamlanabilir; final geçmişi yansıtır ve aynı kayıtta tekrar tetiklenmez.
+
+## Aşama 10 — Ürünü tamamlama
+
+**Bağımlılık:** Ana kariyer yollarının çalışması. Gereken kalite işleri daha erken aşamalarda da yapılır.
+
+- [ ] Olay ve karakter çeşitliliği, tekrar kontrolü, ekonomi/seçim/Avrupa dengesi ve uzun oturum testleri.
+- [ ] Hava ve saat; ayakların yere basması; VAR incelemesinin sunumu; ikinci yarı kenar ısınması.
+- [ ] Yakın seyirciler, yüz/atkı ayrıntıları, erken ayrılma, tezahürat ve koreografi; sesle uyum.
+- [ ] Tribün, düdük, tören ve konuşma sunumunun sesleri. Temel sesler daha erken oynanabilir bölümde eklenebilir.
+- [ ] Ayarlar, okunabilirlik, süreli karar erişilebilirliği ve desteklenecek dil kapsamı.
+- [ ] Dolu büyük statlar, arka plan maçları, uzun kariyer kayıt boyutu ve hedef donanım performansı.
+- [ ] Ekonomiyle yönetilen değerler bağlandıkça geçici deneme panelini oyuncu akışından çıkar; geliştirici araçlarını ayrı tut.
+- [ ] Masaüstü paketi, çevrimdışı çalışma, güncelleme/kayıt uyumluluğu ve seçilen Steam özelliklerini tamamla.
+- [ ] Mağaza anlatımını çalışan sürümden oluştur; fiyat, yayın ve dağıtım kararlarını kullanıcıyla kesinleştir.
+
+**Bitiş ölçütü:** Hedeflenen kariyer yolları tamamlanıyor; kayıtlar, paket ve içerik uzun oyunlarda güvenilir. Yayın yalnız doğrulanmış kapsamla yapılır.
+
+## Açık kararların takibi
+
+Oyun kararlarının listesi ve son karar tarihleri [OYUN_TASARIMI.md](OYUN_TASARIMI.md) içindedir. Platform, kayıt ayrıntıları ve uygulama tercihleri [TEKNIK_PLAN.md](TEKNIK_PLAN.md) içinde açık olarak işaretlidir. Bir karar alındığında ana belgesine işlenir ve yukarıdaki güncel karar özetine kısa, tarihli kayıt eklenir.
+
+Kesin para tutarları, olay aralıkları, başarı olasılıkları ve yaş etkileri oynanış testi gerektirir. Planlanmış olmak tamamlanmış olmak değildir; yalnız uygulanıp doğrulanan işler işaretlenir.

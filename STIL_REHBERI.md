@@ -1,90 +1,92 @@
 # Chairman — stil rehberi
 
-Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil-99.js` dosyasında durur; bu rehber o değerlerin ne anlama geldiğini ve neden seçildiğini anlatır.
+Bu belge mevcut maç prototipinin görsel dilini ve planlanan kariyer sahnelerinin sunum ilkelerini tanımlar. **Gelecek sahnelere ilişkin kurallar, o sahnelerin bugün yapıldığı anlamına gelmez.** Oyun kapsamı [OYUN_TASARIMI.md](OYUN_TASARIMI.md), yapım sırası [YOL_HARITASI.md](YOL_HARITASI.md) içindedir.
 
-## 1. Ekran
-- 4:3 ekran. İç çözünürlük 640×480 (PS1'in yüksek çözünürlük modu). 400×300'de maç dürbünsüz izlenemiyordu; bu çözünürlükte oyuncular ve reklam yazıları normal bakışta da seçilir.
-- Büyütülürken pikseller yumuşatılmaz (en yakın komşu).
-- Maç başkanın gözünden görülür; bu yüzden TV kasası, tarama çizgisi ya da kavisli köşe yoktur. '99 görünümü (piksel, renk titremesi, köşe titremesi) sabittir, arayüzden kapatılmaz.
+Ortak görsel ayarlar `js/stil-99.js` üzerinden yönetilir. İlgili dosyalarda kalan sabitler değiştirilirken uygun ortak ayarlara taşınır. Bu belge bütün sayısal değerleri tekrar eden bir envanter değildir.
 
-## 2. Renk
-- Kanal başına 5 bit (15 bit renk) ve 4×4 düzenli titreme (Bayer). Dönemin ekran kartları gibi. Titreme deseni ekrana sabittir ve şiddeti %70'tir (`titremeGucu`).
-- Işık hesabı renk yönetimi olmadan yapılır; köşe başına aydınlatma kullanılır (Lambert/Gouraud).
-- Gece maçı paleti: sıcak projektör sarısı, gece laciverti, sis.
+## 1. Görsel kimlik ve ekran
 
-| Ad | Değer |
+- Mevcut referans FIFA 99 / PS1 dönemi 3B futbol görünümüdür. Önceki reddedilmiş görsel konseptler bu yönün yerine geçmez.
+- Maç görüntüsü 4:3 ve 640×480 iç çözünürlüktedir. Büyütmede en yakın komşu kullanılır; pikseller yumuşatılmaz.
+- Başkanın gözünden bakıldığı için TV kasası, tarama çizgisi veya yayın çerçevesi eklenmez.
+- Kanal başına 5 bit renk ve ekrana sabit 4×4 Bayer titremesi kullanılır; mevcut titreme şiddeti %70'tir.
+- Köşe titremesi kapalıdır (`koseTitremesi:false`). Retro görünüm, hareketin piksel piksel zıplamasını gerektirmez.
+- Uzun metinli gelecek yönetim ekranları için okunabilirlik esastır. Maçın 640×480 sınırı bütün menüleri aynı düşük çözünürlükte yazmaya zorlamaz; genel pencere düzeni ayrıca sınanır.
+
+## 2. Renk, ışık ve gölge
+
+Gece sahnesinde sıcak projektör sarısı, gece laciverti ve sis kullanılır. Mevcut aydınlatma Lambert/Gouraud yaklaşımındadır.
+
+| Kullanım | Mevcut renk |
 |---|---|
-| Demirkapı kırmızısı | `#c8281e` |
-| Demirkapı beyazı | `#f2ede2` |
+| Demirkapı kırmızısı / beyazı | `#c8281e` / `#f2ede2` |
 | Çim koyu / açık | `#2f7a2a` / `#3a8c33` |
 | Saha çizgisi | `#f2f2ea` |
 | Atletizm pisti | `#8c3f2f` |
 | Sis | `#0c1322` |
-| Meşale | `#ff4a1e` |
-| Tabela amberi | `#ffb530` |
+| Meşale / tabela amberi | `#ff4a1e` / `#ffb530` |
 | Akdeniz FK beyazı / laciverti | `#eef0f3` / `#22347a` |
 
-## 3. Geometri
-- Az poligon. Oyuncu gövdesi kutulardan oluşur; top 20 yüzlü.
-- Köşeler ekran piksellerine yapışmaz: PS1 köşe titremesi hareketi piksel piksel zıplattığı için kapalıdır (`koseTitremesi:false`). Görünüm retro, hareket pürüzsüzdür.
+- Mevcut gece gölgeleri, oyuncunun kemiklerine bağlı kutuların projektörden zemine izdüşümüdür (`js/golgeler.js`). Kol ve bacaklarla hareket eder; top da gölge verir.
+- Aynı ışığın gölgesi stencil ile aynı pikseli bir kez koyulaştırır; farklı ışıklar üst üste gelebilir.
+- Gündüz, hava durumu ve bunlara uygun gölge düzenleri gelecekteki iştir. Bugünkü gece sahnesinin tamamlanmış alternatifleri sayılmaz.
 
-## 4. Dokular
-- 8 ile 64 piksel arası. Hepsi kodla üretilir.
-- Oyuncu ve bayrak dokularında yumuşatma yoktur. Seyirci, reklam panosu ve çimde uzakta titreşmeyi önlemek için mipmap kullanılır.
+## 3. Kodla üretilen görseller
 
-## 5. Oyuncular
-- Her oyuncunun kendine ait görünümü vardır: boy 0,9–1,1, yapı 0,93–1,12 ölçek.
-- Saç stilleri: kısa, kel, uzun, mullet, kıvırcık. Bıyık ve sakal. Krampon rengi. Sıyrık çorap. Kalecide uzun kol ve eldiven.
-- Numara sırtta büyük (2 kat piksel yazı, koyu kenarlı), göğüste küçük.
-- Pozlar: koşu; pas ve şut (hazırlık, geri salınım, temas, takip); ilk dokunuş, göğüs kontrolü, kafa; ayakta ve kayarak müdahale, blok; düşüş, yerde yatma, kalkma; taç; itiraz; sevinç; esneme, tokalaşma, fotoğrafta ayakta ve çömelmiş duruş, kenetlenme, alkış, maç sonunda yorgunluk (eller dizde); kaleci uçuşu, yumruklama, topu tutuş, elle atış ve degaj; marşta el göğüste, oturuş (yedekler), bekleme. Hakem işaretleri (düdük, yön, avantaj, kart, penaltı), yan hakem bayrağı ve dördüncü hakemin tabelası da pozdur. Yeni hareketler aynı poz sistemine (`POSE`) eklenir.
-- Gövde motorun gerçek bakış yönüne döner; oyuncu vuruştan önce hedefe döner. Sol ayaklı oyuncuların vuruş pozları aynalanır: vuran bacak gerçekten sol bacaktır.
-- Hareket pürüzsüzdür: koşu hıza bağlı sürekli bir dalgayla döner, pozlar birbirine yumuşakça karışır, dönüşler yavaşça yapılır. Motor sabit adımla ilerler, çizim adımlar arasında ara değer alır.
-- Yedekler takım renginde eşofmanla, teknik direktör takım elbiseyle görünür. Oyuna giren yedeğin eşofmanı çıkar, forması görünür.
-- Top toplayıcı çocuklar sarı forma, lacivert şort ve eşofman altı giyer; boyları yetişkinlerin ~3/4'üdür. Sahanın çevresinde 12 çocuk elinde yedek topla bekler (çoklu top sistemi). Dışarı çıkan top yuvarlanıp panoda durur, bir çocuk onu toplar.
-- Dördüncü hakemin tabelası kırmızı ve yeşil ışıklı sayılar gösterir: uzatmada dakika, değişiklikte çıkan (kırmızı) ve giren (yeşil) numara.
-- Saha kenarı: kaleci antrenörü ve kondisyoner takımın koyu eşofmanıyla; fotoğrafçılar turuncu yelekli, ellerinde siyah fotoğraf makinesi. Fotoğrafçılar maç boyunca kale arkalarında çömelir; takım fotoğrafında flaşları bir an parlar.
-- Isınmada turuncu koniler ve antrenman topları sahada görünür; driller bitince toplanır.
+- Geometri az poligonludur. İnsanlar kutu temelli kemikli modellerle, top 20 yüzlü geometriyle çizilir.
+- Oyun görselleri kodla üretilir. Harici model, fotoğraf gerçekliğinde doku, gerçek marka ve logo kullanılmaz.
+- Oyuncu atlası 64×64'tür. Küçük desenler düşük çözünürlüklüdür; saha ve pano gibi üretilen yüzeyler için bütün dokulara tek bir 64 piksel üst sınırı konmaz.
+- Oyuncu ve bayrak dokularında keskin piksel görünümü korunur. Seyirci, reklam panosu ve çimde uzak titreşmesini azaltan mipmap kullanılabilir.
+- Yeni sahneler aynı malzeme, insan modeli ve tarif yaklaşımını yeniden kullanır. Her olay için ayrı bir mekân üretmek gerekmez.
 
-## 6. Işık ve gölge
-- Gece maçında her projektör için bir gölge (90'ların dörtlü gölgesi; FIFA 98'in gece maçlarındaki gibi). Gölge, oyuncunun kemiklerine bağlı kutuların ışıktan zemine izdüşümüdür: gerçek silüettir, bacak ve kollarla oynar, ışıktan uzaklaştıkça uzar (`js/golgeler.js`).
-- Aynı ışığın gölgesi bir pikseli bir kez koyulaştırır (stencil); farklı ışıkların gölgeleri üst üste binince koyulaşır. Top da gölge verir.
-- Gündüz maçı için tek ve kısa gölge (henüz yapılmadı).
+## 4. İnsanlar ve hareket
 
-## 7. Stat
-- Her stat bir tariftir (`js/stadyum-tarifleri.js`): tribünler, çatı, pist, tel örgü, projektörler, skor tabelası, çevre.
-- Küçük stat dökük görünür: toprak pist, direkli zayıf projektörler, seyrek reklam panosu, elle değiştirilen skor tabelası, arkada ışıkları yanan apartmanlar.
-- Zemin kalitesi (0–1) düştükçe çim sararır, kale ağızlarında ve sahada kel ve çamurlu alanlar çoğalır, çizgiler solar, biçme deseni silikleşir. Çok iyi zeminde çapraz biçme deseni görünür.
-- Malzeme renkleri (beton, çatı, toprak pist, çamur) `STIL.stadyum` içindedir.
+- Oyuncular boy, vücut yapısı, saç, yüz kılları, krampon ve forma ayrıntılarıyla ayırt edilir. Numara sırtta büyük, göğüste küçüktür; kaleci kıyafeti farklıdır.
+- Hareketler mevcut `POSE` sistemine eklenir. Ayrıntılı poz listesi kodda tutulur; bu belge ikinci bir liste oluşturmaz.
+- Model motorun gerçek bakış yönünü izler. Sol ayaklı futbolcunun vuruşu doğru bacağa aynalanır.
+- Koşu hızla uyumludur; poz geçişleri, dönüşler ve sabit motor adımları arasındaki çizim yumuşaktır.
+- Yedekler, teknik direktör, saha personeli, top toplayıcılar, hakemler ve fotoğrafçılar işlevlerine uygun görünür. Yeni görevlerde var olan modeller ve pozlar geliştirilir.
+- Uzun kariyerde aynı kişinin tanınması korunur. Yaşlanma ve değişen görevlerin görünüşe etkisi gelecekte eklenir; rastgele yeni görünüm verilmez.
 
-## 7b. Tribün ve atmosfer
-- Her seyirci kutulardan kurulu küçük bir insandır: gövde, kollar, bacak, baş, saç ya da bere (kelleri de var). Boyu ve yapısı kişiden kişiye değişir. Başkana uzak olanlar daha az parçayla çizilir.
-- Koltuklu tribünde oturur; beton basamakta ve toprak sette ayakta durur. Ev taraftarının bir kısmı koltukta da ayaktadır.
-- Koltuklar tek tek görünür, boş koltuklar seçilir. Doluluk düşükken tribün seyrektir.
-- Tribün sakin durur; birkaç kişi ara sıra hafifçe kıpırdar. Maçtaki heyecan arttıkça (giriş, santra, şut, direk, gol, maç sonu) zıplayanlar çoğalır; iki kareli zıplama (0,3 sn). Gol atan tarafın taraftarı zıplar, öbürü susar. Başkanın yakınındakiler ve başkan bölümü daha sakindir.
-- Maç öncesi tribün yavaş yavaş dolar: başkan oturduğunda stat beşte bir doludur; ev taraftarı erken, deplasman taraftarı topluca, locadakiler geç gelir, birkaç kişi son dakikada yetişir. İstiklal Marşı'nda tribün ayağa kalkar; golde gol atan tarafın oturanları da kalkar.
-- Paletler (üst giysi): ev sahibi, karışık, deplasman, başkan bölümü (koyu takım elbise).
-- Başkan bölümü: ana tribünün ortasında dört sıra koyu kırmızı döşemeli koltuk. Başkan ön sıradadır; önünde boş bir geçit ve metal korkuluk vardır.
-- Meşale: parlak çekirdek, kırmızı hale ve yükselen duman. Tel örgü, pankart, ampullü skor tabelası, projektör parıltısı.
+## 5. Stat ve tribün
 
-## 8. Arayüz
-- 3×5 piksel yazı (Türkçe karakterli), tek font. Stattaki yazılar (reklam panosu, pankart, skor tabelası) bu yazıyla yazılır.
-- Maç ekranında ekran üstü grafik yoktur: yayın bandı, radar ya da oyuncu etiketi gösterilmez. Tek istisna dürbün maskesidir.
-- Skor ve dakika stadın skor tabelasında (ampullü ya da elle) yazar. Ekranın hemen altında, oyun görüntüsünün dışında bir radyo satırı skoru ve spikerin cümlesini gösterir.
+- Statlar `js/stadyum-tarifleri.js` içindeki tariflerden kurulur. Bugün kasaba ve şehir tarifleri vardır; Avrupa arenası gelecekte yapılacaktır.
+- Küçük statta yıpranmış zemin, daha sınırlı aydınlatma, seyrek reklam ve çevredeki yerleşim kulübün ölçeğini hissettirir.
+- Zemin kalitesi çimin rengini, kel/çamurlu alanları, çizgileri ve biçme desenini etkiler. İnşaat ve stat gelişimi henüz kariyer sistemine bağlı değildir.
+- Seyirciler mesafeye göre ayrıntısı azalan küçük insan modelleridir. Boş koltuklar ve düşük doluluk gerçekten görünür.
+- Tepkiler maç olayına ve taraftara bağlıdır. Herkes sürekli zıplamaz; sakin anlar, gelişler, marş ve goller farklı hissedilir.
+- Ev sahibi, deplasman ve başkan bölümü kıyafetleri ayrışır. Meşale, duman, pankart, tel örgü ve tabelalar aynı görsel dilde kalır.
+- Gelecekte stat yatırımları ve Avrupa deplasmanları ölçek farkını göstermeli; bütün statların yalnızca renk değiştirmiş kopyası gibi görünmesi önlenmelidir.
 
-## 8b. Menü ekranları
-- Yönetim ekranları (ilki maç öncesi bülteni, `js/ekran-mac-oncesi.js`) 4:3 oyun karesinin içinde açılır; stat arkada donuk durur, koyu panel onu büyük ölçüde örter (`STIL.menu.ortu`). Zeminde hafif bir damalı titreme deseni vardır.
-- Ekran tek bir sabit tasarımdır: bütün ölçüler oyun karesinin genişliğine göre büyür ve küçülür, kaydırma yoktur. Oyun fareyle oynanır; düğmeler büyük, ana eylem (İlerle) sağ altta ve tabela amberi rengindedir.
-- Başlıklar piksel görünümlü `Jersey 10`, yazılar `IBM Plex Mono`. Başlık şeritleri amber, takım vurguları kulüp kırmızısı (bizim) ve lacivert (rakip). Form kutucukları: galibiyet yeşil, beraberlik gri, mağlubiyet kırmızı.
-- Takım arması formanın renklerinden kurulur (forma rengi, ortada yaka/şerit rengi). Olası 11 küçük bir sahada gösterilir: forma renginde numaralı daire, altında isim; kaptan "K", kart sınırındaki oyuncu küçük sarı kartla işaretlidir.
-- Renkler `STIL.menu`'dedir; ekran bunları CSS değişkeni olarak sayfaya yazar.
+## 6. Kamera ve başkanın bulunduğu yer
 
-## 9. Kameralar
-- Tek açı başkanın gözüdür: açık ana tribünün ortasındaki başkan koltuğunda, göz hizası. Dürbün isteğe bağlı yakınlaştırmadır. Konumlar stil dosyasındadır.
-- Başkanın bedeni ekranın altında her zaman görünür (ön plan katmanı, `js/baskan.js`): ceviz masa, lacivert takım elbise kolları, sol bilekte saat, ince belli bardakta çay, maç programı, telefon. Eller maça tepki verir (gol sevinci ve ayağa kalkma, yenilen golde eller başa, masaya yumruk, itiraz, alkış); dürbün elle kaldırılır.
-- Bakış topu ve olan biteni yumuşak bir yayla izler: tünelden çıkışta tünele, törende oyuncu sırasına, yazı turada orta noktaya, golde gol atana bakar. Bakış belli bir açıdan fazla aşağı inmez.
-- Maç öncesinde bakış ilgi çeken yerler arasında gezer: önce dolan karşı tribün, sonra kaleciler, hakemler, takımların drilleri; yeni bir şey olunca (takım çıktı, yedekler kulübeye geçti) oraya döner. Tokalaşmada el sıkışanları, fotoğrafta iki takımın fotoğrafını sırayla izler. Devre arasında şut çalışan yedeklere, maç sonunda taraftarını alkışlayan takıma bakar.
+### Mevcut maç prototipi
 
-## 10. Sınırlar
-- Gerçek kulüp, marka ya da logo kullanılmaz.
-- Fotoğraf gerçekliğinde doku kullanılmaz.
-- Ekran oranı 4:3 dışına çıkmaz.
+- Kamera açık ana tribündeki başkan koltuğunda, göz hizasındadır. Dürbün isteğe bağlı yakınlaştırmadır; TV kamerası kullanılmaz.
+- Bakış topu ve maç günündeki dikkat çekici olayları yumuşak geçişlerle izler.
+- Ön planda başkanın kolları, saat, masa, çay, program ve telefon görünür (`js/baskan.js`). Eller maç olaylarına tepki verir; dürbün elle kaldırılır.
+
+### Planlanan kariyer sahneleri
+
+- Hikâyenin başındaki taraftar yeri, görevdeki başkanın yeri, deplasman protokolü ve seçimi kaybetmiş kişinin misafir/loca konumu birbirinden ayrılır. Mevcut açık tribün kuralı bütün kariyeri aynı koltuğa hapsetmez.
+- Deplasmanda ev sahibi yöneticiler ve ilişkiler oturma düzenini etkileyebilir. Kimin yanında oturduğu veriyle belirlenir; her ilişki için yeni stat üretilmez.
+- Ofis, toplantı alanı, basın alanı ve antrenman izleme yeri tekrar kullanılabilir. Kesin mekân listesi ilgili aşamada belirlenir.
+- Fotoğraflar, kupalar ve tanıdık çalışanlar kulüp hafızasını taşır. Geçmişe ait bir nesne, bağlı olduğu olay gerçekleşmeden varmış gibi gösterilmez.
+
+## 7. Arayüz ve bilgi
+
+- Stat içindeki pano, pankart ve skor tabelalarında mevcut Türkçe karakterli 3×5 piksel yazı kullanılır.
+- Maç görüntüsünde TV yayın bandı, radar veya oyuncu etiketi bulunmaz. Dürbün maskesi vardır; skor ve dakika stat tabelasından, ayrıca görüntünün dışındaki radyo satırından izlenir.
+- Planlanan yönetim ekranlarında uzun metinler okunabilir yazıyla, açık seçenekler ve belirgin sonuç bilgisiyle sunulur. Bütün arayüzü 3×5 yazıya sıkıştırma.
+- Mevcut ilk yönetim ekranı maç öncesi bültenidir (`js/ekran-mac-oncesi.js`). 4:3 oyun karesinde açılır; stat arkada donuk kalır ve koyu panelle büyük ölçüde örtülür. Ölçüler oyun karesiyle birlikte değişir, kaydırma kullanılmaz ve ana eylem sağ altta belirgindir.
+- Bülten başlıklarında piksel görünümlü `Jersey 10`, metinlerde `IBM Plex Mono`; ana vurguda tabela amberi, takım ayrımında kırmızı ve lacivert kullanılır. Olası 11 küçük sahada forma renkli ve numaralı işaretlerle gösterilir. Menü renkleri `STIL.menu` içindedir.
+- Futbolcu ve teknik direktörün gizli yetenek/potansiyel puanları gösterilmez. Yıldız, harf notu veya renkli genel güç çubuğu da aynı bilginin dolaylı gösterimi olamaz.
+- Yaş, boy, ücret, sözleşme süresi, maç istatistiği, tarih ve bütçe gibi başkanın öğrenebileceği bilgiler gösterilebilir. Görüş ile doğrulanmış olgu ayrılır.
+- Telefon bildirimleri ve gündem, sahneyi sürekli kapatmadan erişilebilir olmalıdır. Aynı anda birden çok zorunlu karar penceresi açılmaz.
+
+## 8. Baskı ve erişilebilirlik
+
+- Zaman sınırlı cevap, flaş ve kamera sarsıntısı yalnızca uygun sahnelerde kullanılır. Sürekli stres efekti temel oyun ritmi değildir.
+- Süre soru okunabilir olduktan sonra başlar. Süreyi uzatma, flaş ve sarsıntıyı azaltma seçenekleri planlanan sunumun parçasıdır.
+- Erişilebilirlik ayarı gizlice sportif zorluk cezasına dönüştürülmez. Oyuncu bilgiye yetişemediği için yanlış seçeneğe zorlanmamalıdır.
+- Yeni atmosfer ayrıntıları ve ses çalışmaları, başkanlık döngüsü ile kayıt sistemi kurulduktan sonra yol haritasındaki sırasıyla ele alınır.

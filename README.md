@@ -1,67 +1,46 @@
 # Chairman
 
-Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig'den Avrupa kupalarına uzanan bir kariyer. Maçlar başkanın gözünden, açık tribündeki başkan koltuğundan, 90'ların futbol oyunlarını hatırlatan bir görünümle izlenir. Tüm görseller kodla üretilir.
+Türkiye'de tek bir kurgusal futbol kulübünde, taraftarlıktan başkanlığa uzanan uzun kariyer oyunu. Yönetim ekibini kurmak, seçimlere girmek, teknik direktörü seçmek, mali kararlar almak ve baskıyla yaşamak üzerine kurulur. Nihai başarı Avrupa'nın en büyük kulüp kupası ve ardından vedadır; kariyer bu başarıya ulaşmadan da bitebilir.
+
+**Bugünkü uygulama bir 3B maç günü prototipidir.** Kariyer, seçim, ekonomi ve kayıt sistemleri henüz yapılmadı. Hedef bilgisayarda Steam üzerinden oynanan bir oyundur; geliştirme şu anda tarayıcıda sürer. Görseller kodla üretilir ve mevcut görünüm '99 dönemi futbol oyunlarından esinlenir.
 
 ## Oyunu açmak
-- **GitHub Pages açıksa:** `https://frkckr.github.io/chairman/`
-- **Pages yoksa:** Bu sayfada **Code → Download ZIP** ile indir, zip'i aç, `index.html`'e çift tıkla. İnternet bağlantısı gerekir; 3B kütüphanesi ve yazı tipi internetten yüklenir.
-- Eski denemeler `prototipler/` klasöründe: retro 2B sahne (maç motoru çalışıyor), 3B sahne ve '99 tek karenin ilk hali.
 
-## Dosyalar
-| Dosya | Ne işe yarar |
+- [GitHub Pages adresi](https://frkckr.github.io/chairman/): yayınlanan sürüm için depo adresi; yerel değişiklikler otomatik olarak yayına çıkmaz.
+- Yerelde depoyu indirip `index.html` dosyasını aç. Mevcut sürüm Three.js ve yazı tipini internetten yüklediği için internet bağlantısı gerekir.
+- Eski görsel denemeler `prototipler/` klasöründedir. Güncel geliştirme kökteki `index.html` üzerinden yürür.
+
+## Şu anda çalışanlar
+
+- Maç motoruna bağlı, başkanın gözünden 3B maç izleme ve isteğe bağlı dürbün.
+- Sabit lig ve kadro verisiyle çalışan maç öncesi bülteni: lig durumu, form, olası 11'ler, eksikler ve son maçlar.
+- Maç öncesi törenler, maç, devre arası ve maç sonu akışı.
+- Oyuncular, hakemler, teknik ekip, seyirciler ve maç olaylarına tepkiler.
+- Kasaba ve şehir stat tarifleri, doluluk ve zemin ayarları. Avrupa arenası henüz yoktur.
+- Prototip kontrolleri: duraklatma, maça geçme, stat seçimi ve maç hızı gibi deneme araçları.
+
+Mevcut kulüp adı **Demirkapı SK**. Nihai ad ve şehir ayrıca seçilecek. Ayrıntılı kod haritası [teknik planda](TEKNIK_PLAN.md).
+
+## Belgeler
+
+| Belge | İçerik |
 |---|---|
-| `index.html` | Açılış sayfası: '99 sahnesi, başkanın gözünden görünüm, dürbün |
-| `CLAUDE.md` | Claude'un her oturumda okuduğu proje talimatı |
-| `STIL_REHBERI.md` | Görsel kurallar |
-| `YOL_HARITASI.md` | Yapılacaklar, alınan ve bekleyen kararlar |
-| `js/stil-99.js` | Görünüşe dair bütün ayarlar: renkler, çözünürlük, kameralar |
-| `js/stadyum-tarifleri.js` | Stat tarifleri (3. Lig kasaba, 1. Lig şehir, Avrupa arenası) ve maç günü doluluğu; yalnızca veri |
-| `js/kadrolar.js` | Takım kadroları: as, yedek, teknik direktör; her oyuncu tek kayıt |
-| `js/goruntu.js` | Ekran, renk titremesi, ışık, gökyüzü |
-| `js/stadyum.js` | Seçili tarife göre stadı kurar: zemin, tribünler, reklam panoları, projektörler, kaleler |
-| `js/seyirci.js` | Tribündeki insanlar: doluluğa göre koltuklara oturur, iki kareyle sallanır |
-| `js/oyuncular.js` | İnsan modeli (tek parça, kemikli, tek dokulu) ve pozlar |
-| `js/golgeler.js` | Oyuncu ve top gölgeleri: her projektörden zemine izdüşüm |
-| `js/mac-sahnesi.js` | Maç motorunu sahneye bağlar: oyuncu hareketi, top, kulübeler, tören, bakış, radyo satırı |
-| `js/baskan.js` | Başkanın bedeni: masa, eller, çay, program, telefon; olaylara tepkiler ve dürbün |
-| `js/efektler.js` | Meşale ve duman |
-| `js/arayuz.js` | Kamera, dürbün, düğmeler, çizim döngüsü |
-| `js/ortak.js` | Ortak araçlar: piksel yazı, kulüpler, Türkçe ekler |
-| `js/mac-motoru.js` | Maç motoru: oyuncu hareketi ve eylemleri (bakış yönü, vuruş, top sürme), top fiziği, temaslar, kaleci, tören, devreler (görüntüden bağımsız) |
-| `js/mac-karar.js` | Topla karar: şutun gol beklentisi (xG), bölge tehdidi (xT), pas başarısı, seçenekler ve seçim |
-| `js/mac-dizilis.js` | Topsuz oyun: diziliş, savunma çizgisi, pres, destek, koşular, markaj, kaleci konumu |
-| `js/mac-kurallar.js` | Kurallar: duran toplar, top toplayıcılar, müdahale, faul, kart, avantaj, ofsayt, oyuncu değişikliği, hakemler |
-| `js/mac-senaryo.js` | Maç günü çizelgesi (yalnızca veri): ısınma, kulübeler, çıkış, marş, tokalaşma, fotoğraf, yazı tura |
-| `js/mac-oncesi.js` | Maç gününü yürütür: maç öncesi, devre arası, maç sonu; teknik ekip, fotoğrafçılar ve "Maça geç" |
-| `araclar/kontrol.py` | Sayfayı görünmez bir tarayıcıda açıp hata ve ekran görüntüsü kontrolü yapar |
-| `araclar/mac-deneme.js` | Maç motorunu görüntüsüz ve hızlı oynatıp istatistikleri hedef tabloyla karşılaştırır |
-| `AGENTS.md` | Codex gibi başka araçları `CLAUDE.md`'deki talimatlara yönlendirir |
+| [OYUN_TASARIMI.md](OYUN_TASARIMI.md) | Onaylı oyun yönü, kariyer, seçimler, başkanlık kararları ve açık tasarım konuları |
+| [TEKNIK_PLAN.md](TEKNIK_PLAN.md) | Mevcut mimari, hedef veri yapısı, kayıt, zaman ve Steam hazırlığı |
+| [YOL_HARITASI.md](YOL_HARITASI.md) | Bağımlılıklara göre geliştirme sırası, kabul koşulları ve sıradaki iş |
+| [STIL_REHBERI.md](STIL_REHBERI.md) | Mevcut görsel dil ve yeni sahnelerin sunum ilkeleri |
+| [CLAUDE.md](CLAUDE.md) | Bütün geliştirme araçları için çalışma ve doğrulama talimatları |
+| [AGENTS.md](AGENTS.md) | Araçları ortak çalışma talimatına yönlendiren giriş |
 
-## Claude ile çalışma döngüsü
-1. [claude.ai/code](https://claude.ai/code) adresinde yeni oturum aç. Depo olarak `chairman`'ı, dal olarak `main`'i seç.
-2. Ne istediğini yaz. Büyük işlerde **Plan** modunu seç; Claude önce ne yapacağını anlatır ve onayını bekler.
-3. Claude bitirince değişiklikleri ayrı bir dala gönderir. Değişiklik göstergesine (`+42 -18` gibi) tıklayıp bak, sonra **Create PR** de.
-4. GitHub'da açılan PR sayfasında **Merge pull request → Confirm merge** de.
-5. Birkaç dakika sonra oyun linkinde yeni hali görürsün.
+## Geliştirme kontrolleri
 
-**Önemli:** Yeni oturum açmadan önce bir önceki PR'ı birleştir. Her oturum `main` dalından başlar; birleştirilmemiş iş yeni oturumda görünmez. Aynı işe devam edeceksen aynı oturumda yazmaya devam edebilirsin.
+Çalışma kuralları ve bağımlılıklar [CLAUDE.md](CLAUDE.md) içindedir. Kod değişikliklerinde temel komutlar:
 
-Oturumlar birbirini hatırlamaz. Kalıcı olan her şey bu depodaki dosyalardır; alınan kararlar `YOL_HARITASI.md`'ye yazılır.
+```text
+python3 araclar/kontrol.py
+node araclar/mac-deneme.js
+```
 
-## Örnek mesajlar
-- **İlk oturum:** "Merhaba! Bu depo, kulüp başkanlığı oyunum Chairman'ın başlangıç paketi. Önce CLAUDE.md, STIL_REHBERI.md ve YOL_HARITASI.md dosyalarını oku, sonra kodu incele. Ardından projenin şu anki durumunu bana sade bir dille kısaca özetle ve YOL_HARITASI'ndaki açık kararları tek tek sor. Şimdilik hiçbir dosyayı değiştirme."
-- **Kararlardan sonra:** "Kararlarımı YOL_HARITASI.md'ye yaz. Sonra Aşama 1'in ilk adımına başla: stadyum tarifini kur ve 3. Lig kasaba statını üret."
-- **Maçı hareketlendirmek:** "Aşama 2'ye geç: mac-motoru.js'i '99 sahnesine bağla, başkanın bakışı topu izlesin."
-- **Sadece fikir almak:** "Kalecinin uçuşunu nasıl daha akıcı yapabiliriz? Önce düşün, dosyalara dokunma."
+İlk araç tarayıcı hatalarını ve ekran görüntüsünü kontrol etmek içindir; Python, Playwright/Chromium ve npm/tar gerektirir. İkinci araç Node.js ile maç motorunu görüntüsüz çalıştırır ve istatistiklerini raporlar. Raporun hedef dışı satırları ayrıca değerlendirilir. Yalnızca belge değişikliklerinde bağlantı ve tutarlılık kontrolü yapılır.
 
-## Oyun linki (GitHub Pages)
-Depoda **Settings → Pages** → Build and deployment altında **Deploy from a branch** → dal `main`, klasör `/ (root)` → **Save**. Birkaç dakika sonra link aynı sayfanın üstünde görünür. Public depoda ücretsizdir; Private depoda ücretli GitHub Pro gerekir.
-
-## Başka bir Claude hesabından devam etmek
-Her şey bu depoda durduğu için hesap değiştirmek hiçbir şeyi kaybettirmez.
-1. Yeni Claude hesabı Pro, Max, Team ya da Enterprise planında olmalı; ücretsiz planda bulut oturumları yok.
-2. [claude.ai/code](https://claude.ai/code) adresinde GitHub ile bağlan. Claude GitHub App'i kurmayı önerirse kabul et ve bu depoyu seç.
-3. Yeni oturumda depoyu seç ve kaldığın yerden devam et.
-
-## Başka bir yapay zekâ aracıyla devam etmek
-Codex gibi araçlar `AGENTS.md` dosyasını okur; o da onları `CLAUDE.md`'deki talimatlara yönlendirir. Depoyu o araca bağlaman yeterli.
+**Sıradaki geliştirme:** yol haritası 1.1 — kalıcı kimlikler ve asgari kariyer durumu. Kayıt ve çevrimdışı masaüstü denemesi ilk altyapı aşamasına dahildir; bunlar bugün tamamlanmış özellikler değildir.
