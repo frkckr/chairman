@@ -1,4 +1,4 @@
-# Demirkapı '99 — stil rehberi
+# Chairman — stil rehberi
 
 Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil-99.js` dosyasında durur; bu rehber o değerlerin ne anlama geldiğini ve neden seçildiğini anlatır.
 

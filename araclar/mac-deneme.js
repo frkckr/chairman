@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* ============ Demirkapı '99 — maç deneme aracı ============
+/* ============ Chairman — maç deneme aracı ============
    Maç motorunu görüntüsüz, hızlıca oynatır ve maç istatistiklerini hedef tabloyla karşılaştırır.
    Kullanım:  node araclar/mac-deneme.js [maç sayısı, varsayılan 40] [ilk tohum, varsayılan 1]
    - Motor dosyaları index.html'deki sırayla yüklenir: js/goruntu.js'ten önceki mantık dosyaları
@@ -89,7 +89,7 @@ if(process.env.MAC_DENEME_TOHUMLAR){
     const ort=k=>{const v=deger(k);return v.length?v.reduce((a,b)=>a+b,0)/v.length:NaN;};
     const sap=k=>{const v=deger(k),o=ort(k);return v.length?Math.sqrt(v.reduce((a,b)=>a+(b-o)*(b-o),0)/v.length):NaN;};
     const f=(x,n)=>Number.isNaN(x)?'—':x.toFixed(n);
-    console.log(`\nDemirkapı '99 maç deneme aracı · ${MAC_SAYISI} maç · tohum ${ILK_TOHUM}…${ILK_TOHUM+MAC_SAYISI-1} · ${isler.length} çekirdek · ${((Date.now()-t0)/1000).toFixed(1)} sn`);
+    console.log(`\nChairman maç deneme aracı · ${MAC_SAYISI} maç · tohum ${ILK_TOHUM}…${ILK_TOHUM+MAC_SAYISI-1} · ${isler.length} çekirdek · ${((Date.now()-t0)/1000).toFixed(1)} sn`);
     console.log(`Motor dosyaları: ${mantik.join(', ')}\n`);
     console.log('  '+'Ölçüm'.padEnd(28)+'Ortalama'.padStart(10)+'  ±'.padEnd(8)+'Hedef'.padStart(12));
     let disarida=0;

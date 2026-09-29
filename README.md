@@ -1,9 +1,9 @@
-# Demirkapı '99
+# Chairman
 
 Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig'den Avrupa kupalarına uzanan bir kariyer. Maçlar başkanın gözünden, açık tribündeki başkan koltuğundan, 90'ların futbol oyunlarını hatırlatan bir görünümle izlenir. Tüm görseller kodla üretilir.
 
 ## Oyunu açmak
-- **GitHub Pages açıksa:** `https://frkckr.github.io/demirkapi-99/`
+- **GitHub Pages açıksa:** `https://frkckr.github.io/chairman/`
 - **Pages yoksa:** Bu sayfada **Code → Download ZIP** ile indir, zip'i aç, `index.html`'e çift tıkla. İnternet bağlantısı gerekir; 3B kütüphanesi ve yazı tipi internetten yüklenir.
 - Eski denemeler `prototipler/` klasöründe: retro 2B sahne (maç motoru çalışıyor), 3B sahne ve '99 tek karenin ilk hali.
 
@@ -38,7 +38,7 @@ Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig
 | `AGENTS.md` | Codex gibi başka araçları `CLAUDE.md`'deki talimatlara yönlendirir |
 
 ## Claude ile çalışma döngüsü
-1. [claude.ai/code](https://claude.ai/code) adresinde yeni oturum aç. Depo olarak `demirkapi-99`'u, dal olarak `main`'i seç.
+1. [claude.ai/code](https://claude.ai/code) adresinde yeni oturum aç. Depo olarak `chairman`'ı, dal olarak `main`'i seç.
 2. Ne istediğini yaz. Büyük işlerde **Plan** modunu seç; Claude önce ne yapacağını anlatır ve onayını bekler.
 3. Claude bitirince değişiklikleri ayrı bir dala gönderir. Değişiklik göstergesine (`+42 -18` gibi) tıklayıp bak, sonra **Create PR** de.
 4. GitHub'da açılan PR sayfasında **Merge pull request → Confirm merge** de.
@@ -49,7 +49,7 @@ Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig
 Oturumlar birbirini hatırlamaz. Kalıcı olan her şey bu depodaki dosyalardır; alınan kararlar `YOL_HARITASI.md`'ye yazılır.
 
 ## Örnek mesajlar
-- **İlk oturum:** "Merhaba! Bu depo, kulüp başkanlığı oyunum Demirkapı '99'un başlangıç paketi. Önce CLAUDE.md, STIL_REHBERI.md ve YOL_HARITASI.md dosyalarını oku, sonra kodu incele. Ardından projenin şu anki durumunu bana sade bir dille kısaca özetle ve YOL_HARITASI'ndaki açık kararları tek tek sor. Şimdilik hiçbir dosyayı değiştirme."
+- **İlk oturum:** "Merhaba! Bu depo, kulüp başkanlığı oyunum Chairman'ın başlangıç paketi. Önce CLAUDE.md, STIL_REHBERI.md ve YOL_HARITASI.md dosyalarını oku, sonra kodu incele. Ardından projenin şu anki durumunu bana sade bir dille kısaca özetle ve YOL_HARITASI'ndaki açık kararları tek tek sor. Şimdilik hiçbir dosyayı değiştirme."
 - **Kararlardan sonra:** "Kararlarımı YOL_HARITASI.md'ye yaz. Sonra Aşama 1'in ilk adımına başla: stadyum tarifini kur ve 3. Lig kasaba statını üret."
 - **Maçı hareketlendirmek:** "Aşama 2'ye geç: mac-motoru.js'i '99 sahnesine bağla, başkanın bakışı topu izlesin."
 - **Sadece fikir almak:** "Kalecinin uçuşunu nasıl daha akıcı yapabiliriz? Önce düşün, dosyalara dokunma."

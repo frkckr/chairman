@@ -1,4 +1,4 @@
-# Demirkapı '99 — Claude için proje talimatı
+# Chairman — Claude için proje talimatı
 
 Bu dosyayı her oturumun başında oku. Oturumlar birbirini hatırlamaz; kalıcı bilgi yalnızca bu depodaki dosyalardır. Ardından `YOL_HARITASI.md` dosyasını oku: nerede kaldığımız, alınan kararlar ve sıradaki adım orada.
 
@@ -9,7 +9,7 @@ Bu dosyayı her oturumun başında oku. Oturumlar birbirini hatırlamaz; kalıc�
 - Oyun bugün geçer (VAR var), görünüm ve his 90'lar futbol nostaljisidir.
 - Hedef platform bilgisayardır (Steam). Geliştirme tarayıcıda sürer; paketleme son aşamada yapılır.
 
-## Görsel yön: Demirkapı '99
+## Görsel yön: '99 görünümü
 - FIFA 99 / PS1 dönemi 3B görünüm. Kurallar `STIL_REHBERI.md` dosyasındadır; yeni eklenen her şey bu kurallara uyar.
 - Tüm görseller kodla üretilir. Harici model, doku ya da fotoğraf dosyası kullanılmaz (bu karar açıkça değişmedikçe).
 - Gerçek kulüp, oyuncu, marka ya da logo kullanılmaz. Her şey kurgusaldır.

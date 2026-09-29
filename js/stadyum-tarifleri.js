@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — stadyum tarifleri ============
+/* ============ Chairman — stadyum tarifleri ============
    Yalnızca veri; çizim kodu yoktur. Görüntü katmanı (js/stadyum.js, js/seyirci.js) bu tarifleri okur.
    Kariyer 3. Lig kasaba statında başlar. Avrupa arenası şimdilik kaldırıldı; Avrupa'ya gelince geri eklenecek. İleride oyun ekonomisi (para, başarı) statı geliştirecek ve doluluğu belirleyecek.
 

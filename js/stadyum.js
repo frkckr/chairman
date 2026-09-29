@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — stadyum: seçili tarifi (STAT, js/stadyum-tarifleri.js) okuyup statı kurar ============
+/* ============ Chairman — stadyum: seçili tarifi (STAT, js/stadyum-tarifleri.js) okuyup statı kurar ============
    saha ve zemin kalitesi, reklam panoları, tribünler, tel örgü, pankart, bayraklar, skor tabelası, projektörler, çevre, kaleler */
 const SK=STIL.stadyum;
 const PISTLI=STAT.pist!=='yok';

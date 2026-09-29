@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — diziliş ve topsuz oyun (mantık, çizimsiz) ============
+/* ============ Chairman — diziliş ve topsuz oyun (mantık, çizimsiz) ============
    Koordinatlar takımın hücum yönüne göredir: u = −52,5 (kendi kalesi) … +52,5 (rakip kale), w = 0 … 68 (taç çizgileri).
    Her mevki bir çizgiye (kaleci, defans, orta saha, forvet) ve bir taban genişliğine bağlıdır. Takım bir blok gibi hareket eder:
    topa sahipken blok önde ve geniştir, top rakipteyken geride ve dar (kompakt). Blok yüksekliği ve topa kayma topun yerine bağlıdır.

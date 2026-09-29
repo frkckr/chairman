@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — tek kare: PS1 / FIFA 99 dönemi görünümü (Three.js) ============ */
+/* ============ Chairman — tek kare: PS1 / FIFA 99 dönemi görünümü (Three.js) ============ */
 const $=id=>document.getElementById(id);
 const RW=STIL.ekran.genislik,RH=STIL.ekran.yukseklik;
 const screenEl=$('screen'),canvas=$('view'),hud=$('hud'),hg=hud.getContext('2d');

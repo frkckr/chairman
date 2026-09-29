@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — kurallar, hakemler, duran toplar, top toplayıcılar (mantık, çizimsiz) ============
+/* ============ Chairman — kurallar, hakemler, duran toplar, top toplayıcılar (mantık, çizimsiz) ============
    Duran toplar gerçek sırasıyla işler: top çıkınca en yakın top toplayıcı çocuk yedek topu atana verir (çoklu top sistemi),
    atan topu alır, yerine gelir, arkadaşları yerleşir, sonra kullanır. Dışarı çıkan eski topu başka bir çocuk koşup toplar.
    Taç: atan çizgide, top başının üstünde. Korner: köşe yayında, ceza sahasında koşu rolleri, falsolu orta.

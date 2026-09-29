@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — başkanın bedeni: önündeki masa, elleri ve eşyaları (ön plan katmanı) ============
+/* ============ Chairman — başkanın bedeni: önündeki masa, elleri ve eşyaları (ön plan katmanı) ============
    Dünya çizildikten sonra derinlik temizlenir ve bu katman üstüne çizilir. Böylece masa ve eller her zaman ekranın altında durur.
    Eller maçtaki olaylara tepki verir: gol sevinci (başkan ayağa kalkar), yenilen golde eller başa, kaçan pozisyonda masaya yumruk,
    itiraz, alkış. Sakin anlarda çay yudumlar, programa ya da telefonuna bakar. Dürbünü elleriyle kaldırır. */
