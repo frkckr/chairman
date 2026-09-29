@@ -27,6 +27,9 @@ Son güncelleme: 2026-09-29. Bu dosya iş sırasının ve tamamlanma durumunun a
 - **2026-09-29, kullanıcı kararları:** Üç lig kademesi ve Avrupa kupaları. Başarı finali en büyük Avrupa kupasını kazanıp bırakmaktır; kupasız sonlar mümkündür. Seçim kaybı tek başına kariyer sonu değildir.
 - **2026-09-29, onaylı plan:** Öncelik başkanlık döngüsüdür. Kayıt ve masaüstü denemesi başlangıca alınır. Eski görsel işler ilgili aşamalara taşınır. Belge düzenlemesi, sonraki kod aşamalarının uygulanmış olduğu anlamına gelmez.
 - **2026-09-29, mevcut uygulama:** Maç öncesi bülteni `js/lig.js` ve kadro verilerinden lig durumu, form, olası 11, eksikler ve son maçları gösterir. Bu veri henüz kalıcı kariyer kaydı değildir; Aşama 1 ve 3'te yeni yapıya bağlanacaktır.
+- **2026-09-29, mevcut uygulama (1.1):** İlk kariyer veri sözleşmesi ve TEST örnek kariyer eklendi (`js/kariyer.js`, `js/kariyer-ornek.js`, `araclar/kariyer-deneme.js`). Başlangıç görevdeki başkandır; başkan yaşı ve kişi adları test değeridir, açık kararlar kesinleşmedi. Oyunda henüz görünmez. Ayrıntı [TEKNIK_PLAN §3](TEKNIK_PLAN.md#3-kalıcı-dünya-verisi).
+- **2026-09-29, mevcut uygulama (1.2–1.4):** Takvim ve bir kez tamamlanan bekleyen işler (`js/takvim.js`), kuruş tamsayılı para kaydı ve gelecekteki ödemeler (`js/maliye.js`), sağlamalı ve önceki kayda dönebilen kayıt/yükleme (`js/kayit.js`, `js/depo-tarayici.js`) eklendi. Tarayıcıda kaydet → sayfayı yenile → yükle → devam et denemesi geçti. Oyun ekranına bağlı değildir; tutarlar ve gün başlangıcı saati TEST değeridir. Ayrıntı [TEKNIK_PLAN §3–5](TEKNIK_PLAN.md#3-kalıcı-dünya-verisi).
+- **2026-09-29, kullanıcı kararı ve deneme (1.5):** Masaüstü hedefi önce yalnız Windows, paketleme Electron. `masaustu/` denemesinde oyun çevrimdışı açıldı, 3B maç günü çizildi, Türkçe karakterli yollarda kayıt yazıldı ve uygulama kapatılıp açılınca kariyer sürdü; paketlenmiş `Chairman.exe` ile de doğrulandı. Kurulum, imzalama ve Steam bağlantısı yok. Ayrıntı ve sınırlar [TEKNIK_PLAN §10](TEKNIK_PLAN.md#10-sunum-metin-ve-masaüstü).
 
 Eski kararların kronolojisi Git geçmişinde korunur. Bu dosyada geçerli kararlar ve gerekli gerekçeler tutulur.
 
@@ -34,7 +37,7 @@ Eski kararların kronolojisi Git geçmişinde korunur. Bu dosyada geçerli karar
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz.
 
-**Sıradaki kod işi: 1.1 — küçük örnek kariyer verisi ve veri sözleşmesi.** Önce kalıcı kimlikler, tarih/görev durumu ve kaydedilebilir sade veri hazırlanır. Seçim veya ekonomi sistemi topluca yazılmaz. Açık isimler ve denge sayıları için yalnız açıkça etiketlenmiş test verileri kullanılır.
+**Aşama 1 tamamlandı. Sıradaki iş: 2.1 — ajanda ve kulüp durumu.** Kariyer durumu, takvim, para ve kayıt ilk kez oyuncuya bir ekranda gösterilir; günü bitirme ve gün sınırında kayıt buraya bağlanır. 2.2'den önce yönetim ekibi koltuklarının ilk kapsamı kullanıcıyla seçilmelidir. Seçim veya ekonomi sistemi topluca yazılmaz. Açık isimler ve denge sayıları için yalnız açıkça etiketlenmiş test verileri kullanılır.
 
 ## Aşama 0 — Plan ve belge düzeni
 
@@ -49,11 +52,11 @@ Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlıl�
 
 **Bağımlılık:** Aşama 0.
 
-- [ ] **1.1** Kalıcı kulüp/kişi kimlikleri, tarih, görev durumu ve başlangıç verisi için küçük örnek kariyer oluştur; çizimden bağımsız oku/doğrula.
-- [ ] **1.2** Gün ve gün içi zaman ilerlemesini kur; bir bekleyen işi belirtilen tarihte yalnız bir kez tamamlat.
-- [ ] **1.3** Para hareketi ve gelecekteki ödeme için temel kayıt kur; mevcut para ile taahhütleri ayır.
-- [ ] **1.4** Sürümlü yerel kayıt/yükleme, önceki sağlam kayıt ve hatalı kayıt bildirimi ekle; bekleyen işin yükleme sonrası iki kez çalışmadığını doğrula.
-- [ ] **1.5** Hedef işletim sistemi ve paketleme için küçük deneme yap; gerekli kaynakları çevrimdışı açılışa hazırla, kayıt yolunu ve Türkçe karakterli yolları dene.
+- [x] **1.1** Kalıcı kulüp/kişi kimlikleri, tarih, görev durumu ve başlangıç verisi için küçük örnek kariyer oluştur; çizimden bağımsız oku/doğrula.
+- [x] **1.2** Gün ve gün içi zaman ilerlemesini kur; bir bekleyen işi belirtilen tarihte yalnız bir kez tamamlat.
+- [x] **1.3** Para hareketi ve gelecekteki ödeme için temel kayıt kur; mevcut para ile taahhütleri ayır.
+- [x] **1.4** Sürümlü yerel kayıt/yükleme, önceki sağlam kayıt ve hatalı kayıt bildirimi ekle; bekleyen işin yükleme sonrası iki kez çalışmadığını doğrula.
+- [x] **1.5** Hedef işletim sistemi ve paketleme için küçük deneme yap; gerekli kaynakları çevrimdışı açılışa hazırla, kayıt yolunu ve Türkçe karakterli yolları dene.
 
 **Bitiş ölçütü:** Birkaç gün ilerleyen küçük kariyer kaydediliyor, kapatılıp aynı durumdan devam ediyor. Erken masaüstü denemesinin seçimi veya somut engeli belgelenmiş durumda.
 
