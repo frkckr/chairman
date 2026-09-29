@@ -71,6 +71,13 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 - Maç ekranında ekran üstü grafik yoktur: yayın bandı, radar ya da oyuncu etiketi gösterilmez. Tek istisna dürbün maskesidir.
 - Skor ve dakika stadın skor tabelasında (ampullü ya da elle) yazar. Ekranın hemen altında, oyun görüntüsünün dışında bir radyo satırı skoru ve spikerin cümlesini gösterir.
 
+## 8b. Menü ekranları
+- Yönetim ekranları (ilki maç öncesi bülteni, `js/ekran-mac-oncesi.js`) 4:3 oyun karesinin içinde açılır; stat arkada donuk durur, koyu panel onu büyük ölçüde örter (`STIL.menu.ortu`). Zeminde hafif bir damalı titreme deseni vardır.
+- Ekran tek bir sabit tasarımdır: bütün ölçüler oyun karesinin genişliğine göre büyür ve küçülür, kaydırma yoktur. Oyun fareyle oynanır; düğmeler büyük, ana eylem (İlerle) sağ altta ve tabela amberi rengindedir.
+- Başlıklar piksel görünümlü `Jersey 10`, yazılar `IBM Plex Mono`. Başlık şeritleri amber, takım vurguları kulüp kırmızısı (bizim) ve lacivert (rakip). Form kutucukları: galibiyet yeşil, beraberlik gri, mağlubiyet kırmızı.
+- Takım arması formanın renklerinden kurulur (forma rengi, ortada yaka/şerit rengi). Olası 11 küçük bir sahada gösterilir: forma renginde numaralı daire, altında isim; kaptan "K", kart sınırındaki oyuncu küçük sarı kartla işaretlidir.
+- Renkler `STIL.menu`'dedir; ekran bunları CSS değişkeni olarak sayfaya yazar.
+
 ## 9. Kameralar
 - Tek açı başkanın gözüdür: açık ana tribünün ortasındaki başkan koltuğunda, göz hizası. Dürbün isteğe bağlı yakınlaştırmadır. Konumlar stil dosyasındadır.
 - Başkanın bedeni ekranın altında her zaman görünür (ön plan katmanı, `js/baskan.js`): ceviz masa, lacivert takım elbise kolları, sol bilekte saat, ince belli bardakta çay, maç programı, telefon. Eller maça tepki verir (gol sevinci ve ayağa kalkma, yenilen golde eller başa, masaya yumruk, itiraz, alkış); dürbün elle kaldırılır.
