@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — topla karar (mantık, çizimsiz) ============
+/* ============ Chairman — topla karar (mantık, çizimsiz) ============
    Topu tutan oyuncu önündeki seçenekleri görür, her birinin başarı olasılığını ve değerini tartar, birini seçer.
    - xG: şutun gol olma olasılığı. Kaleyi görme açısı θ = atan(7,32·x / (x²+y²−3,66²)) ve mesafeden lojistik model.
      Katsayılar hedef noktalara oturtuldu (penaltı noktası ~0,15, altıpas ~0,46, ceza sahası çizgisi ~0,07, 25 m ~0,03).

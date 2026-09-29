@@ -1,9 +1,9 @@
-# Demirkapı '99 — yol haritası
+# Chairman — yol haritası
 
 Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter; bitince kutusu işaretlenir.
 
 ## Şu an neredeyiz
-- [x] Görsel yön seçildi: Demirkapı '99 (FIFA 99 / PS1 dönemi).
+- [x] Görsel yön seçildi: '99 görünümü (FIFA 99 / PS1 dönemi).
 - [x] Tek kare sahne hazır: ayırt edilebilir oyuncular, dürbün (`index.html`).
 - [x] Maç başkanın gözünden, açık ana tribündeki başkan koltuğundan izleniyor; TV açısı, kapalı loca ve ekran seçenekleri kaldırıldı.
 - [x] Görünüş ayarları tek dosyada toplandı (`js/stil-99.js`).
@@ -20,7 +20,7 @@ Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter
 - 2026-09-26: Kariyer 3. Lig'den başlar, 1. Lig ve Avrupa kupalarına uzanır; iç saha ve deplasman maçları var.
 - 2026-09-26: Oyuncular uzaktan tanınır olmalı: boy, yapı ve saç farkı; belirgin numara; locadan bakarken kendi oyuncularında numara etiketi. (Numara etiketi 2026-09-27'de iptal edildi.)
 - 2026-09-26: Görünüş ayarları tek dosyada (`js/stil-99.js`); stil değişikliği önce oradan yapılır.
-- 2026-09-27: Çalışma ortamı Claude Code bulut oturumları + GitHub (depo: github.com/frkckr/demirkapi-99); oyun GitHub Pages'ten izlenir.
+- 2026-09-27: Çalışma ortamı Claude Code bulut oturumları + GitHub (depo: github.com/frkckr/demirkapi-99); oyun GitHub Pages'ten izlenir. (Depo adı 2026-09-29'da değişti, aşağıya bak.)
 - 2026-09-27: Oyun bugün geçer; VAR var. Görünüm yine '99 tarzı.
 - 2026-09-27: Hedef platform bilgisayar (Steam). Geliştirme tarayıcıda sürer, GitHub Pages test linki olarak kalır; Steam paketi son aşamada yapılır.
 - 2026-09-27: Kulüp, lig, oyuncu ve marka isimleri tamamen kurgusal.
@@ -50,6 +50,7 @@ Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter
 - 2026-09-28: Maç deneme aracının hedef tablosu gözden geçirildi. Oyuncular gerçek hızda koştuğu için 10 dakikalık maçta ~7 dakika oyun oynanır; gerçekçi kararlarla önemli olaylar gerçek maçın dakika başına 2,5–3 katı sıklıkta yaşanır. 40 maçlık ortalama: 1,9 gol, 9,7 şut (%41 isabet), 2,3 korner, 7,3 taç, 9,9 faul, 1,8 sarı kart, 0,4 ofsayt, 130 pas (%69 isabet), uzatma 2,8 / 4,8 dk, takım başına 2,5 değişiklik. Gerçek maçın şut, korner ve taç sayısına ulaşmak için ya maç uzamalı ya da oyun yapaylaşmalı (bkz. Açık kararlar).
 - 2026-09-28: Maç günü akışı `js/mac-senaryo.js` (veri) ve `js/mac-oncesi.js` (yürütücü) dosyalarındadır. Sıra Premier League ısınma protokolüne ve TFF statüsüne göre: kaleciler ~45 dk, takımlar ~35 dk önce ısınmaya çıkar; hakemler orta çizgi boyunca koşar; saha ~10 dk önce boşalır; teknik direktörler en son çıkar. Tokalaşmada misafir takım kaptanı önde önce hakemlerle, sonra ev sahibi oyuncularla tokalaşır; ardından hakemler ev sahibiyle. Önce ev sahibi yerinde, misafir kendi yarısında fotoğraf çektirir. Yazı turayı kazanan santrayı ya da kaleyi seçer (Kural 8). Maç öncesinin rastgeleliği ayrı bir tohumdan gelir; maçın kendisini değiştirmez.
 - 2026-09-28: Devre arası ~45 sn (yedekler kale önünde şut çalışır, teknik direktörler soyunma odasına gidip döner). Maç sonunda üç düdük, kazananların sevinci, kaybedenlerin yorgunluğu, rakiple tokalaşma, iki takımın kendi taraftarını alkışlaması ve tünele dönüş vardır.
+- 2026-09-29: Projenin adı şimdilik "Chairman" (eskiden "Demirkapı '99"). Depo github.com/frkckr/chairman, oyun linki frkckr.github.io/chairman/. Oyuncunun kulübü yine kurgusal Demirkapı SK; statların adı ve kulüp renkleri değişmedi. Görsel yön "'99 görünümü" diye anılır. `prototipler/` eski halleriyle arşiv olarak kalır.
 
 ## Açık kararlar
 - Maç süresi ve olay sıklığı: 10 dakikada, gerçekçi akışla maç başına ~2 gol ve ~10 şut çıkıyor (gerçek maçta ~2,7 gol, ~25 şut). Daha çok olay istenirse iki yol var: maçı uzatmak (15–20 dakika) ya da oyunu yapaylaştırmak (hücumlar daha kolay sonuçlanır, daha çok uzaktan şut). Şimdilik gerçekçi akış ve 10 dakika kaldı.

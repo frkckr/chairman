@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — maç günü: maç öncesi, devre arası, maç sonu (mantık, çizimsiz) ============
+/* ============ Chairman — maç günü: maç öncesi, devre arası, maç sonu (mantık, çizimsiz) ============
    Çizelge js/mac-senaryo.js'tedir. Başkan koltuğuna oturduğunda stat yarı boştur; saha kenarında herkes kendi işini yapar:
    top toplayıcılar yerlerine geçer, kaleciler antrenörleriyle, hakemler orta çizgi boyunca, takımlar yardımcı antrenörleriyle
    ısınır (koşu, esneme, rondo, paslaşma, şut, depar) ve farklı anlarda içeri girer. Sonra 4. hakem, yedekler, antrenörler,

@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — ortak yardımcılar: sayı araçları, 3x5 piksel yazı, kulüpler, Türkçe ekler, reklam listesi ============ */
+/* ============ Chairman — ortak yardımcılar: sayı araçları, 3x5 piksel yazı, kulüpler, Türkçe ekler, reklam listesi ============ */
 'use strict';
 /* ============ yardımcılar ============ */
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;

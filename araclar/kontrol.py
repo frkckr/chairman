@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Demirkapı '99 — hızlı kontrol aracı
+"""Chairman — hızlı kontrol aracı
 
 Sayfayı başsız Chromium'da açar, hataları listeler ve ekran görüntüsü alır.
 
@@ -39,7 +39,7 @@ def yerel_three():
 
 
 def kopya_hazirla(three):
-    gecici = pathlib.Path(tempfile.mkdtemp(prefix="demirkapi-"))
+    gecici = pathlib.Path(tempfile.mkdtemp(prefix="chairman-"))
     site = gecici / "site"
     shutil.copytree(KOK, site, ignore=shutil.ignore_patterns(".git", ".onbellek", "son-kontrol-*.png"))
     for html in site.rglob("*.html"):

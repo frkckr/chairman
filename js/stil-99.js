@@ -1,9 +1,9 @@
-/* ============ Demirkapı '99 — STİL DOSYASI ============
+/* ============ Chairman — STİL DOSYASI ============
    Oyunun görünüşüne dair bütün ayarlar burada toplanır.
    Stili değiştirmek istediğinde önce bu dosyaya bak; oyun mantığı (maç motoru, yönetim) bu dosyayı kullanmaz.
    Renkler: '#rrggbb' metin ya da 0xrrggbb sayı olarak. */
 const STIL={
-  ad:"Demirkapı '99",
+  ad:"Chairman",
 
   /* Ekran: 4:3, PS1'in yüksek çözünürlük modu (640x480), 15 bit renk + 4x4 titreme.
      Köşe titremesi (köşelerin piksellere yapışması) kapalı: hareket pürüzsüz aksın diye. titremeGucu: renk titremesinin şiddeti (0–1). */

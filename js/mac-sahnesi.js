@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — maç sahnesi: maç motorunu (js/mac-motoru.js) '99 sahnesine bağlar ============
+/* ============ Chairman — maç sahnesi: maç motorunu (js/mac-motoru.js) '99 sahnesine bağlar ============
    Motor sabit adımla (1/60 sn) ilerler; çizim son iki adım arasında ara değer alır, böylece hareket ekran hızından bağımsız pürüzsüz akar.
    Gövde yönü motordaki gerçek bakış yönünden (yon) gelir. Pozlar sürekli karışır: koşu döngüsü hıza bağlı dalga; vuruşta
    geri salınım ve takip (vuran ayak tarafına göre), kontrol, göğüs, kafa sıçrayışı, müdahale, kayma, düşme ve kalkma,

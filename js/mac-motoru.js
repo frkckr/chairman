@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — maç motoru: görüntüden bağımsız oyun mantığı ============
+/* ============ Chairman — maç motoru: görüntüden bağımsız oyun mantığı ============
    Koordinatlar: x −52,5…52,5 (kaleler), z 0…68 (z=0 ana tribün tarafındaki taç çizgisi). Görüntü katmanı z'den 34 çıkarır.
    Zaman: motor sabit adımla (1/60 sn) ilerler. Hareketler gerçek hızdadır; maç saati 9 kat hızlı akar (90 dk ≈ 10 dk).
    Evreler: isinma → giris → toren → selam → yazitura (maç günü: js/mac-oncesi.js) → kickoff → play ⇄ durus (taç, korner, aut,

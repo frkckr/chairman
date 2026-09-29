@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — gölgeler: her projektörden zemine izdüşüm ============
+/* ============ Chairman — gölgeler: her projektörden zemine izdüşüm ============
    Her insanın kemiklerine bağlı kutu "gölge vekilleri" (gövde, baş, kollar, bacaklar) ve top, her projektör ışığından
    zemin düzlemine izdüşürülür. Gölge böylece oyuncunun gerçek silüetidir: bacaklar ve kollarla birlikte oynar,
    ışıktan uzaklaştıkça uzar (90'ların gece maçlarındaki dörtlü gölge).

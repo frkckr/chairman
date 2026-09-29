@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — maç günü senaryosu: yalnızca veri ============
+/* ============ Chairman — maç günü senaryosu: yalnızca veri ============
    Maç öncesinin zaman çizelgesi. Kaynaklar: Premier League ısınma protokolü (kaleciler maçtan ~45 dk, takımlar ~35 dk önce çıkar,
    saha ~10 dk önce boşalır; hakemler orta çizgi boyunca koşar), TFF statüsü (İstiklal Marşı, tokalaşma: misafir takım kaptanı
    önde önce hakemlerle sonra ev sahibiyle; ardından ev sahibi hakemlerle), IFAB Kural 8 (yazı tura: kazanan kaleyi ya da santrayı seçer).

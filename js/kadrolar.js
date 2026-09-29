@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — kadrolar ============
+/* ============ Chairman — kadrolar ============
    Yalnızca veri. Her oyuncu tek kayıttır: isim, numara, mevki, görünüş (boy, yapı, ten, saç, bıyık/sakal, çorap, krampon), ayak ve özellikler.
    Sıra maç motorundaki dizilişle aynıdır: 0 kaleci, 1–4 defans, 5–8 orta saha, 9–10 forvet. Sonra yedekler ve teknik direktör.
    boy: 0,9–1,1; yapi: 0,93–1,12; ten: STIL.tenler sırası; sac: kisa | kel | uzun | mullet | kivircik.

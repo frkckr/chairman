@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — oyuncular: kutulardan kurulu model ve pozlar. Maçtaki hareketi js/mac-sahnesi.js verir ============ */
+/* ============ Chairman — oyuncular: kutulardan kurulu model ve pozlar. Maçtaki hareketi js/mac-sahnesi.js verir ============ */
 /* ============ oyuncular: kutulardan kurulu az poligonlu modeller, 16 piksellik dokular ============ */
 function dk(hex,f){const n=parseInt(hex.slice(1),16);return 'rgb('+(((n>>16)&255)*f|0)+','+(((n>>8)&255)*f|0)+','+((n&255)*f|0)+')';}
 function numText(g,s,x,y,col,out,sc){if(out)for(const d of[[-1,0],[1,0],[0,-1],[0,1]])ctxText(g,s,x+d[0],y+d[1],out,sc);ctxText(g,s,x,y,col,sc);}

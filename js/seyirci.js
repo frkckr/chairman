@@ -1,4 +1,4 @@
-/* ============ Demirkapı '99 — seyirci: tribündeki insanlar ============
+/* ============ Chairman — seyirci: tribündeki insanlar ============
    js/stadyum.js'in çıkardığı YERLER'e (koltuk ve basamak noktaları) maç günü doluluğuna göre insan oturtur.
    Her seyirci kutulardan kurulu küçük bir insandır. Binlerce kişi tek çizimle (InstancedMesh) çizilir.
    Tribün sakin durur; birkaç kişi ara sıra hafifçe kıpırdar. Maçtaki heyecan arttıkça (SEYIRCI_HEYECAN: x = ev, y = deplasman)
