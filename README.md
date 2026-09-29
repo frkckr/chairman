@@ -2,12 +2,13 @@
 
 Türkiye'de tek bir kurgusal futbol kulübünde, taraftarlıktan başkanlığa uzanan uzun kariyer oyunu. Yönetim ekibini kurmak, seçimlere girmek, teknik direktörü seçmek, mali kararlar almak ve baskıyla yaşamak üzerine kurulur. Nihai başarı Avrupa'nın en büyük kulüp kupası ve ardından vedadır; kariyer bu başarıya ulaşmadan da bitebilir.
 
-**Bugünkü uygulama bir 3B maç günü prototipidir.** Kariyer, seçim, ekonomi ve kayıt sistemleri henüz yapılmadı. Hedef bilgisayarda Steam üzerinden oynanan bir oyundur; geliştirme şu anda tarayıcıda sürer. Görseller kodla üretilir ve mevcut görünüm '99 dönemi futbol oyunlarından esinlenir.
+**Bugünkü uygulama bir 3B maç günü prototipidir.** Kariyer, seçim ve ekonomi sistemleri henüz oynanabilir değil; kariyer verisi, takvim, para ve kayıt altyapısının ilk temeli var fakat oyun ekranına bağlı değil. Hedef bilgisayarda Steam üzerinden oynanan bir oyundur; geliştirme şu anda tarayıcıda sürer. Görseller kodla üretilir ve mevcut görünüm '99 dönemi futbol oyunlarından esinlenir.
 
 ## Oyunu açmak
 
 - [GitHub Pages adresi](https://frkckr.github.io/chairman/): yayınlanan sürüm için depo adresi; yerel değişiklikler otomatik olarak yayına çıkmaz.
 - Yerelde depoyu indirip `index.html` dosyasını aç. Mevcut sürüm Three.js ve yazı tipini internetten yüklediği için internet bağlantısı gerekir.
+- Windows masaüstü denemesi (geliştiriciler için): `masaustu` klasöründe `npm install`, sonra `npm run baslat`; paket için `node paketle.js`. Bu kopya internetsiz açılır. Kurulum, imza ve Steam bağlantısı henüz yoktur; ayrıntı [teknik plan §10](TEKNIK_PLAN.md#10-sunum-metin-ve-masaüstü).
 - Eski görsel denemeler `prototipler/` klasöründedir. Güncel geliştirme kökteki `index.html` üzerinden yürür.
 
 ## Şu anda çalışanlar
@@ -39,8 +40,9 @@ Mevcut kulüp adı **Demirkapı SK**. Nihai ad ve şehir ayrıca seçilecek. Ayr
 ```text
 python3 araclar/kontrol.py
 node araclar/mac-deneme.js
+node araclar/kariyer-deneme.js
 ```
 
-İlk araç tarayıcı hatalarını ve ekran görüntüsünü kontrol etmek içindir; Python, Playwright/Chromium ve npm/tar gerektirir. İkinci araç Node.js ile maç motorunu görüntüsüz çalıştırır ve istatistiklerini raporlar. Raporun hedef dışı satırları ayrıca değerlendirilir. Yalnızca belge değişikliklerinde bağlantı ve tutarlılık kontrolü yapılır.
+İlk araç tarayıcı hatalarını ve ekran görüntüsünü kontrol etmek içindir; Python, Playwright/Chromium ve npm/tar gerektirir. İkinci araç Node.js ile maç motorunu görüntüsüz çalıştırır ve istatistiklerini raporlar. Raporun hedef dışı satırları ayrıca değerlendirilir. Üçüncü araç kariyer verisini, takvimi, para kaydını ve kayıt/yüklemeyi tarayıcısız dener. Yalnızca belge değişikliklerinde bağlantı ve tutarlılık kontrolü yapılır.
 
-**Sıradaki geliştirme:** yol haritası 1.1 — kalıcı kimlikler ve asgari kariyer durumu. Kayıt ve çevrimdışı masaüstü denemesi ilk altyapı aşamasına dahildir; bunlar bugün tamamlanmış özellikler değildir.
+**Sıradaki geliştirme:** yol haritası 2.1 — ajanda ve kulüp durumu. Aşama 1 (kariyer verisi, takvim, para, kayıt/yükleme ve Windows/Electron masaüstü denemesi) tamamlandı; kariyer altyapısı henüz oyun ekranına bağlı değildir.

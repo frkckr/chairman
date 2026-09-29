@@ -2,3 +2,7 @@
 araclar/.onbellek/
 araclar/son-kontrol-*.png
 __pycache__/
+# Masaüstü denemesinin üretilen dosyaları (masaustu/hazirla.js, paketle.js, deneme.js)
+masaustu/node_modules/
+masaustu/oyun/
+masaustu/cikti/

@@ -1,0 +1,22 @@
+{
+  "name": "chairman-masaustu",
+  "productName": "Chairman",
+  "version": "0.1.0",
+  "description": "Chairman masaüstü paketleme denemesi (yol haritası 1.5): Windows, Electron",
+  "private": true,
+  "main": "ana.js",
+  "scripts": {
+    "hazirla": "node hazirla.js",
+    "baslat": "node hazirla.js && electron .",
+    "deneme": "node deneme.js",
+    "paketle": "node paketle.js",
+    "paket-deneme": "node deneme.js --paket"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/jersey-10": "5.3.0",
+    "electron": "44.4.5",
+    "three": "0.128.0"
+  }
+}

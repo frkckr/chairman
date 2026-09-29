@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Chairman — kayıt denemesi</title>
+<style>
+  body{margin:0;padding:24px;background:#10141a;color:#d8dde6;font:15px/1.6 ui-monospace,Consolas,monospace}
+  h1{font-size:17px;margin:0 0 12px}
+  .ok{color:#7fd48a}.hata{color:#ff7a6e}
+</style>
+</head>
+<body>
+<h1>Chairman — kayıt denemesi</h1>
+<div id="sonuc"></div>
+<!-- Geliştirici denemesi. Kariyeri kaydeder, yeniden açar, yükler ve devam ettirir; sonunda deneme kayıtlarını siler.
+     Tarayıcı:  python3 araclar/kontrol.py araclar/kayit-deneme.html
+       localStorage ('chairman-deneme:' önekli anahtarlar); iki aşama arasında sayfa yenilenir.
+     Masaüstü:  masaustu/deneme.js bu sayfayı ?depo=masaustu&asama=1 ve ayrı bir uygulama açılışında &asama=2 ile açar;
+       iki aşama arasında uygulama kapanıp yeniden açılır, kayıt diskteki dosyadan okunur.
+     Başarısız denetim sayfa hatası üretir; sonuç window.__denemeSonucu'na da yazılır. -->
+<script src="../js/ortak.js"></script>
+<script src="../js/kariyer.js"></script>
+<script src="../js/takvim.js"></script>
+<script src="../js/maliye.js"></script>
+<script src="../js/kayit.js"></script>
+<script src="../js/depo-tarayici.js"></script>
+<script src="../js/depo-masaustu.js"></script>
+<script src="../js/kariyer-ornek.js"></script>
+<script>
+(function(){
+  const kutu=document.getElementById('sonuc'),satirlar=[],hatalar=[];
+  const yaz=(tamam,metin)=>{const d=document.createElement('div');d.className=tamam?'ok':'hata';d.textContent=(tamam?'✓ ':'✗ ')+metin;kutu.appendChild(d);satirlar.push((tamam?'✓ ':'✗ ')+metin);if(!tamam)hatalar.push(metin);};
+  const bitir=()=>{window.__denemeSonucu={tamam:!hatalar.length,satirlar};if(hatalar.length)throw new Error('Kayıt denemesi başarısız: '+hatalar.join(' | '));};
+  const q=new URLSearchParams(location.search),masaustu=q.get('depo')==='masaustu';
+  const depo=masaustu?masaustuDeposu():tarayiciDeposu('chairman-deneme:'),YUVA='kariyer-1';
+  const asama=masaustu?q.get('asama'):(location.hash==='#yenilendi'?'2':'1');
+  const yeniden=masaustu?'Uygulama yeniden açıldıktan sonra':'Sayfa yenilendikten sonra';
+  if(!depo){yaz(false,masaustu?'Masaüstü deposu bulunamadı':'localStorage kullanılamıyor');bitir();return;}
+  yaz(true,`Depo: ${masaustu?'masaüstü dosyası · '+depo.dizin():'tarayıcı localStorage'} · aşama ${asama}`);
+  const temizle=()=>{for(const ad of [YUVA,YUVA+'.onceki',YUVA+'.yeni'])depo.sil(ad);};
+  if(asama==='1'){
+    /* 1. aşama: kaydet; tarayıcıda sayfayı yenile, masaüstünde uygulama kapanır */
+    temizle();
+    const k=kariyerOlustur(KARIYER_ORNEK);
+    zamanIlerlet(k,2*1440+180);                      // 30 Kasım 12:00: maaş ödendi
+    const s=kariyerKaydet(depo,YUVA,k);
+    yaz(s.tamam,'Kaydedildi: '+(s.hata||`${k.tarih} ${saatYazi(k.gunIciDakika)}`));
+    if(s.tamam&&!masaustu){location.hash='yenilendi';location.reload();return;}
+    bitir();
+  }else{
+    /* 2. aşama: yükle ve devam et */
+    const y=kariyerYukle(depo,YUVA);
+    yaz(y.tamam&&y.kaynak==='ana',`${yeniden} yüklendi: `+(y.hata||`${y.kariyer.tarih} ${saatYazi(y.kariyer.gunIciDakika)} · ${y.kariyer.kisiler['kisi-2'].ad}`));
+    if(y.tamam){
+      const k=y.kariyer;
+      yaz(paraYazi(k.kulupler.demirkapi.nakit)==='5.300.000,00 ₺','Yüklenen nakit: '+paraYazi(k.kulupler.demirkapi.nakit));
+      zamanIlerlet(k,10*1440);
+      yaz(k.kulupler.demirkapi.nakit===680000000&&k.hareketler.length===2,'10 gün sonra: '+paraYazi(k.kulupler.demirkapi.nakit)+` · ${k.hareketler.length} hareket (maaş tekrarlanmadı)`);
+      const s=kariyerKaydet(depo,YUVA,k);
+      yaz(s.tamam&&depo.oku(YUVA+'.onceki')!==null&&depo.oku(YUVA+'.yeni')===null,'İkinci kayıt: önceki sağlam kayıt saklandı, geçici kayıt kalmadı');
+      depo.yaz(YUVA,depo.oku(YUVA).slice(0,200));
+      const y2=kariyerYukle(depo,YUVA);
+      yaz(y2.tamam&&y2.kaynak==='onceki','Bozuk ana kayıtta önceki kayda dönüldü: '+(y2.uyarilar||[]).join(' · '));
+    }
+    temizle();
+    yaz(depo.oku(YUVA)===null,'Deneme kayıtları temizlendi');
+    bitir();
+  }
+})();
+</script>
+</body>
+</html>
