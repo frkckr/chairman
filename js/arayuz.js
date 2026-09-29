@@ -13,7 +13,16 @@ function drawHUD(){
 /* ============ arayüz ve döngü ============ */
 function press(b,on){b.setAttribute('aria-pressed',on?'true':'false');}
 const btnBino=$('btnBino');
-btnBino.onclick=()=>{bino=!bino;press(btnBino,bino);};
+/* dürbün: başkan elleriyle kaldırır; yüzüne gelince maske açılır. İndirirken önce maske kapanır */
+btnBino.onclick=()=>{if(!bino&&!BASKAN.durbunHazir){press(btnBino,true);baskanDurbun(true,()=>{bino=true;});}else{bino=false;press(btnBino,false);baskanDurbun(false);}};
+/* duraklat: maç, tribün, bayraklar ve meşaleler durur; dürbün ve bakış çalışır. Kısayol: boşluk tuşu */
+const btnDuraklat=$('btnDuraklat');
+function duraklatDegistir(){DURAKLAT.aktif=!DURAKLAT.aktif;press(btnDuraklat,DURAKLAT.aktif);btnDuraklat.textContent=DURAKLAT.aktif?'Devam':'Duraklat';
+  if(radyoMetin)radyoMetin.textContent=DURAKLAT.aktif?'Duraklatıldı. Devam etmek için Devam düğmesine ya da boşluk tuşuna bas.':SON_SOZ;}
+btnDuraklat.onclick=duraklatDegistir;
+/* maça geç: maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) atlar; santrada düğme kaybolur */
+const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();btnMacaGec.hidden=true;};
+addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat)return;const t=e.target&&e.target.tagName;if(t==='BUTTON'||t==='INPUT'||t==='TEXTAREA')return;e.preventDefault();duraklatDegistir();});
 /* maç hızı ve baştan başlatma */
 {const ayarlaHiz=v=>{MAC_HIZ.deger=v;for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))press(b,+b.dataset.hiz===v);};
  for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))b.onclick=()=>ayarlaHiz(+b.dataset.hiz);ayarlaHiz(MAC_HIZ.deger);
@@ -28,19 +37,23 @@ btnBino.onclick=()=>{bino=!bino;press(btnBino,bino);};
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let last=0,time=0;
 function frame(now){
-  const dt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;time+=dt;
+  const gercekDt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;
+  const dt=DURAKLAT.aktif?0:gercekDt;time+=dt;
   if(!reduce)SEYIRCI_ZAMAN.value=time;
   for(const f of flags){const pa=f.m.geometry.attributes.position,a=pa.array;for(let i=0;i<pa.count;i++){const u=(f.base[i*3]+1.3)/2.6;a[i*3+2]=f.base[i*3+2]+Math.sin(time*5.5-u*4+f.ph)*0.2*u;}pa.needsUpdate=true;}
   fx(dt,time);
-  macKare(dt);
+  macKare(dt);baskanZaman(dt);
+  if(!btnMacaGec.hidden&&!MAC_ONCESI.includes(mac.phase))btnMacaGec.hidden=true;
   const V=curView(),sw=reduce?0:1,hs=bino?sw:0,B=BAKIS,ug=Math.hypot(B.x-V.p[0],B.z-V.p[2])*(bino?0.015:STIL.kameralar.baskan.egim);
-  camera.position.set(V.p[0]+Math.sin(time*0.6)*0.03*sw,V.p[1]+Math.sin(time*0.9)*0.02*sw,V.p[2]);
+  const kalk=BASKAN.kalk,sars=kalk>0.4?(Math.sin(time*31)*0.012+Math.sin(time*23)*0.008)*sw:0;
+  camera.position.set(V.p[0]+Math.sin(time*0.6)*0.03*sw+sars,V.p[1]+Math.sin(time*0.9)*0.02*sw+kalk*0.38,V.p[2]+kalk*0.12);
   /* bakış çok dik aşağı inmesin: masa ve tünel ağzı ekranı kaplamasın */
   const yat=Math.hypot(B.x-camera.position.x,B.z-camera.position.z),ly=Math.max(B.y-ug,camera.position.y-yat*Math.tan(STIL.kameralar.baskan.asagiSinir));
   camera.lookAt(B.x+Math.sin(time*1.7)*0.08*hs,ly+Math.sin(time*2.3)*0.05*hs,B.z);
   if(camera.fov!==V.fov){camera.fov=V.fov;camera.updateProjectionMatrix();}
-  camera.updateMatrixWorld();drawHUD();
+  camera.updateMatrixWorld();baskanKare(dt,camera);drawHUD();
   renderer.setRenderTarget(rt);renderer.setClearColor(STIL.ekran.arkaPlan,1);renderer.clear();renderer.render(scene,camera);
+  if(!bino)baskanCiz();
   renderer.setRenderTarget(null);renderer.clear();renderer.render(post,postCam);
   requestAnimationFrame(frame);
 }

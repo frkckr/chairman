@@ -46,14 +46,30 @@ const STIL={
     /* yedekler eşofmanla, teknik direktör takım elbiseyle (pant: uzun pantolon, ls: uzun kol) */
     yedekEv:{shirt:'#7a1812',trim:'#f2ede2',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
     yedekDeplasman:{shirt:'#22347a',trim:'#eef0f3',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
-    takimElbise:{shirt:'#23262e',trim:'#e8e4da',shorts:'#23262e',socks:'#23262e',ls:true,pant:true,boots:'#0e0e10'}
+    takimElbise:{shirt:'#23262e',trim:'#e8e4da',shorts:'#23262e',socks:'#23262e',ls:true,pant:true,boots:'#0e0e10'},
+    /* top toplayıcı çocuklar: lacivert eşofman, sarı yelek (çocuk boyu, bkz. topcuBoy) */
+    topcu:{shirt:'#e8c21e',trim:'#1e2a5a',shorts:'#1e2a5a',socks:'#1e2a5a',ls:true,pant:true},
+    /* antrenörler (kaleci antrenörü, kondisyoner) koyu eşofmanla; fotoğrafçılar turuncu yelek, elde fotoğraf makinesi */
+    antrenorEv:{shirt:'#1c1c20',trim:'#c8281e',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
+    antrenorDeplasman:{shirt:'#2c3446',trim:'#eef0f3',shorts:'#2c3446',socks:'#2c3446',ls:true,pant:true},
+    foto:{shirt:'#d8661e',trim:'#1c1c1e',shorts:'#2a2c30',socks:'#2a2c30',ls:true,pant:true,boots:'#141416',
+      ekParcalar:[{kemik:'eR',w:0.13,h:0.1,d:0.12,x:0.08,y:-0.34,z:0.1,renk:'ek1'},{kemik:'eR',w:0.07,h:0.07,d:0.12,x:0.08,y:-0.34,z:0.2,renk:'ek2'}],
+      ekRenkler:{ek1:'#141416',ek2:'#3a3a42'}}
   },
+  /* antrenman: koniler, fotoğraf flaşı */
+  antrenman:{koni:0xff7a1e,flas:0xfff4dc},
+  topcuBoy:{h:0.74,w:0.8},
   tenler:['#e2b48c','#cf9a70','#b07650','#8a5a3c','#ecc49e'],
 
-  /* Gece maçında her projektör için bir soluk gölge (90'ların dörtlü gölgesi). Projektörlerin yeri stadyum tarifindedir. */
-  golge:{opaklik:0.16},
+  /* Gece maçında her projektör için bir gölge (90'ların dörtlü gölgesi): oyuncunun silüeti ışıktan zemine izdüşer (js/golgeler.js).
+     opaklik: tek bir ışığın gölgesinin koyuluğu. Projektörlerin yeri stadyum tarifindedir. */
+  golge:{opaklik:0.2},
 
-  /* Başkan bölümü: halı, ahşap bölmeler, başkanın masası ve koltuğu */
+  /* Başkanın bedeni (ön plan katmanı, js/baskan.js): masa, takım elbise, ten, saat renkleri.
+     aci: ön plan kamerasının görüş açısı; dinlenmeEgimi: bakışın sahaya dinlenirken eğimi (radyan). */
+  baskan:{aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.2},
+
+  /* Başkan bölümü: halı, ahşap bölmeler, başkanın koltuğu */
   baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
 
   /* Stat yapı malzemeleri (tribün betonu, çatı, direk, toprak pist, set, kötü zemin renkleri, kasaba apartmanları) */

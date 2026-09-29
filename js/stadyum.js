@@ -121,22 +121,12 @@ function stand(t){
     for(const [liste,geo] of[[yakin,KOLTUK_GEO],[uzak,KOLTUK_UZAK_GEO]]){if(!liste.length)continue;const km=new THREE.InstancedMesh(geo,LAM({vertexColors:true}),liste.length);
       liste.forEach(([x,y,z,sc,renk,j],n)=>{K.makeScale(sc,sc*0.95,sc).setPosition(x,y,z);km.setMatrixAt(n,K);C.set(renk).multiplyScalar(0.85+0.2*h2(j,t.sira));km.setColorAt(n,C);});
       km.frustumCulled=false;g.add(km);}}
-  if(bs!=null){/* başkan bölümü: önünde geçit ve korkuluk, yerde halı, iki yanda ahşap bölme, başkanın önünde masa ve çay */
+  if(bs!=null){/* başkan bölümü: önünde geçit ve korkuluk, yerde halı, iki yanda ahşap bölme. Başkanın masası ve elleri js/baskan.js'te (ön plan) */
     const yr=y0+(bs-1)*eg,z=-(bs-1)*dp-0.05,rm=LAM({color:STIL.seyirci.vipKorkuluk});box(2*VG,0.05,0.05,rm,0,yr+0.95,z,g);
     for(let x=-VG;x<=VG+0.01;x+=VG/3)box(0.04,0.95,0.04,rm,x,yr+0.47,z,g);
     const hali=LAM({color:BB.hali}),bolme=LAM({color:BB.bolme}),bolmeUst=LAM({color:BB.bolmeUst});
     for(let r=bs-1;r<=bs+3;r++){const ry=y0+r*eg,rz=-(r+0.5)*dp;box(2*VG,0.02,dp,hali,0,ry+0.01,rz,g);
       for(const sx of[-1,1]){box(0.08,1.0,dp,bolme,sx*VG,ry+0.5,rz,g);box(0.12,0.05,dp+0.02,bolmeUst,sx*VG,ry+1.02,rz,g);}}
-    /* masa: geçitte, başkanın hemen önünde; üstü koltuk yüzeyinin biraz üstünde */
-    const my=y0+bs*eg+0.66,mz=-bs*dp+0.02,mh=my-yr;
-    box(1.0,0.05,0.42,LAM({color:BB.masaUst}),0,my,mz+0.2,g);box(0.92,mh-0.05,0.06,LAM({color:BB.masa}),0,yr+(mh-0.05)/2,mz+0.38,g);
-    for(const sx of[-1,1])box(0.06,mh-0.05,0.44,LAM({color:BB.masa}),sx*0.46,yr+(mh-0.05)/2,mz+0.2,g);
-    const cay=new THREE.Group();cay.position.set(0.3,my+0.025,mz+0.22);g.add(cay);
-    const tabak=new THREE.Mesh(new THREE.CylinderGeometry(0.062,0.05,0.01,10),LAM({color:0xefece4}));tabak.position.y=0.005;cay.add(tabak);
-    const GP=[[0,0],[0.021,0],[0.018,0.014],[0.0155,0.032],[0.021,0.055],[0.026,0.078],[0.0285,0.097]].map(a=>new THREE.Vector2(a[0],a[1]));
-    const bardak=new THREE.Mesh(new THREE.LatheGeometry(GP,8),LAM({color:0xdfe8ee,transparent:true,opacity:0.35,side:THREE.DoubleSide,depthWrite:false}));bardak.position.y=0.01;bardak.renderOrder=2;cay.add(bardak);
-    const TP=[[0,0.006],[0.017,0.006],[0.0145,0.03],[0.02,0.055],[0.025,0.078],[0,0.078]].map(a=>new THREE.Vector2(a[0],a[1]));
-    const icerik=new THREE.Mesh(new THREE.LatheGeometry(TP,8),LAM({color:0x9a2a0c}));icerik.position.y=0.01;cay.add(icerik);
     /* başkan koltuğunun yüksek sırtlığı */
     box(0.56,0.4,0.08,LAM({color:BB.koltuk}),0,y0+bs*eg+1.0,-(bs+0.55)*dp-0.24,g);}
   TRIBUNLER[t.yer]={t,g,O};

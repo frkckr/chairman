@@ -6,7 +6,7 @@ let renderer=null;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:false,preserveDrawingBuffer:true});}catch(e){renderer=null;}
 if(!renderer){screenEl.insertAdjacentHTML('beforeend','<p class="nogl">Bu cihazda 3B görüntü (WebGL) açılamadı.</p>');throw new Error('WebGL yok');}
 renderer.setPixelRatio(1);renderer.setSize(RW,RH,false);hud.width=RW;hud.height=RH;renderer.autoClear=false;
-const rt=new THREE.WebGLRenderTarget(RW,RH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+const rt=new THREE.WebGLRenderTarget(RW,RH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,stencilBuffer:true});
 const scene=new THREE.Scene();scene.fog=new THREE.Fog(STIL.sis.renk,STIL.sis.yakin,STIL.sis.uzak);
 const camera=new THREE.PerspectiveCamera(30,4/3,0.3,1200);
 

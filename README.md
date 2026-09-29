@@ -20,13 +20,21 @@ Kulüp başkanlığı oyunu. Kurgusal Demirkapı SK'nın başkanı olarak 3. Lig
 | `js/goruntu.js` | Ekran, renk titremesi, ışık, gökyüzü |
 | `js/stadyum.js` | Seçili tarife göre stadı kurar: zemin, tribünler, reklam panoları, projektörler, kaleler |
 | `js/seyirci.js` | Tribündeki insanlar: doluluğa göre koltuklara oturur, iki kareyle sallanır |
-| `js/oyuncular.js` | Oyuncu modelleri ve pozlar |
+| `js/oyuncular.js` | İnsan modeli (tek parça, kemikli, tek dokulu) ve pozlar |
+| `js/golgeler.js` | Oyuncu ve top gölgeleri: her projektörden zemine izdüşüm |
 | `js/mac-sahnesi.js` | Maç motorunu sahneye bağlar: oyuncu hareketi, top, kulübeler, tören, bakış, radyo satırı |
+| `js/baskan.js` | Başkanın bedeni: masa, eller, çay, program, telefon; olaylara tepkiler ve dürbün |
 | `js/efektler.js` | Meşale ve duman |
 | `js/arayuz.js` | Kamera, dürbün, düğmeler, çizim döngüsü |
 | `js/ortak.js` | Ortak araçlar: piksel yazı, kulüpler, Türkçe ekler |
-| `js/mac-motoru.js` | Maç motoru: tören, yazı tura, oyun, duran toplar, devreler (görüntüden bağımsız) |
+| `js/mac-motoru.js` | Maç motoru: oyuncu hareketi ve eylemleri (bakış yönü, vuruş, top sürme), top fiziği, temaslar, kaleci, tören, devreler (görüntüden bağımsız) |
+| `js/mac-karar.js` | Topla karar: şutun gol beklentisi (xG), bölge tehdidi (xT), pas başarısı, seçenekler ve seçim |
+| `js/mac-dizilis.js` | Topsuz oyun: diziliş, savunma çizgisi, pres, destek, koşular, markaj, kaleci konumu |
+| `js/mac-kurallar.js` | Kurallar: duran toplar, top toplayıcılar, müdahale, faul, kart, avantaj, ofsayt, oyuncu değişikliği, hakemler |
+| `js/mac-senaryo.js` | Maç günü çizelgesi (yalnızca veri): ısınma, kulübeler, çıkış, marş, tokalaşma, fotoğraf, yazı tura |
+| `js/mac-oncesi.js` | Maç gününü yürütür: maç öncesi, devre arası, maç sonu; teknik ekip, fotoğrafçılar ve "Maça geç" |
 | `araclar/kontrol.py` | Sayfayı görünmez bir tarayıcıda açıp hata ve ekran görüntüsü kontrolü yapar |
+| `araclar/mac-deneme.js` | Maç motorunu görüntüsüz ve hızlı oynatıp istatistikleri hedef tabloyla karşılaştırır |
 | `AGENTS.md` | Codex gibi başka araçları `CLAUDE.md`'deki talimatlara yönlendirir |
 
 ## Claude ile çalışma döngüsü

@@ -36,12 +36,18 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 - Her oyuncunun kendine ait görünümü vardır: boy 0,9–1,1, yapı 0,93–1,12 ölçek.
 - Saç stilleri: kısa, kel, uzun, mullet, kıvırcık. Bıyık ve sakal. Krampon rengi. Sıyrık çorap. Kalecide uzun kol ve eldiven.
 - Numara sırtta büyük (2 kat piksel yazı, koyu kenarlı), göğüste küçük.
-- Pozlar: şut, koşu, kafa, taç, kaleci uçuşu ve topu tutuş, sevinç, marşta el göğüste, oturuş (yedekler), bekleme. Yeni hareketler aynı poz sistemine (`POSE`) eklenir.
+- Pozlar: koşu; pas ve şut (hazırlık, geri salınım, temas, takip); ilk dokunuş, göğüs kontrolü, kafa; ayakta ve kayarak müdahale, blok; düşüş, yerde yatma, kalkma; taç; itiraz; sevinç; esneme, tokalaşma, fotoğrafta ayakta ve çömelmiş duruş, kenetlenme, alkış, maç sonunda yorgunluk (eller dizde); kaleci uçuşu, yumruklama, topu tutuş, elle atış ve degaj; marşta el göğüste, oturuş (yedekler), bekleme. Hakem işaretleri (düdük, yön, avantaj, kart, penaltı), yan hakem bayrağı ve dördüncü hakemin tabelası da pozdur. Yeni hareketler aynı poz sistemine (`POSE`) eklenir.
+- Gövde motorun gerçek bakış yönüne döner; oyuncu vuruştan önce hedefe döner. Sol ayaklı oyuncuların vuruş pozları aynalanır: vuran bacak gerçekten sol bacaktır.
 - Hareket pürüzsüzdür: koşu hıza bağlı sürekli bir dalgayla döner, pozlar birbirine yumuşakça karışır, dönüşler yavaşça yapılır. Motor sabit adımla ilerler, çizim adımlar arasında ara değer alır.
-- Yedekler takım renginde eşofmanla, teknik direktör takım elbiseyle görünür.
+- Yedekler takım renginde eşofmanla, teknik direktör takım elbiseyle görünür. Oyuna giren yedeğin eşofmanı çıkar, forması görünür.
+- Top toplayıcı çocuklar sarı forma, lacivert şort ve eşofman altı giyer; boyları yetişkinlerin ~3/4'üdür. Sahanın çevresinde 12 çocuk elinde yedek topla bekler (çoklu top sistemi). Dışarı çıkan top yuvarlanıp panoda durur, bir çocuk onu toplar.
+- Dördüncü hakemin tabelası kırmızı ve yeşil ışıklı sayılar gösterir: uzatmada dakika, değişiklikte çıkan (kırmızı) ve giren (yeşil) numara.
+- Saha kenarı: kaleci antrenörü ve kondisyoner takımın koyu eşofmanıyla; fotoğrafçılar turuncu yelekli, ellerinde siyah fotoğraf makinesi. Fotoğrafçılar maç boyunca kale arkalarında çömelir; takım fotoğrafında flaşları bir an parlar.
+- Isınmada turuncu koniler ve antrenman topları sahada görünür; driller bitince toplanır.
 
 ## 6. Işık ve gölge
-- Gece maçında her projektör için bir soluk, uzun gölge (90'ların dörtlü gölgesi).
+- Gece maçında her projektör için bir gölge (90'ların dörtlü gölgesi; FIFA 98'in gece maçlarındaki gibi). Gölge, oyuncunun kemiklerine bağlı kutuların ışıktan zemine izdüşümüdür: gerçek silüettir, bacak ve kollarla oynar, ışıktan uzaklaştıkça uzar (`js/golgeler.js`).
+- Aynı ışığın gölgesi bir pikseli bir kez koyulaştırır (stencil); farklı ışıkların gölgeleri üst üste binince koyulaşır. Top da gölge verir.
 - Gündüz maçı için tek ve kısa gölge (henüz yapılmadı).
 
 ## 7. Stat
@@ -55,6 +61,7 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 - Koltuklu tribünde oturur; beton basamakta ve toprak sette ayakta durur. Ev taraftarının bir kısmı koltukta da ayaktadır.
 - Koltuklar tek tek görünür, boş koltuklar seçilir. Doluluk düşükken tribün seyrektir.
 - Tribün sakin durur; birkaç kişi ara sıra hafifçe kıpırdar. Maçtaki heyecan arttıkça (giriş, santra, şut, direk, gol, maç sonu) zıplayanlar çoğalır; iki kareli zıplama (0,3 sn). Gol atan tarafın taraftarı zıplar, öbürü susar. Başkanın yakınındakiler ve başkan bölümü daha sakindir.
+- Maç öncesi tribün yavaş yavaş dolar: başkan oturduğunda stat beşte bir doludur; ev taraftarı erken, deplasman taraftarı topluca, locadakiler geç gelir, birkaç kişi son dakikada yetişir. İstiklal Marşı'nda tribün ayağa kalkar; golde gol atan tarafın oturanları da kalkar.
 - Paletler (üst giysi): ev sahibi, karışık, deplasman, başkan bölümü (koyu takım elbise).
 - Başkan bölümü: ana tribünün ortasında dört sıra koyu kırmızı döşemeli koltuk. Başkan ön sıradadır; önünde boş bir geçit ve metal korkuluk vardır.
 - Meşale: parlak çekirdek, kırmızı hale ve yükselen duman. Tel örgü, pankart, ampullü skor tabelası, projektör parıltısı.
@@ -66,7 +73,9 @@ Oyunun görünüşünü belirleyen kurallar. Sayısal değerlerin hepsi `js/stil
 
 ## 9. Kameralar
 - Tek açı başkanın gözüdür: açık ana tribünün ortasındaki başkan koltuğunda, göz hizası. Dürbün isteğe bağlı yakınlaştırmadır. Konumlar stil dosyasındadır.
+- Başkanın bedeni ekranın altında her zaman görünür (ön plan katmanı, `js/baskan.js`): ceviz masa, lacivert takım elbise kolları, sol bilekte saat, ince belli bardakta çay, maç programı, telefon. Eller maça tepki verir (gol sevinci ve ayağa kalkma, yenilen golde eller başa, masaya yumruk, itiraz, alkış); dürbün elle kaldırılır.
 - Bakış topu ve olan biteni yumuşak bir yayla izler: tünelden çıkışta tünele, törende oyuncu sırasına, yazı turada orta noktaya, golde gol atana bakar. Bakış belli bir açıdan fazla aşağı inmez.
+- Maç öncesinde bakış ilgi çeken yerler arasında gezer: önce dolan karşı tribün, sonra kaleciler, hakemler, takımların drilleri; yeni bir şey olunca (takım çıktı, yedekler kulübeye geçti) oraya döner. Tokalaşmada el sıkışanları, fotoğrafta iki takımın fotoğrafını sırayla izler. Devre arasında şut çalışan yedeklere, maç sonunda taraftarını alkışlayan takıma bakar.
 
 ## 10. Sınırlar
 - Gerçek kulüp, marka ya da logo kullanılmaz.
