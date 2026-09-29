@@ -22,7 +22,8 @@ function duraklatDegistir(){DURAKLAT.aktif=!DURAKLAT.aktif;press(btnDuraklat,DUR
 btnDuraklat.onclick=duraklatDegistir;
 /* maça geç: maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) atlar; santrada düğme kaybolur */
 const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();btnMacaGec.hidden=true;};
-addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat)return;const t=e.target&&e.target.tagName;if(t==='BUTTON'||t==='INPUT'||t==='TEXTAREA')return;e.preventDefault();duraklatDegistir();});
+/* maç öncesi ekranı açıkken boşluk duraklatmaz (sayfa da kaymaz); odaktaki İlerle düğmesine basılırsa düğme çalışır */
+addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat)return;const t=e.target&&e.target.tagName;if(t==='BUTTON'||t==='INPUT'||t==='TEXTAREA')return;e.preventDefault();if(!ON_EKRAN.acik)duraklatDegistir();});
 /* maç hızı ve baştan başlatma */
 {const ayarlaHiz=v=>{MAC_HIZ.deger=v;for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))press(b,+b.dataset.hiz===v);};
  for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))b.onclick=()=>ayarlaHiz(+b.dataset.hiz);ayarlaHiz(MAC_HIZ.deger);
@@ -35,10 +36,12 @@ addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat)return;const t=e.ta
    el.oninput=()=>{out.textContent=el.value+'%';};el.onchange=()=>ayarla(id,(el.value/100).toFixed(2));}
  $('statBilgi').textContent=STAT.ad+' · '+STAT.lig+' · kapasite '+STAT_KAPASITE.toLocaleString('tr-TR')+' · bu akşam '+SEYIRCI_SAYISI.toLocaleString('tr-TR')+' seyirci';}
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let last=0,time=0;
+let last=0,time=0,onEkranCizildi=false;
 function frame(now){
+  /* maç öncesi ekranı açıkken maç günü başlamaz: stat bir kez çizilir, menünün arkasında donuk durur */
+  if(ON_EKRAN.acik&&onEkranCizildi){last=now;requestAnimationFrame(frame);return;}
   const gercekDt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;
-  const dt=DURAKLAT.aktif?0:gercekDt;time+=dt;
+  const dt=DURAKLAT.aktif||ON_EKRAN.acik?0:gercekDt;time+=dt;
   if(!reduce)SEYIRCI_ZAMAN.value=time;
   for(const f of flags){const pa=f.m.geometry.attributes.position,a=pa.array;for(let i=0;i<pa.count;i++){const u=(f.base[i*3]+1.3)/2.6;a[i*3+2]=f.base[i*3+2]+Math.sin(time*5.5-u*4+f.ph)*0.2*u;}pa.needsUpdate=true;}
   fx(dt,time);
@@ -55,6 +58,7 @@ function frame(now){
   renderer.setRenderTarget(rt);renderer.setClearColor(STIL.ekran.arkaPlan,1);renderer.clear();renderer.render(scene,camera);
   if(!bino)baskanCiz();
   renderer.setRenderTarget(null);renderer.clear();renderer.render(post,postCam);
+  onEkranCizildi=ON_EKRAN.acik;
   requestAnimationFrame(frame);
 }
 for(let i=0;i<90;i++){time+=0.12;fx(0.12,time);}

@@ -33,7 +33,7 @@ def yerel_three():
     hedef = ONBELLEK / "package" / "build" / "three.min.js"
     if not hedef.exists():
         ONBELLEK.mkdir(parents=True, exist_ok=True)
-        subprocess.run(["npm", "pack", "three@0.128.0", "--silent"], cwd=ONBELLEK, check=True, stdout=subprocess.DEVNULL)
+        subprocess.run([shutil.which("npm") or "npm", "pack", "three@0.128.0", "--silent"], cwd=ONBELLEK, check=True, stdout=subprocess.DEVNULL)
         subprocess.run(["tar", "-xzf", "three-0.128.0.tgz", "package/build/three.min.js"], cwd=ONBELLEK, check=True)
     return hedef
 

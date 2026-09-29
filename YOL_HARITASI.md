@@ -13,6 +13,7 @@ Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter
 - [x] Stat tariflerden kuruluyor; tribünlerde kutulardan kurulu insanlar ve tek tek koltuklar var. Ekran altındaki geçici deneme panelinden stat, doluluk ve zemin değiştirilebiliyor.
 - [x] Maç motoru baştan yazıldı (`js/mac-*.js`): oyuncular hedefe dönüp vuruyor, topu dokunuşlarla sürüyor, seçeneklerini tartarak karar veriyor. Taç, korner, aut, serbest vuruş ve penaltı; top toplayıcılar; faul, kart, avantaj, ofsayt; oyuncu değişikliği ve uzatma tabelası var. Ayarlar `araclar/mac-deneme.js` ile ölçülüyor.
 - [x] Maç günü baştan sona gerçek sırayla akıyor (~6 dk, "Maça geç" ile atlanabilir): tribün yavaş yavaş doluyor; kaleciler, hakemler ve takımlar ısınıyor, içeri giriyor; yedekler, antrenörler, 4. hakem, fotoğrafçılar ve en son teknik direktörler çıkıyor; önde üç hakemle çıkış, marş (tribün ayakta), TFF sırasıyla tokalaşma, iki takım fotoğrafı, yazı tura, kenetlenme ve santra. Devre arasında yedekler şut çalışıyor; maç sonunda tokalaşma ve taraftarı alkışlama var.
+- [x] Oyun maç öncesi bülteniyle açılıyor: iki takımın ligdeki yeri ve formu, olası ilk 11'ler, sakat ve cezalılar, son 5 maç, puan durumu, aradaki son maçlar. "İlerle" ile stada geçiliyor. Veriler şimdilik sabit (`js/lig.js`, `js/kadrolar.js`).
 
 ## Kararlar
 - 2026-09-26: Görsel yön Demirkapı '99 (FIFA 99 / PS1 dönemi). Tüm görseller kodla üretilir.
@@ -51,6 +52,8 @@ Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter
 - 2026-09-28: Maç günü akışı `js/mac-senaryo.js` (veri) ve `js/mac-oncesi.js` (yürütücü) dosyalarındadır. Sıra Premier League ısınma protokolüne ve TFF statüsüne göre: kaleciler ~45 dk, takımlar ~35 dk önce ısınmaya çıkar; hakemler orta çizgi boyunca koşar; saha ~10 dk önce boşalır; teknik direktörler en son çıkar. Tokalaşmada misafir takım kaptanı önde önce hakemlerle, sonra ev sahibi oyuncularla tokalaşır; ardından hakemler ev sahibiyle. Önce ev sahibi yerinde, misafir kendi yarısında fotoğraf çektirir. Yazı turayı kazanan santrayı ya da kaleyi seçer (Kural 8). Maç öncesinin rastgeleliği ayrı bir tohumdan gelir; maçın kendisini değiştirmez.
 - 2026-09-28: Devre arası ~45 sn (yedekler kale önünde şut çalışır, teknik direktörler soyunma odasına gidip döner). Maç sonunda üç düdük, kazananların sevinci, kaybedenlerin yorgunluğu, rakiple tokalaşma, iki takımın kendi taraftarını alkışlaması ve tünele dönüş vardır.
 - 2026-09-29: Projenin adı şimdilik "Chairman" (eskiden "Demirkapı '99"). Depo github.com/frkckr/chairman, oyun linki frkckr.github.io/chairman/. Oyuncunun kulübü yine kurgusal Demirkapı SK; statların adı ve kulüp renkleri değişmedi. Görsel yön "'99 görünümü" diye anılır. `prototipler/` eski halleriyle arşiv olarak kalır.
+- 2026-09-29: Oyun fareyle oynanır (Steam). Maçtan önce tek bir menü ekranı ("maç bülteni") vardır; "İlerle" ile maç gününe geçilir. Menü açıkken maç günü başlamaz, stat arkada donuk durur. Menü 4:3 oyun karesinin içindedir ve kareyle orantılı büyür. `?ekran=mac` adres parametresi menüyü atlar.
+- 2026-09-29: Lig, fikstür ve kadro bilgileri şimdilik sabittir (her açılışta aynı, rastgele üretilmez): lig `js/lig.js`'te (16 kurgusal takım, 3. Lig 2. Grup, 13. hafta), sakat/cezalı, kart ve gol bilgisi `js/kadrolar.js`'te. İleride kalıcı kayıt (veritabanı) bu dosyaların yerini alır; ekranlar veriyi yalnızca buralardan okur. Puan ve averaj elle yazılmaz, tablodan hesaplanır. Bu maçın ev sahibi ve konuğu (`MAC_KADRO`) fikstürden (`LIG.buMac`) gelir.
 
 ## Açık kararlar
 - Maç süresi ve olay sıklığı: 10 dakikada, gerçekçi akışla maç başına ~2 gol ve ~10 şut çıkıyor (gerçek maçta ~2,7 gol, ~25 şut). Daha çok olay istenirse iki yol var: maçı uzatmak (15–20 dakika) ya da oyunu yapaylaştırmak (hücumlar daha kolay sonuçlanır, daha çok uzaktan şut). Şimdilik gerçekçi akış ve 10 dakika kaldı.
@@ -69,6 +72,8 @@ Her aşama küçük adımlardan oluşur. Her adım çalışan bir sonuçla biter
 - [x] Kayarak müdahale ve faul; sarı/kırmızı kart; ofsayt bayrağı.
 
 ## Aşama 3 — Yönetim çekirdeği
+- [x] Maç öncesi ekranı (ilk sürüm, sabit veriyle): lig durumu, form, olası 11'ler, eksikler, son maçlar; "İlerle" ile maça geçiş.
+- [ ] Verinin kalıcı kayıttan (veritabanı) gelmesi; maç sonucunun puan durumuna işlenmesi.
 - [ ] Kadro, transfer, bütçe.
 - [ ] Lig yapısı: 3. Lig → 2. Lig → 1. Lig → Avrupa.
 - [ ] Maç sonuçlarının motordan gelmesi; diğer maçların görüntüsüz hızlı oynatılması.
