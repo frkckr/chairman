@@ -37,3 +37,61 @@ const KARIYER_ORNEK={
     'kisi-7':{id:'kisi-7',ad:'Celal Arıkan',rol:'eskiBaskan',dogumTarihi:'1944-10-05',kulupId:'demirkapi',durum:'emekli'}
   }
 };
+
+/* ============ oynanabilir TEST başlangıcı: maçtan önceki hafta (yol haritası 2.1) ============
+   Oyun bu kariyerle açılır: Pazartesi 23 Kasım 08:00. Kulüpler ve kişiler KARIYER_ORNEK ile aynıdır (kariyerOlustur derin kopyalar).
+   Ajanda işleri (js/ajanda.js) hafta boyunca dağılır; Cumartesi 19:00 maçı zorunlu maç sınırıdır (LIG.buMac ile aynı an).
+   Metinler, saatler ve tutarlar TEST verisidir; kesin içerik ya da denge değeri değildir.
+   KARIYER_ORNEK'in işleri (is-1…is-3) maçtan sonraya düşer; maç sonucu kariyere Aşama 3'te bağlanana kadar oraya varılmaz.
+   Yönetim (2.2, js/yonetim.js): futbol şube sorumlusu Necati Uysal, basın sözcüsü Sevim Kara; sayman koltuğu boş.
+   Üç sayman adayı (kisi-8…10) Pazartesi görüşülür. Profilleri oyuncuya metin olarak gösterilir; katkı seviyeleri gizlidir ve
+   Perşembe sponsor işinin saymana devredilince nasıl sonuçlanacağını belirler. */
+const KARIYER_BASLANGIC=Object.assign({},KARIYER_ORNEK,{
+  tarih:'2026-11-23',gunIciDakika:480,
+  sonrakiNo:{kisi:11,is:15,hareket:1},
+  kulupler:Object.assign({},KARIYER_ORNEK.kulupler,{
+    demirkapi:Object.assign({},KARIYER_ORNEK.kulupler.demirkapi,{yonetim:{sayman:null,futbol:'kisi-3',basin:'kisi-4'}})
+  }),
+  kisiler:Object.assign({},KARIYER_ORNEK.kisiler,{
+    'kisi-8':{id:'kisi-8',ad:'Hikmet Aydın',rol:'yoneticiAdayi',dogumTarihi:'1959-05-08',kulupId:'demirkapi',durum:'aktif',
+      profil:{meslek:'Emekli banka şube müdürü.',guclu:'Otuz yıl kredi ve tahsilat işi yürüttü; ödeme planı kurmayı bilir.',
+        zayif:'Futbol çevresini tanımaz; tribünle arası mesafeli.',beklenti:'Kulübün hesaplarının dışarıdan denetlenmesini istiyor.'},
+      katki:{mali:'guclu',baglanti:'orta',futbol:'zayif',iletisim:'orta'}},
+    'kisi-9':{id:'kisi-9',ad:'Tuncay Erbil',rol:'yoneticiAdayi',dogumTarihi:'1970-02-19',kulupId:'demirkapi',durum:'aktif',
+      profil:{meslek:'Organize sanayide tekstil fabrikası sahibi.',guclu:'Şehrin iş çevresini tanır; sponsorlarla aynı masada oturur.',
+        zayif:'Muhasebe ayrıntısına sabrı yok; işleri telefonla halletmeyi sever.',beklenti:'Firmasının adının stat panolarında görünmesini istiyor.'},
+      katki:{mali:'orta',baglanti:'guclu',futbol:'orta',iletisim:'orta'}},
+    'kisi-10':{id:'kisi-10',ad:'Deniz Kocaman',rol:'yoneticiAdayi',dogumTarihi:'1990-10-02',kulupId:'demirkapi',durum:'aktif',
+      profil:{meslek:'Serbest mali müşavir; kulübün eski altyapı oyuncusu.',guclu:'Sözleşmeleri satır satır okur; kayıtları düzenler.',
+        zayif:'Şehrin büyük iş insanları onu henüz ciddiye almıyor.',beklenti:'Altyapıya ayrılan bütçenin korunmasını istiyor.'},
+      katki:{mali:'guclu',baglanti:'zayif',futbol:'orta',iletisim:'guclu'}}
+  }),
+  isler:Object.assign({},KARIYER_ORNEK.isler,{
+    'is-4':{id:'is-4',tur:'ajanda',tarih:'2026-11-23',dakika:600,veri:{baslik:'Haftalık yönetim toplantısı',zorunluluk:'zorunlu',sure:90,kisiId:'kisi-3',
+      aciklama:'Yönetim haftanın gündemini konuşacak: Cumartesi maçı, bilet satışı, sponsor ödemesi ve boş sayman koltuğu.',
+      bilgi:'Necati Uysal: Akdeniz maçı için bilet ön satışı zayıf; tribünler yarı boş kalabilir. Sevim Kara forma sponsorunun ödemeyi geciktirebileceğini söyledi. Eski sayman istifa ettiği için koltuk boş; adaylar öğleden sonra geliyor.'}},
+    'is-14':{id:'is-14',tur:'ajanda',tarih:'2026-11-23',dakika:780,veri:{baslik:'Sayman adaylarıyla görüşme',zorunluluk:'zorunlu',sure:90,
+      karar:'koltukSecimi',kulupId:'demirkapi',koltuk:'sayman',adaylar:['kisi-8','kisi-9','kisi-10'],
+      aciklama:'Boş sayman koltuğu için üç kulüp üyesiyle görüşeceksin. Görüşmenin sonunda birini seçmelisin.'}},
+    'is-5':{id:'is-5',tur:'ajanda',tarih:'2026-11-23',dakika:900,veri:{baslik:'Antrenmanı izle',zorunluluk:'istege',sure:120,kisiId:'kisi-2',
+      aciklama:'Şükrü Hoca haftanın ilk antrenmanını yaptırıyor. Tribünden izleyebilirsin.',
+      bilgi:'Takım tempolu çalıştı. Şükrü Hoca duran toplara uzun süre ayırdı; sağ bekte iki oyuncuyu dönüşümlü denedi.'}},
+    'is-6':{id:'is-6',tur:'ajanda',tarih:'2026-11-24',dakika:660,veri:{baslik:'Saha sorumlusuyla zemin turu',zorunluluk:'ertelenebilir',sure:60,sonTarih:'2026-11-26',
+      aciklama:'Saha sorumlusu yağmurdan sonra zeminin durumunu göstermek istiyor.',
+      bilgi:'Kale önleri çamurlu, orta saha tutuyor. Cumartesiye kadar yeni çim serilemez; kale ağızları kumla desteklenecek.'}},
+    'is-7':{id:'is-7',tur:'odeme',tarih:'2026-11-24',dakika:720,veri:{kulupId:'demirkapi',tutar:-4500000,kalem:'isletme',aciklama:'Stat elektrik faturası (Kasım)'}},
+    'is-8':{id:'is-8',tur:'ajanda',tarih:'2026-11-25',dakika:840,veri:{baslik:'Yerel gazete röportajı',zorunluluk:'ertelenebilir',sure:60,sonTarih:'2026-11-27',
+      aciklama:'Demirkapı Postası sezon ortası değerlendirmesi için kısa bir söyleşi istiyor.',
+      bilgi:'Muhabir en çok bilet fiyatlarını ve Akdeniz maçını sordu. Söyleşi Cuma günkü sayıda çıkacak.'}},
+    'is-9':{id:'is-9',tur:'hatirlatma',tarih:'2026-11-25',dakika:540,veri:{metin:'Federasyon Cumartesi maçının hakemini açıkladı.'}},
+    'is-10':{id:'is-10',tur:'ajanda',tarih:'2026-11-26',dakika:600,veri:{baslik:'Forma sponsoru ödemesi gecikiyor',zorunluluk:'zorunlu',sure:90,
+      karar:'sponsorGecikmesi',kulupId:'demirkapi',odemeIsId:'is-3',
+      aciklama:'Forma sponsoru 1 Aralık\'taki ilk taksiti geciktirmek istiyor. Temsilciyle kendin görüşebilir ya da işi saymana devredebilirsin.'}},
+    'is-11':{id:'is-11',tur:'odeme',tarih:'2026-11-26',dakika:900,veri:{kulupId:'demirkapi',tutar:12000000,kalem:'bilet',aciklama:'Bilet ön satış geliri'}},
+    'is-12':{id:'is-12',tur:'ajanda',tarih:'2026-11-27',dakika:960,veri:{baslik:'Şükrü Hoca ile maç öncesi görüşme',zorunluluk:'istege',sure:45,kisiId:'kisi-2',
+      aciklama:'Hoca maç öncesi planını anlatmak için kısa bir görüşme öneriyor.',
+      bilgi:'Şükrü Hoca: “Akdeniz ortada kalabalık oynuyor, kanatlardan gideceğiz.” Sakat oyuncuların dönüş tarihlerini de anlattı.'}},
+    'is-13':{id:'is-13',tur:'ajanda',tarih:'2026-11-28',dakika:1140,veri:{baslik:'Maç: Demirkapı SK – Akdeniz FK',zorunluluk:'zorunlu',sure:0,eylem:'macGunu',
+      aciklama:'3. Lig 13. hafta. Başkan koltuğunda yerini al.'}}
+  })
+});

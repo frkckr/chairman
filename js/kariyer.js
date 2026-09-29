@@ -6,6 +6,8 @@
 const KARIYER_SURUM=1;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
+/* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */
+const EK_DENETIMLER=[];
 /* kimlikUret'in tanıdığı türler ve kayıtlarının bulunduğu alan (nesne ya da dizi) */
 const KIMLIK_TURLERI={kisi:'kisiler',is:'isler',hareket:'hareketler'};
 
@@ -98,5 +100,6 @@ function kariyerDogrula(k){
   }
   takvimDogrula(k,h);
   maliyeDogrula(k,h);
+  for(const d of EK_DENETIMLER)d(k,h);
   return h;
 }

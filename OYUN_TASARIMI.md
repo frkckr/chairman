@@ -58,6 +58,13 @@ Girişe sabit bir kısa süre sınırı konmaz. Buna rağmen oyuncu erken aşama
 
 Adaylar finansal güç, bağlantılar, futbol geçmişi, yönetim deneyimi, kişilik ve kendi beklentileri bakımından farklıdır. Havuz ilerledikçe yeni kişilerle genişleyebilir. İlk karşılaşmada aşırı sayıda kişiyi ezberleme yükü oluşturulmaz.
 
+**Kesin karar (2026-09-29): ilk kapsamda üç yönetim koltuğu vardır.**
+- Sayman: mali işler.
+- Futbol şube sorumlusu: hoca ve transfer teması.
+- Basın sözcüsü: medya ve taraftar.
+
+Koltuk sayısı sonraki aşamalarda genişleyebilir; seçmen yapısı ve yönetim kurulunun seçimdeki biçimi hâlâ açıktır.
+
 Tek bir özellik bütün bir problemi çözmez. Paralı üyenin desteğinin miktarı, zamanı, şartı ve güvenilirliği ayrı konulardır. Eski futbolcu oyunculara ulaşabilir ama mali konularda zorlanabilir. Her kişi yalnızca bir avantaj ve bir ceza taşıyan kalıba indirgenmez.
 
 ### Kampanya
@@ -69,7 +76,7 @@ Tek bir özellik bütün bir problemi çözmez. Paralı üyenin desteğinin mikt
 - Sonuç; adayın inandırıcılığı, ekibi, ilişkileri, vaatleri ve rakiplerden oluşur. Belirsizlik bulunur, fakat tek bir açıklanamayan zar bütün hazırlığı değersizleştirmez.
 - Sonraki seçimler gerçek görev geçmişini ve rakiplerin alternatiflerini değerlendirir. İyi yönetmek destek sağlar; otomatik yeniden seçilme garantisi vermez.
 
-Oy kullanacak grubun yapısı, yönetim koltukları, dönem süresi ve erken seçim/görevden alınma koşulları uygulanmadan önce kararlaştırılacaktır.
+Oy kullanacak grubun yapısı, ilk üç koltuğun ötesindeki yönetim yapısı, dönem süresi ve erken seçim/görevden alınma koşulları uygulanmadan önce kararlaştırılacaktır.
 
 ## 5. Görev dışında geçen dönem
 
@@ -96,7 +103,15 @@ Hızlandırma önemli olayları sessizce atlamamalıdır. Yeniden adaylık veya 
 
 İki oyun haftalık stat geliştirmesi, takvim iki hafta ilerleyince tamamlanır. Bu haftaların gerçek süresi gündeme göre değişebilir. Bir ekranı açık bırakmak kendiliğinden günleri tüketmez; zamanın hangi eylemle ilerlediği anlaşılır olur.
 
-Ajanda; zorunlu, ertelenebilir ve isteğe bağlı işleri ayırır. Günü bitirme ve sonraki önemli gelişmeye ilerleme davranışı tasarlanır. Bekleyen görüşmenin veya süresi dolacak teklifin atlanacağı önceden anlaşılır.
+Ajanda; zorunlu, ertelenebilir ve isteğe bağlı işleri ayırır. Bekleyen görüşmenin veya süresi dolacak teklifin atlanacağı önceden anlaşılır.
+
+**Kesin karar (2026-09-29):**
+- Zorunlu iş yapılmadan gün bitmez.
+- Ertelenebilir iş ileri güne alınabilir. Gün bitince ertesi güne kendiliğinden kalır, ancak son günü geçilemez; son gününde yapılmadıkça gün bitmez.
+- İsteğe bağlı iş yapılmazsa kaçırılır ve geçmişe yazılır.
+- Bir işe katılmak başka işleri kaçırtacaksa bu önceden gösterilir. Zorunlu bir işle çakışan işe katılınamaz.
+
+Sonraki önemli gelişmeye ilerleme davranışı henüz tasarlanmadı.
 
 Antrenman, boş stat veya kulüp odası gibi isteğe bağlı alanlarda vakit geçirilebilir. Telefon ve haberler bu ortamların içinde gelebilir. Uzun süre beklemek zorunlu bir yetenek veya bilgi kazancına dönüşmez.
 
@@ -189,7 +204,8 @@ Başarı finali kutlama, şehre dönüş, insanlarla veda ve bırakmayla tamamla
 | Açık konu | Karar verilmesi gereken aşama |
 |---|---|
 | Kulübün nihai adı, şehir, kuruluş ve geçmiş kişiler | Hikâye içeriği; Aşama 5 öncesi |
-| Seçmen yapısı, yönetim koltukları, dört/beş yıl, erken seçim | Ekip için Aşama 2; seçim kuralları için Aşama 5 öncesi |
+| Seçmen yapısı, dört/beş yıl, erken seçim (ilk üç koltuk seçildi, §4) | Seçim kuralları için Aşama 5 öncesi |
+| Yönetim adaylarının katkılarının oyuncuya nasıl gösterileceği (bugünkü TEST: profil metni görünür, katkı seviyeleri gizli) | 2.2 kapanmadan; Aşama 5 kampanya ekibinden önce kesinleşmeli |
 | Kişisel katkı biçimi, sınırları ve mali kurallar | Aşama 4 öncesi |
 | Takım sayıları, sezon ve transfer takvimi, alt lig sınırı | Aşama 6 öncesi; yükselme/düşme ayrıntısı Aşama 8 öncesi |
 | Başkanın başlangıç yaşı, becerileri, kupasız final koşulları | Veri alanları Aşama 1; davranış kararı Aşama 7 öncesi |

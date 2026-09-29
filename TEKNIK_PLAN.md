@@ -8,17 +8,17 @@ Son güncelleme: 2026-09-29. Bu belge mevcut prototipten hedef kariyer oyununa g
 |---|---|
 | Açılış | `index.html`; klasik betikler sırayla yüklenir, derleme aracı yok |
 | Veri ve ortak araçlar | `js/ortak.js`, `js/kadrolar.js`, `js/lig.js`, `js/mac-senaryo.js`, `js/stadyum-tarifleri.js` |
-| Kariyer durumu | `js/kariyer.js` oluşturma/kimlik/doğrulama; `js/takvim.js` zaman ve bekleyen işler; `js/maliye.js` para kaydı; `js/kayit.js` kayıt/yükleme; `js/kariyer-ornek.js` TEST örnek kariyer. Henüz `index.html`'e yüklenmez, oyunda görünmez |
+| Kariyer durumu | `js/kariyer.js` oluşturma/kimlik/doğrulama; `js/takvim.js` zaman ve bekleyen işler; `js/maliye.js` para kaydı; `js/ajanda.js` ajanda işleri, karar işleri ve günü bitirme; `js/yonetim.js` yönetim koltukları ve karar türleri; `js/kayit.js` kayıt/yükleme; `js/kariyer-ornek.js` TEST örnek kariyer (`KARIYER_ORNEK`) ve oynanabilir TEST haftası (`KARIYER_BASLANGIC`). `index.html`'e `lig.js`'ten sonra yüklenir |
 | Platform | `js/depo-tarayici.js` tarayıcı (localStorage), `js/depo-masaustu.js` masaüstü kayıt deposu |
 | Masaüstü (deneme) | `masaustu/`: Electron ana süreç `ana.js`, köprü `onyukleme.js`, çevrimdışı kopya `hazirla.js`, paket `paketle.js`, iki açılışlı deneme `deneme.js`. Yalnız Windows x64 |
 | Maç mantığı | `js/mac-motoru.js`, `js/mac-dizilis.js`, `js/mac-karar.js`, `js/mac-kurallar.js` |
 | Maç günü akışı | `js/mac-oncesi.js`; maç öncesi, devre arası, maç sonu |
 | Görsel temel | `js/stil-99.js`, `js/goruntu.js`; Three.js r128, kodla üretilen görseller |
 | Stat ve insanlar | `js/stadyum.js`, `js/seyirci.js`, `js/oyuncular.js`, `js/golgeler.js` |
-| Bağlantı ve sunum | `js/mac-sahnesi.js`, `js/ekran-mac-oncesi.js`, `js/baskan.js`, `js/efektler.js`, `js/arayuz.js` |
+| Bağlantı ve sunum | `js/mac-sahnesi.js`, `js/ekran-ajanda.js` (açılış ekranı, kayıt bağlantısı), `js/ekran-mac-oncesi.js`, `js/baskan.js`, `js/efektler.js`, `js/arayuz.js` |
 | Kontrol | `araclar/kontrol.py` tarayıcı kontrolü; `araclar/mac-deneme.js` görüntüsüz maç ölçümleri; `araclar/kariyer-deneme.js` kariyer, takvim, para ve kayıt denetimi; `araclar/kayit-deneme.html` tarayıcıda kayıt/yenileme/yükleme denemesi |
 
-Motor sahneye bağlıdır. Kadrolarda gizli yetenek değerleri, motorda tohumlu rastgelelik ve sabit zaman adımı bulunur. Bu, kariyer için bir başlangıçtır; takvim, kalıcı sözleşme, seçim, kayıt, oyuncu gelişimi ve kariyer yöneten hoca sistemi henüz yoktur.
+Motor sahneye bağlıdır. Kadrolarda gizli yetenek değerleri, motorda tohumlu rastgelelik ve sabit zaman adımı bulunur. Kariyer takvimi, para, kayıt ve ajanda çalışır; ancak maç sonucu kariyere bağlı değildir. Kalıcı sözleşme, seçim, oyuncu gelişimi ve kariyer yöneten hoca sistemi henüz yoktur.
 
 Tarayıcı sürümünde Three.js ve sayfa fontları dış kaynaklardan yüklenir. Masaüstü kopyası bunları yerel dosyalardan yükler ve çevrimdışı açılır (1.5 denemesi, §10). Üst düzey tanımlar betikler arasında paylaşılır; yeni adlar ve yükleme sırası bu yüzden dikkat gerektirir.
 
@@ -72,11 +72,22 @@ Kariyer durumu tek bir sade veri nesnesidir; kurallar `js/kariyer.js`, `js/takvi
 | `sonrakiNo` | Tür başına sayaç (`kisi`, `is`, `hareket`); `kimlikUret` yeni kimliği buradan verir, var olan kimliği vermez |
 | `kulupler` | Anahtar = `id`; küçük harf/rakam kimlik (`demirkapi`), `ad`, `kisa`, `kademe` 1–3, `baskanId`, `acilisNakit`, `nakit` (kuruş tamsayı) |
 | `kisiler` | Anahtar = `id` (`kisi-N`); `ad`, `rol`, `dogumTarihi`, `kulupId` (ya da `null`), `durum`: `aktif`, `emekli`, `ayrildi`, `vefat` |
-| `isler` | Bekleyen işler; anahtar = `id` (`is-N`); `tur`, `tarih`, `dakika`, `veri`. Türler: `hatirlatma`, `odeme` |
-| `gecmis` | Tamamlanan işlerin sıralı kaydı: `tur: 'is'`, `isId`, `isTuru`, `tarih`, `dakika`, `sonuc` |
+| `isler` | Bekleyen işler; anahtar = `id` (`is-N`); `tur`, `tarih`, `dakika`, `veri`. Türler: `hatirlatma`, `odeme`, `ajanda` |
+| `gecmis` | Sıralı kayıt. Tamamlanan iş: `tur: 'is'`, `isId`, `isTuru`, `tarih`, `dakika`, `sonuc`. Erteleme: `tur: 'erteleme'`, `isId`, `tarih`, `dakika`, `eski`, `yeni`, `saat`, `baslik`, `otomatik`. Yapılmadan iptal: `tur: 'iptal'`, `isId`, `isTuru`, `tarih`, `dakika`, `baslik`, `neden`. İptal edilen iş tamamlanamaz |
+| Kulüp `yonetim` (isteğe bağlı) | `{sayman, futbol, basin}` → kişi kimliği ya da `null`. Oturan kişi aktif, o kulübe bağlı ve `yonetici` rolünde olmalı; bir kişi tek koltukta oturur |
+| Kişi `profil`, `katki` (isteğe bağlı) | `profil`: `{meslek, guclu, zayif, beklenti}` metinleri, oyuncuya gösterilir. `katki`: `{mali, baglanti, futbol, iletisim}` → `zayif`/`orta`/`guclu`, gizlidir ve iş sonuçlarını belirler |
 | `hareketler` | Para hareketleri: `id` (`hareket-N`), `kulupId`, `tarih`, `dakika`, `tutar` (kuruş; gelir +, gider −), `kalem`, `aciklama`, `kaynak` (işin kimliği ya da `null`) |
 
 `kariyerDogrula` sade veri dışı değerleri (fonksiyon, `undefined`, NaN, Date, sınıf örneği), eksik referansları, geçersiz tarihleri, bilinmeyen durumları, sayaç çakışmasını ve görevdeki başkanın kulüp kaydıyla uyumsuzluğunu Türkçe açıklamayla bildirir. Takvim ve para için ayrıca: zamanı geçmiş fakat tamamlanmamış işi, iki kez tamamlanan işi, açılış nakdi ile hareketlerin toplamını tutmayan nakdi, kesirli tutarı ve aynı işten iki kez doğan para hareketini yakalar. Kulüp kimlikleri bugünkü `KADROLAR`/`LIG` anahtarlarıyla aynıdır; bu köprü 3.3'te kullanılır.
+
+**Ajanda işi (2.1):** `ajanda` türü bekleyen iştir; `tarih`/`dakika` başlangıcıdır.
+- `veri` alanları: `baslik`, `aciklama`, `zorunluluk` (`zorunlu`, `ertelenebilir`, `istege`), `sure` (0–720 dk). İsteğe bağlı olarak `kisiId`, `bilgi` (iş yapılınca öğrenilen metin), `sonTarih` (yalnız ertelenebilir işte) ve `eylem` (`macGunu`) bulunabilir.
+- Geçmişteki `sonuc` alanı `{durum: 'yapildi'|'kacirildi', baslik, zorunluluk, gun, saat, sure, bilgi?, eylem?}` biçimindedir. Böylece iş listeden çıktıktan sonra da ajandada gösterilebilir.
+- Alanlar eklemelidir; `kayitSurumu` 1 kalır. Bu tür olmadan yapılmış kayıtlar olduğu gibi açılır.
+
+`KARIYER_BASLANGIC`, `KARIYER_ORNEK`'in kulüp ve kişileri üzerine kurulu oynanabilir TEST haftasıdır. 23 Kasım 08:00'de başlar, Cumartesi 19:00 maç işinde (`LIG.buMac`) biter. Ekledikleri: yönetim koltukları, üç sayman adayı ve iki karar işi. `KARIYER_ORNEK` değişmez.
+
+Sonradan yüklenen kural dosyaları kendi doğrulamasını `EK_DENETIMLER` listesine ekler (`js/yonetim.js` → `yonetimDogrula`). Dosya yüklü olmayan sayfada o alan denetlenmez.
 
 Gelecekteki ödeme ayrı bir liste değil, takvimdeki `odeme` türü iştir; zamanı gelince bir kez para hareketine dönüşür. Böylece mevcut nakit ile henüz ödenmemiş taahhütler ayrı durur (`maliDurum`). Hareket listesi uzun kariyerde büyür; dönem özetlerine sıkıştırma kayıt boyutu ölçüldüğünde ele alınır.
 
@@ -88,7 +99,21 @@ Bir eylem, takvimde ne kadar yer kapladığını ve hangi işi başlattığını
 
 Başkanlık dışındaki hızlı takip de aynı takvim işlemlerini kullanır; ayrı ve çelişen bir dünya simülasyonu kurulmaz. Önemli gelişmelerde durur. Geliştirici testlerinde yıllar hızlı geçilebilir; bu test aracı oyuncunun kariyer temposuyla karıştırılmaz.
 
-**Uygulanan (1.2, 2026-09-29):** `zamanIlerlet(k, dakika)` takvimi yalnız tam dakika ve ileri yönde ilerletir; arada zamanı gelen işleri önce en erken an, aynı anda önce eklenen sırasıyla bir kez tamamlar ve `gecmis`'e yazar. Zamanı tek seferde ya da parça parça ilerletmek aynı sonucu verir. `sonrakiGuneGec` ertesi günün başlangıcına (TEST: 08:00) gider. Geçmiş bir ana iş kurulamaz. Ajanda ekranı ve günü bitirme kararı 2.1'dedir.
+**Uygulanan (1.2, 2026-09-29):** `zamanIlerlet(k, dakika)` takvimi yalnız tam dakika ve ileri yönde ilerletir; arada zamanı gelen işleri önce en erken an, aynı anda önce eklenen sırasıyla bir kez tamamlar ve `gecmis`'e yazar. Zamanı tek seferde ya da parça parça ilerletmek aynı sonucu verir. `sonrakiGuneGec` ertesi günün başlangıcına (TEST: 08:00) gider. Geçmiş bir ana iş kurulamaz.
+
+**Uygulanan (2.1, 2026-09-29):** Takvime üç ekleme yapıldı.
+- Bir iş türü `pay` bildirebilir; iş, zamanından o kadar dakika sonra tamamlanır. Ajanda işi `pay: 1` kullanır: başlangıç dakikasında hâlâ katılınabilir, o dakika geçince takvim işi “kaçırıldı” diye kapatır.
+- `isTamamla(k, id, sonuc)` bekleyen işi şu anda tamamlayıp geçmişe yazar. Hem takvim hem ajanda katılımı bunu kullanır; iş yine bir kez tamamlanır.
+- `isTasi(k, id, tarih, dakika)` işi kimliğini koruyarak ileri taşır.
+
+`js/ajanda.js` işlevleri:
+- `ajandaOnizle`: işin başlangıcını ve bitişini, araya girip kaçırılacak işleri, arada gerçekleşecek ödemeleri ve engelleri bildirir. Engeller: araya giren zorunlu iş, başka günün işi, gün içinde bitmeyen iş.
+- `ajandaIsiYap`: zamanı başlangıca getirir, işi “yapıldı” diye kapatır, sonra süresi kadar ilerler.
+- `ajandaErtele`: ertelenebilir işi ertesi güne taşır; son tarih aşılamaz.
+- `gunuBitirOnizle` / `gunuBitir`: bekleyen zorunlu iş ya da son günü gelmiş ertelenebilir iş varsa gün bitmez. Diğer ertelenebilir işler ertesi güne taşınır, isteğe bağlılar kaçırılır; ardından `sonrakiGuneGec` çağrılır.
+- `ajandaGunu`, `yaklasanlar`, `kulupDurumu`: ekranın okuduğu özetleri üretir.
+
+`GUN_BASLANGICI` hâlâ TEST değeri olan 08:00'dir.
 
 ## 5. Kayıt ve yükleme
 
@@ -102,7 +127,15 @@ Kayıt erken aşama işidir. Hedefler:
 - Kayıt sınırları açık olur. İlk çalışan sürümde gün/karar sınırlarında kayıt yeterlidir; maç veya görüşmenin ortasından devam hedefi ayrıca değerlendirilir ve arayüzde doğru anlatılır.
 - Tarayıcı ve masaüstü depolaması ortak bir kayıt arayüzünün farklı uygulamalarıdır; kariyer kuralları dosya yolunu bilmez.
 
-**Uygulanan (1.4, 2026-09-29):** `js/kayit.js` kariyeri sağlamalı bir zarf içinde kaydeder: `{oyun, bicim, saglama, ozet, veri}`. Tutarsız kariyer yazılmaz. Yazım sırası `.yeni` → sağlam ana kaydın `.onceki`'ye kopyası → ana kayıt → `.yeni`'nin silinmesidir; her adım geri okunarak doğrulanır. Yükleme ana kayıt, `.yeni`, `.onceki` sırasıyla ilk sağlam kaydı açar ve atlananları açıklamayla bildirir. Daha yeni sürümlü kayıt açılmaz; eski sürümler `KAYIT_GECISLERI` ile sırayla dönüştürülür (henüz geçiş yok, sürüm 1 ilk kalıcı sürümdür). Depo `oku/yaz/sil` arayüzüdür: `bellekDeposu` denemeler için, `tarayiciDeposu` localStorage için. Otomatik kayıt ve kayıt ekranı henüz yok; gün sınırında kayıt 2.1 ajandasıyla bağlanacak.
+**Uygulanan (1.4, 2026-09-29):** `js/kayit.js` kariyeri sağlamalı bir zarf içinde kaydeder: `{oyun, bicim, saglama, ozet, veri}`. Tutarsız kariyer yazılmaz. Yazım sırası `.yeni` → sağlam ana kaydın `.onceki`'ye kopyası → ana kayıt → `.yeni`'nin silinmesidir; her adım geri okunarak doğrulanır. Yükleme ana kayıt, `.yeni`, `.onceki` sırasıyla ilk sağlam kaydı açar ve atlananları açıklamayla bildirir. Daha yeni sürümlü kayıt açılmaz; eski sürümler `KAYIT_GECISLERI` ile sırayla dönüştürülür (henüz geçiş yok, sürüm 1 ilk kalıcı sürümdür). Depo `oku/yaz/sil` arayüzüdür: `bellekDeposu` denemeler için, `tarayiciDeposu` localStorage için.
+
+**Uygulanan (2.1, 2026-09-29):** Oyun kaydı `js/ekran-ajanda.js` tarafından yapılır.
+- **Depo:** Önce masaüstü deposu, yoksa tarayıcı deposu (`chairman:` önekiyle) kullanılır. İkisi de yoksa kayıt yalnız bellekte tutulur ve ekranda uyarı gösterilir.
+- **Yuva:** `oyun-1`. Deneme sayfasının kullandığı ve temizlediği `kariyer-1` yuvasından ayrıdır.
+- **Açılış:** Kayıt varsa oradan devam edilir; önceki kayda dönüldüyse ekranda bildirilir. Yuva boşsa `KARIYER_BASLANGIC` oluşturulur ve kaydedilir.
+- **Açılamayan kayıt:** Üzerine yazılmaz. Oyuncu onaylarsa bozuk dosyalar `.bozuk` ekiyle saklanır, ardından yeni kariyer başlar.
+- **Otomatik kayıt:** Yalnız gün sınırında, yani günü bitirince ve yeni kariyerde yapılır. Maç sınırında kayıt yoktur; sayfa yenilenirse son gün başından devam edilir.
+- **Kayıt ekranı:** Kayıt listesi ve birden çok yuva yoktur. “Yeni kariyer” iki adımlı onayla başlar.
 
 Bulut kaydı düşünülürken kullanıcıya ait kayıt konumu ve çakışma davranışı planlanır. İlk adım yerel kaydın güvenilirliğidir. Steam Cloud seçeneği bu temelin üstünde değerlendirilir; uygulanmış sayılmaz. Kaynak: [Steam Cloud belgeleri](https://partner.steamgames.com/doc/features/cloud).
 
@@ -119,6 +152,23 @@ Olayların görevleri ayrılır:
 - Oyuncunun önceki kararlarının dönüşleri.
 
 Tekrar sınırı ve eşzamanlı gündem yoğunluğu izlenir. Sahne seçicisi, iyi yönetimin sağladığı rahatlığı sürekli kriz üreterek ortadan kaldırmaz. Seçeneklerin görünür metni ile uyguladığı etki ayrı veri olarak bulunur.
+
+**Uygulanan ilk karar yapısı (2.2 ilk adım, 2026-09-29):** Karar, ajanda işinin `veri.karar` alanıyla bağlanan bir `KARAR_TURLERI` türüdür (`js/ajanda.js`). Her tür üç işlev sağlar:
+- `denetle`: verinin geçerliliği.
+- `secenekler(k, is)`: görünür metin, açıklama satırları, isteğe bağlı süre ve engel.
+- `uygula(k, is, secim)`: etkiler ve sonuç bilgisi.
+
+Seçim önizlemede, sonra zaman işin başlangıcına geldiğinde yeniden doğrulanır. Etki bir kez uygulanır ve işin geçmiş kaydına `secim`, `secimMetni` ve `bilgi` olarak yazılır; iş kapandığı için ikinci kez uygulanamaz.
+
+`js/yonetim.js` üç tür tanımlar:
+- `koltukSecimi`: adaylardan birini boş koltuğa oturtur.
+- `sponsorGecikmesi`: başkan kendisi görüşür (90 dk) ya da işi saymana devreder (15 dk). Devredilen işin sonucu saymanın gizli katkısına göre değişir:
+  - Bağlantısı güçlü sayman için sponsor indirim ister. İndirim saymanın yetkisini aştığı için ertesi gün başkana zorunlu karar olarak döner.
+  - Mali deneyimli sayman ödemeyi iki taksite böler.
+  - Bağlantısı zayıf sayman ödemenin gecikmesini engelleyemez; sözleşmedeki gecikme bedeli işletilir.
+- `sponsorIndirimi`: indirimi kabul (tutar düşer) ya da ret (ödeme iki hafta kayar).
+
+Sonuçlar ödeme işlerini iptal eder, taşır ya da yeni ödeme planlar; olasılık kullanılmaz. Metinler ve tutarlar TEST değeridir. Söz ve ilişki kaydı (2.4) henüz yoktur; adayın beklentisi yalnız metin olarak kalır.
 
 Sözler için muhatap, şart, son tarih, bilinirlik ve durum tutulur. İlişkiler tek bir herkesin paylaştığı popülerlik sayısı değildir; gerektiği kadar kişiye/gruba özgü tutulur.
 
@@ -172,7 +222,7 @@ Final kontrolü; başkanın kariyer durumu ve tanımlı en büyük Avrupa kupas�
 - Kayıtlar `%APPDATA%\Chairman\kayitlar\<ad>.json` dosyalarındadır. Her yazım geçici dosyaya yapılır, diske işlenir (`fsync`), sonra yerine taşınır; üstünde `js/kayit.js`'in `.yeni`/`.onceki` düzeni çalışır.
 - `paketle.js` `cikti/Chairman-win32-x64/Chairman.exe` üretir (asar arşivi).
 
-**Doğrulanan (geliştirme kopyasında ve paketlenmiş exe'de):** ağ isteği olmadan açılış; sayfa/betik hatası yok; Three.js ve yazı tipleri yerel kopyadan; bülten ve İlerle sonrası 3B maç günü (WebGL) çiziliyor. Uygulama yolu (`C:\Users\FarukÇAKIR\...`) ve kayıt klasörü (`...\Kayıt Şükrü Çağ İğne Ö\kayitlar`) Türkçe harf ve boşluk içeriyor; kayıt diske yazılıyor, Türkçe metin bozulmuyor. Uygulama kapatılıp yeniden açılınca kariyer aynı yerden sürüyor, ödenmiş maaş tekrarlanmıyor; bozuk ana kayıtta önceki kayda dönülüyor.
+**Doğrulanan (geliştirme kopyasında ve paketlenmiş exe'de):** ağ isteği olmadan açılış; açılışta ajanda ve masaüstü kayıt deposu, oyunun kendi kaydı (`oyun-1.json`) diske yazılıyor (2.1'de eklendi, 2026-09-29); sayfa/betik hatası yok; Three.js ve yazı tipleri yerel kopyadan; bülten ve İlerle sonrası 3B maç günü (WebGL) çiziliyor. Uygulama yolu (`C:\Users\FarukÇAKIR\...`) ve kayıt klasörü (`...\Kayıt Şükrü Çağ İğne Ö\kayitlar`) Türkçe harf ve boşluk içeriyor; kayıt diske yazılıyor, Türkçe metin bozulmuyor. Uygulama kapatılıp yeniden açılınca kariyer aynı yerden sürüyor, ödenmiş maaş tekrarlanmıyor; bozuk ana kayıtta önceki kayda dönülüyor.
 
 **Sınırlar ve açık işler:**
 - Paket açılmış hâlde 370 MB; 235 MB'ı Electron çalıştırıcısı, 49 MB'ı Chromium dil dosyaları (Türkçe/İngilizce dışındakiler çıkarılabilir). Sıkıştırılmış dağıtım boyutu ölçülmedi.

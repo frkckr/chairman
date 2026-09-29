@@ -4,7 +4,7 @@ Son güncelleme: 2026-09-29. Bu dosya iş sırasının ve tamamlanma durumunun a
 
 ## Şu an neredeyiz?
 
-Çalışan ürün bir maç günü prototipidir. Aşağıdaki kariyer aşamaları henüz uygulanmamıştır.
+Çalışan ürün bir maç günü prototipi ve ona bağlanan ilk ajanda haftasıdır (2.1). Aşağıdaki diğer kariyer aşamaları henüz uygulanmamıştır.
 
 - [x] Maç motoru '99 sahnesine bağlı; maç baştan sona oynanıyor.
 - [x] Başkan bakışı, dürbün, başkanın elleri/masası ve olaylara tepkiler var.
@@ -15,6 +15,7 @@ Son güncelleme: 2026-09-29. Bu dosya iş sırasının ve tamamlanma durumunun a
 - [x] Zemin, seyirci doluluğu, koltuklar ve tribün tepkilerinin görsel temeli var; değerler geçici deneme panelinden geliyor.
 - [x] Tarayıcı kontrolü ve görüntüsüz maç ölçüm araçları var. Her ortamda bağımlılıklarının hazır olduğu varsayılmaz.
 - [x] Sabit lig/kadro verisiyle çalışan maç öncesi bülteni var: lig durumu, form, olası 11'ler, eksikler ve son maçlar; “İlerle” ile maç gününe geçiliyor.
+- [x] Oyun ajandayla açılıyor: maçtan önceki TEST haftası gün gün oynanıyor, gün sonunda kaydediliyor, Cumartesi “Stada git” bültene geçiyor. Maç sonucu kariyere işlenmiyor.
 - [ ] Kalıcı kariyer, kayıt, ekonomi, seçim, yönetim, sezon ve Avrupa sistemleri.
 - [ ] Ticari masaüstü paketi ve uzun kariyer doğrulaması.
 
@@ -31,13 +32,22 @@ Son güncelleme: 2026-09-29. Bu dosya iş sırasının ve tamamlanma durumunun a
 - **2026-09-29, mevcut uygulama (1.2–1.4):** Takvim ve bir kez tamamlanan bekleyen işler (`js/takvim.js`), kuruş tamsayılı para kaydı ve gelecekteki ödemeler (`js/maliye.js`), sağlamalı ve önceki kayda dönebilen kayıt/yükleme (`js/kayit.js`, `js/depo-tarayici.js`) eklendi. Tarayıcıda kaydet → sayfayı yenile → yükle → devam et denemesi geçti. Oyun ekranına bağlı değildir; tutarlar ve gün başlangıcı saati TEST değeridir. Ayrıntı [TEKNIK_PLAN §3–5](TEKNIK_PLAN.md#3-kalıcı-dünya-verisi).
 - **2026-09-29, kullanıcı kararı ve deneme (1.5):** Masaüstü hedefi önce yalnız Windows, paketleme Electron. `masaustu/` denemesinde oyun çevrimdışı açıldı, 3B maç günü çizildi, Türkçe karakterli yollarda kayıt yazıldı ve uygulama kapatılıp açılınca kariyer sürdü; paketlenmiş `Chairman.exe` ile de doğrulandı. Kurulum, imzalama ve Steam bağlantısı yok. Ayrıntı ve sınırlar [TEKNIK_PLAN §10](TEKNIK_PLAN.md#10-sunum-metin-ve-masaüstü).
 
+- **2026-09-29, kullanıcı kararları (2.1–2.2):** Oyun ajandayla açılır; bülten ve maç ajandadaki maç işinden sonra gelir. Zorunlu iş yapılmadan gün bitmez; ertelenebilir iş ileri güne alınabilir; isteğe bağlı iş kaçırılırsa geçmişe yazılır ve bu önceden gösterilir. Yönetim ekibinin ilk kapsamı üç koltuktur: sayman, futbol şube sorumlusu, basın sözcüsü. Ayrıntı [OYUN_TASARIMI §4 ve §6](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo).
+- **2026-09-29, mevcut uygulama (2.1):** Ajanda kuralları `js/ajanda.js`, ekran `js/ekran-ajanda.js`, TEST haftası `KARIYER_BASLANGIC` (`js/kariyer-ornek.js`). Kariyer dosyaları artık `index.html`'e yüklenir. Kayıt gün sınırında `oyun-1` yuvasına yapılır; maç sınırında kayıt yoktur. Metinler, saatler ve tutarlar TEST değeridir. Ayrıntı [TEKNIK_PLAN §3–5](TEKNIK_PLAN.md#4-zamanın-ilerlemesi).
+
+- **2026-09-29, mevcut uygulama (2.2 ilk adım):**
+  - Yönetim kuralları ve karar türleri `js/yonetim.js` dosyasında. Ajandaya karar işi eklendi (`KARAR_TURLERI`); takvime yapılmadan iptal edilen iş kaydı eklendi (`isIptal`).
+  - Aday profilleri metin olarak gösterilir, katkı seviyeleri gizlidir. Sonuçlar olasılıksız ve tekrarlanabilirdir.
+  - Aday katkılarının oyuncuya gösterim biçimi açık karardır ([OYUN_TASARIMI §13](OYUN_TASARIMI.md#13-kapsam-ve-açık-kararlar)).
+  - Ayrıntı: [TEKNIK_PLAN §3 ve §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi).
+
 Eski kararların kronolojisi Git geçmişinde korunur. Bu dosyada geçerli kararlar ve gerekli gerekçeler tutulur.
 
 ## Çalışma biçimi
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz.
 
-**Aşama 1 tamamlandı. Sıradaki iş: 2.1 — ajanda ve kulüp durumu.** Kariyer durumu, takvim, para ve kayıt ilk kez oyuncuya bir ekranda gösterilir; günü bitirme ve gün sınırında kayıt buraya bağlanır. 2.2'den önce yönetim ekibi koltuklarının ilk kapsamı kullanıcıyla seçilmelidir. Seçim veya ekonomi sistemi topluca yazılmaz. Açık isimler ve denge sayıları için yalnız açıkça etiketlenmiş test verileri kullanılır.
+**Aşama 1 ve 2.1 tamamlandı; 2.2'nin ilk adımı uygulandı. Sıradaki iş: 2.2'nin kapsamını kullanıcıyla değerlendirmek, ardından 2.3 — hoca görüşmesi ve bütçe önceliği.** 2.2 için açık kalanlar maddenin altında yazılı. Seçim veya ekonomi sistemi topluca yazılmaz. Açık isimler ve denge sayıları için yalnız açıkça etiketlenmiş test verileri kullanılır.
 
 ## Aşama 0 — Plan ve belge düzeni
 
@@ -62,10 +72,12 @@ Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlıl�
 
 ## Aşama 2 — İlk oynanabilir başkanlık dönemi
 
-**Bağımlılık:** Aşama 1. Ekip koltuklarının ilk kapsamı bu aşamadan önce seçilir.
+**Bağımlılık:** Aşama 1. Ekip koltuklarının ilk kapsamı seçildi (2026-09-29): sayman, futbol şube sorumlusu, basın sözcüsü.
 
-- [ ] **2.1** Ajanda ve kulüp durumunu göster; zorunlu/ertelenebilir işleri ve günü bitirmeyi anlaşılır yap.
+- [x] **2.1** Ajanda ve kulüp durumunu göster; zorunlu/ertelenebilir işleri ve günü bitirmeyi anlaşılır yap.
 - [ ] **2.2** Sınırlı aday havuzundan yönetim ekibi kur; farklı katkıları ve yetki sınırlarını bir örnek işte göster.
+  - *İlk adım uygulandı (2026-09-29, TEST içerik):* Üç koltuk tanımlandı. Boş sayman koltuğu için üç aday arasından seçim yapılıyor. Perşembe sponsor ödemesi işi başkan tarafından yürütülebiliyor ya da saymana devredilebiliyor; sonuç saymanın gizli katkısına göre değişiyor, yetkiyi aşan indirim talebi başkana dönüyor.
+  - *Açık kalan:* Futbol ve basın koltuklarının örnek işleri ile birden çok koltuğun havuzdan kurulması. Bu maddenin mevcut kapsamla kapatılıp kapatılmayacağı kullanıcıyla değerlendirilecek.
 - [ ] **2.3** Hoca görüşmesi ve bütçe önceliği kararı ekle; şimdilik test başlangıcı görevdeki başkan olabilir.
 - [ ] **2.4** Bir söz/ilişki kaydı ve günlere yayılan olay zinciri kur; önceki kararın sonucu geri gelsin.
 - [ ] **2.5** Sakin zaman ve isteğe bağlı gözlem alanının ilk örneğini ekle. Mevcut ısınma görselleri kullanılabilir; ayrı antrenman simülasyonunun hazır olduğu varsayılmaz.
