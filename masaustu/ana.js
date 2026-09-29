@@ -64,10 +64,15 @@ async function deneme(p){
   wc.on('did-fail-load',(e,kod,aciklama,url)=>sonuc.hatalar.push(`Yüklenemedi: ${url} (${aciklama})`));
   try{
     if(ASAMA==='1'){
+      /* açılış ekranı ajandadır: kariyer diskten yüklenir ya da yeni kariyer oluşturulup kaydedilir */
       await p.loadFile(path.join(OYUN,'index.html'));
       await bekle(8000);
       fs.writeFileSync(path.join(DENEME,'oyun.png'),(await wc.capturePage()).toPNG());
-      /* İlerle: bülten kapanır, 3B maç günü (WebGL) başlar */
+      sonuc.ajanda=await wc.executeJavaScript(`(()=>{const a=document.getElementById('ajanda');const e=typeof AJANDA_EKRANI!=='undefined'?AJANDA_EKRANI:{};
+        return{gorunur:!!a&&!a.hidden,depo:e.depo||null,tarih:e.kariyer?e.kariyer.tarih:null};})()`);
+      /* bülten doğrudan açılır; İlerle: bülten kapanır, 3B maç günü (WebGL) başlar */
+      await p.loadFile(path.join(OYUN,'index.html'),{query:{ekran:'bulten'}});
+      await bekle(6000);
       sonuc.ilerle=await wc.executeJavaScript(`(()=>{const b=document.getElementById('btnIlerle');if(!b)return false;b.click();return true;})()`);
       await bekle(10000);
       fs.writeFileSync(path.join(DENEME,'mac-gunu.png'),(await wc.capturePage()).toPNG());

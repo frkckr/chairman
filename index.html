@@ -126,6 +126,65 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .onEkran .oe-ilerle:hover{filter:brightness(1.12)}
 .onEkran .oe-ilerle:active{transform:translateY(.06em);border-bottom-width:.1em}
 .onEkran .oe-ilerle:focus-visible{outline:.1em solid var(--m-yazi);outline-offset:.15em}
+/* ---- ajanda ekranı (js/ekran-ajanda.js): bültenle aynı kare, ölçü ve renk düzeni; panel başlıkları .oe-panel'den ---- */
+.ajanda{position:absolute;inset:0;z-index:3;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:.7em;padding:1.1em 1.4em;overflow:hidden;
+  font-family:var(--mono);font-size:1.2cqw;line-height:1.3;color:var(--m-yazi);background-color:var(--m-ortuRenk);
+  background-image:repeating-conic-gradient(#0000 0 25%,rgba(255,255,255,.022) 0 50%);background-size:.4em .4em}
+.ajanda button{font:inherit;font-size:1em;line-height:1.2;color:var(--m-yazi);background:var(--m-panelUst);border:1px solid var(--m-cizgi);border-bottom-width:.16em;border-radius:.12em;padding:.3em .7em .22em;cursor:pointer}
+.ajanda button:hover:not(:disabled){border-color:var(--m-soluk)}
+.ajanda button:disabled{opacity:.45;cursor:not-allowed}
+.ajanda button:focus-visible{outline:.12em solid var(--m-vurgu);outline-offset:.1em}
+.aj-bas{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:end;gap:1.2em}
+.aj-tarih{font-family:var(--display);font-size:3.2em;line-height:.85;letter-spacing:.03em;white-space:nowrap}
+.aj-tarih small{font-family:var(--mono);font-size:.28em;letter-spacing:.12em;color:var(--m-soluk);margin-left:.6em}
+.aj-saatBuyuk{font-family:var(--display);font-size:3.2em;line-height:.85;color:var(--m-vurgu)}
+.aj-mesaj{margin:0;color:var(--m-soluk);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.aj-govde{display:grid;grid-template-columns:1.2fr 1fr;gap:.8em;min-height:0}
+.aj-kol{display:flex;flex-direction:column;gap:.8em;min-width:0;min-height:0}
+.aj-kol>.oe-panel:last-child{flex:1;min-height:0;overflow:hidden}
+.aj-liste{list-style:none;margin:0;padding:.3em .4em;display:grid;gap:.12em}
+.aj-satir{display:grid;grid-template-columns:7.2em minmax(0,1fr) auto;align-items:center;gap:.6em;width:100%;text-align:left;white-space:nowrap}
+.ajanda button.aj-satir{background:transparent;border-color:transparent;border-bottom-width:1px;padding:.22em .4em}
+.ajanda button.aj-satir[aria-pressed="true"]{background:var(--m-panelUst);border-color:var(--m-vurgu)}
+.aj-takvim{padding:.12em .4em}
+.aj-ad{overflow:hidden;text-overflow:ellipsis}
+.aj-saat{color:var(--m-soluk);font-variant-numeric:tabular-nums}
+.aj-bitti .aj-ad{color:var(--m-soluk)}
+.aj-bos{color:var(--m-soluk);padding:.2em .4em}
+.aj-etiket{font-size:.76em;letter-spacing:.08em;text-transform:uppercase;padding:.02em .4em;border:1px solid currentColor}
+.aj-zorunlu{color:var(--m-kirmizi)}.aj-ertelenebilir{color:var(--m-vurgu)}.aj-istege{color:var(--m-soluk)}
+.aj-durum{font-size:.85em}.aj-d-yapildi{color:var(--m-galibiyet)}.aj-d-kacirildi{color:var(--m-maglubiyet)}.aj-d-ertelendi{color:var(--m-soluk)}
+.aj-tutar,.aj-dl dd{font-variant-numeric:tabular-nums}
+.aj-eksi{color:var(--m-kirmizi)}
+.aj-vurgu{color:var(--m-vurgu);font-weight:600}
+.aj-p-ayrinti{flex:1;min-height:0}
+.aj-ayrinti{padding:.5em .7em;display:grid;gap:.5em;align-content:start}
+.aj-ayrinti p,.aj-bozuk p{margin:0}
+.aj-is-baslik b{font-weight:600}
+.aj-not,.aj-dipnot{color:var(--m-soluk)}
+.aj-dipnot{margin:0;padding:0 .6em .4em;font-size:.82em}
+.aj-bilgi b{color:var(--m-vurgu);font-weight:500;margin-right:.4em}
+.aj-uyari,.aj-hata{color:var(--m-kirmizi)}
+.aj-dugmeler{display:flex;flex-wrap:wrap;gap:.5em;margin-top:.2em}
+.aj-secenekler{list-style:none;margin:0;padding:0;display:grid;gap:.35em}
+.aj-secenekler li{display:grid;gap:.05em;padding-left:.5em;border-left:.2em solid var(--m-cizgi)}
+.aj-secenekler li:has([aria-pressed="true"]){border-left-color:var(--m-vurgu)}
+.aj-secenekler small{color:var(--m-soluk);font-size:.9em;line-height:1.25}
+.ajanda .aj-secenek{justify-self:start;text-align:left;padding:.15em .6em .1em}
+.ajanda .aj-secenek[aria-pressed="true"]{border-color:var(--m-vurgu);color:var(--m-vurgu)}
+.ajanda .aj-secenek b{font-weight:600}
+.ajanda .aj-birincil{color:#1a1203;background:var(--m-vurgu);border-color:#b9791a}
+.aj-dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.12em 1em;margin:0;padding:.35em .6em}
+.aj-dl dt{color:var(--m-soluk)}
+.aj-dl dd{margin:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aj-dl .oe-form{justify-content:flex-end}
+.aj-alt{display:flex;align-items:center;gap:1em;padding-top:.55em;border-top:.18em solid var(--m-cizgi)}
+.aj-altDurum{flex:1;min-width:0;margin:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ajanda .aj-kucuk{font-size:.85em;color:var(--m-soluk)}
+.ajanda .aj-tehlike{color:var(--m-kirmizi);border-color:var(--m-kirmizi)}
+.ajanda .aj-ana{font-family:var(--display);font-size:2.2em;line-height:1;letter-spacing:.06em;padding:.18em 1.1em .08em;color:#1a1203;background:var(--m-vurgu);border-color:#b9791a;white-space:nowrap}
+.ajanda .aj-ana:active:not(:disabled){transform:translateY(.06em)}
+.aj-bozuk{grid-row:2/5;display:grid;gap:.8em;align-content:start;max-width:60em;padding:1em 0}
 html,body{margin:0}
 </style>
 </head>
@@ -141,6 +200,7 @@ html,body{margin:0}
     <canvas id="view" width="640" height="480" aria-label="1999 tarzı futbol oyunu karesi, başkanın gözünden, açık ana tribünden: son dakika şutu, kaleci uçuyor, kale arkasında meşaleler"></canvas>
     <canvas id="hud" width="640" height="480" aria-hidden="true"></canvas>
     <div class="onEkran" id="onEkran" role="dialog" aria-label="Maç öncesi bülteni" hidden></div>
+    <div class="ajanda" id="ajanda" role="dialog" aria-label="Başkanın ajandası" hidden></div>
   </div>
 
   <p class="radyo" aria-live="polite"><span class="skor" id="radyoSkor">DEM 0-0 AKD · maç öncesi</span><span class="metin" id="radyoMetin">Stat doluyor, takımlar tünelde.</span></p>
@@ -203,6 +263,15 @@ html,body{margin:0}
 <script src="js/stadyum-tarifleri.js"></script>
 <script src="js/kadrolar.js"></script>
 <script src="js/lig.js"></script>
+<script src="js/kariyer.js"></script>
+<script src="js/takvim.js"></script>
+<script src="js/maliye.js"></script>
+<script src="js/ajanda.js"></script>
+<script src="js/yonetim.js"></script>
+<script src="js/kayit.js"></script>
+<script src="js/depo-tarayici.js"></script>
+<script src="js/depo-masaustu.js"></script>
+<script src="js/kariyer-ornek.js"></script>
 <script src="js/mac-motoru.js"></script>
 <script src="js/mac-dizilis.js"></script>
 <script src="js/mac-karar.js"></script>
@@ -218,6 +287,7 @@ html,body{margin:0}
 <script src="js/mac-sahnesi.js"></script>
 <script src="js/baskan.js"></script>
 <script src="js/ekran-mac-oncesi.js"></script>
+<script src="js/ekran-ajanda.js"></script>
 <script src="js/arayuz.js"></script>
 </body>
 </html>

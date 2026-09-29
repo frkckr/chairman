@@ -4,8 +4,9 @@
      node deneme.js           geliştirme kopyası: hazirla.js + electron .
      node deneme.js --paket   paketlenmiş uygulama: cikti/Chairman-win32-x64/Chairman.exe (önce node paketle.js)
    Uygulama iki kez ayrı süreç olarak açılır:
-     1. açılış: oyun çevrimdışı açılır (bütün ağ istekleri engellenir ve sayılır), hatalar toplanır, bültenin ve
-        İlerle'den sonraki 3B maç gününün ekran görüntüsü alınır, örnek kariyer kaydedilir. Uygulama kapanır.
+     1. açılış: oyun çevrimdışı açılır (bütün ağ istekleri engellenir ve sayılır), hatalar toplanır. Açılıştaki ajandanın
+        (oyun.png; oyunun kendi kaydı oyun-1 diske yazılır) ve bültenden İlerle ile geçilen 3B maç gününün (mac-gunu.png)
+        ekran görüntüsü alınır, örnek kariyer kayıt denemesi yapılır. Uygulama kapanır.
      2. açılış: kayıt diskteki dosyadan yüklenir, kariyer devam eder, önceki kayda dönüş denenir.
    Kayıt klasörü Türkçe harf ve boşluk içeren geçici bir yoldur. Sonuçlar ve ekran görüntüsü cikti/deneme/ altına yazılır. */
 'use strict';
@@ -45,13 +46,17 @@ if(s1){
   denetle('Three.js yerel kopyadan yüklendi',o.three==='128',`REVISION ${o.three}`);
   const yt=o.yaziTipleri||[];
   denetle('Yazı tipleri yerel kopyadan yüklendi',yt.some(x=>/IBM Plex Mono/.test(x))&&yt.some(x=>/Jersey 10/.test(x)),yt.join(', '));
-  denetle('İlerle ile 3B maç gününe geçildi, WebGL çalışıyor',s1.ilerle===true&&s1.webgl===true,'görüntü: mac-gunu.png');
+  const aj=s1.ajanda||{};
+  denetle('Açılışta ajanda görünüyor, oyun masaüstü kayıt deposunu kullanıyor',aj.gorunur===true&&aj.depo==='masaustu'&&aj.tarih==='2026-11-23',`depo ${aj.depo} · ${aj.tarih} · görüntü: oyun.png`);
+  denetle('Bülten açılıp İlerle ile 3B maç gününe geçildi, WebGL çalışıyor',s1.ilerle===true&&s1.webgl===true,'görüntü: mac-gunu.png');
   denetle('Kayıt klasörü Türkçe karakterli yolda',s1.kayitDizini.startsWith(KAYIT),s1.kayitDizini);
   for(const x of (s1.kayit||{}).satirlar||[])console.log('    '+x);
 }
 const dosya=path.join(KAYIT,'kayitlar','kariyer-1.json');
 const metin=fs.existsSync(dosya)?fs.readFileSync(dosya,'utf8'):'';
 denetle('Kayıt diske yazıldı, Türkçe metin bozulmadı',metin.includes('"Şükrü Hoca"')&&metin.includes('"Demirkapı SK"'),`${dosya} · ${metin.length} karakter`);
+const oyunKaydi=path.join(KAYIT,'kayitlar','oyun-1.json');
+denetle('Oyunun kendi kaydı (oyun-1) açılışta diske yazıldı',fs.existsSync(oyunKaydi)&&fs.readFileSync(oyunKaydi,'utf8').includes('"tarih":"2026-11-23"'),oyunKaydi);
 denetle('Diskte geçici dosya kalmadı',fs.existsSync(dosya)&&!fs.readdirSync(path.dirname(dosya)).some(f=>/\.gecici$|\.yeni\.json$/.test(f)),fs.existsSync(path.dirname(dosya))?fs.readdirSync(path.dirname(dosya)).join(', '):'klasör yok');
 
 const a2=ac('2'),s2=a2.sonuc;

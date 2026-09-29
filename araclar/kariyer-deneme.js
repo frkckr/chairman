@@ -8,12 +8,15 @@
    - Maliye: tutarlar kuruş tamsayısı; ödemeler bir kez işlenmeli; nakit ile bekleyen taahhütler ayrı durmalı.
    - Kayıt: bellek deposunda kaydet/yükle, önceki sağlam kayda dönüş, bozuk/yarım/yeni sürümlü kayıt bildirimi, sürüm geçişi.
      Tarayıcı deposu ayrıca: python3 araclar/kontrol.py araclar/kayit-deneme.html
+   - Ajanda: zorunlu iş varken gün bitmez; kaçırılacak iş önceden bildirilir ve bir kez kaçırılır; erteleme son tarihi aşmaz;
+     hafta boyunca oynanınca maç sınırına gelinir, her gün başında kaydet/yükle sonucu değiştirmez.
+   - Yönetim: koltuk seçimi bir kez uygulanır; devredilen işin sonucu saymana göre belirlenimli değişir; yetkiyi aşan konu başkana döner.
    - Bilerek bozulan kopyalar doğrulamada yakalanmalı.
    - Başarısız denetim "!" ile işaretlenir; en az biri başarısızsa çıkış kodu 1'dir. */
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const KOK=path.join(__dirname,'..');
-const DOSYALAR=['js/ortak.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/kayit.js','js/kariyer-ornek.js'];
+const DOSYALAR=['js/ortak.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/yonetim.js','js/kayit.js','js/kariyer-ornek.js'];
 const ctx=vm.createContext({console,Math,Date});
 for(const f of DOSYALAR)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),ctx,{filename:f});
 const al=ad=>vm.runInContext(ad,ctx);
@@ -210,6 +213,161 @@ bolum('1.4 — sürümlü yerel kayıt ve yükleme (bellek deposu)');
 }
 denetle('Başlangıç verisi hiçbir denemede değişmedi',metin(ORNEK)===ornekMetni);
 
+/* ================= 2.1 ajanda ================= */
+bolum('2.1 — ajanda, zorunlu/ertelenebilir işler ve günü bitirme');
+const [ajandaOnizle,ajandaIsiYap,ajandaErtele,gunuBitirOnizle,gunuBitir,ajandaGunu,yaklasanlar,kulupDurumu]=
+  ['ajandaOnizle','ajandaIsiYap','ajandaErtele','gunuBitirOnizle','gunuBitir','ajandaGunu','yaklasanlar','kulupDurumu'].map(al);
+const BASLANGIC=al('KARIYER_BASLANGIC'),baslangicMetni=metin(BASLANGIC);
+const hafta=()=>kariyerOlustur(BASLANGIC);
+const durumlar=(c,tarih)=>ajandaGunu(c,tarih).map(r=>`${r.id}:${r.durum}`).join(' ');
+{
+  const c=hafta();
+  denetle('Hafta başlangıcı geçerli',...gecerli(c));
+  denetle('Başlangıç Pazartesi 08:00, maç işi LIG.buMac ile aynı an',an(c)==='2026-11-23 08:00'&&c.isler['is-13'].tarih==='2026-11-28'&&saatYazi(c.isler['is-13'].dakika)===LIG.buMac.saat,an(c));
+  const o=gunuBitirOnizle(c);
+  denetle('Zorunlu iş varken gün bitmez, zaman ilerlemez',o.engel.length===2&&reddeder(()=>gunuBitir(c))&&an(c)==='2026-11-23 08:00',o.engel.join(' · '));
+  const p=ajandaOnizle(c,'is-4');
+  denetle('Önizleme: başlangıç, bitiş, engel yok',!p.engel.length&&saatYazi(p.baslangic%1440)==='10:00'&&p.bitis-p.baslangic===90&&!p.atlanacak.length);
+  const b=ajandaIsiYap(c,'is-4');
+  denetle('Zorunlu işe katılınca zaman başlangıç + süre kadar ilerler, iş yapıldı',an(c)==='2026-11-23 11:30'&&b.length===1&&b[0].sonuc.durum==='yapildi'&&!c.isler['is-4'],`${an(c)} · ${b.map(x=>x.isId+':'+x.sonuc.durum).join()}`);
+  denetle('Aynı işe ikinci kez katılınamaz',reddeder(()=>ajandaIsiYap(c,'is-4')));
+  denetle('Bir zorunlu iş kalınca gün hâlâ bitmez',gunuBitirOnizle(c).engel.length===1);
+  ajandaIsiYap(c,'is-14','kisi-8');
+  const o2=gunuBitirOnizle(c);
+  denetle('Günü bitirmeden önce kaçırılacak isteğe bağlı iş bildirilir',!o2.engel.length&&o2.kacirilacak.map(x=>x.id).join()==='is-5');
+  gunuBitir(c);
+  const g=c.gecmis.filter(x=>x.isId==='is-5');
+  denetle('İsteğe bağlı iş bir kez kaçırıldı, gün 24 Kasım 08:00',g.length===1&&g[0].sonuc.durum==='kacirildi'&&an(c)==='2026-11-24 08:00',an(c));
+  const satir=ajandaGunu(c,'2026-11-23');
+  denetle('Geçmiş günün ajandası: yapılan ve kaçırılan, öğrenilen bilgi duruyor',durumlar(c,'2026-11-23')==='is-4:yapildi is-14:yapildi is-5:kacirildi'&&!!satir[0].bilgi&&!satir[2].bilgi,durumlar(c,'2026-11-23'));
+  denetle('Günü bitirdikten sonra kariyer geçerli',...gecerli(c));
+}
+{
+  const c=hafta();
+  isEkle(c,{tur:'ajanda',tarih:'2026-11-23',dakika:630,veri:{baslik:'Çakışan zorunlu',aciklama:'',zorunluluk:'zorunlu',sure:30}});
+  const p=ajandaOnizle(c,'is-4');
+  denetle('Araya giren zorunlu iş katılımı engeller',p.engel.length===1&&reddeder(()=>ajandaIsiYap(c,'is-4'))&&an(c)==='2026-11-23 08:00',p.engel[0]);
+  const d=hafta();
+  const ard=isEkle(d,{tur:'ajanda',tarih:'2026-11-23',dakika:690,veri:{baslik:'Hemen ardından',aciklama:'',zorunluluk:'istege',sure:30}});
+  const ogle=isEkle(d,{tur:'ajanda',tarih:'2026-11-23',dakika:720,veri:{baslik:'Öğle',aciklama:'',zorunluluk:'istege',sure:30}});
+  ajandaIsiYap(d,'is-4');
+  denetle('Biten işin bitiş dakikasında başlayan işe hâlâ katılınabilir',!!d.isler[ard]&&!ajandaOnizle(d,ard).engel.length);
+  const p5=ajandaOnizle(d,'is-14');
+  denetle('Atlanacak işler önceden bildirilir',p5.atlanacak.map(x=>x.id).join()===`${ard},${ogle}`&&!p5.engel.length,p5.atlanacak.map(x=>x.veri.baslik).join(', '));
+  ajandaIsiYap(d,'is-14','kisi-8');
+  denetle('Atlanan işler bir kez kaçırılır',[ard,ogle].every(id=>d.gecmis.filter(x=>x.isId===id&&x.sonuc.durum==='kacirildi').length===1)&&an(d)==='2026-11-23 14:30',an(d));
+  const gece=isEkle(d,{tur:'ajanda',tarih:'2026-11-23',dakika:1320,veri:{baslik:'Gece',aciklama:'',zorunluluk:'istege',sure:180}});
+  denetle('Gün içinde bitmeyen işe ve başka günün işine katılınamaz',ajandaOnizle(d,gece).engel.length===1&&ajandaOnizle(d,'is-6').engel.length===1,`${ajandaOnizle(d,gece).engel[0]} · ${ajandaOnizle(d,'is-6').engel[0]}`);
+  denetle('Kaçırılan ve yapılan işlerden sonra kariyer geçerli',...gecerli(d));
+}
+{
+  const c=hafta();
+  ajandaIsiYap(c,'is-4');ajandaIsiYap(c,'is-14','kisi-8');gunuBitir(c);  // Salı
+  denetle('Zorunlu olmayan iş ertelenemez',reddeder(()=>ajandaErtele(hafta(),'is-5'))&&reddeder(()=>ajandaErtele(hafta(),'is-4')));
+  const yeni=ajandaErtele(c,'is-6');
+  denetle('Erteleme kimliği korur, ertesi güne taşır',yeni==='2026-11-25'&&c.isler['is-6'].tarih==='2026-11-25'&&durumlar(c,'2026-11-24')==='is-6:ertelendi is-7:bekliyor',durumlar(c,'2026-11-24'));
+  gunuBitir(c);                                                          // Çarşamba
+  const o=gunuBitirOnizle(c);
+  denetle('Günü bitirirken ertelenebilir işler ertesi güne taşınacak diye bildirilir',o.tasinacak.map(x=>x.id).join()==='is-6,is-8'&&!o.engel.length);
+  gunuBitir(c);                                                          // Perşembe
+  denetle('Otomatik erteleme geçmişe işaretli yazılır',c.gecmis.filter(x=>x.tur==='erteleme'&&x.otomatik).length===2&&c.isler['is-6'].tarih==='2026-11-26');
+  const o2=gunuBitirOnizle(c);
+  denetle('Son günü gelen ertelenebilir iş günü bitirmez, son tarihten sonraya ertelenemez',o2.engel.length===2&&/zemin/.test(o2.engel[1])&&reddeder(()=>ajandaErtele(c,'is-6')),o2.engel.join(' · '));
+  const p=ajandaOnizle(c,'is-10');
+  denetle('Zorunlu işle çakışan ertelenmiş iş önceden bildirilir',p.atlanacak.map(x=>x.id).join()==='is-6'&&!p.engel.length,`${p.atlanacak.map(x=>x.veri.baslik).join()} kaçırılacak`);
+  ajandaIsiYap(c,'is-10','kendin');
+  denetle('Kaçırılan son günlü iş artık günü bitirmeyi engellemez',!gunuBitirOnizle(c).engel.length&&c.gecmis.some(x=>x.tur==='is'&&x.isId==='is-6'&&x.sonuc.durum==='kacirildi'));
+  denetle('Ertelemelerden sonra kariyer geçerli',...gecerli(c));
+}
+/* bütün hafta: her gün zorunlu ve son günü gelen işler (engelsizse) yapılır, gün bitirilir; araya kaydet/yükle girebilir.
+   Karar işlerinde secimler[işId] ya da ilk engelsiz seçenek seçilir */
+function haftayiOyna(araIslem,secimler){
+  let c=hafta();
+  for(let gun=0;gun<10&&c.isler['is-13'];gun++){
+    for(const r of ajandaGunu(c,c.tarih)){
+      if(!c.isler[r.id]||r.tur!=='ajanda'||!(r.zorunluluk==='zorunlu'||r.sonTarih===c.tarih))continue;
+      const o=ajandaOnizle(c,r.id),s=o.secenekler.find(x=>!x.engel&&(!secimler||!secimler[r.id]||x.id===secimler[r.id]));
+      if(!o.engel.length)ajandaIsiYap(c,r.id,s?s.id:undefined);
+    }
+    if(!c.isler['is-13'])break;
+    gunuBitir(c);
+    if(araIslem)c=araIslem(c);
+  }
+  return c;
+}
+{
+  const c=haftayiOyna();
+  const m=maliDurum(c,'demirkapi');
+  denetle('Hafta oynanır, maç sınırına Cumartesi 19:00\'da gelinir',an(c)==='2026-11-28 19:00'&&c.gecmis.some(x=>x.isId==='is-13'&&x.sonuc.durum==='yapildi'&&x.sonuc.eylem==='macGunu'),an(c));
+  denetle('Hafta içindeki ödemeler birer kez işlenir',m.nakit===850000000-4500000+12000000&&c.hareketler.length===2,`nakit ${paraYazi(m.nakit)} · ${c.hareketler.length} hareket`);
+  denetle('Maçtan sonraki ödemeler bekliyor',m.bekleyenGider===-320000000&&m.bekleyenGelir===150000000);
+  denetle('Hafta sonunda kariyer geçerli',...gecerli(c));
+  const depo=bellekDeposu();
+  const d=haftayiOyna(x=>{const s=kariyerKaydet(depo,'oyun-1',x);if(!s.tamam)throw new Error(s.hata);return kariyerYukle(depo,'oyun-1').kariyer;});
+  denetle('Her gün başında kaydet/yükle yapmak sonucu değiştirmez',metin(c)===metin(d));
+  const kd=kulupDurumu(c,'demirkapi');
+  denetle('Kulüp durumu: başkan, hoca, yönetim koltukları ve para',kd.baskan.ad==='Haluk Demirel'&&kd.hoca.ad==='Şükrü Hoca'&&kd.yonetim.sayman.ad==='Hikmet Aydın'&&kd.yonetim.futbol.ad==='Necati Uysal'&&kd.mali.nakit===m.nakit,
+    `${kd.hoca.ad} · ${Object.entries(kd.yonetim).map(([x,p])=>x+': '+(p?p.ad:'boş')).join(', ')} · ${paraYazi(kd.mali.nakit)}`);
+  const y=yaklasanlar(hafta(),7).map(x=>x.id);
+  denetle('Yaklaşan işler: bugünden sonraki 7 gün',y[0]==='is-6'&&y.includes('is-13')&&!y.includes('is-4')&&!y.includes('is-3'),y.join(', '));
+}
+
+/* ================= 2.2 yönetim ekibi ================= */
+bolum('2.2 — yönetim ekibi: koltuk seçimi ve yetki sınırlı iş');
+const YK=al('YONETIM_KOLTUKLARI'),bekleyenOdemeler=al('bekleyenOdemeler');
+const odemeler=c=>bekleyenOdemeler(c,'demirkapi').map(x=>`${x.tarih}:${x.veri.tutar}`).join(' ');
+denetle('Üç koltuk tanımlı: sayman, futbol şube sorumlusu, basın sözcüsü',Object.keys(YK).join()==='sayman,futbol,basin',Object.values(YK).map(x=>x.ad).join(', '));
+{
+  const c=hafta(),y=c.kulupler.demirkapi.yonetim;
+  denetle('Başlangıçta sayman koltuğu boş, diğer ikisi dolu',y.sayman===null&&y.futbol==='kisi-3'&&y.basin==='kisi-4');
+  const o=ajandaOnizle(c,'is-14');
+  denetle('Aday seçimi: üç seçenek, profil metinleri, seçim yapılmadan katılınamaz',o.secenekler.length===3&&o.secenekler.every(s=>s.aciklama.length===4&&!s.engel)&&o.secimGerekli&&reddeder(()=>ajandaIsiYap(c,'is-14')),
+    o.secenekler.map(s=>s.metin).join(', '));
+  denetle('Gizli katkı seviyeleri seçenek metinlerinde yok',!/guclu|zayif|orta'|katki/.test(JSON.stringify(o.secenekler)));
+  denetle('Sayman yokken sponsor işi saymana devredilemez',/boş/.test(ajandaOnizle(c,'is-10').secenekler.find(s=>s.id==='devret').engel||''));
+  ajandaIsiYap(c,'is-4');
+  const b=ajandaIsiYap(c,'is-14','kisi-9');
+  const kayit=b.find(x=>x.isId==='is-14');
+  denetle('Seçilen aday sayman oldu; sonuç ve bilgi geçmişte',y.sayman==='kisi-9'&&c.kisiler['kisi-9'].rol==='yonetici'&&kayit.sonuc.secim==='kisi-9'&&/Tuncay Erbil/.test(kayit.sonuc.bilgi),kayit.sonuc.bilgi);
+  denetle('Karar ikinci kez uygulanamaz, seçilmeyen adaylar aday kalır',reddeder(()=>ajandaIsiYap(c,'is-14','kisi-8'))&&y.sayman==='kisi-9'&&c.kisiler['kisi-8'].rol==='yoneticiAdayi');
+  denetle('Seçimden sonra kariyer geçerli',...gecerli(c));
+}
+/* Perşembe sabahına kadar oyna: seçilen sayman ile */
+function persembe(sayman){
+  const c=hafta();
+  ajandaIsiYap(c,'is-4');ajandaIsiYap(c,'is-14',sayman);
+  for(let i=0;i<3;i++)gunuBitir(c);
+  return c;
+}
+{
+  const kendin=persembe('kisi-9');ajandaIsiYap(kendin,'is-10','kendin');
+  const s3=kendin.isler['is-3'];
+  denetle('Başkan kendisi görüşürse 90 dakika sürer, ödeme planı değişmez',an(kendin)==='2026-11-26 11:30'&&s3.tarih==='2026-12-01'&&s3.veri.tutar===150000000&&!kendin.gecmis.some(g=>g.tur==='iptal'),odemeler(kendin));
+  const h=persembe('kisi-8');ajandaIsiYap(h,'is-10','devret');
+  denetle('Mali deneyimli sayman (yetkisi içinde) iki taksit kurar',an(h)==='2026-11-26 10:15'&&!h.isler['is-3']&&h.gecmis.some(g=>g.tur==='iptal'&&g.isId==='is-3')&&/2026-12-01:75000000 2026-12-15:75000000/.test(odemeler(h)),odemeler(h));
+  const d=persembe('kisi-10');ajandaIsiYap(d,'is-10','devret');
+  denetle('Bağlantısı zayıf sayman: ödeme kayar, gecikme bedeli eklenir',d.isler['is-3'].tarih==='2026-12-15'&&/2026-12-15:150000000 2026-12-15:3000000/.test(odemeler(d)),odemeler(d));
+  const t=persembe('kisi-9');const tb=ajandaIsiYap(t,'is-10','devret');
+  const donen=Object.values(t.isler).filter(x=>x.tur==='ajanda'&&x.veri.karar==='sponsorIndirimi');
+  denetle('Bağlantısı güçlü sayman: indirim talebi yetkisini aşar, başkana zorunlu karar olarak döner',t.isler['is-3'].veri.tutar===150000000&&donen.length===1&&donen[0].tarih==='2026-11-27'&&donen[0].veri.zorunluluk==='zorunlu',
+    tb.find(x=>x.isId==='is-10').sonuc.bilgi);
+  denetle('Her sayman farklı sonuç verir',new Set([odemeler(h),odemeler(d),odemeler(t)]).size===3);
+  const t2=persembe('kisi-9');ajandaIsiYap(t2,'is-10','devret');
+  denetle('Aynı seçimler aynı sonucu verir (olasılık yok)',metin(t)===metin(t2));
+  ajandaIsiYap(t,'is-6');gunuBitir(t);                                  // zemin turunun son günü; sonra Cuma
+  denetle('Dönen karar yapılmadan Cuma bitmez',gunuBitirOnizle(t).engel.some(e=>/indirim/.test(e)));
+  const depo=bellekDeposu();kariyerKaydet(depo,'k',t);const t3=kariyerYukle(depo,'k').kariyer;
+  const kabul=kariyerOlustur(t3);ajandaIsiYap(kabul,donen[0].id,'kabul');
+  denetle('İndirimi kabul: ödeme %10 düşük, aynı gün',/2026-12-01:135000000/.test(odemeler(kabul))&&!kabul.isler['is-3'],odemeler(kabul));
+  const ret=kariyerOlustur(t3);ajandaIsiYap(ret,donen[0].id,'ret');
+  denetle('İndirimi ret: tam ödeme iki hafta geç',ret.isler['is-3'].tarih==='2026-12-15'&&ret.isler['is-3'].veri.tutar===150000000,odemeler(ret));
+  denetle('Kayıttan yüklenen kariyerde karar tekrarlanmaz',t3.gecmis.filter(g=>g.isId==='is-10').length===1&&Object.values(t3.isler).filter(x=>x.veri.karar==='sponsorIndirimi').length===1);
+  denetle('Yönetim kararlarından sonra kariyer geçerli',gecerli(h)[0]&&gecerli(d)[0]&&gecerli(kabul)[0]&&gecerli(ret)[0],[h,d,kabul,ret].map(x=>gecerli(x)[1]).filter(Boolean).join(' | '));
+  const w=haftayiOyna(null,{'is-14':'kisi-9','is-10':'devret','is-15':'kabul'});
+  denetle('Hafta yetki devri ve dönen kararla oynanır, maç sınırına gelinir',an(w)==='2026-11-28 19:00'&&gecerli(w)[0]&&/135000000/.test(odemeler(w)),odemeler(w));
+}
+denetle('Hafta başlangıç verisi değişmedi',metin(BASLANGIC)===baslangicMetni&&metin(ORNEK)===ornekMetni);
+
 /* ================= bozuk kopyalar ================= */
 bolum('Bozuk kayıtlar yakalanmalı');
 const ilerlemis=()=>{const c=yeni();zamanIlerlet(c,4*1440);return c;};   // hatırlatma, maaş ve sponsor işlenmiş
@@ -240,7 +398,21 @@ const BOZUKLAR=[
   ['Kesirli nakit',yeni,c=>{c.kulupler.demirkapi.nakit=8500000.5;c.kulupler.demirkapi.acilisNakit=8500000.5;}],
   ['Aynı ödeme iki kez işlenmiş',ilerlemis,c=>{const x=Object.assign({},c.hareketler[0],{id:'hareket-9'});c.sonrakiNo.hareket=10;c.hareketler.push(x);c.kulupler.demirkapi.nakit+=x.tutar;}],
   ['Kaynağı bekleyen işe bağlı hareket',yeni,c=>{c.hareketler.push({id:'hareket-1',kulupId:'demirkapi',tarih:c.tarih,dakika:c.gunIciDakika,tutar:-320000000,kalem:'maas',aciklama:'',kaynak:'is-2'});c.sonrakiNo.hareket=2;c.kulupler.demirkapi.nakit-=320000000;}],
-  ['Gelecekte işlenmiş hareket',ilerlemis,c=>{c.hareketler[0].tarih='2027-01-01';}]
+  ['Gelecekte işlenmiş hareket',ilerlemis,c=>{c.hareketler[0].tarih='2027-01-01';}],
+  ['Ajanda: bilinmeyen zorunluluk',hafta,c=>{c.isler['is-5'].veri.zorunluluk='belki';}],
+  ['Ajanda: olmayan kişi',hafta,c=>{c.isler['is-4'].veri.kisiId='kisi-99';}],
+  ['Ajanda: eksi süre',hafta,c=>{c.isler['is-6'].veri.sure=-5;}],
+  ['Ajanda: zorunlu işte son tarih',hafta,c=>{c.isler['is-4'].veri.sonTarih='2026-11-25';}],
+  ['Ajanda: başlangıcı geçmiş fakat kaçırılmamış iş',hafta,c=>{c.gunIciDakika=602;}],
+  ['Ajanda: bilinmeyen karar türü',hafta,c=>{c.isler['is-14'].veri.karar='yok';}],
+  ['Karar: bilinmeyen koltuk',hafta,c=>{c.isler['is-14'].veri.koltuk='kaleci';}],
+  ['Karar: olmayan aday',hafta,c=>{c.isler['is-14'].veri.adaylar.push('kisi-99');}],
+  ['İş hem bekliyor hem iptal edilmiş',hafta,c=>{c.gecmis.push({tur:'iptal',isId:'is-3',isTuru:'odeme',tarih:c.tarih,dakika:c.gunIciDakika,baslik:'x',neden:''});}],
+  ['Yönetim: olmayan kişi',hafta,c=>{c.kulupler.demirkapi.yonetim.sayman='kisi-99';}],
+  ['Yönetim: aynı kişi iki koltukta',hafta,c=>{c.kulupler.demirkapi.yonetim.sayman='kisi-3';}],
+  ['Yönetim: bilinmeyen koltuk',hafta,c=>{c.kulupler.demirkapi.yonetim.kaleci=null;}],
+  ['Yönetim: aday rolündeki kişi koltukta',hafta,c=>{c.kulupler.demirkapi.yonetim.sayman='kisi-8';}],
+  ['Kişi: bilinmeyen katkı seviyesi',hafta,c=>{c.kisiler['kisi-8'].katki.mali='harika';}]
 ];
 for(const [ad,kur,boz] of BOZUKLAR){
   const c=kur();boz(c);
