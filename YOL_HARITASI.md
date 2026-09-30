@@ -4,7 +4,7 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
 
 ## Şu an neredeyiz?
 
-Çalışan ürün bir maç günü prototipi, kariyer temeli (Aşama 1), ilk ajanda haftası (2.1), sayman/sponsor denemesi (2.2'nin ilk adımı), sponsor konusunun tek mesele olarak takibi ve “İlerle” ile durma noktalarına ilerleme (2.3) ile gün içi kayıt ve dönüş özetidir (2.4). Aydınlık kulüp sahneleri, telefon/görüşme akışı ve sonraki işler henüz uygulanmamıştır. 2.3–2.4 yerel dalda (`mesele-ve-kayit`) geliştirildi; yayınlanmış sürüm güncellenmedi.
+Çalışan ürün bir maç günü prototipi, kariyer temeli (Aşama 1), ilk ajanda haftası (2.1), sayman/sponsor denemesi (2.2'nin ilk adımı), sponsor konusunun tek mesele olarak takibi ve “İlerle” ile durma noktalarına ilerleme (2.3) ile gün içi kayıt ve dönüş özetidir (2.4). 2.3–2.4 kodu PR #8 ile `main` dalına birleşti. Değişken başlangıç/koşula bağlı içerik, aydınlık kulüp sahneleri ve telefon/görüşme akışı henüz uygulanmadı. Git'teki kaynak durumuyla Pages/masaüstü dağıtım sürümü ayrı doğrulanır.
 
 - [x] Maç motoru '99 sahnesine bağlı; maç baştan sona oynanıyor.
 - [x] Başkan bakışı, dürbün, başkanın elleri/masası ve olaylara tepkiler var.
@@ -15,12 +15,13 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
 - [x] Zemin, seyirci doluluğu, koltuklar ve tribün tepkilerinin görsel temeli var; değerler geçici deneme panelinden geliyor.
 - [x] Tarayıcı kontrolü ve görüntüsüz maç ölçüm araçları var. Her ortamda bağımlılıklarının hazır olduğu varsayılmaz.
 - [x] Sabit lig/kadro verisiyle çalışan maç öncesi bülteni var: lig durumu, form, olası 11'ler, eksikler ve son maçlar; “İlerle” ile maç gününe geçiliyor.
-- [x] Oyun ajandayla açılıyor: maçtan önceki TEST haftası gün gün oynanıyor, gün sonunda kaydediliyor, Cumartesi “Stada git” bültene geçiyor. Maç sonucu kariyere işlenmiyor.
+- [x] Oyun ajandayla açılıyor: maçtan önceki TEST haftası gün gün oynanıyor, her tamamlanan komuttan sonra kaydediliyor (maç sınırı hariç), Cumartesi “Stada git” bültene geçiyor. Maç sonucu kariyere işlenmiyor.
 - [x] Kariyer verisi, takvim, para hareketleri ve gelecekteki ödemeler için temel; tarayıcı/masaüstü kayıt ve önceki sağlam kayda dönüş var.
 - [x] Üç yönetim koltuğu, sayman seçimi ve sponsor işini saymana devretme denemesi var; ekip sisteminin tamamı bitmedi.
 - [x] Windows/Electron ile çevrimdışı masaüstü denemesi var; ticari paket tamamlanmadı.
 - [x] Ortak mesele geçmişi (sponsor örneği), durma noktalarına ilerleme ve gün içi karar kaydı ile dönüş özeti mevcut ajanda ekranında var (2.3–2.4).
 - [ ] Mekânlarda günlük başkanlık, telefon/görüşme akışı ve kontrollü gözlem.
+- [ ] Değişken devralma koşulları, koşula bağlı olay paketleri ve eski sabit oyuncu içeriğinin değiştirilmesi (ilk adım 2.4A).
 - [ ] Tam yönetim, sözleşme/ekonomi, seçim, sezon, uzun kariyer ve Avrupa sistemleri; maç sonucunun kariyere bağlanması.
 - [ ] Ticari masaüstü paketi ve uzun kariyer doğrulaması.
 
@@ -38,7 +39,7 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
 - **2026-09-29, kullanıcı kararı ve deneme (1.5):** Masaüstü hedefi önce yalnız Windows, paketleme Electron. `masaustu/` denemesinde oyun çevrimdışı açıldı, 3B maç günü çizildi, Türkçe karakterli yollarda kayıt yazıldı ve uygulama kapatılıp açılınca kariyer sürdü; paketlenmiş `Chairman.exe` ile de doğrulandı. Kurulum, imzalama ve Steam bağlantısı yok. Ayrıntı ve sınırlar [TEKNIK_PLAN §10](TEKNIK_PLAN.md#10-sunum-metin-ve-masaüstü).
 
 - **2026-09-29, ilk akış kararı (2.1–2.2):** Ajandayla açılış bugünkü uygulamadır; hedef ana deneyim 2026-09-30 kararıyla mekânlara taşınmıştır. Ajandanın zorunlu/ertelenebilir/isteğe bağlı iş ve çakışma kuralları korunur. Yönetim ekibinin ilk kapsamı üç koltuktur: sayman, futbol şube sorumlusu, basın sözcüsü. Ayrıntı [OYUN_TASARIMI §4 ve §6](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo).
-- **2026-09-29, mevcut uygulama (2.1):** Ajanda kuralları `js/ajanda.js`, ekran `js/ekran-ajanda.js`, TEST haftası `KARIYER_BASLANGIC` (`js/kariyer-ornek.js`). Kariyer dosyaları artık `index.html`'e yüklenir. Kayıt gün sınırında `oyun-1` yuvasına yapılır; maç sınırında kayıt yoktur. Metinler, saatler ve tutarlar TEST değeridir. Ayrıntı [TEKNIK_PLAN §3–5](TEKNIK_PLAN.md#4-zamanın-ilerlemesi).
+- **2026-09-29, 2.1 uygulama kaydı:** Ajanda kuralları `js/ajanda.js`, ekran `js/ekran-ajanda.js`, TEST haftası `KARIYER_BASLANGIC` (`js/kariyer-ornek.js`). Kariyer dosyaları `index.html`'e bağlandı. O tarihte kayıt gün sınırında `oyun-1` yuvasına yapılıyordu; 2.4 bunu gün içi komut kaydına genişletti. Maç sınırında kayıt hâlâ yoktur. Metinler, saatler ve tutarlar TEST değeridir. Ayrıntı [TEKNIK_PLAN §3–5](TEKNIK_PLAN.md#4-zamanın-ilerlemesi).
 
 - **2026-09-29, mevcut uygulama (2.2 ilk adım):**
   - Yönetim kuralları ve karar türleri `js/yonetim.js` dosyasında. Ajandaya karar işi eklendi (`KARAR_TURLERI`); takvime yapılmadan iptal edilen iş kaydı eklendi (`isIptal`).
@@ -57,15 +58,24 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
   - Maç sonrası devam öne çekilmedi: kariyer maç sınırında durur; boş günler ve uzun meseleler ayrı test takvimleriyle sınanır. Mesele olayları anahtar + parametre olarak saklanır; mevcut diğer metinler dönüştürülmedi.
   - Sezon süresi hedefi zorunlu süre değildir; tekrar, karar yoğunluğu ve sıkılma noktalarıyla ölçülecek hedeftir. 30 dakikalık süre uzaması, 30 günlük ilerleme sınırı ve 09:30 haber saati TEST değeridir.
 
+- **2026-09-30, onaylı içerik yönü ve belge güncellemesi:** Sabit kulüp geçmişi + tutarlı değişken başlangıç + koşula bağlı yazılmış olaylar + sınırlı adil belirsizlik + kalıcı hafıza. Sezon için zorunlu hikâye sırası seçilmez; önlenen kriz geri zorlanmaz, iyi yönetim rahatlık sağlar. Kurallar [OYUN_TASARIMI §3 ve §10](OYUN_TASARIMI.md#3-kulübün-geçmişi-ve-başlangıç-hikâyesi), teknik sınırlar [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi) içindedir.
+- **2026-09-30, yeni öncelik:** Tamamlanan 2.3–2.4 korunur. 2.5 öncesine yeni, tamamlanmamış 2.4A eklenir. İlk içerik P01'in dar ödeme/sponsor örneğidir; sınırlı P03 2.6'da, P13'ün söz/hafıza izi 2.8'de genişler. Eski sabit oyuncu akışı yeni örnek doğrulanınca değiştirilir. [Olay kütüphanesi](OLAY_KUTUPHANESI.md) 23 tarihsel esin, 14 paket ve 6 koşullu birleşim içerir; bunlar 14 tamamlanmış özellik veya 6 sabit kampanya değildir. Bu güncelleme yalnız belgelerdir; kodun değiştiği anlamına gelmez.
+
 Eski kararların kronolojisi Git geçmişinde korunur. Bu dosyada geçerli kararlar ve gerekli gerekçeler tutulur.
 
 ## Çalışma biçimi
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz.
 
-**Aşama 1, 2.1, 2.3 ve 2.4 tamamlandı; 2.2'nin ilk adımı uygulandı. Sıradaki geliştirme: 2.5 — aydınlık başkan odası.** Önce `prototipler/` altında küçük ama kullanılabilir bir oda prototipi gösterilip yerleşim ve etkileşim onaylanır; ardından oyuna bağlanır. 2.2'nin kalan işleri, yeni görüşme/ekip adımıyla (2.6) tamamlanır. Açık isimler ve denge sayıları için yalnız açıkça etiketlenmiş TEST verileri kullanılır.
+**Aşama 1, 2.1, 2.3 ve 2.4 tamamlandı; 2.2'nin ilk adımı uygulandı. Sıradaki geliştirme: 2.4A — değişken başlangıç ve koşula bağlı olay denemesi.** Önce mevcut ajandada dar bir ödeme/sponsor meselesinin farklı koşullarda farklı gündem ürettiği doğrulanır. Ardından 2.5'te `prototipler/` altında küçük, kullanılabilir bir aydınlık oda gösterilip yerleşim ve etkileşim onaylanır ve oyuna bağlanır. 2.2'nin kalan işleri 2.6 ile tamamlanır. Açık isimler, tutarlar ve denge sayıları TEST olarak işaretlenir.
 
-İlk bütünleşik örnek: ofiste başlayan sponsor meselesi ekibe verilir; sonraki gün antrenmanda haber gelir; yetkiyi aşan konu başkana döner ve kararın sonucu kulüpte görülür. Bu örnek yeni Aşama 2'nin sonunda hedeflenir; ilk alt adımda bütün sahneler birden yapılmaz.
+İlk bütünleşik örnek: koşulları uygunsa ofiste başlayan sponsor meselesi ekibe verilir; sonraki gün antrenmanda haber gelir; yetkiyi aşan konu başkana döner ve kararın sonucu kulüpte görülür. Sorunsuz, önlenmiş ve hiç açılmayan mesele örnekleri de sınanır; bu örnek her kariyerin zorunlu açılışı değildir. Bütünleşik sunum Aşama 2 sonunda hedeflenir; ilk alt adımda bütün sahneler birden yapılmaz.
+
+### Sonraki uygulama için çalışma çerçevesi
+
+Claude veya başka bir geliştirme aracı “sıradaki adımı planla” isteğinde önce 2.4A'yı ele almalı. Kodun güncel hâlini okuyup mevcut komutları, kayıt dönüşümlerini ve testleri kullanarak küçük uygulama planı çıkarmalı. Plan; dar veri ihtiyacını, yeni kariyer bağlantısını, eski sponsor kaydının devamını ve aşağıdaki kabul örneklerini açıkça göstermeli. Bu belge onayı oyun kodunu kendiliğinden uygulama izni değildir; sonraki kod çalışmasının kapsamı kullanıcı isteğinden alınır.
+
+İlk adımın dışında: bütün 14 paket, kapsamlı seçim/adaylık, hisse veya yatırımcı sistemi, tam ilişki/hafıza sistemi, yeni 3B ortam, maç sonucunu kariyere bağlama ve mevcut motoru yeniden yazma. Metinler ile denge sayıları küçük TEST tarifleri olabilir; gerçek mali/lig kuralları sessizce kesinleştirilmez.
 
 ### 2026-09-30 madde eşlemesi
 
@@ -119,18 +129,27 @@ Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlıl�
 - [x] **2.4 — Gün içi kayıt ve dönüş.** Tamamlanan kararları ve güvenli sahne geçişlerini kaydet; mesele, bekleyen iş ve yetki durumu yüklenince sürsün. Son karar, beklenen haber ve yaklaşan tarihten kısa dönüş özeti üret.
   - *Bitiş:* Gün bitmeden kapatıp açınca son tamamlanan karar korunuyor; ödeme/karar ikinci kez uygulanmıyor. Kayıt sınırı ve varsa başarısız kayıt doğru bildiriliyor; eski kayıt davranışı doğrulanıyor. Maç ortasından kayıt bu adımın koşulu değildir.
   - *Uygulandı (2026-09-30):* Her tamamlanan komut kariyerin kopyasında uygulanıp doğrulanır (`kariyerKomut`) ve kaydedilir (`kayitOturumu`). Yazım başarısızsa “karar uygulandı, kaydedilemedi” bildirilir; yeniden kaydetme kararı tekrarlamaz. “Stada git” bilinçli istisnadır (maç sonucu kariyere bağlı olmadığı için maç sınırında kayıt yoktur; yüklenen oyuncu maç geçişini kaybetmez). Kayıttan devamda ajandada “Kaldığın yer” özeti açılır. Kayıt sürümü 2'dir; sekiz gerçek sürüm 1 kaydı (`araclar/ornekler/`) açılır, dönüşür ve oynanmaya devam eder. Doğrulama: `node araclar/kariyer-deneme.js`, `python3 araclar/akis-deneme.py`, `python3 araclar/kontrol.py`, masaüstü `node deneme.js`.
-- [ ] **2.5 — Aydınlık başkan odası.** Oda içinde telefon, ajanda ve ilgili dosyaya erişimi kur; bir meseleye odaklanan açık renkli sunum kullan. Okunabilir metin ve temel ortam sesi/ses kontrolü ekle.
+- [ ] **2.4A — Değişken başlangıç ve koşula bağlı olay denemesi.** Mevcut mesele, takvim, para ve kayıt temelinde P01'in dar ödeme/sponsor örneğini kur. Paket tarifi ile kariyerdeki olay örneğini ayır; koşula göre açılma, seçenek, sonuç ve tekrar sınırı kullan. Ayrıntı [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi).
+  - *İlk kapsam:* En az üç tutarlı TEST başlangıcı: ödeme tarihleri sıkışan; acil nakit baskısı olmadan mevcut anlaşmayı değerlendiren; ilgili sorunu önceden çözmüş veya o sorunu taşımayan. Sonuncusunda kriz doğmaması beklenir. Yalnız metin ve miktar değişimi yeterli değildir. Bu sayı nihai başlangıç sayısı veya bütün yolların çözülebilirlik kanıtı değildir.
+  - *Karar örneği:* Koşula göre başkanın müdahalesi, mevcut saymana devretme ve geçerli başka ödeme planı farklı sonuç verebilsin. Uygun şartlarda ret/önleme veya sorunsuz sonuç bulunsun; yeni araştırma/kapasite sistemi 2.6'ya kadar kurulmak zorunda değildir. Aynı aday her koşulda aynı sonucu veya hep üstün cevabı üretmesin.
+  - *Geçiş:* Yeni örnek doğrulanınca sabit TEST haftasını ve eski sponsor seçeneklerini normal Yeni kariyer yolundan çıkar; karşılığı olmayan sabit toplantı/röportaj görevlerini temizle. Rol/karar/takvim temelini, maç geçişini ve eski kayıt uyumluluğunu koru. Ayrıntılı geçiş listesi teknik plandadır; eski içerik ikinci normal oyun yolu olarak kalmaz.
+  - *Bitiş:* Yeni kariyerde koşullar, gündem ve seçenekler ayrışıyor; önlenen/oluşmayan kriz zorla açılmıyor. Aynı başlangıç, seçim, içerik sürümü ve kayıtlı rastlantı ile devam tutarlı. Okuma, önizleme, ekran açma ve yükleme yeniden sonuç çekmiyor. Ödeme/karar bir kez işleniyor; yoğunluk gerçek vadeyi değiştirmiyor. Sürüm 1 ve 2 kayıtları para/geçmiş kaybı olmadan devam ediyor. Değişen kapsamın CLAUDE.md kontrolleri geçiyor; gerçek ekran akışı da sınanıyor.
+  - *Sınır:* Maç sonucu bağlantısı Aşama 3'te kalır. Deneme maç sınırında bitebilir; farklı başlangıçlar ve parça parça ilerleme için geliştirici takvimleri kullanılabilir. Paket kataloğunun geri kalanı bu adımın şartı değildir.
+- [ ] **2.5 — Aydınlık başkan odası.** 2.4A'daki gündemi oda içinde telefon, ajanda ve ilgili dosyayla sun; bir meseleye odaklanan açık renkli düzen kullan. Okunabilir metin ve temel ortam sesi/ses kontrolü ekle. Önce küçük oda prototipini gösterip yerleşim/etkileşim onayından sonra oyuna bağla.
   - *Bitiş:* Oyuncu gündemi bulup konuyu açabiliyor, kapatıp ortama dönebiliyor; gerekli bilgi için nesne aramaya zorlanmıyor. Oda değişimi veya paneli yeniden açma zamanı ve karar geçmişini değiştirmiyor.
 - [ ] **2.6 — Görüşme, tavsiye ve ekip.** Hoca görüşmesi ve bütçe önceliğini ekle. Tavsiye ile yetki devrini ayır; kişi, bütçe, süre, kapasite ve başkana dönüş koşullarını belirle. Bir kalıcı sorumluluk ve başkanın başlattığı bir görüşme/araştırma örneği kur; 2.2'nin kalan işlerini tamamla.
+  - *İçerik:* P01'i ekip bilgisiyle zenginleştir; P03'ün belirli katkı, süre ve görünürlük hakkıyla sınırlı bir örneğini kullan. Tam hisse/yatırımcı veya seçim sistemi kurma. Onaylanmamış katkı kurallarına ihtiyaç varsa uygulamadan önce açıkça ayır.
   - *Bitiş:* Yetki içindeki rutin adımlar ek onay istemiyor; sınır aşılınca başkana dönülüyor. İşe uygun yönetici bazı işleri daha iyi çözebiliyor; şahsen katılım her işte otomatik en iyi seçenek olmuyor. Hoca futbol kararlarının sahibi olarak kalıyor.
 - [ ] **2.7 — Antrenman ve telefon.** İsteğe bağlı gözlem sırasında haber alma, cevaplama, tavsiye isteme veya yönlendirmeyi dene. Mevcut ısınma görsellerinden yararlanılabilir; ayrı antrenman simülasyonunun hazır olduğu varsayılmaz.
   - *Bitiş:* Kontrollü gözlemde mesaj kararı zamanı durduruyor; uyumlu eşzamanlı işler süreyi iki kez tüketmiyor. Uzun görüşmede gözlemden ayrılınıyor; aynı mesele ofiste ve telefonda devam ediyor. Katılmamak zorunlu bilgi/ödül kaybına dönüşmüyor.
 - [ ] **2.8 — Sonuçlar ve kulüp hafızası.** Bir söz/ilişki kaydı, önceki kararın dönüşü, ilk taraftar veya medya tepkisi ve olumlu kulüp anı ekle. Tamamlanan küçük bir iş/yatırımın ya da tutulmuş sözün izini ortamda göster; daha sonraki tesis sisteminin tamamını burada kurma.
+  - *İçerik:* P13'teki küçük söz/teşekkür örneği yaşanmış olaydan doğsun. Para harcayıp günlük moral toplama döngüsü veya her kutlamanın arkasından kriz üretme kuralı kurulmasın.
   - *Bitiş:* Oyuncu sonucun hangi karardan geldiğini anlayabiliyor; ilgili insanlar ve geçmiş hatırlanıyor. Görünür değişim gerçekten kaydedilmiş olaya dayanıyor, yükleme sonrası korunuyor.
 - [ ] **2.9 — Günlük akışın sınanması.** Önce birkaç günlük tek meseleyi, sonra sakin/olağan/yoğun günleri içeren bir haftayı oyna. [Tempo hedefleriyle](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo) gerçek süreyi, tekrarları, kesintileri, kararların anlaşılmasını ve yetki devrinin faydasını değerlendir.
+  - *Tekrar oynama:* Aynı küçük dönemi farklı başlangıç ve kararlarla karşılaştır; temkinli, büyüme odaklı ve yetki devreden yaklaşımların koşullara göre ayrışmasını incele. Video veya önceki oyundan öğrenilmiş sabit cevabın her koşulu çözmediğini, başarının gerçek rahatlık ürettiğini ve önlenen sorunun geri zorlanmadığını değerlendir. Otomatik tutarlılık denemesi normal tempoda oynama yerine geçmez.
   - *Bitiş:* Kısa oturumda mesele ilerliyor; yoğun gün bölünebiliyor; iyi yönetim rahat dönem üretebiliyor. Temel yazı/ses seçenekleri ve dönüş özeti kullanılabilir. Eksik örnekler ve ölçüm sonuçları yazılır; yalnız toplam süreye bakılarak aşama kapatılmaz.
 
-**Uygulama sırası:** 2.3 → 2.4 → 2.5 → 2.2'nin kalanları ve 2.6 → 2.7 → 2.8 → 2.9. Her alt adım kendi kontrolüyle tamamlanır. Başlangıç görevdeki TEST başkanı olabilir.
+**Uygulama sırası:** 2.3 ve 2.4 tamamlandı → 2.4A → 2.5 → 2.2'nin kalanları ve 2.6 → 2.7 → 2.8 → 2.9. 2.4A yeni iştir; tamamlanan 2.4'ün yeniden açılması değildir. Her alt adım kendi kontrolüyle tamamlanır. Başlangıç görevdeki TEST başkanı olabilir.
 
 Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. Tam maç bağlantısı Aşama 3'tedir.
 
@@ -147,6 +166,7 @@ Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. 
 - [ ] **3.5** Maç sonucunu kariyere kimliğiyle yalnız bir kez uygula; istatistik ve geçmiş kaydını bağla. Maç öncesi/sonrası güvenli kayıt sınırlarını doğrula.
 - [ ] **3.6** Tohum tutarlılığını, izleme hızının etkisini ve görüntüsüz maçların maliyetini ölç.
 - [ ] **3.7** Birkaç haftalık yönetim bölümünü maçlarla tamamla; maç günü süresini ve mevcut atlama seçeneklerini ağır kariyer temposuyla değerlendir. Aynı olayların tekrarı, sonuçların yeni gündeme dönüşmesi ve kısa oturumdan devam da sınanır.
+  - P12 hoca değerlendirmesinin erken örneği gerçek rapor/sonuçlardan doğabilir. Hikâye amacıyla skor değiştirilmez; kupa tabanlı P10 ilgili kupa sistemi hazır olana kadar açılmaz.
 
 **Bitiş ölçütü:** Hoca ve kadro kararları sahaya giriyor; maç sonucu yeni gündem ve geçmiş üretiyor. Kayıt yükleme sonucu tekrar uygulamıyor.
 
@@ -160,6 +180,7 @@ Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. 
 - [ ] **4.4** Sponsor görüşmesi ve sınırlı kişisel katkıyı mali kayıtlarla bağla.
 - [ ] **4.5** Aşama 2'deki yetki devrini transfer ve mali anlaşmalara genişlet; bütçe/süre sınırları ve önemli eşikte başkana dönüş ortak kurallarla çalışsın.
 - [ ] **4.6** Geciken gelir veya artan giderin birden çok güne yayılan etkisini ve yeniden planlamayı dene; sürekli kriz, açıklanamayan çıkmaz ve kolay sınırsız para yollarını değerlendir. Başarısızlığın bedeli ve verilen sözler korunsun.
+  - P01/P03'ü gerçek sözleşmelerle genişlet; P07'nin satış/elde tutma örneğini yalnız mevcut oyuncu ve transfer sistemiyle bağla. Katalogdaki altyapı geçmişi veya tam yatırımcı sistemi hazır varsayılmaz.
 
 **Bitiş ölçütü:** Anlaşmalar yalnız konuşma sonucu olmaktan çıkıp kulübün gelecekteki parasına, kadrosuna ve ilişkilerine işleniyor.
 
@@ -173,6 +194,7 @@ Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. 
 - [ ] **5.4** İlk taraftar/medya tepkilerini sezon ölçeğine genişlet; medya/TV, hakem-federasyon gündemi ve rakip başkan ilişkilerini sezon olaylarına bağla.
 - [ ] **5.5** Bilet, doluluk ve yayın/sponsor gelirlerini takvime bağla; ekonomik şartların ilk etkilerini ekle.
 - [ ] **5.6** Sezonu baştan sona oyna; dönem sonu ödemeler, sözleşmeler, geçmiş ve yeni sezon hazırlığını doğrula. Günlük akışın tekrarını ve sezon süresini ölç; yalnız hızlandırılmış deneme tempo onayı sayılmaz.
+  - Farklı başlangıçları sezon ölçeğinde karşılaştır; olayların bazı kariyerlerde hiç oluşmamasını, zor dönem sonrası toparlanmayı ve iyi yönetimin azalttığı iş yükünü değerlendir. P10/P11 yalnız ilgili kupa/kademe kuralları ve gerçek sportif sonuçlar hazırsa açılır; bunlar için sahte başarı üretilmez.
 - [ ] **5.7** Küçük geliştirici örneklerinde kişinin ayrılması/emekliliği, yerine yeni kişi gelmesi ve sezonlar arası kulüp/kademe değişimini sınayarak uzun kariyerin veri temelini doğrula. Seçilmemiş kurallar TEST diye işaretlenir; kapsamlı yaşam döngüsü Aşama 7'de, üç lig ve gelişim Aşama 8'de tamamlanır.
 
 **Bitiş ölçütü:** Bir sezon boyunca hem maç hem yönetim ilerliyor; son tarihler, para ve sonuçlar tutarlı kalıyor. Yeni sezona ve küçük dünya değişimlerine kayıt bozulmadan geçiliyor; sakin dönem ve toparlanma yolları oynanabiliyor.
@@ -181,12 +203,13 @@ Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. 
 
 **Bağımlılık:** Aşama 5. Kulüp geçmişi ve ilk seçim kuralları seçilmiş olmalı. Temel kişiler ve kulüp kimliği daha önce hazırlanabilir; burada kapsamlı giriş tamamlanır.
 
-- [ ] **6.1** Kulüp/şehir geçmişini ve tekrar karşılaşılacak temel kişileri tamamla; geçmiş ile kariyerde oluşacak olayları ayır.
+- [ ] **6.1** Kulüp/şehir geçmişini ve tekrar karşılaşılacak temel kişileri tamamla; 2.4A'nın dar örneğini devralınan koşulların tutarlı birleşimlerine genişlet. Temel gerçekleri adaylıktan önce kur; sezonun olay sırasını yazma. Değişken koşullar sabit kimlik/geçmişle çelişmesin.
 - [ ] **6.2** Tribün, gazete, çevreyle görüşme ve adaylığa davet sahnelerini kur; oyuncuya girişte anlamlı seçimler ver.
 - [ ] **6.3** Adaylık açıklaması, yönetim havuzu, ekipçe vaat hazırlama ve rakip aday karşılaşmaları ekle.
 - [ ] **6.4** Röportaj, hazırlıksız yakalanma ve seçim günü akışını kur; ilk seçim çoğunlukla ulaşılabilir olsun fakat kaybetme yolu bulunsun.
 - [ ] **6.5** Nadir süreli cevap, süre dolması ve okuma/flaş/sarsıntı seçeneklerini ilgili sahnelerde birlikte dene; erken aşamadaki okunabilirlik ve ayar temelini kullan.
 - [ ] **6.6** Kazanma ve kaybetme geçişlerini kaydet; görev dışı takip için temel giriş sun. Uzun görev dışı yıllar Aşama 7'de tamamlanır.
+  - P02 vaat ve P14 destek ittifakı örneklerini gerçekten verilmiş sözler ve seçilmiş seçim kurallarıyla bağla. Girişteki aynı sahne dizisi veya kaçınılmaz transfer başarısızlığı zorunlu olmaz.
 
 **Bitiş ölçütü:** Gerçek oyun başlangıcından kampanyaya ve seçimin iki sonucuna gidiliyor. Seçilen ekip ve verilen vaatler sınanmış sezon döngüsüne taşınıyor.
 
@@ -213,6 +236,7 @@ Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. 
 - [ ] **8.3** 2.8'deki küçük görünür değişim örneğini kapsamlı tesis/stat yatırımına genişlet; maliyet, takvim ve aşamalı sonuç çalışsın, tamamlanan iş görüntüye yansısın.
 - [ ] **8.4** Kulüp büyüdükçe kadro, yönetim havuzu, sponsorluk ve kamuoyu ölçeğini değiştir.
 - [ ] **8.5** Erken hafıza ve gözlem örneklerini odalardaki kupalar, fotoğraflar ve kişisel geçmişle genişlet; isteğe bağlı antrenman ve kulüp ortamlarını geliştir.
+  - P04/P06 tesis ve topluluk desteği, P08 yetiştirme, P09 geri dönüş ve P11 büyüme örneklerini hazır sistemlerle genişlet. P09 için kişinin kulüple bağı ve ayrılışı gerçekten bulunmalı; her kariyere zorunlu efsane dönüşü eklenmez.
 
 **Bitiş ölçütü:** Kulüp ilerliyor veya geriliyor; insanlar ve mali yapı bu değişimi taşıyor. Gelişim ve yatırım otomatik başarı garantisi vermiyor.
 
@@ -226,6 +250,7 @@ Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. 
 - [ ] **9.4** Yalnız en büyük kupanın uygun kariyer sonucuyla başarı finalini tetiklemesini doğrula; küçük kupa ve görev dışı durumları ayrı değerlendir.
 - [ ] **9.5** Kutlama, dönüş, veda ve geçmişe göre farklılaşan kupasız finalleri tamamla.
 - [ ] **9.6** Kupaya giden birden fazla zor ama mümkün yolu test et; yapay rakip güçlendirmesi ve açıklanamayan engeller kullanma.
+  - Olaylar Avrupa başarısının mali/insani sonuçlarını işler; kura veya skor senaryo gereği zorlanmaz. Kütüphanedeki birleşimler zorunlu final yolları sayılmaz; sınırlı testler her başlangıç ve karar dizisine başarı garantisi vermez.
 
 **Bitiş ölçütü:** Kariyerin başarı ve başarısızlık yolları tamamlanabilir; final geçmişi yansıtır ve aynı kayıtta tekrar tetiklenmez.
 

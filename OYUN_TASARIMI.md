@@ -58,9 +58,21 @@ Oyuncu; kararın konusunu, bilinen maliyetini, verilen taahhüdü ve belirsiz ka
 
 ## 3. Kulübün geçmişi ve başlangıç hikâyesi
 
-Kulübün sabit bir geçmişi hazırlanır: kuruluş, önemli eski başkanlar ve oyuncular, başarılar, kırılmalar, gelenekler, taraftar alışkanlıkları ve şehirle ilişkisi. Bu geçmişten gelecekteki olaylar üretilir. Geçmiş kayıtları ile oyuncunun kariyerinde oluşan yeni geçmiş ayrılır.
+Kulübün sabit bir geçmişi hazırlanır: kuruluş, önemli eski başkanlar ve oyuncular, başarılar, kırılmalar, gelenekler, taraftar alışkanlıkları ve şehirle ilişkisi. Geçmiş kayıtları ile oyuncunun kariyerinde oluşan yeni geçmiş ayrılır. Bu kimlik, yeni kariyer açıldığında rastgele başka bir kulübe dönüşmez.
 
-Başlangıç ayrı sahnelerle gelişir:
+### Değişken devralma koşulları
+
+**Onaylı tasarım yaklaşımı (2026-09-30; henüz uygulanmadı):** Sabit kimlik üzerine tutarlı fakat değişken mali, sportif ve insani koşullar kurulur. Vadesi gelen yükümlülükler, tahsilat imkânları, mevcut anlaşmalar, ekip ilişkileri ve tarafların alternatifleri birlikte değerlendirilir. Yalnızca isim, tutar veya olay günü değiştirmek yeterli çeşitlilik sayılmaz; gündem, eldeki kanıt, uygulanabilir seçenek ve sonraki etki değişebilmelidir.
+
+Kulübü zor bir dönemde devralma yönü korunur; zorluğun kaynağı ve birleşimi değişebilir. Her kariyerin aynı sponsor kriziyle veya aynı erken seçim gerekçesiyle başlaması gerekmez. Bir alandaki sorunun yokluğu, bütün kulübün sorunsuz olduğu anlamına gelmez. İlk dar prototipte sakin mali başlangıç da sınanır.
+
+Tam oyunda devralınacak temel gerçekler adaylık başlamadan kurulur ve kariyer boyunca korunur. Borç, gizli anlaşma veya kişinin geçmişi, oyuncunun kararından sonra onu zorlamak için geriye dönük icat edilmez. Oyuncunun bunları öğrenmesi zaman alabilir; dünyanın gerçeği ile başkanın bilgisi farklıdır. Yeni kişiler ve koşullar sabit tarihle çelişmemelidir.
+
+Başlangıç, bütün sezonun olaylarını veya finalini seçen bir senaryo paketi değildir. Sonraki gelişmeler §10'daki koşullarla doğar. Uyumlu koşulların hangi aralıklardan seçileceği ve başlangıç zorluğunun dengesi testlerle belirlenecek; bu karar oyuncuya bir senaryo seçme menüsü eklenmesini zorunlu kılmaz.
+
+### Taraftarlıktan adaylığa giriş
+
+Girişin taşıyabileceği sahne türleri şunlardır; bunlar her kariyerde aynı sırayla oynanacak zorunlu bir zincir değildir:
 
 1. Taraftar olarak maçlara gider, tanıdıklarla konuşur ve kötü gidişe verilen tepkileri görürsün.
 2. Gazetelerden ve çevrenden gelişmeleri takip edersin; kulübün insanlarını tanırsın.
@@ -70,6 +82,8 @@ Başlangıç ayrı sahnelerle gelişir:
 Girişe sabit bir kısa süre sınırı konmaz. Buna rağmen oyuncu erken aşamada anlamlı seçimler yapabilmelidir. Ardışık sahneler ve maç izleme süreleri oynanış testinde değerlendirilir; tekrarlanan geçişler zorunlu beklemeye dönüşmez.
 
 Geliştirmede kulüp kimliği ve tekrar karşılaşılacak temel kişiler erken hazırlanabilir. Kapsamlı taraftarlık ve adaylık girişi, bir sezonluk başkanlık döngüsü sınandıktan sonra tamamlanır. Bu geliştirme sırası, bitmiş oyunun taraftar olarak başlama hedefini değiştirmez.
+
+Tarihsel esinler ve kurgusal olay aileleri [OLAY_KUTUPHANESI.md](OLAY_KUTUPHANESI.md) içindedir. Gerçek kulüplerin yaşadığı sonuçlar oyunda zorunlu tekrar edilmez. Mevcut sabit TEST haftası, yeni başlangıç akışı doğrulandığında oyuncuya açık yeni kariyer yolundan çıkarılır; kayıt uyumluluğu korunur.
 
 ## 4. Yönetim ekibi, vaatler ve seçim
 
@@ -249,6 +263,21 @@ Medya ve TV katılımları, taraftar talepleri, hakem atamaları ve tartışmal�
 
 Olay kaynakları: kararların sonuçları, dünyadaki gelişmeler ve sınırlı sürprizler. Olay sıklığı, tekrar aralığı ve aynı anda açık kalan konular denetlenir. İyi yönetimin rahat dönemler üretmesine izin verilir. Başarı, teşekkür, geçmişten gelen dostluk ve kulübe aidiyet sahneleri de içeriktir.
 
+### Koşula bağlı olaylar ve adil belirsizlik
+
+**Onaylı tasarım yaklaşımı (2026-09-30; mevcut sabit sponsor örneğinin yerine geliştirilecek):** Yazılmış olaylar mevcut koşullarda anlamlı oldukları zaman açılır. Olay aileleri ve birleşim örnekleri [olay kütüphanesinde](OLAY_KUTUPHANESI.md) tutulur; birinin yaşanması bir sonrakini zorunlu kılmaz. Bazı olaylar hiç yaşanmayabilir, bazıları sorunsuz tamamlanabilir. Her maaş ödemesi yeni bir mesele değildir.
+
+- **Kararların gerçek etkisi vardır.** Para harcamak, ödeme tarihini değiştirmek veya hak vermek tanımlı doğrudan sonuç doğurur. Gelecek teklif, insan tepkisi ve sportif başarı aynı kesinlikte değildir. Bir karar gelecekteki koşulları değiştirebilir; zorunlu sonraki sahneyi seçmekle eşdeğer değildir.
+- **Tarafların kendi gerekçeleri bulunur.** Sponsor, yönetici veya futbolcu; amacı, sınırı, bilgisi ve mevcut alternatifleri üzerinden davranır. Her destekçi gizli düşman değildir; aynı kişinin amacı sırf sürpriz için değişmez. Tam bağımsız insan simülasyonu başlangıç şartı değildir.
+- **Bilgi karar vermeye yarar.** Kaynağı ve tarihi belli rapor, görüşme veya araştırma belirsizliği azaltabilir; her bilgiyi kusursuzlaştırmaz. Büyük olumsuz sonuç için anlaşılır risk, edinilebilir ipucu veya gerçekten doğan dış gelişme bulunur. Sonradan gerekçe uydurulmaz. Okuma ücretsizdir; yeni bilgi toplama §6'daki kişi/zaman kurallarına tabidir.
+- **Rastlantı sınırlandırılır.** Dış teklif veya gelişme değişebilir; kesinleşmiş gerçek, görülmüş haber ve çözülmüş sonuç kaydı açınca yeniden üretilmez. Aynı koşul ve kararların kayıtlı rastlantı durumuyla tekrarlanabilmesi test içindir; oyuncunun geleceği önceden bilmesi anlamına gelmez.
+- **Önleme ve sakinlik geçerli sonuçtur.** Önlenen sorun başka adla zorla geri gelmez. Başarıyı dengelemek için açıklanamayan ceza veya rakip güçlendirmesi uygulanmaz. İyi ekip ve iyi mali düzen iş yükünü azaltır; oyuncu yeni girişim başlatmayı seçebilir.
+- **Yoğunluk, gerçeği değiştiremez.** İsteğe bağlı yeni içerik yoğun dönemde bekletilebilir veya açılmayabilir; mevcut vade, taahhüt ve karar sonucu sessizce ertelenemez. Yeni olay için boş zaman doldurma kotası yoktur. Yakın krizlerin birlikte oluşabilmesi önceden anlaşılabilir koşullara dayanır.
+- **Toparlanma bedellidir.** Yeniden anlaşma, daha küçük hedef, başka kaynak veya ekip değişimi mümkün olabilir. Bazı haklar ve fırsatlar geri gelmez. Başlangıçlar kasıtlı gizli çıkmazlarla kurulmaz; her karar dizisinin ya da her şans sonucunun Avrupa kupasına ulaşması garanti edilmez. Birden fazla zor ama makul başarı yolu hedeflenir.
+- **Tekrar oynanabilirlik sınırsız içerik vaadi değildir.** Oyuncu olay ailelerini ve kuralları öğrenebilir. Amaç; üçüncü kariyerde veya video izledikten sonra aynı seçenek dizisini uygulamak yerine mevcut kanıtlara yeniden bakmasıdır. Farklı koşullarda hep üstün gelen bir seçenek varsa denge ve karar tasarımı incelenir.
+
+Bu kuralların teknik karşılığı [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi), kapsamı ve doğrulama sırası [YOL_HARITASI](YOL_HARITASI.md) içindedir. Paket sayısı, bütün paketlerin ilk sürümde veya aynı kariyerde bulunacağı anlamına gelmez.
+
 Rutin haber, tavsiye ve karar gerektiren gelişme farklı önceliklerle sunulur. Aynı meseleye gelen haber geçmişi günceller; bildirim sayısı yapay görev yükü oluşturmaz. İlk örneklerde bir sözün dönüşü, taraftar veya medya tepkisi, olumlu bir kulüp anı ve tamamlanmış küçük işin görünür izi birlikte sınanır. Oyuncu sonucun hangi kararla ilişkili olduğunu anlayabilmelidir.
 
 ### Süreli cevaplar
@@ -296,5 +325,7 @@ Başarı finali kutlama, şehre dönüş, insanlarla veda ve bırakmayla tamamla
 | Avrupa kupalarının sayısı, formatı ve katılım kuralları | Aşama 9 öncesi |
 | Kesin günlük/sezonluk tempo, maç günü toplam süresi, geçiş/atlama seçenekleri, olay yoğunluğu | §6'daki başlangıç aralıklarıyla Aşama 2–3'ten itibaren, tam sezonda Aşama 5'te ölçülür |
 | Kesin para tutarları, yaş etkileri, seçim/transfer olasılıkları | İlgili sistemin oynanış testleri; önceden kesin denge sayılmaz |
+| Değişken başlangıç alanları, uyumluluk sınırları ve zorluk dengesi | 2.4A'da dar TEST örnekleri; tam devralma koşulları ve giriş için Aşama 6 öncesi |
+| Olay paketlerinin ayrıntılı seçenekleri, katkı/hak koşulları ve tekrar aralıkları | İlgili yol haritası adımında; katalog uygulama veya kesin denge sayılmaz. P03'ün ilk örneği hisse/yatırımcı sistemi kurmaz |
 
 Geliştirme aşamaları ve açık işlerin tek takip yeri [YOL_HARITASI.md](YOL_HARITASI.md) dosyasıdır.

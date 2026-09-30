@@ -6,6 +6,8 @@ Türkiye'de tek bir kurgusal futbol kulübünde, taraftarlıktan başkanlığa u
 
 **Bugünkü uygulama bir 3B maç günü prototipi, kariyer temeli ve ilk ajanda haftasıdır.** Oyun başkanın ajandasıyla açılır; maçtan önceki hafta oynanır, her karardan sonra kaydedilir ve Cumartesi maçına gidilir. Sayman seçimi, sponsor işini devretme, para hareketleri ve bekleyen ödemelerin ilk örneği oynanabilir. Tam yönetim/ekonomi, sözleşme, seçim ve sezon sistemleri tamamlanmadı; maç sonucu kariyere işlenmez. Hedef bilgisayarda Steam üzerinden oynanan bir oyundur; tarayıcı geliştirme yolu ve Windows/Electron çevrimdışı denemesi bulunur. Görseller kodla üretilir.
 
+**Onaylı içerik yönü:** Kulübün kimliği ve geçmişi korunurken devralınan koşullar değişebilir. Yazılmış olaylar mevcut durumdan, insanlardan ve kararlardan doğar; bütün sezonun olay sırası önceden belirlenmez. Önlenen sorunlar geri zorlanmaz, iyi yönetim sakin dönem ve daha az iş yükü sağlayabilir. Bu model henüz uygulanmadı; mevcut sabit TEST haftası doğrulanmış yeni akışla değiştirilecek. Tarihsel esinler ve içerik taslakları [olay kütüphanesindedir](OLAY_KUTUPHANESI.md).
+
 ## Oyunu açmak
 
 - [GitHub Pages adresi](https://frkckr.github.io/chairman/): yayınlanan sürüm için depo adresi; yerel değişiklikler otomatik olarak yayına çıkmaz.
@@ -31,6 +33,7 @@ Mevcut kulüp adı **Demirkapı SK**. Nihai ad ve şehir ayrıca seçilecek. Ayr
 | Belge | İçerik |
 |---|---|
 | [OYUN_TASARIMI.md](OYUN_TASARIMI.md) | Yaşayan kulüp, meseleler, zaman/tempo, ekip, uzun kariyer ve açık tasarım konuları |
+| [OLAY_KUTUPHANESI.md](OLAY_KUTUPHANESI.md) | Kaynaklı 23 tarihsel örnek, 14 olay paketi, 6 koşullu birleşim ve içerik bağımlılıkları; henüz uygulanmış içerik değildir |
 | [TEKNIK_PLAN.md](TEKNIK_PLAN.md) | Mevcut mimari, ortak mesele verisi, kontrollü zaman, gün içi kayıt ve Steam hazırlığı |
 | [YOL_HARITASI.md](YOL_HARITASI.md) | Bağımlılıklara göre geliştirme sırası, kabul koşulları ve sıradaki iş |
 | [STIL_REHBERI.md](STIL_REHBERI.md) | Mevcut görsel dil ve yeni sahnelerin sunum ilkeleri |
@@ -50,4 +53,6 @@ python3 araclar/akis-deneme.py
 
 İlk araç tarayıcı hatalarını ve ekran görüntüsünü kontrol etmek içindir; Python, Playwright/Chromium ve npm/tar gerektirir. İkinci araç Node.js ile maç motorunu görüntüsüz çalıştırır ve istatistiklerini raporlar. Raporun hedef dışı satırları ayrıca değerlendirilir. Üçüncü araç kariyer verisini, takvimi, para kaydını, kayıt/yüklemeyi, meseleleri ve ilerlemeyi tarayıcısız dener. Dördüncü araç gerçek ekranı tıklayarak günlük akışı, gün içi kaydı ve sürüm 1 kayıtlarının açılışını dener. Yalnızca belge değişikliklerinde bağlantı ve tutarlılık kontrolü yapılır.
 
-**Sıradaki geliştirme:** [yol haritası Aşama 2](YOL_HARITASI.md#aşama-2--yaşayan-kulüpte-günlük-başkanlık), **2.5 — aydınlık başkan odası**; önce küçük bir oda prototipi gösterilip onaylanır. Ardından görüşme/ekip (2.6) ve antrenman/telefon akışı gelir. Aşama 1, 2.1, 2.3 ve 2.4 tamamlandı; 2.2'nin ilk adımı uygulandı. Tam sezon yeni Aşama 5'te, kapsamlı adaylık hikâyesi Aşama 6'da sınanacak. Değişiklikler yerel dalda (`mesele-ve-kayit`); yayınlanmış sürüm güncellenmedi.
+**Sıradaki geliştirme:** [yol haritası Aşama 2](YOL_HARITASI.md#aşama-2--yaşayan-kulüpte-günlük-başkanlık), **2.4A — değişken başlangıç ve koşula bağlı olay denemesi**. Mevcut ajandada dar bir ödeme/sponsor örneği farklı koşullarla sınanacak; yeni akış doğrulanınca eski sabit oyuncu içeriğinin yerini alacak. Sonrasında 2.5 aydınlık oda, 2.6 görüşme/ekip, 2.7 antrenman/telefon ve 2.8 hafıza gelir. Ayrıntılı sıra ve kabul koşullarının tek kaynağı yol haritasıdır.
+
+Aşama 1, 2.1, 2.3 ve 2.4 tamamlandı; 2.2 kısmen uygulandı. 2.3–2.4 kodu [PR #8](https://github.com/frkckr/chairman/pull/8) ile `main` dalına birleşti. Tam sezon Aşama 5'te, kapsamlı adaylık hikâyesi Aşama 6'da sınanacak. Bu içerik planı güncellemesi oyun kodunu, Pages dağıtımını veya masaüstü paketini güncellemiş sayılmaz.

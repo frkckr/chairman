@@ -6,11 +6,14 @@ Bu talimatlar bütün geliştirme araçları için geçerlidir. Kalıcı proje b
 
 Oturum başında bu dosyayı, ardından [YOL_HARITASI.md](YOL_HARITASI.md) ve [STIL_REHBERI.md](STIL_REHBERI.md) dosyalarını oku. Oyun davranışı veya içerik çalışmadan önce [OYUN_TASARIMI.md](OYUN_TASARIMI.md), kod veya mimari çalışmadan önce ayrıca [TEKNIK_PLAN.md](TEKNIK_PLAN.md) içindeki ilgili bölümleri oku.
 
+Başlangıç, olay veya karar içeriği üzerinde çalışırken ayrıca [OLAY_KUTUPHANESI.md](OLAY_KUTUPHANESI.md) dosyasındaki ilgili paketleri ve durum/bağımlılık tablosunu oku. Katalogdaki her fikir uygulanacak sıradaki iş değildir.
+
 - [README.md](README.md): projenin kısa tanıtımı, bugün çalışanlar ve açılış bilgileri.
 - OYUN_TASARIMI: onaylı oyun yönü, tasarım ilkeleri ve açık ürün kararları.
 - TEKNIK_PLAN: mevcut mimari, hedef altyapı ve teknik kabul koşulları.
 - YOL_HARITASI: iş sırası, bağımlılıklar, tamamlanma durumu ve sıradaki adım.
 - STIL_REHBERI: mevcut görsel dil ve yeni sahnelerin sunum kuralları.
+- OLAY_KUTUPHANESI: kaynaklı tarihsel esinler, kurgusal olay paketleri ve koşula bağlı birleşim örnekleri. Oyun ilkeleri OYUN_TASARIMI'nda, geliştirme sırası YOL_HARITASI'nda kalır.
 
 Bir kararın ayrıntısını tek belgede tut, diğerlerinden bağlantı ver. Bugün çalışan özellik, onaylı hedef, uygulama önerisi ve açık karar birbirinden ayrılmalıdır. Kullanıcının güncel açık kararı önceliklidir; açık kararları sessizce kesinleştirme.
 
@@ -20,6 +23,7 @@ Bir kararın ayrıntısını tek belgede tut, diğerlerinden bağlantı ver. Bug
 - Başarılı final, Avrupa'nın en büyük kulüp kupasını kazanıp görevi bırakmaktır. Kupa kazanılmadan da kariyer bitebilir. Ayrıntılar OYUN_TASARIMI'ndadır.
 - Oyuncu başkanı yönetir; teknik direktörün kadro ve saha kararları ona aittir. Futbolcu ve teknik direktör yetenek puanları kullanıcıya gösterilmez.
 - Onaylı günlük deneyim (2026-09-30): aydınlık kulüp mekânlarında tek meseleye odaklanma; gerektiğinde açılan telefon/ajanda; tavsiye ve yetki devri; eylemle ilerleyen, okurken duran zaman. Kurallar OYUN_TASARIMI, sunum STIL_REHBERI içindedir. Süre aralıkları ölçüm hedefidir, kesin denge değildir.
+- Onaylı içerik yönü (2026-09-30): sabit kulüp kimliği/geçmişi, tutarlı fakat değişken devralma koşulları, mevcut dünyadan ve kararlardan doğan yazılmış olaylar, sınırlı adil belirsizlik ve kalıcı hafıza. Sezonun olay sırası başlangıçta yazılmaz; paket birleşimleri zorunlu hikâye yolları değildir. Önlenen sorun geri zorlanmaz, iyi yönetim sakin dönem ve daha az iş yükü sağlayabilir. Ayrıntı OYUN_TASARIMI §3 ve §10'dadır; bu yön henüz kodda uygulanmadı.
 - Mevcut uygulama; 3B maç günü, kariyer/takvim/para/kayıt temeli, ilk ajanda haftası, sayman/sponsor denemesi, sponsor konusunun mesele olarak takibi, “İlerle” ile durma noktalarına ilerleme ve gün içi karar kaydıdır. Maç sonucu kariyere bağlı değildir. Yeni mekân/telefon akışı henüz hedeftir.
 - Mevcut kulüp adı Demirkapı SK'dır; nihai isim ve şehir açık karardır. Türkiye gerçektir; kulüpler, kişiler ve markalar kurgusaldır. İlk içerik dili Türkçedir.
 
@@ -41,6 +45,7 @@ Bir kararın ayrıntısını tek belgede tut, diğerlerinden bağlantı ver. Bug
 - İşe başlamadan Git durumunu kontrol et, mevcut kullanıcı değişikliklerini koru. İstenmeden commit, push veya yayın yapma.
 - Yol haritasındaki sırayla, küçük ve doğrulanabilir adımlarla ilerle. Yalnızca tamamlanan ve kontrol edilen maddeleri işaretle. Yeni kararları ilgili ana belgeye, yön değişikliklerinin tarihli özetini yol haritasına yaz.
 - Güncel öncelik yaşayan kulüpte günlük başkanlıktır. Tam sezon, kapsamlı adaylık hikâyesinden önce sınanır. Sıradaki somut iş ve bütün bağımlılıklar YOL_HARITASI'nda tutulur; bu kısa özet ikinci bir iş listesi değildir.
+- Sonraki işi planlarken yol haritasının güncel “Sıradaki geliştirme” bölümünü esas al. Yeni içerik, mevcut mesele/takvim/para/kayıt temelini kullanır; bütün olay kataloğunu veya büyük bir hikâye motorunu tek adımda uygulama. Eski sabit oyuncu içeriği doğrulanmış yeni akışla değiştirilir; eski kayıt uyumluluğu ve test örnekleri bu temizlikte korunur.
 - Yerel değişiklik, yayınlanmış değişiklik değildir. Doğrulanmadan GitHub Pages veya Steam sürümünün güncellendiğini söyleme.
 
 ## Kontrol

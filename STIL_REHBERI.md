@@ -108,6 +108,17 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 - Tarih/saat, zamanın durduğu an ve başlatılan ilerleme görünür biçimde anlaşılır. Oyun kuralları [OYUN_TASARIMI §6](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo) içinde tutulur.
 - Oyuna dönüşte son karar, beklenen haberler ve yaklaşan önemli tarih kısa özetle hatırlatılır. Gün içi kayıt sınırı ve son başarılı kayıt doğru anlatılır. Bu ilke mevcut ajanda ekranında uygulanmıştır (2.4); aydınlık oda sunumu henüz yoktur.
 
+### Koşula bağlı olayların sunumu
+
+**Onaylı hedef (2026-09-30; henüz uygulanmadı):** Aynı olay ailesi farklı kariyerlerde farklı koşullarla sunulabilir. Ekran şablonu yeniden kullanılabilir; yalnız kişi adı, renk veya tutar değiştirerek içerik çeşitliliği sağlandığı varsayılmaz. Mevcut koşullar, bilgi ve seçenekler ortak mesele verisinden gelir.
+
+- Yeni kariyerin gündemi gerçekte oluşmuş işlerden çıkar; her açılışta aynı kriz kartı zorla gösterilmez. Sakin anda oda ve isteğe bağlı girişimler erişilebilir kalır.
+- Mesajda gönderen, haberin zamanı, neyin doğrulanmış bilgi, neyin yorum olduğu ve varsa cevap son tarihi anlaşılır olur. Bilginin kaynağı görünürdür; gizli dünya gerçeği veya gelecekteki olay zinciri oyuncuya dökülmez.
+- Olay ailesinin veya test başlangıcının geliştirici kodu oyuncuya gösterilmez. “P01”, tohum, içerik sürümü ve teknik tetikleme gerekçesi oyun arayüzünün parçası değildir.
+- Seçenek, bilinen maliyeti ve taahhüdü anlatır; belirsiz sonuç kesin başarı gibi veya her durumda doğru seçenek vurgusuyla sunulmaz. Kararın ardından gerçekten oluşan sonuç ile beklenen haber ayrılır.
+- Yetki içinde çözülen rutinler özette görünür. Haber gelişini fark ettirmek sürekli açılan pencere, zorunlu mekân değiştirme veya her mesajda onay isteme gerektirmez.
+- Tutulan küçük söz, teşekkür, fotoğraf ve tamamlanan bakım gibi izler gerçek geçmişe bağlanır. İyi yönetimin sağladığı sakinlik görsel/sesli kriz efektleriyle doldurulmaz. Ayrıntılı örnekler [olay kütüphanesindedir](OLAY_KUTUPHANESI.md); ilk kalıcı iz yol haritası 2.8'dedir.
+
 ### Bilginin sınırları
 
 - Futbolcu ve teknik direktörün gizli yetenek/potansiyel puanları gösterilmez. Yıldız, harf notu veya renkli genel güç çubuğu da aynı bilginin dolaylı gösterimi olamaz.
