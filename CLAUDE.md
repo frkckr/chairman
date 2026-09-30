@@ -19,7 +19,8 @@ Bir kararın ayrıntısını tek belgede tut, diğerlerinden bağlantı ver. Bug
 - Türkiye'de geçen, tek kurgusal kulüpte uzun bir başkanlık kariyeri. Taraftarlıktan adaylığa, başkanlığa, seçim kaybında kulübü dışarıdan takip etmeye ve yeniden adaylığa uzanır.
 - Başarılı final, Avrupa'nın en büyük kulüp kupasını kazanıp görevi bırakmaktır. Kupa kazanılmadan da kariyer bitebilir. Ayrıntılar OYUN_TASARIMI'ndadır.
 - Oyuncu başkanı yönetir; teknik direktörün kadro ve saha kararları ona aittir. Futbolcu ve teknik direktör yetenek puanları kullanıcıya gösterilmez.
-- Bu kariyer sistemleri hedeftir. Mevcut uygulama, maç motoruna bağlı bir 3B maç günü prototipidir.
+- Onaylı günlük deneyim (2026-09-30): aydınlık kulüp mekânlarında tek meseleye odaklanma; gerektiğinde açılan telefon/ajanda; tavsiye ve yetki devri; eylemle ilerleyen, okurken duran zaman. Kurallar OYUN_TASARIMI, sunum STIL_REHBERI içindedir. Süre aralıkları ölçüm hedefidir, kesin denge değildir.
+- Mevcut uygulama; 3B maç günü, kariyer/takvim/para/kayıt temeli, ilk ajanda haftası ve sayman/sponsor denemesidir. Maç sonucu kariyere bağlı değildir. Yeni mekân/telefon akışı ve gün içi karar kaydı henüz hedeftir.
 - Mevcut kulüp adı Demirkapı SK'dır; nihai isim ve şehir açık karardır. Türkiye gerçektir; kulüpler, kişiler ve markalar kurgusaldır. İlk içerik dili Türkçedir.
 
 ## Mevcut kod ve mimari
@@ -28,7 +29,7 @@ Bir kararın ayrıntısını tek belgede tut, diğerlerinden bağlantı ver. Bug
 - Mevcut maç motorunu koruyarak küçük adımlarla ilerle. Kariyer ile motor arasına açık bir veri bağlantısı kur; yönetim sistemlerini sahne dosyalarına yığma.
 - Ortak görsel ayarlar `js/stil-99.js` üzerinden yönetilir. Dağınık görsel sabitler değiştirildikçe uygun yere taşınır. Stadyum ve maç günü gibi içerikler tariflerden okunur.
 - Three.js r128 bugün CDN'den yüklenir. Derleme aracı yoktur. Betikler `index.html` içinde sırayla yüklenen klasik betiklerdir; yükleme sırasını ve paylaşılan üst düzey adları kontrol et.
-- Kayıt/yükleme, sürüm geçişleri ve çevrimdışı masaüstü denemesi yol haritasının erken aşamasındadır. Modül veya paketleme değişikliği somut gereksinime göre yapılır; motor değişikliği varsayılmaz.
+- Kayıt/yükleme ve Windows/Electron çevrimdışı masaüstü denemesi yapılmıştır; bugün oyun yalnız gün sınırında kaydeder. Gün içi kayıt ve dönüş özeti yeni akışın erken işleridir. Modül veya paketleme değişikliği somut gereksinime göre yapılır; motor değişikliği varsayılmaz.
 - Tarayıcı prototipinde `index.html` depo kökünde, yollar göreli kalır. Steam hedefi için platform işlemleri oyun mantığından ayrılır.
 - Mevcut '99 görsel dili referanstır. Tüm oyun görselleri kodla üretilir; harici model, doku veya fotoğraf kullanımı ayrıca kararlaştırılmalıdır. Reddedilen görsel konseptler uygulanmaz.
 
@@ -39,6 +40,7 @@ Bir kararın ayrıntısını tek belgede tut, diğerlerinden bağlantı ver. Bug
 - Depodan öğrenilebilecek şeyleri kullanıcıya sorma. Gerçek tercih ve kapsam kararlarını gerektiğinde sor.
 - İşe başlamadan Git durumunu kontrol et, mevcut kullanıcı değişikliklerini koru. İstenmeden commit, push veya yayın yapma.
 - Yol haritasındaki sırayla, küçük ve doğrulanabilir adımlarla ilerle. Yalnızca tamamlanan ve kontrol edilen maddeleri işaretle. Yeni kararları ilgili ana belgeye, yön değişikliklerinin tarihli özetini yol haritasına yaz.
+- Güncel öncelik yaşayan kulüpte günlük başkanlıktır. Tam sezon, kapsamlı adaylık hikâyesinden önce sınanır. Sıradaki somut iş ve bütün bağımlılıklar YOL_HARITASI'nda tutulur; bu kısa özet ikinci bir iş listesi değildir.
 - Yerel değişiklik, yayınlanmış değişiklik değildir. Doğrulanmadan GitHub Pages veya Steam sürümünün güncellendiğini söyleme.
 
 ## Kontrol

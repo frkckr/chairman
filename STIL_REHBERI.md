@@ -1,6 +1,6 @@
 # Chairman — stil rehberi
 
-Bu belge mevcut maç prototipinin görsel dilini ve planlanan kariyer sahnelerinin sunum ilkelerini tanımlar. **Gelecek sahnelere ilişkin kurallar, o sahnelerin bugün yapıldığı anlamına gelmez.** Oyun kapsamı [OYUN_TASARIMI.md](OYUN_TASARIMI.md), yapım sırası [YOL_HARITASI.md](YOL_HARITASI.md) içindedir.
+Son güncelleme: 2026-09-30. Bu belge mevcut maç prototipinin görsel dilini ve planlanan kariyer sahnelerinin sunum ilkelerini tanımlar. **Gelecek sahnelere ilişkin kurallar, o sahnelerin bugün yapıldığı anlamına gelmez.** Oyun kapsamı [OYUN_TASARIMI.md](OYUN_TASARIMI.md), yapım sırası [YOL_HARITASI.md](YOL_HARITASI.md) içindedir.
 
 Ortak görsel ayarlar `js/stil-99.js` üzerinden yönetilir. İlgili dosyalarda kalan sabitler değiştirilirken uygun ortak ayarlara taşınır. Bu belge bütün sayısal değerleri tekrar eden bir envanter değildir.
 
@@ -30,6 +30,10 @@ Gece sahnesinde sıcak projektör sarısı, gece laciverti ve sis kullanılır. 
 - Mevcut gece gölgeleri, oyuncunun kemiklerine bağlı kutuların projektörden zemine izdüşümüdür (`js/golgeler.js`). Kol ve bacaklarla hareket eder; top da gölge verir.
 - Aynı ışığın gölgesi stencil ile aynı pikseli bir kez koyulaştırır; farklı ışıklar üst üste gelebilir.
 - Gündüz, hava durumu ve bunlara uygun gölge düzenleri gelecekteki iştir. Bugünkü gece sahnesinin tamamlanmış alternatifleri sayılmaz.
+
+**Onaylı hedef (2026-09-30):** Kulüp odası, görüşme ve antrenman ortamları ilk kapsamda aydınlık sunulur. Yönetim arayüzünde açık zemin, koyu okunabilir metin, sıcak kâğıt/ahşap tonları ve ölçülü kulüp renkleri kullanılır. Ajanda, raporlar, telefon ve maç öncesi bültenin yönetim sunumu bu yöne uyarlanır. Kesin renk değerleri ilk sahnede sınanır; bugünkü renk tablosu yeni açık paletin tamamlandığı anlamına gelmez.
+
+Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve gözlem örneği, bütün statlara gündüz/hava sistemi eklenmesini beklemez; kapsamlı saat, hava ve gölge çeşitliliği sonraki iştir.
 
 ## 3. Kodla üretilen görseller
 
@@ -70,15 +74,18 @@ Gece sahnesinde sıcak projektör sarısı, gece laciverti ve sis kullanılır. 
 
 - Hikâyenin başındaki taraftar yeri, görevdeki başkanın yeri, deplasman protokolü ve seçimi kaybetmiş kişinin misafir/loca konumu birbirinden ayrılır. Mevcut açık tribün kuralı bütün kariyeri aynı koltuğa hapsetmez.
 - Deplasmanda ev sahibi yöneticiler ve ilişkiler oturma düzenini etkileyebilir. Kimin yanında oturduğu veriyle belirlenir; her ilişki için yeni stat üretilmez.
-- Ofis, toplantı alanı, basın alanı ve antrenman izleme yeri tekrar kullanılabilir. Kesin mekân listesi ilgili aşamada belirlenir.
+- İlk kapsam başkan odası/görüşme alanı ve antrenman kenarıdır; mevcut stat deneyimine bağlanır. Basın alanı ve diğer yerler ihtiyaç oluştuğunda genişletilir. Aynı oda farklı görüşmelerde yeniden kullanılır; her konu için yeni mekân gerekmez.
+- Telefon, ajanda ve ilgili dosya bulunduğun ortamdan erişilebilir olur. Etkileşimler görünür ve anlaşılırdır; oyuncu gerekli bilgiye ulaşmak için gizli nesne aramaya veya uzun geçişleri tekrar izlemeye zorlanmaz.
+- Ortam değişiminde aynı mesele, insanlar ve önceki kararlar devam eder. Kamera ve küçük çevre hareketleri dikkati o anki konu üzerinde tutar.
 - Fotoğraflar, kupalar ve tanıdık çalışanlar kulüp hafızasını taşır. Geçmişe ait bir nesne, bağlı olduğu olay gerçekleşmeden varmış gibi gösterilmez.
 
 ## 7. Arayüz ve bilgi
 
+### Bugünkü uygulama
+
 - Stat içindeki pano, pankart ve skor tabelalarında mevcut Türkçe karakterli 3×5 piksel yazı kullanılır.
 - Maç görüntüsünde TV yayın bandı, radar veya oyuncu etiketi bulunmaz. Dürbün maskesi vardır; skor ve dakika stat tabelasından, ayrıca görüntünün dışındaki radyo satırından izlenir.
-- Planlanan yönetim ekranlarında uzun metinler okunabilir yazıyla, açık seçenekler ve belirgin sonuç bilgisiyle sunulur. Bütün arayüzü 3×5 yazıya sıkıştırma.
-- Mevcut ilk yönetim ekranı maç öncesi bültenidir (`js/ekran-mac-oncesi.js`). 4:3 oyun karesinde açılır; stat arkada donuk kalır ve koyu panelle büyük ölçüde örtülür. Ölçüler oyun karesiyle birlikte değişir, kaydırma kullanılmaz ve ana eylem sağ altta belirgindir.
+- Maç öncesi bülteni (`js/ekran-mac-oncesi.js`) 4:3 oyun karesinde açılır; stat arkada donuk kalır ve koyu panelle büyük ölçüde örtülür. Ölçüler oyun karesiyle birlikte değişir, kaydırma kullanılmaz ve ana eylem sağ altta belirgindir.
 - Ajanda ekranı (`js/ekran-ajanda.js`) oyunun açılış ekranıdır ve bültenin düzenini izler: aynı 4:3 kare, `cqw` ölçüleri, panel başlıkları ve `STIL.menu` renkleri, kaydırma yok, ana eylem (“Günü bitir”, maç günü “Stada git”) sağ altta.
   - Zorunluluk etiketlerinde zorunlu kırmızı, ertelenebilir amber, isteğe bağlı soluk renkle gösterilir.
   - Kaçırılacak işler ve engeller ilgili düğmenin yanında kırmızı metinle önceden yazılır; kaçırtan eylem satır içi onay ister.
@@ -86,13 +93,31 @@ Gece sahnesinde sıcak projektör sarısı, gece laciverti ve sis kullanılır. 
   - Karar işlerinde seçenekler ayrıntı panelinde alt alta listelenir; seçilen seçenek amber kenarla işaretlenir, seçim yapılmadan ana düğme kapalı kalır.
   - Yönetim adayları meslek, güçlü ve zayıf yanlar ve beklenti metniyle tanıtılır; katkı için sayı, seviye ya da çubuk gösterilmez.
 - Bülten başlıklarında piksel görünümlü `Jersey 10`, metinlerde `IBM Plex Mono`; ana vurguda tabela amberi, takım ayrımında kırmızı ve lacivert kullanılır. Olası 11 küçük sahada forma renkli ve numaralı işaretlerle gösterilir. Menü renkleri `STIL.menu` içindedir.
+
+### Onaylı hedef: mekân içinde tek konuya odaklanma
+
+**2026-09-30 tasarım kararı; henüz uygulanmadı.** Yukarıdaki koyu paneller, kaydırmasız düzen ve ajandayla açılış mevcut prototipi anlatır. Yeni akış aşağıdaki kurallarla geliştirilir:
+
+- Ortam görünür kalır; görüşme veya karar sırasında odaktaki kişi/konu öne çıkar. Kulübün bütün göstergeleri sürekli aynı ekrana yığılmaz.
+- Telefon, ajanda, rapor ve mali ayrıntılar gerektiğinde açılır, kapatıldığında bulunulan ortama dönülür. Aynı mesele başka kanaldan açıldığında geçmişi ve durumu korunur.
+- Ekranda meselenin kısa özeti, ilgili kişi, başkandan beklenen karar ve varsa son tarih anlaşılır olur. Ayrıntılar isteğe bağlı açılır; bilgi saklamak için küçük yazı veya belirsiz nesne kullanılmaz.
+- Rutin haberler kısa özette toplanır. Önemli mesaj sahneyi sürekli kapatmadan fark edilir; oyuncu mesajı açıp cevaplayabilir, tavsiye isteyebilir veya yetki devredebilir. Aynı anda birden fazla zorunlu karar penceresi açılmaz.
+- Görüşmede tavsiye, taahhüt ve karar farklı anlamlarıyla gösterilir. Süre ve bilinen sonuç/çakışmalar eylemden önce anlaşılır olur. Bir mesajın okunması işi bitirmiş gibi sunulmaz.
+- Uzun metinler okunabilir yazıyla, açık zemin üzerinde yeterli kontrastla gösterilir. Maçın 640×480 iç çözünürlüğü veya bugünkü menü ölçüleri yeni metin düzenini zorunlu olarak sınırlamaz; pencere boyutu ve yazı büyüklüğü birlikte sınanır.
+- Tarih/saat, zamanın durduğu an ve başlatılan ilerleme görünür biçimde anlaşılır. Oyun kuralları [OYUN_TASARIMI §6](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo) içinde tutulur.
+- Oyuna dönüşte son karar, beklenen haberler ve yaklaşan önemli tarih kısa özetle hatırlatılır. Gün içi kayıt sınırı ve son başarılı kayıt doğru anlatılır.
+
+### Bilginin sınırları
+
 - Futbolcu ve teknik direktörün gizli yetenek/potansiyel puanları gösterilmez. Yıldız, harf notu veya renkli genel güç çubuğu da aynı bilginin dolaylı gösterimi olamaz.
 - Yaş, boy, ücret, sözleşme süresi, maç istatistiği, tarih ve bütçe gibi başkanın öğrenebileceği bilgiler gösterilebilir. Görüş ile doğrulanmış olgu ayrılır.
-- Telefon bildirimleri ve gündem, sahneyi sürekli kapatmadan erişilebilir olmalıdır. Aynı anda birden çok zorunlu karar penceresi açılmaz.
+- Yönetim adaylarının bugünkü metin profilleri TEST sunumudur; katkının nihai gösterimi açık karardır. Futbolcu ve teknik direktör puanlarını gizleme kuralı kesindir.
 
 ## 8. Baskı ve erişilebilirlik
 
 - Zaman sınırlı cevap, flaş ve kamera sarsıntısı yalnızca uygun sahnelerde kullanılır. Sürekli stres efekti temel oyun ritmi değildir.
 - Süre soru okunabilir olduktan sonra başlar. Süreyi uzatma, flaş ve sarsıntıyı azaltma seçenekleri planlanan sunumun parçasıdır.
 - Erişilebilirlik ayarı gizlice sportif zorluk cezasına dönüştürülmez. Oyuncu bilgiye yetişemediği için yanlış seçeneğe zorlanmamalıdır.
-- Yeni atmosfer ayrıntıları ve ses çalışmaları, başkanlık döngüsü ile kayıt sistemi kurulduktan sonra yol haritasındaki sırasıyla ele alınır.
+- Temel okunabilirlik, yazı büyüklüğü ve ortam sesi/ses kontrolü ilk yaşayan kulüp bölümünün kabul koşuludur. Kapsamlı seslendirme, kalabalık çeşitliliği ve atmosfer ayrıntıları sonraki aşamalarda geliştirilir.
+- Takvim dururken küçük ortam hareketleri veya sesleri devam edebilir; saat ve karar durumu bununla karıştırılmaz. Antrenman gözleminde telefon kararına geçiş anlaşılır olur, bilgi karar okunurken değişmez.
+- Bildirimler ve temel sesler sürekli baskı üretmez. Sakin kulüp anları ve iyi yönetimin sağladığı rahatlık sunumda da hissedilir.

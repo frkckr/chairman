@@ -2,7 +2,9 @@
 
 Türkiye'de tek bir kurgusal futbol kulübünde, taraftarlıktan başkanlığa uzanan uzun kariyer oyunu. Yönetim ekibini kurmak, seçimlere girmek, teknik direktörü seçmek, mali kararlar almak ve baskıyla yaşamak üzerine kurulur. Nihai başarı Avrupa'nın en büyük kulüp kupası ve ardından vedadır; kariyer bu başarıya ulaşmadan da bitebilir.
 
-**Bugünkü uygulama bir 3B maç günü prototipi ve ona bağlanan ilk ajanda haftasıdır.** Oyun başkanın ajandasıyla açılır; maçtan önceki hafta gün gün oynanır, gün sonunda kaydedilir ve Cumartesi maçına gidilir. Seçim, yönetim ekibi ve ekonomi sistemleri henüz oynanabilir değil; maç sonucu kariyere işlenmez. Hedef bilgisayarda Steam üzerinden oynanan bir oyundur; geliştirme şu anda tarayıcıda sürer. Görseller kodla üretilir ve mevcut görünüm '99 dönemi futbol oyunlarından esinlenir.
+**Onaylı deneyim hedefi:** Başkanın odasında gündemi öğrenmek, insanlarla görüşmek, antrenman kenarında gelen telefona cevap vermek ve işleri ekibe devrederek kulübü yaşamak. Günlere yayılan meseleler aynı geçmişle takip edilir; ajanda ve raporlar gerektiğinde açılır. Aydınlık kulüp ortamları ve açık renkli yönetim sunumu, mevcut '99 görsel diliyle geliştirilir. Zaman eylemlerle ilerler, okurken ve düşünürken durur; sakin dönemler önemli gelişmelere ilerleyerek geçilebilir. Bu yeni akış henüz uygulanmadı.
+
+**Bugünkü uygulama bir 3B maç günü prototipi, kariyer temeli ve ilk ajanda haftasıdır.** Oyun başkanın ajandasıyla açılır; maçtan önceki hafta gün gün oynanır, gün sonunda kaydedilir ve Cumartesi maçına gidilir. Sayman seçimi, sponsor işini devretme, para hareketleri ve bekleyen ödemelerin ilk örneği oynanabilir. Tam yönetim/ekonomi, sözleşme, seçim ve sezon sistemleri tamamlanmadı; maç sonucu kariyere işlenmez. Hedef bilgisayarda Steam üzerinden oynanan bir oyundur; tarayıcı geliştirme yolu ve Windows/Electron çevrimdışı denemesi bulunur. Görseller kodla üretilir.
 
 ## Oyunu açmak
 
@@ -28,8 +30,8 @@ Mevcut kulüp adı **Demirkapı SK**. Nihai ad ve şehir ayrıca seçilecek. Ayr
 
 | Belge | İçerik |
 |---|---|
-| [OYUN_TASARIMI.md](OYUN_TASARIMI.md) | Onaylı oyun yönü, kariyer, seçimler, başkanlık kararları ve açık tasarım konuları |
-| [TEKNIK_PLAN.md](TEKNIK_PLAN.md) | Mevcut mimari, hedef veri yapısı, kayıt, zaman ve Steam hazırlığı |
+| [OYUN_TASARIMI.md](OYUN_TASARIMI.md) | Yaşayan kulüp, meseleler, zaman/tempo, ekip, uzun kariyer ve açık tasarım konuları |
+| [TEKNIK_PLAN.md](TEKNIK_PLAN.md) | Mevcut mimari, ortak mesele verisi, kontrollü zaman, gün içi kayıt ve Steam hazırlığı |
 | [YOL_HARITASI.md](YOL_HARITASI.md) | Bağımlılıklara göre geliştirme sırası, kabul koşulları ve sıradaki iş |
 | [STIL_REHBERI.md](STIL_REHBERI.md) | Mevcut görsel dil ve yeni sahnelerin sunum ilkeleri |
 | [CLAUDE.md](CLAUDE.md) | Bütün geliştirme araçları için çalışma ve doğrulama talimatları |
@@ -47,4 +49,4 @@ node araclar/kariyer-deneme.js
 
 İlk araç tarayıcı hatalarını ve ekran görüntüsünü kontrol etmek içindir; Python, Playwright/Chromium ve npm/tar gerektirir. İkinci araç Node.js ile maç motorunu görüntüsüz çalıştırır ve istatistiklerini raporlar. Raporun hedef dışı satırları ayrıca değerlendirilir. Üçüncü araç kariyer verisini, takvimi, para kaydını ve kayıt/yüklemeyi tarayıcısız dener. Yalnızca belge değişikliklerinde bağlantı ve tutarlılık kontrolü yapılır.
 
-**Sıradaki geliştirme:** yol haritası 2.2'nin kapsamını değerlendirmek (ilk adımı uygulandı), ardından 2.3 — hoca görüşmesi ve bütçe önceliği. Aşama 1 ve 2.1 (ajanda ve kulüp durumu) tamamlandı.
+**Sıradaki geliştirme:** [yol haritası Aşama 2](YOL_HARITASI.md#aşama-2--yaşayan-kulüpte-günlük-başkanlık), **2.3 — mevcut sponsor örneği üzerinden mesele ve zaman temeli**. Ardından gün içi kayıt, aydınlık oda, görüşme/ekip ve antrenman/telefon akışı gelir. Aşama 1 ve 2.1 tamamlandı; 2.2'nin ilk adımı uygulandı. Tam sezon yeni Aşama 5'te, kapsamlı adaylık hikâyesi Aşama 6'da sınanacak. 2026-09-30 belge güncellemesi bu planı kaydeder; oyun kodunu veya yayınlanan sürümü değiştirmez.
