@@ -1,6 +1,6 @@
 # Chairman — oyun tasarımı
 
-Son güncelleme: 2026-09-29. Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md).
+Son güncelleme: 2026-09-30. Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md).
 
 ## 1. Amaç ve kararların durumu
 
@@ -33,9 +33,26 @@ Başkan teknik direktörü ve yönetimini seçer, bütçe ve öncelikleri belirl
 
 Başkan hocayla oyuncu tercihleri hakkında görüşebilir. Müdahale, hocanın otoritesi ve ilişki üzerinde sonuç doğurur; günlük oyun bir teknik direktör kadro ekranına dönüşmez. Rutin araştırma ve pazarlıklar, bütçe ve yetki sınırlarıyla ekibe bırakılabilir.
 
-Ana döngü:
+### Yaşayan kulüp ve devam eden meseleler
 
-> Ajandayı ve kulübün durumunu gör → bilgi topla ve insanlarla görüş → karar ver veya yetki devret → gelişmeleri yaşa → maçı izle → sonuçlar, ilişkiler ve yeni gündemle devam et.
+**Onaylı tasarım yaklaşımı (2026-09-30):** Günlük başkanlık, karakterin bulunduğu mekânda ve o an ilgilendiği konuya odaklanarak yaşanır. Başkanın odası, görüşme alanı, antrenman kenarı ve stat farklı durumlara ev sahipliği yapar. Telefon, ajanda, raporlar ve mali bilgiler gerektiğinde açılır; bütün kulüp göstergeleri sürekli aynı ekranda tutulmaz. Ajanda, işleri ve zamanı takip etme görevini sürdürür. Açık renkli sunumun kuralları [stil rehberindedir](STIL_REHBERI.md#7-arayüz-ve-bilgi).
+
+Hedef ana döngü:
+
+> Bulunduğun yerde gündemi öğren → bir meseleye odaklan veya girişim başlat → görüş, tavsiye al, karar ver veya yetki devret → gelişmeleri kulüpte yaşa → maçı izle → sonuçlar, ilişkiler ve yeni gündemle devam et.
+
+Bir sponsorluk, transfer veya yatırım; günlere yayılan tek bir mesele olarak takip edilir. Telefon mesajı, toplantı, ekip çalışması ve sonuç aynı meselenin geçmişine bağlanır. Mesaj gelmesi aynı işi ayrı bir görev olarak çoğaltmaz.
+
+Meselede oyuncunun anlayacağı bilgiler:
+
+- Şu an ne olduğu ve bilginin kaynağı.
+- Kimlerin ilgili olduğu ve işi kimin yürüttüğü.
+- Başkanın kararının gerekip gerekmediği.
+- Son tarih, verilmiş sözler ve geçerli yetki sınırları.
+- Sonraki adım veya beklenen haber; zamanı bilinmiyorsa bu belirsizlik.
+- Önceki kararlar ve bunların bilinen sonuçları.
+
+Bekleyen veya ekibe devredilmiş konular arka planda takip edilir. Rutin gelişmeler kısa özette toplanır; yeni karar gerektiren haber öne çıkar. Başkan görüşme ayarlama, sponsor arayışı açma, araştırma isteme ve yatırım ihtiyacını inceletme gibi girişimler başlatabilir. Bu girişimler ilgili sistem hazır oldukça eklenir.
 
 Oyuncu; kararın konusunu, bilinen maliyetini, verilen taahhüdü ve belirsiz kalan noktaları anlayabilmelidir. Her kararın hemen olumlu veya olumsuz sonucu çıkması gerekmez. Bazı sonuçlar haftalar ya da yıllar sonra hatırlanır.
 
@@ -52,6 +69,8 @@ Başlangıç ayrı sahnelerle gelişir:
 
 Girişe sabit bir kısa süre sınırı konmaz. Buna rağmen oyuncu erken aşamada anlamlı seçimler yapabilmelidir. Ardışık sahneler ve maç izleme süreleri oynanış testinde değerlendirilir; tekrarlanan geçişler zorunlu beklemeye dönüşmez.
 
+Geliştirmede kulüp kimliği ve tekrar karşılaşılacak temel kişiler erken hazırlanabilir. Kapsamlı taraftarlık ve adaylık girişi, bir sezonluk başkanlık döngüsü sınandıktan sonra tamamlanır. Bu geliştirme sırası, bitmiş oyunun taraftar olarak başlama hedefini değiştirmez.
+
 ## 4. Yönetim ekibi, vaatler ve seçim
 
 ### Yönetim havuzu
@@ -59,6 +78,7 @@ Girişe sabit bir kısa süre sınırı konmaz. Buna rağmen oyuncu erken aşama
 Adaylar finansal güç, bağlantılar, futbol geçmişi, yönetim deneyimi, kişilik ve kendi beklentileri bakımından farklıdır. Havuz ilerledikçe yeni kişilerle genişleyebilir. İlk karşılaşmada aşırı sayıda kişiyi ezberleme yükü oluşturulmaz.
 
 **Kesin karar (2026-09-29): ilk kapsamda üç yönetim koltuğu vardır.**
+
 - Sayman: mali işler.
 - Futbol şube sorumlusu: hoca ve transfer teması.
 - Basın sözcüsü: medya ve taraftar.
@@ -66,6 +86,8 @@ Adaylar finansal güç, bağlantılar, futbol geçmişi, yönetim deneyimi, kiş
 Koltuk sayısı sonraki aşamalarda genişleyebilir; seçmen yapısı ve yönetim kurulunun seçimdeki biçimi hâlâ açıktır.
 
 Tek bir özellik bütün bir problemi çözmez. Paralı üyenin desteğinin miktarı, zamanı, şartı ve güvenilirliği ayrı konulardır. Eski futbolcu oyunculara ulaşabilir ama mali konularda zorlanabilir. Her kişi yalnızca bir avantaj ve bir ceza taşıyan kalıba indirgenmez.
+
+Hoca sportif ihtiyacı, sayman ödeme gücünü, futbol şube sorumlusu görüşmenin yapılabilirliğini, basın sözcüsü kamuoyuna anlatımını değerlendirebilir. Tavsiyenin kaynağı ve belirsizliği anlaşılır olur; bütün ekip aynı bilgiye ve aynı görüşe sahip sayılmaz. Tavsiye ile işi üstlenme arasındaki fark [§7'de](#7-ekonomi-yetki-devri-ve-kişisel-katkı) tanımlıdır.
 
 ### Kampanya
 
@@ -91,6 +113,8 @@ Seçim kaybedilince kulüp ve lig yaşamaya devam eder. Yeni başkan kendi ekibi
 
 Hızlandırma önemli olayları sessizce atlamamalıdır. Yeniden adaylık veya seçilmek garanti değildir; kupasız bir kariyer sonuna ulaşılması da mümkündür.
 
+Görev dışındaki takip, başkanın erişebildiği haberleri ve katılabileceği gelişmeleri öne çıkarır. Boş günler birlikte ilerletilebilir; bu sırada yeni yönetimin kararları ve kulübün takvimi işlemeye devam eder. Oyunun kapalı olduğu gerçek sürede takvim ilerlemez.
+
 ## 6. Zaman, ajanda ve tempo
 
 Üç süre birbirinden ayrılır:
@@ -105,21 +129,69 @@ Hızlandırma önemli olayları sessizce atlamamalıdır. Yeniden adaylık veya 
 
 Ajanda; zorunlu, ertelenebilir ve isteğe bağlı işleri ayırır. Bekleyen görüşmenin veya süresi dolacak teklifin atlanacağı önceden anlaşılır.
 
-**Kesin karar (2026-09-29):**
+### Ajanda ve son tarihler
+
+**Kesin karar (2026-09-29; yeni akışta da korunur):**
+
 - Zorunlu iş yapılmadan gün bitmez.
 - Ertelenebilir iş ileri güne alınabilir. Gün bitince ertesi güne kendiliğinden kalır, ancak son günü geçilemez; son gününde yapılmadıkça gün bitmez.
 - İsteğe bağlı iş yapılmazsa kaçırılır ve geçmişe yazılır.
 - Bir işe katılmak başka işleri kaçırtacaksa bu önceden gösterilir. Zorunlu bir işle çakışan işe katılınamaz.
 
-Sonraki önemli gelişmeye ilerleme davranışı henüz tasarlanmadı.
+### Zamanın ilerleme kuralları
+
+**Onaylı tasarım yaklaşımı (2026-09-30; henüz uygulanmadı):** Takvim, oyuncunun başlattığı eylemlerle ilerler. Sabah, öğle ve akşam ortamda ve insanların bulunabilirliğinde hissedilir; kısa telefon ile uzun görüşme aynı süreyi tüketmez.
+
+| Durum | Takvimin davranışı |
+|---|---|
+| Mesaj, mevcut rapor veya karar seçeneklerini okumak | Durur; okuma ve düşünme hızı takvimi etkilemez |
+| Görüşme, telefon veya yolculuk yapmak | Önceden belirtilen oyun içi süre geçer; çakışmalar önceden anlaşılır |
+| Yeni araştırma veya pazarlık istemek | İlgili kişinin çalışma kapasitesi ve takvimde süre gerekir |
+| Ekibe iş vermek | Ekip takvim ilerledikçe çalışır; başkan başka işlerle ilgilenebilir |
+| Antrenman izlemek | Oyuncunun başlattığı gözlem süresince kontrollü ilerler; mesajı açıp karar verirken durur |
+| Uyumlu işleri birlikte yapmak | Ortak zaman aralığı iki kez tüketilmez; iki yüz yüze görüşmeye aynı anda katılınamaz |
+| Maç izlemek | Maçın izleme temposu ve takvimde kapladığı süre ayrı hesaplanır |
+| Sonraki önemli gelişmeye ilerlemek | Rutin işler işlenir; gerekli karar, randevu veya önemli gelişmede durulur |
+| Oyundan çıkmak | Takvim durur; kayıtlı durumdan devam edilir |
+
+Mevcut bilgiyi tekrar incelemek yeni araştırma sayılmaz. Yeni bilgi toplamak ise insan ve zaman gerektirir. Bu ayrım, kararları rahatça düşünmeye izin verirken son tarihten önce sınırsız araştırma yapılmasını önler.
+
+“Sonraki önemli gelişmeye ilerle” şu kurallara uyar:
+
+- Ödemeler ve yetki içindeki rutin ekip işleri sırayla işlenir; her biri ayrı kesinti oluşturmaz, sonuçları özette görünür.
+- Başkanın kararı gereken gelişmede veya ekip yetkisinin aşıldığı anda durulur. İlerleme sırasında doğan yeni işler de dikkate alınır.
+- Randevuya yetişmek için gereken hareket saati ve yolculuk süresi hesaba katılır; son tarih ve zorunlu iş korumaları aşılmaz.
+- Atlanacak isteğe bağlı işler ve kaçırılacak fırsatlar önceden gösterilir. Ret, erteleme veya yetki devri yalnız işin kendi kuralları izin veriyorsa kullanılabilir.
+- Beklemede olan meselenin hangi haberi beklediği veya sıradaki mümkün eylem anlaşılır olur. Oyuncu aynı boş günü tekrar tekrar kapatmaya zorlanmaz.
+
+Antrenman gözlemi sırasında kısa bir telefon işi aynı zaman aralığına sığabilir. Uzun ve tam dikkat isteyen görüşme için gözlemden ayrılınır. Mekânın atmosferi, takvimin durduğunu anlamayı güçleştirmemelidir; ayrıntılı sunum [stil rehberinde](STIL_REHBERI.md#8-baskı-ve-erişilebilirlik) tanımlanır.
 
 Antrenman, boş stat veya kulüp odası gibi isteğe bağlı alanlarda vakit geçirilebilir. Telefon ve haberler bu ortamların içinde gelebilir. Uzun süre beklemek zorunlu bir yetenek veya bilgi kazancına dönüşmez.
 
 Transfer gibi uzun olaylar farklı günlere yayılır: hazırlık, görüşme, haber bekleme, karşı teklif ve sonuç. İçerik temposu gerçek oynama süresi ölçülerek ayarlanır. Yoğun günleri kısaltmak için otomatik bir hedef konmaz; tekrarlar ve amaçsız bekleme azaltılır.
 
+### İlk tempo ölçümleri ve oturum devamlılığı
+
+**Onaylı ölçüm yaklaşımı (2026-09-30):** Aşağıdaki aralıklar ilk oynanış denemelerinin hedefleridir; ölçülmüş sonuç, zorunlu süre veya kesin denge değildir. Yoğun günlerin yaklaşık bir saat veya daha uzun yaşanabilmesi korunur.
+
+| Deneyim | Gerçek oynama süresi için ilk hedef |
+|---|---|
+| Sakin gün | 1–5 dakika veya boş günleri birlikte ilerleme |
+| Olağan yönetim günü | 5–15 dakika |
+| Yoğun gün | 30–60 dakika; gerektiğinde daha uzun |
+| Maç | Mevcut 10–15 dakika hedefi |
+| Toplam maç günü | Yaklaşık 20–35 dakika; tören ve çevresindeki içerik ayrıca ölçülür |
+| Normal sezon | Yaklaşık 20–35 saat; fikstür, yetki devri ve katılım tercihleriyle birlikte sınanır |
+
+İçerik, bir süre kotasını doldurmak için üretilmez. Kariyerin uzunluğu anlamlı sezonlardan, sonuçlardan ve gelişimden gelir; boş bekleme veya gerçek dünyada bekleme şartı konmaz. Her günü bir saate uzatmak hedeflenmez. Kesin maç sayısı ve kariyer uzunluğu bu tablodan çıkarılmaz.
+
+Kısa bir oturumda bir mesele ilerletilebilmeli; yoğun bir gün birkaç oturuma bölünebilmelidir. İlk hedef, tamamlanan kararların ve güvenli sahne geçişlerinin gün içinde kaydıdır. Dönüşte son karar, beklenen haberler ve yaklaşan önemli tarih kısa biçimde hatırlatılır. Maç veya görüşmenin tam ortasından devamın kapsamı [teknik planda](TEKNIK_PLAN.md#5-kayıt-ve-yükleme) ayrı tutulur. Bugünkü uygulama yalnız gün sınırında kayıt yapar.
+
 ## 7. Ekonomi, yetki devri ve kişisel katkı
 
 Oyuncu; mevcut nakdi, gelecek ödemeleri ve yaptığı taahhütleri görebilir. Nakit, dönem bütçesi ve ileri tarihteki yükümlülükler aynı değer değildir.
+
+Sayman bir anlaşmanın gelecek ödeme günlerine etkisini anlaşılır biçimde açıklar: örneğin yeni taksidin maaş günüyle çakışması. Özetin dayandığı tutar ve tarihler ayrıntıda görülebilir; gelecekteki belirsiz gelir kesin para gibi sunulmaz.
 
 Gelir/gider alanları: bilet ve doluluk, sponsor, yayın geliri, maaş, transfer ve menajer bedelleri, sözleşme primleri, tazminat, tesis ve stat yatırımları. Ayrıntı düzeyi başkanın kararını değiştirdiği ölçüde artırılır.
 
@@ -128,6 +200,10 @@ Başkan oyundaki mali kurallar çerçevesinde sınırlı kişisel katkı yapabil
 Ekonomik daralma; taraftarın alım gücü, sponsorun ödeme gücü ve kulüp giderleri gibi birkaç anlaşılır bağlantıyla hissedilir. Ayrı bir ülke ekonomisi simülasyonu kurulmaz.
 
 Yetki devrinde kişi, iş, bütçe tavanı, süre ve başkana dönülecek durumlar belirlenir. İyi ekip hem fırsat üretir hem iş yükünü azaltır. Bir üyeyi almak veya kişisel para koymak ekonomi sorununu kalıcı biçimde çözmez.
+
+**Onaylı tasarım yaklaşımı (2026-09-30):** Tavsiye istemek karar sorumluluğunu başkanda bırakır; yetki devri, kişinin tanımlı sınırlar içinde işi yürütmesini sağlar. Tek iş yanında kalıcı sorumluluklar da tanımlanabilir. Ekibin kapasitesi ve bekleyen işi anlaşılır olmalı; yetkili olduğu rutin adımlar için tekrar tekrar onay istenmemelidir.
+
+İşe uygun yönetici uzmanlığı veya ilişkileri sayesinde bazı işleri başkandan daha iyi çözebilir. Başkanın şahsen katılması da bazı görüşmelerde özel ağırlık taşıyabilir. Bütün işlerde en iyi sonucu kişisel katılıma bağlamak oyuncuyu her işi yapmaya yöneltir; denge testleri bunu özellikle kontrol eder. Bugünkü sponsor denemesinin sonuçları bu dengeyi kanıtlamaz.
 
 ## 8. Görüşmeler ve futbol yapılanması
 
@@ -138,6 +214,8 @@ Başkan önemli anlaşmalara doğrudan katılabilir; rutin işler ekibe bırakı
 Örnek gelişmeler: menajerin ek talebi, oyuncunun aile veya rol beklentisi, rakibin teklifi, basına sızma, ücret artışı, sağlık değerlendirmesi veya sorunsuz imza. Gelişmeler ilgili kişilerin çıkarları ve mevcut şartlarla bağlantılıdır.
 
 Sponsor görüşmelerinde para kadar ödeme tarihi, taahhüt edilen haklar, taraftarın yorumu ve gelecekteki hareket alanı önemlidir. Kabul, bekleme, yeniden pazarlık ve çekilme seçeneklerinin maliyeti bulunabilir.
+
+Kaçan transfer, bozulan anlaşma veya geciken gelir sonrasında şartlara uygun alternatif arayışı, yeniden planlama ya da ilişkiyi telafi girişimi bulunabilir. Başarısızlığın bedeli ve verilen sözler korunur; her sorun kariyeri kapatan bir çıkmaza dönüşmez. Sorunsuz anlaşma yolu da çalışır.
 
 ### Teknik direktör
 
@@ -169,6 +247,8 @@ Medya ve TV katılımları, taraftar talepleri, hakem atamaları ve tartışmal�
 
 Olay kaynakları: kararların sonuçları, dünyadaki gelişmeler ve sınırlı sürprizler. Olay sıklığı, tekrar aralığı ve aynı anda açık kalan konular denetlenir. İyi yönetimin rahat dönemler üretmesine izin verilir. Başarı, teşekkür, geçmişten gelen dostluk ve kulübe aidiyet sahneleri de içeriktir.
 
+Rutin haber, tavsiye ve karar gerektiren gelişme farklı önceliklerle sunulur. Aynı meseleye gelen haber geçmişi günceller; bildirim sayısı yapay görev yükü oluşturmaz. İlk örneklerde bir sözün dönüşü, taraftar veya medya tepkisi, olumlu bir kulüp anı ve tamamlanmış küçük işin görünür izi birlikte sınanır. Oyuncu sonucun hangi kararla ilişkili olduğunu anlayabilmelidir.
+
 ### Süreli cevaplar
 
 Özel röportaj ve acil karar anlarında kısa cevap süresi olabilir; yaklaşık beş saniye bir örnektir, sabit genel kural değildir. Soru ve seçenekler anlaşılmadan sayaç başlamaz. Süre bitince oluşacak susma/geçiştirme gibi davranış sahneye uygundur. Normal görüşmelerde düşünmeye zaman vardır.
@@ -180,6 +260,8 @@ Okuma süresi, flaş ve sarsıntı için erişilebilirlik seçenekleri planlanı
 Maçlar karakterin bulunduğu yerden izlenir. Görevdeyken ev sahibi veya deplasman başkan bölümündesin; yanında yöneticiler ve rakip başkan bulunabilir. İlişkiler selamlaşma, oturma düzeni, kısa konuşma ve katılmama gibi ayrıntılara yansır. Görev dışında farklı izleme konumu kullanılır.
 
 Az sayıda anlamlı mekân zaman içinde değişir: kulüp odası, görüşme alanı, basın alanı, antrenman ve stat. Eski personel, fotoğraflar, kupalar ve nesneler yaşanan geçmişi görünür kılar. Gerektikçe yeni mekân eklenir; her konuşma için ayrı mekân yapılmaz.
+
+İlk uygulama oda/görüşme ve isteğe bağlı antrenman örneğine odaklanır. Mekânlar aynı meseleye farklı yerlerden erişim sağlar; yer değiştirmek konuyu veya karar geçmişini sıfırlamaz. Küçük bir yatırımın veya tutulmuş sözün ortamdaki izi erken gösterilir; kapsamlı tesis ve stat gelişimi daha sonra tamamlanır. Antrenmana gitmek ya da uzun süre izlemek günlük zorunlu ödül toplama işine dönüşmez.
 
 Üç ligin kulüp kimlikleri sabittir; bulundukları kademe yükselme/düşmeyle değişir. Oyuncular, başkanlar, hocalar, hakemler ve medya insanları yenilenir. Üçüncü ligin alt sınırında ne olacağı açık karardır.
 
@@ -203,14 +285,14 @@ Başarı finali kutlama, şehre dönüş, insanlarla veda ve bırakmayla tamamla
 
 | Açık konu | Karar verilmesi gereken aşama |
 |---|---|
-| Kulübün nihai adı, şehir, kuruluş ve geçmiş kişiler | Hikâye içeriği; Aşama 5 öncesi |
-| Seçmen yapısı, dört/beş yıl, erken seçim (ilk üç koltuk seçildi, §4) | Seçim kuralları için Aşama 5 öncesi |
-| Yönetim adaylarının katkılarının oyuncuya nasıl gösterileceği (bugünkü TEST: profil metni görünür, katkı seviyeleri gizli) | 2.2 kapanmadan; Aşama 5 kampanya ekibinden önce kesinleşmeli |
+| Kulübün nihai adı, şehir, kuruluş ve geçmiş kişiler | Temel kişiler erken hazırlanabilir; kapsamlı hikâye için Aşama 6 öncesi |
+| Seçmen yapısı, dört/beş yıl, erken seçim (ilk üç koltuk seçildi, §4) | Seçim kuralları için Aşama 6 öncesi |
+| Yönetim adaylarının katkılarının oyuncuya nasıl gösterileceği (bugünkü TEST: profil metni görünür, katkı seviyeleri gizli) | 2.2 kapanmadan; Aşama 6 kampanya ekibinden önce kesinleşmeli |
 | Kişisel katkı biçimi, sınırları ve mali kurallar | Aşama 4 öncesi |
-| Takım sayıları, sezon ve transfer takvimi, alt lig sınırı | Aşama 6 öncesi; yükselme/düşme ayrıntısı Aşama 8 öncesi |
+| Takım sayıları, sezon ve transfer takvimi, alt lig sınırı | Aşama 3 temeli için seçilmeli veya açık TEST tarifi kullanılmalı; tam sezon için Aşama 5 öncesi kesinleşmeli; yükselme/düşme ayrıntısı Aşama 8 öncesi |
 | Başkanın başlangıç yaşı, becerileri, kupasız final koşulları | Veri alanları Aşama 1; davranış kararı Aşama 7 öncesi |
 | Avrupa kupalarının sayısı, formatı ve katılım kuralları | Aşama 9 öncesi |
-| Maç günü toplam süresi, geçiş/atlama seçenekleri, olay yoğunluğu | Aşama 2–3'ten itibaren oynanış testleri |
+| Kesin günlük/sezonluk tempo, maç günü toplam süresi, geçiş/atlama seçenekleri, olay yoğunluğu | §6'daki başlangıç aralıklarıyla Aşama 2–3'ten itibaren, tam sezonda Aşama 5'te ölçülür |
 | Kesin para tutarları, yaş etkileri, seçim/transfer olasılıkları | İlgili sistemin oynanış testleri; önceden kesin denge sayılmaz |
 
 Geliştirme aşamaları ve açık işlerin tek takip yeri [YOL_HARITASI.md](YOL_HARITASI.md) dosyasıdır.

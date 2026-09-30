@@ -1,6 +1,6 @@
 # Chairman — teknik plan
 
-Son güncelleme: 2026-09-29. Bu belge mevcut prototipten hedef kariyer oyununa geçiş planıdır. “Hedef” bölümleri uygulanmış özellik anlamına gelmez. Oyun kuralları [OYUN_TASARIMI.md](OYUN_TASARIMI.md), iş sırası [YOL_HARITASI.md](YOL_HARITASI.md) içindedir.
+Son güncelleme: 2026-09-30. Bu belge mevcut prototipten hedef kariyer oyununa geçiş planıdır. “Hedef” bölümleri uygulanmış özellik anlamına gelmez. Oyun kuralları [OYUN_TASARIMI.md](OYUN_TASARIMI.md), iş sırası [YOL_HARITASI.md](YOL_HARITASI.md) içindedir.
 
 ## 1. Bugünkü yapı
 
@@ -20,6 +20,8 @@ Son güncelleme: 2026-09-29. Bu belge mevcut prototipten hedef kariyer oyununa g
 
 Motor sahneye bağlıdır. Kadrolarda gizli yetenek değerleri, motorda tohumlu rastgelelik ve sabit zaman adımı bulunur. Kariyer takvimi, para, kayıt ve ajanda çalışır; ancak maç sonucu kariyere bağlı değildir. Kalıcı sözleşme, seçim, oyuncu gelişimi ve kariyer yöneten hoca sistemi henüz yoktur.
 
+2026-09-30'da onaylanan yaşayan kulüp akışı henüz uygulanmadı. Ortak mesele verisi, oda/görüşme/telefon sunumu, kontrollü gözlem, sonraki önemli gelişmeye ilerleme ve gün içi karar kaydı aşağıda hedef olarak tanımlanır. Bugünkü 2.1 ve kısmi 2.2 davranışları ayrıca belirtilmiştir.
+
 Tarayıcı sürümünde Three.js ve sayfa fontları dış kaynaklardan yüklenir. Masaüstü kopyası bunları yerel dosyalardan yükler ve çevrimdışı açılır (1.5 denemesi, §10). Üst düzey tanımlar betikler arasında paylaşılır; yeni adlar ve yükleme sırası bu yüzden dikkat gerektirir.
 
 ## 2. Sorumlulukların ayrılması
@@ -33,18 +35,20 @@ Görüntü bu akışı gösterir; para, seçim veya kariyer sonucunun kaynağı 
 | Sorumluluk | Üreteceği şey |
 |---|---|
 | Dünya ve takvim | Tarih, kişiler, kulüpler, görevler, fikstür ve bekleyen işler |
-| Yönetim | Kararlar, bütçe sınırları, ilişkiler, sözler ve sözleşmeler |
+| Yönetim | Devam eden meseleler, kararlar, ekip sorumlulukları, bütçe sınırları, ilişkiler, sözler ve sözleşmeler |
 | Futbol hazırlığı | Hocanın bilgisine göre kadro/taktik ve geçerli maç koşulları |
 | Maç motoru | Sahadaki hareket, kurallar, skor, istatistik ve olaylar |
 | Kariyere sonuç uygulama | Puan durumu, para, kullanılabilirlik, geçmiş ve ilgili sonuçlar |
-| Sunum | Maç sahnesi, görüşmeler, ajanda, raporlar ve bildirimler |
+| Sunum | Mekânlar ve odaktaki konu; aynı meseleyi gösteren görüşme, telefon, ajanda ve raporlar |
 | Platform ve kayıt | Kaydetme, yükleme, dosyalar, dil ve masaüstü bağlantısı |
 
 Yeni mantık çizimden bağımsız çalıştırılabilir olmalı. Mevcut motoru baştan yazmak başlangıç şartı değildir. Dosya/klasör adları, modül geçişi ve paketleme yöntemi küçük denemelerle seçilir. Bir iş için gerekmeden bütün kod tabanı dönüştürülmez.
 
+Mekânlar ve telefon aynı kariyer komutlarını çağırır. Ortam değiştirmek yeni bir karar, yeni rastgele sonuç veya ikinci bir zaman hesabı üretmez. Mevcut ajanda kuralları ortak akışa taşınırken korunur; yeni sunumun kendi ödeme veya yetki kuralları olmaz.
+
 ## 3. Kalıcı dünya verisi
 
-İlk aşamada küçük bir örnek kariyer kurulacak; aşağıdaki alanlar gerektiği aşamada doldurulacak. Bütün sistemleri peşinen uygulamak gerekmez.
+Küçük örnek kariyer temeli kurulmuştur; aşağıdaki hedef alanlar gerektiği aşamada genişletilir. Bugünkü veri biçimi ayrıca listelenmiştir. Bütün sistemleri peşinen uygulamak gerekmez.
 
 - **Kimlik:** Kulüp, kişi, sezon, maç, sözleşme, olay, söz ve yatırım için kalıcı kimlik. İsim değişse veya kişi emekli olsa kimliği değişmez.
 - **Kariyer:** Kayıt sürümü, dünya tohumu, tarih, gün içi konum, başkanın kimliği/yaşı, görev durumu, hedef ve final durumu.
@@ -78,7 +82,7 @@ Kariyer durumu tek bir sade veri nesnesidir; kurallar `js/kariyer.js`, `js/takvi
 | Kişi `profil`, `katki` (isteğe bağlı) | `profil`: `{meslek, guclu, zayif, beklenti}` metinleri, oyuncuya gösterilir. `katki`: `{mali, baglanti, futbol, iletisim}` → `zayif`/`orta`/`guclu`, gizlidir ve iş sonuçlarını belirler |
 | `hareketler` | Para hareketleri: `id` (`hareket-N`), `kulupId`, `tarih`, `dakika`, `tutar` (kuruş; gelir +, gider −), `kalem`, `aciklama`, `kaynak` (işin kimliği ya da `null`) |
 
-`kariyerDogrula` sade veri dışı değerleri (fonksiyon, `undefined`, NaN, Date, sınıf örneği), eksik referansları, geçersiz tarihleri, bilinmeyen durumları, sayaç çakışmasını ve görevdeki başkanın kulüp kaydıyla uyumsuzluğunu Türkçe açıklamayla bildirir. Takvim ve para için ayrıca: zamanı geçmiş fakat tamamlanmamış işi, iki kez tamamlanan işi, açılış nakdi ile hareketlerin toplamını tutmayan nakdi, kesirli tutarı ve aynı işten iki kez doğan para hareketini yakalar. Kulüp kimlikleri bugünkü `KADROLAR`/`LIG` anahtarlarıyla aynıdır; bu köprü 3.3'te kullanılır.
+`kariyerDogrula` sade veri dışı değerleri (fonksiyon, `undefined`, NaN, Date, sınıf örneği), eksik referansları, geçersiz tarihleri, bilinmeyen durumları, sayaç çakışmasını ve görevdeki başkanın kulüp kaydıyla uyumsuzluğunu Türkçe açıklamayla bildirir. Takvim ve para için ayrıca: zamanı geçmiş fakat tamamlanmamış işi, iki kez tamamlanan işi, açılış nakdi ile hareketlerin toplamını tutmayan nakdi, kesirli tutarı ve aynı işten iki kez doğan para hareketini yakalar. Kulüp kimlikleri bugünkü `KADROLAR`/`LIG` anahtarlarıyla aynıdır; bu köprü yol haritası 3.4'te kullanılır.
 
 **Ajanda işi (2.1):** `ajanda` türü bekleyen iştir; `tarih`/`dakika` başlangıcıdır.
 - `veri` alanları: `baslik`, `aciklama`, `zorunluluk` (`zorunlu`, `ertelenebilir`, `istege`), `sure` (0–720 dk). İsteğe bağlı olarak `kisiId`, `bilgi` (iş yapılınca öğrenilen metin), `sonTarih` (yalnız ertelenebilir işte) ve `eylem` (`macGunu`) bulunabilir.
@@ -90,6 +94,16 @@ Kariyer durumu tek bir sade veri nesnesidir; kurallar `js/kariyer.js`, `js/takvi
 Sonradan yüklenen kural dosyaları kendi doğrulamasını `EK_DENETIMLER` listesine ekler (`js/yonetim.js` → `yonetimDogrula`). Dosya yüklü olmayan sayfada o alan denetlenmez.
 
 Gelecekteki ödeme ayrı bir liste değil, takvimdeki `odeme` türü iştir; zamanı gelince bir kez para hareketine dönüşür. Böylece mevcut nakit ile henüz ödenmemiş taahhütler ayrı durur (`maliDurum`). Hareket listesi uzun kariyerde büyür; dönem özetlerine sıkıştırma kayıt boyutu ölçüldüğünde ele alınır.
+
+### Hedef: meseleler ve sahneler arası devamlılık
+
+**Onaylı hedef (2026-09-30; yol haritası 2.3):** Bir mesele kendi kimliğiyle katılımcıları, sorumlu kişiyi, geçerli durumu, son tarihi, beklenen haberi ve karar geçmişi referanslarını taşır. Takvim işi, mesaj, söz, anlaşma ve ödeme gerektiğinde bu kimliğe bağlanır. Mesele kaydı takvimdeki ödeme işlerinin ikinci bir kopyasını oluşturmaz.
+
+İlk örnek mevcut sponsor işidir. Karar bekliyor, ekipte, haber bekliyor veya kapandı gibi durumların hangi eylemle değiştiği açık olur. Kesin alan adları ve kayıt sürümü uygulama sırasında seçilir; bu hedef, mevcut kayıtta bu alanların bulunduğu anlamına gelmez.
+
+Telefon/ajanda/görüşme aynı meseleyi okur. Mesajı okumak işi tamamlamaz; tekrar açmak yeni sonuç üretmez. Okunma durumu ile işin tamamlanma durumu ayrılır. Sunum; ilgili kişi, bilgi kaynağı, beklenen gelişme ve oyuncuya açık seçenekleri ortak veriden alır.
+
+Kalıcı ekip sorumluluklarında kişi, iş kapsamı, bütçe sınırı, süre ve başkana dönülecek koşullar tutulur. İş yükü ve görev yetkisi yeni iş verilirken doğrulanır. Söz, ilişki, tamamlanan küçük yatırım ve bunların görsel izleri aynı geçmiş kayıtlarına bağlanır; sahneye girip çıkmak geçmişi değiştirmez.
 
 ## 4. Zamanın ilerlemesi
 
@@ -115,6 +129,19 @@ Başkanlık dışındaki hızlı takip de aynı takvim işlemlerini kullanır; a
 
 `GUN_BASLANGICI` hâlâ TEST değeri olan 08:00'dir.
 
+### Hedef: kontrollü ilerleme ve kesintiler
+
+**Onaylı hedef (2026-09-30):** Oyuncuya görünen davranışların ana kaynağı [OYUN_TASARIMI §6](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo) olur. Takvim, sahne animasyonu ve gerçek oturum süresi ayrı tutulur.
+
+- Okuma/düşünme ve normal panel kullanımı takvime süre eklemez. Yeni araştırma veya görüşme, ilgili takvim işi ve süreyle temsil edilir.
+- İlerleme komutu; hedef anı, katılım/yolculuk sürelerini ve mevcut zorunlu işleri denetler. Aradaki işler sırayla işlenir; yeni bir karar işi doğarsa durulacak an yeniden değerlendirilir. Büyük bir sıçrama, sonradan oluşan zorunlu işi atlayamaz.
+- Rutin sonuçlar geçmişe ve özete girer. Karar gerektiren gelişme, yetki aşımı ve randevuya hareket zamanı ilerlemeyi durdurur. İsteğe bağlı iş kayıpları ve son tarih engelleri önizlemede görünür.
+- Gözlem, oyuncunun başlattığı belirli oyun içi süreyle çalışır. Telefon kararına geçildiğinde kalan gözlem süresi korunur ve takvim durur. Ortam animasyonu devam edebilse de karar anındaki bilgi ve sonuçlar donmuş kariyer durumunu kullanır.
+- Uyumlu eşzamanlı eylemler ortak zaman aralığıyla hesaplanır; iki kez süre tüketilmez. Tam dikkat isteyen görüşme gözlemden ayrılmayı gerektirir. Uyumsuz katılımlar önceden engellenir.
+- Ekip işleri yalnız ortak takvim ilerledikçe ilerler; uygulama kapalıyken geçen gerçek süre kullanılmaz. Bekleme durumunun haber veya sonraki eylem kaynağı tanımlı olur.
+
+**Kabul:** Tek parça ve bölünmüş ilerleme, aynı kararlar için aynı dünya sonucunu verir. İlerleme sırasında doğan karar, gün aşımı, randevuya hareket, çakışma, rutin ödeme, gözlemin kesilip devam etmesi ve kayıt sonrası sürdürme ayrı örneklerle sınanır. Maç motorunun sabit adımı bu değişikliklerle değiştirilmez.
+
 ## 5. Kayıt ve yükleme
 
 Kayıt erken aşama işidir. Hedefler:
@@ -124,7 +151,7 @@ Kayıt erken aşama işidir. Hedefler:
 - Kimlikler, tarih, para hareketleri ve ilişkiler için yükleme doğrulaması. Bozuk veya desteklenmeyen kayıt açıklanabilir hata üretir.
 - Rastgele üreticilerin devam durumu, bekleyen işler ve uygulanmış işlem kimlikleri kaydedilir.
 - Ödeme, transfer, seçim ve maç sonucu yükleme sonrası ikinci kez uygulanmaz.
-- Kayıt sınırları açık olur. İlk çalışan sürümde gün/karar sınırlarında kayıt yeterlidir; maç veya görüşmenin ortasından devam hedefi ayrıca değerlendirilir ve arayüzde doğru anlatılır.
+- Kayıt sınırları açık olur. Yeni günlük akışın erken hedefi, tamamlanan kararlar ve güvenli sahne geçişlerinde gün içi kayıttır; maç veya görüşmenin tam ortasından devamın kapsamı ayrıca değerlendirilir ve arayüzde doğru anlatılır.
 - Tarayıcı ve masaüstü depolaması ortak bir kayıt arayüzünün farklı uygulamalarıdır; kariyer kuralları dosya yolunu bilmez.
 
 **Uygulanan (1.4, 2026-09-29):** `js/kayit.js` kariyeri sağlamalı bir zarf içinde kaydeder: `{oyun, bicim, saglama, ozet, veri}`. Tutarsız kariyer yazılmaz. Yazım sırası `.yeni` → sağlam ana kaydın `.onceki`'ye kopyası → ana kayıt → `.yeni`'nin silinmesidir; her adım geri okunarak doğrulanır. Yükleme ana kayıt, `.yeni`, `.onceki` sırasıyla ilk sağlam kaydı açar ve atlananları açıklamayla bildirir. Daha yeni sürümlü kayıt açılmaz; eski sürümler `KAYIT_GECISLERI` ile sırayla dönüştürülür (henüz geçiş yok, sürüm 1 ilk kalıcı sürümdür). Depo `oku/yaz/sil` arayüzüdür: `bellekDeposu` denemeler için, `tarayiciDeposu` localStorage için.
@@ -136,6 +163,14 @@ Kayıt erken aşama işidir. Hedefler:
 - **Açılamayan kayıt:** Üzerine yazılmaz. Oyuncu onaylarsa bozuk dosyalar `.bozuk` ekiyle saklanır, ardından yeni kariyer başlar.
 - **Otomatik kayıt:** Yalnız gün sınırında, yani günü bitirince ve yeni kariyerde yapılır. Maç sınırında kayıt yoktur; sayfa yenilenirse son gün başından devam edilir.
 - **Kayıt ekranı:** Kayıt listesi ve birden çok yuva yoktur. “Yeni kariyer” iki adımlı onayla başlar.
+
+### Hedef: gün içinde bırakıp devam etme
+
+**Onaylı hedef (2026-09-30; yol haritası 2.4):** Karar ve etkileri tutarlı biçimde tamamlandıktan sonra güvenli kayıt yapılır. Mesele durumu, ekip yetkisi, bekleyen işler, uygulanan işlem kimlikleri ve devam için gereken sade sunum durumu birlikte korunur. Karar öncesi veri ile karar sonrası para/iş sonuçlarının karıştığı bir kayıt yazılmaz.
+
+Güvenli sahne geçişleri de kayıt noktası olur; son başarılı kayıt kullanıcıya doğru bildirilir. Yazma başarısızsa kayıt varmış gibi gösterilmez ve önceki sağlam kayıt korunur. Dönüş özeti kayıtlı son karar, beklenen haberler ve yaklaşan tarihten üretilir; özetin kendisi yeni olay tetiklemez.
+
+Yeni veri için sürüm geçişi veya geriye uyum davranışı açıkça tanımlanır. Eski örnek kayıt ile gün ortasında alınan yeni kayıt sınanır. Aynı kararın, mesajdan doğan işin ve ödemenin ikinci kez oluşmadığı doğrulanır. Görüşmenin her satırından veya maçın her anından devam bu ilk adımda vaat edilmez; maç öncesi/sonrası kayıt sınırları maç bağlantısında ayrıca tamamlanır.
 
 Bulut kaydı düşünülürken kullanıcıya ait kayıt konumu ve çakışma davranışı planlanır. İlk adım yerel kaydın güvenilirliğidir. Steam Cloud seçeneği bu temelin üstünde değerlendirilir; uygulanmış sayılmaz. Kaynak: [Steam Cloud belgeleri](https://partner.steamgames.com/doc/features/cloud).
 
@@ -153,6 +188,12 @@ Olayların görevleri ayrılır:
 
 Tekrar sınırı ve eşzamanlı gündem yoğunluğu izlenir. Sahne seçicisi, iyi yönetimin sağladığı rahatlığı sürekli kriz üreterek ortadan kaldırmaz. Seçeneklerin görünür metni ile uyguladığı etki ayrı veri olarak bulunur.
 
+**Hedef:** Olaylar mesele kimliği üzerinden ilerler. Rutin bilgi özete, tavsiye ilgili konuya, karar gerektiren gelişme oyuncunun odağına yönlendirilir. Tekrar aralığı ve kesinti önceliği aynı haberin birden fazla kanaldan yeni görev gibi açılmasını önler. Ekibe verilmiş işler her adımda başkana dönmez; yetki eşiği ayrıca denetlenir.
+
+Tavsiye alma, yetki devri ve başkanın doğrudan kararı farklı komutlardır. Seçenekler gösterilirken ve uygulanırken sorumluluk, kapasite, bütçe ve son tarih tekrar doğrulanır. Yeni bilgi edinmenin süresi vardır; mevcut raporu yeniden açmak yeni bir değerlendirme üretmez. Uygun kişinin işi daha iyi çözmesi mümkün olacak şekilde sonuçlar sınanır; mevcut TEST sponsor dalları nihai denge sayılmaz.
+
+Mali değerlendirme, aynı defter ve gelecek ödeme işlerinden üretilir; belirsiz gelir ayrı gösterilir. Başarısız anlaşmanın bedeli kayda girerken alternatif arayışı veya yeniden planlama gibi geçerli sonraki adımlar açık kalabilir. Olumlu sonuç, teşekkür ve sakin dönem üretimi de olay denemelerine dahildir.
+
 **Uygulanan ilk karar yapısı (2.2 ilk adım, 2026-09-29):** Karar, ajanda işinin `veri.karar` alanıyla bağlanan bir `KARAR_TURLERI` türüdür (`js/ajanda.js`). Her tür üç işlev sağlar:
 - `denetle`: verinin geçerliliği.
 - `secenekler(k, is)`: görünür metin, açıklama satırları, isteğe bağlı süre ve engel.
@@ -168,7 +209,7 @@ Seçim önizlemede, sonra zaman işin başlangıcına geldiğinde yeniden doğru
   - Bağlantısı zayıf sayman ödemenin gecikmesini engelleyemez; sözleşmedeki gecikme bedeli işletilir.
 - `sponsorIndirimi`: indirimi kabul (tutar düşer) ya da ret (ödeme iki hafta kayar).
 
-Sonuçlar ödeme işlerini iptal eder, taşır ya da yeni ödeme planlar; olasılık kullanılmaz. Metinler ve tutarlar TEST değeridir. Söz ve ilişki kaydı (2.4) henüz yoktur; adayın beklentisi yalnız metin olarak kalır.
+Sonuçlar ödeme işlerini iptal eder, taşır ya da yeni ödeme planlar; olasılık kullanılmaz. Metinler ve tutarlar TEST değeridir. Söz ve ilişki kaydı (yeni yol haritası 2.8) henüz yoktur; adayın beklentisi yalnız metin olarak kalır.
 
 Sözler için muhatap, şart, son tarih, bilinirlik ve durum tutulur. İlişkiler tek bir herkesin paylaştığı popülerlik sayısı değildir; gerektiği kadar kişiye/gruba özgü tutulur.
 
@@ -196,7 +237,11 @@ Son gözlenen kısa ölçüm (2026-09-29, tohum 1–10): 10 maçta ortalama 2,1 
 
 Lig yapısı kulüp kimliğinden ayrılır; sezon geçişinde kademe değişebilir. Fikstür, puan eşitliği, yükselme/düşme, transfer takvimi ve Avrupa hakkı seçilen oyun kurallarına göre veriden okunur. Kesin formatlar seçilmeden gerçek bir lig statüsü varsayılmaz.
 
+**Onaylı uygulama sırası (2026-09-30):** Basit fikstür ve sezon/transfer takvimi Aşama 3'te kurulur; seçilmemiş biçimler açıkça TEST tarifi olur. Tam sezon Aşama 5'te, kapsamlı adaylık hikâyesi Aşama 6'da tamamlanır. Takvim ve gelecekteki yükümlülükler başkanın planlamasına birlikte girdi sağlar.
+
 Avrupa rakipleri ve dış transfer havuzu gereken ölçüde temsil edilir. Ayrıntılı yabancı lig fikstürü başlangıç kapsamı değildir. Kadro eksilmesi ve emeklilik karşısında yeni oyuncu/personel üretimi dünya nüfusunu sürdürebilmelidir.
+
+Tam uzun kariyer içeriğinden önce küçük geliştirici örnekleriyle kişi ayrılması/emekliliği, yerine yeni kişi gelmesi ve sezon/kademe geçişinde kimliklerin korunması sınanır (5.7). Bu denemeler Aşama 7–8 sistemlerinin tamamlandığı anlamına gelmez. Geçmiş kişiler, sözler ve sözleşmeler yeni sezona geçerken referanslarını korur.
 
 Başkanın durumları: taraftar, aday, görevde, görev dışında, yeniden aday ve kariyer sonu. Geçişler yetkileri değiştirir; ekran değiştirmek yetki kazandırmaz. Yeni yönetim görev dışındaki yıllarda da kulübün işlerini yürütür.
 
@@ -206,8 +251,9 @@ Final kontrolü; başkanın kariyer durumu ve tanımlı en büyük Avrupa kupas�
 
 - İlk içerik Türkçedir. Yeni metinler anlamlı anahtarlar ve parametrelerle ayrılır; kişi adlarına bağlı dil kuralları oyun mantığına yayılmaz. Mevcut Türkçe yardımcılar aşamalı uyarlanır.
 - Oyundaki görseller kodla üretilir. Görsel sabitler stil katmanında; iş kuralları kariyer/motor katmanında kalır.
-- Görüşme süresi, yazı büyüklüğü, flaş/sarsıntı ve ses seçenekleri okunabilirlik ve erişilebilirlik ihtiyacına göre planlanır.
-- Masaüstü denemesi Aşama 1'de yapılır. İşletim sistemi kapsamı ve paketleme yöntemi o denemede seçilir; yalnız Steam hedefi var diye motor değişmez.
+- Yeni sunumda aydınlık kulüp ortamı, odaktaki konu ve gerektiğinde açılan telefon/ajanda bulunur. Mevcut koyu ajanda/bülten uygulaması ile bu hedef [stil rehberinde](STIL_REHBERI.md#7-arayüz-ve-bilgi) ayrılır. Kesin sahne dosyaları ve yerleşim uygulama sırasında seçilir.
+- Temel yazı büyüklüğü, ortam sesi/ses kontrolü ve dönüş özeti Aşama 2'de sınanır. Nadir süreli cevap sahneleri süre/okuma/flaş/sarsıntı seçenekleriyle birlikte geliştirilir; kullanım kalitesi yalnız son aşamaya bırakılmaz.
+- Masaüstü denemesi Aşama 1'de Windows/Electron ile yapıldı; kapsamı aşağıdadır. Ticari paket ve Steam bağlantısı ayrı hedeflerdir; motor değişikliği varsayılmaz.
 - Three.js ve fontlar gibi gerekli dış kaynaklar çevrimdışı pakete uygun biçimde yerelleştirilir. Sürümleri ve dağıtım koşulları kayda alınır.
 - Tarayıcı/GitHub Pages geliştirme yolu sürerken masaüstü kayıt ve dosya işlemleri ayrı platform katmanına konur.
 - Deneme; internet kapalı açılış, Türkçe karakter içeren dosya yolu, kayıt/yükleme, pencere/tam ekran ve gerekli kaynakları kapsar.
@@ -244,11 +290,14 @@ Kontrol, değişen sistemin gerçek riskini hedefler:
 | Görüntü/arayüz | Başsız tarayıcı, konsol hataları, ekran görüntüsü, değişen etkileşim |
 | Maç mantığı/kadro | Mevcut maç deneme aracı, tohum tutarlılığı ve değişen futbol davranışı |
 | Kariyer/kayıt | `node araclar/kariyer-deneme.js`; tarayıcı deposu değişirse `python3 araclar/kontrol.py araclar/kayit-deneme.html`; kaydet-yükle devamlılığı, tekrar uygulama, tarih/kimlik ve para tutarlılığı |
+| Mesele/zaman/ekip | Aynı konunun farklı sahnelerde devamı; sonradan doğan karar önünde durma; süreyi iki kez saymama; yetki/kapasite sınırı; gün içi kayıt ve eski kayıt devamı |
 | Sezon/dünya | Hızlandırılmış çok sezon, nüfus/sözleşme devamlılığı, yükselme/düşme ve görev geçişleri |
 | Masaüstü | `masaustu` içinde `node deneme.js`; paket için `node paketle.js && node deneme.js --paket`. Çevrimdışı paket, kayıt yolu, yeniden açılış ve hedef donanım ölçümü |
 
 Uzun kariyerde geçmiş kayıtlarının sınırsız şişmesi, arka plan maçlarının ana ekranı kilitlemesi ve dolu stat çiziminin maliyeti ölçülür. Önemli anılar saklanırken ayrıntılı maç verisinin saklama düzeyi ayrıca seçilir. Donanım hedefi ölçümden sonra belirlenir.
 
 Oynanış testleri; bir oyun gününün gerçek süresi, tekrarlanan olaylar, kararların anlaşılması, kriz/rahatlık dengesi ve kupaya giden yolları izler. Kullanıcı tarafından talep edilmedikçe harici telemetri hizmeti eklenmez; başlangıçta yerel test kayıtları yeterlidir.
+
+İlk sıra birkaç günlük tek mesele → sakin/olağan/yoğun günleri içeren hafta → maçlarla birkaç hafta → tam sezondur. [OYUN_TASARIMI §6](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo) süre hedeflerinin tek kaynağıdır. Oyuncunun sonraki adımı anlayabilmesi, kısa oturumda ilerleme, yoğun günü bölme, kesinti sayısı, iyi ekibin iş yükünü azaltması, olumlu sonuçlar ve başarısızlık sonrası devam yolları birlikte değerlendirilir. Hızlandırılmış geliştirici testleri mantık tutarlılığını ölçer; normal tempoda oynanışın yerini almaz.
 
 Bu planın uygulanma sırası ve sıradaki somut iş [YOL_HARITASI.md](YOL_HARITASI.md) dosyasındadır.
