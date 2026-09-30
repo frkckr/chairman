@@ -4,7 +4,7 @@
      node deneme.js           geliştirme kopyası: hazirla.js + electron .
      node deneme.js --paket   paketlenmiş uygulama: cikti/Chairman-win32-x64/Chairman.exe (önce node paketle.js)
    Uygulama iki kez ayrı süreç olarak açılır:
-     1. açılış: oyun çevrimdışı açılır (bütün ağ istekleri engellenir ve sayılır), hatalar toplanır. Açılıştaki ajandanın
+     1. açılış: oyun çevrimdışı açılır (bütün ağ istekleri engellenir ve sayılır), hatalar toplanır. Açılıştaki başkan odasının
         (oyun.png; oyunun kendi kaydı oyun-1 diske yazılır) ve bültenden İlerle ile geçilen 3B maç gününün (mac-gunu.png)
         ekran görüntüsü alınır, örnek kariyer kayıt denemesi yapılır. Uygulama kapanır.
      2. açılış: kayıt diskteki dosyadan yüklenir, kariyer devam eder, önceki kayda dönüş denenir.
@@ -46,8 +46,8 @@ if(s1){
   denetle('Three.js yerel kopyadan yüklendi',o.three==='128',`REVISION ${o.three}`);
   const yt=o.yaziTipleri||[];
   denetle('Yazı tipleri yerel kopyadan yüklendi',yt.some(x=>/IBM Plex Mono/.test(x))&&yt.some(x=>/Jersey 10/.test(x)),yt.join(', '));
-  const aj=s1.ajanda||{};
-  denetle('Açılışta ajanda görünüyor, oyun masaüstü kayıt deposunu kullanıyor',aj.gorunur===true&&aj.depo==='masaustu'&&aj.tarih==='2026-11-23',`depo ${aj.depo} · ${aj.tarih} · görüntü: oyun.png`);
+  const aj=s1.acilis||{};
+  denetle('Açılışta başkan odası görünüyor, oyun masaüstü kayıt deposunu kullanıyor',aj.gorunur===true&&aj.depo==='masaustu'&&aj.tarih==='2026-11-23',`depo ${aj.depo} · ${aj.tarih} · görüntü: oyun.png`);
   denetle('Bülten açılıp İlerle ile 3B maç gününe geçildi, WebGL çalışıyor',s1.ilerle===true&&s1.webgl===true,'görüntü: mac-gunu.png');
   denetle('Kayıt klasörü Türkçe karakterli yolda',s1.kayitDizini.startsWith(KAYIT),s1.kayitDizini);
   for(const x of (s1.kayit||{}).satirlar||[])console.log('    '+x);

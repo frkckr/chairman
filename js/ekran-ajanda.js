@@ -1,16 +1,17 @@
-/* ============ Chairman — ajanda ekranı (yol haritası 2.1, 2.3, 2.4) ============
-   Görüntü katmanı: kuralları js/ajanda.js ve js/mesele.js'ten çağırır, kariyeri kayıt deposundan yükler. Oyun bu ekranla açılır
-   (ON_EKRAN.sayfa==='ajanda'); arkada stat donuk durur. Solda günün işleri ve seçili işin (ya da meselenin) ayrıntısı, sağda kulüp durumu,
+/* ============ Chairman — ajanda ekranı (yol haritası 2.1, 2.3, 2.4, 2.4A) ============
+   Görüntü katmanı: kuralları js/ajanda.js ve js/mesele.js'ten çağırır. 2.5'ten beri oyun başkan odasıyla açılır (js/ekran-oda.js); bu koyu
+   ajanda aynı oturumun geliştirici görünümüdür (?ekran=ajanda, ON_EKRAN.sayfa==='ajanda') ve akış denemelerinin kural yoludur; arkada stat donuk durur. Solda günün işleri ve seçili işin (ya da meselenin) ayrıntısı, sağda kulüp durumu,
    önümüzdeki günler ve meseleler; altta "İlerle". Maç işine gelinince ajanda kapanır, maç bülteni açılır.
    Üç soru kolay cevaplanmalı: kim ilgileniyor, ne bekliyorum, şimdi ne yapabilirim. Mesele ayrıntısı bunları üstte verir.
    Karar işlerinde (js/yonetim.js) seçenekler ayrıntıda listelenir; seçim yapılmadan katılınamaz. Gizli katkı seviyeleri gösterilmez.
    Bütün değişiklikler kayıt oturumu (js/kayit.js) üzerinden yapılır: komut kariyerin kopyasında uygulanır, kabul edilirse kaydedilir.
    Kayıt: her tamamlanan komuttan sonra 'oyun-1' yuvasına. Depo: masaüstü → tarayıcı → yalnız bellek. Tek istisna "Stada git": maç sonucu
    kariyere bağlı olmadığı için maç sınırında kayıt yapılmaz; sayfa yenilenirse son karardan devam edilir ve "Stada git" yeniden açılır.
-   Kayıttan devam edilince "Kaldığın yer" özeti gösterilir. Lig bilgisi js/lig.js'teki sabit veridir. */
-const AJANDA_EKRANI={depo:null,kariyer:null,oturum:null};
+   Kayıttan devam edilince "Kaldığın yer" özeti gösterilir. Lig bilgisi js/lig.js'teki sabit veridir.
+   Depo, açılış, yeni kariyer ve komut yolu js/oyun-oturumu.js'tedir. Başlangıç ve paket adları oyuncuya gösterilmez. */
+const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve depoya bu adla da bakar
 {
-  const A=$('ajanda'),M=STIL.menu,YUVA='oyun-1',KULUP='demirkapi';
+  const A=$('ajanda'),M=STIL.menu,KULUP='demirkapi';
   for(const k in M)A.style.setProperty('--m-'+k,M[k]);
   {const h=parseInt(M.zemin.slice(1),16);A.style.setProperty('--m-ortuRenk','rgba('+(h>>16)+','+((h>>8)&255)+','+(h&255)+','+M.ortu+')');}
   const yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
@@ -25,44 +26,14 @@ const AJANDA_EKRANI={depo:null,kariyer:null,oturum:null};
   const DURUM={bekliyor:'',yapildi:'Yapıldı',kacirildi:'Kaçırıldı',ertelendi:'Ertelendi',tamamlandi:''};
   const ROL={baskan:'başkan',teknikDirektor:'teknik direktör',yonetici:'yönetici',eskiBaskan:'eski başkan'};
 
-  /* ---- kayıt deposu ---- */
-  let depo=null;
-  try{depo=masaustuDeposu();if(depo)AJANDA_EKRANI.depo='masaustu';}catch(e){depo=null;}
-  if(!depo){depo=tarayiciDeposu('chairman:');if(depo)AJANDA_EKRANI.depo='tarayici';}
-  if(!depo){depo=bellekDeposu();AJANDA_EKRANI.depo='bellek';}
-
-  let oturum=null,k=null,secili=null,seciliMesele=null,onay=null,mesaj='',bozukHata=null,yeniOnay=false,secimler={},donus=false;
-  function yerlestir(o){oturum=o;k=o.kariyer;AJANDA_EKRANI.oturum=o;AJANDA_EKRANI.kariyer=k;}
-  /* komut: kariyerin kopyasında uygulanır, geçerliyse kabul edilir ve kaydedilir (kaydetme:true ise kaydedilmez). Hata olursa kariyer değişmez */
-  function komut(f,kaydetme){const s=oturum.uygula(f,kaydetme);k=oturum.kariyer;AJANDA_EKRANI.kariyer=k;return s;}
-  const kayitHata=()=>!oturum.durum.tamam||AJANDA_EKRANI.depo==='bellek';
-  function kayitYazi(){
-    const d=oturum.durum,son=d.tarih?tarihKisa(d.tarih)+' '+saatYazi(d.dakika):null;
-    if(!d.tamam)return'Kaydedilemedi: '+d.hata+' · karar uygulandı, kayıt bekliyor'+(son?' · son kayıt '+son:'');
-    if(AJANDA_EKRANI.depo==='bellek')return'Kayıt yalnız bu oturumda: tarayıcı deposu kullanılamıyor';
-    return son?(d.bekleyen?'Son kayıt · ':'Kaydedildi · ')+son:'Kayıt bekliyor';
-  }
-  function yeniKariyer(){
-    yerlestir(kayitOturumu(depo,YUVA,kariyerOlustur(KARIYER_BASLANGIC),false));oturum.kaydet();
-    secili=null;seciliMesele=null;onay=null;donus=false;secimler={};mesaj='Yeni kariyer başladı. Haftanın işleri ajandada.';
-  }
-  /* açılış: kayıt varsa devam, yoksa yeni kariyer; açılamayan kayda dokunulmaz */
-  function baslat(){
-    let y;
-    try{y=kariyerYukle(depo,YUVA);}catch(e){y={tamam:false,bos:false,hata:e.message};}
-    if(y.tamam){
-      yerlestir(kayitOturumu(depo,YUVA,y.kariyer,y.kaynak==='ana'&&!y.gecisler.length));
-      donus=k.gecmis.length>0;
-      if(y.kaynak!=='ana')mesaj='Son kayıt açılamadı; '+(y.kaynak==='onceki'?'bir önceki sağlam kayıttan':'yarım kalan yazımın tamamlanmış kopyasından')+' devam ediliyor. '+y.uyarilar.join(' · ');
-      else if(y.gecisler.length){oturum.kaydet();mesaj='Eski kayıt yeni biçime dönüştürüldü ('+y.gecisler.join(', ')+'); önceki kayıt yedek olarak saklandı.';}
-    }else if(y.bos)yeniKariyer();
-    else bozukHata=y.hata;
-  }
-  /* bozuk kayıt: üzerine yazmadan önce kopyasını saklar */
-  function bozuguSaklaVeBasla(){
-    for(const ad of [YUVA,YUVA+'.yeni',YUVA+'.onceki']){const m=depo.oku(ad);if(m!==null)depo.yaz(ad+'.bozuk',m);}
-    bozukHata=null;yeniKariyer();
-  }
+  /* ---- oturum: depo, açılış ve komut yolu js/oyun-oturumu.js'tedir; oda ekranıyla ortaktır ---- */
+  let k=null,secili=null,seciliMesele=null,onay=null,mesaj='',yeniOnay=false,secimler={},donus=false;
+  function komut(f,kaydetme){const s=oyunKomut(f,kaydetme);k=OYUN.kariyer;return s;}
+  const kayitHata=oyunKayitHata,kayitYazi=oyunKayitYazi;
+  function sifirla(){k=OYUN.kariyer;secili=null;seciliMesele=null;onay=null;donus=false;secimler={};}
+  function yeniKariyer(){mesaj=oyunYeniKariyer();sifirla();}
+  function baslat(){oyunBaslat();k=OYUN.kariyer;donus=OYUN.donus;mesaj=OYUN.mesaj;}
+  function bozuguSaklaVeBasla(){mesaj=oyunBozuguSakla();sifirla();}
 
   /* ---- yardımcılar ---- */
   const kisiYazi=id=>{const p=k.kisiler[id];return p?p.ad+' ('+(ROL[p.rol]||p.rol)+')':'';};
@@ -107,7 +78,9 @@ const AJANDA_EKRANI={depo:null,kariyer:null,oturum:null};
       :'<p class="aj-not">Bekleyen adım kalmadı.</p>';
     if(o.karar)ic+='<p class="aj-bilgi"><b>Şimdi</b> Karar sende.</p><div class="aj-dugmeler"><button type="button" class="aj-birincil" data-eylem="kararAc" data-is="'+o.karar.isId+'">Kararı aç ▸</button></div>';
     else if(m.durum!=='kapandi')ic+='<p class="aj-bilgi"><b>Şimdi</b> Yapılacak bir şey yok; haber için ilerle.</p>';
-    ic+='<ul class="aj-olaylar">'+o.olaylar.slice(-4).reverse().map(x=>'<li><span class="aj-saat">'+yaz(tarihKisa(x.tarih).split(' ').slice(0,2).join(' ')+' '+saatYazi(x.dakika))+'</span><span>'+yaz(x.metin)+'</span></li>').join('')+'</ul>';
+    /* başkanın bildiği kanıtlar: kaynağıyla; dünyanın gizli gerçeği burada yoktur */
+    if(o.bilgiler.length)ic+='<p class="aj-bilgi"><b>Bilinenler</b></p><ul class="aj-olaylar aj-kanit">'+o.bilgiler.slice(-4).map(x=>'<li><span class="aj-saat">'+yaz(x.kaynak)+'</span><span>'+yaz(x.metin)+'</span></li>').join('')+'</ul>';
+    ic+='<ul class="aj-olaylar">'+o.olaylar.slice(o.bilgiler.length?-3:-4).reverse().map(x=>'<li><span class="aj-saat">'+yaz(tarihKisa(x.tarih).split(' ').slice(0,2).join(' ')+' '+saatYazi(x.dakika))+'</span><span>'+yaz(x.metin)+'</span></li>').join('')+'</ul>';
     return panel('Mesele','','<div class="aj-ayrinti">'+ic+'</div>','aj-p-ayrinti');
   }
   function ayrintiPaneli(satirlar){
@@ -117,7 +90,7 @@ const AJANDA_EKRANI={depo:null,kariyer:null,oturum:null};
     if(!r)return panel('Ayrıntı','','<div class="aj-ayrinti"><p class="aj-not">Bir iş seç.</p></div>','aj-p-ayrinti');
     const is=k.isler[r.id],v=is?is.veri:null;
     let ic='<p class="aj-is-baslik"><b>'+yaz(r.baslik)+'</b> '+(r.zorunluluk?'<span class="aj-etiket aj-'+r.zorunluluk+'">'+ETIKET[r.zorunluluk]+'</span>':'')+'</p>'+
-      '<p class="aj-not">'+aralik(r)+(r.sure?' · '+r.sure+' dk':'')+(r.saatsiz?' · en geç '+saatYazi(r.sonCevap.dakika):'')+(v&&v.kisiId?' · '+yaz(kisiYazi(v.kisiId)):'')+(v&&v.sonTarih?' · en geç '+yaz(tarihKisa(v.sonTarih)):'')+'</p>';
+      '<p class="aj-not">'+aralik(r)+(r.sure?' · '+r.sure+' dk':'')+(r.saatsiz?' · en geç '+(r.sonCevap.tarih===k.tarih?'':yaz(tarihKisa(r.sonCevap.tarih))+' ')+saatYazi(r.sonCevap.dakika):'')+(v&&v.kisiId?' · '+yaz(kisiYazi(v.kisiId)):'')+(v&&v.sonTarih?' · en geç '+yaz(tarihKisa(v.sonTarih)):'')+'</p>';
     if(v)ic+='<p>'+yaz(v.aciklama)+'</p>';
     if(r.meseleId)ic+=baglanti(r.meseleId);
     if(r.durum==='yapildi'){
@@ -177,7 +150,7 @@ const AJANDA_EKRANI={depo:null,kariyer:null,oturum:null};
   /* sıradaki durak: nereye gidilecek ve nedeni */
   function durakYazi(o){
     const t=anTarih(o.hedef),an=tarihKisa(t.tarih)+' '+saatYazi(t.dakika);
-    return an+(o.durak?' · '+o.durak.veri.baslik:o.neden==='cakisma'?' · günün işleri çakışıyor, seçim gerekecek':' · bekleyen rutin işler');
+    return an+(o.neden==='sonCevap'?' · son cevap saati: '+o.durak.veri.baslik:o.neden==='haber'?' · beklenen görüş':o.durak?' · '+o.durak.veri.baslik:o.neden==='cakisma'?' · günün işleri çakışıyor, seçim gerekecek':' · bekleyen rutin işler');
   }
   function altSerit(){
     const mac=macIsi();
@@ -201,16 +174,16 @@ const AJANDA_EKRANI={depo:null,kariyer:null,oturum:null};
       dugme=onay==='ilerle'?'<button type="button" data-eylem="vazgec">Vazgeç</button><button type="button" class="aj-ana" data-eylem="ilerle">Onayla ▸</button>'
         :'<button type="button" class="aj-ana" data-eylem="'+(sor?'ilerleSor':'ilerle')+'"'+(o.engel.length?' disabled':'')+'>İlerle ▸</button>';
     }
-    const yeni=yeniOnay?'<button type="button" class="aj-kucuk aj-tehlike" data-eylem="yeniEvet">Evet, Pazartesiden baştan başla</button><button type="button" class="aj-kucuk" data-eylem="yeniHayir">Vazgeç</button>'
-      :'<button type="button" class="aj-kucuk" data-eylem="yeniSor" title="Kariyeri Pazartesi sabahından yeniden başlat">Yeni kariyer</button>'+
-        (oturum.durum.tamam?'':'<button type="button" class="aj-kucuk aj-tehlike" data-eylem="kayitDene">Yeniden kaydet</button>');
+    const yeni=yeniOnay?'<button type="button" class="aj-kucuk aj-tehlike" data-eylem="yeniEvet">Evet, bu kariyeri bırak ve yenisini başlat</button><button type="button" class="aj-kucuk" data-eylem="yeniHayir">Vazgeç</button>'
+      :'<button type="button" class="aj-kucuk" data-eylem="yeniSor" title="Bu kariyeri bırakıp yeni bir kariyer başlat">Yeni kariyer</button>'+
+        (OYUN.oturum.durum.tamam?'':'<button type="button" class="aj-kucuk aj-tehlike" data-eylem="kayitDene">Yeniden kaydet</button>');
     return '<footer class="aj-alt">'+yeni+'<p class="aj-altDurum" aria-live="polite">'+yaz(durum)+'</p>'+dugme+'</footer>';
   }
 
   function ciz(odak){
-    if(bozukHata){
+    if(OYUN.bozukHata){
       A.innerHTML='<header class="oe-ust"><span>Ajanda</span><span class="aj-hata">Kayıt açılamadı</span></header>'+
-        '<div class="aj-bozuk"><p>Kayıtlı kariyer açılamadı. Kayıt dosyasına dokunulmadı.</p><p class="aj-not">'+yaz(bozukHata)+'</p>'+
+        '<div class="aj-bozuk"><p>Kayıtlı kariyer açılamadı. Kayıt dosyasına dokunulmadı.</p><p class="aj-not">'+yaz(OYUN.bozukHata)+'</p>'+
         '<p>Yeni kariyer başlatırsan açılamayan kayıt “.bozuk” uzantısıyla ayrıca saklanır.</p>'+
         '<div class="aj-dugmeler"><button type="button" class="aj-birincil" data-eylem="bozukYeni">Kaydı sakla, yeni kariyer başlat</button></div></div>';
       return;
@@ -235,7 +208,7 @@ const AJANDA_EKRANI={depo:null,kariyer:null,oturum:null};
     onay=null;
     if(k.isler[id]){
       /* yolda karar gerektiren bir haber geldi: iş yerinde bekliyor, o ana kadarki ilerleme geçerli */
-      if(mac)oturum.kaydet();
+      if(mac)OYUN.oturum.kaydet();
       secili=null;seciliMesele=null;
       mesaj=baslik+' için yola çıktın; yolda karar gerektiren bir haber geldi. İş bekliyor.';soyle(mesaj);ciz();return;
     }
@@ -249,11 +222,11 @@ const AJANDA_EKRANI={depo:null,kariyer:null,oturum:null};
     const p=[];
     for(const g of r.biten){
       if(g.isTuru==='odeme'){const h=k.hareketler.find(x=>x.id===g.sonuc.hareketId);if(h)p.push(h.aciklama+' '+tlYazi(h.tutar));}
-      else if(g.isTuru==='ekip'&&g.sonuc&&g.sonuc.bilgi)p.push(g.sonuc.bilgi);
+      else if((g.isTuru==='ekip'||g.isTuru==='gelisme')&&g.sonuc&&g.sonuc.bilgi)p.push(g.sonuc.bilgi);
       else if(g.isTuru==='ajanda'&&g.sonuc&&g.sonuc.durum==='kacirildi')p.push(g.sonuc.baslik+' kaçırıldı');
       else if(g.isTuru==='hatirlatma'&&g.sonuc)p.push(g.sonuc.metin);
     }
-    const bas=r.neden==='karar'?'Karar gerektiren bir haber geldi.':r.neden==='randevu'?'Sıradaki randevuya gelindi.':r.neden==='cakisma'?'Günün işleri çakışıyor; seçim yap.':'Bekleyen rutin işler işlendi.';
+    const bas=r.neden==='karar'?'Karar gerektiren bir haber geldi.':r.neden==='haber'?'Beklenen görüş geldi.':r.neden==='sonCevap'?'Son cevap saati geldi; karar bekliyor.':r.neden==='randevu'?'Sıradaki randevuya gelindi.':r.neden==='cakisma'?'Günün işleri çakışıyor; seçim yap.':'Bekleyen rutin işler işlendi.';
     return tarihKisa(k.tarih)+' '+saatYazi(k.gunIciDakika)+' · '+bas+(p.length?' '+p.join(' · '):'');
   }
   function ilerleEylem(){
@@ -281,7 +254,7 @@ const AJANDA_EKRANI={depo:null,kariyer:null,oturum:null};
     else if(ey==='ertele'){try{const t=komut(x=>ajandaErtele(x,id));mesaj=k.gecmis[k.gecmis.length-1].baslik+' '+tarihYazi(t)+' gününe ertelendi.';secili=null;onay=null;soyle(mesaj);ciz();}catch(x){hataGoster(x);}}
     else if(ey==='ilerleSor'){onay='ilerle';ciz('[data-eylem="ilerle"]');}
     else if(ey==='ilerle')ilerleEylem();
-    else if(ey==='kayitDene'){const s=oturum.kaydet();mesaj=s.tamam?'Kayıt yazıldı.':'Kayıt yine yazılamadı.';ciz('.aj-ana');}
+    else if(ey==='kayitDene'){const s=OYUN.oturum.kaydet();mesaj=s.tamam?'Kayıt yazıldı.':'Kayıt yine yazılamadı.';ciz('.aj-ana');}
     else if(ey==='vazgec'){onay=null;ciz();}
     else if(ey==='yeniSor'){yeniOnay=true;ciz('[data-eylem="yeniHayir"]');}
     else if(ey==='yeniHayir'){yeniOnay=false;ciz();}

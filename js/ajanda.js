@@ -18,6 +18,8 @@
      İşin tarih/dakika alanı başlangıç değil SON CEVAP ANIdır. Geliş ile son cevap arasında istenen an verilir (başlangıç = şimdi).
      Bekleyen karar başka işe katılmayı kilitlemez; yalnız bitişi son cevap anını aşan işe katılınamaz ve ilerleme bu anı geçemez.
      Başkan bir işin içindeyken dolan son cevap anı kaçırılmaz: işin bitişinden SURE_UZATMA dakika sonrasına uzar.
+     veri.bekleyebilir (2.6): acil olmayan, günlere yayılan cevap süresi. Böyle bir karar beklerken ilerlenebilir; ilerleme en geç son cevap
+     anında durur (neden 'sonCevap') ve orada karar verilmeden geçilmez.
    İlerleme (ilerleOnizle/duragaIlerle): sıradaki durma noktasına gider; günü bitirmekle aynı işlem değildir. Durma noktaları:
      sonucu 'dur' taşıyan ya da yeni ajanda işi doğuran gelişme (o anda) · sıradaki saatli ajanda işinin başlangıcı ·
      işleri birbiriyle çakışan günün başlangıcı · hiç ajanda işi yoksa ILERLE_SINIRI gün içindeki son rutin iş.
@@ -69,6 +71,8 @@ function ajandaSonucu(is,durum,sure){
 const kararSecenekleri=(k,is)=>is&&is.tur==='ajanda'&&is.veri.karar!==undefined?KARAR_TURLERI[is.veri.karar].secenekler(k,is):[];
 
 const isAn=is=>anDakika(is.tarih,is.dakika);
+/* son cevap anının yazısı: bugün değilse günüyle birlikte */
+const sonCevapYazi=(k,is)=>(is.tarih===k.tarih?'':gunAyYazi(is.tarih)+' ')+saatYazi(is.dakika);
 const isSirasi=(a,b)=>isAn(a)-isAn(b)||isNo(a.id)-isNo(b.id);
 const bekleyenIsler=k=>Object.values(k.isler).sort(isSirasi);
 
@@ -92,8 +96,8 @@ function ajandaOnizle(k,id,secim){
   }
   for(const x of bekleyenIsler(k)){
     if(x.id===id||isSonAn(x)>bitis)continue;
-    if(x.tur!=='ajanda'){gerceklesecek.push(x);continue;}
-    if(x.veri.saatsiz){engel.push(`Önce karar ver: ${x.veri.baslik} (son cevap ${saatYazi(x.dakika)})`);continue;}
+    if(x.tur!=='ajanda'){if(!isGizli(x))gerceklesecek.push(x);continue;}
+    if(x.veri.saatsiz){engel.push(`Önce karar ver: ${x.veri.baslik} (son cevap ${sonCevapYazi(k,x)})`);continue;}
     atlanacak.push(x);
     if(x.veri.zorunluluk==='zorunlu')engel.push(`${x.veri.baslik} (${saatYazi(x.dakika)}) zorunlu; bu işle çakışıyor`);
   }
@@ -161,9 +165,9 @@ function gunuBitirOnizle(k){
   const hedef=simdikiAn(k)+1440-k.gunIciDakika+GUN_BASLANGICI,engel=[],tasinacak=[],kacirilacak=[],gerceklesecek=[];
   for(const x of bekleyenIsler(k)){
     if(isSonAn(x)>hedef)continue;
-    if(x.tur!=='ajanda'){gerceklesecek.push(x);continue;}
+    if(x.tur!=='ajanda'){if(!isGizli(x))gerceklesecek.push(x);continue;}
     const v=x.veri,ad=`${v.baslik} (${saatYazi(x.dakika)})`;
-    if(v.zorunluluk==='zorunlu')engel.push(v.saatsiz?`Karar bekliyor: ${v.baslik} (son cevap ${saatYazi(x.dakika)})`:`Zorunlu iş bekliyor: ${ad}`);
+    if(v.zorunluluk==='zorunlu')engel.push(v.saatsiz?`Karar bekliyor: ${v.baslik} (son cevap ${sonCevapYazi(k,x)})`:`Zorunlu iş bekliyor: ${ad}`);
     else if(v.zorunluluk==='ertelenebilir'){
       if(ertelemeTarihi(x))tasinacak.push(x);else engel.push(`Bugün son günü: ${ad}`);
     }else kacirilacak.push(x);
@@ -179,7 +183,7 @@ function gunuBitir(k){
 }
 
 /* sıradaki durma noktası (kariyeri değiştirmez): {engel, hedef: durulacak an ya da null, neden: 'randevu'|'cakisma'|'sinir',
-   durak: başlangıcında durulacak iş ya da null, tasinacak, kacirilacak, gerceklesecek: arada işlenecek rutin işler} */
+   (neden 'haber': başkanın beklediği görüş gelecek) durak: başlangıcında durulacak iş ya da null, tasinacak, kacirilacak, gerceklesecek: arada işlenecek rutin işler} */
 function ilerleOnizle(k){
   const simdi=simdikiAn(k),engel=[],tasinacak=[],kacirilacak=[],L=bekleyenIsler(k);
   const saatli=L.filter(x=>x.tur==='ajanda'&&!x.veri.saatsiz),anlar=new Map();
@@ -206,10 +210,15 @@ function ilerleOnizle(k){
     else if(kacirilacak.length){hedef=simdi+1;neden='sinir';}
     else if(!L.some(x=>x.tur==='ajanda'))engel.push('Takvimde bekleyen bir gelişme yok');
   }
+  /* başkanın istediği görüş (veri.durak taşıyan ekip işi) daha önce gelecekse orada durulur: karar beklerken de görüş beklenebilir */
+  {const beklenen=L.filter(x=>x.tur==='ekip'&&x.veri.durak).map(isSonAn).sort((a,b)=>a-b)[0];
+   if(beklenen!==undefined&&(hedef===null||beklenen<hedef)){hedef=Math.max(beklenen,simdi);durak=null;neden='haber';}}
   /* son cevap anı geçilemez: bekleyen karar ilerlemeyi ancak bu an aşılacaksa engeller */
-  for(const x of L)if(x.tur==='ajanda'&&x.veri.saatsiz&&(hedef===null||isSonAn(x)<=hedef))
-    engel.push(`Önce karar ver: ${x.veri.baslik} (son cevap ${saatYazi(x.dakika)})`);
-  const gerceklesecek=hedef===null?[]:L.filter(x=>x.tur!=='ajanda'&&isSonAn(x)<=hedef);
+  /* acil olmayan karar (veri.bekleyebilir) beklerken ilerlenebilir: ilerleme en geç onun son cevap anında durur */
+  for(const x of L)if(x.tur==='ajanda'&&x.veri.saatsiz&&x.veri.bekleyebilir&&isAn(x)>simdi&&(hedef===null||isAn(x)<hedef)){hedef=isAn(x);durak=x;neden='sonCevap';}
+  for(const x of L)if(x.tur==='ajanda'&&x.veri.saatsiz&&!(x.veri.bekleyebilir&&isAn(x)>simdi)&&(hedef===null||isSonAn(x)<=hedef))
+    engel.push(`Önce karar ver: ${x.veri.baslik} (son cevap ${sonCevapYazi(k,x)})`);
+  const gerceklesecek=hedef===null?[]:L.filter(x=>x.tur!=='ajanda'&&!isGizli(x)&&isSonAn(x)<=hedef);
   return{engel,hedef,neden,durak,tasinacak,kacirilacak,gerceklesecek};
 }
 /* sıradaki durma noktasına ilerler. {biten: geçmiş kayıtları, neden: 'karar' (yolda karar gerektiren gelişme) ya da önizlemedeki neden,
@@ -219,7 +228,8 @@ function duragaIlerle(k){
   if(o.engel.length)throw new Error('İlerlenemez: '+o.engel.join('; '));
   for(const x of o.tasinacak)ajandaErtele(k,x.id,true);
   const r=zamanIlerletAna(k,o.hedef,durakSorgusu(k));
-  return{biten:r.biten,neden:r.durdu?'karar':o.neden,durak:r.durdu?null:o.durak};
+  const son=r.biten[r.biten.length-1];
+  return{biten:r.biten,neden:r.durdu?(son&&son.sonuc&&son.sonuc.haber?'haber':'karar'):o.neden,durak:r.durdu?null:o.durak};
 }
 
 /* bir günün ajanda satırları: bekleyen işler ve o gün için tamamlanmış/kaçırılmış/ertelenmiş kayıtlar, saat sırasıyla.
@@ -229,7 +239,7 @@ function ajandaGunu(k,tarih){
   const s=[];
   for(const x of bekleyenIsler(k)){
     const saatsiz=x.tur==='ajanda'&&!!x.veri.saatsiz;
-    if(saatsiz?tarih!==k.tarih:x.tarih!==tarih)continue;
+    if(isGizli(x)||(saatsiz?tarih!==k.tarih:x.tarih!==tarih))continue;
     const v=x.veri,r={id:x.id,tur:x.tur,saat:saatsiz?k.gunIciDakika:x.dakika,durum:'bekliyor',baslik:isBasligi(k,x)};
     if(v.meseleId)r.meseleId=v.meseleId;
     if(saatsiz){r.saatsiz=true;r.sonCevap={tarih:x.tarih,dakika:x.dakika};}
@@ -249,6 +259,7 @@ function ajandaGunu(k,tarih){
       if(r.secimMetni!==undefined)satir.secimMetni=r.secimMetni;
       s.push(satir);
     }else if(g.tarih===tarih){
+      if(g.isTuru==='gelisme'&&!r.bilgi)continue;                        // koşulu doğmayan dış gelişme iz bırakmaz
       const h=g.isTuru==='odeme'?k.hareketler.find(x=>x.id===r.hareketId):null;
       s.push({id:g.isId,tur:g.isTuru,saat:g.dakika,durum:'tamamlandi',baslik:h?h.aciklama:r.metin||r.bilgi||g.isTuru,tutar:h?h.tutar:undefined});
     }
@@ -259,7 +270,7 @@ function ajandaGunu(k,tarih){
 /* bugünden sonraki gün günlerin bekleyen işleri */
 function yaklasanlar(k,gun){
   const son=tarihEkle(k.tarih,gun);
-  return bekleyenIsler(k).filter(x=>tarihKarsilastir(x.tarih,k.tarih)>0&&tarihKarsilastir(x.tarih,son)<=0);
+  return bekleyenIsler(k).filter(x=>!isGizli(x)&&tarihKarsilastir(x.tarih,k.tarih)>0&&tarihKarsilastir(x.tarih,son)<=0);
 }
 
 /* kulübün özet durumu: para ve bilinen insanlar. yonetim: koltuk → kişi (ya da null); kulüpte koltuk kaydı yoksa null */

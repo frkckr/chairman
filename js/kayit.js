@@ -43,6 +43,24 @@ KAYIT_GECISLERI[1]=v=>{
   return v;
 };
 
+/* 2 → 3 (2.4A): içerik sürümü, devralınan koşullar, kayıtlı rastlantı ve olay örnekleri eklendi. Eski kayıt eski sabit içerikle
+   (icerik.surum 0) sürer: bekleyen sponsor işleri js/uyum-sponsor.js ile tamamlanır, yeni olay paketi açılmaz */
+KAYIT_GECISLERI[2]=v=>{
+  v.kayitSurumu=3;
+  v.icerik={surum:0,baslangic:null};v.kosullar={};v.olaylar={};
+  v.rastlanti={durum:Number.isInteger(v.dunyaTohumu)?v.dunyaTohumu>>>0:0};
+  v.sonrakiNo=Object.assign({},v.sonrakiNo,{olay:1});
+  return v;
+};
+
+/* 3 → 4 (2.6, 2.8): söz ve haber kayıtları eklendi. İçerik sürümü değişmez: eski kariyer kendi içeriğiyle sürer, yeni paket açılmaz */
+KAYIT_GECISLERI[3]=v=>{
+  v.kayitSurumu=4;
+  v.sozler={};v.haberler=[];
+  v.sonrakiNo=Object.assign({},v.sonrakiNo,{soz:1});
+  return v;
+};
+
 /* FNV-1a 32 bit: güvenlik için değil, yarım/bozuk yazımı yakalamak için */
 function saglamaHesapla(s){
   let h=0x811c9dc5;

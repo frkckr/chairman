@@ -92,6 +92,25 @@ const STIL={
     vurgu:'#ffb530',kulup:'#c8281e',rakip:'#3a5aa8',galibiyet:'#3a8c33',beraberlik:'#8a8478',maglubiyet:'#c8281e',
     sari:'#f2d21d',kirmizi:'#d8201e',cim:'#2f7a2a',cimAcik:'#3a8c33',sahaCizgi:'#f2f2ea'},
 
+  /* Başkan odası (js/oda.js): aydınlık, gün ışığı alan oda; başkanın masasından bakış. Ölçüler metre.
+     goz/bakis: kameranın yeri ve dinlenirken baktığı nokta; odakAci: bir nesneye odaklanınca görüş açısı;
+     odakKayma: panel sağda açıkken nesne solda görünsün diye bakışın sağa kayması (metre).
+     gunIsigi: saate göre [saat, güç, renk] — sabah, öğle ve akşam odada hissedilsin diye. TEST değerleri. */
+  oda:{aci:56,odakAci:52,odakKayma:0.5,goz:[0,1.28,0.62],bakis:[0,0.95,-1.4],arkaPlan:0xd8e4ea,
+    duvar:0xece4d2,lambri:0xcdbb98,supurgelik:0x8a6a44,tavan:0xf6f1e6,zemin:'#b08252',zeminKoyu:'#966a3e',zeminAcik:'#c0935f',hali:0x8e2f28,haliKenar:0xd8c08a,
+    cerceve:0xf4f1e8,gokUst:'#9fd0ee',gokAlt:'#e8f4f8',cim:'#3a8c33',tribun:'#8a8c90',direk:'#5a5d62',
+    dolap:0x7a5634,dolapKoyu:0x5e4026,koltuk:0x7a2420,koltukAyak:0x3a2a1c,lamba:0x2e5a46,lambaIc:0xfff2c8,
+    telefon:0x1a1b1f,telefonEkran:'#10202c',telefonHaber:'#ffb530',defter:'#f3ecdc',defterCizgi:'#c9bfa8',defterYazi:'#2a2622',defterSerit:'#c8281e',
+    dosya:0xc8281e,dosyaEtiket:0xf2ede2,kagit:0xf6f1e4,kalemlik:0x2a2c33,saatKasa:0x3a2a1c,saatYuz:0xf4f1e8,saatIbre:0x1c1a18,
+    flama:'#c8281e',flamaSerit:'#f2ede2',vurgu:0xffb530,gunesLekesi:0xfff1c4,gazete:'#e9e4d6',notKagidi:'#f2d96a',iskele:'#4a3a2a',iskeleBranda:'#3a6ea8',
+    ortam:{renk:0xfff3df,guc:0.62},gunes:{renk:0xfff0cf,konum:[-3.2,3.6,-2.2]},dolgu:{renk:0xdfe8ff,guc:0.28,konum:[2.5,2,2]},
+    gunIsigi:[[6,0.25,0xffc890],[9,0.62,0xfff0cf],[13,0.78,0xfffaf0],[17,0.6,0xffe0b0],[19.5,0.28,0xff9a5a],[22,0.1,0x6a78a8]]},
+
+  /* Açık renkli yönetim arayüzü (js/ekran-oda.js): kâğıt zemin, koyu okunur metin, ahşap çizgi, ölçülü kulüp rengi.
+     Ekran bu renkleri CSS değişkeni (--k-ad) olarak yazar. yaziBoyu: karenin genişliğine oranla yazı (cqw). TEST değerleri. */
+  kagit:{zemin:'#f4eedf',zeminKoyu:'#e9e0cb',serit:'#fbf7ec',cizgi:'#c9b994',yazi:'#26221c',soluk:'#6d6353',vurgu:'#a5620a',vurguZemin:'#ffb530',
+    kulup:'#b4241c',kirmizi:'#b4241c',yesil:'#2c6f28',golge:'rgba(40,28,12,.28)',yaziBoyu:{normal:1.42,buyuk:1.72}},
+
   /* Kameralar: hedef [x,y,z], aci = dikey görüş açısı (derece).
      Maç başkanın gözünden izlenir: ana tribünün ortasında, açık tribündeki başkan koltuğu. Dürbün isteğe bağlı. */
   kameralar:{

@@ -9,13 +9,14 @@
    Para kuruş cinsinden tamsayıdır (850000000 = 8.500.000,00 ₺). Tutarlar TEST değeridir, denge sayısı değildir.
    isler: takvimde bekleyen işler (js/takvim.js); ödemeler 'odeme' türü iştir (js/maliye.js). gecmis ve hareketler boş başlar. */
 const KARIYER_ORNEK={
-  kayitSurumu:2,
+  kayitSurumu:4,
   dunyaTohumu:20260929,
+  icerik:{surum:0,baslangic:null},kosullar:{},rastlanti:{durum:20260929},olaylar:{},sozler:{},haberler:[],
   tarih:'2026-11-28',gunIciDakika:540,          // 13. hafta maç günü sabahı (LIG.buMac: Cumartesi 19:00)
   baskanId:'kisi-1',
   gorevDurumu:'gorevde',
   final:null,
-  sonrakiNo:{kisi:8,is:4,hareket:1,mesele:1},
+  sonrakiNo:{kisi:8,is:4,hareket:1,mesele:1,olay:1,soz:1},
   meseleler:{},
   kulupler:{
     demirkapi:{id:'demirkapi',ad:'Demirkapı SK',kisa:'DEM',kademe:3,baskanId:'kisi-1',acilisNakit:850000000,nakit:850000000},
@@ -39,8 +40,10 @@ const KARIYER_ORNEK={
   }
 };
 
-/* ============ oynanabilir TEST başlangıcı: maçtan önceki hafta (yol haritası 2.1) ============
-   Oyun bu kariyerle açılır: Pazartesi 23 Kasım 08:00. Kulüpler ve kişiler KARIYER_ORNEK ile aynıdır (kariyerOlustur derin kopyalar).
+/* ============ eski sabit TEST haftası: maçtan önceki hafta (yol haritası 2.1–2.4) ============
+   Oyun artık bu kariyerle açılmaz (2.4A): yeni kariyer js/baslangic.js'teki kariyerBaslat ile kurulur. Bu veri yalnız kural
+   denemelerinin (araclar/kariyer-deneme.js) ve eski kayıt uyumunun örneğidir; içerik sürümü 0'dır.
+   Pazartesi 23 Kasım 08:00'de başlar. Kulüpler ve kişiler KARIYER_ORNEK ile aynıdır (kariyerOlustur derin kopyalar).
    Ajanda işleri (js/ajanda.js) hafta boyunca dağılır; Cumartesi 19:00 maçı zorunlu maç sınırıdır (LIG.buMac ile aynı an).
    Metinler, saatler ve tutarlar TEST verisidir; kesin içerik ya da denge değeri değildir.
    KARIYER_ORNEK'in işleri (is-1…is-3) maçtan sonraya düşer; maç sonucu kariyere Aşama 3'te bağlanana kadar oraya varılmaz.
@@ -51,7 +54,7 @@ const KARIYER_ORNEK={
    ödemesi (is-3) ona bağlıdır; devredilirse saymanın haberi Cuma sabahı gelir. */
 const KARIYER_BASLANGIC=Object.assign({},KARIYER_ORNEK,{
   tarih:'2026-11-23',gunIciDakika:480,
-  sonrakiNo:{kisi:11,is:15,hareket:1,mesele:2},
+  sonrakiNo:{kisi:11,is:15,hareket:1,mesele:2,olay:1,soz:1},
   meseleler:{
     'mesele-1':{id:'mesele-1',tur:'sponsorOdemesi',baslik:'Forma sponsoru: geciken ilk taksit',durum:'kararBekliyor',sorumluId:'kisi-1',kisiler:['kisi-4'],
       olaylar:[{tarih:'2026-11-23',dakika:480,anahtar:'sponsor.acildi',p:{kisiId:'kisi-4'}}],gorulen:0,kapanis:null}

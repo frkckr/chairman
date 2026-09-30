@@ -3,14 +3,19 @@
    Three.js nesnesi, DOM öğesi, fonksiyon, Date ya da undefined içermez. Sözleşme TEKNIK_PLAN.md §3'tedir.
    Örnek başlangıç verisi js/kariyer-ornek.js'tedir. Deneme: node araclar/kariyer-deneme.js
    Yükleme sırası: kariyer.js → takvim.js → maliye.js (kariyerDogrula diğer ikisinin denetimlerini de çağırır).
-   Sürüm 2 (yol haritası 2.3): meseleler ve sonrakiNo.mesele eklendi; sürüm 1 kayıtlarını js/kayit.js dönüştürür. */
-const KARIYER_SURUM=2;
+   Sürüm 2 (yol haritası 2.3): meseleler ve sonrakiNo.mesele eklendi; sürüm 1 kayıtlarını js/kayit.js dönüştürür.
+   Sürüm 3 (yol haritası 2.4A): icerik {surum, baslangic}, kosullar, rastlanti {durum}, olaylar ve sonrakiNo.olay eklendi.
+     icerik.surum: içerik sürümü (kayıt sürümünden ayrı); 0 = eski sabit TEST haftası, yeni olay paketi açılmaz.
+     kosullar: devralınan dünya gerçekleri; başlangıçta bir kez kurulur (js/baslangic.js). olaylar: js/olay.js.
+   Sürüm 4 (yol haritası 2.6, 2.8): sozler (js/soz.js), haberler (gazete ve teşekkür kayıtları) ve sonrakiNo.soz eklendi;
+     kulüpte isteğe bağlı sorumluluklar (kalıcı yetki devri, js/yonetim.js). İçerik sürümü 2: tavsiye, hoca, basın ve destek paketleri. */
+const KARIYER_SURUM=4;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */
 const EK_DENETIMLER=[];
 /* kimlikUret'in tanıdığı türler ve kayıtlarının bulunduğu alan (nesne ya da dizi) */
-const KIMLIK_TURLERI={kisi:'kisiler',is:'isler',hareket:'hareketler',mesele:'meseleler'};
+const KIMLIK_TURLERI={kisi:'kisiler',is:'isler',hareket:'hareketler',mesele:'meseleler',olay:'olaylar',soz:'sozler'};
 
 /* başlangıç verisinin bağımsız kopyası: oyun ilerledikçe başlangıç verisi değişmez */
 const kariyerOlustur=baslangic=>JSON.parse(JSON.stringify(baslangic));
@@ -21,6 +26,17 @@ function kariyerKomut(k,f){
   const y=kariyerOlustur(k),sonuc=f(y),h=kariyerDogrula(y);
   if(h.length)throw new Error('Komut kariyeri tutarsız bıraktı: '+h.slice(0,3).join('; '));
   return{kariyer:y,sonuc};
+}
+
+/* kayıtlı rastlantı: dünya tohumundan başlar, durumu kariyerde saklanır (k.rastlanti.durum); [0,1) aralığında sayı verir.
+   Hesap js/ortak.js'teki tohumluRastgele ile aynıdır (mulberry32). Yalnız komut içinde çekilir: önizleme, özet ve çizim çekmez.
+   Maç ve görsel rastlantıdan bağımsızdır; aynı tohum ve aynı kararlarla aynı dizi tekrarlanır */
+const rastlantiBaslat=tohum=>({durum:tohum>>>0});
+function rastlantiCek(k){
+  const a=(k.rastlanti.durum+0x6D2B79F5)|0;
+  k.rastlanti.durum=a>>>0;
+  let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;
+  return((t^(t>>>14))>>>0)/4294967296;
 }
 
 /* yeni kalıcı kimlik: 'kisi-8', 'is-4' gibi; sayacı ilerletir, var olan bir kimliği asla yeniden vermez */
@@ -80,6 +96,13 @@ function kariyerDogrula(k){
   if(!k.kulupler)h.push('Kulüp listesi yok');
   if(!k.kisiler)h.push('Kişi listesi yok');
   if(!k.sonrakiNo)h.push('sonrakiNo yok');
+  const duz=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+  if(!duz(k.icerik)||!Number.isInteger(k.icerik.surum)||k.icerik.surum<0||(k.icerik.baslangic!==null&&typeof k.icerik.baslangic!=='string'))h.push('İçerik kaydı (icerik) geçersiz');
+  if(!duz(k.kosullar))h.push('Devralınan koşullar (kosullar) yok');
+  if(!duz(k.rastlanti)||!Number.isInteger(k.rastlanti.durum)||k.rastlanti.durum<0||k.rastlanti.durum>0xFFFFFFFF)h.push('Rastlantı durumu (rastlanti) geçersiz');
+  if(!duz(k.olaylar))h.push('Olay listesi (olaylar) yok');
+  if(!duz(k.sozler))h.push('Söz listesi (sozler) yok');
+  if(!Array.isArray(k.haberler))h.push('Haber listesi (haberler) yok');
 
   for(const [anahtar,c] of Object.entries(kulupler)){
     const ad=`Kulüp ${anahtar}`;

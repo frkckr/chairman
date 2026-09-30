@@ -64,12 +64,12 @@ async function deneme(p){
   wc.on('did-fail-load',(e,kod,aciklama,url)=>sonuc.hatalar.push(`Yüklenemedi: ${url} (${aciklama})`));
   try{
     if(ASAMA==='1'){
-      /* açılış ekranı ajandadır: kariyer diskten yüklenir ya da yeni kariyer oluşturulup kaydedilir */
+      /* açılış ekranı başkan odasıdır: kariyer diskten yüklenir ya da yeni kariyer oluşturulup kaydedilir */
       await p.loadFile(path.join(OYUN,'index.html'));
       await bekle(8000);
       fs.writeFileSync(path.join(DENEME,'oyun.png'),(await wc.capturePage()).toPNG());
-      sonuc.ajanda=await wc.executeJavaScript(`(()=>{const a=document.getElementById('ajanda');const e=typeof AJANDA_EKRANI!=='undefined'?AJANDA_EKRANI:{};
-        return{gorunur:!!a&&!a.hidden,depo:e.depo||null,tarih:e.kariyer?e.kariyer.tarih:null};})()`);
+      sonuc.acilis=await wc.executeJavaScript(`(()=>{const a=document.getElementById('oda');const e=typeof OYUN!=='undefined'?OYUN:{};
+        return{gorunur:!!a&&!a.hidden&&!!a.querySelector('.od-ana'),depo:e.depo||null,tarih:e.kariyer?e.kariyer.tarih:null};})()`);
       /* bülten doğrudan açılır; İlerle: bülten kapanır, 3B maç günü (WebGL) başlar */
       await p.loadFile(path.join(OYUN,'index.html'),{query:{ekran:'bulten'}});
       await bekle(6000);

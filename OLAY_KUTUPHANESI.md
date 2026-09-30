@@ -1,10 +1,10 @@
 # Chairman — olay kütüphanesi
 
-Son güncelleme: 2026-09-30. Onaylı tasarım yönünü destekleyen tarihsel kaynak ve kurgusal içerik kataloğudur. **Aşağıdaki yeni paketler henüz uygulanmadı.** Kartlar ayrıntılı içerik taslaklarıdır; bütün seçeneklerin, sayıların veya paketlerin aynı aşamada uygulanacağı anlamına gelmez.
+Son güncelleme: 2026-09-30. Onaylı tasarım yönünü destekleyen tarihsel kaynak ve kurgusal içerik kataloğudur. **P01, P03 ve P13'ün dar alt kapsamları uygulandı (yol haritası 2.4A, 2.6, 2.8; TEST içerik); diğer paketler henüz uygulanmadı.** Kartlar ayrıntılı içerik taslaklarıdır; bütün seçeneklerin, sayıların veya paketlerin aynı aşamada uygulanacağı anlamına gelmez.
 
 Katalog 23 tarihsel örnek, 14 olay paketi ve 6 koşula bağlı birleşim içerir. Tarihsel dayanak ile kurgusal seçenek ve sonuçlar ayrıdır. Birleşimler oynanacak altı sabit kampanya değildir. İlk uygulama kapsamı ve iş sırası [YOL_HARITASI](YOL_HARITASI.md), oyun kuralları [OYUN_TASARIMI](OYUN_TASARIMI.md), teknik sözleşme [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi) içindedir.
 
-Mevcut sabit TEST haftası ve sponsor seçenekleri kodda hâlâ durur. Yeni örnek doğrulandığında normal Yeni kariyer yolunda değiştirilecek; 2.3–2.4 mesele, zaman ve kayıt temeli korunacak. Bu belge eklenirken oyun kodu değiştirilmedi.
+Eski sabit TEST haftası normal Yeni kariyer yolundan çıkarıldı (2.4A); eski sponsor seçenekleri yalnız eski kayıtları tamamlamak için kodda durur. 2.3–2.4 mesele, zaman ve kayıt temeli korundu.
 
 ## 1. Kataloğun kullanımı
 
@@ -55,6 +55,8 @@ Her paket bir mesele ailesidir. Bütün seçenekler her durumda görünmez: bir 
 **Yollar:** Sponsor avansı karşılığında sınırlı hak vermek; alacak ve ödemeleri yeniden görüşmek; ertelenebilir yatırımı küçültmek; uygun aşamada oyuncu satışı araştırmak. Kişisel katkı ancak daha sonra seçilecek kurallar içinde seçenek olur.
 
 **Sonuçlar:** Hızlı nakit ilerideki gelir alanını azaltabilir. Yeniden takvimleme ilişkiyi ve güveni etkiler. Yatırım erteleme sportif bütçeyi korur ama tesis sorununu sürdürür. **Toparlanma:** Anlaşmayı yeniden görüşme ve sonraki dönem bütçesini düzeltme mümkündür; bedeller silinmez. **Önleme:** Erken tahsilat takibi ve nakit tamponu. **İz:** Maaşın zamanında yatması, personelin tavrında ve dosyadaki ödeme kaydında görülür.
+
+**Kullanılan alt kapsam (2.4A, TEST içerik):** Forma sponsorunun taksit erteleme talebi. Açılma yalnız kasa önümüzdeki günlerde gerçekten yetmiyorsa kriz olarak; yetiyorsa acil olmayan değerlendirme olarak. Yollar: sponsorla yüz yüze görüşme (taksit ya da pano hakkı karşılığı tam ödeme teklifi), saymana devir (taksit, tam ödeme, gecikme bedeli ya da yetkiyi aşan indirim teklifi), bakım taksitini bedeliyle erteleme, maaşı bekletme. Önleme: erken tahsilat teyidi ve kasada pay bırakma. Kanıt: tahsilat geçmişi, sözleşmedeki gecikme maddesi, defterdeki açık, saymanın görüşü. Kurulmayanlar: alacak/ödemelerin genel yeniden görüşülmesi, oyuncu satışı, kişisel katkı, tesis sistemi, personelin tavrı ve pano hakkının sonraki etkisi (yalnız kayda yazılır).
 
 ### P02 — İmza gelmeden verilen söz
 
@@ -186,17 +188,17 @@ Uygulamaya alınacak kartta şu bilgiler tamamlanır: paket kimliği/sürümü; 
 
 ## 7. Mevcut içerikten geçiş
 
-Eski sabit haftanın, aday–sponsor sonuç eşleşmelerinin ve sonuçsuz görev metinlerinin değiştirilme sınırı [TEKNIK_PLAN §6](TEKNIK_PLAN.md#eski-içerikten-geçiş-ve-kayıt-uyumu) içindedir. Normal yeni kariyerde yalnız yeni içerik yolu kullanılır. Eski kaydı tamamlamak için gereken davranış ve test verisi korunabilir; ödenmiş para veya geçmiş karar yeniden yazılmaz. Geçiş yeni örnek doğrulandıktan sonra yapılır; bu belge koddan içerik kaldırmaz.
+Eski sabit haftanın, aday–sponsor sonuç eşleşmelerinin ve sonuçsuz görev metinlerinin değiştirilme sınırı [TEKNIK_PLAN §6](TEKNIK_PLAN.md#eski-içerikten-geçiş-ve-kayıt-uyumu) içindedir. Normal yeni kariyerde yalnız yeni içerik yolu kullanılır. Eski kaydı tamamlamak için gereken davranış ve test verisi korunabilir; ödenmiş para veya geçmiş karar yeniden yazılmaz. Geçiş 2.4A ile yapıldı: eski kararlar `js/uyum-sponsor.js`'te, eski hafta yalnız deneme verisi olarak durur.
 
 ## 8. Paket durumu ve bağımlılıkları
 
-**Tüm yeni paketler henüz uygulanmamış içerik taslaklarıdır.** İlk dar örnekler P01, sınırlı P03 ve P13 olarak seçildi; bunlar aşağıdaki farklı adımlarda geliştirilir. Diğer kartlar ilgili aşamada değerlendirilecek aday içeriklerdir. Tablo bağımlılık haritasıdır; tamamlanma ve iş sırası yalnız [YOL_HARITASI](YOL_HARITASI.md) içinde güncellenir.
+**P01, P03 ve P13'ün dar alt kapsamları dışında tüm paketler henüz uygulanmamış içerik taslaklarıdır.** Hoca talebi ve gazetenin sorusu küçük yardımcı örneklerdir; P12 ve basın/medya sistemi uygulanmış sayılmaz. İlk dar örnekler P01, sınırlı P03 ve P13 olarak seçildi; bunlar aşağıdaki farklı adımlarda geliştirilir. Diğer kartlar ilgili aşamada değerlendirilecek aday içeriklerdir. Tablo bağımlılık haritasıdır; tamamlanma ve iş sırası yalnız [YOL_HARITASI](YOL_HARITASI.md) içinde güncellenir.
 
 | Paket | İlk kullanım veya gerekli temel | Kapsam sınırı |
 |---|---|---|
-| P01 | 2.4A dar ödeme/sponsor denemesi; Aşama 4 sözleşmelerle genişleme | İlk adımda transfer, kişisel katkı veya tesis sistemi kurulmaz; karttaki bütün yollar aynı anda uygulanmaz |
+| P01 | 2.4A dar ödeme/sponsor denemesi (uygulandı; kartta “Kullanılan alt kapsam”); Aşama 4 sözleşmelerle genişleme | İlk adımda transfer, kişisel katkı veya tesis sistemi kurulmaz; karttaki bütün yollar aynı anda uygulanmaz |
 | P02 | Aşama 6 adaylık ve vaat; ilgili transfer/yatırım sistemi | Verilmemiş söz veya kesinleşmemiş transfer sonradan oldu diye yazılmaz |
-| P03 | 2.6 sınırlı katkı/görünürlük hakkı; Aşama 4 anlaşmalar | Tam hisse, yatırımcı ve seçim sistemi ilk örneğe dahil değildir; açık mali kararlar ayrıca çözülür |
+| P03 | 2.6 sınırlı katkı/görünürlük hakkı (uygulandı: tek seferlik destek, süreli pano, çıkar çatışması ve tek pano kuralı); Aşama 4 anlaşmalar | Tam hisse, yatırımcı ve seçim sistemi ilk örneğe dahil değildir; açık mali kararlar ayrıca çözülür |
 | P04 | Aşama 8 tesis/stat yatırımı | 2.8'deki küçük görünür iz bütün inşaat sisteminin hazır olduğu anlamına gelmez |
 | P05 | Aşama 4 sonrası ticari hak ve ilgili kamuoyu sistemi | Kulüp kimliği, kurgusal marka ve anlaşmanın sınırları gerekir; her kariyere arma krizi eklenmez |
 | P06 | Aşama 4–5 mali/etkinlik temeli; Aşama 8 tesisle genişleme | Yardım maçı için gerçek maç/takvim gerekir; brüt destek vaadi nakit sayılmaz |
@@ -206,7 +208,7 @@ Eski sabit haftanın, aday–sponsor sonuç eşleşmelerinin ve sonuçsuz görev
 | P10 | Maç sonucu bağlantısı (3.5) ve ayrıca ilgili kupa/fikstür sistemi | Yalnız lig fikstürünün bulunması kupanın hazır olduğu anlamına gelmez; sonuçlar zorlanmaz |
 | P11 | Aşama 5–8 sezon/kademe; Avrupa ölçeği Aşama 9 | Yeni ihtiyacın sportif ve kurumsal dayanağı bulunmalı |
 | P12 | Aşama 3 rapor/hoca/sonuç; Aşama 4 sözleşmeyle genişleme | Başkan günlük kadro/taktik yöneticisine dönüşmez |
-| P13 | 2.8 küçük söz, teşekkür ve kalıcı görünür iz | Günlük zorunlu moral toplama veya kutlama sonrası zorunlu kriz yoktur |
+| P13 | 2.8 küçük söz, teşekkür ve kalıcı görünür iz (uygulandı: söz kaydı, maaş sonrası teşekkür, odadaki izler) | Günlük zorunlu moral toplama veya kutlama sonrası zorunlu kriz yoktur |
 | P14 | Aşama 6 seçim/vaat; Aşama 7 görev geçmişi | Seçmen ve kurul yapısı seçilmeden kesin yönetim modeli kurulmaz |
 
 İlk P01 denemesi üç farklı mali bağlamı karşılaştırır: ödeme zamanlaması sıkışan, acil nakit baskısı olmadan anlaşma değerlendiren ve ilgili sorunu önceden çözmüş/taşımayan. Sonuncusunda krizin hiç açılmaması başarı ölçütüdür. Tam koşullar, geçiş ve bitiş ölçütleri yol haritası 2.4A'dadır. P03 ve P13 bu adımın önkoşulu değildir.

@@ -31,7 +31,7 @@ Gece sahnesinde sıcak projektör sarısı, gece laciverti ve sis kullanılır. 
 - Aynı ışığın gölgesi stencil ile aynı pikseli bir kez koyulaştırır; farklı ışıklar üst üste gelebilir.
 - Gündüz, hava durumu ve bunlara uygun gölge düzenleri gelecekteki iştir. Bugünkü gece sahnesinin tamamlanmış alternatifleri sayılmaz.
 
-**Onaylı hedef (2026-09-30):** Kulüp odası, görüşme ve antrenman ortamları ilk kapsamda aydınlık sunulur. Yönetim arayüzünde açık zemin, koyu okunabilir metin, sıcak kâğıt/ahşap tonları ve ölçülü kulüp renkleri kullanılır. Ajanda, raporlar, telefon ve maç öncesi bültenin yönetim sunumu bu yöne uyarlanır. Kesin renk değerleri ilk sahnede sınanır; bugünkü renk tablosu yeni açık paletin tamamlandığı anlamına gelmez.
+**Onaylı hedef (2026-09-30; başkan odası için uygulandı, 2.5):** Kulüp odası, görüşme ve antrenman ortamları ilk kapsamda aydınlık sunulur. Yönetim arayüzünde açık zemin, koyu okunabilir metin, sıcak kâğıt/ahşap tonları ve ölçülü kulüp renkleri kullanılır. Ajanda, raporlar, telefon ve maç öncesi bültenin yönetim sunumu bu yöne uyarlanır. Başkan odasının 3B renkleri ve gün ışığı `STIL.oda`, açık arayüz paleti `STIL.kagit` içindedir (krem kâğıt zemin, koyu metin, ahşap çizgi, bordo ve amber vurgu); bunlar TEST değeridir. Bülten henüz bu palete uyarlanmadı.
 
 Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve gözlem örneği, bütün statlara gündüz/hava sistemi eklenmesini beklemez; kapsamlı saat, hava ve gölge çeşitliliği sonraki iştir.
 
@@ -83,21 +83,33 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 ### Bugünkü uygulama
 
+- **Başkan odası (`js/oda.js`, `js/ekran-oda.js`) oyunun açılış ekranıdır (2.5).** Başkanın masasından bakılır: pencerede uzakta kulübün tribünü, duvarda flama ve oyun saatini gösteren saat, iki ziyaretçi koltuğu, dosya dolabı. Gün ışığı oyun saatine göre değişir. Kupa ve fotoğraf yoktur: yaşanmamış geçmiş gösterilmez.
+  - Masada telefon, ajanda defteri ve dosya vardır; aynı üçünün etiketli düğmesi solda durur (klavye 1/2/3, Esc). İmleç nesnenin üzerindeyken amber çerçeve yanar. Telefon yeni haberde amber yanar ve sayıyı gösterir; ajanda defteri günün tarihini taşır; dosya yalnız mesele varken masadadır.
+  - Panel açık renkli kâğıt görünümündedir, karenin sağında açılır; oda solda görünür kalır ve bakış nesneye döner. Aynı anda tek panel açıktır. Haber paneli kendiliğinden açmaz.
+  - Üstte kulüp/başkan ve kayıt durumu, solda tarih ve saat, altta son gelişme, sıradaki durak ve “İlerle” (maç günü “Stada git”) her zaman görünür.
+  - Dosyada başlık ve durum, yürüten, “Bilinenler” (kaynağıyla), karar seçenekleri ve kısa geçmiş bulunur. Seçenekler kararın bilinen maliyetini ve belirsizliğini yazar.
+  - Yazı büyüklüğü karenin genişliğine orantılıdır (normal ve büyük); uzun içerikte panel kendi içinde kaydırılır. Ses düzeyi ve sessiz ayarı vardır; sesler bilgi taşımaz.
+  - Dosyada karar seçeneklerinin altında “Görüş iste” düğmesi vardır: kimin inceleyeceği ve görüşün ne zaman geleceği yazılır; görüş “Bilinenler”e kişinin adıyla düşer. Dosyada o konuda verilen sözler, ajandada başkanın başlatabileceği girişimler ve verdiği bütün sözler (açık/tutuldu/bozuldu) listelenir.
+  - Gazete yalnız çıkmış bir haber varken masadadır (dördüncü nesne ve düğme, klavye 4); yeni haberde amber yanar. Panelde manşet büyük başlık yazısıyla ve bağlı olduğu konuyla gösterilir.
+  - Kayıtlı olaydan doğan izler: masada teşekkür kartı, pencerede tribün çatısında iskele (onarım başladıysa), duvarda pano sözünün notu. Olay yaşanmadıysa iz de yoktur.
+  - Koyu ajanda ekranı (`?ekran=ajanda`) geliştirici görünümü olarak durur.
+
 - Stat içindeki pano, pankart ve skor tabelalarında mevcut Türkçe karakterli 3×5 piksel yazı kullanılır.
 - Maç görüntüsünde TV yayın bandı, radar veya oyuncu etiketi bulunmaz. Dürbün maskesi vardır; skor ve dakika stat tabelasından, ayrıca görüntünün dışındaki radyo satırından izlenir.
 - Maç öncesi bülteni (`js/ekran-mac-oncesi.js`) 4:3 oyun karesinde açılır; stat arkada donuk kalır ve koyu panelle büyük ölçüde örtülür. Ölçüler oyun karesiyle birlikte değişir, kaydırma kullanılmaz ve ana eylem sağ altta belirgindir.
-- Ajanda ekranı (`js/ekran-ajanda.js`) oyunun açılış ekranıdır ve bültenin düzenini izler: aynı 4:3 kare, `cqw` ölçüleri, panel başlıkları ve `STIL.menu` renkleri, kaydırma yok, ana eylem (“İlerle”, maç günü “Stada git”) sağ altta.
+- Koyu ajanda ekranı (`js/ekran-ajanda.js`; 2.5'ten beri yalnız `?ekran=ajanda`) bültenin düzenini izler: aynı 4:3 kare, `cqw` ölçüleri, panel başlıkları ve `STIL.menu` renkleri, kaydırma yok, ana eylem (“İlerle”, maç günü “Stada git”) sağ altta.
   - Zorunluluk etiketlerinde zorunlu kırmızı, ertelenebilir amber, isteğe bağlı soluk renkle gösterilir.
   - Kaçırılacak işler ve engeller ilgili düğmenin yanında kırmızı metinle önceden yazılır; kaçırtan eylem satır içi onay ister.
   - Tutarlar kuruşsuz yazılır, giderler kırmızıdır.
   - Karar işlerinde seçenekler ayrıntı panelinde alt alta listelenir; seçilen seçenek amber kenarla işaretlenir, seçim yapılmadan ana düğme kapalı kalır.
   - Yönetim adayları meslek, güçlü ve zayıf yanlar ve beklenti metniyle tanıtılır; katkı için sayı, seviye ya da çubuk gösterilmez.
   - Sağ kolonda “Meseleler” listesi durum ve “yeni” işaretiyle gösterilir. Bir mesele seçilince ayrıntı panelinde önce yürüten kişi, bekleyen adım ve “Şimdi” satırı, sonra kısa geçmiş görünür. Kayıttan dönüşte ayrıntı panelinde “Kaldığın yer” özeti açılır ve “Devam” ile kapanır. Alt şeritte sıradaki durak ve arada olacaklar yazılır; kayıt yazılamazsa üst şeritte kırmızı bildirilir.
+  - Koşula bağlı olayın meselesinde (2.4A) “Bilinenler” listesi başkanın elindeki kanıtları kaynağıyla gösterir (ör. “Muhasebe kayıtları”, “Sponsorluk sözleşmesi”, görüş bildiren kişinin adı). Henüz olmamış dış gelişme ajandada ve önümüzdeki günlerde görünmez. Başlangıcın, paketin ve tohumun geliştirici adları ile dünyanın gizli gerçeği ekrana yazılmaz. Son cevap anı bugün değilse günüyle birlikte yazılır.
 - Bülten başlıklarında piksel görünümlü `Jersey 10`, metinlerde `IBM Plex Mono`; ana vurguda tabela amberi, takım ayrımında kırmızı ve lacivert kullanılır. Olası 11 küçük sahada forma renkli ve numaralı işaretlerle gösterilir. Menü renkleri `STIL.menu` içindedir.
 
 ### Onaylı hedef: mekân içinde tek konuya odaklanma
 
-**2026-09-30 tasarım kararı; henüz uygulanmadı.** Yukarıdaki koyu paneller, kaydırmasız düzen ve ajandayla açılış mevcut prototipi anlatır. Yeni akış aşağıdaki kurallarla geliştirilir:
+**2026-09-30 tasarım kararı; başkan odasında uygulandı (2.5), görüşme ve antrenman ortamları henüz yok.** Aşağıdaki koyu bülten ve koyu ajanda eski düzeni anlatır. Yeni akış aşağıdaki kurallarla geliştirilir:
 
 - Ortam görünür kalır; görüşme veya karar sırasında odaktaki kişi/konu öne çıkar. Kulübün bütün göstergeleri sürekli aynı ekrana yığılmaz.
 - Telefon, ajanda, rapor ve mali ayrıntılar gerektiğinde açılır, kapatıldığında bulunulan ortama dönülür. Aynı mesele başka kanaldan açıldığında geçmişi ve durumu korunur.
@@ -106,11 +118,11 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 - Görüşmede tavsiye, taahhüt ve karar farklı anlamlarıyla gösterilir. Süre ve bilinen sonuç/çakışmalar eylemden önce anlaşılır olur. Bir mesajın okunması işi bitirmiş gibi sunulmaz.
 - Uzun metinler okunabilir yazıyla, açık zemin üzerinde yeterli kontrastla gösterilir. Maçın 640×480 iç çözünürlüğü veya bugünkü menü ölçüleri yeni metin düzenini zorunlu olarak sınırlamaz; pencere boyutu ve yazı büyüklüğü birlikte sınanır.
 - Tarih/saat, zamanın durduğu an ve başlatılan ilerleme görünür biçimde anlaşılır. Oyun kuralları [OYUN_TASARIMI §6](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo) içinde tutulur.
-- Oyuna dönüşte son karar, beklenen haberler ve yaklaşan önemli tarih kısa özetle hatırlatılır. Gün içi kayıt sınırı ve son başarılı kayıt doğru anlatılır. Bu ilke mevcut ajanda ekranında uygulanmıştır (2.4); aydınlık oda sunumu henüz yoktur.
+- Oyuna dönüşte son karar, beklenen haberler ve yaklaşan önemli tarih kısa özetle hatırlatılır. Gün içi kayıt sınırı ve son başarılı kayıt doğru anlatılır. Bu ilke uygulanmıştır: dönüş özeti telefonda açılır (2.4, 2.5).
 
 ### Koşula bağlı olayların sunumu
 
-**Onaylı hedef (2026-09-30; henüz uygulanmadı):** Aynı olay ailesi farklı kariyerlerde farklı koşullarla sunulabilir. Ekran şablonu yeniden kullanılabilir; yalnız kişi adı, renk veya tutar değiştirerek içerik çeşitliliği sağlandığı varsayılmaz. Mevcut koşullar, bilgi ve seçenekler ortak mesele verisinden gelir.
+**Onaylı hedef (2026-09-30; mevcut ajanda ekranında ilk örnekle kısmen uygulandı, yukarıdaki “Bugünkü uygulama”; mekân içi sunum henüz yok):** Aynı olay ailesi farklı kariyerlerde farklı koşullarla sunulabilir. Ekran şablonu yeniden kullanılabilir; yalnız kişi adı, renk veya tutar değiştirerek içerik çeşitliliği sağlandığı varsayılmaz. Mevcut koşullar, bilgi ve seçenekler ortak mesele verisinden gelir.
 
 - Yeni kariyerin gündemi gerçekte oluşmuş işlerden çıkar; her açılışta aynı kriz kartı zorla gösterilmez. Sakin anda oda ve isteğe bağlı girişimler erişilebilir kalır.
 - Mesajda gönderen, haberin zamanı, neyin doğrulanmış bilgi, neyin yorum olduğu ve varsa cevap son tarihi anlaşılır olur. Bilginin kaynağı görünürdür; gizli dünya gerçeği veya gelecekteki olay zinciri oyuncuya dökülmez.
@@ -123,7 +135,8 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 - Futbolcu ve teknik direktörün gizli yetenek/potansiyel puanları gösterilmez. Yıldız, harf notu veya renkli genel güç çubuğu da aynı bilginin dolaylı gösterimi olamaz.
 - Yaş, boy, ücret, sözleşme süresi, maç istatistiği, tarih ve bütçe gibi başkanın öğrenebileceği bilgiler gösterilebilir. Görüş ile doğrulanmış olgu ayrılır.
-- Yönetim adaylarının bugünkü metin profilleri TEST sunumudur; katkının nihai gösterimi açık karardır. Futbolcu ve teknik direktör puanlarını gizleme kuralı kesindir.
+- Yönetim adaylarının katkısı nihai üründe profil metniyle anlatılır; seviye, sayı ya da çubuk gösterilmez (karar 2026-09-30). Futbolcu ve teknik direktör puanlarını gizleme kuralı kesindir.
+- **Geçici istisna (geliştirme aşaması, kullanıcı kararı 2026-09-30):** “Test bilgileri” ayarı açıkken katkı seviyeleri, gizli koşullar, seçeneklerin üreteceği sonuç ve futbolcu özellikleri kesikli çerçeveli, “TEST” etiketli kutularda gösterilir. Ayar kapalıyken hiçbiri ekrana yazılmaz. Bu gösterimler yayından önce kaldırılacaktır ve nihai arayüzün parçası sayılmaz.
 
 ## 8. Baskı ve erişilebilirlik
 
