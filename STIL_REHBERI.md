@@ -86,12 +86,13 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 - Stat içindeki pano, pankart ve skor tabelalarında mevcut Türkçe karakterli 3×5 piksel yazı kullanılır.
 - Maç görüntüsünde TV yayın bandı, radar veya oyuncu etiketi bulunmaz. Dürbün maskesi vardır; skor ve dakika stat tabelasından, ayrıca görüntünün dışındaki radyo satırından izlenir.
 - Maç öncesi bülteni (`js/ekran-mac-oncesi.js`) 4:3 oyun karesinde açılır; stat arkada donuk kalır ve koyu panelle büyük ölçüde örtülür. Ölçüler oyun karesiyle birlikte değişir, kaydırma kullanılmaz ve ana eylem sağ altta belirgindir.
-- Ajanda ekranı (`js/ekran-ajanda.js`) oyunun açılış ekranıdır ve bültenin düzenini izler: aynı 4:3 kare, `cqw` ölçüleri, panel başlıkları ve `STIL.menu` renkleri, kaydırma yok, ana eylem (“Günü bitir”, maç günü “Stada git”) sağ altta.
+- Ajanda ekranı (`js/ekran-ajanda.js`) oyunun açılış ekranıdır ve bültenin düzenini izler: aynı 4:3 kare, `cqw` ölçüleri, panel başlıkları ve `STIL.menu` renkleri, kaydırma yok, ana eylem (“İlerle”, maç günü “Stada git”) sağ altta.
   - Zorunluluk etiketlerinde zorunlu kırmızı, ertelenebilir amber, isteğe bağlı soluk renkle gösterilir.
   - Kaçırılacak işler ve engeller ilgili düğmenin yanında kırmızı metinle önceden yazılır; kaçırtan eylem satır içi onay ister.
   - Tutarlar kuruşsuz yazılır, giderler kırmızıdır.
   - Karar işlerinde seçenekler ayrıntı panelinde alt alta listelenir; seçilen seçenek amber kenarla işaretlenir, seçim yapılmadan ana düğme kapalı kalır.
   - Yönetim adayları meslek, güçlü ve zayıf yanlar ve beklenti metniyle tanıtılır; katkı için sayı, seviye ya da çubuk gösterilmez.
+  - Sağ kolonda “Meseleler” listesi durum ve “yeni” işaretiyle gösterilir. Bir mesele seçilince ayrıntı panelinde önce yürüten kişi, bekleyen adım ve “Şimdi” satırı, sonra kısa geçmiş görünür. Kayıttan dönüşte ayrıntı panelinde “Kaldığın yer” özeti açılır ve “Devam” ile kapanır. Alt şeritte sıradaki durak ve arada olacaklar yazılır; kayıt yazılamazsa üst şeritte kırmızı bildirilir.
 - Bülten başlıklarında piksel görünümlü `Jersey 10`, metinlerde `IBM Plex Mono`; ana vurguda tabela amberi, takım ayrımında kırmızı ve lacivert kullanılır. Olası 11 küçük sahada forma renkli ve numaralı işaretlerle gösterilir. Menü renkleri `STIL.menu` içindedir.
 
 ### Onaylı hedef: mekân içinde tek konuya odaklanma
@@ -105,7 +106,7 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 - Görüşmede tavsiye, taahhüt ve karar farklı anlamlarıyla gösterilir. Süre ve bilinen sonuç/çakışmalar eylemden önce anlaşılır olur. Bir mesajın okunması işi bitirmiş gibi sunulmaz.
 - Uzun metinler okunabilir yazıyla, açık zemin üzerinde yeterli kontrastla gösterilir. Maçın 640×480 iç çözünürlüğü veya bugünkü menü ölçüleri yeni metin düzenini zorunlu olarak sınırlamaz; pencere boyutu ve yazı büyüklüğü birlikte sınanır.
 - Tarih/saat, zamanın durduğu an ve başlatılan ilerleme görünür biçimde anlaşılır. Oyun kuralları [OYUN_TASARIMI §6](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo) içinde tutulur.
-- Oyuna dönüşte son karar, beklenen haberler ve yaklaşan önemli tarih kısa özetle hatırlatılır. Gün içi kayıt sınırı ve son başarılı kayıt doğru anlatılır.
+- Oyuna dönüşte son karar, beklenen haberler ve yaklaşan önemli tarih kısa özetle hatırlatılır. Gün içi kayıt sınırı ve son başarılı kayıt doğru anlatılır. Bu ilke mevcut ajanda ekranında uygulanmıştır (2.4); aydınlık oda sunumu henüz yoktur.
 
 ### Bilginin sınırları
 

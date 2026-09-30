@@ -184,6 +184,12 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .ajanda .aj-tehlike{color:var(--m-kirmizi);border-color:var(--m-kirmizi)}
 .ajanda .aj-ana{font-family:var(--display);font-size:2.2em;line-height:1;letter-spacing:.06em;padding:.18em 1.1em .08em;color:#1a1203;background:var(--m-vurgu);border-color:#b9791a;white-space:nowrap}
 .ajanda .aj-ana:active:not(:disabled){transform:translateY(.06em)}
+.aj-mesele{grid-template-columns:10em minmax(0,1fr) auto}
+.aj-yeni{color:var(--m-vurgu);border:1px solid currentColor;font-size:.76em;letter-spacing:.08em;text-transform:uppercase;padding:.02em .4em}
+.aj-m-kararBekliyor{color:var(--m-kirmizi)}.aj-m-ekipte{color:var(--m-vurgu)}.aj-m-haberBekliyor{color:var(--m-yazi)}.aj-m-kapandi{color:var(--m-galibiyet)}
+.ajanda button.aj-baglanti{background:transparent;border:0;border-bottom:1px solid var(--m-soluk);border-radius:0;padding:0;text-align:left;color:var(--m-yazi)}
+.aj-olaylar{list-style:none;margin:0;padding:0;display:grid;gap:.2em;font-size:.92em}
+.aj-olaylar li{display:grid;grid-template-columns:8.2em minmax(0,1fr);gap:.6em}
 .aj-bozuk{grid-row:2/5;display:grid;gap:.8em;align-content:start;max-width:60em;padding:1em 0}
 html,body{margin:0}
 </style>
@@ -267,6 +273,7 @@ html,body{margin:0}
 <script src="js/takvim.js"></script>
 <script src="js/maliye.js"></script>
 <script src="js/ajanda.js"></script>
+<script src="js/mesele.js"></script>
 <script src="js/yonetim.js"></script>
 <script src="js/kayit.js"></script>
 <script src="js/depo-tarayici.js"></script>

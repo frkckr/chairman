@@ -4,7 +4,7 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
 
 ## Şu an neredeyiz?
 
-Çalışan ürün bir maç günü prototipi, kariyer temeli (Aşama 1), ilk ajanda haftası (2.1) ve sayman/sponsor denemesidir (2.2'nin ilk adımı). Yaşayan kulüp sahneleri ve aşağıdaki yeni işler henüz uygulanmamıştır. 2026-09-30 güncellemesi yalnız belgeleri ve geliştirme planını değiştirir.
+Çalışan ürün bir maç günü prototipi, kariyer temeli (Aşama 1), ilk ajanda haftası (2.1), sayman/sponsor denemesi (2.2'nin ilk adımı), sponsor konusunun tek mesele olarak takibi ve “İlerle” ile durma noktalarına ilerleme (2.3) ile gün içi kayıt ve dönüş özetidir (2.4). Aydınlık kulüp sahneleri, telefon/görüşme akışı ve sonraki işler henüz uygulanmamıştır. 2.3–2.4 yerel dalda (`mesele-ve-kayit`) geliştirildi; yayınlanmış sürüm güncellenmedi.
 
 - [x] Maç motoru '99 sahnesine bağlı; maç baştan sona oynanıyor.
 - [x] Başkan bakışı, dürbün, başkanın elleri/masası ve olaylara tepkiler var.
@@ -19,7 +19,8 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
 - [x] Kariyer verisi, takvim, para hareketleri ve gelecekteki ödemeler için temel; tarayıcı/masaüstü kayıt ve önceki sağlam kayda dönüş var.
 - [x] Üç yönetim koltuğu, sayman seçimi ve sponsor işini saymana devretme denemesi var; ekip sisteminin tamamı bitmedi.
 - [x] Windows/Electron ile çevrimdışı masaüstü denemesi var; ticari paket tamamlanmadı.
-- [ ] Mekânlarda günlük başkanlık, ortak mesele geçmişi, telefon/görüşme akışı, kontrollü gözlem ve gün içi karar kaydı.
+- [x] Ortak mesele geçmişi (sponsor örneği), durma noktalarına ilerleme ve gün içi karar kaydı ile dönüş özeti mevcut ajanda ekranında var (2.3–2.4).
+- [ ] Mekânlarda günlük başkanlık, telefon/görüşme akışı ve kontrollü gözlem.
 - [ ] Tam yönetim, sözleşme/ekonomi, seçim, sezon, uzun kariyer ve Avrupa sistemleri; maç sonucunun kariyere bağlanması.
 - [ ] Ticari masaüstü paketi ve uzun kariyer doğrulaması.
 
@@ -49,13 +50,20 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
 - **2026-09-30, onaylı zaman yaklaşımı:** Eylemle ilerleyen takvim; okuma ve düşünmede durma; sonraki önemli gelişmede durarak ilerleme; gün içinde güvenli kayıt ve dönüş özeti. Gün/sezon süreleri ölçüm hedefidir, kesin denge değildir; tek kaynak [OYUN_TASARIMI §6](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo).
 - **2026-09-30, onaylı iş sırası:** Basit sezon takvimi Aşama 3'e alınır. Tam sezon eski Aşama 6'dan yeni Aşama 5'e, kapsamlı adaylık hikâyesi eski Aşama 5'ten yeni Aşama 6'ya taşınır. Temel kayıt, okunabilirlik ve ortam sesi Aşama 2'nin kabul koşuludur. Tamamlanan işler korunur; bu kararlar oyun kodunun uygulandığı anlamına gelmez.
 
+- **2026-09-30, uygulanan (2.3–2.4) ve alınan kararlar:**
+  - “İlerle” günü bitirmekten ayrı bir işlemdir: sıradaki durma noktasına gider. Gelecekteki zorunlu iş ilerlemeyi engellemez; sabah 08:00'de yalnız günün işleri çakışıyorsa durulur.
+  - Saati serbest karar yalnız başkana dönen zorunlu kararlar içindir (geliş anı, son cevap anı); bütün mesajlara uygulanacak genel kural değildir. Bekleyen karar başka işe katılmayı kilitlemez.
+  - Bir konuya tek mesele, gerektiği kadar bağlı iş bağlanır. Devredilen iş, görevlendirilen kişide kalır; kişi ayrılırsa başkana döner. Komutlar kariyerin kopyasında uygulanır.
+  - Maç sonrası devam öne çekilmedi: kariyer maç sınırında durur; boş günler ve uzun meseleler ayrı test takvimleriyle sınanır. Mesele olayları anahtar + parametre olarak saklanır; mevcut diğer metinler dönüştürülmedi.
+  - Sezon süresi hedefi zorunlu süre değildir; tekrar, karar yoğunluğu ve sıkılma noktalarıyla ölçülecek hedeftir. 30 dakikalık süre uzaması, 30 günlük ilerleme sınırı ve 09:30 haber saati TEST değeridir.
+
 Eski kararların kronolojisi Git geçmişinde korunur. Bu dosyada geçerli kararlar ve gerekli gerekçeler tutulur.
 
 ## Çalışma biçimi
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz.
 
-**Aşama 1 ve 2.1 tamamlandı; 2.2'nin ilk adımı uygulandı. Sıradaki geliştirme: 2.3 — mevcut sponsor örneği üzerinden mesele ve zaman temeli.** Ardından gün içi kayıt ve aydınlık oda gelir. 2.2'nin kalan işleri, yeni görüşme/ekip adımıyla tamamlanır. Açık isimler ve denge sayıları için yalnız açıkça etiketlenmiş TEST verileri kullanılır.
+**Aşama 1, 2.1, 2.3 ve 2.4 tamamlandı; 2.2'nin ilk adımı uygulandı. Sıradaki geliştirme: 2.5 — aydınlık başkan odası.** Önce `prototipler/` altında küçük ama kullanılabilir bir oda prototipi gösterilip yerleşim ve etkileşim onaylanır; ardından oyuna bağlanır. 2.2'nin kalan işleri, yeni görüşme/ekip adımıyla (2.6) tamamlanır. Açık isimler ve denge sayıları için yalnız açıkça etiketlenmiş TEST verileri kullanılır.
 
 İlk bütünleşik örnek: ofiste başlayan sponsor meselesi ekibe verilir; sonraki gün antrenmanda haber gelir; yetkiyi aşan konu başkana döner ve kararın sonucu kulüpte görülür. Bu örnek yeni Aşama 2'nin sonunda hedeflenir; ilk alt adımda bütün sahneler birden yapılmaz.
 
@@ -105,10 +113,12 @@ Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlıl�
 - [ ] **2.2** Sınırlı aday havuzundan yönetim ekibi kur; farklı katkıları ve yetki sınırlarını bir örnek işte göster.
   - *İlk adım uygulandı (2026-09-29, TEST içerik):* Üç koltuk tanımlandı. Boş sayman koltuğu için üç aday arasından seçim yapılıyor. Perşembe sponsor ödemesi işi başkan tarafından yürütülebiliyor ya da saymana devredilebiliyor; sonuç saymanın gizli katkısına göre değişiyor, yetkiyi aşan indirim talebi başkana dönüyor.
   - *Kalan işler:* Futbol ve basın koltuklarının örnek işleri ile birden çok koltuğun havuzdan kurulması. 2.5 sonrasında 2.6 ile yürütülür; aday katkısının sunumuna ilişkin açık karar kapanmadan bu madde tamamlandı sayılmaz.
-- [ ] **2.3 — Mesele ve zaman temeli.** Mevcut sponsor örneğini tek kimlikli meseleye bağla; sorumlu kişi, durum, son tarih, beklenen haber ve karar geçmişini göster. Eylem süreleri ile okuma/düşünme ayrımını ve sonraki önemli gelişmede durmayı kur. Önce mevcut arayüzde küçük bir örnekle doğrula.
+- [x] **2.3 — Mesele ve zaman temeli.** Mevcut sponsor örneğini tek kimlikli meseleye bağla; sorumlu kişi, durum, son tarih, beklenen haber ve karar geçmişini göster. Eylem süreleri ile okuma/düşünme ayrımını ve sonraki önemli gelişmede durmayı kur. Önce mevcut arayüzde küçük bir örnekle doğrula.
   - *Bitiş:* Aynı konu tekrar görev üretmiyor; rutinler ilerlerken yeni karar gerektiğinde duruluyor; zorunlu iş ve son tarih korumaları çalışıyor. Beklenen haber veya yapılabilir sonraki adım anlaşılır.
-- [ ] **2.4 — Gün içi kayıt ve dönüş.** Tamamlanan kararları ve güvenli sahne geçişlerini kaydet; mesele, bekleyen iş ve yetki durumu yüklenince sürsün. Son karar, beklenen haber ve yaklaşan tarihten kısa dönüş özeti üret.
+  - *Uygulandı (2026-09-30, TEST içerik):* Forma sponsoru konusu tek mesele (`js/mesele.js`): birden çok bağlı iş (karar, ekip işi, ödemeler), yürüten kişi, durum, beklenen haber ve olay geçmişi. Ajandada tek ana düğme “İlerle”: sıradaki durma noktasına gider (karar gerektiren haber, randevu, çakışan günün başı); rutin ödemeler ve ekip sonuçları arada işlenir. Başkana dönen karar saati serbesttir. Devredilen iş ertesi sabah, görevlendirilen kişinin katkısına göre sonuçlanır. Ayrıntı [TEKNIK_PLAN §3–4](TEKNIK_PLAN.md#3-kalıcı-dünya-verisi). Okuma ve düşünmede zaman durur; gerçek bir antrenman gözlemi henüz yoktur (2.7).
+- [x] **2.4 — Gün içi kayıt ve dönüş.** Tamamlanan kararları ve güvenli sahne geçişlerini kaydet; mesele, bekleyen iş ve yetki durumu yüklenince sürsün. Son karar, beklenen haber ve yaklaşan tarihten kısa dönüş özeti üret.
   - *Bitiş:* Gün bitmeden kapatıp açınca son tamamlanan karar korunuyor; ödeme/karar ikinci kez uygulanmıyor. Kayıt sınırı ve varsa başarısız kayıt doğru bildiriliyor; eski kayıt davranışı doğrulanıyor. Maç ortasından kayıt bu adımın koşulu değildir.
+  - *Uygulandı (2026-09-30):* Her tamamlanan komut kariyerin kopyasında uygulanıp doğrulanır (`kariyerKomut`) ve kaydedilir (`kayitOturumu`). Yazım başarısızsa “karar uygulandı, kaydedilemedi” bildirilir; yeniden kaydetme kararı tekrarlamaz. “Stada git” bilinçli istisnadır (maç sonucu kariyere bağlı olmadığı için maç sınırında kayıt yoktur; yüklenen oyuncu maç geçişini kaybetmez). Kayıttan devamda ajandada “Kaldığın yer” özeti açılır. Kayıt sürümü 2'dir; sekiz gerçek sürüm 1 kaydı (`araclar/ornekler/`) açılır, dönüşür ve oynanmaya devam eder. Doğrulama: `node araclar/kariyer-deneme.js`, `python3 araclar/akis-deneme.py`, `python3 araclar/kontrol.py`, masaüstü `node deneme.js`.
 - [ ] **2.5 — Aydınlık başkan odası.** Oda içinde telefon, ajanda ve ilgili dosyaya erişimi kur; bir meseleye odaklanan açık renkli sunum kullan. Okunabilir metin ve temel ortam sesi/ses kontrolü ekle.
   - *Bitiş:* Oyuncu gündemi bulup konuyu açabiliyor, kapatıp ortama dönebiliyor; gerekli bilgi için nesne aramaya zorlanmıyor. Oda değişimi veya paneli yeniden açma zamanı ve karar geçmişini değiştirmiyor.
 - [ ] **2.6 — Görüşme, tavsiye ve ekip.** Hoca görüşmesi ve bütçe önceliğini ekle. Tavsiye ile yetki devrini ayır; kişi, bütçe, süre, kapasite ve başkana dönüş koşullarını belirle. Bir kalıcı sorumluluk ve başkanın başlattığı bir görüşme/araştırma örneği kur; 2.2'nin kalan işlerini tamamla.

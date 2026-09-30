@@ -7,10 +7,12 @@
        yalnız işlerin sonucunu belirler. Sonuçlar belirlenimlidir (olasılık yok).
    Karar türleri (KARAR_TURLERI, js/ajanda.js):
      koltukSecimi     veri {koltuk, adaylar:[kişi]} — boş koltuğa adaylardan biri seçilir.
-     sponsorGecikmesi veri {kulupId, odemeIsId} — gecikecek sponsor ödemesi: başkan kendisi görüşür ya da saymana devreder.
-       Saymanın yetkisi ödeme takvimi ve taksittir; indirim yetkisi yoktur. İndirim istenirse iş başkana yeni karar olarak döner.
-     sponsorIndirimi  veri {kulupId, odemeIsId, oran} — başkanın indirim kararı (kabul ya da ret).
-   Metinler, tutarlar ve tarihler TEST verisidir. */
+     sponsorGecikmesi veri {kulupId, odemeIsId, meseleId} — gecikecek sponsor ödemesi: başkan kendisi görüşür ya da saymana devreder.
+       Devredilen iş anında sonuçlanmaz: takvime 'ekip' işi (js/mesele.js, görev sponsorGorusmesi) kurulur, sonuç ertesi sabah gelir.
+       Saymanın yetkisi ödeme takvimi ve taksittir; indirim yetkisi yoktur. İndirim istenirse iş başkana saati serbest karar olarak döner.
+     sponsorIndirimi  veri {kulupId, odemeIsId, oran, meseleId} — başkanın indirim kararı (kabul ya da ret).
+   Sponsor konusu tek meseledir: karar işleri, ekip işi ve bütün ödemeler aynı meseleId'yi taşır; her adım meseleye olay yazar.
+   Metinler, tutarlar, tarihler ve ekip işinin süresi TEST verisidir. */
 const YONETIM_KOLTUKLARI={
   sayman:{ad:'Sayman',alan:'Mali işler: ödemeler, alacaklar ve bütçe takibi.',
     yetki:'Ödeme takvimi ve taksit üzerinde anlaşabilir. İndirim, yeni harcama ve sözleşme başkana döner.'},
@@ -23,8 +25,7 @@ const KATKI_ALANLARI=['mali','baglanti','futbol','iletisim'];
 const KATKI_SEVIYELERI=['zayif','orta','guclu'];
 const PROFIL_ALANLARI=['meslek','guclu','zayif','beklenti'];
 
-const TR_AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-const gunAyYazi=t=>{const [,a,g]=t.split('-').map(Number);return g+' '+TR_AYLAR[a-1];};
+const EKIP_HABER_DAKIKASI=570;              // devredilen işin haberi ertesi gün 09:30'da gelir (TEST değeri)
 const katki=(p,alan)=>(p&&p.katki&&p.katki[alan])||'orta';
 const koltuktaMi=(k,kisiId)=>Object.values(k.kulupler).some(c=>c.yonetim&&Object.values(c.yonetim).includes(kisiId));
 
@@ -68,8 +69,20 @@ function sponsorDenetle(k,v){
   const h=[];
   if(!(k.kulupler||{})[v.kulupId])h.push(`kulüp bulunamadı (${v.kulupId})`);
   if(typeof v.odemeIsId!=='string')h.push('ödeme işi kimliği yok');
+  if(typeof v.meseleId!=='string')h.push('sponsor işi bir meseleye bağlı değil');
   return h;
 }
+Object.assign(MESELE_OLAYLARI,{
+  'sponsor.acildi':(k,p)=>`${kisiAdi(k,p.kisiId)} haber verdi: forma sponsoru ilk taksiti geciktirmek istiyor.`,
+  'sponsor.kendin':(k,p)=>`Temsilciyle kendin görüştün: ödeme planlanan günde (${gunAyYazi(p.tarih)}) tam yapılacak. Karşılığında gelecek sezon stat içi pano istiyorlar; henüz söz vermedin.`,
+  'sponsor.devir':(k,p)=>`Görüşmeyi ${kisiAdi(k,p.kisiId)} üstlendi; ${gunAyYazi(p.tarih)} sabahı haber verecek.`,
+  'sponsor.indirimTalebi':(k,p)=>`${kisiAdi(k,p.kisiId)} sponsorun genel müdürüne ulaştı: ödeme zamanında yapılabilir ama %${p.oran} indirim istiyorlar. İndirim saymanın yetkisini aştığı için karar sende.`,
+  'sponsor.taksit':(k,p)=>`${kisiAdi(k,p.kisiId)} iki taksitte anlaştı: yarısı ${gunAyYazi(p.ilk)}, kalanı ${gunAyYazi(p.son)} günü gelecek.`,
+  'sponsor.gecikme':(k,p)=>`${kisiAdi(k,p.kisiId)} temsilcinin üstlerine ulaşamadı; ödeme ${gunAyYazi(p.tarih)} gününe kaydı. Sözleşmedeki gecikme maddesini buldu: sponsor ${paraYazi(p.bedel)} gecikme bedeli ödeyecek.`,
+  'sponsor.indirimKabul':(k,p)=>`İndirimi kabul ettin; ödeme planlanan günde (${gunAyYazi(p.tarih)}) ${paraYazi(p.tutar)} olarak gelecek.`,
+  'sponsor.indirimRet':(k,p)=>`İndirimi reddettin. Sponsor tam ödeyecek ama iki hafta geç: ${gunAyYazi(p.tarih)}.`,
+  'sponsor.gorusmeBosa':()=>'Ödeme artık beklemediği için görüşmeye gerek kalmadı.'
+});
 KARAR_TURLERI.sponsorGecikmesi={
   denetle:sponsorDenetle,
   secenekler:(k,is)=>{
@@ -83,31 +96,53 @@ KARAR_TURLERI.sponsorGecikmesi={
     ];
   },
   uygula:(k,is,secim)=>{
-    const v=is.veri,odeme=sponsorOdemesi(k,v),tutar=odeme.veri.tutar,c=k.kulupler[v.kulupId];
-    if(secim==='kendin')
-      return{bilgi:`Temsilci ödemenin planlanan günde (${gunAyYazi(odeme.tarih)}) tam yapılacağını söyledi. Karşılığında gelecek sezon stat içi pano istiyorlar; henüz söz vermedin.`};
-    const s=k.kisiler[c.yonetim.sayman];
-    const yarin=tarihEkle(k.tarih,1),sonra=tarihEkle(odeme.tarih,14);
+    const v=is.veri,odeme=sponsorOdemesi(k,v),c=k.kulupler[v.kulupId];
+    if(secim==='kendin')return{bilgi:meseleOlay(k,v.meseleId,'sponsor.kendin',{tarih:odeme.tarih})};
+    /* devir: görevlendirilen kişi işte saklanır; sonuç takvim ilerleyince, o kişinin katkısına göre gelir */
+    const s=k.kisiler[c.yonetim.sayman],yarin=tarihEkle(k.tarih,1),m=k.meseleler[v.meseleId];
+    isEkle(k,{tur:'ekip',tarih:yarin,dakika:EKIP_HABER_DAKIKASI,veri:{meseleId:v.meseleId,kisiId:s.id,kulupId:v.kulupId,koltuk:'sayman',gorev:'sponsorGorusmesi',odemeIsId:v.odemeIsId}});
+    if(!m.kisiler.includes(s.id))m.kisiler.push(s.id);
+    return{bilgi:meseleOlay(k,v.meseleId,'sponsor.devir',{kisiId:s.id,tarih:yarin})};
+  }
+};
+
+/* başkana dönen karar: saati serbest, son cevap anı bugünün sonu (js/ajanda.js) */
+const donenKarar=(k,veri)=>isEkle(k,{tur:'ajanda',tarih:k.tarih,dakika:1439,
+  veri:Object.assign({zorunluluk:'zorunlu',saatsiz:true,gelis:{tarih:k.tarih,dakika:k.gunIciDakika}},veri)});
+
+/* ---- ekip görevi: saymanın sponsor görüşmesi (sonuç görevlendirilen saymanın gizli katkısına göre, olasılıksız) ---- */
+EKIP_GOREVLERI.sponsorGorusmesi={
+  denetle:(k,v)=>typeof v.odemeIsId==='string'?[]:['ödeme işi kimliği yok'],
+  bekleme:(k,is)=>`${kisiAdi(k,is.veri.kisiId)} sponsorla görüşüyor; haber bekleniyor`,
+  uygula:(k,is)=>{
+    const v=is.veri,odeme=sponsorOdemesi(k,v),s=k.kisiler[v.kisiId],olay=(anahtar,p)=>meseleOlay(k,v.meseleId,anahtar,Object.assign({kisiId:s.id},p));
+    if(!odeme)return{bilgi:meseleOlay(k,v.meseleId,'sponsor.gorusmeBosa')};
+    const tutar=odeme.veri.tutar,sonra=tarihEkle(odeme.tarih,14),plan=x=>odemePlanla(k,Object.assign({kulupId:v.kulupId,dakika:odeme.dakika,kalem:odeme.veri.kalem,meseleId:v.meseleId},x));
     if(katki(s,'baglanti')==='guclu'){
       /* bağlantısı güçlü sayman sponsorun üst yönetimine ulaşır; indirim talebi yetkisini aşar, karar başkana döner */
-      isEkle(k,{tur:'ajanda',tarih:yarin,dakika:600,veri:{baslik:'Sponsor indirim istiyor',zorunluluk:'zorunlu',sure:30,karar:'sponsorIndirimi',
-        kulupId:v.kulupId,odemeIsId:v.odemeIsId,oran:10,kisiId:s.id,
-        aciklama:`${s.ad} sponsorun genel müdürüyle görüştü: ödeme zamanında yapılabilir, ancak %10 indirim istiyorlar. İndirim saymanın yetkisini aştığı için karar sana kaldı.`}});
-      return{bilgi:`${s.ad} sponsorun genel müdürüne ulaştı. Ödeme zamanında yapılabilir ama sponsor indirim istiyor. İndirim saymanın yetkisinde olmadığı için yarın karar sana gelecek.`};
+      donenKarar(k,{baslik:'Sponsor indirim istiyor',sure:15,karar:'sponsorIndirimi',kulupId:v.kulupId,odemeIsId:v.odemeIsId,oran:10,kisiId:s.id,meseleId:v.meseleId,
+        aciklama:`${s.ad} sponsorun genel müdürüyle görüştü: ödeme zamanında yapılabilir, ancak %10 indirim istiyorlar. İndirim saymanın yetkisini aştığı için karar sana kaldı.`});
+      return{bilgi:olay('sponsor.indirimTalebi',{oran:10}),dur:true};
     }
     if(katki(s,'mali')==='guclu'&&katki(s,'baglanti')==='orta'){
       /* mali deneyimli sayman taksit planı kurar (yetkisi içinde) */
       const yarim=Math.trunc(tutar/2);
       isIptal(k,odeme.id,'Sayman taksit planı yaptı');
-      odemePlanla(k,{kulupId:v.kulupId,tarih:odeme.tarih,dakika:odeme.dakika,tutar:yarim,kalem:odeme.veri.kalem,aciklama:odeme.veri.aciklama+' (1/2)'});
-      odemePlanla(k,{kulupId:v.kulupId,tarih:sonra,dakika:odeme.dakika,tutar:tutar-yarim,kalem:odeme.veri.kalem,aciklama:odeme.veri.aciklama+' (2/2)'});
-      return{bilgi:`${s.ad} iki taksitte anlaştı: yarısı ${gunAyYazi(odeme.tarih)}, kalanı ${gunAyYazi(sonra)} günü gelecek.`};
+      plan({tarih:odeme.tarih,tutar:yarim,aciklama:odeme.veri.aciklama+' (1/2)'});
+      plan({tarih:sonra,tutar:tutar-yarim,aciklama:odeme.veri.aciklama+' (2/2)'});
+      return{bilgi:olay('sponsor.taksit',{ilk:odeme.tarih,son:sonra})};
     }
     /* bağlantısı zayıf sayman karar vericiye ulaşamaz; ödeme kayar, sözleşmedeki gecikme bedeli işletilir */
     isTasi(k,odeme.id,sonra,odeme.dakika);
     const bedel=Math.trunc(Math.abs(tutar)/50);
-    odemePlanla(k,{kulupId:v.kulupId,tarih:sonra,dakika:odeme.dakika,tutar:bedel,kalem:odeme.veri.kalem,aciklama:'Sponsor gecikme bedeli (sözleşme maddesi)'});
-    return{bilgi:`${s.ad} temsilcinin üstlerine ulaşamadı; ödeme ${gunAyYazi(sonra)} gününe kaydı. Sözleşmedeki gecikme maddesini buldu: sponsor ${paraYazi(bedel)} gecikme bedeli ödeyecek.`};
+    plan({tarih:sonra,tutar:bedel,aciklama:'Sponsor gecikme bedeli (sözleşme maddesi)'});
+    return{bilgi:olay('sponsor.gecikme',{tarih:sonra,bedel})};
+  },
+  /* görevlendirilen sayman koltuktan ayrıldı: görüşme kararı başkana döner */
+  geriDon:(k,is)=>{
+    const v=is.veri;
+    if(sponsorOdemesi(k,v))donenKarar(k,{baslik:'Sponsor görüşmesi sahipsiz kaldı',sure:90,karar:'sponsorGecikmesi',kulupId:v.kulupId,odemeIsId:v.odemeIsId,meseleId:v.meseleId,
+      aciklama:'Görüşmeyi üstlenen sayman görevden ayrıldı. Temsilciyle kendin görüşebilir ya da işi yeni saymana devredebilirsin.'});
   }
 };
 
@@ -127,12 +162,12 @@ KARAR_TURLERI.sponsorIndirimi={
     if(secim==='kabul'){
       const yeni=odeme.veri.tutar-Math.trunc(odeme.veri.tutar*v.oran/100);
       isIptal(k,odeme.id,`%${v.oran} indirim kabul edildi`);
-      odemePlanla(k,{kulupId:v.kulupId,tarih:odeme.tarih,dakika:odeme.dakika,tutar:yeni,kalem:odeme.veri.kalem,aciklama:odeme.veri.aciklama+` (%${v.oran} indirimli)`});
-      return{bilgi:`İndirim kabul edildi; ödeme planlanan günde (${gunAyYazi(odeme.tarih)}) ${paraYazi(yeni)} olarak gelecek.`};
+      odemePlanla(k,{kulupId:v.kulupId,tarih:odeme.tarih,dakika:odeme.dakika,tutar:yeni,kalem:odeme.veri.kalem,aciklama:odeme.veri.aciklama+` (%${v.oran} indirimli)`,meseleId:v.meseleId});
+      return{bilgi:meseleOlay(k,v.meseleId,'sponsor.indirimKabul',{tarih:odeme.tarih,tutar:yeni})};
     }
     const sonra=tarihEkle(odeme.tarih,14);
     isTasi(k,odeme.id,sonra,odeme.dakika);
-    return{bilgi:`İndirimi reddettin. Sponsor tam ödeyecek ama iki hafta geç: ${gunAyYazi(sonra)}.`};
+    return{bilgi:meseleOlay(k,v.meseleId,'sponsor.indirimRet',{tarih:sonra})};
   }
 };
 
