@@ -7,17 +7,23 @@
    ilerletirseniz ilerletin sonuç aynıdır. İş türleri IS_TURLERI'ndedir; maliye.js 'odeme', ajanda.js 'ajanda' türünü ekler.
    Bir tür 'pay' (dakika) bildirebilir: iş zamanından o kadar dakika sonra tamamlanır. Ajanda işi pay:1 kullanır;
    başlangıç dakikasında hâlâ katılınabilir, zaman o dakikayı geçince kaçırılmış olur.
-   Bekleyen iş taşınabilir (isTasi) ya da yapılmadan iptal edilebilir (isIptal → geçmişte {tur:'iptal'}); iptal edilen iş tamamlanamaz. */
+   Bekleyen iş taşınabilir (isTasi) ya da yapılmadan iptal edilebilir (isIptal → geçmişte {tur:'iptal'}); iptal edilen iş tamamlanamaz.
+   zamanIlerletAna aynı döngünün durabilen biçimidir: her tamamlanan işten sonra dur(kayit) sorulur; true ise zaman o işin anında kalır.
+   IS_SONRASI: iş bütün etkileriyle tamamlandıktan sonra çağrılan dinleyiciler (js/mesele.js mesele durumunu burada değerlendirir). */
 const GUN_BASLANGICI=480;                  // yeni gün 08:00'de başlar (TEST değeri)
+const IS_SONRASI=[];                       // (k, is, geçmiş kaydı) => void
 const ZAMAN_ISLEM_SINIRI=100000;           // tek ilerletmede tamamlanabilecek iş sayısı; kendini sürekli yeniden kuran işe karşı
 
-/* iş türleri: denetle(k, veri) → hata listesi; uygula(k, is) → geçmişe yazılacak sade sonuç (ya da undefined) */
+/* iş türleri: denetle(k, veri) → hata listesi; uygula(k, is) → geçmişe yazılacak sade sonuç (ya da undefined);
+   baslik(k, is) → bekleyen işin listelerde görünen kısa adı (isteğe bağlı) */
 const IS_TURLERI={
   hatirlatma:{
     denetle:(k,v)=>v&&typeof v.metin==='string'&&v.metin?[]:['hatırlatma metni yok'],
+    baslik:(k,is)=>is.veri.metin,
     uygula:(k,is)=>({metin:is.veri.metin})
   }
 };
+const isBasligi=(k,is)=>{const t=IS_TURLERI[is.tur];return t&&t.baslik?t.baslik(k,is):is.tur;};
 
 /* an: tarih + gün içi dakika, tek tamsayıya çevrilmiş (1970-01-01 00:00'dan beri dakika). Sıralama ve fark için */
 function anDakika(tarih,dakika){
@@ -67,6 +73,7 @@ function isTamamla(k,id,sonuc){
   delete k.isler[id];
   const kayit={tur:'is',isId:id,isTuru:is.tur,tarih:k.tarih,dakika:k.gunIciDakika,sonuc:sonuc===undefined?null:sonuc};
   k.gecmis.push(kayit);
+  for(const d of IS_SONRASI)d(k,is,kayit);
   return kayit;
 }
 
@@ -92,19 +99,28 @@ function siradakiIs(k,hedef){
   return en;
 }
 
-/* zamanı dakika kadar ilerletir; arada zamanı gelen işleri sırayla bir kez tamamlar. Geçmiş kayıtlarını döndürür */
-function zamanIlerlet(k,dakika){
-  if(!Number.isInteger(dakika)||dakika<0)throw new Error(`Zaman yalnız ileri ve tam dakika olarak ilerler: ${dakika}`);
-  const hedef=simdikiAn(k)+dakika,biten=[];
+/* zamanı hedef ana kadar ilerletir; arada zamanı gelen işleri sırayla bir kez tamamlar. {biten: geçmiş kayıtları, durdu} döndürür.
+   dur(kayit) true dönerse o işin anında kalınır (durdu:true). once(is) true dönerse iş bu turda tamamlanmaz (once işi ileri taşımış olmalı) */
+function zamanIlerletAna(k,hedef,dur,once){
+  if(!Number.isInteger(hedef)||hedef<simdikiAn(k))throw new Error(`Zaman yalnız ileri ve tam dakika olarak ilerler: ${hedef-simdikiAn(k)}`);
+  const biten=[];
   for(let n=0;;n++){
     if(n>=ZAMAN_ISLEM_SINIRI)throw new Error('Zaman ilerletme sınırı aşıldı: işler kendini sürekli yeniden kuruyor olabilir');
     const is=siradakiIs(k,hedef);
     if(!is)break;
+    if(once&&once(is))continue;
     anAyarla(k,Math.max(isSonAn(is),simdikiAn(k)));
-    biten.push(isTamamla(k,is.id,IS_TURLERI[is.tur].uygula(k,is)));
+    const kayit=isTamamla(k,is.id,IS_TURLERI[is.tur].uygula(k,is));
+    biten.push(kayit);
+    if(dur&&dur(kayit))return{biten,durdu:true};
   }
   anAyarla(k,hedef);
-  return biten;
+  return{biten,durdu:false};
+}
+/* zamanı dakika kadar ilerletir (durmadan). Geçmiş kayıtlarını döndürür */
+function zamanIlerlet(k,dakika){
+  if(!Number.isInteger(dakika)||dakika<0)throw new Error(`Zaman yalnız ileri ve tam dakika olarak ilerler: ${dakika}`);
+  return zamanIlerletAna(k,simdikiAn(k)+dakika).biten;
 }
 /* ertesi günün başlangıcına geç (arada kalan işler tamamlanır) */
 const sonrakiGuneGec=k=>zamanIlerlet(k,1440-k.gunIciDakika+GUN_BASLANGICI);

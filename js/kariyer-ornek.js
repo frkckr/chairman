@@ -9,13 +9,14 @@
    Para kuruş cinsinden tamsayıdır (850000000 = 8.500.000,00 ₺). Tutarlar TEST değeridir, denge sayısı değildir.
    isler: takvimde bekleyen işler (js/takvim.js); ödemeler 'odeme' türü iştir (js/maliye.js). gecmis ve hareketler boş başlar. */
 const KARIYER_ORNEK={
-  kayitSurumu:1,
+  kayitSurumu:2,
   dunyaTohumu:20260929,
   tarih:'2026-11-28',gunIciDakika:540,          // 13. hafta maç günü sabahı (LIG.buMac: Cumartesi 19:00)
   baskanId:'kisi-1',
   gorevDurumu:'gorevde',
   final:null,
-  sonrakiNo:{kisi:8,is:4,hareket:1},
+  sonrakiNo:{kisi:8,is:4,hareket:1,mesele:1},
+  meseleler:{},
   kulupler:{
     demirkapi:{id:'demirkapi',ad:'Demirkapı SK',kisa:'DEM',kademe:3,baskanId:'kisi-1',acilisNakit:850000000,nakit:850000000},
     akdeniz:{id:'akdeniz',ad:'Akdeniz FK',kisa:'AKD',kademe:3,baskanId:'kisi-5',acilisNakit:1200000000,nakit:1200000000}
@@ -45,10 +46,16 @@ const KARIYER_ORNEK={
    KARIYER_ORNEK'in işleri (is-1…is-3) maçtan sonraya düşer; maç sonucu kariyere Aşama 3'te bağlanana kadar oraya varılmaz.
    Yönetim (2.2, js/yonetim.js): futbol şube sorumlusu Necati Uysal, basın sözcüsü Sevim Kara; sayman koltuğu boş.
    Üç sayman adayı (kisi-8…10) Pazartesi görüşülür. Profilleri oyuncuya metin olarak gösterilir; katkı seviyeleri gizlidir ve
-   Perşembe sponsor işinin saymana devredilince nasıl sonuçlanacağını belirler. */
+   Perşembe sponsor işinin saymana devredilince nasıl sonuçlanacağını belirler.
+   Mesele (2.3, js/mesele.js): forma sponsorunun geciken taksiti tek meseledir (mesele-1). Perşembe kararı (is-10) ve 1 Aralık
+   ödemesi (is-3) ona bağlıdır; devredilirse saymanın haberi Cuma sabahı gelir. */
 const KARIYER_BASLANGIC=Object.assign({},KARIYER_ORNEK,{
   tarih:'2026-11-23',gunIciDakika:480,
-  sonrakiNo:{kisi:11,is:15,hareket:1},
+  sonrakiNo:{kisi:11,is:15,hareket:1,mesele:2},
+  meseleler:{
+    'mesele-1':{id:'mesele-1',tur:'sponsorOdemesi',baslik:'Forma sponsoru: geciken ilk taksit',durum:'kararBekliyor',sorumluId:'kisi-1',kisiler:['kisi-4'],
+      olaylar:[{tarih:'2026-11-23',dakika:480,anahtar:'sponsor.acildi',p:{kisiId:'kisi-4'}}],gorulen:0,kapanis:null}
+  },
   kulupler:Object.assign({},KARIYER_ORNEK.kulupler,{
     demirkapi:Object.assign({},KARIYER_ORNEK.kulupler.demirkapi,{yonetim:{sayman:null,futbol:'kisi-3',basin:'kisi-4'}})
   }),
@@ -67,6 +74,7 @@ const KARIYER_BASLANGIC=Object.assign({},KARIYER_ORNEK,{
       katki:{mali:'guclu',baglanti:'zayif',futbol:'orta',iletisim:'guclu'}}
   }),
   isler:Object.assign({},KARIYER_ORNEK.isler,{
+    'is-3':Object.assign({},KARIYER_ORNEK.isler['is-3'],{veri:Object.assign({},KARIYER_ORNEK.isler['is-3'].veri,{meseleId:'mesele-1'})}),
     'is-4':{id:'is-4',tur:'ajanda',tarih:'2026-11-23',dakika:600,veri:{baslik:'Haftalık yönetim toplantısı',zorunluluk:'zorunlu',sure:90,kisiId:'kisi-3',
       aciklama:'Yönetim haftanın gündemini konuşacak: Cumartesi maçı, bilet satışı, sponsor ödemesi ve boş sayman koltuğu.',
       bilgi:'Necati Uysal: Akdeniz maçı için bilet ön satışı zayıf; tribünler yarı boş kalabilir. Sevim Kara forma sponsorunun ödemeyi geciktirebileceğini söyledi. Eski sayman istifa ettiği için koltuk boş; adaylar öğleden sonra geliyor.'}},
@@ -85,7 +93,7 @@ const KARIYER_BASLANGIC=Object.assign({},KARIYER_ORNEK,{
       bilgi:'Muhabir en çok bilet fiyatlarını ve Akdeniz maçını sordu. Söyleşi Cuma günkü sayıda çıkacak.'}},
     'is-9':{id:'is-9',tur:'hatirlatma',tarih:'2026-11-25',dakika:540,veri:{metin:'Federasyon Cumartesi maçının hakemini açıkladı.'}},
     'is-10':{id:'is-10',tur:'ajanda',tarih:'2026-11-26',dakika:600,veri:{baslik:'Forma sponsoru ödemesi gecikiyor',zorunluluk:'zorunlu',sure:90,
-      karar:'sponsorGecikmesi',kulupId:'demirkapi',odemeIsId:'is-3',
+      karar:'sponsorGecikmesi',kulupId:'demirkapi',odemeIsId:'is-3',meseleId:'mesele-1',
       aciklama:'Forma sponsoru 1 Aralık\'taki ilk taksiti geciktirmek istiyor. Temsilciyle kendin görüşebilir ya da işi saymana devredebilirsin.'}},
     'is-11':{id:'is-11',tur:'odeme',tarih:'2026-11-26',dakika:900,veri:{kulupId:'demirkapi',tutar:12000000,kalem:'bilet',aciklama:'Bilet ön satış geliri'}},
     'is-12':{id:'is-12',tur:'ajanda',tarih:'2026-11-27',dakika:960,veri:{baslik:'Şükrü Hoca ile maç öncesi görüşme',zorunluluk:'istege',sure:45,kisiId:'kisi-2',

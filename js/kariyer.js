@@ -2,17 +2,26 @@
    Kariyer durumu kaydedilebilir sade veridir: düz nesne, dizi, metin, sonlu sayı, true/false ve null.
    Three.js nesnesi, DOM öğesi, fonksiyon, Date ya da undefined içermez. Sözleşme TEKNIK_PLAN.md §3'tedir.
    Örnek başlangıç verisi js/kariyer-ornek.js'tedir. Deneme: node araclar/kariyer-deneme.js
-   Yükleme sırası: kariyer.js → takvim.js → maliye.js (kariyerDogrula diğer ikisinin denetimlerini de çağırır). */
-const KARIYER_SURUM=1;
+   Yükleme sırası: kariyer.js → takvim.js → maliye.js (kariyerDogrula diğer ikisinin denetimlerini de çağırır).
+   Sürüm 2 (yol haritası 2.3): meseleler ve sonrakiNo.mesele eklendi; sürüm 1 kayıtlarını js/kayit.js dönüştürür. */
+const KARIYER_SURUM=2;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */
 const EK_DENETIMLER=[];
 /* kimlikUret'in tanıdığı türler ve kayıtlarının bulunduğu alan (nesne ya da dizi) */
-const KIMLIK_TURLERI={kisi:'kisiler',is:'isler',hareket:'hareketler'};
+const KIMLIK_TURLERI={kisi:'kisiler',is:'isler',hareket:'hareketler',mesele:'meseleler'};
 
 /* başlangıç verisinin bağımsız kopyası: oyun ilerledikçe başlangıç verisi değişmez */
 const kariyerOlustur=baslangic=>JSON.parse(JSON.stringify(baslangic));
+
+/* güvenli komut: f kariyerin kopyasına uygulanır, kopya doğrulanır; geçerliyse {kariyer: yeni durum, sonuc: f'nin döndürdüğü} döner.
+   f hata verirse ya da kopya tutarsız kalırsa hata fırlatılır ve verilen kariyer hiç değişmez. Ajanda, oda ve telefon aynı yolu kullanır */
+function kariyerKomut(k,f){
+  const y=kariyerOlustur(k),sonuc=f(y),h=kariyerDogrula(y);
+  if(h.length)throw new Error('Komut kariyeri tutarsız bıraktı: '+h.slice(0,3).join('; '));
+  return{kariyer:y,sonuc};
+}
 
 /* yeni kalıcı kimlik: 'kisi-8', 'is-4' gibi; sayacı ilerletir, var olan bir kimliği asla yeniden vermez */
 function kimlikUret(k,tur){

@@ -140,7 +140,7 @@ Ajanda; zorunlu, ertelenebilir ve isteğe bağlı işleri ayırır. Bekleyen gö
 
 ### Zamanın ilerleme kuralları
 
-**Onaylı tasarım yaklaşımı (2026-09-30; henüz uygulanmadı):** Takvim, oyuncunun başlattığı eylemlerle ilerler. Sabah, öğle ve akşam ortamda ve insanların bulunabilirliğinde hissedilir; kısa telefon ile uzun görüşme aynı süreyi tüketmez.
+**Onaylı tasarım yaklaşımı (2026-09-30; ajanda ekranında kısmen uygulandı: okumada zaman durur, “İlerle” ile durma noktalarına gidilir, ekip işleri takvimle çalışır; antrenman gözlemi ve telefon henüz yok):** Takvim, oyuncunun başlattığı eylemlerle ilerler. Sabah, öğle ve akşam ortamda ve insanların bulunabilirliğinde hissedilir; kısa telefon ile uzun görüşme aynı süreyi tüketmez.
 
 | Durum | Takvimin davranışı |
 |---|---|
@@ -164,6 +164,8 @@ Mevcut bilgiyi tekrar incelemek yeni araştırma sayılmaz. Yeni bilgi toplamak 
 - Atlanacak isteğe bağlı işler ve kaçırılacak fırsatlar önceden gösterilir. Ret, erteleme veya yetki devri yalnız işin kendi kuralları izin veriyorsa kullanılabilir.
 - Beklemede olan meselenin hangi haberi beklediği veya sıradaki mümkün eylem anlaşılır olur. Oyuncu aynı boş günü tekrar tekrar kapatmaya zorlanmaz.
 
+**Uygulanan ilk kurallar (2.3, TEST değerleriyle):** Tek “İlerle” işlemi günü bitirmekle aynı değildir; bir sonraki durma noktasına gider. Durma noktaları: başkanın kararını gerektiren gelişme, sıradaki saatli işin başlangıcı, işleri birbiriyle çakışan günün başı. Gelecekteki zorunlu iş ilerlemeyi engellemez; ilerleme onun başlangıcında durur ve katılınmadan geçilmez. Başkana dönen kararlar saati serbesttir: geldikleri andan son cevap anına kadar istenen an verilir, bekleyen karar başka işe katılmayı kilitlemez; yalnız bitişi son cevap anını aşan işe katılınamaz ve ilerleme bu anı geçemez. Başkan bir işin içindeyken dolan zorunlu kararın süresi işin bitişinden 30 dakika sonrasına uzar. Bu, bütün telefon mesajlarına uygulanacak genel bir kural değildir; normal haberler işten sonra gösterilir.
+
 Antrenman gözlemi sırasında kısa bir telefon işi aynı zaman aralığına sığabilir. Uzun ve tam dikkat isteyen görüşme için gözlemden ayrılınır. Mekânın atmosferi, takvimin durduğunu anlamayı güçleştirmemelidir; ayrıntılı sunum [stil rehberinde](STIL_REHBERI.md#8-baskı-ve-erişilebilirlik) tanımlanır.
 
 Antrenman, boş stat veya kulüp odası gibi isteğe bağlı alanlarda vakit geçirilebilir. Telefon ve haberler bu ortamların içinde gelebilir. Uzun süre beklemek zorunlu bir yetenek veya bilgi kazancına dönüşmez.
@@ -183,9 +185,9 @@ Transfer gibi uzun olaylar farklı günlere yayılır: hazırlık, görüşme, h
 | Toplam maç günü | Yaklaşık 20–35 dakika; tören ve çevresindeki içerik ayrıca ölçülür |
 | Normal sezon | Yaklaşık 20–35 saat; fikstür, yetki devri ve katılım tercihleriyle birlikte sınanır |
 
-İçerik, bir süre kotasını doldurmak için üretilmez. Kariyerin uzunluğu anlamlı sezonlardan, sonuçlardan ve gelişimden gelir; boş bekleme veya gerçek dünyada bekleme şartı konmaz. Her günü bir saate uzatmak hedeflenmez. Kesin maç sayısı ve kariyer uzunluğu bu tablodan çıkarılmaz.
+İçerik, bir süre kotasını doldurmak için üretilmez. Kariyerin uzunluğu anlamlı sezonlardan, sonuçlardan ve gelişimden gelir; boş bekleme veya gerçek dünyada bekleme şartı konmaz. Her günü bir saate uzatmak hedeflenmez. Kesin maç sayısı ve kariyer uzunluğu bu tablodan çıkarılmaz. Tablo zorunlu süre değil ölçüm hedefidir: gerçek sezon süresi tekrarlar, karar yoğunluğu ve oyuncunun sıkıldığı noktalarla birlikte ölçülür; uzun kariyerin toplam süresi ayrıca değerlendirilir.
 
-Kısa bir oturumda bir mesele ilerletilebilmeli; yoğun bir gün birkaç oturuma bölünebilmelidir. İlk hedef, tamamlanan kararların ve güvenli sahne geçişlerinin gün içinde kaydıdır. Dönüşte son karar, beklenen haberler ve yaklaşan önemli tarih kısa biçimde hatırlatılır. Maç veya görüşmenin tam ortasından devamın kapsamı [teknik planda](TEKNIK_PLAN.md#5-kayıt-ve-yükleme) ayrı tutulur. Bugünkü uygulama yalnız gün sınırında kayıt yapar.
+Kısa bir oturumda bir mesele ilerletilebilmeli; yoğun bir gün birkaç oturuma bölünebilmelidir. İlk hedef, tamamlanan kararların ve güvenli sahne geçişlerinin gün içinde kaydıdır. Dönüşte son karar, beklenen haberler ve yaklaşan önemli tarih kısa biçimde hatırlatılır. Maç veya görüşmenin tam ortasından devamın kapsamı [teknik planda](TEKNIK_PLAN.md#5-kayıt-ve-yükleme) ayrı tutulur. Bugünkü uygulama her tamamlanan kararın ardından kaydeder (2.4) ve dönüşte “Kaldığın yer” özetini gösterir; maç sınırında kayıt yapılmaz.
 
 ## 7. Ekonomi, yetki devri ve kişisel katkı
 

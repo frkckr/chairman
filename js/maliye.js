@@ -19,6 +19,7 @@ function hareketDenetle(k,v){
 
 IS_TURLERI.odeme={
   denetle:hareketDenetle,
+  baslik:(k,is)=>is.veri.aciklama,
   uygula:(k,is)=>({hareketId:paraHareketi(k,Object.assign({},is.veri,{kaynak:is.id}))})
 };
 
@@ -34,8 +35,10 @@ function paraHareketi(k,{kulupId,tutar,kalem,aciklama,kaynak=null}){
   k.kulupler[kulupId].nakit=yeni;
   return id;
 }
-/* belirli bir ana gelecekteki ödeme/tahsilat kurar (takvimde 'odeme' işi); iş kimliğini döndürür */
-const odemePlanla=(k,{kulupId,tarih,dakika,tutar,kalem,aciklama})=>isEkle(k,{tur:'odeme',tarih,dakika,veri:{kulupId,tutar,kalem,aciklama}});
+/* belirli bir ana gelecekteki ödeme/tahsilat kurar (takvimde 'odeme' işi); iş kimliğini döndürür.
+   meseleId: ödemenin bağlı olduğu mesele (js/mesele.js); verilmezse ödeme bir meseleye bağlı değildir */
+const odemePlanla=(k,{kulupId,tarih,dakika,tutar,kalem,aciklama,meseleId})=>
+  isEkle(k,{tur:'odeme',tarih,dakika,veri:Object.assign({kulupId,tutar,kalem,aciklama},meseleId===undefined?{}:{meseleId})});
 
 /* kulübün henüz işlenmemiş ödemeleri, tarih sırasıyla */
 const bekleyenOdemeler=(k,kulupId)=>Object.values(k.isler).filter(is=>is.tur==='odeme'&&is.veri.kulupId===kulupId)

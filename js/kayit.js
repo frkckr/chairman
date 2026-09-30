@@ -1,8 +1,7 @@
 /* ============ Chairman — kayıt ve yükleme (çizim yok, platformdan bağımsız) ============
    Kariyer kuralları dosya yolunu ya da tarayıcı deposunu bilmez. Depo üç işlevli bir nesnedir:
      oku(ad) → metin ya da null · yaz(ad, metin) · sil(ad)
-   Uygulamalar: bellekDeposu() (bu dosyada; denemeler için), tarayiciDeposu() (js/depo-tarayici.js).
-   Masaüstü deposu paketleme denemesinde (yol haritası 1.5) eklenecek.
+   Uygulamalar: bellekDeposu() (bu dosyada; denemeler için), tarayiciDeposu() (js/depo-tarayici.js), masaustuDeposu() (js/depo-masaustu.js).
 
    Kayıt zarfı (JSON metin): {oyun:'chairman', bicim:1, saglama, ozet, veri}
      veri: kariyer durumu (sürümü veri.kayitSurumu). saglama: veri metninin FNV-1a özeti; yarım ya da bozulmuş yazımı yakalar.
@@ -12,10 +11,37 @@
      Hangi adımda kesilirse kesilsin sağlam bir kayıt kalır; geçersiz kariyer hiç yazılmaz.
    Yükleme sırası: ana kayıt → .yeni (yarım kalmış kaydın tamamlanmış kopyası) → .onceki. Sağlam olan ilki yüklenir,
      atlananlar açıklamayla uyarılar listesine yazılır.
-   Eski sürümlü kayıtlar KAYIT_GECISLERI ile sırayla bugünkü sürüme dönüştürülür; daha yeni sürüm açılmaz. */
+   Eski sürümlü kayıtlar KAYIT_GECISLERI ile sırayla bugünkü sürüme dönüştürülür; daha yeni sürüm açılmaz.
+   Kayıt oturumu (kayitOturumu, yol haritası 2.4): oyunun bütün değişiklikleri oturum.uygula(f) ile yapılır. Komut kariyerin kopyasına
+     uygulanır (kariyerKomut); kabul edilince kaydedilir. Yazılamazsa kariyer yine yeni durumdadır, oturum.durum bunu söyler
+     (tamam:false, bekleyen:true); oturum.kaydet() yalnız mevcut durumu yazar, komutu ikinci kez uygulamaz.
+     uygula(f, true) kaydetmeden uygular (maç sınırı gibi bilinçli istisnalar): kayıt bir önceki komutta kalır. */
 const KAYIT_BICIM=1;
-/* sürüm geçişleri: KAYIT_GECISLERI[n] = veri → (n+1) sürümlü veri. Sürüm 1 ilk kalıcı sürümdür, henüz geçiş yok */
+/* sürüm geçişleri: KAYIT_GECISLERI[n] = veri → (n+1) sürümlü veri. Geçişler başka kural dosyasına bağlı olmayan veri dönüşümleridir;
+   kararları yeniden oynatmaz, para hareketi üretmez */
 const KAYIT_GECISLERI={};
+/* 1 → 2 (2.3): meseleler eklendi. Sürüm 1'de meseleye dönüşecek tek konu TEST haftasının forma sponsoru ödemesiydi.
+   Bekleyen sponsor kararları, kalemi sponsor olan bekleyen ödemeler ve geçmişteki sponsor kararları tek meseleye bağlanır;
+   durum bunlardan türetilir. Sponsor kararı hiç görülmemiş kayıtta (ör. örnek kariyer) mesele açılmaz */
+KAYIT_GECISLERI[1]=v=>{
+  v.kayitSurumu=2;v.meseleler={};
+  v.sonrakiNo=Object.assign({},v.sonrakiNo,{mesele:1});
+  const isler=Object.values(v.isler||{}),SECIMLER=['kendin','devret','kabul','ret'];
+  const kararlar=isler.filter(x=>x.tur==='ajanda'&&x.veri&&(x.veri.karar==='sponsorGecikmesi'||x.veri.karar==='sponsorIndirimi'));
+  const verilen=(v.gecmis||[]).filter(g=>g.tur==='is'&&g.isTuru==='ajanda'&&g.sonuc&&SECIMLER.includes(g.sonuc.secim));
+  if(!kararlar.length&&!verilen.length)return v;
+  const odemeler=isler.filter(x=>x.tur==='odeme'&&x.veri&&x.veri.kalem==='sponsor');
+  for(const x of kararlar.concat(odemeler))x.veri.meseleId='mesele-1';
+  const baskan=(v.kisiler||{})[v.baskanId]||{},c=(v.kulupler||{})[baskan.kulupId]||{},sayman=c.yonetim&&c.yonetim.sayman;
+  const durum=kararlar.length?'kararBekliyor':odemeler.length?'haberBekliyor':'kapandi';
+  const olaylar=verilen.map(g=>({tarih:g.tarih,dakika:g.dakika,anahtar:'eskiKayit',p:{metin:g.sonuc.secimMetni+(g.sonuc.bilgi?': '+g.sonuc.bilgi:'')}}));
+  if(durum==='kapandi')olaylar.push({tarih:v.tarih,dakika:v.gunIciDakika,anahtar:'kapandi',p:{}});
+  v.meseleler['mesele-1']={id:'mesele-1',tur:'sponsorOdemesi',baslik:'Forma sponsoru: geciken ilk taksit',durum,
+    sorumluId:!kararlar.length&&sayman&&verilen.some(g=>g.sonuc.secim==='devret')?sayman:v.baskanId,
+    kisiler:sayman?[sayman]:[],olaylar,gorulen:olaylar.length,kapanis:durum==='kapandi'?{tarih:v.tarih,dakika:v.gunIciDakika}:null};
+  v.sonrakiNo.mesele=2;
+  return v;
+};
 
 /* FNV-1a 32 bit: güvenlik için değil, yarım/bozuk yazımı yakalamak için */
 function saglamaHesapla(s){
@@ -94,6 +120,28 @@ function kariyerYukle(depo,yuva){
   }
   if(!bulunan&&!uyarilar.length)return{tamam:false,bos:true,hata:`${yuva} yuvasında kayıt yok`};
   return{tamam:false,bos:false,hata:'Sağlam kayıt bulunamadı. '+uyarilar.join(' · ')};
+}
+
+/* kayıt oturumu: kariyer + yuva. kayitli: verilen kariyer zaten bu yuvadan yüklendi mi.
+   durum: {tamam: son yazım başarılı mı, hata, tarih/dakika: son başarılı kaydın oyun içi anı, bekleyen: kaydedilmemiş değişiklik var mı} */
+function kayitOturumu(depo,yuva,kariyer,kayitli){
+  const o={
+    kariyer,
+    durum:{tamam:true,hata:null,tarih:kayitli?kariyer.tarih:null,dakika:kayitli?kariyer.gunIciDakika:null,bekleyen:!kayitli},
+    kaydet(){
+      const s=kariyerKaydet(depo,yuva,o.kariyer),d=o.durum;
+      if(s.tamam)o.durum={tamam:true,hata:null,tarih:o.kariyer.tarih,dakika:o.kariyer.gunIciDakika,bekleyen:false};
+      else o.durum={tamam:false,hata:s.hata,tarih:d.tarih,dakika:d.dakika,bekleyen:true};
+      return s;
+    },
+    uygula(f,kaydetme){
+      const r=kariyerKomut(o.kariyer,f);
+      o.kariyer=r.kariyer;
+      if(kaydetme)o.durum.bekleyen=true;else o.kaydet();
+      return r.sonuc;
+    }
+  };
+  return o;
 }
 
 /* bellekte tutulan depo: denemeler ve depo kullanılamadığında geçici çalışma için */

@@ -1,6 +1,7 @@
 # Kontrol aracının geçici dosyaları
 araclar/.onbellek/
 araclar/son-kontrol-*.png
+araclar/son-akis-*.png
 __pycache__/
 # Masaüstü denemesinin üretilen dosyaları (masaustu/hazirla.js, paketle.js, deneme.js)
 masaustu/node_modules/
