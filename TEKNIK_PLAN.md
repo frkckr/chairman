@@ -22,7 +22,7 @@ Motor sahneye bağlıdır. Kadrolarda gizli yetenek değerleri, motorda tohumlu 
 
 2026-09-30'da onaylanan yaşayan kulüp akışının kural katmanı kısmen uygulandı: ortak mesele verisi, durma noktalarına ilerleme (2.3) ve gün içi karar kaydı (2.4) mevcut ajanda ekranında çalışır. Başkan odası, telefon/ajanda/dosya sunumuyla uygulandı (2.5, §10); görüşme/kişi sahneleri ve kontrollü gözlem hâlâ hedeftir. Bugünkü davranışlar “Uygulanan” başlıklarıyla ayrıca belirtilmiştir.
 
-Aynı gün onaylanan değişken başlangıç ve koşula bağlı olay yönünün dar ilk örneği uygulandı (2.4A): yeni kariyer `kariyerBaslat` ile üç TEST başlangıcından birini kurar, ödeme sıkışması paketi §6 sözleşmesiyle çalışır. Tam devralma koşulları ve diğer paketler henüz yoktur. 2.3–2.4 kodu `main` dalına birleşmiştir (PR #8); 2.4A yereldedir. Bu bilgi dağıtılmış Pages veya masaüstü paketinin sürümünü doğrulamaz. Sıra [YOL_HARITASI](YOL_HARITASI.md) içindedir.
+Aynı gün onaylanan değişken başlangıç ve koşula bağlı olay yönünün dar ilk örneği uygulandı (2.4A): yeni kariyer `kariyerBaslat` ile üç TEST başlangıcından birini kurar, ödeme sıkışması paketi §6 sözleşmesiyle çalışır. Tam devralma koşulları ve diğer paketler henüz yoktur. 2.3–2.4 kodu `main` dalına birleşmiştir (PR #8); 2.4A, 2.5, 2.6 ve 2.8 PR #9 ile birleşti. Bu bilgi dağıtılmış Pages veya masaüstü paketinin sürümünü doğrulamaz. Sıra [YOL_HARITASI](YOL_HARITASI.md) içindedir.
 
 Tarayıcı sürümünde Three.js ve sayfa fontları dış kaynaklardan yüklenir. Masaüstü kopyası bunları yerel dosyalardan yükler ve çevrimdışı açılır (1.5 denemesi, §10). Üst düzey tanımlar betikler arasında paylaşılır; yeni adlar ve yükleme sırası bu yüzden dikkat gerektirir.
 

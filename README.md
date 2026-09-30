@@ -60,4 +60,4 @@ python3 araclar/akis-deneme.py
 
 **Sıradaki geliştirme:** [yol haritası Aşama 2](YOL_HARITASI.md#aşama-2--yaşayan-kulüpte-günlük-başkanlık), **2.7 — antrenman ve telefon** (önce prototip), ardından 2.9 günlük akışın sınanması. Ayrıntılı sıra ve kabul koşullarının tek kaynağı yol haritasıdır.
 
-Aşama 1, 2.1–2.6 (2.4A dahil) ve 2.8 tamamlandı. 2.3–2.4 kodu [PR #8](https://github.com/frkckr/chairman/pull/8) ile `main` dalına birleşti; 2.4A, 2.5, 2.6 ve 2.8 yerel değişikliktir. Tam sezon Aşama 5'te, kapsamlı adaylık hikâyesi Aşama 6'da sınanacak. Yerel değişiklik Pages dağıtımını veya masaüstü paketini güncellemiş sayılmaz.
+Aşama 1, 2.1–2.6 (2.4A dahil) ve 2.8 tamamlandı. 2.3–2.4 kodu [PR #8](https://github.com/frkckr/chairman/pull/8) ile `main` dalına birleşti; 2.4A, 2.5, 2.6 ve 2.8 [PR #9](https://github.com/frkckr/chairman/pull/9) ile birleşti. Tam sezon Aşama 5'te, kapsamlı adaylık hikâyesi Aşama 6'da sınanacak. Yerel değişiklik Pages dağıtımını veya masaüstü paketini güncellemiş sayılmaz.
