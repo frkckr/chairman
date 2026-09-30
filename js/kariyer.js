@@ -8,8 +8,9 @@
      icerik.surum: içerik sürümü (kayıt sürümünden ayrı); 0 = eski sabit TEST haftası, yeni olay paketi açılmaz.
      kosullar: devralınan dünya gerçekleri; başlangıçta bir kez kurulur (js/baslangic.js). olaylar: js/olay.js.
    Sürüm 4 (yol haritası 2.6, 2.8): sozler (js/soz.js), haberler (gazete ve teşekkür kayıtları) ve sonrakiNo.soz eklendi;
-     kulüpte isteğe bağlı sorumluluklar (kalıcı yetki devri, js/yonetim.js). İçerik sürümü 2: tavsiye, hoca, basın ve destek paketleri. */
-const KARIYER_SURUM=4;
+     kulüpte isteğe bağlı sorumluluklar (kalıcı yetki devri, js/yonetim.js). İçerik sürümü 2: tavsiye, hoca, basın ve destek paketleri.
+   Sürüm 5 (yol haritası 2.7): gozlem (süren antrenman gözlemi: null ya da {tarih, bas, bitis}; js/gozlem.js). */
+const KARIYER_SURUM=5;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */
@@ -103,6 +104,7 @@ function kariyerDogrula(k){
   if(!duz(k.olaylar))h.push('Olay listesi (olaylar) yok');
   if(!duz(k.sozler))h.push('Söz listesi (sozler) yok');
   if(!Array.isArray(k.haberler))h.push('Haber listesi (haberler) yok');
+  if(k.gozlem===undefined)h.push('Gözlem alanı (gozlem) yok');
 
   for(const [anahtar,c] of Object.entries(kulupler)){
     const ad=`Kulüp ${anahtar}`;

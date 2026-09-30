@@ -154,7 +154,7 @@ Ajanda; zorunlu, ertelenebilir ve isteğe bağlı işleri ayırır. Bekleyen gö
 
 ### Zamanın ilerleme kuralları
 
-**Onaylı tasarım yaklaşımı (2026-09-30; ajanda ekranında kısmen uygulandı: okumada zaman durur, “İlerle” ile durma noktalarına gidilir, ekip işleri takvimle çalışır; antrenman gözlemi ve telefon henüz yok):** Takvim, oyuncunun başlattığı eylemlerle ilerler. Sabah, öğle ve akşam ortamda ve insanların bulunabilirliğinde hissedilir; kısa telefon ile uzun görüşme aynı süreyi tüketmez.
+**Onaylı tasarım yaklaşımı (2026-09-30; ajanda ekranında kısmen uygulandı: okumada zaman durur, “İlerle” ile durma noktalarına gidilir, ekip işleri takvimle çalışır; balkondan antrenman gözlemi kontrollü ilerler ve telefon kararında durur, kısa iş gözlemin içinde geçer, uzun iş için gözlem bırakılır — 2.7):** Takvim, oyuncunun başlattığı eylemlerle ilerler. Sabah, öğle ve akşam ortamda ve insanların bulunabilirliğinde hissedilir; kısa telefon ile uzun görüşme aynı süreyi tüketmez.
 
 | Durum | Takvimin davranışı |
 |---|---|

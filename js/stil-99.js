@@ -104,7 +104,18 @@ const STIL={
     dosya:0xc8281e,dosyaEtiket:0xf2ede2,kagit:0xf6f1e4,kalemlik:0x2a2c33,saatKasa:0x3a2a1c,saatYuz:0xf4f1e8,saatIbre:0x1c1a18,
     flama:'#c8281e',flamaSerit:'#f2ede2',vurgu:0xffb530,gunesLekesi:0xfff1c4,gazete:'#e9e4d6',notKagidi:'#f2d96a',iskele:'#4a3a2a',iskeleBranda:'#3a6ea8',
     ortam:{renk:0xfff3df,guc:0.62},gunes:{renk:0xfff0cf,konum:[-3.2,3.6,-2.2]},dolgu:{renk:0xdfe8ff,guc:0.28,konum:[2.5,2,2]},
-    gunIsigi:[[6,0.25,0xffc890],[9,0.62,0xfff0cf],[13,0.78,0xfffaf0],[17,0.6,0xffe0b0],[19.5,0.28,0xff9a5a],[22,0.1,0x6a78a8]]},
+    gunIsigi:[[6,0.25,0xffc890],[9,0.62,0xfff0cf],[13,0.78,0xfffaf0],[17,0.6,0xffe0b0],[19.5,0.28,0xff9a5a],[22,0.1,0x6a78a8]],
+    /* balkon kapısı (uzak duvarda, x0–x1 arası, h yüksekliğinde) ve masadan balkondaki sandalyeye yürüyüş: yol = [konum, bakış] durakları,
+       yuruyus = saniye. kapiCam: kapının camı */
+    kapi:{x0:0.9,x1:1.75,h:2.1,renk:0xf4f1e8,cam:0xbfe0f2,kol:0xb89a4a},yuruyus:2.8,
+    yol:[[[0,1.28,0.62],[0,0.95,-1.4]],[[1.42,1.6,0.35],[1.2,1.35,-3.4]],[[1.34,1.6,-2.6],[1.3,1.3,-8]],[[1.3,1.6,-4.25],[0.4,-1.5,-30]],[[-0.55,1.3,-4.45],[0,-7,-47]]]},
+
+  /* Balkon ve antrenman sahası (js/balkon.js): odanın dışı, gündüz. Ölçüler metre; saha merkezi oda koordinatındadır (balkon sahanın üstünde,
+     ana tribünün tepesinde). aci/bakis: balkondaki sandalyeden bakış. TEST değerleri. */
+  balkon:{aci:46,odakAci:42,goz:[-0.55,1.3,-4.45],bakis:[0,-7,-47],
+    saha:[0,-7,-58],gokUst:[0.42,0.66,0.9],gokAlt:[0.86,0.93,0.96],disZemin:0x8a8672,zemin:0x9a958a,korkuluk:0x3a3d44,masa:0x6a4228,masaAyak:0x2a2c33,sandalye:0x7a2420,
+    beton:0x9a9b9e,betonKoyu:0x7d7e82,koltuk:0xb4322a,koltukAcik:0xe6e0d2,cati:0x8c9096,direk:0x5a5d62,kalePost:0xf4f4f0,apartman:['#b8ab94','#a89c88','#c4b8a2','#9c9484'],pencere:'#5a6a7a',
+    agac:0x3f6a34,golge:0.22,koni:0xff7a1e,yelek:'#e8c21e'},
 
   /* Açık renkli yönetim arayüzü (js/ekran-oda.js): kâğıt zemin, koyu okunur metin, ahşap çizgi, ölçülü kulüp rengi.
      Ekran bu renkleri CSS değişkeni (--k-ad) olarak yazar. yaziBoyu: karenin genişliğine oranla yazı (cqw). TEST değerleri. */

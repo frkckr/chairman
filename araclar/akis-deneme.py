@@ -32,7 +32,7 @@ import kontrol  # noqa: E402
 sys.stdout.reconfigure(encoding="utf-8")
 
 KOK, ARAC = kontrol.KOK, kontrol.ARAC
-SURUM = 4
+SURUM = 5
 basarisiz = 0
 
 
@@ -48,7 +48,8 @@ DURUM_JS = """() => { const k = OYUN.kariyer; const c = k.kulupler.demirkapi;
     isler: Object.keys(k.isler).join(','), mesele: Object.values(k.meseleler).map(m => m.tur + ':' + m.durum).join(','),
     olay: Object.values(k.olaylar).map(o => o.paket + '/' + o.varyant + ':' + o.durum).join(','), baslangic: k.icerik.baslangic, icerik: k.icerik.surum,
     sayman: c.yonetim.sayman, karar: Object.values(k.isler).filter(x => x.veri.saatsiz).map(x => x.id).join(','),
-    soz: Object.values(k.sozler).map(s => s.anahtar + ':' + s.durum).join(','), haber: k.haberler.map(h => h.anahtar).join(',') }; }"""
+    soz: Object.values(k.sozler).map(s => s.anahtar + ':' + s.durum).join(','), haber: k.haberler.map(h => h.anahtar).join(','),
+    gozlem: k.gozlem ? k.gozlem.bas + '-' + k.gozlem.bitis : '' }; }"""
 KARAR_JS = "tur => { const x = Object.values(OYUN.kariyer.isler).find(x => x.tur === 'ajanda' && x.veri.karar === tur); return x ? x.id : null; }"
 MESELE_JS = "tur => { const m = Object.values(OYUN.kariyer.meseleler).find(m => m.tur === tur); return m ? m.id : null; }"
 KAYIT_JS = "localStorage.getItem('chairman:oyun-1')"
@@ -256,7 +257,8 @@ async def ana():
         await pg.context.close()
 
         # ---- 8. eski kayıtlar ----
-        for surum, ad in ((1, "indirim-bekliyor"), (1, "taksit"), (2, "ekipte"), (2, "indirim-bekliyor"), (3, "kriz-acik"), (3, "teklif-bekliyor")):
+        for surum, ad in ((1, "indirim-bekliyor"), (1, "taksit"), (2, "ekipte"), (2, "indirim-bekliyor"), (3, "kriz-acik"), (3, "teklif-bekliyor"),
+                          (4, "destek-bekliyor"), (4, "gorus-bekliyor"), (4, "sorumlu-ekipte"), (4, "soz-acik"), (4, "basin-bekliyor"), (4, "mac-gunu")):
             kayit = (ARAC / "ornekler" / f"kayit-s{surum}-{ad}.json").read_text(encoding="utf-8")
             baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
             pg2 = await baglam.new_page()
@@ -272,8 +274,8 @@ async def ana():
             yedek = json.loads(await pg2.evaluate("localStorage.getItem('chairman:oyun-1.onceki')") or "{}")
             yazi = await pg2.inner_text("#ajanda .aj-mesaj")
             denetle(f"Sürüm {surum} kayıt ({ad}): açıldı, sürüm {SURUM} olarak yeniden yazıldı, eski kayıt yedek; para ve tarih aynı, kendi içeriği sürüyor",
-                    yeni["kayitSurumu"] == SURUM and yedek.get("veri", {}).get("kayitSurumu") == surum and d["mesele"] != "" and d["icerik"] == (0 if surum < 3 else 1)
-                    and d["soz"] == "" and d["haber"] == "" and d["tarih"] == eski["tarih"] and d["nakit"] == eski["kulupler"]["demirkapi"]["nakit"], f"{d['tarih']} {d['mesele']} · {yazi[:80]}")
+                    yeni["kayitSurumu"] == SURUM and yedek.get("veri", {}).get("kayitSurumu") == surum and d["mesele"] != "" and d["icerik"] == (0, 0, 0, 1, 2)[surum]
+                    and (surum == 4 or (d["soz"] == "" and d["haber"] == "")) and d["gozlem"] == "" and d["tarih"] == eski["tarih"] and d["nakit"] == eski["kulupler"]["demirkapi"]["nakit"], f"{d['tarih']} {d['mesele']} · {yazi[:80]}")
             if (surum, ad) in ((2, "indirim-bekliyor"), (3, "teklif-bekliyor")):
                 await pg2.click('[data-eylem="devam"]')
                 await karar_ver(pg2, d["karar"], "kabul")
@@ -449,6 +451,79 @@ async def ana():
                 d["tarih"] == "2026-11-28" and d["mesele"] == "" and d["haber"] == "gazete.macOnu" and await pg.evaluate("!ODA.nesneler.dosya.g.visible && ODA.durum.haber === 0 && ODA.nesneler.gazete.g.visible && !ODA.kart.visible")
                 and await pg.query_selector('.od-ana:has-text("Stada git")') is not None, str(d))
         await pg.screenshot(path=str(ARAC / "son-akis-9-oda-duzenli.png"))
+        await pg.context.close()
+
+        # ---- 10. balkon ve antrenman gözlemi (2.7): yürüyüş, gözlem, telefonla kesilme, kısa iş, devam, dönüş ----
+        pg, hatalar = await oda_ac(tarayici, site, SIKISIK)
+        tum_hatalar += hatalar
+        # hazırlık (ekran dışı, aynı kariyer komutlarıyla): maaş bekletilir, saat Perşembe 15:00'e getirilir; gazete 16:00'da arayacak
+        await pg.evaluate("""() => { const S = { koltukSecimi: 'kisi-8', destekTeklifi: 'reddet', nakitTakvimi: 'bekle', odemeSikismasi: 'maasGeciktir' };
+          for (let i = 0; i < 12; i++) {
+            let yapilan = null;
+            for (const x of Object.values(OYUN.kariyer.isler).filter(x => x.tur === 'ajanda' && S[x.veri.karar])) {
+              const t = x.veri.karar;
+              try { oyunKomut(k => ajandaIsiYap(k, x.id, S[t])); yapilan = t; break; } catch (e) { /* bugünün işi değil: ilerle */ }
+            }
+            if (yapilan === 'odemeSikismasi') break;
+            if (!yapilan) oyunKomut(k => duragaIlerle(k));
+          }
+          oyunKomut(k => zamanIlerlet(k, anDakika('2026-11-26', 900) - simdikiAn(k))); }""")
+        await oda_yenile(pg)
+        if await pg.query_selector('[data-eylem="devam"]'):
+            await pg.click('[data-eylem="devam"]')
+        await pg.keyboard.press("Escape")
+        d0 = await durum(pg)
+        denetle("(hazırlık) Perşembe 15:00, maaş sözü açık; başkan masada, Balkona çık düğmesi var",
+                d0["tarih"] == "2026-11-26" and d0["dakika"] == 900 and d0["soz"] == "soz.maas:acik" and await pg.evaluate("ODA.yer") == "masa"
+                and "Balkona çık" in await pg.text_content(".od-yer") and await pg.query_selector(".od-gozlem") is None, str(d0))
+        await pg.keyboard.press("Digit5")
+        await pg.wait_for_function("ODA.yer === 'balkon'", timeout=15000)
+        yazi = await pg.text_content(".od-gozlem")
+        denetle("Balkona yüründü: yer değiştirmek tarihi, saati, parayı ve geçmişi değiştirmedi; antrenman sürüyor, izleme seçenekleri var",
+                await durum(pg) == d0 and "Antrenman sürüyor" in yazi and "Odaya dön" in await pg.text_content(".od-yer")
+                and await pg.eval_on_selector_all('[data-eylem="gozlem"]:not([disabled])', "L => L.map(b => b.dataset.dk).join(',')") == "15,30,120", yazi[:140])
+        await pg.wait_for_timeout(1200)
+        await pg.screenshot(path=str(ARAC / "son-akis-10-balkon.png"))
+        await pg.click('[data-eylem="gozlem"][data-dk="120"]')
+        d = await durum(pg)
+        mesaj = await pg.inner_text("#oda .od-mesaj")
+        denetle("Sonuna kadar izle: gazete arayınca (16:00) gözlem durdu, aralık açık kaldı (kalan 60 dk), telefon yandı",
+                d["dakika"] == 960 and d["gozlem"] == "900-1020" and "basinSorusu:kararBekliyor" in d["mesele"] and "Telefon çaldı" in mesaj and await pg.evaluate("ODA.durum.haber > 0 && ODA.yer === 'balkon'"), f"{d['dakika']} {d['gozlem']} · {mesaj[:90]}")
+        await pg.wait_for_selector('[data-eylem="gozlemSurdur"]', timeout=15000)
+        denetle("Karar beklerken Gözleme devam et kapalı; Gözlemi bırak açık",
+                await pg.query_selector('[data-eylem="gozlemSurdur"][disabled]') is not None and await pg.query_selector('[data-eylem="gozlemBirak"]:not([disabled])') is not None)
+        await pg.screenshot(path=str(ARAC / "son-akis-10-balkon-durdu.png"))
+        await oda_yenile(pg)
+        if await pg.query_selector('[data-eylem="devam"]'):
+            await pg.click('[data-eylem="devam"]')
+        await pg.keyboard.press("Escape")
+        denetle("Yenilemeden sonra başkan yine balkonda, gözlem aynı yerde açık", await durum(pg) == d and await pg.evaluate("ODA.yer") == "balkon" and "Gözlem durdu" in await pg.text_content(".od-gozlem"))
+        await pg.keyboard.press("Digit1")
+        await pg.click('.od-panel [data-eylem="dosyaAc"]')
+        yazi = await pg.text_content(".od-panel")
+        denetle("Dosya balkondan açıldı; uzun görüşme kapalı ve nedeni yazıyor, kısa seçenekler açık",
+                "tam dikkat" in yazi and await pg.query_selector('.od-panel [data-eylem="sec"][data-secim="kendin"][disabled]') is not None
+                and await pg.query_selector('.od-panel [data-eylem="sec"][data-secim="devret"]:not([disabled])') is not None, yazi[:160])
+        await pg.screenshot(path=str(ARAC / "son-akis-10-balkon-dosya.png"))
+        await oda_karar(pg, "devret")
+        await pg.keyboard.press("Escape")
+        d = await durum(pg)
+        denetle("Kısa iş gözlemin içinde geçti: saat 16:15, gözlem aralığı aynı, karar kapandı", d["dakika"] == 975 and d["gozlem"] == "900-1020" and d["karar"] == "", str(d))
+        await pg.click('[data-eylem="gozlemSurdur"]')
+        d = await durum(pg)
+        g = await pg.evaluate("OYUN.kariyer.gecmis.filter(x => x.tur === 'gozlem')")
+        kayit = json.loads(await pg.evaluate(KAYIT_JS))["veri"]
+        denetle("Gözleme devam: 17:00'de bitti; geçmişte tek gözlem kaydı (15:00–17:00, 120 dk, notuyla), kayda yazıldı",
+                d["dakika"] == 1020 and d["gozlem"] == "" and len(g) == 1 and g[0]["izlenen"] == 120 and g[0]["bas"] == 900 and bool(g[0].get("not"))
+                and kayit["gozlem"] is None and kayit["gunIciDakika"] == 1020, f"{d['dakika']} {g}")
+        await pg.wait_for_function("document.querySelector('.od-gozlem') && /Saha boş/.test(document.querySelector('.od-gozlem').textContent)", timeout=15000)
+        await pg.wait_for_timeout(600)
+        await pg.screenshot(path=str(ARAC / "son-akis-10-balkon-bitti.png"))
+        await pg.keyboard.press("Digit5")
+        await pg.wait_for_function("ODA.yer === 'masa'", timeout=15000)
+        denetle("Odaya dönüldü: durum aynı, gözlem şeridi yok", await durum(pg) == d and await pg.query_selector(".od-gozlem") is None and "Balkona çık" in await pg.text_content(".od-yer"))
+        await pg.wait_for_timeout(600)
+        await pg.screenshot(path=str(ARAC / "son-akis-10-odaya-donus.png"))
         await pg.context.close()
 
         await tarayici.close()

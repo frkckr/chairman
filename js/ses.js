@@ -2,7 +2,7 @@
    Harici ses dosyası yoktur. Ses ilk kullanıcı etkileşiminde başlar (tarayıcı kuralı); ses açılamazsa sessizce devre dışı kalır,
    oyun aynen çalışır. Sesler bilgi taşımaz: her sesin ekranda yazılı karşılığı vardır.
      sesAyarla(duzey 0–1, sessiz)  ana ses düzeyi
-     sesOrtam(ad | null)           ortam sesi: 'oda' (kısık oda uğultusu ve duvar saati)
+     sesOrtam(ad | null)           ortam sesi: 'oda' (kısık oda uğultusu ve duvar saati), 'balkon' (açık hava), 'antrenman' (açık hava, uzaktan top ve düdük)
      sesCal(ad)                    kısa işaret: 'bildirim' (telefon), 'kagit' (dosya/ajanda açılır), 'karar' (karar verildi), 'tik' (düğme)
    Düzeyler TEST değeridir. */
 const SES={ctx:null,ana:null,ortam:null,ortamAd:null,duzey:0.6,sessiz:false,saat:null};
@@ -45,8 +45,18 @@ function sesOrtam(ad){
   if(!SES.ctx)return;
   if(SES.ortam){try{SES.ortam.kaynak.stop();}catch(e){}SES.ortam=null;}
   if(SES.saat){clearInterval(SES.saat);SES.saat=null;}
-  if(ad!=='oda')return;
+  if(ad!=='oda'&&ad!=='balkon'&&ad!=='antrenman')return;
   try{
+    if(ad!=='oda'){
+      /* açık hava: daha açık tınılı uğultu; antrenmanda uzaktan top sesi ve seyrek düdük */
+      const c=SES.ctx,n=c.sampleRate*2,b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);
+      let son=0;for(let i=0;i<n;i++){son=(son+0.06*(Math.random()*2-1))/1.06;d[i]=son*2.4;}
+      const s=c.createBufferSource(),f=c.createBiquadFilter(),k=c.createGain();s.buffer=b;s.loop=true;f.type='lowpass';f.frequency.value=1100;k.gain.value=0.2;
+      s.connect(f);f.connect(k);k.connect(SES.ana);s.start();SES.ortam={kaynak:s};
+      if(ad==='antrenman'){let sayac=0;SES.saat=setInterval(()=>{if(!SES.ctx||SES.sessiz||SES.ctx.state!=='running'||document.hidden)return;
+        try{sayac++;if(sayac%9===0){sesNota(2350,0.28,'sine',0.025);}else sesGurultu(0.09,0.05,260);}catch(e){}},1100);}
+      return;
+    }
     /* oda uğultusu: alçak geçirgenden geçmiş, döngüye alınmış gürültü */
     const c=SES.ctx,n=c.sampleRate*2,b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);
     let son=0;for(let i=0;i<n;i++){son=(son+0.02*(Math.random()*2-1))/1.02;d[i]=son*3;}

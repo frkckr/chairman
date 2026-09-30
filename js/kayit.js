@@ -61,6 +61,9 @@ KAYIT_GECISLERI[3]=v=>{
   return v;
 };
 
+/* 4 → 5 (2.7): süren antrenman gözlemi alanı eklendi; eski kayıtta gözlem yoktur */
+KAYIT_GECISLERI[4]=v=>{v.kayitSurumu=5;v.gozlem=null;return v;};
+
 /* FNV-1a 32 bit: güvenlik için değil, yarım/bozuk yazımı yakalamak için */
 function saglamaHesapla(s){
   let h=0x811c9dc5;
