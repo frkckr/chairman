@@ -17,6 +17,8 @@
 const MESELE_DURUMLARI=['kararBekliyor','ekipte','haberBekliyor','kapandi'];
 const MESELE_DURUM_ADI={kararBekliyor:'Karar sende',ekipte:'Ekipte',haberBekliyor:'Haber bekleniyor',kapandi:'Kapandı'};
 const EKIP_GOREVLERI={};
+/* meseleOzeti'ne ek bilgi katan kural dosyaları: (k, meseleId, özet) => void (js/olay.js kanıt satırlarını buradan ekler) */
+const MESELE_OZET_EKLERI=[];
 
 const TR_AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const gunAyYazi=t=>{const [,a,g]=t.split('-').map(Number);return g+' '+TR_AYLAR[a-1];};
@@ -75,18 +77,21 @@ function meseleGoruldu(k,id){const m=k.meseleler[id];if(m)m.gorulen=m.olaylar.le
 
 /* meselenin okunur özeti (kariyeri değiştirmez): kim ilgileniyor, ne bekleniyor, şimdi ne yapılabilir, geçmiş.
    adimlar: bağlı bekleyen işler {isId, tur, tarih, dakika, saatsiz, metin}. karar: başkanın bekleyen adımı {isId, simdi} ya da null;
-   simdi: bu adım şu an atılabilir mi (saati serbest ya da bugünün işi) */
+   simdi: bu adım şu an atılabilir mi (saati serbest ya da bugünün işi). bilgiler: başkanın bildiği kanıtlar {metin, kaynak, tarih} (js/olay.js) */
 function meseleOzeti(k,id){
   const m=k.meseleler[id],isler=meseleIsleri(k,id),karar=isler.find(x=>x.tur==='ajanda')||null;
-  return{
+  const o={
     mesele:m,durum:m.durum,durumAdi:MESELE_DURUM_ADI[m.durum],
     sorumlu:k.kisiler[m.sorumluId]||null,
     kisiler:m.kisiler.map(x=>k.kisiler[x]).filter(Boolean),
     adimlar:isler.map(x=>({isId:x.id,tur:x.tur,tarih:x.tarih,dakika:x.dakika,saatsiz:!!x.veri.saatsiz,metin:isBasligi(k,x),tutar:x.tur==='odeme'?x.veri.tutar:undefined})),
     karar:karar?{isId:karar.id,simdi:!!karar.veri.saatsiz||karar.tarih===k.tarih}:null,
     yeni:m.olaylar.length-m.gorulen,
-    olaylar:m.olaylar.map(o=>({tarih:o.tarih,dakika:o.dakika,metin:MESELE_OLAYLARI[o.anahtar](k,o.p)}))
+    olaylar:m.olaylar.map(o=>({tarih:o.tarih,dakika:o.dakika,metin:MESELE_OLAYLARI[o.anahtar](k,o.p)})),
+    bilgiler:[]
   };
+  for(const f of MESELE_OZET_EKLERI)f(k,id,o);
+  return o;
 }
 /* meseleler: önce açık olanlar (kimlik sırasıyla), sonra kapananlar (son kapanan önce) */
 function meseleListesi(k){

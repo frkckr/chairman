@@ -38,6 +38,8 @@ addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat)return;const t=e.ta
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let last=0,time=0,onEkranCizildi=false;
 function frame(now){
+  /* başkan odası: stat yerine oda sahnesi çizilir; maç zamanı ilerlemez (js/oda.js). Odadan çıkınca stat yeniden çizilir */
+  if(ON_EKRAN.sayfa==='oda'){odaKare(Math.min(0.05,Math.max(0,(now-last)/1000)));last=now;odaCiz();onEkranCizildi=false;requestAnimationFrame(frame);return;}
   /* maç öncesi ekranı açıkken maç günü başlamaz: stat bir kez çizilir, menünün arkasında donuk durur */
   if(ON_EKRAN.acik&&onEkranCizildi){last=now;requestAnimationFrame(frame);return;}
   const gercekDt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;

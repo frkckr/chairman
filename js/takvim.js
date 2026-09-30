@@ -15,7 +15,8 @@ const IS_SONRASI=[];                       // (k, is, geçmiş kaydı) => void
 const ZAMAN_ISLEM_SINIRI=100000;           // tek ilerletmede tamamlanabilecek iş sayısı; kendini sürekli yeniden kuran işe karşı
 
 /* iş türleri: denetle(k, veri) → hata listesi; uygula(k, is) → geçmişe yazılacak sade sonuç (ya da undefined);
-   baslik(k, is) → bekleyen işin listelerde görünen kısa adı (isteğe bağlı) */
+   baslik(k, is) → bekleyen işin listelerde görünen kısa adı (isteğe bağlı).
+   gizli: true ise iş zamanı gelene kadar ajanda ve önizleme listelerinde gösterilmez (henüz olmamış dış gelişme; js/olay.js) */
 const IS_TURLERI={
   hatirlatma:{
     denetle:(k,v)=>v&&typeof v.metin==='string'&&v.metin?[]:['hatırlatma metni yok'],
@@ -24,6 +25,7 @@ const IS_TURLERI={
   }
 };
 const isBasligi=(k,is)=>{const t=IS_TURLERI[is.tur];return t&&t.baslik?t.baslik(k,is):is.tur;};
+const isGizli=is=>!!(IS_TURLERI[is.tur]||{}).gizli;
 
 /* an: tarih + gün içi dakika, tek tamsayıya çevrilmiş (1970-01-01 00:00'dan beri dakika). Sıralama ve fark için */
 function anDakika(tarih,dakika){

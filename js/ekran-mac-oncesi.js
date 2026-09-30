@@ -3,10 +3,10 @@
    iki takımın ligdeki yeri ve formu, olası ilk 11'ler (dizilişe göre küçük sahada), eksikler (sakat, cezalı, kart sınırı),
    son 5 maç, puan durumu, aradaki son maçlar; altta hakem, hava, seyirci ve İlerle düğmesi. Rastgelelik yoktur.
    Oyuncu İlerle'ye basana kadar maç günü başlamaz (js/arayuz.js, ON_EKRAN.acik iken zamanı ilerletmez; arkada stat donuk durur).
-   Açılış sayfası (ON_EKRAN.sayfa): 'ajanda' varsayılan (js/ekran-ajanda.js; maç saati gelince bülteni açar),
-   ?ekran=bulten doğrudan bülten, ?ekran=mac menüleri atlar (null). Renkler STIL.menu'den CSS değişkeni (--m-ad) olarak gelir. */
+   Açılış sayfası (ON_EKRAN.sayfa): 'oda' varsayılan (js/ekran-oda.js; maç saati gelince bülteni açar), ?ekran=ajanda eski koyu ajanda
+   (js/ekran-ajanda.js; geliştirici görünümü), ?ekran=bulten doğrudan bülten, ?ekran=mac menüleri atlar (null). Renkler STIL.menu'den CSS değişkeni (--m-ad) olarak gelir. */
 const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('ekran');}catch(x){}
-  const sayfa=e==='mac'?null:e==='bulten'?'bulten':'ajanda';return{acik:sayfa!==null,sayfa};})();
+  const sayfa=e==='mac'?null:e==='bulten'?'bulten':e==='ajanda'?'ajanda':'oda';return{acik:sayfa!==null,sayfa};})();
 {
   const E=$('onEkran'),M=STIL.menu,B=LIG.buMac,TABLO=puanDurumu(LIG);
   for(const k in M)E.style.setProperty('--m-'+k,M[k]);
@@ -80,7 +80,7 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
   const baskanDugmeleri=$('baskanDugmeleri'),btnIlerle=$('btnIlerle');
   function ilerle(){if(ON_EKRAN.sayfa!=='bulten')return;ON_EKRAN.acik=false;ON_EKRAN.sayfa=null;E.hidden=true;baskanDugmeleri.hidden=false;soyle('Stat doluyor, takımlar tünelde.');}
   btnIlerle.onclick=ilerle;
-  /* bülteni aç: açılışta (?ekran=bulten) ya da ajandada maç saati gelince */
+  /* bülteni aç: açılışta (?ekran=bulten) ya da odada/ajandada maç saati gelince */
   ON_EKRAN.bulteniAc=()=>{ON_EKRAN.acik=true;ON_EKRAN.sayfa='bulten';E.hidden=false;baskanDugmeleri.hidden=true;
     soyle('Maç bülteni: kadroları incele, hazır olunca İlerle\'ye bas.');btnIlerle.focus({preventScroll:true});};
   if(ON_EKRAN.sayfa==='bulten')ON_EKRAN.bulteniAc();

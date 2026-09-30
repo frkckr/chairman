@@ -6,23 +6,23 @@ Son güncelleme: 2026-09-30. Bu belge mevcut prototipten hedef kariyer oyununa g
 
 | Alan | Mevcut dosyalar ve durum |
 |---|---|
-| Açılış | `index.html`; klasik betikler sırayla yüklenir, derleme aracı yok |
+| Açılış | `index.html`; klasik betikler sırayla yüklenir, derleme aracı yok. Açılış sayfası başkan odasıdır; `?ekran=ajanda` eski koyu ajanda (geliştirici görünümü), `?ekran=bulten`, `?ekran=mac` |
 | Veri ve ortak araçlar | `js/ortak.js`, `js/kadrolar.js`, `js/lig.js`, `js/mac-senaryo.js`, `js/stadyum-tarifleri.js` |
-| Kariyer durumu | `js/kariyer.js` oluşturma/kimlik/doğrulama ve güvenli komut (`kariyerKomut`); `js/takvim.js` zaman ve bekleyen işler; `js/maliye.js` para kaydı; `js/ajanda.js` ajanda işleri, karar işleri, ilerleme ve günü bitirme; `js/mesele.js` meseleler, ekip işleri ve dönüş özeti; `js/yonetim.js` yönetim koltukları ve karar türleri; `js/kayit.js` kayıt/yükleme, sürüm geçişi ve kayıt oturumu; `js/kariyer-ornek.js` TEST örnek kariyer (`KARIYER_ORNEK`) ve oynanabilir TEST haftası (`KARIYER_BASLANGIC`). `index.html`'e `lig.js`'ten sonra yüklenir; sıra: kariyer, takvim, maliye, ajanda, mesele, yonetim, kayit |
+| Kariyer durumu | `js/kariyer.js` oluşturma/kimlik/doğrulama ve güvenli komut (`kariyerKomut`); `js/takvim.js` zaman ve bekleyen işler; `js/maliye.js` para kaydı; `js/ajanda.js` ajanda işleri, karar işleri, ilerleme ve günü bitirme; `js/mesele.js` meseleler, ekip işleri ve dönüş özeti; `js/yonetim.js` yönetim koltukları ve koltuk seçimi; `js/uyum-sponsor.js` eski sabit sponsor kararları (yalnız eski kayıt uyumu); `js/olay.js` olay paketleri, olay örnekleri ve dış gelişmeler; `js/paket-odeme.js` ödeme sıkışması paketi (P01'in dar örneği); `js/paket-hoca.js` hocanın talebi; `js/paket-basin.js` gazetenin sorusu ve Cuma gazetesi; `js/paket-destek.js` koşullu destek (P03'ün dar örneği); `js/soz.js` sözler, haberler ve odadaki izler; `js/test-gorunum.js` geçici test görünümü (gizli değerleri okuma); `js/kayit.js` kayıt/yükleme, sürüm geçişi ve kayıt oturumu; `js/kariyer-ornek.js` TEST örnek kariyer (`KARIYER_ORNEK`) ve eski sabit TEST haftası (`KARIYER_BASLANGIC`, yalnız denemeler); `js/baslangic.js` yeni kariyerin üç TEST başlangıcı (`kariyerBaslat`); `js/oyun-oturumu.js` depo seçimi, açılış, yeni kariyer ve komut yolu (oda ve ajanda ekranlarının ortak oturumu) ile ses/yazı ayarları. `index.html`'e `lig.js`'ten sonra yüklenir; sıra: kariyer, takvim, maliye, ajanda, mesele, yonetim, uyum-sponsor, olay, paket-odeme, kayit, (depolar), kariyer-ornek, baslangic, oyun-oturumu |
 | Platform | `js/depo-tarayici.js` tarayıcı (localStorage), `js/depo-masaustu.js` masaüstü kayıt deposu |
 | Masaüstü (deneme) | `masaustu/`: Electron ana süreç `ana.js`, köprü `onyukleme.js`, çevrimdışı kopya `hazirla.js`, paket `paketle.js`, iki açılışlı deneme `deneme.js`. Yalnız Windows x64 |
 | Maç mantığı | `js/mac-motoru.js`, `js/mac-dizilis.js`, `js/mac-karar.js`, `js/mac-kurallar.js` |
 | Maç günü akışı | `js/mac-oncesi.js`; maç öncesi, devre arası, maç sonu |
 | Görsel temel | `js/stil-99.js`, `js/goruntu.js`; Three.js r128, kodla üretilen görseller |
 | Stat ve insanlar | `js/stadyum.js`, `js/seyirci.js`, `js/oyuncular.js`, `js/golgeler.js` |
-| Bağlantı ve sunum | `js/mac-sahnesi.js`, `js/ekran-ajanda.js` (açılış ekranı, kayıt bağlantısı), `js/ekran-mac-oncesi.js`, `js/baskan.js`, `js/efektler.js`, `js/arayuz.js` |
-| Kontrol | `araclar/kontrol.py` tarayıcı kontrolü; `araclar/mac-deneme.js` görüntüsüz maç ölçümleri; `araclar/kariyer-deneme.js` kariyer, takvim, para ve kayıt denetimi; `araclar/kayit-deneme.html` tarayıcıda kayıt/yenileme/yükleme denemesi; `araclar/akis-deneme.py` tarayıcıda gerçek ekranı tıklayarak günlük akış, gün içi kayıt ve sürüm 1 kayıt denemesi (`araclar/ornekler/` gerçek eski kayıtlardır) |
+| Bağlantı ve sunum | `js/mac-sahnesi.js`, `js/oda.js` (başkan odası sahnesi), `js/ekran-oda.js` (açılış ekranı: telefon, ajanda, dosya), `js/ses.js` (kodla üretilen ses), `js/ekran-ajanda.js` (koyu ajanda; geliştirici görünümü), `js/ekran-mac-oncesi.js`, `js/baskan.js`, `js/efektler.js`, `js/arayuz.js` |
+| Kontrol | `araclar/kontrol.py` tarayıcı kontrolü; `araclar/mac-deneme.js` görüntüsüz maç ölçümleri; `araclar/kariyer-deneme.js` kariyer, takvim, para ve kayıt denetimi; `araclar/kayit-deneme.html` tarayıcıda kayıt/yenileme/yükleme denemesi; `araclar/akis-deneme.py` tarayıcıda gerçek ekranı tıklayarak üç başlangıç, günlük akış, gün içi kayıt, başkan odası ve sürüm 1–2 kayıt denemesi (`araclar/ornekler/` gerçek eski kayıtlardır) |
 
 Motor sahneye bağlıdır. Kadrolarda gizli yetenek değerleri, motorda tohumlu rastgelelik ve sabit zaman adımı bulunur. Kariyer takvimi, para, kayıt ve ajanda çalışır; ancak maç sonucu kariyere bağlı değildir. Kalıcı sözleşme, seçim, oyuncu gelişimi ve kariyer yöneten hoca sistemi henüz yoktur.
 
-2026-09-30'da onaylanan yaşayan kulüp akışının kural katmanı kısmen uygulandı: ortak mesele verisi, durma noktalarına ilerleme (2.3) ve gün içi karar kaydı (2.4) mevcut ajanda ekranında çalışır. Oda/görüşme/telefon sunumu ve kontrollü gözlem hâlâ hedeftir. Bugünkü davranışlar “Uygulanan” başlıklarıyla ayrıca belirtilmiştir.
+2026-09-30'da onaylanan yaşayan kulüp akışının kural katmanı kısmen uygulandı: ortak mesele verisi, durma noktalarına ilerleme (2.3) ve gün içi karar kaydı (2.4) mevcut ajanda ekranında çalışır. Başkan odası, telefon/ajanda/dosya sunumuyla uygulandı (2.5, §10); görüşme/kişi sahneleri ve kontrollü gözlem hâlâ hedeftir. Bugünkü davranışlar “Uygulanan” başlıklarıyla ayrıca belirtilmiştir.
 
-Aynı gün onaylanan değişken başlangıç ve koşula bağlı olay yönü henüz uygulanmadı. Yeni kariyer hâlâ `KARIYER_BASLANGIC` sabit haftasını kullanır; mevcut sayman/sponsor eşleşmeleri TEST içeriğidir. 2.3–2.4 kodu `main` dalına birleşmiştir (PR #8); bu bilgi dağıtılmış Pages veya masaüstü paketinin sürümünü doğrulamaz. Yeni içerik önce aşağıdaki §6 sözleşmesiyle küçük ölçekte sınanacak; sıra [YOL_HARITASI](YOL_HARITASI.md) içindedir.
+Aynı gün onaylanan değişken başlangıç ve koşula bağlı olay yönünün dar ilk örneği uygulandı (2.4A): yeni kariyer `kariyerBaslat` ile üç TEST başlangıcından birini kurar, ödeme sıkışması paketi §6 sözleşmesiyle çalışır. Tam devralma koşulları ve diğer paketler henüz yoktur. 2.3–2.4 kodu `main` dalına birleşmiştir (PR #8); 2.4A yereldedir. Bu bilgi dağıtılmış Pages veya masaüstü paketinin sürümünü doğrulamaz. Sıra [YOL_HARITASI](YOL_HARITASI.md) içindedir.
 
 Tarayıcı sürümünde Three.js ve sayfa fontları dış kaynaklardan yüklenir. Masaüstü kopyası bunları yerel dosyalardan yükler ve çevrimdışı açılır (1.5 denemesi, §10). Üst düzey tanımlar betikler arasında paylaşılır; yeni adlar ve yükleme sırası bu yüzden dikkat gerektirir.
 
@@ -70,15 +70,22 @@ Kariyer durumu tek bir sade veri nesnesidir; kurallar `js/kariyer.js`, `js/takvi
 
 | Alan | Biçim |
 |---|---|
-| `kayitSurumu` | Tamsayı; şu an `2` (2.3'te `meseleler` eklendi; sürüm 1 kayıtları `KAYIT_GECISLERI[1]` ile dönüştürülür). Daha yeni sürüm doğrulamada reddedilir |
+| `kayitSurumu` | Tamsayı; şu an `4` (2.3'te `meseleler`, 2.4A'da `icerik`/`kosullar`/`rastlanti`/`olaylar`, 2.6–2.8'de `sozler`/`haberler` eklendi; eski kayıtlar `KAYIT_GECISLERI[1]`–`[3]` ile sırayla dönüştürülür). Daha yeni sürüm doğrulamada reddedilir |
 | `dunyaTohumu` | Tamsayı |
+| `icerik` | `{surum, baslangic}`. `surum` içerik sürümüdür, kayıt sürümünden ayrıdır: `0` eski sabit TEST haftası (yeni paket açılmaz), `1` 2.4A içeriği. `baslangic`: `sikisik`, `rahat`, `duzenli` ya da `null` |
+| `kosullar` | Devralınan dünya gerçekleri; başlangıçta bir kez kurulur (bugün `sponsor.durum`: `nakitSikisik`, `pazarlik`, `saglam`). Oyuncuya gösterilmez |
+| `rastlanti` | `{durum}`: dünya tohumundan başlayan, durumu kaydedilen üretici (`rastlantiCek`, mulberry32). Yalnız komut içinde çekilir; maç ve görsel rastlantıdan bağımsızdır |
+| `olaylar` | Anahtar = `id` (`olay-N`); `paket`, `surum`, `konu` (tekrar sınırı anahtarı), `varyant`, `durum` (`acik`, `kapandi`, `onlendi`), `meseleId`, `acilis`, `kosullar`, `bilgiler` (`{anahtar, p, kaynak, tarih}`; başkanın bildiği kanıtlar), `sonuc` (kararların kalıcı izleri) |
+| `sozler` | Anahtar = `id` (`soz-N`); `verenId`, `muhatap` (kişi kimliği ya da `sponsor`/`personel`), `anahtar` + `p` (konu), `sonTarih`, `isId` (sözü yerine getirecek iş), `olayId`, `durum` (`acik`, `tutuldu`, `bozuldu`), `verilis`, `sonuc` |
+| `haberler` | Sıralı kayıt: `tur` (`gazete`, `tesekkur`), `tarih`, `dakika`, `anahtar`, `p`, `olayId`, `gorulen` |
+| Kulüp `sorumluluklar` (isteğe bağlı) | `{alan: {kisiId}}`; bugün yalnız `tahsilat`. Kişi koltuktan ayrıldıysa kullanılırken düşer |
 | `tarih`, `gunIciDakika` | `YYYY-AA-GG` metni (saat diliminden bağımsız); gece yarısından beri dakika, 0–1439 |
 | `baskanId`, `gorevDurumu` | Kişi kimliği; `taraftar`, `aday`, `gorevde`, `gorevDisi`, `yenidenAday`, `kariyerSonu` |
 | `final` | `null` ya da ileride tanımlanacak nesne |
-| `sonrakiNo` | Tür başına sayaç (`kisi`, `is`, `hareket`, `mesele`); `kimlikUret` yeni kimliği buradan verir, var olan kimliği vermez |
+| `sonrakiNo` | Tür başına sayaç (`kisi`, `is`, `hareket`, `mesele`, `olay`); `kimlikUret` yeni kimliği buradan verir, var olan kimliği vermez |
 | `kulupler` | Anahtar = `id`; küçük harf/rakam kimlik (`demirkapi`), `ad`, `kisa`, `kademe` 1–3, `baskanId`, `acilisNakit`, `nakit` (kuruş tamsayı) |
 | `kisiler` | Anahtar = `id` (`kisi-N`); `ad`, `rol`, `dogumTarihi`, `kulupId` (ya da `null`), `durum`: `aktif`, `emekli`, `ayrildi`, `vefat` |
-| `isler` | Bekleyen işler; anahtar = `id` (`is-N`); `tur`, `tarih`, `dakika`, `veri`. Türler: `hatirlatma`, `odeme`, `ajanda`, `ekip` |
+| `isler` | Bekleyen işler; anahtar = `id` (`is-N`); `tur`, `tarih`, `dakika`, `veri`. Türler: `hatirlatma`, `odeme`, `ajanda`, `ekip`, `gelisme` (henüz olmamış dış gelişme; zamanı gelene kadar ajanda ve önizleme listelerinde gösterilmez) |
 | `gecmis` | Sıralı kayıt. Tamamlanan iş: `tur: 'is'`, `isId`, `isTuru`, `tarih`, `dakika`, `sonuc`. Erteleme: `tur: 'erteleme'`, `isId`, `tarih`, `dakika`, `eski`, `yeni`, `saat`, `baslik`, `otomatik`. Yapılmadan iptal: `tur: 'iptal'`, `isId`, `isTuru`, `tarih`, `dakika`, `baslik`, `neden`. İptal edilen iş tamamlanamaz |
 | Kulüp `yonetim` (isteğe bağlı) | `{sayman, futbol, basin}` → kişi kimliği ya da `null`. Oturan kişi aktif, o kulübe bağlı ve `yonetici` rolünde olmalı; bir kişi tek koltukta oturur |
 | Kişi `profil`, `katki` (isteğe bağlı) | `profil`: `{meslek, guclu, zayif, beklenti}` metinleri, oyuncuya gösterilir. `katki`: `{mali, baglanti, futbol, iletisim}` → `zayif`/`orta`/`guclu`, gizlidir ve iş sonuçlarını belirler |
@@ -92,7 +99,9 @@ Kariyer durumu tek bir sade veri nesnesidir; kurallar `js/kariyer.js`, `js/takvi
 - Geçmişteki `sonuc` alanı `{durum: 'yapildi'|'kacirildi', baslik, zorunluluk, gun, saat, sure, bilgi?, eylem?}` biçimindedir. Böylece iş listeden çıktıktan sonra da ajandada gösterilebilir.
 - 2.1 eklenirken alanlar eklemeliydi ve `kayitSurumu` 1 kalmıştı. Güncel sürüm 2'dir; eski kayıtlar §5'teki dönüşümle açılır.
 
-`KARIYER_BASLANGIC`, `KARIYER_ORNEK`'in kulüp ve kişileri üzerine kurulu oynanabilir TEST haftasıdır. 23 Kasım 08:00'de başlar, Cumartesi 19:00 maç işinde (`LIG.buMac`) biter. Ekledikleri: yönetim koltukları, üç sayman adayı ve iki karar işi. `KARIYER_ORNEK` değişmez.
+`KARIYER_BASLANGIC`, `KARIYER_ORNEK`'in kulüp ve kişileri üzerine kurulu eski sabit TEST haftasıdır (içerik sürümü 0). 23 Kasım 08:00'de başlar, Cumartesi 19:00 maç işinde (`LIG.buMac`) biter. Ekledikleri: yönetim koltukları, üç sayman adayı ve iki karar işi. 2.4A'dan beri oyun bu veriyle açılmaz; kural denemelerinin örneği olarak durur. `KARIYER_ORNEK` değişmez.
+
+**Uygulanan başlangıç (2.4A):** `kariyerBaslat({tohum, baslangic?, sponsor?, sayman?})` (`js/baslangic.js`) aynı kulüp ve kişilerle, aynı haftada üç TEST başlangıcından birini kurar. Tohumdan üç çekiliş yapılır (başlangıç, sponsorun gerçek durumu, görevdeki sayman); elle verilen alan yalnız kendi çekilişinin yerine geçer. Kasa, sayman koltuğu, ödeme takvimi ve gizli dış gelişme birlikte kurulur ve sonuç `kariyerDogrula`'dan geçmeden dönmez. Aynı tohum aynı kariyeri verir.
 
 Sonradan yüklenen kural dosyaları kendi doğrulamasını `EK_DENETIMLER` listesine ekler (`js/yonetim.js` → `yonetimDogrula`). Dosya yüklü olmayan sayfada o alan denetlenmez.
 
@@ -183,11 +192,15 @@ Bulut kaydı düşünülürken kullanıcıya ait kayıt konumu ve çakışma dav
 
 **Uygulanan (2.4, 2026-09-30):** `kariyerKomut` (`js/kariyer.js`) komutu kariyerin kopyasında uygular, doğrular ve geçerliyse yeni durumu verir; hata olursa kariyer değişmez. `kayitOturumu` (`js/kayit.js`) komuttan sonra kaydeder. Yazım başarısızsa kariyer yine yeni durumdadır ve oturum bunu bildirir (“karar uygulandı, kaydedilemedi”); yeniden kaydetme yalnız mevcut durumu yazar, kararı tekrarlamaz. `uygula(f, true)` kaydetmeden uygular: “Stada git” bilinçli istisnadır (maç sonucu kariyere bağlı olmadığı için maç sınırında kayıt yoktur; yüklenen oyuncu maç geçişini kaybetmez). `donusOzeti` (`js/mesele.js`) kayıtlı son karar, açık meselelerin beklenen ilk adımı ve yaklaşan zorunlu işten “Kaldığın yer” özetini üretir; kariyeri değiştirmez ve olay tetiklemez. Sürüm 1 kayıtları açılışta dönüştürülür ve yeniden kaydedilir; eski kayıt `.onceki` olarak kalır. Maçın ya da görüşmenin ortasından devam yoktur. Bulut kaydı uygulanmadı.
 
+**Uygulanan (2.4A, 2026-09-30):** Kayıt sürümü 3'tür. `KAYIT_GECISLERI[2]` yalnız boş alan ekler (`icerik.surum = 0`, `kosullar`, `olaylar`, `rastlanti`, `sonrakiNo.olay`); karar oynatmaz, para üretmez. Sürüm 1 kayıtları 1→2→3 zinciriyle açılır. Altı gerçek sürüm 2 kaydı (`araclar/ornekler/kayit-s2-*.json`, kod değişmeden önce üretildi) ve sekiz sürüm 1 kaydı açılır, para/geçmiş/iş/mesele aynı kalır ve eski sponsor işi kaldığı yerden tamamlanır.
+
+**Uygulanan (2.6–2.8, 2026-09-30):** Kayıt sürümü 4'tür. `KAYIT_GECISLERI[3]` yalnız `sozler`, `haberler` ve `sonrakiNo.soz` ekler; içerik sürümünü değiştirmez. İçerik sürümü 2 olan yeni kariyerlerde yeni paketler açılır; sürüm 0 ve 1 içerikli kayıtlar kendi içerikleriyle sürer (paketin `icerik` alanı en küçük içerik sürümünü söyler). Yedi gerçek sürüm 3 kaydı (`araclar/ornekler/kayit-s3-*.json`, kod değişmeden önce üretildi) açılır ve maç sınırına kadar oynanır. Ayarlar (ses, yazı, test) kariyer kaydından ayrı, depoda `ayarlar` adıyla tutulur.
+
 ## 6. Karar, olay ve ilişki sistemi
 
 ### Hedef: koşula bağlı içerik sözleşmesi
 
-**Onaylı yaklaşım (2026-09-30; henüz uygulanmadı):** [OYUN_TASARIMI §3](OYUN_TASARIMI.md#3-kulübün-geçmişi-ve-başlangıç-hikâyesi) ve [§10](OYUN_TASARIMI.md#koşula-bağlı-olaylar-ve-adil-belirsizlik) ürün kurallarını tanımlar. [OLAY_KUTUPHANESI](OLAY_KUTUPHANESI.md) içerik kaynağıdır. İlk uygulama, mevcut karar türleri ve mesele/takvim/para/kayıt komutlarına bağlanan dar bir içerik katmanıdır; genel amaçlı hikâye dili, ikinci ekonomi motoru, çevrimiçi üretim veya bütün katalog için büyük mimari dönüşüm gerektirmez.
+**Onaylı yaklaşım (2026-09-30; dar ilk örneği 2.4A ile uygulandı, aşağıda “Uygulanan”):** [OYUN_TASARIMI §3](OYUN_TASARIMI.md#3-kulübün-geçmişi-ve-başlangıç-hikâyesi) ve [§10](OYUN_TASARIMI.md#koşula-bağlı-olaylar-ve-adil-belirsizlik) ürün kurallarını tanımlar. [OLAY_KUTUPHANESI](OLAY_KUTUPHANESI.md) içerik kaynağıdır. İlk uygulama, mevcut karar türleri ve mesele/takvim/para/kayıt komutlarına bağlanan dar bir içerik katmanıdır; genel amaçlı hikâye dili, ikinci ekonomi motoru, çevrimiçi üretim veya bütün katalog için büyük mimari dönüşüm gerektirmez.
 
 Bir paket tarifi ile o kariyerde oluşmuş olay örneği ayrılır. Tarif, hangi koşullarda ne yapılabileceğini anlatır; örnek, gerçek kişi/iş kimlikleri, seçilmiş koşullar ve oluşmuş sonuçları taşır. Alan adları uygulama sırasında seçilebilir; asgari anlamlar:
 
@@ -209,7 +222,33 @@ Yeni içerik için rastlantı kullanılacaksa dünya tohumuna bağlı, devam dur
 
 Yoğunluk denetimi yalnız isteğe bağlı yeni içerik seçimini sınırlar; mevcut ödeme/taahhüt, gerçek gelişme ve son tarih ortak takvimde zamanında işlenir. Aynı anda gelen kararlar mevcut çakışma kurallarıyla ele alınır. Haberler birleştirilebilir; gerçek sonuç gizlice ertelenemez. İlk sürüm için öğrenen bir zorluk yöneticisi veya oyuncuya göre ceza üreten mekanizma kurulmaz.
 
+### Uygulanan (2.4A, 2026-09-30)
+
+- **Tarif ve örnek:** `PAKETLER[id] = {surum, degerlendir(k, baglam) → varyant | null, ac(k, olay, baglam)}` koddadır, kayda girmez. `paketDene` paketi o anki koşullarla dener; açılırsa `k.olaylar`'a örnek yazılır ve `ac` meseleyi, bağlı işleri ve kanıtları kurar. İçerik sürümü 0 olan kariyerde ve aynı `konu` için ikinci kez açılmaz; önlenen konu `onlendi` kaydıyla tutulur ve geri açılmaz.
+- **Dış gelişme:** takvimde `gelisme` türü gizli iştir. Zamanı gelince `GELISMELER[tur].uygula` dünyayı gerçekten değiştirir (sponsor ödemesi kayar) ve paketi dener. Koşul önizlemede, özet okurken ya da çizimde denetlenmez.
+- **Ödeme sıkışması paketi (`js/paket-odeme.js`):** `nakitAcigi` önümüzdeki 7 günü (TEST) mevcut defter ve bekleyen ödemelerden hesaplar; ikinci mali defter yoktur. Açık varsa `kriz` varyantı (saati serbest zorunlu karar; son cevap, kasanın yetmediği ödemeden 60 dk önce), yoksa `degerlendirme` varyantı (ertelenebilir karar) açılır.
+  - Karar türleri: `odemeSikismasi` (kendin görüş, saymana devret, bakım taksitini ertelet, maaşı beklet), `odemeTeklifi` (pano hakkı ya da indirim: kabul/ret), `anlasmaDegerlendirme` (kabul, gecikme bedeli, saymana incelet), `nakitTakvimi` (olaydan önceki isteğe bağlı görüşme; önleme buradan doğar).
+  - Ekip görevi `tahsilatGorusmesi`: sonuç sponsorun gerçek durumu × görevlendirilen saymanın gizli katkısıdır. Yetki içindeki çözüm (tam ödeme, taksit) ilerlemeyi durdurmaz; indirim teklifi ve kapanmayan açık başkana döner. Denenen yol dönen kararda kapalıdır (`veri.denenen`).
+  - Kesin etkiler (ödeme tarihi/tutarı, erteleme farkı, verilen hak, geciken maaş) deftere ve `olay.sonuc`'a yazılır; belirsiz olan seçenek metninde belirsiz diye anlatılır.
+- **Bilgi:** dünyanın gerçeği `k.kosullar`'dadır ve hiçbir özet ya da önizleme çıktısında yer almaz. Başkanın bildiği kanıtlar `olay.bilgiler`'dedir (anahtar + parametre + kaynak + tarih) ve `meseleOzeti().bilgiler` ile ekrana gelir (`MESELE_OZET_EKLERI`).
+- **Rastlantı:** yalnız `kariyerBaslat` içinde üç kez çekilir. Sonraki sonuçlar olasılıksızdır; kaydet-yükle, önizleme ve görüntüleme `rastlanti.durum`'u değiştirmez.
+- **Kurulmayanlar (2.4A sonunda):** yoğunluk denetçisi (gerçek vade ve gelişme zamanında işlenir), araştırma süresi, kişisel katkı. Söz kaydı, kapasite ve tavsiye 2.6–2.8 ile eklendi (aşağıda).
+
+### Uygulanan (2.6 ve 2.8, 2026-09-30)
+
+- **Tavsiye:** karar türü `tavsiye: {koltuk, gorus(k, is, kisi), engel?}` sağlarsa `tavsiyeIste` o koltuktaki kişiye `tavsiye` görevli bir ekip işi kurar (120 dk, TEST). İş dünyayı değiştirmez; zamanı gelince görüş `olay.bilgiler`'e kişinin kimliğiyle yazılır. İş `veri.durak` taşır: `ilerleOnizle` onu durak sayar, böylece karar beklerken de görüş beklenebilir (`neden: 'haber'`).
+- **Kapasite:** `kisiMesgul` — bekleyen ekip işi olan kişiye ikinci iş ya da tavsiye verilemez; seçenek engeliyle görünür.
+- **Kalıcı sorumluluk:** `kulup.sorumluluklar.tahsilat`. Paket açılırken `sorumluUstlenir` saymanın görüşmesini doğrudan kurar; başkana karar doğmaz ve gelişme ilerlemeyi durdurmaz. Haberi son cevap anına yetişmeyecekse ya da sayman meşgulse karar başkana gelir.
+- **Girişim:** `GIRISIMLER[id] = {ad, aciklama, uygun, baslat}`; `girisimBaslat` bugünün ajandasına iş kurar ve geçmişe `{tur: 'girisim'}` yazar. İçerik sürümü 2'den küçük kariyerde liste boştur.
+- **Bekleyebilen karar:** `veri.bekleyebilir` taşıyan saati serbest karar ilerlemeyi engellemez; ilerleme en geç onun son cevap anında durur (`neden: 'sonCevap'`) ve orada karar verilmeden geçilmez.
+- **Paketler:** `hocaTalebi` (koşul `kosullar.hoca.talep`; onay kasayı maaş gününde eksiye düşürecekse kapalı), `basinSorusu` (konu `basinKonusu` ile kayıttan seçilir; yoksa açılmaz), `kosulluDestek` (koşul: `nakitAcigi().enDusuk` eşiğin altında). Kasa açığı başka yoldan kapanırsa bekleyen kriz kararı `IS_SONRASI`'da iptal edilir.
+- **Söz ve haber (`js/soz.js`):** `sozVer` yalnız taahhüt içeren seçeneklerden çağrılır. `sozDegerlendir` her tamamlanan işten sonra çalışır: bağlı iş tamamlandıysa `tutuldu`, yapılmadan kalktıysa ya da tarihi geçtiyse `bozuldu`; sonuç bir kez yazılır ve meselesine olay düşer. `gazete` ve `tesekkur` gelişmeleri `k.haberler`'e yazar. `odaIzleri` odadaki izleri kayıttan türetir; sunum yalnız bunu okur.
+- **Test görünümü (`js/test-gorunum.js`, geçici):** `testOnizleme` kararı kariyerin kopyasında uygular ve ekibe verilen iş varsa kopyayı haber anına kadar ilerletir; gerçek kariyer, kayıt ve rastlantı değişmez. Sunum bu işlevleri yalnız `ayarlar.test` açıkken çağırır. Yayından önce dosya ve çağrıları kaldırılacaktır.
+- **Kurulmayanlar:** yoğunluk denetçisi, sayısal bütçe tavanı ve süre sınırı, ilişki puanı, kişisel katkı, sözün seçim ya da ilişkiye etkisi. Gazete manşetinin ve pano hakkının başka bir sisteme etkisi yoktur; yalnız kayıt ve görünür izdir.
+
 ### Eski içerikten geçiş ve kayıt uyumu
+
+**Uygulanan karar (2.4A):** veri dönüşümü yerine sınırlı uyumluluk davranışı seçildi. `sponsorGecikmesi`, `sponsorIndirimi`, `sponsorGorusmesi` ve `sponsor.*` olay metinleri `js/yonetim.js`'ten davranışı değişmeden `js/uyum-sponsor.js`'e taşındı; yalnız içerik sürümü 0 olan kayıtlarda bekleyen işleri tamamlar. Yeni kariyer bunları üretmez ve `js/ekran-ajanda.js` artık `KARIYER_BASLANGIC`'ı kullanmaz. Karşılığı olmayan sabit toplantı, röportaj, zemin turu, antrenman ve hoca görüşmesi işleri yeni yolda yoktur. Aşağıdaki paragraflar bu kararın dayandığı onaylı sınırlardır.
 
 Yeni oyuncu akışı doğrulanınca `js/kariyer-ornek.js` içindeki sabit `KARIYER_BASLANGIC` haftası ve `js/ekran-ajanda.js` yeni kariyer bağlantısı yeni başlangıca geçirilir. `js/yonetim.js` içindeki sabit sponsor dalları ve aday→sonuç eşleşmesi yeni içerikle değiştirilir. Karşılığı olmayan sabit toplantı/röportaj metinleri oyuncu akışından çıkarılır. Mevcut test verisi ayrı tutulabilir; normal yeni kariyerde eski ve yeni akış birlikte üretilmez.
 
@@ -246,7 +285,7 @@ Mali değerlendirme, aynı defter ve gelecek ödeme işlerinden üretilir; belir
 
 Seçim önizlemede, sonra zaman işin başlangıcına geldiğinde yeniden doğrulanır. Etki bir kez uygulanır ve işin geçmiş kaydına `secim`, `secimMetni` ve `bilgi` olarak yazılır; iş kapandığı için ikinci kez uygulanamaz.
 
-`js/yonetim.js` üç tür tanımlar:
+İlk üç tür (`koltukSecimi` bugün `js/yonetim.js`'te; iki sponsor türü 2.4A'dan beri yalnız eski kayıtlar için `js/uyum-sponsor.js`'te):
 - `koltukSecimi`: adaylardan birini boş koltuğa oturtur.
 - `sponsorGecikmesi`: başkan kendisi görüşür (90 dk) ya da işi saymana devreder (15 dk). Devredilen iş anında sonuçlanmaz (2.3): ertesi sabah 09:30'da bir `ekip` işi çalışır ve sonuç, görevlendirilen saymanın gizli katkısına göre o zaman gelir:
   - Bağlantısı güçlü sayman için sponsor indirim ister. İndirim saymanın yetkisini aştığı için haberle birlikte başkana saati serbest zorunlu karar olarak döner; ilerleme o anda durur.
@@ -297,6 +336,7 @@ Final kontrolü; başkanın kariyer durumu ve tanımlı en büyük Avrupa kupas�
 - İlk içerik Türkçedir. Yeni metinler anlamlı anahtarlar ve parametrelerle ayrılır; kişi adlarına bağlı dil kuralları oyun mantığına yayılmaz. Mevcut Türkçe yardımcılar aşamalı uyarlanır.
 - Oyundaki görseller kodla üretilir. Görsel sabitler stil katmanında; iş kuralları kariyer/motor katmanında kalır.
 - Yeni sunumda aydınlık kulüp ortamı, odaktaki konu ve gerektiğinde açılan telefon/ajanda bulunur. Mevcut koyu ajanda/bülten uygulaması ile bu hedef [stil rehberinde](STIL_REHBERI.md#7-arayüz-ve-bilgi) ayrılır. Kesin sahne dosyaları ve yerleşim uygulama sırasında seçilir.
+- **Uygulanan (2.5, 2026-09-30):** Oda maç sahnesinden ayrı bir `THREE.Scene`'dir (`js/oda.js`) ve aynı çizim hattını kullanır (640×480, 15 bit renk, titreme). `js/arayuz.js` kare döngüsü sayfa `oda` iken stadı değil odayı çizer; maç zamanı ilerlemez. `js/ekran-oda.js` kural içermez: içerik `ajandaGunu`, `meseleOzeti`, `donusOzeti`, `ilerleOnizle` ve `kulupDurumu`'ndan gelir, değişiklikler `oyunKomut` ile aynı kariyer komutlarına gider; sahneye yalnız `odaDurum` (haber sayısı, dosyanın varlığı, tarih, saat) bildirilir. Paneli açmak yalnız “yeni” işaretini kaldırır. Ses `js/ses.js`'te WebAudio ile üretilir, ilk kullanıcı etkileşiminde başlar, açılamazsa sessizce devre dışı kalır. Ayarlar depoda `ayarlar` adıyla, kariyer kaydından ayrı tutulur.
 - Temel yazı büyüklüğü, ortam sesi/ses kontrolü ve dönüş özeti Aşama 2'de sınanır. Nadir süreli cevap sahneleri süre/okuma/flaş/sarsıntı seçenekleriyle birlikte geliştirilir; kullanım kalitesi yalnız son aşamaya bırakılmaz.
 - Masaüstü denemesi Aşama 1'de Windows/Electron ile yapıldı; kapsamı aşağıdadır. Ticari paket ve Steam bağlantısı ayrı hedeflerdir; motor değişikliği varsayılmaz.
 - Three.js ve fontlar gibi gerekli dış kaynaklar çevrimdışı pakete uygun biçimde yerelleştirilir. Sürümleri ve dağıtım koşulları kayda alınır.
@@ -336,7 +376,7 @@ Kontrol, değişen sistemin gerçek riskini hedefler:
 | Maç mantığı/kadro | Mevcut maç deneme aracı, tohum tutarlılığı ve değişen futbol davranışı |
 | Kariyer/kayıt | `node araclar/kariyer-deneme.js`; tarayıcı deposu değişirse `python3 araclar/kontrol.py araclar/kayit-deneme.html`; kaydet-yükle devamlılığı, tekrar uygulama, tarih/kimlik ve para tutarlılığı |
 | Mesele/zaman/ekip | Aynı konunun farklı sahnelerde devamı; sonradan doğan karar önünde durma; süreyi iki kez saymama; yetki/kapasite sınırı; gün içi kayıt ve eski kayıt devamı. Kural katmanı `node araclar/kariyer-deneme.js`, gerçek ekran `python3 araclar/akis-deneme.py`. Not: Node denemeleri arayüz betiklerini yüklemez; blok içindeki `function` bildirimleri global'e sızdığı için ad çakışmasını yalnız tarayıcı denemesi yakalar |
-| Koşula bağlı içerik/başlangıç | Sabit tohum ve kayıtlı devamla tutarlılık; farklı başlangıç/kararlarda anlamlı ayrışma; önlenen olayın doğmaması; gerçek vade, bir kez ödeme ve eski kayıt devamı. Kural ve ekran kontrolleri CLAUDE.md'deki değişiklik kapsamına göre çalıştırılır; normal tempoda okunabilirlik ve karar kalitesi ayrıca değerlendirilir |
+| Koşula bağlı içerik/başlangıç | Sabit tohum ve kayıtlı devamla tutarlılık; farklı başlangıç/kararlarda anlamlı ayrışma; önlenen olayın doğmaması; gerçek vade, bir kez ödeme ve eski kayıt devamı. Kural katmanı `node araclar/kariyer-deneme.js` (2.4A bölümleri bütün karar yollarını dolaşır), gerçek ekran `python3 araclar/akis-deneme.py`; normal tempoda okunabilirlik ve karar kalitesi ayrıca değerlendirilir |
 | Sezon/dünya | Hızlandırılmış çok sezon, nüfus/sözleşme devamlılığı, yükselme/düşme ve görev geçişleri |
 | Masaüstü | `masaustu` içinde `node deneme.js`; paket için `node paketle.js && node deneme.js --paket`. Çevrimdışı paket, kayıt yolu, yeniden açılış ve hedef donanım ölçümü |
 

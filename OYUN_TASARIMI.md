@@ -62,7 +62,7 @@ Kulübün sabit bir geçmişi hazırlanır: kuruluş, önemli eski başkanlar ve
 
 ### Değişken devralma koşulları
 
-**Onaylı tasarım yaklaşımı (2026-09-30; henüz uygulanmadı):** Sabit kimlik üzerine tutarlı fakat değişken mali, sportif ve insani koşullar kurulur. Vadesi gelen yükümlülükler, tahsilat imkânları, mevcut anlaşmalar, ekip ilişkileri ve tarafların alternatifleri birlikte değerlendirilir. Yalnızca isim, tutar veya olay günü değiştirmek yeterli çeşitlilik sayılmaz; gündem, eldeki kanıt, uygulanabilir seçenek ve sonraki etki değişebilmelidir.
+**Onaylı tasarım yaklaşımı (2026-09-30; dar ilk örneği uygulandı: aynı kulüple üç TEST başlangıcı, yol haritası 2.4A; tam devralma koşulları henüz yok):** Sabit kimlik üzerine tutarlı fakat değişken mali, sportif ve insani koşullar kurulur. Vadesi gelen yükümlülükler, tahsilat imkânları, mevcut anlaşmalar, ekip ilişkileri ve tarafların alternatifleri birlikte değerlendirilir. Yalnızca isim, tutar veya olay günü değiştirmek yeterli çeşitlilik sayılmaz; gündem, eldeki kanıt, uygulanabilir seçenek ve sonraki etki değişebilmelidir.
 
 Kulübü zor bir dönemde devralma yönü korunur; zorluğun kaynağı ve birleşimi değişebilir. Her kariyerin aynı sponsor kriziyle veya aynı erken seçim gerekçesiyle başlaması gerekmez. Bir alandaki sorunun yokluğu, bütün kulübün sorunsuz olduğu anlamına gelmez. İlk dar prototipte sakin mali başlangıç da sınanır.
 
@@ -83,7 +83,7 @@ Girişe sabit bir kısa süre sınırı konmaz. Buna rağmen oyuncu erken aşama
 
 Geliştirmede kulüp kimliği ve tekrar karşılaşılacak temel kişiler erken hazırlanabilir. Kapsamlı taraftarlık ve adaylık girişi, bir sezonluk başkanlık döngüsü sınandıktan sonra tamamlanır. Bu geliştirme sırası, bitmiş oyunun taraftar olarak başlama hedefini değiştirmez.
 
-Tarihsel esinler ve kurgusal olay aileleri [OLAY_KUTUPHANESI.md](OLAY_KUTUPHANESI.md) içindedir. Gerçek kulüplerin yaşadığı sonuçlar oyunda zorunlu tekrar edilmez. Mevcut sabit TEST haftası, yeni başlangıç akışı doğrulandığında oyuncuya açık yeni kariyer yolundan çıkarılır; kayıt uyumluluğu korunur.
+Tarihsel esinler ve kurgusal olay aileleri [OLAY_KUTUPHANESI.md](OLAY_KUTUPHANESI.md) içindedir. Gerçek kulüplerin yaşadığı sonuçlar oyunda zorunlu tekrar edilmez. Eski sabit TEST haftası oyuncuya açık yeni kariyer yolundan çıkarıldı (2.4A); eski kayıtlar kaldıkları yerden sürer.
 
 ## 4. Yönetim ekibi, vaatler ve seçim
 
@@ -265,7 +265,7 @@ Olay kaynakları: kararların sonuçları, dünyadaki gelişmeler ve sınırlı 
 
 ### Koşula bağlı olaylar ve adil belirsizlik
 
-**Onaylı tasarım yaklaşımı (2026-09-30; mevcut sabit sponsor örneğinin yerine geliştirilecek):** Yazılmış olaylar mevcut koşullarda anlamlı oldukları zaman açılır. Olay aileleri ve birleşim örnekleri [olay kütüphanesinde](OLAY_KUTUPHANESI.md) tutulur; birinin yaşanması bir sonrakini zorunlu kılmaz. Bazı olaylar hiç yaşanmayabilir, bazıları sorunsuz tamamlanabilir. Her maaş ödemesi yeni bir mesele değildir.
+**Onaylı tasarım yaklaşımı (2026-09-30; ilk dar örnek sabit sponsor örneğinin yerini aldı: ödeme sıkışması, yol haritası 2.4A, TEST içerik):** Yazılmış olaylar mevcut koşullarda anlamlı oldukları zaman açılır. Olay aileleri ve birleşim örnekleri [olay kütüphanesinde](OLAY_KUTUPHANESI.md) tutulur; birinin yaşanması bir sonrakini zorunlu kılmaz. Bazı olaylar hiç yaşanmayabilir, bazıları sorunsuz tamamlanabilir. Her maaş ödemesi yeni bir mesele değildir.
 
 - **Kararların gerçek etkisi vardır.** Para harcamak, ödeme tarihini değiştirmek veya hak vermek tanımlı doğrudan sonuç doğurur. Gelecek teklif, insan tepkisi ve sportif başarı aynı kesinlikte değildir. Bir karar gelecekteki koşulları değiştirebilir; zorunlu sonraki sahneyi seçmekle eşdeğer değildir.
 - **Tarafların kendi gerekçeleri bulunur.** Sponsor, yönetici veya futbolcu; amacı, sınırı, bilgisi ve mevcut alternatifleri üzerinden davranır. Her destekçi gizli düşman değildir; aynı kişinin amacı sırf sürpriz için değişmez. Tam bağımsız insan simülasyonu başlangıç şartı değildir.
@@ -275,6 +275,10 @@ Olay kaynakları: kararların sonuçları, dünyadaki gelişmeler ve sınırlı 
 - **Yoğunluk, gerçeği değiştiremez.** İsteğe bağlı yeni içerik yoğun dönemde bekletilebilir veya açılmayabilir; mevcut vade, taahhüt ve karar sonucu sessizce ertelenemez. Yeni olay için boş zaman doldurma kotası yoktur. Yakın krizlerin birlikte oluşabilmesi önceden anlaşılabilir koşullara dayanır.
 - **Toparlanma bedellidir.** Yeniden anlaşma, daha küçük hedef, başka kaynak veya ekip değişimi mümkün olabilir. Bazı haklar ve fırsatlar geri gelmez. Başlangıçlar kasıtlı gizli çıkmazlarla kurulmaz; her karar dizisinin ya da her şans sonucunun Avrupa kupasına ulaşması garanti edilmez. Birden fazla zor ama makul başarı yolu hedeflenir.
 - **Tekrar oynanabilirlik sınırsız içerik vaadi değildir.** Oyuncu olay ailelerini ve kuralları öğrenebilir. Amaç; üçüncü kariyerde veya video izledikten sonra aynı seçenek dizisini uygulamak yerine mevcut kanıtlara yeniden bakmasıdır. Farklı koşullarda hep üstün gelen bir seçenek varsa denge ve karar tasarımı incelenir.
+
+**Uygulanan ilk örnek (2.4A, TEST değerleriyle):** Sponsorun erteleme talebi ancak o günkü kasa maaşı karşılamıyorsa zorunlu karara dönüşür; kasa yetiyorsa acil olmayan bir değerlendirmedir, talep hiç gelmeyebilir ya da erken teyitle önlenebilir. Sponsorun gerçek durumu başlangıçta seçilir ve gösterilmez; tahsilat geçmişi gibi kaynağı belli kanıtlar gösterilir. Başkanın görüşmesi, saymana devir ve başka ödeme planı koşula göre farklı sonuç verir; bu küçük örnek denge veya olay yoğunluğu onayı değildir.
+
+**Uygulanan (2.6 ve 2.8, TEST değerleriyle):** Tavsiye istemek kararı başkanda bırakır ve görüş dosyaya kaynağıyla düşer; devir işi kişiye verir; tahsilat takibi kalıcı olarak saymana bırakılabilir. Hoca saha dışı bir harcama isteyebilir (karar yalnız bütçedir), gazete yaşanmış bir sonucu sorabilir, bir kulüp üyesinin firması süreli pano karşılığı destek önerebilir. Açık taahhütler söz olarak kaydedilir ve gerçek kayıtla tutulur ya da bozulur. Cuma gazetesi ve kısa teşekkür yaşanan olaydan doğar; odada izleri görünür. Düzenli başlangıçta bunların hiçbiri açılmaz.
 
 Bu kuralların teknik karşılığı [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi), kapsamı ve doğrulama sırası [YOL_HARITASI](YOL_HARITASI.md) içindedir. Paket sayısı, bütün paketlerin ilk sürümde veya aynı kariyerde bulunacağı anlamına gelmez.
 
@@ -318,7 +322,7 @@ Başarı finali kutlama, şehre dönüş, insanlarla veda ve bırakmayla tamamla
 |---|---|
 | Kulübün nihai adı, şehir, kuruluş ve geçmiş kişiler | Temel kişiler erken hazırlanabilir; kapsamlı hikâye için Aşama 6 öncesi |
 | Seçmen yapısı, dört/beş yıl, erken seçim (ilk üç koltuk seçildi, §4) | Seçim kuralları için Aşama 6 öncesi |
-| Yönetim adaylarının katkılarının oyuncuya nasıl gösterileceği (bugünkü TEST: profil metni görünür, katkı seviyeleri gizli) | 2.2 kapanmadan; Aşama 6 kampanya ekibinden önce kesinleşmeli |
+| Yönetim adaylarının katkılarının gösterimi | **Karar verildi (2026-09-30):** nihai üründe profil metni görünür, katkı seviyeleri gizlidir. Geliştirme aşamasında seviyeler, gizli koşullar ve futbolcu özellikleri “Test bilgileri” ayarıyla görünür; yayından önce kaldırılır |
 | Kişisel katkı biçimi, sınırları ve mali kurallar | Aşama 4 öncesi |
 | Takım sayıları, sezon ve transfer takvimi, alt lig sınırı | Aşama 3 temeli için seçilmeli veya açık TEST tarifi kullanılmalı; tam sezon için Aşama 5 öncesi kesinleşmeli; yükselme/düşme ayrıntısı Aşama 8 öncesi |
 | Başkanın başlangıç yaşı, becerileri, kupasız final koşulları | Veri alanları Aşama 1; davranış kararı Aşama 7 öncesi |
