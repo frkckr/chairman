@@ -1,4 +1,4 @@
-/* ============ Chairman — başkan odası: aydınlık oda sahnesi (yalnız çizim; yol haritası 2.5) ============
+/* ============ Chairman — başkan odası: aydınlık oda sahnesi (yalnız çizim; yol haritası 2.5, 2.7) ============
    Başkanın masasından görülen oda: gün ışığı alan pencere, ahşap masa, ziyaretçi koltukları, dosya dolabı, kulüp flaması, duvar saati.
    Masada gündeme açılan nesneler vardır: telefon (haberler), ajanda defteri (günün işleri), dosya (açık mesele), gazete (çıkmış haber).
    Kayıtlı olaydan doğan izler: masada gazete ve teşekkür kartı, pencerede tribün çatısında iskele, duvarda pano sözünün notu (js/soz.js odaIzleri).
@@ -9,9 +9,13 @@
                                                           telefon ışığı, dosya, defterdeki tarih, saat ve gün ışığı, kayıtlı izler
      odaIsaret(x, y) → nesne adı ya da null              imlecin altındaki nesne (x, y: −1…1 ekran koordinatı); vurguyu da ayarlar
      odaOdak(ad | null)                                   bakışın döneceği nesne
-     odaKare(dt) · odaCiz()                               küçük ortam hareketi ve çizim */
+     odaKare(dt) · odaCiz()                               küçük ortam hareketi ve çizim
+   Balkon (2.7): uzak duvardaki kapıdan balkona çıkılır. ODA.yer: 'masa' | 'yolda' | 'balkon'. odaYuru(hedef, bitince) masadan balkondaki
+   sandalyeye (ya da geri) kısa bir kamera yürüyüşü başlatır; odaYuruAtla() yürüyüşü bitirir. Balkonun ve sahanın kendisi js/balkon.js'te
+   ODA.dis grubuna kurulur; grup yalnız yolda ve balkondayken görünür. Balkonda telefon balkon masasındadır. */
 const OD=STIL.oda;
-const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/RH,0.05,40),nesneler:{},odak:null,uzerinde:null,zaman:0,
+const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/RH,0.05,400),nesneler:{},odak:null,uzerinde:null,zaman:0,
+  yer:'masa',yol:null,dis:new THREE.Group(),kapi:null,balkonTelefon:null,
   bakis:new THREE.Vector3(...OD.bakis),iskele:false,durum:{haber:0,dosya:false,gun:'',ay:'',gunAdi:'',dakika:540}};
 {
   const S=ODA.sahne,oLAM=o=>LAM(Object.assign({fog:false},o));
@@ -27,7 +31,17 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
    box(7,0.1,7,oLAM({map:tx(cv,'n',[5,8])}),0,-0.05,-1.2,S);}
   box(3.4,0.02,2.6,oLAM({color:OD.haliKenar}),0,0.01,-1.35,S);box(3.1,0.024,2.3,oLAM({color:OD.hali}),0,0.012,-1.35,S);
   const duvar=oLAM({color:OD.duvar}),lambri=oLAM({color:OD.lambri}),sup=oLAM({color:OD.supurgelik});
-  box(7,3,0.1,duvar,0,1.5,-3.5,S);box(7,0.95,0.04,lambri,0,0.475,-3.43,S);box(7,0.05,0.05,sup,0,0.96,-3.42,S);
+  /* uzak duvar: balkon kapısının boşluğu açık bırakılır (x0–x1, yerden h yüksekliğe) */
+  {const K=OD.kapi,parca=(x0,x1)=>{const w=x1-x0,x=(x0+x1)/2;box(w,3,0.1,duvar,x,1.5,-3.5,S);box(w,0.95,0.04,lambri,x,0.475,-3.43,S);box(w,0.05,0.05,sup,x,0.96,-3.42,S);};
+   parca(-3.5,K.x0);parca(K.x1,3.5);box(K.x1-K.x0,3-K.h,0.1,duvar,(K.x0+K.x1)/2,(3+K.h)/2,-3.5,S);
+   const c=oLAM({color:K.renk}),w=K.x1-K.x0;
+   for(const x of[K.x0-0.03,K.x1+0.03])box(0.07,K.h+0.06,0.14,c,x,K.h/2,-3.5,S);box(w+0.13,0.07,0.14,c,(K.x0+K.x1)/2,K.h+0.03,-3.5,S);
+   /* kanat: menteşe x0'da; camlı üst yarı, dolu alt yarı, pirinç kol */
+   const kanat=new THREE.Group();kanat.position.set(K.x0,0,-3.5);S.add(kanat);ODA.kapi=kanat;
+   box(w,0.9,0.05,c,w/2,0.45,0,kanat);box(w,0.1,0.05,c,w/2,K.h-0.05,0,kanat);for(const x of[0.04,w-0.04])box(0.08,K.h-1,0.05,c,x,0.9+(K.h-1)/2,0,kanat);box(0.05,K.h-1,0.04,c,w/2,0.9+(K.h-1)/2,0,kanat);
+   const camM=new THREE.MeshBasicMaterial({color:K.cam,fog:false});box(w-0.16,K.h-1,0.02,camM,w/2,0.9+(K.h-1)/2,0,kanat);ODA.kapiCam=camM;
+   box(0.03,0.03,0.1,oLAM({color:K.kol}),w-0.1,1.02,0.04,kanat);}
+  S.add(ODA.dis);ODA.dis.visible=false;
   for(const sx of[-1,1]){box(0.1,3,7,duvar,sx*3.2,1.5,-1.2,S);box(0.04,0.95,7,lambri,sx*3.13,0.475,-1.2,S);box(0.05,0.05,7,sup,sx*3.12,0.96,-1.2,S);}
   box(7,0.1,7,oLAM({color:OD.tavan}),0,3.05,-1.2,S);
 
@@ -52,12 +66,12 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
   {const cv=mk(24,32),g=cv.getContext('2d');g.clearRect(0,0,24,32);
    for(let y=0;y<32;y++){const w=Math.max(0,Math.round(24*(1-y/32)));g.fillStyle=(y>9&&y<14)?OD.flamaSerit:OD.flama;g.fillRect((24-w)>>1,y,w,1);}
    ctxText(g,'D',10,2,OD.flamaSerit,1);
-   const f=new THREE.Mesh(new THREE.PlaneGeometry(0.34,0.46),BAS({map:tx(cv,'n'),transparent:true,alphaTest:0.5,fog:false,color:0xdddddd}));f.position.set(0.55,1.72,-3.44);S.add(f);
-   box(0.4,0.025,0.025,oLAM({color:OD.saatKasa}),0.55,1.96,-3.43,S);}
+   const f=new THREE.Mesh(new THREE.PlaneGeometry(0.34,0.46),BAS({map:tx(cv,'n'),transparent:true,alphaTest:0.5,fog:false,color:0xdddddd}));f.position.set(0.02,1.72,-3.44);S.add(f);
+   box(0.4,0.025,0.025,oLAM({color:OD.saatKasa}),0.02,1.96,-3.43,S);}
   /* pano sözünün notu: yalnız açık bir pano sözü varken duvarda durur */
   {const cv=mk(16,16),g=cv.getContext('2d');g.fillStyle=OD.notKagidi;g.fillRect(0,0,16,16);g.fillStyle=OD.defterYazi;g.fillRect(3,4,10,5);g.fillStyle=OD.notKagidi;g.fillRect(4,5,8,3);g.fillStyle=OD.defterYazi;g.fillRect(3,11,10,1);g.fillRect(3,13,6,1);
-   const n=new THREE.Mesh(new THREE.PlaneGeometry(0.2,0.2),BAS({map:tx(cv,'n'),fog:false,color:0xe6e6e6}));n.position.set(0.98,1.5,-3.44);n.rotation.z=-0.06;n.visible=false;S.add(n);ODA.panoNotu=n;}
-  const SAAT=new THREE.Group();SAAT.position.set(1.45,1.9,-3.44);S.add(SAAT);
+   const n=new THREE.Mesh(new THREE.PlaneGeometry(0.2,0.2),BAS({map:tx(cv,'n'),fog:false,color:0xe6e6e6}));n.position.set(0.02,1.22,-3.44);n.rotation.z=-0.06;n.visible=false;S.add(n);ODA.panoNotu=n;}
+  const SAAT=new THREE.Group();SAAT.position.set(0.52,1.9,-3.44);S.add(SAAT);
   {const kasa=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.04,16),oLAM({color:OD.saatKasa}));kasa.rotation.x=Math.PI/2;SAAT.add(kasa);
    const yuz=new THREE.Mesh(new THREE.CircleGeometry(0.17,16),BAS({color:OD.saatYuz,fog:false}));yuz.position.z=0.022;SAAT.add(yuz);
    const ibre=(w,h)=>{const g=new THREE.Group(),m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),BAS({color:OD.saatIbre,fog:false}));m.position.y=h/2-0.01;g.add(m);g.position.z=0.026;SAAT.add(g);return g;};
@@ -92,6 +106,7 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
     const cerceve=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:OD.vurgu,fog:false}));cerceve.position.y=h/2;cerceve.visible=false;g.add(cerceve);
     return ODA.nesneler[ad]={g,kutu,cerceve,merkez:new THREE.Vector3(x,UST+h/2,z)};
   }
+  ODA.masa=MASA;ODA.masaUstu=UST;
   /* telefon: haber varken ekranı amber yanar ve sayı yazar */
   {const N=nesne('telefon',-0.56,-0.7,0.32,0.16,0.06,0.28),cv=mk(16,32);
    N.g.add(new THREE.Mesh(new THREE.BoxGeometry(0.11,0.016,0.22),oLAM({color:OD.telefon})));N.g.children[2].position.y=0.008;
@@ -151,25 +166,73 @@ function odaDurum(d){
   ODA.akrep.rotation.z=-((dk/60)%12)/12*Math.PI*2;ODA.yelkovan.rotation.z=-(dk%60)/60*Math.PI*2;
   ODA.isik.gunes.intensity=I.guc;ODA.isik.gunes.color.copy(I.renk);ODA.isik.ortam.intensity=OD.ortam.guc*(0.55+0.6*I.guc);
   ODA.cam.material.color.copy(I.renk).lerp(new THREE.Color(0xffffff),0.35).multiplyScalar(0.35+0.85*I.guc);ODA.leke.opacity=0.32*I.guc;
+  ODA.kapiCam.color.set(OD.kapi.cam).multiply(ODA.cam.material.color);
+}
+
+/* ---- balkona yürüyüş ---- */
+const ODA_YOL=OD.yol.map(d=>({p:new THREE.Vector3(...d[0]),b:new THREE.Vector3(...d[1])}));
+/* yolun u (0 = masa, 1 = balkon) noktasındaki konum ve bakış: duraklar arasında yumuşak geçiş */
+function odaYolNoktasi(u,konum,bakis){
+  const n=ODA_YOL.length-1,s=Math.min(n-1e-6,Math.max(0,u)*n),i=Math.floor(s),t=s-i,y=t*t*(3-2*t);
+  konum.lerpVectors(ODA_YOL[i].p,ODA_YOL[i+1].p,y);bakis.lerpVectors(ODA_YOL[i].b,ODA_YOL[i+1].b,y);
+}
+/* telefon bulunulan yerdedir: masada ya da balkon masasında (js/balkon.js ODA.balkonTelefon'u bildirir) */
+function odaYerAyarla(yer){
+  ODA.yer=yer;ODA.yol=null;
+  const N=ODA.nesneler.telefon,B=ODA.balkonTelefon;
+  if(yer==='balkon'&&B){ODA.sahne.add(N.g);N.g.position.set(B.x,B.y,B.z);N.g.rotation.y=B.donus;N.merkez.set(B.x,B.y+0.03,B.z);}
+  else{ODA.masa.add(N.g);N.g.position.set(-0.56,ODA.masaUstu,-0.7);N.g.rotation.y=0.32;N.merkez.set(-0.56,ODA.masaUstu+0.03,-0.7);}
+  ODA.dis.visible=yer!=='masa';ODA.kapi.rotation.y=yer==='masa'?0:1.75;
+  ODA.kamera.fov=yer==='balkon'?STIL.balkon.aci:OD.aci;ODA.kamera.updateProjectionMatrix();
+  ODA.bakis.set(...(yer==='balkon'?STIL.balkon.bakis:OD.bakis));
+}
+/* hedef: 'balkon' | 'masa'. Hareket azaltma ayarında yürüyüş gösterilmez */
+function odaYuru(hedef,bitince){
+  if(ODA.yer==='yolda'||ODA.yer===hedef){if(bitince)bitince();return;}
+  ODA.odak=null;ODA.uzerinde=null;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){odaYerAyarla(hedef);if(bitince)bitince();return;}
+  if(hedef==='masa'){ODA.masa.add(ODA.nesneler.telefon.g);ODA.nesneler.telefon.g.position.set(-0.56,ODA.masaUstu,-0.7);ODA.nesneler.telefon.g.rotation.y=0.32;}
+  ODA.yer='yolda';ODA.dis.visible=true;ODA.yol={t:0,hedef,bitince:bitince||null};
+}
+function odaYuruAtla(){
+  if(!ODA.yol)return;
+  const y=ODA.yol;odaYerAyarla(y.hedef);if(y.bitince)y.bitince();
 }
 const ODA_ISIN=new THREE.Raycaster();
 function odaIsaret(x,y){
   let ad=null;
   if(x!==null){ODA_ISIN.setFromCamera({x,y},ODA.kamera);
-    const v=ODA_ISIN.intersectObjects(Object.values(ODA.nesneler).filter(n=>n.g.visible).map(n=>n.kutu));ad=v.length?v[0].object.userData.nesne:null;}
+    /* masada bütün nesneler, balkonda yalnız yanındaki telefon seçilebilir; yolda hiçbiri */
+    const L=ODA.yer==='masa'?Object.values(ODA.nesneler):ODA.yer==='balkon'?[ODA.nesneler.telefon]:[];
+    const v=ODA_ISIN.intersectObjects(L.filter(n=>n.g.visible).map(n=>n.kutu));ad=v.length?v[0].object.userData.nesne:null;}
   ODA.uzerinde=ad;return ad;
 }
-function odaOdak(ad){ODA.odak=ad&&ODA.nesneler[ad]?ad:null;}
+function odaOdak(ad){ODA.odak=ad&&ODA.nesneler[ad]&&(ODA.yer==='masa'||(ODA.yer==='balkon'&&ad==='telefon'))?ad:null;}
 function odaKare(dt){
   ODA.zaman+=dt;
   const t=ODA.zaman,N=ODA.nesneler,az=matchMedia('(prefers-reduced-motion: reduce)').matches?0:1;
+  if(ODA.dis.visible&&typeof balkonKare==='function')balkonKare(dt);
+  if(ODA.yol){
+    /* yürüyüş: kamera yol boyunca ilerler, adım sallantısı; kapı yolun ortasında açılır */
+    const Y=ODA.yol;Y.t=Math.min(1,Y.t+dt/OD.yuruyus);
+    const u=Y.hedef==='balkon'?Y.t:1-Y.t,P=new THREE.Vector3();
+    odaYolNoktasi(u,P,ODA.bakis);
+    ODA.kamera.position.set(P.x,P.y+Math.abs(Math.sin(Y.t*Math.PI*5))*0.03*Math.sin(Y.t*Math.PI),P.z);ODA.kamera.lookAt(ODA.bakis);
+    ODA.kapi.rotation.y=1.75*Math.min(1,Math.max(0,(u-0.18)/0.3));
+    const aciY=OD.aci+(STIL.balkon.aci-OD.aci)*u;
+    if(ODA.kamera.fov!==aciY){ODA.kamera.fov=aciY;ODA.kamera.updateProjectionMatrix();}
+    for(const ad in N)N[ad].cerceve.visible=false;
+    if(Y.t>=1)odaYuruAtla();
+    return;
+  }
   /* odakta bakış nesneye doğru eğilir ve nesnenin sağına kayar: sağda açılan panelin yanında nesne görünür kalır */
-  const dinlenme=new THREE.Vector3(...OD.bakis),k=Math.min(1,dt*4);
-  const hedef=ODA.odak?dinlenme.clone().lerp(N[ODA.odak].merkez,0.6).setX(N[ODA.odak].merkez.x+OD.odakKayma):dinlenme;
+  const balkonda=ODA.yer==='balkon',G=balkonda?STIL.balkon.goz:OD.goz,k=Math.min(1,dt*4);
+  const dinlenme=new THREE.Vector3(...(balkonda?STIL.balkon.bakis:OD.bakis));
+  const hedef=ODA.odak?(balkonda?N[ODA.odak].merkez.clone().setX(N[ODA.odak].merkez.x+OD.odakKayma*0.6):dinlenme.clone().lerp(N[ODA.odak].merkez,0.6).setX(N[ODA.odak].merkez.x+OD.odakKayma)):dinlenme;
   ODA.bakis.lerp(hedef,k);
-  ODA.kamera.position.set(OD.goz[0]+Math.sin(t*0.5)*0.006*az,OD.goz[1]+Math.sin(t*0.8)*0.004*az,OD.goz[2]);
+  ODA.kamera.position.set(G[0]+Math.sin(t*0.5)*0.006*az,G[1]+Math.sin(t*0.8)*0.004*az,G[2]);
   ODA.kamera.lookAt(ODA.bakis);
-  const aci=ODA.odak?OD.odakAci:OD.aci;
+  const aci=balkonda?(ODA.odak?STIL.balkon.odakAci:STIL.balkon.aci):ODA.odak?OD.odakAci:OD.aci;
   if(Math.abs(ODA.kamera.fov-aci)>0.05){ODA.kamera.fov+=(aci-ODA.kamera.fov)*k;ODA.kamera.updateProjectionMatrix();}
   for(const ad in N)N[ad].cerceve.visible=N[ad].g.visible&&(ad===ODA.uzerinde||ad===ODA.odak);
   N.telefon.isik.material.opacity=ODA.durum.haber?0.3+0.22*Math.sin(t*4)*az:0;

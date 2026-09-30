@@ -12,6 +12,7 @@
    IS_SONRASI: iş bütün etkileriyle tamamlandıktan sonra çağrılan dinleyiciler (js/mesele.js mesele durumunu burada değerlendirir). */
 const GUN_BASLANGICI=480;                  // yeni gün 08:00'de başlar (TEST değeri)
 const IS_SONRASI=[];                       // (k, is, geçmiş kaydı) => void
+const ZAMAN_SONRASI=[];                    // (k) => void; zaman ilerletmesi bittiğinde ya da durduğunda (js/gozlem.js aralığı burada kapatır)
 const ZAMAN_ISLEM_SINIRI=100000;           // tek ilerletmede tamamlanabilecek iş sayısı; kendini sürekli yeniden kuran işe karşı
 
 /* iş türleri: denetle(k, veri) → hata listesi; uygula(k, is) → geçmişe yazılacak sade sonuç (ya da undefined);
@@ -114,9 +115,10 @@ function zamanIlerletAna(k,hedef,dur,once){
     anAyarla(k,Math.max(isSonAn(is),simdikiAn(k)));
     const kayit=isTamamla(k,is.id,IS_TURLERI[is.tur].uygula(k,is));
     biten.push(kayit);
-    if(dur&&dur(kayit))return{biten,durdu:true};
+    if(dur&&dur(kayit)){for(const d of ZAMAN_SONRASI)d(k);return{biten,durdu:true};}
   }
   anAyarla(k,hedef);
+  for(const d of ZAMAN_SONRASI)d(k);
   return{biten,durdu:false};
 }
 /* zamanı dakika kadar ilerletir (durmadan). Geçmiş kayıtlarını döndürür */

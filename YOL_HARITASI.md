@@ -4,7 +4,7 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
 
 ## Şu an neredeyiz?
 
-Çalışan ürün bir maç günü prototipi, kariyer temeli (Aşama 1), ilk ajanda haftası (2.1), sayman/sponsor denemesi (2.2'nin ilk adımı), sponsor konusunun tek mesele olarak takibi ve “İlerle” ile durma noktalarına ilerleme (2.3) ile gün içi kayıt ve dönüş özetidir (2.4). 2.3–2.4 kodu PR #8 ile `main` dalına birleşti. Değişken başlangıcın ve koşula bağlı olayın dar ilk örneği (2.4A) ile aydınlık başkan odası (2.5) çalışır: oyun odayla açılır, gündem masadaki telefon, ajanda ve dosyadan izlenir. Üstüne tavsiye/yetki devri/ekip (2.6) ile sözler, gazete ve odadaki izler (2.8) eklendi. Bu adımlar PR #9 ile `main` dalına birleşti. Tam devralma koşulları, kalan olay paketleri, kişi/görüşme sahneleri ve antrenman kenarı (2.7) henüz uygulanmadı. Git'teki kaynak durumuyla Pages/masaüstü dağıtım sürümü ayrı doğrulanır.
+Çalışan ürün bir maç günü prototipi, kariyer temeli (Aşama 1), ilk ajanda haftası (2.1), sayman/sponsor denemesi (2.2'nin ilk adımı), sponsor konusunun tek mesele olarak takibi ve “İlerle” ile durma noktalarına ilerleme (2.3) ile gün içi kayıt ve dönüş özetidir (2.4). 2.3–2.4 kodu PR #8 ile `main` dalına birleşti. Değişken başlangıcın ve koşula bağlı olayın dar ilk örneği (2.4A) ile aydınlık başkan odası (2.5) çalışır: oyun odayla açılır, gündem masadaki telefon, ajanda ve dosyadan izlenir. Üstüne tavsiye/yetki devri/ekip (2.6) ile sözler, gazete ve odadaki izler (2.8) eklendi. Bu adımlar PR #9 ile `main` dalına birleşti. Balkon ve antrenman gözlemi (2.7) çalışır: odadan balkona yürünür, takım sahadayken isteğe bağlı gözlem yapılır, telefon kararında gözlem durur; bu adım PR #10 ile `main` dalına birleşti. Tam devralma koşulları, kalan olay paketleri ve kişi/görüşme sahneleri henüz uygulanmadı. Git'teki kaynak durumuyla Pages/masaüstü dağıtım sürümü ayrı doğrulanır.
 
 - [x] Maç motoru '99 sahnesine bağlı; maç baştan sona oynanıyor.
 - [x] Başkan bakışı, dürbün, başkanın elleri/masası ve olaylara tepkiler var.
@@ -23,7 +23,8 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
 - [x] Üç TEST başlangıcı, koşula göre açılan/açılmayan/önlenen ödeme sıkışması olayı (P01'in dar örneği) ve eski sabit haftanın yeni kariyer yolundan çıkarılması (2.4A).
 - [x] Aydınlık başkan odası: masadaki telefon, ajanda ve dosya; açık renkli paneller, ses düzeyi ve yazı büyüklüğü ayarı (2.5).
 - [x] Hoca talebi, basın sorusu ve koşullu destek paketleri; söz kaydı, Cuma gazetesi, teşekkür ve odadaki görünür izler (2.6, 2.8).
-- [ ] Kişi/görüşme sahneleri, antrenman kenarı, gözlem sırasında telefon ve kontrollü gözlem (2.7).
+- [x] Balkon ve antrenman kenarı, gözlem sırasında telefon ve kontrollü gözlem (2.7).
+- [ ] Kişi/görüşme sahneleri (kişi modelleriyle yüz yüze görüşme).
 - [ ] Tam devralma koşulları ve kalan olay paketleri (bugün P01, P03 ve P13'ün dar örnekleri ile hoca/basın örnekleri var).
 - [ ] Tam yönetim, sözleşme/ekonomi, seçim, sezon, uzun kariyer ve Avrupa sistemleri; maç sonucunun kariyere bağlanması.
 - [ ] Ticari masaüstü paketi ve uzun kariyer doğrulaması.
@@ -88,8 +89,15 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
   - Hoca talebi yalnız bütçe kararıdır; kadro ve taktik hocada kalır. Basın yalnız yaşanmış bir sonucu sorar. Destek teklifi tek seferlik ve süreli pano hakkıyla sınırlıdır; hisse, yatırımcı ve kişisel katkı yoktur. Tek pano iki tarafa söz verilemez.
   - Söz yalnız açık taahhütten doğar; tutulması ya da bozulması gerçek kayıttan türetilir. Gazete manşeti kayıtlı olaydan seçilir ve ölçülebilir bir etkisi yoktur. Teşekkür para ya da moral puanı üretmez.
   - Kasa açığı başka yoldan kapanırsa bekleyen kriz kararı kendiliğinden düşer.
-  - Kayıt sürümü 4, içerik sürümü 2'dir. Sürüm 1–3 kayıtları kendi içerikleriyle sürer; sonradan eklenen paketler onlarda açılmaz.
+  - Bu adımda kayıt sürümü 4, içerik sürümü 2 oldu (2.7 ile kayıt sürümü 5). Sürüm 1–3 kayıtları kendi içerikleriyle sürer; sonradan eklenen paketler onlarda açılmaz.
   - Haftaya birden çok konu sığabildiği için yoğunluk arttı (sıkışık başlangıçta en çok dört mesele); tempo ve yoğunluk değerlendirmesi 2.9'dadır. Bütün tutarlar, süreler, kişiler ve metinler TEST'tir.
+- **2026-09-30, kullanıcı kararı (antrenman sahnesi):** Antrenman ayrı bir mekân değildir: başkan odasındaki kapıdan balkona yürünür, masaya oturulur; gündüz bütün saha görünür, tribünler boştur, futbolcular çalışır. Antrenman kulübün kendi sahasında yapılır.
+- **2026-09-30, uygulanan (2.7) ve alınan kararlar:**
+  - Gözlem takvimde bir aralıktır (`gozlem: {tarih, bas, bitis}`), süre tüketen ayrı bir iş değildir. Karar gerektiren haberde ya da beklenen görüşte durur, kalan süre korunur; karar verilirken zaman ilerlemez.
+  - Gözlem sürerken 15 dakikayı (TEST) aşmayan iş aralığın içinde geçer, süre iki kez harcanmaz. Daha uzun iş tam dikkat ister: seçenek kapalı gelir ve nedeni yazar; önce gözlem bırakılır.
+  - Antrenman takvim işi değildir (TEST: hafta içi 15:00–17:00, maç günü yok). İzlenmezse hiçbir kayıt düşmez. En az 30 dakika (TEST) izlenirse geçmişe tek cümlelik bir not yazılır; para, moral ya da gizli bilgi kazandırmaz.
+  - Saatli iş ve son cevap anı gözlemi önceden kısaltır; kimse sessizce kaçırılmaz. “İlerle” açık gözlemi kapatır.
+  - Kayıt sürümü 5'tir (`gozlem` alanı). Sürüm 1–4 kayıtları açılır. Antrenman canlandırması sunumdur; antrenman simülasyonu, oyuncu gelişimi ve rapor değildir (Aşama 3.2, 8).
 
 Eski kararların kronolojisi Git geçmişinde korunur. Bu dosyada geçerli kararlar ve gerekli gerekçeler tutulur.
 
@@ -97,13 +105,13 @@ Eski kararların kronolojisi Git geçmişinde korunur. Bu dosyada geçerli karar
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz.
 
-**Aşama 1, 2.1–2.6 (2.4A dahil) ve 2.8 tamamlandı. Sıradaki geliştirme: 2.7 — antrenman ve telefon; ardından 2.9 — günlük akışın sınanması.** 2.7 yeni bir sahne ve gözlem sırasında kontrollü ilerleyen zaman kuralı gerektirir; 2.5'teki gibi önce küçük bir prototip gösterilip onaylanır. Açık isimler, tutarlar ve denge sayıları TEST olarak işaretlenir.
+**Aşama 1 ve 2.1–2.8 (2.4A dahil) tamamlandı. Sıradaki geliştirme: 2.9 — günlük akışın sınanması.** 2.9 yeni sistem eklemez: mevcut haftanın temposu, yoğunluğu, okunabilirliği ve sesi normal oynanışta ölçülür; bulunan sorunlar küçük düzeltmelerle giderilir. Açık isimler, tutarlar ve denge sayıları TEST olarak işaretlenir.
 
 İlk bütünleşik örnek: koşulları uygunsa ofiste başlayan sponsor meselesi ekibe verilir; sonraki gün antrenmanda haber gelir; yetkiyi aşan konu başkana döner ve kararın sonucu kulüpte görülür. Sorunsuz, önlenmiş ve hiç açılmayan mesele örnekleri de sınanır; bu örnek her kariyerin zorunlu açılışı değildir. Bütünleşik sunum Aşama 2 sonunda hedeflenir; ilk alt adımda bütün sahneler birden yapılmaz.
 
 ### Sonraki uygulama için çalışma çerçevesi
 
-Claude veya başka bir geliştirme aracı “sıradaki adımı planla” isteğinde önce 2.7'yi ele almalı. Kodun güncel hâlini okuyup mevcut komutları, kayıt dönüşümlerini ve testleri kullanarak küçük uygulama planı çıkarmalı. Plan; gözlem süresinin takvimde nasıl ilerlediğini, telefon kararında nasıl durduğunu, mevcut ısınma görsellerinden nasıl yararlanılacağını ve önce gösterilecek prototipi açıkça göstermeli. Bu belge onayı oyun kodunu kendiliğinden uygulama izni değildir; sonraki kod çalışmasının kapsamı kullanıcı isteğinden alınır.
+Claude veya başka bir geliştirme aracı “sıradaki adımı planla” isteğinde önce 2.9'u ele almalı. Kodun güncel hâlini okuyup mevcut komutları, kayıt dönüşümlerini ve testleri kullanarak küçük uygulama planı çıkarmalı. Plan; neyin nasıl ölçüleceğini (süre aralıkları, bir haftadaki konu sayısı, sakin dönemin hissi, ses ve okunabilirlik), hangi değerlendirmenin kullanıcıya ait olduğunu ve ölçüm sonucunda değişebilecek TEST değerlerini açıkça göstermeli. Bu belge onayı oyun kodunu kendiliğinden uygulama izni değildir; sonraki kod çalışmasının kapsamı kullanıcı isteğinden alınır.
 
 Sonraki adımların dışında: bütün 14 paket, kapsamlı seçim/adaylık, hisse veya yatırımcı sistemi, tam ilişki/hafıza sistemi, yeni 3B ortam, maç sonucunu kariyere bağlama ve mevcut motoru yeniden yazma. Metinler ile denge sayıları küçük TEST tarifleri olabilir; gerçek mali/lig kuralları sessizce kesinleştirilmez.
 
@@ -176,8 +184,11 @@ Sonraki adımların dışında: bütün 14 paket, kapsamlı seçim/adaylık, his
   - *Bitiş:* Yetki içindeki rutin adımlar ek onay istemiyor; sınır aşılınca başkana dönülüyor. İşe uygun yönetici bazı işleri daha iyi çözebiliyor; şahsen katılım her işte otomatik en iyi seçenek olmuyor. Hoca futbol kararlarının sahibi olarak kalıyor.
   - *Uygulandı (2026-09-30, TEST içerik):* Tavsiye, kapasite, kalıcı sorumluluk ve girişim `js/yonetim.js`'te; P01'e uygulanması `js/paket-odeme.js`'te. Hoca talebi `js/paket-hoca.js`, gazetenin sorusu `js/paket-basin.js`, koşullu destek (P03'ün dar örneği) `js/paket-destek.js`. Odada Dosya'dan görüş istenir, Ajanda'dan girişim başlatılır. Uygun yönetici işi başkandan iyi çözebilir (bağlantısı güçlü sayman pazarlık arayan sponsoru karşılıksız çözer; başkan giderse pano hakkı istenir); şahsen katılım her işte en iyi seçenek değildir. Ayrıntı [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi).
   - *Sınır:* Kişi modelleri ve görüşme sahnesi yoktur; görüşmeler panelde yürür. Bütçe tavanı ve süre sınırı sayısal olarak tanımlı değildir; yetki sınırı koltuk tanımındaki kurallardır. Araştırma türü girişim yalnız tavsiyeyle temsil edilir.
-- [ ] **2.7 — Antrenman ve telefon.** İsteğe bağlı gözlem sırasında haber alma, cevaplama, tavsiye isteme veya yönlendirmeyi dene. Mevcut ısınma görsellerinden yararlanılabilir; ayrı antrenman simülasyonunun hazır olduğu varsayılmaz.
+- [x] **2.7 — Antrenman ve telefon.** İsteğe bağlı gözlem sırasında haber alma, cevaplama, tavsiye isteme veya yönlendirmeyi dene. Mevcut ısınma görsellerinden yararlanılabilir; ayrı antrenman simülasyonunun hazır olduğu varsayılmaz.
   - *Bitiş:* Kontrollü gözlemde mesaj kararı zamanı durduruyor; uyumlu eşzamanlı işler süreyi iki kez tüketmiyor. Uzun görüşmede gözlemden ayrılınıyor; aynı mesele ofiste ve telefonda devam ediyor. Katılmamak zorunlu bilgi/ödül kaybına dönüşmüyor.
+  - *Uygulandı (2026-09-30, TEST sunum ve değerler):* Kurallar `js/gozlem.js`, sahne `js/balkon.js` (oda sahnesinin dışına kurulu balkon, saha, boş tribünler, çalışan takım), yürüyüş `js/oda.js`. Önce `prototipler/5-balkon-ve-antrenman.html` gösterildi, sonra oyuna bağlandı. Telefon, ajanda ve dosya balkondan açılır.
+  - *Doğrulama:* `kariyer-deneme.js` 2.7 bölümü (tek parça/parçalı gözlem aynı sonuç, kesilme ve sürdürme, kısa iş çifte sayılmıyor, uzun iş kapalı, izleyen ile izlemeyenin dünyası aynı, gözlem ortasında kaydet–yükle, sekiz gerçek sürüm 4 kaydı); `akis-deneme.py` 10. bölüm (balkona yürü, izle, telefonla kesil, dosyadan kısa karar, devam et, odaya dön, yenile).
+  - *Sınır:* Hocayla ya da başka biriyle balkonda yüz yüze görüşme sahnesi yoktur. Ses kulakla, yürüyüş ve canlandırma normal tempoda kullanıcı tarafından değerlendirilir (2.9). Hedef donanımda performans ölçülmedi.
 - [x] **2.8 — Sonuçlar ve kulüp hafızası.** Bir söz/ilişki kaydı, önceki kararın dönüşü, ilk taraftar veya medya tepkisi ve olumlu kulüp anı ekle. Tamamlanan küçük bir iş/yatırımın ya da tutulmuş sözün izini ortamda göster; daha sonraki tesis sisteminin tamamını burada kurma.
   - *İçerik:* P13'teki küçük söz/teşekkür örneği yaşanmış olaydan doğsun. Para harcayıp günlük moral toplama döngüsü veya her kutlamanın arkasından kriz üretme kuralı kurulmasın.
   - *Bitiş:* Oyuncu sonucun hangi karardan geldiğini anlayabiliyor; ilgili insanlar ve geçmiş hatırlanıyor. Görünür değişim gerçekten kaydedilmiş olaya dayanıyor, yükleme sonrası korunuyor.
@@ -187,7 +198,7 @@ Sonraki adımların dışında: bütün 14 paket, kapsamlı seçim/adaylık, his
   - *Tekrar oynama:* Aynı küçük dönemi farklı başlangıç ve kararlarla karşılaştır; temkinli, büyüme odaklı ve yetki devreden yaklaşımların koşullara göre ayrışmasını incele. Video veya önceki oyundan öğrenilmiş sabit cevabın her koşulu çözmediğini, başarının gerçek rahatlık ürettiğini ve önlenen sorunun geri zorlanmadığını değerlendir. Otomatik tutarlılık denemesi normal tempoda oynama yerine geçmez.
   - *Bitiş:* Kısa oturumda mesele ilerliyor; yoğun gün bölünebiliyor; iyi yönetim rahat dönem üretebiliyor. Temel yazı/ses seçenekleri ve dönüş özeti kullanılabilir. Eksik örnekler ve ölçüm sonuçları yazılır; yalnız toplam süreye bakılarak aşama kapatılmaz.
 
-**Uygulama sırası:** 2.2–2.6 ve 2.8 tamamlandı → 2.7 → 2.9. 2.8, 2.7'ye bağlı olmadığı için öne alındı (kullanıcı kararı, 2026-09-30: 2.7 yeni sahne ve zaman kuralı gerektirdiği için ayrı pakette). Her alt adım kendi kontrolüyle tamamlanır. Başlangıç görevdeki TEST başkanı olabilir.
+**Uygulama sırası:** 2.2–2.8 tamamlandı → 2.9. 2.8, 2.7'ye bağlı olmadığı için öne alındı (kullanıcı kararı, 2026-09-30: 2.7 yeni sahne ve zaman kuralı gerektirdiği için ayrı pakette). Her alt adım kendi kontrolüyle tamamlanır. Başlangıç görevdeki TEST başkanı olabilir.
 
 Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. Tam maç bağlantısı Aşama 3'tedir.
 

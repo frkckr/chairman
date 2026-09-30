@@ -74,7 +74,7 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 - Hikâyenin başındaki taraftar yeri, görevdeki başkanın yeri, deplasman protokolü ve seçimi kaybetmiş kişinin misafir/loca konumu birbirinden ayrılır. Mevcut açık tribün kuralı bütün kariyeri aynı koltuğa hapsetmez.
 - Deplasmanda ev sahibi yöneticiler ve ilişkiler oturma düzenini etkileyebilir. Kimin yanında oturduğu veriyle belirlenir; her ilişki için yeni stat üretilmez.
-- İlk kapsam başkan odası/görüşme alanı ve antrenman kenarıdır; mevcut stat deneyimine bağlanır. Basın alanı ve diğer yerler ihtiyaç oluştuğunda genişletilir. Aynı oda farklı görüşmelerde yeniden kullanılır; her konu için yeni mekân gerekmez.
+- İlk kapsam başkan odası/görüşme alanı ve antrenman kenarıdır; mevcut stat deneyimine bağlanır. Oda ve balkon uygulanmıştır (§7); kişi modelleriyle görüşme alanı hedeftir. Basın alanı ve diğer yerler ihtiyaç oluştuğunda genişletilir. Aynı oda farklı görüşmelerde yeniden kullanılır; her konu için yeni mekân gerekmez.
 - Telefon, ajanda ve ilgili dosya bulunduğun ortamdan erişilebilir olur. Etkileşimler görünür ve anlaşılırdır; oyuncu gerekli bilgiye ulaşmak için gizli nesne aramaya veya uzun geçişleri tekrar izlemeye zorlanmaz.
 - Ortam değişiminde aynı mesele, insanlar ve önceki kararlar devam eder. Kamera ve küçük çevre hareketleri dikkati o anki konu üzerinde tutar.
 - Fotoğraflar, kupalar ve tanıdık çalışanlar kulüp hafızasını taşır. Geçmişe ait bir nesne, bağlı olduğu olay gerçekleşmeden varmış gibi gösterilmez.
@@ -86,6 +86,9 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 - **Başkan odası (`js/oda.js`, `js/ekran-oda.js`) oyunun açılış ekranıdır (2.5).** Başkanın masasından bakılır: pencerede uzakta kulübün tribünü, duvarda flama ve oyun saatini gösteren saat, iki ziyaretçi koltuğu, dosya dolabı. Gün ışığı oyun saatine göre değişir. Kupa ve fotoğraf yoktur: yaşanmamış geçmiş gösterilmez.
   - Masada telefon, ajanda defteri ve dosya vardır; aynı üçünün etiketli düğmesi solda durur (klavye 1/2/3, Esc). İmleç nesnenin üzerindeyken amber çerçeve yanar. Telefon yeni haberde amber yanar ve sayıyı gösterir; ajanda defteri günün tarihini taşır; dosya yalnız mesele varken masadadır.
   - Panel açık renkli kâğıt görünümündedir, karenin sağında açılır; oda solda görünür kalır ve bakış nesneye döner. Aynı anda tek panel açıktır. Haber paneli kendiliğinden açmaz.
+- **Balkon ve antrenman (`js/balkon.js`, 2.7).** Odanın uzak duvarındaki kapıdan balkona yürünür (“Balkona çık”, klavye 5; yaklaşık 3 saniyelik kamera yürüyüşü, tıklayınca atlanır, hareket azaltma ayarında doğrudan geçilir). Balkonda korkuluk ve küçük masa vardır; karşıda kulübün sahası bütünüyle görünür, tribünler boştur. Işık oyun saatine göre değişir. Antrenman saatinde takım kadrodaki görünüşüyle sahadadır: ısınma koşusu, pas çemberi, kaleye şut, kenarda teknik ekip. Saat dışında saha boştur.
+  - Sol altta gözlem şeridi durur: antrenmanın durumu, “İzle” süreleri, gözlem durduğunda kalan süre, “Gözleme devam et” ve “Gözlemi bırak”. Gözlemde saat birkaç saniyede akar; telefon çalınca o anda durur ve telefon yanar.
+  - Telefon, ajanda, dosya ve gazete balkondan da aynı panellerle açılır. Gözlem sürerken tam dikkat isteyen seçenek kapalı görünür ve nedenini yazar. Renkler ve kamera `STIL.balkon`, yürüyüş `STIL.oda.yol` içindedir.
   - Üstte kulüp/başkan ve kayıt durumu, solda tarih ve saat, altta son gelişme, sıradaki durak ve “İlerle” (maç günü “Stada git”) her zaman görünür.
   - Dosyada başlık ve durum, yürüten, “Bilinenler” (kaynağıyla), karar seçenekleri ve kısa geçmiş bulunur. Seçenekler kararın bilinen maliyetini ve belirsizliğini yazar.
   - Yazı büyüklüğü karenin genişliğine orantılıdır (normal ve büyük); uzun içerikte panel kendi içinde kaydırılır. Ses düzeyi ve sessiz ayarı vardır; sesler bilgi taşımaz.
@@ -144,5 +147,5 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 - Süre soru okunabilir olduktan sonra başlar. Süreyi uzatma, flaş ve sarsıntıyı azaltma seçenekleri planlanan sunumun parçasıdır.
 - Erişilebilirlik ayarı gizlice sportif zorluk cezasına dönüştürülmez. Oyuncu bilgiye yetişemediği için yanlış seçeneğe zorlanmamalıdır.
 - Temel okunabilirlik, yazı büyüklüğü ve ortam sesi/ses kontrolü ilk yaşayan kulüp bölümünün kabul koşuludur. Kapsamlı seslendirme, kalabalık çeşitliliği ve atmosfer ayrıntıları sonraki aşamalarda geliştirilir.
-- Takvim dururken küçük ortam hareketleri veya sesleri devam edebilir; saat ve karar durumu bununla karıştırılmaz. Antrenman gözleminde telefon kararına geçiş anlaşılır olur, bilgi karar okunurken değişmez.
+- Takvim dururken küçük ortam hareketleri veya sesleri devam edebilir; saat ve karar durumu bununla karıştırılmaz. Antrenman gözleminde telefon kararına geçiş anlaşılır olur, bilgi karar okunurken değişmez. Balkonda ortam sesi açık hava uğultusuna, antrenman sürerken uzaktan top ve düdük sesine döner (kodla üretilir; kulakla değerlendirme 2.9'dadır).
 - Bildirimler ve temel sesler sürekli baskı üretmez. Sakin kulüp anları ve iyi yönetimin sağladığı rahatlık sunumda da hissedilir.

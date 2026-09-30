@@ -46,7 +46,7 @@ function kariyerBaslat({tohum,baslangic,sponsor,sayman,hoca}={}){
   if(!Number.isInteger(tohum))throw new Error(`Dünya tohumu tamsayı olmalı: ${tohum}`);
   tohum=tohum>>>0;
   const O=KARIYER_ORNEK,E=KARIYER_BASLANGIC,KULUP=O.kisiler[O.baskanId].kulupId;
-  const k=kariyerOlustur({kayitSurumu:KARIYER_SURUM,dunyaTohumu:tohum,icerik:{surum:ICERIK_SURUM,baslangic:null},kosullar:{},rastlanti:rastlantiBaslat(tohum),olaylar:{},sozler:{},haberler:[],
+  const k=kariyerOlustur({kayitSurumu:KARIYER_SURUM,dunyaTohumu:tohum,icerik:{surum:ICERIK_SURUM,baslangic:null},kosullar:{},rastlanti:rastlantiBaslat(tohum),olaylar:{},sozler:{},haberler:[],gozlem:null,
     tarih:BASLANGIC_TARIHI,gunIciDakika:GUN_BASLANGICI,baskanId:O.baskanId,gorevDurumu:'gorevde',final:null,
     sonrakiNo:{kisi:14,is:1,hareket:1,mesele:1,olay:1,soz:1},meseleler:{},kulupler:O.kulupler,isler:{},gecmis:[],hareketler:[],kisiler:E.kisiler});
   for(const [id,p] of Object.entries(kariyerOlustur(YONETIM_HAVUZU)))k.kisiler[id]=Object.assign(k.kisiler[id]||{},p);

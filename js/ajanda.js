@@ -31,6 +31,8 @@ const AJANDA_EN_UZUN=720;                   // bir işin en uzun süresi (dakika
 const SURE_UZATMA=30;                       // meşgulken dolan son cevap anı, işin bitişinden bu kadar dakika sonraya uzar (TEST değeri)
 const ILERLE_SINIRI=30;                     // ajanda işi yokken ilerlemenin bakacağı en uzak gün (TEST değeri)
 const KARAR_TURLERI={};
+/* katılım önizlemesine ek engel koyan kural dosyaları: (k, iş, süre) => metin | null (js/gozlem.js: gözlem sürerken uzun iş) */
+const AJANDA_ENGELLERI=[];
 
 IS_TURLERI.ajanda={
   pay:1,
@@ -83,11 +85,14 @@ function ajandaOnizle(k,id,secim){
   if(!is||is.tur!=='ajanda')return{is:null,engel:[`Ajanda işi bulunamadı: ${id}`],atlanacak:[],gerceklesecek:[],secenekler:[]};
   const secenekler=kararSecenekleri(k,is),engel=[],atlanacak=[],gerceklesecek=[];
   let sure=is.veri.sure,secenek=null;
+  /* ek engeller seçeneğin kendi süresiyle de sorulur: kapalı seçenek nedeniyle birlikte görünür */
+  for(const s of secenekler)if(!s.engel&&s.sure!==undefined)for(const f of AJANDA_ENGELLERI){const e=f(k,is,s.sure);if(e){s.engel=e;break;}}
   if(secenekler.length&&secim!==undefined&&secim!==null){
     secenek=secenekler.find(s=>s.id===secim);
     if(!secenek)engel.push(`Geçersiz seçenek: ${secim}`);
     else{if(secenek.engel)engel.push(secenek.engel);if(secenek.sure!==undefined)sure=secenek.sure;}
   }
+  if(!(secenek&&secenek.engel))for(const f of AJANDA_ENGELLERI){const e=f(k,is,sure);if(e)engel.push(e);}
   /* saati serbest karar şimdi başlar; saatli iş kendi saatinde */
   const baslangic=is.veri.saatsiz?simdikiAn(k):isAn(is),bitis=baslangic+sure;
   if(!is.veri.saatsiz){
