@@ -1,10 +1,10 @@
 /* ============ Chairman — başkanın bedeni: önündeki masa, elleri ve eşyaları (ön plan katmanı) ============
    Dünya çizildikten sonra derinlik temizlenir ve bu katman üstüne çizilir. Böylece masa ve eller her zaman ekranın altında durur.
    Eller maçtaki olaylara tepki verir: gol sevinci (başkan ayağa kalkar), yenilen golde eller başa, kaçan pozisyonda masaya yumruk,
-   itiraz, alkış. Sakin anlarda çay yudumlar, programa ya da telefonuna bakar. Dürbünü elleriyle kaldırır. */
+   itiraz, alkış. Sakin anlarda programa ya da telefonuna bakar. Dürbünü elleriyle kaldırır. Çay 2.8A'da kaldırıldı. */
 const BK=STIL.baskan;
 const BASKAN={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(BK.aci,RW/RH,0.02,6),eylem:null,kuyruk:[],bosT:12,
-  kalk:0,kalkHedef:0,sarsinti:0,cay:1,caySicak:1,durbunDurum:0,durbunHedef:0,durbunHazir:null};
+  kalk:0,kalkHedef:0,sarsinti:0,durbunDurum:0,durbunHedef:0,durbunHazir:null};
 {const S=BASKAN.sahne;S.add(new THREE.AmbientLight(0x7a7064,1.1));
  const d=new THREE.DirectionalLight(0xffe4bc,0.75);d.position.set(0.4,2,1.2);S.add(d);
  const f=new THREE.DirectionalLight(0x9fb0d8,0.25);f.position.set(-1,0.5,-1);S.add(f);}
@@ -15,16 +15,6 @@ const BK_MASA=new THREE.Group();BASKAN.sahne.add(BK_MASA);
  const ust=box(2.6,0.06,1.1,LAM({map:tx(cv,'n',[5,2])}),0,-0.5,-0.95,BK_MASA);ust.name='masa';
  box(2.6,0.026,0.03,LAM({color:BK.pirinc}),0,-0.468,-1.5,BK_MASA);
  box(0.5,0.008,0.32,LAM({color:BK.sumen}),-0.02,-0.466,-1.2,BK_MASA);}
-/* ---- çay: ince belli bardak, tabak, çay, buhar ---- */
-const BK_CAY=new THREE.Group();BK_CAY.position.set(0.34,-0.469,-1.22);BK_MASA.add(BK_CAY);
-const BK_BARDAK=new THREE.Group();BK_CAY.add(BK_BARDAK);
-let BK_CAYICI=null;
-{const tabak=new THREE.Mesh(new THREE.CylinderGeometry(0.062,0.05,0.01,12),LAM({color:0xefece4}));tabak.position.y=0.005;BK_CAY.add(tabak);
- const GP=[[0,0],[0.021,0],[0.018,0.014],[0.0155,0.032],[0.021,0.055],[0.026,0.078],[0.0285,0.097]].map(a=>new THREE.Vector2(a[0],a[1]));
- const cam=new THREE.Mesh(new THREE.LatheGeometry(GP,10),LAM({color:0xdfe8ee,transparent:true,opacity:0.35,side:THREE.DoubleSide,depthWrite:false}));cam.position.y=0.01;cam.renderOrder=2;BK_BARDAK.add(cam);
- const TP=[[0,0.006],[0.017,0.006],[0.0145,0.03],[0.02,0.055],[0.025,0.078],[0,0.078]].map(a=>new THREE.Vector2(a[0],a[1]));
- BK_CAYICI=new THREE.Mesh(new THREE.LatheGeometry(TP,10),LAM({color:0x9a2a0c}));BK_CAYICI.position.y=0.01;BK_BARDAK.add(BK_CAYICI);}
-const BK_BUHAR=[0,1,2].map(i=>{const s=glow(0xeee8e0,0.05,0);s.material.fog=false;BK_BARDAK.add(s);return{s,f:i/3};});
 /* ---- maç programı: piksel yazılı kapak ---- */
 const BK_PROGRAM=new THREE.Group();BK_PROGRAM.position.set(-0.1,-0.462,-1.18);BK_PROGRAM.rotation.y=0.22;BK_MASA.add(BK_PROGRAM);
 {const cv=mk(32,44),g=cv.getContext('2d');g.fillStyle='#efe9dc';g.fillRect(0,0,32,44);g.fillStyle='#c8281e';g.fillRect(0,0,32,12);
@@ -70,8 +60,6 @@ function bkAnahtar(keys,t){
     if(i>=K.length-1){out[el]=K[K.length-1][1];continue;}const [t0,a]=K[i],[t1,b]=K[i+1];out[el]=bkKaristir(a,b,clamp((t-t0)/Math.max(1e-3,t1-t0),0,1));}
   return out;}
 const BK_EYLEM={
-  cay:{sure:3.2,keys:[[0,{}],[0.55,{sag:BKP(0.288,-0.429,-1.135,0,-0.55,0,0.65)}],[0.95,{sag:BKP(0.26,-0.33,-1.0,0.1,-0.45,0,0.7)}],[1.5,{sag:BKP(0.08,-0.23,-0.52,0.55,-0.3,0.35,0.7)}],
-     [2.1,{sag:BKP(0.08,-0.23,-0.52,0.62,-0.3,0.38,0.7)}],[2.65,{sag:BKP(0.288,-0.429,-1.135,0,-0.55,0,0.65)}],[3.2,{}]],tut:[0.55,2.65]},
   telefon:{sure:3.6,keys:[[0,{}],[0.5,{sag:BKP(0.105,-0.433,-0.965,0,-0.3,0,0.6)}],[1.0,{sag:BKP(0.05,-0.27,-0.6,1.05,-0.1,0,0.55)}],[2.8,{sag:BKP(0.05,-0.27,-0.6,1.05,-0.1,0,0.55)}],[3.3,{sag:BKP(0.105,-0.433,-0.965,0,-0.3,0,0.6)}],[3.6,{}]],telefon:[0.5,3.3]},
   program:{sure:2.4,keys:[[0,{}],[0.5,{sol:BKP(-0.17,-0.44,-1.07,0,0.3,0,0.5)}],[1.4,{sol:BKP(-0.05,-0.41,-1.08,0,0.15,0.3,0.5)}],[2.0,{sol:BKP(-0.17,-0.44,-1.07,0,0.3,0,0.5)}],[2.4,{}]],sayfa:[0.6,1.5]},
   alkis:{sure:2.2,keys:[[0,{}],[0.35,{sol:BKP(-0.08,-0.3,-0.78,0,0,-1.2,0.1),sag:BKP(0.08,-0.3,-0.78,0,0,1.2,0.1)}],[1.85,{sol:BKP(-0.08,-0.3,-0.78,0,0,-1.2,0.1),sag:BKP(0.08,-0.3,-0.78,0,0,1.2,0.1)}],[2.2,{}]],alkis:[0.35,1.85]},
@@ -93,7 +81,7 @@ function baskanOlay(ad,v){
   else if(ad==='save'&&v.p&&v.p.team===1&&rnd()<0.45)baskanEylem('yumruk',3);
   /* aleyhimize karar (faul, kart, ofsayt): başkan itiraz eder */
   else if((ad==='faul'||ad==='kart'||ad==='ofsayt')&&v.aleyhe===0)baskanEylem('itiraz',3);
-  else if(ad==='halftime'){BASKAN.cay=1;BASKAN.caySicak=1;baskanEylem('telefon',2);}
+  else if(ad==='halftime')baskanEylem('telefon',2);
   else if(ad==='fulltime'){const s=v.score;baskanEylem(s[0]>s[1]?'alkis':s[0]<s[1]?'golYedik':'itiraz',4);}
 }
 /* dürbün: eller kaldırır, yüze gelince maske açılır (hazır geri çağrısı); indirirken önce maske kapanır */
@@ -104,11 +92,11 @@ const BK_V=new THREE.Vector3();
 function elYerlestir(el,poz){const E=BK_EL[el];E.g.position.set(...poz.p);E.g.rotation.set(poz.r[0],poz.r[1],poz.r[2]);E.parmak.rotation.x=poz.k*1.4;}
 function baskanKare(dt,kamera){
   const B=BASKAN;
-  /* kendiliğinden eylemler: sakin anda çay, program ya da telefon */
+  /* kendiliğinden eylemler: sakin anda program ya da telefon */
   B.bosT-=dt;
   if(!B.eylem&&B.bosT<=0){B.bosT=14+rnd()*22;
     const ph=typeof mac!=='undefined'?mac.phase:'',sakin=ph==='play'?Math.abs(mac.ball.x)<24:true;
-    if(sakin){const r=rnd();if(B.cay>0.05&&r<0.5)baskanEylem('cay');else if(MAC_ONCESI.includes(ph)||ph==='halftime'?r<0.85:r<0.62)baskanEylem(MAC_ONCESI.includes(ph)?'program':'telefon');}}
+    if(sakin){const r=rnd();if(MAC_ONCESI.includes(ph)||ph==='halftime'?r<0.35:r<0.12)baskanEylem(MAC_ONCESI.includes(ph)?'program':'telefon');}}
   /* eylemi oynat */
   let poz={sol:BK_DINLEN.sol,sag:BK_DINLEN.sag};const e=B.eylem;
   if(e){e.t+=dt;poz=bkAnahtar(e.keys,Math.min(e.t,e.sure));
@@ -116,9 +104,6 @@ function baskanKare(dt,kamera){
     if(e.salla&&e.t>e.salla[0]&&e.t<e.salla[1]){const a=Math.sin(e.t*17)*0.03;poz.sol.p[1]+=a;poz.sag.p[1]-=a;}
     if(e.vur&&!e.vurdu&&e.t>=e.vur){e.vurdu=true;B.sarsinti=1;}
     B.kalkHedef=e.kalk&&e.t>e.kalk[0]&&e.t<e.kalk[1]?1:0;
-    const tut=e.tut&&e.t>e.tut[0]&&e.t<e.tut[1];
-    if(tut&&BK_BARDAK.parent!==BK_EL.sag.g){BK_EL.sag.g.add(BK_BARDAK);BK_BARDAK.position.set(0,-0.04,-0.1);BK_BARDAK.rotation.set(0,0,0);}
-    if(!tut&&BK_BARDAK.parent!==BK_CAY){BK_CAY.add(BK_BARDAK);BK_BARDAK.position.set(0,0,0);BK_BARDAK.rotation.set(0,0,0);if(e.ad==='cay'&&e.t>=e.tut[1])B.cay=Math.max(0,B.cay-0.22);}
     const tel=e.telefon&&e.t>e.telefon[0]&&e.t<e.telefon[1];
     if(tel&&BK_TEL.parent!==BK_EL.sag.g){BK_EL.sag.g.add(BK_TEL);BK_TEL.rotation.set(0,0,0);}
     /* telefon avucun altından kalkıp elin önüne döner: ekran başkana bakar */
@@ -133,12 +118,9 @@ function baskanKare(dt,kamera){
   /* dinlenirken sağ işaret parmağı ara sıra masaya vurur */
   if(!e){const tik=Math.max(0,Math.sin(zamanB*9))*(Math.sin(zamanB*0.7)>0.6?1:0);poz.sag={...poz.sag,k:poz.sag.k+tik*0.25};}
   elYerlestir('sol',poz.sol);elYerlestir('sag',poz.sag);
-  /* çay: seviye ve buhar */
-  BK_CAYICI.scale.y=Math.max(0.02,B.cay);BK_CAYICI.visible=B.cay>0.03;B.caySicak=Math.max(0,B.caySicak-dt/240);
-  for(const b of BK_BUHAR){b.f=(b.f+dt*0.35)%1;b.s.position.set(Math.sin(b.f*9+zamanB)*0.012,0.11+b.f*0.14,0);b.s.scale.setScalar(0.02+b.f*0.035);b.s.material.opacity=0.1*B.caySicak*(B.cay>0.05?1:0)*Math.sin(b.f*Math.PI);}
   /* ayağa kalkma (yay) ve masaya yumruk sarsıntısı */
   B.kalk+=(B.kalkHedef-B.kalk)*Math.min(1,dt*(B.kalkHedef>B.kalk?5:2.2));B.sarsinti=Math.max(0,B.sarsinti-dt*4);
-  BK_MASA.position.y=Math.sin(zamanB*55)*0.004*B.sarsinti;BK_BARDAK.rotation.z=BK_BARDAK.parent===BK_CAY?Math.sin(zamanB*40)*0.08*B.sarsinti:BK_BARDAK.rotation.z;
+  BK_MASA.position.y=Math.sin(zamanB*55)*0.004*B.sarsinti;
   /* gövde hissi: baş dönünce ön plan biraz ters yöne kayar; nefes */
   kamera.getWorldDirection(BK_V);const yaw=Math.atan2(BK_V.x,BK_V.z),pitch=Math.asin(clamp(BK_V.y,-1,1));
   const K=B.kamera;K.rotation.set(clamp((pitch-BK.dinlenmeEgimi)*0.22,-0.12,0.14)+Math.sin(zamanB*1.3)*0.004,clamp(yaw*0.25,-0.3,0.3),0);

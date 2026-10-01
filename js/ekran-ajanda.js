@@ -210,12 +210,12 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
       /* yolda karar gerektiren bir haber geldi: iş yerinde bekliyor, o ana kadarki ilerleme geçerli */
       if(mac)OYUN.oturum.kaydet();
       secili=null;seciliMesele=null;
-      mesaj=baslik+' için yola çıktın; yolda karar gerektiren bir haber geldi. İş bekliyor.';soyle(mesaj);ciz();return;
+      mesaj=baslik+' için yola çıktın; yolda karar gerektiren bir haber geldi. İş bekliyor.';ciz();return;
     }
     secili=id;seciliMesele=null;delete secimler[id];
     if(mac){A.hidden=true;ON_EKRAN.bulteniAc();return;}
     mesaj=baslik+' ('+(saatsiz?'karar':bas)+') tamamlandı.';
-    soyle(mesaj);ciz('button.aj-satir[data-is="'+id+'"]');
+    ciz('button.aj-satir[data-is="'+id+'"]');
   }
   /* ilerlemenin kısa özeti: neden durdu, arada ne işlendi */
   function ilerleOzeti(r){
@@ -234,7 +234,7 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
     try{r=komut(x=>duragaIlerle(x));}catch(e){hataGoster(e);return;}
     onay=null;secili=null;
     mesaj=ilerleOzeti(r);
-    soyle(mesaj);ciz('.aj-ana');
+    ciz('.aj-ana');
   }
   A.addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b||b.disabled)return;
@@ -251,7 +251,7 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
     else if(ey==='sec'){secimler[id]=b.dataset.secim;onay=null;ciz('[data-eylem="sec"][data-secim="'+b.dataset.secim+'"]');}
     else if(ey==='kararAc'){secili=id;seciliMesele=null;onay=null;ciz('[data-eylem="sec"]');}
     else if(ey==='yapSor'){onay='yap:'+id;secili=k.isler[id]&&k.isler[id].veri.eylem==='macGunu'?secili:id;ciz('[data-eylem="yap"]');}
-    else if(ey==='ertele'){try{const t=komut(x=>ajandaErtele(x,id));mesaj=k.gecmis[k.gecmis.length-1].baslik+' '+tarihYazi(t)+' gününe ertelendi.';secili=null;onay=null;soyle(mesaj);ciz();}catch(x){hataGoster(x);}}
+    else if(ey==='ertele'){try{const t=komut(x=>ajandaErtele(x,id));mesaj=k.gecmis[k.gecmis.length-1].baslik+' '+tarihYazi(t)+' gününe ertelendi.';secili=null;onay=null;ciz();}catch(x){hataGoster(x);}}
     else if(ey==='ilerleSor'){onay='ilerle';ciz('[data-eylem="ilerle"]');}
     else if(ey==='ilerle')ilerleEylem();
     else if(ey==='kayitDene'){const s=OYUN.oturum.kaydet();mesaj=s.tamam?'Kayıt yazıldı.':'Kayıt yine yazılamadı.';ciz('.aj-ana');}
@@ -262,6 +262,6 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
     else if(ey==='bozukYeni'){bozuguSaklaVeBasla();ciz('.aj-ana');}
   });
 
-  if(ON_EKRAN.sayfa==='ajanda'){baslat();A.hidden=false;ciz('.aj-ana');soyle('Ajanda: günün işlerini seç, hazır olunca ilerle. Okurken zaman durur.');}
+  if(ON_EKRAN.sayfa==='ajanda'){baslat();A.hidden=false;ciz('.aj-ana');}
   else A.hidden=true;
 }

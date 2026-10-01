@@ -24,10 +24,6 @@
 html,body{background:var(--room);color:var(--text)}
 body{font-family:var(--mono);font-size:14px;line-height:1.55;padding-inline:16px;padding-block:18px 48px}
 .wrap{max-width:1040px;margin-inline:auto;display:grid;gap:18px}
-.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 18px}
-.top h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(40px,6vw,64px);line-height:.85;letter-spacing:.02em}
-.top h1 span{color:var(--club)}
-.top p{margin:0;color:var(--muted);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase}
 .screen{position:relative;width:100%;max-width:900px;margin-inline:auto;aspect-ratio:4/3;overflow:hidden;background:#000;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px #2e2b26}
 .screen canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 .controls{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 22px}
@@ -38,46 +34,61 @@ button{font:inherit;font-size:12.5px;color:var(--text);background:#23211e;border
 button:hover{border-color:#5a5446}
 button[aria-pressed="true"]{color:#1a1203;background:var(--amber);border-color:#b9791a}
 button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
-.radyo{max-width:900px;width:100%;margin:-6px auto 0;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-size:13px;color:#cfc6b4}
-.radyo .skor{font-family:var(--display);font-size:22px;letter-spacing:.04em;color:var(--amber);white-space:nowrap}
-.radyo .metin{flex:1;min-width:220px}
-.deneme{border:1px dashed var(--line);border-radius:6px;padding:12px 14px;display:grid;gap:10px}
-.deneme h2{margin:0;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
-.deneme .satir{display:flex;flex-wrap:wrap;gap:12px 26px;align-items:flex-end}
-.deneme label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.deneme input[type=range]{width:180px;accent-color:var(--amber)}
-.deneme output{color:var(--text);font-variant-numeric:tabular-nums}
-.deneme .bilgi{color:var(--muted);font-size:12px}
-.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 26px;border-top:1px solid var(--line);padding-top:16px}
-.rules h2{margin:0 0 4px;font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.03em;color:var(--amber)}
-.rules p{margin:0;color:#cfc6b4;font-size:13px;max-width:60ch}
-.pal{display:flex;flex-wrap:wrap;gap:10px 16px}
-.sw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
-.sw i{width:22px;height:22px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
-.sw b{color:var(--text);font-weight:500;font-variant-numeric:tabular-nums}
+/* geliştirici alanı: yalnız deneme ayarları; kapalı başlar, oyuncu alanının parçası değildir */
+.gelistirici{max-width:900px;width:100%;margin-inline:auto;border:1px dashed var(--line);border-radius:6px;padding:6px 12px;color:var(--muted);font-size:12px}
+.gelistirici summary{cursor:pointer;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+.gelistirici[open]{display:grid;gap:10px;padding-bottom:12px}
+.gelistirici .satir{display:flex;flex-wrap:wrap;gap:12px 26px;align-items:flex-end}
+.gelistirici label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.gelistirici input[type=range]{width:180px;accent-color:var(--amber)}
+.gelistirici output{color:var(--text);font-variant-numeric:tabular-nums}
+.gelistirici .bilgi{margin:0;color:var(--muted);font-size:12px}
 .nogl{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:24px;text-align:center;color:var(--muted)}
 [hidden]{display:none!important}
-/* ---- maç öncesi ekranı (js/ekran-mac-oncesi.js): 4:3 karenin içinde, karenin genişliğiyle orantılı (cqw); renkler STIL.menu'den ---- */
+/* ---- ortak .oe- bileşenleri: maç programı (js/ekran-mac-oncesi.js, açık tonlar, STIL.program.renk) ve koyu ajanda (STIL.menu) ---- */
 .screen{container-type:inline-size}
-.onEkran{position:absolute;inset:0;z-index:2;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:.8em;padding:1.1em 1.4em;overflow:hidden;
-  font-family:var(--mono);font-size:1.2cqw;line-height:1.3;color:var(--m-yazi);background-color:var(--m-ortuRenk);
-  background-image:repeating-conic-gradient(#0000 0 25%,rgba(255,255,255,.022) 0 50%);background-size:.4em .4em}
+/* maç programı (2.8E): stat arkada donuk ve hafif karartılmış; önde kâğıt kitapçık. Ölçüler karenin genişliğiyle orantılı (cqw) */
+.onEkran{position:absolute;inset:0;z-index:2;display:grid;place-items:center;padding:2.2% 2.6%;overflow:hidden;
+  font-family:var(--mono);font-size:1.3cqw;line-height:1.3;color:var(--m-yazi);background:rgba(12,11,10,.45)}
 .onEkran small{font-size:.86em}
+.prg-kart{width:100%;height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:.6em;padding:.9em 1.2em;background:var(--m-zemin);border:1px solid var(--m-cizgi);box-shadow:.35em .45em 0 var(--m-golge)}
+.prg-ust{display:flex;justify-content:space-between;align-items:baseline;gap:1em;padding-bottom:.3em;border-bottom:.18em solid var(--m-kulup);color:var(--m-soluk);font-size:.9em;letter-spacing:.12em;text-transform:uppercase}
+.prg-ust b{font-family:var(--display);font-weight:400;font-size:1.9em;line-height:.9;letter-spacing:.04em;color:var(--m-kulup)}
+.prg-sayfalar{display:flex;gap:.4em}
+.onEkran button{font:inherit;color:var(--m-yazi);background:var(--m-panel);border:1px solid var(--m-cizgi);border-bottom-width:.16em;border-radius:.14em;padding:.3em .9em .22em;cursor:pointer}
+.onEkran button[aria-pressed="true"]{background:var(--m-vurguZemin);border-color:var(--m-vurgu);color:#1a1203;font-weight:600}
+.onEkran button:focus-visible{outline:.14em solid var(--m-kulup);outline-offset:.1em}
+.prg-govde{min-height:0;overflow-y:auto}
+.prg-kapak{display:grid;gap:.9em;align-content:start}
+.prg-karsilasma{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1em;padding:.6em .8em;background:var(--m-panel);border:1px solid var(--m-cizgi)}
+.prg-takim{display:grid;justify-items:center;gap:.35em;min-width:0;text-align:center}
+.prg-takim .oe-arma{width:3.6em;height:4.2em}
+.prg-takim small{color:var(--m-soluk)}
+.prg-vs{display:grid;justify-items:center;gap:.1em}
+.prg-vs b{font-family:var(--display);font-weight:400;font-size:3.4em;line-height:.85;color:var(--m-kulup)}
+.prg-vs span{font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.prg-vs small{color:var(--m-soluk);letter-spacing:.1em;text-transform:uppercase}
+.prg-baglam{margin:0;padding-left:.6em;border-left:.2em solid var(--m-vurguZemin)}
+.prg-yer{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:1em;align-items:center}
+.prg-stat{width:100%;height:auto;display:block;background:var(--m-panelUst);border:1px solid var(--m-cizgi)}
+.prg-bilgi{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.25em 1em;margin:0}
+.prg-bilgi dt{color:var(--m-soluk)}.prg-bilgi dd{margin:0}
+.prg-iki{display:grid;grid-template-columns:1fr 1fr;gap:.8em}
+.prg-lig{display:grid;grid-template-columns:1.3fr 1fr;gap:.8em;align-items:start}
+.prg-not{margin:.5em 0 0;color:var(--m-soluk);font-size:.9em}
+.prg-alt{display:flex;align-items:center;gap:1em;padding-top:.5em;border-top:.18em solid var(--m-cizgi)}
+.prg-hazirlik{flex:1;margin:0;color:var(--m-soluk)}
+.prg-hata{color:var(--m-kirmizi)}
+.onEkran .oe-tablo tbody tr:nth-child(even) td{background:rgba(40,28,12,.05)}
+.onEkran .oe-tablo tbody tr.oe-kulup td{background:color-mix(in srgb,var(--m-kulup) 18%,transparent)}
+.onEkran .oe-tablo tbody tr.oe-rakip td{background:color-mix(in srgb,var(--m-rakip) 18%,transparent)}
+.onEkran .oe-ad{font-size:2em;white-space:normal}
 .oe-ust{display:flex;justify-content:space-between;gap:1em;padding-bottom:.35em;border-bottom:.18em solid var(--m-kulup);color:var(--m-soluk);font-size:.92em;letter-spacing:.12em;text-transform:uppercase}
-.oe-karsilasma{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.9em}
-.oe-takim{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.8em;padding:.45em .7em;background:var(--m-panel);border:1px solid var(--m-cizgi);border-left:.4em solid var(--t)}
-.oe-takim.sag{grid-template-columns:auto minmax(0,1fr) auto;border-left-width:1px;border-right:.4em solid var(--t);text-align:right}
-.oe-takim.sag .oe-arma{order:3}.oe-takim.sag .oe-form{order:0}.oe-takim.sag .oe-kimlik{order:1}
-.oe-kimlik{display:grid;min-width:0}
-.oe-kimlik small{color:var(--m-soluk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .oe-ad{font-family:var(--display);font-weight:400;font-size:2.3em;line-height:.9;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .oe-arma{width:2.5em;height:2.9em;background:linear-gradient(90deg,var(--a) 0 36%,var(--b) 36% 64%,var(--a) 64%);clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%)}
-.oe-vs{display:grid;justify-items:center;font-family:var(--display);font-size:2.6em;line-height:.85;color:var(--m-vurgu)}
-.oe-vs small{font-family:var(--mono);font-size:.3em;letter-spacing:.14em;text-transform:uppercase;color:var(--m-soluk)}
 .oe-form{display:flex;gap:.2em}
 .oe-f{display:inline-grid;place-items:center;width:1.45em;height:1.45em;font-weight:600;font-size:.9em;color:#fff}
 .oe-G{background:var(--m-galibiyet)}.oe-B{background:var(--m-beraberlik)}.oe-M{background:var(--m-maglubiyet)}
-.oe-govde{display:grid;grid-template-columns:1fr 1.24fr 1fr;gap:.8em;min-height:0}
 .oe-kol{display:flex;flex-direction:column;gap:.8em;min-width:0;min-height:0}
 .oe-panel{background:var(--m-panel);border:1px solid var(--m-cizgi);min-width:0}
 .oe-panel h2{display:flex;justify-content:space-between;align-items:baseline;gap:.6em;margin:0;padding:.18em .55em .05em;background:var(--m-panelUst);border-bottom:1px solid var(--m-cizgi);
@@ -120,10 +131,9 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .oe-aradaki li{grid-template-columns:8.6em minmax(0,1fr) auto minmax(0,1fr)}
 .oe-aradaki li b:last-child{text-align:right}
 .oe-skor{color:var(--m-vurgu);font-weight:600}
-.oe-alt{display:flex;align-items:center;flex-wrap:wrap;gap:.4em 1.6em;padding-top:.55em;border-top:.18em solid var(--m-cizgi)}
-.oe-alt b{font-weight:500;color:var(--m-soluk);letter-spacing:.1em;text-transform:uppercase;font-size:.85em;margin-right:.3em}
-.onEkran .oe-ilerle{margin-left:auto;font-family:var(--display);font-size:2.2em;line-height:1;letter-spacing:.06em;padding:.18em 1.1em .08em;color:#1a1203;background:var(--m-vurgu);border:1px solid #b9791a;border-bottom-width:.16em;border-radius:.1em}
-.onEkran .oe-ilerle:hover{filter:brightness(1.12)}
+.onEkran .oe-ilerle{margin-left:auto;font-family:var(--display);font-size:2.2em;line-height:1;letter-spacing:.06em;padding:.18em 1.1em .08em;color:#1a1203;background:var(--m-vurguZemin);border:1px solid var(--m-vurgu);border-bottom-width:.16em;border-radius:.1em}
+.onEkran .oe-ilerle:disabled{opacity:.45;cursor:not-allowed}
+.onEkran .oe-ilerle:hover:not(:disabled){filter:brightness(1.08)}
 .onEkran .oe-ilerle:active{transform:translateY(.06em);border-bottom-width:.1em}
 .onEkran .oe-ilerle:focus-visible{outline:.1em solid var(--m-yazi);outline-offset:.15em}
 /* ---- ajanda ekranı (js/ekran-ajanda.js): bültenle aynı kare, ölçü ve renk düzeni; panel başlıkları .oe-panel'den ---- */
@@ -255,8 +265,14 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .oda .od-ana{font-family:var(--display);font-size:2.1em;line-height:1;letter-spacing:.06em;padding:.18em 1em .08em;background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:#1a1203;white-space:nowrap}
 .oda .od-ana:active:not(:disabled){transform:translateY(.06em)}
 .od-bozuk{left:12%;right:12%;width:auto;bottom:auto}
-.od-test{margin-top:.15em;padding:.2em .45em;border:1px dashed var(--k-kulup);color:var(--k-soluk);font-size:.84em;line-height:1.25;background:repeating-linear-gradient(135deg,transparent 0 .5em,rgba(180,36,28,.05) 0 1em)}
-.od-test b{color:var(--k-kulup);font-size:.85em;letter-spacing:.1em;margin-right:.3em}
+/* test bilgisi (GEÇİCİ): küçük TEST simgesi; üzerine gelince, odakta ya da tıklayınca hemen altında bilgi kutusu açılır.
+   Kutu düzeni itmez (simge yerinden kaymaz): dikeyde kendi yerinde, yatayda panel içeriğinin genişliğinde durur; panelden taşmaz */
+.od-icerik{position:relative}
+.od-testIpucu{display:inline;margin-left:.3em}
+.oda button.od-testSimge{font-size:.68em;font-weight:600;letter-spacing:.08em;line-height:1.3;padding:.05em .35em;border:1px dashed var(--k-kulup);border-radius:.2em;color:var(--k-kulup);background:transparent;vertical-align:.1em}
+.od-test{display:none;position:absolute;z-index:4;left:.8em;right:.8em;margin-top:.25em;padding:.3em .55em;box-shadow:.15em .2em 0 var(--k-golge);border:1px dashed var(--k-kulup);color:var(--k-soluk);font-size:.84em;font-weight:400;line-height:1.3;letter-spacing:0;text-transform:none;white-space:normal;overflow-wrap:anywhere;
+  background-color:var(--k-zemin);background-image:repeating-linear-gradient(135deg,transparent 0 .5em,rgba(180,36,28,.05) 0 1em)}
+.od-testIpucu:hover>.od-test,.od-testIpucu:focus-within>.od-test,.od-testIpucu.acik>.od-test{display:block}
 .od-tavsiye{display:flex;flex-wrap:wrap;align-items:center;gap:.3em .7em}
 .od-s-tutuldu{color:var(--k-yesil)}.od-s-bozuldu{color:var(--k-kirmizi)}.od-s-acik{color:var(--k-vurgu)}
 .od-gazete{border-left-color:var(--k-yazi)}
@@ -271,59 +287,99 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .od-gozlem{position:absolute;left:.9em;bottom:5.6em;max-width:36%;display:grid;gap:.35em;padding:.45em .7em;background:var(--k-zemin);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-yesil);box-shadow:.2em .25em 0 var(--k-golge)}
 .od-gozlem small{display:block}
 .oda .od-yer{font-weight:600;border-color:var(--k-yesil)}
-.od-test{margin-top:.15em;padding:.2em .45em;border:1px dashed var(--k-kulup);color:var(--k-soluk);font-size:.84em;line-height:1.25;background:repeating-linear-gradient(135deg,transparent 0 .5em,rgba(180,36,28,.05) 0 1em)}
-.od-test b{color:var(--k-kulup);font-size:.85em;letter-spacing:.1em;margin-right:.3em}
-.od-tavsiye{display:flex;flex-wrap:wrap;align-items:center;gap:.3em .7em}
-.od-s-tutuldu{color:var(--k-yesil)}.od-s-bozuldu{color:var(--k-kirmizi)}.od-s-acik{color:var(--k-vurgu)}
-.od-gazete{border-left-color:var(--k-yazi)}
-.od-manset{font-family:var(--display);font-size:1.7em;line-height:1;letter-spacing:.02em}
-.od-genis{width:auto;left:.7em}
-.od-kadro{width:100%;border-collapse:collapse;font-size:.86em;font-variant-numeric:tabular-nums}
-.od-kadro th{font-weight:500;color:var(--k-soluk);text-align:right;border-bottom:1px solid var(--k-cizgi);padding:.1em .25em}
-.od-kadro td{text-align:right;padding:.05em .25em;white-space:nowrap}
-.od-kadro th:nth-child(2),.od-kadro td:nth-child(2){text-align:left}
-.od-kadro tbody tr:nth-child(even) td{background:rgba(40,28,12,.05)}
-.od-yedek td{color:var(--k-soluk)}
+/* görünmez ama klavyeyle odaklanınca beliren düğme (balkon kapısı, 2.8D) */
+.oda .od-gizli:not(:focus):not(:focus-visible){position:absolute;width:1px;height:1px;min-width:0;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0;white-space:nowrap}
+/* ---- 2.8C tek konu ekranları: dosya, kasa, ajanda günleri, telefon uygulamaları, ayar bölümleri ---- */
+.od-panel{grid-template-rows:auto minmax(0,1fr) auto}
+.od-panelAlt{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4em .6em;padding:.35em .6em;background:var(--k-zeminKoyu);border-top:1px solid var(--k-cizgi);font-size:.9em}
+.od-sayac{color:var(--k-soluk);text-align:center;flex:1;min-width:10em}
+.od-sayac b{color:var(--k-yazi)}
+.od-dosyaUst{display:flex;flex-wrap:wrap;align-items:center;gap:.3em .7em}
+.od-kategori{display:inline-flex;align-items:center;gap:.4em;font-size:.82em;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--k-soluk)}
+.od-kSimge{display:inline-grid;place-items:center;width:1.6em;height:1.6em;font-style:normal;font-weight:600;letter-spacing:0;border-radius:.25em;background:var(--k-kulup);color:var(--k-serit)}
+.od-icerik h4.od-dosyaBaslik{margin:0;font-family:var(--display);font-weight:400;font-size:1.75em;line-height:1;letter-spacing:.02em;text-transform:none;color:var(--k-yazi)}
+.od-neOldu{display:grid;gap:.25em;padding-left:.6em;border-left:.2em solid var(--k-vurguZemin)}
+.od-neOldu h4{margin:0}
+.od-sonuc{border-left-color:var(--k-yesil)}
+.od-gecmis summary{cursor:pointer;color:var(--k-vurgu);font-weight:600;font-size:.86em;letter-spacing:.06em}
+.od-gecmis[open] summary{margin-bottom:.3em}
+.od-sekmeler button,.od-uyglar button,.od-gunler button,.od-konusmalar button{font-size:.92em}
+.od-uyglar{display:flex;gap:.5em}
+.oda button.od-uyg{flex:1;padding:.45em .6em .35em;font-weight:600}
+.od-konusmalar{display:flex;flex-wrap:wrap;gap:.3em}
+.od-konusma{display:grid;gap:.4em;padding:.5em .6em;background:var(--k-serit);border:1px solid var(--k-cizgi)}
+.od-konusma h4{margin:0}
+.od-baloncuklar{list-style:none;margin:0;padding:0;display:grid;gap:.35em}
+.od-baloncuklar li{display:grid;gap:.1em;max-width:92%;padding:.3em .55em;background:var(--k-zemin);border:1px solid var(--k-cizgi);border-radius:.2em .6em .6em .6em}
+.od-baloncuklar li.od-baloncukYeni{border-color:var(--k-vurgu)}
+.od-gezinti{display:flex;align-items:center;justify-content:space-between;gap:.6em}
+.od-gunler{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:.25em}
+.oda .od-gunler button{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 .3em;padding:.3em .2em .25em;min-width:0}
+.od-gunler b{font-weight:600}
+.od-gunler .od-rozet{margin-left:0}
+.od-ayarSatir{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4em 1em;padding:.35em 0;border-bottom:1px solid var(--k-cizgi)}
+.od-skorlar{list-style:none;margin:0;padding:0;display:grid;gap:.2em}
+.od-skorlar li{display:grid;grid-template-columns:4em minmax(0,1fr) auto;gap:.6em}
+/* bilinen tutar ve son tarih kesilmesin: ajanda ve kasa satırları sarar */
+.od-sar .od-ad{white-space:normal;overflow:visible}
+.od-ustSag{display:flex;align-items:center;gap:.8em;min-width:0}
+/* ---- maç telefonu (js/ekran-mac-telefon.js, 2.8F): sağda okunur boyutta cihaz; açık tonlar STIL.kagit ---- */
+.macTelefon{position:absolute;z-index:5;top:4%;bottom:4%;right:3%;width:36%;font-family:var(--mono);font-size:1.3cqw;line-height:1.35;color:var(--k-yazi)}
+.mt-cihaz{height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:.5em;padding:.7em .8em;background:var(--k-zemin);border:.35em solid #1a1b1f;border-radius:1.2em;box-shadow:.3em .4em 0 rgba(0,0,0,.35)}
+.mt-ust{display:flex;justify-content:space-between;align-items:center;gap:.6em;color:var(--k-soluk);font-size:.9em}
+.mt-ust b{font-family:var(--display);font-weight:400;font-size:1.7em;color:var(--k-kulup)}
+.macTelefon button{font:inherit;color:var(--k-yazi);background:var(--k-serit);border:1px solid var(--k-cizgi);border-bottom-width:.16em;border-radius:.2em;padding:.25em .6em .2em;cursor:pointer}
+.macTelefon button[aria-pressed="true"]{background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:#1a1203;font-weight:600}
+.macTelefon button:focus-visible{outline:.14em solid var(--k-kulup);outline-offset:.1em}
+.mt-uyglar{display:flex;gap:.4em}.mt-uyglar button{flex:1;font-weight:600}
+.mt-icerik{overflow-y:auto;display:grid;gap:.5em;align-content:start}
+.mt-icerik h4{margin:.2em 0 0;font-size:.82em;letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu)}
+.mt-icerik h4 small{text-transform:none;letter-spacing:0;color:var(--k-soluk);font-weight:400}
+.mt-skorlar,.mt-mesajlar{list-style:none;margin:0;padding:0;display:grid;gap:.3em}
+.mt-skorlar button{width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.3em .6em;text-align:center}
+.mt-skorlar small{grid-column:1/-1;color:var(--k-soluk)}
+.mt-skorlar b{font-family:var(--display);font-weight:400;font-size:1.6em;line-height:1}
+.mt-ist{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.mt-ist th,.mt-ist td{padding:.15em .3em;border-bottom:1px solid var(--k-cizgi);text-align:center}
+.mt-ist tbody th{font-weight:400;color:var(--k-soluk)}
+.mt-mesajlar li{padding:.3em .5em;background:var(--k-serit);border:1px solid var(--k-cizgi)}
+.mt-mesajlar p{margin:.2em 0 0}.mt-mesajlar small{color:var(--k-soluk)}
+.mt-not{margin:0;color:var(--k-soluk);font-size:.9em}
+.od-kayit{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oda button.od-duraklat{font-size:1em;letter-spacing:.1em;text-transform:uppercase;padding:.1em .6em .05em;border-bottom-width:1px}
+/* genel duraklatma göstergesi (2.8B): ekranı karartmaz, yalnız küçük etiket; tıklamaları engellemez */
+.duraklatildi{position:absolute;z-index:6;top:2.6%;left:50%;transform:translateX(-50%);margin:0;padding:.25em .9em .2em;pointer-events:none;
+  font-family:var(--mono);font-size:max(11px,1.25cqw);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#1a1203;background:var(--amber);border:1px solid #b9791a;box-shadow:0 .2em .6em rgba(0,0,0,.25)}
 html,body{margin:0}
 </style>
 </head>
 <body>
 
 <div class="wrap">
-  <header class="top">
-    <h1>Chairman</h1>
-    <p>Başkanın gözünden · açık tribün · 89. dakika</p>
-  </header>
-
   <div class="screen" id="screen">
-    <canvas id="view" width="640" height="480" aria-label="1999 tarzı futbol oyunu karesi, başkanın gözünden, açık ana tribünden: son dakika şutu, kaleci uçuyor, kale arkasında meşaleler"></canvas>
+    <canvas id="view" width="640" height="480" aria-label="Oyun görüntüsü: başkanın gözünden kulüp ve stat"></canvas>
     <canvas id="hud" width="640" height="480" aria-hidden="true"></canvas>
     <div class="onEkran" id="onEkran" role="dialog" aria-label="Maç öncesi bülteni" hidden></div>
     <div class="ajanda" id="ajanda" role="dialog" aria-label="Başkanın ajandası" hidden></div>
     <div class="oda" id="oda" role="application" aria-label="Başkan odası" hidden></div>
+    <p class="duraklatildi" id="duraklatildi" role="status" hidden>Duraklatıldı</p>
+    <section class="macTelefon" id="macTelefon" role="dialog" aria-label="Telefon" hidden></section>
   </div>
-
-  <p class="radyo" aria-live="polite"><span class="skor" id="radyoSkor">DEM 0-0 AKD · maç öncesi</span><span class="metin" id="radyoMetin">Stat doluyor, takımlar tünelde.</span></p>
 
   <div class="controls" id="baskanDugmeleri">
     <div class="grp"><span class="lbl">Başkan</span>
       <div class="seg">
         <button type="button" id="btnBino" aria-pressed="false">Dürbün</button>
         <button type="button" id="btnDuraklat" aria-pressed="false" title="Kısayol: boşluk tuşu">Duraklat</button>
-        <button type="button" id="btnMacaGec" title="Maç öncesini atla, santraya geç">Maça geç</button>
+        <button type="button" id="btnTelefon" aria-pressed="false" title="Masadaki telefon (T)">Telefon</button>
+        <button type="button" id="btnMacaGec" title="Maç öncesini (ısınma, tören, fotoğraf, yazı tura) atla">Santraya geç</button>
       </div>
     </div>
   </div>
 
-  <section class="deneme" aria-label="Deneme ayarları">
-    <h2>Deneme ayarları · geçici, ileride oyun ekonomisi belirleyecek</h2>
+  <details class="gelistirici" aria-label="Geliştirici">
+    <summary>Geliştirici · deneme ayarları</summary>
     <div class="satir">
-      <div class="grp"><span class="lbl">Stat</span>
-        <div class="seg" id="statSeg">
-          <button type="button" data-stat="kasaba" aria-pressed="false">3. Lig kasaba</button>
-          <button type="button" data-stat="sehir" aria-pressed="false">1. Lig şehir</button>
-        </div>
-      </div>
       <div class="grp"><span class="lbl">Maç hızı</span>
         <div class="seg" id="hizSeg">
           <button type="button" data-hiz="1" aria-pressed="false">1x</button>
@@ -337,29 +393,13 @@ html,body{margin:0}
       <label>Zemin kalitesi <output id="zeminDeger"></output><input type="range" id="zemin" min="0" max="100" step="5"></label>
     </div>
     <p class="bilgi" id="statBilgi"></p>
-  </section>
-
-  <section class="rules">
-    <div><h2>Ekran</h2><p>4:3 ekran ve PS1'in yüksek çözünürlük modu olan 640×480. Görüntü keskin ve net; hareket pürüzsüz akıyor, renkler 1999 oyunlarındaki gibi.</p></div>
-    <div><h2>Renk</h2><p>Dönemin 15 bitlik rengi ve düzenli renk titremesi. Gece projektör ışığında sıcak sarı ile lacivert.</p></div>
-    <div><h2>Oyuncular</h2><p>Kutulardan kurulu az poligonlu modeller. Her oyuncunun boyu, yapısı ve saçı farklı: uzun sarı saçlı, kıvırcık, kel, bıyıklı, sakallı, çorabı sıyrık. Tribünden bakınca bile kim olduğu seçiliyor.</p></div>
-    <div><h2>Başkanın gözünden</h2><p>Maçı kapalı bir locadan değil, açık ana tribündeki başkan koltuğundan, taraftarın arasından izliyorsun. Dürbünle yaklaşınca yüzler ve forma numaraları seçiliyor.</p></div>
-    <div><h2>Tribün</h2><p>Seyirciler kutulardan kurulu küçük insanlar; koltuklar tek tek görünüyor, boş koltuklar seçiliyor. 3. Lig'de tribün seyrek, stat büyüdükçe ve doldukça kalabalıklaşıyor. Meşale, duman, pankart ve skor tabelası.</p></div>
-      </section>
-
-  <div class="pal" aria-label="Oyunun renk paleti">
-    <span class="sw"><i style="background:#c8281e"></i><b>Demirkapı kırmızısı</b></span>
-    <span class="sw"><i style="background:#3a8c33"></i><b>Çim</b></span>
-    <span class="sw"><i style="background:#ffe2a0"></i><b>Projektör</b></span>
-    <span class="sw"><i style="background:#0b1222"></i><b>Gece laciverti</b></span>
-    <span class="sw"><i style="background:#ff4a1e"></i><b>Meşale</b></span>
-    <span class="sw"><i style="background:#ffb530"></i><b>Tabela amberi</b></span>
-  </div>
+  </details>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/ortak.js"></script>
 <script src="js/stil-99.js"></script>
+<script src="js/sunum-durumu.js"></script>
 <script src="js/stadyum-tarifleri.js"></script>
 <script src="js/kadrolar.js"></script>
 <script src="js/lig.js"></script>
@@ -400,10 +440,10 @@ html,body{margin:0}
 <script src="js/baskan.js"></script>
 <script src="js/oda.js"></script>
 <script src="js/balkon.js"></script>
-<script src="js/ses.js"></script>
 <script src="js/ekran-mac-oncesi.js"></script>
 <script src="js/ekran-ajanda.js"></script>
 <script src="js/ekran-oda.js"></script>
 <script src="js/arayuz.js"></script>
+<script src="js/ekran-mac-telefon.js"></script>
 </body>
 </html>

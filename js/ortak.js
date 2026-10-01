@@ -1,4 +1,4 @@
-/* ============ Chairman — ortak yardımcılar: sayı araçları, 3x5 piksel yazı, kulüpler, Türkçe ekler, reklam listesi ============ */
+/* ============ Chairman — ortak yardımcılar: sayı araçları, 3x5 piksel yazı, kulüpler, reklam listesi ============ */
 'use strict';
 /* ============ yardımcılar ============ */
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
@@ -62,18 +62,6 @@ const TEAMS=[
    gk:[[62,146,84],[24,24,26],[62,146,84]],
    names:['Nihat','Yaşar','Turgut','İlyas','Nevzat','Halil','Sadi','Fikret','Yılmaz','Orhan','Levent']}
 ];
-
-/* ============ Türkçe ekler (radyo spikeri için) ============ */
-const VOW='aeıioöuü';
-function lastV(w){w=w.toLocaleLowerCase('tr-TR');for(let i=w.length-1;i>=0;i--)if(VOW.includes(w[i]))return w[i];return 'e';}
-const isBack=v=>'aıou'.includes(v);
-const endsV=w=>VOW.includes(w.toLocaleLowerCase('tr-TR').slice(-1));
-const hardEnd=w=>'fstkçşhp'.includes(w.toLocaleLowerCase('tr-TR').slice(-1));
-const sLoc=n=>n+"'"+(hardEnd(n)?'t':'d')+(isBack(lastV(n))?'a':'e');
-const sAbl=n=>n+"'"+(hardEnd(n)?'t':'d')+(isBack(lastV(n))?'an':'en');
-const sDat=n=>n+"'"+(endsV(n)?'y':'')+(isBack(lastV(n))?'a':'e');
-function sGen(n){const h={a:'ı',ı:'ı',o:'u',u:'u',e:'i',i:'i',ö:'ü',ü:'ü'}[lastV(n)]||'i';return n+"'"+(endsV(n)?'n':'')+h+'n';}
-function sAcc(n){const h={a:'ı',ı:'ı',o:'u',u:'u',e:'i',i:'i',ö:'ü',ü:'ü'}[lastV(n)]||'i';return n+"'"+(endsV(n)?'y':'')+h;}
 
 /* ============ dokular: reklam panoları, pankart, skor tabelası ============ */
 const ADS=[['ŞİMŞEK PİL',[250,210,40],[196,28,28]],['LALE KOLONYA',[246,244,236],[28,110,62]],['ÇINAR BİSKÜVİ',[186,30,40],[250,238,214]],

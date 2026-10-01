@@ -43,7 +43,8 @@ function pencereAc(){
   Menu.setApplicationMenu(null);
   const p=new BrowserWindow({
     width:1280,height:860,minWidth:960,minHeight:640,title:'Chairman',backgroundColor:'#000000',show:!DENEME,
-    webPreferences:{preload:path.join(__dirname,'onyukleme.js'),contextIsolation:true,sandbox:true,nodeIntegration:false}
+    /* deneme penceresi gizli açılır; gizli pencerede kare döngüsü kısılmasın diye denemede arka plan kısıtlaması kapalıdır */
+    webPreferences:{preload:path.join(__dirname,'onyukleme.js'),contextIsolation:true,sandbox:true,nodeIntegration:false,backgroundThrottling:!DENEME}
   });
   p.webContents.on('before-input-event',(e,g)=>{if(g.type==='keyDown'&&g.key==='F11'){p.setFullScreen(!p.isFullScreen());e.preventDefault();}});
   p.webContents.setWindowOpenHandler(()=>({action:'deny'}));
@@ -70,10 +71,14 @@ async function deneme(p){
       fs.writeFileSync(path.join(DENEME,'oyun.png'),(await wc.capturePage()).toPNG());
       sonuc.acilis=await wc.executeJavaScript(`(()=>{const a=document.getElementById('oda');const e=typeof OYUN!=='undefined'?OYUN:{};
         return{gorunur:!!a&&!a.hidden&&!!a.querySelector('.od-ana'),depo:e.depo||null,tarih:e.kariyer?e.kariyer.tarih:null};})()`);
-      /* bülten doğrudan açılır; İlerle: bülten kapanır, 3B maç günü (WebGL) başlar */
+      /* maç programı doğrudan açılır; "Maça geç" en az 10 sn hazırlık ve kaynaklar hazır olunca etkinleşir (2.8E), deneme bunu bekler (en çok 25 sn);
+         tıklanınca program kapanır, 3B maç günü (WebGL) başlar */
       await p.loadFile(path.join(OYUN,'index.html'),{query:{ekran:'bulten'}});
-      await bekle(6000);
-      sonuc.ilerle=await wc.executeJavaScript(`(()=>{const b=document.getElementById('btnIlerle');if(!b)return false;b.click();return true;})()`);
+      for(let i=0;i<50&&!sonuc.ilerle;i++){
+        sonuc.ilerle=await wc.executeJavaScript(`(()=>{const b=document.getElementById('btnIlerle');if(!b||b.disabled)return false;b.click();return true;})()`);
+        if(!sonuc.ilerle)await bekle(500);
+      }
+      if(!sonuc.ilerle)sonuc.program=await wc.executeJavaScript(`(()=>{try{return{...ON_EKRAN.programDurumu(),cizildi:ON_EKRAN.cizildi,gizli:document.hidden,gorunurluk:document.visibilityState};}catch(e){return e.message;}})()`);
       await bekle(10000);
       fs.writeFileSync(path.join(DENEME,'mac-gunu.png'),(await wc.capturePage()).toPNG());
       sonuc.webgl=await wc.executeJavaScript(`(()=>{const c=document.createElement('canvas');return !!(c.getContext('webgl2')||c.getContext('webgl'));})()`);

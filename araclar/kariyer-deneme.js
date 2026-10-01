@@ -20,6 +20,7 @@
    - Test görünümü, tavsiye/kapasite/kalıcı sorumluluk/girişim, hoca-basın-destek paketleri, sözler ve haberler (2.6, 2.8): bütün içerikle
      karar yolları; sürüm 3 kayıtları kendi içeriğiyle tamamlanır.
    - Antrenman gözlemi (2.7): aralık, kesilme ve sürdürme, kısa işin gözlemin içinde geçmesi, uzun işin engellenmesi; sürüm 4 kayıtları.
+   - Gözlemin gerçek zamanı (2.8B): 1 dakikalık adımlar tek parça gözlemle aynı kariyeri verir; arada kaydet–yükle; haberde durma.
    - Bilerek bozulan kopyalar doğrulamada yakalanmalı.
    - Başarısız denetim "!" ile işaretlenir; en az biri başarısızsa çıkış kodu 1'dir. */
 'use strict';
@@ -1039,6 +1040,44 @@ const dunya=c=>metin([c.kulupler,c.hareketler,c.isler,c.meseleler,c.olaylar,c.so
   }
 }
 denetle('Başlangıç verileri 2.7 denemelerinde de değişmedi',metin(BASLANGIC)===baslangicMetni&&metin(ORNEK)===ornekMetni);
+
+/* ================= 2.8B: gözlemin gerçek zamanı ================= */
+bolum('2.8B — gözlem oyun dakikası oyun dakikası: parçalı adım, kaydet–yükle ve durma');
+{
+  const [gozlemAc,gozlemAdim,kariyerKomut]=['gozlemAc','gozlemAdim','kariyerKomut'].map(al);
+  /* ekranın yaptığı gibi: aralığı kur, sonra 1 dakikalık komutlarla (her biri doğrulanmış kopyada) ilerle; her n adımda kaydet–yükle */
+  const adimAdim=(bas,dk,kayitAraligi)=>{
+    let c=kariyerKomut(bas,x=>gozlemAc(x,dk)).kariyer,r={neden:'devam'},n=0,kayit=0;
+    if(c.gunIciDakika!==bas.gunIciDakika||!gozlemAcik(c))return{c,r:{neden:'açılmadı'},n,kayit};
+    while(r.neden==='devam'&&n<2000){
+      const s=kariyerKomut(c,x=>gozlemAdim(x,1));c=s.kariyer;r=s.sonuc;n++;
+      if(kayitAraligi&&n%kayitAraligi===0&&r.neden==='devam'){const depo=bellekDeposu();kariyerKaydet(depo,'g',c);c=kariyerYukle(depo,'g').kariyer;kayit++;}
+    }
+    return{c,r,n,kayit};
+  };
+  const d=saate(tamBasla('duzenli',undefined,'kisi-8'),'2026-11-23',900);
+  const ac=kariyerOlustur(d);gozlemAc(ac,120);
+  denetle('gozlemAc aralığı kurar, zamanı ilerletmez; kayıt geçerli',an(ac)==='2026-11-23 15:00'&&gozlemAcik(ac)&&gozlemKalan(ac)===120&&gecerli(ac)[0],gecerli(ac)[1]);
+  const tek=kariyerOlustur(d),rt=gozlemBaslat(tek,120),p=adimAdim(d,120,0),pk=adimAdim(d,120,15);
+  denetle('Sakin gün: 120 adımlık gözlem tek parça gözlemle aynı kariyeri verir (geçmiş ve not dahil)',metin(p.c)===metin(tek)&&p.n===120&&p.r.neden==='bitti'&&rt.neden==='bitti'&&p.r.not===rt.not&&!!p.r.not,`${p.n} adım · ${p.r.neden}`);
+  denetle('Adımlar arasında her 15 dakikada kaydet–yükle sonucu değiştirmez',metin(pk.c)===metin(tek)&&pk.kayit===7,`${pk.kayit} kayıt`);
+  const yarim=adimAdim(d,30,0);
+  denetle('Kısa gözlem kendi süresinde biter',an(yarim.c)==='2026-11-23 15:30'&&yarim.n===30&&yarim.r.neden==='bitti'&&gozlemKayitlari(yarim.c).length===1);
+  /* Perşembe 15:00: gazete 16:00'da arar */
+  const b=yurut(tamBasla('sikisik','nakitSikisik',undefined,'yok'),{koltukSecimi:'kisi-8',destekTeklifi:'reddet',nakitTakvimi:'bekle',odemeSikismasi:'dur'});
+  ajandaIsiYap(b,kararIsi(b,'odemeSikismasi').id,'maasGeciktir');saate(b,'2026-11-26',900);
+  const tb=kariyerOlustur(b),rb=gozlemBaslat(tb,120),pb=adimAdim(b,120,10);
+  denetle('Karar gerektiren haberde parçalı gözlem de aynı anda durur; dünya tek parçayla aynı, kalan süre korunur',metin(pb.c)===metin(tb)&&pb.r.neden==='karar'&&rb.neden==='karar'&&pb.n===60&&gozlemKalan(pb.c)===60,`${an(pb.c)} · ${pb.r.neden} · ${pb.n} adım`);
+  const bi=kararIsi(pb.c,'basinSorusu');
+  denetle('Haberde durunca karar beklerken uzun iş engeli sürer',/tam dikkat/.test(ajandaOnizle(pb.c,bi.id,'kendin').engel.join()));
+  let y=kariyerOlustur(pb.c);ajandaIsiYap(y,bi.id,'devret');
+  const ty=kariyerOlustur(y);gozlemSurdur(ty);
+  let r={neden:'devam'},n=0;while(r.neden==='devam'){const s=kariyerKomut(y,x=>gozlemAdim(x,1));y=s.kariyer;r=s.sonuc;n++;}
+  denetle('Kısa iş gözlemin içinde geçer; kalan 45 dakika adım adım sürdürülür, süre iki kez sayılmaz',metin(y)===metin(ty)&&n===45&&gozlemKayitlari(y)[0].izlenen===120&&an(y)==='2026-11-26 17:00',`${n} adım`);
+  const odeme=c=>c.hareketler.map(h=>h.kaynak).filter(Boolean);
+  denetle('Parçalı gözlemde ödeme ya da olay iki kez uygulanmaz',new Set(odeme(y)).size===odeme(y).length&&metin(Object.keys(y.olaylar))===metin(Object.keys(ty.olaylar)));
+  denetle('Gözlem açık değilken adım reddedilir; geçersiz adım reddedilir',reddeder(()=>gozlemAdim(kariyerOlustur(d),1))&&reddeder(()=>gozlemAdim(kariyerOlustur(ac),0)));
+}
 
 /* ================= bozuk kopyalar ================= */
 bolum('Bozuk kayıtlar yakalanmalı');

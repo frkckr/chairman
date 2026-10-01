@@ -31,7 +31,7 @@ Gece sahnesinde sıcak projektör sarısı, gece laciverti ve sis kullanılır. 
 - Aynı ışığın gölgesi stencil ile aynı pikseli bir kez koyulaştırır; farklı ışıklar üst üste gelebilir.
 - Gündüz, hava durumu ve bunlara uygun gölge düzenleri gelecekteki iştir. Bugünkü gece sahnesinin tamamlanmış alternatifleri sayılmaz.
 
-**Onaylı hedef (2026-09-30; oda 2.5, balkon/antrenman 2.7 ile uygulandı; kişi/görüşme sahneleri henüz yok):** Kulüp odası, görüşme ve antrenman ortamları ilk kapsamda aydınlık sunulur. Yönetim arayüzünde açık zemin, koyu okunabilir metin, sıcak kâğıt/ahşap tonları ve ölçülü kulüp renkleri kullanılır. Ajanda, raporlar, telefon ve maç öncesi bültenin yönetim sunumu bu yöne uyarlanır. Başkan odasının 3B renkleri ve gün ışığı `STIL.oda`, açık arayüz paleti `STIL.kagit` içindedir (krem kâğıt zemin, koyu metin, ahşap çizgi, bordo ve amber vurgu); bunlar TEST değeridir. Bülten henüz bu palete uyarlanmadı. 2026-10-01 ekran yenilemesi bu açık tonları korur.
+**Onaylı hedef (2026-09-30; oda 2.5, balkon/antrenman 2.7 ile uygulandı; kişi/görüşme sahneleri henüz yok):** Kulüp odası, görüşme ve antrenman ortamları ilk kapsamda aydınlık sunulur. Yönetim arayüzünde açık zemin, koyu okunabilir metin, sıcak kâğıt/ahşap tonları ve ölçülü kulüp renkleri kullanılır. Ajanda, raporlar, telefon ve maç öncesi sunum bu yöne uyarlanır. Başkan odasının 3B renkleri ve gün ışığı `STIL.oda`, açık arayüz paleti `STIL.kagit`, maç programının paleti `STIL.program` içindedir (krem kâğıt zemin, koyu metin, ahşap çizgi, bordo ve amber vurgu); bunlar TEST değeridir. Maç öncesi koyu bülten 2.8E'de açık tonlu maç programına dönüştü; yalnız geliştirici görünümü olan koyu ajanda `STIL.menu` ile kalır.
 
 Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve gözlem örneği, bütün statlara gündüz/hava sistemi eklenmesini beklemez; kapsamlı saat, hava ve gölge çeşitliliği sonraki iştir.
 
@@ -54,8 +54,8 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 ## 5. Stat ve tribün
 
-- Statlar `js/stadyum-tarifleri.js` içindeki tariflerden kurulur. Bugün kasaba ve şehir tarifleri vardır; Avrupa arenası gelecekte yapılacaktır.
-- **Onaylı hedef (2026-10-01; 2.8D):** Ayrı şehir stadı ve seçimi kaldırılır. Oda penceresi, balkon ve ev sahibi maçının saha/tribün/çatı/aydınlatma yerleşimi aynı stat tarifinden kurulur. Gündüz boş tribün ile gece dolu tribün aynı yapının farklı hâlleridir. Kariyerdeki etaplı gelişim bu ortak yapıya uygulanır (8.3); lig değişimi otomatik stat değişimi yaratmaz.
+- Statlar `js/stadyum-tarifleri.js` içindeki tariflerden kurulur. Bugün yalnız kulübün kendi stadı vardır (`kulup`; 2.8D öncesindeki ayrı şehir stadı kaldırıldı); Avrupa arenası gelecekte yapılacaktır.
+- **Onaylı hedef (2026-10-01; 2.8D ile uygulandı):** Ayrı şehir stadı ve seçimi kaldırıldı; balkondan görüşü kapatmasın diye ana tribünde çatı yoktur, karşı tribün çatılıdır (iskele izi orada). Oda penceresi, balkon ve ev sahibi maçının saha/tribün/çatı/aydınlatma yerleşimi aynı stat tarifinden kurulur. Gündüz boş tribün ile gece dolu tribün aynı yapının farklı hâlleridir. Kariyerdeki etaplı gelişim bu ortak yapıya uygulanır (8.3); lig değişimi otomatik stat değişimi yaratmaz.
 - Küçük statta yıpranmış zemin, daha sınırlı aydınlatma, seyrek reklam ve çevredeki yerleşim kulübün ölçeğini hissettirir.
 - Zemin kalitesi çimin rengini, kel/çamurlu alanları, çizgileri ve biçme desenini etkiler. İnşaat ve stat gelişimi henüz kariyer sistemine bağlı değildir.
 - Seyirciler mesafeye göre ayrıntısı azalan küçük insan modelleridir. Boş koltuklar ve düşük doluluk gerçekten görünür.
@@ -69,7 +69,7 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 - Kamera açık ana tribündeki başkan koltuğunda, göz hizasındadır. Dürbün isteğe bağlı yakınlaştırmadır; TV kamerası kullanılmaz.
 - Bakış topu ve maç günündeki dikkat çekici olayları yumuşak geçişlerle izler.
-- Ön planda başkanın kolları, saat, masa, çay, program ve telefon görünür (`js/baskan.js`). Eller maç olaylarına tepki verir; dürbün elle kaldırılır.
+- Ön planda başkanın kolları, saat, masa, program ve telefon görünür (`js/baskan.js`; çay 2.8A'da kaldırıldı). Eller maç olaylarına tepki verir; dürbün elle kaldırılır. Sakin anda başkan programa ya da telefonuna bakar.
 
 ### Planlanan kariyer sahneleri
 
@@ -82,7 +82,7 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 ### Onaylı kamera ve hareket yenilemesi
 
-**2026-10-01; henüz uygulanmadı, 2.8A/2.8D:** Oda açılışı başkanın masasından kalır. Oda ve maç masasındaki çay, buhar ve içme hareketi kaldırılır; ellerin diğer işlevleri ve maç tepkileri sürer.
+**2026-10-01; çay kısmı 2.8A, kapı/hareket/koltuk 2.8D ile uygulandı:** Oda açılışı başkanın masasından kalır. Oda, balkon ve maç masasındaki çay, buhar ve içme hareketi kaldırıldı; ellerin diğer işlevleri ve maç tepkileri sürer. Genel duraklatma (2.8B) bugünkü yürüyüşü ve kamerayı da dondurur.
 
 - Balkona çıkışın ana hedefi kapının kendisidir; “Balkona çık” menü düğmesi kaldırılır. Kapının tıklanabilir alanı rahatça seçilir; üzerinde kısa etiket/ışık ve klavye odağı bulunur. Geri dönüş de anlaşılır olur.
 - Kalkış → kapıya yönelme → ritimli adımlar → balkon masasına varma/oturma ayrı hareketler olarak hissedilir. Kamerayı düz çizgide kaydırmak yeterli değildir; adım ritmi hızla uyumlu, küçük ve rahat olmalıdır. Başlangıçta tam bacak modeli gerekmez. Tekrarlı uzun geçiş zorunlu tutulmaz; hareket azaltma seçeneği erişilebilir kalır.
@@ -96,21 +96,22 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 - **Başkan odası (`js/oda.js`, `js/ekran-oda.js`) oyunun açılış ekranıdır (2.5).** Başkanın masasından bakılır: pencerede uzakta kulübün tribünü, duvarda flama ve oyun saatini gösteren saat, iki ziyaretçi koltuğu, dosya dolabı. Gün ışığı oyun saatine göre değişir. Kupa ve fotoğraf yoktur: yaşanmamış geçmiş gösterilmez.
   - Masada telefon, ajanda defteri ve dosya vardır; aynı üçünün etiketli düğmesi solda durur (klavye 1/2/3, Esc). İmleç nesnenin üzerindeyken amber çerçeve yanar. Telefon yeni haberde amber yanar ve sayıyı gösterir; ajanda defteri günün tarihini taşır; dosya yalnız mesele varken masadadır.
   - Panel açık renkli kâğıt görünümündedir, karenin sağında açılır; oda solda görünür kalır ve bakış nesneye döner. Aynı anda tek panel açıktır. Haber paneli kendiliğinden açmaz.
-- **Balkon ve antrenman (`js/balkon.js`, 2.7).** Odanın uzak duvarındaki kapıdan balkona yürünür (“Balkona çık”, klavye 5; yaklaşık 3 saniyelik kamera yürüyüşü, tıklayınca atlanır, hareket azaltma ayarında doğrudan geçilir). Balkonda korkuluk ve küçük masa vardır; karşıda kulübün sahası bütünüyle görünür, tribünler boştur. Işık oyun saatine göre değişir. Antrenman saatinde takım kadrodaki görünüşüyle sahadadır: ısınma koşusu, pas çemberi, kaleye şut, kenarda teknik ekip. Saat dışında saha boştur.
+- **Balkon ve antrenman (`js/balkon.js`, 2.7, 2.8D).** Odanın uzak duvarındaki kapıya tıklanınca (amber çerçeve, üstünde “BALKON” levhası; klavye 5 ya da odakta beliren düğme) başkan kalkar, kapıya döner, adım adım yürür ve balkonda oturur (yaklaşık 6 sn; tıklayınca atlanır, hareket azaltma ayarında doğrudan geçilir). Balkon ana tribünün en üst sırasının arkasındadır; kulübün maçta görülen stadının aynısı gündüz ve boş görünür. Oda penceresinden de aynı stat (karşı tribünün çatısı, projektörler, apartmanlar) görünür. Işık oyun saatine göre değişir. Antrenman saatinde takım kadrodaki görünüşüyle sahadadır: ısınma koşusu, pas çemberi, kaleye şut, kenarda teknik ekip. Saat dışında saha boştur.
   - Sol altta gözlem şeridi durur: antrenmanın durumu, “İzle” süreleri, gözlem durduğunda kalan süre, “Gözleme devam et” ve “Gözlemi bırak”. Gözlemde saat birkaç saniyede akar; telefon çalınca o anda durur ve telefon yanar.
   - Telefon, ajanda, dosya ve gazete balkondan da aynı panellerle açılır. Gözlem sürerken tam dikkat isteyen seçenek kapalı görünür ve nedenini yazar. Renkler ve kamera `STIL.balkon`, yürüyüş `STIL.oda.yol` içindedir.
   - Üstte kulüp/başkan ve kayıt durumu, solda tarih ve saat, altta son gelişme, sıradaki durak ve “İlerle” (maç günü “Stada git”) her zaman görünür.
   - Dosyada başlık ve durum, yürüten, “Bilinenler” (kaynağıyla), karar seçenekleri ve kısa geçmiş bulunur. Seçenekler kararın bilinen maliyetini ve belirsizliğini yazar.
-  - Yazı büyüklüğü karenin genişliğine orantılıdır (normal ve büyük); uzun içerikte panel kendi içinde kaydırılır. Ses düzeyi ve sessiz ayarı vardır; sesler bilgi taşımaz.
+  - Yazı büyüklüğü karenin genişliğine orantılıdır (normal ve büyük); uzun içerikte panel kendi içinde kaydırılır. Ses yoktur (2.8A'da kaldırıldı; Aşama 10).
+  - **2.8C ile (2026-10-01):** panel içerikleri aşağıdaki “Onaylı ekran düzenleri”ne göre yenilendi: dosya (önceki/sıradaki, sayaçlar, arşiv), kasa ayrı panel, ajanda gün seçici ve bölümleri, telefon Mesajlar/Canlı Skor, dört bölümlü ayarlar, TEST simgesi. Üst şeritte Duraklat düğmesi; duraklatmada ekranın üstünde küçük “Duraklatıldı” etiketi (2.8B).
   - Dosyada karar seçeneklerinin altında “Görüş iste” düğmesi vardır: kimin inceleyeceği ve görüşün ne zaman geleceği yazılır; görüş “Bilinenler”e kişinin adıyla düşer. Dosyada o konuda verilen sözler, ajandada başkanın başlatabileceği girişimler ve verdiği bütün sözler (açık/tutuldu/bozuldu) listelenir.
   - Gazete yalnız çıkmış bir haber varken masadadır (dördüncü nesne ve düğme, klavye 4); yeni haberde amber yanar. Panelde manşet büyük başlık yazısıyla ve bağlı olduğu konuyla gösterilir.
   - Kayıtlı olaydan doğan izler: masada teşekkür kartı, pencerede tribün çatısında iskele (onarım başladıysa), duvarda pano sözünün notu. Olay yaşanmadıysa iz de yoktur.
   - Koyu ajanda ekranı (`?ekran=ajanda`) geliştirici görünümü olarak durur.
 
 - Stat içindeki pano, pankart ve skor tabelalarında mevcut Türkçe karakterli 3×5 piksel yazı kullanılır.
-- Maç görüntüsünde TV yayın bandı, radar veya oyuncu etiketi bulunmaz. Dürbün maskesi vardır; skor ve dakika stat tabelasından, ayrıca görüntünün dışındaki radyo satırından izlenir.
-- Maç öncesi bülteni (`js/ekran-mac-oncesi.js`) 4:3 oyun karesinde açılır; stat arkada donuk kalır ve koyu panelle büyük ölçüde örtülür. Ölçüler oyun karesiyle birlikte değişir, kaydırma kullanılmaz ve ana eylem sağ altta belirgindir.
-- Koyu ajanda ekranı (`js/ekran-ajanda.js`; 2.5'ten beri yalnız `?ekran=ajanda`) bültenin düzenini izler: aynı 4:3 kare, `cqw` ölçüleri, panel başlıkları ve `STIL.menu` renkleri, kaydırma yok, ana eylem (“İlerle”, maç günü “Stada git”) sağ altta.
+- Maç görüntüsünde TV yayın bandı, radar veya oyuncu etiketi bulunmaz. Dürbün maskesi vardır; skor ve dakika stat tabelasından izlenir. Görüntünün dışındaki yazılı radyo/spiker satırı 2.8A'da kaldırıldı. Maçta masadaki telefon (tıkla, “Telefon” düğmesi ya da T) sağda açık tonlu bir cihaz olarak açılır: Canlı Skor (kendi maçın ve istatistikleri) ve salt okunur Mesajlar; açıkken maç durur.
+- Maç programı (`js/ekran-mac-oncesi.js`, 2.8E) 4:3 oyun karesinde açılır; stat arkada donuk ve hafif karartılmış kalır, önde açık kâğıt tonlu kitapçık durur (Kapak, Kadrolar, Lig sayfaları). Ölçüler oyun karesiyle birlikte değişir; uzun sayfa kendi içinde kayar. “Maça geç” sağ altta, hazırlık durumu solunda yazar.
+- Koyu ajanda ekranı (`js/ekran-ajanda.js`; 2.5'ten beri yalnız `?ekran=ajanda`) eski bültenin düzenini izler: aynı 4:3 kare, `cqw` ölçüleri, panel başlıkları ve `STIL.menu` renkleri, kaydırma yok, ana eylem (“İlerle”, maç günü “Stada git”) sağ altta.
   - Zorunluluk etiketlerinde zorunlu kırmızı, ertelenebilir amber, isteğe bağlı soluk renkle gösterilir.
   - Kaçırılacak işler ve engeller ilgili düğmenin yanında kırmızı metinle önceden yazılır; kaçırtan eylem satır içi onay ister.
   - Tutarlar kuruşsuz yazılır, giderler kırmızıdır.
@@ -118,11 +119,11 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
   - Yönetim adayları meslek, güçlü ve zayıf yanlar ve beklenti metniyle tanıtılır; katkı için sayı, seviye ya da çubuk gösterilmez.
   - Sağ kolonda “Meseleler” listesi durum ve “yeni” işaretiyle gösterilir. Bir mesele seçilince ayrıntı panelinde önce yürüten kişi, bekleyen adım ve “Şimdi” satırı, sonra kısa geçmiş görünür. Kayıttan dönüşte ayrıntı panelinde “Kaldığın yer” özeti açılır ve “Devam” ile kapanır. Alt şeritte sıradaki durak ve arada olacaklar yazılır; kayıt yazılamazsa üst şeritte kırmızı bildirilir.
   - Koşula bağlı olayın meselesinde (2.4A) “Bilinenler” listesi başkanın elindeki kanıtları kaynağıyla gösterir (ör. “Muhasebe kayıtları”, “Sponsorluk sözleşmesi”, görüş bildiren kişinin adı). Başkanın bilmediği henüz olmamış dış gelişme ajandada ve önümüzdeki günlerde görünmez. Başlangıcın, paketin ve tohumun geliştirici adları ile dünyanın gizli gerçeği ekrana yazılmaz. Son cevap anı bugün değilse günüyle birlikte yazılır.
-- Bülten başlıklarında piksel görünümlü `Jersey 10`, metinlerde `IBM Plex Mono`; ana vurguda tabela amberi, takım ayrımında kırmızı ve lacivert kullanılır. Olası 11 küçük sahada forma renkli ve numaralı işaretlerle gösterilir. Menü renkleri `STIL.menu` içindedir.
+- Program ve ajanda başlıklarında piksel görünümlü `Jersey 10`, metinlerde `IBM Plex Mono`; takım ayrımında kırmızı ve lacivert kullanılır. Olası 11 küçük sahada forma renkli ve numaralı işaretlerle gösterilir. Program renkleri `STIL.program`, koyu ajanda renkleri `STIL.menu` içindedir.
 
 ### Onaylı hedef: mekân içinde tek konuya odaklanma
 
-**2026-09-30 tasarım kararı; oda (2.5) ve balkon/antrenman (2.7) uygulandı, kişi/görüşme sahneleri henüz yok.** Yukarıdaki “Bugünkü uygulama” mevcut koyu bülten ve geliştirici ajandasını da anlatır. 2026-10-01'de onaylanan ekran yenilemesi henüz uygulanmadı; yeni akış aşağıdaki kurallarla geliştirilir:
+**2026-09-30 tasarım kararı; oda (2.5) ve balkon/antrenman (2.7) uygulandı, kişi/görüşme sahneleri henüz yok.** Yukarıdaki “Bugünkü uygulama” maç programını ve geliştirici ajandasını da anlatır. 2026-10-01'de onaylanan ekran yenilemesinin oyun çerçevesi, dosya/ajanda/telefon/ayarlar, test bilgisi ve maç programı kısımları uygulandı (2.8A, 2.8C, 2.8E); maç telefonu 2.8F'dedir. Akış aşağıdaki kurallarla geliştirilir:
 
 - Ortam görünür kalır; görüşme veya karar sırasında odaktaki kişi/konu öne çıkar. Kulübün bütün göstergeleri sürekli aynı ekrana yığılmaz.
 - Telefon, ajanda, rapor ve mali ayrıntılar gerektiğinde açılır, kapatıldığında bulunulan ortama dönülür. Aynı mesele başka kanaldan açıldığında geçmişi ve durumu korunur.
@@ -135,7 +136,7 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 ### Onaylı ekran düzenleri ve etkileşim
 
-**2026-10-01; hedef, henüz uygulanmadı (2.8A–2.8F):** Açık krem/kâğıt tonları korunur. Önce tek dosyanın kullanılabilir düzeni kurulur; ajanda, telefon ve ayarlar aynı okunabilirlik kurallarını izler. Ekranların görev sınırı [OYUN_TASARIMI §2](OYUN_TASARIMI.md#2-başkanın-rolü-ve-ana-döngü) içindedir.
+**2026-10-01; oyun çerçevesi, dosya, ajanda, odadaki telefon, ayarlar ve test bilgisi (2.8A, 2.8C) ile maç telefonu (2.8F) uygulandı:** Açık krem/kâğıt tonları korunur. Önce tek dosyanın kullanılabilir düzeni kurulur; ajanda, telefon ve ayarlar aynı okunabilirlik kurallarını izler. Ekranların görev sınırı [OYUN_TASARIMI §2](OYUN_TASARIMI.md#2-başkanın-rolü-ve-ana-döngü) içindedir.
 
 **Oyun çerçevesi:** `index.html` üzerindeki dış “Chairman / Başkanın gözünden / açık tribün / 89. dakika” notları, alttaki Ekran/Renk/Oyuncular açıklamaları ve renk kutuları kaldırılır. Oyuncu alanında kısa tarih/saat, gerçek kayıt durumu, gerekli ana eylem ve Duraklat erişimi kalır. Mevcut stat/hız/doluluk/zemin denemeleri küçük bir Geliştirici alanına taşınır; kaldırılan şehir stadı seçimi geri konmaz. Proje açıklaması README'de yaşar.
 
@@ -155,7 +156,7 @@ Canlı Skor'da o maç gününün karşılaşmaları kısa skor/dakika/durum sat�
 
 ### Onaylı maç programı
 
-**2026-10-01; hedef, henüz uygulanmadı (2.8E):** Mevcut yoğun koyu bülten açık kâğıt tonlarında kulübün basılı maç programı hissine dönüşür. Kapakta kulüp armaları, karşılaşma adı, tarih/yer, küçük kodla çizilmiş stat resmi ve bir satır maç bağlamı bulunur. Kadrolar ve lig bilgisi isteğe bağlı ayrı sayfalardadır; aynı anda bütün veriler görünmez, sayfalar kendiliğinden dönmez. Başkanın kadroyu seçtiği izlenimi verilmez.
+**2026-10-01; uygulandı (2.8E):** Mevcut yoğun koyu bülten açık kâğıt tonlarında kulübün basılı maç programı hissine dönüştü. Kapakta kulüp armaları, karşılaşma adı, tarih/yer, küçük kodla çizilmiş stat resmi ve bir satır maç bağlamı bulunur. Kadrolar ve lig bilgisi isteğe bağlı ayrı sayfalardadır; aynı anda bütün veriler görünmez, sayfalar kendiliğinden dönmez. Başkanın kadroyu seçtiği izlenimi verilmez.
 
 “Maç hazırlanıyor…” durumu en az 10 saniye görünür; kaynaklar da hazır olunca “Maça geç” etkinleşir. Gerçek hazırlık durumu doğru anlatılır, sahte yüzde üretilmez. Oyuncu butonla geçer; program sayfasını değiştirmek sayacı sıfırlamaz. Duraklat hazırlık sayacını da durdurur; arka planda kaynak yüklenmesi tamamlanabilir ama maç başlayamaz. Maç, tören ve takvim zamanı bu sayfada ilerlemez.
 
@@ -185,6 +186,6 @@ Tasarım dayanakları: [SEGA'nın FM21 tanıtımındaki takım kâğıdı ve ma�
 - Zaman sınırlı cevap, flaş ve kamera sarsıntısı yalnızca uygun sahnelerde kullanılır. Sürekli stres efekti temel oyun ritmi değildir.
 - Süre soru okunabilir olduktan sonra başlar. Süreyi uzatma, flaş ve sarsıntıyı azaltma seçenekleri planlanan sunumun parçasıdır.
 - Erişilebilirlik ayarı gizlice sportif zorluk cezasına dönüştürülmez. Oyuncu bilgiye yetişemediği için yanlış seçeneğe zorlanmamalıdır.
-- Temel okunabilirlik, yazı büyüklüğü, hareket azaltma ve dönüş özeti ilk yaşayan kulüp bölümünde sınanır. **2026-10-01 kararı:** Mevcut sesler ve ayarlar 2.8A'da kaldırılır; ana oyun/ekranlar tamamlanıp Aşama 10'a gelinene kadar ses geliştirilmez. Erken ortam sesi kabul koşulu kaldırılmıştır; yukarıdaki ses açıklamaları yalnız mevcut uygulamayı anlatır.
+- Temel okunabilirlik, yazı büyüklüğü, hareket azaltma ve dönüş özeti ilk yaşayan kulüp bölümünde sınanır. **2026-10-01 kararı:** Mevcut sesler ve ayarlar 2.8A'da kaldırıldı; ana oyun/ekranlar tamamlanıp Aşama 10'a gelinene kadar ses geliştirilmez. Erken ortam sesi kabul koşulu kaldırılmıştır. Hareket azaltma ayarı Ayarlar > Görüntü ve hareket bölümündedir (2.8C).
 - Takvim dururken küçük ortam hareketleri normal okumada devam edebilir; genel Duraklat bütün hareketi durdurur. Maç telefonu açıkken maç ve maç ortamı donar. Antrenman kararında bilgi ve kariyer zamanı sabittir; durma anı ekranda doğru gösterilir.
 - Bildirimler sürekli baskı üretmez. Sakin kulüp anları ve iyi yönetimin sağladığı rahatlık sunumda da hissedilir. Ses tasarımı Aşama 10'da bu ritme uygun olarak yapılır.

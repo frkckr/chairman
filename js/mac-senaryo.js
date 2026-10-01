@@ -3,9 +3,9 @@
    saha ~10 dk önce boşalır; hakemler orta çizgi boyunca koşar), TFF statüsü (İstiklal Marşı, tokalaşma: misafir takım kaptanı
    önde önce hakemlerle sonra ev sahibiyle; ardından ev sahibi hakemlerle), IFAB Kural 8 (yazı tura: kazanan kaleyi ya da santrayı seçer).
    Süreler gerçek saniyedir (motor saniyesi). [a, b] biçimindeki değerler rastgele aralıktır: her maç biraz farklı akar.
-   Yürütücü js/mac-oncesi.js'tir; görüntü (tribünün dolması, bakış, radyo) bu çizelgeyi okur. */
+   Yürütücü js/mac-oncesi.js'tir; görüntü (tribünün dolması, bakış) bu çizelgeyi okur. */
 const MAC_SENARYOSU={
-  /* maça kalan dakika (skor tabelası ve radyo): [senaryo saniyesi, kalan dakika] noktaları arasında doğrusal */
+  /* maça kalan dakika (skor tabelası): [senaryo saniyesi, kalan dakika] noktaları arasında doğrusal */
   kalan:[[0,60],[20,45],[55,35],[190,15],[215,10],[262,3],[330,0]],
   /* tribünün dolması: [senaryo saniyesi, gelenlerin oranı]. Ev taraftarı erken gelir, deplasman otobüsle topluca, locadakiler geç */
   tribun:[[0,0.18],[50,0.3],[140,0.58],[215,0.82],[262,0.95],[300,1]],

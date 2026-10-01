@@ -58,7 +58,7 @@ Oyuncu; kararın konusunu, bilinen maliyetini, verilen taahhüdü ve belirsiz ka
 
 ### Tek konu akışı ve ekranların görevleri
 
-**Onaylı hedef (2026-10-01; henüz uygulanmadı, yol haritası 2.8A–2.8F):** Açılış başkanın odası olarak kalır. Günlük işlerde oyuncu sırayla tek konuyla ilgilenir. Dosya, ajanda, telefon ve ayarlar kendi görevlerini taşır; ekranların ayrıntılı görünümü [STIL_REHBERI §7](STIL_REHBERI.md#7-arayüz-ve-bilgi) içindedir.
+**Onaylı hedef (2026-10-01; yol haritası 2.8A–2.8F ile uygulandı):** Açılış başkanın odası olarak kalır. Günlük işlerde oyuncu sırayla tek konuyla ilgilenir. Dosya, ajanda, telefon ve ayarlar kendi görevlerini taşır; ekranların ayrıntılı görünümü [STIL_REHBERI §7](STIL_REHBERI.md#7-arayüz-ve-bilgi) içindedir.
 
 | Ekran | Oyuncunun yaptığı iş |
 |---|---|
@@ -204,7 +204,7 @@ Mevcut bilgiyi tekrar incelemek yeni araştırma sayılmaz. Yeni bilgi toplamak 
 
 Antrenman gözlemi sırasında kısa bir telefon işi aynı zaman aralığına sığabilir. Uzun ve tam dikkat isteyen görüşme için gözlemden ayrılınır. Mekânın atmosferi, takvimin durduğunu anlamayı güçleştirmemelidir; ayrıntılı sunum [stil rehberinde](STIL_REHBERI.md#8-baskı-ve-erişilebilirlik) tanımlanır.
 
-**Genel duraklatma kararı (2026-10-01; henüz uygulanmadı):** “Duraklat” oda, yürüyüş, balkon/antrenman, maç öncesi ve maç boyunca erişilebilir olur. Kamera, başkan, futbolcular, seyirciler, kapı, ışık/efekt hareketleri ve çalışan sunum sayaçları aynı anda donar. Menülerde gezinip mevcut bilgi okunabilir; zaman ilerleten veya dünyayı değiştiren komutlar devam edilene kadar kapalıdır. Açık maç telefonu maçı durdurur; telefon kapatmak oyuncunun elle duraklatmasını kaldırmaz. Antrenman gözlemi durdurulduğunda görünen saat ile kayıtlı kariyer zamanı aynı noktada olmalıdır; yalnızca önceden uygulanmış ilerlemenin saat animasyonunu durdurmak yeterli değildir. Teknik sınırlar [TEKNIK_PLAN §4](TEKNIK_PLAN.md#4-zamanın-ilerlemesi) içindedir.
+**Genel duraklatma kararı (2026-10-01; 2.8B ve 2.8F ile uygulandı):** “Duraklat” oda, yürüyüş, balkon/antrenman, maç öncesi ve maç boyunca erişilebilir olur. Kamera, başkan, futbolcular, seyirciler, kapı, ışık/efekt hareketleri ve çalışan sunum sayaçları aynı anda donar. Menülerde gezinip mevcut bilgi okunabilir; zaman ilerleten veya dünyayı değiştiren komutlar devam edilene kadar kapalıdır. Açık maç telefonu maçı durdurur; telefon kapatmak oyuncunun elle duraklatmasını kaldırmaz. Antrenman gözlemi durdurulduğunda görünen saat ile kayıtlı kariyer zamanı aynı noktada olmalıdır; yalnızca önceden uygulanmış ilerlemenin saat animasyonunu durdurmak yeterli değildir. Teknik sınırlar [TEKNIK_PLAN §4](TEKNIK_PLAN.md#4-zamanın-ilerlemesi) içindedir.
 
 Antrenman, boş stat veya kulüp odası gibi isteğe bağlı alanlarda vakit geçirilebilir. Telefon ve haberler bu ortamların içinde gelebilir. Uzun süre beklemek zorunlu bir yetenek veya bilgi kazancına dönüşmez.
 
@@ -328,7 +328,7 @@ Avrupa rakipleri ve yabancı oyuncu kaynakları için yeterli bir dış dünya t
 
 ### Ortak stat ve maç günü sunumu
 
-**Onaylı hedef (2026-10-01; henüz uygulanmadı):** Ayrı “1. Lig şehir stadı” tarifi ve seçimi kaldırılır. Kulübün başlangıç stadı korunur; üst ölçeğe aynı stadın tribün, zemin, aydınlatma ve tesislerinin para/zaman/yatırımla gelişmesiyle ulaşılır. Lig atlamak kendiliğinden stat değiştirmez. Oda penceresindeki, balkondaki ve ev sahibi maçındaki saha/tribün yerleşimi aynı kulüp stadına aittir; saat, ışık, doluluk ve antrenman durumu farklı olabilir. Kapsamlı yatırım sistemi Aşama 8'dedir; şimdi ortak fiziksel temel kurulur.
+**Onaylı hedef (2026-10-01; şehir stadının kaldırılması ve ortak stat 2.8D ile uygulandı, etaplı gelişim 8.3'te):** Ayrı “1. Lig şehir stadı” tarifi ve seçimi kaldırılır. Kulübün başlangıç stadı korunur; üst ölçeğe aynı stadın tribün, zemin, aydınlatma ve tesislerinin para/zaman/yatırımla gelişmesiyle ulaşılır. Lig atlamak kendiliğinden stat değiştirmez. Oda penceresindeki, balkondaki ve ev sahibi maçındaki saha/tribün yerleşimi aynı kulüp stadına aittir; saat, ışık, doluluk ve antrenman durumu farklı olabilir. Kapsamlı yatırım sistemi Aşama 8'dedir; şimdi ortak fiziksel temel kurulur.
 
 Balkona odadaki kapıya tıklayarak çıkılır. Başkan doğal biçimde ayağa kalkar, yönelir, adımlarla yürür ve yerine oturur. İlk kapsamda tam bacak modeli gerekmez; kalkış ve adım ritmi göz hizasından anlaşılır. Hareket azaltma ve klavye erişimi korunur. Ev sahibi maçındaki başkan yeri daha yüksekte, altında tribün sıraları görünecek biçimde düzenlenir. Oda ve maç masalarındaki çay kaldırılır.
 

@@ -72,7 +72,7 @@ const STIL={
   /* Başkan bölümü: halı, ahşap bölmeler, başkanın koltuğu */
   baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
 
-  /* Stat yapı malzemeleri (tribün betonu, çatı, direk, toprak pist, set, kötü zemin renkleri, kasaba apartmanları) */
+  /* Stat yapı malzemeleri (tribün betonu, çatı, direk, toprak pist, set, kötü zemin renkleri, çevredeki apartmanlar) */
   stadyum:{
     beton:0x6d6e72,betonKoyu:0x4d4e53,yanDuvar:0x5a5b60,basamak:0x66665f,set:0x4c5a2c,cati:0x8c9096,catiKenar:0x3c3f44,direk:0x4a4d52,disZemin:0x232428,
     toprakPist:'#6e4a33',pistsizKenar:'#2a6526',kuruCim:'#8f8a44',camur:'78,56,34',
@@ -92,6 +92,12 @@ const STIL={
     vurgu:'#ffb530',kulup:'#c8281e',rakip:'#3a5aa8',galibiyet:'#3a8c33',beraberlik:'#8a8478',maglubiyet:'#c8281e',
     sari:'#f2d21d',kirmizi:'#d8201e',cim:'#2f7a2a',cimAcik:'#3a8c33',sahaCizgi:'#f2f2ea'},
 
+  /* Maç programı (js/ekran-mac-oncesi.js, 2.8E): açık kâğıt tonlarında basılı program. hazirlikSn: "Maça geç" etkinleşmeden önceki en kısa
+     etkin hazırlık süresi (TEST değeri). renk: ekran bunları CSS değişkeni (--m-ad) olarak yazar; ortak .oe- bileşenleri bu değişkenleri kullanır. */
+  program:{hazirlikSn:10,renk:{zemin:'#f4eedf',panel:'#fbf7ec',panelUst:'#e9e0cb',cizgi:'#c9b994',yazi:'#26221c',soluk:'#6d6353',vurgu:'#a5620a',vurguZemin:'#ffb530',
+    kulup:'#b4241c',rakip:'#2f4f9a',galibiyet:'#2c6f28',beraberlik:'#8a8478',maglubiyet:'#b4241c',sari:'#e0b81a',kirmizi:'#b4241c',
+    cim:'#3a8c33',cimAcik:'#44973c',sahaCizgi:'#f2f2ea',pist:'#a85f45',tribun:'#9c968a',beton:'#b9b5ad',set:'#7d8b52',cati:'#5f6268',golge:'rgba(40,28,12,.28)'}},
+
   /* Başkan odası (js/oda.js): aydınlık, gün ışığı alan oda; başkanın masasından bakış. Ölçüler metre.
      goz/bakis: kameranın yeri ve dinlenirken baktığı nokta; odakAci: bir nesneye odaklanınca görüş açısı;
      odakKayma: panel sağda açıkken nesne solda görünsün diye bakışın sağa kayması (metre).
@@ -105,17 +111,24 @@ const STIL={
     flama:'#c8281e',flamaSerit:'#f2ede2',vurgu:0xffb530,gunesLekesi:0xfff1c4,gazete:'#e9e4d6',notKagidi:'#f2d96a',iskele:'#4a3a2a',iskeleBranda:'#3a6ea8',
     ortam:{renk:0xfff3df,guc:0.62},gunes:{renk:0xfff0cf,konum:[-3.2,3.6,-2.2]},dolgu:{renk:0xdfe8ff,guc:0.28,konum:[2.5,2,2]},
     gunIsigi:[[6,0.25,0xffc890],[9,0.62,0xfff0cf],[13,0.78,0xfffaf0],[17,0.6,0xffe0b0],[19.5,0.28,0xff9a5a],[22,0.1,0x6a78a8]],
-    /* balkon kapısı (uzak duvarda, x0–x1 arası, h yüksekliğinde) ve masadan balkondaki sandalyeye yürüyüş: yol = [konum, bakış] durakları,
-       yuruyus = saniye. kapiCam: kapının camı */
-    kapi:{x0:0.9,x1:1.75,h:2.1,renk:0xf4f1e8,cam:0xbfe0f2,kol:0xb89a4a},yuruyus:2.8,
-    yol:[[[0,1.28,0.62],[0,0.95,-1.4]],[[1.42,1.6,0.35],[1.2,1.35,-3.4]],[[1.34,1.6,-2.6],[1.3,1.3,-8]],[[1.3,1.6,-4.25],[0.4,-1.5,-30]],[[-0.55,1.3,-4.45],[0,-7,-47]]]},
+    /* balkon kapısı (uzak duvarda, x0–x1 arası, h yüksekliğinde; tıklanır, üstünde levha) ve pencere boşluğu (pencere; balkon kuruluysa dışarı
+       gerçekten görünür). kapiCam: kapının camı */
+    kapi:{x0:0.9,x1:1.75,h:2.1,renk:0xf4f1e8,cam:0xbfe0f2,kol:0xb89a4a},pencere:{x0:-2.2,x1:-0.3,y0:0.995,y1:2.245},levha:'#2a2c30',levhaYazi:'#f2ede2',
+    /* yürüyüş (2.8D): yol = ayakta göz hizasında yürüme noktaları (masanın yanından kapıya, balkon sandalyesinin yanına);
+       adim: kalkış/yönelme/oturma süreleri (sn), yürüme hızı (m/sn), adım boyu (m), iniş-çıkış ve yana yalpa (m). TEST değerleri */
+    yol:[[0.14,1.62,0.8],[1.42,1.62,0.25],[1.36,1.62,-2.7],[1.3,1.62,-4.15],[-0.3,1.62,-4.6]],
+    adim:{kalk:0.6,yonel:0.4,otur:0.6,hiz:1.7,adimBoyu:0.62,sallanma:0.022,yalpa:0.012}},
 
   /* Balkon ve antrenman sahası (js/balkon.js): odanın dışı, gündüz. Ölçüler metre; saha merkezi oda koordinatındadır (balkon sahanın üstünde,
      ana tribünün tepesinde). aci/bakis: balkondaki sandalyeden bakış. TEST değerleri. */
   balkon:{aci:46,odakAci:42,goz:[-0.55,1.3,-4.45],bakis:[0,-7,-47],
     saha:[0,-7,-58],gokUst:[0.42,0.66,0.9],gokAlt:[0.86,0.93,0.96],disZemin:0x8a8672,zemin:0x9a958a,korkuluk:0x3a3d44,masa:0x6a4228,masaAyak:0x2a2c33,sandalye:0x7a2420,
     beton:0x9a9b9e,betonKoyu:0x7d7e82,koltuk:0xb4322a,koltukAcik:0xe6e0d2,cati:0x8c9096,direk:0x5a5d62,kalePost:0xf4f4f0,apartman:['#b8ab94','#a89c88','#c4b8a2','#9c9484'],pencere:'#5a6a7a',
-    agac:0x3f6a34,golge:0.22,koni:0xff7a1e,yelek:'#e8c21e'},
+    agac:0x3f6a34,golge:0.22,koni:0xff7a1e,yelek:'#e8c21e',
+    /* gözlemde bir oyun dakikasının gerçek süresi, ms (2.8B; TEST değeri: 120 dakikalık antrenman ≈ 8,4 sn) */
+    gozlemDakikaMs:70,
+    /* 2.8D: saha konumu (saha) ve bakış tariften hesaplanır (js/balkon.js BLK_STAT); korkulukZ balkonun ön kenarı */
+    korkulukZ:-5.7,duvar:0xc9bfae,iskele:0x8a8f96,iskeleBranda:0x3d6a8a},
 
   /* Açık renkli yönetim arayüzü (js/ekran-oda.js): kâğıt zemin, koyu okunur metin, ahşap çizgi, ölçülü kulüp rengi.
      Ekran bu renkleri CSS değişkeni (--k-ad) olarak yazar. yaziBoyu: karenin genişliğine oranla yazı (cqw). TEST değerleri. */
@@ -127,8 +140,8 @@ const STIL={
   kameralar:{
     /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre).
        Bakış topu ve olan biteni yumuşak bir yayla izler: yay = yayın sertliği, egim = bakışın odağın ne kadar altına indiği (masa ve ön sıralar görünsün),
-       asagiSinir = bakışın en fazla kaç radyan aşağı inebileceği. */
-    baskan:{goz:0.78,hedef:[0,1,-30],aci:30,egim:0.09,yay:2.2,asagiSinir:0.38},
+       asagiSinir = bakışın en fazla kaç radyan aşağı inebileceği (2.8D: koltuk 8. sıraya yükseldi; top yakın kenara gelince alttaki sıralar görünsün). */
+    baskan:{goz:0.78,hedef:[0,1,-30],aci:30,egim:0.09,yay:2.2,asagiSinir:0.46},
     durbun:{goz:0.78,aci:11}
   }
 };

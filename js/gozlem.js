@@ -2,7 +2,7 @@
    Antrenman penceresi bir takvim işi değildir: hafta içi belirli saatlerde takım sahadadır (antrenmanPenceresi). İzlenmezse hiçbir şey
    kaçırılmış sayılmaz; geçmişe "kaçırıldı" kaydı düşmez.
    Gözlem takvimde bir ARALIKTIR (k.gozlem = {tarih, bas, bitis} ya da null/yok), süre tüketen ayrı bir iş değildir:
-     gozlemBaslat aralığı kurar ve zamanı bitişe doğru ilerletir. Karar gerektiren bir gelişme ya da beklenen bir görüş gelirse zaman o anda
+     gozlemAc aralığı kurar; gozlemAdim zamanı bitişe doğru parça parça, gozlemBaslat/gozlemSurdur tek parça ilerletir. Karar gerektiren bir gelişme ya da beklenen bir görüş gelirse zaman o anda
      DURUR; aralık açık kalır (kalan süre = bitis − şimdi). Karar verilirken zaman ilerlemez. gozlemSurdur kalan süreyi ilerletir.
      Aralık açıkken yapılan kısa iş (süresi KISA_IS dakikayı aşmayan) aralığın içinde geçer: gözlem süresi iki kez harcanmaz.
      Tam dikkat isteyen uzun iş için önce gözlem bırakılır (ajandaOnizle engeli).
@@ -70,20 +70,29 @@ function gozlemBitir(k){
   k.gozlem=null;
   return kayit.not?MESELE_OLAYLARI[kayit.not](k,{}):null;
 }
-/* kalan gözlem süresini ilerletir. {biten, durdu, neden: 'karar'|'haber'|'bitti', kalan, not} döndürür */
-function gozlemSurdur(k){
+/* açık gözlemi en çok `dakika` kadar ilerletir (2.8B: ekran gözlemi oyun dakikası oyun dakikası uygular; görünen saat kayıtlı saattir).
+   Aralığın bitişi ve durma sorguları tek parça ilerlemeyle aynıdır: parça parça ilerlemek aynı dünya sonucunu verir.
+   {biten, durdu, neden: 'devam'|'karar'|'haber'|'bitti', kalan, not} döndürür */
+function gozlemAdim(k,dakika){
   if(!gozlemAcik(k))throw new Error('Süren bir gözlem yok');
-  const r=zamanIlerletAna(k,anDakika(k.gozlem.tarih,k.gozlem.bitis),durakSorgusu(k)),son=r.biten[r.biten.length-1];
+  if(!(dakika>0))throw new Error('Geçersiz adım');
+  const son=anDakika(k.gozlem.tarih,k.gozlem.bitis),hedef=Math.min(son,simdikiAn(k)+dakika);
+  const r=zamanIlerletAna(k,hedef,durakSorgusu(k)),b=r.biten[r.biten.length-1],acik=gozlemAcik(k);
   const g=k.gecmis[k.gecmis.length-1];
-  return{biten:r.biten,durdu:r.durdu,neden:r.durdu?(son&&son.sonuc&&son.sonuc.haber?'haber':'karar'):'bitti',kalan:gozlemKalan(k),
-    not:!r.durdu&&g&&g.tur==='gozlem'&&g.not?MESELE_OLAYLARI[g.not](k,{}):null};
+  return{biten:r.biten,durdu:r.durdu,neden:r.durdu?(b&&b.sonuc&&b.sonuc.haber?'haber':'karar'):acik?'devam':'bitti',kalan:gozlemKalan(k),
+    not:!r.durdu&&!acik&&g&&g.tur==='gozlem'&&g.not?MESELE_OLAYLARI[g.not](k,{}):null};
 }
-function gozlemBaslat(k,dakika){
+/* kalan gözlem süresini tek parça ilerletir */
+function gozlemSurdur(k){return gozlemAdim(k,Infinity);}
+/* gözlem aralığını kurar, zamanı ilerletmez; ekran sonra gozlemAdim ile ilerletir */
+function gozlemAc(k,dakika){
   const o=gozlemOnizle(k,dakika);
   if(o.engel.length)throw new Error('Gözlem başlatılamadı: '+o.engel.join('; '));
   k.gozlem={tarih:k.tarih,bas:k.gunIciDakika,bitis:o.bitis};
-  return gozlemSurdur(k);
+  return{bitis:o.bitis,kalan:gozlemKalan(k)};
 }
+/* gözlemi kurar ve tek parça sonuna kadar ilerletir (kural denemeleri ve tek seferde izleme) */
+function gozlemBaslat(k,dakika){gozlemAc(k,dakika);return gozlemSurdur(k);}
 
 /* zaman aralığın sonuna ya da başka bir güne geçtiyse gözlem kapanır */
 ZAMAN_SONRASI.push(k=>{if(k.gozlem&&!gozlemAcik(k))gozlemBitir(k);});

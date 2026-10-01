@@ -1,60 +1,52 @@
-/* ============ Chairman — balkon ve antrenman sahası (yalnız çizim; yol haritası 2.7) ============
-   Başkan odasının (js/oda.js) dışı: kapıdan çıkılan balkon, altında kulübün sahası, boş tribünler, gündüz gökyüzü. ODA.dis grubuna kurulur;
-   grup yalnız balkona yürürken ve balkondayken görünür. Oyun kuralı içermez: antrenmanın sürüp sürmediğini ve saati sunum katmanı
-   balkonDurum ile bildirir (kurallar js/gozlem.js).
+/* ============ Chairman — balkon ve antrenman sahası (yalnız çizim; yol haritası 2.7, 2.8D) ============
+   Başkan odasının (js/oda.js) dışı: kapıdan çıkılan balkon, altında kulübün sahası, gündüz gökyüzü. ODA.dis grubuna kurulur; grup odanın
+   penceresinden de görünür. Stat, maçla aynı tariften aynı kurucuyla kurulur (js/stadyum.js statKur, gündüz ve boş): balkon ana tribünün
+   çatısının hemen arkasında ve üstündedir; konumu tariften hesaplanır (BLK_STAT). Pencerede karşı tribünün çatısı, projektörler ve
+   çevredeki apartmanlar görünür; bakım taksiti ödendiyse karşı tribünün çatısında iskele durur (balkonIskele).
+   Oyun kuralı içermez: antrenmanın sürüp sürmediğini ve saati sunum katmanı balkonDurum ile bildirir (kurallar js/gozlem.js).
    Antrenman sunum amaçlı bir canlandırmadır, maç motoru değildir: üç grup tekrarlayan basit bir düzenle çalışır (ısınma koşusu, pas çemberi,
    kaleye şut); kenarda teknik direktör ve antrenörler durur. Oyuncular kadrodaki görünüşleriyle kurulur (js/kadrolar.js, js/oyuncular.js).
    Takvim dururken de saha hareket eder; saat ve karar durumu bununla karıştırılmaz (STIL_REHBERI §8).
      balkonDurum({antrenman, dakika})  takım sahada mı; gökyüzünün gün ışığı
      balkonKare(dt)                    canlandırma (js/oda.js grup görünürken çağırır)
+     balkonIskele(var)                 karşı tribün çatısındaki onarım iskelesi (yaşanmış olaydan; js/soz.js odaIzleri)
    Renkler ve ölçüler STIL.balkon'dadır. */
 const BLK=STIL.balkon;
 const BALKON={antrenman:false,zaman:0,aktorler:[],kosu:[],rondo:[],sut:[],kaleci:null,ekip:[],top:{},grup:new THREE.Group()};
+/* stadın balkona göre yeri (tariften): ana tribünün arka duvarı balkon korkuluğunun hemen önünde, çatısı balkon döşemesinin altında.
+   Stat grubu 180° döndürülür: ana tribün balkon tarafında kalır. [CX, PY, CZ] sahanın ortası; bakış sahanın ortasına */
+const BLK_STAT=(()=>{
+  const t=STAT.tribunler.find(x=>x.yer==='ana'),O=tribunOlcu(t),arka=YAN_MESAFE+O.D+0.6,ust=O.y1+(t.cati?4.3:1);
+  return{CX:0,PY:-(ust+0.6),CZ:BLK.korkulukZ-0.7-arka};
+})();
+BLK.saha=[BLK_STAT.CX,BLK_STAT.PY,BLK_STAT.CZ];
+BLK.bakis=[0,BLK_STAT.PY+1,BLK_STAT.CZ+6];
 {
   const D=ODA.dis,[CX,PY,CZ]=BLK.saha,oLAM=o=>LAM(Object.assign({fog:false},o));
-  const rgb=h=>[(h>>16&255)/255,(h>>8&255)/255,(h&255)/255];
 
-  /* ---- gökyüzü, çevre zemini, saha ---- */
+  /* ---- gökyüzü ---- */
   {const g=new THREE.SphereGeometry(330,16,10),p=g.attributes.position,col=[];
    for(let i=0;i<p.count;i++){const t=clamp(p.getY(i)/330*2.2,0,1),U=BLK.gokAlt,Q=BLK.gokUst;col.push(U[0]*(1-t)+Q[0]*t,U[1]*(1-t)+Q[1]*t,U[2]*(1-t)+Q[2]*t);}
    g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
    const gok=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false,depthWrite:false}));gok.position.set(CX,PY,CZ);D.add(gok);BALKON.gok=gok.material;}
-  {const z=new THREE.Mesh(new THREE.PlaneGeometry(700,700),oLAM({color:BLK.disZemin}));z.rotation.x=-Math.PI/2;z.position.set(CX,PY-0.3,CZ);D.add(z);
-   const saha=new THREE.Mesh(new THREE.PlaneGeometry(132,92),oLAM({map:tx(pitchCv(STAT.zemin),'l')}));saha.rotation.x=-Math.PI/2;saha.position.set(CX,PY,CZ);D.add(saha);}
 
-  /* ---- boş tribünler: basamaklar ve koltuk sıraları tek geometride (köşe renkli) ---- */
-  {const P=[],beton=rgb(BLK.beton),koyu=rgb(BLK.betonKoyu),k1=rgb(BLK.koltuk),k2=rgb(BLK.koltukAcik);
-   const sira=(x,y,z,w,yon,renk)=>{P.push({w,h:0.5,d:1.2,x,y:y-0.25,z,renk:beton});
-     for(let s=-w/2+3;s<w/2-2;s+=6)P.push({w:5.2,h:0.34,d:0.5,x:x+s+2.6,y:y+0.17,z:z-yon*0.2,renk});};
-   /* ana tribün: balkonun altından sahaya iner */
-   for(let i=0;i<12;i++)sira(CX,-0.75-i*0.5,-6.4-i*1.2,64,1,i%4===3?k2:k1);
-   P.push({w:64,h:1.1,d:0.3,x:CX,y:PY+0.55,z:-21.2,renk:koyu});
-   /* karşı tribün: sahanın öbür yanında yükselir */
-   for(let i=0;i<10;i++)sira(CX,PY+0.9+i*0.5,CZ-42-i*1.2,88,-1,i%3===2?k2:k1);
-   P.push({w:88,h:6.4,d:0.4,x:CX,y:PY+3.2,z:CZ-54.4,renk:koyu});
-   /* kale arkası setleri */
-   for(const sx of[-1,1])for(let i=0;i<5;i++)P.push({w:1.4,h:0.45,d:56,x:CX+sx*(60+i*1.4),y:PY+0.3+i*0.45,z:CZ,renk:i%2?beton:koyu});
-   D.add(new THREE.Mesh(kutuBirlestir(P),oLAM({vertexColors:true})));
-   /* karşı tribünün çatısı ve direkleri */
-   box(88,0.3,9,oLAM({color:BLK.cati}),CX,PY+9.2,CZ-49,D);
-   for(let x=-40;x<=40;x+=20)box(0.4,9,0.4,oLAM({color:BLK.direk}),CX+x,PY+4.6,CZ-53.6,D);}
+  /* ---- kulübün stadı: maçla aynı tarif ve kurucu; gündüz, boş tribünler ---- */
+  {const S=new THREE.Group();S.position.set(CX,PY,CZ);S.rotation.y=Math.PI;D.add(S);statKur(S,{mac:false,gunduz:true});BALKON.stat=S;
+   /* iskele: karşı tribünün çatısında, pencereden görünen yerde (yalnız onarım başladıysa) */
+   const c=tribunCatiOnu('karsi'),I=new THREE.Group(),demir=oLAM({color:BLK.iskele}),branda=oLAM({color:BLK.iskeleBranda});
+   if(c){I.position.set(22,c.y,c.z);S.add(I);
+     for(let x=-6;x<=6;x+=3)for(const z of[-0.6,0.6])box(0.12,3,0.12,demir,x,1.5,z,I);
+     for(const y of[1,2.2,3])box(12.4,0.12,1.4,demir,0,y,0,I);
+     box(5,1.6,0.06,branda,-2,2,0.72,I);}
+   I.visible=false;BALKON.iskele=I;}
+  /* pencere artık dışarıya açılır: aynı stat odadan da görünür */
+  if(typeof odaPencereAc==='function')odaPencereAc();
 
-  /* ---- kaleler, projektör direkleri, uzakta kasaba ---- */
-  {const post=oLAM({color:BLK.kalePost});
-   for(const sx of[-1,1]){for(const v of[-3.66,3.66])box(0.12,2.44,0.12,post,CX+sx*52.5,PY+1.22,CZ+v,D);box(0.12,0.12,7.44,post,CX+sx*52.5,PY+2.44,CZ,D);
-     const ag=new THREE.Mesh(new THREE.PlaneGeometry(7.32,2.4),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.22,side:THREE.DoubleSide,depthWrite:false,fog:false}));
-     ag.rotation.y=Math.PI/2;ag.position.set(CX+sx*54.2,PY+1.2,CZ);D.add(ag);}
-   const direk=oLAM({color:BLK.direk});
-   for(const sx of[-1,1])for(const sz of[-1,1]){box(0.7,24,0.7,direk,CX+sx*64,PY+12,CZ+sz*44,D);box(4,2.6,0.6,direk,CX+sx*64,PY+25,CZ+sz*44,D);}
-   const cv=mk(16,16),g=cv.getContext('2d');g.fillStyle='#ffffff';g.fillRect(0,0,16,16);g.fillStyle=BLK.pencere;for(let y=2;y<16;y+=4)for(let x=2;x<16;x+=4)g.fillRect(x,y,2,2);
-   for(let i=0;i<11;i++){const w=10+h2(i,3)*9,h=9+h2(i,5)*14,d=9+h2(i,7)*6,yan=oLAM({color:BLK.apartman[i%4],map:tx(cv,'n',[Math.round(w/4),Math.round(h/3.5)])});
-     box(w,h,d,yan,CX-105+i*21+h2(i,11)*6,PY+h/2-0.3,CZ-78-h2(i,13)*26,D);}
-   const agac=oLAM({color:BLK.agac});
-   for(let i=0;i<9;i++){const x=CX-84+i*21+h2(i,17)*8;box(0.5,3,0.5,oLAM({color:0x5a4028}),x,PY+1.5,CZ-66,D);box(4.2,4.4,4.2,agac,x,PY+5,CZ-66,D);}}
-
-  /* ---- balkon: döşeme, korkuluk, küçük masa, çay ---- */
+  /* ---- balkon: döşeme, korkuluk, küçük masa ---- */
   {const kork=oLAM({color:BLK.korkuluk}),P=[];
    box(6.6,0.14,2.2,oLAM({color:BLK.zemin}),0,-0.07,-4.65,D);
+   /* balkonu taşıyan duvar: döşemeden ana tribünün arkasına iner */
+   box(6.6,-PY,0.3,oLAM({color:BLK.duvar}),0,PY/2-0.07,BLK.korkulukZ-0.15,D);
    /* alçak ve ince korkuluk: oturan başkanın sahayı görmesini kapatmaz */
    for(const y of[0.1,0.8])P.push({w:6.6,h:0.04,d:0.04,x:0,y,z:-5.7});
    for(let x=-3.25;x<=3.26;x+=0.65)P.push({w:0.025,h:0.7,d:0.025,x,y:0.45,z:-5.7});
@@ -62,8 +54,6 @@ const BALKON={antrenman:false,zaman:0,aktorler:[],kosu:[],rondo:[],sut:[],kaleci
    D.add(new THREE.Mesh(kutuBirlestir(P),kork));
    const masa=oLAM({color:BLK.masa});
    box(0.9,0.04,0.62,masa,-0.6,0.72,-5.12,D);box(0.06,0.7,0.06,oLAM({color:BLK.masaAyak}),-0.6,0.35,-5.12,D);box(0.4,0.03,0.4,oLAM({color:BLK.masaAyak}),-0.6,0.015,-5.12,D);
-   const tabak=new THREE.Mesh(new THREE.CylinderGeometry(0.062,0.05,0.01,12),oLAM({color:0xefece4}));tabak.position.set(-0.32,0.745,-5.12);D.add(tabak);
-   const cay=new THREE.Mesh(new THREE.CylinderGeometry(0.026,0.02,0.085,10),oLAM({color:0x9a2a0c}));cay.position.set(-0.32,0.792,-5.12);D.add(cay);
    ODA.balkonTelefon={x:-0.86,y:0.74,z:-5.08,donus:0.35};}
 
   /* ---- takım: kadrodaki görünüşlerle; antrenman eşofmanı, ortadaki oyuncuda yelek ---- */
@@ -151,6 +141,7 @@ function balkonKare(dt){
   /* teknik ekip: hoca kenarda, ara sıra işaret eder */
   B.ekip.forEach((a,i)=>{balkonBak(a,i===1?44:20,i===1?0:8);balkonPoz(a.m,i===0&&Math.sin(t*0.7)>0.75?POSE.isaret:BLK_DURUS,null,0,1);B.yerlestir(a);});
 }
+function balkonIskele(v){if(BALKON.iskele)BALKON.iskele.visible=!!v;}
 function balkonDurum(d){
   if(d.antrenman!==undefined&&d.antrenman!==BALKON.antrenman){BALKON.antrenman=!!d.antrenman;BALKON.grup.visible=BALKON.antrenman;if(BALKON.antrenman)balkonKare(0.001);}
   if(d.dakika!==undefined){const I=odaGunIsigi(d.dakika);BALKON.gok.color.copy(I.renk).lerp(new THREE.Color(0xffffff),0.5).multiplyScalar(0.3+0.9*I.guc);}
