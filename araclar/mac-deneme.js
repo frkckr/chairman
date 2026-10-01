@@ -16,7 +16,7 @@ const ILK_TOHUM=parseInt(process.argv[3]||'1',10);
 /* ---- motoru yükle ---- */
 const html=fs.readFileSync(path.join(KOK,'index.html'),'utf8');
 const sira=[...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m=>m[1]);
-const DISARIDA=new Set(['js/stil-99.js','js/stadyum-tarifleri.js']);
+const DISARIDA=new Set(['js/stil-99.js','js/sunum-durumu.js','js/stadyum-tarifleri.js']);
 const mantik=sira.slice(0,sira.indexOf('js/goruntu.js')).filter(f=>!DISARIDA.has(f));
 const ctx=vm.createContext({console,Math,Date});
 for(const f of mantik)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),ctx,{filename:f});

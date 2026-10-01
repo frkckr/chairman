@@ -5,12 +5,13 @@
    kaleci uçuşu ve tutuşu, taç, itiraz, sevinç; hakemde düdük, yön, avantaj, kart, penaltı; yan hakemde bayrak.
    Burada ayrıca: top toplayıcılar ve yedek toplar, yedek kulübeleri, teknik direktörler, antrenörler, dördüncü hakem ve uzatma
    tabelası, fotoğrafçılar ve flaşları, antrenman topları ve koniler, yazı tura parası, top, gölgeler, tribünün dolması ve ayağa
-   kalkması, tribün heyecanı, canlı skor tabelası, başkanın bakışı ve ekranın altındaki radyo satırı. */
+   kalkması, tribün heyecanı, canlı skor tabelası ve başkanın bakışı. Yazılı spiker/radyo satırı 2.8A'da kaldırıldı. */
 const MOTOR_Z=34,ADIM=1/60;
 const MAC_HIZ={deger:(()=>{try{const v=parseFloat(new URLSearchParams(location.search).get('hiz'));return [1,2,4,8,16].includes(v)?v:1;}catch(e){return 1;}})()};
 /* ?tohum=123 ile aynı maç yeniden oynatılabilir */
 const MAC_TOHUM=(()=>{try{const v=parseInt(new URLSearchParams(location.search).get('tohum'),10);return Number.isFinite(v)?v:null;}catch(e){return null;}})();
-const olayKuyrugu=[],DURAKLAT={aktif:false};
+/* DURAKLAT: eski ad; ortak duraklatma yönetimini okur (js/sunum-durumu.js, 2.8B) */
+const olayKuyrugu=[],DURAKLAT={get aktif(){return duraklatmaVar();}};
 /* maç sonunda takımların alkışlayacağı tribünün önü (motor koordinatı): ev taraftarının ve deplasman bölümünün tribünü */
 function tribunOnu(taraftar){
   for(const tr of STAT.tribunler){const b=tr.taraftar===taraftar?{from:0,to:0}:(tr.bolumler||[]).find(b=>b.taraftar===taraftar);if(!b)continue;
@@ -78,75 +79,44 @@ const TOP={px:0,py:0,pz:0,q:new THREE.Quaternion(),eksen:new THREE.Vector3(),dq:
 const para=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.01,12),LAM({color:0xe0c050}));para.visible=false;scene.add(para);
 const PARA={t:-1,x:0,z:0};
 
-/* ---- heyecan, radyo, skor tabelası ---- */
+/* ---- heyecan ve skor tabelası ---- */
 const H=STIL.seyirci.heyecan,HEY={ev:0,dep:0,tutEv:0,tutDep:0};
 function heyecanla(takim,deger,tut){if(takim!==1){HEY.ev=Math.max(HEY.ev,deger);if(tut)HEY.tutEv=tut;}if(takim!==0){HEY.dep=Math.max(HEY.dep,deger);if(tut)HEY.tutDep=tut;}}
-const radyoMetin=$('radyoMetin'),radyoSkor=$('radyoSkor');
-let SON_SOZ='';
-function soyle(s){SON_SOZ=s;if(radyoMetin&&!DURAKLAT.aktif)radyoMetin.textContent=s;}
-const tAd=t=>MAC_KADRO[t].ad;
 let tabelaAnahtar='';
 function tabelaGuncelle(){
   const ph=mac.phase,dk=mac.minuteLabel(),alt=MAC_ONCESI.includes(ph)?'MAÇ ÖNCESİ':ph==='halftime'?'DEVRE ARASI':ph==='fulltime'?'MAÇ SONU':'DAKİKA '+dk;
   const kalan=Math.round(cizgiDegeri(MAC_SENARYOSU.kalan,mac.sen.t)),tabelaAlt=ph==='isinma'?(kalan>0&&Math.floor(zaman/6)%2?'MAÇA '+kalan+' DK':'HOŞ GELDİNİZ'):alt;
   const k=mac.score.join('-')+tabelaAlt;if(k===tabelaAnahtar)return;tabelaAnahtar=k;
   TABELA.ciz(MAC_KADRO[0].kisa,MAC_KADRO[1].kisa,mac.score,tabelaAlt);
-  if(radyoSkor)radyoSkor.textContent=MAC_KADRO[0].kisa+' '+mac.score[0]+'-'+mac.score[1]+' '+MAC_KADRO[1].kisa+' · '+(alt.startsWith('DAKİKA')?dk+"'":alt.toLocaleLowerCase('tr-TR'));
 }
-/* radyo spikeri: her olay için kısa bir cümle */
-let sonTacSoz=-99;
+/* maç olayları: başkanın tepkisi, tribün heyecanı, bakış, para, tabela ve sevinç. Yazılı spiker yoktur (2.8A) */
 function olay(ad,v){
   if(typeof baskanOlay==='function')baskanOlay(ad,v);
-  const ad1=p=>p?p.name:'';
   switch(ad){
-    case 'oncesi':{const S={basla:'Stat yavaş yavaş doluyor. Top toplayıcı çocuklar yerlerine geçiyor.',
-        kaleciler:'Maça 45 dakika var. Kaleciler, kaleci antrenörleriyle ısınmaya çıktı.',
-        hakemler:'Hakemler sahada; orta çizgi boyunca enine koşuyorlar.',
-        takim0:tAd(0)+' ısınmaya çıktı, tribünden alkış!',takim1:tAd(1)+' oyuncuları da sahada; deplasman tribünü tezahürat yapıyor.',
-        rondo:'Yardımcı antrenörler konileri dizdi; rondo çemberleri kuruldu.',sut:'Şut çalışması: kaleciler iş başında.',
-        iceri:'Takımlar ısınmayı bitirip soyunma odasına dönüyor.',dorduncu:'Dördüncü hakem tabelasıyla yerini aldı.',
-        kulube:'Yedekler ve antrenörler kulübeye geçiyor.',td:'Teknik direktörler de sahada: '+MAC_KADRO[0].td.ad+' ve '+MAC_KADRO[1].td.ad+'.',
-        foto:'Takım fotoğrafları çekiliyor; flaşlar patlıyor.'};
-      if(S[v.ad])soyle(S[v.ad]);if(v.ad==='takim0')heyecanla(0,H.santra*0.7,2);if(v.ad==='takim1')heyecanla(1,H.santra*0.7,2);
-      if(v.x!=null){ONCESI_BAKIS.x=v.x;ONCESI_BAKIS.z=v.z-MOTOR_Z;ONCESI_BAKIS.t=zaman;}break;}
-    case 'selam':soyle('Selamlaşma: '+tAd(1)+' oyuncuları kaptanları önde, önce hakemlerle sonra '+tAd(0)+' oyuncularıyla tokalaşıyor.');break;
+    case 'oncesi':if(v.ad==='takim0')heyecanla(0,H.santra*0.7,2);if(v.ad==='takim1')heyecanla(1,H.santra*0.7,2);
+      if(v.x!=null){ONCESI_BAKIS.x=v.x;ONCESI_BAKIS.z=v.z-MOTOR_Z;ONCESI_BAKIS.t=zaman;}break;
     case 'flas':{const F=FLASLAR[flasSira++%FLASLAR.length];F.t=0;F.f.position.set(v.x,v.y,v.z-MOTOR_Z);break;}
-    case 'macaGec':soyle('Maça geçildi: takımlar santra için yerinde.');break;
-    case 'giris':soyle('Takımlar hakemlerin arkasından sahaya çıkıyor. Tribünler ayakta!');heyecanla(-1,H.giris,6);break;
-    case 'mars':soyle('İstiklal Marşı okunuyor.');HEY.ev=HEY.dep=0;HEY.tutEv=HEY.tutDep=0;break;
-    case 'marsBitti':soyle('Kaptanlar ve hakem orta yuvarlakta, yazı tura atılacak.');break;
-    case 'yazitura':soyle('Yazı turayı '+tAd(v.takim)+' kazandı; '+(v.secim==='santra'?'santrayı seçti.':'kalesini seçti, santra '+sLoc(tAd(v.santra))+'.'));PARA.t=0;PARA.x=v.x;PARA.z=v.z-MOTOR_Z;break;
-    case 'kickoff':soyle(mac.half===1?'Hakemin düdüğüyle maç başladı!':'İkinci yarı başladı!');heyecanla(-1,H.santra);break;
-    case 'shot':soyle(v.p.name+(v.dist>20?' uzaktan deniyor…':' şutunu çekiyor…'));heyecanla(v.p.team,H.sut);break;
-    case 'header':if(v.shot){soyle(v.p.name+' kafayı vurdu!');heyecanla(v.p.team,H.sut);}else if(v.tur==='indirme')soyle(v.p.name+' kafayla indirdi.');break;
-    case 'cross':soyle(v.p.name+' ortaladı…');heyecanla(v.p.team,H.sut*0.6);break;
-    case 'save':soyle(v.p.name+(v.catch?' topu kucakladı.':' uçtu, çeldi!'));heyecanla(v.p.team,H.kurtaris);break;
-    case 'block':soyle(v.orta?v.p.name+' ortayı kesti.':v.p.name+' şutu vücuduyla kesti.');break;
-    case 'yumruk':soyle(v.p.name+' yumrukla uzaklaştırdı.');break;
-    case 'wood':soyle('Direk! Top direkten döndü!');if(v.p)heyecanla(v.p.team,H.direk);break;
-    case 'yanAg':soyle('Yan ağlar! Tribünler gol sandı.');if(v.p)heyecanla(v.p.team,H.sut);break;
-    case 'goal':{const s=v.score,sc=v.scorer;
-      soyle(v.own?'Olamaz! '+(sc?sc.name:'')+' topu kendi ağlarına gönderdi. Skor '+s[0]+'-'+s[1]+'.':'GOOOL! '+sGen(tAd(v.team))+' golünü '+(sc?sc.name:'')+' attı! Skor '+s[0]+'-'+s[1]+'.');
+    case 'giris':heyecanla(-1,H.giris,6);break;
+    case 'mars':HEY.ev=HEY.dep=0;HEY.tutEv=HEY.tutDep=0;break;
+    case 'yazitura':PARA.t=0;PARA.x=v.x;PARA.z=v.z-MOTOR_Z;break;
+    case 'kickoff':heyecanla(-1,H.santra);break;
+    case 'shot':heyecanla(v.p.team,H.sut);break;
+    case 'header':if(v.shot)heyecanla(v.p.team,H.sut);break;
+    case 'cross':heyecanla(v.p.team,H.sut*0.6);break;
+    case 'save':heyecanla(v.p.team,H.kurtaris);break;
+    case 'wood':if(v.p)heyecanla(v.p.team,H.direk);break;
+    case 'yanAg':if(v.p)heyecanla(v.p.team,H.sut);break;
+    case 'goal':
       heyecanla(v.team,H.gol,8);if(v.team===0){HEY.dep=0;HEY.tutDep=0;}else{HEY.ev=0;HEY.tutEv=0;}
       for(const a of AKTORLER)if((a.esofman||a.kaynak.tur==='kenar')&&a.kaynak.team===v.team)a.sevinc=6;
-      AYAKTA[v.team?1:0]=6;break;}
-    case 'korner':soyle('Korner, '+tAd(v.team)+'.');heyecanla(v.team,H.sut*0.5);break;
-    case 'tac':if(zaman-sonTacSoz>20){sonTacSoz=zaman;soyle('Taç, '+tAd(v.team)+'. Top toplayıcı çocuk topu hemen veriyor.');}break;
-    case 'kaleVurusu':soyle('Kale vuruşu.');break;
-    case 'faul':soyle(v.penalti?'Penaltı! '+ad1(v.faulYapan)+' ceza sahasında '+sAcc(ad1(v.faulYiyen))+' düşürdü!':'Faul! '+ad1(v.faulYapan)+', '+sAcc(ad1(v.faulYiyen))+' düşürdü; hakem düdüğü çaldı.');
-      if(v.penalti)heyecanla(v.takim,H.gol*0.8,3);break;
-    case 'avantaj':soyle('Hakem avantaj verdi, oyun devam ediyor.');break;
-    case 'kart':soyle(v.renk==='sari'?v.p.name+' sarı kart gördü.':v.renk==='ikinciSari'?'İkinci sarıdan kırmızı! '+v.p.name+' oyundan atıldı.':'Kırmızı kart! '+v.p.name+' oyundan atıldı.');
-      heyecanla(1-v.p.team,H.sut*0.7);break;
-    case 'ofsayt':soyle('Ofsayt! Yan hakem bayrağını kaldırdı.');break;
-    case 'uzatma':UZATMA.t=0;UZATMA.metin='+'+v.dakika;tabelaYaz(UZATMA.metin);
-      soyle('Dördüncü hakem tabelayı kaldırdı: '+v.dakika+' dakika uzatma.');break;
-    case 'degisiklik':UZATMA.t=0;tabelaYaz(String(v.cikan.no),String(v.giren.no));
-      soyle('Oyuncu değişikliği, '+tAd(v.takim)+': '+v.cikan.name+' çıkıyor, '+v.giren.name+' giriyor.');break;
-    case 'halftime':soyle('İlk yarı sona erdi. Skor '+v.score[0]+'-'+v.score[1]+'. Takımlar soyunma odasına gidiyor.');break;
-    case 'secondhalf':soyle('Takımlar ikinci yarı için sahaya dönüyor.');heyecanla(-1,H.giris*0.7,3);break;
-    case 'fulltime':{const s=v.score;soyle('Maç sona erdi! '+tAd(0)+' '+s[0]+', '+tAd(1)+' '+s[1]+'.'+(s[0]>s[1]?' Tribünler başkanını alkışlıyor!':s[0]<s[1]?' Zor bir akşam oldu.':' Puanlar paylaşıldı.'));
-      if(s[0]!==s[1])heyecanla(s[0]>s[1]?0:1,H.macSonu,6);break;}
+      AYAKTA[v.team?1:0]=6;break;
+    case 'korner':heyecanla(v.team,H.sut*0.5);break;
+    case 'faul':if(v.penalti)heyecanla(v.takim,H.gol*0.8,3);break;
+    case 'kart':heyecanla(1-v.p.team,H.sut*0.7);break;
+    case 'uzatma':UZATMA.t=0;UZATMA.metin='+'+v.dakika;tabelaYaz(UZATMA.metin);break;
+    case 'degisiklik':UZATMA.t=0;tabelaYaz(String(v.cikan.no),String(v.giren.no));break;
+    case 'secondhalf':heyecanla(-1,H.giris*0.7,3);break;
+    case 'fulltime':{const s=v.score;if(s[0]!==s[1])heyecanla(s[0]>s[1]?0:1,H.macSonu,6);break;}
   }
 }
 

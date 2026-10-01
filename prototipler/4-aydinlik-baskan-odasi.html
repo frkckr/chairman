@@ -123,6 +123,7 @@ body{font-family:var(--mono);font-size:14px;line-height:1.55;padding-inline:16px
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="../js/ortak.js"></script>
 <script src="../js/stil-99.js"></script>
+<script src="../js/sunum-durumu.js"></script>
 <script src="../js/stadyum-tarifleri.js"></script>
 <script src="../js/kadrolar.js"></script>
 <script src="../js/kariyer.js"></script>
@@ -144,7 +145,6 @@ body{font-family:var(--mono);font-size:14px;line-height:1.55;padding-inline:16px
 <script src="../js/baslangic.js"></script>
 <script src="../js/goruntu.js"></script>
 <script src="../js/oda.js"></script>
-<script src="../js/ses.js"></script>
 <script src="../js/ekran-oda.js"></script>
 <script>
 /* prototip oturumu: bellek deposu, gerçek komut ve kayıt yolu (kayitOturumu) */
@@ -163,12 +163,12 @@ const PROTOTIP={oturum:null,ekran:null};
     yeniKariyer:kur,macaGit:()=>{alert('Prototip: burada maç bülteni ve 3B maç günü açılır.');},
     donus:q.get('donus')==='1',ilkMesaj:ilk,bozukHata:null,bozuguSaklaVeBasla:kur
   };
-  const ayarlar={ses:0.6,sessiz:false,yazi:q.get('yazi')==='buyuk'?'buyuk':'normal',test:q.get('test')!=='0',kaydet(){}};
+  const ayarlar={yazi:q.get('yazi')==='buyuk'?'buyuk':'normal',test:q.get('test')!=='0',kaydet(){}};
   PROTOTIP.ekran=odaEkraniKur($('oda'),oyun,ayarlar);
   PROTOTIP.ekran.ciz('.od-ana');
   if(['telefon','ajanda','dosya','ayar'].includes(q.get('panel')))PROTOTIP.ekran.ac(q.get('panel'));
   let son=0;
-  const kare=t=>{const dt=Math.min(0.05,Math.max(0,(t-son)/1000));son=t;odaKare(dt);odaCiz();requestAnimationFrame(kare);};
+  const kare=t=>{const dt=Math.min(0.05,Math.max(0,(t-son)/1000));son=t;odaKare(duraklatmaVar()?0:dt);odaCiz();requestAnimationFrame(kare);};
   requestAnimationFrame(t=>{son=t;requestAnimationFrame(kare);});
 }
 </script>

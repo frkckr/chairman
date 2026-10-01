@@ -10,9 +10,11 @@
      odaIsaret(x, y) → nesne adı ya da null              imlecin altındaki nesne (x, y: −1…1 ekran koordinatı); vurguyu da ayarlar
      odaOdak(ad | null)                                   bakışın döneceği nesne
      odaKare(dt) · odaCiz()                               küçük ortam hareketi ve çizim
-   Balkon (2.7): uzak duvardaki kapıdan balkona çıkılır. ODA.yer: 'masa' | 'yolda' | 'balkon'. odaYuru(hedef, bitince) masadan balkondaki
-   sandalyeye (ya da geri) kısa bir kamera yürüyüşü başlatır; odaYuruAtla() yürüyüşü bitirir. Balkonun ve sahanın kendisi js/balkon.js'te
-   ODA.dis grubuna kurulur; grup yalnız yolda ve balkondayken görünür. Balkonda telefon balkon masasındadır. */
+   Balkon (2.7, 2.8D): uzak duvardaki kapıdan balkona çıkılır; kapının kendisi tıklanır (odaIsaret 'kapi' döndürür; üstünde “BALKON” levhası).
+   ODA.yer: 'masa' | 'yolda' | 'balkon'. odaYuru(hedef, bitince) yürüyüşü başlatır: kalkış → kapıya yönelme → ritimli adımlar (yavaşlayıp
+   hızlanan, sallantılı) → varış ve oturma. odaYuruAtla() yürüyüşü bitirir. Süreler ve adım ölçüleri STIL.oda.adim'dadır; zaman dt ile ilerler,
+   duraklatmada (dt=0) olduğu yerde durur. Balkonun ve sahanın kendisi js/balkon.js'te ODA.dis grubuna kurulur; grup kurulduysa pencereden de
+   görünür (odaPencereAc). Balkonda telefon balkon masasındadır. */
 const OD=STIL.oda;
 const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/RH,0.05,400),nesneler:{},odak:null,uzerinde:null,zaman:0,
   yer:'masa',yol:null,dis:new THREE.Group(),kapi:null,balkonTelefon:null,
@@ -31,16 +33,25 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
    box(7,0.1,7,oLAM({map:tx(cv,'n',[5,8])}),0,-0.05,-1.2,S);}
   box(3.4,0.02,2.6,oLAM({color:OD.haliKenar}),0,0.01,-1.35,S);box(3.1,0.024,2.3,oLAM({color:OD.hali}),0,0.012,-1.35,S);
   const duvar=oLAM({color:OD.duvar}),lambri=oLAM({color:OD.lambri}),sup=oLAM({color:OD.supurgelik});
-  /* uzak duvar: balkon kapısının boşluğu açık bırakılır (x0–x1, yerden h yüksekliğe) */
-  {const K=OD.kapi,parca=(x0,x1)=>{const w=x1-x0,x=(x0+x1)/2;box(w,3,0.1,duvar,x,1.5,-3.5,S);box(w,0.95,0.04,lambri,x,0.475,-3.43,S);box(w,0.05,0.05,sup,x,0.96,-3.42,S);};
-   parca(-3.5,K.x0);parca(K.x1,3.5);box(K.x1-K.x0,3-K.h,0.1,duvar,(K.x0+K.x1)/2,(3+K.h)/2,-3.5,S);
+  /* uzak duvar: balkon kapısının ve pencerenin boşluğu açık bırakılır (kapı x0–x1, yerden h yüksekliğe; pencere OD.pencere) */
+  {const K=OD.kapi,P=OD.pencere,parca=(x0,x1)=>{const w=x1-x0,x=(x0+x1)/2;box(w,0.95,0.04,lambri,x,0.475,-3.43,S);box(w,0.05,0.05,sup,x,0.96,-3.42,S);},
+   duvarParca=(x0,x1,y0,y1)=>box(x1-x0,y1-y0,0.1,duvar,(x0+x1)/2,(y0+y1)/2,-3.5,S);
+   parca(-3.5,K.x0);parca(K.x1,3.5);
+   duvarParca(-3.5,P.x0,0,3);duvarParca(P.x0,P.x1,0,P.y0);duvarParca(P.x0,P.x1,P.y1,3);duvarParca(P.x1,K.x0,0,3);duvarParca(K.x1,3.5,0,3);
+   box(K.x1-K.x0,3-K.h,0.1,duvar,(K.x0+K.x1)/2,(3+K.h)/2,-3.5,S);
    const c=oLAM({color:K.renk}),w=K.x1-K.x0;
    for(const x of[K.x0-0.03,K.x1+0.03])box(0.07,K.h+0.06,0.14,c,x,K.h/2,-3.5,S);box(w+0.13,0.07,0.14,c,(K.x0+K.x1)/2,K.h+0.03,-3.5,S);
    /* kanat: menteşe x0'da; camlı üst yarı, dolu alt yarı, pirinç kol */
    const kanat=new THREE.Group();kanat.position.set(K.x0,0,-3.5);S.add(kanat);ODA.kapi=kanat;
    box(w,0.9,0.05,c,w/2,0.45,0,kanat);box(w,0.1,0.05,c,w/2,K.h-0.05,0,kanat);for(const x of[0.04,w-0.04])box(0.08,K.h-1,0.05,c,x,0.9+(K.h-1)/2,0,kanat);box(0.05,K.h-1,0.04,c,w/2,0.9+(K.h-1)/2,0,kanat);
    const camM=new THREE.MeshBasicMaterial({color:K.cam,fog:false});box(w-0.16,K.h-1,0.02,camM,w/2,0.9+(K.h-1)/2,0,kanat);ODA.kapiCam=camM;
-   box(0.03,0.03,0.1,oLAM({color:K.kol}),w-0.1,1.02,0.04,kanat);}
+   box(0.03,0.03,0.1,oLAM({color:K.kol}),w-0.1,1.02,0.04,kanat);
+   /* kapı tıklanır: görünmez dokunma kutusu, üzerine gelince amber çerçeve; üstünde küçük “BALKON” levhası */
+   const geo=new THREE.BoxGeometry(w+0.1,K.h,0.3),kutu=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({visible:false}));kutu.position.set((K.x0+K.x1)/2,K.h/2,-3.42);kutu.userData.nesne='kapi';S.add(kutu);
+   const cerceve=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:OD.vurgu,fog:false}));cerceve.position.copy(kutu.position);cerceve.visible=false;S.add(cerceve);
+   ODA.kapiHedef={g:kutu,kutu,cerceve,merkez:kutu.position.clone()};
+   const lv=mk(32,8),lg=lv.getContext('2d');lg.fillStyle=OD.levha;lg.fillRect(0,0,32,8);ctxText(lg,'BALKON',(32-textW('BALKON',1))>>1,0,OD.levhaYazi,1);
+   const levha=new THREE.Mesh(new THREE.PlaneGeometry(0.4,0.1),BAS({map:tx(lv,'n'),fog:false}));levha.position.set((K.x0+K.x1)/2,K.h+0.16,-3.44);S.add(levha);ODA.levha=levha;}
   S.add(ODA.dis);ODA.dis.visible=false;
   for(const sx of[-1,1]){box(0.1,3,7,duvar,sx*3.2,1.5,-1.2,S);box(0.04,0.95,7,lambri,sx*3.13,0.475,-1.2,S);box(0.05,0.05,7,sup,sx*3.12,0.96,-1.2,S);}
   box(7,0.1,7,oLAM({color:OD.tavan}),0,3.05,-1.2,S);
@@ -54,7 +65,8 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
      g.fillStyle=OD.direk;g.fillRect(52,8,1,27);g.fillRect(49,6,7,3);g.fillStyle=OD.cim;g.fillRect(0,35,64,13);g.fillStyle='#2f7a2a';for(let x=0;x<64;x+=8)g.fillRect(x,35,4,13);
      if(ODA.cam)ODA.cam.material.map.needsUpdate=true;};
    ODA.pencereCiz(false);
-   const cam=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.25),BAS({map:tx(cv,'n'),fog:false}));cam.position.set(-1.25,1.62,-3.44);S.add(cam);ODA.cam=cam;
+   /* çizili pencere: balkon kurulmadıysa (ör. oda prototipi) dışarıyı temsil eder; balkon kurulunca odaPencereAc onu cama çevirir */
+   const P=OD.pencere,cam=new THREE.Mesh(new THREE.PlaneGeometry(P.x1-P.x0,P.y1-P.y0),BAS({map:tx(cv,'n'),fog:false}));cam.position.set((P.x0+P.x1)/2,(P.y0+P.y1)/2,-3.44);S.add(cam);ODA.cam=cam;
    const c=oLAM({color:OD.cerceve});
    box(2.06,0.08,0.12,c,-1.25,2.28,-3.42,S);box(2.14,0.07,0.2,c,-1.25,0.97,-3.38,S);
    for(const x of[-2.24,-1.25,-0.26])box(x===-1.25?0.05:0.08,1.3,0.1,c,x,1.62,-3.42,S);box(1.9,0.04,0.08,c,-1.25,1.72,-3.42,S);}
@@ -133,13 +145,11 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
    const a=new THREE.Mesh(new THREE.BoxGeometry(0.13,0.09,0.004),oLAM({color:OD.kagit}));a.position.set(0,0.045,0);a.rotation.x=-0.3;kart.add(a);
    const s=new THREE.Mesh(new THREE.BoxGeometry(0.13,0.014,0.005),oLAM({color:OD.defterSerit}));s.position.set(0,0.07,0.009);s.rotation.x=-0.3;kart.add(s);
    kart.visible=false;MASA.add(kart);ODA.kart=kart;}
-  /* masa lambası, kalemlik, çay */
+  /* masa lambası, kalemlik */
   {const l=oLAM({color:OD.lamba});box(0.16,0.02,0.12,l,0.92,UST+0.01,-1.02,MASA);box(0.02,0.3,0.02,l,0.92,UST+0.17,-1.02,MASA);
    const s=box(0.26,0.08,0.13,l,0.86,UST+0.34,-0.98,MASA);s.rotation.z=0.12;box(0.2,0.01,0.09,BAS({color:OD.lambaIc,fog:false}),0.855,UST+0.297,-0.98,MASA).rotation.z=0.12;
    box(0.07,0.1,0.07,oLAM({color:OD.kalemlik}),-0.9,UST+0.05,-1.0,MASA);
-   for(const [x,r] of[[-0.915,0xc8281e],[-0.89,0x22347a],[-0.9,0xd8b030]])box(0.012,0.09,0.012,oLAM({color:r}),x,UST+0.13,-1.0+(x+0.9)*0.8,MASA);
-   const tabak=new THREE.Mesh(new THREE.CylinderGeometry(0.062,0.05,0.01,12),oLAM({color:0xefece4}));tabak.position.set(0.36,UST+0.005,-0.98);MASA.add(tabak);
-   const cay=new THREE.Mesh(new THREE.CylinderGeometry(0.026,0.02,0.085,10),oLAM({color:0x9a2a0c}));cay.position.set(0.36,UST+0.052,-0.98);MASA.add(cay);}
+   for(const [x,r] of[[-0.915,0xc8281e],[-0.89,0x22347a],[-0.9,0xd8b030]])box(0.012,0.09,0.012,oLAM({color:r}),x,UST+0.13,-1.0+(x+0.9)*0.8,MASA);}
   ODA.kamera.position.set(...OD.goz);
 }
 
@@ -154,7 +164,7 @@ function odaGunIsigi(dakika){
 function odaDurum(d){
   const D=Object.assign(ODA.durum,d),N=ODA.nesneler;
   N.dosya.g.visible=!!D.dosya;N.gazete.g.visible=!!D.gazete;ODA.kart.visible=!!D.kart;ODA.panoNotu.visible=!!D.panoNotu;
-  if(ODA.iskele!==!!D.iskele){ODA.iskele=!!D.iskele;ODA.pencereCiz(ODA.iskele);}
+  if(ODA.iskele!==!!D.iskele){ODA.iskele=!!D.iskele;if(ODA.disHep&&typeof balkonIskele==='function')balkonIskele(ODA.iskele);else ODA.pencereCiz(ODA.iskele);}
   {const g=N.telefon.cv.getContext('2d');g.fillStyle=D.haber?OD.telefonHaber:OD.telefonEkran;g.fillRect(0,0,16,32);
    if(D.haber){const s=String(Math.min(9,D.haber));ctxText(g,s,5,9,'#1a1203',2);}else{g.fillStyle='#1c3a52';g.fillRect(0,0,16,5);}
    N.telefon.ekran.map.needsUpdate=true;}
@@ -166,15 +176,50 @@ function odaDurum(d){
   ODA.akrep.rotation.z=-((dk/60)%12)/12*Math.PI*2;ODA.yelkovan.rotation.z=-(dk%60)/60*Math.PI*2;
   ODA.isik.gunes.intensity=I.guc;ODA.isik.gunes.color.copy(I.renk);ODA.isik.ortam.intensity=OD.ortam.guc*(0.55+0.6*I.guc);
   ODA.cam.material.color.copy(I.renk).lerp(new THREE.Color(0xffffff),0.35).multiplyScalar(0.35+0.85*I.guc);ODA.leke.opacity=0.32*I.guc;
+  if(ODA.disHep)ODA.cam.material.color.set(0xd8ecf6);
   ODA.kapiCam.color.set(OD.kapi.cam).multiply(ODA.cam.material.color);
 }
 
-/* ---- balkona yürüyüş ---- */
-const ODA_YOL=OD.yol.map(d=>({p:new THREE.Vector3(...d[0]),b:new THREE.Vector3(...d[1])}));
-/* yolun u (0 = masa, 1 = balkon) noktasındaki konum ve bakış: duraklar arasında yumuşak geçiş */
-function odaYolNoktasi(u,konum,bakis){
-  const n=ODA_YOL.length-1,s=Math.min(n-1e-6,Math.max(0,u)*n),i=Math.floor(s),t=s-i,y=t*t*(3-2*t);
-  konum.lerpVectors(ODA_YOL[i].p,ODA_YOL[i+1].p,y);bakis.lerpVectors(ODA_YOL[i].b,ODA_YOL[i+1].b,y);
+/* ---- pencere: balkon kurulduysa dışarı gerçekten görünür (aynı stat, js/balkon.js) ---- */
+function odaPencereAc(){
+  ODA.disHep=true;ODA.dis.visible=true;
+  ODA.cam.material=new THREE.MeshBasicMaterial({color:0xd8ecf6,transparent:true,opacity:0.14,depthWrite:false,fog:false});
+  if(typeof balkonIskele==='function')balkonIskele(ODA.iskele);
+}
+/* ---- balkona yürüyüş (2.8D): kalkış → yönelme → adımlar → varış/oturma ---- */
+const ODA_YOL=OD.yol.map(d=>new THREE.Vector3(...d));
+const odaYumusak=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x);};
+/* yürüyüşün zaman çizelgesi: oturulan yer (göz, bakış), yürüme noktaları (balkona ya da geri), toplam yol uzunluğu */
+function odaYolKur(hedef){
+  const A=OD.adim,masa={p:new THREE.Vector3(...OD.goz),b:new THREE.Vector3(...OD.bakis)},balkon={p:new THREE.Vector3(...STIL.balkon.goz),b:new THREE.Vector3(...STIL.balkon.bakis)};
+  const W=ODA_YOL.map(v=>v.clone());if(hedef==='masa')W.reverse();
+  const L=[0];for(let i=1;i<W.length;i++)L.push(L[i-1]+W[i].distanceTo(W[i-1]));
+  const yuru=L[L.length-1]/A.hiz;
+  return{t:0,hedef,bas:hedef==='balkon'?masa:balkon,son:hedef==='balkon'?balkon:masa,W,L,yuru,toplam:A.kalk+A.yonel+yuru+A.otur,bakisNokta:new THREE.Vector3()};
+}
+/* yol üzerinde d metredeki nokta ve yön */
+function odaYolda(Y,d,P,yon){
+  const L=Y.L,W=Y.W;let i=1;while(i<L.length-1&&d>L[i])i++;
+  const s=Math.min(1,Math.max(0,(d-L[i-1])/Math.max(1e-6,L[i]-L[i-1])));P.lerpVectors(W[i-1],W[i],s);yon.subVectors(W[i],W[i-1]).normalize();
+}
+/* yürürken bakış: yolun 2,5 m ilerisine, biraz aşağı */
+function odaIleri(Y,d,cikis){const P=new THREE.Vector3(),yon=new THREE.Vector3(),toplam=Y.L[Y.L.length-1];odaYolda(Y,Math.min(toplam,d+2.5),P,yon);
+  if(d+2.5>toplam)P.addScaledVector(yon,d+2.5-toplam);return cikis.set(P.x,P.y-0.3,P.z);}
+/* t anındaki kamera konumu ve bakışı; ilerleme 0–1 (görüş açısı ve kapı için) */
+function odaYolAni(Y,P,B){
+  const A=OD.adim,toplam=Y.L[Y.L.length-1],ileri=new THREE.Vector3();let t=Y.t,ilerleme;
+  if(t<A.kalk){/* kalkış: önce yükselir, sonra yürüme noktasına geriler; bakış oturduğu yerdeki gibi */
+    const s=t/A.kalk;P.lerpVectors(Y.bas.p,Y.W[0],odaYumusak(s));P.y=Y.bas.p.y+(Y.W[0].y-Y.bas.p.y)*Math.sin(Math.min(1,s*1.3)*Math.PI/2);B.copy(Y.bas.b);ilerleme=0;}
+  else if((t-=A.kalk)<A.yonel){/* yönelme: yerinde dönüp yola bakar */
+    P.copy(Y.W[0]);B.lerpVectors(Y.bas.b,odaIleri(Y,0,ileri),odaYumusak(t/A.yonel));ilerleme=0;}
+  else if((t-=A.yonel)<Y.yuru){/* adımlar: yavaş başlayıp yavaş biten yürüyüş; her adımda hafif iniş-çıkış ve yana yalpa */
+    const u=t/Y.yuru,d=toplam*(u-Math.sin(2*Math.PI*u)/(2*Math.PI)),yon=new THREE.Vector3();odaYolda(Y,d,P,yon);
+    const faz=Math.PI*d/A.adimBoyu,genlik=Math.min(1,d/0.4,(toplam-d)/0.4);
+    P.y+=(Math.abs(Math.sin(faz))-0.5)*A.sallanma*genlik;P.x+=-yon.z*Math.sin(faz)*A.yalpa*genlik;P.z+=yon.x*Math.sin(faz)*A.yalpa*genlik;
+    B.copy(odaIleri(Y,d,ileri));ilerleme=d/toplam;}
+  else{/* varış ve oturma: oturulan yere iner, bakış oraya döner */
+    t-=Y.yuru;const s=odaYumusak(t/A.otur);P.lerpVectors(Y.W[Y.W.length-1],Y.son.p,s);B.lerpVectors(odaIleri(Y,toplam,ileri),Y.son.b,s);ilerleme=1;}
+  return Y.hedef==='balkon'?ilerleme:1-ilerleme;
 }
 /* telefon bulunulan yerdedir: masada ya da balkon masasında (js/balkon.js ODA.balkonTelefon'u bildirir) */
 function odaYerAyarla(yer){
@@ -182,7 +227,7 @@ function odaYerAyarla(yer){
   const N=ODA.nesneler.telefon,B=ODA.balkonTelefon;
   if(yer==='balkon'&&B){ODA.sahne.add(N.g);N.g.position.set(B.x,B.y,B.z);N.g.rotation.y=B.donus;N.merkez.set(B.x,B.y+0.03,B.z);}
   else{ODA.masa.add(N.g);N.g.position.set(-0.56,ODA.masaUstu,-0.7);N.g.rotation.y=0.32;N.merkez.set(-0.56,ODA.masaUstu+0.03,-0.7);}
-  ODA.dis.visible=yer!=='masa';ODA.kapi.rotation.y=yer==='masa'?0:1.75;
+  ODA.dis.visible=ODA.disHep||yer!=='masa';ODA.kapi.rotation.y=yer==='masa'?0:1.75;
   ODA.kamera.fov=yer==='balkon'?STIL.balkon.aci:OD.aci;ODA.kamera.updateProjectionMatrix();
   ODA.bakis.set(...(yer==='balkon'?STIL.balkon.bakis:OD.bakis));
 }
@@ -190,9 +235,9 @@ function odaYerAyarla(yer){
 function odaYuru(hedef,bitince){
   if(ODA.yer==='yolda'||ODA.yer===hedef){if(bitince)bitince();return;}
   ODA.odak=null;ODA.uzerinde=null;
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches){odaYerAyarla(hedef);if(bitince)bitince();return;}
+  if(hareketAz()){odaYerAyarla(hedef);if(bitince)bitince();return;}
   if(hedef==='masa'){ODA.masa.add(ODA.nesneler.telefon.g);ODA.nesneler.telefon.g.position.set(-0.56,ODA.masaUstu,-0.7);ODA.nesneler.telefon.g.rotation.y=0.32;}
-  ODA.yer='yolda';ODA.dis.visible=true;ODA.yol={t:0,hedef,bitince:bitince||null};
+  ODA.yer='yolda';ODA.dis.visible=true;ODA.yol=Object.assign(odaYolKur(hedef),{bitince:bitince||null});
 }
 function odaYuruAtla(){
   if(!ODA.yol)return;
@@ -202,27 +247,27 @@ const ODA_ISIN=new THREE.Raycaster();
 function odaIsaret(x,y){
   let ad=null;
   if(x!==null){ODA_ISIN.setFromCamera({x,y},ODA.kamera);
-    /* masada bütün nesneler, balkonda yalnız yanındaki telefon seçilebilir; yolda hiçbiri */
-    const L=ODA.yer==='masa'?Object.values(ODA.nesneler):ODA.yer==='balkon'?[ODA.nesneler.telefon]:[];
+    /* masada bütün nesneler ve balkon kapısı (balkon kuruluysa), balkonda yalnız yanındaki telefon seçilebilir; yolda hiçbiri */
+    const L=ODA.yer==='masa'?Object.values(ODA.nesneler).concat(ODA.kapiHedef&&typeof balkonKare==='function'?[ODA.kapiHedef]:[]):ODA.yer==='balkon'?[ODA.nesneler.telefon]:[];
     const v=ODA_ISIN.intersectObjects(L.filter(n=>n.g.visible).map(n=>n.kutu));ad=v.length?v[0].object.userData.nesne:null;}
   ODA.uzerinde=ad;return ad;
 }
 function odaOdak(ad){ODA.odak=ad&&ODA.nesneler[ad]&&(ODA.yer==='masa'||(ODA.yer==='balkon'&&ad==='telefon'))?ad:null;}
 function odaKare(dt){
   ODA.zaman+=dt;
-  const t=ODA.zaman,N=ODA.nesneler,az=matchMedia('(prefers-reduced-motion: reduce)').matches?0:1;
+  const t=ODA.zaman,N=ODA.nesneler,az=hareketAz()?0:1;
   if(ODA.dis.visible&&typeof balkonKare==='function')balkonKare(dt);
   if(ODA.yol){
-    /* yürüyüş: kamera yol boyunca ilerler, adım sallantısı; kapı yolun ortasında açılır */
-    const Y=ODA.yol;Y.t=Math.min(1,Y.t+dt/OD.yuruyus);
-    const u=Y.hedef==='balkon'?Y.t:1-Y.t,P=new THREE.Vector3();
-    odaYolNoktasi(u,P,ODA.bakis);
-    ODA.kamera.position.set(P.x,P.y+Math.abs(Math.sin(Y.t*Math.PI*5))*0.03*Math.sin(Y.t*Math.PI),P.z);ODA.kamera.lookAt(ODA.bakis);
-    ODA.kapi.rotation.y=1.75*Math.min(1,Math.max(0,(u-0.18)/0.3));
+    /* yürüyüş: kalkış, yönelme, adımlar, oturma (odaYolAni); kapı yaklaşınca açılır, geçince kapanır */
+    const Y=ODA.yol;Y.t=Math.min(Y.toplam,Y.t+dt);
+    const P=new THREE.Vector3(),u=odaYolAni(Y,P,ODA.bakis);
+    ODA.kamera.position.copy(P);ODA.kamera.lookAt(ODA.bakis);
+    ODA.kapi.rotation.y=1.75*odaYumusak((-P.z-1.4)/1.6);
     const aciY=OD.aci+(STIL.balkon.aci-OD.aci)*u;
-    if(ODA.kamera.fov!==aciY){ODA.kamera.fov=aciY;ODA.kamera.updateProjectionMatrix();}
+    if(Math.abs(ODA.kamera.fov-aciY)>0.01){ODA.kamera.fov=aciY;ODA.kamera.updateProjectionMatrix();}
     for(const ad in N)N[ad].cerceve.visible=false;
-    if(Y.t>=1)odaYuruAtla();
+    if(ODA.kapiHedef)ODA.kapiHedef.cerceve.visible=false;
+    if(Y.t>=Y.toplam)odaYuruAtla();
     return;
   }
   /* odakta bakış nesneye doğru eğilir ve nesnenin sağına kayar: sağda açılan panelin yanında nesne görünür kalır */
@@ -235,6 +280,7 @@ function odaKare(dt){
   const aci=balkonda?(ODA.odak?STIL.balkon.odakAci:STIL.balkon.aci):ODA.odak?OD.odakAci:OD.aci;
   if(Math.abs(ODA.kamera.fov-aci)>0.05){ODA.kamera.fov+=(aci-ODA.kamera.fov)*k;ODA.kamera.updateProjectionMatrix();}
   for(const ad in N)N[ad].cerceve.visible=N[ad].g.visible&&(ad===ODA.uzerinde||ad===ODA.odak);
+  if(ODA.kapiHedef)ODA.kapiHedef.cerceve.visible=ODA.uzerinde==='kapi';
   N.telefon.isik.material.opacity=ODA.durum.haber?0.3+0.22*Math.sin(t*4)*az:0;
   N.gazete.isik.material.opacity=ODA.durum.gazete&&ODA.durum.gazeteYeni?0.26+0.18*Math.sin(t*3)*az:0;
 }

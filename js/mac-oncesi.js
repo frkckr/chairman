@@ -82,7 +82,7 @@ Object.assign(Match.prototype,{
     this.hakemIsinma(dt);this.kenarOncesi(dt);
     this.hareketHepsi(dt,true);
     this.antrenmanTopu(dt);
-    /* radyo için önemli anlar */
+    /* bakış için önemli anlar */
     const ol=(ad,kosul,v)=>{if(kosul&&!sn.olan[ad]){sn.olan[ad]=true;this.on('oncesi',Object.assign({ad},v||{}));}};
     ol('kaleciler',sn.t>sn.kaleciler[0].cikis+3,{x:sn.kaleciler[0].gx,z:MZ});
     ol('hakemler',sn.t>this.refs[0].sg.cikis+6,{x:0,z:MZ});
