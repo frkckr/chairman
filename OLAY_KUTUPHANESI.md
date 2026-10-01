@@ -1,6 +1,6 @@
 # Chairman — olay kütüphanesi
 
-Son güncelleme: 2026-09-30. Onaylı tasarım yönünü destekleyen tarihsel kaynak ve kurgusal içerik kataloğudur. **P01, P03 ve P13'ün dar alt kapsamları uygulandı (yol haritası 2.4A, 2.6, 2.8; TEST içerik); diğer paketler henüz uygulanmadı.** Kartlar ayrıntılı içerik taslaklarıdır; bütün seçeneklerin, sayıların veya paketlerin aynı aşamada uygulanacağı anlamına gelmez.
+Son güncelleme: 2026-10-01. Onaylı tasarım yönünü destekleyen tarihsel kaynak ve kurgusal içerik kataloğudur. **P01, P03 ve P13'ün dar alt kapsamları uygulandı (yol haritası 2.4A, 2.6, 2.8; TEST içerik); diğer paketler henüz uygulanmadı.** Kartlar ayrıntılı içerik taslaklarıdır; bütün seçeneklerin, sayıların veya paketlerin aynı aşamada uygulanacağı anlamına gelmez.
 
 Katalog 23 tarihsel örnek, 14 olay paketi ve 6 koşula bağlı birleşim içerir. Tarihsel dayanak ile kurgusal seçenek ve sonuçlar ayrıdır. Birleşimler oynanacak altı sabit kampanya değildir. İlk uygulama kapsamı ve iş sırası [YOL_HARITASI](YOL_HARITASI.md), oyun kuralları [OYUN_TASARIMI](OYUN_TASARIMI.md), teknik sözleşme [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi) içindedir.
 
@@ -11,6 +11,8 @@ Eski sabit TEST haftası normal Yeni kariyer yolundan çıkarıldı (2.4A); eski
 Bir paket bir mesele ailesidir. Önce §8'deki bağımlılıklar, sonra kartın açılma koşulu ve oyuncunun elde edebileceği kanıt okunur. İlgili sistem hazır değilse yalnız metnini eklemek paketi uygulanmış yapmaz. Kesin olay sırası, final veya her duruma uyan doğru cevap yazılmaz.
 
 Kartlarda kaynak, insan, gelecekteki hareket alanı ve kulüpte görünür iz düşünülür; her küçük olayın dört alanda da büyük etkisi gerekmez. Bazı olumlu anlar yalnız aidiyet ve hafıza sağlar. Yeni kararlarda oyun kurallarının ana kaynağı güncellenir; bu katalog ikinci bir tasarım kuralları listesi tutulacak yer değildir.
+
+**2026-10-01 sunum yenilemesi:** Paketler [tek konu akışını](OYUN_TASARIMI.md#tek-konu-akışı-ve-ekranların-görevleri) ve [onaylı ekran düzenlerini](STIL_REHBERI.md#onaylı-ekran-düzenleri-ve-etkileşim) kullanır. Aynı mesele mesaj, ajanda ve dosyada çoğaltılmaz; kritik bilgi/son tarih saklanmaz, haber açık dosyayı değiştirmez. Öncelik 2.8A–2.8F ekran temelidir; bu katalog yeni paketleri öne alma gerekçesi değildir. Tarihsel esinler, paketler ve koşullu yollar korunur.
 
 ## 2. Tarihsel kaynak kütüphanesi
 
@@ -199,7 +201,7 @@ Eski sabit haftanın, aday–sponsor sonuç eşleşmelerinin ve sonuçsuz görev
 | P01 | 2.4A dar ödeme/sponsor denemesi (uygulandı; kartta “Kullanılan alt kapsam”); Aşama 4 sözleşmelerle genişleme | İlk adımda transfer, kişisel katkı veya tesis sistemi kurulmaz; karttaki bütün yollar aynı anda uygulanmaz |
 | P02 | Aşama 6 adaylık ve vaat; ilgili transfer/yatırım sistemi | Verilmemiş söz veya kesinleşmemiş transfer sonradan oldu diye yazılmaz |
 | P03 | 2.6 sınırlı katkı/görünürlük hakkı (uygulandı: tek seferlik destek, süreli pano, çıkar çatışması ve tek pano kuralı); Aşama 4 anlaşmalar | Tam hisse, yatırımcı ve seçim sistemi ilk örneğe dahil değildir; açık mali kararlar ayrıca çözülür |
-| P04 | Aşama 8 tesis/stat yatırımı | 2.8'deki küçük görünür iz bütün inşaat sisteminin hazır olduğu anlamına gelmez |
+| P04 | 2.8D ortak stat temeli; Aşama 8 tesis/stat yatırımı | Kulübün mevcut stadı etap etap gelişir; lig değişimi ayrı hazır şehir stadı getirmez. Ortak tarif ve 2.8'deki küçük görünür iz bütün inşaat sisteminin hazır olduğu anlamına gelmez |
 | P05 | Aşama 4 sonrası ticari hak ve ilgili kamuoyu sistemi | Kulüp kimliği, kurgusal marka ve anlaşmanın sınırları gerekir; her kariyere arma krizi eklenmez |
 | P06 | Aşama 4–5 mali/etkinlik temeli; Aşama 8 tesisle genişleme | Yardım maçı için gerçek maç/takvim gerekir; brüt destek vaadi nakit sayılmaz |
 | P07 | Aşama 4 transfer; Aşama 8 yetişmiş oyuncuyla genişleme | İlk satış örneği mevcut oyuncuyu kullanabilir; akademi varmış gibi geçmiş icat edilmez |

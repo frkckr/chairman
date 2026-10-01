@@ -1,6 +1,6 @@
 # Chairman — yol haritası
 
-Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun ana kaynağıdır. Oyun kuralları [OYUN_TASARIMI.md](OYUN_TASARIMI.md), mimari yaklaşım [TEKNIK_PLAN.md](TEKNIK_PLAN.md), sunum kuralları [STIL_REHBERI.md](STIL_REHBERI.md) içindedir.
+Son güncelleme: 2026-10-01. Bu dosya iş sırasının ve tamamlanma durumunun ana kaynağıdır. Oyun kuralları [OYUN_TASARIMI.md](OYUN_TASARIMI.md), mimari yaklaşım [TEKNIK_PLAN.md](TEKNIK_PLAN.md), sunum kuralları [STIL_REHBERI.md](STIL_REHBERI.md) içindedir.
 
 ## Şu an neredeyiz?
 
@@ -29,6 +29,8 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
 - [ ] Tam yönetim, sözleşme/ekonomi, seçim, sezon, uzun kariyer ve Avrupa sistemleri; maç sonucunun kariyere bağlanması.
 - [ ] Ticari masaüstü paketi ve uzun kariyer doğrulaması.
 
+**Onaylanan yenileme henüz kodda yok (2026-10-01):** Yukarıdaki iki stat, ses ayarı, mevcut paneller ve prototip kontrolleri bugün çalışan uygulamayı anlatır. Yeni 2.8A–2.8F işleri bu düzeni yenileyecek; tarihsel tamamlanma kayıtları korunur. Sıradaki iş 2.8A'dır.
+
 ## Güncel karar özeti
 
 - **2026-09-26/27, geçerli:** Görseller kodla üretilir. Mevcut '99 görünümü, karakterin gözünden maç izleme ve kurgusal kulüp/kişi kimlikleri korunur. Reddedilen konsept denemeleri ürüne alınmaz.
@@ -53,7 +55,7 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
 
 - **2026-09-30, onaylı tasarım ve belge güncellemesi:** Öncelik yaşayan kulüp deneyimidir: aydınlık oda/görüşme ortamı, aynı meseleyi takip eden telefon ve ajanda, tavsiye/kalıcı yetki devri, kontrollü antrenman gözlemi ve kararların görünür sonuçları. Ayrıntı [OYUN_TASARIMI §2](OYUN_TASARIMI.md#2-başkanın-rolü-ve-ana-döngü) ve [STIL_REHBERI §7](STIL_REHBERI.md#7-arayüz-ve-bilgi).
 - **2026-09-30, onaylı zaman yaklaşımı:** Eylemle ilerleyen takvim; okuma ve düşünmede durma; sonraki önemli gelişmede durarak ilerleme; gün içinde güvenli kayıt ve dönüş özeti. Gün/sezon süreleri ölçüm hedefidir, kesin denge değildir; tek kaynak [OYUN_TASARIMI §6](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo).
-- **2026-09-30, onaylı iş sırası:** Basit sezon takvimi Aşama 3'e alınır. Tam sezon eski Aşama 6'dan yeni Aşama 5'e, kapsamlı adaylık hikâyesi eski Aşama 5'ten yeni Aşama 6'ya taşınır. Temel kayıt, okunabilirlik ve ortam sesi Aşama 2'nin kabul koşuludur. Tamamlanan işler korunur; bu kararlar oyun kodunun uygulandığı anlamına gelmez.
+- **2026-09-30, onaylı iş sırası:** Basit sezon takvimi Aşama 3'e alınır. Tam sezon eski Aşama 6'dan yeni Aşama 5'e, kapsamlı adaylık hikâyesi eski Aşama 5'ten yeni Aşama 6'ya taşınır. Temel kayıt ve okunabilirlik Aşama 2'nin kabul koşuludur; o tarihteki erken ortam sesi koşulu 2026-10-01 kararıyla kaldırıldı. Tamamlanan işler korunur; bu kararlar oyun kodunun uygulandığı anlamına gelmez.
 
 - **2026-09-30, uygulanan (2.3–2.4) ve alınan kararlar:**
   - “İlerle” günü bitirmekten ayrı bir işlemdir: sıradaki durma noktasına gider. Gelecekteki zorunlu iş ilerlemeyi engellemez; sabah 08:00'de yalnız günün işleri çakışıyorsa durulur.
@@ -99,21 +101,25 @@ Son güncelleme: 2026-09-30. Bu dosya iş sırasının ve tamamlanma durumunun a
   - Saatli iş ve son cevap anı gözlemi önceden kısaltır; kimse sessizce kaçırılmaz. “İlerle” açık gözlemi kapatır.
   - Kayıt sürümü 5'tir (`gozlem` alanı). Sürüm 1–4 kayıtları açılır. Antrenman canlandırması sunumdur; antrenman simülasyonu, oyuncu gelişimi ve rapor değildir (Aşama 3.2, 8).
 
+- **2026-10-01, onaylı ekran ve öncelik yenilemesi; yalnız belge güncellemesi:** Açılış oda olarak kalır; dosya/ajanda/telefon/ayarlar açık tonlarda tek konuya odaklanır. Dış prototip notları, renk kutuları, masalardaki çay ve yazılı maç spikeri kaldırılacaktır. Test verileri küçük simgeyle açılan bilgi kutusuna taşınacaktır. Genel Duraklat bütün sahne hareketi ve süreleri donduracaktır; maç telefonu açıkken maç duracaktır. Kapıya tıklama, doğal kalkış/adımlar, aynı stat ve daha yüksek başkan yeri kurulacaktır. Maç öncesi açık maç programında en az 10 saniye hazırlık sonrası kullanıcı “Maça geç” ile devam edecektir. Ayrıntı [OYUN_TASARIMI §2/6/11](OYUN_TASARIMI.md#2-başkanın-rolü-ve-ana-döngü), [STIL_REHBERI §5–8](STIL_REHBERI.md#7-arayüz-ve-bilgi) ve [TEKNIK_PLAN §4/10](TEKNIK_PLAN.md#4-zamanın-ilerlemesi) içindedir.
+- **2026-10-01, ses ve stat kararı:** Ses sistemi, çağrıları ve ses ayarları 2.8A'da kaldırılacaktır; ana oyun/ekranlar tamamlanıp Aşama 10'a gelinene kadar ses çalışması yapılmaz. Ayrı şehir stadı 2.8D'de kaldırılacaktır; kulübün mevcut stadı yatırımla etap etap gelişir (8.3). Bu kararlar bugünkü kodun değiştiği anlamına gelmez.
+- **2026-10-01, onaylı iş sırası:** Tamamlanan 2.1–2.8 ve 2.4A korunur. 2.9'dan önce yeni 2.8A–2.8F eklenir. Maç telefonunun kendi maç verisi 2.8F'de, gerçek diğer maç bağlantısı yeni 3.8'de yapılır; 5.2 bunun tam sezon performansını tamamlar. Olay kütüphanesi ve uzun kariyer yönü korunur; bu paket yeni senaryo motoru kurmaz.
+
 Eski kararların kronolojisi Git geçmişinde korunur. Bu dosyada geçerli kararlar ve gerekli gerekçeler tutulur.
 
 ## Çalışma biçimi
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz.
 
-**Aşama 1 ve 2.1–2.8 (2.4A dahil) tamamlandı. Sıradaki geliştirme: 2.9 — günlük akışın sınanması.** 2.9 yeni sistem eklemez: mevcut haftanın temposu, yoğunluğu, okunabilirliği ve sesi normal oynanışta ölçülür; bulunan sorunlar küçük düzeltmelerle giderilir. Açık isimler, tutarlar ve denge sayıları TEST olarak işaretlenir.
+**Aşama 1 ve 2.1–2.8 (2.4A dahil) tamamlandı. Sıradaki geliştirme: 2.8A — oyun çerçevesini temizleme.** Yeni 2.8A–2.8F tamamlanmamıştır; tek konu ekranları ve maç günü sunumu önce kurulur, ardından 2.9'da normal oynanışın temposu, yoğunluğu ve okunabilirliği ölçülür. Açık isimler, tutarlar ve denge sayıları TEST olarak işaretlenir. Ses değerlendirmesi Aşama 10'a taşınmıştır.
 
 İlk bütünleşik örnek: koşulları uygunsa ofiste başlayan sponsor meselesi ekibe verilir; sonraki gün antrenmanda haber gelir; yetkiyi aşan konu başkana döner ve kararın sonucu kulüpte görülür. Sorunsuz, önlenmiş ve hiç açılmayan mesele örnekleri de sınanır; bu örnek her kariyerin zorunlu açılışı değildir. Bütünleşik sunum Aşama 2 sonunda hedeflenir; ilk alt adımda bütün sahneler birden yapılmaz.
 
 ### Sonraki uygulama için çalışma çerçevesi
 
-Claude veya başka bir geliştirme aracı “sıradaki adımı planla” isteğinde önce 2.9'u ele almalı. Kodun güncel hâlini okuyup mevcut komutları, kayıt dönüşümlerini ve testleri kullanarak küçük uygulama planı çıkarmalı. Plan; neyin nasıl ölçüleceğini (süre aralıkları, bir haftadaki konu sayısı, sakin dönemin hissi, ses ve okunabilirlik), hangi değerlendirmenin kullanıcıya ait olduğunu ve ölçüm sonucunda değişebilecek TEST değerlerini açıkça göstermeli. Bu belge onayı oyun kodunu kendiliğinden uygulama izni değildir; sonraki kod çalışmasının kapsamı kullanıcı isteğinden alınır.
+Claude veya başka bir geliştirme aracı “sıradaki adımı planla” isteğinde önce **2.8A**'yı ele almalı. Kodun güncel hâlini okuyup [stil rehberindeki onaylı ekran düzenlerini](STIL_REHBERI.md#onaylı-ekran-düzenleri-ve-etkileşim) ve [teknik plandaki yenileme sınırlarını](TEKNIK_PLAN.md#hedef-ekran-yenilemesi-ve-ortak-stat) kullanarak küçük uygulama planı çıkarmalı. Hangi HTML öğeleri, betik çağrıları, ses ayarları ve çay hareketleri temizlenecek; hangi geliştirici kontrolleri taşınacak; maç olayları ve eski kayıtlar nasıl korunacak açıkça gösterilir. 2.8B ve sonraki adımların kapsamı tek işe yığılmaz. Bu belge onayı oyun kodunu kendiliğinden uygulama izni değildir; sonraki kod çalışmasının kapsamı kullanıcı isteğinden alınır.
 
-Sonraki adımların dışında: bütün 14 paket, kapsamlı seçim/adaylık, hisse veya yatırımcı sistemi, tam ilişki/hafıza sistemi, yeni 3B ortam, maç sonucunu kariyere bağlama ve mevcut motoru yeniden yazma. Metinler ile denge sayıları küçük TEST tarifleri olabilir; gerçek mali/lig kuralları sessizce kesinleştirilmez.
+2.8A–2.8F'nin dışında: bütün 14 paket, kapsamlı seçim/adaylık, hisse veya yatırımcı sistemi, tam ilişki/hafıza sistemi, ek mekân, kapsamlı stat inşaatı, diğer lig maçlarının simülasyonu, maç sonucunu kariyere bağlama ve mevcut motoru yeniden yazma. Ortak mevcut stat ve menüler yenilenir; yeni bir dünya sistemi kurulmaz. Metinler ile denge sayıları küçük TEST tarifleri olabilir; gerçek mali/lig kuralları sessizce kesinleştirilmez.
 
 ### 2026-09-30 madde eşlemesi
 
@@ -130,7 +136,16 @@ Sonraki adımların dışında: bütün 14 paket, kapsamlı seçim/adaylık, his
 | 5.1–5.6 adaylık hikâyesi | 6.1–6.6 |
 | 6.1–6.6 tam sezon | 5.1–5.6; erken yaşam döngüsü denemesi 5.7 olarak eklenir |
 | 8.3/8.5 yatırım ve hafıza | Küçük ilk örnek 2.8; kapsamlı gelişim Aşama 8'de kalır |
-| Aşama 10 temel kullanım kalitesi | Gün içi kayıt 2.4; okunabilirlik/ortam sesi 2.5–2.9; kapsamlı tamamlama Aşama 10'da kalır |
+| Aşama 10 temel kullanım kalitesi | Gün içi kayıt 2.4; okunabilirlik 2.5–2.9; 2026-10-01 kararıyla bütün ses tasarımı Aşama 10'a taşındı |
+
+### 2026-10-01 madde eşlemesi
+
+| Önceki iş | Güncel karşılık |
+|---|---|
+| Doğrudan 2.9'a geçiş | Önce 2.8A → 2.8B → 2.8C → 2.8D → 2.8E → 2.8F, sonra 2.9 |
+| Erken ortam sesi/ses kontrolü | Kaldırma 2.8A; sesin tasarlanması Aşama 10 |
+| Ayrı kasaba/şehir stat seçimi | Tek ortak kulüp stadı 2.8D; etaplı yatırım 8.3 |
+| 5.2'nin diğer maçları üretme temeli | Dar maç günü bağlantısı 3.8; tam sezon maliyet/tutarlılık 5.2 |
 
 ## Aşama 0 — Plan ve belge düzeni
 
@@ -175,10 +190,10 @@ Sonraki adımların dışında: bütün 14 paket, kapsamlı seçim/adaylık, his
   - *Sınır:* Maç sonucu bağlantısı Aşama 3'te kalır. Deneme maç sınırında bitebilir; farklı başlangıçlar ve parça parça ilerleme için geliştirici takvimleri kullanılabilir. Paket kataloğunun geri kalanı bu adımın şartı değildir.
   - *Uygulandı (2026-09-30, TEST içerik):* Üç başlangıç `js/baslangic.js`, olay katmanı `js/olay.js`, P01'in dar tarifi `js/paket-odeme.js` içindedir. Sıkışık başlangıçta sayman seçilir, isteğe bağlı nakit takvimi görüşmesi önleme imkânı verir, sponsorun haberi maaş gününden önce zorunlu karar açar (kendin görüş, saymana devret, bakım taksitini ertelet, maaşı beklet). Rahat başlangıçta aynı haber acil olmayan bir karar açar; düzenli başlangıçta mesele açılmadan tek “İlerle” ile maç gününe gelinir. Devir sonucu sponsorun gerçek durumuna ve saymanın katkısına göre değişir; hiçbir aday iki koşulda da en iyi değildir. Yetkiyi aşan teklif ve çözülemeyen açık başkana döner. Ayrıntı [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi).
   - *Doğrulama:* `node araclar/kariyer-deneme.js` (2.4A bölümleri: 260 karar yolunun tamamında kasa eksiye düşmüyor ve maç sınırına varılıyor; sekiz sürüm 1 ve altı sürüm 2 kayıt açılıp tamamlanıyor), `python3 araclar/akis-deneme.py`, `python3 araclar/kontrol.py`, `python3 araclar/kontrol.py araclar/kayit-deneme.html`, masaüstü `node deneme.js`. Masaüstü paketi yeniden üretilmedi. Normal tempoda oynayarak okunabilirlik ve karar kalitesi değerlendirmesi yapılmadı (2.9).
-- [x] **2.5 — Aydınlık başkan odası.** 2.4A'daki gündemi oda içinde telefon, ajanda ve ilgili dosyayla sun; bir meseleye odaklanan açık renkli düzen kullan. Okunabilir metin ve temel ortam sesi/ses kontrolü ekle. Önce küçük oda prototipini gösterip yerleşim/etkileşim onayından sonra oyuna bağla.
+- [x] **2.5 — Aydınlık başkan odası.** 2.4A'daki gündemi oda içinde telefon, ajanda ve ilgili dosyayla sun; bir meseleye odaklanan açık renkli düzen kullan. Okunabilir metin ve o tarihteki plana göre temel ortam sesi/ses kontrolü eklendi; ses 2.8A'da kaldırılacak ve Aşama 10'da tasarlanacak. Önce küçük oda prototipini gösterip yerleşim/etkileşim onayından sonra oyuna bağla.
   - *Bitiş:* Oyuncu gündemi bulup konuyu açabiliyor, kapatıp ortama dönebiliyor; gerekli bilgi için nesne aramaya zorlanmıyor. Oda değişimi veya paneli yeniden açma zamanı ve karar geçmişini değiştirmiyor.
   - *Uygulandı (2026-09-30, TEST sunum):* Oda sahnesi `js/oda.js`, oda ekranı `js/ekran-oda.js`, ses `js/ses.js`, ortak oturum `js/oyun-oturumu.js`; renkler `STIL.oda` ve `STIL.kagit`. Oyun odayla açılır; telefon yeni haberde yanar, ajanda defteri günün tarihini, duvar saati oyun saatini gösterir, gün ışığı saate göre değişir. Dosya yalnız mesele varken masadadır ve karar seçenekleri dosyanın içindedir. Ayarlar: ses düzeyi/sessiz, yazı büyüklüğü (normal/büyük). “Stada git” bülteni ve 3B maçı açar. Ayrıntı [STIL_REHBERI §7](STIL_REHBERI.md#7-arayüz-ve-bilgi).
-  - *Doğrulama:* `python3 araclar/akis-deneme.py` (9. bölüm: nesneye tıklama, panelde gezmenin durumu değiştirmemesi, haberin paneli açmaması, yenilemede aynı durum ve ayar, maç geçişi, düzenli başlangıç), `python3 araclar/kontrol.py` (oda, `?ekran=ajanda`, `?ekran=bulten`, `?ekran=mac`), `node araclar/kariyer-deneme.js`, kayıt denemesi sayfası, masaüstü `node deneme.js`. Ses başsız tarayıcıda duyularak doğrulanamadı; kulakla değerlendirme ve normal tempoda okunabilirlik değerlendirmesi (2.9) yapılmadı. Dört seçenekli kararda ve büyük yazıda panel içinde kaydırma gerekir. Masaüstü paketi yeniden üretilmedi.
+  - *Doğrulama:* `python3 araclar/akis-deneme.py` (9. bölüm: nesneye tıklama, panelde gezmenin durumu değiştirmemesi, haberin paneli açmaması, yenilemede aynı durum ve ayar, maç geçişi, düzenli başlangıç), `python3 araclar/kontrol.py` (oda, `?ekran=ajanda`, `?ekran=bulten`, `?ekran=mac`), `node araclar/kariyer-deneme.js`, kayıt denemesi sayfası, masaüstü `node deneme.js`. Ses başsız tarayıcıda duyularak doğrulanamadı; o tarihteki kulakla değerlendirme yapılmadı (artık Aşama 10), normal tempoda okunabilirlik değerlendirmesi 2.9'dadır. Dört seçenekli kararda ve büyük yazıda panel içinde kaydırma gerekir. Masaüstü paketi yeniden üretilmedi.
 - [x] **2.6 — Görüşme, tavsiye ve ekip.** Hoca görüşmesi ve bütçe önceliğini ekle. Tavsiye ile yetki devrini ayır; kişi, bütçe, süre, kapasite ve başkana dönüş koşullarını belirle. Bir kalıcı sorumluluk ve başkanın başlattığı bir görüşme/araştırma örneği kur; 2.2'nin kalan işlerini tamamla.
   - *İçerik:* P01'i ekip bilgisiyle zenginleştir; P03'ün belirli katkı, süre ve görünürlük hakkıyla sınırlı bir örneğini kullan. Tam hisse/yatırımcı veya seçim sistemi kurma. Onaylanmamış katkı kurallarına ihtiyaç varsa uygulamadan önce açıkça ayır.
   - *Bitiş:* Yetki içindeki rutin adımlar ek onay istemiyor; sınır aşılınca başkana dönülüyor. İşe uygun yönetici bazı işleri daha iyi çözebiliyor; şahsen katılım her işte otomatik en iyi seçenek olmuyor. Hoca futbol kararlarının sahibi olarak kalıyor.
@@ -188,17 +203,29 @@ Sonraki adımların dışında: bütün 14 paket, kapsamlı seçim/adaylık, his
   - *Bitiş:* Kontrollü gözlemde mesaj kararı zamanı durduruyor; uyumlu eşzamanlı işler süreyi iki kez tüketmiyor. Uzun görüşmede gözlemden ayrılınıyor; aynı mesele ofiste ve telefonda devam ediyor. Katılmamak zorunlu bilgi/ödül kaybına dönüşmüyor.
   - *Uygulandı (2026-09-30, TEST sunum ve değerler):* Kurallar `js/gozlem.js`, sahne `js/balkon.js` (oda sahnesinin dışına kurulu balkon, saha, boş tribünler, çalışan takım), yürüyüş `js/oda.js`. Önce `prototipler/5-balkon-ve-antrenman.html` gösterildi, sonra oyuna bağlandı. Telefon, ajanda ve dosya balkondan açılır.
   - *Doğrulama:* `kariyer-deneme.js` 2.7 bölümü (tek parça/parçalı gözlem aynı sonuç, kesilme ve sürdürme, kısa iş çifte sayılmıyor, uzun iş kapalı, izleyen ile izlemeyenin dünyası aynı, gözlem ortasında kaydet–yükle, sekiz gerçek sürüm 4 kaydı); `akis-deneme.py` 10. bölüm (balkona yürü, izle, telefonla kesil, dosyadan kısa karar, devam et, odaya dön, yenile).
-  - *Sınır:* Hocayla ya da başka biriyle balkonda yüz yüze görüşme sahnesi yoktur. Ses kulakla, yürüyüş ve canlandırma normal tempoda kullanıcı tarafından değerlendirilir (2.9). Hedef donanımda performans ölçülmedi.
+  - *Sınır:* Hocayla ya da başka biriyle balkonda yüz yüze görüşme sahnesi yoktur. Yürüyüş ve canlandırma normal tempoda kullanıcı tarafından değerlendirilir (yenileme 2.8D, akış değerlendirmesi 2.9); ses değerlendirmesi Aşama 10'dadır. Hedef donanımda performans ölçülmedi.
 - [x] **2.8 — Sonuçlar ve kulüp hafızası.** Bir söz/ilişki kaydı, önceki kararın dönüşü, ilk taraftar veya medya tepkisi ve olumlu kulüp anı ekle. Tamamlanan küçük bir iş/yatırımın ya da tutulmuş sözün izini ortamda göster; daha sonraki tesis sisteminin tamamını burada kurma.
   - *İçerik:* P13'teki küçük söz/teşekkür örneği yaşanmış olaydan doğsun. Para harcayıp günlük moral toplama döngüsü veya her kutlamanın arkasından kriz üretme kuralı kurulmasın.
   - *Bitiş:* Oyuncu sonucun hangi karardan geldiğini anlayabiliyor; ilgili insanlar ve geçmiş hatırlanıyor. Görünür değişim gerçekten kaydedilmiş olaya dayanıyor, yükleme sonrası korunuyor.
   - *Uygulandı (2026-09-30, TEST içerik):* Söz kaydı, haberler ve izler `js/soz.js`'te. Sözler: hocaya kamp ödemesi (hafta içinde tutulur), personele geciken maaş günü, sponsora ve destekçiye pano. Cuma günü Demirkapı Postası'nın manşeti o haftanın kayıtlı olayından ve verilen cevaptan seçilir. Sıkışma atlatılıp maaş gününde yattıysa personelden kısa teşekkür gelir (P13'ün dar örneği). Odada izler: masada gazete ve teşekkür kartı, pencerede tribün çatısında iskele (bakım taksiti ödendiyse), duvarda pano sözünün notu.
-  - *Doğrulama (2.6 ve 2.8 birlikte):* `node araclar/kariyer-deneme.js` (yeni bölümler; bütün içerikle 5.800'den fazla karar yolu, başlangıç başına 1.200 yoldan sonra örnekleme: kasa eksiye düşmüyor, her yol maç sınırına varıyor; sürüm 1, 2 ve 3 örnekleri açılıp kendi içerikleriyle tamamlanıyor), `python3 araclar/akis-deneme.py` (odada test anahtarı, girişim, görüş isteme, basın sorusu, gazete, sözler, izlerin yenilemede korunması), `python3 araclar/kontrol.py` (oda, ajanda, bülten, maç, kayıt denemesi), masaüstü `node deneme.js`. Masaüstü paketi yeniden üretilmedi. Normal tempoda elle oynanış, yoğunluk ve ses değerlendirmesi yapılmadı (2.9).
-- [ ] **2.9 — Günlük akışın sınanması.** Önce birkaç günlük tek meseleyi, sonra sakin/olağan/yoğun günleri içeren bir haftayı oyna. [Tempo hedefleriyle](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo) gerçek süreyi, tekrarları, kesintileri, kararların anlaşılmasını ve yetki devrinin faydasını değerlendir.
+  - *Doğrulama (2.6 ve 2.8 birlikte):* `node araclar/kariyer-deneme.js` (yeni bölümler; bütün içerikle 5.800'den fazla karar yolu, başlangıç başına 1.200 yoldan sonra örnekleme: kasa eksiye düşmüyor, her yol maç sınırına varıyor; sürüm 1, 2 ve 3 örnekleri açılıp kendi içerikleriyle tamamlanıyor), `python3 araclar/akis-deneme.py` (odada test anahtarı, girişim, görüş isteme, basın sorusu, gazete, sözler, izlerin yenilemede korunması), `python3 araclar/kontrol.py` (oda, ajanda, bülten, maç, kayıt denemesi), masaüstü `node deneme.js`. Masaüstü paketi yeniden üretilmedi. Normal tempoda elle oynanış ve yoğunluk değerlendirmesi yapılmadı (2.9); o tarihteki ses değerlendirmesi de yapılmadı, artık Aşama 10'dadır.
+- [ ] **2.8A — Oyun çerçevesini temizleme.** `index.html` dış başlık/notlarını, alt açıklamaları ve renk kutularını kaldır; açılış başkan odası olarak kalsın. Oda ve maç masasındaki çayı, buharı ve içme hareketlerini temizle. Ses betiğini, yükleme/çağrı/zamanlayıcılarını ve ses ayarlarını kaldır; bu aşamadan Aşama 10'a kadar ses ekleme. Yazılı maç spikeri/radyo satırını ve yalnız ona ait metin yolunu kaldır. Diğer prototip araçlarını küçük Geliştirici alanına taşı; satır içi TEST metinlerini küçük, gerektiğinde açılan bilgi kutusuna taşıma temeli kur.
+  - *Bitiş:* Oyun temiz oda çerçevesiyle açılıyor; ses çalışmıyor, çay ve yazılı spiker yok. Maç olayları, gol tepkileri ve istatistikler çalışıyor; kaldırılmış HTML öğelerine erişim hatası yok. Mevcut kayıt/ayarlar yeni kariyer gerektirmeden açılıyor. Ekran, akış ve etkilenen kariyer/masaüstü kontrolleri [CLAUDE.md](CLAUDE.md) uyarınca tamamlanır; test verisinin son yerleşimi 2.8C'de sınanır.
+- [ ] **2.8B — Genel duraklatma.** Oda, yürüyüş, balkon/antrenman, program ve maç için tek duraklatma yönetimi kur. Elle duraklatma ve maç telefonu gibi nedenleri ayrı tut; bütün motor/sahne hareketi ve çalışan sayaçları dondur. Mevcut bilgide gezinmeye izin ver, süre ilerleten/dünyayı değiştiren komutları engelle. Gözlemde görünen zaman ile gerçek kariyer/kayıt durumunu eşleştir; yalnız saat animasyonunu dondurma.
+  - *Bitiş:* Kalkışın/adımın, antrenmanın ve maçın ortasında durdurup beklemek durum değiştirmiyor. Devamda zaman sıçramıyor, olay/ödeme iki kez uygulanmıyor. Duraklatma nedenleri birbirini kaldırmıyor; maç telefonu ve 10 saniyelik program sayacının bütünleşik kontrolleri eklendikleri 2.8F/2.8E adımlarında tamamlanıyor. Antrenman durma noktası ve kayıttan devam [TEKNIK_PLAN §4](TEKNIK_PLAN.md#hedef-genel-duraklatma-ve-gözlemin-gerçek-zamanı) kabul örneklerini geçiyor.
+- [ ] **2.8C — Başkanlık ekranları.** Önce tek dosya düzenini kur; ardından ajanda, mesajlar ve ayarları aynı açık, okunabilir dilde yenile. Dosyada önceki/sıradaki, açık/cevap bekleyen/takipte sayaçları, kısa sonuç ve ayrı arşiv olsun. Ajanda randevu ve son tarihlere odaklansın; finans ilgili dosya/saymanda erişilsin. Telefon tek konuşmayla ilgilenmeyi ve bağlı dosyadan aynı konuşmaya dönüşü sağlasın. Ayarlar sade bölümlerle ve ses seçeneği olmadan açılsın; TEST verisi küçük simge/bilgi kutusunda kalsın. Geliştirici alanına “Görüntüyü kaydet” ekle.
+  - *Bitiş:* Normal/büyük yazıda sakin ve yoğun başlangıçlar okunabiliyor; bilinen maliyet/son tarih/kritik risk saklanmıyor. Yeni haber okunan dosyayı değiştirmiyor, karar otomatik sonraki dosyaya geçirmiyor. Gezinti zamanı/sonucu değiştirmiyor; mesaj–dosya–geri bağlamı korunuyor. Finansın taşınması ödeme/teklif tarihini gizlemiyor. Fare ve klavyeyle menü/test kutusu erişimi ve boş durumlar inceleniyor.
+- [ ] **2.8D — Ortak stat ve mekân hareketi.** Ayrı şehir stadını, seçicisini ve ona ait canlı uygulama yollarını kaldır. Oda penceresi/balkon/ev sahibi maçı tek stat tarifini kullansın. Kapı tıklanabilir olsun; balkon düğmesi kaldırılsın, klavye erişimi sürsün. Doğal kalkış, yönelme, adım ve oturma hareketlerini kur. Maç başkan koltuğunu/masasını gerçek tribünde daha yükseğe taşı; altında sıralar görünsün.
+  - *Bitiş:* Aynı saha, tribün ve yapı iki görünümde tanınıyor; değişen yalnız saat/ışık/doluluk/etkinlik. Şehir stadı oyun seçeneği veya tarif olarak dönmüyor; eski URL tercihi güvenli ortak varsayılana düşüyor. Yürüyüş kayma hissi vermiyor, hareket azaltma ve Duraklat çalışıyor. Yeni açı saha, eller ve dürbünle inceleniyor. İnşaat ekonomisi bu işin parçası değildir; gelişim 8.3'tedir.
+- [ ] **2.8E — Maç programı.** Yoğun koyu bülteni açık tonlarda kısa programla değiştir: karşılaşma kapağı, isteğe bağlı kadro/lig sayfaları, kodla çizilmiş küçük stat resmi. En az 10 saniye etkin hazırlık ve gerçek kaynak hazır olma koşulundan sonra “Maça geç” etkinleşsin; geçiş oyuncunun eylemiyle olsun.
+  - *Bitiş:* Programda maç/tören/takvim ilerlemiyor; sayfa değişimi sayacı sıfırlamıyor, otomatik maça geçilmiyor, sahte yükleme yüzdesi yok. Duraklat ve büyük yazı çalışıyor. Kaynak hazır değilse erken geçiş olmuyor; hata anlaşılır gösteriliyor. Gerçek maç günü verisi henüz yoksa mevcut TEST veri dürüstçe kullanılıyor.
+- [ ] **2.8F — Maç telefonu.** Masadaki telefon tıklanınca Mesajlar ve Canlı Skor uygulamaları açılsın. Kendi maçına tıklayınca gerçek motor istatistikleri görülsün. İlk maça özgü mesajlar boş olabilir; mevcut kariyer mesajları silinmez. Telefon açıkken maç ve çevresi durur; kapanınca başka duraklatma nedeni yoksa aynı andan sürer.
+  - *Bitiş:* Telefon ön plan kamerasına uygun tıklanıyor; fare/klavye aç-kapa ve uygulama geri dönüşü çalışıyor. Skor, dakika ve istatistik aynı motor anına ait; olmayan veri uydurulmuyor. Gol, devre arası ve maç sonunda aç-kapa olay/sonucu tekrar üretmiyor. Diğer lig maçları 3.8'e kadar açık veri-eksikliği durumudur; telefon için başka maç sistemi peşinen kurulmaz.
+- [ ] **2.9 — Günlük akışın sınanması.** 2.8A–2.8F sonrasında önce birkaç günlük tek meseleyi, sonra sakin/olağan/yoğun günleri içeren bir haftayı oyna. [Tempo hedefleriyle](OYUN_TASARIMI.md#6-zaman-ajanda-ve-tempo) gerçek süreyi, tekrarları, kesintileri, kararların anlaşılmasını ve yetki devrinin faydasını değerlendir.
   - *Tekrar oynama:* Aynı küçük dönemi farklı başlangıç ve kararlarla karşılaştır; temkinli, büyüme odaklı ve yetki devreden yaklaşımların koşullara göre ayrışmasını incele. Video veya önceki oyundan öğrenilmiş sabit cevabın her koşulu çözmediğini, başarının gerçek rahatlık ürettiğini ve önlenen sorunun geri zorlanmadığını değerlendir. Otomatik tutarlılık denemesi normal tempoda oynama yerine geçmez.
-  - *Bitiş:* Kısa oturumda mesele ilerliyor; yoğun gün bölünebiliyor; iyi yönetim rahat dönem üretebiliyor. Temel yazı/ses seçenekleri ve dönüş özeti kullanılabilir. Eksik örnekler ve ölçüm sonuçları yazılır; yalnız toplam süreye bakılarak aşama kapatılmaz.
+  - *Bitiş:* Kısa oturumda mesele ilerliyor; yoğun gün bölünebiliyor; iyi yönetim rahat dönem üretebiliyor. Yeni dosya/ajanda/telefon düzeni, yazı/hareket seçenekleri, Duraklat ve dönüş özeti kullanılabilir. On saniyelik maç programı, doğal yürüyüş ve yüksek maç açısı kullanıcıyla incelenir. Eksik örnekler ve ölçüm sonuçları yazılır; yalnız toplam süreye bakılarak aşama kapatılmaz. Ses bu aşamanın kabul koşulu değildir.
 
-**Uygulama sırası:** 2.2–2.8 tamamlandı → 2.9. 2.8, 2.7'ye bağlı olmadığı için öne alındı (kullanıcı kararı, 2026-09-30: 2.7 yeni sahne ve zaman kuralı gerektirdiği için ayrı pakette). Her alt adım kendi kontrolüyle tamamlanır. Başlangıç görevdeki TEST başkanı olabilir.
+**Uygulama sırası:** 2.2–2.8 tamamlandı → **2.8A → 2.8B → 2.8C → 2.8D → 2.8E → 2.8F → 2.9**. 2.8 geçmişte 2.7'ye bağlı olmadığı için öne alındı (kullanıcı kararı, 2026-09-30); yeni ekler 2026-10-01 onayıdır. Her alt adım kendi kontrolüyle tamamlanır; bir sonrakinin gerektirdiği dar bağlantı kurulabilir ama bütün paket tek uygulama sayılmaz. Başlangıç görevdeki TEST başkanı olabilir.
 
 Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. Tam maç bağlantısı Aşama 3'tedir.
 
@@ -216,6 +243,8 @@ Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. 
 - [ ] **3.6** Tohum tutarlılığını, izleme hızının etkisini ve görüntüsüz maçların maliyetini ölç.
 - [ ] **3.7** Birkaç haftalık yönetim bölümünü maçlarla tamamla; maç günü süresini ve mevcut atlama seçeneklerini ağır kariyer temposuyla değerlendir. Aynı olayların tekrarı, sonuçların yeni gündeme dönüşmesi ve kısa oturumdan devam da sınanır.
   - P12 hoca değerlendirmesinin erken örneği gerçek rapor/sonuçlardan doğabilir. Hikâye amacıyla skor değiştirilmez; kupa tabanlı P10 ilgili kupa sistemi hazır olana kadar açılmaz.
+- [ ] **3.8 — Gerçek diğer maçlar ve canlı skor bağlantısı.** 2.8F telefonu ile 3.1/3.4–3.6 fikstür, maç kimliği, kadro/girdi ve bir kez sonuç temellerini kullan. Aynı maç gününün diğer karşılaşmalarını görüntüsüz üret; kendi maçının ortak oyun zamanına göre gerçek skor/dakika/durumunu Canlı Skor'a ver. Farklı başlangıç saatleri, duraklatma, sonuç kaydı ve yeniden açılış tutarlı olsun. Tam sezon işlem maliyeti ve bütün fikstür 5.2'de genişler.
+  - *Bitiş:* Rastgele arayüz skorları yok; aynı kimlik/tohum aynı sonucu veriyor. Telefon/elle duraklatmada diğer maçların gösterilen zamanı da sabit. Tekrar açma maçı yeniden çekmiyor veya sonucu iki kez uygulamıyor; çalışma arayüzü kilitlemiyor. Kadrosu/verisi olmayan kulüp hazır sayılmıyor; dar TEST fikstürü açıkça etiketleniyor.
 
 **Bitiş ölçütü:** Hoca ve kadro kararları sahaya giriyor; maç sonucu yeni gündem ve geçmiş üretiyor. Kayıt yükleme sonucu tekrar uygulamıyor.
 
@@ -238,7 +267,7 @@ Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. 
 **Bağımlılık:** Aşama 4. İlk lig formatı ve sezon takvimi seçilmiş olmalı. Kapsamlı adaylık hikâyesi bu aşamanın koşulu değildir; görevdeki TEST başkanıyla sınanabilir.
 
 - [ ] **5.1** Aşama 3'teki fikstür/takvim temelini diğer kulüpler, puan durumu ve transfer dönemleriyle tamamla; sezon geçişini kur.
-- [ ] **5.2** Diğer maçları arayüzü kilitlemeden üret; toplam maliyeti ve sonuç tutarlılığını ölç.
+- [ ] **5.2** 3.8'deki diğer maç/canlı skor temelini bütün sezon ve fikstüre genişlet; arayüzü kilitlemeden toplam maliyeti, puan tablosunu ve sonuç tutarlılığını ölç. Aynı maç kimliği yeniden simüle edilmez veya ikinci kez uygulanmaz.
 - [ ] **5.3** Ev/deplasman kimliklerini, taraftar dağılımını ve başkan bölümündeki komşu kişileri bağla.
 - [ ] **5.4** İlk taraftar/medya tepkilerini sezon ölçeğine genişlet; medya/TV, hakem-federasyon gündemi ve rakip başkan ilişkilerini sezon olaylarına bağla.
 - [ ] **5.5** Bilet, doluluk ve yayın/sponsor gelirlerini takvime bağla; ekonomik şartların ilk etkilerini ekle.
@@ -282,7 +311,7 @@ Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. 
 
 - [ ] **8.1** Üç ligin kulüp kimliklerini, yükselme/düşme ve sezon geçişlerini tamamla.
 - [ ] **8.2** Altyapıdan yeni oyuncu, gelişim, sakatlık sonrası dönüş ve yaş etkilerini uzun kariyere bağla.
-- [ ] **8.3** 2.8'deki küçük görünür değişim örneğini kapsamlı tesis/stat yatırımına genişlet; maliyet, takvim ve aşamalı sonuç çalışsın, tamamlanan iş görüntüye yansısın.
+- [ ] **8.3** 2.8'in küçük görünür izi ve 2.8D'nin ortak stat temelini kapsamlı tesis/stat yatırımına genişlet. Başlangıçtaki kendi stadın etap etap gelişsin: maliyet, takvim, bakım, kapasite ve tamamlanan iş görüntüye yansısın. Lig atlayınca hazır şehir stadına geçilmez; balkon ve maç görünümü aynı yatırım durumunu kullansın.
 - [ ] **8.4** Kulüp büyüdükçe kadro, yönetim havuzu, sponsorluk ve kamuoyu ölçeğini değiştir.
 - [ ] **8.5** Erken hafıza ve gözlem örneklerini odalardaki kupalar, fotoğraflar ve kişisel geçmişle genişlet; isteğe bağlı antrenman ve kulüp ortamlarını geliştir.
   - P04/P06 tesis ve topluluk desteği, P08 yetiştirme, P09 geri dönüş ve P11 büyüme örneklerini hazır sistemlerle genişlet. P09 için kişinin kulüple bağı ve ayrılışı gerçekten bulunmalı; her kariyere zorunlu efsane dönüşü eklenmez.
@@ -305,15 +334,15 @@ Bu aşamada kariyer maç sonucu uydurulmaz; ajanda maç sınırında durabilir. 
 
 ## Aşama 10 — Ürünü tamamlama
 
-**Bağımlılık:** Ana kariyer yollarının çalışması. Gün içi kayıt, temel okunabilirlik, ortam sesi/ses kontrolü ve dönüş özeti Aşama 2'nin kabul koşullarıdır; burada bütün ürün ölçeğinde tamamlanır.
+**Bağımlılık:** Ana kariyer yolları ve ekranların çalışması. Gün içi kayıt, temel okunabilirlik, hareket seçenekleri ve dönüş özeti erken aşamalarda sınanır; burada bütün ürün ölçeğinde tamamlanır. **Bütün ses tasarımı bu aşamadadır (2026-10-01 kararı); önceki aşamalarda ses eklenmez.**
 
 - [ ] Olay ve karakter çeşitliliği, tekrar kontrolü, ekonomi/seçim/Avrupa dengesi ve uzun oturum testleri.
 - [ ] İlk aydınlık kulüp sahnelerinden sonra kapsamlı hava/saat değişimleri ve gölgeler; ayakların yere basması; VAR incelemesinin sunumu; ikinci yarı kenar ısınması.
 - [ ] Yakın seyirciler, yüz/atkı ayrıntıları, erken ayrılma, tezahürat ve koreografi; sesle uyum.
-- [ ] Erken ortam sesi temelini tribün, düdük, tören ve konuşma sunumuyla tamamla.
+- [ ] Ses tasarımını bu aşamada kur: oda/balkon ortamı, bildirim, tribün, düdük ve tören; ses/sessiz ayarları ve okunabilir görsel karşılıkları birlikte tasarlanır. Konuşma/seslendirme kapsamı ayrıca değerlendirilir. Sürekli baskı ve tekrarlayan uğultu normal tempoda dinlenerek sınanır.
 - [ ] Erken ayar ve okunabilirlik temelini bütün sahnelere uygula; süreli karar erişilebilirliği ve desteklenecek dil kapsamını tamamla.
 - [ ] Dolu büyük statlar, arka plan maçları, uzun kariyer kayıt boyutu ve hedef donanım performansı.
-- [ ] Ekonomiyle yönetilen değerler bağlandıkça geçici deneme panelini oyuncu akışından çıkar; geliştirici araçlarını ayrı tut.
+- [ ] 2.8A/2.8C'de ayrılan geliştirici panelini, TEST bilgi kutularını ve deneme yollarını yayın paketinden çıkar; ekonomiyle yönetilen değerler gerçek sistemden gelsin.
 - [ ] Masaüstü paketi, çevrimdışı çalışma, güncelleme/kayıt uyumluluğu ve seçilen Steam özelliklerini tamamla.
 - [ ] Mağaza anlatımını çalışan sürümden oluştur; fiyat, yayın ve dağıtım kararlarını kullanıcıyla kesinleştir.
 

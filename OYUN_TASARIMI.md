@@ -1,6 +1,6 @@
 # Chairman — oyun tasarımı
 
-Son güncelleme: 2026-09-30. Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md).
+Son güncelleme: 2026-10-01. Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md).
 
 ## 1. Amaç ve kararların durumu
 
@@ -55,6 +55,26 @@ Meselede oyuncunun anlayacağı bilgiler:
 Bekleyen veya ekibe devredilmiş konular arka planda takip edilir. Rutin gelişmeler kısa özette toplanır; yeni karar gerektiren haber öne çıkar. Başkan görüşme ayarlama, sponsor arayışı açma, araştırma isteme ve yatırım ihtiyacını inceletme gibi girişimler başlatabilir. Bu girişimler ilgili sistem hazır oldukça eklenir.
 
 Oyuncu; kararın konusunu, bilinen maliyetini, verilen taahhüdü ve belirsiz kalan noktaları anlayabilmelidir. Her kararın hemen olumlu veya olumsuz sonucu çıkması gerekmez. Bazı sonuçlar haftalar ya da yıllar sonra hatırlanır.
+
+### Tek konu akışı ve ekranların görevleri
+
+**Onaylı hedef (2026-10-01; henüz uygulanmadı, yol haritası 2.8A–2.8F):** Açılış başkanın odası olarak kalır. Günlük işlerde oyuncu sırayla tek konuyla ilgilenir. Dosya, ajanda, telefon ve ayarlar kendi görevlerini taşır; ekranların ayrıntılı görünümü [STIL_REHBERI §7](STIL_REHBERI.md#7-arayüz-ve-bilgi) içindedir.
+
+| Ekran | Oyuncunun yaptığı iş |
+|---|---|
+| Dosya | Tek meseleyi anlamak, bilinen kanıtı görmek, tavsiye almak, karar vermek veya devretmek |
+| Ajanda | Tarihi, randevuyu, ayrılmış süreyi, yaklaşan son tarihi ve uygun girişimi takip etmek |
+| Telefon / Mesajlar | Tek konuşmayı okumak, cevaplamak, iletmek veya bağlı dosyaya geçmek |
+| Telefon / Canlı Skor | Maç gününde karşılaşmaları ve kendi maçının gerçek istatistiklerini incelemek |
+| Ayarlar | Okunabilirlik, görüntü/hareket, kayıt ve geliştirici seçeneklerini düzenlemek |
+
+Dosyada kategori, kısa olay özeti, ilgili kişi, mevcut durum ve başkandan beklenen adım önce gelir. Bilinen maliyet, süre, taahhüt, son tarih ve önemli risk karar verilmeden görülebilir; bunlar ayrıntı çekmecesine saklanmaz. Uzun geçmiş ve ek belgeler gerektiğinde açılır. “Önceki dosya” ve “Sıradaki dosya” ile gezilir; toplam açık, cevap bekleyen ve takipteki konu sayıları kısa sayaçlarla anlaşılır. Kapanmış meseleler ayrı arşivden incelenebilir.
+
+Karardan sonra kısa bir sonuç ve beklenen sonraki haber gösterilir. Oyuncu sıradaki dosyaya kendisi geçer; gelen haber okumakta olduğu konuyu değiştirmez veya sırayı kaydırmaz. Mesajdan dosyaya gidip geri dönünce aynı konuşma ve okuma konumu korunur. Gezmek, ayrıntı açmak ve test verisine bakmak süre tüketmez veya yeni sonuç çekmez.
+
+Ajandada kasa, finans tablosu, bütün karar seçenekleri ve geçmişteki bütün sözler yığılmaz. Ödeme ya da mali teklifin gerçek son tarihi ajandada kısa hatırlatma olarak kalır; mali bilgi sayman görüşü veya ilgili dosyada erişilebilir olur. Ajandadaki randevu kendi konusuna bağlanır. Boş gün anlaşılır ve sakin gösterilir; boşluğu doldurmak için yeni görev üretilmez.
+
+Telefon bildirimleri yeni haberi fark ettirir; açık dosya veya her takipteki konu sürekli yeni bildirim sayılmaz. Mesaj okuma ile işi tamamlamak farklıdır. Cevap, tavsiye ve devir seçenekleri yalnız ilgili mesele ve yetki kuralları izin veriyorsa sunulur. İlk maç telefonu Mesajlar ve Canlı Skor olmak üzere iki uygulama taşır; maça özgü mesajlar başlangıçta boş olabilir, mevcut kariyer haberleri korunur.
 
 ## 3. Kulübün geçmişi ve başlangıç hikâyesi
 
@@ -165,6 +185,8 @@ Ajanda; zorunlu, ertelenebilir ve isteğe bağlı işleri ayırır. Bekleyen gö
 | Antrenman izlemek | Oyuncunun başlattığı gözlem süresince kontrollü ilerler; mesajı açıp karar verirken durur |
 | Uyumlu işleri birlikte yapmak | Ortak zaman aralığı iki kez tüketilmez; iki yüz yüze görüşmeye aynı anda katılınamaz |
 | Maç izlemek | Maçın izleme temposu ve takvimde kapladığı süre ayrı hesaplanır |
+| Maçta telefonu açmak | Maç durur; telefon kapatılınca diğer duraklatma nedenleri yoksa aynı andan sürer |
+| Genel “Duraklat” | Takvim ilerlemesi, maç ve sahnedeki bütün hareket/süreler durur; bilgi incelenebilir |
 | Sonraki önemli gelişmeye ilerlemek | Rutin işler işlenir; gerekli karar, randevu veya önemli gelişmede durulur |
 | Oyundan çıkmak | Takvim durur; kayıtlı durumdan devam edilir |
 
@@ -181,6 +203,8 @@ Mevcut bilgiyi tekrar incelemek yeni araştırma sayılmaz. Yeni bilgi toplamak 
 **Uygulanan ilk kurallar (2.3, TEST değerleriyle):** Tek “İlerle” işlemi günü bitirmekle aynı değildir; bir sonraki durma noktasına gider. Durma noktaları: başkanın kararını gerektiren gelişme, sıradaki saatli işin başlangıcı, işleri birbiriyle çakışan günün başı. Gelecekteki zorunlu iş ilerlemeyi engellemez; ilerleme onun başlangıcında durur ve katılınmadan geçilmez. Başkana dönen kararlar saati serbesttir: geldikleri andan son cevap anına kadar istenen an verilir, bekleyen karar başka işe katılmayı kilitlemez; yalnız bitişi son cevap anını aşan işe katılınamaz ve ilerleme bu anı geçemez. Başkan bir işin içindeyken dolan zorunlu kararın süresi işin bitişinden 30 dakika sonrasına uzar. Bu, bütün telefon mesajlarına uygulanacak genel bir kural değildir; normal haberler işten sonra gösterilir.
 
 Antrenman gözlemi sırasında kısa bir telefon işi aynı zaman aralığına sığabilir. Uzun ve tam dikkat isteyen görüşme için gözlemden ayrılınır. Mekânın atmosferi, takvimin durduğunu anlamayı güçleştirmemelidir; ayrıntılı sunum [stil rehberinde](STIL_REHBERI.md#8-baskı-ve-erişilebilirlik) tanımlanır.
+
+**Genel duraklatma kararı (2026-10-01; henüz uygulanmadı):** “Duraklat” oda, yürüyüş, balkon/antrenman, maç öncesi ve maç boyunca erişilebilir olur. Kamera, başkan, futbolcular, seyirciler, kapı, ışık/efekt hareketleri ve çalışan sunum sayaçları aynı anda donar. Menülerde gezinip mevcut bilgi okunabilir; zaman ilerleten veya dünyayı değiştiren komutlar devam edilene kadar kapalıdır. Açık maç telefonu maçı durdurur; telefon kapatmak oyuncunun elle duraklatmasını kaldırmaz. Antrenman gözlemi durdurulduğunda görünen saat ile kayıtlı kariyer zamanı aynı noktada olmalıdır; yalnızca önceden uygulanmış ilerlemenin saat animasyonunu durdurmak yeterli değildir. Teknik sınırlar [TEKNIK_PLAN §4](TEKNIK_PLAN.md#4-zamanın-ilerlemesi) içindedir.
 
 Antrenman, boş stat veya kulüp odası gibi isteğe bağlı alanlarda vakit geçirilebilir. Telefon ve haberler bu ortamların içinde gelebilir. Uzun süre beklemek zorunlu bir yetenek veya bilgi kazancına dönüşmez.
 
@@ -302,6 +326,16 @@ Az sayıda anlamlı mekân zaman içinde değişir: kulüp odası, görüşme al
 
 Avrupa rakipleri ve yabancı oyuncu kaynakları için yeterli bir dış dünya temsili kurulur. Bütün yabancı liglerin maçlarını ayrıntılı simüle etmek gerekmez. Avrupa deplasmanları görkemli statları ve ortamıyla kariyerin ilerlemesini hissettirir. Kendi stadın da para, zaman ve yatırımlarla gelişir.
 
+### Ortak stat ve maç günü sunumu
+
+**Onaylı hedef (2026-10-01; henüz uygulanmadı):** Ayrı “1. Lig şehir stadı” tarifi ve seçimi kaldırılır. Kulübün başlangıç stadı korunur; üst ölçeğe aynı stadın tribün, zemin, aydınlatma ve tesislerinin para/zaman/yatırımla gelişmesiyle ulaşılır. Lig atlamak kendiliğinden stat değiştirmez. Oda penceresindeki, balkondaki ve ev sahibi maçındaki saha/tribün yerleşimi aynı kulüp stadına aittir; saat, ışık, doluluk ve antrenman durumu farklı olabilir. Kapsamlı yatırım sistemi Aşama 8'dedir; şimdi ortak fiziksel temel kurulur.
+
+Balkona odadaki kapıya tıklayarak çıkılır. Başkan doğal biçimde ayağa kalkar, yönelir, adımlarla yürür ve yerine oturur. İlk kapsamda tam bacak modeli gerekmez; kalkış ve adım ritmi göz hizasından anlaşılır. Hareket azaltma ve klavye erişimi korunur. Ev sahibi maçındaki başkan yeri daha yüksekte, altında tribün sıraları görünecek biçimde düzenlenir. Oda ve maç masalarındaki çay kaldırılır.
+
+Maç öncesi, açık tonlarda kısa bir kulüp maç programı sunulur: karşılaşma, yer/zaman ve kısa bağlam ana sayfada; kadrolar ve lig bilgisi isteğe bağlı sayfalardadır. Hazırlık en az **10 saniye** sürer ve gerekli kaynaklar hazır olmalıdır; ardından “Maça geç” etkinleşir, oyuncu kendisi geçer. Sayfa değiştirmek süreyi sıfırlamaz. Bu bekleme takvimde yeni süre tüketmez ve maç başlamaz; §6'daki süre hedefleri bekleme kotasına dönüştürülmez.
+
+Yazılı maç spikeri/radyo akışı kaldırılır. Skor ve dakika stat tabelasında; ayrıntılar masadaki telefondaki Canlı Skor uygulamasında görülür. Kendi maçının istatistikleri mevcut motorun ürettiği verilerdir. Diğer lig maçları gerçek fikstür, maç kimlikleri, kadrolar ve sonuç temeli kurulduğunda bağlanır (Aşama 3); o zamana kadar veri eksikliği açıkça gösterilir, uydurma canlı skor üretilmez.
+
 ## 12. Başkanın yaşlanması ve kariyer sonları
 
 Başkanın dayanma gücü, uyumu ve bazı becerileri yaşla gerileyebilir; tecrübesi, insan tanıması ve kulüpteki ağırlığı artabilir. Değişim herkes için tek bir yaş çizelgesine indirgenmez. Yeni adaylar ve değişen beklentiler baskı oluşturur.
@@ -317,6 +351,8 @@ Başarı finali kutlama, şehre dönüş, insanlarla veda ve bırakmayla tamamla
 ## 13. Kapsam ve açık kararlar
 
 İlk ticari hedefe dahil değildir: seçilebilir çok sayıda kulüp, başkanın şirketini yönetme, bütün dünya liglerini ayrıntılı oynatma, çevrimiçi çok oyunculu yapı, her kişiye haftalık zorunlu görüşme ve her olaya ayrı mekân. Tam seslendirme gibi içerik maliyeti yüksek işler temel oynanış kanıtlandıktan sonra değerlendirilir.
+
+**Ses kararı (2026-10-01):** Mevcut ses sistemi, çağrıları ve ses ayarları 2.8A'da kaldırılacaktır. Ana oyun ve ekranlar tamamlanıp Aşama 10'daki ses tasarımına gelinene kadar hiçbir yerde yeni ses çalışması yapılmaz. Önceki erken ortam sesi kabul koşulları bu kararla geçersizdir; geçmiş uygulama kayıtları tarihsel bilgi olarak kalır. Bu belge güncellemesi seslerin koddan şimdiden kaldırıldığı anlamına gelmez.
 
 | Açık konu | Karar verilmesi gereken aşama |
 |---|---|
