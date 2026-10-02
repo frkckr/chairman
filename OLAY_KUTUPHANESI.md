@@ -1,6 +1,6 @@
 # Chairman — olay kütüphanesi
 
-Son güncelleme: 2026-10-01. Onaylı tasarım yönünü destekleyen tarihsel kaynak ve kurgusal içerik kataloğudur. **P01, P03 ve P13'ün dar alt kapsamları uygulandı (yol haritası 2.4A, 2.6, 2.8; TEST içerik); diğer paketler henüz uygulanmadı.** Kartlar ayrıntılı içerik taslaklarıdır; bütün seçeneklerin, sayıların veya paketlerin aynı aşamada uygulanacağı anlamına gelmez.
+Son güncelleme: 2026-10-02. Onaylı tasarım yönünü destekleyen tarihsel kaynak ve kurgusal içerik kataloğudur. **P01, P03 ve P13'ün dar alt kapsamları uygulandı (yol haritası 2.4A, 2.6, 2.8; TEST içerik); diğer paketler henüz uygulanmadı.** Bu eski dar örneklerin yeni iki seçenekli sisteme uyumu henüz yapılmadı. Kartlar konu/strateji taslaklarıdır; nihai sahne veya aynı anda sunulacak seçenek listesi değildir. Bütün katalog uygulama öncesi yeni sözleşmeyle incelenir.
 
 Katalog 23 tarihsel örnek, 14 olay paketi ve 6 koşula bağlı birleşim içerir. Tarihsel dayanak ile kurgusal seçenek ve sonuçlar ayrıdır. Birleşimler oynanacak altı sabit kampanya değildir. İlk uygulama kapsamı ve iş sırası [YOL_HARITASI](YOL_HARITASI.md), oyun kuralları [OYUN_TASARIMI](OYUN_TASARIMI.md), teknik sözleşme [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi) içindedir.
 
@@ -12,7 +12,9 @@ Bir paket bir mesele ailesidir. Önce §8'deki bağımlılıklar, sonra kartın 
 
 Kartlarda kaynak, insan, gelecekteki hareket alanı ve kulüpte görünür iz düşünülür; her küçük olayın dört alanda da büyük etkisi gerekmez. Bazı olumlu anlar yalnız aidiyet ve hafıza sağlar. Yeni kararlarda oyun kurallarının ana kaynağı güncellenir; bu katalog ikinci bir tasarım kuralları listesi tutulacak yer değildir.
 
-**2026-10-01 sunum yenilemesi:** Paketler [tek konu akışını](OYUN_TASARIMI.md#tek-konu-akışı-ve-ekranların-görevleri) ve [onaylı ekran düzenlerini](STIL_REHBERI.md#onaylı-ekran-düzenleri-ve-etkileşim) kullanır. Aynı mesele mesaj, ajanda ve dosyada çoğaltılmaz; kritik bilgi/son tarih saklanmaz, haber açık dosyayı değiştirmez. Öncelik 2.8A–2.8F ekran temelidir; bu katalog yeni paketleri öne alma gerekçesi değildir. Tarihsel esinler, paketler ve koşullu yollar korunur.
+**2026-10-01 sunum yenilemesi:** Paketler [tek konu akışını](OYUN_TASARIMI.md#tek-konu-akışı-ve-ekranların-görevleri) ve [onaylı ekran düzenlerini](STIL_REHBERI.md#onaylı-ekran-düzenleri-ve-etkileşim) kullanır. Aynı mesele mesaj, ajanda ve dosyada çoğaltılmaz; kritik bilgi/son tarih saklanmaz, haber açık dosyayı değiştirmez. 2.8A–2.8F ilk ekran temelini kurdu. Güncel öncelik 2026-10-02 revizyonudur; sıra yol haritasındadır. Tarihsel kaynaklar korunur, uyumsuz oyuncu senaryoları §7 kapsamında yeniden yazılır veya kaldırılır.
+
+**2026-10-02 onayı:** [İki seçenekli karar](OYUN_TASARIMI.md#başkanlık-kararında-iki-seçenek) ve [karakter/mizah yönü](OYUN_TASARIMI.md#tanıdık-kişiler-başkanlık-üslubu-ve-mizah) bütün yeni içerikte geçerlidir. Aşağıdaki **Yollar** bir mesele ailesinin farklı şartlardaki tasarım olanaklarıdır; tek kartta üç/dört düğme veya zorunlu ardışık menüler olarak uygulanamaz. Aynı anda iki anlamlı yaklaşımı, doğal takipleri ve metinleri uygulayıcı tasarlar. K01–K06 koşul ilişkileridir, oynatılacak senaryo dizileri değildir.
 
 ## 2. Tarihsel kaynak kütüphanesi
 
@@ -184,13 +186,32 @@ Başlangıç ve adil belirsizlik kuralları [OYUN_TASARIMI §3](OYUN_TASARIMI.md
 
 ## 6. Paketin asgari yazım biçimi
 
-Uygulamaya alınacak kartta şu bilgiler tamamlanır: paket kimliği/sürümü; tarihsel esin ile kurgu ayrımı; açılma/iptal/tekrar koşulları; roller ve tarafların hedefleri; gerçek koşullar; başkanın görebileceği kanıtlar; seçeneklerin kaynak/yetki/süre şartları; tavsiye ve devir imkânı; kesin etkiler ile belirsiz sonuçların ayrımı; takip işleri; önleme/telafi yolları; kapanış; hafıza ve sunum izi; bağlı kabul örnekleri. İlk örneğin gerektirmediği bütün alt sistemler peşinen kodlanmaz.
+Uygulamaya alınacak sahne önce karar/haber/sonuç olarak ayrılır. Gerçek kararda iki açık cevabın anlamı, bilinen bedeli, kısa sonuç ve beklenen sonraki haber belirlenir; hazır görüş ile yeni araştırma ayrılır. Nihai ifadeler ve doğal takip yapısı uygulayıcının alanıdır. Ardından şu bilgiler tamamlanır: paket kimliği/sürümü; tarihsel esin ile kurgu ayrımı; açılma/iptal/tekrar koşulları; roller ve tarafların hedefleri; gerçek koşullar; başkanın görebileceği kanıtlar; seçeneklerin kaynak/yetki/süre şartları; tavsiye ve devir imkânı; kesin etkiler ile belirsiz sonuçların ayrımı; takip işleri; önleme/telafi yolları; kapanış; hafıza ve sunum izi; bağlı kabul örnekleri. İlk örneğin gerektirmediği bütün alt sistemler peşinen kodlanmaz.
 
 Örnek ayrım: sponsorun avansı nakdi kesin artırır ve kabul edilen hakkı bağlar. Taraftar algısı, ilerideki teklif ve sportif başarı aynı kesinlikte değildir. Kart bu farkı anlatır; kesin ödeme kuralı yalnız hikâye metnine bırakılmaz. Kalıcı veri ve komut sözleşmesi [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi) içindedir.
 
 ## 7. Mevcut içerikten geçiş
 
-Eski sabit haftanın, aday–sponsor sonuç eşleşmelerinin ve sonuçsuz görev metinlerinin değiştirilme sınırı [TEKNIK_PLAN §6](TEKNIK_PLAN.md#eski-içerikten-geçiş-ve-kayıt-uyumu) içindedir. Normal yeni kariyerde yalnız yeni içerik yolu kullanılır. Eski kaydı tamamlamak için gereken davranış ve test verisi korunabilir; ödenmiş para veya geçmiş karar yeniden yazılmaz. Geçiş 2.4A ile yapıldı: eski kararlar `js/uyum-sponsor.js`'te, eski hafta yalnız deneme verisi olarak durur.
+**Onaylı iş (2026-10-02; henüz uygulanmadı):** Yeni sistemle uyuşmayan bütün mevcut senaryolar/karar akışları normal oyuncu yolundan çıkarılacak; uygun konu aileleri yeni iki seçenekli düzenle yeniden yazılacak. Bu bölüm kod silindiği veya eski örneklerin uyumlu olduğu anlamına gelmez. Önce 2.8G envanteri, sonra 2.8H geçişi yapılır; ayrıntılı kayıt koruması [TEKNIK_PLAN §6](TEKNIK_PLAN.md#eski-içerikten-geçiş-ve-kayıt-uyumu) içindedir.
+
+| İncelenecek mevcut alan | Yeni oyuncu akışında yapılacak işlem |
+|---|---|
+| Koltuk/aday seçimi (yonetim) | Çok adaylı tek karar ekranını kaldır; kişilerin anlamlı biçimde değerlendirildiği iki cevaplı teklif/görüşme akışını tasarla. Rastgele iki aday tutmak çözüm değildir. |
+| Ödeme sıkışması, ödeme teklifi, anlaşma değerlendirme ve nakit takvimi (paket-odeme) | Çok seçenekli yolları, ayrı ek tavsiye/devir eylemlerini ve karşı teklifleri birlikte yeniden tasarla; koşul, ödeme tarihi ve önleme yolunu koru. Uyumsuz eski akışı yeni kariyerden kaldır. |
+| Hoca talebi/görüşmesi, basın sorusu, destek teklifi | Zaten iki düğmesi olsa da kısa metin, açık bedel, gerçek geçmiş, tekrar ve iki anlamlı cevap bakımından incele. Tek işlem/bilgi haberini sahte ikileme çevirme; uygun biçimde haber/girişim veya gerçek karar olarak yeniden yaz. |
+| Girişimler, tavsiye, kalıcı sorumluluk, söz/gazete/teşekkür | Yeni çalışma ile hazır bilgiyi ayır; gizli üçüncü kararları kaldır. Gerçek komut, söz ve sonuç korunur; sonuçsuz görev veya uydurma mesaj atfı çıkarılır. |
+| Stat/bakım/pano anlatıları ve görünür izler | Çatısız başlangıçla çelişen çatı bakımı/iskelesini yeniden bağla; yapılmamış yatırım varmış gibi anlatılmaz. |
+| Başlangıçlar, paket açılma yolları, eski ajanda/alternatif girişler | Yeni kariyerin hiçbir erişiminden uyumsuz içerik açılmasın. Sakin/önlenmiş durumlar korunsun; sabit zorunlu kriz sırası getirilmesin. |
+| Eski sabit hafta, uyum-sponsor, eski kayıt örnekleri | Yalnız kayıt uyumu veya açık kural testi gerekçesi varsa yalıtılmış biçimde kalır; üretim içeriği olarak geri dönmez. Kullanılmayan metin/yükleme ve referanslar temizlenir. |
+| P01–P14 ve K01–K06 taslakları | Tarihsel kaynaklar ve uyumlu mesele aileleri kalır. Çok yollu eski anlatım hazır senaryo sayılmaz; ilgili aşamada iki cevaplı sahnelere yeniden tasarlanır, uymayan sahne/sonuç önerileri çıkarılır. |
+
+Bu başlangıç envanteri kod taramasının yerine geçmez: bütün karar türleri, üreticiler, seçenekler, girişimler, olay anahtarları ve erişim yolları listelenir. Her kayıtta mevcut kaynak, uyumsuzluk, korunacak kural/gerçek, yeni düzen veya kaldırma kararı, kayıt etkisi ve doğrulama örneği bulunur. Geçiş sonunda belirsiz kalan aktif senaryo olmaz; sonuç matrisi bu bölümde veya bağlantılı teknik kayıtta güncellenir.
+
+Ödenmiş para, kabul edilmiş hak, verilmiş söz ve görülen geçmiş silinmez. Eski bekleyen iş için dönüşüm veya sınırlı uyumluluk kararı gerekçelendirilir. Yeni ve eski senaryo aynı kariyerde iki görev/ödeme üretmez. Maç simülasyonunu kuran mac-senaryo dosyasının adı, onun bu içerik temizliğinde kaldırılacağı anlamına gelmez; oyun motoru korunur.
+
+**İçerik üretim yöntemi:** Önce az sayıda mevcut meselede iki cevap, kısa sonuç, önleme/sorunsuz yol ve gerçek hafıza izi tamamlanır. Birkaç tanınır kişiyle yaklaşık 12–20 karar/tepki metni başlangıç denemesi olabilir; kesin adet, günlük kota veya zorunlu sıra değildir. Önce davranış ve kısa iskelet sınanır, ardından üslup işlenir. [Failbetter'ın küçük bitmiş parçalar ve önce yapı yaklaşımı](https://www.failbettergames.com/news/narrative-snippets-organising-creative-efforts-2) üretim referansıdır. Yeni bağımsız senaryo kataloğu veya tam ilişki motoru bu denemenin önkoşulu değildir.
+
+**Tarihsel kayıt:** 2.4A eski sabit haftayı yeni kariyerden çıkardı; eski sponsor kararlarını kayıt uyumuna ayırdı. 2026-10-02 işi bugünkü aktif örnekleri de kapsayan daha geniş bir revizyondur.
 
 ## 8. Paket durumu ve bağımlılıkları
 
@@ -217,7 +238,7 @@ Eski sabit haftanın, aday–sponsor sonuç eşleşmelerinin ve sonuçsuz görev
 
 ## 9. İçerik inceleme soruları
 
-Kart geliştirilirken aşağıdaki sorular cevaplanır; çalışma zamanı ve kayıt kontrollerinin ana kaynağı teknik plan, aşama kabulünün ana kaynağı yol haritasıdır:
+Kart geliştirilirken önce §7 uyum kararı ve iki cevap sözleşmesi, sonra aşağıdaki sorular cevaplanır; çalışma zamanı ve kayıt kontrollerinin ana kaynağı teknik plan, aşama kabulünün ana kaynağı yol haritasıdır:
 
 - Hangi gerçek durum bu meseleyi anlamlı kılıyor; hangi durumda hiç açılmıyor?
 - Oyuncu aynı cevabı ezberlemek yerine hangi bilgiye bakacak? Fark yalnız ad/tutar değişimi mi?

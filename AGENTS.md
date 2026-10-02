@@ -7,3 +7,5 @@ Oyun davranışı veya içerik çalışmasında [OYUN_TASARIMI.md](OYUN_TASARIMI
 Ekran veya mekân yenilemesinde STIL_REHBERI'nin onaylı ekran düzenlerini, TEKNIK_PLAN'ın duraklatma ve ortak stat sınırlarını birlikte oku. Sıradaki işi YOL_HARITASI'ndan al; belge güncellemesi yeni ekranın uygulanmış olduğu anlamına gelmez. Ortak talimatları veya iş listesini bu dosyada çoğaltma.
 
 Başlangıç, olay veya karar içeriği çalışmasında ayrıca [OLAY_KUTUPHANESI.md](OLAY_KUTUPHANESI.md) içindeki ilgili paketleri ve durum/bağımlılık tablosunu oku. Katalog geliştirme sırasının yerine geçmez; sıradaki iş YOL_HARITASI'ndadır.
+
+Yeni karar düzeninde içerik geçişini kütüphanenin §7'sinden, kayıt korumasını teknik planın §6'sından al. Kesin çerçeve ile uygulayıcının tasarım alanının ayrımı CLAUDE.md'dedir; örnek senaryoları veya tarihsel uygulama notlarını güncel zorunlu akış sanma.
