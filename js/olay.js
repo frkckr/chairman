@@ -13,7 +13,8 @@
    Dış gelişme (takvimde 'gelisme' türü iş, gizli): zamanı gelince GELISMELER[veri.gelisme].uygula dünyayı değiştirir ve ilgili
      paketi o anki koşullarla dener (paketDene). Koşul önizlemede, özet okurken ya da çizimde denetlenmez; rastlantı çekilmez.
    İçerik sürümü (k.icerik.surum) 0 olan eski kayıtlarda paket açılmaz. Yoğunluk denetimi yoktur: gerçek vade ve gelişme zamanında işlenir. */
-const ICERIK_SURUM=2;
+/* içerik sürümü 3 (2.8H): iki cevaplı kararlar; 2 ve öncesinin çok seçenekli kararları js/uyum-icerik2.js'te yalnız eski kayıtlar ve denemeler için durur */
+const ICERIK_SURUM=3;
 const OLAY_DURUMLARI=['acik','kapandi','onlendi'];
 const OLAY_KAYNAKLARI={defter:'Muhasebe kayıtları',sozlesme:'Sponsorluk sözleşmesi',gazete:'Demirkapı Postası'};
 const PAKETLER={},GELISMELER={};

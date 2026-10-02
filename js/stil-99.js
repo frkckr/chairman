@@ -113,11 +113,11 @@ const STIL={
     gunIsigi:[[6,0.25,0xffc890],[9,0.62,0xfff0cf],[13,0.78,0xfffaf0],[17,0.6,0xffe0b0],[19.5,0.28,0xff9a5a],[22,0.1,0x6a78a8]],
     /* balkon kapısı (uzak duvarda, x0–x1 arası, h yüksekliğinde; tıklanır, üstünde levha) ve pencere boşluğu (pencere; balkon kuruluysa dışarı
        gerçekten görünür). kapiCam: kapının camı */
-    kapi:{x0:0.9,x1:1.75,h:2.1,renk:0xf4f1e8,cam:0xbfe0f2,kol:0xb89a4a},pencere:{x0:-2.2,x1:-0.3,y0:0.995,y1:2.245},levha:'#2a2c30',levhaYazi:'#f2ede2',
+    kapi:{x0:0.9,x1:1.75,h:2.1,renk:0xf4f1e8,cam:0xbfe0f2,kol:0xb89a4a},pencere:{x0:-2.2,x1:-0.3,y0:0.6,y1:2.245},levha:'#2a2c30',levhaYazi:'#f2ede2',
     /* yürüyüş (2.8D): yol = ayakta göz hizasında yürüme noktaları (masanın yanından kapıya, balkon sandalyesinin yanına);
-       adim: kalkış/yönelme/oturma süreleri (sn), yürüme hızı (m/sn), adım boyu (m), iniş-çıkış ve yana yalpa (m). TEST değerleri */
+       adim: kalkış/yönelme/oturma süreleri (sn), yürüme hızı (m/sn), adım boyu (m), adım hissi için küçük iniş-çıkış (m; 2.8J: yana yalpa yok). TEST değerleri */
     yol:[[0.14,1.62,0.8],[1.42,1.62,0.25],[1.36,1.62,-2.7],[1.3,1.62,-4.15],[-0.3,1.62,-4.6]],
-    adim:{kalk:0.6,yonel:0.4,otur:0.6,hiz:1.7,adimBoyu:0.62,sallanma:0.022,yalpa:0.012}},
+    adim:{kalk:0.6,yonel:0.4,otur:0.6,hiz:1.7,adimBoyu:0.62,sallanma:0.01}},
 
   /* Balkon ve antrenman sahası (js/balkon.js): odanın dışı, gündüz. Ölçüler metre; saha merkezi oda koordinatındadır (balkon sahanın üstünde,
      ana tribünün tepesinde). aci/bakis: balkondaki sandalyeden bakış. TEST değerleri. */
@@ -128,12 +128,37 @@ const STIL={
     /* gözlemde bir oyun dakikasının gerçek süresi, ms (2.8B; TEST değeri: 120 dakikalık antrenman ≈ 8,4 sn) */
     gozlemDakikaMs:70,
     /* 2.8D: saha konumu (saha) ve bakış tariften hesaplanır (js/balkon.js BLK_STAT); korkulukZ balkonun ön kenarı */
-    korkulukZ:-5.7,duvar:0xc9bfae,iskele:0x8a8f96,iskeleBranda:0x3d6a8a},
+    korkulukZ:-5.7,duvar:0xc9bfae,iskele:0x8a8f96,iskeleBranda:0x3d6a8a,iskeleTorba:0xc9b98f,iskeleSerit:0xd8402a},
 
   /* Açık renkli yönetim arayüzü (js/ekran-oda.js): kâğıt zemin, koyu okunur metin, ahşap çizgi, ölçülü kulüp rengi.
      Ekran bu renkleri CSS değişkeni (--k-ad) olarak yazar. yaziBoyu: karenin genişliğine oranla yazı (cqw). TEST değerleri. */
   kagit:{zemin:'#f4eedf',zeminKoyu:'#e9e0cb',serit:'#fbf7ec',cizgi:'#c9b994',yazi:'#26221c',soluk:'#6d6353',vurgu:'#a5620a',vurguZemin:'#ffb530',
-    kulup:'#b4241c',kirmizi:'#b4241c',yesil:'#2c6f28',golge:'rgba(40,28,12,.28)',yaziBoyu:{normal:1.42,buyuk:1.72}},
+    kulup:'#b4241c',kirmizi:'#b4241c',yesil:'#2c6f28',golge:'rgba(40,28,12,.28)',yaziBoyu:{normal:1.42,buyuk:1.72},
+    /* telefon (2.8I): açık tonlu cihaz; gelen/giden baloncuk ve ana ekran simgeleri */
+    telefon:{kasa:'#1d1e22',ekran:'#f7f2e6',gelen:'#fbf7ec',giden:'#ffd27a',gidenCizgi:'#c98a1c',mesajSimge:'#2c6f28',skorSimge:'#22347a'}},
+
+  /* Kişi portreleri (js/portre.js, 2.8I): 16×16 piksel, kodla çizilir. Tanınır kişilerin görünüşü burada sabittir; listede olmayan kişi
+     kimliğinden belirlenimli görünüş alır. ten 0–2, sac: renk adı, tip: 'kisa'|'seyrek'|'kel'|'uzun'|'topuz'|'dalgali', biyik: 0 yok, 1 ince, 2 gür,
+     gozluk, giysi: üst giysinin rengi, yaka: gömlek/forma rengi. Görünüş başlangıç verisidir; TEST değeri */
+  portre:{
+    tenler:['#f0c9a0','#d9a679','#b98257'],
+    saclar:{siyah:'#1f1a17',kahve:'#5a3a22',kir:'#8f8a84',beyaz:'#d9d5cf',sari:'#c9a24a'},
+    zemin:{baskan:'#c8281e',teknikDirektor:'#2c6f28',yonetici:'#22347a',yoneticiAdayi:'#6d6353',personel:'#a5620a',sponsorTemsilcisi:'#c98a1c',muhabir:'#3a6ea8',diger:'#6d6353'},
+    kisiler:{
+      'kisi-1':{ten:1,sac:'kir',tip:'kisa',biyik:2,giysi:'#2a2f3d',yaka:'#f2ede2'},             // Haluk Demirel
+      'kisi-2':{ten:1,sac:'beyaz',tip:'seyrek',biyik:2,giysi:'#b4241c',yaka:'#f2ede2'},          // Şükrü Hoca: kulüp eşofmanı
+      'kisi-3':{ten:2,sac:'kir',tip:'kisa',biyik:1,giysi:'#3b3f2a',yaka:'#c8281e'},              // Necati Uysal: eski kaptan
+      'kisi-4':{ten:0,sac:'kahve',tip:'uzun',biyik:0,giysi:'#5a2a3a',yaka:'#f2ede2'},            // Sevim Kara
+      'kisi-8':{ten:0,sac:'beyaz',tip:'kel',biyik:1,gozluk:true,giysi:'#2a2f3d',yaka:'#9ab4d8'}, // Hikmet Aydın: emekli banka müdürü
+      'kisi-9':{ten:1,sac:'siyah',tip:'dalgali',biyik:2,giysi:'#5a3a22',yaka:'#f2ede2'},          // Tuncay Erbil: fabrikatör
+      'kisi-10':{ten:0,sac:'kahve',tip:'kisa',biyik:0,gozluk:true,giysi:'#22347a',yaka:'#f2ede2'},// Deniz Kocaman: genç müşavir
+      'kisi-11':{ten:0,sac:'kir',tip:'topuz',biyik:0,gozluk:true,giysi:'#3a4a3a',yaka:'#f2ede2'},// Aysel Tekin
+      'kisi-12':{ten:2,sac:'siyah',tip:'seyrek',biyik:2,giysi:'#c8281e',yaka:'#f2ede2'},         // Orhan Yazıcı: taraftar derneği
+      'kisi-13':{ten:2,sac:'kir',tip:'kel',biyik:2,giysi:'#4a5a6a',yaka:'#4a5a6a'},              // Remzi Usta: malzemeci
+      'kisi-14':{ten:0,sac:'sari',tip:'dalgali',biyik:0,giysi:'#c98a1c',yaka:'#f2ede2'},          // Selim Çınar: sponsorun oğlu
+      'kisi-15':{ten:1,sac:'siyah',tip:'uzun',biyik:0,gozluk:true,giysi:'#3a6ea8',yaka:'#f2ede2'} // Nalan Ergin: muhabir
+    }
+  },
 
   /* Kameralar: hedef [x,y,z], aci = dikey görüş açısı (derece).
      Maç başkanın gözünden izlenir: ana tribünün ortasında, açık tribündeki başkan koltuğu. Dürbün isteğe bağlı. */
