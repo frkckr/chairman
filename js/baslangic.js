@@ -4,8 +4,13 @@
      sikisik  kasa dar, sayman koltuğu boş, sponsor taksiti ertelemek isteyecek → taksit gelmezse maaş günü kasa yetmez.
      rahat    kasada pay var, sayman görevde, basın sözcüsü koltuğu boş, sponsor yine erteleme isteyecek → acil olmayan bir değerlendirme.
      duzenli  ödeme takvimi uyumlu, üç koltuk dolu, sponsor gününde ödüyor, hocanın isteği yok → sakin hafta.
-   kariyerBaslat({tohum, baslangic?, sponsor?, sayman?, hoca?}): tohumdan dört rastlantı çekilir (başlangıç, sponsorun gerçek durumu, görevdeki sayman,
+   kariyerBaslat({tohum, baslangic?, sponsor?, sayman?, hoca?, icerik?}): tohumdan dört rastlantı çekilir (başlangıç, sponsorun gerçek durumu, görevdeki sayman,
      hocanın talebi); verilen alanlar çekilen değerin yerine geçer (geliştirici ve deneme içindir, oyuncuya menü olarak sunulmaz). Aynı tohum aynı kariyeri kurar.
+   İçerik sürümü 3 (2.8H, varsayılan): iki rastlantı daha çekilir (sayman ve basın adaylarının görüşme sırası); önceki dört çekiliş değişmez. Aday görüşmesi
+     katılınınca açılan sıralı kartlardır; yeni saymanın nakit takvimi randevusu göreve gelince kurulur (js/paket-odeme.js nakitRandevusu). Forma sponsorunun
+     temsilcisi ve Demirkapı Postası muhabiri kişi olarak eklenir (telefonda mesaj gönderenler). Bakım kalemi çatısız ana tribünün basamak onarımıdır.
+   icerik: 2 yalnız kural denemeleri içindir (araclar/kariyer-deneme.js): 2.4A–2.8'in kurulumunu ve çok seçenekli kararlarını (js/uyum-icerik2.js) aynen kurar.
+     Oyunun hiçbir girişi bunu kullanmaz.
    Koşullar birlikte ve bir kez seçilir (k.kosullar, k.icerik.baslangic); sezonun olay sırası yazılmaz. Takvime gizli dış gelişmeler konur (js/olay.js);
    her biri zamanı gelince o günkü dünyaya bakar ve koşulu yoksa hiçbir şey açmaz:
      Salı destek teklifi (js/paket-destek.js) · Çarşamba sponsorun talebi (js/paket-odeme.js) · Perşembe hocanın talebi (js/paket-hoca.js) ve
@@ -41,17 +46,32 @@ const YONETIM_HAVUZU={
   'kisi-13':{id:'kisi-13',ad:'Remzi Usta',rol:'personel',dogumTarihi:'1957-02-09',kulupId:'demirkapi',durum:'aktif'}
 };
 const BASIN_ADAYLARI=['kisi-11','kisi-12'];
+/* içerik sürümü 3'ün kulüp dışı muhatapları (telefonda mesaj gönderenler). Kurgusal; Çınar Bisküvi statta pano sahibi olarak zaten görünür */
+const DIS_KISILER={
+  'kisi-14':{id:'kisi-14',ad:'Selim Çınar',rol:'sponsorTemsilcisi',dogumTarihi:'1988-06-21',kulupId:null,durum:'aktif',
+    profil:{meslek:'Forma sponsoru Çınar Bisküvi\'nin pazarlama müdürü; patronun oğlu.'}},
+  'kisi-15':{id:'kisi-15',ad:'Nalan Ergin',rol:'muhabir',dogumTarihi:'1984-11-05',kulupId:null,durum:'aktif',
+    profil:{meslek:'Demirkapı Postası\'nın spor muhabiri.'}}
+};
+/* görüşme sırası: altı olası sıradan biri (rastlantı) */
+const SIRALAR=[[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]];
 
-function kariyerBaslat({tohum,baslangic,sponsor,sayman,hoca}={}){
+function kariyerBaslat({tohum,baslangic,sponsor,sayman,hoca,icerik}={}){
   if(!Number.isInteger(tohum))throw new Error(`Dünya tohumu tamsayı olmalı: ${tohum}`);
   tohum=tohum>>>0;
+  const surum=icerik===undefined?ICERIK_SURUM:icerik;
+  if(surum!==2&&surum!==ICERIK_SURUM)throw new Error(`Bu içerik sürümüyle kariyer kurulamaz: ${icerik}`);
+  const yeni=surum>=3;
   const O=KARIYER_ORNEK,E=KARIYER_BASLANGIC,KULUP=O.kisiler[O.baskanId].kulupId;
-  const k=kariyerOlustur({kayitSurumu:KARIYER_SURUM,dunyaTohumu:tohum,icerik:{surum:ICERIK_SURUM,baslangic:null},kosullar:{},rastlanti:rastlantiBaslat(tohum),olaylar:{},sozler:{},haberler:[],gozlem:null,
+  const k=kariyerOlustur({kayitSurumu:KARIYER_SURUM,dunyaTohumu:tohum,icerik:{surum,baslangic:null},kosullar:{},rastlanti:rastlantiBaslat(tohum),olaylar:{},sozler:{},haberler:[],gozlem:null,
     tarih:BASLANGIC_TARIHI,gunIciDakika:GUN_BASLANGICI,baskanId:O.baskanId,gorevDurumu:'gorevde',final:null,
-    sonrakiNo:{kisi:14,is:1,hareket:1,mesele:1,olay:1,soz:1},meseleler:{},kulupler:O.kulupler,isler:{},gecmis:[],hareketler:[],kisiler:E.kisiler});
+    sonrakiNo:{kisi:yeni?16:14,is:1,hareket:1,mesele:1,olay:1,soz:1},meseleler:{},kulupler:O.kulupler,isler:{},gecmis:[],hareketler:[],kisiler:E.kisiler});
   for(const [id,p] of Object.entries(kariyerOlustur(YONETIM_HAVUZU)))k.kisiler[id]=Object.assign(k.kisiler[id]||{},p);
+  if(yeni)Object.assign(k.kisiler,kariyerOlustur(DIS_KISILER));
   /* dört çekiliş her zaman yapılır: bir alanı elle vermek diğerlerinin seçimini değiştirmez */
   const sec=L=>L[Math.floor(rastlantiCek(k)*L.length)],r=[sec(BASLANGIC_SIRASI),sec(SPONSOR_DURUMLARI),sec(SAYMAN_ADAYLARI),sec(HOCA_TALEPLERI)];
+  /* içerik sürümü 3: aday görüşme sıraları (ilk dört çekilişten sonra; onları değiştirmez) */
+  const siraS=yeni?sec(SIRALAR):null,siraB=yeni?sec(SIRALAR):null,sirala=(L,S)=>S.filter(i=>i<L.length).map(i=>L[i]);
   const ad=baslangic||r[0],B=BASLANGICLAR[ad];
   if(!B)throw new Error(`Bilinmeyen başlangıç: ${ad}`);
   const spDurum=B.erteleme?sponsor||r[1]:'saglam',saymanId=sayman||r[2],talep=ad==='duzenli'?'yok':hoca||r[3];
@@ -69,12 +89,21 @@ function kariyerBaslat({tohum,baslangic,sponsor,sayman,hoca}={}){
   const gun=n=>tarihEkle(BASLANGIC_TARIHI,n),odeme=(n,dakika,tutar,kalem,aciklama)=>odemePlanla(k,{kulupId:KULUP,tarih:gun(n),dakika,tutar,kalem,aciklama});
   const gelisme=(n,dakika,veri)=>isEkle(k,{tur:'gelisme',tarih:gun(n),dakika,veri});
   odeme(1,720,-4500000,'isletme','Stat elektrik faturası (Kasım)');
-  const bakimIsId=odeme(3,600,-35000000,'bakim','Tribün çatısı bakım taksiti');
+  const bakimIsId=odeme(3,600,-35000000,'bakim',yeni?'Karşı tribün basamak onarımı taksiti':'Tribün çatısı bakım taksiti');
   const odemeIsId=odeme(3,660,150000000,'sponsor','Forma sponsoru ilk taksit');
   odeme(3,900,12000000,'bilet','Bilet ön satış geliri');
   const maasIsId=odeme(4,720,-320000000,'maas','Kasım maaşları');
   const ortak={kulupId:KULUP,odemeIsId,maasIsId,bakimIsId};
-  if(B.erteleme){
+  if(yeni){
+    if(B.erteleme)gelisme(2,570,Object.assign({gelisme:'sponsorErteleme',gun:14},ortak));
+    /* sayman koltuğu boşsa adaylarla sıralı görüşme; yeni sayman göreve gelince nakit takvimi randevusunu kendisi ister */
+    if(!B.sayman)isEkle(k,{tur:'ajanda',tarih:gun(0),dakika:600,veri:{baslik:'Sayman adaylarıyla görüşme',zorunluluk:'zorunlu',sure:ADAY_SURESI,etki:'adayGorusmesi',
+      kulupId:KULUP,koltuk:'sayman',adaylar:sirala(SAYMAN_ADAYLARI,siraS),
+      aciklama:'Eski sayman istifa etti; koltuk boş. Üç kulüp üyesini sırayla dinleyeceksin; her görüşmeden sonra ya göreve alırsın ya sıradakine geçersin.'}});
+    if(!B.basin)isEkle(k,{tur:'ajanda',tarih:gun(0),dakika:660,veri:{baslik:'Basın sözcüsü adaylarıyla görüşme',zorunluluk:'ertelenebilir',sure:ADAY_SURESI,sonTarih:gun(2),etki:'adayGorusmesi',
+      kulupId:KULUP,koltuk:'basin',adaylar:sirala(BASIN_ADAYLARI.concat(SAYMAN_ADAYLARI.find(x=>x!==saymanId&&x!=='kisi-9')),siraB),
+      aciklama:'Sevim Kara geçen ay görevi bıraktı; basın sözcüsü koltuğu boş. Üç kulüp üyesini sırayla dinleyebilirsin. Çarşambaya kadar ertelenebilir.'}});
+  }else if(B.erteleme){
     const gelismeIsId=gelisme(2,570,Object.assign({gelisme:'sponsorErteleme',gun:14},ortak));
     if(!B.sayman){
       const a=nakitAcigi(k,KULUP,odemeIsId);
@@ -86,7 +115,7 @@ function kariyerBaslat({tohum,baslangic,sponsor,sayman,hoca}={}){
           (a.acik?` Defter şunu gösteriyor: Perşembe günkü sponsor taksiti gelmezse ${gunAyYazi(a.is.tarih)} günü “${a.is.veri.aciklama}” için kasada ${paraYazi(a.acik)} eksik kalır.`:'')},ortak)});
     }
   }
-  if(!B.basin)isEkle(k,{tur:'ajanda',tarih:gun(0),dakika:660,veri:{baslik:'Basın sözcüsü adaylarıyla görüşme',zorunluluk:'ertelenebilir',sure:60,sonTarih:gun(2),
+  if(!yeni&&!B.basin)isEkle(k,{tur:'ajanda',tarih:gun(0),dakika:660,veri:{baslik:'Basın sözcüsü adaylarıyla görüşme',zorunluluk:'ertelenebilir',sure:60,sonTarih:gun(2),
     karar:'koltukSecimi',kulupId:KULUP,koltuk:'basin',adaylar:BASIN_ADAYLARI.concat(SAYMAN_ADAYLARI.find(x=>x!==saymanId&&x!=='kisi-9')),
     aciklama:'Sevim Kara geçen ay görevi bıraktı; basın sözcüsü koltuğu boş. Üç kulüp üyesiyle görüşüp birini seçebilirsin. Çarşambaya kadar ertelenebilir.'}});
   /* gizli dış gelişmeler: koşulu yoksa iz bırakmadan geçer */
@@ -95,6 +124,8 @@ function kariyerBaslat({tohum,baslangic,sponsor,sayman,hoca}={}){
   gelisme(3,960,{gelisme:'basinSorusu',kulupId:KULUP});
   gelisme(4,510,{gelisme:'gazete',kulupId:KULUP});
   gelisme(4,900,{gelisme:'tesekkur',kulupId:KULUP,kisiId:'kisi-13',maasIsId});
+  /* içerik sürümü 3 (2.8K): gerçek geçmişe gönderme yapan kısa kişi mesajları; yaşanmış karar yoksa iz bırakmaz (js/soz.js) */
+  if(yeni){gelisme(4,720,{gelisme:'hatira',gun:'cuma'});gelisme(5,540,{gelisme:'hatira',gun:'cumartesi'});}
   isEkle(k,{tur:'ajanda',tarih:gun(5),dakika:1140,veri:{baslik:'Maç: Demirkapı SK – Akdeniz FK',zorunluluk:'zorunlu',sure:0,eylem:'macGunu',
     aciklama:'3. Lig 13. hafta. Başkan koltuğunda yerini al.'}});
   const h=kariyerDogrula(k);

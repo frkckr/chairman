@@ -26,7 +26,7 @@
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const KOK=path.join(__dirname,'..');
-const DOSYALAR=['js/ortak.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/mesele.js','js/yonetim.js','js/uyum-sponsor.js','js/olay.js','js/paket-odeme.js','js/paket-hoca.js','js/paket-basin.js','js/paket-destek.js','js/soz.js','js/gozlem.js','js/test-gorunum.js','js/kayit.js','js/kariyer-ornek.js','js/baslangic.js'];
+const DOSYALAR=['js/ortak.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/mesele.js','js/yonetim.js','js/uyum-sponsor.js','js/olay.js','js/paket-odeme.js','js/paket-hoca.js','js/paket-basin.js','js/paket-destek.js','js/uyum-icerik2.js','js/soz.js','js/mesajlar.js','js/gozlem.js','js/test-gorunum.js','js/kayit.js','js/kariyer-ornek.js','js/baslangic.js'];
 const ctx=vm.createContext({console,Math,Date});
 for(const f of DOSYALAR)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),ctx,{filename:f});
 const al=ad=>vm.runInContext(ad,ctx);
@@ -619,7 +619,7 @@ const [kariyerBaslat,nakitAcigi,rastlantiCek,paketDene,kayitMetni]=['kariyerBasl
 /* 2.4A bölümleri ödeme sıkışmasını tek başına dener: sonradan eklenen dış gelişmeler (destek, hoca, basın, gazete, teşekkür) ve basın koltuğu
    seçimi bu kariyerlerden çıkarılır. Bütün içerik birlikte 2.6/2.8 bölümlerinde denenir (tamBasla) */
 const yalnizOdeme=c=>{for(const x of Object.values(c.isler))if((x.tur==='gelisme'&&x.veri.gelisme!=='sponsorErteleme')||(x.veri.karar==='koltukSecimi'&&x.veri.koltuk==='basin'))delete c.isler[x.id];return c;};
-const tamBasla=(baslangic,sponsor,sayman,hoca,tohum)=>kariyerBaslat({tohum:tohum===undefined?7:tohum,baslangic,sponsor,sayman,hoca});
+const tamBasla=(baslangic,sponsor,sayman,hoca,tohum)=>kariyerBaslat({tohum:tohum===undefined?7:tohum,baslangic,sponsor,sayman,hoca,icerik:2});
 const basla=(baslangic,sponsor,sayman,tohum)=>yalnizOdeme(tamBasla(baslangic,sponsor,sayman,'yok',tohum));
 const kararIsi=(c,tur)=>Object.values(c.isler).find(x=>x.tur==='ajanda'&&x.veri.karar===tur);
 const secenekAdlari=(c,tur)=>ajandaOnizle(c,kararIsi(c,tur).id).secenekler.map(s=>s.id).join();
@@ -656,11 +656,11 @@ const macSinirinda=c=>an(c)==='2026-11-28 19:00'&&Object.values(c.isler).some(x=
   const gizli=c=>Object.values(c.isler).find(x=>x.tur==='gelisme');
   denetle('Henüz olmamış dış gelişme ajandada, yaklaşanlarda ve ilerleme önizlemesinde görünmez',!!gizli(S)&&!yaklasanlar(S,7).some(x=>x.tur==='gelisme')&&!ajandaGunu(S,'2026-11-25').some(r=>r.tur==='gelisme')
     &&!ilerleOnizle(D).gerceklesecek.some(x=>x.tur==='gelisme')&&!gizli(D));
-  const tohumlar=[];for(let t=1;t<=40;t++)tohumlar.push(kariyerBaslat({tohum:t}));
-  denetle('Aynı tohum aynı kariyeri kurar; 40 tohumda üç başlangıç ve iki sponsor durumu da çıkıyor',tohumlar.every((c,i)=>metin(c)===metin(kariyerBaslat({tohum:i+1})))
+  const tohumlar=[];for(let t=1;t<=40;t++)tohumlar.push(kariyerBaslat({tohum:t,icerik:2}));
+  denetle('Aynı tohum aynı kariyeri kurar; 40 tohumda üç başlangıç ve iki sponsor durumu da çıkıyor',tohumlar.every((c,i)=>metin(c)===metin(kariyerBaslat({tohum:i+1,icerik:2})))
     &&new Set(tohumlar.map(c=>c.icerik.baslangic)).size===3&&new Set(tohumlar.map(c=>c.kosullar.sponsor.durum)).size===3,[...new Set(tohumlar.map(c=>c.icerik.baslangic+'/'+c.kosullar.sponsor.durum))].join(' '));
-  const r1=kariyerBaslat({tohum:7}),r2=kariyerBaslat({tohum:7,baslangic:r1.icerik.baslangic});
-  denetle('Başlangıcı elle vermek diğer çekilişleri değiştirmez; geçersiz başlangıç reddedilir',metin(r1)===metin(r2)&&reddeder(()=>kariyerBaslat({tohum:7,baslangic:'yok'}))&&reddeder(()=>kariyerBaslat({tohum:1.5})));
+  const r1=kariyerBaslat({tohum:7,icerik:2}),r2=kariyerBaslat({tohum:7,baslangic:r1.icerik.baslangic,icerik:2});
+  denetle('Başlangıcı elle vermek diğer çekilişleri değiştirmez; geçersiz başlangıç reddedilir',metin(r1)===metin(r2)&&reddeder(()=>kariyerBaslat({tohum:7,baslangic:'yok',icerik:2}))&&reddeder(()=>kariyerBaslat({tohum:1.5,icerik:2})));
   const uretec=al('tohumluRastgele')(7),x=basla('duzenli'),y=kariyerOlustur(x);x.rastlanti.durum=7;y.rastlanti.durum=7;
   const dizi=[1,2,3,4].map(()=>rastlantiCek(x));
   denetle('Kayıtlı rastlantı tohumlu üreticiyle aynı diziyi verir; durumu kariyerde saklanır ve kaldığı yerden sürer',dizi.every(v=>v===uretec())&&(rastlantiCek(y),rastlantiCek(y),rastlantiCek(yukle(y)))===dizi[2]);
@@ -1079,6 +1079,235 @@ bolum('2.8B — gözlem oyun dakikası oyun dakikası: parçalı adım, kaydet�
   denetle('Gözlem açık değilken adım reddedilir; geçersiz adım reddedilir',reddeder(()=>gozlemAdim(kariyerOlustur(d),1))&&reddeder(()=>gozlemAdim(kariyerOlustur(ac),0)));
 }
 
+/* ================= 2.8H: iki cevaplı kararlar (içerik sürümü 3) ================= */
+bolum('2.8H — yeni kariyer: içerik sürümü 3, aynı devralınan koşullar, sıralı aday görüşmesi');
+const ESKI_TURLER=['koltukSecimi','odemeSikismasi','anlasmaDegerlendirme','nakitTakvimi','hocaTalebi','hocaGorusmesi','basinSorusu','destekTeklifi','sponsorGecikmesi','sponsorIndirimi'];
+const [ikiSecenek,zamanAsimiVar]=['ikiSecenek','zamanAsimiVar'].map(al);
+const yeniBasla=(baslangic,sponsor,sayman,hoca,tohum)=>kariyerBaslat({tohum:tohum===undefined?7:tohum,baslangic,sponsor,sayman,hoca});
+const secenekIdleri=(c,id)=>ajandaOnizle(c,id).secenekler.map(s=>s.id).join();
+/* bugün katılınması gereken randevu (karar olmayan, saati gelmiş, engeli olmayan): aday görüşmesi gibi */
+const randevu=c=>ajandaGunu(c,c.tarih).find(r=>r.tur==='ajanda'&&r.durum==='bekliyor'&&!r.karar&&!r.eylem&&!r.saatsiz&&r.saat<=c.gunIciDakika&&r.zorunluluk!=='istege'&&!ajandaOnizle(c,r.id).engel.length);
+/* yeni içerikle oyna: secimler[karar türü] seçenek kimliği, öncelik listesi, işlev (c, iş) → kimlik, null (dokunma) ya da 'dur'. Engel randevudan geliyorsa randevuya katılınır */
+function yurut3(c,secimler={},ara){
+  for(let n=0;n<160;n++){
+    if(bugunkuKararlar(c).some(r=>secimler[r.karar]==='dur'))break;
+    const r=bugunkuKararlar(c).find(r=>secimler[r.karar]!==null&&uygunSecenekler(c,r.id).length);
+    if(r){
+      const S=uygunSecenekler(c,r.id),t=secimler[r.karar],ist=[].concat(typeof t==='function'?t(c,c.isler[r.id]):t||[]);
+      ajandaIsiYap(c,r.id,(ist.map(i=>S.find(s=>s.id===i)).find(Boolean)||S[0]).id);
+    }else{
+      /* saati gelen randevuya (zorunlu ya da ertelenebilir aday görüşmesi) katılır; yoksa ilerler */
+      const rv=randevu(c);
+      if(rv)ajandaIsiYap(c,rv.id);else if(ilerleOnizle(c).engel.length)break;else duragaIlerle(c);
+    }
+    if(ara)c=ara(c);
+  }
+  return c;
+}
+const adayAl=id=>(c,is)=>is.veri.kisiId===id?'al':['sonraki','bos'];
+const koltuklar=c=>Object.entries(c.kulupler.demirkapi.yonetim).map(([a,b])=>a+':'+(b||'boş')).join(' ');
+{
+  const y=yeniBasla('sikisik','pazarlik'),e=tamBasla('sikisik','pazarlik',undefined,'yok');
+  const t3=[];for(let t=1;t<=40;t++)t3.push(kariyerBaslat({tohum:t}));
+  denetle('Yeni kariyer içerik sürümü 3 ile kurulur; aynı tohumda devralınan koşullar eski sürümle aynı (önceki dört çekiliş değişmez)',
+    t3.every((c,i)=>{const o=kariyerBaslat({tohum:i+1,icerik:2});return c.icerik.surum===3&&c.icerik.baslangic===o.icerik.baslangic&&metin(c.kosullar)===metin(o.kosullar)&&gecerli(c)[0];})
+    &&t3.every((c,i)=>metin(c)===metin(kariyerBaslat({tohum:i+1}))));
+  const ilk=c=>{const r=Object.values(c.isler).find(x=>x.veri.etki==='adayGorusmesi'&&x.veri.koltuk==='sayman');return r?r.veri.adaylar[0]:null;};
+  denetle('Aday görüşme sırası tohuma göre değişir (ezber sıra yok); geçersiz içerik sürümü reddedilir',new Set(t3.map(ilk).filter(Boolean)).size===3&&reddeder(()=>kariyerBaslat({tohum:7,icerik:1})),[...new Set(t3.map(ilk).filter(Boolean))].join());
+  denetle('Kulüp dışı muhataplar (sponsor temsilcisi, gazete muhabiri) yeni kariyerde kişi olarak var; eski sürümde yok',y.kisiler['kisi-14'].rol==='sponsorTemsilcisi'&&y.kisiler['kisi-15'].rol==='muhabir'&&!e.kisiler['kisi-14']&&y.sonrakiNo.kisi===16);
+  const rv=Object.values(y.isler).find(x=>x.veri.etki==='adayGorusmesi');
+  denetle('Başlangıçta karar yok: sayman görüşmesi bir randevudur (katılım etkisi), nakit takvimi henüz kurulmaz',!!rv&&!rv.veri.karar&&rv.veri.zorunluluk==='zorunlu'&&!Object.values(y.isler).some(x=>x.veri.karar)&&!Object.keys(y.meseleler).length,koltuklar(y));
+  const b=kariyerOlustur(y);duragaIlerle(b);ajandaIsiYap(b,rv.id);
+  const k1=kararIsi(b,'adayGorusmesi'),m=Object.values(b.meseleler)[0];
+  denetle('Randevuya katılınca koltuk meselesi açılır, ilk adayın kartı gelir: [Göreve al] / [Sıradaki adayı dinle]',!!k1&&secenekIdleri(b,k1.id)==='al,sonraki'&&m.tur==='koltuk'&&k1.veri.kisiId===rv.veri.adaylar[0]&&an(b)==='2026-11-23 10:30'&&k1.veri.saatsiz,secenekIdleri(b,k1.id));
+  const b2=kariyerOlustur(b);ajandaIsiYap(b2,k1.id,'sonraki');const k2=kararIsi(b2,'adayGorusmesi');ajandaIsiYap(b2,k2.id,'sonraki');const k3=kararIsi(b2,'adayGorusmesi');
+  denetle('Sıradakini dinlemek 30 dakika sürer; son adayda [Göreve al] / [Koltuğu boş bırak]',an(b2)==='2026-11-23 11:30'&&k3.veri.sira===2&&secenekIdleri(b2,k3.id)==='al,bos'&&!b2.kulupler.demirkapi.yonetim.sayman);
+  const bos=kariyerOlustur(b2);ajandaIsiYap(bos,k3.id,'bos');
+  denetle('Koltuk boş kalabilir: mesele kapanır, nakit takvimi kurulmaz, geri çevrilen adaylar kulüpte kalır',!bos.kulupler.demirkapi.yonetim.sayman&&bos.meseleler[m.id].durum==='kapandi'&&!kararIsi(bos,'nakitOnerisi')&&rv.veri.adaylar.every(id=>bos.kisiler[id].durum==='aktif')&&gecerli(bos)[0],gecerli(bos)[1]);
+  const al=kariyerOlustur(b);ajandaIsiYap(al,k1.id,'al');const nk=kararIsi(al,'nakitOnerisi');
+  denetle('Göreve alınan sayman ertesi gün 14:00 için nakit takvimi randevusu ister: [sponsoru bugün ara] / [tahsilat bundan sonra sende]',al.kulupler.demirkapi.yonetim.sayman===rv.veri.adaylar[0]&&!!nk&&nk.tarih==='2026-11-24'&&nk.dakika===840
+    &&nk.veri.soran===rv.veri.adaylar[0]&&secenekIdleri(al,nk.id)==='takip,kalici'&&al.meseleler[m.id].durum==='kapandi',`${nk&&nk.tarih} · ${nk&&secenekIdleri(al,nk.id)}`);
+  const ra=yeniBasla('rahat','pazarlik','kisi-8','yok'),brv=Object.values(ra.isler).find(x=>x.veri.etki==='adayGorusmesi');
+  denetle('Rahat başlangıçta basın sözcüsü görüşmesi ertelenebilir bir randevudur (karar değil; erteleme randevunun işidir)',koltuklar(ra)==='sayman:kisi-8 futbol:kisi-3 basin:boş'&&brv.veri.koltuk==='basin'&&brv.veri.zorunluluk==='ertelenebilir'&&brv.veri.adaylar.length===3);
+}
+
+bolum('2.8H — ödeme sıkışması: koşula göre seçilen iki cevap, hazır görüş, cevapsız kalma');
+{
+  const kriz3=(durum,sayman)=>yurut3(yeniBasla('sikisik',durum,undefined,'yok'),{adayGorusmesi:adayAl(sayman),destekCevabi:'kucult',nakitOnerisi:null,odemeYolu:'dur',basinCevabi:'kendin'});
+  /* destek teklifi kabul edilirse açık kapanabilir; burada küçük destek: kriz yine doğar */
+  const c=kriz3('nakitSikisik','kisi-8'),ki=kararIsi(c,'odemeYolu'),oz=meseleOzeti(c,ki.veri.meseleId);
+  denetle('Kriz kartı: saymanlı başlangıçta [kendin görüş] / [sayman görüşsün]; karar telefonda saymanın konuşmasındadır',!!ki&&secenekIdleri(c,ki.id)==='kendin,devret'&&ki.veri.soran==='kisi-8'&&ki.veri.zorunluluk==='zorunlu'&&!ki.veri.bekleyebilir,
+    `${an(c)} · ${secenekIdleri(c,ki.id)}`);
+  denetle('Saymanın görüşü karar gelirken hazır bilgi olarak dosyada (kaynağıyla); "Görüş iste" ayrı karar düğmesi yok',oz.bilgiler.some(b=>b.kaynak==='Hikmet Aydın'&&/Görüşü/.test(b.metin))&&tavsiyeOnizle(c,ki.id)===null,oz.bilgiler.map(b=>b.kaynak).join());
+  const bos=yurut3(yeniBasla('sikisik','nakitSikisik',undefined,'yok'),{adayGorusmesi:(x,is)=>is.veri.sira<2?'sonraki':'bos',destekCevabi:'kucult',odemeYolu:'dur'}),kb=kararIsi(bos,'odemeYolu');
+  denetle('Sayman koltuğu boşsa kriz kartı: [kendin görüş] / [tribün onarımının taksitini ertelet]; telefonda soran yok, karar dosyada',!!kb&&secenekIdleri(bos,kb.id)==='kendin,bakimErtele'&&kb.veri.soran===undefined,kb&&secenekIdleri(bos,kb.id));
+  const sn=kriz3('pazarlik','kisi-10');ajandaIsiYap(sn,kararIsi(sn,'odemeYolu').id,'devret');duragaIlerle(sn);const k2=kararIsi(sn,'odemeYolu');
+  denetle('Görüşme sonuçsuz kalınca kart döner ve açığın kulüp içinde nasıl kapanacağını sorar: [bakımı ertelet] / [maaşı beklet]',!!k2&&secenekIdleri(sn,k2.id)==='bakimErtele,maasGeciktir'&&k2.veri.denenen.join()==='devret',k2&&secenekIdleri(sn,k2.id));
+  const kp=kriz3('pazarlik','kisi-8');ajandaIsiYap(kp,kararIsi(kp,'odemeYolu').id,'kendin');const tk=kararIsi(kp,'odemeTeklifi');
+  denetle('Kendin görüşünce pazarlık arayan sponsor pano ister; teklif sponsor temsilcisinin konuşmasında iki cevaplıdır',!!tk&&secenekIdleri(kp,tk.id)==='kabul,ret'&&tk.veri.soran==='kisi-14');
+  const ret=kariyerOlustur(kp);ajandaIsiYap(ret,tk.id,'ret');
+  denetle('Teklif reddedilince kart [bakımı ertelet] / [maaşı beklet] olarak döner',secenekIdleri(ret,kararIsi(ret,'odemeYolu').id)==='bakimErtele,maasGeciktir');
+
+  const rh=yurut3(yeniBasla('rahat','pazarlik','kisi-8','yok'),{adayGorusmesi:adayAl('kisi-11'),ertelemeTalebi:'dur'}),ei=kararIsi(rh,'ertelemeTalebi');
+  denetle('Rahat başlangıç: acil olmayan talep [Hikmet Aydın konuşsun] / [%2 bedeli iste]; bekleyebilir, son cevap iki gün sonra 18:00, soran sponsor temsilcisi',!!ei&&secenekIdleri(rh,ei.id)==='devret,bedel'&&ei.veri.bekleyebilir&&zamanAsimiVar(ei)
+    &&`${ei.tarih} ${saatYazi(ei.dakika)}`==='2026-11-27 18:00'&&ei.veri.soran==='kisi-14'&&!ilerleOnizle(rh).engel.length,`${an(rh)} · ${ei&&secenekIdleri(rh,ei.id)}`);
+  const cv=kariyerOlustur(rh),r1=duragaIlerle(cv),o1=ilerleOnizle(cv);
+  denetle('Cevap verilmezse ilerleme son cevap anında bir kez durur; sonraki ilerleme kararı “cevapsız kalacak” diye bildirir (engel değil)',r1.neden==='sonCevap'&&an(cv)==='2026-11-27 18:00'&&!!cv.isler[ei.id]&&!o1.engel.length&&o1.cevapsiz.length===1&&o1.cevapsiz[0].id===ei.id,`${r1.neden} · ${o1.neden}`);
+  duragaIlerle(cv);const g=cv.gecmis.find(x=>x.isId===ei.id),ol=Object.values(cv.olaylar).find(o=>o.paket==='odemeSikismasi');
+  denetle('Süre dolunca kartta yazan sonuç işler: erteleme kabul edilmiş sayılır, taksit bir kez ve ertelenen günde; kayıtta cevapsız yazar',g&&g.sonuc.durum==='cevapsiz'&&/cevap vermedin/.test(g.sonuc.bilgi)&&ol.sonuc.cozum==='cevapsiz'
+    &&Object.values(cv.isler).filter(x=>x.veri.kalem==='sponsor').length===1&&Object.values(cv.isler).find(x=>x.veri.kalem==='sponsor').tarih==='2026-12-10'&&gecerli(cv)[0],gecerli(cv)[1]);
+  const uz=kariyerOlustur(rh),o2=ajandaOnizle(uz,ei.id,'devret');
+  denetle('Zorunlu kriz kararı cevapsız kalamaz: ilerleme engellenir',!!ilerleOnizle(c).engel.length&&!zamanAsimiVar(kararIsi(c,'odemeYolu'))&&!o2.engel.length);
+}
+
+bolum('2.8H — hoca, basın ve destek: koşula göre iki cevap; tek eylemli görüşme karar değil');
+{
+  const rk=yurut3(yeniBasla('rahat','pazarlik','kisi-8','kamp'),{adayGorusmesi:adayAl('kisi-11'),ertelemeTalebi:'bedel',kampTalebi:'dur'}),hk=kararIsi(rk,'kampTalebi');
+  denetle('Kasa yetiyorsa kamp talebi [onayla, bugün öde] / [bu maç olmaz]; Necati Uysal\'ın görüşü hazır, soran hoca',!!hk&&secenekIdleri(rk,hk.id)==='onayla,reddet'&&hk.veri.soran==='kisi-2'
+    &&meseleOzeti(rk,hk.veri.meseleId).bilgiler.some(b=>b.kaynak==='Necati Uysal'),hk&&secenekIdleri(rk,hk.id));
+  /* küçük destek açığı kapatmaz: kriz kararı beklerken Perşembe hocanın talebi gelir */
+  const dar=yurut3(yeniBasla('sikisik','nakitSikisik',undefined,'kamp'),{adayGorusmesi:adayAl('kisi-8'),destekCevabi:'kucult',nakitOnerisi:null,odemeYolu:null,kampTalebi:'dur'});
+  zamanIlerlet(dar,1440+300);const hd=kararIsi(dar,'kampTalebi');
+  denetle('Kasa maaş gününü çıkaramıyorsa: [takım lokalde toplansın, masrafsız] / [bu maç olmaz]',!!hd&&secenekIdleri(dar,hd.id)==='lokal,reddet',hd&&`${an(dar)} · ${secenekIdleri(dar,hd.id)}`);
+  const lk=kariyerOlustur(dar);ajandaIsiYap(lk,hd.id,'lokal');
+  denetle('Lokal cevabı para çıkarmaz, sonucu kayıtlıdır',Object.values(lk.olaylar).find(o=>o.paket==='hocaTalebi').sonuc.cozum==='lokal'&&!Object.values(lk.isler).some(x=>x.veri.kalem==='kamp')&&gecerli(lk)[0]);
+  const cz=yurut3(kariyerOlustur(rk),{kampTalebi:null,basinCevabi:'kendin'});
+  denetle('Kamp talebi cevapsız kalırsa hoca takımı maç günü toplar (kayıtta cevapsız)',Object.values(cz.olaylar).find(o=>o.paket==='hocaTalebi').sonuc.cozum==='cevapsiz'&&macSinirinda(cz)&&!cz.hareketler.some(h=>h.kalem==='kamp'));
+
+  /* sayman görüşür (bedel işletilir ama açık sürer), kart döner, maaş bekletilir: gazete bunu sorar */
+  const bs=yurut3(yeniBasla('sikisik','pazarlik',undefined,'yok'),{adayGorusmesi:adayAl('kisi-8'),destekCevabi:'kucult',nakitOnerisi:null,odemeYolu:['devret','maasGeciktir'],basinCevabi:'dur'}),bi=kararIsi(bs,'basinCevabi');
+  denetle('Basın sorusu: sözcü varken [kendin konuş] / [Sevim Kara açıklasın]; soran gazete muhabiri; baskı saatine kadar bekleyebilir',!!bi&&secenekIdleri(bs,bi.id)==='kendin,devret'&&bi.veri.soran==='kisi-15'&&bi.veri.bekleyebilir&&saatYazi(bi.dakika)==='18:30',bi&&secenekIdleri(bs,bi.id));
+  const sz=kariyerOlustur(bs);sz.kisiler['kisi-4'].durum='ayrildi';sz.kulupler.demirkapi.yonetim.basin=null;
+  denetle('Sözcü yokken basın sorusu: [kendin konuş] / [“yorum yok” de]',secenekIdleri(sz,bi.id)==='kendin,yorumYok');
+  const yy=kariyerOlustur(sz);ajandaIsiYap(yy,bi.id,'yorumYok');const yyy=yurut3(yy,{});
+  const sess=yurut3(kariyerOlustur(bs),{basinCevabi:null});
+  denetle('“Yorum yok” ve cevapsız kalma farklı manşet üretir; ikisi de kayıtlı olaydan',/Yorum yok/.test(haberMetni(yyy,yyy.haberler[0]))&&/cevapsız/.test(haberMetni(sess,sess.haberler[0]))&&Object.values(sess.olaylar).find(o=>o.paket==='basinSorusu').sonuc.basin==='sessiz',
+    haberMetni(yyy,yyy.haberler[0]));
+
+  const ds=yurut3(yeniBasla('sikisik','pazarlik',undefined,'yok'),{adayGorusmesi:adayAl('kisi-9'),destekCevabi:'dur'}),di=kararIsi(ds,'destekCevabi');
+  denetle('Destek teklifi [kabul, pano onların] / [küçük destek]; teklif sahibi saymansa saymanın görüşü yazılmaz (çıkar çatışması)',!!di&&secenekIdleri(ds,di.id)==='kabul,kucult'&&di.veri.soran==='kisi-9'
+    &&!meseleOzeti(ds,di.veri.meseleId).bilgiler.some(b=>/Görüşü/.test(b.metin)),di&&secenekIdleri(ds,di.id));
+  const pn=kariyerOlustur(ds);al('sozVer')(pn,{muhatap:'sponsor',anahtar:'soz.pano'});
+  denetle('Pano sponsora söz verildiyse destek: [küçük destek] / [teşekkür et, reddet] (kapalı cevap gösterilmez)',secenekIdleri(pn,di.id)==='kucult,reddet');
+  const dc=yurut3(kariyerOlustur(ds),{destekCevabi:null,nakitOnerisi:null,odemeYolu:['devret','bakimErtele'],odemeTeklifi:'ret',basinCevabi:'kendin'});
+  denetle('Destek teklifi cevapsız kalırsa düşer: para gelmez, hak verilmez',Object.values(dc.olaylar).find(o=>o.paket==='kosulluDestek').sonuc.cozum==='cevapsiz'&&!dc.hareketler.some(h=>h.kalem==='destek')&&!Object.values(dc.sozler).some(s=>s.anahtar==='soz.destekPano'));
+
+  const g1=yeniBasla('rahat','pazarlik','kisi-8','kamp');girisimBaslat(g1,'hocaGorusmesi');const gr=Object.values(g1.isler).find(x=>x.veri.etki==='hocaGorusmesi');
+  const gb=ajandaIsiYap(g1,gr.id);
+  denetle('Hocayla görüşme karar değil, katılınan randevudur; talep varsa erkenden açılır ve kamp kartı iki cevaplı gelir',!!gr&&!gr.veri.karar&&/isteğini açtı/.test(gb.find(x=>x.isId===gr.id).sonuc.bilgi)&&!!kararIsi(g1,'kampTalebi')&&gecerli(g1)[0],gecerli(g1)[1]);
+  const g2=yeniBasla('rahat','pazarlik','kisi-8','kamp');girisimBaslat(g2,'nakitTakvimi');const nt=kararIsi(g2,'nakitOnerisi');
+  denetle('Nakit takvimi girişimi yeni içerikte iki cevaplı karar kurar; soran sayman',!!nt&&secenekIdleri(g2,nt.id)==='takip,kalici'&&nt.veri.soran==='kisi-8'&&!kararIsi(g2,'nakitTakvimi'));
+}
+
+bolum('2.8H — bütün yeni karar yolları: tam iki geçerli cevap, eski tür yok, kasa ve kayıt tutarlı');
+{
+  const say={yol:0,engel:0,eksi:0,gecersiz:0,sinir:0,ikiDegil:0,eski:0,karar:0,turler:new Set(),sonuc:new Set(),ornek:'',cevapsiz:0};
+  const SINIR=1500;let kok=0;
+  function dolas3(c,derinlik){
+    if(derinlik>80){say.engel++;return;}
+    for(const r of bugunkuKararlar(c)){
+      const t=c.isler[r.id].veri.karar,S=ajandaOnizle(c,r.id).secenekler;say.karar++;say.turler.add(t);
+      if(ESKI_TURLER.includes(t))say.eski++;
+      if(S.length!==2||S.some(s=>s.engel)){say.ikiDegil++;if(!say.ornek)say.ornek=`${t}: ${S.map(s=>s.id+(s.engel?'('+s.engel+')':'')).join(',')}`;}
+    }
+    const K=bugunkuKararlar(c).filter(r=>uygunSecenekler(c,r.id).length),dallar=[];
+    if(K.length)for(const s of uygunSecenekler(c,K[0].id))dallar.push(x=>ajandaIsiYap(x,K[0].id,s.id));
+    const o=ilerleOnizle(c),rv=K.length?null:randevu(c);
+    if(rv)dallar.push(x=>ajandaIsiYap(x,rv.id));
+    if(!o.engel.length&&!K.some(r=>r.zorunluluk==='zorunlu'&&!c.isler[r.id].veri.bekleyebilir))dallar.push(x=>duragaIlerle(x));
+    if(!dallar.length){
+      say.yol++;
+      if(!macSinirinda(c))say.engel++;
+      if(enDusukNakit(c)<0)say.eksi++;
+      if(!gecerli(c)[0])say.gecersiz++;
+      say.cevapsiz+=c.gecmis.filter(g=>g.sonuc&&g.sonuc.durum==='cevapsiz').length?1:0;
+      say.sonuc.add(meseleTurleri(c)+'/'+metin(Object.values(c.olaylar).map(o=>o.sonuc))+'/'+koltuklar(c));
+      return;
+    }
+    const L=say.yol-kok>=SINIR?(say.sinir++,dallar.slice(0,1)):dallar;
+    for(const f of L){const y=kariyerOlustur(c);f(y);dolas3(y,derinlik+1);}
+  }
+  const kokler=[];
+  for(const d of ['nakitSikisik','pazarlik'])for(const hc of ['kamp','yok'])kokler.push(yeniBasla('sikisik',d,undefined,hc));
+  for(const d of ['nakitSikisik','pazarlik'])for(const s of ['kisi-8','kisi-9','kisi-10'])kokler.push(yeniBasla('rahat',d,s,'kamp'));
+  kokler.push(yeniBasla('duzenli',undefined,'kisi-8'),yeniBasla('sikisik','pazarlik',undefined,'kamp',11),yeniBasla('sikisik','nakitSikisik',undefined,'kamp',23));
+  for(const b of kokler){kok=say.yol;dolas3(b,0);}
+  denetle('Her karar noktasında tam iki geçerli cevap var; eski çok seçenekli türler yeni kariyerde hiç doğmuyor',say.karar>1000&&!say.ikiDegil&&!say.eski,
+    `${say.karar} karar görünümü · türler: ${[...say.turler].sort().join(', ')}${say.ornek?' · ilk aykırı: '+say.ornek:''}`);
+  denetle('Bütün yeni yollar maç sınırına varır: kasa eksiye düşmez, kayıt geçerli kalır; cevapsız kalma da bir yol',say.yol>1000&&!say.engel&&!say.eksi&&!say.gecersiz&&say.cevapsiz>0,
+    `${say.yol} yol · ${say.sonuc.size} farklı sonuç · cevapsız kalan yol ${say.cevapsiz} · takılan ${say.engel} · eksi kasa ${say.eksi} · geçersiz ${say.gecersiz}${say.sinir?` · başlangıç başına ${SINIR} yoldan sonra ${say.sinir} noktada yalnız ilk seçenek izlendi (örnekleme)`:''}`);
+  const S={adayGorusmesi:adayAl('kisi-9'),destekCevabi:'kucult',odemeYolu:['devret','kendin','maasGeciktir'],odemeTeklifi:'ret',basinCevabi:'devret'};
+  const a1=yurut3(yeniBasla('sikisik','nakitSikisik',undefined,'kamp'),S),a2=yurut3(yeniBasla('sikisik','nakitSikisik',undefined,'kamp'),S);
+  const depo=bellekDeposu(),ara=x=>{const s=kariyerKaydet(depo,'oyun-1',x);if(!s.tamam)throw new Error(s.hata);return kariyerYukle(depo,'oyun-1').kariyer;};
+  denetle('Aynı başlangıç ve seçimler aynı kariyeri verir; her komuttan sonra kaydet/yükle sonucu değiştirmez',metin(a1)===metin(a2)&&metin(yurut3(yeniBasla('sikisik','nakitSikisik',undefined,'kamp'),S,ara))===metin(a1)&&macSinirinda(a1)&&gecerli(a1)[0],an(a1));
+  const c=yurut3(yeniBasla('sikisik','pazarlik'),{adayGorusmesi:adayAl('kisi-8'),destekCevabi:'kucult',nakitOnerisi:null,odemeYolu:'dur'}),once=metin(c),kid=kararIsi(c,'odemeYolu').id;
+  for(let i=0;i<3;i++){for(const s of ajandaOnizle(c,kid).secenekler){ajandaOnizle(c,kid,s.id);testOnizleme(c,kid,s.id);}meseleOzeti(c,kararIsi(c,'odemeYolu').veri.meseleId);ilerleOnizle(c);donusOzeti(c);}
+  denetle('Okuma, önizleme ve test önizlemesi yeni içerikte de kariyeri ve rastlantıyı değiştirmez',metin(c)===once);
+  denetle('ikiSecenek: kapalı seçenek seçilmez, koşula uyan ilk çift döner',ikiSecenek([{id:'a',engel:'x'},{id:'b'},{id:'c'}],[['a','b'],['b','c']]).map(s=>s.id).join()==='b,c');
+}
+denetle('Başlangıç verileri 2.8H denemelerinde de değişmedi',metin(BASLANGIC)===baslangicMetni&&metin(ORNEK)===ornekMetni);
+
+bolum('2.8H — içerik sürümü 3 kayıtları (araclar/ornekler/kayit-s5-*): açılır, iki cevapla sürer, cevapsız kalma bir kez işler');
+{
+  const ORN=[['aday-karti','adayGorusmesi'],['kriz-iki-cevap','odemeYolu'],['cevapsiz-son-an','ertelemeTalebi']];
+  for(const [ad,tur] of ORN){
+    const dosya=fs.readFileSync(path.join(KOK,'araclar','ornekler',`kayit-s5-${ad}.json`),'utf8'),eski=JSON.parse(dosya).veri;
+    const depo=bellekDeposu();depo.yaz('e',dosya);
+    const y=kariyerYukle(depo,'e'),c=y.kariyer,ki=y.tamam&&kararIsi(c,tur);
+    denetle(`${ad}: dönüşümsüz açıldı (sürüm 5, içerik 3); bekleyen karar iki cevaplı`,y.tamam&&!y.gecisler.length&&c.icerik.surum===3&&metin(c)===metin(eski)&&!!ki&&ajandaOnizle(c,ki.id).secenekler.length===2,y.tamam?`${an(c)} · ${ki&&secenekIdleri(c,ki.id)}`:y.hata);
+    if(!y.tamam)continue;
+    if(ad==='cevapsiz-son-an'){
+      const o=ilerleOnizle(c),cc=kariyerOlustur(c);duragaIlerle(cc);const g=cc.gecmis.filter(x=>x.isId===ki.id);
+      denetle('Son cevap anında kaydedilmiş kayıttan ilerlenince karar bir kez cevapsız kapanır; tekrar yükleme ikinci kez uygulamaz',
+        o.cevapsiz.length===1&&g.length===1&&g[0].sonuc.durum==='cevapsiz'&&metin(kariyerYukle((()=>{const d=bellekDeposu();kariyerKaydet(d,'x',cc);return d;})(),'x').kariyer)===metin(cc),`${g.length} kayıt`);
+    }
+    const s=yurut3(kariyerOlustur(c),{adayGorusmesi:adayAl('kisi-8'),odemeYolu:['devret','maasGeciktir'],odemeTeklifi:'ret',ertelemeTalebi:'bedel'});
+    denetle(`${ad}: kaldığı yerden maç sınırına kadar oynandı; eski tür doğmadı, kasa eksiye düşmedi`,macSinirinda(s)&&gecerli(s)[0]&&enDusukNakit(s)>=0
+      &&s.gecmis.some(g=>g.sonuc&&g.sonuc.karar)&&!s.gecmis.some(g=>g.sonuc&&ESKI_TURLER.includes(g.sonuc.karar)),`${an(s)} ${gecerli(s)[1]}`);
+  }
+}
+
+/* ================= 2.8I/2.8K: telefondaki kişi konuşmaları (okuma modeli) ================= */
+bolum('2.8I — kişi konuşmaları: gönderen, giden cevap, okundu ile cevaplandı; okumak kariyeri değiştirmez');
+{
+  const konusmaListesi=al('konusmaListesi'),meseleGoruldu=al('meseleGoruldu');
+  const c=yurut3(yeniBasla('sikisik','pazarlik',undefined,'kamp'),{adayGorusmesi:adayAl('kisi-8'),destekCevabi:'kucult',nakitOnerisi:null,odemeYolu:'dur'});
+  const once=metin(c),L=konusmaListesi(c),ad=id=>L.find(x=>x.anahtar===id);
+  for(let i=0;i<3;i++)konusmaListesi(c);
+  denetle('Konuşma listesi okuma modelidir: kariyeri ve rastlantıyı değiştirmez',metin(c)===once);
+  denetle('Mesajlar gerçek gönderenden: sponsorun haberi temsilcinin, destek teklifi destekçinin konuşmasında; kendi ağzından yazılmış',
+    /babam selam/.test(ad('kisi-14').mesajlar[0].metin)&&ad('kisi-9').mesajlar.some(m=>m.yon==='gelen'&&/firma olarak/.test(m.metin)),ad('kisi-14').mesajlar[0].metin);
+  denetle('Kararın iki cevabı soranın (sayman) konuşmasında; cevap bekleyen konuşma listede önde; yüz yüze aday görüşmesi telefonda yok',
+    ad('kisi-8').kararlar.length===1&&L[0].anahtar==='kisi-8'&&L[0].cevapBekliyor&&!L.some(x=>x.meseleler.includes(Object.values(c.meseleler).find(m=>m.tur==='koltuk').id)),L.map(x=>x.ad).join(', '));
+  denetle('Verilen cevap giden mesaj olarak destekçinin konuşmasında; sonuç satırı not olarak',ad('kisi-9').mesajlar.some(m=>m.yon==='giden'&&/Küçük destek/.test(m.metin))&&ad('kisi-9').mesajlar.some(m=>m.yon==='not'));
+  const y=kariyerOlustur(c);for(const id of ad('kisi-14').meseleler)meseleGoruldu(y,id);
+  const s=konusmaListesi(y).find(x=>x.anahtar==='kisi-14');
+  denetle('Okundu ile cevaplandı ayrı: konuşmayı okumak yeni işaretini kaldırır, bekleyen karar sürer',ad('kisi-14').okunmamis>0&&s.okunmamis===0&&!!kararIsi(y,'odemeYolu'));
+  denetle('Girişim ilgili kişinin konuşmasında öneri olarak durur (hocayla görüşme)',ad('kisi-2')&&ad('kisi-2').girisimler.some(g=>g.id==='hocaGorusmesi'));
+  const e=hafta();
+  denetle('Eski içerikte de konuşma listesi kurulur (gönderen kaydı olmayan olaylar not olur, hata vermez)',Array.isArray(konusmaListesi(e)));
+}
+
+bolum('2.8K — karakter ve hafıza: gerçek geçmişe gönderme yapan, cevap istemeyen kişi mesajları');
+{
+  const konusmaListesi=al('konusmaListesi');
+  const hatiralar=c=>Object.values(c.meseleler).flatMap(m=>m.olaylar.filter(o=>o.anahtar.startsWith('hatira.')).map(o=>o.anahtar)).sort().join();
+  const MESELE_OLAYLARI_METNI=(c,anahtar)=>{for(const m of Object.values(c.meseleler))for(const o of m.olaylar)if(o.anahtar===anahtar)return al('MESELE_OLAYLARI')[anahtar](c,o.p);return'';};
+  const lk=yurut3(yeniBasla('sikisik','nakitSikisik',undefined,'kamp'),{adayGorusmesi:adayAl('kisi-9'),destekCevabi:'kucult',nakitOnerisi:null,odemeYolu:null,kampTalebi:'dur'});
+  zamanIlerlet(lk,1440+300);ajandaIsiYap(lk,kararIsi(lk,'kampTalebi').id,'lokal');
+  const lks=yurut3(lk,{odemeYolu:['devret','maasGeciktir'],odemeTeklifi:'ret'});
+  const sk=konusmaListesi(lks).find(x=>x.anahtar==='kisi-2');
+  denetle('Lokalde toplanan takımın hocası maç sabahı bunu hatırlatır; maaşı geciken personel sözü hatırlatır; küçük destek veren üye anonsu anar',
+    hatiralar(lks)==='hatira.destek.anons,hatira.hoca.lokal,hatira.personel.soz'&&sk.mesajlar.some(m=>m.yon==='gelen'&&/Lokalde yattık/.test(m.metin))&&macSinirinda(lks),hatiralar(lks));
+  const bs=yurut3(yeniBasla('sikisik','pazarlik',undefined,'yok'),{adayGorusmesi:adayAl('kisi-8'),destekCevabi:'kucult',nakitOnerisi:null,odemeYolu:['kendin','maasGeciktir'],odemeTeklifi:'ret',basinCevabi:null});
+  denetle('Gazeteye cevap vermeyen başkana muhabir Cuma döner; mesaj gazetenin konuşmasında',/hatira\.basin\.sessiz/.test(hatiralar(bs))&&konusmaListesi(bs).find(x=>x.anahtar==='kisi-15').mesajlar.some(m=>/açmadınız/.test(m.metin)),hatiralar(bs));
+  const d=yurut3(yeniBasla('duzenli',undefined,'kisi-8'),{});
+  denetle('Sakin hafta sakin kalır: yaşanmış karar yoksa hatıra mesajı da yok',!hatiralar(d)&&macSinirinda(d)&&!Object.keys(d.meseleler).length);
+  const r=yurut3(yeniBasla('rahat','pazarlik','kisi-9','kamp'),{adayGorusmesi:adayAl('kisi-11'),ertelemeTalebi:'devret',kampTalebi:'onayla'});
+  denetle('Hatıra yalnız gerçekten olana bağlı: talebi geri çektiren saymanı sponsor anar, oteldeki kampı hoca anar; her biri bir kez',
+    hatiralar(r)==='hatira.hoca.otel,hatira.sponsor.tam'&&/Tuncay Erbil/.test(MESELE_OLAYLARI_METNI(r,'hatira.sponsor.tam')),hatiralar(r));
+}
+
 /* ================= bozuk kopyalar ================= */
 bolum('Bozuk kayıtlar yakalanmalı');
 const ilerlemis=()=>{const c=yeni();zamanIlerlet(c,4*1440);return c;};   // hatırlatma, maaş ve sponsor işlenmiş
@@ -1166,7 +1395,11 @@ const BOZUKLAR=[
   ['Haber: gelecekte kalan kayıt',sozlu,c=>{c.haberler.push({tur:'gazete',tarih:'2027-01-01',dakika:0,anahtar:'gazete.macOnu',p:{},olayId:null,gorulen:false});}],
   ['Sorumluluk: olmayan kişi',krizde,c=>{c.kulupler.demirkapi.sorumluluklar={tahsilat:{kisiId:'kisi-99'}};}],
   ['Tavsiye: karar işi kimliği yok',()=>{const c=tamKriz('pazarlik','kisi-8');tavsiyeIste(c,kararIsi(c,'odemeSikismasi').id);return c;},c=>{delete Object.values(c.isler).find(x=>x.veri.gorev==='tavsiye').veri.isId;}],
-  ['Ödeme teklifi: bilinmeyen teklif',()=>{const c=krizde();ajandaIsiYap(c,kararIsi(c,'odemeSikismasi').id,'kendin');return c;},c=>{kararIsi(c,'odemeTeklifi').veri.teklif='yok';}]
+  ['Ödeme teklifi: bilinmeyen teklif',()=>{const c=krizde();ajandaIsiYap(c,kararIsi(c,'odemeSikismasi').id,'kendin');return c;},c=>{kararIsi(c,'odemeTeklifi').veri.teklif='yok';}],
+  ['Ajanda: bilinmeyen katılım etkisi',()=>yeniBasla('sikisik','pazarlik'),c=>{Object.values(c.isler).find(x=>x.veri.etki).veri.etki='yok';}],
+  ['Ajanda: katılım etkisi karar işinde',()=>yeniBasla('sikisik','pazarlik'),c=>{Object.values(c.isler).find(x=>x.veri.etki).veri.karar='nakitOnerisi';}],
+  ['Ajanda: olmayan soran kişi',()=>yurut3(yeniBasla('sikisik','pazarlik'),{adayGorusmesi:adayAl('kisi-8'),destekCevabi:'dur'}),c=>{kararIsi(c,'destekCevabi').veri.soran='kisi-99';}],
+  ['Aday kartı: sıra geçersiz',()=>{const c=yeniBasla('sikisik','pazarlik');duragaIlerle(c);ajandaIsiYap(c,Object.values(c.isler).find(x=>x.veri.etki).id);return c;},c=>{kararIsi(c,'adayGorusmesi').veri.sira=7;}]
 ];
 for(const [ad,kur,boz] of BOZUKLAR){
   const c=kur();boz(c);

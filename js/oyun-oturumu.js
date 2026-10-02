@@ -7,12 +7,12 @@
        Geliştirici için adres parametreleri: ?baslangic=sikisik|rahat|duzenli, ?sponsor=nakitSikisik|pazarlik, ?sayman=kisi-N, ?hoca=kamp|yok, ?dunya=tohum.
      oyunBozuguSakla()       açılamayan kaydı '.bozuk' ekiyle saklar, yeni kariyer başlatır.
      oyunKayitYazi() · oyunKayitHata()  kayıt durumunun oyuncuya gösterilen yazısı.
-   Ayarlar (OYUN.ayarlar: yazi, test, hareket) kariyer kaydına girmez; depoda ayrı 'ayarlar' adında tutulur. Ses ayarı 2.8A'da kaldırıldı:
+   Ayarlar (OYUN.ayarlar: yazi, test) kariyer kaydına girmez; depoda ayrı 'ayarlar' adında tutulur. Ses ayarı 2.8A'da, hareket azaltma 2.8J'de kaldırıldı:
    eski kayıttaki ses/sessiz anahtarları okunurken yok sayılır, açılışta yeniden yazılarak düşer.
    test: geliştirme aşamasında gizli değerleri gösteren geçici anahtar (js/test-gorunum.js); varsayılan açık, yayından önce kaldırılacak. */
 const OYUN_YUVA='oyun-1';
 const OYUN={depo:null,kariyer:null,oturum:null,donus:false,mesaj:'',bozukHata:null,basladi:false,
-  ayarlar:{yazi:'normal',test:true,hareket:false,kaydet(){try{OYUN_DEPO.yaz('ayarlar',JSON.stringify({yazi:this.yazi,test:this.test,hareket:this.hareket}));}catch(e){}}}};
+  ayarlar:{yazi:'normal',test:true,kaydet(){try{OYUN_DEPO.yaz('ayarlar',JSON.stringify({yazi:this.yazi,test:this.test}));}catch(e){}}}};
 let OYUN_DEPO=null;
 {
   try{OYUN_DEPO=masaustuDeposu();if(OYUN_DEPO)OYUN.depo='masaustu';}catch(e){OYUN_DEPO=null;}
@@ -23,8 +23,8 @@ let OYUN_DEPO=null;
     if(a&&typeof a==='object'){
       if(a.yazi==='buyuk')OYUN.ayarlar.yazi='buyuk';
       if(a.test===false)OYUN.ayarlar.test=false;
-      if(a.hareket===true)OYUN.ayarlar.hareket=true;
-      if('ses' in a||'sessiz' in a)OYUN.ayarlar.kaydet();
+      /* kaldırılan ayarlar (ses 2.8A, hareket azaltma 2.8J) okunmaz; açılışta yeniden yazılarak düşer */
+      if('ses' in a||'sessiz' in a||'hareket' in a)OYUN.ayarlar.kaydet();
     }
   }catch(e){}
 }

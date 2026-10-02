@@ -23,7 +23,7 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
   const tarihKisa=t=>{const [,a,g]=parca(t);return g+' '+AYLAR[a-1].slice(0,3)+' '+gunAdi(t).slice(0,3);};
   const tlYazi=kurus=>paraYazi(kurus).replace(/,\d\d ₺$/,' ₺');
   const ETIKET={zorunlu:'Zorunlu',ertelenebilir:'Ertelenebilir',istege:'İsteğe bağlı'};
-  const DURUM={bekliyor:'',yapildi:'Yapıldı',kacirildi:'Kaçırıldı',ertelendi:'Ertelendi',tamamlandi:''};
+  const DURUM={bekliyor:'',yapildi:'Yapıldı',kacirildi:'Kaçırıldı',ertelendi:'Ertelendi',cevapsiz:'Cevapsız',tamamlandi:''};
   const ROL={baskan:'başkan',teknikDirektor:'teknik direktör',yonetici:'yönetici',eskiBaskan:'eski başkan'};
 
   /* ---- oturum: depo, açılış ve komut yolu js/oyun-oturumu.js'tedir; oda ekranıyla ortaktır ---- */
@@ -98,6 +98,7 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
       ic+=r.bilgi?'<p class="aj-bilgi"><b>'+(r.secimMetni?'Sonuç':'Öğrendiklerin')+'</b> '+yaz(r.bilgi)+'</p>':'<p class="aj-not">Yapıldı.</p>';
     }
     if(r.durum==='kacirildi')ic+='<p class="aj-uyari">Bu işe katılmadın; kaçırıldı.</p>';
+    if(r.durum==='cevapsiz')ic+='<p class="aj-uyari">Cevap vermedin; kartta yazan sonuç işledi.'+(r.bilgi?' '+yaz(r.bilgi):'')+'</p>';
     if(r.durum==='bekliyor'&&v){
       const secim=secimler[r.id],o=ajandaOnizle(k,r.id,secim);
       /* karar işi: seçenekler; seçim katılımda uygulanır */
@@ -167,10 +168,11 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
         p.push('Sıradaki durak: '+durakYazi(o));
         if(o.tasinacak.length)p.push('Ertesi güne kalacak: '+o.tasinacak.map(x=>x.veri.baslik).join(', '));
         if(o.kacirilacak.length)p.push('Kaçırılacak: '+o.kacirilacak.map(x=>x.veri.baslik).join(', '));
+        if(o.cevapsiz.length)p.push('Cevapsız kalacak: '+o.cevapsiz.map(x=>x.veri.baslik).join(', '));
         if(o.gerceklesecek.length)p.push('Bu arada: '+o.gerceklesecek.map(isAdi).join(' · '));
       }
       durum=p.join(' · ');
-      const sor=o.kacirilacak.length&&onay!=='ilerle';
+      const sor=(o.kacirilacak.length||o.cevapsiz.length)&&onay!=='ilerle';
       dugme=onay==='ilerle'?'<button type="button" data-eylem="vazgec">Vazgeç</button><button type="button" class="aj-ana" data-eylem="ilerle">Onayla ▸</button>'
         :'<button type="button" class="aj-ana" data-eylem="'+(sor?'ilerleSor':'ilerle')+'"'+(o.engel.length?' disabled':'')+'>İlerle ▸</button>';
     }

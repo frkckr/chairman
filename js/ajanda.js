@@ -24,13 +24,22 @@
      sonucu 'dur' taşıyan ya da yeni ajanda işi doğuran gelişme (o anda) · sıradaki saatli ajanda işinin başlangıcı ·
      işleri birbiriyle çakışan günün başlangıcı · hiç ajanda işi yoksa ILERLE_SINIRI gün içindeki son rutin iş.
      Gelecekteki zorunlu iş ilerlemeyi engellemez, ilerleme onun başlangıcında durur. Şu an başlangıcında durulan iş:
-     zorunluysa katılmadan ilerlenmez, ertelenebilirse ertesi güne taşınır (son günüyse ilerlenmez), isteğe bağlıysa kaçırılır. */
+     zorunluysa katılmadan ilerlenmez, ertelenebilirse ertesi güne taşınır (son günüyse ilerlenmez), isteğe bağlıysa kaçırılır.
+   Katılım etkisi (2.8H): karar olmayan randevu veri.etki taşıyabilir (KATILIM_ETKILERI[ad] = {denetle?(k,veri), uygula(k, is) → {bilgi?}}); katılınınca
+     bir kez çalışır (ör. aday görüşmesi ilk aday kartını açar). Tek eylemli iş karar gibi sunulmaz.
+   Cevapsız kalma (2.8H, kullanıcı kararı 2026-10-02): acil olmayan saati serbest karar (veri.bekleyebilir) türü zamanAsimi {metin(k,is), uygula(k,is) → {bilgi?}}
+     tanımlarsa son cevap anı geçince kendiliğinden o sonuçla kapanır (durum 'cevapsiz'). Sonuç kartta önceden yazar; ilerleme son cevap anında bir kez
+     durur (neden 'sonCevap'), sonraki ilerleme ve uzun iş önizlemesi onu 'cevapsiz' listesinde bildirir. Zorunlu krizin böyle bir sonucu yoktur: engeller. */
 const AJANDA_ZORUNLULUK=['zorunlu','ertelenebilir','istege'];
 const AJANDA_EYLEMLER=['macGunu'];
 const AJANDA_EN_UZUN=720;                   // bir işin en uzun süresi (dakika)
 const SURE_UZATMA=30;                       // meşgulken dolan son cevap anı, işin bitişinden bu kadar dakika sonraya uzar (TEST değeri)
 const ILERLE_SINIRI=30;                     // ajanda işi yokken ilerlemenin bakacağı en uzak gün (TEST değeri)
 const KARAR_TURLERI={};
+const KATILIM_ETKILERI={};
+/* bu karar cevapsız kalırsa kendiliğinden sonuçlanır mı (yalnız acil olmayan saati serbest karar) */
+const zamanAsimiVar=x=>x.tur==='ajanda'&&!!x.veri.saatsiz&&!!x.veri.bekleyebilir&&!!x.veri.karar&&!!(KARAR_TURLERI[x.veri.karar]||{}).zamanAsimi;
+const zamanAsimiMetni=(k,x)=>KARAR_TURLERI[x.veri.karar].zamanAsimi.metin(k,x);
 /* katılım önizlemesine ek engel koyan kural dosyaları: (k, iş, süre) => metin | null (js/gozlem.js: gözlem sürerken uzun iş) */
 const AJANDA_ENGELLERI=[];
 
@@ -45,10 +54,14 @@ IS_TURLERI.ajanda={
     if(!AJANDA_ZORUNLULUK.includes(v.zorunluluk))h.push(`bilinmeyen zorunluluk (${v.zorunluluk})`);
     if(!Number.isInteger(v.sure)||v.sure<0||v.sure>AJANDA_EN_UZUN)h.push(`süre 0–${AJANDA_EN_UZUN} dakika olmalı (${v.sure})`);
     if(v.kisiId!==undefined&&!(k.kisiler||{})[v.kisiId])h.push(`kişi bulunamadı (${v.kisiId})`);
+    /* soran (2.8I): kararı telefonda kimin konuşmasında cevaplayacağın; yoksa karar yalnız dosyadadır */
+    if(v.soran!==undefined&&!(k.kisiler||{})[v.soran])h.push(`soran kişi bulunamadı (${v.soran})`);
     if(v.bilgi!==undefined&&typeof v.bilgi!=='string')h.push('bilgi metin değil');
     if(v.sonTarih!==undefined&&!tarihGecerliMi(v.sonTarih))h.push(`geçersiz son tarih (${v.sonTarih})`);
     if(v.sonTarih!==undefined&&v.zorunluluk!=='ertelenebilir')h.push('son tarih yalnız ertelenebilir işte olur');
     if(v.eylem!==undefined&&!AJANDA_EYLEMLER.includes(v.eylem))h.push(`bilinmeyen eylem (${v.eylem})`);
+    if(v.etki!==undefined){const e=KATILIM_ETKILERI[v.etki];
+      if(!e)h.push(`bilinmeyen katılım etkisi (${v.etki})`);else if(v.karar!==undefined)h.push('katılım etkisi karar işinde olmaz');else if(e.denetle)h.push(...e.denetle(k,v));}
     if(v.karar!==undefined){const t=KARAR_TURLERI[v.karar];if(!t)h.push(`bilinmeyen karar türü (${v.karar})`);else h.push(...t.denetle(k,v));}
     if(v.meseleId!==undefined&&typeof v.meseleId!=='string')h.push('mesele kimliği metin değil');
     if(v.saatsiz!==undefined){
@@ -58,8 +71,13 @@ IS_TURLERI.ajanda={
     }
     return h;
   },
-  /* takvim yalnız katılınmayan işi tamamlar: başlangıç dakikası geçti */
-  uygula:(k,is)=>ajandaSonucu(is,'kacirildi')
+  /* takvim yalnız katılınmayan işi tamamlar: başlangıç dakikası geçti. Cevapsız kalabilen kararın sonucu bu anda işler */
+  uygula:(k,is)=>{
+    if(!zamanAsimiVar(is))return ajandaSonucu(is,'kacirildi');
+    const r=KARAR_TURLERI[is.veri.karar].zamanAsimi.uygula(k,is)||{},s=ajandaSonucu(is,'cevapsiz');
+    if(r.bilgi!==undefined)s.bilgi=r.bilgi;
+    return s;
+  }
 };
 
 /* geçmişe yazılan sonuç: iş listeden çıktıktan sonra da ajandada gösterilebilsin diye başlık ve zaman bilgisini taşır */
@@ -67,6 +85,11 @@ function ajandaSonucu(is,durum,sure){
   const v=is.veri,s={durum,baslik:v.baslik,zorunluluk:v.zorunluluk,gun:is.tarih,saat:is.dakika,sure:sure===undefined?v.sure:sure};
   if(durum==='yapildi'&&v.bilgi!==undefined)s.bilgi=v.bilgi;
   if(v.eylem!==undefined)s.eylem=v.eylem;
+  /* telefonda cevabın hangi konuya ve kişiye ait olduğu (2.8I; eski kayıtlarda yoktur) */
+  if(v.meseleId!==undefined)s.meseleId=v.meseleId;
+  if(v.kisiId!==undefined)s.kisiId=v.kisiId;
+  if(v.soran!==undefined)s.soran=v.soran;
+  if(v.karar!==undefined)s.karar=v.karar;
   return s;
 }
 /* karar işinin seçenekleri (karar işi değilse boş liste) */
@@ -82,8 +105,8 @@ const bekleyenIsler=k=>Object.values(k.isler).sort(isSirasi);
    Karar işinde secim verilirse süresi ve geçerliliği o seçeneğe göre hesaplanır; verilmezse secimGerekli true olur */
 function ajandaOnizle(k,id,secim){
   const is=k.isler[id];
-  if(!is||is.tur!=='ajanda')return{is:null,engel:[`Ajanda işi bulunamadı: ${id}`],atlanacak:[],gerceklesecek:[],secenekler:[]};
-  const secenekler=kararSecenekleri(k,is),engel=[],atlanacak=[],gerceklesecek=[];
+  if(!is||is.tur!=='ajanda')return{is:null,engel:[`Ajanda işi bulunamadı: ${id}`],atlanacak:[],gerceklesecek:[],cevapsiz:[],secenekler:[]};
+  const secenekler=kararSecenekleri(k,is),engel=[],atlanacak=[],gerceklesecek=[],cevapsiz=[];
   let sure=is.veri.sure,secenek=null;
   /* ek engeller seçeneğin kendi süresiyle de sorulur: kapalı seçenek nedeniyle birlikte görünür */
   for(const s of secenekler)if(!s.engel&&s.sure!==undefined)for(const f of AJANDA_ENGELLERI){const e=f(k,is,s.sure);if(e){s.engel=e;break;}}
@@ -102,11 +125,12 @@ function ajandaOnizle(k,id,secim){
   for(const x of bekleyenIsler(k)){
     if(x.id===id||isSonAn(x)>bitis)continue;
     if(x.tur!=='ajanda'){if(!isGizli(x))gerceklesecek.push(x);continue;}
+    if(zamanAsimiVar(x)){cevapsiz.push(x);continue;}
     if(x.veri.saatsiz){engel.push(`Önce karar ver: ${x.veri.baslik} (son cevap ${sonCevapYazi(k,x)})`);continue;}
     atlanacak.push(x);
     if(x.veri.zorunluluk==='zorunlu')engel.push(`${x.veri.baslik} (${saatYazi(x.dakika)}) zorunlu; bu işle çakışıyor`);
   }
-  return{is,baslangic,bitis,sure,engel,atlanacak,gerceklesecek,secenekler,secenek,secimGerekli:secenekler.length>0&&!secenek};
+  return{is,baslangic,bitis,sure,engel,atlanacak,gerceklesecek,cevapsiz,secenekler,secenek,secimGerekli:secenekler.length>0&&!secenek};
 }
 
 /* ilerleme sırasında durduran gelişme: sonucu 'dur' taşıyan iş ya da yeni doğan ajanda işi (başkana dönen karar, yeni randevu) */
@@ -116,7 +140,7 @@ function durakSorgusu(k){
 }
 /* başkan meşgulken son cevap anı dolan saati serbest karar kaçırılmaz: süre işin bitişinden SURE_UZATMA dakika sonrasına uzar */
 function sureUzat(k,x,bitis){
-  if(x.tur!=='ajanda'||!x.veri.saatsiz)return false;
+  if(x.tur!=='ajanda'||!x.veri.saatsiz||zamanAsimiVar(x))return false;
   const t=anTarih(bitis+SURE_UZATMA);
   isTasi(k,x.id,t.tarih,t.dakika);
   if(x.veri.meseleId)meseleOlay(k,x.veri.meseleId,'sureUzadi',{baslik:x.veri.baslik,tarih:t.tarih,dakika:t.dakika});
@@ -140,6 +164,9 @@ function ajandaIsiYap(k,id,secim){
     if(!s||s.engel)throw new Error('Seçenek artık geçerli değil: '+(s?s.engel:secim));
     const r=KARAR_TURLERI[o.is.veri.karar].uygula(k,o.is,secim)||{};
     sonuc.secim=secim;sonuc.secimMetni=s.metin;
+    if(r.bilgi!==undefined)sonuc.bilgi=r.bilgi;
+  }else if(o.is.veri.etki!==undefined){
+    const r=KATILIM_ETKILERI[o.is.veri.etki].uygula(k,o.is)||{};
     if(r.bilgi!==undefined)sonuc.bilgi=r.bilgi;
   }
   biten.push(isTamamla(k,id,sonuc));
@@ -187,7 +214,8 @@ function gunuBitir(k){
   return sonrakiGuneGec(k);
 }
 
-/* sıradaki durma noktası (kariyeri değiştirmez): {engel, hedef: durulacak an ya da null, neden: 'randevu'|'cakisma'|'sinir',
+/* sıradaki durma noktası (kariyeri değiştirmez): {engel, hedef: durulacak an ya da null, neden: 'randevu'|'cakisma'|'sinir'|'sonCevap'|'cevapsiz',
+   cevapsiz: son cevap anı gelmiş, ilerlenince kartta yazan sonuçla kapanacak kararlar,
    (neden 'haber': başkanın beklediği görüş gelecek) durak: başlangıcında durulacak iş ya da null, tasinacak, kacirilacak, gerceklesecek: arada işlenecek rutin işler} */
 function ilerleOnizle(k){
   const simdi=simdikiAn(k),engel=[],tasinacak=[],kacirilacak=[],L=bekleyenIsler(k);
@@ -221,10 +249,14 @@ function ilerleOnizle(k){
   /* son cevap anı geçilemez: bekleyen karar ilerlemeyi ancak bu an aşılacaksa engeller */
   /* acil olmayan karar (veri.bekleyebilir) beklerken ilerlenebilir: ilerleme en geç onun son cevap anında durur */
   for(const x of L)if(x.tur==='ajanda'&&x.veri.saatsiz&&x.veri.bekleyebilir&&isAn(x)>simdi&&(hedef===null||isAn(x)<hedef)){hedef=isAn(x);durak=x;neden='sonCevap';}
-  for(const x of L)if(x.tur==='ajanda'&&x.veri.saatsiz&&!(x.veri.bekleyebilir&&isAn(x)>simdi)&&(hedef===null||isSonAn(x)<=hedef))
+  /* son cevap anı gelmiş, cevapsız kalabilen karar: engel değildir; ilerlenirse kartta yazan sonuçla kapanır (sunum onay ister) */
+  const dolan=L.filter(x=>zamanAsimiVar(x)&&isAn(x)<=simdi);
+  if(dolan.length&&hedef===null){hedef=Math.max(...dolan.map(isSonAn));neden='cevapsiz';}
+  for(const x of L)if(x.tur==='ajanda'&&x.veri.saatsiz&&!zamanAsimiVar(x)&&!(x.veri.bekleyebilir&&isAn(x)>simdi)&&(hedef===null||isSonAn(x)<=hedef))
     engel.push(`Önce karar ver: ${x.veri.baslik} (son cevap ${sonCevapYazi(k,x)})`);
+  const cevapsiz=hedef===null?[]:dolan.filter(x=>isSonAn(x)<=hedef);
   const gerceklesecek=hedef===null?[]:L.filter(x=>x.tur!=='ajanda'&&!isGizli(x)&&isSonAn(x)<=hedef);
-  return{engel,hedef,neden,durak,tasinacak,kacirilacak,gerceklesecek};
+  return{engel,hedef,neden,durak,tasinacak,kacirilacak,cevapsiz,gerceklesecek};
 }
 /* sıradaki durma noktasına ilerler. {biten: geçmiş kayıtları, neden: 'karar' (yolda karar gerektiren gelişme) ya da önizlemedeki neden,
    durak: başlangıcına gelinen iş ya da null} döndürür */

@@ -115,16 +115,14 @@ function baskanKare(dt,kamera){
       if(e.ad==='durbunKaldir'&&e.t>=e.sure&&B.durbunHazir){B.durbunHazir();B.durbunHazir=null;B.durbunAcik=true;}}
     if(e.t>=e.sure&&!e.kal){B.eylem=null;if(e.durbun)BK_DURBUN.visible=false;}
   }else B.kalkHedef=0;
-  /* dinlenirken sağ işaret parmağı ara sıra masaya vurur */
-  if(!e){const tik=Math.max(0,Math.sin(zamanB*9))*(Math.sin(zamanB*0.7)>0.6?1:0);poz.sag={...poz.sag,k:poz.sag.k+tik*0.25};}
   elYerlestir('sol',poz.sol);elYerlestir('sag',poz.sag);
   /* ayağa kalkma (yay) ve masaya yumruk sarsıntısı */
   B.kalk+=(B.kalkHedef-B.kalk)*Math.min(1,dt*(B.kalkHedef>B.kalk?5:2.2));B.sarsinti=Math.max(0,B.sarsinti-dt*4);
   BK_MASA.position.y=Math.sin(zamanB*55)*0.004*B.sarsinti;
-  /* gövde hissi: baş dönünce ön plan biraz ters yöne kayar; nefes */
+  /* gövde hissi: baş dönünce ön plan biraz ters yöne kayar (nefes salınımı yok, 2.8J) */
   kamera.getWorldDirection(BK_V);const yaw=Math.atan2(BK_V.x,BK_V.z),pitch=Math.asin(clamp(BK_V.y,-1,1));
-  const K=B.kamera;K.rotation.set(clamp((pitch-BK.dinlenmeEgimi)*0.22,-0.12,0.14)+Math.sin(zamanB*1.3)*0.004,clamp(yaw*0.25,-0.3,0.3),0);
-  K.position.set(0,B.kalk*0.34+Math.sin(zamanB*1.3)*0.004,B.kalk*0.1);
+  const K=B.kamera;K.rotation.set(clamp((pitch-BK.dinlenmeEgimi)*0.22,-0.12,0.14),clamp(yaw*0.25,-0.3,0.3),0);
+  K.position.set(0,B.kalk*0.34,B.kalk*0.1);
 }
 let zamanB=0;
 function baskanZaman(dt){zamanB+=dt;}

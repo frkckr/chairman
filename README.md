@@ -13,4 +13,4 @@ Yerelde `index.html` dosyasını açın; tarayıcı sürümü internet bağlant�
 - [Olay kütüphanesi ve içerik geçişi](OLAY_KUTUPHANESI.md)
 - [Ortak çalışma talimatı](CLAUDE.md) · [Araç girişi](AGENTS.md)
 
-2026-10-02 karar ve ekran yenilemesi planlandı; henüz oyun koduna uygulanmadı. Sıradaki işin ve tamamlanma durumunun tek kaynağı yol haritasıdır.
+2026-10-02 karar ve ekran yenilemesi (2.8G–2.8K: iki cevaplı kararlar, kişi konuşmalı telefon, sade ajanda, sakin hareket, tek maç öncesi ekranı, çatısız küçük stat) yerelde uygulandı ve `baskanlik-2.8g-k` dalında incelemeyi bekliyor; yayınlanmış sürümde henüz yoktur. Sıradaki işin ve tamamlanma durumunun tek kaynağı yol haritasıdır.

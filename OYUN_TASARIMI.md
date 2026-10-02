@@ -1,6 +1,6 @@
 # Chairman — oyun tasarımı
 
-Son güncelleme: 2026-10-02. Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md). **2026-10-02 iki seçenekli karar ve sade ekran yenilemesi onaylı hedeftir; kodda henüz uygulanmadı.**
+Son güncelleme: 2026-10-02. Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md). **2026-10-02 iki seçenekli karar ve sade ekran yenilemesi 2.8G–2.8K ile uygulandı (TEST içerik; ilgili bölümlerdeki “Bugünkü uygulama” notları).**
 
 ## 1. Amaç ve kararların durumu
 
@@ -60,7 +60,7 @@ Oyuncu; kararın konusunu, bilinen maliyetini, verilen taahhüdü ve belirsiz ka
 
 ### Tek konu akışı ve ekranların görevleri
 
-**Onaylı hedef (2026-10-02):** 2.8A–2.8F ilk sunumu kurdu; aşağıdaki yeni düzen henüz uygulanmadı. Açılış başkanın odası olarak kalır. Günlük işlerde oyuncu sırayla tek konuyla ilgilenir. Dosya, ajanda, telefon ve ayarlar kendi görevlerini taşır; ekranların ayrıntılı görünümü [STIL_REHBERI §7](STIL_REHBERI.md#7-arayüz-ve-bilgi) içindedir.
+**Onaylı hedef (2026-10-02):** 2.8A–2.8F ilk sunumu kurdu; aşağıdaki yeni düzen 2.8I ile uygulandı (sunum ayrıntısı [STIL_REHBERI §7](STIL_REHBERI.md#onaylı-ekran-düzenleri-ve-etkileşim)). Açılış başkanın odası olarak kalır. Günlük işlerde oyuncu sırayla tek konuyla ilgilenir. Dosya, ajanda, telefon ve ayarlar kendi görevlerini taşır; ekranların ayrıntılı görünümü [STIL_REHBERI §7](STIL_REHBERI.md#7-arayüz-ve-bilgi) içindedir.
 
 | Ekran | Oyuncunun yaptığı iş |
 |---|---|
@@ -80,7 +80,7 @@ Telefon bildirimleri yeni haberi fark ettirir; açık dosya veya her takipteki k
 
 ### Başkanlık kararında iki seçenek
 
-**Onaylı çerçeve (2026-10-02; uygulanmadı):** Dosya, mesaj, görüşme, bütçe, atama ve diğer başkanlık kararlarında aynı anda **tam iki anlamlı cevap** sunulur. Bunlar yalnız evet/hayır değildir: teklif, öncelik, sorumluluk, ilişki, kamuoyu ve küçük kulüp anları farklı ikilemler taşır. Her seçimin büyük ekonomik bedeli olması gerekmez. Menüde kişi/gün seçmek, ayrıntı okumak veya dosyalar arasında gezinmek karar sayılmaz; oyun menüsündeki her düğme sayısı ikiye indirilmeyecek.
+**Onaylı çerçeve (2026-10-02; 2.8H ile uygulandı, aşağıdaki “Bugünkü uygulama”):** Dosya, mesaj, görüşme, bütçe, atama ve diğer başkanlık kararlarında aynı anda **tam iki anlamlı cevap** sunulur. Bunlar yalnız evet/hayır değildir: teklif, öncelik, sorumluluk, ilişki, kamuoyu ve küçük kulüp anları farklı ikilemler taşır. Her seçimin büyük ekonomik bedeli olması gerekmez. Menüde kişi/gün seçmek, ayrıntı okumak veya dosyalar arasında gezinmek karar sayılmaz; oyun menüsündeki her düğme sayısı ikiye indirilmeyecek.
 
 - Ekip somut tutar, ödeme takvimi, kapsam ve sınırlarla teklif getirir. Başkan serbest fiyat/rakam girmek yerine iki açık yaklaşım arasından yön verir. Yeniden çalışma isteniyorsa neyin değişeceği anlaşılırdır; zaman ve ekip kapasitesi kullanılır, sınırsız ücretsiz teklif yenileme yoktur.
 - İki cevabın yanında üçüncü karar olarak tavsiye/devir/erteleme düğmesi saklanmaz. Hazır görüşü okumak ücretsiz bilgidir; yeni araştırma, yetki devri veya bekletme uygun kararda iki cevaptan biri olabilir. Dosyayı kapatmak ret veya onay sayılmaz; gerçek son tarih sürer.
@@ -91,6 +91,8 @@ Telefon bildirimleri yeni haberi fark ettirir; açık dosya veya her takipteki k
 - Başkan uygun kişiler üzerinden girişim başlatabilir; yalnız gelen istekleri beklemek zorunda değildir. Tam araştırma, transfer ve kalıcı çalışma kuralları ilgili sistemlerle genişler. İyi ekip rutin işi azaltır; yetki içinde kalan her adım yeniden onaylatılmaz.
 
 Reigns'ten kısa konuşma, iki açık cevap ve koşula bağlı devam alınır; dört kaynak çubuğu, hızlı ölüm/yeniden başlama, her cevapla yıl atlama veya sürekli süre baskısı alınmaz. Kulüp takvimi ve §6'daki eylemle ilerleme korunur. Aynı kulüp, farklı koşullarda birden fazla makul başarı yolu taşıyabilir; tek ezber cevap dizisi hedeflenmez.
+
+**Bugünkü uygulama (2.8H, 2026-10-02; TEST içerik):** Yeni kariyerin bütün kararları iki cevaplıdır; hangi ikilinin geleceği o anki koşuldan çıkar (ör. sayman yetişiyorsa “Kendin görüş / Sayman görüşsün”, yetişmiyorsa “Kendin görüş / Tribün onarımını ertelet”). Aday seçimi **sıralı görüşmedir** (kullanıcı kararı): adaylar tek tek dinlenir, [Göreve al] / [Sıradaki adayı dinle (+30 dk)]; son adayda [Göreve al] / [Koltuğu boş bırak]. Geri çevrilen aday kulüp üyesi olarak kalır. İlgili koltuktaki kişinin görüşü karar gelirken hazır bilgi olarak dosyaya düşer; “Görüş iste” düğmesi yoktur, saymanın konuşması gibi yeni çalışma yalnız anlamlı olduğu kararda iki cevaptan biridir. Hocayla görüşme karar değil, katılınan randevudur. Eski çok seçenekli konular yalnız eski kayıtlarda kendi biçimleriyle sürer.
 
 **İçerik geçişi:** Yeni düzene uymayan bütün mevcut oyuncu senaryoları, seçenek akışları ve sonuçsuz görevler envantere alınarak yeniden yazılır veya yeni kariyer yolundan kaldırılır. Üzerine yalnız iki düğmelik görünüm kaplamak yeterli değildir. Uyumlu konu ailesi/oyun kuralı korunabilir; eski çok seçenekli senaryo normal yeni oyunda paralel yaşamaz. Katalogdaki henüz uygulanmamış çok yollu taslaklar da hazır senaryo kabul edilmez. Kapsam [OLAY_KUTUPHANESI §7](OLAY_KUTUPHANESI.md#7-mevcut-içerikten-geçiş), kayıt koruması [TEKNIK_PLAN §6](TEKNIK_PLAN.md#eski-içerikten-geçiş-ve-kayıt-uyumu) içindedir.
 
@@ -188,6 +190,7 @@ Ajanda; zorunlu, ertelenebilir ve isteğe bağlı işleri ayırır. Bekleyen gö
 - Zorunlu iş yapılmadan gün bitmez.
 - Ertelenebilir iş ileri güne alınabilir. Gün bitince ertesi güne kendiliğinden kalır, ancak son günü geçilemez; son gününde yapılmadıkça gün bitmez.
 - İsteğe bağlı iş yapılmazsa kaçırılır ve geçmişe yazılır.
+- **Cevapsız kalma (kullanıcı kararı, 2026-10-02; 2.8H ile uygulandı):** Acil olmayan bir karar, cevabı gelmeden son tarihine ulaşırsa kartta önceden yazılı sonuç işler (ör. muhabir elindekiyle yazar, sponsorun erteleme isteği bedelsiz kabul edilmiş sayılır, hoca talebi reddedilmiş sayılır). İlerleme son cevap anında bir kez durup bunu gösterir; oyuncu yine ilerlerse sonuç bir kez işler ve “cevapsız” diye geçmişe yazılır. Zorunlu kriz kararlarının (maaş günü gibi) böyle bir sonucu yoktur; karar verilmeden geçilmez. Cevapsız kalma üçüncü düğme değildir, zamanın gerçek sonucudur.
 - Bir işe katılmak başka işleri kaçırtacaksa bu önceden gösterilir. Zorunlu bir işle çakışan işe katılınamaz.
 
 ### Zamanın ilerleme kuralları
@@ -305,6 +308,8 @@ Mizahın yönü samimi kasaba kulübü hayatıdır: mütevazı imkânlar ve büy
 
 Başkanlık üslubu ileride yaşanmış davranışlar üzerinden insan tepkilerine yansıyabilir; başlangıçta değişmez karakter sınıfı veya görünür kişilik çubuğu seçilmez. Oyuncu yaklaşımını değiştirebilir. Özel konuşma ile kamuya verilmiş söz ayrılır; medya gerçekte söylenmemiş bir cümleyi eski vaat diye üretmez. Mesaj eki, fotoğraf, maçtaki tanıdık komşu ve oda hatırası ancak gerçek geçmişe bağlanır; görseller mevcut kodla üretim kuralını izler. Kulüp büyüdükçe kararların ölçeği artar, rutin onay yükü artmak zorunda değildir.
 
+**Bugünkü uygulama (2.8K, 2026-10-02; TEST metin):** Telefonda kişiler kendi sesleriyle yazar: forma sponsorunun işi babasından devralan oğlu, titiz sayman, “kadroyu ben bilirim” diyen eski usul hoca, yerel gazetenin muhabiri, destekçi esnaf. Kasa yetmediğinde hocanın uzlaşma cevabı takımın kulüp lokalinde toplanmasıdır. Hafta sonuna doğru birkaç cevapsız hatıra mesajı yalnız gerçekten verilmiş karara gönderme yapar (lokal kampı, istenen bedel, pano sözü, cevapsız bırakılan muhabir, geciken maaş sözü) ve bir kez gelir; para, puan veya yeni iş üretmez. Kişilik/ilişki puanı yoktur.
+
 Tasarım dayanakları: [Reigns'in karakter ve koşula bağlı olay yaklaşımı](https://gamingtrend.com/interviews/one-night-with-the-king-reigns-developer-interviewed-on-games-success/), [Her Majesty'nin kısa kart yazımı ve oyuncu girişimi](https://gamesbeat.com/building-reigns-her-majestys-queendom/), [Wildermyth geçmiş kaydı](https://wildermyth.com/wiki/History), [Yes, Your Grace geliştiricilerinin bağlam ve küçük sunumlarla önem yaratması](https://www.gamedeveloper.com/business/deep-dive-the-subtle-art-of-building-tension-in-i-yes-your-grace-i-). Bunlar araştırma dayanaklarıdır; oyunların bütün mekanikleri veya sabit hikâyeleri benimsenmez.
 
 Taraftar, seçmenler, yönetim, oyuncular, hoca, sponsorlar, rakip başkanlar, gazeteciler ve federasyon çevresi farklı beklentilere sahiptir. Tek bir genel popülerlik değeri bütün davranışları açıklamaz.
@@ -360,7 +365,7 @@ Avrupa rakipleri ve yabancı oyuncu kaynakları için yeterli bir dış dünya t
 
 Balkona odadaki kapıya tıklayarak çıkılır. Başkan doğal biçimde ayağa kalkar, yönelir, kısa adımlı yürüyüşle yerine oturur. **2026-10-02 kararı:** bütün oyunda sakin hareket standarttır; kamera sallantısı ve dekoratif hareketler kaldırılır, hareket azaltma ayarı sunulmaz. Kalkış ve kısa yürüyüş korunur; eski ayarın doğrudan geçiş davranışı yeni standart değildir. Futbol/top ve gerekli karakter hareketleri ile klavye erişimi sürer. Ev sahibi maçındaki başkan yeri daha yüksekte, altında tribün sıraları görülecek biçimdedir. Çay kaldırılmıştır.
 
-**2026-10-02 hedefi:** Başlangıç stadı daha mütevazı, çatısız bir kasaba/ilçe stadı olur; küçük tribünler ve yıpranmış çevre gelişime alan bırakır. Çatı ve diğer kapsamlı yatırımlar sonra yapılır. Tek mevcut tabela, başkan açısından okunur konumda direkler üzerinde armalar, skor ve dakika gösterir. Balkon, pencere ve maç aynı değişiklikleri taşır; olmayan çatıya bakım izi bağlanmaz.
+**2026-10-02 hedefi (2.8J ile uygulandı; görünüm [STIL_REHBERI §5](STIL_REHBERI.md#5-stat-ve-tribün)):** Başlangıç stadı daha mütevazı, çatısız bir kasaba/ilçe stadı olur; küçük tribünler ve yıpranmış çevre gelişime alan bırakır. Çatı ve diğer kapsamlı yatırımlar sonra yapılır. Tek mevcut tabela, başkan açısından okunur konumda direkler üzerinde armalar, skor ve dakika gösterir. Balkon, pencere ve maç aynı değişiklikleri taşır; olmayan çatıya bakım izi bağlanmaz.
 
 Maç öncesi açık tonlarda **tek kompakt ekran** sunulur: armalar/karşılaşma, lig/hafta/saat, kısa form/sıra bilgisi ve tek cümle bağlam. Stat resmi, ayrı kadro/lig sayfaları ve yoğun tablolar kaldırılır. En az **10 saniyelik hazırlık**, dolan bir çubukla görünür; bu gerçek dosya yükleme yüzdesi diye sunulmaz. Süre tamamlanıp gerekli kaynaklar hazır olunca “Maça geç” etkinleşir, oyuncu kendisi geçer. Duraklat çubuğu da durdurur. Bekleme takvimde süre tüketmez ve maçı başlatmaz; §6'daki süre hedefleri bekleme kotasına dönüştürülmez.
 

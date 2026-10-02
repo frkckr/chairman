@@ -1,22 +1,22 @@
 /* ============ Chairman — balkon ve antrenman sahası (yalnız çizim; yol haritası 2.7, 2.8D) ============
    Başkan odasının (js/oda.js) dışı: kapıdan çıkılan balkon, altında kulübün sahası, gündüz gökyüzü. ODA.dis grubuna kurulur; grup odanın
    penceresinden de görünür. Stat, maçla aynı tariften aynı kurucuyla kurulur (js/stadyum.js statKur, gündüz ve boş): balkon ana tribünün
-   çatısının hemen arkasında ve üstündedir; konumu tariften hesaplanır (BLK_STAT). Pencerede karşı tribünün çatısı, projektörler ve
-   çevredeki apartmanlar görünür; bakım taksiti ödendiyse karşı tribünün çatısında iskele durur (balkonIskele).
+   (ve protokol locasının) hemen arkasında ve üstündedir; konumu tariften hesaplanır (BLK_STAT). Pencerede çatısız karşı tribün, tabela,
+   projektörler ve çevredeki apartmanlar görünür; tribün onarımının taksiti ödendiyse basamaklarda iskele durur (balkonIskele, 2.8J).
    Oyun kuralı içermez: antrenmanın sürüp sürmediğini ve saati sunum katmanı balkonDurum ile bildirir (kurallar js/gozlem.js).
    Antrenman sunum amaçlı bir canlandırmadır, maç motoru değildir: üç grup tekrarlayan basit bir düzenle çalışır (ısınma koşusu, pas çemberi,
    kaleye şut); kenarda teknik direktör ve antrenörler durur. Oyuncular kadrodaki görünüşleriyle kurulur (js/kadrolar.js, js/oyuncular.js).
    Takvim dururken de saha hareket eder; saat ve karar durumu bununla karıştırılmaz (STIL_REHBERI §8).
      balkonDurum({antrenman, dakika})  takım sahada mı; gökyüzünün gün ışığı
      balkonKare(dt)                    canlandırma (js/oda.js grup görünürken çağırır)
-     balkonIskele(var)                 karşı tribün çatısındaki onarım iskelesi (yaşanmış olaydan; js/soz.js odaIzleri)
+     balkonIskele(var)                 tribün basamaklarındaki onarım iskelesi (yaşanmış olaydan; js/soz.js odaIzleri)
    Renkler ve ölçüler STIL.balkon'dadır. */
 const BLK=STIL.balkon;
 const BALKON={antrenman:false,zaman:0,aktorler:[],kosu:[],rondo:[],sut:[],kaleci:null,ekip:[],top:{},grup:new THREE.Group()};
-/* stadın balkona göre yeri (tariften): ana tribünün arka duvarı balkon korkuluğunun hemen önünde, çatısı balkon döşemesinin altında.
+/* stadın balkona göre yeri (tariften): ana tribünün arka duvarı balkon korkuluğunun hemen önünde, tepesi (protokol locası dahil) balkon döşemesinin altında.
    Stat grubu 180° döndürülür: ana tribün balkon tarafında kalır. [CX, PY, CZ] sahanın ortası; bakış sahanın ortasına */
 const BLK_STAT=(()=>{
-  const t=STAT.tribunler.find(x=>x.yer==='ana'),O=tribunOlcu(t),arka=YAN_MESAFE+O.D+0.6,ust=O.y1+(t.cati?4.3:1);
+  const t=STAT.tribunler.find(x=>x.yer==='ana'),O=tribunOlcu(t),arka=YAN_MESAFE+O.D+0.6,ust=tribunTepe('ana')+(t.cati?0.3:1.2);
   return{CX:0,PY:-(ust+0.6),CZ:BLK.korkulukZ-0.7-arka};
 })();
 BLK.saha=[BLK_STAT.CX,BLK_STAT.PY,BLK_STAT.CZ];
@@ -32,12 +32,15 @@ BLK.bakis=[0,BLK_STAT.PY+1,BLK_STAT.CZ+6];
 
   /* ---- kulübün stadı: maçla aynı tarif ve kurucu; gündüz, boş tribünler ---- */
   {const S=new THREE.Group();S.position.set(CX,PY,CZ);S.rotation.y=Math.PI;D.add(S);statKur(S,{mac:false,gunduz:true});BALKON.stat=S;
-   /* iskele: karşı tribünün çatısında, pencereden görünen yerde (yalnız onarım başladıysa) */
-   const c=tribunCatiOnu('karsi'),I=new THREE.Group(),demir=oLAM({color:BLK.iskele}),branda=oLAM({color:BLK.iskeleBranda});
-   if(c){I.position.set(22,c.y,c.z);S.add(I);
-     for(let x=-6;x<=6;x+=3)for(const z of[-0.6,0.6])box(0.12,3,0.12,demir,x,1.5,z,I);
-     for(const y of[1,2.2,3])box(12.4,0.12,1.4,demir,0,y,0,I);
-     box(5,1.6,0.06,branda,-2,2,0.72,I);}
+   /* iskele: onarılan tribünün basamaklarında, pencereden görünen yerde (yalnız onarım başladıysa): borular, kalas, branda, çimento torbaları
+      ve şeritli bariyer. Çatısız statta çatıya bağlanmaz (2.8J) */
+   const c=tribunBakimYeri(),I=new THREE.Group(),demir=oLAM({color:BLK.iskele}),branda=oLAM({color:BLK.iskeleBranda}),torba=oLAM({color:BLK.iskeleTorba}),serit=oLAM({color:BLK.iskeleSerit});
+   if(c){I.position.set(c.x,c.y,c.z);I.rotation.y=c.rot;S.add(I);
+     for(let x=-4;x<=4;x+=2)for(const z of[-0.5,0.5])box(0.1,2.4,0.1,demir,x,1.2,z,I);
+     for(const y of[0.9,1.9,2.4])box(8.3,0.1,1.2,demir,0,y,0,I);
+     box(3.6,1.3,0.05,branda,-1.6,1.6,0.62,I);
+     for(let i=0;i<4;i++)box(0.5,0.22,0.34,torba,2.2+(i%2)*0.55,0.11+Math.floor(i/2)*0.22,0.9,I);
+     for(let x=-5;x<=5;x+=1)box(0.5,0.08,0.04,(x+5)%2?serit:demir,x,0.9,1.35,I);}
    I.visible=false;BALKON.iskele=I;}
   /* pencere artık dışarıya açılır: aynı stat odadan da görünür */
   if(typeof odaPencereAc==='function')odaPencereAc();
