@@ -79,6 +79,9 @@ const SAYFALAR={
     {ad:'Jokey: geri-çapraz 1,6 m/sn',kur:p=>{p.vx=-1.15;p.vz=-1.1;p.tavir='jokey';},kareler:[1,1.1,1.2,1.3,1.4,1.5,1.6],az:40},
     {ad:'Top sürme: dokunuşta ayak öne (sağ/sol sırayla)',kur:p=>{p.vx=5;mac.ball.sahip=p;},her:(p,t)=>{p.vx=5;const n=Math.floor(t/0.42);if(!p.sonDokunus||p.sonDokunus.n!==n)p.sonDokunus={n,t:n*0.42,tur:'surus',ayak:n%2?'sol':'sag'};
       mac.ball.x=p.x+0.35+(t%0.42)*1.6;mac.ball.z=p.z+(n%2?-0.12:0.12);},kareler:[1.26,1.31,1.36,1.41,1.68,1.73,1.78],az:60},
+    {ad:'Boşta (T1): duruş, eller belde',kur:p=>{p.n=1;p.kip='dur';},kareler:[0.5,1.2,1.6,2.0,2.6,3.2,3.8],az:30},
+    {ad:'Boşta (T1): gevşek duruş, ağırlık değiştirme',kur:p=>{p.n=5;p.kip='dur';},kareler:[0.5,1.6,2.4,3.2,4.0,4.8,5.6],az:20},
+    {ad:'Yürüyüş 1,6 m/sn (p.kip yuru, yarı boşta)',kur:p=>{p.n=4;p.kip='yuru';p.vx=1.6;},kareler:[1,1.15,1.3,1.45,1.6,1.75,1.9],az:90},
     {ad:'Depar ve sert fren',kur:p=>{},her:(p,t,dt)=>{const v=t<1.2?Math.min(7,t*7):Math.max(0,7-(t-1.2)*9);p.vx=v;},kareler:[1.0,1.2,1.3,1.4,1.5,1.6,1.8],az:90}],
   ikili:[
     {ad:'Omuz (rakip sağda, kazandı)',kur:p=>{p.vx=5;},adim:[{ad:null,sure:0.9},{ad:'omuz',sure:0.6,ek:{taraf:'sag',kazandi:true},bas:(p,e)=>{e.rakip={x:p.x,z:p.z+0.7};}},{ad:null,sure:1}],kareler:[0.9,1.0,1.1,1.2,1.3,1.45,1.6],az:0},

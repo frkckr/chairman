@@ -20,7 +20,9 @@
      Parmak izi: her 30 adımda topun ve oyuncuların durumu (konum, hız, yön) FNV-1a ile özetlenir; 600 adımda bir kontrol noktası.
      Ölçüm rastlantı çekmez ve motorun önbellek yazan yöntemlerini (topYolu, topTahmin, yakalamaNoktasi, cerceveyeGider) çağırmaz;
      şutun kale çizgisini geçeceği yer topun bir kopyası üzerinde topFizikAdim ile bulunur.
-     Eklenti ölçümleri: araclar/olcumler/*.js → module.exports={bilgi:[[ad,anahtar,basamak]], yeni:()=>({dinle(ad,v,m),adim(m),bitir(m)})}. */
+     Eklenti ölçümleri: araclar/olcumler/*.js → module.exports={bilgi:[[ad,anahtar,basamak]], yeni:()=>({dinle(ad,v,m),adim(m),bitir(m)}), ozet?(sonuclar)}.
+   - T0 (gerçekçilik planı, 2026-10-03): --json taban dosyasına ortam (Node sürümü, işletim sistemi, git) yazılır; --karsilastir tabanın ortamını
+     basar, Node sürümü farklıysa "!" ile uyarır (çıkış kodu değişmez). Eklentinin ozet() tablosu bilgi satırlarından sonra basılır. */
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm'),os=require('os'),{spawn}=require('child_process');
 const KOK=path.join(__dirname,'..');
@@ -30,6 +32,9 @@ function secenek(ad,degerli){const i=ARG.indexOf(ad);if(i<0)return null;if(!dege
 const DIZILIS=secenek('--dizilis',true)||process.env.MAC_DENEME_DIZILIS||'';
 const JSON_DOSYA=secenek('--json',true),KARSILASTIR=secenek('--karsilastir',true),AYNI=!!secenek('--ayni',false),SENARYO=secenek('--senaryo',true);
 const AYAR=process.env.MAC_DENEME_AYAR||'';
+/* T0: taban dosyasına yazılan çalışma ortamı (Node sürümü, işletim sistemi, git sürümü) */
+const ORTAM=(()=>{let git=null;try{git=require('child_process').execSync('git rev-parse --short HEAD',{cwd:__dirname,stdio:['ignore','pipe','ignore']}).toString().trim()||null;}catch(e){}
+  return{node:process.version,platform:process.platform,arch:process.arch,git};})();
 const MAC_SAYISI=Math.max(1,parseInt(ARG[0]||'40',10));
 const ILK_TOHUM=parseInt(ARG[1]||'1',10);
 
@@ -288,29 +293,37 @@ else if(process.env.MAC_DENEME_TOHUMLAR){
     const bitmeyen=sonuclar.filter(s=>s.bitmedi).length;
     console.log(`\nOrtalama maç süresi: ${f(ort('sure')/60,1)} dakika (gerçek zaman)${bitmeyen?` · BİTMEYEN MAÇ: ${bitmeyen}`:''}`);
     console.log(`Hedef dışında: ${disarida} satır`);
-    console.log('\n  Bilgi (hedefsiz)');
+    console.log('\n  Bilgi (hedefsiz; "hedef T…" gerçekçilik planı turunun kabulüdür, bilgi amaçlı)');
     const msAdim=ort('_msAdim');
-    const bilgiSatirlari=BILGI.concat(...EKLENTILER.map(e=>(e.bilgi||[]).map(([ad,k,n])=>[ad,k,null,n])));
-    for(const [ad,k,k2,n] of bilgiSatirlari){
+    /* T0: eklenti satırı isteğe bağlı plan hedefi taşır: [ad,anahtar,basamak,[alt|null,üst|null,'T1']]; dışındaysa "!" (bilgi, çıkış kodu değişmez) */
+    const bilgiSatirlari=BILGI.concat(...EKLENTILER.map(e=>(e.bilgi||[]).map(([ad,k,n,h])=>[ad,k,null,n,h])));
+    for(const [ad,k,k2,n,h] of bilgiSatirlari){
       if(!k){console.log('  '+ad);continue;}
       if(k==='msAdim'){console.log('  '+ad.padEnd(28)+f(msAdim,n).padStart(16));continue;}
-      const oranli=sonuclar[0]&&sonuclar[0].ham&&k in sonuclar[0].ham;
-      console.log('  '+ad.padEnd(28)+(f(degerAl(k),n)+(k2?' / '+f(ort(k2),n):'')).padStart(16)+(k2||oranli?'':('  ± '+f(sap(k),n))));}
+      const oranli=sonuclar[0]&&sonuclar[0].ham&&k in sonuclar[0].ham,v=degerAl(k);
+      const dis=h&&!Number.isNaN(v)&&((h[0]!=null&&v<h[0])||(h[1]!=null&&v>h[1]));
+      const hedef=h?`   hedef ${h[2]}: ${h[0]==null?'≤'+h[1]:h[1]==null?'≥'+h[0]:h[0]+'–'+h[1]}`:'';
+      console.log((dis?'! ':'  ')+ad.padEnd(28)+(f(v,n)+(k2?' / '+f(ort(k2),n):'')).padStart(16)+(k2||oranli?'':('  ± '+f(sap(k),n)))+hedef);}
     /* eylem histogramı ve tavır süreleri (maç başına) */
     const EH={},TV={};for(const s of sonuclar){for(const [a,v] of Object.entries(s.eylemler||{}))EH[a]=(EH[a]||0)+v;for(const [a,v] of Object.entries(s.tavir||{}))TV[a]=(TV[a]||0)+v;}
     console.log('  Eylemler / maç: '+Object.keys(EH).sort().map(a=>a+' '+f(EH[a]/sonuclar.length,1)).join(' · '));
     if(Object.keys(TV).length)console.log('  Tavır süresi / maç (oyuncu·sn): '+Object.keys(TV).sort().map(a=>a+' '+f(TV[a]/sonuclar.length,0)).join(' · '));
+    /* T0: eklenti isteğe bağlı ozet(sonuclar) ile kendi tablosunu basabilir ("!" satırları bilgidir, çıkış kodunu etkilemez) */
+    for(const E of EKLENTILER)if(E.ozet)E.ozet(sonuclar);
     /* tekrarlanabilirlik: ilk tohum bu süreçte iki kez oynatılır, işçinin sonucuyla da karşılaştırılır */
     const a=karsilastirMetni(macOynaIz(ILK_TOHUM)),b=karsilastirMetni(macOynaIz(ILK_TOHUM)),c=karsilastirMetni(sonuclar[0]);
     const ayni=a===b&&a===c;
     console.log('\n'+(ayni?'  ':'! ')+`Tekrarlanabilirlik: tohum ${ILK_TOHUM} üç kez oynatıldı, ${ayni?'sonuç aynı':'SONUÇ FARKLI'}`);
     if(!ayni)process.exitCode=1;
     if(JSON_DOSYA){fs.mkdirSync(path.dirname(path.resolve(JSON_DOSYA)),{recursive:true});
-      fs.writeFileSync(JSON_DOSYA,JSON.stringify({tarih:new Date().toISOString(),dizilis:DIZILIS,ayar:AYAR,sonuclar},null,0));console.log(`  Sonuçlar yazıldı: ${JSON_DOSYA}`);}
+      fs.writeFileSync(JSON_DOSYA,JSON.stringify({tarih:new Date().toISOString(),dizilis:DIZILIS,ayar:AYAR,ortam:ORTAM,sonuclar},null,0));console.log(`  Sonuçlar yazıldı: ${JSON_DOSYA}`);}
     if(KARSILASTIR){
-      const eski=JSON.parse(fs.readFileSync(KARSILASTIR,'utf8')).sonuclar,E=new Map(eski.map(s=>[s.tohum,s]));
+      const EJ=JSON.parse(fs.readFileSync(KARSILASTIR,'utf8')),eski=EJ.sonuclar,E=new Map(eski.map(s=>[s.tohum,s]));
       const ortak=sonuclar.filter(s=>E.has(s.tohum));
       console.log(`\n  Karşılaştırma: ${KARSILASTIR} (${ortak.length} ortak tohum)`);
+      /* T0: tabanın ortamı; Node sürümü farklıysa kayan nokta (Math.* kütüphanesi) farkı parmak izini değiştirebilir (çıkış kodunu etkilemez) */
+      const eo=EJ.ortam;console.log('  Taban ortamı: '+(eo?`Node ${eo.node} · ${eo.platform}/${eo.arch} · git ${eo.git||'—'}`:'kayıtlı değil')+` · şimdi Node ${ORTAM.node} · git ${ORTAM.git||'—'}`);
+      if(!eo||eo.node!==ORTAM.node)console.log(`! Node sürümü ${eo?'farklı':'bilinmiyor'} (taban ${eo?eo.node:'?'}, şimdi ${ORTAM.node}): --ayni farkı motor değişikliği olmayabilir`);
       if(AYNI){let fark=0;
         for(const s of ortak){const e=E.get(s.tohum);if(s.iz===e.iz)continue;fark++;
           let i=0;while(i<s.izler.length&&i<e.izler.length&&s.izler[i]===e.izler[i])i++;

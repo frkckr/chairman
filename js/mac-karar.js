@@ -408,7 +408,7 @@ function tekVurusKarari(m,p,k,s,yakin){
   const tau=0.12+0.42*(1-p.oz.karar),P1=1/(1+Math.exp((U2-U1-MOTOR_AYAR.tekVurus)/tau));
   if(m.rast()>=P1)return{sec:null,hedef};
   return{sec:{tur:en1.tur,hx:en1.hx,hz:en1.hz,tip:en1.tip,alici:en1.alici,varisHizi:en1.varis,mod:en1.mod,ex:en1.ex,ez:en1.ez,es:en1.es,
-    guncelle:true,ilk:true,tekDokunus:true},hedef};
+    guncelle:true,ilk:true,tekDokunus:true,P:en1.P,Pk:en1.Pk,alt:en1.alt},hedef};   /* P, Pk, alt salt okunur (ölçüm) */
 }
 /* ---- kafa: ceza sahasında kaleye, geride uzaklaştırma, ileride arkadaşa indirme ya da koşana uzatma ---- */
 function kafaKarari(m,p){

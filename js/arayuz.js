@@ -53,6 +53,7 @@ function frame(now){
   for(const f of flags){const pa=f.m.geometry.attributes.position,a=pa.array;for(let i=0;i<pa.count;i++){const u=(f.base[i*3]+1.3)/2.6;a[i*3+2]=f.base[i*3+2]+Math.sin(time*5.5-u*4+f.ph)*0.2*u;}pa.needsUpdate=true;}
   fx(dt,time);
   macKare(dt);baskanZaman(dt);
+  if(typeof locaGirisKare==='function')locaGirisKare(dt);   /* js/loca-giris.js (2.8T) */
   if(!btnMacaGec.hidden&&!MAC_ONCESI.includes(mac.phase))btnMacaGec.hidden=true;
   kameraUygula(curView());   /* js/kamera.js */
   okunurlukKare();           /* js/okunurluk.js: topun asgari boyu, havadaki topun lekesi */

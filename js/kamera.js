@@ -202,6 +202,7 @@ addEventListener('keyup',e=>KAM_ELLE.ok.delete(e.code));
 addEventListener('blur',()=>KAM_ELLE.ok.clear());
 /* başkanın önündeki masa (js/baskan.js ön plan) başı izler: takipte az ve yavaş (sakin), elle büyük dönüşte masa görüntüden kayar ve çabuk yetişir */
 function kameraGovdeHedefi(yaw,pitch,G){
+  if(typeof LOCA_GIRIS!=='undefined'&&LOCA_GIRIS.aktif)return{p:0,y:0,hiz:8};
   const B=STIL.baskan,E=KAM_E,ay=Math.abs(yaw),k=E.masaKayma;
   const y=!KAM.takip&&ay>k?Math.sign(yaw)*(0.25*k+(ay-k)):clamp(yaw*0.25,-0.3,0.3);
   return{p:clamp((pitch-B.dinlenmeEgimi)*0.22,-0.12,B.egimUst),y,hiz:KAM.takip&&Math.abs(G.y)<=0.31?B.govdeHiz:E.masaHiz};
@@ -210,6 +211,8 @@ function kameraGovdeHedefi(yaw,pitch,G){
 function kameraFovKaristir(a,b,e){const ta=Math.tan(a*KAM_DER/2),tb=Math.tan(b*KAM_DER/2);return 2*Math.atan(ta*Math.pow(tb/ta,e))/KAM_DER;}
 /* sakin kamera (2.8J): baş salınımı, gol sarsıntısı ve dürbün el titremesi yok; ayağa kalkış (kalk) gerçek harekettir */
 function kameraUygula(V){
+  /* locaya giriş (2.8T, js/loca-giris.js): kamera yürüyüşün yolundadır */
+  if(typeof LOCA_GIRIS!=='undefined'&&LOCA_GIRIS.aktif){locaGirisKamera();return;}
   if(KAMERA_ZORLA){const h=KAMERA_ZORLA.hedef,f=KAMERA_ZORLA.fov||KAM_B.aci;camera.position.set(V.p[0],V.p[1],V.p[2]);camera.lookAt(h.x,h.y,h.z);
     if(camera.fov!==f){camera.fov=f;camera.updateProjectionMatrix();}return;}
   const kalk=typeof BASKAN!=='undefined'?BASKAN.kalk:0,g=KAM.gecis,e=g*g*(3-2*g);

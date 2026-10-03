@@ -56,8 +56,10 @@ BLK.bakis=[0,BLK_STAT.PY+1,BLK_STAT.CZ+6];
    for(const sx of[-1,1]){for(const y of[0.1,0.8])P.push({w:0.04,h:0.04,d:2.1,x:sx*3.27,y,z:-4.65});for(let z=-5.6;z<=-3.7;z+=0.65)P.push({w:0.025,h:0.7,d:0.025,x:sx*3.27,y:0.45,z});}
    D.add(new THREE.Mesh(kutuBirlestir(P),kork));
    const masa=oLAM({color:BLK.masa});
-   box(0.9,0.04,0.62,masa,-0.6,0.72,-5.12,D);box(0.06,0.7,0.06,oLAM({color:BLK.masaAyak}),-0.6,0.35,-5.12,D);box(0.4,0.03,0.4,oLAM({color:BLK.masaAyak}),-0.6,0.015,-5.12,D);
-   ODA.balkonTelefon={x:-0.86,y:0.74,z:-5.08,donus:0.35};}
+   /* 2.8R: masa korkuluğun dibinde; üstündeki telefon oturan başkanın görüşünde, alt şeridin üstünde görünür ve tıklanır */
+   const M=BLK.telefonMasa;
+   box(0.6,0.04,0.42,masa,M[0],0.72,M[1],D);box(0.06,0.7,0.06,oLAM({color:BLK.masaAyak}),M[0],0.35,M[1],D);box(0.4,0.03,0.4,oLAM({color:BLK.masaAyak}),M[0],0.015,M[1],D);
+   ODA.balkonTelefon={x:M[0]+0.12,y:0.74,z:M[1]+0.02,donus:0.3};}
 
   /* ---- takım: kadrodaki görünüşlerle; antrenman eşofmanı, ortadaki oyuncuda yelek ---- */
   const G=BALKON.grup;D.add(G);G.visible=false;

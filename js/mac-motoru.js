@@ -31,9 +31,13 @@ const VARSAYILAN_TAKTIK={dizilis:'4-4-2',sakin:0.5,direkt:0.5,risk:1,pres:0.5,te
 const MOTOR_AYAR={
   gecis:0.7,                   // topu kaybeden takımın savunma düzenine geçme gecikmesi (sn)
   donus:0.75,                  // savunmaya dönüşte topa uzak oyuncunun hız oranı (birleştirme 2026-10-03: 0,85 → 0,75, koşu mesafesi)
-  karsiPres:3.0                // top kaybından sonra karşı pres süresi (sn; takımın pres ayarıyla 0,6–1,4 katı) (MM2)
+  karsiPres:3.0,               // top kaybından sonra karşı pres süresi (sn; takımın pres ayarıyla 0,6–1,4 katı) (MM2)
+  sekilGecikme:0,              // T1: topu yeni kazanan takımın hücum düzenine geçme gecikmesi (sn; kısa sahiplikte şekil değişmez)
+  blokYumusak:4,               // T1: bölge hedefinin izlediği top yerinin yumuşatma süresi (sn; 0: ham): tehlikesiz yönde
+  blokHizli:4,                 // T1: aynısı tehlikede (savunmada top kalemize gelirken, hücumda top ileri giderken)
+  hucumGecikme:1               // T1: hücumdaki takımın bölge oyuncuları da kişisel tepkiyle kayar: 1 topun gerisindekiler, 2 hepsi, 0 hiçbiri
 };
-const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek'};
+const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',sekilGecikme:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){if(Object.prototype.hasOwnProperty.call(MOTOR_AYAR,k))throw new Error('MOTOR_AYAR.'+k+' iki kez eklendi ('+MOTOR_AYAR_SAHIBI[k]+', '+akis+')');
   MOTOR_AYAR[k]=o[k];MOTOR_AYAR_SAHIBI[k]=akis;}}
 /* eylem adımları: eylem adı → işlev(p, e, dt), this maçtır; sahibinin dosyasında kaydedilir (Faz 0) */
@@ -125,10 +129,14 @@ class Match{
       ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,kartSira:null,gir:0,_kar:null,oturuyor:false,koltuk:null,cikti:false,poz:null,sg:null,yuk:0,zipla:null,
       /* motor → çizim sözleşmesi (Faz 0; TEKNIK_PLAN §8): tavır, bakış yönü, denge, sprint enerjisi, son dokunuş */
       tavir:null,bakisYon:null,denge:1,enerji:1,sonDokunus:null,
+      /* T1 (insan gibi hareket): efor 0–1, hız kipi (dur/yuru/tiris/kos/hizli/depar; çizim okur), son düşünme anı (sn) */
+      efor:1,kip:'dur',dusunT:0,
       /* akışların oyuncuya sonradan yazdığı iç alanlar baştan (undefined) tanımlı: nesnenin biçimi değişmez, motor yavaşlamaz (birleştirme, 2026-10-03) */
       _cev:undefined,_hk:undefined,_kacKare:undefined,_kacX:undefined,_kacZ:undefined,_varisHiz:undefined,_varisKare:undefined,_tavirKare:undefined,
       _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_calim:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,
-      _kp:undefined,_duz:undefined,_pen:undefined,_poz:undefined,_sonKurt:undefined},ek);
+      _kp:undefined,_duz:undefined,_pen:undefined,_poz:undefined,_sonKurt:undefined,
+      /* T1 iç alanları: kararlı hedef, efor karesi, kip ve süresi, son ivme (karede hız değişimi), düşünme aralığı (kare) */
+      _hdfX:0,_hdfZ:0,_hdfK:-9,_eforK:-1,_kipI:0,_kipT:0,_iax:0,_iaz:0,_dusP:0},ek);
   }
   oyuncuKur(t,n,k,mevki){
     const oz=ozellikler(k),rol=mevki.cizgi==='KL'?'GK':mevki.cizgi;

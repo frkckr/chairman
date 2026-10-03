@@ -9,6 +9,7 @@
    Gelişme 'denemeTeklif' → paket 'denemeTeklif' (koşul: k.kosullar.deneme !== 'yok') → acil olmayan iki cevaplı karar 'denemeKarari'
      [kabul et / saymana devret] (sayman yoksa [kabul et / reddet]); cevapsız kalırsa teklif düşer.
      kabul: ertesi sabah tahsilat + pano sözü (bağlı tahsilat yapılınca tutulur). devret: ertesi sabah saymanın ekip işi → tahsilat ve gazete haberi.
+   testDosyasizKarar(k): bugüne konuya bağlı olmayan iki cevaplı karar 'denemeDosyasiz' ekler (2.8Q'nun sağ karar paneli için).
    Metinler yalnız denemedir; oyun içeriği değildir. */
 const TEST_KISILER={
   'kisi-2':{id:'kisi-2',ad:'Ayla Deneme',rol:'yonetici',dogumTarihi:'1975-05-05',kulupId:'demirkapi',durum:'aktif',
@@ -102,6 +103,15 @@ EKIP_GOREVLERI.denemeGorevi={
   geriDon:(k,is)=>{const v=is.veri;donenKarar(k,{baslik:'Deneme teklifi sana döndü',sure:15,karar:'denemeKarari',meseleId:v.meseleId,olayId:v.olayId,soran:v.sahipId,
     kulupId:v.kulupId,kisiId:v.sahipId,tutar:v.tutar,aciklama:'Sayman ayrıldı; teklifi sen cevaplayacaksın.'});}
 };
+
+/* dosyasız karar (2.8Q): bir konuya bağlı olmayan, başkana dönen iki cevaplı karar. Yalnız denemede elle eklenir (testDosyasizKarar);
+   ajandada yalnız görünür, cevabı alt şeritteki "Karar ver" ile açılan sağ panelde verilir */
+KARAR_TURLERI.denemeDosyasiz={
+  denetle:()=>[],
+  secenekler:()=>[{id:'evet',metin:'Evet',sure:0,aciklama:['Deneme: evet.']},{id:'hayir',metin:'Hayır',sure:0,aciklama:['Deneme: hayır.']}],
+  uygula:(k,is,secim)=>({bilgi:secim==='evet'?'Deneme kararı: evet dedin.':'Deneme kararı: hayır dedin.'})
+};
+const testDosyasizKarar=k=>donenKarar(k,{baslik:'Dosyasız deneme kararı',sure:0,karar:'denemeDosyasiz',aciklama:'Konuya bağlı olmayan deneme kararı.'});
 
 /* yeni kariyere TEST kişilerini ve takvim işlerini ekler */
 function testIcerikKur(k,{sayman=true,gelisme=true,randevu=true}={}){

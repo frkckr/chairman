@@ -12,7 +12,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const ornek=[];
   for(let i=0;i<N;i++){
     const p=m.players[1+(i%21)];
-    Object.assign(p,{eylem:null,kickCd:0,yuk:0,zipla:null,tavir:null,yonHedef:null,bak:null,denge:1,surus:null,
+    Object.assign(p,{eylem:null,kickCd:0,yuk:0,zipla:null,tavir:null,yonHedef:null,bak:null,denge:1,surus:null,_iax:0,_iaz:0,
       yorgunluk:r()*0.4,enerji:0.5+0.5*r(),x:-30+60*r(),z:10+48*r()});
     const vm0=tepeF(p),duran=r()<0.3,sp=duran?r()*0.4:(0.15+0.85*r())*vm0,a=r()*2*Math.PI;
     p.vx=Math.cos(a)*sp;p.vz=Math.sin(a)*sp;p.spd=sp;p.yon=duran?r()*2*Math.PI-Math.PI:a+(r()-0.5)*0.6;

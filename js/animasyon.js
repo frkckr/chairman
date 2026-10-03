@@ -7,7 +7,8 @@
    p.bakisYon'a) bakar. 2) eylem yuvaları: her eylemin pozu kendi ağırlığıyla karışır; ağırlık sınırlı hızla yükselir ve iner (eylem yarıda kesilince
    poz atlamaz). 3) bacaklar en son iki kemikli ters kinematikle (IK) ayak hedeflerine uzanır; eylem pozu bacağı ne kadar tutuyorsa IK o kadar çekilir.
    4) kök: düşüş, yerde yatış ve kalkış aynı eksende (düşüşün başında saklanır; ters dönme yok), kaleci uçuşunun yayı, sıçrama.
-   Sözleşme alanları yoksa yedek davranış: vuruş stili seçim türünden, düşüş yönü faul olayından ya da hızdan, uçuş evreleri süreden. */
+   Sözleşme alanları yoksa yedek davranış: vuruş stili seçim türünden, düşüş yönü faul olayından ya da hızdan, uçuş evreleri süreden,
+   hız kipi (p.kip, T1) hızdan. Boşta pozlar (T1): duran oyuncu eller belde ya da gevşek, ağırlık değiştirir; yürürken yarı ağırlıkla. */
 /* ---- kanallar: eski 13 eklem (balkon ve eski pozlar) + iskelet 2 kanalları (js/oyuncular.js pose) ---- */
 const EKLEM=['lean','dy','hx','lL','kL','lR','kR','aL','aR','aLz','aRz','eL','eR'];
 const ANM_KANAL=EKLEM.concat(['hy','hz','gx','gy','gz','by','bz','lLy','lRy','lLz','lRz','aLy','aRy']);
@@ -38,6 +39,9 @@ const ANM_POZ=(()=>{const G=anmGenis,P=POSE,Tm=anmTam,O=Object.assign;return{
   koru:{lean:0.12,gz:0.15,gy:0.3,hy:0.2,aL:0.35,aLz:-1.05,eL:-0.35,aR:-0.3,aRz:0.35,eR:-0.9,hx:0.25},
   jokey:{lean:0.28,aL:-0.25,aR:-0.25,aLz:-0.5,aRz:0.5,eL:-0.9,eR:-0.9,hx:0.15},
   bekle:{aLz:-0.12,aRz:0.12,eL:-0.35,eR:-0.35},
+  /* boşta (T1, p.kip dur/yuru): eller belde; gevşek duruş (kollar yanda, ağırlık bir bacakta) */
+  belde:{aL:0.25,aR:0.25,aLz:-0.55,aRz:0.55,eL:-1.45,eR:-1.45,hx:0.12},
+  gevsek:{aLz:-0.06,aRz:0.1,eL:-0.15,eR:-0.3,hz:0.05,gz:0.06,hx:0.08},
   sendele:{aL:-0.6,aR:-0.6,aLz:-1.15,aRz:1.15,eL:-0.4,eR:-0.4,hx:-0.25},
   /* müdahale (top sağda): uzanan ayak ya da önden blok; şut bloku kollar arkada; kayarak (sağ bacak uzanır, sol kalçaya yatar) */
   mudahaleV:G({lean:-0.05,dy:-0.15,lL:-1.1,lLz:-0.2,lLy:-0.4,kL:0.12,lR:0.3,kR:0.9,aL:0.3,aR:-0.45,aLz:-0.7,aRz:0.7,eL:-0.5,eR:-0.5,hy:-0.25,gy:0.1,hx:0.35}),
@@ -83,7 +87,7 @@ const ANM_VURUS={ic:['icG','icT'],dis:['disG','disT'],ust:['ustG','ustT'],asirtm
 const ANM_SEVINC=[ANM_POZ.sevKollar,ANM_POZ.sevUcak,ANM_POZ.sevYumruk,ANM_POZ.sevGok],ANM_UZGUN=[ANM_POZ.basEl,ANM_POZ.belEl,ANM_POZ.egik];
 
 /* ---- eylem yuvaları: sıra karışım sırasıdır (sonraki baskın). [ad, yükselme hızı, inme hızı] (ağırlık/sn) ---- */
-const ANM_SLOT=[['hazir',5,4],['jokey',5,4],['koru',6,5],['bekle',3,3],['dokun',40,10],['kontrol',30,8],['gogus',30,8],['vG',40,8],['vT',40,8],['degaj',30,8],
+const ANM_SLOT=[['bosta',2,4],['hazir',5,4],['jokey',5,4],['koru',6,5],['bekle',3,3],['dokun',40,10],['kontrol',30,8],['gogus',30,8],['vG',40,8],['vT',40,8],['degaj',30,8],
   ['kafa',16,16],['omuz',12,8],['sendele',15,6],['mudahale',30,7],['blok',30,8],['kayma',12,3],['ucusI',30,6],['ucusH',30,5],['ucusN',30,5],['kapan',12,6],
   ['tutus',25,8],['yumruk',30,8],['elleAtis',30,8],['dusus',10,4],['yerde',4,3],['kalk',20,5],['tac',6,5],['tacAt',30,6],['elde',10,10],['itiraz',30,8],
   ['p0',5,5],['p1',10,10],['p2',5,5],['p3',5,5],['p4',5,5],['p5',5,5],['p6',5,5],['p7',5,5],['sevinc',6,6],['sarilma',4,4],['dizKayma',5,4],['uzgun',2,3],['mars',3,3]];
@@ -103,7 +107,7 @@ function aktorKur(K,kaynak,boy){
     gDrop:0,gGen:0,gAdim:1,gHy:0,tvSon:null,jYan:1,korP:null,yEk:0,kucuk:false,phItme:0,dokT:-1,dokSon:undefined,dokSurum:-1,dokP:null,
     /* eylem: son görülen eylem nesnesi ve başında seçilenler */
     eyl:null,eylAd:'',oSag:1,vG:null,vT:null,vGm:1,vTm:1,vStil:null,kP:null,mP:null,bP:null,kyP:null,oP:null,tP:null,uP:null,uY:0.8,uFaz:'',uG:0,
-    sdX:0,sdZ:1,sdS:0.6,sevSon:false,sevC:0,sevH:8,sevDiz:false,dizAktif:false,uzP:null,
+    sdX:0,sdZ:1,sdS:0.6,bosT:0,bosP:null,sevSon:false,sevC:0,sevH:8,sevDiz:false,dizAktif:false,uzP:null,
     /* kök: yatış ekseni (gövde çerçevesinde x,z), açısı, uzun eksen etrafında dönüş; düşüş/kalkış pozları */
     lkx:1,lkz:0,lth:0,lps:0,lps0:0,lieTur:'',lieSag:true,dP:null,yP:null,kkP:null,kTh0:0,kPs0:0};
 }
@@ -189,7 +193,15 @@ function anmTavir(a,p,dt){
     if(hazir){st[S.hazir]=1;sp[S.hazir]=ANM_POZ.kaleciHazir;drop=0.13;gen=0.12;adim=0.6;}
     else if(tv==='jokey'){st[S.jokey]=1;sp[S.jokey]=ANM_POZ.jokey;drop=0.12;gen=0.07;adim=0.65;hyE=-0.35*a.jYan;}
     else if(tv==='koru'){st[S.koru]=1;sp[S.koru]=a.korP;drop=0.07;gen=0.08;adim=0.8;}
-    else if(tv==='bekle'){st[S.bekle]=1;sp[S.bekle]=ANM_POZ.bekle;}}
+    else if(tv==='bekle'){st[S.bekle]=1;sp[S.bekle]=ANM_POZ.bekle;}
+    /* boşta (T1; sözleşme: p.kip, yoksa hızdan): bir süre duran oyuncu eller belde ya da gevşek durur, ağırlığını değiştirir (anmEkler);
+       yürürken yarı ağırlıkla. Oyuncuya göre sabit seçim (h2), rastlantısız */
+    const ph=mac.phase,v=Math.sqrt((p.vx||0)*(p.vx||0)+(p.vz||0)*(p.vz||0)),kip=p.kip!=null?p.kip:v<0.2?'dur':v<2?'yuru':'';
+    if(!tv&&!hazir&&!p.eylem&&!p.poz&&!p.sevinc&&(ph==='play'||ph==='durus'||ph==='kickoff')){
+      a.bosT=kip==='dur'?a.bosT+dt:0;
+      if(!a.bosP){const n=(p.n!=null?p.n:p.no||0)|0;a.bosP=h2(n*5+(p.team|0),11)<0.35?ANM_POZ.belde:ANM_POZ.gevsek;}
+      st[S.bosta]=kip==='dur'?(a.bosT>1.2?1:0):kip==='yuru'?0.45:0;sp[S.bosta]=a.bosP;}
+    else a.bosT=0;}
   if(dt>0){const k=Math.min(1,dt*5);a.gDrop+=(drop-a.gDrop)*k;a.gGen+=(gen-a.gGen)*k;a.gAdim+=(adim-a.gAdim)*k;a.gHy+=(hyE-a.gHy)*k;}
 }
 
@@ -334,6 +346,8 @@ function anmEkler(a,p,dt){
   const wo=sw[S.omuz];if(wo>0.01&&ad==='omuz'&&e.kazandi===false){const f=clamp(e.t/(e.sure||0.5)*2-1,0,1)*wo;P.gz-=0.55*a.oSag*f;P.hz-=0.2*a.oSag*f;P.aRz+=0.5*f;P.aLz-=0.5*f;}
   const wh=sw[S.sarilma];if(wh>0.01)a.yEk=Math.max(a.yEk,Math.abs(Math.sin(zaman*6+a.faz0*0.3))*0.1*wh);
   const wi=sw[S.itiraz];if(wi>0.01){const v=Math.sin(zaman*6+a.faz0)*0.15*wi;P.aLz-=v;P.aRz+=v;}
+  /* boşta (T1): ağırlığı yavaşça bir bacaktan öbürüne verir, başı hafif oynar */
+  const wb=sw[S.bosta];if(wb>0.01&&!a.kucuk){const v=Math.sin(zaman*0.7+a.faz0),u=Math.sin(zaman*0.37+a.faz0*1.7);P.gz+=0.07*v*wb;P.hz-=0.05*v*wb;P.hy+=0.12*u*wb;}
   const wa=sw[S.p0+4];if(wa>0.01){const v=Math.sin(zaman*15+a.faz0)*0.22*wa;P.aLz+=v;P.aRz-=v;}
   const we=sw[S.p0];if(we>0.01){const f=0.5+0.5*Math.sin(zaman*0.9+a.faz0);anmKar(a,ANM_POZ.esneme1,we*f);anmKar(a,POSE.esneme2,we*(1-f));}
   if(p.tur==='hakem'&&e){

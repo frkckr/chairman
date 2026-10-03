@@ -181,15 +181,15 @@ Object.assign(Match.prototype,{
       let i=0,j=0;
       const hucumcular=this.sahadakiler(du.takim).filter(p=>p!==tk&&p.rol!=='GK').sort((a,c)=>(c.oz.kafa+c.boy)-(a.oz.kafa+a.boy));
       for(const p of hucumcular){if(p.rol==='DEF'&&!(p.oz.kafa>0.68&&i<2)){p.tx=d*-2;p.tz=p.z<MZ?20:48;continue;}
-        const y=hucumYer[i++];if(!y){p.tx=d*(PL-30);p.tz=p.mevki.w;continue;}p.tx=d*y[0];p.tz=y[1];p.hizOran=0.8;p.bak=this.ball;}
+        const y=hucumYer[i++];if(!y){p.tx=d*(PL-30);p.tz=p.mevki.w;continue;}p.tx=d*y[0];p.tz=y[1];p.hizOran=0.8;p.bak=this.ball;this.eforVer(p,0.4);}
       const savunanlar=this.sahadakiler(savunan).filter(p=>p.rol!=='GK').sort((a,c)=>(c.oz.kafa+c.boy)-(a.oz.kafa+a.boy));
       for(const p of savunanlar){if(p.rol==='FV'&&j>3){p.tx=d*(-8);p.tz=p.mevki.hedef?30:40;continue;}
-        const y=savYer[j++];if(!y){p.tx=d*(PL-24);p.tz=p.mevki.w;continue;}p.tx=d*y[0];p.tz=y[1];p.hizOran=0.8;p.bak=this.ball;}
+        const y=savYer[j++];if(!y){p.tx=d*(PL-24);p.tz=p.mevki.w;continue;}p.tx=d*y[0];p.tz=y[1];p.hizOran=0.8;p.bak=this.ball;this.eforVer(p,0.4);}
     }else if(du.tur==='penalti'){
       const kl=this.kaleci(savunan);kl.tx=gx;kl.tz=MZ;kl.bak=this.ball;kl.yonHedef=null;
       let i=0;for(const p of this.players){if(!p.oyunda||p===tk||p===kl)continue;
         if(p.rol==='GK'){p.tx=-gx*0.9;p.tz=MZ;continue;}
-        const s=i++;p.tx=d*(PL-19-((s*7)%5));p.tz=MZ-14+((s*11)%28);p.hizOran=0.5;p.bak=this.ball;}
+        const s=i++;p.tx=d*(PL-19-((s*7)%5));p.tz=MZ-14+((s*11)%28);p.hizOran=0.5;p.bak=this.ball;this.eforVer(p,0.4);}
     }else if(du.tur==='serbest'||du.tur==='kaleVurusu'){
       /* baraj: kaleye yakın serbest vuruşta topla kale arasında, 9,15 m'de */
       if(du.tur==='serbest'&&this.tehlikeliSerbest(du)&&du.asama!=='bekle'){
@@ -197,7 +197,7 @@ Object.assign(Match.prototype,{
         const yakinDirek=Math.sign(du.z-MZ)||1,merkez={x:du.x+ux*9.15,z:du.z+uz*9.15},px=-uz,pz=ux;
         const oyuncular=this.sahadakiler(savunan).filter(p=>p.rol!=='GK').sort((a,c)=>hyp(a.x-merkez.x,a.z-merkez.z)-hyp(c.x-merkez.x,c.z-merkez.z)).slice(0,n);
         du.barajdakiler=oyuncular;
-        oyuncular.forEach((p,k)=>{const s=(k-(n-1)/2)*0.62+yakinDirek*0.35;p.tx=merkez.x+px*s;p.tz=merkez.z+pz*s;p.hizOran=0.8;p.bak=this.ball;p.yonHedef=a+Math.PI;});
+        oyuncular.forEach((p,k)=>{const s=(k-(n-1)/2)*0.62+yakinDirek*0.35;p.tx=merkez.x+px*s;p.tz=merkez.z+pz*s;p.hizOran=0.8;p.bak=this.ball;p.yonHedef=a+Math.PI;this.eforVer(p,0.4);});
         const kl=this.kaleci(savunan);kl.tx=gx-d*0.8;kl.tz=MZ-yakinDirek*1.2;kl.bak=this.ball;
       }
       /* 9,15 m: savunan takım topa yaklaşmaz; aut'ta ceza sahası dışında kalır */
