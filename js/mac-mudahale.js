@@ -10,7 +10,7 @@
 'use strict';
 ayarEkle('C',{
   mudahaleIstegi:1.25,         // pres yapan oyuncunun müdahaleye girme isteği
-  faulOrani:2.7,               // itme, tutma ve hava topu faullerinin olasılık çarpanı
+  faulOrani:4.0,               // itme, tutma ve hava topu faullerinin olasılık çarpanı (T1: 2,7 → 4,0; yürüyen oyunda ikili temas azaldı)
   faulEsik:0.55,               // müdahale temasında faul eşiği (şiddet; P=σ((c−eşik)/0,12)) (C2)
   kutuIstek:0.65,              // kendi ceza sahasında müdahale isteği çarpanı (C2; birleştirme 2026-10-03: 0,5 → 0,65)
   sabirsiz:0.15,               // top açıkta değilken erken dalma sıklığı (1/sn; kararsız ve sert oyuncuda yüksek) (C2)
@@ -239,7 +239,7 @@ Object.assign(Match.prototype,{
       this.faul(o,p,{itme:true,arkadan:true,taktik:true,ciddiyet:0.25+0.25*this.rast(),x:p.x,z:p.z});
   },
   mudahaleBaslat(p,s,x,z,tur){
-    p.eylem={ad:'mudahale',t:0,sure:0.5,temas:0.18,oldu:false,tur};p.yonHedef=hrkAtan2(z-p.z,x-p.x);p.tx=x;p.tz=z;p.hizOran=1;p.tavir=null;
+    p.eylem={ad:'mudahale',t:0,sure:0.5,temas:0.18,oldu:false,tur};p.yonHedef=hrkAtan2(z-p.z,x-p.x);p.tx=x;p.tz=z;p.hizOran=1;p.tavir=null;this.eforVer(p,1);
     this.on('mudahale',{p,rakip:s,kayma:false,tur});
   },
   kaymaBaslat(p,s,x,z){

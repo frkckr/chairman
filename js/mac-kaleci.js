@@ -326,6 +326,7 @@ Object.assign(Match.prototype,{
      derinlikte; dar açıda yakın direğe yakın. Menzildeki rakip topla ya da şuta hazırlanıyorsa hazır duruşa geçer */
   kaleciKonum(p,dt){
     const b=this.ball,d=this.dir[p.team],gx=-d*PL,bu=b.x*d,sahipTakim=b.sahip?b.sahip.team:-1;
+    this.eforVer(p,1);   /* T1: kaleci yer tutmada hep tam eforla (ivme sınırı azami) */
     p.bak=b;p.hizOran=0.8;
     const pl=p._kp;
     if(pl){if(this.t>=pl.tBas+pl.r){p.tx=pl.px;p.tz=pl.pz;p.hizOran=1;}else{p.tx=p.x;p.tz=p.z;p.hizOran=0.3;}
