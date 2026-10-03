@@ -4,23 +4,23 @@
      isId: sözü yerine getirecek bekleyen iş (ör. ödeme); olayId: sözün doğduğu olay. durum: 'acik' | 'tutuldu' | 'bozuldu'.
    Yalnız açıkça taahhüt olan karar söz doğurur (sozVer); söylenen her cümle söz değildir. Tutulma/bozulma gerçek kayıttan türetilir ve bir kez
    yazılır: bağlı iş tamamlandıysa tutuldu; bağlı iş yapılmadan kalktıysa ya da son tarihi geçtiyse bozuldu. Süresiz söz (sonTarih null, iş yok) açık kalır.
-   Haber (k.haberler): {tur:'gazete'|'tesekkur', tarih, dakika, anahtar, p, olayId, gorulen} — yaşanmış olaydan üretilen kalıcı kayıt; yeni sorun icat etmez.
+   Haber (k.haberler): {tur, tarih, dakika, anahtar, p, olayId, gorulen} — yaşanmış olaydan üretilen kalıcı kayıt; yeni sorun icat etmez.
+     tur: HABER_TURLERI anahtarı ('gazete' masadaki gazete, 'tesekkur' masadaki kart). p.kaynak verilirse başlıkta yayın/kişi adı olarak görünür.
    odaIzleri(k): odada gösterilecek izler; yalnız kayıtlı olaya dayanır, yüklemeden sonra aynıdır.
-   Metinler ve kişiler TEST verisidir. */
+   2.8L (2026-10-02): söz konuları, teşekkür ve hatıra içerikleri kaldırıldı; SOZ_TARAFLARI ve ODA_NOTU_SOZLERI içerik yazıldıkça doldurulur. */
 const SOZ_DURUMLARI=['acik','tutuldu','bozuldu'];
-const SOZ_TARAFLARI={sponsor:'Forma sponsoru',personel:'Personel ve oyuncular'};
-const HABER_TURLERI=['gazete','tesekkur'];
+/* kişi olmayan muhataplar: anahtar → ad (ör. {personel:'Personel ve oyuncular'}); içerik dosyaları ekler */
+const SOZ_TARAFLARI={};
+/* haber türleri ve başlıkları */
+const HABER_TURLERI={gazete:'Gazete',tesekkur:'Not'};
+/* açıkken duvardaki panoya not olarak düşen söz konuları (anahtar listesi); içerik dosyaları ekler */
+const ODA_NOTU_SOZLERI=[];
 const sozMuhatapAdi=(k,m)=>SOZ_TARAFLARI[m]||kisiAdi(k,m);
 const sozMetni=(k,s)=>MESELE_OLAYLARI[s.anahtar](k,s.p);
 
 Object.assign(MESELE_OLAYLARI,{
-  'soz.pano':()=>'Gelecek sezon stat içi bir pano sponsorun olacak.',
-  'soz.destekPano':()=>'Bu sezonun kalanı ve gelecek sezon stat içi bir pano destekçinin firmasına ayrılacak.',
-  'soz.maas':(k,p)=>`Maaşlar ${gunAyYazi(p.tarih)} günü ödenecek.`,
-  'soz.kamp':(k,p)=>`Kamp masrafı (${paraYazi(p.tutar)}) ${gunAyYazi(p.tarih)} günü, maaşlar yattıktan sonra ödenecek.`,
   'soz.tutuldu':(k,p)=>`Sözünü tuttun (${sozMuhatapAdi(k,p.muhatap)}): ${MESELE_OLAYLARI[p.anahtar](k,p.p)}`,
-  'soz.bozuldu':(k,p)=>`Sözün yerine gelmedi (${sozMuhatapAdi(k,p.muhatap)}): ${MESELE_OLAYLARI[p.anahtar](k,p.p)}`,
-  'tesekkur.maas':(k,p)=>`${kisiAdi(k,p.kisiId)} kapıdan başını uzattı: “Başkanım, bu ay zor diyorlardı; maaşlar gününde yattı. Çocuklar adına sağ olun.”`
+  'soz.bozuldu':(k,p)=>`Sözün yerine gelmedi (${sozMuhatapAdi(k,p.muhatap)}): ${MESELE_OLAYLARI[p.anahtar](k,p.p)}`
 });
 
 /* söz kaydeder; kimliğini döndürür */
@@ -55,72 +55,8 @@ function haberEkle(k,{tur,anahtar,p={},olayId=null}){
   return MESELE_OLAYLARI[anahtar](k,p);
 }
 const haberMetni=(k,h)=>MESELE_OLAYLARI[h.anahtar](k,h.p);
+const haberBasligi=(k,h)=>h.p&&h.p.kaynak?(OLAY_KAYNAKLARI[h.p.kaynak]||kisiAdi(k,h.p.kaynak)):HABER_TURLERI[h.tur];
 function haberlerGoruldu(k){for(const h of k.haberler)h.gorulen=true;}
-
-/* dış gelişme: maaşlar gününde yattıysa ve hafta içinde gerçek bir sıkışma atlatıldıysa kısa teşekkür (olay kütüphanesi P13'ün dar örneği).
-   Para ya da moral puanı üretmez; koşulu yoksa iz bırakmadan geçer */
-GELISMELER.tesekkur={
-  denetle:(k,v)=>{const h=[];if(!(k.kisiler||{})[v.kisiId])h.push(`kişi bulunamadı (${v.kisiId})`);if(typeof v.maasIsId!=='string')h.push('maaş işi kimliği yok');return h;},
-  uygula:(k,is)=>{
-    const v=is.veri,kriz=Object.values(k.olaylar).find(o=>o.paket==='odemeSikismasi'&&o.varyant==='kriz');
-    if(!kriz||kriz.sonuc.maasGecikti||!k.hareketler.some(h=>h.kaynak===v.maasIsId))return{bilgi:null};
-    return{bilgi:haberEkle(k,{tur:'tesekkur',anahtar:'tesekkur.maas',p:{kisiId:v.kisiId},olayId:kriz.id})};
-  }
-};
-
-/* ---- hatıra (2.8K): gerçek geçmişe gönderme yapan, cevap istemeyen kısa kişi mesajları ----
-   Dış gelişme 'hatira' (içerik sürümü 3; Cuma öğle ve Cumartesi sabahı) o güne kadar gerçekten verilmiş kararlara bakar; kayıt yoksa iz bırakmaz.
-   Her kural bir kez yazılır (aynı anahtar o konuda tekrar etmez), ilgili konunun geçmişine olay olarak düşer ve telefonda kişinin konuşmasında
-   görünür (js/mesajlar.js). Para, puan ya da yeni görev üretmez; mizah kararın bedelini değiştirmez. Metinler TEST verisidir. */
-Object.assign(MESELE_OLAYLARI,{
-  'hatira.sponsor.bedel':()=>'Gecikme bedelini yatırdık başkanım. Babam “sözleşme sözleşmedir” dedi; haklıymışsınız, biz de öyle yaparız.',
-  'hatira.sponsor.pano':()=>'Gelecek sezonun panosu için ölçü almaya ne zaman gelelim? Babam logoyu büyütelim diyor, ben vazgeçirmeye çalışıyorum.',
-  'hatira.sponsor.tam':(k,p)=>`Genel müdürümüz ${kisiAdi(k,p.saymanId)} Bey'le konuştuktan sonra taksiti hemen çıkardı. Bir dahaki sefere doğrudan onu arayacağım galiba.`,
-  'hatira.sponsor.cevapsiz':()=>'Sessizliği “olur” saydık başkanım, sağ olun. Taksit söylediğimiz günde gelecek.',
-  'hatira.destek.pano':()=>'Panonun yazısını kızım çizmek istiyor, şimdiden üç taslak yaptı. Kulübün rengine sadık kalacağız, söz.',
-  'hatira.destek.anons':()=>'Maç günü anonsu ben okuyayım diyorum; sesim gürdür. Şaka şaka, spikere bıraktım.',
-  'hatira.basin.baskan':()=>'Açıklamanız aynen girdi başkanım. Böyle doğrudan konuşunca biz de rahat ediyoruz.',
-  'hatira.basin.yorumYok':()=>'“Yorum yok” da bir cevaptır başkanım; manşete onu taşıdık. Bir dahakine bir cümle daha verin.',
-  'hatira.basin.sessiz':()=>'Dün aradım, açmadınız; elimdekini yazdım. Telefonum açık.',
-  'hatira.hoca.lokal':()=>'Lokalde yattık başkanım. Remzi Usta bütün gece maç anlattı ama çocuklar dinç. Otel kadar olmasa da birlikteydik.',
-  'hatira.hoca.otel':()=>'Otelde herkes erkenden yattı, kahvaltıda kimse geç kalmadı. Bunu unutmam başkanım.',
-  'hatira.hoca.cevapsiz':()=>'Dün akşam herkes kendi evindeydi. Sustuysa hayırdır dedik, ama bir dahakine bir “yok” de başkanım, ben anlarım.',
-  'hatira.personel.soz':(k,p)=>`Başkanım, ${gunAyYazi(p.tarih)} dediniz; ben çocuklara öyle söyledim. Bekliyoruz.`
-});
-const olayPaketi=(k,paket)=>Object.values(k.olaylar||{}).find(o=>o.paket===paket&&o.durum!=='onlendi')||null;
-/* kurallar: [gün, anahtar, kişi(k, olay) → kişi kimliği, koşul(k) → olay ya da null, parametre?] */
-const HATIRA_KURALLARI=[
-  ['cuma','hatira.sponsor.bedel',k=>(Object.values(k.kisiler).find(p=>p.rol==='sponsorTemsilcisi')||{}).id,k=>{const o=olayPaketi(k,'odemeSikismasi');return o&&o.sonuc.cozum==='bedel'?o:null;}],
-  ['cuma','hatira.sponsor.pano',k=>(Object.values(k.kisiler).find(p=>p.rol==='sponsorTemsilcisi')||{}).id,k=>{const o=olayPaketi(k,'odemeSikismasi');return o&&o.sonuc.hak==='panoGelecekSezon'?o:null;}],
-  ['cuma','hatira.sponsor.tam',k=>(Object.values(k.kisiler).find(p=>p.rol==='sponsorTemsilcisi')||{}).id,k=>{const o=olayPaketi(k,'odemeSikismasi');return o&&o.sonuc.cozum==='tamOdeme'?o:null;},
-    (k,o)=>({saymanId:(k.kulupler[k.kisiler[k.baskanId].kulupId].yonetim||{}).sayman})],
-  ['cuma','hatira.sponsor.cevapsiz',k=>(Object.values(k.kisiler).find(p=>p.rol==='sponsorTemsilcisi')||{}).id,k=>{const o=olayPaketi(k,'odemeSikismasi');return o&&o.sonuc.cozum==='cevapsiz'?o:null;}],
-  ['cuma','hatira.destek.pano',(k,o)=>k.meseleler[o.meseleId].kisiler[0]||null,k=>{const o=olayPaketi(k,'kosulluDestek');return o&&o.sonuc.cozum==='kabul'?o:null;}],
-  ['cuma','hatira.destek.anons',(k,o)=>k.meseleler[o.meseleId].kisiler[0]||null,k=>{const o=olayPaketi(k,'kosulluDestek');return o&&o.sonuc.cozum==='kucuk'?o:null;}],
-  ['cuma','hatira.basin.baskan',k=>(Object.values(k.kisiler).find(p=>p.rol==='muhabir')||{}).id,k=>{const o=olayPaketi(k,'basinSorusu');return o&&o.sonuc.basin==='baskan'?o:null;}],
-  ['cuma','hatira.basin.yorumYok',k=>(Object.values(k.kisiler).find(p=>p.rol==='muhabir')||{}).id,k=>{const o=olayPaketi(k,'basinSorusu');return o&&o.sonuc.basin==='yorumYok'?o:null;}],
-  ['cuma','hatira.basin.sessiz',k=>(Object.values(k.kisiler).find(p=>p.rol==='muhabir')||{}).id,k=>{const o=olayPaketi(k,'basinSorusu');return o&&o.sonuc.basin==='sessiz'?o:null;}],
-  ['cumartesi','hatira.hoca.lokal',(k,o)=>k.meseleler[o.meseleId].kisiler[0]||null,k=>{const o=olayPaketi(k,'hocaTalebi');return o&&o.sonuc.cozum==='lokal'?o:null;}],
-  ['cumartesi','hatira.hoca.otel',(k,o)=>k.meseleler[o.meseleId].kisiler[0]||null,k=>{const o=olayPaketi(k,'hocaTalebi');return o&&(o.sonuc.cozum==='onay'||o.sonuc.cozum==='soz')?o:null;}],
-  ['cumartesi','hatira.hoca.cevapsiz',(k,o)=>k.meseleler[o.meseleId].kisiler[0]||null,k=>{const o=olayPaketi(k,'hocaTalebi');return o&&o.sonuc.cozum==='cevapsiz'?o:null;}],
-  ['cumartesi','hatira.personel.soz',k=>{const p=Object.values(k.kisiler).find(p=>p.rol==='personel'&&p.durum==='aktif');return p?p.id:null;},
-    k=>{const s=acikSoz(k,'soz.maas');return s&&k.olaylar[s.olayId]||null;},k=>({tarih:acikSoz(k,'soz.maas').p.tarih})]
-];
-GELISMELER.hatira={
-  denetle:(k,v)=>v.gun==='cuma'||v.gun==='cumartesi'?[]:[`bilinmeyen hatıra günü (${v.gun})`],
-  uygula:(k,is)=>{
-    const yazilan=[];
-    for(const [gun,anahtar,kisi,kosul,param] of HATIRA_KURALLARI){
-      if(gun!==is.veri.gun)continue;
-      const o=kosul(k);if(!o||!k.meseleler[o.meseleId])continue;
-      const m=k.meseleler[o.meseleId],kid=kisi(k,o);
-      if(!kid||!k.kisiler[kid]||m.olaylar.some(x=>x.anahtar===anahtar))continue;
-      const p=Object.assign({kisiId:kid},param?param(k,o):{});
-      yazilan.push(kisiAdi(k,kid)+': '+meseleOlay(k,o.meseleId,anahtar,p));
-    }
-    return{bilgi:yazilan.length?yazilan.join(' · '):null};
-  }
-};
 
 /* odada görünen izler (kariyeri değiştirmez) */
 function odaIzleri(k){
@@ -129,8 +65,8 @@ function odaIzleri(k){
     gazete:gazete.length?gazete[gazete.length-1]:null,
     kart:kart.length?kart[kart.length-1]:null,
     yeniHaber:H.filter(h=>!h.gorulen).length,
-    iskele:k.hareketler.some(h=>h.kalem==='bakim'),
-    panoNotu:!!(acikSoz(k,'soz.pano')||acikSoz(k,'soz.destekPano'))
+    iskele:k.hareketler.some(h=>h.kalem==='bakim'),          // stat bakımına ödeme yapıldıysa karşı tribünde onarım izi
+    panoNotu:ODA_NOTU_SOZLERI.some(a=>!!acikSoz(k,a))
   };
 }
 
@@ -154,7 +90,7 @@ function sozDogrula(k,h){
   }
   if(Array.isArray(k.haberler))k.haberler.forEach((x,i)=>{
     const ad=`Haber [${i}]`;
-    if(!x||!HABER_TURLERI.includes(x.tur)){h.push(`${ad}: bilinmeyen tür (${x&&x.tur})`);return;}
+    if(!x||!HABER_TURLERI[x.tur]){h.push(`${ad}: bilinmeyen tür (${x&&x.tur})`);return;}
     if(!MESELE_OLAYLARI[x.anahtar])h.push(`${ad}: bilinmeyen anahtar (${x.anahtar})`);
     else if(!x.p||typeof x.p!=='object'||Array.isArray(x.p))h.push(`${ad}: parametreler nesne değil`);
     if(!an(x))h.push(`${ad}: geçersiz tarih/dakika`);

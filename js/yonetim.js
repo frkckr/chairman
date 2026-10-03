@@ -1,18 +1,13 @@
-/* ============ Chairman — yönetim ekibi: koltuklar, adaylar ve yetki sınırlı işler (çizim yok; yol haritası 2.2) ============
+/* ============ Chairman — yönetim ekibi: koltuklar ve yetki sınırlı işler (çizim yok; yol haritası 2.2, 2.6) ============
    İlk kapsam üç koltuktur (kullanıcı kararı, 2026-09-29): sayman, futbol şube sorumlusu, basın sözcüsü.
    Kulüp kaydı: yonetim = {sayman, futbol, basin} → kişi kimliği ya da null (boş koltuk). Alan yoksa denetlenmez.
-   Aday/yönetici kişisinin ek alanları (kişi kaydında, isteğe bağlı):
+   Yönetici kişisinin ek alanları (kişi kaydında, isteğe bağlı):
      profil: {meslek, guclu, zayif, beklenti} — oyuncuya gösterilen metin.
      katki: {mali, baglanti, futbol, iletisim} → 'zayif'|'orta'|'guclu' — gizli; sayı ya da seviye olarak gösterilmez,
        yalnız işlerin sonucunu belirler.
-   Karar türü (KARAR_TURLERI, js/ajanda.js):
-     adayGorusmesi    veri {koltuk, kisiId, sira, adaylar} — içerik 3 (2.8H): adaylar sırayla tek tek görülür; [Göreve al] /
-                      [Sıradaki adayı dinle (+30 dk)], son adayda [Koltuğu boş bırak]. Eski tek ekranlı koltukSecimi js/uyum-icerik2.js'tedir.
-   donenKarar: ekibin yetkisini aşan konu başkana saati serbest zorunlu karar olarak döner.
-   2.6: tavsiye (karar başkanda kalır, görüş dosyaya düşer), kapasite (kişi başına tek iş), kalıcı sorumluluk
-     (kulüp.sorumluluklar = {alan: {kisiId}}; yetki içindeki iş ek onay istemeden yürür) ve girişim (başkanın başlattığı iş).
-   Konuya özgü kararlar kendi dosyasındadır: js/paket-odeme.js (2.4A), eski kayıtlar için js/uyum-sponsor.js.
-   Metinler ve ekip işinin süresi TEST verisidir. */
+   Ortak yardımcılar: ikiSecenek (her karar tam iki cevap), hazirGorus (koltuktaki kişinin görüşü kanıt olur), donenKarar (yetkiyi aşan konu
+     başkana döner), tavsiye, kapasite (kişi başına tek iş), kalıcı sorumluluk (kulüp.sorumluluklar = {alan: {kisiId}}) ve girişim.
+   2.8L (2026-10-02): sıralı aday görüşmesi ve bütün konuya özgü kararlar içerikle birlikte kaldırıldı; içerik yazıldıkça kendi dosyasında eklenir. */
 const YONETIM_KOLTUKLARI={
   sayman:{ad:'Sayman',alan:'Mali işler: ödemeler, alacaklar ve bütçe takibi.',
     yetki:'Ödeme takvimi ve taksit üzerinde anlaşabilir. İndirim, yeni harcama ve sözleşme başkana döner.'},
@@ -39,19 +34,6 @@ function koltugaAta(k,kulupId,koltuk,kisiId){
   c.yonetim[koltuk]=kisiId;p.rol='yonetici';p.kulupId=kulupId;
 }
 
-/* aday seçimi (koltukSecimi, bütün adaylar tek ekranda) içerik sürümü 2 ve öncesinin kararıdır: js/uyum-icerik2.js.
-   İçerik sürümü 3'te aday görüşmesi sıralıdır (aşağıda, adayGorusmesi) */
-const adayDenetle=(k,v)=>{
-  const h=[];
-  if(!YONETIM_KOLTUKLARI[v.koltuk])h.push(`bilinmeyen koltuk (${v.koltuk})`);
-  if(!(k.kulupler||{})[v.kulupId])h.push(`kulüp bulunamadı (${v.kulupId})`);
-  if(!Array.isArray(v.adaylar)||!v.adaylar.length)h.push('aday listesi yok');
-  else for(const id of v.adaylar)if(!(k.kisiler||{})[id])h.push(`aday bulunamadı (${id})`);
-  return h;
-};
-const koltukAtamaBilgisi=(k,koltuk,p)=>`${p.ad} ${YONETIM_KOLTUKLARI[koltuk].ad.toLocaleLowerCase('tr-TR')} oldu. Yetkisi: ${YONETIM_KOLTUKLARI[koltuk].yetki}`+
-  (p.profil&&p.profil.beklenti?` Beklentisini açıkça söyledi: ${p.profil.beklenti}`:'');
-
 /* ---- iki cevap (2.8H, OYUN_TASARIMI §2): içerik sürümü 3'teki her başkanlık kararı tam iki geçerli cevap sunar ----
    Karar türü bütün olası yolları (engelleriyle) üretir; ikiSecenek koşula uyan ilk ÇİFTİ seçer. Çift rastgele değil, o anki koşuldan seçilir;
    kapalı seçenek gösterilmez. Kalan yollar ancak gerçek yeni durum doğunca (ör. görüşme sonuçsuz kaldı) sonraki kararla gelir.
@@ -71,64 +53,6 @@ function hazirGorus(k,olayId,veri,koltuk,gorus,engel){
   olayBilgi(k,olayId,g.anahtar,g.p,kisi.id);
   return kisi;
 }
-
-/* ---- sıralı aday görüşmesi (2.8H; kullanıcı kararı 2026-10-02) ----
-   Randevu (veri.etki 'adayGorusmesi', veri {kulupId, koltuk, adaylar: görüşme sırası}) katılınınca bir mesele açar ve ilk adayın kartını getirir.
-   Kart: [Göreve al] / [Sıradaki adayı dinle (+ADAY_SURESI dk)]; son adayda [Göreve al] / [Koltuğu şimdilik boş bırak].
-   Geri çevrilen aday kulüp üyesi olarak kalır, bu koltuk için dönmez. Sıra başlangıçta bir kez belirlenir (js/baslangic.js) */
-const ADAY_SURESI=30;                       // bir adayla görüşmenin süresi, dakika (TEST değeri)
-const BOS_KOLTUK_NOTU={
-  sayman:'Bu hafta ödemeleri ve sponsoru sen takip edersin; işi devredebileceğin bir sayman olmaz.',
-  basin:'Gazete sorarsa ya sen konuşursun ya da kulüp “yorum yok” der; açıklamayı devredemezsin.',
-  futbol:'Hocayla temas ve transfer araştırması sende kalır.'
-};
-Object.assign(MESELE_OLAYLARI,{
-  'aday.basladi':(k,p)=>`${YONETIM_KOLTUKLARI[p.koltuk].ad} koltuğu için ${p.n} adayla sırayla görüşeceksin. İlk aday: ${kisiAdi(k,p.kisiId)}.`,
-  'aday.sonraki':(k,p)=>`${kisiAdi(k,p.kisiId)} ile vedalaştın; sıradaki aday ${kisiAdi(k,p.sonrakiId)} içeri giriyor.`,
-  'aday.al':(k,p)=>koltukAtamaBilgisi(k,p.koltuk,k.kisiler[p.kisiId]),
-  'aday.bos':(k,p)=>`${YONETIM_KOLTUKLARI[p.koltuk].ad} koltuğu şimdilik boş kaldı. ${BOS_KOLTUK_NOTU[p.koltuk]||''}`
-});
-function adayKarti(k,v,sira){
-  const id=v.adaylar[sira],p=k.kisiler[id],pr=p.profil||{},K=YONETIM_KOLTUKLARI[v.koltuk];
-  isEkle(k,{tur:'ajanda',tarih:k.tarih,dakika:1439,veri:{baslik:`${K.ad} adayı ${sira+1}/${v.adaylar.length}: ${p.ad}`,zorunluluk:'zorunlu',sure:0,saatsiz:true,
-    gelis:{tarih:k.tarih,dakika:k.gunIciDakika},karar:'adayGorusmesi',kulupId:v.kulupId,koltuk:v.koltuk,adaylar:v.adaylar.slice(),sira,kisiId:id,meseleId:v.meseleId,
-    aciklama:[pr.meslek,pr.guclu&&'Güçlü yanı: '+pr.guclu,pr.zayif&&'Zayıf yanı: '+pr.zayif,pr.beklenti&&'Beklentisi: '+pr.beklenti].filter(Boolean).join(' ')}});
-}
-KATILIM_ETKILERI.adayGorusmesi={
-  denetle:adayDenetle,
-  uygula:(k,is)=>{
-    const v=is.veri,id=meseleAc(k,{tur:'koltuk',baslik:`${YONETIM_KOLTUKLARI[v.koltuk].ad} koltuğu boş`,sorumluId:k.baskanId,kisiler:v.adaylar});
-    meseleOlay(k,id,'aday.basladi',{koltuk:v.koltuk,n:v.adaylar.length,kisiId:v.adaylar[0]});
-    adayKarti(k,Object.assign({},v,{meseleId:id}),0);
-    return{bilgi:MESELE_OLAYLARI['aday.basladi'](k,{koltuk:v.koltuk,n:v.adaylar.length,kisiId:v.adaylar[0]})};
-  }
-};
-KARAR_TURLERI.adayGorusmesi={
-  denetle:(k,v)=>{const h=adayDenetle(k,v);if(!Number.isInteger(v.sira)||v.sira<0||!Array.isArray(v.adaylar)||v.sira>=v.adaylar.length)h.push(`aday sırası geçersiz (${v.sira})`);
-    if(typeof v.meseleId!=='string')h.push('aday görüşmesi bir meseleye bağlı değil');return h;},
-  secenekler:(k,is)=>{
-    const v=is.veri,c=k.kulupler[v.kulupId],p=k.kisiler[v.kisiId],K=YONETIM_KOLTUKLARI[v.koltuk],son=v.sira===v.adaylar.length-1,dolu=!!(c.yonetim&&c.yonetim[v.koltuk]);
-    const sonraki=son?null:k.kisiler[v.adaylar[v.sira+1]];
-    return[
-      {id:'al',metin:'Göreve al',kisiId:p.id,engel:dolu?`${K.ad} koltuğu artık dolu`:p.durum!=='aktif'?`${p.ad} artık aday değil`:koltuktaMi(k,p.id)?`${p.ad} zaten bir koltukta`:null,
-        aciklama:[`${p.ad} ${K.ad.toLocaleLowerCase('tr-TR')} olur.`,'Yetkisi: '+K.yetki]},
-      son?{id:'bos',metin:'Koltuğu şimdilik boş bırak',engel:null,aciklama:[BOS_KOLTUK_NOTU[v.koltuk]||'Koltuk boş kalır.']}
-        :{id:'sonraki',metin:'Sıradaki adayı dinle',sure:ADAY_SURESI,kisiId:sonraki.id,engel:sonraki.durum!=='aktif'?`${sonraki.ad} artık aday değil`:null,
-          aciklama:[`${ADAY_SURESI} dakika sürer: ${sonraki.ad} ile görüşürsün.`,`${p.ad} bu koltuk için geri çağrılmaz.`]}
-    ];
-  },
-  uygula:(k,is,secim)=>{
-    const v=is.veri;
-    if(secim==='al'){
-      koltugaAta(k,v.kulupId,v.koltuk,v.kisiId);
-      if(v.koltuk==='sayman'&&typeof nakitRandevusu==='function')nakitRandevusu(k,v.kulupId);
-      return{bilgi:meseleOlay(k,v.meseleId,'aday.al',{koltuk:v.koltuk,kisiId:v.kisiId})};
-    }
-    if(secim==='bos')return{bilgi:meseleOlay(k,v.meseleId,'aday.bos',{koltuk:v.koltuk})};
-    adayKarti(k,v,v.sira+1);
-    return{bilgi:meseleOlay(k,v.meseleId,'aday.sonraki',{kisiId:v.kisiId,sonrakiId:v.adaylar[v.sira+1]})};
-  }
-};
 
 /* başkana dönen karar: saati serbest, son cevap anı bugünün sonu (js/ajanda.js) */
 const donenKarar=(k,veri)=>isEkle(k,{tur:'ajanda',tarih:k.tarih,dakika:1439,

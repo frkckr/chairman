@@ -6,7 +6,7 @@ Sayfayı başsız Chromium'da açar, hataları listeler ve ekran görüntüsü a
 Kullanım:
   python3 araclar/kontrol.py                     # index.html
   python3 araclar/kontrol.py prototipler/1-retro-2b-baskan-locasi.html
-  python3 araclar/kontrol.py "index.html?ekran=mac&doluluk=0.8"   # adres parametreleriyle
+  python3 araclar/kontrol.py "index.html?ekran=mac&tohum=3"   # adres parametreleriyle
 
 Çıktı: araclar/son-kontrol-<sayfa>[-<parametreler>].png (depoya eklenmez).
 Three.js cdnjs yerine npm'den indirilen yerel kopyadan yüklenir; depodaki dosyalar değişmez.

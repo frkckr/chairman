@@ -192,6 +192,8 @@ Uygulamaya alınacak sahne önce karar/haber/sonuç olarak ayrılır. Gerçek ka
 
 ## 7. Mevcut içerikten geçiş
 
+**Durum (2026-10-02 akşam, kullanıcı kararı; 2.8L):** Aşağıdaki geçiş tamamlandıktan sonra kodda kalan bütün içerik de silindi: `js/paket-*.js`, `js/uyum-*.js`, başlangıçlar, kişiler, mesaj/hatıra/gözlem metinleri. Kodda paket yoktur; bu bölüm ve katalogdaki paketler kullanıcının yeni içerik yazarken yararlanabileceği esin kaynağıdır, uygulanmış içerik değildir. Yeni içerik [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi)'daki kayıt defterlerine eklenir; tam bir örnek `araclar/test-icerik.js`'tedir (yalnız denemeler yükler).
+
 **Onaylı iş (2026-10-02; 2.8G–2.8H ile uygulandı, sonuç matrisi aşağıda):** Yeni sistemle uyuşmayan bütün mevcut senaryolar/karar akışları normal oyuncu yolundan çıkarılacak; uygun konu aileleri yeni iki seçenekli düzenle yeniden yazılacak. Bu bölüm kod silindiği veya eski örneklerin uyumlu olduğu anlamına gelmez. Önce 2.8G envanteri, sonra 2.8H geçişi yapılır; ayrıntılı kayıt koruması [TEKNIK_PLAN §6](TEKNIK_PLAN.md#eski-içerikten-geçiş-ve-kayıt-uyumu) içindedir.
 
 | İncelenecek mevcut alan | Yeni oyuncu akışında yapılacak işlem |

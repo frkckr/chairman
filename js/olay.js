@@ -12,11 +12,14 @@
      sonuc: kararların bıraktığı kalıcı izler (ör. verilen hak, geciken maaş); sonraki içerik buradan okur.
    Dış gelişme (takvimde 'gelisme' türü iş, gizli): zamanı gelince GELISMELER[veri.gelisme].uygula dünyayı değiştirir ve ilgili
      paketi o anki koşullarla dener (paketDene). Koşul önizlemede, özet okurken ya da çizimde denetlenmez; rastlantı çekilmez.
-   İçerik sürümü (k.icerik.surum) 0 olan eski kayıtlarda paket açılmaz. Yoğunluk denetimi yoktur: gerçek vade ve gelişme zamanında işlenir. */
-/* içerik sürümü 3 (2.8H): iki cevaplı kararlar; 2 ve öncesinin çok seçenekli kararları js/uyum-icerik2.js'te yalnız eski kayıtlar ve denemeler için durur */
-const ICERIK_SURUM=3;
+   Yoğunluk denetimi yoktur: gerçek vade ve gelişme zamanında işlenir.
+   İçerik sıfırlandı (2.8L, kullanıcı kararı 2026-10-02): oyunda paket, gelişme ya da kanıt kaynağı tanımlı değildir; kayıt defterleri boş durur ve
+   içerik yazıldıkça kendi dosyasından doldurulur. Kural denemeleri yalnız araclar/test-icerik.js'teki TEST içeriğini yükler. */
+/* içerik sürümü 4 (2.8L): boş içerik. 3 ve öncesinin paketleri kaldırıldı; o kayıtlar kayıt sürümü 6 ile açılmaz (js/kayit.js) */
+const ICERIK_SURUM=4;
 const OLAY_DURUMLARI=['acik','kapandi','onlendi'];
-const OLAY_KAYNAKLARI={defter:'Muhasebe kayıtları',sozlesme:'Sponsorluk sözleşmesi',gazete:'Demirkapı Postası'};
+/* kanıt kaynakları: anahtar → okunur ad (ör. {defter:'Muhasebe kayıtları'}); içerik dosyaları ekler. Kişi kimliği de kaynak olabilir */
+const OLAY_KAYNAKLARI={};
 const PAKETLER={},GELISMELER={};
 
 const olayKaynakAdi=(k,kaynak)=>OLAY_KAYNAKLARI[kaynak]||kisiAdi(k,kaynak);

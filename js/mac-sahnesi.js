@@ -3,7 +3,7 @@
    Gövde yönü motordaki gerçek bakış yönünden (yon) gelir. Pozlar sürekli karışır: koşu döngüsü hıza bağlı dalga; vuruşta
    geri salınım ve takip (vuran ayak tarafına göre), kontrol, göğüs, kafa sıçrayışı, müdahale, kayma, düşme ve kalkma,
    kaleci uçuşu ve tutuşu, taç, itiraz, sevinç; hakemde düdük, yön, avantaj, kart, penaltı; yan hakemde bayrak.
-   Burada ayrıca: top toplayıcılar ve yedek toplar, yedek kulübeleri, teknik direktörler, antrenörler, dördüncü hakem ve uzatma
+   Burada ayrıca: konilerdeki yedek toplar ve dışarıda kalan toplar (top toplayıcı 2.8O'da kaldırıldı), yedek kulübeleri, teknik direktörler, antrenörler, dördüncü hakem ve uzatma
    tabelası, fotoğrafçılar ve flaşları, antrenman topları ve koniler, yazı tura parası, top, gölgeler, tribünün dolması ve ayağa
    kalkması, tribün heyecanı, canlı skor tabelası ve başkanın bakışı. Yazılı spiker/radyo satırı 2.8A'da kaldırıldı. */
 const MOTOR_Z=34,ADIM=1/60;
@@ -34,7 +34,6 @@ mac.players.forEach(p=>{const kd=MAC_KADRO[p.team],k=p.kayit||{},forma=p.rol==='
 const HAKEMLER=mac.refs.map((r,i)=>{const a=aktorKur({...KIT.hakem,num:0,skin:STIL.tenler[[1,4,2][i]],hair:['#8a8680','#3c2616','#241a12'][i],style:i?'short':'bald',mus:i===0,w:i?1:1.06},r);
   if(r.kind==='lin'){const bayrak=new THREE.Mesh(new THREE.PlaneGeometry(0.3,0.22),LAM({color:0xf2c11d,side:THREE.DoubleSide}));bayrak.position.set(0,-0.36,0.14);a.m.eR.add(bayrak);}
   AKTORLER.push(a);return a;});
-mac.topcular.forEach((t,i)=>AKTORLER.push(aktorKur({...KIT.topcu,num:0,skin:STIL.tenler[(i*3)%5],hair:['#241a12','#141212','#3c2616'][i%3],style:i%4?'short':'curly',h:STIL.topcuBoy.h,w:STIL.topcuBoy.w},t)));
 /* hakemin kartı: elinde küçük sarı/kırmızı kart */
 const KART=new THREE.Mesh(new THREE.PlaneGeometry(0.08,0.11),LAM({color:0xf2d21d,side:THREE.DoubleSide}));KART.position.set(0,-0.36,0.04);KART.visible=false;HAKEMLER[0].m.eL.add(KART);
 
@@ -129,7 +128,8 @@ const POZ_ETIKET=['esneme','tokalas','comel','foto','alkis','cember','yorgun','t
 const tepe=(t,s)=>Math.sin(Math.PI*clamp(t/s,0,1));
 function pozla(a,p,spd,dt){
   const run=Math.min(1,spd/7.5),hedefAmp=spd>0.3?0.18+run*0.8:0;a.amp+=(hedefAmp-a.amp)*Math.min(1,dt*8);
-  if(spd>0.3)a.ph+=dt*(4.8+spd*0.95);
+  /* adım: her adım bir yarım döngüdür; adım boyu hızla uzar (yürüyüşte ~0,8 m, depar ~2 m), böylece ayak yerde kaymaz (MM1) */
+  if(spd>0.3)a.ph+=dt*Math.PI*spd/((0.7+0.15*spd)*(p&&p.boy||1));
   const s=Math.sin(a.ph),c=Math.cos(a.ph),A=a.amp,r=Math.min(1,a.amp);
   const J={lean:0.22*run,dy:Math.abs(c)*0.05*run-0.03*run,hx:0,lL:-s*A,lR:s*A,kL:Math.max(0,Math.sin(a.ph+1.4))*A*1.5+0.05,kR:Math.max(0,Math.sin(a.ph+Math.PI+1.4))*A*1.5+0.05,
     aL:s*A*0.75,aR:-s*A*0.75,eL:-(0.25+r*1.0),eR:-(0.25+r*1.0),aLz:-0.08,aRz:0.08};
@@ -164,7 +164,7 @@ function pozla(a,p,spd,dt){
   if(ad==='atis'){const f=e.t/e.sure;kar(J,POSE.tac,f<0.4?f/0.4:0);kar(J,POSE.tacAt,f>=0.4?1-(f-0.4)/0.6:0);}
   /* top elde: kaleci tutuşu, duran topu taşıyan oyuncu, yedek topu tutan çocuk */
   const elde=b.tasiyan===p&&ad!=='tac';
-  kar(J,p.rol==='GK'?POSE.tutus:POSE.tasi,yumusak(a,'elde',elde||(p.tur==='topcu'&&p.top)?1:0,10,dt));
+  kar(J,p.rol==='GK'?POSE.tutus:POSE.tasi,yumusak(a,'elde',elde?1:0,10,dt));
   kar(J,POSE.sevinc,yumusak(a,'sevinc',p.sevinc?1:0,6,dt));
   kar(J,POSE.mars,yumusak(a,'mars',ph==='toren'&&p.tur!=='hakem'?1:0,3,dt));
   kar(J,POSE.dive,yumusak(a,'dive',ad==='ucus'?1:0,16,dt));
@@ -181,8 +181,10 @@ function pozla(a,p,spd,dt){
 }
 function uygula(a,J){for(const k of EKLEM)a.J[k]=J[k]||0;pose(a.m,a.J);}
 
-/* ---- bakış: başkanın gözü topu ve olan biteni yumuşakça izler (kritik sönümlü yay) ---- */
-const BAKIS=new THREE.Vector3(...STIL.kameralar.baskan.hedef),BAKIS_HIZ=new THREE.Vector3(),BAKIS_HEDEF=new THREE.Vector3();
+/* ---- bakış: başkanın gözü olan biteni yumuşakça izler (kritik sönümlü yay) ----
+   2.8O: yüksek locadan saha geniş görünür; baş topun her dokunuşunu izlemez. Odak noktası önce sahanın ortasına doğru sıkıştırılır
+   (takip.x/z payı, xSinir), sonra takip.sure saniyede yumuşar (atak bölgesi); yay bu yumuşak noktaya döner. */
+const BAKIS=new THREE.Vector3(...STIL.kameralar.baskan.hedef),BAKIS_HIZ=new THREE.Vector3(),BAKIS_HEDEF=new THREE.Vector3(),BAKIS_ATAK=new THREE.Vector3(...STIL.kameralar.baskan.hedef);
 const ONCESI_BAKIS={x:0,z:0,t:-99};
 function bakisOdagi(){
   const ph=mac.phase,b=mac.ball;
@@ -198,7 +200,7 @@ function bakisOdagi(){
     const fotolar=G.filter(g=>g[2]>4);
     if(fotolar.length){const g=fotolar[Math.floor(zaman/5)%fotolar.length];return BAKIS_HEDEF.set(g[0]/g[2],1,g[1]/g[2]-MOTOR_Z);}
     return n?BAKIS_HEDEF.set(x/n,1,z/n-MOTOR_Z):BAKIS_HEDEF.set(0,1,MZ-9-MOTOR_Z);}
-  if(ph==='giris'){if(mac.phaseT<5)return BAKIS_HEDEF.set(TUNEL.x,1,TUNEL.z+3);let n=0,x=0,z=0;for(const a of AKTORLER)if(a.m.root.visible&&a.kaynak.tur!=='topcu'){x+=a.x;z+=a.z;n++;}return BAKIS_HEDEF.set(n?x/n:0,1,n?z/n:0);}
+  if(ph==='giris'){if(mac.phaseT<5)return BAKIS_HEDEF.set(TUNEL.x,1,TUNEL.z+3);let n=0,x=0,z=0;for(const a of AKTORLER)if(a.m.root.visible){x+=a.x;z+=a.z;n++;}return BAKIS_HEDEF.set(n?x/n:0,1,n?z/n:0);}
   if(ph==='toren')return BAKIS_HEDEF.set(0,1,MZ-9-MOTOR_Z);
   if(ph==='yazitura')return BAKIS_HEDEF.set(0,1,0);
   /* devre arası: önce soyunma odasına yürüyen oyuncular, sonra kale önünde şut çalışan yedekler, en son tünel.
@@ -208,7 +210,14 @@ function bakisOdagi(){
   if(ph==='fulltime'){if(mac.phaseT<14)return ortala(mac.players.filter(p=>p.oyunda));if(mac.phaseT<30)return ortala(mac.teams[0].filter(p=>p.oyunda));return BAKIS_HEDEF.set(0,1,TUNEL.z+10);}
   /* kart gösterilirken hakeme (dördüncü hakem başkanın hemen önünde, ekranın altında zaten görünür) */
   const h=mac.refs[0];if(h.eylem&&h.eylem.ad==='kart')return BAKIS_HEDEF.set(h.x,1.3,h.z-MOTOR_Z);
-  const f=mac.focus();return BAKIS_HEDEF.set(f.x+b.vx*0.25,Math.min(f.y,3),f.z-MOTOR_Z+b.vz*0.25);
+  const f=mac.focus();return BAKIS_HEDEF.set(f.x,1,f.z-MOTOR_Z);
+}
+/* atak bölgesi: hedef sahanın ortasına sıkıştırılır ve zamanla yumuşatılır; duraklatmada (dt 0) yerinde kalır */
+function bakisAtak(dt){
+  const T=STIL.kameralar.baskan.takip,h=BAKIS_HEDEF;
+  const x=clamp(h.x*T.x,-T.xSinir,T.xSinir),z=h.z*T.z,a=1-Math.exp(-dt/T.sure);
+  BAKIS_ATAK.x+=(x-BAKIS_ATAK.x)*a;BAKIS_ATAK.z+=(z-BAKIS_ATAK.z)*a;BAKIS_ATAK.y=1;
+  return BAKIS_ATAK;
 }
 
 /* ---- "Maça geç": maç öncesini atla ---- */
@@ -243,7 +252,8 @@ function macKare(dt){
     if(a===DORDUNCU&&UZATMA.t>=0&&UZATMA.t<6){aciYumusak(a,Math.PI,dts,5);const J=pozla(a,p,0,dts);kar(J,POSE.tabela,yumusak(a,'tabela',1,5,dts));uygula(a,J);
       a.m.root.position.set(a.x,0,a.z);a.m.root.rotation.set(0,a.yaw,0);continue;}
     /* gövde yönü: motordaki bakış yönü (yon, x ekseninden açı) → modelin y dönüşü */
-    aciYumusak(a,Math.atan2(Math.cos(p.yon),Math.sin(p.yon)),dts,ad==='vurus'?22:14);
+    /* gövde yönü motorda sınırlı hızla döner; çizim yalnız iki adım arasını yumuşatır (çift yumuşatma yok, MM1) */
+    aciYumusak(a,Math.atan2(Math.cos(p.yon),Math.sin(p.yon)),dts,40);
     const J=pozla(a,p,spd,dts);
     if(p.tur==='kenar'){a.sevinc=Math.max(0,(a.sevinc||0)-dts);const sv=yumusak(a,'kenarSevinc',a.sevinc>0?1:0,6,dts);
       if(p.oturuyor){kar(J,POSE.otur,1-sv);}
@@ -254,7 +264,8 @@ function macKare(dt){
     uygula(a,J);
     /* kök: kafa sıçrayışı, uçuş yuvarlanması, düşüp yerde yatma */
     let y=0,rx=0,rz=0;
-    if(ad==='kafa')y=0.32*tepe(e.t,e.sure)*(p.oz?0.6+p.oz.kafa*0.6:1);
+    /* sıçrama yüksekliği motordan (p.yuk); kafa vuruşu pozu ayrıca */
+    y=p.yuk||0;
     const dw=a.w.dive||0;
     if(dw>0.01){const yan=e&&e.ad==='ucus'?e.yan:(a.sonYan||1);a.sonYan=yan;const lx=-Math.sin(a.yaw)*yan;y=dw*((e&&e.y)||0.5)*0.6;rz=-Math.sign(lx||1)*1.35*dw;}
     const hedefDus=ad==='dusus'?clamp(e.t/e.sure,0,1):ad==='yerde'?1:ad==='kalkis'?1-e.t/e.sure:0;a.dus+=(hedefDus-a.dus)*Math.min(1,dts*18);
@@ -271,13 +282,14 @@ function macKare(dt){
    topMesh.position.set(bx,TOP_R+by,bz);
    if(v>0.05){TOP.eksen.set(vz/v,0,-vx/v);TOP.dq.setFromAxisAngle(TOP.eksen,v*dts/TOP_R);TOP.q.premultiply(TOP.dq);topMesh.quaternion.copy(TOP.q);}
    const icerde=b.z<T.z-0.8;topMesh.visible=!icerde;}
-  /* dışarıdaki toplar ve çocukların elindeki yedek toplar */
+  /* dışarıda kalan toplar ve konilerin üstündeki yedek toplar */
   {let n=0;const E=EK_TOPLAR;
    for(const o of mac.disToplar){if(n>=80)break;EK_M.makeTranslation(o.x,TOP_R+o.y,o.z-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
    for(const o of mac.sen.toplar){if(n>=80)break;EK_M.makeTranslation(o.x,TOP_R+o.y,o.z-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
-   for(const k of mac.topcular){if(!k.top||b.tasiyan===k||n>=80||k.z<T.z-0.8)continue;const c=Math.cos(k.yon),s=Math.sin(k.yon);EK_M.makeTranslation(k.x+c*0.22,0.62,k.z+s*0.22-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
+   for(const k of mac.koniler){if(!k.top||n>=80)continue;EK_M.makeTranslation(k.x,0.2+TOP_R,k.z-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
    E.count=n;E.instanceMatrix.needsUpdate=true;
    let c=0;for(const k of mac.sen.koniler){if(c>=64)break;EK_M.makeTranslation(k.x,0.12,k.z-MOTOR_Z);KONILER.setMatrixAt(c++,EK_M);}
+   for(const k of mac.koniler){if(c>=64)break;EK_M.makeTranslation(k.x,0.12,k.z-MOTOR_Z);KONILER.setMatrixAt(c++,EK_M);}
    KONILER.count=c;KONILER.instanceMatrix.needsUpdate=true;}
   /* flaşlar: bir an parlar, söner */
   for(const F of FLASLAR){F.t+=dts;F.f.visible=F.t<0.14;if(F.f.visible)F.f.material.opacity=1-F.t/0.14;}
@@ -296,6 +308,6 @@ function macKare(dt){
   tabelaGuncelle();
   golgeleriGuncelle();
   /* bakış yayı */
-  bakisOdagi();const k=STIL.kameralar.baskan.yay,d=Math.min(dt,0.05);
-  BAKIS_HIZ.addScaledVector(BAKIS_HEDEF.clone().sub(BAKIS),k*k*d).multiplyScalar(Math.max(0,1-2*k*d));BAKIS.addScaledVector(BAKIS_HIZ,d);
+  bakisOdagi();const A=bakisAtak(Math.min(dt,0.05)),k=STIL.kameralar.baskan.yay,d=Math.min(dt,0.05);
+  BAKIS_HIZ.addScaledVector(A.clone().sub(BAKIS),k*k*d).multiplyScalar(Math.max(0,1-2*k*d));BAKIS.addScaledVector(BAKIS_HIZ,d);
 }

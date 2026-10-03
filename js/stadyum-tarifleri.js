@@ -18,17 +18,22 @@
    tabela: tek fiziksel tabela. konum [x, z] metre, yukseklik: direklerin boyu, genislik: tabelanın eni. Başkanın yerine döner.
    zemin: 0 (tarla) – 1 (halı gibi). pist: yok | toprak | tartan.
    projektor.tip: direk = köşelerde direk, cati = çatı kenarında lamba sırası.
-   tunelX: oyuncuların sahaya çıktığı tünelin yeri (ana tribün önünde, orta çizgiden metre; verilmezse 0 = başkanın altı). TEST değerleri. */
+   tunelX: oyuncuların sahaya çıktığı tünelin yeri (ana tribün önünde, orta çizgiden metre; verilmezse 0 = başkanın altı).
+   kulubeX: yedek kulübelerinin orta çizgiden uzaklığı (metre; ev sahibi solda).
+   loca (2.8O, kullanıcı kararı 2026-10-02): başkanın maçı izlediği yer. Ana tribünün arkasındaki kulüp binasında, odanın balkonunun bir kat
+     üstündedir (balkon döşemesinden kat metre yukarıda, tribünün arka duvarından geri metre geride); genislik/derinlik locanın ölçüsü.
+     Yüksek ve geniş bakış: yedek kulübeleri ve sahanın büyük kısmı başını çevirmeden görünür. Başkan koltuğu ve kamera buradan hesaplanır;
+     tribündeki protokol bölümü diğer yöneticilerindir. TEST değerleri. */
 const STADYUMLAR={
   kulup:{
     ad:'Demirkapı İlçe Stadı',lig:'3. Lig',
     pist:'toprak',zemin:0.22,cevre:'apartman',
     projektor:{tip:'direk',konumlar:[[-58,-40],[58,-40],[-58,40],[58,40]],yukseklik:17,guc:0.75},
     reklam:0.32,telOrgu:['karsi','kale1','kale2'],
-    tabela:{tip:'elle',konum:[-20,49],yukseklik:6,genislik:11},
-    bakim:{yer:'karsi',u:0.3},tunelX:-19,
+    tabela:{tip:'elle',konum:[-20,49],yukseklik:6.5,genislik:13},
+    bakim:{yer:'karsi',u:0.3},tunelX:-19,kulubeX:7,
     tribunler:[
-      {yer:'ana',tip:'oturma',uzunluk:40,sira:9,koltuk:'#b8b2a4',taraftar:'karisik',baskanSira:5,protokol:1.5},
+      {yer:'ana',tip:'oturma',uzunluk:40,sira:9,koltuk:'#b8b2a4',taraftar:'karisik',baskanSira:5,protokol:1.5,loca:{kat:2.2,geri:6.2,genislik:9,derinlik:4.2}},
       {yer:'karsi',tip:'ayakta',uzunluk:60,sira:5,taraftar:'ev',mesale:true},
       {yer:'kale1',tip:'set',uzunluk:34,sira:4,taraftar:'karisik',bolumler:[{from:-17,to:17,taraftar:'deplasman'}]},
       {yer:'kale2',tip:'set',uzunluk:28,sira:3,taraftar:'karisik'}
@@ -36,13 +41,8 @@ const STADYUMLAR={
   }
 };
 
-/* Maç günü: tariften ayrı durur. doluluk ve deplasman 0–1 arası.
-   Şimdilik deneme için adres satırından okunur (örnek: index.html?doluluk=0.8&zemin=0.5). Eski ?stat= değeri yok sayılır (tek stat).
-   İleride bu değerleri oyun ekonomisi ve maçın önemi belirleyecek. */
+/* Maç günü: tariften ayrı durur. doluluk ve deplasman 0–1 arası. 2.8O (2026-10-02): geliştirici panelindeki doluluk/zemin ayarı ve
+   ?doluluk/?zemin/?deplasman adres parametreleri kaldırıldı; değerler sabittir. İleride oyun ekonomisi ve maçın önemi belirleyecek. */
 const VARSAYILAN_DOLULUK=0.3;
-const MAC_GUNU=(()=>{
-  let q=null;try{q=new URLSearchParams(location.search);}catch(e){}
-  const sayi=(ad,varsayilan)=>{const v=q&&parseFloat(q.get(ad));return isFinite(v)?clamp(v,0,1):varsayilan;};
-  return{stat:'kulup',doluluk:sayi('doluluk',VARSAYILAN_DOLULUK),deplasman:sayi('deplasman',0.08),zemin:sayi('zemin',STADYUMLAR.kulup.zemin)};
-})();
+const MAC_GUNU={stat:'kulup',doluluk:VARSAYILAN_DOLULUK,deplasman:0.08,zemin:STADYUMLAR.kulup.zemin};
 const STAT={...STADYUMLAR[MAC_GUNU.stat],zemin:MAC_GUNU.zemin};

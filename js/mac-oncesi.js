@@ -48,9 +48,8 @@ Object.assign(Match.prototype,{
     const iceri=p=>{p.x=T.x+((n%3)-1)*0.5;p.z=T.z-2.5-Math.floor(n/3)*0.6;n++;p.vx=p.vz=0;p.tx=p.x;p.tz=p.z;p.eylem=null;p.bak=null;
       p.yonHedef=null;p.yon=Math.PI/2;p.hizOran=0.4;p.oturuyor=false;p.poz=null;p.sg={};};
     for(const p of this.players)iceri(p);for(const Y of this.yedekler)for(const p of Y)iceri(p);
-    for(const p of this.refs)iceri(p);for(const p of this.kenar)iceri(p);for(const k of this.topcular)iceri(k);
+    for(const p of this.refs)iceri(p);for(const p of this.kenar)iceri(p);
     const sn=this.sen={t:0,bitti:false,toplar:[],koniler:[],olan:{},ilgiler:[],takim:[{},{}],kaleciler:[{},{}]};
-    this.topcular.map(k=>k).sort(()=>r()-0.5).forEach((k,i,A)=>{k.cikisT=S.topcular[0]+(S.topcular[1]-S.topcular[0])*i/A.length;});
     /* takımlar: sahadakiler (kaleci hariç 10) ve yedekler (kaleci hariç 4) birlikte ısınır */
     for(let t=0;t<2;t++){
       const s=t?1:-1,taban=ara(S.takimlar.cikis[t]),Y=this.yedekler[t];
@@ -420,7 +419,6 @@ Object.assign(Match.prototype,{
     for(const p of this.players){p.poz=null;p.eylem=null;}
     for(const t of[0,1])for(const p of this.yedekler[t]){p.poz=null;p.eylem=null;if(!p.cikti&&!p.oturuyor)this.otur(p);}
     for(const p of this.kenar){p.poz=null;p.eylem=null;if(p.kind==='kaleciAnt')this.otur(p);else{p.x=p.tx=p.ev.x;p.z=p.tz=p.ev.z;p.vx=p.vz=0;}}
-    for(const k of this.topcular){k.x=k.tx=k.ev.x;k.z=k.tz=k.ev.z;k.cikisT=null;}
     this.refs.forEach(r=>{r.poz=null;r.eylem=null;});
     this.refs[1].x=20;this.refs[1].z=PW+1.3;this.refs[2].x=-20;this.refs[2].z=-1.3;
     this.ball.tasiyan=null;

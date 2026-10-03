@@ -13,7 +13,7 @@
      (o an koltukta oturanın değil) katkısına göre EKIP_GOREVLERI[gorev].uygula çalışır. Kişi koltuktan ayrıldıysa iş başkana döner (geriDon).
      Sonuç 'dur:true' taşıyorsa ilerleme o anda durur (js/ajanda.js).
      EKIP_GOREVLERI[gorev] = {denetle(k,veri) → hatalar, bekleme(k,is) → beklenen haberin metni, uygula(k,is) → sonuç, geriDon(k,is) → sonuç}
-   Metinler TEST verisidir. */
+   Konuya özgü olay anahtarları, ekip görevleri ve kategoriler içerik dosyalarındadır (2.8L'den beri oyunda içerik yoktur). */
 const MESELE_DURUMLARI=['kararBekliyor','ekipte','haberBekliyor','kapandi'];
 const MESELE_DURUM_ADI={kararBekliyor:'Karar sende',ekipte:'Ekipte',haberBekliyor:'Haber bekleniyor',kapandi:'Kapandı'};
 const EKIP_GOREVLERI={};
@@ -29,9 +29,11 @@ const MESELE_OLAYLARI={
   odeme:(k,p)=>`${p.aciklama}: ${paraYazi(p.tutar)} ${p.tutar<0?'ödendi':'kasaya girdi'}.`,
   kapandi:()=>'Konu kapandı; bekleyen adım kalmadı.',
   sureUzadi:(k,p)=>`Başka bir işteydin; “${p.baslik}” için son cevap saati ${saatYazi(p.dakika)} oldu.`,
-  ekipAyrildi:(k,p)=>`${kisiAdi(k,p.kisiId)} görevden ayrıldığı için iş sana döndü.`,
-  eskiKayit:(k,p)=>p.metin
+  ekipAyrildi:(k,p)=>`${kisiAdi(k,p.kisiId)} görevden ayrıldığı için iş sana döndü.`
 };
+/* dosyada konunun kategorisi: mesele türü → [ad, simge harfi]; içerik dosyaları ekler. Tanımsız tür 'Kulüp' sayılır */
+const MESELE_KATEGORILERI={};
+const meseleKategorisi=m=>MESELE_KATEGORILERI[m.tur]||['Kulüp','K'];
 
 /* yeni mesele açar; kimliğini döndürür. Durum bağlı işlerden değerlendirilene kadar verilen değerdir */
 function meseleAc(k,{tur,baslik,sorumluId,kisiler=[],durum='kararBekliyor'}){
@@ -98,22 +100,6 @@ function meseleListesi(k){
   const L=Object.values(k.meseleler||{}),no=m=>Number(m.id.slice(7));
   return L.filter(m=>m.durum!=='kapandi').sort((a,b)=>no(a)-no(b))
     .concat(L.filter(m=>m.durum==='kapandi').sort((a,b)=>anDakika(b.kapanis.tarih,b.kapanis.dakika)-anDakika(a.kapanis.tarih,a.kapanis.dakika)||no(b)-no(a)));
-}
-
-/* oyuna dönüş özeti (kariyeri değiştirmez, yeni olay tetiklemez): son yapılan iş/karar, açık meselelerde beklenen ilk adım,
-   yaklaşan ilk zorunlu iş ya da son cevap anı */
-function donusOzeti(k){
-  let sonKarar=null;
-  for(let i=k.gecmis.length-1;i>=0&&!sonKarar;i--){
-    const g=k.gecmis[i],r=g.sonuc;
-    if(g.tur==='is'&&g.isTuru==='ajanda'&&r&&r.durum==='yapildi')sonKarar={baslik:r.baslik,secimMetni:r.secimMetni||null,tarih:r.gun,dakika:r.saat};
-  }
-  const beklenen=meseleListesi(k).filter(m=>m.durum!=='kapandi').map(m=>{
-    const o=meseleOzeti(k,m.id),a=o.adimlar[0];
-    return{meseleId:m.id,baslik:m.baslik,durum:m.durum,durumAdi:o.durumAdi,sorumlu:o.sorumlu?o.sorumlu.ad:null,metin:a.metin,tarih:a.tarih,dakika:a.dakika,saatsiz:a.saatsiz};
-  });
-  const z=bekleyenIsler(k).find(x=>x.tur==='ajanda'&&(x.veri.zorunluluk==='zorunlu'||(x.veri.zorunluluk==='ertelenebilir'&&!ertelemeTarihi(x))));
-  return{sonKarar,beklenen,yaklasan:z?{isId:z.id,baslik:z.veri.baslik,tarih:z.tarih,dakika:z.dakika,saatsiz:!!z.veri.saatsiz}:null};
 }
 
 /* ---- ekip işi: devredilen iş takvimde bekler, zamanı gelince görevlendirilen kişiye göre sonuçlanır ---- */

@@ -81,15 +81,16 @@ function secenekler(m,p){
   const gorur=(x,z,uzun)=>{const a=Math.abs(aciFark(Math.atan2(z-p.z,x-p.x),p.yon));if(a<1.9)return true;return m.rast()<oz.gorus*(uzun?0.5:0.95)*(1-(a-1.9)/2.6);};
   /* şut */
   /* şut: iyi pozisyonda istekle; uzaktan ancak iyi şutçu ve önü boşsa. Atış hattındaki savunmacı bloklayabilir */
-  if(u>PL-38){let x=xG(u,w,'ayak',baski*0.6);
+  /* dolaylı serbest vuruşu kullanan doğrudan kaleye vurmaz (başkası dokunmadan gol olmaz) */
+  if(u>PL-38&&!(b.endirekt&&b.endirekt.p===p)){let x=xG(u,w,'ayak',baski*0.4);
     const gx=d*PL,Lk=hyp(gx-b.x,MZ-b.z);let acik=1;
     for(const o of m.teams[1-p.team]){if(!o.oyunda||o.rol==='GK')continue;const on=((o.x-b.x)*(gx-b.x)+(o.z-b.z)*(MZ-b.z))/Lk;if(on<0.5||on>Math.min(14,Lk-1))continue;
-      const yan=segD(o.x,o.z,b.x,b.z,gx,MZ);if(yan<1.3)acik*=1-0.75*(1-yan/1.3);}
+      const yan=segD(o.x,o.z,b.x,b.z,gx,MZ);if(yan<1.3)acik*=1-0.6*(1-yan/1.3);}
     x*=acik;
     /* şut isteği iyi pozisyonda tam, uzaklaştıkça azalır: 18 m'ye kadar tam, 30 m'de yalnız şutun kendi değeri */
     const istek=1+(MOTOR_AYAR.sutIstegi-1)*clamp((30-Lk)/12,0,1);
-    if(x>=0.02)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*istek-(1-x)*0.4,xg:x});
-    else if(x>=0.01&&oz.sut>0.6&&baski<0.5)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*(0.5+0.5*istek)-(1-x)*0.4,xg:x});}
+    if(x>=0.017)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*istek-(1-x)*0.4,xg:x});
+    else if(x>=0.008&&oz.sut>0.5&&baski<0.6)S.push({tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*(0.5+0.5*istek)-(1-x)*0.4,xg:x});}
   /* paslar */
   for(const q of m.teams[p.team]){
     if(q===p||!q.oyunda)continue;const qu=q.x*d;

@@ -5,7 +5,7 @@
      Cevaba basmak seçer; "Onayla" kararı verir (aynı karar telefonda ve dosyada bir kez uygulanır: ajandaIsiYap işi kapatır).
      Bilinen bedel (tutar, tarih, taahhüt, belirsizlik) seçenek açıklamasında, cevapsız kalırsa olacak olan kartın altında yazar.
      İkiden fazla seçenek yalnız eski kayıtların kararlarında görülür (js/uyum-icerik2.js); aynı kart onları sırayla dizer.
-   telefonCiz(k, T, s)      T: {ekran:'ana'|'mesajlar'|'konusma'|'skor', kisi, skorAc}. s: {macta, mac, donus (html), secimler, onay, kapali, kasa}
+   telefonCiz(k, T, s)      T: {ekran:'ana'|'mesajlar'|'konusma'|'skor', kisi, skorAc}. s: {macta, mac, secimler, onay, kapali, kasa}
      Ana ekran: saat ve iki uygulama (Mesajlar, Canlı Skor). Mesajlar: kişi listesi → tek konuşma. Canlı Skor: günün maçları → ayrıntı.
      Maçta görünüm aynıdır; cevap verilmez (maç içi kariyer cevabı Aşama 3'te). Diğer maçların verisi 3.8'e kadar bağlı değildir. */
 const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
@@ -149,7 +149,7 @@ function telefonCiz(k,T,s={}){
   let ust='<div class="tel-ust"><b>'+yazT(saat)+'</b><span>'+(k?yazT(telGunAdi(k.tarih)+' · '+gunAyYazi(k.tarih)):'')+'</span></div>',ic='';
   if(T.ekran==='ana'||!T.ekran){
     const rozet=cevap?'<i class="tel-rozet tel-acil">'+cevap+'</i>':okunmamis?'<i class="tel-rozet">'+okunmamis+'</i>':'';
-    ic='<div class="tel-ana">'+(s.donus||'')+'<div class="tel-uyglar">'+
+    ic='<div class="tel-ana"><div class="tel-uyglar">'+
       '<button type="button" class="tel-uyg tel-uygMesaj" data-eylem="telUyg" data-uyg="mesajlar" aria-label="Mesajlar'+(cevap?', cevap bekleyen '+cevap:'')+'"><span class="tel-simge">'+TEL_SIMGE.mesajlar+rozet+'</span>Mesajlar</button>'+
       '<button type="button" class="tel-uyg tel-uygSkor" data-eylem="telUyg" data-uyg="skor"><span class="tel-simge">'+TEL_SIMGE.skor+'</span>Canlı Skor</button></div></div>';
   }else if(T.ekran==='mesajlar'){

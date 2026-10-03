@@ -9,7 +9,6 @@ const MAC_SENARYOSU={
   kalan:[[0,60],[20,45],[55,35],[190,15],[215,10],[262,3],[330,0]],
   /* tribünün dolması: [senaryo saniyesi, gelenlerin oranı]. Ev taraftarı erken gelir, deplasman otobüsle topluca, locadakiler geç */
   tribun:[[0,0.18],[50,0.3],[140,0.58],[215,0.82],[262,0.95],[300,1]],
-  topcular:[3,14],                    // top toplayıcıların sahaya çıktığı aralık
   kaleciler:[[15,19],[21,27]],        // ev sahibi ve misafir kalecileri, kaleci antrenörleriyle
   hakemler:{cikis:[36,42],iceri:[150,158]},
   takimlar:{cikis:[[46,50],[52,58]],iceri:[186,206]},   // her oyuncu kendi anında içeri girer

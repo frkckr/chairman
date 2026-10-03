@@ -9,8 +9,10 @@
      kosullar: devralınan dünya gerçekleri; başlangıçta bir kez kurulur (js/baslangic.js). olaylar: js/olay.js.
    Sürüm 4 (yol haritası 2.6, 2.8): sozler (js/soz.js), haberler (gazete ve teşekkür kayıtları) ve sonrakiNo.soz eklendi;
      kulüpte isteğe bağlı sorumluluklar (kalıcı yetki devri, js/yonetim.js). İçerik sürümü 2: tavsiye, hoca, basın ve destek paketleri.
-   Sürüm 5 (yol haritası 2.7): gozlem (süren antrenman gözlemi: null ya da {tarih, bas, bitis}; js/gozlem.js). */
-const KARIYER_SURUM=5;
+   Sürüm 5 (yol haritası 2.7): gozlem (süren antrenman gözlemi: null ya da {tarih, bas, bitis}; js/gozlem.js).
+   Sürüm 6 (yol haritası 2.8L, 2026-10-02): alanlar sürüm 5 ile aynıdır; oyunun bütün içeriği kaldırıldığı için 1–5 sürümlü kayıtlar
+     dönüştürülmez, açılırken nedeni söylenerek reddedilir (js/kayit.js). İçerik sürümü 4 boş içeriktir. */
+const KARIYER_SURUM=6;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */

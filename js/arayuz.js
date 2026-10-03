@@ -20,22 +20,18 @@ btnBino.onclick=()=>{if(!bino&&!BASKAN.durbunHazir){press(btnBino,true);baskanDu
 const btnDuraklat=$('btnDuraklat'),duraklatGosterge=$('duraklatildi');
 function duraklatDegistir(){if(duraklatmaVar('elle'))duraklatmaKaldir('elle');else duraklatmaEkle('elle');}
 btnDuraklat.onclick=duraklatDegistir;
-duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';btnBino.disabled=a;if(duraklatGosterge)duraklatGosterge.hidden=!a;});
+/* geliştirici panelindeki Durdur/Devam aynı ortak duraklatmayı kullanır (2.8O) */
+const btnDurdur=$('btnDurdur');btnDurdur.onclick=duraklatDegistir;
+duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';btnBino.disabled=a;if(duraklatGosterge)duraklatGosterge.hidden=!a;});
 /* maça geç: maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) atlar; santrada düğme kaybolur */
 const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();btnMacaGec.hidden=true;};
 /* boşluk ya da P duraklatır (sayfa kaymaz); odaktaki düğmede boşluk düğmeyi çalıştırır. Oda açıkken kısayolu oda ekranı işler (js/ekran-oda.js) */
 addEventListener('keydown',e=>{if((e.code!=='Space'&&e.code!=='KeyP')||e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;
   if(t==='INPUT'||t==='TEXTAREA'||(t==='BUTTON'&&e.code==='Space'))return;if(ON_EKRAN.sayfa==='oda')return;e.preventDefault();duraklatDegistir();});
-/* maç hızı ve baştan başlatma */
+/* geliştirici paneli (2.8O, kullanıcı kararı 2026-10-02): yalnız maç hızı ve durdurma. Doluluk, zemin ve baştan başlatma kaldırıldı;
+   doluluk ve zemin stat tarifinden gelir (js/stadyum-tarifleri.js) */
 {const ayarlaHiz=v=>{MAC_HIZ.deger=v;for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))press(b,+b.dataset.hiz===v);};
- for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))b.onclick=()=>ayarlaHiz(+b.dataset.hiz);ayarlaHiz(MAC_HIZ.deger);
- $('btnBastan').onclick=()=>location.reload();}
-/* deneme paneli: doluluk ve zemin adres satırına yazılır, sayfa yeni ayarla yeniden açılır (tek kulüp stadı; stat seçimi yok, 2.8D) */
-{const ayarla=(k,v)=>{const q=new URLSearchParams(location.search);q.set(k,v);q.delete('stat');location.search=q.toString();};
- const yuzde=v=>Math.round(v*100)+'%';
- for(const [id,deger] of[['doluluk',MAC_GUNU.doluluk],['zemin',MAC_GUNU.zemin]]){const el=$(id),out=$(id+'Deger');el.value=Math.round(deger*100);out.textContent=yuzde(deger);
-   el.oninput=()=>{out.textContent=el.value+'%';};el.onchange=()=>ayarla(id,(el.value/100).toFixed(2));}
- $('statBilgi').textContent=STAT.ad+' · '+STAT.lig+' · kapasite '+STAT_KAPASITE.toLocaleString('tr-TR')+' · bu akşam '+SEYIRCI_SAYISI.toLocaleString('tr-TR')+' seyirci';}
+ for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))b.onclick=()=>ayarlaHiz(+b.dataset.hiz);ayarlaHiz(MAC_HIZ.deger);}
 let last=0,time=0,onEkranCizildi=false;
 function frame(now){
   /* başkan odası: stat yerine oda sahnesi çizilir; maç zamanı ilerlemez (js/oda.js). Odadan çıkınca stat yeniden çizilir */

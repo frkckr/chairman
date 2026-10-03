@@ -14,13 +14,8 @@
 const ANTRENMAN_SAATI={bas:900,bit:1020};  // hafta içi 15:00–17:00 (TEST değeri)
 const KISA_IS=15;                          // gözlemin içine sığan işin en uzun süresi, dakika (TEST değeri)
 const GOZLEM_NOT_ESIGI=30;                 // bundan kısa gözlem not bırakmaz (TEST değeri)
-const GOZLEM_NOTLARI=['gozlem.not.pas','gozlem.not.sut','gozlem.not.kosu','gozlem.not.genc'];
-Object.assign(MESELE_OLAYLARI,{
-  'gozlem.not.pas':()=>'Pas çemberi tempoluydu; ortadaki oyuncu sık değişti.',
-  'gozlem.not.sut':()=>'Şükrü Hoca şut çalışmasını uzattı; forvetler kaleyi sık buldu.',
-  'gozlem.not.kosu':()=>'Isınma koşusu uzun tutuldu; takım ağır başladı, sonra açıldı.',
-  'gozlem.not.genc':()=>'Yedekler as takımla birlikte çalıştı; çalışma sakindi.'
-});
+/* gözlem notlarının olay anahtarları (MESELE_OLAYLARI); içerik dosyaları ekler. Boşsa gözlem not bırakmaz (2.8L) */
+const GOZLEM_NOTLARI=[];
 
 const gunNo=tarih=>{const [y,a,g]=tarih.split('-').map(Number);return Date.UTC(y,a-1,g)/86400000;};
 /* o günün antrenman saatleri ya da null (hafta sonu ve maç günü antrenman yok) */
@@ -65,7 +60,7 @@ function gozlemBitir(k){
   if(!g)return null;
   const ayniGun=g.tarih===k.tarih,bit=ayniGun?Math.min(k.gunIciDakika,g.bitis):g.bitis,izlenen=Math.max(0,bit-g.bas);
   const kayit={tur:'gozlem',tarih:g.tarih,dakika:bit,bas:g.bas,bitis:bit,izlenen};
-  if(izlenen>=GOZLEM_NOT_ESIGI)kayit.not=GOZLEM_NOTLARI[gunNo(g.tarih)%GOZLEM_NOTLARI.length];
+  if(izlenen>=GOZLEM_NOT_ESIGI&&GOZLEM_NOTLARI.length)kayit.not=GOZLEM_NOTLARI[gunNo(g.tarih)%GOZLEM_NOTLARI.length];
   k.gecmis.push(kayit);
   k.gozlem=null;
   return kayit.not?MESELE_OLAYLARI[kayit.not](k,{}):null;

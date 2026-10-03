@@ -7,7 +7,7 @@
    Bütün değişiklikler kayıt oturumu (js/kayit.js) üzerinden yapılır: komut kariyerin kopyasında uygulanır, kabul edilirse kaydedilir.
    Kayıt: her tamamlanan komuttan sonra 'oyun-1' yuvasına. Depo: masaüstü → tarayıcı → yalnız bellek. Tek istisna "Stada git": maç sonucu
    kariyere bağlı olmadığı için maç sınırında kayıt yapılmaz; sayfa yenilenirse son karardan devam edilir ve "Stada git" yeniden açılır.
-   Kayıttan devam edilince "Kaldığın yer" özeti gösterilir. Lig bilgisi js/lig.js'teki sabit veridir.
+   Lig bilgisi js/lig.js'teki sabit veridir.
    Depo, açılış, yeni kariyer ve komut yolu js/oyun-oturumu.js'tedir. Başlangıç ve paket adları oyuncuya gösterilmez. */
 const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve depoya bu adla da bakar
 {
@@ -27,12 +27,12 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
   const ROL={baskan:'başkan',teknikDirektor:'teknik direktör',yonetici:'yönetici',eskiBaskan:'eski başkan'};
 
   /* ---- oturum: depo, açılış ve komut yolu js/oyun-oturumu.js'tedir; oda ekranıyla ortaktır ---- */
-  let k=null,secili=null,seciliMesele=null,onay=null,mesaj='',yeniOnay=false,secimler={},donus=false;
+  let k=null,secili=null,seciliMesele=null,onay=null,mesaj='',yeniOnay=false,secimler={};
   function komut(f,kaydetme){const s=oyunKomut(f,kaydetme);k=OYUN.kariyer;return s;}
   const kayitHata=oyunKayitHata,kayitYazi=oyunKayitYazi;
-  function sifirla(){k=OYUN.kariyer;secili=null;seciliMesele=null;onay=null;donus=false;secimler={};}
+  function sifirla(){k=OYUN.kariyer;secili=null;seciliMesele=null;onay=null;secimler={};}
   function yeniKariyer(){mesaj=oyunYeniKariyer();sifirla();}
-  function baslat(){oyunBaslat();k=OYUN.kariyer;donus=OYUN.donus;mesaj=OYUN.mesaj;}
+  function baslat(){oyunBaslat();k=OYUN.kariyer;mesaj=OYUN.mesaj;}
   function bozuguSaklaVeBasla(){mesaj=oyunBozuguSakla();sifirla();}
 
   /* ---- yardımcılar ---- */
@@ -54,21 +54,12 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
       const bitti=r.durum!=='bekliyor'?' aj-bitti':'';
       if(r.tur!=='ajanda')return '<li class="aj-satir aj-takvim'+bitti+'"><span class="aj-saat">'+saatYazi(r.saat)+'</span><span class="aj-ad">'+yaz(r.baslik)+'</span>'+
         (r.tutar!==undefined?'<span class="aj-tutar'+(r.tutar<0?' aj-eksi':'')+'">'+tlYazi(r.tutar)+'</span>':'<span></span>')+'</li>';
-      return '<li><button type="button" class="aj-satir'+bitti+'" data-is="'+r.id+'" data-durum="'+r.durum+'" aria-pressed="'+(r.id===secili&&!seciliMesele&&!donus&&r.durum!=='ertelendi'?'true':'false')+'">'+
+      return '<li><button type="button" class="aj-satir'+bitti+'" data-is="'+r.id+'" data-durum="'+r.durum+'" aria-pressed="'+(r.id===secili&&!seciliMesele&&r.durum!=='ertelendi'?'true':'false')+'">'+
         '<span class="aj-saat">'+aralik(r)+'</span><span class="aj-ad">'+yaz(r.baslik)+'</span><span class="aj-sag">'+(durum||etiket)+'</span></button></li>';
     }).join('');
     return panel('Bugün',yaz(tarihKisa(k.tarih)),'<ul class="aj-liste">'+(li||'<li class="aj-bos">Bugün için iş yok.</li>')+'</ul>','aj-p-bugun');
   }
-  /* oyuna dönüş: son karar, beklenen haber, yaklaşan iş (donusOzeti kariyeri değiştirmez) */
-  function donusAyrintisi(){
-    const o=donusOzeti(k);
-    let ic='<p class="aj-is-baslik"><b>Kaldığın yer</b> <span class="aj-not">'+yaz(tarihYazi(k.tarih)+' '+saatYazi(k.gunIciDakika))+'</span></p>';
-    ic+=o.sonKarar?'<p class="aj-bilgi"><b>Son yaptığın</b> '+yaz(o.sonKarar.baslik)+(o.sonKarar.secimMetni?' — '+yaz(o.sonKarar.secimMetni):'')+'</p>':'<p class="aj-not">Henüz bir iş yapmadın.</p>';
-    for(const b of o.beklenen)ic+='<p class="aj-bilgi"><b>'+yaz(b.durumAdi)+'</b> '+yaz(b.metin)+' <span class="aj-not">('+yaz(anYazi(b.tarih,b.dakika,b.saatsiz))+')</span></p>';
-    if(o.yaklasan)ic+='<p class="aj-bilgi"><b>Yaklaşan</b> '+yaz(o.yaklasan.baslik)+' <span class="aj-not">('+yaz(anYazi(o.yaklasan.tarih,o.yaklasan.dakika,o.yaklasan.saatsiz))+')</span></p>';
-    ic+='<div class="aj-dugmeler"><button type="button" class="aj-birincil" data-eylem="devam">Devam ▸</button></div>';
-    return panel('Ayrıntı','','<div class="aj-ayrinti">'+ic+'</div>','aj-p-ayrinti');
-  }
+
   /* meselenin dosyası: yürüten, bekleyen, şimdi yapılabilecek, geçmiş */
   function meseleAyrintisi(){
     const o=meseleOzeti(k,seciliMesele),m=o.mesele;
@@ -84,7 +75,6 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
     return panel('Mesele','','<div class="aj-ayrinti">'+ic+'</div>','aj-p-ayrinti');
   }
   function ayrintiPaneli(satirlar){
-    if(donus)return donusAyrintisi();
     if(seciliMesele)return meseleAyrintisi();
     const r=satirlar.find(x=>x.id===secili&&x.durum!=='ertelendi');
     if(!r)return panel('Ayrıntı','','<div class="aj-ayrinti"><p class="aj-not">Bir iş seç.</p></div>','aj-p-ayrinti');
@@ -144,7 +134,7 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
   function mesellerPaneli(){
     const L=meseleListesi(k);
     const li=L.map(m=>{const o=meseleOzeti(k,m.id);
-      return '<li><button type="button" class="aj-satir aj-mesele'+(m.durum==='kapandi'?' aj-bitti':'')+'" data-mesele="'+m.id+'" aria-pressed="'+(m.id===seciliMesele&&!donus?'true':'false')+'">'+
+      return '<li><button type="button" class="aj-satir aj-mesele'+(m.durum==='kapandi'?' aj-bitti':'')+'" data-mesele="'+m.id+'" aria-pressed="'+(m.id===seciliMesele?'true':'false')+'">'+
         '<span class="aj-saat aj-m-'+m.durum+'">'+yaz(o.durumAdi)+'</span><span class="aj-ad">'+yaz(m.baslik)+'</span><span class="aj-sag">'+(o.yeni>0?'<span class="aj-yeni">Yeni</span>':'')+'</span></button></li>';}).join('');
     return panel('Meseleler',L.filter(m=>m.durum!=='kapandi').length+' açık','<ul class="aj-liste">'+(li||'<li class="aj-bos">Henüz bir mesele yok.</li>')+'</ul>','aj-p-olay');
   }
@@ -241,8 +231,6 @@ const AJANDA_EKRANI=OYUN;                   // eski ad: denemeler kariyere ve de
   A.addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b||b.disabled)return;
     const id=b.dataset.is,ey=b.dataset.eylem,ms=b.dataset.mesele;
-    if(ey==='devam'){donus=false;ciz('.aj-ana');return;}
-    donus=false;
     if(!ey&&ms){
       seciliMesele=ms;secili=null;onay=null;
       try{if(meseleOzeti(k,ms).yeni>0)komut(x=>meseleGoruldu(x,ms));}catch(x){hataGoster(x);return;}

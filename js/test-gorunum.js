@@ -16,10 +16,8 @@ function testKisi(k,kisiId){
   return p&&p.katki?Object.keys(TEST_KATKI_ADLARI).map(a=>({alan:TEST_KATKI_ADLARI[a],seviye:TEST_SEVIYE_ADLARI[p.katki[a]||'orta']})):null;
 }
 function testKosullar(k){
-  const L=[{ad:'Başlangıç',deger:k.icerik.baslangic||'eski sabit hafta'},{ad:'İçerik sürümü',deger:String(k.icerik.surum)},{ad:'Dünya tohumu',deger:String(k.dunyaTohumu)}];
-  const K=k.kosullar||{};
-  if(K.sponsor)L.push({ad:'Sponsorun gerçek durumu',deger:K.sponsor.durum});
-  if(K.hoca)L.push({ad:'Hocanın talebi',deger:K.hoca.talep});
+  const L=[{ad:'Başlangıç',deger:k.icerik.baslangic||'—'},{ad:'İçerik sürümü',deger:String(k.icerik.surum)},{ad:'Dünya tohumu',deger:String(k.dunyaTohumu)}];
+  for(const [ad,deger] of Object.entries(k.kosullar||{}))L.push({ad:'Koşul: '+ad,deger:typeof deger==='object'?JSON.stringify(deger):String(deger)});
   for(const c of Object.values(k.kulupler))if(c.sorumluluklar)for(const [alan,s] of Object.entries(c.sorumluluklar))L.push({ad:'Kalıcı sorumluluk: '+alan,deger:(k.kisiler[s.kisiId]||{}).ad||s.kisiId});
   for(const o of Object.values(k.olaylar||{}))L.push({ad:`Olay ${o.id} (${o.paket})`,deger:[o.varyant,o.durum,JSON.stringify(o.sonuc)].filter(Boolean).join(' · ')});
   const gizli=Object.values(k.isler).filter(x=>isGizli(x)).sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika));

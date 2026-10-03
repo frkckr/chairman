@@ -11,58 +11,17 @@
      Hangi adımda kesilirse kesilsin sağlam bir kayıt kalır; geçersiz kariyer hiç yazılmaz.
    Yükleme sırası: ana kayıt → .yeni (yarım kalmış kaydın tamamlanmış kopyası) → .onceki. Sağlam olan ilki yüklenir,
      atlananlar açıklamayla uyarılar listesine yazılır.
-   Eski sürümlü kayıtlar KAYIT_GECISLERI ile sırayla bugünkü sürüme dönüştürülür; daha yeni sürüm açılmaz.
+   Eski sürümlü kayıtlar KAYIT_GECISLERI ile sırayla bugünkü sürüme dönüştürülür; daha yeni sürüm açılmaz. Sürüm 6'dan eski kayıt açılmaz (2.8L).
    Kayıt oturumu (kayitOturumu, yol haritası 2.4): oyunun bütün değişiklikleri oturum.uygula(f) ile yapılır. Komut kariyerin kopyasına
      uygulanır (kariyerKomut); kabul edilince kaydedilir. Yazılamazsa kariyer yine yeni durumdadır, oturum.durum bunu söyler
      (tamam:false, bekleyen:true); oturum.kaydet() yalnız mevcut durumu yazar, komutu ikinci kez uygulamaz.
      uygula(f, true) kaydetmeden uygular (maç sınırı gibi bilinçli istisnalar): kayıt bir önceki komutta kalır. */
 const KAYIT_BICIM=1;
 /* sürüm geçişleri: KAYIT_GECISLERI[n] = veri → (n+1) sürümlü veri. Geçişler başka kural dosyasına bağlı olmayan veri dönüşümleridir;
-   kararları yeniden oynatmaz, para hareketi üretmez */
+   kararları yeniden oynatmaz, para hareketi üretmez.
+   2.8L (2026-10-02): 1→5 geçişleri kaldırıldı. Sürüm 5 ve öncesinin kayıtları silinen içeriğe bağlıdır; açılmaz (ESKI_KAYIT_SINIRI) */
 const KAYIT_GECISLERI={};
-/* 1 → 2 (2.3): meseleler eklendi. Sürüm 1'de meseleye dönüşecek tek konu TEST haftasının forma sponsoru ödemesiydi.
-   Bekleyen sponsor kararları, kalemi sponsor olan bekleyen ödemeler ve geçmişteki sponsor kararları tek meseleye bağlanır;
-   durum bunlardan türetilir. Sponsor kararı hiç görülmemiş kayıtta (ör. örnek kariyer) mesele açılmaz */
-KAYIT_GECISLERI[1]=v=>{
-  v.kayitSurumu=2;v.meseleler={};
-  v.sonrakiNo=Object.assign({},v.sonrakiNo,{mesele:1});
-  const isler=Object.values(v.isler||{}),SECIMLER=['kendin','devret','kabul','ret'];
-  const kararlar=isler.filter(x=>x.tur==='ajanda'&&x.veri&&(x.veri.karar==='sponsorGecikmesi'||x.veri.karar==='sponsorIndirimi'));
-  const verilen=(v.gecmis||[]).filter(g=>g.tur==='is'&&g.isTuru==='ajanda'&&g.sonuc&&SECIMLER.includes(g.sonuc.secim));
-  if(!kararlar.length&&!verilen.length)return v;
-  const odemeler=isler.filter(x=>x.tur==='odeme'&&x.veri&&x.veri.kalem==='sponsor');
-  for(const x of kararlar.concat(odemeler))x.veri.meseleId='mesele-1';
-  const baskan=(v.kisiler||{})[v.baskanId]||{},c=(v.kulupler||{})[baskan.kulupId]||{},sayman=c.yonetim&&c.yonetim.sayman;
-  const durum=kararlar.length?'kararBekliyor':odemeler.length?'haberBekliyor':'kapandi';
-  const olaylar=verilen.map(g=>({tarih:g.tarih,dakika:g.dakika,anahtar:'eskiKayit',p:{metin:g.sonuc.secimMetni+(g.sonuc.bilgi?': '+g.sonuc.bilgi:'')}}));
-  if(durum==='kapandi')olaylar.push({tarih:v.tarih,dakika:v.gunIciDakika,anahtar:'kapandi',p:{}});
-  v.meseleler['mesele-1']={id:'mesele-1',tur:'sponsorOdemesi',baslik:'Forma sponsoru: geciken ilk taksit',durum,
-    sorumluId:!kararlar.length&&sayman&&verilen.some(g=>g.sonuc.secim==='devret')?sayman:v.baskanId,
-    kisiler:sayman?[sayman]:[],olaylar,gorulen:olaylar.length,kapanis:durum==='kapandi'?{tarih:v.tarih,dakika:v.gunIciDakika}:null};
-  v.sonrakiNo.mesele=2;
-  return v;
-};
-
-/* 2 → 3 (2.4A): içerik sürümü, devralınan koşullar, kayıtlı rastlantı ve olay örnekleri eklendi. Eski kayıt eski sabit içerikle
-   (icerik.surum 0) sürer: bekleyen sponsor işleri js/uyum-sponsor.js ile tamamlanır, yeni olay paketi açılmaz */
-KAYIT_GECISLERI[2]=v=>{
-  v.kayitSurumu=3;
-  v.icerik={surum:0,baslangic:null};v.kosullar={};v.olaylar={};
-  v.rastlanti={durum:Number.isInteger(v.dunyaTohumu)?v.dunyaTohumu>>>0:0};
-  v.sonrakiNo=Object.assign({},v.sonrakiNo,{olay:1});
-  return v;
-};
-
-/* 3 → 4 (2.6, 2.8): söz ve haber kayıtları eklendi. İçerik sürümü değişmez: eski kariyer kendi içeriğiyle sürer, yeni paket açılmaz */
-KAYIT_GECISLERI[3]=v=>{
-  v.kayitSurumu=4;
-  v.sozler={};v.haberler=[];
-  v.sonrakiNo=Object.assign({},v.sonrakiNo,{soz:1});
-  return v;
-};
-
-/* 4 → 5 (2.7): süren antrenman gözlemi alanı eklendi; eski kayıtta gözlem yoktur */
-KAYIT_GECISLERI[4]=v=>{v.kayitSurumu=5;v.gozlem=null;return v;};
+const ESKI_KAYIT_SINIRI=6;                   // bu sürümden eski kayıt dönüştürülmez: içeriği oyundan kaldırıldı
 
 /* FNV-1a 32 bit: güvenlik için değil, yarım/bozuk yazımı yakalamak için */
 function saglamaHesapla(s){
@@ -92,6 +51,7 @@ function kayitCoz(metin){
   let k=z.veri;const gecisler=[];
   if(!Number.isInteger(k.kayitSurumu))return{tamam:false,hata:'Kayıt sürümü okunamadı'};
   if(k.kayitSurumu>KARIYER_SURUM)return{tamam:false,hata:`Bu kayıt oyunun daha yeni bir sürümüyle yapılmış (kayıt sürümü ${k.kayitSurumu}); bu sürüm açamaz`};
+  if(k.kayitSurumu<ESKI_KAYIT_SINIRI&&!KAYIT_GECISLERI[k.kayitSurumu])return{tamam:false,eski:true,hata:`Bu kayıt oyunun eski bir sürümüne ait (kayıt sürümü ${k.kayitSurumu}); o sürümün içeriği kaldırıldığı için açılamaz`};
   while(k.kayitSurumu<KARIYER_SURUM){
     const g=KAYIT_GECISLERI[k.kayitSurumu];
     if(!g)return{tamam:false,hata:`Kayıt sürümü ${k.kayitSurumu} için dönüşüm yok`};

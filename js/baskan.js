@@ -1,7 +1,7 @@
 /* ============ Chairman — başkanın bedeni: önündeki masa, elleri ve eşyaları (ön plan katmanı) ============
    Dünya çizildikten sonra derinlik temizlenir ve bu katman üstüne çizilir. Böylece masa ve eller her zaman ekranın altında durur.
    Eller maçtaki olaylara tepki verir: gol sevinci (başkan ayağa kalkar), yenilen golde eller başa, kaçan pozisyonda masaya yumruk,
-   itiraz, alkış. Sakin anlarda programa ya da telefonuna bakar. Dürbünü elleriyle kaldırır. Çay 2.8A'da kaldırıldı. */
+   itiraz, alkış. Sakin anlarda telefonuna bakar. Dürbünü elleriyle kaldırır. Çay 2.8A'da, masadaki maç programı 2.8O'da kaldırıldı. */
 const BK=STIL.baskan;
 const BASKAN={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(BK.aci,RW/RH,0.02,6),eylem:null,kuyruk:[],bosT:12,
   kalk:0,kalkHedef:0,sarsinti:0,durbunDurum:0,durbunHedef:0,durbunHazir:null};
@@ -15,15 +15,7 @@ const BK_MASA=new THREE.Group();BASKAN.sahne.add(BK_MASA);
  const ust=box(2.6,0.06,1.1,LAM({map:tx(cv,'n',[5,2])}),0,-0.5,-0.95,BK_MASA);ust.name='masa';
  box(2.6,0.026,0.03,LAM({color:BK.pirinc}),0,-0.468,-1.5,BK_MASA);
  box(0.5,0.008,0.32,LAM({color:BK.sumen}),-0.02,-0.466,-1.2,BK_MASA);}
-/* ---- maç programı: piksel yazılı kapak ---- */
-const BK_PROGRAM=new THREE.Group();BK_PROGRAM.position.set(-0.1,-0.462,-1.18);BK_PROGRAM.rotation.y=0.22;BK_MASA.add(BK_PROGRAM);
-{const cv=mk(32,44),g=cv.getContext('2d');g.fillStyle='#efe9dc';g.fillRect(0,0,32,44);g.fillStyle='#c8281e';g.fillRect(0,0,32,12);
- ctxText(g,MAC_KADRO[0].kisa,(32-textW(MAC_KADRO[0].kisa,1))>>1,2,'#f2ede2',1);ctxText(g,'-',14,15,'#2a2a2e',1);
- ctxText(g,MAC_KADRO[1].kisa,(32-textW(MAC_KADRO[1].kisa,1))>>1,22,'#22347a',1);g.fillStyle='#2a2a2e';g.fillRect(3,32,26,1);
- ctxText(g,STAT.lig.replace(' ',''),(32-textW(STAT.lig.replace(' ',''),1))>>1,35,'#2a2a2e',1);
- const kenar=LAM({color:0xd8d0c0});BK_PROGRAM.add(new THREE.Mesh(new THREE.BoxGeometry(0.15,0.007,0.206),[kenar,kenar,LAM({map:tx(cv,'n')}),kenar,kenar,kenar]));
- const sayfa=new THREE.Mesh(new THREE.PlaneGeometry(0.15,0.206),LAM({color:0xf4efe4,side:THREE.DoubleSide}));sayfa.geometry.translate(0.075,0,0);sayfa.rotation.x=-Math.PI/2;
- const mentese=new THREE.Group();mentese.position.set(-0.075,0.005,0);mentese.add(sayfa);BK_PROGRAM.add(mentese);BK_PROGRAM.userData.sayfa=mentese;}
+/* maç programı (beyaz kitapçık) 2.8O'da kaldırıldı (kullanıcı kararı 2026-10-02): masada yalnız sümen ve telefon durur */
 /* ---- telefon: ekranı yanınca skoru ve saati gösterir ---- */
 const BK_TEL=new THREE.Group();BK_TEL.position.set(0.14,-0.463,-1.08);BK_TEL.rotation.y=-0.3;BK_MASA.add(BK_TEL);
 const BK_TEL_CV=mk(16,32),BK_TEL_TX=tx(BK_TEL_CV,'n'),BK_TEL_EKRAN=BAS({map:BK_TEL_TX,color:0x333333});
@@ -61,7 +53,6 @@ function bkAnahtar(keys,t){
   return out;}
 const BK_EYLEM={
   telefon:{sure:3.6,keys:[[0,{}],[0.5,{sag:BKP(0.105,-0.433,-0.965,0,-0.3,0,0.6)}],[1.0,{sag:BKP(0.05,-0.27,-0.6,1.05,-0.1,0,0.55)}],[2.8,{sag:BKP(0.05,-0.27,-0.6,1.05,-0.1,0,0.55)}],[3.3,{sag:BKP(0.105,-0.433,-0.965,0,-0.3,0,0.6)}],[3.6,{}]],telefon:[0.5,3.3]},
-  program:{sure:2.4,keys:[[0,{}],[0.5,{sol:BKP(-0.17,-0.44,-1.07,0,0.3,0,0.5)}],[1.4,{sol:BKP(-0.05,-0.41,-1.08,0,0.15,0.3,0.5)}],[2.0,{sol:BKP(-0.17,-0.44,-1.07,0,0.3,0,0.5)}],[2.4,{}]],sayfa:[0.6,1.5]},
   alkis:{sure:2.2,keys:[[0,{}],[0.35,{sol:BKP(-0.08,-0.3,-0.78,0,0,-1.2,0.1),sag:BKP(0.08,-0.3,-0.78,0,0,1.2,0.1)}],[1.85,{sol:BKP(-0.08,-0.3,-0.78,0,0,-1.2,0.1),sag:BKP(0.08,-0.3,-0.78,0,0,1.2,0.1)}],[2.2,{}]],alkis:[0.35,1.85]},
   golBiz:{sure:4.2,keys:[[0,{}],[0.3,{sol:BKP(-0.3,0.08,-0.72,1.3,0,0.2,1),sag:BKP(0.3,0.08,-0.72,1.3,0,-0.2,1)}],[3.4,{sol:BKP(-0.3,0.1,-0.72,1.3,0,0.2,1),sag:BKP(0.3,0.1,-0.72,1.3,0,-0.2,1)}],[4.2,{}]],kalk:[0.2,3.6],salla:[0.3,3.4]},
   golYedik:{sure:3.4,keys:[[0,{}],[0.6,{sol:BKP(-0.36,0.3,-0.26,2.3,0.4,0.6,0.3),sag:BKP(0.36,0.3,-0.26,2.3,-0.4,-0.6,0.3)}],[2.6,{sol:BKP(-0.36,0.28,-0.26,2.25,0.4,0.6,0.3),sag:BKP(0.36,0.28,-0.26,2.25,-0.4,-0.6,0.3)}],[3.4,{}]]},
@@ -92,11 +83,11 @@ const BK_V=new THREE.Vector3();
 function elYerlestir(el,poz){const E=BK_EL[el];E.g.position.set(...poz.p);E.g.rotation.set(poz.r[0],poz.r[1],poz.r[2]);E.parmak.rotation.x=poz.k*1.4;}
 function baskanKare(dt,kamera){
   const B=BASKAN;
-  /* kendiliğinden eylemler: sakin anda program ya da telefon */
+  /* kendiliğinden eylem: sakin anda (maç öncesi, devre arası ya da top ortadayken) telefona bakar */
   B.bosT-=dt;
   if(!B.eylem&&B.bosT<=0){B.bosT=14+rnd()*22;
     const ph=typeof mac!=='undefined'?mac.phase:'',sakin=ph==='play'?Math.abs(mac.ball.x)<24:true;
-    if(sakin){const r=rnd();if(MAC_ONCESI.includes(ph)||ph==='halftime'?r<0.35:r<0.12)baskanEylem(MAC_ONCESI.includes(ph)?'program':'telefon');}}
+    if(sakin){const r=rnd();if(MAC_ONCESI.includes(ph)||ph==='halftime'?r<0.25:r<0.12)baskanEylem('telefon');}}
   /* eylemi oynat */
   let poz={sol:BK_DINLEN.sol,sag:BK_DINLEN.sag};const e=B.eylem;
   if(e){e.t+=dt;poz=bkAnahtar(e.keys,Math.min(e.t,e.sure));
@@ -110,7 +101,6 @@ function baskanKare(dt,kamera){
     if(tel){const q=clamp(Math.min((e.t-0.5)/0.5,(e.telefon[1]-e.t)/0.5),0,1),s=q*q*(3-2*q);BK_TEL.position.set(0,lerp(-0.03,0.04,s),lerp(-0.12,-0.07,s));BK_TEL.rotation.x=0.52*s;}
     if(!tel&&BK_TEL.parent!==BK_MASA){BK_MASA.add(BK_TEL);BK_TEL.position.set(0.14,-0.463,-1.08);BK_TEL.rotation.set(0,-0.3,0);}
     BK_TEL_EKRAN.color.setHex(tel?0xffffff:0x333333);if(tel)telefonYaz();
-    if(e.sayfa){const s=clamp((e.t-e.sayfa[0])/(e.sayfa[1]-e.sayfa[0]),0,1);BK_PROGRAM.userData.sayfa.rotation.z=Math.sin(s*Math.PI)*2.6;}
     if(e.durbun){const s=clamp(e.t/e.sure,0,1);BK_DURBUN.visible=true;BK_DURBUN.position.set(0,lerp(-0.45,-0.07,e.ad==='durbunKaldir'?s:1-s),lerp(-0.9,-0.33,e.ad==='durbunKaldir'?s:1-s));
       if(e.ad==='durbunKaldir'&&e.t>=e.sure&&B.durbunHazir){B.durbunHazir();B.durbunHazir=null;B.durbunAcik=true;}}
     if(e.t>=e.sure&&!e.kal){B.eylem=null;if(e.durbun)BK_DURBUN.visible=false;}
