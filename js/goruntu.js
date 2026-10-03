@@ -1,19 +1,17 @@
 /* ============ Chairman — tek kare: PS1 / FIFA 99 dönemi görünümü (Three.js) ============ */
 const $=id=>document.getElementById(id);
-/* iki ızgara: oda ve balkon 640×480 (RW×RH); maç sahnesi STIL.ekran.mac (960×720; 2026-10-03 ikinci paket, kullanıcı kararı) */
-const RW=STIL.ekran.genislik,RH=STIL.ekran.yukseklik,MAC_RW=(STIL.ekran.mac||STIL.ekran).genislik,MAC_RH=(STIL.ekran.mac||STIL.ekran).yukseklik;
+/* tek ızgara (2026-10-03, kullanıcı kararı: maçtaki görüntü kalitesi bütün oyunun standardıdır): oda, balkon ve maç 960×720 (RW×RH) */
+const RW=STIL.ekran.genislik,RH=STIL.ekran.yukseklik;
 const screenEl=$('screen'),canvas=$('view'),hud=$('hud'),hg=hud.getContext('2d');
 let renderer=null;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:false,preserveDrawingBuffer:true});}catch(e){renderer=null;}
 if(!renderer){screenEl.insertAdjacentHTML('beforeend','<p class="nogl">Bu cihazda 3B görüntü (WebGL) açılamadı.</p>');throw new Error('WebGL yok');}
-renderer.setPixelRatio(1);renderer.setSize(RW,RH,false);hud.width=MAC_RW;hud.height=MAC_RH;renderer.autoClear=false;
-/* maç sahnesi kendi ızgarasının (960×720) ornekleme katı büyüklükte çizilir (rtMac, 1920×1440), son işlem her 2×2 bloğun ortalamasını
-   alır; 15 bit renk ve titreme maç ızgarasındadır. Doğrusal süzgeçle blok köşesinden tek örnek dört pikselin ortalamasıdır. Oda ve balkon
-   yakın sahnedir, 640×480 hedefe (rt) çizilir (js/oda.js odaCiz); hangi hedefin son işleme gireceğini sonIslemHedefi seçer, ızgara da onunla
-   değişir (js/arayuz.js frame) */
+renderer.setPixelRatio(1);renderer.setSize(RW,RH,false);hud.width=RW;hud.height=RH;renderer.autoClear=false;
+/* her sahne ızgaranın ornekleme katı büyüklükte çizilir (rt, 1920×1440), son işlem her 2×2 bloğun ortalamasını alır; 15 bit renk ve
+   titreme ızgaradadır. Doğrusal süzgeçle blok köşesinden tek örnek dört pikselin ortalamasıdır. Maç (js/arayuz.js frame) ile oda ve
+   balkon (js/oda.js odaCiz) aynı hedefe çizer */
 const EKRAN_ORNEK=Math.max(1,Math.round(STIL.ekran.ornekleme||1)),EKRAN_RT_AYAR={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,generateMipmaps:false,stencilBuffer:true};
-const rt=new THREE.WebGLRenderTarget(RW,RH,EKRAN_RT_AYAR),
-  rtMac=EKRAN_ORNEK>1||MAC_RW!==RW?new THREE.WebGLRenderTarget(MAC_RW*EKRAN_ORNEK,MAC_RH*EKRAN_ORNEK,EKRAN_RT_AYAR):rt;
+const rt=new THREE.WebGLRenderTarget(RW*EKRAN_ORNEK,RH*EKRAN_ORNEK,EKRAN_RT_AYAR);
 const scene=new THREE.Scene();scene.fog=new THREE.Fog(STIL.sis.renk,STIL.sis.yakin,STIL.sis.uzak);
 const camera=new THREE.PerspectiveCamera(30,4/3,0.3,1200);
 
@@ -32,14 +30,10 @@ const postMat=new THREE.ShaderMaterial({uniforms:{tD:{value:rt.texture},uDither:
       float m=min(min(texture2D(tD,uv+e).a,texture2D(tD,uv-e).a),min(texture2D(tD,uv+f).a,texture2D(tD,uv-f).a));if(m<0.9)c*=0.32;}
     float d=(b4(q)-0.47)*uDither;c=floor(c*uLv+0.5+d)/uLv;gl_FragColor=vec4(c,1.0);}`});
 post.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),postMat));
-/* etkin ızgara: son işleme giren hedefe göre (rtMac → maç ızgarası, rt → 640×480) */
-const IZGARA={w:RW,h:RH};
-function sonIslemHedefi(h){postMat.uniforms.tD.value=h.texture;const w=h===rtMac?MAC_RW:RW,g=h===rtMac?MAC_RH:RH;
-  if(w!==IZGARA.w||g!==IZGARA.h){IZGARA.w=w;IZGARA.h=g;postMat.uniforms.uR.value.set(w,g);ekranKatGuncelle(true);}}
 /* tuvalin çizim katı: ekrandaki genişlik × aygıt piksel oranı / ızgara genişliği, yukarı yuvarlanır (1–4) */
 let EKRAN_KAT=1;
-function ekranKatGuncelle(zorla){const r=canvas.getBoundingClientRect(),k=clamp(Math.ceil(r.width*(window.devicePixelRatio||1)/IZGARA.w-0.02),1,4)||1;
-  if(k!==EKRAN_KAT||zorla===true){EKRAN_KAT=k;renderer.setSize(IZGARA.w*k,IZGARA.h*k,false);postMat.uniforms.uK.value=k;}}
+function ekranKatGuncelle(){const r=canvas.getBoundingClientRect(),k=clamp(Math.ceil(r.width*(window.devicePixelRatio||1)/RW-0.02),1,4)||1;
+  if(k!==EKRAN_KAT){EKRAN_KAT=k;renderer.setSize(RW*k,RH*k,false);postMat.uniforms.uK.value=k;}}
 ekranKatGuncelle();addEventListener('resize',ekranKatGuncelle);
 if(typeof ResizeObserver!=='undefined')new ResizeObserver(ekranKatGuncelle).observe(canvas);
 
@@ -59,6 +53,21 @@ function kutuBirlestir(parcalar){const pos=[],nor=[],col=[],idx=[];
     pos.push(...g.attributes.position.array);nor.push(...g.attributes.normal.array);for(const i of g.index.array)idx.push(o+i);
     const c=p.renk||[1,1,1];for(let i=0;i<g.attributes.position.count;i++)col.push(c[0],c[1],c[2]);g.dispose();}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);return g;}
+/* ekranda sabit kalınlıkta çizgi: gen ızgara pikseli (960×720'de). WebGL çizgisi tek iç piksel olduğundan örneklemeyle (2×) yarıya
+   soluklaşır; bunun yerine her parça ekrana dik genişletilmiş dörtgen olur. geo: parça çiftleri (ör. EdgesGeometry) */
+function kalinCizgi(geo,renk,gen){
+  const a=geo.attributes.position.array,n=a.length/6,bas=new Float32Array(n*12),son=new Float32Array(n*12),uc=new Float32Array(n*4),yan=new Float32Array(n*4),idx=[];
+  for(let i=0;i<n;i++){for(let k=0;k<4;k++){const j=(i*4+k)*3;for(let e=0;e<3;e++){bas[j+e]=a[i*6+e];son[j+e]=a[i*6+3+e];}uc[i*4+k]=k>>1;yan[i*4+k]=k&1?-1:1;}
+    const o=i*4;idx.push(o,o+1,o+2,o+2,o+1,o+3);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(bas,3));g.setAttribute('son',new THREE.BufferAttribute(son,3));
+  g.setAttribute('uc',new THREE.BufferAttribute(uc,1));g.setAttribute('yan',new THREE.BufferAttribute(yan,1));g.setIndex(idx);
+  const m=new THREE.ShaderMaterial({uniforms:{uRenk:{value:new THREE.Color(renk)},uGen:{value:gen},uR:{value:new THREE.Vector2(RW,RH)}},
+    vertexShader:`attribute vec3 son;attribute float uc,yan;uniform float uGen;uniform vec2 uR;
+      void main(){vec4 a=projectionMatrix*modelViewMatrix*vec4(position,1.0),b=projectionMatrix*modelViewMatrix*vec4(son,1.0);
+        vec2 d=b.xy/b.w*uR-a.xy/a.w*uR;d=length(d)>1e-5?normalize(d):vec2(1.0,0.0);
+        vec4 p=uc>0.5?b:a;p.xy+=vec2(-d.y,d.x)*yan*uGen/uR*p.w;gl_Position=p;}`,
+    fragmentShader:'uniform vec3 uRenk;void main(){gl_FragColor=vec4(uRenk,1.0);}'});
+  const s=new THREE.Mesh(g,m);s.frustumCulled=false;return s;}
 function box(w,h,d,m,x,y,z,parent){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);(parent||scene).add(b);return b;}
 const GLOWT=(()=>{const cv=mk(32,32),g=cv.getContext('2d'),gr=g.createRadialGradient(16,16,0,16,16,16);
   gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(0.3,'rgba(255,255,255,0.45)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,32,32);return tx(cv,'l');})();

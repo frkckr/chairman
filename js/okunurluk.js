@@ -31,7 +31,7 @@ const OKN_CIZGI=(()=>{
   const I=STIL.isik,G=STAT.projektor.guc,q=0.45+0.55*STAT.zemin,isik=new THREE.Color(I.ortam.renk).multiplyScalar(I.ortam.guc*(0.6+0.4*G));
   for(const [L,k] of[[I.ana,I.ana.guc*G],[I.dolgu,I.dolgu.guc]].concat(I.kamera?[[I.kamera,I.kamera.guc]]:[])){const d=new THREE.Vector3(...L.konum).normalize();isik.add(new THREE.Color(L.renk).multiplyScalar(k*Math.max(0,d.y)));}
   const renk=new THREE.Color(STIL.saha.cimAcik).lerp(new THREE.Color(STIL.saha.cizgi),q).multiply(isik).multiplyScalar(OKN.cizgi.parlaklik);
-  const m=new THREE.ShaderMaterial({uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{uRenk:{value:renk},uOpak:{value:OKN.cizgi.opak*q},uGen:{value:OKN.cizgi.genislik},uR:{value:new THREE.Vector2(MAC_RW,MAC_RH)}}]),
+  const m=new THREE.ShaderMaterial({uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{uRenk:{value:renk},uOpak:{value:OKN.cizgi.opak*q},uGen:{value:OKN.cizgi.genislik},uR:{value:new THREE.Vector2(RW,RH)}}]),
     fog:true,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1,
     vertexShader:`attribute vec3 son;attribute float uc,yan;uniform float uGen;uniform vec2 uR;
       #include <fog_pars_vertex>
@@ -70,7 +70,7 @@ function okunurlukKare(){
   if(!t.visible){OKN_LEKE.visible=false;return;}
   /* topCiz konumu her kare yeniden yazar; yazmadıysa önceki kaldırmayı geri al */
   const y0=t.position.y===T.sonY?T.tabanY:t.position.y;
-  const d=Math.max(1,camera.position.distanceTo(t.position)),px=2*TOP_R*(MAC_RH/2)/(d*Math.tan(camera.fov*Math.PI/360)),s=clamp(OKN.topEnAz/px,1,OKN.topEnCok);
+  const d=Math.max(1,camera.position.distanceTo(t.position)),px=2*TOP_R*(RH/2)/(d*Math.tan(camera.fov*Math.PI/360)),s=clamp(OKN.topEnAz/px,1,OKN.topEnCok);
   t.scale.setScalar(s);t.position.y=y0+TOP_R*(s-1);T.tabanY=y0;T.sonY=t.position.y;
   const h=y0-TOP_R;OKN_LEKE.visible=h>OKN.topLeke.yukseklik;
   if(OKN_LEKE.visible){OKN_LEKE.position.set(t.position.x,0.03,t.position.z);OKN_LEKE.scale.setScalar(TOP_R*s*OKN.topLeke.boy);}

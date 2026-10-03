@@ -90,7 +90,7 @@ KUR_JS = """() => {
 }"""
 
 OLCU_JS = """() => {
-  const H = typeof MAC_RH !== 'undefined' ? MAC_RH : 480, W = typeof MAC_RW !== 'undefined' ? MAC_RW : 640, f = camera.fov * Math.PI / 180, b = mac.ball, v = new THREE.Vector3();
+  const H = RH, W = RW, f = camera.fov * Math.PI / 180, b = mac.ball, v = new THREE.Vector3();
   const piksel = (x, y, z, r) => { v.set(x, y, z); const d = v.distanceTo(camera.position); return 2 * r * (H / 2) / (d * Math.tan(f / 2)); };
   v.set(b.x, b.y + (typeof TOP_R !== 'undefined' ? TOP_R : 0.14), b.z - 34).project(camera);
   const topNdc = { x: +v.x.toFixed(3), y: +v.y.toFixed(3) }, topPx = +piksel(b.x, b.y, b.z - 34, typeof TOP_R !== 'undefined' ? TOP_R : 0.14).toFixed(2);
@@ -110,7 +110,7 @@ OLCU_JS = """() => {
 
 # görünümü (3B + HUD maskesi) tek tuvale bas; şerit için yan yana
 CIZ_JS = """(o) => {
-  const v = document.getElementById('view'), h = document.getElementById('hud'), W = typeof MAC_RW !== 'undefined' ? MAC_RW : 640, H = typeof MAC_RH !== 'undefined' ? MAC_RH : 480;
+  const v = document.getElementById('view'), h = document.getElementById('hud'), W = RW, H = RH;
   let c = window.__serit;
   if (!c || o.yeni) { c = window.__serit = document.createElement('canvas'); const sut = Math.min(o.adet, 4); c.width = W * sut; c.height = H * Math.ceil(o.adet / sut); }
   const g = c.getContext('2d'), sut = Math.min(o.adet, 4), x = (o.i % sut) * W, y = Math.floor(o.i / sut) * H;
