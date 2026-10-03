@@ -6,16 +6,20 @@ const STIL={
   ad:"Chairman",
 
   /* Ekran: 4:3, PS1'in yüksek çözünürlük modu (640x480), 15 bit renk + 4x4 titreme.
-     Köşe titremesi (köşelerin piksellere yapışması) kapalı: hareket pürüzsüz aksın diye. titremeGucu: renk titremesinin şiddeti (0–1). */
-  ekran:{genislik:640,yukseklik:480,renkBiti:5,titreme:true,titremeGucu:0.7,koseTitremesi:false,arkaPlan:0x070b16},
+     Köşe titremesi (köşelerin piksellere yapışması) kapalı: hareket pürüzsüz aksın diye. titremeGucu: renk titremesinin şiddeti (0–1).
+     ornekleme (A akışı, 2026-10-03, kullanıcı kararı): sahne iç çözünürlüğün bu katında çizilip ortalanarak 640×480'e indirilir (2 = 1280×960);
+     renk biti ve titreme değişmez, uzaktaki ince çizgi ve küçük oyuncular kırılmaz. */
+  ekran:{genislik:640,yukseklik:480,renkBiti:5,titreme:true,titremeGucu:0.7,koseTitremesi:false,arkaPlan:0x070b16,ornekleme:2},
 
   /* Gece havası */
   sis:{renk:0x0c1322,yakin:150,uzak:380},
   gokyuzu:{ufuk:[0.1,0.13,0.21],tepe:[0.015,0.025,0.07],yildiz:0xc8d0e8},
+  /* Maç ışıkları (yalnız maç sahnesi, js/goruntu.js; oda ve balkonun kendi ışığı var). A akışı (2026-10-03): sıcak ana ışık başkanın
+     tarafından gelir (eskiden karşıdan: oyuncular locadan ters ışıkta koyu leke görünüyordu); soğuk karşı ışık uzak taraftan, gece havası korunur */
   isik:{
     ortam:{renk:0x56607c,guc:0.72},
-    ana:{renk:0xffe8c4,guc:0.82,konum:[60,80,55]},      // sıcak projektör ışığı
-    dolgu:{renk:0xcfd8ff,guc:0.45,konum:[-50,70,-45]}   // soğuk karşı ışık
+    ana:{renk:0xffe8c4,guc:0.82,konum:[20,80,-70]},     // sıcak projektör ışığı (loca tarafından)
+    dolgu:{renk:0xcfd8ff,guc:0.45,konum:[-50,70,45]}    // soğuk karşı ışık (uzak taraftan)
   },
 
   /* Saha dokusu (metre başına piksel = pikselMetre) */
@@ -41,7 +45,8 @@ const STIL={
     ev:{shirt:'#c8281e',trim:'#f2ede2',shorts:'#f2ede2',socks:'#c8281e',out:'#6e140e'},
     evKaleci:{shirt:'#e0b828',trim:'#141414',shorts:'#1c1c1e',socks:'#e0b828',glove:'#f2f2f2',gk:true},
     deplasman:{shirt:'#eef0f3',trim:'#22347a',shorts:'#22347a',socks:'#eef0f3',sash:'#22347a'},
-    deplasmanKaleci:{shirt:'#3c9254',trim:'#141414',shorts:'#1c1c1e',socks:'#3c9254',glove:'#f2f2f2',gk:true},
+    /* A akışı (2026-10-03): deplasman kalecisi yeşildi, çimle aynı tonda locadan seçilmiyordu; mor */
+    deplasmanKaleci:{shirt:'#8a4fc4',trim:'#141414',shorts:'#1c1c1e',socks:'#8a4fc4',glove:'#f2f2f2',gk:true},
     hakem:{shirt:'#1a1a1c',trim:'#f2f2f2',shorts:'#1a1a1c',socks:'#1a1a1c'},
     /* yedekler eşofmanla, teknik direktör takım elbiseyle (pant: uzun pantolon, ls: uzun kol) */
     yedekEv:{shirt:'#7a1812',trim:'#f2ede2',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
@@ -59,13 +64,31 @@ const STIL={
 
   tenler:['#e2b48c','#cf9a70','#b07650','#8a5a3c','#ecc49e'],
 
+  /* Oyuncu animasyonu (js/animasyon.js; E akışı, 2026-10-03): yalnız görünüş ayarları, motoru etkilemez.
+     adim: adım boyu = boy·(kisa + uzun·min(1, hız/1,4)) + hizBoy·hız (m); yer: ayağın yerde kaldığı döngü payı (yürüyüş), yerHiz ile hızlandıkça
+       yerEn'e iner; kaldir/kaldirHiz/kaldirTavan: salınan ayağın yüksekliği (m); geri/yan: geri ve yana adımın boy çarpanı;
+       yuvar: adımın uçlarında taban ortasının yükselmesi (topuk ve burun yere değer, m).
+     kalcaDonus: kalçanın hareket yönüne dönüşü (rad, gövde ters döner). egilme: koşuda öne eğilme, ileri ivmeden eğilme ve yan ivmeden yatış katsayıları.
+     dusus: yerde yatış açısı (rad) ve gövde kalınlığı (yüzüstü/sırtüstü, yan). dokunus: top sürerken ayak dokunuşunun süresi (sn).
+     kucukPiksel: ekranda bundan kısa görünen oyuncuda bakış ve dokunuş gibi ayrıntı katmanları atlanır.
+     top: havadaki topun üst/kesik (ust) ve yan (egri) dönüşünün görünür hız çarpanları; kare: bir karede en çok dönüş (rad, örnekleme kırılmasın).
+     sevincCesit: gol sevinci çeşidi sayısı (oyuncu ve gole göre karışık seçilir) */
+  animasyon:{
+    adim:{kisa:0.25,uzun:0.37,hizBoy:0.17,yer:0.6,yerHiz:0.05,yerEn:0.22,kaldir:0.06,kaldirHiz:0.05,kaldirTavan:0.42,geri:0.7,yan:0.45,yuvar:0.05},
+    kalcaDonus:0.5,egilme:{kosu:0.2,ivme:0.025,yatis:0.03},
+    dusus:{aci:1.45,yuzY:0.12,yanY:0.16},dokunus:0.18,kucukPiksel:8,
+    top:{ust:300,egri:150,kare:0.6},sevincCesit:4
+  },
+
   /* Gece maçında her projektör için bir gölge (90'ların dörtlü gölgesi): oyuncunun silüeti ışıktan zemine izdüşer (js/golgeler.js).
      opaklik: tek bir ışığın gölgesinin koyuluğu. Projektörlerin yeri stadyum tarifindedir. */
   golge:{opaklik:0.2},
 
   /* Başkanın bedeni (ön plan katmanı, js/baskan.js): masa, takım elbise, ten, saat renkleri.
-     aci: ön plan kamerasının görüş açısı; dinlenmeEgimi: bakışın sahaya dinlenirken eğimi (radyan). */
-  baskan:{aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.38},
+     aci: ön plan kamerasının görüş açısı; dinlenmeEgimi: bakışın sahaya dinlenirken eğimi (radyan). A akışı (2026-10-03): bakış topa odaklıdır
+     (eğim orta sahada ≈ -0,22, uzak taçta ≈ -0,13); dinlenmeEgimi uzak tarafa yakın seçildi, egimUst: ön planın yukarı dönüşünün sınırı (radyan;
+     masa en çok bu kadar iner, telefon ekranda kalır), govdeHiz: ön planın bakışa yetişme hızı (radyan/sn; telefon kıpırdamadan tıklanır). */
+  baskan:{aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.15,egimUst:0.02,govdeHiz:0.05},
 
   /* Başkan bölümü: halı, ahşap bölmeler, başkanın koltuğu */
   baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
@@ -154,12 +177,33 @@ const STIL={
   /* Kameralar: hedef [x,y,z], aci = dikey görüş açısı (derece).
      Maç başkanın gözünden izlenir: ana tribünün ortasında, açık tribündeki başkan koltuğu. Dürbün isteğe bağlı. */
   kameralar:{
-    /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre).
-       Bakış topu ve olan biteni yumuşak bir yayla izler: yay = yayın sertliği, egim = bakışın odağın ne kadar altına indiği (masa ve ön sıralar görünsün),
-       asagiSinir = bakışın en fazla kaç radyan aşağı inebileceği (2.8D: koltuk 8. sıraya yükseldi; top yakın kenara gelince alttaki sıralar görünsün). */
-    /* 2.8O (kullanıcı kararı 2026-10-02): binadaki locadan yüksek ve geniş bakış; baş az döner. takip: bakış topun kendisini değil, yaklaşık
-       sure saniyede yumuşayan atak bölgesini izler (x payı ve sınırı, z payı); yay daha yumuşaktır. TEST değerleri */
-    baskan:{goz:0.78,hedef:[0,1,0],aci:52,egim:0.18,yay:1.0,asagiSinir:0.5,takip:{x:0.6,xSinir:30,z:0.45,sure:1.3}},
-    durbun:{goz:0.78,aci:11}
-  }
+    /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre). js/kamera.js
+       A akışı (2026-10-03, kullanıcı kararı): oyun sürerken bakış topa odaklıdır, görüş açısı oyunAci aralığına daralır; ölü topta oluGecikme
+       saniye sonra, maç öncesi/sonrası ve devre arasında geniş açıya (aci) döner. aciSure: görüş açısı yumuşama süresi (sn, maç zamanı).
+       yayOyun: oyunda bakış yayının açısal sıklığı (1/sn), hizSiniri: bakışın en hızlı dönüşü (derece/sn); yay ve sahneSinir aynısı oyun dışı
+       (ilgi noktaları) için. oluBolge: [derece, m/sn] top bu hızdan yavaşken bakışın kıpırdamadığı açı. egim: oyunda bakışın topun ne kadar
+       altına indiği (derece; 0 = top tam ortada; 2,5 ile biraz üstte: alttaki masanın açıkta bıraktığı alanın ortasına yakın). sahneEgim: oyun dışında bakışın odağın altına inme payı (uzaklığa
+       oran; masa ve ön sıralar görünsün). asagiSinir/yukariSinir: bakışın en çok aşağı/yukarı eğimi (radyan).
+       top: onde = taşıyanın önüne bakış (m), ongoru = serbest topta balistik öngörü (sn), inis = [başlangıç sn, süre sn, en çok pay] uzun havadan
+       topta iniş yerine kayma, kale = son üçte birde kale ağzına kayma payı, korner = kornerde penaltı noktasına kayma payı, butce = [sapma, eğim]
+       nişanın topun yönünden en çok sapması (derece, oyunAci[1]'de). genislik (görüş açısı için 0 dar – 1 geniş): hiz = top hızı aralığı (m/sn),
+       kale = kaleye uzaklık aralığı (m, yakında geniş), yayilim = [m, m, pay] topa üçüncü en yakın oyuncunun uzaklığı (dağınık oyunda geniş).
+       TEST değerleri */
+    baskan:{goz:0.78,hedef:[0,1,0],aci:52,oyunAci:[36,40],aciSure:0.8,oluGecikme:1.5,yayOyun:4,hizSiniri:100,yay:1.0,sahneSinir:60,
+      oluBolge:[1.2,2.5],egim:2.5,sahneEgim:0.18,asagiSinir:0.5,yukariSinir:0.12,
+      top:{onde:0.6,ongoru:0.35,inis:[0.5,1.6,0.55],kale:0.25,korner:0.45,butce:[5,2.5]},
+      genislik:{hiz:[7,22],kale:[30,12],yayilim:[6,18,0.6]}},
+    /* dürbün elle açılır, açıkken topa kilitlenir: aci = oyun dışı görüş açısı, oyunAci = oyunda [dar, geniş] (oyunun genişliğine göre),
+       ongoru = topta öngörü (sn), yay = açısal sıklık (1/sn), hizSiniri = derece/sn, butce = [sapma, eğim] derece, aciSure = görüş açısı
+       yumuşaması (sn), gecisSure = açılış/kapanış geçişi (sn, gerçek zaman). TEST değerleri */
+    durbun:{goz:0.78,aci:11,oyunAci:[9,13],ongoru:0.12,yay:6,hizSiniri:140,butce:[0.8,0.5],aciSure:0.6,gecisSure:0.35}
+  },
+
+  /* Maçın okunurluğu (js/okunurluk.js, js/goruntu.js; A akışı, 2026-10-03): locadan uzaktaki maçın net görünmesi için çizim ayarları.
+     cizgi: saha çizgilerinin üstüne ekranda sabit genişlikli şerit (acik, genislik = iç çözünürlükte piksel, opak = saydamlık (zemin kalitesiyle
+     çarpılır), parlaklik = ışıklı çizgi rengine çarpan, y = zeminden yükseklik m). topEnAz: topun ekrandaki en küçük çapı (piksel; daha uzakta
+     büyütülür), topEnCok: en çok büyütme katı. topLeke: havadaki topun altındaki koyu leke (opak, boy = top yarıçapına oran, yukseklik = top
+     yerden bu kadar (m) yükselince). parlama: oyuncu dokusunun kendi renginden ışıma payı (gece ışığında koyu leke olmasınlar).
+     disCizgi: oyuncu ve topun çevresinde 1 piksellik koyu çizgi denemesi (karşılaştırma için; varsayılan kapalı). TEST değerleri */
+  okunurluk:{cizgi:{acik:true,genislik:1,opak:0.7,parlaklik:1,y:0.02},topEnAz:3.3,topEnCok:3,topLeke:{opak:0.5,boy:2.2,yukseklik:0.3},parlama:0.12,disCizgi:false}
 };

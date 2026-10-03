@@ -4,7 +4,7 @@
    itiraz, alkış. Sakin anlarda telefonuna bakar. Dürbünü elleriyle kaldırır. Çay 2.8A'da, masadaki maç programı 2.8O'da kaldırıldı. */
 const BK=STIL.baskan;
 const BASKAN={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(BK.aci,RW/RH,0.02,6),eylem:null,kuyruk:[],bosT:12,
-  kalk:0,kalkHedef:0,sarsinti:0,durbunDurum:0,durbunHedef:0,durbunHazir:null};
+  kalk:0,kalkHedef:0,sarsinti:0,durbunDurum:0,durbunHedef:0,durbunHazir:null,govde:{y:0,p:0}};
 {const S=BASKAN.sahne;S.add(new THREE.AmbientLight(0x7a7064,1.1));
  const d=new THREE.DirectionalLight(0xffe4bc,0.75);d.position.set(0.4,2,1.2);S.add(d);
  const f=new THREE.DirectionalLight(0x9fb0d8,0.25);f.position.set(-1,0.5,-1);S.add(f);}
@@ -83,10 +83,11 @@ const BK_V=new THREE.Vector3();
 function elYerlestir(el,poz){const E=BK_EL[el];E.g.position.set(...poz.p);E.g.rotation.set(poz.r[0],poz.r[1],poz.r[2]);E.parmak.rotation.x=poz.k*1.4;}
 function baskanKare(dt,kamera){
   const B=BASKAN;
-  /* kendiliğinden eylem: sakin anda (maç öncesi, devre arası ya da top ortadayken) telefona bakar */
+  /* kendiliğinden eylem: sakin anda telefona bakar. A akışı (2026-10-03): yalnız top oyun dışındayken (duran top, gol sonrası, maç öncesi,
+     devre arası, maç sonu); oyun sürerken telefon ekranın alt ortasını kapatmaz */
   B.bosT-=dt;
   if(!B.eylem&&B.bosT<=0){B.bosT=14+rnd()*22;
-    const ph=typeof mac!=='undefined'?mac.phase:'',sakin=ph==='play'?Math.abs(mac.ball.x)<24:true;
+    const ph=typeof mac!=='undefined'?mac.phase:'',sakin=ph!=='play'&&ph!=='kickoff';
     if(sakin){const r=rnd();if(MAC_ONCESI.includes(ph)||ph==='halftime'?r<0.25:r<0.12)baskanEylem('telefon');}}
   /* eylemi oynat */
   let poz={sol:BK_DINLEN.sol,sag:BK_DINLEN.sag};const e=B.eylem;
@@ -109,9 +110,13 @@ function baskanKare(dt,kamera){
   /* ayağa kalkma (yay) ve masaya yumruk sarsıntısı */
   B.kalk+=(B.kalkHedef-B.kalk)*Math.min(1,dt*(B.kalkHedef>B.kalk?5:2.2));B.sarsinti=Math.max(0,B.sarsinti-dt*4);
   BK_MASA.position.y=Math.sin(zamanB*55)*0.004*B.sarsinti;
-  /* gövde hissi: baş dönünce ön plan biraz ters yöne kayar (nefes salınımı yok, 2.8J) */
+  /* gövde hissi: baş dönünce ön plan biraz ters yöne kayar (nefes salınımı yok, 2.8J). A akışı: bakış topa odaklı ve sık döndüğünden ön plan
+     ona en çok govdeHiz (radyan/sn) hızla yetişir; uzak tarafa bakınca masa en çok egimUst kadar iner. Masadaki telefon ekranda kalır ve
+     kıpırdamadan tıklanır. Ön plan görüş açısı (aci) maçın yakınlaşmasından bağımsızdır; duraklatmada (dt 0) yerinde kalır */
   kamera.getWorldDirection(BK_V);const yaw=Math.atan2(BK_V.x,BK_V.z),pitch=Math.asin(clamp(BK_V.y,-1,1));
-  const K=B.kamera;K.rotation.set(clamp((pitch-BK.dinlenmeEgimi)*0.22,-0.12,0.14),clamp(yaw*0.25,-0.3,0.3),0);
+  const G=B.govde,m=BK.govdeHiz*dt;
+  G.p+=clamp(clamp((pitch-BK.dinlenmeEgimi)*0.22,-0.12,BK.egimUst)-G.p,-m,m);G.y+=clamp(clamp(yaw*0.25,-0.3,0.3)-G.y,-m,m);
+  const K=B.kamera;K.rotation.set(G.p,G.y,0);
   K.position.set(0,B.kalk*0.34,B.kalk*0.1);
 }
 let zamanB=0;

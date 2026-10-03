@@ -6,19 +6,37 @@ let renderer=null;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:false,preserveDrawingBuffer:true});}catch(e){renderer=null;}
 if(!renderer){screenEl.insertAdjacentHTML('beforeend','<p class="nogl">Bu cihazda 3B görüntü (WebGL) açılamadı.</p>');throw new Error('WebGL yok');}
 renderer.setPixelRatio(1);renderer.setSize(RW,RH,false);hud.width=RW;hud.height=RH;renderer.autoClear=false;
-const rt=new THREE.WebGLRenderTarget(RW,RH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,stencilBuffer:true});
+/* A akışı (2026-10-03): maç sahnesi iç çözünürlüğün ornekleme katı büyüklükte çizilir (rtMac, 1280×960), son işlem her 2×2 bloğun
+   ortalamasını alır; 15 bit renk ve titreme yine 640×480 ızgarasındadır. Doğrusal süzgeçle blok köşesinden tek örnek dört pikselin
+   ortalamasıdır. Oda ve balkon yakın sahnedir, eskisi gibi 640×480 hedefe (rt) çizilir (js/oda.js odaCiz); hangi hedefin son işleme
+   gireceğini sonIslemHedefi seçer (js/arayuz.js frame) */
+const EKRAN_ORNEK=Math.max(1,Math.round(STIL.ekran.ornekleme||1)),EKRAN_RT_AYAR={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,generateMipmaps:false,stencilBuffer:true};
+const rt=new THREE.WebGLRenderTarget(RW,RH,EKRAN_RT_AYAR),rtMac=EKRAN_ORNEK>1?new THREE.WebGLRenderTarget(RW*EKRAN_ORNEK,RH*EKRAN_ORNEK,EKRAN_RT_AYAR):rt;
 const scene=new THREE.Scene();scene.fog=new THREE.Fog(STIL.sis.renk,STIL.sis.yakin,STIL.sis.uzak);
 const camera=new THREE.PerspectiveCamera(30,4/3,0.3,1200);
 
-/* ---- son işlem: 15 bit renk + 4x4 düzenli titreme (dönemin ekran kartları gibi) ---- */
+/* ---- son işlem: 15 bit renk + 4x4 düzenli titreme (dönemin ekran kartları gibi) ----
+   Tuval, ekrandaki boyunu karşılayan tam sayı katında (uK) çizilir: her iç piksel uK×uK düzgün bloktur; tarayıcı bunu ekrana yumuşak
+   küçültür (keskin-çift doğrusal): pikseller eşit görünür, tam katta birebir. uDis: oyuncuların çevresinde koyu çizgi denemesi (okunurluk) */
 const post=new THREE.Scene(),postCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-const postMat=new THREE.ShaderMaterial({uniforms:{tD:{value:rt.texture},uDither:{value:STIL.ekran.titreme?STIL.ekran.titremeGucu:0},uLv:{value:Math.pow(2,STIL.ekran.renkBiti)-1}},depthTest:false,depthWrite:false,
-  vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
-  fragmentShader:`uniform sampler2D tD;uniform float uDither,uLv;varying vec2 vUv;
+const postMat=new THREE.ShaderMaterial({uniforms:{tD:{value:rt.texture},uDither:{value:STIL.ekran.titreme?STIL.ekran.titremeGucu:0},uLv:{value:Math.pow(2,STIL.ekran.renkBiti)-1},
+  uK:{value:1},uR:{value:new THREE.Vector2(RW,RH)},uDis:{value:0}},depthTest:false,depthWrite:false,
+  vertexShader:'void main(){gl_Position=vec4(position.xy,0.0,1.0);}',
+  fragmentShader:`uniform sampler2D tD;uniform float uDither,uLv,uK,uDis;uniform vec2 uR;
   float b2(vec2 a){a=floor(a);return fract(dot(a,vec2(0.5,a.y*0.75)));}
   float b4(vec2 a){return b2(0.5*a)*0.25+b2(a);}
-  void main(){vec3 c=texture2D(tD,vUv).rgb;float d=(b4(gl_FragCoord.xy)-0.47)*uDither;c=floor(c*uLv+0.5+d)/uLv;gl_FragColor=vec4(c,1.0);}`});
+  void main(){vec2 q=floor(gl_FragCoord.xy/uK)+0.5,uv=q/uR;vec4 t=texture2D(tD,uv);vec3 c=t.rgb;
+    if(uDis>0.5&&t.a>0.9){vec2 e=vec2(1.0/uR.x,0.0),f=vec2(0.0,1.0/uR.y);
+      float m=min(min(texture2D(tD,uv+e).a,texture2D(tD,uv-e).a),min(texture2D(tD,uv+f).a,texture2D(tD,uv-f).a));if(m<0.9)c*=0.32;}
+    float d=(b4(q)-0.47)*uDither;c=floor(c*uLv+0.5+d)/uLv;gl_FragColor=vec4(c,1.0);}`});
 post.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),postMat));
+function sonIslemHedefi(h){postMat.uniforms.tD.value=h.texture;}
+/* tuvalin çizim katı: ekrandaki genişlik × aygıt piksel oranı / 640, yukarı yuvarlanır (1–4) */
+let EKRAN_KAT=1;
+function ekranKatGuncelle(){const r=canvas.getBoundingClientRect(),k=clamp(Math.ceil(r.width*(window.devicePixelRatio||1)/RW-0.02),1,4)||1;
+  if(k!==EKRAN_KAT){EKRAN_KAT=k;renderer.setSize(RW*k,RH*k,false);postMat.uniforms.uK.value=k;}}
+ekranKatGuncelle();addEventListener('resize',ekranKatGuncelle);
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(ekranKatGuncelle).observe(canvas);
 
 /* ---- köşe titremesi: köşeler ekran piksellerine yapışır (PS1 hissi) ---- */
 const SG='vec2('+(RW/2).toFixed(1)+','+(RH/2).toFixed(1)+')',SNAP='#include <project_vertex>\n{vec4 q=gl_Position;q.xy=floor(q.xy/q.w*'+SG+'+0.5)/'+SG+'*q.w;gl_Position=q;}';
@@ -28,7 +46,7 @@ function mk(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;r
 function tx(cv,mode,rep){const t=new THREE.CanvasTexture(cv);
   if(mode==='n'){t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;}
   else if(mode==='m'){t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;}
-  else t.anisotropy=4;
+  else t.anisotropy=renderer.capabilities.getMaxAnisotropy();   /* A akışı: uzaktaki saha çizgileri yatık açıda silinmesin */
   if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);}return t;}
 /* birden çok kutuyu tek geometride birleştirir; her parçanın köşe rengi olur (varsayılan beyaz, örnek rengiyle çarpılır) */
 function kutuBirlestir(parcalar){const pos=[],nor=[],col=[],idx=[];
@@ -51,4 +69,4 @@ function glow(color,size,op){const s=new THREE.Sprite(new THREE.SpriteMaterial({
  scene.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false,depthWrite:false})));
  const sp=[];for(let i=0;i<320;i++){const a=rnd()*Math.PI*2,e=0.18+rnd()*1.2;sp.push(Math.cos(a)*Math.cos(e)*650,Math.sin(e)*650,Math.sin(a)*Math.cos(e)*650);}
  const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));
- scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:STIL.gokyuzu.yildiz,size:1,sizeAttenuation:false,fog:false})));}
+ scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:STIL.gokyuzu.yildiz,size:EKRAN_ORNEK,sizeAttenuation:false,fog:false})));}

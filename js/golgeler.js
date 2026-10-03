@@ -5,9 +5,9 @@
    Her ışık kendi stencil bitini kullanır: aynı ışığın gölgesi bir pikseli bir kez koyulaştırır (çift koyulaşma yok),
    farklı ışıkların gölgeleri üst üste binince doğal olarak koyulaşır. */
 const GOLGE_ZEMIN=0.02,GOLGE_KAPASITE=1400;
-/* vekil kutular: [kemik, genişlik, yükseklik, derinlik, x, y, z] (kemiğe göre, metre) */
+/* vekil kutular: [kemik, genişlik, yükseklik, derinlik, x, y, z] (kemiğe göre, metre). Gövde iskelet 2'de kendi kemiğindedir (govde, 2026-10-03) */
 const GOLGE_VEKIL=[
-  ['hip',0.34,0.22,0.21,0,0.02,0],['hip',0.42,0.54,0.23,0,0.39,0],['head',0.22,0.26,0.24,0,0,0],
+  ['hip',0.34,0.22,0.21,0,0.02,0],['govde',0.42,0.54,0.23,0,0.27,0],['head',0.22,0.26,0.24,0,0,0],
   ['aL',0.11,0.34,0.11,0,-0.13,0],['aR',0.11,0.34,0.11,0,-0.13,0],['eL',0.09,0.36,0.09,0,-0.18,0],['eR',0.09,0.36,0.09,0,-0.18,0],
   ['lL',0.16,0.46,0.17,0,-0.2,0],['lR',0.16,0.46,0.17,0,-0.2,0],['kL',0.12,0.5,0.14,0,-0.24,0],['kR',0.12,0.5,0.14,0,-0.24,0],
   ['kL',0.12,0.08,0.26,0,-0.46,0.05],['kR',0.12,0.08,0.26,0,-0.46,0.05]
@@ -50,8 +50,8 @@ function golgeleriGuncelle(){
   for(const m of GOLGE.insanlar){
     if(!m.root.visible||!m.root.parent)continue;
     m.root.updateMatrixWorld(true);
-    for(const [kem,w,h,d,x,y,z] of GOLGE_VEKIL){if(n>=GOLGE_KAPASITE)break;
-      GOLGE_K.makeScale(w,h,d).setPosition(x,y,z);GOLGE_M.multiplyMatrices(m[kem].matrixWorld,GOLGE_K);GOLGE_M.toArray(a,n*16);n++;}}
+    for(let i=0;i<GOLGE_VEKIL.length;i++){if(n>=GOLGE_KAPASITE)break;const v=GOLGE_VEKIL[i];
+      GOLGE_K.makeScale(v[1],v[2],v[3]).setPosition(v[4],v[5],v[6]);GOLGE_M.multiplyMatrices(m[v[0]].matrixWorld,GOLGE_K);GOLGE_M.toArray(a,n*16);n++;}}
   GOLGE.ortak.needsUpdate=true;
   const t=GOLGE.top,tg=!!(t&&t.visible);
   for(const I of GOLGE.isiklar){I.im.count=n;I.tm.visible=tg;if(tg){I.tm.position.copy(t.position);I.tm.scale.setScalar(GOLGE.topR);}}

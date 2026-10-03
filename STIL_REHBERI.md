@@ -1,13 +1,13 @@
 # Chairman — stil rehberi
 
-Son güncelleme: 2026-10-02. Bu belge mevcut maç prototipinin görsel dilini ve planlanan kariyer sahnelerinin sunum ilkelerini tanımlar. **2.8A–2.8F ilk uygulamadır; 2026-10-02 iki seçenekli sade sunum yenilemesi 2.8G–2.8K ile uygulandı (aşağıdaki “Bugünkü uygulama” notları).** Oyun kapsamı [OYUN_TASARIMI.md](OYUN_TASARIMI.md), yapım sırası [YOL_HARITASI.md](YOL_HARITASI.md) içindedir. Hedefler okunabilirlik ve etkileşim çerçevesidir; kesin ölçü, ikon, portre kompozisyonu ve kısa metin uygulayıcının tasarım alanıdır.
+Son güncelleme: 2026-10-03. Bu belge mevcut maç prototipinin görsel dilini ve planlanan kariyer sahnelerinin sunum ilkelerini tanımlar. **2.8A–2.8F ilk uygulamadır; 2026-10-02 iki seçenekli sade sunum yenilemesi 2.8G–2.8K ile uygulandı (aşağıdaki “Bugünkü uygulama” notları).** Oyun kapsamı [OYUN_TASARIMI.md](OYUN_TASARIMI.md), yapım sırası [YOL_HARITASI.md](YOL_HARITASI.md) içindedir. Hedefler okunabilirlik ve etkileşim çerçevesidir; kesin ölçü, ikon, portre kompozisyonu ve kısa metin uygulayıcının tasarım alanıdır.
 
 Ortak görsel ayarlar `js/stil-99.js` üzerinden yönetilir. İlgili dosyalarda kalan sabitler değiştirilirken uygun ortak ayarlara taşınır. Bu belge bütün sayısal değerleri tekrar eden bir envanter değildir.
 
 ## 1. Görsel kimlik ve ekran
 
 - Mevcut referans FIFA 99 / PS1 dönemi 3B futbol görünümüdür. Önceki reddedilmiş görsel konseptler bu yönün yerine geçmez.
-- Maç görüntüsü 4:3 ve 640×480 iç çözünürlüktedir. Büyütmede en yakın komşu kullanılır; pikseller yumuşatılmaz.
+- Maç görüntüsü 4:3 ve 640×480 iç çözünürlüktedir. **2026-10-03 (kullanıcı kararı):** maç sahnesi içeride 2× (1280×960) çizilir, her 2×2 blok ortalanarak 640×480 ızgaraya iner; 5 bit renk ve titreme bu ızgarada aynen uygulanır (`STIL.ekran.ornekleme`). Oda ve balkon 640×480'de çizilir. Ekrana büyütmede tuval görünen boyu karşılayan tam sayı katında çizilir, tarayıcı küçültürken yumuşatır (keskin çift doğrusal); pikseller eşit genişlikte kalır.
 - Başkanın gözünden bakıldığı için TV kasası, tarama çizgisi veya yayın çerçevesi eklenmez.
 - Kanal başına 5 bit renk ve ekrana sabit 4×4 Bayer titremesi kullanılır; mevcut titreme şiddeti %70'tir.
 - Köşe titremesi kapalıdır (`koseTitremesi:false`). Retro görünüm, hareketin piksel piksel zıplamasını gerektirmez.
@@ -27,6 +27,7 @@ Gece sahnesinde sıcak projektör sarısı, gece laciverti ve sis kullanılır. 
 | Meşale / tabela amberi | `#ff4a1e` / `#ffb530` |
 | Akdeniz FK beyazı / laciverti | `#eef0f3` / `#22347a` |
 
+- **2026-10-03:** maçta sıcak ana ışık başkanın locası tarafından gelir (`STIL.isik.ana.konum`), soğuk karşı ışık uzak taraftan; oyuncular locadan arkadan aydınlanmış görünmez. Oyuncu malzemelerine kendi dokusundan hafif ışıma eklenir; saha çizgileri her zaman en az bir piksel çizilen ayrı bir katmandır, top ekranda en az ~3,3 piksel görünür ve havadayken altında koyu bir leke vardır (`STIL.okunurluk`, `js/okunurluk.js`). İsteğe bağlı 1 piksellik koyu dış çizgi denemesi vardır, varsayılanı kapalıdır (`STIL.okunurluk.disCizgi`).
 - Mevcut gece gölgeleri, oyuncunun kemiklerine bağlı kutuların projektörden zemine izdüşümüdür (`js/golgeler.js`). Kol ve bacaklarla hareket eder; top da gölge verir.
 - Aynı ışığın gölgesi stencil ile aynı pikseli bir kez koyulaştırır; farklı ışıklar üst üste gelebilir.
 - Gündüz, hava durumu ve bunlara uygun gölge düzenleri gelecekteki iştir. Bugünkü gece sahnesinin tamamlanmış alternatifleri sayılmaz.
@@ -45,8 +46,9 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 ## 4. İnsanlar ve hareket
 
-- Oyuncular boy, vücut yapısı, saç, yüz kılları, krampon ve forma ayrıntılarıyla ayırt edilir. Numara sırtta büyük, göğüste küçüktür; kaleci kıyafeti farklıdır.
+- Oyuncular boy, vücut yapısı, saç, yüz kılları, krampon ve forma ayrıntılarıyla ayırt edilir. Numara sırtta büyük, göğüste küçüktür; kaleci kıyafeti farklıdır. Deplasman kalecisinin forması çimde kaybolmasın diye mordur (2026-10-03; kullanıcı incelemesine açık).
 - Hareketler mevcut `POSE` sistemine eklenir. Ayrıntılı poz listesi kodda tutulur; bu belge ikinci bir liste oluşturmaz.
+- **2026-10-03 (`js/animasyon.js`):** iskelette kalçanın altında bir gövde kemiği vardır (insan başına yine tek çizim). Koşu yönü gövdeye göre ileri, geri ve yan adım olarak karışır; yerdeki ayak kaymaz (iki kemikli bacak uzanması). Kalça harekete döner, gövde ters döner; ivmede eğilir, dönüşte yatar. Baş topa ya da oyuncunun etrafa bakma yönüne döner. Vuruş biçimi (iç, dış, üst, aşırtma, vole) ve gücü ayrı görünür; omuz mücadelesi, sendeleme, jokey ve top koruma duruşları vardır. Düşüşün yönü temastan gelir; kalkış aynı yönden olur (ters dönme yok). Kalecinin uçuşu itiş, havada yay ve iniş evrelerinden oluşur. Sevinçler dört çeşittir ve oyuncular aynı anda hareket etmez; gol yiyen takım üzgün durur. Top falso ve üst dönüşüyle döner, elde dönmez. Görünüş ayarları `STIL.animasyon`; denemesi `araclar/poz-galerisi.html`.
 - Model motorun gerçek bakış yönünü izler. Sol ayaklı futbolcunun vuruşu doğru bacağa aynalanır.
 - Koşu hızla uyumludur; poz geçişleri, dönüşler ve sabit motor adımları arasındaki çizim yumuşaktır.
 - Yedekler, teknik direktör, saha personeli, top toplayıcılar, hakemler ve fotoğrafçılar işlevlerine uygun görünür. Yeni görevlerde var olan modeller ve pozlar geliştirilir.
@@ -71,7 +73,7 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 ### Mevcut maç prototipi
 
-- Kamera açık ana tribündeki başkan koltuğunda, göz hizasındadır. Dürbün isteğe bağlı yakınlaştırmadır; TV kamerası kullanılmaz.
+- Kamera başkanın locasında, göz hizasındadır (2.8O). Dürbün elle açılan yakınlaştırmadır; TV kamerası kullanılmaz. Bugünkü bakış ve yakınlaşma kuralı aşağıdaki 2026-10-03 maddesindedir.
 - Bakış topu ve maç günündeki dikkat çekici olayları yumuşak geçişlerle izler.
 - Ön planda başkanın kolları, saat, masa, program ve telefon görünür (`js/baskan.js`; çay 2.8A'da kaldırıldı). Eller maç olaylarına tepki verir; dürbün elle kaldırılır. Sakin anda başkan programa ya da telefonuna bakar.
 
@@ -92,7 +94,8 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 - **2026-10-02 ile güncellendi:** Kalkış → kapıya yönelme → kısa doğal yürüyüş → oturma hissi korunur; kamera sallantısı ve süs hareketleri kaldırılır. Yalnız düz kamera kayması veya eski hareket azaltmadaki doğrudan geçiş yeni yürüyüşün yerine geçmez. Başlangıçta tam bacak modeli gerekmez; uygulayıcı gerekli hareketi sakin hız/beden/kapı ipuçlarıyla çözer. Bu bütün oyunun standardıdır, Ayarlar'da hareket azaltma seçeneği kalmaz. Maç/top ve gerekli karakter hareketleri devam eder; Duraklat ayrı işlevdir. *Bugün (2.8J):* kamera nefesi, yürüyüş yalpası, gol sarsıntısı, dürbün titremesi, parmak vurma ve yanıp sönen ışıklar kalktı; adımda çok küçük dikey hareket kalır; yürüyüş tıklayınca atlanır.
 - Maç koltuğu gerçek tribün geometrisiyle birlikte daha yükseğe alınır. Başkanın altında tribün sıraları, önünde saha görünür; saha bütünü izlenebilir. Kamera yalnız havaya kaldırılmaz; koltuk, masa ve başkan bölümünün konumu tutarlı olur. Dürbün ve eller bu açıyla yeniden kontrol edilir.
 - Genel duraklatmada kalkış, adım, kapı, kamera bakışı ve başkan hareketi bulundukları anda donar; devamda sıçrama olmaz. Serbest inceleme için menü gezintisi açık kalır.
-- **Bugünkü uygulama (2.8O, kullanıcı kararı 2026-10-02):** Bakış daha yukarıdan ve geniştir: göz ≈12,5 m yüksekte, kenar çizgisinden ≈22 m geride, dikey görüş açısı 52°. Orta sahaya bakarken iki yedek kulübesi, sahanın büyük kısmı, karşı tribün ve tabela görünür; baş sürekli sağa sola dönmez. Bakış topun anlık yerini değil, sahanın ortasına sıkıştırılmış (x payı 0,6, en çok ±30 m; z payı 0,45) ve ~1,3 sn'de yumuşayan atak bölgesini izler; yay yumuşaktır (`STIL.kameralar.baskan.takip`). Masadaki beyaz maç programı ve ona bakma hareketi kaldırıldı; masada sümen ve telefon kalır, sakin anda başkan telefonuna bakar. Saha kenarında top toplayıcı yoktur; kenar boyunca, köşelerde ve kale arkalarında konilerin üstünde yedek toplar durur. Dürbün aynıdır.
+- **Topa odaklı bakış ve yakınlaşma (kullanıcı kararı 2026-10-03; 2.8O'daki “atak bölgesini izle, baş az döner” kuralının yerini alır):** Oyun sürerken bakış topa odaklıdır: topu taşıyanın biraz önüne, serbest topta kısa bir öngörüyle topun gideceği yere, uzun havadan topta iniş yerine doğru, son üçte birde kale ağzını da kadraja alacak kadar kaleye kayar; top ekranın ortasına yakın kalır. Sapma ve eğim ayrı, kritik sönümlü yaylarla izlenir (en çok ~100°/sn, top yavaşken küçük ölü bölge); maç zamanıyla ilerlediği için 2–8× hızda geride kalmaz, Duraklat'ta donar. Dikey görüş açısı oyunda oyunun yayılımına göre 36–40° arasında yumuşakça değişir; duran topta kısa bir beklemeden sonra, maç öncesi, devre arası, törende ve maç sonunda 52° geniş açıya döner (kulübeler ve tabela o anlarda görünür). Kart, gol sevinci ve maç günü anlarında ilgi noktası seçimi sürer. Dürbün elle açılır (düğme ya da D tuşu), açıkken bakış topa kilitlenir (9–13°), açılıp kapanırken görüş açısı yumuşak geçer. Boşta telefona bakma yalnız top oyun dışındayken olur. Ayarlar `STIL.kameralar` (`oyunAci`, `aciSure`, `oluGecikme`, `yayOyun`, `top`, `genislik`, `durbun`), kod `js/kamera.js`.
+- **Tarihsel (2.8O, kullanıcı kararı 2026-10-02):** Bakış daha yukarıdan ve geniştir: göz ≈12,5 m yüksekte, kenar çizgisinden ≈22 m geride, dikey görüş açısı 52°. Orta sahaya bakarken iki yedek kulübesi, sahanın büyük kısmı, karşı tribün ve tabela görünür; baş sürekli sağa sola dönmez. Bakış topun anlık yerini değil, sahanın ortasına sıkıştırılmış (x payı 0,6, en çok ±30 m; z payı 0,45) ve ~1,3 sn'de yumuşayan atak bölgesini izler; yay yumuşaktır (`STIL.kameralar.baskan.takip`). Masadaki beyaz maç programı ve ona bakma hareketi kaldırıldı; masada sümen ve telefon kalır, sakin anda başkan telefonuna bakar. Saha kenarında top toplayıcı yoktur; kenar boyunca, köşelerde ve kale arkalarında konilerin üstünde yedek toplar durur. Dürbün aynıdır.
 
 ## 7. Arayüz ve bilgi
 

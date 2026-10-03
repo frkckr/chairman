@@ -26,6 +26,8 @@ body{font-family:var(--mono);font-size:14px;line-height:1.55;padding-inline:16px
 .wrap{max-width:1040px;margin-inline:auto;display:grid;gap:18px}
 .screen{position:relative;width:100%;max-width:900px;margin-inline:auto;aspect-ratio:4/3;overflow:hidden;background:#000;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px #2e2b26}
 .screen canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+/* 3B görüntü tam sayı katında çizilir (js/goruntu.js); tarayıcı ekrana yumuşak küçültür: pikseller eşit görünür (keskin-çift doğrusal) */
+.screen canvas#view,.screen canvas#hud{image-rendering:auto}
 .controls{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 22px}
 .grp{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .lbl{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -358,7 +360,7 @@ html,body{margin:0}
   <div class="controls" id="baskanDugmeleri">
     <div class="grp"><span class="lbl">Başkan</span>
       <div class="seg">
-        <button type="button" id="btnBino" aria-pressed="false">Dürbün</button>
+        <button type="button" id="btnBino" aria-pressed="false" title="Dürbün: topa kilitlenir (D)" aria-keyshortcuts="D">Dürbün</button>
         <button type="button" id="btnDuraklat" aria-pressed="false" title="Kısayol: boşluk tuşu">Duraklat</button>
         <button type="button" id="btnTelefon" aria-pressed="false" title="Masadaki telefon (T)">Telefon</button>
         <button type="button" id="btnMacaGec" title="Maç öncesini (ısınma, tören, fotoğraf, yazı tura) atla">Santraya geç</button>
@@ -408,6 +410,10 @@ html,body{margin:0}
 <script src="js/baslangic.js"></script>
 <script src="js/oyun-oturumu.js"></script>
 <script src="js/mac-motoru.js"></script>
+<script src="js/mac-hareket.js"></script>
+<script src="js/mac-mudahale.js"></script>
+<script src="js/mac-topla.js"></script>
+<script src="js/mac-kaleci.js"></script>
 <script src="js/mac-dizilis.js"></script>
 <script src="js/mac-karar.js"></script>
 <script src="js/mac-kurallar.js"></script>
@@ -419,7 +425,10 @@ html,body{margin:0}
 <script src="js/oyuncular.js"></script>
 <script src="js/golgeler.js"></script>
 <script src="js/efektler.js"></script>
+<script src="js/animasyon.js"></script>
 <script src="js/mac-sahnesi.js"></script>
+<script src="js/kamera.js"></script>
+<script src="js/okunurluk.js"></script>
 <script src="js/baskan.js"></script>
 <script src="js/oda.js"></script>
 <script src="js/balkon.js"></script>
