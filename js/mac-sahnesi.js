@@ -77,11 +77,18 @@ const PARA={t:-1,x:0,z:0};
 /* ---- heyecan ve skor tabelası ---- */
 const H=STIL.seyirci.heyecan,HEY={ev:0,dep:0,tutEv:0,tutDep:0};
 function heyecanla(takim,deger,tut){if(takim!==1){HEY.ev=Math.max(HEY.ev,deger);if(tut)HEY.tutEv=tut;}if(takim!==0){HEY.dep=Math.max(HEY.dep,deger);if(tut)HEY.tutDep=tut;}}
-let tabelaAnahtar='';
-function tabelaGuncelle(){
-  const ph=mac.phase,dk=mac.minuteLabel(),alt=MAC_ONCESI.includes(ph)?'MAÇ ÖNCESİ':ph==='halftime'?'DEVRE ARASI':ph==='fulltime'?'MAÇ SONU':'DAKİKA '+dk;
+let tabelaAnahtar='',tabelaSabit='',tabelaBekle=0;
+/* tabelanın alt satırı: oyunda canlı maç saati dakika:saniye (ör. 17:33; 2026-10-03 kullanıcı kararı). Uzatmada saymayı sürdürür (46:12, 91:05);
+   ikinci yarı 45:00'ten başlar. Tabela yalnız yazı değişince yeniden çizilir; yalnız saat değiştiyse en çok saniyede 10 kez (hızlı oynatmada
+   tuval yüklemesi her kareye binmez; skor ve durum hemen yazılır). dt gerçek süredir, duraklatmada 0. TABELA.yazi denemeler içindir */
+function tabelaSaati(){const s=Math.max(0,Math.floor(mac.gameSec));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function tabelaGuncelle(dt){
+  const ph=mac.phase,saat=!MAC_ONCESI.includes(ph)&&ph!=='halftime'&&ph!=='fulltime',alt=MAC_ONCESI.includes(ph)?'MAÇ ÖNCESİ':ph==='halftime'?'DEVRE ARASI':ph==='fulltime'?'MAÇ SONU':tabelaSaati();
   const kalan=Math.round(cizgiDegeri(MAC_SENARYOSU.kalan,mac.sen.t)),tabelaAlt=ph==='isinma'?(kalan>0&&Math.floor(zaman/6)%2?'MAÇA '+kalan+' DK':'HOŞ GELDİNİZ'):alt;
-  const k=mac.score.join('-')+tabelaAlt;if(k===tabelaAnahtar)return;tabelaAnahtar=k;
+  tabelaBekle-=dt||0;
+  const k=mac.score.join('-')+tabelaAlt;if(k===tabelaAnahtar)return;
+  const sabit=mac.score.join('-')+(saat?'saat':tabelaAlt);if(sabit===tabelaSabit&&tabelaBekle>0)return;
+  tabelaAnahtar=k;tabelaSabit=sabit;tabelaBekle=0.1;TABELA.yazi=tabelaAlt;
   TABELA.ciz(MAC_KADRO[0].kisa,MAC_KADRO[1].kisa,mac.score,tabelaAlt);
 }
 /* maç olayları: başkanın tepkisi, tribün heyecanı, bakış, para, tabela ve sevinç. Yazılı spiker yoktur (2.8A) */
@@ -167,7 +174,7 @@ function macKare(dt){
   HEY.tutEv=Math.max(0,HEY.tutEv-dts);HEY.tutDep=Math.max(0,HEY.tutDep-dts);
   if(HEY.tutEv<=0)HEY.ev=Math.max(0,HEY.ev-dts/H.sonme);if(HEY.tutDep<=0)HEY.dep=Math.max(0,HEY.dep-dts/H.sonme);
   SEYIRCI_HEYECAN.value.set(HEY.ev,HEY.dep);MESALE_COSKU=HEY.ev;
-  tabelaGuncelle();
+  tabelaGuncelle(dt);
   golgeleriGuncelle();
   /* bakış (js/kamera.js) */
   kameraAdim(dt);

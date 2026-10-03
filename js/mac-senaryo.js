@@ -16,7 +16,7 @@ const MAC_SENARYOSU={
   driller:[['kosu',18],['esneme',15],['rondo',32],['paslasma',22],['sut',30],['depar',10]],
   dorduncu:[196,202],                 // 4. hakem tabelasıyla çıkar
   yedekler:[204,236],                 // yedekler ve antrenörler rastgele anlarda kulübeye
-  fotografcilar:[222,232],
+  fotografcilar:[222,232],            // yalnız çekiliş: fotoğrafçılar marştan sonra çıkar, bu aralık çıkış gecikmesini (0–1,5 sn) verir
   teknikDirektorler:[240,254],        // en son teknik direktörler
   giris:262,                          // tünelden çıkış: önde 3 hakem, arkada iki sıra oyuncu
   mars:26,                            // İstiklal Marşı (sn)

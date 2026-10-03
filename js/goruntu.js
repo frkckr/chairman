@@ -1,17 +1,19 @@
 /* ============ Chairman — tek kare: PS1 / FIFA 99 dönemi görünümü (Three.js) ============ */
 const $=id=>document.getElementById(id);
-const RW=STIL.ekran.genislik,RH=STIL.ekran.yukseklik;
+/* iki ızgara: oda ve balkon 640×480 (RW×RH); maç sahnesi STIL.ekran.mac (960×720; 2026-10-03 ikinci paket, kullanıcı kararı) */
+const RW=STIL.ekran.genislik,RH=STIL.ekran.yukseklik,MAC_RW=(STIL.ekran.mac||STIL.ekran).genislik,MAC_RH=(STIL.ekran.mac||STIL.ekran).yukseklik;
 const screenEl=$('screen'),canvas=$('view'),hud=$('hud'),hg=hud.getContext('2d');
 let renderer=null;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:false,preserveDrawingBuffer:true});}catch(e){renderer=null;}
 if(!renderer){screenEl.insertAdjacentHTML('beforeend','<p class="nogl">Bu cihazda 3B görüntü (WebGL) açılamadı.</p>');throw new Error('WebGL yok');}
-renderer.setPixelRatio(1);renderer.setSize(RW,RH,false);hud.width=RW;hud.height=RH;renderer.autoClear=false;
-/* A akışı (2026-10-03): maç sahnesi iç çözünürlüğün ornekleme katı büyüklükte çizilir (rtMac, 1280×960), son işlem her 2×2 bloğun
-   ortalamasını alır; 15 bit renk ve titreme yine 640×480 ızgarasındadır. Doğrusal süzgeçle blok köşesinden tek örnek dört pikselin
-   ortalamasıdır. Oda ve balkon yakın sahnedir, eskisi gibi 640×480 hedefe (rt) çizilir (js/oda.js odaCiz); hangi hedefin son işleme
-   gireceğini sonIslemHedefi seçer (js/arayuz.js frame) */
+renderer.setPixelRatio(1);renderer.setSize(RW,RH,false);hud.width=MAC_RW;hud.height=MAC_RH;renderer.autoClear=false;
+/* maç sahnesi kendi ızgarasının (960×720) ornekleme katı büyüklükte çizilir (rtMac, 1920×1440), son işlem her 2×2 bloğun ortalamasını
+   alır; 15 bit renk ve titreme maç ızgarasındadır. Doğrusal süzgeçle blok köşesinden tek örnek dört pikselin ortalamasıdır. Oda ve balkon
+   yakın sahnedir, 640×480 hedefe (rt) çizilir (js/oda.js odaCiz); hangi hedefin son işleme gireceğini sonIslemHedefi seçer, ızgara da onunla
+   değişir (js/arayuz.js frame) */
 const EKRAN_ORNEK=Math.max(1,Math.round(STIL.ekran.ornekleme||1)),EKRAN_RT_AYAR={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,generateMipmaps:false,stencilBuffer:true};
-const rt=new THREE.WebGLRenderTarget(RW,RH,EKRAN_RT_AYAR),rtMac=EKRAN_ORNEK>1?new THREE.WebGLRenderTarget(RW*EKRAN_ORNEK,RH*EKRAN_ORNEK,EKRAN_RT_AYAR):rt;
+const rt=new THREE.WebGLRenderTarget(RW,RH,EKRAN_RT_AYAR),
+  rtMac=EKRAN_ORNEK>1||MAC_RW!==RW?new THREE.WebGLRenderTarget(MAC_RW*EKRAN_ORNEK,MAC_RH*EKRAN_ORNEK,EKRAN_RT_AYAR):rt;
 const scene=new THREE.Scene();scene.fog=new THREE.Fog(STIL.sis.renk,STIL.sis.yakin,STIL.sis.uzak);
 const camera=new THREE.PerspectiveCamera(30,4/3,0.3,1200);
 
@@ -30,11 +32,14 @@ const postMat=new THREE.ShaderMaterial({uniforms:{tD:{value:rt.texture},uDither:
       float m=min(min(texture2D(tD,uv+e).a,texture2D(tD,uv-e).a),min(texture2D(tD,uv+f).a,texture2D(tD,uv-f).a));if(m<0.9)c*=0.32;}
     float d=(b4(q)-0.47)*uDither;c=floor(c*uLv+0.5+d)/uLv;gl_FragColor=vec4(c,1.0);}`});
 post.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),postMat));
-function sonIslemHedefi(h){postMat.uniforms.tD.value=h.texture;}
-/* tuvalin çizim katı: ekrandaki genişlik × aygıt piksel oranı / 640, yukarı yuvarlanır (1–4) */
+/* etkin ızgara: son işleme giren hedefe göre (rtMac → maç ızgarası, rt → 640×480) */
+const IZGARA={w:RW,h:RH};
+function sonIslemHedefi(h){postMat.uniforms.tD.value=h.texture;const w=h===rtMac?MAC_RW:RW,g=h===rtMac?MAC_RH:RH;
+  if(w!==IZGARA.w||g!==IZGARA.h){IZGARA.w=w;IZGARA.h=g;postMat.uniforms.uR.value.set(w,g);ekranKatGuncelle(true);}}
+/* tuvalin çizim katı: ekrandaki genişlik × aygıt piksel oranı / ızgara genişliği, yukarı yuvarlanır (1–4) */
 let EKRAN_KAT=1;
-function ekranKatGuncelle(){const r=canvas.getBoundingClientRect(),k=clamp(Math.ceil(r.width*(window.devicePixelRatio||1)/RW-0.02),1,4)||1;
-  if(k!==EKRAN_KAT){EKRAN_KAT=k;renderer.setSize(RW*k,RH*k,false);postMat.uniforms.uK.value=k;}}
+function ekranKatGuncelle(zorla){const r=canvas.getBoundingClientRect(),k=clamp(Math.ceil(r.width*(window.devicePixelRatio||1)/IZGARA.w-0.02),1,4)||1;
+  if(k!==EKRAN_KAT||zorla===true){EKRAN_KAT=k;renderer.setSize(IZGARA.w*k,IZGARA.h*k,false);postMat.uniforms.uK.value=k;}}
 ekranKatGuncelle();addEventListener('resize',ekranKatGuncelle);
 if(typeof ResizeObserver!=='undefined')new ResizeObserver(ekranKatGuncelle).observe(canvas);
 

@@ -2,11 +2,12 @@
 let bino=false;
 const KMR=k=>({p:[BASKAN_KOLTUGU.x,BASKAN_KOLTUGU.y+k.goz,BASKAN_KOLTUGU.z],fov:k.aci}),VIEWS={baskan:KMR(STIL.kameralar.baskan),durbun:KMR(STIL.kameralar.durbun)};
 const curView=()=>bino?VIEWS.durbun:VIEWS.baskan;
+/* dürbün maskesi maç ızgarasında çizilir (hud tuvali MAC_RW×MAC_RH, js/goruntu.js) */
 function drawHUD(){
-  hg.clearRect(0,0,RW,RH);
+  const W=hud.width,H=hud.height;hg.clearRect(0,0,W,H);
   if(!bino)return;
-  hg.fillStyle='#030303';hg.fillRect(0,0,RW,RH);hg.globalCompositeOperation='destination-out';
-  for(const cx of[RW*0.35,RW*0.65]){hg.beginPath();hg.arc(cx,RH/2,RH*0.407,0,6.3);hg.fill();}
+  hg.fillStyle='#030303';hg.fillRect(0,0,W,H);hg.globalCompositeOperation='destination-out';
+  for(const cx of[W*0.35,W*0.65]){hg.beginPath();hg.arc(cx,H/2,H*0.407,0,6.3);hg.fill();}
   hg.globalCompositeOperation='source-over';
 }
 
@@ -18,6 +19,11 @@ const btnBino=$('btnBino');
 btnBino.onclick=()=>{if(!bino&&!BASKAN.durbunHazir){press(btnBino,true);baskanDurbun(true,()=>{bino=true;});}else{bino=false;press(btnBino,false);baskanDurbun(false);}};
 addEventListener('keydown',e=>{if(e.code!=='KeyD'||e.repeat||e.ctrlKey||e.altKey||e.metaKey||ON_EKRAN.sayfa!==null||btnBino.disabled)return;const t=e.target&&e.target.tagName;
   if(t==='INPUT'||t==='TEXTAREA'||(typeof MAC_TELEFON!=='undefined'&&MAC_TELEFON.acik))return;e.preventDefault();btnBino.onclick();});
+/* Topu izle (2026-10-03 ikinci paket): açıkken bakış topu kendiliğinden izler (js/kamera.js); kapalıyken (varsayılan) baş fareyle ya da ok
+   tuşlarıyla elle döner. Sürüklemek takibi kapatır. Kısayol: F (D ile aynı koşullarda) */
+const btnTopIzle=$('btnTopIzle');btnTopIzle.onclick=()=>kameraTakipAyarla(!KAM.takip);
+addEventListener('keydown',e=>{if(e.code!=='KeyF'||e.repeat||e.ctrlKey||e.altKey||e.metaKey||ON_EKRAN.sayfa!==null||btnTopIzle.disabled)return;const t=e.target&&e.target.tagName;
+  if(t==='INPUT'||t==='TEXTAREA'||(typeof MAC_TELEFON!=='undefined'&&MAC_TELEFON.acik))return;e.preventDefault();btnTopIzle.onclick();});
 /* duraklat: tek ortak yönetim (js/sunum-durumu.js; elle duraklatma 'elle' nedenidir). Maç, tribün, bayraklar, meşaleler, kamera, eller ve dürbün
    durur; oda, yürüyüş ve balkon da aynı yönetimle durur. Ekranı karartmayan küçük "Duraklatıldı" göstergesi açılır. Kısayol: boşluk ya da P */
 const btnDuraklat=$('btnDuraklat'),duraklatGosterge=$('duraklatildi');
@@ -25,7 +31,7 @@ function duraklatDegistir(){if(duraklatmaVar('elle'))duraklatmaKaldir('elle');el
 btnDuraklat.onclick=duraklatDegistir;
 /* geliştirici panelindeki Durdur/Devam aynı ortak duraklatmayı kullanır (2.8O) */
 const btnDurdur=$('btnDurdur');btnDurdur.onclick=duraklatDegistir;
-duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';btnBino.disabled=a;if(duraklatGosterge)duraklatGosterge.hidden=!a;});
+duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';btnBino.disabled=a;btnTopIzle.disabled=a;if(duraklatGosterge)duraklatGosterge.hidden=!a;});
 /* maça geç: maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) atlar; santrada düğme kaybolur */
 const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();btnMacaGec.hidden=true;};
 /* boşluk ya da P duraklatır (sayfa kaymaz); odaktaki düğmede boşluk düğmeyi çalıştırır. Oda açıkken kısayolu oda ekranı işler (js/ekran-oda.js) */

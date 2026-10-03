@@ -171,9 +171,10 @@ function statKur(kok,sec){
   }
   for(const t of STAT.tribunler)stand(t);
   /* ---- başkan locası (2.8O): ana tribünün arkasındaki kulüp binasında, balkonun bir kat üstünde. Beton döşeme, alçak ön bordür (başkanın
-     masası korkuluk işini görür), yan duvarlar ve öndeki iki ayak; başkanın koltuğu ön kenardadır. Kamera buradan bakar ---- */
+     masası korkuluk işini görür), yan duvarlar ve öndeki iki ayak; başkanın koltuğu ön kenardadır. Kamera buradan bakar. Yalnız maçta kurulur
+     (2026-10-03): balkon ve pencere statı ters döndüğünden döşeme odanın içine, baş hizasına düşüyordu ---- */
   {const t=STAT.tribunler.find(x=>x.yer==='ana');
-   if(t&&t.loca){const L=t.loca,O=tribunOlcu(t),arka=YAN_MESAFE+O.D+0.6,zemin=locaZemini(t),on=-(arka+L.geri)+0.7,W=L.genislik,D=L.derinlik;
+   if(t&&t.loca&&mac){const L=t.loca,O=tribunOlcu(t),arka=YAN_MESAFE+O.D+0.6,zemin=locaZemini(t),on=-(arka+L.geri)+0.7,W=L.genislik,D=L.derinlik;
      const beton=LAM({color:SK.beton}),koyu=LAM({color:SK.betonKoyu});
      kutu(W+0.4,0.35,D,beton,0,zemin-0.18,on-D/2);kutu(W+0.4,0.22,0.18,koyu,0,zemin+0.11,on);
      for(const sx of[-1,1]){kutu(0.25,2.6,D,koyu,sx*(W/2+0.1),zemin+1.3,on-D/2);kutu(0.5,zemin,0.5,beton,sx*(W/2-0.3),zemin/2,on-0.4);}

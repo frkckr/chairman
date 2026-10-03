@@ -23,11 +23,15 @@
 *{box-sizing:border-box}
 html,body{background:var(--room);color:var(--text)}
 body{font-family:var(--mono);font-size:14px;line-height:1.55;padding-inline:16px;padding-block:18px 48px}
-.wrap{max-width:1040px;margin-inline:auto;display:grid;gap:18px}
-.screen{position:relative;width:100%;max-width:900px;margin-inline:auto;aspect-ratio:4/3;overflow:hidden;background:#000;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px #2e2b26}
+/* oyun alanı pencereye sığan en büyük 4:3 kare (2026-10-03 ikinci paket, kullanıcı kararı; eskiden en çok 900 px): altındaki düğme satırı
+   ve geliştirici alanı ekranda kalır; dar ya da alçak pencerede en az 640 px (yer yoksa pencere genişliği) */
+.wrap{margin-inline:auto;display:grid;gap:18px}
+.screen{position:relative;width:min(100%,max(640px,calc((100svh - 190px)*4/3)));margin-inline:auto;aspect-ratio:4/3;overflow:hidden;background:#000;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px #2e2b26}
 .screen canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 /* 3B görüntü tam sayı katında çizilir (js/goruntu.js); tarayıcı ekrana yumuşak küçültür: pikseller eşit görünür (keskin-çift doğrusal) */
 .screen canvas#view,.screen canvas#hud{image-rendering:auto}
+/* elle bakış (js/kamera.js): maçta sürükleyerek baş çevrilir */
+#hud.kam-elle{cursor:grab;touch-action:none}#hud.kam-surukle{cursor:grabbing}
 .controls{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 22px}
 .grp{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .lbl{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -37,7 +41,7 @@ button:hover{border-color:#5a5446}
 button[aria-pressed="true"]{color:#1a1203;background:var(--amber);border-color:#b9791a}
 button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 /* geliştirici alanı: yalnız deneme ayarları; kapalı başlar, oyuncu alanının parçası değildir */
-.gelistirici{max-width:900px;width:100%;margin-inline:auto;border:1px dashed var(--line);border-radius:6px;padding:6px 12px;color:var(--muted);font-size:12px}
+.gelistirici{width:min(100%,max(640px,calc((100svh - 190px)*4/3)));margin-inline:auto;border:1px dashed var(--line);border-radius:6px;padding:6px 12px;color:var(--muted);font-size:12px}
 .gelistirici summary{cursor:pointer;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
 .gelistirici[open]{display:grid;gap:10px;padding-bottom:12px}
 .gelistirici .satir{display:flex;flex-wrap:wrap;gap:12px 26px;align-items:flex-end}
@@ -360,7 +364,8 @@ html,body{margin:0}
   <div class="controls" id="baskanDugmeleri">
     <div class="grp"><span class="lbl">Başkan</span>
       <div class="seg">
-        <button type="button" id="btnBino" aria-pressed="false" title="Dürbün: topa kilitlenir (D)" aria-keyshortcuts="D">Dürbün</button>
+        <button type="button" id="btnBino" aria-pressed="false" title="Dürbün (D): baktığın yeri büyütür; Topu izle açıkken topa kilitlenir" aria-keyshortcuts="D">Dürbün</button>
+        <button type="button" id="btnTopIzle" aria-pressed="false" title="Topu izle (F): bakış topu kendiliğinden izler; fareyle sürükleyince ya da ok tuşuyla elle bakışa döner" aria-keyshortcuts="F">Topu izle</button>
         <button type="button" id="btnDuraklat" aria-pressed="false" title="Kısayol: boşluk tuşu">Duraklat</button>
         <button type="button" id="btnTelefon" aria-pressed="false" title="Masadaki telefon (T)">Telefon</button>
         <button type="button" id="btnMacaGec" title="Maç öncesini (ısınma, tören, fotoğraf, yazı tura) atla">Santraya geç</button>
