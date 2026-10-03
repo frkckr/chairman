@@ -8,8 +8,10 @@ const STIL={
   /* Ekran: 4:3, PS1'in yüksek çözünürlük modu (640x480), 15 bit renk + 4x4 titreme.
      Köşe titremesi (köşelerin piksellere yapışması) kapalı: hareket pürüzsüz aksın diye. titremeGucu: renk titremesinin şiddeti (0–1).
      ornekleme (A akışı, 2026-10-03, kullanıcı kararı): sahne iç çözünürlüğün bu katında çizilip ortalanarak 640×480'e indirilir (2 = 1280×960);
-     renk biti ve titreme değişmez, uzaktaki ince çizgi ve küçük oyuncular kırılmaz. */
-  ekran:{genislik:640,yukseklik:480,renkBiti:5,titreme:true,titremeGucu:0.7,koseTitremesi:false,arkaPlan:0x070b16,ornekleme:2},
+     renk biti ve titreme değişmez, uzaktaki ince çizgi ve küçük oyuncular kırılmaz.
+     mac (2026-10-03 ikinci paket, kullanıcı kararı): maç sahnesinin ızgarası 960×720 (içeride ornekleme katında, 1920×1440); oda ve balkon
+     genislik×yukseklik (640×480) kalır. Renk biti ve titreme her iki ızgarada aynıdır. */
+  ekran:{genislik:640,yukseklik:480,renkBiti:5,titreme:true,titremeGucu:0.7,koseTitremesi:false,arkaPlan:0x070b16,ornekleme:2,mac:{genislik:960,yukseklik:720}},
 
   /* Gece havası */
   sis:{renk:0x0c1322,yakin:150,uzak:380},
@@ -175,35 +177,40 @@ const STIL={
   },
 
   /* Kameralar: hedef [x,y,z], aci = dikey görüş açısı (derece).
-     Maç başkanın gözünden izlenir: ana tribünün ortasında, açık tribündeki başkan koltuğu. Dürbün isteğe bağlı. */
+     Maç başkanın gözünden izlenir: ana tribünün arkasındaki binada, başkanın locası. Dürbün isteğe bağlı. */
   kameralar:{
     /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre). js/kamera.js
-       A akışı (2026-10-03, kullanıcı kararı): oyun sürerken bakış topa odaklıdır, görüş açısı oyunAci aralığına daralır; ölü topta oluGecikme
-       saniye sonra, maç öncesi/sonrası ve devre arasında geniş açıya (aci) döner. aciSure: görüş açısı yumuşama süresi (sn, maç zamanı).
-       yayOyun: oyunda bakış yayının açısal sıklığı (1/sn), hizSiniri: bakışın en hızlı dönüşü (derece/sn); yay ve sahneSinir aynısı oyun dışı
-       (ilgi noktaları) için. oluBolge: [derece, m/sn] top bu hızdan yavaşken bakışın kıpırdamadığı açı. egim: oyunda bakışın topun ne kadar
-       altına indiği (derece; 0 = top tam ortada; 2,5 ile biraz üstte: alttaki masanın açıkta bıraktığı alanın ortasına yakın). sahneEgim: oyun dışında bakışın odağın altına inme payı (uzaklığa
-       oran; masa ve ön sıralar görünsün). asagiSinir/yukariSinir: bakışın en çok aşağı/yukarı eğimi (radyan).
+       2026-10-03 ikinci paket (kullanıcı kararı): bakış varsayılan olarak elle döner (fareyle sürükleme, ok tuşları); görüş açısı elleAci'de
+       sabittir, baş kendiliğinden dönmez. “Topu izle” (F) açıkken bakış topa odaklıdır: görüş açısı oyunda oyunAci aralığında, ölü topta
+       oluGecikme saniye sonra, maç öncesi/sonrası, devre arası ve törende aci'ye (geniş) döner. aciSure: görüş açısı yumuşama süresi (sn, maç
+       zamanı). yayOyun: oyunda bakış yayının açısal sıklığı (1/sn), hizSiniri: bakışın en hızlı dönüşü (derece/sn); yay ve sahneSinir aynısı
+       oyun dışı (ilgi noktaları) için. oluBolge: [derece (oyunAci[1]'de), m/sn] top bu hızdan yavaşken bakışın kıpırdamadığı açı. egim: oyunda
+       bakışın topun ne kadar altına indiği (derece, oyunAci[1]'de; top alttaki masanın açıkta bıraktığı alanın ortasına yakın). sahneEgim: oyun
+       dışında bakışın odağın altına inme payı (uzaklığa oran). asagiSinir/yukariSinir: takipte bakışın en çok aşağı/yukarı eğimi (radyan).
        top: onde = taşıyanın önüne bakış (m), ongoru = serbest topta balistik öngörü (sn), inis = [başlangıç sn, süre sn, en çok pay] uzun havadan
        topta iniş yerine kayma, kale = son üçte birde kale ağzına kayma payı, korner = kornerde penaltı noktasına kayma payı, butce = [sapma, eğim]
        nişanın topun yönünden en çok sapması (derece, oyunAci[1]'de). genislik (görüş açısı için 0 dar – 1 geniş): hiz = top hızı aralığı (m/sn),
        kale = kaleye uzaklık aralığı (m, yakında geniş), yayilim = [m, m, pay] topa üçüncü en yakın oyuncunun uzaklığı (dağınık oyunda geniş).
+       elle: esik = sürüklemenin başladığı imleç kayması (piksel; altı tıklamadır), sapma = yatayda en çok dönüş (derece, iki yana),
+       egim = [aşağı, yukarı] en çok eğim (derece), ok = ok tuşlarıyla dönüş hızı (derece/sn, elleAci'de; görüş açısıyla ölçeklenir),
+       masaHiz = elle bakışta masanın başa yetişme hızı (radyan/sn), masaKayma = masanın görüntüden kaymaya başladığı sapma (radyan).
        TEST değerleri */
-    baskan:{goz:0.78,hedef:[0,1,0],aci:52,oyunAci:[36,40],aciSure:0.8,oluGecikme:1.5,yayOyun:4,hizSiniri:100,yay:1.0,sahneSinir:60,
-      oluBolge:[1.2,2.5],egim:2.5,sahneEgim:0.18,asagiSinir:0.5,yukariSinir:0.12,
-      top:{onde:0.6,ongoru:0.35,inis:[0.5,1.6,0.55],kale:0.25,korner:0.45,butce:[5,2.5]},
-      genislik:{hiz:[7,22],kale:[30,12],yayilim:[6,18,0.6]}},
-    /* dürbün elle açılır, açıkken topa kilitlenir: aci = oyun dışı görüş açısı, oyunAci = oyunda [dar, geniş] (oyunun genişliğine göre),
-       ongoru = topta öngörü (sn), yay = açısal sıklık (1/sn), hizSiniri = derece/sn, butce = [sapma, eğim] derece, aciSure = görüş açısı
-       yumuşaması (sn), gecisSure = açılış/kapanış geçişi (sn, gerçek zaman). TEST değerleri */
-    durbun:{goz:0.78,aci:11,oyunAci:[9,13],ongoru:0.12,yay:6,hizSiniri:140,butce:[0.8,0.5],aciSure:0.6,gecisSure:0.35}
+    baskan:{goz:0.78,hedef:[0,1,0],aci:36,oyunAci:[21,26],elleAci:24,aciSure:0.8,oluGecikme:1.5,yayOyun:5,hizSiniri:120,yay:1.0,sahneSinir:60,
+      oluBolge:[0.8,2.5],egim:1.6,sahneEgim:0.18,asagiSinir:0.5,yukariSinir:0.12,
+      top:{onde:0.6,ongoru:0.35,inis:[0.5,1.6,0.55],kale:0.25,korner:0.45,butce:[2.5,1.6]},
+      genislik:{hiz:[7,22],kale:[30,12],yayilim:[6,18,0.6]},
+      elle:{esik:4,sapma:100,egim:[-34,16],ok:40,masaHiz:2.5,masaKayma:0.6}},
+    /* dürbün elle açılır: takipte topa kilitlenir, elle bakışta başın baktığı yeri büyütür. aci = oyun dışı ve elle görüş açısı, oyunAci = takipte
+       oyunda [dar, geniş] (oyunun genişliğine göre), ongoru = topta öngörü (sn), yay = açısal sıklık (1/sn), hizSiniri = derece/sn, butce = [sapma,
+       eğim] derece (oyunAci[1]'de), aciSure = görüş açısı yumuşaması (sn), gecisSure = açılış/kapanış geçişi (sn, gerçek zaman). TEST değerleri */
+    durbun:{goz:0.78,aci:8.5,oyunAci:[7,10],ongoru:0.12,yay:7,hizSiniri:160,butce:[0.6,0.4],aciSure:0.6,gecisSure:0.35}
   },
 
   /* Maçın okunurluğu (js/okunurluk.js, js/goruntu.js; A akışı, 2026-10-03): locadan uzaktaki maçın net görünmesi için çizim ayarları.
      cizgi: saha çizgilerinin üstüne ekranda sabit genişlikli şerit (acik, genislik = iç çözünürlükte piksel, opak = saydamlık (zemin kalitesiyle
-     çarpılır), parlaklik = ışıklı çizgi rengine çarpan, y = zeminden yükseklik m). topEnAz: topun ekrandaki en küçük çapı (piksel; daha uzakta
-     büyütülür), topEnCok: en çok büyütme katı. topLeke: havadaki topun altındaki koyu leke (opak, boy = top yarıçapına oran, yukseklik = top
+     çarpılır), parlaklik = ışıklı çizgi rengine çarpan, y = zeminden yükseklik m). topEnAz: topun ekrandaki en küçük çapı (maç ızgarasında
+     piksel; daha uzakta büyütülür), topEnCok: en çok büyütme katı. topLeke: havadaki topun altındaki koyu leke (opak, boy = top yarıçapına oran, yukseklik = top
      yerden bu kadar (m) yükselince). parlama: oyuncu dokusunun kendi renginden ışıma payı (gece ışığında koyu leke olmasınlar).
      disCizgi: oyuncu ve topun çevresinde 1 piksellik koyu çizgi denemesi (karşılaştırma için; varsayılan kapalı). TEST değerleri */
-  okunurluk:{cizgi:{acik:true,genislik:1,opak:0.7,parlaklik:1,y:0.02},topEnAz:3.3,topEnCok:3,topLeke:{opak:0.5,boy:2.2,yukseklik:0.3},parlama:0.12,disCizgi:false}
+  okunurluk:{cizgi:{acik:true,genislik:1,opak:0.7,parlaklik:1,y:0.02},topEnAz:4.5,topEnCok:3,topLeke:{opak:0.5,boy:2.2,yukseklik:0.3},parlama:0.12,disCizgi:false}
 };

@@ -1,10 +1,11 @@
 /* ============ Chairman — maç günü: maç öncesi, devre arası, maç sonu (mantık, çizimsiz) ============
    Çizelge js/mac-senaryo.js'tedir. Başkan koltuğuna oturduğunda stat yarı boştur; saha kenarında herkes kendi işini yapar:
    top toplayıcılar yerlerine geçer, kaleciler antrenörleriyle, hakemler orta çizgi boyunca, takımlar yardımcı antrenörleriyle
-   ısınır (koşu, esneme, rondo, paslaşma, şut, depar) ve farklı anlarda içeri girer. Sonra 4. hakem, yedekler, antrenörler,
-   fotoğrafçılar ve en son teknik direktörler çıkar. Takımlar önde üç hakemle tünelden çıkar; İstiklal Marşı; TFF sırasıyla
+   ısınır (koşu, esneme, rondo, paslaşma, şut, depar) ve farklı anlarda içeri girer. Sonra 4. hakem, yedekler, antrenörler
+   ve en son teknik direktörler çıkar. Takımlar önde üç hakemle tünelden çıkar; İstiklal Marşı; TFF sırasıyla
    tokalaşma (misafirler kaptanları önde önce hakemlerle, sonra ev sahibiyle; ardından hakemler ev sahibiyle); iki takım
-   fotoğrafı; yazı tura (Kural 8: kazanan santrayı ya da kaleyi seçer); takımlar kenetlenir ve yerlerine geçer.
+   fotoğrafı (takım başına bir fotoğrafçı marştan sonra tünelden çıkar, takım poz verirken kenardan girer, tek kare çeker, geri çekilir;
+   2026-10-03 kullanıcı kararı); yazı tura (Kural 8: kazanan santrayı ya da kaleyi seçer); takımlar kenetlenir ve yerlerine geçer.
    Senaryonun rastgeleliği ayrı bir tohumdan gelir (this.srast); maçın kendi rastgele dizisini değiştirmez.
    Görüntüye yalnızca durum verilir: kişilerin yeri, bakışı, "poz" etiketi (esneme, tokalaşma, çömelme…), antrenman topları,
    koniler ve olaylar (on). Nasıl görüneceğine görüntü katmanı karar verir. */
@@ -18,8 +19,11 @@ Object.assign(Match.prototype,{
       const s=kb.koltuklar[5]||{x:kb.alan.x+2.6,z:kb.alan.z-3.3};
       ekle('kaleciAnt',t,{name:'Kaleci antrenörü',koltuk:s,ev:{x:s.x,z:s.z}});
       ekle('kondisyoner',t,{name:'Kondisyoner',ev:{x:kb.alan.x+(t?-4.1:4.1),z:kb.alan.z-2.8}});}
-    ekle('dorduncu',-1,{name:'4. hakem',ev:{x:-5,z:-2.6},maxSpd:6});
-    [[-1,-7],[-1,8],[1,-8],[1,7]].forEach(([s,dz])=>ekle('foto',-1,{name:'Fotoğrafçı',ev:{x:s*(PL+2.4),z:MZ+dz}}));
+    /* 4. hakem iki kulübenin ortasında, orta çizgi hizasında durur; değişiklik ve uzatma tabelasını orada kaldırır (2026-10-03) */
+    ekle('dorduncu',-1,{name:'4. hakem',ev:{x:0,z:-2.6},maxSpd:6});
+    /* fotoğrafçılar: takım başına bir (sırası takımı verir: 0 ev sahibi, 1 misafir); maçta kale arkasında çömelir. team -1 kalır:
+       gol sevincine karışmazlar */
+    [[-1,-7],[1,7]].forEach(([s,dz])=>ekle('foto',-1,{name:'Fotoğrafçı',ev:{x:s*(PL+2.4),z:MZ+dz}}));
     this.kenar=L;
   },
   kenarBul(kind,t){return this.kenar.find(p=>p.kind===kind&&(t==null||p.team===t));},
@@ -29,13 +33,23 @@ Object.assign(Match.prototype,{
     const b=this.ball,oyun=['play','durus','kickoff','goal'].includes(this.phase);
     for(const p of this.kenar){
       if(p.oturuyor)continue;
+      if(p.kind==='foto'){/* yerine sahayı kesmeden gider (fotografciHedefi); kale arkasında sahaya bakıp çömelir */
+        const h=this.fotografciHedefi(p),ev=hyp(p.ev.x-p.x,p.ev.z-p.z);p.tx=h.x;p.tz=h.z;p.hizOran=0.35;
+        p.bak=ev<1.5?{x:0,z:MZ}:null;p.yonHedef=null;p.poz=ev<0.8?'comel':null;continue;}
       if(p.kind==='td'&&oyun){p.tx=clamp(b.x*0.25+p.ev.x,p.ev.x-3.5,p.ev.x+3.5);p.tz=p.ev.z;p.hizOran=0.25;}
       else if(p.kind==='kaleciAnt'&&hyp(p.x-p.ev.x,p.z-p.ev.z-0.7)<0.4&&oyun){this.otur(p);continue;}
       else if(p.kind==='kaleciAnt'){p.tx=p.ev.x;p.tz=p.ev.z+0.7;p.hizOran=0.35;}
       else{p.tx=p.ev.x;p.tz=p.ev.z;p.hizOran=0.35;}
-      p.bak=hyp(p.tx-p.x,p.tz-p.z)<1.5?(p.kind==='foto'?{x:0,z:MZ}:b):null;p.yonHedef=null;
-      p.poz=p.kind==='foto'&&hyp(p.tx-p.x,p.tz-p.z)<0.8?'comel':null;
+      p.bak=hyp(p.tx-p.x,p.tz-p.z)<1.5?b:null;p.yonHedef=null;p.poz=null;
     }
+  },
+  /* fotoğrafçının kale arkasındaki yerine giden yol: sahadaysa en yakın yan çizginin dışına çıkar, oradan çizgi boyunca köşeye, köşeden
+     kale arkasına. Takımların ve oyunun içinden geçmez */
+  fotografciHedefi(p){
+    const sx=Math.sign(p.ev.x)||1,kz=p.z<MZ?-1.6:PW+1.6;
+    if(Math.abs(p.x)<PL+0.5&&p.z>-0.5&&p.z<PW+0.5)return{x:p.x,z:kz};
+    if(Math.abs(p.x)<PL+1.5||Math.sign(p.x)!==sx)return{x:sx*(PL+2.4),z:kz};
+    return p.ev;
   },
   otur(p){const k=p.koltuk;p.oturuyor=true;p.x=k.x;p.z=k.z;p.vx=p.vz=0;p.yon=Math.PI/2;p.poz=null;p.eylem=null;p.bak=null;},
 
@@ -70,7 +84,10 @@ Object.assign(Match.prototype,{
     }
     this.refs.forEach((h,i)=>{h.sg={cikis:ara(S.hakemler.cikis)+i*0.7,iceri:ara(S.hakemler.iceri)+i*0.6,adim:0,x:(i-1)*2.2};});
     this.kenarBul('dorduncu').sg={kulube:ara(S.dorduncu)};
-    this.kenar.filter(p=>p.kind==='foto').forEach((p,i)=>{p.sg={kulube:ara(S.fotografcilar),bekle:{x:[-7,-3,3,7][i],z:3.5}};});
+    /* fotoğrafçılar ısınmada tünelde kalır (kulube yok: kenarOncesi yürütmez), marştan sonra çıkar. Senaryo çekilişi eskisi gibi dörttür
+       (yazı-tura ve maçın kendisi aynı kalsın); ilk ikisi tünelden çıkış gecikmesini verir (0–1,5 sn) */
+    {const F=this.kenar.filter(p=>p.kind==='foto'),[fa,fb]=S.fotografcilar;
+     for(let i=0;i<4;i++){const v=ara(S.fotografcilar);if(F[i])F[i].sg={cikis:(v-fa)/(fb-fa)*1.5};}}
     this.on('oncesi',{ad:'basla'});
   },
 
@@ -247,7 +264,7 @@ Object.assign(Match.prototype,{
     else{p.tx=gx-s*(27+(ts.sutSira.length-1)*1.3);p.tz=MZ-8;p.hizOran=0.45;
       if(sn.t-su.t0>2.2){su.atan=null;su.sonraki=sn.t+0.3+r()*0.5;}}
   },
-  /* ---- saha kenarı: 4. hakem, yedekler ve antrenörler kulübeye, fotoğrafçılar, en son teknik direktörler ---- */
+  /* ---- saha kenarı: 4. hakem, yedekler ve antrenörler kulübeye, en son teknik direktörler (fotoğrafçılar tünelde bekler) ---- */
   kenarOncesi(dt){
     const sn=this.sen;
     for(const t of[0,1])for(const p of this.yedekler[t]){if(p.oturuyor||sn.t<p.sg.kulube)continue;if(p.sg.iceri&&sn.t<p.sg.iceri+5)continue;
@@ -256,8 +273,8 @@ Object.assign(Match.prototype,{
     for(const p of this.kenar){const g=p.sg;
       if(p.oturuyor||g.kulube==null||sn.t<g.kulube)continue;if(g.iceri&&sn.t<g.iceri+5)continue;
       if(p.kind==='kaleciAnt'){p.tx=p.ev.x;p.tz=p.ev.z+0.7;p.hizOran=0.45;p.poz=null;if(hyp(p.x-p.tx,p.z-p.tz)<0.35)this.otur(p);continue;}
-      const h=p.kind==='foto'?g.bekle:p.ev;p.tx=h.x;p.tz=h.z;p.hizOran=0.4;p.poz=null;
-      p.bak=hyp(p.x-h.x,p.z-h.z)<1.2?{x:p.kind==='foto'?h.x:0,z:MZ}:null;}
+      const h=p.ev;p.tx=h.x;p.tz=h.z;p.hizOran=0.4;p.poz=null;
+      p.bak=hyp(p.x-h.x,p.z-h.z)<1.2?{x:0,z:MZ}:null;}
   },
 
   /* ============ antrenman topları ============ */
@@ -347,7 +364,7 @@ Object.assign(Match.prototype,{
   selamX(s){/* yol üzerindeki yer (x); s<0: kendi sırasında sola kayar */
     if(s<=-1)return 2.4+(-s-1)*1.05;if(s<0)return 1.1+(-s)*1.3;if(s<=2)return 1.1-s*1.1;if(s<=3)return -1.1-(s-2)*1.3;return -2.4-(s-3)*1.05;},
   stepSelam(dt){
-    const S=MAC_SENARYOSU,A=S.selamAdim,tau=this.phaseT,SZ=SZ_SIRA,sn=this.sen,r=this.srast;
+    const S=MAC_SENARYOSU,A=S.selamAdim,tau=this.phaseT,SZ=SZ_SIRA,sn=this.sen;
     for(const p of this.sira)p.poz=null;
     const yol=(p,s,son,sonra)=>{/* s: yol üzerindeki ilerleme (istasyon birimi) */
       if(s>=son+0.5){sonra();return;}
@@ -371,13 +388,25 @@ Object.assign(Match.prototype,{
     const evFoto=hBas+(2+11+1)*A,misFoto=(10+13.5)*A+9;
     if(tau>evFoto)this.dizi[0].forEach((p,k)=>{const f=this.fotoYeri(0,k);p.tx=f.x;p.tz=f.z;p.hizOran=0.35;
       if(hyp(p.x-f.x,p.z-f.z)<0.4){p.bak={x:p.x,z:-60};p.poz=f.on?'comel':'foto';}else p.bak=null;});
-    /* fotoğrafçılar: ikisi ev sahibinin, ikisi misafirin önüne */
+    /* fotoğrafçılar (takım başına bir; rastlantısız): marştan sonra tünelden çıkıp yan çizginin dışından çekim yerinin hizasına yürür.
+       Takım poza geçerken içeri girer, çömelir; takımın hepsi pozdayken tek kare çeker (bir flaş). Sonra yüzü takımda birkaç adım geri
+       çekilir, dönüp kenara yürür; maçta kale arkasındaki yerine geçer (stepYazitura, kenarAI) */
     const F=this.kenar.filter(p=>p.kind==='foto'),bitis=Math.max(evFoto,misFoto)+S.foto+2;
-    F.forEach((p,i)=>{const t=i<2?0:1,c=this.fotoMerkez(t),bas=t?misFoto:evFoto;
-      if(tau<bas-6){p.tx=p.sg.bekle.x;p.tz=p.sg.bekle.z;p.bak={x:p.x,z:MZ};return;}
-      p.tx=c.x+(i%2?1.6:-1.6);p.tz=c.z-5.5;p.hizOran=0.5;p.bak={x:c.x,z:c.z};
-      const yerinde=hyp(p.x-p.tx,p.z-p.tz)<0.5;p.poz=yerinde?'comel':null;
-      if(yerinde&&tau>bas+1&&tau<bas+S.foto&&r()<dt*2.2)this.on('flas',{x:p.x+Math.cos(p.yon)*0.3,z:p.z+Math.sin(p.yon)*0.3,y:0.95});});
+    F.forEach((p,t)=>{const g=p.sg,c=this.fotoMerkez(t),bas=t?misFoto:evFoto,yer={x:c.x+(t?1.6:-1.6),z:c.z-5.5},yan={x:yer.x,z:-1.6};
+      p.poz=null;p.yonHedef=null;
+      if(g.cekti==null){
+        if(tau<g.cikis)return;
+        if(tau<bas-5){p.tx=yan.x;p.tz=yan.z;p.hizOran=0.45;p.bak=hyp(p.x-yan.x,p.z-yan.z)<1.2?{x:c.x,z:c.z}:null;return;}
+        p.tx=yer.x;p.tz=yer.z;p.hizOran=0.6;p.bak={x:c.x,z:c.z};
+        if(hyp(p.x-yer.x,p.z-yer.z)<0.5){p.poz='comel';if(g.yerinde==null)g.yerinde=tau;
+          const hazir=this.dizi[t].every(q=>q.poz==='foto'||q.poz==='comel');
+          if(tau-g.yerinde>0.6&&tau>bas+1&&(hazir||tau>bas+S.foto-2)){g.cekti=tau;
+            this.on('flas',{x:p.x+Math.cos(p.yon)*0.3,z:p.z+Math.sin(p.yon)*0.3,y:0.95,takim:t});}}
+        return;}
+      const s=tau-g.cekti;p.bak={x:c.x,z:c.z};
+      if(s<0.8){p.poz='comel';p.tx=p.x;p.tz=p.z;return;}
+      if(s<2.6){p.tx=yer.x;p.tz=yer.z-1.4;p.hizOran=0.15;p.yonHedef=Math.atan2(c.z-p.z,c.x-p.x);return;}
+      p.tx=yan.x;p.tz=yan.z;p.hizOran=0.35;p.bak=null;});
     if(!sn.olan.foto&&tau>Math.min(evFoto,misFoto)+1){sn.olan.foto=true;this.on('oncesi',{ad:'foto',x:this.fotoMerkez(0).x,z:SZ});}
     this.hareketHepsi(dt,true);
     if(tau>bitis)this.yaziTuraBaslat();
@@ -404,7 +433,7 @@ Object.assign(Match.prototype,{
       const d=this.dir[p.team],takim=this.teams[p.team],i=takim.indexOf(p),a=i/11*Math.PI*2,cx=-d*13,cz=MZ;
       p.tx=cx+Math.cos(a)*1.25;p.tz=cz+Math.sin(a)*1.25;p.hizOran=0.5;
       if(hyp(p.x-p.tx,p.z-p.tz)<0.6){p.bak={x:cx,z:cz};p.poz='cember';}else p.bak=null;}
-    for(const p of this.kenar)if(p.kind==='foto'){p.tx=p.ev.x;p.tz=p.ev.z;p.hizOran=0.5;p.bak=null;}
+    for(const p of this.kenar)if(p.kind==='foto'){const h=this.fotografciHedefi(p);p.tx=h.x;p.tz=h.z;p.hizOran=0.4;p.bak=null;p.yonHedef=null;}
     this.hareketHepsi(dt,true);
     if(this.yaziTura==null&&tau>4.5){
       const kazanan=this.yaziTura=this.rast()<0.5?0:1,secim=this.srast()<S.santraSecimi?'santra':'kale';

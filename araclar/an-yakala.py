@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Chairman — maç anı yakalama aracı (2026-10-03, maç motoru güncellemesi Faz 0)
 
-Maçı başsız Chromium'da tohumlu ve sanal saatle oynatır, istenen anı başkanın gözünden (640×480 iç çözünürlükte) PNG olarak kaydeder.
+Maçı başsız Chromium'da tohumlu ve sanal saatle oynatır, istenen anı başkanın gözünden (maç ızgarasında, 960×720) PNG olarak kaydeder.
+Bakış varsayılan olarak “Topu izle” açık yakalanır (an topu çerçevelesin); --elle ile oyundaki varsayılan elle bakış korunur.
 Görüntüler tekrarlanabilir: Math.random tohumludur, requestAnimationFrame elle ilerletilir (her kare 1/60 sn).
 
 Kullanım:
@@ -12,8 +13,10 @@ Kullanım:
               --sonra S (koşuldan S sn sonra çek) · --yakin top|<forma no> (yalnız geliştirme: kamera o noktaya yakından bakar, KAMERA_ZORLA)
               --onek AD (dosya adlarının başına; ör. once/sonra karşılaştırması) · --en-cok S (koşul için en çok oyun süresi, varsayılan 900)
               --js "<ifade>" (sayfa yüklenince çalışır; ör. bir STIL ayarını açıp kapatmak: --js "STIL.okunurluk.disCizgi=true")
+              --oncesi (--kosul ile: maç öncesini atlamadan bekle; ör. tören ve takım fotoğrafı anları)
+              --elle (Topu izle kapalı: baş kendiliğinden dönmez, ilk bakış orta yuvarlağa)
 Çıktı: araclar/anlar/<onek><ad>.png ve .json (topun ekrandaki yeri ve boyu (topPx gerçek, topCizimPx asgari boya büyütülmüş çizim), oyuncuların
-piksel boyu, görüş açısı, aşama). --bino dürbünü anında açar: bakış ve görüş açısı geçişsiz oturur (kameraOturt). Depoya eklenmez.
+piksel boyu (maç ızgarasında; oyuncuPx480 480 satır karşılığı, eski ölçülerle karşılaştırma için), görüş açısı, aşama). --bino dürbünü anında açar: bakış ve görüş açısı geçişsiz oturur (kameraOturt). Depoya eklenmez.
 """
 import argparse
 import asyncio
@@ -87,7 +90,7 @@ KUR_JS = """() => {
 }"""
 
 OLCU_JS = """() => {
-  const H = 480, W = 640, f = camera.fov * Math.PI / 180, b = mac.ball, v = new THREE.Vector3();
+  const H = typeof MAC_RH !== 'undefined' ? MAC_RH : 480, W = typeof MAC_RW !== 'undefined' ? MAC_RW : 640, f = camera.fov * Math.PI / 180, b = mac.ball, v = new THREE.Vector3();
   const piksel = (x, y, z, r) => { v.set(x, y, z); const d = v.distanceTo(camera.position); return 2 * r * (H / 2) / (d * Math.tan(f / 2)); };
   v.set(b.x, b.y + (typeof TOP_R !== 'undefined' ? TOP_R : 0.14), b.z - 34).project(camera);
   const topNdc = { x: +v.x.toFixed(3), y: +v.y.toFixed(3) }, topPx = +piksel(b.x, b.y, b.z - 34, typeof TOP_R !== 'undefined' ? TOP_R : 0.14).toFixed(2);
@@ -101,16 +104,17 @@ OLCU_JS = """() => {
   const topCizimPx = +(topPx * (typeof topMesh !== 'undefined' ? topMesh.scale.x : 1)).toFixed(2);
   return { faz: mac.phase, dakika: mac.minuteLabel(), t: +mac.t.toFixed(2), skor: mac.score.join('-'), fov: camera.fov, bino: typeof bino !== 'undefined' && bino,
     top: { x: +b.x.toFixed(2), y: +b.y.toFixed(2), z: +b.z.toFixed(2) }, topNdc, topPx, topCizimPx,
-    oyuncuPx: { ortanca: boylar.length ? +boylar[boylar.length >> 1].toFixed(1) : null, enAz: boylar.length ? +boylar[0].toFixed(1) : null, sayi: boylar.length }, yakin };
+    oyuncuPx: { ortanca: boylar.length ? +boylar[boylar.length >> 1].toFixed(1) : null, enAz: boylar.length ? +boylar[0].toFixed(1) : null, sayi: boylar.length },
+    oyuncuPx480: boylar.length ? +(boylar[boylar.length >> 1] * 480 / H).toFixed(1) : null, izgara: [W, H], takip: typeof KAM !== 'undefined' && KAM.takip, yakin };
 }"""
 
 # görünümü (3B + HUD maskesi) tek tuvale bas; şerit için yan yana
 CIZ_JS = """(o) => {
-  const v = document.getElementById('view'), h = document.getElementById('hud');
+  const v = document.getElementById('view'), h = document.getElementById('hud'), W = typeof MAC_RW !== 'undefined' ? MAC_RW : 640, H = typeof MAC_RH !== 'undefined' ? MAC_RH : 480;
   let c = window.__serit;
-  if (!c || o.yeni) { c = window.__serit = document.createElement('canvas'); const sut = Math.min(o.adet, 4); c.width = 640 * sut; c.height = 480 * Math.ceil(o.adet / sut); }
-  const g = c.getContext('2d'), sut = Math.min(o.adet, 4), x = (o.i % sut) * 640, y = Math.floor(o.i / sut) * 480;
-  g.imageSmoothingEnabled = false; g.drawImage(v, x, y, 640, 480); g.drawImage(h, x, y, 640, 480);
+  if (!c || o.yeni) { c = window.__serit = document.createElement('canvas'); const sut = Math.min(o.adet, 4); c.width = W * sut; c.height = H * Math.ceil(o.adet / sut); }
+  const g = c.getContext('2d'), sut = Math.min(o.adet, 4), x = (o.i % sut) * W, y = Math.floor(o.i / sut) * H;
+  g.imageSmoothingEnabled = false; g.drawImage(v, x, y, W, H); g.drawImage(h, x, y, W, H);
   return o.son ? c.toDataURL('image/png') : null;
 }"""
 
@@ -126,6 +130,8 @@ async def yakala(tarayici, site, ad, kosul, sonra, on, a):
     await pg.wait_for_selector("#btnMacaGec", timeout=30000)
     await pg.evaluate("__kare(2)")
     await pg.evaluate(KUR_JS)
+    if not a.elle:
+        await pg.evaluate("if (typeof kameraTakipAyarla === 'function') kameraTakipAyarla(true);")
     if a.js:
         await pg.evaluate("(k) => { new Function(k)(); }", a.js)
     if on == "mac":
@@ -158,7 +164,7 @@ async def yakala(tarayici, site, ad, kosul, sonra, on, a):
     yol.write_bytes(base64.b64decode(veri.split(",", 1)[1]))
     olcu.update({"ad": ad, "tohum": a.tohum, "kosul": kosul, "kare": adet, "hatalar": hatalar})
     (CIKTI / f"{a.onek}{ad}.json").write_text(json.dumps(olcu, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(f"{ad}: {yol.relative_to(KOK)} · faz {olcu['faz']} {olcu['dakika']}' · top ekranda {olcu['topNdc']} ({olcu['topPx']} px, çizimde {olcu['topCizimPx']} px) · oyuncu boyu ortanca {olcu['oyuncuPx']['ortanca']} px, en az {olcu['oyuncuPx']['enAz']} px · fov {olcu['fov']}"
+    print(f"{ad}: {yol.relative_to(KOK)} · faz {olcu['faz']} {olcu['dakika']}' · top ekranda {olcu['topNdc']} ({olcu['topPx']} px, çizimde {olcu['topCizimPx']} px) · oyuncu boyu ortanca {olcu['oyuncuPx']['ortanca']} px (480 satırda {olcu['oyuncuPx480']}), en az {olcu['oyuncuPx']['enAz']} px · fov {olcu['fov']:.1f}"
           + (f" · {len(hatalar)} hata" if hatalar else ""))
     await baglam.close()
     return True, hatalar
@@ -179,6 +185,8 @@ async def ana():
     ap.add_argument("--onek", default="")
     ap.add_argument("--en-cok", dest="en_cok", type=float, default=900)
     ap.add_argument("--js")
+    ap.add_argument("--oncesi", action="store_true")
+    ap.add_argument("--elle", action="store_true")
     a = ap.parse_args()
     try:
         from playwright.async_api import async_playwright
@@ -186,7 +194,7 @@ async def ana():
         sys.exit("Playwright bulunamadı. Kurmak için: pip install playwright==1.56.0")
     isler = []
     if a.kosul:
-        isler.append((a.ad, a.kosul, a.sonra or 0, "mac"))
+        isler.append((a.ad, a.kosul, a.sonra or 0, "oncesi" if a.oncesi else "mac"))
     secim = list(HAZIR) if a.hepsi else (a.anlar or ([] if a.kosul else VARSAYILAN_SET))
     for ad in secim:
         if ad not in HAZIR:

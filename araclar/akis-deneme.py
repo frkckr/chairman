@@ -10,20 +10,24 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
      yenilemede aynı durum ve kararın bir kez uygulanması, tahsilatla sözün tutulup konunun arşive geçmesi, büyük yazıda taşma olmaması.
  12. Genel duraklatma (2.8B): oda, yürüyüş ortası, gerçek zamanlı gözlem (duraklat → kayıt aynı an → yenile → devam) ve maç.
  14. Maç öncesi ekranı (2.8J, 2.8N): iki takımın ilk 11'i ve son 5 maçı, dolan hazırlık çubuğu, en az 10 sn, duraklatma, elle geçiş.
- 15. Ortak çatısız stat ve mekân (2.8D, 2.8J, 2.8O): tek tarif, balkon/pencere aynı stat, iskele, kapıya tıklama, doğal yürüyüş;
-     maçta binadaki loca, geniş açıda yedek kulübeleri ve okunur tabela; oyunda topa odaklı yakın bakış ve topa kilitli dürbün.
+ 15. Ortak çatısız stat ve mekân (2.8D, 2.8J, 2.8O): tek tarif, balkon/pencere aynı stat, iskele, kapıya tıklama, doğal yürüyüş.
+ 15b. Maçta binadaki loca, 52°'lik geniş bakışta yedek kulübeleri ve okunur tabela; varsayılan elle bakış (fareyle sürükleme, ok tuşları,
+     sınırlar, duraklatmada kapalı, sürükleme sonrası telefon açılmaz); Topu izle (F) ile topa odaklı yakın bakış ve topa kilitli dürbün.
  16. Maç telefonu (2.8F, 2.8I).
- 17. Topa odaklı bakış ve maçın netliği (A akışı, 2026-10-03): belirlenimli 30 sn oyunda (1× ve 4×) top ekranın ortasında, dürbünde maskenin
-     içinde; oyuncu boyu, topun çizim boyu, iç çözünürlükte 2× çizim ve D kısayolu.
+ 17. Topu izle açıkken bakış ve maçın netliği (2026-10-03): belirlenimli 30 sn oyunda (1× ve 4×) top ekranın ortasında, dürbünde maskenin
+     içinde; oyuncu boyu, topun çizim boyu, 960×720 maç ızgarası ve 2× iç çizim, D kısayolu.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız ve Durdur, eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
 
-Kullanım:  python3 araclar/akis-deneme.py
+Kullanım:  python3 araclar/akis-deneme.py            # bütün bölümler
+           python3 araclar/akis-deneme.py 12 16      # yalnız verilen bölümler (hızlı inceleme; tam doğrulama yerine geçmez)
 """
 import asyncio
 import json
+import math
 import pathlib
+import re
 import shutil
 import sys
 
@@ -245,6 +249,9 @@ async def bolum_3(tarayici, site, tum_hatalar):
 
 
 SAHNE_JS = "() => ({ z: +ODA.zaman.toFixed(4), k: ODA.kamera.position.toArray().map(v => +v.toFixed(5)).join(','), yol: ODA.yol ? +ODA.yol.t.toFixed(4) : null, yer: ODA.yer })"
+# kare başına oyun saati artışı (n kare): başsız yazılım çiziminde kare hızı düşük ve dalgalıdır; zaman penceresi yerine kareler karşılaştırılır
+KARE_JS = """(n) => new Promise(res => { const L = []; let son = mac.gameSec; const f = () => { const s = mac.gameSec; L.push(+(s - son).toFixed(3)); son = s;
+  if (L.length < n) requestAnimationFrame(f); else res(L); }; requestAnimationFrame(f); })"""
 MAC_JS = """() => ({ sn: +mac.gameSec.toFixed(3), top: [mac.ball.x, mac.ball.z].map(v => +v.toFixed(3)).join(','),
   kamera: camera.position.toArray().map(v => +v.toFixed(4)).join(','), el: BK_EL.sag.g.position.toArray().map(v => +v.toFixed(4)).join(','),
   fov: +camera.fov.toFixed(5), yon: camera.quaternion.toArray().map(v => +v.toFixed(6)).join(',') })"""
@@ -317,9 +324,7 @@ async def bolum_12(tarayici, site, tum_hatalar):
     tum_hatalar += hatalar
     await pg.click("#btnMacaGec")
     await pg.wait_for_timeout(2500)
-    a0 = await pg.evaluate(MAC_JS)
-    await pg.wait_for_timeout(1000)
-    a1 = await pg.evaluate(MAC_JS)
+    once = await pg.evaluate(KARE_JS, 5)
     await pg.keyboard.press("KeyP")
     m1 = await pg.evaluate(MAC_JS)
     await pg.wait_for_timeout(1500)
@@ -327,11 +332,9 @@ async def bolum_12(tarayici, site, tum_hatalar):
     denetle("Maçta Duraklat: maç saati, top, kamera (yer, bakış yönü, görüş açısı) ve eller 1,5 sn sonra aynı; dürbün kapalı, gösterge açık",
             m1 == m2 and await pg.is_visible("#duraklatildi") and await pg.evaluate("btnBino.disabled") and await pg.text_content("#btnDuraklat") == "Devam", f"{m1} → {m2}")
     await pg.keyboard.press("KeyP")
-    await pg.wait_for_timeout(1000)
-    m3 = await pg.evaluate(MAC_JS)
-    adim = a1["sn"] - a0["sn"]
-    denetle("Devam: maç aynı andan sürdü; bekleme süresi tek seferde eklenmedi (sıçrama yok)",
-            0 < m3["sn"] - m2["sn"] < 2 * adim + 1, f"1 sn'de {adim:.1f} oyun sn · devamdan sonra {m3['sn'] - m2['sn']:.1f}")
+    sonra = await pg.evaluate(KARE_JS, 5)
+    denetle("Devam: maç aynı andan sürdü; bekleme süresi tek seferde eklenmedi (devamdan sonraki karelerde oyun saati duraklatmadan önceki kadar ilerliyor, sıçrama yok)",
+            sum(sonra) > 0 and max(sonra) <= max(once) * 1.5 + 0.2, f"önce kare başına {once} · sonra {sonra}")
     await pg.context.close()
 
 
@@ -433,39 +436,123 @@ async def bolum_15(tarayici, site, tum_hatalar):
     await pg.wait_for_timeout(400)
     await pg.screenshot(path=str(ARAC / "son-akis-15-pencere.png"))
     await pg.context.close()
-    # maç (2.8O): başkan binadaki locada, balkonun bir kat üstünde; yüksek ve geniş bakış, yedek kulübeleri görünür; tabela okunur
+
+
+YON_JS = """() => ({ y: +KAM.a.y.toFixed(5), p: +KAM.a.p.toFixed(5), takip: KAM.takip, basili: document.getElementById('btnTopIzle').getAttribute('aria-pressed'),
+  fov: +camera.fov.toFixed(3), elleAci: STIL.kameralar.baskan.elleAci })"""
+# zemin noktası: {x, y} imleçteki ekran noktasının zemindeki karşılığı; {nokta: {x, z}} zemin noktasının ekrandaki yeri (sayfa pikseli)
+ZEMIN_JS = """(o) => { kameraUygula(curView()); camera.updateMatrixWorld(); const r = document.getElementById('view').getBoundingClientRect();
+  if (o.nokta) { const v = new THREE.Vector3(o.nokta.x, 0, o.nokta.z).project(camera); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
+  const R = new THREE.Raycaster(); R.setFromCamera({ x: (o.x - r.left) / r.width * 2 - 1, y: -((o.y - r.top) / r.height * 2 - 1) }, camera);
+  const t = -R.ray.origin.y / R.ray.direction.y; return { x: R.ray.origin.x + R.ray.direction.x * t, z: R.ray.origin.z + R.ray.direction.z * t }; }"""
+
+
+async def surukle(pg, x0, y0, x1, y1, adim=12):
+    await pg.mouse.move(x0, y0)
+    await pg.mouse.down()
+    await pg.mouse.move(x1, y1, steps=adim)
+    await pg.mouse.up()
+
+
+async def bolum_15b(tarayici, site, tum_hatalar):
+    """Maçta başkanın locası ve bakış (2.8O, 2026-10-03 ikinci paket): loca geometrisi, 52°'lik geniş bakışta kulübeler ve tabela; varsayılan
+    elle bakış (fareyle sürükleme, ok tuşları, sınırlar, duraklatmada kapalı, sürükleme sonrası telefon açılmaz); Topu izle (F) ile topa odaklı
+    yakın bakış ve topa kilitli dürbün."""
     pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&stat=sehir&tohum=5", "#btnMacaGec")
     tum_hatalar += hatalar
     k = await pg.evaluate("""() => { const t = STAT.tribunler.find(x => x.yer === 'ana'), O = tribunOlcu(t), arka = YAN_MESAFE + O.D + 0.6;
       return { y: +BASKAN_KOLTUGU.y.toFixed(2), beklenen: +(locaZemini(t) + KOLTUK_YUKSEKLIGI * 1.14).toFixed(2), balkon: +(tribunTepe('ana') + 1.8).toFixed(2),
-        z: +BASKAN_KOLTUGU.z.toFixed(2), arka: -arka, goz: +(BASKAN_KOLTUGU.y + STIL.kameralar.baskan.goz).toFixed(2), aci: STIL.kameralar.baskan.aci, ad: STAT.ad }; }""")
-    denetle("Maçta başkan binadaki locada: balkonun bir kat üstünde, ana tribünün arkasında; göz 12–15 m yüksekte, görüş açısı geniş; konum tarifin geometrisinden",
-            k["y"] == k["beklenen"] and k["y"] > k["balkon"] + 1.5 and k["z"] < k["arka"] - 3 and 12 <= k["goz"] <= 15 and k["aci"] >= 45 and k["ad"] == "Demirkapı İlçe Stadı", str(k))
+        z: +BASKAN_KOLTUGU.z.toFixed(2), arka: -arka, goz: +(BASKAN_KOLTUGU.y + STIL.kameralar.baskan.goz).toFixed(2), ad: STAT.ad }; }""")
+    denetle("Maçta başkan binadaki locada: balkonun bir kat üstünde, ana tribünün arkasında; göz 12–15 m yüksekte; konum tarifin geometrisinden",
+            k["y"] == k["beklenen"] and k["y"] > k["balkon"] + 1.5 and k["z"] < k["arka"] - 3 and 12 <= k["goz"] <= 15 and k["ad"] == "Demirkapı İlçe Stadı", str(k))
     await pg.click("#btnMacaGec")
     await pg.wait_for_function("mac.phase === 'play'", timeout=60000)
+    # elle bakış (varsayılan): baş kendiliğinden dönmez, görüş açısı sabit
+    y0 = await pg.evaluate(YON_JS)
+    await pg.wait_for_timeout(2500)
+    y1 = await pg.evaluate(YON_JS)
+    denetle("Bakış varsayılan olarak elle: Topu izle kapalı; oyun sürerken baş kendiliğinden dönmüyor, görüş açısı elleAci'de sabit",
+            not y0["takip"] and y0["basili"] == "false" and y0["y"] == y1["y"] and y0["p"] == y1["p"] and abs(y1["fov"] - y1["elleAci"]) < 0.01, f"{y0} → {y1}")
+    r = await pg.evaluate("(() => { const r = document.getElementById('hud').getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; })()")
+    cx, cy = r["x"] + r["w"] * 0.5, r["y"] + r["h"] * 0.4
+    P = await pg.evaluate(ZEMIN_JS, {"x": cx, "y": cy})
+    await surukle(pg, cx, cy, cx + 120, cy + 60)
+    s1 = await pg.evaluate(ZEMIN_JS, {"nokta": P})
+    y2 = await pg.evaluate(YON_JS)
+    hata = ((s1["x"] - cx - 120) ** 2 + (s1["y"] - cy - 60) ** 2) ** 0.5
+    denetle("Sürükleyince baş dönüyor (dünyayı tut): imlecin altındaki zemin noktası imleçle gitti (hata ≤ 3 piksel); sağa sürükleme sola, aşağı sürükleme yukarı baktırıyor",
+            hata <= 3 and y2["y"] > y1["y"] and y2["p"] > y1["p"] and not y2["takip"], f"hata {hata:.1f} px · {y1} → {y2}")
+    await pg.wait_for_timeout(1500)
+    t = await pg.evaluate(TEL_JS)
+    await surukle(pg, t["x"] - 160, t["y"] - 30, t["x"], t["y"], 8)
+    await pg.wait_for_timeout(1500)
+    acik1 = await pg.evaluate("MAC_TELEFON.acik")
+    t = await pg.evaluate(TEL_JS)
+    await pg.mouse.click(t["x"], t["y"])
+    await pg.wait_for_timeout(300)
+    acik2 = await pg.evaluate("MAC_TELEFON.acik")
+    await pg.keyboard.press("Escape")
+    await pg.wait_for_timeout(300)
+    denetle("Sürükleme masadaki telefonun üstünde bitince telefon açılmıyor; kısa tık açıyor (Esc kapatıyor)", not acik1 and acik2 and not await pg.evaluate("MAC_TELEFON.acik"), f"{acik1} · {acik2}")
+    # Topu izle: F ve düğme; sürükleme takibi kapatır
+    await pg.keyboard.press("KeyF")
+    f1 = await pg.evaluate(YON_JS)
+    await surukle(pg, cx, cy, cx - 80, cy, 6)
+    f2 = await pg.evaluate(YON_JS)
+    await pg.click("#btnTopIzle")
+    f3 = await pg.evaluate(YON_JS)
+    await pg.click("#btnTopIzle")
+    f4 = await pg.evaluate(YON_JS)
+    denetle("Topu izle: F ve düğme takibi açıp kapatıyor (düğme basılı görünüyor); fareyle sürüklemek takibi kapatıp elle bakışa döndürüyor",
+            f1["takip"] and f1["basili"] == "true" and not f2["takip"] and f2["basili"] == "false" and f3["takip"] and f3["basili"] == "true" and not f4["takip"], f"{f1} · {f2} · {f3} · {f4}")
+    # ok tuşları
+    a0 = await pg.evaluate(YON_JS)
+    await pg.keyboard.down("ArrowLeft")
+    await pg.wait_for_timeout(1500)
+    await pg.keyboard.up("ArrowLeft")
+    a1 = await pg.evaluate(YON_JS)
+    denetle("Ok tuşları başı çeviriyor (sol ok sola)", a1["y"] > a0["y"] + 0.005 and not a1["takip"], f"{a0} → {a1}")
+    # sınırlar: yatayda ±100°, dikeyde −34° … +16°
+    for _ in range(4):
+        await surukle(pg, r["x"] + 30, cy, r["x"] + r["w"] - 30, cy, 10)
+    for _ in range(3):
+        await surukle(pg, cx, r["y"] + 30, cx, r["y"] + r["h"] - 30, 10)
+    s_ = await pg.evaluate(YON_JS)
+    for _ in range(6):
+        await surukle(pg, cx, r["y"] + r["h"] - 30, cx, r["y"] + 30, 10)
+    s2 = await pg.evaluate(YON_JS)
+    denetle("Bakışın sınırları: yatayda en çok 100°, dikeyde en çok +16° yukarı ve −34° aşağı",
+            abs(s_["y"] - math.radians(100)) < 0.002 and abs(s_["p"] - math.radians(16)) < 0.002 and abs(s2["p"] + math.radians(34)) < 0.002, f"{s_} · {s2}")
+    # duraklatmada fare bakışı kapalı
     await pg.keyboard.press("KeyP")
-    # geniş bakış (maç öncesi, devre arası ve maç sonundaki oyun dışı bakış: geniş açı, odağın biraz altı): orta sahaya zorla, kulübe ve tabela
-    await pg.evaluate("""() => { const K = STIL.kameralar.baskan, g = kameraGoz(); KAMERA_ZORLA = { hedef: { x: 0, y: 1 - Math.hypot(g[0], g[2]) * K.sahneEgim, z: 0 }, fov: K.aci };
+    d0 = await pg.evaluate(YON_JS)
+    await surukle(pg, cx, cy, cx - 150, cy - 40, 8)
+    await pg.keyboard.press("ArrowRight")
+    d1 = await pg.evaluate(YON_JS)
+    denetle("Duraklatmada fare ve ok tuşları başı çevirmiyor; Topu izle düğmesi kapalı", d0["y"] == d1["y"] and d0["p"] == d1["p"] and await pg.evaluate("btnTopIzle.disabled"), f"{d0} → {d1}")
+    # 52°'lik geniş bakış (geometri: loca ile kulübe ve tabelanın yeri): orta sahaya zorla, kulübe ve tabela
+    await pg.evaluate("""() => { const K = STIL.kameralar.baskan, g = kameraGoz(); KAMERA_ZORLA = { hedef: { x: 0, y: 1 - Math.hypot(g[0], g[2]) * K.sahneEgim, z: 0 }, fov: 52 };
       kameraUygula(curView()); camera.updateMatrixWorld(); }""")
     await pg.wait_for_timeout(300)
     t = await pg.evaluate(TABELA_JS)
     kul = await pg.evaluate("""() => KULUBELER.map(k => { const v = new THREE.Vector3(k.x, 1, k.z).project(camera); return [+v.x.toFixed(2), +v.y.toFixed(2)]; })""")
-    denetle("Oyun dışı geniş bakışla orta sahaya bakarken iki yedek kulübesi de görüş alanında ve masanın üstünde kalıyor (baş çevirmeden)",
+    denetle("Locadan 52°'lik geniş bakışla orta sahaya bakarken iki yedek kulübesi de görüş alanında ve masanın üstünde",
             len(kul) == 2 and all(abs(x) < 0.97 and -0.62 < y < 0.9 for x, y in kul), str(kul))
-    denetle("Tek tabela başkan bakışında: oyun dışı geniş bakışla orta sahaya bakarken ekranın içinde, okunacak büyüklükte (iç çözünürlükte ≥ 60 piksel en)",
+    denetle("Tek tabela 52°'lik geniş bakışla orta sahaya bakarken ekranın içinde, okunacak büyüklükte (640 satır karşılığı ≥ 60 piksel en)",
             abs(t["x"]) < 0.95 and abs(t["y"]) < 0.95 and t["en"] >= 60 and t["boy"] >= 25, str(t))
-    # A akışı (2026-10-03): oyunda bakış topa odaklı ve yakın; dürbün topa kilitli. Duraklatılmışken top yerleştirilir, bakış elle ilerletilir
-    odak = await pg.evaluate("""() => { KAMERA_ZORLA = null; const b = mac.ball, eski = { x: b.x, y: b.y, z: b.z, vx: b.vx, vy: b.vy, vz: b.vz, sahip: b.sahip, tasiyan: b.tasiyan };
-      const v = new THREE.Vector3(), K = STIL.kameralar, R = 480 * 0.407, olc = () => { kameraUygula(curView()); camera.updateMatrixWorld(); v.set(b.x, b.y + TOP_R, b.z - MOTOR_Z).project(camera);
-        const sx = (v.x + 1) * 320, sy = (1 - v.y) * 240; return { x: +v.x.toFixed(3), y: +v.y.toFixed(3), fov: +camera.fov.toFixed(2), maske: Math.min(Math.hypot(sx - 224, sy - 240), Math.hypot(sx - 416, sy - 240)) < R }; };
+    # Topu izle açıkken: bakış topa odaklı ve yakın; dürbün topa kilitli. Takip açılıp bakış oturtulur (sınır denemesindeki uç yönden başlamasın);
+    # duraklatılmışken top yerleştirilir, bakış elle ilerletilir
+    odak = await pg.evaluate("""() => { KAMERA_ZORLA = null; kameraTakipAyarla(true); kameraOturt(); const b = mac.ball, eski = { x: b.x, y: b.y, z: b.z, vx: b.vx, vy: b.vy, vz: b.vz, sahip: b.sahip, tasiyan: b.tasiyan };
+      const v = new THREE.Vector3(), K = STIL.kameralar, W = MAC_RW, H = MAC_RH, R = H * 0.407, olc = () => { kameraUygula(curView()); camera.updateMatrixWorld(); v.set(b.x, b.y + TOP_R, b.z - MOTOR_Z).project(camera);
+        const sx = (v.x + 1) * W / 2, sy = (1 - v.y) * H / 2; return { x: +v.x.toFixed(3), y: +v.y.toFixed(3), fov: +camera.fov.toFixed(2), maske: Math.min(Math.hypot(sx - W * 0.35, sy - H / 2), Math.hypot(sx - W * 0.65, sy - H / 2)) < R }; };
       const top = [];
       for (const [x, z] of [[30, 52], [-38, 12], [5, 62], [-15, 30]]) { Object.assign(b, { x, z, y: 0, vx: 0, vy: 0, vz: 0, sahip: null, tasiyan: null }); for (let i = 0; i < 150; i++) kameraAdim(1 / 60); top.push(olc()); }
       bino = true; for (let i = 0; i < 90; i++) kameraAdim(1 / 60); const d = olc(); bino = false; for (let i = 0; i < 60; i++) kameraAdim(1 / 60);
       Object.assign(b, eski); return { faz: mac.phase, top, d, oyunAci: K.baskan.oyunAci, durbunAci: K.durbun.oyunAci, aci: K.baskan.aci }; }""")
     A, D = odak["oyunAci"], odak["durbunAci"]
-    denetle("Bakış topa odaklı: duraklatılmışken dört yere konan topa bakış yayla döndü; top ekranın ortasına yakın (|x| ≤ 0,15, −0,1 ≤ y ≤ 0,3; masanın üstünde), oyunda görüş açısı yakın (oyunAci), geniş açı 52°",
-            odak["faz"] == "play" and odak["aci"] == 52 and all(abs(o["x"]) <= 0.15 and -0.1 <= o["y"] <= 0.3 and A[0] - 0.01 <= o["fov"] <= A[1] + 0.01 for o in odak["top"]), str(odak["top"]))
-    denetle("Dürbün topa kilitli: top dürbün maskesinin içinde ve ortada, görüş açısı dürbünün oyun aralığında",
+    denetle("Topu izle açıkken bakış topa odaklı: duraklatılmışken dört yere konan topa bakış yayla döndü; top ekranın ortasına yakın (|x| ≤ 0,15, −0,1 ≤ y ≤ 0,3), görüş açısı oyunAci içinde, geniş açı 36°",
+            odak["faz"] == "play" and odak["aci"] == 36 and all(abs(o["x"]) <= 0.15 and -0.1 <= o["y"] <= 0.3 and A[0] - 0.01 <= o["fov"] <= A[1] + 0.01 for o in odak["top"]), str(odak["top"]))
+    denetle("Topu izle açıkken dürbün topa kilitli: top dürbün maskesinin içinde ve ortada, görüş açısı dürbünün oyun aralığında",
             odak["d"]["maske"] and abs(odak["d"]["x"]) <= 0.12 and abs(odak["d"]["y"]) <= 0.12 and D[0] - 0.01 <= odak["d"]["fov"] <= D[1] + 0.01, str(odak["d"]))
     await pg.screenshot(path=str(ARAC / "son-akis-15-mac.png"))
     await pg.context.close()
@@ -477,6 +564,11 @@ async def bolum_16(tarayici, site, tum_hatalar):
     tum_hatalar += hatalar
     await pg.click("#btnMacaGec")
     await pg.wait_for_timeout(4000)
+    sk = await pg.evaluate("""({ yazi: TABELA.yazi, sn: mac.gameSec, d: (k => k && [k.ev.x, k.ev.z])(mac.kenarBul('dorduncu')),
+      foto: mac.kenar.filter(p => p.kind === 'foto').length, telBak: typeof telefonYaz === 'undefined' && !('telefon' in BK_EYLEM) })""")
+    m = re.fullmatch(r"(\d\d):(\d\d)", sk["yazi"] or "")
+    denetle("Tabela canlı dakika:saniye (ör. 17:33; maç saatiyle aynı, hızlı oynatmada en çok saniyede 10 kez yazılır); 4. hakem iki kulübenin ortasında; takım başına bir fotoğrafçı; başkan kendiliğinden telefona bakmaz",
+            bool(m) and abs(int(m.group(1)) * 60 + int(m.group(2)) - sk["sn"]) <= 10 and sk["d"] and sk["d"][0] == 0 and sk["foto"] == 2 and sk["telBak"], str(sk))
     n = await pg.evaluate(TEL_JS)
     await pg.mouse.move(n["x"], n["y"])
     await pg.mouse.click(n["x"], n["y"])
@@ -522,7 +614,7 @@ async def bolum_16(tarayici, site, tum_hatalar):
 ORNEK_JS = """(o) => {
   /* duraklatılmışken maçı elle ilerletir (kare döngüsü dt 0 verir); her 0,25 sn bakışı yerleştirip topu ve oyuncuları ekrana izdüşürür */
   let g = 0; while (!(mac.phase === 'play' && mac.phaseT > 1) && g < 3600) { macKare(1 / 60); g++; }
-  MAC_HIZ.deger = o.hiz; if (o.bino) bino = true;
+  MAC_HIZ.deger = o.hiz; if (o.bino) bino = true; kameraTakipAyarla(true);
   const v = new THREE.Vector3(), R = [], f2 = x => +x.toFixed(3);
   for (let i = 1; i <= o.sure * 60; i++) { macKare(1 / 60); if (i % 15) continue;
     kameraUygula(curView()); camera.updateMatrixWorld(); okunurlukKare(); const b = mac.ball; v.set(b.x, b.y + TOP_R, b.z - MOTOR_Z).project(camera);
@@ -548,7 +640,8 @@ SAAT_JS = """(() => { let s = 5 >>> 0; Math.random = () => { s = (s + 0x6D2B79F5
 
 
 async def bolum_17(tarayici, site, tum_hatalar):
-    """Topa odaklı bakış ve maçın netliği (A akışı, 2026-10-03). Sayfa tohumlu ve elle saatli: örnekler her çalıştırmada aynıdır."""
+    """Topu izle açıkken topa odaklı bakış ve maçın netliği (A akışı 2026-10-03; ikinci paket: maç ızgarası 960×720, yakın bakış).
+    Sayfa tohumlu ve elle saatli: örnekler her çalıştırmada aynıdır. Oyuncu boyu ve top 480 satır karşılığıyla ölçülür."""
     baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
     await baglam.add_init_script(SAAT_JS)
     pg = await baglam.new_page()
@@ -558,31 +651,86 @@ async def bolum_17(tarayici, site, tum_hatalar):
     await pg.goto((site / "index.html").as_uri() + "?ekran=mac&tohum=5")
     await pg.wait_for_selector("#btnMacaGec", timeout=30000)
     await pg.evaluate("__kare(2)")
-    cizim = await pg.evaluate("({ rt: [rtMac.width, rtMac.height], oda: [rt.width, rt.height], tuval: [renderer.domElement.width, renderer.domElement.height], ic: [RW, RH], ornek: STIL.ekran.ornekleme })")
-    denetle("Maç sahnesi iç çözünürlüğün 2 katında çiziliyor (1280×960), iç çözünürlük 640×480; oda 640×480 hedefte; tuval tam sayı katında",
-            cizim["rt"] == [1280, 960] and cizim["ic"] == [640, 480] and cizim["oda"] == [640, 480] and cizim["tuval"][0] % 640 == 0 and cizim["tuval"][0] * 3 == cizim["tuval"][1] * 4, str(cizim))
+    cizim = await pg.evaluate("({ rt: [rtMac.width, rtMac.height], oda: [rt.width, rt.height], tuval: [renderer.domElement.width, renderer.domElement.height], ic: [RW, RH], mac: [MAC_RW, MAC_RH], ornek: STIL.ekran.ornekleme, hud: [hud.width, hud.height] })")
+    denetle("Maç sahnesi 960×720 ızgarada, içeride 2 katında çiziliyor (1920×1440); oda ve balkon 640×480 hedefte; tuval maç ızgarasının tam sayı katında, dürbün maskesi maç ızgarasında",
+            cizim["rt"] == [1920, 1440] and cizim["mac"] == [960, 720] and cizim["ic"] == [640, 480] and cizim["oda"] == [640, 480] and cizim["hud"] == [960, 720]
+            and cizim["tuval"][0] % 960 == 0 and cizim["tuval"][0] * 3 == cizim["tuval"][1] * 4, str(cizim))
     await pg.click("#btnMacaGec")
     o1 = await pg.evaluate(ORNEK_JS, {"sure": 30, "hiz": 1, "bino": False})
     o4 = await pg.evaluate(ORNEK_JS, {"sure": 30, "hiz": 4, "bino": False})
     ob = await pg.evaluate(ORNEK_JS, {"sure": 20, "hiz": 1, "bino": True})
     for ad, o in (("1×", o1), ("4×", o4)):
-        denetle(f"Belirlenimli 30 sn oyunda ({ad}) top 0,25 sn'lik örneklerin ≥ %90'ında ekranın ortasında (|x| ≤ 0,45, −0,35 ≤ y ≤ 0,45), ≤ %1'inde ekran dışında",
+        denetle(f"Topu izle açıkken belirlenimli 30 sn oyunda ({ad}) top 0,25 sn'lik örneklerin ≥ %90'ında ekranın ortasında (|x| ≤ 0,45, −0,35 ≤ y ≤ 0,45), ≤ %1'inde ekran dışında",
                 o["ornek"] >= 40 and o["ic"] >= 0.9 and o["disarida"] <= 0.01, str(o))
-    denetle("Oyunda oyuncu boyu ortancası ≥ 18 piksel, top çizimde ≥ 3 piksel", o1["boy"] >= 18 and o1["topPx"] >= 2.95, f"{o1['boy']} px · top en az {o1['topPx']} px")
-    denetle("Dürbün açıkken top örneklerin ≥ %85'inde maskenin içinde", ob["ornek"] >= 30 and ob["maske"] >= 0.85, str(ob))
+    denetle("Topu izle açıkken oyunda oyuncu boyu ortancası 480 satır karşılığı ≥ 28 piksel (önce ~21), top ≥ 3 piksel", o1["boy"] >= 28 and o1["topPx"] >= 2.95, f"{o1['boy']} px · top en az {o1['topPx']} px")
+    denetle("Topu izle ve dürbün açıkken top örneklerin ≥ %85'inde maskenin içinde", ob["ornek"] >= 30 and ob["maske"] >= 0.85, str(ob))
     # D kısayolu dürbünü açar (eller kaldırınca maske, ~0,5 sn) ve kapatır
     await pg.keyboard.press("KeyD")
     await pg.evaluate("__kare(45)")
     acik = await pg.evaluate("({ bino, basili: btnBino.getAttribute('aria-pressed'), kisayol: btnBino.getAttribute('aria-keyshortcuts') })")
-    await pg.evaluate("__kare(30)")
-    await pg.screenshot(path=str(ARAC / "son-akis-17-durbun.png"))
+    await pg.evaluate("__kare(4)")
+    # elle saatli sayfada kareler sunulmadan art arda verilir; yazılım çizimi (960×720 ızgara, 2×) birikir: görüntü öncesi kuyruk boşaltılır
+    await pg.evaluate("renderer.getContext().finish()")
+    await pg.screenshot(path=str(ARAC / "son-akis-17-durbun.png"), timeout=180000)
     await pg.keyboard.press("KeyD")
-    await pg.evaluate("__kare(90)")
+    await pg.evaluate("__kare(45)")
     kapali = await pg.evaluate("({ bino, basili: btnBino.getAttribute('aria-pressed') })")
     denetle("D tuşu dürbünü açıyor (eller kaldırınca maske) ve kapatıyor; düğme durumu eşleşiyor", acik["bino"] and acik["basili"] == "true" and acik["kisayol"] == "D" and not kapali["bino"] and kapali["basili"] == "false", f"{acik} · {kapali}")
-    await pg.screenshot(path=str(ARAC / "son-akis-17-mac.png"))
+    await pg.evaluate("renderer.getContext().finish()")
+    await pg.screenshot(path=str(ARAC / "son-akis-17-mac.png"), timeout=180000)
     tum_hatalar += hatalar
     await baglam.close()
+
+
+async def bolum_11(tarayici, site, tum_hatalar):
+    """Oyun çerçevesi (2.8A, 2.8J, 2.8O)."""
+    # ---- 11. oyun çerçevesi temizliği (2.8A, 2.8J): dış notlar, ses, çay ve yazılı spiker yok; eski ayarlar açılıyor ----
+    baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
+    await baglam.add_init_script("""window.__sesSayaci = 0; for (const ad of ['AudioContext', 'webkitAudioContext']) if (window[ad]) {
+      const A = window[ad]; window[ad] = function (...a) { window.__sesSayaci++; return new A(...a); }; }""")
+    # eski (2.5–2.8F) ayar kaydı: ses, sessiz ve hareket anahtarları vardı
+    await baglam.add_init_script("""if (!sessionStorage.getItem('__ayarYazildi')) { sessionStorage.setItem('__ayarYazildi', '1');
+      localStorage.setItem('chairman:ayarlar', JSON.stringify({ ses: 0.3, sessiz: true, yazi: 'buyuk', test: false, hareket: true })); }""")
+    pg = await baglam.new_page()
+    hatalar = []
+    pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
+    await pg.goto((site / "index.html").as_uri() + "?dunya=7")
+    await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=20000)
+    cerceve = await pg.evaluate("""() => ({ ust: !!document.querySelector('header.top, .rules, .pal, .radyo, #radyoMetin, #radyoSkor'),
+      gelistirici: !!document.querySelector('details.gelistirici:not([open]) #hizSeg'), santra: (document.getElementById('btnMacaGec') || {}).textContent,
+      ayarlar: [...document.querySelectorAll('details.gelistirici button, details.gelistirici input')].map(b => b.id || b.dataset.hiz).join(',') })""")
+    denetle("Çerçeve temiz: başlık, kurallar, palet ve radyo satırı yok; deneme ayarlarında yalnız maç hızı ve Durdur (doluluk, zemin, baştan başlat yok); 'Santraya geç'",
+            not cerceve["ust"] and cerceve["gelistirici"] and cerceve["santra"] == "Santraya geç" and cerceve["ayarlar"] == "1,2,4,8,btnDurdur", str(cerceve))
+    ayar = await pg.evaluate("({ a: OYUN.ayarlar.yazi, t: OYUN.ayarlar.test, kayit: JSON.parse(localStorage.getItem('chairman:ayarlar')) })")
+    denetle("Eski ayar kaydı açıldı: yazı büyüklüğü ve test ayarı korundu, ses ve hareket anahtarları düştü",
+            ayar["a"] == "buyuk" and ayar["t"] is False and "ses" not in ayar["kayit"] and "sessiz" not in ayar["kayit"] and "hareket" not in ayar["kayit"], str(ayar))
+    await pg.keyboard.press("Digit2")
+    await pg.keyboard.press("Digit1")
+    await pg.click('.od-nesne[data-panel="ayar"]')
+    ayar_yazi = await pg.text_content(".od-panel")
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("Digit5")
+    await pg.wait_for_function("ODA.yer === 'balkon'", timeout=YURUYUS_BEKLE)
+    ses = await pg.evaluate("({ sayac: window.__sesSayaci, tanim: ['sesCal', 'sesBaslat', 'sesOrtam', 'sesAyarla', 'SES'].filter(a => a in window), cay: typeof BK_CAY !== 'undefined' || typeof BK_BUHAR !== 'undefined', soyle: typeof soyle !== 'undefined' })")
+    denetle("Ses yok: paneller ve balkon sonrası ses bağlamı kurulmadı, ses işlevleri tanımsız, ayarlarda Ses ya da Hareket bölümü yok; çay ve spiker işlevi yok",
+            ses["sayac"] == 0 and not ses["tanim"] and not ses["cay"] and not ses["soyle"] and "Ses" not in ayar_yazi and "Hareket" not in ayar_yazi, str(ses))
+    await pg.goto((site / "index.html").as_uri() + "?ekran=mac&hiz=16&tohum=3")
+    await pg.wait_for_timeout(1500)
+    await pg.click("#btnMacaGec")
+    await pg.wait_for_timeout(8000)
+    mac = await pg.evaluate("({ faz: mac.phase, sn: Math.round(mac.gameSec), sut: mac.ist.sut.join('-'), sayac: window.__sesSayaci, kuyruk: olayKuyrugu.length })")
+    denetle("Maç sessiz ve spikersiz oynanıyor: santradan sonra olaylar işleniyor, istatistik üretiliyor",
+            mac["faz"] not in ("isinma", "giris", "toren", "selam", "yazitura") and mac["sn"] > 0 and mac["sayac"] == 0 and not hatalar, str(mac))
+    await pg.screenshot(path=str(ARAC / "son-akis-11-mac.png"))
+    tum_hatalar += hatalar
+    await baglam.close()
+
+
+SECIM = set(sys.argv[1:])
+
+
+def sec(n):
+    return not SECIM or n in SECIM
 
 
 async def ana():
@@ -600,63 +748,36 @@ async def ana():
         tarayici = await p.chromium.launch(
             args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
 
-        print("\n1. İçeriksiz yeni kariyer")
-        await bolum_1(tarayici, site, tum_hatalar)
-        print("\n2. Eski kayıt")
-        await bolum_2(tarayici, site, tum_hatalar)
-        print("\n3. TEST içeriği: defter, telefon, masada açık dosya")
-        await bolum_3(tarayici, site, tum_hatalar)
-        print("\n12. Genel duraklatma")
-        await bolum_12(tarayici, site, tum_hatalar)
-        print("\n14. Maç öncesi ekranı")
-        await bolum_14(tarayici, site, tum_hatalar)
-        print("\n15. Stat, mekân ve başkanın locası")
-        await bolum_15(tarayici, site, tum_hatalar)
-        print("\n16. Maç telefonu")
-        await bolum_16(tarayici, site, tum_hatalar)
-        print("\n17. Topa odaklı bakış ve maçın netliği")
-        await bolum_17(tarayici, site, tum_hatalar)
-        print("\n11. Oyun çerçevesi")
-        # ---- 11. oyun çerçevesi temizliği (2.8A, 2.8J): dış notlar, ses, çay ve yazılı spiker yok; eski ayarlar açılıyor ----
-        baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
-        await baglam.add_init_script("""window.__sesSayaci = 0; for (const ad of ['AudioContext', 'webkitAudioContext']) if (window[ad]) {
-          const A = window[ad]; window[ad] = function (...a) { window.__sesSayaci++; return new A(...a); }; }""")
-        # eski (2.5–2.8F) ayar kaydı: ses, sessiz ve hareket anahtarları vardı
-        await baglam.add_init_script("""if (!sessionStorage.getItem('__ayarYazildi')) { sessionStorage.setItem('__ayarYazildi', '1');
-          localStorage.setItem('chairman:ayarlar', JSON.stringify({ ses: 0.3, sessiz: true, yazi: 'buyuk', test: false, hareket: true })); }""")
-        pg = await baglam.new_page()
-        hatalar = []
-        pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
-        await pg.goto((site / "index.html").as_uri() + "?dunya=7")
-        await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=20000)
-        cerceve = await pg.evaluate("""() => ({ ust: !!document.querySelector('header.top, .rules, .pal, .radyo, #radyoMetin, #radyoSkor'),
-          gelistirici: !!document.querySelector('details.gelistirici:not([open]) #hizSeg'), santra: (document.getElementById('btnMacaGec') || {}).textContent,
-          ayarlar: [...document.querySelectorAll('details.gelistirici button, details.gelistirici input')].map(b => b.id || b.dataset.hiz).join(',') })""")
-        denetle("Çerçeve temiz: başlık, kurallar, palet ve radyo satırı yok; deneme ayarlarında yalnız maç hızı ve Durdur (doluluk, zemin, baştan başlat yok); 'Santraya geç'",
-                not cerceve["ust"] and cerceve["gelistirici"] and cerceve["santra"] == "Santraya geç" and cerceve["ayarlar"] == "1,2,4,8,btnDurdur", str(cerceve))
-        ayar = await pg.evaluate("({ a: OYUN.ayarlar.yazi, t: OYUN.ayarlar.test, kayit: JSON.parse(localStorage.getItem('chairman:ayarlar')) })")
-        denetle("Eski ayar kaydı açıldı: yazı büyüklüğü ve test ayarı korundu, ses ve hareket anahtarları düştü",
-                ayar["a"] == "buyuk" and ayar["t"] is False and "ses" not in ayar["kayit"] and "sessiz" not in ayar["kayit"] and "hareket" not in ayar["kayit"], str(ayar))
-        await pg.keyboard.press("Digit2")
-        await pg.keyboard.press("Digit1")
-        await pg.click('.od-nesne[data-panel="ayar"]')
-        ayar_yazi = await pg.text_content(".od-panel")
-        await pg.keyboard.press("Escape")
-        await pg.keyboard.press("Digit5")
-        await pg.wait_for_function("ODA.yer === 'balkon'", timeout=YURUYUS_BEKLE)
-        ses = await pg.evaluate("({ sayac: window.__sesSayaci, tanim: ['sesCal', 'sesBaslat', 'sesOrtam', 'sesAyarla', 'SES'].filter(a => a in window), cay: typeof BK_CAY !== 'undefined' || typeof BK_BUHAR !== 'undefined', soyle: typeof soyle !== 'undefined' })")
-        denetle("Ses yok: paneller ve balkon sonrası ses bağlamı kurulmadı, ses işlevleri tanımsız, ayarlarda Ses ya da Hareket bölümü yok; çay ve spiker işlevi yok",
-                ses["sayac"] == 0 and not ses["tanim"] and not ses["cay"] and not ses["soyle"] and "Ses" not in ayar_yazi and "Hareket" not in ayar_yazi, str(ses))
-        await pg.goto((site / "index.html").as_uri() + "?ekran=mac&hiz=16&tohum=3")
-        await pg.wait_for_timeout(1500)
-        await pg.click("#btnMacaGec")
-        await pg.wait_for_timeout(8000)
-        mac = await pg.evaluate("({ faz: mac.phase, sn: Math.round(mac.gameSec), sut: mac.ist.sut.join('-'), sayac: window.__sesSayaci, kuyruk: olayKuyrugu.length })")
-        denetle("Maç sessiz ve spikersiz oynanıyor: santradan sonra olaylar işleniyor, istatistik üretiliyor",
-                mac["faz"] not in ("isinma", "giris", "toren", "selam", "yazitura") and mac["sn"] > 0 and mac["sayac"] == 0 and not hatalar, str(mac))
-        await pg.screenshot(path=str(ARAC / "son-akis-11-mac.png"))
-        tum_hatalar += hatalar
-        await baglam.close()
+        if sec("1"):
+            print("\n1. İçeriksiz yeni kariyer")
+            await bolum_1(tarayici, site, tum_hatalar)
+        if sec("2"):
+            print("\n2. Eski kayıt")
+            await bolum_2(tarayici, site, tum_hatalar)
+        if sec("3"):
+            print("\n3. TEST içeriği: defter, telefon, masada açık dosya")
+            await bolum_3(tarayici, site, tum_hatalar)
+        if sec("12"):
+            print("\n12. Genel duraklatma")
+            await bolum_12(tarayici, site, tum_hatalar)
+        if sec("14"):
+            print("\n14. Maç öncesi ekranı")
+            await bolum_14(tarayici, site, tum_hatalar)
+        if sec("15"):
+            print("\n15. Stat, mekân, balkon ve yürüyüş")
+            await bolum_15(tarayici, site, tum_hatalar)
+        if sec("15b"):
+            print("\n15b. Maçta loca, elle bakış, Topu izle ve dürbün")
+            await bolum_15b(tarayici, site, tum_hatalar)
+        if sec("16"):
+            print("\n16. Maç telefonu")
+            await bolum_16(tarayici, site, tum_hatalar)
+        if sec("17"):
+            print("\n17. Topa odaklı bakış ve maçın netliği")
+            await bolum_17(tarayici, site, tum_hatalar)
+        if sec("11"):
+            print("\n11. Oyun çerçevesi")
+            await bolum_11(tarayici, site, tum_hatalar)
 
         await tarayici.close()
     shutil.rmtree(site.parent, ignore_errors=True)
