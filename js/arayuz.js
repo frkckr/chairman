@@ -13,8 +13,11 @@ function drawHUD(){
 /* ============ arayüz ve döngü ============ */
 function press(b,on){b.setAttribute('aria-pressed',on?'true':'false');}
 const btnBino=$('btnBino');
-/* dürbün: başkan elleriyle kaldırır; yüzüne gelince maske açılır. İndirirken önce maske kapanır */
+/* dürbün: başkan elleriyle kaldırır; yüzüne gelince maske açılır ve bakış topa kilitlenir (js/kamera.js). İndirirken önce maske kapanır.
+   Kısayol: D (maçta; oda açıkken ya da duraklatılmışken çalışmaz) */
 btnBino.onclick=()=>{if(!bino&&!BASKAN.durbunHazir){press(btnBino,true);baskanDurbun(true,()=>{bino=true;});}else{bino=false;press(btnBino,false);baskanDurbun(false);}};
+addEventListener('keydown',e=>{if(e.code!=='KeyD'||e.repeat||e.ctrlKey||e.altKey||e.metaKey||ON_EKRAN.sayfa!==null||btnBino.disabled)return;const t=e.target&&e.target.tagName;
+  if(t==='INPUT'||t==='TEXTAREA'||(typeof MAC_TELEFON!=='undefined'&&MAC_TELEFON.acik))return;e.preventDefault();btnBino.onclick();});
 /* duraklat: tek ortak yönetim (js/sunum-durumu.js; elle duraklatma 'elle' nedenidir). Maç, tribün, bayraklar, meşaleler, kamera, eller ve dürbün
    durur; oda, yürüyüş ve balkon da aynı yönetimle durur. Ekranı karartmayan küçük "Duraklatıldı" göstergesi açılır. Kısayol: boşluk ya da P */
 const btnDuraklat=$('btnDuraklat'),duraklatGosterge=$('duraklatildi');
@@ -35,7 +38,7 @@ addEventListener('keydown',e=>{if((e.code!=='Space'&&e.code!=='KeyP')||e.repeat|
 let last=0,time=0,onEkranCizildi=false;
 function frame(now){
   /* başkan odası: stat yerine oda sahnesi çizilir; maç zamanı ilerlemez (js/oda.js). Odadan çıkınca stat yeniden çizilir */
-  if(ON_EKRAN.sayfa==='oda'){odaKare(duraklatmaVar()?0:Math.min(0.05,Math.max(0,(now-last)/1000)));last=now;odaCiz();onEkranCizildi=false;requestAnimationFrame(frame);return;}
+  if(ON_EKRAN.sayfa==='oda'){sonIslemHedefi(rt);odaKare(duraklatmaVar()?0:Math.min(0.05,Math.max(0,(now-last)/1000)));last=now;odaCiz();onEkranCizildi=false;requestAnimationFrame(frame);return;}
   /* maç öncesi ekranı açıkken maç günü başlamaz: stat bir kez çizilir, menünün arkasında donuk durur */
   if(ON_EKRAN.acik&&onEkranCizildi){last=now;requestAnimationFrame(frame);return;}
   const gercekDt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;
@@ -45,16 +48,11 @@ function frame(now){
   fx(dt,time);
   macKare(dt);baskanZaman(dt);
   if(!btnMacaGec.hidden&&!MAC_ONCESI.includes(mac.phase))btnMacaGec.hidden=true;
-  /* sakin kamera (2.8J): baş salınımı, gol sarsıntısı ve dürbün el titremesi yok; ayağa kalkış (kalk) gerçek harekettir */
-  const V=curView(),B=BAKIS,ug=Math.hypot(B.x-V.p[0],B.z-V.p[2])*(bino?0.015:STIL.kameralar.baskan.egim);
-  const kalk=BASKAN.kalk;
-  camera.position.set(V.p[0],V.p[1]+kalk*0.38,V.p[2]+kalk*0.12);
-  /* bakış çok dik aşağı inmesin: masa ve tünel ağzı ekranı kaplamasın */
-  const yat=Math.hypot(B.x-camera.position.x,B.z-camera.position.z),ly=Math.max(B.y-ug,camera.position.y-yat*Math.tan(STIL.kameralar.baskan.asagiSinir));
-  camera.lookAt(B.x,ly,B.z);
-  if(camera.fov!==V.fov){camera.fov=V.fov;camera.updateProjectionMatrix();}
+  kameraUygula(curView());   /* js/kamera.js */
+  okunurlukKare();           /* js/okunurluk.js: topun asgari boyu, havadaki topun lekesi */
   camera.updateMatrixWorld();baskanKare(dt,camera);drawHUD();
-  renderer.setRenderTarget(rt);renderer.setClearColor(STIL.ekran.arkaPlan,1);renderer.clear();renderer.render(scene,camera);
+  sonIslemHedefi(rtMac);   /* maç sahnesi ornekleme katında (js/goruntu.js) */
+  renderer.setRenderTarget(rtMac);renderer.setClearColor(STIL.ekran.arkaPlan,1);renderer.clear();renderer.render(scene,camera);
   if(!bino)baskanCiz();
   renderer.setRenderTarget(null);renderer.clear();renderer.render(post,postCam);
   onEkranCizildi=ON_EKRAN.acik;if(ON_EKRAN.acik)ON_EKRAN.cizildi=true;

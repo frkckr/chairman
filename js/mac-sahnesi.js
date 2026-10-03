@@ -5,7 +5,8 @@
    kaleci uçuşu ve tutuşu, taç, itiraz, sevinç; hakemde düdük, yön, avantaj, kart, penaltı; yan hakemde bayrak.
    Burada ayrıca: konilerdeki yedek toplar ve dışarıda kalan toplar (top toplayıcı 2.8O'da kaldırıldı), yedek kulübeleri, teknik direktörler, antrenörler, dördüncü hakem ve uzatma
    tabelası, fotoğrafçılar ve flaşları, antrenman topları ve koniler, yazı tura parası, top, gölgeler, tribünün dolması ve ayağa
-   kalkması, tribün heyecanı, canlı skor tabelası ve başkanın bakışı. Yazılı spiker/radyo satırı 2.8A'da kaldırıldı. */
+   kalkması, tribün heyecanı, canlı skor tabelası ve başkanın bakışı. Yazılı spiker/radyo satırı 2.8A'da kaldırıldı.
+   Faz 0 (2026-10-03): oyuncu pozları ve aktör yerleşimi js/animasyon.js'te (E akışı), başkanın bakışı ve kamera js/kamera.js'te (A akışı). */
 const MOTOR_Z=34,ADIM=1/60;
 const MAC_HIZ={deger:(()=>{try{const v=parseFloat(new URLSearchParams(location.search).get('hiz'));return [1,2,4,8,16].includes(v)?v:1;}catch(e){return 1;}})()};
 /* ?tohum=123 ile aynı maç yeniden oynatılabilir */
@@ -23,11 +24,6 @@ const mac=new Match((ad,v)=>olayKuyrugu.push([ad,v]),{kadro:MAC_KADRO,tunel:{x:T
   taraftarYeri:tribunOnu('ev')||undefined,deplasmanYeri:tribunOnu('deplasman')});
 
 /* ---- aktörler: motordaki her oyuncu, hakem ve top toplayıcı için bir model ---- */
-const EKLEM=['lean','dy','hx','lL','kL','lR','kR','aL','aR','aLz','aRz','eL','eR'];
-function aktorKur(K,kaynak,boy){
-  const m=player(K);m.root.rotation.order='YXZ';scene.add(m.root);golgeEkle(m);
-  return{m,kaynak,boy:boy||1,J:{},yaw:0,ph:rnd()*6,amp:0,w:{},px:kaynak?kaynak.x:0,pz:kaynak?kaynak.z:0,x:0,z:0,dus:0};
-}
 const AKTORLER=[];
 mac.players.forEach(p=>{const kd=MAC_KADRO[p.team],k=p.kayit||{},forma=p.rol==='GK'?kd.kaleciForma:kd.forma;
   AKTORLER.push(aktorKur(kitKaydi(forma,k,p.no),p,k.boy));});
@@ -91,6 +87,8 @@ function tabelaGuncelle(){
 /* maç olayları: başkanın tepkisi, tribün heyecanı, bakış, para, tabela ve sevinç. Yazılı spiker yoktur (2.8A) */
 function olay(ad,v){
   if(typeof baskanOlay==='function')baskanOlay(ad,v);
+  /* kamera ve animasyon akışlarının olay kancaları (js/kamera.js, js/animasyon.js; Faz 0) */
+  kameraOlay(ad,v);animasyonOlay(ad,v);
   switch(ad){
     case 'oncesi':if(v.ad==='takim0')heyecanla(0,H.santra*0.7,2);if(v.ad==='takim1')heyecanla(1,H.santra*0.7,2);
       if(v.x!=null){ONCESI_BAKIS.x=v.x;ONCESI_BAKIS.z=v.z-MOTOR_Z;ONCESI_BAKIS.t=zaman;}break;
@@ -119,106 +117,7 @@ function olay(ad,v){
   }
 }
 
-/* ---- pozlar: sürekli karışım ---- */
-const kar=(J,P,w)=>{if(w<=0.001)return;for(const k in P)J[k]=J[k]+(P[k]-J[k])*w;};
-function yumusak(a,ad,hedef,hiz,dt){const v=a.w[ad]||0;a.w[ad]=v+(hedef-v)*Math.min(1,dt*hiz);return a.w[ad];}
-function aciYumusak(a,h,dt,hiz){let d=h-a.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));a.yaw+=d*Math.min(1,dt*hiz);}
-const yanPoz=(P,sol)=>sol?aynala(P):P;
-const POZ_ETIKET=['esneme','tokalas','comel','foto','alkis','cember','yorgun','tutus'];
-const tepe=(t,s)=>Math.sin(Math.PI*clamp(t/s,0,1));
-function pozla(a,p,spd,dt){
-  const run=Math.min(1,spd/7.5),hedefAmp=spd>0.3?0.18+run*0.8:0;a.amp+=(hedefAmp-a.amp)*Math.min(1,dt*8);
-  /* adım: her adım bir yarım döngüdür; adım boyu hızla uzar (yürüyüşte ~0,8 m, depar ~2 m), böylece ayak yerde kaymaz (MM1) */
-  if(spd>0.3)a.ph+=dt*Math.PI*spd/((0.7+0.15*spd)*(p&&p.boy||1));
-  const s=Math.sin(a.ph),c=Math.cos(a.ph),A=a.amp,r=Math.min(1,a.amp);
-  const J={lean:0.22*run,dy:Math.abs(c)*0.05*run-0.03*run,hx:0,lL:-s*A,lR:s*A,kL:Math.max(0,Math.sin(a.ph+1.4))*A*1.5+0.05,kR:Math.max(0,Math.sin(a.ph+Math.PI+1.4))*A*1.5+0.05,
-    aL:s*A*0.75,aR:-s*A*0.75,eL:-(0.25+r*1.0),eR:-(0.25+r*1.0),aLz:-0.08,aRz:0.08};
-  if(!p)return J;
-  const ph=mac.phase,e=p.eylem,ad=e?e.ad:'',b=mac.ball;
-  /* vuruş: geri salınım, temas, takip. Pas iç ayakla küçük, şut ve uzun top tam salınım */
-  if(ad==='vurus'){const sol=e.ayak==='sol',kucuk=e.sec&&e.sec.tip==='yer'&&e.sec.tur!=='sut',G=yanPoz(kucuk?POSE.pasGeri:POSE.vurusGeri,sol),T=yanPoz(kucuk?POSE.pasTakip:POSE.vurusTakip,sol);
-    if(e.faz==='geri')kar(J,G,clamp(e.ft/Math.max(0.05,e.geri),0,1));
-    else if(e.faz==='takip'){const f=e.ft/0.26;if(f<0.35){kar(J,G,1);kar(J,T,f/0.35);}else kar(J,T,1-(f-0.35)/0.65);}}
-  /* antrenman vuruşu: geri salınım, temas, takip */
-  if(ad==='tekme'){const sol=e.ayak==='sol',G=yanPoz(e.kucuk?POSE.pasGeri:POSE.vurusGeri,sol),T=yanPoz(e.kucuk?POSE.pasTakip:POSE.vurusTakip,sol),f=e.t/e.sure;
-    if(f<0.33)kar(J,G,f/0.33);else{const g=(f-0.33)/0.67;kar(J,G,Math.max(0,1-g*3));kar(J,T,g<0.3?g/0.3:1-(g-0.3)/0.7);}}
-  /* maç günü pozları (motorun verdiği poz etiketi): esneme, tokalaşma, fotoğraf, alkış, kenetlenme, yorgunluk */
-  for(const k of POZ_ETIKET){const w=yumusak(a,'p_'+k,p.poz===k?1:0,k==='tokalas'?10:5,dt);if(w<=0.001)continue;
-    if(k==='esneme'){const f=0.5+0.5*Math.sin(zaman*0.9+a.ph);kar(J,POSE.esneme1,w*f);kar(J,POSE.esneme2,w*(1-f));}
-    else if(k==='comel'&&p.kind==='foto')kar(J,POSE.fotoCek,w);
-    else{kar(J,POSE[k],w);if(k==='alkis'){J.aLz+=Math.sin(zaman*15+a.ph)*0.22*w;J.aRz-=Math.sin(zaman*15+a.ph)*0.22*w;}}}
-  if(ad==='degaj'){const f=e.t/e.sure;kar(J,POSE.vurusTakip,f<0.3?f/0.3:1-(f-0.3)/0.7);kar(J,POSE.tutus,Math.max(0,1-f*3));}
-  if(ad==='kontrol')kar(J,POSE.kontrol,tepe(e.t,e.sure)*0.8);
-  if(ad==='gogus')kar(J,POSE.gogus,tepe(e.t,e.sure));
-  kar(J,POSE.kafa,yumusak(a,'kafa',ad==='kafa'?1:0,16,dt));
-  if(ad==='mudahale')kar(J,POSE.mudahale,tepe(e.t,e.sure));
-  kar(J,POSE.slide,yumusak(a,'kayma',ad==='kayma'?1:0,14,dt));
-  if(ad==='blok')kar(J,POSE.blok,tepe(e.t,e.sure));
-  if(ad==='dusus'||ad==='yerde')kar(J,ad==='dusus'?POSE.dusus:POSE.yerde,1);
-  if(ad==='kalkis')kar(J,POSE.yerde,1-e.t/e.sure);
-  if(ad==='yumruk')kar(J,POSE.yumruk,tepe(e.t,e.sure));
-  if(ad==='elleAtis')kar(J,POSE.elleAtis,tepe(e.t,e.sure));
-  if(ad==='itiraz'){kar(J,POSE.itiraz,Math.min(1,e.t*4)*Math.min(1,(e.sure-e.t)*4));J.aLz-=Math.sin(zaman*6)*0.15;J.aRz+=Math.sin(zaman*6)*0.15;}
-  /* taç: top başın üstünde; atışta kollar öne */
-  if(ad==='tac'){if(e.faz==='tut')kar(J,POSE.tac,1);else{const f=e.ft/0.34;kar(J,POSE.tac,1);kar(J,POSE.tacAt,f<1?f*f:Math.max(0,1-(e.ft-0.34)/0.3));}}
-  if(ad==='atis'){const f=e.t/e.sure;kar(J,POSE.tac,f<0.4?f/0.4:0);kar(J,POSE.tacAt,f>=0.4?1-(f-0.4)/0.6:0);}
-  /* top elde: kaleci tutuşu, duran topu taşıyan oyuncu, yedek topu tutan çocuk */
-  const elde=b.tasiyan===p&&ad!=='tac';
-  kar(J,p.rol==='GK'?POSE.tutus:POSE.tasi,yumusak(a,'elde',elde?1:0,10,dt));
-  kar(J,POSE.sevinc,yumusak(a,'sevinc',p.sevinc?1:0,6,dt));
-  kar(J,POSE.mars,yumusak(a,'mars',ph==='toren'&&p.tur!=='hakem'?1:0,3,dt));
-  kar(J,POSE.dive,yumusak(a,'dive',ad==='ucus'?1:0,16,dt));
-  /* hakem işaretleri */
-  if(p.tur==='hakem'){
-    if(ad==='duduk')kar(J,POSE.hakemDuduk,tepe(e.t,e.sure));
-    if(ad==='yon')kar(J,POSE.hakemYon,tepe(e.t,e.sure));
-    if(ad==='avantaj')kar(J,POSE.hakemAvantaj,tepe(e.t,e.sure));
-    if(ad==='kart')kar(J,POSE.hakemKart,tepe(e.t,e.sure));
-    if(ad==='penaltiGoster')kar(J,POSE.hakemPenalti,tepe(e.t,e.sure));
-    if(ad==='bayrak')kar(J,POSE.bayrak,Math.min(1,e.t*6)*Math.min(1,(e.sure-e.t)*4));}
-  if(p.sevinc)J.aLz+=Math.sin(zaman*8)*0.3,J.aRz-=Math.sin(zaman*8)*0.3;
-  return J;
-}
-function uygula(a,J){for(const k of EKLEM)a.J[k]=J[k]||0;pose(a.m,a.J);}
 
-/* ---- bakış: başkanın gözü olan biteni yumuşakça izler (kritik sönümlü yay) ----
-   2.8O: yüksek locadan saha geniş görünür; baş topun her dokunuşunu izlemez. Odak noktası önce sahanın ortasına doğru sıkıştırılır
-   (takip.x/z payı, xSinir), sonra takip.sure saniyede yumuşar (atak bölgesi); yay bu yumuşak noktaya döner. */
-const BAKIS=new THREE.Vector3(...STIL.kameralar.baskan.hedef),BAKIS_HIZ=new THREE.Vector3(),BAKIS_HEDEF=new THREE.Vector3(),BAKIS_ATAK=new THREE.Vector3(...STIL.kameralar.baskan.hedef);
-const ONCESI_BAKIS={x:0,z:0,t:-99};
-function bakisOdagi(){
-  const ph=mac.phase,b=mac.ball;
-  /* ısınma: yeni bir şey olduysa oraya bakar; yoksa ilgi noktaları (kaleciler, hakemler, takımlar) arasında gezinir.
-     İlk anlarda karşı tribünün dolmasını izler */
-  if(ph==='isinma'){const sn=mac.sen;
-    if(zaman-ONCESI_BAKIS.t<6)return BAKIS_HEDEF.set(ONCESI_BAKIS.x,1,ONCESI_BAKIS.z);
-    const L=sn.ilgiler;if(sn.t<14||!L.length)return BAKIS_HEDEF.set(-8,4,PW-MOTOR_Z+12);
-    const i=Math.floor(zaman/8)%L.length;return BAKIS_HEDEF.set(L[i].x,1,L[i].z-MOTOR_Z);}
-  /* tokalaşma: el sıkışanları izler; fotoğrafta iki takımın fotoğrafı arasında gidip gelir */
-  if(ph==='selam'){const G=[[0,0,0],[0,0,0]];let n=0,x=0,z=0;
-    for(const p of mac.players){if(p.poz==='tokalas'){x+=p.x;z+=p.z;n++;}else if(p.poz==='comel'||p.poz==='foto'){const g=G[p.team];g[0]+=p.x;g[1]+=p.z;g[2]++;}}
-    const fotolar=G.filter(g=>g[2]>4);
-    if(fotolar.length){const g=fotolar[Math.floor(zaman/5)%fotolar.length];return BAKIS_HEDEF.set(g[0]/g[2],1,g[1]/g[2]-MOTOR_Z);}
-    return n?BAKIS_HEDEF.set(x/n,1,z/n-MOTOR_Z):BAKIS_HEDEF.set(0,1,MZ-9-MOTOR_Z);}
-  if(ph==='giris'){if(mac.phaseT<5)return BAKIS_HEDEF.set(TUNEL.x,1,TUNEL.z+3);let n=0,x=0,z=0;for(const a of AKTORLER)if(a.m.root.visible){x+=a.x;z+=a.z;n++;}return BAKIS_HEDEF.set(n?x/n:0,1,n?z/n:0);}
-  if(ph==='toren')return BAKIS_HEDEF.set(0,1,MZ-9-MOTOR_Z);
-  if(ph==='yazitura')return BAKIS_HEDEF.set(0,1,0);
-  /* devre arası: önce soyunma odasına yürüyen oyuncular, sonra kale önünde şut çalışan yedekler, en son tünel.
-     Maç sonu: sevinç ve tokalaşma, sonra taraftarını alkışlayan ev sahibi, en son tünel */
-  const ortala=L=>{let n=0,x=0,z=0;for(const p of L)if(p.z>mac.tunel.z){x+=p.x;z+=p.z;n++;}return n?BAKIS_HEDEF.set(x/n,1,z/n-MOTOR_Z):BAKIS_HEDEF.set(0,1,TUNEL.z+10);};
-  if(ph==='halftime'){if(mac.phaseT<10)return ortala(mac.players.filter(p=>p.oyunda));if(mac.phaseT<DEVRE_ARASI-8)return BAKIS_HEDEF.set(-PL+14,1,0);return BAKIS_HEDEF.set(0,1,TUNEL.z+10);}
-  if(ph==='fulltime'){if(mac.phaseT<14)return ortala(mac.players.filter(p=>p.oyunda));if(mac.phaseT<30)return ortala(mac.teams[0].filter(p=>p.oyunda));return BAKIS_HEDEF.set(0,1,TUNEL.z+10);}
-  /* kart gösterilirken hakeme (dördüncü hakem başkanın hemen önünde, ekranın altında zaten görünür) */
-  const h=mac.refs[0];if(h.eylem&&h.eylem.ad==='kart')return BAKIS_HEDEF.set(h.x,1.3,h.z-MOTOR_Z);
-  const f=mac.focus();return BAKIS_HEDEF.set(f.x,1,f.z-MOTOR_Z);
-}
-/* atak bölgesi: hedef sahanın ortasına sıkıştırılır ve zamanla yumuşatılır; duraklatmada (dt 0) yerinde kalır */
-function bakisAtak(dt){
-  const T=STIL.kameralar.baskan.takip,h=BAKIS_HEDEF;
-  const x=clamp(h.x*T.x,-T.xSinir,T.xSinir),z=h.z*T.z,a=1-Math.exp(-dt/T.sure);
-  BAKIS_ATAK.x+=(x-BAKIS_ATAK.x)*a;BAKIS_ATAK.z+=(z-BAKIS_ATAK.z)*a;BAKIS_ATAK.y=1;
-  return BAKIS_ATAK;
-}
 
 /* ---- "Maça geç": maç öncesini atla ---- */
 function macaGecIste(){if(!MAC_ONCESI.includes(mac.phase))return;mac.macaGec();for(const F of FLASLAR)F.t=9;}
@@ -236,52 +135,15 @@ function macKare(dt){
   }
   if(n>=240)birikim=0;
   const al=birikim/ADIM,b=mac.ball,bx=lerp(TOP.px,b.x,al),bz=lerp(TOP.pz,b.z,al)-MOTOR_Z,T=mac.tunel;
-  for(const a of AKTORLER){
-    const p=a.kaynak;a.x=lerp(a.px,p.x,al);a.z=lerp(a.pz,p.z,al)-MOTOR_Z;
-    let gorunur=p.z>T.z-0.8&&(p.tur!=='oyuncu'||p.oyunda||p.cikiyor);
-    /* yedek: kulübedeyken eşofman modeli, oyuna girince forma */
-    if(a.esofman){const esofmanli=p.tur==='yedek'&&!p.cikti;a.esofman.root.visible=gorunur&&esofmanli;
-      if(esofmanli){a.m.root.visible=false;const E=a.esofman;if(!gorunur)continue;
-        const ax={m:E,J:a.J,w:a.w,amp:a.amp,ph:a.ph};const J=pozla(ax,p,p.oturuyor?0:p.spd,dts);a.amp=ax.amp;a.ph=ax.ph;
-        if(p.oturuyor){a.sevinc=Math.max(0,(a.sevinc||0)-dts);const kalk=yumusak(a,'kalk',a.sevinc>0||mac.phase==='toren'?1:0,5,dts);kar(J,POSE.otur,1-kalk);if(kalk>0.5&&a.sevinc>0){kar(J,POSE.sevinc,kalk);J.dy+=Math.abs(Math.sin(zaman*7))*0.25*kalk;}}
-        for(const k of EKLEM)a.J[k]=J[k]||0;pose(E,a.J);aciYumusak(a,Math.atan2(Math.cos(p.yon),Math.sin(p.yon)),dts,8);
-        E.root.position.set(a.x,0,a.z);E.root.rotation.set(0,a.yaw,0);continue;}}
-    a.m.root.visible=gorunur;if(!gorunur)continue;
-    const spd=p.oturuyor?0:(p.spd||0),e=p.eylem,ad=e?e.ad:'';
-    /* dördüncü hakem tabelayı kaldırırken yüzü ana tribüne */
-    if(a===DORDUNCU&&UZATMA.t>=0&&UZATMA.t<6){aciYumusak(a,Math.PI,dts,5);const J=pozla(a,p,0,dts);kar(J,POSE.tabela,yumusak(a,'tabela',1,5,dts));uygula(a,J);
-      a.m.root.position.set(a.x,0,a.z);a.m.root.rotation.set(0,a.yaw,0);continue;}
-    /* gövde yönü: motordaki bakış yönü (yon, x ekseninden açı) → modelin y dönüşü */
-    /* gövde yönü motorda sınırlı hızla döner; çizim yalnız iki adım arasını yumuşatır (çift yumuşatma yok, MM1) */
-    aciYumusak(a,Math.atan2(Math.cos(p.yon),Math.sin(p.yon)),dts,40);
-    const J=pozla(a,p,spd,dts);
-    if(p.tur==='kenar'){a.sevinc=Math.max(0,(a.sevinc||0)-dts);const sv=yumusak(a,'kenarSevinc',a.sevinc>0?1:0,6,dts);
-      if(p.oturuyor){kar(J,POSE.otur,1-sv);}
-      if(sv>0.02){kar(J,POSE.sevinc,sv);J.dy+=Math.abs(Math.sin(zaman*7))*0.2*sv;}
-      if(p.kind==='td')kar(J,POSE.isaret,yumusak(a,'isaret',Math.sin(zaman*0.7+p.team*2)>0.85&&mac.phase==='play'?1:0,4,dts));
-      if(a===DORDUNCU)kar(J,POSE.tabela,yumusak(a,'tabela',0,5,dts));}
-    else if(p.oturuyor)kar(J,POSE.otur,1);
-    uygula(a,J);
-    /* kök: kafa sıçrayışı, uçuş yuvarlanması, düşüp yerde yatma */
-    let y=0,rx=0,rz=0;
-    /* sıçrama yüksekliği motordan (p.yuk); kafa vuruşu pozu ayrıca */
-    y=p.yuk||0;
-    const dw=a.w.dive||0;
-    if(dw>0.01){const yan=e&&e.ad==='ucus'?e.yan:(a.sonYan||1);a.sonYan=yan;const lx=-Math.sin(a.yaw)*yan;y=dw*((e&&e.y)||0.5)*0.6;rz=-Math.sign(lx||1)*1.35*dw;}
-    const hedefDus=ad==='dusus'?clamp(e.t/e.sure,0,1):ad==='yerde'?1:ad==='kalkis'?1-e.t/e.sure:0;a.dus+=(hedefDus-a.dus)*Math.min(1,dts*18);
-    if(a.dus>0.01){rx=1.45*a.dus;y+=0.12*a.dus;}
-    a.m.root.position.set(a.x,y,a.z);a.m.root.rotation.set(rx,a.yaw,rz);
-  }
+  /* aktörler: konum, poz ve kök (js/animasyon.js) */
+  for(const a of AKTORLER)aktorGuncelle(a,al,dts,T);
   /* hakemin kartı */
   {const e=mac.refs[0].eylem;KART.visible=!!(e&&e.ad==='kart');if(KART.visible)KART.material.color.setHex(e.renk==='sari'?0xf2d21d:0xd8201e);}
   if(UZATMA.t>=0){UZATMA.t+=dts;if(UZATMA.t>7)UZATMA.t=-1;}
   /* uzatma tabelası dördüncü hakemin başının üstünde */
   {const w=DORDUNCU.w.tabela||0;UZATMA_TABELA.visible=w>0.5;if(UZATMA_TABELA.visible){UZATMA_TABELA.position.set(DORDUNCU.x,1.95+0.25*w,DORDUNCU.z+0.2);UZATMA_TABELA.rotation.set(0,Math.PI,0);}}
-  /* top */
-  {const by=lerp(TOP.py,b.y,al),vx=b.vx,vz=b.vz,v=Math.hypot(vx,vz);
-   topMesh.position.set(bx,TOP_R+by,bz);
-   if(v>0.05){TOP.eksen.set(vz/v,0,-vx/v);TOP.dq.setFromAxisAngle(TOP.eksen,v*dts/TOP_R);TOP.q.premultiply(TOP.dq);topMesh.quaternion.copy(TOP.q);}
-   const icerde=b.z<T.z-0.8;topMesh.visible=!icerde;}
+  /* top (js/animasyon.js) */
+  topCiz(b,al,bx,bz,dts,T);
   /* dışarıda kalan toplar ve konilerin üstündeki yedek toplar */
   {let n=0;const E=EK_TOPLAR;
    for(const o of mac.disToplar){if(n>=80)break;EK_M.makeTranslation(o.x,TOP_R+o.y,o.z-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
@@ -307,7 +169,6 @@ function macKare(dt){
   SEYIRCI_HEYECAN.value.set(HEY.ev,HEY.dep);MESALE_COSKU=HEY.ev;
   tabelaGuncelle();
   golgeleriGuncelle();
-  /* bakış yayı */
-  bakisOdagi();const A=bakisAtak(Math.min(dt,0.05)),k=STIL.kameralar.baskan.yay,d=Math.min(dt,0.05);
-  BAKIS_HIZ.addScaledVector(A.clone().sub(BAKIS),k*k*d).multiplyScalar(Math.max(0,1-2*k*d));BAKIS.addScaledVector(BAKIS_HIZ,d);
+  /* bakış (js/kamera.js) */
+  kameraAdim(dt);
 }

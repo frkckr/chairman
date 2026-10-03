@@ -37,23 +37,24 @@ function atlasCiz(k,ekRenkler){
 function uvKare(ad){const [x,y]=KARE[ad];return[x/ATLAS,1-(y+16)/ATLAS,(x+16)/ATLAS,1-y/ATLAS];}
 function uvRenk(ad){const i=RENK_KARE.indexOf(ad),x=(i%8)*8+4,y=32+Math.floor(i/8)*8+4;return[x/ATLAS,1-y/ATLAS,x/ATLAS,1-y/ATLAS];}
 
-/* ---- insan modeli: kutular tek bir kemikli modelde (SkinnedMesh) birleşir; her kutu tek kemiğe bağlıdır.
-   Dönen nesne eski arayüzle aynıdır: root, hip, head, aL, eL, aR, eR, lL, kL, lR, kR (hepsi kemik) ---- */
+/* ---- insan modeli: kutular tek bir kemikli modelde (SkinnedMesh) birleşir; her kutu tek kemiğe bağlıdır (insan başına tek çizim).
+   Dönen nesne eski arayüzle aynıdır: root, hip, head, aL, eL, aR, eR, lL, kL, lR, kR (hepsi kemik); iskelet 2 (2026-10-03, E akışı) ayrıca
+   govde: kalçanın üstünde gövde kemiği; gövde, boyun, baş ve kollar ona bağlıdır. Düz duruşta her şey eskisiyle aynı yerdedir ---- */
 const YUZ_SIRASI=['px','nx','py','ny','pz','nz'];
 function player(k,ekRenkler){
   const ls=k.gk||k.ls,uv={};
   const R=ad=>uv[ad]||(uv[ad]=uvRenk(ad));
   const kemik=(ad,parent,x,y,z)=>{const b=new THREE.Bone();b.name=ad;b.position.set(x,y,z);if(parent)parent.add(b);return b;};
-  const hip=kemik('hip',null,0,0.95,0),head=kemik('head',hip,0,0.84,0);
-  const aL=kemik('aL',hip,-0.27,0.6,0),eL=kemik('eL',aL,0,-0.3,0),aR=kemik('aR',hip,0.27,0.6,0),eR=kemik('eR',aR,0,-0.3,0);
+  const hip=kemik('hip',null,0,0.95,0),govde=kemik('govde',hip,0,0.12,0),head=kemik('head',govde,0,0.72,0);head.rotation.order='YXZ';
+  const aL=kemik('aL',govde,-0.27,0.48,0),eL=kemik('eL',aL,0,-0.3,0),aR=kemik('aR',govde,0.27,0.48,0),eR=kemik('eR',aR,0,-0.3,0);
   const lL=kemik('lL',hip,-0.1,-0.04,0),kL=kemik('kL',lL,0,-0.44,0),lR=kemik('lR',hip,0.1,-0.04,0),kR=kemik('kR',lR,0,-0.44,0);
-  const kemikler=[hip,head,aL,eL,aR,eR,lL,kL,lR,kR];
+  const kemikler=[hip,govde,head,aL,eL,aR,eR,lL,kL,lR,kR];
   const parcalar=[];
   const kutu=(kem,w,h,d,x,y,z,yuzler)=>parcalar.push({kem,w,h,d,x,y,z,yuzler});
   const tek=ad=>{const u=R(ad);return[u,u,u,u,u,u];};
   kutu(hip,0.34,0.22,0.21,0,0.02,0,tek('shorts'));
-  {const f=R('shirt');kutu(hip,0.42,0.54,0.23,0,0.39,0,[f,f,f,f,uvKare('formaOn'),uvKare('formaArka')]);}
-  kutu(hip,0.1,0.08,0.1,0,0.7,0,tek('skin'));
+  {const f=R('shirt');kutu(govde,0.42,0.54,0.23,0,0.27,0,[f,f,f,f,uvKare('formaOn'),uvKare('formaArka')]);}
+  kutu(govde,0.1,0.08,0.1,0,0.58,0,tek('skin'));
   {const yan=uvKare('basYan');kutu(head,0.22,0.26,0.24,0,0,0,[yan,yan,R(k.style==='bald'?'skin':'hair'),R('skin'),uvKare('yuz'),uvKare('basArka')]);}
   if(k.style==='long')kutu(head,0.23,0.26,0.07,0,-0.12,-0.13,tek('hair'));
   if(k.style==='mullet')kutu(head,0.2,0.2,0.06,0,-0.15,-0.13,tek('hair'));
@@ -66,7 +67,7 @@ function player(k,ekRenkler){
     if(k.rolled){kutu(kn,0.12,0.2,0.13,0,-0.1,0,tek('skin'));kutu(kn,0.14,0.05,0.15,0,-0.21,0,tek('socks'));kutu(kn,0.12,0.22,0.13,0,-0.33,0,tek('socks'));}
     else kutu(kn,0.12,0.44,0.13,0,-0.22,0,tek('socks'));
     kutu(kn,0.12,0.08,0.26,0,-0.46,0.05,tek('boots'));}
-  if(k.ekParcalar)for(const e of k.ekParcalar)kutu({hip,head,aL,eL,aR,eR,lL,kL,lR,kR}[e.kemik],e.w,e.h,e.d,e.x,e.y,e.z,tek(e.renk));
+  if(k.ekParcalar)for(const e of k.ekParcalar)kutu({hip,govde,head,aL,eL,aR,eR,lL,kL,lR,kR}[e.kemik],e.w,e.h,e.d,e.x,e.y,e.z,tek(e.renk));
   /* geometri: kutuların köşeleri kemiklerin bağlanma (düz duruş) konumuna yerleşir */
   hip.updateMatrixWorld(true);
   const pos=[],nor=[],uvs=[],si=[],sw=[],idx=[],V=new THREE.Vector3();
@@ -85,12 +86,16 @@ function player(k,ekRenkler){
   const mesh=new THREE.SkinnedMesh(geo,LAM({map:tx(atlasCiz(k,ekRenkler||k.ekRenkler),'n'),skinning:true}));
   mesh.add(hip);mesh.bind(new THREE.Skeleton(kemikler));
   const root=new THREE.Group();root.add(mesh);root.scale.set(k.w||1,k.h||1,k.w||1);
-  return{root,mesh,hip,head,aL,eL,aR,eR,lL,kL,lR,kR,kemikler};
+  return{root,mesh,hip,govde,head,aL,eL,aR,eR,lL,kL,lR,kR,kemikler};
 }
+/* poz: eski 13 kanal (lean, dy, hx, lL/kL/lR/kR, aL/aR, aLz/aRz, eL/eR) aynen; iskelet 2 kanalları verilmezse 0:
+   hy/hz kalça dönüşü ve yana yatışı, gx/gy/gz gövde (öne eğilme, dönme, yana yatma), by/bz baş dönüşü ve yatışı,
+   lLy/lRy bacak burulması, lLz/lRz bacağı yana açma, aLy/aRy kol burulması */
 function pose(r,P){
-  r.hip.rotation.set(P.lean||0,0,0);r.hip.position.y=0.95+(P.dy||0);r.head.rotation.x=P.hx||0;
-  r.lL.rotation.set(P.lL||0,0,0);r.kL.rotation.x=P.kL||0;r.lR.rotation.set(P.lR||0,0,0);r.kR.rotation.x=P.kR||0;
-  r.aL.rotation.set(P.aL||0,0,P.aLz||0);r.aR.rotation.set(P.aR||0,0,P.aRz||0);r.eL.rotation.x=P.eL||0;r.eR.rotation.x=P.eR||0;
+  r.hip.rotation.set(P.lean||0,P.hy||0,P.hz||0);r.hip.position.y=0.95+(P.dy||0);
+  r.govde.rotation.set(P.gx||0,P.gy||0,P.gz||0);r.head.rotation.set(P.hx||0,P.by||0,P.bz||0);
+  r.lL.rotation.set(P.lL||0,P.lLy||0,P.lLz||0);r.kL.rotation.x=P.kL||0;r.lR.rotation.set(P.lR||0,P.lRy||0,P.lRz||0);r.kR.rotation.x=P.kR||0;
+  r.aL.rotation.set(P.aL||0,P.aLy||0,P.aLz||0);r.aR.rotation.set(P.aR||0,P.aRy||0,P.aRz||0);r.eL.rotation.x=P.eL||0;r.eR.rotation.x=P.eR||0;
 }
 const POSE={
   shoot:{lean:-0.22,lR:-1.35,kR:0.25,lL:0.3,kL:0.35,aL:-0.35,aLz:-1.05,aR:0.55,aRz:0.8,eL:-0.3,eR:-0.4,hx:0.15},
@@ -141,9 +146,10 @@ const POSE={
   cember:{lean:0.45,aL:-1.6,aR:-1.6,aLz:-1.0,aRz:1.0,eL:-0.2,eR:-0.2,hx:0.3},
   yorgun:{lean:0.75,dy:-0.08,aL:-0.55,aR:-0.55,eL:-0.35,eR:-0.35,lL:-0.2,lR:-0.2,kL:0.35,kR:0.35,hx:-0.3}
 };
-/* sağ ayak/kol pozunu sol tarafa çevir */
-const AYNA={lL:'lR',lR:'lL',kL:'kR',kR:'kL',aL:'aR',aR:'aL',eL:'eR',eR:'eL',aLz:'aRz',aRz:'aLz'},AYNA_ONBELLEK=new Map();
-function aynala(P){let A=AYNA_ONBELLEK.get(P);if(A)return A;A={};for(const k in P){const h=AYNA[k]||k;A[h]=(k==='aLz'||k==='aRz')?-P[k]:P[k];}AYNA_ONBELLEK.set(P,A);return A;}
+/* sağ ayak/kol pozunu sol tarafa çevir: sağ-sol kanalları yer değiştirir; y ve z eksenli dönüşler (yana açma, burulma, kalça/gövde/baş dönüşü) işaret değiştirir */
+const AYNA={lL:'lR',lR:'lL',kL:'kR',kR:'kL',aL:'aR',aR:'aL',eL:'eR',eR:'eL',aLz:'aRz',aRz:'aLz',lLz:'lRz',lRz:'lLz',lLy:'lRy',lRy:'lLy',aLy:'aRy',aRy:'aLy'},AYNA_ONBELLEK=new Map();
+const AYNA_EKSI={aLz:1,aRz:1,lLz:1,lRz:1,lLy:1,lRy:1,aLy:1,aRy:1,hy:1,hz:1,gy:1,gz:1,by:1,bz:1};
+function aynala(P){let A=AYNA_ONBELLEK.get(P);if(A)return A;A={};for(const k in P){const h=AYNA[k]||k;A[h]=AYNA_EKSI[k]?-P[k]:P[k];}AYNA_ONBELLEK.set(P,A);return A;}
 /* formalar: kadrodaki forma adı → STIL.formalar */
 const KIT=STIL.formalar;
 const SAC_STILI={kisa:'short',kel:'bald',uzun:'long',mullet:'mullet',kivircik:'curly'};

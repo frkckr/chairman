@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Poz galerisi</title>
+<!-- Chairman — poz galerisi (geliştirme sayfası, E akışı, 2026-10-03). Oyunda yüklenmez.
+     js/animasyon.js'in motor→çizim sözleşmesindeki durumlarını (TEKNIK_PLAN §8) yapay zaman çizelgeleriyle büyük boyda gösterir: her satır bir
+     durum, sütunlar zaman sırasıyla kareler. Sayfalar: ?sayfa=kosu | ikili | dusus | kaleci | vurus | sevinc | olcum (ayak kayması ve süre ölçümü).
+     Açmak: python3 araclar/kontrol.py "araclar/poz-galerisi.html?sayfa=dusus" (görüntü araclar/son-kontrol-poz-galerisi-sayfa-dusus.png).
+     Bütün durumlar her sayfada sayısal olarak da denetlenir (NaN olursa konsol hatası). -->
+<style>
+html,body{margin:0;background:#151a17;overflow:hidden}
+#c,#y{position:absolute;left:0;top:0}
+</style>
+</head>
+<body>
+<canvas id="c" width="1180" height="1000"></canvas><canvas id="y" width="1180" height="1000"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../js/ortak.js"></script>
+<script src="../js/stil-99.js"></script>
+<script>
+/* oyunun çizim ortamının yerine geçenler (js/goruntu.js, js/golgeler.js, js/mac-sahnesi.js) ve yapay maç */
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(26,1,0.1,300);
+const LAM=o=>new THREE.MeshLambertMaterial(o),BAS=o=>new THREE.MeshBasicMaterial(o);
+function mk(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
+function tx(cv){const t=new THREE.CanvasTexture(cv);t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;return t;}
+function golgeEkle(){}
+const MOTOR_Z=0,ADIM=1/60,DORDUNCU=null,UZATMA={t:-1},TOP_R=0.14;
+const TOP={px:0,py:0,pz:0,q:new THREE.Quaternion(),eksen:new THREE.Vector3(),dq:new THREE.Quaternion()};
+let zaman=0;
+const mac={phase:'play',phaseT:0,celeb:null,score:[0,0],teams:[[],[]],players:[],refs:[],
+  ball:{x:5,y:0,z:0,vx:0,vy:0,vz:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,surum:0,sut:null}};
+</script>
+<script src="../js/oyuncular.js"></script>
+<script src="../js/animasyon.js"></script>
+<script>
+'use strict';
+STIL.animasyon.kucukPiksel=-1;
+const SAYFA=(new URLSearchParams(location.search).get('sayfa'))||'kosu';
+const W=1180,H=1000,TUNEL={x:0,z:-1e4};
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(1);renderer.setSize(W,H,false);renderer.autoClear=false;renderer.setScissorTest(true);
+const yg=document.getElementById('y').getContext('2d');
+scene.add(new THREE.AmbientLight(0xffffff,0.55));{const L=new THREE.DirectionalLight(0xffffff,0.75);L.position.set(4,9,6);scene.add(L);}
+/* zemin: 0,5 m'lik ızgara (ayak kayması gözle görülsün) */
+{const z=new THREE.Mesh(new THREE.PlaneGeometry(120,120),new THREE.MeshLambertMaterial({color:0x3f7a38}));z.rotation.x=-Math.PI/2;z.position.y=-0.002;scene.add(z);
+ const g=new THREE.GridHelper(120,240,0x6fae62,0x5a9550);g.position.y=0.001;scene.add(g);}
+const topMesh=(()=>{const cv=mk(32,16),g=cv.getContext('2d');g.fillStyle='#f4f4ee';g.fillRect(0,0,32,16);g.fillStyle='#18181c';
+  for(const [x,y] of[[2,3],[10,9],[18,3],[26,9],[6,13],[22,13]])g.fillRect(x,y,3,3);const m=new THREE.Mesh(new THREE.SphereGeometry(TOP_R,12,8),LAM({map:tx(cv)}));scene.add(m);return m;})();
+const RAKIP_M=new THREE.Mesh(new THREE.BoxGeometry(0.4,1.7,0.3),LAM({color:0x2a3a8a}));scene.add(RAKIP_M);RAKIP_M.visible=false;
+
+const KITLER=[{...STIL.formalar.ev,num:8,skin:STIL.tenler[1],hair:'#241a12',style:'short',h:1,w:1},
+  {...STIL.formalar.evKaleci,num:1,skin:STIL.tenler[0],hair:'#3c2616',style:'curly',h:1.03,w:1.03},
+  {...STIL.formalar.deplasman,num:4,skin:STIL.tenler[3],hair:'#141212',style:'bald',beard:true,h:0.98,w:1.02}];
+function oyuncu(ek){return Object.assign({tur:'oyuncu',kind:null,team:0,n:5,no:8,rol:'OS',ayak:'sag',boy:1,x:0,z:0,vx:0,vz:0,spd:0,yon:0,yuk:0,eylem:null,
+  sevinc:false,poz:null,oyunda:true,cikiyor:false,oturuyor:false,tavir:null,bakisYon:null,denge:1,enerji:1,sonDokunus:null},ek||{});}
+const AKTOR=[];
+function aktorYeni(kit,p){const a=aktorKur(kit,p,kit.h);AKTOR.push(a);return a;}
+
+/* ---- zaman çizelgesi: adımlar {ad, sure, ek (eylem alanları), v:[vx,vz] başta hız, fren (m/sn²), her(p,e,t,dt) her kare} ---- */
+function cizelge(adimlar){let i=-1,t0=0,e=null;
+  return function(p,t,dt){
+    while(i<adimlar.length-1&&(i<0||t-t0>=adimlar[i].sure)){if(i>=0)t0+=adimlar[i].sure;i++;const B=adimlar[i];
+      e=B.ad?Object.assign({ad:B.ad,t:0,sure:B.sure},B.ek||{}):null;p.eylem=e;if(B.v){p.vx=B.v[0];p.vz=B.v[1];}if(B.bas)B.bas(p,e);}
+    const A=adimlar[i];if(e&&i===adimlar.length-1&&t-t0>=A.sure){p.eylem=null;e=null;}
+    if(e){e.t=t-t0;if(A.her)A.her(p,e,t-t0,dt);}
+    if(A.fren){const s=Math.hypot(p.vx,p.vz),n=Math.max(0,s-A.fren*dt);if(s>0){p.vx*=n/s;p.vz*=n/s;}}};}
+/* vuruş evreleri: hazırlık (topa koşu), geri salınım, takip */
+function vurusHer(geri){return(p,e,t)=>{if(t<0.25){e.faz='hazirlik';e.ft=t;}else if(t<0.25+geri){e.faz='geri';e.ft=t-0.25;e.geri=geri;}else{e.faz='takip';e.ft=t-0.25-geri;}
+  if(e.faz!=='hazirlik'){p.vx*=0.9;p.vz*=0.9;}};}
+const D=Math.PI/180;
+/* ---- sayfalar: satır = {ad, kit, kur(p) başlangıç, adim çizelgesi ya da her kare işlevi, kareler (sn), az (bakış açısı, derece), uzak (m)} ---- */
+const SAYFALAR={
+  kosu:[
+    {ad:'İleri koşu 7 m/sn',kur:p=>{p.vx=7;},kareler:[1,1.06,1.12,1.18,1.24,1.30,1.36],az:90},
+    {ad:'Geri koşu 3 m/sn (yüz +x)',kur:p=>{p.vx=-3;},kareler:[1,1.08,1.16,1.24,1.32,1.40,1.48],az:90},
+    {ad:'Yana (sağa) 2,8 m/sn',kur:p=>{p.vz=2.8;},kareler:[1,1.08,1.16,1.24,1.32,1.40,1.48],az:10},
+    {ad:'Jokey: geri-çapraz 1,6 m/sn',kur:p=>{p.vx=-1.15;p.vz=-1.1;p.tavir='jokey';},kareler:[1,1.1,1.2,1.3,1.4,1.5,1.6],az:40},
+    {ad:'Top sürme: dokunuşta ayak öne (sağ/sol sırayla)',kur:p=>{p.vx=5;mac.ball.sahip=p;},her:(p,t)=>{p.vx=5;const n=Math.floor(t/0.42);if(!p.sonDokunus||p.sonDokunus.n!==n)p.sonDokunus={n,t:n*0.42,tur:'surus',ayak:n%2?'sol':'sag'};
+      mac.ball.x=p.x+0.35+(t%0.42)*1.6;mac.ball.z=p.z+(n%2?-0.12:0.12);},kareler:[1.26,1.31,1.36,1.41,1.68,1.73,1.78],az:60},
+    {ad:'Depar ve sert fren',kur:p=>{},her:(p,t,dt)=>{const v=t<1.2?Math.min(7,t*7):Math.max(0,7-(t-1.2)*9);p.vx=v;},kareler:[1.0,1.2,1.3,1.4,1.5,1.6,1.8],az:90}],
+  ikili:[
+    {ad:'Omuz (rakip sağda, kazandı)',kur:p=>{p.vx=5;},adim:[{ad:null,sure:0.9},{ad:'omuz',sure:0.6,ek:{taraf:'sag',kazandi:true},bas:(p,e)=>{e.rakip={x:p.x,z:p.z+0.7};}},{ad:null,sure:1}],kareler:[0.9,1.0,1.1,1.2,1.3,1.45,1.6],az:0},
+    {ad:'Omuz (rakip solda, kaybetti)',kur:p=>{p.vx=5;},adim:[{ad:null,sure:0.9},{ad:'omuz',sure:0.6,ek:{taraf:'sol',kazandi:false},bas:(p,e)=>{e.rakip={x:p.x,z:p.z-0.7};}},{ad:null,sure:1}],kareler:[0.9,1.0,1.1,1.2,1.3,1.45,1.6],az:0},
+    {ad:'Sendele (sağ öne, şiddet 0,8)',kur:p=>{p.vx=4;},adim:[{ad:null,sure:0.9},{ad:'sendele',sure:0.7,ek:{yon:50*D,siddet:0.8},fren:3},{ad:null,sure:1}],kareler:[0.9,1.0,1.1,1.2,1.35,1.5,1.7],az:40},
+    {ad:'Topu koru (rakip sağ arkada)',kur:p=>{p.vx=-0.6;p.tavir='koru';mac.teams[1]=[{x:-0.8,z:0.7,oyunda:true}];},kareler:[0.3,0.6,0.9,1.2,1.5,1.8,2.1],az:30},
+    {ad:'Ayakta müdahale (top sağ önde)',kur:p=>{p.vx=3;},adim:[{ad:null,sure:0.6},{ad:'mudahale',sure:0.5,ek:{temas:0.16},fren:6,bas:p=>{mac.ball.x=p.x+0.9;mac.ball.z=p.z+0.4;}},{ad:null,sure:1}],kareler:[0.6,0.68,0.76,0.84,0.95,1.05,1.2],az:30},
+    {ad:'Şut bloku (top solda)',kur:p=>{},adim:[{ad:null,sure:0.5},{ad:'blok',sure:0.45,bas:p=>{mac.ball.x=p.x+1;mac.ball.z=p.z-0.6;}},{ad:null,sure:1}],kareler:[0.5,0.6,0.67,0.75,0.85,0.95,1.1],az:20}],
+  dusus:[
+    {ad:'Öne düşüş → yerde → kalkış',kur:p=>{p.vx=5;},adim:[{ad:null,sure:0.4},{ad:'dusus',sure:0.45,ek:{yon:0},fren:6},{ad:'yerde',sure:0.8,fren:12},{ad:'kalkis',sure:0.6,fren:12},{ad:null,sure:1}],
+      kareler:[0.5,0.65,0.85,1.3,1.75,1.9,2.3],az:70,uzak:5.2},
+    {ad:'Arkaya düşüş (yön +180°)',kur:p=>{p.vx=-1;},adim:[{ad:null,sure:0.4},{ad:'dusus',sure:0.45,ek:{yon:Math.PI},fren:6},{ad:'yerde',sure:0.8,fren:12},{ad:'kalkis',sure:0.6,fren:12},{ad:null,sure:1}],
+      kareler:[0.5,0.65,0.85,1.3,1.75,1.9,2.3],az:70,uzak:5.2},
+    {ad:'Sağa düşüş, sırtına döner',kur:p=>{p.vx=3;},adim:[{ad:null,sure:0.4},{ad:'dusus',sure:0.45,ek:{yon:90*D,yuzustu:false},fren:6},{ad:'yerde',sure:0.8,fren:12},{ad:'kalkis',sure:0.6,fren:12},{ad:null,sure:1}],
+      kareler:[0.5,0.65,0.85,1.3,1.75,1.9,2.3],az:0,uzak:5.2},
+    {ad:'Sola düşüş, yüzüne döner',kur:p=>{p.vx=3;},adim:[{ad:null,sure:0.4},{ad:'dusus',sure:0.45,ek:{yon:-90*D,yuzustu:true},fren:6},{ad:'yerde',sure:0.8,fren:12},{ad:'kalkis',sure:0.6,fren:12},{ad:null,sure:1}],
+      kareler:[0.5,0.65,0.85,1.3,1.75,1.9,2.3],az:0,uzak:5.2},
+    {ad:'Kayarak müdahale → yan kalkış',kur:p=>{p.vx=6;},adim:[{ad:null,sure:0.4},{ad:'kayma',sure:0.95,v:[7,0],fren:4.5,bas:p=>{mac.ball.x=p.x+2.2;mac.ball.z=p.z+0.5;}},{ad:'kalkis',sure:0.6,fren:12},{ad:null,sure:1}],
+      kareler:[0.45,0.6,0.85,1.3,1.45,1.6,1.9],az:60,uzak:5.5}],
+  kaleci:[
+    {ad:'Alçak uçuş sağa (y 0,3) → kalkış',kit:1,kur:p=>{p.rol='GK';},adim:[{ad:null,sure:0.3},{ad:'ucus',sure:1.05,ek:{vx:0,vz:5.2,yan:1,y:0.3},her:(p,e,t)=>{if(t<0.42){p.vx=0;p.vz=5.2;}},fren:4},{ad:'kalkis',sure:0.55,ek:{kaleci:true},fren:12},{ad:null,sure:1}],
+      kareler:[0.33,0.42,0.55,0.75,1.1,1.55,1.8],az:0,uzak:6},
+    {ad:'Yüksek uçuş sola, tek el (y 1,9)',kit:1,kur:p=>{p.rol='GK';},adim:[{ad:null,sure:0.3},{ad:'ucus',sure:1.05,ek:{vx:0,vz:-5.2,yan:-1,y:1.9},her:(p,e,t)=>{if(t<0.42){p.vx=0;p.vz=-5.2;}},fren:4},{ad:'kalkis',sure:0.55,ek:{kaleci:true},fren:12},{ad:null,sure:1}],
+      kareler:[0.33,0.42,0.55,0.75,1.1,1.55,1.8],az:0,uzak:6},
+    {ad:'Kapan (sağa, alçak)',kit:1,kur:p=>{p.rol='GK';p.vx=2;},adim:[{ad:null,sure:0.4},{ad:'kapan',sure:0.9,ek:{yon:60*D},fren:6},{ad:null,sure:1}],kareler:[0.4,0.5,0.6,0.8,1.0,1.2,1.45],az:20},
+    {ad:'Hazır duruş → yüksek tutuş → elde',kit:1,kur:p=>{p.rol='GK';p.tavir='hazir';mac.ball.y=2.1;mac.ball.x=p.x+0.4;},adim:[{ad:null,sure:0.6},{ad:'tutus',sure:0.35,ek:{tur:'yuksek'},bas:p=>{p.tavir=null;}},{ad:null,sure:1,bas:p=>{mac.ball.tasiyan=p;}}],
+      kareler:[0.3,0.6,0.68,0.78,0.9,1.1,1.4],az:20},
+    {ad:'Yerden tutuş → elde',kit:1,kur:p=>{p.rol='GK';p.vx=1;mac.ball.y=0.1;mac.ball.x=p.x+0.6;},adim:[{ad:null,sure:0.5},{ad:'tutus',sure:0.35,ek:{tur:'yer'},fren:6},{ad:null,sure:1,bas:p=>{mac.ball.tasiyan=p;}}],
+      kareler:[0.45,0.55,0.62,0.7,0.8,1.0,1.3],az:20}],
+  vurus:[
+    {ad:'İç ayak pası (sağ)',kur:p=>{p.vx=2.5;},adim:[{ad:'vurus',sure:0.62,ek:{ayak:'sag',stil:'ic',guc:0.5,sec:{tur:'pas',tip:'yer'}},her:vurusHer(0.11)},{ad:null,sure:1}],kareler:[0.2,0.28,0.33,0.38,0.44,0.52,0.62],az:60},
+    {ad:'Dış ayak, sol, tek dokunuş',kur:p=>{p.vx=3;p.ayak='sol';},adim:[{ad:'vurus',sure:0.62,ek:{ayak:'sol',stil:'dis',guc:0.6,tekDokunus:true,sec:{tur:'pas',tip:'yer'}},her:vurusHer(0.11)},{ad:null,sure:1}],kareler:[0.2,0.28,0.33,0.38,0.44,0.52,0.62],az:60},
+    {ad:'Üstten şut, tam güç',kur:p=>{p.vx=3;},adim:[{ad:'vurus',sure:0.68,ek:{ayak:'sag',stil:'ust',guc:1,sec:{tur:'sut'}},her:vurusHer(0.17)},{ad:null,sure:1}],kareler:[0.2,0.3,0.38,0.44,0.5,0.58,0.68],az:60},
+    {ad:'Aşırtma',kur:p=>{p.vx=2;},adim:[{ad:'vurus',sure:0.68,ek:{ayak:'sag',stil:'asirtma',guc:0.5,sec:{tur:'sut'}},her:vurusHer(0.17)},{ad:null,sure:1}],kareler:[0.2,0.3,0.38,0.44,0.5,0.58,0.68],az:60},
+    {ad:'Yarım vole (sekeni karşılama)',kur:p=>{p.vx=2;mac.ball.y=0.3;},adim:[{ad:'vurus',sure:0.68,ek:{ayak:'sag',stil:'yarimVole',guc:0.9,sec:{tur:'sut'}},her:vurusHer(0.17)},{ad:null,sure:1}],kareler:[0.2,0.3,0.38,0.44,0.5,0.58,0.68],az:60},
+    {ad:'Vole (top bel hizasında, sağ)',kur:p=>{p.vx=1;mac.ball.y=0.8;},adim:[{ad:'vurus',sure:0.68,ek:{ayak:'sag',stil:'vole',guc:0.9,sec:{tur:'sut'}},her:vurusHer(0.17)},{ad:null,sure:1}],kareler:[0.2,0.3,0.38,0.44,0.5,0.58,0.68],az:20},
+    {ad:'Kafa vuruşu (sıçrama)',kur:p=>{p.vx=2;},adim:[{ad:null,sure:0.2},{ad:'kafa',sure:0.5,her:(p,e,t)=>{p.yuk=Math.max(0,3.2*t-4.9*t*t*1.3);}},{ad:null,sure:1,bas:p=>{p.yuk=0;}}],kareler:[0.2,0.3,0.4,0.5,0.6,0.7,0.85],az:60}],
+  sevinc:[
+    {ad:'Sevinç: kollar havada',sev:0,kareler:[0.6,0.8,1.0,1.8,2.0,2.2,2.4],az:30},
+    {ad:'Sevinç: uçak',sev:1,kareler:[0.6,0.8,1.0,1.8,2.0,2.2,2.4],az:30},
+    {ad:'Sevinç: yumruk',sev:2,kareler:[0.6,0.8,1.0,1.8,2.0,2.2,2.4],az:30},
+    {ad:'Sevinç: göğe işaret',sev:3,kareler:[0.6,0.8,1.0,1.8,2.0,2.2,2.4],az:30},
+    {ad:'Golcü: dizlerinin üstünde kayma',sev:0,diz:true,kareler:[0.6,1.0,1.3,1.6,1.9,2.2,2.5],az:60},
+    {ad:'Golcünün yanında sarılma',sev:0,saril:true,kareler:[0.4,0.8,1.2,1.6,2.0,2.2,2.4],az:30},
+    {ad:'Yenen takım: eller başta / belde',uzgun:true,kareler:[0.4,0.8,1.2,1.6,2.0,2.2,2.4],az:20}]
+};
+/* sevinç satırı: gol aşaması, golcü ve hız eğrisi (koşar, yavaşlar) */
+function sevincKur(S,p,a){mac.phase='goal';mac.phaseT=0;mac.score=[1,0];
+  if(S.uzgun){p.team=1;mac.celeb={team:0,scorer:null,own:false};p.vx=1.2;return;}
+  const golcu=S.saril?oyuncu({x:2.4,z:0.3,team:0,n:9}):p;mac.celeb={team:0,scorer:golcu,own:false};p.sevinc=true;}
+function sevincHer(S,p,t){mac.phaseT=t;if(S.uzgun){p.vx=Math.max(0,1.2-t*0.5);return;}
+  if(S.saril){p.vx=t<0.8?2:Math.max(0,2-(t-0.8)*4);return;}
+  p.vx=t<1.0?6:Math.max(0,6-(t-1.0)*5);}
+
+/* ---- bir satırı çalıştır: her kare motor adımı gibi (önceki yer → yeni yer), örnek anlarda çağrı ---- */
+function satirCalistir(S,ornek,sonT){
+  for(const a of AKTOR)a.m.root.visible=false;RAKIP_M.visible=false;
+  const p=oyuncu(),kit=KITLER[S.kit||0];mac.ball=Object.assign(mac.ball,{x:6,y:0,z:0,vx:0,vy:0,vz:0,tasiyan:null,sahip:null,sut:null});mac.teams=[[],[]];mac.phase='play';mac.celeb=null;
+  const a=aktorYeni(kit,p);if(S.kur)S.kur(p,a);if(S.sev!=null||S.uzgun)sevincKur(S,p,a);
+  if(S.uzgun)a.uzP=ANM_UZGUN[0];
+  const cz=S.adim?cizelge(S.adim):null;let t=0,k=0;const K=S.kareler||[],son=sonT!=null?sonT:(K.length?K[K.length-1]:2)+0.05;
+  const kontrol=[];
+  while(t<=son){const dt=1/60;
+    if(cz)cz(p,t,dt);if(S.her)S.her(p,t,dt);if(S.sev!=null||S.uzgun)sevincHer(S,p,t);
+    a.px=p.x;a.pz=p.z;p.x+=p.vx*dt;p.z+=p.vz*dt;p.spd=Math.hypot(p.vx,p.vz);
+    zaman+=dt;aktorGuncelle(a,1,dt,TUNEL);
+    if(t<dt*1.5&&S.sev!=null){a.sevSon=true;a.sevC=S.sev;a.sevDiz=!!S.diz;}
+    if(t<dt*1.5&&S.uzgun)a.uzP=ANM_UZGUN[(AKTOR.length)%2];
+    for(const c of ANM_KANAL)if(!Number.isFinite(a.P[c]))kontrol.push(S.ad+' '+c+' t='+t.toFixed(2));
+    if(!Number.isFinite(a.m.root.position.y)||!Number.isFinite(a.m.root.quaternion.w))kontrol.push(S.ad+' kök t='+t.toFixed(2));
+    while(k<K.length&&t>=K[k]-1e-6){ornek&&ornek(a,p,k,t);k++;}
+    t+=dt;}
+  a.m.root.visible=false;
+  return kontrol;
+}
+/* ---- çizim: satır etiketleri ve hücreler ---- */
+function hucreCiz(a,p,S,x,y,w,h){
+  a.m.root.visible=true;a.m.root.updateMatrixWorld(true);
+  const hp=new THREE.Vector3();a.m.hip.getWorldPosition(hp);
+  const az=(S.az!=null?S.az:30)*D,u=S.uzak||5,hy=Math.max(0.55,hp.y)+0.05;
+  camera.position.set(hp.x+Math.cos(az)*u,hy+0.9,hp.z+Math.sin(az)*u);camera.lookAt(hp.x,hy,hp.z);camera.aspect=w/h;camera.updateProjectionMatrix();
+  topMesh.position.set(mac.ball.tasiyan?a.m.root.position.x+0.25:mac.ball.x,TOP_R+(mac.ball.tasiyan?1.25:mac.ball.y),mac.ball.tasiyan?a.m.root.position.z:mac.ball.z);
+  RAKIP_M.visible=!!(p.eylem&&p.eylem.ad==='omuz'&&p.eylem.rakip)||p.tavir==='koru';
+  if(RAKIP_M.visible){const r=p.eylem&&p.eylem.rakip||mac.teams[1][0];RAKIP_M.position.set(p.tavir==='koru'?p.x+r.x:p.x,0.85,p.tavir==='koru'?p.z+r.z:p.z+(r.z<p.z?-0.75:0.75));}
+  const yy=H-y-h;renderer.setViewport(x,yy,w,h);renderer.setScissor(x,yy,w,h);renderer.setClearColor(0x1d2621);renderer.clear();renderer.render(scene,camera);
+  a.m.root.visible=false;RAKIP_M.visible=false;
+}
+function yaz(s,x,y,renk,boy){yg.fillStyle=renk||'#e8e2cf';yg.font=(boy||12)+'px monospace';yg.fillText(s,x,y);}
+/* ?satir=i&sutun=k: tek satır, k kare (yakından bakmak için) */
+const SATIR=new URLSearchParams(location.search).get('satir'),SUTUN=+(new URLSearchParams(location.search).get('sutun')||7);
+function sayfaCiz(ad){
+  let L=SAYFALAR[ad];if(SATIR!=null){const S=Object.assign({},L[+SATIR]),k=S.kareler;S.kareler=Array.from({length:SUTUN},(_,i)=>k[Math.round(i*(k.length-1)/Math.max(1,SUTUN-1))]);L=[S];}
+  const n=L.length,ust=24,etiket=150,K=SATIR!=null?SUTUN:7,cw=Math.floor((W-etiket)/K),rh=Math.min(Math.floor((H-ust)/n),SATIR!=null?Math.round(cw*1.4):9999),hata=[];
+  yg.clearRect(0,0,W,H);yaz('Poz galerisi · '+ad+' · sütunlar zaman sırası (sn) · ızgara 0,5 m',8,16,'#f0d080',13);
+  L.forEach((S,i)=>{const y=ust+i*rh;
+    hata.push(...satirCalistir(S,(a,p,k,t)=>{hucreCiz(a,p,S,etiket+k*cw,y,cw-2,rh-2);yaz(t.toFixed(2)+(p.eylem?' '+p.eylem.ad:''),etiket+k*cw+4,y+rh-6,'#cfe8c0',11);}));
+    yg.fillStyle='rgba(0,0,0,0.0)';const kel=S.ad.split(' ');let sat='',yy=y+18;for(const w of kel){if((sat+' '+w).length>18){yaz(sat,6,yy);yy+=15;sat=w;}else sat=sat?sat+' '+w:w;}yaz(sat,6,yy);});
+  return hata;
+}
+/* ---- ölçüm: ayak kayması (yerdeki ayağın yatay yer değiştirmesi, adım başına) ve aktorGuncelle süresi ---- */
+function ayakOlc(aciD,v,sure){
+  const p=oyuncu(),a=aktorYeni(KITLER[0],p),V=new THREE.Vector3(),A=[new THREE.Vector3(),new THREE.Vector3()],ON=[null,null];
+  const yx=Math.cos(aciD*D)*v,yz=Math.sin(aciD*D)*v;mac.ball.x=40;mac.ball.z=0;
+  let t=0,yol=0,net=0,adim=0,onceki=-1,bas=null,govde=0,isinma=1.0;
+  for(;t<sure;t+=1/60){const dt=1/60;p.vx=yx;p.vz=yz;a.px=p.x;a.pz=p.z;p.x+=yx*dt;p.z+=yz*dt;p.spd=v;zaman+=dt;aktorGuncelle(a,1,dt,TUNEL);
+    a.m.root.updateMatrixWorld(true);
+    for(let i=0;i<2;i++){A[i].set(0,-0.5,0.05).applyMatrix4((i?a.m.kR:a.m.kL).matrixWorld);}
+    const alt=A[0].y<A[1].y?0:1,yer=A[alt].y<0.05?alt:-1;
+    if(t>=isinma){if(yer>=0&&yer===onceki&&ON[yer]){yol+=Math.hypot(A[yer].x-ON[yer].x,A[yer].z-ON[yer].z);}
+      if(yer>=0&&yer!==onceki){if(bas&&onceki>=0){net+=Math.hypot(ON[onceki].x-bas.x,ON[onceki].z-bas.z);}adim++;bas=A[yer].clone();}
+      govde+=v*dt;}
+    for(let i=0;i<2;i++)ON[i]=(ON[i]||new THREE.Vector3()).copy(A[i]);onceki=yer;}
+  a.m.root.visible=false;
+  return{aci:aciD,hiz:v,adim,yolAdim:adim?yol/adim:0,netAdim:adim>1?net/(adim-1):0,adimBoy:adim?govde/adim:0};
+}
+function sureOlc(){/* 60 aktör, gerçek saat (Date.now), çok kare: aktorGuncelle toplamı (kare başına ms) */
+  const L=[];for(let i=0;i<60;i++){const p=oyuncu({n:i,yon:i*0.37}),a=aktorYeni(KITLER[i%3],p);p.vx=Math.cos(i)*(1+i%7);p.vz=Math.sin(i)*(1+i%5);L.push([a,p]);
+    if(i%9===0)p.eylem={ad:'yerde',t:0,sure:9};if(i%11===0)p.tavir='jokey';}
+  const N=600,t0=Date.now();
+  for(let f=0;f<N;f++){zaman+=1/60;for(const [a,p] of L){a.px=p.x;a.pz=p.z;p.x+=p.vx/60;p.z+=p.vz/60;p.spd=Math.hypot(p.vx,p.vz);if(p.eylem)p.eylem.t+=1/60;aktorGuncelle(a,1,1/60,TUNEL);}}
+  const ms=(Date.now()-t0)/N;for(const [a] of L)a.m.root.visible=false;return ms;
+}
+function olcumCiz(){
+  yg.clearRect(0,0,W,H);yaz('Ayak kayması: yerdeki ayağın adım başına yatay yolu (m) · yüz +x, hareket açısı derece',8,20,'#f0d080',14);
+  const sat=[[0,1.5],[0,4],[0,7],[0,8.3],[45,3],[45,5],[90,1.5],[90,2.8],[-90,2.8],[135,2],[135,3],[180,1.5],[180,3]],R=[];
+  sat.forEach(([ac,v],i)=>{const r=ayakOlc(ac,v,4);R.push(r);
+    yaz(`açı ${String(ac).padStart(4)}°  hız ${v.toFixed(1)} m/sn  adım ${String(r.adim).padStart(2)}  adım boyu ${r.adimBoy.toFixed(2)} m  kayma/adım: yol ${r.yolAdim.toFixed(3)} m, net ${r.netAdim.toFixed(3)} m`,12,52+i*22,r.yolAdim<=0.08?'#cfe8c0':'#ff9a80',13);});
+  const ort=R.reduce((s,r)=>s+r.yolAdim,0)/R.length;
+  yaz('ortalama yol/adım: '+ort.toFixed(3)+' m',12,52+sat.length*22+10,'#f0d080',14);
+  const ms=sureOlc();yaz('aktorGuncelle: 60 aktör, 600 kare, Date.now: '+ms.toFixed(3)+' ms/kare',12,52+sat.length*22+40,'#f0d080',14);
+  window.ANM_OLCUM={ayak:R,ortalama:ort,msKare:ms};
+}
+/* ---- çalıştır: istenen sayfa çizilir; bütün sayfaların durumları NaN için denetlenir ---- */
+let hatalar=[];
+if(SAYFA==='olcum')olcumCiz();else if(SAYFALAR[SAYFA])hatalar=sayfaCiz(SAYFA);
+for(const ad in SAYFALAR)if(ad!==SAYFA)for(const S of SAYFALAR[ad])hatalar.push(...satirCalistir(S,null));
+if(hatalar.length){console.error('Poz galerisi: sayısal olmayan değer: '+hatalar.slice(0,8).join(' | '));}
+window.GALERI_TAMAM=true;
+</script>
+</body>
+</html>
