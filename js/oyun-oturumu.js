@@ -1,17 +1,17 @@
 /* ============ Chairman — oyun oturumu: kayıt deposu, açılış ve komut yolu (çizim yok; yol haritası 2.4, 2.5) ============
    Oda (js/ekran-oda.js) ve ajanda (js/ekran-ajanda.js) ekranları aynı oturumu kullanır; ekran değiştirmek kariyeri, kaydı ya da zamanı değiştirmez.
    Depo: masaüstü → tarayıcı ('chairman:' önekiyle) → yalnız bellek. Yuva 'oyun-1'.
-     oyunBaslat()            kayıt varsa devam (OYUN.donus: daha önce oynanmış), yoksa yeni kariyer; açılamayan kayda dokunulmaz (OYUN.bozukHata).
+     oyunBaslat()            kayıt varsa devam, yoksa yeni kariyer; açılamayan kayda dokunulmaz (OYUN.bozukHata). Dönüş özeti ("Kaldığın yer") 2.8L'de kaldırıldı.
      oyunKomut(f, kaydetme)  komut kariyerin kopyasında uygulanır, geçerliyse kabul edilir ve kaydedilir (kaydetme: true ise kaydedilmez).
      oyunYeniKariyer()       js/baslangic.js ile yeni kariyer kurar, kaydeder; açılış mesajını döndürür. Dünya tohumu burada üretilir.
-       Geliştirici için adres parametreleri: ?baslangic=sikisik|rahat|duzenli, ?sponsor=nakitSikisik|pazarlik, ?sayman=kisi-N, ?hoca=kamp|yok, ?dunya=tohum.
+       Geliştirici için adres parametresi: ?dunya=tohum (2.8L'de başlangıç seçenekleri içerikle birlikte kaldırıldı).
      oyunBozuguSakla()       açılamayan kaydı '.bozuk' ekiyle saklar, yeni kariyer başlatır.
      oyunKayitYazi() · oyunKayitHata()  kayıt durumunun oyuncuya gösterilen yazısı.
    Ayarlar (OYUN.ayarlar: yazi, test) kariyer kaydına girmez; depoda ayrı 'ayarlar' adında tutulur. Ses ayarı 2.8A'da, hareket azaltma 2.8J'de kaldırıldı:
    eski kayıttaki ses/sessiz anahtarları okunurken yok sayılır, açılışta yeniden yazılarak düşer.
    test: geliştirme aşamasında gizli değerleri gösteren geçici anahtar (js/test-gorunum.js); varsayılan açık, yayından önce kaldırılacak. */
 const OYUN_YUVA='oyun-1';
-const OYUN={depo:null,kariyer:null,oturum:null,donus:false,mesaj:'',bozukHata:null,basladi:false,
+const OYUN={depo:null,kariyer:null,oturum:null,mesaj:'',bozukHata:null,basladi:false,
   ayarlar:{yazi:'normal',test:true,kaydet(){try{OYUN_DEPO.yaz('ayarlar',JSON.stringify({yazi:this.yazi,test:this.test}));}catch(e){}}}};
 let OYUN_DEPO=null;
 {
@@ -44,11 +44,9 @@ function oyunYeniKariyer(){
   let q=null,yeni;
   try{q=new URLSearchParams(location.search);}catch(e){}
   const al=ad=>(q&&q.get(ad))||undefined,dunya=parseInt(al('dunya'),10);
-  try{yeni=kariyerBaslat({tohum:Number.isFinite(dunya)?dunya:rastgele(),baslangic:al('baslangic'),sponsor:al('sponsor'),sayman:al('sayman'),hoca:al('hoca')});}
-  catch(e){yeni=kariyerBaslat({tohum:rastgele()});}
+  yeni=kariyerBaslat({tohum:Number.isFinite(dunya)?dunya:rastgele()});
   oyunYerlestir(kayitOturumu(OYUN_DEPO,OYUN_YUVA,yeni,false));OYUN.oturum.kaydet();
-  OYUN.donus=false;
-  return OYUN.mesaj='Yeni kariyer başladı. '+BASLANGICLAR[yeni.icerik.baslangic].acilis;
+  return OYUN.mesaj='Yeni kariyer başladı.';
 }
 function oyunBaslat(){
   if(OYUN.basladi)return;
@@ -57,7 +55,6 @@ function oyunBaslat(){
   try{y=kariyerYukle(OYUN_DEPO,OYUN_YUVA);}catch(e){y={tamam:false,bos:false,hata:e.message};}
   if(y.tamam){
     oyunYerlestir(kayitOturumu(OYUN_DEPO,OYUN_YUVA,y.kariyer,y.kaynak==='ana'&&!y.gecisler.length));
-    OYUN.donus=y.kariyer.gecmis.length>0;
     if(y.kaynak!=='ana')OYUN.mesaj='Son kayıt açılamadı; '+(y.kaynak==='onceki'?'bir önceki sağlam kayıttan':'yarım kalan yazımın tamamlanmış kopyasından')+' devam ediliyor. '+y.uyarilar.join(' · ');
     else if(y.gecisler.length){OYUN.oturum.kaydet();OYUN.mesaj='Eski kayıt yeni biçime dönüştürüldü ('+y.gecisler.join(', ')+'); önceki kayıt yedek olarak saklandı.';}
   }else if(y.bos)oyunYeniKariyer();

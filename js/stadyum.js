@@ -67,6 +67,8 @@ function tribunOlcu(t){
 const STAT_KAPASITE=STAT.tribunler.reduce((s,t)=>s+tribunOlcu(t).kap,0);
 function tribunYeri(yer){return{ana:{pos:[0,-YAN_MESAFE],rot:0},karsi:{pos:[0,YAN_MESAFE],rot:Math.PI},kale1:{pos:[-KALE_MESAFE,0],rot:Math.PI/2},kale2:{pos:[KALE_MESAFE,0],rot:-Math.PI/2}}[yer];}
 /* tribünün en yüksek noktası (stat koordinatında metre): çatı, yoksa en üst sıra; protokol locası yükseltilmişse onun üstü. Balkon bunun üstündedir */
+/* başkan locasının döşeme yüksekliği: balkon döşemesinin (tribün tepesi + 1,8 m) kat metre üstü (js/balkon.js BLK_STAT ile aynı hesap) */
+const locaZemini=t=>tribunTepe('ana')+(t.cati?0.9:1.8)+t.loca.kat;
 function tribunTepe(yer){
   const t=STAT.tribunler.find(x=>x.yer===yer);if(!t)return 0;
   const O=tribunOlcu(t);return t.cati?O.y1+4:O.y1+(t.protokol||0);
@@ -137,7 +139,7 @@ function statKur(kok,sec){
         if(tr==='baskan'&&vipSira(r)){/* başkan bölümü: döşemeli koltuklar, yöneticiler; protokol locası PH kadar yükseltilmiş */
           for(let k=-6;k<=6;k++){const x=k*0.6,z=-(r+0.55)*dp,baskan=r===bs&&k===0,vy=yr+PH+KOLTUK_YUKSEKLIGI*1.14;
             koltuklar.push([x,yr+PH,z,1.2,baskan?BB.koltuk:STIL.seyirci.vipKoltuk]);
-            if(baskan){if(mac){V.set(x,vy,z);BASKAN_KOLTUGU=g.localToWorld(V.clone());}continue;}
+            /* 2.8O: başkan bu bölümde değil, binadaki locadadır; ön sıranın ortası diğer yöneticilerin */
             yer(x,vy,z,{taraftar:'vip',yer:t.yer,kap:1},r,{vip:true});}
           continue;}
         const n=Math.floor((b-a)/O.S.kisi);
@@ -162,13 +164,21 @@ function statKur(kok,sec){
       const hali=LAM({color:BB.hali}),bolme=LAM({color:BB.bolme}),bolmeUst=LAM({color:BB.bolmeUst});
       for(let r=bs-1;r<=bs+3&&r<t.sira;r++){const ry=y0+r*eg+(r>=bs?PH:0),rz=-(r+0.5)*dp;box(2*VG,0.02,dp,hali,0,ry+0.01,rz,g);
         if(r>=bs)for(const sx of[-1,1]){box(0.08,1.0,dp,bolme,sx*VG,ry+0.5,rz,g);box(0.12,0.05,dp+0.02,bolmeUst,sx*VG,ry+1.02,rz,g);}}
-      /* başkan koltuğunun yüksek sırtlığı */
-      box(0.56,0.4,0.08,LAM({color:BB.koltuk}),0,y0+bs*eg+PH+1.0,-(bs+0.55)*dp-0.24,g);}
+}
     tribunler[t.yer]={t,g,O};
     if(mac)TRIBUNLER[t.yer]=tribunler[t.yer];
     return g;
   }
   for(const t of STAT.tribunler)stand(t);
+  /* ---- başkan locası (2.8O): ana tribünün arkasındaki kulüp binasında, balkonun bir kat üstünde. Beton döşeme, alçak ön bordür (başkanın
+     masası korkuluk işini görür), yan duvarlar ve öndeki iki ayak; başkanın koltuğu ön kenardadır. Kamera buradan bakar ---- */
+  {const t=STAT.tribunler.find(x=>x.yer==='ana');
+   if(t&&t.loca){const L=t.loca,O=tribunOlcu(t),arka=YAN_MESAFE+O.D+0.6,zemin=locaZemini(t),on=-(arka+L.geri)+0.7,W=L.genislik,D=L.derinlik;
+     const beton=LAM({color:SK.beton}),koyu=LAM({color:SK.betonKoyu});
+     kutu(W+0.4,0.35,D,beton,0,zemin-0.18,on-D/2);kutu(W+0.4,0.22,0.18,koyu,0,zemin+0.11,on);
+     for(const sx of[-1,1]){kutu(0.25,2.6,D,koyu,sx*(W/2+0.1),zemin+1.3,on-D/2);kutu(0.5,zemin,0.5,beton,sx*(W/2-0.3),zemin/2,on-0.4);}
+     kutu(W,2.8,0.25,koyu,0,zemin+1.4,on-D);
+     if(mac)BASKAN_KOLTUGU=new THREE.Vector3(0,zemin+KOLTUK_YUKSEKLIGI*1.14,on-0.55);}}
   if(mac&&!BASKAN_KOLTUGU)BASKAN_KOLTUGU=new THREE.Vector3(0,6,-YAN_MESAFE-6);
 
   /* ---- tel örgü ---- */
@@ -229,7 +239,8 @@ function statKur(kok,sec){
    const L=YAN_MESAFE-(-TUNEL.z),zc=TUNEL.z-L/2;
    const tx0=TUNEL.x;for(const sx of[-1,1])kutu(0.15,2.3,L,duvar,tx0+sx*1.45,1.15,zc);kutu(3.05,0.12,L,duvar,tx0,2.35,zc);kutu(2.8,2.2,0.05,ic,tx0,1.1,-YAN_MESAFE+0.1);
    kutu(3.2,0.25,0.2,LAM({color:K.serit}),tx0,2.3,TUNEL.z);
-   for(const [takim,cx] of[[0,-11.5],[1,11.5]]){
+   const KX=STAT.kulubeX||11.5;
+   for(const [takim,cx] of[[0,-KX],[1,KX]]){
      const g=new THREE.Group();g.position.set(cx,0,-39.2);kok.add(g);
      box(6.5,2.1,0.12,duvar,0,1.05,-0.9,g);for(const sx of[-1,1])box(0.06,1.9,1.8,cam,sx*3.25,0.95,0,g);
      const cati=box(6.7,0.06,2.1,cam,0,2.12,-0.05,g);cati.rotation.x=0.08;box(6.5,0.12,0.12,duvar,0,2.14,0.95,g);

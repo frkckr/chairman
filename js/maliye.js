@@ -43,6 +43,22 @@ const odemePlanla=(k,{kulupId,tarih,dakika,tutar,kalem,aciklama,meseleId})=>
 /* kulübün henüz işlenmemiş ödemeleri, tarih sırasıyla */
 const bekleyenOdemeler=(k,kulupId)=>Object.values(k.isler).filter(is=>is.tur==='odeme'&&is.veri.kulupId===kulupId)
   .sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika)||isNo(a.id)-isNo(b.id));
+/* önümüzdeki NAKIT_UFKU günde kasanın en çok ne kadar eksiye düştüğü (kariyeri değiştirmez): {acik: kuruş (0 = açık yok), is: kasanın
+   ilk yetmediği ödeme ya da null, enDusuk: bu sürede kasanın gördüğü en düşük bakiye, son: sürenin sonundaki bakiye}.
+   haric: hesaba katılmayacak ödeme işi ("o ödeme gelmezse ne olur" sorusu için). İçerik dosyaları ve test görünümü kullanır */
+const NAKIT_UFKU=7;                         // bakılan gün sayısı (TEST değeri)
+function nakitAcigi(k,kulupId,haric){
+  const sinir=simdikiAn(k)+NAKIT_UFKU*1440;
+  let bakiye=k.kulupler[kulupId].nakit,en=0,ilk=null,dip=bakiye;
+  for(const is of bekleyenOdemeler(k,kulupId)){
+    if(is.id===haric||anDakika(is.tarih,is.dakika)>sinir)continue;
+    bakiye+=is.veri.tutar;
+    if(bakiye<0&&!ilk)ilk=is;
+    if(bakiye<en)en=bakiye;
+    if(bakiye<dip)dip=bakiye;
+  }
+  return{acik:-en,is:ilk,enDusuk:dip,son:bakiye};
+}
 /* mevcut para ile bekleyen taahhütlerin ayrı özeti */
 function maliDurum(k,kulupId){
   let gelir=0,gider=0;

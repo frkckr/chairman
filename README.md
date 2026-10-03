@@ -13,4 +13,4 @@ Yerelde `index.html` dosyasını açın; tarayıcı sürümü internet bağlant�
 - [Olay kütüphanesi ve içerik geçişi](OLAY_KUTUPHANESI.md)
 - [Ortak çalışma talimatı](CLAUDE.md) · [Araç girişi](AGENTS.md)
 
-2026-10-02 karar ve ekran yenilemesi (2.8G–2.8K: iki cevaplı kararlar, kişi konuşmalı telefon, sade ajanda, sakin hareket, tek maç öncesi ekranı, çatısız küçük stat) yerelde uygulandı ve `baskanlik-2.8g-k` dalında incelemeyi bekliyor; yayınlanmış sürümde henüz yoktur. Sıradaki işin ve tamamlanma durumunun tek kaynağı yol haritasıdır.
+2026-10-02 akşam turu (2.8L–2.8O ve maç motoru MM0–MM2: oyun içeriğinin sıfırlanması, masada açık dosya ve iki sayfalı defter, ilk 11'li maç öncesi ekranı, yüksek başkan locası, top toplayıcısız stat, motorun fizik/temas/beden ve takım zekâsı turları) 2026-10-03'te `main`'e alındı. Oyunda şu an senaryo içeriği yoktur; içerik yazılacaktır. Sıradaki işin ve tamamlanma durumunun tek kaynağı yol haritasıdır.

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Jersey+10&display=swap" rel="stylesheet">
 <!-- Yol haritası 2.5, bölüm A: yerleşim ve etkileşim onayı için prototip. Gerçek kural dosyalarını (../js) kullanır; kariyer yalnız bellekte tutulur,
-     oyunun kaydına dokunmaz. Adres parametreleri: ?baslangic=sikisik|rahat|duzenli, ?sponsor=nakitSikisik|pazarlik, ?sayman=kisi-N, ?dunya=tohum,
+     oyunun kaydına dokunmaz. Adres parametreleri: ?dunya=tohum,
      ?yazi=buyuk, ?panel=telefon|ajanda|dosya (açık başlasın). -->
 <style>
 :root{color-scheme:dark;--room:#12110f;--text:#efe7d6;--muted:#9a9282;--display:"Jersey 10","Arial Narrow",Impact,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace}
@@ -114,10 +114,7 @@ body{font-family:var(--mono);font-size:14px;line-height:1.55;padding-inline:16px
     <canvas id="hud" width="640" height="480" aria-hidden="true"></canvas>
     <div class="oda" id="oda" role="application" aria-label="Başkan odası"></div>
   </div>
-  <p class="not">Bu sayfa yerleşim ve etkileşim denemesidir; kariyer yalnız bellekte tutulur. Başlangıçlar:
-    <a href="?baslangic=sikisik&sponsor=nakitSikisik&dunya=7">kasa dar</a> ·
-    <a href="?baslangic=rahat&sponsor=pazarlik&sayman=kisi-9&dunya=7">kasada pay var</a> ·
-    <a href="?baslangic=duzenli&dunya=7">düzenli</a> · Klavye: 1 telefon, 2 ajanda, 3 dosya, Esc kapat.</p>
+  <p class="not">Bu sayfa yerleşim ve etkileşim denemesidir; kariyer yalnız bellekte tutulur. 2.8L'den beri içerik yoktur; oda boş başlar · Klavye: 1 telefon, 2 ajanda, 3 dosya, Esc kapat.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -126,29 +123,25 @@ body{font-family:var(--mono);font-size:14px;line-height:1.55;padding-inline:16px
 <script src="../js/sunum-durumu.js"></script>
 <script src="../js/stadyum-tarifleri.js"></script>
 <script src="../js/kadrolar.js"></script>
+<script src="../js/lig.js"></script>
 <script src="../js/kariyer.js"></script>
 <script src="../js/takvim.js"></script>
 <script src="../js/maliye.js"></script>
 <script src="../js/ajanda.js"></script>
 <script src="../js/mesele.js"></script>
 <script src="../js/yonetim.js"></script>
-<script src="../js/uyum-sponsor.js"></script>
 <script src="../js/olay.js"></script>
-<script src="../js/paket-odeme.js"></script>
-<script src="../js/paket-hoca.js"></script>
-<script src="../js/paket-basin.js"></script>
-<script src="../js/paket-destek.js"></script>
-<script src="../js/uyum-icerik2.js"></script>
 <script src="../js/soz.js"></script>
 <script src="../js/mesajlar.js"></script>
 <script src="../js/test-gorunum.js"></script>
 <script src="../js/kayit.js"></script>
-<script src="../js/kariyer-ornek.js"></script>
 <script src="../js/baslangic.js"></script>
 <script src="../js/goruntu.js"></script>
 <script src="../js/oda.js"></script>
 <script src="../js/portre.js"></script>
 <script src="../js/ekran-telefon.js"></script>
+<script src="../js/ekran-dosya.js"></script>
+<script src="../js/ekran-defter.js"></script>
 <script src="../js/ekran-oda.js"></script>
 <script>
 /* prototip oturumu: bellek deposu, gerçek komut ve kayıt yolu (kayitOturumu) */
@@ -156,8 +149,8 @@ const PROTOTIP={oturum:null,ekran:null};
 {
   const q=new URLSearchParams(location.search),al=ad=>q.get(ad)||undefined,depo=bellekDeposu();
   const rastgele=()=>Math.floor(Math.random()*0x100000000),dunya=parseInt(al('dunya'),10);
-  const kur=()=>{let k;try{k=kariyerBaslat({tohum:Number.isFinite(dunya)?dunya:rastgele(),baslangic:al('baslangic'),sponsor:al('sponsor'),sayman:al('sayman'),hoca:al('hoca')});}catch(e){k=kariyerBaslat({tohum:rastgele()});}
-    PROTOTIP.oturum=kayitOturumu(depo,'oda-deneme',k,false);PROTOTIP.oturum.kaydet();return'Yeni kariyer başladı. '+BASLANGICLAR[k.icerik.baslangic].acilis;};
+  const kur=()=>{let k;k=kariyerBaslat({tohum:Number.isFinite(dunya)?dunya:rastgele()});
+    PROTOTIP.oturum=kayitOturumu(depo,'oda-deneme',k,false);PROTOTIP.oturum.kaydet();return'Yeni kariyer başladı.';};
   const ilk=kur(),saatYaz=d=>d.tarih?d.tarih.slice(5).split('-').reverse().join('.')+' '+saatYazi(d.dakika):'';
   const oyun={
     get kariyer(){return PROTOTIP.oturum.kariyer;},
@@ -165,7 +158,7 @@ const PROTOTIP={oturum:null,ekran:null};
     kayitYazi:()=>'Prototip · kayıt yalnız bellekte · '+saatYaz(PROTOTIP.oturum.durum),
     kayitHata:()=>false,kayitTamam:()=>PROTOTIP.oturum.durum.tamam,yenidenKaydet:()=>PROTOTIP.oturum.kaydet(),
     yeniKariyer:kur,macaGit:()=>{alert('Prototip: burada maç bülteni ve 3B maç günü açılır.');},
-    donus:q.get('donus')==='1',ilkMesaj:ilk,bozukHata:null,bozuguSaklaVeBasla:kur
+    ilkMesaj:ilk,bozukHata:null,bozuguSaklaVeBasla:kur
   };
   const ayarlar={yazi:q.get('yazi')==='buyuk'?'buyuk':'normal',test:q.get('test')!=='0',kaydet(){}};
   PROTOTIP.ekran=odaEkraniKur($('oda'),oyun,ayarlar);

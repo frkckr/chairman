@@ -47,8 +47,6 @@ const STIL={
     yedekEv:{shirt:'#7a1812',trim:'#f2ede2',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
     yedekDeplasman:{shirt:'#22347a',trim:'#eef0f3',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
     takimElbise:{shirt:'#23262e',trim:'#e8e4da',shorts:'#23262e',socks:'#23262e',ls:true,pant:true,boots:'#0e0e10'},
-    /* top toplayıcı çocuklar: lacivert eşofman, sarı yelek (çocuk boyu, bkz. topcuBoy) */
-    topcu:{shirt:'#e8c21e',trim:'#1e2a5a',shorts:'#1e2a5a',socks:'#1e2a5a',ls:true,pant:true},
     /* antrenörler (kaleci antrenörü, kondisyoner) koyu eşofmanla; fotoğrafçılar turuncu yelek, elde fotoğraf makinesi */
     antrenorEv:{shirt:'#1c1c20',trim:'#c8281e',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
     antrenorDeplasman:{shirt:'#2c3446',trim:'#eef0f3',shorts:'#2c3446',socks:'#2c3446',ls:true,pant:true},
@@ -58,7 +56,7 @@ const STIL={
   },
   /* antrenman: koniler, fotoğraf flaşı */
   antrenman:{koni:0xff7a1e,flas:0xfff4dc},
-  topcuBoy:{h:0.74,w:0.8},
+
   tenler:['#e2b48c','#cf9a70','#b07650','#8a5a3c','#ecc49e'],
 
   /* Gece maçında her projektör için bir gölge (90'ların dörtlü gölgesi): oyuncunun silüeti ışıktan zemine izdüşer (js/golgeler.js).
@@ -67,7 +65,7 @@ const STIL={
 
   /* Başkanın bedeni (ön plan katmanı, js/baskan.js): masa, takım elbise, ten, saat renkleri.
      aci: ön plan kamerasının görüş açısı; dinlenmeEgimi: bakışın sahaya dinlenirken eğimi (radyan). */
-  baskan:{aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.2},
+  baskan:{aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.38},
 
   /* Başkan bölümü: halı, ahşap bölmeler, başkanın koltuğu */
   baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
@@ -135,7 +133,11 @@ const STIL={
   kagit:{zemin:'#f4eedf',zeminKoyu:'#e9e0cb',serit:'#fbf7ec',cizgi:'#c9b994',yazi:'#26221c',soluk:'#6d6353',vurgu:'#a5620a',vurguZemin:'#ffb530',
     kulup:'#b4241c',kirmizi:'#b4241c',yesil:'#2c6f28',golge:'rgba(40,28,12,.28)',yaziBoyu:{normal:1.42,buyuk:1.72},
     /* telefon (2.8I): açık tonlu cihaz; gelen/giden baloncuk ve ana ekran simgeleri */
-    telefon:{kasa:'#1d1e22',ekran:'#f7f2e6',gelen:'#fbf7ec',giden:'#ffd27a',gidenCizgi:'#c98a1c',mesajSimge:'#2c6f28',skorSimge:'#22347a'}},
+    telefon:{kasa:'#1d1e22',ekran:'#f7f2e6',gelen:'#fbf7ec',giden:'#ffd27a',gidenCizgi:'#c98a1c',mesajSimge:'#2c6f28',skorSimge:'#22347a'},
+    /* dosya (2.8M, js/ekran-dosya.js): masada açılan kırmızı karton dosya; perde odayı hafif karartır */
+    dosya:{perde:'rgba(24,16,8,.42)',kapak:'#a8291f',kapakKoyu:'#7a1c15',sekme:'#e9dcc0',sayfa:'#fbf6e8',cizgi:'#d8c9a6',not:'#fffdf6',atas:'#8a8f98',mavi:'#22347a'},
+    /* ajanda (2.8M, js/ekran-defter.js): iki sayfalı spiral defter; kayıtlar mürekkep renginde */
+    defter:{kapak:'#2c3442',sayfa:'#fbf8ef',cizgi:'#e3d9c2',spiral:'#5a5d62',kurdele:'#b4241c',murekkep:'#22347a',kayit:'#eef1fa',kayitCizgi:'#c4cbe0',secili:'#fff1c4',kart:'#fffdf6'}},
 
   /* Kişi portreleri (js/portre.js, 2.8I): 16×16 piksel, kodla çizilir. Tanınır kişilerin görünüşü burada sabittir; listede olmayan kişi
      kimliğinden belirlenimli görünüş alır. ten 0–2, sac: renk adı, tip: 'kisa'|'seyrek'|'kel'|'uzun'|'topuz'|'dalgali', biyik: 0 yok, 1 ince, 2 gür,
@@ -143,20 +145,9 @@ const STIL={
   portre:{
     tenler:['#f0c9a0','#d9a679','#b98257'],
     saclar:{siyah:'#1f1a17',kahve:'#5a3a22',kir:'#8f8a84',beyaz:'#d9d5cf',sari:'#c9a24a'},
-    zemin:{baskan:'#c8281e',teknikDirektor:'#2c6f28',yonetici:'#22347a',yoneticiAdayi:'#6d6353',personel:'#a5620a',sponsorTemsilcisi:'#c98a1c',muhabir:'#3a6ea8',diger:'#6d6353'},
+    zemin:{baskan:'#c8281e',teknikDirektor:'#2c6f28',yonetici:'#22347a',yoneticiAdayi:'#6d6353',personel:'#a5620a',diger:'#6d6353'},
     kisiler:{
-      'kisi-1':{ten:1,sac:'kir',tip:'kisa',biyik:2,giysi:'#2a2f3d',yaka:'#f2ede2'},             // Haluk Demirel
-      'kisi-2':{ten:1,sac:'beyaz',tip:'seyrek',biyik:2,giysi:'#b4241c',yaka:'#f2ede2'},          // Şükrü Hoca: kulüp eşofmanı
-      'kisi-3':{ten:2,sac:'kir',tip:'kisa',biyik:1,giysi:'#3b3f2a',yaka:'#c8281e'},              // Necati Uysal: eski kaptan
-      'kisi-4':{ten:0,sac:'kahve',tip:'uzun',biyik:0,giysi:'#5a2a3a',yaka:'#f2ede2'},            // Sevim Kara
-      'kisi-8':{ten:0,sac:'beyaz',tip:'kel',biyik:1,gozluk:true,giysi:'#2a2f3d',yaka:'#9ab4d8'}, // Hikmet Aydın: emekli banka müdürü
-      'kisi-9':{ten:1,sac:'siyah',tip:'dalgali',biyik:2,giysi:'#5a3a22',yaka:'#f2ede2'},          // Tuncay Erbil: fabrikatör
-      'kisi-10':{ten:0,sac:'kahve',tip:'kisa',biyik:0,gozluk:true,giysi:'#22347a',yaka:'#f2ede2'},// Deniz Kocaman: genç müşavir
-      'kisi-11':{ten:0,sac:'kir',tip:'topuz',biyik:0,gozluk:true,giysi:'#3a4a3a',yaka:'#f2ede2'},// Aysel Tekin
-      'kisi-12':{ten:2,sac:'siyah',tip:'seyrek',biyik:2,giysi:'#c8281e',yaka:'#f2ede2'},         // Orhan Yazıcı: taraftar derneği
-      'kisi-13':{ten:2,sac:'kir',tip:'kel',biyik:2,giysi:'#4a5a6a',yaka:'#4a5a6a'},              // Remzi Usta: malzemeci
-      'kisi-14':{ten:0,sac:'sari',tip:'dalgali',biyik:0,giysi:'#c98a1c',yaka:'#f2ede2'},          // Selim Çınar: sponsorun oğlu
-      'kisi-15':{ten:1,sac:'siyah',tip:'uzun',biyik:0,gozluk:true,giysi:'#3a6ea8',yaka:'#f2ede2'} // Nalan Ergin: muhabir
+      'kisi-1':{ten:1,sac:'kir',tip:'kisa',biyik:2,giysi:'#2a2f3d',yaka:'#f2ede2'}              // Haluk Demirel (2.8L: diğer kişiler içerikle kaldırıldı)
     }
   },
 
@@ -166,7 +157,9 @@ const STIL={
     /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre).
        Bakış topu ve olan biteni yumuşak bir yayla izler: yay = yayın sertliği, egim = bakışın odağın ne kadar altına indiği (masa ve ön sıralar görünsün),
        asagiSinir = bakışın en fazla kaç radyan aşağı inebileceği (2.8D: koltuk 8. sıraya yükseldi; top yakın kenara gelince alttaki sıralar görünsün). */
-    baskan:{goz:0.78,hedef:[0,1,-30],aci:30,egim:0.09,yay:2.2,asagiSinir:0.46},
+    /* 2.8O (kullanıcı kararı 2026-10-02): binadaki locadan yüksek ve geniş bakış; baş az döner. takip: bakış topun kendisini değil, yaklaşık
+       sure saniyede yumuşayan atak bölgesini izler (x payı ve sınırı, z payı); yay daha yumuşaktır. TEST değerleri */
+    baskan:{goz:0.78,hedef:[0,1,0],aci:52,egim:0.18,yay:1.0,asagiSinir:0.5,takip:{x:0.6,xSinir:30,z:0.45,sure:1.3}},
     durbun:{goz:0.78,aci:11}
   }
 };
