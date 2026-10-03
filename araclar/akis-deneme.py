@@ -543,7 +543,7 @@ async def bolum_15b(tarayici, site, tum_hatalar):
     # Topu izle açıkken: bakış topa odaklı ve yakın; dürbün topa kilitli. Takip açılıp bakış oturtulur (sınır denemesindeki uç yönden başlamasın);
     # duraklatılmışken top yerleştirilir, bakış elle ilerletilir
     odak = await pg.evaluate("""() => { KAMERA_ZORLA = null; kameraTakipAyarla(true); kameraOturt(); const b = mac.ball, eski = { x: b.x, y: b.y, z: b.z, vx: b.vx, vy: b.vy, vz: b.vz, sahip: b.sahip, tasiyan: b.tasiyan };
-      const v = new THREE.Vector3(), K = STIL.kameralar, W = MAC_RW, H = MAC_RH, R = H * 0.407, olc = () => { kameraUygula(curView()); camera.updateMatrixWorld(); v.set(b.x, b.y + TOP_R, b.z - MOTOR_Z).project(camera);
+      const v = new THREE.Vector3(), K = STIL.kameralar, W = RW, H = RH, R = H * 0.407, olc = () => { kameraUygula(curView()); camera.updateMatrixWorld(); v.set(b.x, b.y + TOP_R, b.z - MOTOR_Z).project(camera);
         const sx = (v.x + 1) * W / 2, sy = (1 - v.y) * H / 2; return { x: +v.x.toFixed(3), y: +v.y.toFixed(3), fov: +camera.fov.toFixed(2), maske: Math.min(Math.hypot(sx - W * 0.35, sy - H / 2), Math.hypot(sx - W * 0.65, sy - H / 2)) < R }; };
       const top = [];
       for (const [x, z] of [[30, 52], [-38, 12], [5, 62], [-15, 30]]) { Object.assign(b, { x, z, y: 0, vx: 0, vy: 0, vz: 0, sahip: null, tasiyan: null }); for (let i = 0; i < 150; i++) kameraAdim(1 / 60); top.push(olc()); }
@@ -651,9 +651,9 @@ async def bolum_17(tarayici, site, tum_hatalar):
     await pg.goto((site / "index.html").as_uri() + "?ekran=mac&tohum=5")
     await pg.wait_for_selector("#btnMacaGec", timeout=30000)
     await pg.evaluate("__kare(2)")
-    cizim = await pg.evaluate("({ rt: [rtMac.width, rtMac.height], oda: [rt.width, rt.height], tuval: [renderer.domElement.width, renderer.domElement.height], ic: [RW, RH], mac: [MAC_RW, MAC_RH], ornek: STIL.ekran.ornekleme, hud: [hud.width, hud.height] })")
-    denetle("Maç sahnesi 960×720 ızgarada, içeride 2 katında çiziliyor (1920×1440); oda ve balkon 640×480 hedefte; tuval maç ızgarasının tam sayı katında, dürbün maskesi maç ızgarasında",
-            cizim["rt"] == [1920, 1440] and cizim["mac"] == [960, 720] and cizim["ic"] == [640, 480] and cizim["oda"] == [640, 480] and cizim["hud"] == [960, 720]
+    cizim = await pg.evaluate("({ rt: [rt.width, rt.height], tuval: [renderer.domElement.width, renderer.domElement.height], ic: [RW, RH], ornek: STIL.ekran.ornekleme, hud: [hud.width, hud.height], ikinciHedef: typeof rtMac !== 'undefined' })")
+    denetle("Tek ızgara: maç, oda ve balkon 960×720'de, içeride 2 katında çiziliyor (1920×1440, tek hedef); tuval ızgaranın tam sayı katında, dürbün maskesi ızgarada",
+            cizim["rt"] == [1920, 1440] and cizim["ic"] == [960, 720] and cizim["hud"] == [960, 720] and not cizim["ikinciHedef"]
             and cizim["tuval"][0] % 960 == 0 and cizim["tuval"][0] * 3 == cizim["tuval"][1] * 4, str(cizim))
     await pg.click("#btnMacaGec")
     o1 = await pg.evaluate(ORNEK_JS, {"sure": 30, "hiz": 1, "bino": False})

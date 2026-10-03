@@ -5,13 +5,12 @@
 const STIL={
   ad:"Chairman",
 
-  /* Ekran: 4:3, PS1'in yüksek çözünürlük modu (640x480), 15 bit renk + 4x4 titreme.
+  /* Ekran: 4:3, tek ızgara genislik×yukseklik (960×720), 15 bit renk + 4x4 titreme. 2026-10-03 kullanıcı kararı: maçtaki görüntü kalitesi
+     standarttır; oda, balkon ve maç aynı ızgarayı ve örneklemeyi kullanır (eskiden oda ve balkon 640×480, maç ayrı 960×720 ızgaradaydı).
      Köşe titremesi (köşelerin piksellere yapışması) kapalı: hareket pürüzsüz aksın diye. titremeGucu: renk titremesinin şiddeti (0–1).
-     ornekleme (A akışı, 2026-10-03, kullanıcı kararı): sahne iç çözünürlüğün bu katında çizilip ortalanarak 640×480'e indirilir (2 = 1280×960);
-     renk biti ve titreme değişmez, uzaktaki ince çizgi ve küçük oyuncular kırılmaz.
-     mac (2026-10-03 ikinci paket, kullanıcı kararı): maç sahnesinin ızgarası 960×720 (içeride ornekleme katında, 1920×1440); oda ve balkon
-     genislik×yukseklik (640×480) kalır. Renk biti ve titreme her iki ızgarada aynıdır. */
-  ekran:{genislik:640,yukseklik:480,renkBiti:5,titreme:true,titremeGucu:0.7,koseTitremesi:false,arkaPlan:0x070b16,ornekleme:2,mac:{genislik:960,yukseklik:720}},
+     ornekleme (A akışı, 2026-10-03, kullanıcı kararı): sahne ızgaranın bu katında çizilip ortalanarak ızgaraya indirilir (2 = 1920×1440);
+     renk biti ve titreme değişmez, uzaktaki ince çizgi ve küçük oyuncular kırılmaz. */
+  ekran:{genislik:960,yukseklik:720,renkBiti:5,titreme:true,titremeGucu:0.7,koseTitremesi:false,arkaPlan:0x070b16,ornekleme:2},
 
   /* Gece havası */
   sis:{renk:0x0c1322,yakin:150,uzak:380},
@@ -72,13 +71,13 @@ const STIL={
        yuvar: adımın uçlarında taban ortasının yükselmesi (topuk ve burun yere değer, m).
      kalcaDonus: kalçanın hareket yönüne dönüşü (rad, gövde ters döner). egilme: koşuda öne eğilme, ileri ivmeden eğilme ve yan ivmeden yatış katsayıları.
      dusus: yerde yatış açısı (rad) ve gövde kalınlığı (yüzüstü/sırtüstü, yan). dokunus: top sürerken ayak dokunuşunun süresi (sn).
-     kucukPiksel: ekranda bundan kısa görünen oyuncuda bakış ve dokunuş gibi ayrıntı katmanları atlanır.
+     kucukPiksel: ekranda (720 satırlık ızgarada) bundan kısa görünen oyuncuda bakış ve dokunuş gibi ayrıntı katmanları atlanır (480 satırdaki 8 ile aynı eşik).
      top: havadaki topun üst/kesik (ust) ve yan (egri) dönüşünün görünür hız çarpanları; kare: bir karede en çok dönüş (rad, örnekleme kırılmasın).
      sevincCesit: gol sevinci çeşidi sayısı (oyuncu ve gole göre karışık seçilir) */
   animasyon:{
     adim:{kisa:0.25,uzun:0.37,hizBoy:0.17,yer:0.6,yerHiz:0.05,yerEn:0.22,kaldir:0.06,kaldirHiz:0.05,kaldirTavan:0.42,geri:0.7,yan:0.45,yuvar:0.05},
     kalcaDonus:0.5,egilme:{kosu:0.2,ivme:0.025,yatis:0.03},
-    dusus:{aci:1.45,yuzY:0.12,yanY:0.16},dokunus:0.18,kucukPiksel:8,
+    dusus:{aci:1.45,yuzY:0.12,yanY:0.16},dokunus:0.18,kucukPiksel:12,
     top:{ust:300,egri:150,kare:0.6},sevincCesit:4
   },
 
@@ -124,14 +123,15 @@ const STIL={
   /* Başkan odası (js/oda.js): aydınlık, gün ışığı alan oda; başkanın masasından bakış. Ölçüler metre.
      goz/bakis: kameranın yeri ve dinlenirken baktığı nokta; odakAci: bir nesneye odaklanınca görüş açısı;
      odakKayma: panel sağda açıkken nesne solda görünsün diye bakışın sağa kayması (metre).
-     gunIsigi: saate göre [saat, güç, renk] — sabah, öğle ve akşam odada hissedilsin diye. TEST değerleri. */
+     gunIsigi: saate göre [saat, güç, renk] — sabah, öğle ve akşam odada hissedilsin diye. vurguCizgi: üzerine gelinen nesnenin amber
+     çerçevesinin kalınlığı (ızgara pikseli; js/goruntu.js kalinCizgi). TEST değerleri. */
   oda:{aci:56,odakAci:52,odakKayma:0.5,goz:[0,1.28,0.62],bakis:[0,0.95,-1.4],arkaPlan:0xd8e4ea,
     duvar:0xece4d2,lambri:0xcdbb98,supurgelik:0x8a6a44,tavan:0xf6f1e6,zemin:'#b08252',zeminKoyu:'#966a3e',zeminAcik:'#c0935f',hali:0x8e2f28,haliKenar:0xd8c08a,
     cerceve:0xf4f1e8,gokUst:'#9fd0ee',gokAlt:'#e8f4f8',cim:'#3a8c33',tribun:'#8a8c90',direk:'#5a5d62',
     dolap:0x7a5634,dolapKoyu:0x5e4026,koltuk:0x7a2420,koltukAyak:0x3a2a1c,lamba:0x2e5a46,lambaIc:0xfff2c8,
     telefon:0x1a1b1f,telefonEkran:'#10202c',telefonHaber:'#ffb530',defter:'#f3ecdc',defterCizgi:'#c9bfa8',defterYazi:'#2a2622',defterSerit:'#c8281e',
     dosya:0xc8281e,dosyaEtiket:0xf2ede2,kagit:0xf6f1e4,kalemlik:0x2a2c33,saatKasa:0x3a2a1c,saatYuz:0xf4f1e8,saatIbre:0x1c1a18,
-    flama:'#c8281e',flamaSerit:'#f2ede2',vurgu:0xffb530,gunesLekesi:0xfff1c4,gazete:'#e9e4d6',notKagidi:'#f2d96a',iskele:'#4a3a2a',iskeleBranda:'#3a6ea8',
+    flama:'#c8281e',flamaSerit:'#f2ede2',vurgu:0xffb530,vurguCizgi:1.5,gunesLekesi:0xfff1c4,gazete:'#e9e4d6',notKagidi:'#f2d96a',iskele:'#4a3a2a',iskeleBranda:'#3a6ea8',
     ortam:{renk:0xfff3df,guc:0.62},gunes:{renk:0xfff0cf,konum:[-3.2,3.6,-2.2]},dolgu:{renk:0xdfe8ff,guc:0.28,konum:[2.5,2,2]},
     gunIsigi:[[6,0.25,0xffc890],[9,0.62,0xfff0cf],[13,0.78,0xfffaf0],[17,0.6,0xffe0b0],[19.5,0.28,0xff9a5a],[22,0.1,0x6a78a8]],
     /* balkon kapısı (uzak duvarda, x0–x1 arası, h yüksekliğinde; tıklanır, üstünde levha) ve pencere boşluğu (pencere; balkon kuruluysa dışarı

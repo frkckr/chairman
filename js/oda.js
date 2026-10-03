@@ -3,7 +3,7 @@
    Masada gündeme açılan nesneler vardır: telefon (haberler), ajanda defteri (günün işleri), dosya (açık mesele), gazete (çıkmış haber).
    Kayıtlı olaydan doğan izler: masada gazete ve teşekkür kartı, pencerede tribün basamaklarında onarım iskelesi, duvarda pano sözünün notu (js/soz.js odaIzleri).
    Oyun kuralı içermez: neyin gösterileceğini sunum katmanı odaDurum ile bildirir (js/ekran-oda.js). Renkler STIL.oda'dadır.
-   Maç sahnesinden ayrı bir sahnedir; aynı çizim hattını kullanır (js/goruntu.js: 640×480, 15 bit renk, titreme).
+   Maç sahnesinden ayrı bir sahnedir; aynı çizim hattını kullanır (js/goruntu.js: maçla aynı 960×720 ızgara ve 2× örnekleme, 15 bit renk, titreme).
    Kulübün geçmişine ait kupa ya da fotoğraf yoktur: bağlı olduğu olay yaşanmadan nesne gösterilmez (STIL_REHBERI §6).
      odaDurum({haber, dosya, gun, ay, gunAdi, dakika, gazete, gazeteYeni, kart, iskele, panoNotu})
                                                           telefon ışığı, dosya, defterdeki tarih, saat ve gün ışığı, kayıtlı izler
@@ -50,7 +50,7 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
    box(0.03,0.03,0.1,oLAM({color:K.kol}),w-0.1,1.02,0.04,kanat);
    /* kapı tıklanır: görünmez dokunma kutusu, üzerine gelince amber çerçeve; üstünde küçük “BALKON” levhası */
    const geo=new THREE.BoxGeometry(w+0.1,K.h,0.3),kutu=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({visible:false}));kutu.position.set((K.x0+K.x1)/2,K.h/2,-3.42);kutu.userData.nesne='kapi';S.add(kutu);
-   const cerceve=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:OD.vurgu,fog:false}));cerceve.position.copy(kutu.position);cerceve.visible=false;S.add(cerceve);
+   const cerceve=kalinCizgi(new THREE.EdgesGeometry(geo),OD.vurgu,OD.vurguCizgi);cerceve.position.copy(kutu.position);cerceve.visible=false;S.add(cerceve);
    ODA.kapiHedef={g:kutu,kutu,cerceve,merkez:kutu.position.clone()};
    const lv=mk(32,8),lg=lv.getContext('2d');lg.fillStyle=OD.levha;lg.fillRect(0,0,32,8);ctxText(lg,'BALKON',(32-textW('BALKON',1))>>1,0,OD.levhaYazi,1);
    const levha=new THREE.Mesh(new THREE.PlaneGeometry(0.4,0.1),BAS({map:tx(lv,'n'),fog:false}));levha.position.set((K.x0+K.x1)/2,K.h+0.16,-3.44);S.add(levha);ODA.levha=levha;}
@@ -118,7 +118,7 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
   function nesne(ad,x,z,donus,w,h,d){
     const g=new THREE.Group();g.position.set(x,UST,z);g.rotation.y=donus;MASA.add(g);
     const geo=new THREE.BoxGeometry(w,h,d),kutu=new THREE.Mesh(geo,gorunmez);kutu.position.y=h/2;kutu.userData.nesne=ad;g.add(kutu);
-    const cerceve=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:OD.vurgu,fog:false}));cerceve.position.y=h/2;cerceve.visible=false;g.add(cerceve);
+    const cerceve=kalinCizgi(new THREE.EdgesGeometry(geo),OD.vurgu,OD.vurguCizgi);cerceve.position.y=h/2;cerceve.visible=false;g.add(cerceve);
     return ODA.nesneler[ad]={g,kutu,cerceve,merkez:new THREE.Vector3(x,UST+h/2,z)};
   }
   ODA.masa=MASA;ODA.masaUstu=UST;

@@ -2,7 +2,7 @@
 let bino=false;
 const KMR=k=>({p:[BASKAN_KOLTUGU.x,BASKAN_KOLTUGU.y+k.goz,BASKAN_KOLTUGU.z],fov:k.aci}),VIEWS={baskan:KMR(STIL.kameralar.baskan),durbun:KMR(STIL.kameralar.durbun)};
 const curView=()=>bino?VIEWS.durbun:VIEWS.baskan;
-/* dürbün maskesi maç ızgarasında çizilir (hud tuvali MAC_RW×MAC_RH, js/goruntu.js) */
+/* dürbün maskesi ızgarada çizilir (hud tuvali RW×RH, js/goruntu.js) */
 function drawHUD(){
   const W=hud.width,H=hud.height;hg.clearRect(0,0,W,H);
   if(!bino)return;
@@ -44,7 +44,7 @@ addEventListener('keydown',e=>{if((e.code!=='Space'&&e.code!=='KeyP')||e.repeat|
 let last=0,time=0,onEkranCizildi=false;
 function frame(now){
   /* başkan odası: stat yerine oda sahnesi çizilir; maç zamanı ilerlemez (js/oda.js). Odadan çıkınca stat yeniden çizilir */
-  if(ON_EKRAN.sayfa==='oda'){sonIslemHedefi(rt);odaKare(duraklatmaVar()?0:Math.min(0.05,Math.max(0,(now-last)/1000)));last=now;odaCiz();onEkranCizildi=false;requestAnimationFrame(frame);return;}
+  if(ON_EKRAN.sayfa==='oda'){odaKare(duraklatmaVar()?0:Math.min(0.05,Math.max(0,(now-last)/1000)));last=now;odaCiz();onEkranCizildi=false;requestAnimationFrame(frame);return;}
   /* maç öncesi ekranı açıkken maç günü başlamaz: stat bir kez çizilir, menünün arkasında donuk durur */
   if(ON_EKRAN.acik&&onEkranCizildi){last=now;requestAnimationFrame(frame);return;}
   const gercekDt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;
@@ -57,8 +57,8 @@ function frame(now){
   kameraUygula(curView());   /* js/kamera.js */
   okunurlukKare();           /* js/okunurluk.js: topun asgari boyu, havadaki topun lekesi */
   camera.updateMatrixWorld();baskanKare(dt,camera);drawHUD();
-  sonIslemHedefi(rtMac);   /* maç sahnesi ornekleme katında (js/goruntu.js) */
-  renderer.setRenderTarget(rtMac);renderer.setClearColor(STIL.ekran.arkaPlan,1);renderer.clear();renderer.render(scene,camera);
+  /* ornekleme katında, oda ve balkonla aynı hedefe (js/goruntu.js) */
+  renderer.setRenderTarget(rt);renderer.setClearColor(STIL.ekran.arkaPlan,1);renderer.clear();renderer.render(scene,camera);
   if(!bino)baskanCiz();
   renderer.setRenderTarget(null);renderer.clear();renderer.render(post,postCam);
   onEkranCizildi=ON_EKRAN.acik;if(ON_EKRAN.acik)ON_EKRAN.cizildi=true;
