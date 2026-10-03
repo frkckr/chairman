@@ -93,6 +93,8 @@ function netM(w,h){return LAM({map:tx(NET_CV,'m',[w/0.16,h/0.16]),transparent:tr
 const lamps=[],TRIBUNLER={},YERLER=[],flags=[],MESALE_YERLERI=[],TABELA={ciz(){}},KULUBELER=[];
 const TUNEL={x:TUNEL_X,z:-(YAN_MESAFE-2.2)}; // tünel ağzı tribün önünde kısa bir körük
 let BASKAN_KOLTUGU=null;
+/* başkan locası ölçüleri (2.8T: locaya giriş js/loca-giris.js okur): zemin yüksekliği, ön kenar z, genişlik, derinlik, arka duvar */
+let LOCA=null;
 
 function statKur(kok,sec){
   const mac=!!(sec&&sec.mac),gunduz=!!(sec&&sec.gunduz),GB=STIL.balkon;
@@ -178,7 +180,8 @@ function statKur(kok,sec){
      const beton=LAM({color:SK.beton}),koyu=LAM({color:SK.betonKoyu});
      kutu(W+0.4,0.35,D,beton,0,zemin-0.18,on-D/2);kutu(W+0.4,0.22,0.18,koyu,0,zemin+0.11,on);
      for(const sx of[-1,1]){kutu(0.25,2.6,D,koyu,sx*(W/2+0.1),zemin+1.3,on-D/2);kutu(0.5,zemin,0.5,beton,sx*(W/2-0.3),zemin/2,on-0.4);}
-     kutu(W,2.8,0.25,koyu,0,zemin+1.4,on-D);
+     const arkaDuvar=kutu(W,2.8,0.25,koyu,0,zemin+1.4,on-D);
+     if(mac)LOCA={zemin,on,W,D,arka:arkaDuvar,beton,koyu};
      if(mac)BASKAN_KOLTUGU=new THREE.Vector3(0,zemin+KOLTUK_YUKSEKLIGI*1.14,on-0.55);}}
   if(mac&&!BASKAN_KOLTUGU)BASKAN_KOLTUGU=new THREE.Vector3(0,6,-YAN_MESAFE-6);
 

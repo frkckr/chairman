@@ -273,7 +273,8 @@ Object.assign(Match.prototype,{
     switch(s.tur){
       case 'sut':this.vurusBaslat(p,{tur:'sut',hx:this.dir[p.team]*PL,hz:MZ,xg:s.xg});break;
       case 'pas':case 'ara':case 'uzun':case 'orta':case 'geriCevir':
-        this.vurusBaslat(p,{tur:s.tur,hx:s.hx,hz:s.hz,tip:s.tip,alici:s.alici,varisHizi:s.varis,T:s.T,hy:s.hy,yay:s.yay,mod:s.mod,ex:s.ex,ez:s.ez,es:s.es,guncelle:!!s.mod});break;
+        this.vurusBaslat(p,{tur:s.tur,hx:s.hx,hz:s.hz,tip:s.tip,alici:s.alici,varisHizi:s.varis,T:s.T,hy:s.hy,yay:s.yay,mod:s.mod,ex:s.ex,ez:s.ez,es:s.es,guncelle:!!s.mod,
+          P:s.P,Pk:s.Pk,alt:s.alt});break;   /* P, Pk, alt: karar anındaki tahmin, salt okunur (ölçüm: araclar/olcumler/p-kalib.js) */
       case 'uzaklastir':{/* uzağa ve kanada, çoğu zaman hedefsiz; baskı altında ayağın kenarından kaçıp taça ya da kornere gidebilir */
         const d=this.dir[p.team],yan=p.z<MZ?-1:1,kacti=this.rast()<0.25+baskiAltinda(this,p)*0.25;
         let hx=clamp(p.x+d*(28+this.rast()*22),-PL+4,PL-4),hz=p.z+yan*(10+this.rast()*26);

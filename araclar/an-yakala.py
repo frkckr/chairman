@@ -60,6 +60,13 @@ HAZIR = {
     "jokey": ("mac.players.some(p=>p.oyunda&&p.tavir==='jokey')&&mac.ball.sahip", 0.3, "mac"),
     "tek-vurus": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.tekDokunus&&p.eylem.faz==='takip')", 0, "mac"),
     "kapan": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='kapan')", 0.1, "mac"),
+    # gerçekçilik planı T0 (film şeridi; ör. --kare 6 --aralik 0.15): bire bir, kayma, hava düellosu, korner ve serbest vuruş vuruşu, oyun kurma
+    "birebir": ("mac.players.some(p=>p.oyunda&&p._calim&&p._calim.faz>=1&&mac.ball.sahip===p)", 0.1, "mac"),
+    "kayma": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='kayma'&&p.eylem.t>0.15)", 0, "mac"),
+    "hava": ("__son('header',0.05)&&mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='kafa'&&p.eylem.bos&&p.eylem.t<0.1)", 0, "mac"),
+    "korner-vurus": ("mac.phase==='play'&&mac.ball.pas&&mac.ball.pas.tur==='korner'&&mac.t-mac.ball.pas.t>0.35", 0, "mac"),
+    "serbest-vurus": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&p.eylem.sec.serbest&&p.eylem.faz==='takip')", 0.05, "mac"),
+    "oyun-kurma": ("(mac.phase==='play'&&mac.ball.pas&&mac.ball.pas.tur==='kaleVurusu'&&mac.ball.pas.L<30&&mac.t-mac.ball.pas.t>0.4)||__son('pass',0.05,v=>v.p&&v.p.rol==='DEF'&&v.x0*mac.dir[v.p.team]<-32)", 0.3, "mac"),
 }
 VARSAYILAN_SET = ["santra", "orta-saha", "korner", "sut", "faul", "sol-ceza", "uzak-kenar", "yakin-kenar"]
 

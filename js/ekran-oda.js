@@ -181,12 +181,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     }
     if(r.durum==='kacirildi')ic+='<p class="od-uyari">Bu işe katılmadın; kaçırıldı.</p>';
     if(r.durum==='ertelendi')ic+='<p class="od-not">'+yaz(tarihKisa(r.yeni))+' gününe ertelendi.</p>';
-    /* bir konuya bağlı karar dosyadadır; ajanda yalnız randevuyu ve son cevap anını gösterir */
-    const dosyada=r.meseleId&&k.meseleler[r.meseleId];
-    if(dosyada)ic+='<p class="od-not">Konu: '+yaz(k.meseleler[r.meseleId].baslik)+'</p>'+(r.durum==='bekliyor'&&v&&v.karar?
-      '<div class="od-dugmeler"><button type="button" class="od-birincil" data-eylem="dosyaAc" data-mesele="'+r.meseleId+'" data-donus="ajanda">Dosyada karar ver ▸</button>'+
-        (v.zorunluluk==='ertelenebilir'?ertelemeDugmesi(is):'')+'</div>':'<div class="od-dugmeler"><button type="button" data-eylem="dosyaAc" data-mesele="'+r.meseleId+'" data-donus="ajanda">İlgili dosya ▸</button></div>');
-    if(r.durum==='bekliyor'&&!(dosyada&&v&&v.karar))ic+=isBolumu(r.id);
+    /* 2.8Q: ajanda yalnız gösterir. Bir konuya bağlı karar dosyadadır; katılma, erteleme ve karar alt şeritten yapılır */
+    if(r.meseleId&&k.meseleler[r.meseleId])ic+='<p class="od-not">Konu: '+yaz(k.meseleler[r.meseleId].baslik)+'</p>';
+    if(r.durum==='bekliyor'&&v&&bugunMu)ic+='<p class="dft-ipucu">'+(v.karar?'Cevabın bekleniyor: alttaki “Karar ver”.':v.eylem==='macGunu'?'Alttaki “Stada git” ile maç günü başlar.':'Katılmak ya da ertelemek için alttaki şerit.')+'</p>';
     return ic+'</section>';
   }
   function ajandaPaneli(){
@@ -291,15 +288,34 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const t=anTarih(o.hedef),an=tarihKisa(t.tarih)+' '+saatYazi(t.dakika);
     return an+(o.neden==='sonCevap'?' · son cevap saati: '+o.durak.veri.baslik:o.neden==='haber'?' · beklediğin görüş gelecek':o.neden==='cevapsiz'?' · cevap vermediğin karar kapanır':o.durak?' · '+o.durak.veri.baslik:o.neden==='cakisma'?' · günün işleri çakışıyor, seçim gerekecek':' · bekleyen rutin işler');
   }
+  /* 2.8Q: defterde seçili, bugün bekleyen randevu ya da karar; eylemleri alt şeritte */
+  const seciliIs=()=>acik==='ajanda'&&secili&&ajandaGun===k.tarih?bugun().find(r=>r.id===secili&&r.tur==='ajanda'&&r.durum==='bekliyor')||null:null;
+  /* bir işin şeridi: durum yazısı ve düğmeler (ana düğme sağda, .od-ana tek kalır) */
+  function isSeridi(r){
+    const id=r.id,is=k.isler[id],v=is.veri,ert=v.zorunluluk==='ertelenebilir'?ertelemeDugmesi(is).replace('<button type="button"','<button type="button" class="od-ikinci"'):'';
+    if(v.karar){
+      /* dosyalı karar dosyada, dosyasız karar sağdaki karar panelinde verilir */
+      const dosyada=r.meseleId&&k.meseleler[r.meseleId];
+      return{durum:yaz(v.baslik)+' · cevabın bekleniyor'+(r.saatsiz&&r.sonCevap?' · en geç '+saatYazi(r.sonCevap.dakika):''),
+        dugme:ert+'<button type="button" class="od-ana" data-eylem="'+(dosyada?'dosyaAc':'kararAc')+'" data-is="'+id+'"'+(dosyada?' data-mesele="'+r.meseleId+'" data-donus="ajanda"':'')+'>Karar ver ▸</button>'};
+    }
+    const o=ajandaOnizle(k,id,secimler[id]),mac=v.eylem==='macGunu',p=[];
+    if(o.engel.length)p.push('<span class="od-uyari">'+o.engel.map(yaz).join(' · ')+'</span>');
+    else p.push(mac?'Maç '+saatYazi(r.saat)+'\'da. Stada gidince maç günü başlar.':yaz(v.baslik)+' · '+saatYazi(r.saat)+(o.sure?'–'+saatYazi((r.saat+o.sure)%1440):''));
+    if(o.atlanacak.length)p.push('<span class="od-uyari">Kaçırılacak: '+o.atlanacak.map(x=>yaz(x.veri.baslik+' ('+saatYazi(x.dakika)+')')).join(', ')+'</span>');
+    if(o.cevapsiz.length)p.push('<span class="od-uyari">Cevapsız kalacak: '+o.cevapsiz.map(x=>yaz(x.veri.baslik+' — '+zamanAsimiMetni(k,x))).join(' · ')+'</span>');
+    if(o.gerceklesecek.length)p.push('Bu arada: '+o.gerceklesecek.map(x=>yaz(isAdi(x))).join(' · '));
+    const sor=(o.atlanacak.length||o.cevapsiz.length)&&onay!=='yap:'+id,dosya=r.meseleId&&k.meseleler[r.meseleId]?
+      '<button type="button" class="od-ikinci" data-eylem="dosyaAc" data-mesele="'+r.meseleId+'" data-donus="ajanda">İlgili dosya ▸</button>':'';
+    const dugme=onay==='yap:'+id?'<button type="button" class="od-ikinci" data-eylem="vazgec">Vazgeç</button><button type="button" class="od-ana" data-eylem="yap" data-is="'+id+'">Onayla ▸</button>'
+      :dosya+ert+'<button type="button" class="od-ana" data-eylem="'+(sor?'yapSor':'yap')+'" data-is="'+id+'"'+(o.engel.length||o.secimGerekli?' disabled':'')+'>'+(mac?'Stada git ▸':'Katıl ▸')+'</button>';
+    return{durum:p.join(' · '),dugme,uyari:o.atlanacak.length||o.cevapsiz.length||o.engel.length};
+  }
   function altSerit(){
-    const mac=macIsi();
-    let durum,dugme;
-    if(mac){
-      const o=ajandaOnizle(k,mac.id);
-      durum=o.engel.length?o.engel.join(' · '):'Maç '+saatYazi(mac.saat)+'\'da. Stada gidince maç günü başlar.'+(o.atlanacak.length?' Kaçırılacak: '+o.atlanacak.map(x=>x.veri.baslik).join(', ')+'.':'');
-      dugme=onay==='yap:'+mac.id?'<button type="button" data-eylem="vazgec">Vazgeç</button><button type="button" class="od-ana" data-eylem="yap" data-is="'+mac.id+'">Onayla ▸</button>'
-        :'<button type="button" class="od-ana" data-eylem="'+(o.atlanacak.length?'yapSor':'yap')+'" data-is="'+mac.id+'"'+(o.engel.length?' disabled':'')+'>Stada git ▸</button>';
-    }else{
+    const r=seciliIs()||macIsi();
+    let durum,dugme,uyari=false;
+    if(r)({durum,dugme,uyari}=isSeridi(r));
+    else{
       const o=ilerleOnizle(k),p=[];
       if(o.engel.length)p.push('İlerlenemiyor: '+o.engel.join(' · '));
       else{
@@ -308,13 +324,17 @@ function odaEkraniKur(kap,oyun,ayarlar){
         if(o.kacirilacak.length)p.push('Kaçırılacak: '+o.kacirilacak.map(x=>x.veri.baslik).join(', '));
         if(o.cevapsiz.length)p.push('Cevapsız kalacak: '+o.cevapsiz.map(x=>x.veri.baslik+' ('+zamanAsimiMetni(k,x)+')').join(', '));
       }
-      durum=p.join(' · ');
+      durum=yaz(p.join(' · '));
       const sor=(o.kacirilacak.length||o.cevapsiz.length)&&onay!=='ilerle';
-      dugme=onay==='ilerle'?'<button type="button" data-eylem="vazgec">Vazgeç</button><button type="button" class="od-ana" data-eylem="ilerle">Onayla ▸</button>'
+      dugme=onay==='ilerle'?'<button type="button" class="od-ikinci" data-eylem="vazgec">Vazgeç</button><button type="button" class="od-ana" data-eylem="ilerle">Onayla ▸</button>'
         :'<button type="button" class="od-ana" data-eylem="'+(sor?'ilerleSor':'ilerle')+'"'+(o.engel.length?' disabled':'')+'>İlerle ▸</button>';
     }
-    return'<footer class="od-alt"><div class="od-altYazi"><p class="od-mesaj" aria-live="polite">'+yaz(mesaj)+'</p><p class="od-durak">'+yaz(durum)+'</p></div>'+dugme+'</footer>';
+    return'<footer class="od-alt"><div class="od-altYazi"><p class="od-mesaj" aria-live="polite">'+yaz(mesaj)+'</p><p class="od-durak'+(uyari?' od-durakUyari':'')+'">'+durum+'</p></div>'+
+      '<div class="od-altDugmeler">'+dugme+'</div></footer>';
   }
+  /* dosyasız karar (2.8Q): sağdaki karar panelinde iki cevaplı kart; cevaptan sonra ajandaya dönülür */
+  let kararIs=null;
+  function kararPaneli(){return kararIs&&k.isler[kararIs]?isBolumu(kararIs):'<p class="od-not">Bu karar artık beklemiyor.</p>';}
 
   function odayiBildir(){
     const [,a,g]=parca(k.tarih);
@@ -344,8 +364,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const dugme=(ad,rozet,sinif,kapali)=>'<button type="button" class="od-nesne" data-eylem="ac" data-panel="'+ad+'" aria-pressed="'+(acik===ad?'true':'false')+'"'+(kapali?' disabled':'')+'>'+
       NESNE[ad]+(rozet?'<i class="od-rozet'+(sinif?' '+sinif:'')+'">'+rozet+'</i>':'')+'</button>';
     const iz=izler(),gazeteVar=!!iz.gazete||!!iz.kart;
-    const baslik={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',ayar:'Ayarlar',kadro:'Kadro (TEST)',kasa:'Kasa'}[acik];
-    const icerik=acik==='telefon'?telefonPaneli():acik==='ajanda'?ajandaPaneli():acik==='dosya'?dosyaPaneli():acik==='gazete'?gazetePaneli():acik==='ayar'?ayarPaneli():acik==='kadro'?kadroPaneli():acik==='kasa'?kasaPaneli():'';
+    const baslik={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',ayar:'Ayarlar',kadro:'Kadro (TEST)',kasa:'Kasa',karar:'Karar'}[acik];
+    const icerik=acik==='telefon'?telefonPaneli():acik==='ajanda'?ajandaPaneli():acik==='dosya'?dosyaPaneli():acik==='gazete'?gazetePaneli():acik==='ayar'?ayarPaneli():acik==='kadro'?kadroPaneli():acik==='kasa'?kasaPaneli():acik==='karar'?kararPaneli():'';
     kap.innerHTML='<header class="od-ust"><span>'+yaz(k.kulupler[kulupId()].ad)+' · Başkan '+yaz(b?b.ad:'')+'</span>'+
       '<span class="od-ustSag"><span class="od-kayit'+(oyun.kayitHata()?' od-uyari':'')+'">'+yaz(oyun.kayitYazi())+'</span>'+(oyun.kayitTamam()?'':' <button type="button" class="od-kucuk od-tehlike" data-eylem="kayitDene">Yeniden kaydet</button>')+
         '<button type="button" class="od-duraklat" data-eylem="duraklat" aria-pressed="'+(duraklatmaVar('elle')?'true':'false')+'" title="Duraklat (P ya da boşluk)">'+(duraklatmaVar('elle')?'Devam ▸':'Duraklat')+'</button></span></header>'+
@@ -395,7 +415,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(ad==='gazete'&&izler().yeniHaber)try{komut(x=>haberlerGoruldu(x));}catch(e){mesaj=e.message;}
     ciz('.od-kapat');
   }
-  function kapat(){acik=null;onay=null;yeniOnay=false;ciz('.od-ana');}
+  /* karar panelinden kapatınca ajandaya (aynı güne, aynı kayda) dönülür */
+  function kapat(){if(acik==='karar'){kararIs=null;panelAc('ajanda',null,null,true);return;}acik=null;onay=null;yeniOnay=false;ciz('.od-ana');}
   /* balkon ↔ oda: yürüyüş yalnız sunumdur; odaya dönerken açık gözlem kapanır */
   function yerDegistir(){
     if(!balkonVar||ODA.yer==='yolda')return;
@@ -434,6 +455,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     }
     delete secimler[id];
     if(mac){acik=null;oyun.macaGit();return;}
+    if(acik==='karar'){acik='ajanda';kararIs=null;}
     /* kararın sonucu aynı dosyada kısa görünür; otomatik sonraki dosyaya geçilmez */
     if(is.veri.meseleId){const g=k.gecmis.slice().reverse().find(x=>x.tur==='is'&&x.isId===id),r=g&&g.sonuc;
       if(r&&(r.bilgi||r.secimMetni))dosyaSonuc={meseleId:is.veri.meseleId,metin:(r.secimMetni?r.secimMetni+(r.bilgi?' — ':''):'')+(r.bilgi||'')};}
@@ -476,6 +498,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(!ey&&id){secili=id;onay=null;ciz('button[data-is="'+id+'"]:not([data-eylem])');return;}
     if(ey==='ac'){if(acik===b.dataset.panel)kapat();else panelAc(b.dataset.panel);}
     else if(ey==='dosyaAc'){if(b.dataset.gezinti)donusYeri=null;panelAc('dosya',ms,b.dataset.donus);}
+    else if(ey==='kararAc'){kararIs=id;panelAc('karar');}
     else if(ey==='donus'){const d=donusYeri;donusYeri=null;if(d)panelAc(d.panel,null,null,true);}
     else if(ey==='arsiv'){dosyaArsiv=!dosyaArsiv;ciz('[data-eylem="arsiv"]');}
     /* telefon gezintisi: zaman ve kariyer değişmez (konuşmayı açmak yalnız "yeni" işaretini kaldırır) */

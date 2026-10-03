@@ -6,23 +6,26 @@
    §1 tablosundadır. */
 const R_PL=52.5,R_MZ=34,R_CU=16.5,R_CW=20.16;
 const R_KAYIP=[['pas','kesilen / isabetsiz pas'],['diger','çalım, sürüş kaybı, seken top'],['hava','hava topu, kafa sonrası'],['mudahale','müdahale'],['kontrol','kötü ilk dokunuş']];
+/* T0: satırlara planın tur kabul hedefleri bağlandı (4. öğe [alt, üst, tur]; bilgi amaçlı, dışındaysa "!", çıkış kodu değişmez).
+   T1/T2 hedefleri §4 "Kabul"den; T8 satırları da aynı tanımı ölçtüğü için eklendi. Hedefsiz satırların planda doğrudan karşılığı yok
+   (ör. barajlı serbest vuruşta T8 hedefi doğrudan şut başınadır, burada 8 sn içindeki gol; ayrı ölçüm d-duran senaryosunda) */
 module.exports={
   bilgi:[
     ['— R: robotluk karnesi (gerçekçilik planı Ek F) —',null,0],
-    ['Hareket: durma + yürüme (<2 m/sn) %','rDurYuru',1],['Hareket: depar (≥7 m/sn) %','rDepar',1],
-    ['Hareket: topa >25 m iken >4 m/sn %','rUzakKosu',1],['Hareket: 16+ saha oyuncusu koşuyor (anların) %','rKalabalik',1],
-    ['Hareket: ortalama hız (m/dk)','rHizDk',0],['Hareket: >3 m/sn² ivmelenme / oyuncu·dk','rIvme',1],
-    ['Top ayakta: ortanca (sn)','rAyakta',2],['Top ayakta: 1 sn\'den kısa %','rAyaktaKisa',1],['Top taşıma: >5 m %','rTasima',1],
-    ['Sahiplik: tamamlanan pas ort.','rSeqPas',2],['Sahiplik: ortalama süre (sn)','rSeqSure',1],['Sahiplik: pas yapılamadan biten %','rSeqBos',1]]
+    ['Hareket: durma + yürüme (<2 m/sn) %','rDurYuru',1,[40,null,'T1']],['Hareket: depar (≥7 m/sn) %','rDepar',1,[null,3,'T1']],
+    ['Hareket: topa >25 m iken >4 m/sn %','rUzakKosu',1,[null,25,'T1']],['Hareket: 16+ saha oyuncusu koşuyor (anların) %','rKalabalik',1,[null,25,'T1']],
+    ['Hareket: ortalama hız (m/dk)','rHizDk',0,[140,180,'T1']],['Hareket: >3 m/sn² ivmelenme / oyuncu·dk','rIvme',1,[null,5,'T1']],
+    ['Top ayakta: ortanca (sn)','rAyakta',2,[1.2,2.0,'T2']],['Top ayakta: 1 sn\'den kısa %','rAyaktaKisa',1,[null,45,'T2']],['Top taşıma: >5 m %','rTasima',1,[25,35,'T2']],
+    ['Sahiplik: tamamlanan pas ort.','rSeqPas',2,[2.5,4,'T2']],['Sahiplik: ortalama süre (sn)','rSeqSure',1],['Sahiplik: pas yapılamadan biten %','rSeqBos',1,[null,25,'T2']]]
     .concat(R_KAYIP.map(([k,ad])=>['Top kaybı nedeni: '+ad+' %','rKayip_'+k,1]))
-    .concat([['PPDA (rakibin kendi %60\'ında pas / savunma eylemi)','rPpda',1],
-    ['Şut: ceza sahası içinden %','rSutKutu',1],['Şut: ortanca mesafe (m)','rSutMesafe',1],
-    ['Gol: duran toptan (korner, serbest, penaltı) %','rGolDuran',1],
-    ['Korner: 8 sn içinde gol %','rKornerGol',1],['Korner: ceza sahasındaki hücumcu','rKornerKutu',1],
-    ['Korner: geride kalanların hızı − takım ort. (özellik)','rKornerGeriHiz',2],
+    .concat([['PPDA (rakibin kendi %60\'ında pas / savunma eylemi)','rPpda',1,[7,12,'T2']],
+    ['Şut: ceza sahası içinden %','rSutKutu',1,[55,null,'T2']],['Şut: ortanca mesafe (m)','rSutMesafe',1,[14,16,'T2']],
+    ['Gol: duran toptan (korner, serbest, penaltı) %','rGolDuran',1,[25,35,'T8']],
+    ['Korner: 8 sn içinde gol %','rKornerGol',1,[3,5,'T8']],['Korner: ceza sahasındaki hücumcu','rKornerKutu',1],
+    ['Korner: geride kalanların hızı − takım ort. (özellik)','rKornerGeriHiz',2,[0,null,'T8']],
     ['Barajlı serbest vuruş: 8 sn içinde gol %','rBarajGol',1],['Barajlı serbest vuruş: barajdaki kişi','rBarajKisi',1],
-    ['Barajsız serbest vuruş (son 40 m): ceza sahasındaki hücumcu','rSerbestKutu',1],
-    ['Tehlikeli duran topta hazırlık (sn, ortanca)','rDuranHazirlik',1]]),
+    ['Barajsız serbest vuruş (son 40 m): ceza sahasındaki hücumcu','rSerbestKutu',1,[4,6,'T8']],
+    ['Tehlikeli duran topta hazırlık (sn, ortanca)','rDuranHazirlik',1,[10,14,'T8']]]),
   yeni:()=>{
     const hyp=Math.hypot,ort=L=>L.length?L.reduce((a,b)=>a+b,0)/L.length:NaN,ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b);return S[Math.floor(S.length/2)];};
     /* hareket */

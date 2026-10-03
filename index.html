@@ -88,6 +88,16 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .prg-cubuk i{display:block;height:100%;width:0;background:var(--m-vurguZemin)}
 .prg-durum{margin:0;color:var(--m-soluk)}
 .prg-hata{color:var(--m-kirmizi)}
+/* 2.8S: iki sayfa aynı yerde üst üste durur (yükseklik değişmez); gösterilmeyen görünmez */
+.prg-yaprak{display:grid}
+.prg-yaprak>.prg-sayfa{grid-area:1/1;min-width:0}
+.prg-yaprak>.prg-gizli{visibility:hidden}
+.prg-gosterge{display:flex;gap:.3em;margin-left:auto}
+.onEkran .prg-gosterge button{font:inherit;font-size:.86em;letter-spacing:.08em;padding:.1em .6em;background:var(--m-panel);border:1px solid var(--m-cizgi);color:var(--m-soluk);cursor:pointer}
+.onEkran .prg-gosterge button[aria-selected="true"]{background:var(--m-vurguZemin);border-color:var(--m-vurgu);color:#1a1203}
+.prg-lig{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:1em;align-items:start}
+.prg-sonlar{display:grid;gap:1em}
+.prg-eksik{padding:.1em 0 0}
 .onEkran .oe-tablo tbody tr:nth-child(even) td{background:rgba(40,28,12,.05)}
 .onEkran .oe-tablo tbody tr.oe-kulup td{background:color-mix(in srgb,var(--m-kulup) 18%,transparent)}
 .onEkran .oe-tablo tbody tr.oe-rakip td{background:color-mix(in srgb,var(--m-rakip) 18%,transparent)}
@@ -271,6 +281,10 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .od-altYazi{flex:1;min-width:0;display:grid;gap:.1em}
 .od-mesaj,.od-durak{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .od-durak{color:var(--k-soluk);font-size:.92em;-webkit-line-clamp:1}
+.od-durakUyari{-webkit-line-clamp:2}
+/* 2.8Q: ajandadaki seçili işin eylemleri alt şeritte; ana düğme sağda */
+.od-altDugmeler{display:flex;align-items:center;gap:.5em;flex:none}
+.oda .od-ikinci{white-space:nowrap;padding:.3em .8em .2em;background:var(--k-zemin)}
 .oda .od-ana{font-family:var(--display);font-size:2.1em;line-height:1;letter-spacing:.06em;padding:.18em 1em .08em;background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:#1a1203;white-space:nowrap}
 .oda .od-ana:active:not(:disabled){transform:translateY(.06em)}
 .od-bozuk{left:12%;right:12%;width:auto;bottom:auto}
@@ -445,6 +459,7 @@ html,body{margin:0}
 <script src="js/ekran-defter.js"></script>
 <script src="js/ekran-oda.js"></script>
 <script src="js/arayuz.js"></script>
+<script src="js/loca-giris.js"></script>
 <script src="js/ekran-mac-telefon.js"></script>
 </body>
 </html>
