@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chairman — telefon taslağı (N7)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Jersey+10&display=swap" rel="stylesheet">
+<!-- Yol haritası N7 (kullanıcı kararı 2026-10-04): telefonun tanıdık bir akıllı telefona daha çok benzemesi için GÖRSEL TASLAK.
+     Oyunun kodunu yüklemez; dört ekran yan yana durur. Kişiler ve metinler denemelerin TEST içeriğidir (araclar/test-icerik.js adları);
+     oyunda içerik yoktur. Renkler STIL.kagit paletindendir. Onaydan sonra js/ekran-telefon.js bu düzene çevrilir.
+     Sınırlar (STIL_REHBERI §7): tanıdık düzen alınır, gerçek marka arayüzü birebir kopyalanmaz; çalışmayan süs düğmesi konmaz. -->
+<style>
+:root{
+  --oda:#12110f;--yazi0:#efe7d6;--soluk0:#9a9282;--cizgi0:#2e2b26;
+  /* STIL.kagit */
+  --zemin:#f4eedf;--serit:#fbf7ec;--cizgi:#c9b994;--yazi:#26221c;--soluk:#6d6353;--vurgu:#a5620a;--vurguZemin:#ffb530;--kirmizi:#b4241c;--yesil:#2c6f28;
+  /* STIL.kagit.telefon */
+  --kasa:#1d1e22;--ekran:#f7f2e6;--gelen:#fbf7ec;--giden:#ffd27a;--gidenCizgi:#c98a1c;--mesaj:#2c6f28;--skor:#22347a;
+  --display:"Jersey 10","Arial Narrow",Impact,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --boy:14px;
+}
+:root.buyuk{--boy:17px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--oda);color:var(--yazi0)}
+body{font-family:var(--mono);font-size:14px;line-height:1.5;padding:18px 16px 48px}
+.ust{max-width:1280px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline}
+.ust h1{font-family:var(--display);font-weight:400;font-size:30px;line-height:1;margin:0;letter-spacing:.04em}
+.ust p{margin:0;color:var(--soluk0);max-width:70ch}
+.ust button{font:inherit;color:var(--yazi0);background:#1a1917;border:1px solid var(--cizgi0);border-radius:4px;padding:5px 10px;cursor:pointer}
+.ust button[aria-pressed="true"]{background:var(--vurguZemin);color:#1a1203;border-color:var(--vurguZemin)}
+.sira{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:22px 14px;align-items:start}
+figure{margin:0;display:grid;gap:10px;justify-items:center}
+figcaption{color:var(--soluk0);font-size:13px;max-width:34ch;text-align:center}
+figcaption b{color:var(--yazi0);font-weight:600;display:block}
+
+/* ---- cihaz: yuvarlak köşeli gövde, ince çerçeve, kamera adası, ana ekran çizgisi ---- */
+.cihaz{width:min(100%,300px);aspect-ratio:300/620;background:var(--kasa);border-radius:44px;padding:9px;position:relative;box-shadow:0 18px 40px rgba(0,0,0,.5),inset 0 0 0 2px #34363c}
+.cihaz::before{content:"";position:absolute;right:-3px;top:150px;width:3px;height:64px;border-radius:2px;background:#2a2b30}
+.ekran{position:relative;height:100%;border-radius:36px;overflow:hidden;background:var(--ekran);color:var(--yazi);font-size:var(--boy);display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.ada{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:84px;height:24px;border-radius:14px;background:#0c0c0e;z-index:3}
+.durum{display:flex;justify-content:space-between;align-items:center;padding:12px 22px 4px;font-weight:600;font-size:.92em;height:42px}
+.durum .sag{display:flex;gap:5px;align-items:center}
+.sinyal{display:flex;gap:2px;align-items:flex-end;height:11px}.sinyal i{width:3px;background:var(--yazi);border-radius:1px}
+.sinyal i:nth-child(1){height:4px}.sinyal i:nth-child(2){height:6px}.sinyal i:nth-child(3){height:8px}.sinyal i:nth-child(4){height:11px}
+.pil{width:23px;height:11px;border:1.5px solid var(--yazi);border-radius:3px;position:relative;padding:1px}.pil::after{content:"";position:absolute;right:-4px;top:2.5px;width:2px;height:4px;background:var(--yazi);border-radius:0 1px 1px 0}.pil i{display:block;height:100%;width:72%;background:var(--yazi);border-radius:1px}
+.govde{min-height:0;overflow:hidden;display:grid;align-content:start}
+.cizgi{height:26px;display:grid;place-items:center}.cizgi i{width:112px;height:5px;border-radius:3px;background:var(--yazi);opacity:.85}
+
+/* ---- 1. ana ekran: büyük saat ve tarih, bildirim kartları, altta sabit sıra ---- */
+.ana{background:linear-gradient(180deg,#efe6d0 0%,#f7f2e6 38%,#f1e8d4 100%)}
+.ana .govde{grid-template-rows:auto 1fr auto;height:100%}
+.tarih{text-align:center;padding-top:10px;color:var(--soluk);font-weight:500;letter-spacing:.02em}
+.saat{font-family:var(--display);font-size:5.4em;line-height:.9;text-align:center;letter-spacing:.02em;color:var(--yazi)}
+.bildirimler{display:grid;gap:8px;padding:14px 12px 0;align-content:start}
+.bildirim{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:center;background:rgba(251,247,236,.92);border:1px solid var(--cizgi);border-radius:16px;padding:9px 11px;box-shadow:0 2px 6px rgba(40,28,12,.12)}
+.bildirim .simge{grid-row:span 2;grid-column:1;width:2.3em;height:2.3em;border-radius:.6em}
+.bildirim b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bildirim time{color:var(--soluk);font-size:.82em}
+.bildirim .onizle{grid-column:2/-1;color:var(--soluk);font-size:.9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bildirim .bekliyor{color:var(--kirmizi);font-weight:600}
+.sabit{margin:0 12px 2px;padding:10px 14px;border-radius:26px;background:rgba(201,185,148,.42);display:flex;justify-content:center;gap:26px}
+.uyg{display:grid;justify-items:center;gap:4px;font-size:.78em;font-weight:500;color:var(--yazi)}
+.simge{position:relative;width:3.5em;height:3.5em;border-radius:.9em;display:grid;place-items:center;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.simge.m{background:var(--mesaj)}.simge.s{background:var(--skor)}
+.simge svg{width:58%;height:58%}
+.rozet{position:absolute;top:-5px;right:-6px;min-width:1.55em;height:1.55em;padding:0 .35em;border-radius:1em;background:var(--kirmizi);color:#fff;font-size:.74em;font-weight:600;display:grid;place-items:center;border:2px solid var(--ekran)}
+
+/* ---- ortak uygulama başlığı ---- */
+.baslik{display:flex;align-items:center;gap:8px;padding:2px 14px 8px;border-bottom:1px solid var(--cizgi);min-height:44px}
+.geri{font:inherit;color:var(--skor);background:none;border:0;padding:4px 2px;display:flex;align-items:center;gap:2px;font-weight:500}
+.geri::before{content:"";width:.6em;height:.6em;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-right:2px}
+.buyukBaslik{font-family:var(--display);font-weight:400;font-size:2.5em;line-height:1;padding:6px 16px 8px;letter-spacing:.02em}
+
+/* ---- 2. Mesajlar: büyük başlık, kişi satırları ---- */
+.kisi{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:9px 14px 9px 8px;border-bottom:1px solid rgba(201,185,148,.6)}
+.kisi .nokta{width:9px;height:9px;border-radius:50%;background:var(--skor);grid-row:1/span 2;margin-right:-4px}
+.kisi .nokta.yok{background:transparent}
+.portre{width:2.9em;height:2.9em;border-radius:50%;image-rendering:pixelated;border:1px solid var(--cizgi);background:var(--serit);grid-row:1/span 2}
+.kisi{grid-template-columns:auto auto minmax(0,1fr) auto}
+.kisi b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kisi time{color:var(--soluk);font-size:.82em;white-space:nowrap}
+.kisi .on{grid-column:3/-1;color:var(--soluk);font-size:.9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kisi .etiket{grid-column:3/-1;color:var(--kirmizi);font-size:.68em;font-weight:600;letter-spacing:.06em;white-space:nowrap}
+
+/* ---- 3. konuşma: üstte kişi, baloncuklar, altta iki cevap ---- */
+.konusma .govde{grid-template-rows:auto minmax(0,1fr) auto;height:100%}
+.kisiBas{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 12px 6px;border-bottom:1px solid var(--cizgi)}
+.kisiBas .orta{display:grid;justify-items:center;gap:1px;font-size:.82em;font-weight:600}
+.kisiBas .orta .portre{width:2.3em;height:2.3em}
+.kisiBas small{font-weight:400;color:var(--soluk);font-size:.9em}
+.akis{display:grid;gap:6px;padding:10px 12px;align-content:end;overflow:hidden}
+.gun{justify-self:center;color:var(--soluk);font-size:.74em;letter-spacing:.04em}
+.balon{max-width:82%;padding:7px 11px;border-radius:17px;line-height:1.35;font-size:.94em}
+.balon.g{justify-self:start;background:var(--gelen);border:1px solid var(--cizgi);border-bottom-left-radius:5px}
+.balon.c{justify-self:end;background:var(--giden);border:1px solid var(--gidenCizgi);border-bottom-right-radius:5px}
+.cevap{border-top:1px solid var(--cizgi);background:var(--serit);padding:8px 10px 4px;display:grid;gap:6px}
+.cevap .soru{font-size:.8em;color:var(--soluk)}
+.cevap .ikili{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cevap button{font:inherit;text-align:left;background:#fff;border:1px solid var(--cizgi);border-bottom-width:3px;border-radius:12px;padding:8px 10px;display:grid;gap:2px;color:var(--yazi)}
+.cevap button b{font-weight:600;font-size:1.02em;line-height:1.15}
+.cevap button small{color:var(--soluk);font-size:.78em;line-height:1.25}
+.cevap .dosya{justify-self:center;font-size:.8em;color:var(--skor);padding-bottom:2px}
+
+/* ---- 4. Canlı Skor: her karşılaşma tek satır (N2) ---- */
+.bolum{padding:10px 14px 4px;font-size:.74em;letter-spacing:.1em;text-transform:uppercase;color:var(--vurgu);font-weight:600}
+.mac{display:grid;grid-template-columns:3.2em minmax(0,1fr) auto minmax(0,1fr);gap:.5em;align-items:center;margin:0 10px;padding:9px 10px;white-space:nowrap;background:var(--serit);border:1px solid var(--cizgi);border-radius:12px}
+.mac small{color:var(--soluk);font-size:.86em}.mac small.canli{color:var(--kirmizi);font-weight:600}
+.mac span{overflow:hidden;text-overflow:ellipsis}.mac .ev{text-align:right}
+.mac b{font-family:var(--display);font-weight:400;font-size:1.35em;line-height:1}
+.ist{margin:8px 10px 0;border:1px solid var(--cizgi);border-radius:12px;overflow:hidden;background:#fff}
+.ist div{display:grid;grid-template-columns:2.6em 1fr 2.6em;align-items:center;padding:6px 10px;border-bottom:1px solid rgba(201,185,148,.5);font-variant-numeric:tabular-nums}
+.ist div:last-child{border-bottom:0}.ist i{font-style:normal;text-align:center;color:var(--soluk);font-size:.9em}.ist span:last-child{text-align:right}
+.ist .bas{background:var(--zemin);font-weight:600;font-size:.86em}
+.notlar{max-width:1280px;margin:26px auto 0;color:var(--soluk0);display:grid;gap:6px}
+.notlar h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0;color:var(--yazi0);letter-spacing:.04em}
+.notlar ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+</style>
+</head>
+<body>
+<div class="ust">
+  <h1>TELEFON TASLAĞI · N7</h1>
+  <p>Dört ekran yan yana. Kişiler ve metinler TEST içeriğidir; oyunda içerik yok. Onayınızdan sonra oyundaki telefon bu düzene çevrilir.</p>
+  <button type="button" id="yazi" aria-pressed="false">Büyük yazı</button>
+</div>
+
+<div class="sira">
+  <!-- 1. ana ekran -->
+  <figure>
+    <div class="cihaz"><div class="ekran ana"><div class="ada"></div>
+      <div class="durum"><span>08:00</span><span class="sag"><span class="sinyal"><i></i><i></i><i></i><i></i></span><span class="pil"><i></i></span></span></div>
+      <div class="govde">
+        <div><div class="tarih">Pazartesi, 23 Kasım</div><div class="saat">08:00</div></div>
+        <div class="bildirimler">
+          <div class="bildirim"><span class="simge m"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></span><b>Berk Deneme</b><time>07:42</time><span class="onizle"><span class="bekliyor">Cevap bekliyor</span> · Deneme teklifi hazır, bakabilir misin?</span></div>
+          <div class="bildirim"><span class="simge m"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></span><b>Ayla Deneme</b><time>dün</time><span class="onizle">Kasa defteri masanda.</span></div>
+          <div class="bildirim"><span class="simge s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5l4 3-1.5 4.5h-5L8 10.5z" fill="currentColor" stroke="none"/></svg></span><b>Canlı Skor</b><time>Cmt</time><span class="onizle">Demirkapı SK – Akdeniz FK · 19:00</span></div>
+        </div>
+        <div class="sabit">
+          <div class="uyg"><span class="simge m"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg><span class="rozet">2</span></span>Mesajlar</div>
+          <div class="uyg"><span class="simge s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5l4 3-1.5 4.5h-5L8 10.5z" fill="currentColor" stroke="none"/></svg></span>Canlı Skor</div>
+        </div>
+      </div>
+      <div class="cizgi"><i></i></div>
+    </div></div>
+    <figcaption><b>1 · Ana ekran</b>Büyük saat ve tarih, altında bildirim kartları (dokununca o konuşma açılır), en altta sabit sırada iki uygulama. Olmayan uygulamanın simgesi yok.</figcaption>
+  </figure>
+
+  <!-- 2. Mesajlar -->
+  <figure>
+    <div class="cihaz"><div class="ekran"><div class="ada"></div>
+      <div class="durum"><span>08:00</span><span class="sag"><span class="sinyal"><i></i><i></i><i></i><i></i></span><span class="pil"><i></i></span></span></div>
+      <div class="govde">
+        <div class="buyukBaslik">Mesajlar</div>
+        <div class="kisi"><i class="nokta"></i><canvas class="portre" width="16" height="16" data-p="1"></canvas><b>Berk Deneme</b><time>07:42</time><span class="on">Deneme teklifi hazır, bakabilir misin?</span><span class="etiket">CEVAP BEKLİYOR</span></div>
+        <div class="kisi"><i class="nokta"></i><canvas class="portre" width="16" height="16" data-p="2"></canvas><b>Ayla Deneme</b><time>dün</time><span class="on">Kasa defteri masanda.</span></div>
+        <div class="kisi"><i class="nokta yok"></i><canvas class="portre" width="16" height="16" data-p="3"></canvas><b>Cem Deneme</b><time>Cuma</time><span class="on">Tamam başkanım.</span></div>
+      </div>
+      <div class="cizgi"><i></i></div>
+    </div></div>
+    <figcaption><b>2 · Mesajlar</b>Büyük başlık; yuvarlak portre, kalın ad, tek satır önizleme, sağda saat; okunmamışta nokta, cevap bekleyende kırmızı etiket.</figcaption>
+  </figure>
+
+  <!-- 3. konuşma -->
+  <figure>
+    <div class="cihaz"><div class="ekran konusma"><div class="ada"></div>
+      <div class="durum"><span>08:00</span><span class="sag"><span class="sinyal"><i></i><i></i><i></i><i></i></span><span class="pil"><i></i></span></span></div>
+      <div class="govde">
+        <div class="kisiBas"><button type="button" class="geri" aria-label="Mesajlar">Geri</button><div class="orta"><canvas class="portre" width="16" height="16" data-p="1"></canvas>Berk Deneme<small>destekçi</small></div><span></span></div>
+        <div class="akis">
+          <div class="gun">Bugün 07:40</div>
+          <div class="balon g">Günaydın başkanım. Deneme teklifimi gönderdim.</div>
+          <div class="balon g">Deneme teklifi hazır, bakabilir misin?</div>
+          <div class="gun">Dün</div>
+          <div class="balon c">Yarın bakarım.</div>
+        </div>
+        <div class="cevap">
+          <div class="soru">Deneme teklifi · son cevap bugün 18:00</div>
+          <div class="ikili">
+            <button type="button"><b>Kabul et</b><small>Para yarın kasada; bir pano onların olur.</small></button>
+            <button type="button"><b>Saymana devret</b><small>15 dk · Ayla görüşür.</small></button>
+          </div>
+          <div class="dosya">Dosyayı aç ›</div>
+        </div>
+      </div>
+      <div class="cizgi"><i></i></div>
+    </div></div>
+    <figcaption><b>3 · Konuşma</b>Üstte geri düğmesi, portre ve ad; gelen gri, giden kulüp sarısı baloncuk. Klavye yerine altta iki cevaplı kart (kural değişmedi).</figcaption>
+  </figure>
+
+  <!-- 4. Canlı Skor -->
+  <figure>
+    <div class="cihaz"><div class="ekran"><div class="ada"></div>
+      <div class="durum"><span>19:17</span><span class="sag"><span class="sinyal"><i></i><i></i><i></i><i></i></span><span class="pil"><i></i></span></span></div>
+      <div class="govde">
+        <div class="buyukBaslik">Canlı Skor</div>
+        <div class="bolum">Bugün · 3. Lig 13. hafta</div>
+        <div class="mac"><small class="canli">17'</small><span class="ev">Demirkapı</span><b>1 – 0</b><span>Akdeniz</span></div>
+        <div class="ist">
+          <div class="bas"><span>DEM</span><i></i><span>AKD</span></div>
+          <div><span>4</span><i>Şut</i><span>2</span></div>
+          <div><span>2</span><i>İsabetli şut</i><span>1</span></div>
+          <div><span>54%</span><i>Topa sahip olma</i><span>46%</span></div>
+          <div><span>1</span><i>Korner</i><span>0</span></div>
+          <div><span>3</span><i>Faul</i><span>4</span></div>
+          <div><span>0</span><i>Sarı kart</i><span>1</span></div>
+        </div>
+      </div>
+      <div class="cizgi"><i></i></div>
+    </div></div>
+    <figcaption><b>4 · Canlı Skor</b>Her karşılaşma tek satır (N2'de uygulandı). Kendi maçının istatistik kartı; diğer maçlar bağlandığında aynı satır kalıbıyla listeye gelir.</figcaption>
+  </figure>
+</div>
+
+<div class="notlar">
+  <h2>BUGÜNKÜ TELEFONA GÖRE DEĞİŞENLER</h2>
+  <ul>
+    <li>Cihaz gövdesi: yuvarlak köşeler, ince çerçeve, üstte kamera adası, altta ana ekran çizgisi (dokununca ana ekrana döner).</li>
+    <li>Durum çubuğu: solda oyun saati, sağda sinyal ve pil (süs; bilgi taşımaz).</li>
+    <li>Ana ekran: büyük saat ve tarih, bildirim kartları, altta sabit sıra. Bugün iki büyük düğme var.</li>
+    <li>Mesajlar: büyük başlık ve yuvarlak portreler. Konuşmada kişi üstte ortada. Kurallar aynı: iki cevap, “Dosyayı aç”, maçta cevap yok.</li>
+    <li>Aynı kalanlar: açık kâğıt tonları, okunur yazı boyu (masaüstünde dar gerçek telefon ölçeğine zorlanmaz), kurgusal kimlik; gerçek bir markanın arayüzü kopyalanmadı.</li>
+  </ul>
+</div>
+
+<script>
+/* 16×16 piksel portre: oyundaki kodla çizilen portrelerin (js/portre.js) yerini tutan basit örnek */
+const P={1:{ten:'#d9a679',sac:'#1f1a17',giysi:'#22347a',biyik:true},2:{ten:'#f0c9a0',sac:'#5a3a22',giysi:'#b4241c',uzun:true},3:{ten:'#b98257',sac:'#8f8a84',giysi:'#2c6f28',kel:true}};
+for(const c of document.querySelectorAll('canvas.portre')){const p=P[c.dataset.p],g=c.getContext('2d'),k=(r,x,y,w,h)=>{g.fillStyle=r;g.fillRect(x,y,w,h);};
+  k('#e9e0cb',0,0,16,16);k(p.giysi,2,12,12,4);k('#fbf7ec',7,12,2,2);k(p.ten,5,4,6,8);k(p.ten,7,11,2,2);
+  if(!p.kel){k(p.sac,4,2,8,3);k(p.sac,4,4,1,3);k(p.sac,11,4,1,3);}else{k(p.sac,4,5,1,2);k(p.sac,11,5,1,2);}
+  if(p.uzun){k(p.sac,3,4,2,7);k(p.sac,11,4,2,7);}
+  k('#26221c',6,7,1,1);k('#26221c',9,7,1,1);k(p.biyik?p.sac:'#a5624a',7,10,2,1);}
+const d=document.getElementById('yazi');
+d.onclick=()=>{const a=document.documentElement.classList.toggle('buyuk');d.setAttribute('aria-pressed',a?'true':'false');};
+if(new URLSearchParams(location.search).get('yazi')==='buyuk')d.onclick();
+</script>
+</body>
+</html>

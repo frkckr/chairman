@@ -3,7 +3,7 @@
    Gövde yönü motordaki gerçek bakış yönünden (yon) gelir. Pozlar sürekli karışır: koşu döngüsü hıza bağlı dalga; vuruşta
    geri salınım ve takip (vuran ayak tarafına göre), kontrol, göğüs, kafa sıçrayışı, müdahale, kayma, düşme ve kalkma,
    kaleci uçuşu ve tutuşu, taç, itiraz, sevinç; hakemde düdük, yön, avantaj, kart, penaltı; yan hakemde bayrak.
-   Burada ayrıca: konilerdeki yedek toplar ve dışarıda kalan toplar (top toplayıcı 2.8O'da kaldırıldı), yedek kulübeleri, teknik direktörler, antrenörler, dördüncü hakem ve uzatma
+   Burada ayrıca: top toplayıcı çocuklar ve ellerindeki yedek toplar, dışarıda kalan toplar (N10; 2.8O'daki koniler kalktı), yedek kulübeleri, teknik direktörler, antrenörler, dördüncü hakem ve uzatma
    tabelası, fotoğrafçılar ve flaşları, antrenman topları ve koniler, yazı tura parası, top, gölgeler, tribünün dolması ve ayağa
    kalkması, tribün heyecanı, canlı skor tabelası ve başkanın bakışı. Yazılı spiker/radyo satırı 2.8A'da kaldırıldı.
    Faz 0 (2026-10-03): oyuncu pozları ve aktör yerleşimi js/animasyon.js'te (E akışı), başkanın bakışı ve kamera js/kamera.js'te (A akışı). */
@@ -47,6 +47,8 @@ const DORDUNCU=(()=>{let d=null;mac.kenar.forEach((p,i)=>{
   else if(p.kind==='dorduncu')K={...KIT.hakem,num:0,skin:STIL.tenler[0],hair:'#3c2616',style:'short'};
   else K=kitKaydi(p.kind==='foto'?'foto':p.team?'antrenorDeplasman':'antrenorEv',bak,0);
   const a=aktorKur(K,p,K.h);AKTORLER.push(a);if(p.kind==='dorduncu')d=a;});return d;})();
+/* ---- top toplayıcılar (N10): sarı yelekli çocuklar; ellerindeki yedek top aşağıda EK_TOPLAR ile çizilir ---- */
+mac.topcular.forEach((k,i)=>AKTORLER.push(aktorKur({...KIT.topcu,num:0,skin:STIL.tenler[(i*3)%5],hair:SACLAR[(i*2)%5],style:i%4?'short':'curly',h:STIL.topcuBoy.h,w:STIL.topcuBoy.w},k,STIL.topcuBoy.h)));
 /* uzatma tabelası: dördüncü hakemin elinde, yeşil ışıklı rakamlar */
 const TABELA_CV=mk(32,16),TABELA_G=TABELA_CV.getContext('2d'),TABELA_TX=tx(TABELA_CV,'n');
 const UZATMA_TABELA=(()=>{const g=new THREE.Group(),kasa=new THREE.Mesh(new THREE.BoxGeometry(0.62,0.34,0.05),LAM({color:0x141416}));
@@ -151,14 +153,14 @@ function macKare(dt){
   {const w=DORDUNCU.w.tabela||0;UZATMA_TABELA.visible=w>0.5;if(UZATMA_TABELA.visible){UZATMA_TABELA.position.set(DORDUNCU.x,1.95+0.25*w,DORDUNCU.z+0.2);UZATMA_TABELA.rotation.set(0,Math.PI,0);}}
   /* top (js/animasyon.js) */
   topCiz(b,al,bx,bz,dts,T);
-  /* dışarıda kalan toplar ve konilerin üstündeki yedek toplar */
+  /* dışarıda kalan toplar, antrenman topları ve top toplayıcıların elindeki yedek toplar */
   {let n=0;const E=EK_TOPLAR;
    for(const o of mac.disToplar){if(n>=80)break;EK_M.makeTranslation(o.x,TOP_R+o.y,o.z-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
    for(const o of mac.sen.toplar){if(n>=80)break;EK_M.makeTranslation(o.x,TOP_R+o.y,o.z-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
-   for(const k of mac.koniler){if(!k.top||n>=80)continue;EK_M.makeTranslation(k.x,0.2+TOP_R,k.z-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
+   for(const k of mac.topcular){if(!k.top||b.tasiyan===k||n>=80||k.z<mac.tunel.z-0.8)continue;const c=Math.cos(k.yon),s=Math.sin(k.yon);
+     EK_M.makeTranslation(k.x+c*0.22,0.62,k.z+s*0.22-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
    E.count=n;E.instanceMatrix.needsUpdate=true;
    let c=0;for(const k of mac.sen.koniler){if(c>=64)break;EK_M.makeTranslation(k.x,0.12,k.z-MOTOR_Z);KONILER.setMatrixAt(c++,EK_M);}
-   for(const k of mac.koniler){if(c>=64)break;EK_M.makeTranslation(k.x,0.12,k.z-MOTOR_Z);KONILER.setMatrixAt(c++,EK_M);}
    KONILER.count=c;KONILER.instanceMatrix.needsUpdate=true;}
   /* flaşlar: bir an parlar, söner */
   for(const F of FLASLAR){F.t+=dts;F.f.visible=F.t<0.14;if(F.f.visible)F.f.material.opacity=1-F.t/0.14;}

@@ -6,8 +6,8 @@
    Oyuncunun gerçek bir bakış yönü (yon) vardır ve dönüşü sınırlıdır: hızlı koşarken yavaş döner, geri geri koşamaz.
    Topla her iş bir eylemdir: vuruşta önce hazırlık (hedefe dön, topu vuran ayağın önüne al), sonra geri salınım ve temas, sonra takip.
    Top fiziği: yuvarlanma, sekme, hava direnci, falso; direk, üst direk, ağ. Top sürme dokunuşlarla olur, aradaki anlarda top serbesttir.
-   Top toplayıcı yoktur (2.8O/MM0b, kullanıcı kararı 2026-10-02): dışarı çıkan top yuvarlanıp durur; yakında durursa atan alır, uzağa giderse
-   kenar boyunca ve kale arkalarında konilerin üstündeki yedek toplardan en yakını kullanılır (js/mac-kurallar.js).
+   Top toplayıcılar (N10, kullanıcı kararı 2026-10-04): dışarı çıkan top yuvarlanıp panolarda durur; taç, korner ve autta en yakın çocuk
+   elindeki yedek topu atana verir, eski topu boştaki çocuk toplar (js/mac-kurallar.js). 2.8O/MM0b'deki koniler kaldırıldı.
    Diziliş ve topsuz oyun js/mac-dizilis.js'te, topla karar js/mac-karar.js'te, kurallar ve duran toplar js/mac-kurallar.js'tedir.
    Faz 0 (2026-10-03) dosya sahipliği: hareket ve beden js/mac-hareket.js, ikili mücadele/faul/avantaj js/mac-mudahale.js, vuruş/pas/şut/ilk dokunuş
    js/mac-topla.js, kaleci js/mac-kaleci.js; bu dosya çekirdektir (top fiziği, aşamalar, temas sırası). Ayrıntı TEKNIK_PLAN §8.
@@ -114,7 +114,7 @@ class Match{
       for(let n=0;n<11;n++){const p=this.oyuncuKur(t,n,this.kadro&&this.kadro[t].oyuncular[n],diz.mevkiler[n]);this.players.push(p);this.teams[t].push(p);}}
     /* hakemler: orta hakem, sağ yarının yan hakemi (karşı taç), sol yarının yan hakemi (ana tribün tacı) */
     this.refs=[this.hakemKur('ref',-6,26),this.hakemKur('lin',20,PW+1.3),this.hakemKur('lin',-20,-1.3)];
-    this.koniler=this.konileriKur();this.disToplar=[];
+    this.topcular=this.topculariKur();this.disToplar=[];
     this.yedekleriKur();this.kenarKur();
     this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,sonTakim:0,hedefOyuncu:null,sut:null,pas:null,
       surum:0,agda:false,direk:false,px:0,py:0,pz:0};
@@ -126,7 +126,7 @@ class Match{
     return Object.assign({tur,kind:null,team:null,n:-1,rol:null,mevki:null,name:'',no:0,kaptan:false,kayit:null,oz:null,ayak:'sag',boy:1,
       x,z,vx:0,vz:0,spd:0,yon:0,maxSpd:7,tx:x,tz:z,hizOran:1,bak:null,yonHedef:null,eylem:null,kickCd:0,kararT:0,dokunT:0,surus:null,
       oyunda:false,cikiyor:false,kart:0,yorgunluk:0,destek:null,kosu:null,gorev:null,sevinc:false,hedef:null,tutus:null,_cikis:null,
-      ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,kartSira:null,gir:0,_kar:null,oturuyor:false,koltuk:null,cikti:false,poz:null,sg:null,yuk:0,zipla:null,
+      ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,topBos:0,kartSira:null,gir:0,_kar:null,oturuyor:false,koltuk:null,cikti:false,poz:null,sg:null,yuk:0,zipla:null,
       /* motor → çizim sözleşmesi (Faz 0; TEKNIK_PLAN §8): tavır, bakış yönü, denge, sprint enerjisi, son dokunuş */
       tavir:null,bakisYon:null,denge:1,enerji:1,sonDokunus:null,
       /* T1 (insan gibi hareket): efor 0–1, hız kipi (dur/yuru/tiris/kos/hizli/depar; çizim okur), son düşünme anı (sn) */
@@ -188,7 +188,7 @@ class Match{
     const dinlen=this.phase==='halftime'?0.004:this.phase==='durus'||this.phase==='goal'||this.phase==='kickoff'?0.0015:0;
     for(const p of this.players){if(p.zipla){const z=p.zipla;z.t+=dt;const f=z.t/z.sure;p.yuk=f<1?z.tepe*4*f*(1-f):0;if(f>=1)p.zipla=null;}
       if(dinlen&&p.yorgunluk>0)p.yorgunluk=Math.max(0,p.yorgunluk-dinlen*dt);}
-    this.konilerAdim(dt);this.disToplarAdim(dt);
+    this.topcuAI(dt);this.disToplarAdim(dt);
     if(saat)this.devreSonuKontrol();
   }
 
@@ -424,7 +424,11 @@ class Match{
   disToplarAdim(dt){
     for(let i=this.disToplar.length-1;i>=0;i--){const o=this.disToplar[i];o.t+=dt;
       topFizikAdim(o,dt,false,this.R);
-      if(!this.panoSiniri(o)){this.disToplar.splice(i,1);continue;}}
+      if(!this.panoSiniri(o)){this.disToplar.splice(i,1);continue;}
+      /* panodan seken eski top sahaya geri yuvarlanmaz: çizginin 0,8 m dışında durur (N10; oyunda ikinci top olmaz) */
+      if(Math.abs(o.x)<PL&&o.z>0&&o.z<PW){const dx=PL-Math.abs(o.x),dz=Math.min(o.z,PW-o.z);
+        if(dx<dz)o.x=Math.sign(o.x||1)*(PL+0.8);else o.z=o.z<MZ?-0.8:PW+0.8;
+        o.vx=o.vy=o.vz=0;o.y=0;}}
     while(this.disToplar.length>4)this.disToplar.shift();
   }
 

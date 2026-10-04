@@ -7,7 +7,8 @@
      İkiden fazla seçenek yalnız eski kayıtların kararlarında görülür (js/uyum-icerik2.js); aynı kart onları sırayla dizer.
    telefonCiz(k, T, s)      T: {ekran:'ana'|'mesajlar'|'konusma'|'skor', kisi, skorAc}. s: {macta, mac, secimler, onay, kapali, kasa}
      Ana ekran: saat ve iki uygulama (Mesajlar, Canlı Skor). Mesajlar: kişi listesi → tek konuşma. Canlı Skor: günün maçları → ayrıntı.
-     Maçta görünüm aynıdır; cevap verilmez (maç içi kariyer cevabı Aşama 3'te). Diğer maçların verisi 3.8'e kadar bağlı değildir. */
+     Maçta görünüm aynıdır; cevap verilmez (maç içi kariyer cevabı Aşama 3'te). Diğer maçların verisi 3.8'e kadar bağlı değildir;
+     bağlanınca aynı tek satır kalıbıyla listeye gelirler, eksikleri için uyarı yazılmaz (N2, kullanıcı kararı 2026-10-04). */
 const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 /* bileşenin görünüşü: oda (.oda) ve maç telefonu (.macTelefon) içinde aynı. Renkler STIL.kagit'ten (--k-*), telefonunkiler STIL.kagit.telefon'dan.
    Masaüstü kopyası yalnız js/ klasörünü taşıdığı için stil burada belgeye eklenir */
@@ -85,9 +86,13 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .tel-bos{color:var(--k-soluk);text-align:center;padding:1em 0}
 .tel-skor{display:grid;gap:.45em}
 .tel-skor h5{margin:0;font-size:.8em;letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu)}
-.tel .tel-mac{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.2em .6em;width:100%;text-align:center;padding:.4em .5em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-radius:.4em}
-.tel-mac b{font-family:var(--display);font-weight:400;font-size:1.7em;line-height:1}
-.tel-mac small{grid-column:1/-1;color:var(--k-soluk)}
+/* N2 (2026-10-04): her karşılaşma tek satır: saat ya da dakika/durum · ev sahibi · skor · deplasman; sığmayan ad kesilir, satır kaymaz */
+.tel .tel-mac{display:grid;grid-template-columns:3.4em minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.5em;width:100%;padding:.45em .5em;white-space:nowrap;line-height:1.2;background:var(--k-serit);border:1px solid var(--k-cizgi);border-radius:.4em}
+.tel-mac span{overflow:hidden;text-overflow:ellipsis}
+.tel-mac .tel-macEv{text-align:right}.tel-mac .tel-macDep{text-align:left}
+.tel-mac b{font-family:var(--display);font-weight:400;font-size:1.3em;line-height:1}
+.tel-mac small{color:var(--k-soluk);text-align:left;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
+.tel-mac small.tel-macCanli{color:var(--k-kirmizi);font-weight:600}
 .tel-ist{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 .tel-ist th,.tel-ist td{padding:.15em .3em;border-bottom:1px solid var(--k-cizgi);text-align:center}
 .tel-ist tbody th{font-weight:400;color:var(--k-soluk)}
@@ -99,6 +104,12 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const TEL_GUNLER=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
 const telGunAdi=t=>{const [y,a,g]=t.split('-').map(Number);return TEL_GUNLER[new Date(Date.UTC(y,a-1,g)).getUTCDay()];};
 const telTarih=(k,t)=>t===k.tarih?'Bugün':t===tarihEkle(k.tarih,-1)?'Dün':gunAyYazi(t)+' '+telGunAdi(t);
+/* Canlı Skor satırı (N2): tek satır. m: {sol: saat ya da dakika/durum, canli, ev, orta: skor ya da “–”, dep, durum: okunur durum}; nitelik verilirse satır düğmedir */
+function telMacSatiri(m,nitelik){
+  const ic='<small'+(m.canli?' class="tel-macCanli"':'')+'>'+yazT(m.sol)+'</small><span class="tel-macEv">'+yazT(m.ev)+'</span><b>'+yazT(m.orta)+'</b><span class="tel-macDep">'+yazT(m.dep)+'</span>';
+  const baslik=' title="'+yazT(m.ev+' – '+m.dep+' · '+m.durum)+'"';
+  return nitelik?'<button type="button" class="tel-mac" '+nitelik+baslik+'>'+ic+'</button>':'<div class="tel-mac"'+baslik+'>'+ic+'</div>';
+}
 
 /* ---- karar kartı ---- */
 function kararKarti(k,isId,s={}){
@@ -186,15 +197,17 @@ function telefonCiz(k,T,s={}){
     ic='<header class="tel-baslik"><button type="button" class="tel-geri" data-eylem="telEv" aria-label="Ana ekran">◂</button><h4>Canlı Skor</h4></header><div class="tel-skor">';
     if(s.mac){
       const M=s.mac;
-      ic+='<h5>Bugün</h5><button type="button" class="tel-mac" data-eylem="skorAc" aria-expanded="'+(T.skorAc?'true':'false')+'"><span>'+yazT(M.ev)+'</span><b>'+yazT(M.skor)+'</b><span>'+yazT(M.dep)+'</span><small>'+yazT(M.durum)+'</small></button>';
+      ic+='<h5>Bugün</h5>'+telMacSatiri({sol:M.kisaDurum||M.durum,canli:!!M.canli,ev:M.ev,orta:M.skor,dep:M.dep,durum:M.durum},'data-eylem="skorAc" aria-expanded="'+(T.skorAc?'true':'false')+'"');
       if(T.skorAc&&M.ist)ic+='<table class="tel-ist"><thead><tr><th>'+yazT(M.evKisa)+'</th><th></th><th>'+yazT(M.depKisa)+'</th></tr></thead><tbody>'+
         M.ist.map(r=>'<tr><td>'+yazT(r[1])+'</td><th scope="row">'+yazT(r[0])+'</th><td>'+yazT(r[2])+'</td></tr>').join('')+'</tbody></table>';
     }else if(k){
       const mac=bekleyenIsler(k).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu');
-      ic+=mac?(mac.tarih===k.tarih?'<h5>Bugün</h5><div class="tel-mac"><span>'+yazT(mac.veri.baslik.replace(/^Maç: /,''))+'</span><small>'+saatYazi(mac.dakika)+' · başlamadı</small></div>'
-        :'<p class="tel-bos">Bugün maç yok. Sıradaki: '+yazT(gunAyYazi(mac.tarih)+' '+telGunAdi(mac.tarih)+' '+saatYazi(mac.dakika))+' · '+yazT(mac.veri.baslik.replace(/^Maç: /,''))+'</p>'):'<p class="tel-bos">Yaklaşan maç yok.</p>';
+      if(mac){const [ev,dep]=mac.veri.baslik.replace(/^Maç: /,'').split(' – '),bugun=mac.tarih===k.tarih;
+        ic+=(bugun?'<h5>Bugün</h5>':'<p class="tel-bos">Bugün maç yok.</p><h5>Sıradaki · '+yazT(telGunAdi(mac.tarih)+' '+gunAyYazi(mac.tarih))+'</h5>')+
+          telMacSatiri({sol:saatYazi(mac.dakika),ev,orta:'–',dep:dep||'',durum:'başlamadı'});}
+      else ic+='<p class="tel-bos">Yaklaşan maç yok.</p>';
     }
-    ic+='<p class="tel-not">Diğer maçların verisi henüz bağlı değil.</p></div>';
+    ic+='</div>';
   }
   return'<div class="tel" data-ekran="'+(T.ekran||'ana')+'">'+ust+'<div class="tel-govde">'+ic+'</div><div class="tel-alt"><button type="button" class="tel-ev" data-eylem="telEv" aria-label="Ana ekran"></button></div></div>';
 }

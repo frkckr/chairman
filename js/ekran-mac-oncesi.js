@@ -69,11 +69,14 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
         '<div class="prg-sonlar">'+sonTaraf(TARAF[0])+sonTaraf(TARAF[1])+'</div></div>'+
     '</div>'+
     '<footer class="prg-alt"><div class="prg-hazirlik"><span class="prg-etiket">Maç öncesi hazırlık</span><div class="prg-cubuk" role="progressbar" aria-label="Maç öncesi hazırlık" aria-valuemin="0" aria-valuemax="'+STIL.program.hazirlikSn+'" aria-valuenow="0"><i></i></div>'+
-      '<p class="prg-durum" aria-live="polite"></p></div><button type="button" class="oe-ilerle" id="btnIlerle" disabled title="Maç gününü başlat">Maça geç ▸</button></footer></div>';
+      '<p class="prg-durum" aria-live="polite"></p></div>'+
+      /* N3 (kullanıcı kararı 2026-10-04): GEÇİCİ test düğmesi; 10 sn hazırlığı beklemeden geçer. Yayından önce test görünümüyle birlikte kaldırılır */
+      '<button type="button" class="prg-atla" id="btnBeklemedenGec" title="Test aşaması: hazırlık süresini beklemeden maça geçer (yayından önce kaldırılacak)"><small>TEST</small> Beklemeden geç</button>'+
+      '<button type="button" class="oe-ilerle" id="btnIlerle" disabled title="Maç gününü başlat">Maça geç ▸</button></footer></div>';
 
   /* hazırlık: en az hazirlikSn etkin süre + gerçek kaynak hazırlığı; ikisi de olmadan geçiş yok */
-  const baskanDugmeleri=$('baskanDugmeleri'),btnIlerle=$('btnIlerle'),durumP=E.querySelector('.prg-durum'),cubuk=E.querySelector('.prg-cubuk'),dolgu=cubuk.firstChild;
-  const P={acik:false,gecen:0,son:0,yazi:'',kaydir:0,sayfa:-1,fontlar:!(document.fonts&&document.fonts.ready)};
+  const baskanDugmeleri=$('baskanDugmeleri'),btnIlerle=$('btnIlerle'),btnAtla=$('btnBeklemedenGec'),durumP=E.querySelector('.prg-durum'),cubuk=E.querySelector('.prg-cubuk'),dolgu=cubuk.firstChild;
+  const P={acik:false,gecen:0,son:0,yazi:'',kaydir:0,sayfa:-1,atla:false,fontlar:!(document.fonts&&document.fonts.ready)};
   /* gösterilen sayfa: hazırlık sayacından (etkin süre); göstergeye tıklamak yalnız kaydırmayı değiştirir */
   const sayfalar=[...E.querySelectorAll('.prg-sayfa')],gosterge=[...E.querySelectorAll('.prg-gosterge button')];
   const sayfaNo=()=>(Math.floor(P.gecen/STIL.program.sayfaSn)+P.kaydir)%2;
@@ -93,7 +96,10 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
     const oran=Math.min(1,P.gecen/STIL.program.hazirlikSn),n=Math.floor(Math.min(P.gecen,STIL.program.hazirlikSn));
     dolgu.style.width=(oran*100).toFixed(1)+'%';if(cubuk.getAttribute('aria-valuenow')!==String(n))cubuk.setAttribute('aria-valuenow',String(n));
     if(btnIlerle.disabled===hazir)btnIlerle.disabled=!hazir;
+    const atlaKapali=!!hata||duraklatmaVar();if(btnAtla.disabled!==atlaKapali)btnAtla.disabled=atlaKapali;
     sayfaYaz();
+    /* “Beklemeden geç” basıldıysa: kaynaklar hazır olur olmaz geçilir */
+    if(P.atla&&hazir){P.atla=false;ilerle();}
   }
   function hazirlikKare(t){
     if(!P.acik)return;
@@ -108,9 +114,11 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
   function ilerle(){if(ON_EKRAN.sayfa!=='bulten'||btnIlerle.disabled)return;P.acik=false;ON_EKRAN.acik=false;ON_EKRAN.sayfa=null;E.hidden=true;baskanDugmeleri.hidden=false;
     if(typeof locaGirisBaslat==='function')locaGirisBaslat();}
   btnIlerle.onclick=ilerle;
+  /* N3: süre koşulunu tamamlanmış sayar; kaynak hazırlığı ve Duraklat yine beklenir (hazirlikYaz geçirir) */
+  btnAtla.onclick=()=>{if(ON_EKRAN.sayfa!=='bulten'||btnAtla.disabled)return;P.atla=true;P.gecen=Math.max(P.gecen,STIL.program.hazirlikSn);hazirlikYaz();};
   /* programı aç: açılışta (?ekran=bulten) ya da odada/ajandada maç saati gelince. Hazırlık her açılışta baştan sayılır */
   ON_EKRAN.bulteniAc=()=>{ON_EKRAN.acik=true;ON_EKRAN.sayfa='bulten';E.hidden=false;baskanDugmeleri.hidden=true;
-    ON_EKRAN.cizildi=false;P.gecen=0;P.son=0;P.yazi='';P.kaydir=0;P.sayfa=-1;P.acik=true;hazirlikYaz();requestAnimationFrame(hazirlikKare);
+    ON_EKRAN.cizildi=false;P.gecen=0;P.son=0;P.yazi='';P.kaydir=0;P.sayfa=-1;P.atla=false;P.acik=true;hazirlikYaz();requestAnimationFrame(hazirlikKare);
     btnIlerle.focus({preventScroll:true});};
   if(ON_EKRAN.sayfa==='bulten')ON_EKRAN.bulteniAc();
   else{E.hidden=true;baskanDugmeleri.hidden=ON_EKRAN.acik;}
