@@ -98,7 +98,7 @@ Sakatlık ve tedavi, elle oynama, çabuk kullanılan serbest vuruş, hakem topu,
 
 ## 4. Turlar
 
-Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi (Ek F), `ad-denetimi.js`, `an-yakala.py` film şeridi, `akis-deneme.py`; belgeler (YOL_HARITASI, TEKNIK_PLAN §8) güncellenir.
+Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi (Ek F), `ad-denetimi.js`, `an-yakala.py` film şeridi, `akis-deneme.py`; belgeler (YOL_HARITASI, TEKNIK_PLAN §8) güncellenir. Tur içindeki ara adımlarda yalnız hızlı kademe çalışır (10 maç ve tekrarlanabilirlik, ilgili senaryo, gerekirse `ad-denetimi.js`); ayrıntı CLAUDE.md “Kontrol” bölümündeki iki kademe (2026-10-04).
 
 ### T0 — Ölçü ve araçlar (sonucu değiştirmez)
 
