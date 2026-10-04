@@ -70,6 +70,12 @@ Yerel bağlantıları, mevcut durum ile hedef ayrımını, belgeler arası tutar
 
 ### Oyun kodu veya görsel değişikliği
 
+**İki kademe (kullanıcı kararı, 2026-10-04).** Aşağıdaki tam kontroller her ara adımda değil, işin (tur, madde) sonunda, commit ve push'tan önce bir kez çalışır.
+
+- **Ara adım (“bozdum mu?”):** `node araclar/mac-deneme.js 10` (tekrarlanabilirlik satırı “sonuç aynı” olmalı), değişen şeyin senaryosu varsa o (`--senaryo <ad>`), yeni betik/üst düzey ad/`Match` yöntemi eklendiyse `node araclar/ad-denetimi.js`. Kariyer kuralı değiştiyse `node araclar/kariyer-deneme.js` (hızlıdır). Ara adımlar küçük tutulur; gerekirse dalda yerel commit'lenir, push yapılmaz.
+- **İşin sonu (“iyi oldu mu?”):** aşağıdaki kurallarda istenen her şey: motor için 80 maç `--karsilastir` ve robotluk karnesi, ekran/kamera/animasyon dosyasına dokunulduysa `kontrol.py`, `akis-deneme.py`, `an-yakala.py`. Bunlar geçmeden iş tamamlandı sayılmaz, `main`'e alınmaz.
+- 10 maçlık sonuçla denge kararı verilmez ve `MOTOR_AYAR` ayarlanmaz (gol ortalaması 10 maçta kabaca ±0,4 oynar); denge yalnız işin sonundaki tam ölçümle değerlendirilir.
+
 - `python3 araclar/kontrol.py` çalıştır. Araç sayfayı başsız Chromium'da açar, hataları ve `araclar/son-kontrol-index.png` ekran görüntüsünü üretir. Görüntüyü incele; yalnızca komutun bitmesini başarı sayma.
 - Başka bir sayfa için yolu ver: `python3 araclar/kontrol.py prototipler/1-retro-2b-baskan-locasi.html`.
 - Araç Python, Playwright/Chromium ve yerel Three.js kopyasını hazırlamak için npm/tar gerektirir. Three.js kontrol sırasında yerel kopyadan yüklenir; geçici dosyalar Git dışında tutulur. Eksik bağımlılık varsa bildir; eşdeğer kontrol kullanıldıysa ne yapıldığını açıkla.
