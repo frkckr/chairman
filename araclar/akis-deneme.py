@@ -10,6 +10,8 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
      yenilemede aynı durum ve kararın bir kez uygulanması, tahsilatla sözün tutulup konunun arşive geçmesi, büyük yazıda taşma olmaması.
  12. Genel duraklatma (2.8B): oda, yürüyüş ortası, gerçek zamanlı gözlem (duraklat → kayıt aynı an → yenile → devam) ve maç.
  14. Maç öncesi ekranı (2.8J, 2.8N): iki takımın ilk 11'i ve son 5 maçı, dolan hazırlık çubuğu, en az 10 sn, duraklatma, elle geçiş.
+ 14 (N11, 2026-10-04): stada varış: karanlıktan açılış, sokak kapısı, kesme, merdiven, kalabalık loca, oturma; atlama ve Santraya geç.
+ 14b. N12: rakip başkan yerinde / sonra / yok; beş saniyelik karar anı (süre, duraklatma, klavye, büyük yazı, atlamanın geçememesi).
  15. Ortak çatısız stat ve mekân (2.8D, 2.8J, 2.8O): tek tarif, balkon/pencere aynı stat, iskele, kapıya tıklama, doğal yürüyüş;
      N6 (2026-10-04): insan gibi kalkış, adım ve oturma (ivme ve hız sıçraması sınırı), telefonu alma ve masaya koyma.
  15b. Maçta binadaki loca, 52°'lik geniş bakışta yedek kulübeleri ve okunur tabela; N4 (2026-10-04): bakış hep topu izler (elle bakış,
@@ -96,7 +98,7 @@ async def oda_ilerle(pg):
 # Canlı Skor satırı (N2): satır yüksekliği (yazı boyuna oran), parçaların dikey ortalarının yayılımı (piksel) ve yatay taşma
 TEK_SATIR_JS = """(kok) => { const m = document.querySelector(kok + ' .tel-mac'); if (!m) return null; const r = m.getBoundingClientRect(), fs = parseFloat(getComputedStyle(m).fontSize);
   const orta = [...m.children].map(c => { const q = c.getBoundingClientRect(); return q.top + q.height / 2; });
-  return { satir: +(r.height / fs).toFixed(2), yayilim: +(Math.max(...orta) - Math.min(...orta)).toFixed(1), yazi: [...m.children].map(c => c.textContent).join(' | '), tasma: m.scrollWidth - m.clientWidth }; }"""
+  return { satir: +(r.height / fs).toFixed(2), yayilim: +(Math.max(...orta) - Math.min(...orta)).toFixed(1), yazi: [...m.children].map(c => c.textContent).join(' | '), tasma: m.scrollWidth - m.clientWidth, baslik: m.title }; }"""
 
 
 async def bolum_1(tarayici, site, tum_hatalar):
@@ -116,8 +118,8 @@ async def bolum_1(tarayici, site, tum_hatalar):
     await pg.click('.tel [data-eylem="telEv"]')
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
     sk, skor = await pg.evaluate(TEK_SATIR_JS, ".od-telefonPanel"), await pg.text_content(".tel")
-    denetle("N2: Canlı Skor'da sıradaki maç tek satır (saat · ev sahibi · – · deplasman); 'veri bağlı değil' notu yok",
-            sk and sk["satir"] <= 2.8 and sk["yayilim"] <= 4 and sk["tasma"] <= 0 and "19:00" in sk["yazi"] and "Demirkapı SK" in sk["yazi"] and "Akdeniz FK" in sk["yazi"]
+    denetle("N2: Canlı Skor'da sıradaki maç tek satır (saat · ev sahibi · – · deplasman; N7: kısa kulüp adı, tam ad başlıkta); 'veri bağlı değil' notu yok",
+            sk and sk["satir"] <= 2.8 and sk["yayilim"] <= 4 and sk["tasma"] <= 0 and "19:00" in sk["yazi"] and "Demirkapı" in sk["yazi"] and "Akdeniz" in sk["yazi"] and "Demirkapı SK – Akdeniz FK" in sk["baslik"]
             and "Bugün maç yok" in skor and "Sıradaki" in skor and "bağlı değil" not in skor, f"{sk}")
     await pg.keyboard.press("Escape")
     await pg.keyboard.press("Digit2")
@@ -152,6 +154,7 @@ async def bolum_1(tarayici, site, tum_hatalar):
     sk, skor = await pg.evaluate(TEK_SATIR_JS, ".od-telefonPanel"), await pg.text_content(".tel")
     denetle("N2: maç günü Canlı Skor'da bugünün maçı tek satır; not yok", sk and sk["satir"] <= 2.8 and sk["yayilim"] <= 4 and sk["tasma"] <= 0 and "19:00" in sk["yazi"]
             and "Bugün" in skor and "bağlı değil" not in skor, f"{sk}")
+    await pg.wait_for_timeout(300)  # N7: telefonun açılış geçişi (0,18 sn) bitsin
     await pg.screenshot(path=str(ARAC / "son-akis-1-canli-skor.png"))
     await pg.keyboard.press("Escape")
     await pg.context.close()
@@ -180,6 +183,42 @@ async def bolum_2(tarayici, site, tum_hatalar):
 
 
 TASMA_JS = "() => [...document.querySelectorAll('.dsy-sayfa, .dft-sayfa, .dsy-sekmeler')].map(e => e.scrollWidth - e.clientWidth)"
+# N7: telefonun yerleşimi: içerideki yatay taşma (piksel), cihazın panele sığması, konuşmada iki cevabın cevap alanında kaydırmadan görünmesi
+# N9: seyircinin sürekliliği (js/seyirci.js seyirciDurumlari): 0–300 sn arası 0,25 sn'de bir; seyirci saati çıkıştan sonra maç zamanıyla, atlamada sıçrar
+SEYIRCI_JS = """() => {
+  const R = { yuruyen: YURUYEN.length, havuz: YURUYEN_HAVUZ, belirme: 0, kapida: 0, varis: 0, enCok: 0, kotu: [], egri: true,
+    gec: YURUYEN.filter(k => k.yuru.son > 262).length };
+  let once = null;
+  for (let A = 0; A <= 300.001; A += 0.25) {
+    const D = seyirciDurumlari(A); let n = 0, dolu = 0;
+    for (let j = 0; j < D.length; j++) { const d = D[j]; if (d.tur === 'yol' && d.g) n++; if (d.tur === 'yer' && d.g) dolu++;
+      if (!once) continue; const p = once[j];
+      if (d.g && !p.g) { R.belirme++; if (d.tur === 'yol' && d.kapida) R.kapida++; else if (R.kotu.length < 5) R.kotu.push({ A, i: d.i, tur: d.tur }); }
+      else if (d.g && p.g) { const m = Math.hypot(d.x - p.x, d.y - p.y, d.z - p.z); if (m > 0.6 && R.kotu.length < 5) R.kotu.push({ A, i: d.i, m: +m.toFixed(2) }); if (p.tur === 'yol' && d.tur === 'yer') R.varis++; } }
+    /* yerindekiler: eski kuraldaki (geliş sırası doluluğu geçmiş) kişilerle aynı */
+    if (A <= 262 && A % 10 === 0) { const eski = SEYIRCI_KISILER.filter(k => k.kayit.gelis <= cizgiDegeri(MAC_SENARYOSU.tribun, A)).length; if (eski !== dolu) R.egri = false; }
+    R.enCok = Math.max(R.enCok, n); once = D; }
+  /* seyirci saati: çıkıştan sonra (senaryo durmuş) maç zamanıyla ilerler; atlamada senaryo saatine sıçrar */
+  const S = SEYIRCI_SAAT, eski = { A: S.A, faz: mac.phase, t: mac.sen.t };
+  S.A = 262; mac.sen.t = 262; mac.phase = 'giris'; seyirciSaatIlerlet(8); const a1 = S.A; mac.sen.t = 322; seyirciSaatIlerlet(0.016); const a2 = S.A;
+  S.A = eski.A; mac.phase = eski.faz; mac.sen.t = eski.t; R.saat = [+a1.toFixed(2), +a2.toFixed(2)];
+  return R; }"""
+# N11: varışın göz yolu: iki yürüyüş (sokak kapısına; merdivenden locaya) ve oturma, 1/60 sn'de bir; kesme (siyah) hariç
+VARIS_HAREKET_JS = """() => { const Y = LOCA_GIRIS.yol, T = STIL.locaGiris.sure, P = new THREE.Vector3(), B = new THREE.Vector3(), R = { ivme: 0, sicrama: 0 };
+  const parca = K => { for (let i = 2; i < K.length; i++) { const v1 = K[i - 1].clone().sub(K[i - 2]).multiplyScalar(60), v2 = K[i].clone().sub(K[i - 1]).multiplyScalar(60);
+      R.sicrama = Math.max(R.sicrama, Math.abs(v2.length() - v1.length())); R.ivme = Math.max(R.ivme, v2.clone().sub(v1).length() * 60); } };
+  for (const Z of [Y.Y1, Y.Y2]) { const K = []; for (let t = 0; t <= Z.yuru; t += 1 / 60) { yrYuruAn(Z, t, P, B); K.push(P.clone()); } parca(K); }
+  { const K = []; for (let t = 0; t <= T.otur; t += 1 / 60) { yrOtur(t / T.otur, Y.ayakta, Y.oturma, new THREE.Vector3(0, 0, 1), P); K.push(P.clone()); } parca(K); }
+  const Z = Y.Y2, i = Z.D.findIndex(d => d >= Y.mb);
+  R.merdivenAdim = +(Z.FZ[i < 0 ? Z.FZ.length - 1 : i]).toFixed(2); R.basamak = STIL.locaGiris.merdiven.basamak;
+  R.toplam = +(T.bekle + Y.Y1.yuru + T.kesmeSiyah + Y.Y2.yuru + T.otur + T.raf).toFixed(2); R.ivme = +R.ivme.toFixed(2); R.sicrama = +R.sicrama.toFixed(3); return R; }"""
+TEL_YERLESIM_JS = """() => { const T = document.querySelector('.tel'), P = document.querySelector('.od-telefonPanel'), E = document.querySelector('.tel-ekran');
+  if (!T || !P || !E) return { tasma: 99, sigiyor: false, cevapGorunur: false, genislik: 0 };
+  const t = T.getBoundingClientRect(), p = P.getBoundingClientRect(), e = E.getBoundingClientRect();
+  const tasma = Math.max(0, ...[...T.querySelectorAll('.tel-govde, .tel-cevap, .tel-bildirimler, .tel-liste, .tel-skor, .tel-mac')].map(x => x.scrollWidth - x.clientWidth));
+  const C = T.querySelector('.tel-cevap'), c = C && C.getBoundingClientRect(), B = [...T.querySelectorAll('.tel-cevap .kk-cevap')];
+  const cevapGorunur = !!C && B.length === 2 && B.every(b => { const r = b.getBoundingClientRect(); return r.width > 0 && r.top >= c.top - 1 && r.bottom <= c.bottom + 1 && r.bottom <= e.bottom + 1; });
+  return { tasma, sigiyor: t.left >= p.left - 1 && t.right <= p.right + 1 && t.top >= p.top - 1 && t.bottom <= p.bottom + 1, cevapGorunur, genislik: Math.round(t.width) }; }"""
 
 
 async def bolum_3(tarayici, site, tum_hatalar):
@@ -212,14 +251,64 @@ async def bolum_3(tarayici, site, tum_hatalar):
     denetle("İlerle, Salı 10:30 karar haberinde durdu: TEST konusu açık, karar bekliyor", d["tarih"] == "2026-11-24" and d["dakika"] == 630
             and d["mesele"] == "deneme:kararBekliyor", str(d))
     await pg.keyboard.press("Digit1")
+    # N7: tanıdık telefon düzeni: ana ekranda cihaz, büyük saat ve bildirim kartı; karta tıklayınca o konuşma açılır
+    ana = await pg.evaluate("""() => ({ cihaz: !!document.querySelector('.od-telefonPanel .tel .tel-ada') && !!document.querySelector('.tel-durum .tel-pil'),
+      saat: (document.querySelector('.tel-saat') || {}).textContent, kart: [...document.querySelectorAll('.tel-bildirim')].map(b => b.textContent),
+      sabit: [...document.querySelectorAll('.tel-sabit .tel-uyg')].map(b => b.dataset.uyg).join(',') })""")
+    await pg.screenshot(path=str(ARAC / "son-akis-3-telefon-ana.png"))
+    await pg.click('.tel-bildirim[data-kisi]')
+    acilan = await pg.evaluate("({ ekran: document.querySelector('.tel-ekran').dataset.ekran, bas: (document.querySelector('.tel-kisiBas') || {}).textContent || '' })")
+    denetle("N7: ana ekranda cihaz, durum çubuğu ve büyük saat (10:30), sabit sırada iki uygulama, Berk Deneme bildirimi 'Cevap bekliyor'; karta tıklayınca o konuşma açıldı",
+            ana["cihaz"] and ana["saat"] == "10:30" and ana["sabit"] == "mesajlar,skor" and len(ana["kart"]) >= 1 and "Berk Deneme" in ana["kart"][0]
+            and "Cevap bekliyor" in ana["kart"][0] and acilan["ekran"] == "konusma" and "Berk Deneme" in acilan["bas"], f"{ana} · {acilan}")
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
     liste = await pg.text_content(".tel-liste")
+    await pg.wait_for_timeout(300)
+    await pg.screenshot(path=str(ARAC / "son-akis-3-telefon-mesajlar.png"))
     await pg.click('.tel-kisi:has-text("Berk Deneme")')
     konusma = await pg.text_content(".tel")
-    cev = await pg.eval_on_selector_all(".tel .kk-cevap", "L => L.map(b => b.dataset.secim).join(',')")
-    denetle("Telefon: kişi listesinde Berk Deneme cevap bekliyor; konuşmada kendi sesiyle mesaj ve iki cevap",
+    cev = await pg.eval_on_selector_all(".tel .tel-cevap .kk-cevap", "L => L.map(b => b.dataset.secim).join(',')")
+    denetle("Telefon: kişi listesinde Berk Deneme cevap bekliyor; konuşmada kendi sesiyle mesaj; iki cevap alttaki sabit cevap alanında",
             "cevap bekl" in liste.replace("İ", "i").lower() and "firmamız" in konusma and cev == "kabul,devret", cev)
+    await pg.wait_for_timeout(300)  # N7: telefonun açılış geçişi (0,18 sn) bitsin
+    await pg.screenshot(path=str(ARAC / "son-akis-3-telefon.png"))
+    # N7: büyük yazıda iki cevap kaydırmadan görünür; büyük yazıda ve dar pencerede dört ekranda yatay taşma yok; Esc önce ana ekrana döner
+    olcumler = {}
+    async def tel_yerlesim(ad):
+        olcumler[ad] = await pg.evaluate(TEL_YERLESIM_JS)
+    await tel_yerlesim("normal-konusma")
     await pg.keyboard.press("Escape")
+    esc1 = await pg.evaluate("({ panel: !!document.querySelector('.od-telefonPanel'), ekran: (document.querySelector('.tel-ekran') || {dataset: {}}).dataset.ekran })")
+    await pg.keyboard.press("Escape")
+    esc2 = await pg.query_selector(".od-telefonPanel") is None
+    denetle("N7: Esc konuşmadan ana ekrana döndü (telefon açık); ana ekranda Esc telefonu kapattı", esc1 == {"panel": True, "ekran": "ana"} and esc2, f"{esc1} · {esc2}")
+    for yazi, boyut in (("buyuk", (1180, 1000)), ("normal", (800, 600)), ("buyuk", (800, 600))):
+        await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
+        await pg.click('.od-nesne[data-panel="ayar"]')
+        await pg.click(f'[data-eylem="yazi"][data-yazi="{yazi}"]')
+        await pg.keyboard.press("Escape")
+        await pg.keyboard.press("Digit1")
+        etiket = f"{yazi}-{boyut[0]}"
+        await tel_yerlesim(etiket + "-ana")
+        await pg.click('.tel-bildirim[data-kisi]')
+        await tel_yerlesim(etiket + "-konusma")
+        if etiket == "buyuk-1180":
+            await pg.wait_for_timeout(300)  # N7: telefonun açılış geçişi (0,18 sn) bitsin
+            await pg.screenshot(path=str(ARAC / "son-akis-3-telefon-buyuk.png"))
+        await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
+        await tel_yerlesim(etiket + "-mesajlar")
+        await pg.click('.tel [data-eylem="telEv"]')
+        await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
+        await tel_yerlesim(etiket + "-skor")
+        await pg.keyboard.press("Escape")
+        await pg.keyboard.press("Escape")
+    await pg.set_viewport_size({"width": 1180, "height": 1000})
+    await pg.click('.od-nesne[data-panel="ayar"]')
+    await pg.click('[data-eylem="yazi"][data-yazi="normal"]')
+    await pg.keyboard.press("Escape")
+    kotu = {a: o for a, o in olcumler.items() if o["tasma"] > 1 or not o["sigiyor"] or (a.endswith("konusma") and not o["cevapGorunur"])}
+    denetle("N7: normal ve büyük yazıda, 1180 ve 800 piksel genişlikte dört ekranda yatay taşma yok, cihaz panele sığıyor; konuşmada iki cevap kaydırmadan görünüyor",
+            len(olcumler) == 13 and not kotu, str(kotu or {a: (o["tasma"], o["genislik"]) for a, o in olcumler.items()}))
     await pg.keyboard.press("Digit3")
     dsy = await pg.evaluate("""() => ({ sekme: document.querySelectorAll('.dsy-sekme[role="tab"]:not(.dsy-arsivSekme)').length, nokta: !!document.querySelector('.dsy-sekme .dsy-nokta'),
       damga: (document.querySelector('.dsy-damga') || {}).textContent, notlar: [...document.querySelectorAll('.dsy-not small')].map(x => x.textContent.trim()),
@@ -387,7 +476,7 @@ PROGRAM_JS = "() => ({ ...ON_EKRAN.programDurumu(), faz: mac.phase, t: +mac.sen.
 
 async def bolum_14(tarayici, site, tum_hatalar):
     """Maç öncesi ekranı (2.8J, 2.8N): iki takımın ilk 11'i ve son 5 maçı; dolan çubuk, 10 sn etkin hazırlık, duraklatma, elle geçiş."""
-    pg, hatalar = await sayfa(tarayici, site, "?ekran=bulten&tohum=4", "#onEkran:not([hidden]) #btnIlerle")
+    pg, hatalar = await sayfa(tarayici, site, "?ekran=bulten&tohum=4&rakipBaskan=yok", "#onEkran:not([hidden]) #btnIlerle")
     tum_hatalar += hatalar
     yazi = await pg.text_content("#onEkran")
     on11 = await pg.eval_on_selector_all("#onEkran .oe-saha", "L => L.map(s => s.querySelectorAll('.oe-oy').length)")
@@ -430,23 +519,40 @@ async def bolum_14(tarayici, site, tum_hatalar):
     await pg.wait_for_timeout(1500)
     e = await pg.evaluate(PROGRAM_JS)
     denetle("Maça geç tıklanınca ekran kapandı, maç günü başladı", not e["acik"] and e["t"] > 0 and await pg.is_visible("#baskanDugmeleri"), str(e))
-    # 2.8T: locaya giriş: merdiven, kapı, rakip başkanla tokalaşma, oturma; maç günü arkada sürer
-    LOCA_JS = "() => ({ aktif: LOCA_GIRIS.aktif, sayfa: ON_EKRAN.sayfa, bino: btnBino.disabled, masa: BK_MASA.visible, t: +LOCA_GIRIS.t.toFixed(3), k: camera.position.toArray().map(v => +v.toFixed(3)).join(',') })"
+    # N11: stada varış: karanlıktan açılış, sokak kapısı, kesme, merdiven, kalabalık loca, oturma; maç günü arkada sürer
+    LOCA_JS = """() => ({ aktif: LOCA_GIRIS.aktif, evre: LOCA_GIRIS.evre, sayfa: ON_EKRAN.sayfa, bino: btnBino.disabled, masa: BK_MASA.visible, t: +LOCA_GIRIS.t.toFixed(3),
+      k: camera.position.toArray().map(v => +v.toFixed(3)).join(','), kar: +(document.getElementById('karartma') || { style: { opacity: 0 } }).style.opacity })"""
     g = await pg.evaluate(LOCA_JS)
-    denetle("2.8T: Maça geç'ten sonra locaya giriş sürüyor: dürbün kapalı, raf henüz yok", g["aktif"] and g["sayfa"] == "loca" and g["bino"] and not g["masa"], str(g))
+    denetle("N11: Maça geç'ten sonra stada varış başladı: ekran karanlıktan açılıyor (karartma koyu), dürbün kapalı, raf henüz yok",
+            g["aktif"] and g["sayfa"] == "loca" and g["bino"] and not g["masa"] and g["evre"] in ("acilis", "yuru1") and (g["kar"] > 0.25 or g["t"] > 1.0), str(g))
     await pg.keyboard.press("KeyP")
     k1 = await pg.evaluate(LOCA_JS)
     await pg.wait_for_timeout(1200)
     k2 = await pg.evaluate(LOCA_JS)
-    denetle("Duraklatmada locaya giriş ve kamera yerinde duruyor", k1 == k2 and k1["aktif"], f"{k1['t']} → {k2['t']}")
     await pg.keyboard.press("KeyP")
-    await pg.wait_for_function("LOCA_GIRIS.t > 7.5", timeout=90000)
-    await pg.screenshot(path=str(ARAC / "son-akis-14-tokalas.png"))
+    await pg.wait_for_timeout(300)
+    k3 = await pg.evaluate(LOCA_JS)
+    denetle("Duraklatmada varış, kamera ve karartma yerinde duruyor; Devam'dan sonra dürbün girişte kapalı kalıyor", k1 == k2 and k1["aktif"] and k3["bino"], f"{k1['t']} → {k2['t']} · dürbün {k3['bino']}")
+    await pg.wait_for_function("LOCA_GIRIS.evre === 'yuru1' && LOCA_GIRIS.tl > 0.4", timeout=60000)
+    await pg.screenshot(path=str(ARAC / "son-akis-14-varis.png"))
+    await pg.wait_for_function("LOCA_GIRIS.evre === 'kesme'", timeout=60000)
+    kes = await pg.evaluate(LOCA_JS)
+    await pg.wait_for_function("LOCA_GIRIS.evre === 'yuru2' && LOCA_GIRIS.tl > 1.2", timeout=60000)
+    await pg.screenshot(path=str(ARAC / "son-akis-14-merdiven.png"))
+    mer = await pg.evaluate(LOCA_JS)
+    denetle("Kapı eşiğinde kısa karartma kesmesi (tam siyah), ardından merdiven kuyusunda açılış", kes["kar"] >= 0.99 and mer["kar"] < 0.05 and mer["evre"] == "yuru2", f"{kes['kar']} · {mer['kar']}")
+    hk = await pg.evaluate(VARIS_HAREKET_JS)
+    denetle("N11: insan gibi yürüyüş (ortak model): gözün ivmesi ≤ 6 m/sn², kareler arası hız sıçraması ≤ 0,1 m/sn (kesme hariç); merdivende basamak başına bir adım; varış 16–24 sn",
+            hk["ivme"] <= 6 and hk["sicrama"] <= 0.1 and abs(hk["merdivenAdim"] - hk["basamak"]) <= 1.5 and 16 <= hk["toplam"] <= 24, str(hk))
+    kl = await pg.evaluate("""() => ({ n: LOCA_GIRIS.kisiler.length, olcek: LOCA_GIRIS.kisiler.map(k => +k.R.root.scale.y.toFixed(2)), en: LOCA_GIRIS.kisiler.map(k => +k.R.root.scale.x.toFixed(2)),
+      rakip: LOCA_GIRIS.rakip.root.visible, durum: MAC_PROTOKOL.rakipBaskan })""")
+    denetle("Kalabalık loca: önde iki yönetici, arkada beş konuk, hepsi aynı insan ölçeğinde (boy ve en 0,95–1,07); rakip başkan 'yok' durumunda koltuk boş",
+            kl["n"] == 7 and all(0.95 <= v <= 1.07 for v in kl["olcek"] + kl["en"]) and not kl["rakip"] and kl["durum"] == "yok", str(kl))
     await pg.wait_for_function("!LOCA_GIRIS.aktif", timeout=90000)
     son = await pg.evaluate("""() => ({ sayfa: ON_EKRAN.sayfa, masa: BK_MASA.visible, bino: btnBino.disabled, d: +camera.position.distanceTo(new THREE.Vector3(BASKAN_KOLTUGU.x, BASKAN_KOLTUGU.y + STIL.kameralar.baskan.goz, BASKAN_KOLTUGU.z)).toFixed(3),
-      rakip: +LOCA_GIRIS.rakip.root.position.z.toFixed(2), koltuk: +(LOCA.on - 0.55).toFixed(2), faz: mac.phase })""")
-    denetle("Locaya giriş kendiliğinden bitti: başkan koltuğunda (göz yerinde), masa ve dürbün geri geldi, rakip başkan yanındaki koltukta; maç günü sürüyor",
-            son["sayfa"] is None and son["masa"] and not son["bino"] and son["d"] < 0.6 and son["rakip"] == son["koltuk"] and son["faz"] == "isinma", str(son))
+      faz: mac.phase, kar: +document.getElementById('karartma').style.opacity, t: +LOCA_GIRIS.t.toFixed(2) })""")
+    denetle("Varış kendiliğinden bitti: başkan koltuğunda (göz yerinde), raf ve dürbün geri geldi, karartma yok; maç günü sürüyor",
+            son["sayfa"] is None and son["masa"] and not son["bino"] and son["d"] < 0.6 and son["faz"] == "isinma" and son["kar"] == 0, str(son))
     await pg.screenshot(path=str(ARAC / "son-akis-14-loca.png"))
     await pg.set_viewport_size({"width": 900, "height": 800})
     await pg.goto((site / "index.html").as_uri() + "?ekran=bulten")
@@ -468,21 +574,100 @@ async def bolum_14(tarayici, site, tum_hatalar):
     denetle("N3: 'Beklemeden geç' (TEST etiketli) 10 sn dolmadan maça geçiriyor (locaya giriş başladı); Duraklat'ta düğme kapalı",
             kapali and once["kapali"] and once["gecen"] < 5 and not sonra["acik"] and sonra["loca"] and "TEST" in sonra["etiket"], f"{once['gecen']:.2f} sn · {sonra}")
     await pg.context.close()
-    # 2.8T: atlama: maç görüntüsüne tıklamak yürüyüşü bitirir (tık telefonu açmaz); Santraya geç de önce yürüyüşü bitirir
-    pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4", "#btnMacaGec")
+    # N11: atlama: maç görüntüsüne tıklamak varışı bitirir (tık telefonu açmaz); rakip başkan yoksa Santraya geç önce varışı bitirir, sonra atlar
+    pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=yok", "#btnMacaGec")
     tum_hatalar += hatalar
     await pg.evaluate("locaGirisBaslat()")
     await pg.wait_for_timeout(600)
     r = await pg.evaluate("document.getElementById('view').getBoundingClientRect().toJSON()")
     await pg.mouse.click(r["x"] + r["width"] / 2, r["y"] + r["height"] * 0.4)
-    s = await pg.evaluate("({ aktif: LOCA_GIRIS.aktif, sayfa: ON_EKRAN.sayfa, masa: BK_MASA.visible, tel: typeof MAC_TELEFON !== 'undefined' && MAC_TELEFON.acik })")
-    denetle("Locaya giriş tıklayınca atlanıyor: başkan oturmuş, masa yerinde, tık telefonu açmadı", not s["aktif"] and s["sayfa"] is None and s["masa"] and not s["tel"], str(s))
+    s = await pg.evaluate("({ aktif: LOCA_GIRIS.aktif, sayfa: ON_EKRAN.sayfa, masa: BK_MASA.visible, tel: typeof MAC_TELEFON !== 'undefined' && MAC_TELEFON.acik, kar: +document.getElementById('karartma').style.opacity })")
+    denetle("Varış tıklayınca atlanıyor: başkan oturmuş, raf yerinde, karartma yok, tık telefonu açmadı", not s["aktif"] and s["sayfa"] is None and s["masa"] and not s["tel"] and s["kar"] == 0, str(s))
     await pg.evaluate("locaGirisBaslat()")
     await pg.click("#btnMacaGec")
     s = await pg.evaluate("({ aktif: LOCA_GIRIS.aktif, sayfa: ON_EKRAN.sayfa, faz: mac.phase })")
-    denetle("Santraya geç önce yürüyüşü bitiriyor, sonra maç öncesini atlıyor", not s["aktif"] and s["sayfa"] is None and s["faz"] not in ("isinma",), str(s))
+    denetle("Santraya geç önce varışı bitiriyor, sonra maç öncesini atlıyor", not s["aktif"] and s["sayfa"] is None and s["faz"] not in ("isinma",), str(s))
     await pg.context.close()
 
+
+async def bolum_14b(tarayici, site, tum_hatalar):
+    """N12 (kullanıcı kararı 2026-10-04): rakip başkan yerinde / sonra / yok ve tokalaşmada beş saniyelik karar anı (TEST kaydı: Selam ver / Ses çıkarma)."""
+    AN_JS = """() => ({ acik: KARAR_ANI.acik, t: +KARAR_ANI.t.toFixed(3), kalan: +KARAR_ANI.kalan.toFixed(3), sure: KARAR_ANI.sure, evre: LOCA_GIRIS.evre, mod: LOCA_GIRIS.mod,
+      aktif: LOCA_GIRIS.aktif, rakip: LOCA_GIRIS.rk.evre, karar: MAC_PROTOKOL.karar && MAC_PROTOKOL.karar.secim, faz: mac.phase,
+      kart: [...document.querySelectorAll('#kararAni .ka-kart b')].map(b => b.textContent), kim: (document.querySelector('#kararAni .ka-kim') || {}).textContent })"""
+    # yerinde: girişi atlamak tokalaşma anına götürür; süre kartlar yerine oturmadan başlamaz; tıklama atlatmaz; duraklatmada süre durur; 5 sn'de cevapsız
+    pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=yerinde", "#btnMacaGec")
+    tum_hatalar += hatalar
+    await pg.evaluate("locaGirisBaslat()")
+    await pg.wait_for_timeout(500)
+    await pg.keyboard.press("Escape")
+    await pg.wait_for_function("KARAR_ANI.acik", timeout=15000)
+    a0 = await pg.evaluate(AN_JS)
+    denetle("N12 yerinde: atlama tokalaşma anına götürdü; karar anı açık (üstte 'Akdeniz FK Başkanı', iki kart: Selam ver / Ses çıkarma); süre kartlar yerine oturmadan başlamıyor",
+            a0["acik"] and a0["evre"] == "el" and a0["kart"] == ["Selam ver", "Ses çıkarma"] and "Akdeniz FK Başkanı" in (a0["kim"] or "") and (a0["kalan"] == a0["sure"] == 5 or a0["t"] >= 0.4), str(a0))
+    await pg.wait_for_function("KARAR_ANI.t > 0.9", timeout=15000)
+    r = await pg.evaluate("document.getElementById('view').getBoundingClientRect().toJSON()")
+    await pg.mouse.click(r["x"] + r["width"] * 0.5, r["y"] + r["height"] * 0.25)
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("KeyP")
+    p1 = await pg.evaluate(AN_JS)
+    await pg.wait_for_timeout(1200)
+    p2 = await pg.evaluate(AN_JS)
+    await pg.keyboard.press("KeyP")
+    denetle("Karar anında tıklama ve Esc atlatmıyor; süre işliyor ve Duraklat'ta donuyor", p1["acik"] and p2["acik"] and p1["kalan"] == p2["kalan"] < 5 and p1["evre"] == "el", f"{p1['kalan']} → {p2['kalan']}")
+    await pg.screenshot(path=str(ARAC / "son-akis-14b-karar.png"))
+    await pg.wait_for_function("MAC_PROTOKOL.karar", timeout=30000)
+    c = await pg.evaluate(AN_JS)
+    await pg.wait_for_function("!LOCA_GIRIS.aktif", timeout=60000)
+    c2 = await pg.evaluate("""() => ({ rakip: LOCA_GIRIS.rk.evre, z: +LOCA_GIRIS.rakip.root.position.z.toFixed(2), koltuk: +(LOCA.on - 0.55).toFixed(2), olcek: +LOCA_GIRIS.rakip.root.scale.x.toFixed(2),
+      digerleri: LOCA_GIRIS.kisiler.map(k => k.R.root.scale.x), masa: BK_MASA.visible })""")
+    ort = sum(c2["digerleri"]) / len(c2["digerleri"])
+    denetle("Süre dolunca cevapsız sonucu işledi (el bırakıldı); tepkiden sonra ikisi de oturdu; rakip başkan diğer loca kişileriyle aynı ölçekte (±%5)",
+            c["karar"] == "cevapsiz" and c2["rakip"] == "oturuyor" and c2["z"] == c2["koltuk"] and abs(c2["olcek"] - ort) / ort <= 0.05 and c2["masa"], f"{c['karar']} · {c2}")
+    await pg.context.close()
+    # yerinde, büyük yazı, klavye: 1 → Selam ver
+    pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=yerinde", "#btnMacaGec")
+    tum_hatalar += hatalar
+    await pg.evaluate("() => { OYUN.ayarlar.yazi = 'buyuk'; locaGirisBaslat(); }")
+    await pg.wait_for_timeout(400)
+    await pg.keyboard.press("Escape")
+    await pg.wait_for_function("KARAR_ANI.acik && KARAR_ANI.t > 0.6", timeout=30000)
+    yer = await pg.evaluate("""() => { const E = document.getElementById('kararAni').getBoundingClientRect(), K = [...document.querySelectorAll('#kararAni .ka-kart')];
+      return { icinde: K.every(k => { const r = k.getBoundingClientRect(); return r.left >= E.left - 1 && r.right <= E.right + 1 && r.bottom <= E.bottom + 1 && r.top >= E.top; }),
+        tasma: Math.max(...K.map(k => k.scrollWidth - k.clientWidth)), boy: getComputedStyle(document.getElementById('kararAni')).getPropertyValue('--an-boy') }; }""")
+    await pg.screenshot(path=str(ARAC / "son-akis-14b-karar-buyuk.png"))
+    await pg.keyboard.press("Digit1")
+    await pg.wait_for_function("MAC_PROTOKOL.karar", timeout=5000)
+    k1 = await pg.evaluate(AN_JS)
+    denetle("Büyük yazıda iki kart karede, taşma yok; 1 tuşu 'Selam ver'i seçti (kart kısa süre kalıyor)", yer["icinde"] and yer["tasma"] <= 1 and "1.6" in yer["boy"] and k1["karar"] == "selam", f"{yer} · {k1['karar']}")
+    await pg.context.close()
+    # sonra: başkan oturur; Santraya geç ertelenir, rakip başkan o an kapıdan gelir; → tuşu 'Ses çıkarma'; karar anından sonra atlama yapılır
+    pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=sonra", "#btnMacaGec")
+    tum_hatalar += hatalar
+    await pg.evaluate("locaGirisBaslat()")
+    await pg.wait_for_timeout(400)
+    await pg.keyboard.press("Escape")
+    s0 = await pg.evaluate(AN_JS)
+    await pg.click("#btnMacaGec")
+    s1 = await pg.evaluate(AN_JS)
+    denetle("N12 sonra: atlama başkanı oturttu (rakip başkan henüz yok); Santraya geç ertelendi: rakip başkan kapıdan geliyor, karşılama başladı",
+            not s0["aktif"] and s0["rakip"] == "yok" and s1["aktif"] and s1["mod"] == "selam" and s1["rakip"] == "yuruyor" and s1["faz"] == "isinma", f"{s0} · {s1}")
+    await pg.wait_for_function("KARAR_ANI.acik && KARAR_ANI.t > 0.5", timeout=90000)
+    await pg.screenshot(path=str(ARAC / "son-akis-14b-sonra.png"))
+    await pg.keyboard.press("ArrowRight")
+    await pg.wait_for_function("!LOCA_GIRIS.aktif", timeout=60000)
+    await pg.wait_for_timeout(300)
+    s2 = await pg.evaluate(AN_JS)
+    denetle("→ tuşu 'Ses çıkarma'yı seçti; karşılama bitince ertelenen atlama yapıldı (maç öncesi geçti)", s2["karar"] == "sus" and s2["faz"] != "isinma", str(s2))
+    await pg.context.close()
+    # yok: karar anı açılmaz, koltuk boş
+    pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=yok", "#btnMacaGec")
+    tum_hatalar += hatalar
+    # (varış mantığı sayfa içinde hızlı ilerletilir: çizim beklenmez; karar anı hiç açılmamalı)
+    y = await pg.evaluate("() => { duraklatmaEkle('elle'); locaGirisBaslat(); let acildi = false; for (let i = 0; i < 4000 && LOCA_GIRIS.aktif; i++) { locaGirisKare(1 / 30); acildi = acildi || KARAR_ANI.acik; } duraklatmaKaldir('elle'); return acildi; }")
+    y = dict(await pg.evaluate(AN_JS), acildi=y)
+    denetle("N12 yok: varış boyunca karar anı açılmadı, varış bitti, rakip başkanın koltuğu boş", not y["acildi"] and not y["aktif"] and y["karar"] is None and y["rakip"] == "yok", str(y))
+    await pg.context.close()
 
 KAPI_JS = """() => { const v = ODA.kapiHedef.merkez.clone().project(ODA.kamera), r = document.getElementById('oda').getBoundingClientRect();
   return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }"""
@@ -502,6 +687,14 @@ async def bolum_15(tarayici, site, tum_hatalar):
       balkonButonu: (() => { const b = document.querySelector('.od-yer'); if (!b) return null; const r = b.getBoundingClientRect(); return r.width > 2; })() })""")
     denetle("Tek kulüp stadı ve çatısız: şehir tarifi yok, ?stat=sehir güvenli varsayılana düştü; hiçbir tribünün çatısı yok; balkon aynı kurucuyla, pencere dışarı açık; görünür 'Balkona çık' düğmesi yok",
             stat["tarifler"] == "kulup" and stat["ad"] == "Demirkapı İlçe Stadı" and not stat["secim"] and stat["cati"] == 0 and stat["balkon"] > 10 and stat["pencere"] and stat["yer"] == "masa" and stat["balkonButonu"] is False, str(stat))
+    # N8: çevre her cephe ayrı; kulüp binası yalnız maç kurulumunda; tribün girişleri ve çevre kapıları tarifle tutarlı
+    cevre = await pg.evaluate("""() => { const D = [-(KALE_MESAFE + 7), KALE_MESAFE + 5.5], Z = [YAN_MESAFE + 10, -(YAN_MESAFE + 11)];
+      const icinde = p => p[0] > D[0] && p[0] < D[1] && p[2] < Z[0] && p[2] > Z[1];
+      return { mac: (scene.userData.cevre || []).join(','), balkon: (BALKON.stat.userData.cevre || []).join(','), kapi: KAPILAR.length, tarif: STAT.kapilar.length,
+        duvarda: KAPILAR.every(k => D.includes(k.kapi[0]) || Z.includes(k.kapi[1])), icerde: KAPILAR.every(k => icinde(k.giris)),
+        tribun: KAPILAR.map(k => k.tribun).join(',') }; }""")
+    denetle("N8: maçta dört cephe (yamaç, evler, kapı, kulüp binası), balkon ve pencerede kulüp binası yok; her tribün girişinin karşısında çevre duvarında kapı, giriş duvarın içinde",
+            cevre["mac"] == "yamac,evler,kapi,kulupBinasi" and cevre["balkon"] == "yamac,evler,kapi" and cevre["kapi"] == cevre["tarif"] == 6 and cevre["duvarda"] and cevre["icerde"], str(cevre))
     iskele = await pg.evaluate("""() => { const a = BALKON.iskele.visible; odaDurum({ iskele: true }); const b = BALKON.iskele.visible; odaDurum({ iskele: false });
       const B = tribunBakimYeri(); return [a, b, BALKON.iskele.visible, B.y < 3, STAT.bakim.yer]; }""")
     denetle("Onarım iskelesi 3B olarak karşı tribünün basamaklarında (çatıya bağlı değil); yalnız iz varken görünür", iskele == [False, True, False, True, "karsi"], str(iskele))
@@ -587,6 +780,12 @@ async def bolum_15b(tarayici, site, tum_hatalar):
     izler (elle bakış, Topu izle düğmesi ve F tuşu yok; sürükleme ve ok tuşları başı çevirmez); topa kilitli dürbün."""
     pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&stat=sehir&tohum=5", "#btnMacaGec")
     tum_hatalar += hatalar
+    # N9: seyirci kapıdan girer: 0,25 sn'de bir her kişi ya bir önceki örnekten en çok 0,6 m uzakta ya da kapıda / giriş ağzında beliriyor;
+    # yürüyen yerine varınca aynı yerde oturuyor; çıkışa kadar doluluk eskisiyle aynı; çıkıştan sonra geç gelenler maç zamanıyla yürüyor
+    n9 = await pg.evaluate(SEYIRCI_JS)
+    denetle("N9: seyirci kapıdan girip yerine yürüyor: kimse yerinde belirmiyor (her belirme kapıda ya da giriş ağzında), yolda sıçrama yok, her yürüyen yerine kesintisiz varıyor; havuz taşmıyor; doluluk eğrisi aynı; çıkıştan sonra geç gelenler yürüyor",
+            n9["yuruyen"] > 300 and n9["belirme"] == n9["kapida"] and not n9["kotu"] and n9["varis"] == n9["yuruyen"] and n9["enCok"] <= n9["havuz"]
+            and n9["egri"] and n9["gec"] > 0 and n9["saat"] == [270.0, 322.0], str({k: v for k, v in n9.items() if k != "kotu"}) + str(n9["kotu"][:3]))
     k = await pg.evaluate("""() => { const t = STAT.tribunler.find(x => x.yer === 'ana'), O = tribunOlcu(t), arka = YAN_MESAFE + O.D + 0.6;
       return { y: +BASKAN_KOLTUGU.y.toFixed(2), beklenen: +(locaZemini(t) + KOLTUK_YUKSEKLIGI * 1.14).toFixed(2), balkon: +(tribunTepe('ana') + 1.8).toFixed(2),
         z: +BASKAN_KOLTUGU.z.toFixed(2), arka: -arka, goz: +(BASKAN_KOLTUGU.y + STIL.kameralar.baskan.goz).toFixed(2), ad: STAT.ad }; }""")
@@ -679,15 +878,22 @@ async def bolum_16(tarayici, site, tum_hatalar):
             tablo.get("Şut") == (str(ist["sut"][0]), str(ist["sut"][1])) and tablo.get("Faul") == (str(ist["faul"][0]), str(ist["faul"][1])) and tablo.get("Korner") == (str(ist["korner"][0]), str(ist["korner"][1]))
             and f"{ist['skor'][0]} – {ist['skor'][1]}" in yazi and ist["dk"] in yazi and "bağlı değil" not in yazi and "xG" not in yazi
             and sk and sk["satir"] <= 2.8 and sk["yayilim"] <= 4 and sk["tasma"] <= 0, f"{sk} · {tablo}")
+    await pg.wait_for_timeout(300)  # N7: telefonun açılış geçişi (0,18 sn) bitsin
     await pg.screenshot(path=str(ARAC / "son-akis-16-canli-skor.png"))
     await pg.click('#macTelefon [data-eylem="telEv"]')
     await pg.click('#macTelefon [data-eylem="telUyg"][data-uyg="mesajlar"]')
     denetle("Mesajlar: kariyer olmadan sakin boş durum", "Mesaj yok" in await pg.text_content("#macTelefon"))
+    await pg.wait_for_timeout(300)  # N7: telefonun açılış geçişi (0,18 sn) bitsin
     await pg.screenshot(path=str(ARAC / "son-akis-16-telefon.png"))
+    # N7: Esc önce ana ekrana döner (maç yine durur), ana ekranda telefonu kapatır
+    await pg.keyboard.press("Escape")
+    e1 = await pg.evaluate("({ acik: MAC_TELEFON.acik, ekran: MAC_TELEFON.T.ekran, nedenler: [...SUNUM.nedenler].join(','), sn: mac.gameSec, cihaz: !!document.querySelector('#macTelefon .tel .tel-ada') && !!document.querySelector('#macTelefon .tel-saat') })")
+    denetle("N7: maç telefonu aynı cihaz düzeninde (kamera adası, ana ekran saati); Esc önce ana ekrana döndü, telefon açık, maç durmuş",
+            e1["acik"] and e1["ekran"] == "ana" and e1["nedenler"] == "telefon" and e1["sn"] == b["sn"] and e1["cihaz"], str(e1))
     await pg.keyboard.press("Escape")
     await pg.wait_for_timeout(800)
     c = await pg.evaluate("({ acik: MAC_TELEFON.acik, nedenler: [...SUNUM.nedenler].join(','), sn: mac.gameSec })")
-    denetle("Esc telefonu kapattı; tek neden olduğu için maç aynı andan sürdü", not c["acik"] and c["nedenler"] == "" and c["sn"] > b["sn"], str(c))
+    denetle("Ana ekranda Esc telefonu kapattı; tek neden olduğu için maç aynı andan sürdü", not c["acik"] and c["nedenler"] == "" and c["sn"] > b["sn"], str(c))
     await pg.keyboard.press("KeyP")
     await pg.keyboard.press("KeyT")
     t1 = await pg.evaluate("[...SUNUM.nedenler].sort().join(',')")
@@ -855,6 +1061,9 @@ async def ana():
         if sec("14"):
             print("\n14. Maç öncesi ekranı")
             await bolum_14(tarayici, site, tum_hatalar)
+        if sec("14b"):
+            print("\n14b. Rakip başkan ve karar anı")
+            await bolum_14b(tarayici, site, tum_hatalar)
         if sec("15"):
             print("\n15. Stat, mekân, balkon ve yürüyüş")
             await bolum_15(tarayici, site, tum_hatalar)

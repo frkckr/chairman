@@ -53,6 +53,15 @@ function kutuBirlestir(parcalar){const pos=[],nor=[],col=[],idx=[];
     pos.push(...g.attributes.position.array);nor.push(...g.attributes.normal.array);for(const i of g.index.array)idx.push(o+i);
     const c=p.renk||[1,1,1];for(let i=0;i<g.attributes.position.count;i++)col.push(c[0],c[1],c[2]);g.dispose();}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);return g;}
+/* birden çok geometriyi (kutu dışındakiler de: çatı, koni, düzlem) tek geometride birleştirir; parça {g, m: Matrix4 (isteğe bağlı), renk: [r,g,b]}.
+   Parçanın geometrisi dönüştürülüp bırakılır. Stadın çevresi (N8, js/stadyum-cevre.js) cephe başına tek çizimle kurulur */
+function geoBirlestir(parcalar){const pos=[],nor=[],col=[],idx=[];
+  for(const p of parcalar){const g=p.g;if(p.m)g.applyMatrix4(p.m);const P=g.attributes.position,N=g.attributes.normal,o=pos.length/3;
+    for(let i=0;i<P.array.length;i++){pos.push(P.array[i]);nor.push(N.array[i]);}
+    if(g.index)for(const i of g.index.array)idx.push(o+i);else for(let i=0;i<P.count;i++)idx.push(o+i);
+    const c=p.renk||[1,1,1];for(let i=0;i<P.count;i++)col.push(c[0],c[1],c[2]);g.dispose();}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));
+  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);return g;}
 /* ekranda sabit kalınlıkta çizgi: gen ızgara pikseli (960×720'de). WebGL çizgisi tek iç piksel olduğundan örneklemeyle (2×) yarıya
    soluklaşır; bunun yerine her parça ekrana dik genişletilmiş dörtgen olur. geo: parça çiftleri (ör. EdgesGeometry) */
 function kalinCizgi(geo,renk,gen){

@@ -165,7 +165,8 @@ function macKare(dt){
   /* flaşlar: bir an parlar, söner */
   for(const F of FLASLAR){F.t+=dts;F.f.visible=F.t<0.14;if(F.f.visible)F.f.material.opacity=1-F.t/0.14;}
   /* tribün: maç öncesi dolar; marşta ve golde ayağa kalkar */
-  SEYIRCI_DOLU.value=cizgiDegeri(MAC_SENARYOSU.tribun,mac.sen.t);
+  /* N9: seyirci saati (maç öncesi senaryo saati; çıkıştan sonra geç gelenler için maç zamanıyla); kapıdan yerine yürüyenler */
+  {const A=seyirciSaatIlerlet(dts);SEYIRCI_DOLU.value=cizgiDegeri(MAC_SENARYOSU.tribun,A);seyirciKare(A);}
   AYAKTA[0]=Math.max(0,AYAKTA[0]-dts);AYAKTA[1]=Math.max(0,AYAKTA[1]-dts);
   const marsta=mac.phase==='toren'||(mac.phase==='giris'&&mac.phaseT>8);
   SEYIRCI_AYAKTA.value.set(marsta||AYAKTA[0]>0?1:0,marsta||AYAKTA[1]>0?1:0);

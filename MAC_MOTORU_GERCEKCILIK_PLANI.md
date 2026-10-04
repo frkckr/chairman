@@ -1,6 +1,6 @@
 # Chairman — maç motoru gerçekçilik planı
 
-**Durum (2026-10-04):** T0 ve T1 tamamlandı (ölçümler ve sınırlar YOL_HARITASI T0/T1). §7.2 kararı: yürüme hedefi en az %55 (ulaşılan %55,6). Sıradaki T2; önce §7.1 (maçın temposu) kararı gerekir. Kullanıcı isteğiyle depoya alındı; turlar [YOL_HARITASI](YOL_HARITASI.md#maç-motoru-gerçekçilik-planı-2026-10-03) “Maç motoru gerçekçilik planı” bölümünde T0–T11 maddeleridir. Uygulama T0 ile başlar. §7'deki kararlar açıktır; uygulayıcı bunları sessizce kesinleştirmez, ilgili tura gelince kullanıcıya sorar. Ölçüm araçlarının ilk ikisi eklendi: `araclar/olcumler/r-karne.js` ve `araclar/oyuncu-karnesi.js` (Ek F).
+**Durum (2026-10-04):** T0 ve T1 tamamlandı (ölçümler ve sınırlar YOL_HARITASI T0/T1). §7.2 kararı: yürüme hedefi en az %55 (ulaşılan %55,6). Sıradaki T2; §7.1 kararı verildi (2026-10-04): amaçlı atak. Kullanıcı isteğiyle depoya alındı; turlar [YOL_HARITASI](YOL_HARITASI.md#maç-motoru-gerçekçilik-planı-2026-10-03) “Maç motoru gerçekçilik planı” bölümünde T0–T11 maddeleridir. Uygulama T0 ile başlar. §7'deki diğer kararlar (3–8) açıktır; uygulayıcı bunları sessizce kesinleştirmez, ilgili tura gelince kullanıcıya sorar. Ölçüm araçlarının ilk ikisi eklendi: `araclar/olcumler/r-karne.js` ve `araclar/oyuncu-karnesi.js` (Ek F).
 
 **2026-10-04 ekleri (kullanıcı onayı):** (1) animasyon her turda ölçütlü bir iştir (§4 “Animasyon”); (2) açık oyunda dönen top ve şutu takip açık maddedir (T5 madde 8, T7 madde 11); (3) her turun kapanışında önce/sonra film şeridi kullanıcıya gösterilir (§4 girişi). Gerekçe: aynı gün incelenen başka bir oyunun kısa maç videosunda görünür fark benzetimde değil, iki kişilik temas animasyonunda ve olayların birbirine zincirlenmesindeydi; benzetim tarafında bu planın turları (T2, T4–T6) aynı konuları zaten hedefliyor. Top toplayıcılar geri geldi (YOL_HARITASI N10, 2026-10-04) ve duran top süresini değiştirdi; T2 yeni tabanla (`araclar/taban/n10.json`) karşılaştırılır.
 
@@ -345,7 +345,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 
 ## 7. Kullanıcının karar vermesi gerekenler
 
-1. **Maçın temposu.** Daha az, daha uzun ve amaçlı atak (öneri) mı, bugünkü sık top kaybı mı? Hedef tabloyu etkiler: pas isabeti üst sınırı (%80), top kaybı sayısı.
+1. **Maçın temposu.** Daha az, daha uzun ve amaçlı atak (öneri) mı, bugünkü sık top kaybı mı? Hedef tabloyu etkiler: pas isabeti üst sınırı (%80), top kaybı sayısı. **Karar (kullanıcı, 2026-10-04): amaçlı atak** — daha az ama daha uzun, amaçlı ataklar; T2'nin kabul hedefleri (sahiplik başına 2,5–4 pas, top ayakta 1,2–2 sn, taşıma payı) bu yöndedir; pas isabeti %80 tavanını aşarsa tavan T2'de gözden geçirilir.
 2. **Yürüme oranı hedefi.** Önerilen ara hedef %40; gerçek %61.
 3. **Özellik listesi.** Alt özellikler türetilsin (öneri) mi, kadro verisine yeni özellik eklensin mi?
 4. **Çekirdek dosyaların açılması ve yeni dosyalar.** `mac-dizilis.js`, `mac-kurallar.js`, `mac-motoru.js` (top fiziği); yeni `mac-profil.js`, `mac-takim.js`, `mac-durantop.js`.

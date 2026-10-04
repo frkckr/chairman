@@ -151,12 +151,14 @@ function odaEkraniKur(kap,oyun,ayarlar){
      Telefon durumu (tel) oturumda kalır: dosyadan "◂ Mesaja dön" aynı konuşmaya döner. Konuşmayı açmak o konuların "yeni" işaretini kaldırır;
      cevap vermek ayrı bir eylemdir. Yeni haber açık konuşmayı değiştirmez */
   const tel={ekran:'ana',kisi:null,skorAc:false};
-  let telAlta=false;
+  /* telGecis: telefonda ekran değişti (kısa açılış geçişi yalnız o çizimde; N7) */
+  let telAlta=false,telGecis=false;
   function telefonPaneli(){
-    const s=saymanVar();
-    return telefonCiz(k,tel,{secimler,onay,testSecenek,kasa:s?s.id:null,yeniler:yeniIsaret});
+    const s=saymanVar(),acilis=telGecis;telGecis=false;
+    return telefonCiz(k,tel,{secimler,onay,testSecenek,kasa:s?s.id:null,yeniler:yeniIsaret,acilis});
   }
   const saymanVar=()=>{const c=k.kulupler[kulupId()],id=c.yonetim&&c.yonetim.sayman;return id?k.kisiler[id]:null;};
+  function telAnaEkran(){tel.ekran='ana';tel.kisi=null;onay=null;telGecis=true;ciz('.tel-uygMesaj');}
   /* konuşmayı açınca: o kişinin konularındaki yeni mesajlar görüldü (zamanı ve geçmişi değiştirmez) */
   function konusmaAc(anahtar){
     tel.ekran='konusma';tel.kisi=anahtar;telAlta=true;
@@ -502,9 +504,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='donus'){const d=donusYeri;donusYeri=null;if(d)panelAc(d.panel,null,null,true);}
     else if(ey==='arsiv'){dosyaArsiv=!dosyaArsiv;ciz('[data-eylem="arsiv"]');}
     /* telefon gezintisi: zaman ve kariyer değişmez (konuşmayı açmak yalnız "yeni" işaretini kaldırır) */
-    else if(ey==='telUyg'){tel.ekran=b.dataset.uyg;tel.skorAc=false;onay=null;ciz('.tel-geri');}
-    else if(ey==='telEv'){tel.ekran='ana';tel.kisi=null;onay=null;ciz('.tel-uygMesaj');}
-    else if(ey==='telKisi'){onay=null;konusmaAc(b.dataset.kisi);ciz('.tel-geri');}
+    else if(ey==='telUyg'){tel.ekran=b.dataset.uyg;tel.skorAc=false;onay=null;telGecis=true;ciz('.tel-geri');}
+    else if(ey==='telEv'){telAnaEkran();}
+    else if(ey==='telKisi'){onay=null;konusmaAc(b.dataset.kisi);telGecis=true;ciz('.tel-geri');}
     else if(ey==='telKisiler'){tel.ekran='mesajlar';panelAc('telefon',null,null,true);}
     else if(ey==='skorAc'){tel.skorAc=!tel.skorAc;ciz('[data-eylem="skorAc"]');}
     else if(ey==='gun'){ajandaGun=b.dataset.tarih;secili=null;onay=null;ciz('[data-eylem="gun"][data-tarih="'+ajandaGun+'"]');}
@@ -549,7 +551,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(ad){e.preventDefault();if(acik===ad)kapat();else panelAc(ad);}
     else if(e.code==='Digit5'&&balkonVar){e.preventDefault();if(!duraklatmaVar())yerDegistir();}
     else if(e.code==='KeyP'||(e.code==='Space'&&t!=='BUTTON'&&!e.repeat)){e.preventDefault();duraklatDegistir();}
-    else if(e.code==='Escape'&&acik){e.preventDefault();kapat();}
+    /* Esc: telefonda bir uygulama açıksa önce ana ekrana döner, ana ekrandaysa telefonu kapatır (N7) */
+    else if(e.code==='Escape'&&acik){e.preventDefault();if(acik==='telefon'&&tel.ekran!=='ana')telAnaEkran();else kapat();}
     else if((e.code==='BracketLeft'||e.code==='BracketRight')&&acik==='dosya'&&!dosyaArsiv){
       const S=acikSira(),n=S.length,i=S.indexOf(seciliMesele);if(!n||(n<2&&i>=0))return;
       e.preventDefault();donusYeri=null;panelAc('dosya',S[i<0?0:(i+(e.code==='BracketLeft'?-1:1)+n)%n]);}

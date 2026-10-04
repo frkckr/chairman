@@ -231,40 +231,16 @@ function odaTelefonYeri(yer){const B=ODA.balkonTelefon;
 function odaYolKur(hedef){
   const A=OD.adim,masa={p:new THREE.Vector3(...OD.goz),b:new THREE.Vector3(...OD.bakis)},balkon={p:new THREE.Vector3(...STIL.balkon.goz),b:new THREE.Vector3(...STIL.balkon.bakis)};
   const W=ODA_YOL.map(v=>v.clone());if(hedef==='masa')W.reverse();
-  /* eğri: konum ve yön doğrudan eğriden okunur (köşesiz); Q sık örneklenir (hız ve zaman çizelgesi için; kare başına birden çok nokta) */
-  const egriYol=new THREE.CatmullRomCurve3(W,false,'centripetal');egriYol.arcLengthDivisions=1200;
-  const Q=egriYol.getSpacedPoints(640),L=[0],K=12;
-  for(let i=1;i<Q.length;i++)L.push(L[i-1]+Q[i].distanceTo(Q[i-1]));
-  const top=L[L.length-1],n=Q.length,V=[];
-  /* hız: dönüşün keskinliğiyle (yön değişimi / metre) azalır; durmadan başlar ve durarak biter (ivmeyle sınırlı) */
-  for(let i=0;i<n;i++){const a=Q[Math.max(0,i-K)],b=Q[i],c=Q[Math.min(n-1,i+K)],u1=b.clone().sub(a),u2=c.clone().sub(b);
-    const egri=u1.lengthSq()>1e-8&&u2.lengthSq()>1e-8?u1.angleTo(u2)/Math.max(0.05,L[Math.min(n-1,i+K)]-L[Math.max(0,i-K)]):0;
-    V.push(A.hiz/(1+A.viraj*egri));}
-  /* ivme sınırı: durmadan başlar, durarak biter; dönüşe girerken önceden yavaşlar, çıkarken yeniden hızlanır (ileri ve geri geçiş) */
-  V[0]=V[n-1]=0.04;
-  for(let i=1;i<n;i++)V[i]=Math.min(V[i],Math.sqrt(V[i-1]*V[i-1]+2*A.ivme*(L[i]-L[i-1])));
-  for(let i=n-2;i>=0;i--)V[i]=Math.min(V[i],Math.sqrt(V[i+1]*V[i+1]+2*A.ivme*(L[i+1]-L[i])));
-  /* zaman çizelgesi: yol 1/240 sn'lik adımlarla yürünür; hız yolun izin verdiği hıza ivme sınırıyla yaklaşır (hız sürekli, sıçrama yok).
-     D = yol (m), VZ = hız, FZ = adım fazı (adım boyu hızla değiştiği için biriktirilir); hepsi zamana göre eşit aralıklı */
-  const DTS=1/240,D=[0],VZ=[0],FZ=[0];let d=0,v=0;
-  while(d<top-1e-7&&D.length<240*40){const [i,s]=odaAra(L,d),vt=V[i-1]+(V[i]-V[i-1])*s;
-    v=Math.max(0.03,v+Math.max(-1.6*A.ivme*DTS,Math.min(A.ivme*DTS,vt-v)));d=Math.min(top,d+v*DTS);
-    D.push(d);VZ.push(v);FZ.push(FZ[FZ.length-1]+v*DTS/yrAdimBoyu(v));}
-  const E={al:YR.el.sure,yonel:YR.yonel,kalk:YR.kalk.sure,yuru:(D.length-1)*DTS,otur:YR.otur.sure,koy:YR.el.sure};
+  /* yol, hız profili ve zaman çizelgesi ortak planlayıcıdan (js/yuruyus.js yrYolKur; N11'de ortaklaştı, sayısal davranış aynı) */
+  const Z=yrYolKur(W,A),{egri:egriYol,Q,L,D,VZ,FZ,DTS}=Z;
+  const E={al:YR.el.sure,yonel:YR.yonel,kalk:YR.kalk.sure,yuru:Z.yuru,otur:YR.otur.sure,koy:YR.el.sure};
   const bas=hedef==='balkon'?masa:balkon,son=hedef==='balkon'?balkon:masa;
   const yatay=o=>{const v=new THREE.Vector3(o.b.x-o.p.x,0,o.b.z-o.p.z);return v.lengthSq()>1e-8?v.normalize():v.set(0,0,-1);};
   return{t:0,hedef,bas,son,W,Q,L,D,VZ,FZ,DTS,E,egri:egriYol,yuru:E.yuru,toplam:E.al+E.yonel+E.kalk+E.yuru+E.otur+E.koy,koltuk:hedef==='balkon'?0:1,
     basIleri:yatay(bas),sonIleri:yatay(son),telBas:odaTelefonYeri(hedef==='balkon'?'masa':'balkon'),telSon:odaTelefonYeri(hedef),el:null};
 }
-/* sıralı dizide x'in aralığı ve kesri */
-function odaAra(D,x){let a=0,b=D.length-1;if(x<=D[0])return[1,0];if(x>=D[b])return[b,1];while(b-a>1){const m=(a+b)>>1;if(D[m]<=x)a=m;else b=m;}return[b,(x-D[a])/Math.max(1e-9,D[b]-D[a])];}
-/* yol üzerinde d metredeki nokta ve yön */
-function odaYolda(Y,d,P,yon){
-  const u=Math.min(1,Math.max(0,d/Y.L[Y.L.length-1]));Y.egri.getPointAt(u,P);Y.egri.getTangentAt(u,yon);
-}
-/* yürürken bakış: yolun 2,5 m ilerisine, biraz aşağı (yol döner dönmez baş önden döner) */
-function odaIleri(Y,d,cikis){const P=new THREE.Vector3(),yon=new THREE.Vector3(),toplam=Y.L[Y.L.length-1];odaYolda(Y,Math.min(toplam,d+2.5),P,yon);
-  if(d+2.5>toplam)P.addScaledVector(yon,d+2.5-toplam);return cikis.set(P.x,P.y-0.3,P.z);}
+/* yol yardımcıları: js/yuruyus.js (yrAra, yrYolda, yrIleri) */
+const odaIleri=(Y,d,cikis)=>yrIleri(Y,d,cikis);
 const ODA_SIFIR=new THREE.Vector3();
 /* t anındaki kamera konumu ve bakışı; ilerleme 0–1 (görüş açısı ve kapı için). Y.koltuk: başkan koltuğunun itilme payı (0–1);
    Y.el: el işi sürüyorsa {mod: 'al' | 'koy', s: 0–1} */
@@ -278,10 +254,7 @@ function odaYolAni(Y,P,B){
     const s=t/E.kalk;yrKalk(s,Y.bas.p,Y.Q[0],Y.basIleri,P);B.copy(odaIleri(Y,0,ileri));
     if(Y.hedef==='balkon')Y.koltuk=yrYumusak((s-0.35)/0.65);}
   else if((t-=E.kalk)<E.yuru){/* adımlar: zaman çizelgesinden; her adımda küçük iniş-çıkış, ağırlık aktarımı ve ilerlemenin hafif nabzı */
-    const k=Math.min(Y.D.length-1-1e-9,t/Y.DTS),i=Math.floor(k),s=k-i,ara=(Z)=>Z[i]+(Z[i+1]-Z[i])*s;
-    const faz=ara(Y.FZ),v=ara(Y.VZ),zarf=Math.max(0,Math.min(1,faz,Y.FZ[Y.FZ.length-1]-faz));
-    const d=Math.min(toplam,Math.max(0,ara(Y.D)+YR.adim.nabiz*yrAdimBoyu(v)*Math.sin(2*Math.PI*faz)*yrYumusak(zarf))),yon=new THREE.Vector3();
-    odaYolda(Y,d,P,yon);yrAdim(faz,zarf,yon,P);B.copy(odaIleri(Y,d,ileri));ilerleme=d/toplam;}
+    const d=yrYuruAn(Y,t,P,B);ilerleme=d/toplam;}
   else if((t-=E.yuru)<E.otur){/* oturma: yerine geçer, öne eğilerek alçalır, yaslanır; bakış oturulan yerin bakışına döner; koltuk yerine çekilir */
     const s=t/E.otur;yrOtur(s,Y.Q[Y.Q.length-1],Y.son.p,Y.sonIleri,P);B.lerpVectors(odaIleri(Y,toplam,ileri),Y.son.b,yrYumusak(s/0.7));
     if(Y.hedef==='masa')Y.koltuk=1-yrYumusak((s-0.1)/0.5);ilerleme=1;}

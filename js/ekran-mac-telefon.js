@@ -1,6 +1,6 @@
 /* ============ Chairman — maç telefonu (yol haritası 2.8F, 2.8I) ============
    Görüntü katmanı; kural içermez, kariyeri değiştirmez. Maçta masadaki telefona (js/baskan.js BK_TEL; ön plan kamerası BASKAN.kamera ile
-   isabet denetimi) tıklanınca, “Telefon” düğmesiyle ya da T tuşuyla açılır; Esc ya da T ile kapanır.
+   isabet denetimi) tıklanınca, “Telefon” düğmesiyle ya da T tuşuyla açılır; T ile kapanır. Esc bir uygulamadan ana ekrana döner, ana ekranda kapatır (N7).
    Oda ve balkondakiyle aynı telefondur (js/ekran-telefon.js telefonCiz): ana ekran → Mesajlar (kişi listesi → konuşma) / Canlı Skor.
      Mesajlar   kariyerdeki konuşmalar okunur; karar kartı görünür ama cevap maçta verilmez (maç içi kariyer cevabı Aşama 3'te zaman
                 bağlantısıyla açılır). Okumak maçta "yeni" işaretini de değiştirmez: maç sınırında kariyer değişmez. Kariyer yoksa boş durum.
@@ -24,10 +24,11 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
       ist:[['Şut',I.sut[0],I.sut[1]],['İsabetli şut',I.isabet[0],I.isabet[1]],['Topa sahip olma',s>0?y+'%':'—',s>0?(100-y)+'%':'—'],['Korner',I.korner[0],I.korner[1]],
         ['Faul',I.faul[0],I.faul[1]],['Sarı kart',I.sari[0],I.sari[1]],['Kırmızı kart',I.kirmizi[0],I.kirmizi[1]],['Ofsayt',I.ofsayt[0],I.ofsayt[1]]]};
   }
-  function ciz(odak){
+  /* gecis: telefonda ekran değişti (kısa açılış geçişi yalnız o çizimde; N7). Maçın durumu telefonun durum çubuğunda ve ana ekranındadır */
+  function ciz(odak,gecis){
     const k=typeof OYUN!=='undefined'?OYUN.kariyer:null;
-    E.innerHTML='<div class="mt-cihaz"><header class="mt-ust"><span>'+yaz(durumYazi())+'</span><b>Telefon</b><button type="button" data-mt="kapat" title="Kapat (Esc)">Kapat ×</button></header>'+
-      telefonCiz(k,T,{macta:true,mac:macVerisi(),kapali:'Maç sürerken cevap verilmez; maçtan sonra odadan cevaplayabilirsin.'})+'</div>';
+    E.innerHTML='<div class="mt-cihaz"><header class="mt-ust"><b>Telefon</b><button type="button" data-mt="kapat" title="Kapat (Esc)">Kapat ×</button></header>'+
+      telefonCiz(k,T,{macta:true,mac:macVerisi(),acilis:!!gecis,kapali:'Maç sürerken cevap verilmez; maçtan sonra odadan cevaplayabilirsin.'})+'</div>';
     const f=odak&&E.querySelector(odak);if(f)f.focus({preventScroll:true});
   }
   function ac(){if(MAC_TELEFON.acik||ON_EKRAN.sayfa!==null)return;MAC_TELEFON.acik=true;duraklatmaEkle('telefon');E.hidden=false;btn.setAttribute('aria-pressed','true');ciz('[data-mt="kapat"]');}
@@ -39,9 +40,9 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
     const b=e.target.closest('button');if(!b||b.disabled)return;
     if(b.dataset.mt==='kapat'){kapat();return;}
     const ey=b.dataset.eylem;
-    if(ey==='telUyg'){T.ekran=b.dataset.uyg;T.skorAc=false;ciz('.tel-geri');}
-    else if(ey==='telEv'){T.ekran='ana';T.kisi=null;ciz('.tel-uygMesaj');}
-    else if(ey==='telKisi'){T.ekran='konusma';T.kisi=b.dataset.kisi;ciz('.tel-geri');const g=E.querySelector('.tel-govde');if(g)g.scrollTop=g.scrollHeight;}
+    if(ey==='telUyg'){T.ekran=b.dataset.uyg;T.skorAc=false;ciz('.tel-geri',true);}
+    else if(ey==='telEv'){T.ekran='ana';T.kisi=null;ciz('.tel-uygMesaj',true);}
+    else if(ey==='telKisi'){T.ekran='konusma';T.kisi=b.dataset.kisi;ciz('.tel-geri',true);const g=E.querySelector('.tel-govde');if(g)g.scrollTop=g.scrollHeight;}
     else if(ey==='skorAc'){T.skorAc=!T.skorAc;ciz('[data-eylem="skorAc"]');}
   });
   /* masadaki telefon: ön plan kamerasıyla isabet; üzerindeyken el imleci */
@@ -54,7 +55,8 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
   addEventListener('keydown',e=>{
     if(ON_EKRAN.sayfa!==null||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;
     if(e.code==='KeyT'){e.preventDefault();MAC_TELEFON.acik?kapat():ac();}
-    else if(e.code==='Escape'&&MAC_TELEFON.acik){e.preventDefault();kapat();}});
+    /* Esc: bir uygulama açıksa önce ana ekrana döner, ana ekrandaysa telefonu kapatır (N7) */
+    else if(e.code==='Escape'&&MAC_TELEFON.acik){e.preventDefault();if(T.ekran!=='ana'){T.ekran='ana';T.kisi=null;ciz('.tel-uygMesaj',true);}else kapat();}});
   /* açıkken skor/dakika satırı motorun donmuş anını gösterir; elle duraklatma kalkıp telefon tek neden kalınca da değişmez */
   duraklatmaDinle(()=>{if(MAC_TELEFON.acik)ciz();});
 }

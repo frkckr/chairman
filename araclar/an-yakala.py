@@ -14,6 +14,8 @@ Kullanım:
               --onek AD (dosya adlarının başına; ör. once/sonra karşılaştırması) · --en-cok S (koşul için en çok oyun süresi, varsayılan 900)
               --js "<ifade>" (sayfa yüklenince çalışır; ör. bir STIL ayarını açıp kapatmak: --js "STIL.okunurluk.disCizgi=true")
               --oncesi (--kosul ile: maç öncesini atlamadan bekle; ör. tören ve takım fotoğrafı anları)
+              --giris (N11, 2026-10-04: stada varışı ve locaya girişi başlatıp film şeridi çeker; karartma ve karar anı gibi sayfa katmanları
+                da görüntüye girer; --sonra S: şeride başlamadan S sn oynat) · --ek "&rakipBaskan=yerinde" (adrese eklenir)
 Çıktı: araclar/anlar/<onek><ad>.png ve .json (topun ekrandaki yeri ve boyu (topPx gerçek, topCizimPx asgari boya büyütülmüş çizim), oyuncuların
 piksel boyu (maç ızgarasında; oyuncuPx480 480 satır karşılığı, eski ölçülerle karşılaştırma için), görüş açısı, aşama). --bino dürbünü anında açar: bakış ve görüş açısı geçişsiz oturur (kameraOturt). Depoya eklenmez.
 """
@@ -125,6 +127,36 @@ CIZ_JS = """(o) => {
 }"""
 
 
+async def giris_seridi(pg, ad, a, hatalar, baglam):
+    """N11: varışı başlatır; kareler oyunun tam kare döngüsünden (__kare) ve sayfanın kendisinden (karartma, karar anı) alınır."""
+    from PIL import Image
+    import io
+    await pg.evaluate("() => { const b = document.getElementById('btnBeklemedenGec'); if (ON_EKRAN.acik && b && !b.hidden) b.click(); else locaGirisBaslat(); }")
+    if a.sonra:   # parça parça (tek uzun çağrı çizim sürecini kilitleyebiliyor)
+        kalan = round(a.sonra * 60)
+        while kalan > 0:
+            await pg.evaluate(f"__kare({min(60, kalan)})")
+            kalan -= 60
+    adet, kareler, iz = max(1, a.kare), [], []
+    kutu = await pg.locator('#screen').bounding_box()
+    for i in range(adet):
+        if i:
+            await pg.evaluate(f"__kare({max(1, round(a.aralik * 60))})")
+        kareler.append(Image.open(io.BytesIO(await pg.screenshot(clip=kutu))).convert('RGB'))
+        iz.append(await pg.evaluate("({ t: +LOCA_GIRIS.t.toFixed(2), evre: LOCA_GIRIS.evre, mod: LOCA_GIRIS.mod, rakip: LOCA_GIRIS.rk.evre, karar: KARAR_ANI.acik, secim: MAC_PROTOKOL.karar && MAC_PROTOKOL.karar.secim })"))
+    w, h = 480, 360
+    sut = min(adet, 4)
+    serit = Image.new('RGB', (w * sut, h * ((adet + sut - 1) // sut)))
+    for i, k in enumerate(kareler):
+        serit.paste(k.resize((w, h)), ((i % sut) * w, (i // sut) * h))
+    CIKTI.mkdir(parents=True, exist_ok=True)
+    serit.save(CIKTI / f"{a.onek}{ad}.png")
+    (CIKTI / f"{a.onek}{ad}.json").write_text(json.dumps({"ad": ad, "tohum": a.tohum, "ek": a.ek, "kareler": iz, "hatalar": hatalar}, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"{ad}: araclar/anlar/{a.onek}{ad}.png · " + " | ".join(f"{d['t']} {d['evre'] or '-'}" for d in iz))
+    await baglam.close()
+    return True, hatalar
+
+
 async def yakala(tarayici, site, ad, kosul, sonra, on, a):
     baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
     await baglam.add_init_script(BASLANGIC_JS % a.tohum)
@@ -132,7 +164,7 @@ async def yakala(tarayici, site, ad, kosul, sonra, on, a):
     hatalar = []
     pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
     pg.on("console", lambda m: hatalar.append("Konsol: " + m.text) if m.type == "error" and "Failed to load resource" not in m.text else None)
-    await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}")
+    await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}" + (a.ek or ""))
     await pg.wait_for_selector("#btnMacaGec", timeout=30000)
     await pg.evaluate("__kare(2)")
     await pg.evaluate(KUR_JS)
@@ -140,6 +172,8 @@ async def yakala(tarayici, site, ad, kosul, sonra, on, a):
         await pg.evaluate("(k) => { new Function(k)(); }", a.js)
     if on == "mac":
         await pg.evaluate("macaGecIste(); document.getElementById('btnMacaGec').hidden = true;")
+    if on == "giris":
+        return await giris_seridi(pg, ad, a, hatalar, baglam)
     if a.yakin:
         hedef = "mac.ball" if a.yakin == "top" else f"mac.players.find(p=>p.no=={int(a.yakin)}&&p.oyunda)"
         await pg.evaluate(f"window.KAMERA_ZORLA = {{ get hedef() {{ const t = {hedef}; return t ? {{ x: t.x, y: 1, z: t.z - 34 }} : {{ x: 0, y: 1, z: 0 }}; }}, fov: 14 }}")
@@ -190,15 +224,19 @@ async def ana():
     ap.add_argument("--en-cok", dest="en_cok", type=float, default=900)
     ap.add_argument("--js")
     ap.add_argument("--oncesi", action="store_true")
+    ap.add_argument("--giris", action="store_true")
+    ap.add_argument("--ek")
     a = ap.parse_args()
     try:
         from playwright.async_api import async_playwright
     except ImportError:
         sys.exit("Playwright bulunamadı. Kurmak için: pip install playwright==1.56.0")
     isler = []
-    if a.kosul:
+    if a.giris:
+        isler.append((a.ad if a.ad != "ozel" else "giris", "true", 0, "giris"))
+    elif a.kosul:
         isler.append((a.ad, a.kosul, a.sonra or 0, "oncesi" if a.oncesi else "mac"))
-    secim = list(HAZIR) if a.hepsi else (a.anlar or ([] if a.kosul else VARSAYILAN_SET))
+    secim = list(HAZIR) if a.hepsi else (a.anlar or ([] if (a.kosul or a.giris) else VARSAYILAN_SET))
     for ad in secim:
         if ad not in HAZIR:
             sys.exit(f"Bilinmeyen an: {ad}. Hazır anlar: {', '.join(HAZIR)}")
