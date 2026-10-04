@@ -27,7 +27,7 @@ function duraklatDegistir(){if(duraklatmaVar('elle'))duraklatmaKaldir('elle');el
 btnDuraklat.onclick=duraklatDegistir;
 /* geliştirici panelindeki Durdur/Devam aynı ortak duraklatmayı kullanır (2.8O) */
 const btnDurdur=$('btnDurdur');btnDurdur.onclick=duraklatDegistir;
-duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';btnBino.disabled=a;if(duraklatGosterge)duraklatGosterge.hidden=!a;});
+duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';btnBino.disabled=a||ON_EKRAN.sayfa==='loca';if(duraklatGosterge)duraklatGosterge.hidden=!a;});
 /* maça geç: maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) atlar; santrada düğme kaybolur */
 const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();btnMacaGec.hidden=true;};
 /* boşluk ya da P duraklatır (sayfa kaymaz); odaktaki düğmede boşluk düğmeyi çalıştırır. Oda açıkken kısayolu oda ekranı işler (js/ekran-oda.js) */

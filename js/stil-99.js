@@ -35,6 +35,9 @@ const STIL={
     vip:['#1e1f24','#2a2c33','#3a3228','#23262e','#2e2a26'],
     sac:['#241a12','#3c2616','#141212','#5a4028','#8a8680','#1c1714'],
     bere:0.16,kel:0.1,
+    /* N9 (2026-10-04): kapıdan yerine yürüyen seyirci. hiz: yürüme hızı aralığı (m/sn, kişiden kişiye), adim: adım boyu (m),
+       salinim: bacak salınımı (radyan), sekme: adımdaki iniş-çıkış (m). TEST değerleri */
+    yuruyen:{hiz:[1.15,1.45],adim:0.62,salinim:0.42,sekme:0.03},
     /* maç olaylarında tribünün heyecanı (0–1) ve sönme süresi (sn) */
     heyecan:{giris:0.8,santra:0.5,sut:0.35,kurtaris:0.4,direk:0.6,gol:1,macSonu:0.8,sonme:6},
     vipKoltuk:'#8a1c16',vipKorkuluk:0xb8bcc2,
@@ -93,24 +96,50 @@ const STIL={
      aci: ön plan kamerasının görüş açısı; dinlenmeEgimi: bakışın sahaya dinlenirken eğimi (radyan). A akışı (2026-10-03): bakış topa odaklıdır
      (eğim orta sahada ≈ -0,22, uzak taçta ≈ -0,13); dinlenmeEgimi uzak tarafa yakın seçildi, egimUst: ön planın yukarı dönüşünün sınırı (radyan;
      masa en çok bu kadar iner, telefon ekranda kalır), govdeHiz: ön planın bakışa yetişme hızı (radyan/sn; telefon kıpırdamadan tıklanır). */
-  /* locaya giriş (2.8T, js/loca-giris.js): görüş açısı, ayakta göz yüksekliği (m); arka duvardaki kapı (x, genişlik, yükseklik);
-     kapının ardındaki sahanlık ve aşağı inen merdiven; zaman çizelgesi (sn: merdivenin sonu, kapı, rakibin önü, tokalaşmanın sonu,
-     koltuğun yanı, oturmuş); rakip başkan (x, ön kenardan uzaklığı, bekleyişte ve otururken yönü, görünüşü). TEST değerleri */
-  locaGiris:{aci:50,goz:1.62,kapi:{x:-3.0,en:1.0,boy:2.15},merdiven:{basamak:8,yukseklik:0.17,derinlik:0.3,sahanlik:1.4},
-    sure:{merdiven:3.4,kapi:4.6,rakip:6.8,tokalas:8.8,yer:10.0,otur:11.8},
-    rakip:{x:1.5,bekle:1.3,yon:Math.PI,oturYon:0,gorunus:{ten:2,sac:'kisa',sacRenk:'#8a8680',biyik:true,boy:1.0,yapi:1.15}},
-    renk:{cerceve:0xd8d2c4,kapi:0x6a4a2c,ic:0xcfc6b4,koltuk:0x4a1e18}},
+  /* stada varış ve locaya giriş (N11, kullanıcı kararı 2026-10-04; 2.8T'nin yerini aldı; js/loca-giris.js). aci: yürürken görüş açısı,
+     acilisAci: karanlıktan açılışta (geniş; yürürken aci'ya daralır), elAci: tokalaşırken (karar anı); goz: ayakta göz yüksekliği (m); kapi: locanın arka duvarındaki kapı; merdiven: kapının ardındaki
+     sahanlık ve son kat basamakları; dis: başkanın binanın sokak kapısının önünde başladığı uzaklık (m); yol: ortak yürüyüşün hızı ve
+     merdivendeki hızı (js/yuruyus.js yrYolKur); sure: karanlıktan açılış, ilk adıma kadar bekleyiş, kapıda kesme (kararma, siyah, açılma),
+     rakip başkanın kalkışı, tepki, geri adım, oturma ve raf (sn); rakip: rakip başkanın koltuğu (x), tokalaşma mesafesi, görünüşü (diğer
+     loca kişileriyle aynı insan ölçeği); kalabalik: önde iki yönetici (x), arkada basamak (ön kenardan uzaklık, yükseklik) ve konuklar (x);
+     sonra: rakip başkan sonra gelirse başkan oturduktan kaç sn sonra (aralık; takımlar ısınmaya çıkmadan, senaryo sn sinir'den önce).
+     TEST değerleri */
+  locaGiris:{aci:46,acilisAci:58,elAci:42,goz:1.62,kapi:{x:-3.0,en:1.0,boy:2.15},merdiven:{basamak:8,yukseklik:0.17,derinlik:0.3,sahanlik:1.4},
+    dis:6.5,yol:{hiz:1.3,viraj:0.4,ivme:1.0,merdivenHiz:0.62},
+    sure:{acilis:1.6,bekle:1.2,kesmeKarar:0.8,kesmeSiyah:0.25,kesmeAc:0.45,kalk:1.3,tepki:1.5,geri:1.0,otur:2.2,raf:0.5,selamKalk:1.6},
+    rakip:{x:1.5,mesafe:1.35,gorunus:{ten:2,sac:'kisa',sacRenk:'#8a8680',biyik:true,boy:1.0,yapi:1.0}},
+    kalabalik:{on:[-1.4,-2.6],arka:{geri:2.1,yukseklik:0.35,x:[-1.9,-0.6,0.7,2.0,3.3]}},
+    sonra:[8,20],sinir:44,
+    renk:{cerceve:0xd8d2c4,kapi:0x6a4a2c,ic:0x8a8274,lamba:0xfff0d0,pencere:0x0e1420,koltuk:0x4a1e18,basamak:0x5a5b60}},
+  /* karar anı ekranı (N12, js/ekran-an.js): kenar kararması (0–1), kartların yerine oturma süresi (süre ondan sonra başlar), seçimden sonra
+     kartın kalış süresi, son kaç saniyede çubuk amber olur (sn); yazı büyüklüğü (cqw; normal, büyük). TEST değerleri */
+  an:{kararma:0.35,giris:0.4,sonra:0.9,amber:1.5,yazi:{normal:1.3,buyuk:1.6}},
   /* raf (N5, 2026-10-04): y = rafın üst yüzeyi (ön plan kamerasına göre metre; eski masa -0,47'deydi), derinlik = rafın eni (m), duvar = altındaki ön duvarın iç yüzü */
   baskan:{aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,raf:{y:-0.56,derinlik:0.3,duvar:0x44474d},takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.15,egimUst:0.02,govdeHiz:0.05},
 
   /* Başkan bölümü: halı, ahşap bölmeler, başkanın koltuğu */
   baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
 
-  /* Stat yapı malzemeleri (tribün betonu, çatı, direk, toprak pist, set, kötü zemin renkleri, çevredeki apartmanlar) */
+  /* Stat yapı malzemeleri (tribün betonu, çatı, direk, toprak pist, set, kötü zemin renkleri) */
   stadyum:{
     beton:0x6d6e72,betonKoyu:0x4d4e53,yanDuvar:0x5a5b60,basamak:0x66665f,set:0x4c5a2c,cati:0x8c9096,catiKenar:0x3c3f44,direk:0x4a4d52,disZemin:0x232428,
-    toprakPist:'#6e4a33',pistsizKenar:'#2a6526',kuruCim:'#8f8a44',camur:'78,56,34',
-    apartman:['#3a3530','#463d34','#34363a','#3e362c'],pencere:'#ffd98a'
+    toprakPist:'#6e4a33',pistsizKenar:'#2a6526',kuruCim:'#8f8a44',camur:'78,56,34'
+  },
+  /* stadın çevresi (N8, js/stadyum-cevre.js): gündüz (balkon, pencere; Lambert ile aydınlanır) ve gece (maç; ışıksız koyu renkler, yanık pencere
+     ve lamba). Listelerde renk karmayla seçilir. kaya: Braga esinli yamaç; duvar/kiremit: evler; tente: dükkân tenteleri; tepe: ufuktaki iki sıra.
+     yamacIsik: gece projektörün yamacın alt basamaklarına vurması (alttan üste parlaklık çarpanı). pencereOrani: gece yanık pencerelerin payı. TEST değerleri */
+  cevre:{
+    gunduz:{kaya:['#a39a8a','#958c7c','#b0a796','#8a8272','#9c9080'],cali:'#6c7a40',cam:'#3f5a32',govde:'#5a4232',kavak:'#5d7a3c',
+      duvar:['#e8e0cc','#d9c9a8','#efe6d2','#cdb892','#e4d4b4','#d8cfc0'],kiremit:['#a4553a','#b0603f','#94492f','#9c5a3a'],pencere:'#4a5866',kapi:'#5a3e2a',
+      cevreDuvar:'#b8b2a4',duvarUst:'#9e988a',asfalt:'#5e5e60',kaldirim:'#a8a49a',cizgi:'#e8e6dc',ic:'#8f8a78',tarla:['#9a9560','#7d8c4c','#b0a46e','#6f7f45'],
+      tasDuvar:'#a09a88',tepeYakin:'#6f7d50',tepeUzak:'#94a3a8',arac:['#b33a2e','#2e4f8a','#d8d4c8','#3a3d42','#8a8f94'],tente:['#b4241c','#2c6f28','#22347a','#c98a1c'],
+      vitrin:'#3c4650',direk:'#5a5d62',lamba:'#d8d4c4',bina:'#d8cfba',binaKoyu:'#b9ae96',agiz:'#141416',tabela:'#2a2c30',tabelaYazi:'#f2ede2',kulup:'#c8281e',kulupAcik:'#f2ede2'},
+    gece:{kaya:['#34332f','#2e2d2a','#3a3834','#2a2927','#33312c'],cali:'#151b10',cam:'#0f150e',govde:'#16120f',kavak:'#111810',
+      duvar:['#2c2925','#2a2620','#302c26','#27231e','#2d2923','#2b2824'],kiremit:['#2c1b15','#301d16','#27170f','#2a1a10'],pencere:'#15171c',kapi:'#1a140f',
+      cevreDuvar:'#3c3c3e',duvarUst:'#303032',asfalt:'#18191c',kaldirim:'#2c2d30',cizgi:'#5c5c5a',ic:'#262624',tarla:['#1b1d15','#181c13','#1f1f16','#161a12'],
+      tasDuvar:'#2b2a27',tepeYakin:'#07090b',tepeUzak:'#0a0d13',arac:['#3a1512','#141e33','#4a4844','#18191c','#2e3134'],tente:['#3a120f','#0f2410','#0e1530','#3a2a0c'],
+      vitrin:'#20242a',direk:'#2a2c30',lamba:'#fff2cc',bina:'#3c3832',binaKoyu:'#2e2a25',agiz:'#060607',tabela:'#1c1d20',tabelaYazi:'#e8e0cc',kulup:'#7a1a14',kulupAcik:'#8a8478',
+      pencereIsik:'#ffd98a',vitrinIsik:'#fff0c8',lambaIsik:0xffd9a0,yamacIsik:[1.7,1.0],pencereOrani:0.35}
   },
 
   /* tünel ağzı ve yedek kulübeleri */
@@ -181,7 +210,7 @@ const STIL={
      ana tribünün tepesinde). aci/bakis: balkondaki sandalyeden bakış. TEST değerleri. */
   balkon:{aci:46,odakAci:42,goz:[-0.55,1.3,-4.45],bakis:[0,-7,-47],
     saha:[0,-7,-58],gokUst:[0.42,0.66,0.9],gokAlt:[0.86,0.93,0.96],disZemin:0x8a8672,zemin:0x9a958a,korkuluk:0x3a3d44,masa:0x6a4228,masaAyak:0x2a2c33,sandalye:0x7a2420,
-    beton:0x9a9b9e,betonKoyu:0x7d7e82,koltuk:0xb4322a,koltukAcik:0xe6e0d2,cati:0x8c9096,direk:0x5a5d62,kalePost:0xf4f4f0,apartman:['#b8ab94','#a89c88','#c4b8a2','#9c9484'],pencere:'#5a6a7a',
+    beton:0x9a9b9e,betonKoyu:0x7d7e82,koltuk:0xb4322a,koltukAcik:0xe6e0d2,cati:0x8c9096,direk:0x5a5d62,kalePost:0xf4f4f0,
     agac:0x3f6a34,golge:0.22,koni:0xff7a1e,yelek:'#e8c21e',
     /* gözlemde bir oyun dakikasının gerçek süresi, ms (2.8B; TEST değeri: 120 dakikalık antrenman ≈ 8,4 sn) */
     gozlemDakikaMs:70,
@@ -194,8 +223,10 @@ const STIL={
      Ekran bu renkleri CSS değişkeni (--k-ad) olarak yazar. yaziBoyu: karenin genişliğine oranla yazı (cqw). TEST değerleri. */
   kagit:{zemin:'#f4eedf',zeminKoyu:'#e9e0cb',serit:'#fbf7ec',cizgi:'#c9b994',yazi:'#26221c',soluk:'#6d6353',vurgu:'#a5620a',vurguZemin:'#ffb530',
     kulup:'#b4241c',kirmizi:'#b4241c',yesil:'#2c6f28',golge:'rgba(40,28,12,.28)',yaziBoyu:{normal:1.42,buyuk:1.72},
-    /* telefon (2.8I): açık tonlu cihaz; gelen/giden baloncuk ve ana ekran simgeleri */
-    telefon:{kasa:'#1d1e22',ekran:'#f7f2e6',gelen:'#fbf7ec',giden:'#ffd27a',gidenCizgi:'#c98a1c',mesajSimge:'#2c6f28',skorSimge:'#22347a'},
+    /* telefon (2.8I): açık tonlu cihaz; gelen/giden baloncuk ve ana ekran simgeleri. N7 (2026-10-04): cihaz çerçevesi ve kamera adası, ana ekranın
+       dikey zemini (üst, orta, alt), alttaki sabit sıranın zemini, geri/okunmamış mavisi, satır ayracı */
+    telefon:{kasa:'#1d1e22',cerceve:'#34363c',ada:'#0c0c0e',ekran:'#f7f2e6',anaZemin:['#efe6d0','#f7f2e6','#f1e8d4'],sabit:'rgba(201,185,148,.42)',
+      baglanti:'#22347a',ayrac:'rgba(201,185,148,.6)',gelen:'#fbf7ec',giden:'#ffd27a',gidenCizgi:'#c98a1c',mesajSimge:'#2c6f28',skorSimge:'#22347a'},
     /* dosya (2.8M, js/ekran-dosya.js): masada açılan kırmızı karton dosya; perde odayı hafif karartır */
     dosya:{perde:'rgba(24,16,8,.42)',kapak:'#a8291f',kapakKoyu:'#7a1c15',sekme:'#e9dcc0',sayfa:'#fbf6e8',cizgi:'#d8c9a6',not:'#fffdf6',atas:'#8a8f98',mavi:'#22347a'},
     /* ajanda (2.8M, js/ekran-defter.js): iki sayfalı spiral defter; kayıtlar mürekkep renginde */

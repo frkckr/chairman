@@ -1,11 +1,12 @@
 /* ============ Chairman — stadyum: kulübün stat tarifini (STAT, js/stadyum-tarifleri.js) okuyup statı kurar ============
    Tek kurucu (2.8D): statKur(kok, {mac, gunduz}) aynı tariften aynı yapıyı verilen gruba kurar:
      saha ve zemin kalitesi, reklam panoları, tribünler (basamak, koltuk, başkan bölümü, çatı), tel örgü, skor tabelası,
-     tünel ağzı ve yedek kulübeleri, projektörler, çevre, kaleler.
+     tünel ağzı ve yedek kulübeleri, projektörler, çevre (cephe cephe; js/stadyum-cevre.js cevreKur), kaleler.
    mac: true  → maç sahnesi. Seyirci yerleri (YERLER), başkan koltuğu (BASKAN_KOLTUGU), pankart/bayrak/meşale, projektör ışıkları,
                 canlı skor tabelası (TABELA), tünel ve kulübe verisi (TUNEL, KULUBELER) burada üretilir.
    mac: false → balkon ve oda penceresi (js/balkon.js): aynı yapı gündüz, boş tribünlerle; maç günü eşyası ve seyirci yeri üretilmez.
-   gunduz: çevredeki apartmanların ve dış zeminin gündüz renkleri (STIL.balkon). Maçtaki hâl ile aynı yapıdır, yalnız ışık/doluluk değişir. */
+   gunduz: çevrenin ve dış zeminin gündüz renkleri (STIL.cevre.gunduz, STIL.balkon). Maçtaki hâl ile aynı yapıdır, yalnız ışık/doluluk değişir;
+     ana tribünün arkasındaki kulüp binası yalnız maçta kurulur (balkon ve pencere o binadadır). */
 const SK=STIL.stadyum;
 const PISTLI=STAT.pist!=='yok';
 const YAN_MESAFE={tartan:44,toprak:42,yok:40}[STAT.pist],KALE_MESAFE={tartan:64,toprak:61,yok:59}[STAT.pist];
@@ -259,16 +260,9 @@ function statKur(kok,sec){
     for(let i=0;i<4;i++)for(let j=0;j<2;j++)box(0.8,0.8,0.1,BAS({color:gunduz?0xd8d4c4:0xfff2cc}),-1.5+i,H+0.05+j*1.1,0.25,d);
     if(mac){const s=glow(0xffe9c0,10,0.5*STAT.projektor.guc);s.position.set(0,H+0.6,1.2);d.add(s);lamps.push(s);}}
 
-  /* ---- çevre: kasaba statının arkasında apartmanlar (gece ışıkları yanar; gündüz cephe renkleri) ---- */
-  if(STAT.cevre==='apartman'){
-    const renk=gunduz?GB.apartman:SK.apartman;
-    const wcv=seed=>{const cv=mk(16,32),g=cv.getContext('2d'),dv=renk[seed%renk.length];g.fillStyle=dv;g.fillRect(0,0,16,32);
-      for(let f=0;f<4;f++)for(let w=0;w<3;w++){g.fillStyle=gunduz?GB.pencere:h2(seed*9+w,f*5)<0.35?SK.pencere:'#15171c';g.fillRect(1+w*5,f*8+2,3,4);}return cv;};
-    for(let i=0;i<34;i++){
-      const a=i/34*Math.PI*2+h2(i,3)*0.1,r=112+h2(i,5)*45,x=Math.cos(a)*r*1.15,z=Math.sin(a)*r*0.85,fl=3+Math.floor(h2(i,7)*4),w=12+h2(i,9)*10,dp=10+h2(i,11)*6,h=fl*3;
-      const side=gunduz?LAM({map:tx(wcv(i),'m',[w/9,fl/4])}):BAS({map:tx(wcv(i),'m',[w/9,fl/4])}),roof=gunduz?LAM({color:0x6a6c70}):BAS({color:0x1c1d21});
-      const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,dp),[side,side,roof,roof,side,side]);b.position.set(x,h/2-0.3,z);b.rotation.y=-a+h2(i,13)*0.4;kok.add(b);}
-  }
+  /* ---- çevre: her cephe ayrı (N8; js/stadyum-cevre.js): doğuda kaya yamaç, karşıda evler, batıda stat kapısı ve sokak, ana tribünün arkasında
+     kulüp binası (yalnız maç), ufukta tepeler; çevre duvarı ve kapılar ---- */
+  if(typeof cevreKur==='function')cevreKur(kok,{mac,gunduz});
 
   /* ---- kaleler ---- */
   for(const sd of[-1,1]){

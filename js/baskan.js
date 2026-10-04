@@ -60,6 +60,8 @@ const BK_EYLEM={
   durbunKaldir:{sure:0.5,keys:[[0,{}],[0.5,{sol:BKP(-0.09,-0.1,-0.4,1.35,0.3,0,0.8),sag:BKP(0.09,-0.1,-0.4,1.35,-0.3,0,0.8)}]],durbun:true,kal:true},
   /* locaya girişte rakip başkanla tokalaşma (2.8T): sağ el öne uzanır, iki kez sallanır, geri çekilir */
   tokalas:{sure:2.0,keys:[[0,{sag:BKP(0.3,-0.75,-0.6,0.2,-0.2,0,0.3)}],[0.45,{sag:BKP(0.03,-0.24,-0.68,0.3,0.1,-1.45,0.5)}],[1.6,{sag:BKP(0.03,-0.24,-0.68,0.3,0.1,-1.45,0.5)}],[2.0,{sag:BKP(0.3,-0.75,-0.6,0.2,-0.2,0,0.3)}]],salla:[0.55,1.5]},
+  /* N12: karar anında uzun tokalaşma: el uzanır, karar anı boyunca tutulur (js/loca-giris.js karar bitince bırakılma anına atlatır: t = 7,4) */
+  tokalasAn:{sure:8.0,keys:[[0,{sag:BKP(0.3,-0.75,-0.6,0.2,-0.2,0,0.3)}],[0.45,{sag:BKP(0.03,-0.24,-0.68,0.3,0.1,-1.45,0.5)}],[7.4,{sag:BKP(0.03,-0.24,-0.68,0.3,0.1,-1.45,0.5)}],[8.0,{sag:BKP(0.3,-0.75,-0.6,0.2,-0.2,0,0.3)}]],salla:[0.55,1.5]},
   durbunIndir:{sure:0.5,keys:[[0,{sol:BKP(-0.09,-0.1,-0.4,1.35,0.3,0,0.8),sag:BKP(0.09,-0.1,-0.4,1.35,-0.3,0,0.8)}],[0.5,{}]],durbun:true}
 };
 /* ---- tepkiler: maç olaylarından gelir (js/mac-sahnesi.js → baskanOlay) ---- */

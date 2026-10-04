@@ -24,11 +24,26 @@
      üstündedir (balkon döşemesinden kat metre yukarıda, tribünün arka duvarından geri metre geride); genislik/derinlik locanın ölçüsü.
      Yüksek ve geniş bakış: yedek kulübeleri ve sahanın büyük kısmı başını çevirmeden görünür. Başkan koltuğu ve kamera buradan hesaplanır;
      tribündeki protokol bölümü diğer yöneticilerindir. N5 (kullanıcı kararı 2026-10-04): başkanın yeri biraz yükseldi (kat 2,2 → 3,0).
-     TEST değerleri. */
+     TEST değerleri.
+   cevre (N8, kullanıcı kararı 2026-10-04): stadın çevresi, her cephe ayrı (çizim js/stadyum-cevre.js). Kasaba stadı: yüksek bina zorunlu değil,
+     ufukta boşluk kalmaz; örnek, bir kale arkası kaya yamaca yaslanan Braga stadı. Kulübün şehri açık karar olduğundan belirli bir şehri gösteren
+     yapı yoktur.
+     cepheler: {yer: tribünün yeri, tip}. yamac = basamaklı kaya yüzü (yukseklik m, basamak sayısı), üstte çamlar; evler = sokak, bahçe duvarlı
+       bir-iki katlı kiremit çatılı evler, kavaklar (sira: arka arkaya ev sırası); kapi = çevre duvarında stat kapısı ve gişeler, sokak, lambalar,
+       araçlar, az katlı dükkânlar; kulupBinasi = locayı taşıyan kulüp binası, armalı giriş, otopark, bahçe duvarı, arka sokak. kulupBinasi yalnız
+       maç kurulumunda kurulur: balkon ve pencere kurulumunda stat 180° döner, bina odanın içine düşer (loca ile aynı kural).
+     ufuk: stadı çevreleyen tepe sıraları {yaricap, yukseklik: [en az, en çok]} (yakından uzağa). duvar: çevre duvarının yüksekliği.
+   kapilar (N8; seyircinin girişi N9): {tribun, u: tribün boyunca −0.5…0.5}. Oturma ve ayakta tribünde arka duvarda giriş ağzı, setin girişi
+     çevredeki kapıdan; her girişin karşısında çevre duvarında (ya da tel örgüde) kapı vardır. */
 const STADYUMLAR={
   kulup:{
     ad:'Demirkapı İlçe Stadı',lig:'3. Lig',
-    pist:'toprak',zemin:0.22,cevre:'apartman',
+    pist:'toprak',zemin:0.22,
+    cevre:{
+      cepheler:[{yer:'kale2',tip:'yamac',yukseklik:30,basamak:5},{yer:'karsi',tip:'evler',sira:4},{yer:'kale1',tip:'kapi'},{yer:'ana',tip:'kulupBinasi'}],
+      ufuk:[{yaricap:205,yukseklik:[17,36]},{yaricap:290,yukseklik:[34,78]}],duvar:2.4
+    },
+    kapilar:[{tribun:'ana',u:-0.38},{tribun:'ana',u:0.38},{tribun:'karsi',u:-0.3},{tribun:'karsi',u:0.3},{tribun:'kale1',u:0},{tribun:'kale2',u:0}],
     projektor:{tip:'direk',konumlar:[[-58,-40],[58,-40],[-58,40],[58,40]],yukseklik:17,guc:0.75},
     reklam:0.32,telOrgu:['karsi','kale1','kale2'],
     tabela:{tip:'elle',konum:[-20,49],yukseklik:6.5,genislik:13},
