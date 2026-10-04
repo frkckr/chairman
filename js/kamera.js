@@ -1,17 +1,14 @@
 /* ============ Chairman — başkanın bakışı ve maç kamerası (çizim) ============
    Sahibi: A akışı (2026-10-03). Başkanın gözü başkan koltuğundadır.
-   2026-10-03 ikinci paket (kullanıcı kararı): bakış varsayılan olarak ELLE döner. Sol tuşla sürükleyince baş döner ("dünyayı tut": imlecin
-   altındaki nokta imleçle gider), ok tuşları da çevirir; görüş açısı elleAci'de sabittir, baş kendiliğinden dönmez, dürbün başın baktığı yeri
-   büyütür. “Topu izle” düğmesi (F, kameraTakipAyarla) aşağıdaki otomatik bakışı açar; sürüklemek ya da ok tuşu onu kapatır. Elle bakış
-   duraklatmada, telefon açıkken ve maç öncesi ekranında kapalıdır; sürüklemeden sonra gelen tık masadaki telefonu açmaz.
-   Topu izle açıkken (takip) oyun sürerken bakış topa odaklıdır: topu taşıyanın hemen önü, serbest
+   N4 (kullanıcı kararı 2026-10-04): bakış HEP topu izler. Fareyle sürükleme ve ok tuşlarıyla elle bakış, “Topu izle” düğmesi ve F tuşu kaldırıldı
+   (2026-10-03 ikinci paketteki varsayılan elle bakışın yerini alır). Dürbün elle açılır ve topa kilitlenir.
+   Oyun sürerken bakış topa odaklıdır: topu taşıyanın hemen önü, serbest
    topta kısa balistik öngörü (topFizikAdim topun özel kopyasında; motorun önbelleklerine dokunulmaz), uzun havadan topta iniş yeri, son üçte
    birde kale ağzı. Bu kaymalar topun yönünden en fazla bir açı bütçesi kadar sapar: top hep ekranın ortasına yakın kalır. Maç öncesi, devre
    arası, maç sonu, gol sevinci ve kart anında bakisOdagi'nin ilgi noktaları izlenir. Bakış yönü (sapma/eğim) kritik sönümlü yaylarla, açısal
    hız sınırıyla ve maç zamanıyla (dt × maç hızı, alt adımlı) ilerler: 2–8× hızda geride kalmaz; duraklatmada (dt 0) hiçbir şey kıpırdamaz.
    Görüş açısı oyunda oyunAci aralığına daralır (oyunun ne kadarının kadraja girmesi gerektiğine göre), ölü topta kısa bir gecikmeyle,
-   maç öncesi/sonrası ve devre arasında geniş açıya (aci) döner. Dürbün elle açılır; takipte topa kilitlenir, elle bakışta başın baktığı yeri
-   büyütür; açılış/kapanış yumuşak geçişlidir.
+   maç öncesi/sonrası ve devre arasında geniş açıya (aci) döner. Dürbün elle açılır ve topa kilitlenir; açılış/kapanış yumuşak geçişlidir.
    kameraAdim durumu ilerletir (js/mac-sahnesi.js macKare sonunda), kameraUygula kameraya yerleştirir (js/arayuz.js frame). Motoru yalnız okur. */
 const KAM_B=STIL.kameralar.baskan,KAM_D=STIL.kameralar.durbun,KAM_DER=Math.PI/180;
 /* BAKIS: o anki bakış noktası (kameranın baktığı yönde, okuyucular için); BAKIS_HEDEF: ilgi noktası (sahne koordinatı) */
@@ -19,7 +16,7 @@ const BAKIS=new THREE.Vector3(...KAM_B.hedef),BAKIS_HEDEF=new THREE.Vector3(...K
 const ONCESI_BAKIS={x:0,z:0,t:-99};
 /* bakış durumu: a = başkanın bakışı, d = dürbün. y sapma (+z'den +x'e, radyan), p eğim, vy/vp hızları; fov/dfov görüş açıları;
    gecis dürbün geçişi (0 kapalı, 1 açık); olu ölü topta geçen maç süresi; ty/tp ölü bölgede tutulan hedef */
-const KAM={a:{y:0,p:-0.2,vy:0,vp:0},d:{y:0,p:-0.2,vy:0,vp:0},fov:KAM_B.elleAci,dfov:KAM_D.aci,gecis:0,durbunAcik:false,olu:0,ty:0,tp:-0.2,ilk:true,mod:'sahne',takip:false};
+const KAM={a:{y:0,p:-0.2,vy:0,vp:0},d:{y:0,p:-0.2,vy:0,vp:0},fov:KAM_B.aci,dfov:KAM_D.aci,gecis:0,durbunAcik:false,olu:0,ty:0,tp:-0.2,ilk:true,mod:'sahne'};
 const KAM_TOP={x:0,y:0,z:0,vx:0,vy:0,vz:0,egri:0,ust:0},KAM_INIS={x:0,y:0,z:0,vx:0,vy:0,vz:0,egri:0,ust:0};
 const kamAciFark=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 function kameraGoz(){return[BASKAN_KOLTUGU.x,BASKAN_KOLTUGU.y+KAM_B.goz,BASKAN_KOLTUGU.z];}
@@ -41,7 +38,7 @@ function bakisOdagi(){
     const fotolar=G.filter(g=>g[2]>4);
     if(fotolar.length){const g=fotolar[Math.floor(zaman/5)%fotolar.length];return BAKIS_HEDEF.set(g[0]/g[2],1,g[1]/g[2]-MOTOR_Z);}
     return n?BAKIS_HEDEF.set(x/n,1,z/n-MOTOR_Z):BAKIS_HEDEF.set(0,1,MZ-9-MOTOR_Z);}
-  if(ph==='giris'){if(mac.phaseT<5)return BAKIS_HEDEF.set(TUNEL.x,1,TUNEL.z+3);let n=0,x=0,z=0;for(const a of AKTORLER)if(a.m.root.visible){x+=a.x;z+=a.z;n++;}return BAKIS_HEDEF.set(n?x/n:0,1,n?z/n:0);}
+  if(ph==='giris'){if(mac.phaseT<5)return BAKIS_HEDEF.set(TUNEL.x,1,TUNEL.z+3);let n=0,x=0,z=0;for(const a of AKTORLER)if(a.m.root.visible&&a.kaynak.tur!=='topcu'){x+=a.x;z+=a.z;n++;}return BAKIS_HEDEF.set(n?x/n:0,1,n?z/n:0);}
   if(ph==='toren')return BAKIS_HEDEF.set(0,1,MZ-9-MOTOR_Z);
   if(ph==='yazitura')return BAKIS_HEDEF.set(0,1,0);
   /* devre arası: önce soyunma odasına yürüyen oyuncular, sonra kale önünde şut çalışan yedekler, en son tünel.
@@ -132,7 +129,6 @@ function kameraHedefleri(dtm){
 function kameraAdim(dt){
   if(KAM.ilk){KAM.ilk=false;kameraOturt();}
   if(!(dt>0))return;
-  if(!KAM.takip){kamElleAdim(dt);return;}
   const dtm=Math.min(dt,0.05)*MAC_HIZ.deger,H=kameraHedefleri(dtm),A=KAM.a,D=KAM.d,acik=typeof bino!=='undefined'&&bino;
   /* ölü bölge: top yavaşken küçük oynamalarda baş kıpırdamaz */
   if(H.yavas){const ey=kamAciFark(H.y,KAM.ty),ep=H.p-KAM.tp,e=Math.hypot(ey,ep),dz=KAM_B.oluBolge[0]*KAM_DER*KAM.fov/KAM_B.oyunAci[1];if(e>dz){KAM.ty+=ey*(e-dz)/e;KAM.tp+=ep*(e-dz)/e;}}
@@ -150,62 +146,15 @@ function kameraAdim(dt){
 /* bütün durumu bu anın hedeflerine oturtur (ilk kare; geliştirme: an yakalama aracı dürbünü anında açar) */
 function kameraOturt(){
   const acik=typeof bino!=='undefined'&&bino;
-  if(!KAM.takip){const o=kameraElleYonu({y:0,p:0});for(const s of[KAM.a,KAM.d])Object.assign(s,{y:o.y,p:o.p,vy:0,vp:0});KAM.ty=o.y;KAM.tp=o.p;
-    KAM.fov=KAM_B.elleAci;KAM.dfov=KAM_D.aci;KAM.gecis=acik?1:0;KAM.durbunAcik=acik;return;}
   const H=kameraHedefleri(0);
   Object.assign(KAM.a,{y:H.y,p:H.p,vy:0,vp:0});Object.assign(KAM.d,{y:H.dy,p:H.dp,vy:0,vp:0});
   KAM.ty=H.y;KAM.tp=H.p;KAM.fov=H.fov;KAM.dfov=H.dfov;KAM.gecis=acik?1:0;KAM.durbunAcik=acik;
 }
-/* ---- elle bakış (2026-10-03 ikinci paket) ---- */
-const KAM_E=KAM_B.elle,KAM_ELLE={basili:false,surukle:false,id:null,x0:0,y0:0,son:{x:0,y:0},yut:false,ok:new Set()};
-/* başlangıç: orta yuvarlağa, masanın açıkta bıraktığı alanın ortasına yakın */
-function kameraElleYonu(o){kameraAcilari(0,0,0,o);o.p-=KAM_B.egim*KAM_DER*KAM_B.elleAci/KAM_B.oyunAci[1];return o;}
-function kamElleAcik(){return !KAMERA_ZORLA&&typeof ON_EKRAN!=='undefined'&&ON_EKRAN.sayfa===null&&!ON_EKRAN.acik&&!duraklatmaVar()&&
-  !(typeof MAC_TELEFON!=='undefined'&&MAC_TELEFON.acik);}
-function kamSinirla(s){const sp=KAM_E.sapma*KAM_DER;s.y=clamp(kamAciFark(s.y,0),-sp,sp);s.p=clamp(s.p,KAM_E.egim[0]*KAM_DER,KAM_E.egim[1]*KAM_DER);}
-/* takibi açar/kapatır; kapanınca baş ve dürbün o an görünen yöne hizalanır (görüntü sıçramaz) */
-function kameraTakipAyarla(acik){
-  acik=!!acik;if(KAM.takip===acik)return;KAM.takip=acik;
-  if(!acik){const g=KAM.gecis>0.5?KAM.d:KAM.a;for(const s of[KAM.a,KAM.d]){s.y=g.y;s.p=g.p;kamSinirla(s);s.vy=s.vp=0;}KAM.ty=KAM.a.y;KAM.tp=KAM.a.p;}
-  else{KAM.ty=KAM.a.y;KAM.tp=KAM.a.p;KAM.olu=0;}
-  const b=document.getElementById('btnTopIzle');if(b)b.setAttribute('aria-pressed',acik?'true':'false');
-}
-/* başı ve dürbünü birlikte döndürür (radyan; +sapma sola, +eğim yukarı) */
-function kamElleDondur(dy,dp){if(KAM.takip)kameraTakipAyarla(false);for(const s of[KAM.a,KAM.d]){s.y+=dy;s.p+=dp;kamSinirla(s);s.vy=s.vp=0;}KAM.ty=KAM.a.y;KAM.tp=KAM.a.p;}
-/* elle bakışta her kare: ok tuşları (gerçek zamanla, görüş açısıyla ölçekli), sabit görüş açılarına yumuşama, dürbün geçişi */
-function kamElleAdim(dt){
-  const r=Math.min(dt,0.05),acik=typeof bino!=='undefined'&&bino,O=KAM_ELLE.ok;
-  if(O.size&&kamElleAcik()){const h=KAM_E.ok*KAM_DER*r*camera.fov/KAM_B.elleAci;
-    kamElleDondur(((O.has('ArrowLeft')?1:0)-(O.has('ArrowRight')?1:0))*h,((O.has('ArrowUp')?1:0)-(O.has('ArrowDown')?1:0))*h);}
-  KAM.fov+=(KAM_B.elleAci-KAM.fov)*(1-Math.exp(-r/KAM_B.aciSure));KAM.dfov+=(KAM_D.aci-KAM.dfov)*(1-Math.exp(-r/KAM_D.aciSure));
-  KAM.durbunAcik=acik;KAM.gecis=clamp(KAM.gecis+(acik?1:-1)*r/KAM_D.gecisSure,0,1);
-}
-/* imlecin bakış yönüne göre açısı (radyan; ekran ortası 0) */
-function kamImlecAci(e){const r=canvas.getBoundingClientRect(),t=Math.tan(camera.fov*KAM_DER/2);
-  return{x:Math.atan(((e.clientX-r.left)/r.width*2-1)*t*camera.aspect),y:Math.atan((1-(e.clientY-r.top)/r.height*2)*t)};}
-function kamElleBitir(){const E=KAM_ELLE;if(E.surukle){E.yut=true;hud.classList.remove('kam-surukle');}E.basili=false;E.surukle=false;E.id=null;}
-hud.classList.add('kam-elle');
-hud.addEventListener('pointerdown',e=>{const E=KAM_ELLE;E.yut=false;if(e.button!==0||!kamElleAcik())return;
-  E.basili=true;E.surukle=false;E.id=e.pointerId;E.x0=e.clientX;E.y0=e.clientY;E.son=kamImlecAci(e);});
-hud.addEventListener('pointermove',e=>{const E=KAM_ELLE;if(!E.basili||e.pointerId!==E.id)return;
-  if(!kamElleAcik()){kamElleBitir();return;}
-  if(!E.surukle){if(Math.hypot(e.clientX-E.x0,e.clientY-E.y0)<KAM_E.esik)return;E.surukle=true;hud.classList.add('kam-surukle');try{hud.setPointerCapture(e.pointerId);}catch(_){}}
-  /* imlecin altındaki nokta imleçle gitsin: yatay açı farkı eğimle düzeltilir (eğik bakışta yatay dönüş ekranda daralır) */
-  const a=kamImlecAci(e);kamElleDondur((a.x-E.son.x)/Math.max(0.35,Math.cos(KAM.a.p)),E.son.y-a.y);E.son=a;});
-hud.addEventListener('pointerup',e=>{if(e.pointerId===KAM_ELLE.id)kamElleBitir();});
-hud.addEventListener('pointercancel',()=>kamElleBitir());
-/* sürüklemenin sonundaki tık telefonu açmasın (yakalama evresinde, telefon dinleyicisinden önce) */
-hud.addEventListener('click',e=>{if(KAM_ELLE.yut){KAM_ELLE.yut=false;e.stopImmediatePropagation();}},true);
-addEventListener('keydown',e=>{if(!e.code.startsWith('Arrow')||e.ctrlKey||e.altKey||e.metaKey||!kamElleAcik())return;const t=e.target&&e.target.tagName;
-  if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;e.preventDefault();KAM_ELLE.ok.add(e.code);if(KAM.takip)kameraTakipAyarla(false);});
-addEventListener('keyup',e=>KAM_ELLE.ok.delete(e.code));
-addEventListener('blur',()=>KAM_ELLE.ok.clear());
-/* başkanın önündeki masa (js/baskan.js ön plan) başı izler: takipte az ve yavaş (sakin), elle büyük dönüşte masa görüntüden kayar ve çabuk yetişir */
+/* başkanın önündeki raf (js/baskan.js ön plan) başı izler: az ve yavaş (sakin) */
 function kameraGovdeHedefi(yaw,pitch,G){
   if(typeof LOCA_GIRIS!=='undefined'&&LOCA_GIRIS.aktif)return{p:0,y:0,hiz:8};
-  const B=STIL.baskan,E=KAM_E,ay=Math.abs(yaw),k=E.masaKayma;
-  const y=!KAM.takip&&ay>k?Math.sign(yaw)*(0.25*k+(ay-k)):clamp(yaw*0.25,-0.3,0.3);
-  return{p:clamp((pitch-B.dinlenmeEgimi)*0.22,-0.12,B.egimUst),y,hiz:KAM.takip&&Math.abs(G.y)<=0.31?B.govdeHiz:E.masaHiz};
+  const B=STIL.baskan;
+  return{p:clamp((pitch-B.dinlenmeEgimi)*0.22,-0.12,B.egimUst),y:clamp(yaw*0.25,-0.3,0.3),hiz:B.govdeHiz};
 }
 /* görüş açılarını tan(fov/2) üzerinden karıştırır: yakınlaşma eşit hızda hissedilir */
 function kameraFovKaristir(a,b,e){const ta=Math.tan(a*KAM_DER/2),tb=Math.tan(b*KAM_DER/2);return 2*Math.atan(ta*Math.pow(tb/ta,e))/KAM_DER;}

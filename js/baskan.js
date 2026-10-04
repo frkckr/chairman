@@ -1,5 +1,7 @@
-/* ============ Chairman — başkanın bedeni: önündeki masa, elleri ve eşyaları (ön plan katmanı) ============
-   Dünya çizildikten sonra derinlik temizlenir ve bu katman üstüne çizilir. Böylece masa ve eller her zaman ekranın altında durur.
+/* ============ Chairman — başkanın bedeni: önündeki raf, elleri ve eşyaları (ön plan katmanı) ============
+   Dünya çizildikten sonra derinlik temizlenir ve bu katman üstüne çizilir. Böylece raf ve eller her zaman ekranın altında durur.
+   N5 (kullanıcı kararı 2026-10-04): büyük masa kalktı; önde locanın ön duvarının üstünde dar bir ahşap raf durur (telefon ve eller onun
+   üstünde), altında duvarın iç yüzü görünür. Ekranın altını kapatan alan azaldı. BK_MASA adı (raf grubu) diğer dosyalar için korunur.
    Eller maçtaki olaylara tepki verir: gol sevinci (başkan ayağa kalkar), yenilen golde eller başa, kaçan pozisyonda masaya yumruk,
    itiraz, alkış. Dürbünü elleriyle kaldırır. Çay 2.8A'da, masadaki maç programı 2.8O'da kaldırıldı; kendiliğinden telefona bakma
    2026-10-03'te kaldırıldı (kullanıcı kararı): masadaki telefon yalnız kullanıcı tıklayınca açılır (js/ekran-mac-telefon.js). */
@@ -10,15 +12,15 @@ const BASKAN={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(BK.aci,
  const d=new THREE.DirectionalLight(0xffe4bc,0.75);d.position.set(0.4,2,1.2);S.add(d);
  const f=new THREE.DirectionalLight(0x9fb0d8,0.25);f.position.set(-1,0.5,-1);S.add(f);}
 const BK_MASA=new THREE.Group();BASKAN.sahne.add(BK_MASA);
-/* ---- masa: ceviz, pirinç kenar şeridi, ortada bordo deri sümen ---- */
+/* ---- raf: ceviz üst yüzey (y = RAF.y), uzak kenarında pirinç şerit; yakın kenarının altında ön duvarın iç yüzü ---- */
+const BK_RAF=BK.raf,BK_RAF_Z=-1.5+BK_RAF.derinlik/2;
 {const cv=mk(32,16),g=cv.getContext('2d');g.fillStyle=BK.masa;g.fillRect(0,0,32,16);
  for(let y=0;y<16;y++){g.fillStyle=h2(y,3)>0.5?BK.masaKoyu:BK.masaAcik;g.fillRect(((h2(y,9)*32)|0),y,8+((h2(y,5)*14)|0),1);}
- const ust=box(2.6,0.06,1.1,LAM({map:tx(cv,'n',[5,2])}),0,-0.5,-0.95,BK_MASA);ust.name='masa';
- box(2.6,0.026,0.03,LAM({color:BK.pirinc}),0,-0.468,-1.5,BK_MASA);
- box(0.5,0.008,0.32,LAM({color:BK.sumen}),-0.02,-0.466,-1.2,BK_MASA);}
-/* maç programı (beyaz kitapçık) 2.8O'da kaldırıldı (kullanıcı kararı 2026-10-02): masada yalnız sümen ve telefon durur */
-/* ---- telefon: masada ekranı kapalı durur; tıklanınca maç telefonu açılır (js/ekran-mac-telefon.js) ---- */
-const BK_TEL=new THREE.Group();BK_TEL.position.set(0.14,-0.463,-1.08);BK_TEL.rotation.y=-0.3;BK_MASA.add(BK_TEL);
+ const ust=box(2.6,0.05,BK_RAF.derinlik,LAM({map:tx(cv,'n',[5,1])}),0,BK_RAF.y-0.025,BK_RAF_Z,BK_MASA);ust.name='masa';
+ box(2.6,0.026,0.03,LAM({color:BK.pirinc}),0,BK_RAF.y+0.002,-1.5,BK_MASA);
+ box(2.6,0.8,0.05,LAM({color:BK_RAF.duvar}),0,BK_RAF.y-0.45,-1.5+BK_RAF.derinlik-0.025,BK_MASA);}
+/* ---- telefon: rafta ekranı kapalı durur; tıklanınca maç telefonu açılır (js/ekran-mac-telefon.js) ---- */
+const BK_TEL=new THREE.Group();BK_TEL.position.set(0.14,BK_RAF.y+0.007,BK_RAF_Z-0.01);BK_TEL.rotation.y=-0.3;BK_MASA.add(BK_TEL);
 const BK_TEL_EKRAN=BAS({color:0x10202c});
 {BK_TEL.add(new THREE.Mesh(new THREE.BoxGeometry(0.072,0.01,0.148),LAM({color:0x1a1b1f})));
  const e=new THREE.Mesh(new THREE.PlaneGeometry(0.062,0.13),BK_TEL_EKRAN);e.rotation.x=-Math.PI/2;e.position.y=0.0055;BK_TEL.add(e);}
@@ -40,7 +42,8 @@ const BK_DURBUN=new THREE.Group();BK_DURBUN.visible=false;BASKAN.sahne.add(BK_DU
 
 /* ---- pozlar: bilek konumu p, dönüşü r (Euler), parmak kıvrımı k ---- */
 const BKP=(x,y,z,rx,ry,rz,k)=>({p:[x,y,z],r:[rx||0,ry||0,rz||0],k:k||0});
-const BK_DINLEN={sol:BKP(-0.3,-0.434,-0.99,0,0.55,0,0.22),sag:BKP(0.29,-0.434,-0.98,0,-0.5,0,0.28)};
+/* dinlenme: bilekler rafın yakın kenarında, eller rafın üstünde */
+const BK_DINLEN={sol:BKP(-0.3,BK_RAF.y+0.036,BK_RAF_Z+0.1,0,0.55,0,0.22),sag:BKP(0.29,BK_RAF.y+0.036,BK_RAF_Z+0.11,0,-0.5,0,0.28)};
 function bkKaristir(a,b,t){const s=t*t*(3-2*t),l=(u,v)=>u.map((x,i)=>x+(v[i]-x)*s);return{p:l(a.p,b.p),r:l(a.r,b.r),k:a.k+(b.k-a.k)*s};}
 /* anahtar kareler: [zaman(sn), {sol?, sag?}] — verilmeyen el dinlenme pozunda kalır */
 function bkAnahtar(keys,t){
@@ -52,7 +55,7 @@ const BK_EYLEM={
   alkis:{sure:2.2,keys:[[0,{}],[0.35,{sol:BKP(-0.08,-0.3,-0.78,0,0,-1.2,0.1),sag:BKP(0.08,-0.3,-0.78,0,0,1.2,0.1)}],[1.85,{sol:BKP(-0.08,-0.3,-0.78,0,0,-1.2,0.1),sag:BKP(0.08,-0.3,-0.78,0,0,1.2,0.1)}],[2.2,{}]],alkis:[0.35,1.85]},
   golBiz:{sure:4.2,keys:[[0,{}],[0.3,{sol:BKP(-0.3,0.08,-0.72,1.3,0,0.2,1),sag:BKP(0.3,0.08,-0.72,1.3,0,-0.2,1)}],[3.4,{sol:BKP(-0.3,0.1,-0.72,1.3,0,0.2,1),sag:BKP(0.3,0.1,-0.72,1.3,0,-0.2,1)}],[4.2,{}]],kalk:[0.2,3.6],salla:[0.3,3.4]},
   golYedik:{sure:3.4,keys:[[0,{}],[0.6,{sol:BKP(-0.36,0.3,-0.26,2.3,0.4,0.6,0.3),sag:BKP(0.36,0.3,-0.26,2.3,-0.4,-0.6,0.3)}],[2.6,{sol:BKP(-0.36,0.28,-0.26,2.25,0.4,0.6,0.3),sag:BKP(0.36,0.28,-0.26,2.25,-0.4,-0.6,0.3)}],[3.4,{}]]},
-  yumruk:{sure:1.3,keys:[[0,{}],[0.4,{sag:BKP(0.22,-0.26,-1.0,0.3,-0.3,0,1)}],[0.55,{sag:BKP(0.22,-0.43,-1.05,0,-0.3,0,1)}],[0.9,{sag:BKP(0.22,-0.43,-1.05,0,-0.3,0,1)}],[1.3,{}]],vur:0.55},
+  yumruk:{sure:1.3,keys:[[0,{}],[0.4,{sag:BKP(0.22,BK_RAF.y+0.21,BK_RAF_Z+0.08,0.3,-0.3,0,1)}],[0.55,{sag:BKP(0.22,BK_RAF.y+0.04,BK_RAF_Z+0.05,0,-0.3,0,1)}],[0.9,{sag:BKP(0.22,BK_RAF.y+0.04,BK_RAF_Z+0.05,0,-0.3,0,1)}],[1.3,{}]],vur:0.55},
   itiraz:{sure:1.8,keys:[[0,{}],[0.45,{sol:BKP(-0.3,-0.33,-0.92,0,0.3,-2.7,0.05),sag:BKP(0.3,-0.33,-0.92,0,-0.3,2.7,0.05)}],[1.3,{sol:BKP(-0.32,-0.3,-0.9,0,0.3,-2.8,0.05),sag:BKP(0.32,-0.3,-0.9,0,-0.3,2.8,0.05)}],[1.8,{}]]},
   durbunKaldir:{sure:0.5,keys:[[0,{}],[0.5,{sol:BKP(-0.09,-0.1,-0.4,1.35,0.3,0,0.8),sag:BKP(0.09,-0.1,-0.4,1.35,-0.3,0,0.8)}]],durbun:true,kal:true},
   /* locaya girişte rakip başkanla tokalaşma (2.8T): sağ el öne uzanır, iki kez sallanır, geri çekilir */
@@ -92,12 +95,11 @@ function baskanKare(dt,kamera){
     if(e.t>=e.sure&&!e.kal){B.eylem=null;if(e.durbun)BK_DURBUN.visible=false;}
   }else B.kalkHedef=0;
   elYerlestir('sol',poz.sol);elYerlestir('sag',poz.sag);
-  /* ayağa kalkma (yay) ve masaya yumruk sarsıntısı */
+  /* ayağa kalkma (yay) ve rafa yumruk sarsıntısı */
   B.kalk+=(B.kalkHedef-B.kalk)*Math.min(1,dt*(B.kalkHedef>B.kalk?5:2.2));B.sarsinti=Math.max(0,B.sarsinti-dt*4);
   BK_MASA.position.y=Math.sin(zamanB*55)*0.004*B.sarsinti;
-  /* gövde hissi: baş dönünce ön plan ters yöne kayar (nefes salınımı yok, 2.8J). Hedef ve hız js/kamera.js kameraGovdeHedefi'nden: “Topu izle”
-     açıkken bakış sık döndüğünden ön plan az ve yavaş (govdeHiz) izler, masadaki telefon ekranda kalır; elle büyük dönüşte (2026-10-03 ikinci
-     paket) masa görüntüden kayar ve çabuk yetişir. Ön plan görüş açısı (aci) maçın yakınlaşmasından bağımsızdır; duraklatmada (dt 0) yerinde kalır */
+  /* gövde hissi: baş dönünce ön plan ters yöne kayar (nefes salınımı yok, 2.8J). Hedef ve hız js/kamera.js kameraGovdeHedefi'nden: bakış
+     topu izlerken sık döndüğünden ön plan az ve yavaş (govdeHiz) izler, öndeki telefon ekranda kalır (N4: elle bakış kaldırıldı). Ön plan görüş açısı (aci) maçın yakınlaşmasından bağımsızdır; duraklatmada (dt 0) yerinde kalır */
   kamera.getWorldDirection(BK_V);const yaw=Math.atan2(BK_V.x,BK_V.z),pitch=Math.asin(clamp(BK_V.y,-1,1));
   const G=B.govde,H=kameraGovdeHedefi(yaw,pitch,G),m=H.hiz*dt;
   G.p+=clamp(H.p-G.p,-m,m);G.y+=clamp(H.y-G.y,-m,m);

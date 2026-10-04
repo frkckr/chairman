@@ -299,6 +299,8 @@ function anmEylemler(a,p,dt){
   else if(ad==='atis'){const f=e.t/e.sure;st[S.tac]=f<0.4?f/0.4:0;st[S.tacAt]=f>=0.4?1-(f-0.4)/0.6:0;sp[S.tac]=ANM_POZ.tac;sp[S.tacAt]=ANM_POZ.tacAt;}
   /* top elde: kaleci tutuşu, duran topu taşıyan oyuncu */
   if(b.tasiyan===p&&ad!=='tac'){st[S.elde]=1;sp[S.elde]=p.rol==='GK'?POSE.tutus:POSE.tasi;}
+  /* top toplayıcı (N10): yedek topu iki eliyle önünde tutar */
+  else if(p.tur==='topcu'&&p.top&&ad!=='atis'){st[S.elde]=1;sp[S.elde]=POSE.tasi;}
   /* maç günü poz etiketleri */
   if(p.poz)for(let i=0;i<8;i++)if(p.poz===POZ_ETIKET[i]){st[S.p0+i]=1;sp[S.p0+i]=i===2&&p.kind==='foto'?ANM_POZ.fotoCek:ANM_ETIKET_POZ[i];}
   /* gol sevinci: oyuncuya ve gole göre çeşit, kendi zamanlaması; golcünün yanındakiler sarılır; golcü dizlerinin üstünde kayabilir */

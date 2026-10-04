@@ -53,6 +53,8 @@ const STIL={
     yedekEv:{shirt:'#7a1812',trim:'#f2ede2',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
     yedekDeplasman:{shirt:'#22347a',trim:'#eef0f3',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
     takimElbise:{shirt:'#23262e',trim:'#e8e4da',shorts:'#23262e',socks:'#23262e',ls:true,pant:true,boots:'#0e0e10'},
+    /* top toplayıcı çocuklar (N10): lacivert eşofman, sarı yelek (çocuk boyu: topcuBoy) */
+    topcu:{shirt:'#e8c21e',trim:'#1e2a5a',shorts:'#1e2a5a',socks:'#1e2a5a',ls:true,pant:true},
     /* antrenörler (kaleci antrenörü, kondisyoner) koyu eşofmanla; fotoğrafçılar turuncu yelek, elde fotoğraf makinesi */
     antrenorEv:{shirt:'#1c1c20',trim:'#c8281e',shorts:'#1c1c20',socks:'#1c1c20',ls:true,pant:true},
     antrenorDeplasman:{shirt:'#2c3446',trim:'#eef0f3',shorts:'#2c3446',socks:'#2c3446',ls:true,pant:true},
@@ -60,6 +62,8 @@ const STIL={
       ekParcalar:[{kemik:'eR',w:0.13,h:0.1,d:0.12,x:0.08,y:-0.34,z:0.1,renk:'ek1'},{kemik:'eR',w:0.07,h:0.07,d:0.12,x:0.08,y:-0.34,z:0.2,renk:'ek2'}],
       ekRenkler:{ek1:'#141416',ek2:'#3a3a42'}}
   },
+  /* top toplayıcı çocukların boyu ve eni (yetişkine oran) */
+  topcuBoy:{h:0.74,w:0.8},
   /* antrenman: koniler, fotoğraf flaşı */
   antrenman:{koni:0xff7a1e,flas:0xfff4dc},
 
@@ -96,7 +100,8 @@ const STIL={
     sure:{merdiven:3.4,kapi:4.6,rakip:6.8,tokalas:8.8,yer:10.0,otur:11.8},
     rakip:{x:1.5,bekle:1.3,yon:Math.PI,oturYon:0,gorunus:{ten:2,sac:'kisa',sacRenk:'#8a8680',biyik:true,boy:1.0,yapi:1.15}},
     renk:{cerceve:0xd8d2c4,kapi:0x6a4a2c,ic:0xcfc6b4,koltuk:0x4a1e18}},
-  baskan:{aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.15,egimUst:0.02,govdeHiz:0.05},
+  /* raf (N5, 2026-10-04): y = rafın üst yüzeyi (ön plan kamerasına göre metre; eski masa -0,47'deydi), derinlik = rafın eni (m), duvar = altındaki ön duvarın iç yüzü */
+  baskan:{aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,raf:{y:-0.56,derinlik:0.3,duvar:0x44474d},takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.15,egimUst:0.02,govdeHiz:0.05},
 
   /* Başkan bölümü: halı, ahşap bölmeler, başkanın koltuğu */
   baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
@@ -144,12 +149,12 @@ const STIL={
     /* balkon kapısı (uzak duvarda, x0–x1 arası, h yüksekliğinde; tıklanır, üstünde levha) ve pencere boşluğu (pencere; balkon kuruluysa dışarı
        gerçekten görünür). kapiCam: kapının camı */
     kapi:{x0:0.9,x1:1.75,h:2.1,renk:0xf4f1e8,cam:0xbfe0f2,kol:0xb89a4a},pencere:{x0:-2.2,x1:-0.3,y0:0.6,y1:2.245},levha:'#2a2c30',levhaYazi:'#f2ede2',
-    /* yürüyüş (2.8D, 2.8R): yol = ayakta göz hizasında yürüme noktaları (koltuğun yanından masanın ucuna, kapıya, balkon sandalyesinin yanına);
-       noktalar köşeleri yuvarlatılmış bir eğriyle (Catmull-Rom) birleşir. adim: yönelme (otururken baş yola döner), kalkış, oturma süreleri (sn),
-       düzlükteki yürüme hızı (m/sn), dönüşte yavaşlama (viraj: 1 rad/m'lik dönüşte hız 1/(1+viraj) katına iner), hızlanma/yavaşlama ivmesi (m/sn²),
-       adım boyu (m), adım hissi için küçük iniş-çıkış (m; 2.8J: yana yalpa yok). TEST değerleri */
+    /* yürüyüş (2.8D, 2.8R, N6): yol = ayakta göz hizasında yürüme noktaları (koltuğun yanından masanın ucuna, kapıya, balkon sandalyesinin yanına);
+       noktalar köşeleri yuvarlatılmış bir eğriyle (Catmull-Rom) birleşir. adim: düzlükteki yürüme hızı (m/sn), dönüşte yavaşlama (viraj: 1 rad/m'lik
+       dönüşte hız 1/(1+viraj) katına iner), hızlanma/yavaşlama ivmesi (m/sn²). Kalkış, oturma, adım ve el ayarları ortak STIL.yuruyus'tadır
+       (N6, kullanıcı kararı 2026-10-04). TEST değerleri */
     yol:[[0.58,1.62,0.58],[1.42,1.62,0.18],[1.36,1.62,-2.7],[1.3,1.62,-4.15],[-0.3,1.62,-4.6]],
-    adim:{kalk:0.7,yonel:0.55,otur:0.7,hiz:1.6,viraj:0.55,ivme:1.3,adimBoyu:0.62,sallanma:0.01},
+    adim:{hiz:1.5,viraj:0.35,ivme:1.1},
     /* arka duvar (2.8R): başkanın koltuğunun arkası (z). Masadan bakınca görünmez; kalkınca ve odaya dönerken görünür.
        koltuk: yüksek arkalıklı başkan koltuğu (deri, ayak); kalkarken geriye itilir (itme, m). pano: kulübün arması ve adı (ahşap çerçeve).
        bayrak: köşedeki direkte kulüp bayrağı. TEST değerleri */
@@ -157,6 +162,20 @@ const STIL={
     baskanKoltugu:{z:0.86,deri:0x4a1e18,dikis:0x6a2c22,ayak:0x2a2c33,itme:0.32},
     pano:{x:-0.7,y:1.78,en:1.25,boy:0.95,cerceve:0x6a4a2c,zemin:'#f2ede2'},
     bayrak:{x:1.7,z:2.0,direk:0xb89a4a}},
+
+  /* Başkanın beden hareketi (N6, kullanıcı kararı 2026-10-04; js/yuruyus.js): odada, balkonda ve locaya girişte ortak.
+     yonel: otururken başın yola dönmesi (sn). kalk: sure (sn), egilPay = öne eğilmenin bittiği an (0–1), adimPay = yerine adım atmanın başladığı an,
+     egil = gözün öne gittiği yol (m), cok = eğilirken gözün alçaldığı (m). otur: sure, yerPay = koltuğun önüne geçişin bittiği an, basla = alçalmanın
+     başladığı, yaslan = yaslanmanın başladığı an, egil/cok = alçalırken öne eğilme (m), geri = yaslanırken geri gidilen yol (m).
+     adim: boy = normal hızda adım boyu (m), hiz = o hız (m/sn), dikey = adımda gözün iniş-çıkışı (m), yanal = ağırlık aktarımı (m),
+     nabiz = adım içinde ilerlemenin dalgalanması (adım boyuna oran). el: sure (sn), tut = elin nesneye vardığı an (0–1), bekle = orada kaldığı pay,
+     kavis = uzanırken elin yükseldiği (m), bak = bakışın nesneye dönme payı (0–1), bas = elin çıktığı yer (göze göre: sağ, aşağı, ileri; m).
+     TEST değerleri */
+  yuruyus:{yonel:0.5,
+    kalk:{sure:1.6,egilPay:0.36,adimPay:0.34,egil:0.18,cok:0.05},
+    otur:{sure:2.2,yerPay:0.55,basla:0.25,yaslan:0.82,egil:0.1,cok:0.03,geri:0.04},
+    adim:{boy:0.66,hiz:1.4,dikey:0.024,yanal:0.012,nabiz:0.012},
+    el:{sure:0.85,tut:0.45,bekle:0.12,kavis:0.05,bak:0.55,bas:[0.26,-0.5,0.2]}},
 
   /* Balkon ve antrenman sahası (js/balkon.js): odanın dışı, gündüz. Ölçüler metre; saha merkezi oda koordinatındadır (balkon sahanın üstünde,
      ana tribünün tepesinde). aci/bakis: balkondaki sandalyeden bakış. TEST değerleri. */
@@ -198,8 +217,8 @@ const STIL={
      Maç başkanın gözünden izlenir: ana tribünün arkasındaki binada, başkanın locası. Dürbün isteğe bağlı. */
   kameralar:{
     /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre). js/kamera.js
-       2026-10-03 ikinci paket (kullanıcı kararı): bakış varsayılan olarak elle döner (fareyle sürükleme, ok tuşları); görüş açısı elleAci'de
-       sabittir, baş kendiliğinden dönmez. “Topu izle” (F) açıkken bakış topa odaklıdır: görüş açısı oyunda oyunAci aralığında, ölü topta
+       N4 (kullanıcı kararı 2026-10-04): bakış hep topu izler; fareyle/ok tuşlarıyla elle bakış ve “Topu izle” düğmesi kaldırıldı (elleAci ve
+       elle ayarları da). Bakış topa odaklıdır: görüş açısı oyunda oyunAci aralığında, ölü topta
        oluGecikme saniye sonra, maç öncesi/sonrası, devre arası ve törende aci'ye (geniş) döner. aciSure: görüş açısı yumuşama süresi (sn, maç
        zamanı). yayOyun: oyunda bakış yayının açısal sıklığı (1/sn), hizSiniri: bakışın en hızlı dönüşü (derece/sn); yay ve sahneSinir aynısı
        oyun dışı (ilgi noktaları) için. oluBolge: [derece (oyunAci[1]'de), m/sn] top bu hızdan yavaşken bakışın kıpırdamadığı açı. egim: oyunda
@@ -209,16 +228,12 @@ const STIL={
        topta iniş yerine kayma, kale = son üçte birde kale ağzına kayma payı, korner = kornerde penaltı noktasına kayma payı, butce = [sapma, eğim]
        nişanın topun yönünden en çok sapması (derece, oyunAci[1]'de). genislik (görüş açısı için 0 dar – 1 geniş): hiz = top hızı aralığı (m/sn),
        kale = kaleye uzaklık aralığı (m, yakında geniş), yayilim = [m, m, pay] topa üçüncü en yakın oyuncunun uzaklığı (dağınık oyunda geniş).
-       elle: esik = sürüklemenin başladığı imleç kayması (piksel; altı tıklamadır), sapma = yatayda en çok dönüş (derece, iki yana),
-       egim = [aşağı, yukarı] en çok eğim (derece), ok = ok tuşlarıyla dönüş hızı (derece/sn, elleAci'de; görüş açısıyla ölçeklenir),
-       masaHiz = elle bakışta masanın başa yetişme hızı (radyan/sn), masaKayma = masanın görüntüden kaymaya başladığı sapma (radyan).
        TEST değerleri */
-    baskan:{goz:0.78,hedef:[0,1,0],aci:36,oyunAci:[21,26],elleAci:24,aciSure:0.8,oluGecikme:1.5,yayOyun:5,hizSiniri:120,yay:1.0,sahneSinir:60,
+    baskan:{goz:0.78,hedef:[0,1,0],aci:36,oyunAci:[21,26],aciSure:0.8,oluGecikme:1.5,yayOyun:5,hizSiniri:120,yay:1.0,sahneSinir:60,
       oluBolge:[0.8,2.5],egim:1.6,sahneEgim:0.18,asagiSinir:0.5,yukariSinir:0.12,
       top:{onde:0.6,ongoru:0.35,inis:[0.5,1.6,0.55],kale:0.25,korner:0.45,butce:[2.5,1.6]},
-      genislik:{hiz:[7,22],kale:[30,12],yayilim:[6,18,0.6]},
-      elle:{esik:4,sapma:100,egim:[-34,16],ok:40,masaHiz:2.5,masaKayma:0.6}},
-    /* dürbün elle açılır: takipte topa kilitlenir, elle bakışta başın baktığı yeri büyütür. aci = oyun dışı ve elle görüş açısı, oyunAci = takipte
+      genislik:{hiz:[7,22],kale:[30,12],yayilim:[6,18,0.6]}},
+    /* dürbün elle açılır ve topa kilitlenir. aci = oyun dışı görüş açısı, oyunAci =
        oyunda [dar, geniş] (oyunun genişliğine göre), ongoru = topta öngörü (sn), yay = açısal sıklık (1/sn), hizSiniri = derece/sn, butce = [sapma,
        eğim] derece (oyunAci[1]'de), aciSure = görüş açısı yumuşaması (sn), gecisSure = açılış/kapanış geçişi (sn, gerçek zaman). TEST değerleri */
     durbun:{goz:0.78,aci:8.5,oyunAci:[7,10],ongoru:0.12,yay:7,hizSiniri:160,butce:[0.6,0.4],aciSure:0.6,gecisSure:0.35}

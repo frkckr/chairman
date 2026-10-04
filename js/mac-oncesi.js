@@ -51,7 +51,9 @@ Object.assign(Match.prototype,{
     if(Math.abs(p.x)<PL+1.5||Math.sign(p.x)!==sx)return{x:sx*(PL+2.4),z:kz};
     return p.ev;
   },
-  otur(p){const k=p.koltuk;p.oturuyor=true;p.x=k.x;p.z=k.z;p.vx=p.vz=0;p.yon=Math.PI/2;p.poz=null;p.eylem=null;p.bak=null;},
+  /* oturan kişi hareket durumu taşımaz (N1, 2026-10-04): hız, ivme durumu ve zorlanan yön de sıfırlanır. Yoksa devre arası çalışmasından kalan
+     değerler (ör. spd, _iaz) oyuna giren yedeğin ilk adımlarına taşınıyor, maç sunumdaki ayrıntıya bağlı kalıyordu */
+  otur(p){const k=p.koltuk;p.oturuyor=true;p.x=k.x;p.z=k.z;p.vx=p.vz=0;p.spd=0;p._iax=0;p._iaz=0;p._kipI=0;p._kipT=0;p.kip='dur';p.yon=Math.PI/2;p.yonHedef=null;p.poz=null;p.eylem=null;p.bak=null;},
 
   /* ============ maç öncesini kur: herkes tünelde, stat yarı boş ============ */
   oncesiHazirla(){
@@ -63,6 +65,9 @@ Object.assign(Match.prototype,{
       p.yonHedef=null;p.yon=Math.PI/2;p.hizOran=0.4;p.oturuyor=false;p.poz=null;p.sg={};};
     for(const p of this.players)iceri(p);for(const Y of this.yedekler)for(const p of Y)iceri(p);
     for(const p of this.refs)iceri(p);for(const p of this.kenar)iceri(p);
+    /* top toplayıcılar (N10): en son sıralanır (ötekilerin tüneldeki yeri değişmez), sırayla çıkıp yerlerine geçer. Sıra sabittir:
+       senaryo çekilişi tüketmez, böylece ısınmanın geri kalanı ve yazı-tura seçimi aynı kalır */
+    {const A=S.topcular,N=this.topcular.length;this.topcular.forEach((k,i)=>{iceri(k);k.gorev=null;k.top=true;k.topBos=0;k.sg={cikis:A[0]+(A[1]-A[0])*((i*5)%N)/N};});}
     const sn=this.sen={t:0,bitti:false,toplar:[],koniler:[],olan:{},ilgiler:[],takim:[{},{}],kaleciler:[{},{}]};
     /* takımlar: sahadakiler (kaleci hariç 10) ve yedekler (kaleci hariç 4) birlikte ısınır */
     for(let t=0;t<2;t++){
@@ -129,8 +134,9 @@ Object.assign(Match.prototype,{
       if(!this.sahada(p,p.sg.cikis,p.sg.iceri))return;
       if(p.eylem&&p.eylem.kilit)return;
       const kaleci=takimSutu?kl.kaleciler[0]===p:aktif===p;
-      if(kaleci){p.tx=gx-s*0.7;p.tz=MZ;p.hizOran=0.45;p.bak=havada?kl.top:A;}
-      else{p.tx=gx-s*1.2;p.tz=MZ+5.6;p.hizOran=0.4;p.bak={x:0,z:MZ};}
+      if(kaleci){p.tx=gx-s*0.7;p.tz=MZ;p.hizOran=0.45;p.bak=havada?kl.top:A;if(p.poz==='esneme')p.poz=null;}
+      /* sırasını bekleyen kaleci direğin yanında boş durmaz, esner (N1) */
+      else{p.tx=gx-s*1.2;p.tz=MZ+5.6;p.hizOran=0.4;p.bak={x:0,z:MZ};p.poz=hyp(p.x-p.tx,p.z-p.tz)<0.6?'esneme':null;}
     });
     if(!this.sahada(A,A.sg.cikis,A.sg.iceri))return;
     if(takimSutu){A.tx=gx-s*14;A.tz=MZ+11;A.hizOran=0.4;A.bak={x:gx,z:MZ};return;}
@@ -297,15 +303,20 @@ Object.assign(Match.prototype,{
         else{const c=this.havadanCoz(o.x,Math.max(o.y,0.11),o.z,h.x,h.y,h.z,L/h.v*1.08,0);o.y=Math.max(o.y,0.11);o.vx=c.vx;o.vy=c.vy;o.vz=c.vz;}
         if(h.kaleci)this.antKaleci(o,h.kaleci,h.zor);
         continue;}
-      if(o.tutan){const p=o.tutan;o.x=p.x+Math.cos(p.yon)*0.3;o.z=p.z+Math.sin(p.yon)*0.3;o.y=1.05*p.boy;o.vx=o.vy=o.vz=0;
+      if(o.tutan){const p=o.tutan,pe=p.eylem;o.x=p.x+Math.cos(p.yon)*0.3;o.z=p.z+Math.sin(p.yon)*0.3;o.vx=o.vy=o.vz=0;
+        /* uçarak tutan kalecide top kalçanın biraz üstünde, kalkarken ellerle birlikte yükselir */
+        o.y=pe&&pe.ad==='ucus'?Math.max(0.3,(pe.hy||0.3)+0.15):pe&&pe.ad==='kalkis'?lerp(0.4,1.05*p.boy,clamp(pe.t/pe.sure,0,1)):1.05*p.boy;
         if(sn.t>o.birak){o.tutan=null;p.poz=null;const A=o.geri;if(A){o.y=1.3;const L=hyp(A.x-o.x,A.z-o.z)||1;
             const c=this.havadanCoz(o.x,1.3,o.z,A.x,0.3,A.z,0.6+L/14,0);o.vx=c.vx;o.vy=c.vy;o.vz=c.vz;p.eylem={ad:'elleAtis',t:0,sure:0.6};o.sil=sn.t+4;o.alan=A;}}
         continue;}
       if(o.sahip){const p=o.sahip;o.x=p.x+Math.cos(p.yon)*0.35;o.z=p.z+Math.sin(p.yon)*0.35;o.y=0;o.vx=p.vx;o.vz=p.vz;o.vy=0;continue;}
       topFizikAdim(o,dt,false,this.R);
       if(o.alan&&hyp(o.x-o.alan.x,o.z-o.alan.z)<1.1&&o.y<1.6){sn.toplar.splice(i,1);continue;}
-      /* kaleci: top hizasından geçerken kurtarış */
+      /* kaleci: zamanı gelince uçar (maçtaki dalış); top hizasından geçerken kurtarış */
       const K=o.kaleci;
+      if(K&&K.uc&&sn.t>=K.uc.an){const U=K.uc,gk=K.p;K.uc=null;
+        if(!gk.eylem){const pl={px:gk.x,pz:U.z,nx:U.yon,nz:0,vj:1};
+          this.kaleciUc(gk,pl,kaleciYanal(gk,pl),U.y,Math.max(0.15,U.varis-sn.t),kaleciItis(clamp(U.y-0.1,0.25,1.2*(gk.boy||1))),0.6);}}
       if(K&&(o.x-K.p.x)*(o.x-o.vx*dt-K.p.x)<=0){o.kaleci=null;
         if(K.kurtar&&hyp(o.z-K.p.z,(o.y-1)*0.6)<1.6){
           if(K.tut){o.tutan=K.p;o.birak=sn.t+0.9+this.srast()*0.6;o.geri=K.geri;K.p.poz='tutus';continue;}
@@ -318,15 +329,20 @@ Object.assign(Match.prototype,{
       if(o.hedef){const q=o.hedef;if(hyp(o.x-(q.x+Math.cos(q.yon)*0.3),o.z-(q.z+Math.sin(q.yon)*0.3))<0.75&&o.y<0.5){o.sahip=q;o.hedef=null;o.vx=o.vz=0;}}
     }
   },
-  /* antrenman şutunda kaleci: topun geçeceği yere uçar ya da yerinde tutar; kurtarışı önceden belirlenir */
+  /* antrenman şutunda kaleci: topun geçeceği yere uçar ya da yerinde tutar; kurtarışı önceden belirlenir.
+     N1 (2026-10-04): dalış maçtaki dalışın aynısıdır (js/mac-kaleci.js kaleciUc; itiş, havada, iniş, kalkış). Eskiden burada kurulan eski biçimli
+     'ucus' eylemi MM4'ün uçuş adımında kalecinin konumunu bozuyordu (NaN): kaleci görünmez oluyor, antrenör ve yedek kaleci onu bekliyordu.
+     Kaleci erken uçmaz: uçuş anı topun varışına göre hesaplanır (uc.an), antrenmanTopu o anda başlatır. Kurtaramayacaksa geç ve kısa uçar */
   antKaleci(o,gk,zor){
     const sn=this.sen,dx=gk.x-o.x;if(Math.abs(o.vx)<0.5)return;
-    const T=dx/o.vx;if(T<=0)return;
+    const T=dx/o.vx;if(!(T>0))return;
     const z=o.z+o.vz*T,y=clamp(o.y+o.vy*T-0.5*G*T*T,0,2.6),dz=z-gk.z,kurtar=this.srast()<(zor?0.55:0.8);
     const A=this.kenarBul('kaleciAnt',gk.team);
-    o.kaleci={p:gk,kurtar,tut:kurtar&&(Math.abs(dz)<0.9||this.srast()<0.4),geri:A};
-    if(Math.abs(dz)>0.6&&!gk.eylem){const k=Math.max(0.25,T-0.08),v=clamp(dz/k,-6,6);
-      gk.eylem={ad:'ucus',t:0,sure:1.05,kilit:true,fren:4,vx:0,vz:v,yan:Math.sign(dz)||1,y:clamp(y,0.2,2)};}
+    o.kaleci={p:gk,kurtar,tut:kurtar&&(Math.abs(dz)<0.9||this.srast()<0.4),geri:A,uc:null};
+    if(Math.abs(dz)>0.6){
+      const B=gk.boy||1,yy=clamp(y,0.2,2),yh=clamp(yy-0.1,0.25,1.2*B),lat=dz*(kurtar?1:0.7);
+      const yol=Math.min(kaleciUcusYolu(gk,yh),Math.max(0,Math.abs(lat)-0.44*B*MOTOR_AYAR.kaleciErisim));
+      o.kaleci.uc={an:sn.t+Math.max(0,T-kaleciItis(yh)-yol/kaleciDalisHizi(gk,yh)-(kurtar?0.1:-0.06)),varis:sn.t+T,z:gk.z+lat,y:yy,yon:Math.sign(o.vx)||1};}
   },
 
   /* ============ tünelden çıkış: önde üç hakem (maç topu orta hakemde), arkada iki sıra oyuncu ============ */
@@ -448,6 +464,7 @@ Object.assign(Match.prototype,{
     for(const p of this.players){p.poz=null;p.eylem=null;}
     for(const t of[0,1])for(const p of this.yedekler[t]){p.poz=null;p.eylem=null;if(!p.cikti&&!p.oturuyor)this.otur(p);}
     for(const p of this.kenar){p.poz=null;p.eylem=null;if(p.kind==='kaleciAnt')this.otur(p);else{p.x=p.tx=p.ev.x;p.z=p.tz=p.ev.z;p.vx=p.vz=0;}}
+    for(const k of this.topcular){k.x=k.tx=k.ev.x;k.z=k.tz=k.ev.z;k.vx=k.vz=0;k.eylem=null;k.gorev=null;k.top=true;k.topBos=0;if(k.sg)k.sg.cikis=null;}
     this.refs.forEach(r=>{r.poz=null;r.eylem=null;});
     this.refs[1].x=20;this.refs[1].z=PW+1.3;this.refs[2].x=-20;this.refs[2].z=-1.3;
     this.ball.tasiyan=null;

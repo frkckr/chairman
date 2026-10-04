@@ -2,7 +2,7 @@
 """Chairman — maç anı yakalama aracı (2026-10-03, maç motoru güncellemesi Faz 0)
 
 Maçı başsız Chromium'da tohumlu ve sanal saatle oynatır, istenen anı başkanın gözünden (maç ızgarasında, 960×720) PNG olarak kaydeder.
-Bakış varsayılan olarak “Topu izle” açık yakalanır (an topu çerçevelesin); --elle ile oyundaki varsayılan elle bakış korunur.
+Bakış oyundaki gibi topu izler (N4, 2026-10-04: elle bakış ve --elle seçeneği kaldırıldı).
 Görüntüler tekrarlanabilir: Math.random tohumludur, requestAnimationFrame elle ilerletilir (her kare 1/60 sn).
 
 Kullanım:
@@ -14,7 +14,6 @@ Kullanım:
               --onek AD (dosya adlarının başına; ör. once/sonra karşılaştırması) · --en-cok S (koşul için en çok oyun süresi, varsayılan 900)
               --js "<ifade>" (sayfa yüklenince çalışır; ör. bir STIL ayarını açıp kapatmak: --js "STIL.okunurluk.disCizgi=true")
               --oncesi (--kosul ile: maç öncesini atlamadan bekle; ör. tören ve takım fotoğrafı anları)
-              --elle (Topu izle kapalı: baş kendiliğinden dönmez, ilk bakış orta yuvarlağa)
 Çıktı: araclar/anlar/<onek><ad>.png ve .json (topun ekrandaki yeri ve boyu (topPx gerçek, topCizimPx asgari boya büyütülmüş çizim), oyuncuların
 piksel boyu (maç ızgarasında; oyuncuPx480 480 satır karşılığı, eski ölçülerle karşılaştırma için), görüş açısı, aşama). --bino dürbünü anında açar: bakış ve görüş açısı geçişsiz oturur (kameraOturt). Depoya eklenmez.
 """
@@ -112,7 +111,7 @@ OLCU_JS = """() => {
   return { faz: mac.phase, dakika: mac.minuteLabel(), t: +mac.t.toFixed(2), skor: mac.score.join('-'), fov: camera.fov, bino: typeof bino !== 'undefined' && bino,
     top: { x: +b.x.toFixed(2), y: +b.y.toFixed(2), z: +b.z.toFixed(2) }, topNdc, topPx, topCizimPx,
     oyuncuPx: { ortanca: boylar.length ? +boylar[boylar.length >> 1].toFixed(1) : null, enAz: boylar.length ? +boylar[0].toFixed(1) : null, sayi: boylar.length },
-    oyuncuPx480: boylar.length ? +(boylar[boylar.length >> 1] * 480 / H).toFixed(1) : null, izgara: [W, H], takip: typeof KAM !== 'undefined' && KAM.takip, yakin };
+    oyuncuPx480: boylar.length ? +(boylar[boylar.length >> 1] * 480 / H).toFixed(1) : null, izgara: [W, H], yakin };
 }"""
 
 # görünümü (3B + HUD maskesi) tek tuvale bas; şerit için yan yana
@@ -137,8 +136,6 @@ async def yakala(tarayici, site, ad, kosul, sonra, on, a):
     await pg.wait_for_selector("#btnMacaGec", timeout=30000)
     await pg.evaluate("__kare(2)")
     await pg.evaluate(KUR_JS)
-    if not a.elle:
-        await pg.evaluate("if (typeof kameraTakipAyarla === 'function') kameraTakipAyarla(true);")
     if a.js:
         await pg.evaluate("(k) => { new Function(k)(); }", a.js)
     if on == "mac":
@@ -193,7 +190,6 @@ async def ana():
     ap.add_argument("--en-cok", dest="en_cok", type=float, default=900)
     ap.add_argument("--js")
     ap.add_argument("--oncesi", action="store_true")
-    ap.add_argument("--elle", action="store_true")
     a = ap.parse_args()
     try:
         from playwright.async_api import async_playwright

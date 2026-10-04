@@ -2,6 +2,8 @@
 
 **Durum (2026-10-04):** T0 ve T1 tamamlandı (ölçümler ve sınırlar YOL_HARITASI T0/T1). §7.2 kararı: yürüme hedefi en az %55 (ulaşılan %55,6). Sıradaki T2; önce §7.1 (maçın temposu) kararı gerekir. Kullanıcı isteğiyle depoya alındı; turlar [YOL_HARITASI](YOL_HARITASI.md#maç-motoru-gerçekçilik-planı-2026-10-03) “Maç motoru gerçekçilik planı” bölümünde T0–T11 maddeleridir. Uygulama T0 ile başlar. §7'deki kararlar açıktır; uygulayıcı bunları sessizce kesinleştirmez, ilgili tura gelince kullanıcıya sorar. Ölçüm araçlarının ilk ikisi eklendi: `araclar/olcumler/r-karne.js` ve `araclar/oyuncu-karnesi.js` (Ek F).
 
+**2026-10-04 ekleri (kullanıcı onayı):** (1) animasyon her turda ölçütlü bir iştir (§4 “Animasyon”); (2) açık oyunda dönen top ve şutu takip açık maddedir (T5 madde 8, T7 madde 11); (3) her turun kapanışında önce/sonra film şeridi kullanıcıya gösterilir (§4 girişi). Gerekçe: aynı gün incelenen başka bir oyunun kısa maç videosunda görünür fark benzetimde değil, iki kişilik temas animasyonunda ve olayların birbirine zincirlenmesindeydi; benzetim tarafında bu planın turları (T2, T4–T6) aynı konuları zaten hedefliyor. Top toplayıcılar geri geldi (YOL_HARITASI N10, 2026-10-04) ve duran top süresini değiştirdi; T2 yeni tabanla (`araclar/taban/n10.json`) karşılaştırılır.
+
 **Bu belge kimin için:** Planı uygulayacak model ve kullanıcı. Her tur kendi başına okunabilir: neden gerekli, kodda kök neden nerede, ne yapılacak, neyle ölçülecek.
 
 **Dayanak:** Motorun bütün dosyaları okundu (`js/mac-*.js`, `js/animasyon.js`, `js/oyuncular.js`). Bu makinede (Node v24.15.0) 40 maçlık standart ölçüm, 40 maçlık derin ölçüm, 6 maçlık hız ölçümü ve 6 maçlık karar izi çalıştırıldı (tanımları Ek F'de; aynı ölçümler artık `araclar/olcumler/r-karne.js` ve `araclar/oyuncu-karnesi.js` ile yeniden üretilir). Gerçek futbol verisi ve başka oyunların çözümleri araştırıldı (kaynaklar sonda).
@@ -98,7 +100,7 @@ Sakatlık ve tedavi, elle oynama, çabuk kullanılan serbest vuruş, hakem topu,
 
 ## 4. Turlar
 
-Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi (Ek F), `ad-denetimi.js`, `an-yakala.py` film şeridi, `akis-deneme.py`; belgeler (YOL_HARITASI, TEKNIK_PLAN §8) güncellenir. Tur içindeki ara adımlarda yalnız hızlı kademe çalışır (10 maç ve tekrarlanabilirlik, ilgili senaryo, gerekirse `ad-denetimi.js`); ayrıntı CLAUDE.md “Kontrol” bölümündeki iki kademe (2026-10-04).
+Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi (Ek F), `ad-denetimi.js`, `an-yakala.py` film şeridi, `akis-deneme.py`; turun animasyon işi aşağıdaki “Animasyon” ölçütleriyle birlikte kapanır; belgeler (YOL_HARITASI, TEKNIK_PLAN §8) güncellenir. **Kullanıcı incelemesi (2026-10-04):** turun önce/sonra film şeridi (başkanın normal bakışı ve dürbün) kullanıcıya gösterilir; ölçüm iyileşip görüntüde fark görünmüyorsa bu, turun “Sınır” notuna yazılır (T1'de böyle oldu). Tur içindeki ara adımlarda yalnız hızlı kademe çalışır (10 maç ve tekrarlanabilirlik, ilgili senaryo, gerekirse `ad-denetimi.js`); ayrıntı CLAUDE.md “Kontrol” bölümündeki iki kademe (2026-10-04).
 
 ### T0 — Ölçü ve araçlar (sonucu değiştirmez)
 
@@ -202,8 +204,9 @@ Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi
 5. **Top–beden süpürme testi.** Topun bu adımdaki yolu (önceki → şimdiki yer) ile beden kapsülü arasındaki en kısa uzaklık (kalecideki `kaleciSegD` örneği). Hızlı top gövdeden geçmez.
 6. Kayma temiz olsa da sürücü takılıp düşebilir.
 7. İsteğe bağlı: elle oynama. Top bedene çarptığında kolun açık olduğu pozlarda (blok, sıçrama, kayma) küçük olasılık; hakem takdiri.
+8. **Dönen top (2026-10-04, kullanıcı onayı).** Kurtarıştan, direkten ve bloktan dönen top açık oyunun parçasıdır. Top sahipsizken ona varabilecek iki takımın en yakın oyuncuları varış zamanına göre (`varisZamani`) azami eforla gider; kimse topu seyretmez. Kaleci yerdeyse en yakın savunmacı kale çizgisini kapatır. Bugün “ikinci top” yalnız pas değerindeki bir çarpandır (`MOTOR_AYAR.ikinciTop`, [js/mac-karar.js:196](js/mac-karar.js)) ve kornerde bir bekleme yeridir ([js/mac-dizilis.js:270](js/mac-dizilis.js)). Yeni senaryo `c-donen`: ceza sahasında kurtarıştan dönen top ızgarası (dönüş yönü × hız × en yakın hücumcunun ve savunmacının uzaklığı). Takım tarafı (kimin takip edeceği) T7 madde 11'dedir.
 
-**Kabul.** "İtme" payı faullerin %40'ının altında; toplam faul 8–14; kırmızı en çok 0,2; top gövdeden geçti en çok 1; kayma kaynaklı faulsüz düşüş sıfırdan büyük.
+**Kabul.** "İtme" payı faullerin %40'ının altında; toplam faul 8–14; kırmızı en çok 0,2; top gövdeden geçti en çok 1; kayma kaynaklı faulsüz düşüş sıfırdan büyük. `c-donen`: dönen topa ilk dokunan, varış zamanı önde olandır ve olasılık zaman farkıyla düzgün değişir (basamak değil); top ceza sahasında sahipsizken 0,5 sn içinde iki takımdan da en az birer oyuncunun eforu 0,9'un üstündedir. Dönen toptan gol payı karneye bilgi satırı olarak eklenir; hedef aralığı gerçek veri kaynağı bulununca bağlanır (bugün kaynak yok, sayı uydurulmaz).
 
 ### T6 — Hava topu
 
@@ -224,8 +227,9 @@ Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi
 8. **Savunma.** Blok yüksekliği taktikten; pres tetikleyicileri (kötü ilk dokunuş, geri pas, sırtı dönük alıcı, çizgiye sıkışma); pres yapan en tehlikeli pas yolunu arkasında bırakır; kademe; koşucu takibi ve devri; ofsayt çizgisi (top üstünde baskı varsa çık, yoksa düş); ortada ön direk, altıpas önü, arka direk ve penaltı noktası sahipliği; kaleci çıkınca çizgiye inen savunmacı.
 9. **Maç durumu.** Skor farkı × kalan süre × kırmızı kart → niyet ağırlıkları. Gerideyken son 10 dakika: stoper forvete, daha direkt oyun. Öndeyken: topu tutma, duran topta acele etmeme, taktik faul.
 10. **Hoca kapısı.** `taktikDegistir(takim, yeni)` olayı ve değişiklik mantığı (yorgunluk, kart, skor, sakatlık). Kararın kendisi Aşama 3.3'tedir; motor yalnız kapıyı sağlar.
+11. **Şutu takip ve dönen topu uzaklaştırma (2026-10-04, kullanıcı onayı).** Şut anında ceza sahasındaki ve yaydaki hücumculardan profili uygun olanlar (fırsatçı, ceza sahasına geç giren) kale ağzına ve uzak direğe takip koşusu yapar; hepsi gitmez, geride kalanlar (madde 7) yerini korur. Savunmada kaleciye en yakın stoper topun düşeceği bölgeyi, uzak taraftaki bek uzak direği tutar; topu alan savunmacı tehlikeye göre uzaklaştırır ya da oynar (MM3'teki uzaklaştırma kararı). Mekaniği T5 madde 8'dedir.
 
-**Kabul.** Stoper + merkez orta sahanın pas payı en az %45; kanat değiştirme başarısı; hızlı hücumdan şut payı; gerideki takımın son 15 dakikadaki şut payı en az %60; savunmada takım boyu 25–32 m; ofsayt 0,3–2.
+**Kabul.** Stoper + merkez orta sahanın pas payı en az %45; kanat değiştirme başarısı; hızlı hücumdan şut payı; gerideki takımın son 15 dakikadaki şut payı en az %60; savunmada takım boyu 25–32 m; ofsayt 0,3–2. Ceza sahası içinden atılan şutta kale ağzına takip koşusu yapan hücumcu 1–3 (hiç ya da herkes değil); `c-donen` senaryosunda dönen topa ilk dokunuşun takımlara dağılımı karneye yazılır.
 
 ### T8 — Duran toplar
 
@@ -279,7 +283,29 @@ Motor adım evresini ve basan ayağı bilir (`p.adimFaz`, `p.basanAyak`); dokunu
 
 ### Animasyon (her turda, E akışı)
 
-Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Eklenecekler: boşta pozlar ve yürüyüş (T1); taşıma ve bakınma (T2); çalım hareketlerinin ayak yolları (IK hedefi topun çevresinde; makas, çekme, içe kesme) ve yutan savunmacının yanlış yöne adımı (T4); önden blok, şut bloğuna atlama, takılıp düşme (T5); yer kapma ve havada çarpışma (T6); jestler: pas isteme, ofsayt için el kaldırma, işaret, kaçan golde başını tutma (T7); baraj, zıplama, perdeleme (T8); kötü vuruş (T9); sakatlık, tedavi, topallama (T10).
+Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon her turun ölçütlü bir işidir (2026-10-04, kullanıcı onayı); turun motor işiyle birlikte kapanır, sonraya bırakılmaz.
+
+| Tur | Animasyon işi |
+|---|---|
+| T1 | Boşta pozlar ve yürüyüş (yapıldı) |
+| T2 | Topu taşıma, bakınma, topu ayağının altında bekletme, sırtı dönükken dönme |
+| T4 | Çalım hareketlerinin ayak yolları (IK hedefi topun çevresinde; makas, çekme, içe kesme); yutan savunmacının yanlış yöne adımı; top saklarken gövdeyi araya koyma |
+| T5 | Önden blok, şut bloğuna atlama, takılıp düşme ve yerden kalkma; omuz omuza itişme; dönen topa hamle |
+| T6 | Yer kapma (kolla itişme, tutma), birlikte sıçrama ve havada çarpışma, iniş |
+| T7 | Jestler: pas isteme, ofsayt için el kaldırma, işaret, kaçan golde başını tutma |
+| T8 | Baraj, zıplama, perdeleme |
+| T9 | Kötü vuruş (ıska, topun altına girme) |
+| T10 | Sakatlık, tedavi, topallama |
+
+**Kabul ölçütleri (eşikler TEST başlangıç değeridir; ilk ölçümde gözden geçirilir).** Ölçüm `araclar/poz-galerisi.html` ve `an-yakala.py` ile yapılır.
+- **Galeri satırı.** Her yeni hareketin poz galerisinde zaman sıralı bir satırı vardır; sayfa hatasız açılır.
+- **İki kişilik temas.** Temas pozları (omuz, tutma, birlikte sıçrama, müdahale ve takılma, top saklama) galeride iki oyunculu sahneyle gösterilir. Temas karesinde temas eden noktalar (el–gövde, omuz–omuz, ayak–top, ayak–ayak) arasındaki açıklık en çok 0,15 m; gövde kutuları en çok 0,05 m iç içe girer. Galeri bu iki değeri satırın yanına yazar.
+- **Geçiş.** Bir pozdan ötekine geçerken hiçbir eklem açısı 60 Hz'de kare başına 20°'den fazla değişmez (poz atlamaz); düşüşten kalkışa, temastan koşuya geçişler dahil.
+- **Ayak.** Yerdeki ayağın kayması adım başına en çok 0,10 m (MA1'in ölçüsü korunur).
+- **Zamanlama.** Temas karesi, motorun temas anından en çok bir kare sapar; çizim motora yazmaz (`ad-denetimi.js`).
+- **Uzaktan okunurluk.** Başkanın normal bakışında (dürbünsüz film şeridi) hareketin ne olduğu ayırt edilir; bu, kullanıcı incelemesiyle onaylanır (§4 girişi).
+
+**Sınır.** Kodla üretilen pozlar loca mesafesinde ve dürbünde retro üslupla canlı ve okunur olmayı hedefler; yakın plan yayın kamerasında elle ya da hareket yakalamayla üretilmiş animasyonun inceliği hedef değildir. Daha yüksek tavan dış veri gerektirir ve ayrı karardır (CLAUDE.md: harici model ve veri kullanımı).
 
 ---
 

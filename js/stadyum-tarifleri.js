@@ -23,7 +23,8 @@
    loca (2.8O, kullanıcı kararı 2026-10-02): başkanın maçı izlediği yer. Ana tribünün arkasındaki kulüp binasında, odanın balkonunun bir kat
      üstündedir (balkon döşemesinden kat metre yukarıda, tribünün arka duvarından geri metre geride); genislik/derinlik locanın ölçüsü.
      Yüksek ve geniş bakış: yedek kulübeleri ve sahanın büyük kısmı başını çevirmeden görünür. Başkan koltuğu ve kamera buradan hesaplanır;
-     tribündeki protokol bölümü diğer yöneticilerindir. TEST değerleri. */
+     tribündeki protokol bölümü diğer yöneticilerindir. N5 (kullanıcı kararı 2026-10-04): başkanın yeri biraz yükseldi (kat 2,2 → 3,0).
+     TEST değerleri. */
 const STADYUMLAR={
   kulup:{
     ad:'Demirkapı İlçe Stadı',lig:'3. Lig',
@@ -33,7 +34,7 @@ const STADYUMLAR={
     tabela:{tip:'elle',konum:[-20,49],yukseklik:6.5,genislik:13},
     bakim:{yer:'karsi',u:0.3},tunelX:-19,kulubeX:7,
     tribunler:[
-      {yer:'ana',tip:'oturma',uzunluk:40,sira:9,koltuk:'#b8b2a4',taraftar:'karisik',baskanSira:5,protokol:1.5,loca:{kat:2.2,geri:6.2,genislik:9,derinlik:4.2}},
+      {yer:'ana',tip:'oturma',uzunluk:40,sira:9,koltuk:'#b8b2a4',taraftar:'karisik',baskanSira:5,protokol:1.5,loca:{kat:3.0,geri:6.2,genislik:9,derinlik:4.2}},
       {yer:'karsi',tip:'ayakta',uzunluk:60,sira:5,taraftar:'ev',mesale:true},
       {yer:'kale1',tip:'set',uzunluk:34,sira:4,taraftar:'karisik',bolumler:[{from:-17,to:17,taraftar:'deplasman'}]},
       {yer:'kale2',tip:'set',uzunluk:28,sira:3,taraftar:'karisik'}

@@ -2,7 +2,7 @@
    Kullanıcı kararı 2026-10-03 (ikinci paket): maç öncesi ekranında “Maça geç”ten sonra başkan kulüp binasının merdiveninden çıkar, kapıdan
    locaya girer, rakip kulübün başkanıyla tokalaşır ve yavaşça yerine oturur. Atlanabilir: maç görüntüsüne tıklamak, Esc ya da “Santraya geç”.
    Maç günü yürüyüş sırasında durmaz (tören başında sakindir; kaleciler ~15. saniyede çıkar); yürüyüş yalnız kameradır ve motoru okumaz bile.
-   Sırada ON_EKRAN.sayfa 'loca'dır: dürbün, Topu izle, elle bakış ve masadaki telefon kapalıdır (js/arayuz.js, js/kamera.js, js/ekran-mac-telefon.js).
+   Sırada ON_EKRAN.sayfa 'loca'dır: dürbün ve masadaki telefon kapalıdır (js/arayuz.js, js/ekran-mac-telefon.js).
    Duraklatmada (kare dt 0) yürüyüş olduğu yerde durur. Merdiven, kapı, sahanlık, iki koltuk ve rakip başkan ilk yürüyüşte kurulur (tembel kurulum):
    ?ekran=mac ile açılan denemelerde (an-yakala, akış) sahne ve yüklemedeki rastlantı tüketimi değişmez. Rakip başkanın adı ve sözü yoktur.
    Ölçüler ve süreler STIL.locaGiris'tedir (TEST değerleri).
@@ -72,7 +72,7 @@ function locaGirisBaslat(){
   locaGirisKur();const G=LOCA_GIRIS;
   G.aktif=true;G.t=0;G.tokalasti=false;G.yol=locaGirisYolu();ON_EKRAN.sayfa='loca';
   pose(G.rakip,{});G.rakip.root.position.set(LG.rakip.x,LOCA.zemin,LOCA.on-LG.rakip.bekle);G.rakip.root.rotation.y=LG.rakip.yon;
-  for(const b of[btnBino,btnTopIzle])b.disabled=true;
+  btnBino.disabled=true;
   locaGirisKare(0);
 }
 /* rakip başkan: tokalaşırken eli uzanır, sonra koltuğuna döner ve oturur */
@@ -105,7 +105,7 @@ function locaGirisBitir(){
   G.aktif=false;G.t=LG.sure.otur;lgRakip(LG.sure.tokalas+2);G.kapi.rotation.y=0;
   BK_MASA.visible=true;BK_EL.sol.g.visible=true;BK_EL.sag.g.visible=true;if(BASKAN.eylem&&BASKAN.eylem.ad==='tokalas')BASKAN.eylem=null;
   if(ON_EKRAN.sayfa==='loca')ON_EKRAN.sayfa=null;
-  const a=duraklatmaVar();btnBino.disabled=a;btnTopIzle.disabled=a;
+  btnBino.disabled=duraklatmaVar();
   kameraOturt();
 }
 /* atlama: maç görüntüsüne tıklamak ya da Esc; “Santraya geç” önce yürüyüşü bitirir */
