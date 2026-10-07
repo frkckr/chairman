@@ -171,14 +171,18 @@ Object.assign(Match.prototype,{
       }
     }
   },
-  /* oyuncunun topa yetişebileceği en erken nokta (top yolundan). yukseklik: erişebildiği top yüksekliği */
+  /* oyuncunun topa yetişebileceği en erken nokta (top yolundan). yukseklik: erişebildiği top yüksekliği.
+     M0 (2026-10-07, sonucu değiştirmez): varisZamani'nin alt sınırı (düz çizgi uzaklığı − menzil) / vk'dir; vk anlık hız ile tepe hızın büyüğü
+     (modelin hiçbir evresi bundan hızlı gitmez). Bu sınırla 0,05 sn payla bile yetişemeyeceği kesin noktada varisZamani çağrılmaz */
   yakalamaNoktasi(p,yukseklik){
     const yol=this.topYolu(),t0=this.t-this._yolT0,i0=Math.max(0,Math.round(t0*60)-1);
+    const vk=Math.max(hyp(p.vx,p.vz),hrkTepe(p)),px=p.x,pz=p.z;
     let onceki=null;
     for(let i=i0;i<yol.length;i+=3){const s=yol[i],t=(i-i0)/60;if(s.y>yukseklik)continue;
       /* top durduysa sonraki noktalar aynıdır */
       if(onceki&&s.v<0.05&&s.y<0.01&&onceki.v<0.05)return{x:s.x,z:s.z,t:Math.max(t,varisZamani(p,s.x,s.z,0.4,0.15))};
       onceki=s;
+      const r=0.45+vk*(t-0.05),dx=s.x-px,dz=s.z-pz;if(r<=0||dx*dx+dz*dz>r*r)continue;
       /* topa ondan biraz önce varabileceği ilk nokta (güvenlik payı 0,1 sn) */
       if(varisZamani(p,s.x,s.z,0.45,0.15)+0.1<=t)return{x:s.x,z:s.z,t};}
     const s=yol[yol.length-1];return{x:s.x,z:s.z,t:3.5+hyp(s.x-p.x,s.z-p.z)/p.maxSpd};

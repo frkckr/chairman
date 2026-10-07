@@ -93,12 +93,13 @@ Object.assign(Match.prototype,{
           if(hyp(k.x-o.x,k.z-o.z)<0.9){this.disToplar.splice(i,1);k.top=true;k.topBos=0;k.gorev=null;}}}
       else if(g.tur==='ver'){const du=this.phase==='durus'?this.durus:null;
         if(!du||du.topcu!==k||b.tasiyan!==k){if(b.tasiyan===k){b.tasiyan=null;this.topDegisti();}k.gorev=null;}
-        else{/* atana yakın, saha dışında bir yere gelir; atan yaklaşınca topu atar */
+        else{/* atana yakın, saha dışında bir yere gelir; atan yaklaşınca topu atar. Atan yoksa (sahada uygun oyuncu kalmadı; yalnız yapay
+             senaryolarda, ör. d-sut) bekler: stepDurus atanı yeniden seçer (M0, 2026-10-07; gerçek maçta sonuç değişmez) */
           k.tx=g.x;k.tz=g.z;k.hizOran=0.9;const tk=du.kullanan;k.bak=tk;
-          const L=hyp(tk.x-k.x,tk.z-k.z),gel=hyp(k.x-g.x,k.z-g.z)<2.5||L<9,menzil=du.tur==='serbest'||du.tur==='penalti'?32:16;
-          /* atan çizgiye dönmeden atmaz: topun peşinden dışarı taşmış oyuncu (ör. kale arkasındaki kaleci) önce yerine yönelir */
-          const tkDis=Math.max(Math.abs(tk.x)-PL,-tk.z,tk.z-PW);
-          if(gel&&L<menzil&&du.t>0.5&&tkDis<1.0){this.topcuAtar(k,tk,du);k.gorev=null;}}}
+          if(tk){const L=hyp(tk.x-k.x,tk.z-k.z),gel=hyp(k.x-g.x,k.z-g.z)<2.5||L<9,menzil=du.tur==='serbest'||du.tur==='penalti'?32:16;
+            /* atan çizgiye dönmeden atmaz: topun peşinden dışarı taşmış oyuncu (ör. kale arkasındaki kaleci) önce yerine yönelir */
+            const tkDis=Math.max(Math.abs(tk.x)-PL,-tk.z,tk.z-PW);
+            if(gel&&L<menzil&&du.t>0.5&&tkDis<1.0){this.topcuAtar(k,tk,du);k.gorev=null;}}}}
       this.moveP(k,dt);
     }
   },
@@ -381,7 +382,10 @@ Object.assign(Match.prototype,{
       q.yonHedef=uz>6?null:(z>MZ?-Math.PI/2:Math.PI/2);q.bak=b;};
     yan(r[1],1,PW+1.3);yan(r[2],-1,-1.3);
   },
-  ofsaytHizasi(side){const def=this.dir[0]===-side?0:1;const xs=this.teams[def].filter(p=>p.oyunda).map(p=>p.x*side).sort((a,c)=>c-a);return Math.max(xs[1]||0,this.ball.x*side,0);},
+  /* sondan ikinci savunmacının hizası (M0: her karede iki kez çağrılır; dizi kurmadan en büyük iki değer, sonuç aynı) */
+  ofsaytHizasi(side){const def=this.dir[0]===-side?0:1;let a=-Infinity,c=-Infinity;
+    for(const p of this.teams[def])if(p.oyunda){const v=p.x*side;if(v>a){c=a;a=v;}else if(v>c)c=v;}
+    return Math.max(c>0?c:0,this.ball.x*side,0);},
   oyundanCikar(p){p.oyunda=false;p.cikiyor=true;p.eylem=null;p.surus=null;p.tx=this.tunel.x;p.tz=this.tunel.z-4;p.hizOran=0.35;
     const b=this.ball;if(b.sahip===p)b.sahip=null;if(b.tasiyan===p)b.tasiyan=null;this.on('oyundanCikti',{p});
     this.yenidenDizil(p);},

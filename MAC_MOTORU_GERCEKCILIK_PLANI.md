@@ -1,6 +1,6 @@
 # Chairman — maç motoru gerçekçilik planı
 
-**Durum (2026-10-07):** Motor odağı (kullanıcı kararı; YOL_HARITASI “Güncel karar özeti” 2026-10-07): kullanıcı “tamam” diyene kadar bütün geliştirme bu plandadır; motor kararlarını Claude verir ve görünür yazar. Sıra **M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11**: M0 (araç ve hız) eklendi, T3 profil kapısına daraltıldı (kabiliyet ekonomisi ileride veritabanıyla), T9 top fiziği (T9a, öne alındı) ve vuruş (T9b) olarak bölündü (§4, §5). §7: 1–2 verilmişti; 3, 4, 5 ve 7 bu tarihte kesinleştirildi (§7'de yazılı); 6 ve 8 T10'da kullanıcıya sorulur. Kontrol üç kademedir (CLAUDE.md “Kontrol”). Sıradaki M0.
+**Durum (2026-10-07):** Motor odağı (kullanıcı kararı; YOL_HARITASI “Güncel karar özeti” 2026-10-07): kullanıcı “tamam” diyene kadar bütün geliştirme bu plandadır; motor kararlarını Claude verir ve görünür yazar. Sıra **M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11**: M0 (araç ve hız) eklendi, T3 profil kapısına daraltıldı (kabiliyet ekonomisi ileride veritabanıyla), T9 top fiziği (T9a, öne alındı) ve vuruş (T9b) olarak bölündü (§4, §5). §7: 1–2 verilmişti; 3, 4, 5 ve 7 bu tarihte kesinleştirildi (§7'de yazılı); 6 ve 8 T10'da kullanıcıya sorulur. Kontrol üç kademedir (CLAUDE.md “Kontrol”). M0 aynı gün tamamlandı (aşağıda “M0 — Sonuç”); sıradaki T2, taban `araclar/taban/m0.json`.
 
 **Durum (2026-10-04):** T0 ve T1 tamamlandı (ölçümler ve sınırlar YOL_HARITASI T0/T1). §7.2 kararı: yürüme hedefi en az %55 (ulaşılan %55,6). Sıradaki T2; §7.1 kararı verildi (2026-10-04): amaçlı atak. Kullanıcı isteğiyle depoya alındı; turlar [YOL_HARITASI](YOL_HARITASI.md#maç-motoru-gerçekçilik-planı-2026-10-03) “Maç motoru gerçekçilik planı” bölümünde T0–T11 maddeleridir. Uygulama T0 ile başlar. §7'deki diğer kararlar (3–8) açıktır; uygulayıcı bunları sessizce kesinleştirmez, ilgili tura gelince kullanıcıya sorar. Ölçüm araçlarının ilk ikisi eklendi: `araclar/olcumler/r-karne.js` ve `araclar/oyuncu-karnesi.js` (Ek F).
 
@@ -155,6 +155,8 @@ Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi
 6. Hız yeniden ölçülür; yeni taban `araclar/taban/m0.json` (T2 bununla karşılaştırılır).
 
 **Kabul.** `--karsilastir araclar/taban/m0-once.json --ayni` 8/8 aynı; 1000 adım ≤200 ms tek işçi (sağlanamazsa ölçülen değer ve nedeni YOL_HARITASI M0'a yazılır, T2 beklemez); hızlı kademe ≤45 sn; oturum sonu ≤4 dk; bütün senaryolar T1 sonrasındaki sonuçlarını korur.
+
+**M0 — Sonuç (2026-10-07; ayrıntı YOL_HARITASI M0).** Kabulün hepsi tuttu: 80/80 tohum birebir aynı; tek süreçte 1000 adım 250 → ~78 ms; 80 maç 500 → 144 sn; hızlı kademe ~21 sn; oturum sonu 154 sn. İki kaynak: (1) deneme araçları motoru Node'un sarılı `vm` bağlamında yüklüyordu, `Math` ve `function` ile bildirilen üst düzey adlara her erişim yavaş yoldan geçiyordu (`araclar/motor-yukle.js`, `DONT_CONTEXTIFY`); (2) `yakalamaNoktasi` her oyuncu için topun yolundaki her noktada `varisZamani` hesaplıyordu, kanıtlı alt sınırla yetişilemeyecek noktalar atlanıyor. Tarayıcıda (1) zaten yoktu; (2) oyunu da hızlandırır. Profilde sırada `moveP` (~%27) ve gövde çarpışması (`hareketHepsi`, ~%10) var; bütçe aşılırsa sonraki hız bakımının adaylarıdır. Bulgu: `d-sut` senaryosu N10'dan beri düşüyordu (`topcuAI` atanı varsayıyordu); düzeltildi.
 
 ### T2 — Topla oyun: tempo, taşıma, devam değeri
 
@@ -363,7 +365,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 - Kişisel sapma ve düşünme anı kaydırması tohumdan ve oyuncu sırasından türetilir.
 - Rastlantı çekiliş sırası değişen turda `--ayni` kullanılmaz; `--karsilastir` istatistikle bakılır.
 - Mekanik senaryoda doğrulanmadan `MOTOR_AYAR` düğmeleriyle denge aranmaz.
-- Süre bütçesi (2026-10-07): bu makinede tek işçiyle 1000 adım 314 ms (T0 ortamında 202 ms yazılmıştı), 8 işçi paralelken 588 ms. M0 hedefi ≤200 ms; sonraki turlarda artış %10'u geçmez, 250 ms aşılırsa bir sonraki turdan önce hız bakımı yapılır. Her tur kapanışında tek işçi süresi YOL_HARITASI'na yazılır.
+- Süre bütçesi (2026-10-07): M0 sonrası bu makinede tek süreçte 1000 adım ~78 ms (`node araclar/hiz-olcum.js 3`; M0 öncesi 250). Tur başına artış %10'u geçmez, 250 ms aşılırsa bir sonraki turdan önce hız bakımı yapılır. Her tur kapanışında tek süreç süresi YOL_HARITASI'na yazılır; `mac-deneme.js`'in süre satırı paralel süredir, bütçe ölçüsü değildir.
 - Motor çizime yalnız alan ekler; her yeni alanın çizimde yedek davranışı olur.
 - Bir tur bitmeden ötekine geçilmez.
 

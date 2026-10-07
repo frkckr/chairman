@@ -1,6 +1,7 @@
 # Kontrol aracının geçici dosyaları
 araclar/.onbellek/
 araclar/son-kontrol-*.png
+araclar/son-oturum.txt
 araclar/son-akis-*.png
 araclar/anlar/
 __pycache__/

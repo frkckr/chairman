@@ -6,19 +6,14 @@
    2) Bireysellik: ilk 11'lerin oyuncu başına eylem sayıları (pas, şut, çalım girişimi, müdahale, faul, alış, kafa, derin koşu), topa sahip olma
       süresi, tempo, depar ve yürüme payı; özellik ile davranış arasındaki ilişki (Pearson r).
    Kullanım: node araclar/oyuncu-karnesi.js [maç sayısı, varsayılan 8] [ilk tohum, varsayılan 1]
-   Motor dosyaları index.html sırasıyla yüklenir (araclar/mac-deneme.js ile aynı). kararVer ve secenekler yalnız kayıt için sarılır: sonuçları
-   değiştirmez, rastlantı çekmez (baskiAltinda saftır). MAC_DENEME_AYAR ve MAC_DENEME_DIZILIS mac-deneme.js'teki gibi çalışır. Tek süreçtir. */
+   Motor dosyaları index.html sırasıyla yüklenir (araclar/motor-yukle.js; mac-deneme.js ile aynı). kararVer ve secenekler yalnız kayıt için
+   sarılır: sonuçları değiştirmez, rastlantı çekmez (baskiAltinda saftır). MAC_DENEME_AYAR ve MAC_DENEME_DIZILIS mac-deneme.js'teki gibi
+   çalışır. Tek süreçtir. */
 'use strict';
-const fs=require('fs'),path=require('path'),vm=require('vm');
-const KOK=path.join(__dirname,'..');
+const vm=require('vm');
 const N=Math.max(1,parseInt(process.argv[2]||'8',10)),T0=parseInt(process.argv[3]||'1',10),dt=1/60;
-const html=fs.readFileSync(path.join(KOK,'index.html'),'utf8');
-const sira=[...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m=>m[1]);
-const DISARIDA=new Set(['js/stil-99.js','js/sunum-durumu.js','js/stadyum-tarifleri.js']);
-const mantik=sira.slice(0,sira.indexOf('js/goruntu.js')).filter(f=>!DISARIDA.has(f));
 const KARAR=[];
-const ctx=vm.createContext({console,Math,Date,__kayit:o=>KARAR.push(o)});
-for(const f of mantik)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),ctx,{filename:f});
+const {ctx}=require('./motor-yukle').motorYukle({__kayit:o=>KARAR.push(o)});
 if(process.env.MAC_DENEME_AYAR)vm.runInContext(`Object.assign(MOTOR_AYAR,${JSON.stringify(JSON.parse(process.env.MAC_DENEME_AYAR))})`,ctx);
 const DIZILIS=process.env.MAC_DENEME_DIZILIS?process.env.MAC_DENEME_DIZILIS.split(','):null;
 /* karar izi: secenekler'in son listesi ve kararVer'in seçimi */
