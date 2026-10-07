@@ -232,11 +232,11 @@ Object.assign(Match.prototype,{
     }
     u=clamp(u,-PL+0.5,PL-0.8);w=clamp(w,0.8,PW-0.8);
     /* efor (T1): görevin eforu (koşu ve markaj 1, bindirme ve ceza sahasına koşu 0,8, destek 0,6, uzak kanat 0,5); yoksa bölge 0,25–0,5
-       (hedefe uzaklık, top kendi kalesine yakınsa tehlike) × çalışkanlık (dayanıklılık, rol, yorgunluk; geçici, T3'te profilden).
+       (hedefe uzaklık, top kendi kalesine yakınsa tehlike) × çalışkanlık (T3: profilin çalışkanlığı × gün formu; rol ve yorgunluk).
        Dinlenme: top dinlenUzak'tan uzak ve yakında koşan rakip yokken 0,15 (yürür, yüzü topa) */
     const b=this.ball,db=hyp(p.x-b.x,p.z-b.z);
     if(!ef){const uz0=hyp(u*d-p.x,w-p.z),tehlike=hucum?0:clamp((45-(b.x*d+PL))/25,0,1);
-      const calis=(0.85+0.3*p.oz.dayaniklilik)*(p.rol==='OS'?1.1:p.rol==='FV'?0.9:1)*(1-0.3*p.yorgunluk);
+      const pr=p.profil,calis=(pr?(0.7+0.6*pr.alt.caliskanlik)*pr.form:0.85+0.3*p.oz.dayaniklilik)*(p.rol==='OS'?1.1:p.rol==='FV'?0.9:1)*(1-0.3*p.yorgunluk);
       ef=clamp((0.25+0.2*clamp((uz0-3)/12,0,1)+0.15*tehlike)*calis,0.2,0.55);
       /* hücumda topun önündeki oyuncu (ofsayt çizgisi, koşu) dinlenmez */
       if(db>MOTOR_AYAR.dinlenUzak&&!(hucum&&p.x*d>b.x*d-5)&&!this.tehditVar(p,hucum))ef=0.15;}

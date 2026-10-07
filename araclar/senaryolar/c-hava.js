@@ -10,9 +10,10 @@ const HV_PROFIL={guclu:{boy:1.07,kafa:0.85,sertlik:0.7},orta:{boy:1,kafa:0.6,ser
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||60,dt=1/60,t0=Date.now();
   const kur=vm.runInContext(`(tohum,olay)=>{const m=new Match(olay,{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();return m;}`,ctx);
+  const profilKur=vm.runInContext('profilKur',ctx);
   const bosalt=(m,kal)=>{for(const p of m.players){if(kal.includes(p)||p.rol==='GK')continue;p.oyunda=false;p.x=p.tx=-300;p.z=p.tz=-300;p.vx=p.vz=0;p.eylem=null;}};
   const yerlestir=(p,x,z,yon,pr)=>{Object.assign(p,{x,z,tx:x,tz:z,vx:0,vz:0,spd:0,yon,eylem:null,kickCd:0,surus:null,kosu:null,oyunda:true,denge:1,zipla:null,yuk:0,boy:pr.boy,_kutle:0});
-    p.oz.kafa=pr.kafa;p.oz.sertlik=pr.sertlik;p.oz.karar=0.6;
+    p.oz.kafa=pr.kafa;p.oz.sertlik=pr.sertlik;p.oz.karar=0.6;profilKur(p,0);   /* T3: profil özellikten türetilir */
     p._kutle=72*pr.boy*pr.boy*(0.85+0.3*pr.sertlik);};   /* kütle önbelleği: kadronun yapı farkı kalksın (kutle() formülü, yapı 1) */
   /* durum: [ad, X profili, Y profili, X koşuyor mu, Y koşuyor mu] — X'in kazanma payı raporlanır */
   const DURUM=[['orta × orta, ikisi duruyor','orta','orta',false,false],['güçlü × zayıf, ikisi duruyor','guclu','zayif',false,false],

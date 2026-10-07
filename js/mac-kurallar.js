@@ -15,8 +15,9 @@ Object.assign(Match.prototype,{
     this.yedekler=[[],[]];
     for(let t=0;t<2;t++){const kd=this.kadro&&this.kadro[t];if(!kd)continue;
       (kd.yedekler||[]).forEach((k,i)=>{const s=this.kulubeler[t].koltuklar[i]||{x:t?11.5:-11.5,z:-5.8},oz=ozellikler(k);
-        this.yedekler[t].push(this.varlik('yedek',s.x,s.z,{team:t,rol:k.mevki==='KL'?'GK':(k.mevki||'OS'),name:k.ad,no:k.no,kayit:k,oz,ayak:k.ayak||'sag',boy:k.boy||1,
-          maxSpd:6.4+2.4*oz.hiz,yon:Math.PI/2,oturuyor:true,koltuk:s}));});}
+        const y=this.varlik('yedek',s.x,s.z,{team:t,rol:k.mevki==='KL'?'GK':(k.mevki||'OS'),name:k.ad,no:k.no,kayit:k,oz,ayak:k.ayak||'sag',boy:k.boy||1,
+          maxSpd:6.4+2.4*oz.hiz,yon:Math.PI/2,oturuyor:true,koltuk:s});
+        profilKur(y,this.tohum);this.yedekler[t].push(y);});}   /* T3: yedeğin profili (mevki yok: stoper / merkez sayılır) */
     /* değişiklik planı: her takım ikinci yarıda 2–4 değişiklik, 55. ile 87. dakika arasında */
     this.degisimPlani=[0,1].map(()=>{const n=2+Math.floor(this.rast()*3),L=[];for(let i=0;i<n;i++)L.push(3300+this.rast()*1920);return L.sort((a,b)=>a-b);});
   },
@@ -99,7 +100,10 @@ Object.assign(Match.prototype,{
           if(tk){const L=hyp(tk.x-k.x,tk.z-k.z),gel=hyp(k.x-g.x,k.z-g.z)<2.5||L<9,menzil=du.tur==='serbest'||du.tur==='penalti'?32:16;
             /* atan çizgiye dönmeden atmaz: topun peşinden dışarı taşmış oyuncu (ör. kale arkasındaki kaleci) önce yerine yönelir */
             const tkDis=Math.max(Math.abs(tk.x)-PL,-tk.z,tk.z-PW);
-            if(gel&&L<menzil&&du.t>0.5&&tkDis<1.0){this.topcuAtar(k,tk,du);k.gorev=null;}}}}
+            /* T3 bulgusu (2026-10-07): koşarak gelen atana uzaktan atılan top kontrol edilemeyip sahaya yuvarlanıyordu (taç, 16 sn'yi aşan
+               hazırlık); top ancak atan yakındayken (6 m) ya da yavaşlamışken verilir */
+            const yakin=L<6||(L<menzil&&tk.spd<2.5);
+            if(gel&&yakin&&du.t>0.5&&tkDis<1.0){this.topcuAtar(k,tk,du);k.gorev=null;}}}}
       this.moveP(k,dt);
     }
   },
@@ -172,11 +176,12 @@ Object.assign(Match.prototype,{
     let en=null,ep=1e9;
     for(const p of tm){if(p.rol==='GK'&&du.tur!=='serbest')continue;
       let c=hyp(p.x-du.x,p.z-du.z);
-      if(du.tur==='korner')c=c*0.4+(p.rol==='OS'?0:30)-p.oz.pas*20;
+      /* T3: görevli profilden — korner: duran top + orta; penaltı: şut + soğukkanlılık; tehlikeli serbest vuruş: duran top (T8 bunun üstüne kurulur) */
+      if(du.tur==='korner')c=c*0.4+(p.rol==='OS'?0:30)-(p.profil?0.5*p.profil.alt.duranTop+0.5*p.profil.alt.orta:p.oz.pas)*20;
       if(du.tur==='tac'&&(p.mevki.bek||p.mevki.kanat))c-=6;
-      if(du.tur==='penalti')c=-p.oz.sut*50-(p.rol==='FV'?10:0)+(p.rol==='GK'?99:0);
+      if(du.tur==='penalti')c=-(p.profil?0.6*p.oz.sut+0.4*p.profil.alt.sogukkanlilik:p.oz.sut)*50-(p.rol==='FV'?10:0)+(p.rol==='GK'?99:0);
       if(du.tur==='serbest'&&p.rol==='GK')c=this.kendiCezaSahasinda(p,du.x,du.z)?c-10:c+60;
-      if(du.tur==='serbest'&&this.tehlikeliSerbest(du))c=c*0.3-p.oz.sut*25;
+      if(du.tur==='serbest'&&this.tehlikeliSerbest(du))c=c*0.3-profilAlt(p,'duranTop',p.oz.sut)*25;
       if(c<ep){ep=c;en=p;}}
     return en;
   },
@@ -237,10 +242,12 @@ Object.assign(Match.prototype,{
       const hucumYer=[[PL-5.5,MZ+yan*2.5],[PL-7,MZ-yan*3],[PL-11,MZ+yan*0.5],[PL-4,MZ],[PL-17,MZ-yan*4],[PL-19,MZ+yan*6]];
       const savYer=[[PL-0.6,MZ+yan*(GW2-0.4)],[PL-5,MZ+yan*1.5],[PL-5,MZ-yan*2.5],[PL-7.5,MZ],[PL-10,MZ+yan*3],[PL-10,MZ-yan*3],[PL-16,MZ]];
       let i=0,j=0;
-      const hucumcular=this.sahadakiler(du.takim).filter(p=>p!==tk&&p.rol!=='GK').sort((a,c)=>(c.oz.kafa+c.boy)-(a.oz.kafa+a.boy));
-      for(const p of hucumcular){if(p.rol==='DEF'&&!(p.oz.kafa>0.68&&i<2)){p.tx=d*-2;p.tz=p.z<MZ?20:48;continue;}
+      /* T3: kafa için sıralama sıçramadan (0,6 kafa + 0,2 hız + 0,2 güç; profil) ve boydan; eski eşik kafa 0,68 ≈ sıçrama 0,62 */
+      const kg=p=>profilAlt(p,'sicrama',p.oz.kafa);
+      const hucumcular=this.sahadakiler(du.takim).filter(p=>p!==tk&&p.rol!=='GK').sort((a,c)=>(kg(c)+c.boy)-(kg(a)+a.boy));
+      for(const p of hucumcular){if(p.rol==='DEF'&&!(kg(p)>0.62&&i<2)){p.tx=d*-2;p.tz=p.z<MZ?20:48;continue;}
         const y=hucumYer[i++];if(!y){p.tx=d*(PL-30);p.tz=p.mevki.w;continue;}p.tx=d*y[0];p.tz=y[1];p.hizOran=0.8;p.bak=this.ball;this.eforVer(p,0.4);}
-      const savunanlar=this.sahadakiler(savunan).filter(p=>p.rol!=='GK').sort((a,c)=>(c.oz.kafa+c.boy)-(a.oz.kafa+a.boy));
+      const savunanlar=this.sahadakiler(savunan).filter(p=>p.rol!=='GK').sort((a,c)=>(kg(c)+c.boy)-(kg(a)+a.boy));
       for(const p of savunanlar){if(p.rol==='FV'&&j>3){p.tx=d*(-8);p.tz=p.mevki.hedef?30:40;continue;}
         const y=savYer[j++];if(!y){p.tx=d*(PL-24);p.tz=p.mevki.w;continue;}p.tx=d*y[0];p.tz=y[1];p.hizOran=0.8;p.bak=this.ball;this.eforVer(p,0.4);}
     }else if(du.tur==='penalti'){

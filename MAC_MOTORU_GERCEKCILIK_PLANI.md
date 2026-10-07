@@ -1,6 +1,6 @@
 # Chairman — maç motoru gerçekçilik planı
 
-**Durum (2026-10-07):** Motor odağı (kullanıcı kararı; YOL_HARITASI “Güncel karar özeti” 2026-10-07): kullanıcı “tamam” diyene kadar bütün geliştirme bu plandadır; motor kararlarını Claude verir ve görünür yazar. Sıra **M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11**: M0 (araç ve hız) eklendi, T3 profil kapısına daraltıldı (kabiliyet ekonomisi ileride veritabanıyla), T9 top fiziği (T9a, öne alındı) ve vuruş (T9b) olarak bölündü (§4, §5). §7: 1–2 verilmişti; 3, 4, 5 ve 7 bu tarihte kesinleştirildi (§7'de yazılı); 6 ve 8 T10'da kullanıcıya sorulur. Kontrol üç kademedir (CLAUDE.md “Kontrol”). M0 aynı gün tamamlandı (aşağıda “M0 — Sonuç”); T2 de tamamlandı (aşağıda “T2 — Sonuç”; kullanıcı onayıyla kapandı, M0 ile birlikte `main`'e alındı), sıradaki T3, taban `araclar/taban/t2.json`.
+**Durum (2026-10-07):** Motor odağı (kullanıcı kararı; YOL_HARITASI “Güncel karar özeti” 2026-10-07): kullanıcı “tamam” diyene kadar bütün geliştirme bu plandadır; motor kararlarını Claude verir ve görünür yazar. Sıra **M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11**: M0 (araç ve hız) eklendi, T3 profil kapısına daraltıldı (kabiliyet ekonomisi ileride veritabanıyla), T9 top fiziği (T9a, öne alındı) ve vuruş (T9b) olarak bölündü (§4, §5). §7: 1–2 verilmişti; 3, 4, 5 ve 7 bu tarihte kesinleştirildi (§7'de yazılı); 6 ve 8 T10'da kullanıcıya sorulur. Kontrol üç kademedir (CLAUDE.md “Kontrol”). M0 aynı gün tamamlandı (aşağıda “M0 — Sonuç”); T2 de tamamlandı (aşağıda “T2 — Sonuç”; kullanıcı onayıyla kapandı, M0 ile birlikte `main`'e alındı), T3 aynı gece tamamlandı (aşağıda “T3 — Sonuç”; kullanıcı incelemesi bekliyor), sıradaki T9a, taban `araclar/taban/t3.json`.
 
 **Durum (2026-10-07 akşam):** Kullanıcı kararıyla dürbün tamamen kaldırıldı (YOL_HARITASI N13): tur kapanışındaki önce/sonra film şeritleri yalnız başkanın loca bakışıyla (oyunda 21–26°) alınır; animasyon ve ayak ayrıntısı bu mesafede okunmalıdır. T11'in kazancı dürbüne bağlıydı: **T11 sıradan ve “hazır” tanımından çıkarıldı** (ileride ayrı karar). T3–T10 için bitirme planı (kapsam, kabul, büyüklük) onaylandı (YOL_HARITASI “Güncel karar özeti” 2026-10-07 akşam); sıra **T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10**.
 
@@ -195,6 +195,8 @@ Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi
 **Amaç.** Aynı durumda farklı oyuncular farklı şeyler denesin.
 
 **2026-10-07 daraltma (kullanıcı çerçevesi).** Oyuncudan oyuncuya kabiliyet ekonomisi (kim neyi yapabilir, puanların karşılığı) ileride veritabanıyla yazılacak. T3 derin bir özellik sistemi değil, o ekonominin tek giriş kapısıdır: aşağıdaki 1–5 korunur ama türetme Ek A'nın başlangıç önerisiyle sınırlı kalır, kadro verisine özellik eklenmez, ağırlıklar ayar değil veri olarak durur (`mac-profil.js` içinde tablo). Büyüklük küçük; kabul ölçütleri aynen.
+
+**T3 — Sonuç (2026-10-07 akşam; ayrıntı YOL_HARITASI T3; `claude/motor-t3`, kullanıcı incelemesi bekliyor).** Uygulanan: `js/mac-profil.js` (Ek A tablosu, roller ve eğilimler veri; ad özetinden ±0,08; gün formu tohum özetinden, `m.rast` tüketmez), `p.profil = {alt, rol, egilim, form, grup}`; kullanım yerleri çalışkanlık, seçim (Gumbel ölçeği tutarlılıktan, eğilim puanı), sabır, uzak şut, tek vuruş, çalım sıklığı, müdahale isteği, faul çekilişleri (agresiflik; T5'e kadar), duran top görevlileri. Kabul ölçümü duyarlılık kipiyle (`oyuncu-karnesi.js --duyarlilik`: aynı mevki grubundaki iki oyuncuya ±0,2; kabul = sıklık oranı ≥ 1,25 ve GA alt ucu > 1; doğal kadroda r gürültüden ibaret): sürüş → çalım 1,97×, sürüş → taşıma 1,71×, müdahale → müdahale 1,38×, sertlik → faul 1,56× (80 maç); aynı kipte hat içi r 0,68 / 0,59 / 0,46 / 0,52. `p-tip` TVD 0,068 → 0,369. Forvet dışı şut %8 (≥%30 kabulü T7'ye devredildi: orta saha ve kanat son üçte bire girmiyor). Hedef tablosu T2 ile aynı; top ayakta ortanca 1,28 sn (hedefte). Hız 35,9 ms / 1000 adım (T2 37,3). Taban `araclar/taban/t3.json`. Bulgu: top toplayıcının koşan atana uzaktan attığı top (`d-topcu`) düzeltildi.
 
 **Yapılacaklar**
 1. Yeni dosya `js/mac-profil.js` (yalnız veri ve saf işlev; motor çekirdeğinden önce yüklenir; `index.html` sırası ve `ad-denetimi.js`).
@@ -412,6 +414,8 @@ Hepsi 0–1; `kütle` boy ve yapıdan (mevcut `kutle`), 0–1'e ölçeklenir. He
 | orta | 0,60·pas + 0,20·sürüş + 0,20·görüş |
 | şut gücü | 0,60·şut + 0,40·güç |
 | tutarlılık | 0,50 + 0,40·karar |
+
+**Uygulama (T3, 2026-10-07):** `js/mac-profil.js` `PRF_ALT` bu tabloyu veri olarak tutar (çeviklik `hrkCeviklik` ile aynı, sapmasız; kütle01 = (kütle − 55)/45). Ek B'ye `topuSurer` eğilimi eklendi (sürüş 0,6, çabukluk 0,2, pas −0,2; taşıma kararı ve çalım sıklığı); `uzaktanVurur` tabanı şut 0,3 + şut gücü 0,3'tür ve rol belirler (iki yönlü +0,5, içe kat eden +0,4, hedef forvet −0,3, fırsatçı −0,4). Roller: KL çizgi kalecisi / süpürücü; stoper sert / oyun kuran; bek savunmacı / bindiren; merkez kesici / oyun kurucu / iki yönlü; kanat çizgi / içe kat eden / oyun kuran; FV hedef / fırsatçı / derine gelen. Eğilim = clamp(3·Σ w·(değer − 0,5) + rolün varsayılanı, −1, 1).
 
 ## Ek B — Roller ve eğilimler
 

@@ -8,6 +8,7 @@
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||40,dt=1/60,t0=Date.now();
   const kur=vm.runInContext(`(tohum,olay)=>{const m=new Match(olay,{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();return m;}`,ctx);
+  const profilKur=vm.runInContext('profilKur',ctx);
   const bosalt=(m,kal)=>{for(const p of m.players){if(kal.includes(p)||p.rol==='GK')continue;p.oyunda=false;p.x=p.tx=-300;p.z=p.tz=-300;p.vx=p.vz=0;p.eylem=null;}};
   const yerlestir=(p,x,z,yon,v)=>{Object.assign(p,{x,z,tx:x,tz:z,vx:Math.cos(yon)*v,vz:Math.sin(yon)*v,spd:v,yon,eylem:null,kickCd:0,surus:null,kosu:null,oyunda:true,denge:1,_calim:null});};
   const HIZ=[0,3,6],FARK=[-0.4,0,0.4],T={};let deneme=0;
@@ -15,7 +16,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
     for(let i=0;i<n;i++){deneme++;let faul=false;
       const m=kur((tohum||1)*1000+deneme,ad=>{if(ad==='faul'||ad==='avantaj')faul=true;}),A=m.teams[0][9],D=m.teams[1][3],b=m.ball,d=m.dir[0],hy=d>0?0:Math.PI;
       bosalt(m,[A,D]);
-      A.oz.surus=0.6+fk/2;D.oz.mudahale=0.6-fk/2;
+      A.oz.surus=0.6+fk/2;D.oz.mudahale=0.6-fk/2;profilKur(A,m.tohum);profilKur(D,m.tohum);   /* T3: profil özellikten türetilir */
       const ax=d*18,az=34+(i%5-2)*3;yerlestir(A,ax,az,hy,v0);yerlestir(D,ax+d*6,az,hy+Math.PI,0);
       m.phase='play';m.phaseT=1;m.durus=null;
       Object.assign(b,{x:ax+d*0.45,z:az,y:0,vx:d*v0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,sonTakim:0,sonDokunan:A});

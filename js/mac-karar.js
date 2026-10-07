@@ -426,10 +426,12 @@ function sutPlani(m,p,ox,oz,sd,o){
 function sutSecenegi(m,p,x0,z0,baski){
   const d=m.dir[p.team],u=x0*d;if(u<=PL-38)return null;
   const gx=d*PL,Lk=hyp(gx-x0,MZ-z0),oz=p.oz;let x=xG(u,z0,'ayak',baski*0.4)*(1-sutBlokOlasiligi(m,p,x0,z0,gx,MZ,'sert'));
-  /* şut isteği iyi pozisyonda tam, uzaklaştıkça azalır: 14 m'ye kadar tam, 22 m'de yalnız şutun kendi değeri, daha uzakta isteksiz */
-  const istek=Lk<22?1+(MOTOR_AYAR.sutIstegi-1)*clamp((22-Lk)/8,0,1):1-clamp((Lk-22)/14,0,0.5);
+  /* şut isteği iyi pozisyonda tam, uzaklaştıkça azalır: 14 m'ye kadar tam, 22 m'de yalnız şutun kendi değeri, daha uzakta isteksiz.
+     T3: uzaktan vurma eğilimi 14 m'den sonra isteği ±%60 değiştirir (kararVer'de ayrıca eğilim puanı); uzak şutun kapısı eğilimle de açılır */
+  const uv=profilEgilim(p,'uzaktanVurur');
+  const istek=(Lk<22?1+(MOTOR_AYAR.sutIstegi-1)*clamp((22-Lk)/8,0,1):1-clamp((Lk-22)/14,0,0.5))*(1+0.6*uv*clamp((Lk-14)/8,0,1));
   if(x>=0.017)return{tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*istek-(1-x)*0.4,xg:x};
-  if(x>=0.008&&oz.sut>0.5&&baski<0.6)return{tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*(0.5+0.5*istek)-(1-x)*0.4,xg:x};
+  if(x>=0.008&&(oz.sut>0.5||uv>0.3)&&baski<0.6)return{tur:'sut',deger:x*100*(0.85+oz.sut*0.3)*(0.5+0.5*istek)-(1-x)*0.4,xg:x};
   return null;}
 /* ---- seçenekler ---- */
 /* bütün değerler aynı ölçüdedir: gol olasılığı × 100 ("puan"). Pas = başarı × hedefin tehdidi − kayıp × rakibin oradaki tehdidi */
@@ -459,18 +461,21 @@ function secenekler(m,p){
 function sabirEsigi(m,p,t1,tutT){const A=MOTOR_AYAR,tk=m.taktik[p.team],u=m.ball.x*m.dir[p.team];
   /* son üçte birde sabır azalır: oyun kurarken sabır, bitirirken tempo (kaleye 42 m'den uzakta tam, ceza sahası çizgisinde %20) */
   const bolge=clamp((PL-16-u)/26,0.2,1);
-  return(A.sabir[0]+(A.sabir[1]-A.sabir[0])*(0.6*tk.sakin+0.4*(1-tk.tempo)))*(0.3+0.7*acikOran(t1))*clamp(1-(tutT||0)/A.sabirSure,0,1)*bolge;}
-/* seçim (T2): her seçeneğin değerine kişisel bir sapma eklenir (Gumbel; ölçeği karar özelliğinden: eski sıcaklıklı seçimin aynısı) ve en büyüğü
-   seçilir. Sapma bir sahiplik boyunca aynı kalır (topu tutma, şut, uzaklaştırma ve alıcı başına): oyuncu her düşünme anında (5–8 Hz) yeniden
-   zar atmaz, kararı tutarlıdır; taşırken durum değişince karar değişir. Taşıma ve beklemeye sabır eşiği eklenir */
+  /* T3: oyuncunun eğilimi — topu tutan sabırlı, tek vuruş oynayan sabırsız (×0,4–1,6) */
+  const eg=clamp(1+0.35*profilEgilim(p,'topuTutar')-0.25*profilEgilim(p,'tekVurus'),0.4,1.6);
+  return(A.sabir[0]+(A.sabir[1]-A.sabir[0])*(0.6*tk.sakin+0.4*(1-tk.tempo)))*(0.3+0.7*acikOran(t1))*clamp(1-(tutT||0)/A.sabirSure,0,1)*bolge*eg;}
+/* seçim (T2): her seçeneğin değerine kişisel bir sapma eklenir (Gumbel; ölçeği T3'ten beri profilin tutarlılığından: 0,1 + 0,5·(1 − tutarlılık),
+   eskiden 0,12 + 0,42·(1 − karar)) ve en büyüğü seçilir. Sapma bir sahiplik boyunca aynı kalır (topu tutma, şut, uzaklaştırma ve alıcı başına):
+   oyuncu her düşünme anında (5–8 Hz) yeniden zar atmaz, kararı tutarlıdır; taşırken durum değişince karar değişir. Taşıma ve beklemeye sabır
+   eşiği eklenir. T3: her seçeneğe oyuncunun eğilim puanı eklenir (profilEgilimPuani, js/mac-profil.js); çekiliş sayısı ve sırası değişmez */
 function kararVer(m,p){
   const S=secenekler(m,p);if(!S.length)return{tur:'bekle'};
   const v=m.bVeri(p),b=m.ball;if(!v.gur||v.gur.no!==m.sahiplikNo)v.gur={no:m.sahiplikNo,M:new Map(),t0:m.t};
-  const G=v.gur.M,tau=0.12+0.42*(1-p.oz.karar),esik=sabirEsigi(m,p,baskiSuresi(m,p.team,b.x,b.z,0).t1,m.t-v.gur.t0);
+  const G=v.gur.M,tau=0.1+0.5*(1-profilAlt(p,'tutarlilik',0.5+0.4*p.oz.karar)),esik=sabirEsigi(m,p,baskiSuresi(m,p.team,b.x,b.z,0).t1,m.t-v.gur.t0);
   let en=S[0],enP=-1e9;
   for(const s of S){const k=s.tur==='tasi'||s.tur==='bekle'||s.tur==='koru'?'tut':s.alici?(s.tur==='orta'||s.tur==='geriCevir'?'o':'p')+s.alici.n:s.tur;
     let g=G.get(k);if(g===undefined){const r=Math.max(1e-12,m.rast());g=-Math.log(-Math.log(r))*tau;G.set(k,g);}
-    const puan=s.deger+g+(k==='tut'?esik:0);if(puan>enP){enP=puan;en=s;}}
+    const puan=s.deger+g+profilEgilimPuani(m,p,s)+(k==='tut'?esik:0);if(puan>enP){enP=puan;en=s;}}
   return en;
 }
 /* ---- gelişine tek vuruş (MM3): top gelirken alıcı tek vuruşla pası (geri, bırakma, ara) kontrol edip oynamakla (+~0,5 sn, daha çok baskı)
@@ -495,7 +500,8 @@ function tekVurusKarari(m,p,k,s,yakin){
   if(!en1)return{sec:null,hedef};
   /* tek vuruşun kendi riski: top ayağa tam gelmeyebilir */
   const U1=en1.deger*0.92;
-  const tau=0.12+0.42*(1-p.oz.karar),P1=1/(1+Math.exp((U2-U1-MOTOR_AYAR.tekVurus)/tau));
+  /* T3: tek vuruş eğilimi (±0,5·egilimGuc puan) gelişine oynamayı kolaylaştırır ya da zorlaştırır */
+  const tau=0.12+0.42*(1-p.oz.karar),P1=1/(1+Math.exp((U2-U1-MOTOR_AYAR.tekVurus-0.5*MOTOR_AYAR.egilimGuc*profilEgilim(p,'tekVurus'))/tau));
   if(m.rast()>=P1)return{sec:null,hedef};
   return{sec:{tur:en1.tur,hx:en1.hx,hz:en1.hz,tip:en1.tip,alici:en1.alici,varisHizi:en1.varis,mod:en1.mod,ex:en1.ex,ez:en1.ez,es:en1.es,
     guncelle:true,ilk:true,tekDokunus:true,P:en1.P,Pk:en1.Pk,alt:en1.alt},hedef};   /* P, Pk, alt salt okunur (ölçüm) */

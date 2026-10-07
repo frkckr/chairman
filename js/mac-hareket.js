@@ -341,8 +341,11 @@ Object.assign(Match.prototype,{
       if(!(s.cal||s.hiz>=0.6))return null;
       /* rakip sürüş yönünde ya da (ileri sürerken) kaleye giden yolda önde */
       const hy=this.dir[p.team]>0?0:HRK_PI,ileri=hrkCos(s.yon-hy)>0.17,o=this.calimRakibi(p,s.yon)||(ileri?this.calimRakibi(p,hy,3):null);if(!o)return null;
-      if(!s.cal&&this.rast()>dt*MOTOR_AYAR.calimIstegi*(0.5+p.oz.surus))return null;
-      C=p._calim={o,tur:this.rast()<0.3+0.55*p.oz.surus?'aldat':'hiz',taraf:this.calimTarafi(p,o),faz:0,t0:this.t,ft:0,kare:this.kare,yon2:0};
+      /* T3: sıklık sürüşle daha dik, yaratıcılık (profil) ve "topu atıp koşar" eğilimiyle; tür yaratıcılık ↔ çabukluk farkından (aldatma / hız).
+         "Rakibi geç" kararının kendisi T4'tedir */
+      const yar=profilAlt(p,'yaraticilik',p.oz.surus),cab=profilAlt(p,'cabukluk',p.oz.hiz);
+      if(!s.cal&&this.rast()>dt*MOTOR_AYAR.calimIstegi*(0.05+1.3*p.oz.surus+0.3*yar)*(1+0.2*profilEgilim(p,'topuAtipKosar')+0.3*profilEgilim(p,'topuSurer')))return null;
+      C=p._calim={o,tur:this.rast()<clamp(0.55+0.5*(yar-cab),0.1,0.9)?'aldat':'hiz',taraf:this.calimTarafi(p,o),faz:0,t0:this.t,ft:0,kare:this.kare,yon2:0};
     }
     C.kare=this.kare;C.ft+=dt;
     const o=C.o,ax=o.x-p.x,az=o.z-p.z,L=hrkHyp(ax,az)||1,ux=ax/L,uz=az/L,lx=-uz,lz=ux,ana=hrkAtan2(uz,ux);

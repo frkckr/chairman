@@ -9,6 +9,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||60,dt=1/60,t0=Date.now();let sd=(tohum||1)*2654435761>>>0;
   const r=()=>{sd=(sd+0x6D2B79F5)>>>0;let t=sd;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};   /* kurulum rastlantısı (mulberry32) */
   const kur=vm.runInContext(`(tohum,olay)=>{const m=new Match(olay,{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();return m;}`,ctx);
+  const profilKur=vm.runInContext('profilKur',ctx);
   const bosalt=(m,kal)=>{for(const p of m.players){if(kal.includes(p)||p.rol==='GK')continue;p.oyunda=false;p.x=p.tx=-300;p.z=p.tz=-300;p.vx=p.vz=0;p.eylem=null;}};
   /* geliş açısı: savunmacının hücumcunun koşu yönüne göre yeri (derece; 90 yandan, 135 arkadan-yandan, 60 önden-çapraz) */
   const ACI=[[60,'önden çapraz (60°)'],[90,'yandan (90°)'],[135,'arkadan-yandan (135°)']],BEC=[0.4,0.8],T={};let deneme=0;
@@ -17,7 +18,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
     for(let i=0;i<n;i++){deneme++;let son=null,dusus=false,kart=false;
       const m=kur((tohum||1)*1000+deneme,(ad,v)=>{if(ad==='mudahaleSonuc'&&!son)son=v;else if(ad==='dusus'&&v&&v.p===A&&v.neden==='kayma')dusus=true;else if(ad==='faul'&&v&&v.kart)kart=true;});
       const A=m.teams[0][7],D=m.teams[1][2],b=m.ball,d=m.dir[0],hy=d>0?0:Math.PI;bosalt(m,[A,D]);
-      D.oz.mudahale=bc;
+      D.oz.mudahale=bc;profilKur(D,m.tohum);   /* T3: profil özellikten türetilir */
       const yan=i%2?1:-1,ax=d*10,az=34+yan*8,v=4.5+2*r();
       Object.assign(A,{x:ax,z:az,tx:ax,tz:az,vx:d*v,vz:0,spd:v,yon:hy,eylem:null,kickCd:0,surus:null,denge:1,oyunda:true,_calim:null});
       Object.assign(b,{x:ax+d*1.6,z:az,y:0,vx:d*7,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,sonTakim:0,sonDokunan:A});

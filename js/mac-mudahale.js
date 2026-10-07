@@ -70,7 +70,7 @@ Object.assign(Match.prototype,{
     const pa=sigma((g(a)-g(c))*3),k=this.rast()<pa?a:c,kay=k===a?c:a;
     kay.p.kickCd=0.55;if(this.ball.sahip===kay.p)this.ball.sahip=null;
     /* yarı yarıya topta geç kalan bazen rakibi iter ya da ayağına basar (faul; top ölü) */
-    if(this.phase==='play'&&kay.p.team!==k.p.team&&this.rast()<0.06*(0.5+kay.p.oz.sertlik)*MOTOR_AYAR.faulOrani/2.7){
+    if(this.phase==='play'&&kay.p.team!==k.p.team&&this.rast()<0.06*(0.2+1.6*profilAlt(kay.p,'agresiflik',kay.p.oz.sertlik))*MOTOR_AYAR.faulOrani/2.7){   /* T3: agresiflik (T5: temastan) */
       this.faul(kay.p,k.p,{itme:true,ciddiyet:0.2+0.4*this.rast(),x:k.p.x,z:k.p.z});return null;}
     const dx=kay.p.x-k.p.x,dz=kay.p.z-k.p.z,n=hrkHyp(dx,dz)||1;this.dengeBoz(kay.p,0.14,dx/n,dz/n,'takilma',k.p);
     return k;
@@ -196,7 +196,7 @@ Object.assign(Match.prototype,{
     /* arkadaki (boy: c'nin a'dan öndeliği) */
     const arkadaki=boy>0.25?a:boy<-0.25?c:null,on=arkadaki===a?c:arkadaki===c?a:null;
     /* faul: arkadan omuz (arkadaki kazandı) ya da geride kalan tutup çekti */
-    if(arkadaki){const sert=arkadaki.oz.sertlik,P=arkadaki===kaz?0.15*(0.6+0.8*sert):0.05*(0.5+sert)*(1.3-arkadaki.oz.karar);
+    if(arkadaki){const agr=profilAlt(arkadaki,'agresiflik',arkadaki.oz.sertlik),P=arkadaki===kaz?0.15*(0.25+1.5*agr):0.05*Math.max(0,1.6*agr-0.1);   /* T3: agresiflik (T5: temastan) */
       if(this.rast()<P*MOTOR_AYAR.faulOrani/2.7){this.faul(arkadaki,on,{itme:true,omuz:true,arkadan:true,ciddiyet:0.15+0.35*fark/0.3+(arkadaki===kaz?0.1:0),x:on.x,z:on.z});return;}}
     const nx=kay.x-kaz.x,nz=kay.z-kaz.z,n=hrkHyp(nx,nz)||1,ux=nx/n,uz=nz/n;
     kay.vx=kay.vx*(0.9-fark*0.4)+ux*(0.4+3*fark);kay.vz=kay.vz*(0.9-fark*0.4)+uz*(0.4+3*fark);
@@ -214,7 +214,10 @@ Object.assign(Match.prototype,{
     const b=this.ball;if(b.y>0.5)return;
     const db=hrkHyp(b.x-p.x,b.z-p.z);if(db>3.4)return;
     const tk=this.taktik[p.team],kutu=this.kendiCezaSahasinda(p,b.x,b.z);
-    const istek=MOTOR_AYAR.mudahaleIstegi*(0.55+p.oz.mudahale*0.8)*(0.75+tk.pres*0.5)*(kutu?MOTOR_AYAR.kutuIstek:1);
+    /* T3: isteğe pozisyon alma (müdahale + karar) ve sıkı markaj eğilimi; agresiflik sırttan ve erken girişleri, kayma eğilimi kaymayı belirler
+       (eskiden sertlik ve karar doğrudan; ortalama değerde aynı, oyuncular arası fark daha dik) */
+    const agr=profilAlt(p,'agresiflik',p.oz.sertlik);
+    const istek=MOTOR_AYAR.mudahaleIstegi*(0.55+p.oz.mudahale*0.8)*(0.3+1.4*profilAlt(p,'pozisyonAlma',0.5))*(1+0.25*profilEgilim(p,'sikiMarkaj'))*(0.75+tk.pres*0.5)*(kutu?MOTOR_AYAR.kutuIstek:1);
     /* temas anında (0,18 sn sonra) top, savunmacı ve sürücü nerede: top sürücünün ayağından 0,8 m'den uzak, savunmacının ayağı (0,95 m)
        yetişiyor ve sürücüden yakınsa girer (top açıkta) */
     const T=0.18,bx=b.x+b.vx*T,bz=b.z+b.vz*T,eD=hrkHyp(bx-p.x-p.vx*T*0.6,bz-p.z-p.vz*T*0.6),eS=hrkHyp(bx-s.x-s.vx*T,bz-s.z-s.vz*T);
@@ -226,16 +229,16 @@ Object.assign(Match.prototype,{
     if(dS>1.3&&db>1.3&&db<3.2&&p.spd>3.5&&(b.vx*(b.x-s.x)+b.vz*(b.z-s.z))/dS>1){
       const tK=(db-1.1)/(p.spd+1.2),kx=b.x+b.vx*tK,kz=b.z+b.vz*tK,tS=varisZamani(s,kx,kz,0.45,0.05);
       const yon=((kx-p.x)*p.vx+(kz-p.z)*p.vz)/(hrkHyp(kx-p.x,kz-p.z)*p.spd||1);
-      if(yon>0.75&&tK<tS-0.05&&this.rast()<dt*MOTOR_AYAR.kaymaIstek*istek*(0.35+p.oz.sertlik))this.kaymaBaslat(p,s,kx,kz);return;}
+      if(yon>0.75&&tK<tS-0.05&&this.rast()<dt*MOTOR_AYAR.kaymaIstek*istek*(0.35+p.oz.sertlik)*(1+0.5*profilEgilim(p,'kayarakGirer')))this.kaymaBaslat(p,s,kx,kz);return;}
     const ds=hrkHyp(s.x-p.x,s.z-p.z)||1,sirt=((p.x-s.x)*hrkCos(s.yon)+(p.z-s.z)*hrkSin(s.yon))/ds<-0.5;
-    if(db<1.25&&sirt&&this.rast()<dt*0.9*istek*(0.5+p.oz.sertlik)){this.mudahaleBaslat(p,s,bx,bz,'sirt');return;}
-    if(db<1.4&&this.rast()<dt*MOTOR_AYAR.sabirsiz*istek*(1.3-p.oz.karar)*(0.5+p.oz.sertlik))this.mudahaleBaslat(p,s,bx,bz,'erken');
+    if(db<1.25&&sirt&&this.rast()<dt*0.9*istek*(0.3+1.5*agr)){this.mudahaleBaslat(p,s,bx,bz,'sirt');return;}
+    if(db<1.4&&this.rast()<dt*MOTOR_AYAR.sabirsiz*istek*(0.1+1.25*agr))this.mudahaleBaslat(p,s,bx,bz,'erken');
   },
   /* çalımla geçilen savunmacı bazen formadan çeker ya da çelme takar (taktik faul; gelişen atakta çoğu zaman sarı) */
   gecildiFaulu(o,p){
     if(!o.oyunda||o.rol==='GK'||o.eylem&&o.eylem.kilit||this.phase!=='play'||hrkHyp(o.x-p.x,o.z-p.z)>1.5)return;
     const kutu=this.kendiCezaSahasinda(o,p.x,p.z),ileri=p.x*this.dir[p.team]>0;
-    if(this.rast()<MOTOR_AYAR.taktikFaul*(0.4+o.oz.sertlik)*(1.3-0.5*o.oz.karar)*(kutu?0.15:1)*(ileri?1.3:0.7))
+    if(this.rast()<MOTOR_AYAR.taktikFaul*(0.1+1.7*profilAlt(o,'agresiflik',o.oz.sertlik))*(kutu?0.15:1)*(ileri?1.3:0.7))   /* T3: agresiflik */
       this.faul(o,p,{itme:true,arkadan:true,taktik:true,ciddiyet:0.25+0.25*this.rast(),x:p.x,z:p.z});
   },
   mudahaleBaslat(p,s,x,z,tur){
@@ -279,7 +282,7 @@ Object.assign(Match.prototype,{
     if(s&&adama){
       const ds=hrkHyp(s.x-p.x,s.z-p.z)||1,arkadan=((p.x-s.x)*hrkCos(s.yon)+(p.z-s.z)*hrkSin(s.yon))/ds<-0.35;
       const gec=b.sahip!==s&&b.sonDokunan===s&&dS>1.3,once=kazan&&!adamOnce,vrel=hrkHyp(p.vx-s.vx,p.vz-s.vz);
-      const cc=vrel/6+(arkadan?0.35:0)+(kayma?0.25:0)+(gec?0.3:0)-(once?0.4:0)+(p.oz.sertlik-0.5)*0.3+this.normal()*0.06;
+      const cc=vrel/6+(arkadan?0.35:0)+(kayma?0.25:0)+(gec?0.3:0)-(once?0.4:0)+(profilAlt(p,'agresiflik',p.oz.sertlik)-0.5)*0.5+this.normal()*0.06;   /* T3: agresiflik 0,3 → 0,5 */
       if(this.rast()<sigma((cc-MOTOR_AYAR.faulEsik)/0.12)){
         this.on('mudahaleSonuc',{p,rakip:s,kazan:false,topaDegdi:topa,faul:true,kayma,sonuc:'faul',tur:e.tur||(kayma?'kayma':'acik')});
         this.faul(p,s,{kayma,arkadan,gec,deneme:true,ciddiyet:cc,x:s.x,z:s.z});return;}
@@ -304,12 +307,12 @@ Object.assign(Match.prototype,{
     for(const o of this.teams[1-p.team]){if(!o.oyunda||o.rol==='GK'||(o.eylem&&o.eylem.kilit))continue;
       const dx=o.x-p.x,dz=o.z-p.z,d=hrkHyp(dx,dz);if(d>1.0)continue;
       const arkada=(dx*hrkCos(p.yon)+dz*hrkSin(p.yon))/(d||1)<0.2,kutu=this.kendiCezaSahasinda(o,p.x,p.z);
-      if(this.rast()<(arkada?0.12:0.05)*(0.6+o.oz.sertlik*0.8)*MOTOR_AYAR.faulOrani*(kutu?MOTOR_AYAR.kutuIstek*0.6:1)){
+      if(this.rast()<(arkada?0.12:0.05)*(0.25+1.5*profilAlt(o,'agresiflik',o.oz.sertlik))*MOTOR_AYAR.faulOrani*(kutu?MOTOR_AYAR.kutuIstek*0.6:1)){   /* T3: agresiflik (T5: temastan) */
         this.faul(o,p,{ciddiyet:0.1+this.rast()*0.3+(arkada?0.1:0),x:p.x,z:p.z,itme:true,arkadan:arkada});return;}}
   },
   /* hava topunda itme ya da tutma */
   havaFaulu(kazanan,kaybeden){
-    const P=0.055*(0.6+kaybeden.oz.sertlik*0.8)*MOTOR_AYAR.faulOrani,P2=0.03*MOTOR_AYAR.faulOrani;
+    const P=0.055*(0.25+1.5*profilAlt(kaybeden,'agresiflik',kaybeden.oz.sertlik))*MOTOR_AYAR.faulOrani,P2=0.03*MOTOR_AYAR.faulOrani;   /* T3: agresiflik (T5/T6: temastan) */
     if(this.rast()<P){this.faul(kaybeden,kazanan,{hava:true,ciddiyet:0.15+this.rast()*0.25,x:kazanan.x,z:kazanan.z});return true;}
     if(this.rast()<P2){this.faul(kazanan,kaybeden,{hava:true,ciddiyet:0.1+this.rast()*0.2,x:kaybeden.x,z:kaybeden.z});return true;}
     return false;

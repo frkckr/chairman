@@ -129,6 +129,8 @@ class Match{
       ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,topBos:0,kartSira:null,gir:0,_kar:null,oturuyor:false,koltuk:null,cikti:false,poz:null,sg:null,yuk:0,zipla:null,
       /* motor → çizim sözleşmesi (Faz 0; TEKNIK_PLAN §8): tavır, bakış yönü, denge, sprint enerjisi, son dokunuş */
       tavir:null,bakisYon:null,denge:1,enerji:1,sonDokunus:null,
+      /* T3 (profil kapısı): oyuncu ve yedekte profilKur ile dolar {alt, rol, egilim, form, grup} (js/mac-profil.js); hakem ve top toplayıcıda null */
+      profil:null,
       /* T1 (insan gibi hareket): efor 0–1, hız kipi (dur/yuru/tiris/kos/hizli/depar; çizim okur), son düşünme anı (sn) */
       efor:1,kip:'dur',dusunT:0,
       /* akışların oyuncuya sonradan yazdığı iç alanlar baştan (undefined) tanımlı: nesnenin biçimi değişmez, motor yavaşlamaz (birleştirme, 2026-10-03) */
@@ -140,8 +142,10 @@ class Match{
   }
   oyuncuKur(t,n,k,mevki){
     const oz=ozellikler(k),rol=mevki.cizgi==='KL'?'GK':mevki.cizgi;
-    return this.varlik('oyuncu',0,MZ,{team:t,n,rol,mevki,name:k?k.ad:TEAMS[t].names[n],no:k?k.no:n+1,kaptan:!!(k&&k.kaptan),kayit:k||null,oz,
+    const p=this.varlik('oyuncu',0,MZ,{team:t,n,rol,mevki,name:k?k.ad:TEAMS[t].names[n],no:k?k.no:n+1,kaptan:!!(k&&k.kaptan),kayit:k||null,oz,
       ayak:(k&&k.ayak)||'sag',boy:(k&&k.boy)||1,yon:t?Math.PI:0,maxSpd:6.4+2.4*oz.hiz,oyunda:true});
+    profilKur(p,this.tohum);   /* T3: alt özellikler, rol, eğilimler ve gün formu (js/mac-profil.js); rastlantı çekmez */
+    return p;
   }
   hakemKur(kind,x,z){return this.varlik('hakem',x,z,{kind,maxSpd:7.2,oz:{hiz:0.6}});}
   focus(){const c=this.celeb,b=this.ball;if(this.phase==='goal'&&c&&c.scorer&&!c.own)return{x:c.scorer.x,y:1,z:c.scorer.z};
