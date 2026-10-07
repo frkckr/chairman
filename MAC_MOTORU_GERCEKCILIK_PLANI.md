@@ -1,5 +1,7 @@
 # Chairman — maç motoru gerçekçilik planı
 
+**Durum (2026-10-07):** Motor odağı (kullanıcı kararı; YOL_HARITASI “Güncel karar özeti” 2026-10-07): kullanıcı “tamam” diyene kadar bütün geliştirme bu plandadır; motor kararlarını Claude verir ve görünür yazar. Sıra **M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11**: M0 (araç ve hız) eklendi, T3 profil kapısına daraltıldı (kabiliyet ekonomisi ileride veritabanıyla), T9 top fiziği (T9a, öne alındı) ve vuruş (T9b) olarak bölündü (§4, §5). §7: 1–2 verilmişti; 3, 4, 5 ve 7 bu tarihte kesinleştirildi (§7'de yazılı); 6 ve 8 T10'da kullanıcıya sorulur. Kontrol üç kademedir (CLAUDE.md “Kontrol”). M0 aynı gün tamamlandı (aşağıda “M0 — Sonuç”); T2 de tamamlandı (aşağıda “T2 — Sonuç”; kullanıcı onayıyla kapandı, M0 ile birlikte `main`'e alındı), sıradaki T3, taban `araclar/taban/t2.json`.
+
 **Durum (2026-10-04):** T0 ve T1 tamamlandı (ölçümler ve sınırlar YOL_HARITASI T0/T1). §7.2 kararı: yürüme hedefi en az %55 (ulaşılan %55,6). Sıradaki T2; §7.1 kararı verildi (2026-10-04): amaçlı atak. Kullanıcı isteğiyle depoya alındı; turlar [YOL_HARITASI](YOL_HARITASI.md#maç-motoru-gerçekçilik-planı-2026-10-03) “Maç motoru gerçekçilik planı” bölümünde T0–T11 maddeleridir. Uygulama T0 ile başlar. §7'deki diğer kararlar (3–8) açıktır; uygulayıcı bunları sessizce kesinleştirmez, ilgili tura gelince kullanıcıya sorar. Ölçüm araçlarının ilk ikisi eklendi: `araclar/olcumler/r-karne.js` ve `araclar/oyuncu-karnesi.js` (Ek F).
 
 **2026-10-04 ekleri (kullanıcı onayı):** (1) animasyon her turda ölçütlü bir iştir (§4 “Animasyon”); (2) açık oyunda dönen top ve şutu takip açık maddedir (T5 madde 8, T7 madde 11); (3) her turun kapanışında önce/sonra film şeridi kullanıcıya gösterilir (§4 girişi). Gerekçe: aynı gün incelenen başka bir oyunun kısa maç videosunda görünür fark benzetimde değil, iki kişilik temas animasyonunda ve olayların birbirine zincirlenmesindeydi; benzetim tarafında bu planın turları (T2, T4–T6) aynı konuları zaten hedefliyor. Top toplayıcılar geri geldi (YOL_HARITASI N10, 2026-10-04) ve duran top süresini değiştirdi; T2 yeni tabanla (`araclar/taban/n10.json`) karşılaştırılır.
@@ -100,7 +102,7 @@ Sakatlık ve tedavi, elle oynama, çabuk kullanılan serbest vuruş, hakem topu,
 
 ## 4. Turlar
 
-Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi (Ek F), `ad-denetimi.js`, `an-yakala.py` film şeridi, `akis-deneme.py`; turun animasyon işi aşağıdaki “Animasyon” ölçütleriyle birlikte kapanır; belgeler (YOL_HARITASI, TEKNIK_PLAN §8) güncellenir. **Kullanıcı incelemesi (2026-10-04):** turun önce/sonra film şeridi (başkanın normal bakışı ve dürbün) kullanıcıya gösterilir; ölçüm iyileşip görüntüde fark görünmüyorsa bu, turun “Sınır” notuna yazılır (T1'de böyle oldu). Tur içindeki ara adımlarda yalnız hızlı kademe çalışır (10 maç ve tekrarlanabilirlik, ilgili senaryo, gerekirse `ad-denetimi.js`); ayrıntı CLAUDE.md “Kontrol” bölümündeki iki kademe (2026-10-04).
+Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi (Ek F), `ad-denetimi.js`, `an-yakala.py` film şeridi, `akis-deneme.py`; turun animasyon işi aşağıdaki “Animasyon” ölçütleriyle birlikte kapanır; belgeler (YOL_HARITASI, TEKNIK_PLAN §8) güncellenir. **Kullanıcı incelemesi (2026-10-04):** turun önce/sonra film şeridi (başkanın normal bakışı ve dürbün) kullanıcıya gösterilir; ölçüm iyileşip görüntüde fark görünmüyorsa bu, turun “Sınır” notuna yazılır (T1'de böyle oldu). Kontrol üç kademedir (2026-10-07): tur içindeki her düzenlemeden sonra hızlı kademe (4 maç ve kısa tekrarlanabilirlik, ilgili senaryo, gerekirse `ad-denetimi.js`; ≤45 sn), yerel commit'ten önce oturum sonu kademesi (40 maç `--karsilastir`, senaryolar, ad denetimi; tek komut, arka planda), tur kapanışında bu paragraftaki tam kontrol; ayrıntı CLAUDE.md “Kontrol”.
 
 ### T0 — Ölçü ve araçlar (sonucu değiştirmez)
 
@@ -140,9 +142,29 @@ Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi
 
 **Çizim.** `kip` sözleşmeye eklenir; yürürken ve beklerken boşta pozlar (eller belde, ağırlık değiştirme).
 
+### M0 — Araç ve hız (2026-10-07; sonucu değiştirmez)
+
+**Neden.** Bu makinede (Node v24.21.0, win32/x64, 8 mantıksal çekirdek) tek işçiyle 1000 motor adımı 314 ms (T0'da 202 ms yazılmıştı; makine farkı mı T1/N10 yükü mü ayrılmadı), `mac-deneme.js` 8 işçi paralelken 588 ms (sanal çekirdek çekişmesi). 10 maç 1–1,5 dk, 80 maç 6–7 dk sürüyor ve her tur yük ekleyecek; uzun test beklemenin kaynağı bu.
+
+**Yapılacaklar**
+1. **Yerel taban.** Değişiklikten önce `node araclar/mac-deneme.js 80 1 --json araclar/taban/m0-once.json`. `t0.json` ve `n10.json` başka ortamda (Node v24.15.0) üretildi; burada `--ayni` tutmaz (YOL_HARITASI 2.8W ve T0 notları).
+2. **Profil.** `node --cpu-prof` ile 2 maç; en ağır 10 işlev yazılır. Adaylar: her adımda bütün aşamalarda çalışan `topcuAI` ([js/mac-kurallar.js](js/mac-kurallar.js)), `secenekler`/`pasAnaliz` aday sayısı ve `topTahmin` çağrıları ([js/mac-karar.js](js/mac-karar.js)), `varisZamani`/`enYakinRakip`/`baskiAltinda` döngülerinin kare başına tekrarı, `markajAta`/`bolgeKonumu` sıklığı, oyuncu nesnesinin biçimi (V8 notu TEKNIK_PLAN §8). Sonucu değiştirmeyen yollar: kare içinde aynı sorunun ikinci cevabı için önbellek, rastlantı çekilişine dokunmayan sıklık azaltma. Çekiliş sırasını değiştiren hiçbir düzenleme M0'a girmez.
+3. **İşçi sayısı.** `mac-deneme.js` fiziksel çekirdek kadar işçi (mantıksal/2, en az 1; `--isci N` ile ezilir).
+4. **Hızlı kademe.** Kısa tekrarlanabilirlik: tam maç yerine tohum 1'in ilk dakikalarının parmak izi iki kez; `node araclar/mac-deneme.js 4` toplam ≤45 sn.
+5. **Oturum sonu tek komut.** `node araclar/oturum-sonu.js [taban]`: 40 maç `--karsilastir`, bütün senaryolar, `ad-denetimi.js`; özet ve hedef dışı satırlar `araclar/olcumler/son-oturum.txt`'ye, çıkış kodu bulguya göre. Arka planda çalışırken geliştirme sürer.
+6. Hız yeniden ölçülür; yeni taban `araclar/taban/m0.json` (T2 bununla karşılaştırılır).
+
+**Kabul.** `--karsilastir araclar/taban/m0-once.json --ayni` 8/8 aynı; 1000 adım ≤200 ms tek işçi (sağlanamazsa ölçülen değer ve nedeni YOL_HARITASI M0'a yazılır, T2 beklemez); hızlı kademe ≤45 sn; oturum sonu ≤4 dk; bütün senaryolar T1 sonrasındaki sonuçlarını korur.
+
+**M0 — Sonuç (2026-10-07; ayrıntı YOL_HARITASI M0).** Kabulün hepsi tuttu: 80/80 tohum birebir aynı; tek süreçte 1000 adım 250 → ~78 ms; 80 maç 500 → 144 sn; hızlı kademe ~21 sn; oturum sonu 154 sn. İki kaynak: (1) deneme araçları motoru Node'un sarılı `vm` bağlamında yüklüyordu, `Math` ve `function` ile bildirilen üst düzey adlara her erişim yavaş yoldan geçiyordu (`araclar/motor-yukle.js`, `DONT_CONTEXTIFY`); (2) `yakalamaNoktasi` her oyuncu için topun yolundaki her noktada `varisZamani` hesaplıyordu, kanıtlı alt sınırla yetişilemeyecek noktalar atlanıyor. Tarayıcıda (1) zaten yoktu; (2) oyunu da hızlandırır. Profilde sırada `moveP` (~%27) ve gövde çarpışması (`hareketHepsi`, ~%10) var; bütçe aşılırsa sonraki hız bakımının adaylarıdır. Bulgu: `d-sut` senaryosu N10'dan beri düşüyordu (`topcuAI` atanı varsayıyordu); düzeltildi.
+
 ### T2 — Topla oyun: tempo, taşıma, devam değeri
 
 **Amaç.** Oyuncu topu alınca bakabilsin, taşıyabilsin, bekleyebilsin; pas en ilerideki adama değil devamı olan adama gitsin.
+
+**2026-10-07 eki.** Hedef tablosu: §7.7'nin düzeltilmiş kararı (şut 8–14, gol 1,8–3,0 kalır; kurtarış oranı bilgi satırı). Taban `araclar/taban/m0.json`.
+
+**T2 — Sonuç (2026-10-07; ayrıntı YOL_HARITASI T2; kullanıcı onayıyla kapandı).** Uygulanan: baskı süresi, devam değeri, 8 yön × 5/10 m taşıma, bekle/koru, sabır eşiği (takım ayarından; baskıda, son üçte birde ve topu tuttukça azalır), topu tutarken 5–8 Hz düşünme ve olay tetikleri, sahiplik boyu kişisel karar sapması, pas kalibrasyonu (vuruş hatası toleransı, ofsayt riski, hedef forvette kazanma/ikinci top ayrı, ara pası çarpanı 0,85). 80 maçta: top ayakta ortanca 0,85 → 1,19 sn, sahiplik başına pas 1,65 → 3,17, forvete pas %61 → 29,5, pas boyu 26,6 → 20,9 m, PPDA 5,3 → 9,9, Brier 18,5 → 11,2. Kabulde dışarıda: taşıma %22, boş sahiplik %27, kanada pas %11,5, pas boyu, şutun yeri (%36 içeriden, 19,9 m); hedef tablosunda pas isabeti %86, faul 5,2, hava topu 1,8, korner, taç. Bunlar T4 (bire bir), T5–T6 (ikili mücadele), T7 (yerleşim, pres tetikleri, koşular) ile ele alınır; ara pası çarpanının kök nedeni (geriye koşan savunmacının varışı) T5'tedir.
 
 **Yapılacaklar**
 1. **Baskı süresi.** Saf `baskiSuresi(m,p)`: en yakın rakibin topa varış süresi (`varisZamani`). Taşıma, bekleme ve dönme kararlarının ortak girdisi.
@@ -169,6 +191,8 @@ Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi
 ### T3 — Oyuncu profili: alt özellikler, roller, eğilimler
 
 **Amaç.** Aynı durumda farklı oyuncular farklı şeyler denesin.
+
+**2026-10-07 daraltma (kullanıcı çerçevesi).** Oyuncudan oyuncuya kabiliyet ekonomisi (kim neyi yapabilir, puanların karşılığı) ileride veritabanıyla yazılacak. T3 derin bir özellik sistemi değil, o ekonominin tek giriş kapısıdır: aşağıdaki 1–5 korunur ama türetme Ek A'nın başlangıç önerisiyle sınırlı kalır, kadro verisine özellik eklenmez, ağırlıklar ayar değil veri olarak durur (`mac-profil.js` içinde tablo). Büyüklük küçük; kabul ölçütleri aynen.
 
 **Yapılacaklar**
 1. Yeni dosya `js/mac-profil.js` (yalnız veri ve saf işlev; motor çekirdeğinden önce yüklenir; `index.html` sırası ve `ad-denetimi.js`).
@@ -252,6 +276,8 @@ Yeni dosya `js/mac-durantop.js` önerilir; rutinler tablodan okunur (Ek D). `js/
 
 ### T9 — Top fiziği ve vuruş modeli
 
+**2026-10-07 bölme.** **T9a (Top)** T3'ten hemen sonra yapılır: bağımsızdır, orta boydur ve locadan en çok görünen fiziksel şey topun uçuşu ile sekmesidir; pas ve şut tahmini aynı `topFizikAdim`'ı kullandığından karar katmanı kendiliğinden uyar. Koşullar (madde 5) yalnız motor kapısıdır; görünümü §7.8 kararına bağlıdır. **T9b (Vuruş)** T6'dan sonra yapılır; T2'nin güç ve baskı girdilerine dayanır.
+
 **Top** (`topFizikAdim`, [js/mac-motoru.js:67](js/mac-motoru.js))
 1. **Hıza bağlı sürükleme.** Yavaş topta yüksek (katsayı ≈ 0,025 /m), hızlı topta düşük (≈ 0,012 /m); geçiş 12–15 m/sn çevresinde yumuşak. Aşırtma ve asılan ortalar uçuşun sonunda "ölür".
 2. **Dönüş vektörü.** Üç bileşenli açısal hız; Magnus ivmesi dönüş oranına bağlı ve doyar. Mevcut `egri` ve `ust` alanları bu vektörden türetilen okunur alanlar olarak kalır (çizim sözleşmesi bozulmaz).
@@ -288,7 +314,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 | Tur | Animasyon işi |
 |---|---|
 | T1 | Boşta pozlar ve yürüyüş (yapıldı) |
-| T2 | Topu taşıma, bakınma, topu ayağının altında bekletme, sırtı dönükken dönme |
+| T2 | Topu taşıma, bakınma, topu ayağının altında bekletme, sırtı dönükken dönme (yapıldı 2026-10-07: taşıma duruşu, bekletme pozu tabanla topun üstünde, bakınırken baş kalkar, dönüş dokunuşu `sonDokunus.donus`; poz galerisinde üç satır) |
 | T4 | Çalım hareketlerinin ayak yolları (IK hedefi topun çevresinde; makas, çekme, içe kesme); yutan savunmacının yanlış yöne adımı; top saklarken gövdeyi araya koyma |
 | T5 | Önden blok, şut bloğuna atlama, takılıp düşme ve yerden kalkma; omuz omuza itişme; dönen topa hamle |
 | T6 | Yer kapma (kolla itişme, tutma), birlikte sıçrama ve havada çarpışma, iniş |
@@ -315,18 +341,22 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 |---|---|---|---|
 | T0 Ölçü | — | küçük | — |
 | T1 Hareket | T0 | büyük | çok yüksek |
-| T2 Topla oyun | T0, T1 | büyük | çok yüksek |
-| T3 Profil | T0 | orta | yüksek |
+| M0 Araç ve hız (2026-10-07) | T1 | küçük | — (test süresi) |
+| T2 Topla oyun | T0, T1, M0 | büyük | çok yüksek |
+| T3 Profil kapısı | T0 | küçük (2026-10-07'de daraltıldı) | orta |
+| T9a Top fiziği | T0 | orta | yüksek (uçuş, sekme) |
 | T4 Bire bir | T2, T3 | büyük | yüksek |
 | T5 Temas | T4 | büyük | orta–yüksek |
 | T6 Hava topu | T5 | orta | orta |
 | T7 Takım zekâsı | T2, T3 | büyük | çok yüksek |
 | T8 Duran toplar | T3 | orta | yüksek |
-| T9 Top ve vuruş | T0 | orta | orta |
+| T9b Vuruş | T2, T9a | küçük | orta |
 | T10 Olaylar | T5 | orta | yüksek (seyrek) |
 | T11 Adım evresi | T4 | orta | düşük |
 
-Önerilen sıra: T0 → T1 → T2 → T3 → T4 → T5 → T7 → T8 → T6 → T9 → T10 → T11. İlk dört tur temeldir; sonrası kullanıcının önceliğine göre yer değiştirebilir. T8 ve T9 diğerlerinden bağımsızdır; ayrı oturumda paralel yürüyebilir.
+Önerilen sıra (2026-10-03) T0 → T1 → T2 → T3 → T4 → T5 → T7 → T8 → T6 → T9 → T10 → T11 idi. **Sıra (2026-10-07): M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11.** T8 diğerlerinden bağımsızdır; ayrı oturumda paralel yürüyebilir.
+
+**Hazır tanımı (2026-10-07).** Motor “hazır” sayılır ve kullanıcı “tamam” diyebilir: 80 maçta robotluk karnesinin bütün T-hedefleri ve gerçek değerlere çekilmiş hedef tablosu tutuyor; `araclar/senaryolar/` içindeki bütün senaryolar geçiyor; tek işçide 1000 adım ≤250 ms; kullanıcı her turun önce/sonra film şeridini (loca bakışı ve dürbün) onaylamış. Kabiliyet ekonomisi (veritabanı) bu tanımın dışındadır.
 
 ---
 
@@ -337,7 +367,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 - Kişisel sapma ve düşünme anı kaydırması tohumdan ve oyuncu sırasından türetilir.
 - Rastlantı çekiliş sırası değişen turda `--ayni` kullanılmaz; `--karsilastir` istatistikle bakılır.
 - Mekanik senaryoda doğrulanmadan `MOTOR_AYAR` düğmeleriyle denge aranmaz.
-- Süre bütçesi: bu makinede 1000 adım 202 ms; tur başına artış %25'i geçmez. Düşünme anları (T1) yükü azaltır.
+- Süre bütçesi (2026-10-07): M0 sonrası bu makinede tek süreçte 1000 adım ~78 ms (`node araclar/hiz-olcum.js 3`; M0 öncesi 250). Tur başına artış %10'u geçmez, 250 ms aşılırsa bir sonraki turdan önce hız bakımı yapılır. Her tur kapanışında tek süreç süresi YOL_HARITASI'na yazılır; `mac-deneme.js`'in süre satırı paralel süredir, bütçe ölçüsü değildir.
 - Motor çizime yalnız alan ekler; her yeni alanın çizimde yedek davranışı olur.
 - Bir tur bitmeden ötekine geçilmez.
 
@@ -347,12 +377,12 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 
 1. **Maçın temposu.** Daha az, daha uzun ve amaçlı atak (öneri) mı, bugünkü sık top kaybı mı? Hedef tabloyu etkiler: pas isabeti üst sınırı (%80), top kaybı sayısı. **Karar (kullanıcı, 2026-10-04): amaçlı atak** — daha az ama daha uzun, amaçlı ataklar; T2'nin kabul hedefleri (sahiplik başına 2,5–4 pas, top ayakta 1,2–2 sn, taşıma payı) bu yöndedir; pas isabeti %80 tavanını aşarsa tavan T2'de gözden geçirilir.
 2. **Yürüme oranı hedefi.** Önerilen ara hedef %40; gerçek %61.
-3. **Özellik listesi.** Alt özellikler türetilsin (öneri) mi, kadro verisine yeni özellik eklensin mi?
-4. **Çekirdek dosyaların açılması ve yeni dosyalar.** `mac-dizilis.js`, `mac-kurallar.js`, `mac-motoru.js` (top fiziği); yeni `mac-profil.js`, `mac-takim.js`, `mac-durantop.js`.
-5. **Duran top süresi.** Tehlikeli duran toplarda hazırlığın 10–14 saniyeye uzaması.
-6. **Sakatlık sıklığı ve değişiklik hakkı.** Gerçekte maç başına yaklaşık bir süre kayıplı sakatlık olur. Motor bugün 5 değişikliğe izin veriyor ([js/mac-kurallar.js:26](js/mac-kurallar.js)); dönem kuralı kararı.
-7. **Kurtarış oranı (~%50).** Bu turlarla düzelmez; şut hedefinin yeniden ele alınmasını gerektirir.
-8. **Hava koşulları ve görünümü.** Yağmur ve rüzgâr maçta gösterilecek mi?
+3. **Özellik listesi.** Alt özellikler türetilsin (öneri) mi, kadro verisine yeni özellik eklensin mi? **Karar (Claude, 2026-10-07; motor kararları kullanıcı tarafından devredildi): türetilir; kadro verisine özellik eklenmez. Kabiliyet ekonomisi ileride veritabanıyla gelir, T3 yalnız kapıdır.**
+4. **Çekirdek dosyaların açılması ve yeni dosyalar.** `mac-dizilis.js`, `mac-kurallar.js`, `mac-motoru.js` (top fiziği); yeni `mac-profil.js`, `mac-takim.js`, `mac-durantop.js`. **Karar (Claude, 2026-10-07): açılır; üç yeni dosya gelir, `index.html` sırası ve `ad-denetimi.js` ile.**
+5. **Duran top süresi.** Tehlikeli duran toplarda hazırlığın 10–14 saniyeye uzaması. **Karar (Claude, 2026-10-07): 10–14 sn; N10 sonrası ölçülen ortanca 12,5 sn zaten aralıkta, T8 yalnız “görevliler yerinde ya da azami süre” koşulunu kurar.**
+6. **Sakatlık sıklığı ve değişiklik hakkı.** Gerçekte maç başına yaklaşık bir süre kayıplı sakatlık olur. Motor bugün 5 değişikliğe izin veriyor ([js/mac-kurallar.js:26](js/mac-kurallar.js)); dönem kuralı kararı. **Oyun kuralıdır; T10'da kullanıcıya sorulur.** Öneri: maç başına ~0,3 tedavi gerektiren sakatlık, 5 değişiklik (günümüz kuralı).
+7. **Kurtarış oranı (~%50).** Bu turlarla düzelmez; şut hedefinin yeniden ele alınmasını gerektirir. **Karar (Claude, 2026-10-07; aynı gün T2 sırasında düzeltildi):** ilk verilen "toplam şut 18–28, gol 2–3,2, kurtarış %65–75" 10 dakikalık maçla çelişir: top ~420 sn oyunda, amaçlı atakta ~45 sahiplik olur; 18–28 şut için sahipliklerin yarısı şutla bitmeli (gerçekte ~%10–12). **Şut 8–14 ve gol 1,8–3,0 kalır** (maç 90 dakikanın özetidir: önemli olaylar gerçeğin dakika başına 2,5–3 katı). Kurtarış oranı şutun kalitesinin sonucudur, bilgi satırı olarak izlenir (gerçekte ceza sahası içi isabetli şutta %55–65, dışarıdan %75–85); T2 sonunda %55,6. T7 ve T9b sonunda yeniden ele alınır.
+8. **Hava koşulları ve görünümü.** Yağmur ve rüzgâr maçta gösterilecek mi? **Görünüm kararıdır; T10'da kullanıcıya sorulur.** T9a yalnız motor kapısını (`kosullar`) kurar, varsayılan kuru ve rüzgârsızdır.
 
 ---
 

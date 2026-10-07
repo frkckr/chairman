@@ -18,7 +18,7 @@
    Sözleşme alanları (TEKNIK_PLAN §8): vurus.stil/guc/tekDokunus, kontrol.yuzey/yon, kafa.tur, p.bakisYon, p.sonDokunus — rastlantısız. */
 'use strict';
 ayarEkle('B',{
-  kararGecikme:[0.12,0.36],    // topu kontrol ettikten sonra karar süresi (sn): tempo yüksekse kısa
+  kararGecikme:[0.4,0.7],      // topu kontrol ettikten sonra karar süresi (sn): tempo yüksekse kısa (T2: 0,12–0,36 → 0,4–0,7; top ayakta ortancası 0,85 sn idi)
   ilerleme:0.04,               // topu ileri taşımanın metre başına değeri (puan): oyunun ne kadar dikine aktığı (birleştirme 2026-10-03: 0,036 → 0,027; T1: 0,04)
   risk:1.0,                    // top kaybından çekinme çarpanı (takımın risk ayarıyla çarpılır)
   surusKarar:[0.3,0.62],       // top sürerken yeniden karar aralığı
@@ -43,7 +43,18 @@ ayarEkle('B',{
   kosuIstegi:2.8,              // savunma arkasına derin koşuya çıkma sıklığı çarpanı (ara pası ve ofsayt; eskiden 1) (MM3; T1: 1,6 → 2,8)
   aliciPay:0.1,                // pas analizinde alıcının varış süresine eklenen pay (sn): varış modeli duran/dönen oyuncuda iyimser (MM3)
   uzaklastirDeger:0.0,         // uzaklaştırmanın taban değeri (baskıyla +1,1, ceza sahası yakınında +0,4; birleştirme 2026-10-03)
-  hedefDeger:0.8               // hedef forvete uzun topun ek değeri (takımın 'direkt' ayarıyla 0,4–1,4 katı; birleştirme 2026-10-03)
+  hedefDeger:0.8,              // hedef forvete uzun topun ek değeri (takımın 'direkt' ayarıyla 0,4–1,4 katı; birleştirme 2026-10-03)
+  /* T2 (2026-10-07, topla oyun) */
+  devamAgirlik:0.6,            // pas değerinde alıcının devam değerinin oranın tehdidinden farkının payı (devamDegeri)
+  devamHedef:0.4,              // hedef forvete uzun topta devam farkının ek çarpanı (değeri alan ve ikinci top belirler)
+  sabir:[0.3,1.1],             // sabır eşiği (puan): topu tutmanın pasa göre ek değeri, takımın sakin/tempo ayarıyla bu aralıkta
+  sabirSure:2.5,               // sabır eşiği topu tuttukça söner, bu kadar (sn) sonra sıfır
+  devamPas:0.8,                // devam değerinde ileri pas ön puanının payı (ön puan tam analizden iyimser)
+  bekleOran:0.8,               // yerinde bekleyen topun oranın tehdidinden koruduğu pay
+  dusunHz:[5,8],               // topu tutarken düşünme sıklığı (1/sn; karar özelliğiyle): her anda seçenekler yeniden tartılır
+  pasTol:[1.2,4,0.5],          // pas hatası toleransı: taban (m) + alıcının rakipten önce varma payı (sn) × katsayı; uzunluk hatasının payı
+  ikinciTopHedef:0.3,          // hedef forvete uzun topta kaybedilen düelloda topun takımda kalma olasılığı (kaybın bedelini azaltır)
+  araKalib:0.85                // ara pasının başarı olasılığı düzeltmesi (ölçülen; kök neden savunmacının varış modeli, T5)
 });
 /* vuruş stili (sözleşme: ic/dis/ust/asirtma/vole/yarimVole); vuruş anında topun yüksekliği ve şutun türüyle kesinleşir */
 function vurusStili(sec,y){
@@ -63,7 +74,8 @@ Object.assign(Match.prototype,{
     const b=this.ball,P=this.players,n=P.length,PI=Math.PI,kare=this.kare||0;
     for(let i=0;i<n;i++){const p=P[i];if(!p.oyunda||(i+kare)&1)continue;  /* her oyuncu iki karede bir */
       let per=2.5-1.8*p.oz.gorus;
-      if(b.hedefOyuncu===p)per*=0.55;else if(b.sahip===p)per*=1.25;
+      /* topu süren seyrek bakar; topu ayağının altında bekleten (T2) seçenek arar, daha sık bakar */
+      if(b.hedefOyuncu===p)per*=0.55;else if(b.sahip===p)per*=p.tavir==='bekle'?0.5:1.25;
       const v=this.bVeri(p);let T=v.tara;
       if(!T){T=v.tara={t:0,bas:-9,yan:p.n%2?1:-1,ok:false,x:new Float64Array(n),z:new Float64Array(n),vx:new Float64Array(n),vz:new Float64Array(n)};
         T.t=this.t-((p.n*0.37+p.team*0.53)%1)*per;this.taramaKaydi(T);}
@@ -74,8 +86,11 @@ Object.assign(Match.prototype,{
       if(by>PI)by-=2*PI;else if(by<-PI)by+=2*PI;
       p.bakisYon=by;}
   },
-  /* oyuncuya özel B verisi: {tara: tarama hafızası, plan: yönlü ilk dokunuş planı, vk: ver-kaç koşusu} */
-  bVeri(p){let M=this._bv;if(!M)M=this._bv=new Map();let v=M.get(p);if(!v){v={tara:null,plan:null,vk:null};M.set(p,v);}return v;},
+  /* oyuncuya özel B verisi: {tara: tarama hafızası, plan: yönlü ilk dokunuş planı, vk: ver-kaç koşusu, gur: kararın sahiplik boyu sapması (T2),
+     yakinR/yakinNo: en yakın rakibin önceki uzaklığı ve sahiplik (T2 olay)} */
+  bVeri(p){let M=this._bv;if(!M)M=this._bv=new Map();let v=M.get(p);if(!v){v={tara:null,plan:null,vk:null,gur:null,yakinR:9,yakinNo:-1};M.set(p,v);}return v;},
+  /* düşünme aralığı (T2): topu tutarken seçenekler 5–8 Hz'de yeniden tartılır (karar özelliği yüksek oyuncu daha sık) */
+  dusunmeAraligi(p){const H=MOTOR_AYAR.dusunHz;return 1/(H[0]+(H[1]-H[0])*p.oz.karar);},
   taramaKaydi(T){const P=this.players;for(let j=0;j<P.length;j++){const q=P[j];T.x[j]=q.x;T.z[j]=q.z;T.vx[j]=q.vx;T.vz[j]=q.vz;}T.ok=true;},
   /* vuruş zinciri. sec: {tur, hx, hz, tip, alici, ilk (gelişine), mod (hedef tazeleme: ayak/bosluk/ara), varisHizi, T, hy, yay}.
      Önce hazırlık: hedefe dön, topu vuran ayağın önüne al */
@@ -265,6 +280,10 @@ Object.assign(Match.prototype,{
     if(d>3.2||(d>1.6&&hyp(b.vx,b.vz)>9)){b.sahip=null;p.surus=null;return;}
     if(p.eylem)return;
     p.kararT-=dt;
+    /* T2 olay: rakip 2,5 m'ye girdi — bir sonraki düşünme anını beklemeden yeniden bak (yeni sahiplikte ilk karede yalnız kaydedilir) */
+    const v=this.bVeri(p),yr=enYakinRakip(this,p.x,p.z,p.team).d;
+    if(yr<2.5&&v.yakinR>=2.5&&v.yakinNo===this.sahiplikNo&&p.kararT>0)p.kararT=0;
+    v.yakinR=yr;v.yakinNo=this.sahiplikNo;
     if(p.kararT<=0&&d<1.1&&b.y<0.5){const s=kararVer(this,p);this.secenekUygula(p,s);if(p.eylem)return;}
     this.surusIlerle(p,dt);
   },
@@ -281,7 +300,10 @@ Object.assign(Match.prototype,{
         if(kacti){hx=p.x+d*(this.rast()*14-4);hz=p.z+yan*(18+this.rast()*20);}
         this.vurusBaslat(p,{tur:'uzaklastir',hx,hz,tip:'hava'});break;}
       case 'koru':{const {o}=enYakinRakip(this,p.x,p.z,p.team);const a=o?Math.atan2(p.z-o.z,p.x-o.x):p.yon;p.surus={yon:a,hiz:0.22,koru:true};
-        p.kararT=0.28+this.rast()*0.2;break;}
+        p.kararT=this.dusunmeAraligi(p);break;}
+      /* T2: taşıma — yön ve uzunluk seçimden; uzun taşıma daha hızlı. Bekleme — top ayağın altında, baş yukarıda */
+      case 'tasi':p.surus={yon:s.yon,hiz:clamp(0.55+0.035*s.mesafe,0.55,0.92)};p.kararT=this.dusunmeAraligi(p);break;
+      case 'bekle':p.surus={yon:p.yon,hiz:0.1,bekle:true};p.kararT=this.dusunmeAraligi(p);break;
       default:{p.surus={yon:s.yon!=null?s.yon:p.yon,hiz:s.hiz||0.88};p.kararT=lerp(A.surusKarar[0],A.surusKarar[1],this.rast());}
     }
   },
@@ -436,7 +458,10 @@ Object.assign(Match.prototype,{
     const ileriBakar=Math.cos(s.yon)*d>0.2,serbest=baskiAltinda(this,s)<0.8,pu=p.x*d;
     if(!ileriBakar||!serbest||su<-18||Math.abs(pu-ofs)>4||this.rast()>dt*(p.rol==='FV'?3.2:1.3)*MOTOR_AYAR.kosuIstegi)return null;
     const hedefU=Math.min(PL-8,ofs+10+this.rast()*8),hw=clamp(p.z+(MZ-p.z)*0.35+(this.rast()-0.5)*10,8,PW-8);
-    p.kosu={u:hedefU,w:hw,t:2.6};this.on('kosu',{p});return p.kosu;
+    p.kosu={u:hedefU,w:hw,t:2.6};this.on('kosu',{p});
+    /* T2 olay: koşu başladı — topu tutan bir sonraki düşünme anını beklemeden yeniden bakar */
+    if(s.kararT>0.05)s.kararT=0.05;
+    return p.kosu;
   },
   /* korner: kısa korner ya da orta ile aynı hedef mantığı (kafa vuranlar, koşular, ön direk ve penaltı noktası bölgesi); sıcaklıklı seçim */
   kornerSecenegi(du,tk){

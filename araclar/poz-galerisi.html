@@ -79,6 +79,15 @@ const SAYFALAR={
     {ad:'Jokey: geri-çapraz 1,6 m/sn',kur:p=>{p.vx=-1.15;p.vz=-1.1;p.tavir='jokey';},kareler:[1,1.1,1.2,1.3,1.4,1.5,1.6],az:40},
     {ad:'Top sürme: dokunuşta ayak öne (sağ/sol sırayla)',kur:p=>{p.vx=5;mac.ball.sahip=p;},her:(p,t)=>{p.vx=5;const n=Math.floor(t/0.42);if(!p.sonDokunus||p.sonDokunus.n!==n)p.sonDokunus={n,t:n*0.42,tur:'surus',ayak:n%2?'sol':'sag'};
       mac.ball.x=p.x+0.35+(t%0.42)*1.6;mac.ball.z=p.z+(n%2?-0.12:0.12);},kareler:[1.26,1.31,1.36,1.41,1.68,1.73,1.78],az:60},
+    /* T2 (2026-10-07): taşıma duruşu, topu ayağın altında bekletme ve bakınma, sırtı dönükken dönüş dokunuşu */
+    {ad:'T2 Topu taşıma 4 m/sn: hafif öne, kollar dengede',kur:p=>{p.vx=4;mac.ball.sahip=p;},her:(p,t)=>{p.vx=4;const n=Math.floor(t/0.5);if(!p.sonDokunus||p.sonDokunus.n!==n)p.sonDokunus={n,t:n*0.5,tur:'surus',ayak:n%2?'sol':'sag'};
+      mac.ball.x=p.x+0.4+(t%0.5)*1.2;mac.ball.z=p.z+(n%2?-0.1:0.1);},kareler:[1.0,1.1,1.2,1.3,1.4,1.5,1.6],az:70},
+    {ad:'T2 Bekletme: taban topun üstünde, omuz üstünden bakınır',kur:p=>{p.tavir='bekle';mac.ball.sahip=p;mac.ball.x=p.x+0.36;},
+      her:(p,t)=>{p.tavir='bekle';p.vx=0;const k=t%1.6;p.bakisYon=k>0.6&&k<0.95?(t%3.2<1.6?1.55:-1.55):null;mac.ball.x=p.x+0.36;mac.ball.z=p.z+0.08;},kareler:[0.3,0.8,1.2,0.62+1.6,0.9+1.6,2.9,3.4],az:70},
+    {ad:'T2 Sırtı dönükken dönüş dokunuşu (sağ ayak, 180°)',kur:p=>{p.yon=Math.PI;mac.ball.sahip=p;},
+      her:(p,t)=>{const f=clamp((t-0.5)/0.6,0,1),g=f*f*(3-2*f);p.yon=Math.PI*(1-g);p.vx=f>0.6?3*(f-0.6)/0.4:0;const n=t<0.5?0:t<0.85?1:2;
+        if(n&&(!p.sonDokunus||p.sonDokunus.n!==n))p.sonDokunus={n,t,tur:'surus',ayak:'sag',donus:true};mac.ball.x=p.x+Math.cos(p.yon)*0.38;mac.ball.z=p.z+Math.sin(p.yon)*0.38;},
+      kareler:[0.45,0.55,0.65,0.75,0.9,1.05,1.3],az:50},
     {ad:'Boşta (T1): duruş, eller belde',kur:p=>{p.n=1;p.kip='dur';},kareler:[0.5,1.2,1.6,2.0,2.6,3.2,3.8],az:30},
     {ad:'Boşta (T1): gevşek duruş, ağırlık değiştirme',kur:p=>{p.n=5;p.kip='dur';},kareler:[0.5,1.6,2.4,3.2,4.0,4.8,5.6],az:20},
     {ad:'Yürüyüş 1,6 m/sn (p.kip yuru, yarı boşta)',kur:p=>{p.n=4;p.kip='yuru';p.vx=1.6;},kareler:[1,1.15,1.3,1.45,1.6,1.75,1.9],az:90},

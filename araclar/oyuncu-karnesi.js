@@ -6,29 +6,26 @@
    2) Bireysellik: ilk 11'lerin oyuncu başına eylem sayıları (pas, şut, çalım girişimi, müdahale, faul, alış, kafa, derin koşu), topa sahip olma
       süresi, tempo, depar ve yürüme payı; özellik ile davranış arasındaki ilişki (Pearson r).
    Kullanım: node araclar/oyuncu-karnesi.js [maç sayısı, varsayılan 8] [ilk tohum, varsayılan 1]
-   Motor dosyaları index.html sırasıyla yüklenir (araclar/mac-deneme.js ile aynı). kararVer ve secenekler yalnız kayıt için sarılır: sonuçları
-   değiştirmez, rastlantı çekmez (baskiAltinda saftır). MAC_DENEME_AYAR ve MAC_DENEME_DIZILIS mac-deneme.js'teki gibi çalışır. Tek süreçtir. */
+   Motor dosyaları index.html sırasıyla yüklenir (araclar/motor-yukle.js; mac-deneme.js ile aynı). kararVer ve secenekler yalnız kayıt için
+   sarılır: sonuçları değiştirmez, rastlantı çekmez (baskiAltinda saftır). MAC_DENEME_AYAR ve MAC_DENEME_DIZILIS mac-deneme.js'teki gibi
+   çalışır. Tek süreçtir. */
 'use strict';
-const fs=require('fs'),path=require('path'),vm=require('vm');
-const KOK=path.join(__dirname,'..');
+const vm=require('vm');
 const N=Math.max(1,parseInt(process.argv[2]||'8',10)),T0=parseInt(process.argv[3]||'1',10),dt=1/60;
-const html=fs.readFileSync(path.join(KOK,'index.html'),'utf8');
-const sira=[...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m=>m[1]);
-const DISARIDA=new Set(['js/stil-99.js','js/sunum-durumu.js','js/stadyum-tarifleri.js']);
-const mantik=sira.slice(0,sira.indexOf('js/goruntu.js')).filter(f=>!DISARIDA.has(f));
 const KARAR=[];
-const ctx=vm.createContext({console,Math,Date,__kayit:o=>KARAR.push(o)});
-for(const f of mantik)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),ctx,{filename:f});
+const {ctx}=require('./motor-yukle').motorYukle({__kayit:o=>KARAR.push(o)});
 if(process.env.MAC_DENEME_AYAR)vm.runInContext(`Object.assign(MOTOR_AYAR,${JSON.stringify(JSON.parse(process.env.MAC_DENEME_AYAR))})`,ctx);
 const DIZILIS=process.env.MAC_DENEME_DIZILIS?process.env.MAC_DENEME_DIZILIS.split(','):null;
 /* karar izi: secenekler'in son listesi ve kararVer'in seçimi */
-vm.runInContext(`(function(){const _s=secenekler,_k=kararVer;let son=null;
+vm.runInContext(`(function(){const _s=secenekler,_k=kararVer;let son=null;const sonNo=new Map();
   const grup=q=>!q?'-':q.rol==='GK'?'kaleci':q.mevki.bek?'bek':q.rol==='DEF'?'stoper':q.mevki.kanat?'kanat':q.rol==='OS'?'merkez':'forvet';
   secenekler=function(m,p){const S=_s(m,p);son=S;return S;};
   kararVer=function(m,p){const r=_k(m,p),S=son||[],d=m.dir[p.team],en={};son=null;
     for(const s of S){const t=s.tur==='ara'||s.tur==='uzun'||s.tur==='geriCevir'?'pas':s.tur;if(en[t]==null||s.deger>en[t])en[t]=s.deger;}
     let dd=99;for(const o of m.teams[1-p.team])if(o.oyunda)dd=Math.min(dd,hyp(o.x-p.x,o.z-p.z));
-    __kayit({g:grup(p),sec:r.tur,alici:grup(r.alici),L:r.L||0,P:r.P!=null?r.P:null,en,dd,u:m.ball.x*d,ileri:r.alici?(r.hx-m.ball.x)*d:0});
+    /* T2: topu tutarken saniyede 5–8 kez karar verilir; sahipliğin ilk kararı ayrıca işaretlenir */
+    const ilk=sonNo.get(p)!==m.sahiplikNo;sonNo.set(p,m.sahiplikNo);
+    __kayit({g:grup(p),sec:r.tur,alici:grup(r.alici),L:r.L||0,P:r.P!=null?r.P:null,en,dd,u:m.ball.x*d,ileri:r.alici?(r.hx-m.ball.x)*d:0,ilk});
     return r;};})();`,ctx);
 /* oyuncu sayaçları (takım + ad) */
 const O={},hyp=Math.hypot;
@@ -55,15 +52,20 @@ const say=(L,f)=>{const o={};for(const k of L){const a=f(k);o[a]=(o[a]||0)+1;}re
 const yuzde=o=>{const t=Object.values(o).reduce((a,b)=>a+b,0);return Object.entries(o).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+' '+f1(100*v/t)).join(' · ');};
 const tip=k=>k.sec==='ara'||k.sec==='uzun'||k.sec==='geriCevir'?'pas':k.sec,K=KARAR;
 console.log(`\nChairman oyuncu ve karar karnesi · ${N} maç · tohum ${T0}…${T0+N-1} · ${K.length} karar (maç başına ${f1(K.length/N)})`);
-console.log('\n[1] Topla karar: seçilen eylem %');
+console.log('\n[1] Topla karar: seçilen eylem % (T2: "hepsi" topu tutarken her düşünme anını sayar; "ilk" sahipliğin ilk kararıdır)');
 console.log('    hepsi                 '+yuzde(say(K,tip)));
 for(const [ad,f] of[['rakip >6 m (rahat)',k=>k.dd>6],['rakip 3–6 m',k=>k.dd>3&&k.dd<=6],['rakip <3 m (baskı)',k=>k.dd<=3]]){const L=K.filter(f);
   console.log('    '+ad.padEnd(22)+'('+f1(100*L.length/K.length)+'% karar) '+yuzde(say(L,tip)));}
+const KI=K.filter(k=>k.ilk);
+console.log('    ilk karar             ('+KI.length+') '+yuzde(say(KI,tip)));
+for(const [ad,f] of[['  ilk, rakip >6 m',k=>k.dd>6],['  ilk, rakip 3–6 m',k=>k.dd>3&&k.dd<=6],['  ilk, rakip <3 m',k=>k.dd<=3]]){const L=KI.filter(f);
+  if(L.length)console.log('    '+ad.padEnd(22)+'('+f1(100*L.length/KI.length)+'% ilk) '+yuzde(say(L,tip)));}
 console.log('\n[2] Seçenek türlerinin en iyi değeri (puan = gol olasılığı × 100)');
-for(const t of['pas','sur','koru','sut','orta','uzaklastir']){const L=K.filter(k=>k.en[t]!=null);
+/* T2: eski 'sur' (sürme) yerine taşıma ('tasi') ve bekleme ('bekle'); 'koru' gövdeyle koruma */
+for(const t of['pas','tasi','bekle','koru','sut','orta','uzaklastir']){const L=K.filter(k=>k.en[t]!=null);
   console.log('    '+t.padEnd(11)+'kararların %'+f1(100*L.length/K.length).padStart(5)+'\'inde var · ort. '+f2(ort(L.map(k=>k.en[t]))).padStart(6)+' · seçilme %'+f1(100*K.filter(k=>tip(k)===t).length/K.length));}
-{const L=K.filter(k=>k.en.pas!=null&&k.en.sur!=null),R=L.filter(k=>k.dd>6);
- console.log('    en iyi pas − en iyi sürme ort. '+f2(ort(L.map(k=>k.en.pas-k.en.sur)))+' (rahatken '+f2(ort(R.map(k=>k.en.pas-k.en.sur)))+') · sürmenin daha değerli olduğu karar %'+f1(100*L.filter(k=>k.en.sur>k.en.pas).length/(L.length||1)));}
+{const L=KI.filter(k=>k.en.pas!=null&&k.en.tasi!=null),R=L.filter(k=>k.dd>6);
+ console.log('    ilk kararda en iyi pas − en iyi taşıma ort. '+f2(ort(L.map(k=>k.en.pas-k.en.tasi)))+' (rahatken '+f2(ort(R.map(k=>k.en.pas-k.en.tasi)))+') · taşımanın daha değerli olduğu ilk karar %'+f1(100*L.filter(k=>k.en.tasi>k.en.pas).length/(L.length||1)));}
 console.log('\n[3] Pas');
 console.log('    alıcı %: '+yuzde(say(K.filter(k=>k.alici!=='-'),k=>k.alici)));
 console.log('    boy ort. '+f1(ort(K.filter(k=>k.L>0).map(k=>k.L)))+' m · ileri kazanç ort. '+f1(ort(K.filter(k=>k.alici!=='-').map(k=>k.ileri)))+' m · seçilen pasın başarı tahmini ort. '+f2(ort(K.filter(k=>k.P!=null&&k.alici!=='-').map(k=>k.P))));

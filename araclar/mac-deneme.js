@@ -22,15 +22,22 @@
      şutun kale çizgisini geçeceği yer topun bir kopyası üzerinde topFizikAdim ile bulunur.
      Eklenti ölçümleri: araclar/olcumler/*.js → module.exports={bilgi:[[ad,anahtar,basamak]], yeni:()=>({dinle(ad,v,m),adim(m),bitir(m)}), ozet?(sonuclar)}.
    - T0 (gerçekçilik planı, 2026-10-03): --json taban dosyasına ortam (Node sürümü, işletim sistemi, git) yazılır; --karsilastir tabanın ortamını
-     basar, Node sürümü farklıysa "!" ile uyarır (çıkış kodu değişmez). Eklentinin ozet() tablosu bilgi satırlarından sonra basılır. */
+     basar, Node sürümü farklıysa "!" ile uyarır (çıkış kodu değişmez). Eklentinin ozet() tablosu bilgi satırlarından sonra basılır.
+   - M0 (2026-10-07, araç ve hız): motor araclar/motor-yukle.js ile sıradan genel nesneli bağlamda yüklenir (sonuç aynı, motor ~belirgin hızlı).
+     --isci N                işçi süreç sayısı (varsayılan: mantıksal çekirdeğin yarısı, yani fiziksel çekirdek; ortam MAC_DENEME_ISCI).
+                             Ölçüm (i7-8565U, 4 çekirdek/8 iş parçacığı, 8 maç): 8 işçi 33,9 sn, 4 işçi 21,7 sn, 2 işçi 25,1 sn; dizüstü
+                             işlemci bütün iş parçacıkları yüklenince güç sınırına takılır
+     Tekrarlanabilirlik ayrı bir işçide, maçlarla aynı anda koşar: ilk tohum o işçide iki kez oynatılır (süreçler arası ve aynı süreçte art arda
+     aynılık). 10 maç ve altında yalnız ilk 3 dakikası (18 kontrol noktası) oynatılır ("kısa"); --tam-tekrar ile bütünü.
+     "Süre / 1000 motor adımı" paralel işçilerin birbirini yavaşlattığı süredir; tek süreç hız ölçüsü araclar/hiz-olcum.js'tedir. */
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm'),os=require('os'),{spawn}=require('child_process');
-const KOK=path.join(__dirname,'..');
 const ARG=process.argv.slice(2);
 function secenek(ad,degerli){const i=ARG.indexOf(ad);if(i<0)return null;if(!degerli){ARG.splice(i,1);return true;}return ARG.splice(i,2)[1];}
 /* seçenek: --dizilis A,B  iki takımın dizilişini kadro verisine dokunmadan değiştirir (ör. 4-3-3,4-2-3-1; MM2) */
 const DIZILIS=secenek('--dizilis',true)||process.env.MAC_DENEME_DIZILIS||'';
 const JSON_DOSYA=secenek('--json',true),KARSILASTIR=secenek('--karsilastir',true),AYNI=!!secenek('--ayni',false),SENARYO=secenek('--senaryo',true);
+const ISCI=parseInt(secenek('--isci',true)||process.env.MAC_DENEME_ISCI||'0',10),TAM_TEKRAR=!!secenek('--tam-tekrar',false);
 const AYAR=process.env.MAC_DENEME_AYAR||'';
 /* T0: taban dosyasına yazılan çalışma ortamı (Node sürümü, işletim sistemi, git sürümü) */
 const ORTAM=(()=>{let git=null;try{git=require('child_process').execSync('git rev-parse --short HEAD',{cwd:__dirname,stdio:['ignore','pipe','ignore']}).toString().trim()||null;}catch(e){}
@@ -38,13 +45,8 @@ const ORTAM=(()=>{let git=null;try{git=require('child_process').execSync('git re
 const MAC_SAYISI=Math.max(1,parseInt(ARG[0]||'40',10));
 const ILK_TOHUM=parseInt(ARG[1]||'1',10);
 
-/* ---- motoru yükle ---- */
-const html=fs.readFileSync(path.join(KOK,'index.html'),'utf8');
-const sira=[...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m=>m[1]);
-const DISARIDA=new Set(['js/stil-99.js','js/sunum-durumu.js','js/stadyum-tarifleri.js']);
-const mantik=sira.slice(0,sira.indexOf('js/goruntu.js')).filter(f=>!DISARIDA.has(f));
-const ctx=vm.createContext({console,Math,Date});
-for(const f of mantik)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),ctx,{filename:f});
+/* ---- motoru yükle (M0: araclar/motor-yukle.js) ---- */
+const {ctx,mantik,kip:BAGLAM}=require('./motor-yukle').motorYukle();
 if(AYAR){let o;try{o=JSON.parse(AYAR);}catch(e){console.error('MAC_DENEME_AYAR geçerli JSON değil: '+e.message);process.exit(2);}
   const yok=Object.keys(o).filter(k=>!vm.runInContext(`Object.prototype.hasOwnProperty.call(MOTOR_AYAR,${JSON.stringify(k)})`,ctx));
   if(yok.length){console.error('MAC_DENEME_AYAR: MOTOR_AYAR içinde olmayan anahtar: '+yok.join(', '));process.exit(2);}
@@ -110,7 +112,7 @@ const BILGI=[
   ['Kurtarış oranı % (çerçeveye giden)','kurtarisOran',null,1],['Kurtarışta tutma payı %','tutmaPay',null,1],
   ['xG / şut','xgSut',null,3],['Şutsuz gol payı % (sekme, dönen top, kendi kalesine)','sutsuzGolOran',null,1],['Ceza sahası içi isabetli: direğe ≤1 m %','direkYakinOran',null,1],
   ['— Performans —',null,null,0],
-  ['Süre / 1000 motor adımı (ms)','msAdim',null,1]
+  ['Süre / 1000 motor adımı (ms; işçiler paralel)','msAdim',null,1]
 ];
 const yuzdelik=(L,q)=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b);return S[Math.min(S.length-1,Math.floor(q*S.length))];};
 
@@ -122,8 +124,8 @@ function izDurum(h,m){const b=m.ball;let n=0;IZ_F[n++]=b.x;IZ_F[n++]=b.y;IZ_F[n+
 function izMetin(h,s){for(let i=0;i<s.length;i++){h^=s.charCodeAt(i)&255;h=Math.imul(h,16777619)>>>0;h^=s.charCodeAt(i)>>8;h=Math.imul(h,16777619)>>>0;}return h;}
 const hex=h=>('0000000'+(h>>>0).toString(16)).slice(-8);
 
-/* ---- bir maç ---- */
-function macOyna(tohum){
+/* ---- bir maç (sinir: en çok bu kadar adım; kısa tekrarlanabilirlik için) ---- */
+function macOyna(tohum,sinir){
   const olay={save:0,header:0,block:0,sekme:0,steal:0},pasH=[],sutH=[];let m=null;
   const bu={faulYiyen:new Set(),save:null,catch:false,goal:false,block:false};   /* bu adımın olayları */
   const say={avantaj:0,avantajTutuldu:0,avantajSonuc:0,penalti:0,faulMudahale:0,steal:0,xg:[]},eylemSay={};
@@ -157,7 +159,7 @@ function macOyna(tohum){
     if(bu.goal){sutlar.gol++;return;}
     if(bu.save||gk){sutlar.kurtaris++;if(a.cerceve)sutlar.kurtarisCerceve++;if(bu.catch||gk)sutlar.tutma++;}}
   m.macaGec();
-  let adim=0;const MAKS=60*60*30,dt=1/60,onceki=new Map(),hizlar=[],ivmeler=[],icinde=new Set();let mesafe=0,gecti=0,sprint=0;
+  let adim=0;const MAKS=sinir||60*60*30,dt=1/60,onceki=new Map(),hizlar=[],ivmeler=[],icinde=new Set();let mesafe=0,gecti=0,sprint=0;
   let bosta=0,cift=0,karsiPres=0,kalecisiz=0,sonSahip=-1,kayip=[-99,-99];const boylar=[],enler=[];
   /* pas izleme: ist.pas artınca yeni pas (top.pas), ist.pasTamam artınca tamamlandı, top.pas boşalınca tamamlanmadı */
   const pasK={kisa:[0,0],orta:[0,0],uzun:[0,0],ara:[0,0],donus:[0,0],cross:[0,0],tek:[0,0]};let pasN=0,pasTN=0,aktifPas=null,sonTamam=null,verKac=0;
@@ -249,7 +251,9 @@ function macOyna(tohum){
 /* parmak izi durumu (macOyna içinde sıfırlanır) */
 let izH=0x811c9dc5,izler=[];
 const _macOyna=macOyna;
-function macOynaIz(t){izH=0x811c9dc5>>>0;izler=[];return _macOyna(t);}
+function macOynaIz(t,sinir){izH=0x811c9dc5>>>0;izler=[];return _macOyna(t,sinir);}
+/* kısa tekrarlanabilirlik: ilk 3 dakika (10800 adım, 18 kontrol noktası) */
+const KISA_TEKRAR=60*60*3;
 /* zamanı içermeyen karşılaştırma metni */
 const karsilastirMetni=s=>JSON.stringify(s,(k,v)=>k.startsWith('_')?undefined:v);
 
@@ -265,15 +269,23 @@ else if(process.env.MAC_DENEME_TOHUMLAR){
   const [a,b]=process.env.MAC_DENEME_TOHUMLAR.split(',').map(Number),out=[];
   for(let t=a;t<b;t++)out.push(macOynaIz(t));
   process.stdout.write(JSON.stringify(out));
+}
+/* ---- tekrar işçisi: bir tohumu aynı süreçte iki kez oynatır (sinir > 0 ise yalnız o kadar adım) ---- */
+else if(process.env.MAC_DENEME_TEKRAR){
+  const [t,sinir]=process.env.MAC_DENEME_TEKRAR.split(',').map(Number);
+  process.stdout.write(JSON.stringify([macOynaIz(t,sinir||0),macOynaIz(t,sinir||0)]));
 }else{
-  /* ---- maçları çekirdeklere dağıt, sonuçları topla, özetle ---- */
-  const t0=Date.now(),isci=Math.max(1,Math.min(os.cpus().length,MAC_SAYISI)),parca=Math.ceil(MAC_SAYISI/isci),isler=[];
+  /* ---- maçları işçilere dağıt, sonuçları topla, özetle; tekrarlanabilirlik ayrı işçide aynı anda ---- */
+  const t0=Date.now(),isci=Math.max(1,Math.min(ISCI>0?ISCI:Math.floor(os.cpus().length/2),MAC_SAYISI)),parca=Math.ceil(MAC_SAYISI/isci),isler=[];
+  const surec=(env,ad)=>new Promise((tamam,hata)=>{
+    const c=spawn(process.execPath,[__filename],{env:Object.assign({},process.env,{MAC_DENEME_DIZILIS:DIZILIS},env)});let s='';
+    c.stdout.on('data',d=>s+=d);c.stderr.on('data',d=>process.stderr.write(d));
+    c.on('close',k=>k===0?tamam(JSON.parse(s)):hata(new Error(`${ad} oynatılamadı (çıkış kodu ${k})`)));});
   for(let i=0;i<isci;i++){const a=ILK_TOHUM+i*parca,b=Math.min(ILK_TOHUM+MAC_SAYISI,a+parca);if(a>=b)break;
-    isler.push(new Promise((tamam,hata)=>{
-      const c=spawn(process.execPath,[__filename],{env:Object.assign({},process.env,{MAC_DENEME_TOHUMLAR:a+','+b,MAC_DENEME_DIZILIS:DIZILIS})});let s='';
-      c.stdout.on('data',d=>s+=d);c.stderr.on('data',d=>process.stderr.write(d));
-      c.on('close',k=>k===0?tamam(JSON.parse(s)):hata(new Error(`tohum ${a}–${b-1} oynatılamadı (çıkış kodu ${k})`)));}));}
-  Promise.all(isler).then(p=>{
+    isler.push(surec({MAC_DENEME_TOHUMLAR:a+','+b},`tohum ${a}–${b-1}`));}
+  const tekrarSinir=TAM_TEKRAR||MAC_SAYISI>10?0:KISA_TEKRAR;
+  const tekrar=surec({MAC_DENEME_TEKRAR:ILK_TOHUM+','+tekrarSinir},'tekrarlanabilirlik');
+  Promise.all([Promise.all(isler),tekrar]).then(([p,tk])=>{
     const sonuclar=[].concat(...p);
     const deger=(k,L)=>(L||sonuclar).map(s=>s[k]).filter(x=>typeof x==='number'&&!Number.isNaN(x));
     const ort=(k,L)=>{const v=deger(k,L);return v.length?v.reduce((a,b)=>a+b,0)/v.length:NaN;};
@@ -282,8 +294,8 @@ else if(process.env.MAC_DENEME_TOHUMLAR){
     const oran=(k,L)=>{let a=0,b=0;for(const s of(L||sonuclar)){const h=s.ham&&s.ham[k];if(h){a+=h[0];b+=h[1];}}return b?100*a/b:NaN;};
     const degerAl=(k,L)=>sonuclar[0]&&sonuclar[0].ham&&k in sonuclar[0].ham?oran(k,L):ort(k,L);
     const f=(x,n)=>Number.isNaN(x)?'—':x.toFixed(n);
-    console.log(`\nChairman maç deneme aracı · ${MAC_SAYISI} maç · tohum ${ILK_TOHUM}…${ILK_TOHUM+MAC_SAYISI-1} · ${isler.length} çekirdek · ${((Date.now()-t0)/1000).toFixed(1)} sn${DIZILIS?' · diziliş '+DIZILIS:''}${AYAR?' · ayar '+AYAR:''}`);
-    console.log(`Motor dosyaları: ${mantik.join(', ')}${EKLENTILER.length?'\nEklenti ölçümleri: '+EKLENTILER.map(e=>e.dosya).join(', '):''}\n`);
+    console.log(`\nChairman maç deneme aracı · ${MAC_SAYISI} maç · tohum ${ILK_TOHUM}…${ILK_TOHUM+MAC_SAYISI-1} · ${isler.length} işçi + 1 tekrar işçisi · ${((Date.now()-t0)/1000).toFixed(1)} sn${DIZILIS?' · diziliş '+DIZILIS:''}${AYAR?' · ayar '+AYAR:''}`);
+    console.log(`Motor dosyaları (bağlam ${BAGLAM}): ${mantik.join(', ')}${EKLENTILER.length?'\nEklenti ölçümleri: '+EKLENTILER.map(e=>e.dosya).join(', '):''}\n`);
     console.log('  '+'Ölçüm'.padEnd(28)+'Ortalama'.padStart(10)+'  ±'.padEnd(8)+'Hedef'.padStart(12));
     let disarida=0;
     for(const [ad,k,a,b] of HEDEF){
@@ -310,10 +322,12 @@ else if(process.env.MAC_DENEME_TOHUMLAR){
     if(Object.keys(TV).length)console.log('  Tavır süresi / maç (oyuncu·sn): '+Object.keys(TV).sort().map(a=>a+' '+f(TV[a]/sonuclar.length,0)).join(' · '));
     /* T0: eklenti isteğe bağlı ozet(sonuclar) ile kendi tablosunu basabilir ("!" satırları bilgidir, çıkış kodunu etkilemez) */
     for(const E of EKLENTILER)if(E.ozet)E.ozet(sonuclar);
-    /* tekrarlanabilirlik: ilk tohum bu süreçte iki kez oynatılır, işçinin sonucuyla da karşılaştırılır */
-    const a=karsilastirMetni(macOynaIz(ILK_TOHUM)),b=karsilastirMetni(macOynaIz(ILK_TOHUM)),c=karsilastirMetni(sonuclar[0]);
-    const ayni=a===b&&a===c;
-    console.log('\n'+(ayni?'  ':'! ')+`Tekrarlanabilirlik: tohum ${ILK_TOHUM} üç kez oynatıldı, ${ayni?'sonuç aynı':'SONUÇ FARKLI'}`);
+    /* tekrarlanabilirlik: ilk tohum tekrar işçisinde iki kez oynatıldı (aynı süreçte art arda), işçinin sonucuyla da karşılaştırılır.
+       Kısa denetimde yalnız ilk kontrol noktaları (parmak izi zinciri) karşılaştırılır */
+    let ayni;
+    if(tekrarSinir){const n=tk[0].izler.length,c=sonuclar[0].izler.slice(0,n).join(',');ayni=n>0&&tk[0].izler.join(',')===c&&tk[1].izler.join(',')===c;}
+    else{const a=karsilastirMetni(tk[0]),b=karsilastirMetni(tk[1]),c=karsilastirMetni(sonuclar[0]);ayni=a===b&&a===c;}
+    console.log('\n'+(ayni?'  ':'! ')+`Tekrarlanabilirlik: tohum ${ILK_TOHUM} üç kez oynatıldı${tekrarSinir?` (kısa: ilk ${tekrarSinir/3600} dakika, ${tk[0].izler.length} kontrol noktası)`:''}, ${ayni?'sonuç aynı':'SONUÇ FARKLI'}`);
     if(!ayni)process.exitCode=1;
     if(JSON_DOSYA){fs.mkdirSync(path.dirname(path.resolve(JSON_DOSYA)),{recursive:true});
       fs.writeFileSync(JSON_DOSYA,JSON.stringify({tarih:new Date().toISOString(),dizilis:DIZILIS,ayar:AYAR,ortam:ORTAM,sonuclar},null,0));console.log(`  Sonuçlar yazıldı: ${JSON_DOSYA}`);}

@@ -103,7 +103,7 @@ class Match{
   normal(){let u=0;while(u===0)u=this.rast();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*this.rast());}
   reset(){
     this.score=[0,0];this.half=1;this.gameSec=0;this.t=0;this.phase='kickoff';this.phaseT=0;this.dir=[1,-1];
-    this.yaziTura=null;this.ilkSantra=0;this.tuneleGitti=false;this.celeb=null;this.durus=null;this.sp=null;
+    this.yaziTura=null;this.ilkSantra=0;this.tuneleGitti=false;this.celeb=null;this.durus=null;this.sp=null;this.sahiplikNo=0;
     this.ist={sut:[0,0],isabet:[0,0],korner:[0,0],tac:[0,0],kaleVurusu:[0,0],faul:[0,0],sari:[0,0],kirmizi:[0,0],ofsayt:[0,0],
       pas:[0,0],pasTamam:[0,0],pasYon:{ileri:0,yan:0,geri:0},uzunPas:0,havaTopu:0,uzatma:[0,0],degisiklik:[0,0],oyunda:0,toplam:0,sahiplik:[0,0]};
     this.shots=this.ist.sut;this.poss=this.ist.sahiplik;
@@ -323,7 +323,8 @@ class Match{
     this.ofsaytDokunus(p,kasitli);
     this.topDegisti();
   }
-  sahipYap(p){const b=this.ball;b.sahip=p;b.tasiyan=null;p.surus=null;p.kararT=this.kararSuresi(p);}
+  /* sahiplikNo (T2): her yeni sahiplikte artar; topla kararın kişisel sapması sahiplik boyunca aynı kalır (kararVer) */
+  sahipYap(p){const b=this.ball;b.sahip=p;b.tasiyan=null;p.surus=null;p.kararT=this.kararSuresi(p);this.sahiplikNo++;}
 
 
   /* ============ eylemler ============

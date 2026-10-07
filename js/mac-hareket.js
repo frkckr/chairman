@@ -174,7 +174,7 @@ Object.assign(Match.prototype,{
       p.x+=p.vx*dt;p.z+=p.vz*dt;const s=hrkHyp(p.vx,p.vz),ns=hrkMax(0,s-(e2.fren||9)*dt);if(s>0){p.vx*=ns/s;p.vz*=ns/s;}p.spd=ns;
       p._iax=0;p._iaz=0;p.kip=hrkKipAdi(ns);return;}
     /* tavır (jokey, koru) her karede tazelenir; tazelenmediyse kalkar */
-    if((p.tavir==='jokey'||p.tavir==='koru')&&p._tavirKare!==this.kare)p.tavir=null;
+    if((p.tavir==='jokey'||p.tavir==='koru'||p.tavir==='bekle')&&p._tavirKare!==this.kare)p.tavir=null;
     /* tünelden geçerken önce ağza yürü (tribün duvarının içinden geçmesin) */
     let tx=p.tx,tz=p.tz;const T=this.tunel,ic=p.z<T.z+0.5;
     if(ic!==(tz<T.z+0.5)){const ax=T.x+clamp(p.x-T.x,-0.7,0.7);
@@ -298,8 +298,9 @@ Object.assign(Match.prototype,{
   surusIlerle(p,dt){
     const b=this.ball;if(!p.surus)p.surus={yon:b.vx*b.vx+b.vz*b.vz>0.64?hrkAtan2(b.vz,b.vx):p.yon,hiz:0.5};   /* niyet gelmeden: topun gidişine */
     const s=p.surus;
-    if(s.koru){p.tavir='koru';p._tavirKare=this.kare;}
-    const M=s.koru?null:this.calimAdim(p,s,dt),yon=M?M.yon:s.yon,c=hrkCos(yon),sn=hrkSin(yon);
+    /* T2: bekleme niyetinde (s.bekle) top ayağın altında kalır, baş yukarıda (p.tavir='bekle'; çizim okur) */
+    if(s.koru||s.bekle){p.tavir=s.koru?'koru':'bekle';p._tavirKare=this.kare;}
+    const M=s.koru||s.bekle?null:this.calimAdim(p,s,dt),yon=M?M.yon:s.yon,c=hrkCos(yon),sn=hrkSin(yon);
     /* sürüş yolunda yakın rakip varken (manevra dışı) yavaşla ve topu ayağa yakın tut: topu rakibin önüne itme */
     const yakin=!M&&!s.koru&&this.calimRakibi(p,yon,2.2),hiz=M?M.hiz:yakin?hrkMin(s.hiz,0.6):s.hiz;
     const dx=b.x-p.x,dz=b.z-p.z,d=hrkHyp(dx,dz);
@@ -318,10 +319,11 @@ Object.assign(Match.prototype,{
       if(!(M&&M.itme)&&!s.koru){const {o,d:od}=enYakinRakip(this,b.x,b.z,p.team);if(o&&od<2){const yy=hrkCos(a)*(o.z-p.z)-hrkSin(a)*(o.x-p.x);a-=hrkIsaret(yy)*0.3*(2-od)/2;}}
       a+=this.normal()*(0.04+0.1*(1-p.oz.surus))*(1+baski);
       /* önünde yakın rakip varken (manevra dışı) kısa dokunuş: top ayaktan uzaklaşmasın */
-      const itme=M&&M.itme?M.itme:s.koru?0.3:lerp(1.9,0.65,baski)*(donus?0.45:1)*(0.75+0.5*hiz)*(yakin?0.6:1);
+      const itme=M&&M.itme?M.itme:s.koru?0.3:s.bekle?0.15:lerp(1.9,0.65,baski)*(donus?0.45:1)*(0.75+0.5*hiz)*(yakin?0.6:1);
       /* son dokunuş (çizim için, rastlantısız): ayak topun gövdeye göre yanı; yüzey: dönüş ayağın kendi yanına dış, öbür yana iç, düz uzun itiş üst */
       const ayak=mdhAyak(p,b.x,b.z),fy=hrkAciFark(a,p.yon);
-      p.sonDokunus={t:this.t,tur:'surus',ayak,yuzey:s.koru?'taban':hrkAbs(fy)<0.3?(itme>1.5?'ust':'ic'):(fy>0)===(ayak==='sag')?'dis':'ic'};
+      /* donus (T2, sözleşme): gövdeye göre keskin yönlü dokunuş (sırtı dönükken dönme, içe/dışa kesme); çizim gövdeyi dönüşe yatırır */
+      p.sonDokunus={t:this.t,tur:'surus',ayak,yuzey:s.koru||s.bekle?'taban':hrkAbs(fy)<0.3?(itme>1.5?'ust':'ic'):(fy>0)===(ayak==='sag')?'dis':'ic',donus:donus||hrkAbs(fy)>0.7};
       const ileri=hrkMax(0,p.vx*hrkCos(a)+p.vz*hrkSin(a)),v=ileri*0.95+itme;
       b.vx=hrkCos(a)*v;b.vz=hrkSin(a)*v;b.vy=0;b.y=0;b.egri=0;b.ust=0;
       p.dokunT=0.22;this.dokunus(p,true);
