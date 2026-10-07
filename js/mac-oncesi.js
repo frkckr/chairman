@@ -310,7 +310,7 @@ Object.assign(Match.prototype,{
             const c=this.havadanCoz(o.x,1.3,o.z,A.x,0.3,A.z,0.6+L/14,0);o.vx=c.vx;o.vy=c.vy;o.vz=c.vz;p.eylem={ad:'elleAtis',t:0,sure:0.6};o.sil=sn.t+4;o.alan=A;}}
         continue;}
       if(o.sahip){const p=o.sahip;o.x=p.x+Math.cos(p.yon)*0.35;o.z=p.z+Math.sin(p.yon)*0.35;o.y=0;o.vx=p.vx;o.vz=p.vz;o.vy=0;continue;}
-      topFizikAdim(o,dt,false,this.R);
+      topFizikAdim(o,dt,false,this.R,this.kosullar);
       if(o.alan&&hyp(o.x-o.alan.x,o.z-o.alan.z)<1.1&&o.y<1.6){sn.toplar.splice(i,1);continue;}
       /* kaleci: zamanı gelince uçar (maçtaki dalış); top hizasından geçerken kurtarış */
       const K=o.kaleci;

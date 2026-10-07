@@ -278,7 +278,7 @@ Object.assign(Match.prototype,{
   /* özel kopya üzerinde: top kaleciden sonra kendi kalesine girer mi (1 sn) */
   kaleciIceriGider(gk){
     const b=this.ball,gx=-this.dir[gk.team]*PL,s={x:b.x,y:b.y,z:b.z,vx:b.vx,vy:b.vy,vz:b.vz,egri:0,ust:0};
-    for(let i=0;i<60;i++){const px=s.x,py=s.y,pz=s.z;topFizikAdim(s,1/60,false,this.R);
+    for(let i=0;i<60;i++){const px=s.x,py=s.y,pz=s.z;topFizikAdim(s,1/60,false,this.R,this.kosullar);
       if((px-gx)*(s.x-gx)<=0){const f=(gx-px)/((s.x-px)||1),z=pz+(s.z-pz)*f,y=py+(s.y-py)*f;return Math.abs(z-MZ)<GW2+0.05&&y<GH+0.05;}}
     return false;
   },

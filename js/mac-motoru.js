@@ -18,8 +18,25 @@
    çarpışmada momentumu paylaştırır; ivme düşük hızda güçlü, tepe hıza yaklaştıkça azalır; hava topunda oyuncu gerçekten sıçrar (p.yuk) ve
    temas anında en yükseğe ulaşan avantajlıdır. Yorgunluk hız, ivme, vuruş isabeti ve karar süresini etkiler; duraklamada ve devre arasında azalır. */
 const PL=52.5,PW=68,MZ=34,GH=2.44,GW2=3.66,GPR=9,G=9.81;
-/* yuvarlanma: yavaşlama = R + (hava direnci/2)·v². R çimin kalitesine bağlıdır: iyi çimde ~1,2, tarla gibi zeminde ~2,1 m/sn² */
-const ROLL=1.45,TOP_YARICAP=0.11,HAVA_DIRENCI=0.0125,SEKME=0.52,SEKME_SURTUNME=0.8,DIREK_R=0.06;
+/* ---- top fiziği (T9a, 2026-10-07; gerçekçilik planı §4 T9 "Top"): sürükleme hıza bağlı, dönüş açısal hızla ve doyan Magnus, sekmede dik
+   geri sekme çarpma hızıyla azalır ve sürtünme itkisi kaymayı giderir, yerde kayma → yuvarlanma, koşul kapısı (ıslak, rüzgâr). Dönüş iki açısal
+   hızla tutulur (wYan düşey eksen: falso; wUst enine eksen: üst/kesik dönüş; rad/sn); egri ve ust vuruşun girdisi ve her adımda dönüşten yeniden
+   yazılan okunur alanlardır (çizim sözleşmesi: js/animasyon.js, js/kamera.js). Boylamsal bileşenin uçuşta etkisi olmadığından vektör yerine iki
+   bileşen tutulur; sekmede yön değişimi için yan dönüşün ekseni eğik varsayılır (egikEksen). TEST değerleri ---- */
+const TOP_YARICAP=0.11,DIREK_R=0.06;
+const TOP_FIZIK={
+  surukleYavas:0.025,surukleHizli:0.012,gecisHiz:14,gecisGen:1.5,     // hava direnci a = k(v)·v² (1/m): yavaş topta 0,025, hızlı topta 0,012; geçiş ~14 m/sn (Ek E)
+  magnus:0.053,clEnCok:0.33,clS0:0.18,                                 // Magnus a = magnus·C_L(S)·v², C_L = clEnCok·S/(S + clS0), S = ω·r/v (doyar)
+  yanOlcek:2.5,ustOlcek:1.0,donusSonum:0.1,                            // egri/ust → dönüş oranı (vuruş anındaki hızla); havada dönüşün saniyelik sönümü
+  sekmeE:[0.65,0.45],sekmeEgim:0.0105,sekmeSurtunme:0.4,egikEksen:0.5, // dik geri sekme e = 0,65 − 0,0105·(vn − 2) (0,45–0,65); sürtünme μ; yan dönüşün eğik ekseni
+  kayma:0.4,yerDirenc:0.0125,yuvarlanma:[1.5,0.6],                     // yerde kayma sürtünmesi (×g); yuvarlanan topun hava direnci (1/m); yuvarlanma yavaşlaması zemin 0 → 1 (m/sn²)
+  islak:{kayma:0.55,sekme:0.85,yuvarlanma:0.8}                          // ıslak zemin çarpanları (T9a kapısı; görünümü §7.8, T10)
+};
+const ROLL=lerp(TOP_FIZIK.yuvarlanma[0],TOP_FIZIK.yuvarlanma[1],0.7),TOP_KOSUL_YOK={islak:0,ruzgar:null};
+/* zeminden yuvarlanma yavaşlaması (zemin 0 tarla … 1 halı; ıslakta top daha uzun gider) */
+function zeminYuvarlanma(zemin,islak){return lerp(TOP_FIZIK.yuvarlanma[0],TOP_FIZIK.yuvarlanma[1],clamp(zemin==null?0.7:zemin,0,1))*(islak?TOP_FIZIK.islak.yuvarlanma:1);}
+const topSurukleme=v=>TOP_FIZIK.surukleYavas+(TOP_FIZIK.surukleHizli-TOP_FIZIK.surukleYavas)/(1+Math.exp(-(v-TOP_FIZIK.gecisHiz)/TOP_FIZIK.gecisGen));
+const topKaldirma=S=>TOP_FIZIK.clEnCok*S/(S+TOP_FIZIK.clS0);
 const CEZA_U=16.5,CEZA_W=20.16,ALTIPAS_U=5.5,ALTIPAS_W=9.16,PENALTI_U=11;
 const MAC_ONCESI=['isinma','giris','toren','selam','yazitura'],DEVRE_ARASI=45;
 /* oyuncu özellikleri (kadrolar.js'te 1–99 arası, aynı sırayla) */
@@ -61,29 +78,65 @@ function kutle(p){if(p._kutle)return p._kutle;const y=(p.kayit&&p.kayit.yapi)||1
 /* başın o anki yüksekliği (m): ayakta boyla, sıçrarken p.yuk kadar yukarıda */
 const kafaYuksekligi=p=>1.72*(p.boy||1)+0.12+(p.yuk||0);
 function ozellikler(k){const v=(k&&k.oz)||VARSAYILAN_OZ,o={};OZ_SIRA.forEach((a,i)=>{o[a]=(v[i]!=null?v[i]:VARSAYILAN_OZ[i])/100;});return o;}
-/* yerde yuvarlanan top: v² mesafeyle üstel azalır (R sabit sürtünme, c hava direnci). Buradan hız, ilk hız ve süre */
-function yerHiz(v0,s,R){const c=HAVA_DIRENCI*0.5,k=R/c,w=(v0*v0+k)*Math.exp(-2*c*s)-k;return w>0?Math.sqrt(w):0;}
-function yerIlkHiz(L,varis,R){const c=HAVA_DIRENCI*0.5,k=R/c;return Math.sqrt((varis*varis+k)*Math.exp(2*c*L)-k);}
-function yerSure(v0,s,R){let t=0,v=v0;const ds=s/4;for(let i=1;i<=4;i++){const v2=yerHiz(v0,ds*i,R||ROLL);if(v2<=0.05)return 99;t+=ds/((v+v2)/2);v=v2;}return t;}
+/* yerden vurulan (dönüşsüz) top önce KAYAR: yavaşlama μg, yüzey hızı 2,5 katı artar; hızı 5/7'ye inince YUVARLANIR (kayma yolu s1 = (24/49)·v0²/(2μg),
+   süresi (2/7)·v0/μg). Yuvarlanırken v² mesafeyle üstel azalır (R yuvarlanma yavaşlaması, c hava direnci). Buradan hız, ilk hız ve süre: pas
+   planlayıcısı (js/mac-karar.js) bunlarla fizikle tutarlı kalır. K: koşullar (ıslakta kayma uzar; verilmezse kuru) */
+const yerKayma=K=>TOP_FIZIK.kayma*G*(K&&K.islak?TOP_FIZIK.islak.kayma:1);
+function yerHiz(v0,s,R,K){const a=yerKayma(K),s1=(24/49)*v0*v0/(2*a);
+  if(s<=s1){const w=v0*v0-2*a*s;return w>0?Math.sqrt(w):0;}
+  const v1=v0*5/7,c=TOP_FIZIK.yerDirenc,k=(R||ROLL)/c,w=(v1*v1+k)*Math.exp(-2*c*(s-s1))-k;return w>0?Math.sqrt(w):0;}
+function yerIlkHiz(L,varis,R,K){const a=yerKayma(K);
+  const vk=Math.sqrt(varis*varis+2*a*L);if((24/49)*vk*vk/(2*a)>=L)return vk;   /* yalnız kayarak varır */
+  /* kayma + yuvarlanma: yerHiz(v0, L) = varis için v0 (v0'da tekdüze artar); ikiye bölme, 16 adım (~0,001 m/sn) */
+  let alt=vk,ust=60;for(let i=0;i<16;i++){const o=(alt+ust)/2;if(yerHiz(o,L,R,K)<varis)alt=o;else ust=o;}
+  return (alt+ust)/2;}
+function yerSure(v0,s,R,K){const a=yerKayma(K),s1=Math.min(s,(24/49)*v0*v0/(2*a));
+  let t=(v0-Math.sqrt(Math.max(0,v0*v0-2*a*s1)))/a,v=yerHiz(v0,s1,R,K);const kalan=s-s1;if(kalan<=0)return t;
+  const ds=kalan/4;for(let i=1;i<=4;i++){const v2=yerHiz(v0,s1+ds*i,R,K);if(v2<=0.05)return 99;t+=ds/((v+v2)/2);v=v2;}return t;}
 /* pasın alıcıya varış hızı: kısa pas yumuşak, uzun pas sert */
 const pasVarisHizi=L=>clamp(7+L*0.15,8,12);
-/* tek adım top fiziği (gerçek top da tahmin de bununla ilerler). ucus: yere çarpmayı yok say (vuruş çözümü için). R: yuvarlanma */
-function topFizikAdim(b,dt,ucus,R){
+/* vuruşun girdilerinden (egri, ust; vuruş anındaki hızla) açısal hızlar. Gerçek top her dokunuşta (surum) yeniden kurar; sürümü olmayan tahmin
+   kopyaları (havadanCoz, kamera) okunur alanlardan her adımda yeniden kurar (okunur alanlar dönüşle tutarlı yazıldığından aynı sonuç) */
+function topDonusHazirla(b){
+  if(b.surum!==undefined&&b._donSurum===b.surum)return;
+  const v=hyp3(b.vx,b.vy,b.vz)||1;b.wYan=(b.egri||0)*TOP_FIZIK.yanOlcek*v/TOP_YARICAP;b.wUst=(b.ust||0)*TOP_FIZIK.ustOlcek*v/TOP_YARICAP;b._donSurum=b.surum;
+  b.sw=b.wUst*TOP_YARICAP;   /* yüzey hızı: yerde kayma ↔ yuvarlanma */
+}
+function topDonusYaz(b,v){const k=TOP_YARICAP/(v||1);b.egri=b.wYan*k/TOP_FIZIK.yanOlcek;b.ust=b.wUst*k/TOP_FIZIK.ustOlcek;}
+/* tek adım top fiziği (gerçek top da tahmin de bununla ilerler). ucus: yere çarpmayı yok say (vuruş çözümü için). R: yuvarlanma yavaşlaması,
+   K: koşullar {islak, ruzgar:{x,z}} (verilmezse kuru ve rüzgârsız) */
+function topFizikAdim(b,dt,ucus,R,K){
+  topDonusHazirla(b);K=K||TOP_KOSUL_YOK;
   if(ucus||b.y>0.001||b.vy>0.001){
-    const v=hyp3(b.vx,b.vy,b.vz),k=HAVA_DIRENCI*v*dt;
-    b.vx-=b.vx*k;b.vy-=b.vy*k;b.vz-=b.vz*k;
-    if(b.egri){const ex=-b.vz*b.egri*dt,ez=b.vx*b.egri*dt;b.vx+=ex;b.vz+=ez;b.egri*=1-0.35*dt;}
-    /* üst dönüş (ust > 0) topu aşağı bastırır, kesik dönüş (ust < 0) havada tutar: kuvvet yatay hızla orantılı (Magnus) */
-    if(b.ust){b.vy-=b.ust*hyp(b.vx,b.vz)*dt;b.ust*=1-0.35*dt;}
+    /* sürükleme havaya göre hızla (rüzgâr), katsayı hıza bağlı: yavaşlayan aşırtma ve asılan orta sonda "ölür" */
+    const rw=K.ruzgar,rvx=b.vx-(rw?rw.x:0),rvz=b.vz-(rw?rw.z:0),v=hyp3(rvx,b.vy,rvz),k=topSurukleme(v)*v*dt;
+    b.vx-=rvx*k;b.vy-=b.vy*k;b.vz-=rvz*k;
+    /* Magnus: yan dönüş yana, üst dönüş aşağı (kesik yukarı); dönüş oranı S = ω·r/v hız düştükçe büyür, C_L doyar; dönüş yavaş söner */
+    if(b.wYan){const S=Math.abs(b.wYan)*TOP_YARICAP/(v||1),a=TOP_FIZIK.magnus*topKaldirma(S)*v*v*Math.sign(b.wYan)/(hyp(rvx,rvz)||1);
+      b.vx-=rvz*a*dt;b.vz+=rvx*a*dt;b.wYan*=1-TOP_FIZIK.donusSonum*dt;}
+    if(b.wUst){const S=Math.abs(b.wUst)*TOP_YARICAP/(v||1);b.vy-=TOP_FIZIK.magnus*topKaldirma(S)*v*v*Math.sign(b.wUst)*dt;b.wUst*=1-TOP_FIZIK.donusSonum*dt;}
     b.vy-=G*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;
     if(!ucus&&b.y<=0){b.y=0;
-      /* sekme: üst dönüş yerden sonra topu hızlandırır, kesik dönüş frenler */
-      if(b.vy<-1.3){const f=SEKME_SURTUNME*(1+clamp(b.ust||0,-0.15,0.15)*1.6);b.vy=-b.vy*SEKME;b.vx*=f;b.vz*=f;b.egri*=0.3;b.ust=(b.ust||0)*0.3;}
-      else{b.vy=0;b.egri=0;b.ust=0;}}
+      if(b.vy<-1.3){/* sekme: dik geri sekme çarpma hızıyla azalır; yatayda sürtünme itkisi (≤ μ·(1+e)·vn) kaymayı giderir — üst dönüşlü top ileri
+           fırlar, kesik dönüşlü top frenler, yüzey hızı değişir; yan dönüşlü top eğik eksen varsayımıyla yana itilir (yön değiştirir); ıslakta düşük ve kaygan */
+        const vn=-b.vy,isl=K.islak?1:0,e=clamp(TOP_FIZIK.sekmeE[0]-TOP_FIZIK.sekmeEgim*(vn-2),TOP_FIZIK.sekmeE[1],TOP_FIZIK.sekmeE[0])*(isl?TOP_FIZIK.islak.sekme:1);
+        const J=TOP_FIZIK.sekmeSurtunme*(isl?TOP_FIZIK.islak.kayma:1)*(1+e)*vn,vh=hyp(b.vx,b.vz)||1,ux=b.vx/vh,uz=b.vz/vh;
+        const sw=b.wUst*TOP_YARICAP,slip=vh-sw,sg=Math.sign(slip),m=Math.min(J,(2/7)*Math.abs(slip)),nv=vh-sg*m;b.wUst=(sw+2.5*sg*m)/TOP_YARICAP;
+        const ys=b.wYan*TOP_YARICAP*TOP_FIZIK.egikEksen,ml=Math.min(J*0.5,(2/7)*Math.abs(ys))*Math.sign(ys);
+        b.vx=ux*nv-uz*ml;b.vz=uz*nv+ux*ml;b.vy=vn*e;b.wYan*=0.7;}
+      else b.vy=0;
+      b.sw=b.wUst*TOP_YARICAP;}
+    topDonusYaz(b,v);
   }else{
     b.y=0;b.vy=0;const s=hyp(b.vx,b.vz);
-    if(s>0){const ns=Math.max(0,s-((R||ROLL)+HAVA_DIRENCI*0.5*s*s)*dt);b.vx*=ns/s;b.vz*=ns/s;}
-    b.x+=b.vx*dt;b.z+=b.vz*dt;
+    if(s>0){/* kayma: yüzey hızı topun hızına yetişene kadar μg ile yavaşlar (yüzey hızı 2,5 katı artar; üst dönüşlü top ileri çıkar); sonra
+         yuvarlanma: R + c·v² */
+      const a=yerKayma(K),slip=s-b.sw;let ns;
+      if(Math.abs(slip)>0.05){const f=a*dt*Math.sign(slip);if(Math.abs(slip)<=3.5*Math.abs(f)){ns=s-slip*(2/7);b.sw=ns;}else{ns=s-f;b.sw+=2.5*f;}}
+      else{ns=Math.max(0,s-((R||ROLL)+TOP_FIZIK.yerDirenc*s*s)*dt);b.sw=ns;}
+      b.vx*=ns/s;b.vz*=ns/s;b.wUst=b.sw/TOP_YARICAP;b.wYan*=1-1.5*dt;}
+    else{b.sw=0;b.wUst=0;}
+    b.x+=b.vx*dt;b.z+=b.vz*dt;topDonusYaz(b,hyp(b.vx,b.vz));
   }
 }
 
@@ -95,8 +148,11 @@ class Match{
     secenek=secenek||{};this.on=on||(()=>{});this.kadro=secenek.kadro||null;this.tunel=secenek.tunel||{x:0,z:-6};
     this.kulubeler=secenek.kulubeler||[0,1].map(t=>({takim:t,koltuklar:[0,1,2,3,4,5].map(i=>({x:(t?11.5:-11.5)-2.6+i*1.04,z:-5.75})),alan:{x:t?11.5:-11.5,z:-2.4}}));
     this.tohum=(secenek.tohum!=null?secenek.tohum:Math.floor(Math.random()*4294967296))>>>0;this.rast=tohumluRastgele(this.tohum);
-    /* zemin 0 (tarla) – 1 (halı gibi): kötü zeminde top çabuk durur, sekmesi düzensizdir */
-    this.zemin=secenek.zemin!=null?clamp(secenek.zemin,0,1):0.7;this.R=lerp(2.1,1.2,this.zemin);
+    /* zemin 0 (tarla) – 1 (halı gibi): kötü zeminde top çabuk durur, sekmesi düzensizdir. T9a koşul kapısı: secenek.kosullar = {zemin, islak,
+       ruzgar:{x,z} m/sn}; varsayılan kuru ve rüzgârsız (görünüm ve kullanım §7.8, T10). Pas planlayıcısı kuru varsayar */
+    this.kosullar=Object.assign({islak:0,ruzgar:null},secenek.kosullar||{});
+    this.zemin=clamp(this.kosullar.zemin!=null?this.kosullar.zemin:secenek.zemin!=null?secenek.zemin:0.7,0,1);this.kosullar.zemin=this.zemin;
+    this.R=zeminYuvarlanma(this.zemin,this.kosullar.islak);
     this.taraftarYeri=secenek.taraftarYeri||{x:0,z:PW-4,nx:0,nz:1};this.deplasmanYeri=secenek.deplasmanYeri||null;
     this.reset();
   }
@@ -117,7 +173,9 @@ class Match{
     this.topcular=this.topculariKur();this.disToplar=[];
     this.yedekleriKur();this.kenarKur();
     this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,sonTakim:0,hedefOyuncu:null,sut:null,pas:null,
-      surum:0,agda:false,direk:false,px:0,py:0,pz:0};
+      surum:0,agda:false,direk:false,px:0,py:0,pz:0,
+      /* T9a: açısal hızlar (rad/sn), yüzey hızı (m/sn) ve dönüşün kurulduğu sürüm (topDonusHazirla) */
+      wYan:0,wUst:0,sw:0,_donSurum:-1};
     this.kuralHazirla();
     this.oncesiHazirla();
   }
@@ -267,8 +325,8 @@ class Match{
   topYolu(){
     const b=this.ball;
     if(this._yol&&this._yolSurum===b.surum&&this.t-this._yolT0<1.2)return this._yol;
-    const s={x:b.x,y:b.y,z:b.z,vx:b.vx,vy:b.vy,vz:b.vz,egri:b.egri,ust:b.ust||0},yol=[];
-    for(let i=0;i<210;i++){topFizikAdim(s,1/60,false,this.R);yol.push({x:s.x,y:s.y,z:s.z,v:hyp(s.vx,s.vz)});}
+    const s={x:b.x,y:b.y,z:b.z,vx:b.vx,vy:b.vy,vz:b.vz,egri:b.egri,ust:b.ust||0,wYan:b.wYan,wUst:b.wUst,sw:b.sw,surum:b.surum,_donSurum:b._donSurum},yol=[];
+    for(let i=0;i<210;i++){topFizikAdim(s,1/60,false,this.R,this.kosullar);yol.push({x:s.x,y:s.y,z:s.z,v:hyp(s.vx,s.vz)});}
     this._yol=yol;this._yolSurum=b.surum;this._yolT0=this.t;return yol;
   }
   /* t saniye sonra top nerede */
@@ -278,7 +336,7 @@ class Match{
     if(b.tasiyan){const h=b.tasiyan,c=Math.cos(h.yon),s=Math.sin(h.yon),tac=h.eylem&&h.eylem.ad==='tac';
       b.x=h.x+c*(tac?0.05:0.32);b.z=h.z+s*(tac?0.05:0.32);b.y=tac?2.05*h.boy:1.05*h.boy;b.vx=h.vx;b.vz=h.vz;b.vy=0;return;}
     const once=b.vy;
-    topFizikAdim(b,dt,false,this.R);
+    topFizikAdim(b,dt,false,this.R,this.kosullar);
     /* kötü zeminde sekme düzensizdir: yön ve yükseklik biraz sapar (tahmin bunu bilmez; oyuncu gerçek sekmeye tepki verir) */
     if(once<-1.3&&b.vy>0&&b.y===0&&this.zemin<0.95){const k=1-this.zemin,a=this.normal()*0.16*k,c=Math.cos(a),s=Math.sin(a),vx=b.vx;
       b.vx=vx*c-b.vz*s;b.vz=vx*s+b.vz*c;b.vy*=clamp(1+this.normal()*0.18*k,0.6,1.4);this.topDegisti();}
@@ -348,7 +406,7 @@ class Match{
   /* havadan vuruş: top T saniye sonra (hx,hy,hz)'de olsun; hava direnci ve falso ile, düzeltmeli çözüm */
   havadanCoz(x0,y0,z0,hx,hy,hz,T,egri,ust){
     let vx=(hx-x0)/T,vz=(hz-z0)/T,vy=(hy-y0+0.5*G*T*T)/T;const n=Math.max(1,Math.round(T*60));
-    for(let k=0;k<3;k++){const s={x:x0,y:y0,z:z0,vx,vy,vz,egri,ust:ust||0};for(let i=0;i<n;i++)topFizikAdim(s,1/60,true);
+    for(let k=0;k<3;k++){const s={x:x0,y:y0,z:z0,vx,vy,vz,egri,ust:ust||0};for(let i=0;i<n;i++)topFizikAdim(s,1/60,true,undefined,this.kosullar);
       vx+=(hx-s.x)/T;vy+=(hy-s.y)/T;vz+=(hz-s.z)/T;}
     return{vx,vy,vz};
   }
@@ -428,7 +486,7 @@ class Match{
   /* yedek top kullanılınca eski top saha dışında kalır: yuvarlanır, durur; en çok 4 tane görünür kalır (görevliler toplar) */
   disToplarAdim(dt){
     for(let i=this.disToplar.length-1;i>=0;i--){const o=this.disToplar[i];o.t+=dt;
-      topFizikAdim(o,dt,false,this.R);
+      topFizikAdim(o,dt,false,this.R,this.kosullar);
       if(!this.panoSiniri(o)){this.disToplar.splice(i,1);continue;}
       /* panodan seken eski top sahaya geri yuvarlanmaz: çizginin 0,8 m dışında durur (N10; oyunda ikinci top olmaz) */
       if(Math.abs(o.x)<PL&&o.z>0&&o.z<PW){const dx=PL-Math.abs(o.x),dz=Math.min(o.z,PW-o.z);

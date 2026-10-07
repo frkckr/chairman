@@ -135,7 +135,7 @@ Object.assign(Match.prototype,{
   /* top nerede durur (kariyeri değil, kopyayı ilerletir): panolarda durur; tribüne giderse null */
   topDuracagiYer(){
     const b=this.ball,o={x:b.x,y:b.y,z:b.z,vx:b.vx,vy:b.vy,vz:b.vz,egri:b.egri||0};
-    for(let i=0;i<360;i++){topFizikAdim(o,1/30,false,this.R);if(!this.panoSiniri(o))return null;if(o.y<0.01&&Math.abs(o.vy)<0.01&&hyp(o.vx,o.vz)<0.15)break;}
+    for(let i=0;i<360;i++){topFizikAdim(o,1/30,false,this.R,this.kosullar);if(!this.panoSiniri(o))return null;if(o.y<0.01&&Math.abs(o.vy)<0.01&&hyp(o.vx,o.vz)<0.15)break;}
     return{x:o.x,z:o.z};
   },
   /* duran top için top: atış yerinin hemen yanında (≤2,5 m) duracaksa atan onu alır; değilse en yakın top toplayıcı elindeki topu verir,
