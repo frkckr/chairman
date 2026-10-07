@@ -1,6 +1,6 @@
 # Chairman — maç motoru gerçekçilik planı
 
-**Durum (2026-10-07):** Motor odağı (kullanıcı kararı; YOL_HARITASI “Güncel karar özeti” 2026-10-07): kullanıcı “tamam” diyene kadar bütün geliştirme bu plandadır; motor kararlarını Claude verir ve görünür yazar. Sıra **M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11**: M0 (araç ve hız) eklendi, T3 profil kapısına daraltıldı (kabiliyet ekonomisi ileride veritabanıyla), T9 top fiziği (T9a, öne alındı) ve vuruş (T9b) olarak bölündü (§4, §5). §7: 1–2 verilmişti; 3, 4, 5 ve 7 bu tarihte kesinleştirildi (§7'de yazılı); 6 ve 8 T10'da kullanıcıya sorulur. Kontrol üç kademedir (CLAUDE.md “Kontrol”). M0 aynı gün tamamlandı (aşağıda “M0 — Sonuç”); sıradaki T2, taban `araclar/taban/m0.json`.
+**Durum (2026-10-07):** Motor odağı (kullanıcı kararı; YOL_HARITASI “Güncel karar özeti” 2026-10-07): kullanıcı “tamam” diyene kadar bütün geliştirme bu plandadır; motor kararlarını Claude verir ve görünür yazar. Sıra **M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11**: M0 (araç ve hız) eklendi, T3 profil kapısına daraltıldı (kabiliyet ekonomisi ileride veritabanıyla), T9 top fiziği (T9a, öne alındı) ve vuruş (T9b) olarak bölündü (§4, §5). §7: 1–2 verilmişti; 3, 4, 5 ve 7 bu tarihte kesinleştirildi (§7'de yazılı); 6 ve 8 T10'da kullanıcıya sorulur. Kontrol üç kademedir (CLAUDE.md “Kontrol”). M0 aynı gün tamamlandı (aşağıda “M0 — Sonuç”); T2 de uygulandı (aşağıda “T2 — Sonuç”; kapanış kullanıcının film şeridi incelemesini bekliyor), sıradaki T3, taban `araclar/taban/t2.json`.
 
 **Durum (2026-10-04):** T0 ve T1 tamamlandı (ölçümler ve sınırlar YOL_HARITASI T0/T1). §7.2 kararı: yürüme hedefi en az %55 (ulaşılan %55,6). Sıradaki T2; §7.1 kararı verildi (2026-10-04): amaçlı atak. Kullanıcı isteğiyle depoya alındı; turlar [YOL_HARITASI](YOL_HARITASI.md#maç-motoru-gerçekçilik-planı-2026-10-03) “Maç motoru gerçekçilik planı” bölümünde T0–T11 maddeleridir. Uygulama T0 ile başlar. §7'deki diğer kararlar (3–8) açıktır; uygulayıcı bunları sessizce kesinleştirmez, ilgili tura gelince kullanıcıya sorar. Ölçüm araçlarının ilk ikisi eklendi: `araclar/olcumler/r-karne.js` ve `araclar/oyuncu-karnesi.js` (Ek F).
 
@@ -162,7 +162,9 @@ Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi
 
 **Amaç.** Oyuncu topu alınca bakabilsin, taşıyabilsin, bekleyebilsin; pas en ilerideki adama değil devamı olan adama gitsin.
 
-**2026-10-07 eki.** Hedef tablosu (`araclar/mac-deneme.js`) bu turda gerçek değerlere çekilir: toplam şut 18–28, gol 2–3,2, kurtarış %65–75, xG/şut buna göre ~0,10 (§7.7 kararı). Amaçlı atak daha çok ve daha iyi pozisyon üretmeli; şut sayısı T7'de tamamlanır. Taban `araclar/taban/m0.json`.
+**2026-10-07 eki.** Hedef tablosu: §7.7'nin düzeltilmiş kararı (şut 8–14, gol 1,8–3,0 kalır; kurtarış oranı bilgi satırı). Taban `araclar/taban/m0.json`.
+
+**T2 — Sonuç (2026-10-07; ayrıntı YOL_HARITASI T2; kapanış kullanıcının film şeridi incelemesini bekliyor).** Uygulanan: baskı süresi, devam değeri, 8 yön × 5/10 m taşıma, bekle/koru, sabır eşiği (takım ayarından; baskıda, son üçte birde ve topu tuttukça azalır), topu tutarken 5–8 Hz düşünme ve olay tetikleri, sahiplik boyu kişisel karar sapması, pas kalibrasyonu (vuruş hatası toleransı, ofsayt riski, hedef forvette kazanma/ikinci top ayrı, ara pası çarpanı 0,85). 80 maçta: top ayakta ortanca 0,85 → 1,19 sn, sahiplik başına pas 1,65 → 3,17, forvete pas %61 → 29,5, pas boyu 26,6 → 20,9 m, PPDA 5,3 → 9,9, Brier 18,5 → 11,2. Kabulde dışarıda: taşıma %22, boş sahiplik %27, kanada pas %11,5, pas boyu, şutun yeri (%36 içeriden, 19,9 m); hedef tablosunda pas isabeti %86, faul 5,2, hava topu 1,8, korner, taç. Bunlar T4 (bire bir), T5–T6 (ikili mücadele), T7 (yerleşim, pres tetikleri, koşular) ile ele alınır; ara pası çarpanının kök nedeni (geriye koşan savunmacının varışı) T5'tedir.
 
 **Yapılacaklar**
 1. **Baskı süresi.** Saf `baskiSuresi(m,p)`: en yakın rakibin topa varış süresi (`varisZamani`). Taşıma, bekleme ve dönme kararlarının ortak girdisi.
@@ -312,7 +314,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 | Tur | Animasyon işi |
 |---|---|
 | T1 | Boşta pozlar ve yürüyüş (yapıldı) |
-| T2 | Topu taşıma, bakınma, topu ayağının altında bekletme, sırtı dönükken dönme |
+| T2 | Topu taşıma, bakınma, topu ayağının altında bekletme, sırtı dönükken dönme (yapıldı 2026-10-07: taşıma duruşu, bekletme pozu tabanla topun üstünde, bakınırken baş kalkar, dönüş dokunuşu `sonDokunus.donus`; poz galerisinde üç satır) |
 | T4 | Çalım hareketlerinin ayak yolları (IK hedefi topun çevresinde; makas, çekme, içe kesme); yutan savunmacının yanlış yöne adımı; top saklarken gövdeyi araya koyma |
 | T5 | Önden blok, şut bloğuna atlama, takılıp düşme ve yerden kalkma; omuz omuza itişme; dönen topa hamle |
 | T6 | Yer kapma (kolla itişme, tutma), birlikte sıçrama ve havada çarpışma, iniş |
@@ -379,7 +381,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 4. **Çekirdek dosyaların açılması ve yeni dosyalar.** `mac-dizilis.js`, `mac-kurallar.js`, `mac-motoru.js` (top fiziği); yeni `mac-profil.js`, `mac-takim.js`, `mac-durantop.js`. **Karar (Claude, 2026-10-07): açılır; üç yeni dosya gelir, `index.html` sırası ve `ad-denetimi.js` ile.**
 5. **Duran top süresi.** Tehlikeli duran toplarda hazırlığın 10–14 saniyeye uzaması. **Karar (Claude, 2026-10-07): 10–14 sn; N10 sonrası ölçülen ortanca 12,5 sn zaten aralıkta, T8 yalnız “görevliler yerinde ya da azami süre” koşulunu kurar.**
 6. **Sakatlık sıklığı ve değişiklik hakkı.** Gerçekte maç başına yaklaşık bir süre kayıplı sakatlık olur. Motor bugün 5 değişikliğe izin veriyor ([js/mac-kurallar.js:26](js/mac-kurallar.js)); dönem kuralı kararı. **Oyun kuralıdır; T10'da kullanıcıya sorulur.** Öneri: maç başına ~0,3 tedavi gerektiren sakatlık, 5 değişiklik (günümüz kuralı).
-7. **Kurtarış oranı (~%50).** Bu turlarla düzelmez; şut hedefinin yeniden ele alınmasını gerektirir. **Karar (Claude, 2026-10-07): hedef tablosu T2'de gerçek değerlere çekilir — toplam şut 18–28, gol 2–3,2, kurtarış %65–75, xG/şut ~0,10; T7 pozisyon üretimiyle tamamlar.**
+7. **Kurtarış oranı (~%50).** Bu turlarla düzelmez; şut hedefinin yeniden ele alınmasını gerektirir. **Karar (Claude, 2026-10-07; aynı gün T2 sırasında düzeltildi):** ilk verilen "toplam şut 18–28, gol 2–3,2, kurtarış %65–75" 10 dakikalık maçla çelişir: top ~420 sn oyunda, amaçlı atakta ~45 sahiplik olur; 18–28 şut için sahipliklerin yarısı şutla bitmeli (gerçekte ~%10–12). **Şut 8–14 ve gol 1,8–3,0 kalır** (maç 90 dakikanın özetidir: önemli olaylar gerçeğin dakika başına 2,5–3 katı). Kurtarış oranı şutun kalitesinin sonucudur, bilgi satırı olarak izlenir (gerçekte ceza sahası içi isabetli şutta %55–65, dışarıdan %75–85); T2 sonunda %55,6. T7 ve T9b sonunda yeniden ele alınır.
 8. **Hava koşulları ve görünümü.** Yağmur ve rüzgâr maçta gösterilecek mi? **Görünüm kararıdır; T10'da kullanıcıya sorulur.** T9a yalnız motor kapısını (`kosullar`) kurar, varsayılan kuru ve rüzgârsızdır.
 
 ---

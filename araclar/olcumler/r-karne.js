@@ -16,7 +16,10 @@ module.exports={
     ['Hareket: topa >25 m iken >4 m/sn %','rUzakKosu',1,[null,25,'T1']],['Hareket: 16+ saha oyuncusu koşuyor (anların) %','rKalabalik',1,[null,25,'T1']],
     ['Hareket: ortalama hız (m/dk)','rHizDk',0,[140,180,'T1']],['Hareket: >3 m/sn² ivmelenme / oyuncu·dk','rIvme',1,[null,5,'T1']],
     ['Top ayakta: ortanca (sn)','rAyakta',2,[1.2,2.0,'T2']],['Top ayakta: 1 sn\'den kısa %','rAyaktaKisa',1,[null,45,'T2']],['Top taşıma: >5 m %','rTasima',1,[25,35,'T2']],
-    ['Sahiplik: tamamlanan pas ort.','rSeqPas',2,[2.5,4,'T2']],['Sahiplik: ortalama süre (sn)','rSeqSure',1],['Sahiplik: pas yapılamadan biten %','rSeqBos',1,[null,25,'T2']]]
+    ['Sahiplik: tamamlanan pas ort.','rSeqPas',2,[2.5,4,'T2']],['Sahiplik: ortalama süre (sn)','rSeqSure',1],['Sahiplik: pas yapılamadan biten %','rSeqBos',1,[null,25,'T2']],
+    /* T2 (2026-10-07): 10+ paslı sahiplik, pasın alıcısı (karar katmanının hedeflediği arkadaş; oyuncu-karnesi.js'teki gruplarla aynı), pas boyu */
+    ['Sahiplik: 10+ paslı %','rSeq10',1,[3,null,'T2']],
+    ['Pas alıcısı: forvet %','rAliciForvet',1,[null,30,'T2']],['Pas alıcısı: kanat %','rAliciKanat',1,[15,null,'T2']],['Pas boyu ort. (m)','rPasBoy',1,[16,20,'T2']]]
     .concat(R_KAYIP.map(([k,ad])=>['Top kaybı nedeni: '+ad+' %','rKayip_'+k,1]))
     .concat([['PPDA (rakibin kendi %60\'ında pas / savunma eylemi)','rPpda',1,[7,12,'T2']],
     ['Şut: ceza sahası içinden %','rSutKutu',1,[55,null,'T2']],['Şut: ortanca mesafe (m)','rSutMesafe',1,[14,16,'T2']],
@@ -38,11 +41,16 @@ module.exports={
     let sut=0,sutKutu=0,gol=0,golDuran=0;const sutL=[];
     /* duran top */
     let onceki=null,lastDu=null,duT0=0;const bekleyen=[],korner=[],baraj=[],serbest=[],hazirlik=[];
+    /* pasın alıcısı ve boyu (T2) */
+    const grup=q=>!q?'-':q.rol==='GK'?'kaleci':q.mevki&&q.mevki.bek?'bek':q.rol==='DEF'?'stoper':q.mevki&&q.mevki.kanat?'kanat':q.rol==='OS'?'merkez':'forvet';
+    let pasN=0,pasL=0,alFv=0,alKn=0,alN=0;
     const kapat=(m,neden)=>{if(!seq)return;seqs.push({sure:m.t-seq.t0,pas:m.ist.pasTamam[seq.team]-seq.pt0,neden});seq=null;};
     const kutuda=(m,p,t)=>{const gx=m.dir[t]*R_PL;return Math.abs(p.x-gx)<R_CU&&Math.abs(p.z-R_MZ)<R_CW;};
     return{
       dinle(ad,v,m){if(!m)return;const b=m.ball;
-        if(ad==='pass'||ad==='cross'){if(v.p&&sahipP===v.p)ayakta.push(m.t-sahipT);if(v.p){son.pas={t:m.t,team:v.p.team};if(b.x*m.dir[v.p.team]<10.5)ppdaPas++;}}
+        if(ad==='pass'||ad==='cross'){if(v.p&&sahipP===v.p)ayakta.push(m.t-sahipT);if(v.p){son.pas={t:m.t,team:v.p.team};if(b.x*m.dir[v.p.team]<10.5)ppdaPas++;}
+          if(ad==='pass'&&v.L!=null){pasN++;pasL+=v.L;}
+          if(v.q&&v.q.team!=null){const g=grup(v.q);alN++;if(g==='forvet')alFv++;else if(g==='kanat')alKn++;}}
         else if(ad==='shot'){sut++;if(v.p&&kutuda(m,v.p,v.p.team))sutKutu++;if(v.dist!=null)sutL.push(v.dist);if(v.p&&sahipP===v.p)ayakta.push(m.t-sahipT);}
         else if(ad==='header'){son.kafa={t:m.t};if(v.shot){sut++;sutKutu++;}}
         else if(ad==='mudahale'){if(v.p&&b.x*m.dir[1-v.p.team]<10.5)ppdaEylem++;}
@@ -88,10 +96,11 @@ module.exports={
       bitir(){const tk=Object.values(kayip).reduce((a,c)=>a+c,0),ham={
           rDurYuru:[tDY,tOy],rDepar:[tDep,tOy],rUzakKosu:[tUzakKosu,tUzak],rKalabalik:[kalabalik,orn],
           rAyaktaKisa:[ayakta.filter(x=>x<1).length,ayakta.length],rTasima:[tasima.filter(t=>t.yol>5).length,tasima.length],
-          rSeqBos:[seqs.filter(s=>s.pas===0).length,seqs.length],rSutKutu:[sutKutu,sut],rGolDuran:[golDuran,gol],
+          rSeqBos:[seqs.filter(s=>s.pas===0).length,seqs.length],rSeq10:[seqs.filter(s=>s.pas>=10).length,seqs.length],
+          rAliciForvet:[alFv,alN],rAliciKanat:[alKn,alN],rSutKutu:[sutKutu,sut],rGolDuran:[golDuran,gol],
           rKornerGol:[korner.filter(k=>k.gol).length,korner.length],rBarajGol:[baraj.filter(k=>k.gol).length,baraj.length]};
         for(const [k] of R_KAYIP)ham['rKayip_'+k]=[kayip[k]||0,tk];
-        return{ham,rHizDk:tOy?mes/tOy*60:NaN,rIvme:tOy?efor/(tOy/60):NaN,rAyakta:ortanca(ayakta),rSeqPas:ort(seqs.map(s=>s.pas)),rSeqSure:ort(seqs.map(s=>s.sure)),
+        return{ham,rPasBoy:pasN?pasL/pasN:NaN,rHizDk:tOy?mes/tOy*60:NaN,rIvme:tOy?efor/(tOy/60):NaN,rAyakta:ortanca(ayakta),rSeqPas:ort(seqs.map(s=>s.pas)),rSeqSure:ort(seqs.map(s=>s.sure)),
           rPpda:ppdaEylem?ppdaPas/ppdaEylem:NaN,rSutMesafe:ortanca(sutL),rKornerKutu:ort(korner.map(k=>k.kutu)),rKornerGeriHiz:ort(korner.map(k=>k.geriHiz).filter(x=>x===x)),
           rBarajKisi:ort(baraj.map(k=>k.kisi)),rSerbestKutu:ort(serbest),rDuranHazirlik:ortanca(hazirlik)};}
     };
