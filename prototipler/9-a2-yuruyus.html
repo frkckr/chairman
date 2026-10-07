@@ -1,0 +1,133 @@
+<!doctype html>
+<!-- Chairman — animasyon karşılaştırma sayfası (2026-10-07 gece, kullanıcı kararı). Aynı yol ve hız profilinde üç figür: A2'siz (bugünkü mantık),
+     A2 (biyomekanik yürüyüş, pivot, ataletli geçiş, bekleyiş canlılığı) ve A2 başka kimlik. Yeni her hareket bu kalıpla gösterilir: önce/sonra ve
+     farklı kimlik, aynı sahne. Gerçekçilik planı §4 A2 ve Ek G. Oyun koduna bağlı değildir (oyuncak figür); Three.js r128 CDN. -->
+<html lang="tr"><head><meta charset="utf-8"><title>A2 örneği — A2'siz ve A2 yürüyüş</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;background:#15140f;color:#e8e2d4;font:13px/1.4 system-ui,sans-serif}
+#kap{position:relative;max-width:960px;margin:0 auto}
+canvas{display:block;width:100%;height:auto;background:#000}
+.etk{position:absolute;top:8px;right:8px;width:30%;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.etk div{background:rgba(0,0,0,.62);padding:6px 9px;border-radius:4px;font-size:11.5px}
+.etk b{display:block;font-size:12.5px;margin-bottom:2px}
+.etk i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+#alt{position:absolute;bottom:8px;left:8px;right:8px;background:rgba(0,0,0,.6);padding:6px 9px;border-radius:4px;font-size:12px}
+</style></head><body>
+<div id="kap">
+<canvas id="c" width="960" height="600"></canvas>
+<div class="etk">
+  <div><b><i style="background:#c8281e"></i>Üst sıra — A2'siz (bugünkü mantık)</b>sabit kadans, adım hıza uymaz (ayak kayar), kollar sabit, dönüş yerinde döndürme, poz anında değişir, bekleyiş donuk</div>
+  <div><b><i style="background:#2b4fa8"></i>Orta sıra — A2, oyuncu 1</b>hıza bağlı adım ve kadans, pelvis bob/sway, omuz–kalça ters burulma, kol salınımı, ivmeye eğilme, dönüşe yatış + kısa adımlı pivot, ataletli geçiş, nefes ve ağırlık aktarımı</div>
+  <div><b><i style="background:#d9b53a"></i>Alt sıra — A2, oyuncu 2 (başka kimlik)</b>aynı yol: kısa adım + yüksek kadans, dik duruş, geniş kol, farklı nefes temposu</div>
+</div>
+<div id="alt"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const G=9.81,clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t,smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+const canvas=document.getElementById('c'),renderer=new THREE.WebGLRenderer({canvas,antialias:false});renderer.setPixelRatio(1);renderer.setSize(960,600,false);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x101a12);
+const camera=new THREE.PerspectiveCamera(34,960/600,0.1,100);camera.position.set(-1.5,9,12);camera.lookAt(-1.5,0.3,0.3);
+scene.add(new THREE.HemisphereLight(0xdfe8ff,0x2b4a2a,1.0));const sun=new THREE.DirectionalLight(0xffe8c0,0.75);sun.position.set(3,8,5);scene.add(sun);
+const LAM=c=>new THREE.MeshLambertMaterial({color:c});
+const zemin=new THREE.Mesh(new THREE.PlaneGeometry(40,16),LAM(0x2e7a36));zemin.rotation.x=-Math.PI/2;scene.add(zemin);
+for(const z of[-3.6,0,3.6]){const l=new THREE.Mesh(new THREE.PlaneGeometry(14,0.05),new THREE.MeshBasicMaterial({color:0xd8dcc8}));l.rotation.x=-Math.PI/2;l.position.set(-1.5,0.004,z+0.9);scene.add(l);}
+function kutu(w,h,d,m,parent,x,y,z){const g=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);g.position.set(x||0,y||0,z||0);parent.add(g);return g;}
+/* ---- figür: pelvis → gövde → baş; omuzlar gövdede, kalçalar pelviste. Yerel +z ileri, +x sol ---- */
+function figur(forma,ten,sort){
+  const F={root:new THREE.Group()};scene.add(F.root);
+  F.pelvis=new THREE.Group();F.root.add(F.pelvis);kutu(0.34,0.18,0.2,LAM(sort),F.pelvis,0,0.06,0);
+  F.govde=new THREE.Group();F.govde.position.set(0,0.12,0);F.pelvis.add(F.govde);kutu(0.38,0.5,0.22,LAM(forma),F.govde,0,0.28,0);
+  F.bas=new THREE.Group();F.bas.position.set(0,0.6,0);F.govde.add(F.bas);kutu(0.2,0.22,0.2,LAM(ten),F.bas,0,0.15,0);kutu(0.2,0.08,0.21,LAM(0x2a1a10),F.bas,0,0.24,0);
+  const kol=sx=>{const u=new THREE.Group();u.position.set(sx*0.25,0.5,0);F.govde.add(u);kutu(0.1,0.3,0.1,LAM(forma),u,0,-0.15,0);
+    const a=new THREE.Group();a.position.set(0,-0.3,0);u.add(a);kutu(0.09,0.28,0.09,LAM(ten),a,0,-0.14,0);return{u,a};};
+  const bacak=sx=>{const u=new THREE.Group();u.position.set(sx*0.1,0,0);F.pelvis.add(u);kutu(0.13,0.44,0.14,LAM(sort),u,0,-0.22,0);
+    const a=new THREE.Group();a.position.set(0,-0.44,0);u.add(a);kutu(0.11,0.44,0.12,LAM(ten),a,0,-0.22,0);kutu(0.11,0.08,0.24,LAM(0x111111),a,0,-0.46,0.06);return{u,a};};
+  F.kolL=kol(1);F.kolR=kol(-1);F.bacakL=bacak(1);F.bacakR=bacak(-1);
+  return F;
+}
+/* eklem değerleri: hL/hR kalça öne (+), kL/kR diz bükme (+), sL/sR omuz öne (+), eL/eR dirsek bükme (+), lean öne, roll (dönüşe yatış), pyaw pelvis, tyaw gövde, hyaw baş, bob, sway, crouch */
+const EKLEM=['hL','hR','kL','kR','sL','sR','eL','eR','lean','roll','pyaw','tyaw','hyaw','bob','sway','crouch'];
+function uygula(F,J,yaw,x,z){
+  const a1L=J.hL,a2L=J.hL-J.kL,a1R=J.hR,a2R=J.hR-J.kR;
+  const ayakL=0.44*Math.cos(a1L)+0.44*Math.cos(a2L),ayakR=0.44*Math.cos(a1R)+0.44*Math.cos(a2R);
+  const kalcaY=0.05+Math.max(ayakL,ayakR)-J.crouch+J.bob;
+  F.root.position.set(x,kalcaY,z);F.root.rotation.y=yaw;
+  F.pelvis.position.set(J.sway,0,0);F.pelvis.rotation.set(0,J.pyaw,J.roll);
+  F.govde.rotation.set(J.lean,J.tyaw,0);F.bas.rotation.set(-J.lean*0.6,J.hyaw,0);
+  F.bacakL.u.rotation.x=-J.hL;F.bacakL.a.rotation.x=J.kL;F.bacakR.u.rotation.x=-J.hR;F.bacakR.a.rotation.x=J.kR;
+  F.kolL.u.rotation.x=-J.sL;F.kolL.a.rotation.x=-J.eL;F.kolR.u.rotation.x=-J.sR;F.kolR.a.rotation.x=-J.eR;
+}
+/* ---- ortak yol: hız (m/sn) ve yön hedefi zamana göre; aynı profil üç figürde ---- */
+const P={yuru:1.3,hizlan:1.5,kos:0.8,donus:0.8,hizlan2:0.5,kosGeri:0,yavasla:1.0,bekle:2.2};
+P.v1=1.4;P.v2=4.0;P.v3=3.6;
+function profil(t){let s=t;
+  if(s<P.yuru)return{v:P.v1,faz:'yürüyüş 1,4 m/sn',yon:1};s-=P.yuru;
+  if(s<P.hizlan)return{v:lerp(P.v1,P.v2,s/P.hizlan),faz:'hızlanma',yon:1};s-=P.hizlan;
+  if(s<P.kos)return{v:P.v2,faz:'koşu 4 m/sn',yon:1};s-=P.kos;
+  if(s<P.donus){const u=s/P.donus;return{v:u<0.5?lerp(P.v2,0.9,u*2):lerp(0.9,1.6,(u-0.5)*2),faz:'180° dönüş',yon:1,donus:u};}s-=P.donus;
+  if(s<P.hizlan2)return{v:lerp(1.6,P.v3,s/P.hizlan2),faz:'geri koşu',yon:-1};s-=P.hizlan2;
+  if(s<P.kosGeri)return{v:P.v3,faz:'geri koşu 3,6 m/sn',yon:-1};s-=P.kosGeri;
+  if(s<P.yavasla)return{v:lerp(P.v3,0,s/P.yavasla),faz:'duruş',yon:-1};s-=P.yavasla;
+  return{v:0,faz:'bekleyiş'+(s>0.9?' · geri dönüş':''),yon:s>0.9?1:-1,bekle:s};}
+/* geri koşu süresi: figür başladığı yere dönsün (sayısal çözüm) */
+function netYol(kosGeri){P.kosGeri=kosGeri;let x=0,yaw=Math.PI/2,t=0;const dt=1/120,T=P.yuru+P.hizlan+P.kos+P.donus+P.hizlan2+kosGeri+P.yavasla;
+  while(t<T){const q=profil(t);const yawH=q.donus!=null?lerp(Math.PI/2,-Math.PI/2,q.donus):q.yon>0?Math.PI/2:-Math.PI/2;yaw=yawH;x+=q.v*Math.sin(yaw)*dt;t+=dt;}return x;}
+{let a=0,b=6;for(let i=0;i<30;i++){const m=(a+b)/2;if(netYol(m)>0)a=m;else b=m;}P.kosGeri=(a+b)/2;}
+const T_CYC=P.yuru+P.hizlan+P.kos+P.donus+P.hizlan2+P.kosGeri+P.yavasla+P.bekle;
+/* ---- yürüyüş üreticileri ---- */
+function hedefBos(){const J={};for(const k of EKLEM)J[k]=0;return J;}
+/* A2'siz: sabit kadans, genlik hızdan, kol sabit, dönüşte poz değişmez, bekleyişte donuk */
+function a2siz(S,q,dt){const J=hedefBos();
+  if(q.v>0.05){S.faz+=2*Math.PI*1.8*dt;const A=clamp(q.v*0.22,0.15,0.75);
+    J.hL=A*Math.sin(S.faz);J.hR=A*Math.sin(S.faz+Math.PI);J.kL=0.9*A*Math.max(0,Math.sin(S.faz+0.9));J.kR=0.9*A*Math.max(0,Math.sin(S.faz+0.9+Math.PI));}
+  else{J.hL=0.02;J.hR=-0.02;J.kL=J.kR=0.04;}
+  J.sL=J.sR=-0.12;J.eL=J.eR=0.4;return J;}
+/* A2: biyomekanik yürüyüş + ataletli geçiş + kimlik */
+function a2(S,q,dt,K,t){const J=hedefBos(),v=q.v,kosuP=clamp((v-1)/3,0,1);
+  const donuyor=Math.abs(S.omega)>1.5,sallan=q.bekle!=null&&q.bekle>0.9&&q.bekle<1.9;
+  if(v>0.05||sallan){
+    const f=(0.55+1.05*Math.sqrt(Math.max(v,0.3)/(G*0.9)))*K.kadans*(donuyor||sallan?1.6:1);S.faz+=2*Math.PI*f*dt;
+    const adim=v/(2*f),A=donuyor||sallan?0.22:clamp(Math.asin(clamp(adim/1.76,0,0.95))*K.adim,0.18,0.72);
+    const diz=(0.5+0.8*kosuP)*(donuyor?0.6:1);
+    J.hL=A*Math.sin(S.faz)+0.04;J.hR=A*Math.sin(S.faz+Math.PI)+0.04;
+    J.kL=diz*Math.max(0,Math.sin(S.faz+0.9))+(donuyor?0.3:0.06);J.kR=diz*Math.max(0,Math.sin(S.faz+0.9+Math.PI))+(donuyor?0.3:0.06);
+    const kolA=(0.2+0.4*kosuP)*K.kol;J.sL=-kolA*Math.sin(S.faz)-0.05;J.sR=kolA*Math.sin(S.faz)-0.05;J.eL=J.eR=0.35+0.95*kosuP+K.dirsek;
+    J.bob=0.018*(0.4+0.6*kosuP)*Math.cos(2*S.faz)*K.bob;J.sway=0.02*Math.sin(S.faz)*(donuyor?0.5:1);
+    J.pyaw=0.11*Math.sin(S.faz)*(0.4+0.6*Math.min(v/2,1));J.tyaw=-0.7*J.pyaw;
+    J.crouch=donuyor?0.05:0.012*kosuP;}
+  else{/* bekleyiş: ayaklar açık, nefes, ağırlık aktarımı, bakış gezinir */
+    const b=q.bekle||0;J.hL=0.05;J.hR=-0.05;J.kL=0.06;J.kR=0.08;J.sL=-0.08;J.sR=-0.1;J.eL=0.3+K.dirsek;J.eR=0.35+K.dirsek;
+    J.bob=0.004*Math.sin(2*Math.PI*K.nefes*t);J.lean=0.015*Math.sin(2*Math.PI*K.nefes*t)+K.durus;
+    J.sway=(Math.floor(b/2.4)%2?1:-1)*0.028;J.hyaw=0.12*Math.sin(2*Math.PI*0.13*t+K.faz0);}
+  J.lean+=clamp(0.09*S.ivme,-0.3,0.3)+0.05*kosuP+K.durus;
+  J.roll=-clamp(0.055*v*S.omega,-0.33,0.33);J.hyaw+=clamp(S.omega*0.28,-0.6,0.6);
+  return J;}
+/* ---- figür durumları ---- */
+const RENK=[[0xc8281e,0xe0b48a,0xf2f2f2],[0x2b4fa8,0xe0b48a,0xf2f2f2],[0xd9b53a,0xb57a4a,0x24305a]];
+const X0=-6.0;
+const FIG=[{z:-3.6,tur:'a2siz'},{z:0,tur:'a2',K:{kadans:1,adim:1,kol:1,dirsek:0,bob:1,nefes:0.27,durus:0,faz0:0}},{z:3.6,tur:'a2',K:{kadans:1.12,adim:0.86,kol:1.35,dirsek:0.2,bob:1.3,nefes:0.33,durus:-0.035,faz0:2}}]
+  .map((f,i)=>Object.assign(f,{F:figur(...RENK[i]),x:X0,yaw:Math.PI/2,faz:0,omega:0,ivme:0,vOnce:0,J:hedefBos(),JV:hedefBos()}));
+const alt=document.getElementById('alt');
+let son=null,t=0;
+function kare(now){requestAnimationFrame(kare);if(son===null)son=now;const dt=Math.min(0.05,(now-son)/1000);son=now;t+=dt;
+  const tc=t%T_CYC,q=profil(tc);
+  for(const f of FIG){
+    /* yön: A2'siz yerinde döner (doğrusal); A2 yumuşak başlar ve biter */
+    let yawH;if(q.donus!=null)yawH=lerp(Math.PI/2,-Math.PI/2,f.tur==='a2'?smooth(q.donus):q.donus);
+    else if(q.bekle!=null&&q.bekle>0.9)yawH=f.tur==='a2'?lerp(-Math.PI/2,Math.PI/2,smooth((q.bekle-0.9)/1.0)):Math.PI/2;
+    else yawH=q.yon>0?Math.PI/2:-Math.PI/2;
+    const omega=(yawH-f.yaw)/Math.max(dt,1e-3);f.omega=f.tur==='a2'?lerp(f.omega,omega,Math.min(1,dt*12)):0;f.yaw=yawH;
+    f.ivme=lerp(f.ivme,(q.v-f.vOnce)/Math.max(dt,1e-3),Math.min(1,dt*8));f.vOnce=q.v;
+    f.x+=q.v*Math.sin(f.yaw)*dt;if(tc<dt*1.5&&t>1)f.x=X0;   /* döngü başı: aynı yere */
+    const H=f.tur==='a2'?a2(f,q,dt,f.K,t):a2siz(f,q,dt);
+    if(f.tur==='a2'){/* ataletli (kritik sönümlü) geçiş: her eklem hedefe hız sürekliliğiyle gider */
+      const w=20;for(const k of EKLEM){const e=H[k]-f.J[k];f.JV[k]+=(w*w*e-2*w*f.JV[k])*dt;f.J[k]+=f.JV[k]*dt;}}
+    else f.J=H;
+    uygula(f.F,f.J,f.yaw,f.x,f.z);}
+  alt.textContent='Aynı yol, aynı hız profili: '+q.faz+' · hız '+q.v.toFixed(1).replace('.',',')+' m/sn · döngü '+tc.toFixed(1).replace('.',',')+' / '+T_CYC.toFixed(1).replace('.',',')+' sn';
+  renderer.render(scene,camera);}
+requestAnimationFrame(kare);
+</script></body></html>

@@ -1,8 +1,8 @@
 # Chairman — maç motoru gerçekçilik planı
 
-**Durum (2026-10-07):** Motor odağı (kullanıcı kararı; YOL_HARITASI “Güncel karar özeti” 2026-10-07): kullanıcı “tamam” diyene kadar bütün geliştirme bu plandadır; motor kararlarını Claude verir ve görünür yazar. Sıra **M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11**: M0 (araç ve hız) eklendi, T3 profil kapısına daraltıldı (kabiliyet ekonomisi ileride veritabanıyla), T9 top fiziği (T9a, öne alındı) ve vuruş (T9b) olarak bölündü (§4, §5). §7: 1–2 verilmişti; 3, 4, 5 ve 7 bu tarihte kesinleştirildi (§7'de yazılı); 6 ve 8 T10'da kullanıcıya sorulur. Kontrol üç kademedir (CLAUDE.md “Kontrol”). M0 aynı gün tamamlandı (aşağıda “M0 — Sonuç”); T2 de tamamlandı (aşağıda “T2 — Sonuç”; kullanıcı onayıyla kapandı, M0 ile birlikte `main`'e alındı), T3 ve T9a aynı gece tamamlandı (aşağıda “T3 — Sonuç” ve “T9a — Sonuç”; `main`'de), sıradaki T4, taban `araclar/taban/t9a.json`.
+**Durum (2026-10-07):** Motor odağı (kullanıcı kararı; YOL_HARITASI “Güncel karar özeti” 2026-10-07): kullanıcı “tamam” diyene kadar bütün geliştirme bu plandadır; motor kararlarını Claude verir ve görünür yazar. Sıra **M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11**: M0 (araç ve hız) eklendi, T3 profil kapısına daraltıldı (kabiliyet ekonomisi ileride veritabanıyla), T9 top fiziği (T9a, öne alındı) ve vuruş (T9b) olarak bölündü (§4, §5). §7: 1–2 verilmişti; 3, 4, 5 ve 7 bu tarihte kesinleştirildi (§7'de yazılı); 6 ve 8 T10'da kullanıcıya sorulur. Kontrol üç kademedir (CLAUDE.md “Kontrol”). M0 aynı gün tamamlandı (aşağıda “M0 — Sonuç”); T2 de tamamlandı (aşağıda “T2 — Sonuç”; kullanıcı onayıyla kapandı, M0 ile birlikte `main`'e alındı), T3 ve T9a aynı gece tamamlandı (aşağıda “T3 — Sonuç” ve “T9a — Sonuç”; `main`'de). **2026-10-07 gece (kullanıcı kararı):** T4'ten önce **A2 — animasyon temeli ve hareket dili** turu eklendi (§4 A2, Ek G; karşılaştırma sayfası `prototipler/9-a2-yuruyus.html`); sıradaki A2, ardından T4; taban `araclar/taban/t9a.json`.
 
-**Durum (2026-10-07 akşam):** Kullanıcı kararıyla dürbün tamamen kaldırıldı (YOL_HARITASI N13): tur kapanışındaki önce/sonra film şeritleri yalnız başkanın loca bakışıyla (oyunda 21–26°) alınır; animasyon ve ayak ayrıntısı bu mesafede okunmalıdır. T11'in kazancı dürbüne bağlıydı: **T11 sıradan ve “hazır” tanımından çıkarıldı** (ileride ayrı karar). T3–T10 için bitirme planı (kapsam, kabul, büyüklük) onaylandı (YOL_HARITASI “Güncel karar özeti” 2026-10-07 akşam); sıra **T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10**.
+**Durum (2026-10-07 akşam):** Kullanıcı kararıyla dürbün tamamen kaldırıldı (YOL_HARITASI N13): tur kapanışındaki önce/sonra film şeritleri yalnız başkanın loca bakışıyla (oyunda 21–26°) alınır; animasyon ve ayak ayrıntısı bu mesafede okunmalıdır. T11'in kazancı dürbüne bağlıydı: **T11 sıradan ve “hazır” tanımından çıkarıldı** (ileride ayrı karar). T3–T10 için bitirme planı (kapsam, kabul, büyüklük) onaylandı (YOL_HARITASI “Güncel karar özeti” 2026-10-07 akşam); sıra **T3 → T9a → A2 → T4 → T5 → T7 → T8 → T6 → T9b → T10** (A2 aynı gece eklendi).
 
 **Durum (2026-10-04):** T0 ve T1 tamamlandı (ölçümler ve sınırlar YOL_HARITASI T0/T1). §7.2 kararı: yürüme hedefi en az %55 (ulaşılan %55,6). Sıradaki T2; §7.1 kararı verildi (2026-10-04): amaçlı atak. Kullanıcı isteğiyle depoya alındı; turlar [YOL_HARITASI](YOL_HARITASI.md#maç-motoru-gerçekçilik-planı-2026-10-03) “Maç motoru gerçekçilik planı” bölümünde T0–T11 maddeleridir. Uygulama T0 ile başlar. §7'deki diğer kararlar (3–8) açıktır; uygulayıcı bunları sessizce kesinleştirmez, ilgili tura gelince kullanıcıya sorar. Ölçüm araçlarının ilk ikisi eklendi: `araclar/olcumler/r-karne.js` ve `araclar/oyuncu-karnesi.js` (Ek F).
 
@@ -211,6 +211,24 @@ Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi
 - Forvet dışı oyuncuların şut payı en az %30.
 - `p-tip` senaryosu: aynı sahnede hızlı kanat ile oyun kurucu kanadın seçim dağılımı belirgin farklı.
 
+### A2 — Animasyon temeli ve hareket dili (2026-10-07 gece, kullanıcı kararı; T4'ten önce)
+
+**Neden.** T1–T3 ve T9a'dan sonra robot hissinin kalan kaynağı hareketin kendisi: kadans hıza uymuyor, dönüşler yerinde döndürme, poz değişimleri ani, bekleyiş donuk, 22 oyuncu aynı yürüyor. Karşılaştırma sayfası `prototipler/9-a2-yuruyus.html` (aynı yol ve hız profilinde A2'siz / A2 / A2 başka kimlik) farkı gösterdi ve kullanıcı yöntemi benimsedi: bundan sonra her yeni hareket aynı kalıpla (önce/sonra, farklı kimlik, aynı sahne) gösterilir. Bütün pozlar kodla üretilir; hareket verisi (mocap eğrileri) ayrı karardır (§7.9).
+
+**Kapsam (E akışı, `js/animasyon.js`; motor yalnız okunur, sözleşme alanları ve `p.profil` kullanılır):**
+1. **Adım döngüleri hıza bağlı.** Kadans ve adım boyu hızdan (Froude: f ≈ 0,55 + 1,05·√(v/(g·bacak)); yürüyüşte ~1,9 adım/sn, koşuda ~2,8); yürüyüş, tırıs, koşu ve depar döngüleri ayrı eğrilerle (koşuda uçuş evresi; deparda öne eğik gövde, yüksek diz, 90° kol); geri geri koşu ve yana kayma adımı (savunmacı); ayak basma–itme evreleri. `p.kip` döngüyü seçer, hız eğrileri karıştırır.
+2. **Pelvis, omuz, baş.** Pelvis inip kalkma (adım başına) ve yana salınım, kalça–omuz ters burulma, kollar bacakla zıt fazda ve genliği hızla, baş topa/hedefe (`p.bakisYon`) ve dönüşte yeni yöne önce döner.
+3. **İvme ve fren.** Hızlanırken öne eğilme (ivmeyle orantılı), frende geri yatış ve uzun son adım (topuk); yanal ivmede içe yatış.
+4. **Dönüş.** Yerinde döndürme kalkar: dış ayak basar, iç ayak döner (plant-and-pivot); 90°'ye kadar tek adım, 180° iki adım; dönüşe yatış; motorun yön değişimi (`yon`, `yonHedef`) ve hız vektörü okunarak zamanlanır.
+5. **Ataletli geçiş (inertialization).** Bütün kanallar hedefe hız sürekliliğiyle gider (kritik sönümlü yay); kip ve eylem değişimlerinde poz sıçraması kalmaz; T5–T6 temas pozlarına geçişler de bundan yararlanır.
+6. **Kimlik.** `p.profil` (boy, yapı, çabukluk, çalışkanlık, rol) → adım boyu/kadans oranı, duruş eğimi, kol açıklığı, koşu stili (uzun adımlı / çabuk), bekleyiş tarzı; yorgunluk → düşük diz, ağır adım, dizlere dayanma. Aynı sahnede iki oyuncu farklı yürür.
+7. **Bekleyiş ve düşük efor.** Nefes, ağırlık aktarımı, bakınma, dinlenme duruşları (eller belde, gevşek, dizlere dayanma); kaleci ve hakem için kendi bekleyişleri (Ek G6, G7).
+8. **Araç.** Karşılaştırma sayfası oyun iskeletine bağlanır: `prototipler/9-a2-yuruyus.html` kalıbı `js/animasyon.js`'i yükleyen bir sahne seçiciye dönüşür (önce/sonra: eski üretici dondurulur; farklı kimlikler yan yana); `an-yakala.py` film şeridi; poz galerisi satırları; yeni ölçütler `araclar/animasyon-olcum.py`.
+
+**Kabul.** Ayak kayması adım başına ≤ 0,05 m (bugün 0,10); kadans–hız uyumu gerçek aralıkta (yürüyüş 1,7–2,1 adım/sn, koşu 2,6–3,0); eklem açısı değişimi kare başına ≤ 20° ve sarsıntı (jerk) ölçütü (galeri yazar); dönüşlerde en az bir basma adımı, yerinde dönüş yok; aynı sahnede iki kimlik ayırt edilebilir; 22 aktörde kare başına animasyon süresi ≤ 2 ms (ölçülür); kullanıcı karşılaştırma sayfasını ve loca bakışı film şeridini onaylar. Motor sonucu değişmez (`--ayni`).
+
+**Büyüklük.** 1–1,5 oturum. Ek G'nin G1 bölümü bu turdur; G2–G8 ilgili T turlarına dağıtılır (§4 “Animasyon” tablosu).
+
 ### T4 — Bire bir: hareket kütüphanesi, savunma, top saklama
 
 **Yapılacaklar**
@@ -317,17 +335,18 @@ Motor adım evresini ve basan ayağı bilir (`p.adimFaz`, `p.basanAyak`); dokunu
 
 Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon her turun ölçütlü bir işidir (2026-10-04, kullanıcı onayı); turun motor işiyle birlikte kapanır, sonraya bırakılmaz.
 
-| Tur | Animasyon işi |
+| Tur | Animasyon işi (ayrıntı Ek G; 2026-10-07 gece genişletildi) |
 |---|---|
 | T1 | Boşta pozlar ve yürüyüş (yapıldı) |
 | T2 | Topu taşıma, bakınma, topu ayağının altında bekletme, sırtı dönükken dönme (yapıldı 2026-10-07: taşıma duruşu, bekletme pozu tabanla topun üstünde, bakınırken baş kalkar, dönüş dokunuşu `sonDokunus.donus`; poz galerisinde üç satır) |
-| T4 | Çalım hareketlerinin ayak yolları (IK hedefi topun çevresinde; makas, çekme, içe kesme); yutan savunmacının yanlış yöne adımı; top saklarken gövdeyi araya koyma |
-| T5 | Önden blok, şut bloğuna atlama, takılıp düşme ve yerden kalkma; omuz omuza itişme; dönen topa hamle |
-| T6 | Yer kapma (kolla itişme, tutma), birlikte sıçrama ve havada çarpışma, iniş |
-| T7 | Jestler: pas isteme, ofsayt için el kaldırma, işaret, kaçan golde başını tutma |
-| T8 | Baraj, zıplama, perdeleme |
-| T9 | Kötü vuruş (ıska, topun altına girme) |
-| T10 | Sakatlık, tedavi, topallama |
+| A2 | Hareket temeli: hıza bağlı adım döngüleri (yürüyüş/tırıs/koşu/depar, geri ve yana adım), pelvis/omuz/baş, ivme–fren, basma adımlı dönüş, ataletli geçiş, kimlik, canlı bekleyiş; karşılaştırma sayfası ve ölçütler (Ek G1, G9) |
+| T4 | Çalım hareketlerinin ayak yolları (IK hedefi topun çevresinde; makas, çekme, içe kesme); yutan savunmacının yanlış yöne adımı; top saklarken gövdeyi araya koyma; pas, ara pası ve ilk dokunuş hazırlıkları, taşımada dokunuş sıklığı ve bakınma (Ek G2) |
+| T5 | Önden blok, şut bloğuna atlama, takılıp düşme (aktif ragdoll) ve yerden kalkma; omuz omuza itişme ve forma çekme (kol IK'sı); dönen topa hamle; faul tepkileri (Ek G4) |
+| T6 | Yer kapma (kolla itişme, tutma), birlikte sıçrama ve havada çarpışma, iniş; kafa vuruşu türleri; kalecinin hava topu ve yumruklaması (Ek G4, G6) |
+| T7 | Jestler: pas isteme, ofsayt için el kaldırma, işaret, kaçan golde başını tutma; topsuz koşu başlangıcı; savunma kayma adımı, geri koşu ve jokey duruşu; pres koşusu (Ek G3) |
+| T8 | Duran top hazırlıkları: top yerleştirme, geri adımlar, bakış ve el kaldırma, korner/serbest vuruş koşusu, baraj ve zıplama, perdeleme ve itişme, taç atışı, kale vuruşu, penaltı (Ek G5) |
+| T9b | Vuruş hazırlıkları ve takipleri: sert, plase, falso, aşırtma, vole; uzun topta ve yön değiştirmede gerilme; kötü vuruş (ıska, topun altına girme); kaleci degajı ve set duruşu (Ek G2, G6) |
+| T10 | Sakatlık, tedavi, topallama; hakem, yan hakem ve kenar hareketleri; sevinç, tepki ve beden dili çeşitleri (Ek G7, G8) |
 
 **Kabul ölçütleri (eşikler TEST başlangıç değeridir; ilk ölçümde gözden geçirilir).** Ölçüm `araclar/poz-galerisi.html` ve `an-yakala.py` ile yapılır.
 - **Galeri satırı.** Her yeni hareketin poz galerisinde zaman sıralı bir satırı vardır; sayfa hatasız açılır.
@@ -350,6 +369,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 | M0 Araç ve hız (2026-10-07) | T1 | küçük | — (test süresi) |
 | T2 Topla oyun | T0, T1, M0 | büyük | çok yüksek |
 | T3 Profil kapısı | T0 | küçük (2026-10-07'de daraltıldı) | orta |
+| A2 Animasyon temeli (2026-10-07 gece) | T1, T3 | orta | çok yüksek (robot hissinin kalan kaynağı) |
 | T9a Top fiziği | T0 | orta | yüksek (uçuş, sekme) |
 | T4 Bire bir | T2, T3 | büyük | yüksek |
 | T5 Temas | T4 | büyük | orta–yüksek |
@@ -360,9 +380,9 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 | T10 Olaylar | T5 | orta | yüksek (seyrek) |
 | T11 Adım evresi (2026-10-07 akşam sıradan çıkarıldı) | T4 | orta | — (dürbünsüz görünmez) |
 
-Önerilen sıra (2026-10-03) T0 → T1 → T2 → T3 → T4 → T5 → T7 → T8 → T6 → T9 → T10 → T11 idi. **Sıra (2026-10-07): M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10** (T11 aynı gün akşam sıradan çıkarıldı). T8 diğerlerinden bağımsızdır; ayrı oturumda paralel yürüyebilir. Bitirme planı (2026-10-07 akşam, kullanıcı onayı): tur başına dal, üç kademeli kontrol, kapanışta loca bakışıyla önce/sonra film şeridi; büyüklükler kabaca T3 ½–1, T9a ½–1, T4 1–1½, T5 1–1½, T7 1½–2, T8 1, T6 ½, T9b ½, T10 1 oturum (M0+T2 = 1 oturum ölçeğinde); pas isabeti tavanı T7 sonunda, kurtarış oranı T9b sonunda hedef tablosunda gözden geçirilir; §7.6 ve §7.8 T10 başında sorulur.
+Önerilen sıra (2026-10-03) T0 → T1 → T2 → T3 → T4 → T5 → T7 → T8 → T6 → T9 → T10 → T11 idi. **Sıra (2026-10-07): M0 → T2 → T3 → T9a → A2 → T4 → T5 → T7 → T8 → T6 → T9b → T10** (T11 aynı gün akşam sıradan çıkarıldı; A2 aynı gece eklendi). T8 diğerlerinden bağımsızdır; ayrı oturumda paralel yürüyebilir. Bitirme planı (2026-10-07 akşam, kullanıcı onayı): tur başına dal, üç kademeli kontrol, kapanışta loca bakışıyla önce/sonra film şeridi ve karşılaştırma sayfası; büyüklükler kabaca T3 ½–1, T9a ½–1, A2 1–1½, T4 1–1½, T5 1–1½, T7 1½–2, T8 1, T6 ½, T9b ½, T10 1 oturum (Ek G'nin tur başına animasyon işi her tura yaklaşık yarım oturum ekler) (M0+T2 = 1 oturum ölçeğinde); pas isabeti tavanı T7 sonunda, kurtarış oranı T9b sonunda hedef tablosunda gözden geçirilir; §7.6 ve §7.8 T10 başında sorulur.
 
-**Hazır tanımı (2026-10-07).** Motor “hazır” sayılır ve kullanıcı “tamam” diyebilir: 80 maçta robotluk karnesinin bütün T-hedefleri ve gerçek değerlere çekilmiş hedef tablosu tutuyor; `araclar/senaryolar/` içindeki bütün senaryolar geçiyor; tek işçide 1000 adım ≤250 ms; kullanıcı her turun önce/sonra film şeridini (loca bakışı; dürbün yok) onaylamış. Kabiliyet ekonomisi (veritabanı) ve T11 bu tanımın dışındadır.
+**Hazır tanımı (2026-10-07).** Motor “hazır” sayılır ve kullanıcı “tamam” diyebilir: 80 maçta robotluk karnesinin bütün T-hedefleri ve gerçek değerlere çekilmiş hedef tablosu tutuyor; `araclar/senaryolar/` içindeki bütün senaryolar geçiyor; tek işçide 1000 adım ≤250 ms; kullanıcı her turun önce/sonra film şeridini (loca bakışı; dürbün yok) ve karşılaştırma sayfasındaki hareketleri onaylamış; A2'nin animasyon ölçütleri (Ek G9) tutuyor. Kabiliyet ekonomisi (veritabanı), mocap eğrileri (§7.9) ve T11 bu tanımın dışındadır.
 
 ---
 
@@ -376,6 +396,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 - Süre bütçesi (2026-10-07): M0 sonrası bu makinede tek süreçte 1000 adım ~78 ms (`node araclar/hiz-olcum.js 3`; M0 öncesi 250). Tur başına artış %10'u geçmez, 250 ms aşılırsa bir sonraki turdan önce hız bakımı yapılır. Her tur kapanışında tek süreç süresi YOL_HARITASI'na yazılır; `mac-deneme.js`'in süre satırı paralel süredir, bütçe ölçüsü değildir.
 - Motor çizime yalnız alan ekler; her yeni alanın çizimde yedek davranışı olur.
 - Bir tur bitmeden ötekine geçilmez.
+- Yeni her hareket karşılaştırma sayfasında aynı sahnede önce/sonra ve farklı kimlikle gösterilir (2026-10-07 gece, kullanıcı kararı; kalıp `prototipler/9-a2-yuruyus.html`); hareket motor durumundan tetiklenir, motora yazmaz, pozlar kodla üretilir.
 
 ---
 
@@ -389,6 +410,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 6. **Sakatlık sıklığı ve değişiklik hakkı.** Gerçekte maç başına yaklaşık bir süre kayıplı sakatlık olur. Motor bugün 5 değişikliğe izin veriyor ([js/mac-kurallar.js:26](js/mac-kurallar.js)); dönem kuralı kararı. **Oyun kuralıdır; T10'da kullanıcıya sorulur.** Öneri: maç başına ~0,3 tedavi gerektiren sakatlık, 5 değişiklik (günümüz kuralı).
 7. **Kurtarış oranı (~%50).** Bu turlarla düzelmez; şut hedefinin yeniden ele alınmasını gerektirir. **Karar (Claude, 2026-10-07; aynı gün T2 sırasında düzeltildi):** ilk verilen "toplam şut 18–28, gol 2–3,2, kurtarış %65–75" 10 dakikalık maçla çelişir: top ~420 sn oyunda, amaçlı atakta ~45 sahiplik olur; 18–28 şut için sahipliklerin yarısı şutla bitmeli (gerçekte ~%10–12). **Şut 8–14 ve gol 1,8–3,0 kalır** (maç 90 dakikanın özetidir: önemli olaylar gerçeğin dakika başına 2,5–3 katı). Kurtarış oranı şutun kalitesinin sonucudur, bilgi satırı olarak izlenir (gerçekte ceza sahası içi isabetli şutta %55–65, dışarıdan %75–85); T2 sonunda %55,6. T7 ve T9b sonunda yeniden ele alınır.
 8. **Hava koşulları ve görünümü.** Yağmur ve rüzgâr maçta gösterilecek mi? **Görünüm kararıdır; T10'da kullanıcıya sorulur.** T9a yalnız motor kapısını (`kosullar`) kurar, varsayılan kuru ve rüzgârsızdır.
+9. **Hareket verisi (mocap eğrileri; 2026-10-07 gece).** Kodla üretilen pozların tavanı sınırlıdır: '99 dönemi oyunların doğal hareketi düşük poligonla ama hareket yakalamadan türetilmiş anahtar karelerle geldi. Kamu malı / CC0 hareket yakalama verisinden (ör. CMU veritabanı) türetilmiş eklem açısı eğrileri sayı tablosu olarak koda gömülebilir (model, doku ya da fotoğraf değil; retro görünüm aynı kalır). CLAUDE.md'deki harici veri kuralına girer; **açık karar, kullanıcıya sorulur.** Öneri: A2 veri olmadan yapılır, karşılaştırma sayfasında fark yetmezse bu seçenek açılır.
 
 ---
 
@@ -512,6 +534,75 @@ Hepsi top oyundayken (`phase==='play'`), saha oyuncuları için; rastlantı çek
 - **Duran top düzeni:** duruştan oyuna geçiş anında ceza sahasındaki hücumcu ve savunmacı sayısı, kendi yarısında kalan hücumcular ve hız ortalaması, `barajdakiler.length`, 1,6 sn içinde şut (doğrudan), 8 sn içinde şut ve gol.
 - **Yetenek–davranış ilişkisi:** oyuncu başına süreye oranlanmış sayılar ile özellik arasında Pearson r.
 
+## Ek G — Hareket dili: animasyon programı (2026-10-07 gece, kullanıcı kararı)
+
+Amaç: gerçek futbolcunun yaptığı her görünür hareketin oyunda bir karşılığı olsun; hepsi kodla üretilir, motorun durumundan tetiklenir (çizim motora yazmaz), locadan okunur, kimlikle çeşitlenir. Her madde **tetik** (motor alanı/olayı) → **hareket** (ne görünür) → **ölçüt** düzenindedir. Bölümler turlara dağıtılır (§4 “Animasyon” tablosu); yeni her hareket karşılaştırma sayfasında önce/sonra ve farklı kimlikle gösterilir (G9).
+
+**Ortak ilkeler**
+- **Hazırlık → vuruş → takip → toparlanma:** hiçbir vuruş tek karede olmaz; hazırlık süresi motorun karar ve vuruş süresinden okunur (B akışı `vurus` eyleminin evreleri), takipte bir denge adımı.
+- **Bakış niyeti önceler:** pas vermeden önce alıcıya bakış, aldatmada ters bakış (profil: yaratıcılık); şutta kaleye kısa bakış.
+- **Ağırlık ve temas:** destek ayağı topun yanında basar, gövde ağırlığı destek ayağında; iki bedenli hareketlerde temas noktaları IK ile buluşur (≤ 0,15 m).
+- **Kimlik:** adım, duruş, kol, vuruş stili tercihi (iç/dış/üst), sevinç ve itiraz tarzı profilden; yorgunluk görünür.
+- **Ölçüm:** galeri satırı, geçiş sınırı, ayak kayması, temas açıklığı, zamanlama (TEKNIK_PLAN §8 sözleşmesi, §4 “Animasyon” kabulü).
+
+### G1 — Yürüyüş, koşu ve beden (A2)
+§4 A2 maddeleri 1–7. Koşu türleri: yer tutma tırısı (gövde dik, kısa adım), hücum koşusu (öne eğik, kol itişi), savunma geri koşusu (geri geri, hız 4 m/sn'yi aşınca dönüp koşma), kaleciye dönüş yürüyüşü (ağır), depar (yüksek diz, 90° kol, gövde öne). Dinlenme: eller belde, gevşek duruş, dizlere dayanma (yorgunluk). **Ölçüt:** kadans gerçek aralıkta, ayak kayması ≤ 0,05 m, yerinde dönüş yok, iki kimlik aynı sahnede ayırt edilebilir, sarsıntı ölçütü.
+
+### G2 — Topla oyun: pas, şut, ilk dokunuş, taşıma (T4, T9b)
+- **Kısa iç ayak pas** — tetik `vurus` (stil ic, L < 20 m): kısa geri salınım, destek ayağı topun yanında, karşı kol dengede, vuruş ayağı topu süpürür, takip kısa, gövde alıcıya dönük. Ölçüt: hazırlık ≤ 0,25 sn, ayak–top teması vuruş anında ≤ 0,05 m.
+- **Uzun top ve yön değiştirme** — tetik `vurus` ile L ≥ 30 m ya da havadan: **gerilme** — iki küçük ayar adımı, destek ayağı geniş basar, gövde geri yatar, vuruş ayağı kalçadan geniş salınım, kollar açılır; vuruşta gövde öne, takipte ayak yüksek ve bir denge adımı. Kısa ve uzun pas aynı poza bağlanmaz. Ölçüt: hazırlık ≥ 0,4 sn, salınım açısı kısanın en az iki katı.
+- **Ara pası** — tetik alt `ara`: kısa hazırlık, alıcıya değil boşluğa bakış, bir önceki karede omuzun ters yöne dönmesi (aldatma; profil `oldurucuPas`).
+- **Dış ayak, topuk, dış üst** — stil `dis`/topuk (T4 Ek C hareketleriyle); dış ayakta gövde dışa döner, topukta baş öne.
+- **Orta** — tetik `orta`/`korner`: destek ayağı geniş, gövde yana yatar; kesme ortada kısa salınım, asmada uzun ve dik; takipte gövde dönüşü. Geri çevirmede iç ayak, kısa.
+- **Şut** — stil sert (uzun hazırlık, son adım uzun, destek ayağı sabitlenir, vuruş ayağı tepeye kadar takip, gövde topun üstüne), plase (kısa hazırlık, açık iç ayak, gövde öne), falso (gövde yana yatar, ayak içten dışa süpürür), aşırtma (ayak topun altına girer, gövde geri), vole / yarım vole (gövde yana, destek ayağı parmak ucunda), zayıf ayak (gövde çarpık, dar salınım; profil `zayifAyak`), ceza sahasında baskıyla acele (kısa, gövde dik). **Kötü vuruş** (T9b): ıska, topun altına girme (ayak çimi kazır), üstüne vurma. Şut sonrası: topu izleyen baş, elleri kaldırma ya da başı tutma (G8).
+- **İlk dokunuş** — tetik `kontrol` + `yuzey`: ayak içi (ayak topu karşılar, diz gevşer), dış ayak yönlü, uyluk (diz kalkar), göğüs (gövde geri, kollar açık), kafayla indirme; kontrol sonrası ilk adım yöne (`sonDokunus.yon`).
+- **Taşıma** — dokunuş sıklığı hızla (yürüyerek her adım, koşarak 2–3 adımda bir), topa bakış ile önüne bakışın değişimi, hız değiştirme adımı, gövde çalımı (T4 Ek C ayak yolları).
+- **Bakınma** — saniyede 0,4–0,6 baş çevirme (profil: görüş); sırtı dönükken omuz üstünden bakış.
+**Ölçüt:** vuruş evrelerinin süresi motorla aynı; stil–poz eşleşmesi galeri satırında; uzun topta gerilme görünür; dokunuş sıklığı hıza bağlı.
+
+### G3 — Topsuz koşular ve savunma (T7)
+- **Derin koşu başlangıcı** — tetik `kosu`: kol işaretiyle (el kaldırma ya da yere işaret) iki patlama adımı, baş pasöre; varışta ofsayt için omuz üstünden bakış.
+- **Ceza sahasına geç giriş / bindirme** — kol sallama (top isteme), hız değişimi; bindirende dış koridorda tam koşu.
+- **Savunmacı** — yana kayma adımı (dizler bükük, kollar açık), geri geri koşu ve dönüp koşma eşiği, jokey duruşu (topla rakip arasında, ağırlık öne, kollar yarı açık), kapatma (bacak uzatma, gövde yana), çizgi tutma ve ofsayt için el kaldırma, pres koşusu (kollar geniş, gövde öne), ikinci top için hazır duruş (dizler bükük, baş topta).
+- **Markaj** — rakibe hafif el teması, kornerde itişme (G5); adam paylaşımında işaret.
+**Ölçüt:** savunmacının yüzü topa dönük süre payı; geri koşuda dönüş eşiğinin zamanlaması; koşu başlangıcı `kosu` olayından ≤ 1 kare.
+
+### G4 — İkili mücadele ve temas (T4, T5, T6)
+- **Omuz omuza** — tetik `omuz`: iki beden kol IK'sıyla temas (omuz–omuz ≤ 0,15 m); kaybeden sendeler (`sendele`), kazanan gövdeyi sokar.
+- **Forma çekme / tutma** — tetik faul itme–tutma: el rakibin formasında (IK), rakibin gövdesi geriye.
+- **Top saklama** — tetik `koru`: gövde topla rakip arasında, kol rakibe uzanır, top uzak ayakta, dizler bükük.
+- **Müdahale** — ayakta (ayak uzatma, gövde öne), kayarak (gövde yan, kayma ve kalkış), blok (iki ayak, gövde kapanır), engellenme → **aktif ragdoll düşüş** (0,3–0,5 sn verlet zinciri, yere göre), yerde yatış (yüzüstü/sırtüstü), kalkış (diz, el yere, ayağa), takılmada birkaç topal adım (T10 sakatlıkta uzar).
+- **Hava topu** — yer kapma (kolla itişme), koşarak/durarak sıçrama, havada çarpışma, kafa vuruşu türleri (alın ileri, yana, geri), iniş dengesi; kaybeden ikinci topa döner.
+- **Faul ve tepki** — faul yapanın eli açık itirazı, faul yiyenin yerde kıvranması ya da çabuk kalkışı (profil: `hakemeItiraz`, agresiflik), hakemin gelişi (G7).
+**Ölçüt:** temas açıklığı ≤ 0,15 m, gövde kutuları iç içe ≤ 0,05 m, düşüşte kök hızı sürekli, temas karesi motor anından ≤ 1 kare sapar.
+
+### G5 — Duran toplar (T8)
+- **Korner** — top köşe yayına yerleştirilir (eğilme), geri geri 4–6 adım, bir an durma ve bakış, **el kaldırma** (işaret; profil ve takım kalıbı), koşu ve içe/dışa dönen vuruş; ceza sahasında bekleyenler itişir, perdeler, kol tutar; kaleci ön direkte işaret verir.
+- **Serbest vuruş** — top yerleştirme, geri adımlar (vuruşçuya göre 3–7), baraja ve kaleye bakış, hakeme bakış (düdük bekleme), kısa koşu ve vuruş; barajdakiler eller önde, vuruşta zıplar ya da eğilir; kaleci barajı işaretlerle yerleştirir; çabuk kullanımda hiçbiri yok (T8 madde 10).
+- **Taç** — topu alma, çizgiye geliş, geri adım, iki el üstten atış (uzun taçta koşu), ayaklar yerde; alıcılar çizgiye yaklaşır.
+- **Kale vuruşu** — kaleci topu altıpasa koyar, geri adım, uzun vuruş hazırlığı (gerilme) ya da kısa oyun kurma.
+- **Penaltı** — top yerleştirme, geri adımlar, bekleme (nefes, bakış), koşu ve vuruş; kaleci çizgide kol sallama, zıplama, dalış; bekleyenler yay dışında eğilmiş, düdükle içeri.
+- **Santra** — topa dokunuş ve geri pas; gol sonrası ağdan top alma (G6).
+**Ölçüt:** hazırlık süreleri motorun duran top süresiyle aynı (tehlikelide 10–14 sn); el kaldırma ve bakış evreleri galeri satırında; itişmede temas ölçütü.
+
+### G6 — Kaleci (T6, T8, T9b)
+Set duruşu (dizler bükük, eller önde), yan adımlar ve çizgi oyunu, topla göz teması, dalışlar (yan alçak/yüksek, ileri), topu göğse çekme ve yerde toplama, yumruklama, çıkış koşusu ve ayakla kapatma (açık kollar ve bacaklar), tutuş sonrası kalkış, degaj (elden: koşu ve yüksek atış; ayaktan: gerilme), topu yere koyup oyun kurma, elle yuvarlama, penaltı öncesi hareket, savunmaya komut (kol), gol yedikten sonra topu ağdan alma, bekleyiş (çizgide ağırlık değiştirme, eldivenleri düzeltme). **Ölçüt:** dalış evreleri `ucus` sözleşmesiyle; el–top teması ≤ 0,1 m; set duruşundan dalışa geçiş kare sınırında.
+
+### G7 — Hakem, yan hakem ve kenar (T10)
+- **Orta hakem** — çapraz koşu (orta tempo), düdük (el ağza), faul işareti (kol), avantaj (iki kol öne), kart (cebe el, kaldırma, oyuncuya bakış), oyuncuya yaklaşıp konuşma, korner/aut işareti, gol işareti (santraya koşu), bekleyişte eller arkada.
+- **Yan hakem** — çizgi boyunca yan koşu (yüz sahaya), bayrak kaldırma (ofsayt: yerinde durup bayrak öne), taç yönü, korner/aut işareti.
+- **4. hakem ve kenar** — değişiklik tabelası, kulübeye uyarı; hoca ayağa kalkar, işaret, itiraz; yedekler ısınma; sağlık görevlisi koşusu (T10).
+**Ölçüt:** işaretler olayla aynı karede başlar; hakemin koşusu oyun hızına yetişir (topa ortalama uzaklık ölçülür).
+
+### G8 — Sevinç, tepki ve beden dili (T10)
+Gol sevinci türleri profil ve kişilikten (koşu ve kayma, kollar açık, yumruk, takım kucaklaşması, gökyüzüne bakış, sakin); kaçan pozisyonda baş tutma, dizlere çökme; yorgunluk (dizlere dayanma, eller belde, yavaş yürüyüş); hakeme itiraz (eller açık, yaklaşma; profil `hakemeItiraz`); takım arkadaşına işaret/kızma; devre ve maç sonu yürüyüşleri, tokalaşma, taraftarı alkışlama. **Ölçüt:** sevinç süresi maç olay süresiyle aynı; aynı tohumda farklı oyuncu farklı sevinç; başkanın tepkileriyle zamanlama (js/baskan.js) korunur.
+
+### G9 — Araçlar ve ölçüm
+- **Karşılaştırma sayfası:** `prototipler/9-a2-yuruyus.html` kalıbı A2'de oyun iskeletine bağlanır: sahne seçici (yürüyüş, dönüş, pas, uzun top, şut, korner, mücadele, kaleci…), aynı sahnede önce/sonra ve farklı kimlikler yan yana; her yeni hareket burada gösterilir ve kullanıcı onaylar.
+- **Poz galerisi** (`araclar/poz-galerisi.html`): her hareketin zaman sıralı satırı, iki bedenli sahneler, temas açıklığı ve geçiş ölçüleri satırda.
+- **`an-yakala.py`:** loca bakışıyla film şeridi; önce/sonra `--onek`.
+- **Yeni ölçütler** (`araclar/animasyon-olcum.py`, A2'de): kadans–hız uyumu, ayak kayması, eklem sarsıntısı (jerk), kare başına animasyon süresi (22 aktör), temas açıklığı; sonuçlar `R:` satırları gibi tur kapanışında yazılır.
+
 ---
 
 ## Kaynaklar
@@ -546,3 +637,4 @@ Hepsi top oyundayken (`phase==='play'`), saha oyuncuları için; rastlantı çek
 - FIFA oynanış teknikleri: https://www.ea.com/games/fifa/news/fifa-19-pitch-notes-gameplay · https://www.ea.com/news/pitch-notes-fifa-23-gameplay-deep-dive · https://blog.playstation.com/?p=116374
 - PES / eFootball: https://www.fifplay.com/efootball-2026-playing-styles/ · https://pesmastery.com/pes-playing-styles/ · https://www.mynewsdesk.com/uk/bastion-uk/pressreleases/new-efootball-gameplay-details-revealed-by-konami-at-gamescom-2021-3123618 · https://godisageek.com/?p=121204
 - Olay türleri (StatsBomb): https://live-data-api-guide.statsbomb.com/api-reference/event-descriptions.html
+- Yürüyüşte kadans ve adım (Froude ilişkisi): https://en.wikipedia.org/wiki/Froude_number#Walking_Froude_number · ataletli karışım (inertialization; GDC 2018): https://www.gdcvault.com/play/1025165/Inertialization-High-Performance-Animation-Transitions · CMU hareket yakalama veritabanı (kamu malı; §7.9): http://mocap.cs.cmu.edu/
