@@ -1,22 +1,22 @@
 /* ============ Chairman — başkanın bakışı ve maç kamerası (çizim) ============
    Sahibi: A akışı (2026-10-03). Başkanın gözü başkan koltuğundadır.
    N4 (kullanıcı kararı 2026-10-04): bakış HEP topu izler. Fareyle sürükleme ve ok tuşlarıyla elle bakış, “Topu izle” düğmesi ve F tuşu kaldırıldı
-   (2026-10-03 ikinci paketteki varsayılan elle bakışın yerini alır). Dürbün elle açılır ve topa kilitlenir.
+   (2026-10-03 ikinci paketteki varsayılan elle bakışın yerini alır). Dürbün 2026-10-07'de kullanıcı kararıyla tamamen kaldırıldı: tek bakış vardır.
    Oyun sürerken bakış topa odaklıdır: topu taşıyanın hemen önü, serbest
    topta kısa balistik öngörü (topFizikAdim topun özel kopyasında; motorun önbelleklerine dokunulmaz), uzun havadan topta iniş yeri, son üçte
    birde kale ağzı. Bu kaymalar topun yönünden en fazla bir açı bütçesi kadar sapar: top hep ekranın ortasına yakın kalır. Maç öncesi, devre
    arası, maç sonu, gol sevinci ve kart anında bakisOdagi'nin ilgi noktaları izlenir. Bakış yönü (sapma/eğim) kritik sönümlü yaylarla, açısal
    hız sınırıyla ve maç zamanıyla (dt × maç hızı, alt adımlı) ilerler: 2–8× hızda geride kalmaz; duraklatmada (dt 0) hiçbir şey kıpırdamaz.
    Görüş açısı oyunda oyunAci aralığına daralır (oyunun ne kadarının kadraja girmesi gerektiğine göre), ölü topta kısa bir gecikmeyle,
-   maç öncesi/sonrası ve devre arasında geniş açıya (aci) döner. Dürbün elle açılır ve topa kilitlenir; açılış/kapanış yumuşak geçişlidir.
+   maç öncesi/sonrası ve devre arasında geniş açıya (aci) döner.
    kameraAdim durumu ilerletir (js/mac-sahnesi.js macKare sonunda), kameraUygula kameraya yerleştirir (js/arayuz.js frame). Motoru yalnız okur. */
-const KAM_B=STIL.kameralar.baskan,KAM_D=STIL.kameralar.durbun,KAM_DER=Math.PI/180;
+const KAM_B=STIL.kameralar.baskan,KAM_DER=Math.PI/180;
 /* BAKIS: o anki bakış noktası (kameranın baktığı yönde, okuyucular için); BAKIS_HEDEF: ilgi noktası (sahne koordinatı) */
 const BAKIS=new THREE.Vector3(...KAM_B.hedef),BAKIS_HEDEF=new THREE.Vector3(...KAM_B.hedef),KAM_YON=new THREE.Vector3();
 const ONCESI_BAKIS={x:0,z:0,t:-99};
-/* bakış durumu: a = başkanın bakışı, d = dürbün. y sapma (+z'den +x'e, radyan), p eğim, vy/vp hızları; fov/dfov görüş açıları;
-   gecis dürbün geçişi (0 kapalı, 1 açık); olu ölü topta geçen maç süresi; ty/tp ölü bölgede tutulan hedef */
-const KAM={a:{y:0,p:-0.2,vy:0,vp:0},d:{y:0,p:-0.2,vy:0,vp:0},fov:KAM_B.aci,dfov:KAM_D.aci,gecis:0,durbunAcik:false,olu:0,ty:0,tp:-0.2,ilk:true,mod:'sahne'};
+/* bakış durumu: a = başkanın bakışı. y sapma (+z'den +x'e, radyan), p eğim, vy/vp hızları; fov görüş açısı;
+   olu ölü topta geçen maç süresi; ty/tp ölü bölgede tutulan hedef */
+const KAM={a:{y:0,p:-0.2,vy:0,vp:0},fov:KAM_B.aci,olu:0,ty:0,tp:-0.2,ilk:true,mod:'sahne'};
 const KAM_TOP={x:0,y:0,z:0,vx:0,vy:0,vz:0,egri:0,ust:0},KAM_INIS={x:0,y:0,z:0,vx:0,vy:0,vz:0,egri:0,ust:0};
 const kamAciFark=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 function kameraGoz(){return[BASKAN_KOLTUGU.x,BASKAN_KOLTUGU.y+KAM_B.goz,BASKAN_KOLTUGU.z];}
@@ -52,7 +52,7 @@ function bakisOdagi(){
   return null;
 }
 /* topa odaklı nişan (motor koordinatı, o'ya yazılır): taşıyanın önü / balistik öngörü; tam ise uzun havadan topta iniş yeri ve son üçte birde
-   kale ağzı (dürbün yalnız öngörüyle topa kilitlenir). sure: öngörü süresi (sn). Duran topta top uzaktaysa oyunun başlayacağı nokta */
+   kale ağzı. sure: öngörü süresi (sn). Duran topta top uzaktaysa oyunun başlayacağı nokta */
 function kamTopNisani(sure,tam,o){
   const b=mac.ball,h=b.tasiyan||b.sahip,T=KAM_B.top,du=mac.phase==='durus'?mac.durus:null;
   if(du&&Math.hypot(b.x-du.x,b.z-du.z)>3){o.x=du.x;o.y=0;o.z=du.z;}
@@ -99,56 +99,46 @@ function kameraYay(s,ty,tp,w,sinir,h){
   const v=Math.hypot(s.vy,s.vp);if(v>sinir){s.vy*=sinir/v;s.vp*=sinir/v;}
   s.y+=s.vy*h;s.p+=s.vp*h;
 }
-/* bu anın hedefleri: başkanın bakışı (y, p, yay, sınır, fov) ve dürbün (dy, dp, dfov) */
-const KAM_H={y:0,p:0,w:1,sinir:1,fov:52,dy:0,dp:0,dfov:11,yavas:false},KAM_HD={y:0,p:0};
+/* bu anın hedefleri: başkanın bakışı (y, p, yay, sınır, fov) */
+const KAM_H={y:0,p:0,w:1,sinir:1,fov:52,yavas:false};
 function kameraHedefleri(dtm){
   const ph=mac.phase,odak=bakisOdagi(),b=mac.ball;
   if(odak){
     /* oyun dışı: ilgi noktası; bakış eskisi gibi biraz aşağıda (masa ve ön sıralar görünsün) */
     KAM.mod='sahne';kameraAcilari(odak.x,odak.y,odak.z,KAM_H);const g=kameraGoz();
     KAM_H.p=Math.atan2(odak.y-Math.hypot(odak.x-g[0],odak.z-g[2])*KAM_B.sahneEgim-g[1],Math.hypot(odak.x-g[0],odak.z-g[2]));
-    kameraAcilari(odak.x,odak.y,odak.z,KAM_HD);KAM_H.dy=KAM_HD.y;KAM_H.dp=KAM_HD.p;
     KAM_H.w=KAM_B.yay;KAM_H.sinir=KAM_B.sahneSinir*KAM_DER;KAM_H.yavas=true;
     /* gol sevinci ve kart ölü toptur: kısa gecikmeyle geniş açı; maç öncesi/sonrası ve devre arasında hemen */
     const olu=ph==='goal'||!MAC_ONCESI.includes(ph)&&ph!=='halftime'&&ph!=='fulltime';
-    KAM.olu=olu?KAM.olu+dtm:99;KAM_H.fov=KAM.olu>KAM_B.oluGecikme?KAM_B.aci:KAM.fov;KAM_H.dfov=KAM_D.aci;
+    KAM.olu=olu?KAM.olu+dtm:99;KAM_H.fov=KAM.olu>KAM_B.oluGecikme?KAM_B.aci:KAM.fov;
   }else{
     KAM.mod='top';const oyun=ph==='play';
-    kamTopYonu(KAM_D.ongoru,false,KAM_D.butce,KAM.dfov/KAM_D.oyunAci[1],KAM_HD);KAM_H.dy=KAM_HD.y;KAM_H.dp=KAM_HD.p;
     kamTopYonu(KAM_B.top.ongoru,true,KAM_B.top.butce,KAM.fov/KAM_B.oyunAci[1],KAM_H);KAM_H.p-=KAM_B.egim*KAM_DER*KAM.fov/KAM_B.oyunAci[1];
     KAM_H.w=KAM_B.yayOyun;KAM_H.sinir=KAM_B.hizSiniri*KAM_DER;KAM_H.yavas=Math.hypot(b.vx,b.vz)<KAM_B.oluBolge[1];
     const n=kamOyunGenisligi();
     KAM.olu=oyun?0:KAM.olu+dtm;
     KAM_H.fov=KAM.olu>KAM_B.oluGecikme?KAM_B.aci:oyun?lerp(KAM_B.oyunAci[0],KAM_B.oyunAci[1],n):KAM.fov;
-    KAM_H.dfov=lerp(KAM_D.oyunAci[0],KAM_D.oyunAci[1],n);
   }
-  KAM_H.p=clamp(KAM_H.p,-KAM_B.asagiSinir,KAM_B.yukariSinir);KAM_H.dp=clamp(KAM_H.dp,-KAM_B.asagiSinir,KAM_B.yukariSinir);
+  KAM_H.p=clamp(KAM_H.p,-KAM_B.asagiSinir,KAM_B.yukariSinir);
   return KAM_H;
 }
-/* her kare (durum): hedefler → ölü bölge → yaylar (maç zamanında, alt adımlı) → görüş açıları → dürbün geçişi */
+/* her kare (durum): hedefler → ölü bölge → yay (maç zamanında, alt adımlı) → görüş açısı */
 function kameraAdim(dt){
   if(KAM.ilk){KAM.ilk=false;kameraOturt();}
   if(!(dt>0))return;
-  const dtm=Math.min(dt,0.05)*MAC_HIZ.deger,H=kameraHedefleri(dtm),A=KAM.a,D=KAM.d,acik=typeof bino!=='undefined'&&bino;
+  const dtm=Math.min(dt,0.05)*MAC_HIZ.deger,H=kameraHedefleri(dtm),A=KAM.a;
   /* ölü bölge: top yavaşken küçük oynamalarda baş kıpırdamaz */
   if(H.yavas){const ey=kamAciFark(H.y,KAM.ty),ep=H.p-KAM.tp,e=Math.hypot(ey,ep),dz=KAM_B.oluBolge[0]*KAM_DER*KAM.fov/KAM_B.oyunAci[1];if(e>dz){KAM.ty+=ey*(e-dz)/e;KAM.tp+=ep*(e-dz)/e;}}
   else{KAM.ty=H.y;KAM.tp=H.p;}
-  /* dürbün açılınca başkanın bakışından devralır; kapanırken de topu izlemeyi sürdürür */
-  if(acik&&!KAM.durbunAcik&&KAM.gecis<=0){D.y=A.y;D.p=A.p;D.vy=A.vy;D.vp=A.vp;KAM.dfov=H.dfov;}
-  KAM.durbunAcik=acik;
   const n=Math.min(30,Math.ceil(dtm*60-1e-6)),h=dtm/n;
-  for(let i=0;i<n;i++){kameraYay(A,KAM.ty,KAM.tp,H.w,H.sinir,h);if(acik||KAM.gecis>0)kameraYay(D,H.dy,H.dp,KAM_D.yay,KAM_D.hizSiniri*KAM_DER,h);}
+  for(let i=0;i<n;i++)kameraYay(A,KAM.ty,KAM.tp,H.w,H.sinir,h);
   KAM.fov+=(H.fov-KAM.fov)*(1-Math.exp(-dtm/KAM_B.aciSure));
-  KAM.dfov+=(H.dfov-KAM.dfov)*(1-Math.exp(-dtm/KAM_D.aciSure));
-  /* dürbün geçişi gerçek zamanla (arayüz hareketi; maç hızından bağımsız) */
-  KAM.gecis=clamp(KAM.gecis+(acik?1:-1)*Math.min(dt,0.05)/KAM_D.gecisSure,0,1);
 }
-/* bütün durumu bu anın hedeflerine oturtur (ilk kare; geliştirme: an yakalama aracı dürbünü anında açar) */
+/* bütün durumu bu anın hedeflerine oturtur (ilk kare; locaya girişin sonu; an yakalama aracı) */
 function kameraOturt(){
-  const acik=typeof bino!=='undefined'&&bino;
   const H=kameraHedefleri(0);
-  Object.assign(KAM.a,{y:H.y,p:H.p,vy:0,vp:0});Object.assign(KAM.d,{y:H.dy,p:H.dp,vy:0,vp:0});
-  KAM.ty=H.y;KAM.tp=H.p;KAM.fov=H.fov;KAM.dfov=H.dfov;KAM.gecis=acik?1:0;KAM.durbunAcik=acik;
+  Object.assign(KAM.a,{y:H.y,p:H.p,vy:0,vp:0});
+  KAM.ty=H.y;KAM.tp=H.p;KAM.fov=H.fov;
 }
 /* başkanın önündeki raf (js/baskan.js ön plan) başı izler: az ve yavaş (sakin) */
 function kameraGovdeHedefi(yaw,pitch,G){
@@ -156,21 +146,18 @@ function kameraGovdeHedefi(yaw,pitch,G){
   const B=STIL.baskan;
   return{p:clamp((pitch-B.dinlenmeEgimi)*0.22,-0.12,B.egimUst),y:clamp(yaw*0.25,-0.3,0.3),hiz:B.govdeHiz};
 }
-/* görüş açılarını tan(fov/2) üzerinden karıştırır: yakınlaşma eşit hızda hissedilir */
-function kameraFovKaristir(a,b,e){const ta=Math.tan(a*KAM_DER/2),tb=Math.tan(b*KAM_DER/2);return 2*Math.atan(ta*Math.pow(tb/ta,e))/KAM_DER;}
-/* sakin kamera (2.8J): baş salınımı, gol sarsıntısı ve dürbün el titremesi yok; ayağa kalkış (kalk) gerçek harekettir */
+/* sakin kamera (2.8J): baş salınımı ve gol sarsıntısı yok; ayağa kalkış (kalk) gerçek harekettir */
 function kameraUygula(V){
   /* locaya giriş (2.8T, js/loca-giris.js): kamera yürüyüşün yolundadır */
   if(typeof LOCA_GIRIS!=='undefined'&&LOCA_GIRIS.aktif){locaGirisKamera();return;}
   if(KAMERA_ZORLA){const h=KAMERA_ZORLA.hedef,f=KAMERA_ZORLA.fov||KAM_B.aci;camera.position.set(V.p[0],V.p[1],V.p[2]);camera.lookAt(h.x,h.y,h.z);
     if(camera.fov!==f){camera.fov=f;camera.updateProjectionMatrix();}return;}
-  const kalk=typeof BASKAN!=='undefined'?BASKAN.kalk:0,g=KAM.gecis,e=g*g*(3-2*g);
+  const kalk=typeof BASKAN!=='undefined'?BASKAN.kalk:0;
   camera.position.set(V.p[0],V.p[1]+kalk*0.38,V.p[2]+kalk*0.12);
-  const y=KAM.a.y+kamAciFark(KAM.d.y,KAM.a.y)*e,p=KAM.a.p+(KAM.d.p-KAM.a.p)*e,c=Math.cos(p);
+  const y=KAM.a.y,p=KAM.a.p,c=Math.cos(p);
   KAM_YON.set(Math.sin(y)*c,Math.sin(p),Math.cos(y)*c);BAKIS.copy(camera.position).addScaledVector(KAM_YON,60);
   camera.lookAt(BAKIS);
-  const f=e>0?kameraFovKaristir(KAM.fov,KAM.dfov,e):KAM.fov;
-  if(Math.abs(camera.fov-f)>1e-6){camera.fov=f;camera.updateProjectionMatrix();}
+  if(Math.abs(camera.fov-KAM.fov)>1e-6){camera.fov=KAM.fov;camera.updateProjectionMatrix();}
 }
 /* maç olayları (js/mac-sahnesi.js olay işlevinden): bakış aşamalardan ve toptan okunur, olay gerekmez */
 function kameraOlay(ad,v){}

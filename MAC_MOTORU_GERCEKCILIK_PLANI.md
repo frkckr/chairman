@@ -2,6 +2,8 @@
 
 **Durum (2026-10-07):** Motor odağı (kullanıcı kararı; YOL_HARITASI “Güncel karar özeti” 2026-10-07): kullanıcı “tamam” diyene kadar bütün geliştirme bu plandadır; motor kararlarını Claude verir ve görünür yazar. Sıra **M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11**: M0 (araç ve hız) eklendi, T3 profil kapısına daraltıldı (kabiliyet ekonomisi ileride veritabanıyla), T9 top fiziği (T9a, öne alındı) ve vuruş (T9b) olarak bölündü (§4, §5). §7: 1–2 verilmişti; 3, 4, 5 ve 7 bu tarihte kesinleştirildi (§7'de yazılı); 6 ve 8 T10'da kullanıcıya sorulur. Kontrol üç kademedir (CLAUDE.md “Kontrol”). M0 aynı gün tamamlandı (aşağıda “M0 — Sonuç”); T2 de tamamlandı (aşağıda “T2 — Sonuç”; kullanıcı onayıyla kapandı, M0 ile birlikte `main`'e alındı), sıradaki T3, taban `araclar/taban/t2.json`.
 
+**Durum (2026-10-07 akşam):** Kullanıcı kararıyla dürbün tamamen kaldırıldı (YOL_HARITASI N13): tur kapanışındaki önce/sonra film şeritleri yalnız başkanın loca bakışıyla (oyunda 21–26°) alınır; animasyon ve ayak ayrıntısı bu mesafede okunmalıdır. T11'in kazancı dürbüne bağlıydı: **T11 sıradan ve “hazır” tanımından çıkarıldı** (ileride ayrı karar). T3–T10 için bitirme planı (kapsam, kabul, büyüklük) onaylandı (YOL_HARITASI “Güncel karar özeti” 2026-10-07 akşam); sıra **T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10**.
+
 **Durum (2026-10-04):** T0 ve T1 tamamlandı (ölçümler ve sınırlar YOL_HARITASI T0/T1). §7.2 kararı: yürüme hedefi en az %55 (ulaşılan %55,6). Sıradaki T2; §7.1 kararı verildi (2026-10-04): amaçlı atak. Kullanıcı isteğiyle depoya alındı; turlar [YOL_HARITASI](YOL_HARITASI.md#maç-motoru-gerçekçilik-planı-2026-10-03) “Maç motoru gerçekçilik planı” bölümünde T0–T11 maddeleridir. Uygulama T0 ile başlar. §7'deki diğer kararlar (3–8) açıktır; uygulayıcı bunları sessizce kesinleştirmez, ilgili tura gelince kullanıcıya sorar. Ölçüm araçlarının ilk ikisi eklendi: `araclar/olcumler/r-karne.js` ve `araclar/oyuncu-karnesi.js` (Ek F).
 
 **2026-10-04 ekleri (kullanıcı onayı):** (1) animasyon her turda ölçütlü bir iştir (§4 “Animasyon”); (2) açık oyunda dönen top ve şutu takip açık maddedir (T5 madde 8, T7 madde 11); (3) her turun kapanışında önce/sonra film şeridi kullanıcıya gösterilir (§4 girişi). Gerekçe: aynı gün incelenen başka bir oyunun kısa maç videosunda görünür fark benzetimde değil, iki kişilik temas animasyonunda ve olayların birbirine zincirlenmesindeydi; benzetim tarafında bu planın turları (T2, T4–T6) aynı konuları zaten hedefliyor. Top toplayıcılar geri geldi (YOL_HARITASI N10, 2026-10-04) ve duran top süresini değiştirdi; T2 yeni tabanla (`araclar/taban/n10.json`) karşılaştırılır.
@@ -95,14 +97,14 @@ Sakatlık ve tedavi, elle oynama, çabuk kullanılan serbest vuruş, hakem topu,
 3. **Önce ölçü, sonra kod.** Her tur kendi senaryosu ve karne satırlarıyla başlar ve kapanır.
 4. **Efor ölçülü harcanır.** Azami ivme ve depar yalnız mücadele, kovalama ve koşuda kullanılır; yer tutma rahat tempoda yapılır.
 5. **Aynı durum, farklı oyuncu, farklı davranış.** Özellik "ne kadar iyi"yi, eğilim "neyi dener"i belirler.
-6. **Önce uzaktan görünen.** Başkan geniş açıdan bakar; önce tempo, akış ve yerleşim, sonra dürbünde görünen ayak ayrıntısı.
+6. **Önce uzaktan görünen.** Başkan locadan bakar (dürbün yok, 2026-10-07); önce tempo, akış ve yerleşim, sonra bu mesafede okunabilen ayak ayrıntısı.
 7. **10 dakikalık maç 90 dakikanın özeti gibi oynar (karar gerekir, bkz. §7).** Bugün olay sıklığı, topun çok sık el değiştirmesiyle sağlanıyor: ataklar gerçeğinden kısa (6,5 sn ve 1,35 pas; gerçekte 9,5 sn ve 3–5 pas). Öneri: daha az, daha uzun ve amaçlı atak; şut sayısı atakların verimiyle korunur.
 
 ---
 
 ## 4. Turlar
 
-Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi (Ek F), `ad-denetimi.js`, `an-yakala.py` film şeridi, `akis-deneme.py`; turun animasyon işi aşağıdaki “Animasyon” ölçütleriyle birlikte kapanır; belgeler (YOL_HARITASI, TEKNIK_PLAN §8) güncellenir. **Kullanıcı incelemesi (2026-10-04):** turun önce/sonra film şeridi (başkanın normal bakışı ve dürbün) kullanıcıya gösterilir; ölçüm iyileşip görüntüde fark görünmüyorsa bu, turun “Sınır” notuna yazılır (T1'de böyle oldu). Kontrol üç kademedir (2026-10-07): tur içindeki her düzenlemeden sonra hızlı kademe (4 maç ve kısa tekrarlanabilirlik, ilgili senaryo, gerekirse `ad-denetimi.js`; ≤45 sn), yerel commit'ten önce oturum sonu kademesi (40 maç `--karsilastir`, senaryolar, ad denetimi; tek komut, arka planda), tur kapanışında bu paragraftaki tam kontrol; ayrıntı CLAUDE.md “Kontrol”.
+Her turun kapanışı: 80 maç `--karsilastir`, ilgili senaryo, robotluk karnesi (Ek F), `ad-denetimi.js`, `an-yakala.py` film şeridi, `akis-deneme.py`; turun animasyon işi aşağıdaki “Animasyon” ölçütleriyle birlikte kapanır; belgeler (YOL_HARITASI, TEKNIK_PLAN §8) güncellenir. **Kullanıcı incelemesi (2026-10-04):** turun önce/sonra film şeridi (başkanın loca bakışı; dürbün 2026-10-07'de kaldırıldı) kullanıcıya gösterilir; ölçüm iyileşip görüntüde fark görünmüyorsa bu, turun “Sınır” notuna yazılır (T1'de böyle oldu). Kontrol üç kademedir (2026-10-07): tur içindeki her düzenlemeden sonra hızlı kademe (4 maç ve kısa tekrarlanabilirlik, ilgili senaryo, gerekirse `ad-denetimi.js`; ≤45 sn), yerel commit'ten önce oturum sonu kademesi (40 maç `--karsilastir`, senaryolar, ad denetimi; tek komut, arka planda), tur kapanışında bu paragraftaki tam kontrol; ayrıntı CLAUDE.md “Kontrol”.
 
 ### T0 — Ölçü ve araçlar (sonucu değiştirmez)
 
@@ -303,9 +305,9 @@ Yeni dosya `js/mac-durantop.js` önerilir; rutinler tablodan okunur (Ek D). `js/
 5. **Kenar.** Yedeklerin ısınması, hocanın tepkileri, sağlık görevlisi.
 6. **Kupa kapısı.** Uzatma ve penaltı atışları (Aşama 9).
 
-### T11 — Adım evresi (isteğe bağlı, en son)
+### T11 — Adım evresi (2026-10-07 akşam sıradan çıkarıldı)
 
-Motor adım evresini ve basan ayağı bilir (`p.adimFaz`, `p.basanAyak`); dokunuş ve vuruş oynayan ayak serbestken olur; ters ayaktaki topa vuruş için ayak ayarı süresi doğar; animasyon aynı evreyi okur. Kazancı çoğunlukla dürbünde görünür.
+Motor adım evresini ve basan ayağı bilir (`p.adimFaz`, `p.basanAyak`); dokunuş ve vuruş oynayan ayak serbestken olur; ters ayaktaki topa vuruş için ayak ayarı süresi doğar; animasyon aynı evreyi okur. Kazancı çoğunlukla dürbünde görünecekti. **2026-10-07 akşam:** dürbün kaldırıldığı için kazancı locadan görünmez; isteğe bağlı olan bu tur sıradan ve “hazır” tanımından çıkarıldı, ileride ayrı karardır.
 
 ### Animasyon (her turda, E akışı)
 
@@ -329,9 +331,9 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 - **Geçiş.** Bir pozdan ötekine geçerken hiçbir eklem açısı 60 Hz'de kare başına 20°'den fazla değişmez (poz atlamaz); düşüşten kalkışa, temastan koşuya geçişler dahil.
 - **Ayak.** Yerdeki ayağın kayması adım başına en çok 0,10 m (MA1'in ölçüsü korunur).
 - **Zamanlama.** Temas karesi, motorun temas anından en çok bir kare sapar; çizim motora yazmaz (`ad-denetimi.js`).
-- **Uzaktan okunurluk.** Başkanın normal bakışında (dürbünsüz film şeridi) hareketin ne olduğu ayırt edilir; bu, kullanıcı incelemesiyle onaylanır (§4 girişi).
+- **Uzaktan okunurluk.** Başkanın loca bakışında (film şeridi; dürbün yok) hareketin ne olduğu ayırt edilir; bu, kullanıcı incelemesiyle onaylanır (§4 girişi).
 
-**Sınır.** Kodla üretilen pozlar loca mesafesinde ve dürbünde retro üslupla canlı ve okunur olmayı hedefler; yakın plan yayın kamerasında elle ya da hareket yakalamayla üretilmiş animasyonun inceliği hedef değildir. Daha yüksek tavan dış veri gerektirir ve ayrı karardır (CLAUDE.md: harici model ve veri kullanımı).
+**Sınır.** Kodla üretilen pozlar loca mesafesinde retro üslupla canlı ve okunur olmayı hedefler; yakın plan yayın kamerasında elle ya da hareket yakalamayla üretilmiş animasyonun inceliği hedef değildir. Daha yüksek tavan dış veri gerektirir ve ayrı karardır (CLAUDE.md: harici model ve veri kullanımı).
 
 ---
 
@@ -352,11 +354,11 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir. Animasyon h
 | T8 Duran toplar | T3 | orta | yüksek |
 | T9b Vuruş | T2, T9a | küçük | orta |
 | T10 Olaylar | T5 | orta | yüksek (seyrek) |
-| T11 Adım evresi | T4 | orta | düşük |
+| T11 Adım evresi (2026-10-07 akşam sıradan çıkarıldı) | T4 | orta | — (dürbünsüz görünmez) |
 
-Önerilen sıra (2026-10-03) T0 → T1 → T2 → T3 → T4 → T5 → T7 → T8 → T6 → T9 → T10 → T11 idi. **Sıra (2026-10-07): M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10 → T11.** T8 diğerlerinden bağımsızdır; ayrı oturumda paralel yürüyebilir.
+Önerilen sıra (2026-10-03) T0 → T1 → T2 → T3 → T4 → T5 → T7 → T8 → T6 → T9 → T10 → T11 idi. **Sıra (2026-10-07): M0 → T2 → T3 → T9a → T4 → T5 → T7 → T8 → T6 → T9b → T10** (T11 aynı gün akşam sıradan çıkarıldı). T8 diğerlerinden bağımsızdır; ayrı oturumda paralel yürüyebilir. Bitirme planı (2026-10-07 akşam, kullanıcı onayı): tur başına dal, üç kademeli kontrol, kapanışta loca bakışıyla önce/sonra film şeridi; büyüklükler kabaca T3 ½–1, T9a ½–1, T4 1–1½, T5 1–1½, T7 1½–2, T8 1, T6 ½, T9b ½, T10 1 oturum (M0+T2 = 1 oturum ölçeğinde); pas isabeti tavanı T7 sonunda, kurtarış oranı T9b sonunda hedef tablosunda gözden geçirilir; §7.6 ve §7.8 T10 başında sorulur.
 
-**Hazır tanımı (2026-10-07).** Motor “hazır” sayılır ve kullanıcı “tamam” diyebilir: 80 maçta robotluk karnesinin bütün T-hedefleri ve gerçek değerlere çekilmiş hedef tablosu tutuyor; `araclar/senaryolar/` içindeki bütün senaryolar geçiyor; tek işçide 1000 adım ≤250 ms; kullanıcı her turun önce/sonra film şeridini (loca bakışı ve dürbün) onaylamış. Kabiliyet ekonomisi (veritabanı) bu tanımın dışındadır.
+**Hazır tanımı (2026-10-07).** Motor “hazır” sayılır ve kullanıcı “tamam” diyebilir: 80 maçta robotluk karnesinin bütün T-hedefleri ve gerçek değerlere çekilmiş hedef tablosu tutuyor; `araclar/senaryolar/` içindeki bütün senaryolar geçiyor; tek işçide 1000 adım ≤250 ms; kullanıcı her turun önce/sonra film şeridini (loca bakışı; dürbün yok) onaylamış. Kabiliyet ekonomisi (veritabanı) ve T11 bu tanımın dışındadır.
 
 ---
 

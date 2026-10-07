@@ -9,7 +9,7 @@ Kullanım:
   python3 araclar/an-yakala.py santra korner sut            # hazır anlar
   python3 araclar/an-yakala.py --hepsi                      # bütün hazır anlar
   python3 araclar/an-yakala.py --kosul "mac.ball.x>40" --ad sag   # kendi koşulun (JS ifadesi; mac, __son(ad,sn) kullanılabilir)
-  Seçenekler: --tohum N (varsayılan 3) · --bino (dürbünle) · --kare N --aralik S (film şeridi: N kare, S sn arayla)
+  Seçenekler: --tohum N (varsayılan 3) · --kare N --aralik S (film şeridi: N kare, S sn arayla)
               --sonra S (koşuldan S sn sonra çek) · --yakin top|<forma no> (yalnız geliştirme: kamera o noktaya yakından bakar, KAMERA_ZORLA)
               --onek AD (dosya adlarının başına; ör. once/sonra karşılaştırması) · --en-cok S (koşul için en çok oyun süresi, varsayılan 900)
               --js "<ifade>" (sayfa yüklenince çalışır; ör. bir STIL ayarını açıp kapatmak: --js "STIL.okunurluk.disCizgi=true")
@@ -17,7 +17,8 @@ Kullanım:
               --giris (N11, 2026-10-04: stada varışı ve locaya girişi başlatıp film şeridi çeker; karartma ve karar anı gibi sayfa katmanları
                 da görüntüye girer; --sonra S: şeride başlamadan S sn oynat) · --ek "&rakipBaskan=yerinde" (adrese eklenir)
 Çıktı: araclar/anlar/<onek><ad>.png ve .json (topun ekrandaki yeri ve boyu (topPx gerçek, topCizimPx asgari boya büyütülmüş çizim), oyuncuların
-piksel boyu (maç ızgarasında; oyuncuPx480 480 satır karşılığı, eski ölçülerle karşılaştırma için), görüş açısı, aşama). --bino dürbünü anında açar: bakış ve görüş açısı geçişsiz oturur (kameraOturt). Depoya eklenmez.
+piksel boyu (maç ızgarasında; oyuncuPx480 480 satır karşılığı, eski ölçülerle karşılaştırma için), görüş açısı, aşama). Dürbün ve --bino seçeneği
+2026-10-07'de kaldırıldı (kullanıcı kararı): bütün görüntüler başkanın loca bakışıdır. Depoya eklenmez.
 """
 import argparse
 import asyncio
@@ -110,19 +111,19 @@ OLCU_JS = """() => {
   const yakin = mac.players.filter(p => p.oyunda && p.eylem).map(p => ({ no: p.no, takim: p.team, eylem: p.eylem.ad, x: +p.x.toFixed(1), z: +p.z.toFixed(1) }))
     .filter(o => Math.hypot(o.x - b.x, o.z - b.z) < 12);
   const topCizimPx = +(topPx * (typeof topMesh !== 'undefined' ? topMesh.scale.x : 1)).toFixed(2);
-  return { faz: mac.phase, dakika: mac.minuteLabel(), t: +mac.t.toFixed(2), skor: mac.score.join('-'), fov: camera.fov, bino: typeof bino !== 'undefined' && bino,
+  return { faz: mac.phase, dakika: mac.minuteLabel(), t: +mac.t.toFixed(2), skor: mac.score.join('-'), fov: camera.fov,
     top: { x: +b.x.toFixed(2), y: +b.y.toFixed(2), z: +b.z.toFixed(2) }, topNdc, topPx, topCizimPx,
     oyuncuPx: { ortanca: boylar.length ? +boylar[boylar.length >> 1].toFixed(1) : null, enAz: boylar.length ? +boylar[0].toFixed(1) : null, sayi: boylar.length },
     oyuncuPx480: boylar.length ? +(boylar[boylar.length >> 1] * 480 / H).toFixed(1) : null, izgara: [W, H], yakin };
 }"""
 
-# görünümü (3B + HUD maskesi) tek tuvale bas; şerit için yan yana
+# görünümü tek tuvale bas; şerit için yan yana
 CIZ_JS = """(o) => {
-  const v = document.getElementById('view'), h = document.getElementById('hud'), W = RW, H = RH;
+  const v = document.getElementById('view'), W = RW, H = RH;
   let c = window.__serit;
   if (!c || o.yeni) { c = window.__serit = document.createElement('canvas'); const sut = Math.min(o.adet, 4); c.width = W * sut; c.height = H * Math.ceil(o.adet / sut); }
   const g = c.getContext('2d'), sut = Math.min(o.adet, 4), x = (o.i % sut) * W, y = Math.floor(o.i / sut) * H;
-  g.imageSmoothingEnabled = false; g.drawImage(v, x, y, W, H); g.drawImage(h, x, y, W, H);
+  g.imageSmoothingEnabled = false; g.drawImage(v, x, y, W, H);
   return o.son ? c.toDataURL('image/png') : null;
 }"""
 
@@ -184,8 +185,6 @@ async def yakala(tarayici, site, ad, kosul, sonra, on, a):
         return False, hatalar
     if sonra:
         await pg.evaluate(f"__ileriSure({sonra})")
-    if a.bino:
-        await pg.evaluate("bino = true; if (typeof BASKAN !== 'undefined') { BASKAN.eylem = null; BASKAN.durbunAcik = true; } if (typeof kameraOturt === 'function') kameraOturt();")
     # birkaç tam kare: çizim, eller ve sahne güncellensin
     await pg.evaluate("__kare(3)")
     adet = max(1, a.kare)
@@ -215,7 +214,6 @@ async def ana():
     ap.add_argument("--kosul")
     ap.add_argument("--ad", default="ozel")
     ap.add_argument("--tohum", type=int, default=3)
-    ap.add_argument("--bino", action="store_true")
     ap.add_argument("--kare", type=int, default=1)
     ap.add_argument("--aralik", type=float, default=0.1)
     ap.add_argument("--sonra", type=float, default=None)

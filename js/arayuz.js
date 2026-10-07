@@ -1,33 +1,19 @@
-/* ============ ekran üstü: yalnızca dürbün maskesi ============ */
-let bino=false;
-const KMR=k=>({p:[BASKAN_KOLTUGU.x,BASKAN_KOLTUGU.y+k.goz,BASKAN_KOLTUGU.z],fov:k.aci}),VIEWS={baskan:KMR(STIL.kameralar.baskan),durbun:KMR(STIL.kameralar.durbun)};
-const curView=()=>bino?VIEWS.durbun:VIEWS.baskan;
-/* dürbün maskesi ızgarada çizilir (hud tuvali RW×RH, js/goruntu.js) */
-function drawHUD(){
-  const W=hud.width,H=hud.height;hg.clearRect(0,0,W,H);
-  if(!bino)return;
-  hg.fillStyle='#030303';hg.fillRect(0,0,W,H);hg.globalCompositeOperation='destination-out';
-  for(const cx of[W*0.35,W*0.65]){hg.beginPath();hg.arc(cx,H/2,H*0.407,0,6.3);hg.fill();}
-  hg.globalCompositeOperation='source-over';
-}
-
-/* ============ arayüz ve döngü ============ */
+/* ============ arayüz ve döngü ============
+   Dürbün (düğme, D kısayolu, ekran üstü maske tuvali ve elle kaldırma hareketi) 2026-10-07'de kullanıcı kararıyla tamamen kaldırıldı:
+   maç yalnız başkanın loca bakışıyla izlenir (js/kamera.js). */
+const VIEWS={baskan:{p:[BASKAN_KOLTUGU.x,BASKAN_KOLTUGU.y+STIL.kameralar.baskan.goz,BASKAN_KOLTUGU.z],fov:STIL.kameralar.baskan.aci}};
+/* ad araçlar için korunur (araclar/akis-deneme.py kameraUygula(curView())): hep başkanın bakışı */
+const curView=()=>VIEWS.baskan;
 function press(b,on){b.setAttribute('aria-pressed',on?'true':'false');}
-const btnBino=$('btnBino');
-/* dürbün: başkan elleriyle kaldırır; yüzüne gelince maske açılır ve bakış topa kilitlenir (js/kamera.js). İndirirken önce maske kapanır.
-   Kısayol: D (maçta; oda açıkken ya da duraklatılmışken çalışmaz) */
-btnBino.onclick=()=>{if(!bino&&!BASKAN.durbunHazir){press(btnBino,true);baskanDurbun(true,()=>{bino=true;});}else{bino=false;press(btnBino,false);baskanDurbun(false);}};
-addEventListener('keydown',e=>{if(e.code!=='KeyD'||e.repeat||e.ctrlKey||e.altKey||e.metaKey||ON_EKRAN.sayfa!==null||btnBino.disabled)return;const t=e.target&&e.target.tagName;
-  if(t==='INPUT'||t==='TEXTAREA'||(typeof MAC_TELEFON!=='undefined'&&MAC_TELEFON.acik))return;e.preventDefault();btnBino.onclick();});
 /* N4 (kullanıcı kararı 2026-10-04): bakış hep topu izler (js/kamera.js); “Topu izle” düğmesi, F tuşu ve fareyle/ok tuşlarıyla elle bakış kaldırıldı */
-/* duraklat: tek ortak yönetim (js/sunum-durumu.js; elle duraklatma 'elle' nedenidir). Maç, tribün, bayraklar, meşaleler, kamera, eller ve dürbün
+/* duraklat: tek ortak yönetim (js/sunum-durumu.js; elle duraklatma 'elle' nedenidir). Maç, tribün, bayraklar, meşaleler, kamera ve eller
    durur; oda, yürüyüş ve balkon da aynı yönetimle durur. Ekranı karartmayan küçük "Duraklatıldı" göstergesi açılır. Kısayol: boşluk ya da P */
 const btnDuraklat=$('btnDuraklat'),duraklatGosterge=$('duraklatildi');
 function duraklatDegistir(){if(duraklatmaVar('elle'))duraklatmaKaldir('elle');else duraklatmaEkle('elle');}
 btnDuraklat.onclick=duraklatDegistir;
 /* geliştirici panelindeki Durdur/Devam aynı ortak duraklatmayı kullanır (2.8O) */
 const btnDurdur=$('btnDurdur');btnDurdur.onclick=duraklatDegistir;
-duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';btnBino.disabled=a||ON_EKRAN.sayfa==='loca';if(duraklatGosterge)duraklatGosterge.hidden=!a;});
+duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';if(duraklatGosterge)duraklatGosterge.hidden=!a;});
 /* maça geç: maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) atlar; santrada düğme kaybolur */
 const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();btnMacaGec.hidden=true;};
 /* boşluk ya da P duraklatır (sayfa kaymaz); odaktaki düğmede boşluk düğmeyi çalıştırır. Oda açıkken kısayolu oda ekranı işler (js/ekran-oda.js) */
@@ -53,10 +39,10 @@ function frame(now){
   if(!btnMacaGec.hidden&&!MAC_ONCESI.includes(mac.phase))btnMacaGec.hidden=true;
   kameraUygula(curView());   /* js/kamera.js */
   okunurlukKare();           /* js/okunurluk.js: topun asgari boyu, havadaki topun lekesi */
-  camera.updateMatrixWorld();baskanKare(dt,camera);drawHUD();
+  camera.updateMatrixWorld();baskanKare(dt,camera);
   /* ornekleme katında, oda ve balkonla aynı hedefe (js/goruntu.js) */
   renderer.setRenderTarget(rt);renderer.setClearColor(STIL.ekran.arkaPlan,1);renderer.clear();renderer.render(scene,camera);
-  if(!bino)baskanCiz();
+  baskanCiz();
   renderer.setRenderTarget(null);renderer.clear();renderer.render(post,postCam);
   onEkranCizildi=ON_EKRAN.acik;if(ON_EKRAN.acik)ON_EKRAN.cizildi=true;
   requestAnimationFrame(frame);

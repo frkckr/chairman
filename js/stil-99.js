@@ -245,7 +245,8 @@ const STIL={
   },
 
   /* Kameralar: hedef [x,y,z], aci = dikey görüş açısı (derece).
-     Maç başkanın gözünden izlenir: ana tribünün arkasındaki binada, başkanın locası. Dürbün isteğe bağlı. */
+     Maç başkanın gözünden izlenir: ana tribünün arkasındaki binada, başkanın locası. Dürbün 2026-10-07'de kullanıcı kararıyla tamamen
+     kaldırıldı (ayarı da). */
   kameralar:{
     /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre). js/kamera.js
        N4 (kullanıcı kararı 2026-10-04): bakış hep topu izler; fareyle/ok tuşlarıyla elle bakış ve “Topu izle” düğmesi kaldırıldı (elleAci ve
@@ -263,11 +264,7 @@ const STIL={
     baskan:{goz:0.78,hedef:[0,1,0],aci:36,oyunAci:[21,26],aciSure:0.8,oluGecikme:1.5,yayOyun:5,hizSiniri:120,yay:1.0,sahneSinir:60,
       oluBolge:[0.8,2.5],egim:1.6,sahneEgim:0.18,asagiSinir:0.5,yukariSinir:0.12,
       top:{onde:0.6,ongoru:0.35,inis:[0.5,1.6,0.55],kale:0.25,korner:0.45,butce:[2.5,1.6]},
-      genislik:{hiz:[7,22],kale:[30,12],yayilim:[6,18,0.6]}},
-    /* dürbün elle açılır ve topa kilitlenir. aci = oyun dışı görüş açısı, oyunAci =
-       oyunda [dar, geniş] (oyunun genişliğine göre), ongoru = topta öngörü (sn), yay = açısal sıklık (1/sn), hizSiniri = derece/sn, butce = [sapma,
-       eğim] derece (oyunAci[1]'de), aciSure = görüş açısı yumuşaması (sn), gecisSure = açılış/kapanış geçişi (sn, gerçek zaman). TEST değerleri */
-    durbun:{goz:0.78,aci:8.5,oyunAci:[7,10],ongoru:0.12,yay:7,hizSiniri:160,butce:[0.6,0.4],aciSure:0.6,gecisSure:0.35}
+      genislik:{hiz:[7,22],kale:[30,12],yayilim:[6,18,0.6]}}
   },
 
   /* Maçın okunurluğu (js/okunurluk.js, js/goruntu.js; A akışı, 2026-10-03): locadan uzaktaki maçın net görünmesi için çizim ayarları.

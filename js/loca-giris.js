@@ -12,7 +12,7 @@
    (MAC_PROTOKOL.karar), kariyere ve ilişkiye etkisi yoktur (3.5, 5.4).
    Atlama: tıklama ya da Esc girişi bitirir (rakip başkan yerindeyse tokalaşma anına gider); karar anını hiçbir atlama geçemez. “Santraya geç”
    karar anı bitene kadar ertelenir; rakip başkan sonra gelecekse gelişi o an başlar, atlama ardından yapılır. Duraklat her şeyi dondurur
-   (kare dt 0); karartma da zamandan okunur. Sırada ON_EKRAN.sayfa 'loca'dır: dürbün ve masadaki telefon kapalıdır. Maç günü arkada sürer.
+   (kare dt 0); karartma da zamandan okunur. Sırada ON_EKRAN.sayfa 'loca'dır: masadaki telefon kapalıdır. Maç günü arkada sürer.
    Merdiven, kapı, loca kişileri ve rakip başkan ilk girişte kurulur (tembel kurulum): ?ekran=mac denemelerinin sahnesi değişmez. Ses yoktur.
    Yürüyüş ortak modelle (js/yuruyus.js: yrYolKur, yrYuruAn, yrKalk, yrOtur; merdivende basamak başına bir adım). Ayarlar STIL.locaGiris (TEST).
      locaGirisBaslat()   varışı başlatır (js/ekran-mac-oncesi.js ilerle)
@@ -151,7 +151,7 @@ function locaGirisBaslat(){
   MAC_PROTOKOL.rakipBaskan=MAC_PROTOKOL.rakipBaskan||rakipBaskanDurumu();
   Object.assign(G,{aktif:true,mod:'giris',evre:'acilis',t:0,tl:0,yol:locaGirisYolu(MAC_PROTOKOL.rakipBaskan),fov:LG.acilisAci,oturdu:null,tepki:null});
   lgRakipEvre(MAC_PROTOKOL.rakipBaskan==='yerinde'?'oturuyor':'yok');
-  ON_EKRAN.sayfa='loca';btnBino.disabled=true;
+  ON_EKRAN.sayfa='loca';
   locaGirisKare(0);
 }
 /* sonra gelen rakip başkanı karşılama: başkan oturuyorken kapı açılır, rakip başkan gelir; başkan kalkıp ona döner */
@@ -163,7 +163,7 @@ function lgSelamBaslat(){
   const yer=lgV(LG.rakip.mesafe,y0,L.on-0.35);
   G.rk.yol=lgYol([lgV(K.x,y0,z0+0.4),lgV(K.x+0.3,y0,L.on-1.0),lgV(yer.x+0.05,y0,L.on-1.0),yer]);G.rk.el=false;lgRakipEvre('yuruyor');
   G.selamYer=yer;G.ayaktaSelam=lgV(0,y0+LG.goz,L.on-0.25);
-  ON_EKRAN.sayfa='loca';btnBino.disabled=true;
+  ON_EKRAN.sayfa='loca';
 }
 function lgKarartma(){
   const G=LOCA_GIRIS,T=LG.sure;if(!G.karartma)return;let o=0;
@@ -254,7 +254,7 @@ function locaGirisBitir(){
   const r=G.rk.evre;if(r!=='yok'&&r!=='oturuyor'){G.rk.yer=null;lgRakipEvre('oturuyor');}lgRakipKare(0);
   BK_MASA.visible=true;BK_EL.sol.g.visible=true;BK_EL.sag.g.visible=true;if(BASKAN.eylem&&BASKAN.eylem.ad.startsWith('tokalas'))BASKAN.eylem=null;
   if(ON_EKRAN.sayfa==='loca')ON_EKRAN.sayfa=null;
-  btnBino.disabled=duraklatmaVar();camera.fov=LG.aci;
+  camera.fov=LG.aci;
   if(!selam&&typeof mac!=='undefined')G.oturdu=mac.sen.t;
   if(G.karartma)G.karartma.style.opacity='0';
   kameraOturt();
@@ -270,8 +270,8 @@ function lgAtla(){
   if(['el','tepki'].includes(G.evre))return;
   locaGirisBitir();
 }
-/* atlama: maç görüntüsüne tıklamak ya da Esc; karar anı sürerken tıklama yutulur */
-hud.addEventListener('click',e=>{if(LOCA_GIRIS.aktif){e.stopImmediatePropagation();if(!duraklatmaVar())lgAtla();}},true);
+/* atlama: maç görüntüsüne (#view tuvali) tıklamak ya da Esc; karar anı sürerken tıklama yutulur */
+canvas.addEventListener('click',e=>{if(LOCA_GIRIS.aktif){e.stopImmediatePropagation();if(!duraklatmaVar())lgAtla();}},true);
 addEventListener('keydown',e=>{if(e.code==='Escape'&&LOCA_GIRIS.aktif){e.preventDefault();if(!duraklatmaVar())lgAtla();}});
 /* “Santraya geç”: karar anı ya da karşılanacak rakip başkan varsa ertelenir; o an bitince yapılır */
 {const eski=btnMacaGec.onclick;LOCA_GIRIS.atla=eski;

@@ -3,11 +3,12 @@
    N5 (kullanıcı kararı 2026-10-04): büyük masa kalktı; önde locanın ön duvarının üstünde dar bir ahşap raf durur (telefon ve eller onun
    üstünde), altında duvarın iç yüzü görünür. Ekranın altını kapatan alan azaldı. BK_MASA adı (raf grubu) diğer dosyalar için korunur.
    Eller maçtaki olaylara tepki verir: gol sevinci (başkan ayağa kalkar), yenilen golde eller başa, kaçan pozisyonda masaya yumruk,
-   itiraz, alkış. Dürbünü elleriyle kaldırır. Çay 2.8A'da, masadaki maç programı 2.8O'da kaldırıldı; kendiliğinden telefona bakma
-   2026-10-03'te kaldırıldı (kullanıcı kararı): masadaki telefon yalnız kullanıcı tıklayınca açılır (js/ekran-mac-telefon.js). */
+   itiraz, alkış. Çay 2.8A'da, masadaki maç programı 2.8O'da, dürbün (elle kaldırma hareketiyle birlikte) 2026-10-07'de kaldırıldı (kullanıcı
+   kararları); kendiliğinden telefona bakma 2026-10-03'te kaldırıldı (kullanıcı kararı): masadaki telefon yalnız kullanıcı tıklayınca açılır
+   (js/ekran-mac-telefon.js). */
 const BK=STIL.baskan;
 const BASKAN={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(BK.aci,RW/RH,0.02,6),eylem:null,kuyruk:[],
-  kalk:0,kalkHedef:0,sarsinti:0,durbunDurum:0,durbunHedef:0,durbunHazir:null,govde:{y:0,p:0}};
+  kalk:0,kalkHedef:0,sarsinti:0,govde:{y:0,p:0}};
 {const S=BASKAN.sahne;S.add(new THREE.AmbientLight(0x7a7064,1.1));
  const d=new THREE.DirectionalLight(0xffe4bc,0.75);d.position.set(0.4,2,1.2);S.add(d);
  const f=new THREE.DirectionalLight(0x9fb0d8,0.25);f.position.set(-1,0.5,-1);S.add(f);}
@@ -35,10 +36,6 @@ function elKur(taraf){
   BASKAN.sahne.add(g);return{g,parmak};
 }
 const BK_EL={sol:elKur('sol'),sag:elKur('sag')};
-/* ---- dürbün: iki tüp ve köprü; yalnız kaldırılırken görünür ---- */
-const BK_DURBUN=new THREE.Group();BK_DURBUN.visible=false;BASKAN.sahne.add(BK_DURBUN);
-{const m=LAM({color:0x1e1f22});for(const sx of[-1,1]){const c=new THREE.Mesh(new THREE.CylinderGeometry(0.036,0.04,0.13,10),m);c.rotation.x=Math.PI/2;c.position.set(sx*0.045,0,0);BK_DURBUN.add(c);}
- box(0.05,0.02,0.04,m,0,0,0.02,BK_DURBUN);}
 
 /* ---- pozlar: bilek konumu p, dönüşü r (Euler), parmak kıvrımı k ---- */
 const BKP=(x,y,z,rx,ry,rz,k)=>({p:[x,y,z],r:[rx||0,ry||0,rz||0],k:k||0});
@@ -57,16 +54,14 @@ const BK_EYLEM={
   golYedik:{sure:3.4,keys:[[0,{}],[0.6,{sol:BKP(-0.36,0.3,-0.26,2.3,0.4,0.6,0.3),sag:BKP(0.36,0.3,-0.26,2.3,-0.4,-0.6,0.3)}],[2.6,{sol:BKP(-0.36,0.28,-0.26,2.25,0.4,0.6,0.3),sag:BKP(0.36,0.28,-0.26,2.25,-0.4,-0.6,0.3)}],[3.4,{}]]},
   yumruk:{sure:1.3,keys:[[0,{}],[0.4,{sag:BKP(0.22,BK_RAF.y+0.21,BK_RAF_Z+0.08,0.3,-0.3,0,1)}],[0.55,{sag:BKP(0.22,BK_RAF.y+0.04,BK_RAF_Z+0.05,0,-0.3,0,1)}],[0.9,{sag:BKP(0.22,BK_RAF.y+0.04,BK_RAF_Z+0.05,0,-0.3,0,1)}],[1.3,{}]],vur:0.55},
   itiraz:{sure:1.8,keys:[[0,{}],[0.45,{sol:BKP(-0.3,-0.33,-0.92,0,0.3,-2.7,0.05),sag:BKP(0.3,-0.33,-0.92,0,-0.3,2.7,0.05)}],[1.3,{sol:BKP(-0.32,-0.3,-0.9,0,0.3,-2.8,0.05),sag:BKP(0.32,-0.3,-0.9,0,-0.3,2.8,0.05)}],[1.8,{}]]},
-  durbunKaldir:{sure:0.5,keys:[[0,{}],[0.5,{sol:BKP(-0.09,-0.1,-0.4,1.35,0.3,0,0.8),sag:BKP(0.09,-0.1,-0.4,1.35,-0.3,0,0.8)}]],durbun:true,kal:true},
   /* locaya girişte rakip başkanla tokalaşma (2.8T): sağ el öne uzanır, iki kez sallanır, geri çekilir */
   tokalas:{sure:2.0,keys:[[0,{sag:BKP(0.3,-0.75,-0.6,0.2,-0.2,0,0.3)}],[0.45,{sag:BKP(0.03,-0.24,-0.68,0.3,0.1,-1.45,0.5)}],[1.6,{sag:BKP(0.03,-0.24,-0.68,0.3,0.1,-1.45,0.5)}],[2.0,{sag:BKP(0.3,-0.75,-0.6,0.2,-0.2,0,0.3)}]],salla:[0.55,1.5]},
   /* N12: karar anında uzun tokalaşma: el uzanır, karar anı boyunca tutulur (js/loca-giris.js karar bitince bırakılma anına atlatır: t = 7,4) */
-  tokalasAn:{sure:8.0,keys:[[0,{sag:BKP(0.3,-0.75,-0.6,0.2,-0.2,0,0.3)}],[0.45,{sag:BKP(0.03,-0.24,-0.68,0.3,0.1,-1.45,0.5)}],[7.4,{sag:BKP(0.03,-0.24,-0.68,0.3,0.1,-1.45,0.5)}],[8.0,{sag:BKP(0.3,-0.75,-0.6,0.2,-0.2,0,0.3)}]],salla:[0.55,1.5]},
-  durbunIndir:{sure:0.5,keys:[[0,{sol:BKP(-0.09,-0.1,-0.4,1.35,0.3,0,0.8),sag:BKP(0.09,-0.1,-0.4,1.35,-0.3,0,0.8)}],[0.5,{}]],durbun:true}
+  tokalasAn:{sure:8.0,keys:[[0,{sag:BKP(0.3,-0.75,-0.6,0.2,-0.2,0,0.3)}],[0.45,{sag:BKP(0.03,-0.24,-0.68,0.3,0.1,-1.45,0.5)}],[7.4,{sag:BKP(0.03,-0.24,-0.68,0.3,0.1,-1.45,0.5)}],[8.0,{sag:BKP(0.3,-0.75,-0.6,0.2,-0.2,0,0.3)}]],salla:[0.55,1.5]}
 };
 /* ---- tepkiler: maç olaylarından gelir (js/mac-sahnesi.js → baskanOlay) ---- */
 function baskanEylem(ad,oncelik){
-  const e=BASKAN.eylem;if(e&&(e.oncelik>=(oncelik||1)||e.ad.startsWith('durbun')))return;
+  const e=BASKAN.eylem;if(e&&e.oncelik>=(oncelik||1))return;
   BASKAN.eylem={ad,t:0,oncelik:oncelik||1,...BK_EYLEM[ad]};}
 function baskanOlay(ad,v){
   if(ad==='goal')baskanEylem(v.team===0?'golBiz':'golYedik',5);
@@ -77,24 +72,19 @@ function baskanOlay(ad,v){
   else if((ad==='faul'||ad==='kart'||ad==='ofsayt')&&v.aleyhe===0)baskanEylem('itiraz',3);
   else if(ad==='fulltime'){const s=v.score;baskanEylem(s[0]>s[1]?'alkis':s[0]<s[1]?'golYedik':'itiraz',4);}
 }
-/* dürbün: eller kaldırır, yüze gelince maske açılır (hazır geri çağrısı); indirirken önce maske kapanır */
-function baskanDurbun(ac,hazir){
-  BASKAN.eylem=null;if(ac){BASKAN.durbunHazir=hazir;baskanEylem('durbunKaldir',9);}else{BASKAN.durbunAcik=false;baskanEylem('durbunIndir',9);}}
 /* ---- her kare ---- */
 const BK_V=new THREE.Vector3();
 function elYerlestir(el,poz){const E=BK_EL[el];E.g.position.set(...poz.p);E.g.rotation.set(poz.r[0],poz.r[1],poz.r[2]);E.parmak.rotation.x=poz.k*1.4;}
 function baskanKare(dt,kamera){
   const B=BASKAN;
-  /* eylemi oynat (yalnız maç olaylarından gelen tepkiler ve dürbün; kendiliğinden eylem yok) */
+  /* eylemi oynat (yalnız maç olaylarından gelen tepkiler ve locaya girişteki tokalaşma; kendiliğinden eylem yok) */
   let poz={sol:BK_DINLEN.sol,sag:BK_DINLEN.sag};const e=B.eylem;
   if(e){e.t+=dt;poz=bkAnahtar(e.keys,Math.min(e.t,e.sure));
     if(e.alkis&&e.t>e.alkis[0]&&e.t<e.alkis[1]){const a=Math.sin(e.t*26)*0.045;poz.sol.p[0]-=a;poz.sag.p[0]+=a;}
     if(e.salla&&e.t>e.salla[0]&&e.t<e.salla[1]){const a=Math.sin(e.t*17)*0.03;poz.sol.p[1]+=a;poz.sag.p[1]-=a;}
     if(e.vur&&!e.vurdu&&e.t>=e.vur){e.vurdu=true;B.sarsinti=1;}
     B.kalkHedef=e.kalk&&e.t>e.kalk[0]&&e.t<e.kalk[1]?1:0;
-    if(e.durbun){const s=clamp(e.t/e.sure,0,1);BK_DURBUN.visible=true;BK_DURBUN.position.set(0,lerp(-0.45,-0.07,e.ad==='durbunKaldir'?s:1-s),lerp(-0.9,-0.33,e.ad==='durbunKaldir'?s:1-s));
-      if(e.ad==='durbunKaldir'&&e.t>=e.sure&&B.durbunHazir){B.durbunHazir();B.durbunHazir=null;B.durbunAcik=true;}}
-    if(e.t>=e.sure&&!e.kal){B.eylem=null;if(e.durbun)BK_DURBUN.visible=false;}
+    if(e.t>=e.sure)B.eylem=null;
   }else B.kalkHedef=0;
   elYerlestir('sol',poz.sol);elYerlestir('sag',poz.sag);
   /* ayağa kalkma (yay) ve rafa yumruk sarsıntısı */

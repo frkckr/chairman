@@ -47,11 +47,12 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
   });
   /* masadaki telefon: ön plan kamerasıyla isabet; üzerindeyken el imleci */
   const telefonUstunde=e=>{
-    if(ON_EKRAN.sayfa!==null||bino)return false;
+    if(ON_EKRAN.sayfa!==null)return false;
     const r=canvas.getBoundingClientRect();isin.setFromCamera({x:(e.clientX-r.left)/r.width*2-1,y:-((e.clientY-r.top)/r.height*2-1)},BASKAN.kamera);
     return isin.intersectObject(BK_TEL,true).length>0;};
-  hud.addEventListener('click',e=>{if(telefonUstunde(e))ac();});
-  hud.addEventListener('pointermove',e=>{const u=telefonUstunde(e);hud.style.cursor=u?'pointer':'';hud.title=u?'Telefon (T)':'';});
+  /* işaretçi olayları oyun tuvalinde (#view; ekran üstü maske tuvali dürbünle birlikte 2026-10-07'de kalktı) */
+  canvas.addEventListener('click',e=>{if(telefonUstunde(e))ac();});
+  canvas.addEventListener('pointermove',e=>{const u=telefonUstunde(e);canvas.style.cursor=u?'pointer':'';canvas.title=u?'Telefon (T)':'';});
   addEventListener('keydown',e=>{
     if(ON_EKRAN.sayfa!==null||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;
     if(e.code==='KeyT'){e.preventDefault();MAC_TELEFON.acik?kapat():ac();}

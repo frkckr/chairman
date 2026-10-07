@@ -2,11 +2,12 @@
 const $=id=>document.getElementById(id);
 /* tek ızgara (2026-10-03, kullanıcı kararı: maçtaki görüntü kalitesi bütün oyunun standardıdır): oda, balkon ve maç 960×720 (RW×RH) */
 const RW=STIL.ekran.genislik,RH=STIL.ekran.yukseklik;
-const screenEl=$('screen'),canvas=$('view'),hud=$('hud'),hg=hud.getContext('2d');
+/* tek tuval: dürbün maskesinin ekran üstü tuvali (hud) dürbünle birlikte 2026-10-07'de kaldırıldı; işaretçi olayları #view'dadır */
+const screenEl=$('screen'),canvas=$('view');
 let renderer=null;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:false,preserveDrawingBuffer:true});}catch(e){renderer=null;}
 if(!renderer){screenEl.insertAdjacentHTML('beforeend','<p class="nogl">Bu cihazda 3B görüntü (WebGL) açılamadı.</p>');throw new Error('WebGL yok');}
-renderer.setPixelRatio(1);renderer.setSize(RW,RH,false);hud.width=RW;hud.height=RH;renderer.autoClear=false;
+renderer.setPixelRatio(1);renderer.setSize(RW,RH,false);renderer.autoClear=false;
 /* her sahne ızgaranın ornekleme katı büyüklükte çizilir (rt, 1920×1440), son işlem her 2×2 bloğun ortalamasını alır; 15 bit renk ve
    titreme ızgaradadır. Doğrusal süzgeçle blok köşesinden tek örnek dört pikselin ortalamasıdır. Maç (js/arayuz.js frame) ile oda ve
    balkon (js/oda.js odaCiz) aynı hedefe çizer */

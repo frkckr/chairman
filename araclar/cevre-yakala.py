@@ -2,7 +2,8 @@
 """Chairman — stadın çevresini görüntüleme ve ölçme aracı (yol haritası N8, 2026-10-04)
 
 Maç sahnesini (gece) ve balkon/pencere sahnesini (gündüz) başsız Chromium'da açar; serbest kamerayla stadın dört yanını, başkanın
-yerinden bakışı ve dürbünü çeker. Oyunun kare döngüsü durdurulur (requestAnimationFrame elle), Math.random tohumludur; görüntüler
+yerinden bakışı ve 9°'lik yakın çekimleri (yalnız çevrenin incelenmesi için; oyundaki dürbün 2026-10-07'de kaldırıldı) çeker. Oyunun kare
+döngüsü durdurulur (requestAnimationFrame elle), Math.random tohumludur; görüntüler
 oyunun kendi çizim yolundan (2× iç çizim, renk ve titreme) geçer. Başkanın ön plandaki elleri ve rafı çizilmez (çevre incelemesi içindir).
 
 Ölçülenler:
@@ -86,14 +87,14 @@ GECE = [
     ("gece-kose-kb", {"goz": [-115, 48, 108], "hedef": [0, 0, 0], "fov": 52}),
     ("gece-kose-gd", {"goz": [115, 48, -108], "hedef": [0, 0, 0], "fov": 52}),
     ("gece-kose-gb", {"goz": [-115, 48, -108], "hedef": [0, 0, 0], "fov": 52}),
-    # başkanın yerinden: ölü top geniş açısı ve dürbün
+    # başkanın yerinden: ölü top geniş açısı ve inceleme için 9°'lik yakın çekim (oyunda dürbün yok)
     ("gece-baskan-orta", {"baskan": True, "hedef": [0, 0, 0], "fov": 36, "tekrar": True}),
     ("gece-baskan-dogu", {"baskan": True, "hedef": [52, 0, 10], "fov": 36}),
     ("gece-baskan-bati", {"baskan": True, "hedef": [-52, 0, 10], "fov": 36}),
     ("gece-baskan-karsi", {"baskan": True, "hedef": [0, 2, 34], "fov": 36}),
-    ("gece-durbun-yamac", {"baskan": True, "hedef": [85, 12, 0], "fov": 9}),
-    ("gece-durbun-evler", {"baskan": True, "hedef": [0, 6, 85], "fov": 9}),
-    ("gece-durbun-kapi", {"baskan": True, "hedef": [-76, 4, 0], "fov": 9}),
+    ("gece-yakin-yamac", {"baskan": True, "hedef": [85, 12, 0], "fov": 9}),
+    ("gece-yakin-evler", {"baskan": True, "hedef": [0, 6, 85], "fov": 9}),
+    ("gece-yakin-kapi", {"baskan": True, "hedef": [-76, 4, 0], "fov": 9}),
     ("gece-genis", {"goz": [0, 110, -170], "hedef": [0, 0, 20], "fov": 60, "tekrar": True}),
     # ana tribünün arkası (başkanın yerinden görünmez): sahadan kulüp binasına, binanın arkasından sokağa
     ("gece-bina-on", {"goz": [0, 14, 10], "hedef": [0, 8, -60], "fov": 40}),
