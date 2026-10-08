@@ -150,6 +150,16 @@ Object.assign(Match.prototype,{
         P1[t]=pres1;
         const ileriPres=bu>lerp(34,6,tk.pres);
         if(!(bu<-PL+30||ileriPres))pres2=null;
+        /* T4 (2): bire bir örtüsü — 1. adam düellodaysa (çalımın hedefi) ya da sürücü ona 4,5 m içinde üstüne geliyorsa, 1. adamın kapatYakin
+           m arkasındaki noktaya en yakın takım arkadaşı (kaleci, kilitli eylemdeki ve az önce geçilen hariç; 9 m içinde) 2. adam olur ve yakın
+           kapatır (kapatYakin, mac-hareket.js). Eskiden orta sahada 2. adam yoktu: yardımcı bölgesinde duruyordu (c-1v1 [4b]: itiş anında topa
+           5,8 m, hızı 1,7 m/sn; geçildikten sonra 1,5 sn'de kayıp %0) */
+        if(pres1&&!pres2&&!(pres1.eylem&&pres1.eylem.kilit)){const s1=hyp(pres1.x-s.x,pres1.z-s.z);
+          if(s.calim&&s.calim.o===pres1||s1<=4.5&&(s.vx*(pres1.x-s.x)+s.vz*(pres1.z-s.z))/(s1||1)>0.5){
+            const kx=-d*PL-pres1.x,kz=MZ-pres1.z,kl=hyp(kx,kz)||1,K=MOTOR_AYAR.kapatYakin,hx=pres1.x+kx/kl*K,hz=pres1.z+kz/kl*K;let en=null,ed=81;
+            for(const q of this.teams[t]){if(q===pres1||!q.oyunda||q.rol==='GK'||(q.eylem&&q.eylem.kilit)||this.t-q._gecT<1.5)continue;
+              const dd=(q.x-hx)*(q.x-hx)+(q.z-hz)*(q.z-hz);if(dd<ed){ed=dd;en=q;}}
+            if(en){pres2=en;en._kapatK=this.kare;}}}
       }
       const cizgi=this.savunmaCizgisi(t,hucum,odak);
       if(!hucum)this.markajAta(t,du?odak:gecikmeli);else if(this._markaj)this._markaj[t]=new Map();
@@ -167,7 +177,7 @@ Object.assign(Match.prototype,{
           this.kovala(p,K&&K.yuksek||p===b.hedefOyuncu||f<=MOTOR_AYAR.kovalaPay?1:0.5);continue;}
         if(p===kovalayan[2+t]){this.kovala(p,1);continue;}
         if(p===pres1){this.eforVer(p,karsi?0.9:1);this.presYap(p,b.sahip,dt);continue;}
-        if(p===pres2){this.eforVer(p,karsi?0.9:0.8);this.kapat(p,b.sahip);continue;}
+        if(p===pres2){const yakin=p._kapatK===this.kare;this.eforVer(p,yakin?1:karsi?0.9:0.8);if(yakin)this.kapatYakin(p,b.sahip,pres1,dt);else this.kapat(p,b.sahip);continue;}
         if(p===pres3){this.eforVer(p,0.9);this.yolKapat(p,b.sahip);continue;}
         let od=odak;
         if(!du&&(!hucum||MOTOR_AYAR.hucumGecikme&&(MOTOR_AYAR.hucumGecikme>1||p.x*d<b.x*d))){/* kişisel tepki: topun tp sn önceki (yumuşatılmış) yeri */

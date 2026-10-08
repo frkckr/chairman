@@ -10,7 +10,9 @@
    [2] Kalibrasyon: denemenin tahmini (yaklaşmanın sonundaki birebirTahmin P'si) ile gerçekleşen. Kabul: |ortalama P − başarı| ≤ 10 puan; Brier bilgi.
    [3] Karar açık: aynı kurulum, karar katmanı açık (rakibi geç kararı 'gec'; bilgi).
    [4] Savunmacı: okuması düşük ↔ yüksek savunmacı (karar ve görüş 0,3 ↔ 0,9). [4a] kabul: aldatılma oranı düşük okumada en az 1,5 kat.
-       [4b] (T4d) arkada 3 m'de yardımcı savunmacı varken geçme düşer (bilgi; T4d'de kabul). [4c] savunma kalitesi (müdahale, karar, görüş birlikte
+       [4b] (T4d, 2026-10-08) arkada 3 m'de yardımcı savunmacı: "geçti" ilk adamın geçilmesidir, yardımcının işi sonra başlar; geçtikten sonra
+       1,5 sn içinde top kaybı, yardımcının topu alması (kaçışta ya da geçildikten sonra) ve temiz geçiş (geçti ve 1,5 sn top bizde) ölçülür;
+       payda düelloya giren her deneme. Kabul: temiz geçiş yardımsızın en çok 0,75 katı, yardımcı düellonun en az dörtte birinde topu alır. [4c] savunma kalitesi (müdahale, karar, görüş birlikte
        0,3 ↔ 0,9; bilgi: faul modeli T5'te).
    Kabul dışıysa çıkış kodu 1. Kullanım: node araclar/mac-deneme.js --senaryo c-1v1 [N=60 hücre başına; beceri etkisi 30'da gürültü içinde] [tohum] */
 'use strict';
@@ -22,8 +24,10 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const yerlestir=(p,x,z,yon,v)=>{Object.assign(p,{x,z,tx:x,tz:z,vx:Math.cos(yon)*v,vz:Math.sin(yon)*v,spd:v,yon,eylem:null,kickCd:0,surus:null,kosu:null,oyunda:true,denge:1,calim:null,yutma:null});};
   /* bir deneme: fk beceri farkı, v0 hız, kip: 'zorla' (çalım niyeti) | 'karar' (karar katmanı açık), ok: savunmacının karar/görüş (null: kadro), yardim: arkada ikinci savunmacı */
   let deneme=0;
-  const dene=(fk,v0,i,kip,ok,yardim,sk)=>{deneme++;let ol=null,gecSecildi=false;
-    const m=kur((tohum||1)*1000+deneme,(ad,v)=>{if(ad==='calim'&&v&&v.p===A&&!ol)ol=v;else if(ad==='faul'&&!ol)ol={sonuc:'faul',P:null,yut:null,dis:true};});
+  const dene=(fk,v0,i,kip,ok,yardim,sk)=>{deneme++;let ol=null,gecSecildi=false,olT=0,kayipSonra=null,kim=null;
+    /* kim: topu alan savunmacı (D ya da D2; olay anında ya da geçildikten sonra son dokunan) */
+    const kimBul=()=>b.sonDokunan===D?'D':yardim&&b.sonDokunan===D2?'D2':b.sahip===D?'D':yardim&&b.sahip===D2?'D2':null;
+    const m=kur((tohum||1)*1000+deneme,(ad,v)=>{if(ad==='calim'&&v&&v.p===A&&!ol){ol=v;olT=m.t;if(v.sonuc==='kayip')kim=kimBul();}else if(ad==='faul'&&!ol){ol={sonuc:'faul',P:null,yut:null,dis:true};olT=m.t;}});
     const A=m.teams[0][9],D=m.teams[1][3],D2=m.teams[1][2],b=m.ball,d=m.dir[0],hy=d>0?0:Math.PI;
     bosalt(m,yardim?[A,D,D2]:[A,D]);
     /* beceri farkı: hücumcunun sürüşü (savunmacı 0,6); ok: savunmacının okuması (karar, görüş); sk: savunma kalitesi (müdahale, karar, görüş) */
@@ -36,13 +40,17 @@ module.exports={calistir({ctx,vm,N,tohum}){
     m.topDegisti();m.sahipYap(A);
     let vardi=false,ilkD=null;
     for(let k=0;k<60*6;k++){
-      if(kip==='zorla'){A.kararT=99;if(b.sahip===A&&(!A.surus||!A.surus.cal)&&!A.calim)A.surus={yon:hy,hiz:1,cal:{o:D}};}
+      /* T4 (2): çalım niyeti yalnız olaya kadar zorlanır; geçtikten sonra hücumcu düz sürer (eskiden niyet yeniden kurulup geride kalan savunmacıya dönüyordu) */
+      if(kip==='zorla'){A.kararT=99;if(!ol&&b.sahip===A&&(!A.surus||!A.surus.cal)&&!A.calim)A.surus={yon:hy,hiz:1,cal:{o:D}};}
       m.step(dt);if(A.calim){vardi=true;if(ilkD==null&&A.calim.faz>=1)ilkD=Math.hypot(D.x-A.x,D.z-A.z);}
       if(kip==='karar'&&A.surus&&A.surus.cal)gecSecildi=true;
-      if(ol)break;if(m.phase!=='play')break;
-      if(b.sonDokunan===D||b.sahip===D){if(!ol)ol={sonuc:'kayip',P:null,yut:null,dis:true};break;}}
+      if(m.phase!=='play')break;
+      if(!ol&&(b.sonDokunan===D||b.sahip===D||yardim&&(b.sonDokunan===D2||b.sahip===D2))){ol={sonuc:'kayip',P:null,yut:null,dis:true};kim=kimBul();break;}
+      /* T4 (2): geçtikten sonra 1,5 sn izlenir — top rakibe geçerse (yardımcı dahil) "geçtikten sonra kayıp", geçmezse "temiz geçiş" */
+      if(ol){if(ol.sonuc==='gecti'&&kayipSonra==null){if(b.sonTakim!==0||b.sahip&&b.sahip.team===1){kayipSonra=true;kim=kimBul();}else if(m.t-olT>=1.5)kayipSonra=false;}
+        if(ol.sonuc!=='gecti'||kayipSonra!=null)break;}}
     const sonuc=ol?ol.sonuc:vardi?'vazgecti':'sonucsuz';
-    return{sonuc,P:ol&&!ol.dis?ol.P:null,yut:ol?ol.yut:null,hareket:ol&&ol.hareket,deneme:!!ol&&!ol.dis,gecSecildi,ilkD};};
+    return{sonuc,P:ol&&!ol.dis?ol.P:null,yut:ol?ol.yut:null,hareket:ol&&ol.hareket,deneme:!!ol&&!ol.dis,gecSecildi,ilkD,kayipSonra,kim};};
   const y=(a,c)=>c?(100*a/c).toFixed(0).padStart(4)+'%':'   —';
   /* [1] + [2] */
   const FARK=[-0.4,-0.2,0,0.2,0.4],HIZ=[0,3,6],T={},kal=[],HAR={};
@@ -76,8 +84,11 @@ module.exports={calistir({ctx,vm,N,tohum}){
   {let gs=0,den=0,gec=0;const N3=n;for(let i=0;i<N3;i++){const r=dene(0,3,i,'karar',null,false);if(r.gecSecildi)gs++;if(r.deneme){den++;if(r.sonuc==='gecti')gec++;}}
    console.log(`\n[3] Karar açık (beceri farkı 0, 3 m/sn; ${N3} deneme): "rakibi geç" seçildi %${(100*gs/N3).toFixed(0)} · çalım denemesi ${den} · geçme %${den?(100*gec/den).toFixed(0):'—'} (bilgi)`);}
   /* [4] savunmacı */
-  {const N4=n*2,say=(ok,yardim)=>{let yd=0,yy=0,den=0,gec=0,dS=0,dN=0;for(let i=0;i<N4;i++){const r=dene(0,3,i,'zorla',ok,yardim);if(r.yut!=null){yd++;if(r.yut)yy++;}if(r.deneme){den++;if(r.sonuc==='gecti')gec++;}if(r.ilkD!=null){dS+=r.ilkD;dN++;}}
-      return{yut:yd?yy/yd:NaN,yd,gec:den?gec/den:NaN,den,ilkD:dN?dS/dN:NaN};};
+  /* T4 (2): payda [1]'deki gibi düelloya giren her deneme (olaysız biten kayıplar dahil; eskiden yalnız olaylı denemeler sayılıyor, yardımcının
+     kaçışta aldığı toplar paydadan düşüyordu). ortu: yardımcının topu alması (düello sırasında ya da geçildikten sonra 1,5 sn içinde) */
+  {const N4=n*2,say=(ok,yardim)=>{let yd=0,yy=0,den=0,gec=0,dS=0,dN=0,ks=0,tz=0,ortu=0;for(let i=0;i<N4;i++){const r=dene(0,3,i,'zorla',ok,yardim);if(r.yut!=null){yd++;if(r.yut)yy++;}
+        if(r.sonuc!=='vazgecti'&&r.sonuc!=='sonucsuz'){den++;if(r.sonuc==='gecti'){gec++;if(r.kayipSonra===true)ks++;else if(r.kayipSonra===false)tz++;}if(r.kim==='D2')ortu++;}if(r.ilkD!=null){dS+=r.ilkD;dN++;}}
+      return{yut:yd?yy/yd:NaN,yd,gec:den?gec/den:NaN,den,ilkD:dN?dS/dN:NaN,temiz:den?tz/den:NaN,kayipSonra:gec?ks/gec:NaN,ortu:den?ortu/den:NaN};};
    const dus=say(0.3,false),yuk=say(0.9,false),oran=dus.yut/Math.max(1e-6,yuk.yut),ok4=oran>=1.5&&dus.yd>=20&&yuk.yd>=20;
    console.log(`\n[4] Savunmacı (beceri farkı 0, 3 m/sn; ${N4} deneme)`);
    console.log(`  okuma düşük (karar/görüş 0,3): aldatıldı %${(100*dus.yut).toFixed(0)} (${dus.yd}) · geçme %${(100*dus.gec).toFixed(0)} (${dus.den})`);
@@ -85,7 +96,13 @@ module.exports={calistir({ctx,vm,N,tohum}){
    console.log((ok4?'  ':'! ')+`[4a] Kabul (T4): aldatılma oranı düşük okumada ≥ 1,5 kat → ${oran.toFixed(2)} kat`);
    if(!ok4)cikis=1;
    const tek=say(null,false),yard=say(null,true);
-   console.log(`  [4b] (bilgi; T4d'de kabul) yardımcı savunmacı yok → var: geçme %${(100*tek.gec).toFixed(0)} → %${(100*yard.gec).toFixed(0)} · hazırlıkta uzaklık ${tek.ilkD.toFixed(2)} → ${yard.ilkD.toFixed(2)} m`);
+   /* T4 (2): yardımcı 3 m arkada — "geçti" ilk adamın geçilmesidir (Opta), yardımcının işi ondan sonra başlar: kaçışta ya da geçildikten sonra
+      1,5 sn içinde topu alması ve temiz geçiş (geçti ve 1,5 sn top bizde) ölçülür. Kabul: temiz geçiş yardımsızın en çok 0,75 katı; yardımcı
+      düellonun en az dörtte birinde topu alır */
+   const ok4b=yard.temiz<=0.75*tek.temiz&&yard.ortu>=0.25;
+   console.log(`  yardımcı savunmacı yok → 3 m arkada: geçme %${(100*tek.gec).toFixed(0)} → %${(100*yard.gec).toFixed(0)} · geçtikten sonra 1,5 sn içinde kayıp %${(100*tek.kayipSonra).toFixed(0)} → %${(100*yard.kayipSonra).toFixed(0)} · temiz geçiş %${(100*tek.temiz).toFixed(0)} → %${(100*yard.temiz).toFixed(0)} · yardımcı topu aldı %${(100*yard.ortu).toFixed(0)} (${yard.den} deneme) · hazırlıkta uzaklık ${tek.ilkD.toFixed(2)} → ${yard.ilkD.toFixed(2)} m`);
+   console.log((ok4b?'  ':'! ')+`[4b] Kabul (T4): yardımcıyla temiz geçiş ≤ 0,75 × yardımsız (${(100*yard.temiz).toFixed(0)} / ${(100*tek.temiz).toFixed(0)}) ve yardımcı topu alır ≥ %25 (%${(100*yard.ortu).toFixed(0)})`);
+   if(!ok4b)cikis=1;
    const say2=sk=>{let den=0,gec=0,faul=0;for(let i=0;i<N4;i++){const r=dene(0,3,i,'zorla',null,false,sk);if(r.sonuc!=='vazgecti'&&r.sonuc!=='sonucsuz'){den++;if(r.sonuc==='gecti')gec++;if(r.sonuc==='faul')faul++;}}return{gec:den?gec/den:NaN,faul:den?faul/den:NaN};};
    const zayif=say2(0.3),iyi=say2(0.9);
    console.log(`  [4c] (bilgi; faul modeli T5) savunma kalitesi 0,3 → 0,9: geçme %${(100*zayif.gec).toFixed(0)} → %${(100*iyi.gec).toFixed(0)} · faulle biten %${(100*zayif.faul).toFixed(0)} → %${(100*iyi.faul).toFixed(0)}`);}

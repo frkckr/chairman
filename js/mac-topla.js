@@ -58,8 +58,9 @@ ayarEkle('B',{
   /* T4 (2026-10-08): rakibi geç */
   birebirMenzil:8,             // önündeki (±66°) savunmacı bu uzaklık içindeyse rakibi geç seçeneği tartılır (m; düelloya girmesi ayrıca aranır)
   birebirKayip:1.0,            // rakibi geçerken top kaybının bedel çarpanı
-  birebirDeger:4.0             // adam geçmenin ek değeri (puan; devam değeri onu eksik ölçer: savunma dağılmış, sürücü hızla gelir; araDeger kalıbı).
+  birebirDeger:4.0,            // adam geçmenin ek değeri (puan; devam değeri onu eksik ölçer: savunma dağılmış, sürücü hızla gelir; araDeger kalıbı).
                                // T4 ölçümü: 3'te maç başına ~6, 4'te ~9 düello; başarı %47–52
+  devamBirebir:1.0             // (1c) alıcının önündeki tek savunmacıyı geçme devamının payı (devamDegeri; 0 kapatır)
 });
 /* vuruş stili (sözleşme: ic/dis/ust/asirtma/vole/yarimVole); vuruş anında topun yüksekliği ve şutun türüyle kesinleşir */
 function vurusStili(sec,y){

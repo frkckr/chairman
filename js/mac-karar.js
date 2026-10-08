@@ -166,14 +166,14 @@ function pasKaybi(m,p,x,z){return 0.3+xT(-x*m.dir[p.team],z)*100;}
    Topu alan oyuncu bakabilsin, taşıyabilsin, bekleyebilsin; pas en ilerideki adama değil devamı olan adama gitsin. Hepsi saf (rastlantı yok). */
 /* baskı süresi: topu t sn sonra (x,z)'de tutan oyuncuya en yakın iki rakibin varış süresi − t (sn; 9: baskı yok). Yerdeki ya da kilitli
    eylemdeki rakip sayılmaz. Ufkun (t + 2,5 sn) ötesindeki rakip sonucu değiştirmez (açıklık 1,8 sn'de doyar). Paylaşılan nesne döner (kopyala) */
-const BS={t1:9,t2:9};
-/* haric (T4): sayılmayan rakip (rakibi geç seçeneğinde geçilmiş savunmacı) */
+const BS={t1:9,t2:9,o1:null};
+/* haric (T4): sayılmayan rakip (rakibi geç seçeneğinde geçilmiş savunmacı). o1 (T4 1c): en önce varan rakip */
 function baskiSuresi(m,team,x,z,t,haric){
-  let t1=9,t2=9;const ufuk=t+2.5;
+  let t1=9,t2=9,o1=null;const ufuk=t+2.5;
   for(const o of m.teams[1-team]){if(!o.oyunda||(o.eylem&&o.eylem.kilit)||o===haric)continue;
     const dx=o.x-x,dz=o.z-z,r=o.maxSpd*1.1*ufuk+0.8;if(dx*dx+dz*dz>r*r)continue;
-    const v=varisZamani(o,x,z,0.8,0.2)-t;if(v<t1){t2=t1;t1=v;}else if(v<t2)t2=v;}
-  BS.t1=t1;BS.t2=t2;return BS;}
+    const v=varisZamani(o,x,z,0.8,0.2)-t;if(v<t1){t2=t1;t1=v;o1=o;}else if(v<t2)t2=v;}
+  BS.t1=t1;BS.t2=t2;BS.o1=o1;return BS;}
 /* açıklık (0–1): 0 rakip topla aynı anda gelir, 1 en az 1,8 sn serbest */
 const acikOran=t1=>clamp((t1-0.2)/1.6,0,1);
 /* (x,z)'den ileriye en iyi pasın ucuz ön puanı: ileride ya da hizadaki arkadaşlar (ofsaytta olmayan), hattı kapatan rakipler (pasAdayiEkle'nin
@@ -199,6 +199,15 @@ function devamDegeri(m,q,x,z,t,bakis,haric){
   if(u>PL-30)en=Math.max(en,xG(u,z,'ayak',1-acik)*100*(0.85+q.oz.sut*0.3));
   const k=10*acik*(1-sirt);
   if(k>1){const u2=Math.min(PL-11,u+k);en=Math.max(en,xT(u2,z+(MZ-z)*0.15)*100+(u2-u)*A.ilerleme*0.8);}
+  /* T4 (1c): alıcının bire bir devamı. Önündeki tek savunmacıya (ilki 1,6 sn içinde ve önünde, ikincisi ondan en az 0,6 sn geç; kaleci değil)
+     yüzü dönük alıcı onu geçmeyi dener: P1 sürüş becerisinden (0,15 + 0,5·sürüş) ve yalnızlıktan (0,6–1,6 sn: 0 → 1); kazanç 9 m ötenin
+     tehdidi + ilerleme + adam geçme değerinin yarısı (bir adım ötede, kesin değil), kayıp bu yerin bedeli (gec seçeneğinin 0,75 oranıyla).
+     Önceden önü kapalı alıcının devamı yalnız oranın tehdidiydi: beke karşı yalnız kalan kanat oyuncusuna pas en iyi seçenek olmuyordu
+     (rakip yarıda %3; kanada pas %10, çalımların kanat payı %20) */
+  const o1=bs.o1;
+  if(A.devamBirebir>0&&o1&&o1.rol!=='GK'&&u>-12&&bs.t1<1.6&&sirt<0.5&&(o1.x-x)*d>0.5){const iso=clamp((bs.t2-bs.t1-0.6)/1.0,0,1);
+    if(iso>0){const P1=clamp(0.15+0.5*q.oz.surus,0.1,0.65)*iso*(1-sirt),u2=Math.min(PL-8,u+9);
+      const v1=(P1*(xT(u2,z+(MZ-z)*0.15)*100+9*A.ilerleme+0.5*A.birebirDeger)-(1-P1)*0.75*pasKaybi(m,q,x,z))*A.devamBirebir;if(v1>en)en=v1;}}
   /* ön puan tam analizden iyimserdir (alıcının baskısı, vuruş hatası yok): devamPas kadar sayılır */
   const ip=ileriPasOnPuani(m,q,x,z,0);if(ip>-9)en=Math.max(en,ip*A.devamPas*(1-0.7*sirt));
   const g=clamp(0.62+0.38*acik-0.15*iki,0.4,1);
