@@ -14,6 +14,8 @@ Kullanım:
               --onek AD (dosya adlarının başına; ör. once/sonra karşılaştırması) · --en-cok S (koşul için en çok oyun süresi, varsayılan 900)
               --js "<ifade>" (sayfa yüklenince çalışır; ör. bir STIL ayarını açıp kapatmak: --js "STIL.okunurluk.disCizgi=true")
               --oncesi (--kosul ile: maç öncesini atlamadan bekle; ör. tören ve takım fotoğrafı anları)
+              --anm once (A2, 2026-10-08: çizim dondurulmuş "önce" animasyonuyla; araclar/karsilastir/once/animasyon.js. Motor aynıdır,
+                aynı tohumla aynı an; önce/sonra şeridi git stash'siz alınır: --anm once --onek once- ile ve onsuz --onek sonra-)
               --giris (N11, 2026-10-04: stada varışı ve locaya girişi başlatıp film şeridi çeker; karartma ve karar anı gibi sayfa katmanları
                 da görüntüye girer; --sonra S: şeride başlamadan S sn oynat) · --ek "&rakipBaskan=yerinde" (adrese eklenir)
 Çıktı: araclar/anlar/<onek><ad>.png ve .json (topun ekrandaki yeri ve boyu (topPx gerçek, topCizimPx asgari boya büyütülmüş çizim), oyuncuların
@@ -32,6 +34,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from kontrol import KOK, yerel_three, kopya_hazirla  # noqa: E402
 
 CIKTI = KOK / "araclar" / "anlar"
+ONCE = KOK / "araclar" / "karsilastir" / "once" / "animasyon.js"
+ONCE_YUKLE = KOK / "araclar" / "karsilastir" / "once-yukle.js"
 
 # hazır anlar: (koşul, sonra sn, ön koşul: 'mac' maça geç / 'oncesi' maç öncesinde kal)
 HAZIR = {
@@ -168,6 +172,9 @@ async def yakala(tarayici, site, ad, kosul, sonra, on, a):
     await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}" + (a.ek or ""))
     await pg.wait_for_selector("#btnMacaGec", timeout=30000)
     await pg.evaluate("__kare(2)")
+    if a.anm == "once":
+        await pg.evaluate(ONCE_YUKLE.read_text(encoding="utf-8") + "\n;window.anmOnceYukle = anmOnceYukle; true;")
+        await pg.evaluate("(s) => anmOnceYukle(window, s)", ONCE.read_text(encoding="utf-8"))
     await pg.evaluate(KUR_JS)
     if a.js:
         await pg.evaluate("(k) => { new Function(k)(); }", a.js)
@@ -224,6 +231,7 @@ async def ana():
     ap.add_argument("--oncesi", action="store_true")
     ap.add_argument("--giris", action="store_true")
     ap.add_argument("--ek")
+    ap.add_argument("--anm", choices=["once", "simdi"], default="simdi")
     a = ap.parse_args()
     try:
         from playwright.async_api import async_playwright

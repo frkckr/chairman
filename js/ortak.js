@@ -1,5 +1,8 @@
 /* ============ Chairman — ortak yardımcılar: sayı araçları, 3x5 piksel yazı, kulüpler, reklam listesi ============ */
 'use strict';
+/* geliştirme kancası (A2, 2026-10-08): animasyon karşılaştırma sayfası (araclar/animasyon-karsilastir.html) oyunu iki çerçevede açar ve
+   sayfa betikleri çalışmadan önce iki çerçeveye ortak kare saatini ve tohumlu rastlantıyı kurar. Oyunda (üst pencere yokken) etkisizdir. */
+try{if(window.parent!==window&&typeof window.parent.ANM_KARSILASTIR_KUR==='function')window.parent.ANM_KARSILASTIR_KUR(window);}catch(e){}
 /* ============ yardımcılar ============ */
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const lerp=(a,b,t)=>a+(b-a)*t;

@@ -72,21 +72,31 @@ const STIL={
 
   tenler:['#e2b48c','#cf9a70','#b07650','#8a5a3c','#ecc49e'],
 
-  /* Oyuncu animasyonu (js/animasyon.js; E akışı, 2026-10-03): yalnız görünüş ayarları, motoru etkilemez.
-     adim: adım boyu = boy·(kisa + uzun·min(1, hız/1,4)) + hizBoy·hız (m); yer: ayağın yerde kaldığı döngü payı (yürüyüş), yerHiz ile hızlandıkça
-       yerEn'e iner; kaldir/kaldirHiz/kaldirTavan: salınan ayağın yüksekliği (m); geri/yan: geri ve yana adımın boy çarpanı;
-       yuvar: adımın uçlarında taban ortasının yükselmesi (topuk ve burun yere değer, m).
-     kalcaDonus: kalçanın hareket yönüne dönüşü (rad, gövde ters döner). egilme: koşuda öne eğilme, ileri ivmeden eğilme ve yan ivmeden yatış katsayıları.
+  /* Oyuncu animasyonu (js/animasyon.js; E akışı, 2026-10-03; A2a 2026-10-08): yalnız görünüş ayarları, motoru etkilemez. Gerçek değerler
+     gerçekçilik planı Ek G0/G1'dedir; adım boyu ve yerde kalma payı hızdan ve boydan hesaplanır (anmAdimBoyu).
+     adim: yuvar: adımın uçlarında taban ortasının yükselmesi (m); kaldirEn/kaldirHiz/kaldirTavan: salınan ayağın tepe yüksekliği
+       = kaldirEn + kaldirHiz·hız (m; en çok kaldirTavan, adımın yarısını geçmez); geri: geri adımın boy çarpanı; yanEn/yanHiz/yanTavan: yana
+       adımın boyu (m); donusKadans: yerinde dönerken basma sıklığı (adım/sn; dönüş farkı büyüdükçe artar).
+     kalcaDonus: kalçanın hareket yönüne dönüşü (rad, gövde ters döner); kalcaSalinim: adımla kalça dönüşü (rad; yürüyüş, koşu);
+       kalcaGecikme: dönüşte kalçanın ayakların yönünde kalan payı; yaylanma: koşuda kalçanın inip kalkması (m; yavaş koşu, hızlı koşu).
+     egilme: kosu koşuda öne eğilme (rad); ivme/yatis: ivmeden öne-arkaya ve virajda içe yatış (atan(a/g) çarpanı); ivmeAlt/ivmeUst/yatisTavan sınırlar (rad).
+     bas: bakış zinciri — yay (1/sn), hiz (en çok rad/sn), ivme (en çok rad/sn²), sinir (baş–gövde, rad; ötesini gövde alır, en çok govde rad), oncu (dönüşte baş, kökün
+       dönüş hızının bu kadar saniye ilerisine bakar).
+     kol: kol salınımının genliği (rad; yürüyüş + koşu payı) ve dirsek bükülmesi (rad; yürüyüş + koşu payı).
      dusus: yerde yatış açısı (rad) ve gövde kalınlığı (yüzüstü/sırtüstü, yan). dokunus: top sürerken ayak dokunuşunun süresi (sn).
      kucukPiksel: ekranda (720 satırlık ızgarada) bundan kısa görünen oyuncuda bakış ve dokunuş gibi ayrıntı katmanları atlanır (480 satırdaki 8 ile aynı eşik).
      top: havadaki topun üst/kesik (ust) ve yan (egri) dönüşünün görünür hız çarpanları; kare: bir karede en çok dönüş (rad, örnekleme kırılmasın).
      sevincCesit: gol sevinci çeşidi sayısı (oyuncu ve gole göre karışık seçilir) */
   animasyon:{
-    adim:{kisa:0.25,uzun:0.37,hizBoy:0.17,yer:0.6,yerHiz:0.05,yerEn:0.22,kaldir:0.06,kaldirHiz:0.05,kaldirTavan:0.42,geri:0.7,yan:0.45,yuvar:0.05},
-    kalcaDonus:0.5,egilme:{kosu:0.2,ivme:0.025,yatis:0.03},
+    adim:{yuvar:0.05,kaldirEn:0.06,kaldirHiz:0.055,kaldirTavan:0.42,geri:0.75,yanEn:0.3,yanHiz:0.08,yanTavan:0.5,donusKadans:3.2},
+    kalcaDonus:0.5,kalcaSalinim:[0.05,0.1],kalcaGecikme:0.65,yaylanma:[0.04,0.022],
+    egilme:{kosu:0.2,ivme:0.8,yatis:0.8,ivmeAlt:-0.3,ivmeUst:0.42,yatisTavan:0.35},
+    bas:{yay:22,hiz:7,ivme:90,sinir:1.22,govde:0.7,oncu:0.32},
+    kol:{genlik:[0.16,0.74],dirsek:[0.28,1.1]},
     dusus:{aci:1.45,yuzY:0.12,yanY:0.16},dokunus:0.18,kucukPiksel:12,
     top:{ust:300,egri:150,kare:0.6},sevincCesit:4
   },
+
 
   /* Gece maçında her projektör için bir gölge (90'ların dörtlü gölgesi): oyuncunun silüeti ışıktan zemine izdüşer (js/golgeler.js).
      opaklik: tek bir ışığın gölgesinin koyuluğu. Projektörlerin yeri stadyum tarifindedir. */

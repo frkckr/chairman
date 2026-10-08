@@ -191,6 +191,8 @@ class Match{
       profil:null,
       /* T1 (insan gibi hareket): efor 0–1, hız kipi (dur/yuru/tiris/kos/hizli/depar; çizim okur), son düşünme anı (sn) */
       efor:1,kip:'dur',dusunT:0,
+      /* A2a (2026-10-08): jest {tur: kol|isaret|itiraz|cagir|basEl|alkis, t, sure, kol, hedef} — motor → çizim; yazan iş T7/T10 (bugün null) */
+      jest:null,
       /* akışların oyuncuya sonradan yazdığı iç alanlar baştan (undefined) tanımlı: nesnenin biçimi değişmez, motor yavaşlamaz (birleştirme, 2026-10-03) */
       _cev:undefined,_hk:undefined,_kacKare:undefined,_kacX:undefined,_kacZ:undefined,_varisHiz:undefined,_varisKare:undefined,_tavirKare:undefined,
       _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_calim:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,

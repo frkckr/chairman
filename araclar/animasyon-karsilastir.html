@@ -1,0 +1,132 @@
+<!doctype html>
+<!-- Chairman — animasyon karşılaştırma sayfası (A2, 2026-10-08; gerçekçilik planı Ek G9). Aynı maç, aynı an: solda dondurulmuş "önce"
+     animasyonu (araclar/karsilastir/once/animasyon.js; araclar/karsilastir/dondur.js üretir), sağda şimdiki js/animasyon.js. Motor ikisinde de
+     aynıdır (aynı tohum); iki çerçevenin kare saati bu sayfadan birlikte ilerler (js/ortak.js'teki geliştirme kancası), sahneye ileri sarma da
+     motor adımıyla birlikte yapılır. Yerel sunucu gerekir (aynı köken; file:// çalışmaz): proje kökünde
+       python -m http.server 8765   →   http://localhost:8765/araclar/animasyon-karsilastir.html
+     ya da Claude masaüstü uygulamasında .claude/launch.json'daki "chairman-yerel". Yeni her hareket burada önce/sonra gösterilir (Ek G9). -->
+<html lang="tr"><head><meta charset="utf-8"><title>Animasyon karşılaştırma — önce / şimdi</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{color-scheme:dark}
+body{margin:0;background:#15140f;color:#e8e2d4;font:13px/1.4 system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:10px 14px;background:#1d1b15;border-bottom:1px solid #333}
+header h1{font-size:14px;margin:0 8px 0 0;font-weight:700}
+header label{display:flex;gap:6px;align-items:center}
+select,input,button{font:inherit;color:#e8e2d4;background:#2a2720;border:1px solid #4a463c;border-radius:4px;padding:4px 8px}
+input[type=number]{width:64px}
+button{cursor:pointer}button:disabled{opacity:.45;cursor:default}
+button[aria-pressed="true"]{background:#45552a;border-color:#6d8540}
+main{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+figure{margin:0}
+figcaption{padding:2px 2px 6px;font-weight:600}
+figcaption small{font-weight:400;color:#b9b19c}
+iframe{width:100%;aspect-ratio:4/3;border:0;background:#000;display:block}
+#durum{padding:2px 14px 12px;color:#b9b19c;min-height:1.4em}
+#durum b{color:#e8e2d4}
+.uyari{color:#ffb38a}
+</style></head><body>
+<header>
+  <h1>Animasyon: önce / şimdi</h1>
+  <label>Sahne <select id="sahne"></select></label>
+  <label>Kamera <select id="kamera">
+    <option value="sahne">sahnenin önerisi</option><option value="loca">loca (oyundaki bakış)</option>
+    <option value="yakin">yakın (yandan, 7 m)</option><option value="orta">orta (yandan, 16 m)</option></select></label>
+  <label>Tohum <input id="tohum" type="number" min="1" value="3"></label>
+  <label>Hız <select id="hiz"><option value="1">1×</option><option value="0.5" selected>½×</option><option value="0.25">¼×</option></select></label>
+  <button id="oynat" type="button" aria-pressed="false">▶ Oynat</button>
+  <button id="kare" type="button" title="Bir kare ileri">Kare ▸</button>
+  <button id="bastan" type="button" title="Sahneyi yeniden kur">Baştan</button>
+</header>
+<main>
+  <figure><figcaption>Önce <small>— A2 öncesi animasyon (dondurulmuş)</small></figcaption><iframe id="fOnce" title="Önce"></iframe></figure>
+  <figure><figcaption>Şimdi <small>— js/animasyon.js</small></figcaption><iframe id="fSimdi" title="Şimdi"></iframe></figure>
+</main>
+<div id="durum">Hazırlanıyor…</div>
+<script src="karsilastir/once-yukle.js"></script>
+<script>
+'use strict';
+/* sahneler: koşul çerçevenin içinde (motor adımından sonra) değerlendirilir; window.__takip kameranın izleyeceği oyuncu ya da top */
+const SAHNELER=[
+  {ad:'Yerinde dönüş (yakın)',kamera:'yakin',kosul:"(()=>{if(mac.phase!=='play'||mac.t<4)return false;for(const p of mac.players){if(!p.oyunda||p.rol==='GK'||p.eylem||p.yonHedef==null)continue;if(Math.hypot(p.vx||0,p.vz||0)>0.8)continue;let d=p.yonHedef-p.yon;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)>2.3){window.__takip=p;return true;}}return false;})()"},
+  {ad:'Topla koşu (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&mac.t>6&&!!mac.ball.sahip&&mac.ball.sahip.rol!=='GK'&&Math.hypot(mac.ball.sahip.vx||0,mac.ball.sahip.vz||0)>4.2&&!!(window.__takip=mac.ball.sahip)"},
+  {ad:'Depar (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&mac.t>6&&!!(window.__takip=mac.players.find(p=>p.oyunda&&!p.eylem&&Math.hypot(p.vx||0,p.vz||0)>6.8))"},
+  {ad:'Ölü top — bekleyiş (orta)',kamera:'orta',kosul:"mac.phase==='durus'&&mac.durus.asama==='hazir'&&mac.durus.tur!=='tac'&&!!(window.__takip=mac.ball)"},
+  {ad:'Oyun — loca bakışı',kamera:'loca',kosul:"mac.phase==='play'&&mac.t>25"},
+  {ad:'Uzun top — loca',kamera:'loca',kosul:"mac.phase==='play'&&!!mac.ball.pas&&mac.ball.pas.L>30&&mac.t-mac.ball.pas.t<0.1"},
+  {ad:'Korner — loca',kamera:'loca',kosul:"mac.phase==='durus'&&mac.durus.tur==='korner'&&mac.durus.asama==='hazir'"},
+];
+const $=id=>document.getElementById(id),F={once:$('fOnce'),simdi:$('fSimdi')},Y={once:null,simdi:null};
+const UI_CSS='.controls,.gelistirici,.duraklatildi{display:none!important}body{margin:0!important;background:#000!important;overflow:hidden}.wrap{gap:0!important;display:block!important}.screen{width:100vw!important;max-width:none!important;box-shadow:none!important}';
+for(const [i,s] of SAHNELER.entries()){const o=document.createElement('option');o.value=i;o.textContent=s.ad;$('sahne').appendChild(o);}
+let ONCE_KAYNAK=null,TOHUM=3,oynuyor=false,kurulum=0,birikim=0,sonZaman=0;
+const durum=(m,uyari)=>{$('durum').innerHTML=uyari?'<span class="uyari">'+m+'</span>':m;};
+
+/* js/ortak.js'teki kanca, çerçevenin betikleri çalışmadan çağırır: tohumlu Math.random ve elle ilerleyen kare saati (araclar/an-yakala.py ile aynı) */
+window.ANM_KARSILASTIR_KUR=w=>{
+  const yan=w===F.once.contentWindow?'once':w===F.simdi.contentWindow?'simdi':null;if(!yan)return;
+  let s=TOHUM>>>0;w.Math.random=()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};
+  let kuyruk=[],an=1000;
+  w.requestAnimationFrame=f=>{kuyruk.push(f);return kuyruk.length;};w.cancelAnimationFrame=()=>{};
+  w.performance.now=()=>an;
+  w.__kare=n=>{for(let i=0;i<n;i++){an+=1000/60;const q=kuyruk;kuyruk=[];for(const f of q)f(an);}};
+  Y[yan]={w,yan};
+};
+const yuklendi=f=>new Promise(r=>f.addEventListener('load',r,{once:true}));
+const bekle=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* kamera: loca (oyundaki), yakın/orta (yandan, ana tribün tarafından alçaktan; izlenen oyuncuyu yumuşakça takip eder) */
+function kameraKur(y){
+  const w=y.w,asil=w.kameraUygula,asilBaskan=w.baskanCiz,cam=w.eval('camera'),MZ=w.eval('MOTOR_Z'),V=new w.THREE.Vector3(),H=new w.THREE.Vector3();
+  let ilk=true;
+  w.kameraUygula=v=>{
+    const k=kameraSecimi();
+    if(k==='loca'){w.baskanCiz=asilBaskan;return asil(v);}
+    w.baskanCiz=()=>{};
+    const t=w.__takip||w.eval('mac.ball'),uz=k==='yakin'?7:16,yuk=k==='yakin'?1.9:4.2;
+    H.set(t.x,0.9,(t.z||0)-MZ);V.set(H.x+uz*0.35,yuk,H.z-uz);
+    if(ilk){y.kp=V.clone();y.kh=H.clone();ilk=false;}else{y.kp.lerp(V,0.08);y.kh.lerp(H,0.15);}
+    cam.position.copy(y.kp);cam.lookAt(y.kh);const f=k==='yakin'?34:30;if(cam.fov!==f){cam.fov=f;cam.updateProjectionMatrix();}
+  };
+}
+function kameraSecimi(){const k=$('kamera').value;return k==='sahne'?SAHNELER[+$('sahne').value].kamera:k;}
+
+/* sahneyi kur: iki çerçeveyi aynı tohumla aç, "önce" tarafına dondurulmuş animasyonu yükle, santraya geç, koşula kadar iki motoru birlikte ilerlet */
+async function sahneKur(){
+  const no=++kurulum;oynuyor=false;$('oynat').setAttribute('aria-pressed','false');$('oynat').textContent='▶ Oynat';
+  TOHUM=Math.max(1,parseInt($('tohum').value,10)||3);const S=SAHNELER[+$('sahne').value];
+  durum('Sayfalar açılıyor…');Y.once=Y.simdi=null;
+  if(!ONCE_KAYNAK){try{ONCE_KAYNAK=await (await fetch('karsilastir/once/animasyon.js',{cache:'no-store'})).text();}catch(e){durum('Dondurulmuş animasyon okunamadı (yerel sunucu gerekir: python -m http.server 8765).',true);return;}}
+  const adres='../index.html?ekran=mac&tohum='+TOHUM+'&k='+Date.now();
+  const yk=[yuklendi(F.once),yuklendi(F.simdi)];F.once.src=adres;F.simdi.src=adres;await Promise.all(yk);
+  if(no!==kurulum)return;
+  if(!Y.once||!Y.simdi){durum('Çerçeveler kancayı çağırmadı (js/ortak.js) ya da sayfa farklı kökenden açıldı.',true);return;}
+  for(const y of [Y.once,Y.simdi]){const w=y.w,st=w.document.createElement('style');st.textContent=UI_CSS;w.document.head.appendChild(st);
+    w.__kare(2);if(y.yan==='once')anmOnceYukle(w,ONCE_KAYNAK);
+    w.macaGecIste();const b=w.document.getElementById('btnMacaGec');if(b)b.hidden=true;w.__takip=null;kameraKur(y);}
+  /* ileri sarma: iki motor birlikte, kare kare (çizimsiz); koşul iki tarafta da aynı adımda gerçekleşmeli */
+  const kA=new Y.once.w.Function('return ('+S.kosul+')'),kB=new Y.simdi.w.Function('return ('+S.kosul+')');
+  let n=0,a=false,b=false;const EN=90*60;
+  while(n<EN){for(let i=0;i<240&&n<EN;i++){Y.once.w.macKare(1/60);Y.simdi.w.macKare(1/60);n++;a=!!kA();b=!!kB();if(a||b)break;}
+    if(a||b)break;durum('Sahneye ilerleniyor… '+(n/60).toFixed(0)+' sn');await bekle(0);if(no!==kurulum)return;}
+  if(!(a||b)){durum('Koşul 90 oyun saniyesinde gerçekleşmedi; başka tohum deneyin.',true);return;}
+  const esit=a&&b&&Math.abs(Y.once.w.eval('mac.t')-Y.simdi.w.eval('mac.t'))<1e-6&&Math.abs(Y.once.w.eval('mac.ball.x')-Y.simdi.w.eval('mac.ball.x'))<1e-6;
+  for(const y of [Y.once,Y.simdi])y.w.__kare(1);
+  bilgi(esit?'':' · <span class="uyari">iki motor ayrıştı</span>');
+}
+function bilgi(ek){if(!Y.simdi)return;const w=Y.simdi.w,t=w.__takip,m=w.eval('mac');
+  durum('<b>'+SAHNELER[+$('sahne').value].ad+'</b> · tohum '+TOHUM+' · '+m.minuteLabel()+'\' ('+m.t.toFixed(1)+' sn) · '+m.phase+
+    (t&&t.no!=null?' · izlenen: '+(t.team?'deplasman':'ev')+' '+t.no+' numara':'')+(ek||''));}
+function ilerle(n){if(!Y.once||!Y.simdi)return;for(let i=0;i<n;i++){Y.once.w.__kare(1);Y.simdi.w.__kare(1);}}
+function dongu(t){requestAnimationFrame(dongu);const dt=Math.min(0.1,(t-sonZaman)/1000);sonZaman=t;
+  if(!oynuyor)return;birikim+=dt*parseFloat($('hiz').value);let n=0;while(birikim>=1/60&&n<4){birikim-=1/60;n++;}if(n){ilerle(n);bilgi();}}
+requestAnimationFrame(t=>{sonZaman=t;requestAnimationFrame(dongu);});
+$('oynat').onclick=()=>{oynuyor=!oynuyor;birikim=0;$('oynat').setAttribute('aria-pressed',oynuyor?'true':'false');$('oynat').textContent=oynuyor?'❚❚ Duraklat':'▶ Oynat';};
+$('kare').onclick=()=>{ilerle(1);bilgi();};
+$('bastan').onclick=sahneKur;$('sahne').onchange=sahneKur;$('tohum').onchange=sahneKur;
+$('kamera').onchange=()=>{if(Y.once&&Y.simdi&&!oynuyor){ilerle(1);bilgi();}};
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(e.code==='Space'){e.preventDefault();$('oynat').click();}else if(e.code==='ArrowRight'){$('kare').click();}});
+if(location.protocol==='file:')durum('Bu sayfa yerel sunucu ister: proje kökünde "python -m http.server 8765", sonra http://localhost:8765/araclar/animasyon-karsilastir.html',true);
+else sahneKur();
+</script></body></html>
