@@ -7,6 +7,7 @@ dışarıdan okur ve ölçer. Animasyon dosyasına ölçüm kodu girmez: araç a
 Kullanım:
   python araclar/animasyon-olcum.py                      # şimdiki animasyon, tohum 3, 180 sn oyun
   python araclar/animasyon-olcum.py --once               # A2 öncesi dondurulmuş animasyon (araclar/karsilastir/once/animasyon.js)
+  python araclar/animasyon-olcum.py --once a2a           # A2b öncesi (A2a) dondurulmuş animasyon (araclar/karsilastir/a2a/animasyon.js)
   python araclar/animasyon-olcum.py --json araclar/taban/a2-once.json      # sonucu kaydet
   python araclar/animasyon-olcum.py --karsilastir araclar/taban/a2-once.json   # kayıtlı sonuçla yan yana
   Seçenekler: --tohum N · --sure S (oyun saniyesi; varsayılan 180)
@@ -38,7 +39,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from kontrol import KOK, yerel_three, kopya_hazirla  # noqa: E402
 
 RAPOR = KOK / "araclar" / "son-animasyon.txt"
-ONCE = KOK / "araclar" / "karsilastir" / "once" / "animasyon.js"
+KARSILASTIR = KOK / "araclar" / "karsilastir"
 YUKLE = KOK / "araclar" / "karsilastir" / "once-yukle.js"
 
 BASLANGIC_JS = """
@@ -63,7 +64,10 @@ OLCUM_KUR_JS = r"""() => {
     ucus: [0,0,0,0,0], ucusN: [0,0,0,0,0], sicramaUst: 0, sicramaBacak: 0, sicramaEylem: 0, sicramaDy: 0, kirilmaUst: 0, kirilmaBacak: 0, eylemsizKare: 0, eylemliKare: 0, kareN: 0, kanalSicrama: {},
     adimNet: [[],[],[],[],[]], basHiz: [], basHiz600: 0, basGovdeHiz: [], kokHiz: [], kanalKirilma: {}, dyEylemsiz: 0, kirilmaBacakGecis: 0,
     basMax: 0, bas70: 0, basKare: 0, basPitchMax: 0, donus: [], donusKare: 0, donusAdimsiz: 0, kimlik: [], bekle: 0, bekleDonuk: 0, ikiz: 0, cift: 0,
-    sparc: [], kokSicrama: 0 };
+    sparc: [], kokSicrama: 0, kanalSicramaEylem: {},
+    /* A2b zamanlama: hakem işareti olayla aynı karede mi (motor adımı farkı), vuruşta çizimin temas evresi motorun temas karesinde mi */
+    zOlay: [], zIsaret: {}, zVurus: 0, zVurusAyni: 0, zVurusFark: [] };
+  const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin' };
   const K = new Map(), V = new THREE.Vector3(), H = new THREE.Vector3();
   let t = 0, kareSure = 0, bekleyenler = [];
   const fft = (re, im) => { const n = re.length;
@@ -107,7 +111,7 @@ OLCUM_KUR_JS = r"""() => {
     for (let i = 0; i < NK; i++) { const x = P[KANAL[i]] || 0;
       if (k.pn >= 1) { const d = Math.abs(x - k.P1[i]), dd = k.pn >= 2 ? Math.abs(x - 2 * k.P1[i] + k.P2[i]) : 0; toplamD += d;
         if (i === 1) { if (d > 0.03) { S.sicramaDy++; if (eylemsiz) S.dyEylemsiz++; } }
-        else if (!eylemsiz) { if (d > 0.3491) S.sicramaEylem++; }
+        else if (!eylemsiz) { if (d > 0.3491) { S.sicramaEylem++; const ad = KANAL[i] + '@' + e; S.kanalSicramaEylem[ad] = (S.kanalSicramaEylem[ad] || 0) + 1; } }
         else if (BACAK.has(KANAL[i])) { if (d > 0.3491) { S.sicramaBacak++; S.kanalSicrama[KANAL[i]] = (S.kanalSicrama[KANAL[i]] || 0) + 1; } if (dd > 0.2) { S.kirilmaBacak++; if (S.kare - k.gecis[KANAL[i].endsWith('R') || KANAL[i].includes('R') ? 1 : 0] <= 3) S.kirilmaBacakGecis++; S.kanalKirilma[KANAL[i]] = (S.kanalKirilma[KANAL[i]] || 0) + 1; } }
         else { if (d > 0.1745) { S.sicramaUst++; S.kanalSicrama[KANAL[i]] = (S.kanalSicrama[KANAL[i]] || 0) + 1; } if (dd > 0.06) { S.kirilmaUst++; S.kanalKirilma[KANAL[i]] = (S.kanalKirilma[KANAL[i]] || 0) + 1; } } }
       k.P2[i] = k.P1[i]; k.P1[i] = x; }
@@ -148,7 +152,17 @@ OLCUM_KUR_JS = r"""() => {
     k.ilk = false;
   }
   const asil = window.aktorGuncelle;
-  window.aktorGuncelle = (a, al, dts, T) => { const t0 = R(); asil(a, al, dts, T); kareSure += R() - t0; kaydet(a, dts); };
+  window.aktorGuncelle = (a, al, dts, T) => { const t0 = R(); asil(a, al, dts, T); kareSure += R() - t0; kaydet(a, dts); zamanlama(a); };
+  const asilOlay = window.animasyonOlay;
+  /* endirekt kolu havadayken yeniden başlama düdüğü çizilmez (kol inmez): ölçüme alınmaz */
+  window.animasyonOlay = (ad, v) => { asilOlay(ad, v); const h0 = typeof ANM_HK !== 'undefined' && mac.refs ? ANM_HK.get(mac.refs[0]) : null;
+    if (HK_OLAY[ad] && !(ad === 'duduk' && h0 && h0.cur && h0.cur.tur === 'endirekt')) S.zOlay.push({ ad, kare: mac.kare, tur: HK_OLAY[ad] }); };
+  const zK = new Map();
+  function zamanlama(a) {
+    const p = a.kaynak; if (!p) return;
+    if ((p.tur === 'hakem') && typeof ANM_HK !== 'undefined') { const h = ANM_HK.get(p); if (h && h.basKare >= 0) { const o = zK.get(a) || -1; if (h.basKare !== o) { zK.set(a, h.basKare); (S.zIsaret[p.kind] = S.zIsaret[p.kind] || []).push(h.basKare); } } }
+    if (p.tur === 'oyuncu' && a.vk) { const e = p.eylem; if (e && e.ad === 'vurus' && e.faz === 'takip') { if (zK.get(a) !== e) { zK.set(a, e); S.zVurus++; if (a.vk.evre === 3 && a.vk.tT === 0) S.zVurusAyni++; else S.zVurusFark.push(a.vk.evre); } } }
+  }
   const asilKare = window.macKare;
   window.macKare = dt => { kareSure = 0; bekleyenler = []; asilKare(dt); t += dt; S.kare++; S.sureler.push(kareSure);
     for (let i = 0; i < bekleyenler.length; i++) for (let j = i + 1; j < bekleyenler.length; j++) { let s = 0; const A = bekleyenler[i], B = bekleyenler[j]; for (let q = 0; q < NK; q++) s += (A[q] - B[q]) * (A[q] - B[q]);
@@ -178,7 +192,7 @@ SONUC_JS = r"""() => {
     kanalKirilma: S.kanalKirilma, dyEylemsizdk: +(S.dyEylemsiz / Math.max(1e-9, S.eylemsizKare / 3600)).toFixed(2),
     basHizP99: S.basHiz.length ? Math.round(yuzde(S.basHiz, 0.99)) : null, basHizMax: S.basHiz.length ? Math.round(S.basHiz.reduce((x, y) => x > y ? x : y, 0)) : null, basHiz600dk: +(S.basHiz600 / Math.max(1e-9, S.eylemsizKare / 3600)).toFixed(2),
     kokSicramadk: +(S.kokSicrama / Math.max(1e-9, dk)).toFixed(2),
-    kanalSicrama: S.kanalSicrama,
+    kanalSicrama: S.kanalSicrama, kanalSicramaEylem: S.kanalSicramaEylem,
     basMaxDer: +(S.basMax * 57.3).toFixed(0), bas70: +(100 * S.bas70 / Math.max(1, S.basKare)).toFixed(2), basPitchMaxDer: +(S.basPitchMax * 57.3).toFixed(0),
     donus90: don90.length, donusAdim: don90.length ? +ort(don90.map(d => d.adim)).toFixed(2) : null, donusAdimsizPay: don90.length ? +(100 * don90.filter(d => d.adim === 0).length / don90.length).toFixed(1) : null,
     onculukMs: onc.length ? yuzde(onc, 0.5) : null, onculukP10: onc.length ? yuzde(onc, 0.1) : null,
@@ -187,6 +201,11 @@ SONUC_JS = r"""() => {
     bekleKare: S.bekle, bekleDonuk: S.bekle ? +(100 * S.bekleDonuk / S.bekle).toFixed(1) : null, ikizPay: S.cift ? +(100 * S.ikiz / S.cift).toFixed(2) : null,
     sparcOrt: S.sparc.length ? +ort(S.sparc).toFixed(2) : null, sparcP10: S.sparc.length ? +yuzde(S.sparc, 0.1).toFixed(2) : null, sparcN: S.sparc.length,
     sureMs: +ort(S.sureler).toFixed(3), sureP99: +yuzde(S.sureler, 0.99).toFixed(3),
+    zaman: (() => { if (typeof ANM_HK === 'undefined') return null; const r = { olay: S.zOlay.length, ayni: 0, bir: 0, yok: 0, yokAd: {} };
+      for (const o of S.zOlay) { const L = o.tur === 'ref' ? ['ref'] : o.tur === 'lin' ? ['lin'] : o.tur === 'ikisi' ? ['ref', 'lin'] : ['ref', 'lin'];
+        let enIyi = 99; for (const k of L) for (const b of (S.zIsaret[k] || [])) { const d = b - o.kare; if (d >= 0 && d < enIyi) enIyi = d; }
+        if (enIyi === 0) r.ayni++; else if (enIyi === 1) r.bir++; else { r.yok++; r.yokAd[o.ad] = (r.yokAd[o.ad] || 0) + 1; } }
+      r.vurus = S.zVurus; r.vurusAyni = S.zVurusAyni; r.vurusFark = S.zVurusFark.slice(0, 10); return r; })(),
     surum: window.ANM_SURUM || 'simdiki'
   };
 }"""
@@ -212,6 +231,9 @@ def satirlar(o):
     ks = sorted(o["kanalSicrama"].items(), key=lambda x: -x[1])[:6]
     if ks:
         S.append("A:   sıçrayan kanallar: " + ", ".join(f"{k} {n}" for k, n in ks) + f" · eylemsiz kalça >3 cm {v(o.get('dyEylemsizdk'), 2)} /oyuncu·dk")
+    ke = sorted((o.get("kanalSicramaEylem") or {}).items(), key=lambda x: -x[1])[:8]
+    if ke:
+        S.append("A:   eylemde sıçrayan kanal@eylem: " + ", ".join(f"{k} {n}" for k, n in ke))
     kk = sorted((o.get("kanalKirilma") or {}).items(), key=lambda x: -x[1])[:8]
     if kk:
         S.append("A:   kırılan kanallar: " + ", ".join(f"{k} {n}" for k, n in kk))
@@ -220,6 +242,9 @@ def satirlar(o):
     S.append(f"A: kimlik (koşu bandı, {o['kimlikN']} oyuncu): adım boyu CV %{v(o['kimlikBoyCv'])} · kol genliği CV %{v(o['kimlikKolCv'])}   [hedef ≥8 / ≥20]")
     S.append(f"A: bekleyiş: {o['bekleKare']} kare, donuk %{v(o['bekleDonuk'])}, ikiz poz %{v(o['ikizPay'], 2)}   [hedef donuk ~0, ikiz ~0]")
     S.append(f"A: düzgünlük (SPARC, baş hızı, 3 sn, n {o['sparcN']}): ort {v(o['sparcOrt'], 2)} · p10 {v(o['sparcP10'], 2)}")
+    z = o.get("zaman")
+    if z:
+        S.append(f"A: zamanlama: hakem işareti {z['olay']} olay — aynı karede {z['ayni']}, bir adım sonra {z['bir']}, başlamayan {z['yok']} {z['yokAd'] or ''} · vuruş {z['vurus']} temas — çizimin temas evresi aynı karede {z['vurusAyni']}   [hedef sapma 0]")
     S.append(f"A: süre: aktorGuncelle {v(o['sureMs'], 3)} ms/kare (p99 {v(o['sureP99'], 3)}) · {o['kare']} kare, {v(o['oyuncuDk'])} oyuncu·dk · animasyon: {o['surum']}   [hedef ≤2 ms]")
     return S
 
@@ -241,8 +266,9 @@ async def olc(a):
             await pg.evaluate("__kare(2)")
             if a.once:
                 await pg.evaluate(YUKLE.read_text(encoding="utf-8") + "\n;window.anmOnceYukle = anmOnceYukle; true;")
-                n = await pg.evaluate("(s) => anmOnceYukle(window, s)", ONCE.read_text(encoding="utf-8"))
-                print(f"önce animasyonu yüklendi ({n} aktör)")
+                n = await pg.evaluate("(s) => anmOnceYukle(window, s)", (KARSILASTIR / a.once / "animasyon.js").read_text(encoding="utf-8"))
+                await pg.evaluate(f"window.ANM_SURUM = {json.dumps(a.once)}")
+                print(f"önce animasyonu yüklendi ({a.once}, {n} aktör)")
             await pg.evaluate("macaGecIste(); document.getElementById('btnMacaGec').hidden = true;")
             await pg.evaluate(OLCUM_KUR_JS)
             kalan = a.sure
@@ -261,7 +287,7 @@ def ana():
     ap = argparse.ArgumentParser(description="Chairman animasyon ölçümü")
     ap.add_argument("--tohum", type=int, default=3)
     ap.add_argument("--sure", type=float, default=180)
-    ap.add_argument("--once", action="store_true")
+    ap.add_argument("--once", nargs="?", const="once", default=None, help="dondurulmuş animasyon: once (A2 öncesi, varsayılan) ya da a2a")
     ap.add_argument("--json")
     ap.add_argument("--karsilastir")
     a = ap.parse_args()

@@ -28,7 +28,8 @@ const AKTORLER=[];
 mac.players.forEach(p=>{const kd=MAC_KADRO[p.team],k=p.kayit||{},forma=p.rol==='GK'?kd.kaleciForma:kd.forma;
   AKTORLER.push(aktorKur(kitKaydi(forma,k,p.no),p,k.boy));});
 const HAKEMLER=mac.refs.map((r,i)=>{const a=aktorKur({...KIT.hakem,num:0,skin:STIL.tenler[[1,4,2][i]],hair:['#8a8680','#3c2616','#241a12'][i],style:i?'short':'bald',mus:i===0,w:i?1:1.06},r);
-  if(r.kind==='lin'){const bayrak=new THREE.Mesh(new THREE.PlaneGeometry(0.3,0.22),LAM({color:0xf2c11d,side:THREE.DoubleSide}));bayrak.position.set(0,-0.36,0.14);a.m.eR.add(bayrak);}
+  /* yan hakemin bayrağı: sol elde başlar; js/animasyon.js işarete ve koşuya göre sahaya yakın ele alır (A2b) */
+  if(r.kind==='lin'){const bayrak=new THREE.Mesh(new THREE.PlaneGeometry(0.3,0.22),LAM({color:0xf2c11d,side:THREE.DoubleSide}));bayrak.position.set(0,-0.36,0.14);a.m.eR.add(bayrak);a.bayrak=bayrak;}
   AKTORLER.push(a);return a;});
 /* hakemin kartı: elinde küçük sarı/kırmızı kart */
 const KART=new THREE.Mesh(new THREE.PlaneGeometry(0.08,0.11),LAM({color:0xf2d21d,side:THREE.DoubleSide}));KART.position.set(0,-0.36,0.04);KART.visible=false;HAKEMLER[0].m.eL.add(KART);
@@ -146,8 +147,8 @@ function macKare(dt){
   const al=birikim/ADIM,b=mac.ball,bx=lerp(TOP.px,b.x,al),bz=lerp(TOP.pz,b.z,al)-MOTOR_Z,T=mac.tunel;
   /* aktörler: konum, poz ve kök (js/animasyon.js) */
   for(const a of AKTORLER)aktorGuncelle(a,al,dts,T);
-  /* hakemin kartı */
-  {const e=mac.refs[0].eylem;KART.visible=!!(e&&e.ad==='kart');if(KART.visible)KART.material.color.setHex(e.renk==='sari'?0xf2d21d:0xd8201e);}
+  /* hakemin kartı (ikinci sarıda önce sarı, sonra kırmızı; A2b) */
+  {const e=mac.refs[0].eylem;KART.visible=!!(e&&e.ad==='kart');if(KART.visible)KART.material.color.setHex(e.renk==='sari'||(e.renk==='ikinciSari'&&e.t<(e.sure||1.7)*0.5)?0xf2d21d:0xd8201e);}
   if(UZATMA.t>=0){UZATMA.t+=dts;if(UZATMA.t>7)UZATMA.t=-1;}
   /* uzatma tabelası dördüncü hakemin başının üstünde */
   {const w=DORDUNCU.w.tabela||0;UZATMA_TABELA.visible=w>0.5;if(UZATMA_TABELA.visible){UZATMA_TABELA.position.set(DORDUNCU.x,1.95+0.25*w,DORDUNCU.z+0.2);UZATMA_TABELA.rotation.set(0,Math.PI,0);}}
@@ -158,7 +159,9 @@ function macKare(dt){
    for(const o of mac.disToplar){if(n>=80)break;EK_M.makeTranslation(o.x,TOP_R+o.y,o.z-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
    for(const o of mac.sen.toplar){if(n>=80)break;EK_M.makeTranslation(o.x,TOP_R+o.y,o.z-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
    for(const k of mac.topcular){if(!k.top||b.tasiyan===k||n>=80||k.z<mac.tunel.z-0.8)continue;const c=Math.cos(k.yon),s=Math.sin(k.yon);
-     EK_M.makeTranslation(k.x+c*0.22,0.62,k.z+s*0.22-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
+     /* çömelen çocuğun topu kucağında (A2b; js/animasyon.js ANM_TOPCU: çömelme ağırlığı) */
+     const cw=typeof ANM_TOPCU!=='undefined'?(ANM_TOPCU.get(k)||0):0;
+     EK_M.makeTranslation(k.x+c*(0.22+0.06*cw),0.62-0.3*cw,k.z+s*(0.22+0.06*cw)-MOTOR_Z);E.setMatrixAt(n++,EK_M);}
    E.count=n;E.instanceMatrix.needsUpdate=true;
    let c=0;for(const k of mac.sen.koniler){if(c>=64)break;EK_M.makeTranslation(k.x,0.12,k.z-MOTOR_Z);KONILER.setMatrixAt(c++,EK_M);}
    KONILER.count=c;KONILER.instanceMatrix.needsUpdate=true;}

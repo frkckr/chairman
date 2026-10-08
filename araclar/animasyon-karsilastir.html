@@ -33,6 +33,8 @@ iframe{width:100%;aspect-ratio:4/3;border:0;background:#000;display:block}
   <label>Kamera <select id="kamera">
     <option value="sahne">sahnenin önerisi</option><option value="loca">loca (oyundaki bakış)</option>
     <option value="yakin">yakın (yandan, 7 m)</option><option value="orta">orta (yandan, 16 m)</option></select></label>
+  <label>Önce <select id="onceSurum">
+    <option value="a2a" selected>A2a (A2b öncesi)</option><option value="once">A2 öncesi</option></select></label>
   <label>Tohum <input id="tohum" type="number" min="1" value="3"></label>
   <label>Hız <select id="hiz"><option value="1">1×</option><option value="0.5" selected>½×</option><option value="0.25">¼×</option></select></label>
   <button id="oynat" type="button" aria-pressed="false">▶ Oynat</button>
@@ -40,7 +42,7 @@ iframe{width:100%;aspect-ratio:4/3;border:0;background:#000;display:block}
   <button id="bastan" type="button" title="Sahneyi yeniden kur">Baştan</button>
 </header>
 <main>
-  <figure><figcaption>Önce <small>— A2 öncesi animasyon (dondurulmuş)</small></figcaption><iframe id="fOnce" title="Önce"></iframe></figure>
+  <figure><figcaption>Önce <small id="onceAd">— A2a animasyonu (dondurulmuş)</small></figcaption><iframe id="fOnce" title="Önce"></iframe></figure>
   <figure><figcaption>Şimdi <small>— js/animasyon.js</small></figcaption><iframe id="fSimdi" title="Şimdi"></iframe></figure>
 </main>
 <div id="durum">Hazırlanıyor…</div>
@@ -56,11 +58,28 @@ const SAHNELER=[
   {ad:'Oyun — loca bakışı',kamera:'loca',kosul:"mac.phase==='play'&&mac.t>25"},
   {ad:'Uzun top — loca',kamera:'loca',kosul:"mac.phase==='play'&&!!mac.ball.pas&&mac.ball.pas.L>30&&mac.t-mac.ball.pas.t<0.1"},
   {ad:'Korner — loca',kamera:'loca',kosul:"mac.phase==='durus'&&mac.durus.tur==='korner'&&mac.durus.asama==='hazir'"},
+  /* A2b (2026-10-08): tetiği motorda olan hareketler. en: koşulun aranacağı en çok oyun süresi (sn) */
+  {ad:'A2b Şut — gerilme yayı ve iniş (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&!!(window.__takip=mac.players.find(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.faz==='hazirlik'&&p.eylem.t<0.02&&p.eylem.sec&&p.eylem.sec.tur==='sut'&&!p.eylem.sec.ilk))",en:900},
+  {ad:'A2b Gelişine vuruş (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&!!(window.__takip=mac.players.find(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.faz==='hazirlik'&&p.eylem.t<0.02&&p.eylem.sec&&p.eylem.sec.ilk))",en:600},
+  {ad:'A2b Uzun top — gerilme (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&!!(window.__takip=mac.players.find(p=>{const e=p.eylem;if(!p.oyunda||!e||e.ad!=='vurus'||e.faz!=='hazirlik'||e.t>0.02||!e.sec)return false;const s=e.sec;return s.tip==='hava'&&Math.hypot(s.hx-mac.ball.x,s.hz-mac.ball.z)>25;}))",en:600},
+  {ad:'A2b Pas — iç ayak, destek ayağı (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&mac.t>5&&!!(window.__takip=mac.players.find(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.faz==='hazirlik'&&p.eylem.t<0.02&&p.eylem.stil==='ic'))"},
+  {ad:'A2b İlk dokunuş (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&mac.t>5&&!!mac.ball.hedefOyuncu&&!mac.ball.sahip&&Math.hypot(mac.ball.x-mac.ball.hedefOyuncu.x,mac.ball.z-mac.ball.hedefOyuncu.z)<7&&!!(window.__takip=mac.ball.hedefOyuncu)"},
+  {ad:'A2b Hakem: faul — düdük ve yön (orta)',kamera:'orta',kosul:"mac.phase==='durus'&&mac.durus.tur==='serbest'&&!mac.durus.ofsayt&&mac.durus.t<0.02&&!!(window.__takip=mac.refs[0])",en:600},
+  {ad:'A2b Yan hakem: ofsayt (orta)',kamera:'orta',kosul:"mac.phase==='durus'&&!!mac.durus.ofsayt&&mac.durus.t<0.02&&!!(window.__takip=mac.durus.x>0?mac.refs[1]:mac.refs[2])",en:900},
+  {ad:'A2b Korner: hakem ve yan hakem (orta)',kamera:'orta',kosul:"mac.phase==='durus'&&mac.durus.tur==='korner'&&mac.durus.t<0.02&&!!(window.__takip=mac.durus.x>0?mac.refs[1]:mac.refs[2])",en:600},
+  {ad:'A2b Taç: işaret (orta)',kamera:'orta',kosul:"mac.phase==='durus'&&mac.durus.tur==='tac'&&mac.durus.t<0.02&&!!(window.__takip=mac.ball)",en:600},
+  {ad:'A2b Kaleci: split-step ve set (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&(()=>{const p=mac.players.find(q=>q.oyunda&&q.eylem&&q.eylem.ad==='vurus'&&q.eylem.faz==='hazirlik'&&q.eylem.t<0.02&&q.eylem.sec&&q.eylem.sec.tur==='sut');if(!p)return false;window.__takip=mac.teams[1-p.team][0];return true;})()",en:600},
+  {ad:'A2b Kaleci dağıtımı (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&!!mac.ball.tasiyan&&mac.ball.tasiyan.rol==='GK'&&!!(window.__takip=mac.ball.tasiyan)",en:900},
+  {ad:'A2b Baraj (orta)',kamera:'orta',kosul:"mac.phase==='durus'&&!!mac.durus.baraj&&mac.durus.asama==='hazir'&&!!mac.durus.barajdakiler&&!!(window.__takip=mac.durus.barajdakiler[0])",en:1800},
+  {ad:'A2b Uzun top — savunmacının başı topta (orta)',kamera:'orta',kosul:"mac.phase==='play'&&!!mac.ball.pas&&mac.ball.pas.L>30&&mac.ball.y>1.5&&!!(window.__takip=mac.ball)",en:600},
+  {ad:'A2b Kenar — kulübe ve teknik direktör (orta)',kamera:'orta',kosul:"mac.phase==='play'&&mac.t>30&&!!(window.__takip=mac.kenar.find(k=>k.kind==='td'&&k.team===0))"},
 ];
 const $=id=>document.getElementById(id),F={once:$('fOnce'),simdi:$('fSimdi')},Y={once:null,simdi:null};
 const UI_CSS='.controls,.gelistirici,.duraklatildi{display:none!important}body{margin:0!important;background:#000!important;overflow:hidden}.wrap{gap:0!important;display:block!important}.screen{width:100vw!important;max-width:none!important;box-shadow:none!important}';
 for(const [i,s] of SAHNELER.entries()){const o=document.createElement('option');o.value=i;o.textContent=s.ad;$('sahne').appendChild(o);}
-let ONCE_KAYNAK=null,TOHUM=3,oynuyor=false,kurulum=0,birikim=0,sonZaman=0;
+/* "önce" sürümleri (araclar/karsilastir/dondur.js [ad]): a2a = A2b'den önceki A2a animasyonu, once = A2 öncesi */
+const ONCE_AD={a2a:'— A2a animasyonu (dondurulmuş; A2b öncesi)',once:'— A2 öncesi animasyon (dondurulmuş)'},ONCE_KAYNAK={};
+let TOHUM=3,oynuyor=false,kurulum=0,birikim=0,sonZaman=0;
 const durum=(m,uyari)=>{$('durum').innerHTML=uyari?'<span class="uyari">'+m+'</span>':m;};
 
 /* js/ortak.js'teki kanca, çerçevenin betikleri çalışmadan çağırır: tohumlu Math.random ve elle ilerleyen kare saati (araclar/an-yakala.py ile aynı) */
@@ -97,20 +116,22 @@ async function sahneKur(){
   const no=++kurulum;oynuyor=false;$('oynat').setAttribute('aria-pressed','false');$('oynat').textContent='▶ Oynat';
   TOHUM=Math.max(1,parseInt($('tohum').value,10)||3);const S=SAHNELER[+$('sahne').value];
   durum('Sayfalar açılıyor…');Y.once=Y.simdi=null;
-  if(!ONCE_KAYNAK){try{ONCE_KAYNAK=await (await fetch('karsilastir/once/animasyon.js',{cache:'no-store'})).text();}catch(e){durum('Dondurulmuş animasyon okunamadı (yerel sunucu gerekir: python -m http.server 8765).',true);return;}}
+  const OS=$('onceSurum').value;$('onceAd').textContent=ONCE_AD[OS]||OS;
+  if(!ONCE_KAYNAK[OS]){try{const r=await fetch('karsilastir/'+OS+'/animasyon.js',{cache:'no-store'});if(!r.ok)throw new Error(r.status);ONCE_KAYNAK[OS]=await r.text();}
+    catch(e){durum('Dondurulmuş animasyon okunamadı (karsilastir/'+OS+'/animasyon.js; yerel sunucu gerekir: python -m http.server 8765).',true);return;}}
   const adres='../index.html?ekran=mac&tohum='+TOHUM+'&k='+Date.now();
   const yk=[yuklendi(F.once),yuklendi(F.simdi)];F.once.src=adres;F.simdi.src=adres;await Promise.all(yk);
   if(no!==kurulum)return;
   if(!Y.once||!Y.simdi){durum('Çerçeveler kancayı çağırmadı (js/ortak.js) ya da sayfa farklı kökenden açıldı.',true);return;}
   for(const y of [Y.once,Y.simdi]){const w=y.w,st=w.document.createElement('style');st.textContent=UI_CSS;w.document.head.appendChild(st);
-    w.__kare(2);if(y.yan==='once')anmOnceYukle(w,ONCE_KAYNAK);
+    w.__kare(2);if(y.yan==='once')anmOnceYukle(w,ONCE_KAYNAK[OS]);
     w.macaGecIste();const b=w.document.getElementById('btnMacaGec');if(b)b.hidden=true;w.__takip=null;kameraKur(y);}
   /* ileri sarma: iki motor birlikte, kare kare (çizimsiz); koşul iki tarafta da aynı adımda gerçekleşmeli */
   const kA=new Y.once.w.Function('return ('+S.kosul+')'),kB=new Y.simdi.w.Function('return ('+S.kosul+')');
-  let n=0,a=false,b=false;const EN=90*60;
+  let n=0,a=false,b=false;const EN=(S.en||90)*60;
   while(n<EN){for(let i=0;i<240&&n<EN;i++){Y.once.w.macKare(1/60);Y.simdi.w.macKare(1/60);n++;a=!!kA();b=!!kB();if(a||b)break;}
     if(a||b)break;durum('Sahneye ilerleniyor… '+(n/60).toFixed(0)+' sn');await bekle(0);if(no!==kurulum)return;}
-  if(!(a||b)){durum('Koşul 90 oyun saniyesinde gerçekleşmedi; başka tohum deneyin.',true);return;}
+  if(!(a||b)){durum('Koşul '+(S.en||90)+' oyun saniyesinde gerçekleşmedi; başka tohum deneyin.',true);return;}
   const esit=a&&b&&Math.abs(Y.once.w.eval('mac.t')-Y.simdi.w.eval('mac.t'))<1e-6&&Math.abs(Y.once.w.eval('mac.ball.x')-Y.simdi.w.eval('mac.ball.x'))<1e-6;
   for(const y of [Y.once,Y.simdi])y.w.__kare(1);
   bilgi(esit?'':' · <span class="uyari">iki motor ayrıştı</span>');
@@ -124,7 +145,7 @@ function dongu(t){requestAnimationFrame(dongu);const dt=Math.min(0.1,(t-sonZaman
 requestAnimationFrame(t=>{sonZaman=t;requestAnimationFrame(dongu);});
 $('oynat').onclick=()=>{oynuyor=!oynuyor;birikim=0;$('oynat').setAttribute('aria-pressed',oynuyor?'true':'false');$('oynat').textContent=oynuyor?'❚❚ Duraklat':'▶ Oynat';};
 $('kare').onclick=()=>{ilerle(1);bilgi();};
-$('bastan').onclick=sahneKur;$('sahne').onchange=sahneKur;$('tohum').onchange=sahneKur;
+$('bastan').onclick=sahneKur;$('sahne').onchange=sahneKur;$('tohum').onchange=sahneKur;$('onceSurum').onchange=sahneKur;
 $('kamera').onchange=()=>{if(Y.once&&Y.simdi&&!oynuyor){ilerle(1);bilgi();}};
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(e.code==='Space'){e.preventDefault();$('oynat').click();}else if(e.code==='ArrowRight'){$('kare').click();}});
 if(location.protocol==='file:')durum('Bu sayfa yerel sunucu ister: proje kökünde "python -m http.server 8765", sonra http://localhost:8765/araclar/animasyon-karsilastir.html',true);

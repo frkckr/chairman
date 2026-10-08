@@ -14,7 +14,8 @@ Kullanım:
               --onek AD (dosya adlarının başına; ör. once/sonra karşılaştırması) · --en-cok S (koşul için en çok oyun süresi, varsayılan 900)
               --js "<ifade>" (sayfa yüklenince çalışır; ör. bir STIL ayarını açıp kapatmak: --js "STIL.okunurluk.disCizgi=true")
               --oncesi (--kosul ile: maç öncesini atlamadan bekle; ör. tören ve takım fotoğrafı anları)
-              --anm once (A2, 2026-10-08: çizim dondurulmuş "önce" animasyonuyla; araclar/karsilastir/once/animasyon.js. Motor aynıdır,
+              --anm once|a2a (A2, 2026-10-08: çizim dondurulmuş "önce" animasyonuyla; araclar/karsilastir/once/animasyon.js (A2 öncesi) ya da
+                a2a/animasyon.js (A2b öncesi). Motor aynıdır,
                 aynı tohumla aynı an; önce/sonra şeridi git stash'siz alınır: --anm once --onek once- ile ve onsuz --onek sonra-)
               --giris (N11, 2026-10-04: stada varışı ve locaya girişi başlatıp film şeridi çeker; karartma ve karar anı gibi sayfa katmanları
                 da görüntüye girer; --sonra S: şeride başlamadan S sn oynat) · --ek "&rakipBaskan=yerinde" (adrese eklenir)
@@ -34,7 +35,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from kontrol import KOK, yerel_three, kopya_hazirla  # noqa: E402
 
 CIKTI = KOK / "araclar" / "anlar"
-ONCE = KOK / "araclar" / "karsilastir" / "once" / "animasyon.js"
+KARSILASTIR = KOK / "araclar" / "karsilastir"
 ONCE_YUKLE = KOK / "araclar" / "karsilastir" / "once-yukle.js"
 
 # hazır anlar: (koşul, sonra sn, ön koşul: 'mac' maça geç / 'oncesi' maç öncesinde kal)
@@ -73,6 +74,16 @@ HAZIR = {
     "korner-vurus": ("mac.phase==='play'&&mac.ball.pas&&mac.ball.pas.tur==='korner'&&mac.t-mac.ball.pas.t>0.35", 0, "mac"),
     "serbest-vurus": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&p.eylem.sec.serbest&&p.eylem.faz==='takip')", 0.05, "mac"),
     "oyun-kurma": ("(mac.phase==='play'&&mac.ball.pas&&mac.ball.pas.tur==='kaleVurusu'&&mac.ball.pas.L<30&&mac.t-mac.ball.pas.t>0.4)||__son('pass',0.05,v=>v.p&&v.p.rol==='DEF'&&v.x0*mac.dir[v.p.team]<-32)", 0.3, "mac"),
+    # A2b (2026-10-08; gerçekçilik planı Ek G9): tetiği motorda olan hareketler (film şeridi; ör. --kare 6 --aralik 0.1)
+    "gerilme": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.faz==='hazirlik'&&p.eylem.sec&&!p.eylem.sec.ilk&&(p.eylem.sec.tur==='sut'||p.eylem.sec.tip==='hava')&&Math.hypot(mac.ball.x-p.x,mac.ball.z-p.z)<1.4)", 0, "mac"),
+    "uzun-top-savunma": ("__son('pass',0.05,v=>v.long)||__son('cross',0.05)", 0.3, "mac"),
+    "baraj": ("mac.phase==='durus'&&!!mac.durus.baraj&&mac.durus.asama==='hazir'&&mac.durus.hazirT>2.6", 0, "mac"),
+    "hakem-faul": ("__son('faul',0.02,v=>!v.avantajdan)", 0, "mac"),
+    "hakem-kart": ("mac.refs[0].eylem&&mac.refs[0].eylem.ad==='kart'&&mac.refs[0].eylem.t<0.05", 0, "mac"),
+    "yan-hakem-ofsayt": ("__son('ofsayt',0.02)", 0, "mac"),
+    "kaleci-set": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&p.eylem.sec.tur==='sut'&&p.eylem.faz==='hazirlik'&&Math.hypot(mac.ball.x-p.x,mac.ball.z-p.z)<1.4)", 0, "mac"),
+    "dagitim": ("mac.players.some(p=>p.oyunda&&p.rol==='GK'&&mac.ball.tasiyan===p&&p.tutus&&p.tutus.t>p.tutus.sure-0.15)", 0, "mac"),
+    "bekleyis": ("mac.phase==='durus'&&mac.durus.t>5", 0, "mac"),
 }
 VARSAYILAN_SET = ["santra", "orta-saha", "korner", "sut", "faul", "sol-ceza", "uzak-kenar", "yakin-kenar"]
 
@@ -172,9 +183,9 @@ async def yakala(tarayici, site, ad, kosul, sonra, on, a):
     await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}" + (a.ek or ""))
     await pg.wait_for_selector("#btnMacaGec", timeout=30000)
     await pg.evaluate("__kare(2)")
-    if a.anm == "once":
+    if a.anm != "simdi":
         await pg.evaluate(ONCE_YUKLE.read_text(encoding="utf-8") + "\n;window.anmOnceYukle = anmOnceYukle; true;")
-        await pg.evaluate("(s) => anmOnceYukle(window, s)", ONCE.read_text(encoding="utf-8"))
+        await pg.evaluate("(s) => anmOnceYukle(window, s)", (KARSILASTIR / a.anm / "animasyon.js").read_text(encoding="utf-8"))
     await pg.evaluate(KUR_JS)
     if a.js:
         await pg.evaluate("(k) => { new Function(k)(); }", a.js)
@@ -231,7 +242,7 @@ async def ana():
     ap.add_argument("--oncesi", action="store_true")
     ap.add_argument("--giris", action="store_true")
     ap.add_argument("--ek")
-    ap.add_argument("--anm", choices=["once", "simdi"], default="simdi")
+    ap.add_argument("--anm", choices=["once", "a2a", "simdi"], default="simdi")
     a = ap.parse_args()
     try:
         from playwright.async_api import async_playwright
