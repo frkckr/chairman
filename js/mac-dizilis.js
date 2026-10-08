@@ -135,13 +135,19 @@ Object.assign(Match.prototype,{
         L.sort((x,y)=>x[0]-y[0]||x[1].n-y[1].n);
         if(L[0]&&L[0][0]<12)pres1=L[0][1];if(L[1]&&L[1][0]<10)pres2=L[1][1];if(L[2]&&L[2][0]<14)pres3=L[2][1];}
       else if(!du&&sahipTakim===1-t&&b.sahip){
-        const s=b.sahip;let e1=1e9,e2=1e9;
+        const s=b.sahip;let e1=1e9,e2=1e9;const P1=this._pres1||(this._pres1=[null,null]),onceki=P1[t];
         for(const p of this.teams[t]){if(!p.oyunda||p.rol==='GK'||(p.eylem&&p.eylem.kilit))continue;
+          /* T4: az önce geçilen savunmacı (1,5 sn) 1. adam olmaz: toparlanır, 2. adam öne çıkar */
+          if(p._gecT!=null&&this.t-p._gecT<1.5)continue;
           const k=dizilisKonumu(tk.dizilis,p.n,bu,odak.z,false),bolge=hyp(k.u*d-s.x,k.w-s.z),simdi=hyp(p.x-s.x,p.z-s.z);
-          const puan=Math.min(bolge,simdi*1.2)+simdi*0.35;
+          /* T4: önceki 1. adam gecikme payı kadar avantajlı (kare kare değişmesin) */
+          const puan=Math.min(bolge,simdi*1.2)+simdi*0.35-(p===onceki?MOTOR_AYAR.presHisterezis:0);
           if(puan<e1){e2=e1;pres2=pres1;e1=puan;pres1=p;}else if(puan<e2){e2=puan;pres2=p;}}
         /* orta sahada blok yerini korur: 1. adam ancak top kendi yarısına yaklaşınca ya da çok yakındaysa çıkar */
         if(pres1&&(hyp(pres1.x-s.x,pres1.z-s.z)>16||(bu>-8+tk.pres*14&&hyp(pres1.x-s.x,pres1.z-s.z)>7)))pres1=null;
+        /* T4: üstüne sürülen (çalımın hedefi olan) savunmacı 1. adamdır: ikili mücadeleye girer (bölgesinde kalırsa çalıma tepki vermiyordu) */
+        const ch=s.calim&&s.calim.o;if(ch&&ch.team===t&&ch.oyunda&&ch.rol!=='GK'&&!(ch.eylem&&ch.eylem.kilit)&&ch!==pres1){if(pres2===ch)pres2=pres1;pres1=ch;}
+        P1[t]=pres1;
         const ileriPres=bu>lerp(34,6,tk.pres);
         if(!(bu<-PL+30||ileriPres))pres2=null;
       }

@@ -54,15 +54,16 @@ for(let tohum=T0;tohum<T0+N;tohum++){
     else if(ad==='mudahale'){if(v.p)oy(v.p).mud++;}
     else if((ad==='faul'&&!v.avantajdan)||ad==='avantaj'){if(v.faulYapan)oy(v.faulYapan).faul++;}
     else if(ad==='ilkDokunus'){if(v.p)oy(v.p).alis++;}
-    else if(ad==='kosu'){if(v.p&&!v.verKac)oy(v.p).kosu++;}};
+    else if(ad==='kosu'){if(v.p&&!v.verKac)oy(v.p).kosu++;}
+    else if(ad==='calim'){if(v.p)oy(v.p).calim++;}};   /* T4: çalım denemesi motorun 'calim' olayından (hazırlığı başlamış deneme; eskiden _calim nesnesi) */
   m=vm.runInContext(`(on,t,D)=>{const K=D?MAC_KADRO.map((k,i)=>Object.assign({},k,{taktik:Object.assign({},k.taktik,{dizilis:D[i]})})):MAC_KADRO;
     return new Match(on,{kadro:K,tohum:t,tunel:{x:0,z:-6}});}`,ctx)(dinle,tohum,DIZILIS);
   if(DUYARLILIK)duyarlilikUygula(m);
-  m.macaGec();const calim=new Map();let a=0,sahipOnce=null,yol=0;   /* yol: sahipliğin kesintisiz yolu (m); 5 m'den uzunu taşıma sayılır (T3; r-karne ile aynı) */
+  m.macaGec();let a=0,sahipOnce=null,yol=0;   /* yol: sahipliğin kesintisiz yolu (m); 5 m'den uzunu taşıma sayılır (T3; r-karne ile aynı) */
   while(m.phase!=='fulltime'&&a<60*60*30){m.step(dt);a++;if(m.phase!=='play'){if(sahipOnce&&yol>5)oy(sahipOnce).tasima++;sahipOnce=null;yol=0;continue;}
     const sh=m.ball.sahip;if(sh!==sahipOnce){if(sahipOnce&&yol>5)oy(sahipOnce).tasima++;sahipOnce=sh;yol=0;}
     for(const p of m.players){if(!p.oyunda)continue;const P=oy(p),sp=hyp(p.vx,p.vz);P.sure+=dt;P.mes+=sp*dt;if(sp>7)P.sprint+=sp*dt;if(sp<2)P.yuru+=dt;
-      if(m.ball.sahip===p){P.top+=dt;yol+=sp*dt;}const c=p._calim;if(c&&calim.get(p)!==c)P.calim++;calim.set(p,c||null);}}
+      if(m.ball.sahip===p){P.top+=dt;yol+=sp*dt;}}}
 }
 const f1=x=>x==null||Number.isNaN(x)?'—':x.toFixed(1),f2=x=>x==null||Number.isNaN(x)?'—':x.toFixed(2),ort=L=>L.length?L.reduce((a,b)=>a+b,0)/L.length:NaN;
 const say=(L,f)=>{const o={};for(const k of L){const a=f(k);o[a]=(o[a]||0)+1;}return o;};
@@ -79,7 +80,7 @@ for(const [ad,f] of[['  ilk, rakip >6 m',k=>k.dd>6],['  ilk, rakip 3–6 m',k=>k
   if(L.length)console.log('    '+ad.padEnd(22)+'('+f1(100*L.length/KI.length)+'% ilk) '+yuzde(say(L,tip)));}
 console.log('\n[2] Seçenek türlerinin en iyi değeri (puan = gol olasılığı × 100)');
 /* T2: eski 'sur' (sürme) yerine taşıma ('tasi') ve bekleme ('bekle'); 'koru' gövdeyle koruma */
-for(const t of['pas','tasi','bekle','koru','sut','orta','uzaklastir']){const L=K.filter(k=>k.en[t]!=null);
+for(const t of['pas','tasi','gec','bekle','koru','sut','orta','uzaklastir']){const L=K.filter(k=>k.en[t]!=null);
   console.log('    '+t.padEnd(11)+'kararların %'+f1(100*L.length/K.length).padStart(5)+'\'inde var · ort. '+f2(ort(L.map(k=>k.en[t]))).padStart(6)+' · seçilme %'+f1(100*K.filter(k=>tip(k)===t).length/K.length));}
 {const L=KI.filter(k=>k.en.pas!=null&&k.en.tasi!=null),R=L.filter(k=>k.dd>6);
  console.log('    ilk kararda en iyi pas − en iyi taşıma ort. '+f2(ort(L.map(k=>k.en.pas-k.en.tasi)))+' (rahatken '+f2(ort(R.map(k=>k.en.pas-k.en.tasi)))+') · taşımanın daha değerli olduğu ilk karar %'+f1(100*L.filter(k=>k.en.tasi>k.en.pas).length/(L.length||1)));}

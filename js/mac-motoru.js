@@ -52,9 +52,10 @@ const MOTOR_AYAR={
   sekilGecikme:0,              // T1: topu yeni kazanan takımın hücum düzenine geçme gecikmesi (sn; kısa sahiplikte şekil değişmez)
   blokYumusak:4,               // T1: bölge hedefinin izlediği top yerinin yumuşatma süresi (sn; 0: ham): tehlikesiz yönde
   blokHizli:4,                 // T1: aynısı tehlikede (savunmada top kalemize gelirken, hücumda top ileri giderken)
-  hucumGecikme:1               // T1: hücumdaki takımın bölge oyuncuları da kişisel tepkiyle kayar: 1 topun gerisindekiler, 2 hepsi, 0 hiçbiri
+  hucumGecikme:1,              // T1: hücumdaki takımın bölge oyuncuları da kişisel tepkiyle kayar: 1 topun gerisindekiler, 2 hepsi, 0 hiçbiri
+  presHisterezis:1.5           // T4: 1. adam seçimi kare kare değişmesin: önceki 1. adam yeni adaydan bu kadar (puan, ~m) kötü olmadıkça kalır
 };
-const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',sekilGecikme:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek'};
+const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',sekilGecikme:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){if(Object.prototype.hasOwnProperty.call(MOTOR_AYAR,k))throw new Error('MOTOR_AYAR.'+k+' iki kez eklendi ('+MOTOR_AYAR_SAHIBI[k]+', '+akis+')');
   MOTOR_AYAR[k]=o[k];MOTOR_AYAR_SAHIBI[k]=akis;}}
 /* eylem adımları: eylem adı → işlev(p, e, dt), this maçtır; sahibinin dosyasında kaydedilir (Faz 0) */
@@ -193,9 +194,12 @@ class Match{
       efor:1,kip:'dur',dusunT:0,
       /* A2a (2026-10-08): jest {tur: kol|isaret|itiraz|cagir|basEl|alkis, t, sure, kol, hedef} — motor → çizim; yazan iş T7/T10 (bugün null) */
       jest:null,
+      /* T4 (2026-10-08, bire bir): çalım denemesi {o, hareket, taraf, faz 0 yaklaşma / 1 hazırlık / 2 geçme, ft, t0, kare, …} ve aldatılan
+         savunmacının yanılgısı {yon, t, sure, siddet} — motor → çizim (js/mac-hareket.js) */
+      calim:null,yutma:null,
       /* akışların oyuncuya sonradan yazdığı iç alanlar baştan (undefined) tanımlı: nesnenin biçimi değişmez, motor yavaşlamaz (birleştirme, 2026-10-03) */
       _cev:undefined,_hk:undefined,_kacKare:undefined,_kacX:undefined,_kacZ:undefined,_varisHiz:undefined,_varisKare:undefined,_tavirKare:undefined,
-      _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_calim:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,
+      _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,_gecT:undefined,_destek:undefined,_destekK:undefined,
       _kp:undefined,_duz:undefined,_pen:undefined,_poz:undefined,_sonKurt:undefined,
       /* T1 iç alanları: kararlı hedef, efor karesi, kip ve süresi, son ivme (karede hız değişimi), düşünme aralığı (kare) */
       _hdfX:0,_hdfZ:0,_hdfK:-9,_eforK:-1,_kipI:0,_kipT:0,_iax:0,_iaz:0,_dusP:0},ek);
@@ -472,7 +476,7 @@ class Match{
   /* oyundaki top dışarı çıktı: yuvarlanmaya devam eder (panolarda durur); duran topu kim nasıl alacak durusBaslat'ta seçilir */
   topDisari(){
     const b=this.ball;
-    for(const p of this.players)if(p.eylem&&p.eylem.ad==='vurus')p.eylem=null;
+    for(const p of this.players){if(p.eylem&&p.eylem.ad==='vurus')p.eylem=null;if(p.calim)this.calimBitir(p,'disari',true);}
     b.sahip=null;b.sut=null;b.hedefOyuncu=null;b.pas=null;
     for(const t of[0,1]){const gk=this.kaleci(t);if(gk.eylem&&gk.eylem.ad==='ucus')continue;}
   }

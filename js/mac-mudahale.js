@@ -37,7 +37,9 @@ Object.assign(Match.prototype,{
     /* müdahale hamlesindeki savunmacının ayağı topa erişti: müdahale temas anındaki geometriyle şimdi çözülür (C2) */
     for(const a of ad){const e=a.p.eylem;if(e&&e.ad==='mudahale'&&!e.oldu&&b.sonDokunan&&b.sonDokunan.team!==a.p.team){e.oldu=true;this.mudahaleSonuc(a.p,e);return true;}}
     if(sahip&&sahip.oyunda&&b.y<0.5&&!b.sut){const dS=hrkHyp(b.x-sahip.x,b.z-sahip.z);
-      if(dS<1.3&&hrkHyp(b.vx,b.vz)<7){
+      /* T4: sürücünün kendi dokunuşundan (0,3 sn içinde) hızlı giden top da onun sürüşüdür (uzun kaçış dokunuşu kendi ayağına "gelen top" sayılmasın) */
+      const kendi=b.sonDokunan===sahip&&sahip.sonDokunus&&sahip.sonDokunus.tur==='surus'&&this.t-sahip.sonDokunus.t<0.3;
+      if(dS<1.3&&(hrkHyp(b.vx,b.vz)<7||kendi)){
         if(dS<0.62&&ad.some(a=>a.p===sahip))return true;
         for(let i=ad.length-1;i>=0;i--){const a=ad[i];if(a.p!==sahip&&(a.p.team===sahip.team||a.d>dS-0.5))ad.splice(i,1);}
         if(!ad.length)return true;}}
@@ -169,7 +171,7 @@ Object.assign(Match.prototype,{
     const b=this.ball,a=hrkAtan2(uz,ux),sp=hrkHyp(p.vx,p.vz),c=hrkCos(a-p.yon);
     const yuzustu=c>0.25||(neden!=='omuz'&&neden!=='hava'&&sp>3&&c>-0.6);
     p.eylem={ad:'dusus',t:0,sure:0.45,kilit:true,fren:6,yerde:yerde||0.5+1.3*siddet,yon:a,neden,siddet,yuzustu};
-    p.vx+=ux*siddet;p.vz+=uz*siddet;p.surus=null;p.tavir=null;p.zipla=null;p.denge=0;p._calim=null;
+    p.vx+=ux*siddet;p.vz+=uz*siddet;p.surus=null;p.tavir=null;p.zipla=null;p.denge=0;if(p.calim)this.calimBitir(p,'kayip');
     if(b.sahip===p)b.sahip=null;
     this.on('dusus',{p,neden,siddet,yon:a,yuzustu,kaynak:kaynak||null});
   },
@@ -210,7 +212,7 @@ Object.assign(Match.prototype,{
   /* pres yapan oyuncu ne zaman girer: top açıkta (sürenden 0,8 m'den uzak ve savunmacının ayağı ondan önce yetişir) ya da sürücü sırtını döndü;
      uzun kaçan topu kovalarken kayarak. Disiplinsiz ve sert oyuncu arada erken dalar. Kendi ceza sahasında istek yarıya iner (jokey ve blok) */
   mudahaleDene(p,s,dt){
-    if(p.eylem||p.kickCd>0||!s||!s.oyunda)return;
+    if(p.eylem||p.kickCd>0||!s||!s.oyunda||p.yutma&&this.t-p.yutma.t<p.yutma.sure)return;   /* T4: aldatılan savunmacı yanılgısı sürerken giremez */
     const b=this.ball;if(b.y>0.5)return;
     const db=hrkHyp(b.x-p.x,b.z-p.z);if(db>3.4)return;
     const tk=this.taktik[p.team],kutu=this.kendiCezaSahasinda(p,b.x,b.z);
@@ -230,10 +232,17 @@ Object.assign(Match.prototype,{
       const tK=(db-1.1)/(p.spd+1.2),kx=b.x+b.vx*tK,kz=b.z+b.vz*tK,tS=varisZamani(s,kx,kz,0.45,0.05);
       const yon=((kx-p.x)*p.vx+(kz-p.z)*p.vz)/(hrkHyp(kx-p.x,kz-p.z)*p.spd||1);
       if(yon>0.75&&tK<tS-0.05&&this.rast()<dt*MOTOR_AYAR.kaymaIstek*istek*(0.35+p.oz.sertlik)*(1+0.5*profilEgilim(p,'kayarakGirer')))this.kaymaBaslat(p,s,kx,kz);return;}
-    const ds=hrkHyp(s.x-p.x,s.z-p.z)||1,sirt=((p.x-s.x)*hrkCos(s.yon)+(p.z-s.z)*hrkSin(s.yon))/ds<-0.5;
-    if(db<1.25&&sirt&&this.rast()<dt*0.9*istek*(0.3+1.5*agr)){this.mudahaleBaslat(p,s,bx,bz,'sirt');return;}
-    if(db<1.4&&this.rast()<dt*MOTOR_AYAR.sabirsiz*istek*(0.1+1.25*agr))this.mudahaleBaslat(p,s,bx,bz,'erken');
+    /* T4: sırtı dönük sürücüye rastgele dalış kalktı (gerçekçilik planı T4: girmez, dönüşü kapatır). Dönüş dokunuşu (sonDokunus.donus, bu karede)
+       savunmacının ayağının yetiştiği yere gidiyorsa belirlenimli müdahale (tür 'donus'; sonuç mudahaleSonuc) */
+    const sd=s.sonDokunus;
+    if(sd&&sd.tur==='surus'&&sd.donus&&sd.t===this.t&&db<1.6){const T2=0.2,qx=b.x+b.vx*T2,qz=b.z+b.vz*T2;
+      if(hrkHyp(qx-p.x-p.vx*T2*0.6,qz-p.z-p.vz*T2*0.6)<0.95&&hrkHyp(qx-s.x-s.vx*T2,qz-s.z-s.vz*T2)>0.6){this.mudahaleBaslat(p,s,qx,qz,'donus');return;}}
+    /* T4: arkasında yardım varsa erken girer, yoksa geciktirir (yardım 0 → ×0,4, 1 → ×1,4) */
+    if(db<1.4&&this.rast()<dt*MOTOR_AYAR.sabirsiz*istek*(0.1+1.25*agr)*(0.4+(p._destekK!=null&&this.kare-p._destekK<6?p._destek:0)))this.mudahaleBaslat(p,s,bx,bz,'erken');
   },
+  /* T4: geçilme işareti — bir (savunmacı, sürücü) çifti için tek taktik faul zarı (eskiden çalımın geçti anı ve presYap'ın "arkada kaldı" denetimi
+     aynı geçilmeye iki zar atabiliyordu); ayrıca geçilen savunmacının zamanı (toparlanma, 1. adam seçimi) */
+  gecildiIsaretle(o,p){o._gecT=this.t;if(o._gecS===p)return;o._gecS=p;this._gecFaul=[o,p];},
   /* çalımla geçilen savunmacı bazen formadan çeker ya da çelme takar (taktik faul; gelişen atakta çoğu zaman sarı) */
   gecildiFaulu(o,p){
     if(!o.oyunda||o.rol==='GK'||o.eylem&&o.eylem.kilit||this.phase!=='play'||hrkHyp(o.x-p.x,o.z-p.z)>1.5)return;
@@ -322,6 +331,8 @@ Object.assign(Match.prototype,{
     const b=this.ball,x=clamp(v.x,-PL+0.3,PL-0.3),z=clamp(v.z,0.3,PW-0.3),h=this.half-1,neden=v.kayma?'kayma':v.hava?'hava':v.itme?'itme':'mudahale';
     const c=v.ciddiyet||0,yd=this.dir[yiyen.team],yu=x*yd,kutu=this.cezaSahasi(yapan.team,x,z);
     this.ist.faul[yapan.team]++;
+    /* T4: çalım denemesi faulle biter (avantajda nesne kalır: eski akış sürer, ikinci kez bildirilmez) */
+    if(yiyen.calim)this.calimBitir(yiyen,'faul',true);if(yapan.calim)this.calimBitir(yapan,'yarim',true);
     /* faul yiyen temasın yönüne düşer (yapanın konumu ve bağıl hızı); hafif itme ve tutmada yalnız sendeler */
     let ix=yiyen.x-yapan.x+(yapan.vx-yiyen.vx)*0.15,iz=yiyen.z-yapan.z+(yapan.vz-yiyen.vz)*0.15;const n=hrkHyp(ix,iz)||1;ix/=n;iz/=n;
     const ayakta=c<0.35&&!v.kayma&&!v.hava&&yiyen.denge>0.5&&!(yiyen.eylem&&yiyen.eylem.kilit);

@@ -10,7 +10,7 @@
      form    gün formu (±formSapma): tohum, takım ve forma numarasının özetinden; m.rast TÜKETİLMEZ (çekiliş sırası değişmez). Kadro kaydındaki
              isteğe bağlı form alanı ezer (kariyer kapısı: moral ve form Aşama 3'te buradan gelir).
    Kullanım yerleri (T3; her biri mevcut bir ifadenin yerine): çalışkanlık (mac-dizilis), seçim ve sabır (mac-karar kararVer, sabirEsigi,
-   sutSecenegi, tekVurusKarari), çalım sıklığı (mac-hareket calimAdim), müdahale isteği ve faul çekilişleri (mac-mudahale; çekilişler T5'te
+   sutSecenegi, tekVurusKarari), rakibi geç seçeneği (T4: profilEgilimPuani 'gec'; hareketin yeteneği hrkYetenek), müdahale isteği ve faul çekilişleri (mac-mudahale; çekilişler T5'te
    kalkar, agresiflik girdi olarak kalır), duran top görevlileri (mac-kurallar kullananSec, durusYerlesim). Sonraki turlar aynı kapıyı okur
    (T4 hareket listesi, T7 topsuz rol, T8 duran top görevleri, T9b zayıf ayak, T10 disiplin).
    Senaryolar oyuncunun oz değerlerini değiştirirse profilKur(p, m.tohum) yeniden çağrılır (araclar/senaryolar/p-tip.js, c-1v1.js …). */
@@ -132,6 +132,8 @@ function profilEgilimPuani(m,p,s){
     case 'tasi':return g*(0.5*e.topuSurer+0.4*e.topuAtipKosar*(s.mesafe>=10?1:0.2));
     case 'bekle':return g*(0.8*e.topuTutar-0.4*e.tekVurus);
     case 'koru':return g*(0.5*e.topuTutar+0.5*e.sirtiDonuk);
+    /* T4: rakibi geç — top süren ve (yarış hareketlerinde) topu atıp koşan */
+    case 'gec':return g*(0.6*e.topuSurer+0.4*e.topuAtipKosar*(s.i>=0&&HRK_HAREKET[s.i].mek==='yaris'?1:0.3));
     case 'orta':case 'geriCevir':return g*0.5*e.cizgiyeIner;
     case 'uzaklastir':return -g*0.6*e.oynayarakCikar;
     default:return 0;}

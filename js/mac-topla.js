@@ -54,7 +54,12 @@ ayarEkle('B',{
   dusunHz:[5,8],               // topu tutarken düşünme sıklığı (1/sn; karar özelliğiyle): her anda seçenekler yeniden tartılır
   pasTol:[1.2,4,0.5],          // pas hatası toleransı: taban (m) + alıcının rakipten önce varma payı (sn) × katsayı; uzunluk hatasının payı
   ikinciTopHedef:0.3,          // hedef forvete uzun topta kaybedilen düelloda topun takımda kalma olasılığı (kaybın bedelini azaltır)
-  araKalib:0.85                // ara pasının başarı olasılığı düzeltmesi (ölçülen; kök neden savunmacının varış modeli, T5)
+  araKalib:0.85,               // ara pasının başarı olasılığı düzeltmesi (ölçülen; kök neden savunmacının varış modeli, T5)
+  /* T4 (2026-10-08): rakibi geç */
+  birebirMenzil:8,             // önündeki (±66°) savunmacı bu uzaklık içindeyse rakibi geç seçeneği tartılır (m; düelloya girmesi ayrıca aranır)
+  birebirKayip:1.0,            // rakibi geçerken top kaybının bedel çarpanı
+  birebirDeger:4.0             // adam geçmenin ek değeri (puan; devam değeri onu eksik ölçer: savunma dağılmış, sürücü hızla gelir; araDeger kalıbı).
+                               // T4 ölçümü: 3'te maç başına ~6, 4'te ~9 düello; başarı %47–52
 });
 /* vuruş stili (sözleşme: ic/dis/ust/asirtma/vole/yarimVole); vuruş anında topun yüksekliği ve şutun türüyle kesinleşir */
 function vurusStili(sec,y){
@@ -273,22 +278,31 @@ Object.assign(Match.prototype,{
   },
   /* ============ topla oyuncu: karar, top sürme, koruma ============ */
   topluAI(dt){
+    this.calimDenetle();   /* T4: önceki karede sürülmeyen çalım denemesi kapanır (mac-hareket.js) */
     this.verKacAdim();
     const b=this.ball,p=b.sahip;if(!p||b.tasiyan)return;
     if(!p.oyunda){b.sahip=null;return;}
-    const d=hyp(b.x-p.x,b.z-p.z);
-    if(d>3.2||(d>1.6&&hyp(b.vx,b.vz)>9)){b.sahip=null;p.surus=null;return;}
+    const d=hyp(b.x-p.x,b.z-p.z),C=p.calim,kacis=!!C&&C.faz===2;
+    /* T4: çalımın kaçışında (top savunmacının ötesine itildi) sahiplik ancak top 5 m'den uzaksa düşer */
+    if(d>(kacis?5:3.2)||(!kacis&&d>1.6&&hyp(b.vx,b.vz)>9)){b.sahip=null;p.surus=null;return;}
     if(p.eylem)return;
     p.kararT-=dt;
-    /* T2 olay: rakip 2,5 m'ye girdi — bir sonraki düşünme anını beklemeden yeniden bak (yeni sahiplikte ilk karede yalnız kaydedilir) */
+    /* T2 olay: rakip 2,5 m'ye girdi — bir sonraki düşünme anını beklemeden yeniden bak (yeni sahiplikte ilk karede yalnız kaydedilir; T4: çalım
+       sürerken bakılmaz, rakibin gelmesi beklenendir) */
     const v=this.bVeri(p),yr=enYakinRakip(this,p.x,p.z,p.team).d;
-    if(yr<2.5&&v.yakinR>=2.5&&v.yakinNo===this.sahiplikNo&&p.kararT>0)p.kararT=0;
+    if(yr<2.5&&v.yakinR>=2.5&&v.yakinNo===this.sahiplikNo&&p.kararT>0&&!C)p.kararT=0;
     v.yakinR=yr;v.yakinNo=this.sahiplikNo;
-    if(p.kararT<=0&&d<1.1&&b.y<0.5){const s=kararVer(this,p);this.secenekUygula(p,s);if(p.eylem)return;}
+    /* T4: çalımın hazırlığı ve kaçışı sürerken yeni karar yok (bağlılık); kaçışta savunmacı 0,6 sn'den sonra topa 3,5 m'den uzaksa düello yoktur,
+       sürücü yeniden düşünür (şut, pas; eskiden 2,5 sn boyunca düşünmeden koşuyordu) */
+    const bagli=C&&(C.faz===1||C.faz===2&&(C.ft<0.6||hyp(C.o.x-b.x,C.o.z-b.z)<=3.5));
+    if(p.kararT<=0&&d<1.1&&b.y<0.5&&!bagli){const s=kararVer(this,p);this.secenekUygula(p,s);if(p.eylem)return;}
     this.surusIlerle(p,dt);
   },
   secenekUygula(p,s){
     const b=this.ball,A=MOTOR_AYAR;
+    /* T4: çalım sürerken başka bir iş seçildi (savunmacı uzaktayken yeniden düşündü): deneme şimdiki duruma göre kapanır (sonraki pasın kesilmesi
+       çalımın kaybı sayılmasın) */
+    if(p.calim&&s.tur!=='gec')this.calimBitir(p,this.calimSonucu(p,p.calim));
     switch(s.tur){
       case 'sut':this.vurusBaslat(p,{tur:'sut',hx:this.dir[p.team]*PL,hz:MZ,xg:s.xg});break;
       case 'pas':case 'ara':case 'uzun':case 'orta':case 'geriCevir':
@@ -303,6 +317,8 @@ Object.assign(Match.prototype,{
         p.kararT=this.dusunmeAraligi(p);break;}
       /* T2: taşıma — yön ve uzunluk seçimden; uzun taşıma daha hızlı. Bekleme — top ayağın altında, baş yukarıda */
       case 'tasi':p.surus={yon:s.yon,hiz:clamp(0.55+0.035*s.mesafe,0.55,0.92)};p.kararT=this.dusunmeAraligi(p);break;
+      /* T4: rakibi geç — çalım niyeti (hareket, yan, tahmin); yaklaşma süresince karar bağlı (yürütücü yaklaşmanın sonunda yeniden tartar) */
+      case 'gec':p.surus={yon:s.yon,hiz:HRK_HAREKET[s.i].yakHiz,cal:{o:s.o,i:s.i,taraf:s.taraf,P:s.P}};p.kararT=Math.max(this.dusunmeAraligi(p),s.tYak-HRK_HAREKET[s.i].haz+0.2);break;
       case 'bekle':p.surus={yon:p.yon,hiz:0.1,bekle:true};p.kararT=this.dusunmeAraligi(p);break;
       default:{p.surus={yon:s.yon!=null?s.yon:p.yon,hiz:s.hiz||0.88};p.kararT=lerp(A.surusKarar[0],A.surusKarar[1],this.rast());}
     }

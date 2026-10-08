@@ -101,7 +101,9 @@ const BILGI=[
   ['Oyunun yönünü değiştirme (adet)','donusPas',null,1],['Yön değiştirme başarısı %','donusPasOran',null,1],
   ['Orta (adet)','orta',null,1],['Orta başarısı %','ortaOran',null,1],
   ['Tek vuruşla pas %','tekVurusOran',null,1],['Ver-kaç (adet)','verKac',null,1],['İlk dokunuş hatası %','ilkDokunusHataOran',null,1],
-  ['Çalım girişimi (adet)','calim',null,1],['Çalım başarısı %','calimOran',null,1],
+  /* T4 (2026-10-08): çalımın tek tanımı motorun 'calim' olayıdır (robotluk karnesi R: satırları); buradaki geometrik ölçü (önündeki 3 m içindeki
+     rakibin aynı sahiplikte arkasında kalması) T9a tabanıyla karşılaştırma sürsün diye bilgi olarak kalır */
+  ['Geçiş (geometrik; bilgi) (adet)','calim',null,1],['Geçiş başarısı (geometrik) %','calimOran',null,1],
   ['— Beden ve mücadele —',null,null,0],
   ['Müdahale girişimi (adet)','mudahale',null,1],['Müdahale kazanma %','mudahaleOran',null,1],['Girişim başına faul %','mudahaleFaulOran',null,1],
   ['Kayarak müdahale payı %','kaymaPay',null,1],['Omuz mücadelesi (adet)','omuz',null,1],['Sendeleme (adet)','sendele',null,1],
@@ -171,7 +173,8 @@ function macOyna(tohum,sinir){
     if(tamam){const q=m.ball.sonDokunan;if(sonTamam&&sonTamam.q===a.p&&q===sonTamam.p&&m.t-sonTamam.t<3)verKac++;sonTamam={p:a.p,q,t:m.t};}}
   /* eylem histogramı: her yeni eylem nesnesi adıyla sayılır; tavır süreleri */
   const sonEylem=new Map(),tavirSure={};let kontrolN=0,kontrolKotu=0,mudahaleN=0,kaymaN=0,omuzN=0,sendeleN=0,dususN=0,faulsuzDusus=0;
-  /* çalım: topu süren oyuncunun önünde 3 m içindeki rakip, aynı sahiplikte arkasında kalırsa başarılı; top o rakibe giderse başarısız */
+  /* geometrik geçiş (T4'ten beri bilgi; çalım denemesi 'calim' olayıdır): topu süren oyuncunun önünde 3 m içindeki rakip, aynı sahiplikte arkasında
+     kalırsa başarılı; top o rakibe giderse başarısız */
   let calimSahip=null,calimOnunde=new Set(),calimN=0,calimOk=0;
   let ns=0n;
   while(m.phase!=='fulltime'&&adim<MAKS){

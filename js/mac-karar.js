@@ -167,9 +167,10 @@ function pasKaybi(m,p,x,z){return 0.3+xT(-x*m.dir[p.team],z)*100;}
 /* baskı süresi: topu t sn sonra (x,z)'de tutan oyuncuya en yakın iki rakibin varış süresi − t (sn; 9: baskı yok). Yerdeki ya da kilitli
    eylemdeki rakip sayılmaz. Ufkun (t + 2,5 sn) ötesindeki rakip sonucu değiştirmez (açıklık 1,8 sn'de doyar). Paylaşılan nesne döner (kopyala) */
 const BS={t1:9,t2:9};
-function baskiSuresi(m,team,x,z,t){
+/* haric (T4): sayılmayan rakip (rakibi geç seçeneğinde geçilmiş savunmacı) */
+function baskiSuresi(m,team,x,z,t,haric){
   let t1=9,t2=9;const ufuk=t+2.5;
-  for(const o of m.teams[1-team]){if(!o.oyunda||(o.eylem&&o.eylem.kilit))continue;
+  for(const o of m.teams[1-team]){if(!o.oyunda||(o.eylem&&o.eylem.kilit)||o===haric)continue;
     const dx=o.x-x,dz=o.z-z,r=o.maxSpd*1.1*ufuk+0.8;if(dx*dx+dz*dz>r*r)continue;
     const v=varisZamani(o,x,z,0.8,0.2)-t;if(v<t1){t2=t1;t1=v;}else if(v<t2)t2=v;}
   BS.t1=t1;BS.t2=t2;return BS;}
@@ -191,8 +192,8 @@ function ileriPasOnPuani(m,q,x,z,tau){
    seçenekler şut (xG), önündeki boşluğa taşıma, ileri pas. Baskı ve yön azaltır: sırtı dönük ve sıkışık alıcı topu ancak geri bırakır (ileri
    seçenekleri kapanır), rakip dibindeyse işi bitiremeyebilir (kayıp payı); iki rakip arasında daha da zor. Yüzü oyuna dönük ve önü açık
    alıcıda yüksektir */
-function devamDegeri(m,q,x,z,t,bakis){
-  const d=m.dir[q.team],u=x*d,A=MOTOR_AYAR,bs=baskiSuresi(m,q.team,x,z,t),acik=acikOran(bs.t1),iki=clamp((0.9-bs.t2)/0.9,0,1)*(1-acik);
+function devamDegeri(m,q,x,z,t,bakis,haric){
+  const d=m.dir[q.team],u=x*d,A=MOTOR_AYAR,bs=baskiSuresi(m,q.team,x,z,t,haric),acik=acikOran(bs.t1),iki=clamp((0.9-bs.t2)/0.9,0,1)*(1-acik);
   const sirt=bakis==null?0:clamp(-Math.cos(aciFark(bakis,d>0?0:Math.PI)),0,1)*(1-acik);
   let en=xT(u,z)*100;
   if(u>PL-30)en=Math.max(en,xG(u,z,'ayak',1-acik)*100*(0.85+q.oz.sut*0.3));
@@ -236,6 +237,28 @@ function bekleSecenegi(m,p,S){
   /* bekleOran: yerinde beklemek oranın tehdidini tam korumaz (savunma yerleşir, atak söner; eski koru değeri de buranın tehdidinin %85'iydi) */
   const v=Math.max(xT(b.x*m.dir[p.team],b.z)*100*A.bekleOran,ileriPasOnPuani(m,p,b.x,b.z,0.6)*A.devamPas);
   S.push({tur:t1<0.7?'koru':'bekle',deger:P*v-(1-P)*pasKaybi(m,p,b.x,b.z)*m.taktik[p.team].risk*A.risk,P});}
+/* T4 (2026-10-08): rakibi geç. Önünde (ilerleme yönünde ya da kaleye doğru, birebirMenzil içinde) savunmacı varsa birebirTahmin (js/mac-hareket.js)
+   hareketi, yanı ve olasılığı verir. Değer: P · (toplama noktasındaki devam değeri (geçilen savunmacı sayılmadan) + kazandırılan alan + birebirDeger)
+   − Pk · buradaki kayıp · risk · birebirKayip.
+   Kaleciye bire bir yapılmaz (calimRakibi kaleciyi saymaz; T9b). Taşıma seçenekleri saf yarış kalır (aynı şerit iki kez sayılmaz: taşıma rakibin
+   üstüne sürmeyi kötü bulur, bu seçenek onu aşmayı tartar) */
+const BB_YON=[0,0,null];
+function birebirSecenegi(m,p,S){
+  if(p.rol==='GK')return;
+  const b=m.ball,d=m.dir[p.team],A=MOTOR_AYAR,hA=d>0?0:Math.PI,gy=Math.atan2(MZ-b.z,d*PL-b.x);let en=null,enD=-1e9;
+  /* yönler: hücum yönü, kaleye doğru, topu sürüyorsa kendi gidiş yönü; savunmacı ±66° içinde */
+  const YON=BB_YON;YON[0]=hA;YON[1]=gy;YON[2]=p.surus&&!p.surus.bekle&&!p.surus.koru?p.surus.yon:null;
+  for(const yon of YON){if(yon==null)continue;const o=m.calimRakibi(p,yon,A.birebirMenzil,false,0.4);if(!o||en&&en.o===o)continue;
+    /* düelloya giren savunmacı çalımlanır: 4 m içinde ve 3 m/sn'den hızlı geri çekilmiyor ya da menzil içinde ve 1 m/sn'den hızlı kaçmıyor (hatla birlikte geri
+       çekilen savunmacıya topla yürünür; ona yapılan çalım düellosuz biter) */
+    const L0=hyp(o.x-b.x,o.z-b.z),geri=(o.vx*(o.x-b.x)+o.vz*(o.z-b.z))/(L0||1);if(!(L0<=4&&geri<3||geri<1))continue;
+    const bb=birebirTahmin(m,p,o,yon,null);if(bb.i<0)continue;
+    const H=HRK_HAREKET[bb.i],L=L0,tYak=Math.max(0,L-H.itisL)/Math.max(1,hrkTepe(p)*0.92*H.yakHiz)+H.haz;
+    /* devam değeri geçilen savunmacı sayılmadan (başarıda o geride kalmıştır) */
+    const dv=devamDegeri(m,p,bb.cx,bb.cz,tYak+bb.tA,Math.atan2(MZ-bb.cz,d*PL-bb.cx),o),ilr=(bb.cx-b.x)*d*A.ilerleme;
+    const deger=bb.P*(dv+ilr+A.birebirDeger)-bb.Pk*pasKaybi(m,p,b.x,b.z)*m.taktik[p.team].risk*A.risk*A.birebirKayip;
+    if(deger>enD){enD=deger;en={tur:'gec',yon,o,i:bb.i,hareket:bb.hareket,taraf:bb.taraf,P:bb.P,Pk:bb.Pk,hx:bb.cx,hz:bb.cz,deger,tYak};}}
+  if(en)S.push(en);}
 /* hedefin değeri (türden bağımsız kısım): tehdit, ilerleme, geri pasla topu tutma, ara pası, boşluğa, yön değiştirme, ver-kaç dönüşü */
 function pasDegeri(m,p,o,hx,hz,alt,q){
   const d=m.dir[p.team],u=o.ox*d,A=MOTOR_AYAR,takim=m.taktik[p.team],hu=hx*d,ilerleme=hu-u;
@@ -448,6 +471,8 @@ function secenekler(m,p){
   if(u>PL-30&&Math.abs(w-MZ)>8)ortaSecenekleri(m,p,{ox:b.x,oz:b.z,baski,ofs},S);
   /* T2: taşıma (8 yön × 5/10 m; eskiden 5 yön × 6 m, boş alanda bile başarı 0,6 + 0,35·sürüş ve değer buranın tehdidi + 2,5 ile sınırlıydı) */
   tasimaSecenekleri(m,p,S);
+  /* T4: rakibi geç (bire bir) */
+  birebirSecenegi(m,p,S);
   /* uzaklaştırma: kendi bölgesinde baskı altında; kaleye yaklaştıkça ve baskı arttıkça daha cazip (birleştirme 2026-10-03: alt ligde sık,
      çoğu zaman taça ya da hava mücadelesine gider) */
   if(u<-PL+30&&baski>0.3)S.push({tur:'uzaklastir',deger:MOTOR_AYAR.uzaklastirDeger+baski*1.1+(u<-PL+18?0.4:0)});

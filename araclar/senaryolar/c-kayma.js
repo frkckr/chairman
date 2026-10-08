@@ -20,7 +20,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
       const A=m.teams[0][7],D=m.teams[1][2],b=m.ball,d=m.dir[0],hy=d>0?0:Math.PI;bosalt(m,[A,D]);
       D.oz.mudahale=bc;profilKur(D,m.tohum);   /* T3: profil özellikten türetilir */
       const yan=i%2?1:-1,ax=d*10,az=34+yan*8,v=4.5+2*r();
-      Object.assign(A,{x:ax,z:az,tx:ax,tz:az,vx:d*v,vz:0,spd:v,yon:hy,eylem:null,kickCd:0,surus:null,denge:1,oyunda:true,_calim:null});
+      Object.assign(A,{x:ax,z:az,tx:ax,tz:az,vx:d*v,vz:0,spd:v,yon:hy,eylem:null,kickCd:0,surus:null,denge:1,oyunda:true,calim:null});
       Object.assign(b,{x:ax+d*1.6,z:az,y:0,vx:d*7,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,sonTakim:0,sonDokunan:A});
       /* savunmacı topun 2–3,4 m ötesinde, açıya göre (±15°); topa doğru 5–7 m/sn */
       const a=hy+yan*(aci+(r()-0.5)*30)*Math.PI/180,R=2.0+1.4*r(),vd=5+2*r(),dx=b.x+Math.cos(a)*R,dz=b.z+Math.sin(a)*R,ya=Math.atan2(b.z-dz,b.x-dx);
