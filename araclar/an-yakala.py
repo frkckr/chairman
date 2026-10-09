@@ -14,8 +14,8 @@ Kullanım:
               --onek AD (dosya adlarının başına; ör. once/sonra karşılaştırması) · --en-cok S (koşul için en çok oyun süresi, varsayılan 900)
               --js "<ifade>" (sayfa yüklenince çalışır; ör. bir STIL ayarını açıp kapatmak: --js "STIL.okunurluk.disCizgi=true")
               --oncesi (--kosul ile: maç öncesini atlamadan bekle; ör. tören ve takım fotoğrafı anları)
-              --anm once|a2a (A2, 2026-10-08: çizim dondurulmuş "önce" animasyonuyla; araclar/karsilastir/once/animasyon.js (A2 öncesi) ya da
-                a2a/animasyon.js (A2b öncesi). Motor aynıdır,
+              --anm once|a2a|a2b|t4v (A2, 2026-10-08: çizim dondurulmuş "önce" animasyonuyla; araclar/karsilastir/once/animasyon.js (A2 öncesi),
+                a2a/ (A2b öncesi), a2b/ (T4-V öncesi) ya da t4v/ (T4g öncesi, 2026-10-09). Motor aynıdır,
                 aynı tohumla aynı an; önce/sonra şeridi git stash'siz alınır: --anm once --onek once- ile ve onsuz --onek sonra-)
               --giris (N11, 2026-10-04: stada varışı ve locaya girişi başlatıp film şeridi çeker; karartma ve karar anı gibi sayfa katmanları
                 da görüntüye girer; --sonra S: şeride başlamadan S sn oynat) · --ek "&rakipBaskan=yerinde" (adrese eklenir)
@@ -86,6 +86,10 @@ HAZIR = {
     "bekleyis": ("mac.phase==='durus'&&mac.durus.t>5", 0, "mac"),
     # T4-V (2026-10-09): yerden pas hazırlığı (gelişine değil, şut değil) ve 22 m'den uzun yerden pas; önce/sonra şeridi (--kare 6 --aralik 0.1)
     "pas": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&!p.eylem.sec.ilk&&p.eylem.sec.tur!=='sut'&&p.eylem.sec.tur!=='uzaklastir'&&(p.eylem.sec.tip||'yer')==='yer'&&(p.eylem.faz==='hazirlik'||p.eylem.faz==='geri')&&Math.hypot(mac.ball.x-p.x,mac.ball.z-p.z)<1.2)", 0, "mac"),
+    # T4g (2026-10-09): çalım hazırlığı (makas), aldatılan savunmacı, top saklama (film şeridi; --kare 6 --aralik 0.1)
+    "makas": ("mac.players.some(p=>p.oyunda&&p.calim&&p.calim.faz===1&&p.calim.hareket==='makas'&&p.calim.ft<0.03)", 0, "mac"),
+    "yutma": ("mac.players.some(p=>p.oyunda&&p.yutma&&mac.t-p.yutma.t<0.03)", 0, "mac"),
+    "koru": ("mac.players.some(p=>p.oyunda&&p.tavir==='koru')", 0.2, "mac"),
     "uzun-yer-pas": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&!p.eylem.sec.ilk&&p.eylem.sec.tur!=='sut'&&p.eylem.sec.tur!=='uzaklastir'&&(p.eylem.sec.tip||'yer')==='yer'&&(p.eylem.faz==='hazirlik'||p.eylem.faz==='geri')&&Math.hypot(p.eylem.sec.hx-mac.ball.x,p.eylem.sec.hz-mac.ball.z)>22&&Math.hypot(mac.ball.x-p.x,mac.ball.z-p.z)<1.2)", 0, "mac"),
 }
 VARSAYILAN_SET = ["santra", "orta-saha", "korner", "sut", "faul", "sol-ceza", "uzak-kenar", "yakin-kenar"]
@@ -245,7 +249,7 @@ async def ana():
     ap.add_argument("--oncesi", action="store_true")
     ap.add_argument("--giris", action="store_true")
     ap.add_argument("--ek")
-    ap.add_argument("--anm", choices=["once", "a2a", "a2b", "simdi"], default="simdi")
+    ap.add_argument("--anm", choices=["once", "a2a", "a2b", "t4v", "simdi"], default="simdi")
     a = ap.parse_args()
     try:
         from playwright.async_api import async_playwright
