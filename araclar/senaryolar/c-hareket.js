@@ -42,6 +42,17 @@ module.exports={calistir({ctx,vm,N,tohum}){
   ozet('kısa (<5 m)',ornek.filter(o=>o.D<5));ozet('orta (5–15 m)',ornek.filter(o=>o.D>=5&&o.D<15));ozet('uzun (≥15 m)',ornek.filter(o=>o.D>=15));
   const ok=H.med<=0.10&&H.p90<=0.25&&Math.abs(H.ort)<=0.04;
   console.log('\n'+(ok?'  ':'! ')+`Kabul (ortanca ≤0,10 · %90 ≤0,25 · |yanlılık| ≤0,04): ${ok?'geçti':'GEÇMEDİ'}`);
+  /* T4h (2026-10-09; gerçekçilik planı Ek H madde 7, bilgi): aynı 90° dönüş üç hızda — oyuncu +x yönünde v ile koşarken (tam efor, hız aynı tutulur)
+     hedef 30 m yana verilir; gidiş yönü 80°'ye varana dek süre, o sürede ileri ve yana gidilen yol (dönüş yarıçapının yaklaşığı), en düşük hız.
+     İvme, fren ve dönüş aynı fiziksel sınırdan (hrkYanal): hız arttıkça yarıçap büyür, süre uzar */
+  const donus=v=>{const p=m.players[5];Object.assign(p,{eylem:null,kickCd:0,yuk:0,zipla:null,tavir:null,yonHedef:null,bak:null,denge:1,surus:null,_iax:0,_iaz:0,
+      yorgunluk:0,enerji:1,x:-20,z:30,vx:v,vz:0,spd:v,yon:0});
+    const x0=p.x,z0=p.z,oran=Math.min(1,v/tepeF(p));let t=0,vmin=v,t80=null;p.tx=p.x;p.tz=p.z+30;
+    while(t<4){m.kare++;m.t+=dt;p.hizOran=oran;p._eforK=m.kare;p.efor=1;p._varisHiz=v;p._varisKare=m.kare;m.moveP(p,dt);t+=dt;
+      const s=Math.hypot(p.vx,p.vz);if(s<vmin)vmin=s;if(Math.atan2(p.vz,p.vx)>=80*Math.PI/180){t80=t;break;}}
+    return{v,t80,ileri:p.x-x0,yana:p.z-z0,vmin};};
+  console.log('  bilgi · aynı 90° dönüş üç hızda (gidiş yönü 80°\'ye varana dek): '+[3,5,7].map(v=>{const d=donus(v);
+    return `${v} m/sn: ${d.t80!=null?d.t80.toFixed(2)+' sn':'—'}, ileri ${d.ileri.toFixed(1)} m, yana ${d.yana.toFixed(1)} m, en düşük hız ${d.vmin.toFixed(1)}`;}).join(' · '));
   if(process.env.C_HAREKET_JSON)require('fs').writeFileSync(process.env.C_HAREKET_JSON,JSON.stringify(ornek));
   return ok?0:1;
 }};

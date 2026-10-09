@@ -1,7 +1,7 @@
 /* ============ C akışı ölçümü: müdahale türü ve sonucu, omuz mücadelesi, düşüş ve faul nedenleri, kart gerekçesi, avantaj ============
    Olaylardan sayar (rastlantı çekmez, motor yöntemi çağırmaz). Değerler maç başına adettir. */
 'use strict';
-const TUR=['acik','sirt','erken','kayma'],SONUC=['temiz','durttu','blok','gecildi','faul'],NEDEN=['faul','omuz','kayma','hava','takilma'],FN=['mudahale','kayma','itme','hava'],KART=['siddet','atak','firsat','asiri'];
+const TUR=['acik','donus','erken','kayma']   /* T4'ten beri motor sırttan dalış yerine 'donus' yayar (2026-10-09 düzeltme) */,SONUC=['temiz','durttu','blok','gecildi','faul'],NEDEN=['faul','omuz','kayma','hava','takilma'],FN=['mudahale','kayma','itme','hava'],KART=['siddet','atak','firsat','asiri'];
 const bas=s=>s.charAt(0).toUpperCase()+s.slice(1);
 module.exports={
   bilgi:[['— C: müdahale, omuz, düşüş, kart —',null,0]]

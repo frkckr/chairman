@@ -27,6 +27,10 @@ ONBELLEK = ARAC / ".onbellek"
 CDN_THREE = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
 DIS_KAYNAK = ("fonts.googleapis.com", "fonts.gstatic.com")  # bulut ortamında erişilemeyebilir; hata sayılmaz
 BEKLE_MS = 6000
+# T4h (2026-10-09; gerçekçilik planı Ek H madde 41): kare süresi bilgisi — sayfanın requestAnimationFrame geri çağırmalarının süresi (JS ve
+# çizim komutları; başsız Chromium'da yazılım WebGL, saniyede ~10 kare: mutlak değer değil göreli bilgi). İlk 10 kare (yükleme) sayılmaz. Hata sayılmaz.
+KARE_SURE_JS = """(() => { const asil = window.requestAnimationFrame.bind(window), S = window.__kareSure = [];
+  window.requestAnimationFrame = f => asil(t => { const t0 = performance.now(); try { f(t); } finally { S.push(performance.now() - t0); } }); })();"""
 
 
 def yerel_three():
@@ -52,6 +56,7 @@ def kopya_hazirla(three):
 async def kontrol_et(tarayici, site, sayfa):
     hatalar = []
     pg = await tarayici.new_page(viewport={"width": 1180, "height": 1000})
+    await pg.add_init_script(KARE_SURE_JS)
     pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
     pg.on("console", lambda m: hatalar.append("Konsol: " + m.text)
           if m.type == "error" and "Failed to load resource" not in m.text else None)
@@ -68,8 +73,10 @@ async def kontrol_et(tarayici, site, sayfa):
     ek = ("-" + re.sub(r"[^0-9A-Za-z.]+", "-", sorgu).strip("-")) if sorgu else ""
     goruntu = ARAC / f"son-kontrol-{pathlib.Path(yol).stem}{ek}.png"
     await pg.screenshot(path=str(goruntu))
+    kare = await pg.evaluate("""() => { const S = (window.__kareSure || []).slice(10).sort((a, b) => a - b); if (S.length < 10) return null;
+      const q = x => S[Math.min(S.length - 1, Math.floor(x * S.length))]; return { n: S.length, o: q(0.5), p95: q(0.95), p99: q(0.99) }; }""")
     await pg.close()
-    return hatalar, goruntu
+    return hatalar, goruntu, kare
 
 
 async def ana():
@@ -84,12 +91,14 @@ async def ana():
         tarayici = await p.chromium.launch(
             args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
         for sayfa in sayfalar:
-            hatalar, goruntu = await kontrol_et(tarayici, site, sayfa)
+            hatalar, goruntu, kare = await kontrol_et(tarayici, site, sayfa)
             toplam += len(hatalar)
             print(f"{sayfa}: {'hata yok' if not hatalar else str(len(hatalar)) + ' hata'}")
             for h in hatalar:
                 print("  - " + h)
             print(f"  Ekran görüntüsü: {goruntu.relative_to(KOK)}")
+            if kare:
+                print(f"  Kare süresi (bilgi; rAF geri çağırması, ms): ortanca {kare['o']:.2f} · p95 {kare['p95']:.2f} · p99 {kare['p99']:.2f} · {kare['n']} kare ({kare['n'] / (BEKLE_MS / 1000):.1f}/sn)")
         await tarayici.close()
     shutil.rmtree(site.parent, ignore_errors=True)
     sys.exit(1 if toplam else 0)

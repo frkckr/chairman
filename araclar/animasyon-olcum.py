@@ -69,11 +69,14 @@ OLCUM_KUR_JS = r"""() => {
     zOlay: [], zIsaret: {}, zVurus: 0, zVurusAyni: 0, zVurusFark: [],
     /* T4-V vuruş hazırlığı: temas karesinde son adımın süresi / planı (tB), geri salınımın tepesi / planı, ilk görülme evresi, motorun karar→temas
        süresi (e.t, türe göre); vuruş sırasında evre sınırları (son adım başı, temas, çıkış) dışındaki > 20° sıçramalar; hız katlarında kararsız kare */
-    vkN: 0, vkHazirliksiz: 0, vkSonAdim: [], vkTepe: [], vkIlkTakip: 0, vkKT: { pas: [], sut: [], uzun: [], ilk: [] }, vkKare: 0, vkDisi: 0, kararsiz: 0, kararsizKanal: {},
+    vkN: 0, vkHazirliksiz: 0, vkSonAdim: [], vkTepe: [], vkIlkTakip: 0, vkKT: { pas: [], sut: [], uzun: [], ilk: [] }, vkKare: 0, vkDisi: 0, vkDisiEvre: {}, vkEvreKare: {}, kararsiz: 0, kararsizKanal: {},
     /* T4g çalım: hareket başına hazırlık sayısı; hazırlık çiziminin başladığı motor adımı ile motorun faz 1'e geçtiği adımın farkı; itiş pozunun adımı
        (sonDokunus.calim ile); makasta süpüren ayağın topa yanal uzaklığı (gövde çerçevesinde, en çok); aldatılan savunmacıda (aldatma) gövde yatışının
        (gz + hz) yanılgı yanında olduğu kare payı; top saklamada çizimin seçtiği yanın en yakın rakibin yanıyla aynılığı ve yan değişimi */
-    ck: { N: {}, bas: 0, basAyni: 0, basFark: [], it: 0, itAyni: 0, makas: [], yutKayit: [], korKare: 0, korN: 0, korDogru: 0, korDegis: 0 } };
+    ck: { N: {}, bas: 0, basAyni: 0, basFark: [], it: 0, itAyni: 0, makas: [], yutKayit: [], korKare: 0, korN: 0, korDogru: 0, korDegis: 0 },
+    /* T4h (Ek H madde 5, bilgi): durum bantlarında ayak kayması — dar dönüş (kök > 2 rad/sn, hız > 0,6 m/sn), ani duruş (yumuşatılmış hız
+       3 m/sn²'den hızlı düşüyor), top saklama (tavır 'koru'); aynı tanımla (eylemsiz temas karesi, 0,2 m/sn) */
+    dTemas: [0, 0, 0], dKayma: [0, 0, 0] };
   const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin' };
   const K = new Map(), V = new THREE.Vector3(), H = new THREE.Vector3();
   let t = 0, kareSure = 0, bekleyenler = [];
@@ -96,7 +99,8 @@ OLCUM_KUR_JS = r"""() => {
     const p = a.kaynak; if (!p || !(dt > 0) || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible) return;
     let k = K.get(a); if (!k) K.set(a, k = yeni(a));
     const P = a.P, e = p.eylem ? p.eylem.ad : '', eylemsiz = !e;
-    const v = Math.hypot(a.x - k.x, a.z - k.z) / dt; k.x = a.x; k.z = a.z; k.vs += (Math.min(v, 12) - k.vs) * Math.min(1, dt * 8);
+    const v = Math.hypot(a.x - k.x, a.z - k.z) / dt, vsOnce = k.vs; k.x = a.x; k.z = a.z; k.vs += (Math.min(v, 12) - k.vs) * Math.min(1, dt * 8);
+    const durum = !k.ilk && p.tavir === 'koru' ? 2 : !k.ilk && Math.abs(aciF(a.yaw, k.yawU)) / dt > 2 && k.vs > 0.6 ? 0 : !k.ilk && (vsOnce - k.vs) / dt > 3 ? 1 : -1;
     const b = BANT(k.vs);
     a.m.root.updateMatrixWorld(true);
     const yer = [false, false];
@@ -105,7 +109,7 @@ OLCUM_KUR_JS = r"""() => {
       V.set(0, -0.5, 0.05).applyMatrix4((i ? a.m.kR : a.m.kL).matrixWorld); const c = k.temas[i] ? V.y < 0.025 : V.y < 0.02; yer[i] = c;
       if (!k.ilk) {
         if (c && k.temas[i]) { k.tn[i]++; const d = Math.hypot(V.x - k.ayak[i][0], V.z - k.ayak[i][1]); k.yol[i] += d; if (!eylemsiz) k.epEylem[i] = true;
-          if (eylemsiz && k.tn[i] > 2) { S.temas[b]++; if (d / dt > 0.2) S.kayma[b]++; } }
+          if (eylemsiz && k.tn[i] > 2) { S.temas[b]++; if (d / dt > 0.2) S.kayma[b]++; if (durum >= 0) { S.dTemas[durum]++; if (d / dt > 0.2) S.dKayma[durum]++; } } }
         if (c !== k.temas[i]) k.gecis[i] = S.kare;
         if (c && !k.temas[i]) { k.yol[i] = 0; k.tn[i] = 0; k.bas0[i][0] = V.x; k.bas0[i][1] = V.z; k.basVar[i] = true; k.epEylem[i] = !eylemsiz; k.pen.bas.push(t); }
         if (!c && k.temas[i] && k.basVar[i] && !k.epEylem[i] && k.tn[i] > 2) { S.adimYol[b].push(k.yol[i]); S.adimNet[b].push(Math.hypot(k.ayak[i][0] - k.bas0[i][0], k.ayak[i][1] - k.bas0[i][1])); }
@@ -118,14 +122,15 @@ OLCUM_KUR_JS = r"""() => {
        ilk karesi) sıçramaya sayılmaz; sayılan: hazırlık, geri salınım, iniş ve çıkış (robotluğun görüldüğü yerler). Kanal değeri saçma (|x| ≥ 2π
        ya da NaN) ise kararsız kare (hız katlarında eski yayın kararsızlığı) */
     const vk = a.vk, vkSinir = !!(vk && e === 'vurus' && ((vk.evre === 2 && (vk.asagi || vk.t <= dt * 1.01)) || vk.evre === 3 || (vk.evre === 5 && vk.cikT <= dt * 1.01)));
-    if (vk && e === 'vurus') S.vkKare++;
+    if (vk && e === 'vurus') { S.vkKare++; const ev = vk.evre === 2 ? (vk.asagi ? '2a' : '2g') : String(vk.evre); S.vkEvreKare[ev] = (S.vkEvreKare[ev] || 0) + 1; }
     let toplamD = 0;
     for (let i = 0; i < NK; i++) { const ham = P[KANAL[i]], x = ham || 0;
       if (ham !== undefined && !(Math.abs(ham) < 6.2832)) { S.kararsiz++; S.kararsizKanal[KANAL[i]] = (S.kararsizKanal[KANAL[i]] || 0) + 1; }
       if (k.pn >= 1) { const d = Math.abs(x - k.P1[i]), dd = k.pn >= 2 ? Math.abs(x - 2 * k.P1[i] + k.P2[i]) : 0; toplamD += d;
         if (i === 1) { if (d > 0.03) { S.sicramaDy++; if (eylemsiz) S.dyEylemsiz++; } }
         else if (!eylemsiz) { if (d > 0.3491) { S.sicramaEylem++; const ad = KANAL[i] + '@' + e; S.kanalSicramaEylem[ad] = (S.kanalSicramaEylem[ad] || 0) + 1;
-            if (e === 'vurus' && vk && !vkSinir) S.vkDisi++; } }
+            if (e === 'vurus' && vk && !vkSinir) S.vkDisi++;
+            if (e === 'vurus' && vk) { const ev = (vk.evre === 2 ? (vk.asagi ? '2a' : '2g') : String(vk.evre)) + ':' + KANAL[i]; S.vkDisiEvre[ev] = (S.vkDisiEvre[ev] || 0) + 1; } } }
         else if (BACAK.has(KANAL[i])) { if (d > 0.3491) { S.sicramaBacak++; S.kanalSicrama[KANAL[i]] = (S.kanalSicrama[KANAL[i]] || 0) + 1; } if (dd > 0.2) { S.kirilmaBacak++; if (S.kare - k.gecis[KANAL[i].endsWith('R') || KANAL[i].includes('R') ? 1 : 0] <= 3) S.kirilmaBacakGecis++; S.kanalKirilma[KANAL[i]] = (S.kanalKirilma[KANAL[i]] || 0) + 1; } }
         else { if (d > 0.1745) { S.sicramaUst++; S.kanalSicrama[KANAL[i]] = (S.kanalSicrama[KANAL[i]] || 0) + 1; } if (dd > 0.06) { S.kirilmaUst++; S.kanalKirilma[KANAL[i]] = (S.kanalKirilma[KANAL[i]] || 0) + 1; } } }
       k.P2[i] = k.P1[i]; k.P1[i] = x; }
@@ -254,7 +259,9 @@ SONUC_JS = r"""() => {
         sonAdimIyiPay: S.vkSonAdim.length ? +(100 * S.vkSonAdim.filter(x => x >= 0.8).length / S.vkSonAdim.length).toFixed(1) : null,
         tepeMed: S.vkTepe.length ? +yuzde(S.vkTepe, 0.5).toFixed(2) : null, ilkTakip: S.vkIlkTakip,
         ktPas: med(kt.pas), ktSut: med(kt.sut), ktUzun: med(kt.uzun), ktIlk: med(kt.ilk), disiVurus: S.vkN ? +(S.vkDisi / S.vkN).toFixed(2) : null, kare: S.vkKare, kararsiz: S.kararsiz,
-        kararsizKanal: Object.entries(S.kararsizKanal).sort((a, b) => b[1] - a[1]).slice(0, 6) }; })(),
+        kararsizKanal: Object.entries(S.kararsizKanal).sort((a, b) => b[1] - a[1]).slice(0, 6),
+        disiEvre: Object.entries(S.vkDisiEvre).sort((a, b) => b[1] - a[1]).slice(0, 10), evreKare: S.vkEvreKare }; })(),
+    kaymaDurum: S.dTemas.map((n, i) => n ? { pay: +(100 * S.dKayma[i] / n).toFixed(2), n } : null),
     ck: (() => { const G = S.ck, Y = G.yutKayit.filter(y => y.n >= 3);
       return { N: G.N, bas: G.bas, basAyni: G.basAyni, basFark: G.basFark.slice(0, 10), it: G.it, itAyni: G.itAyni,
         makasN: G.makas.length, makasIyi: G.makas.filter(x => x >= 0.35).length, makasMed: G.makas.length ? +yuzde(G.makas, 0.5).toFixed(2) : null,
@@ -276,6 +283,9 @@ def v(x, n=1):
 def satirlar(o):
     S = []
     S.append(f"A: ayak kayması % (eylemsiz temas karesi, bant): " + " · ".join(f"{BANT_AD[i]} {v(o['kayma'][i], 2)}" for i in range(1, 5)) + "   [hedef ≤5 / ≤5 / ≤15 / ≤15]")
+    kd = o.get("kaymaDurum")
+    if kd:
+        S.append("A: ayak kayması % durumlara göre (bilgi; aynı tanım): " + " · ".join(f"{ad} {v(kd[i]['pay'], 2)} ({kd[i]['n']} temas)" if kd[i] else f"{ad} —" for i, ad in enumerate(["dar dönüş", "ani duruş", "top saklama"])))
     yp = lambda d, i: f"{v(d[i]['ort'], 3)}/{v(d[i]['p90'], 3)}" if d[i] else "—"
     S.append(f"A: adım başına kayma (m; yerdeki ayağın temas boyunca yolu / net yer değiştirmesi, ort/p90): " + " · ".join(f"{BANT_AD[i]} {yp(o['adimYol'], i)} | {yp(o['adimNet'], i)}" for i in range(1, 5)) + "   [hedef yürüyüş ≤0,03, depar ≤0,08]")
     S.append(f"A: kadans (adım/sn, ort [p10–p90] n): " + " · ".join(f"{BANT_AD[i]} {v(o['kadans'][i]['ort'], 2)} [{v(o['kadans'][i]['p10'], 2)}–{v(o['kadans'][i]['p90'], 2)}] {o['kadans'][i]['n']}" if o['kadans'][i] else f"{BANT_AD[i]} —" for i in range(1, 5)) + "   [hedef 1,6–2,2 / 2,5–3,0 / 3,0–3,6 / 3,5–4,2]")
@@ -304,6 +314,8 @@ def satirlar(o):
         S.append(f"A: vuruş (T4-V): {k['n']} temas — hazırlıksız (son adım < 0,8·tB) %{v(k['hazirliksizPay'])} · son adım/tB ort {v(k['sonAdimOrt'], 2)}, ≥ 0,8 olan %{v(k['sonAdimIyiPay'])} · geri salınım tepe/plan ortanca {v(k['tepeMed'], 2)} · ilk görülme temasta {k['ilkTakip']}"
                  f" · karar→temas ortanca (sn) pas {v(k['ktPas'], 2)} / şut {v(k['ktSut'], 2)} / uzun {v(k['ktUzun'], 2)} / gelişine {v(k['ktIlk'], 2)} · evre sınırı dışı >20° sıçrama {v(k['disiVurus'], 2)}/vuruş · kararsız kare {k['kararsiz']}"
                  f"   [hedef ≤5 / ≥90 / ≥0,85 / 0 / pas 0,40–0,55 / bilgi / 1×'te 0 (hız katlarında dondurulmuş A2b'de de aynı: araç ya da ortak kod, bilgi)]")
+        if k.get("disiEvre"):
+            S.append("A:   vuruşta >20° sıçrama evre:kanal (1 hazırlık, 2g geri salınım, 2a aşağı salınım, 3 takip, 4 iniş, 5 çıkış; evre kare sayısı " + ", ".join(f"{e} {n}" for e, n in sorted((k.get("evreKare") or {}).items())) + "): " + ", ".join(f"{c} {n}" for c, n in k["disiEvre"]))
         if k.get("kararsizKanal"):
             S.append("A:   kararsız kanallar: " + ", ".join(f"{c} {n}" for c, n in k["kararsizKanal"]))
     c = o.get("ck")

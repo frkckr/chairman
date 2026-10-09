@@ -43,7 +43,11 @@ module.exports={
     ['Korner: geride kalanların hızı − takım ort. (özellik)','rKornerGeriHiz',2,[0,null,'T8']],
     ['Barajlı serbest vuruş: 8 sn içinde gol %','rBarajGol',1],['Barajlı serbest vuruş: barajdaki kişi','rBarajKisi',1],
     ['Barajsız serbest vuruş (son 40 m): ceza sahasındaki hücumcu','rSerbestKutu',1,[4,6,'T8']],
-    ['Tehlikeli duran topta hazırlık (sn, ortanca)','rDuranHazirlik',1,[10,14,'T8']]]),
+    ['Tehlikeli duran topta hazırlık (sn, ortanca)','rDuranHazirlik',1,[10,14,'T8']],
+    /* T4h (2026-10-09; gerçekçilik planı Ek H madde 39, bilgi): yön salınımı — 0,2 sn'de bir örneklenen gidiş yönü (hız > 1,5 m/sn, kilitli eylem
+       dışında) 50°'den çok döner ve bir sonraki örnekte ilk yönün 30° içine geri gelir (gereksiz yön değişimi); sahipsiz duran top — oyunda top
+       kimsenin değil, yerde ve 0,3 m/sn'den yavaş (kimse almıyor) */
+    ['Yön salınımı (gidip geri dönme) / oyuncu·dk','rSalinim',2],['Sahipsiz duran top (sn / maç)','rTopBos',1],['Sahipsiz duran top: en uzun (sn)','rTopBosEn',1]]),
   yeni:()=>{
     const hyp=Math.hypot,ort=L=>L.length?L.reduce((a,b)=>a+b,0)/L.length:NaN,ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b);return S[Math.floor(S.length/2)];};
     /* hareket */
@@ -61,6 +65,8 @@ module.exports={
     let pasN=0,pasL=0,alFv=0,alKn=0,alN=0;
     /* T4: çalım, top saklama, dokunuş sıklığı */
     let clN=0,clHep=0,clYarim=0,clOk=0,clKanat=0,clFaul=0,clPn=0,clPt=0,clPok=0,clYn=0,clY=0,tKoru=0;const clHar={},dkT=[0,0,0],dkN=[0,0,0];
+    /* T4h: yön salınımı, sahipsiz duran top */
+    let salinim=0,bosT=0,bosAn=0,bosEn=0;const yonFark=(x,y)=>{let r=x-y;r=Math.atan2(Math.sin(r),Math.cos(r));return r<0?-r:r;};
     const kapat=(m,neden)=>{if(!seq)return;seqs.push({sure:m.t-seq.t0,pas:m.ist.pasTamam[seq.team]-seq.pt0,neden});seq=null;};
     const kutuda=(m,p,t)=>{const gx=m.dir[t]*R_PL;return Math.abs(p.x-gx)<R_CU&&Math.abs(p.z-R_MZ)<R_CW;};
     return{
@@ -91,7 +97,8 @@ module.exports={
           void D;}
         for(let i=bekleyen.length-1;i>=0;i--){const q=bekleyen[i];if(m.t>=q.t){q.o.gol=m.score[q.att]>q.g0;bekleyen.splice(i,1);}}
         onceki=ph;
-        if(ph!=='play'){if(seq)kapat(m,'durdu');if(tas)tasima.push(tas);tas=null;sahipP=null;return;}
+        if(ph!=='play'){if(seq)kapat(m,'durdu');if(tas)tasima.push(tas);tas=null;sahipP=null;bosAn=0;return;}
+        {const bv=hyp(b.vx,b.vz);if(!b.sahip&&!b.tasiyan&&bv<0.3&&b.y<0.2){bosT+=1/60;bosAn+=1/60;if(bosAn>bosEn)bosEn=bosAn;}else bosAn=0;}
         /* sahiplik zinciri, top ayakta, taşıma */
         const s=b.sahip;
         if(s!==sahipP){if(tas)tasima.push(tas);sahipP=s;sahipT=m.t;tas=s?{yol:0}:null;}
@@ -113,7 +120,9 @@ module.exports={
         for(const p of m.players){if(!p.oyunda||p.rol==='GK')continue;const sp=hyp(p.vx,p.vz);tOy+=dt;mes+=sp*dt;if(sp<2)tDY+=dt;if(sp>=7)tDep+=dt;if(sp>2)n++;
           if(p.tavir==='koru')tKoru+=dt;
           if(hyp(p.x-b.x,p.z-b.z)>25){tUzak+=dt;if(sp>4)tUzakKosu+=dt;}
-          let h=iv.get(p);if(!h){h={v:new Float64Array(12),i:0,n:0,ust:false,son:-9};iv.set(p,h);}
+          let h=iv.get(p);if(!h){h={v:new Float64Array(12),i:0,n:0,ust:false,son:-9,y0:0,y1:0,y2:0,yn:0};iv.set(p,h);}
+          if(adim%12===0){if(sp>1.5&&!(p.eylem&&p.eylem.kilit)){h.y2=h.y1;h.y1=h.y0;h.y0=Math.atan2(p.vz,p.vx);h.yn++;
+            if(h.yn>=3&&yonFark(h.y1,h.y2)>0.873&&yonFark(h.y0,h.y2)<0.524)salinim++;}else h.yn=0;}
           if(h.n>=12&&!(p.eylem&&p.eylem.kilit)){const a=(sp-h.v[h.i])/0.2;if(a>3){if(!h.ust&&m.t-h.son>1){efor++;h.son=m.t;}h.ust=true;}else h.ust=false;}
           h.v[h.i]=sp;h.i=(h.i+1)%12;h.n++;}
         if(adim%30===0){orn++;if(n>=16)kalabalik++;}},
@@ -130,7 +139,8 @@ module.exports={
           rBarajKisi:ort(baraj.map(k=>k.kisi)),rSerbestKutu:ort(serbest),rDuranHazirlik:ortanca(hazirlik),
           rCalim:clN,rCalimHepsi:clHep,rCalimKalib:clPn?100*(clPt-clPok)/clPn:NaN,rKoru:tKoru,rCalimHareket:clHar,
           rDokunus:dkT[0]+dkT[1]+dkT[2]>0?(dkN[0]+dkN[1]+dkN[2])/(dkT[0]+dkT[1]+dkT[2]):NaN,
-          rDokunusY:dkT[0]>0?dkN[0]/dkT[0]:NaN,rDokunusO:dkT[1]>0?dkN[1]/dkT[1]:NaN,rDokunusH:dkT[2]>0?dkN[2]/dkT[2]:NaN};}
+          rDokunusY:dkT[0]>0?dkN[0]/dkT[0]:NaN,rDokunusO:dkT[1]>0?dkN[1]/dkT[1]:NaN,rDokunusH:dkT[2]>0?dkN[2]/dkT[2]:NaN,
+          rSalinim:tOy?salinim/(tOy/60):NaN,rTopBos:bosT,rTopBosEn:bosEn};}
     };
   },
   /* T4: hareket başına çalım denemesi ve başarı (bütün maçlar) */

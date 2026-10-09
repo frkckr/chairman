@@ -179,7 +179,7 @@ function aktorKur(K,kaynak,boy){
     P,C,sw:new Float32Array(N),swV:new Float32Array(N),st:new Float32Array(N),sp:new Array(N).fill(null),faz0:rnd()*6.283,
     /* yürüyüş: dünya hızı/ivmesi, gövdeye göre hareket yönü, ayak hedefleri (x,y,z ×2), kalça/baş dönüşü, tavır parametreleri */
     wvx:0,wvz:0,awx:0,awz:0,mX:0,mZ:1,sapma:0,W:new Float32Array(4),D:new Float32Array(4),anc:new Uint8Array(2),yawO:0,don:0,donY:0,yonM:null,cadS:0,ayakYaw:null,T:new Float32Array([-0.1,-0.034,0.025,0.1,-0.034,0.025]),qA:new Float32Array(2),beta:0.6,dyR:0,dyV:0,hy:0,hyV:0,hyT:0,hyTV:0,by:0,byV:0,kim:null,
-    gDrop:0,gGen:0,gAdim:1,gHy:0,tvSon:null,jYan:1,bekP:null,yEk:0,kucuk:false,phItme:0,dokT:-1,dokSon:undefined,dokSurum:-1,dokP:null,dokDon:false,dokCal:false,dokS:ANM.dokunus,
+    gDrop:0,gGen:0,gAdim:1,gHy:0,tvSon:null,jYan:1,bekP:null,yEk:0,kucuk:false,phItme:0,dokT:-1,dokSon:undefined,dokSurum:-1,dokP:null,dokDon:false,dokCal:false,dokKoru:false,dokS:ANM.dokunus,
     /* T4g: çalım, aldatılan savunmacı ve top saklama katmanının durumu (anmCalimDurum) */
     ck:anmCkYeni(),
     /* eylem: son görülen eylem nesnesi ve başında seçilenler */
@@ -220,6 +220,9 @@ function anmPiksel(a,sy){if(typeof camera==='undefined')return 99;
    hedefe döner, baş–gövde sınırını aşan kısmı gövde alır. Oyuncuya göre kimlik (anmKimlik): adım, kol, dirsek, yaylanma, duruş eğimi.
    Yorgunluk (p.enerji < 0,6): koşuda duruş uzar, kalça daha çok yaylanır, ayak daha az kalkar (adım boyu aynı). ---- */
 const anmAci=d=>Math.atan2(Math.sin(d),Math.cos(d));
+/* T4h (2026-10-09; gerçekçilik planı Ek H madde 15): yarı örtük Euler yayı ω·dt ≈ 0,83'ü aşınca kararsızdır (2× oynatmada kalça yayı ω 34 ile 1,13:
+   dy ve bacak kanallarında patlama). Büyük dt alt adımlara bölünür (ω·h ≤ 0,7); 1×'te (dt = 1/60) her yayda tek adım, sonuç eskisiyle aynı */
+const anmAltAdim=(w,dt)=>{const n=Math.ceil(w*dt/0.7-1e-9);return n<1?1:n>16?16:n;};
 /* bir adımın boyu (m, boy 1 için) boya göre hızdan (vn = hız/√boy): yürüyüşte 0,75·(vn/1,25)^0,42, koşuda 1 + 0,95·(1 − e^−(vn−2,5)/2,2) */
 function anmAdimBoyu(vn){
   if(vn<2)return 0.75*Math.pow(Math.max(vn,0.25)/1.25,0.42);
@@ -251,7 +254,11 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
   const fark=anmAci(a.yaw-a.ayakYaw),piv=v<1.2?clamp((Math.abs(fark)-0.08)/0.3+a.don/4,0,1)*(1-v/1.2):0;
   /* adım boyu (dünya m) ve kadans; koşu payı (yürüyüş → koşu 2–2,5 m/sn, boya göre) */
   const vn=v/Math.sqrt(sy),kos=clamp((vn-2)/0.5,0,1),Lf=anmAdimBoyu(vn)*sy,yor=clamp((0.6-(p&&p.enerji!=null?p.enerji:1))/0.6,0,1);   /* yor: yorgun koşu */
-  const wS2=wS*wS,wFB=wF+wB||1,L=Math.max(0.12,((1-wS2)*(wF*Lf+wB*A.geri*Lf)/wFB+wS2*sy*clamp(A.yanEn+A.yanHiz*v,A.yanEn,A.yanTavan))*K.adim*a.gAdim);
+  /* T4h (2026-10-09): hızlı yan harekette (motorun vuruş hazırlığında gövde pas yönüne erken döner, oyuncu topa koşmayı sürdürür) yan adım 2 m/sn'den
+     sonra uzar (yan galop, çapraz adım; 4,5 m/sn'de 0,95 m) ve adım sıklığı insan sınırında kalır (en çok 4,8 adım/sn): eskiden yan koşuda 7–9
+     adım/sn çıkıyor, dizler karede 20°'den çok sıçrıyordu */
+  const Ly=clamp(A.yanEn+A.yanHiz*v,A.yanEn,A.yanTavan),Lyan=v>2?lerp(Ly,0.95,clamp((v-2)/2.5,0,1)):Ly;
+  const wS2=wS*wS,wFB=wF+wB||1,L=Math.max(0.12,v/4.8,((1-wS2)*(wF*Lf+wB*A.geri*Lf)/wFB+wS2*sy*Lyan)*K.adim*a.gAdim);
   let cad=Math.max(v/L,piv*A.donusKadans*(0.7+0.5*Math.min(1,Math.abs(fark)/1.5)),clamp((a.sapma-0.28)/0.2,0,1)*A.donusKadans);
   /* durunca havadaki ayak adımını tamamlar (süzülerek yerine gitmez) */
   if(cad<1.6&&(!a.anc[0]||!a.anc[1]))cad=1.6;
@@ -293,7 +300,7 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
   const yay=kos*K.yay*(1+0.5*yor)*lerp(ANM.yaylanma[0],ANM.yaylanma[1],clamp((v-3)/5,0,1))/sy;
   /* iniş sınırı: gerçek yürüyüşte kütle merkezi 4–5 cm iner (geride kalan ayağın topuğu kalkar; hızlı yürüyüşte daha çok); yetişemeyen ayağı yumuşak IK kısa bırakır */
   const dyH=Math.max(Math.min(need,-yay*Math.cos(2*TAU*(u0-beta/2))),-lerp(0.09,0.1,kos)/sy);
-  if(dt>0){const w=34;a.dyV+=(w*w*(dyH-a.dyR)-2*w*a.dyV)*dt;a.dyR+=a.dyV*dt;}
+  if(dt>0){const w=34,n=anmAltAdim(w,dt),h=dt/n;for(let s=0;s<n;s++){a.dyV+=(w*w*(dyH-a.dyR)-2*w*a.dyV)*h;a.dyR+=a.dyV*h;}}
   P.dy=Math.min(-a.gDrop,a.dyR);
   /* eğilme: koşu duruşu (kimlikle), ivmeden öne/arkaya, virajda içe (atan(a/g)) */
   P.lean=Math.min(0.6,(E.kosu*run+K.egim*kos)*wF+0.05*wB*Math.min(1,v)+clamp(Math.atan(af/9.81)*E.ivme,E.ivmeAlt,E.ivmeUst)+0.6*a.gDrop);
@@ -302,8 +309,8 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
   let fl=Math.atan2(-mX,mZ);if(fl>1.5708)fl-=Math.PI;else if(fl<-1.5708)fl+=Math.PI;
   /* tam yana harekette kalça kare kalır (±90°'de yön değiştirirken kalça öbür yana kapanmaz); kritik sönümlü yayla */
   const fy=Math.abs(fl)/1.5708,hyH=-clamp(fl*0.7,-ANM.kalcaDonus,ANM.kalcaDonus)*Math.min(1,v/1.5)*(1-fy*fy*fy*fy)+a.gHy;
-  if(dt>0){const w=9;a.hyV+=(w*w*(hyH-a.hy)-2*w*a.hyV)*dt;a.hy+=a.hyV*dt;}
-  if(dt>0){const w=12,h=clamp(-fark*ANM.kalcaGecikme,-0.5,0.5);a.hyTV+=(w*w*(h-a.hyT)-2*w*a.hyTV)*dt;a.hyT+=a.hyTV*dt;}
+  if(dt>0){const w=9,n=anmAltAdim(w,dt),h=dt/n;for(let s=0;s<n;s++){a.hyV+=(w*w*(hyH-a.hy)-2*w*a.hyV)*h;a.hy+=a.hyV*h;}}
+  if(dt>0){const w=12,h=clamp(-fark*ANM.kalcaGecikme,-0.5,0.5),n=anmAltAdim(w,dt),k=dt/n;for(let s=0;s<n;s++){a.hyTV+=(w*w*(h-a.hyT)-2*w*a.hyTV)*k;a.hyT+=a.hyTV*k;}}
   const sal=lerp(ANM.kalcaSalinim[0],ANM.kalcaSalinim[1],run)*Math.min(1,v)*Math.cos(TAU*u0);
   P.hy=a.hy+sal+a.hyT;P.gy=-a.hy*0.8-1.5*sal-a.hyT;
   /* kollar: bacakla ters fazda (sağ ayak basarken sağ kol geride), genlik hızla ve kimlikle; öne gelen kolun dirseği daha kapalı */
@@ -330,11 +337,11 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
     if(d2<16){let k=1;if(p.bakisYon!=null&&d2>0.01){const r=anmAci(p.bakisYon-Math.atan2(dz,dx));k=clamp(Math.cos(r),0,1);}
       P.hx+=0.25*(1-Math.sqrt(d2)/4)*k;}}
   /* başın topa kalkması kritik sönümlü yayla (top inince ya da sahip olunca sıçramasın) */
-  if(dt>0){const w=12;a.hxUV+=(w*w*(hxU-a.hxU)-2*w*a.hxUV)*dt;a.hxU+=a.hxUV*dt;}
+  if(dt>0){const w=12,n=anmAltAdim(w,dt),h=dt/n;for(let s=0;s<n;s++){a.hxUV+=(w*w*(hxU-a.hxU)-2*w*a.hxUV)*h;a.hxU+=a.hxUV*h;}}
   P.hx+=a.hxU;if(a.hxU<-0.45)P.gx+=(a.hxU+0.45)*0.35;
   yH=clamp(yH,-(B.sinir+B.govde),B.sinir+B.govde);
   /* hız sınırı ve gövdenin payı yumuşak (tanh, softplus): sınırda ivme kırılmaz */
-  if(dt>0){const w=B.yay,ac=clamp(w*w*(yH-a.by)-2*w*a.byV,-B.ivme,B.ivme);a.byV+=ac*dt;a.byV=B.hiz*Math.tanh(a.byV/B.hiz);a.by+=a.byV*dt;}
+  if(dt>0){const w=B.yay,n=anmAltAdim(w,dt),h=dt/n;for(let s=0;s<n;s++){const ac=clamp(w*w*(yH-a.by)-2*w*a.byV,-B.ivme,B.ivme);a.byV+=ac*h;a.byV=B.hiz*Math.tanh(a.byV/B.hiz);a.by+=a.byV*h;}}
   {const x=Math.abs(a.by)-B.sinir;P.gy+=Math.sign(a.by)*(x>3?x:Math.log(1+Math.exp(8*x))/8);}
   P.by=clamp(a.by-P.hy-P.gy,-1.4,1.4);
 }
@@ -910,7 +917,9 @@ function anmDokunus(a,p,e,dt){
   const bt=a.beta,hu=bt+0.72*(1-bt);let u=a.ph/6.283185307179586+ayak*0.5;u-=Math.floor(u);let d=hu-u;d-=Math.round(d);
   /* T2: dönüş dokunuşu (sözleşme: sonDokunus.donus) gövdeyi dönüşe yatırır, ayak topu içe/dışa çeker; T4g: taban dokunuşunda ayak topun üstünde */
   const P0=cal?(yz==='dis'?ANM_POZ.dokunDis:yz==='ust'?ANM_POZ.dokunUzun:ANM_POZ.dokunIc):sd&&sd.donus?ANM_POZ.dokunDon:yz==='taban'?ANM_POZ.dokunTaban:ANM_POZ.dokun;
-  a.phItme=clamp(d*6.283185307179586,-0.9,0.9);a.dokT=0;a.dokP=ayak?aynala(P0):P0;a.dokDon=!!(sd&&sd.donus);a.dokCal=cal;a.dokS=cal?0.26:ANM.dokunus;
+  /* T4h: top saklamada (motor saniyede ~4,5 kez tabanla dokunur) dokunuş adım evresini itmez ve taban pozu hafiftir (eskiden yerdeki ayak temasın %55'inde kayıyordu) */
+  const koru=p.tavir==='koru';a.dokKoru=koru;
+  if(!koru)a.phItme=clamp(d*6.283185307179586,-0.9,0.9);a.dokT=0;a.dokP=ayak?aynala(P0):P0;a.dokDon=!!(sd&&sd.donus);a.dokCal=cal;a.dokS=cal?0.26:ANM.dokunus;
 }
 
 /* ---- 2. eylem yuvalarının hedef ağırlıkları ---- */
@@ -918,7 +927,7 @@ function anmEylemler(a,p,dt){
   const e=p.eylem,ad=e?e.ad:'',b=mac.ball,st=a.st,sp=a.sp,S=ANM_S,ph=mac.phase;
   if(e!==a.eyl){a.eyl=e;a.eylAd=ad;if(e)anmBasla(a,p,e,ad);}
   anmDokunus(a,p,e,dt);
-  if(a.dokT>=0){st[S.dokun]=(a.dokCal?0.8:a.dokDon?0.75:0.55)*tepe(a.dokT,a.dokS);sp[S.dokun]=a.dokP;}
+  if(a.dokT>=0){st[S.dokun]=(a.dokCal?0.8:a.dokKoru?0.3:a.dokDon?0.75:0.55)*tepe(a.dokT,a.dokS);sp[S.dokun]=a.dokP;}
   /* A2b: vuruşun üst gövdesi vuruş katmanından (geri salınım ve takip ağırlıkları; iniş ve çıkış motorun eylemi bittikten sonra da sürer) */
   const vk=a.vk;
   if(vk&&vk.evre>0&&(ad==='vurus'||!ad)){if(vk.wG>0){st[S.vG]=vk.wG;sp[S.vG]=vk.pG;}if(vk.wT>0){st[S.vT]=vk.wT;sp[S.vT]=vk.pT;}}
