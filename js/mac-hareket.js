@@ -59,8 +59,13 @@ ayarEkle('C',{
   destekSure:[0.6,1.6],        // 1. adamın arkasındaki yardımın varış süresi: 0,6 sn'de tam yardım, 1,6 sn'de yok (destekHesapla)
   kapatYakin:3.0,              // (2) bire bir örtüsü: 2. adam 1. adamın bu kadar (m) arkasında, kale tarafında bekler (kapatYakin; takimAI seçer)
   /* T4 (2026-10-08): sürüş dokunuşu */
-  dokunusSiklik:[2.9,3.4],     // taşımada planlanan dokunuş sıklığı (1/sn): yavaş → hızlı (7 m/sn) sürüş; öndeki baskı ×(1 + 0,3·baskı). Dönüş ve yavaşlamayla ölçülen ~%20 düşük: 2,3 → 3,0 (Ek G2)
-  dokunusUlas:[0.62,0.85]      // ayağın topa uzanma mesafesi (m, gövde merkezinden): yavaş → hızlı koşu (uzun adım topu daha önde alır)
+  dokunusSiklik:[3.8,4.2],     // taşımada planlanan dokunuş sıklığı (1/sn): yavaş → hızlı (7 m/sn) sürüş; öndeki baskı ×(1 + 0,3·baskı). Dönüş, hızlanma ve topa yetişme
+                               // süresiyle ölçülen oran ≈ 0,65–0,70 (T4 (3), 40 maç: [2,9; 3,4] → 2,13/sn, [3,6; 4,0] → 2,50); hedef ölçülen 2,3 → 3,0 (Ek G2).
+                               // T4-V'de pres vuruşa kadar uzak durunca öndeki baskı payı düştü, ölçülen 2,28'e indi → [3,8; 4,2]
+  dokunusUlas:[0.62,0.85],     // ayağın topa uzanma mesafesi (m, gövde merkezinden): yavaş → hızlı koşu (uzun adım topu daha önde alır)
+  /* T4-V (2026-10-09): vuruş hazırlığında gövde dönüş hızı = yerinde dönüş w0 × [0], tavan [1] rad/sn (çizimin kök yaw tavanı 9; eskiden 11 − 7k).
+     Motor (moveP) ve çizime bildirilen kalan süre (vurusIlerle) aynı değeri okur (hrkVurusDonus) */
+  vurusDonus:[1.15,9]
 });
 /* çeviklik (0–1): top sürme, hız ve hafiflikten türetilir (kadro verisi değişmez) */
 const hrkCeviklik=p=>{if(p._cev!=null)return p._cev;const o=p.oz||{},s=o.surus!=null?o.surus:0.5,h=o.hiz!=null?o.hiz:0.5;
@@ -75,6 +80,8 @@ const hrkSabit=p=>{const k=p._hk;if(k)return k;if(k===undefined)hrkHazirla(p);co
   return p._hk={A0:clamp(A.ivme+1.1*h+0.7*c+0.45*tip,6.0,7.8),S0:clamp(p.maxSpd+1.25-0.3*tip,8.6,10.0),B:A.fren+1.5*h,ly:A.yanTutus+3.5*c,w0:A.donusYerinde+2.5*c};};
 /* o anki tepe hız: sprint enerjisi ve yorgunluk düşürür */
 const hrkTepe=p=>p.maxSpd*(0.86+0.14*(p.enerji!=null?p.enerji:1))*(1-0.12*(p.yorgunluk||0));
+/* T4-V: vuruş hazırlığındaki gövde dönüş hızı (rad/sn; hızlanınca düşer). moveP ve vurusIlerle'nin kalan süre hesabı aynı değeri okur */
+const hrkVurusDonus=p=>{const w=MOTOR_AYAR.vurusDonus,k=hrkMin(1,p.spd/p.maxSpd);return hrkMin(w[1],hrkSabit(p).w0*w[0])*(1-0.3*k);};
 /* gövdenin baktığı yöne göre hız tavanı (oran; c: bakış ile gidiş yönü arasındaki açının kosinüsü): ileri 1, yana adım ~0,52, geri geri ~0,42 */
 const hrkYonTavan=c=>{const y=MOTOR_AYAR.yanTavan;return c>=0?y+(1-y)*c:y+(y-MOTOR_AYAR.geriTavan)*c;};
 /* yanal tutunma (k=v/vmax) */
@@ -338,8 +345,9 @@ Object.assign(Match.prototype,{
       else if(p.bak){const bx=p.bak.x-p.x,bz=p.bak.z-p.z;if(bx*bx+bz*bz>0.04)yh=hrkAtan2(bz,bx);}
       else if(hedefHiz>0.4)yh=hrkAtan2(dz,dx);
     }
-    /* dönüş hızı: saha oyuncusu yerinde 5,5–8 rad/sn (çeviklik), hızlanınca yarıya yakın; kaleci ve diğerleri eski değer */
-    if(yh!=null){const k=hrkMin(1,p.spd/p.maxSpd),f=hrkAciFark(yh,p.yon),oran=(saha&&!(e2&&e2.ad==='vurus')?hk.w0*(1-0.5*k):11-7*k)*dt;p.yon=hrkAciNorm(p.yon+clamp(f,-oran,oran));}
+    /* dönüş hızı: saha oyuncusu yerinde 5,5–8 rad/sn (çeviklik), hızlanınca yarıya yakın; vuruş hazırlığında hrkVurusDonus (T4-V; çizimle ortak);
+       kaleci ve diğerleri eski değer */
+    if(yh!=null){const k=hrkMin(1,p.spd/p.maxSpd),f=hrkAciFark(yh,p.yon),oran=(saha?(e2&&e2.ad==='vurus'?hrkVurusDonus(p):hk.w0*(1-0.5*k)):11-7*k)*dt;p.yon=hrkAciNorm(p.yon+clamp(f,-oran,oran));}
     let ux=0,uz=0;if(d>0.04){ux=dx/d;uz=dz/d;}
     if(p._kacKare===this.kare&&d>0.6){ux+=p._kacX;uz+=p._kacZ;const n=hrkHyp(ux,uz)||1;ux/=n;uz/=n;}
     let s=hrkMin(hedefHiz,vm*hrkYonTavan(ux*hrkCos(p.yon)+uz*hrkSin(p.yon)));
@@ -651,7 +659,8 @@ Object.assign(Match.prototype,{
     /* T4: jokey mesafesi müdahale becerisinden değil sürücünün hızından (eskiden 2,25 − 0,5·müdahale: kötü müdahaleci geride durup daha zor geçiliyordu);
        arkasında yardım varsa %20'ye kadar yakın (destekHesapla) */
     const des=this.destekHesapla(p),kale=hrkCos(s.yon)*nx+hrkSin(s.yon)*nz,R0=clamp(1.95+0.1*s.spd,1.6,2.4)*MOTOR_AYAR.jokeyMesafe*(1-0.2*des),
-      R=s.eylem&&s.eylem.ad==='vurus'?hrkMin(R0,0.8):kale<0.3?lerp(0.9,R0,clamp((kale+1)/1.3,0,1)):R0;
+      /* T4-V: vuruşta üstüne gelme yalnız temasa 0,3 sn kala (uzayan hazırlık presçiyi davet etmesin; kalan alanı yoksa eskisi gibi) */
+      R=s.eylem&&s.eylem.ad==='vurus'&&!(s.eylem.kalan>0.3)?hrkMin(R0,0.8):kale<0.3?lerp(0.9,R0,clamp((kale+1)/1.3,0,1)):R0;
     const al=orta?0.05+0.1*profilAlt(p,'sezgi',0.5):0.15+0.3*clamp((hrkAbs(oz-MZ)-6)/14,0,1);
     p.tx=ox+R*(nx*hrkCos(al)+qx*hrkSin(al));p.tz=oz+R*(nz*hrkCos(al)+qz*hrkSin(al));p.bak=b;
     const yaklas=hrkMax(0,(s.vx*(p.x-s.x)+s.vz*(p.z-s.z))/(mesafe||1));

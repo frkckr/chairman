@@ -474,7 +474,9 @@ function secenekler(m,p){
   const ofs=ofsaytCizgisi(m,p.team)+m.normal()*MOTOR_AYAR.ofsaytAlgi*(1.2-oz.gorus);
   /* dolaylı serbest vuruşu kullanan doğrudan kaleye vurmaz (başkası dokunmadan gol olmaz) */
   if(!(b.endirekt&&b.endirekt.p===p)){const s=sutSecenegi(m,p,b.x,b.z,baski);if(s)S.push(s);}
-  /* paslar */
+  /* paslar. t0 = 0: top hemen çıkıyor sayılır. T4-V'de vuruşa kalan süre (vurusSureleri) denendi ve geri alındı: t0 = hazırlık + geri 40 maçta
+     vazgeçmeyi 2,6 → 8/maça (yakinP cezası t0 < 0,05 ile kapanıyordu), yalnız t0 = geri ise pası 108 → 96'ya, sahiplik başına pası 2,17 → 1,75'e
+     düşürdü (kesilme modeli rakibin tepki gecikmesini bilmez, uzayan süre her hattı kapalı gösterir); karar modelinin bu kısmı T7'de ele alınır */
   for(const s of pasSecenekleri(m,p,{ox:b.x,oz:b.z,t0:0,ilk:false,baski,ofs}))S.push(s);
   /* orta ve geri çevirme: kanatta, son üçte birde */
   if(u>PL-30&&Math.abs(w-MZ)>8)ortaSecenekleri(m,p,{ox:b.x,oz:b.z,baski,ofs},S);

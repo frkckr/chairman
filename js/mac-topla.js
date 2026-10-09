@@ -18,7 +18,7 @@
    Sözleşme alanları (TEKNIK_PLAN §8): vurus.stil/guc/tekDokunus, kontrol.yuzey/yon, kafa.tur, p.bakisYon, p.sonDokunus — rastlantısız. */
 'use strict';
 ayarEkle('B',{
-  kararGecikme:[0.4,0.7],      // topu kontrol ettikten sonra karar süresi (sn): tempo yüksekse kısa (T2: 0,12–0,36 → 0,4–0,7; top ayakta ortancası 0,85 sn idi)
+  kararGecikme:[0.3,0.6],      // topu kontrol ettikten sonra karar süresi (sn): tempo yüksekse kısa (T4-V 2026-10-09: 0,4–0,7 → 0,3–0,6 — vuruş hazırlığı (hazirlikEn + geri) karar süresinin bir kısmıyla örtüşür, top ayakta ortancası 1,2–2 bandında kalır; T2: 0,12–0,36 → 0,4–0,7; top ayakta ortancası 0,85 sn idi)
   ilerleme:0.04,               // topu ileri taşımanın metre başına değeri (puan): oyunun ne kadar dikine aktığı (birleştirme 2026-10-03: 0,036 → 0,027; T1: 0,04)
   risk:1.0,                    // top kaybından çekinme çarpanı (takımın risk ayarıyla çarpılır)
   surusKarar:[0.3,0.62],       // top sürerken yeniden karar aralığı
@@ -63,6 +63,15 @@ ayarEkle('B',{
   devamBirebir:1.0             // (1c) alıcının önündeki tek savunmacıyı geçme devamının payı (devamDegeri; 0 kapatır)
 });
 /* vuruş stili (sözleşme: ic/dis/ust/asirtma/vole/yarimVole); vuruş anında topun yüksekliği ve şutun türüyle kesinleşir */
+/* T4-V (2026-10-09; gerçekçilik planı §4 T4 madde 6, Ek G2): vuruş türüne göre geri salınım `geri` ve karar anından asgari hazırlık `haz` (sn);
+   baskıda acele (kısa). Çizimin son adımı geri'ye, üst gövde hazırlığı haz'a sığar. Karar katmanı (pasSecenekleri t0: vuruşa kalan süre) ve
+   vurusBaslat aynı tabloyu okur: pas hattının bu süre içinde kapanacağı karara girer. Gelişine vuruşta temas anını topun varışı belirler */
+function vurusSureleri(tur,baski){let geri,haz;
+  if(tur==='ilk'){geri=0.2;haz=0;}else if(tur==='ilkSut'){geri=0.24;haz=0;}
+  else if(tur==='sut'){geri=0.33;haz=0.1;}else if(tur==='asirtma'){geri=0.3;haz=0.12;}
+  else if(tur==='hava'){geri=0.39;haz=0.15;}else if(tur==='uzunYer'){geri=0.34;haz=0.14;}
+  else{geri=0.26;haz=0.12;}
+  return{geri:geri*(1-0.25*baski),haz:haz*(1-0.8*baski)};}
 function vurusStili(sec,y){
   if(sec.yay==='asirtma')return 'asirtma';
   if(sec.ilk&&y>0.45)return 'vole';if(sec.ilk&&y>0.15)return 'yarimVole';
@@ -94,7 +103,7 @@ Object.assign(Match.prototype,{
   },
   /* oyuncuya özel B verisi: {tara: tarama hafızası, plan: yönlü ilk dokunuş planı, vk: ver-kaç koşusu, gur: kararın sahiplik boyu sapması (T2),
      yakinR/yakinNo: en yakın rakibin önceki uzaklığı ve sahiplik (T2 olay)} */
-  bVeri(p){let M=this._bv;if(!M)M=this._bv=new Map();let v=M.get(p);if(!v){v={tara:null,plan:null,vk:null,gur:null,yakinR:9,yakinNo:-1};M.set(p,v);}return v;},
+  bVeri(p){let M=this._bv;if(!M)M=this._bv=new Map();let v=M.get(p);if(!v){v={tara:null,plan:null,vk:null,gur:null,yakinR:9,yakinNo:-1,vazT:-9};M.set(p,v);}return v;},
   /* düşünme aralığı (T2): topu tutarken seçenekler 5–8 Hz'de yeniden tartılır (karar özelliği yüksek oyuncu daha sık) */
   dusunmeAraligi(p){const H=MOTOR_AYAR.dusunHz;return 1/(H[0]+(H[1]-H[0])*p.oz.karar);},
   taramaKaydi(T){const P=this.players;for(let j=0;j<P.length;j++){const q=P[j];T.x[j]=q.x;T.z[j]=q.z;T.vx[j]=q.vx;T.vz[j]=q.vz;}T.ok=true;},
@@ -103,15 +112,28 @@ Object.assign(Match.prototype,{
   vurusBaslat(p,sec){
     const b=this.ball;let ox=b.x,oz=b.z;
     if(sec.ilk&&hyp(b.vx,b.vz)>2&&hyp(b.x-p.x,b.z-p.z)>1.2){const k=this.yakalamaNoktasi(p,1.0);ox=k.x;oz=k.z;}
-    const a=Math.atan2(sec.hz-oz,sec.hx-ox),f=aciFark(a,p.yon);
-    /* ayak: tercih edilen. Hedef güçlü ayağın dış tarafında ve açı orta büyüklükteyse çoğu zaman dış ayak (zayıf ayağı zorlamaz);
-       çok ters yandaysa diğer ayak (iki ayaklı değilse hatası büyük). f > 0: hedef sağda */
-    let ayak=p.ayak==='iki'?(f>0?'sol':'sag'):p.ayak,stil=null;
-    if(p.ayak!=='iki'){const dis=p.ayak==='sag'?f>0:f<0;
-      if(dis&&sec.tur!=='sut'&&sec.tur!=='uzaklastir'&&(sec.tip||'yer')==='yer'&&Math.abs(f)>0.45&&Math.abs(f)<1.4&&this.rast()<0.3+0.5*p.oz.pas)stil='dis';
-      else if(Math.abs(f)>0.9&&this.rast()<0.45)ayak=f>0?'sol':'sag';}
-    p.eylem={ad:'vurus',faz:'hazirlik',t:0,ft:0,sec,ayak,stil:stil||vurusStili(sec,b.y),guc:0,tekDokunus:!!sec.tekDokunus,
-      geri:sec.tur==='sut'||sec.tip==='hava'||sec.tur==='uzaklastir'?0.17:0.11};
+    const a=Math.atan2(sec.hz-oz,sec.hx-ox),f=aciFark(a,p.yon),L=hyp(sec.hx-ox,sec.hz-oz),tip=sec.tip||'yer',sut=sec.tur==='sut',uzk=sec.tur==='uzaklastir',
+      hava=tip==='hava',baski=baskiAltinda(this,p);
+    /* ayak (T4-V, tek zar): hedef güçlü ayağın dış tarafında ve açı orta büyüklükteyse çoğu zaman dış ayak (zayıf ayağı zorlamaz); hedef çok
+       yandaysa o yanın iç ayağı (f > 0: hedef sağda → sol ayağın içi) ya da top gövdenin zayıf ayak yanındaysa (≥ 0,18 m) zayıf ayakla vuruş: olasılık
+       profilin zayıf ayağına ve kaçınma eğilimine göre, hedef ters yandaysa, baskıda ve şutta değişir; zar tutmazsa güçlü ayak (hazırlık hedefi
+       gövdeyi öbür yana kaydırır: ayar adımı kendiliğinden ve zaman alır). İki ayaklı: topun yanındaki ayak, hedef çok yandaysa o yanın içi */
+    let ayak=p.ayak,stil=null;const zar=this.rast(),yanU=Math.cos(p.yon)*(b.z-p.z)-Math.sin(p.yon)*(b.x-p.x),yakin=Math.abs(yanU)>0.18?(yanU>0?'sag':'sol'):null;
+    if(p.ayak==='iki')ayak=Math.abs(f)>0.9||!yakin?(f>0?'sol':'sag'):yakin;
+    else{const dis=p.ayak==='sag'?f>0:f<0,zayif=p.ayak==='sag'?'sol':'sag',geo=Math.abs(f)>0.9?(f>0?'sol':'sag'):null;
+      if(dis&&!sut&&!uzk&&tip==='yer'&&Math.abs(f)>0.45&&Math.abs(f)<1.4&&zar<0.3+0.5*p.oz.pas)stil='dis';
+      else if(geo===zayif||yakin===zayif){
+        let P=clamp(0.1+0.45*profilAlt(p,'zayifAyak',0.35)-0.25*profilEgilim(p,'zayifAyaktanKacinir'),0.05,0.8);
+        if(geo===zayif)P*=1.3;if(baski>0.5)P*=1.25;if(sut)P*=0.8;
+        if(zar<P)ayak=zayif;}}
+    /* hazırlık süreleri (T4-V): vurusSureleri tablosu; vazgeçmeden 0,6 sn içinde yeniden başlayan vuruş beklemez */
+    const vsr=vurusSureleri(sec.ilk?(sut?'ilkSut':'ilk'):sut?'sut':hava&&sec.yay==='asirtma'?'asirtma':hava||uzk?'hava':L>22?'uzunYer':'pas',baski);
+    const geri=vsr.geri;let hazEn=vsr.haz;if(this.t-this.bVeri(p).vazT<0.6)hazEn=0;
+    /* planlanan güç (çizim temastan önce okur; uzun yerden pasta gerilme): yerden pasta plandan, temasta kesinleşir (yerPasVur: v > 20 → üst) */
+    let gucPlan=sut?0.85:hava||uzk?0.7:0.5,st=stil||vurusStili(sec,b.y);
+    if(tip==='yer'&&!sut&&!uzk){gucPlan=clamp(pasPlani(this,Math.max(0.5,L),'yer',sec.varisHizi||pasVarisHizi(L)).v0/29,0,1);if(gucPlan*29>20&&st==='ic')st='ust';}
+    /* sözleşme (TEKNIK_PLAN §8): kalan = temasa kalan süre (her adımda motor yazar, çizim okur), hazirlikT = hazırlıktan geri salınıma geçiş anı */
+    p.eylem={ad:'vurus',faz:'hazirlik',t:0,ft:0,sec,ayak,stil:st,guc:0,tekDokunus:!!sec.tekDokunus,geri,hazirlikEn:hazEn,hazirlikT:null,kalan:hazEn+geri,baski,gucPlan};
     p.surus=null;
   },
   vurusIlerle(p,e,dt){
@@ -132,18 +154,27 @@ Object.assign(Match.prototype,{
       /* hareketli top: ayağa ne zaman gelir (yol boyunca uzaklık / hız) ve yoldan ne kadar yanda */
       let gelir=false;if(topHiz>1.5){const yol=((ax-b.x)*b.vx+(az-b.z)*b.vz)/topHiz,yan2=Math.abs((ax-b.x)*b.vz-(az-b.z)*b.vx)/topHiz;
         gelir=yol>0&&yol/topHiz<=e.geri+0.03&&yan2<0.45;}
-      if(sapma<sinir&&(ayakD<(sec.ilk?0.62:0.5)||(sec.ilk&&gelir))&&b.y<(sec.tur==='sut'||sec.ilk?1.1:0.6)){
-        /* son an kontrolü: yerden pas hattı bu arada kapandıysa pastan vazgeç, yeniden karar ver */
-        if(sec.tip==='yer'&&sec.tur!=='sut'&&!sec.ilk&&this.hatKapali(p,a)){p.eylem=null;p.yonHedef=null;p.kararT=0.05;this.on('vazgecti',{p});return;}
-        e.faz='geri';e.ft=0;e.hizalanma=sapma;e.sabit=sec.ilk&&topHiz>1.5;}
-      else if(e.t>(sec.ilk?2.2:1.3)){p.eylem=null;p.yonHedef=null;p.kararT=0;if(b.sahip===p&&b.hedefOyuncu)b.hedefOyuncu=null;}
+      /* T4-V: temasa kalan süre (çizim okur, tahmin etmez): asgari hazırlığın kalanı, hizalanma süresi ya da ayağa varış süresi + geri salınım */
+      const w=hrkVurusDonus(p),donT=sapma>sinir?(sapma-sinir)/w:0,varT=ayakD>0.5&&!(sec.ilk&&gelir)?(ayakD-0.5)/Math.max(0.7,p.spd):0;
+      e.kalan=Math.max(e.hazirlikEn-e.t,donT,varT)+e.geri;
+      if(sapma<sinir&&(ayakD<(sec.ilk?0.62:0.5)||(sec.ilk&&gelir))&&b.y<(sec.tur==='sut'||sec.ilk?1.1:0.6)&&e.t>=e.hazirlikEn){
+        /* son an kontrolü: yerden pas hattı bu arada kapandıysa pastan vazgeç, yeniden karar ver (0,6 sn içinde yeniden başlayan vuruş beklemez) */
+        if(sec.tip==='yer'&&sec.tur!=='sut'&&!sec.ilk&&this.hatKapali(p,a)){p.eylem=null;p.yonHedef=null;p.kararT=0.05;this.bVeri(p).vazT=this.t;this.on('vazgecti',{p});return;}
+        e.faz='geri';e.ft=0;e.hizalanma=sapma;e.sabit=sec.ilk&&topHiz>1.5;e.hazirlikT=e.t;e.kalan=e.geri;}
+      else if(e.t>(sec.ilk?2.2:1.3+e.hazirlikEn)){p.eylem=null;p.yonHedef=null;p.kararT=0;if(b.sahip===p&&b.hedefOyuncu)b.hedefOyuncu=null;}
     }else if(e.faz==='geri'){
       if(!e.sabit){p.tx=b.x+b.vx*0.1-Math.cos(p.yon)*0.3;p.tz=b.z+b.vz*0.1-Math.sin(p.yon)*0.3;}
+      /* T4-V: geri salınımın temasa 0,12 sn kalana dek olan kısmında yerden pas hattı kapanırsa pasör vuruştan vazgeçer (gerçekte pas o ana dek
+         iptal edilebilir). Eski 0,11 sn'lik salınımda bu pencere yoktu; uzayan salınımda hatta giren rakip pası kesiyordu (kesilen pas %34 → 43) */
+      if(!e.sabit&&sec.tip==='yer'&&sec.tur!=='sut'&&!sec.ilk&&e.ft<e.geri-0.12&&this.hatKapali(p,Math.atan2(sec.hz-b.z,sec.hx-b.x))){
+        p.eylem=null;p.yonHedef=null;p.kararT=0.05;this.bVeri(p).vazT=this.t;this.on('vazgecti',{p});return;}
       /* gelişine: top ayağın hizasını geçerken vur (salınım bitmeden önce gelirse beklemez) */
-      let gecti=false;if(e.sabit&&e.ft>=0.05){const ax=p.x+Math.cos(p.yon)*0.3,az=p.z+Math.sin(p.yon)*0.3;gecti=(ax-b.x)*b.vx+(az-b.z)*b.vz<=0;}
+      let gecti=false;e.kalan=Math.max(0,e.geri-e.ft);
+      if(e.sabit){const ax=p.x+Math.cos(p.yon)*0.3,az=p.z+Math.sin(p.yon)*0.3,dot=(ax-b.x)*b.vx+(az-b.z)*b.vz,v2=b.vx*b.vx+b.vz*b.vz;
+        if(e.ft>=0.05)gecti=dot<=0;if(dot>0&&v2>2.25)e.kalan=Math.min(e.kalan,dot/v2);}
       if(e.ft>=e.geri||gecti){
         const ayakD=hyp(b.x-(p.x+Math.cos(p.yon)*0.3),b.z-(p.z+Math.sin(p.yon)*0.3));
-        if(ayakD<0.85&&b.y<1.2&&!b.tasiyan&&this.phase!=='goal'){this.vurusYap(p,e);e.faz='takip';e.ft=0;}
+        if(ayakD<0.85&&b.y<1.2&&!b.tasiyan&&this.phase!=='goal'){this.vurusYap(p,e);e.faz='takip';e.ft=0;e.kalan=0;}
         else{p.eylem=null;p.yonHedef=null;p.kararT=0;}
       }
     }else if(e.ft>=0.26){p.eylem=null;p.yonHedef=null;}

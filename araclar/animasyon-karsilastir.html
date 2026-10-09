@@ -34,7 +34,7 @@ iframe{width:100%;aspect-ratio:4/3;border:0;background:#000;display:block}
     <option value="sahne">sahnenin önerisi</option><option value="loca">loca (oyundaki bakış)</option>
     <option value="yakin">yakın (yandan, 7 m)</option><option value="orta">orta (yandan, 16 m)</option></select></label>
   <label>Önce <select id="onceSurum">
-    <option value="a2a" selected>A2a (A2b öncesi)</option><option value="once">A2 öncesi</option></select></label>
+    <option value="a2a" selected>A2a (A2b öncesi)</option><option value="a2b">A2b (T4-V öncesi)</option><option value="once">A2 öncesi</option></select></label>
   <label>Tohum <input id="tohum" type="number" min="1" value="3"></label>
   <label>Hız <select id="hiz"><option value="1">1×</option><option value="0.5" selected>½×</option><option value="0.25">¼×</option></select></label>
   <button id="oynat" type="button" aria-pressed="false">▶ Oynat</button>
@@ -73,12 +73,18 @@ const SAHNELER=[
   {ad:'A2b Baraj (orta)',kamera:'orta',kosul:"mac.phase==='durus'&&!!mac.durus.baraj&&mac.durus.asama==='hazir'&&!!mac.durus.barajdakiler&&!!(window.__takip=mac.durus.barajdakiler[0])",en:1800},
   {ad:'A2b Uzun top — savunmacının başı topta (orta)',kamera:'orta',kosul:"mac.phase==='play'&&!!mac.ball.pas&&mac.ball.pas.L>30&&mac.ball.y>1.5&&!!(window.__takip=mac.ball)",en:600},
   {ad:'A2b Kenar — kulübe ve teknik direktör (orta)',kamera:'orta',kosul:"mac.phase==='play'&&mac.t>30&&!!(window.__takip=mac.kenar.find(k=>k.kind==='td'&&k.team===0))"},
+  /* T4-V (2026-10-09): vuruş hazırlığı — yerden pas (hizalı; eskiden hazırlıksız), dönerek pas, 22 m'den uzun yerden pas, zayıf ayakla pas. Önce = a2b.
+     İki çerçeve aynı (yeni) motorla sürer: "önce" çizimi uzayan geri salınımı görür ama motorun bildirdiği kalan süreyi okumaz (yalnız çizim farkı) */
+  {ad:'T4-V Pas — hazırlık ve geri salınım (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&mac.t>5&&!!(window.__takip=mac.players.find(p=>{const e=p.eylem;if(!p.oyunda||!e||e.ad!=='vurus'||e.faz!=='hazirlik'||e.t>0.02||!e.sec||e.sec.ilk||e.sec.tur==='sut'||e.sec.tur==='uzaklastir'||(e.sec.tip||'yer')!=='yer')return false;const L=Math.hypot(e.sec.hx-mac.ball.x,e.sec.hz-mac.ball.z),f=Math.atan2(e.sec.hz-mac.ball.z,e.sec.hx-mac.ball.x)-p.yon,a=Math.abs(Math.atan2(Math.sin(f),Math.cos(f)));return a<0.3&&L<=22;}))",en:600},
+  {ad:'T4-V Dönerek pas (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&mac.t>5&&!!(window.__takip=mac.players.find(p=>{const e=p.eylem;if(!p.oyunda||!e||e.ad!=='vurus'||e.faz!=='hazirlik'||e.t>0.02||!e.sec||e.sec.ilk||e.sec.tur==='sut'||e.sec.tur==='uzaklastir'||(e.sec.tip||'yer')!=='yer')return false;const L=Math.hypot(e.sec.hx-mac.ball.x,e.sec.hz-mac.ball.z),f=Math.atan2(e.sec.hz-mac.ball.z,e.sec.hx-mac.ball.x)-p.yon,a=Math.abs(Math.atan2(Math.sin(f),Math.cos(f)));return a>1.0&&L<=22;}))",en:900},
+  {ad:'T4-V Uzun yerden pas — gerilme (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&mac.t>5&&!!(window.__takip=mac.players.find(p=>{const e=p.eylem;if(!p.oyunda||!e||e.ad!=='vurus'||e.faz!=='hazirlik'||e.t>0.02||!e.sec||e.sec.ilk||e.sec.tur==='sut'||e.sec.tur==='uzaklastir'||(e.sec.tip||'yer')!=='yer')return false;return Math.hypot(e.sec.hx-mac.ball.x,e.sec.hz-mac.ball.z)>22;}))",en:900},
+  {ad:'T4-V Zayıf ayakla pas (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&mac.t>5&&!!(window.__takip=mac.players.find(p=>{const e=p.eylem;return p.oyunda&&e&&e.ad==='vurus'&&e.faz==='hazirlik'&&e.t<0.02&&e.sec&&!e.sec.ilk&&p.ayak&&p.ayak!=='iki'&&e.ayak&&e.ayak!==p.ayak;}))",en:900},
 ];
 const $=id=>document.getElementById(id),F={once:$('fOnce'),simdi:$('fSimdi')},Y={once:null,simdi:null};
 const UI_CSS='.controls,.gelistirici,.duraklatildi{display:none!important}body{margin:0!important;background:#000!important;overflow:hidden}.wrap{gap:0!important;display:block!important}.screen{width:100vw!important;max-width:none!important;box-shadow:none!important}';
 for(const [i,s] of SAHNELER.entries()){const o=document.createElement('option');o.value=i;o.textContent=s.ad;$('sahne').appendChild(o);}
 /* "önce" sürümleri (araclar/karsilastir/dondur.js [ad]): a2a = A2b'den önceki A2a animasyonu, once = A2 öncesi */
-const ONCE_AD={a2a:'— A2a animasyonu (dondurulmuş; A2b öncesi)',once:'— A2 öncesi animasyon (dondurulmuş)'},ONCE_KAYNAK={};
+const ONCE_AD={a2a:'— A2a animasyonu (dondurulmuş; A2b öncesi)',a2b:'— A2b animasyonu (dondurulmuş; T4-V öncesi; motor ikisinde de bugünkü)',once:'— A2 öncesi animasyon (dondurulmuş)'},ONCE_KAYNAK={};
 let TOHUM=3,oynuyor=false,kurulum=0,birikim=0,sonZaman=0;
 const durum=(m,uyari)=>{$('durum').innerHTML=uyari?'<span class="uyari">'+m+'</span>':m;};
 

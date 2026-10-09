@@ -84,6 +84,9 @@ HAZIR = {
     "kaleci-set": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&p.eylem.sec.tur==='sut'&&p.eylem.faz==='hazirlik'&&Math.hypot(mac.ball.x-p.x,mac.ball.z-p.z)<1.4)", 0, "mac"),
     "dagitim": ("mac.players.some(p=>p.oyunda&&p.rol==='GK'&&mac.ball.tasiyan===p&&p.tutus&&p.tutus.t>p.tutus.sure-0.15)", 0, "mac"),
     "bekleyis": ("mac.phase==='durus'&&mac.durus.t>5", 0, "mac"),
+    # T4-V (2026-10-09): yerden pas hazırlığı (gelişine değil, şut değil) ve 22 m'den uzun yerden pas; önce/sonra şeridi (--kare 6 --aralik 0.1)
+    "pas": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&!p.eylem.sec.ilk&&p.eylem.sec.tur!=='sut'&&p.eylem.sec.tur!=='uzaklastir'&&(p.eylem.sec.tip||'yer')==='yer'&&(p.eylem.faz==='hazirlik'||p.eylem.faz==='geri')&&Math.hypot(mac.ball.x-p.x,mac.ball.z-p.z)<1.2)", 0, "mac"),
+    "uzun-yer-pas": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&!p.eylem.sec.ilk&&p.eylem.sec.tur!=='sut'&&p.eylem.sec.tur!=='uzaklastir'&&(p.eylem.sec.tip||'yer')==='yer'&&(p.eylem.faz==='hazirlik'||p.eylem.faz==='geri')&&Math.hypot(p.eylem.sec.hx-mac.ball.x,p.eylem.sec.hz-mac.ball.z)>22&&Math.hypot(mac.ball.x-p.x,mac.ball.z-p.z)<1.2)", 0, "mac"),
 }
 VARSAYILAN_SET = ["santra", "orta-saha", "korner", "sut", "faul", "sol-ceza", "uzak-kenar", "yakin-kenar"]
 
@@ -242,7 +245,7 @@ async def ana():
     ap.add_argument("--oncesi", action="store_true")
     ap.add_argument("--giris", action="store_true")
     ap.add_argument("--ek")
-    ap.add_argument("--anm", choices=["once", "a2a", "simdi"], default="simdi")
+    ap.add_argument("--anm", choices=["once", "a2a", "a2b", "simdi"], default="simdi")
     a = ap.parse_args()
     try:
         from playwright.async_api import async_playwright

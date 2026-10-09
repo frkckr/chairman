@@ -66,7 +66,10 @@ OLCUM_KUR_JS = r"""() => {
     basMax: 0, bas70: 0, basKare: 0, basPitchMax: 0, donus: [], donusKare: 0, donusAdimsiz: 0, kimlik: [], bekle: 0, bekleDonuk: 0, ikiz: 0, cift: 0,
     sparc: [], kokSicrama: 0, kanalSicramaEylem: {},
     /* A2b zamanlama: hakem işareti olayla aynı karede mi (motor adımı farkı), vuruşta çizimin temas evresi motorun temas karesinde mi */
-    zOlay: [], zIsaret: {}, zVurus: 0, zVurusAyni: 0, zVurusFark: [] };
+    zOlay: [], zIsaret: {}, zVurus: 0, zVurusAyni: 0, zVurusFark: [],
+    /* T4-V vuruş hazırlığı: temas karesinde son adımın süresi / planı (tB), geri salınımın tepesi / planı, ilk görülme evresi, motorun karar→temas
+       süresi (e.t, türe göre); vuruş sırasında evre sınırları (son adım başı, temas, çıkış) dışındaki > 20° sıçramalar; hız katlarında kararsız kare */
+    vkN: 0, vkHazirliksiz: 0, vkSonAdim: [], vkTepe: [], vkIlkTakip: 0, vkKT: { pas: [], sut: [], uzun: [], ilk: [] }, vkKare: 0, vkDisi: 0, kararsiz: 0, kararsizKanal: {} };
   const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin' };
   const K = new Map(), V = new THREE.Vector3(), H = new THREE.Vector3();
   let t = 0, kareSure = 0, bekleyenler = [];
@@ -107,11 +110,18 @@ OLCUM_KUR_JS = r"""() => {
     }
     if (eylemsiz && b >= 1) { S.ucusN[b]++; if (!yer[0] && !yer[1]) S.ucus[b]++; }
     /* eklem kanalları: sıçrama ve kırılma */
+    /* T4-V: vuruşta aşağı salınım ve takip kareleri (diz hızı doğası gereği karede 25–33°) ile evre sınırı kareleri (son adım başı, temas, çıkışın
+       ilk karesi) sıçramaya sayılmaz; sayılan: hazırlık, geri salınım, iniş ve çıkış (robotluğun görüldüğü yerler). Kanal değeri saçma (|x| ≥ 2π
+       ya da NaN) ise kararsız kare (hız katlarında eski yayın kararsızlığı) */
+    const vk = a.vk, vkSinir = !!(vk && e === 'vurus' && ((vk.evre === 2 && (vk.asagi || vk.t <= dt * 1.01)) || vk.evre === 3 || (vk.evre === 5 && vk.cikT <= dt * 1.01)));
+    if (vk && e === 'vurus') S.vkKare++;
     let toplamD = 0;
-    for (let i = 0; i < NK; i++) { const x = P[KANAL[i]] || 0;
+    for (let i = 0; i < NK; i++) { const ham = P[KANAL[i]], x = ham || 0;
+      if (ham !== undefined && !(Math.abs(ham) < 6.2832)) { S.kararsiz++; S.kararsizKanal[KANAL[i]] = (S.kararsizKanal[KANAL[i]] || 0) + 1; }
       if (k.pn >= 1) { const d = Math.abs(x - k.P1[i]), dd = k.pn >= 2 ? Math.abs(x - 2 * k.P1[i] + k.P2[i]) : 0; toplamD += d;
         if (i === 1) { if (d > 0.03) { S.sicramaDy++; if (eylemsiz) S.dyEylemsiz++; } }
-        else if (!eylemsiz) { if (d > 0.3491) { S.sicramaEylem++; const ad = KANAL[i] + '@' + e; S.kanalSicramaEylem[ad] = (S.kanalSicramaEylem[ad] || 0) + 1; } }
+        else if (!eylemsiz) { if (d > 0.3491) { S.sicramaEylem++; const ad = KANAL[i] + '@' + e; S.kanalSicramaEylem[ad] = (S.kanalSicramaEylem[ad] || 0) + 1;
+            if (e === 'vurus' && vk && !vkSinir) S.vkDisi++; } }
         else if (BACAK.has(KANAL[i])) { if (d > 0.3491) { S.sicramaBacak++; S.kanalSicrama[KANAL[i]] = (S.kanalSicrama[KANAL[i]] || 0) + 1; } if (dd > 0.2) { S.kirilmaBacak++; if (S.kare - k.gecis[KANAL[i].endsWith('R') || KANAL[i].includes('R') ? 1 : 0] <= 3) S.kirilmaBacakGecis++; S.kanalKirilma[KANAL[i]] = (S.kanalKirilma[KANAL[i]] || 0) + 1; } }
         else { if (d > 0.1745) { S.sicramaUst++; S.kanalSicrama[KANAL[i]] = (S.kanalSicrama[KANAL[i]] || 0) + 1; } if (dd > 0.06) { S.kirilmaUst++; S.kanalKirilma[KANAL[i]] = (S.kanalKirilma[KANAL[i]] || 0) + 1; } } }
       k.P2[i] = k.P1[i]; k.P1[i] = x; }
@@ -161,7 +171,17 @@ OLCUM_KUR_JS = r"""() => {
   function zamanlama(a) {
     const p = a.kaynak; if (!p) return;
     if ((p.tur === 'hakem') && typeof ANM_HK !== 'undefined') { const h = ANM_HK.get(p); if (h && h.basKare >= 0) { const o = zK.get(a) || -1; if (h.basKare !== o) { zK.set(a, h.basKare); (S.zIsaret[p.kind] = S.zIsaret[p.kind] || []).push(h.basKare); } } }
-    if (p.tur === 'oyuncu' && a.vk) { const e = p.eylem; if (e && e.ad === 'vurus' && e.faz === 'takip') { if (zK.get(a) !== e) { zK.set(a, e); S.zVurus++; if (a.vk.evre === 3 && a.vk.tT === 0) S.zVurusAyni++; else S.zVurusFark.push(a.vk.evre); } } }
+    if (p.tur === 'oyuncu' && a.vk) { const e = p.eylem, vk = a.vk;
+      if (e && e.ad === 'vurus') {
+        /* T4-V: eylem ilk görüldüğünde evresi (temasta görülen = hazırlık hiç çizilmedi); son adımda (evre 2, aşağı salınımdan önce) geri salınımın
+           tepesi / planı; temas karesinde son adımın süresi / tB ve motorun karar→temas süresi (e.t) türe göre */
+        let z = zK.get(a); if (!z || z.e !== e) { z = { e, tepe: 0, bitti: false }; zK.set(a, z); if (e.faz === 'takip') S.vkIlkTakip++; }
+        if (vk.e === e && vk.evre === 2 && !vk.asagi) { const h = (vk.kp[1] - ANM_VK_YG) / (0.08 + 0.26 * vk.S); if (h > z.tepe) z.tepe = h; }
+        if (e.faz === 'takip' && !z.bitti) { z.bitti = true; S.zVurus++;
+          const ayni = vk.evre === 3 && vk.tT === 0; if (ayni) S.zVurusAyni++; else S.zVurusFark.push(vk.evre);
+          S.vkN++; const sa = ayni ? vk.t / vk.tB : 0; S.vkSonAdim.push(+sa.toFixed(3)); if (sa < 0.8) S.vkHazirliksiz++; S.vkTepe.push(+z.tepe.toFixed(3));
+          const sec = e.sec || {}, L = sec.hx != null ? Math.hypot(sec.hx - mac.ball.x, sec.hz - mac.ball.z) : 0;
+          const g = sec.ilk ? 'ilk' : sec.tur === 'sut' ? 'sut' : (sec.tip === 'hava' || L > 22 || sec.tur === 'uzaklastir') ? 'uzun' : 'pas'; if (e.t != null) S.vkKT[g].push(+e.t.toFixed(3)); } } }
   }
   const asilKare = window.macKare;
   window.macKare = dt => { kareSure = 0; bekleyenler = []; asilKare(dt); t += dt; S.kare++; S.sureler.push(kareSure);
@@ -206,6 +226,12 @@ SONUC_JS = r"""() => {
         let enIyi = 99; for (const k of L) for (const b of (S.zIsaret[k] || [])) { const d = b - o.kare; if (d >= 0 && d < enIyi) enIyi = d; }
         if (enIyi === 0) r.ayni++; else if (enIyi === 1) r.bir++; else { r.yok++; r.yokAd[o.ad] = (r.yokAd[o.ad] || 0) + 1; } }
       r.vurus = S.zVurus; r.vurusAyni = S.zVurusAyni; r.vurusFark = S.zVurusFark.slice(0, 10); return r; })(),
+    vk: (() => { const med = a => a.length ? +yuzde(a, 0.5).toFixed(3) : null, kt = S.vkKT;
+      return { n: S.vkN, hazirliksizPay: S.vkN ? +(100 * S.vkHazirliksiz / S.vkN).toFixed(1) : null, sonAdimOrt: S.vkSonAdim.length ? +ort(S.vkSonAdim).toFixed(3) : null,
+        sonAdimIyiPay: S.vkSonAdim.length ? +(100 * S.vkSonAdim.filter(x => x >= 0.8).length / S.vkSonAdim.length).toFixed(1) : null,
+        tepeMed: S.vkTepe.length ? +yuzde(S.vkTepe, 0.5).toFixed(2) : null, ilkTakip: S.vkIlkTakip,
+        ktPas: med(kt.pas), ktSut: med(kt.sut), ktUzun: med(kt.uzun), ktIlk: med(kt.ilk), disiVurus: S.vkN ? +(S.vkDisi / S.vkN).toFixed(2) : null, kare: S.vkKare, kararsiz: S.kararsiz,
+        kararsizKanal: Object.entries(S.kararsizKanal).sort((a, b) => b[1] - a[1]).slice(0, 6) }; })(),
     surum: window.ANM_SURUM || 'simdiki'
   };
 }"""
@@ -245,6 +271,13 @@ def satirlar(o):
     z = o.get("zaman")
     if z:
         S.append(f"A: zamanlama: hakem işareti {z['olay']} olay — aynı karede {z['ayni']}, bir adım sonra {z['bir']}, başlamayan {z['yok']} {z['yokAd'] or ''} · vuruş {z['vurus']} temas — çizimin temas evresi aynı karede {z['vurusAyni']}   [hedef sapma 0]")
+    k = o.get("vk")
+    if k:
+        S.append(f"A: vuruş (T4-V): {k['n']} temas — hazırlıksız (son adım < 0,8·tB) %{v(k['hazirliksizPay'])} · son adım/tB ort {v(k['sonAdimOrt'], 2)}, ≥ 0,8 olan %{v(k['sonAdimIyiPay'])} · geri salınım tepe/plan ortanca {v(k['tepeMed'], 2)} · ilk görülme temasta {k['ilkTakip']}"
+                 f" · karar→temas ortanca (sn) pas {v(k['ktPas'], 2)} / şut {v(k['ktSut'], 2)} / uzun {v(k['ktUzun'], 2)} / gelişine {v(k['ktIlk'], 2)} · evre sınırı dışı >20° sıçrama {v(k['disiVurus'], 2)}/vuruş · kararsız kare {k['kararsiz']}"
+                 f"   [hedef ≤5 / ≥90 / ≥0,85 / 0 / pas 0,40–0,55 / bilgi / 1×'te 0 (hız katlarında dondurulmuş A2b'de de aynı: araç ya da ortak kod, bilgi)]")
+        if k.get("kararsizKanal"):
+            S.append("A:   kararsız kanallar: " + ", ".join(f"{c} {n}" for c, n in k["kararsizKanal"]))
     S.append(f"A: süre: aktorGuncelle {v(o['sureMs'], 3)} ms/kare (p99 {v(o['sureP99'], 3)}) · {o['kare']} kare, {v(o['oyuncuDk'])} oyuncu·dk · animasyon: {o['surum']}   [hedef ≤2 ms]")
     return S
 
@@ -271,6 +304,9 @@ async def olc(a):
                 print(f"önce animasyonu yüklendi ({a.once}, {n} aktör)")
             await pg.evaluate("macaGecIste(); document.getElementById('btnMacaGec').hidden = true;")
             await pg.evaluate(OLCUM_KUR_JS)
+            if a.hiz != 1:
+                await pg.evaluate(f"MAC_HIZ.deger = {a.hiz}")
+                print(f"oynatma hızı {a.hiz}× (kare başına {a.hiz} motor adımı; yalnız vuruş/zamanlama satırları anlamlıdır)")
             kalan = a.sure
             while kalan > 0:
                 parca = min(10, kalan)
@@ -290,6 +326,7 @@ def ana():
     ap.add_argument("--once", nargs="?", const="once", default=None, help="dondurulmuş animasyon: once (A2 öncesi, varsayılan) ya da a2a")
     ap.add_argument("--json")
     ap.add_argument("--karsilastir")
+    ap.add_argument("--hiz", type=int, default=1, choices=[1, 2, 4, 8, 16], help="oynatma hızı (MAC_HIZ; T4-V: hız katlarında vuruş katmanının kararlılığı)")
     a = ap.parse_args()
     try:
         import playwright  # noqa: F401
