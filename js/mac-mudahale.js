@@ -47,26 +47,75 @@ function mdhGeo(px,pz,yon,kayma,bx,bz,by,sx,sz){
    agresiflik; önce topa değdiyse hızın payı ×0,35 ve −0,7 (top oynandıktan sonraki temas çoğu zaman oyunun içi; arkadan ve geç yine faule yakın).
    T3: agresiflik 0,3 → 0,5. T5: +0,35 (faul bütün temaslarda aynı eşikle; müdahalede girişimin ~%8'i faul oluyordu, gerçekte ~%20–25) */
 const mdhSiddet=(p,vrel,arkadan,kayma,gec,once)=>0.35+(once?0.35:1)*vrel/6+(arkadan?0.35:0)+(kayma?0.25:0)+(gec?0.3:0)-(once?0.7:0)+(profilAlt(p,'agresiflik',p.oz.sertlik)-0.5)*0.5;
-/* T5 (2026-10-09; plan T5 madde 1): müdahalenin saf tahmini — ayakta hamle şimdi başlarsa temas anında ne olur. Temas, motordaki gibi top
-   savunmacının ayak erişimine (0,6 m; surucuKoru) girdiği ilk karede ya da en geç 0,18 sn'de (mudahaleBaslat); savunmacı, top ve sürücü kendi
-   hızlarıyla ileri sarılır, bacak hamlenin yönündedir (topun 0,18 sn sonraki yeri). Belirsizlik: topun yeri σ 0,15 m
-   (sürücü topu kontrolündeyse 0,3: arada dokunabilir), sürücünün yeri σ 0,12 m; 3×3×3×3 noktalı Gauss örneklemesi. Sonuç mudahaleSonuc'un
-   geometrisi (mdhGeo), kazanma olasılığı ve şiddetiyle (mdhSiddet; P(faul) = σ((c − faulEsik)/0,125), motorun gürültüsü katılı):
-   {Ptop: topa önce değme, Padam: adama önce değme, Pfaul: faul (hakemin görmesinden önce), Pkazan}. Rastlantı çekmez (c-temas sınar) */
+/* T5 (2026-10-09; plan T5 madde 1): müdahalenin saf tahmini — ayakta hamle şimdi başlarsa temas anında ne olur. T5c (aynı gün akşam, masaüstü):
+   motorun 0,18 sn'si ileri sarılır (10 hareket adımı, sonra eylemin temas adımı); v1'in sabit hız varsayımı kalktı (c-temas: top 0,2–0,36 m sapıyordu,
+   arka yandan faul 48 ↔ 69, önden adama 21 ↔ 32). Savunmacı moveP'nin varış yasasıyla gider (hedef hız √(2·varisFren·d) + 0,2; itiş A0·(1 − v/S0),
+   fren B; yanal ve sarsıntı sınırı yok), gövdesi w0·(1 − 0,5k) ile hedefe (topun 0,18 sn sonraki yeri; mudahaleBaslat) döner; sürücü sabit hızla;
+   top yer modeliyle yavaşlar (yeni dokunuşta kayma, sonra yuvarlanma 0,6 m/sn²) ve sürücünün sıradaki dokunuşunu alır (surusIlerle'nin
+   belirlenimli kısmı: dokunT, dokunusUlas, dokunusSiklik, öndeki baskı, gidişe göre açı sınırı, rakipten uzak ayak, hrkItmeHizi; yön gürültüsü ve
+   çalım yok). Temas, motordaki gibi top savunmacının ayak erişimine (0,6 m; temaslar → surucuKoru) girdiği adımda ya da 11. adımın başında
+   (eylem.temas); her adımda gövdeler 0,7 m'den yakınsa itilir (hareketHepsi gibi, kütle payıyla). Arkadan, geç ve bağıl hız temas anındaki
+   yerlerden. Belirsizlik: topun yeri σ 0,15 m (sürücü kontrolündeyse 0,25), sürücünün yeri σ 0,12 m; 3×3×3×3 noktalı Gauss örneklemesi. Sonuç
+   mudahaleSonuc'un geometrisi (mdhGeo), kazanma olasılığı ve şiddetiyle (mdhSiddet; P(faul) = σ((c − faulEsik)/0,125), motorun gürültüsü katılı):
+   {Ptop: topa önce değme, Padam: adama önce değme, Pdeg: adama değme, Pfaul: faul (hakemin görmesinden önce), Pkazan; T: temas anı (sn), arkadan,
+   vrel, dokunus: sürücünün dokunuşu öngörüldü}. Rastlantı çekmez, alan yazmaz (c-temas sınar; henüz karar katmanında kullanılmıyor) */
 const MDH_GN=[-1.2247449,0,1.2247449],MDH_GW=[1/6,2/3,1/6];
 function mudahaleTahmin(m,p,s){
-  const b=m.ball,yon=hrkAtan2(b.z+b.vz*0.18-p.z,b.x+b.vx*0.18-p.x);let T=0.18;
-  for(let t=1/60;t<0.18;t+=1/60)if(hrkHyp(b.x+b.vx*t-p.x-p.vx*t,b.z+b.vz*t-p.z-p.vz*t)<0.6){T=t;break;}
-  const bx0=b.x+b.vx*T,bz0=b.z+b.vz*T,px=p.x+p.vx*T,pz=p.z+p.vz*T,sx0=s.x+s.vx*T,sz0=s.z+s.vz*T,sb=(b.sahip===s||hrkHyp(b.x-s.x,b.z-s.z)<0.45)?0.3:0.15,ss=0.12,E=MOTOR_AYAR.faulEsik;
-  const vrel=hrkHyp(p.vx-s.vx,p.vz-s.vz),ds=hrkHyp(s.x-p.x,s.z-p.z)||1,arkadan=((p.x-s.x)*hrkCos(s.yon)+(p.z-s.z)*hrkSin(s.yon))/ds<-0.35;
-  const gec=b.sahip!==s&&b.sonDokunan===s&&hrkHyp(b.x-s.x,b.z-s.z)>1.3,pfOnce=sigma((mdhSiddet(p,vrel,arkadan,false,gec,true)-E)/0.125),pfDegil=sigma((mdhSiddet(p,vrel,arkadan,false,gec,false)-E)/0.125);
-  const beceri=p.oz.mudahale-s.oz.surus*0.7;let Pt=0,Pa=0,Pf=0,Pk=0;
-  let Pad=0;for(let i=0;i<3;i++)for(let j=0;j<3;j++)for(let k=0;k<3;k++)for(let l=0;l<3;l++){const w=MDH_GW[i]*MDH_GW[j]*MDH_GW[k]*MDH_GW[l];
-    const G=mdhGeo(px,pz,yon,false,bx0+MDH_GN[i]*sb,bz0+MDH_GN[j]*sb,b.y,sx0+MDH_GN[k]*ss,sz0+MDH_GN[l]*ss);
+  const b=m.ball,A=MOTOR_AYAR,dt=1/60,K=m.kosullar,hx=b.x+b.vx*0.18,hz=b.z+b.vz*0.18;
+  const hk=p._hk||hrkSabit(p),vm=hrkTepe(p),A0=hk.A0*(1-0.15*(p.yorgunluk||0)),S0=hk.S0,B=hk.B,w0=hk.w0;
+  let px=p.x,pz=p.z,pvx=p.vx,pvz=p.vz,yon=p.yon,bx=b.x,bz=b.z,bvx=b.vx,bvz=b.vz,sx=s.x,sz=s.z,svx=s.vx,svz=s.vz,T=11*dt,dokunus=false,iax=p._iax||0,iaz=p._iaz||0;
+  const J=A.sarsintiAzami*dt*dt;
+  /* sürücünün dokunuşu: surusIlerle'nin koşulu (ulaşım, dokunuş aralığı, top önde) ve dokunuşun yönü/hızı */
+  const surer=b.sahip===s&&!!s.surus&&!s.surus.koru&&!s.surus.bekle&&b.y<0.35,ssp=hrkHyp(s.vx,s.vz);
+  let dokunT=surer?(s.dokunT||0):99,yavas=s.sonDokunus&&m.t-s.sonDokunus.t<0.25?yerKayma(K):0.6;
+  const ulas=lerp(A.dokunusUlas[0],A.dokunusUlas[1],clamp((ssp-3)/4,0,1));
+  /* sürücünün hız niyeti (surusIlerle): sürüş yolunda 2,2 m içindeki rakip (koni 0,57) hızı 0,6'ya indirir, arkadan yaklaşan rakip 0,95'e çıkarır */
+  const sOnce=m.players.indexOf(s)<m.players.indexOf(p);   /* motor adımında hücumcu savunmacıdan önce hareket ediyorsa temas karesinde bir adım öndedir */
+  for(let k=1;k<=11;k++){
+    /* adımın başı (topluAI): sürücünün dokunuşu — temas karesinde de temastan önce gelir */
+    dokunT-=dt;
+    if(surer&&!dokunus&&dokunT<=0){const dx=bx-sx,dz=bz-sz,d=hrkHyp(dx,dz);
+      if(d<ulas&&dx*hrkCos(s.yon)+dz*hrkSin(s.yon)>-0.15){dokunus=true;
+        let a=s.surus.yon;const BO=hrkBaskiOn(m,s,a),bOn=BO.on,bAr=BO.arka;
+        let yakin=false;{const c=hrkCos(a),sn=hrkSin(a);for(const o of m.teams[1-s.team]){if(!o.oyunda||o.eylem&&o.eylem.kilit)continue;const ox=o.x-sx,oz=o.z-sz,od=hrkHyp(ox,oz);if(od<2.2&&od>0.3&&(ox*c+oz*sn)/od>0.57){yakin=true;break;}}}
+        const hiz0=yakin?hrkMin(s.surus.hiz||0.88,0.6):(s.surus.hiz||0.88),hz=bAr>0?lerp(hiz0,hrkMax(hiz0,0.95),bAr):hiz0,vp=hrkTepe(s)*hz*(0.8+0.12*s.oz.surus);
+        const Dt0=1/(lerp(A.dokunusSiklik[0],A.dokunusSiklik[1],clamp(vp/7,0,1))*(1+0.3*bOn));
+        if(ssp>1.2){const va=hrkAtan2(s.vz,s.vx),tm=clamp(0.7*hrkYanal(s,ssp/hrkTepe(s))*Dt0/ssp,0.2,0.85),f2=hrkAciFark(a,va);if(hrkAbs(f2)>tm)a=hrkAciNorm(va+hrkIsaret(f2)*tm);}
+        const od=hrkHyp(px-bx,pz-bz);if(od<2){const yy=hrkCos(a)*(pz-sz)-hrkSin(a)*(px-sx);a-=hrkIsaret(yy)*0.3*(2-od)/2;}
+        const ca=hrkCos(a),sa=hrkSin(a),ileri=hrkMax(0,s.vx*ca+s.vz*sa),vort=ileri+0.5*clamp(vp-ileri,-4*Dt0,3*Dt0),simdi=dx*ca+dz*sa;
+        let yol=hrkMax(0.15,vort*Dt0+0.9*ulas-simdi);
+        const lx=ca>0.05?(PL-0.4-bx)/ca:ca<-0.05?(-PL+0.4-bx)/ca:99,lz=sa>0.05?(PW-0.4-bz)/sa:sa<-0.05?(0.4-bz)/sa:99;yol=hrkMin(yol,hrkMax(0.3,hrkMin(lx,lz)-0.8));
+        const v=hrkMin(14,hrkItmeHizi(yol,Dt0,m.R));bvx=ca*v;bvz=sa*v;yavas=yerKayma(K);}}
+    /* temas karesi (eylem.temas, 11. adım): savunmacı ve top henüz kıpırdamadı; hücumcu listede öndeyse bir adım atmıştır */
+    if(k===11){if(sOnce){sx+=svx*dt;sz+=svz*dt;}break;}
+    const bv=hrkHyp(bvx,bvz);if(bv>0){const nv=hrkMax(0,bv-yavas*dt);bvx*=nv/bv;bvz*=nv/bv;}
+    bx+=bvx*dt;bz+=bvz*dt;
+    sx+=svx*dt;sz+=svz*dt;   /* sürücü sabit hızla (c-temas: 0,18 sn'de sabit hızdan sapması 0,02–0,07 m; yavaşlama modeli denendi, 0,15–0,30 m saptı) */
+    /* savunmacı: moveP'nin varış yasası (vA = 0), gövde dönüşü, itiş ve fren sınırı */
+    const dx=hx-px,dz=hz-pz,d=hrkHyp(dx,dz),sp=hrkHyp(pvx,pvz);
+    if(d>0.04){const f=hrkAciFark(hrkAtan2(dz,dx),yon),oran=w0*(1-0.5*hrkMin(1,sp/p.maxSpd))*dt;yon=hrkAciNorm(yon+clamp(f,-oran,oran));}
+    const ux=d>0.04?dx/d:0,uz=d>0.04?dz/d:0,hedef=d<0.04?0:hrkMin(vm,hrkKok(2*A.varisFren*hrkMax(0,d-0.03))+0.2);
+    const sh=hrkMin(hedef,vm*hrkYonTavan(ux*hrkCos(yon)+uz*hrkSin(yon)));
+    let ax=ux*sh-pvx,az=uz*sh-pvz;const al=hrkHyp(ax,az),lim=(sh>sp?A0*hrkMax(0,1-sp/S0):B)*dt;if(al>lim){ax*=lim/al;az*=lim/al;}
+    /* sarsıntı sınırı (moveP): ivme karede en çok J değişir */
+    {const jx=ax-iax,jz=az-iaz,jl=hrkHyp(jx,jz);if(jl>J){ax=iax+jx*J/jl;az=iaz+jz*J/jl;}iax=ax;iaz=az;}
+    pvx+=ax;pvz+=az;px+=pvx*dt;pz+=pvz*dt;
+    /* gövdeler 0,7 m'den yakınsa itilir; kapanma hızının payı söner */
+    {const rx=sx-px,rz=sz-pz,rd=hrkHyp(rx,rz);if(rd<0.7&&rd>1e-6){const ip=1/(p._kutle||kutle(p)),is=1/(s._kutle||kutle(s)),w=(0.7-rd)*0.5/(ip+is),nx=rx/rd,nz=rz/rd;
+      px-=nx*w*ip;pz-=nz*w*ip;sx+=nx*w*is;sz+=nz*w*is;const vr=(svx-pvx)*nx+(svz-pvz)*nz;if(vr<0){const Jc=-vr*0.8/(ip+is);pvx-=Jc*ip*nx;pvz-=Jc*ip*nz;}}}
+    /* adımın sonu (temaslar → surucuKoru): top savunmacının ayak erişiminde */
+    if(b.y<0.8&&hrkHyp(bx-px,bz-pz)<0.6){T=k*dt;break;}
+  }
+  const ds=hrkHyp(sx-px,sz-pz)||1,arkadan=((px-sx)*hrkCos(s.yon)+(pz-sz)*hrkSin(s.yon))/ds<-0.35,E=A.faulEsik;
+  const gec=b.sahip!==s&&b.sonDokunan===s&&hrkHyp(bx-sx,bz-sz)>1.3,vrel=hrkHyp(pvx-svx,pvz-svz);
+  const pfOnce=sigma((mdhSiddet(p,vrel,arkadan,false,gec,true)-E)/0.125),pfDegil=sigma((mdhSiddet(p,vrel,arkadan,false,gec,false)-E)/0.125);
+  const sb=0.15,ss=0.12,beceri=p.oz.mudahale-s.oz.surus*0.7;let Pt=0,Pa=0,Pad=0,Pf=0,Pk=0;   /* top σ 0,15 (dokunuş artık modelde; v1'de kontrolde 0,3) */
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++)for(let k=0;k<3;k++)for(let l=0;l<3;l++){const w=MDH_GW[i]*MDH_GW[j]*MDH_GW[k]*MDH_GW[l];
+    const G=mdhGeo(px,pz,yon,false,bx+MDH_GN[i]*sb,bz+MDH_GN[j]*sb,b.y,sx+MDH_GN[k]*ss,sz+MDH_GN[l]*ss);
     const ilk=G.topa&&!G.adamOnce&&!G.kalkan,Pb=ilk?clamp(0.6+0.35*beceri+(G.kontrol?-0.25:0.12)-G.dTop*0.5,0.12,0.95):0;
     const pf=G.adama?(ilk?Pb*pfOnce+(1-Pb)*pfDegil:pfDegil):0;
     if(ilk)Pt+=w;if(G.adamOnce)Pa+=w;if(G.adama)Pad+=w;Pf+=w*pf;Pk+=w*Pb*(1-pf);}
-  return{Ptop:Pt,Padam:Pa,Pdeg:Pad,Pfaul:Pf,Pkazan:Pk};
+  return{Ptop:Pt,Padam:Pa,Pdeg:Pad,Pfaul:Pf,Pkazan:Pk,T,arkadan,vrel,dokunus,yer:{px,pz,sx,sz,bx,bz,bv:hrkHyp(bvx,bvz),surer}};
 }
 /* T5 (2026-10-09; gerçekçilik planı T5 kararı 5): orta bloğu temastan (saf; motor ortaBlok ve planlayıcı js/mac-karar.js aynı işlevi kullanır).
    Ortanın ilk 3 m'si (en çok 0,5 sn) boyunca top 0,8 m'nin altındayken rakibin (yürüyüşüyle ileri sarılmış) bacak erişimi: duran bacak 0,35 m,
@@ -391,15 +440,16 @@ Object.assign(Match.prototype,{
       sonuc=this.rast()<P?(!kayma&&!kontrol&&hrkHyp(b.vx-p.vx,b.vz-p.vz)<6&&this.rast()<0.3+0.3*p.oz.mudahale?'temiz':'durttu'):'blok';}
     const kazan=sonuc==='temiz'||sonuc==='durttu';
     /* adama değdi: şiddet c = bağıl hız/6 + arkadan 0,35 + kayarak 0,25 + geç 0,3 − önce topa değdi 0,4; P(faul)=σ((c−eşik)/0,12) */
+    let arkadan=false,once=false,cc=null;   /* olaya teşhis alanı (c-temas; T5c) */
     if(s&&adama){
-      const ds=hrkHyp(s.x-p.x,s.z-p.z)||1,arkadan=((p.x-s.x)*hrkCos(s.yon)+(p.z-s.z)*hrkSin(s.yon))/ds<-0.35;
-      const gec=b.sahip!==s&&b.sonDokunan===s&&dS>1.3,once=kazan&&!adamOnce,vrel=hrkHyp(p.vx-s.vx,p.vz-s.vz);
+      const ds=hrkHyp(s.x-p.x,s.z-p.z)||1;arkadan=((p.x-s.x)*hrkCos(s.yon)+(p.z-s.z)*hrkSin(s.yon))/ds<-0.35;
+      const gec=b.sahip!==s&&b.sonDokunan===s&&dS>1.3,vrel=hrkHyp(p.vx-s.vx,p.vz-s.vz);once=kazan&&!adamOnce;
       /* şiddet mdhSiddet (T5: önce topa değen hamlede hızın payı ×0,35 ve −0,7 — eskiden −0,4: hızlı kayma topu alsa da hep faul sayılıyor, kaymanın
          faulsüz düşürmesi neredeyse hiç olmuyordu; c-kayma) + N(0; 0,06) */
-      const cc=mdhSiddet(p,vrel,arkadan,kayma,gec,once)+this.normal()*0.06;
+      cc=mdhSiddet(p,vrel,arkadan,kayma,gec,once)+this.normal()*0.06;
       /* T5: faul olunca hakem görür mü (faulGor); görmezse oyun sürer, temasın fiziği (faulle aynı düşüş) ve topun sonucu uygulanır */
       if(this.rast()<sigma((cc-MOTOR_AYAR.faulEsik)/0.12)){
-        if(mdhGormeCek(this,s.x,s.z,p,s)){this.on('mudahaleSonuc',{p,rakip:s,kazan:false,topaDegdi:topa,topaOnce:topa&&!adamOnce&&!kalkan,adamaDegdi:true,faul:true,kayma,sonuc:'faul',tur:e.tur||(kayma?'kayma':'acik')});
+        if(mdhGormeCek(this,s.x,s.z,p,s)){this.on('mudahaleSonuc',{p,rakip:s,kazan:false,topaDegdi:topa,topaOnce:topa&&!adamOnce&&!kalkan,adamaDegdi:true,faul:true,kayma,sonuc:'faul',tur:e.tur||(kayma?'kayma':'acik'),arkadan,kalkan,kontrol,once,siddet:cc,t:e.t});
           this.faul(p,s,{kayma,arkadan,gec,deneme:true,ciddiyet:cc,kaynak:kayma?'kayma':'mudahale',x:s.x,z:s.z});return;}
         this.faulDusur(p,s,{kayma,ciddiyet:cc});this.on('faulGorulmedi',{faulYapan:p,faulYiyen:s,kaynak:kayma?'kayma':'mudahale',siddet:cc,x:s.x,z:s.z});e.gorulmedi=true;}
       else{/* faulsüz temas: sürücünün dengesi bozulur; önce topa değen kayma çoğu zaman düşürür */
@@ -418,7 +468,7 @@ Object.assign(Match.prototype,{
     if(!kazan){p.kickCd=kayma?0.8:0.5;if(!kayma)this.dengeBoz(p,0.12+0.05*p.spd,c,sn,'takilma',s);}
     /* T5 (2026-10-09; plan T5 madde 6): uzanan bacak 0,25 sn yerinde kalır; sürücü üstünden geçerken takılabilir (mdhBacakTakilma) */
     if(s&&!(s&&adama))e.bacak={s,fa,top:topa&&!adamOnce&&!kalkan,t0:this.t};
-    this.on('mudahaleSonuc',{p,rakip:s,kazan,topaDegdi:topa,topaOnce:topa&&!adamOnce&&!kalkan,adamaDegdi:!!(s&&adama),faul:false,gorulmedi:!!e.gorulmedi,kayma,sonuc,tur:e.tur||(kayma?'kayma':'acik')});
+    this.on('mudahaleSonuc',{p,rakip:s,kazan,topaDegdi:topa,topaOnce:topa&&!adamOnce&&!kalkan,adamaDegdi:!!(s&&adama),faul:false,gorulmedi:!!e.gorulmedi,kayma,sonuc,tur:e.tur||(kayma?'kayma':'acik'),arkadan,kalkan,kontrol,once,siddet:cc,t:e.t});
   },
   /* T5 (2026-10-09; gerçekçilik planı T5 kararı 1): rakip gövdelerin çarpışması (moveP sonrası; kapanma hızı vk > 1 m/sn) temas faulü adayıdır
      (arkadan itme, bindirme; eski "topu alana arkadan" zarı sirtFaulu kalktı). Saldıran: karşıya doğru hızı (aA, aC) büyük olan. Yalnız topla
