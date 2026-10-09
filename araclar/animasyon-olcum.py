@@ -76,7 +76,11 @@ OLCUM_KUR_JS = r"""() => {
     ck: { N: {}, bas: 0, basAyni: 0, basFark: [], it: 0, itAyni: 0, makas: [], yutKayit: [], korKare: 0, korN: 0, korDogru: 0, korDegis: 0 },
     /* T4h (Ek H madde 5, bilgi): durum bantlarında ayak kayması — dar dönüş (kök > 2 rad/sn, hız > 0,6 m/sn), ani duruş (yumuşatılmış hız
        3 m/sn²'den hızlı düşüyor), top saklama (tavır 'koru'); aynı tanımla (eylemsiz temas karesi, 0,2 m/sn) */
-    dTemas: [0, 0, 0], dKayma: [0, 0, 0] };
+    dTemas: [0, 0, 0], dKayma: [0, 0, 0],
+    /* T5f temas (Ek G9 "Temas"): müdahalenin temas karesinde (mudahaleSonuc, topa değdi) çizilen uzanan ayağın (taban ortası) topa açıklığı (merkeze
+       uzaklık − yarıçap); ayakta iki oyuncunun çizilen gövdeleri 0,3 m'den yakın (iç içe) kare sayısı / 1 m içindeki çift-kare; kalkışın son karesinde
+       kök yatış açısı ≤ 0,05 rad; tökezleme (sendelerken adım boyu çarpanı < 0,7); düşüş sayısı */
+    tm: { n: 0, acik: [], icIce: 0, cift: 0, kalkN: 0, kalkDik: 0, sendKare: 0, sendKisa: 0, dususN: 0 } };
   const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin' };
   const K = new Map(), V = new THREE.Vector3(), H = new THREE.Vector3();
   let t = 0, kareSure = 0, bekleyenler = [];
@@ -171,12 +175,21 @@ OLCUM_KUR_JS = r"""() => {
     k.ilk = false;
   }
   const asil = window.aktorGuncelle;
-  window.aktorGuncelle = (a, al, dts, T) => { const t0 = R(); asil(a, al, dts, T); kareSure += R() - t0; kaydet(a, dts); zamanlama(a); };
+  window.aktorGuncelle = (a, al, dts, T) => { const t0 = R(); asil(a, al, dts, T); kareSure += R() - t0; kaydet(a, dts); zamanlama(a); temasOlc(a, dts); };
   const asilOlay = window.animasyonOlay;
   /* endirekt kolu havadayken yeniden başlama düdüğü çizilmez (kol inmez): ölçüme alınmaz */
   window.animasyonOlay = (ad, v) => { asilOlay(ad, v); const h0 = typeof ANM_HK !== 'undefined' && mac.refs ? ANM_HK.get(mac.refs[0]) : null;
-    if (HK_OLAY[ad] && !(ad === 'duduk' && h0 && h0.cur && h0.cur.tur === 'endirekt')) S.zOlay.push({ ad, kare: mac.kare, tur: HK_OLAY[ad] }); };
-  const zK = new Map(), zC = new Map(), zIt = new Map(), zY = new Map(), zKor = new Map();
+    if (HK_OLAY[ad] && !(ad === 'duduk' && h0 && h0.cur && h0.cur.tur === 'endirekt')) S.zOlay.push({ ad, kare: mac.kare, tur: HK_OLAY[ad] });
+    if (ad === 'mudahaleSonuc' && v && v.p && v.topaDegdi) zTmBekle.set(v.p, mac.kare); };
+  const zK = new Map(), zC = new Map(), zIt = new Map(), zY = new Map(), zKor = new Map(), zTm = new Map(), zTmBekle = new Map();
+  /* T5f temas ölçümü (aktör başına, kare sonunda) */
+  function temasOlc(a, dt) { const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible) return; const e = p.eylem, ad = e ? e.ad : '', G = S.tm;
+    const kare = zTmBekle.get(p); if (kare !== undefined) { zTmBekle.delete(p); if (kare === mac.kare) { a.m.root.updateMatrixWorld(true); const b = mac.ball; let en = 9;
+      for (let i = 0; i < 2; i++) { V.set(0, -0.5, 0.05).applyMatrix4((i ? a.m.kR : a.m.kL).matrixWorld); const d = Math.hypot(V.x - b.x, V.y - (b.y + 0.11), V.z - (b.z - MOTOR_Z)) - 0.11; if (d < en) en = d; }
+      G.n++; G.acik.push(+Math.max(0, en).toFixed(3)); } }
+    if (ad === 'kalkis') { let z = zTm.get(a); if (!z || z.e !== e) { z = { e, bitti: false }; zTm.set(a, z); } if (!z.bitti && e.t >= (e.sure || 0.6) - dt * 1.01) { z.bitti = true; G.kalkN++; if (a.lth <= 0.05) G.kalkDik++; } }
+    if (ad === 'sendele') { G.sendKare++; if (a.gAdim < 0.7) G.sendKisa++; }
+    if (ad === 'dusus' && e.t < dt * 1.01) G.dususN++; }
   function zamanlama(a) {
     const p = a.kaynak; if (!p) return;
     if ((p.tur === 'hakem') && typeof ANM_HK !== 'undefined') { const h = ANM_HK.get(p); if (h && h.basKare >= 0) { const o = zK.get(a) || -1; if (h.basKare !== o) { zK.set(a, h.basKare); (S.zIsaret[p.kind] = S.zIsaret[p.kind] || []).push(h.basKare); } } }
@@ -213,6 +226,8 @@ OLCUM_KUR_JS = r"""() => {
   }
   const asilKare = window.macKare;
   window.macKare = dt => { kareSure = 0; bekleyenler = []; asilKare(dt); t += dt; S.kare++; S.sureler.push(kareSure);
+    { const L = []; for (const a of K.keys()) { const p = a.kaynak; if (p && p.tur === 'oyuncu' && p.oyunda && a.m.root.visible && !(p.eylem && p.eylem.kilit)) L.push(a); }
+      for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) { const dx = L[i].x - L[j].x, dz = L[i].z - L[j].z, d2 = dx * dx + dz * dz; if (d2 < 1) { S.tm.cift++; if (d2 < 0.09) S.tm.icIce++; } } }
     for (let i = 0; i < bekleyenler.length; i++) for (let j = i + 1; j < bekleyenler.length; j++) { let s = 0; const A = bekleyenler[i], B = bekleyenler[j]; for (let q = 0; q < NK; q++) s += (A[q] - B[q]) * (A[q] - B[q]);
       S.cift++; if (Math.sqrt(s / NK) < 0.02) S.ikiz++; } };
   window.__ANM_KIMLIK = () => { const o = []; for (const k of K.values()) if (k.kimlik.boy.length >= 2) o.push({ boy: k.kimlik.boy.reduce((x, y) => x + y) / k.kimlik.boy.length, kol: k.kimlik.kol.reduce((x, y) => x + y) / k.kimlik.kol.length }); return o; };
@@ -249,6 +264,9 @@ SONUC_JS = r"""() => {
     bekleKare: S.bekle, bekleDonuk: S.bekle ? +(100 * S.bekleDonuk / S.bekle).toFixed(1) : null, ikizPay: S.cift ? +(100 * S.ikiz / S.cift).toFixed(2) : null,
     sparcOrt: S.sparc.length ? +ort(S.sparc).toFixed(2) : null, sparcP10: S.sparc.length ? +yuzde(S.sparc, 0.1).toFixed(2) : null, sparcN: S.sparc.length,
     sureMs: +ort(S.sureler).toFixed(3), sureP99: +yuzde(S.sureler, 0.99).toFixed(3),
+    tm: (() => { const G = S.tm, sa = sirala(G.acik); return { n: G.n, acikMed: sa.length ? sa[Math.floor(sa.length / 2)] : null, acikP90: sa.length ? sa[Math.min(sa.length - 1, Math.floor(0.9 * sa.length))] : null,
+      acikIyi: sa.length ? +(100 * sa.filter(x => x <= 0.15).length / sa.length).toFixed(0) : null, icIce: G.icIce, cift: G.cift, kalkN: G.kalkN, kalkDik: G.kalkDik, sendKare: G.sendKare,
+      sendKisaPay: G.sendKare ? +(100 * G.sendKisa / G.sendKare).toFixed(0) : null, dususN: G.dususN }; })(),
     zaman: (() => { if (typeof ANM_HK === 'undefined') return null; const r = { olay: S.zOlay.length, ayni: 0, bir: 0, yok: 0, yokAd: {} };
       for (const o of S.zOlay) { const L = o.tur === 'ref' ? ['ref'] : o.tur === 'lin' ? ['lin'] : o.tur === 'ikisi' ? ['ref', 'lin'] : ['ref', 'lin'];
         let enIyi = 99; for (const k of L) for (const b of (S.zIsaret[k] || [])) { const d = b - o.kare; if (d >= 0 && d < enIyi) enIyi = d; }
@@ -325,6 +343,11 @@ def satirlar(o):
                  f" · itiş pozu aynı karede {c['itAyni']}/{c['it']} · makasta ayak topun yanına ≥ 0,35 m {c['makasIyi']}/{c['makasN']} (yanal ortanca {v(c['makasMed'], 2)} m)"
                  f" · aldatılan savunmacının gövdesi yanılgı yanında {c['yutGor']}/{c['yut']} · top saklama {v(c['korSn'])} oyuncu·sn: doğru yan %{v(c['korDogru'])}, yan değişimi {v(c['korDegisSn'], 2)}/sn"
                  f"   [hedef N/N / M/M / ≥%90 / ≥%80 / ≥90 / ≤1]")
+    tm = o.get("tm")
+    if tm:
+        S.append(f"A: temas (T5f): müdahale topa {tm['n']} — çizilen ayağın topa açıklığı ortanca {v(tm['acikMed'], 3)} m (p90 {v(tm['acikP90'], 3)}), ≤ 0,15 olan %{v(tm['acikIyi'])}"
+                 f" · ayakta gövdeler iç içe (< 0,3 m) {tm['icIce']} kare / {tm['cift']} yakın çift-kare · kalkış sonunda dik {tm['kalkDik']}/{tm['kalkN']}"
+                 f" · tökezleme: sendele {tm['sendKare']} kare, kısa adım %{v(tm['sendKisaPay'])} · düşüş {tm['dususN']}   [hedef ≤0,15 / ~0 / N/N / bilgi]")
     S.append(f"A: süre: aktorGuncelle {v(o['sureMs'], 3)} ms/kare (p99 {v(o['sureP99'], 3)}) · {o['kare']} kare, {v(o['oyuncuDk'])} oyuncu·dk · animasyon: {o['surum']}   [hedef ≤2 ms]")
     return S
 

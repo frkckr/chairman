@@ -90,6 +90,11 @@ HAZIR = {
     "makas": ("mac.players.some(p=>p.oyunda&&p.calim&&p.calim.faz===1&&p.calim.hareket==='makas'&&p.calim.ft<0.03)", 0, "mac"),
     "yutma": ("mac.players.some(p=>p.oyunda&&p.yutma&&mac.t-p.yutma.t<0.03)", 0, "mac"),
     "koru": ("mac.players.some(p=>p.oyunda&&p.tavir==='koru')", 0.2, "mac"),
+    # T5f (2026-10-09): temas animasyonu — forma çekme (taktik faul), görülmeyen faul (yiyenin itirazı 0,5 sn sonra), düşüşün ilk yarısı, uzun kalkış (sırtüstü/yüzüstü 1,6 sn)
+    "faul-cekme": ("__son('faul',0.02,v=>v.kaynak==='taktik')", 0, "mac"),
+    "gorulmedi": ("__son('faulGorulmedi',0.02)", 0.6, "mac"),
+    "dusus": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='dusus'&&p.eylem.t<0.03)", 0, "mac"),
+    "kalkis-uzun": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='kalkis'&&p.eylem.sure>=1.4&&p.eylem.t<0.03)", 0, "mac"),
     "uzun-yer-pas": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&!p.eylem.sec.ilk&&p.eylem.sec.tur!=='sut'&&p.eylem.sec.tur!=='uzaklastir'&&(p.eylem.sec.tip||'yer')==='yer'&&(p.eylem.faz==='hazirlik'||p.eylem.faz==='geri')&&Math.hypot(p.eylem.sec.hx-mac.ball.x,p.eylem.sec.hz-mac.ball.z)>22&&Math.hypot(mac.ball.x-p.x,mac.ball.z-p.z)<1.2)", 0, "mac"),
 }
 VARSAYILAN_SET = ["santra", "orta-saha", "korner", "sut", "faul", "sol-ceza", "uzak-kenar", "yakin-kenar"]
