@@ -240,12 +240,56 @@ function tasimaSecenekleri(m,p,S){
    ileri koşanlar: duran arkadaşın pası şimdi de var, beklemek onu iyileştirmez) */
 function bekleSecenegi(m,p,S){
   const b=m.ball,A=MOTOR_AYAR,t1=baskiSuresi(m,p.team,b.x,b.z,0).t1;
+  if(t1<0.7)return;   /* T4e: rakip dibindeyse tutma koruSecenegi'nin işi */
   const kalkan=clamp(0.5*p.oz.surus+0.3*p.oz.sertlik+0.2*clamp((kutle(p)-65)/30,0,1),0,1);
   /* tam baskıda (rakip topla aynı anda) korumayla ~%45–60 (maçta müdahalelerin yarısı topu alıyor; 0,55 katsayısı fazla iyimserdi, T2) */
   const P=clamp(0.98-0.7*clamp((1.0-t1)/1.2,0,1)*(1.25-kalkan),0.25,0.98);
   /* bekleOran: yerinde beklemek oranın tehdidini tam korumaz (savunma yerleşir, atak söner; eski koru değeri de buranın tehdidinin %85'iydi) */
   const v=Math.max(xT(b.x*m.dir[p.team],b.z)*100*A.bekleOran,ileriPasOnPuani(m,p,b.x,b.z,0.6)*A.devamPas);
-  S.push({tur:t1<0.7?'koru':'bekle',deger:P*v-(1-P)*pasKaybi(m,p,b.x,b.z)*m.taktik[p.team].risk*A.risk,P});}
+  S.push({tur:'bekle',deger:P*v-(1-P)*pasKaybi(m,p,b.x,b.z)*m.taktik[p.team].risk*A.risk,P});}
+/* T4e (2026-10-09): bırakma pasının ucuz ön puanı — (x,z)'den tau sn sonra 4–16 m'deki bir arkadaşa (her yönde: destek geriden gelir) kısa pas.
+   Alıcı tau sn sonraki yerinde; hattı kapatan rakipler ileriPasOnPuani biçiminde (tau'nun yarısı kadar ilerletilir); değer alıcının yerinin
+   tehdidi (açıklığıyla) + ilerleme, kesilme payıyla; yoksa −9. tau 0: şimdi */
+function birakOnPuani(m,q,x,z,tau){
+  const d=m.dir[q.team],u=x*d,A=MOTOR_AYAR,k=tau||0;let en=-9;
+  for(const r of m.teams[q.team]){if(r===q||!r.oyunda||r.rol==='GK')continue;
+    const rx=r.x+r.vx*k,rz=r.z+r.vz*k,ru=rx*d,L=hyp(rx-x,rz-z);if(L<4||L>16)continue;
+    const ux=(rx-x)/L,uz=(rz-z)/L,vOrt=10+L*0.25;let kapali=0;
+    for(const o of m.teams[1-q.team]){if(!o.oyunda)continue;const ox=o.x+o.vx*k*0.5-x,oz=o.z+o.vz*k*0.5-z,boy=ox*ux+oz*uz;if(boy<-1||boy>L+2)continue;
+      const yan=Math.abs(ox*uz-oz*ux),ul=o.maxSpd*0.75*Math.max(0,boy)/vOrt+0.8;if(yan<ul)kapali+=1-yan/ul;}
+    const P=Math.exp(-1.2*kapali),acik=acikOran(baskiSuresi(m,q.team,rx,rz,k).t1);
+    const U=P*(xT(ru,rz)*100*(0.7+0.3*acik)+(ru-u)*A.ilerleme)-(1-P)*pasKaybi(m,q,(x+rx)/2,(z+rz)/2);if(U>en)en=U;}
+  return en;}
+/* T4e: top saklama — rakip dibindeyken (0,8 sn içinde ya da 1,6 m'de) gövdeyi araya koyup destek gelene dek tutma (gerçekçilik planı §4 T4
+   madde 5, Ek G2 "koru"). Değer: tutma olasılığı (bekleSecenegi'nin kalkan modeli: sürüş, sertlik, kütle; 0,6 sn'lik olasılığın süreyle üssü) ×
+   tau sonra açılacak en iyi işin ucuz puanı (bırakma pası birakOnPuani, ileri pas ileriPasOnPuani, oranın tehdidi × bekleOran) − kayıp;
+   koruDeger × kalkan küçük eğilim payı (MOTOR_AYAR; c-koru geçtikten sonra ayarlanır). tau 0,5 / 0,9 / 1,3 sn denenir, en iyisi seçeneğin
+   süresi olur (yürütme kararT'yi ona bağlar: tutma sürer, düşünme aralığında bozulmaz) */
+function koruSecenegi(m,p,S){
+  if(p.rol==='GK')return;
+  const b=m.ball,A=MOTOR_AYAR,bs=baskiSuresi(m,p.team,b.x,b.z,0),t1=bs.t1;
+  if(t1>=0.8&&!(bs.o1&&hyp(bs.o1.x-b.x,bs.o1.z-b.z)<1.6))return;
+  /* gövde araya girince 0,6 sn'lik tutma olasılığı kalkandan (arkadan temas çoğu zaman faul, kayıp daha çok kendi hatası): 0,55 → 0,9.
+     0,7 → 0,97 denendi: tutma herkese bedava göründü (40 maçta koruma 21–23 sn ama pas −10, PPDA −1, düello bandın altı) */
+  const kalkan=clamp(0.5*p.oz.surus+0.3*p.oz.sertlik+0.2*clamp((kutle(p)-65)/30,0,1),0,1),P0=clamp(0.55+0.35*kalkan,0.5,0.92);
+  const kayip=pasKaybi(m,p,b.x,b.z)*m.taktik[p.team].risk*A.risk,tehdit=xT(b.x*m.dir[p.team],b.z)*100*A.bekleOran;
+  /* şimdiki en iyi iş (pas, taşıma, şut, çalım; listede önce gelirler) tutulursa kalır; beklemek ucuz ön puanlardaki artış kadar kazandırır */
+  let enS=tehdit;for(const s of S)if(s.deger>enS)enS=s.deger;
+  const b0=birakOnPuani(m,p,b.x,b.z,0),i0=ileriPasOnPuani(m,p,b.x,b.z,0);
+  /* eğilim payı bu sahiplikte topu tutma süresiyle söner (koruSure): yerleşip bakar, sonra indirir — sonsuza dek tutmaz. Beklemenin kazancı eksi
+     de olabilir (destek geldiyse ya da uzaklaşıyorsa, rakip yaklaşıyorsa beklemek değer kaybettirir): o zaman bırakır */
+  const g=m.bVeri(p).gur,tutT=g&&g.no===m.sahiplikNo?m.t-g.t0:0,egilim=A.koruDeger*kalkan*Math.max(0,1-tutT/A.koruSure);
+  /* tempo bedeli: top tutuldukça atak söner, savunma yerleşir (koruTempo puan/sn; ucuz ön puanlar bunu görmez) */
+  const tempo=A.koruTempo*tutT;
+  let en=null;
+  for(const tau of KORU_SURE){
+    /* ikinci rakip tutma bitmeden gelirse (t2 < tau) gövde ikisini birden kapatamaz: olasılık 0,55'e dek iner */
+    const P=Math.pow(P0,tau/0.6)*(bs.t2<tau?lerp(1,0.55,clamp((tau-bs.t2)/tau,0,1)):1);
+    const kazanc=Math.max(birakOnPuani(m,p,b.x,b.z,tau)-b0,ileriPasOnPuani(m,p,b.x,b.z,tau)-i0)*A.devamPas;
+    const deger=P*(enS+kazanc)-(1-P)*kayip+egilim-tempo;
+    if(!en||deger>en.deger)en={tur:'koru',deger,P,sure:tau,o:bs.o1};}
+  S.push(en);}
+const KORU_SURE=[0.5,0.9,1.3];
 /* T4 (2026-10-08): rakibi geç. Önünde (ilerleme yönünde ya da kaleye doğru, birebirMenzil içinde) savunmacı varsa birebirTahmin (js/mac-hareket.js)
    hareketi, yanı ve olasılığı verir. Değer: P · (toplama noktasındaki devam değeri (geçilen savunmacı sayılmadan) + kazandırılan alan + birebirDeger)
    − Pk · buradaki kayıp · risk · birebirKayip.
@@ -488,7 +532,7 @@ function secenekler(m,p){
      çoğu zaman taça ya da hava mücadelesine gider) */
   if(u<-PL+30&&baski>0.3)S.push({tur:'uzaklastir',deger:MOTOR_AYAR.uzaklastirDeger+baski*1.1+(u<-PL+18?0.4:0)});
   /* T2: bekleme ya da gövdeyle koruma (eskiden yalnız koru: değeri her zaman eksiydi) */
-  bekleSecenegi(m,p,S);
+  bekleSecenegi(m,p,S);koruSecenegi(m,p,S);
   return S;
 }
 /* sabır eşiği (T2, puan): topu tutmanın (taşıma, bekleme) pasa göre ek değeri. Takımın sakin ve tempo ayarından 0,1–0,6; oyuncunun önü açıksa

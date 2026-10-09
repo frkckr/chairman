@@ -488,6 +488,8 @@ Object.assign(Match.prototype,{
       if(surer&&!cekme&&sp>1.2){const tm=clamp(0.7*hrkYanal(p,sp/hrkTepe(p))*Dt0/sp,0.2,0.85),f2=hrkAciFark(a,va);if(hrkAbs(f2)>tm)a=hrkAciNorm(va+hrkIsaret(f2)*tm);}
       const baski=baskiAltinda(this,p);
       /* topu rakipten uzak ayakta tut: yakın (2 m) rakip dokunuş yönünün yanındaysa top ondan biraz öteye (en çok 0,3 rad) */
+      /* topu rakipten uzak ayakta tut: yakın (2 m) rakip dokunuş yönünün yanındaysa top ondan biraz öteye (en çok 0,3 rad). T4e'de 0,45 denendi
+         ("sürerken saklama"): c-1v1 beceri eğimini 15,8 → 14,0'a düşürdü (zayıf sürücü de topu kaçırıyor), geri alındı */
       if(!itis&&!s.koru&&!cekme){const {o,d:od}=enYakinRakip(this,b.x,b.z,p.team);if(o&&od<2){const yy=hrkCos(a)*(o.z-p.z)-hrkSin(a)*(o.x-p.x);a-=hrkIsaret(yy)*0.3*(2-od)/2;}}
       if(!itis)a+=this.normal()*(0.04+0.1*(1-p.oz.surus))*(1+baski);
       const ca=hrkCos(a),sa=hrkSin(a),ileri=hrkMax(0,p.vx*ca+p.vz*sa);

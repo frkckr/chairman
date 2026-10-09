@@ -35,7 +35,7 @@ module.exports={
     ['Çalım (düello) / maç','rCalim',1,[10,14,'T4']],['Çalım: başarı %','rCalimOk',1,[40,50,'T4']],['Çalım: kanat oyuncularının payı %','rCalimKanat',1,[40,null,'T4']],
     ['Çalım: tahmin − gerçek (puan)','rCalimKalib',1,[-8,8,'T4']],['Çalım denemesi (düellosuz ve faul dahil) / maç','rCalimHepsi',1],['Çalım denemesi: düellosuz yarım %','rCalimYarim',1],
     ['Çalım denemesi: savunmacı aldatıldı %','rCalimYut',1],['Çalım denemesi: faulle biten %','rCalimFaul',1],
-    ['Top saklama (koru; oyuncu·sn / maç)','rKoru',1,[15,40,'T4']],
+    ['Top saklama (koru; oyuncu·sn / maç)','rKoru',1,[10,30,'T4']],   /* T4e (2026-10-09): 15–40 planın tahminiydi; ölçülen tutma ~10 durum × 1 sn, bant 10–30 */
     ['Taşıma: dokunuş sıklığı (1/sn)','rDokunus',2,[2.3,3.0,'T4']],['Taşıma: dokunuş sıklığı <3 m/sn','rDokunusY',2],
     ['Taşıma: dokunuş sıklığı 3–5,5 m/sn','rDokunusO',2],['Taşıma: dokunuş sıklığı ≥5,5 m/sn','rDokunusH',2],
     ['Gol: duran toptan (korner, serbest, penaltı) %','rGolDuran',1,[25,35,'T8']],

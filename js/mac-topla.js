@@ -51,6 +51,11 @@ ayarEkle('B',{
   sabirSure:2.5,               // sabır eşiği topu tuttukça söner, bu kadar (sn) sonra sıfır
   devamPas:0.8,                // devam değerinde ileri pas ön puanının payı (ön puan tam analizden iyimser)
   bekleOran:0.8,               // yerinde bekleyen topun oranın tehdidinden koruduğu pay
+  koruDeger:0.9,               // T4e: top saklama seçeneğine kalkanla çarpılan eğilim payı (puan; hedef forvetin "yerleş, bak, indir" alışkanlığı). Seçenek değerleri rakip yarıda 0–3 puan
+                               // ölçeğindedir (c-koru dökümü). 40 maç taraması (2026-10-09): koruma süresi 0,45 → 6,8 sn, 0,9 → 10,4, 1,2 → 10,7 (doyar: sınırlayan tutma
+                               // durumlarının sayısı, ~10/maç); asıl kol tutma olasılığı (koruSecenegi P0)
+  koruSure:2.5,                // T4e: eğilim payının söndüğü tutma süresi (sn; bu sahiplikte topu tutma süresiyle doğrusal iner); 1,5 → 2,5 koruma 10,4 → 11,2
+  koruTempo:0.2,               // T4e: tutma süresine bağlı tempo bedeli (puan/sn): top tutuldukça atak söner; uzun tutmayı (3 sn+) bitirir (0,3 → 0,2: PPDA 5,4 → 5,9)
   dusunHz:[5,8],               // topu tutarken düşünme sıklığı (1/sn; karar özelliğiyle): her anda seçenekler yeniden tartılır
   pasTol:[1.2,4,0.5],          // pas hatası toleransı: taban (m) + alıcının rakipten önce varma payı (sn) × katsayı; uzunluk hatasının payı
   ikinciTopHedef:0.3,          // hedef forvete uzun topta kaybedilen düelloda topun takımda kalma olasılığı (kaybın bedelini azaltır)
@@ -345,8 +350,10 @@ Object.assign(Match.prototype,{
         let hx=clamp(p.x+d*(28+this.rast()*22),-PL+4,PL-4),hz=p.z+yan*(10+this.rast()*26);
         if(kacti){hx=p.x+d*(this.rast()*14-4);hz=p.z+yan*(18+this.rast()*20);}
         this.vurusBaslat(p,{tur:'uzaklastir',hx,hz,tip:'hava'});break;}
-      case 'koru':{const {o}=enYakinRakip(this,p.x,p.z,p.team);const a=o?Math.atan2(p.z-o.z,p.x-o.x):p.yon;p.surus={yon:a,hiz:0.22,koru:true};
-        p.kararT=this.dusunmeAraligi(p);break;}
+      /* T4e: top saklama — gövde rakiple top arasında (yön rakipten uzağa), seçeneğin süresi boyunca sürer (düşünme aralığında bozulmaz;
+         destek gelince bırakma pası ya da dönüş yeniden tartılır) */
+      case 'koru':{const o=s.o||enYakinRakip(this,p.x,p.z,p.team).o;const a=o?Math.atan2(p.z-o.z,p.x-o.x):p.yon;p.surus={yon:a,hiz:0.22,koru:true};
+        p.kararT=Math.max(this.dusunmeAraligi(p),(s.sure||0.5)*0.85);break;}
       /* T2: taşıma — yön ve uzunluk seçimden; uzun taşıma daha hızlı. Bekleme — top ayağın altında, baş yukarıda */
       case 'tasi':p.surus={yon:s.yon,hiz:clamp(0.55+0.035*s.mesafe,0.55,0.92)};p.kararT=this.dusunmeAraligi(p);break;
       /* T4: rakibi geç — çalım niyeti (hareket, yan, tahmin); yaklaşma süresince karar bağlı (yürütücü yaklaşmanın sonunda yeniden tartar) */

@@ -235,10 +235,14 @@ Object.assign(Match.prototype,{
     /* T4: sırtı dönük sürücüye rastgele dalış kalktı (gerçekçilik planı T4: girmez, dönüşü kapatır). Dönüş dokunuşu (sonDokunus.donus, bu karede)
        savunmacının ayağının yetiştiği yere gidiyorsa belirlenimli müdahale (tür 'donus'; sonuç mudahaleSonuc) */
     const sd=s.sonDokunus;
-    if(sd&&sd.tur==='surus'&&sd.donus&&sd.t===this.t&&db<1.6){const T2=0.2,qx=b.x+b.vx*T2,qz=b.z+b.vz*T2;
+    if(sd&&sd.tur==='surus'&&sd.donus&&sd.t===this.t&&db<1.6&&s.tavir!=='koru'){const T2=0.2,qx=b.x+b.vx*T2,qz=b.z+b.vz*T2;   /* T4e: koruyan gövdenin arkasından girmez */
       if(hrkHyp(qx-p.x-p.vx*T2*0.6,qz-p.z-p.vz*T2*0.6)<0.95&&hrkHyp(qx-s.x-s.vx*T2,qz-s.z-s.vz*T2)>0.6){this.mudahaleBaslat(p,s,qx,qz,'donus');return;}}
     /* T4: arkasında yardım varsa erken girer, yoksa geciktirir (yardım 0 → ×0,4, 1 → ×1,4) */
-    if(db<1.4&&this.rast()<dt*MOTOR_AYAR.sabirsiz*istek*(0.1+1.25*agr)*(0.4+(p._destekK!=null&&this.kare-p._destekK<6?p._destek:0)))this.mudahaleBaslat(p,s,bx,bz,'erken');
+    /* T4e: sürücü topu saklıyorsa (tavır koru) ve gövdesi topla savunmacının arasındaysa (kalkan; mudahaleSonuc'ta temas çoğu zaman arkadan
+       faul) erken giriş ×0,1 — "sırtı dönük rakibe girmez", dönüşü bekler. Yalnız saklama tavrında: çalımla geçilen savunmacının arkadan
+       toparlanma girişimi değişmez (c-1v1 beceri eğimi 15,8 → 14,0'a düşmüştü) */
+    const kalkanli=s.tavir==='koru'&&segD(s.x,s.z,p.x,p.z,b.x,b.z)<0.35&&hrkHyp(s.x-p.x,s.z-p.z)<hrkHyp(b.x-p.x,b.z-p.z);
+    if(db<1.4&&this.rast()<dt*MOTOR_AYAR.sabirsiz*istek*(0.1+1.25*agr)*(0.4+(p._destekK!=null&&this.kare-p._destekK<6?p._destek:0))*(kalkanli?0.1:1))this.mudahaleBaslat(p,s,bx,bz,'erken');
   },
   /* T4: geçilme işareti — bir (savunmacı, sürücü) çifti için tek taktik faul zarı (eskiden çalımın geçti anı ve presYap'ın "arkada kaldı" denetimi
      aynı geçilmeye iki zar atabiliyordu); ayrıca geçilen savunmacının zamanı (toparlanma, 1. adam seçimi) */
