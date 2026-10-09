@@ -106,6 +106,11 @@ function topDonusHazirla(b){
 function topDonusYaz(b,v){const k=TOP_YARICAP/(v||1);b.egri=b.wYan*k/TOP_FIZIK.yanOlcek;b.ust=b.wUst*k/TOP_FIZIK.ustOlcek;}
 /* tek adım top fiziği (gerçek top da tahmin de bununla ilerler). ucus: yere çarpmayı yok say (vuruş çözümü için). R: yuvarlanma yavaşlaması,
    K: koşullar {islak, ruzgar:{x,z}} (verilmezse kuru ve rüzgârsız) */
+/* T5 (2026-10-09): süpürme — (ax,az)→(bx,bz) parçasında ilerleyen noktanın (cx,cz) merkezli R yarıçaplı çembere ilk girdiği oran (0–1); başta
+   içerideyse 0, girmiyorsa −1 (direk ve üst direkte hızlı top bir adımda çarpışma yarıçapını atlamasın). Saf */
+function topSupurmeT(ax,az,bx,bz,cx,cz,R){const dx=bx-ax,dz=bz-az,fx=ax-cx,fz=az-cz,c=fx*fx+fz*fz-R*R;if(c<=0)return 0;
+  const a=dx*dx+dz*dz;if(a<1e-12)return -1;const k=fx*dx+fz*dz;if(k>=0)return -1;const d=k*k-a*c;if(d<0)return -1;
+  const t=(-k-Math.sqrt(d))/a;return t<=1?t:-1;}
 function topFizikAdim(b,dt,ucus,R,K){
   topDonusHazirla(b);K=K||TOP_KOSUL_YOK;
   if(ucus||b.y>0.001||b.vy>0.001){
@@ -174,7 +179,7 @@ class Match{
     this.topcular=this.topculariKur();this.disToplar=[];
     this.yedekleriKur();this.kenarKur();
     this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,sonTakim:0,hedefOyuncu:null,sut:null,pas:null,
-      surum:0,agda:false,direk:false,px:0,py:0,pz:0,
+      surum:0,agda:false,direk:false,px:0,py:0,pz:0,ortaBlok:null,
       /* T9a: açısal hızlar (rad/sn), yüzey hızı (m/sn) ve dönüşün kurulduğu sürüm (topDonusHazirla) */
       wYan:0,wUst:0,sw:0,_donSurum:-1};
     this.kuralHazirla();
@@ -199,7 +204,7 @@ class Match{
       calim:null,yutma:null,
       /* akışların oyuncuya sonradan yazdığı iç alanlar baştan (undefined) tanımlı: nesnenin biçimi değişmez, motor yavaşlamaz (birleştirme, 2026-10-03) */
       _cev:undefined,_hk:undefined,_kacKare:undefined,_kacX:undefined,_kacZ:undefined,_varisHiz:undefined,_varisKare:undefined,_tavirKare:undefined,
-      _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,_gecT:undefined,_destek:undefined,_destekK:undefined,
+      _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_tmsS:undefined,_tmsT:undefined,_tepkiS:undefined,_tepkiJ:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,_gecT:undefined,_destek:undefined,_destekK:undefined,
       _kp:undefined,_duz:undefined,_pen:undefined,_poz:undefined,_sonKurt:undefined,
       /* T1 iç alanları: kararlı hedef, efor karesi, kip ve süresi, son ivme (karede hız değişimi), düşünme aralığı (kare) */
       _hdfX:0,_hdfZ:0,_hdfK:-9,_eforK:-1,_kipI:0,_kipT:0,_iax:0,_iaz:0,_dusP:0},ek);
@@ -325,7 +330,7 @@ class Match{
   }
 
   /* ============ top ============ */
-  topuSifirla(x,z){const b=this.ball;Object.assign(b,{x,z,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,agda:false,direk:false,endirekt:null,tac:null});b.surum++;}
+  topuSifirla(x,z){const b=this.ball;Object.assign(b,{x,z,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,agda:false,direk:false,endirekt:null,tac:null,ortaBlok:null});b.surum++;}
   topDegisti(){this.ball.surum++;this._degisimT=this.t;}
   /* topun gelecekteki yolu (3,5 sn, 1/60 adım). Top her dokunuşta değişir; o zamana kadar hesap önbellekte kalır */
   topYolu(){
@@ -360,15 +365,19 @@ class Match{
     const b=this.ball;
     for(const sx of[-1,1]){
       const gx=sx*PL,once=(b.px-gx)*sx,simdi=(b.x-gx)*sx;
-      /* direkler: kale çizgisindeki iki dikey silindir */
-      if(Math.abs(b.x-gx)<0.4&&b.y<GH+0.1)for(const pz of[MZ-GW2-DIREK_R,MZ+GW2+DIREK_R]){
-        const dx=b.x-(gx+sx*DIREK_R),dz=b.z-pz,dd=hyp(dx,dz);
-        if(dd<DIREK_R+TOP_YARICAP&&dd>1e-4){const nx=dx/dd,nz=dz/dd,vn=b.vx*nx+b.vz*nz;
-          if(vn<0){b.vx-=1.55*vn*nx;b.vz-=1.55*vn*nz;b.x=gx+sx*DIREK_R+nx*(DIREK_R+TOP_YARICAP);b.z=pz+nz*(DIREK_R+TOP_YARICAP);this.direkVurdu();return false;}}}
-      /* üst direk */
-      if(Math.abs(b.x-gx)<0.3&&Math.abs(b.z-MZ)<GW2+0.1){const dy=b.y-(GH+DIREK_R),dx=b.x-(gx+sx*DIREK_R),dd=hyp(dx,dy);
-        if(dd<DIREK_R+TOP_YARICAP&&dd>1e-4){const nx=dx/dd,ny=dy/dd,vn=b.vx*nx+b.vy*ny;
-          if(vn<0){b.vx-=1.5*vn*nx;b.vy-=1.5*vn*ny;b.x=gx+sx*DIREK_R+nx*(DIREK_R+TOP_YARICAP);b.y=GH+DIREK_R+ny*(DIREK_R+TOP_YARICAP);this.direkVurdu();return false;}}}
+      /* direkler: kale çizgisindeki iki dikey silindir. T5 (2026-10-09): süpürme — topun bu adımdaki yolu (önceki → şimdiki yer) silindire ilk
+         girdiği anda çarpar (30 m/sn'lik şut adımda 0,5 m gider, çarpışma yarıçapı 0,17 m: anlık sınama direği atlayabiliyordu) */
+      const RR=DIREK_R+TOP_YARICAP,cx=gx+sx*DIREK_R;
+      if(Math.min(Math.abs(b.x-gx),Math.abs(b.px-gx))<0.6&&Math.min(b.y,b.py)<GH+0.1)for(const pz of[MZ-GW2-DIREK_R,MZ+GW2+DIREK_R]){
+        const t=topSupurmeT(b.px,b.pz,b.x,b.z,cx,pz,RR);if(t<0)continue;
+        const x=b.px+(b.x-b.px)*t,z=b.pz+(b.z-b.pz)*t,y=b.py+(b.y-b.py)*t;if(y>=GH+0.1)continue;
+        const dx=x-cx,dz=z-pz,dd=hyp(dx,dz);if(dd<1e-4)continue;const nx=dx/dd,nz=dz/dd,vn=b.vx*nx+b.vz*nz;
+        if(vn<0){b.vx-=1.55*vn*nx;b.vz-=1.55*vn*nz;b.x=cx+nx*RR;b.z=pz+nz*RR;b.y=y;this.direkVurdu();return false;}}
+      /* üst direk (süpürme, x–y düzleminde; temas anında top kale genişliğinde) */
+      if(Math.min(Math.abs(b.x-gx),Math.abs(b.px-gx))<0.6){const cy=GH+DIREK_R,t=topSupurmeT(b.px,b.py,b.x,b.y,cx,cy,RR);
+        if(t>=0){const z=b.pz+(b.z-b.pz)*t;if(Math.abs(z-MZ)<GW2+0.1){const x=b.px+(b.x-b.px)*t,y=b.py+(b.y-b.py)*t,dx=x-cx,dy=y-cy,dd=hyp(dx,dy);
+          if(dd>1e-4){const nx=dx/dd,ny=dy/dd,vn=b.vx*nx+b.vy*ny;
+            if(vn<0){b.vx-=1.5*vn*nx;b.vy-=1.5*vn*ny;b.x=cx+nx*RR;b.y=cy+ny*RR;b.z=z;this.direkVurdu();return false;}}}}}
       /* çizgiyi geçti mi: topun tamamı kale çizgisinin ötesinde ve direklerin arasında, üst direğin altında */
       if(once<=TOP_YARICAP&&simdi>TOP_YARICAP&&!b.agda){
         const f=(TOP_YARICAP-once)/((simdi-once)||1),z=b.pz+(b.z-b.pz)*f,y=b.py+(b.y-b.py)*f;
@@ -430,6 +439,8 @@ class Match{
     const b=this.ball;if(b.tasiyan)return;
     this.kaleciTemas();
     if(this.phase!=='play'||b.tasiyan)return;
+    /* T5: orta bloğu topun bacağa vardığı anda (ortaBlok, js/mac-mudahale.js) */
+    const OB=b.ortaBlok;if(OB){if(OB.surum!==b.surum||!OB.o.oyunda||OB.o.eylem&&OB.o.eylem.kilit)b.ortaBlok=null;else if(this.t>=OB.t){b.ortaBlok=null;this.ortaBlokUygula(OB);return;}}
     this.ziplamalar();
     const ad=[];
     for(const p of this.players){

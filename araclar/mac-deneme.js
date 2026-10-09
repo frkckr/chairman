@@ -91,6 +91,8 @@ const BILGI=[
   ['Pas hızı ort. (m/sn)','pasHiz',null,1],['Şut hızı ort. (m/sn)','sutHiz',null,1],['Şut hızı en yüksek (m/sn)','sutHizMaks',null,1],
   ['Oyuncu en yüksek hız (m/sn)','hizMaks',null,2],['Oyuncu hız %99 (m/sn)','hiz99',null,2],['Oyuncu ivme %99 (m/sn²)','ivme99',null,1],
   ['Koşu mesafesi / oyuncu (m)','mesafe',null,0],['Top gövdeden geçti (kez)','icindenGecti',null,1],
+  /* T5 (2026-10-09): başkasının gövdesinden geçen top (topun son dokunanı değil, vuruşa hazırlanmıyor; kabul ≤ 1) */
+  ['Top başkasının gövdesinden geçti (kez; T5 kabul ≤ 1)','icindenGectiBaska',null,1],
   /* MM2: takım savunması */
   ['Ceza sahasında boşta rakip (sn)','bosta',null,1],['Çift markaj anı (sn)','cift',null,1],['Karşı pres kazanımı (kez)','karsiPres',null,1],
   ['Savunmada takım boyu (m)','boy',null,1],['Savunmada takım eni (m)','en',null,1],['Kalecisiz oynanan süre (sn)','kalecisiz',null,1],
@@ -161,7 +163,7 @@ function macOyna(tohum,sinir){
     if(bu.goal){sutlar.gol++;return;}
     if(bu.save||gk){sutlar.kurtaris++;if(a.cerceve)sutlar.kurtarisCerceve++;if(bu.catch||gk)sutlar.tutma++;}}
   m.macaGec();
-  let adim=0;const MAKS=sinir||60*60*30,dt=1/60,onceki=new Map(),hizlar=[],ivmeler=[],icinde=new Set();let mesafe=0,gecti=0,sprint=0;
+  let adim=0;const MAKS=sinir||60*60*30,dt=1/60,onceki=new Map(),hizlar=[],ivmeler=[],icinde=new Set();let mesafe=0,gecti=0,gectiBaska=0,sprint=0;
   let bosta=0,cift=0,karsiPres=0,kalecisiz=0,sonSahip=-1,kayip=[-99,-99];const boylar=[],enler=[];
   /* pas izleme: ist.pas artınca yeni pas (top.pas), ist.pasTamam artınca tamamlandı, top.pas boşalınca tamamlanmadı */
   const pasK={kisa:[0,0],orta:[0,0],uzun:[0,0],ara:[0,0],donus:[0,0],cross:[0,0],tek:[0,0]};let pasN=0,pasTN=0,aktifPas=null,sonTamam=null,verKac=0;
@@ -220,7 +222,7 @@ function macOyna(tohum,sinir){
       onceki.set(p,{vx:p.vx,vz:p.vz,kilit:!!(p.eylem&&p.eylem.kilit)});
       /* top gövdenin içinden geçiyor: hızlı top, yerden 1,8 m'den alçak, gövde ekseninden 0,22 m'den yakın; o kişi topun sahibi/taşıyanı değil */
       const d=Math.sqrt((b.x-p.x)**2+(b.z-p.z)**2),ic=bh>3&&b.y<1.8&&d<0.22&&b.sahip!==p&&b.tasiyan!==p;
-      if(ic&&!icinde.has(p)){gecti++;icinde.add(p);}else if(!ic)icinde.delete(p);}
+      if(ic&&!icinde.has(p)){gecti++;icinde.add(p);if(p!==b.sonDokunan&&!(p.eylem&&p.eylem.ad==='vurus'))gectiBaska++;}else if(!ic)icinde.delete(p);}
   }
   const I=m.ist,top=a=>a[0]+a[1],ort=L=>L.length?L.reduce((a,c)=>a+c,0)/L.length:NaN;
   izH=izMetin(izH,JSON.stringify(I)+'|'+m.score.join('-')+'|'+m.phase+'|'+adim);
@@ -236,7 +238,7 @@ function macOyna(tohum,sinir){
   s.oyundaOran=100*s.oyunda/(s.toplam||1);
   Object.assign(s,{golEv:m.score[0],golDep:m.score[1],sutEv:I.sut[0],sutDep:I.sut[1],sahiplikEv:100*I.sahiplik[0]/((I.sahiplik[0]+I.sahiplik[1])||1),
     kurtaris:olay.save,kafa:olay.header,blok:olay.block,sekme:olay.sekme,kapma:olay.steal,pasHiz:ort(pasH),sutHiz:ort(sutH),sutHizMaks:sutH.length?Math.max(...sutH):NaN,
-    hizMaks:hizlar.length?Math.max(...hizlar):NaN,hiz99:yuzdelik(hizlar,0.99),ivme99:yuzdelik(ivmeler,0.99),mesafe:mesafe/22,icindenGecti:gecti,
+    hizMaks:hizlar.length?Math.max(...hizlar):NaN,hiz99:yuzdelik(hizlar,0.99),ivme99:yuzdelik(ivmeler,0.99),mesafe:mesafe/22,icindenGecti:gecti,icindenGectiBaska:gectiBaska,
     bosta,cift,karsiPres,kalecisiz,boy:ort(boylar),en:ort(enler)});
   /* Faz 0 ölçümleri: oranlar toplam üzerinden hesaplanabilsin diye pay/payda ayrı saklanır (ham: [pay, payda]) */
   s.ham={pasKisaOran:[pasK.kisa[1],pasK.kisa[0]],pasOrtaOran:[pasK.orta[1],pasK.orta[0]],pasUzunOran:[pasK.uzun[1],pasK.uzun[0]],

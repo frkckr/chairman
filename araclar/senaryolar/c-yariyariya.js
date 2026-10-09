@@ -2,8 +2,9 @@
    Boş sahada duran (ya da yavaş yuvarlanan) serbest topa iki rakip (ev sahibi orta saha, konuk orta saha) farklı uzaklıklardan koşar; ikisi de
    takım AI'ının kovalayanıdır. Varış farkı Δ = tahmini varış(ev) − varış(konuk) (varisZamani, başlangıçta). Sonuç: topa ilk kim dokundu, faul
    (yarı yarıyada itme/basma), aynı ana yakın varış (iki oyuncu da topa 0,8 m içindeyken ilk dokunuş). Bugün yakın varışta çekiliş
-   (ikiliMucadele, mac-mudahale.js) çözer; T5'te iki ayağın varış zamanı farkıyla çözülecek. Kabul (T5, bilgi): Δ ile düzgün değişen kazanma eğrisi,
-   Δ≈0'da ~%50. Kullanım: node araclar/mac-deneme.js --senaryo c-yariyariya [N=40 hücre başına] [tohum] */
+   (ikiliMucadele, mac-mudahale.js) çözer; T5'te (2026-10-09) iki ayağın varış zamanı farkıyla çözülür (aynı ana yakın varışta top sıkışıp seker,
+   geç kalan ayağa basabilir) ve tepki süresinin kişisel sapmasıyla (kovala) eğri düzgündür. Kabul (T5, kapı): Δ ile düzgün azalan kazanma eğrisi
+   (5 puan tolerans), Δ≈0'da %35–65; değilse çıkış kodu 1. Kullanım: node araclar/mac-deneme.js --senaryo c-yariyariya [N=40 hücre başına] [tohum] */
 'use strict';
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||40,dt=1/60,t0=Date.now(),VZ=vm.runInContext('varisZamani',ctx);
@@ -35,6 +36,6 @@ module.exports={calistir({ctx,vm,N,tohum}){
     console.log('  '+k.padEnd(14)+String(c.n).padStart(5)+(c.dl/c.n).toFixed(2).padStart(9)+y(c.A,c.n).padStart(9)+y(c.n-c.A-c.faul-c.yok,c.n).padStart(12)+y(c.faul,c.n).padStart(7)+y(c.yakin,c.n).padStart(26)+y(c.yok,c.n).padStart(14));}
   const o=K['−0,03…0,03'],orta=o?100*o.A/Math.max(1,o.n-o.faul-o.yok):NaN;
   ok=ok&&orta>=35&&orta<=65;
-  console.log((ok?'  ':'! ')+`Kabul (T5, bilgi): ev ilk dokunuş payı Δ arttıkça azalır (5 puan tolerans), Δ≈0'da %35–65 → Δ≈0 %${orta.toFixed(0)}, ${ok?'tutarlı':'TUTARSIZ'}`);
-  return 0;
+  console.log((ok?'  ':'! ')+`Kabul (T5, kapı): ev ilk dokunuş payı Δ arttıkça azalır (5 puan tolerans), Δ≈0'da %35–65 → Δ≈0 %${orta.toFixed(0)}, ${ok?'tutarlı':'TUTARSIZ'}`);
+  return ok?0:1;
 }};

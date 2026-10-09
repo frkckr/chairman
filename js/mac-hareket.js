@@ -65,7 +65,11 @@ ayarEkle('C',{
   dokunusUlas:[0.62,0.85],     // ayağın topa uzanma mesafesi (m, gövde merkezinden): yavaş → hızlı koşu (uzun adım topu daha önde alır)
   /* T4-V (2026-10-09): vuruş hazırlığında gövde dönüş hızı = yerinde dönüş w0 × [0], tavan [1] rad/sn (çizimin kök yaw tavanı 9; eskiden 11 − 7k).
      Motor (moveP) ve çizime bildirilen kalan süre (vurusIlerle) aynı değeri okur (hrkVurusDonus) */
-  vurusDonus:[1.15,9]
+  vurusDonus:[1.15,9],
+  /* T5 (2026-10-09): rakibe çarpmama (moveP) — kasıtlı temas dışında oyuncu rakibin gövdesine (merkezler 0,72 m) kendi hızının ona doğru payıyla
+     en çok √(2·temasFren·(d − 0,72)) + temasHiz hızla yaklaşır */
+  temasFren:4,                 // öngörülü yavaşlama (m/sn²; fren kapasitesinin ~yarısı: tepki payı)
+  temasHiz:1.2                 // gövde temasına izin verilen yaklaşma hızı (m/sn; hafif temas, omuz omuza)
 });
 /* çeviklik (0–1): top sürme, hız ve hafiflikten türetilir (kadro verisi değişmez) */
 const hrkCeviklik=p=>{if(p._cev!=null)return p._cev;const o=p.oz||{},s=o.surus!=null?o.surus:0.5,h=o.hiz!=null?o.hiz:0.5;
@@ -288,8 +292,10 @@ Object.assign(Match.prototype,{
         const dd=hrkKok(d2),ux=dx/dd,uz=dz/dd,ic=1/(c._kutle||kutle(c)),w=(0.7-dd)*0.5/(ia+ic);
         a.x-=ux*w*ia;a.z-=uz*w*ia;c.x+=ux*w*ic;c.z+=uz*w*ic;
         const vr=(c.vx-a.vx)*ux+(c.vz-a.vz)*uz;
-        if(vr<0){const J=-vr*0.8/(ia+ic);a.vx-=J*ia*ux;a.vz-=J*ia*uz;c.vx+=J*ic*ux;c.vz+=J*ic*uz;
-          if(this.phase==='play'){const va=J*ia,vc=J*ic;if(va>1.2&&a.tur==='oyuncu')this.dengeBoz(a,0.16*(va-1.2),-ux,-uz,'takilma',c);if(vc>1.2&&c.tur==='oyuncu')this.dengeBoz(c,0.16*(vc-1.2),ux,uz,'takilma',a);}}}}
+        if(vr<0){const aA=a.vx*ux+a.vz*uz,aC=-(c.vx*ux+c.vz*uz),J=-vr*0.8/(ia+ic);a.vx-=J*ia*ux;a.vz-=J*ia*uz;c.vx+=J*ic*ux;c.vz+=J*ic*uz;
+          if(this.phase==='play'){const va=J*ia,vc=J*ic;if(va>1.2&&a.tur==='oyuncu')this.dengeBoz(a,0.16*(va-1.2),-ux,-uz,'takilma',c);if(vc>1.2&&c.tur==='oyuncu')this.dengeBoz(c,0.16*(vc-1.2),ux,uz,'takilma',a);
+            /* T5 (2026-10-09): rakiplerin 1 m/sn'den hızlı çarpışması temas faulü adayı (govdeTemasi; faul çalındıysa adım biter) */
+            if(-vr>1&&a.tur==='oyuncu'&&c.tur==='oyuncu'&&a.team!==c.team&&this.govdeTemasi(a,c,-vr,aA,aC))return;}}}}
     if(this.phase==='play')this.omuzlar(dt);
   },
   /* takım arkadaşları birbirine doğru koşuyorsa (0,7 sn içinde 0,9 m'den yakın geçecekse) yanlara ayrılır; topu süren ve vuran yolunu değiştirmez */
@@ -356,11 +362,25 @@ Object.assign(Match.prototype,{
     const LyA=hrkYanal(p,sp/vm),LyR=hrkMin(A.yanRahat,LyA),Ly0=(LyR+(LyA-LyR)*w)*dk;
     /* dönüş hızı: hedef yakın ve yandaysa, hıza dik tutunmayla dönebileceği hıza (v²≤a·R, R=d/(2·sinθ)) frenler; yörüngeye girip dolanmaz */
     if(sp>2&&d>0.3&&A.donusSiniri){const cs=(ux*p.vx+uz*p.vz)/sp;if(cs<0.9){const sn=hrkKok(hrkMax(0,1-cs*cs)),R=cs>0?(d+1)/(2*hrkMax(sn,0.05)):d*0.5;s=hrkMin(s,hrkMax(1.6,hrkKok(Ly0*R*A.donusSiniri)));}}
+    /* T5 (2026-10-09): rakibe çarpmama. Kasıtlı temas (müdahale, omuz) ve topu süren dışında saha oyuncusu 5 m içindeki rakibe, istenen hızının ona
+       doğru payından rakibin uzaklaşma hızının yarısı düşülünce (öndeki ani durabilir: arkasından takipte 1,1–1,3 m ara kalır), en çok
+       √(2·temasFren·(d − 0,72)) + temasHiz hızla yaklaşır; fazlası kesilir, yanal pay kalır
+       (etrafından dolanır). Rakibin üstüne gelişi sayılmaz (jokey ve geri çekilme değişmez); kayan rakip öngörülmez (ani; bacağına takılınabilir). Teşhis: topu sürene ≥ 3 m/sn bağıl hızla arkadan ya
+       da yandan çarpma maçta ~2,5 (duran vurucuya, saklayana, yavaşlayana; çoğu faul). Fren mesafesinden gerçek yaklaşma hızıyla 0,12 sn'lik tepki
+       yolu düşülür; gerçek yaklaşma izni aşıyorsa (acil) fren ve sarsıntı sınırı eforsuz da azamidir (çarpmak üzere olan insan sert frenler) */
+    let acil=false;
+    if(saha&&oyun&&s>0.5&&p!==this.ball.sahip&&!(e2&&(e2.ad==='mudahale'||e2.ad==='omuz'))){
+      let vx=ux*s,vz=uz*s,deg=false;const Fr=2*A.temasFren;
+      for(const o of this.teams[1-p.team]){if(!o.oyunda||o.eylem&&o.eylem.ad==='kayma')continue;const rx=o.x-p.x,rz=o.z-p.z,d2=rx*rx+rz*rz;if(d2>25||d2<1e-4)continue;
+        const d=hrkKok(d2),nx=rx/d,nz=rz/d,ov=0.5*hrkMax(0,o.vx*nx+o.vz*nz),vn=vx*nx+vz*nz-ov;if(vn<=0)continue;
+        const va=p.vx*nx+p.vz*nz-ov,izin=hrkKok(Fr*hrkMax(0,d-0.72-0.12*hrkMax(0,va)))+A.temasHiz;
+        if(vn>izin){vx-=(vn-izin)*nx;vz-=(vn-izin)*nz;deg=true;if(va>izin)acil=true;}}
+      if(deg){s=hrkHyp(vx,vz);if(s>1e-3){ux=vx/s;uz=vz/s;}}}
     p.kip=hrkKipAdi(s);
     let ax=ux*s-p.vx,az=uz*s-p.vz;
     /* ileri itiş a(v)=A0·(1−v/S0) (yorgunluk düşürür); rahat değer bunu aşamaz */
     const Aa=hk.A0*(1-0.15*(p.yorgunluk||0))*hrkMax(0,1-sp/hk.S0),Ar=hrkMin(A.ivmeRahat,Aa);
-    const Ac=(Ar+(Aa-Ar)*w)*dk*dt,B=(A.frenRahat+(hk.B-A.frenRahat)*w)*dk*dt,Ly=Ly0*dt;
+    const Ac=(Ar+(Aa-Ar)*w)*dk*dt,B=(A.frenRahat+(hk.B-A.frenRahat)*(acil?1:w))*dk*dt,Ly=Ly0*dt;
     if(sp<0.6){const al=hrkHyp(ax,az),lim=s>sp?hrkMin(B,ef>=0.8?hrkMax(Ac,Ly):Ac):B;if(al>lim){ax*=lim/al;az*=lim/al;}}
     else{const ex=p.vx/sp,ez=p.vz/sp;let ap=ax*ex+az*ez,qx=ax-ap*ex,qz=az-ap*ez;
       /* hızlıyken keskin dönüş (>100°): ayak basılır, önce fren, sonra yeni yöne */
@@ -371,7 +391,7 @@ Object.assign(Match.prototype,{
       else{const q=(ap/B)*(ap/B)+(aq/Ly)*(aq/Ly);if(q>1){const k=1/hrkKok(q);ap*=k;qx*=k;qz*=k;}}
       ax=ap*ex+qx;az=ap*ez+qz;}
     /* sarsıntı sınırı: ivme vektörü karede en çok J·dt değişir (hız eğrisi çan biçimli; efor 1'de J azami) */
-    const J=(A.sarsinti+(A.sarsintiAzami-A.sarsinti)*ef*ef*ef)*dt*dt,jx=ax-p._iax,jz=az-p._iaz,jl=hrkHyp(jx,jz);
+    const J=(A.sarsinti+(A.sarsintiAzami-A.sarsinti)*(acil?1:ef*ef*ef))*dt*dt,jx=ax-p._iax,jz=az-p._iaz,jl=hrkHyp(jx,jz);
     if(jl>J){ax=p._iax+jx*J/jl;az=p._iaz+jz*J/jl;}
     p._iax=ax;p._iaz=az;
     p.vx+=ax;p.vz+=az;p.x+=p.vx*dt;p.z+=p.vz*dt;p.spd=hrkHyp(p.vx,p.vz);
@@ -412,8 +432,11 @@ Object.assign(Match.prototype,{
   },
   kovala(p,ef){
     const b=this.ball;this.eforVer(p,ef!=null?ef:1);
-    /* tepki süresi: top yön değiştirdikten sonra oyuncu bir an eski hedefine gider (pası bekleyen alıcı daha çabuk) */
-    const tepki=b.hedefOyuncu===p?0.05:0.3-p.oz.karar*0.15;
+    /* tepki süresi: top yön değiştirdikten sonra oyuncu bir an eski hedefine gider (pası bekleyen alıcı daha çabuk). T5e (2026-10-09): top
+       değişimi başına kişisel sapma N(0; 0,06 sn), ±0,12'de kesik (tek zar): yarı yarıya ve dönen topta ilk dokunuş varış farkıyla düzgün
+       değişir, basamak değil (c-donen; eskiden aynı durum her seferinde aynı sonucu veriyordu) */
+    if(p._tepkiS!==b.surum){p._tepkiS=b.surum;p._tepkiJ=b.hedefOyuncu===p?0:clamp(0.06*this.normal(),-0.12,0.12);}
+    const tepki=b.hedefOyuncu===p?0.05:0.3-p.oz.karar*0.15+p._tepkiJ;
     if(this.t-(this._degisimT||0)<tepki){p.hizOran=1;p.bak=b;return;}
     const havada=b.y>1.3||b.vy>2;let hMax=havada?1.72*p.boy+0.5:0.7;
     /* kendisine atılan havadan pası rakip zorlamıyorsa topun inmesini bekler: göğüs ya da ayakla alır, kafayla oynamaz */
@@ -619,6 +642,16 @@ Object.assign(Match.prototype,{
   /* 1. adam (C2): sürücüye kale tarafından, dış yanı gösterecek biçimde biraz içeriden yaklaşır: uzaktan hızla kapanır, yaklaşınca yavaşlar,
      1,6–2,4 m'de yan duruşla jokey yapar (p.tavir='jokey'); sürücüyü tepki gecikmesiyle (τr≈0,32−0,15·karar) izler. Sürücü hızla geliyorsa kalçasını
      açıp koşarak çekilir. Müdahaleye ancak top açıkta ya da sürücü sırtını dönmüşse girer (mudahaleDene, mac-mudahale.js) */
+  /* T5 (2026-10-09): rakip sürücüye giden savunmacı onun içinden geçmez — hedefe giden düz yol sürücünün 0,95 m yakınından geçiyorsa (sürücü
+     yolun üzerinde ve savunmacıdan 2,5 m içinde) hedef sürücünün yanına alınır (yolun geçtiği yan, 0,95 m; 0,25 sn önüne): kovalayan yanına gelir,
+     omuz omuza mücadele doğar (teşhis: topu sürene ≥ 2,2 m/sn ile arkadan ya da yandan çarpan maçta 1. adam 3,25, bölge oyuncusu 1,3 kezdi) */
+  yanindanGec(p,s){
+    const ex=p.tx-p.x,ez=p.tz-p.z,L2=ex*ex+ez*ez;if(L2<0.04||!s)return;
+    const sx=s.x-p.x,sz=s.z-p.z,u=(sx*ex+sz*ez)/L2;if(u<0.05||u>0.95||sx*sx+sz*sz>6.25)return;
+    const cx=p.x+ex*u-s.x,cz=p.z+ez*u-s.z,dc=hrkHyp(cx,cz);if(dc>=0.95)return;
+    const L=hrkKok(L2),yx=dc>1e-3?cx/dc:-ez/L,yz=dc>1e-3?cz/dc:ex/L;
+    p.tx=s.x+s.vx*0.25+yx*0.95;p.tz=s.z+s.vz*0.25+yz*0.95;
+  },
   presYap(p,s,dt){
     const b=this.ball,gx=-this.dir[p.team]*PL,mesafe=hrkHyp(p.x-s.x,p.z-s.z);
     /* T4: aldatılan savunmacı yanılgı süresince aldatma yanına yüklenir (tempoda yerinde kalır, kesmede ataletiyle sürer), müdahaleye girmez */
@@ -633,11 +666,11 @@ Object.assign(Match.prototype,{
     const Ci=s.calim,okudu=Ci&&Ci.o===p&&Ci.faz>=1;
     if(okudu&&Ci.faz===2&&Ci.ft>=hrkMax(0.06,0.16-0.1*p.oz.karar)&&b.y<0.5){
       if(hrkHyp(b.x-s.x,b.z-s.z)>1.2){const kn=this.yakalamaNoktasi(p,0.7);
-        if(kn.t<3&&kn.t<varisZamani(s,kn.x,kn.z,0.45,0.05)+0.1){p.tx=kn.x;p.tz=kn.z;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);this.mudahaleDene(p,s,dt);return;}}
+        if(kn.t<3&&kn.t<varisZamani(s,kn.x,kn.z,0.45,0.05)+0.1){p.tx=kn.x;p.tz=kn.z;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);this.yanindanGec(p,s);this.mudahaleDene(p,s,dt);return;}}
       /* topa yetişemiyor: toparlanma koşusu — sürücünün 0,5 sn sonraki yerinden kaleye doğru 2,5 m'deki noktaya, koşu yönüne bakarak (yan adımla
          jokey hedefi sürücü yanından geçerken üstüne düşüyor, savunmacı duruyordu) */
       const fx=s.x+s.vx*0.5,fz=s.z+s.vz*0.5,kx=gx-fx,kz=MZ-fz,kl=hrkHyp(kx,kz)||1;
-      p.tx=fx+kx/kl*2.5;p.tz=fz+kz/kl*2.5;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);this.mudahaleDene(p,s,dt);return;}
+      p.tx=fx+kx/kl*2.5;p.tz=fz+kz/kl*2.5;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);this.yanindanGec(p,s);this.mudahaleDene(p,s,dt);return;}
     /* T4 (2): başka savunmacıyı geçmiş sürücüye çıkan taze 1. adam (örtüden gelen; geçilen 1,5 sn 1. adam olmaz): yaklaşıp jokey yapmaz, topa
        koşar. Tetik: sürücünün kaçışı sürüyor (itişten 0,2–0,3 sn sonra) ya da bir takım arkadaşı 1,5 sn içinde geçildi ve top sürücüden
        1,2 m'den uzakta; topun yoluna sürücüyle aynı sıralarda (en çok 0,8 sn geç) yetişebiliyorsa oraya koşar, yetişemiyorsa aşağıdaki yaklaşma
@@ -645,7 +678,7 @@ Object.assign(Match.prototype,{
     if(b.y<0.5&&p._gecS!==s){let kacis=!!Ci&&Ci.faz===2&&Ci.o!==p&&Ci.ft>=0.3-0.1*p.oz.karar;
       if(!kacis&&!Ci&&hrkHyp(b.x-s.x,b.z-s.z)>1.2)for(const q of this.teams[p.team]){if(q!==p&&this.t-q._gecT<1.5){kacis=true;break;}}
       if(kacis){const kn=this.yakalamaNoktasi(p,0.7);
-        if(kn.t<2.5&&kn.t<varisZamani(s,kn.x,kn.z,0.45,0.05)+0.8){p.tx=kn.x;p.tz=kn.z;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);this.mudahaleDene(p,s,dt);return;}}}
+        if(kn.t<2.5&&kn.t<varisZamani(s,kn.x,kn.z,0.45,0.05)+0.8){p.tx=kn.x;p.tz=kn.z;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);this.yanindanGec(p,s);this.mudahaleDene(p,s,dt);return;}}}
     const tr=okudu?0.08:0.32-0.15*p.oz.karar,k=hrkMin(1,dt/tr);
     if(p._algS!==s){p._algS=s;p._algVx=s.vx;p._algVz=s.vz;}
     p._algVx+=(s.vx-p._algVx)*k;p._algVz+=(s.vz-p._algVz)*k;
@@ -665,6 +698,7 @@ Object.assign(Match.prototype,{
       R=s.eylem&&s.eylem.ad==='vurus'&&!(s.eylem.kalan>0.3)?hrkMin(R0,0.8):kale<0.3?lerp(0.9,R0,clamp((kale+1)/1.3,0,1)):R0;
     const al=orta?0.05+0.1*profilAlt(p,'sezgi',0.5):0.15+0.3*clamp((hrkAbs(oz-MZ)-6)/14,0,1);
     p.tx=ox+R*(nx*hrkCos(al)+qx*hrkSin(al));p.tz=oz+R*(nz*hrkCos(al)+qz*hrkSin(al));p.bak=b;
+    this.yanindanGec(p,s);   /* T5 */
     const yaklas=hrkMax(0,(s.vx*(p.x-s.x)+s.vz*(p.z-s.z))/(mesafe||1));
     /* T4: sürücünün savunmacıya göre yan hızı (yanından geçiyor): yan adımın tavanı (~4 m/sn) yetmez, dönüp koşar */
     const yanH=hrkAbs(s.vx*(p.z-s.z)-s.vz*(p.x-s.x))/(mesafe||1);
@@ -672,7 +706,9 @@ Object.assign(Match.prototype,{
     /* T4: üstüne koşan sürücüye koşarak çıkılmaz: sürücünün yaklaşma hızı arttıkça kapanma yavaşlar (hızlı yaklaş, yavaş var; Ek G3) */
     else if(mesafe>R+1.2){p.hizOran=clamp(0.9-0.3*(yaklas-1),0.15,0.9);p.yonHedef=hrkAtan2(s.z-p.z,s.x-p.x);}
     else if(yaklas>0.55*p.maxSpd||yanH>0.45*p.maxSpd)p.hizOran=1;   /* koşarak çekil ya da yanında koş: gidiş yönüne bakar */
-    else if(kale<0.3){p.hizOran=1;p.yonHedef=hrkAtan2(s.z-p.z,s.x-p.x);}   /* sıkı markaj: yüzü sürücüye */
+    /* sıkı markaj: yüzü sürücüye. T5 (2026-10-09): son 2,5 m'de küçük adımlarla yavaş varır (0,35–1; eskiden tam hızla 0,9 m'lik noktaya koşup geri
+       yaslanan ya da topu saklayan sürücünün sırtına 3 m/sn'den hızlı çarpıyordu — temas faulü) */
+    else if(kale<0.3){p.hizOran=mesafe>2.5?1:clamp(0.35+0.4*(mesafe-0.9),0.35,1);p.yonHedef=hrkAtan2(s.z-p.z,s.x-p.x);}
     else{p.tavir='jokey';p._tavirKare=this.kare;p.hizOran=1;
       const a=hrkAtan2(s.z-p.z,s.x-p.x),off=0.45+0.8*clamp((yaklas-2.5)/3,0,1),d1=hrkAciNorm(a+off),d2=hrkAciNorm(a-off);
       p.yonHedef=-(hrkCos(d1)*qx+hrkSin(d1)*qz)>=-(hrkCos(d2)*qx+hrkSin(d2)*qz)?d1:d2;}

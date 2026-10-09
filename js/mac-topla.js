@@ -409,8 +409,7 @@ Object.assign(Match.prototype,{
       this.dokunus(p,true);this.sahipYap(p);p.eylem={ad:'kontrol',t:0,sure:pl?0.15:0.22,yuzey:y.yuzey,yon:a};p.kickCd=0.06;
       p.sonDokunus={t:this.t,tur:'kontrol',ayak:y.ayak,yuzey:y.yuzey};
       this.on('ilkDokunus',{p,iyi:true,tur:'ayak',plan:!!pl});
-      /* topu alırken arkasına yapışan rakip itebilir ya da tutabilir */
-      if(this.phase==='play')this.sirtFaulu(p);}
+      /* T5: topu alana arkadan itme artık gövde çarpışmasından doğar (govdeTemasi, mac-mudahale.js; eski zar sirtFaulu kalktı) */}
     else{/* kötü dokunuş: ağır (top istenen yöne 2–4 m kaçar) ya da sekme (gelen hızın bir kısmı sürer, ayaktan rastgele yöne) */
       const agir=r<P+(1-P)*0.6,y=this.kontrolYuzeyi(p,a,3);
       if(agir){const ra=a+this.normal()*0.45,h=Math.sqrt(2*(this.R+0.3)*(2+this.rast()*2));b.vx=gx*0.12+Math.cos(ra)*h;b.vz=gz*0.12+Math.sin(ra)*h;b.vy=0;b.y=Math.min(b.y,0.05);}

@@ -162,6 +162,16 @@ Object.assign(Match.prototype,{
             if(en){pres2=en;en._kapatK=this.kare;}}}
       }
       const cizgi=this.savunmaCizgisi(t,hucum,odak);
+      /* T5e (2026-10-09; gerçekçilik planı T5 madde 8): kaleci yerdeyken (uçuş, kapanma, kalkış) top kendi ceza sahamızda sahipsizse kovalayanlar
+         dışındaki en yakın saha oyuncusu kale çizgisine koşar (direklerin arası; topun hizasıyla kale ortasının ortası, 0,5 m önde) */
+      let cizgiBek=null,cbx=0,cbz=0;
+      if(!du&&sahipTakim<0&&!b.tasiyan&&this.cezaSahasi(t,b.x,b.z)){const gk=this.teams[t].find(q=>q.rol==='GK'&&q.oyunda);
+        if(gk&&gk.eylem&&gk.eylem.kilit){cbx=-this.dir[t]*(PL-0.5);cbz=MZ+clamp((b.z-MZ)*0.5,-2.6,2.6);let ed=1e9;
+          for(const q of this.teams[t]){if(!q.oyunda||q.rol==='GK'||q===kovalayan[t]||q===kovalayan[2+t]||q.eylem&&q.eylem.kilit)continue;
+            const dd=(q.x-cbx)*(q.x-cbx)+(q.z-cbz)*(q.z-cbz);if(dd<ed){ed=dd;cizgiBek=q;}}}}
+      /* T5e: dönen top — top bir ceza sahasında sahipsizken iki takımın kovalayanı da tam eforla gider (kimse topu seyretmez; eskiden rakibinden
+         0,5 sn'den geç yetişecek kovalayan rahat ivmeyle yaklaşıyordu) */
+      const donen=!du&&sahipTakim<0&&!b.tasiyan&&(this.cezaSahasi(0,b.x,b.z)||this.cezaSahasi(1,b.x,b.z));
       if(!hucum)this.markajAta(t,du?odak:gecikmeli);else if(this._markaj)this._markaj[t]=new Map();
       for(const p of this.teams[t]){
         if(!p.oyunda||p===b.sahip||b.tasiyan===p)continue;
@@ -174,8 +184,9 @@ Object.assign(Match.prototype,{
         /* T1: topa rakibinden açıkça geç yetişecek kovalayan (kovalaPay sn) çekişmeye koşmaz, rahat ivmeyle yaklaşır; pasın alıcısı ve
            yüksek topta kovalayan tam eforla (rahat karşılayan alıcı geç kalıp pası kaybediyordu) */
         if(p===kovalayan[t]){const K=this._kov,S=K&&K.sure,f=S?S[t]-S[1-t]:0;
-          this.kovala(p,K&&K.yuksek||p===b.hedefOyuncu||f<=MOTOR_AYAR.kovalaPay?1:0.5);continue;}
+          this.kovala(p,K&&K.yuksek||p===b.hedefOyuncu||donen||f<=MOTOR_AYAR.kovalaPay?1:0.5);continue;}
         if(p===kovalayan[2+t]){this.kovala(p,1);continue;}
+        if(p===cizgiBek){p.tx=cbx;p.tz=cbz;p.hizOran=1;this.eforVer(p,1);continue;}   /* T5e */
         if(p===pres1){this.eforVer(p,karsi?0.9:1);this.presYap(p,b.sahip,dt);continue;}
         if(p===pres2){const yakin=p._kapatK===this.kare;this.eforVer(p,yakin?1:karsi?0.9:0.8);if(yakin)this.kapatYakin(p,b.sahip,pres1,dt);else this.kapat(p,b.sahip);continue;}
         if(p===pres3){this.eforVer(p,0.9);this.yolKapat(p,b.sahip);continue;}
@@ -184,6 +195,7 @@ Object.assign(Match.prototype,{
           const tp=clamp(0.62-0.22*p.oz.karar-0.12*p.oz.gorus+0.2*p.yorgunluk,0.25,0.7)*MOTOR_AYAR.tepkiCarpan,n=Math.min(15,Math.round(tp*20));
           if(G.i>n){const j=(G.i-1-n)&15;OG.x=G.x[j];OG.z=G.z[j];OG.sahip=odak.sahip;OG.takim=odak.takim;od=OG;}}
         this.bolgeKonumu(p,t,hucum,cizgi,dt,od);
+        if(b.sahip&&b.sahip.team!==t)this.yanindanGec(p,b.sahip);   /* T5: bölge oyuncusu da topu sürenin içinden geçmez */
       }
     }
   },

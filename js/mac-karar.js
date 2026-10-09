@@ -440,10 +440,10 @@ function ortaSecenekleri(m,p,o,S){
     if(en&&enT<3)ekle(en,eg,zx,zw,'hava',yay,hy,havaSure(hyp(zx-o.ox,zw-o.oz),yay),yay);}
   for(const c of C){
     const A2=pasAnaliz(m,p,c.hx,c.hz,c.tip,c.g,{ox:o.ox,oz:o.oz,T:c.T,yay:c.yay,hy:c.hy,varislar:c.tur==='alcak'?varisAdaylari(hyp(c.hx-o.ox,c.hz-o.oz),'orta'):null,baski:o.baski});
-    /* ortacının önündeki (0,3–2,4 m) rakip bacağı ortayı kesebilir (mac-mudahale.js ortaBlok ile aynı geometri) */
-    const L=hyp(c.hx-o.ox,c.hz-o.oz)||1,ux=(c.hx-o.ox)/L,uz=(c.hz-o.oz)/L;let acik=1;
-    for(const r of m.teams[1-p.team]){if(!r.oyunda||r.rol==='GK'||(r.eylem&&r.eylem.kilit))continue;const on=(r.x-o.ox)*ux+(r.z-o.oz)*uz,yan=Math.abs((r.x-o.ox)*uz-(r.z-o.oz)*ux);
-      if(on>0.3&&on<2.4&&yan<0.9)acik*=1-0.45*(1-yan/0.9);}
+    /* ortacının önündeki rakip bacağı ortayı kesebilir — T5 (2026-10-09): motorla aynı saf işlev (ortaBlokTahmin, js/mac-mudahale.js); ilk hız
+       uçuş süresinden (havadan: yatay L/T, dikey (hy + gT²/2)/T; yerden 18 m/sn), yön belirsizliği 0,25 m */
+    const L=hyp(c.hx-o.ox,c.hz-o.oz)||1,ux=(c.hx-o.ox)/L,uz=(c.hz-o.oz)/L,Tu=c.tip==='hava'&&c.T>0?c.T:0,vh=Tu?L/Tu:18,vy0=Tu?((c.hy||0)+0.5*G*Tu*Tu)/Tu:0;
+    const acik=ortaBlokTahmin(m,p.team,o.ox,o.oz,0.11,ux*vh,uz*vh,vy0,0.25).acik;
     const tu=c.hx*d,parca=c.tip==='hava'?(c.hy>1.3?'kafa':'vole'):'ayak';
     const bec=parca==='kafa'?0.6+0.8*c.q.oz.kafa:parca==='vole'?0.7+0.6*c.q.oz.sut:0.8+0.4*c.q.oz.sut;
     const sans=xG(tu,c.hz,parca,A2.baskiK)*bec;

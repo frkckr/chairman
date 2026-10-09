@@ -3,7 +3,8 @@
    çaprazdan ya da arkadan-yandan gelir. Kayma motorun kendi işlevleriyle başlar (kaymaBaslat; temas kaymaTemas → mudahaleSonuc): hedef, motorun
    karar koşulundaki gibi savunmacının topa yetişeceği nokta. Değişkenler: geliş açısı ve savunmacının müdahale becerisi (0,4 / 0,8).
    Sonuç: temiz / dürttü (top kazanıldı), blok, geçildi (ıska), faul; ayrıca faulsüz temasta hücumcunun düşmesi (dusus, neden 'kayma').
-   Kabul (T5, bilgi): kayma kaynaklı faulsüz düşüş sıfırdan büyük. Kullanım: node araclar/mac-deneme.js --senaryo c-kayma [N=60 hücre başına] [tohum] */
+   Kabul (T5, kapı; 2026-10-09): kayma kaynaklı faulsüz düşüş sıfırdan büyük (topa değen kaymanın yerdeki bacağına takılan sürücü), değilse çıkış
+   kodu 1. Kullanım: node araclar/mac-deneme.js --senaryo c-kayma [N=60 hücre başına] [tohum] */
 'use strict';
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||60,dt=1/60,t0=Date.now();let sd=(tohum||1)*2654435761>>>0;
@@ -36,6 +37,6 @@ module.exports={calistir({ctx,vm,N,tohum}){
   let dus=0;
   for(const [aci,ad] of ACI)for(const bc of BEC){const h=T[aci+'|'+bc];dus+=h.dusus;
     console.log('  '+ad.padEnd(24)+bc.toFixed(1).padStart(8)+String(h.n).padStart(5)+SONUC.map(s=>y(h[s],h.n).padStart(s==='gecildi'?9:8)).join('')+y(h.kart,h.n).padStart(7)+y(h.dusus,h.n).padStart(16)+y(h.yok,h.n).padStart(12));}
-  console.log((dus>0?'  ':'! ')+`Kabul (T5, bilgi): kayma kaynaklı faulsüz düşüş > 0 → ${dus} düşüş`);
-  return 0;
+  console.log((dus>0?'  ':'! ')+`Kabul (T5, kapı): kayma kaynaklı faulsüz düşüş > 0 → ${dus} düşüş`);
+  return dus>0?0:1;
 }};
