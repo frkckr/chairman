@@ -358,7 +358,9 @@ Object.assign(Match.prototype,{
        (eskiden sertlik ve karar doğrudan; ortalama değerde aynı, oyuncular arası fark daha dik) */
     const agr=profilAlt(p,'agresiflik',p.oz.sertlik);
     /* T5: sarı kartlı oyuncu temkinli (müdahale isteği ×0,6, kayarak giriş ayrıca ×0,4) */
-    const kartli=(p.kart||0)>=1,istek=MOTOR_AYAR.mudahaleIstegi*(0.55+p.oz.mudahale*0.8)*(0.3+1.4*profilAlt(p,'pozisyonAlma',0.5))*(1+0.25*profilEgilim(p,'sikiMarkaj'))*(0.75+tk.pres*0.5)*(kutu?MOTOR_AYAR.kutuIstek:1)*(kartli?0.6:1);
+    /* T5g: özelliğin payı dikleştirildi (0,55 + 0,8·m → 0,3 + 1,3·m; ortalamada aynı): T3 duyarlılık kabulü müdahale → girişim 80 maçta 1,19× (≥ 1,25) kalmıştı —
+       yandan dürtme ve toparlanma girişimleri de bu istekle ölçeklenir */
+    const kartli=(p.kart||0)>=1,istek=MOTOR_AYAR.mudahaleIstegi*(0.3+p.oz.mudahale*1.3)*(0.3+1.4*profilAlt(p,'pozisyonAlma',0.5))*(1+0.25*profilEgilim(p,'sikiMarkaj'))*(0.75+tk.pres*0.5)*(kutu?MOTOR_AYAR.kutuIstek:1)*(kartli?0.6:1);
     /* temas anında (0,18 sn sonra) top, savunmacı ve sürücü nerede: top sürücünün ayağından 0,8 m'den uzak, savunmacının ayağı (0,95 m)
        yetişiyor ve sürücüden yakınsa girer (top açıkta) */
     const T=0.18,bx=b.x+b.vx*T,bz=b.z+b.vz*T,eD=hrkHyp(bx-p.x-p.vx*T*0.6,bz-p.z-p.vz*T*0.6),eS=hrkHyp(bx-s.x-s.vx*T,bz-s.z-s.vz*T);

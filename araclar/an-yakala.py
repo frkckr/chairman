@@ -254,7 +254,7 @@ async def ana():
     ap.add_argument("--oncesi", action="store_true")
     ap.add_argument("--giris", action="store_true")
     ap.add_argument("--ek")
-    ap.add_argument("--anm", choices=["once", "a2a", "a2b", "t4v", "simdi"], default="simdi")
+    ap.add_argument("--anm", choices=["once", "a2a", "a2b", "t4v", "t4", "simdi"], default="simdi")   # t4: T5 öncesi dondurulmuş çizim (T5g şeritleri)
     a = ap.parse_args()
     try:
         from playwright.async_api import async_playwright
