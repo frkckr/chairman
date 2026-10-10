@@ -112,8 +112,8 @@ Object.assign(Match.prototype,{
       if(!p.oyunda||p.rol==='GK'||p.zipla||p.kickCd>0)continue;
       const e=p.eylem;if(e&&(e.kilit||e.ad==='vurus'||e.ad==='tac'||e.ad==='kafa'))continue;
       const dx0=b.x-p.x,dz0=b.z-p.z;if(dx0*dx0+dz0*dz0>400)continue;
-      /* rakipsiz pası bekleyen alıcı sıçramaz (kovala: topun inmesini bekler) */
-      if(b.hedefOyuncu===p&&enYakinRakip(this,p.x,p.z,p.team).d>3.5)continue;
+      /* rakipsiz pası bekleyen alıcı sıçramaz (kovala: topun inmesini bekler; T6e: ortanın alıcısı beklemez) */
+      if(b.hedefOyuncu===p&&!(b.pasHedef&&b.pasHedef.tur==='orta')&&enYakinRakip(this,p.x,p.z,p.team).d>3.5)continue;
       const sp=p.spd,kos=sp>=2.5,hz=kos?A.sicramaHazir[1]:A.sicramaHazir[0],hM=hvSicramaH(p,sp),aD=hvAlinDur(p),R=A.havaEgilme[0]+(kos?A.havaEgilme[1]:0)+0.2;
       /* T6b: kalkış yeri — hazırlıkta hedefine doğru hızıyla (koşarak; durarak yerinde); kalkıştan temasa sıçrama temas noktasına yönelir (koşarak
          ≤ min(4,5, sicramaYatay·hız), durarak ≤ 1 m/sn); baş erişimi R */

@@ -238,8 +238,10 @@ Object.assign(Match.prototype,{
     const yan=Math.sign(p.z-MZ)||1,GR=this._geride&&this._geride[t],Z=[[PL-3,MZ+yan*1.2],[PL-4,MZ-yan*4],[PL-11,MZ]],C=[];
     for(const q of this.teams[t]){if(q===p||!q.oyunda||q.rol==='GK'||(q.eylem&&q.eylem.kilit)||(GR&&GR.has(q)))continue;
       const L=Math.hypot(q.x-gx,q.z-MZ);if(L>22)continue;
-      const pr=q.profil,puan=0.5*profilAlt(q,'topsuzHareket',0.5)+0.4*Math.max(0,profilEgilim(q,'cezaSahasinaGecGirer'))+(pr&&pr.rol==='firsatci'?0.4:0)+(q.rol==='FV'?0.2:0)-L/40;
-      if(puan>0.05)C.push([puan,q]);}
+      /* T6e (2026-10-10): eşik 0,05 → −0,05, uzaklık cezası L/40 → L/50 — ceza sahasına geç giren orta saha da takibe girer (T7 sonunda
+         takip eden hücumcu 0,92; bant 1–3) */
+      const pr=q.profil,puan=0.5*profilAlt(q,'topsuzHareket',0.5)+0.4*Math.max(0,profilEgilim(q,'cezaSahasinaGecGirer'))+(pr&&pr.rol==='firsatci'?0.4:0)+(q.rol==='FV'?0.2:0)-L/50;
+      if(puan>-0.05)C.push([puan,q]);}
     C.sort((a,c)=>c[0]-a[0]||a[1].n-c[1].n);
     for(let i=0;i<Math.min(A.takipSayi,C.length,Z.length);i++){const q=C[i][1];q.kosu={u:Z[i][0],w:Z[i][1],t:1.6,tur:'takip'};this.on('kosu',{p:q,tur:'takip'});}
     /* savunma: kaleciye en yakın stoper kale önüne, uzak bek uzak direğe */

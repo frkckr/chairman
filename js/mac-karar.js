@@ -455,7 +455,9 @@ function pasSecenekleri(m,p,o){
    yüksekliği), arka direğe asma, geri çevirme (ceza sahası içine yerden geri). Değer = xG(kafa/vole) × P(ulaşır) × (1 − kaleciHavaTahmin) */
 function ortaSecenekleri(m,p,o,S){
   const d=m.dir[p.team],u=o.ox*d,yakin=Math.sign(o.oz-MZ)||1,gk=m.kaleci(1-p.team),A=MOTOR_AYAR,takim=m.taktik[p.team],C=[];
-  const ekle=(q,g,hx,hz,tip,yay,hy,T,tur)=>{const tu=hx*d;if(tu>PL-2||tu<PL-20||Math.abs(hz-MZ)>12)return;C.push({q,g,hx,hz,tip,yay,hy,T,tur});};
+  /* T6e: havadan ortanın hedefi ceza sahasında (kaleye 16 m; 16–20 m'deki oyuncuya havadan top orta değil, kafası 14 m'nin ötesinden şut olmaz);
+     yerden geri çevirme yaya (20 m) kadar */
+  const ekle=(q,g,hx,hz,tip,yay,hy,T,tur)=>{const tu=hx*d;if(tu>PL-2||tu<PL-(tip==='hava'?16:20)||Math.abs(hz-MZ)>12)return;C.push({q,g,hx,hz,tip,yay,hy,T,tur});};
   for(const q of m.teams[p.team]){
     if(q===p||!q.oyunda||q.rol==='GK'||(q.eylem&&q.eylem.kilit))continue;
     const g=algilanan(m,p,q);if(!g)continue;
@@ -635,7 +637,7 @@ function tekVurusKarari0(m,p,k,s,yakin){
 /* ---- kafa: ceza sahasında kaleye, geride uzaklaştırma, ileride arkadaşa indirme ya da koşana uzatma ---- */
 function kafaKarari(m,p){
   const b=m.ball,d=m.dir[p.team],u=b.x*d,w=b.z,baski=baskiAltinda(m,p);
-  if(u>PL-14&&Math.abs(w-MZ)<12){const x=xG(u,w,'kafa',baski*0.5);
+  if(u>PL-16&&Math.abs(w-MZ)<12){const x=xG(u,w,'kafa',baski*0.5);   /* T6e: ceza sahası çizgisine kadar (eskiden 14 m); 14–16 m'de gol beklentisi çoğu zaman 0,03 altı */
     if(x>0.03||u>PL-7){
       /* hedef: köşeler ve yükseklik; kaleciTahmin ile en açık yer (sıcaklıklı) */
       const gk=m.kaleci(1-p.team),hx=d*PL,v=9+p.oz.kafa*5,sig=(0.05+0.1*(1-p.oz.kafa))*(1+baski*0.5);
@@ -649,7 +651,7 @@ function kafaKarari(m,p){
       return{tur:'sut',hx,hz,v,vy:(hy-b.y+0.5*G*T*T)/T,xg:x,hy};}}
   /* baskı altındaki savunmacının kafası güvenliğe, gerekirse taça gider (birleştirme 2026-10-03). T6c: kendi üçte birimizde ya da savunmacının
      kendi yarısında yalnız rakip yakınken (baskı 0,12 / 0,3 üstü: ~4 / 3,5 m içinde) uzaklaştırır; baskısız kafa arkadaşa gider (indirme) */
-  if((u<-PL+30&&baski>0.12)||(p.rol==='DEF'&&u<5&&baski>0.3)||baski>0.7){const yan=w<MZ?-1:1,ds=baski>0.45,hx=b.x+d*(16+m.rast()*12),hz=clamp(b.z+yan*(4+m.rast()*12),ds?-3:3,ds?PW+3:PW-3);
+  if((u<-PL+30&&baski>0.12)||(p.rol==='DEF'&&u<5&&baski>0.3)||(baski>0.7&&u<10)){   /* T6e: panik uzaklaştırması rakip yarının derinliğinde yok */const yan=w<MZ?-1:1,ds=baski>0.45,hx=b.x+d*(16+m.rast()*12),hz=clamp(b.z+yan*(4+m.rast()*12),ds?-3:3,ds?PW+3:PW-3);
     return{tur:'uzaklastir',hx,hz,v:10+p.oz.kafa*5,vy:5+m.rast()*3};}
   let en=null,enP=-1e9;
   for(const q of m.teams[p.team]){if(q===p||!q.oyunda||q.rol==='GK')continue;const L=hyp(q.x-b.x,q.z-b.z);if(L<3||L>17)continue;
