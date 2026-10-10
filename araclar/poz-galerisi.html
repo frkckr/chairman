@@ -151,6 +151,22 @@ function yutmaSatir(ad,o){let Y=null,R=null;
 /* kamera: vuranın önü ve destek ayağı tarafı (sağ ayakta sol ön; karşı kolun açılması görünsün) */
 function vurusSatir(ad,o,az){const s=vurusSim(o);return{ad,kit:o.kit||0,kur:s.kur,her:s.her,kareler:s.kareler,az:az!=null?az:(o.ayak==='sol'?55:-55),uzak:o.uzak||4.6};}
 const D=Math.PI/180;
+/* T6f (2026-10-10): sıçrama — motorun p.zipla'sı gibi (t < 0 hazırlık, 0…sure uçuş; p.yuk = tepe·4f(1 − f), sure = 2√(2·tepe/g)). Kalkış 0,5 sn'de
+   hazırlıkla başlar. o: {kos, tepe, v (hız), ayak}; kafa: tepede kafa eylemi (o.yuzey), top başın önünde (o.yan: sağa) */
+function ziplaKur(o){const hz=o.kos?0.08:0.15,T=2*Math.sqrt(2*o.tepe/9.81),t0=0.5;let z=null;
+  return{hz,T,t0,tepe:t0+hz+T/2,her:(p,t)=>{const s=t-t0-hz;if(o.v)p.vx=s<0?o.v:o.v*0.7;
+    if(t<t0||s>=T){if(z&&s>=T)z=null;p.zipla=null;p.yuk=0;return;}
+    if(!z)z={t:-hz,sure:T,tepe:o.tepe,kos:!!o.kos,hz};z.t=s;p.zipla=z;const f=s/T;p.yuk=f>0&&f<1?o.tepe*4*f*(1-f):0;}};}
+function ziplaSatir(ad,o){const Z=ziplaKur(o);
+  return{ad,kit:o.kit||0,kur:p=>{p.vx=o.v||0;p.ayak=o.ayak||'sag';p.zipla=null;p.yuk=0;},her:Z.her,az:o.az!=null?o.az:80,uzak:5,sabitY:true,kamY:1.25,
+    kareler:[0.45,Z.t0+Z.hz*0.7,Z.t0+Z.hz+0.06,Z.tepe,Z.t0+Z.hz+Z.T*0.8,Z.t0+Z.hz+Z.T+0.05,Z.t0+Z.hz+Z.T+0.25]};}
+function kafaSatir(ad,o){const Z=ziplaKur({kos:false,tepe:0.38}),y=o.yan||0,on=o.on!=null?o.on:0.42;   /* on: temas karesinde top başın önünde (m; + bir karelik yol 0,15) */
+  return{ad,kit:o.kit||0,kur:p=>{p.vx=0;p.zipla=null;p.yuk=0;p.eylem=null;mac.ball.x=p.x+4;mac.ball.y=2.0;mac.ball.z=p.z+y;},
+    her:(p,t,dt)=>{Z.her(p,t);const b=mac.ball,tc=Z.tepe;
+      if(t<tc){const k=(tc-t);b.x=p.x+on+k*9;b.z=p.z+y;b.y=1.79+0.38+0.04-k*1.5;b.vx=-9;b.vz=0;b.vy=-1.5;}
+      else if(!p.eylem||p.eylem.ad!=='kafa'){p.eylem={ad:'kafa',t:0,sure:0.5,yuzey:o.yuzey};b.vx=9;b.vy=2;}
+      else{p.eylem.t=t-tc;if(p.eylem.t>=0.5)p.eylem=null;b.x+=b.vx*dt;b.y=Math.max(0,b.y+b.vy*dt);}},
+    kareler:[Z.t0,Z.t0+Z.hz+0.1,Z.tepe-0.04,Z.tepe,Z.tepe+0.08,Z.tepe+0.18,Z.tepe+0.35],az:o.az!=null?o.az:70,uzak:5,sabitY:true,kamY:1.3};}
 /* ---- sayfalar: satır = {ad, kit, kur(p) başlangıç, adim çizelgesi ya da her kare işlevi, kareler (sn), az (bakış açısı, derece), uzak (m)} ---- */
 const SAYFALAR={
   kosu:[
@@ -315,6 +331,24 @@ const SAYFALAR={
     {ad:'T5f Görülmeyen faul: yiyen 0,5 sn sonra kollarını açar, hakeme döner',kit:0,kur:p=>{p.vx=0.5;p._t5g=false;mac.refs=[{x:p.x+6,z:p.z-4}];},
       her:(p,t,dt)=>{p.vx=0.5;if(t>=0.3&&!p._t5g){p._t5g=true;animasyonOlay('faulGorulmedi',{faulYapan:{x:p.x-1,z:p.z},faulYiyen:p,kaynak:'carpma',x:p.x,z:p.z});}},
       kareler:[0.6,0.9,1.1,1.3,1.6,2.0,2.4],az:30}],
+  /* T6f (2026-10-10; Ek G4/G6): sıçrama (hazırlık → uçuş → iniş), kafanın yüzeyi, havada düello (rakip kutu: havada, sağda), kalecinin yüksek
+     tutuşu (sıçrama), müdahale bacağının topa IK'sı (temas karesinde uzanan ayak topta) */
+  t6hava:[
+    ziplaSatir('T6f Durarak sıçrama: hazırlık (kalça alçalır, kollar geride) → uçuş (kollar yukarı) → iniş',{kos:false,tepe:0.38}),
+    ziplaSatir('T6f Koşarak sıçrama (sağ ayaklı, sol ayakla kalkış): serbest diz yukarıda',{kos:true,tepe:0.47,v:4,az:100}),
+    kafaSatir('T6f Kafa (alın): tepede; gövde yaydan öne kırılır, baş topa uzanır',{yuzey:'alin'}),
+    kafaSatir('T6f Kafa (tepe): sıyırma, baş geride',{yuzey:'tepe'}),
+    kafaSatir('T6f Kafa (yan): top sağda, baş topa döner, gövde yana',{yuzey:'yan',yan:0.42,on:0.05,az:20}),
+    kafaSatir('T6f Kafa (yüz): fazla yüksek sıçradı, top yüze; kollar korur',{yuzey:'yuz'}),
+    {ad:'T6f Havada düello: rakip sağda havada, kol rakibe kalkık, gövde yatar',kit:0,sabitY:true,
+      kur:p=>{p.vx=0;p.zipla=null;p.yuk=0;mac.teams[1]=[{x:p.x+0.15,z:p.z+0.85,oyunda:true,team:1,zipla:{t:0.1}}];},
+      her:(()=>{const Z=ziplaKur({kos:false,tepe:0.38});return(p,t)=>{Z.her(p,t);const r=mac.teams[1][0];r.x=p.x+0.15;r.z=p.z+0.85;r.zipla=p.zipla?{t:0.1}:null;};})(),
+      rakip:()=>mac.teams[1][0],kareler:[0.45,0.6,0.7,0.8,0.9,1.0,1.3],az:-20,uzak:5,kamY:1.3},
+    {ad:'T6f Kaleci yüksek tutuş: sıçrar, en yüksek noktada tutar',kit:1,sabitY:true,kur:p=>{p.rol='GK';p.tavir='hazir';mac.ball.y=2.35;mac.ball.x=p.x+0.4;},
+      adim:[{ad:null,sure:0.6},{ad:'tutus',sure:0.35,ek:{tur:'yukari'},bas:p=>{p.tavir=null;}},{ad:null,sure:1}],kareler:[0.55,0.63,0.7,0.78,0.86,0.95,1.2],az:30,sabitY:true,kamY:1.4},
+    {ad:'T6f Müdahale: uzanan bacak temas karesinde topta (IK; erken temas olayıyla)',kur:p=>{p.vx=3;},
+      adim:[{ad:null,sure:0.6},{ad:'mudahale',sure:0.5,ek:{temas:0.18,tur:'acik'},fren:6,bas:p=>{mac.ball.x=p.x+0.75;mac.ball.z=p.z+0.35;mac.ball.vx=0;mac.ball.vz=0;}},{ad:null,sure:1}],
+      her:(p,t)=>{if(Math.abs(t-0.7)<0.009)animasyonOlay('mudahaleSonuc',{p,topaDegdi:true,kayma:false});},kareler:[0.6,0.66,0.7,0.74,0.8,0.9,1.1],az:30}],
   t4calim:[
     calimSatir('T4g Makas: sol ayak topun önünden dışa, sağ dış ayakla itiş',{hareket:'makas',sure:0.45,taraf:1,kay:0.3,hazHiz:0.55,v:3.5}),
     calimSatir('T4g Makas, öbür yan ve başka kimlik',{hareket:'makas',sure:0.45,taraf:-1,kay:0.3,hazHiz:0.55,v:3.2,kit:2,n:11,az:-20}),
@@ -363,7 +397,7 @@ function satirCalistir(S,ornek,sonT){
 function hucreCiz(a,p,S,x,y,w,h){
   a.m.root.visible=true;a.m.root.updateMatrixWorld(true);
   const hp=new THREE.Vector3();a.m.hip.getWorldPosition(hp);
-  const az=(S.az!=null?S.az:30)*D,u=S.uzak||5,hy=S.sabitY?0.95:Math.max(0.55,hp.y)+0.05;   /* sabitY: sıçrama görünsün diye kamera yüksekliği sabit (A2b) */
+  const az=(S.az!=null?S.az:30)*D,u=S.uzak||5,hy=S.kamY!=null?S.kamY:S.sabitY?0.95:Math.max(0.55,hp.y)+0.05;   /* sabitY: sıçrama görünsün diye kamera yüksekliği sabit (A2b); kamY: sabit bakış yüksekliği (T6f: sıçramada baş görünsün) */
   camera.position.set(hp.x+Math.cos(az)*u,hy+0.9,hp.z+Math.sin(az)*u);camera.lookAt(hp.x,hy,hp.z);camera.aspect=w/h;camera.updateProjectionMatrix();
   topMesh.position.set(mac.ball.tasiyan?a.m.root.position.x+0.25:mac.ball.x,TOP_R+(mac.ball.tasiyan?1.25:mac.ball.y),mac.ball.tasiyan?a.m.root.position.z:mac.ball.z);
   /* T4g: satır rakibin dünyadaki yerini verirse (S.rakip) kutu orada */

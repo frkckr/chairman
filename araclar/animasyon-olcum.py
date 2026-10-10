@@ -74,12 +74,17 @@ OLCUM_KUR_JS = r"""() => {
        (gz + hz) yanılgı yanında olduğu kare payı; top saklamada çizimin seçtiği yanın en yakın rakibin yanıyla aynılığı ve yan değişimi */
     ck: { N: {}, bas: 0, basAyni: 0, basFark: [], it: 0, itAyni: 0, makas: [], yutKayit: [], korKare: 0, korN: 0, korDogru: 0, korDegis: 0 },
     /* T4h (Ek H madde 5, bilgi): durum bantlarında ayak kayması — dar dönüş (kök > 2 rad/sn, hız > 0,6 m/sn), ani duruş (yumuşatılmış hız
-       3 m/sn²'den hızlı düşüyor), top saklama (tavır 'koru'); aynı tanımla (eylemsiz temas karesi, 0,2 m/sn) */
-    dTemas: [0, 0, 0], dKayma: [0, 0, 0],
+       3 m/sn²'den hızlı düşüyor), top saklama (tavır 'koru'); T6f: sıçrama yakını (sıçramanın hazırlığı ve uçuşu ya da inişin 0,22 sn'si;
+       önceliklidir); aynı tanımla (eylemsiz temas karesi, 0,2 m/sn) */
+    dTemas: [0, 0, 0, 0], dKayma: [0, 0, 0, 0],
     /* T5f temas (Ek G9 "Temas"): müdahalenin temas karesinde (mudahaleSonuc, topa değdi) çizilen uzanan ayağın (taban ortası) topa açıklığı (merkeze
        uzaklık − yarıçap); ayakta iki oyuncunun çizilen gövdeleri 0,3 m'den yakın (iç içe) kare sayısı / 1 m içindeki çift-kare; kalkışın son karesinde
        kök yatış açısı ≤ 0,05 rad; tökezleme (sendelerken adım boyu çarpanı < 0,7); düşüş sayısı */
-    tm: { n: 0, acik: [], icIce: 0, cift: 0, kalkN: 0, kalkDik: 0, sendKare: 0, sendKisa: 0, dususN: 0 } };
+    tm: { n: 0, acik: [], icIce: 0, cift: 0, kalkN: 0, kalkDik: 0, sendKare: 0, sendKisa: 0, dususN: 0 },
+    /* T6f hava (Ek G4 ölçütü): kafa eyleminin ilk karesinde (motorun temas adımı; düellonun kaybedeni hariç) çizilen baş merkezinin topa açıklığı
+       (merkezler arası − top yarıçapı 0,11 − baş 0,12); sıçrayarak vurulan pay; yüzey (kafa.yuzey); havadaki iki rakibin çizilen gövde merkezleri
+       0,5 m'den yakın kare / 1,2 m içindeki havadaki çift-kare */
+    hv: { n: 0, acik: [], sic: 0, yz: {}, icIce: 0, cift: 0 } };
   const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin' };
   const K = new Map(), V = new THREE.Vector3(), H = new THREE.Vector3();
   let t = 0, kareSure = 0, bekleyenler = [];
@@ -101,9 +106,11 @@ OLCUM_KUR_JS = r"""() => {
   function kaydet(a, dt) {
     const p = a.kaynak; if (!p || !(dt > 0) || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible) return;
     let k = K.get(a); if (!k) K.set(a, k = yeni(a));
-    const P = a.P, e = p.eylem ? p.eylem.ad : '', eylemsiz = !e;
+    /* T6f: sıçramanın uçuşu ve inişin ilk 0,12 sn'si eylem sayılır (havadaki ayak yürüyüşün ayak kilidi ölçüsüne girmez; hazırlıkta ayak yerde, sayılır) */
+    const zp = p.zipla, havada = !!(zp && zp.t >= 0) || (a.inisT >= 0 && a.inisT < 0.12);
+    const P = a.P, e = p.eylem ? p.eylem.ad : (havada ? 'sicrama' : ''), eylemsiz = !e;
     const v = Math.hypot(a.x - k.x, a.z - k.z) / dt, vsOnce = k.vs; k.x = a.x; k.z = a.z; k.vs += (Math.min(v, 12) - k.vs) * Math.min(1, dt * 8);
-    const durum = !k.ilk && p.tavir === 'koru' ? 2 : !k.ilk && Math.abs(aciF(a.yaw, k.yawU)) / dt > 2 && k.vs > 0.6 ? 0 : !k.ilk && (vsOnce - k.vs) / dt > 3 ? 1 : -1;
+    const durum = p.zipla || a.inisT >= 0 ? 3 : !k.ilk && p.tavir === 'koru' ? 2 : !k.ilk && Math.abs(aciF(a.yaw, k.yawU)) / dt > 2 && k.vs > 0.6 ? 0 : !k.ilk && (vsOnce - k.vs) / dt > 3 ? 1 : -1;
     const b = BANT(k.vs);
     a.m.root.updateMatrixWorld(true);
     const yer = [false, false];
@@ -180,7 +187,7 @@ OLCUM_KUR_JS = r"""() => {
   window.animasyonOlay = (ad, v) => { asilOlay(ad, v); const h0 = typeof ANM_HK !== 'undefined' && mac.refs ? ANM_HK.get(mac.refs[0]) : null;
     if (HK_OLAY[ad] && !(ad === 'duduk' && h0 && h0.cur && h0.cur.tur === 'endirekt')) S.zOlay.push({ ad, kare: mac.kare, tur: HK_OLAY[ad] });
     if (ad === 'mudahaleSonuc' && v && v.p && v.topaDegdi) zTmBekle.set(v.p, mac.kare); };
-  const zK = new Map(), zC = new Map(), zIt = new Map(), zY = new Map(), zKor = new Map(), zTm = new Map(), zTmBekle = new Map();
+  const zK = new Map(), zC = new Map(), zIt = new Map(), zY = new Map(), zKor = new Map(), zTm = new Map(), zTmBekle = new Map(), zHv = new Map();
   /* T5f temas ölçümü (aktör başına, kare sonunda) */
   function temasOlc(a, dt) { const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible) return; const e = p.eylem, ad = e ? e.ad : '', G = S.tm;
     const kare = zTmBekle.get(p); if (kare !== undefined) { zTmBekle.delete(p); if (kare === mac.kare) { a.m.root.updateMatrixWorld(true); const b = mac.ball; let en = 9;
@@ -188,7 +195,10 @@ OLCUM_KUR_JS = r"""() => {
       G.n++; G.acik.push(+Math.max(0, en).toFixed(3)); } }
     if (ad === 'kalkis') { let z = zTm.get(a); if (!z || z.e !== e) { z = { e, bitti: false }; zTm.set(a, z); } if (!z.bitti && e.t >= (e.sure || 0.6) - dt * 1.01) { z.bitti = true; G.kalkN++; if (a.lth <= 0.05) G.kalkDik++; } }
     if (ad === 'sendele') { G.sendKare++; if (a.gAdim < 0.7) G.sendKisa++; }
-    if (ad === 'dusus' && e.t < dt * 1.01) G.dususN++; }
+    if (ad === 'dusus' && e.t < dt * 1.01) G.dususN++;
+    if (ad === 'kafa' && !e.bos) { let z = zHv.get(a); if (!z || z.e !== e) { zHv.set(a, { e }); const Hv = S.hv; a.m.root.updateMatrixWorld(true); a.m.head.getWorldPosition(H);
+      const tb = anmVkTop(a.al), b = { x: tb[0], y: tb[1], z: tb[2] + MOTOR_Z }, d = Math.hypot(H.x - b.x, H.y - (b.y + 0.11), H.z - (b.z - MOTOR_Z)) - 0.23; Hv.n++;   /* topun çizilen yeri */ Hv.acik.push(+Math.max(0, d).toFixed(3)); if (p.zipla) Hv.sic++;
+      const y = e.yuzey || '-'; Hv.yz[y] = (Hv.yz[y] || 0) + 1; } } }
   function zamanlama(a) {
     const p = a.kaynak; if (!p) return;
     if ((p.tur === 'hakem') && typeof ANM_HK !== 'undefined') { const h = ANM_HK.get(p); if (h && h.basKare >= 0) { const o = zK.get(a) || -1; if (h.basKare !== o) { zK.set(a, h.basKare); (S.zIsaret[p.kind] = S.zIsaret[p.kind] || []).push(h.basKare); } } }
@@ -227,6 +237,10 @@ OLCUM_KUR_JS = r"""() => {
   window.macKare = dt => { kareSure = 0; bekleyenler = []; asilKare(dt); t += dt; S.kare++; S.sureler.push(kareSure);
     { const L = []; for (const a of K.keys()) { const p = a.kaynak; if (p && p.tur === 'oyuncu' && p.oyunda && a.m.root.visible && !(p.eylem && p.eylem.kilit)) L.push(a); }
       for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) { const dx = L[i].x - L[j].x, dz = L[i].z - L[j].z, d2 = dx * dx + dz * dz; if (d2 < 1) { S.tm.cift++; if (d2 < 0.09) S.tm.icIce++; } } }
+    /* T6f: havadaki iki rakip (motorun p.zipla'sı uçuşta) çizilen gövde merkezleri 0,5 m'den yakın mı */
+    { const A = []; for (const a of K.keys()) { const p = a.kaynak; if (p && p.tur === 'oyuncu' && p.oyunda && p.zipla && p.zipla.t >= 0 && a.m.root.visible) A.push(a); }
+      for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) { if (A[i].kaynak.team === A[j].kaynak.team) continue; const dx = A[i].x - A[j].x, dz = A[i].z - A[j].z, d2 = dx * dx + dz * dz;
+        if (d2 < 1.44) { S.hv.cift++; if (d2 < 0.25) S.hv.icIce++; } } }
     for (let i = 0; i < bekleyenler.length; i++) for (let j = i + 1; j < bekleyenler.length; j++) { let s = 0; const A = bekleyenler[i], B = bekleyenler[j]; for (let q = 0; q < NK; q++) s += (A[q] - B[q]) * (A[q] - B[q]);
       S.cift++; if (Math.sqrt(s / NK) < 0.02) S.ikiz++; } };
   window.__ANM_KIMLIK = () => { const o = []; for (const k of K.values()) if (k.kimlik.boy.length >= 2) o.push({ boy: k.kimlik.boy.reduce((x, y) => x + y) / k.kimlik.boy.length, kol: k.kimlik.kol.reduce((x, y) => x + y) / k.kimlik.kol.length }); return o; };
@@ -263,6 +277,8 @@ SONUC_JS = r"""() => {
     bekleKare: S.bekle, bekleDonuk: S.bekle ? +(100 * S.bekleDonuk / S.bekle).toFixed(1) : null, ikizPay: S.cift ? +(100 * S.ikiz / S.cift).toFixed(2) : null,
     sparcOrt: S.sparc.length ? +ort(S.sparc).toFixed(2) : null, sparcP10: S.sparc.length ? +yuzde(S.sparc, 0.1).toFixed(2) : null, sparcN: S.sparc.length,
     sureMs: +ort(S.sureler).toFixed(3), sureP99: +yuzde(S.sureler, 0.99).toFixed(3),
+    hv: (() => { const G = S.hv, sa = sirala(G.acik); return { n: G.n, acikMed: sa.length ? sa[Math.floor(sa.length / 2)] : null, acikP90: sa.length ? sa[Math.min(sa.length - 1, Math.floor(0.9 * sa.length))] : null,
+      acikIyi: sa.length ? +(100 * sa.filter(x => x <= 0.15).length / sa.length).toFixed(0) : null, sicPay: G.n ? +(100 * G.sic / G.n).toFixed(0) : null, yz: G.yz, icIce: G.icIce, cift: G.cift }; })(),
     tm: (() => { const G = S.tm, sa = sirala(G.acik); return { n: G.n, acikMed: sa.length ? sa[Math.floor(sa.length / 2)] : null, acikP90: sa.length ? sa[Math.min(sa.length - 1, Math.floor(0.9 * sa.length))] : null,
       acikIyi: sa.length ? +(100 * sa.filter(x => x <= 0.15).length / sa.length).toFixed(0) : null, icIce: G.icIce, cift: G.cift, kalkN: G.kalkN, kalkDik: G.kalkDik, sendKare: G.sendKare,
       sendKisaPay: G.sendKare ? +(100 * G.sendKisa / G.sendKare).toFixed(0) : null, dususN: G.dususN }; })(),
@@ -302,7 +318,7 @@ def satirlar(o):
     S.append(f"A: ayak kayması % (eylemsiz temas karesi, bant): " + " · ".join(f"{BANT_AD[i]} {v(o['kayma'][i], 2)}" for i in range(1, 5)) + "   [hedef ≤5 / ≤5 / ≤15 / ≤15]")
     kd = o.get("kaymaDurum")
     if kd:
-        S.append("A: ayak kayması % durumlara göre (bilgi; aynı tanım): " + " · ".join(f"{ad} {v(kd[i]['pay'], 2)} ({kd[i]['n']} temas)" if kd[i] else f"{ad} —" for i, ad in enumerate(["dar dönüş", "ani duruş", "top saklama"])))
+        S.append("A: ayak kayması % durumlara göre (bilgi; aynı tanım): " + " · ".join(f"{ad} {v(kd[i]['pay'], 2)} ({kd[i]['n']} temas)" if kd[i] else f"{ad} —" for i, ad in enumerate(["dar dönüş", "ani duruş", "top saklama", "sıçrama yakını"][:len(kd)])))
     yp = lambda d, i: f"{v(d[i]['ort'], 3)}/{v(d[i]['p90'], 3)}" if d[i] else "—"
     S.append(f"A: adım başına kayma (m; yerdeki ayağın temas boyunca yolu / net yer değiştirmesi, ort/p90): " + " · ".join(f"{BANT_AD[i]} {yp(o['adimYol'], i)} | {yp(o['adimNet'], i)}" for i in range(1, 5)) + "   [hedef yürüyüş ≤0,03, depar ≤0,08]")
     S.append(f"A: kadans (adım/sn, ort [p10–p90] n): " + " · ".join(f"{BANT_AD[i]} {v(o['kadans'][i]['ort'], 2)} [{v(o['kadans'][i]['p10'], 2)}–{v(o['kadans'][i]['p90'], 2)}] {o['kadans'][i]['n']}" if o['kadans'][i] else f"{BANT_AD[i]} —" for i in range(1, 5)) + "   [hedef 1,6–2,2 / 2,5–3,0 / 3,0–3,6 / 3,5–4,2]")
@@ -347,6 +363,11 @@ def satirlar(o):
         S.append(f"A: temas (T5f): müdahale topa {tm['n']} — çizilen ayağın topa açıklığı ortanca {v(tm['acikMed'], 3)} m (p90 {v(tm['acikP90'], 3)}), ≤ 0,15 olan %{v(tm['acikIyi'])}"
                  f" · ayakta gövdeler iç içe (< 0,3 m) {tm['icIce']} kare / {tm['cift']} yakın çift-kare · kalkış sonunda dik {tm['kalkDik']}/{tm['kalkN']}"
                  f" · tökezleme: sendele {tm['sendKare']} kare, kısa adım %{v(tm['sendKisaPay'])} · düşüş {tm['dususN']}   [hedef ≤0,15 / ~0 / N/N / bilgi]")
+    hv = o.get("hv")
+    if hv:
+        yz = " / ".join(f"{k} {n}" for k, n in sorted((hv.get("yz") or {}).items()))
+        S.append(f"A: hava (T6f): kafa {hv['n']} — çizilen başın topa açıklığı ortanca {v(hv['acikMed'], 3)} m (p90 {v(hv['acikP90'], 3)}), ≤ 0,15 olan %{v(hv['acikIyi'])}"
+                 f" · sıçrayarak %{v(hv['sicPay'])} · yüzey {yz or '—'} · havada gövdeler iç içe (< 0,5 m) {hv['icIce']} kare / {hv['cift']} havadaki çift-kare   [hedef ≤0,15 / bilgi / bilgi / ~0]")
     S.append(f"A: süre: aktorGuncelle {v(o['sureMs'], 3)} ms/kare (p99 {v(o['sureP99'], 3)}) · {o['kare']} kare, {v(o['oyuncuDk'])} oyuncu·dk · animasyon: {o['surum']}   [hedef ≤2 ms]")
     return S
 
