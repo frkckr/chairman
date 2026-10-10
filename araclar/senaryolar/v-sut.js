@@ -25,7 +25,7 @@
    zaman goldür; kapı aşırtmanın seçilip işlediğini sınar. Hücre başına 200 deneme (60'ta çerçeve payı ±6 puan oynuyordu).
    Kullanım: node araclar/mac-deneme.js --senaryo v-sut [N=200 hücre başına] [tohum] */
 'use strict';
-const KAPI={1:true,2:true,3:true,4:true,5:true,6:true,7:false};   /* T9b-a: [1] [2] [5]; T9b-b: [3] [4] [6] açık */
+const KAPI={1:true,2:true,3:true,4:true,5:true,6:true,7:true};   /* T9b-a: [1] [2] [5]; T9b-b: [3] [4] [6]; T9b-c: [7] açık */
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||200,dt=1/60,t0=Date.now();
   const kur=vm.runInContext(`(tohum,olay)=>{const m=new Match(olay,{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();

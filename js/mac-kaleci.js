@@ -17,7 +17,8 @@ ayarEkle('D',{
   kaleciCikis:0.2              // boştaki topa çıkmak için rakibe göre gereken zaman payı (sn)
 });
 /* model sabitleri: itiş (çömelme) süresi, uzanmanın tamamlanması (sn), yana adım ve geri çekilme hızı (m/sn), erişimdeki belirsizlik (m; P için), el+top yarıçapı */
-const KL_M={itis:0.12,uzanma:0.28,adim:3.0,geri:3.0,sapma:0.22,elR:0.21};
+const KL_M={itis:0.12,uzanma:0.28,adim:3.0,geri:3.0,sapma:0.22,elR:0.21,
+  egri:0.07};   /* T9b-c: dönen topun (|egri| > 0,05) kalecinin tepkisine eklediği süre: yolu geç okur (topun kendi yolu tahminde biliniyor) */
 /* ---- saf model ---- */
 /* tepki süresi (sn): kalecilik; topla kaleci arasındaki çizgiye yakın beden görüşü kapatır (+0,10–0,18); hazır duruş −0,05 */
 function kaleciTepkiSuresi(m,gk,bx,bz){
@@ -68,9 +69,10 @@ function kaleciSegD(p1x,p1y,p1z,q1x,q1y,q1z,p2x,p2y,p2z,q2x,q2y,q2z){
   KL_SS[0]=s;KL_SS[1]=t;const x=rx+d1x*s-d2x*t,y=ry+d1y*s-d2y*t,z=rz+d1z*s-d2z*t;return Math.sqrt(x*x+y*y+z*z);}
 /* kalecinin, kale çizgisinden (z, y) noktasında T sn sonra geçecek şutu kurtarma olasılığı P ve erişim payı (m). Şut topun bugünkü yerinden
    gider (B şutu seçerken top ayağındadır); top kalecinin düzleminden (topun yoluna dik) T·f sn sonra geçer. P: erişim × denetim */
-function kaleciTahmin(m,gk,z,y,T){
+/* T9b-c: ek — fazladan tepki (sn): dönen top (falso, trivela) kalecinin okumasını geciktirir (KL_M.egri); şut planı türüne göre verir */
+function kaleciTahmin(m,gk,z,y,T,ek){
   const b=m.ball,gx=-m.dir[gk.team]*PL,dx=gx-b.x,dz=z-b.z,L=hyp(dx,dz)||1,nx=dx/L,nz=dz/L,y0=Math.max(b.y,0.11),e=gk.eylem;
-  const f0=clamp(((gk.x-b.x)*nx+(gk.z-b.z)*nz)/L,0.05,1),r=kaleciTepkiSuresi(m,gk,b.x,b.z)+(e&&e.kilit?0.35:0);let en=null;
+  const f0=clamp(((gk.x-b.x)*nx+(gk.z-b.z)*nz)/L,0.05,1),r=kaleciTepkiSuresi(m,gk,b.x,b.z)+(e&&e.kilit?0.35:0)+(ek||0);let en=null;
   /* adaylar: kalecinin düzlemi, düzlemle kale çizgisinin ortası ve kale çizgisi (düşen topa geri çekilerek; geri çekilme zamanı düşülür) */
   /* T9b-a: geri çekilme yana kaymayla birlikte (çapraz; yanAdim): süre bedeli çapraz yolun yanal yoldan fazlası (eskiden geri çekilmenin
      bütün süresi: yavaş, yüksek köşe şutu kurtarılamaz sanılıyordu) */
@@ -120,7 +122,7 @@ Object.assign(Match.prototype,{
         &&this.kendiCezaSahasinda(gk,gk.x,gk.z)?this.kaleciPlanla(gk):null;
       if(!yeni){gk._kp=null;return;}
       if(pl&&hyp(yeni.pz-pl.pz,yeni.py-pl.py)<0.4&&Math.abs(yeni.an-pl.an)<0.15){yeni.tBas=pl.tBas;yeni.r=pl.r;yeni.vj=pl.vj;yeni.basladi=pl.basladi;}
-      else{yeni.tBas=this.t;yeni.r=Math.max(0.06,kaleciTepkiSuresi(this,gk,b.x,b.z)+this.normal()*0.035);yeni.vj=clamp(1+this.normal()*0.07,0.85,1.15);yeni.basladi=false;}
+      else{yeni.tBas=this.t;yeni.r=Math.max(0.06,kaleciTepkiSuresi(this,gk,b.x,b.z)+(Math.abs(b.egri||0)>0.05?KL_M.egri:0)+this.normal()*0.035);yeni.vj=clamp(1+this.normal()*0.07,0.85,1.15);yeni.basladi=false;}
       pl=gk._kp=yeni;}
     /* top kaleciyi geçti */
     if((b.x-gk.x)*pl.nx+(b.z-gk.z)*pl.nz>1.0){gk._kp=null;return;}
