@@ -158,6 +158,7 @@ Object.assign(Match.prototype,{
     const du=Object.assign({tur,takim,x,z,t:0,asama:'bekle',kullanan:null,topcu:null,hazirT:0},veri||{});
     this.durus=du;this.sp=du;
     du.kullanan=this.kullananSec(du);
+    this.hocaKapisi();   /* T7a: hoca kapısı — m.hoca geri çağrısı varsa her duruşta sorulur (js/mac-takim.js) */
     /* taç, korner, aut ve saha dışında kalan top: top toplayıcı yedek topu verir (N10). Faulde top sahadadır; atan alıp yerine taşır */
     b.tasiyan=null;
     if(tur==='tac'||tur==='korner'||tur==='kaleVurusu'||Math.abs(b.x)>PL+0.2||b.z<-0.2||b.z>PW+0.2)this.durusTopu(du);
@@ -205,7 +206,8 @@ Object.assign(Match.prototype,{
     if(du.t>28&&du.asama!=='hazir'){du.asama='hazir';
       if(du.tur==='tac'){tk.x=nk.x;tk.z=nk.z;tk.vx=tk.vz=0;b.tasiyan=tk;tk.eylem={ad:'tac',t:0,faz:'tut',ft:0};}
       else{b.tasiyan=null;du.geriX=tk.x;du.geriZ=tk.z;du.aci=tk.yon;b.x=du.x;b.z=du.z;}}
-    if(du.asama==='bekle'){tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=0.8;if(du.t>(du.bekle||0.45))du.asama='getir';}
+    /* T7a: önde biten son dakikalarda duran topta acele yok (niyetin duranGecikme'si) */
+    if(du.asama==='bekle'){tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=0.8;if(du.t>(du.bekle||0.45)+(this._niyet&&du.tur!=='penalti'?this._niyet[du.takim].duranGecikme:0))du.asama='getir';}
     else if(du.asama==='getir'){
       if(b.tasiyan===tk)du.asama='yerles';
       /* top çocuğun elinde: atan atış yerine gelir, çocuğa döner ve topu bekler (saha dışına çıkmaz) */

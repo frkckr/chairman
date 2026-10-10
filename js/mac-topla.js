@@ -510,7 +510,7 @@ Object.assign(Match.prototype,{
       return k;}
     if(!(p.rol==='FV'||p.mevki.kanat||(p.rol==='OS'&&!p.mevki.derin&&su>5)))return null;
     const ileriBakar=Math.cos(s.yon)*d>0.2,serbest=baskiAltinda(this,s)<0.8,pu=p.x*d;
-    if(!ileriBakar||!serbest||su<-18||Math.abs(pu-ofs)>4||this.rast()>dt*(p.rol==='FV'?3.2:1.3)*MOTOR_AYAR.kosuIstegi)return null;
+    if(!ileriBakar||!serbest||su<-18||Math.abs(pu-ofs)>4||this.rast()>dt*(p.rol==='FV'?3.2:1.3)*MOTOR_AYAR.kosuIstegi*(this._niyet?this._niyet[p.team].kosu:1))return null;   /* T7a: niyetin koşu çarpanı */
     const hedefU=Math.min(PL-8,ofs+10+this.rast()*8),hw=clamp(p.z+(MZ-p.z)*0.35+(this.rast()-0.5)*10,8,PW-8);
     p.kosu={u:hedefU,w:hw,t:2.6};this.on('kosu',{p});
     /* T2 olay: koşu başladı — topu tutan bir sonraki düşünme anını beklemeden yeniden bakar */

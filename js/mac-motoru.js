@@ -151,7 +151,7 @@ class Match{
      secenek.kulubeler: [{takim, koltuklar:[{x,z}], alan:{x,z}}] (motor koordinatı; verilmezse varsayılan),
      secenek.taraftarYeri / deplasmanYeri: {x,z,nx,nz} maç sonunda takımın alkışlayacağı tribünün önü (n: tribüne doğru birim yön) */
   constructor(on,secenek){
-    secenek=secenek||{};this.on=on||(()=>{});this.kadro=secenek.kadro||null;this.tunel=secenek.tunel||{x:0,z:-6};
+    secenek=secenek||{};this.on=on||(()=>{});this.kadro=secenek.kadro||null;this.hoca=typeof secenek.hoca==='function'?secenek.hoca:null;this.tunel=secenek.tunel||{x:0,z:-6};
     this.kulubeler=secenek.kulubeler||[0,1].map(t=>({takim:t,koltuklar:[0,1,2,3,4,5].map(i=>({x:(t?11.5:-11.5)-2.6+i*1.04,z:-5.75})),alan:{x:t?11.5:-11.5,z:-2.4}}));
     this.tohum=(secenek.tohum!=null?secenek.tohum:Math.floor(Math.random()*4294967296))>>>0;this.rast=tohumluRastgele(this.tohum);
     /* zemin 0 (tarla) – 1 (halı gibi): kötü zeminde top çabuk durur, sekmesi düzensizdir. T9a koşul kapısı: secenek.kosullar = {zemin, islak,
@@ -171,6 +171,8 @@ class Match{
     this.shots=this.ist.sut;this.poss=this.ist.sahiplik;
     this.duranSure=[0,0];this.added=[60,120];this.uzatmaIlan=[false,false];
     this.taktik=[0,1].map(t=>Object.assign({},VARSAYILAN_TAKTIK,this.kadro&&this.kadro[t].taktik));
+    /* T7a: hocanın tabanı; taktik etkin taktiktir (taban + niyet + maç durumu; js/mac-takim.js) */
+    this.taktikTaban=this.taktik.map(o=>Object.assign({},o));this._niyet=null;
     this.players=[];this.teams=[[],[]];
     for(let t=0;t<2;t++){const diz=DIZILISLER[this.taktik[t].dizilis]||DIZILISLER['4-4-2'];
       for(let n=0;n<11;n++){const p=this.oyuncuKur(t,n,this.kadro&&this.kadro[t].oyuncular[n],diz.mevkiler[n]);this.players.push(p);this.teams[t].push(p);}}

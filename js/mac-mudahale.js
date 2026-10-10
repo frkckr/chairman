@@ -401,7 +401,7 @@ Object.assign(Match.prototype,{
   gecildiFaulu(o,p){
     if(!o.oyunda||o.rol==='GK'||o.eylem&&o.eylem.kilit||this.phase!=='play'||hrkHyp(o.x-p.x,o.z-p.z)>1.5)return;
     const kutu=this.kendiCezaSahasinda(o,p.x,p.z),ileri=p.x*this.dir[p.team]>0;
-    if(this.rast()<MOTOR_AYAR.taktikFaul*(0.1+1.7*profilAlt(o,'agresiflik',o.oz.sertlik))*(kutu?0.15:1)*(ileri?1.3:0.7))   /* T3: agresiflik */
+    if(this.rast()<MOTOR_AYAR.taktikFaul*(0.1+1.7*profilAlt(o,'agresiflik',o.oz.sertlik))*(kutu?0.15:1)*(ileri?1.3:0.7)*(this._niyet?this._niyet[o.team].faulIstek:1))   /* T3: agresiflik; T7a: önde biterken taktik faul isteği */
       {/* T5: kasıt zarı kalır, hakem görür mü; arkadan (sürücünün gidişine göre) forma çekme 'itme', yandan çelme 'müdahale' sayılır */
         const sp=hrkHyp(p.vx,p.vz)||1,arka=((o.x-p.x)*p.vx+(o.z-p.z)*p.vz)/(sp*(hrkHyp(o.x-p.x,o.z-p.z)||1))<-0.5;
         this.faulGor(o,p,{itme:arka,arkadan:arka,taktik:true,kaynak:'taktik',ciddiyet:0.25+0.25*this.rast(),x:p.x,z:p.z});}

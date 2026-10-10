@@ -44,12 +44,13 @@ const BLOK={
   hucum:{cizgi:(bu)=>clamp(bu*0.55-17,-38,12),os:15,fv:17,kayma:{DEF:0.3,OS:0.42,FV:0.32},genislik:1.14,bekIleri:10,kanatIleri:11},
   savunma:{cizgi:(bu)=>clamp(bu*0.6-22,-42,-3),os:13,fv:14,kayma:{DEF:0.33,OS:0.46,FV:0.3},genislik:0.95,bekIleri:0,kanatIleri:-2,uzakKapanma:0.28}
 };
-/* bir mevkinin hedef konumu (takımın hücum çerçevesinde): bu = topun u'su, bw = topun w'su, sahip = top takımda mı */
-function dizilisKonumu(diz,n,bu,bw,sahip){
-  const m=DIZILISLER[diz].mevkiler[n],B=sahip?BLOK.hucum:BLOK.savunma,defU=B.cizgi(bu);
+/* bir mevkinin hedef konumu (takımın hücum çerçevesinde): bu = topun u'su, bw = topun w'su, sahip = top takımda mı. N: takımın niyeti (T7a,
+   js/mac-takim.js; yoksa nötr): hücumda genişlik, derinlik ve bek çıkışı çarpanı, savunmada blok (çizginin kayması, m) */
+function dizilisKonumu(diz,n,bu,bw,sahip,N){
+  const m=DIZILISLER[diz].mevkiler[n],B=sahip?BLOK.hucum:BLOK.savunma,defU=B.cizgi(bu)+(N?(sahip?N.derinlik:N.blok):0);
   if(m.cizgi==='KL'){const u=sahip?-47+clamp(bu+20,0,40)*0.12:-50+clamp(bu+30,0,50)*0.05;return{u,w:MZ+clamp((bw-MZ)*0.18,-4,4)};}
   let u=defU+(m.cizgi==='OS'?B.os:m.cizgi==='FV'?B.os+B.fv:0);
-  if(m.bek)u+=B.bekIleri*(sahip&&bu>0?1:sahip?0.4:0);
+  if(m.bek)u+=B.bekIleri*(sahip&&bu>0?1:sahip?0.4:0)*(N&&sahip?N.bekIleri:1);
   if(m.kanat)u+=B.kanatIleri;
   if(m.derin&&sahip)u-=4;
   if(m.hedef&&sahip)u+=2;
@@ -59,7 +60,7 @@ function dizilisKonumu(diz,n,bu,bw,sahip){
   if(!sahip&&m.cizgi==='FV')u=m.hedef?Math.max(u,bu<-30?-12:-5):Math.min(u,defU+B.os+9);
   u=Math.min(u,46);
   const kay=B.kayma[m.cizgi]||0.35;
-  let w=MZ+(m.w-MZ)*B.genislik+(bw-MZ)*kay;
+  let w=MZ+(m.w-MZ)*B.genislik*(N&&sahip?N.genislik:1)+(bw-MZ)*kay;
   /* savunmada top tarafı daha sıkışık, uzak kanat içeri kapanır */
   if(!sahip){const uzak=Math.sign(m.w-MZ)!==Math.sign(bw-MZ)&&Math.abs(bw-MZ)>8;if(uzak)w=lerp(w,MZ,B.uzakKapanma);}
   return{u,w:clamp(w,2,PW-2)};
@@ -115,6 +116,8 @@ Object.assign(Match.prototype,{
     /* geçiş: topu kaybeden takım savunma düzenine bir gecikmeyle geçer (kontra atak anı) */
     if(sahipTakim>=0&&sahipTakim!==this._sonSahipTakim){this._kaybeden=this._sonSahipTakim;this._sonSahipTakim=sahipTakim;this._sahiplikBas=this.t;}
     const gecisSure=du?0:this.t-(this._sahiplikBas||0);
+    /* T7a: takım niyeti ve maç durumu (js/mac-takim.js): etkin taktik ve düzen çarpanları */
+    this.niyetAdim(dt,du);const NY=this._niyet;
     for(let t=0;t<2;t++){
       const d=this.dir[t],bu=odak.x*d,tk=this.taktik[t];
       /* serbest topta (pas yolda, sekme, ikili mücadele) son dokunan değil son sahip olan takımın düzeni sürer: takım şekli her sekmede
@@ -139,7 +142,7 @@ Object.assign(Match.prototype,{
         for(const p of this.teams[t]){if(!p.oyunda||p.rol==='GK'||(p.eylem&&p.eylem.kilit))continue;
           /* T4: az önce geçilen savunmacı (1,5 sn) 1. adam olmaz: toparlanır, 2. adam öne çıkar */
           if(p._gecT!=null&&this.t-p._gecT<1.5)continue;
-          const k=dizilisKonumu(tk.dizilis,p.n,bu,odak.z,false),bolge=hyp(k.u*d-s.x,k.w-s.z),simdi=hyp(p.x-s.x,p.z-s.z);
+          const k=dizilisKonumu(tk.dizilis,p.n,bu,odak.z,false,NY[t]),bolge=hyp(k.u*d-s.x,k.w-s.z),simdi=hyp(p.x-s.x,p.z-s.z);
           /* T4: önceki 1. adam gecikme payı kadar avantajlı (kare kare değişmesin) */
           const puan=Math.min(bolge,simdi*1.2)+simdi*0.35-(p===onceki?MOTOR_AYAR.presHisterezis:0);
           if(puan<e1){e2=e1;pres2=pres1;e1=puan;pres1=p;}else if(puan<e2){e2=puan;pres2=p;}}
@@ -217,7 +220,7 @@ Object.assign(Match.prototype,{
   },
   /* düz savunma çizgisi (takımın çerçevesinde u): top önü açık ve ileri bakan birindeyse geri çekil, geri pasta çık */
   savunmaCizgisi(t,hucum,odak){
-    const d=this.dir[t],bu=odak.x*d,B=hucum?BLOK.hucum:BLOK.savunma;let u=B.cizgi(bu);
+    const d=this.dir[t],bu=odak.x*d,B=hucum?BLOK.hucum:BLOK.savunma,N=this._niyet&&this._niyet[t];let u=B.cizgi(bu)+(N?(hucum?N.derinlik:N.blok):0);
     if(!hucum){
       const s=odak.sahip;
       if(s&&s.team!==t){const onuAcik=baskiAltinda(this,s)<0.3,ileriBakar=Math.cos(s.yon)*(-d)>0.3;if(onuAcik&&ileriBakar)u-=4;}
@@ -230,8 +233,8 @@ Object.assign(Match.prototype,{
   },
   /* bölge, destek, koşu ve markaj */
   bolgeKonumu(p,t,hucum,cizgi,dt,odak){
-    const d=this.dir[t],bu=odak.x*d,bw=odak.z,diz=this.taktik[t].dizilis;
-    const k=dizilisKonumu(diz,p.n,bu,bw,hucum);let u=k.u,w=k.w,markajda=null,ef=0,zorla=false;
+    const d=this.dir[t],bu=odak.x*d,bw=odak.z,diz=this.taktik[t].dizilis,N=this._niyet&&this._niyet[t];
+    const k=dizilisKonumu(diz,p.n,bu,bw,hucum,N);let u=k.u,w=k.w,markajda=null,ef=0,zorla=false;
     if(p.rol==='DEF'&&!hucum)u=cizgi+(p.mevki.bek?0.6:0);
     if(hucum){
       const ofs=this._ofs[t],s=odak.sahip;
@@ -245,9 +248,11 @@ Object.assign(Match.prototype,{
         const kosu=this.derinKosu(p,s,ofs,dt);if(kosu){u=kosu.u;w=kosu.w;p.hizOran=1;ef=1;}
         /* bindirme: aynı kanatta top ilerideyse bek dışından geçer (kanatta ikiye bir) */
         const ayniKanat=Math.sign(s.z-MZ)===Math.sign(p.mevki.w-MZ)&&Math.abs(s.z-MZ)>10;
-        if(p.mevki.bek&&ayniKanat&&s!==p&&s.x*d>-5){u=Math.max(u,s.x*d+(s.mevki.kanat?6:-4));w=p.mevki.w<MZ?3.5:PW-3.5;p.hizOran=0.95;ef=0.8;}
+        if(p.mevki.bek&&ayniKanat&&s!==p&&s.x*d>-5&&(!N||N.bekCik)){u=Math.max(u,s.x*d+(s.mevki.kanat?6:-4));w=p.mevki.w<MZ?3.5:PW-3.5;p.hizOran=0.95;ef=0.8;}
         /* uzak kanat: top öbür kanatta ve ilerideyse içeri, ceza sahasına kayar */
         if(p.mevki.kanat&&!ayniKanat&&Math.abs(s.z-MZ)>10&&s.x*d>10){u=Math.max(u,ofs-4);w=lerp(w,MZ,0.55);ef=Math.max(ef,0.5);}
+        /* T7a: geride son dakikalar — kafası en iyi stoper forvet hattına çıkar (maç durumu, js/mac-takim.js) */
+        if(N&&N.stoperIleri===p&&bu>-5){u=Math.max(u,ofs-4);w=MZ+(p.mevki.w<MZ?-3:3);p.hizOran=0.95;ef=Math.max(ef,0.8);}
       }
       /* forvet savunmanın omzunda, kanat biraz gerisinde bekler; koşu yapmayan hücumcu ofsayta düşmez */
       if(!p.kosu&&s&&s.team===t){if(p.rol==='FV')u=Math.max(u,ofs-(p.mevki.hedef?1.2:2.5));else if(p.mevki.kanat&&bu>-10)u=Math.max(u,ofs-9);}
