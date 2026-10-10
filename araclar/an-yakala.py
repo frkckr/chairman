@@ -14,9 +14,9 @@ Kullanım:
               --onek AD (dosya adlarının başına; ör. once/sonra karşılaştırması) · --en-cok S (koşul için en çok oyun süresi, varsayılan 900)
               --js "<ifade>" (sayfa yüklenince çalışır; ör. bir STIL ayarını açıp kapatmak: --js "STIL.okunurluk.disCizgi=true")
               --oncesi (--kosul ile: maç öncesini atlamadan bekle; ör. tören ve takım fotoğrafı anları)
-              --anm once|a2a|a2b|t4v (A2, 2026-10-08: çizim dondurulmuş "önce" animasyonuyla; araclar/karsilastir/once/animasyon.js (A2 öncesi),
-                a2a/ (A2b öncesi), a2b/ (T4-V öncesi) ya da t4v/ (T4g öncesi, 2026-10-09). Motor aynıdır,
-                aynı tohumla aynı an; önce/sonra şeridi git stash'siz alınır: --anm once --onek once- ile ve onsuz --onek sonra-)
+              --anm AD (A2, 2026-10-08: çizim dondurulmuş "önce" animasyonuyla; araclar/karsilastir/<AD>/animasyon.js, turun başında
+                araclar/karsilastir/dondur.js AD üretir; seçenekler klasörden okunur). Motor aynıdır, aynı tohumla aynı an; önce/sonra şeridi
+                git stash'siz alınır: --anm t5 --onek once- ile ve onsuz --onek sonra-. Silinen eski kopyalar (once, a2a, a2b, t4v, t4): ARSIV.md §0
               --giris (N11, 2026-10-04: stada varışı ve locaya girişi başlatıp film şeridi çeker; karartma ve karar anı gibi sayfa katmanları
                 da görüntüye girer; --sonra S: şeride başlamadan S sn oynat) · --ek "&rakipBaskan=yerinde" (adrese eklenir)
 Çıktı: araclar/anlar/<onek><ad>.png ve .json (topun ekrandaki yeri ve boyu (topPx gerçek, topCizimPx asgari boya büyütülmüş çizim), oyuncuların
@@ -254,7 +254,7 @@ async def ana():
     ap.add_argument("--oncesi", action="store_true")
     ap.add_argument("--giris", action="store_true")
     ap.add_argument("--ek")
-    ap.add_argument("--anm", choices=["once", "a2a", "a2b", "t4v", "t4", "simdi"], default="simdi")   # t4: T5 öncesi dondurulmuş çizim (T5g şeritleri)
+    ap.add_argument("--anm", choices=sorted(d.name for d in KARSILASTIR.iterdir() if (d / "animasyon.js").is_file()) + ["simdi"], default="simdi")
     a = ap.parse_args()
     try:
         from playwright.async_api import async_playwright

@@ -2,7 +2,8 @@
 /* ============ Chairman — oturum sonu kontrolü (M0, 2026-10-07; CLAUDE.md "Kontrol", orta kademe) ============
    Yerel commit'ten önce tek komutla: ad ve sınır denetimi, 40 maç tabanla karşılaştırma ve bütün senaryolar. Arka planda çalıştırılabilir;
    geliştirme sürerken biter. Tam rapor araclar/son-oturum.txt'ye yazılır (Git dışında), ekrana özet basılır.
-   Kullanım: node araclar/oturum-sonu.js [taban, varsayılan araclar/taban/m0.json] [--mac N, varsayılan 40] [--senaryo a,b,…] [--ayni]
+   Kullanım: node araclar/oturum-sonu.js [taban, varsayılan araclar/taban/t7.json] [--mac N, varsayılan 40] [--senaryo a,b,…] [--ayni]
+     taban      turun tabanı (YOL_HARITASI devam notu yazar); varsayılan her tur kapanışında güncellenir
      --senaryo  yalnız bu senaryolar (varsayılan: araclar/senaryolar/ içindeki hepsi)
      --ayni     karşılaştırma tohum başına parmak iziyle (sonucu değiştirmemesi gereken düzenlemede)
    Çıkış kodu: herhangi bir adım sıfır dışı döndüyse 1. Senaryoların "!" satırları kabul dışı ölçümlerdir; T0 senaryolarında çıkış kodunu
@@ -13,7 +14,7 @@ const KOK=path.join(__dirname,'..');
 const ARG=process.argv.slice(2);
 function secenek(ad,degerli){const i=ARG.indexOf(ad);if(i<0)return null;if(!degerli){ARG.splice(i,1);return true;}return ARG.splice(i,2)[1];}
 const MAC=parseInt(secenek('--mac',true)||'40',10),SECILI=secenek('--senaryo',true),AYNI=!!secenek('--ayni',false);
-const TABAN=ARG[0]||path.join('araclar','taban','m0.json');
+const TABAN=ARG[0]||path.join('araclar','taban','t7.json');
 const RAPOR=path.join(__dirname,'son-oturum.txt');
 const SENARYOLAR=SECILI?SECILI.split(','):fs.readdirSync(path.join(__dirname,'senaryolar')).filter(f=>f.endsWith('.js')).map(f=>f.slice(0,-3)).sort();
 

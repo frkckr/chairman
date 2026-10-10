@@ -6,10 +6,9 @@ dışarıdan okur ve ölçer. Animasyon dosyasına ölçüm kodu girmez: araç a
 
 Kullanım:
   python araclar/animasyon-olcum.py                      # şimdiki animasyon, tohum 3, 180 sn oyun
-  python araclar/animasyon-olcum.py --once               # A2 öncesi dondurulmuş animasyon (araclar/karsilastir/once/animasyon.js)
-  python araclar/animasyon-olcum.py --once a2a           # A2b öncesi (A2a) dondurulmuş animasyon (araclar/karsilastir/a2a/animasyon.js)
-  python araclar/animasyon-olcum.py --json araclar/taban/a2-once.json      # sonucu kaydet
-  python araclar/animasyon-olcum.py --karsilastir araclar/taban/a2-once.json   # kayıtlı sonuçla yan yana
+  python araclar/animasyon-olcum.py --once t5            # dondurulmuş "önce" animasyonu (araclar/karsilastir/t5/animasyon.js; dondur.js üretir)
+  python araclar/animasyon-olcum.py --json araclar/taban/t7-anm.json        # sonucu kaydet (tur kapanışında turun animasyon tabanı)
+  python araclar/animasyon-olcum.py --karsilastir araclar/taban/t7-anm.json # kayıtlı sonuçla yan yana
   Seçenekler: --tohum N · --sure S (oyun saniyesi; varsayılan 180)
 
 Ölçütler ("A:" satırları; tanım ve hedefler Ek G9). Bantlar oyuncunun çizilen hızından: duran < 0,3 · yürüyüş < 2 · koşu 2–5 ·
@@ -393,7 +392,8 @@ def ana():
     ap = argparse.ArgumentParser(description="Chairman animasyon ölçümü")
     ap.add_argument("--tohum", type=int, default=3)
     ap.add_argument("--sure", type=float, default=180)
-    ap.add_argument("--once", nargs="?", const="once", default=None, help="dondurulmuş animasyon: once (A2 öncesi, varsayılan) ya da a2a")
+    ap.add_argument("--once", default=None, choices=sorted(d.name for d in KARSILASTIR.iterdir() if (d / "animasyon.js").is_file()),
+                    help="dondurulmuş animasyon: araclar/karsilastir/<ad>/animasyon.js (turun başında dondur.js <ad>)")
     ap.add_argument("--json")
     ap.add_argument("--karsilastir")
     ap.add_argument("--hiz", type=int, default=1, choices=[1, 2, 4, 8, 16], help="oynatma hızı (MAC_HIZ; T4-V: hız katlarında vuruş katmanının kararlılığı)")

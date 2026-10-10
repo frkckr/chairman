@@ -47,10 +47,7 @@ const ILK_TOHUM=parseInt(ARG[1]||'1',10);
 
 /* ---- motoru yükle (M0: araclar/motor-yukle.js) ---- */
 const {ctx,mantik,kip:BAGLAM}=require('./motor-yukle').motorYukle();
-if(AYAR){let o;try{o=JSON.parse(AYAR);}catch(e){console.error('MAC_DENEME_AYAR geçerli JSON değil: '+e.message);process.exit(2);}
-  const yok=Object.keys(o).filter(k=>!vm.runInContext(`Object.prototype.hasOwnProperty.call(MOTOR_AYAR,${JSON.stringify(k)})`,ctx));
-  if(yok.length){console.error('MAC_DENEME_AYAR: MOTOR_AYAR içinde olmayan anahtar: '+yok.join(', '));process.exit(2);}
-  vm.runInContext(`Object.assign(MOTOR_AYAR,${JSON.stringify(o)})`,ctx);}
+require('./motor-yukle').ayarUygula(ctx,AYAR);
 /* eklenti ölçümleri */
 const OLCUM_KLASOR=path.join(__dirname,'olcumler');
 const EKLENTILER=fs.existsSync(OLCUM_KLASOR)?fs.readdirSync(OLCUM_KLASOR).filter(f=>f.endsWith('.js')).sort().map(f=>Object.assign({dosya:f},require(path.join(OLCUM_KLASOR,f)))):[];
@@ -59,7 +56,8 @@ const EKLENTILER=fs.existsSync(OLCUM_KLASOR)?fs.readdirSync(OLCUM_KLASOR).filter
    Oyuncular gerçek hızda koştuğu için bir maçta ~7 dakika (≈400 sn) oyun oynanır; gerçek bir maçta bu ~55 dakikadır.
    Gerçekçi kararlarla motor şut ve gol gibi önemli olayları gerçeğin dakika başına 2,5–3 katı sıklıkta üretir:
    gol sayısı gerçeğe yakındır; şut, korner, taç ve pas gibi sık tekrarlanan olaylar gerçek maçın yarısından azdır.
-   Oranlar (isabet, pas isabeti, pas yönleri, uzun pas) gerçek maçlara göre tutulur. */
+   Oranlar (isabet, pas isabeti, pas yönleri, uzun pas) gerçek maçlara göre tutulur. Sıkıştırmanın olay türüne göre hesabı (pas oyun dakikası
+   başına sıkışmaz, sahiplik ×2, savunma eylemi ×2,5–3,5): MAC_MOTORU_GERCEKCILIK_PLANI §7 madde 7 (2026-10-10). */
 const HEDEF=[
   ['Gol','gol',1.8,3.0],
   ['Şut','sut',8,14],
@@ -104,7 +102,7 @@ const BILGI=[
   ['Orta (adet)','orta',null,1],['Orta başarısı %','ortaOran',null,1],
   ['Tek vuruşla pas %','tekVurusOran',null,1],['Ver-kaç (adet)','verKac',null,1],['İlk dokunuş hatası %','ilkDokunusHataOran',null,1],
   /* T4 (2026-10-08): çalımın tek tanımı motorun 'calim' olayıdır (robotluk karnesi R: satırları); buradaki geometrik ölçü (önündeki 3 m içindeki
-     rakibin aynı sahiplikte arkasında kalması) T9a tabanıyla karşılaştırma sürsün diye bilgi olarak kalır */
+     rakibin aynı sahiplikte arkasında kalması) tabanlarla karşılaştırma sürsün diye bilgi olarak kalır */
   ['Geçiş (geometrik; bilgi) (adet)','calim',null,1],['Geçiş başarısı (geometrik) %','calimOran',null,1],
   ['— Beden ve mücadele —',null,null,0],
   ['Müdahale girişimi (adet)','mudahale',null,1],['Müdahale kazanma %','mudahaleOran',null,1],['Girişim başına faul %','mudahaleFaulOran',null,1],

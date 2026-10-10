@@ -19,7 +19,7 @@ const ARG=process.argv.slice(2),DUYARLILIK=ARG.includes('--duyarlilik'),SAYI=ARG
 const N=Math.max(1,parseInt(SAYI[0]||'8',10)),T0=parseInt(SAYI[1]||'1',10),dt=1/60,DELTA=0.2;
 const KARAR=[];
 const {ctx}=require('./motor-yukle').motorYukle({__kayit:o=>KARAR.push(o)});
-if(process.env.MAC_DENEME_AYAR)vm.runInContext(`Object.assign(MOTOR_AYAR,${JSON.stringify(JSON.parse(process.env.MAC_DENEME_AYAR))})`,ctx);
+require('./motor-yukle').ayarUygula(ctx,process.env.MAC_DENEME_AYAR);
 const DIZILIS=process.env.MAC_DENEME_DIZILIS?process.env.MAC_DENEME_DIZILIS.split(','):null;
 /* karar izi: secenekler'in son listesi ve kararVer'in seçimi */
 vm.runInContext(`(function(){const _s=secenekler,_k=kararVer;let son=null;const sonNo=new Map();

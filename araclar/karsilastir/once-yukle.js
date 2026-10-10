@@ -1,9 +1,9 @@
 /* Chairman — A2 karşılaştırması: maç sayfasında (index.html) çizimi dondurulmuş "önce" animasyonuna çevirir (2026-10-08).
-   Dondurulmuş dosya (araclar/karsilastir/once/animasyon.js, araclar/karsilastir/dondur.js üretir) bir işlevin içinde çalıştırılır: üst
+   Dondurulmuş dosya (araclar/karsilastir/<ad>/animasyon.js, araclar/karsilastir/dondur.js <ad> üretir) bir işlevin içinde çalıştırılır: üst
    düzey adları (EKLEM, ANM_POZ, POSE …) yerel kalır, oyunun adlarıyla çakışmaz. Aktörlerin modelleri korunur; her aktörün animasyon
    durumu eski kurulumla yeniden kurulur ve js/mac-sahnesi.js'in adıyla çağırdığı aktorKur, aktorGuncelle, topCiz, animasyonOlay
    eskisine döner. Motor değişmez (aynı tohumla aynı maç). Sayfa yüklendikten sonra, ilk maç karesinden önce çağrılır.
-   Kullananlar: araclar/animasyon-karsilastir.html, araclar/animasyon-olcum.py --once, araclar/an-yakala.py --anm once. */
+   Kullananlar: araclar/animasyon-karsilastir.html, araclar/animasyon-olcum.py --once <ad>, araclar/an-yakala.py --anm <ad>. */
 function anmOnceYukle(w,kaynak){
   const once=w.eval('(function(){\n'+kaynak+'\n;return {aktorKur,aktorGuncelle,topCiz,animasyonOlay};\n})()');
   const AKTORLER=w.eval('AKTORLER'),asilPlayer=w.player,asilGolge=w.golgeEkle;
