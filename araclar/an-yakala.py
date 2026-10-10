@@ -96,6 +96,10 @@ HAZIR = {
     "dusus": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='dusus'&&p.eylem.t<0.03)", 0, "mac"),
     "kalkis-uzun": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='kalkis'&&p.eylem.sure>=1.4&&p.eylem.t<0.03)", 0, "mac"),
     "uzun-yer-pas": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&!p.eylem.sec.ilk&&p.eylem.sec.tur!=='sut'&&p.eylem.sec.tur!=='uzaklastir'&&(p.eylem.sec.tip||'yer')==='yer'&&(p.eylem.faz==='hazirlik'||p.eylem.faz==='geri')&&Math.hypot(p.eylem.sec.hx-mac.ball.x,p.eylem.sec.hz-mac.ball.z)>22&&Math.hypot(mac.ball.x-p.x,mac.ball.z-p.z)<1.2)", 0, "mac"),
+    # T6-0 (2026-10-10): hava topu — sıçrayan iki rakip topun yakınında (düello), ortadan sonraki 3 sn içinde kafa, sıçramanın kalkışı (film şeridi; --kare 6 --aralik 0.1)
+    "hava-duello": ("(()=>{const b=mac.ball;let t=[0,0];for(const p of mac.players)if(p.oyunda&&p.zipla&&Math.hypot(p.x-b.x,p.z-b.z)<2.5)t[p.team]++;return t[0]>0&&t[1]>0;})()", 0, "mac"),
+    "orta-kafa": ("__son('header',0.05)&&__son('cross',3)", 0, "mac"),
+    "sicrama": ("mac.players.some(p=>p.oyunda&&p.zipla&&p.zipla.t<0.03)", 0, "mac"),
 }
 VARSAYILAN_SET = ["santra", "orta-saha", "korner", "sut", "faul", "sol-ceza", "uzak-kenar", "yakin-kenar"]
 
