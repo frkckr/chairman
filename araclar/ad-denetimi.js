@@ -66,8 +66,9 @@ function sizanIslevler(s){
   return out;
 }
 /* bilinen ve zararsız (Faz 0'da vardı): ekran dosyalarının kendi üst düzey blokları içindeki yardımcılar; her blok kendi işlevini çağırır,
-   global ada kimse başvurmaz. Yeni bir çakışma hata sayılır */
-const BILINEN_SIZINTI=new Set(['durakYazi','altSerit','ciz','hataGoster','isiYap','ilerleOzeti','ilerleEylem','kapat']);
+   global ada kimse başvurmaz. Yeni bir çakışma hata sayılır. (2026-10-10: eski koyu ajanda kalkınca durakYazi, altSerit, hataGoster, isiYap,
+   ilerleOzeti, ilerleEylem tekilleşti) */
+const BILINEN_SIZINTI=new Set(['ciz','kapat']);
 {const ad=Object.create(null);
   for(const f of dosyalar){const s=temiz[f];for(const x of sizanIslevler(s))(ad[x.ad]||(ad[x.ad]=[])).push(`${f}:${satirNo(s,x.i)}`);}
   for(const [k,L] of Object.entries(ad))if(L.length>1){if(BILINEN_SIZINTI.has(k))bilinen.push(`${k}: ${L.join(', ')}`);else bul('aynı işlev adı',`${k}: ${L.join(', ')}`);}

@@ -109,7 +109,7 @@ const hrkKosuSuresi=(D,v0,vm,A0,S0)=>{
   return((T[o]*(1-fj)+T[o+1]*fj)*(1-fi)+(T[o+N1]*(1-fj)+T[o+N1+1]*fj)*fi)*tau;
 };
 /* hız kipleri (T1): dur, yürü, tırıs, koş, hızlı, depar (tepe hız). Çizim p.kip'i okur (boşta pozlar) */
-const HRK_KIP=['dur','yuru','tiris','kos','hizli','depar'],HRK_KIP_HIZ=[0,1.6,3.2,5.0,6.5,99];
+const HRK_KIP_HIZ=[0,1.6,3.2,5.0,6.5,99];   /* sırasıyla dur, yuru, tiris, kos, hizli, depar */
 const hrkKipAdi=s=>s<0.2?'dur':s<2?'yuru':s<4?'tiris':s<5.75?'kos':s<7?'hizli':'depar';
 /* çalımda topun itileceği açı (rakibe göre): top rakibin ~1,25 m yanından geçsin (yakın rakipte daha geniş), en az a0, en çok 1,2 rad */
 const hrkCalimAci=(L,a0)=>hrkMin(1.2,hrkMax(a0,L>1.3?Math.asin(1.25/L)+0.1:1.2));

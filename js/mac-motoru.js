@@ -49,13 +49,12 @@ const MOTOR_AYAR={
   gecis:0.7,                   // topu kaybeden takımın savunma düzenine geçme gecikmesi (sn)
   donus:0.75,                  // savunmaya dönüşte topa uzak oyuncunun hız oranı (birleştirme 2026-10-03: 0,85 → 0,75, koşu mesafesi)
   karsiPres:3.0,               // top kaybından sonra karşı pres süresi (sn; takımın pres ayarıyla 0,6–1,4 katı) (MM2)
-  sekilGecikme:0,              // T1: topu yeni kazanan takımın hücum düzenine geçme gecikmesi (sn; kısa sahiplikte şekil değişmez)
   blokYumusak:4,               // T1: bölge hedefinin izlediği top yerinin yumuşatma süresi (sn; 0: ham): tehlikesiz yönde
   blokHizli:4,                 // T1: aynısı tehlikede (savunmada top kalemize gelirken, hücumda top ileri giderken)
   hucumGecikme:1,              // T1: hücumdaki takımın bölge oyuncuları da kişisel tepkiyle kayar: 1 topun gerisindekiler, 2 hepsi, 0 hiçbiri
   presHisterezis:1.5           // T4: 1. adam seçimi kare kare değişmesin: önceki 1. adam yeni adaydan bu kadar (puan, ~m) kötü olmadıkça kalır
 };
-const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',sekilGecikme:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
+const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){if(Object.prototype.hasOwnProperty.call(MOTOR_AYAR,k))throw new Error('MOTOR_AYAR.'+k+' iki kez eklendi ('+MOTOR_AYAR_SAHIBI[k]+', '+akis+')');
   MOTOR_AYAR[k]=o[k];MOTOR_AYAR_SAHIBI[k]=akis;}}
 /* eylem adımları: eylem adı → işlev(p, e, dt), this maçtır; sahibinin dosyasında kaydedilir (Faz 0) */

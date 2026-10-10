@@ -74,7 +74,6 @@ const SEYIRCI_KISILER=[];
   if(!ayakta&&!uzak){const M2=y.m.clone().multiply(new THREE.Matrix4().makeTranslation(0,-KOLTUK_YUKSEKLIGI,0.12)).multiply(new THREE.Matrix4().makeScale(w,h,w));
     SEYIRCILER.ayak.push({...kayit,M:M2,mod:2,ikiz:true});}
  });}
-const SEYIRCI_SAYISI=Object.values(SEYIRCILER).reduce((s,L)=>s+L.filter(k=>!k.ikiz).length,0);
 for(const d in SEYIRCILER){
   const L=SEYIRCILER[d],n=L.length;if(!n)continue;
   const at=a=>new THREE.InstancedBufferAttribute(new Float32Array(L.map(k=>k[a])),1),faz=at('faz'),taraf=at('taraf'),sakin=at('sakin'),gelis=at('gelis'),mod=at('mod'),C=new THREE.Color();

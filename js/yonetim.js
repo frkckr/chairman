@@ -20,7 +20,6 @@ const KATKI_ALANLARI=['mali','baglanti','futbol','iletisim'];
 const KATKI_SEVIYELERI=['zayif','orta','guclu'];
 const PROFIL_ALANLARI=['meslek','guclu','zayif','beklenti'];
 
-const EKIP_HABER_DAKIKASI=570;              // devredilen işin haberi ertesi gün 09:30'da gelir (TEST değeri)
 const katki=(p,alan)=>(p&&p.katki&&p.katki[alan])||'orta';
 const koltuktaMi=(k,kisiId)=>Object.values(k.kulupler).some(c=>c.yonetim&&Object.values(c.yonetim).includes(kisiId));
 

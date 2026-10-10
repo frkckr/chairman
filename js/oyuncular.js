@@ -40,7 +40,6 @@ function uvRenk(ad){const i=RENK_KARE.indexOf(ad),x=(i%8)*8+4,y=32+Math.floor(i/
 /* ---- insan modeli: kutular tek bir kemikli modelde (SkinnedMesh) birleşir; her kutu tek kemiğe bağlıdır (insan başına tek çizim).
    Dönen nesne eski arayüzle aynıdır: root, hip, head, aL, eL, aR, eR, lL, kL, lR, kR (hepsi kemik); iskelet 2 (2026-10-03, E akışı) ayrıca
    govde: kalçanın üstünde gövde kemiği; gövde, boyun, baş ve kollar ona bağlıdır. Düz duruşta her şey eskisiyle aynı yerdedir ---- */
-const YUZ_SIRASI=['px','nx','py','ny','pz','nz'];
 function player(k,ekRenkler){
   const ls=k.gk||k.ls,uv={};
   const R=ad=>uv[ad]||(uv[ad]=uvRenk(ad));

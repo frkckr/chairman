@@ -14,12 +14,8 @@ ayarEkle('T',{
   kurmaStoperW:17,   // T7b: kurmada stoperlerin orta çizgiden uzaklığı (m; ceza sahası genişliği ±20)
   gerideEk:1,        // T7b: hücumda geride kalan sayısı = bizim yarıdaki rakip saha oyuncusu + bu (en az 2)
   rakipAlgi:1,       // T7c (Ek H 26): karar anında görüş dışındaki rakip son taramadan bilinir (0: gerçek konum; mac-karar.js rakipAlgisi)
-  pasT0:0,           // T7c (§7.10): pas kararında vuruşa kalan süre ve rakibin saati vuruştan (0: t0 = 0). Kapı; 40 maçta denendi, kapalı tutuldu:
-                     // rakibin (ve alıcının) saati vuruşa kayınca model iyimserleşti (pas tahmini −3,3…−4,1, ara pası −10 puan), sahiplik başına pas
-                     // 2,18 → 1,80–1,94 ve PPDA 6,0 → 4,9–5,6 düştü (okuma payı 0,5 ve 1,0; ön puan düzeltmesiyle de). Motordaki savunmacı karar
-                     // anından itibaren pasörü ve adamını izler; eski saat kalibre olandır (gerçekçilik planı §7 madde 10)
-  pasOku:0.5,        // T7c (§7.10): rakibin vuruş hazırlığını okuma payı (en çok; sezgi ve bakışla ölçeklenir)
-  pasOkuAlici:0.7,   // T7c (§7.10): alıcının pasörü okuma payı (vuruştan önce yönelir)
+  /* pasT0, pasOku, pasOkuAlici (T7c, §7.10: rakibin ve alıcının saati vuruştan): 40 maçta iyimser çıktı (pas tahmini −3,3…−4,1, ara pası −10 puan;
+     sahiplik başına pas 2,18 → 1,80–1,94, PPDA 6,0 → 4,9–5,6), kapalı kaldı; 2026-10-10 bakımında kaldırıldı (gerçekçilik planı §7 madde 10) */
   kosuTetik:6,       // T7c: tetikli koşunun başlama sıklığı (1/sn; ara noktası bulundu ve taşıyanın başı yukarıda; topsuz hareket × kanallara koşma)
   kosuRastgele:0.5,  // T7c: tetiksiz (rastgele) derin koşunun eski sıklığa oranı
   kosuEs:2,          // T7c: aynı anda en çok savunma arkasına koşu

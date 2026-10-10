@@ -1,5 +1,6 @@
 /* ============ Chairman — oyun oturumu: kayıt deposu, açılış ve komut yolu (çizim yok; yol haritası 2.4, 2.5) ============
-   Oda (js/ekran-oda.js) ve ajanda (js/ekran-ajanda.js) ekranları aynı oturumu kullanır; ekran değiştirmek kariyeri, kaydı ya da zamanı değiştirmez.
+   Oda ekranı (js/ekran-oda.js; telefon, defter ve dosya ondan açılır) bu oturumu kullanır; ekran değiştirmek kariyeri, kaydı ya da zamanı
+   değiştirmez. (Eski koyu ajanda js/ekran-ajanda.js de bu oturumu kullanıyordu; 2026-10-10'da kaldırıldı.)
    Depo: masaüstü → tarayıcı ('chairman:' önekiyle) → yalnız bellek. Yuva 'oyun-1'.
      oyunBaslat()            kayıt varsa devam, yoksa yeni kariyer; açılamayan kayda dokunulmaz (OYUN.bozukHata). Dönüş özeti ("Kaldığın yer") 2.8L'de kaldırıldı.
      oyunKomut(f, kaydetme)  komut kariyerin kopyasında uygulanır, geçerliyse kabul edilir ve kaydedilir (kaydetme: true ise kaydedilmez).

@@ -124,9 +124,8 @@ Object.assign(Match.prototype,{
       /* serbest topta (pas yolda, sekme, ikili mücadele) son dokunan değil son sahip olan takımın düzeni sürer: takım şekli her sekmede
          değişmez (T1, kararlı hedef) */
       const sonSahip=this._sonSahipTakim!=null?this._sonSahipTakim:b.sonTakim;
-      /* yeni kazanılan topta takım hücum düzenine sekilGecikme sn sonra geçer: çok kısa sahiplikte takım şekli değişmez (T1) */
-      const yeniKazanan=!du&&sonSahip===t&&this._kaybeden===1-t&&gecisSure<MOTOR_AYAR.sekilGecikme;
-      const hucum=!yeniKazanan&&(sahipTakim===t||(sahipTakim<0&&sonSahip===t))||(sahipTakim===1-t&&gecisSure<MOTOR_AYAR.gecis);
+      /* T1'deki sekilGecikme (yeni kazanılan topta hücum düzenine geçme gecikmesi) 0'da kaldı; 2026-10-10 bakımında kaldırıldı */
+      const hucum=sahipTakim===t||(sahipTakim<0&&sonSahip===t)||(sahipTakim===1-t&&gecisSure<MOTOR_AYAR.gecis);
       HT[t]=hucum;
       const G=GG[t],gecikmeli=du||G.i<=8?odak:{x:G.x[(G.i-9)&15],z:G.z[(G.i-9)&15],sahip:odak.sahip,takim:odak.takim};
       /* bölgesel pres: topa, top kendi bölgesine giren oyuncu çıkar (1. adam); diğerleri yerini korur.

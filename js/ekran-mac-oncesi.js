@@ -13,11 +13,11 @@
    duraklatmada durur, gizli sekmeden dönüşte sıçramaz. Ayrıca kaynaklar hazır olmalıdır: yazı tipleri yüklenmiş ve stat en az bir kez çizilmiş
    (js/arayuz.js ON_EKRAN.cizildi). Çubuk dosya yükleme yüzdesi değildir. İkisi sağlanınca "Maça geç" etkinleşir; geçiş yalnız oyuncunun eylemiyle olur.
    Ekran açıkken maç günü, tören ve takvim ilerlemez (js/arayuz.js, ON_EKRAN.acik iken zaman ilerlemez; arkada stat donuk durur).
-   Açılış sayfası (ON_EKRAN.sayfa): 'oda' varsayılan (js/ekran-oda.js; maç saati gelince bu ekranı açar), ?ekran=ajanda eski koyu ajanda
-   (js/ekran-ajanda.js; geliştirici görünümü), ?ekran=bulten doğrudan bu ekran, ?ekran=mac menüleri atlar (null).
+   Açılış sayfası (ON_EKRAN.sayfa): 'oda' varsayılan (js/ekran-oda.js; maç saati gelince bu ekranı açar), ?ekran=bulten doğrudan bu ekran,
+   ?ekran=mac menüleri atlar (null). Eski koyu ajanda (?ekran=ajanda, js/ekran-ajanda.js) 2026-10-10'da kaldırıldı; o adres odayı açar.
    Renkler STIL.program.renk'ten CSS değişkeni (--m-ad) olarak gelir. */
 const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('ekran');}catch(x){}
-  const sayfa=e==='mac'?null:e==='bulten'?'bulten':e==='ajanda'?'ajanda':'oda';return{acik:sayfa!==null,sayfa,cizildi:false};})();
+  const sayfa=e==='mac'?null:e==='bulten'?'bulten':'oda';return{acik:sayfa!==null,sayfa,cizildi:false};})();
 {
   const E=$('onEkran'),M=STIL.program.renk,B=LIG.buMac,TABLO=puanDurumu(LIG);
   for(const k in M)E.style.setProperty('--m-'+k,M[k]);

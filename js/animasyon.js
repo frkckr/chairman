@@ -212,7 +212,6 @@ function anmKar(a,P,w){if(w<=0.001)return;const J=a.P,C=a.C;if(w>1)w=1;for(const
 function yumusak(a,ad,hedef,hiz,dt){const v=a.w[ad]||0;a.w[ad]=v+(hedef-v)*Math.min(1,dt*hiz);return a.w[ad];}
 /* kök yönü hedefe yaklaşır; tavan verilirse en çok tavan rad/sn (A2a: motorun ani yön atlamaları çizimde tek karede dönüş olmaz) */
 function aciYumusak(a,h,dt,hiz,tavan){let d=h-a.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));let s=d*Math.min(1,dt*hiz);if(tavan){const m=tavan*dt;if(s>m)s=m;else if(s<-m)s=-m;}a.yaw+=s;}
-const yanPoz=(P,sol)=>sol?aynala(P):P;
 const tepe=(t,s)=>Math.sin(Math.PI*clamp(t/s,0,1));
 /* giriş-tutma-çıkış zarfı: g sn'de yükselir, sürenin son c sn'sinde iner */
 const anmZarf=(t,s,g,c)=>Math.max(0,Math.min(1,t/g,(s-t)/c));
@@ -1108,8 +1107,6 @@ function anmPozBasla(a,p,spd,dt,M){
   if(p)anmEkler(a,p,dt);
 }
 function anmPozBitir(a){anmBacakIK(a);}
-/* eski arayüz: tek çağrıda poz (a.P) */
-function pozla(a,p,spd,dt){anmPozBasla(a,p,spd,dt,a.m);anmPozBitir(a);return a.P;}
 function uygula(a,J){for(const k of EKLEM)a.J[k]=J[k]||0;pose(a.m,a.J);}
 
 /* ---- 4. kök: düşüş/yatış/kalkış ekseni ve açısı, kaleci uçuşunun yayı, sıçrama ve sevinç zıplaması ---- */

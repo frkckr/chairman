@@ -89,13 +89,9 @@ function rakipAlgisi(m,p){
 function rakipler(m,team){const g=GOZ.p;return g&&g.team===team&&MOTOR_AYAR.rakipAlgi?rakipAlgisi(m,g):m.teams[1-team];}
 /* f'yi p gözlemciyken çalıştırır (iç içe güvenli; karar giriş noktaları kapanış yaratmamak için aynı kalıbı doğrudan kullanır) */
 function gozlemle(p,f){const e=GOZ.p;GOZ.p=p;try{return f();}finally{GOZ.p=e;}}
-/* T7c (§7.10, 2026-10-10): pas kesilme modelinde rakibin saati. Vuruşa t0 sn varken rakip pasın yönünü ancak vuruşta öğrenir; hazırlığı okuyan
-   (sezgi; yüzü pasöre dönük) bir kısmını önceden okur: tepkiye başlama t0·(1 − okuma), o ana kadar şimdiki hızıyla (en çok 0,6 sn) süzülür,
-   sonra varisSuresi gibi (0,22 sn tepki). t0 = 0'da varisSuresi'nin aynısı. pasT0 0 iken okuma kapalı (eski model) */
-function pasOkuma(op,p){const A=MOTOR_AYAR;if(!A.pasOku)return 0;const by=op.bakisYon!=null?op.bakisYon:op.yon,bak=Math.abs(aciFark(Math.atan2(p.z-op.z,p.x-op.x),by))<1.2;
-  return A.pasOku*(0.5+0.5*profilAlt(op,'sezgi',0.5))*(bak?1:0.4);}
-/* rakibin vuruş anındaki yeri (şimdiki hızıyla, en çok 0,6 sn): vekil; ts 0 iken kendisi */
-function rakipSuzul(op,ts){if(ts<=0)return op;const k=Math.min(ts,0.6);return rakipVekil(op,op.x+op.vx*k,op.z+op.vz*k,op.vx,op.vz);}
+/* T7c'de (§7.10) rakibin ve alıcının saatini vuruştan başlatan kesilme modeli (pasT0, pasOku, pasOkuAlici; pasOkuma, rakipSuzul) denendi,
+   iyimser çıktı ve kapalı kaldı; 2026-10-10 bakımında kaldırıldı (gerçekçilik planı §7 madde 10; kod tur/t7 etiketinde). Rakibin saati karar
+   anından başlar (varisSuresi, 0,22 sn tepki). */
 
 /* ---- pas analizi ---- */
 const PA_N=8,PA_X=new Float64Array(PA_N),PA_Z=new Float64Array(PA_N),PA_TB=new Float64Array(PA_N*3),PA_TA=new Float64Array(PA_N),PA_H=new Float64Array(PA_N),PA_TO=new Float64Array(PA_N),PA_KC=new Uint8Array(PA_N);
@@ -111,9 +107,7 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
   if(tip==='yer'){for(let k=0;k<K;k++){v0[k]=Math.min(29,yerIlkHiz(L,V[k],R));for(let i=0;i<N;i++)PA_TB[k*N+i]=t0+yerSure(v0[k],L*(i+1)/N,R);}}
   else{T=o.T||havaSure(L,o.yay);const hy=o.hy||0;for(let i=0;i<N;i++){const f=(i+1)/N,t=T*f;PA_TB[i]=t0+t;PA_H[i]=hy*f+G/2*t*(T-t);}}
   /* alıcı topu karşılar: yolda topa ondan önce yetişebildiği ilk nokta (havadan pasta yalnız iniş yeri) */
-  /* T7c (§7.10): alıcı da topa vuruşla yönelir; pasörü rakipten iyi okur (pasOkuAlici), o ana kadar koşusunu sürdürür */
-  if(alici){const ek=MOTOR_AYAR.aliciPay,tr=MOTOR_AYAR.pasT0&&t0>0?t0*(1-MOTOR_AYAR.pasOkuAlici):0,av=rakipSuzul(alici,tr);
-    for(let i=0;i<N;i++)PA_TA[i]=tr+varisSuresi(av,PA_X[i],PA_Z[i],0.6)+ek;}
+  if(alici){const ek=MOTOR_AYAR.aliciPay;for(let i=0;i<N;i++)PA_TA[i]=varisSuresi(alici,PA_X[i],PA_Z[i],0.6)+ek;}
   const ir=[N-1,N-1,N-1],tr=[0,0,0],sure=[0,0,0];let sureMax=0;
   /* boşluğa ve ara pasında alıcı noktaya toptan biraz önce varmalı (koşu içinde yolu kesmek dar bir pencere) */
   const pay=o.alt==='bosluk'||o.alt==='ara'?-0.05:0.05;
@@ -127,10 +121,9 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
     const ds=segD(op.x,op.z,ox,oz,hx,hz);if(ds>op.maxSpd*(sureMax+0.2)+1.5)continue;
     const kaleci=op.rol==='GK',boy=(op.x-ox)*ux+(op.z-oz)*uz;
     /* pasörün dibindeki rakip: top ilk metrelerde bacağına yakın geçerse çoğu zaman bloklanır */
-    /* T7c: vuruşa t0 kalırken pasörün dibindeki rakibin o anki yeri (şimdiki hızıyla; eskiden t0 > 0'da bu ceza hiç sayılmıyordu) */
-    let yakinP=0;if(tip==='yer'&&(t0<0.05||MOTOR_AYAR.pasT0)){const kt=Math.min(t0,0.6),yk=segD(op.x+op.vx*kt,op.z+op.vz*kt,ox,oz,ox+ux*Math.min(4,L),oz+uz*Math.min(4,L));if(yk<1.0)yakinP=0.85-yk*0.35;}
-    const ts=MOTOR_AYAR.pasT0&&t0>0?t0*(1-pasOkuma(op,p)):0,opv=rakipSuzul(op,ts);
-    for(let i=0;i<N;i++){const kc=kaleci&&kaleCeza(m,op,PA_X[i],PA_Z[i]);PA_KC[i]=kc?1:0;PA_TO[i]=ts+varisSuresi(opv,PA_X[i],PA_Z[i],kc?1.1:0.75);}
+    /* T7c: vuruşa t0 kalırken pasörün dibindeki rakibin o anki yeri (şimdiki hızıyla) */
+    let yakinP=0;if(tip==='yer'&&t0<0.05){const yk=segD(op.x+op.vx*t0,op.z+op.vz*t0,ox,oz,ox+ux*Math.min(4,L),oz+uz*Math.min(4,L));if(yk<1.0)yakinP=0.85-yk*0.35;}
+    for(let i=0;i<N;i++){const kc=kaleci&&kaleCeza(m,op,PA_X[i],PA_Z[i]);PA_KC[i]=kc?1:0;PA_TO[i]=varisSuresi(op,PA_X[i],PA_Z[i],kc?1.1:0.75);}
     for(let k=0;k<K;k++){
       /* alıcının arkasındaki (kale tarafındaki) rakip topa ancak alıcının etrafından dolaşarak gelir */
       const r=ir[k],arkada=alici&&boy>L*(r+1)/N-0.4?0.35:0;let en=yakinP;
@@ -177,11 +170,10 @@ function bulusmaNoktasi(m,g,ox,oz,t0,tip,varis,yay){
 /* ara pası noktası: koşu çizgisinde (koşmuyorsa hücum yönünde) savunma çizgisinin gerisinde, alıcının her savunmacıdan en az 0,25 sn önce
    vardığı ve topun da alıcıdan çok önce geçmediği ilk nokta; yoksa alıcının hâlâ önde olduğu en iyi nokta (dar pencere: riskli, değeri düşer).
    g: alıcı (algı vekili olabilir), ofs: ofsayt çizgisi (u) */
-function araNoktasi(m,g,ox,oz,t0,varis,ofs,d,pasor){
+function araNoktasi(m,g,ox,oz,t0,varis,ofs,d){
   const qh=hyp(g.vx,g.vz);let rx,rz;
   if(qh>2&&g.vx*d>0.4){rx=g.vx/qh;rz=g.vz/qh;}else{rx=d;rz=clamp((MZ-g.z)*0.015,-0.4,0.4);const n=hyp(rx,rz);rx/=n;rz/=n;}
-  /* T7c (§7.10): rakip ara pasını vuruşta öğrenir (pasT0; pasör verildiyse hazırlığı okuma payıyla); rakip başına bir kez */
-  const RV=[];for(const o of rakipler(m,g.team)){if(!o.oyunda)continue;const ts=MOTOR_AYAR.pasT0&&t0>0&&pasor?t0*(1-pasOkuma(o,pasor)):0;RV.push({o,ts,v:rakipSuzul(o,ts)});}
+  const RK=rakipler(m,g.team);
   let en=null;
   for(let s=2;s<=22;s+=2){
     const x=g.x+rx*s,z=g.z+rz*s;if(x*d>PL-3||z<2||z>PW-2)break;
@@ -189,7 +181,7 @@ function araNoktasi(m,g,ox,oz,t0,varis,ofs,d,pasor){
     const tq=varisZamani(g,x,z,0.5,0.05),L=hyp(x-ox,z-oz);
     const tb=t0+yerSure(Math.min(29,yerIlkHiz(L,varis||pasVarisHizi(L)+2,m.R)),L,m.R);
     if(tq>tb+0.35)continue;
-    let td=99;for(const r of RV){const kc=r.o.rol==='GK'&&kaleCeza(m,r.o,x,z);td=Math.min(td,r.ts+varisZamani(r.v,x,z,kc?1.1:0.75,0.2));}
+    let td=99;for(const o of RK){if(!o.oyunda)continue;const kc=o.rol==='GK'&&kaleCeza(m,o,x,z);td=Math.min(td,varisZamani(o,x,z,kc?1.1:0.75,0.2));}
     const mj=td-tq;if(mj>=0.25)return{x,z,s,marj:mj};
     if(mj>=0&&(!en||mj>en.marj))en={x,z,s,marj:mj};}
   return en;}
@@ -375,8 +367,7 @@ function pasAdayiEkle(m,p,o,C,q,g,hx,hz,alt,ex,ez,es,ek){
   let r60=0,rSon=0,inis=99,blok=99;
   for(const r of rakipler(m,p.team)){if(!r.oyunda)continue;
     const rx=r.x-ox,rz=r.z-oz,boy=rx*ux+rz*uz,yan=Math.abs(rx*uz-rz*ux);
-    /* T7c (§7.10): ön puanda da rakip vuruşa kadar yalnız hazırlığı okuduğu kadar yaklaşır (tam analizle aynı saat; ortalama okuma ~0,75·pasOku) */
-    if(boy>-1&&boy<L+3){const t=(MOTOR_AYAR.pasT0?o.t0*0.75*MOTOR_AYAR.pasOku:o.t0)+Math.max(0,boy)/vOrt,ul=r.maxSpd*0.75*t+0.8;
+    if(boy>-1&&boy<L+3){const t=o.t0+Math.max(0,boy)/vOrt,ul=r.maxSpd*0.75*t+0.8;
       if(yan<ul){if(boy<L*0.6){r60+=1-yan/ul;if(boy<7&&yan<1.6&&boy<blok)blok=boy;}else rSon+=1-yan/ul;}}
     const di=hyp(r.x-hx,r.z-hz);if(di<inis)inis=di;}
   /* tür: hat açıksa yerden (38 m'ye kadar; uzunda sert), ilk %60'ı kapalıysa ve iniş yeri boşsa havadan, kısa mesafede rakip dibindeyse aşırtma */
@@ -445,7 +436,7 @@ function pasSecenekleri(m,p,o){
     if(!o.ilk&&!ofsaytta&&q.rol==='FV'&&qu>u+12){const L=hyp(g.x-o.ox,g.z-o.oz);if(L>=22&&L<=58)pasAdayiEkle(m,p,o,C,q,g,g.x+g.vx*0.6,g.z+g.vz*0.6,'hedef',0,0,0);}
     /* ara pası: ofsayt çizgisine yakın, kendi tarafındaki hücumcu (ya da bindiren bek) savunma arkasına */
     if(qu<=o.ofs+0.5&&q.rol!=='GK'&&(q.rol!=='DEF'||q.mevki.bek)&&qu>o.ofs-12&&qu>u-8){
-      const h=araNoktasi(m,g,o.ox,o.oz,o.t0,null,o.ofs,d,p);
+      const h=araNoktasi(m,g,o.ox,o.oz,o.t0,null,o.ofs,d);
       if(h){pasAdayiEkle(m,p,o,C,q,g,h.x,h.z,'ara',0,0,0,-Math.max(0,0.25-h.marj)*MOTOR_AYAR.araDar);
         /* T7c: tetikli koşunun kaydı — alıcı bu noktaya koşabilir (mac-topla.js derinKosu; 0,5 sn geçerli) */
         const AK=m._araKayit||(m._araKayit=[new Map(),new Map()]),e=AK[p.team].get(q);if(e){e.x=h.x;e.z=h.z;e.t=m.t;}else AK[p.team].set(q,{x:h.x,z:h.z,t:m.t});}}
@@ -564,10 +555,9 @@ function secenekler0(m,p){
   if(!(b.endirekt&&b.endirekt.p===p)){const s=sutSecenegi(m,p,b.x,b.z,baski);if(s)S.push(s);}
   /* paslar. t0 = 0: top hemen çıkıyor sayılır. T4-V'de vuruşa kalan süre (vurusSureleri) denendi ve geri alındı: t0 = hazırlık + geri 40 maçta
      vazgeçmeyi 2,6 → 8/maça (yakinP cezası t0 < 0,05 ile kapanıyordu), yalnız t0 = geri ise pası 108 → 96'ya, sahiplik başına pası 2,17 → 1,75'e
-     düşürdü (kesilme modeli rakibin tepki gecikmesini bilmez, uzayan süre her hattı kapalı gösterir); karar modelinin bu kısmı T7'de ele alınır */
-  /* T7c (§7.10): t0 = vuruşa kalan süre (hazırlık + geri salınım; vurusSureleri), kesilme modeli rakibin saatini de vuruştan başlatır */
-  const vs=MOTOR_AYAR.pasT0?vurusSureleri('pas',baski):null;
-  for(const s of pasSecenekleri(m,p,{ox:b.x,oz:b.z,t0:vs?vs.haz+vs.geri:0,ilk:false,baski,ofs}))S.push(s);
+     düşürdü (kesilme modeli rakibin tepki gecikmesini bilmez, uzayan süre her hattı kapalı gösterir). T7c'de rakibin saatini de vuruştan
+     başlatan model denendi, o da iyimser çıktı (gerçekçilik planı §7 madde 10); t0 = 0 kalibre olandır */
+  for(const s of pasSecenekleri(m,p,{ox:b.x,oz:b.z,t0:0,ilk:false,baski,ofs}))S.push(s);
   /* orta ve geri çevirme: kanatta, son üçte birde */
   if(u>PL-30&&Math.abs(w-MZ)>8)ortaSecenekleri(m,p,{ox:b.x,oz:b.z,baski,ofs},S);
   /* T2: taşıma (8 yön × 5/10 m; eskiden 5 yön × 6 m, boş alanda bile başarı 0,6 + 0,35·sürüş ve değer buranın tehdidi + 2,5 ile sınırlıydı) */

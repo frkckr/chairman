@@ -158,13 +158,6 @@ const STIL={
   tabela:{zemin:'#140c04',ampul:'#ffb530',ikincil:'#ffd98a',elleZemin:'#1d2a22',elleYazi:'#f0ece0'},
   pankart:{zemin:'#efe9dc',yazi:'#c8281e'},
 
-  /* Menü ekranları (maç öncesi bülteni gibi): 4:3 oyun karesinin içinde, stadın önünde koyu bir panel.
-     Ekran bu renkleri CSS değişkeni (--m-ad) olarak yazar. ortu: panelin arkasındaki donuk stadı ne kadar örttüğü (0–1).
-     galibiyet/beraberlik/maglubiyet: form kutucukları; sari/kirmizi: kart ve ceza işaretleri; cim/sahaCizgi: mini saha. */
-  menu:{zemin:'#0c0b0a',ortu:0.9,panel:'#191816',panelUst:'#221f1b',cizgi:'#3b372f',yazi:'#efe7d6',soluk:'#9a9282',
-    vurgu:'#ffb530',kulup:'#c8281e',rakip:'#3a5aa8',galibiyet:'#3a8c33',beraberlik:'#8a8478',maglubiyet:'#c8281e',
-    sari:'#f2d21d',kirmizi:'#d8201e',cim:'#2f7a2a',cimAcik:'#3a8c33',sahaCizgi:'#f2f2ea'},
-
   /* Maç programı (js/ekran-mac-oncesi.js, 2.8E): açık kâğıt tonlarında basılı program. hazirlikSn: "Maça geç" etkinleşmeden önceki en kısa
      etkin hazırlık süresi (TEST değeri). renk: ekran bunları CSS değişkeni (--m-ad) olarak yazar; ortak .oe- bileşenleri bu değişkenleri kullanır. */
   program:{hazirlikSn:10,sayfaSn:5,renk:{zemin:'#f4eedf',panel:'#fbf7ec',panelUst:'#e9e0cb',cizgi:'#c9b994',yazi:'#26221c',soluk:'#6d6353',vurgu:'#a5620a',vurguZemin:'#ffb530',
