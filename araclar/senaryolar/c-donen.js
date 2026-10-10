@@ -10,6 +10,7 @@
        ilk dokunuş 0,5 sn'den önce olduysa o ana kadar).
    [3] Kale çizgisi (bilgi): her üç denemeden birinde ikinci savunmacı (kaleden 12 m); kaleci yerdeyken kovalamayan savunmacı 1 sn'de kale
        çizgisindeki noktaya en az 2 m yaklaşır.
+   [4] (T7-0, 2026-10-10; bilgi) Bütün denemelerde dönen topa ilk dokunuşun takımlara dağılımı (T7 karnesi).
    Kabul dışıysa çıkış kodu 1. Kullanım: node araclar/mac-deneme.js --senaryo c-donen [N=12 hücre başına] [tohum] */
 'use strict';
 module.exports={calistir({ctx,vm,N,tohum}){
@@ -62,5 +63,8 @@ module.exports={calistir({ctx,vm,N,tohum}){
   console.log((ok1?'      ':'    ! ')+`Kabul [1]: |Δ| > 0,3'te önde olanın payı ≥ %85 (Δ<−0,3: hücumcu %${(pay['<−0,3']||0).toFixed(0)}, Δ>0,3: savunmacı %${(100-(pay['>0,3']||0)).toFixed(0)}); Δ'yla düzgün azalma ${tutarli?'var':'YOK'}; basamak değil (−0,05…0,05 %25–75, ±0,05…0,15'te önde olan ≤ %97: ${orta?'evet':'HAYIR'})`);
   console.log((ok2?'  ':'! ')+`[2] İki takımın oyuncusu da 0,5 sn içinde efor > 0,9: %${eforP.toFixed(1)} (${eforOk}/${eforN}; kabul ≥ %95)`);
   console.log(`  [3] Kaleci yerdeyken kovalamayan savunmacı 1 sn'de kale çizgisine ≥ 2 m yaklaştı (bilgi): %${(100*cizgiOk/Math.max(1,cizgiN)).toFixed(0)} (${cizgiOk}/${cizgiN})`);
+  /* T7-0 (2026-10-10): bütün denemelerde ilk dokunuşun takımlara dağılımı (T7 karnesi; maç karşılığı t-takim.js “Dönen top”) */
+  {let a=0,bb=0,yk=0,fl=0,nn=0;for(const k of S){const c=K[k];if(!c)continue;a+=c.A;bb+=c.B;yk+=c.yok;fl+=c.faul;nn+=c.n;}const yz=x=>(100*x/Math.max(1,nn)).toFixed(0);
+   console.log(`  [4] Dönen topa ilk dokunuş, bütün denemeler (T7 karnesi, bilgi): hücumcu %${yz(a)} · savunmacı %${yz(bb)} · faul %${yz(fl)} · dokunan yok %${yz(yk)} (${nn} deneme)`);}
   return ok1&&ok2?0:1;
 }};

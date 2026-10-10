@@ -30,7 +30,9 @@ vm.runInContext(`(function(){const _s=secenekler,_k=kararVer;let son=null;const 
     let dd=99;for(const o of m.teams[1-p.team])if(o.oyunda)dd=Math.min(dd,hyp(o.x-p.x,o.z-p.z));
     /* T2: topu tutarken saniyede 5–8 kez karar verilir; sahipliğin ilk kararı ayrıca işaretlenir */
     const ilk=sonNo.get(p)!==m.sahiplikNo;sonNo.set(p,m.sahiplikNo);
-    __kayit({g:grup(p),sec:r.tur,alici:grup(r.alici),L:r.L||0,P:r.P!=null?r.P:null,en,dd,u:m.ball.x*d,ileri:r.alici?(r.hx-m.ball.x)*d:0,ilk});
+    /* T7-0 (Ek H 28): karar sürekliliği için oyuncu, sahiplik, zaman ve alıcı kimliği */
+    __kayit({g:grup(p),sec:r.tur,alici:grup(r.alici),L:r.L||0,P:r.P!=null?r.P:null,en,dd,u:m.ball.x*d,ileri:r.alici?(r.hx-m.ball.x)*d:0,ilk,
+      id:m.tohum+':'+p.team+':'+p.n+':'+m.sahiplikNo,t:m.t,an:r.alici?r.alici.team*11+r.alici.n:-1});
     return r;};})();`,ctx);
 /* duyarlılık kipi: her takımın her mevki grubunda (profilin grup alanı) sıraya göre çiftler; çiftin ilkine +, ikincisine − (sürüş, müdahale,
    sertlik; işaretler çift sırasının bitlerinden, çiftler arasında bağımsız). Aynı oyuncu her maçta aynı farkı alır (sayaçlar ada göre birikir).
@@ -128,3 +130,16 @@ if(DUYARLILIK){
 console.log('\n[8] Profil (T3): rol, gün formu ve en belirgin iki eğilim (ilk 11\'ler)');
 for(const o of L){if(!o.prof||!o.eg)continue;const E=Object.entries(o.eg).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,2).map(([k,v])=>k+(v>=0?' +':' −')+Math.abs(v).toFixed(2));
   console.log('    '+(o.team+' '+o.ad).padEnd(14)+String(o.mevki||o.rol).padEnd(6)+String(o.prof).padEnd(17)+'form '+o.form.toFixed(3)+'  '+E.join(' · '));}
+/* [9] T7-0 (2026-10-10; gerçekçilik planı Ek H 28, bilgi): topu tutan oyuncunun bir sahiplikteki kararları. Karar = seçilen tür ve (pasta) alıcı;
+   değişme = art arda iki kararın farklı olması (taşımanın yönü sayılmaz); süre = sahipliğin ilk kararından vuruş kararına (pas, şut, orta,
+   uzaklaştırma) */
+{const H=new Map();for(const k of KARAR){if(k.id==null)continue;let L=H.get(k.id);if(!L){L=[];H.set(k.id,L);}L.push(k);}
+  const VUR=new Set(['pas','ara','uzun','orta','geriCevir','sut','uzaklastir']),ad=k=>k.sec+(k.an>=0?'>'+k.an:'');
+  let nH=0,deg=0,farkli=0,tek=0,karar=0;const sure=[],degL=[];
+  for(const L of H.values()){nH++;karar+=L.length;let d=0;const S=new Set();
+    for(let i=0;i<L.length;i++){S.add(ad(L[i]));if(i&&ad(L[i])!==ad(L[i-1]))d++;}
+    deg+=d;degL.push(d);farkli+=S.size;if(L.length===1)tek++;const son=L[L.length-1];if(VUR.has(son.sec))sure.push(son.t-L[0].t);}
+  const yzd=(A,q)=>{if(!A.length)return NaN;const B=A.slice().sort((a,b)=>a-b);return B[Math.min(B.length-1,Math.floor(q*B.length))];};
+  console.log('\n[9] Karar sürekliliği (Ek H 28, bilgi): sahiplik başına kararlar (tür + alıcı; taşımanın yönü sayılmaz)');
+  console.log(`    sahiplik ${nH} · karar / sahiplik ${f2(karar/Math.max(1,nH))} · değişme / sahiplik ${f2(deg/Math.max(1,nH))} (≥ 3 değişme %${f1(100*degL.filter(x=>x>=3).length/Math.max(1,nH))}) · farklı karar / sahiplik ${f2(farkli/Math.max(1,nH))} · tek kararlı %${f1(100*tek/Math.max(1,nH))}`);
+  console.log(`    ilk karardan vuruş kararına (sn): ortanca ${f2(yzd(sure,0.5))} · %75 ${f2(yzd(sure,0.75))} · %90 ${f2(yzd(sure,0.9))} (${sure.length} vuruş)`);}
