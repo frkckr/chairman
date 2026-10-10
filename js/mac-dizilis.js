@@ -165,6 +165,8 @@ Object.assign(Match.prototype,{
             if(en){pres2=en;en._kapatK=this.kare;}}}
       }
       const cizgi=this.savunmaCizgisi(t,hucum,odak);
+      /* T7b: geride kalanlar ve koridor sahipliği (6 karede bir; js/mac-takim.js) */
+      if(!du){this.gerideKalanlar(t);this.koridorAta(t,gecikmeli);}
       /* T5e (2026-10-09; gerçekçilik planı T5 madde 8): kaleci yerdeyken (uçuş, kapanma, kalkış) top kendi ceza sahamızda sahipsizse kovalayanlar
          dışındaki en yakın saha oyuncusu kale çizgisine koşar (direklerin arası; topun hizasıyla kale ortasının ortası, 0,5 m önde) */
       let cizgiBek=null,cbx=0,cbz=0;
@@ -238,24 +240,31 @@ Object.assign(Match.prototype,{
     if(p.rol==='DEF'&&!hucum)u=cizgi+(p.mevki.bek?0.6:0);
     if(hucum){
       const ofs=this._ofs[t],s=odak.sahip;
+      /* T7b (js/mac-takim.js): koridor sahipliği yanal yeri verir; kurmada stoperler, bekler ve altı numara kurma dizilişinde; geride kalanlar
+         (top rakip yarısındayken) koşmaz, bindirmez, destek ve ceza sahası rolü almaz */
+      const KR=this._koridor&&this._koridor[t],GR=this._geride&&this._geride[t],geride=!!(GR&&GR.has(p))&&bu>0,kurma=!!(N&&N.ad==='kur'&&s&&s.team===t);
+      if(KR&&KR.has(p))w=KR.get(p);
+      if(kurma){const k2=this.kurmaKonumu(p,t,k,N);if(k2){u=k2.u;w=k2.w;}}
       /* ortaya koşu rolleri: top kanatta ve son üçte birde */
       const orta=bu>PL-30&&Math.abs(bw-MZ)>11&&s&&s.team===t;
-      if(orta){const r=this.kutuRolu(p,t,bw);if(r){u=r.u;w=r.w;p.hizOran=0.95;ef=0.8;}}
+      if(orta){const r=geride?null:this.kutuRolu(p,t,bw);if(r){u=r.u;w=r.w;p.hizOran=0.95;ef=0.8;}}
       else if(s&&s.team===t){
-        /* destek: topa en yakın iki oyuncu açık pas yoluna gelir */
-        if(this.destekci(p,s)){const n=this.destekNoktasi(p,s,dt);if(n){u=n.u;w=n.w;p.hizOran=0.8;ef=0.6;}}
+        /* destek: topa en yakın iki oyuncu açık pas yoluna gelir (T7b: kurmada stoperler ve bekler yerinde kalır) */
+        if(!geride&&!(kurma&&p.rol==='DEF')&&this.destekci(p,s)){const n=this.destekNoktasi(p,s,dt);if(n){u=n.u;w=n.w;p.hizOran=0.8;ef=0.6;}}
         /* derin koşu: forvet (ve bazen kanat) topu tutan ileri bakınca savunmanın arkasına */
-        const kosu=this.derinKosu(p,s,ofs,dt);if(kosu){u=kosu.u;w=kosu.w;p.hizOran=1;ef=1;}
+        const kosu=geride?null:this.derinKosu(p,s,ofs,dt);if(kosu){u=kosu.u;w=kosu.w;p.hizOran=1;ef=1;}
         /* bindirme: aynı kanatta top ilerideyse bek dışından geçer (kanatta ikiye bir) */
         const ayniKanat=Math.sign(s.z-MZ)===Math.sign(p.mevki.w-MZ)&&Math.abs(s.z-MZ)>10;
-        if(p.mevki.bek&&ayniKanat&&s!==p&&s.x*d>-5&&(!N||N.bekCik)){u=Math.max(u,s.x*d+(s.mevki.kanat?6:-4));w=p.mevki.w<MZ?3.5:PW-3.5;p.hizOran=0.95;ef=0.8;}
-        /* uzak kanat: top öbür kanatta ve ilerideyse içeri, ceza sahasına kayar */
-        if(p.mevki.kanat&&!ayniKanat&&Math.abs(s.z-MZ)>10&&s.x*d>10){u=Math.max(u,ofs-4);w=lerp(w,MZ,0.55);ef=Math.max(ef,0.5);}
+        if(!geride&&p.mevki.bek&&ayniKanat&&s!==p&&s.x*d>-5&&(!N||N.bekCik)){u=Math.max(u,s.x*d+(s.mevki.kanat?6:-4));w=p.mevki.w<MZ?3.5:PW-3.5;p.hizOran=0.95;ef=0.8;}
+        /* uzak kanat: top öbür kanatta ve ilerideyse içeri, ceza sahasına kayar (T7b: son bölge dışında genişliği tutar — yüklenip çevirmenin hedefi) */
+        if(p.mevki.kanat&&!ayniKanat&&Math.abs(s.z-MZ)>10&&s.x*d>10){u=Math.max(u,ofs-4);w=lerp(w,MZ,N&&N.ad!=='sonBolge'?0.15:0.55);ef=Math.max(ef,0.5);}
         /* T7a: geride son dakikalar — kafası en iyi stoper forvet hattına çıkar (maç durumu, js/mac-takim.js) */
         if(N&&N.stoperIleri===p&&bu>-5){u=Math.max(u,ofs-4);w=MZ+(p.mevki.w<MZ?-3:3);p.hizOran=0.95;ef=Math.max(ef,0.8);}
       }
       /* forvet savunmanın omzunda, kanat biraz gerisinde bekler; koşu yapmayan hücumcu ofsayta düşmez */
       if(!p.kosu&&s&&s.team===t){if(p.rol==='FV')u=Math.max(u,ofs-(p.mevki.hedef?1.2:2.5));else if(p.mevki.kanat&&bu>-10)u=Math.max(u,ofs-9);}
+      /* T7b: geride kalan topun 12 m gerisinde, rakip yarısının 5 m'sini geçmez, merkezi kapatır */
+      if(geride){u=Math.min(u,bu-12,5);w=clamp(w,MZ-16,MZ+16);}
       if(!p.kosu&&u>ofs-0.6&&u>0)u=ofs-0.6;
       /* kararlı hedef ofsayttaysa hemen geri (T1) */
       zorla=!p.kosu&&p._hdfX*d>ofs-0.3&&p._hdfX*d>0;

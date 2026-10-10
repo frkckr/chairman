@@ -10,7 +10,9 @@ ayarEkle('T',{
   niyetEtki:1,       // T7a: niyet ve maç durumunun taktiğe ve düzene etkisi (0: yok, tabanın aynısı)
   macDurumEtki:1,    // T7a: maç durumunun (skor × kalan süre × eksik adam) payı (0: niyet var, maç durumu yok)
   niyetYenile:0.5,   // T7a: niyet en çok bu aralıkla yeniden hesaplanır (sn; sahiplik değişince ve duruşta hemen)
-  kontraSure:6       // T7a: kontra niyeti top kazanıldıktan sonra en çok bu kadar sürer (sn)
+  kontraSure:6,      // T7a: kontra niyeti top kazanıldıktan sonra en çok bu kadar sürer (sn)
+  kurmaStoperW:17,   // T7b: kurmada stoperlerin orta çizgiden uzaklığı (m; ceza sahası genişliği ±20)
+  gerideEk:1         // T7b: hücumda geride kalan sayısı = bizim yarıdaki rakip saha oyuncusu + bu (en az 2)
 });
 /* niyet → düzen ve taktik farkı. Taktik: risk kayıp maliyetinin çarpanıdır (yüksek = temkinli), sakin geri pas ve sabır, tempo karar hızı, direkt ileri
    ve uzun oyun (mac-karar.js); toplanır (risk çarpılır). Düzen: genişlik hücumda mevkilerin yayılma çarpanı, derinlik bloğun öne/geriye kayması (m),
@@ -28,7 +30,7 @@ const NIYET_PARAM={
   savunma: {risk:1,   sakin:0,    tempo:0,    direkt:0,    genislik:1,   derinlik:0, bekIleri:1,  kosu:1,  bekCik:true}
 };
 Object.assign(Match.prototype,{
-  niyetYeni(){return{ad:'savunma',t0:0,genislik:1,derinlik:0,bekIleri:1,kosu:1,bekCik:true,blok:0,duranGecikme:0,faulIstek:1,stoperIleri:null,
+  niyetYeni(){return{ad:'savunma',t0:0,genislik:1,derinlik:0,bekIleri:1,kosu:1,bekCik:true,blok:0,duranGecikme:0,faulIstek:1,stoperIleri:null,alti:null,basan:0,uzun:false,
     durum:{fark:0,kalanDk:90,adamFark:0,acele:0,koru:0,eksik:0}};},
   /* takimAI'dan her adım (sahiplik takibinden sonra): niyetYenile sn'de bir, sahiplik takımı değişince ya da duruş başlayıp bitince yeniden hesaplanır */
   niyetAdim(dt,du){
@@ -53,7 +55,59 @@ Object.assign(Match.prototype,{
     N.blok=k*(4*D.acele-3*D.koru-3*D.eksik);
     N.duranGecikme=k*2*D.koru;N.faulIstek=1+k*0.6*D.koru;
     N.stoperIleri=k&&D.acele>0.6&&ad!=='savunma'?this.ileriStoper(t):null;
+    /* T7b: kurma — altı numara, basan rakip sayısı ve +1 üstünlüğü (kaleci dahil); sağlanamıyorsa uzun (etkin direkt +0,4) */
+    N.alti=null;N.basan=0;N.uzun=false;
+    if(k&&ad==='kur'){const b=this.ball,bx=du?du.x:b.x,bz=du?du.z:b.z,bu=bx*d;let en=null;
+      for(const p of this.teams[t])if(p.oyunda&&p.rol==='OS'&&p.mevki.derin&&(!en||Math.abs(p.mevki.w-MZ)<Math.abs(en.mevki.w-MZ)))en=p;
+      N.alti=en;let Pb=0,Qb=1;
+      for(const o of this.teams[1-t])if(o.oyunda&&o.rol!=='GK'&&o.x*d>bu-2&&Math.hypot(o.x-bx,o.z-bz)<22)Pb++;
+      for(const p of this.teams[t])if(p.oyunda&&p.rol!=='GK'&&p.x*d<bu+8&&Math.hypot(p.x-bx,p.z-bz)<30)Qb++;
+      N.basan=Pb;N.uzun=Qb<Pb+1;}
   },
+  /* T7b: kurma dizilişi (plan T7 madde 2): stoperler ceza sahası genişliğine açılır, altı numara basan iki rakip varsa aralarına, yoksa önlerine
+     gelir, bekler yükselir ve çizgiye açılır. k: mevkinin dizilişteki yeri ({u, w}, hücum çerçevesi); kurmada rolü olmayana null */
+  kurmaKonumu(p,t,k,N){const m=p.mevki;
+    if(p.rol==='DEF'&&!m.bek)return{u:k.u,w:MZ+(m.w<MZ?-1:1)*MOTOR_AYAR.kurmaStoperW};
+    if(m.bek)return{u:k.u+10,w:m.w<MZ?4:PW-4};
+    if(p===N.alti)return N.basan>=2?{u:k.u-10,w:MZ}:{u:k.u-3,w:MZ+(m.w-MZ)*0.3};
+    return null;},
+  /* T7b: geride kalanlar (plan T7 madde 7): hücumda bizim yarıdaki rakip saha oyuncusu + gerideEk kadar oyuncu (en az 2) geride kalır: önce
+     stoperler, sonra pozisyon alması ve çabukluğu en iyi bek/derin orta saha. Koşmaz, bindirmez, destek ve ceza sahası rolü almaz (bolgeKonumu).
+     6 karede bir; savunmada boş */
+  gerideKalanlar(t){const G=this._geride||(this._geride=[new Set(),new Set()]);
+    if(this.kare%6!==(t?3:0))return G[t];
+    const S=new Set();G[t]=S;const N=this._niyet&&this._niyet[t];if(!N||!MOTOR_AYAR.niyetEtki||N.ad==='savunma')return S;
+    const d=this.dir[t];let rakip=0;for(const o of this.teams[1-t])if(o.oyunda&&o.rol!=='GK'&&o.x*d<0)rakip++;
+    const gerek=Math.max(2,rakip+MOTOR_AYAR.gerideEk),b=this.ball;
+    const C=this.teams[t].filter(p=>p.oyunda&&p.rol!=='GK'&&p!==b.sahip&&p!==N.stoperIleri&&(p.rol==='DEF'||p.mevki.derin));
+    const stp=p=>p.rol==='DEF'&&!p.mevki.bek?1:0,ka=p=>profilAlt(p,'pozisyonAlma',0.5)+profilAlt(p,'cabukluk',0.5);
+    C.sort((a,c)=>stp(c)-stp(a)||ka(c)-ka(a)||a.n-c.n);
+    for(const p of C){if(S.size>=gerek)break;S.add(p);}
+    return S;},
+  /* T7b: koridor sahipliği (plan T7 madde 3): saha beş dikey koridora ayrılır (PW/5). Hücumda topun hizasındaki ve önündeki oyuncularda (kaleci,
+     topu süren ve geride kalanlar hariç; yer dizilişten) aynı koridor ve aynı hatta (|Δu| < 8 m) iki kişi olmaz — koridor ortasına uzak olan boş
+     komşu koridora kayar —, boş koridor kalmaz — iki kişilik komşu koridordan en yakını kayar. Kontrada üç şerit: en öndeki forvet ortaya, en
+     öndeki iki oyuncu kanatlara. Sonuç oyuncu → koridorun ortası (w); 6 karede bir */
+  koridorAta(t,odak){const K=this._koridor||(this._koridor=[new Map(),new Map()]);
+    if(this.kare%6!==(t?3:0))return K[t];
+    const M=new Map();K[t]=M;const N=this._niyet&&this._niyet[t];if(!N||!MOTOR_AYAR.niyetEtki||N.ad==='savunma')return M;
+    const d=this.dir[t],bu=odak.x*d,bw=odak.z,diz=this.taktik[t].dizilis,b=this.ball,GR=this._geride&&this._geride[t],KW=PW/5,L=[];
+    for(const p of this.teams[t]){if(!p.oyunda||p.rol==='GK'||p===b.sahip||(GR&&GR.has(p)))continue;
+      const k=dizilisKonumu(diz,p.n,bu,bw,true,N);if(k.u<bu-6)continue;L.push({p,u:k.u,w:k.w,s:clamp(Math.floor(k.w/KW),0,4),yeni:false});}
+    const dolu=(s,q)=>L.some(r=>r!==q&&r.s===s&&Math.abs(r.u-q.u)<8);
+    if(N.ad==='kontra'){
+      const F=L.filter(q=>q.p.rol==='FV').sort((a,c)=>c.u-a.u||a.p.n-c.p.n)[0];if(F){F.s=2;F.yeni=true;}
+      const Y=L.filter(q=>q!==F).sort((a,c)=>c.u-a.u||a.p.n-c.p.n).slice(0,2);
+      if(Y.length===2){const sol=Y[0].w<=Y[1].w?Y[0]:Y[1],sag=sol===Y[0]?Y[1]:Y[0];sol.s=0;sag.s=4;sol.yeni=sag.yeni=true;}}
+    else{
+      for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){const a=L[i],c=L[j];if(a.s!==c.s||Math.abs(a.u-c.u)>=8)continue;
+        const mv=Math.abs(a.w-(a.s+0.5)*KW)>Math.abs(c.w-(c.s+0.5)*KW)?a:c,B=[mv.s-1,mv.s+1].filter(s=>s>=0&&s<=4&&!dolu(s,mv));
+        if(B.length){mv.s=B.length>1&&Math.abs((B[1]+0.5)*KW-mv.w)<Math.abs((B[0]+0.5)*KW-mv.w)?B[1]:B[0];mv.yeni=true;}}
+      for(let s=0;s<5;s++){if(L.some(q=>q.s===s))continue;let en=null,ed=1e9;
+        for(const q of L){if(Math.abs(q.s-s)!==1||L.filter(r=>r.s===q.s).length<2)continue;const dd=Math.abs(q.w-(s+0.5)*KW);if(dd<ed){ed=dd;en=q;}}
+        if(en){en.s=s;en.yeni=true;}}}
+    for(const q of L)if(q.yeni)M.set(q.p,(q.s+0.5)*KW);
+    return M;},
   /* kontra koşulu (plan T7 madde 1): topun önündeki (rakip kalesi yönünde) rakip saha oyuncusu − topun hizasında ya da önündeki bizim saha oyuncumuz
      (topu süren hariç). Sayım ≤ 0: top kazanıldığı anda kontra başlar; ≤ 1 sürdükçe sürer (savunma toparlanınca biter) */
   kontraSayim(t){const b=this.ball,d=this.dir[t],bu=b.x*d;let onde=0,bizim=0;
@@ -79,7 +133,7 @@ Object.assign(Match.prototype,{
     E.risk=Math.max(0.3,B.risk*(1+k*(P.risk-1))*(1-0.25*k*D.acele)*(1+0.3*k*D.koru)*(1+0.1*k*D.eksik));
     E.sakin=clamp(B.sakin+k*(P.sakin-0.3*D.acele+0.3*D.koru),0,1);
     E.tempo=clamp(B.tempo+k*(P.tempo+0.3*D.acele-0.25*D.koru),0,1);
-    E.direkt=clamp(B.direkt+k*(P.direkt+0.3*D.acele),0,1);
+    E.direkt=clamp(B.direkt+k*(P.direkt+0.3*D.acele+(N.uzun?0.4:0)),0,1);
     E.pres=clamp(B.pres+k*(0.25*D.acele-0.1*D.koru-0.15*D.eksik),0,1);},
   /* hoca kapısı (plan T7 madde 10): hocanın tabanını değiştirir; diziliş değişirse mevkiler sıradan (n) yeniden okunur, markaj/pres/koşu tabloları
      sıfırlanır; 'taktik' olayı yayılır */
