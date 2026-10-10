@@ -643,8 +643,9 @@ function kafaKarari(m,p){
       let r=m.rast()*top,c=Ls[Ls.length-1];for(const c2 of Ls){r-=c2.a;if(r<=0){c=c2;break;}}
       const hz=MZ+c.zt,L=hyp(hx-b.x,hz-b.z),T=L/v,hy=c.yt;
       return{tur:'sut',hx,hz,v,vy:(hy-b.y+0.5*G*T*T)/T,xg:x,hy};}}
-  /* baskı altındaki savunmacının kafası güvenliğe, gerekirse taça gider (birleştirme 2026-10-03) */
-  if(u<-PL+30||(p.rol==='DEF'&&u<5)||baski>0.7){const yan=w<MZ?-1:1,ds=baski>0.45,hx=b.x+d*(16+m.rast()*12),hz=clamp(b.z+yan*(4+m.rast()*12),ds?-3:3,ds?PW+3:PW-3);
+  /* baskı altındaki savunmacının kafası güvenliğe, gerekirse taça gider (birleştirme 2026-10-03). T6c: kendi üçte birimizde ya da savunmacının
+     kendi yarısında yalnız rakip yakınken (baskı 0,12 / 0,3 üstü: ~4 / 3,5 m içinde) uzaklaştırır; baskısız kafa arkadaşa gider (indirme) */
+  if((u<-PL+30&&baski>0.12)||(p.rol==='DEF'&&u<5&&baski>0.3)||baski>0.7){const yan=w<MZ?-1:1,ds=baski>0.45,hx=b.x+d*(16+m.rast()*12),hz=clamp(b.z+yan*(4+m.rast()*12),ds?-3:3,ds?PW+3:PW-3);
     return{tur:'uzaklastir',hx,hz,v:10+p.oz.kafa*5,vy:5+m.rast()*3};}
   let en=null,enP=-1e9;
   for(const q of m.teams[p.team]){if(q===p||!q.oyunda||q.rol==='GK')continue;const L=hyp(q.x-b.x,q.z-b.z);if(L<3||L>17)continue;

@@ -370,7 +370,8 @@ Object.assign(Match.prototype,{
     if(d<0.6&&yb<0.8)return 'ayak';
     if(d<0.5&&yb>=0.8&&yb<1.55)return 'gogus';
     if(b.vy<3&&hvTemas(this,p)){
-      /* ceza sahaları dışında, rakipsiz ve yavaşça düşen topu kafayla oynamaz: göğse ya da ayağa indirir */
+      /* ceza sahaları dışında, rakipsiz ve yavaşça düşen topu kafayla oynamaz: göğse ya da ayağa indirir (T6c: rakipsiz kafa uzaklaştırma değil,
+         arkadaşa gider — js/mac-karar.js kafaKarari) */
       if(b.vy<0&&hyp(b.vx,b.vz)<9&&!(Math.abs(b.x)>PL-CEZA_U-2&&Math.abs(b.z-MZ)<CEZA_W+2)){
         let rakip=false;for(const o of this.teams[1-p.team])if(o.oyunda&&hyp(o.x-b.x,o.z-b.z)<2.5){rakip=true;break;}
         if(!rakip)return null;}
@@ -459,22 +460,26 @@ Object.assign(Match.prototype,{
       if(puan>enP){enP=puan;en=a;}}
     return en==null?null:{surum:b.surum,t:this.t,yon:aciNorm(en),hazir:false};
   },
-  kafaVur(p){
-    const b=this.ball,k=kafaKarari(this,p);
+  /* T6c: cek — hava düellosundan; yüzey temasın geometrisinden (js/mac-hava.js hvYuzey, HV_YUZEY): isabet ve güç yüzeye ve çekişmeye göre;
+     tepeyle sıyırmada top gelişini büyük ölçüde korur (uzatma), yukarı kalkar. Sözleşme: kafa.yuzey, kafa.cek; 'header' olayında yuzey, cek */
+  kafaVur(p,cek){
+    const b=this.ball,k=kafaKarari(this,p),yz=hvYuzey(p),Q=HV_YUZEY[yz];
     /* kendi kalesine dönük savunmacının kafası çoğu zaman topu çizgiden dışarı atar (korner) */
     const d=this.dir[p.team],kaleyeDonuk=Math.cos(p.yon)*d<-0.3,kendiCeza=this.kendiCezaSahasinda(p,b.x,b.z);
     if(k.tur==='uzaklastir'&&kendiCeza&&this.rast()<(kaleyeDonuk?0.45:0.18)){k.hx=b.x-d*12;k.hz=b.z+(b.z<MZ?-1:1)*(4+this.rast()*8);k.vy=3+this.rast()*3;}
-    const L=hyp(k.hx-b.x,k.hz-b.z)||1,sig=(0.05+0.1*(1-p.oz.kafa))*(1+baskiAltinda(this,p)*0.5),gelen=hyp(b.vx,b.vz);
+    const L=hyp(k.hx-b.x,k.hz-b.z)||1,sig=(0.05+0.1*(1-p.oz.kafa))*(1+baskiAltinda(this,p)*0.5)*Q[0]*(cek?1.4:1),gelen=hyp(b.vx,b.vz);
     /* kafa vuruşu gelen topun hızının bir kısmını kullanır: sert gelen orta sert gider */
-    const a=Math.atan2(k.hz-b.z,k.hx-b.x)+this.normal()*sig,v=Math.min(22,k.v*(0.85+this.rast()*0.15)+gelen*(k.tur==='sut'?0.12:0.2));
-    b.vx=Math.cos(a)*v;b.vz=Math.sin(a)*v;b.vy=k.vy+this.normal()*sig*6;b.egri=0;b.ust=0;
-    b.sahip=null;p.kickCd=0.4;p.eylem={ad:'kafa',t:0,sure:0.5,tur:k.tur};
-    p.sonDokunus={t:this.t,tur:'kafa',ayak:null,yuzey:'alin'};
+    let a=Math.atan2(k.hz-b.z,k.hx-b.x)+this.normal()*sig;
+    if(yz==='tepe'&&gelen>1){const ag=Math.atan2(b.vz,b.vx);a=ag+aciFark(a,ag)*0.35;}
+    const v=Math.min(22,(k.v*(0.85+this.rast()*0.15)+gelen*(k.tur==='sut'?0.12:0.2))*Q[1]*(cek?0.9:1));
+    b.vx=Math.cos(a)*v;b.vz=Math.sin(a)*v;b.vy=(yz==='tepe'?Math.max(k.vy,2+gelen*0.12):k.vy)+this.normal()*sig*6;b.egri=0;b.ust=0;
+    b.sahip=null;p.kickCd=0.4;p.eylem={ad:'kafa',t:0,sure:0.5,tur:k.tur,yuzey:yz,cek:!!cek};
+    p.sonDokunus={t:this.t,tur:'kafa',ayak:null,yuzey:yz};
     this.dokunus(p,true);b.hedefOyuncu=k.alici||null;
     if(k.tur==='sut'){b.sut={team:p.team,by:p,gkDone:false,cerceve:this.cerceveyeGider(p.team),kafa:true,t:this.t,hedefZ:k.hz,hedefY:k.hy,tur:'kafa',
       ipucu:{yan:Math.sign(k.hz-MZ)||1,guven:clamp(0.8-0.5*p.oz.kafa,0.2,0.8)}};this.ist.sut[p.team]++;}
     else if(k.tur==='indirme'||k.tur==='pas'){this.pasSay(p,k.hx,k.hz,L,'kafa');this.ofsaytPasAni(p);}
-    this.on('header',{p,shot:k.tur==='sut',tur:k.tur,xg:k.xg||0});if(k.tur==='sut')this.sutTakipAta(p,k.xg);
+    this.on('header',{p,shot:k.tur==='sut',tur:k.tur,xg:k.xg||0,yuzey:yz,cek:!!cek});if(k.tur==='sut')this.sutTakipAta(p,k.xg);
   },
   /* gelişine karar (C'nin kovala'sından her karede, karşılama noktası k: {x,z,t}); top başına bir kez, topa ~0,6 sn kala:
      arkadaştan gelen topta gelişine şut ya da tek vuruşla pas (kontrol edip oynamaya karşı); seçilmezse yönlü ilk dokunuş planı */

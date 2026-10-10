@@ -18,6 +18,10 @@
    (meşru omuz temasının payı düşülür). Sıçrama planlanan temas noktasına yönelir (kalkışta yatay hız).
    Topun uçuşunu okuma (kovala): oyuncu ve top sürümü başına iki zar daha — derinlik (topun gidişi yönünde) ve yanal hata (m; σ = taban +
    çarpan × (1 − okuma), yanal yarısı); karşılama noktası bu kadar kayar, top yaklaştıkça (karşılamaya 1 sn kalandan) en çok %60'a iner.
+   T6c (kafa kalitesi): temasın yüzeyi geometriden (hvYuzey) — alın (top baş merkezinin ±0,12 m'sinde, baş gövdeyle uzanma sınırında), yan
+   (uzanmanın 0,06 m ötesi: başın yanıyla), tepe (top 0,12 m üstte: sıyırma), yüz (0,12 m altta: fazla yüksek sıçradı, top yüze ya da boyna
+   gelir). İsabet (σ çarpanı) ve güç yüzeyden (HV_YUZEY), çekişmede σ ×1,4 ve güç ×0,9; tepeyle sıyırmada top gelişini büyük ölçüde korur
+   (uzatma) ve yukarı kalkar (js/mac-topla.js kafaVur).
    Baş: kafaYuksekligi başın tepesidir; alın (baş merkezi) 0,10 m altı (hvAlin). */
 'use strict';
 ayarEkle('C',{
@@ -50,14 +54,17 @@ function hvHataAl(m,p){const b=m.ball;if(p._hvS===b.surum)return;p._hvS=b.surum;
    çıkacaksa başın tepesiyle sıyırır. Adım 6 ara noktada taranır. Rastlantısız; temas yoksa false; varsa p._hvTs (kesir 0–1), p._hvTy (top − baş,
    m), p._hvTd (yatay uzaklık, m) yazılır (oyuncu nesnesinde, ayırma yok) */
 const HV_T={s:0,e:0,dh:0};
-/* genel sınama: top a → b parçası (hız v), baş merkezi (px, hy, pz), uzanma L. Temas varsa HV_T doldurulur, kesir döner; yoksa −1 */
+/* genel sınama: top a → b parçası (hız v), baş merkezi (px, hy, pz), uzanma L. Temas varsa HV_T doldurulur (s kesir, e top − baş, dh topun
+   yolunun başa en yakın yatay uzaklığı), kesir döner; yoksa −1 */
 function hvTemasG(ax,ay,az,bx,by,bz,vx,vy,vz,px,hy,pz,L){const dx=bx-ax,dy=by-ay,dz=bz-az;
   for(let k=0;k<=6;k++){const s=k/6,y=ay+dy*s,e=y-hy;if(e>0.23||e<-0.23)continue;
     const x=ax+dx*s-px,z=az+dz*s-pz,dh=Math.sqrt(x*x+z*z),r=L+Math.sqrt(0.0529-e*e);
     if(dh>r)continue;
     if(e>0.12&&vy<-0.5){/* top alnın üstünde: inip alnın hizasına (0,12) erişimden çıkmadan gelecek mi */
       const t=(e-0.12)/-vy,x2=x+vx*t,z2=z+vz*t;if(Math.sqrt(x2*x2+z2*z2)<=L+0.196)continue;}
-    HV_T.s=s;HV_T.e=e;HV_T.dh=dh;return s;}
+    /* T6c: yanal uzanma topun yolunun başa en yakın geçtiği yatay uzaklıktan (ilk temas erişimin kenarında olur; oyuncu alnını yola getirir) */
+    const v2=vx*vx+vz*vz,ca=v2>0.01?Math.abs(x*vz-z*vx)/Math.sqrt(v2):dh;
+    HV_T.s=s;HV_T.e=e;HV_T.dh=ca<dh?ca:dh;return s;}
   return -1;}
 function hvTemas(m,p){const b=m.ball;if(hvTemasG(b.px,b.py,b.pz,b.x,b.y,b.z,b.vx,b.vy,b.vz,p.x,hvAlin(p),p.z,hvEgilme(p))<0)return false;
   p._hvTs=HV_T.s;p._hvTy=HV_T.e;p._hvTd=HV_T.dh;return true;}
@@ -69,6 +76,9 @@ function hvTemasOnu(m,p,n){const yol=m.topYolu(),i0=Math.max(0,Math.round((m.t-m
     const s=hvTemasG(a.x,a.y,a.z,c.x,c.y,c.z,(c.x-a.x)/dt,(c.y-a.y)/dt,(c.z-a.z)/dt,p.x+p.vx*t,aD+yk,p.z+p.vz*t,L);
     if(s>=0)return(k-1+s)*dt;a=c;}
   return -1;}
+/* T6c: kafanın teması (bu adımın temasından: p._hvTy, p._hvTd) ve yüzeye göre [isabet σ çarpanı, güç çarpanı] */
+const hvYuzey=p=>{const e=p._hvTy;if(e>0.12)return 'tepe';if(e<-0.12)return 'yuz';return p._hvTd>hvEgilme(p)+0.06?'yan':'alin';};
+const HV_YUZEY={alin:[1,1],yan:[1.6,0.85],tepe:[2.4,0.55],yuz:[3,0.4]};
 /* eşit temasta yerini koruyan: kütle ve sertlik */
 const hvGuc=p=>kutle(p)*(0.8+0.4*(p.oz.sertlik!=null?p.oz.sertlik:0.5));
 /* sıçramanın ilerlemesi (çekirdeğin adım döngüsünden). T6b: kalkışta sıçrama planlanan temas noktasına (z.cx, z.cz; kalkıştan z.tt sn sonra)
@@ -128,13 +138,15 @@ Object.assign(Match.prototype,{
     if(R.length){this.ist.havaTopu++;let kay=null,kd=9;
       /* neredeyse aynı anda varış: rakibin başı topa 0,1 sn içinde değecekse temas anları (+ sapma havaDuello) karşılaştırılır; erken olan kazanır */
       const sd=MOTOR_AYAR.havaDuello;let enT=W._hvTs/60+this.normal()*sd,en=-1;
-      for(let i=0;i<R.length;i++){const q=R[i],t0=kafa.some(a=>a.p===q)?q._hvTs/60:hvTemasOnu(this,q,6);if(t0<0)continue;const t=t0+this.normal()*sd;if(t<enT){enT=t;en=i;}}
+      for(let i=0;i<R.length;i++){const q=R[i],ak=kafa.some(a=>a.p===q),t0=ak?q._hvTs/60:hvTemasOnu(this,q,6);if(t0<0)continue;
+        if(!ak){q._hvTs=HV_T.s;q._hvTy=HV_T.e;q._hvTd=HV_T.dh;}   /* T6c: öngörülen temasın yüzeyi */
+        const t=t0+this.normal()*sd;if(t<enT){enT=t;en=i;}}
       if(en>=0){const q=R[en];R[en]=W;W=q;}
       for(const q of R){q.eylem={ad:'kafa',t:0,sure:0.5,bos:true};q.kickCd=0.4;
         const dx=q.x-W.x,dz=q.z-W.z,n=hrkHyp(dx,dz)||1,yuk=(W.yuk||0)-(q.yuk||0);if(n<kd){kd=n;kay=q;}
         if(n<1.2)this.dengeBoz(q,(0.12+0.3*clamp((kutle(W)-kutle(q))/25+yuk*1.5,0,1)+0.1*W.oz.sertlik)*(1+(q.yuk||0)*2),dx/n,dz/n,'hava',W);}
       if(kay&&this.havaFaulu(W,kay))return;}
-    this.kafaVur(W);
+    this.kafaVur(W,R.length>0);
   },
   /* T5 (2026-10-09): hava topunda faul temastan — kaybeden kazanana (1,2 m'den yakın) çarpar; tek zar hakemin görmesi. T6b: şiddet = 1,8 m/sn'yi
      aşan kapanma hızı / 3,5 (omuz omuza ikisi de topa sıçrarken yaklaşma meşru temastır; eskiden kapanma/5 bütün yaklaşmayı sayıyordu) + arkadan

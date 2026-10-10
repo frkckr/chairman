@@ -31,12 +31,14 @@ module.exports={
       ['Hava düellosu (bölümde) / maç','hDuello',2],['Sıçrama / maç','hSicrama',1],['Sıçrama: koşarak %','hSicramaKos',1],
       ['Sıçrama yüksekliği ort. (m)','hSicramaH',2],['Kafa (bölümde ilk temas) / maç','hKafa',2],['Kafa: top − alın ortanca (m)','hKafaFark',2],
       ['Kafa: |top − alın| ≤ 0,12 m %','hKafaAlin',1],['Kafa: sıçrayarak %','hKafaSicrama',1],['Kafa: zamanlama ortanca (sn; + geç)','hKafaZam',3],
-      ['Kafa: |zamanlama| ortanca (sn)','hKafaZamMut',3],['Sonra: atan takım topu tuttu %','hTuttu',1],
+      ['Kafa: |zamanlama| ortanca (sn)','hKafaZamMut',3],['Kafa yüzeyi (T6c): alın %','hY_alin',1],['Kafa yüzeyi: yan %','hY_yan',1],
+      ['Kafa yüzeyi: tepe (sıyırma) %','hY_tepe',1],['Kafa yüzeyi: yüz ve boyun %','hY_yuz',1],['Kafa: çekişmeli (düelloda) %','hY_cek',1],
+      ['Sonra: atan takım topu tuttu %','hTuttu',1],
       ['Hava faulü / maç','hFaul',2,[0.8,2.5,'T6']]]),
   yeni:()=>{
     const hyp=Math.hypot,kaynak={},temas={};for(const k of H_KAYNAK)kaynak[k]=0;for(const k of H_TEMAS)temas[k]=0;
     let bolum=0,inis=0,cek15=0,cek3=0,bos3=0,cekKafa=0,cekN=0,temasAtan=0,temasN=0,duello=0,sicrama=0,sicramaKos=0,kafaSicrama=0,kafaN=0,tuttu=0,tuttuN=0,faul=0;
-    const sicH=[],kFark=[],kZam=[];
+    const sicH=[],kFark=[],kZam=[],yz={alin:0,yan:0,tepe:0,yuz:0};let yzN=0,yzCek=0;
     let ep=null,sonra=null,bekle=null,son='diger';
     const DURAN={korner:'korner',serbest:'serbest',kaleVurusu:'kaleVurusu',tac:'tac',penalti:'sut'};
     const kapat=(m,tur,p)=>{temas[tur]++;if(ep.cek)cekN++;
@@ -50,6 +52,7 @@ module.exports={
       dinle(ad,v,m){if(!m)return;
         if(ad==='faul'||ad==='avantaj'||ad==='faulGorulmedi'){if(v&&(v.neden==='hava'||v.kaynak==='hava'))faul++;return;}
         /* son dokunuşun kaynağı (bölüm açılınca okunur) */
+        if(ad==='header'&&v&&v.yuzey){yzN++;if(yz[v.yuzey]!=null)yz[v.yuzey]++;if(v.cek)yzCek++;}   /* bütün kafalar (bölümden bağımsız) */
         if(DURAN[ad])son=DURAN[ad];
         else if(ad==='cross')son='orta';
         else if(ad==='pass')son=v&&v.p&&v.p.rol==='GK'&&!v.tip?'kaleci':v&&v.tip==='hava'?(v.long?'uzunTop':'havaPas'):'diger';
@@ -79,7 +82,7 @@ module.exports={
           ep={kaynak:k,takim:b.sonTakim,t0:m.t,havaOnce:m.ist.havaTopu,inis:false,cek:false,sic:new Set()};}},
       bitir(){
         const ham={hCek15:[cek15,inis],hCek3:[cek3,inis],hBos3:[bos3,inis],hCekKafa:[cekKafa,cekN],hTemasAtan:[temasAtan,temasN],
-          hSicramaKos:[sicramaKos,sicrama],hKafaAlin:[kFark.filter(x=>Math.abs(x)<=0.12).length,kFark.length],hKafaSicrama:[kafaSicrama,kafaN],hTuttu:[tuttu,tuttuN]};
+          hSicramaKos:[sicramaKos,sicrama],hY_alin:[yz.alin,yzN],hY_yan:[yz.yan,yzN],hY_tepe:[yz.tepe,yzN],hY_yuz:[yz.yuz,yzN],hY_cek:[yzCek,yzN],hKafaAlin:[kFark.filter(x=>Math.abs(x)<=0.12).length,kFark.length],hKafaSicrama:[kafaSicrama,kafaN],hTuttu:[tuttu,tuttuN]};
         for(const k of H_KAYNAK)ham['hK_'+k]=[kaynak[k],bolum];
         let tN=0;for(const k of H_TEMAS)tN+=temas[k];for(const k of H_TEMAS)ham['hT_'+k]=[temas[k],tN];
         return{ham,hBolum:bolum,hDuello:duello,hSicrama:sicrama,hSicramaH:sicH.length?sicH.reduce((a,c)=>a+c,0)/sicH.length:NaN,hKafa:kafaN,
