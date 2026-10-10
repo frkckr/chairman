@@ -11,11 +11,14 @@
    (tarama); merkezin ilk eylemi (kanada pas, ileri pas, geri/yan pas, dönüp ilerleme (yüzü kaleye ±60° ve 1,5 m ileri), taşıma (≥ 4 m), kayıp,
    5 sn tutuyor) ve tek dokunuş payı; alıştan pasa süre; kanada pas payı; kanadın 4 sn içindeki devamı (ilerler ≥ 5 m, orta, içeri kat eder
    ≥ 4 m ya da şut, beke/merkeze döner, kayıp, diğer); 6 sn sonra top ev sahibinde mi.
-   Kabul: T7-0'da bilgi (çıkış kodu 0); eşikler T7c sonunda belgeye yazılır ve kapı olur (gerçekçilik planı §4 T7 “Alt adımlar”).
-   Kullanım: node araclar/mac-deneme.js --senaryo c-kanat [N=24 kademe başına] [tohum] */
+   Kabul (T7g, 2026-10-10; kabul dışıysa çıkış kodu 1): [1] kademe 0–2'de pas merkeze ≥ %90 ulaşır ve merkez topun yolunda ≥ 1,5 kez omzunun
+   üstünden bakar; [2] küçük grupta kanada pas ≥ %40 ve 6 sn sonra top ev sahibinde ≥ %55 (kademe başına 40 denemede %68–83, 24'te %58–83:
+   varsayılan 40); [A] algı denetimi. 11'e 11 kademesi bilgidir (zorla
+   verilen stoper pası sırtı markajlı merkeze %55–65 kesilir).
+   Kullanım: node araclar/mac-deneme.js --senaryo c-kanat [N=40 kademe başına] [tohum] */
 'use strict';
 module.exports={calistir({ctx,vm,N,tohum}){
-  const n=N||24,dt=1/60,t0=Date.now();
+  const n=N||40,dt=1/60,t0=Date.now();
   const kur=vm.runInContext(`(tohum,olay)=>{const m=new Match(olay,{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();return m;}`,ctx);
   const profilKur=vm.runInContext('profilKur',ctx),PW=vm.runInContext('PW',ctx),MZ=vm.runInContext('MZ',ctx);
   const secenekler=vm.runInContext('secenekler',ctx),dizilisKonumu=vm.runInContext('dizilisKonumu',ctx);
@@ -94,10 +97,16 @@ module.exports={calistir({ctx,vm,N,tohum}){
     console.log(`      kanada pas ${yz(K.length,U.length)} → kanat: `+KD.map(c=>c+' '+yz(kd[c]||0,K.length)).join(' · '));};
   for(let k=0;k<4;k++){const L=sonuc.filter(o=>o.k===k);yaz(KADEME[k],L);
     if(k===1){yaz('   görüş 0,3',L.filter(o=>o.gorus===0.3));yaz('   görüş 0,85',L.filter(o=>o.gorus===0.85));}}
+  /* kapılar [1]–[2] (T7g) */
+  let k1=true,k2=true;const pay=(a,c)=>c?100*a/c:0;
+  for(let k=0;k<3;k++){const L=sonuc.filter(o=>o.k===k&&!o.pasYok),U=L.filter(o=>o.ulasti),ul=pay(U.length,L.length),tr=U.reduce((a,o)=>a+o.tara,0)/Math.max(1,U.length);if(ul<90||tr<1.5)k1=false;}
+  {const U=sonuc.filter(o=>o.k===2&&o.ulasti),kn=pay(U.filter(o=>o.kanada).length,U.length),el=pay(U.filter(o=>o.elde6).length,U.length);if(kn<40||el<55)k2=false;
+   console.log((k1?'  ':'! ')+'[1] Kabul (T7): kademe 0–2 pas merkeze ≥ %90 ulaşır, topun yolunda tarama ≥ 1,5 — '+(k1?'tuttu':'TUTMADI'));
+   console.log((k2?'  ':'! ')+`[2] Kabul (T7): küçük grupta kanada pas %${kn.toFixed(0)} (≥ 40), 6 sn elde %${el.toFixed(0)} (≥ 55)`);}
   /* [A] algı denetimi (T7c, Ek H 26; belirlenimli): topu tutan merkezin 4 m arkasından 5 m/sn ile gelen rakip, merkezin son taramasında (1 sn önce)
      12 m geride duruyordu. Karar katmanının baskı süresi (gözlemci merkez) algıya göre uzun, gerçeğe göre kısa olmalı; rakip görüş içindeyse ikisi
      aynı. Kabul: görüş dışında fark ≥ 0,5 sn, görüş içinde 0 (rakipAlgi 0 iken denetim atlanır) */
-  let cikis=0;
+  let cikis=k1&&k2?0:1;
   {const algi=vm.runInContext('MOTOR_AYAR.rakipAlgi',ctx),olc=vm.runInContext('(m,p)=>gozlemle(p,()=>baskiSuresi(m,p.team,m.ball.x,m.ball.z,0).t1)',ctx);
     const m=kur((tohum||1)*1000+999,()=>{}),d=m.dir[0],hy=d>0?0:Math.PI,C=m.teams[0][7],D=m.teams[1][6],b=m.ball;
     bosalt(m,[C,D]);yerlestir(C,0,MZ,hy,0);yerlestir(D,-d*4,MZ+0.5,hy,5);

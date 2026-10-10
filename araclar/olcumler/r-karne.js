@@ -16,12 +16,15 @@ module.exports={
     ['Hareket: topa >25 m iken >4 m/sn %','rUzakKosu',1,[null,25,'T1']],['Hareket: 16+ saha oyuncusu koşuyor (anların) %','rKalabalik',1,[null,25,'T1']],
     ['Hareket: ortalama hız (m/dk)','rHizDk',0,[140,180,'T1']],['Hareket: >3 m/sn² ivmelenme / oyuncu·dk','rIvme',1,[null,5,'T1']],
     ['Top ayakta: ortanca (sn)','rAyakta',2,[1.2,2.0,'T2']],['Top ayakta: 1 sn\'den kısa %','rAyaktaKisa',1,[null,45,'T2']],['Top taşıma: >5 m %','rTasima',1,[25,35,'T2']],
-    ['Sahiplik: tamamlanan pas ort.','rSeqPas',2,[2.5,4,'T2']],['Sahiplik: ortalama süre (sn)','rSeqSure',1],['Sahiplik: pas yapılamadan biten %','rSeqBos',1,[null,25,'T2']],
+    /* T7g (2026-10-10, §7.7 kararı): sıkıştırılmış maçta sahiplik sayısı oyun dakikası başına gerçeğin ~2 katı, pas sayısı aynı → sahiplik başına
+       pas gerçeğin yarısı; bant 2,5–4 (gerçek) → 1,6–3 */
+    ['Sahiplik: tamamlanan pas ort.','rSeqPas',2,[1.6,3,'T7']],['Sahiplik: ortalama süre (sn)','rSeqSure',1],['Sahiplik: pas yapılamadan biten %','rSeqBos',1,[null,25,'T2']],
     /* T2 (2026-10-07): 10+ paslı sahiplik, pasın alıcısı (karar katmanının hedeflediği arkadaş; oyuncu-karnesi.js'teki gruplarla aynı), pas boyu */
     ['Sahiplik: 10+ paslı %','rSeq10',1,[3,null,'T2']],
     ['Pas alıcısı: forvet %','rAliciForvet',1,[null,30,'T2']],['Pas alıcısı: kanat %','rAliciKanat',1,[15,null,'T2']],['Pas boyu ort. (m)','rPasBoy',1,[16,20,'T2']]]
     .concat(R_KAYIP.map(([k,ad])=>['Top kaybı nedeni: '+ad+' %','rKayip_'+k,1]))
-    .concat([['PPDA (rakibin kendi %60\'ında pas / savunma eylemi)','rPpda',1,[7,12,'T2']],
+    /* T7g (§7.7): pas sıkışmaz, savunma eylemi (müdahale, çalım düellosu) 2,5–3,5 kat sıkışık → PPDA bandı 7–12 (gerçek) → 3,5–7 */
+    .concat([['PPDA (rakibin kendi %60\'ında pas / savunma eylemi)','rPpda',1,[3.5,7,'T7']],
     ['Şut: ceza sahası içinden %','rSutKutu',1,[55,null,'T2']],['Şut: ortanca mesafe (m)','rSutMesafe',1,[14,16,'T2']],
     ['Şut: forvet dışı %','rSutForvetDisi',1,[30,null,'T3']],
     /* T4 (2026-10-08, bire bir): çalım denemesi motorun 'calim' olayıdır (hazırlığı başlamış deneme; sonuç gecti/kayip/faul/disari/yarim).

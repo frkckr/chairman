@@ -287,6 +287,7 @@ Object.assign(Match.prototype,{
     if(sh&&sh.cerceve)this.ist.isabet[sh.team]++;
     const s=gk._sonKurt,ikinci=s!=null&&this.t-s<4&&(this._dSahipT||-9)<s;gk._sonKurt=this.t;
     this.on('save',{p:gk,catch:tut,tur:'kurtaris',sut:!!sh,cerceve:!!(sh&&sh.cerceve),bicim,ikinci,el:gk.eylem&&gk.eylem.ad==='ucus'?gk.eylem.el:'cift'});
+    this.kacanFirsat();   /* T7f: kurtarılan büyük fırsatta şutçu başını tutar (js/mac-takim.js) */
   },
   /* kalecinin kendi çelip düşürdüğü top (3 sn içinde, arada kimse sahip olmadan) ona dönüyor mu: yeniden alması ikinci kurtarıştır */
   kaleciDonen(gk){const s=gk._sonKurt;return s!=null&&this.t-s<3&&(this._dSahipT||-9)<s;},

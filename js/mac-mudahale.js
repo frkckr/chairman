@@ -386,13 +386,13 @@ Object.assign(Match.prototype,{
     const sv=s.spd;
     if(sv>1.5&&db<1.6&&eD<1){const ux=s.vx/sv,uz=s.vz/sv,rx=p.x-s.x,rz=p.z-s.z,boy=rx*ux+rz*uz,yan=hrkAbs(rx*uz-rz*ux);
       if(yan>0.35&&yan<1.3&&boy>-1.2&&boy<0.5&&p.vx*ux+p.vz*uz>0.5*sv&&segD(s.x,s.z,p.x,p.z,bx,bz)>=0.3){const tur=boy<-0.45?'toparlanma':'yan';
-        if(this.rast()<dt*MOTOR_AYAR.yanIstek*istek*(tur==='toparlanma'?0.2+0.8*agr:1)){this.mudahaleBaslat(p,s,bx,bz,tur);return;}}}
+        if(this.rast()<dt*MOTOR_AYAR.yanIstek*istek*(tur==='toparlanma'?0.2+0.8*agr:1)*this.mudahaleTahminCarpani(p,s)){this.mudahaleBaslat(p,s,bx,bz,tur);return;}}}   /* T7d: girme/bekleme */
     /* T4: arkasında yardım varsa erken girer, yoksa geciktirir (yardım 0 → ×0,4, 1 → ×1,4) */
     /* T4e: sürücü topu saklıyorsa (tavır koru) ve gövdesi topla savunmacının arasındaysa (kalkan; mudahaleSonuc'ta temas çoğu zaman arkadan
        faul) erken giriş ×0,1 — "sırtı dönük rakibe girmez", dönüşü bekler. Yalnız saklama tavrında: çalımla geçilen savunmacının arkadan
        toparlanma girişimi değişmez (c-1v1 beceri eğimi 15,8 → 14,0'a düşmüştü) */
     const kalkanli=s.tavir==='koru'&&segD(s.x,s.z,p.x,p.z,b.x,b.z)<0.35&&hrkHyp(s.x-p.x,s.z-p.z)<hrkHyp(b.x-p.x,b.z-p.z);
-    if(db<1.4&&this.rast()<dt*MOTOR_AYAR.sabirsiz*istek*(0.1+1.25*agr)*(0.4+(p._destekK!=null&&this.kare-p._destekK<6?p._destek:0))*(kalkanli?0.1:1))this.mudahaleBaslat(p,s,bx,bz,'erken');
+    if(db<1.4&&this.rast()<dt*MOTOR_AYAR.sabirsiz*istek*(0.1+1.25*agr)*(0.4+(p._destekK!=null&&this.kare-p._destekK<6?p._destek:0))*(kalkanli?0.1:1)*this.mudahaleTahminCarpani(p,s))this.mudahaleBaslat(p,s,bx,bz,'erken');   /* T7d: girme/bekleme (mudahaleTahmin) */
   },
   /* T4: geçilme işareti — bir (savunmacı, sürücü) çifti için tek taktik faul zarı (eskiden çalımın geçti anı ve presYap'ın "arkada kaldı" denetimi
      aynı geçilmeye iki zar atabiliyordu); ayrıca geçilen savunmacının zamanı (toparlanma, 1. adam seçimi) */

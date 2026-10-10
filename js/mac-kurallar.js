@@ -165,6 +165,7 @@ Object.assign(Match.prototype,{
     /* avantajdan kalan kart ilk duruşta gösterilir */
     if(this.bekleyenKart){const a=this.bekleyenKart;this.bekleyenKart=null;if(a.yapan.oyunda)this.kartGoster(a.yapan,a.kart);}
     if(tur==='tac')this.ist.tac[takim]++;else if(tur==='korner')this.ist.korner[takim]++;else if(tur==='kaleVurusu')this.ist.kaleVurusu[takim]++;
+    if(tur==='kaleVurusu'||tur==='korner')this.kacanFirsat();   /* T7f: kaçan büyük fırsatta şutçu başını tutar */
     const r=this.refs[0];r.eylem={ad:'yon',t:0,sure:1.3,yon:this.dir[takim]};
     if(tur==='korner'||tur==='kaleVurusu'){const yh=b.x>0?this.refs[1]:this.refs[2];yh.eylem={ad:'bayrak',t:0,sure:1.6,tur};}
     const eski={tac:'throw',korner:'corner',kaleVurusu:'goalkick'}[tur];
@@ -367,7 +368,7 @@ Object.assign(Match.prototype,{
   },
   ofsaytCal(p){
     const yh=p.x>0?this.refs[1]:this.refs[2];yh.eylem={ad:'bayrak',t:0,sure:2.6,tur:'ofsayt'};
-    this.ist.ofsayt[p.team]++;this.on('ofsayt',{p,aleyhe:p.team});
+    this.ist.ofsayt[p.team]++;this.on('ofsayt',{p,aleyhe:p.team});this.ofsaytJesti(p);   /* T7f: savunmacılar kol kaldırır */
     this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};
     this.durusBaslat('serbest',1-p.team,clamp(p.x,-PL+1,PL-1),clamp(p.z,1,PW-1),{bekle:1.6,endirekt:true,ofsayt:true,duduk:true});
   },

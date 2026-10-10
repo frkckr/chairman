@@ -18,7 +18,7 @@
      (±100°) dışındaysa “görüş dışı”.
    - Niyet süreleri: iki takımın niyetinin (T7a, `m._niyet`) oyun süresine oranı; T7a öncesi “—”. */
 const T_PL=52.5,T_MZ=34,T_CU=16.5,T_CW=20.16,T_K1=22.67,T_K2=45.33;
-const T_NIYET=['kur','ilerlet','sonBolge','kontra','tut','savunma'];
+const T_NIYET=['kur','ilerlet','sonBolge','kontra','tut','savunma'],T_JEST=['isaret','cagir','kol','basEl'];
 module.exports={
   bilgi:[
     ['— T7: takım zekâsı (gerçekçilik planı §4 T7) —',null,0],
@@ -31,7 +31,9 @@ module.exports={
     ['Pas boyu <10 m %','tPasBoy1',1],['Pas boyu 10–20 m %','tPasBoy2',1],['Pas boyu 20–30 m %','tPasBoy3',1],['Pas boyu >30 m %','tPasBoy4',1],
     ['Top ayakta <1 sn %','tAyakta1',1],['Top ayakta 1–2 sn %','tAyakta2',1],['Top ayakta 2–4 sn %','tAyakta3',1],['Top ayakta >4 sn %','tAyakta4',1],
     ['Kesilen pas / maç','tKesilen',1],['Kesilen pas: kesen pasörün görüşü dışındaydı %','tKorKesme',1]]
-    .concat(T_NIYET.map(k=>['Niyet: '+k+' (takım süresi %)','tNiyet_'+k,1])),
+    .concat(T_NIYET.map(k=>['Niyet: '+k+' (takım süresi %)','tNiyet_'+k,1]))
+    /* T7f (Ek G3): motorun yazdığı jestler (yeni jest nesnesi; maç başına) */
+    .concat(T_JEST.map(k=>['Jest: '+k+' / maç','tJest_'+k,2])),
   yeni:()=>{
     const hyp=Math.hypot,ort=L=>L.length?L.reduce((a,b)=>a+b,0)/L.length:NaN;
     const grup=q=>!q?'-':q.rol==='GK'?'kaleci':q.mevki&&q.mevki.bek?'bek':q.rol==='DEF'?'stoper':q.mevki&&q.mevki.kanat?'kanat':q.rol==='OS'?'merkez':'forvet';
@@ -43,7 +45,7 @@ module.exports={
     /* şut, takip */
     let sutN=0,hizli=0,gerN=0,gerGeride=0,kutuSut=0,takip13=0,adimN=0;const takipler=[],takipSay=[];
     /* dönen top, kesilen pas, niyet */
-    let donen=null,dnN=0,dnAtt=0,pasBek=null,kes=0,kesKor=0,niyetTop=0;const niyetT={};
+    let donen=null,dnN=0,dnAtt=0,pasBek=null,kes=0,kesKor=0,niyetTop=0;const niyetT={},jest={},jestSon=new Map();
     const kutuda=(m,x,z,t)=>Math.abs(x-m.dir[t]*T_PL)<T_CU&&Math.abs(z-T_MZ)<T_CW;
     const takipBitir=k=>{const n=k.set.size;takipSay.push(n);if(n>=1&&n<=3)takip13++;};
     const sut=(m,p)=>{if(!p||p.team==null)return;const t=p.team,b=m.ball,d=m.dir[t];sutN++;
@@ -65,6 +67,7 @@ module.exports={
         else if(ad==='block'){const p=v.p;if(!p||p.team==null)return;donenKur(m,p,1-p.team,-m.dir[p.team]*T_PL);}
         else if(ad==='wood'){const p=v.p;if(!p||p.team==null)return;donenKur(m,p,p.team,m.dir[p.team]*T_PL);}},
       adim(m){adimN++;const b=m.ball,ph=m.phase,s=b.sahip;
+        for(const p of m.players){const j=p.jest;if(j&&j!==jestSon.get(p))jest[j.tur]=(jest[j.tur]||0)+1;jestSon.set(p,j);}
         /* top ayakta (oyuncu başına sahiplik süresi) */
         const s2=ph==='play'?s:null;
         if(s2!==sahipP){if(sahipP){const d=m.t-sahipT;ayN++;ay[d<1?0:d<2?1:d<4?2:3]++;}sahipP=s2;sahipT=m.t;}
@@ -91,7 +94,7 @@ module.exports={
           tDonenIlk:[dnAtt,dnN],tKorKesme:[kesKor,kes]};
         for(let i=0;i<4;i++){ham['tPasBoy'+(i+1)]=[pb[i],pbN];ham['tAyakta'+(i+1)]=[ay[i],ayN];}
         for(const k of T_NIYET)ham['tNiyet_'+k]=[niyetT[k]||0,niyetTop];
-        return{ham,tKanatDegis:kd,tTakip:takipSay.length?ort(takipSay):NaN,tKesilen:kes};}
+        const r={ham,tKanatDegis:kd,tTakip:takipSay.length?ort(takipSay):NaN,tKesilen:kes};for(const k of T_JEST)r['tJest_'+k]=jest[k]||0;return r;}
     };
   }
 };

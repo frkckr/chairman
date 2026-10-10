@@ -208,6 +208,8 @@ class Match{
       _cev:undefined,_hk:undefined,_kacKare:undefined,_kacX:undefined,_kacZ:undefined,_varisHiz:undefined,_varisKare:undefined,_tavirKare:undefined,
       _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_tmsS:undefined,_tmsT:undefined,_tepkiS:undefined,_tepkiJ:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,_gecT:undefined,_destek:undefined,_destekK:undefined,
       _kp:undefined,_duz:undefined,_pen:undefined,_poz:undefined,_sonKurt:undefined,
+      /* T7d: müdahale tahmininin önbelleği (çarpan, kare, rakip; js/mac-takim.js mudahaleTahminCarpani) */
+      _mt:undefined,_mtK:undefined,_mtS:undefined,
       /* T1 iç alanları: kararlı hedef, efor karesi, kip ve süresi, son ivme (karede hız değişimi), düşünme aralığı (kare) */
       _hdfX:0,_hdfZ:0,_hdfK:-9,_eforK:-1,_kipI:0,_kipT:0,_iax:0,_iaz:0,_dusP:0},ek);
   }

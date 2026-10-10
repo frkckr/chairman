@@ -87,7 +87,7 @@ function rakipAlgisi(m,p){
   RA.m=m;RA.p=p;RA.kare=m.kare;RA.L=L;return L;}
 /* team takımının karar anında hesaba kattığı rakipler (gözlemci o takımdansa algısı) */
 function rakipler(m,team){const g=GOZ.p;return g&&g.team===team&&MOTOR_AYAR.rakipAlgi?rakipAlgisi(m,g):m.teams[1-team];}
-/* f'yi p gözlemciyken çalıştırır (iç içe güvenli) */
+/* f'yi p gözlemciyken çalıştırır (iç içe güvenli; karar giriş noktaları kapanış yaratmamak için aynı kalıbı doğrudan kullanır) */
 function gozlemle(p,f){const e=GOZ.p;GOZ.p=p;try{return f();}finally{GOZ.p=e;}}
 /* T7c (§7.10, 2026-10-10): pas kesilme modelinde rakibin saati. Vuruşa t0 sn varken rakip pasın yönünü ancak vuruşta öğrenir; hazırlığı okuyan
    (sezgi; yüzü pasöre dönük) bir kısmını önceden okur: tepkiye başlama t0·(1 − okuma), o ana kadar şimdiki hızıyla (en çok 0,6 sn) süzülür,
@@ -231,7 +231,8 @@ function devamDegeri(m,q,x,z,t,bakis,haric){
   const sirt=bakis==null?0:clamp(-Math.cos(aciFark(bakis,d>0?0:Math.PI)),0,1)*(1-acik);
   let en=xT(u,z)*100;
   /* T7c (plan T7 madde 6, şut açısı): şutun devamı atış hattındaki blokla azalır — açısı açık yere taşıma ve pas, kapalıdan değerli */
-  if(u>PL-30)en=Math.max(en,xG(u,z,'ayak',1-acik)*100*(0.85+q.oz.sut*0.3)*(1-sutBlokOlasiligi(m,q,x,z,d*PL,MZ,'sert')));
+  /* (hız: blok ancak blokuz şut değeri en iyiyi geçiyorsa hesaplanır — sonuç aynı) */
+  if(u>PL-30){const sv=xG(u,z,'ayak',1-acik)*100*(0.85+q.oz.sut*0.3);if(sv>en)en=Math.max(en,sv*(1-sutBlokOlasiligi(m,q,x,z,d*PL,MZ,'sert')));}
   const k=10*acik*(1-sirt);
   if(k>1){const u2=Math.min(PL-11,u+k);en=Math.max(en,xT(u2,z+(MZ-z)*0.15)*100+(u2-u)*A.ilerleme*0.8);}
   /* T4 (1c): alıcının bire bir devamı. Önündeki tek savunmacıya (ilki 1,6 sn içinde ve önünde, ikincisi ondan en az 0,6 sn geç; kaleci değil)
@@ -553,7 +554,7 @@ function sutSecenegi(m,p,x0,z0,baski){
   return null;}
 /* ---- seçenekler ---- */
 /* bütün değerler aynı ölçüdedir: gol olasılığı × 100 ("puan"). Pas = başarı × hedefin tehdidi − kayıp × rakibin oradaki tehdidi */
-function secenekler(m,p){return gozlemle(p,()=>secenekler0(m,p));}
+function secenekler(m,p){const e=GOZ.p;GOZ.p=p;try{return secenekler0(m,p);}finally{GOZ.p=e;}}
 function secenekler0(m,p){
   const b=m.ball,d=m.dir[p.team],u=b.x*d,w=b.z,oz=p.oz,S=[];
   const baski=baskiAltinda(m,p);
@@ -575,7 +576,9 @@ function secenekler0(m,p){
   birebirSecenegi(m,p,S);
   /* uzaklaştırma: kendi bölgesinde baskı altında; kaleye yaklaştıkça ve baskı arttıkça daha cazip (birleştirme 2026-10-03: alt ligde sık,
      çoğu zaman taça ya da hava mücadelesine gider) */
-  if(u<-PL+30&&baski>0.3)S.push({tur:'uzaklastir',deger:MOTOR_AYAR.uzaklastirDeger+baski*1.1+(u<-PL+18?0.4:0)});
+  /* T7e (plan T7 madde 11): şuttan sonra 3 sn kendi ceza sahamızda dönen topu alan savunmacı için uzaklaştırma daha değerli (baskı yoksa pas yine seçilebilir) */
+  const dn=!!m._donenT&&m.t-m._donenT[p.team]<3&&m.kendiCezaSahasinda(p,b.x,b.z);
+  if(u<-PL+30&&(baski>0.3||dn))S.push({tur:'uzaklastir',deger:MOTOR_AYAR.uzaklastirDeger+baski*1.1+(u<-PL+18?0.4:0)+(dn?MOTOR_AYAR.donenUzak:0)});
   /* T2: bekleme ya da gövdeyle koruma (eskiden yalnız koru: değeri her zaman eksiydi) */
   bekleSecenegi(m,p,S);koruSecenegi(m,p,S);
   return S;
@@ -593,7 +596,7 @@ function sabirEsigi(m,p,t1,tutT){const A=MOTOR_AYAR,tk=m.taktik[p.team],u=m.ball
    eskiden 0,12 + 0,42·(1 − karar)) ve en büyüğü seçilir. Sapma bir sahiplik boyunca aynı kalır (topu tutma, şut, uzaklaştırma ve alıcı başına):
    oyuncu her düşünme anında (5–8 Hz) yeniden zar atmaz, kararı tutarlıdır; taşırken durum değişince karar değişir. Taşıma ve beklemeye sabır
    eşiği eklenir. T3: her seçeneğe oyuncunun eğilim puanı eklenir (profilEgilimPuani, js/mac-profil.js); çekiliş sayısı ve sırası değişmez */
-function kararVer(m,p){return gozlemle(p,()=>kararVer0(m,p));}
+function kararVer(m,p){const e=GOZ.p;GOZ.p=p;try{return kararVer0(m,p);}finally{GOZ.p=e;}}
 function kararVer0(m,p){
   const S=secenekler(m,p);if(!S.length)return{tur:'bekle'};
   const v=m.bVeri(p),b=m.ball;if(!v.gur||v.gur.no!==m.sahiplikNo)v.gur={no:m.sahiplikNo,M:new Map(),t0:m.t};
@@ -609,7 +612,7 @@ function kararVer0(m,p){
 /* ---- gelişine tek vuruş (MM3): top gelirken alıcı tek vuruşla pası (geri, bırakma, ara) kontrol edip oynamakla (+~0,5 sn, daha çok baskı)
    karşılaştırır. k: karşılama noktası {x,z,t}, s: topun o anki durumu (topTahmin). Dönüş: {sec: tek vuruş seçimi ya da null, hedef: kontrol
    sonrası en iyi pasın hedefi (yönlü ilk dokunuş için)} */
-function tekVurusKarari(m,p,k,s,yakin){return gozlemle(p,()=>tekVurusKarari0(m,p,k,s,yakin));}
+function tekVurusKarari(m,p,k,s,yakin){const e=GOZ.p;GOZ.p=p;try{return tekVurusKarari0(m,p,k,s,yakin);}finally{GOZ.p=e;}}
 function tekVurusKarari0(m,p,k,s,yakin){
   const b=m.ball,d=m.dir[p.team],gelA=Math.atan2(b.vz,b.vx);
   let dd=99;for(const o of rakipler(m,p.team))if(o.oyunda)dd=Math.min(dd,hyp(o.x-k.x,o.z-k.z)-o.maxSpd*k.t*0.6);

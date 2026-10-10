@@ -19,7 +19,7 @@
 'use strict';
 ayarEkle('B',{
   kararGecikme:[0.3,0.6],      // topu kontrol ettikten sonra karar süresi (sn): tempo yüksekse kısa (T4-V 2026-10-09: 0,4–0,7 → 0,3–0,6 — vuruş hazırlığı (hazirlikEn + geri) karar süresinin bir kısmıyla örtüşür, top ayakta ortancası 1,2–2 bandında kalır; T2: 0,12–0,36 → 0,4–0,7; top ayakta ortancası 0,85 sn idi)
-  ilerleme:0.04,               // topu ileri taşımanın metre başına değeri (puan): oyunun ne kadar dikine aktığı (birleştirme 2026-10-03: 0,036 → 0,027; T1: 0,04)
+  ilerleme:0.05,               // topu ileri taşımanın metre başına değeri (puan): oyunun ne kadar dikine aktığı (birleştirme 2026-10-03: 0,036 → 0,027; T1: 0,04; T7g: 0,05 — kompakt savunmaya karşı ileri pas %26,6 → %30,7, bant 30–45)
   risk:1.0,                    // top kaybından çekinme çarpanı (takımın risk ayarıyla çarpılır)
   surusKarar:[0.3,0.62],       // top sürerken yeniden karar aralığı
   vurusHizalama:0.36,          // vuruş için gövdenin hedefe en fazla sapması (rad); gelişine vuruşta 1,05, dış ayakla 0,85
@@ -275,7 +275,7 @@ Object.assign(Match.prototype,{
     b.hedefOyuncu=sec.alici||null;b.pasHedef=sec.alici?{x:hx,z:hz,tur:sec.tur}:null;
     const tur=sec.tur;
     if(tur==='sut'){b.sut={team:p.team,by:p,gkDone:false,cerceve:this.cerceveyeGider(p.team),xg:sec.xg||0,t:this.t};if(k.sut)Object.assign(b.sut,k.sut);this.ist.sut[p.team]++;
-      this.ofsaytPasAni(p);this.on('shot',{p,dist:L,xg:sec.xg||0});}
+      this.ofsaytPasAni(p);this.on('shot',{p,dist:L,xg:sec.xg||0});this.sutTakipAta(p,sec.xg);}   /* T7e: şutu takip ve dönen top (js/mac-takim.js) */
     else if(tur==='pas'||tur==='ara'||tur==='uzun'||tur==='orta'||tur==='geriCevir'||tur==='kisa'){
       this.pasSay(p,sec.hx,sec.hz,L,tur);this.ofsaytPasAni(p);
       this.on(tur==='orta'?'cross':'pass',{p,q:sec.alici,long:L>=32,tur,L,x0:bx,z0:bz,hx,hz,tip,ilk:!!sec.ilk});
@@ -473,7 +473,7 @@ Object.assign(Match.prototype,{
     if(k.tur==='sut'){b.sut={team:p.team,by:p,gkDone:false,cerceve:this.cerceveyeGider(p.team),kafa:true,t:this.t,hedefZ:k.hz,hedefY:k.hy,tur:'kafa',
       ipucu:{yan:Math.sign(k.hz-MZ)||1,guven:clamp(0.8-0.5*p.oz.kafa,0.2,0.8)}};this.ist.sut[p.team]++;}
     else if(k.tur==='indirme'||k.tur==='pas'){this.pasSay(p,k.hx,k.hz,L,'kafa');this.ofsaytPasAni(p);}
-    this.on('header',{p,shot:k.tur==='sut',tur:k.tur,xg:k.xg||0});
+    this.on('header',{p,shot:k.tur==='sut',tur:k.tur,xg:k.xg||0});if(k.tur==='sut')this.sutTakipAta(p,k.xg);
   },
   /* gelişine karar (C'nin kovala'sından her karede, karşılama noktası k: {x,z,t}); top başına bir kez, topa ~0,6 sn kala:
      arkadaştan gelen topta gelişine şut ya da tek vuruşla pas (kontrol edip oynamaya karşı); seçilmezse yönlü ilk dokunuş planı */
@@ -507,6 +507,7 @@ Object.assign(Match.prototype,{
   },
   derinKosu(p,s,ofs,dt){
     const d=this.dir[p.team],su=s.x*d;
+    if(p.kosu&&p.kosu.tur==='takip')p.kosu=null;   /* T7e: şutu takip koşusu top birinin ayağına geçince biter */
     if(p.kosu){const k=p.kosu;k.t-=dt;
       if(k.t<=0||this.ball.sahip!==s||p.x*d>PL-6){p.kosu=null;return null;}
       return k;}

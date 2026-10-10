@@ -692,7 +692,11 @@ Object.assign(Match.prototype,{
     /* yönlendirme: kanatta dışarıyı gösterir (içeriden yaklaşır); ortada (orta çizgiden 10 m içinde) sürücünün güçlü ayağı tarafında durur, onu zayıf
        ayağına iter (T4; sezgiyle) */
     let qx=-nz,qz=nx;const orta=hrkAbs(oz-MZ)<10&&s.ayak!=='iki';
-    if(orta){const sag=s.ayak!=='sol';if(!sag){qx=-qx;qz=-qz;}}else if(qz*(MZ-oz)<0){qx=-qx;qz=-qz;}
+    /* T7d (gölge pres, plan T7 madde 8): ortada sürücünün en tehlikeli pas yolu varsa (18 m içinde en çok ilerleten arkadaşı) 1. adam o tarafa
+       yaklaşır, yolu arkasında bırakır; yoksa eskisi gibi zayıf ayağa iter (kanatta dışarıyı gösterir) */
+    const gq=hrkAbs(oz-MZ)<10&&MOTOR_AYAR.golgePres?this.tehlikeliAlici(s):null;
+    if(gq){if((gq.x-s.x)*qx+(gq.z-s.z)*qz<0){qx=-qx;qz=-qz;}}
+    else if(orta){const sag=s.ayak!=='sol';if(!sag){qx=-qx;qz=-qz;}}else if(qz*(MZ-oz)<0){qx=-qx;qz=-qz;}
     /* mesafe: kaleye dönük sürücüye jokey (1,6–2,4 m); sırtı ya da yanı dönükse sıkı (1–1,4 m, dönmesine izin verme); vuruş hazırlığında üstüne */
     /* T4: jokey mesafesi müdahale becerisinden değil sürücünün hızından (eskiden 2,25 − 0,5·müdahale: kötü müdahaleci geride durup daha zor geçiliyordu);
        arkasında yardım varsa %20'ye kadar yakın (destekHesapla) */
