@@ -12,7 +12,20 @@ ayarEkle('T',{
   niyetYenile:0.5,   // T7a: niyet en çok bu aralıkla yeniden hesaplanır (sn; sahiplik değişince ve duruşta hemen)
   kontraSure:6,      // T7a: kontra niyeti top kazanıldıktan sonra en çok bu kadar sürer (sn)
   kurmaStoperW:17,   // T7b: kurmada stoperlerin orta çizgiden uzaklığı (m; ceza sahası genişliği ±20)
-  gerideEk:1         // T7b: hücumda geride kalan sayısı = bizim yarıdaki rakip saha oyuncusu + bu (en az 2)
+  gerideEk:1,        // T7b: hücumda geride kalan sayısı = bizim yarıdaki rakip saha oyuncusu + bu (en az 2)
+  rakipAlgi:1,       // T7c (Ek H 26): karar anında görüş dışındaki rakip son taramadan bilinir (0: gerçek konum; mac-karar.js rakipAlgisi)
+  pasT0:0,           // T7c (§7.10): pas kararında vuruşa kalan süre ve rakibin saati vuruştan (0: t0 = 0). Kapı; 40 maçta denendi, kapalı tutuldu:
+                     // rakibin (ve alıcının) saati vuruşa kayınca model iyimserleşti (pas tahmini −3,3…−4,1, ara pası −10 puan), sahiplik başına pas
+                     // 2,18 → 1,80–1,94 ve PPDA 6,0 → 4,9–5,6 düştü (okuma payı 0,5 ve 1,0; ön puan düzeltmesiyle de). Motordaki savunmacı karar
+                     // anından itibaren pasörü ve adamını izler; eski saat kalibre olandır (gerçekçilik planı §7 madde 10)
+  pasOku:0.5,        // T7c (§7.10): rakibin vuruş hazırlığını okuma payı (en çok; sezgi ve bakışla ölçeklenir)
+  pasOkuAlici:0.7,   // T7c (§7.10): alıcının pasörü okuma payı (vuruştan önce yönelir)
+  kosuTetik:6,       // T7c: tetikli koşunun başlama sıklığı (1/sn; ara noktası bulundu ve taşıyanın başı yukarıda; topsuz hareket × kanallara koşma)
+  kosuRastgele:0.5,  // T7c: tetiksiz (rastgele) derin koşunun eski sıklığa oranı
+  kosuEs:2,          // T7c: aynı anda en çok savunma arkasına koşu
+  zon14:2,           // T7c: son üçte birde orta sahanın destek noktasında ceza sahası önü (zon 14) payı (destekNoktasi puanı)
+  govdeAc:0.25,      // T7c (Ek H 6): taşırken gövde en iyi pasın hedefine bu oranda açılır (0: kapalı)
+  osDestek:28        // T7c: merkez orta saha topa bu kadar yakınken (m) hep destek noktası arar (0: kapalı; eski kural en yakın üç)
 });
 /* niyet → düzen ve taktik farkı. Taktik: risk kayıp maliyetinin çarpanıdır (yüksek = temkinli), sakin geri pas ve sabır, tempo karar hızı, direkt ileri
    ve uzun oyun (mac-karar.js); toplanır (risk çarpılır). Düzen: genişlik hücumda mevkilerin yayılma çarpanı, derinlik bloğun öne/geriye kayması (m),
@@ -145,6 +158,18 @@ Object.assign(Match.prototype,{
         if(this._markaj)this._markaj[t]=new Map();if(this._pres1)this._pres1[t]=null;}}
     if(this._niyet)this.etkinTaktik(t);else Object.assign(this.taktik[t],T);
     this.on('taktik',{takim:t,eski,yeni:Object.assign({},T),neden:neden||null});},
+  /* T7c: topsuz koşular (plan T7 madde 5). Savunma arkasına koşu (tur 'arkaya') başlar; koşucunun 15 m içindeki hat arkadaşı (forvet, kanat,
+     ileri orta saha; koşmayan, geride kalmayan) “biri giderse öteki gelir”: hedef forvet ya da derine gelme eğilimli olan ayağa gelir ('gel'),
+     öteki yana açılıp savunmacıyı çeker ('aldatma'). Topu tutan bir sonraki düşünme anını beklemeden yeniden bakar */
+  kosuBaslat(p,s,hu,hw,tur){p.kosu={u:hu,w:hw,t:2.6,tur};this.on('kosu',{p,tur});if(s.kararT>0.05)s.kararT=0.05;this.kosuOrtak(p,s);return p.kosu;},
+  kosuOrtak(p,s){const d=this.dir[p.team],GR=this._geride&&this._geride[p.team];let en=null,ed=15;
+    for(const q of this.teams[p.team]){if(q===p||q===s||!q.oyunda||q.kosu||q.rol==='GK'||q.rol==='DEF'||(q.rol==='OS'&&q.mevki.derin)||(GR&&GR.has(q)))continue;
+      const dd=Math.hypot(q.x-p.x,q.z-p.z);if(dd<ed&&Math.abs((q.x-p.x)*d)<10){ed=dd;en=q;}}
+    if(!en)return;const su=s.x*d,qu=en.x*d;
+    if(en.mevki.hedef||profilEgilim(en,'derineGelir')>0)en.kosu={u:Math.max(su+5,qu-7),w:lerp(en.z,s.z,0.35),t:1.4,tur:'gel'};
+    else{const y=Math.sign(en.z-p.z)||1;en.kosu={u:qu,w:clamp(en.z+y*6,4,PW-4),t:1.2,tur:'aldatma'};}
+    this.on('kosu',{p:en,tur:en.kosu.tur});},
+  kosuSayisi(t){let n=0;for(const q of this.teams[t])if(q.oyunda&&q.kosu&&q.kosu.tur==='arkaya')n++;return n;},
   /* duruşta hoca sorulur: m.hoca(t, maç durumu, taban, maç) bir yama dönerse uygulanır (yoksa hiçbir şey olmaz; rastlantı çekmez) */
   hocaKapisi(){if(typeof this.hoca!=='function')return;
     for(let t=0;t<2;t++){const y=this.hoca(t,this.macDurumu(t),Object.assign({},this.taktikTaban[t]),this);if(y&&typeof y==='object')this.taktikDegistir(t,y,'hoca');}}

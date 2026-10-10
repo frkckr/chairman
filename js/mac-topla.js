@@ -108,7 +108,7 @@ Object.assign(Match.prototype,{
   },
   /* oyuncuya özel B verisi: {tara: tarama hafızası, plan: yönlü ilk dokunuş planı, vk: ver-kaç koşusu, gur: kararın sahiplik boyu sapması (T2),
      yakinR/yakinNo: en yakın rakibin önceki uzaklığı ve sahiplik (T2 olay)} */
-  bVeri(p){let M=this._bv;if(!M)M=this._bv=new Map();let v=M.get(p);if(!v){v={tara:null,plan:null,vk:null,gur:null,yakinR:9,yakinNo:-1,vazT:-9};M.set(p,v);}return v;},
+  bVeri(p){let M=this._bv;if(!M)M=this._bv=new Map();let v=M.get(p);if(!v){v={tara:null,plan:null,vk:null,gur:null,yakinR:9,yakinNo:-1,vazT:-9,enPas:null};M.set(p,v);}return v;},
   /* düşünme aralığı (T2): topu tutarken seçenekler 5–8 Hz'de yeniden tartılır (karar özelliği yüksek oyuncu daha sık) */
   dusunmeAraligi(p){const H=MOTOR_AYAR.dusunHz;return 1/(H[0]+(H[1]-H[0])*p.oz.karar);},
   taramaKaydi(T){const P=this.players;for(let j=0;j<P.length;j++){const q=P[j];T.x[j]=q.x;T.z[j]=q.z;T.vx[j]=q.vx;T.vz[j]=q.vz;}T.ok=true;},
@@ -499,7 +499,9 @@ Object.assign(Match.prototype,{
       if(u>ofs-0.6||u<-PL+4||w<2||w>PW-2)continue;
       let yol=99,bos=99;for(const o of rakip){if(!o.oyunda)continue;const ox=o.x*d;
         yol=Math.min(yol,segD(ox,o.z,su,sw,u,w));bos=Math.min(bos,hyp(ox-u,o.z-w));}
-      const puan=Math.min(yol,5)*1.1+Math.min(bos,8)*0.5+(u-su)*0.22-hyp(u-ku,w-kw)*0.1;
+      /* T7c: son üçte birde orta saha ceza sahası önüne (zon 14) gelir: geri çevirme ve indirmenin alıcısı, uzaktan şut */
+      const z14=p.rol==='OS'&&su>PL-40&&u>PL-26&&u<PL-15&&Math.abs(w-MZ)<11?MOTOR_AYAR.zon14:0;
+      const puan=Math.min(yol,5)*1.1+Math.min(bos,8)*0.5+(u-su)*0.22-hyp(u-ku,w-kw)*0.1+z14;
       if(puan>enP){enP=puan;en={u,w};}}
     p.destek=en?{u:en.u,w:en.w,t:this.t}:null;return p.destek;
   },
@@ -509,13 +511,19 @@ Object.assign(Match.prototype,{
       if(k.t<=0||this.ball.sahip!==s||p.x*d>PL-6){p.kosu=null;return null;}
       return k;}
     if(!(p.rol==='FV'||p.mevki.kanat||(p.rol==='OS'&&!p.mevki.derin&&su>5)))return null;
-    const ileriBakar=Math.cos(s.yon)*d>0.2,serbest=baskiAltinda(this,s)<0.8,pu=p.x*d;
-    if(!ileriBakar||!serbest||su<-18||Math.abs(pu-ofs)>4||this.rast()>dt*(p.rol==='FV'?3.2:1.3)*MOTOR_AYAR.kosuIstegi*(this._niyet?this._niyet[p.team].kosu:1))return null;   /* T7a: niyetin koşu çarpanı */
+    const ileriBakar=Math.cos(s.yon)*d>0.2,serbest=baskiAltinda(this,s)<0.8,pu=p.x*d,A=MOTOR_AYAR,N=this._niyet&&this._niyet[p.team];
+    /* T7c: tetikli koşu (plan T7 madde 5) — taşıyanın son kararında bu oyuncu için savunma arkasında bir ara noktası bulunduysa (0,5 sn içinde;
+       pasSecenekleri kaydeder) ve taşıyanın başı yukarıdaysa (bakışı hücum yönünün ±60°'sinde) koşu o noktaya doğru başlar; sıklık topsuz
+       hareketten ve kanallara koşma eğiliminden. Aynı anda en çok kosuEs koşu (js/mac-takim.js kosuBaslat; ortak koşu kosuOrtak) */
+    const AK=this._araKayit&&this._araKayit[p.team].get(p),kos=this.kosuSayisi(p.team);
+    if(AK&&this.t-AK.t<0.5&&serbest&&su>=-18&&kos<A.kosuEs){
+      const bas=Math.abs(aciFark(s.bakisYon!=null?s.bakisYon:s.yon,d>0?0:Math.PI))<1.05;
+      if(bas&&this.rast()<dt*A.kosuTetik*(0.5+profilAlt(p,'topsuzHareket',0.5))*(1+0.3*profilEgilim(p,'kanallaraKosar'))*(N?N.kosu:1))
+        return this.kosuBaslat(p,s,Math.min(PL-8,AK.x*d+4),clamp(AK.z,4,PW-4),'arkaya');}
+    if(!ileriBakar||!serbest||su<-18||Math.abs(pu-ofs)>4||kos>=A.kosuEs||this.rast()>dt*(p.rol==='FV'?3.2:1.3)*A.kosuIstegi*A.kosuRastgele*(N?N.kosu:1))return null;   /* T7a: niyetin koşu çarpanı */
     const hedefU=Math.min(PL-8,ofs+10+this.rast()*8),hw=clamp(p.z+(MZ-p.z)*0.35+(this.rast()-0.5)*10,8,PW-8);
-    p.kosu={u:hedefU,w:hw,t:2.6};this.on('kosu',{p});
-    /* T2 olay: koşu başladı — topu tutan bir sonraki düşünme anını beklemeden yeniden bakar */
-    if(s.kararT>0.05)s.kararT=0.05;
-    return p.kosu;
+    /* T2 olay: koşu başladı — topu tutan bir sonraki düşünme anını beklemeden yeniden bakar (kosuBaslat) */
+    return this.kosuBaslat(p,s,hedefU,hw,'arkaya');
   },
   /* korner: kısa korner ya da orta ile aynı hedef mantığı (kafa vuranlar, koşular, ön direk ve penaltı noktası bölgesi); sıcaklıklı seçim */
   kornerSecenegi(du,tk){

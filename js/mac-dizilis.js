@@ -304,7 +304,9 @@ Object.assign(Match.prototype,{
     if(p.rol==='GK'||p===s)return false;
     let sira=0;const dp=hyp(p.x-s.x,p.z-s.z);
     for(const q of this.teams[p.team])if(q!==p&&q!==s&&q.oyunda&&q.rol!=='GK'&&hyp(q.x-s.x,q.z-s.z)<dp)sira++;
-    return sira<3&&dp<32;
+    /* T7c: merkez orta saha (kanat değil) topa 28 m içindeyken hep destek noktası arar — topu almak için görünür (orta saha atlanıyordu: maçta
+       karar sayısı stoper 126, bek 131, forvet 115, merkez 40; pasların %12'si merkeze) */
+    return sira<3&&dp<32||!!MOTOR_AYAR.osDestek&&p.rol==='OS'&&!p.mevki.kanat&&dp<MOTOR_AYAR.osDestek;
   },
   /* ceza sahasına koşu rolleri */
   kutuRolu(p,t,bw){

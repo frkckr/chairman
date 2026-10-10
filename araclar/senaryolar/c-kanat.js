@@ -3,7 +3,8 @@
    kanat (8) açıkta ileride, sol bek (4) geride, forvet (10) rakip savunmanın önünde. Stoperin merkeze pası motorun kendi seçeneklerinden
    (secenekler → alıcısı merkez olan pas) başlatılır; sonrası karar katmanınındır, sonuç sabitlenmez. Kademeler (başlangıç ve profiller sabit):
      0 rakipsiz (yalnız kaleciler)
-     1 tek savunmacı: konuk derin orta saha merkezin 3 m arkasında (görüş dışı); denemelerin yarısında merkezin görüşü 0,3, yarısında 0,85
+     1 kör noktadan presçi: konuk derin orta saha merkezin 6 m arkasında ve 2 m yanında (görüş dışı), pas yoldayken kapanır; denemelerin yarısında
+       merkezin görüşü 0,3, yarısında 0,85 (Ek H 26: görüşü düşük merkez presçiyi son taramasındaki yerinde bilir)
      2 küçük grup: + konuk sağ bek kanadın 3 m kale tarafında, konuk forvet stopere 3 m/sn ile basıyor
      3 11'e 11: herkes dizilişin yerinde (dizilisKonumu), yukarıdaki beş ev sahibi ve sırttaki savunmacı aynı başlangıçta
    Ölçülen: pasın merkeze ulaşması (merkezin ilk dokunuşu; tek dokunuşla oynaması dahil); topun yolundayken merkezin omzunun üstünden bakması
@@ -20,7 +21,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const secenekler=vm.runInContext('secenekler',ctx),dizilisKonumu=vm.runInContext('dizilisKonumu',ctx);
   const bosalt=(m,kal)=>{for(const p of m.players){if(kal.includes(p)||p.rol==='GK')continue;p.oyunda=false;p.x=p.tx=-300;p.z=p.tz=-300;p.vx=p.vz=0;p.eylem=null;}};
   const yerlestir=(p,x,z,yon,v)=>{Object.assign(p,{x,z,tx:x,tz:z,vx:Math.cos(yon)*(v||0),vz:Math.sin(yon)*(v||0),spd:v||0,yon,eylem:null,kickCd:0,surus:null,kosu:null,destek:null,oyunda:true,denge:1,calim:null,yutma:null});};
-  const KADEME=['0 rakipsiz','1 sırtta tek savunmacı','2 küçük grup','3 11\'e 11'];
+  const KADEME=['0 rakipsiz','1 kör noktadan presçi','2 küçük grup','3 11\'e 11'];
   const IL=['kanada','ileri','geri/yan','döndü','taşıdı','kayıp','tutuyor'],KD=['ilerledi','orta','içeri','beke/merkeze','kayıp','diğer'];
   const sonuc=[];let deneme=0;
   for(let k=0;k<4;k++)for(let i=0;i<n;i++){deneme++;
@@ -49,7 +50,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
     yerlestir(CM,d*-10,MZ+5+(i%3-1),0,0);CM.yon=Math.atan2(CB.z-CM.z,CB.x-CM.x);   /* yüzü stopere */
     CB.yon=Math.atan2(CM.z-CB.z,CM.x-CB.x);
     yerlestir(W,d*-2,PW-5,hy,0);yerlestir(FB,d*-16,PW-9,hy,0);yerlestir(FV,d*12,MZ+2,hy,0);
-    if(k>=1)yerlestir(D1,CM.x+d*3,CM.z-0.4,hy+Math.PI,0);
+    if(k===1)yerlestir(D1,CM.x+d*6,CM.z-2,hy+Math.PI,0);else if(k>=2)yerlestir(D1,CM.x+d*3,CM.z-0.4,hy+Math.PI,0);
     if(k===2){yerlestir(D2,W.x+d*3,W.z-1.5,hy+Math.PI,0);yerlestir(P1,CB.x+d*8,CB.z+1,hy+Math.PI,3);}
     m.phase='play';m.phaseT=1;m.durus=null;
     Object.assign(b,{x:CB.x+Math.cos(CB.yon)*0.35,z:CB.z+Math.sin(CB.yon)*0.35,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,sonTakim:0,sonDokunan:CB});
@@ -93,5 +94,20 @@ module.exports={calistir({ctx,vm,N,tohum}){
     console.log(`      kanada pas ${yz(K.length,U.length)} → kanat: `+KD.map(c=>c+' '+yz(kd[c]||0,K.length)).join(' · '));};
   for(let k=0;k<4;k++){const L=sonuc.filter(o=>o.k===k);yaz(KADEME[k],L);
     if(k===1){yaz('   görüş 0,3',L.filter(o=>o.gorus===0.3));yaz('   görüş 0,85',L.filter(o=>o.gorus===0.85));}}
-  return 0;
+  /* [A] algı denetimi (T7c, Ek H 26; belirlenimli): topu tutan merkezin 4 m arkasından 5 m/sn ile gelen rakip, merkezin son taramasında (1 sn önce)
+     12 m geride duruyordu. Karar katmanının baskı süresi (gözlemci merkez) algıya göre uzun, gerçeğe göre kısa olmalı; rakip görüş içindeyse ikisi
+     aynı. Kabul: görüş dışında fark ≥ 0,5 sn, görüş içinde 0 (rakipAlgi 0 iken denetim atlanır) */
+  let cikis=0;
+  {const algi=vm.runInContext('MOTOR_AYAR.rakipAlgi',ctx),olc=vm.runInContext('(m,p)=>gozlemle(p,()=>baskiSuresi(m,p.team,m.ball.x,m.ball.z,0).t1)',ctx);
+    const m=kur((tohum||1)*1000+999,()=>{}),d=m.dir[0],hy=d>0?0:Math.PI,C=m.teams[0][7],D=m.teams[1][6],b=m.ball;
+    bosalt(m,[C,D]);yerlestir(C,0,MZ,hy,0);yerlestir(D,-d*4,MZ+0.5,hy,5);
+    m.phase='play';m.phaseT=1;m.durus=null;Object.assign(b,{x:C.x+d*0.4,z:C.z,y:0,vx:0,vz:0,vy:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,sonTakim:0,sonDokunan:C});
+    m.topDegisti();m.sahipYap(C);
+    const nP=m.players.length,v=m.bVeri(C),T=v.tara={t:0,bas:-9,yan:1,ok:false,x:new Float64Array(nP),z:new Float64Array(nP),vx:new Float64Array(nP),vz:new Float64Array(nP)};
+    m.taramaKaydi(T);const i=m.players.indexOf(D);T.t=m.t-1;T.x[i]=-d*12;T.z[i]=MZ+0.5;T.vx[i]=0;T.vz[i]=0;
+    C.bakisYon=hy;m.kare++;const tDis=olc(m,C);C.bakisYon=hy+Math.PI;m.kare++;const tIc=olc(m,C);   /* algı karede bir kurulur: bakış değişince kare ilerletilir */
+    const A=vm.runInContext('MOTOR_AYAR',ctx),es=A.rakipAlgi;A.rakipAlgi=0;C.bakisYon=hy;m.kare++;const tGer=olc(m,C);A.rakipAlgi=es;
+    const ok=!algi||(tDis-tGer>=0.5&&Math.abs(tIc-tGer)<1e-9);if(!ok)cikis=1;
+    console.log((ok?'  ':'! ')+`[A] Algı (Ek H 26): arkadan gelen rakip görüş dışındayken baskı süresi ${tDis.toFixed(2)} sn (gerçek ${tGer.toFixed(2)} sn), görüş içinde ${tIc.toFixed(2)} sn — kabul: dışarıda fark ≥ 0,5, içeride 0${algi?'':' (rakipAlgi 0: atlandı)'}`);}
+  return cikis;
 }};

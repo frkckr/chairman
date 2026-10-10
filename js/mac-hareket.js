@@ -496,6 +496,9 @@ Object.assign(Match.prototype,{
     const vp=hrkTepe(p)*p.hizOran;
     if(!s.koru&&!s.bekle&&!(M&&M.bekle)){p._varisHiz=0.95*vp;p._varisKare=this.kare;}
     p.yonHedef=d>0.45&&(dx*hrkCos(p.yon)+dz*hrkSin(p.yon))<0.5*d?hrkAtan2(dz,dx):yon;
+    /* T7c (Ek H 6): serbest sürüşte gövde en iyi pasın hedefine biraz açılır (pas kararı gelince dönüş kısalır); 0,6 sn taze, 0,9 rad'dan geniş değil */
+    if(serbest&&A.govdeAc&&this._bv){const v=this._bv.get(p),ep=v&&v.enPas;
+      if(ep&&this.t-ep.t<0.6){const f=hrkAciFark(hrkAtan2(ep.hz-p.z,ep.hx-p.x),p.yonHedef);if(hrkAbs(f)<0.9)p.yonHedef=hrkAciNorm(p.yonHedef+A.govdeAc*f);}}
     p.dokunT-=dt;
     const onde=dx*hrkCos(p.yon)+dz*hrkSin(p.yon),ulas=lerp(A.dokunusUlas[0],A.dokunusUlas[1],clamp((p.spd-3)/4,0,1));
     if((d<ulas&&p.dokunT<=0||M&&(M.itme||M.durdur)&&d<0.75)&&b.y<0.35&&onde>-0.15&&!(M&&M.bekle)){
