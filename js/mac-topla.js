@@ -116,6 +116,9 @@ Object.assign(Match.prototype,{
      Önce hazırlık: hedefe dön, topu vuran ayağın önüne al */
   vurusBaslat(p,sec){
     const b=this.ball;let ox=b.x,oz=b.z;
+    /* T6d: havadan ortada alıcı ortanın noktasına koşar (vuruş hazırlığı ~0,5 sn; ortayı yapan koşuyu okur, hücumcu ortaya koşar — eskiden alıcı
+       ortadan habersiz kendi koşusunu sürdürüp top havalanınca başın hizasındaki noktaya yetişemiyordu). Koşu takım düzeninde (bolgeKonumu) */
+    if(sec.tur==='orta'&&sec.tip==='hava'&&sec.alici&&sec.alici.oyunda&&sec.alici.team===p.team){const d=this.dir[p.team];sec.alici.kosu={u:sec.hx*d,w:sec.hz,t:2.0,tur:'orta'};}
     if(sec.ilk&&hyp(b.vx,b.vz)>2&&hyp(b.x-p.x,b.z-p.z)>1.2){const k=this.yakalamaNoktasi(p,1.0);ox=k.x;oz=k.z;}
     const a=Math.atan2(sec.hz-oz,sec.hx-ox),f=aciFark(a,p.yon),L=hyp(sec.hx-ox,sec.hz-oz),tip=sec.tip||'yer',sut=sec.tur==='sut',uzk=sec.tur==='uzaklastir',
       hava=tip==='hava',baski=baskiAltinda(this,p);

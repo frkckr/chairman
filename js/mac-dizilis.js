@@ -253,8 +253,11 @@ Object.assign(Match.prototype,{
       if(kurma){const k2=this.kurmaKonumu(p,t,k,N);if(k2){u=k2.u;w=k2.w;}}
       /* ortaya koşu rolleri: top kanatta ve son üçte birde */
       const orta=bu>PL-30&&Math.abs(bw-MZ)>11&&s&&s.team===t;
-      if(orta){const r=geride?null:this.kutuRolu(p,t,bw);if(r){u=r.u;w=r.w;p.hizOran=0.95;ef=0.8;}}
-      else if(s&&s.team===t){
+      /* T6d: ortanın alıcısı ortanın noktasına koşar (js/mac-topla.js vurusBaslat); top ayaktan çıkana dek ofsayt çizgisinin gerisinde */
+      const oK=p.kosu&&p.kosu.tur==='orta'?p.kosu:null;
+      if(oK){oK.t-=dt;if(oK.t<=0||!s||s.team!==t){p.kosu=null;}else{u=Math.min(oK.u,ofs-0.4);w=oK.w;p.hizOran=1;ef=1;}}
+      if(orta&&!p.kosu){const r=geride?null:this.kutuRolu(p,t,bw);if(r){u=r.u;w=r.w;p.hizOran=0.95;ef=0.8;}}
+      else if(s&&s.team===t&&!(p.kosu&&p.kosu.tur==='orta')){
         /* destek: topa en yakın iki oyuncu açık pas yoluna gelir (T7b: kurmada stoperler ve bekler yerinde kalır) */
         if(!geride&&!(kurma&&p.rol==='DEF')&&this.destekci(p,s)){const n=this.destekNoktasi(p,s,dt);if(n){u=n.u;w=n.w;p.hizOran=0.8;ef=0.6;}}
         /* derin koşu: forvet (ve bazen kanat) topu tutan ileri bakınca savunmanın arkasına */

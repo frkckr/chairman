@@ -306,17 +306,20 @@ Object.assign(Match.prototype,{
     const b=this.ball;b.tasiyan=gk;b.sahip=null;b.vx=b.vy=b.vz=0;b.egri=0;this.dokunus(gk,true);
     gk.tutus={t:0,sure:1.6+this.rast()*1.6,tur:tur||'gogus'};gk.kickCd=0.2;gk._kp=null;this._dSahipT=this.t;
   },
-  /* genel temasta elle (orta, korner, boştaki top): kalabalıkta ya da erişiminin sınırında yumrukla uzaklaştırır, yoksa tutar */
+  /* genel temasta elle (orta, korner, boştaki top): kalabalıkta ya da erişiminin sınırında yumrukla uzaklaştırır, yoksa tutar. T6d: yumruk kararı
+     zar değil geometri — yüksek topta (1,45 m üstü) rakip 1,5 m içinde sıçrıyor ya da başı topa 0,1 sn içinde değecekse (çekişme; js/mac-hava.js
+     hvTemasOnu) ya da top elin erişiminin son 0,3 m'sindeyse yumruklar; kalabalıkta (1,5 m içinde iki rakip) da. Tutma başarısı zar olarak kalır
+     (elden kaçırma: hız, kalecilik, çekişme) */
   kaleciYakala(gk){
     const b=this.ball,sh=b.sut,v=hyp3(b.vx,b.vy,b.vz),B=gk.boy||1,elY=2.3*B+0.35,k=gk.oz.kalecilik,d=this.dir[gk.team];
     if(sh&&sh.team!==gk.team){this.kaleciTemasSonuc(gk,'el',0.6,null);return;}
-    let kal=0;for(const o of this.teams[1-gk.team])if(o.oyunda&&hyp(o.x-b.x,o.z-b.z)<1.5)kal++;
-    const yuksek=b.y>1.45,Py=yuksek?clamp(0.06+0.3*kal+(b.y>elY-0.3?0.35:0)-(k-0.7)*0.6,0,0.9):0;
-    if(this.rast()<Py){/* yumruk: kaleden uzağa, kanada doğru; top önden geliyorsa iki yumruk */
+    let kal=0,cek=false;for(const o of this.teams[1-gk.team])if(o.oyunda&&hyp(o.x-b.x,o.z-b.z)<1.5){kal++;if(o.zipla||hvTemasOnu(this,o,6)>=0)cek=true;}
+    const yuksek=b.y>1.45,yumrukla=yuksek&&(cek||kal>=2||b.y>elY-0.3);
+    if(yumrukla){/* yumruk: kaleden uzağa, kanada doğru; top önden geliyorsa iki yumruk */
       const gel=hyp(b.vx,b.vz)||1,el=Math.abs(b.vx)/gel>0.8?'cift':'tek',yanS=b.z<MZ?-1:1,a=Math.atan2(yanS*(0.5+this.rast()*0.6),d),h=12+this.rast()*5;
       b.vx=Math.cos(a)*h;b.vz=Math.sin(a)*h;b.vy=4+this.rast()*2.5;b.sut=null;b.egri=0;b.ust=0;
       this.dokunus(gk,false);gk.kickCd=0.5;gk.eylem={ad:'yumruk',t:0,sure:0.5,el};this.on('yumruk',{p:gk,el});return;}
-    if(this.rast()<clamp(0.95-(v-12)*0.02+(k-0.6)*0.3-(yuksek?0.04*kal:0),0.5,0.98)){const tur=yuksek?'yukari':b.y<0.5?'yer':'gogus',ik=this.kaleciDonen(gk);
+    if(this.rast()<clamp(0.95-(v-12)*0.02+(k-0.6)*0.3-(yuksek?0.04*kal:0)-(cek?0.1:0),0.5,0.98)){const tur=yuksek?'yukari':b.y<0.5?'yer':'gogus',ik=this.kaleciDonen(gk);
       this.kaleciTut(gk,tur);gk.eylem={ad:'tutus',t:0,sure:0.35,tur};if(ik)this.kaleciKaydet(gk,null,true,'ikinci');}
     else{/* tutamadı: top elinden kaleden ve merkezden uzağa seker */const yanS=Math.sign(b.z-MZ)||1,h=3+this.rast()*4,a=Math.atan2(yanS*(0.6+this.rast()*0.8),d);
       b.vx=Math.cos(a)*h;b.vz=Math.sin(a)*h;b.vy=1+this.rast()*1.5;b.egri=0;b.ust=0;this.dokunus(gk,false);gk.kickCd=0.45;this.kaleciKaydet(gk,sh,false,'yakala');}

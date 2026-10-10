@@ -22,6 +22,9 @@
    (uzanmanın 0,06 m ötesi: başın yanıyla), tepe (top 0,12 m üstte: sıyırma), yüz (0,12 m altta: fazla yüksek sıçradı, top yüze ya da boyna
    gelir). İsabet (σ çarpanı) ve güç yüzeyden (HV_YUZEY), çekişmede σ ×1,4 ve güç ×0,9; tepeyle sıyırmada top gelişini büyük ölçüde korur
    (uzatma) ve yukarı kalkar (js/mac-topla.js kafaVur).
+   T6d (ortak tahmin): havaDuelloTahmin saftır (rastlantısız): iki oyuncu da inişteyken topu kim alır — inen topa yüksek baş önce değer, erişim
+   (ayaktaki alın + durarak sıçrama + 0,12) farkından lojistik (ölçek 0,105 m; c-hava'daki güçlü × orta %75–85 ile ayarlı); topa erişemeyen
+   kaybeder. Pas analizi (havadan pasın inişi: orta, korner, uzun top), hedef forvete uzun top (hedefHavaP) aynı modeli okur (tasarım ilkesi 1).
    Baş: kafaYuksekligi başın tepesidir; alın (baş merkezi) 0,10 m altı (hvAlin). */
 'use strict';
 ayarEkle('C',{
@@ -79,6 +82,14 @@ function hvTemasOnu(m,p,n){const yol=m.topYolu(),i0=Math.max(0,Math.round((m.t-m
 /* T6c: kafanın teması (bu adımın temasından: p._hvTy, p._hvTd) ve yüzeye göre [isabet σ çarpanı, güç çarpanı] */
 const hvYuzey=p=>{const e=p._hvTy;if(e>0.12)return 'tepe';if(e<-0.12)return 'yuz';return p._hvTd>hvEgilme(p)+0.06?'yan':'alin';};
 const HV_YUZEY={alin:[1,1],yan:[1.6,0.85],tepe:[2.4,0.55],yuz:[3,0.4]};
+/* T6d: algı vekilinin (karar katmanı) kaynağı: vekil boy ve profil taşımayabilir */
+const hvKaynak=(m,o)=>o.kaynak||(o.vekil&&m.teams[o.team]?m.teams[o.team][o.n]:o)||o;
+/* başın temiz temas erişimi (m): ayaktaki alın + durarak sıçrama + 0,12 */
+const hvErisim=p=>hvAlinDur(p)+hvSicramaH(p,0)+0.12;
+/* T6d: hava düellosu tahmini (saf): ikisi de inişteyken a, d'ye karşı y yüksekliğindeki topu alır mı (0,05–0,95). Topa (erişim + 0,11) yetişemeyen
+   kaybeder; ikisi de yetişemezse 0,5 */
+function havaDuelloTahmin(m,a,d,y){const A=hvKaynak(m,a),D=hvKaynak(m,d),ra=hvErisim(A),rd=hvErisim(D),ua=y>ra+0.11,ud=y>rd+0.11;
+  if(ua&&ud)return 0.5;if(ua)return 0.05;if(ud)return 0.95;return clamp(1/(1+Math.exp(-(ra-rd)/0.105)),0.05,0.95);}
 /* eşit temasta yerini koruyan: kütle ve sertlik */
 const hvGuc=p=>kutle(p)*(0.8+0.4*(p.oz.sertlik!=null?p.oz.sertlik:0.5));
 /* sıçramanın ilerlemesi (çekirdeğin adım döngüsünden). T6b: kalkışta sıçrama planlanan temas noktasına (z.cx, z.cz; kalkıştan z.tt sn sonra)
@@ -112,9 +123,16 @@ Object.assign(Match.prototype,{
         const dx=s.x-kx,dz=s.z-kz,d=Math.sqrt(dx*dx+dz*dz),sR=vS*(t-hz)+R;if(d>sR)continue;
         /* başın erişimine kadar sıçrayarak yaklaşır: temas noktası topa R'den yakın değilse topa doğru R kadar geride */
         const k=d>R?(d-R*0.6)/d:0;tc=t;yc=s.y;cx=kx+dx*k;cz=kz+dz*k;break;}
+      /* T6d: çekişme sıçraması — top erişimime girmiyor ama 1,3 m içindeki bir rakibin başına inecekse onu zorlamak için topa doğru sıçrarım
+         (markajdaki savunmacı hücumcunun arkasından, hücumcu uzaklaştıran savunmacıya); düelloya girer, kafayı zorlaştırır */
+      let zorla=false;
+      if(tc<0)for(let i=i0+2;i<=iN;i+=2){const s=yol[i],t=(i-i0)/60;if(t<=hz+0.05||s.y<aD-0.23||s.y>aD+hM+0.5)continue;
+        const dx=s.x-kx,dz=s.z-kz,d=Math.sqrt(dx*dx+dz*dz);if(d>vS*(t-hz)+R+0.75)continue;
+        const k2=Math.min(t,0.5);let yakin=false;for(const o of this.teams[1-p.team]){if(!o.oyunda||o.rol==='GK')continue;const ox=o.x+o.vx*k2-s.x,oz=o.z+o.vz*k2-s.z;if(ox*ox+oz*oz<1.69){yakin=true;break;}}
+        if(!yakin)continue;const k=d>R?(d-R*0.6)/d:0;tc=t;yc=Math.min(s.y,aD+hM);cx=kx+dx*k;cz=kz+dz*k;zorla=true;break;}
       if(tc<0)continue;
       const ihtiyac=yc-aD;if(ihtiyac<0.05)continue;
-      let cek=false;for(const o of this.teams[1-p.team]){if(!o.oyunda||o.rol==='GK')continue;const k=Math.min(tc,0.5),ox=o.x+o.vx*k-cx,oz=o.z+o.vz*k-cz;if(ox*ox+oz*oz<4){cek=true;break;}}
+      let cek=zorla;if(!cek)for(const o of this.teams[1-p.team]){if(!o.oyunda||o.rol==='GK')continue;const k=Math.min(tc,0.5),ox=o.x+o.vx*k-cx,oz=o.z+o.vz*k-cz;if(ox*ox+oz*oz<4){cek=true;break;}}
       if(ihtiyac>hM+(cek?0.25:0.12))continue;
       /* T6b: takım arkadaşının başkasına attığı pasta çekişme yoksa sıçranmaz (amaçsız sıçrama oyuncuyu havada ~0,7 sn oyun dışı bırakır) */
       if(!cek&&b.sonTakim===p.team&&b.hedefOyuncu&&b.hedefOyuncu!==p)continue;
