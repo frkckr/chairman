@@ -70,7 +70,7 @@ const HEDEF=[
   ['Kırmızı kart','kirmizi',0,0.2],
   ['Ofsayt','ofsayt',0.3,2],
   ['Pas','pas',110,200],
-  ['Pas isabeti %','pasOran',65,80],
+  ['Pas isabeti %','pasOran',70,85],   // T9b kararı (2026-10-11; gerçekçilik planı §7 madde 1): 65–80 → 70–85
   ['İleri pas %','ileriOran',30,45],
   ['Yan pas %','yanOran',35,58],
   ['Geri pas %','geriOran',10,25],
