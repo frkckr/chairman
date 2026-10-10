@@ -157,7 +157,9 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
   /* T2 (pas kalibrasyonu): vuruş hatası. Yön ve uzunluk hatası vurusHatasi ölçeğinde (pas becerisi, baskı, gelişine/vole, yorgunluk, mesafe;
      havadan ×1,6); alıcının en yakın rakipten önce varma payı (marj) ne kadar büyükse o kadar sapma affedilir: dar pencereli ara pası ve uzun top
      sapmaya duyarlıdır, boştaki arkadaşa kısa pas değildir */
-  const PT=MOTOR_AYAR.pasTol,sd0=(0.028+0.075*(1-oz2.pas))*(1+baski*0.9)*(o.ilk?1.35:1)*(o.vole?1.5:1)*(1+0.35*(p.yorgunluk||0))*(1+L/200)*MOTOR_AYAR.pasSapma*(tip==='hava'?1.6:1);
+  /* T9b-a: mesafe çarpanı (1 + L/200) yerine vuruşun gücü (vurusSapma ile aynı; gucHataCarpani, pasGucu) */
+  const PT=MOTOR_AYAR.pasTol,sd0=(0.028+0.075*(1-oz2.pas))*(1+baski*0.9)*(o.ilk?1.35:1)*(o.vole?1.5:1)*(1+0.35*(p.yorgunluk||0))
+    *gucHataCarpani(pasGucu(tip,v0[enK],L,T),VURUS_GUC_REF.pas)*MOTOR_AYAR.pasSapma*(tip==='hava'?1.6:1);
   const tol=PT[0]+PT[1]*Math.max(0,marj[enK]),Pex=(2*normalDagilim(tol/Math.max(0.05,sd0*L))-1)*(2*normalDagilim(tol/Math.max(0.05,sd0*(tip==='hava'?1.3:1+L/40)*L*PT[2]))-1);
   return{P:clamp(Pt*teknik*Pex,0.02,0.99),Pk,baskiK:bk,sure:sure[enK],v0:v0[enK],varis:V[enK],T:tip==='yer'?PA_TB[enK*N+N-1]-t0:T,L,marj:marj[enK],Pex};}
 function kaleCeza(m,o,x,z){const gx=-m.dir[o.team]*PL;return Math.abs(x-gx)<16.5&&Math.abs(z-MZ)<20.2;}
@@ -508,8 +510,20 @@ function kornerSecenekleri(m,p,ox,oz){
     if(en)deg(en,d*zu,zw,1.75);}
   return S;}
 
-/* ---- şut planı (MM3): ~8 hedef × tür. P(gol) = P(çerçeve: hatanın normal dağılımı kalenin içinde) × (1 − kaleciTahmin) × (1 − blok) ---- */
-const SUT_Z=[-3.4,-3.0,3.0,3.4],SUT_Y=[0.35,1.75];
+/* ---- şut planı (MM3): ~8 hedef × tür. P(gol) = P(çerçeve: hatanın normal dağılımı kalenin içinde) × (1 − kaleciTahmin) × (1 − blok) ----
+   T9b-a (2026-10-10): hedef × tür × güç. Hız = güç × stilin hız payı × şutçunun azami hızı (sutHizTavani; zayıf ayakta az); yön ve yükseklik
+   hatası türün çarpanı × gücün çarpanı (gucHataCarpani: güç arttıkça dik artar). Güçlü şut kalecinin tepkisini geçer, isabeti düşer: plan
+   ikisini tartar. Tür: plase iç ayak, sert üst, falso içüstü (eğri), düşen (serbest vuruş), aşırtma */
+const SUT_Z=[-3.4,-3.0,-2.0,2.0,3.0,3.4],SUT_Y=[0.35,1.75],SUT_GUC=[0.6,0.75,0.9,1.0];
+/* T9b-a: kalenin ağzı hücrelere bölünür (kale ortasına göre z sınırları, y sınırları; dış sınırlar topun yarıçapı kadar içeride). Kalecinin
+   kurtarma olasılığı hücre ortalarında okunur (tür ve güç başına bir kez); nişanın normal dağılımı hücrelere dağıtılır:
+   P(gol) = (1 − blok) × Σ P(hücre) × (1 − kurtarış(hücre)). Eskiden kurtarış nişan noktasında okunuyordu: büyük hatalı (güçlü, uzak) köşe şutu
+   çerçeveyi bulunca hep köşeye gidiyor sayılıyordu (25 m'den köşeye tam güç P(gol) ~0,23) */
+const SUT_HZ=[-3.54,-3.0,-2.2,-1.4,-0.6,0.6,1.4,2.2,3.0,3.54],SUT_HY=[-99,0.6,1.3,2.32],SUT_HZM=[],SUT_HYM=[0.25,0.95,1.8];
+for(let i=0;i+1<SUT_HZ.length;i++)SUT_HZM.push((SUT_HZ[i]+SUT_HZ[i+1])/2);
+const SUT_PS=new Float64Array(SUT_HZM.length*SUT_HYM.length),SUT_FZ=new Float64Array(SUT_HZ.length),SUT_FY=new Float64Array(SUT_HY.length);
+const SUT_TUR={plase:{stil:'ic',kz:0.9,ky:0.85},sert:{stil:'ust',kz:1.0,ky:1.1},falso:{stil:'falso',kz:1.0,ky:0.85},dusen:{stil:'ust',kz:1.05,ky:0.85},
+  asirtma:{stil:'asirtma',kz:0.9,ky:0.7}};
 /* atış hattındaki savunmacı bloklayabilir (aşırtma ve düşen top ilk metrelerden sonra üstünden geçer, falso hattı biraz kaçırır) */
 function sutBlokOlasiligi(m,p,ox,oz,tx,tz,tur){
   const Lk=hyp(tx-ox,tz-oz)||1;let acik=1;
@@ -517,22 +531,30 @@ function sutBlokOlasiligi(m,p,ox,oz,tx,tz,tur){
     if(tur==='asirtma'&&on>4)continue;
     const yan=segD(o.x,o.z,ox,oz,tx,tz);if(yan<1.3)acik*=1-(tur==='falso'?0.45:tur==='dusen'&&on>4?0.3:0.6)*(1-yan/1.3);}
   return 1-acik;}
-/* sd: temel yön hatası (rad). o: {serbest}. Seçim sıcaklıklıdır: kararlı şutçu en iyi hedefi daha tutarlı seçer */
+/* sd: temel yön hatası (rad; vurusSapma, güç çarpanı 1). o: {serbest, tur (sabit tür), guc (sabit güç), zayif (zayıf ayak: azami hız düşer)}.
+   Seçim sıcaklıklıdır: kararlı şutçu en iyi hedefi daha tutarlı seçer */
 function sutPlani(m,p,ox,oz,sd,o){
-  o=o||{};const d=m.dir[p.team],gx=d*PL,gk=m.kaleci(1-p.team),L=Math.max(1,hyp(gx-ox,MZ-oz)),s=p.oz.sut,onde=gk.oyunda?Math.abs(gk.x-gx):0;
-  const turler=o.serbest?['falso','dusen']:onde>5&&L>11?['plase','sert','falso','asirtma']:L>14?['plase','sert','falso']:['plase','sert'];
+  o=o||{};const d=m.dir[p.team],gx=d*PL,gk=m.kaleci(1-p.team),L=Math.max(1,hyp(gx-ox,MZ-oz)),onde=gk.oyunda?Math.abs(gk.x-gx):0;
+  const turler=o.tur?[o.tur]:o.serbest?['falso','dusen']:onde>5&&L>11?['plase','sert','falso','asirtma']:L>14?['plase','sert','falso']:['plase','sert'];
+  const gucler=o.guc!=null?[o.guc]:SUT_GUC,vMax=sutHizTavani(p,!!o.zayif),R=VURUS_GUC_REF.sut;
   const Ls=[],sapma=Math.max(0,L-18)*0.01;let en=0;
-  for(const tur of turler){
-    const v=tur==='plase'?(L<11?15:18)+5*s:tur==='sert'?25+6*s:tur==='falso'?20+5*s:tur==='dusen'?21+3*s:13+3*s;
-    const kz=tur==='plase'?0.9:tur==='sert'?1.2:tur==='falso'?1.0:tur==='dusen'?1.05:0.9,ky=tur==='sert'?1.25:tur==='asirtma'?0.7:0.85;
-    for(const zt of SUT_Z)for(const y0 of(tur==='asirtma'?[2.0]:tur==='dusen'?[1.9]:SUT_Y)){
-      if(tur==='asirtma'&&Math.abs(zt)>2.6)continue;
-      const yt=y0+sapma,sz=Math.max(0.05,sd*kz*L),sy=Math.max(0.05,sd*ky*L*0.35);
-      const Pon=(normalDagilim((GW2-0.12-zt)/sz)-normalDagilim((-GW2+0.12-zt)/sz))*normalDagilim((GH-0.12-yt)/sy);
-      const T=L/v*1.06*(tur==='falso'?1.08:1);
-      const Ps=gk.oyunda?kaleciTahmin(m,gk,MZ+zt,y0,T).P*(tur==='asirtma'?0.3:1):0;
-      const Pg=Pon*(1-Ps)*(1-sutBlokOlasiligi(m,p,ox,oz,gx,MZ+zt,tur));
-      Ls.push({tur,zt,yt:y0,v,kz,ky,Pg});if(Pg>en)en=Pg;}}
+  const nZ=SUT_HZM.length,nY=SUT_HYM.length;
+  for(const tur of turler){const TT=SUT_TUR[tur]||SUT_TUR.plase,kz=TT.kz,ky=TT.ky,BL=[];
+    for(const g of gucler){const v=Math.max(8,g*VURUS_STIL[TT.stil].hiz*vMax),fg=gucHataCarpani(g,R),T=L/v*1.06*(tur==='falso'?1.08:1);
+      /* kalecinin hücre ortalarındaki kurtarışı (bu tür ve güçle uçuş süresi T) */
+      for(let i=0;i<nZ;i++)for(let j=0;j<nY;j++)SUT_PS[i*nY+j]=gk.oyunda?kaleciTahmin(m,gk,MZ+SUT_HZM[i],SUT_HYM[j],T).P*(tur==='asirtma'?0.3:1):0;
+      for(let k=0;k<SUT_Z.length;k++){const zt=SUT_Z[k];
+        if(tur==='asirtma'&&Math.abs(zt)>2.6)continue;
+        /* blok olasılığı güçten bağımsız: tür ve hedef başına bir kez */
+        let bl=BL[k];if(bl===undefined)bl=BL[k]=sutBlokOlasiligi(m,p,ox,oz,gx,MZ+zt,tur);
+        const sz=Math.max(0.05,sd*kz*fg*L);for(let i=0;i<SUT_HZ.length;i++)SUT_FZ[i]=normalDagilim((SUT_HZ[i]-zt)/sz);
+        for(const y0 of(tur==='asirtma'?[2.0]:tur==='dusen'?[1.9]:SUT_Y)){
+          const yt=y0+sapma,sy=Math.max(0.05,sd*ky*fg*L*0.35);for(let j=0;j<SUT_HY.length;j++)SUT_FY[j]=normalDagilim((SUT_HY[j]-yt)/sy);
+          let Pon=0,Pk=0;
+          for(let i=0;i<nZ;i++){const pz=SUT_FZ[i+1]-SUT_FZ[i];if(pz<1e-4)continue;
+            for(let j=0;j<nY;j++){const pc=pz*(SUT_FY[j+1]-SUT_FY[j]);Pon+=pc;Pk+=pc*(1-SUT_PS[i*nY+j]);}}
+          const Pg=Pk*(1-bl);
+          Ls.push({tur,zt,yt:y0,v,g,kz,ky,fg,stil:TT.stil,Pg,Pon});if(Pg>en)en=Pg;}}}}
   const tau=0.012+0.035*(1-p.oz.karar);let top=0;
   for(const c of Ls){c.a=Math.exp((c.Pg-en)/tau);top+=c.a;}
   let r=m.rast()*top;for(const c of Ls){r-=c.a;if(r<=0)return c;}

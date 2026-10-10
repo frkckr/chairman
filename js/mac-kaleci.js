@@ -9,7 +9,8 @@
    Tepki ve dalış hızındaki küçük sapmalar (tohumlu) kaleciTahmin'in P'sindeki belirsizliği (KL_M.sapma) üretir. */
 'use strict';
 ayarEkle('D',{
-  kaleciTepki:0.2,             // şuta tepki süresi (sn) ·(1,25 − 0,5·kalecilik); görüş kapalıysa +0,10–0,18, hazır duruşta −0,05
+  kaleciTepki:0.23,            // şuta tepki süresi (sn) ·(1,25 − 0,5·kalecilik); görüş kapalıysa +0,10–0,18, hazır duruşta −0,05. T9b-a (2026-10-10): 0,20 → 0,23 —
+                               // kaleci dalıştan önce yana adım atınca (yanAdim) d-sut kapıları (MM4) yeniden tuttu; kalecilik 0,7'de 0,21 sn (Ek G6: ~0,2 sn)
   kaleciErisim:1.0,            // uzanma (erişim elipsi) çarpanı
   kaleciUcus:[3.6,2.6],        // dalışta yanal hız (m/sn) = a + b·kalecilik (yüksek dalışta azalır)
   kaleciTutma:0.84,            // kurtarışta topu tutma olasılığı çarpanı (en çok 0,96 olan olasılığa uygulanır)
@@ -41,8 +42,12 @@ function kaleciPay(gk,lat,y,T,r,vj){
   const ua=clamp(tr/0.25,0,1),aA=(0.5+0.4*ua)*B*E,sA=Math.min(Math.max(0,adz-0.3),KL_M.adim*Math.max(0,tr-0.06)),hyA=y<0.7?(0.95-0.4*ua)*B:0.95*B;
   const DA=hyp((adz-sA)/aA,(y-hyA)/(y>hyA?1.35*B:Math.max(0.3,hyA))),payA=(1-DA)*aA+R;let en={pay:payA,mod:'dur',u:DA,payA};
   const yh=clamp(y-0.1,0.25,1.2*B),tp=tr-kaleciItis(yh);
-  if(tp>0){const aD=(0.65+0.6*clamp(tr/KL_M.uzanma,0,1))*B*E,v=kaleciDalisHizi(gk,yh)*(vj||1),s=Math.min(Math.max(0,adz-0.35*aD),v*tp,kaleciUcusYolu(gk,yh));
-    const hy=kaleciKalcaY(0.8*B,kaleciSicrama(gk,yh,tp),tp),DD=hyp((adz-s)/aD,(y-hy)/((y>hy?1.05:0.95)*B*E)),p=(1-DD)*aD+R;
+  /* T9b-a (2026-10-10; Ek G6 dalış zinciri, Ek H 20): yana adım — dalışın yolu (kaleciUcusYolu) zamanın gerektirdiğinden kısaysa kaleci artan
+     sürede önce yana kayar (KL_M.adim), sonra dalar. Yürütmede kaleciKarar dalışı gerekene dek geciktirir, kaleciKonum o arada plan noktasına
+     yürütür; eskiden tahmin bunu bilmiyordu: yavaş köşe şutu (güç modeliyle seçilebilir oldu) kurtarılamaz sanılıyordu */
+  if(tp>0){const aD=(0.65+0.6*clamp(tr/KL_M.uzanma,0,1))*B*E,v=kaleciDalisHizi(gk,yh)*(vj||1),yol=kaleciUcusYolu(gk,yh),tm=Math.max(0,tp-yol/v-0.06),tf=tp-tm;
+    const s=Math.min(Math.max(0,adz-0.35*aD),KL_M.adim*tm+Math.min(v*tf,yol));
+    const hy=kaleciKalcaY(0.8*B,kaleciSicrama(gk,yh,tf),tf),DD=hyp((adz-s)/aD,(y-hy)/((y>hy?1.05:0.95)*B*E)),p=(1-DD)*aD+R;
     if(p>en.pay)en={pay:p,mod:'ucus',u:DD,payA};}
   if(y<0.55&&T<0.45){const c=(0.35*B+Math.min(0.65*B,5*tr))*E,p=c-adz+0.15;if(p>en.pay)en={pay:p,mod:'ayak',u:adz/c,payA};}
   return en;}
@@ -67,9 +72,12 @@ function kaleciTahmin(m,gk,z,y,T){
   const b=m.ball,gx=-m.dir[gk.team]*PL,dx=gx-b.x,dz=z-b.z,L=hyp(dx,dz)||1,nx=dx/L,nz=dz/L,y0=Math.max(b.y,0.11),e=gk.eylem;
   const f0=clamp(((gk.x-b.x)*nx+(gk.z-b.z)*nz)/L,0.05,1),r=kaleciTepkiSuresi(m,gk,b.x,b.z)+(e&&e.kilit?0.35:0);let en=null;
   /* adaylar: kalecinin düzlemi, düzlemle kale çizgisinin ortası ve kale çizgisi (düşen topa geri çekilerek; geri çekilme zamanı düşülür) */
+  /* T9b-a: geri çekilme yana kaymayla birlikte (çapraz; yanAdim): süre bedeli çapraz yolun yanal yoldan fazlası (eskiden geri çekilmenin
+     bütün süresi: yavaş, yüksek köşe şutu kurtarılamaz sanılıyordu) */
   for(let i=0;i<3;i++){const f=i===0?f0:i===1?(f0+1)/2:1;if(i&&f-f0<0.02)break;
-    const Ti=T*f-(f-f0)*L/KL_M.geri,px=b.x+dx*f,pz=b.z+dz*f,yi=Math.max(0.05,y0+(y-y0)*f+0.5*G*T*T*f*(1-f));
-    const k=kaleciPay(gk,(px-gk.x)*(-nz)+(pz-gk.z)*nx,yi,Ti,r,1);if(!en||k.pay>en.pay)en=k;}
+    const px=b.x+dx*f,pz=b.z+dz*f,lt=(px-gk.x)*(-nz)+(pz-gk.z)*nx,gr=(f-f0)*L,Ti=T*f-(Math.sqrt(lt*lt+gr*gr)-Math.abs(lt))/KL_M.geri;
+    const yi=Math.max(0.05,y0+(y-y0)*f+0.5*G*T*T*f*(1-f));
+    const k=kaleciPay(gk,lt,yi,Ti,r,1);if(!en||k.pay>en.pay)en=k;}
   return{P:sigma(1.702*en.pay/KL_M.sapma)*kaleciKontrolP(gk,en.u,L/Math.max(0.05,T)),pay:en.pay};}
 /* havadan gelen top (orta, korner): kalecinin (x, z) noktasına T sn içinde çıkıp y yüksekliğinde alma olasılığı ve zaman payı (sn).
    Sıçrayarak ~2,3·boy+0,35 m'ye uzanır; noktadaki kalabalık (rakip tam, arkadaş yarım) ve kaleden uzaklık olasılığı düşürür */
@@ -135,8 +143,8 @@ Object.assign(Match.prototype,{
     if(ig<0||!kale||Math.abs(kale.z-MZ)>GW2+0.5||kale.y>GH+0.5)return null;
     /* karşılama noktası: düzlemden kale çizgisine kadar yol boyunca en büyük erişim payı (düşen topa geri çekilerek) */
     let en=null,enP=-1e9;
-    for(let i=ig;i<=Math.max(ig,ik);i+=(i+3>ik&&i<ik?ik-i:3)){const c=yol[i],dd=Math.max(0,(c.x-gk.x)*nx+(c.z-gk.z)*nz);
-      const p=kaleciPay(gk,(c.x-gk.x)*(-nz)+(c.z-gk.z)*nx,c.y,(i-i0)/60-dd/KL_M.geri,0.15,1).pay;if(p>enP+0.02){enP=p;en={c,i};}}
+    for(let i=ig;i<=Math.max(ig,ik);i+=(i+3>ik&&i<ik?ik-i:3)){const c=yol[i],dd=Math.max(0,(c.x-gk.x)*nx+(c.z-gk.z)*nz),lt=(c.x-gk.x)*(-nz)+(c.z-gk.z)*nx;
+      const p=kaleciPay(gk,lt,c.y,(i-i0)/60-(Math.sqrt(lt*lt+dd*dd)-Math.abs(lt))/KL_M.geri,0.15,1).pay;if(p>enP+0.02){enP=p;en={c,i};}}   /* T9b-a: çapraz geri çekilme (kaleciTahmin ile aynı) */
     return{surum:b.surum,px:en.c.x,py:en.c.y,pz:en.c.z,an:this.t+(en.i-i0)/60,nx,nz,ky:kale.y,kz:kale.z};
   },
   /* topun yolunun kalecinin bugünkü düzlemini (topun yönüne dik) geçeceği yer (adım başına bir kez); geçmiyorsa plan noktası */
@@ -151,15 +159,24 @@ Object.assign(Match.prototype,{
   },
   /* tepkiden sonra: ayakta adım/uzanma, ayakla kapama ya da zamanlı dalış (erken uçmaz: gerekene kadar yana kayar, kaleciKonum) */
   kaleciKarar(gk,pl){
-    /* karşılama noktası kalecinin gerisindeyse (düşen top) önce geri çekilir (kaleciKonum); karar noktaya varınca ya da süre azalınca */
-    const dd=Math.max(0,(pl.px-gk.x)*pl.nx+(pl.pz-gk.z)*pl.nz);if(dd>0.35&&pl.an-this.t-dd/KL_M.geri>0.2)return;
-    const T=pl.an-this.t,lat=kaleciYanal(gk,pl),y=pl.py,k=kaleciPay(gk,lat,y,T,0,pl.vj),B=gk.boy||1;
+    const dd=Math.max(0,(pl.px-gk.x)*pl.nx+(pl.pz-gk.z)*pl.nz),T=pl.an-this.t,lat=kaleciYanal(gk,pl),y=pl.py,B=gk.boy||1,E=MOTOR_AYAR.kaleciErisim;
+    /* dalışın gerektirdiği süre: itiş + yanal yol (en çok dalışın yolu) / dalış hızı */
+    const yh=clamp(y-0.1,0.25,1.2*B),v=kaleciDalisHizi(gk,yh)*pl.vj,yol=kaleciUcusYolu(gk,yh),need=kaleciItis(yh)+Math.min(yol,Math.max(0,Math.abs(lat)-0.44*B*E))/v;
+    /* karşılama noktası kalecinin gerisindeyse (düşen top) önce geri çekilir; karar noktaya varınca ya da süre azalınca. T9b-a: geri çekilme adım
+       eylemiyle (yanAdim; çapraz, en çok KL_M.adim; kaleciTahmin'in geri çekilmesiyle aynı) ve dalışa süre bırakarak. Eskiden kaleciKonum'la
+       koşarak çekiliyordu: duruştan hızlanma sınırı yüzünden yarım saniyede ~0,3 m gidiyor, tahminin varsaydığı yere varamıyordu */
+    if(dd>0.35&&T-dd/KL_M.geri>0.2){const sure=Math.min(0.6,T-Math.max(need,0.2)-0.06);
+      if(sure>0.05){gk.eylem={ad:'yanAdim',t:0,sure,kilit:true,fren:0.001,yan:Math.sign(lat)||1};if(gk.tavir==='hazir')gk.tavir=null;return;}}
+    const k=kaleciPay(gk,lat,y,T,0,pl.vj);
     if(k.mod==='ayak'){this.kaleciKapanBaslat(gk,Math.atan2(-pl.nz,-pl.nx),true);pl.basladi=true;return;}
     /* ayakta rahatça yetişiyorsa uçmaz (adım atıp tutar) */
     if(k.mod==='dur'||k.payA>=Math.min(0.5,k.pay)){gk.eylem={ad:'tutus',t:0,sure:Math.max(0.25,T+0.3),kilit:true,fren:10,kurtar:true,tur:y>1.75?'yukari':y<0.55?'yer':'gogus',hedefY:y,hy:(gk.tavir==='hazir'?0.88:0.95)*B};
       if(gk.tavir==='hazir')gk.tavir=null;pl.basladi=true;return;}
-    const yh=clamp(y-0.1,0.25,1.2*B),v=kaleciDalisHizi(gk,yh)*pl.vj,need=kaleciItis(yh)+Math.min(kaleciUcusYolu(gk,yh),Math.max(0,Math.abs(lat)-0.44*B*MOTOR_AYAR.kaleciErisim))/v;
-    if(T>need+0.12&&T>0.42)return;
+    if(T>need+0.12&&T>0.42){
+      /* T9b-a (dalış zinciri): top dalışın yolunun ötesindeyse zaman payında önce yana adım (kaleciPay'in yana adımıyla aynı hız); adım bitince
+         karar yeniden verilir. Eskiden kaleci burada yerinde bekliyordu (kısa sürede hızlanamıyor, yolun ötesindeki topa yetişemiyordu) */
+      const tm=T-need-0.06;if(tm>0.05&&Math.abs(lat)-0.44*B*E>yol+0.05){gk.eylem={ad:'yanAdim',t:0,sure:Math.min(tm,0.6),kilit:true,fren:0.001,yan:Math.sign(lat)||1};if(gk.tavir==='hazir')gk.tavir=null;}
+      return;}
     this.kaleciUc(gk,pl,lat,y,T,kaleciItis(yh),k.u);pl.basladi=true;
   },
   /* dalış: itiş (çömelme), havada (yana sabit hız, balistik kalça), iniş (yerde kayma) ve hızlı kalkış (EYLEM_ADIM.ucus) */
@@ -427,6 +444,16 @@ EYLEM_ADIM.ucus=function(p,e,dt){
   else e.hy=0.2;
   e.eg=Math.min(e.egH,(e.eg||0)+8*dt);
   if(e.faz==='inis'&&e.t-e.inisT>=0.3)p.eylem={ad:'kalkis',t:0,sure:0.32,kilit:true,fren:12,kaleci:true};
+  return true;};
+/* T9b-a (Ek G6 dalış zinciri): yana adım — kaleci plan noktasına doğru yana (KL_M.adim) ve gerekirse geriye (KL_M.geri) kayar (kaleciPay'deki
+   yana adım, kaleciTahmin'deki geri çekilme), süre dolunca ya da noktaya gelince biter; karar yeniden verilir (dalış ya da ayakta kurtarış).
+   Sözleşme: eylem 'yanAdim' {yan: kaymanın yönü, kalecinin yanal ekseninde (+ topun yönüne göre sol)} */
+EYLEM_ADIM.yanAdim=function(p,e,dt){
+  const pl=p._kp;if(!pl){p.eylem=null;return true;}
+  const lat=kaleciYanal(p,pl),dd=(pl.px-p.x)*pl.nx+(pl.pz-p.z)*pl.nz;let h=clamp(lat*10,-KL_M.adim,KL_M.adim),g=clamp(Math.max(0,dd)*10,0,KL_M.geri);
+  const n=Math.sqrt(h*h+g*g);if(n>KL_M.adim){h*=KL_M.adim/n;g*=KL_M.adim/n;}   /* çapraz kayma da en çok KL_M.adim */
+  p.vx=-pl.nz*h+pl.nx*g;p.vz=pl.nx*h+pl.nz*g;
+  if(e.t>=e.sure||(Math.abs(lat)<0.3&&dd<0.12))p.eylem=null;
   return true;};
 /* ayakta kurtarış: karşılama noktasına yana adım (en çok KL_M.adim) ve geri çekilme (KL_M.geri), alçak topa eğilir; plan bitince biter */
 EYLEM_ADIM.tutus=function(p,e,dt){

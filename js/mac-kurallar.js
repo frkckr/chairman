@@ -105,6 +105,11 @@ Object.assign(Match.prototype,{
             const yakin=L<6||(L<menzil&&tk.spd<2.5);
             if(gel&&yakin&&du.t>0.5&&tkDis<1.0){this.topcuAtar(k,tk,du);k.gorev=null;}}}}
       this.moveP(k,dt);
+      /* T9b-a (2026-10-10, d-topcu bulgusu): çocuk sahaya girmez — dışarıdaki topu koşarak alıp dönerken atalet onu çizginin içine taşıyabiliyordu
+         (kale çizgisinde 0,38 m); oyunda çizgi kendi kenarında kesin sınırdır, içeri doğru hızı kesilir */
+      if(!oncesi&&Math.abs(k.x)<PL+0.05&&k.z>-0.05&&k.z<PW+0.05){const bo=this.topcuBolge(k);
+        if(bo==='sag'){k.x=PL+0.05;if(k.vx<0)k.vx=0;}else if(bo==='sol'){k.x=-PL-0.05;if(k.vx>0)k.vx=0;}
+        else if(bo==='alt'){k.z=-0.05;if(k.vz>0)k.vz=0;}else{k.z=PW+0.05;if(k.vz<0)k.vz=0;}}
     }
   },
   /* çocuğun durduğu kenar: alt (ana tribün önü), ust (karşı kenar), sol ve sag (kale arkaları) */
@@ -208,6 +213,8 @@ Object.assign(Match.prototype,{
       if(du.tur==='tac'){tk.x=nk.x;tk.z=nk.z;tk.vx=tk.vz=0;b.tasiyan=tk;tk.eylem={ad:'tac',t:0,faz:'tut',ft:0};}
       else{b.tasiyan=null;du.geriX=tk.x;du.geriZ=tk.z;du.aci=tk.yon;b.x=du.x;b.z=du.z;}}
     /* T7a: önde biten son dakikalarda duran topta acele yok (niyetin duranGecikme'si) */
+    /* T9b-a (d-topcu bulgusu): topu kovalarken hızla çizgiyi aşan atan sert durur (azami fren; rahat frenle 5 m/sn'den ~2,8 m taşıyordu) */
+    if((du.asama==='bekle'||du.asama==='getir')&&tk.spd>3)this.eforVer(tk,1);
     if(du.asama==='bekle'){tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=0.8;if(du.t>(du.bekle||0.45)+(this._niyet&&du.tur!=='penalti'?this._niyet[du.takim].duranGecikme:0))du.asama='getir';}
     else if(du.asama==='getir'){
       if(b.tasiyan===tk)du.asama='yerles';
