@@ -1,6 +1,6 @@
 # Chairman — olay kütüphanesi
 
-Son güncelleme: 2026-10-02. Onaylı tasarım yönünü destekleyen tarihsel kaynak ve kurgusal içerik kataloğudur. **P01, P03 ve P13'ün dar alt kapsamları uygulandı (yol haritası 2.4A, 2.6, 2.8; TEST içerik); diğer paketler henüz uygulanmadı.** Bu dar örnekler 2.8H'de yeni iki cevaplı sisteme uyarlandı (§7 sonuç matrisi); eski çok seçenekli biçimleri yalnız eski kayıtlar için durur. Kartlar konu/strateji taslaklarıdır; nihai sahne veya aynı anda sunulacak seçenek listesi değildir. Bütün katalog uygulama öncesi yeni sözleşmeyle incelenir.
+Son güncelleme: 2026-10-10 (2.8L silmesi başa ve §8'e işlendi; §7'de `?ekran=ajanda`). Onaylı tasarım yönünü destekleyen tarihsel kaynak ve kurgusal içerik kataloğudur. **P01, P03 ve P13'ün dar alt kapsamları uygulandı (yol haritası 2.4A, 2.6, 2.8; TEST içerik); diğer paketler henüz uygulanmadı.** **2.8L (2026-10-02 akşam, kullanıcı kararı) ile bu dar örnekler dahil oyunun bütün içeriği silindi; bugün hiçbir paket kodda yoktur (Git geçmişinde durur), içeriği kullanıcı tek tek yazar.** Bu dar örnekler 2.8H'de yeni iki cevaplı sisteme uyarlandı (§7 sonuç matrisi); eski çok seçenekli biçimleri yalnız eski kayıtlar için durur. Kartlar konu/strateji taslaklarıdır; nihai sahne veya aynı anda sunulacak seçenek listesi değildir. Bütün katalog uygulama öncesi yeni sözleşmeyle incelenir.
 
 Katalog 23 tarihsel örnek, 14 olay paketi ve 6 koşula bağlı birleşim içerir. Tarihsel dayanak ile kurgusal seçenek ve sonuçlar ayrıdır. Birleşimler oynanacak altı sabit kampanya değildir. İlk uygulama kapsamı ve iş sırası [YOL_HARITASI](YOL_HARITASI.md), oyun kuralları [OYUN_TASARIMI](OYUN_TASARIMI.md), teknik sözleşme [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi) içindedir.
 
@@ -238,19 +238,19 @@ Kapsam: koddaki bütün karar türleri (`KARAR_TURLERI`), gelişmeler (`GELISMEL
 | Hatıra (yeni, `GELISMELER.hatira`) | — | Cuma 12:00 ve Cumartesi 09:00; yalnız gerçek geçmiş varsa, bir kez, cevapsız (2.8K) | Yalnız içerik 3 |
 | Bakım kalemi “Tribün çatısı bakım taksiti” ve çatı iskelesi | Çatısız stat | “Karşı tribün basamak onarımı taksiti”; iskele karşı tribünün basamaklarında; manşetler “tribün onarımı” | Eski kayıtlarda saklanmış açıklama değişmez |
 | Başlangıçlar (`sikisik`, `rahat`, `sakin`) | Eski türleri kurar | Aynı üç başlangıç; aday randevuları, iki dış kişi (kisi-14, kisi-15) ve hatıra gelişmeleri | `?baslangic=` akış 1–4 |
-| Ekran girişleri: oda dosyası, telefon, ajanda, `?ekran=ajanda`, maç telefonu | Seçenek kesmez | Hepsi aynı `ajandaOnizle` seçeneklerini gösterir; telefon ile dosya aynı komutu bir kez uygular | Akış 9, 13, 16 |
+| Ekran girişleri: oda dosyası, telefon, ajanda, `?ekran=ajanda` (2026-10-10'da kaldırıldı), maç telefonu | Seçenek kesmez | Hepsi aynı `ajandaOnizle` seçeneklerini gösterir; telefon ile dosya aynı komutu bir kez uygular | Akış 9, 13, 16 |
 
 Doğrulama: `kariyer-deneme.js` yeni kariyerin 8.896 yolunda 5.388 karar görünümünün her birinde tam iki geçerli cevap bulur, eski türlerin hiçbiri doğmaz, kasa eksiye düşmez ve her yol maç sınırına varır.
 
 ## 8. Paket durumu ve bağımlılıkları
 
-**P01, P03 ve P13'ün dar alt kapsamları dışında tüm paketler henüz uygulanmamış içerik taslaklarıdır.** Hoca talebi ve gazetenin sorusu küçük yardımcı örneklerdir; P12 ve basın/medya sistemi uygulanmış sayılmaz. İlk dar örnekler P01, sınırlı P03 ve P13 olarak seçildi; bunlar aşağıdaki farklı adımlarda geliştirilir. Diğer kartlar ilgili aşamada değerlendirilecek aday içeriklerdir. Tablo bağımlılık haritasıdır; tamamlanma ve iş sırası yalnız [YOL_HARITASI](YOL_HARITASI.md) içinde güncellenir.
+**P01, P03 ve P13'ün dar alt kapsamları dışında tüm paketler henüz uygulanmamış içerik taslaklarıdır.** *(2.8L ile o dar alt kapsamlar da kodu dahil silindi; aşağıdaki “uygulandı” notları tarihseldir.)* Hoca talebi ve gazetenin sorusu küçük yardımcı örneklerdir; P12 ve basın/medya sistemi uygulanmış sayılmaz. İlk dar örnekler P01, sınırlı P03 ve P13 olarak seçildi; bunlar aşağıdaki farklı adımlarda geliştirilir. Diğer kartlar ilgili aşamada değerlendirilecek aday içeriklerdir. Tablo bağımlılık haritasıdır; tamamlanma ve iş sırası yalnız [YOL_HARITASI](YOL_HARITASI.md) içinde güncellenir.
 
 | Paket | İlk kullanım veya gerekli temel | Kapsam sınırı |
 |---|---|---|
-| P01 | 2.4A dar ödeme/sponsor denemesi (uygulandı; kartta “Kullanılan alt kapsam”); Aşama 4 sözleşmelerle genişleme | İlk adımda transfer, kişisel katkı veya tesis sistemi kurulmaz; karttaki bütün yollar aynı anda uygulanmaz |
+| P01 | 2.4A dar ödeme/sponsor denemesi (uygulandı, 2.8L'de silindi; kartta “Kullanılan alt kapsam”); Aşama 4 sözleşmelerle genişleme | İlk adımda transfer, kişisel katkı veya tesis sistemi kurulmaz; karttaki bütün yollar aynı anda uygulanmaz |
 | P02 | Aşama 6 adaylık ve vaat; ilgili transfer/yatırım sistemi | Verilmemiş söz veya kesinleşmemiş transfer sonradan oldu diye yazılmaz |
-| P03 | 2.6 sınırlı katkı/görünürlük hakkı (uygulandı: tek seferlik destek, süreli pano, çıkar çatışması ve tek pano kuralı); Aşama 4 anlaşmalar | Tam hisse, yatırımcı ve seçim sistemi ilk örneğe dahil değildir; açık mali kararlar ayrıca çözülür |
+| P03 | 2.6 sınırlı katkı/görünürlük hakkı (uygulandı, 2.8L'de silindi: tek seferlik destek, süreli pano, çıkar çatışması ve tek pano kuralı); Aşama 4 anlaşmalar | Tam hisse, yatırımcı ve seçim sistemi ilk örneğe dahil değildir; açık mali kararlar ayrıca çözülür |
 | P04 | 2.8D ortak stat temeli; Aşama 8 tesis/stat yatırımı | Kulübün mevcut stadı etap etap gelişir; lig değişimi ayrı hazır şehir stadı getirmez. Ortak tarif ve 2.8'deki küçük görünür iz bütün inşaat sisteminin hazır olduğu anlamına gelmez |
 | P05 | Aşama 4 sonrası ticari hak ve ilgili kamuoyu sistemi | Kulüp kimliği, kurgusal marka ve anlaşmanın sınırları gerekir; her kariyere arma krizi eklenmez |
 | P06 | Aşama 4–5 mali/etkinlik temeli; Aşama 8 tesisle genişleme | Yardım maçı için gerçek maç/takvim gerekir; brüt destek vaadi nakit sayılmaz |
@@ -260,7 +260,7 @@ Doğrulama: `kariyer-deneme.js` yeni kariyerin 8.896 yolunda 5.388 karar görün
 | P10 | Maç sonucu bağlantısı (3.5) ve ayrıca ilgili kupa/fikstür sistemi | Yalnız lig fikstürünün bulunması kupanın hazır olduğu anlamına gelmez; sonuçlar zorlanmaz |
 | P11 | Aşama 5–8 sezon/kademe; Avrupa ölçeği Aşama 9 | Yeni ihtiyacın sportif ve kurumsal dayanağı bulunmalı |
 | P12 | Aşama 3 rapor/hoca/sonuç; Aşama 4 sözleşmeyle genişleme | Başkan günlük kadro/taktik yöneticisine dönüşmez |
-| P13 | 2.8 küçük söz, teşekkür ve kalıcı görünür iz (uygulandı: söz kaydı, maaş sonrası teşekkür, odadaki izler) | Günlük zorunlu moral toplama veya kutlama sonrası zorunlu kriz yoktur |
+| P13 | 2.8 küçük söz, teşekkür ve kalıcı görünür iz (uygulandı, 2.8L'de silindi: söz kaydı, maaş sonrası teşekkür, odadaki izler) | Günlük zorunlu moral toplama veya kutlama sonrası zorunlu kriz yoktur |
 | P14 | Aşama 6 seçim/vaat; Aşama 7 görev geçmişi | Seçmen ve kurul yapısı seçilmeden kesin yönetim modeli kurulmaz |
 
 İlk P01 denemesi üç farklı mali bağlamı karşılaştırır: ödeme zamanlaması sıkışan, acil nakit baskısı olmadan anlaşma değerlendiren ve ilgili sorunu önceden çözmüş/taşımayan. Sonuncusunda krizin hiç açılmaması başarı ölçütüdür. Tam koşullar, geçiş ve bitiş ölçütleri yol haritası 2.4A'dadır. P03 ve P13 bu adımın önkoşulu değildir.

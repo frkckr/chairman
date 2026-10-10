@@ -1,6 +1,6 @@
 # Chairman — oyun tasarımı
 
-Son güncelleme: 2026-10-02. Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md). **2026-10-02 iki seçenekli karar ve sade ekran yenilemesi 2.8G–2.8K ile uygulandı (TEST içerik; ilgili bölümlerdeki “Bugünkü uygulama” notları).**
+Son güncelleme: 2026-10-10 (§13'e maç motorunun T10'da sorulacak iki kararı). Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md). **2026-10-02 iki seçenekli karar ve sade ekran yenilemesi 2.8G–2.8K ile uygulandı (TEST içerik; ilgili bölümlerdeki “Bugünkü uygulama” notları).**
 
 ## 1. Amaç ve kararların durumu
 
@@ -407,5 +407,7 @@ Başarı finali kutlama, şehre dönüş, insanlarla veda ve bırakmayla tamamla
 | Kesin para tutarları, yaş etkileri, seçim/transfer olasılıkları | İlgili sistemin oynanış testleri; önceden kesin denge sayılmaz |
 | Değişken başlangıç alanları, uyumluluk sınırları ve zorluk dengesi | 2.4A'da dar TEST örnekleri; tam devralma koşulları ve giriş için Aşama 6 öncesi |
 | Olay paketlerinin ayrıntılı seçenekleri, katkı/hak koşulları ve tekrar aralıkları | İlgili yol haritası adımında; katalog uygulama veya kesin denge sayılmaz. P03'ün ilk örneği hisse/yatırımcı sistemi kurmaz |
+| Maçta sakatlık sıklığı, değişiklik hakkı (3 ya da 5) ve dönem kuralları ile işaretleri ([gerçekçilik planı §7 madde 6](MAC_MOTORU_GERCEKCILIK_PLANI.md#7-kullanıcının-karar-vermesi-gerekenler), Ek G10) | Maç motoru T10'da kullanıcıya sorulur (oyun kuralı) |
+| Yağmur ve rüzgârın maçta gösterilmesi ([gerçekçilik planı §7 madde 8](MAC_MOTORU_GERCEKCILIK_PLANI.md#7-kullanıcının-karar-vermesi-gerekenler)) | Maç motoru T10'da kullanıcıya sorulur; motor kapısı T9a'da kuruldu, varsayılan kuru ve rüzgârsız |
 
 Geliştirme aşamaları ve açık işlerin tek takip yeri [YOL_HARITASI.md](YOL_HARITASI.md) dosyasıdır.

@@ -14,7 +14,7 @@ if(!/^[a-z0-9-]+$/.test(AD)||AD==='simdi')throw new Error('geçersiz ad: '+AD+' 
 const ctx=vm.createContext({console,Math,JSON});
 for(const f of ['js/ortak.js','js/stil-99.js','js/oyuncular.js'])vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),ctx,{filename:f});
 const anm=vm.runInContext('JSON.stringify(STIL.animasyon)',ctx),poz=vm.runInContext('JSON.stringify(POSE)',ctx);
-let src=fs.readFileSync(path.join(KOK,'js','animasyon.js'),'utf8');
+let src=fs.readFileSync(path.join(KOK,'js','animasyon.js'),'utf8').replace(/\r\n/g,'\n');   /* tek satır sonu (başlık LF; çalışma ağacı CRLF olabilir) */
 const ESKI='const ANM=STIL.animasyon;';
 if(!src.includes(ESKI))throw new Error('js/animasyon.js içinde "'+ESKI+'" bulunamadı');
 src=src.replace(ESKI,'const ANM='+anm+';   /* dondurulmuş STIL.animasyon */');
