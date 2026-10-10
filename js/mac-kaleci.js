@@ -270,18 +270,18 @@ Object.assign(Match.prototype,{
     if(Pc>0&&this.rast()<Pc){
       if(this.rast()<clamp(v/30*(1-k)*0.25,0,0.2)){/* düşürdü: top dibine seker */const d=this.dir[gk.team];
         b.vx=d*(0.4+this.rast()*1.6);b.vz=this.normal()*1.0;b.vy=0.5+this.rast()*1.2;b.egri=0;b.ust=0;
-        this.dokunus(gk,false);gk.kickCd=0.35;this.kaleciKaydet(gk,sh,false,'dusurdu');return;}
+        this.dokunus(gk,false);gk.kickCd=0.35;this.kaleciKaydet(gk,sh,false,'dusurdu',parca);return;}
       const tur=b.y>1.75?'yukari':b.y<0.5?'yer':'gogus';this.kaleciTut(gk,tur);
       if(!ucus&&ad!=='kapan')gk.eylem={ad:'tutus',t:0,sure:0.35,tur};
-      this.kaleciKaydet(gk,sh,true,bicim);return;}
+      this.kaleciKaydet(gk,sh,true,bicim,parca);return;}
     this.kaleciCel(gk,sh,parca,u,bicim,o);
   },
   /* parmak ucu: top yavaşlar ve kalecinin merkezinden uzağa biraz sapar. Yine kaleye gidiyorsa dokunuş sayılmaz (şut sürer, gol şutu atanın) */
   kaleciParmak(gk,sh,o){
     const b=this.ball,lx=o?o.Ex-o.Hx:0,lz=o?o.Ez-o.Hz:1,L=hyp(lx,lz)||1,f=0.72+this.rast()*0.2,it=1.5+this.rast()*2.5;
     b.vx=b.vx*f+lx/L*it;b.vz=b.vz*f+lz/L*it;b.vy=b.vy*f+this.rast()*1.2;b.egri=0;b.ust=0;this.topDegisti();gk.kickCd=0.3;
-    if(this.kaleciIceriGider(gk)){this.on('parmak',{p:gk,gol:true});return;}
-    this.dokunus(gk,false);this.kaleciKaydet(gk,sh,false,'parmak');
+    if(this.kaleciIceriGider(gk)){this.on('parmak',{p:gk,gol:true,parca:'el'});return;}
+    this.dokunus(gk,false);this.kaleciKaydet(gk,sh,false,'parmak','el');
   },
   /* çelme: elle temas geometriden (T9b-d, Ek H 19); gövdeye çarpan top yansır.
      El: kalecinin avucu topun gelişine bakar ve kaleci onu dışa (topun yatay gidişine dik, kale ortasından uzağa) ya da yüksek topta yukarı (üst
@@ -308,7 +308,7 @@ Object.assign(Match.prototype,{
       if(nL<1e-3){const w=v||1;nx=-b.vx/w;ny=0.2;nz=-b.vz/w;}else{nx/=nL;ny/=nL;nz/=nL;}
       const vn=b.vx*nx+b.vy*ny+b.vz*nz;if(vn<0){b.vx-=1.35*vn*nx;b.vy-=1.35*vn*ny;b.vz-=1.35*vn*nz;}
       const a=this.normal()*0.35,c=Math.cos(a),s=Math.sin(a),vx=b.vx;b.vx=(vx*c-b.vz*s)*0.55;b.vz=(vx*s+b.vz*c)*0.55;b.vy=Math.abs(b.vy)*0.5+this.rast()*1.5;}
-    b.egri=0;b.ust=0;this.dokunus(gk,false);gk.kickCd=0.4;this.kaleciKaydet(gk,sh,false,bicim);
+    b.egri=0;b.ust=0;this.dokunus(gk,false);gk.kickCd=0.4;this.kaleciKaydet(gk,sh,false,bicim,parca);
   },
   /* özel kopya üzerinde: top kaleciden sonra kendi kalesine girer mi (1 sn) */
   kaleciIceriGider(gk){
@@ -317,11 +317,12 @@ Object.assign(Match.prototype,{
       if((px-gx)*(s.x-gx)<=0){const f=(gx-px)/((s.x-px)||1),z=pz+(s.z-pz)*f,y=py+(s.y-py)*f;return Math.abs(z-MZ)<GW2+0.05&&y<GH+0.05;}}
     return false;
   },
-  /* kurtarış olayı (Faz 0 alanları korunur) ve sayımlar; ikinci: aynı kaleci, arada kimse topa sahip olmadan 4 sn içinde yeniden */
-  kaleciKaydet(gk,sh,tut,bicim){
+  /* kurtarış olayı (Faz 0 alanları korunur) ve sayımlar; ikinci: aynı kaleci, arada kimse topa sahip olmadan 4 sn içinde yeniden.
+     T9b-e: parca — topa değen beden parçası ('el', 'govde', 'bacak', 'kapan'; çizim elin topa IK'sını yalnız el temasında yapar) */
+  kaleciKaydet(gk,sh,tut,bicim,parca){
     if(sh&&sh.cerceve)this.ist.isabet[sh.team]++;
     const s=gk._sonKurt,ikinci=s!=null&&this.t-s<4&&(this._dSahipT||-9)<s;gk._sonKurt=this.t;
-    this.on('save',{p:gk,catch:tut,tur:'kurtaris',sut:!!sh,cerceve:!!(sh&&sh.cerceve),bicim,ikinci,el:gk.eylem&&gk.eylem.ad==='ucus'?gk.eylem.el:'cift'});
+    this.on('save',{p:gk,catch:tut,tur:'kurtaris',sut:!!sh,cerceve:!!(sh&&sh.cerceve),bicim,ikinci,el:gk.eylem&&gk.eylem.ad==='ucus'?gk.eylem.el:'cift',parca:parca||'el'});
     this.kacanFirsat();   /* T7f: kurtarılan büyük fırsatta şutçu başını tutar (js/mac-takim.js) */
   },
   /* kalecinin kendi çelip düşürdüğü top (3 sn içinde, arada kimse sahip olmadan) ona dönüyor mu: yeniden alması ikinci kurtarıştır */
@@ -355,9 +356,9 @@ Object.assign(Match.prototype,{
       b.vx=Math.cos(a)*h;b.vz=Math.sin(a)*h;b.vy=4+this.rast()*2.5;b.sut=null;b.egri=0;b.ust=0;
       this.dokunus(gk,false);gk.kickCd=0.5;gk.eylem={ad:'yumruk',t:0,sure:0.5,el};this.on('yumruk',{p:gk,el});return;}
     if(this.rast()<clamp(0.95-(v-12)*0.02+(k-0.6)*0.3-(yuksek?0.04*kal:0)-(cek?0.1:0),0.5,0.98)){const tur=yuksek?'yukari':b.y<0.5?'yer':'gogus',ik=this.kaleciDonen(gk);
-      this.kaleciTut(gk,tur);gk.eylem={ad:'tutus',t:0,sure:0.35,tur};if(ik)this.kaleciKaydet(gk,null,true,'ikinci');}
+      this.kaleciTut(gk,tur);gk.eylem={ad:'tutus',t:0,sure:0.35,tur};if(ik)this.kaleciKaydet(gk,null,true,'ikinci','el');}
     else{/* tutamadı: top elinden kaleden ve merkezden uzağa seker */const yanS=Math.sign(b.z-MZ)||1,h=3+this.rast()*4,a=Math.atan2(yanS*(0.6+this.rast()*0.8),d);
-      b.vx=Math.cos(a)*h;b.vz=Math.sin(a)*h;b.vy=1+this.rast()*1.5;b.egri=0;b.ust=0;this.dokunus(gk,false);gk.kickCd=0.45;this.kaleciKaydet(gk,sh,false,'yakala');}
+      b.vx=Math.cos(a)*h;b.vz=Math.sin(a)*h;b.vy=1+this.rast()*1.5;b.egri=0;b.ust=0;this.dokunus(gk,false);gk.kickCd=0.45;this.kaleciKaydet(gk,sh,false,'yakala','el');}
   },
   /* ============ yer tutma ============
      Kaleye gelen topta tepkiden sonra topun geçeceği noktaya yana kayar (tepki süresince yerinde). Serbest topa ve savunmanın arkasına atılan topa

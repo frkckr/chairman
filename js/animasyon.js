@@ -149,6 +149,15 @@ const ANM_POZ=(()=>{const G=anmGenis,P=POSE,Tm=anmTam,O=Object.assign;return{
   kaleciHazir:{lean:0.22,aL:-0.5,aR:-0.5,aLz:-0.5,aRz:0.5,eL:-0.75,eR:-0.75,hx:0.05},
   /* A2b (Ek G6): set duruşu — göğüs dizlerin üstünde, dirsekler önde, eller ayakların önünde, baş topta (diz ~60°, ayaklar geniş: tavır) */
   kaleciSet:{lean:0.38,gx:0.06,aL:-0.9,aR:-0.9,aLz:-0.28,aRz:0.28,eL:-0.5,eR:-0.5,hx:-0.08},
+  /* T9b-e (Ek G6): çökme dalışı — yakın alçak topa kaleci itmez, yakın bacağı çöker: itişte dizler bükük, kollar aşağıda; havada bacaklar
+     katlanmış, kollar başın üstünden topa (sağa; solda aynalanır). Bire birde kapanma türleri (sözleşme kapan.tur): K-blok (top sağda: sağ bacak
+     yana açık ve yerde, sol diz yerde, gövde dik, kollar aşağıda yana açık), yıldız (ayakta büyür: bacaklar ve kollar yana açık, küçük sıçrama) */
+  cokmeItis:Tm({lean:0.25,dy:-0.3,lL:-0.55,kL:1.25,lR:-0.45,kR:1.15,lLz:-0.15,aL:-0.9,aR:-0.9,aLz:-0.7,aRz:0.7,eL:-0.45,eR:-0.45,hx:0.15}),
+  ucusCokme:Tm({lean:0.12,lL:-0.85,kL:1.45,lR:-0.35,kR:1.0,aL:-0.45,aR:-0.35,aLz:-2.55,aRz:2.6,eL:-0.35,eR:-0.4,hx:0.1}),
+  kapanKblok:Tm({lean:0.18,dy:-0.47,lL:-0.15,lLz:-0.92,kL:0.2,lR:-0.35,kR:1.85,lRz:0.1,aL:0.15,aR:0.15,aLz:-0.75,aRz:0.75,eL:-0.35,eR:-0.35,hx:0.35}),
+  kapanYildiz:Tm({lean:0.04,dy:-0.04,lL:-0.05,kL:0.2,lR:-0.05,kR:0.2,lLz:-0.42,lRz:0.42,aL:-0.3,aR:-0.3,aLz:-1.3,aRz:1.3,eL:-0.12,eR:-0.12,hx:0.05}),
+  /* T9b-e kötü vuruşta (ıska, altına girme) denge: kollar yana açılır, gövde geride */
+  vkDenge:{lean:-0.1,aL:-0.5,aR:-0.5,aLz:-1.2,aRz:1.2,eL:-0.35,eR:-0.35,hx:-0.12},
   /* A2b dağıtım (Ek G6; top motorda eylemin ilk karesinde çıkar: pozlar bırakış/temas anından takibe gider). Sağ ayak/el; solakta aynalanır */
   degajTemas:G({lean:-0.2,lL:-1.25,kL:0.55,lR:0.12,kR:0.3,aL:-0.5,aLz:-1.1,eL:-0.3,aR:-0.4,aRz:1.1,eR:-0.3,hx:0.35}),
   degajTakip:G({lean:-0.36,lL:-1.95,kL:0.1,lR:0.18,kR:0.25,aL:0.2,aLz:-1.2,eL:-0.3,aR:-0.6,aRz:1.25,eR:-0.3,hx:0.15}),
@@ -190,7 +199,7 @@ const ANM_SEVINC=[ANM_POZ.sevKollar,ANM_POZ.sevUcak,ANM_POZ.sevYumruk,ANM_POZ.se
 /* T4g: yutma (aldatılan savunmacı), koru/koruS (top saklama; rakip sağda/solda, çapraz geçiş), ckA (çalım hazırlığı), ckB (itiş ve patlama) */
 const ANM_SLOT=[['bosta',2,4],['dizler',2.5,1.6],['kipirti',3,2.5],['hazir',5,4],['set',12,5],['jokey',5,4],['yutma',10,5],['koru',6,5],['koruS',6,5],['bekle',3,3],['tasi',4,4],
   ['ckA',12,8],['ckB',14,6],['izle',3,2],['baraj',4,4],['barajZ',14,5],
-  ['dokun',40,10],['kontrol',30,8],['kontrol2',20,8],['gogus',30,8],['gogus2',20,8],['vG',40,8],['vT',40,8],['degaj',30,8],['degajT',20,6],
+  ['dokun',40,10],['kontrol',30,8],['kontrol2',20,8],['gogus',30,8],['gogus2',20,8],['vG',40,8],['vT',40,8],['vD',20,6],['degaj',30,8],['degajT',20,6],
   ['zHaz',14,8],['zUc',12,6],['zIn',16,6],['hvDuello',10,6],['kafa',16,16],['omuz',12,8],['sendele',15,6],['mudahale',30,7],['blok',30,8],['kayma',24,3],['ucusI',30,6],['ucusH',30,5],['ucusN',30,5],['kapan',12,6],
   ['tutus',25,8],['yumruk',30,8],['elleAtis',30,8],['elleAtisT',20,6],['dusus',10,4],['yerde',4,3],['kalk',20,5],['kalk2',12,5],['tac',6,5],['tacAt',30,6],['elde',10,10],['itiraz',30,8],['cekme',14,6],['tepki',8,5],['jest',8,5],
   ['p0',5,5],['p1',10,10],['p2',5,5],['p3',5,5],['p4',5,5],['p5',5,5],['p6',5,5],['p7',5,5],['sevinc',6,6],['sarilma',4,4],['dizKayma',5,4],['uzgun',2,3],['mars',3,3],
@@ -209,7 +218,7 @@ function aktorKur(K,kaynak,boy){
     P,C,sw:new Float32Array(N),swV:new Float32Array(N),st:new Float32Array(N),sp:new Array(N).fill(null),faz0:rnd()*6.283,
     /* yürüyüş: dünya hızı/ivmesi, gövdeye göre hareket yönü, ayak hedefleri (x,y,z ×2), kalça/baş dönüşü, tavır parametreleri */
     wvx:0,wvz:0,awx:0,awz:0,mX:0,mZ:1,sapma:0,W:new Float32Array(4),D:new Float32Array(4),anc:new Uint8Array(2),yawO:0,don:0,donY:0,yonM:null,cadS:0,ayakYaw:null,T:new Float32Array([-0.1,-0.034,0.025,0.1,-0.034,0.025]),qA:new Float32Array(2),beta:0.6,dyR:0,dyV:0,hy:0,hyV:0,hyT:0,hyTV:0,by:0,byV:0,kim:null,
-    gDrop:0,gGen:0,gAdim:1,gHy:0,tvSon:null,jYan:1,bekP:null,yEk:0,kucuk:false,phItme:0,dokT:-1,dokSon:undefined,dokSurum:-1,dokP:null,dokDon:false,dokCal:false,dokKoru:false,dokS:ANM.dokunus,
+    gDrop:0,gGen:0,gAdim:1,gHy:0,gKal:1,tvSon:null,jYan:1,bekP:null,yEk:0,kucuk:false,phItme:0,dokT:-1,dokSon:undefined,dokSurum:-1,dokP:null,dokDon:false,dokCal:false,dokKoru:false,dokS:ANM.dokunus,
     /* T4g: çalım, aldatılan savunmacı ve top saklama katmanının durumu (anmCalimDurum) */
     ck:anmCkYeni(),
     /* eylem: son görülen eylem nesnesi ve başında seçilenler */
@@ -224,7 +233,9 @@ function aktorKur(K,kaynak,boy){
     /* A2b: kalecinin set/split-step durumu, baraj sıçraması, dağıtım pozları */
     ks:{evre:0,t:0,hopT:0.2,e:null},hxU:0,hxUV:0,kP2:null,bj:{e:null,t:-1,h:0.35,T:0.53,bas:false},dg:{e:null,P0:null,P1:null},kpSol:false,
     /* T6f: sıçrama katmanı (son görülen p.zipla, pozları, iniş saati), kafanın pozu, müdahale bacağı (IK hedefi, gövde çerçevesinde), başın uzanması */
-    zipE:null,zipVar:false,inisT:-1,zHazP:null,zUcP:null,kfP:null,mI:0,mT:null,mAn:null,mAnT:0,kf:{ofs:0,kd:0,egim:0,yuk:0,e:null,tOfs:0,tEgim:0,tYuk:0,on:0},kyOx:0,kyOz:0,kfOx:0,kfOz:0,kfOy:0};
+    zipE:null,zipVar:false,inisT:-1,zHazP:null,zUcP:null,kfP:null,mI:0,mT:null,mAn:null,mAnT:0,kf:{ofs:0,kd:0,egim:0,yuk:0,e:null,tOfs:0,tEgim:0,tYuk:0,on:0},kyOx:0,kyOz:0,kfOx:0,kfOz:0,kfOy:0,
+    /* T9b-e: dalışın itiş pozu ve çökme dalışı, kapanmanın pozu, kalecinin kol IK'sı (ağırlık, temas karesinden geçen süre, hedef, eller) */
+    uIP:null,uCok:false,kpnP:null,mOx:0,mOz:0,kl:{w:0,temas:false,tT:0,tx:0,ty:0,tz:0,sx:0,sy:1,sz:0,el:'cift',kol:0,kolE:null,ox:0,oy:0,oz:0,q:[new THREE.Quaternion(),new THREE.Quaternion()],e:[0,0]},kh:{y:0.9,t:-1}};
 }
 
 /* ---- pozlar: sürekli karışım ---- */
@@ -306,7 +317,7 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
   const vk=a.vk;   /* A2b: vuruşta adım döngüsü durur (bacaklar vuruş katmanında) */
   if(dt>0&&cad>0.02&&!(vk&&vk.dondur)){a.ph+=dt*Math.PI*cad;if(a.ph>TAU)a.ph-=TAU;}
   const Lm=L/sx,R=2*beta*Lm*Math.min(1,v/Math.max(1e-3,cad*L)),run=Math.min(1,v/7.5);
-  let kal=clamp(A.kaldirEn+A.kaldirHiz*v,A.kaldirEn,A.kaldirTavan)*(wF+0.85*wB+0.75*wS)*K.kaldir*(1-0.2*yor*kos);kal=Math.min(kal,Math.max(0.035,0.5*L))/sy;
+  let kal=clamp(A.kaldirEn+A.kaldirHiz*v,A.kaldirEn,A.kaldirTavan)*(wF+0.85*wB+0.75*wS)*K.kaldir*(1-0.2*yor*kos)*a.gKal;kal=Math.min(kal,Math.max(0.035,0.5*L))/sy;
   const gen=Math.max(0,(Math.abs(mX)*R-0.12)/2)+a.gGen,zOff=0.025-0.05*run-0.12*R*kos*wF,yuv=A.yuvar*4*Math.min(1,R/0.5),yuvA=yuv*(1.1+1.9*run),Lr=0.92,W=a.W,Dv=a.D,us=lerp(1,0.75,kos);
   let need=9,sapma=0;const u0=a.ph/TAU,ck=a.ck;
   for(let i=0;i<2;i++){let u=u0+i*0.5;u-=Math.floor(u);let q,h=0,g=0;const yer=u<beta;
@@ -412,9 +423,12 @@ function anmBekleyis(a,p,dt,duruyor){
 
 /* ---- tavır (sözleşme: p.tavir) → yürüyüş parametreleri ve üst gövde ---- */
 function anmTavir(a,p,dt){
-  let drop=0,gen=0,adim=1,hyE=0;
+  let drop=0,gen=0,adim=1,hyE=0,yanA=false,kalK=1;
   if(p&&p.tur==='oyuncu'){const tv=p.tavir,b=mac.ball,st=a.st,sp=a.sp,S=ANM_S;
     let hazir=tv==='hazir';if(tv==null&&p.rol==='GK'&&b.sut&&b.sut.team!==p.team&&mac.phase==='play'&&!p.eylem)hazir=true;
+    /* T9b-e (Ek G6 dalış zinciri): kalecinin yana adımı (eylem yanAdim) — çömelik hazır duruşta kısa, sık ve geniş adım (ayaklar çaprazlanmaz:
+       yürüyüşün yan kayması), eller önde */
+    if(p.rol==='GK'&&p.eylem&&p.eylem.ad==='yanAdim'){hazir=true;yanA=true;}
     if(tv!==a.tvSon){a.tvSon=tv;if(tv==='jokey')a.jYan=anmSagda(p,b.x,b.z)?1:-1;
       /* T4g: top saklamanın başında rakibin yanı (sonra her karede histerezisle, anmKoru) */
       if(tv==='koru'){const o=anmKorRakip(p);a.ck.korSag=!o||anmSagda(p,o.x,o.z);a.ck.korT=0;}
@@ -422,7 +436,8 @@ function anmTavir(a,p,dt){
     /* A2b kaleci: şutçunun basışına zamanlanmış split-step ve set duruşu (anmKaleciSet) */
     const ks=p.rol==='GK'?anmKaleciSet(a,p,dt):0;
     const bjw=p.rol!=='GK'?anmBaraj(a,p,dt):0;
-    if(hazir||ks>0){st[S.hazir]=1;sp[S.hazir]=ANM_POZ.kaleciHazir;st[S.set]=ks;sp[S.set]=ANM_POZ.kaleciSet;drop=0.13+0.07*ks;gen=0.12+0.06*ks;adim=0.6-0.2*ks;}
+    if(hazir||ks>0){st[S.hazir]=1;sp[S.hazir]=ANM_POZ.kaleciHazir;st[S.set]=yanA?0.5:ks;sp[S.set]=ANM_POZ.kaleciSet;drop=0.13+0.07*ks;gen=0.12+0.06*ks;adim=0.6-0.2*ks;
+      if(yanA){drop=0.15;gen=0.16;adim=0.5;kalK=0.4;}}   /* yana adımda ayak yerden az kalkar */
     else if(tv==='jokey'){st[S.jokey]=1;sp[S.jokey]=ANM_POZ.jokey;drop=0.12;gen=0.07;adim=0.65;hyE=-0.35*a.jYan;}
     /* T4g top saklama: rakibin yanı her karede (anmKoru); iki yuva (sağ/sol) çapraz geçer; alçak, geniş, kısa adım */
     else if(tv==='koru'){anmKoru(a,p,dt);const sg=a.ck.korSag;st[S.koru]=sg?1:0;sp[S.koru]=ANM_POZ.koru;st[S.koruS]=sg?0:1;sp[S.koruS]=aynala(ANM_POZ.koru);drop=0.1;gen=0.12;adim=0.7;}
@@ -451,12 +466,12 @@ function anmTavir(a,p,dt){
     a.bosT=v<0.3&&!(h&&(h.cur||h.sira.length))?a.bosT+dt:0;
     if(a.bosT>0.8){st[S.bosta]=1;sp[S.bosta]=p.kind==='lin'?ANM_POZ.gevsek:p.kind==='dorduncu'?ANM_POZ.hkOnde:ANM_POZ.hkBekle;}}
   /* T4g: çalım hazırlığında kısa ve sık adım, diz bükük (harekete göre); aldatılan savunmacı alçak ve geniş basar */
-  const ck=a.ck;let hizli=!!(a.ks&&a.ks.evre);
+  const ck=a.ck;let hizli=!!(a.ks&&a.ks.evre)||yanA;
   /* T5f (Ek G4): tökezleme — sendelerken 1–3 kısa, sık ve alçak adım (adım boyu 0,55; gövde öne sendele pozundan) */
   if(p&&p.eylem&&p.eylem.ad==='sendele'){drop=Math.max(drop,0.08);gen=Math.max(gen,0.1);adim=Math.min(adim,0.55);hizli=true;}
   if(ck){if(ck.evre===1){const Y=ANM_CK_YUR[ck.mek]||ANM_CK_YUR.aldat;drop=Math.max(drop,Y[0]);gen=Math.max(gen,Y[1]);adim=Math.min(adim,Y[2]);hizli=true;}
     if(ck.yW>0.01&&ck.yE&&ck.yE.mek==='aldat'){drop=Math.max(drop,0.1*ck.yW);gen=Math.max(gen,0.12*ck.yW);hizli=true;}}
-  if(dt>0){const k=Math.min(1,dt*(hizli?12:5));a.gDrop+=(drop-a.gDrop)*k;a.gGen+=(gen-a.gGen)*k;a.gAdim+=(adim-a.gAdim)*k;a.gHy+=(hyE-a.gHy)*k;}
+  if(dt>0){const k=Math.min(1,dt*(hizli?12:5));a.gDrop+=(drop-a.gDrop)*k;a.gGen+=(gen-a.gGen)*k;a.gAdim+=(adim-a.gAdim)*k;a.gHy+=(hyE-a.gHy)*k;a.gKal+=(kalK-a.gKal)*k;}
 }
 
 /* ---- 1b. vuruş katmanı (A2b, 2026-10-08; gerçekçilik planı Ek G2): hazırlık → basış → geri salınım → temas → takip → iniş. Motorun vuruş
@@ -484,19 +499,33 @@ const ANM_VK_POZ={
   asirtmaG:{lean:-0.1,gy:0.25,hy:-0.2,aR:0.22,aRz:1.15,eR:-0.3,aL:-0.3,aLz:-0.5,eL:-0.65,hx:0.34,lLy:0},
   asirtmaT:{lean:-0.24,gx:-0.08,gy:-0.1,hy:0.12,aR:-0.2,aRz:1.05,eR:-0.35,aL:0.2,aLz:-0.85,eL:-0.4,hx:0.15,lLy:0},
   voleG:{lean:-0.1,gz:-0.34,hz:-0.18,gy:0.28,hy:-0.3,aR:0.1,aRz:1.45,eR:-0.3,aL:-0.2,aLz:-1.1,eL:-0.4,hx:0.2,lLy:0},
-  voleT:{lean:-0.05,gz:-0.45,hz:-0.22,gy:-0.28,hy:0.36,aR:-0.3,aRz:1.05,eR:-0.35,aL:0.3,aLz:-1.3,eL:-0.4,hx:0.25,lLy:0}};
+  voleT:{lean:-0.05,gz:-0.45,hz:-0.22,gy:-0.28,hy:0.36,aR:-0.3,aRz:1.05,eR:-0.35,aL:0.3,aLz:-1.3,eL:-0.4,hx:0.25,lLy:0},
+  /* T9b-e: falso (iç ayakla içüstü, açılı yaklaşma: kalça daha açık, gövde destek yanına yatar, karşı kol geniş; takipte bacak gövdenin önünden
+     çapraz süpürür, kalça sola döner) ve burunla dürtme (kısa saplama: gövde topun üstünde ve dik, kollar toplu) */
+  falsoG:{lean:-0.06,gy:0.36,hy:-0.28,gz:-0.15,aR:0.15,aRz:1.5,eR:-0.25,aL:-0.35,aLz:-0.5,eL:-0.7,hx:0.4,lLy:-0.2},
+  falsoT:{lean:-0.02,gy:-0.5,hy:0.42,gz:-0.1,aR:-0.4,aRz:0.9,eR:-0.5,aL:0.45,aLz:-0.6,eL:-0.45,hx:0.36,lLy:-0.3},
+  burunG:{lean:0.1,gy:0.08,hy:-0.06,aR:0.05,aRz:0.55,eR:-0.6,aL:-0.1,aLz:-0.35,eL:-0.7,hx:0.42,lLy:0.05},
+  burunT:{lean:0.14,gy:-0.08,hy:0.1,aR:-0.15,aRz:0.5,eR:-0.6,aL:0.15,aLz:-0.35,eL:-0.6,hx:0.38,lLy:0.05}};
 /* stile göre geri salınımın (S) ve takibin (T) büyüklüğü; güç ve uzun top ölçekler */
-const ANM_VK_STIL={ic:{S:0.45,T:0.4},dis:{S:0.6,T:0.6},ust:{S:1,T:1},yarimVole:{S:0.85,T:0.85},asirtma:{S:0.7,T:0.4},vole:{S:0.9,T:0.9}};
+const ANM_VK_STIL={ic:{S:0.45,T:0.4},dis:{S:0.6,T:0.6},ust:{S:1,T:1},yarimVole:{S:0.85,T:0.85},asirtma:{S:0.7,T:0.4},vole:{S:0.9,T:0.9},falso:{S:0.85,T:0.9},burun:{S:0.25,T:0.35}};
 const ANM_VK_YG=-0.034,ANM_VK_G=new Float32Array(2),ANM_VK_B=new Float32Array(3),ANM_VK_Q=new Float32Array(3),ANM_VK_L=new Float32Array(3);
 function anmVkYeni(){const f=n=>new Float32Array(n);return{evre:0,e:null,t:0,tT:0,tL:0,ayak:0,yan:-1,stil:'ic',uzun:false,sert0:false,sert:false,S:1,Tk:1,g:0.6,
   tD:0.1,tB:0.3,tF:0.2,tIn:0.15,hopT:0,hopH:0,h:0,tc:9,u:0,asagi:false,kd:0,ofs:0,ofs0:0,kp:f(3),kv:f(3),D0:f(3),C:f(3),F:f(3),Ln:f(3),
   sw:f(2),s0:f(2),sAd:1,sDur:0.1,sBos:false,sb:f(3),T:f(6),Te:f(6),kw:0,dondur:false,need:9,yer:new Uint8Array(2),
-  wG:0,wT:0,pG:null,pT:null,yEk:0,dy:0,lean:0,cikT:0,hazEn:0.22,uzunYer:false,k0:f(3),kisa:false,tempo:1,kol:1,tau:0.045};}
+  wG:0,wT:0,pG:null,pT:null,yEk:0,dy:0,lean:0,cikT:0,hazEn:0.22,uzunYer:false,k0:f(3),kisa:false,tempo:1,kol:1,tau:0.045,pk:'',kotu:null,kotuT:0,kLean:0,C0:f(3)};}
 /* gövde çerçevesi (x sola, z öne; js/animasyon.js adım döngüsüyle aynı) ↔ dünya */
 function anmVkGovde(a,wx,wz,sx){const c=Math.cos(a.yaw),s=Math.sin(a.yaw),dx=wx-a.x,dz=wz-a.z;ANM_VK_G[0]=(dx*c-dz*s)/sx;ANM_VK_G[1]=(dx*s+dz*c)/sx;return ANM_VK_G;}
 function anmVkDunya(a,x,z,sx){const c=Math.cos(a.yaw),s=Math.sin(a.yaw);ANM_VK_G[0]=a.x+(x*c+z*s)*sx;ANM_VK_G[1]=a.z+(-x*s+z*c)*sx;return ANM_VK_G;}
 /* topun çizilen yeri (iki motor adımı arası; aktörlerle aynı oran) */
-function anmVkTop(al){const b=mac.ball,P=typeof TOP!=='undefined'?TOP:null;
+/* T9b-e: topun temas karesi — top son motor adımında dokunulduysa (sürümü değişti) çizim onu bu karede temas yerinde, adımın başındaki yerinde
+   gösterir. Çizim adımın sonundaki durumu gösterdiğinden (iki adım arası oran ≈ 1) top vuruş adımında 0,2–0,5 m ilerlemiş çiziliyor, vuruşun,
+   kafanın, müdahalenin ve kurtarışın çarpma karesi hiç görünmüyordu (temasta ayak topun 0,25 m gerisinde). Bir kare; sonra top yoluna devam
+   eder. Yalnız tek adımlık karede (1× oynatma) ve topun adımdaki yolu 1,5 m'den kısaysa (sıfırlama değil); motorun adım sayacı yoksa (poz galerisi) yok */
+const ANM_TOPT={surum:-1,kare:-1,tut:false};
+function anmTopTut(){const b=mac.ball,k=mac.kare,P=typeof TOP!=='undefined'?TOP:null;if(k==null||!P)return false;
+  if(k!==ANM_TOPT.kare){ANM_TOPT.tut=ANM_TOPT.kare>=0&&k-ANM_TOPT.kare===1&&b.surum!==ANM_TOPT.surum&&Math.abs(b.x-P.px)+Math.abs(b.z-P.pz)<1.5;ANM_TOPT.kare=k;ANM_TOPT.surum=b.surum;}
+  return ANM_TOPT.tut;}
+function anmVkTop(al){const b=mac.ball,P=typeof TOP!=='undefined'?TOP:null;if(P&&anmTopTut())al=0;
   ANM_VK_B[0]=P?lerp(P.px,b.x,al):b.x;ANM_VK_B[1]=P?lerp(P.py,b.y,al):b.y;ANM_VK_B[2]=(P?lerp(P.pz,b.z,al):b.z)-MOTOR_Z;return ANM_VK_B;}
 /* ikinci derece Bézier; orta nokta eğrinin s = 0,5'te geçtiği yer (denetim noktası 2M − (A+C)/2) */
 function anmVkBez(A,M,C,s,o){const u=1-s;for(let k=0;k<3;k++){const q=2*M[k]-(A[k]+C[k])/2;o[k]=u*u*A[k]+2*u*s*q+s*s*C[k];}}
@@ -518,14 +547,15 @@ function anmVkKalan(vk,p,vur){
   const vc=d>1e-3?(((p.vx||0)-b.vx)*dx+((p.vz||0)-b.vz)*dz)/d:0;
   return geri+don+Math.max(0,d-(sec.ilk?0.62:0.5))/Math.max(0.7,vc);
 }
-function anmVkPoz(vk){const st=vk.stil,k=st==='ic'?(vk.uzunYer?'ust':'ic'):st==='dis'?'dis':st==='asirtma'?'asirtma':st==='vole'?'vole':vk.uzun?'uzun':'ust';
-  const G=ANM_VK_POZ[k+'G'],T=ANM_VK_POZ[k+'T'];vk.pG=vk.ayak?aynala(G):G;vk.pT=vk.ayak?aynala(T):T;}
+function anmVkPoz(vk){const st=vk.stil,k=st==='ic'?(vk.uzunYer?'ust':'ic'):st==='dis'?'dis':st==='asirtma'?'asirtma':st==='vole'?'vole':st==='falso'?'falso':st==='burun'?'burun':vk.uzun?'uzun':'ust';
+  const G=ANM_VK_POZ[k+'G'],T=ANM_VK_POZ[k+'T'];vk.pk=k;vk.pG=vk.ayak?aynala(G):G;vk.pT=vk.ayak?aynala(T):T;}
 /* temas yeri (gövde çerçevesi): üstle top ortasının arkası, iç ayakla topun yanı, dış ayakla öbür yanı, aşırtmada altı, volede top
    yüksekliğinde; bacağın erişimine sığdırılır */
 function anmVkTemas(vk,bx,bz,by,o){
   const y=vk.yan,st=vk.stil;let x=bx,z=bz-0.15,h=by+0.05;
   if(st==='ic'){x=bx+y*0.1;z=bz-0.04;h=by+0.02;}else if(st==='dis'){x=bx-y*0.09;z=bz-0.06;h=by+0.03;}
   else if(st==='asirtma'){z=bz-0.12;h=by;}else if(st==='vole'){x=bx+y*0.04;z=bz-0.1;h=by+0.06;}
+  else if(st==='falso'){x=bx+y*0.07;z=bz-0.11;h=by+0.04;}else if(st==='burun'){x=bx+y*0.02;z=bz-0.24;h=by+0.02;}
   o[0]=x;o[1]=ANM_VK_YG+Math.max(0.01,h);o[2]=z;
   const hx=y*0.1,dx=o[0]-hx,dy=o[1]-0.9,dz=o[2],d=Math.sqrt(dx*dx+dy*dy+dz*dz);if(d>0.935){const k=0.935/d;o[0]=hx+dx*k;o[1]=0.9+dy*k;o[2]=dz*k;}
 }
@@ -543,7 +573,7 @@ function anmVkBasla(a,p,vur){
      tB + hazirlikEn (motorun asgari hazırlığı) */
   vk.tD=0.07+0.035*vk.S;vk.tB=vur.geri!=null?Math.max(vk.tD+0.08,vur.geri):vk.tD+(vk.uzun?0.28:vk.sert0?0.23:0.18);
   vk.hazEn=vur.hazirlikEn!=null?Math.max(0.1,vur.hazirlikEn):0.22;
-  vk.h=0;vk.asagi=false;vk.u=0;vk.sBos=false;vk.sAd=1;vk.tc=9;vk.kisa=false;anmVkPoz(vk);
+  vk.h=0;vk.asagi=false;vk.u=0;vk.sBos=false;vk.sAd=1;vk.tc=9;vk.kisa=false;vk.kotu=null;vk.kLean=0;anmVkPoz(vk);
 }
 /* destek ayağının basacağı yer (dünya): tahmini temas anındaki topun 0,12 m gerisi, 0,22–0,27 m yanı */
 function anmVkBasisYeri(vk,tc){
@@ -567,7 +597,7 @@ function anmVkCikis(a,sx,basan){
   vk.Te.set(T);vk.evre=5;vk.cikT=0;vk.dondur=false;vk.e=null;vk.ofs0=vk.ofs;
 }
 function anmVurusDurum(a,p,dt,al,sx){
-  const vk=a.vk;vk.yEk=0;vk.dy=0;vk.lean=0;vk.wG=0;vk.wT=0;
+  const vk=a.vk;vk.yEk=0;vk.dy=0;vk.lean=0;vk.wG=0;vk.wT=0;if(vk.kotu){vk.kotuT+=dt;if(vk.kotuT>0.75)vk.kotu=null;}
   const e=p.eylem,vur=e&&e.ad==='vurus'?e:null;
   if(vur!==vk.e){
     if(vur){if(vk.evre>=2&&vk.evre<5)anmVkCikis(a,sx);anmVkBasla(a,p,vur);}
@@ -592,7 +622,7 @@ function anmVurusDurum(a,p,dt,al,sx){
     const temas=vur.faz==='takip';
     vk.ofs=Math.max(vk.ofs,OF*(temas?1:1-clamp(tc/vk.tB,0,1)));
     /* temas yeri topu izler; temas karesinde bir önceki karenin yeri kalır (hızlı oynatmada geri salınım görülmediyse şimdiki top) */
-    if(!temas||vk.t<=dt*1.01)anmVkTemas(vk,bx,bz,by,vk.C);
+    if(!temas||vk.t<=dt*1.01||anmTopTut())anmVkTemas(vk,bx,bz,by,vk.C);   /* T9b-e: tutulan temas karesinde top temas yerinde */
     if(!vk.asagi&&tc>vk.tD&&!temas){
       /* geri salınım (T4-V): ayak son adımın başındaki yerinden tepeye (arkada ve yukarıda, diz ~90°) kalan süreye bağlı durumsuz eğriyle —
          her oynatma hızında aynı yol (eski kritik sönümlü yay 4×'te sınırda, 8×'te kararsızdı); tepeye varış temposu ve kol ağırlığı kimlikten */
@@ -621,22 +651,35 @@ function anmVurusDurum(a,p,dt,al,sx){
       vk.stil=vur.stil||vk.stil;vk.g=vur.guc!=null?vur.guc:0.6;if(!vk.asagi)anmVkPoz(vk);
       /* kısa vuruş (T4-V): eylem ilk kez temas karesinde görüldüyse (hızlı oynatma) ayak topa ışınlanmaz; temas noktası ayağa doğru çekilir, takip kısa */
       vk.kisa=vk.t<=dt*1.01;if(vk.kisa)for(let k=0;k<3;k++)vk.C[k]=lerp(vk.kp[k],vk.C[k],0.6);
+      /* T9b-e: kötü vuruş (sözleşme vurus.kotu; motor temas adımında seçer) — temas yeri türden: ıskada ayak topun üstünden ve yanından geçer,
+         altına girmede topun altına ve önüne uzanır (gövde geride), üstüne vurmada topun üst yarısında (gövde topun üstünde), ayağın kenarında
+         topun iç yanında. Ayak bu karede aşağı salınımın en hızlı yerinde (~15 m/sn): yer değişimi salınımın içinde kalır */
+      const ku=vur.kotu||null;vk.kotu=ku;vk.kotuT=0;vk.kLean=0;vk.C0.set(vk.C);   /* C0: normal temas yeri (ölçüm okur) */
+      if(ku==='iska'){vk.C[1]+=0.2;vk.C[2]+=0.04;vk.C[0]+=vk.yan*0.06;}
+      else if(ku==='alt'){vk.C[1]=Math.max(yG+0.01,vk.C[1]-0.06);vk.C[2]+=0.06;vk.kLean=-0.12;}
+      else if(ku==='ust'){vk.C[1]+=0.1;vk.C[2]-=0.03;vk.kLean=0.08;}
+      else if(ku==='kenar')vk.C[0]-=vk.yan*0.08;
       const st=ANM_VK_STIL[vk.stil]||ANM_VK_STIL.ust,g=vk.g;
-      vk.Tk=st.T*(0.6+0.6*g)*(vk.uzun?1.2:vk.uzunYer?1.1:1)*(vk.kisa?0.7:1);vk.sert=((vk.stil==='ust'||vk.stil==='yarimVole'||vk.stil==='vole')&&g>=0.6)||(vk.uzun&&g>=0.5);
-      const C=vk.C,F=vk.F,Tk=vk.Tk,Tm=Math.min(Tk,1.25),ic=vk.stil==='ic',dis=vk.stil==='dis',as=vk.stil==='asirtma';
-      F[0]=C[0]+(ic?-vk.yan*0.03:dis?vk.yan*0.12:-vk.yan*0.12*Tm);F[1]=yG+(as?0.1+0.2*Tm:ic?0.08+0.3*Tm:0.12+0.55*Tm);F[2]=C[2]+0.2+0.35*Tm;
+      vk.Tk=st.T*(0.6+0.6*g)*(vk.uzun?1.2:vk.uzunYer?1.1:1)*(vk.kisa?0.7:1)*(ku==='iska'?1.15:ku==='ust'?0.6:1);
+      vk.sert=((vk.stil==='ust'||vk.stil==='yarimVole'||vk.stil==='vole'||vk.stil==='falso'&&g>=0.7)&&g>=0.6)||(vk.uzun&&g>=0.5);
+      const C=vk.C,F=vk.F,Tk=vk.Tk,Tm=Math.min(Tk,1.25),ic=vk.stil==='ic',dis=vk.stil==='dis',as=vk.stil==='asirtma',fa=vk.stil==='falso',bu=vk.stil==='burun';
+      /* takip: iç ayakta kısa ve alçak, dış ayakta dışa, falsoda gövdenin önünden çapraz (sağ ayakta sola), burunda kısa saplama */
+      F[0]=C[0]+(ic?-vk.yan*0.03:dis?vk.yan*0.12:fa?-vk.yan*0.3*Tm:bu?0:-vk.yan*0.12*Tm);F[1]=yG+(as?0.1+0.2*Tm:ic?0.08+0.3*Tm:bu?0.06+0.12*Tm:fa?0.1+0.45*Tm:0.12+0.55*Tm);
+      F[2]=C[2]+(bu?0.12+0.2*Tm:fa?0.15+0.3*Tm:0.2+0.35*Tm);
+      /* kötü vuruşun takibi: ıskada boşa savrulur, altına girmede yüksek, üstüne vurmada alçak ve kısa, kenardan vuruşta dışa kaçar */
+      if(ku==='iska')F[1]+=0.1;else if(ku==='alt')F[1]+=0.25;else if(ku==='ust'){F[1]=yG+0.04+0.1*Tm;F[2]=C[2]+0.25;}else if(ku==='kenar')F[0]+=vk.yan*0.22*Tm;
       vk.tF=0.1+0.05*Tm;vk.tIn=0.1+0.05*Tm;
       if(vk.sert){vk.hopT=vk.tF+vk.tIn-0.04;vk.hopH=0.04+0.04*clamp((g-0.6)/0.4,0,1);}else{vk.hopT=0;vk.hopH=0;}
       vk.evre=3;vk.tT=0;vk.sBos=false;for(let k=0;k<3;k++)T[i*3+k]=C[k];vk.kp.set(C);vk.wT=1;vk.wG=0;}
   }
   else if(vk.evre===3||vk.evre===4){
-    vk.tT+=dt;const C=vk.C,F=vk.F,Tm=Math.min(vk.Tk,1.25),eg=vk.stil==='ic'?0.06:0.15;
+    vk.tT+=dt;const C=vk.C,F=vk.F,Tm=Math.min(vk.Tk,1.25),eg=vk.stil==='ic'?0.06:vk.stil==='burun'?0.02:0.15;
     if(vk.evre===3){const v=clamp(vk.tT/vk.tF,0,1),s=1-(1-v)*(1-v);
       ANM_VK_Q[0]=lerp(C[0],F[0],0.4);ANM_VK_Q[1]=lerp(C[1],F[1],0.35)+0.03;ANM_VK_Q[2]=lerp(C[2],F[2],0.7);
-      anmVkBez(C,ANM_VK_Q,F,s,vk.kp);vk.wT=1;vk.lean=-eg*Tm*s;vk.ofs=OF;
+      anmVkBez(C,ANM_VK_Q,F,s,vk.kp);vk.wT=1;vk.lean=(vk.kLean-eg*Tm)*s;vk.ofs=OF;
       if(v>=1){vk.evre=4;vk.tL=0;const Ln=vk.Ln,hiz=Math.sqrt(a.wvx*a.wvx+a.wvz*a.wvz);Ln[0]=vk.yan*0.1;Ln[1]=yG;Ln[2]=0.1+0.15*Tm+clamp(hiz*0.07,0,0.3);}}
     else{vk.tL+=dt;const f=clamp(vk.tL/vk.tIn,0,1),sm=f*f*(3-2*f),Ln=vk.Ln;
-      vk.kp[0]=lerp(F[0],Ln[0],sm);vk.kp[2]=lerp(F[2],Ln[2],sm);vk.kp[1]=lerp(F[1],Ln[1],f*f);vk.wT=1-0.6*f;vk.lean=-eg*Tm*(1-sm);vk.ofs=OF*(1-0.4*sm);
+      vk.kp[0]=lerp(F[0],Ln[0],sm);vk.kp[2]=lerp(F[2],Ln[2],sm);vk.kp[1]=lerp(F[1],Ln[1],f*f);vk.wT=1-0.6*f;vk.lean=(vk.kLean-eg*Tm)*(1-sm);vk.ofs=OF*(1-0.4*sm);
       if(f>=1){for(let k=0;k<3;k++)T[i*3+k]=vk.kp[k];vk.yer[i]=1;anmVkCikis(a,sx,i);return;}}
     for(let k=0;k<3;k++)T[i*3+k]=vk.kp[k];vk.yer[i]=0;
     /* destek ayağı: sert vuruşta temastan 0,04 sn sonra yerden kesilir (iniş sıçraması: vuran ayağa inilir); değilse kilitli kalır, gövdenin
@@ -956,14 +999,19 @@ function anmBasla(a,p,e,ad){
   else if(ad==='kalkis'){a.kTh0=a.lth;a.kPs0=a.lps;const t=a.lth<0.25?'':a.lieTur,sag=a.lieSag;
     a.kkP=t==='yuz'?ANM_POZ.kalkYuz:t==='yan'||t==='ucus'||t==='kapan'||e.kaleci?(sag?ANM_POZ.kalkYan:aynala(ANM_POZ.kalkYan)):ANM_POZ.kalkSirt;
     a.kkP2=(e.sure||0.6)>=1.4&&(t==='yuz'||t==='sirt'||t==='yanSirt'||t==='')?ANM_POZ.kalkDiz:null;}   /* T5f: uzun kalkışta (1,6 sn) dizlerin üstünden */
-  else if(ad==='ucus'){const vx=e.vx||0,vz=e.vz!=null?e.vz:(e.yan||1);let r=-vx*Math.sin(p.yon)+vz*Math.cos(p.yon);if(!r)r=e.yan||1;const sag=r>0;
-    a.uY=e.hedefY!=null?e.hedefY:e.y!=null?e.y:0.8;const tek=e.el?e.el==='tek':a.uY>1.6;
-    a.uP=tek?(sag?ANM_POZ.ucusTek:aynala(ANM_POZ.ucusTek)):ANM_POZ.ucusCift;a.uNP=sag?ANM_POZ.ucusIn:aynala(ANM_POZ.ucusIn);
+  /* T9b-e: dalışın yönü motorun dalış ekseninden (ucus.lx/lz; yoksa yan), çökme dalışı (ucus.tur 'cokme') kendi pozlarıyla */
+  else if(ad==='ucus'){const vx=e.lx!=null?e.lx:e.vx||0,vz=e.lz!=null?e.lz:e.vz!=null?e.vz:(e.yan||1);let r=-vx*Math.sin(p.yon)+vz*Math.cos(p.yon);if(!r)r=e.yan||1;const sag=r>0;
+    a.uY=e.hedefY!=null?e.hedefY:e.y!=null?e.y:0.8;const tek=e.el?e.el==='tek':a.uY>1.6;a.uCok=e.tur==='cokme';
+    a.uP=a.uCok?(sag?ANM_POZ.ucusCokme:aynala(ANM_POZ.ucusCokme)):tek?(sag?ANM_POZ.ucusTek:aynala(ANM_POZ.ucusTek)):ANM_POZ.ucusCift;a.uNP=sag?ANM_POZ.ucusIn:aynala(ANM_POZ.ucusIn);
+    a.uIP=a.uCok?(sag?ANM_POZ.cokmeItis:aynala(ANM_POZ.cokmeItis)):ANM_POZ.ucusItis;
     if(a.lth<0.1){a.lkx=0;a.lkz=sag?1:-1;}a.lieTur='ucus';a.lieSag=sag;}
   else if(ad==='tutus'){const tur=e.tur==='yukari'?'yuksek':e.tur||(b.y>1.55?'yuksek':b.y<0.45?'yer':'gogus');   /* T6f: motor 'yukari' yazar (yüksek tutuş göğüs tutuşu çiziliyordu) */a.tP=tur==='yuksek'?ANM_POZ.tutYuksek:tur==='yer'?ANM_POZ.tutYer:ANM_POZ.tutGogus;}
   else if(ad==='omuz'){const r=e.rakip;const sag=r&&r.x!=null?anmSagda(p,r.x,r.z):(e.taraf==='sag'||e.taraf>0);a.oP=sag?ANM_POZ.omuz:aynala(ANM_POZ.omuz);a.oSag=sag?1:-1;}
   else if(ad==='sendele'){const y=e.yon!=null?e.yon:Math.atan2(p.vz||0,p.vx||1),r=y-p.yon;a.sdX=-Math.sin(r);a.sdZ=Math.cos(r);a.sdS=e.siddet!=null?clamp(e.siddet,0.2,1):0.6;}
-  else if(ad==='kapan'){let sag;if(e.yon!=null)sag=Math.sin(e.yon-p.yon)>0;else sag=anmSagda(p,b.x,b.z);if(a.lth<0.1){a.lkx=0;a.lkz=sag?1:-1;}a.lieTur='kapan';a.lieSag=sag;}
+  /* T9b-e: kapanmanın türü (sözleşme kapan.tur): yayıl (yere yayılma, eski kapanma), K-blok (bacak topun yanına), yıldız (ayakta) */
+  else if(ad==='kapan'){let sag;if(e.yon!=null)sag=Math.sin(e.yon-p.yon)>0;else sag=anmSagda(p,b.x,b.z);const ty=e.tur||'yayil';
+    a.kpnP=ty==='kblok'?(anmSagda(p,b.x,b.z)?ANM_POZ.kapanKblok:aynala(ANM_POZ.kapanKblok)):ty==='yildiz'?ANM_POZ.kapanYildiz:ANM_POZ.kapan;
+    if(ty!=='yayil')a.lieTur='';else{if(a.lth<0.1){a.lkx=0;a.lkz=sag?1:-1;}a.lieTur='kapan';a.lieSag=sag;}}
 }
 /* vuruş stili (sözleşme: vurus.stil, guc, tekDokunus); yoksa seçimin türünden */
 function anmVurusSec(a,p,e,ad){
@@ -1007,6 +1055,8 @@ function anmEylemler(a,p,dt){
   /* A2b: vuruşun üst gövdesi vuruş katmanından (geri salınım ve takip ağırlıkları; iniş ve çıkış motorun eylemi bittikten sonra da sürer) */
   const vk=a.vk;
   if(vk&&vk.evre>0&&(ad==='vurus'||!ad)){if(vk.wG>0){st[S.vG]=vk.wG;sp[S.vG]=vk.pG;}if(vk.wT>0){st[S.vT]=vk.wT;sp[S.vT]=vk.pT;}}
+  /* T9b-e: kötü vuruşta (ıska, altına girme) denge — kollar yana açılır, gövde geride (temastan 0,75 sn; iniş ve çıkış eylem bittikten sonra da) */
+  if(vk&&vk.kotu&&(vk.kotu==='iska'||vk.kotu==='alt')&&(ad==='vurus'||!ad)){st[S.vD]=0.85*anmZarf(vk.kotuT,0.75,0.06,0.35);sp[S.vD]=ANM_POZ.vkDenge;}
   if(ad==='tekme'){const f=e.t/e.sure;if(f<0.33)st[S.vG]=f/0.33;else{const g=(f-0.33)/0.67;st[S.vG]=Math.max(0,1-g*3);st[S.vT]=g<0.3?g/0.3:1-(g-0.3)/0.7;}sp[S.vG]=a.vG;sp[S.vT]=a.vT;}
   /* A2b dağıtım (Ek G6): top eylemin ilk karesinde çıkar — degajda vuran bacak topun altından yükselir, kollar açılır, gövde geride, küçük
      sıçrama; elle atışta bırakış pozundan takibe (omuzdan: kol baştan öne iner; yuvarlama: çömelip kol yerden öne) */
@@ -1030,7 +1080,9 @@ function anmEylemler(a,p,dt){
   else if(ad==='kayma'){st[S.kayma]=Math.min(1,e.t/0.09);sp[S.kayma]=a.kyP;}
   else if(ad==='blok'){st[S.blok]=tepe(e.t,e.sure);sp[S.blok]=a.bP;if(a.bZip){const f=clamp(e.t/(e.sure||0.45),0,1);a.yEk=Math.max(a.yEk,0.14*Math.sin(Math.PI*f));}}
   else if(ad==='ucus')anmUcus(a,p,e);
-  else if(ad==='kapan'){st[S.kapan]=anmZarf(e.t,e.sure||0.8,0.15,0.25);sp[S.kapan]=ANM_POZ.kapan;}
+  else if(ad==='kapan'){const ty=e.tur||'yayil';sp[S.kapan]=a.kpnP||ANM_POZ.kapan;
+    st[S.kapan]=ty==='yildiz'?anmZarf(e.t,e.sure||0.55,0.08,0.18):ty==='kblok'?anmZarf(e.t,e.sure||0.5,0.1,0.15):anmZarf(e.t,e.sure||0.8,0.15,0.25);
+    if(ty==='yildiz'){const f=clamp(e.t/0.3,0,1);a.yEk=Math.max(a.yEk,0.06*Math.sin(Math.PI*f));}}   /* yıldızda küçük sıçrama (motor kapan.hy) */
   /* T6f (Ek G6): yüksek tutuşta ve yüksek topa yumrukta kaleci sıçrar (kök) */
   else if(ad==='tutus'){st[S.tutus]=anmZarf(e.t,e.sure||0.35,0.07,0.12);sp[S.tutus]=a.tP;if(a.tP===ANM_POZ.tutYuksek){const f=clamp(e.t/(e.sure||0.35),0,1);a.yEk=Math.max(a.yEk,0.28*Math.sin(Math.PI*f));}}
   else if(ad==='yumruk'){st[S.yumruk]=tepe(e.t,e.sure);sp[S.yumruk]=ANM_POZ.yumruk;if(p.rol==='GK')a.yEk=Math.max(a.yEk,0.25*tepe(e.t,e.sure||0.5));}
@@ -1101,7 +1153,7 @@ function anmUcus(a,p,e){
   const g=faz==='itis'?clamp(t/iT,0,1):faz==='havada'?clamp((t-iT)/Math.max(0.05,nT-iT),0,1):clamp((t-nT)/0.3,0,1);
   a.uFaz=faz;a.uG=g;
   if(faz==='itis')st[S.ucusI]=1;else if(faz==='havada'){st[S.ucusI]=Math.max(0,1-g/0.35);st[S.ucusH]=1;}else{st[S.ucusH]=Math.max(0,1-g);st[S.ucusN]=1;}
-  sp[S.ucusI]=ANM_POZ.ucusItis;sp[S.ucusH]=a.uP;sp[S.ucusN]=a.uNP;
+  sp[S.ucusI]=a.uIP||ANM_POZ.ucusItis;sp[S.ucusH]=a.uP;sp[S.ucusN]=a.uNP;
 }
 /* yuvaların ağırlığı sınırlı hızla hedefe gider ve sırayla karışır */
 /* A2a: ağırlık kritik sönümlü yayla hedefe gider (kapalı biçim; ω = 3 × eski oran, yükselişte ve inişte ayrı): hız sürekli, poz
@@ -1115,6 +1167,11 @@ function anmYuvalar(a,dt){const sw=a.sw,sv=a.swV,st=a.st,sp=a.sp,N=sw.length;
 /* yuvaların üstüne eklenen hareketler: boyun vuruşu, sendeleme yönü, sevinç ritmi, itiraz ve alkış; hakem işaretleri */
 function anmEkler(a,p,dt){
   const P=a.P,sw=a.sw,S=ANM_S,e=p.eylem,ad=e?e.ad:'';
+  /* T9b-e: kalecinin ayakta kurtarışında çizilen kalça motorun kalça yüksekliğinde (tutus.hy; alçak topa motor kalçayı indirir, elin erişimi
+     buradan) — kalça iner, dizleri bacak IK'sı büker; tutuşa geçen eylemde (hy yok) son yükseklik 0,35 sn'de söner */
+  if(p.rol==='GK'&&p.tur==='oyuncu'&&a.kh){const kh=a.kh;
+    if(ad==='tutus'&&e.hy!=null){kh.y=e.hy;kh.t=0;}else if(kh.t>=0){kh.t+=dt;if(kh.t>0.35)kh.t=-1;}
+    if(kh.t>=0){const sy=a.m.root.scale.y||1,w=kh.t<0.1?1:Math.max(0,1-(kh.t-0.1)/0.25),dyH=kh.y/sy-0.95;if(dyH<P.dy)P.dy+=(dyH-P.dy)*w;}}
   /* A2b vuruş: takipte ayak yükseldikçe gövde geriye; sert vuruşta iniş sıçraması */
   const vk=a.vk;if(vk&&vk.evre>0){P.lean+=vk.lean;if(vk.yEk>a.yEk)a.yEk=vk.yEk;}
   /* T6f: kafada gövde yaydan öne kırılır — alında tam, yanda 0,6; tepeyle sıyırmada ve yüze gelen topta kırılma yok; ayakta parmak ucuna kalkar */
@@ -1127,7 +1184,10 @@ function anmEkler(a,p,dt){
   /* T6f: müdahale bacağının topa IK'sı ("A: temas" ≤ 0,15 m; T5f'nin sabit pozu topa uzanmıyordu) — uzanan bacak temasa kadar topun yanına
      (taban ortası topun merkezine 0,12 m geride, merkezin 0,06 m altında) uzanır, temasta kalır, eylemin sonunda poza döner; o bacağın pozu IK'ya bırakılır */
   /* temas planlanandan önce olursa (top ayağa erken geldi; 'mudahaleSonuc' olayı) bacak o karede topa varır, sonra temasın yerinde kalır */
-  if(ad==='mudahale'&&!a.kucuk&&a.T){const s=e.sure||0.5,t=e.t,tm=e.temas||0.16,u=clamp(t/tm,0,1),an=ANM_MUD.has(p);if(an){ANM_MUD.delete(p);a.mAn=e;}
+  if(ad==='mudahale'&&!a.kucuk&&a.T){const s=e.sure||0.5,t=e.t,tm=e.temas||0.16,u=clamp(t/tm,0,1),an=ANM_MUD.has(p);if(an){ANM_MUD.delete(p);a.mAn=e;
+      /* T9b-e: temas karesinde top gövdenin öbür yanına 0,15 m'den çok geçtiyse uzanan bacak o yanın bacağıdır (bacak eylemin başında topun
+         yanından seçiliyordu; çapraz bacak topa erişemiyor, IK onu yatay kaldırıyordu: ayak 0,76 m yükseklikte) */
+      const tb=anmVkTop(a.al),G=anmVkGovde(a,tb[0],tb[2],a.m.root.scale.x||1);if(a.mI===1&&G[0]<-0.15||a.mI===0&&G[0]>0.15){a.mI=1-a.mI;a.mP=aynala(a.mP);}}
     const tt=a.mAn===e,g=tt||t>=tm?((e.bacak||t<Math.max(tm,a.mAnT||0)+0.14)?1:Math.max(0,1-(t-tm-0.14)/Math.max(0.05,s-tm-0.14))):u*u*(3-2*u);
     if(an)a.mAnT=t;
     if(g>0.01){const i=a.mI,B=ANM_IK[i],T=a.T,R=a.m.root,sx=R.scale.x||1,sy=R.scale.y||1;
@@ -1203,11 +1263,13 @@ function anmKok(a,p,dt,M){
   else if(ad==='kalkis'){const s=e.sure||0.6,f=clamp(e.t/s,0,1),g=clamp((f-0.08)/(s>=1.4?0.5:0.85),0,1);th=a.kTh0*(1-g*g*(3-2*g));ps=a.kPs0*Math.max(0,1-f*2);hiz=40;}
   else if(ad==='kayma'){th=0.42*Math.min(1,e.t/0.1);hiz=35;}   /* T6f: 0,14 → 0,1 sn, 25 → 35 (yukarıdaki kayma yuvasıyla) */
   else if(ad==='ucus'){const hi=clamp((a.uY-0.4)/1.6,0,1),thA=1.35-0.55*hi,g=a.uG;hiz=40;
-    if(a.uFaz==='itis')th=0.22*g;
+    /* T9b-e çökme dalışı: itişte gövde yakın yana düşmeye başlar, havada hemen yatar, yay yok */
+    if(a.uFaz==='itis')th=(a.uCok?0.45:0.22)*g;
     /* alçak topa gövde hemen yatar (yavaşlayan eğri), yüksek topa önce uzanır */
-    else if(a.uFaz==='havada'){const sm=g*g*(3-2*g),c=1-(1-g)*(1-g)*(1-g);th=0.22+(thA-0.22)*Math.min(1,(c+(sm*1.6-c)*hi));ekY=(0.2+0.4*hi)*Math.sin(Math.PI*g);}
+    else if(a.uFaz==='havada'){const sm=g*g*(3-2*g),c=1-(1-g)*(1-g)*(1-g);
+      if(a.uCok)th=0.45+(1.38-0.45)*c;else{th=0.22+(thA-0.22)*Math.min(1,(c+(sm*1.6-c)*hi));ekY=(0.2+0.4*hi)*Math.sin(Math.PI*g);}}
     else th=thA+(1.42-thA)*g*g*(3-2*g);}
-  else if(ad==='kapan'){th=0.3*a.sw[ANM_S.kapan];hiz=20;}
+  else if(ad==='kapan'){th=e.tur==='yildiz'||e.tur==='kblok'?0:0.3*a.sw[ANM_S.kapan];hiz=20;}
   if(dt>0){const k=Math.min(1,dt*hiz);a.lth+=(th-a.lth)*k;a.lps+=(ps-a.lps)*k;}
   /* yatarken gövde kalınlığı kadar yukarı */
   const yat=clamp((1-Math.cos(a.lth))/(1-Math.cos(D.aci)),0,1),yy=(a.lieTur==='yuz'||a.lieTur==='sirt'?D.yuzY:D.yanY)*yat;
@@ -1215,6 +1277,15 @@ function anmKok(a,p,dt,M){
   if(a.lth<1e-3&&Math.abs(a.lps)<1e-3)R.rotation.set(0,a.yaw,0);
   else{ANM_V.set(a.lkx,0,a.lkz).normalize();ANM_Q1.setFromAxisAngle(ANM_V,a.lth);ANM_Q2.setFromAxisAngle(ANM_Y,a.lps);ANM_Q1.multiply(ANM_Q2);
     R.quaternion.setFromAxisAngle(ANM_Y,a.yaw).multiply(ANM_Q1);}
+  /* T9b-e (Ek G6): kalecinin dalışında ve kalkışında çizilen kalça motorun kalçasındadır — motorun beden modelinde kalecinin yeri (x, z) kalçadır,
+     yüksekliği ucus.hy (kurtarışın el, gövde ve bacak kapsülleri buradan); çizim kökü ayaklardan döndürdüğü için yatan gövdenin kalçası ~0,9 m
+     dalış yönüne kayıyor, eller topun ötesinde kalıyordu. Kök, çizilen kalça motorun kalçasına gelecek kadar kayar: uçuşun ilk %30'unda girer,
+     inişte tam, kalkışta yatış açısıyla söner (kalça kökün üstüne gelince fark kalmaz); itişte ayaklar yerde kalır */
+  if(p.rol==='GK'&&!a.kucuk&&(ad==='ucus'&&a.uFaz!=='itis'||ad==='kalkis'&&e.kaleci)){
+    const w=ad==='ucus'&&a.uFaz==='havada'?clamp(a.uG/0.3,0,1):1;
+    R.updateMatrixWorld(true);M.hip.getWorldPosition(ANM_KV);
+    R.position.x+=(a.x-ANM_KV.x)*w;R.position.z+=(a.z-ANM_KV.z)*w;
+    if(ad==='ucus'&&e.hy!=null)R.position.y=Math.max(0,R.position.y+(e.hy-ANM_KV.y)*w);}
   /* T6f: kafanın temas karesinde (eylemin ilk karesi) çizilen baş topa değer — başın dünyadaki yeri okunur, kök başı topun merkezinin 0,12 m
      önüne getirecek kadar (yatayda en çok 0,4 m) kayar ve topun hizasına en çok 0,15 m kalkar (motor topun yüksekliğini temasta merkez sayar, çizim
      topu yarıçap kadar yukarıda gösterir; koşan oyuncunun öne yatık gövdesi başı kökün önüne taşır); sonra 0,15 sn'de söner */
@@ -1229,8 +1300,85 @@ function anmKok(a,p,dt,M){
     for(const kb of[M.kL,M.kR]){ANM_KV.set(0,-0.5,0.05).applyMatrix4(kb.matrixWorld);const d=Math.hypot(ANM_KV.x-cx,ANM_KV.y-cy,ANM_KV.z-cz);if(d<en){en=d;fx=ANM_KV.x;fz=ANM_KV.z;}}
     if(en>0.15){const ox=cx-fx,oz=cz-fz,ol=Math.sqrt(ox*ox+oz*oz)||1,k=Math.min(Math.max(0,ol-0.12),0.7)/ol;a.kyOx=ox*k;a.kyOz=oz*k;}}}
   if(a.kyOx||a.kyOz){R.position.x+=a.kyOx;R.position.z+=a.kyOz;const s=dt>0?Math.max(0,1-dt/0.25):1;a.kyOx*=s;a.kyOz*=s;if(Math.abs(a.kyOx)+Math.abs(a.kyOz)<0.002){a.kyOx=0;a.kyOz=0;}}
+  /* T9b-e: ayakta müdahalenin temas karesinde (mudahaleSonuc) uzanan ayak topa erişemediyse — motor topu 0,7–1 m'den de keser, bacak IK'sı
+     erişimin içinde kalır — kök kalan pay kadar topa kayar (en çok 0,5 m: uzanma hamlesi), 0,2 sn'de söner (kaymadaki gibi) */
+  if(ad==='mudahale'&&a.mAn===e&&a.mAnT===e.t&&a.mT&&!a.kucuk&&p.tur==='oyuncu'){R.updateMatrixWorld(true);ANM_KV.set(0,-0.5,0.05).applyMatrix4((a.mI?M.kR:M.kL).matrixWorld);
+    const tb=anmVkTop(a.al),dx=tb[0]-ANM_KV.x,dz=tb[2]-ANM_KV.z,dl=Math.sqrt(dx*dx+dz*dz),r=dl-0.12;
+    if(r>0.03){const k=Math.min(r,0.5)/dl;a.mOx=dx*k;a.mOz=dz*k;}}
+  if(a.mOx||a.mOz){R.position.x+=a.mOx;R.position.z+=a.mOz;const s=dt>0?Math.max(0,1-dt/0.2):1;a.mOx*=s;a.mOz*=s;if(Math.abs(a.mOx)+Math.abs(a.mOz)<0.002){a.mOx=0;a.mOz=0;}}
 }
 
+/* ---- 4b. T9b-e kalecinin kolu topa (Ek G6): iki kemikli kol IK'sı (bacak IK'sının kalıbı; omuz 0,3 m, ön kol ve eldiven 0,3 m). Uçuşta, ayakta
+   kurtarışta (tutuş), yumrukta ve yere yayılan kapanmada top yaklaşırken eller topun yolunun göğse en yakın noktasına uzanır (o noktaya 0,4 sn
+   kala girer, top göğüsten 1,6 m'den uzaksa girmez); elle temasın motor adımında (olay 'save' parca 'el', 'yumruk', 'parmak') eller topun çizilen
+   yerindedir — iki elde topun iki yanında, tek elde omzu topa yakın kol —; sonra kollar temastaki açılarını gövdeye göre 0,1 sn korur (gövde
+   düşerken eller dünyadaki temas noktasında asılı kalmaz; tutulan topta eller topu izler), 0,2 sn'de poza döner.
+   Çözüm gövde kemiğinin çerçevesinde: dirsek açısı omuz–hedef uzaklığından, kolun yana açılması (z) ve öne kalkışı (x) hedefin yönünden, kol
+   burulması 0; iki çözümden poza yakın olanı. Kök ve poz bittikten sonra (anmKok) yalnız kol kemiklerine yazılır ---- */
+/* omuzun dönüşü poz ile çözüm arasında dördeyle (en kısa yoldan) karışır: Euler açılarının doğrudan karışımı kolu ara pozlarda gökyüzüne süpürüyordu */
+const ANM_KOL=new Map(),ANM_KM=new THREE.Matrix4(),ANM_KV2=new THREE.Vector3(),ANM_QA=new THREE.Quaternion(),ANM_QB=new THREE.Quaternion(),ANM_QC=new THREE.Quaternion(),ANM_EU=new THREE.Euler();
+/* kolun omuz dönüşünü (Euler XYZ) q'ya doğru w kadar döndürür, dirseği e'ye doğru; kemiklere yazar */
+function anmKolKar(a,i,q,e,w){
+  const P=a.P,ka=i?'aR':'aL',kz=ka+'z',ky=ka+'y',ke=i?'eR':'eL',M=a.m;
+  ANM_EU.set(P[ka],P[ky],P[kz],'XYZ');ANM_QA.setFromEuler(ANM_EU).slerp(q,w);ANM_EU.setFromQuaternion(ANM_QA,'XYZ');
+  P[ka]=ANM_EU.x;P[ky]=ANM_EU.y;P[kz]=ANM_EU.z;P[ke]+=(e-P[ke])*w;
+  (i?M.aR:M.aL).rotation.set(P[ka],P[ky],P[kz]);(i?M.eR:M.eL).rotation.x=P[ke];
+}
+function anmKolCoz(a,i,tx,ty,tz,w){
+  const P=a.P,ka=i?'aR':'aL',kz=ka+'z',ky=ka+'y';
+  ANM_KV2.set(tx,ty,tz).applyMatrix4(ANM_KM);
+  let X=ANM_KV2.x-(i?0.27:-0.27),Y=ANM_KV2.y-0.48,Z=ANM_KV2.z,d=Math.sqrt(X*X+Y*Y+Z*Z);
+  if(d>0.598){const k=0.598/d;X*=k;Y*=k;Z*=k;d=0.598;}else if(d<0.1)d=0.1;
+  const cf=clamp((d*d-0.18)/0.18,-1,1),fi=Math.acos(cf),hy=-0.3*(1+cf),hz=0.3*Math.sin(fi),c1=Math.asin(clamp(X/(-hy),-1,1));
+  /* iki çözümden omuz dönüşü poza yakın olan */
+  ANM_EU.set(P[ka],P[ky],P[kz],'XYZ');ANM_QA.setFromEuler(ANM_EU);let en=-1;
+  for(const c of[c1,Math.PI-c1]){ANM_EU.set(Math.atan2(Z,Y)-Math.atan2(hz,hy*Math.cos(c)),0,c,'XYZ');ANM_QC.setFromEuler(ANM_EU);const dd=Math.abs(ANM_QA.dot(ANM_QC));if(dd>en){en=dd;ANM_QB.copy(ANM_QC);}}
+  anmKolKar(a,i,ANM_QB,-fi,w);
+}
+function anmKolIK(a,p,dt){
+  const k=a.kl,e=p.eylem,ad=e?e.ad:'',b=mac.ball,M=a.m,el=ANM_KOL.get(p);
+  if(el!==undefined)ANM_KOL.delete(p);
+  if(a.kucuk||!p.oyunda){k.w=0;k.temas=false;k.ox=k.oy=k.oz=0;return;}
+  /* temasta erişilemeyen pay: kök o kadar (en çok 0,35 m) topa kaymıştı, 0,15 sn'de söner (kafa ve kaymadaki gibi) */
+  if(k.ox||k.oy||k.oz){const R=M.root;R.position.x+=k.ox;R.position.y+=k.oy;R.position.z+=k.oz;const s=dt>0?Math.max(0,1-dt/0.15):1;k.ox*=s;k.oy*=s;k.oz*=s;
+    if(Math.abs(k.ox)+Math.abs(k.oy)+Math.abs(k.oz)<0.002)k.ox=k.oy=k.oz=0;}
+  if(k.temas){k.tT+=dt;if(k.tT>0.3)k.temas=false;}
+  if(el!==undefined){const B=anmVkTop(a.al);k.tx=B[0];k.ty=B[1]+0.11;k.tz=B[2];k.tT=0;k.temas=true;k.el=ad==='ucus'&&e.el?e.el:el;}
+  /* temastan sonra (çelinen top): kollar temas karesindeki açılarda (gövdeye göre), 0,1 sn sonra 0,2 sn'de poza */
+  if(k.temas&&k.tT>0&&b.tasiyan!==p){const w=k.tT<0.1?1:Math.max(0,1-(k.tT-0.1)/0.2);for(let i=0;i<2;i++)anmKolKar(a,i,k.q[i],k.e[i],w);k.w=0;return;}
+  const iz=ad==='ucus'&&e.faz!=='inis'||ad==='tutus'||ad==='yumruk'||ad==='kapan'&&(e.tur||'yayil')==='yayil';
+  if(!k.temas&&!iz&&k.w<0.01){k.w=0;return;}
+  /* hedef: temasta tutulan yer (tutulan topta topun kendisi), yaklaşırken topun yolundaki nokta; sönerken son hedef */
+  let w=0,tx=k.temas?k.tx:k.sx,ty=k.temas?k.ty:k.sy,tz=k.temas?k.tz:k.sz;
+  M.root.updateMatrixWorld(true);const E=M.govde.matrixWorld.elements,gx=E[12]+E[4]*0.3,gy=E[13]+E[5]*0.3,gz=E[14]+E[6]*0.3;   /* göğüs: gövde kemiğinin 0,3 m üstü */
+  if(k.temas){w=k.tT<0.1?1:Math.max(0,1-(k.tT-0.1)/0.2);if(b.tasiyan===p){const B=anmVkTop(a.al);tx=B[0];ty=B[1]+0.11;tz=B[2];}}
+  else if(!b.tasiyan&&iz){
+    const B=anmVkTop(a.al),bx=B[0],by=B[1]+0.11,bz=B[2],vx=b.vx||0,vy=b.vy||0,vz=b.vz||0,v2=vx*vx+vy*vy+vz*vz;
+    const tc=v2>1?((gx-bx)*vx+(gy-by)*vy+(gz-bz)*vz)/v2:-1;
+    if(tc>0&&tc<0.45){tx=bx+vx*tc;ty=Math.max(0.11,by+vy*tc-4.9*tc*tc);tz=bz+vz*tc;const dd=Math.sqrt((tx-gx)*(tx-gx)+(ty-gy)*(ty-gy)+(tz-gz)*(tz-gz));
+      w=clamp((0.4-tc)/0.3,0,1)*clamp((1.6-dd)/0.5,0,1);if(w>0){k.sx=tx;k.sy=ty;k.sz=tz;}}}
+  if(k.temas){k.sx=tx;k.sy=ty;k.sz=tz;}
+  k.w=k.temas?w:k.w+(w-k.w)*Math.min(1,dt/0.05);
+  if(k.w<0.01){k.w=0;return;}
+  /* eller topun gövdeye bakan yanında: iki elde gövdenin yan ekseninde ±0,1 m, göğse doğru 0,04 m */
+  const xl=Math.sqrt(E[0]*E[0]+E[1]*E[1]+E[2]*E[2])||1,Xx=E[0]/xl,Xy=E[1]/xl,Xz=E[2]/xl;
+  let cx=gx-tx,cy=gy-ty,cz=gz-tz;const cl=Math.sqrt(cx*cx+cy*cy+cz*cz)||1;cx*=0.04/cl;cy*=0.04/cl;cz*=0.04/cl;
+  ANM_KM.copy(M.govde.matrixWorld).invert();
+  /* tek el: omzu topa yakın olan kol (eylem boyunca aynı; temasta öbür omuz 0,25 m'den yakınsa ona geçer) */
+  const tek=k.temas?k.el==='tek':ad==='ucus'&&e.el==='tek';
+  if(tek){const q=s=>{const ox=E[12]+E[0]*s+E[4]*0.48-tx,oy=E[13]+E[1]*s+E[5]*0.48-ty,oz=E[14]+E[2]*s+E[6]*0.48-tz;return Math.sqrt(ox*ox+oy*oy+oz*oz);},d0=q(-0.27),d1=q(0.27);
+    if(k.kolE!==e){k.kolE=e;k.kol=d0<=d1?0:1;}else if(k.temas&&k.tT===0&&Math.abs(d0-d1)>0.25)k.kol=d0<d1?0:1;
+    anmKolCoz(a,k.kol,tx+cx,ty+cy,tz+cz,k.w);}
+  else{anmKolCoz(a,0,tx-Xx*0.1+cx,ty-Xy*0.1+cy,tz-Xz*0.1+cz,k.w);anmKolCoz(a,1,tx+Xx*0.1+cx,ty+Xy*0.1+cy,tz+Xz*0.1+cz,k.w);}
+  /* temas karesi: kolun erişemediği pay kalırsa (çizilen beden motorun kapsüllerinden kaba; tam uzanmada, alçak topta) kök topa kayar, en çok
+     0,35 m; kök yerin altına inmez */
+  if(k.temas&&k.tT===0){const R=M.root,P=a.P;
+    for(let i=0;i<2;i++){const ka=i?'aR':'aL';ANM_EU.set(P[ka],P[ka+'y'],P[ka+'z'],'XYZ');k.q[i].setFromEuler(ANM_EU);k.e[i]=P[i?'eR':'eL'];}
+    R.updateMatrixWorld(true);let en=9,rx=0,ry=0,rz=0;
+    for(let i=0;i<2;i++){if(tek&&i!==k.kol)continue;const s=tek?0:i?0.1:-0.1;ANM_KV.set(0,-0.3,0).applyMatrix4((i?M.eR:M.eL).matrixWorld);
+      const dx=tx+Xx*s+cx-ANM_KV.x,dy=ty+Xy*s+cy-ANM_KV.y,dz=tz+Xz*s+cz-ANM_KV.z,d=Math.sqrt(dx*dx+dy*dy+dz*dz);if(d<en){en=d;rx=dx;ry=dy;rz=dz;}}
+    if(en>0.05){const f=Math.min(en-0.03,0.35)/en;k.ox=rx*f;k.oy=Math.max(-R.position.y,ry*f);k.oz=rz*f;R.position.x+=k.ox;R.position.y+=k.oy;R.position.z+=k.oz;}}
+}
 /* ---- her kare: aktörün ara değerli yeri, görünürlüğü, pozu ve kökü. al: iki motor adımı arası oran, T: tünel ---- */
 function aktorGuncelle(a,al,dts,T){
     const p=a.kaynak;a.x=lerp(a.px,p.x,al);a.z=lerp(a.pz,p.z,al)-MOTOR_Z;a.al=al;
@@ -1263,10 +1411,12 @@ function aktorGuncelle(a,al,dts,T){
     else if(p.oturuyor)anmKar(a,ANM_POZ.otur,1);
     anmPozBitir(a);pose(a.m,a.P);
     anmKok(a,p,dts,a.m);
+    if(p.rol==='GK'&&p.tur==='oyuncu')anmKolIK(a,p,dts);   /* T9b-e: kökten sonra (gövdenin dünyadaki yeri belli) */
 }
 /* ---- top: ara değerli yer; dönüş yerde yuvarlanma, havada üst/kesik (ust) ve yan (egri) dönüş; elde taşınırken dönmez; tünelin içinde gizli ---- */
 const ANM_TOP={w:new THREE.Vector3(),h:new THREE.Vector3(),e:new THREE.Vector3()};
 function topCiz(b,al,bx,bz,dts,T){
+  if(anmTopTut()){bx=TOP.px;bz=TOP.pz-MOTOR_Z;al=0;}   /* T9b-e: temas karesi */
   const by=lerp(TOP.py,b.y,al);topMesh.position.set(bx,TOP_R+by,bz);
   const icerde=b.z<T.z-0.8;topMesh.visible=!icerde;
   if(!(dts>0))return;
@@ -1281,6 +1431,8 @@ function topCiz(b,al,bx,bz,dts,T){
 function animasyonOlay(ad,v){
   anmHakemOlay(ad,v);if(v)anmKenarOlay(ad,v);   /* A2b: hakem işaretleri, kenarın tepkisi */
   if(ad==='mudahaleSonuc'&&v&&v.p&&v.topaDegdi){if(v.kayma)ANM_KAYMA.set(v.p,true);else ANM_MUD.set(v.p,true);}   /* T6f: temas karesi */
+  /* T9b-e: kalecinin eliyle topa değdiği motor adımı (kurtarışta parca 'el', yumruk, kaleye giden parmak ucu) — el o karede topta (anmKolIK) */
+  if(v&&v.p&&v.p.rol==='GK'&&(ad==='save'&&(!v.parca||v.parca==='el')||ad==='yumruk'||ad==='parmak'))ANM_KOL.set(v.p,v.el||'cift');
   if((ad==='faul'||ad==='avantaj')&&v&&v.faulYiyen&&v.faulYapan&&!v.avantajdan){const y=v.faulYiyen,f=v.faulYapan;
     let dx=y.x-f.x,dz=y.z-f.z;const L=Math.sqrt(dx*dx+dz*dz)||1;dx/=L;dz/=L;const s=Math.sqrt((y.vx||0)*(y.vx||0)+(y.vz||0)*(y.vz||0));
     if(s>1){const k=Math.min(0.75,0.3+s/8);dx=dx*(1-k)+y.vx/s*k;dz=dz*(1-k)+y.vz/s*k;}

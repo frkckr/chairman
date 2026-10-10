@@ -309,7 +309,8 @@ Object.assign(Match.prototype,{
     hy+=this.normal()*sd*ky*fg*L*0.35+Math.max(0,L-18)*0.01;
     const c=this.havadanCoz(bx,Math.max(b.y,0.11),bz,hx,hy,hz,T,egri,ust);
     b.vx=c.vx;b.vy=c.vy;b.vz=c.vz;b.y=Math.max(b.y,0.11);b.egri=egri;b.ust=ust;
-    if(e.stil!=='vole'&&e.stil!=='yarimVole')e.stil=(SUT_TUR[tur]||SUT_TUR.plase).stil;
+    /* T9b-e: burunla dürtmenin stili temasta korunur (çizim ve ölçüm okur; eskiden 'ust'e dönüyordu) */
+    if(e.stil!=='vole'&&e.stil!=='yarimVole'&&e.stil!=='burun')e.stil=(SUT_TUR[tur]||SUT_TUR.plase).stil;
     e.guc=g;
     const aldat=this.rast()<0.08+0.25*oz.sut;
     /* T9b-0: nisanZ/nisanY — hatası uygulanmış nişan (kale çizgisinde; salt okunur, ölçüm araclar/olcumler/v-vurus.js) */
