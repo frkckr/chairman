@@ -455,6 +455,8 @@ Object.assign(Match.prototype,{
       let tb=null;for(let i=i0;i<yol.length;i+=2){const s=yol[i];if(hrkHyp(s.x-on.x,s.z-on.z)<0.9&&s.y<(havada?2.3:0.8)){tb=(i-i0)/60;break;}}
       if(tb!=null&&varisZamani(p,on.x,on.z,0.45,0.1)<=tb+0.15)k={x:on.x,z:on.z,t:tb};}
     p._kar={x:k.x,z:k.z,surum:b.surum};
+    /* T6b: topun uçuşunu okuma — havadaki topta karşılama noktası derinlik ve yanal hata kadar kayar (karşılamaya 1 sn kalandan %60'a iner) */
+    if(havada&&hMax>1.6){hvHataAl(this,p);const v=hrkHyp(b.vx,b.vz);if(v>1){const ux=b.vx/v,uz=b.vz/v,f=clamp(k.t,0.6,1);k={x:k.x+(ux*p._hvD-uz*p._hvL)*f,z:k.z+(uz*p._hvD+ux*p._hvL)*f,t:k.t};}}
     /* ara pasında alıcı koşusuna devam eder: pasın hedefine top gelmeden yetişebiliyorsa oraya gider */
     const ph=b.pasHedef;
     if(b.hedefOyuncu===p&&ph&&ph.tur==='ara'){const yol=this.topYolu(),i0=hrkMax(0,Math.round((this.t-this._yolT0)*60)-1);

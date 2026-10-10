@@ -215,8 +215,10 @@ Object.assign(Match.prototype,{
       else if(b.tasiyan&&b.tasiyan.tur==='topcu'){tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=0.85;tk.bak=b.tasiyan;}
       else if(!b.tasiyan){/* top havada ya da yerde: atan alır. T4h (2026-10-09, N10 kuralı): atan çizginin en çok 1,6 m dışına gider (tahmin topun
            1,5 m içinde duracağını söylese de yavaş top öteye yuvarlanabiliyor; 1 m'lik alma erimiyle 2,6 m'ye dek yetişir); top 2,5 m'den öteye
-           yuvarlanıp yavaşladıysa top toplayıcı yenisini verir (uygun çocuk yoksa atan gider) */
-        if(Math.max(Math.abs(b.x)-PL,-b.z,b.z-PW)>2.5&&hyp(b.vx,b.vz)<1&&b.y<0.3&&!du.topcu)this.durusTopu(du,true);
+           yuvarlanıp yavaşladıysa top toplayıcı yenisini verir (uygun çocuk yoksa atan gider). T6b (2026-10-10, d-topcu bulgusu): çocuğun attığı
+           yedek topu atan kaçırıp top yine 2,5 m'den öteye yuvarlandıysa başka bir çocuk yenisini verir (eskiden yalnız ilk top: atan topa
+           uzanamayıp 16 sn'lik zorla teslime kadar takılıyordu) */
+        if(Math.max(Math.abs(b.x)-PL,-b.z,b.z-PW)>2.5&&hyp(b.vx,b.vz)<1&&b.y<0.3)this.durusTopu(du,true);
         if(!b.tasiyan){const k=this.yakalamaNoktasi(tk,2.2);tk.tx=clamp(k.x,-PL-1.6,PL+1.6);tk.tz=clamp(k.z,-1.6,PW+1.6);tk.hizOran=0.8;tk.bak=b;
           if(hyp(b.x-tk.x,b.z-tk.z)<1.0&&b.y<2.3){b.tasiyan=tk;b.vx=b.vy=b.vz=0;this.topDegisti();du.asama='yerles';}}}
     }else if(du.asama==='yerles'){

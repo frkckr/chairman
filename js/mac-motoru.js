@@ -72,7 +72,7 @@ const MOTOR_AYAR={
   mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
   acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,
   /* C — js/mac-hava.js (T6) */
-  sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,
+  sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,havaOkuma:undefined,havaEgilme:undefined,havaDuello:undefined,
   /* B — js/mac-topla.js */
   kararGecikme:undefined,ilerleme:undefined,risk:undefined,surusKarar:undefined,vurusHizalama:undefined,sutIstegi:undefined,ortaIstegi:undefined,
   sutSapma:undefined,pasSapma:undefined,sikisma:undefined,geriPas:undefined,kontrolZorluk:undefined,tekVurus:undefined,verKacIstegi:undefined,
@@ -245,7 +245,7 @@ class Match{
       _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_tmsS:undefined,_tmsT:undefined,_tepkiS:undefined,_tepkiJ:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,_gecT:undefined,_destek:undefined,_destekK:undefined,
       _kp:undefined,_duz:undefined,_pen:undefined,_poz:undefined,_sonKurt:undefined,
       /* T6a: sıçramanın zamanlama hatası (top sürümü, sn; js/mac-hava.js sicramalar) */
-      _hvS:-1,_hvE:0,
+      _hvS:-1,_hvE:0,_hvD:0,_hvL:0,_hvTs:0,_hvTy:0,_hvTd:0,
       /* T7d: müdahale tahmininin önbelleği (çarpan, kare, rakip; js/mac-takim.js mudahaleTahminCarpani) */
       _mt:undefined,_mtK:undefined,_mtS:undefined,
       /* T1 iç alanları: kararlı hedef, efor karesi, kip ve süresi, son ivme (karede hız değişimi), düşünme aralığı (kare) */
@@ -501,7 +501,7 @@ class Match{
     const el=ad.find(a=>a.tur==='el');if(el){this.kaleciYakala(el.p);return;}
     /* hava topu: kafa mücadelesi */
     const kafa=ad.filter(a=>a.tur==='kafa').sort((x,y)=>x.d-y.d);
-    if(kafa.length){this.kafaAdaylari(kafa);this.havaTopu(kafa);return;}
+    if(kafa.length){this.havaTopu(kafa);return;}   /* T6b: topa ilk değen baş (js/mac-hava.js) */
     const kazanan=this.kazananSec(ad);if(!kazanan)return;
     this.topaDokun(kazanan);
   }
