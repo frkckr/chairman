@@ -12,7 +12,7 @@
    ≤ %25; kötü kalecide kendi kalesine ≤ %12.
    Kullanım: node araclar/mac-deneme.js --senaryo d-sut [tekrar, varsayılan 24] */
 'use strict';
-const KAPI_D=false;   /* T9b-d'de açılır */
+const KAPI_D=true;   /* T9b-d: açık */
 const KOD=`(function(){
   const dt=1/60;
   function hazirla(tohum){

@@ -30,7 +30,10 @@ function kaleciTepkiSuresi(m,gk,bx,bz){
    alçak köşeye yere inmek de itişi biraz uzatır */
 const kaleciYuksek=yh=>clamp((yh-0.9)/0.5,0,1);
 function kaleciDalisHizi(gk,yh){const A=MOTOR_AYAR.kaleciUcus;return(A[0]+A[1]*gk.oz.kalecilik)*(1-0.3*kaleciYuksek(yh));}
-function kaleciItis(yh){return KL_M.itis+0.05*kaleciYuksek(yh)+0.03*clamp((0.6-yh)/0.35,0,1);}
+/* T9b-d (Ek G6 çökme dalışı): yakın (yanal ≤ 1,3·boy) alçak topa kaleci itmez, yakın bacağı çöker: itiş kısa (0,08 sn), yere iniş için ek süre yok.
+   lat verilmezse (penaltı) eski itiş */
+const kaleciCokme=(yh,lat,B)=>lat!=null&&yh<0.5&&Math.abs(lat)<1.3*(B||1);
+function kaleciItis(yh,lat,B){if(kaleciCokme(yh,lat,B))return 0.08;return KL_M.itis+0.05*kaleciYuksek(yh)+0.03*clamp((0.6-yh)/0.35,0,1);}
 function kaleciUcusYolu(gk,yh){return(1.75-0.25*kaleciYuksek(yh))*(gk.boy||1)*MOTOR_AYAR.kaleciErisim;}
 /* dalışta kalça: itişten tp sn sonra yh yüksekliğinde olacak sıçrama hızı ve balistik yükseklik (yerde 0,22) */
 function kaleciSicrama(gk,yh,tp){const y0=0.8*(gk.boy||1);return clamp((yh-y0+0.5*G*tp*tp)/Math.max(0.08,tp),-1.5,3.6);}
@@ -42,7 +45,7 @@ function kaleciPay(gk,lat,y,T,r,vj){
   if(tr<=0){const a=0.45*B,hy=0.9*B,D=hyp(adz/a,(y-hy)/(y>hy?1.1*B:hy));return{pay:(1-D)*a+R,mod:'dur',u:D};}
   const ua=clamp(tr/0.25,0,1),aA=(0.5+0.4*ua)*B*E,sA=Math.min(Math.max(0,adz-0.3),KL_M.adim*Math.max(0,tr-0.06)),hyA=y<0.7?(0.95-0.4*ua)*B:0.95*B;
   const DA=hyp((adz-sA)/aA,(y-hyA)/(y>hyA?1.35*B:Math.max(0.3,hyA))),payA=(1-DA)*aA+R;let en={pay:payA,mod:'dur',u:DA,payA};
-  const yh=clamp(y-0.1,0.25,1.2*B),tp=tr-kaleciItis(yh);
+  const yh=clamp(y-0.1,0.25,1.2*B),tp=tr-kaleciItis(yh,adz,B);
   /* T9b-a (2026-10-10; Ek G6 dalış zinciri, Ek H 20): yana adım — dalışın yolu (kaleciUcusYolu) zamanın gerektirdiğinden kısaysa kaleci artan
      sürede önce yana kayar (KL_M.adim), sonra dalar. Yürütmede kaleciKarar dalışı gerekene dek geciktirir, kaleciKonum o arada plan noktasına
      yürütür; eskiden tahmin bunu bilmiyordu: yavaş köşe şutu (güç modeliyle seçilebilir oldu) kurtarılamaz sanılıyordu */
@@ -163,7 +166,7 @@ Object.assign(Match.prototype,{
   kaleciKarar(gk,pl){
     const dd=Math.max(0,(pl.px-gk.x)*pl.nx+(pl.pz-gk.z)*pl.nz),T=pl.an-this.t,lat=kaleciYanal(gk,pl),y=pl.py,B=gk.boy||1,E=MOTOR_AYAR.kaleciErisim;
     /* dalışın gerektirdiği süre: itiş + yanal yol (en çok dalışın yolu) / dalış hızı */
-    const yh=clamp(y-0.1,0.25,1.2*B),v=kaleciDalisHizi(gk,yh)*pl.vj,yol=kaleciUcusYolu(gk,yh),need=kaleciItis(yh)+Math.min(yol,Math.max(0,Math.abs(lat)-0.44*B*E))/v;
+    const yh=clamp(y-0.1,0.25,1.2*B),v=kaleciDalisHizi(gk,yh)*pl.vj,yol=kaleciUcusYolu(gk,yh),itisT=kaleciItis(yh,lat,B),need=itisT+Math.min(yol,Math.max(0,Math.abs(lat)-0.44*B*E))/v;
     /* karşılama noktası kalecinin gerisindeyse (düşen top) önce geri çekilir; karar noktaya varınca ya da süre azalınca. T9b-a: geri çekilme adım
        eylemiyle (yanAdim; çapraz, en çok KL_M.adim; kaleciTahmin'in geri çekilmesiyle aynı) ve dalışa süre bırakarak. Eskiden kaleciKonum'la
        koşarak çekiliyordu: duruştan hızlanma sınırı yüzünden yarım saniyede ~0,3 m gidiyor, tahminin varsaydığı yere varamıyordu */
@@ -179,22 +182,25 @@ Object.assign(Match.prototype,{
          karar yeniden verilir. Eskiden kaleci burada yerinde bekliyordu (kısa sürede hızlanamıyor, yolun ötesindeki topa yetişemiyordu) */
       const tm=T-need-0.06;if(tm>0.05&&Math.abs(lat)-0.44*B*E>yol+0.05){gk.eylem={ad:'yanAdim',t:0,sure:Math.min(tm,0.6),kilit:true,fren:0.001,yan:Math.sign(lat)||1};if(gk.tavir==='hazir')gk.tavir=null;}
       return;}
-    this.kaleciUc(gk,pl,lat,y,T,kaleciItis(yh),k.u);pl.basladi=true;
+    this.kaleciUc(gk,pl,lat,y,T,itisT,k.u);pl.basladi=true;
   },
   /* dalış: itiş (çömelme), havada (yana sabit hız, balistik kalça), iniş (yerde kayma) ve hızlı kalkış (EYLEM_ADIM.ucus) */
   kaleciUc(gk,pl,lat,y,T,itisT,u){
     const B=gk.boy||1,E=MOTOR_AYAR.kaleciErisim,sg=Math.sign(lat)||1,lx=-pl.nz*sg,lz=pl.nx*sg,yh=clamp(y-0.1,0.25,1.2*B),tp=Math.max(0.1,T-itisT);
     const vy=kaleciSicrama(gk,yh,tp),v=kaleciDalisHizi(gk,yh)*(pl.vj||1),s=Math.min(kaleciUcusYolu(gk,yh),Math.max(0,Math.abs(lat)-0.35*1.25*B*E)),y0=0.8*B;
     const tIn=(vy+Math.sqrt(vy*vy+2*G*(y0-0.22)))/G,egH=clamp(Math.atan2(Math.max(0.15,Math.abs(lat)-s),y-yh),0.35,1.5);
+    /* T9b-d: tur — 'dalis' ya da 'cokme' (yakın alçak top; sözleşme ucus.tur) */
     gk.eylem={ad:'ucus',t:0,faz:'itis',itisT,inisT:itisT+tIn,sure:itisT+tIn+0.3,kilit:true,fren:4,yan:Math.sign(lz)||sg,y:clamp(y,0.15,2.4),hedefY:y,
-      el:(u==null||u<0.85)&&y<1.95?'cift':'tek',lx,lz,v,s,gid:0,vy,y0,hy:0.88*B,eg:0,egH};
+      el:(u==null||u<0.85)&&y<1.95?'cift':'tek',lx,lz,v,s,gid:0,vy,y0,hy:0.88*B,eg:0,egH,tur:kaleciCokme(yh,lat,B)?'cokme':'dalis'};
     if(gk.tavir==='hazir')gk.tavir=null;this.on('dive',{p:gk,yan:gk.eylem.yan});
   },
-  /* kapanma: bire birde topa atılıp önünde yere yayılma; ayak: yakın alçak şutta bacakları açma (yon: kalecinin döndüğü yön) */
-  kaleciKapanBaslat(gk,yon,ayak){
-    const B=gk.boy||1,v=ayak?1.0:4.2;
-    gk.eylem={ad:'kapan',t:0,sure:ayak?0.5:0.8,kilit:true,fren:ayak?10:5,yon,ayak:!!ayak,v,hy:0.9*B};gk.vx=Math.cos(yon)*v;gk.vz=Math.sin(yon)*v;
-    if(gk.tavir==='hazir')gk.tavir=null;this.on('kapan',{p:gk,ayak:!!ayak});
+  /* kapanma: bire birde topa atılıp önünde yere yayılma; ayak: yakın alçak şutta bacakları açma (yon: kalecinin döndüğü yön). T9b-d (Ek G6): tur —
+     'yayil' (topa atılıp yere yayılma), 'kblok' (yakın alçak şut: bir diz yerde, öbür bacak açık — K-blok), 'yildiz' (bire birde şutçu 2,6–7 m'de
+     vuruşa hazırlanırken kaleci ayakta kollarını ve bacaklarını açıp büyür; ileri atılmaz). Sözleşme kapan.tur */
+  kaleciKapanBaslat(gk,yon,ayak,yildiz){
+    const B=gk.boy||1,v=yildiz?0:ayak?1.0:4.2,tur=yildiz?'yildiz':ayak?'kblok':'yayil';
+    gk.eylem={ad:'kapan',t:0,sure:yildiz?0.55:ayak?0.5:0.8,kilit:true,fren:yildiz?14:ayak?10:5,yon,ayak:!!ayak,v,hy:0.9*B,tur};gk.vx=Math.cos(yon)*v;gk.vz=Math.sin(yon)*v;
+    if(gk.tavir==='hazir')gk.tavir=null;this.on('kapan',{p:gk,ayak:!!ayak,tur});
   },
   /* penaltı: kaleci vuruşla birlikte bir tarafa uçar (ipucu varsa ona doğru, kalecilik ve ipucunun güveniyle), ~0,1 olasılıkla ortada kalır.
      Tahmin ettiği noktaya uçar; tepkiden sonra elleri gerçek topa döner. Kurtarış aynı temas modeliyle çözülür */
@@ -227,6 +233,9 @@ Object.assign(Match.prototype,{
       o.Sx=gk.x+ux*0.52*B;o.Sy=hy+uy*0.52*B;o.Sz=gk.z+uz*0.52*B;o.Fx=gk.x-ux*0.9*B;o.Fy=Math.max(0.05,hy-uy*0.9*B);o.Fz=gk.z-uz*0.9*B;}
     else if(mod==='yer'){const sg=e&&e.lx!=null&&(e.lx*lx+e.lz*lz<0)?-1:1,k=ad==='kalkis'?clamp(e.t/e.sure,0,1):0;
       o.Sx=gk.x+lx*sg*0.52*B*(1-k);o.Sy=hy+0.52*B*k;o.Sz=gk.z+lz*sg*0.52*B*(1-k);o.Fx=gk.x-lx*sg*0.9*B*(1-k);o.Fy=0.12;o.Fz=gk.z-lz*sg*0.9*B*(1-k);}
+    else if(mod==='kapan'&&e.tur==='yildiz'){/* T9b-d yıldız: kollar omuz hizasında yana açık (Ay 1,25·boy), gövde ve bacak ayakta */
+      const c=Math.cos(e.yon),s=Math.sin(e.yon),w=Math.min(0.95*B,0.4*B+3*e.t)*E;
+      o.kapan=true;o.Ax=gk.x-s*w;o.Az=gk.z+c*w;o.Cx=gk.x+s*w;o.Cz=gk.z-c*w;o.Ay=1.25*B;o.Sx=gk.x;o.Sy=hy+0.52*B;o.Sz=gk.z;o.Fx=gk.x;o.Fy=0.05;o.Fz=gk.z;}
     else if(mod==='kapan'){const c=Math.cos(e.yon),s=Math.sin(e.yon),w=e.ayak?(0.35*B+Math.min(0.65*B,5*e.t))*E:0.85*B*E;
       o.kapan=true;o.Ax=gk.x-s*w+c*0.2;o.Az=gk.z+c*w+s*0.2;o.Cx=gk.x+s*w+c*0.2;o.Cz=gk.z-c*w+s*0.2;o.Ay=e.ayak?0.18:0.22;
       if(e.ayak){o.Sx=gk.x;o.Sy=hy+0.5*B;o.Sz=gk.z;}else{o.Sx=gk.x+c*0.55*B;o.Sy=Math.max(0.25,hy);o.Sz=gk.z+s*0.55*B;}o.Fx=gk.x;o.Fy=0.1;o.Fz=gk.z;}
@@ -274,15 +283,23 @@ Object.assign(Match.prototype,{
     if(this.kaleciIceriGider(gk)){this.on('parmak',{p:gk,gol:true});return;}
     this.dokunus(gk,false);this.kaleciKaydet(gk,sh,false,'parmak');
   },
-  /* çelme: elle kaleden ve merkezden uzağa (korner yönüne ya da ileri yana), yüksek topu üst direğin üstüne; gövdeye çarpan top yansır */
+  /* çelme: elle temas geometriden (T9b-d, Ek H 19); gövdeye çarpan top yansır.
+     El: kalecinin avucu topun gelişine bakar ve kaleci onu dışa (topun yatay gidişine dik, kale ortasından uzağa) ya da yüksek topta yukarı (üst
+     direğin üstüne) açar: n = −v̂·cos θ + w·sin θ; plan topun kale ortasına uzaklığından — ortadaki topu önüne (11°), direğe yakını dışa (34°):
+     θ = 0,2 + 0,4·|z − orta| / 3,66 + 0,1·(kalecilik − 0,7); uygulanan = plan + hata (σ 0,12 + 0,3·(1 − kalecilik) + 0,4·uzanmanın sınırı + hız).
+     İlk denemede kalecilikten sabit 31–43° plan ortadaki alçak şutu kaleye çeliyordu (iyi kalecide kendi kalesine %6,5, tehlikeli bölgeye %1). Yansıma v′ = v − (1 + e)(v·n)n + n·itiş (e 0,35 eldivenli avuç; itiş 1,5 + 2·kalecilik m/sn). Açı küçük kalırsa
+     top geri ve ortaya döner, büyük kalırsa yoluna devam eder: tehlikeli bölgeye ve kendi kalesine de gidebilir. Eskiden yön zarla seçilir, top
+     kaleye gidiyorsa ikinci zar atılırdı (kaleciIceriGider); gövdede kaleye giden topun x'i ters çevrilirdi */
   kaleciCel(gk,sh,parca,u,bicim,o){
-    const b=this.ball,k=gk.oz.kalecilik,d=this.dir[gk.team],gx=-d*PL,v=hyp3(b.vx,b.vy,b.vz),yanS=Math.sign(b.z-MZ)||Math.sign(b.vz)||1;
-    if(parca==='el'){
-      if(b.y>1.85&&Math.abs(b.x-gx)<6&&this.rast()<0.8){/* üst direğin üstüne */const dxl=Math.abs(gx-b.x)+0.3,vx=Math.abs(b.vx)*0.35+0.5,t=dxl/vx;
-        b.vx=-d*vx;b.vy=clamp((GH+0.4-b.y+0.5*G*t*t)/t,2,8);b.vz=b.vz*0.4+yanS*(0.3+this.rast());bicim='ust';}
-      else{const kose=this.rast()<clamp(0.3+0.4*k+(b.y>1.3?0.15:0)-0.25*Math.max(0,0.6-u),0.15,0.9),vo=v*(0.34+this.rast()*0.2);
-        for(let i=0;i<2;i++){const phi=kose&&!i?-(0.05+this.rast()*0.3):0.15+this.rast()*0.4;
-          b.vx=d*Math.sin(phi)*vo;b.vz=yanS*Math.cos(phi)*vo;b.vy=clamp(b.vy*0.3+1+this.rast()*2.5,0.5,5);if(!this.kaleciIceriGider(gk))break;}}}
+    const b=this.ball,k=gk.oz.kalecilik,d=this.dir[gk.team],gx=-d*PL,v=hyp3(b.vx,b.vy,b.vz);
+    if(parca==='el'){const vl=v||1,ux=b.vx/vl,uy=b.vy/vl,uz=b.vz/vl,hL=hyp(b.vx,b.vz)||1;
+      let sx=-b.vz/hL,sz=b.vx/hL;const yr=Math.abs(b.z-MZ)>0.3?b.z-MZ:(b.z-gk.z)||1;if(sz*yr<0){sx=-sx;sz=-sz;}
+      const al=b.y>1.6&&Math.abs(b.x-gx)<4?clamp((b.y-1.6)/0.6,0,1):0;
+      let wx=sx*(1-al),wy=al,wz=sz*(1-al);const wv=wx*ux+wy*uy+wz*uz;wx-=wv*ux;wy-=wv*uy;wz-=wv*uz;const wn=hyp3(wx,wy,wz)||1;wx/=wn;wy/=wn;wz/=wn;
+      const th=0.2+0.4*clamp(Math.abs(b.z-MZ)/GW2,0,1)+0.1*(k-0.7)+this.normal()*(0.12+0.3*(1-k)+0.4*Math.max(0,(u||0)-0.6)+0.006*Math.max(0,v-20)),c=Math.cos(th),s=Math.sin(th);
+      let nx=-ux*c+wx*s,ny=-uy*c+wy*s,nz=-uz*c+wz*s;const nn=hyp3(nx,ny,nz)||1;nx/=nn;ny/=nn;nz/=nn;
+      const vn=b.vx*nx+b.vy*ny+b.vz*nz,it=1.5+2*k;if(vn<0){b.vx-=1.35*vn*nx;b.vy-=1.35*vn*ny;b.vz-=1.35*vn*nz;}
+      b.vx+=nx*it;b.vy+=ny*it;b.vz+=nz*it;if(al>0.5)bicim='ust';}
     else{/* gövde/bacak: temas noktasındaki normale göre yansır, hızının çoğunu kaybeder */
       const cx=parca==='govde'?o.Sx:parca==='kapan'?o.Cx:o.Fx,cy=parca==='govde'?o.Sy:parca==='kapan'?o.Ay:o.Fy,cz=parca==='govde'?o.Sz:parca==='kapan'?o.Cz:o.Fz;
       const sx=parca==='kapan'?o.Ax:o.Hx,sy=parca==='kapan'?o.Ay:o.Hy,sz=parca==='kapan'?o.Az:o.Hz;
@@ -290,8 +307,7 @@ Object.assign(Match.prototype,{
       let nx=b.x-qx,ny=b.y-qy,nz=b.z-qz;const nL=hyp3(nx,ny,nz);
       if(nL<1e-3){const w=v||1;nx=-b.vx/w;ny=0.2;nz=-b.vz/w;}else{nx/=nL;ny/=nL;nz/=nL;}
       const vn=b.vx*nx+b.vy*ny+b.vz*nz;if(vn<0){b.vx-=1.35*vn*nx;b.vy-=1.35*vn*ny;b.vz-=1.35*vn*nz;}
-      const a=this.normal()*0.35,c=Math.cos(a),s=Math.sin(a),vx=b.vx;b.vx=(vx*c-b.vz*s)*0.55;b.vz=(vx*s+b.vz*c)*0.55;b.vy=Math.abs(b.vy)*0.5+this.rast()*1.5;
-      if(b.vx*d<0&&this.kaleciIceriGider(gk))b.vx=-b.vx;}
+      const a=this.normal()*0.35,c=Math.cos(a),s=Math.sin(a),vx=b.vx;b.vx=(vx*c-b.vz*s)*0.55;b.vz=(vx*s+b.vz*c)*0.55;b.vy=Math.abs(b.vy)*0.5+this.rast()*1.5;}
     b.egri=0;b.ust=0;this.dokunus(gk,false);gk.kickCd=0.4;this.kaleciKaydet(gk,sh,false,bicim);
   },
   /* özel kopya üzerinde: top kaleciden sonra kendi kalesine girer mi (1 sn) */
@@ -362,6 +378,9 @@ Object.assign(Match.prototype,{
       if(!arada){const dT=hyp(b.x-p.x,b.z-p.z);
         if(dT<3.6&&!p.eylem){const hx=b.x+b.vx*0.15,hz=b.z+b.vz*0.15,acik=hyp(b.x-s.x,b.z-s.z),vurus=s.eylem&&s.eylem.ad==='vurus';
           if(acik>0.75&&varisZamani(p,hx,hz,0.9,0.08)<varisZamani(s,hx,hz,0.5,0.1)+0.12||vurus&&dT<2.6){this.kaleciKapanBaslat(p,Math.atan2(hz-p.z,hx-p.x),false);return;}}
+        /* T9b-d: şutçu 2,6–7 m'de vuruşa hazırlanıyor, kaleci üstüne atılamıyor: yıldız (ayakta büyür), geri salınımın son 0,25 sn'sinde */
+        if(!p.eylem&&dT>=2.6&&dT<7&&s.eylem&&s.eylem.ad==='vurus'&&s.eylem.sec&&s.eylem.sec.tur==='sut'&&s.eylem.faz==='geri'&&s.eylem.kalan<0.25){
+          this.kaleciKapanBaslat(p,Math.atan2(b.z-p.z,b.x-p.x),false,true);return;}
         const dx=s.x-gx,dz=s.z-MZ,L=hyp(dx,dz)||1,k=clamp(L*0.45,1.2,7);p.tx=gx+dx/L*k;p.tz=MZ+dz/L*k;p.hizOran=1;this.kaleciTavir(p,true);return;}}
     /* açıortay: topun kaleye bakan açısının ortası */
     const a1=Math.atan2(MZ-GW2-b.z,gx-b.x),a2=Math.atan2(MZ+GW2-b.z,gx-b.x),am=a1+aciFark(a2,a1)/2;
@@ -413,8 +432,11 @@ Object.assign(Match.prototype,{
       b.x=gk.x+Math.cos(gk.yon)*0.35;b.z=gk.z+Math.sin(gk.yon)*0.35;b.y=0.1;b.vx=Math.cos(a)*v;b.vz=Math.sin(a)*v;b.vy=0;b.egri=0;b.ust=0;
       gk.eylem={ad:'elleAtis',t:0,sure:0.6,stil:'yuvarla'};this.dokunus(gk,true);gk.kickCd=0.5;b.hedefOyuncu=q;
       this.pasSay(gk,hx,hz,L,'elleAtis');this.ofsaytPasAni(gk);this.on('pass',{p:gk,q});return;}
-    if(tur==='elleAtis'){hx=k.hx;hz=k.hz;hy=0.3;y0=1.9;T=0.4+hyp(hx-gk.x,hz-gk.z)/24;gk.eylem={ad:'elleAtis',t:0,sure:0.6,stil:'omuz'};}
-    else{const h=q||{x:d*10,z:MZ};hx=clamp(h.x+d*4,-PL+10,PL-10);hz=h.z;hy=0;y0=0.9;T=1.7+hyp(hx-gk.x,hz-gk.z)/34;gk.eylem={ad:'degaj',t:0,sure:0.7};}
+    /* T9b-d (Ek G6 dağıtım): elle atış 28 m'den uzağa üstten (ust), yakına omuzdan; degaj 45 m'den yakına koşan arkadaşa düşürme vuruşu (alçak, hızlı),
+       değilse punt (yüksek, uzun). Sözleşme elleAtis.stil, degaj.stil */
+    if(tur==='elleAtis'){hx=k.hx;hz=k.hz;hy=0.3;y0=1.9;const L2=hyp(hx-gk.x,hz-gk.z);T=0.4+L2/24;gk.eylem={ad:'elleAtis',t:0,sure:0.6,stil:L2>28?'ust':'omuz'};}
+    else{const h=q||{x:d*10,z:MZ};hx=clamp(h.x+d*4,-PL+10,PL-10);hz=h.z;hy=0;y0=0.9;const L2=hyp(hx-gk.x,hz-gk.z),dus=!!q&&L2<45&&hyp(q.vx,q.vz)>2.5;
+      T=dus?1.15+L2/40:1.7+L2/34;gk.eylem={ad:'degaj',t:0,sure:0.7,stil:dus?'dusurme':'punt'};}
     const L=hyp(hx-gk.x,hz-gk.z),a=Math.atan2(hz-gk.z,hx-gk.x)+this.normal()*(tur==='degaj'?0.06:0.03);
     hx=gk.x+Math.cos(a)*L;hz=gk.z+Math.sin(a)*L;
     b.x=gk.x+Math.cos(gk.yon)*0.3;b.z=gk.z+Math.sin(gk.yon)*0.3;b.y=y0;
@@ -468,6 +490,8 @@ EYLEM_ADIM.tutus=function(p,e,dt){
   return true;};
 /* kapanma: ilk 0,22 sn topa atılır, gövde yere iner; süre bitince hızlı kalkış */
 EYLEM_ADIM.kapan=function(p,e){const B=p.boy||1;
+  if(e.tur==='yildiz'){/* yıldız: ayakta, kısa sıçrayıp açılır; süre bitince yeniden karar verir (kalkış yok) */
+    p.vx*=0.5;p.vz*=0.5;e.hy=0.9*B+0.06*Math.sin(Math.PI*clamp(e.t/0.3,0,1));if(e.t>=e.sure)p.eylem=null;return true;}
   if(e.t<0.22){p.vx=Math.cos(e.yon)*e.v;p.vz=Math.sin(e.yon)*e.v;}
   e.hy=Math.max(e.ayak?0.55*B:0.3,0.9*B-e.t*(e.ayak?2:3.2));
   if(e.t>=e.sure)p.eylem={ad:'kalkis',t:0,sure:e.ayak?0.25:0.35,kilit:true,fren:12,kaleci:true};
