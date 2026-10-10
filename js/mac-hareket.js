@@ -354,6 +354,11 @@ Object.assign(Match.prototype,{
     /* dönüş hızı: saha oyuncusu yerinde 5,5–8 rad/sn (çeviklik), hızlanınca yarıya yakın; vuruş hazırlığında hrkVurusDonus (T4-V; çizimle ortak);
        kaleci ve diğerleri eski değer */
     if(yh!=null){const k=hrkMin(1,p.spd/p.maxSpd),f=hrkAciFark(yh,p.yon),oran=(saha?(e2&&e2.ad==='vurus'?hrkVurusDonus(p):hk.w0*(1-0.5*k)):11-7*k)*dt;p.yon=hrkAciNorm(p.yon+clamp(f,-oran,oran));}
+    /* M1 (2026-10-10, hız): hedefinde duran oyuncu dışı varlık (hakem, kenar, ısınmayan yedek; adım başına ~19 çağrı). Buradan sonrası onun için
+       kesindir: hedef hızı 0 ve yön birimi 0 olduğundan istenen hız, ivme ve sarsıntı +0, kip 'dur'; aşağıdaki tam yolun yaptığı atamalar aynen
+       yapılır (±0 dahil: +0 eklenir). Oyuncunun enerji hesabı olduğu için oyuncu tam yoldan geçer */
+    if(d<0.04&&hedefHiz===0&&p.vx===0&&p.vz===0&&p._iax===0&&p._iaz===0&&p.tur!=='oyuncu'){
+      p.kip='dur';p._iax=0;p._iaz=0;p.vx+=0;p.vz+=0;p.x+=0;p.z+=0;p.spd=0;return;}
     let ux=0,uz=0;if(d>0.04){ux=dx/d;uz=dz/d;}
     if(p._kacKare===this.kare&&d>0.6){ux+=p._kacX;uz+=p._kacZ;const n=hrkHyp(ux,uz)||1;ux/=n;uz/=n;}
     let s=hrkMin(hedefHiz,vm*hrkYonTavan(ux*hrkCos(p.yon)+uz*hrkSin(p.yon)));

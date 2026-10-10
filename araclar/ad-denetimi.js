@@ -8,6 +8,8 @@
    (c) çizim dosyaları motoru yalnız okur: mac.rast/normal ve önbellek yazan yöntemler (topYolu, topTahmin, yakalamaNoktasi, cerceveyeGider)
        çağrılmaz; oyuncu (p.) ve top (mac.ball., b.) alanlarına yazılmaz. Motoru ilerleten tek yer js/mac-sahnesi.js'tir (mac.step, mac.macaGec).
    (d) motor dosyalarında (js/mac-*.js) tohumsuz rastlantı yok: Math.random ve rnd( kullanılmaz (varsayılan tohum seçimi hariç).
+   (e) MOTOR_AYAR (M1, 2026-10-10): bütün anahtarlar js/mac-motoru.js'te bildirilir ve her birinin değeri tam bir kez atanır (çekirdekte ya da
+       akışın ayarEkle'sinde); motor araclar/motor-yukle.js ile yüklenir, bildirilmemiş, iki kez atanan ya da atanmamış anahtar bulgudur.
    Kullanım: node araclar/ad-denetimi.js   (bulgu varsa çıkış kodu 1) */
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm');
@@ -99,6 +101,12 @@ const BILINEN_SIZINTI=new Set(['ciz','kapat']);
 /* (d) motor dosyalarında tohumsuz rastlantı */
 for(const f of dosyalar.filter(f=>/^js\/mac-/.test(f)&&f!=='js/mac-sahnesi.js')){const s=temiz[f];
   s.split('\n').forEach((L,i)=>{if(/Math\.random\s*\(|\brnd\s*\(/.test(L)&&!/secenek\.tohum/.test(L))bul('motor tohumsuz rastlantı',`${f}:${i+1}`);});}
+
+/* (e) MOTOR_AYAR: bildirim ve sahiplik (yükleme hataları ayarEkle ve motor-yukle'den gelir) */
+{if(process.env.AD_DENETIMI_KOK&&!process.env.MOTOR_KOK)process.env.MOTOR_KOK=KOK;
+  let ctx=null;try{ctx=require('./motor-yukle').motorYukle().ctx;}catch(e){bul('MOTOR_AYAR',String(e.message).split('\n')[0]);}
+  if(ctx){const A=vm.runInContext('MOTOR_AYAR',ctx),S=vm.runInContext('MOTOR_AYAR_SAHIBI',ctx);
+    for(const k of Object.keys(A))if(!S[k])bul('MOTOR_AYAR sahibi yok',k);}}
 
 if(bulgular.length){console.log(`Ad ve sınır denetimi: ${bulgular.length} bulgu`);for(const b of bulgular)console.log('  ! '+b);process.exitCode=1;}
 else console.log(`Ad ve sınır denetimi: ${dosyalar.length} betik, bulgu yok`+(bilinen.length?` (bilinen zararsız blok içi işlev adları: ${bilinen.length})`:''));

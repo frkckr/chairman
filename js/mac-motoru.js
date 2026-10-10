@@ -43,8 +43,12 @@ const MAC_ONCESI=['isinma','giris','toren','selam','yazitura'],DEVRE_ARASI=45;
 const OZ_SIRA=['hiz','pas','sut','kafa','surus','mudahale','gorus','karar','kalecilik','dayaniklilik','sertlik'];
 const VARSAYILAN_OZ=[62,58,55,55,56,55,55,56,8,66,50];
 const VARSAYILAN_TAKTIK={dizilis:'4-4-2',sakin:0.5,direkt:0.5,risk:1,pres:0.5,tempo:0.5};
-/* ayar katsayıları: araclar/mac-deneme.js ile hedef tabloya göre ayarlanır. Çekirdekte yalnız takım düzeni ayarları kalır; her akış kendi
-   dosyasında ayarEkle ile kendi anahtarlarını ekler (aynı anahtar iki kez eklenemez; Faz 0, 2026-10-03) */
+/* ayar katsayıları: araclar/mac-deneme.js ile hedef tabloya göre ayarlanır. Çekirdekte yalnız takım düzeni ayarlarının değeri vardır; her akış
+   kendi dosyasında ayarEkle ile kendi anahtarlarının değerini atar (sahiplik; Faz 0, 2026-10-03).
+   M1 (2026-10-10, hız): bütün anahtarlar burada, yüklenme sırasıyla bildirilir (akışlarınki undefined, değeri ayarEkle atar). Sonradan eklenen
+   130'u aşkın anahtar V8'de nesneyi sözlük kipine düşürüyor, motorun her ayar okumasını yavaşlatıyordu; bildirilmiş nesne hızlı kalır, değerler
+   aynıdır. Yeni anahtar: önce buraya (sahibinin satırına), sonra akışın ayarEkle'sine. ayarEkle bildirilmemiş ya da iki kez atanan anahtarda hata
+   verir; araclar/motor-yukle.js yüklemeden sonra değeri atanmamış anahtarı hata sayar, araclar/ad-denetimi.js ikisini kaynakta denetler. */
 const MOTOR_AYAR={
   gecis:0.7,                   // topu kaybeden takımın savunma düzenine geçme gecikmesi (sn)
   donus:0.75,                  // savunmaya dönüşte topa uzak oyuncunun hız oranı (birleştirme 2026-10-03: 0,85 → 0,75, koşu mesafesi)
@@ -52,10 +56,41 @@ const MOTOR_AYAR={
   blokYumusak:4,               // T1: bölge hedefinin izlediği top yerinin yumuşatma süresi (sn; 0: ham): tehlikesiz yönde
   blokHizli:4,                 // T1: aynısı tehlikede (savunmada top kalemize gelirken, hücumda top ileri giderken)
   hucumGecikme:1,              // T1: hücumdaki takımın bölge oyuncuları da kişisel tepkiyle kayar: 1 topun gerisindekiler, 2 hepsi, 0 hiçbiri
-  presHisterezis:1.5           // T4: 1. adam seçimi kare kare değişmesin: önceki 1. adam yeni adaydan bu kadar (puan, ~m) kötü olmadıkça kalır
+  presHisterezis:1.5,          // T4: 1. adam seçimi kare kare değişmesin: önceki 1. adam yeni adaydan bu kadar (puan, ~m) kötü olmadıkça kalır
+
+  /* P — js/mac-profil.js */
+  egilimGuc:undefined,formSapma:undefined,
+  /* C — js/mac-hareket.js */
+  ivme:undefined,ivmeRahat:undefined,frenRahat:undefined,yanRahat:undefined,varisRahat:undefined,sarsinti:undefined,sarsintiAzami:undefined,
+  kipSure:undefined,kipDur:undefined,donusYerinde:undefined,dinlenUzak:undefined,hedefOlu:undefined,hedefOluAzami:undefined,kovalaPay:undefined,
+  dinlenKos:undefined,tepkiCarpan:undefined,eforUs:undefined,kipKos:undefined,fren:undefined,yanTutus:undefined,enerjiHarca:undefined,
+  enerjiTopla:undefined,yanTavan:undefined,geriTavan:undefined,donusSiniri:undefined,ayakBas:undefined,varisHizi:undefined,varisFren:undefined,
+  jokeyMesafe:undefined,birebirYayilim:undefined,birebirErisim:undefined,birebirYaris:undefined,birebirKayma:undefined,birebirDonus:undefined,
+  birebirVazgec:undefined,yutmaGuc:undefined,yutmaSure:undefined,destekSure:undefined,kapatYakin:undefined,dokunusSiklik:undefined,
+  dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,
+  /* C — js/mac-mudahale.js */
+  mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
+  acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,
+  /* B — js/mac-topla.js */
+  kararGecikme:undefined,ilerleme:undefined,risk:undefined,surusKarar:undefined,vurusHizalama:undefined,sutIstegi:undefined,ortaIstegi:undefined,
+  sutSapma:undefined,pasSapma:undefined,sikisma:undefined,geriPas:undefined,kontrolZorluk:undefined,tekVurus:undefined,verKacIstegi:undefined,
+  verKacDeger:undefined,boslukDeger:undefined,ikinciTop:undefined,havaDeger:undefined,araDeger:undefined,araDar:undefined,donusDeger:undefined,
+  ofsaytAlgi:undefined,kosuIstegi:undefined,aliciPay:undefined,uzaklastirDeger:undefined,hedefDeger:undefined,devamAgirlik:undefined,
+  devamHedef:undefined,sabir:undefined,sabirSure:undefined,devamPas:undefined,bekleOran:undefined,koruDeger:undefined,koruSure:undefined,
+  koruTempo:undefined,dusunHz:undefined,pasTol:undefined,ikinciTopHedef:undefined,araKalib:undefined,birebirMenzil:undefined,birebirKayip:undefined,
+  birebirDeger:undefined,devamBirebir:undefined,
+  /* D — js/mac-kaleci.js */
+  kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,
+  /* T — js/mac-takim.js */
+  niyetEtki:undefined,macDurumEtki:undefined,niyetYenile:undefined,kontraSure:undefined,kurmaStoperW:undefined,gerideEk:undefined,rakipAlgi:undefined,
+  kosuTetik:undefined,kosuRastgele:undefined,kosuEs:undefined,zon14:undefined,govdeAc:undefined,osDestek:undefined,presTetikSure:undefined,
+  presTetikMesafe:undefined,golgePres:undefined,kosucuTakip:undefined,hatCik:undefined,kutuSavunma:undefined,kompakt:undefined,
+  mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined
 };
 const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
-function ayarEkle(akis,o){for(const k in o){if(Object.prototype.hasOwnProperty.call(MOTOR_AYAR,k))throw new Error('MOTOR_AYAR.'+k+' iki kez eklendi ('+MOTOR_AYAR_SAHIBI[k]+', '+akis+')');
+function ayarEkle(akis,o){for(const k in o){
+  if(!Object.prototype.hasOwnProperty.call(MOTOR_AYAR,k))throw new Error('MOTOR_AYAR.'+k+' bildirilmemiş ('+akis+'; önce js/mac-motoru.js MOTOR_AYAR)');
+  if(MOTOR_AYAR_SAHIBI[k])throw new Error('MOTOR_AYAR.'+k+' iki kez eklendi ('+MOTOR_AYAR_SAHIBI[k]+', '+akis+')');
   MOTOR_AYAR[k]=o[k];MOTOR_AYAR_SAHIBI[k]=akis;}}
 /* eylem adımları: eylem adı → işlev(p, e, dt), this maçtır; sahibinin dosyasında kaydedilir (Faz 0) */
 const EYLEM_ADIM={};

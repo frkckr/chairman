@@ -28,6 +28,9 @@ function motorYukle(ek){
   if(eski)ctx=vm.createContext(Object.assign({console,Math,Date},ek));
   else{ctx=vm.createContext(vm.constants.DONT_CONTEXTIFY);ctx.console=console;if(ek)Object.assign(ctx,ek);}
   for(const f of mantik)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),ctx,{filename:f});
+  /* M1 (2026-10-10): MOTOR_AYAR'da bildirilip değeri hiçbir akışta atanmamış anahtar (js/mac-motoru.js MOTOR_AYAR, ayarEkle) */
+  const bos=vm.runInContext('Object.keys(MOTOR_AYAR).filter(k=>MOTOR_AYAR[k]===undefined)',ctx);
+  if(bos.length)throw new Error('MOTOR_AYAR: değeri atanmamış anahtar: '+bos.join(', ')+' (akışın ayarEkle\'sine ekleyin)');
   return{ctx,mantik,kip:(eski?'eski (sarılı bağlam)':'hızlı (sıradan genel nesne)')+(process.env.MOTOR_KOK?' · motor '+KOK:'')};
 }
 /* metin: MAC_DENEME_AYAR biçiminde JSON (boşsa bir şey yapmaz). Döner: uygulanan nesne ya da null */

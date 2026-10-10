@@ -120,7 +120,9 @@ function profilKur(p,tohum){
   for(const [ad,w] of PRF_EGILIMLER){let v=0;for(const a in w)v+=w[a]*(kaynak(a)-0.5);egilim[ad]=clamp(3*v+(ro[ad]||0),-1,1);}
   if(k.egilimler)for(const ad in k.egilimler)if(ad in egilim)egilim[ad]=clamp(+k.egilimler[ad]||0,-1,1);
   const form=k.form!=null?clamp(+k.form,0.9,1.1):1+(profilOzet(tohum+':'+p.team+':'+(p.no||p.n))-0.5)*2*MOTOR_AYAR.formSapma;
-  return p.profil={alt,rol,egilim,form,grup};
+  /* M1 (2026-10-10): anahtar anahtar kurulan eğilim nesnesi (20 anahtar) V8'de sözlük kipine düşüyor, her okuması yavaşlıyordu; kopyası hızlıdır
+     (aynı anahtarlar, aynı sıra, aynı değerler) */
+  return p.profil={alt:{...alt},rol,egilim:{...egilim},form,grup};
 }
 /* eğilimin karar seçeneğine eklediği puan (kararVer; saf). Şut: uzaktan vurma eğilimi 14 m'den sonra (sutSecenegi'nde ayrıca çarpan) */
 function profilEgilimPuani(m,p,s){
