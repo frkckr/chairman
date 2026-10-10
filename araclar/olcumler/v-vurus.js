@@ -21,9 +21,9 @@ const V_HIZ=['<20','20–25','25–30','>30'];
 const V_STIL=['ic','ust','dis','asirtma','vole','yarimVole','burun'];
 const V_STIL_AD={ic:'iç ayak (plase)',ust:'üst (sert)',dis:'dış ayak',asirtma:'aşırtma',vole:'vole',yarimVole:'yarım vole',burun:'burun'};
 const V_MES=['<11 m','11–16,5 m','16,5–25 m','>25 m'];
-const V_NEDEN=['durus','rakip','beden','degisti','hazirlik','kacti'];
+const V_NEDEN=['durus','rakip','beden','degisti','hazirlik','kacti','iska'];
 const V_NEDEN_AD={durus:'oyun durdu',rakip:'rakip aldı ya da dokundu',beden:'beden (düşüş, sendeleme …)',degisti:'başka vuruşa döndü',
-  hazirlik:'hazırlıkta bitti (hizalanma, süre)',kacti:'geri salınımda top kaçtı'};
+  hazirlik:'hazırlıkta bitti (hizalanma, süre)',kacti:'geri salınımda top kaçtı',iska:'ıska (kötü vuruş, T9b-b)'};
 const V_KOTU=['alt','ust','kenar','iska'];
 const V_KOTU_AD={alt:'altına girme',ust:'üstüne vurma',kenar:'ayağın kenarı',iska:'ıska'};
 const vOrtanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b),n=S.length;return n%2?S[(n-1)/2]:(S[n/2-1]+S[n/2])/2;};
@@ -56,7 +56,8 @@ module.exports={
         if(ad==='goal'){bu.goal=true;return;}
         if(ad==='save'){bu.save=true;return;}
         if(ad==='pass'||ad==='cross'){pasN++;return;}
-        if(ad==='kotuVurus'){if(v&&v.sut)kotuSut++;else kotuPas++;if(v&&kotu[v.tur]!=null)kotu[v.tur]++;return;}
+        if(ad==='kotuVurus'){if(v&&v.sut)kotuSut++;else kotuPas++;if(v&&kotu[v.tur]!=null)kotu[v.tur]++;
+          if(v&&v.tur==='iska'&&v.p){const a=acik.get(v.p);if(a)a.iska=true;}return;}
         if(ad!=='shot')return;
         const p=v&&v.p,b=m.ball,s=b.sut;if(!p||!s)return;acik.delete(p);
         sutN++;const sp=hyp(b.vx,b.vy,b.vz);hiz[sp<20?0:sp<25?1:sp<30?2:3]++;
@@ -80,7 +81,7 @@ module.exports={
         for(const p of m.players){const e=p.eylem,se=e&&e.ad==='vurus'&&e.sec&&e.sec.tur==='sut'?e:null,a=acik.get(p);
           if(a&&a.e!==se){vurulmayan++;acik.delete(p);
             const rk=(b.sahip&&b.sahip.team!=null&&b.sahip.team!==p.team)||(b.sonDokunan&&b.sonDokunan.team!=null&&b.sonDokunan.team!==p.team);
-            neden[m.phase!=='play'?'durus':rk?'rakip':e&&e.ad!=='vurus'?'beden':e?'degisti':a.faz==='geri'?'kacti':'hazirlik']++;}
+            neden[a.iska?'iska':m.phase!=='play'?'durus':rk?'rakip':e&&e.ad!=='vurus'?'beden':e?'degisti':a.faz==='geri'?'kacti':'hazirlik']++;}
           if(se&&!gorulen.has(se)){gorulen.add(se);acik.set(p,{e:se,faz:se.faz});}
           else if(se&&a&&a.e===se)a.faz=se.faz;}},
       bitir(){

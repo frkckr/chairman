@@ -531,16 +531,17 @@ function sutBlokOlasiligi(m,p,ox,oz,tx,tz,tur){
     if(tur==='asirtma'&&on>4)continue;
     const yan=segD(o.x,o.z,ox,oz,tx,tz);if(yan<1.3)acik*=1-(tur==='falso'?0.45:tur==='dusen'&&on>4?0.3:0.6)*(1-yan/1.3);}
   return 1-acik;}
-/* sd: temel yön hatası (rad; vurusSapma, güç çarpanı 1). o: {serbest, tur (sabit tür), guc (sabit güç), zayif (zayıf ayak: azami hız düşer)}.
-   Seçim sıcaklıklıdır: kararlı şutçu en iyi hedefi daha tutarlı seçer */
+/* sd: temel yön hatası (rad; vurusSapma, güç çarpanı 1). o: {serbest, tur (sabit tür), guc (sabit güç), zayif (zayıf ayak: azami hız düşer), acele
+   (T9b-b: kısa geri salınım azami hızı en çok %15 düşürür), stil (sabit stil: burun)}. Seçim sıcaklıklıdır: kararlı şutçu en iyi hedefi daha
+   tutarlı seçer */
 function sutPlani(m,p,ox,oz,sd,o){
   o=o||{};const d=m.dir[p.team],gx=d*PL,gk=m.kaleci(1-p.team),L=Math.max(1,hyp(gx-ox,MZ-oz)),onde=gk.oyunda?Math.abs(gk.x-gx):0;
   const turler=o.tur?[o.tur]:o.serbest?['falso','dusen']:onde>5&&L>11?['plase','sert','falso','asirtma']:L>14?['plase','sert','falso']:['plase','sert'];
-  const gucler=o.guc!=null?[o.guc]:SUT_GUC,vMax=sutHizTavani(p,!!o.zayif),R=VURUS_GUC_REF.sut;
+  const gucler=o.guc!=null?[o.guc]:SUT_GUC,vMax=sutHizTavani(p,!!o.zayif)*(1-0.15*(o.acele||0)),R=VURUS_GUC_REF.sut;
   const Ls=[],sapma=Math.max(0,L-18)*0.01;let en=0;
   const nZ=SUT_HZM.length,nY=SUT_HYM.length;
-  for(const tur of turler){const TT=SUT_TUR[tur]||SUT_TUR.plase,kz=TT.kz,ky=TT.ky,BL=[];
-    for(const g of gucler){const v=Math.max(8,g*VURUS_STIL[TT.stil].hiz*vMax),fg=gucHataCarpani(g,R),T=L/v*1.06*(tur==='falso'?1.08:1);
+  for(const tur of turler){const TT=SUT_TUR[tur]||SUT_TUR.plase,kz=TT.kz,ky=TT.ky,BL=[],stil=o.stil||TT.stil;
+    for(const g of gucler){const v=Math.max(8,g*VURUS_STIL[stil].hiz*vMax),fg=gucHataCarpani(g,R),T=L/v*1.06*(tur==='falso'?1.08:1);
       /* kalecinin hücre ortalarındaki kurtarışı (bu tür ve güçle uçuş süresi T) */
       for(let i=0;i<nZ;i++)for(let j=0;j<nY;j++)SUT_PS[i*nY+j]=gk.oyunda?kaleciTahmin(m,gk,MZ+SUT_HZM[i],SUT_HYM[j],T).P*(tur==='asirtma'?0.3:1):0;
       for(let k=0;k<SUT_Z.length;k++){const zt=SUT_Z[k];
@@ -554,8 +555,10 @@ function sutPlani(m,p,ox,oz,sd,o){
           for(let i=0;i<nZ;i++){const pz=SUT_FZ[i+1]-SUT_FZ[i];if(pz<1e-4)continue;
             for(let j=0;j<nY;j++){const pc=pz*(SUT_FY[j+1]-SUT_FY[j]);Pon+=pc;Pk+=pc*(1-SUT_PS[i*nY+j]);}}
           const Pg=Pk*(1-bl);
-          Ls.push({tur,zt,yt:y0,v,g,kz,ky,fg,stil:TT.stil,Pg,Pon});if(Pg>en)en=Pg;}}}}
-  const tau=0.012+0.035*(1-p.oz.karar);let top=0;
+          Ls.push({tur,zt,yt:y0,v,g,kz,ky,fg,stil,Pg,Pon});if(Pg>en)en=Pg;}}}}
+  /* T9b-a: sıcaklık en iyi adayın değerine göre (göreli): uzak şutta bütün adayların P(gol)'ü küçükken mutlak sıcaklık seçimi neredeyse rastgele
+     yapıyordu (25 m'de plan tam güçlü vuruşu en iyi bulsa da ortalama güç 0,84 çıkıyordu); karar 0,6'da 16 m'de eskisiyle aynı keskinlik */
+  const tau=Math.max(0.004,(0.06+0.18*(1-p.oz.karar))*en);let top=0;
   for(const c of Ls){c.a=Math.exp((c.Pg-en)/tau);top+=c.a;}
   let r=m.rast()*top;for(const c of Ls){r-=c.a;if(r<=0)return c;}
   return Ls[Ls.length-1];}
