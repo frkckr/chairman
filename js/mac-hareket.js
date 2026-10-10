@@ -362,8 +362,10 @@ Object.assign(Match.prototype,{
     let ux=0,uz=0;if(d>0.04){ux=dx/d;uz=dz/d;}
     if(p._kacKare===this.kare&&d>0.6){ux+=p._kacX;uz+=p._kacZ;const n=hrkHyp(ux,uz)||1;ux/=n;uz/=n;}
     let s=hrkMin(hedefHiz,vm*hrkYonTavan(ux*hrkCos(p.yon)+uz*hrkSin(p.yon)));
-    /* ivme sınırları: havada (sıçrama) çok az, sendelerken ve denge düşükken az */
-    const sp=hrkHyp(p.vx,p.vz),dk=(p.yuk>0.02?0.25:1)*(e2&&e2.ad==='sendele'?0.45+0.25*(1-(e2.siddet||0.5)):1)*(0.65+0.35*clamp(p.denge!=null?p.denge:1,0,1));
+    /* T6a: durarak sıçramanın hazırlığında (karşı hareket) oyuncu frenler */
+    if(p.zipla&&p.zipla.t<0&&!p.zipla.kos)s=0;
+    /* ivme sınırları: havada (sıçrama; T6a havaIvme) yok denecek kadar az, sendelerken ve denge düşükken az */
+    const zp=p.zipla,sp=hrkHyp(p.vx,p.vz),dk=(zp&&zp.t>=0?A.havaIvme:1)*(e2&&e2.ad==='sendele'?0.45+0.25*(1-(e2.siddet||0.5)):1)*(0.65+0.35*clamp(p.denge!=null?p.denge:1,0,1));
     const LyA=hrkYanal(p,sp/vm),LyR=hrkMin(A.yanRahat,LyA),Ly0=(LyR+(LyA-LyR)*w)*dk;
     /* dönüş hızı: hedef yakın ve yandaysa, hıza dik tutunmayla dönebileceği hıza (v²≤a·R, R=d/(2·sinθ)) frenler; yörüngeye girip dolanmaz */
     if(sp>2&&d>0.3&&A.donusSiniri){const cs=(ux*p.vx+uz*p.vz)/sp;if(cs<0.9){const sn=hrkKok(hrkMax(0,1-cs*cs)),R=cs>0?(d+1)/(2*hrkMax(sn,0.05)):d*0.5;s=hrkMin(s,hrkMax(1.6,hrkKok(Ly0*R*A.donusSiniri)));}}
@@ -443,7 +445,7 @@ Object.assign(Match.prototype,{
     if(p._tepkiS!==b.surum){p._tepkiS=b.surum;p._tepkiJ=b.hedefOyuncu===p?0:clamp(0.06*this.normal(),-0.12,0.12);}
     const tepki=b.hedefOyuncu===p?0.05:0.3-p.oz.karar*0.15+p._tepkiJ;
     if(this.t-(this._degisimT||0)<tepki){p.hizOran=1;p.bak=b;return;}
-    const havada=b.y>1.3||b.vy>2;let hMax=havada?1.72*p.boy+0.5:0.7;
+    const havada=b.y>1.3||b.vy>2;let hMax=havada?hvAlinDur(p)+hvSicramaH(p,p.spd)+0.12:0.7;   /* T6a: alın + sıçrama (js/mac-hava.js) */
     /* kendisine atılan havadan pası rakip zorlamıyorsa topun inmesini bekler: göğüs ya da ayakla alır, kafayla oynamaz */
     if(havada&&b.hedefOyuncu===p){const k2=this.yakalamaNoktasi(p,1.5);if(enYakinRakip(this,k2.x,k2.z,p.team).d>3.5)hMax=1.5;}
     let k=this.yakalamaNoktasi(p,hMax);

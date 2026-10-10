@@ -362,13 +362,14 @@ Object.assign(Match.prototype,{
       default:{p.surus={yon:s.yon!=null?s.yon:p.yon,hiz:s.hiz||0.88};p.kararT=lerp(A.surusKarar[0],A.surusKarar[1],this.rast());}
     }
   },
-  /* oyuncu topa ne ile erişir: ayak, göğüs, kafa ya da (kaleci) el */
+  /* oyuncu topa ne ile erişir: ayak, göğüs, kafa ya da (kaleci) el. T6a: beden yükseklikleri sıçramayla kalkar (y − p.yuk); kafa alnın
+     0,25 m altından 0,22 m üstüne kadar (başın tepesiyle sıyırma dahil; js/mac-hava.js hvAlin) */
   erisim(p,d){
-    const b=this.ball,y=b.y,kafaY=kafaYuksekligi(p);
+    const b=this.ball,y=b.y,yb=y-(p.yuk||0),alin=hvAlin(p);
     if(this.elErisimi(p,d,y))return 'el';
-    if(d<0.6&&y<0.8)return 'ayak';
-    if(d<0.5&&y>=0.8&&y<1.55)return 'gogus';
-    if(d<0.62&&y>=1.45&&y<kafaY&&b.vy<3){
+    if(d<0.6&&yb<0.8)return 'ayak';
+    if(d<0.5&&yb>=0.8&&yb<1.55)return 'gogus';
+    if(d<0.62&&y>=alin-0.25&&y<=alin+0.22&&b.vy<3){
       /* ceza sahaları dışında, rakipsiz ve yavaşça düşen topu kafayla oynamaz: göğse ya da ayağa indirir */
       if(b.vy<0&&hyp(b.vx,b.vz)<9&&!(Math.abs(b.x)>PL-CEZA_U-2&&Math.abs(b.z-MZ)<CEZA_W+2)){
         let rakip=false;for(const o of this.teams[1-p.team])if(o.oyunda&&hyp(o.x-b.x,o.z-b.z)<2.5){rakip=true;break;}

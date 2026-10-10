@@ -3,10 +3,11 @@
    yerinde). Profiller: güçlü (boy 1,07, kafa 0,85, sertlik 0,7), orta (1,00 / 0,60 / 0,5), zayıf (0,95 / 0,45 / 0,4); hız ve karar 0,6. Takım ve
    kadro farkı kalksın diye profiller ev/konuk ve forvet/stoper kaydı arasında yer değiştirir; kütle profilden. Kişisel profil sapması (±0,08)
    ve gün formu kalır (eşit durum tam eşit değildir).
-   Top A (yan top): orta sahada yandan 24 m, 1,3 sn, iniş yerinde ~2,0 m. Yerleşim: dur — iniş yerinin iki yanında 0,4 m (uçuşa dik); kos — ~3,5 m
-   çaprazdan duruştan koşarak (top gelirken hızlanır); gec — iniş yerinin 2,5 m gerisinden (topun gittiği yönde) duruştan.
-   Top B (orta benzeri): sağ kanattan (u = 40, w = 6) arka direğe (u = 43,5, w = MZ+3; ~2,0 m), 1,25 sn; hücumcu ceza sahası dışından koşar,
-   savunmacı kale tarafında (rakip kaleci yerinde).
+   Top A (yan top): orta sahada yandan 24 m, 1,3 sn, iniş yerinde ~2,0 m. Yerleşim: dur — iniş yerinin iki yanında 0,4 m (uçuşa dik); kos — uçuşa
+   dik 4 m yandan, 0,8 m önden, iniş yerine doğru 3,5 m/sn koşarken (T6-0: T0'daki kurulum duruştan 2,5 m yana gidemeyip topa başının hizasında
+   hiç yetişemiyordu); gec — iniş yerinin 2,5 m gerisinden (topun gittiği yönde) duruştan.
+   Top B (orta benzeri): kanattan (u = 40, w = 6) arka direğe (u = 43,5, w = MZ+3; ~2,0 m), 1,25 sn; hücumcu 6,4 m geriden 4,5 m/sn koşarken,
+   savunmacı kale tarafında durur (rakip kaleci yerinde).
    Top C (iki hücumcu, bir savunmacı): top A; hücumcular iniş yerinin iki yanında 0,6 m, savunmacı 0,6 m gerisinde.
    Sonuç: topa ilk dokunan ve türü (kafa, göğüs, ayak, gövde, kalecinin eli); düello (m.ist.havaTopu arttı); hava faulü; temas anında top − alın
    (m); sıçrayan. "X payı" kafa olanlarda X'in payı.
@@ -44,11 +45,13 @@ module.exports={calistir({ctx,vm,N,tohum}){
       let ox,oz,hx,hz,hy=2.0,T=1.3;
       const yan=i%4<2?1:-1;
       if(top==='B'){/* takım X'in hücum yönünde: kanattan arka direğe */const d=m.dir[X.team];hx=d*(PL-9);hz=MZ+3*yan;ox=d*(PL-12.5);oz=yan>0?6:62;T=1.25;
-        const ux=d*(PL-15),uz=MZ+6*yan;yerlestir(X,ux,uz,Math.atan2(hz-uz,hx-ux),HV_PROFIL[pX]);
+        const ux=d*(PL-14),uz=MZ+7*yan,a=Math.atan2(hz-uz,hx-ux);yerlestir(X,ux,uz,a,HV_PROFIL[pX]);X.vx=Math.cos(a)*4.5;X.vz=Math.sin(a)*4.5;X.spd=4.5;
         const vx=d*(PL-7.5),vz=MZ+2.2*yan;yerlestir(Y,vx,vz,Math.atan2(oz-vz,ox-vx),HV_PROFIL[pY]);}
       else{hx=(i%3-1)*4;hz=34;ox=hx;oz=hz-yan*24;
         /* dur: iniş yerinin iki yanında 0,4 m (C: 0,6 m; savunmacı 0,6 m geride); kos: ~3,5 m çaprazdan; gec: topun gittiği yönde 2,5 m geriden */
-        const yer=(p,pr,y,s,ara)=>{const x=y==='kos'?hx+s*2.5:y==='gec'?hx:hx+s*ara,z=y==='kos'?hz-yan*2.5:y==='gec'?hz+yan*2.5:hz;yerlestir(p,x,z,Math.atan2(oz-z,ox-x),pr);};
+        const yer=(p,pr,y,s,ara)=>{const x=y==='kos'?hx+s*4:y==='gec'?hx:hx+s*ara,z=y==='kos'?hz-yan*0.8:y==='gec'?hz+yan*2.5:hz;
+          if(y==='kos'){const a=Math.atan2(hz-yan*0.3-z,hx-x);yerlestir(p,x,z,a,pr);p.vx=Math.cos(a)*3.5;p.vz=Math.sin(a)*3.5;p.spd=3.5;}
+          else yerlestir(p,x,z,Math.atan2(oz-z,ox-x),pr);};
         if(top==='C'){yer(X,HV_PROFIL[pX],'dur',1,0.6);yer(Z,HV_PROFIL[pZ],'dur',-1,0.6);yerlestir(Y,hx,hz+yan*0.6,Math.atan2(oz-hz,ox-hx),HV_PROFIL[pY]);}
         else{yer(X,HV_PROFIL[pX],yX,1,0.4);yer(Y,HV_PROFIL[pY],yY,-1,0.4);}}
       m.phase='play';m.phaseT=1;m.durus=null;

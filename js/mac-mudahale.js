@@ -1,6 +1,7 @@
 /* ============ Chairman — maç motoru: ikili mücadele, müdahale, faul ve avantaj (mantık, çizimsiz) ============
-   Sahibi: C akışı. Topa erişemeyen bedene çarpma ve sekme, blok, hava topu düellosu, top sürücünün korunması, yarı yarıya top,
-   müdahale ve kayarak müdahale, faul, kart kararı ve avantaj. Kart gösterme, itiraz ve duran top altyapısı js/mac-kurallar.js'tedir.
+   Sahibi: C akışı. Topa erişemeyen bedene çarpma ve sekme, blok, top sürücünün korunması, yarı yarıya top,
+   müdahale ve kayarak müdahale, faul, kart kararı ve avantaj. Kart gösterme, itiraz ve duran top altyapısı js/mac-kurallar.js'tedir. Hava topu
+   (sıçrama, kafa adayları, düello, hava faulü) T6'dan beri js/mac-hava.js'tedir.
    C2 (2026-10-03): müdahale geometriyle çözülür — ayak kapsülü (ayakta ~0,75 m, kaymada süpürme) temas anında topa mı, adama mı, hangisine önce
    değiyor; sonuç temiz kazanma / topu dürtme / blok / geçilme / faul; top ayağın hızı ve topun momentumuyla gider. Temasın şiddeti (bağıl hız,
    arkadan, kayarak, geç, önce topa değdi) faul olasılığını ve kartı belirler (gelişen atağı kesmek sarı, açık gol fırsatını engellemek kırmızı).
@@ -177,13 +178,6 @@ Object.assign(Match.prototype,{
       if(ad.every(a=>a.p===b.sut.by))return true;}
     return false;
   },
-  /* hava topu adayları: topa sıçrayan rakipler 1,5 m'ye kadar mücadeleye girer */
-  kafaAdaylari(kafa){
-    const b=this.ball;
-    for(const p of this.players){if(!p.oyunda||p.kickCd>0||p.rol==='GK'||kafa.some(a=>a.p===p)||p.team===kafa[0].p.team)continue;
-      const e=p.eylem;if(e&&(e.kilit||e.ad==='tac'))continue;
-      const d=hrkHyp(b.x-p.x,b.z-p.z);if(d<1.5&&b.y<kafaYuksekligi(p)+0.15)kafa.push({p,d,tur:'kafa'});}
-  },
   /* en yakın oyuncu dokunur; iki takımdan biri de erişiyorsa ikili mücadele */
   kazananSec(ad){
     ad.sort((x,y)=>x.d-y.d);let kazanan=ad[0];
@@ -250,16 +244,6 @@ Object.assign(Match.prototype,{
     for(const r of this.refs)if(dene(r,true))return true;
     return false;
   },
-  /* hava topunda sıçrama: top kısa süre sonra başın üstüne yakın bir yükseklikten geçecekse oyuncu sıçrar. Sıçrama 0,5 sn sürer,
-     en yükseğe ortasında çıkar (p.yuk); yükseklik kafa becerisine bağlıdır. Erken ya da geç sıçrayan topa yetişemez */
-  ziplamalar(){
-    const b=this.ball;if(b.y<1.0&&b.vy<=0)return;
-    const t=0.24,bx=b.x+b.vx*t,bz=b.z+b.vz*t,by=b.y+b.vy*t-0.5*G*t*t;
-    for(const p of this.players){if(!p.oyunda||p.zipla||p.kickCd>0||(p.eylem&&(p.eylem.kilit||p.eylem.ad==='vurus'||p.eylem.ad==='tac'))||b.sahip===p)continue;
-      const px=p.x+p.vx*t,pz=p.z+p.vz*t;if(hrkHyp(bx-px,bz-pz)>0.8)continue;
-      const tepe=0.28+0.32*p.oz.kafa,bas=1.72*p.boy+0.12;
-      if(by>bas-0.2&&by<bas+tepe+0.12)p.zipla={t:0,sure:0.5,tepe};}
-  },
   /* orta: topun ilk metrelerindeki rakibin bacağı ortayı kesebilir; top çoğu zaman kale çizgisine doğru seker (korner).
      T5 (2026-10-09; gerçekçilik planı T5 kararı 5): zar yerine bacak erişimi (ortaBlokTahmin; planlayıcının aynası aynı işlevi kullanır). Kesme
      topun bacağa vardığı anda olur (b.ortaBlok → temaslar); arada top değişirse ya da kesecek oyuncu kilitli bir eyleme girerse kalkar */
@@ -273,24 +257,6 @@ Object.assign(Match.prototype,{
     else{b.vx=-ux*v*(0.15+this.rast()*0.2)+this.normal()*2;b.vz=-uz*v*(0.15+this.rast()*0.2)+this.normal()*2;}
     b.vy=1.5+this.rast()*4;b.egri=0;b.pasHedef=null;
     this.dokunus(o,false);o.kickCd=0.35;o.eylem={ad:'blok',t:0,sure:0.45};this.on('block',{p:o,v,orta:true});
-  },
-  /* ============ hava topu ============ */
-  havaTopu(adaylar){
-    const b=this.ball,takimlar=new Set(adaylar.map(a=>a.p.team));
-    let kazanan=adaylar[0];
-    if(takimlar.size>1){
-      this.ist.havaTopu++;
-      /* temas anında başı topa en iyi uzanan (sıçrama zamanlaması ve boy), güçlü ve iyi kafa vuran kazanır */
-      const g=a=>{const p=a.p;return(kafaYuksekligi(p)-b.y)*2.2+p.oz.kafa*1.2+(kutle(p)-75)/18-a.d*1.6+(p.rol==='GK'?0.5:0)+this.normal()*0.35;};
-      kazanan=adaylar.reduce((x,y)=>g(x)>g(y)?x:y);
-      for(const a of adaylar)if(a!==kazanan){a.p.eylem={ad:'kafa',t:0,sure:0.5,bos:true};a.p.kickCd=0.4;
-        /* gövde gövdeye: güçlü ve daha yükseğe çıkan rakibi iter; havadaki oyuncu yere dengesiz inebilir (faulsüz düşüş) */
-        const w=kazanan.p,q=a.p,dx=q.x-w.x,dz=q.z-w.z,n=hrkHyp(dx,dz)||1,yuk=(w.yuk||0)-(q.yuk||0);
-        if(n<1.2&&w.team!==q.team)this.dengeBoz(q,(0.12+0.3*clamp((kutle(w)-kutle(q))/25+yuk*1.5,0,1)+0.1*w.oz.sertlik)*(1+(q.yuk||0)*2),dx/n,dz/n,'hava',w);}
-      const kaybeden=adaylar.find(a=>a.p.team!==kazanan.p.team);
-      if(kaybeden&&this.havaFaulu(kazanan.p,kaybeden.p))return;
-    }
-    this.kafaVur(kazanan.p);
   },
   /* ============ denge, sendeleme, düşme (C2) ============ */
   /* denge kaybı m (dayanıklılığa bölünür), (ux,uz) itildiği yön. Denge 0,3'ün altına inerse sendeler (kilitsiz; ivme düşer), 0'ın altına
@@ -308,7 +274,7 @@ Object.assign(Match.prototype,{
     const b=this.ball,a=hrkAtan2(uz,ux),sp=hrkHyp(p.vx,p.vz),c=hrkCos(a-p.yon);
     const yuzustu=c>0.25||(neden!=='omuz'&&neden!=='hava'&&sp>3&&c>-0.6);
     p.eylem={ad:'dusus',t:0,sure:0.45,kilit:true,fren:6,yerde:yerde||0.5+1.3*siddet,yon:a,neden,siddet,yuzustu};
-    p.vx+=ux*siddet;p.vz+=uz*siddet;p.surus=null;p.tavir=null;p.zipla=null;p.denge=0;if(p.calim)this.calimBitir(p,'kayip');
+    p.vx+=ux*siddet;p.vz+=uz*siddet;p.surus=null;p.tavir=null;if(p.zipla&&p.zipla.t<0)p.zipla=null;p.denge=0;if(p.calim)this.calimBitir(p,'kayip');
     if(b.sahip===p)b.sahip=null;
     this.on('dusus',{p,neden,siddet,yon:a,yuzustu,kaynak:kaynak||null});
   },
@@ -508,14 +474,6 @@ Object.assign(Match.prototype,{
     this.faulDusur(yapan,yiyen,v);
     this.on('faulGorulmedi',{faulYapan:yapan,faulYiyen:yiyen,kaynak:v.kaynak||null,siddet:v.ciddiyet||0,P,x:v.x,z:v.z});
     return false;
-  },
-  /* T5 (2026-10-09): hava topunda faul temastan — kaybeden kazanana yatay kapanma hızıyla (1,2 m'den yakın) çarpar; şiddet = kapanma/5 +
-     arkadan 0,3 + daha alçakta kalıp havadakine girme 0,15 + agresiflik; tek zar hakemin görmesi (T6 sıçrama zamanlamasıyla genişletir) */
-  havaFaulu(kazanan,kaybeden){
-    const w=kazanan,q=kaybeden,dx=w.x-q.x,dz=w.z-q.z,d=hrkHyp(dx,dz);if(d>1.2||d<1e-3)return false;
-    const vk=hrkMax(0,((q.vx-w.vx)*dx+(q.vz-w.vz)*dz)/d),arka=(-dx*hrkCos(w.yon)-dz*hrkSin(w.yon))/d;   /* arka < −0,3: kaybeden kazananın arkasında */
-    const cc=vk/5+(arka<-0.3?0.3:0)+((q.yuk||0)<(w.yuk||0)-0.1?0.15:0)+(profilAlt(q,'agresiflik',q.oz.sertlik)-0.5)*0.5;
-    return this.temasFaulu(q,w,cc,{hava:true,arkadan:arka<-0.3,kaynak:'hava',x:w.x,z:w.z});
   },
   /* ============ faul, kart, avantaj ============ */
   /* faul yiyen temasın yönüne düşer (yapanın konumu ve bağıl hızı); hafif itme ve tutmada yalnız sendeler. Ayakta kaldıysa true (T5: görülmeyen

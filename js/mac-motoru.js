@@ -71,6 +71,8 @@ const MOTOR_AYAR={
   /* C — js/mac-mudahale.js */
   mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
   acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,
+  /* C — js/mac-hava.js (T6) */
+  sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,
   /* B — js/mac-topla.js */
   kararGecikme:undefined,ilerleme:undefined,risk:undefined,surusKarar:undefined,vurusHizalama:undefined,sutIstegi:undefined,ortaIstegi:undefined,
   sutSapma:undefined,pasSapma:undefined,sikisma:undefined,geriPas:undefined,kontrolZorluk:undefined,tekVurus:undefined,verKacIstegi:undefined,
@@ -242,6 +244,8 @@ class Match{
       _cev:undefined,_hk:undefined,_kacKare:undefined,_kacX:undefined,_kacZ:undefined,_varisHiz:undefined,_varisKare:undefined,_tavirKare:undefined,
       _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_tmsS:undefined,_tmsT:undefined,_tepkiS:undefined,_tepkiJ:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,_gecT:undefined,_destek:undefined,_destekK:undefined,
       _kp:undefined,_duz:undefined,_pen:undefined,_poz:undefined,_sonKurt:undefined,
+      /* T6a: sıçramanın zamanlama hatası (top sürümü, sn; js/mac-hava.js sicramalar) */
+      _hvS:-1,_hvE:0,
       /* T7d: müdahale tahmininin önbelleği (çarpan, kare, rakip; js/mac-takim.js mudahaleTahminCarpani) */
       _mt:undefined,_mtK:undefined,_mtS:undefined,
       /* T1 iç alanları: kararlı hedef, efor karesi, kip ve süresi, son ivme (karede hız değişimi), düşünme aralığı (kare) */
@@ -297,7 +301,7 @@ class Match{
     if(['kickoff','play','durus','goal'].includes(this.phase))this.kenarAI(dt);
     /* sıçramalar ve dinlenme: oyun dururken ve devre arasında yorgunluk biraz azalır */
     const dinlen=this.phase==='halftime'?0.004:this.phase==='durus'||this.phase==='goal'||this.phase==='kickoff'?0.0015:0;
-    for(const p of this.players){if(p.zipla){const z=p.zipla;z.t+=dt;const f=z.t/z.sure;p.yuk=f<1?z.tepe*4*f*(1-f):0;if(f>=1)p.zipla=null;}
+    for(const p of this.players){if(p.zipla)ziplaIlerle(p,dt);   /* T6a: kalkış hazırlığı, uçuş ve iniş (js/mac-hava.js) */
       if(dinlen&&p.yorgunluk>0)p.yorgunluk=Math.max(0,p.yorgunluk-dinlen*dt);}
     this.topcuAI(dt);this.disToplarAdim(dt);
     if(saat)this.devreSonuKontrol();
@@ -479,7 +483,7 @@ class Match{
     if(this.phase!=='play'||b.tasiyan)return;
     /* T5: orta bloğu topun bacağa vardığı anda (ortaBlok, js/mac-mudahale.js) */
     const OB=b.ortaBlok;if(OB){if(OB.surum!==b.surum||!OB.o.oyunda||OB.o.eylem&&OB.o.eylem.kilit)b.ortaBlok=null;else if(this.t>=OB.t){b.ortaBlok=null;this.ortaBlokUygula(OB);return;}}
-    this.ziplamalar();
+    this.sicramalar();   /* T6a: sıçrama planı (js/mac-hava.js) */
     const ad=[];
     for(const p of this.players){
       if(!p.oyunda||p.kickCd>0)continue;const e=p.eylem;
