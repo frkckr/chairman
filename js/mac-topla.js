@@ -235,7 +235,8 @@ Object.assign(Match.prototype,{
     if(e.stil!=='vole'&&e.stil!=='yarimVole')e.stil=tur==='asirtma'?'asirtma':tur==='sert'||tur==='dusen'?'ust':'ic';
     e.guc=clamp(v/32,0,1);
     const aldat=this.rast()<0.08+0.25*oz.sut;
-    this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'sut',sut:{hedefZ:hz0,hedefY:hy0,tur,ipucu:{yan:(Math.sign(hz0-MZ)||1)*(aldat?-1:1),guven:clamp(0.85-0.7*oz.sut,0.15,0.8)}}});
+    /* T9b-0: nisanZ/nisanY — hatası uygulanmış nişan (kale çizgisinde; salt okunur, ölçüm araclar/olcumler/v-vurus.js) */
+    this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'sut',sut:{hedefZ:hz0,hedefY:hy0,nisanZ:hz,nisanY:hy,tur,ipucu:{yan:(Math.sign(hz0-MZ)||1)*(aldat?-1:1),guven:clamp(0.85-0.7*oz.sut,0.15,0.8)}}});
   },
   /* yerden pas: ortak plandaki varış hızından ilk hız; yön hatası ve uzunluk hatası (mesafe oranı; baskıda hafif eksik) */
   yerPasVur(p,e){

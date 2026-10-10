@@ -100,6 +100,11 @@ HAZIR = {
     "hava-duello": ("(()=>{const b=mac.ball;let t=[0,0];for(const p of mac.players)if(p.oyunda&&p.zipla&&Math.hypot(p.x-b.x,p.z-b.z)<2.5)t[p.team]++;return t[0]>0&&t[1]>0;})()", 0, "mac"),
     "orta-kafa": ("__son('header',0.05)&&__son('cross',3)", 0, "mac"),
     "sicrama": ("mac.players.some(p=>p.oyunda&&p.zipla&&p.zipla.t<0.03)", 0, "mac"),
+    # T9b-0 (2026-10-10): vuruş modeli — plase (iç ayak) ve sert (üst) şutun geri salınımı, kötü vuruş, kalecinin çelmesi (film şeridi; --kare 6 --aralik 0.1)
+    "sut-plase": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&p.eylem.sec.tur==='sut'&&p.eylem.stil==='ic'&&p.eylem.faz==='geri')", 0, "mac"),
+    "sut-sert": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&p.eylem.sec.tur==='sut'&&p.eylem.stil==='ust'&&p.eylem.faz==='geri')", 0, "mac"),
+    "kotu-vurus": ("__son('kotuVurus',0.05)", 0, "mac"),
+    "celme": ("__son('save',0.05,v=>!v.catch)", 0.1, "mac"),
 }
 VARSAYILAN_SET = ["santra", "orta-saha", "korner", "sut", "faul", "sol-ceza", "uzak-kenar", "yakin-kenar"]
 

@@ -4,7 +4,10 @@
    - Çelme (tutulamayan kurtarış) sonrası top: bir sonraki dokunuşun ya da topun yavaşladığı yerin altıpasta olması; rakibe düşmesi.
    - Gollerin kaynağı: kayıtlı şut, kendi kalesine, kalecinin çelmesinden sonra, bloktan sonra, diğer.
    - Kalecinin topu toplaması (orta/korner sonrası tutuş), yumruk, dağıtımda topun takımda kalması.
-   JSON çıktısında _dBicim: çelme biçimine göre [adet, altıpasa düşen, rakibe düşen]. */
+   JSON çıktısında _dBicim: çelme biçimine göre [adet, altıpasa düşen, rakibe düşen].
+   - T9b-0 (2026-10-10): çelmenin sonu — kendi kalesine (çelmeden sonra, arada kimse dokunmadan gol), oyun dışına (oyun durdu), tehlikeli bölgeye
+     (sonraki dokunuş ya da topun yavaşladığı yer kale çizgisine 11 m ve kale ortasına 9,16 m içinde), güvenli (geri kalanı ve kalecinin yeniden
+     tuttuğu top); çelmelere oranla. */
 'use strict';
 const PL=52.5,MZ=34;
 module.exports={
@@ -15,6 +18,8 @@ module.exports={
     ['Kapanma (kapan, adet)','dKapan',2],['Şut (adet) / kaleci hazır duruşta','dSutN',2],['  kaleci hazırdı (adet)','dSutHazir',2],
     ['Gol kaynağı: kayıtlı şut','dGolSut',2],['  çelmeden sonra','dGolCelme',2],['  bloktan/sekmeden sonra','dGolBlok',2],
     ['  kendi kalesine (diğer)','dGolOwn',2],['  diğer','dGolDiger',2],
+    ['Çelmenin sonu: kendi kalesine %','dCyKale',1],['Çelmenin sonu: oyun dışına %','dCyDisari',1],
+    ['Çelmenin sonu: tehlikeli bölgeye (11 m, kale ±9 m) %','dCyTehlike',1],['Çelmenin sonu: güvenli (bölge dışı, oyunda) %','dCyDisa',1],
     ['Orta/korner sonrası kaleci tuttu (adet)','dOrtaTut',2],['Yumruk (adet)','dYumruk',2],
     ['Kaleci dağıtımı (adet)','dDagitim',2],['  top takımda kaldı (adet)','dDagitimTamam',2]
   ],
@@ -22,9 +27,10 @@ module.exports={
     let son=[-99,-99],celme=null,ikinci=0,celmeN=0,celmeAlti=0,celmeRakip=0,kapan=0,yumruk=0,ortaTut=0;
     let sonSut=null,olaylar=[],golSut=0,golOwn=0,golCelme=0,golBlok=0,golDiger=0,golN=0;
     let sutN=0,sutHazir=0,oncekiTasiyan=null,sonOrta=-99,dagitim=null,dagN=0,dagTamam=0;
-    const sonKapan=new Map(),bicimler={};
-    const bitirCelme=(m,x,z,rakip)=>{const c=celme;celme=null;const gx=-m.dir[c.team]*PL,B=bicimler[c.bicim||'?']=bicimler[c.bicim||'?']||[0,0,0];B[0]++;
-      if(x!=null&&Math.abs(x-gx)<5.5&&Math.abs(z-MZ)<9.16&&Math.abs(x)<PL){celmeAlti++;B[1]++;}if(rakip){celmeRakip++;B[2]++;}};
+    const sonKapan=new Map(),bicimler={},cy={kale:0,disari:0,tehlike:0,disa:0};
+    const bitirCelme=(m,x,z,rakip,guvenli)=>{const c=celme;celme=null;const gx=-m.dir[c.team]*PL,B=bicimler[c.bicim||'?']=bicimler[c.bicim||'?']||[0,0,0];B[0]++;
+      if(x!=null&&Math.abs(x-gx)<5.5&&Math.abs(z-MZ)<9.16&&Math.abs(x)<PL){celmeAlti++;B[1]++;}if(rakip){celmeRakip++;B[2]++;}
+      if(x==null)cy.disari++;else if(guvenli)cy.disa++;else if(Math.abs(x-gx)<11&&Math.abs(z-MZ)<9.16&&Math.abs(x)<PL)cy.tehlike++;else cy.disa++;};
     return{
       dinle(ad,v,m){if(!m)return;
         olaylar.push([ad,m.t]);if(olaylar.length>40)olaylar.splice(0,20);
@@ -41,7 +47,7 @@ module.exports={
             if(o[0]==='pass'||o[0]==='cross'||o[0]==='header'||o[0]==='ilkDokunus')break;}
           if(tur==='diger'&&v.own)tur='own';
           if(tur==='sut')golSut++;else if(tur==='celme')golCelme++;else if(tur==='blok')golBlok++;else if(tur==='own')golOwn++;else golDiger++;
-          if(celme)celme=null;}
+          if(celme){cy.kale++;celme=null;}}
         if((ad==='gkkick'||ad==='pass')&&v&&v.p&&v.p.rol==='GK'){dagN++;dagitim={team:v.p.team,t:m.t};}
       },
       adim(m){
@@ -53,10 +59,10 @@ module.exports={
         if(b.sahip||b.tasiyan){son=[-99,-99];}
         /* çelme sonrası top */
         if(celme){const c=celme,dok=b.sonDokunan;
-          if(b.tasiyan){bitirCelme(m,b.x,b.z,b.tasiyan.team!==c.team);}
+          if(b.tasiyan){bitirCelme(m,b.x,b.z,b.tasiyan.team!==c.team,b.tasiyan===c.p);}   /* kalecinin kendi çelip yeniden tuttuğu top güvenlidir */
           else if(dok&&dok!==c.p){bitirCelme(m,b.x,b.z,dok.team!==c.team);}
           else if(m.t-c.t0>0.3&&Math.hypot(b.vx,b.vz)<4&&b.y<0.5){bitirCelme(m,b.x,b.z,false);}
-          else if(m.t-c.t0>4)bitirCelme(m,null,null,false);}
+          else if(m.t-c.t0>4)bitirCelme(m,b.x,b.z,false);}
         /* kaleci topu eline aldı: orta/korner sonrası mı */
         const ta=b.tasiyan;if(ta&&ta!==oncekiTasiyan&&ta.rol==='GK'&&m.t-sonOrta<3.5)ortaTut++;
         oncekiTasiyan=ta;
@@ -67,7 +73,8 @@ module.exports={
         /* oranlar: payları ve paydaları ayrı (maç başına ortalamaların oranı = toplam oran) */
         return{dIkinci:ikinci,dCelme:celmeN,dCelmeAlti:celmeAlti,dCelmeRakip:celmeRakip,dKapan:kapan,dSutN:sutN,dSutHazir:sutHazir,
           dGolSut:golSut,dGolOwn:golOwn,dGolCelme:golCelme,dGolBlok:golBlok,dGolDiger:golDiger,dYumruk:yumruk,dOrtaTut:ortaTut,dDagitim:dagN,dDagitimTamam:dagTamam,
-          _dBicim:bicimler};
+          _dBicim:bicimler,ham:{dCyKale:[cy.kale,cy.kale+cy.disari+cy.tehlike+cy.disa],dCyDisari:[cy.disari,cy.kale+cy.disari+cy.tehlike+cy.disa],
+            dCyTehlike:[cy.tehlike,cy.kale+cy.disari+cy.tehlike+cy.disa],dCyDisa:[cy.disa,cy.kale+cy.disari+cy.tehlike+cy.disa]}};
       }
     };
   }
