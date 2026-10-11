@@ -434,10 +434,11 @@ Object.assign(Match.prototype,{
   /* ============ kaleci topu elinde: ileri yürür, sonra yuvarlar, atar ya da degaj yapar ============ */
   kaleciElde(dt){
     const b=this.ball,gk=b.tasiyan;if(!gk||gk.rol!=='GK')return;
-    const tu=gk.tutus||(gk.tutus={t:0,sure:2});tu.t+=dt;
+    const tu=gk.tutus||(gk.tutus={t:0,sure:2,zg:this.zamanGecirEk(gk.team,4)});tu.t+=dt;   /* T10d: öndeyken son dakikalarda topu tutar */
     const d=this.dir[gk.team],gx=-d*PL;
     gk.tx=gx+d*Math.min(14,Math.abs(gk.x-gx)+2);gk.tz=MZ+clamp(gk.z-MZ,-9,9);gk.hizOran=0.3;gk.bak=null;gk.yonHedef=d>0?0:Math.PI;
-    if(tu.t<tu.sure||gk.eylem)return;
+    if(tu.t<tu.sure+tu.zg||gk.eylem)return;
+    if(tu.zg>0)this.zamanGecirmeGoruldu(gk,tu.zg);
     const k=kaleciDagitim(this,gk);gk.tutus=null;b.tasiyan=null;
     const q=k?k.q:null,tur=k?k.tur:'degaj';
     let hx,hz,hy,T,y0;

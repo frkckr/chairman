@@ -15,7 +15,7 @@
    Sözleşme (çizim T10f'de okur; motor yalnız alan ekler): oyuncuda p.sakat {tur, bolge, derece, t0, gun} (tedavi ve çıkış sürerken), p.topal
    {oran, son} (basma oranı ve bitiş), p.tedavide (tedavi sonrası saha dışında bekliyor); saha kenarında kind 'saglikci' (takım başına iki;
    gorev, poz 'comel' tedavide); m.sakatlikAkis {p, evre, ...}, m.sedye {x, z, yon, p} (sedye taşınırken). Olaylar 'sakatlik' {p, tur, bolge,
-   derece, dakika, gun}, 'hakemTopu' {takim, x, z, p, ek}, 'tedaviBasladi', 'sedye', 'oyunaDondu'. Maçın kaydı kayit.sakatliklar (Match.sonucKaydi; kariyer Aşama 3'te okur) */
+   derece, dakika, gun}, 'hakemTopu' {takim, x, z, neden 'sakatlik', kutu, p, ek}, 'tedaviBasladi', 'sedye', 'oyunaDondu'. Maçın kaydı kayit.sakatliklar (Match.sonucKaydi; kariyer Aşama 3'te okur) */
 'use strict';
 ayarEkle('S',{
   sakatTemas:0.45,             // temaslı düşüşte sakatlık olasılığı: × (0,3 + 0,7·şiddet²) × yatkınlık (derece şiddetle: çıkış 0,025 + 0,14·ş, tedavi 0,28 + 0,2·ş, kalanı ağrı)
@@ -158,14 +158,12 @@ Object.assign(Match.prototype,{
   },
   sakatlikBitir(){this.sakatlikAkis=null;},
   /* hakem oyunu durdurur: hakem topu topu son oynayan takıma (sahibi varsa onun takımı), topun yerinde; top ceza sahasındaysa savunan takımın
-     kalecisine (2019; kaleci kendi ceza sahasındaki serbest vuruşu kullanır, kullananSec). Dolaylı serbest vuruş gibi kullanılır. Uzatmaya
-     tedavide 60, sedyede 90 sn (gerçekte ~1–1,5 dk; sıkıştırılmış maçta duraklama ~20–30 sn sürer) */
+     kalecisine (2019; js/mac-kurallar.js hakemTopuBaslat: hakem topu bırakır, rakipler 4 m'de). Uzatmaya tedavide 60, sedyede 90 sn (gerçekte
+     ~1–1,5 dk; sıkıştırılmış maçta duraklama ~20–30 sn sürer) */
   hakemTopuDurdur(p){
-    const b=this.ball,x=clamp(b.x,-PL+1,PL-1),z=clamp(b.z,1,PW-1);let takim=b.sahip?b.sahip.team:b.sonTakim!=null?b.sonTakim:1-p.team;
-    if(Math.abs(x)>PL-16.5&&Math.abs(z-MZ)<20.16)takim=this.dir[0]===-Math.sign(x)?0:1;
-    const ek=p.sakat&&p.sakat.derece==='cikis'?90:60;this.duranSure[this.half-1]+=ek;
-    this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};this.on('hakemTopu',{takim,x,z,p,ek});
-    this.durusBaslat('serbest',takim,x,z,{bekle:1.0,endirekt:true,hakemTopu:true,duduk:true});
+    const b=this.ball,takim=b.sahip?b.sahip.team:b.sonTakim!=null?b.sonTakim:1-p.team;
+    const ek=p.sakat&&p.sakat.derece==='cikis'?90:60;this.uzatmaBirikim[this.half-1]+=ek;
+    this.hakemTopuBaslat(takim,b.x,b.z,'sakatlik',{p,ek});
   },
   /* devre ya da maç bitti: süren tedavi kapanır (kenardaki oyuncu ikinci yarıda sahada), sedyedeki oyuncu çıkmış sayılır (değişiklik devre arasında) */
   sakatlikDevreSonu(){

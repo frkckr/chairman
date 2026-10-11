@@ -90,7 +90,8 @@ const MOTOR_AYAR={
   presTetikMesafe:undefined,golgePres:undefined,kosucuTakip:undefined,hatCik:undefined,kutuSavunma:undefined,kompakt:undefined,
   mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,
   /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
-  hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,itirazKart:undefined,
+  hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,itirazKart:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
+  ofsaytBayrak:undefined,ofsaytBekle:undefined,
   /* K — js/mac-durantop.js (T8) */
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
   kornerKisa:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined,
@@ -218,7 +219,9 @@ class Match{
     this.ist={sut:[0,0],isabet:[0,0],korner:[0,0],tac:[0,0],kaleVurusu:[0,0],faul:[0,0],sari:[0,0],kirmizi:[0,0],ofsayt:[0,0],
       pas:[0,0],pasTamam:[0,0],pasYon:{ileri:0,yan:0,geri:0},uzunPas:0,havaTopu:0,uzatma:[0,0],degisiklik:[0,0],oyunda:0,toplam:0,sahiplik:[0,0]};
     this.shots=this.ist.sut;this.poss=this.ist.sahiplik;
-    this.duranSure=[0,0];this.added=[60,120];this.uzatmaIlan=[false,false];
+    /* uzatmanın birikimi (maç saati sn; yarı başına: gol 50, değişiklik 30, faul 15 (+15 kart), penaltı 60, sakatlık 60/90 …). T10d (T10 teşhisi
+       hata 7): eski adı duranSure'ydi, MOTOR_AYAR.duranSure (duran topun hazırlığı) ile aynı adı taşıyordu */
+    this.uzatmaBirikim=[0,0];this.added=[60,120];this.uzatmaIlan=[false,false];
     this.taktik=[0,1].map(t=>Object.assign({},VARSAYILAN_TAKTIK,this.kadro&&this.kadro[t].taktik));
     /* T7a: hocanın tabanı; taktik etkin taktiktir (taban + niyet + maç durumu; js/mac-takim.js) */
     this.taktikTaban=this.taktik.map(o=>Object.assign({},o));this._niyet=null;
@@ -231,9 +234,12 @@ class Match{
     this.yedekleriKur();this.kenarKur();
     /* T10c: maçın kaydı (kariyer Aşama 3'te sonucKaydi ile okur) ve sağlıkçılar (js/mac-sakatlik.js) */
     this.kayit={goller:[],kartlar:[],sakatliklar:[],degisiklikler:[]};
+    this.zgUyari=[0,0];   /* T10d: zaman geçirmede hakemin uyarısı (takım başına; js/mac-kurallar.js zamanGecirmeGoruldu) */
+    this.ofsaytBekleyen=null;   /* T10d: bayrağı geç kalkacak ofsayt {p, t, x, z, fark, yanlis, g} (js/mac-kurallar.js ofsaytDokunus) */
+    this.santraAcele=false;   /* T10d: gerideki takım topu ağdan alıp koştu: santra kurala göre (stepKick) */
     this.sakatlikHazirla();
     this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,sonTakim:0,hedefOyuncu:null,sut:null,pas:null,
-      surum:0,agda:false,direk:false,px:0,py:0,pz:0,ortaBlok:null,
+      surum:0,agda:false,direk:false,px:0,py:0,pz:0,ortaBlok:null,hakemDegdi:null,
       /* T8-0: duran topun kullanımı {tur, p, t0, x, z, cikti, du}: durusKullan (ve santra) kurar, kullananın ilk dokunuşu 'kullanim' olayını yayar,
          başka oyuncunun dokunuşu siler (dokunus; js/mac-durantop.js) */
       kullanim:null,
@@ -366,19 +372,25 @@ class Match{
     const yerinde=hyp(b.x,b.z-MZ)<0.3&&!b.tasiyan&&b.y<0.05&&hyp(b.vx,b.vz)<0.2;
     if(!yerinde){
       if(b.tasiyan===tk){tk.tx=-0.35*this.dir[tk.team];tk.tz=MZ-0.25;tk.hizOran=0.5;if(hyp(tk.x,tk.z-MZ)<0.7)this.topuSifirla(0,MZ);}
+      /* T10d: topu ağdan alan gerideki takımın oyuncusu orta noktaya koşup koyar */
+      else if(b.tasiyan&&b.tasiyan.team===this.kickTeam&&b.tasiyan.rol!=='GK'){const c=b.tasiyan;c.tx=0;c.tz=MZ;c.hizOran=1;c.bak=null;if(hyp(c.x,c.z-MZ)<0.8)this.topuSifirla(0,MZ);}
       else if(!b.tasiyan){/* kalecinin gönderdiği topu santrayı yapacak oyuncu karşılar, eliyle ya da ayağıyla tutar */
         const k=this.yakalamaNoktasi(tk,2.2);tk.tx=k.x;tk.tz=k.z;tk.hizOran=0.8;tk.bak=b;
         if(hyp(b.x-tk.x,b.z-tk.z)<1.2&&b.y<2.2){b.tasiyan=tk;this.topDegisti();}}
     }else{const k=this.santraKonumu(tk,this.kickTeam);tk.tx=k.x;tk.tz=k.z;}
     this.hareketHepsi(dt);this.topAdim(dt);
     let hazir=yerinde;
-    if(hazir)for(const p of this.players)if(p.oyunda&&!p.sakat&&hyp(p.tx-p.x,p.tz-p.z)>1.3){hazir=false;break;}
+    /* T10d: topu ağdan alıp koşan gerideki takımın santrasında kural yeter: herkes kendi yarısında, rakipler çemberin dışında (santracı yerinde) */
+    if(hazir){const ac=this.santraAcele;
+      for(const p of this.players){if(!p.oyunda||p.sakat)continue;
+        if(ac&&p!==tk){if(p.x*this.dir[p.team]>0.3||p.team!==this.kickTeam&&hyp(p.x,p.z-MZ)<9.15){hazir=false;break;}}
+        else if(hyp(p.tx-p.x,p.tz-p.z)>1.3){hazir=false;break;}}}
     /* T8d: gerideyken ve süre azalmışken (acele) santra çabuk: 1,6 → 0,9 sn. T10c: tedavi ya da sedye sürerken santra bekler */
     if(!this.sakatlikBekletir()&&(hazir&&this.phaseT>(this.macDurumu(this.kickTeam).acele>0.5?0.9:1.6)||this.phaseT>22)){
       if(!yerinde)this.topuSifirla(0,MZ);
       const al=this.santraAlici(this.kickTeam),t0=this.t-this.phaseT;
       this.on('kickoff',{team:this.kickTeam,half:this.half});this.refs[0].eylem={ad:'duduk',t:0,sure:0.8};
-      this.phase='play';this.phaseT=0;this.kullanimBaslat('santra',tk,null,t0);   /* T8-0 */
+      this.phase='play';this.phaseT=0;this.santraAcele=false;this.kullanimBaslat('santra',tk,null,t0);   /* T8-0 */
       tk.x=-0.35*this.dir[tk.team];tk.z=MZ-0.25;tk.vx=tk.vz=0;tk.yon=this.dir[tk.team]>0?0:Math.PI;
       this.sahipYap(tk);this.vurusBaslat(tk,{tur:'pas',hx:al.x,hz:al.z,tip:'yer',alici:al});
     }
@@ -600,11 +612,12 @@ class Match{
     if(b.endirekt){const own=b.endirekt.p.team===def;b.endirekt=null;this.topDisari();
       if(own)this.durusBaslat('korner',att,side*(PL-0.4),b.z<MZ?0.4:PW-0.4);else this.durusBaslat('kaleVurusu',def,side*(PL-ALTIPAS_U+0.5),MZ+(b.z<MZ?-4:4));
       this.on('endirektGol',{});return;}
+    if(this.golIptalMi(side))return;   /* T10d: geç kalkan ofsayt bayrağı ya da hakeme çarpıp giren top (js/mac-kurallar.js) */
     this.score[att]++;const own=b.sonTakim===def,scorer=b.sonDokunan;
     if(b.sut&&!own)this.ist.isabet[att]++;
     b.agda=true;b.sut=null;b.sahip=null;b.hedefOyuncu=null;b.pas=null;
     for(const p of this.players)if(p.eylem&&p.eylem.ad==='vurus')p.eylem=null;
-    this.phase='goal';this.phaseT=0;this.celeb={team:att,side,scorer,own};this.duranSure[this.half-1]+=50;
+    this.phase='goal';this.phaseT=0;this.celeb={team:att,side,scorer,own};this.uzatmaBirikim[this.half-1]+=50;
     this.on('goal',{team:att,scorer,own,score:this.score.slice()});
     this.kayit.goller.push({ad:scorer?scorer.name:'',no:scorer?scorer.no:0,takim:att,kendiKalesine:!!own,dakika:Math.floor(this.gameSec/60)+1});   /* T10c */
     /* T10b (T10 teşhisi hata 5): avantaj sürerken gol — avantaj tutulmuştur, kart şimdi gösterilir (sevinç sürerken hakem oyuncuya gider) */
@@ -612,8 +625,22 @@ class Match{
   }
   stepGoal(dt){
     const c=this.celeb,sc=c.own?null:c.scorer,cx=c.side*(PL-3),cz=c.side>0?PW-3:3,b=this.ball,gk=this.kaleci(1-c.team);
+    /* T10d: gol yiyen takım hâlâ gerideyse (ikinci yarıda ya da acelede) kaleye en yakın saha oyuncusu topu ağdan alır, orta noktaya koşup koyar
+       (olay topuAgdanAldi); santra kurala göre hazırlanır (stepKick santraAcele) */
+    if(c.alan===undefined){c.alan=null;const t=1-c.team;
+      if(this.score[t]<this.score[c.team]&&(this.half===2||this.macDurumu(t).acele>0)){let en=1e9;
+        for(const q of this.teams[t])if(q.oyunda&&q.rol!=='GK'&&!q.sakat){const dq=hyp(q.x-b.x,q.z-b.z);if(dq<en){en=dq;c.alan=q;}}}}
+    const al=c.alan;
     for(const p of this.players){
       if(!p.oyunda)continue;p.surus=null;
+      if(p===al){p.sevinc=false;
+        if(!b.tasiyan&&b.agda&&this.phaseT>0.6){p.tx=b.x-c.side*0.4;p.tz=b.z;p.hizOran=1;p.bak=b;
+          if(hyp(p.x-b.x,p.z-b.z)<0.9){b.agda=false;b.tasiyan=p;this.topDegisti();this.on('topuAgdanAldi',{p});}}
+        else if(b.tasiyan===p){p.tx=0;p.tz=MZ;p.hizOran=1;p.bak=null;
+          if(hyp(p.x,p.z-MZ)<0.8){b.tasiyan=null;Object.assign(b,{x:0,z:MZ,y:0,vx:0,vy:0,vz:0});this.topDegisti();c.hazir=true;}}
+        else{const k=this.santraKonumu(p,1-c.team);p.tx=k.x;p.tz=k.z;p.hizOran=0.6;}
+        continue;}
+      if(p===gk&&al){p.tx=c.side*(PL-1.5);p.tz=MZ;p.hizOran=0.4;continue;}
       if(p===gk){/* kaleci topu ağdan alır, orta noktaya doğru atar */
         if(!b.tasiyan&&b.agda&&this.phaseT>2.2){p.tx=b.x-c.side*0.4;p.tz=b.z;p.hizOran=0.4;p.bak=b;
           if(hyp(p.x-b.x,p.z-b.z)<0.9){b.agda=false;b.tasiyan=p;this.topDegisti();}}
@@ -629,14 +656,14 @@ class Match{
       }else{const k=this.santraKonumu(p,1-c.team);p.tx=k.x;p.tz=k.z;p.hizOran=0.3;p.bak=null;}
     }
     this.hareketHepsi(dt);this.topAdim(dt);
-    if(this.phaseT>7){for(const p of this.players)p.sevinc=false;this.santraHazirla(1-c.team,false);}
+    if(this.phaseT>7){for(const p of this.players)p.sevinc=false;this.santraHazirla(1-c.team,false);this.santraAcele=!!al;}
   }
 
   /* ============ devre / maç sonu ============ */
   devreSonuKontrol(){
     const h=this.half-1,sinir=h?5400:2700;
     if(!this.uzatmaIlan[h]&&this.gameSec>=sinir-20){
-      const dk=clamp(Math.round((this.duranSure[h]+30)/60),h?2:1,8);this.added[h]=dk*60;this.uzatmaIlan[h]=true;this.ist.uzatma[h]=dk;
+      const dk=clamp(Math.round((this.uzatmaBirikim[h]+30)/60),h?2:1,8);this.added[h]=dk*60;this.uzatmaIlan[h]=true;this.ist.uzatma[h]=dk;
       this.on('uzatma',{dakika:dk,yari:this.half});}
     if(this.phase!=='play'&&this.phase!=='kickoff')return;
     const lim=sinir+this.added[h],b=this.ball;

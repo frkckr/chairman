@@ -477,6 +477,7 @@ Object.assign(Match.prototype,{
   endHalf(){
     const b=this.ball;b.sahip=null;b.tasiyan=null;b.vx*=0.3;b.vz*=0.3;b.sut=null;b.hedefOyuncu=null;this.durus=null;
     this.sakatlikDevreSonu();   /* T10c: süren tedavi ya da sedye devre sonunda kapanır (js/mac-sakatlik.js) */
+    this.ofsaytBekleyen=null;b.hakemDegdi=null;   /* T10d */
     const first=this.half===1;this.phase=first?'halftime':'fulltime';this.phaseT=0;
     const T=this.tunel;
     for(const p of this.players){p.eylem=null;p.surus=null;p.sevinc=false;p.bak=null;p.yonHedef=null;p.hizOran=0.3;p.poz=null;

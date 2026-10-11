@@ -23,12 +23,12 @@
    seçilmez (penaltı hariç). Rastlantı çekmez. */
 'use strict';
 ayarEkle('K',{
-  duranSure:[8.5,11.5],        // T8a (§7 madde 5): tehlikeli duran topta duruşun başından koşunun başına en az / en çok (sn; koşu ve işaret ~1,5–2,5 sn: temas 10–14);
+  duranSure:[8,11],            // T8a (§7 madde 5): tehlikeli duran topta duruşun başından koşunun başına en az / en çok (sn; koşu ve işaret ~1,5–2,5 sn: temas 10–14; T10d: 8,5–11,5 → 8–11);
                                // arada koşul “görevliler yerinde”
-  duranHazir:[0.5,1.4,0.5,0.6,1.5],   // T8a: kullanan hazır olduktan sonra en az bekleme (sn): taç, korner, kale vuruşu, serbest vuruş, penaltı
+  duranHazir:[0.5,1.4,0.3,0.6,1.2],   // T8a: kullanan hazır olduktan sonra en az bekleme (sn): taç, korner, kale vuruşu, serbest vuruş, penaltı (T10d: kale vuruşu 0,5 → 0,3, penaltı 1,5 → 1,2)
   duranYerinde:1.5,            // T8a: görevli hedefine bu kadar (m) yakınsa yerinde
   duranGeri:[3,7],             // T8a: kullananın geri çekilmesinin sınırları (m); türden ve profilden (kornerde 3–4,5, barajlı vuruşta 4–7)
-  penaltiSure:[6.5,9.5],       // T8a: penaltıda duruşun başından koşunun başına en az / en çok (sn; temas 8–12)
+  penaltiSure:[6,9],           // T8a: penaltıda duruşun başından koşunun başına en az / en çok (sn; temas 8–12; T10d: 6,5–9,5 → 6–9)
   hizliSerbest:0.6,            // T8a: çabuk serbest vuruş için kullananın en az karar özelliği
   kornerKutu:5,                // T8a: kornerde kutuya çıkan hücumcu (maç durumuyla 4–7)
   kornerKisa:0.18,             // T8b: kısa korner olasılığı (kullananın yaratıcılığıyla 0,6–1,4 katı; gerçek ~%20, Ek E)
@@ -271,6 +271,8 @@ Object.assign(Match.prototype,{
     const A=MOTOR_AYAR,H=A.duranHazir[DT_HAZIR[du.tur]]||1;
     if(du.hizli)return du.hazirT>=0.2;
     if(!(du.hazirT>=H&&(du.tur==='tac'||hyp(tk.x-du.geriX,tk.z-du.geriZ)<0.5||du.hazirT>H+2)))return false;
+    if(du.hakemTopu)return this.hakemTopuBirak(du);   /* T10d */
+    if(du.zgEk>0&&du.hazirT<H+du.zgEk)return false;   /* T10d: zaman geçirme (js/mac-kurallar.js zamanGecirEk) */
     if(this.duranTehlikeli(du)){if(du.t<A.duranSure[0])return false;if(du.t<A.duranSure[1]&&!this.gorevlilerYerinde(du))return false;}
     else if(du.tur==='penalti'){if(du.t<A.penaltiSure[0])return false;if(du.t<A.penaltiSure[1]&&!this.gorevlilerYerinde(du))return false;}
     if(du.tur==='korner'||du.sinif==='kenar'){if(du.isaret==null){du.isaret=du.t;this.jestVer(tk,'kol',0.8,null);return false;}if(du.t-du.isaret<0.8)return false;}
@@ -354,7 +356,19 @@ Object.assign(Match.prototype,{
       return{h:{x:d*(PL-12),z:MZ-yan*12},yh,yhYer:{x:sx*(PL+0.8),z:Math.sign(yz-MZ)===yan?yz+Math.sign(yz-MZ)*0.2:yz}};}
     if(du.tur==='penalti')return{h:{x:d*(PL-17),z:MZ+(yz>MZ?-6:6)},yh,yhYer:{x:sx*PL,z:yz>MZ?MZ+CEZA_W:MZ-CEZA_W}};
     if(du.sinif==='baraj'&&!du.hakemHazir&&du.barajUc)return{h:du.barajUc,yh:null,yhYer:null};
+    /* T10d: hakem topunda hakem topun yanına gelir ve bırakır (hakemTopuBirak), sonra topun gerisine ve içeriye 2,5 m çekilir */
+    if(du.hakemTopu)return{h:du.birak==null?{x:du.x,z:du.z+(du.z<MZ?0.55:-0.55)}:{x:du.x-d*2.5,z:du.z+(du.z<MZ?2.5:-2.5)},yh:null,yhYer:null};
     return null;},
+  /* T10d: hakem topu bırakılır — hakem topun yanına varınca (en geç 14 sn) top 1 m'den bırakılır (olay hakemTopuBirak, hakemde eylem 'birak');
+     yere değince oyun başlar (kullanan oynar). Döner: kullanılabilir mi */
+  hakemTopuBirak(du){
+    const r=this.refs[0],b=this.ball;
+    if(du.birak==null){if(hyp(r.x-du.x,r.z-du.z)>1.4&&du.t<14)return false;
+      du.birak=this.t;b.tasiyan=null;b.x=du.x;b.z=du.z;b.y=1.0;b.vx=b.vy=b.vz=0;this.topDegisti();
+      r.eylem={ad:'birak',t:0,sure:0.7};this.on('hakemTopuBirak',{takim:du.takim,x:du.x,z:du.z});return false;}
+    if(b.y>0.12&&this.t-du.birak<1.2)return false;
+    if(b.y<0.12){b.y=0;b.vy=0;b.vx=b.vz=0;}
+    return hyp(r.x-du.x,r.z-du.z)>=2||this.t-du.birak>2.5;},   /* hakem çekilmeden oynanmaz (top hakeme çarpıyordu) */
 
   /* ============ yerleşim (T8a; eski mac-kurallar.js durusYerlesim) ============
      Görevliler hedeflerine (adam: adamının kale tarafında 0,9 m); baraj (T8c'ye kadar eski kural); 9,15 m kuralı; taç */
@@ -364,20 +378,25 @@ Object.assign(Match.prototype,{
     const ke=du.asama==='kullan'&&tk&&tk.eylem&&tk.eylem.ad==='vurus'?tk.eylem:null,kos=!!ke&&ke.kalan<0.55&&du.rutin!=='kisa';
     if(du.gorev)for(const [p,g] of du.gorev){if(!p.oyunda||p===tk)continue;
       /* adam markajı: adamının 0,3 sn sonraki yerinin kale tarafında 0,8 m (koşuyu okur; vuruştan sonra duranRolKonum aynı) */
-      if(g.rol==='adam'&&g.hedef){const o=g.hedef;if(o.oyunda){const og=this.dir[o.team]*PL,ox=o.x+o.vx*0.3,oz=o.z+o.vz*0.3,L=hyp(og-ox,MZ-oz)||1;g.hx=ox+(og-ox)/L*0.8;g.hz=oz+(MZ-oz)/L*0.8;}}
+      /* T10d: adamı kendi görev yerinden 6 m'den uzaktaysa markajcı o yerin kale tarafında bekler (adamının önünde geri geri koşup kutuya gelen
+         koşucuyu 3 m/sn'ye kilitliyordu: görevliler yerinde %71) */
+      if(g.rol==='adam'&&g.hedef){const o=g.hedef;if(o.oyunda){const og=this.dir[o.team]*PL,go=du.gorev.get(o),uzak=!!go&&go.hx!=null&&hyp(o.x-go.hx,o.z-go.hz)>6;
+        const ox=uzak?go.hx:o.x+o.vx*0.3,oz=uzak?go.hz:o.z+o.vz*0.3,L=hyp(og-ox,MZ-oz)||1;g.hx=ox+(og-ox)/L*0.8;g.hz=oz+(MZ-oz)/L*0.8;}}
       if(g.hx==null)continue;
       if(kos&&g.kx!=null){p.tx=g.kx;p.tz=g.kz;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);continue;}
       /* görevli yerine düzenli koşar (efor 0,8: T1 hız kipleri 8 m içinde yürütüyordu, hareket eden adamına yetişemiyordu), yerinde ağır */
-      const e=hyp(p.x-g.hx,p.z-g.hz);p.tx=g.hx;p.tz=g.hz;p.hizOran=e>15?0.85:e>8?0.7:e>2?0.55:0.4;p.bak=b;
+      /* T10d: 6 sn'den sonra yerine varmamış görevli hızlanır (T8'den: görevliler yerinde %76–78, hedef ≥ %80; geç kalanlar kutuya kendi yarısından
+         gelen koşucular, kullanımda hedeflerine ortanca 5,8 m) */
+      const e=hyp(p.x-g.hx,p.z-g.hz),acil=du.t>6&&e>3;p.tx=g.hx;p.tz=g.hz;p.hizOran=acil?0.95:e>15?0.85:e>8?0.7:e>2?0.55:0.4;p.bak=b;
       /* markajcı koşan adamını tam eforla izler */
       if(g.rol==='adam'&&g.hedef&&g.hedef.spd>2){p.hizOran=e>1?1:0.8;p.yonHedef=null;this.eforVer(p,1);continue;}
-      if(p.rol!=='GK'){p.yonHedef=null;this.eforVer(p,e>1.2||g.rol==='adam'?0.8:0.45);}}
+      if(p.rol!=='GK'){p.yonHedef=null;this.eforVer(p,acil?1:e>1.2||g.rol==='adam'?0.8:0.45);}}
     if(du.tur==='serbest'||du.tur==='kaleVurusu'){
       /* T8c: baraj görevlerden (barajKur; yerleri gorev döngüsünde): üyeler topa bakar */
       if(du.barajdakiler)for(const p of du.barajdakiler){if(p.oyunda&&p.duranRol&&p.duranRol.rol==='baraj'){p.bak=b;p.yonHedef=du.barajAci;}}
       /* 9,15 m: savunan takım topa yaklaşmaz (çabuk serbest vuruşta itilmez); kale vuruşunda ceza sahası dışında kalır */
       if(!du.hizli)for(const p of this.sahadakiler(savunan)){if(du.barajdakiler&&du.barajdakiler.includes(p))continue;if(p.rol==='GK'&&du.tur==='serbest')continue;
-        const dx=p.tx-du.x,dz=p.tz-du.z,L=hyp(dx,dz);if(L<9.6){const s=9.6/(L||1);p.tx=du.x+dx*s;p.tz=du.z+dz*s;}
+        const dx=p.tx-du.x,dz=p.tz-du.z,L=hyp(dx,dz),R=du.hakemTopu?4.5:9.6;if(L<R){const s=R/(L||1);p.tx=du.x+dx*s;p.tz=du.z+dz*s;}   /* T10d: hakem topunda 4 m */
         if(du.tur==='kaleVurusu'){const u=p.tx*this.dir[du.takim];if(u<-PL+CEZA_U+1&&Math.abs(p.tz-MZ)<CEZA_W+1)p.tx=this.dir[du.takim]*(-PL+CEZA_U+1.5);}}
     }else if(du.tur==='tac'){
       for(const p of this.sahadakiler(savunan)){const L=hyp(p.tx-du.x,p.tz-du.z);if(L<2.5){p.tz=du.z<MZ?Math.max(p.tz,2.8):Math.min(p.tz,PW-2.8);}}

@@ -75,10 +75,11 @@ module.exports={
         if(v&&v.p&&KAY[ad])sonOlay={ad,p:v.p,t:m.t};
         if(ad==='korner'){const b=m.ball,s=b.sonDokunan;let k='diger';
           if(s&&sonOlay&&sonOlay.p===s&&m.t-sonOlay.t<4)k=KAY[sonOlay.ad]||'diger';kKay[k]++;return;}
-        if(ad==='kullanim'){const tur=v.tur;if(!N.hasOwnProperty(tur))return;N[tur]++;const p=v.p,t=v.takim,d=m.dir[t],du=v.du,hz=v.hazirlik;
+        if(ad==='kullanim'){const tur=v.tur;if(!N.hasOwnProperty(tur))return;if(tur==='serbest'&&v.du&&v.du.hakemTopu)return;   /* T10d: hakem topu ayrı (o-olay) */
+          N[tur]++;const p=v.p,t=v.takim,d=m.dir[t],du=v.du,hz=v.hazirlik;
           if(hz>=27.9)zorla++;
           const u=v.x*d,dz=Math.abs(v.z-K_MZ),sinif=tur!=='serbest'?null:du&&du.baraj?'baraj':u<=0?'geri':u>K_PL-35&&dz>12?'kenar':'uzak';
-          const hk=tur==='serbest'?(sinif==='baraj'||sinif==='kenar'?sinif:'serbest'):tur;if(HZ[hk])HZ[hk].push(hz);
+          const hk=tur==='serbest'?(sinif==='baraj'||sinif==='kenar'?sinif:'serbest'):tur;if(HZ[hk]&&!(du&&(du.zgEk>0||du.sakatBekledi)))HZ[hk].push(hz);   /* T10d: zaman geçirilen ve sakatlık tedavisini bekleyen duruş hazırlığa girmez (o-olay) */
           if(du&&du.yerinde!==undefined&&(tur==='korner'||sinif==='baraj'||sinif==='kenar')){tehlike++;if(du.yerinde)yerinde++;}
           if(tur==='korner'){if(kAlt[v.alt]!=null)kAlt[v.alt]++;if(v.bolge&&kBol[v.bolge]!=null)kBol[v.bolge]++;
             const A=m.teams[t].filter(q=>q.oyunda&&q.rol!=='GK'&&q!==p),D=m.teams[1-t].filter(q=>q.oyunda&&q.rol!=='GK');

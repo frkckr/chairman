@@ -8,7 +8,9 @@
    faul 15 (+15 kart), penaltı 60, avantajdan dönen faul 15 sn), zaman geçirme göstergesi (önde olan takımın kullandığı taç, korner, kale vuruşu ve
    serbest vuruşta duruşun süresi: 75. dakikadan önce ve sonra), topa çarpan hakem, sakatlık (olay sakatlik {tur, derece: agri|tedavi|cikis};
    T10c'de türe göre kas ve kramp; uzatmaya sakatlığın eklediği hakemTopu.ek), maç boyu yorgunluk (44. ve 89. dakika) ve gollerin zamanı
-   (T10c). Rastlantı çekmez, maçı değiştirmez. */
+   (T10c); T10d: zaman geçirme (uyarı, sarı, uzatmaya eklenen), hakem topu (kaynak, ceza sahasında kaleciye, bırakıldı mı), ofsayt (yanlış bayrak,
+   görülmeyen ofsayt, yan hakemin doğru karar payı, bayrağın gecikmesi, gol iptali, görülmeyen ofsayttan gol), gerideki takımın topu ağdan alması
+   ve santraya süresi. Rastlantı çekmez, maçı değiştirmez. */
 const OO_ZG=75*60;   /* zaman geçirme göstergesinin sınırı (maç saati, sn) */
 const OO_TUR=new Set(['tac','korner','kaleVurusu','serbest']);
 const ooOrt=L=>L.length?L.reduce((a,b)=>a+b,0)/L.length:NaN;
@@ -25,6 +27,7 @@ module.exports={
     ['Kutuda verilmeyen hava faulü / maç','oKutuHava',2],
     ['Kırmızı görüp 12 sn sonra sahada kalan / maç','oKirmiziSahada',2,[0,0,'T10']],
     ['Gol → santra (sn)','oGolSantra',1,[20,35,'T10']],
+    ['Gol → santra: gerideki takım topu ağdan aldı (sn; T10d)','oGolSantraAcele',1],['Topu ağdan alan gerideki takım / maç','oAgdan',2],
     ['Değişiklik: dakika ort.','oDegDk',1],
     ['Değişiklik: süre (sn; olaydan oyuncu girene)','oDegSure',1],
     ['Değişiklik: gerideki takımın dakikası ort. (T10c)','oDegGeriDk',1],['Değişiklik: önde ya da berabereyken dakika ort.','oDegDigerDk',1],
@@ -37,6 +40,13 @@ module.exports={
     ['Zaman geçirme: öndeki takımın duruşu, 75. dk öncesi (sn)','oZgOnce',1],
     ['Zaman geçirme: öndeki takımın duruşu, 75. dk sonrası (sn)','oZgSonra',1],
     ['Topa çarpan hakem / maç','oHakemeCarpti',2],
+    /* T10d: zaman geçirme (uyarı, sarı, uzatmaya eklenen) ve hakem topu (kaynağa göre; bırakıldı mı) */
+    ['Zaman geçirme: uyarı / maç','oZgUyari',2],['Zaman geçirme: sarı / maç','oZgSari',2],['Uzatma kaynağı: zaman geçirme (sn / maç)','oUzZg',0],
+    /* T10d: ofsayt — yan hakemin kararı (ofsayt olayında yanlis, ofsaytKacti), bayrağın gecikmesi, gol iptali, görülmeyen ofsayttan 8 sn içinde gol */
+    ['Ofsayt: yanlış bayrak (gerçekte değil) / maç','oOfsYanlis',2],['Ofsayt: görülmeyen (bayrak kalkmadı) / maç','oOfsKacti',2],
+    ['Ofsayt: yan hakemin doğru karar payı %','oOfsDogru',1],['Ofsayt: bayrağın gecikmesi ort. (sn)','oOfsGec',2],
+    ['Gol iptali / maç: ofsayt','oIptalOfs',2],['Gol iptali / maç: hakeme çarpan top','oIptalHakem',2],['Görülmeyen ofsayttan gol / maç','oOfsGol',2],
+    ['Hakem topu / maç: sakatlık','oHtSak',2],['Hakem topu / maç: hakeme çarpan top','oHtHakem',2],['Hakem topu: ceza sahasında kaleciye %','oHtKutu',1],['Hakem topu: bırakıldı %','oHtBirak',1],
     /* T10b: yeni faul kaynaklarının girişimleri (çalınan faul c-beden "Faul kaynağı"), itiraz sarısı ve hakem kişiliği (sertliğe göre kırılım ozet'te) */
     ['Tutma (girişim) / maç','oTutma',2],['Elle oynama (olay) / maç','oEl',2],['Elle oynama: penaltı / maç','oElPen',2],
     ['İtiraz sarısı / maç','oItiraz',2],['Hakem: sertlik ort.','oSertlik',2],
@@ -51,8 +61,8 @@ module.exports={
   ],
   yeni:()=>{
     let hkT=0,hkN=0,hk530=0,golT=null,golH=0,onceki=null,du=null;
-    const faulD=[],gor={n:0,g:0},gorB=[[0,0],[0,0],[0,0]],kirmizi=[],golSantra=[],degDk=[],degGeriDk=[],degDigerDk=[],degGeriFv=[0,0],degSure=[],degBas=new Map(),zgOnce=[],zgSonra=[];
-    let kutuHava=0,kirmiziSahada=0,uzGol=0,uzDeg=0,uzFaul=0,uzPen=0,uzSak=0,sakKas=0,sakKramp=0,yorg45=NaN,yorg90=NaN,golN=0,golIlk=0,golSon=0,golIki=0,hakemeCarpti=0,sakDur=0,sakCik=0,sakAgri=0,tutma=0,el=0,elPen=0,itiraz=0,sertlik=NaN;const pen=[0,0,0,0,0];
+    const ofsGec=[],kactiT=[-99,-99],faulD=[],gor={n:0,g:0},gorB=[[0,0],[0,0],[0,0]],kirmizi=[],golSantra=[],golSantraAcele=[],degDk=[],degGeriDk=[],degDigerDk=[],degGeriFv=[0,0],degSure=[],degBas=new Map(),zgOnce=[],zgSonra=[];
+    let kutuHava=0,kirmiziSahada=0,uzGol=0,uzDeg=0,uzFaul=0,uzPen=0,uzSak=0,sakKas=0,sakKramp=0,yorg45=NaN,yorg90=NaN,golN=0,golIlk=0,golSon=0,golIki=0,zgUyari=0,zgSari=0,agdan=0,golAcele=false,ofsYanlis=0,ofsKacti=0,ofsN=0,iptalOfs=0,iptalHakem=0,ofsGol=0,uzZg=0,htSak=0,htHakem=0,htKutu=0,htBirak=0,hakemeCarpti=0,sakDur=0,sakCik=0,sakAgri=0,tutma=0,el=0,elPen=0,itiraz=0,sertlik=NaN;const pen=[0,0,0,0,0];
     const hakemUzak=(m,x,z)=>{const r=m.refs&&m.refs[0];return r?Math.hypot(r.x-x,r.z-z):NaN;};
     const gorme=(m,x,z,goruldu)=>{const d=hakemUzak(m,x,z);if(Number.isNaN(d))return;faulD.push(d);gor.n++;if(!goruldu)gor.g++;
       const b=gorB[d<15?0:d<25?1:2];b[0]++;if(!goruldu)b[1]++;};
@@ -60,7 +70,7 @@ module.exports={
       dinle(ad,v,m){
         if(!m)return;
         if(m.hakem&&sertlik!==sertlik)sertlik=m.hakem.sertlik;
-        if(ad==='tutma')tutma++;else if(ad==='elleOynama')el++;else if(ad==='kart'&&v.neden==='itiraz')itiraz++;
+        if(ad==='tutma')tutma++;else if(ad==='elleOynama')el++;else if(ad==='kart'&&v.neden==='itiraz')itiraz++;else if(ad==='kart'&&v.neden==='zaman')zgSari++;
         if(ad==='faul'&&v.neden==='el'&&v.penalti)elPen++;
         if(ad==='faul'&&v.penalti&&!v.avantajdan){const k=v.kaynak;pen[k==='mudahale'||k==='kayma'?0:k==='tutma'||k==='carpma'||k==='omuz'||k==='basma'?1:k==='hava'||k==='kaleci'?2:k==='el'?3:4]++;}
         if(ad==='faul'){
@@ -69,9 +79,16 @@ module.exports={
         else if(ad==='avantaj'){const q=v.faulYiyen;if(q)gorme(m,q.x,q.z,true);}
         else if(ad==='faulGorulmedi'){if(v.kaynak==='hava'&&v.P===0.5)kutuHava++;else gorme(m,v.x,v.z,false);}
         else if(ad==='kart'){if(v.renk==='kirmizi'||v.renk==='ikinciSari')kirmizi.push({p:v.p,t:m.t});}
-        else if(ad==='goal'){uzGol+=50;golT=m.t;golH=m.half;golN++;if(m.half===2)golIki++;if(m.gameSec<900)golIlk++;else if(m.half===2&&m.gameSec>=4500)golSon++;}
-        else if(ad==='hakemTopu')uzSak+=v.ek||0;
-        else if(ad==='kickoff'){if(golT!=null&&golH===m.half)golSantra.push(m.t-golT);golT=null;}
+        else if(ad==='goal'){if(m.t-kactiT[v.team]<8)ofsGol++;uzGol+=50;golT=m.t;golH=m.half;golN++;if(m.half===2)golIki++;if(m.gameSec<900)golIlk++;else if(m.half===2&&m.gameSec>=4500)golSon++;}
+        else if(ad==='hakemTopu'){uzSak+=v.ek||0;if(v.neden==='hakem')htHakem++;else htSak++;if(v.kutu)htKutu++;}
+        else if(ad==='hakemTopuBirak')htBirak++;
+        else if(ad==='zamanGecirme')uzZg+=v.ek*9/3;
+        else if(ad==='uyari'&&v.neden==='zaman')zgUyari++;
+        else if(ad==='kickoff'){if(golT!=null&&golH===m.half)(golAcele?golSantraAcele:golSantra).push(m.t-golT);golT=null;golAcele=false;}
+        else if(ad==='topuAgdanAldi'){agdan++;golAcele=true;}
+        else if(ad==='ofsayt'){ofsN++;if(v.yanlis)ofsYanlis++;if(v.gecikme)ofsGec.push(v.gecikme);}
+        else if(ad==='ofsaytKacti'){ofsKacti++;if(v.p)kactiT[v.p.team]=m.t;}
+        else if(ad==='golIptal'){if(v.neden==='ofsayt')iptalOfs++;else iptalHakem++;}
         else if(ad==='degisiklik'){uzDeg+=30;degDk.push(m.gameSec/60);degBas.set(v.giren,m.t);
           if(!v.sakatlik){if(v.skor==='geri'){degGeriDk.push(m.gameSec/60);degGeriFv[1]++;if(v.giren&&v.giren.rol==='FV')degGeriFv[0]++;}else degDigerDk.push(m.gameSec/60);}}
         else if(ad==='oyuncuGirdi'){const t0=degBas.get(v.giren);if(t0!=null){degSure.push(m.t-t0);degBas.delete(v.giren);}}
@@ -90,10 +107,10 @@ module.exports={
         for(let i=kirmizi.length-1;i>=0;i--){const k=kirmizi[i];if(!k.p.oyunda){kirmizi.splice(i,1);continue;}
           if(m.t-k.t>12){kirmiziSahada++;kirmizi.splice(i,1);}}},
       bitir(){
-        return{oHkTop:hkN?hkT/hkN:NaN,oHkFaul:ooOrt(faulD),oKutuHava:kutuHava,oKirmiziSahada:kirmiziSahada,oGolSantra:ooOrt(golSantra),
-          oDegDk:ooOrt(degDk),oDegGeriDk:ooOrt(degGeriDk),oDegDigerDk:ooOrt(degDigerDk),oDegSure:ooOrt(degSure),oUzGol:uzGol,oUzDeg:uzDeg,oUzFaul:uzFaul,oUzPen:uzPen,oUzSak:uzSak,oSakKas:sakKas,oSakKramp:sakKramp,oYorg45:yorg45,oYorg90:yorg90,oZgOnce:ooOrt(zgOnce),oZgSonra:ooOrt(zgSonra),
+        return{oHkTop:hkN?hkT/hkN:NaN,oHkFaul:ooOrt(faulD),oKutuHava:kutuHava,oKirmiziSahada:kirmiziSahada,oGolSantra:ooOrt(golSantra),oGolSantraAcele:ooOrt(golSantraAcele),oAgdan:agdan,
+          oDegDk:ooOrt(degDk),oDegGeriDk:ooOrt(degGeriDk),oDegDigerDk:ooOrt(degDigerDk),oDegSure:ooOrt(degSure),oUzGol:uzGol,oUzDeg:uzDeg,oUzFaul:uzFaul,oUzPen:uzPen,oUzSak:uzSak,oZgUyari:zgUyari,oZgSari:zgSari,oOfsYanlis:ofsYanlis,oOfsKacti:ofsKacti,oOfsGec:ooOrt(ofsGec),oIptalOfs:iptalOfs,oIptalHakem:iptalHakem,oOfsGol:ofsGol,oUzZg:uzZg,oHtSak:htSak,oHtHakem:htHakem,oSakKas:sakKas,oSakKramp:sakKramp,oYorg45:yorg45,oYorg90:yorg90,oZgOnce:ooOrt(zgOnce),oZgSonra:ooOrt(zgSonra),
           oHakemeCarpti:hakemeCarpti,oSakDur:sakDur,oSakCik:sakCik,oSakAgri:sakAgri,oTutma:tutma,oEl:el,oElPen:elPen,oItiraz:itiraz,oSertlik:sertlik,oPenMud:pen[0],oPenTut:pen[1],oPenHava:pen[2],oPenEl:pen[3],oPenDiger:pen[4],
-          ham:{oDegGeriFv:degGeriFv,oGolIlk15:[golIlk,golN],oGolSon15:[golSon,golN],oGolIkinci:[golIki,golN],oHk530:[hk530,hkN],oGorulmeyen:[gor.g,gor.n],oGor15:[gorB[0][1],gorB[0][0]],oGor25:[gorB[1][1],gorB[1][0]],oGorUzak:[gorB[2][1],gorB[2][0]]}};}};
+          ham:{oOfsDogru:[ofsN-ofsYanlis,ofsN+ofsKacti],oHtKutu:[htKutu,htSak+htHakem],oHtBirak:[htBirak,htSak+htHakem],oDegGeriFv:degGeriFv,oGolIlk15:[golIlk,golN],oGolSon15:[golSon,golN],oGolIkinci:[golIki,golN],oHk530:[hk530,hkN],oGorulmeyen:[gor.g,gor.n],oGor15:[gorB[0][1],gorB[0][0]],oGor25:[gorB[1][1],gorB[1][0]],oGorUzak:[gorB[2][1],gorB[2][0]]}};}};
   },
   /* T10b: hakemin sertliğine göre maç başına faul ve sarı (sert: ≥ 0,6, yumuşak: ≤ 0,4; kabul: sert hakemde ikisi de belirgin yüksek) */
   ozet(sonuclar){

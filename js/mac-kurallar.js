@@ -17,7 +17,13 @@ ayarEkle('Kurallar',{
   hakemFaul:0.3,               // T10b: sertliğin faul eşiğine etkisi: eşik − hakemFaul × (sertlik − 0,5) (uçlarda ±0,12; 40'ar maç: sertlik 0,9 → faul 6,8 / sarı 2,6, 0,1 → 4,8 / 1,6 — gerçekte hakemden hakeme ±%15 / ±%25; 0,12'de faul farkı yalnız %5'ti)
   hakemKart:0.25,              // T10b: sertliğin kart eşiğine etkisi (uçlarda ±0,1)
   hakemYorgun:0.15,            // T10b: 75. dakikadan sonra yorgunluk: görme × (1 − f·(1,3 − kondisyon)·hakemYorgun), koşu temposu da düşer (Ek G7: son 15 dakikada hata %23)
-  itirazKart:0.035             // T10b: itiraz başına sarı olasılığı (× hakemeItiraz eğilimi, × hakemin sertliği; gerçekte itiraz sarısı maç başına ~0,3)
+  itirazKart:0.035,            // T10b: itiraz başına sarı olasılığı (× hakemeItiraz eğilimi, × hakemin sertliği; gerçekte itiraz sarısı maç başına ~0,3)
+  /* T10d: yan hakemin ofsayt kararı (ofsaytPasAni): algılanan fark = gerçek + hizalanma hatası + hareket yanılgısı + gürültü */
+  ofsaytLag:0.06,              // T10d: hareket yanılgısı (flash-lag, sn): ileri koşan hücumcu ve geri çekilen çizgi bu kadar ileride/geride görülür
+  ofsaytHata:0.3,              // T10d: yan hakemin yargı gürültüsü (m, standart sapma; o-ofsayt: ucu ucuna hata ~%15–20, hataların çoğu yanlış bayrak)
+  ofsaytPay:0.15,              // T10d: şüphede bayrak inmez — algılanan fark bundan büyükse bayrak (m)
+  ofsaytBayrak:[0.35,0.65],    // T10d: dokunuştan bayrağa tepki (sn)
+  ofsaytBekle:0.4              // T10d: “bekle ve gör” — ucu ucuna pozisyonda (algılanan |fark| < 1 m) bayrak bu kadar daha geç (sn); bu sürede gol olursa iptal
 });
 const HAKEM_ALAN=['sertlik','avantaj','dikkat','kondisyon','evEgilim'];
 function hakemKisilik(g,tohum){const S=MOTOR_AYAR.hakemSabit,o={};
@@ -28,6 +34,8 @@ const hkDeger=(m,k)=>m.hakem?m.hakem[k]:0.5;
 const hkYorgun=m=>m.half===2?clamp((m.gameSec-4500)/900,0,1)*(1.3-hkDeger(m,'kondisyon'))*MOTOR_AYAR.hakemYorgun:0;
 const hkFaulEsik=m=>MOTOR_AYAR.faulEsik-MOTOR_AYAR.hakemFaul*(hkDeger(m,'sertlik')-0.5);
 const hkKartEsik=m=>MOTOR_AYAR.kartEsik-MOTOR_AYAR.hakemKart*(hkDeger(m,'sertlik')-0.5);
+/* T10d: zaman geçirmede duran topun ek hazırlığının tabanı (sn; × yoğunluk × 0,6–1,4; zamanGecirEk) */
+const ZG_TABAN={tac:3.5,kaleVurusu:6,serbest:3,korner:2.5};
 /* orta hakemin görme çarpanı: dikkat (0,94–1,06) × (1 − yorgunluk) */
 const hkGorme=m=>(0.94+0.12*hkDeger(m,'dikkat'))*(1-hkYorgun(m));
 Object.assign(Match.prototype,{
@@ -61,10 +69,10 @@ Object.assign(Match.prototype,{
       const giren=hucumcu&&cikan.rol!=='DEF'?hucumcu:savunmaci&&cikan.rol==='OS'?savunmaci:yedek.find(y=>y.rol===cikan.rol)||yedek[0];
       plan.shift();
       giren.oturuyor=false;giren.tx=0;giren.tz=-0.7;giren.hizOran=0.5;giren.bak=cikan;
-      /* çıkan oyuncu en yakın çizgiden çıkar; ana tribün tarafındaysa kulübeye yürür */
-      cikan.hizOran=0.35;
+      /* çıkan oyuncu en yakın çizgiden çıkar; ana tribün tarafındaysa kulübeye yürür. T10d: öndeki takımın çıkanı son dakikalarda yavaş yürür */
+      cikan.hizOran=0.35*(1-0.5*(this._niyet?this._niyet[t].zamanGecir:0));
       this.degisiklik={t,cikan,giren,t0:this.t,girdi:false};
-      this.duranSure[this.half-1]+=30;
+      this.uzatmaBirikim[this.half-1]+=30;
       this.on('degisiklik',{takim:t,cikan,giren,skor:fark<0?'geri':fark>0?'onde':'esit'});
       return;}
   },
@@ -90,7 +98,7 @@ Object.assign(Match.prototype,{
     if(!giren)return false;
     const plan=this.degisimPlani[t];if(plan.length)plan.shift();
     const dg={t,cikan:p,giren,t0:this.t,girdi:false,sakatlik:true};
-    this.duranSure[this.half-1]+=30;this.on('degisiklik',{takim:t,cikan:p,giren,sakatlik:true});
+    this.uzatmaBirikim[this.half-1]+=30;this.on('degisiklik',{takim:t,cikan:p,giren,sakatlik:true});
     giren.oturuyor=false;
     if(aninda){this.degisiklikTakas(dg);const k=p.koltuk;p.oturuyor=true;p.x=p.tx=k.x;p.z=p.tz=k.z;p.vx=p.vz=0;return true;}
     giren.tx=0;giren.tz=-0.7;giren.hizOran=0.6;giren.bak=p;
@@ -205,18 +213,24 @@ Object.assign(Match.prototype,{
 
   /* ============ duran toplar ============ */
   durusBaslat(tur,takim,x,z,veri){
+    /* T10d: bayrağı bekleyen ofsayt varken oyun başka sebeple durursa önce ofsayt çalınır (ilk ihlal) */
+    if(this.ofsaytBekleyen&&!(veri&&veri.ofsayt)){const o=this.ofsaytBekleyen;this.ofsaytCal(o.p,o);return;}
     const b=this.ball;
     this.phase='durus';this.phaseT=0;
     for(const p of this.players){if(p.eylem&&!p.eylem.kilit)p.eylem=null;p.surus=null;p.kosu=null;p.destek=null;p.yonHedef=null;}
-    b.sahip=null;b.hedefOyuncu=null;b.sut=null;b.pas=null;b.ofsaytta=null;b.endirekt=null;b.tac=null;b.kullanim=null;
+    b.sahip=null;b.hedefOyuncu=null;b.sut=null;b.pas=null;b.ofsaytta=null;b.endirekt=null;b.tac=null;b.kullanim=null;b.hakemDegdi=null;
     const du=Object.assign({tur,takim,x,z,t:0,asama:'bekle',kullanan:null,topcu:null,hazirT:0},veri||{});
     this.durus=du;
+    /* T10d: zaman geçirme (öndeki takım; hakem topu ve penaltı hariç) */
+    if(!du.hakemTopu&&tur!=='penalti'){du.zgEk=this.zamanGecirEk(takim,ZG_TABAN[tur]||0);if(du.zgEk>0)du.hizli=false;}
     du.kullanan=this.kullananSec(du);
     this.duranGorevAta(du);   /* T8a: görevler profilden (js/mac-durantop.js) */
     this.hocaKapisi();   /* T7a: hoca kapısı — m.hoca geri çağrısı varsa her duruşta sorulur (js/mac-takim.js) */
     /* taç, korner, aut ve saha dışında kalan top: top toplayıcı yedek topu verir (N10). Faulde top sahadadır; atan alıp yerine taşır */
     b.tasiyan=null;
     if(tur==='tac'||tur==='korner'||tur==='kaleVurusu'||Math.abs(b.x)>PL+0.2||b.z<-0.2||b.z>PW+0.2)this.durusTopu(du);
+    /* T10d: penaltıda top noktaya konur (hakem gösterir; kullanan topu taşımaz, noktaya yürür — T8'den penaltı hazırlığı 14–16 sn, hedef 8–12) */
+    else if(tur==='penalti'){b.tasiyan=null;b.x=x;b.z=z;b.y=0;b.vx=b.vy=b.vz=0;this.topDegisti();}
     /* T10b (T10 teşhisi hata 5): avantaj sürerken oyun durdu — avantaj kapanır, kart bu duruşta gösterilir (eskiden oyun dönünce kapanıyor, kart bir
        duruş geç kalıyordu). Avantajdan kalan kart ilk duruşta gösterilir */
     if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:!!a.tuttu});if(a.kart)this.bekleyenKart=a;}
@@ -232,7 +246,7 @@ Object.assign(Match.prototype,{
   },
   kullananSec(du){
     const tm=this.sahadakiler(du.takim);
-    if(du.tur==='kaleVurusu')return this.kaleci(du.takim);
+    if(du.tur==='kaleVurusu'||du.kaleciye)return this.kaleci(du.takim)||tm[0];   /* T10d: ceza sahasındaki hakem topu kaleciye */
     let en=null,ep=1e9;
     for(const p of tm){if(p.rol==='GK'&&du.tur!=='serbest')continue;
       let c=hyp(p.x-du.x,p.z-du.z);
@@ -307,7 +321,8 @@ Object.assign(Match.prototype,{
         if(!yer&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5){tk.hizOran=du.kisaGeri?0.6:0.3;this.eforVer(tk,0.8);}}
       /* T8d: uzun taçta atan topu başının üstünde tutarak çizginin 3 m gerisine yürür (koşu için) */
       let tacHazir=true;if(du.tur==='tac'&&du.tacGeri){const G=du.tacGeri;tk.tx=G.x;tk.tz=G.z;tk.hizOran=0.3;tk.yonHedef=Math.atan2(MZ-G.z,0);tk.bak=null;tacHazir=hyp(tk.x-G.x,tk.z-G.z)<0.5||du.hazirT>4;}
-      const degisimBekle=this.degisiklik&&!this.degisiklik.girdi||this.sakatlikBekletir();   /* T10c: tedavi ve sedye sürerken de bekler */
+      const sakatBekle=this.sakatlikBekletir();if(sakatBekle)du.sakatBekledi=true;   /* T10d: ölçüm (k-duran hazırlığı sakatlık bekleyişini ayırır) */
+      const degisimBekle=this.degisiklik&&!this.degisiklik.girdi||sakatBekle;   /* T10c: tedavi ve sedye sürerken de bekler */
       /* T8a: kullanım koşulu (hazırlık penceresi, görevliler yerinde, el işareti; js/mac-durantop.js duranHazirMi) */
       if(!degisimBekle&&tacHazir&&!(du.kisaGeri&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5)&&this.duranHazirMi(du,tk))this.durusKullan(du);
     }else if(du.asama==='kullan'){
@@ -326,6 +341,7 @@ Object.assign(Match.prototype,{
   durusKullan(du){
     const tk=du.kullanan,b=this.ball,d=this.dir[du.takim];
     this.sonKullanim={tur:du.tur,p:tk,t:this.t};
+    if(du.zgEk>0)this.zamanGecirmeGoruldu(tk,du.zgEk);   /* T10d */
     /* T8b (inceleme bulgusu): görevliler kullanım anında yerinde miydi (k-duran ölçümü; yalnız okur) */
     if(this.duranTehlikeli(du)||du.tur==='penalti')du.yerinde=this.gorevlilerYerinde(du);
     this.kullanimBaslat(du.tur,tk,du,this.t-du.t);   /* T8-0: kullanım bayrağı; olay kullananın ilk dokunuşunda (js/mac-durantop.js) */
@@ -394,6 +410,18 @@ Object.assign(Match.prototype,{
     this.kayit.kartlar.push({ad:p.name,no:p.no,takim:p.team,renk,neden:neden||null,dakika:Math.floor(this.gameSec/60)+1});   /* T10c: maçın kaydı */
     this.on('kart',{p,renk,aleyhe:p.team,takim:p.team,neden:neden||null});   /* T10b: neden (itiraz …; faul kartının gerekçesi faul olayındadır) */
   },
+  /* T10d: zaman geçirme — öndeki takım son dakikalarda (niyetin zamanGecir'i, maç durumunun koru'su 0–1): duran topu geç kullanır (durusBaslat
+     zgEk: taç 3,5 · kale vuruşu 6 · serbest 3 · korner 2,5 sn × yoğunluk × 0,6–1,4; js/mac-durantop.js duranHazirMi bekler), kaleci topu elinde
+     tutar (js/mac-kaleci.js kaleciElde), çıkan oyuncu yavaş yürür. Hakem görür: kaybın üçte birini uzatmaya ekler (maç saati; gerçekte de
+     eksik ekler), 3 sn'den uzun gecikmede uyarır (olay uyari; 0,25 + 0,3·(sertlik − 0,5)), uyarıdan sonra tekrarında sarı (neden 'zaman'; aynı
+     olasılık), takım başına bir kez */
+  zamanGecirEk(t,taban){const N=this._niyet&&this._niyet[t],z=N?N.zamanGecir:0;return z>0.05&&taban>0?taban*z*(0.6+0.8*this.rast()):0;},
+  zamanGecirmeGoruldu(p,ek){
+    if(!p||!(ek>0))return;this.uzatmaBirikim[this.half-1]+=ek*GPR/3;this.on('zamanGecirme',{p,ek});
+    const Z=this.zgUyari,t=p.team;if(ek<3||Z[t]>=2)return;
+    if(this.rast()>=0.25+0.3*(hkDeger(this,'sertlik')-0.5))return;
+    if(!Z[t]){Z[t]=1;this.on('uyari',{p,neden:'zaman'});}else{Z[t]=2;this.kartGoster(p,'sari','zaman');}
+  },
   itirazEt(yapan){
     let n=0;for(const q of this.teams[yapan.team]){if(!q.oyunda||q.rol==='GK'||n>=2)continue;
       if(hyp(q.x-yapan.x,q.z-yapan.z)<14&&this.rast()<0.55){q.eylem={ad:'itiraz',t:0,sure:1.4+this.rast()};n++;
@@ -409,31 +437,71 @@ Object.assign(Match.prototype,{
     for(const p of this.players)if(p.eylem&&p.eylem.ad==='kayma')this.kaymaTemas(p);
     this.tutmaAdim();   /* T10b: markajda tutma (js/mac-mudahale.js) */
     this.avantajAdim(dt);
+    this.hakemDegdiAdim();   /* T10d: hakeme çarpan top el değiştirdiyse hakem topu */
+    this.ofsaytBekleAdim();   /* T10d: geç kalkan ofsayt bayrağı */
   },
+  /* T10d: hakem topu (2019 kuralı; §7.6) — topu son oynayan takımın bir oyuncusuna, son dokunuşun yerinde; top ceza sahasındaysa savunan
+     takımın kalecisine. Hakem noktaya gelir ve topu bırakır (duranHazirMi → hakemTopuBirak, js/mac-durantop.js), top yere değince oyun başlar;
+     rakipler en az 4 m uzakta, doğrudan gol olmaz (endirekt). Kaynaklar: sakatlık (js/mac-sakatlik.js hakemTopuDurdur), hakeme çarpan top
+     (hakemDegdiAdim). veri: olaya eklenir (sakatlıkta p, ek) */
+  hakemTopuBaslat(takim,x,z,neden,veri){
+    x=clamp(x,-PL+1,PL-1);z=clamp(z,1,PW-1);
+    const kutu=Math.abs(x)>PL-CEZA_U&&Math.abs(z-MZ)<CEZA_W;if(kutu)takim=this.dir[0]===-Math.sign(x)?0:1;
+    this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};this.on('hakemTopu',Object.assign({takim,x,z,neden,kutu},veri||{}));
+    this.durusBaslat('serbest',takim,x,z,{bekle:1.0,endirekt:true,hakemTopu:true,kaleciye:kutu,duduk:true,hizli:false});
+  },
+  /* T10d (2019): top hakeme çarptı (js/mac-mudahale.js govdeCarpmasi b.hakemDegdi) ve sonraki dokunuş öbür takımınsa oyun durur, hakem topu
+     topu son oynayan takıma çarpmanın yerinde; aynı takım dokunursa ya da 8 sn geçerse bir şey olmaz. Doğrudan kaleye giren top gol değildir (golIptalMi) */
+  hakemDegdiAdim(){const b=this.ball,H=b.hakemDegdi;if(!H)return;
+    if(b.sonDokunan!==H.dokunan){b.hakemDegdi=null;if(b.sonTakim!==H.takim)this.hakemTopuBaslat(H.takim,H.x,H.z,'hakem');}
+    else if(this.t-H.t>8)b.hakemDegdi=null;},
 
   /* ============ ofsayt ============ */
-  /* pas anında: pası alan takımın rakip yarıda, toptan ve sondan ikinci savunmacıdan önde olan oyuncuları */
+  /* pas anında yan hakemin değerlendirmesi. T10d (gerçekçilik planı T10 madde 3; Ek G7): çizgi sondan ikinci savunmacı (top öndeyse top); yan
+     hakem gerçek farkı hatasız görmez — algılanan fark = gerçek fark + hizalanma hatası (yan hakem çizginin hizasında değilse bakış açısı:
+     (x_yh − x_çizgi)·(z_oyuncu − z_çizgi)/(z_çizgi − z_yh), ±3 katla sınırlı) + hareket yanılgısı (ofsaytLag × ileri hız farkı: koşan hücumcu
+     ileride, geri çekilen çizgi geride görülür) + gürültü (ofsaytHata); şüphede bayrak inmez (ofsaytPay). Gerçekte ucu ucuna pozisyonda yan
+     hakemin hatası ~%25, çoğu yanlış bayrak (Helsen 2006). liste: bayrak kalkacaklar; kacan: gerçekte ofsaytta olup görülmeyenler */
   ofsaytPasAni(p){
     const b=this.ball,son=this.sonKullanim;
     if(son&&son.p===p&&this.t-son.t<1.5&&(son.tur==='tac'||son.tur==='korner'||son.tur==='kaleVurusu')){b.ofsaytta=null;return;}
-    const t=p.team,d=this.dir[t],cizgi=ofsaytCizgisi(this,t),bu=b.x*d,liste=[];
-    for(const q of this.teams[t]){if(q===p||!q.oyunda)continue;const qu=q.x*d;if(qu>0&&qu>bu+0.05&&qu>cizgi+0.05)liste.push({q,fark:qu-Math.max(cizgi,bu)});}
-    b.ofsaytta=liste.length?{takim:t,liste,t:this.t}:null;
+    const t=p.team,d=this.dir[t],bu=b.x*d,A=MOTOR_AYAR;
+    let s1=null,s2=null;for(const o of this.teams[1-t]){if(!o.oyunda)continue;const u=o.x*d;if(!s1||u>s1.x*d){s2=s1;s1=o;}else if(!s2||u>s2.x*d)s2=o;}
+    const cu=Math.max(s2?s2.x*d:0,0),topCizgi=bu>cu,cizgi=Math.max(cu,bu),ref=topCizgi||!s2?{x:cizgi*d,z:topCizgi?b.z:MZ,vx:0}:s2;
+    const liste=[],kacan=[];
+    for(const q of this.teams[t]){if(q===p||!q.oyunda)continue;const qu=q.x*d;if(qu<=0)continue;const f=qu-cizgi;if(f<-1.5)continue;
+      const yh=q.x>0?this.refs[1]:this.refs[2],k=clamp((q.z-ref.z)/((ref.z-yh.z)||1e-3),-3,3);
+      const algi=f+(yh.x-cizgi*d)*d*k+A.ofsaytLag*((q.vx||0)-(ref.vx||0))*d+this.normal()*A.ofsaytHata;
+      if(algi>A.ofsaytPay)liste.push({q,fark:f,algi});else if(f>0.05)kacan.push({q,fark:f,algi});}
+    b.ofsaytta=liste.length||kacan.length?{takim:t,liste,kacan,t:this.t}:null;
   },
+  /* ofsayttaki oyuncu topa dokundu: bayrak tepkiyle (ofsaytBayrak), ucu ucuna pozisyonda “bekle ve gör” ile daha geç kalkar (ofsaytBekle); o
+     sürede oyun sürer, gol olursa iptal (golIptalMi), başka duruş olursa önce ofsayt çalınır (durusBaslat). Görülmeyen ofsayt: olay ofsaytKacti */
   ofsaytDokunus(p,kasitli){
     const b=this.ball,o=b.ofsaytta;if(!o)return;
     if(p.team!==o.takim){if(kasitli)b.ofsaytta=null;return;}
-    const k=o.liste.find(a=>a.q===p);b.ofsaytta=null;
-    if(!k)return;
-    /* çok yakın pozisyonda yan hakem bayrağı kaldırmayabilir */
-    if(k.fark<0.4&&this.rast()<0.35*(1-k.fark/0.4))return;
-    this.ofsaytCal(p);
+    const k=o.liste.find(a=>a.q===p),kc=k?null:o.kacan.find(a=>a.q===p);b.ofsaytta=null;
+    if(kc){this.on('ofsaytKacti',{p,fark:kc.fark});return;}
+    if(!k||this.ofsaytBekleyen)return;
+    const A=MOTOR_AYAR,g=A.ofsaytBayrak[0]+this.rast()*(A.ofsaytBayrak[1]-A.ofsaytBayrak[0])+(Math.abs(k.algi)<1?A.ofsaytBekle:0);
+    this.ofsaytBekleyen={p,t:this.t+g,g,x:p.x,z:p.z,fark:k.fark,yanlis:k.fark<=0.05};
   },
-  ofsaytCal(p){
-    const yh=p.x>0?this.refs[1]:this.refs[2];yh.eylem={ad:'bayrak',t:0,sure:2.6,tur:'ofsayt'};
-    this.ist.ofsayt[p.team]++;this.on('ofsayt',{p,aleyhe:p.team});this.ofsaytJesti(p);   /* T7f: savunmacılar kol kaldırır */
+  ofsaytBekleAdim(){const o=this.ofsaytBekleyen;if(o&&this.t>=o.t){this.ofsaytBekleyen=null;this.ofsaytCal(o.p,o);}},
+  /* o: bekleyen bayrak {x, z (dokunuşun yeri), fark, yanlis, g (gecikme)} */
+  ofsaytCal(p,o){
+    o=o||{x:p.x,z:p.z,fark:null,yanlis:false,g:0};this.ofsaytBekleyen=null;
+    const yh=o.x>0?this.refs[1]:this.refs[2];yh.eylem={ad:'bayrak',t:0,sure:2.6,tur:'ofsayt'};
+    this.ist.ofsayt[p.team]++;this.on('ofsayt',{p,aleyhe:p.team,fark:o.fark,yanlis:o.yanlis,gecikme:o.g});this.ofsaytJesti(p);   /* T7f: savunmacılar kol kaldırır */
     this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};
-    this.durusBaslat('serbest',1-p.team,clamp(p.x,-PL+1,PL-1),clamp(p.z,1,PW-1),{bekle:1.6,endirekt:true,ofsayt:true,duduk:true});
+    this.durusBaslat('serbest',1-p.team,clamp(o.x,-PL+1,PL-1),clamp(o.z,1,PW-1),{bekle:1.2,endirekt:true,ofsayt:true,duduk:true});
+  },
+  /* T10d: gol iptali — bekleyen ofsayt bayrağı (yan hakem geç kaldırdı: önce ofsayt) ya da hakeme çarpıp doğrudan kaleye giren top (2019: hakem
+     topu). Döner: gol iptal edildi mi (gol() başta sorar) */
+  golIptalMi(side){
+    const b=this.ball,o=this.ofsaytBekleyen,H=b.hakemDegdi;
+    if(o){this.topDisari();this.on('golIptal',{takim:o.p.team,p:o.p,neden:'ofsayt',yanlis:o.yanlis});this.ofsaytCal(o.p,o);return true;}
+    if(H&&b.sonDokunan===H.dokunan){b.hakemDegdi=null;this.topDisari();this.on('golIptal',{takim:H.takim,p:null,neden:'hakem',yanlis:false});this.hakemTopuBaslat(H.takim,H.x,H.z,'hakem');return true;}
+    return false;
   },
 
   /* ============ hakemler ============ */

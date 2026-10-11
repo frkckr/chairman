@@ -245,10 +245,10 @@ Object.assign(Match.prototype,{
     for(const q of this.teams[1-p.team]){if(!q.oyunda)continue;const d=hrkHyp(q.x-b.x,q.z-b.z);if(d<en){en=d;o=q;}}
     if(!o||this.rast()>=mdhGorme(this,b.x,b.z,p,o))return false;
     const x=clamp(b.x,-PL+0.3,PL-0.3),z=clamp(b.z,0.3,PW-0.3);
-    this.ist.faul[p.team]++;this.duranSure[this.half-1]+=15;p.eylem=null;
+    this.ist.faul[p.team]++;this.uzatmaBirikim[this.half-1]+=15;p.eylem=null;
     this.on('faul',{faulYapan:p,faulYiyen:o,takim:o.team,aleyhe:p.team,x,z,penalti:false,kart:null,neden:'yuksekAyak',kaynak:'yuksekAyak',endirekt:true,siddet:0});
     this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};
-    this.durusBaslat('serbest',o.team,x,z,{bekle:1.2+this.rast()*0.4,endirekt:true,duduk:true});
+    this.durusBaslat('serbest',o.team,x,z,{bekle:0.9+this.rast()*0.4,endirekt:true,duduk:true});
     return true;
   },
   /* ============ T10b: markajda tutma (forma çekme; gerçekçilik planı §4 T10 madde 3, Ek G4) ============
@@ -298,7 +298,7 @@ Object.assign(Match.prototype,{
       if((b.vx-(p.vx||0))*dx+(b.vz-(p.vz||0))*dz>=0)return false;
       if(!hakem&&this.elleOynamaDene(p))return true;   /* T10b: elle oynama (çalındıysa oyun durdu) */
       this.yansit(p,0.3,0.25);
-      if(hakem){this.topDegisti();this.on('hakemeCarpti',{p});}
+      if(hakem){this.topDegisti();b.hakemDegdi={takim:b.sonTakim,dokunan:b.sonDokunan,t:this.t,x:b.x,z:b.z};this.on('hakemeCarpti',{p});}   /* T10d: hakemDegdiAdim */
       else{if(b.sut&&p.team!==b.sut.team){b.sut=null;p.eylem={ad:'blok',t:0,sure:0.45};this.on('block',{p,v});}else this.on('sekme',{p});
         this.dokunus(p,false);p.kickCd=0.3;}
       return true;};
@@ -580,11 +580,11 @@ Object.assign(Match.prototype,{
     if(!penalti&&kart!=='kirmizi'&&c<0.8&&this.avantajVar(yiyen,yu,ayakta)){
       this.avantaj={t:this.t,kare:this.kare,takim:yiyen.team,x,z,kart,yapan,yiyen,neden,tuttu:false,u0:b.x*yd};this.refs[0].eylem={ad:'avantaj',t:0,sure:1.4};
       this.on('avantaj',{takim:yiyen.team,aleyhe:yapan.team,faulYapan:yapan,faulYiyen:yiyen,neden,siddet:c,omuz:!!v.omuz,kartNeden,kaynak:v.kaynak||null});return;}
-    this.duranSure[h]+=penalti?60:15+(kart?15:0);
+    this.uzatmaBirikim[h]+=penalti?60:15+(kart?15:0);
     this.on('faul',{faulYapan:yapan,faulYiyen:yiyen,takim:yiyen.team,aleyhe:yapan.team,x,z,penalti,kart,neden,siddet:c,omuz:!!v.omuz,kartNeden,kaynak:v.kaynak||null});
     this.refs[0].eylem={ad:penalti?'penaltiGoster':'duduk',t:0,sure:1.0};
     this.durusBaslat(penalti?'penalti':'serbest',yiyen.team,penalti?this.dir[yiyen.team]*(PL-PENALTI_U):x,penalti?MZ:z,
-      {bekle:1.0+(kart?2.2:0)+this.rast()*0.6,kart,faulYapan:yapan,duduk:true});   /* T8a: düdük ve itiraz 1,4–2,2 → 1,0–1,6 sn (serbest vuruş hazırlığı 3–6 sn) */
+      {bekle:0.8+(kart?2.0:0)+this.rast()*0.4,kart,faulYapan:yapan,duduk:true});   /* T8a: düdük ve itiraz 1,4–2,2 → 1,0–1,6 sn; T10d: 0,8–1,2 sn, kartta +2 (serbest vuruş hazırlığı 3–6 sn) */
     if(kart)this.kartGoster(yapan,kart);
     this.itirazEt(yapan);
   },
@@ -614,8 +614,8 @@ Object.assign(Match.prototype,{
     const kayip=b.sahip&&b.sahip.team!==a.takim,geri=a.u0-b.x*this.dir[a.takim]>=10;
     if(el<2.5&&(kayip||geri)||!a.tuttu&&el>1.5){/* avantaj gerçekleşmedi: faule dön */this.avantaj=null;
       this.on('faul',{faulYapan:a.yapan,faulYiyen:a.yiyen,takim:a.takim,aleyhe:a.yapan.team,x:a.x,z:a.z,penalti:false,kart:a.kart,neden:a.neden,avantajdan:true});this.on('avantajSonuc',{tutuldu:false});
-      this.duranSure[this.half-1]+=15;this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};
-      this.durusBaslat('serbest',a.takim,a.x,a.z,{bekle:1.2+(a.kart?2:0),kart:a.kart,faulYapan:a.yapan,duduk:true});if(a.kart)this.kartGoster(a.yapan,a.kart);}
+      this.uzatmaBirikim[this.half-1]+=15;this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};
+      this.durusBaslat('serbest',a.takim,a.x,a.z,{bekle:1.0+(a.kart?2:0),kart:a.kart,faulYapan:a.yapan,duduk:true});if(a.kart)this.kartGoster(a.yapan,a.kart);}
     else if(el>=2.5){this.avantaj=null;if(a.kart)this.bekleyenKart=a;this.on('avantajSonuc',{tutuldu:true});}
   }
 });

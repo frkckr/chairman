@@ -49,7 +49,7 @@ const NIYET_PARAM={
   savunma: {risk:1,   sakin:0,    tempo:0,    direkt:0,    genislik:1,   derinlik:0, bekIleri:1,  kosu:1,  bekCik:true}
 };
 Object.assign(Match.prototype,{
-  niyetYeni(){return{ad:'savunma',t0:0,genislik:1,derinlik:0,bekIleri:1,kosu:1,bekCik:true,blok:0,duranGecikme:0,faulIstek:1,stoperIleri:null,alti:null,basan:0,uzun:false,kompakt:1,
+  niyetYeni(){return{ad:'savunma',t0:0,genislik:1,derinlik:0,bekIleri:1,kosu:1,bekCik:true,blok:0,duranGecikme:0,zamanGecir:0,faulIstek:1,stoperIleri:null,alti:null,basan:0,uzun:false,kompakt:1,
     durum:{fark:0,kalanDk:90,adamFark:0,acele:0,koru:0,eksik:0}};},
   /* takimAI'dan her adım (sahiplik takibinden sonra): niyetYenile sn'de bir, sahiplik takımı değişince ya da duruş başlayıp bitince yeniden hesaplanır */
   niyetAdim(dt,du){
@@ -74,7 +74,7 @@ Object.assign(Match.prototype,{
     N.genislik=1+k*(P.genislik-1);N.derinlik=k*P.derinlik;N.bekIleri=1+k*(P.bekIleri-1);N.kosu=1+k*(P.kosu-1);N.bekCik=k?P.bekCik:true;
     /* savunma çizgisi: geride kalan takım öne çıkar, öndeki ve eksik kalan geri çekilir (m) */
     N.blok=k*(4*D.acele-3*D.koru-3*D.eksik);
-    N.duranGecikme=k*2*D.koru;N.faulIstek=1+k*0.6*D.koru;
+    N.duranGecikme=k*2*D.koru;N.faulIstek=1+k*0.6*D.koru;N.zamanGecir=k*D.koru;   /* T10d: zaman geçirme yoğunluğu (js/mac-kurallar.js zamanGecirEk) */
     N.stoperIleri=k&&D.acele>0.6&&ad!=='savunma'?this.ileriStoper(t):null;
     N.kompakt=k&&ad==='savunma'?1-k*A.kompakt:1;   /* T7d: savunmada hatlar sıkışır (dizilisKonumu) */
     /* T7b: kurma — altı numara, basan rakip sayısı ve +1 üstünlüğü (kaleci dahil); sağlanamıyorsa uzun (etkin direkt +0,4) */
