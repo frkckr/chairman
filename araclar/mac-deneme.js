@@ -65,7 +65,7 @@ const HEDEF=[
   ['Korner','korner',2,6],
   ['Taç','tac',5,12],
   ['Kale vuruşu','kaleVurusu',2.5,8],
-  ['Faul','faul',8,14],
+  ['Faul','faul',4,9],   // T10g kararı (2026-10-11; gerçekçilik planı §7 madde 11 ve “T10 — Sonuç”): 8–14 → 4–9
   ['Sarı kart','sari',1.5,3.5],
   ['Kırmızı kart','kirmizi',0,0.2],
   ['Ofsayt','ofsayt',0.3,2],
@@ -75,7 +75,7 @@ const HEDEF=[
   ['Yan pas %','yanOran',35,58],
   ['Geri pas %','geriOran',10,25],
   ['Uzun pas %','uzunOran',10,24],
-  ['Hava topu mücadelesi','havaTopu',6,15],
+  ['Hava topu mücadelesi','havaTopu',4,10],   // T10g kararı (2026-10-11; “T10 — Sonuç”): 6–15 → 4–10
   ['Uzatma 1. yarı (dk)','uzatma1',1,4],
   ['Uzatma 2. yarı (dk)','uzatma2',3,7],
   ['Değişiklik (takım başına)','degisiklik',2,4],

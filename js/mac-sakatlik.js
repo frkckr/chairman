@@ -77,9 +77,10 @@ Object.assign(Match.prototype,{
   /* her adım (oyun, duruş, gol, santra): akış, kenardaki sağlıkçılar, topallama; oyunda 6 karede bir temassız sakatlık zarı */
   sakatlikAdim(dt){
     this.sakatlikAkisAdim(dt);if(this.tedavideBekleyen.length)this.tedavidenDonus();
-    for(const s of this.kenar)if(s.kind==='saglikci'&&!s.gorev){s.tx=s.ev.x;s.tz=s.ev.z;s.hizOran=0.35;s.poz=null;s.bak=hyp(s.x-s.ev.x,s.z-s.ev.z)<1.5?this.ball:null;s.yonHedef=null;}
+    if(this.kare%6)return;   /* T10g (hız): boştaki sağlıkçılar, topallamanın bitişi ve temassız zar 6 karede bir */
+    for(const s of this.kenar)if(s.kind==='saglikci'&&!s.gorev){s.tx=s.ev.x;s.tz=s.ev.z;s.hizOran=0.35;s.poz=null;s.bak=null;s.yonHedef=hyp(s.x-s.ev.x,s.z-s.ev.z)<1.5?Math.PI/2:null;}   /* T10g: yerinde sahaya dönük */
     for(const p of this.players)if(p.topal&&this.t>p.topal.son)p.topal=null;
-    if(this.phase!=='play'||this.kare%6)return;
+    if(this.phase!=='play')return;
     const ds=dt*6,son=this.half===2&&this.gameSec>4200;
     for(const p of this.players){if(!p.oyunda||p.sakat||p.eylem&&p.eylem.kilit)continue;
       const y=p.yorgunluk||0,yt=skYatkinlik(p);

@@ -14,7 +14,7 @@
      (+ geç, − erken; sn; tepe = süre/2).
    - Sonra: bölümden sonraki 3 sn içinde topa ilk sahip olan takım; atan takım tuttu %.
    - Hava faulü: 'faul', 'avantaj' ya da 'faulGorulmedi' olayında neden ya da kaynak 'hava'.
-   Bantlar (T6 kabulü, gerçekçilik planı §4 T6): hava faulü 0,8–2,5/maç; hava topu mücadelesinin bandı (6–15) hedef tablosunda. */
+   Bantlar (T6 kabulü, gerçekçilik planı §4 T6): hava faulü 0,8–2,5/maç; hava topu mücadelesinin bandı hedef tablosunda (6–15; T10g'de 4–10, gerçekçilik planı “T10 — Sonuç”). */
 'use strict';
 const H_KAYNAK=['orta','korner','serbest','uzunTop','havaPas','uzaklastirma','kaleVurusu','kaleci','kafa','tac','sekme','sut','diger'];
 const H_KAYNAK_AD={orta:'orta',korner:'korner',serbest:'serbest vuruş',uzunTop:'uzun top (≥ 32 m)',havaPas:'havadan pas',uzaklastirma:'uzaklaştırma',

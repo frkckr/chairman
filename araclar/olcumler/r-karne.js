@@ -17,8 +17,9 @@ module.exports={
     ['Hareket: ortalama hız (m/dk)','rHizDk',0,[140,180,'T1']],['Hareket: >3 m/sn² ivmelenme / oyuncu·dk','rIvme',1,[null,5,'T1']],
     ['Top ayakta: ortanca (sn)','rAyakta',2,[1.2,2.0,'T2']],['Top ayakta: 1 sn\'den kısa %','rAyaktaKisa',1,[null,45,'T2']],['Top taşıma: >5 m %','rTasima',1,[25,35,'T2']],
     /* T7g (2026-10-10, §7.7 kararı): sıkıştırılmış maçta sahiplik sayısı oyun dakikası başına gerçeğin ~2 katı, pas sayısı aynı → sahiplik başına
-       pas gerçeğin yarısı; bant 2,5–4 (gerçek) → 1,6–3 */
-    ['Sahiplik: tamamlanan pas ort.','rSeqPas',2,[1.6,3,'T7']],['Sahiplik: ortalama süre (sn)','rSeqSure',1],['Sahiplik: pas yapılamadan biten %','rSeqBos',1,[null,25,'T2']],
+       pas gerçeğin yarısı; bant 2,5–4 (gerçek) → 1,6–3. T10g (2026-10-11, aynı karardan): pas yapılamadan biten sahiplik ≤ 25 → ≤ 45 (sahiplik
+       başına 1,6–3 pasta sıfır paslı pay geometrik dağılımla %25–38, düelloyla başlayan kısa sahiplikler artırır; “T10 — Sonuç”) */
+    ['Sahiplik: tamamlanan pas ort.','rSeqPas',2,[1.6,3,'T7']],['Sahiplik: ortalama süre (sn)','rSeqSure',1],['Sahiplik: pas yapılamadan biten %','rSeqBos',1,[null,45,'T10']],
     /* T2 (2026-10-07): 10+ paslı sahiplik, pasın alıcısı (karar katmanının hedeflediği arkadaş; oyuncu-karnesi.js'teki gruplarla aynı), pas boyu */
     ['Sahiplik: 10+ paslı %','rSeq10',1,[3,null,'T2']],
     ['Pas alıcısı: forvet %','rAliciForvet',1,[null,30,'T2']],['Pas alıcısı: kanat %','rAliciKanat',1,[15,null,'T2']],['Pas boyu ort. (m)','rPasBoy',1,[16,20,'T2']]]

@@ -15,7 +15,8 @@
      hücumun kafa şutu, hücumun diğer kafası, savunmanın kafası, hücumun ayak şutu (gelişine), hücum topu aldı, savunma topu aldı, uzaklaştırma,
      top oyun dışı; hiçbiri olmazsa “diğer”. Hava düellosu (m.ist.havaTopu arttı) ayrıca sayılır.
    - Serbest vuruş bölgesi: duruşun yeri kale ortasına ≤ 30 m (yakın) ya da uzak. Barajlı doğrudan serbest vuruşta şut başına gol T8 bandıdır
-     (%6–10; d-duran senaryosunun [barajlı] tanımıyla aynı). */
+     (%6–10; d-duran senaryosunun [barajlı] tanımıyla aynı). T10g (2026-10-11): maç içi satır bilgidir — 80 maçta ~45 şut (σ ≈ 4 puan; T8 tabanında
+     %16, T10'da %2,2); kapı d-duran'ın barajlı hücreleri (80'er şut). */
 const S_PL=52.5,S_MZ=34;
 const S_KAYNAK=['acik','ortaKafa','ortaAyak','geriCevir','korner','serbest','dogrudan','penalti','tac'];
 const S_KAYNAK_AD={acik:'açık oyun',ortaKafa:'ortadan kafa',ortaAyak:'ortadan ayak',geriCevir:'geri çevirmeden',korner:'korner',
@@ -36,7 +37,7 @@ module.exports={
     .concat(S_ORTA.map(k=>['Orta sonucu: '+S_ORTA_AD[k]+' %','sO_'+k,1]))
     .concat([['Korner başına şut','sKornerSut',2],
       ['Serbest vuruş / maç','sSerbestMac',2],['Serbest vuruş: yakın (≤30 m) / maç','sSerbestYakin',2],['Serbest vuruş: yakında doğrudan şut %','sSerbestYakinSut',1],
-      ['Barajlı doğrudan serbest vuruş / maç','sBarajliSut',2],['Barajlı doğrudan serbest vuruşta şut başına gol %','sBarajliGol',1,[6,10,'T8']],
+      ['Barajlı doğrudan serbest vuruş / maç','sBarajliSut',2],['Barajlı doğrudan serbest vuruşta şut başına gol %','sBarajliGol',1],
       ['Kafa şutu / maç','sKafaSut',2],['Kafa şutu: çerçeveye giden %','sKafaCer',1],['Gol / şut: kafa (bütün kaynaklar) %','sKafaGol',1]]),
   yeni:()=>{
     const hyp=Math.hypot;

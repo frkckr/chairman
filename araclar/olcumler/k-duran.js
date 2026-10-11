@@ -5,7 +5,8 @@
    Kullanım anı motorun 'kullanim' olayıdır (js/mac-durantop.js; kullananın topa ilk dokunuşu: vuruş, taç atışı, sürüş ya da kalecinin topu eline
    alması), duruşun başı değil. Tanımlar:
    - Hazırlık: duruşun başından kullanıma (sn). Tehlikeli duran top (korner, barajlı ve kenar serbest vuruşu) 10–14 sn (§7 madde 5); taç 3–6, kale
-     vuruşu 4–8, diğer serbest vuruş 3–6, penaltı 8–12 (T8a kararı). Zorla: 28 sn'lik güvenlik ağıyla kullanılan.
+     vuruşu 4–8, diğer serbest vuruş 3–6, penaltı 8–12 (T8a kararı; T10g'de kale vuruşu 4–10, diğer serbest vuruş 3–8 — gerçekte bu duruşlar taçtan
+     uzun sürer, kornerin sıkıştırmasıyla: gerçekçilik planı “T10 — Sonuç”). Zorla: 28 sn'lik güvenlik ağıyla kullanılan.
    - Serbest vuruş sınıfı: barajlı (duruşta baraj kuruldu), kenar (barajsız, kaleye 35 m'den yakın ve kale ortasından 12 m'den yanda), uzak
      (barajsız, rakip yarı), geri (kendi yarısı).
    - Korner: kullanımda ceza sahasındaki hücumcu ve savunmacı (kaleci ve kullanan hariç), geride kalan (kendi yarısında) hücumcu ve hız özelliği
@@ -22,7 +23,7 @@
 const K_PL=52.5,K_MZ=34,K_CU=16.5,K_CW=20.16;
 const K_TUR=['korner','serbest','tac','kaleVurusu','penalti'],K_TUR_AD={korner:'korner',serbest:'serbest vuruş',tac:'taç',kaleVurusu:'kale vuruşu',penalti:'penaltı'};
 const K_HZ=[['korner','korner',[10,14,'T8']],['baraj','barajlı serbest vuruş',[10,14,'T8']],['kenar','kenar serbest vuruşu',[10,14,'T8']],
-  ['serbest','diğer serbest vuruş',[3,6,'T8']],['tac','taç',[3,6,'T8']],['kaleVurusu','kale vuruşu',[4,8,'T8']],['penalti','penaltı',[8,12,'T8']]];
+  ['serbest','diğer serbest vuruş',[3,8,'T10']],['tac','taç',[3,6,'T8']],['kaleVurusu','kale vuruşu',[4,10,'T10']],['penalti','penaltı',[8,12,'T8']]];
 const K_ILK=['hucumKafa','savunmaKafa','kaleci','hucumAyak','savunmaAyak','yere','disari','yok'];
 const K_ILK_AD={hucumKafa:'hücumun kafası',savunmaKafa:'savunmanın kafası',kaleci:'kaleci',hucumAyak:'hücum (ayak, gövde)',savunmaAyak:'savunma (ayak, gövde)',
   yere:'yere düştü',disari:'oyun dışı',yok:'4 sn içinde yok'};

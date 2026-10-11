@@ -271,6 +271,14 @@ Object.assign(Match.prototype,{
     const c=MOTOR_AYAR.yorgunlukHiz;
     for(const p of this.players)if(p.oyunda){const k=p.spd/p.maxSpd;p.yorgunluk=hrkMin(1,p.yorgunluk+dt*(0.00053+0.0016*k*k)*(1.25-p.oz.dayaniklilik)*c);}
   },
+  /* T10g (hız): ısınan yedeğin basit hareketi — saha dışında, kimseyle etkileşmez: hedefe sabit tempoda (hız oranı × tepe hızın %55'i, varışta
+     yavaşlar), 4 m/sn² ivme ve 6 rad/sn dönüşle; tam fizik (moveP) maçta adım başına ~%3 süre alıyordu. Oyuna giren yedek moveP ile yürür */
+  isinmaHareket(p,dt){const dx=p.tx-p.x,dz=p.tz-p.z,d=hrkHyp(dx,dz),vh=d<0.05?0:hrkMin(p.hizOran*p.maxSpd*0.55,hrkKok(8*d));
+    const ux=d>1e-3?dx/d:0,uz=d>1e-3?dz/d:0,ax=ux*vh-p.vx,az=uz*vh-p.vz,a=hrkHyp(ax,az),lim=4*dt;
+    if(a>lim){p.vx+=ax/a*lim;p.vz+=az/a*lim;}else{p.vx+=ax;p.vz+=az;}
+    p.x+=p.vx*dt;p.z+=p.vz*dt;p.spd=hrkHyp(p.vx,p.vz);
+    if(p.spd>0.3){const f=hrkAciFark(hrkAtan2(p.vz,p.vx),p.yon),o=6*dt;p.yon=hrkAciNorm(p.yon+clamp(f,-o,o));}
+    p.kip=hrkKipAdi(p.spd);},
   /* T10c: devre arasında yorgunluk devreDinlenme payı kadar azalır (js/mac-oncesi.js stepBreak, ikinci yarı başlarken) */
   devreDinlen(){for(const p of this.players)if(p.yorgunluk>0)p.yorgunluk*=1-MOTOR_AYAR.devreDinlenme;},
   /* ============ hareket ============ */
@@ -283,8 +291,9 @@ Object.assign(Match.prototype,{
     this._hrkOyun=!carpismaYok;
     for(const p of P)if(p.oyunda||p.cikiyor)this.moveP(p,dt);
     for(const r of this.refs)this.moveP(r,dt);
-    for(const Y of this.yedekler)for(const p of Y)if(!p.oturuyor)this.moveP(p,dt);
-    if(this.kenar)for(const p of this.kenar)if(!p.oturuyor)this.moveP(p,dt);
+    for(const Y of this.yedekler)for(const p of Y)if(!p.oturuyor){if(p.isiniyor&&!(this.degisiklik&&this.degisiklik.giren===p))this.isinmaHareket(p,dt);else this.moveP(p,dt);}   /* T10g (hız) */
+    /* T10g (hız): görevsiz sağlıkçı yerinde dururken hareket hesabından geçmez (sahaya dönük bekler; adım başına 4 tam moveP'ydi) */
+    if(this.kenar)for(const p of this.kenar)if(!p.oturuyor&&!(p.kind==='saglikci'&&!p.gorev&&p.vx===0&&p.vz===0&&hrkHyp(p.tx-p.x,p.tz-p.z)<0.04&&hrkAbs(hrkAciFark(p.yon,Math.PI/2))<0.02))this.moveP(p,dt);
     if(carpismaYok)return;
     /* gövdeler: kütle (boy, yapı, sertlik) çarpışmayı paylaştırır. Üst üste binme ağır olanı daha az iter; birbirine doğru gelen hızların
        ortak kısmı paylaşılır (esnek olmayan çarpışma): güçlü oyuncu omuz omuza mücadelede yerini korur. Hakemler de engeldir.

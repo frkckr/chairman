@@ -84,7 +84,7 @@ Object.assign(Match.prototype,{
      her hattan biri; kulübe tarafındaki çizginin dışında, kulübeden köşeye doğru 7–25 m'de hafif koşar (p.isiniyor, p.isinma; olay isinma).
      Değişiklik ısınanlardan yapılır (degisiklikBaslat, zorunluDegisiklik). Devre ya da maç sonunda kulübeye otururlar (js/mac-oncesi.js) */
   isinmaAdim(dt){
-    if(this.half!==2)return;
+    if(this.half!==2||this.kare%6)return;   /* T10g (hız): 6 karede bir (hedefler ve şerit ucu; ~0,25 m yol) */
     for(let t=0;t<2;t++){const Y=this.yedekler[t],kb=this.kulubeler[t],s=kb.alan.x>=0?1:-1,dg=this.degisiklik;
       const I=Y.filter(p=>p.isiniyor&&!p.cikti&&!(dg&&dg.giren===p));
       const plan=this.degisimPlani[t],bas=Math.max(3300,(plan.length?plan[0]:5400)-600);
