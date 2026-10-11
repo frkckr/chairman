@@ -503,7 +503,7 @@ class Match{
     /* T5: orta bloğu topun bacağa vardığı anda (ortaBlok, js/mac-mudahale.js) */
     const OB=b.ortaBlok;if(OB){if(OB.surum!==b.surum||!OB.o.oyunda||OB.o.eylem&&OB.o.eylem.kilit)b.ortaBlok=null;else if(this.t>=OB.t){b.ortaBlok=null;this.ortaBlokUygula(OB);return;}}
     this.sicramalar();   /* T6a: sıçrama planı (js/mac-hava.js) */
-    const ad=[],ks=b.sut&&b.sut.cerceve?b.sut.team:-1;
+    const ad=[],ks=b.sut&&b.sut.cerceve&&!b.sut.direk&&b.sonDokunan===b.sut.by?b.sut.team:-1;   /* T8f: direkten ya da bedenden dönen top oynanır */
     for(const p of this.players){
       if(!p.oyunda||p.kickCd>0)continue;const e=p.eylem;
       if(e&&(e.kilit||e.ad==='tac'))continue;

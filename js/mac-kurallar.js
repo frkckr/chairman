@@ -253,13 +253,13 @@ Object.assign(Match.prototype,{
     }else if(du.asama==='hazir'){
       du.hazirT+=dt;
       if(du.tur!=='tac'){const yer=du.yerT!=null&&du.t-du.yerT<0.6;tk.tx=yer?tk.x:du.geriX;tk.tz=yer?tk.z:du.geriZ;tk.hizOran=0.4;tk.yonHedef=du.aci;tk.bak=null;b.x=du.x;b.z=du.z;b.vx=b.vz=0;
-        /* T8a: geri adımlar düzenli (efor 0,8, yavaş; 3–7 m geri çekilme T1 hız kipinde ~3 sn sürüyordu) */
-        if(!yer&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5){tk.hizOran=0.3;this.eforVer(tk,0.8);}}
+        /* T8a: geri adımlar düzenli (efor 0,8, yavaş; 3–7 m geri çekilme T1 hız kipinde ~3 sn sürüyordu); T8f: topa yürüyüş (kisaGeri) 0,6 */
+        if(!yer&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5){tk.hizOran=du.kisaGeri?0.6:0.3;this.eforVer(tk,0.8);}}
       /* T8d: uzun taçta atan topu başının üstünde tutarak çizginin 3 m gerisine yürür (koşu için) */
       let tacHazir=true;if(du.tur==='tac'&&du.tacGeri){const G=du.tacGeri;tk.tx=G.x;tk.tz=G.z;tk.hizOran=0.3;tk.yonHedef=Math.atan2(MZ-G.z,0);tk.bak=null;tacHazir=hyp(tk.x-G.x,tk.z-G.z)<0.5||du.hazirT>4;}
       const degisimBekle=this.degisiklik&&!this.degisiklik.girdi;
       /* T8a: kullanım koşulu (hazırlık penceresi, görevliler yerinde, el işareti; js/mac-durantop.js duranHazirMi) */
-      if(!degisimBekle&&tacHazir&&this.duranHazirMi(du,tk))this.durusKullan(du);
+      if(!degisimBekle&&tacHazir&&!(du.kisaGeri&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5)&&this.duranHazirMi(du,tk))this.durusKullan(du);
     }else if(du.asama==='kullan'){
       /* T8a: kullananın koşusu ve vuruşu (vuruş eylemi) sürerken duruş sürer, oyun temasta başlar (kullanimBildir); kullanan vuruştan vazgeçerse
          (hat kapandı, süre doldu, ıska) oyun başlar ve yeniden karar verir */
@@ -283,17 +283,19 @@ Object.assign(Match.prototype,{
     if(du.tur==='tac'){const e=tk.eylem;if(e&&e.ad==='tac'&&e.faz==='tut'){e.ft=0;
       if(du.tacUzun){const U=this.tacUzunSecenegi(du,tk,false)||du.tacUzun,nk=this.durusNoktasi(du);e.uzun=U;e.hedef=U.q;e.faz='kosu';e.kx=nk.x;e.kz=nk.z;}
       else{e.faz='at';e.hedef=this.tacHedefi(tk);}}return;}
-    if(!du.hizli&&(du.duduk||du.tur==='penalti'||du.baraj))this.on('duduk',{tur:du.tur});
+    if(!du.hizli&&(du.duduk||du.tur==='penalti'||du.baraj)&&!du.dudukCalindi){du.dudukCalindi=true;this.on('duduk',{tur:du.tur});}
     b.tasiyan=null;b.x=du.x;b.z=du.z;b.y=0;b.vx=b.vz=b.vy=0;b.ust=0;this.topDegisti();
     tk.x=du.geriX;tk.z=du.geriZ;if(tk.eylem&&!tk.eylem.kilit)tk.eylem=null;
     this.sahipYap(tk);
     /* dolaylı serbest vuruş: başka bir oyuncu dokunmadan gol olmaz (Match.gol) */
     b.endirekt=du.endirekt?{p:tk}:null;
-    const sec=this.durusSecenegi(du,tk);
+    const sec=du.kisaGeri?null:this.durusSecenegi(du,tk);   /* T8f: topa yürüdükten sonra ilk karar (sürdürme) geçerlidir, yeniden zar atılmaz */
     if(sec){sec.duran=true;du.asama='kullan';this.vurusBaslat(tk,sec);if(du.tur==='penalti')this.penaltiKaleciHazirla(du);return;}
-    /* T8b (inceleme bulgusu): vuruş seçeneği yoksa (kenar ve barajlı serbest vuruşun şutsuz payı; karar T8c) kullanan topun en çok 1,3 m
-       gerisinde başlar. Geri çekildiği 3–7 m'de oyun başlarsa sahiplik ilk karede düşüyor, top kimsenin değilken 9,15 m kuralı kalkıyordu */
-    const gx=du.geriX-du.x,gz=du.geriZ-du.z,gL=hyp(gx,gz);if(gL>1.3){tk.x=du.x+gx/gL*1.3;tk.z=du.z+gz/gL*1.3;}
+    /* T8b (inceleme bulgusu): vuruş seçeneği yoksa (serbest vuruşun şutsuz ve ortasız payı: oyunu sürdürme, rutin) oyun kullanan topun başındayken
+       başlar — geri çekildiği 3–7 m'de başlarsa sahiplik ilk karede düşüyor, top kimsenin değilken 9,15 m kuralı kalkıyordu. T8f (inceleme): kullanan
+       ışınlanmaz, duruş sürerken topun 1 m gerisine yürür (hazır evresi, hizOran 0,6), sonra yeniden kullanır (düdük bir kez çalar) */
+    const gx=du.geriX-du.x,gz=du.geriZ-du.z,gL=hyp(gx,gz);
+    if(gL>1.3&&!du.kisaGeri){du.kisaGeri=true;du.geriX=du.x+gx/gL*1.0;du.geriZ=du.z+gz/gL*1.0;b.sahip=null;b.endirekt=null;b.kullanim=null;du.asama='hazir';return;}
     this.phase='play';this.phaseT=0;this.durus=null;tk.kararT=0;
   },
   /* duran topun ilk vuruşu: korner ve serbest vuruş mac-topla.js, kale vuruşu mac-kaleci.js (Faz 0) */

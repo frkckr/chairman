@@ -37,7 +37,7 @@ ayarEkle('C',{
   havaOkuma:[0.12,0.36],       // T6b: topun uçuşunu okuma hatası (derinlik) σ = taban + çarpan × (1 − okuma) (m; yanal hata yarısı)
   havaEgilme:[0.35,0.10],      // T6b: başın gövde ve boyunla yatayda topa uzanması (m): ayakta / koşarak sıçrarken ek
   havaDuello:0.035,            // T6b: düelloda neredeyse aynı anda varan başların temas anı sapması σ (sn; boyun ve gövdenin son uzanması, itişme; fiziksel aralık 0,025–0,05)
-  kafaDonus:1.6                // T8b: kafa vuruşunda topu geliş doğrultusundan saptırmanın zorluğu: yön σ × (1 + kafaDonus·sin θ) (90°'de en zor; sıyırma ve geri vurma kolay)
+  kafaDonus:1.6                // T8b: kafa vuruşunda topu geliş doğrultusundan saptırmanın zorluğu: yön ve yükseklik σ × (1 + kafaDonus·sin θ) (90°'de en zor; sıyırma ve geri vurma kolay)
 });
 /* T8b (2026-10-11): kafanın topu geliş doğrultusundan saptırma açısının sinüsü (gelen top 3 m/sn altındaysa 0). Ortadan ve kornerden kaleye kafa
    ~90° saptırmadır: gerçekte kafa şutlarının ~%30–35'i çerçeveyi bulur, motorda saptırma hesaba katılmadan %68–76'sı buluyordu */

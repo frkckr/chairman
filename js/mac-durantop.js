@@ -35,7 +35,7 @@ ayarEkle('K',{
   duranRolSure:6,              // T8b: vuruştan sonra görev düzeninin en uzun süresi (sn)
   barajZipla:1.0,              // T8c: barajın sıçrama yüksekliği, oyuncunun durarak sıçramasının katı (planlayıcı ve motor aynı)
   barajZiplaZaman:0.06,        // T8c: baraj üyesinin kalkış zamanlamasının σ'sı (sn; kullananın temasından sonra hazırlık + bu)
-  serbestDevam:2.0,            // T8c: serbest vuruşta oyunu sürdürmenin (kısa ya da uzun pas, sürüş) değeri, P(gol)·100 biriminde
+  serbestDevam:2.3,            // T8c: serbest vuruşta oyunu sürdürmenin (kısa ya da uzun pas, sürüş) değeri, P(gol)·100 biriminde (T8f: 2,0'da 30 m'de %51 doğrudan şut; 2,3'te %47,5)
   serbestOrta:6.0,             // T8c: kenardan ve ceza sahasına yakından ortanın değeri (P(gol)·100; d-duran'da korner %4,8, kenar ortası biraz üstü);
                                // ortadan ve uzaktan azalır. 5,0'te kenardan %22 doğrudan şut
   serbestRutin:0.12,           // T8c: barajlı vuruşta kısa pas rutini olasılığı (kullananın yaratıcılığıyla 0,6–1,4 katı; taktik çeşitlilik; 0,08'de 18 m'de %92,5 şut)
@@ -84,7 +84,7 @@ Object.assign(Match.prototype,{
     if(du&&this.phase==='durus'&&this.durus===du){this.phase='play';this.phaseT=0;this.durus=null;}
     if(this.sonKullanim&&this.sonKullanim.p===p)this.sonKullanim.t=this.t;
     if(du&&tur!=='santra')this.duranSonrasiBaslat(du,alici,hx,hz);   /* T8b: vuruştan sonra görev düzeni */
-    if(du&&du.baraj&&alt==='sut'&&du.barajdakiler)this.barajZipla(du);   /* T8c */
+    if(du&&alt==='sut'&&du.barajdakiler&&du.barajdakiler.length)this.barajZipla(du);   /* T8c; T8f: kenar vuruşunun 1–2 kişilik barajı da sıçrar */
     this.on('kullanim',{tur,alt,bolge,p,takim:p.team,x:K.x,z:K.z,hedef:hx!=null?{x:hx,z:hz,alici}:null,hazirlik:this.t-K.t0,
       baraj:!!(du&&du.baraj),barajdakiler:du&&du.barajdakiler||null,du});
   },
@@ -238,12 +238,15 @@ Object.assign(Match.prototype,{
      hizasında; alıcı ortadaki gibi topa gider ve sıçrar */
   tacUzunSecenegi(du,tk,karar){
     const d=this.dir[du.takim];if(du.x*d<PL-32)return null;
-    /* T8e düzeltmesi: menzil 20–30 m (gerçek uzun taç 25–30 m, uzmanlar 35+); kutu hedefleri yan çizgiden 30+ m'de kaldığı için ayrıca altıpasın
+    /* T8e düzeltmesi: menzil 22–32 m (gerçek uzun taç 25–30 m, uzmanlar 35+); kutu hedefleri yan çizgiden 30+ m'de kaldığı için ayrıca altıpasın
        atana yakın köşesi (kaleden 7 m, ortadan 6 m) hedeftir — oraya en yakın arkadaş alıcıdır */
-    const R=20+10*profilAlt(tk,'guc',0.5)+8*((tk.boy||1)-1),yan=Math.sign(du.z-MZ)||1;let en=null;
+    const R=22+10*profilAlt(tk,'guc',0.5)+8*((tk.boy||1)-1),yan=Math.sign(du.z-MZ)||1;let en=null;
     for(const c of kornerSecenekleri(this,tk,du.x,du.z)){const Lc=hyp(c.hx-du.x,c.hz-du.z);if(Lc>R||Lc<15)continue;if(!en||c.deger>en.deger)en=Object.assign({L:Lc},c);}
-    if(!en){const ex=d*(PL-7),ez=MZ+yan*6,Lc=hyp(ex-du.x,ez-du.z);if(Lc<=R&&Lc>=15){let q=null,qd=8;for(const p of this.sahadakiler(du.takim)){if(p===tk||p.rol==='GK')continue;const dd=hyp(p.x-ex,p.z-ez);if(dd<qd){qd=dd;q=p;}}
-      if(q)en={q,hx:ex,hz:ez,hy:Math.min(2.0,hvAlinDur(q)+0.25),L:Lc,deger:0.5};}}
+    /* T8f: kutu hedefleri (altıpasın atana yakın köşesi; yetişilmezse ceza sahasının atana yakın ön kenarı — yan çizgiden 25 m, çoğu atan yetişir);
+       alıcı hedefe 12 m içindeki en yakın arkadaş */
+    if(!en)for(const [eu,ew] of[[PL-7,6],[PL-9,9.5]]){const ex=d*eu,ez=MZ+yan*ew,Lc=hyp(ex-du.x,ez-du.z);if(Lc>R||Lc<15)continue;
+      let q=null,qd=12;for(const p of this.sahadakiler(du.takim)){if(p===tk||p.rol==='GK')continue;const dd=hyp(p.x-ex,p.z-ez);if(dd<qd){qd=dd;q=p;}}
+      if(q){en={q,hx:ex,hz:ez,hy:Math.min(2.0,hvAlinDur(q)+0.25),L:Lc,deger:0.5};break;}}
     if(!en||karar&&this.rast()>0.7)return null;
     return{q:en.q,hx:en.hx,hz:en.hz,hy:en.hy,L:en.L};
   },
@@ -281,14 +284,16 @@ Object.assign(Match.prototype,{
   duranSonrasiBaslat(du,alici,hx,hz){
     if(!du.gorev||!du.gorev.size||!(du.tur==='korner'||du.sinif==='baraj'||du.sinif==='kenar'))return;
     const G=alici&&alici.team===du.takim?alici.duranRol:null;if(G&&hx!=null&&DT_HEDEF.has(G.rol)){G.kx=hx;G.kz=hz;}
-    this._duranSonrasi={t0:this.t,tur:du.tur,takim:du.takim,savunan:1-du.takim,sahipT:-1,kisa:du.rutin==='kisa'};
+    this._duranSonrasi={t0:this.t,tur:du.tur,takim:du.takim,savunan:1-du.takim,sahipT:-1,kisa:du.rutin==='kisa',x:du.x};
   },
   duranSonrasiBitir(){if(this._duranSonrasi){this._duranSonrasi=null;this.duranRolTemizle();}},
   /* takimAI'nın başında (duruş dışında) */
   duranSonrasiAdim(){
     const DS=this._duranSonrasi;if(!DS)return;const b=this.ball,s=b.sahip,d=this.dir[DS.takim];
     if(s&&s.team===DS.savunan){if(DS.sahipT<0)DS.sahipT=this.t;}else DS.sahipT=-1;
-    if(this.phase!=='play'||this.t-DS.t0>MOTOR_AYAR.duranRolSure||b.x*d<PL-28||DS.sahipT>=0&&this.t-DS.sahipT>0.8||this._sonSut&&this._sonSut.t>DS.t0)this.duranSonrasiBitir();
+    /* T8f (inceleme bulgusu): bitiş eşiği vuruş noktasına göre — eskiden sabit 28 m, 28–35 m'den kullanılan kenar ve barajlı vuruşta pencere ilk
+       adımda kapanıyordu (kutu koşuları ve markaj hiç çalışmıyordu) */
+    if(this.phase!=='play'||this.t-DS.t0>MOTOR_AYAR.duranRolSure||b.x*d<Math.min(PL-28,DS.x*d-10)||DS.sahipT>=0&&this.t-DS.sahipT>0.8||this._sonSut&&this._sonSut.t>DS.t0)this.duranSonrasiBitir();
   },
   /* görev düzenindeki oyuncunun hedefi {x, z, ef, h}; null: eski kural (görevsiz, kısa seçenek, kaleci, ortanın koşusundaki alıcı) */
   duranRolKonum(p){

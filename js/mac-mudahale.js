@@ -510,6 +510,9 @@ Object.assign(Match.prototype,{
     else if(r<sigma((ck-MOTOR_AYAR.kartEsik)/0.07)){kart='sari';kartNeden='siddet';}             /* pervasız */
     else if(spa&&r2<MOTOR_AYAR.sariAtak+(v.taktik?0.3:0)){kart='sari';kartNeden='atak';}                                       /* gelişen atağı kesti */
     const penalti=kutu&&!v.hava||(v.hava&&kutu&&this.rast()<0.5);
+    /* T8f (inceleme bulgusu): kutudaki hava faulünün penaltı verilmeyen yarısı ceza sahası içinde doğrudan serbest vuruş oluyordu (kural dışı);
+       hakem görmemiş sayılır (olay faulGorulmedi), oyun sürer */
+    if(kutu&&!penalti){this.on('faulGorulmedi',{faulYapan:yapan,faulYiyen:yiyen,kaynak:v.kaynak||null,siddet:c,P:0.5,x,z});return;}
     /* avantaj: ciddi değil, takım topu tutacak ve atağın geleceği var */
     if(!penalti&&kart!=='kirmizi'&&c<0.8&&this.avantajVar(yiyen,yu,ayakta)){
       this.avantaj={t:this.t,kare:this.kare,takim:yiyen.team,x,z,kart,yapan,yiyen,neden,tuttu:false,u0:b.x*yd};this.refs[0].eylem={ad:'avantaj',t:0,sure:1.4};
