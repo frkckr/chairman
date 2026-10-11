@@ -124,8 +124,11 @@ function yerHiz(v0,s,R,K){const a=yerKayma(K),s1=(24/49)*v0*v0/(2*a);
   const v1=v0*5/7,c=TOP_FIZIK.yerDirenc,k=(R||ROLL)/c,w=(v1*v1+k)*Math.exp(-2*c*(s-s1))-k;return w>0?Math.sqrt(w):0;}
 function yerIlkHiz(L,varis,R,K){const a=yerKayma(K);
   const vk=Math.sqrt(varis*varis+2*a*L);if((24/49)*vk*vk/(2*a)>=L)return vk;   /* yalnız kayarak varır */
-  /* kayma + yuvarlanma: yerHiz(v0, L) = varis için v0 (v0'da tekdüze artar); ikiye bölme, 16 adım (~0,001 m/sn) */
-  let alt=vk,ust=60;for(let i=0;i<16;i++){const o=(alt+ust)/2;if(yerHiz(o,L,R,K)<varis)alt=o;else ust=o;}
+  /* kayma + yuvarlanma: yerHiz(v0, L) = varis için v0 (v0'da tekdüze artar); ikiye bölme, 16 adım (~0,001 m/sn). T8-0b (2026-10-11): arama
+     [varis, 60] aralığında — eskiden alt sınır salt kaymanın çözümü vk idi; kayma 5/7 hızda bitip yuvarlanma daha az yavaşlattığından kök vk'nin
+     altındadır, arama hep ~vk döndürüyordu: yerden pas planlanandan 0,3–0,6 m/sn hızlı varıyordu, yavaş varışlı uzun topta (top toplayıcının
+     yuvarladığı, durdurulup geri verilen top) hata 2–5 m/sn idi (araclar: 13 m'de 1,2 m/sn istenen top 5,9 m/sn ile varıyordu) */
+  let alt=varis,ust=60;for(let i=0;i<16;i++){const o=(alt+ust)/2;if(yerHiz(o,L,R,K)<varis)alt=o;else ust=o;}
   return (alt+ust)/2;}
 function yerSure(v0,s,R,K){const a=yerKayma(K),s1=Math.min(s,(24/49)*v0*v0/(2*a));
   let t=(v0-Math.sqrt(Math.max(0,v0*v0-2*a*s1)))/a,v=yerHiz(v0,s1,R,K);const kalan=s-s1;if(kalan<=0)return t;
