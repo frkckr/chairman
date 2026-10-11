@@ -163,6 +163,7 @@ Object.assign(Match.prototype,{
     const du=Object.assign({tur,takim,x,z,t:0,asama:'bekle',kullanan:null,topcu:null,hazirT:0},veri||{});
     this.durus=du;
     du.kullanan=this.kullananSec(du);
+    this.duranGorevAta(du);   /* T8a: görevler profilden (js/mac-durantop.js) */
     this.hocaKapisi();   /* T7a: hoca kapısı — m.hoca geri çağrısı varsa her duruşta sorulur (js/mac-takim.js) */
     /* taç, korner, aut ve saha dışında kalan top: top toplayıcı yedek topu verir (N10). Faulde top sahadadır; atan alıp yerine taşır */
     b.tasiyan=null;
@@ -190,10 +191,12 @@ Object.assign(Match.prototype,{
       if(du.tur==='penalti')c=-(p.profil?0.6*p.oz.sut+0.4*p.profil.alt.sogukkanlilik:p.oz.sut)*50-(p.rol==='FV'?10:0)+(p.rol==='GK'?99:0);
       if(du.tur==='serbest'&&p.rol==='GK')c=this.kendiCezaSahasinda(p,du.x,du.z)?c-10:c+60;
       if(du.tur==='serbest'&&this.tehlikeliSerbest(du))c=c*0.3-profilAlt(p,'duranTop',p.oz.sut)*25;
+      /* T8a: yerdeki ya da düşen (kilitli eylemdeki) oyuncu duran topu kullanmaz (penaltı hariç: görevli vurucu kalkar); faulden sonra yiyen
+         oyuncu en yakın olduğu için seçiliyor, serbest vuruşların %59'unda kalkışı bekleniyordu */
+      if(p.eylem&&p.eylem.kilit&&du.tur!=='penalti')c+=20;
       if(c<ep){ep=c;en=p;}}
     return en;
   },
-  tehlikeliSerbest(du){const u=du.x*this.dir[du.takim],dz=Math.abs(du.z-MZ);return !du.endirekt&&u>PL-33&&u<PL-15&&dz<17;},
   /* atış/vuruş noktasında atanın durduğu yer */
   durusNoktasi(du){
     const d=this.dir[du.takim];
@@ -203,20 +206,26 @@ Object.assign(Match.prototype,{
   },
   stepDurus(dt){
     const du=this.durus,b=this.ball,tk=du.kullanan,d=this.dir[du.takim];du.t+=dt;
-    if(!tk||!tk.oyunda){du.kullanan=this.kullananSec(du);return;}
+    if(!tk||!tk.oyunda){du.kullanan=this.kullananSec(du);this.duranGorevAta(du);return;}
     this.taramaAdim(dt);   /* duran topta da etrafa bakılır */
     this.takimAI(dt,du);
     this.durusYerlesim(du,dt);
+    /* T8a: faulden sonra yuvarlanan topu en yakın oyuncu durdurur; çabuk serbest vuruş düdükten 0,3 sn sonra bir kez tartılır (js/mac-durantop.js) */
+    if((du.tur==='serbest'||du.tur==='penalti')&&(du.asama==='bekle'||du.asama==='getir'))this.topDurdur(du);
+    if(du.tur==='serbest'&&du.hizli==null&&du.t>=0.3)du.hizli=this.hizliSerbestMi(du,tk);
     const nk=this.durusNoktasi(du);
     if(du.t>16&&(du.asama==='getir'||du.asama==='bekle')){b.tasiyan=tk;this.topDegisti();du.asama='yerles';}
     /* çok uzadıysa: atan yerine konur (taçta top elinde) */
-    if(du.t>28&&du.asama!=='hazir'){du.asama='hazir';
+    if(du.t>28&&du.asama!=='hazir'&&du.asama!=='kullan'){du.asama='hazir';
       if(du.tur==='tac'){tk.x=nk.x;tk.z=nk.z;tk.vx=tk.vz=0;b.tasiyan=tk;tk.eylem={ad:'tac',t:0,faz:'tut',ft:0};}
       else{b.tasiyan=null;du.geriX=tk.x;du.geriZ=tk.z;du.aci=tk.yon;b.x=du.x;b.z=du.z;}}
     /* T7a: önde biten son dakikalarda duran topta acele yok (niyetin duranGecikme'si) */
     /* T9b-a (d-topcu bulgusu): topu kovalarken hızla çizgiyi aşan atan sert durur (azami fren; rahat frenle 5 m/sn'den ~2,8 m taşıyordu) */
     if((du.asama==='bekle'||du.asama==='getir')&&tk.spd>3)this.eforVer(tk,1);
-    if(du.asama==='bekle'){tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=0.8;if(du.t>(du.bekle||0.45)+(this._niyet&&du.tur!=='penalti'?this._niyet[du.takim].duranGecikme:0))du.asama='getir';}
+    /* T8a: kullanan topa ve yerine düzenli yürür/koşar (efor 0,8; T1 hız kipi 8 m içinde 1,6 m/sn'lik yürüyüşe düşürüyordu: serbest vuruşta topu
+       yerine taşımak ~3 sn sürüyordu) */
+    else if(du.asama==='bekle'||du.asama==='getir'||du.asama==='yerles')this.eforVer(tk,0.8);
+    if(du.asama==='bekle'){tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=0.8;if(du.t>(du.hizli?0.3:(du.bekle||0.45)+(this._niyet&&du.tur!=='penalti'?this._niyet[du.takim].duranGecikme:0)))du.asama='getir';}
     else if(du.asama==='getir'){
       if(b.tasiyan===tk)du.asama='yerles';
       /* top çocuğun elinde: atan atış yerine gelir, çocuğa döner ve topu bekler (saha dışına çıkmaz) */
@@ -230,81 +239,48 @@ Object.assign(Match.prototype,{
         if(!b.tasiyan){const k=this.yakalamaNoktasi(tk,2.2);tk.tx=clamp(k.x,-PL-1.6,PL+1.6);tk.tz=clamp(k.z,-1.6,PW+1.6);tk.hizOran=0.8;tk.bak=b;
           if(hyp(b.x-tk.x,b.z-tk.z)<1.0&&b.y<2.3){b.tasiyan=tk;b.vx=b.vy=b.vz=0;this.topDegisti();du.asama='yerles';}}}
     }else if(du.asama==='yerles'){
-      tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=0.7;tk.bak=null;tk.yonHedef=Math.atan2(MZ-nk.z,d*20-nk.x);
+      tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=0.8;tk.bak=null;tk.yonHedef=Math.atan2(MZ-nk.z,d*20-nk.x);   /* T8a: 0,7 → 0,8 */
       if(hyp(tk.x-nk.x,tk.z-nk.z)<0.45){
         if(du.tur==='tac'){tk.eylem={ad:'tac',t:0,faz:'tut',ft:0};du.asama='hazir';}
-        else{/* topu yere koy, iki adım geri çekil */b.tasiyan=null;b.x=du.x;b.z=du.z;b.y=0;b.vx=b.vy=b.vz=0;this.topDegisti();du.asama='hazir';
-          const a=this.durusHedefAcisi(du);du.aci=a;du.geriX=du.x-Math.cos(a)*(du.tur==='penalti'?2.2:1.3);du.geriZ=du.z-Math.sin(a)*(du.tur==='penalti'?2.2:1.3);}}
+        else{/* topu yere koy, geri çekil. T8a: topu yere koyma eylemi (yerlestir, 0,6 sn; çabuk vuruşta yok), geri çekilme türe ve profile göre
+             (duranGeriMesafe; eskiden 1,3, penaltıda 2,2 m) */
+          b.tasiyan=null;b.x=du.x;b.z=du.z;b.y=0;b.vx=b.vy=b.vz=0;this.topDegisti();du.asama='hazir';
+          const a=this.durusHedefAcisi(du),gm=this.duranGeriMesafe(du,tk);du.aci=a;du.geriX=du.x-Math.cos(a)*gm;du.geriZ=du.z-Math.sin(a)*gm;
+          if(!du.hizli&&(du.tur!=='serbest'||this.duranTehlikeli(du))){tk.eylem={ad:'yerlestir',t:0,sure:0.6};du.yerT=du.t;}}}
     }else if(du.asama==='hazir'){
       du.hazirT+=dt;
-      if(du.tur!=='tac'){tk.tx=du.geriX;tk.tz=du.geriZ;tk.hizOran=0.4;tk.yonHedef=du.aci;tk.bak=null;b.x=du.x;b.z=du.z;b.vx=b.vz=0;}
-      const bekle={tac:0.5,korner:1.4,kaleVurusu:1.0,serbest:du.baraj?3.2:0.9,penalti:3.0}[du.tur]||1;
+      if(du.tur!=='tac'){const yer=du.yerT!=null&&du.t-du.yerT<0.6;tk.tx=yer?tk.x:du.geriX;tk.tz=yer?tk.z:du.geriZ;tk.hizOran=0.4;tk.yonHedef=du.aci;tk.bak=null;b.x=du.x;b.z=du.z;b.vx=b.vz=0;
+        /* T8a: geri adımlar düzenli (efor 0,8, yavaş; 3–7 m geri çekilme T1 hız kipinde ~3 sn sürüyordu) */
+        if(!yer&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5){tk.hizOran=0.3;this.eforVer(tk,0.8);}}
       const degisimBekle=this.degisiklik&&!this.degisiklik.girdi;
-      if(!degisimBekle&&du.hazirT>=bekle&&(du.tur==='tac'||hyp(tk.x-du.geriX,tk.z-du.geriZ)<0.5||du.hazirT>bekle+2))this.durusKullan(du);
+      /* T8a: kullanım koşulu (hazırlık penceresi, görevliler yerinde, el işareti; js/mac-durantop.js duranHazirMi) */
+      if(!degisimBekle&&this.duranHazirMi(du,tk))this.durusKullan(du);
+    }else if(du.asama==='kullan'){
+      /* T8a: kullananın koşusu ve vuruşu (vuruş eylemi) sürerken duruş sürer, oyun temasta başlar (kullanimBildir); kullanan vuruştan vazgeçerse
+         (hat kapandı, süre doldu, ıska) oyun başlar ve yeniden karar verir */
+      if(!(tk.eylem&&tk.eylem.ad==='vurus')){this.phase='play';this.phaseT=0;this.durus=null;tk.kararT=0;}
     }
     this.degisiklikAdim(dt);
     this.hareketHepsi(dt);this.topAdim(dt);
     /* saha dışındaki top panolarda durur; panoların üstünden tribüne giderse top toplayıcı yenisini verir */
-    if(!b.tasiyan&&(Math.abs(b.x)>PL||b.z<0||b.z>PW)&&!this.panoSiniri(b))this.durusTopu(du,true);
+    if(this.phase==='durus'&&!b.tasiyan&&(Math.abs(b.x)>PL||b.z<0||b.z>PW)&&!this.panoSiniri(b))this.durusTopu(du,true);
   },
-  /* atanın bakacağı yön: kaleye ya da oyunun içine */
-  durusHedefAcisi(du){const d=this.dir[du.takim];if(du.tur==='penalti'||(du.tur==='serbest'&&du.baraj))return Math.atan2(MZ-du.z,d*PL-du.x);
-    if(du.tur==='korner')return Math.atan2(MZ-du.z,d*(PL-11)-du.x);return Math.atan2((MZ-du.z)*0.3,d*20);},
-  /* duran topta herkesin yeri: korner rolleri, baraj, penaltı, 9,15 m kuralı */
-  durusYerlesim(du,dt){
-    const d=this.dir[du.takim],gx=d*PL,tk=du.kullanan,savunan=1-du.takim;
-    if(du.tur==='korner'){
-      const yan=Math.sign(du.z-MZ)||1;
-      const hucumYer=[[PL-5.5,MZ+yan*2.5],[PL-7,MZ-yan*3],[PL-11,MZ+yan*0.5],[PL-4,MZ],[PL-17,MZ-yan*4],[PL-19,MZ+yan*6]];
-      const savYer=[[PL-0.6,MZ+yan*(GW2-0.4)],[PL-5,MZ+yan*1.5],[PL-5,MZ-yan*2.5],[PL-7.5,MZ],[PL-10,MZ+yan*3],[PL-10,MZ-yan*3],[PL-16,MZ]];
-      let i=0,j=0;
-      /* T3: kafa için sıralama sıçramadan (0,6 kafa + 0,2 hız + 0,2 güç; profil) ve boydan; eski eşik kafa 0,68 ≈ sıçrama 0,62 */
-      const kg=p=>profilAlt(p,'sicrama',p.oz.kafa);
-      const hucumcular=this.sahadakiler(du.takim).filter(p=>p!==tk&&p.rol!=='GK').sort((a,c)=>(kg(c)+c.boy)-(kg(a)+a.boy));
-      for(const p of hucumcular){if(p.rol==='DEF'&&!(kg(p)>0.62&&i<2)){p.tx=d*-2;p.tz=p.z<MZ?20:48;continue;}
-        const y=hucumYer[i++];if(!y){p.tx=d*(PL-30);p.tz=p.mevki.w;continue;}p.tx=d*y[0];p.tz=y[1];p.hizOran=0.8;p.bak=this.ball;this.eforVer(p,0.4);}
-      const savunanlar=this.sahadakiler(savunan).filter(p=>p.rol!=='GK').sort((a,c)=>(kg(c)+c.boy)-(kg(a)+a.boy));
-      for(const p of savunanlar){if(p.rol==='FV'&&j>3){p.tx=d*(-8);p.tz=p.mevki.hedef?30:40;continue;}
-        const y=savYer[j++];if(!y){p.tx=d*(PL-24);p.tz=p.mevki.w;continue;}p.tx=d*y[0];p.tz=y[1];p.hizOran=0.8;p.bak=this.ball;this.eforVer(p,0.4);}
-    }else if(du.tur==='penalti'){
-      const kl=this.kaleci(savunan);kl.tx=gx;kl.tz=MZ;kl.bak=this.ball;kl.yonHedef=null;
-      let i=0;for(const p of this.players){if(!p.oyunda||p===tk||p===kl)continue;
-        if(p.rol==='GK'){p.tx=-gx*0.9;p.tz=MZ;continue;}
-        const s=i++;p.tx=d*(PL-19-((s*7)%5));p.tz=MZ-14+((s*11)%28);p.hizOran=0.5;p.bak=this.ball;this.eforVer(p,0.4);}
-    }else if(du.tur==='serbest'||du.tur==='kaleVurusu'){
-      /* baraj: kaleye yakın serbest vuruşta topla kale arasında, 9,15 m'de */
-      if(du.tur==='serbest'&&this.tehlikeliSerbest(du)&&du.asama!=='bekle'){
-        du.baraj=true;const a=Math.atan2(MZ-du.z,gx-du.x),ux=Math.cos(a),uz=Math.sin(a),n=clamp(Math.round(6-(hyp(gx-du.x,MZ-du.z)-16)/3.5),2,5);
-        const yakinDirek=Math.sign(du.z-MZ)||1,merkez={x:du.x+ux*9.15,z:du.z+uz*9.15},px=-uz,pz=ux;
-        const oyuncular=this.sahadakiler(savunan).filter(p=>p.rol!=='GK').sort((a,c)=>hyp(a.x-merkez.x,a.z-merkez.z)-hyp(c.x-merkez.x,c.z-merkez.z)).slice(0,n);
-        du.barajdakiler=oyuncular;
-        oyuncular.forEach((p,k)=>{const s=(k-(n-1)/2)*0.62+yakinDirek*0.35;p.tx=merkez.x+px*s;p.tz=merkez.z+pz*s;p.hizOran=0.8;p.bak=this.ball;p.yonHedef=a+Math.PI;this.eforVer(p,0.4);});
-        const kl=this.kaleci(savunan);kl.tx=gx-d*0.8;kl.tz=MZ-yakinDirek*1.2;kl.bak=this.ball;
-      }
-      /* 9,15 m: savunan takım topa yaklaşmaz; aut'ta ceza sahası dışında kalır */
-      for(const p of this.sahadakiler(savunan)){if(du.barajdakiler&&du.barajdakiler.includes(p))continue;if(p.rol==='GK'&&du.tur==='serbest')continue;
-        const dx=p.tx-du.x,dz=p.tz-du.z,L=hyp(dx,dz);if(L<9.6){const s=9.6/(L||1);p.tx=du.x+dx*s;p.tz=du.z+dz*s;}
-        if(du.tur==='kaleVurusu'){const u=p.tx*this.dir[du.takim];if(u<-PL+CEZA_U+1&&Math.abs(p.tz-MZ)<CEZA_W+1)p.tx=this.dir[du.takim]*(-PL+CEZA_U+1.5);}}
-    }else if(du.tur==='tac'){
-      for(const p of this.sahadakiler(savunan)){const L=hyp(p.tx-du.x,p.tz-du.z);if(L<2.5){p.tz=du.z<MZ?Math.max(p.tz,2.8):Math.min(p.tz,PW-2.8);}}
-    }
-  },
-  /* duran topu kullan */
+  /* duran topu kullan. T8a: vuruşla kullanılan duran topta oyun kullananın koşusundan sonra, topa temasta başlar (asama 'kullan'; baraj ve
+     görevliler koşu boyunca yerinde kalır, eskiden düzen koşunun başında dağılıyor, presçi koşuya giriyordu); vuruş seçimi yoksa hemen */
   durusKullan(du){
     const tk=du.kullanan,b=this.ball,d=this.dir[du.takim];
     this.sonKullanim={tur:du.tur,p:tk,t:this.t};
     this.kullanimBaslat(du.tur,tk,du,this.t-du.t);   /* T8-0: kullanım bayrağı; olay kullananın ilk dokunuşunda (js/mac-durantop.js) */
     if(du.tur==='tac'){const e=tk.eylem;if(e&&e.ad==='tac'&&e.faz==='tut'){e.faz='at';e.ft=0;e.hedef=this.tacHedefi(tk);}return;}
-    if(du.duduk||du.tur==='penalti'||du.baraj)this.on('duduk',{tur:du.tur});
-    this.phase='play';this.phaseT=0;this.durus=null;
+    if(!du.hizli&&(du.duduk||du.tur==='penalti'||du.baraj))this.on('duduk',{tur:du.tur});
     b.tasiyan=null;b.x=du.x;b.z=du.z;b.y=0;b.vx=b.vz=b.vy=0;b.ust=0;this.topDegisti();
-    tk.x=du.geriX;tk.z=du.geriZ;
+    tk.x=du.geriX;tk.z=du.geriZ;if(tk.eylem&&!tk.eylem.kilit)tk.eylem=null;
     this.sahipYap(tk);
     /* dolaylı serbest vuruş: başka bir oyuncu dokunmadan gol olmaz (Match.gol) */
     b.endirekt=du.endirekt?{p:tk}:null;
     const sec=this.durusSecenegi(du,tk);
-    if(sec)this.vurusBaslat(tk,sec);else tk.kararT=0;
-    if(du.tur==='penalti')this.penaltiKaleciHazirla(du);
+    if(sec){sec.duran=true;du.asama='kullan';this.vurusBaslat(tk,sec);if(du.tur==='penalti')this.penaltiKaleciHazirla(du);return;}
+    this.phase='play';this.phaseT=0;this.durus=null;tk.kararT=0;
   },
   /* duran topun ilk vuruşu: korner ve serbest vuruş mac-topla.js, kale vuruşu mac-kaleci.js (Faz 0) */
   durusSecenegi(du,tk){
@@ -393,10 +369,15 @@ Object.assign(Match.prototype,{
     if(ph==='fulltime'){r.forEach((q,i)=>{q.hizOran=0.3;q.tx=(i-1)*1.2;q.tz=MZ-3;});return;}
     /* orta hakem: çapraz çizgi, oyunu kendisiyle aktif yan hakem arasında tutar, 12–20 m uzakta */
     const h=r[0],du=this.durus,fx=du?du.x:b.x,fz=du?du.z:b.z;
-    const kartSira=h.kartSira;
+    const kartSira=h.kartSira,DY=du?this.hakemDuranYeri(du):null;   /* T8a: duran topta hakemlerin yeri (js/mac-durantop.js) */
     if(kartSira){kartSira.t+=dt;const p=kartSira.p;h.tx=p.x+(h.x<p.x?-1.6:1.6);h.tz=p.z;h.hizOran=1;h.bak=p;
       if(hyp(h.x-p.x,h.z-p.z)<2.2&&!(h.eylem&&h.eylem.ad==='kart')){h.eylem={ad:'kart',t:0,sure:1.7,renk:kartSira.renk};}
       if(h.eylem&&h.eylem.ad==='kart'&&h.eylem.t>1.5||kartSira.t>6){h.kartSira=null;if(p.kart===2)this.oyundanCikar(p);}}
+    else if(DY&&DY.h){h.tx=clamp(DY.h.x,-PL+1,PL-1);h.tz=clamp(DY.h.z,1,PW-1);const uz=hyp(h.tx-h.x,h.tz-h.z);h.hizOran=uz>8?0.9:0.6;h.bak=b;
+      /* barajlı serbest vuruş: hakem barajın ucunda 9,15 m'yi gösterir, 1,2 sn sonra baraj dizilmiş sayılır ve hakem çaprazına çekilir */
+      if(du.sinif==='baraj'&&!du.hakemHazir&&(du.asama==='yerles'||du.asama==='hazir')&&uz<1.2){du.hakemT=(du.hakemT||0)+dt;
+        if(!du.hakemYon){du.hakemYon=true;h.eylem={ad:'yon',t:0,sure:1.2,yon:Math.atan2(du.z-h.z,du.x-h.x)};}
+        if(du.hakemT>1.2)du.hakemHazir=true;}}
     else{
       const cap=MZ-clamp(fx,-PL,PL)/PL*21;
       let tx=clamp(fx*0.8-Math.sign(fx||1)*3,-40,40),tz=lerp(cap,fz,0.28);
@@ -406,6 +387,7 @@ Object.assign(Match.prototype,{
     const yan=(q,s,z)=>{q.tx=clamp(this.ofsaytHizasi(s),0,PL-1)*s;q.tz=z;const uz=Math.abs(q.tx-q.x);q.hizOran=uz>8?1:0.55;
       q.yonHedef=uz>6?null:(z>MZ?-Math.PI/2:Math.PI/2);q.bak=b;};
     yan(r[1],1,PW+1.3);yan(r[2],-1,-1.3);
+    if(DY&&DY.yh){const q=DY.yh;q.tx=DY.yhYer.x;q.tz=DY.yhYer.z;q.hizOran=hyp(q.tx-q.x,q.tz-q.z)>8?1:0.6;q.yonHedef=null;q.bak=b;}
   },
   /* sondan ikinci savunmacının hizası (M0: her karede iki kez çağrılır; dizi kurmadan en büyük iki değer, sonuç aynı) */
   ofsaytHizasi(side){const def=this.dir[0]===-side?0:1;let a=-Infinity,c=-Infinity;
