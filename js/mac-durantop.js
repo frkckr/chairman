@@ -94,7 +94,8 @@ Object.assign(Match.prototype,{
   /* tehlikeli serbest vuruş: kaleye 15–33 m, kale ortasından 17 m'den yakın, dolaylı değil (baraj kurulur) */
   tehlikeliSerbest(du){const u=du.x*this.dir[du.takim],dz=Math.abs(du.z-MZ);return !du.endirekt&&u>PL-33&&u<PL-15&&dz<17;},
   /* serbest vuruşun sınıfı (T8a; k-duran ile aynı): baraj, kenar (barajsız, kaleye 35 m'den yakın ve kale ortasından 12 m'den yanda), uzak, geri */
-  serbestSinif(du){const u=du.x*this.dir[du.takim];return this.tehlikeliSerbest(du)?'baraj':u<=0?'geri':u>PL-35&&Math.abs(du.z-MZ)>12?'kenar':'uzak';},
+  /* T10c: hakem topu (sakatlıkta hakemin durdurduğu oyun; js/mac-sakatlik.js) ayrı sınıf: baraj ve görev yok */
+  serbestSinif(du){const u=du.x*this.dir[du.takim];return du.hakemTopu?'hakemTopu':this.tehlikeliSerbest(du)?'baraj':u<=0?'geri':u>PL-35&&Math.abs(du.z-MZ)>12?'kenar':'uzak';},
   duranTehlikeli(du){return du.tur==='korner'||du.sinif==='baraj'||du.sinif==='kenar';},
   /* duruşun başında (durusBaslat; kullanan seçildikten sonra) görevler dağıtılır; oyuncunun p.duranRol'ü aynı kayıttır */
   duranGorevAta(du){

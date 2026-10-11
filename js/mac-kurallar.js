@@ -44,24 +44,57 @@ Object.assign(Match.prototype,{
     /* değişiklik planı: her takım ikinci yarıda 2–4 değişiklik, 55. ile 87. dakika arasında */
     this.degisimPlani=[0,1].map(()=>{const n=2+Math.floor(this.rast()*3),L=[];for(let i=0;i<n;i++)L.push(3300+this.rast()*1920);return L.sort((a,b)=>a-b);});
   },
-  /* duruşta sırası gelen değişiklik başlar: yorgun (ya da sarı kartlı) oyuncu çıkar, aynı mevkiden yedek girer */
+  /* duruşta sırası gelen değişiklik başlar: yorgun (ya da sarı kartlı) oyuncu çıkar, aynı mevkiden yedek girer. T10c: skora göre — gerideki takım
+     60. dakikadan sonra değişikliği 10 dakikaya dek öne alır ve orta saha ya da forvetin yerine forvet sokar (yeni mevkide hücumcu); öndeki takım
+     75. dakikadan sonra orta sahanın yerine savunmacı sokar. Diziliş değişikliği ve hocanın kararı Aşama 3.3'te (m.hoca kapısı) */
   degisiklikBaslat(du){
     if(this.degisiklik||this.half!==2||!['tac','kaleVurusu','serbest'].includes(du.tur))return;
     for(const t of[du.takim,1-du.takim]){
-      const plan=this.degisimPlani[t];if(!plan.length||this.gameSec<plan[0]||this.ist.degisiklik[t]>=5)continue;
+      const fark=this.score[t]-this.score[1-t],geri=fark<0&&this.gameSec>=3600,onde=fark>0&&this.gameSec>=4500;
+      const plan=this.degisimPlani[t];if(!plan.length||this.gameSec<plan[0]-(geri?600:0)||this.ist.degisiklik[t]>=5)continue;
       const yedek=this.yedekler[t].filter(p=>!p.cikti&&p.rol!=='GK');if(!yedek.length){plan.length=0;continue;}
-      const saha=this.teams[t].filter(p=>p.oyunda&&p.rol!=='GK'&&p!==du.kullanan&&!(p.eylem&&p.eylem.kilit));if(!saha.length)continue;
+      let saha=this.teams[t].filter(p=>p.oyunda&&p.rol!=='GK'&&p!==du.kullanan&&!(p.eylem&&p.eylem.kilit));if(!saha.length)continue;
+      const hucumcu=geri&&yedek.find(y=>y.rol==='FV'),savunmaci=onde&&yedek.find(y=>y.rol==='DEF');
+      if(hucumcu||savunmaci){const S=saha.filter(p=>hucumcu?p.rol!=='DEF':p.rol==='OS');if(S.length)saha=S;}
       const puan=p=>p.yorgunluk+(p.kart===1&&p.rol==='DEF'?0.25:0)+this.rast()*0.15-Math.min(p.z,PW-p.z)*0.004;
       const cikan=saha.reduce((a,c)=>puan(c)>puan(a)?c:a);
-      const giren=yedek.find(y=>y.rol===cikan.rol)||yedek[0];
+      const giren=hucumcu&&cikan.rol!=='DEF'?hucumcu:savunmaci&&cikan.rol==='OS'?savunmaci:yedek.find(y=>y.rol===cikan.rol)||yedek[0];
       plan.shift();
       giren.oturuyor=false;giren.tx=0;giren.tz=-0.7;giren.hizOran=0.5;giren.bak=cikan;
       /* çıkan oyuncu en yakın çizgiden çıkar; ana tribün tarafındaysa kulübeye yürür */
       cikan.hizOran=0.35;
       this.degisiklik={t,cikan,giren,t0:this.t,girdi:false};
       this.duranSure[this.half-1]+=30;
-      this.on('degisiklik',{takim:t,cikan,giren});
+      this.on('degisiklik',{takim:t,cikan,giren,skor:fark<0?'geri':fark>0?'onde':'esit'});
       return;}
+  },
+  /* T10c: değişikliğin takası — giren çıkanın yerini ve mevkisini alır; profili yeni mevkiye göre yeniden kurulur (T10 teşhisi hata 3: yedeğin
+     profili kulübede mevkisiz kuruluyordu, kanadın yerine giren merkez gibi oynuyordu); çıkan kulübeye. Maçın kaydına yazılır */
+  degisiklikTakas(dg){
+    const {cikan,giren,t}=dg,n=cikan.n,i=this.players.indexOf(cikan);
+    Object.assign(giren,{tur:'oyuncu',n,mevki:cikan.mevki,rol:cikan.rol,oyunda:true,oturuyor:false,yorgunluk:0,hizOran:0.8});
+    profilKur(giren,this.tohum);
+    this.teams[t][n]=giren;if(i>=0)this.players[i]=giren;
+    Object.assign(cikan,{tur:'yedek',oyunda:false,cikiyor:false,cikti:true,koltuk:giren.koltuk,eylem:null,surus:null});
+    const Y=this.yedekler[t];Y.splice(Y.indexOf(giren),1,cikan);
+    if(this.ball.sahip===cikan)this.ball.sahip=null;
+    this.ist.degisiklik[t]++;dg.girdi=true;dg.t1=this.t;
+    this.kayit.degisiklikler.push({takim:t,cikan:cikan.name,giren:giren.name,dakika:Math.floor(this.gameSec/60)+1,sakatlik:!!dg.sakatlik});
+    this.on('oyuncuGirdi',{takim:t,cikan,giren});
+  },
+  /* T10c: sakatlıkta zorunlu değişiklik — hak varsa (en çok 5) sakatın yerine aynı mevkiden yedek (kalecide yedek kaleci) girer; plandaki
+     değişikliklerden biri kullanılmış sayılır. aninda: devre sonunda takas hemen (yürüme yok). Süren değişiklik, hak ya da uygun yedek yoksa false */
+  zorunluDegisiklik(p,aninda){
+    const t=p.team;if(this.degisiklik||this.ist.degisiklik[t]>=5)return false;
+    const Y=this.yedekler[t].filter(q=>!q.cikti),giren=p.rol==='GK'?Y.find(q=>q.rol==='GK'):(Y.find(q=>q.rol===p.rol)||Y.find(q=>q.rol!=='GK'));
+    if(!giren)return false;
+    const plan=this.degisimPlani[t];if(plan.length)plan.shift();
+    const dg={t,cikan:p,giren,t0:this.t,girdi:false,sakatlik:true};
+    this.duranSure[this.half-1]+=30;this.on('degisiklik',{takim:t,cikan:p,giren,sakatlik:true});
+    giren.oturuyor=false;
+    if(aninda){this.degisiklikTakas(dg);const k=p.koltuk;p.oturuyor=true;p.x=p.tx=k.x;p.z=p.tz=k.z;p.vx=p.vz=0;return true;}
+    giren.tx=0;giren.tz=-0.7;giren.hizOran=0.6;giren.bak=p;
+    this.degisiklik=dg;return true;
   },
   degisiklikAdim(dt){
     const dg=this.degisiklik;if(!dg)return;
@@ -70,15 +103,7 @@ Object.assign(Match.prototype,{
     if(!dg.girdi){cikan.tx=clamp(cikan.x,-PL+2,PL-2);cikan.tz=cikan.z<MZ?-0.8:PW+0.8;cikan.hizOran=0.6;cikan.bak=null;cikan.yonHedef=null;
       giren.tx=0;giren.tz=-0.7;giren.hizOran=0.55;
       const disarida=cikan.z<0.2||cikan.z>PW-0.2,girenHazir=hyp(giren.x,giren.z+0.7)<1.2;
-      if((disarida&&girenHazir)||this.t-dg.t0>14){
-        const n=cikan.n,i=this.players.indexOf(cikan);
-        Object.assign(giren,{tur:'oyuncu',n,mevki:cikan.mevki,rol:cikan.rol,oyunda:true,oturuyor:false,yorgunluk:0,hizOran:0.8});
-        this.teams[t][n]=giren;if(i>=0)this.players[i]=giren;
-        Object.assign(cikan,{tur:'yedek',oyunda:false,cikti:true,koltuk:giren.koltuk,eylem:null,surus:null});
-        const Y=this.yedekler[t];Y.splice(Y.indexOf(giren),1,cikan);
-        if(this.ball.sahip===cikan)this.ball.sahip=null;
-        this.ist.degisiklik[t]++;dg.girdi=true;dg.t1=this.t;
-        this.on('oyuncuGirdi',{takim:t,cikan,giren});}}
+      if((disarida&&girenHazir)||this.t-dg.t0>14)this.degisiklikTakas(dg);}
     else{/* çıkan kulübedeki boş koltuğa oturur */const k=cikan.koltuk;
       if(cikan.z>MZ){cikan.tx=clamp(cikan.x,-PL,PL);cikan.tz=PW+2;}else{cikan.tx=k.x;cikan.tz=k.z;}
       cikan.hizOran=0.35;cikan.bak=null;
@@ -282,7 +307,7 @@ Object.assign(Match.prototype,{
         if(!yer&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5){tk.hizOran=du.kisaGeri?0.6:0.3;this.eforVer(tk,0.8);}}
       /* T8d: uzun taçta atan topu başının üstünde tutarak çizginin 3 m gerisine yürür (koşu için) */
       let tacHazir=true;if(du.tur==='tac'&&du.tacGeri){const G=du.tacGeri;tk.tx=G.x;tk.tz=G.z;tk.hizOran=0.3;tk.yonHedef=Math.atan2(MZ-G.z,0);tk.bak=null;tacHazir=hyp(tk.x-G.x,tk.z-G.z)<0.5||du.hazirT>4;}
-      const degisimBekle=this.degisiklik&&!this.degisiklik.girdi;
+      const degisimBekle=this.degisiklik&&!this.degisiklik.girdi||this.sakatlikBekletir();   /* T10c: tedavi ve sedye sürerken de bekler */
       /* T8a: kullanım koşulu (hazırlık penceresi, görevliler yerinde, el işareti; js/mac-durantop.js duranHazirMi) */
       if(!degisimBekle&&tacHazir&&!(du.kisaGeri&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5)&&this.duranHazirMi(du,tk))this.durusKullan(du);
     }else if(du.asama==='kullan'){
@@ -366,6 +391,7 @@ Object.assign(Match.prototype,{
     /* T10b (T10 teşhisi hata 1): kartlar sıraya girer — eskiden tek yer vardı (r.kartSira), birkaç saniye içinde ikinci kart gelirse ilki eziliyor,
        kırmızı gören oyuncu oyundan çıkarılmayabiliyordu. Hakem sıradakini gösterir; r.kartSira gösterilen karttır (çizim okur) */
     const k={p,renk,t:0};(r.kartKuyruk||(r.kartKuyruk=[])).push(k);if(!r.kartSira)r.kartSira=k;
+    this.kayit.kartlar.push({ad:p.name,no:p.no,takim:p.team,renk,neden:neden||null,dakika:Math.floor(this.gameSec/60)+1});   /* T10c: maçın kaydı */
     this.on('kart',{p,renk,aleyhe:p.team,takim:p.team,neden:neden||null});   /* T10b: neden (itiraz …; faul kartının gerekçesi faul olayındadır) */
   },
   itirazEt(yapan){
@@ -456,7 +482,9 @@ Object.assign(Match.prototype,{
   /* kırmızı kartta yeniden diziliş (MM2): kaleci atılırsa en uygun saha oyuncusu (önce forvet, sonra kalecilik özelliği) kaleye geçer;
      savunma ya da orta saha oyuncusu atılırsa bir forvet onun mevkisine iner (takım 4-4-1 gibi oynar). Takım dizisindeki yerler takas edilir */
   yenidenDizil(p){
-    const t=p.team,T=this.teams[t],takas=(a,c)=>{const na=a.n,nc=c.n,ma=a.mevki,ra=a.rol;a.n=nc;a.mevki=c.mevki;a.rol=c.rol;c.n=na;c.mevki=ma;c.rol=ra;T[a.n]=a;T[c.n]=c;};
+    /* T10c: takastan sonra profil yeni mevkiye göre yeniden kurulur (değişiklikteki hata 3'ün eşi) */
+    const t=p.team,T=this.teams[t],takas=(a,c)=>{const na=a.n,nc=c.n,ma=a.mevki,ra=a.rol;a.n=nc;a.mevki=c.mevki;a.rol=c.rol;c.n=na;c.mevki=ma;c.rol=ra;T[a.n]=a;T[c.n]=c;
+      profilKur(a,this.tohum);profilKur(c,this.tohum);};
     if(p.rol==='GK'){const L=T.filter(q=>q.oyunda&&q!==p);if(!L.length)return;
       const puan=q=>(q.rol==='FV'?1:0)+q.oz.kalecilik*3;const y=L.reduce((a,c)=>puan(c)>puan(a)?c:a);
       takas(y,p);y.eylem=null;y.surus=null;this.on('kaleyeGecti',{p:y});return;}

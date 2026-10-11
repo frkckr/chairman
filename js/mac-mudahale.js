@@ -339,6 +339,7 @@ Object.assign(Match.prototype,{
     p.vx+=ux*siddet;p.vz+=uz*siddet;p.surus=null;p.tavir=null;if(p.zipla&&p.zipla.t<0)p.zipla=null;p.denge=0;if(p.calim)this.calimBitir(p,'kayip');
     if(b.sahip===p)b.sahip=null;
     this.on('dusus',{p,neden,siddet,yon:a,yuzustu,kaynak:kaynak||null});
+    this.sakatlikTemas(p,siddet,neden,kaynak);   /* T10c: rakibin temasıyla düşüşte sakatlık zarı (js/mac-sakatlik.js) */
   },
   /* ============ omuz omuza mücadele (C2) ============ */
   /* yan yana koşan iki rakip (0,45–0,9 m, ikisi de >3,5 m/sn, yönleri 35° içinde; top birinde ya da serbest ve yakın) ~0,3 sn'de bir birbirini iter:

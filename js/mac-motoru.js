@@ -63,6 +63,7 @@ const MOTOR_AYAR={
   /* C — js/mac-hareket.js */
   ivme:undefined,ivmeRahat:undefined,frenRahat:undefined,yanRahat:undefined,varisRahat:undefined,sarsinti:undefined,sarsintiAzami:undefined,
   kipSure:undefined,kipDur:undefined,donusYerinde:undefined,dinlenUzak:undefined,hedefOlu:undefined,hedefOluAzami:undefined,kovalaPay:undefined,
+  yorgunlukHiz:undefined,devreDinlenme:undefined,
   dinlenKos:undefined,tepkiCarpan:undefined,eforUs:undefined,kipKos:undefined,fren:undefined,yanTutus:undefined,enerjiHarca:undefined,
   enerjiTopla:undefined,yanTavan:undefined,geriTavan:undefined,donusSiniri:undefined,ayakBas:undefined,varisHizi:undefined,varisFren:undefined,
   jokeyMesafe:undefined,birebirYayilim:undefined,birebirErisim:undefined,birebirYaris:undefined,birebirKayma:undefined,birebirDonus:undefined,
@@ -92,7 +93,9 @@ const MOTOR_AYAR={
   hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,itirazKart:undefined,
   /* K — js/mac-durantop.js (T8) */
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
-  kornerKisa:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined
+  kornerKisa:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined,
+  /* S — js/mac-sakatlik.js (T10c) */
+  sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined
 };
 const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
@@ -226,6 +229,9 @@ class Match{
     this.refs=[this.hakemKur('ref',-6,26),this.hakemKur('lin',20,PW+1.3),this.hakemKur('lin',-20,-1.3)];
     this.topcular=this.topculariKur();this.disToplar=[];
     this.yedekleriKur();this.kenarKur();
+    /* T10c: maçın kaydı (kariyer Aşama 3'te sonucKaydi ile okur) ve sağlıkçılar (js/mac-sakatlik.js) */
+    this.kayit={goller:[],kartlar:[],sakatliklar:[],degisiklikler:[]};
+    this.sakatlikHazirla();
     this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,sonTakim:0,hedefOyuncu:null,sut:null,pas:null,
       surum:0,agda:false,direk:false,px:0,py:0,pz:0,ortaBlok:null,
       /* T8-0: duran topun kullanımı {tur, p, t0, x, z, cikti, du}: durusKullan (ve santra) kurar, kullananın ilk dokunuşu 'kullanim' olayını yayar,
@@ -241,7 +247,7 @@ class Match{
     return Object.assign({tur,kind:null,team:null,n:-1,rol:null,mevki:null,name:'',no:0,kaptan:false,kayit:null,oz:null,ayak:'sag',boy:1,
       x,z,vx:0,vz:0,spd:0,yon:0,maxSpd:7,tx:x,tz:z,hizOran:1,bak:null,yonHedef:null,eylem:null,kickCd:0,kararT:0,dokunT:0,surus:null,
       oyunda:false,cikiyor:false,kart:0,yorgunluk:0,destek:null,kosu:null,gorev:null,sevinc:false,hedef:null,tutus:null,_cikis:null,
-      ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,topBos:0,kartSira:null,kartKuyruk:null,gir:0,_kar:null,oturuyor:false,koltuk:null,cikti:false,poz:null,sg:null,yuk:0,zipla:null,
+      ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,topBos:0,kartSira:null,kartKuyruk:null,sakat:null,topal:null,tedavide:false,gir:0,_kar:null,oturuyor:false,koltuk:null,cikti:false,poz:null,sg:null,yuk:0,zipla:null,
       /* motor → çizim sözleşmesi (Faz 0; TEKNIK_PLAN §8): tavır, bakış yönü, denge, sprint enerjisi, son dokunuş */
       tavir:null,bakisYon:null,denge:1,enerji:1,sonDokunus:null,
       /* T3 (profil kapısı): oyuncu ve yedekte profilKur ile dolar {alt, rol, egilim, form, grup} (js/mac-profil.js); hakem ve top toplayıcıda null */
@@ -314,14 +320,21 @@ class Match{
       case 'goal':this.stepGoal(dt);break;
       default:this.stepBreak(dt);
     }
-    if(['kickoff','play','durus','goal'].includes(this.phase))this.kenarAI(dt);
-    /* sıçramalar ve dinlenme: oyun dururken ve devre arasında yorgunluk biraz azalır */
-    const dinlen=this.phase==='halftime'?0.004:this.phase==='durus'||this.phase==='goal'||this.phase==='kickoff'?0.0015:0;
-    for(const p of this.players){if(p.zipla)ziplaIlerle(p,dt);   /* T6a: kalkış hazırlığı, uçuş ve iniş (js/mac-hava.js) */
-      if(dinlen&&p.yorgunluk>0)p.yorgunluk=Math.max(0,p.yorgunluk-dinlen*dt);}
+    if(['kickoff','play','durus','goal'].includes(this.phase)){this.kenarAI(dt);this.sakatlikAdim(dt);}   /* T10c: sakatlık akışı (js/mac-sakatlik.js) */
+    /* sıçramalar. T10c: maç boyu yorgunluk kısa duruşta azalmaz (eski dinlenme birikimi siliyordu; kısa toparlanma sprint enerjisindedir), devre
+       arasında azalır (devreDinlen, js/mac-hareket.js) */
+    for(const p of this.players)if(p.zipla)ziplaIlerle(p,dt);   /* T6a: kalkış hazırlığı, uçuş ve iniş (js/mac-hava.js) */
     this.topcuAI(dt);this.disToplarAdim(dt);
     if(saat)this.devreSonuKontrol();
   }
+
+  /* T10c (2026-10-11; TEKNIK_PLAN §8 “maç sonucu sabit bir kayıt hâline gelir”): kariyere aktarılacak sonuç kaydı — skor, goller, kartlar,
+     sakatlıklar (kaç gün), değişiklikler ve temel istatistik. Salt okunur kopya; kariyer Aşama 3'te maç kimliğiyle bir kez uygular */
+  sonucKaydi(){const I=this.ist,K=this.kayit,s=I.sahiplik[0]+I.sahiplik[1]||1;
+    return{skor:this.score.slice(),bitti:this.phase==='fulltime',goller:K.goller.map(o=>({...o})),kartlar:K.kartlar.map(o=>({...o})),
+      sakatliklar:K.sakatliklar.map(o=>({...o})),degisiklikler:K.degisiklikler.map(o=>({...o})),
+      ist:{sut:I.sut.slice(),isabet:I.isabet.slice(),korner:I.korner.slice(),faul:I.faul.slice(),sari:I.sari.slice(),kirmizi:I.kirmizi.slice(),
+        ofsayt:I.ofsayt.slice(),sahiplik:[I.sahiplik[0]/s,I.sahiplik[1]/s]}};}
 
   /* maç öncesi, devre arası ve maç sonu (maç günü akışı) js/mac-oncesi.js'tedir */
 
@@ -339,7 +352,7 @@ class Match{
     const b=this.ball;
     if(isinla||b.agda)this.topuSifirla(0,MZ);
     for(const p of this.players){
-      if(!p.oyunda)continue;
+      if(!p.oyunda||p.sakat)continue;   /* T10c: yerdeki sakat tedavisini bekler */
       const k=this.santraKonumu(p,takim);p.tx=k.x;p.tz=k.z;p.hizOran=0.55;p.eylem=null;p.surus=null;p.kickCd=0;p.sevinc=false;p.kosu=null;p.destek=null;
       p.bak=b;p.yonHedef=null;
       if(isinla){p.x=k.x;p.z=k.z;p.vx=p.vz=0;p.yon=this.dir[p.team]>0?0:Math.PI;}
@@ -359,9 +372,9 @@ class Match{
     }else{const k=this.santraKonumu(tk,this.kickTeam);tk.tx=k.x;tk.tz=k.z;}
     this.hareketHepsi(dt);this.topAdim(dt);
     let hazir=yerinde;
-    if(hazir)for(const p of this.players)if(p.oyunda&&hyp(p.tx-p.x,p.tz-p.z)>1.3){hazir=false;break;}
-    /* T8d: gerideyken ve süre azalmışken (acele) santra çabuk: 1,6 → 0,9 sn */
-    if(hazir&&this.phaseT>(this.macDurumu(this.kickTeam).acele>0.5?0.9:1.6)||this.phaseT>22){
+    if(hazir)for(const p of this.players)if(p.oyunda&&!p.sakat&&hyp(p.tx-p.x,p.tz-p.z)>1.3){hazir=false;break;}
+    /* T8d: gerideyken ve süre azalmışken (acele) santra çabuk: 1,6 → 0,9 sn. T10c: tedavi ya da sedye sürerken santra bekler */
+    if(!this.sakatlikBekletir()&&(hazir&&this.phaseT>(this.macDurumu(this.kickTeam).acele>0.5?0.9:1.6)||this.phaseT>22)){
       if(!yerinde)this.topuSifirla(0,MZ);
       const al=this.santraAlici(this.kickTeam),t0=this.t-this.phaseT;
       this.on('kickoff',{team:this.kickTeam,half:this.half});this.refs[0].eylem={ad:'duduk',t:0,sure:0.8};
@@ -593,6 +606,7 @@ class Match{
     for(const p of this.players)if(p.eylem&&p.eylem.ad==='vurus')p.eylem=null;
     this.phase='goal';this.phaseT=0;this.celeb={team:att,side,scorer,own};this.duranSure[this.half-1]+=50;
     this.on('goal',{team:att,scorer,own,score:this.score.slice()});
+    this.kayit.goller.push({ad:scorer?scorer.name:'',no:scorer?scorer.no:0,takim:att,kendiKalesine:!!own,dakika:Math.floor(this.gameSec/60)+1});   /* T10c */
     /* T10b (T10 teşhisi hata 5): avantaj sürerken gol — avantaj tutulmuştur, kart şimdi gösterilir (sevinç sürerken hakem oyuncuya gider) */
     if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:true});if(a.kart&&a.yapan.oyunda)this.kartGoster(a.yapan,a.kart);}
   }

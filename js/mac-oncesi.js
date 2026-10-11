@@ -32,7 +32,7 @@ Object.assign(Match.prototype,{
   kenarAI(dt){
     const b=this.ball,oyun=['play','durus','kickoff','goal'].includes(this.phase);
     for(const p of this.kenar){
-      if(p.oturuyor)continue;
+      if(p.oturuyor||p.kind==='saglikci')continue;   /* T10c: sağlıkçılar sakatlık akışında (js/mac-sakatlik.js) */
       if(p.kind==='foto'){/* yerine sahayı kesmeden gider (fotografciHedefi); kale arkasında sahaya bakıp çömelir */
         const h=this.fotografciHedefi(p),ev=hyp(p.ev.x-p.x,p.ev.z-p.z);p.tx=h.x;p.tz=h.z;p.hizOran=0.35;
         p.bak=ev<1.5?{x:0,z:MZ}:null;p.yonHedef=null;p.poz=ev<0.8?'comel':null;continue;}
@@ -476,6 +476,7 @@ Object.assign(Match.prototype,{
   /* ============ devre arası ve maç sonu ============ */
   endHalf(){
     const b=this.ball;b.sahip=null;b.tasiyan=null;b.vx*=0.3;b.vz*=0.3;b.sut=null;b.hedefOyuncu=null;this.durus=null;
+    this.sakatlikDevreSonu();   /* T10c: süren tedavi ya da sedye devre sonunda kapanır (js/mac-sakatlik.js) */
     const first=this.half===1;this.phase=first?'halftime':'fulltime';this.phaseT=0;
     const T=this.tunel;
     for(const p of this.players){p.eylem=null;p.surus=null;p.sevinc=false;p.bak=null;p.yonHedef=null;p.hizOran=0.3;p.poz=null;
@@ -492,7 +493,7 @@ Object.assign(Match.prototype,{
     this.hareketHepsi(dt,true);this.topAdim(dt);
     if(this.sen)this.antrenmanTopu(dt);
     if(this.phase==='halftime'&&this.phaseT>DEVRE_ARASI){
-      this.half=2;this.dir=[-this.dir[0],-this.dir[1]];this.gameSec=2700;
+      this.half=2;this.dir=[-this.dir[0],-this.dir[1]];this.gameSec=2700;this.devreDinlen();   /* T10c: devre arasında yorgunluk azalır (js/mac-hareket.js) */
       for(const p of this.players){p.x=T.x+(p.team?0.6:-0.6);p.z=T.z-1.6-p.n*0.9;p.vx=p.vz=0;}
       if(this.sen){this.sen.toplar.length=0;}
       for(const t of[0,1])for(const p of this.yedekler[t])if(!p.cikti&&!p.oturuyor)this.otur(p);

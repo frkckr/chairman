@@ -40,6 +40,8 @@ ayarEkle('C',{
   yanTutus:6.0,                // yanal tutunma (m/sn²; çeviklikle +3,5), hızla %30'a kadar azalır (C1)
   enerjiHarca:0.05,            // tepe hızda sprint enerjisinin saniyelik azalması (0,85·vmax üstünde) (C1)
   enerjiTopla:0.05,            // dururken sprint enerjisinin saniyelik dolması (0,55·vmax altında) (C1)
+  yorgunlukHiz:2.7,            // T10c: maç boyu yorgunluğun oyundaki birikim çarpanı: dt·(0,00053 + 0,0016·k²)·(1,25 − dayanıklılık)·çarpan (k = hız/tepe)
+  devreDinlenme:0.25,          // T10c: devre arasında yorgunluğun azalan payı (kısa duruşta azalmaz)
   yanTavan:0.52,               // yana adımda tepe hıza oran (C1)
   geriTavan:0.42,              // geri geri koşuda tepe hıza oran (C1)
   donusSiniri:1,               // dönüş hızı sınırının yarıçap çarpanı (0: yok) (C1)
@@ -83,7 +85,7 @@ const hrkSabit=p=>{const k=p._hk;if(k)return k;if(k===undefined)hrkHazirla(p);co
   const tip=clamp((1-(p.boy||1))*6+(c-0.5)*1.2-(((p.kayit&&p.kayit.yapi)||1)-1)*4,-1,1);
   return p._hk={A0:clamp(A.ivme+1.1*h+0.7*c+0.45*tip,6.0,7.8),S0:clamp(p.maxSpd+1.25-0.3*tip,8.6,10.0),B:A.fren+1.5*h,ly:A.yanTutus+3.5*c,w0:A.donusYerinde+2.5*c};};
 /* o anki tepe hız: sprint enerjisi ve yorgunluk düşürür */
-const hrkTepe=p=>p.maxSpd*(0.86+0.14*(p.enerji!=null?p.enerji:1))*(1-0.12*(p.yorgunluk||0));
+const hrkTepe=p=>p.maxSpd*(0.86+0.14*(p.enerji!=null?p.enerji:1))*(1-0.12*(p.yorgunluk||0))*(p.topal?0.75:1);   /* T10c: topallayan %25 yavaş (Ek G4) */
 /* T4-V: vuruş hazırlığındaki gövde dönüş hızı (rad/sn; hızlanınca düşer). moveP ve vurusIlerle'nin kalan süre hesabı aynı değeri okur */
 const hrkVurusDonus=p=>{const w=MOTOR_AYAR.vurusDonus,k=hrkMin(1,p.spd/p.maxSpd);return hrkMin(w[1],hrkSabit(p).w0*w[0])*(1-0.3*k);};
 /* gövdenin baktığı yöne göre hız tavanı (oran; c: bakış ile gidiş yönü arasındaki açının kosinüsü): ileri 1, yana adım ~0,52, geri geri ~0,42 */
@@ -263,10 +265,14 @@ const varisZamani=(p,x,z,menzil,tepki)=>{
 };
 Object.assign(Match.prototype,{
   /* beden adımı: yorgunluk koştukça (özellikle depar) birikir, dayanıklılık yavaşlatır. Kısa süreli depar yorgunluğunu sprint enerjisi taşır;
-     yorgunluk maç boyu birikendir (C1: birikim 2/3'e indi, top daha uzun oyunda kalıyor) */
+     yorgunluk maç boyu birikendir (C1: birikim 2/3'e indi, top daha uzun oyunda kalıyor). T10c: duruşlardaki eski dinlenme birikimi siliyordu (90.
+     dakikada ~0,01); artık kısa duruşta azalmaz, devre arasında devreDinlen; yorgunlukHiz ile 44. dakikada ~0,23, 89.'da ~0,33 */
   bedenAdim(dt){
-    for(const p of this.players)if(p.oyunda){const k=p.spd/p.maxSpd;p.yorgunluk=hrkMin(1,p.yorgunluk+dt*(0.00053+0.0016*k*k)*(1.25-p.oz.dayaniklilik));}
+    const c=MOTOR_AYAR.yorgunlukHiz;
+    for(const p of this.players)if(p.oyunda){const k=p.spd/p.maxSpd;p.yorgunluk=hrkMin(1,p.yorgunluk+dt*(0.00053+0.0016*k*k)*(1.25-p.oz.dayaniklilik)*c);}
   },
+  /* T10c: devre arasında yorgunluk devreDinlenme payı kadar azalır (js/mac-oncesi.js stepBreak, ikinci yarı başlarken) */
+  devreDinlen(){for(const p of this.players)if(p.yorgunluk>0)p.yorgunluk*=1-MOTOR_AYAR.devreDinlenme;},
   /* ============ hareket ============ */
   hareketHepsi(dt,carpismaYok){
     const P=this.players;
