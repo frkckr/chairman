@@ -70,9 +70,9 @@ const MOTOR_AYAR={
   dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,
   /* C — js/mac-mudahale.js */
   mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
-  acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,
+  acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,elOlasilik:undefined,tutmaIstek:undefined,
   /* C — js/mac-hava.js (T6) */
-  sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,havaOkuma:undefined,havaEgilme:undefined,havaDuello:undefined,kafaDonus:undefined,
+  sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,havaOkuma:undefined,havaEgilme:undefined,havaDuello:undefined,havaKol:undefined,kafaDonus:undefined,
   /* B — js/mac-topla.js */
   kararGecikme:undefined,ilerleme:undefined,risk:undefined,surusKarar:undefined,vurusHizalama:undefined,sutIstegi:undefined,ortaIstegi:undefined,
   sutSapma:undefined,uzaklastirCizgi:undefined,pasSapma:undefined,sikisma:undefined,geriPas:undefined,kontrolZorluk:undefined,tekVurus:undefined,verKacIstegi:undefined,
@@ -88,6 +88,8 @@ const MOTOR_AYAR={
   kosuTetik:undefined,kosuRastgele:undefined,kosuEs:undefined,zon14:undefined,govdeAc:undefined,osDestek:undefined,presTetikSure:undefined,
   presTetikMesafe:undefined,golgePres:undefined,kosucuTakip:undefined,hatCik:undefined,kutuSavunma:undefined,kompakt:undefined,
   mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,
+  /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
+  hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,itirazKart:undefined,
   /* K — js/mac-durantop.js (T8) */
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
   kornerKisa:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined
@@ -201,6 +203,8 @@ class Match{
     this.kosullar=Object.assign({islak:0,ruzgar:null},secenek.kosullar||{});
     this.zemin=clamp(this.kosullar.zemin!=null?this.kosullar.zemin:secenek.zemin!=null?secenek.zemin:0.7,0,1);this.kosullar.zemin=this.zemin;
     this.R=zeminYuvarlanma(this.zemin,this.kosullar.islak);
+    /* T10b: hakem kişiliği (secenek.hakem ya da tohumdan; js/mac-kurallar.js hakemKisilik) */
+    this.hakem=hakemKisilik(secenek.hakem,this.tohum);
     this.taraftarYeri=secenek.taraftarYeri||{x:0,z:PW-4,nx:0,nz:1};this.deplasmanYeri=secenek.deplasmanYeri||null;
     this.reset();
   }
@@ -237,7 +241,7 @@ class Match{
     return Object.assign({tur,kind:null,team:null,n:-1,rol:null,mevki:null,name:'',no:0,kaptan:false,kayit:null,oz:null,ayak:'sag',boy:1,
       x,z,vx:0,vz:0,spd:0,yon:0,maxSpd:7,tx:x,tz:z,hizOran:1,bak:null,yonHedef:null,eylem:null,kickCd:0,kararT:0,dokunT:0,surus:null,
       oyunda:false,cikiyor:false,kart:0,yorgunluk:0,destek:null,kosu:null,gorev:null,sevinc:false,hedef:null,tutus:null,_cikis:null,
-      ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,topBos:0,kartSira:null,gir:0,_kar:null,oturuyor:false,koltuk:null,cikti:false,poz:null,sg:null,yuk:0,zipla:null,
+      ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,topBos:0,kartSira:null,kartKuyruk:null,gir:0,_kar:null,oturuyor:false,koltuk:null,cikti:false,poz:null,sg:null,yuk:0,zipla:null,
       /* motor → çizim sözleşmesi (Faz 0; TEKNIK_PLAN §8): tavır, bakış yönü, denge, sprint enerjisi, son dokunuş */
       tavir:null,bakisYon:null,denge:1,enerji:1,sonDokunus:null,
       /* T3 (profil kapısı): oyuncu ve yedekte profilKur ile dolar {alt, rol, egilim, form, grup} (js/mac-profil.js); hakem ve top toplayıcıda null */
@@ -589,6 +593,8 @@ class Match{
     for(const p of this.players)if(p.eylem&&p.eylem.ad==='vurus')p.eylem=null;
     this.phase='goal';this.phaseT=0;this.celeb={team:att,side,scorer,own};this.duranSure[this.half-1]+=50;
     this.on('goal',{team:att,scorer,own,score:this.score.slice()});
+    /* T10b (T10 teşhisi hata 5): avantaj sürerken gol — avantaj tutulmuştur, kart şimdi gösterilir (sevinç sürerken hakem oyuncuya gider) */
+    if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:true});if(a.kart&&a.yapan.oyunda)this.kartGoster(a.yapan,a.kart);}
   }
   stepGoal(dt){
     const c=this.celeb,sc=c.own?null:c.scorer,cx=c.side*(PL-3),cz=c.side>0?PW-3:3,b=this.ball,gk=this.kaleci(1-c.team);

@@ -37,6 +37,7 @@ ayarEkle('C',{
   havaOkuma:[0.12,0.36],       // T6b: topun uçuşunu okuma hatası (derinlik) σ = taban + çarpan × (1 − okuma) (m; yanal hata yarısı)
   havaEgilme:[0.35,0.10],      // T6b: başın gövde ve boyunla yatayda topa uzanması (m): ayakta / koşarak sıçrarken ek
   havaDuello:0.035,            // T6b: düelloda neredeyse aynı anda varan başların temas anı sapması σ (sn; boyun ve gövdenin son uzanması, itişme; fiziksel aralık 0,025–0,05)
+  havaKol:0.2,                 // T10b: hava düellosunda kolla yer kapma: şiddete havaKol × (0,4 + 1,2·agresiflik) (ikisi de sıçrarken, 0,9 m içinde)
   kafaDonus:1.6                // T8b: kafa vuruşunda topu geliş doğrultusundan saptırmanın zorluğu: yön ve yükseklik σ × (1 + kafaDonus·sin θ) (90°'de en zor; sıyırma ve geri vurma kolay)
 });
 /* T8b (2026-10-11): kafanın topu geliş doğrultusundan saptırma açısının sinüsü (gelen top 3 m/sn altındaysa 0). Ortadan ve kornerden kaleye kafa
@@ -182,8 +183,11 @@ Object.assign(Match.prototype,{
   havaFaulu(kazanan,kaybeden){
     const w=kazanan,q=kaybeden,dx=w.x-q.x,dz=w.z-q.z,d=hrkHyp(dx,dz);if(d>1.2||d<1e-3)return false;
     const vk=hrkMax(0,((q.vx-w.vx)*dx+(q.vz-w.vz)*dz)/d),arka=(-dx*hrkCos(w.yon)-dz*hrkSin(w.yon))/d;   /* arka < −0,3: kaybeden kazananın arkasında */
-    const gec=(w.yuk||0)>0.1&&(!q.zipla||q.zipla.t<0||(q.yuk||0)<(w.yuk||0)-0.15);
-    const cc=hrkMax(0,vk-1.8)/3.5+(arka<-0.3?0.3:0)+(gec?0.15:0)+(profilAlt(q,'agresiflik',q.oz.sertlik)-0.5)*0.5;
+    const gec=(w.yuk||0)>0.1&&(!q.zipla||q.zipla.t<0||(q.yuk||0)<(w.yuk||0)-0.15),agr=profilAlt(q,'agresiflik',q.oz.sertlik);
+    /* T10b: kolla yer kapma (Ek G4; T6'da yalnız gövde vardı) — 0,9 m içinde ikisi de sıçrarken kaybeden kolunu kullanır, agresif oyuncu daha çok:
+       şiddete havaKol × (0,4 + 1,2·agresiflik). Gerçekte hava düellolarının ~%10'u faulle biter; motorda %3'tü */
+    const kol=d<0.9&&(q.zipla||(q.yuk||0)>0.05)&&(w.zipla||(w.yuk||0)>0.05)?MOTOR_AYAR.havaKol*(0.4+1.2*agr):0;
+    const cc=hrkMax(0,vk-1.8)/3.5+(arka<-0.3?0.3:0)+(gec?0.15:0)+(agr-0.5)*0.5+kol;
     return this.temasFaulu(q,w,cc,{hava:true,arkadan:arka<-0.3,kaynak:'hava',x:w.x,z:w.z});
   }
 });

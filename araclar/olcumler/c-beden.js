@@ -1,10 +1,11 @@
 /* ============ C akışı ölçümü: müdahale türü ve sonucu, omuz mücadelesi, düşüş ve faul nedenleri, kart gerekçesi, avantaj ============
    Olaylardan sayar (rastlantı çekmez, motor yöntemi çağırmaz). Değerler maç başına adettir. */
 'use strict';
-const TUR=['acik','donus','erken','kayma','yan','toparlanma']   /* T4'ten beri motor sırttan dalış yerine 'donus' yayar (2026-10-09 düzeltme) */,SONUC=['temiz','durttu','blok','gecildi','faul'],NEDEN=['faul','omuz','kayma','hava','takilma'],FN=['mudahale','kayma','itme','hava'],KART=['siddet','atak','firsat','asiri'];
+const TUR=['acik','donus','erken','kayma','yan','toparlanma']   /* T4'ten beri motor sırttan dalış yerine 'donus' yayar (2026-10-09 düzeltme) */,SONUC=['temiz','durttu','blok','gecildi','faul'],NEDEN=['faul','omuz','kayma','hava','takilma'],FN=['mudahale','kayma','itme','hava','el'],KART=['siddet','atak','firsat','asiri','el','itiraz'];
 const bas=s=>s.charAt(0).toUpperCase()+s.slice(1);
-/* T5 (2026-10-09): faulün kaynağı (temastan: müdahale, kayma, gövde çarpması, omuz, ayağa basma, hava; kasıt: taktik) ve hakemin görmediği faul */
-const KAYNAK=['mudahale','kayma','carpma','omuz','basma','hava','taktik'];
+/* T5 (2026-10-09): faulün kaynağı (temastan: müdahale, kayma, gövde çarpması, omuz, ayağa basma, hava; kasıt: taktik) ve hakemin görmediği faul.
+   T10b (2026-10-11): markajda tutma, elle oynama, kaleciye çarpma, yüksek ayak; kart gerekçesine el ve itiraz (itiraz sarısı 'kart' olayının nedeninden) */
+const KAYNAK=['mudahale','kayma','carpma','omuz','basma','hava','taktik','tutma','el','kaleci','yuksekAyak'];
 module.exports={
   bilgi:[['— C: müdahale, omuz, düşüş, kart —',null,0]]
     .concat(TUR.map(t=>['Müdahale türü: '+t,'cMt'+bas(t),1]))
@@ -27,6 +28,7 @@ module.exports={
         else if(ad==='dusus')art('cDn'+bas(v.neden||'faul'));
         else if((ad==='faul'&&!v.avantajdan)||ad==='avantaj'){art('cFn'+bas(v.neden||'mudahale'));if(v.omuz)art('cOmuzFaul');if(v.kartNeden)art('cK'+bas(v.kartNeden));if(v.kaynak)art('cFk'+bas(v.kaynak));}
         else if(ad==='faulGorulmedi')art('cFg');
+        else if(ad==='kart'&&v.neden)art('cK'+bas(v.neden));
         else if(ad==='avantajSonuc'&&!v.tutuldu)art('cAvDon');},
       bitir(){const o={};
         for(const t of TUR)o['cMt'+bas(t)]=say['cMt'+bas(t)]||0;

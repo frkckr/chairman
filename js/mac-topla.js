@@ -265,6 +265,9 @@ Object.assign(Match.prototype,{
       /* dış ayak ve gelişine iç ayak, gövdeyi tam çevirmeden açılı vurur */
       e.hizalanma=e.stil==='dis'?Math.max(0,sap-0.6):sec.ilk?Math.max(0,sap-0.4):sap;}
     if(e.stil!=='asirtma'&&e.stil!=='dis'&&e.stil!=='burun'){if(b.y>0.45)e.stil='vole';else if(b.y>0.15&&sec.ilk)e.stil='yarimVole';}
+    /* T10b: yüksek ayak (tehlikeli oyun): baş hizasındaki topa (≥ 1,3 m) ayakla vurulurken rakip 1 m içindeyse ve hakem görürse vuruş olmaz,
+       rakibe dolaylı serbest vuruş (js/mac-mudahale.js yuksekAyak) */
+    if(b.y>=1.3&&this.yuksekAyak(p))return;
     /* T9b-b: kötü vuruş (tek zar; gerçekçilik planı §4 T9 “Vuruş” 4): olasılık kotuVurusOlasiligi'ndan, türü aynı zarın içinden — gelen ya da
        havadaki topta ıska %25, altına girme %35, üstüne vurma %15, ayağın kenarı %25; duran topta altına %40, üstüne %30, kenar %30. Etkisi vuruş
        işlevlerinde (sutVur, yerPasVur, havaPasVur); ıskada top değmez. Sözleşme: vurus.kotu, olay 'kotuVurus' {p, tur, sut} */

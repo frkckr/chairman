@@ -7,6 +7,29 @@
    Faul: müdahalenin sonucu (ayakta, kayarak, arkadan, hava topunda itme). Oyuncu düşer, hakem düdük çalar ve yön gösterir,
    gerekirse kart; faul yiyen takım iyi durumdaysa avantaj. Ofsayt: pas anında ölçülür, oyuna karışınca yan hakem bayrak kaldırır.
    Hakem çapraz sistemle koşar; yan hakemler sondan ikinci savunmacı (ya da top) hizasında durur. */
+/* ============ T10b (2026-10-11): hakem kişiliği (gerçekçilik planı §4 T10 madde 2; isimsiz — isimli hakem içerik işidir, 2.8L) ============
+   sertlik (faul ve kart eşiği), avantaj (avantaj verme eğilimi), dikkat (görme), kondisyon (son 15 dakikada görme ve koşu), evEgilim (seyirci
+   baskısı, T10e): 0–1, 0,5 ortalama — ortalama hakem eski sabit davranışın aynısıdır, kişilik yalnız hakemden hakeme fark katar (gerçekte maç
+   başına faul ±%15, sarı ±%25). Maç girdisinden (secenek.hakem) ya da tohumdan (profilOzet: rastlantı çekmez); MOTOR_AYAR.hakemSabit (tarama)
+   hepsinin yerine geçer */
+ayarEkle('Kurallar',{
+  hakemSabit:null,             // T10b: tarama için sabit kişilik {sertlik, avantaj, dikkat, kondisyon, evEgilim} (MAC_DENEME_AYAR); null: girdiden ya da tohumdan
+  hakemFaul:0.3,               // T10b: sertliğin faul eşiğine etkisi: eşik − hakemFaul × (sertlik − 0,5) (uçlarda ±0,12; 40'ar maç: sertlik 0,9 → faul 6,8 / sarı 2,6, 0,1 → 4,8 / 1,6 — gerçekte hakemden hakeme ±%15 / ±%25; 0,12'de faul farkı yalnız %5'ti)
+  hakemKart:0.25,              // T10b: sertliğin kart eşiğine etkisi (uçlarda ±0,1)
+  hakemYorgun:0.15,            // T10b: 75. dakikadan sonra yorgunluk: görme × (1 − f·(1,3 − kondisyon)·hakemYorgun), koşu temposu da düşer (Ek G7: son 15 dakikada hata %23)
+  itirazKart:0.035             // T10b: itiraz başına sarı olasılığı (× hakemeItiraz eğilimi, × hakemin sertliği; gerçekte itiraz sarısı maç başına ~0,3)
+});
+const HAKEM_ALAN=['sertlik','avantaj','dikkat','kondisyon','evEgilim'];
+function hakemKisilik(g,tohum){const S=MOTOR_AYAR.hakemSabit,o={};
+  for(const k of HAKEM_ALAN)o[k]=S&&S[k]!=null?clamp(+S[k],0,1):g&&g[k]!=null?clamp(+g[k],0,1):clamp(0.5+(profilOzet('hakem#'+tohum+'#'+k)-0.5)*0.8,0.1,0.9);
+  return o;}
+const hkDeger=(m,k)=>m.hakem?m.hakem[k]:0.5;
+/* yorgunluk: 75. dakikadan (ikinci yarıda maç saati 4500 sn) 90'a doğrusal artar, uzatmada en çok; kondisyonla */
+const hkYorgun=m=>m.half===2?clamp((m.gameSec-4500)/900,0,1)*(1.3-hkDeger(m,'kondisyon'))*MOTOR_AYAR.hakemYorgun:0;
+const hkFaulEsik=m=>MOTOR_AYAR.faulEsik-MOTOR_AYAR.hakemFaul*(hkDeger(m,'sertlik')-0.5);
+const hkKartEsik=m=>MOTOR_AYAR.kartEsik-MOTOR_AYAR.hakemKart*(hkDeger(m,'sertlik')-0.5);
+/* orta hakemin görme çarpanı: dikkat (0,94–1,06) × (1 − yorgunluk) */
+const hkGorme=m=>(0.94+0.12*hkDeger(m,'dikkat'))*(1-hkYorgun(m));
 Object.assign(Match.prototype,{
   kuralHazirla(){this.avantaj=null;this.sonKullanim=null;this.degisiklik=null;},
 
@@ -169,7 +192,9 @@ Object.assign(Match.prototype,{
     /* taç, korner, aut ve saha dışında kalan top: top toplayıcı yedek topu verir (N10). Faulde top sahadadır; atan alıp yerine taşır */
     b.tasiyan=null;
     if(tur==='tac'||tur==='korner'||tur==='kaleVurusu'||Math.abs(b.x)>PL+0.2||b.z<-0.2||b.z>PW+0.2)this.durusTopu(du);
-    /* avantajdan kalan kart ilk duruşta gösterilir */
+    /* T10b (T10 teşhisi hata 5): avantaj sürerken oyun durdu — avantaj kapanır, kart bu duruşta gösterilir (eskiden oyun dönünce kapanıyor, kart bir
+       duruş geç kalıyordu). Avantajdan kalan kart ilk duruşta gösterilir */
+    if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:!!a.tuttu});if(a.kart)this.bekleyenKart=a;}
     if(this.bekleyenKart){const a=this.bekleyenKart;this.bekleyenKart=null;if(a.yapan.oyunda)this.kartGoster(a.yapan,a.kart);}
     if(tur==='tac')this.ist.tac[takim]++;else if(tur==='korner')this.ist.korner[takim]++;else if(tur==='kaleVurusu')this.ist.kaleVurusu[takim]++;
     if(tur==='kaleVurusu'||tur==='korner')this.kacanFirsat();   /* T7f: kaçan büyük fırsatta şutçu başını tutar */
@@ -333,18 +358,21 @@ Object.assign(Match.prototype,{
 
 
   cezaSahasi(t,x,z){const gx=-this.dir[t]*PL;return Math.abs(x-gx)<CEZA_U&&Math.abs(z-MZ)<CEZA_W;},
-  kartGoster(p,renk){
+  kartGoster(p,renk,neden){
     const r=this.refs[0];
     if(renk==='sari'&&p.kart===1)renk='ikinciSari';
     if(renk==='sari'){p.kart=1;this.ist.sari[p.team]++;}
     else{if(renk==='ikinciSari')this.ist.sari[p.team]++;p.kart=2;this.ist.kirmizi[p.team]++;}
-    const d=this.durus;if(d)d.kartAn={p,renk};
-    r.kartSira={p,renk,t:0};
-    this.on('kart',{p,renk,aleyhe:p.team,takim:p.team});
+    /* T10b (T10 teşhisi hata 1): kartlar sıraya girer — eskiden tek yer vardı (r.kartSira), birkaç saniye içinde ikinci kart gelirse ilki eziliyor,
+       kırmızı gören oyuncu oyundan çıkarılmayabiliyordu. Hakem sıradakini gösterir; r.kartSira gösterilen karttır (çizim okur) */
+    const k={p,renk,t:0};(r.kartKuyruk||(r.kartKuyruk=[])).push(k);if(!r.kartSira)r.kartSira=k;
+    this.on('kart',{p,renk,aleyhe:p.team,takim:p.team,neden:neden||null});   /* T10b: neden (itiraz …; faul kartının gerekçesi faul olayındadır) */
   },
   itirazEt(yapan){
     let n=0;for(const q of this.teams[yapan.team]){if(!q.oyunda||q.rol==='GK'||n>=2)continue;
-      if(hyp(q.x-yapan.x,q.z-yapan.z)<14&&this.rast()<0.55){q.eylem={ad:'itiraz',t:0,sure:1.4+this.rast()};n++;}}
+      if(hyp(q.x-yapan.x,q.z-yapan.z)<14&&this.rast()<0.55){q.eylem={ad:'itiraz',t:0,sure:1.4+this.rast()};n++;
+        /* T10b: itirazdan sarı — oyuncunun hakeme itiraz eğilimi (profil; eskiden okunmuyordu) ve hakemin sertliği; kartı olan da görebilir (ikinci sarı) */
+        if(this.rast()<MOTOR_AYAR.itirazKart*(1+1.5*Math.max(0,profilEgilim(q,'hakemeItiraz')))*(0.5+hkDeger(this,'sertlik')))this.kartGoster(q,'sari','itiraz');}}
   },
 
   /* her karede: avantajın süresi, kaleci elde, kayma teması */
@@ -353,6 +381,7 @@ Object.assign(Match.prototype,{
     if(this.degisiklik&&this.degisiklik.girdi)this.degisiklikAdim(dt);
     if(b.tasiyan&&b.tasiyan.rol==='GK')this.kaleciElde(dt);
     for(const p of this.players)if(p.eylem&&p.eylem.ad==='kayma')this.kaymaTemas(p);
+    this.tutmaAdim();   /* T10b: markajda tutma (js/mac-mudahale.js) */
     this.avantajAdim(dt);
   },
 
@@ -392,7 +421,8 @@ Object.assign(Match.prototype,{
     const kartSira=h.kartSira,DY=du?this.hakemDuranYeri(du):null;   /* T8a: duran topta hakemlerin yeri (js/mac-durantop.js) */
     if(kartSira){kartSira.t+=dt;const p=kartSira.p;h.tx=p.x+(h.x<p.x?-1.6:1.6);h.tz=p.z;h.hizOran=1;h.bak=p;
       if(hyp(h.x-p.x,h.z-p.z)<2.2&&!(h.eylem&&h.eylem.ad==='kart')){h.eylem={ad:'kart',t:0,sure:1.7,renk:kartSira.renk};}
-      if(h.eylem&&h.eylem.ad==='kart'&&h.eylem.t>1.5||kartSira.t>6){h.kartSira=null;if(p.kart===2)this.oyundanCikar(p);}}
+      if(h.eylem&&h.eylem.ad==='kart'&&h.eylem.t>1.5||kartSira.t>6){const Q=h.kartKuyruk;if(Q&&Q[0]===kartSira)Q.shift();h.kartSira=Q&&Q.length?Q[0]:null;
+        if(p.kart===2&&p.oyunda)this.oyundanCikar(p);}}
     else if(DY&&DY.h){h.tx=clamp(DY.h.x,-PL+1,PL-1);h.tz=clamp(DY.h.z,1,PW-1);const uz=hyp(h.tx-h.x,h.tz-h.z);h.hizOran=uz>8?0.9:0.6;h.bak=b;
       /* barajlı serbest vuruş: hakem barajın ucunda 9,15 m'yi gösterir, 1,2 sn sonra baraj dizilmiş sayılır ve hakem çaprazına çekilir */
       if(du.sinif==='baraj'&&!du.hakemHazir&&(du.asama==='yerles'||du.asama==='hazir')&&uz<1.2){du.hakemT=(du.hakemT||0)+dt;
@@ -402,7 +432,12 @@ Object.assign(Match.prototype,{
       const cap=MZ-clamp(fx,-PL,PL)/PL*21;
       let tx=clamp(fx*0.8-Math.sign(fx||1)*3,-40,40),tz=lerp(cap,fz,0.28);
       const dd=hyp(tx-fx,tz-fz);if(dd<12){const s=12/(dd||1);tx=fx+(tx-fx)*s;tz=fz+(tz-fz)*s;}
-      h.tx=clamp(tx,-PL+2,PL-2);h.tz=clamp(tz,2,PW-2);const uzak=hyp(h.tx-h.x,h.tz-h.z);h.hizOran=uzak>14?1:uzak>5?0.65:0.4;h.bak=b;}
+      /* T10b: yorgun hakem son 15 dakikada daha yavaş koşar (hkYorgun; Ek G7: geri ve yan koşu yarıya iner) */
+      h.tx=clamp(tx,-PL+2,PL-2);h.tz=clamp(tz,2,PW-2);const uzak=hyp(h.tx-h.x,h.tz-h.z);h.hizOran=(uzak>14?1:uzak>5?0.65:0.4)*(1-1.5*hkYorgun(this));h.bak=b;
+      /* T10b: hakem topun yolundan çekilir (Ek G7: pas hattını kapatmaz; T10-0'da topa çarpan hakem maç başına 0,5): top 6 m/sn'den hızlı ve
+         önümüzdeki 1 sn'de 1,5 m yakınından geçecekse yolun dik yönünde 3 m kenara */
+      const bv=hyp(b.vx,b.vz);if(bv>6&&!b.sahip){const nx=-b.vz/bv,nz=b.vx/bv;
+        if(segD(h.x,h.z,b.x,b.z,b.x+b.vx,b.z+b.vz)<1.5){const s=((h.x-b.x)*nx+(h.z-b.z)*nz)>=0?1:-1;h.tx=clamp(h.x+nx*s*3,-PL+2,PL-2);h.tz=clamp(h.z+nz*s*3,2,PW-2);h.hizOran=1;}}}
     /* yan hakemler: kendi yarılarında, sondan ikinci savunmacı ya da top hizasında; yan adımla izler */
     const yan=(q,s,z)=>{q.tx=clamp(this.ofsaytHizasi(s),0,PL-1)*s;q.tz=z;const uz=Math.abs(q.tx-q.x);q.hizOran=uz>8?1:0.55;
       q.yonHedef=uz>6?null:(z>MZ?-Math.PI/2:Math.PI/2);q.bak=b;};

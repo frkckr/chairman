@@ -21,7 +21,9 @@ ayarEkle('C',{
   kaymaIstek:3,                // uzun kaçan topa kayarak girme sıklığı (1/sn) (C2)
   taktikFaul:0.3,              // çalımla geçilen savunmacının çekme/çelme olasılığı (C2)
   sariAtak:0.8,                // gelişen atağı kesen faulde sarı olasılığı (taktik faulde +0,3) (C2)
-  firsatKirmizi:0.45           // açık gol fırsatını engelleyen faulde kırmızı olasılığı (hakem her zaman görmez; birleştirme 2026-10-03)
+  firsatKirmizi:0.45,          // açık gol fırsatını engelleyen faulde kırmızı olasılığı (hakem her zaman görmez; birleştirme 2026-10-03)
+  elOlasilik:1.0,              // T10b: elle oynama olasılıklarının çarpanı (kol yüksekliğindeki temasta duruşa göre 0,03–0,25; elleOynamaDene)
+  tutmaIstek:0.35              // T10b: adamı koşuyla sıyrılan markajcının formadan tutma olasılığı (× 0,2 + 1,6·agresiflik; tutmaDene)
 });
 /* dengeye dayanıklılık: kütle, sertlik ve çeviklik (C2) */
 const mdhDengeGuc=p=>(kutle(p)/78)*(0.8+0.4*(p.oz&&p.oz.sertlik!=null?p.oz.sertlik:0.5))*(0.85+0.3*hrkCeviklik(p));
@@ -143,7 +145,7 @@ const mdhGormeUzak=d=>d<=10?0.95:d<=20?0.95-0.013*(d-10):d<=30?0.82-0.017*(d-20)
 /* T5: hakem görür mü — tek zar (motorun rast'ı) */
 const mdhGormeCek=(m,x,z,yapan,yiyen)=>m.rast()<mdhGorme(m,x,z,yapan,yiyen);
 function mdhGorme(m,x,z,yapan,yiyen){
-  const R=m.refs;if(!R||!R.length)return 1;const h=R[0],dx=x-h.x,dz=z-h.z,d=hrkHyp(dx,dz)||0.1;let P=mdhGormeUzak(d);
+  const R=m.refs;if(!R||!R.length)return 1;const h=R[0],dx=x-h.x,dz=z-h.z,d=hrkHyp(dx,dz)||0.1;let P=mdhGormeUzak(d)*hkGorme(m);   /* T10b: dikkat ve yorgunluk */
   if(yapan&&yiyen){const wx=yiyen.x-yapan.x,wz=yiyen.z-yapan.z,w=hrkHyp(wx,wz)||1;if(hrkAbs((dx*wx+dz*wz)/(d*w))>0.85)P*=0.8;}
   let perde=0;for(const q of m.players){if(perde>=2||!q.oyunda||q===yapan||q===yiyen)continue;
     const qx=q.x-h.x,qz=q.z-h.z,u=(qx*dx+qz*dz)/(d*d);if(u<0.1||u>0.9)continue;if(hrkHyp(qx-dx*u,qz-dz*u)<1){P*=0.85;perde++;}}
@@ -218,12 +220,69 @@ Object.assign(Match.prototype,{
     const yuk=b.y/((p.boy||1)*1.8);b.vy=yuk<0.35?hrkAbs(b.vy)*0.3+this.rast()*1.2:1+this.rast()*2.5;
     b.x=p.x+mx*(0.38);b.z=p.z+mz*(0.38);b.egri=0;b.ust=0;
   },
+  /* ============ T10b: elle oynama (gerçekçilik planı §4 T10 madde 3; T5 madde 7) ============
+     Top bedene çarptığında (sekme, blok, gövdeye çarpma) temas kol yüksekliğindeyse (ayaktan 0,85–1,75 × boy) ve kol doğal olmayan bir duruştaysa
+     elle oynamadır: sıçrarken (kollar yukarı) 0,3, bloğa atılırken 0,25, kayarken (destek kolu) 0,08, düşerken 0,06, koşarken ya da dururken
+     (kollar gövdeye yakın; üst gövdeye gelen topun kola değme payı) 0,08 — × elOlasilik; topu 2 m'den yakından yiyen (yansıyan top) yarı olasılıkla
+     (ilk ölçüm 0,03/0,25/0,2 ile maç başına 0,03 elle oynama: motorda üst gövdeye gelen top seyrek). Hakem görür mü tek zar (faulGor);
+     görmezse oyun sürer, kimse düşmez. Kendi ceza sahasında penaltı; çerçeveye giden şutu elle kesmek en az sarı (faul) */
+  elleOynamaDene(p){
+    const b=this.ball;if(this.phase!=='play'||!p.oyunda||p.rol==='GK'&&this.kendiCezaSahasinda(p,b.x,b.z))return false;
+    const B=p.boy||1,h=b.y-(p.yuk||0);if(h<0.85*B||h>1.75*B)return false;
+    const e=p.eylem&&p.eylem.ad,P0=p.zipla||(p.yuk||0)>0.05?0.3:e==='blok'?0.25:e==='kayma'?0.08:e==='dusus'||e==='yerde'?0.06:0.08;
+    const s=b.sonDokunan,yakin=!!s&&s!==p&&hrkHyp(s.x-p.x,s.z-p.z)<2;
+    if(this.rast()>=P0*MOTOR_AYAR.elOlasilik*(yakin?0.5:1))return false;
+    const yiyen=s&&s.team!==p.team&&s.oyunda?s:enYakinRakip(this,p.x,p.z,p.team).o;if(!yiyen)return false;
+    const sut=!!(b.sut&&b.sut.team!==p.team&&b.sut.cerceve);
+    this.on('elleOynama',{p,yiyen,sut,x:p.x,z:p.z});
+    return this.faulGor(p,yiyen,{el:true,sut,kaynak:'el',ciddiyet:0.2,x:p.x,z:p.z});
+  },
+  /* ============ T10b: yüksek ayak (tehlikeli oyun; gerçekçilik planı §4 T10 madde 3) ============
+     Baş hizasındaki topa ayakla vuran oyuncunun 1 m içinde (topa) rakip varsa ve hakem görürse (mdhGorme; tek zar) temas olmadan tehlikeli oyundur:
+     vuruş olmaz, rakibe dolaylı serbest vuruş (hakemin endirekt işareti). Faul sayılır, kart yok. Çalındıysa true */
+  yuksekAyak(p){
+    const b=this.ball;if(this.phase!=='play')return false;let o=null,en=1.0;
+    for(const q of this.teams[1-p.team]){if(!q.oyunda)continue;const d=hrkHyp(q.x-b.x,q.z-b.z);if(d<en){en=d;o=q;}}
+    if(!o||this.rast()>=mdhGorme(this,b.x,b.z,p,o))return false;
+    const x=clamp(b.x,-PL+0.3,PL-0.3),z=clamp(b.z,0.3,PW-0.3);
+    this.ist.faul[p.team]++;this.duranSure[this.half-1]+=15;p.eylem=null;
+    this.on('faul',{faulYapan:p,faulYiyen:o,takim:o.team,aleyhe:p.team,x,z,penalti:false,kart:null,neden:'yuksekAyak',kaynak:'yuksekAyak',endirekt:true,siddet:0});
+    this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};
+    this.durusBaslat('serbest',o.team,x,z,{bekle:1.2+this.rast()*0.4,endirekt:true,duduk:true});
+    return true;
+  },
+  /* ============ T10b: markajda tutma (forma çekme; gerçekçilik planı §4 T10 madde 3, Ek G4) ============
+     Markajdaki savunmacı (açık oyunda takım markajı _markaj, duran topta görev 'adam'), adamı 1,1 m içinden 1,2 m/sn'den hızlı sıyrılırken ve top ona
+     ya da yakınına geliyorken (pasın hedefi o ya da havadaki topun inişi 6 m içinde) formadan tutabilir: top sürümü başına bir kez, tutmaIstek ×
+     (0,2 + 1,6·agresiflik) (sarı kartlı ×0,5). Tutulan yavaşlar ve dengesi bozulur; temas faulü adayıdır: şiddet 0,2 + sıyrılma hızı/5 +
+     agresiflik + adam havadaysa 0,1 — hakem ceza sahasında tutmaya hoşgörülüdür (−0,45; penaltı nadir — −0,2 ile 40 maçta tutmadan 0,30 penaltı/maç
+     çıkıyordu, toplam penaltı 0,25 → 0,45). Gerçekte faullerin ~%15'i tutma */
+  tutmaAdim(){
+    if(this.kare%3||this.phase!=='play')return;const b=this.ball,hedef=b.hedefOyuncu,ph=b.pasHedef;
+    if(!hedef&&!(ph&&b.y>0.5&&!b.sahip))return;
+    const dene=(p,o)=>{if(!p.oyunda||!o.oyunda||p.team===o.team||p.rol==='GK'||p.eylem&&p.eylem.kilit||o.eylem&&o.eylem.kilit)return;
+      const dx=o.x-p.x,dz=o.z-p.z,d=hrkHyp(dx,dz);if(d>1.1||d<1e-3)return;
+      const vr=((o.vx-p.vx)*dx+(o.vz-p.vz)*dz)/d;if(vr<1.2)return;
+      if(o!==hedef&&!(ph&&hrkHyp(ph.x-o.x,ph.z-o.z)<6))return;
+      if(p._tutS===b.surum)return;p._tutS=b.surum;
+      const agr=profilAlt(p,'agresiflik',p.oz.sertlik);
+      if(this.rast()>=MOTOR_AYAR.tutmaIstek*(0.2+1.6*agr)*((p.kart||0)>=1?0.5:1))return;
+      o.vx*=0.55;o.vz*=0.55;p.vx*=0.8;p.vz*=0.8;this.dengeBoz(o,0.08,-dx/d,-dz/d,'itme',p);
+      this.on('tutma',{p,o});
+      const kutu=this.kendiCezaSahasinda(p,o.x,o.z);
+      this.temasFaulu(p,o,0.2+vr/5+(agr-0.5)*0.5+(o.zipla?0.1:0)-(kutu?0.45:0),{itme:true,kaynak:'tutma',x:o.x,z:o.z});};
+    const M=this._markaj;
+    if(M)for(let t=0;t<2&&this.phase==='play';t++)for(const [p,o] of M[t])dene(p,o);
+    for(const p of this.players){if(this.phase!=='play')break;const g=p.duranRol;if(g&&g.rol==='adam'&&g.hedef)dene(p,g.hedef);}
+  },
   sekme(p){
+    if(this.elleOynamaDene(p))return;   /* T10b */
     const b=this.ball;this.yansit(p,0.45,0.35);
     if(b.sut)b.sut=null;this.dokunus(p,false);p.kickCd=0.35;this.on('sekme',{p});
   },
   blok(p){
     /* blok: şut savunmacının bacağına ya da gövdesine çarpıp yansır (korner, geri ya da yana gidebilir) */
+    if(this.elleOynamaDene(p))return;   /* T10b */
     const b=this.ball,v=hrkHyp(b.vx,b.vz);this.yansit(p,0.4,0.45);
     b.sut=null;this.dokunus(p,false);p.kickCd=0.35;p.eylem={ad:'blok',t:0,sure:0.45};this.on('block',{p,v});
   },
@@ -237,6 +296,7 @@ Object.assign(Match.prototype,{
       const bj=!hakem&&!!(p.duranRol&&p.duranRol.rol==='baraj'),dx=b.x-p.x,dz=b.z-p.z,d=hrkHyp(dx,dz);
       if(d>(bj?0.5:0.37)||b.y>(bj?1.95:1.8)*(p.boy||1)+(p.yuk||0)||b.y<(p.yuk||0)-0.08)return false;
       if((b.vx-(p.vx||0))*dx+(b.vz-(p.vz||0))*dz>=0)return false;
+      if(!hakem&&this.elleOynamaDene(p))return true;   /* T10b: elle oynama (çalındıysa oyun durdu) */
       this.yansit(p,0.3,0.25);
       if(hakem){this.topDegisti();this.on('hakemeCarpti',{p});}
       else{if(b.sut&&p.team!==b.sut.team){b.sut=null;p.eylem={ad:'blok',t:0,sure:0.45};this.on('block',{p,v});}else this.on('sekme',{p});
@@ -418,7 +478,7 @@ Object.assign(Match.prototype,{
          faulsüz düşürmesi neredeyse hiç olmuyordu; c-kayma) + N(0; 0,06) */
       cc=mdhSiddet(p,vrel,arkadan,kayma,gec,once)+this.normal()*0.06;
       /* T5: faul olunca hakem görür mü (faulGor); görmezse oyun sürer, temasın fiziği (faulle aynı düşüş) ve topun sonucu uygulanır */
-      if(this.rast()<sigma((cc-MOTOR_AYAR.faulEsik)/0.12)){
+      if(this.rast()<sigma((cc-hkFaulEsik(this))/0.12)){   /* T10b: eşik hakemin sertliğiyle (js/mac-kurallar.js) */
         if(mdhGormeCek(this,s.x,s.z,p,s)){this.on('mudahaleSonuc',{p,rakip:s,kazan:false,topaDegdi:topa,topaOnce:topa&&!adamOnce&&!kalkan,adamaDegdi:true,faul:true,kayma,sonuc:'faul',tur:e.tur||(kayma?'kayma':'acik'),arkadan,kalkan,kontrol,once,siddet:cc,t:e.t});
           this.faul(p,s,{kayma,arkadan,gec,deneme:true,ciddiyet:cc,kaynak:kayma?'kayma':'mudahale',x:s.x,z:s.z});return;}
         this.faulDusur(p,s,{kayma,ciddiyet:cc});this.on('faulGorulmedi',{faulYapan:p,faulYiyen:s,kaynak:kayma?'kayma':'mudahale',siddet:cc,x:s.x,z:s.z});e.gorulmedi=true;}
@@ -465,7 +525,7 @@ Object.assign(Match.prototype,{
   /* T5: temastan faul — şiddet c ile P(faul) = σ((c − faulEsik)/0,12) (müdahaleyle aynı biçim); faulse hakem görür mü (faulGor). Faul
      çalındıysa (oyun durdu ya da avantaj) true */
   temasFaulu(yapan,yiyen,c,v){
-    if(this.phase!=='play'||!yapan.oyunda||!yiyen.oyunda||this.rast()>=sigma((c-MOTOR_AYAR.faulEsik)/0.12))return false;
+    if(this.phase!=='play'||!yapan.oyunda||!yiyen.oyunda||this.rast()>=sigma((c-hkFaulEsik(this))/0.12))return false;
     v.ciddiyet=c;return this.faulGor(yapan,yiyen,v);
   },
   /* T5: hakem faulü görür mü (mdhGorme; tek zar). Görmezse oyun sürer: faul yiyen temasın yönüne sendeler ya da düşer (faulle aynı fizik),
@@ -473,7 +533,7 @@ Object.assign(Match.prototype,{
   faulGor(yapan,yiyen,v){
     const P=mdhGorme(this,v.x,v.z,yapan,yiyen);
     if(this.rast()<P){this.faul(yapan,yiyen,v);return true;}
-    this.faulDusur(yapan,yiyen,v);
+    if(!v.el)this.faulDusur(yapan,yiyen,v);   /* T10b: elle oynamada kimse düşmez */
     this.on('faulGorulmedi',{faulYapan:yapan,faulYiyen:yiyen,kaynak:v.kaynak||null,siddet:v.ciddiyet||0,P,x:v.x,z:v.z});
     return false;
   },
@@ -489,13 +549,12 @@ Object.assign(Match.prototype,{
     return ayakta;
   },
   faul(yapan,yiyen,v){
-    const b=this.ball,x=clamp(v.x,-PL+0.3,PL-0.3),z=clamp(v.z,0.3,PW-0.3),h=this.half-1,neden=v.kayma?'kayma':v.hava?'hava':v.itme?'itme':'mudahale';
+    const b=this.ball,x=clamp(v.x,-PL+0.3,PL-0.3),z=clamp(v.z,0.3,PW-0.3),h=this.half-1,neden=v.el?'el':v.kayma?'kayma':v.hava?'hava':v.itme?'itme':'mudahale';
     const c=v.ciddiyet||0,yd=this.dir[yiyen.team],yu=x*yd,kutu=this.cezaSahasi(yapan.team,x,z);
-    this.ist.faul[yapan.team]++;
     /* T4: çalım denemesi faulle biter (avantajda nesne kalır: eski akış sürer, ikinci kez bildirilmez) */
     if(yiyen.calim)this.calimBitir(yiyen,'faul',true);if(yapan.calim)this.calimBitir(yapan,'yarim',true);
-    const ayakta=this.faulDusur(yapan,yiyen,v);
-    yiyen.surus=null;
+    const ayakta=v.el?true:this.faulDusur(yapan,yiyen,v);   /* T10b: elle oynamada kimse düşmez */
+    if(!v.el)yiyen.surus=null;
     /* açık gol fırsatı: faul yiyen top ondayken ya da ona gelirken kaleye 22 m içinde, merkezde, kaleye yöneliyor; yapan dışında kaleyle
        arasında savunmacı yok. Gelişen atak: faul yiyen takım ileri gidiyor ve kaleyle arasında en çok dört savunmacı */
     const onda=b.sahip===yiyen||b.sonDokunan===yiyen&&hrkHyp(b.x-yiyen.x,b.z-yiyen.z)<3||b.hedefOyuncu===yiyen;
@@ -504,15 +563,18 @@ Object.assign(Match.prototype,{
     const spa=!dogso&&b.sonTakim===yiyen.team&&yu>-5&&arada<=4&&(yiyen.vx*yd>1.5||b.vx*yd>2);
     /* T5: kart müdahale şiddetine göre kuruludur; itme, çarpma, hava ve basmada kart için şiddet 0,3 düşük sayılır (itiş nadiren kartlık) */
     const ck=c-(v.kaynak==='carpma'||v.kaynak==='omuz'||v.kaynak==='hava'||v.kaynak==='basma'?0.3:0);
-    let kart=null,kartNeden=null;const r=this.rast(),r2=this.rast();
-    if(ck>=MOTOR_AYAR.kartEsik+0.5&&(v.kayma||v.arkadan)&&r<0.35){kart='kirmizi';kartNeden='asiri';}                 /* aşırı sert */
+    let kart=null,kartNeden=null;const r=this.rast(),r2=this.rast(),KE=hkKartEsik(this);   /* T10b: kart eşiği hakemin sertliğiyle */
+    if(ck>=KE+0.5&&(v.kayma||v.arkadan)&&r<0.35){kart='kirmizi';kartNeden='asiri';}                 /* aşırı sert */
     else if(dogso&&r2<MOTOR_AYAR.firsatKirmizi){kart=kutu&&v.deneme?'sari':'kirmizi';kartNeden='firsat';}          /* kutuda topa oynama girişimi: sarı */
-    else if(r<sigma((ck-MOTOR_AYAR.kartEsik)/0.07)){kart='sari';kartNeden='siddet';}             /* pervasız */
+    else if(r<sigma((ck-KE)/0.07)){kart='sari';kartNeden='siddet';}             /* pervasız */
+    else if(dogso){kart='sari';kartNeden='firsat';}   /* T10b (T10 teşhisi hata 2): kırmızı sayılmayan açık gol fırsatı en az sarıdır (eskiden gelişen atak dalı !dogso ile kartsız kalıyordu) */
     else if(spa&&r2<MOTOR_AYAR.sariAtak+(v.taktik?0.3:0)){kart='sari';kartNeden='atak';}                                       /* gelişen atağı kesti */
+    if(v.el&&v.sut&&!kart){kart='sari';kartNeden='el';}   /* T10b: çerçeveye giden şutu elle kesmek */
     const penalti=kutu&&!v.hava||(v.hava&&kutu&&this.rast()<0.5);
     /* T8f (inceleme bulgusu): kutudaki hava faulünün penaltı verilmeyen yarısı ceza sahası içinde doğrudan serbest vuruş oluyordu (kural dışı);
        hakem görmemiş sayılır (olay faulGorulmedi), oyun sürer */
     if(kutu&&!penalti){this.on('faulGorulmedi',{faulYapan:yapan,faulYiyen:yiyen,kaynak:v.kaynak||null,siddet:c,P:0.5,x,z});return;}
+    this.ist.faul[yapan.team]++;   /* T10b (T10 teşhisi hata 4): verilmeyen kutu içi hava faulü sayılmaz (eskiden işlevin başında sayılıyordu) */
     /* avantaj: ciddi değil, takım topu tutacak ve atağın geleceği var */
     if(!penalti&&kart!=='kirmizi'&&c<0.8&&this.avantajVar(yiyen,yu,ayakta)){
       this.avantaj={t:this.t,kare:this.kare,takim:yiyen.team,x,z,kart,yapan,yiyen,neden,tuttu:false,u0:b.x*yd};this.refs[0].eylem={ad:'avantaj',t:0,sure:1.4};
@@ -534,8 +596,9 @@ Object.assign(Match.prototype,{
       for(const q of this.players){if(!q.oyunda||(q.eylem&&q.eylem.kilit))continue;const tq=varisZamani(q,k.x,k.z,0.6,0.15);if(tq<en){en=tq;kimde=q;}}
       if(en>0.8)kimde=null;}
     if(!kimde||kimde.team!==t||(kimde===yiyen&&!ayakta))return false;
-    const ku=kimde.x*d;if(ku>0&&baskiAltinda(this,kimde)<0.45)return true;
-    for(const q of this.teams[t]){if(q===kimde||!q.oyunda||q.rol==='GK'||q.x*d<ku+4||hrkHyp(q.x-kimde.x,q.z-kimde.z)>32)continue;
+    /* T10b: hakemin avantaj eğilimi baskı eşiğini (0,35–0,55) ve öndeki boş arkadaşın uzaklığını (26–38 m) değiştirir; ortalama hakemde 0,45 ve 32 */
+    const av=hkDeger(this,'avantaj'),ku=kimde.x*d;if(ku>0&&baskiAltinda(this,kimde)<0.35+0.2*av)return true;
+    for(const q of this.teams[t]){if(q===kimde||!q.oyunda||q.rol==='GK'||q.x*d<ku+4||hrkHyp(q.x-kimde.x,q.z-kimde.z)>26+12*av)continue;
       if(enYakinRakip(this,q.x,q.z,t).d>3)return true;}
     return false;
   },

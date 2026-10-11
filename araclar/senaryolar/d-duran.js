@@ -27,6 +27,8 @@ const KOD=`(function(tohum,tur,t,u,w){
     else if(ad==='header'&&v.shot&&v.p&&v.p.team===t)sut++;
     else if(ad==='goal'&&v.team===t&&!gol){gol=true;golDogrudan=m.ball.sonDokunan===kul.p||v.scorer===kul.p;}
     if(ad==='block'&&v.p&&kul.barajdakiler&&kul.barajdakiler.includes(v.p)&&m.t-su<1)blok=true;
+    /* T10b (2026-10-11): ilk temastan önce çalınan faul (kutuda tutma, havada kol, kaleciye çarpma) ayrı sınıf — eskiden "disari" sayılıyordu */
+    if(!ilk&&ad==='faul'&&m.t-su<4&&kul.alt!=='kisa'){ilk='faul';return;}
     if(!ilk&&v.p&&m.t-su<4&&kul.alt!=='kisa'){const h=v.p.team===t;
       if(ad==='header')ilk=h?'hucumKafa':'savunmaKafa';
       else if(ad==='save'||ad==='yumruk'||ad==='parmak'||ad==='kapan')ilk='kaleci';
@@ -62,15 +64,18 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const KL=K.L,Kn=KL.length,Kc=KL.filter(r=>r.alt!=='kisa'),say=(L,f2)=>L.filter(f2).length;
   const ilkT={};for(const r of Kc)ilkT[r.ilk||'yok']=(ilkT[r.ilk||'yok']||0)+1;
   const kGol=100*say(KL,r=>r.gol)/Math.max(1,Kn),kKisa=100*say(KL,r=>r.alt==='kisa')/Math.max(1,Kn),kKutu=ort(KL.map(r=>r.kutuH)),kIn=Kc.filter(r=>r.inis!=null);
-  const kInis=100*say(kIn,r=>r.inis)/Math.max(1,kIn.length),kHucum=100*say(Kc,r=>r.ilk==='hucumKafa'||r.ilk==='hucumAyak')/Math.max(1,Kc.length);
+  /* T10b: ilk temas payı faulle biten kornerler dışında (çekişmenin sonucu); faulle biten pay ayrıca yazılır */
+  const Kt=Kc.filter(r=>r.ilk!=='faul');
+  const kInis=100*say(kIn,r=>r.inis)/Math.max(1,kIn.length),kHucum=100*say(Kt,r=>r.ilk==='hucumKafa'||r.ilk==='hucumAyak')/Math.max(1,Kt.length);
   console.log(`\nT8 · duran top kapısı (d-duran) · ${((Date.now()-t0)/1000).toFixed(1)} sn (korner)\n`);
   console.log(`  Korner: ${Kn} kullanıldı${K.yok?` (${K.yok} kullanılamadı)`:''} · hazırlık ortancası ${f1(ortanca(KL.map(r=>r.hz)))} sn · kısa ${y(say(KL,r=>r.alt==='kisa'),Kn)} · içe ${y(say(KL,r=>r.alt==='ice'),Kn)} · dışa ${y(say(KL,r=>r.alt==='disa'),Kn)}`);
   console.log(`  Korner: kutuda hücumcu ${f1(kKutu)} · savunmacı ${f1(ort(KL.map(r=>r.kutuS)))} · inişte iki takımdan 1,5 m içinde ${f1(kInis)}% · şut/korner ${(KL.reduce((a,r)=>a+r.sut,0)/Math.max(1,Kn)).toFixed(2)} · 8 sn içinde gol ${kGol.toFixed(1)}% (${say(KL,r=>r.gol)}/${Kn})`);
-  console.log('  Korner ilk temas (kısa hariç): '+['hucumKafa','savunmaKafa','kaleci','hucumAyak','savunmaAyak','yere','disari','yok'].map(k=>k+' '+y(ilkT[k]||0,Kc.length)).join(' · '));
+  console.log('  Korner ilk temas (kısa hariç): '+['hucumKafa','savunmaKafa','kaleci','hucumAyak','savunmaAyak','yere','disari','faul','yok'].map(k=>k+' '+y(ilkT[k]||0,Kc.length)).join(' · '));
   kapi(KAPI.korner,kGol>=3&&kGol<=5,`korner başına gol %3–5 → %${kGol.toFixed(1)}`);
   kapi(KAPI.korner,kKutu>=4&&kKutu<=7,`kullanımda kutudaki hücumcu 4–7 → ${f1(kKutu)}`);
   kapi(KAPI.korner,kKisa>=10&&kKisa<=25,`kısa korner %10–25 → %${kKisa.toFixed(1)}`);
-  kapi(KAPI.korner,kHucum>=30,`ilk temas hücumda ≥ %30 → %${kHucum.toFixed(1)}`);
+  kapi(KAPI.korner,kHucum>=30,`ilk temas hücumda ≥ %30 (faulle bitenler dışında) → %${kHucum.toFixed(1)}`);
+  console.log(`  Korner: ilk temastan önce faul %${(100*say(Kc,r=>r.ilk==='faul')/Math.max(1,Kc.length)).toFixed(1)} (T10b bilgi; gerçekte ~%10–15, çoğu hücum faulü)`);
   kapi(KAPI.korner,kInis>=50,`inişte iki takımdan 1,5 m içinde ≥ %50 → %${kInis.toFixed(1)}`);
   /* serbest vuruş hücreleri */
   const m2=Math.max(4,Math.round(n/5)),H=[['merkez',18,0],['merkez',22,0],['merkez',26,0],['merkez',30,0],['yarı',18,10],['yarı',22,10],['yarı',26,10],

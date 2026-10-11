@@ -355,6 +355,14 @@ Object.assign(Match.prototype,{
     if(sh&&sh.team!==gk.team){this.kaleciTemasSonuc(gk,'el',0.6,null);return;}
     let kal=0,cek=false;for(const o of this.teams[1-gk.team])if(o.oyunda&&hyp(o.x-b.x,o.z-b.z)<1.5){kal++;if(o.zipla||hvTemasOnu(this,o,6)>=0)cek=true;}
     const yuksek=b.y>1.45,yumrukla=yuksek&&(cek||kal>=2||b.y>elY-0.3);
+    /* T10b: kaleciye çarpma — yüksek topu alan kalecinin 1 m içindeki rakip havadaysa ya da kaleciye doğru (> 1,5 m/sn) geliyorsa temas: şiddet
+       0,25 + kapanma/4 + havada 0,2 + agresiflik; faulse kaleci lehine serbest vuruş (tek zar hakemin görmesi; js/mac-mudahale.js temasFaulu) */
+    if(yuksek)for(const o of this.teams[1-gk.team]){if(!o.oyunda||o.eylem&&o.eylem.kilit)continue;const dx=gk.x-o.x,dz=gk.z-o.z,dd=hyp(dx,dz);if(dd>1.0||dd<1e-3)continue;
+      const vk=Math.max(0,((o.vx-gk.vx)*dx+(o.vz-gk.vz)*dz)/dd),hava=!!o.zipla||(o.yuk||0)>0.05;if(!hava&&vk<1.5)continue;
+      if(this.temasFaulu(o,gk,0.25+vk/4+(hava?0.2:0)+(profilAlt(o,'agresiflik',o.oz.sertlik)-0.5)*0.5,{hava:true,kaynak:'kaleci',x:gk.x,z:gk.z}))return;
+      /* görülmeyen çarpma kaleciyi düşürdü (faulDusur): top elinden kaçar */
+      if(gk.eylem&&gk.eylem.ad==='dusus'){const yanS=Math.sign(b.z-MZ)||1,a=Math.atan2(yanS*(0.6+this.rast()*0.8),d),h=2+this.rast()*3;
+        b.vx=Math.cos(a)*h;b.vz=Math.sin(a)*h;b.vy=0.8+this.rast();b.egri=0;b.ust=0;this.dokunus(gk,false);gk.kickCd=0.6;return;}}
     if(yumrukla){/* yumruk: kaleden uzağa, kanada doğru; top önden geliyorsa iki yumruk */
       const gel=hyp(b.vx,b.vz)||1,el=Math.abs(b.vx)/gel>0.8?'cift':'tek',yanS=b.z<MZ?-1:1,a=Math.atan2(yanS*(0.5+this.rast()*0.6),d),h=12+this.rast()*5;
       b.vx=Math.cos(a)*h;b.vz=Math.sin(a)*h;b.vy=4+this.rast()*2.5;b.sut=null;b.egri=0;b.ust=0;
