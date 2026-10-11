@@ -159,9 +159,9 @@ Object.assign(Match.prototype,{
     const b=this.ball;
     this.phase='durus';this.phaseT=0;
     for(const p of this.players){if(p.eylem&&!p.eylem.kilit)p.eylem=null;p.surus=null;p.kosu=null;p.destek=null;p.yonHedef=null;}
-    b.sahip=null;b.hedefOyuncu=null;b.sut=null;b.pas=null;b.ofsaytta=null;b.endirekt=null;b.tac=null;
+    b.sahip=null;b.hedefOyuncu=null;b.sut=null;b.pas=null;b.ofsaytta=null;b.endirekt=null;b.tac=null;b.kullanim=null;
     const du=Object.assign({tur,takim,x,z,t:0,asama:'bekle',kullanan:null,topcu:null,hazirT:0},veri||{});
-    this.durus=du;this.sp=du;
+    this.durus=du;
     du.kullanan=this.kullananSec(du);
     this.hocaKapisi();   /* T7a: hoca kapısı — m.hoca geri çağrısı varsa her duruşta sorulur (js/mac-takim.js) */
     /* taç, korner, aut ve saha dışında kalan top: top toplayıcı yedek topu verir (N10). Faulde top sahadadır; atan alıp yerine taşır */
@@ -171,7 +171,8 @@ Object.assign(Match.prototype,{
     if(this.bekleyenKart){const a=this.bekleyenKart;this.bekleyenKart=null;if(a.yapan.oyunda)this.kartGoster(a.yapan,a.kart);}
     if(tur==='tac')this.ist.tac[takim]++;else if(tur==='korner')this.ist.korner[takim]++;else if(tur==='kaleVurusu')this.ist.kaleVurusu[takim]++;
     if(tur==='kaleVurusu'||tur==='korner')this.kacanFirsat();   /* T7f: kaçan büyük fırsatta şutçu başını tutar */
-    const r=this.refs[0];r.eylem={ad:'yon',t:0,sure:1.3,yon:this.dir[takim]};
+    /* T8-0: faulde ve ofsaytta aynı karede yazılan düdük / penaltı işareti ezilmez (hakem çizimi olaydan da kurar; sonuç değişmez) */
+    const r=this.refs[0],re=r.eylem;if(!(re&&re.t===0&&(re.ad==='duduk'||re.ad==='penaltiGoster')))r.eylem={ad:'yon',t:0,sure:1.3,yon:this.dir[takim]};
     if(tur==='korner'||tur==='kaleVurusu'){const yh=b.x>0?this.refs[1]:this.refs[2];yh.eylem={ad:'bayrak',t:0,sure:1.6,tur};}
     const eski={tac:'throw',korner:'corner',kaleVurusu:'goalkick'}[tur];
     this.on(tur,{team:takim,taker:du.kullanan,x,z});if(eski)this.on(eski,{team:takim,taker:du.kullanan});
@@ -292,9 +293,10 @@ Object.assign(Match.prototype,{
   durusKullan(du){
     const tk=du.kullanan,b=this.ball,d=this.dir[du.takim];
     this.sonKullanim={tur:du.tur,p:tk,t:this.t};
+    this.kullanimBaslat(du.tur,tk,du,this.t-du.t);   /* T8-0: kullanım bayrağı; olay kullananın ilk dokunuşunda (js/mac-durantop.js) */
     if(du.tur==='tac'){const e=tk.eylem;if(e&&e.ad==='tac'&&e.faz==='tut'){e.faz='at';e.ft=0;e.hedef=this.tacHedefi(tk);}return;}
     if(du.duduk||du.tur==='penalti'||du.baraj)this.on('duduk',{tur:du.tur});
-    this.phase='play';this.phaseT=0;this.durus=null;this.sp=null;
+    this.phase='play';this.phaseT=0;this.durus=null;
     b.tasiyan=null;b.x=du.x;b.z=du.z;b.y=0;b.vx=b.vz=b.vy=0;b.ust=0;this.topDegisti();
     tk.x=du.geriX;tk.z=du.geriZ;
     this.sahipYap(tk);
@@ -318,10 +320,11 @@ Object.assign(Match.prototype,{
     if(e.faz==='tut'){if(b.tasiyan!==p)p.eylem=null;return;}
     if(e.faz==='at'&&!e.atti&&e.ft>=0.34){
       e.atti=true;const q=e.hedef,hx=q?q.x+q.vx*0.6:p.x+this.dir[p.team]*8,hz=q?q.z+q.vz*0.6:clamp(p.z+(p.z<MZ?8:-8),1,PW-1);
+      e.hx=hx;e.hz=hz;   /* T8-0: atışın hedefi (kullanım olayı okur) */
       const L=hyp(hx-p.x,hz-p.z),c=this.havadanCoz(p.x,2.0*p.boy,p.z,hx,1.0,hz,0.4+L/20,0);
       b.tasiyan=null;b.x=p.x+Math.cos(p.yon)*0.25;b.z=p.z+Math.sin(p.yon)*0.25;b.y=2.0*p.boy;b.vx=c.vx;b.vy=c.vy;b.vz=c.vz;b.egri=0;
       this.dokunus(p,true);b.hedefOyuncu=q||null;p.kickCd=0.4;b.tac={p};b.ust=0;
-      this.phase='play';this.phaseT=0;this.durus=null;this.sp=null;
+      this.phase='play';this.phaseT=0;this.durus=null;
     }
     if(e.ft>=0.65)p.eylem=null;
   },

@@ -37,7 +37,9 @@ module.exports={
         if(ad==='save'&&v&&v.p){const t=v.p.team;if(m.t-son[t]<4)ikinci++;son[t]=m.t;
           if(!v.catch){celmeN++;if(celme)celme=null;celme={team:t,p:v.p,t0:m.t,surum:m.ball.surum,bicim:v.bicim};}}
         if(ad==='yumruk')yumruk++;
-        if(ad==='cross'||ad==='corner')sonOrta=m.t;
+        /* T8-0: korner ve ortalanan serbest vuruşun penceresi kullanım anından ('kullanim'; eskiden korner duruşunun başındaki 'corner' olayından:
+           vuruş ~6–7 sn sonra geldiği için kornerden tutuş sayılmıyordu) */
+        if(ad==='cross'||ad==='kullanim'&&v&&(v.tur==='korner'&&v.alt!=='kisa'||v.tur==='serbest'&&v.alt==='orta'))sonOrta=m.t;
         if((ad==='shot'||(ad==='header'&&v&&v.shot))&&m.ball.sut){sutN++;const gk=m.kaleci(1-m.ball.sut.team);if(gk&&gk.tavir==='hazir')sutHazir++;}
         if(ad==='goal'){golN++;
           /* önce kayıtlı şut; değilse son 4 sn'deki son ilgili olay (pas ya da kontrol zinciri keser); sonra kendi kalesine */

@@ -10,7 +10,8 @@
    - Rol ve mesafe: şutu atanın grubu (r-karne grupları) ve kale ortasına uzaklığı (<11, 11–16,5, 16,5–25, >25 m).
    - Başlayıp vurulmayan şut: şut kararıyla başlayan vuruş (p.eylem 'vurus', sec.tur 'sut') şut olayına varmadan bitti (müdahale, vazgeçme,
      duruş …). Yalnız ayak şutları; maç sonunda yarım kalan sayılmaz.
-   - Orta sonucu: ortadan ('cross' olayı; korner ortası da) sonraki 3 sn'de ilk belirleyici olay: blok, kaleci (kurtarış, yakalama, yumruk, parmak),
+   - Orta sonucu: ortadan ('cross' olayı; açık oyun ve serbest vuruşun ortası — korner servisi 'cross' yaymaz, onun sonucu araclar/olcumler/k-duran.js
+     “Korner ilk temas” satırlarındadır; T8-0 düzeltmesi, eski not “korner ortası da” diyordu) sonraki 3 sn'de ilk belirleyici olay: blok, kaleci (kurtarış, yakalama, yumruk, parmak),
      hücumun kafa şutu, hücumun diğer kafası, savunmanın kafası, hücumun ayak şutu (gelişine), hücum topu aldı, savunma topu aldı, uzaklaştırma,
      top oyun dışı; hiçbiri olmazsa “diğer”. Hava düellosu (m.ist.havaTopu arttı) ayrıca sayılır.
    - Serbest vuruş bölgesi: duruşun yeri kale ortasına ≤ 30 m (yakın) ya da uzak. Barajlı doğrudan serbest vuruşta şut başına gol T8 bandıdır
@@ -34,7 +35,7 @@ module.exports={
       ['Orta / maç','sOrta',1],['Orta: hava düellosu oldu %','sOrtaHava',1]])
     .concat(S_ORTA.map(k=>['Orta sonucu: '+S_ORTA_AD[k]+' %','sO_'+k,1]))
     .concat([['Korner başına şut','sKornerSut',2],
-      ['Serbest vuruş: yakın (≤30 m) / maç','sSerbestYakin',2],['Serbest vuruş: yakında doğrudan şut %','sSerbestYakinSut',1],
+      ['Serbest vuruş / maç','sSerbestMac',2],['Serbest vuruş: yakın (≤30 m) / maç','sSerbestYakin',2],['Serbest vuruş: yakında doğrudan şut %','sSerbestYakinSut',1],
       ['Barajlı doğrudan serbest vuruş / maç','sBarajliSut',2],['Barajlı doğrudan serbest vuruşta şut başına gol %','sBarajliGol',1,[6,10,'T8']]]),
   yeni:()=>{
     const hyp=Math.hypot;
@@ -101,7 +102,7 @@ module.exports={
         for(const g of S_GRUP)ham['sR_'+g]=[rol[g],sutN];
         for(let i=0;i<4;i++)ham['sM_'+i]=[mes[i],sutN];
         let oT=0;for(const k of S_ORTA)oT+=orta[k];for(const k of S_ORTA)ham['sO_'+k]=[orta[k],oT];
-        const r={ham,sVurulmayan:vurulmayan,sOrta:ortaN,sKornerSut:korner?kornerSut/korner:NaN,sSerbestYakin:syN,sBarajliSut:bjN};
+        const r={ham,sVurulmayan:vurulmayan,sOrta:ortaN,sKornerSut:korner?kornerSut/korner:NaN,sSerbestMac:syMac,sSerbestYakin:syN,sBarajliSut:bjN};
         for(const k of S_KAYNAK)r['sS_'+k]=sut[k];
         return r;}
     };

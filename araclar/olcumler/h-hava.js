@@ -39,7 +39,9 @@ module.exports={
     const hyp=Math.hypot,kaynak={},temas={};for(const k of H_KAYNAK)kaynak[k]=0;for(const k of H_TEMAS)temas[k]=0;
     let bolum=0,inis=0,cek15=0,cek3=0,bos3=0,cekKafa=0,cekN=0,temasAtan=0,temasN=0,duello=0,sicrama=0,sicramaKos=0,kafaSicrama=0,kafaN=0,tuttu=0,tuttuN=0,faul=0;
     const sicH=[],kFark=[],kZam=[],yz={alin:0,yan:0,tepe:0,yuz:0};let yzN=0,yzCek=0;
-    let ep=null,sonra=null,bekle=null,son='diger';
+    let ep=null,sonra=null,bekle=null,son='diger',kul=null;
+    /* T8-0: duran topun kaynağı kullanım anından ('kullanim'); kullananın aynı adımdaki 'pass'/'cross' olayı kaynağı ezmez (eskiden duruşun başındaki
+       olaydan: serbest vuruşun ve kale vuruşunun pası kaynağı eziyordu, iki kaynak yapı gereği 0 çıkıyordu) */
     const DURAN={korner:'korner',serbest:'serbest',kaleVurusu:'kaleVurusu',tac:'tac',penalti:'sut'};
     const kapat=(m,tur,p)=>{temas[tur]++;if(ep.cek)cekN++;
       if(p&&p.team!=null){temasN++;if(p.team===ep.takim)temasAtan++;}
@@ -53,7 +55,9 @@ module.exports={
         if(ad==='faul'||ad==='avantaj'||ad==='faulGorulmedi'){if(v&&(v.neden==='hava'||v.kaynak==='hava'))faul++;return;}
         /* son dokunuşun kaynağı (bölüm açılınca okunur) */
         if(ad==='header'&&v&&v.yuzey){yzN++;if(yz[v.yuzey]!=null)yz[v.yuzey]++;if(v.cek)yzCek++;}   /* bütün kafalar (bölümden bağımsız) */
-        if(DURAN[ad])son=DURAN[ad];
+        if(ad==='kullanim'){if(v&&DURAN[v.tur]){son=DURAN[v.tur];kul={p:v.p,t:m.t};}return;}
+        if((ad==='pass'||ad==='cross'||ad==='gkkick')&&kul&&v&&v.p===kul.p&&m.t===kul.t){}
+        else if(DURAN[ad])son=DURAN[ad];
         else if(ad==='cross')son='orta';
         else if(ad==='pass')son=v&&v.p&&v.p.rol==='GK'&&!v.tip?'kaleci':v&&v.tip==='hava'?(v.long?'uzunTop':'havaPas'):'diger';
         else if(ad==='clear')son='uzaklastirma';else if(ad==='gkkick')son='kaleci';else if(ad==='header')son='kafa';else if(ad==='shot')son='sut';

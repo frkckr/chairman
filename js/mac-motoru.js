@@ -201,7 +201,7 @@ class Match{
   normal(){let u=0;while(u===0)u=this.rast();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*this.rast());}
   reset(){
     this.score=[0,0];this.half=1;this.gameSec=0;this.t=0;this.phase='kickoff';this.phaseT=0;this.dir=[1,-1];
-    this.yaziTura=null;this.ilkSantra=0;this.tuneleGitti=false;this.celeb=null;this.durus=null;this.sp=null;this.sahiplikNo=0;
+    this.yaziTura=null;this.ilkSantra=0;this.tuneleGitti=false;this.celeb=null;this.durus=null;this.sahiplikNo=0;
     this.ist={sut:[0,0],isabet:[0,0],korner:[0,0],tac:[0,0],kaleVurusu:[0,0],faul:[0,0],sari:[0,0],kirmizi:[0,0],ofsayt:[0,0],
       pas:[0,0],pasTamam:[0,0],pasYon:{ileri:0,yan:0,geri:0},uzunPas:0,havaTopu:0,uzatma:[0,0],degisiklik:[0,0],oyunda:0,toplam:0,sahiplik:[0,0]};
     this.shots=this.ist.sut;this.poss=this.ist.sahiplik;
@@ -218,6 +218,9 @@ class Match{
     this.yedekleriKur();this.kenarKur();
     this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,sonTakim:0,hedefOyuncu:null,sut:null,pas:null,
       surum:0,agda:false,direk:false,px:0,py:0,pz:0,ortaBlok:null,
+      /* T8-0: duran topun kullanımı {tur, p, t0, x, z, cikti, du}: durusKullan (ve santra) kurar, kullananın ilk dokunuşu 'kullanim' olayını yayar,
+         başka oyuncunun dokunuşu siler (dokunus; js/mac-durantop.js) */
+      kullanim:null,
       /* T9a: açısal hızlar (rad/sn), yüzey hızı (m/sn) ve dönüşün kurulduğu sürüm (topDonusHazirla) */
       wYan:0,wUst:0,sw:0,_donSurum:-1};
     this.kuralHazirla();
@@ -240,6 +243,9 @@ class Match{
       /* T4 (2026-10-08, bire bir): çalım denemesi {o, hareket, taraf, faz 0 yaklaşma / 1 hazırlık / 2 geçme, ft, t0, kare, …} ve aldatılan
          savunmacının yanılgısı {yon, t, sure, siddet} — motor → çizim (js/mac-hareket.js) */
       calim:null,yutma:null,
+      /* T8 (2026-10-11, duran toplar; js/mac-durantop.js): duran topta görevi {rol, hx, hz, hedef, …} — duruşta ve vuruştan sonra 6 sn (motor → çizim;
+         T8-0'da yazılmaz) */
+      duranRol:null,
       /* akışların oyuncuya sonradan yazdığı iç alanlar baştan (undefined) tanımlı: nesnenin biçimi değişmez, motor yavaşlamaz (birleştirme, 2026-10-03) */
       _cev:undefined,_hk:undefined,_kacKare:undefined,_kacX:undefined,_kacZ:undefined,_varisHiz:undefined,_varisKare:undefined,_tavirKare:undefined,
       _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_tmsS:undefined,_tmsT:undefined,_tepkiS:undefined,_tepkiJ:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,_gecT:undefined,_destek:undefined,_destekK:undefined,
@@ -346,9 +352,9 @@ class Match{
     if(hazir)for(const p of this.players)if(p.oyunda&&hyp(p.tx-p.x,p.tz-p.z)>1.3){hazir=false;break;}
     if(hazir&&this.phaseT>1.6||this.phaseT>22){
       if(!yerinde)this.topuSifirla(0,MZ);
-      const al=this.santraAlici(this.kickTeam);
+      const al=this.santraAlici(this.kickTeam),t0=this.t-this.phaseT;
       this.on('kickoff',{team:this.kickTeam,half:this.half});this.refs[0].eylem={ad:'duduk',t:0,sure:0.8};
-      this.phase='play';this.phaseT=0;
+      this.phase='play';this.phaseT=0;this.kullanimBaslat('santra',tk,null,t0);   /* T8-0 */
       tk.x=-0.35*this.dir[tk.team];tk.z=MZ-0.25;tk.vx=tk.vz=0;tk.yon=this.dir[tk.team]>0?0:Math.PI;
       this.sahipYap(tk);this.vurusBaslat(tk,{tur:'pas',hx:al.x,hz:al.z,tip:'yer',alici:al});
     }
@@ -372,7 +378,7 @@ class Match{
   }
 
   /* ============ top ============ */
-  topuSifirla(x,z){const b=this.ball;Object.assign(b,{x,z,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,agda:false,direk:false,endirekt:null,tac:null,ortaBlok:null});b.surum++;}
+  topuSifirla(x,z){const b=this.ball;Object.assign(b,{x,z,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,agda:false,direk:false,endirekt:null,tac:null,ortaBlok:null,kullanim:null});b.surum++;}
   topDegisti(){this.ball.surum++;this._degisimT=this.t;}
   /* topun gelecekteki yolu (3,5 sn, 1/60 adım). Top her dokunuşta değişir; o zamana kadar hesap önbellekte kalır */
   topYolu(){
@@ -435,7 +441,10 @@ class Match{
 
   /* bir oyuncu topa dokundu (kimin son dokunduğu: taç/korner/aut ve ofsayt için) */
   dokunus(p,kasitli){
-    const b=this.ball;b.sonDokunan=p;b.sonTakim=p.team;b.hedefOyuncu=null;b.direk=false;
+    const b=this.ball,K=b.kullanim;
+    /* T8-0: duran topu kullananın ilk dokunuşu kullanımdır (vuruş, taç atışı, sürüş ya da elle alma; js/mac-durantop.js); başkasının dokunuşu biter */
+    if(K){if(p===K.p){if(!K.cikti){K.cikti=true;this.kullanimBildir(p,K);}}else b.kullanim=null;}
+    b.sonDokunan=p;b.sonTakim=p.team;b.hedefOyuncu=null;b.direk=false;
     if(b.endirekt&&p!==b.endirekt.p)b.endirekt=null;if(b.tac&&p!==b.tac.p)b.tac=null;
     if(b.pas&&p!==b.pas.p){if(p.team===b.pas.takim)this.ist.pasTamam[p.team]++;b.pas=null;}
     if(b.sut&&p!==b.sut.by)b.sut=null;

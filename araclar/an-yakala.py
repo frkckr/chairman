@@ -105,6 +105,13 @@ HAZIR = {
     "sut-sert": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.sec&&p.eylem.sec.tur==='sut'&&p.eylem.stil==='ust'&&p.eylem.faz==='geri')", 0, "mac"),
     "kotu-vurus": ("__son('kotuVurus',0.05)", 0, "mac"),
     "celme": ("__son('save',0.05,v=>!v.catch)", 0.1, "mac"),
+    # T8-0 (2026-10-11): duran toplar — kullanım anı motorun 'kullanim' olayıdır (js/mac-durantop.js); film şeridi (--kare 6 --aralik 0.15)
+    "korner-hazirlik": ("mac.phase==='durus'&&mac.durus.tur==='korner'&&mac.durus.asama==='yerles'", 0, "mac"),
+    "korner-alici": ("__son('kullanim',0.05,v=>v.tur==='korner'&&v.alt!=='kisa')", 0.6, "mac"),
+    "baraj-zipla": ("__son('kullanim',0.05,v=>v.tur==='serbest'&&v.baraj&&v.alt==='sut')", 0, "mac"),
+    "uzun-tac": ("__son('kullanim',0.05,v=>v.tur==='tac'&&v.alt==='uzun')", 0, "mac"),
+    "penalti-vurus": ("__son('kullanim',0.05,v=>v.tur==='penalti')", 0, "mac"),
+    "kale-vurusu": ("mac.phase==='durus'&&mac.durus.tur==='kaleVurusu'&&mac.durus.asama==='hazir'", 0.3, "mac"),
 }
 VARSAYILAN_SET = ["santra", "orta-saha", "korner", "sut", "faul", "sol-ceza", "uzak-kenar", "yakin-kenar"]
 
