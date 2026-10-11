@@ -103,7 +103,27 @@ OLCUM_KUR_JS = r"""() => {
        ≥ 0,5 sn; taç bırakışında (kullanim) kolların öne gidişi (tacAt ≥ 0,5); penaltıda kalecinin uçuşunun başlangıcı temasa göre (sn; [−0,15, +0,02]);
        duruşta kutudaki görevlilerin çizilen gövdeleri 0,3 m'den yakın kare */
     dr: { bjKare: 0, bjFazla: 0, bjPoz: 0, bjOnce: 0, yerN: 0, yerIyi: 0, kolN: 0, kolIyi: 0, tacN: 0, tacTepe: 0, tacUzun: 0, penN: 0, penDt: [], penOrta: 0, icIce: 0 } };
-  const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin', barajYeri: 'ref' };
+  const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin', barajYeri: 'ref', uyari: 'ref', tedaviBasladi: 'ref' };
+  /* T10f olay (Ek G4, G7, G8): yerdeki sakatın tutma pozu (sakat yuvası > 0,8), sedyede kökün yüksekliği (0,55–0,9 m) ve sedyeyi tutan sağlıkçı,
+     tedavide sağlıkçının çömelmesi ya da gerdirmesi, topallamada iki ayağın yerde kalma karesi (sakat / sağlam), endirekt işaretin tutulduğu kare
+     payı (duruşun 2. saniyesinden — önce düdük ve yön —; hakem topu hariç), hakem topunu bırakma işaretinin motorun eylemiyle aynı karede başlaması, golcünün sevinç çeşidi */
+  S.ol = { sakKare: 0, sakPoz: 0, sedKare: 0, sedYuk: 0, sedTutN: 0, sedTut: 0, tedKare: 0, tedPoz: 0, gerdir: 0, topalN: 0, topalKotu: 0, topalIyi: 0, endKare: 0, endTut: 0, birakN: 0, birakAyni: 0, sev: {} };
+  function olayOlc(a, dt) {
+    const p = a.kaynak; if (!p || !(dt > 0) || typeof ANM_S === 'undefined') return; const O = S.ol, sw = a.sw, SL = ANM_S, e = p.eylem, A = mac.sakatlikAkis;
+    if (p.tur === 'oyuncu') {
+      if (p.sakat && e && e.ad === 'yerde') { O.sakKare++; if (sw[SL.sakat] > 0.8) O.sakPoz++; }
+      if (mac.sedye && mac.sedye.p === p) { O.sedKare++; const y = a.m.root.position.y; if (y >= 0.55 && y <= 0.9) O.sedYuk++; }
+      const k = K.get(a); if (p.topal && p.oyunda && a.topBacak != null && k && k.vs > 1 && !e) { O.topalN++; if (k.temas[a.topBacak]) O.topalKotu++; if (k.temas[1 - a.topBacak]) O.topalIyi++; }
+      if (p.sevinc && a.sevSon && mac.celeb && mac.celeb.scorer === p) { const g = mac.score[0] + mac.score[1]; if (a._olSevG !== g) { a._olSevG = g; O.sev[a.sevC] = (O.sev[a.sevC] || 0) + 1; } } }
+    if (p.kind === 'saglikci' && p.gorev && A && A === p.gorev) { if (A.evre === 'tedavi') { O.tedKare++; if (sw[SL.p0 + 2] + sw[SL.gerdir] > 0.8) O.tedPoz++; if (sw[SL.gerdir] > 0.5) O.gerdir++; }
+      if (mac.sedye && A.evre === 'sedye') { O.sedTutN++; if (sw[SL.sedyeTut] > 0.8) O.sedTut++; } }
+    /* gerdirme görünür mü: gerdir yuvası ağır, çömelme yuvası (p2, karışımda sonra) hafif */
+    if (p.kind === 'saglikci' && sw[SL.gerdir] > 0.5 && sw[SL.p0 + 2] > 0.3) O.gerdirOrtulu = (O.gerdirOrtulu || 0) + 1;
+    if (p.kind === 'ref') { const du = mac.durus, b = mac.ball, h = typeof ANM_HK !== 'undefined' ? ANM_HK.get(p) : null;
+      const end = (mac.phase === 'durus' && du && du.endirekt && !du.hakemTopu && du.t > 2.0) || (mac.phase === 'play' && b && b.endirekt && !b.endirekt.hakemTopu);
+      if (end) { O.endKare++; if (h && h.cur && h.cur.tur === 'endirekt') O.endTut++; }
+      if (e && e.ad === 'birak' && e.t <= dt * 1.01) { O.birakN++; if (h && h.cur && h.cur.tur === 'birak') O.birakAyni++; } }
+  }
   const K = new Map(), V = new THREE.Vector3(), H = new THREE.Vector3();
   let t = 0, kareSure = 0, bekleyenler = [];
   const fft = (re, im) => { const n = re.length;
@@ -199,7 +219,7 @@ OLCUM_KUR_JS = r"""() => {
     k.ilk = false;
   }
   const asil = window.aktorGuncelle;
-  window.aktorGuncelle = (a, al, dts, T) => { const t0 = R(); asil(a, al, dts, T); kareSure += R() - t0; kaydet(a, dts); zamanlama(a); temasOlc(a, dts); };
+  window.aktorGuncelle = (a, al, dts, T) => { const t0 = R(); asil(a, al, dts, T); kareSure += R() - t0; kaydet(a, dts); zamanlama(a); temasOlc(a, dts); olayOlc(a, dts); };
   const asilOlay = window.animasyonOlay;
   /* endirekt kolu havadayken yeniden başlama düdüğü çizilmez (kol inmez): ölçüme alınmaz */
   window.animasyonOlay = (ad, v) => { asilOlay(ad, v); const h0 = typeof ANM_HK !== 'undefined' && mac.refs ? ANM_HK.get(mac.refs[0]) : null;
@@ -340,10 +360,10 @@ SONUC_JS = r"""() => {
     tm: (() => { const G = S.tm, sa = sirala(G.acik); return { n: G.n, acikMed: sa.length ? sa[Math.floor(sa.length / 2)] : null, acikP90: sa.length ? sa[Math.min(sa.length - 1, Math.floor(0.9 * sa.length))] : null,
       acikIyi: sa.length ? +(100 * sa.filter(x => x <= 0.15).length / sa.length).toFixed(0) : null, icIce: G.icIce, cift: G.cift, kalkN: G.kalkN, kalkDik: G.kalkDik, sendKare: G.sendKare,
       sendKisaPay: G.sendKare ? +(100 * G.sendKisa / G.sendKare).toFixed(0) : null, dususN: G.dususN, liste: G.liste }; })(),
-    zaman: (() => { if (typeof ANM_HK === 'undefined') return null; const r = { olay: S.zOlay.length, ayni: 0, bir: 0, yok: 0, yokAd: {} };
+    zaman: (() => { if (typeof ANM_HK === 'undefined') return null; const r = { olay: S.zOlay.length, ayni: 0, bir: 0, yok: 0, yokAd: {}, birAd: {} };
       for (const o of S.zOlay) { const L = o.tur === 'ref' ? ['ref'] : o.tur === 'lin' ? ['lin'] : o.tur === 'ikisi' ? ['ref', 'lin'] : ['ref', 'lin'];
         let enIyi = 99; for (const k of L) for (const b of (S.zIsaret[k] || [])) { const d = b - o.kare; if (d >= 0 && d < enIyi) enIyi = d; }
-        if (enIyi === 0) r.ayni++; else if (enIyi === 1) r.bir++; else { r.yok++; r.yokAd[o.ad] = (r.yokAd[o.ad] || 0) + 1; } }
+        if (enIyi === 0) r.ayni++; else if (enIyi === 1) { r.bir++; r.birAd[o.ad] = (r.birAd[o.ad] || 0) + 1; } else { r.yok++; r.yokAd[o.ad] = (r.yokAd[o.ad] || 0) + 1; } }
       r.vurus = S.zVurus; r.vurusAyni = S.zVurusAyni; r.vurusFark = S.zVurusFark.slice(0, 10); return r; })(),
     vk: (() => { const med = a => a.length ? +yuzde(a, 0.5).toFixed(3) : null, kt = S.vkKT;
       return { n: S.vkN, hazirliksizPay: S.vkN ? +(100 * S.vkHazirliksiz / S.vkN).toFixed(1) : null, sonAdimOrt: S.vkSonAdim.length ? +ort(S.vkSonAdim).toFixed(3) : null,
@@ -370,6 +390,9 @@ SONUC_JS = r"""() => {
     dr: (() => { const G = S.dr, d = G.penDt.filter(x => x !== null), sd = sirala(d); return { bjKare: G.bjKare, bjFazla: G.bjKare ? +(100 * G.bjFazla / G.bjKare).toFixed(1) : null, bjPoz: G.bjKare ? +(100 * G.bjPoz / G.bjKare).toFixed(1) : null, bjOnce: G.bjOnce,
       yerN: G.yerN, yerIyi: G.yerIyi, kolN: G.kolN, kolIyi: G.kolIyi, tacN: G.tacN, tacTepe: G.tacTepe, tacUzun: G.tacUzun, penN: G.penN, penMed: sd.length ? sd[Math.floor(sd.length / 2)] : null,
       penIcinde: d.filter(x => x >= -0.15 && x <= 0.02).length, penYok: G.penDt.filter(x => x === null).length, penOrta: G.penOrta, penDt: G.penDt.slice(0, 20), icIce: G.icIce, duran: window.__DURAN_SONUC || null }; })(),
+    ol: (() => { const O = S.ol, yz = (a, b) => b ? +(100 * a / b).toFixed(1) : null; return { sakKare: O.sakKare, sakPoz: yz(O.sakPoz, O.sakKare), sedKare: O.sedKare, sedYuk: yz(O.sedYuk, O.sedKare),
+      sedTut: yz(O.sedTut, O.sedTutN), tedKare: O.tedKare, tedPoz: yz(O.tedPoz, O.tedKare), gerdir: O.gerdir, topalN: O.topalN, topalOran: O.topalIyi ? +(O.topalKotu / O.topalIyi).toFixed(2) : null,
+      endKare: O.endKare, endTut: yz(O.endTut, O.endKare), birakN: O.birakN, birakAyni: O.birakAyni, sev: O.sev, sevCesit: Object.keys(O.sev).length, gerdirOrtulu: O.gerdirOrtulu || 0, olay: window.__OLAY_SONUC || null }; })(),
     surum: window.ANM_SURUM || 'simdiki'
   };
 }"""
@@ -436,6 +459,37 @@ DURAN_JS = r"""() => {
     if (kul) { S.kullanim++; for (let k = 0; k < 60 * 6 && (m.phase === 'play' || m.phase === 'goal'); k++) macKare(dt); } };
 }"""
 
+# T10f: yapay olaylar (motorun gerçek akışları oyunun içinde): sırayla tedavi, sedye (çıkış), kramp, zaman geçirmede uyarı, hakem topu, endirekt
+# serbest vuruş (yüksek ayak), gol (golcünün sevinci; her denemede başka oyuncu), topallama (12 sn). Her deneme akış bitene ya da oyun dönene dek
+# maç karesi (motor + çizim) ilerler
+OLAY_JS = r"""() => {
+  const dt = 1 / 60, S = window.__OLAY_SONUC = { deneme: 0, tur: {} };
+  const ilerle = (sn, kosul) => { for (let k = 0; k < 60 * sn && !(kosul && kosul()); k++) macKare(dt); };
+  window.__olayDene = i => { const m = mac, TUR = ['tedavi', 'cikis', 'kramp', 'uyari', 'hakemTopu', 'endirekt', 'gol', 'topal'], tur = TUR[i % TUR.length];
+    if (m.phase !== 'play') ilerle(60, () => m.phase === 'play');
+    if (m.phase !== 'play') return;
+    m.gameSec = m.half === 1 ? 900 : 3600; m.uzatmaIlan = [false, false];   /* devre bitmesin (bitince sakatlık akışı ve topallama işlemez) */
+    const t = Math.floor(i / TUR.length) % 2, T0 = m.teams[t], p = T0.filter(q => q.oyunda && q.rol !== 'GK' && !q.sakat)[(i * 3) % 7];
+    if (!p) return; S.deneme++; S.tur[tur] = (S.tur[tur] || 0) + 1;
+    if (tur === 'tedavi' || tur === 'cikis' || tur === 'kramp') {
+      if (tur === 'cikis' && m.ist.degisiklik[t] >= 5) m.ist.degisiklik[t] = 4;
+      m.sakatlikBaslat(p, tur === 'kramp' ? 'kramp' : 'temas', tur === 'kramp' ? 'baldir' : ['diz', 'kafa', 'bilek'][i % 3], tur === 'kramp' ? 'tedavi' : tur);
+      ilerle(70, () => !m.sakatlikAkis && !m.sakatlikSira.length && !m.tedavideBekleyen.length && m.phase === 'play'); ilerle(2); }
+    else if (tur === 'uyari') { m.zgUyari[t] = 0; const kA = m.kuralAdim;   /* motor adımının içinde (olay ve işaret aynı karede) */
+      m.kuralAdim = function (d) { m.kuralAdim = kA; kA.call(this, d); const r = this.rast; this.rast = () => 0; this.zamanGecirmeGoruldu(p, 4); this.rast = r; }; ilerle(3); }
+    else if (tur === 'hakemTopu') { const b = m.ball; m.hakemTopuBaslat(t, b.x, b.z, 'olcum'); ilerle(30, () => m.phase === 'play'); ilerle(2); }
+    else if (tur === 'endirekt') { const b = m.ball, x = clamp(b.x, -35, 35), z = clamp(b.z, 8, 60), o = m.teams[1 - t].find(q => q.oyunda && q.rol !== 'GK');
+      const kA = m.kuralAdim;   /* motor adımının içinde: olay motorun olay kuyruğundan (aynı kare) */
+      m.kuralAdim = function (d) { m.kuralAdim = kA; kA.call(this, d); if (this.phase !== 'play') return;
+        this.on('faul', { faulYapan: o, faulYiyen: p, takim: t, aleyhe: 1 - t, endirekt: true, x, z, kaynak: 'yuksekAyak', neden: 'yuksekAyak' });
+        this.durusBaslat('serbest', t, x, z, { bekle: 1.0, endirekt: true, duduk: true }); };
+      ilerle(1); ilerle(30, () => m.phase === 'play'); ilerle(4); }
+    else if (tur === 'gol') { const b = m.ball, side = m.dir[t]; b.sahip = null; b.tasiyan = null; b.sonDokunan = p; b.sonTakim = t; b.endirekt = null; b.x = side * (PL + 0.3); b.z = MZ; b.y = 0.5;
+      m.gol(side); ilerle(9); ilerle(40, () => m.phase === 'play'); }
+    else if (tur === 'topal') { p.topal = { oran: 0.62 + 0.08 * ((i * 7) % 5) / 4, son: m.t + 14 }; ilerle(14); }
+  };
+}"""
+
 BANT_AD = ["duran", "yürüyüş", "koşu", "hızlı", "depar"]
 
 
@@ -473,7 +527,7 @@ def satirlar(o):
     S.append(f"A: düzgünlük (SPARC, baş hızı, 3 sn, n {o['sparcN']}): ort {v(o['sparcOrt'], 2)} · p10 {v(o['sparcP10'], 2)}")
     z = o.get("zaman")
     if z:
-        S.append(f"A: zamanlama: hakem işareti {z['olay']} olay — aynı karede {z['ayni']}, bir adım sonra {z['bir']}, başlamayan {z['yok']} {z['yokAd'] or ''} · vuruş {z['vurus']} temas — çizimin temas evresi aynı karede {z['vurusAyni']}   [hedef sapma 0]")
+        S.append(f"A: zamanlama: hakem işareti {z['olay']} olay — aynı karede {z['ayni']}, bir adım sonra {z['bir']} {z.get('birAd') or ''}, başlamayan {z['yok']} {z['yokAd'] or ''} · vuruş {z['vurus']} temas — çizimin temas evresi aynı karede {z['vurusAyni']}   [hedef sapma 0]")
     k = o.get("vk")
     if k:
         S.append(f"A: vuruş (T4-V): {k['n']} temas — hazırlıksız (son adım < 0,8·tB) %{v(k['hazirliksizPay'])} · son adım/tB ort {v(k['sonAdimOrt'], 2)}, ≥ 0,8 olan %{v(k['sonAdimIyiPay'])} · geri salınım tepe/plan ortanca {v(k['tepeMed'], 2)} · ilk görülme temasta {k['ilkTakip']}"
@@ -522,6 +576,15 @@ def satirlar(o):
         kt = " · ".join(f"{k} {r['uyumlu']}/{r['n']} (açıklık {v(r['acik'], 2)}, yükseklik {v(r['dy'], 2)}, yan {v(r['yan'], 2)})" for k, r in sorted(vs["kotu"].items())) or "—"
         S.append(f"A: vuruş stili (T9b-e): temas {vs['n']} — çizimin pozu motorun stiline uyan {vs['ayni']}/{vs['n']} ({st}) · kötü vuruşta ayağın topa göre yeri türle uyumlu: {kt}"
                  f" · normal vuruş: açıklık {v(vs['normalAcik'], 2)}, yükseklik {v(vs['normalDy'], 2)}, yan {v(vs['normalYan'], 2)} (n {vs['normalN']})   [hedef ≥%90 / N/N]")
+    ol = o.get("ol")
+    if ol and (ol["sakKare"] or ol["endKare"] or ol["topalN"] or ol["sevCesit"] or ol["birakN"]):
+        sev = " ".join(f"{k}:{n}" for k, n in sorted(ol["sev"].items()))
+        S.append(f"A: olay (T10f): sakatın tutma pozu %{v(ol['sakPoz'])} ({ol['sakKare']} kare) · sedyede kök 0,55–0,9 m %{v(ol['sedYuk'])} ({ol['sedKare']} kare), sedyeyi tutan sağlıkçı %{v(ol['sedTut'])}"
+                 f" · tedavide sağlıkçı çömelik/gerdirir %{v(ol['tedPoz'])} ({ol['tedKare']} kare; gerdirme {ol['gerdir']}, çömelmenin altında {ol.get('gerdirOrtulu', 0)}) · topallama basma oranı {v(ol['topalOran'], 2)} ({ol['topalN']} kare)"
+                 f" · endirekt işaret tutuldu %{v(ol['endTut'])} ({ol['endKare']} kare) · hakem topu bırakma aynı karede {ol['birakAyni']}/{ol['birakN']} · golcü sevinci {ol['sevCesit']} çeşit ({sev or '—'})"
+                 f"   [hedef ≥90 / ≥90 / ≥80 / ≥80 / 0,55–0,75 / ≥90 / N/N / ≥5]")
+        if ol.get("olay"):
+            S.append("A:   olay düzeneği (yapay): " + json.dumps(ol["olay"], ensure_ascii=False))
     S.append(f"A: süre: aktorGuncelle {v(o['sureMs'], 3)} ms/kare (p99 {v(o['sureP99'], 3)}) · {o['kare']} kare, {v(o['oyuncuDk'])} oyuncu·dk · animasyon: {o['surum']}   [hedef ≤2 ms]")
     return S
 
@@ -563,6 +626,12 @@ async def olc(a):
                     await pg.evaluate(f"__duranDene({i})")
                 print(f"duran top düzeneği: {a.duran} yapay duran top (yalnız duran top satırı anlamlıdır)")
                 a.sure = 0
+            if a.olay:
+                await pg.evaluate(OLAY_JS)
+                for i in range(a.olay):
+                    await pg.evaluate(f"__olayDene({i})")
+                print(f"olay düzeneği: {a.olay} yapay olay (sakatlık, sedye, kramp, uyarı, hakem topu, endirekt, gol, topallama; olay satırı)")
+                a.sure = 0
             if a.hiz != 1:
                 await pg.evaluate(f"MAC_HIZ.deger = {a.hiz}")
                 print(f"oynatma hızı {a.hiz}× (kare başına {a.hiz} motor adımı; yalnız vuruş/zamanlama satırları anlamlıdır)")
@@ -589,6 +658,7 @@ def ana():
     ap.add_argument("--hiz", type=int, default=1, choices=[1, 2, 4, 8, 16], help="oynatma hızı (MAC_HIZ; T4-V: hız katlarında vuruş katmanının kararlılığı)")
     ap.add_argument("--kaleci", type=int, default=0, help="T9b-e: kaleye N yapay şut (d-sut kalıbı; maç oynanmaz; yalnız kurtarış satırı anlamlıdır)")
     ap.add_argument("--kotu", action="store_true", help="T9b-e: kötü vuruş olasılığı tavana (yalnız vuruş stili satırı anlamlıdır)")
+    ap.add_argument("--olay", type=int, default=0, help="T10f: N yapay olay (sakatlık, sedye, kramp, uyarı, hakem topu, endirekt, gol, topallama sırayla; maç oynanmaz, yalnız olay satırı anlamlıdır)")
     ap.add_argument("--duran", type=int, default=0, help="T8e: N yapay duran top (korner, serbest vuruş, penaltı, taç, kale vuruşu sırayla; maç oynanmaz; yalnız duran top satırı anlamlıdır)")
     a = ap.parse_args()
     try:

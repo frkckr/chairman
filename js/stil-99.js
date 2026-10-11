@@ -63,8 +63,14 @@ const STIL={
     antrenorDeplasman:{shirt:'#2c3446',trim:'#eef0f3',shorts:'#2c3446',socks:'#2c3446',ls:true,pant:true},
     foto:{shirt:'#d8661e',trim:'#1c1c1e',shorts:'#2a2c30',socks:'#2a2c30',ls:true,pant:true,boots:'#141416',
       ekParcalar:[{kemik:'eR',w:0.13,h:0.1,d:0.12,x:0.08,y:-0.34,z:0.1,renk:'ek1'},{kemik:'eR',w:0.07,h:0.07,d:0.12,x:0.08,y:-0.34,z:0.2,renk:'ek2'}],
-      ekRenkler:{ek1:'#141416',ek2:'#3a3a42'}}
+      ekRenkler:{ek1:'#141416',ek2:'#3a3a42'}},
+    /* T10f: sağlıkçılar beyaz eşofmanla (kırmızı şerit), sol elde kırmızı ilk yardım çantası (beyaz haç) */
+    saglikci:{shirt:'#ecebe6',trim:'#c8281e',shorts:'#ecebe6',socks:'#2a2c30',ls:true,pant:true,boots:'#141416',
+      ekParcalar:[{kemik:'eL',w:0.24,h:0.17,d:0.12,x:-0.02,y:-0.42,z:0.02,renk:'ek1'},{kemik:'eL',w:0.03,h:0.1,d:0.125,x:-0.02,y:-0.42,z:0.02,renk:'ek2'},{kemik:'eL',w:0.1,h:0.03,d:0.125,x:-0.02,y:-0.42,z:0.02,renk:'ek2'}],
+      ekRenkler:{ek1:'#c8281e',ek2:'#f4f4f0'}}
   },
+  /* T10f: sedye (çerçeve ve bez; js/mac-sahnesi.js) */
+  sedye:{cerceve:0x8c8c90,bez:0xc8642a},
   /* top toplayıcı çocukların boyu ve eni (yetişkine oran) */
   topcuBoy:{h:0.74,w:0.8},
   /* antrenman: koniler, fotoğraf flaşı */

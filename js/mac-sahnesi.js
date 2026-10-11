@@ -47,7 +47,7 @@ const DORDUNCU=(()=>{let d=null;mac.kenar.forEach((p,i)=>{
   let K;
   if(p.kind==='td')K=kitKaydi('takimElbise',MAC_KADRO[p.team].td,0);
   else if(p.kind==='dorduncu')K={...KIT.hakem,num:0,skin:STIL.tenler[0],hair:'#3c2616',style:'short'};
-  else K=kitKaydi(p.kind==='foto'?'foto':p.team?'antrenorDeplasman':'antrenorEv',bak,0);
+  else K=kitKaydi(p.kind==='foto'?'foto':p.kind==='saglikci'?'saglikci':p.team?'antrenorDeplasman':'antrenorEv',bak,0);   /* T10f: sağlıkçı */
   const a=aktorKur(K,p,K.h);AKTORLER.push(a);if(p.kind==='dorduncu')d=a;});return d;})();
 /* ---- top toplayıcılar (N10): sarı yelekli çocuklar; ellerindeki yedek top aşağıda EK_TOPLAR ile çizilir ---- */
 mac.topcular.forEach((k,i)=>AKTORLER.push(aktorKur({...KIT.topcu,num:0,skin:STIL.tenler[(i*3)%5],hair:SACLAR[(i*2)%5],style:i%4?'short':'curly',h:STIL.topcuBoy.h,w:STIL.topcuBoy.w},k,STIL.topcuBoy.h)));
@@ -57,6 +57,10 @@ const UZATMA_TABELA=(()=>{const g=new THREE.Group(),kasa=new THREE.Mesh(new THRE
   const yuz=new THREE.Mesh(new THREE.PlaneGeometry(0.56,0.28),BAS({map:TABELA_TX}));yuz.position.z=0.027;const arka=yuz.clone();arka.rotation.y=Math.PI;arka.position.z=-0.027;
   g.add(kasa,yuz,arka);g.visible=false;scene.add(g);return g;})();
 const UZATMA={t:-1,metin:''},AYAKTA=[0,0];
+/* T10f: sedye (motor m.sedye {x, z, yon, p}): iki sap ve bez, sağlıkçıların el hizasında; sakat üstünde yatar (js/animasyon.js kökü 0,72 m) */
+const SEDYE=(()=>{const g=new THREE.Group(),C=STIL.sedye,cer=LAM({color:C.cerceve}),bez=new THREE.Mesh(new THREE.BoxGeometry(0.56,0.03,1.85),LAM({color:C.bez}));
+  bez.position.y=0.02;g.add(bez);for(const s of[-1,1]){const sap=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.04,2.3),cer);sap.position.set(s*0.3,0.02,0);g.add(sap);}
+  g.visible=false;scene.add(g);return{g,a:null,p:null};})();
 function tabelaYaz(s,s2){const g=TABELA_G;g.fillStyle='#050505';g.fillRect(0,0,32,16);
   if(s2==null)ctxText(g,s,(32-textW(s,2))>>1,1,'#3cff4a',2);
   else{ctxText(g,s,Math.max(0,8-(textW(s,1)>>1)),4,'#ff3a2a',1);ctxText(g,s2,Math.max(16,24-(textW(s2,1)>>1)),4,'#3cff4a',1);g.fillStyle='#333';g.fillRect(15,2,1,12);}
@@ -153,6 +157,9 @@ function macKare(dt){
   if(UZATMA.t>=0){UZATMA.t+=dts;if(UZATMA.t>7)UZATMA.t=-1;}
   /* uzatma tabelası dördüncü hakemin başının üstünde */
   {const w=DORDUNCU.w.tabela||0;UZATMA_TABELA.visible=w>0.5;if(UZATMA_TABELA.visible){UZATMA_TABELA.position.set(DORDUNCU.x,1.95+0.25*w,DORDUNCU.z+0.2);UZATMA_TABELA.rotation.set(0,Math.PI,0);}}
+  /* T10f: sedye sakatın çizilen yerinde (aktörün ara değerli yeri), uzun ekseni motorun sedye yönünde */
+  {const sd=mac.sedye;SEDYE.g.visible=!!sd;if(sd){if(SEDYE.p!==sd.p){SEDYE.p=sd.p;SEDYE.a=AKTORLER.find(a=>a.kaynak===sd.p)||null;}
+    const A=SEDYE.a,x=A?A.x:sd.x,z=A?A.z:sd.z-MOTOR_Z;SEDYE.g.position.set(x,0.66,z);SEDYE.g.rotation.set(0,Math.PI/2-sd.yon,0);}}
   /* top (js/animasyon.js) */
   topCiz(b,al,bx,bz,dts,T);
   /* dışarıda kalan toplar, antrenman topları ve top toplayıcıların elindeki yedek toplar */

@@ -10,6 +10,8 @@
      a2vurus | a2hakem | a2kaleci | a2bekle2 | a2dokunus (A2b, 2026-10-08) | t4calim (T4g, 2026-10-09: çalım, aldatılan savunmacı, top saklama) |
      t6hava (T6f) | t9vurus (T9b-e: falso, burun, kötü vuruş) | t9kaleci (T9b-e: yana adım, dalış ve kolun topa IK'sı, çökme, K-blok, yıldız) |
      t8duran (T8e: topu yerleştirme, barajın motor sıçraması, uzun taç koşusu, kutuda yer kapma, yarı plonjon kafa, top toplayıcı yuvarlama) |
+     t10olay (T10f: sakatın tutma pozları, kramp, sağlıkçının gerdirmesi ve sedyeyi tutması, sedyede sakat, topallama, hakem uyarısı ve hakem topu,
+     pres koşusu ve markajda el teması, yeni sevinçler) |
      olcum (ayak kayması ve süre ölçümü). Satır seçeneği sabitY: kamera yüksekliği
      sabit (sıçrama görünsün).
      Açmak: python3 araclar/kontrol.py "araclar/poz-galerisi.html?sayfa=dusus" (görüntü araclar/son-kontrol-poz-galerisi-sayfa-dusus.png).
@@ -58,7 +60,8 @@ const RAKIP_M=new THREE.Mesh(new THREE.BoxGeometry(0.4,1.7,0.3),LAM({color:0x2a3
 const KITLER=[{...STIL.formalar.ev,num:8,skin:STIL.tenler[1],hair:'#241a12',style:'short',h:1,w:1},
   {...STIL.formalar.evKaleci,num:1,skin:STIL.tenler[0],hair:'#3c2616',style:'curly',h:1.03,w:1.03},
   {...STIL.formalar.deplasman,num:4,skin:STIL.tenler[3],hair:'#141212',style:'bald',beard:true,h:0.98,w:1.02},
-  {...STIL.formalar.hakem,num:0,skin:STIL.tenler[1],hair:'#8a8680',style:'bald',mus:true,h:1,w:1.06}];
+  {...STIL.formalar.hakem,num:0,skin:STIL.tenler[1],hair:'#8a8680',style:'bald',mus:true,h:1,w:1.06},
+  {...STIL.formalar.saglikci,num:0,skin:STIL.tenler[2],hair:'#3c2616',style:'short',h:0.98,w:1.04}];   /* T10f: sağlıkçı */
 function oyuncu(ek){return Object.assign({tur:'oyuncu',kind:null,team:0,n:5,no:8,rol:'OS',ayak:'sag',boy:1,x:0,z:0,vx:0,vz:0,spd:0,yon:0,yuk:0,eylem:null,
   sevinc:false,poz:null,oyunda:true,cikiyor:false,oturuyor:false,tavir:null,bakisYon:null,denge:1,enerji:1,sonDokunus:null},ek||{});}
 const AKTOR=[];
@@ -432,6 +435,38 @@ const SAYFALAR={
       her:(p,t)=>{const b=mac.ball;b.y=1.5;b.x=t<0.4?p.x+0.3+(0.4-t)*5:p.x+0.3-(t-0.4)*6;},kareler:[0.2,0.38,0.42,0.48,0.56,0.7,0.95],az:60,uzak:5},
     {ad:'T8e Top toplayıcı yuvarlama (atis, stil yuvarla): çömelip yerden',kit:2,kur:p=>{p.yon=0;},
       adim:[{ad:null,sure:0.2},{ad:'atis',sure:0.5,ek:{stil:'yuvarla'}},{ad:null,sure:0.6}],kareler:[0.15,0.25,0.32,0.4,0.5,0.65,0.9],az:40,uzak:4.5}],
+  /* T10f (Ek G4, G7, G8): olay hareketleri — motorun alanları yapay verilir (p.sakat, p.topal, p.gorev, mac.sedye, mac._pres1, mac._markaj, hakem işareti) */
+  t10olay:[
+    {ad:'T10f Sakat (diz): sırtüstü düşüş, eller dizde, kıvranma',kit:0,kur:p=>{p.yon=0;p.sakat={tur:'temas',bolge:'diz',derece:'tedavi'};},
+      adim:[{ad:null,sure:0.2},{ad:'dusus',sure:0.45,ek:{yon:Math.PI,yuzustu:false,kilit:true}},{ad:'yerde',sure:3,ek:{kilit:true}}],kareler:[0.3,0.5,0.7,1.0,1.6,2.2,3.0],az:50,uzak:4.5},
+    {ad:'T10f Sakat (kafa): eller başta',kit:2,kur:p=>{p.yon=0;p.n=3;p.no=4;p.sakat={tur:'temas',bolge:'kafa',derece:'tedavi'};},
+      adim:[{ad:null,sure:0.2},{ad:'dusus',sure:0.45,ek:{yon:Math.PI,yuzustu:false,kilit:true}},{ad:'yerde',sure:3,ek:{kilit:true}}],kareler:[0.3,0.5,0.7,1.0,1.6,2.2,3.0],az:50,uzak:4.5},
+    {ad:'T10f Kramp: sırtüstü, bacak havada, titrer',kit:0,kur:p=>{p.yon=0;p.sakat={tur:'kramp',bolge:'baldir',derece:'tedavi'};},
+      adim:[{ad:null,sure:0.2},{ad:'dusus',sure:0.6,ek:{yon:Math.PI,yuzustu:false,kilit:true}},{ad:'yerde',sure:3,ek:{kilit:true}}],kareler:[0.3,0.6,0.9,1.3,1.8,2.4,3.0],az:70,uzak:4.5},
+    {ad:'T10f Sağlıkçı: kramp tedavisinde bacağı gerdirir (çömelmez)',kit:4,kur:p=>{p.tur='kenar';p.kind='saglikci';p.team=0;p.yon=0;p.poz='comel';
+      p.gorev={p:oyuncu({sakat:{tur:'kramp',bolge:'baldir',derece:'tedavi'}})};mac.saglikcilar=()=>[p];},kareler:[0.2,0.5,0.8,1.1,1.4,1.7,2.0],az:70,uzak:4.5},
+    {ad:'T10f Sağlıkçı: tedavide çömelik (çanta sol elde)',kit:4,kur:p=>{p.tur='kenar';p.kind='saglikci';p.team=0;p.yon=0;p.poz='comel';
+      p.gorev={p:oyuncu({sakat:{tur:'temas',bolge:'diz',derece:'tedavi'}})};mac.saglikcilar=()=>[p];},kareler:[0.2,0.5,0.8,1.1,1.4,1.7,2.0],az:40,uzak:4.5},
+    {ad:'T10f Sedyede sakat: kök 0,72 m (sedye taşınırken)',kit:2,kur:p=>{p.yon=0;p.n=3;p.no=4;p.sakat={tur:'temas',bolge:'diz',derece:'cikis'};},
+      adim:[{ad:null,sure:0.2},{ad:'dusus',sure:0.45,ek:{yon:Math.PI,yuzustu:false,kilit:true}},{ad:'yerde',sure:3,ek:{kilit:true}}],
+      her:(p,t)=>{mac.sedye=t>1.2?{x:p.x,z:p.z,yon:Math.PI/2,p}:null;if(t>1.2)p.vx=1.5;},kareler:[0.5,1.0,1.3,1.6,2.0,2.5,3.0],az:60,uzak:5},
+    {ad:'T10f Sağlıkçı: sedyeyi tutar (yürür)',kit:4,kur:p=>{p.tur='kenar';p.kind='saglikci';p.team=0;p.yon=0;const h=oyuncu();p.gorev={p:h};mac.sedye={x:0,z:0,yon:0,p:h};p.vx=1.6;},
+      kareler:[0.2,0.5,0.8,1.1,1.4,1.7,2.0],az:60,uzak:4.5},
+    {ad:'T10f Topallama (basma oranı 0,65): sakat bacakta kısa basış, gövde yana',kit:0,kur:p=>{p.yon=0;p.topal={oran:0.65,son:99};},
+      adim:[{ad:null,sure:3,v:[2.6,0]}],kareler:[1.0,1.15,1.3,1.45,1.6,1.75,1.9],az:90,uzak:5},
+    {ad:'T10f Hakem: zaman geçirmede uyarı (parmak), sonra saat',kit:3,kur:p=>{p.tur='hakem';p.kind='ref';p.yon=0;p.__h=false;},
+      her:(p,t)=>{if(t>=0.3&&!p.__h){p.__h=true;anmHkIsaret(p,[{tur:'uyari',sure:1.1,p:{x:p.x+3,z:p.z+1}},{tur:'saat',sure:0.9}],true);}},
+      kareler:[0.35,0.55,0.75,0.95,1.2,1.5,1.9],az:30,uzak:4.5},
+    {ad:'T10f Hakem topu: iki elle bırakır (eylem birak)',kit:3,kur:p=>{p.tur='hakem';p.kind='ref';p.yon=0;},
+      adim:[{ad:null,sure:0.3},{ad:'birak',sure:0.7},{ad:null,sure:0.6}],kareler:[0.25,0.35,0.5,0.7,0.9,1.1,1.4],az:40,uzak:4.5},
+    {ad:'T10f Pres koşusu: kollar geniş, gövde öne (takımın birinci baskıcısı)',kit:2,kur:p=>{p.yon=0;p.n=3;p.no=4;mac._pres1=[p,p];},
+      adim:[{ad:null,sure:2,v:[5,0]}],kareler:[0.6,0.75,0.9,1.05,1.2,1.35,1.5],az:80,uzak:5},
+    {ad:'T10f Markajda el teması: adamına 1 m içinde kol sırtına',kit:2,kur:p=>{p.yon=0;p.n=3;p.no=4;const o={x:0.8,z:0.3,oyunda:true,team:1};mac.teams[1]=[o];mac._markaj=[new Map([[p,o]]),new Map([[p,o]])];},
+      her:(p,t)=>{const o=mac.teams[1][0];o.x=p.x+0.8;o.z=p.z+0.3;p.vx=1.2;},rakip:()=>mac.teams[1][0],kareler:[0.3,0.6,0.9,1.2,1.5,1.8,2.1],az:60,uzak:4.5},
+    {ad:'T10f Sevinç: armayı öper',sev:4,kareler:[0.6,0.8,1.0,1.8,2.0,2.2,2.4],az:30},
+    {ad:'T10f Sevinç: parmak dudakta',sev:5,kareler:[0.6,0.8,1.0,1.8,2.0,2.2,2.4],az:30},
+    {ad:'T10f Sevinç: el kulakta (tribüne döner)',sev:6,kareler:[0.6,0.8,1.0,1.8,2.0,2.2,2.4],az:30},
+    {ad:'T10f Sevinç: sakin, tek kol havada',sev:7,kareler:[0.6,0.8,1.0,1.8,2.0,2.2,2.4],az:30}],
   t4calim:[
     calimSatir('T4g Makas: sol ayak topun önünden dışa, sağ dış ayakla itiş',{hareket:'makas',sure:0.45,taraf:1,kay:0.3,hazHiz:0.55,v:3.5}),
     calimSatir('T4g Makas, öbür yan ve başka kimlik',{hareket:'makas',sure:0.45,taraf:-1,kay:0.3,hazHiz:0.55,v:3.2,kit:2,n:11,az:-20}),
@@ -458,7 +493,7 @@ function sevincHer(S,p,t){mac.phaseT=t;if(S.uzgun){p.vx=Math.max(0,1.2-t*0.5);re
 function satirCalistir(S,ornek,sonT){
   for(const a of AKTOR)a.m.root.visible=false;RAKIP_M.visible=false;
   const p=oyuncu(),kit=KITLER[S.kit||0];mac.ball=Object.assign(mac.ball,{x:6,y:0,z:0,vx:0,vy:0,vz:0,tasiyan:null,sahip:null,sut:null});mac.teams=[[],[]];mac.phase='play';mac.celeb=null;
-  mac.players=[];mac.durus=null;
+  mac.players=[];mac.durus=null;mac._pres1=null;mac._markaj=null;mac.sedye=null;mac.sakatlikAkis=null;mac.saglikcilar=null;   /* T10f */
   const a=aktorYeni(kit,p);if(S.kur)S.kur(p,a);if(S.sev!=null||S.uzgun)sevincKur(S,p,a);
   if(S.uzgun)a.uzP=ANM_UZGUN[0];
   const cz=S.adim?cizelge(S.adim):null;let t=0,k=0;const K=S.kareler||[],son=sonT!=null?sonT:(K.length?K[K.length-1]:2)+0.05;

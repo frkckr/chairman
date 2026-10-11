@@ -72,7 +72,7 @@ Object.assign(Match.prototype,{
       const cikan=saha.reduce((a,c)=>puan(c)>puan(a)?c:a);
       const giren=hucumcu&&cikan.rol!=='DEF'?hucumcu:savunmaci&&cikan.rol==='OS'?savunmaci:sec(y=>y.rol===cikan.rol)||yedek.find(y=>y.isiniyor)||yedek[0];
       plan.shift();
-      giren.oturuyor=false;giren.tx=0;giren.tz=-0.7;giren.hizOran=0.5;giren.bak=cikan;
+      giren.oturuyor=false;giren.poz=null;giren.tx=0;giren.tz=-0.7;giren.hizOran=0.5;giren.bak=cikan;
       /* çıkan oyuncu en yakın çizgiden çıkar; ana tribün tarafındaysa kulübeye yürür. T10d: öndeki takımın çıkanı son dakikalarda yavaş yürür */
       cikan.hizOran=0.35*(1-0.5*(this._niyet?this._niyet[t].zamanGecir:0));
       this.degisiklik={t,cikan,giren,t0:this.t,girdi:false};
@@ -92,14 +92,17 @@ Object.assign(Match.prototype,{
         const oturan=Y.filter(p=>!p.cikti&&p.oturuyor&&p.rol!=='GK'),roller=new Set(I.map(p=>p.rol)),y=oturan.find(p=>!roller.has(p.rol))||oturan[0];
         if(y){const k=Y.filter(p=>p.isinma).length%3;y.isiniyor=true;y.oturuyor=false;y.isinma={a:kb.alan.x+s*(7+k*1.5),b:kb.alan.x+s*(22+k*1.5),z:-3.2-0.6*k,yon:1};
           I.push(y);this.on('isinma',{p:y,takim:t});}}
-      for(const p of I){const w=p.isinma;if(!w)continue;const hx=w.yon>0?w.b:w.a;p.tx=hx;p.tz=w.z;p.hizOran=0.42;p.bak=null;p.yonHedef=null;
-        if(hyp(p.x-hx,p.z-w.z)<0.8)w.yon=-w.yon;}}
+      /* T10f: şeridin ucunda 2,5 sn esner (poz etiketi 'esneme'; çizim) */
+      for(const p of I){const w=p.isinma;if(!w)continue;
+        if(w.dur!=null){p.tx=p.x;p.tz=p.z;p.hizOran=0.3;if(this.t>=w.dur){w.dur=null;p.poz=null;w.yon=-w.yon;}continue;}
+        const hx=w.yon>0?w.b:w.a;p.tx=hx;p.tz=w.z;p.hizOran=0.42;p.bak=null;p.yonHedef=null;
+        if(hyp(p.x-hx,p.z-w.z)<0.8){w.dur=this.t+2.5;p.poz='esneme';}}}
   },
   /* T10c: değişikliğin takası — giren çıkanın yerini ve mevkisini alır; profili yeni mevkiye göre yeniden kurulur (T10 teşhisi hata 3: yedeğin
      profili kulübede mevkisiz kuruluyordu, kanadın yerine giren merkez gibi oynuyordu); çıkan kulübeye. Maçın kaydına yazılır */
   degisiklikTakas(dg){
     const {cikan,giren,t}=dg,n=cikan.n,i=this.players.indexOf(cikan),isindi=!!giren.isiniyor;
-    Object.assign(giren,{tur:'oyuncu',n,mevki:cikan.mevki,rol:cikan.rol,oyunda:true,oturuyor:false,yorgunluk:0,hizOran:0.8,isiniyor:false,isinma:null});
+    Object.assign(giren,{tur:'oyuncu',n,mevki:cikan.mevki,rol:cikan.rol,oyunda:true,oturuyor:false,yorgunluk:0,hizOran:0.8,isiniyor:false,isinma:null,poz:null});
     profilKur(giren,this.tohum);
     this.teams[t][n]=giren;if(i>=0)this.players[i]=giren;
     Object.assign(cikan,{tur:'yedek',oyunda:false,cikiyor:false,cikti:true,koltuk:giren.koltuk,eylem:null,surus:null});
@@ -118,7 +121,7 @@ Object.assign(Match.prototype,{
     const plan=this.degisimPlani[t];if(plan.length)plan.shift();
     const dg={t,cikan:p,giren,t0:this.t,girdi:false,sakatlik:true};
     this.uzatmaBirikim[this.half-1]+=30;this.on('degisiklik',{takim:t,cikan:p,giren,sakatlik:true});
-    giren.oturuyor=false;
+    giren.oturuyor=false;giren.poz=null;
     if(aninda){this.degisiklikTakas(dg);const k=p.koltuk;p.oturuyor=true;p.x=p.tx=k.x;p.z=p.tz=k.z;p.vx=p.vz=0;return true;}
     giren.tx=0;giren.tz=-0.7;giren.hizOran=0.6;giren.bak=p;
     this.degisiklik=dg;return true;
@@ -373,7 +376,7 @@ Object.assign(Match.prototype,{
     tk.x=du.geriX;tk.z=du.geriZ;if(tk.eylem&&!tk.eylem.kilit)tk.eylem=null;
     this.sahipYap(tk);
     /* dolaylı serbest vuruş: başka bir oyuncu dokunmadan gol olmaz (Match.gol) */
-    b.endirekt=du.endirekt?{p:tk}:null;
+    b.endirekt=du.endirekt?{p:tk,hakemTopu:!!du.hakemTopu}:null;   /* T10f: hakem topunda işaret yok (çizim ve ölçüm ayırır) */
     const sec=du.kisaGeri?null:this.durusSecenegi(du,tk);   /* T8f: topa yürüdükten sonra ilk karar (sürdürme) geçerlidir, yeniden zar atılmaz */
     if(sec){sec.duran=true;du.asama='kullan';this.vurusBaslat(tk,sec);if(du.tur==='penalti')this.penaltiKaleciHazirla(du);return;}
     /* T8b (inceleme bulgusu): vuruş seçeneği yoksa (serbest vuruşun şutsuz ve ortasız payı: oyunu sürdürme, rutin) oyun kullanan topun başındayken

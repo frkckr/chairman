@@ -97,10 +97,8 @@ function pose(r,P){
   r.aL.rotation.set(P.aL||0,P.aLy||0,P.aLz||0);r.aR.rotation.set(P.aR||0,P.aRy||0,P.aRz||0);r.eL.rotation.x=P.eL||0;r.eR.rotation.x=P.eR||0;
 }
 const POSE={
-  shoot:{lean:-0.22,lR:-1.35,kR:0.25,lL:0.3,kL:0.35,aL:-0.35,aLz:-1.05,aR:0.55,aRz:0.8,eL:-0.3,eR:-0.4,hx:0.15},
   runA:{lean:0.2,lL:-0.75,kL:0.35,lR:0.6,kR:1.35,aL:0.65,aR:-0.7,eL:-1.1,eR:-1.1,aLz:-0.1,aRz:0.1},
   runB:{lean:0.2,lL:0.6,kL:1.35,lR:-0.75,kR:0.35,aL:-0.7,aR:0.65,eL:-1.1,eR:-1.1,aLz:-0.1,aRz:0.1},
-  slide:{lean:-1.05,dy:-0.5,lR:-1.5,kR:0.05,lL:-0.55,kL:1.5,aL:0.3,aLz:-0.9,aR:0.6,aRz:0.6,eL:-0.2,eR:-0.4,hx:0.5},
   dive:{lL:0.25,kL:0.5,lR:-0.35,kR:0.2,aLz:-2.9,aRz:2.9,eL:-0.1,eR:-0.1},
   ready:{lean:0.25,dy:-0.08,lL:-0.2,kL:0.45,lR:0.15,kR:0.4,aL:-0.3,aR:-0.3,aLz:-0.35,aRz:0.35,eL:-0.6,eR:-0.6},
   otur:{dy:-0.4,lL:-1.45,kL:1.45,lR:-1.45,kR:1.45,aL:-0.35,aR:-0.35,eL:-0.9,eR:-0.9,aLz:-0.05,aRz:0.05},
@@ -127,11 +125,7 @@ const POSE={
   tacAt:{lean:0.25,aL:-1.1,aR:-1.1,eL:-0.4,eR:-0.4,lL:0.25,lR:-0.35,kL:0.2,kR:0.4},
   tasi:{aL:-0.85,aR:-0.85,eL:-0.9,eR:-0.9,aLz:0.15,aRz:-0.15},
   itiraz:{aL:-0.5,aR:-0.5,aLz:-0.7,aRz:0.7,eL:-1.25,eR:-1.25,hx:-0.15},
-  hakemDuduk:{aL:-2.5,eL:-0.2,aLz:-0.15,hx:-0.1},
-  hakemYon:{aL:-1.55,eL:0,aLz:0},
-  hakemAvantaj:{aL:-1.35,aR:-1.35,eL:0,eR:0,aLz:0.25,aRz:-0.25},
-  hakemKart:{aL:-3.0,eL:0,aLz:-0.1,hx:-0.15},
-  hakemPenalti:{aL:-1.0,eL:0,aLz:0},
+  /* T10f (T10 teşhisi hata 7'nin çizim kalıntısı): kullanılmayan hakem pozları (hakemDuduk, hakemYon, hakemAvantaj, hakemKart, hakemPenalti) ile eski shoot ve slide kaldırıldı; hakem işaretleri js/animasyon.js anmHkPoz'da */
   bayrak:{aR:-3.0,eR:0,aRz:0.05},
   tabela:{aL:-2.9,aR:-2.9,eL:-0.3,eR:-0.3,aLz:0.2,aRz:-0.2},
   /* maç günü: ısınma, tören, fotoğraf, maç sonu */
