@@ -518,6 +518,8 @@ function kornerSecenekleri(m,p,ox,oz){
    hatası türün çarpanı × gücün çarpanı (gucHataCarpani: güç arttıkça dik artar). Güçlü şut kalecinin tepkisini geçer, isabeti düşer: plan
    ikisini tartar. Tür: plase iç ayak, sert üst, falso içüstü (eğri), düşen (serbest vuruş), aşırtma */
 const SUT_Z=[-3.4,-3.0,-2.0,2.0,3.0,3.4],SUT_Y=[0.35,1.75],SUT_GUC=[0.6,0.75,0.9,1.0];
+/* T8c: serbest vuruşta türün hedef yükseklikleri — barajın üstünden falso ve düşen üst köşeye, sert iki yükseklikte, plase sıçrayan barajın altından */
+const SUT_YS={falso:[1.75,2.05],dusen:[1.95,2.2],sert:SUT_Y,plase:[0.3]};
 /* T9b-a: kalenin ağzı hücrelere bölünür (kale ortasına göre z sınırları, y sınırları; dış sınırlar topun yarıçapı kadar içeride). Kalecinin
    kurtarma olasılığı hücre ortalarında okunur (tür ve güç başına bir kez); nişanın normal dağılımı hücrelere dağıtılır:
    P(gol) = (1 − blok) × Σ P(hücre) × (1 − kurtarış(hücre)). Eskiden kurtarış nişan noktasında okunuyordu: büyük hatalı (güçlü, uzak) köşe şutu
@@ -531,20 +533,40 @@ const SUT_TUR={plase:{stil:'ic',kz:0.9,ky:0.85},sert:{stil:'ust',kz:1.0,ky:1.1},
    (trivela) sağa döner: sol direğin dışından. Sol ayakta tersi. zt·d > 0 vuranın sağıdır. Ayak bilinmiyorsa (eski çağrı) iki yan da */
 function sutEgriYani(tur,ayak,zt,d){if(tur!=='falso'&&tur!=='trivela'||!ayak||ayak==='iki')return true;const sag=zt*d>0;return(ayak==='sag')===(tur==='falso'?sag:!sag);}
 /* atış hattındaki savunmacı bloklayabilir (aşırtma ve düşen top ilk metrelerden sonra üstünden geçer, falso hattı biraz kaçırır) */
-function sutBlokOlasiligi(m,p,ox,oz,tx,tz,tur){
-  const Lk=hyp(tx-ox,tz-oz)||1;let acik=1;
+/* T8c (2026-10-11): 3B — yt (kale çizgisindeki hedef yükseklik) ve T (uçuş süresi) verilirse engelin hizasında topun yüksekliği
+   yOn = 0,11 + (yt − 0,11)·f + ½·g′·T²·f·(1 − f) (f = engelin uzaklığı / mesafe; düşende üst dönüşle g′ = 1,3 g); erişim Ry = 1,8·boy + 0,15
+   (barajda + durarak sıçrama × barajZipla). P_i = yanal × [(Ry − yOn)/0,35 + 0,5] (0–1; erişimin ±0,175 m'si sıçramanın zamanı ve topun
+   yükseklik hatasıyla belirsiz — ilk denemede rampa erişimin altında kalıyordu, plan barajı sıyıran düşen şutu temiz sanıyor, fizikte %41'i
+   baraja çarpıyordu); barajda yanal (0,5 − yan)/0,2 (omuz omuza duvar), havadaki
+   barajın altından (yOn < 0,45) ×0,4. yt verilmezse eski 2B (türün payı: plase ve sert 0,6, falso 0,45, uzaktaki engele düşen 0,3) */
+function sutBlokOlasiligi(m,p,ox,oz,tx,tz,tur,yt,T){
+  const Lk=hyp(tx-ox,tz-oz)||1,ucY=yt!=null;let acik=1;
   for(const o of rakipler(m,p.team)){if(!o.oyunda||o.rol==='GK')continue;const on=((o.x-ox)*(tx-ox)+(o.z-oz)*(tz-oz))/Lk;if(on<0.5||on>Math.min(14,Lk-1))continue;
     if(tur==='asirtma'&&on>4)continue;
-    const yan=segD(o.x,o.z,ox,oz,tx,tz);if(yan<1.3)acik*=1-(tur==='falso'?0.45:tur==='dusen'&&on>4?0.3:0.6)*(1-yan/1.3);}
+    const bj=!!(o.duranRol&&o.duranRol.rol==='baraj'),yan=segD(o.x,o.z,ox,oz,tx,tz);let P;
+    if(bj){if(yan>=0.5)continue;P=Math.min(1,(0.5-yan)/0.2);}
+    else{if(yan>=1.3)continue;P=(ucY?0.6:tur==='falso'?0.45:tur==='dusen'&&on>4?0.3:0.6)*(1-yan/1.3);}
+    if(ucY){const f=on/Lk,yOn=0.11+(yt-0.11)*f+0.5*G*(tur==='dusen'?1.3:1)*T*T*f*(1-f),Ry=1.8*(o.boy||1)+(bj?hvSicramaH(o,0)*MOTOR_AYAR.barajZipla:0)+0.15;
+      P*=clamp((Ry-yOn)/0.35+0.5,0,1);if(bj&&yOn<0.45)P*=0.4;}
+    acik*=1-P;}
   return 1-acik;}
 /* sd: temel yön hatası (rad; vurusSapma, güç çarpanı 1). o: {serbest, tur (sabit tür), guc (sabit güç), zayif (zayıf ayak: azami hız düşer), acele
    (T9b-b: kısa geri salınım azami hızı en çok %15 düşürür), stil (sabit stil: burun)}. Seçim sıcaklıklıdır: kararlı şutçu en iyi hedefi daha
    tutarlı seçer */
 function sutPlani(m,p,ox,oz,sd,o){
+  const A=sutAdaylari(m,p,ox,oz,sd,o),Ls=A.Ls,en=A.en;
+  /* T9b-a: sıcaklık en iyi adayın değerine göre (göreli): uzak şutta bütün adayların P(gol)'ü küçükken mutlak sıcaklık seçimi neredeyse rastgele
+     yapıyordu (25 m'de plan tam güçlü vuruşu en iyi bulsa da ortalama güç 0,84 çıkıyordu); karar 0,6'da 16 m'de eskisiyle aynı keskinlik */
+  const tau=Math.max(0.004,(0.06+0.18*(1-p.oz.karar))*en);let top=0;
+  for(const c of Ls){c.a=Math.exp((c.Pg-en)/tau);top+=c.a;}
+  let r=m.rast()*top;for(const c of Ls){r-=c.a;if(r<=0)return c;}
+  return Ls[Ls.length-1];}
+/* T8c: şut adayları ve en iyisinin P(gol)'ü (saf; rastlantı çekmez): serbest vuruş kararı (serbestKarar) seçmeden değerlendirir */
+function sutAdaylari(m,p,ox,oz,sd,o){
   o=o||{};const d=m.dir[p.team],gx=d*PL,gk=m.kaleci(1-p.team),L=Math.max(1,hyp(gx-ox,MZ-oz)),onde=gk.oyunda?Math.abs(gk.x-gx):0;
   /* T9b-c: aşırtma kaleci 3,5 m'den öndeyse ve 9 m'den uzaktan (eskiden 5 m ve 11 m: maçta şutların ~%0,6'sında); dış ayakla falso yalnız becerili şutçuda */
   const tv=p.oz.sut>=0.65?['trivela']:[];
-  const turler=o.tur?[o.tur]:o.serbest?['falso','dusen']:onde>3.5&&L>9?['plase','sert','falso',...tv,'asirtma']:L>14?['plase','sert','falso',...tv]:['plase','sert'];
+  const turler=o.tur?[o.tur]:o.serbest?['falso','dusen','sert','plase']:onde>3.5&&L>9?['plase','sert','falso',...tv,'asirtma']:L>14?['plase','sert','falso',...tv]:['plase','sert'];
   const gucler=o.guc!=null?[o.guc]:SUT_GUC,vMax=sutHizTavani(p,!!o.zayif)*(1-0.15*(o.acele||0)),R=VURUS_GUC_REF.sut;
   const Ls=[],sapma=Math.max(0,L-18)*0.01;let en=0;
   const nZ=SUT_HZM.length,nY=SUT_HYM.length;
@@ -557,27 +579,26 @@ function sutPlani(m,p,ox,oz,sd,o){
       for(let i=0;i<nZ;i++)for(let j=0;j<nY;j++)SUT_PS[i*nY+j]=gk.oyunda?kaleciTahmin(m,gk,MZ+SUT_HZM[i],SUT_HYM[j],T,ek).P:0;
       for(let k=0;k<SUT_Z.length;k++){const zt=SUT_Z[k];
         if(tur==='asirtma'&&Math.abs(zt)>2.6||!sutEgriYani(tur,o.ayak,zt,d))continue;
-        /* blok olasılığı güçten bağımsız: tür ve hedef başına bir kez */
-        let bl=BL[k];if(bl===undefined)bl=BL[k]=sutBlokOlasiligi(m,p,ox,oz,gx,MZ+zt,tur);
+        /* blok olasılığı güçten bağımsız: tür ve hedef başına bir kez. T8c: serbest vuruşta 3B (barajın yüksekliği; yükseklik ve uçuş başına) */
+        let bl=o.serbest?0:BL[k];if(!o.serbest&&bl===undefined)bl=BL[k]=sutBlokOlasiligi(m,p,ox,oz,gx,MZ+zt,tur);
         const sz=Math.max(0.05,sd*kz*fg*L);for(let i=0;i<SUT_HZ.length;i++)SUT_FZ[i]=normalDagilim((SUT_HZ[i]-zt)/sz);
-        for(const y0 of(tur==='asirtma'?[2.0]:tur==='dusen'?[1.9]:SUT_Y)){
-          const yt=y0+sapma,sy=Math.max(0.05,sd*ky*fg*L*0.35);for(let j=0;j<SUT_HY.length;j++)SUT_FY[j]=normalDagilim((SUT_HY[j]-yt)/sy);
+        for(const y0 of(o.serbest?SUT_YS[tur]:tur==='asirtma'?[2.0]:tur==='dusen'?[1.9]:SUT_Y)){
+          /* T8c: serbest vuruşta barajın üstünden giden şutun (hedef yüksekliği ≥ 1 m; türü ne olursa olsun) yükseklik hatası yanal hatayla aynı
+             açıda (ky = kz / 0,35; açık oyunda yükseklik hatası yanalın 0,35'i — alçak şut yüksekliği tutar): üstten hem barajı aşıp hem üst direğin
+             altına inmek fırlatma açısını, hızı ve dönüşü birlikte tutturmayı ister. Tarama (18 m merkez, 40 vuruş): düşen ve falsoda 1,4 katında
+             gol %27, 2 katında %35; yalnız onlara uygulanınca plan barajın üstüne 'sert' şut seçti (30 şutta 15 gol) */
+          const kyY=o.serbest&&y0>=1?kz/0.35:ky,yt=y0+sapma,sy=Math.max(0.05,sd*kyY*fg*L*0.35);if(o.serbest)bl=sutBlokOlasiligi(m,p,ox,oz,gx,MZ+zt,tur,yt,T);for(let j=0;j<SUT_HY.length;j++)SUT_FY[j]=normalDagilim((SUT_HY[j]-yt)/sy);
           let Pon=0,Pk=0;
           for(let i=0;i<nZ;i++){const pz=SUT_FZ[i+1]-SUT_FZ[i];if(pz<1e-4)continue;
             for(let j=0;j<nY;j++){const pc=pz*(SUT_FY[j+1]-SUT_FY[j]);Pon+=pc;Pk+=pc*(1-SUT_PS[i*nY+j]);}}
           const Pg=Pk*(1-bl);
-          Ls.push({tur,zt,yt:y0,v,g,kz,ky,fg,stil,Pg,Pon});if(Pg>en)en=Pg;}}}}
-  /* T9b-a: sıcaklık en iyi adayın değerine göre (göreli): uzak şutta bütün adayların P(gol)'ü küçükken mutlak sıcaklık seçimi neredeyse rastgele
-     yapıyordu (25 m'de plan tam güçlü vuruşu en iyi bulsa da ortalama güç 0,84 çıkıyordu); karar 0,6'da 16 m'de eskisiyle aynı keskinlik */
-  const tau=Math.max(0.004,(0.06+0.18*(1-p.oz.karar))*en);let top=0;
-  for(const c of Ls){c.a=Math.exp((c.Pg-en)/tau);top+=c.a;}
-  let r=m.rast()*top;for(const c of Ls){r-=c.a;if(r<=0)return c;}
-  return Ls[Ls.length-1];}
+          Ls.push({tur,zt,yt:y0,v,g,kz,ky:kyY,fg,stil,Pg,Pon});if(Pg>en)en=Pg;}}}}
+  return{Ls,en};}
 
 /* şut seçeneği: iyi pozisyonda istekle; uzaktan ancak iyi şutçu ve önü boşsa. Atış hattındaki savunmacı bloklayabilir */
 function sutSecenegi(m,p,x0,z0,baski){
   const d=m.dir[p.team],u=x0*d;if(u<=PL-38)return null;
-  const gx=d*PL,Lk=hyp(gx-x0,MZ-z0),oz=p.oz;let x=xG(u,z0,'ayak',baski*0.4)*(1-sutBlokOlasiligi(m,p,x0,z0,gx,MZ,'sert'));
+  const gx=d*PL,Lk=hyp(gx-x0,MZ-z0),oz=p.oz;let x=xG(u,z0,'ayak',baski*0.4)*(1-sutBlokOlasiligi(m,p,x0,z0,gx,MZ,'sert'));   /* 2B (T8c: 3B yalnız serbest vuruşun planında) */
   /* T9b-c: şutçunun niteliği yakında şut becerisinden, 18 m'den sonra giderek gücünden (sutGucu; uzak şutu güç taşır). Gol olmayan şutun değeri:
      dönen top ve korner (sutIkinci; 13 m'ye kadar tam, 25 m'de sıfır — uzak şutun çoğu tutulur ya da auta gider, çelme ve blok yakında doğar)
      eksi top kaybı (0,4; eskiden yalnız kayıp cezası). İlk denemede mesafeden bağımsız değer 25 m ötesinden şutu %7'den %36'ya çıkarmıştı */

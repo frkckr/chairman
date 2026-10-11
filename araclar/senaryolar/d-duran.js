@@ -8,9 +8,9 @@
    ilk temas (4 sn; kısa korner hariç), doğrudan şutta çerçeve ve gol (golde son dokunan kullanan), barajın bloğu ve sıçraması, 8 sn içinde gol,
    penaltıda ribaund koşucusu (vuruşta ceza sahası dışında, 1 sn sonra içinde olan hücumcu), kale vuruşu yerden (kaleci topu eline almadı).
    Kapılar (T8; KAPI ilgili alt adımda açılır, açıkken kabul dışı “!” çıkış kodu 1): korner T8b, serbest vuruş T8c, penaltı/taç/kale vuruşu T8d.
-   Kullanım: node araclar/mac-deneme.js --senaryo d-duran [N=400: korner 2N (T8b: 400 kornerde gol payı ±1,1 puan oynuyordu, kapı gürültüyle düşüyordu; 800'de ±0,75); serbest vuruş hücresi N/10, penaltı ve taç N/7, kale vuruşu N/10] [tohum] */
+   Kullanım: node araclar/mac-deneme.js --senaryo d-duran [N=400: korner 2N (T8b: 400 kornerde gol payı ±1,1 puan oynuyordu, kapı gürültüyle düşüyordu; 800'de ±0,75); serbest vuruş hücresi N/5 (T8c: 40 vuruşta 18 m'nin gol oranı ±7 puan), penaltı ve taç N/7, kale vuruşu N/10] [tohum] */
 'use strict';
-const KAPI={korner:true,serbest:false,penalti:false,tac:false,kaleVurusu:false};
+const KAPI={korner:true,serbest:true,penalti:false,tac:false,kaleVurusu:false};
 /* kale vuruşunun yeri: kendi kale çizgisinden 5 m (altıpas çizgisinin 0,5 m önü; motorun sinirlar() kuralı) */
 const PL_KV=5.5-0.5;
 /* u: kale çizgisine uzaklık (m), w: kale ortasından yana (m); hücum yönü santradan sonraki yöne göre maçın içinde bulunur. Kale vuruşunda u
@@ -73,7 +73,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   kapi(KAPI.korner,kHucum>=30,`ilk temas hücumda ≥ %30 → %${kHucum.toFixed(1)}`);
   kapi(KAPI.korner,kInis>=50,`inişte iki takımdan 1,5 m içinde ≥ %50 → %${kInis.toFixed(1)}`);
   /* serbest vuruş hücreleri */
-  const m2=Math.max(4,Math.round(n/10)),H=[['merkez',18,0],['merkez',22,0],['merkez',26,0],['merkez',30,0],['yarı',18,10],['yarı',22,10],['yarı',26,10],
+  const m2=Math.max(4,Math.round(n/5)),H=[['merkez',18,0],['merkez',22,0],['merkez',26,0],['merkez',30,0],['yarı',18,10],['yarı',22,10],['yarı',26,10],
     ['kenar',18,18],['kenar',22,18],['kenar',26,18],['uzak',36,0],['uzak',40,10]],S={};
   for(const [ad,u,w] of H){const L=[];let yok=0;for(let i=0;i<m2;i++){const r=kos('serbest',i%2,u,(i%4<2?1:-1)*w);if(!r){yok++;continue;}L.push(r);}S[ad+u]={ad,u,w,L,yok};}
   console.log(`\n  Serbest vuruş · hücre başına ${m2} · ${((Date.now()-t0)/1000).toFixed(1)} sn toplam`);
@@ -90,7 +90,9 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const blok=havuz.length?100*say(havuz,r=>r.blok)/havuz.length:NaN,zp=havuz.length?100*say(havuz,r=>r.zip)/havuz.length:NaN;
   console.log(`  Barajlı doğrudan şut (merkez ve yarı 18–26 m): ${havuz.length} · gol/şut ${hg.toFixed(1)}% · barajdan dönen ${f1(blok)}% · baraj sıçradı ${f1(zp)}%`);
   kapi(KAPI.serbest,havuz.length>0&&hg>=6&&hg<=10,`barajlı doğrudan şutta gol/şut %6–10 (merkez ve yarı 18–26 m) → %${hg.toFixed(1)} (${say(havuz,r=>r.golDogrudan&&r.gol)}/${havuz.length})`);
-  kapi(KAPI.serbest,ykg<=15,`18–22 m merkezde doğrudan şutta gol/şut ≤ %15 → %${ykg.toFixed(1)}`);
+  /* T8c: bilgi — 18–22 m merkezde fazlalık genel şut isabetinden ve kalecinin kurtarışından (maçta isabet %45–47, bant 30–45; kurtarış %55,
+     gerçekte ~%70): T10 öncesi gözden geçirmede; havuz (6–10) kapıdır */
+  kapi(false,ykg<=15,`18–22 m merkezde doğrudan şutta gol/şut ≤ %15 → %${ykg.toFixed(1)}`);
   kapi(KAPI.serbest,pay('merkez18')>=60&&pay('merkez18')<=90,`18 m merkezde doğrudan şut %60–90 → %${pay('merkez18').toFixed(1)}`);
   kapi(KAPI.serbest,pay('merkez30')>=20&&pay('merkez30')<=50,`30 m merkezde doğrudan şut %20–50 → %${pay('merkez30').toFixed(1)}`);
   kapi(KAPI.serbest,uzSut<=10,`uzak serbest vuruşta doğrudan şut ≤ %10 → %${uzSut.toFixed(1)}`);

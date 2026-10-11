@@ -283,7 +283,7 @@ Object.assign(Match.prototype,{
   vurusHatasi(p,e,L,g){
     const sec=e.sec,sut=sec.tur==='sut',R=sut?VURUS_GUC_REF.sut:VURUS_GUC_REF.pas;
     /* T8b: duran topun servisi (korner, serbest vuruşun ortası) ortadan ve duran top becerisinden (eskiden pastan) */
-    const tek=sec.duran&&(sec.tur==='korner'||sec.tur==='orta')?0.5*profilAlt(p,'orta',p.oz.pas)+0.5*profilAlt(p,'duranTop',p.oz.pas):undefined;
+    const tek=sec.duran&&(sec.tur==='korner'||sec.tur==='orta')?0.5*profilAlt(p,'orta',p.oz.pas)+0.5*profilAlt(p,'duranTop',p.oz.pas):sec.duran&&sec.serbest?serbestTeknik(p):undefined;   /* T8c: doğrudan serbest vuruş */
     return vurusSapma(p,{sut,guc:g==null?R:g,ref:R,stil:e.stil,zayif:p.ayak!=='iki'&&e.ayak!==p.ayak,hizalanma:e.hizalanma||0,baski:baskiAltinda(this,p),acele:e.acele||0,ilk:!!sec.ilk,teknik:tek});
   },
   /* şut: hedef ve tür sutPlani'ndan (kaleci, blok, isabet olasılığı); penaltıda seçilen köşe. b.sut'a hedef, tür ve vurucunun gövde
@@ -459,7 +459,7 @@ Object.assign(Match.prototype,{
   erisim(p,d){
     const b=this.ball,y=b.y,yb=y-(p.yuk||0);
     if(this.elErisimi(p,d,y))return 'el';
-    if(d<0.6&&yb<0.8)return 'ayak';
+    if(d<0.6&&yb<0.8&&yb>-0.1)return 'ayak';   /* T8c: havadaki oyuncunun ayağının altından geçen top (sıçrayan baraj) */
     if(d<0.5&&yb>=0.8&&yb<1.55)return 'gogus';
     if(b.vy<3&&hvTemas(this,p)){
       /* ceza sahaları dışında, rakipsiz ve yavaşça düşen topu kafayla oynamaz: göğse ya da ayağa indirir (T6c: rakipsiz kafa uzaklaştırma değil,
@@ -644,11 +644,6 @@ Object.assign(Match.prototype,{
       const hedefler=[[PL-5.5,MZ+yan*2.2],[PL-7,MZ-yan*3.2],[PL-11,MZ],[PL-6,MZ]],h=hedefler[Math.floor(this.rast()*hedefler.length)];
       let al=null,ed=1e9;for(const p of this.sahadakiler(du.takim)){if(p===tk||p.rol==='GK')continue;const dd=hyp(p.x-d*h[0],p.z-h[1]);if(dd<ed){ed=dd;al=p;}}
       return{tur:'korner',hx:d*h[0],hz:h[1],tip:'hava',T:1.15+hyp(d*h[0]-du.x,h[1]-du.z)/30,alici:al};
-  },
-  serbestSecenegi(du,tk){
-    const gx=this.dir[du.takim]*PL;
-    if(du.baraj&&!du.endirekt&&this.rast()<0.62)return{tur:'sut',hx:gx,hz:MZ,serbest:true,xg:0.06};
-    return null;
   },
   penaltiAtisi(du,tk){
     const gx=this.dir[du.takim]*PL,yan=this.rast()<0.5?-1:1;return{tur:'sut',hx:gx,hz:MZ+yan*(GW2-0.7),penalti:true,xg:0.76};

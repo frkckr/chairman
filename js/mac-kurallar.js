@@ -292,7 +292,7 @@ Object.assign(Match.prototype,{
     if(du.tur==='korner')return this.kornerSecenegi(du,tk);
     if(du.tur==='kaleVurusu')return this.kaleVurusuSecenegi(du,tk);
     if(du.tur==='penalti')return this.penaltiAtisi(du,tk);
-    if(du.tur==='serbest')return this.serbestSecenegi(du,tk);
+    if(du.tur==='serbest')return this.serbestKarar(du,tk);   /* T8c: js/mac-durantop.js */
     return null;
   },
   /* taç: atan top başının üstünde bekler, açıktaki arkadaşa atar */

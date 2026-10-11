@@ -233,7 +233,9 @@ Object.assign(Match.prototype,{
     const b=this.ball,v=hrkHyp(b.vx,b.vz);if(v<2||b.y>2.1)return false;
     const dene=(p,hakem)=>{
       if(p===b.sahip||ad.some(a=>a.p===p)||(p.eylem&&(p.eylem.ad==='vurus'||p.eylem.ad==='ucus'))||(!hakem&&p===b.sonDokunan&&p.kickCd>0))return false;
-      const dx=b.x-p.x,dz=b.z-p.z,d=hrkHyp(dx,dz);if(d>0.37||b.y>1.8*(p.boy||1)+(p.yuk||0))return false;
+      /* T8c: barajdaki oyuncu omuz omuza (yanal 0,5 m; kollar ve baş 1,95·boy); havadakinin ayaklarının altından top geçer */
+      const bj=!hakem&&!!(p.duranRol&&p.duranRol.rol==='baraj'),dx=b.x-p.x,dz=b.z-p.z,d=hrkHyp(dx,dz);
+      if(d>(bj?0.5:0.37)||b.y>(bj?1.95:1.8)*(p.boy||1)+(p.yuk||0)||b.y<(p.yuk||0)-0.08)return false;
       if((b.vx-(p.vx||0))*dx+(b.vz-(p.vz||0))*dz>=0)return false;
       this.yansit(p,0.3,0.25);
       if(hakem){this.topDegisti();this.on('hakemeCarpti',{p});}

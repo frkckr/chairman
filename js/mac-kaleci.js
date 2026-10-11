@@ -79,7 +79,10 @@ function kaleciTahmin(m,gk,z,y,T,ek){
   /* adaylar: kalecinin düzlemi, düzlemle kale çizgisinin ortası ve kale çizgisi (düşen topa geri çekilerek; geri çekilme zamanı düşülür) */
   /* T9b-a: geri çekilme yana kaymayla birlikte (çapraz; yanAdim): süre bedeli çapraz yolun yanal yoldan fazlası (eskiden geri çekilmenin
      bütün süresi: yavaş, yüksek köşe şutu kurtarılamaz sanılıyordu) */
-  for(let i=0;i<3;i++){const f=i===0?f0:i===1?(f0+1)/2:1;if(i&&f-f0<0.02)break;
+  /* T8c (2026-10-11; hata): düzlem kaleciye 0,3 m'den yakınsa atlanır. Eskiden ara düzlem yakınsa (f − f0 < 0,02) döngü bitiyor, kale çizgisi
+     de denenmiyordu: kaleci çizgiden ~1 m öndeyken 26–30 m'den gelen yavaş ve yüksek topa (2,4 sn uçuş) geri çekilme hiç hesaplanmıyor,
+     kurtarış olasılığı 0,2–0,5 çıkıyor, plan bu şutları seçiyordu (serbest vuruşta 30 m'den %14 gol bekleniyordu, gerçekleşen %0) */
+  for(let i=0;i<3;i++){const f=i===0?f0:i===1?(f0+1)/2:1;if(i&&(f-f0)*L<0.3)continue;
     const px=b.x+dx*f,pz=b.z+dz*f,lt=(px-gk.x)*(-nz)+(pz-gk.z)*nx,gr=(f-f0)*L,Ti=T*f-(Math.sqrt(lt*lt+gr*gr)-Math.abs(lt))/KL_M.geri;
     const yi=Math.max(0.05,y0+(y-y0)*f+0.5*G*T*T*f*(1-f));
     const k=kaleciPay(gk,lt,yi,Ti,r,1);if(!en||k.pay>en.pay)en=k;}
