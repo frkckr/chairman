@@ -31,7 +31,12 @@ ayarEkle('T',{
   kompakt:0.1,       // T7d: savunmada hatlar arası mesafe bu oranda kısalır (takım boyu; T7g: 0,15 → 0,10 — 0,15'te 40 maçta şut 6,2 / gol 1,7, 0,10'da 6,6 / 2,0)
   mdhTahminEtki:1,   // T7d: erken ve yandan müdahale isteği mudahaleTahmin'in kazanma − faul farkıyla ölçeklenir (0: kapalı)
   takipSayi:3,       // T7e: şutu takip eden en çok hücumcu (0: kapalı)
-  donenUzak:1        // T7e: kurtarış, blok ya da direkten sonra 3 sn kendi ceza sahamızda uzaklaştırmanın ek değeri (puan)
+  donenUzak:1,       // T7e: kurtarış, blok ya da direkten sonra 3 sn kendi ceza sahamızda uzaklaştırmanın ek değeri (puan)
+  /* T10e: kısa süreli takım güveni (guvenAdim): gol, kendi kalesine gol, kaçan büyük fırsat, kaçan penaltı; birkaç oyun dakikasında tabana döner */
+  guvenEtki:0.06,    // T10e: güvenin vuruş hatasına etkisi: σ × (1 − guvenEtki × oyuncunun güveni) (güven −1…1; soğukkanlılık tepkiyi küçültür)
+  guvenRisk:0.1,     // T10e: güvenin takım riskine (kayıp maliyeti çarpanı) etkisi: risk × (1 − guvenRisk × güven) — güvenen takım daha cesur
+  guvenSure:30,      // T10e: güvenin tabana dönüş süresi sabiti (sn; ~4,5 oyun dakikası)
+  evGuven:0.2        // T10e: deplasmanın güven tabanı −evGuven × atmosfer (dolu statta deplasman biraz gergin)
 });
 /* niyet → düzen ve taktik farkı. Taktik: risk kayıp maliyetinin çarpanıdır (yüksek = temkinli), sakin geri pas ve sabır, tempo karar hızı, direkt ileri
    ve uzun oyun (mac-karar.js); toplanır (risk çarpılır). Düzen: genişlik hücumda mevkilerin yayılma çarpanı, derinlik bloğun öne/geriye kayması (m),
@@ -48,7 +53,22 @@ const NIYET_PARAM={
   tut:     {risk:1.3, sakin:0.35, tempo:-0.25,direkt:-0.2, genislik:1.12,derinlik:-2,bekIleri:0.6,kosu:0.5,bekCik:false},
   savunma: {risk:1,   sakin:0,    tempo:0,    direkt:0,    genislik:1,   derinlik:0, bekIleri:1,  kosu:1,  bekCik:true}
 };
+/* T10e: güven olaylarının büyüklüğü (takım güveninde) */
+const GUVEN_OLAY={golAtti:0.45,golYedi:-0.25,kendiKale:-0.15,kacanFirsat:-0.15,penaltiKacti:-0.3,penaltiKurtardi:0.2};
 Object.assign(Match.prototype,{
+  /* T10e: takım güveni m.guven[t] (−1…1) olaylarla değişir, guvenSure ile tabana döner (ev sahibi 0, deplasman −evGuven × atmosfer); oyuncuya
+     soğukkanlılığıyla yansır: p.guven = güven × (1,25 − soğukkanlılık) (6 karede bir). Etkiler küçük: vuruş hatası (js/mac-topla.js vurusSapma) ve
+     takımın riski (etkinTaktik). Rastlantı çekmez */
+  guvenHazirla(){const a=this.kosullar?this.kosullar.atmosfer:0.5,ev=this.evSahibi||0;
+    this.guvenTaban=[0,1].map(t=>t===ev?0:-MOTOR_AYAR.evGuven*a);this.guven=this.guvenTaban.slice();this._penaltiSon=null;},
+  guvenOlay(t,ad){const d=GUVEN_OLAY[ad];if(d==null||t==null)return;this.guven[t]=clamp(this.guven[t]+d,-1,1);this.on('guven',{takim:t,ad,deger:this.guven[t]});},
+  guvenAdim(dt){
+    const G=this.guven,B=this.guvenTaban,k=Math.exp(-dt/MOTOR_AYAR.guvenSure);for(let t=0;t<2;t++)G[t]=B[t]+(G[t]-B[t])*k;
+    /* kaçan penaltı: kullanımdan 3 sn içinde gol yoksa (js/mac-durantop.js kullanimBildir _penaltiSon) */
+    const P=this._penaltiSon;if(P&&this.t-P.t>3){this._penaltiSon=null;if(this.score[P.takim]===P.g0){this.guvenOlay(P.takim,'penaltiKacti');this.guvenOlay(1-P.takim,'penaltiKurtardi');}}
+    if(this.kare%6)return;
+    for(const p of this.players)if(p.oyunda)p.guven=clamp(G[p.team]*(1.25-profilAlt(p,'sogukkanlilik',p.oz.karar)),-1,1);
+  },
   niyetYeni(){return{ad:'savunma',t0:0,genislik:1,derinlik:0,bekIleri:1,kosu:1,bekCik:true,blok:0,duranGecikme:0,zamanGecir:0,faulIstek:1,stoperIleri:null,alti:null,basan:0,uzun:false,kompakt:1,
     durum:{fark:0,kalanDk:90,adamFark:0,acele:0,koru:0,eksik:0}};},
   /* takimAI'dan her adım (sahiplik takibinden sonra): niyetYenile sn'de bir, sahiplik takımı değişince ya da duruş başlayıp bitince yeniden hesaplanır */
@@ -155,7 +175,7 @@ Object.assign(Match.prototype,{
     E.dizilis=B.dizilis;
     if(!k){E.risk=B.risk;E.sakin=B.sakin;E.tempo=B.tempo;E.direkt=B.direkt;E.pres=B.pres;return;}
     const P=NIYET_PARAM[N.ad];
-    E.risk=Math.max(0.3,B.risk*(1+k*(P.risk-1))*(1-0.25*k*D.acele)*(1+0.3*k*D.koru)*(1+0.1*k*D.eksik));
+    E.risk=Math.max(0.3,B.risk*(1+k*(P.risk-1))*(1-0.25*k*D.acele)*(1+0.3*k*D.koru)*(1+0.1*k*D.eksik)*(1-MOTOR_AYAR.guvenRisk*(this.guven?this.guven[t]:0)));   /* T10e: güven */
     E.sakin=clamp(B.sakin+k*(P.sakin-0.3*D.acele+0.3*D.koru),0,1);
     E.tempo=clamp(B.tempo+k*(P.tempo+0.3*D.acele-0.25*D.koru),0,1);
     E.direkt=clamp(B.direkt+k*(P.direkt+0.3*D.acele+(N.uzun?0.4:0)),0,1);
@@ -186,7 +206,7 @@ Object.assign(Match.prototype,{
   ofsaytJesti(p){const L=this.teams[1-p.team].filter(q=>q.oyunda&&q.rol==='DEF').sort((a,c)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(c.x-p.x,c.z-p.z)||a.n-c.n);
     for(let i=0;i<Math.min(2,L.length);i++)this.jestVer(L[i],'kol',1.5,null);},
   /* T7f: büyük fırsat (xG > 0,25) kurtarışla ya da auta biterse şutçu başını tutar (1,6 sn); şuttan 3 sn içinde */
-  kacanFirsat(){const k=this._sonSut;if(!k)return;this._sonSut=null;if(this.t-k.t<3&&k.xg>0.25&&k.p.oyunda)this.jestVer(k.p,'basEl',1.6,null);},
+  kacanFirsat(){const k=this._sonSut;if(!k)return;this._sonSut=null;if(this.t-k.t<3&&k.xg>0.25&&k.p.oyunda){this.jestVer(k.p,'basEl',1.6,null);this.guvenOlay(k.p.team,'kacanFirsat');}},   /* T10e: güven */
   kosuOrtak(p,s){const d=this.dir[p.team],GR=this._geride&&this._geride[p.team];let en=null,ed=15;
     for(const q of this.teams[p.team]){if(q===p||q===s||!q.oyunda||q.kosu||q.rol==='GK'||q.rol==='DEF'||(q.rol==='OS'&&q.mevki.derin)||(GR&&GR.has(q)))continue;
       const dd=Math.hypot(q.x-p.x,q.z-p.z);if(dd<ed&&Math.abs((q.x-p.x)*d)<10){ed=dd;en=q;}}

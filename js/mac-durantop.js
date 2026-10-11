@@ -64,6 +64,7 @@ Object.assign(Match.prototype,{
   kullanimBaslat(tur,tk,du,t0){const b=this.ball;b.kullanim={tur,p:tk,t0,x:du?du.x:b.x,z:du?du.z:b.z,cikti:false,du:du||null};},
   /* kullananın ilk dokunuşu: türü ve hedefi kullananın eyleminden (vuruşun seçimi, taç atışının hedefi), topun dönüşünden (korner içe/dışa) */
   kullanimBildir(p,K){
+    if(K.tur==='penalti')this._penaltiSon={takim:p.team,t:this.t,g0:this.score[p.team]};   /* T10e: kaçan penaltının güveni (js/mac-takim.js guvenAdim) */
     const b=this.ball,e=p.eylem,sec=e&&e.ad==='vurus'?e.sec:null,d=this.dir[p.team],tur=K.tur;
     let alt='surus',bolge=null,hx=null,hz=null,alici=null;
     if(b.tasiyan===p)alt='elle';

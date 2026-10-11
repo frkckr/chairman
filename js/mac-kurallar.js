@@ -18,6 +18,7 @@ ayarEkle('Kurallar',{
   hakemKart:0.25,              // T10b: sertliğin kart eşiğine etkisi (uçlarda ±0,1)
   hakemYorgun:0.15,            // T10b: 75. dakikadan sonra yorgunluk: görme × (1 − f·(1,3 − kondisyon)·hakemYorgun), koşu temposu da düşer (Ek G7: son 15 dakikada hata %23)
   itirazKart:0.035,            // T10b: itiraz başına sarı olasılığı (× hakemeItiraz eğilimi, × hakemin sertliği; gerçekte itiraz sarısı maç başına ~0,3)
+  evEtki:0.03,                 // T10e: hakemin ev sahibi eğilimi: faul ve kart eşiği ± evEtki × atmosfer × (0,5 + evEgilim) (gerçekte deplasman ~%10–20 fazla sarı)
   /* T10d: yan hakemin ofsayt kararı (ofsaytPasAni): algılanan fark = gerçek + hizalanma hatası + hareket yanılgısı + gürültü */
   ofsaytLag:0.06,              // T10d: hareket yanılgısı (flash-lag, sn): ileri koşan hücumcu ve geri çekilen çizgi bu kadar ileride/geride görülür
   ofsaytHata:0.3,              // T10d: yan hakemin yargı gürültüsü (m, standart sapma; o-ofsayt: ucu ucuna hata ~%15–20, hataların çoğu yanlış bayrak)
@@ -32,8 +33,10 @@ function hakemKisilik(g,tohum){const S=MOTOR_AYAR.hakemSabit,o={};
 const hkDeger=(m,k)=>m.hakem?m.hakem[k]:0.5;
 /* yorgunluk: 75. dakikadan (ikinci yarıda maç saati 4500 sn) 90'a doğrusal artar, uzatmada en çok; kondisyonla */
 const hkYorgun=m=>m.half===2?clamp((m.gameSec-4500)/900,0,1)*(1.3-hkDeger(m,'kondisyon'))*MOTOR_AYAR.hakemYorgun:0;
-const hkFaulEsik=m=>MOTOR_AYAR.faulEsik-MOTOR_AYAR.hakemFaul*(hkDeger(m,'sertlik')-0.5);
-const hkKartEsik=m=>MOTOR_AYAR.kartEsik-MOTOR_AYAR.hakemKart*(hkDeger(m,'sertlik')-0.5);
+/* T10e: ev sahibi eğilimi — atmosfer × hakemin evEgilim'i: deplasmanın faulünde eşik düşer, ev sahibininkinde yükselir (t: faul yapan takım) */
+const hkEv=(m,t)=>t==null?0:(t===(m.evSahibi||0)?-1:1)*MOTOR_AYAR.evEtki*(m.kosullar?m.kosullar.atmosfer:0.5)*(0.5+hkDeger(m,'evEgilim'));
+const hkFaulEsik=(m,t)=>MOTOR_AYAR.faulEsik-MOTOR_AYAR.hakemFaul*(hkDeger(m,'sertlik')-0.5)-hkEv(m,t);
+const hkKartEsik=(m,t)=>MOTOR_AYAR.kartEsik-MOTOR_AYAR.hakemKart*(hkDeger(m,'sertlik')-0.5)-hkEv(m,t);
 /* T10d: zaman geçirmede duran topun ek hazırlığının tabanı (sn; × yoğunluk × 0,6–1,4; zamanGecirEk) */
 const ZG_TABAN={tac:3.5,kaleVurusu:6,serbest:3,korner:2.5};
 /* orta hakemin görme çarpanı: dikkat (0,94–1,06) × (1 − yorgunluk) */
@@ -62,11 +65,12 @@ Object.assign(Match.prototype,{
       const plan=this.degisimPlani[t];if(!plan.length||this.gameSec<plan[0]-(geri?600:0)||this.ist.degisiklik[t]>=5)continue;
       const yedek=this.yedekler[t].filter(p=>!p.cikti&&p.rol!=='GK');if(!yedek.length){plan.length=0;continue;}
       let saha=this.teams[t].filter(p=>p.oyunda&&p.rol!=='GK'&&p!==du.kullanan&&!(p.eylem&&p.eylem.kilit));if(!saha.length)continue;
-      const hucumcu=geri&&yedek.find(y=>y.rol==='FV'),savunmaci=onde&&yedek.find(y=>y.rol==='DEF');
+      const sec=f=>yedek.find(y=>y.isiniyor&&f(y))||yedek.find(f);   /* T10e: önce ısınanlardan */
+      const hucumcu=geri&&sec(y=>y.rol==='FV'),savunmaci=onde&&sec(y=>y.rol==='DEF');
       if(hucumcu||savunmaci){const S=saha.filter(p=>hucumcu?p.rol!=='DEF':p.rol==='OS');if(S.length)saha=S;}
       const puan=p=>p.yorgunluk+(p.kart===1&&p.rol==='DEF'?0.25:0)+this.rast()*0.15-Math.min(p.z,PW-p.z)*0.004;
       const cikan=saha.reduce((a,c)=>puan(c)>puan(a)?c:a);
-      const giren=hucumcu&&cikan.rol!=='DEF'?hucumcu:savunmaci&&cikan.rol==='OS'?savunmaci:yedek.find(y=>y.rol===cikan.rol)||yedek[0];
+      const giren=hucumcu&&cikan.rol!=='DEF'?hucumcu:savunmaci&&cikan.rol==='OS'?savunmaci:sec(y=>y.rol===cikan.rol)||yedek.find(y=>y.isiniyor)||yedek[0];
       plan.shift();
       giren.oturuyor=false;giren.tx=0;giren.tz=-0.7;giren.hizOran=0.5;giren.bak=cikan;
       /* çıkan oyuncu en yakın çizgiden çıkar; ana tribün tarafındaysa kulübeye yürür. T10d: öndeki takımın çıkanı son dakikalarda yavaş yürür */
@@ -76,11 +80,26 @@ Object.assign(Match.prototype,{
       this.on('degisiklik',{takim:t,cikan,giren,skor:fark<0?'geri':fark>0?'onde':'esit'});
       return;}
   },
+  /* T10e: ısınan yedekler — ikinci yarıda (55. dakikadan ya da ilk planlı değişiklikten 10 dakika önce) en çok 3 yedek kenarda ısınır: mümkünse
+     her hattan biri; kulübe tarafındaki çizginin dışında, kulübeden köşeye doğru 7–25 m'de hafif koşar (p.isiniyor, p.isinma; olay isinma).
+     Değişiklik ısınanlardan yapılır (degisiklikBaslat, zorunluDegisiklik). Devre ya da maç sonunda kulübeye otururlar (js/mac-oncesi.js) */
+  isinmaAdim(dt){
+    if(this.half!==2)return;
+    for(let t=0;t<2;t++){const Y=this.yedekler[t],kb=this.kulubeler[t],s=kb.alan.x>=0?1:-1,dg=this.degisiklik;
+      const I=Y.filter(p=>p.isiniyor&&!p.cikti&&!(dg&&dg.giren===p));
+      const plan=this.degisimPlani[t],bas=Math.max(3300,(plan.length?plan[0]:5400)-600);
+      if(this.gameSec>=bas&&I.length<3&&this.ist.degisiklik[t]<5&&this.kare%30===0){
+        const oturan=Y.filter(p=>!p.cikti&&p.oturuyor&&p.rol!=='GK'),roller=new Set(I.map(p=>p.rol)),y=oturan.find(p=>!roller.has(p.rol))||oturan[0];
+        if(y){const k=Y.filter(p=>p.isinma).length%3;y.isiniyor=true;y.oturuyor=false;y.isinma={a:kb.alan.x+s*(7+k*1.5),b:kb.alan.x+s*(22+k*1.5),z:-3.2-0.6*k,yon:1};
+          I.push(y);this.on('isinma',{p:y,takim:t});}}
+      for(const p of I){const w=p.isinma;if(!w)continue;const hx=w.yon>0?w.b:w.a;p.tx=hx;p.tz=w.z;p.hizOran=0.42;p.bak=null;p.yonHedef=null;
+        if(hyp(p.x-hx,p.z-w.z)<0.8)w.yon=-w.yon;}}
+  },
   /* T10c: değişikliğin takası — giren çıkanın yerini ve mevkisini alır; profili yeni mevkiye göre yeniden kurulur (T10 teşhisi hata 3: yedeğin
      profili kulübede mevkisiz kuruluyordu, kanadın yerine giren merkez gibi oynuyordu); çıkan kulübeye. Maçın kaydına yazılır */
   degisiklikTakas(dg){
-    const {cikan,giren,t}=dg,n=cikan.n,i=this.players.indexOf(cikan);
-    Object.assign(giren,{tur:'oyuncu',n,mevki:cikan.mevki,rol:cikan.rol,oyunda:true,oturuyor:false,yorgunluk:0,hizOran:0.8});
+    const {cikan,giren,t}=dg,n=cikan.n,i=this.players.indexOf(cikan),isindi=!!giren.isiniyor;
+    Object.assign(giren,{tur:'oyuncu',n,mevki:cikan.mevki,rol:cikan.rol,oyunda:true,oturuyor:false,yorgunluk:0,hizOran:0.8,isiniyor:false,isinma:null});
     profilKur(giren,this.tohum);
     this.teams[t][n]=giren;if(i>=0)this.players[i]=giren;
     Object.assign(cikan,{tur:'yedek',oyunda:false,cikiyor:false,cikti:true,koltuk:giren.koltuk,eylem:null,surus:null});
@@ -88,13 +107,13 @@ Object.assign(Match.prototype,{
     if(this.ball.sahip===cikan)this.ball.sahip=null;
     this.ist.degisiklik[t]++;dg.girdi=true;dg.t1=this.t;
     this.kayit.degisiklikler.push({takim:t,cikan:cikan.name,giren:giren.name,dakika:Math.floor(this.gameSec/60)+1,sakatlik:!!dg.sakatlik});
-    this.on('oyuncuGirdi',{takim:t,cikan,giren});
+    this.on('oyuncuGirdi',{takim:t,cikan,giren,isindi});
   },
   /* T10c: sakatlıkta zorunlu değişiklik — hak varsa (en çok 5) sakatın yerine aynı mevkiden yedek (kalecide yedek kaleci) girer; plandaki
      değişikliklerden biri kullanılmış sayılır. aninda: devre sonunda takas hemen (yürüme yok). Süren değişiklik, hak ya da uygun yedek yoksa false */
   zorunluDegisiklik(p,aninda){
     const t=p.team;if(this.degisiklik||this.ist.degisiklik[t]>=5)return false;
-    const Y=this.yedekler[t].filter(q=>!q.cikti),giren=p.rol==='GK'?Y.find(q=>q.rol==='GK'):(Y.find(q=>q.rol===p.rol)||Y.find(q=>q.rol!=='GK'));
+    const Y=this.yedekler[t].filter(q=>!q.cikti),giren=p.rol==='GK'?Y.find(q=>q.rol==='GK'):(Y.find(q=>q.isiniyor&&q.rol===p.rol)||Y.find(q=>q.rol===p.rol)||Y.find(q=>q.isiniyor)||Y.find(q=>q.rol!=='GK'));   /* T10e: önce ısınanlardan */
     if(!giren)return false;
     const plan=this.degisimPlani[t];if(plan.length)plan.shift();
     const dg={t,cikan:p,giren,t0:this.t,girdi:false,sakatlik:true};

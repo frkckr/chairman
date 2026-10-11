@@ -88,9 +88,9 @@ const MOTOR_AYAR={
   niyetEtki:undefined,macDurumEtki:undefined,niyetYenile:undefined,kontraSure:undefined,kurmaStoperW:undefined,gerideEk:undefined,rakipAlgi:undefined,
   kosuTetik:undefined,kosuRastgele:undefined,kosuEs:undefined,zon14:undefined,govdeAc:undefined,osDestek:undefined,presTetikSure:undefined,
   presTetikMesafe:undefined,golgePres:undefined,kosucuTakip:undefined,hatCik:undefined,kutuSavunma:undefined,kompakt:undefined,
-  mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,
+  mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,guvenEtki:undefined,guvenRisk:undefined,guvenSure:undefined,evGuven:undefined,
   /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
-  hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,itirazKart:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
+  hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,itirazKart:undefined,evEtki:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
   ofsaytBayrak:undefined,ofsaytBekle:undefined,
   /* K — js/mac-durantop.js (T8) */
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
@@ -204,7 +204,9 @@ class Match{
     this.tohum=(secenek.tohum!=null?secenek.tohum:Math.floor(Math.random()*4294967296))>>>0;this.rast=tohumluRastgele(this.tohum);
     /* zemin 0 (tarla) – 1 (halı gibi): kötü zeminde top çabuk durur, sekmesi düzensizdir. T9a koşul kapısı: secenek.kosullar = {zemin, islak,
        ruzgar:{x,z} m/sn}; varsayılan kuru ve rüzgârsız (görünüm ve kullanım §7.8, T10). Pas planlayıcısı kuru varsayar */
-    this.kosullar=Object.assign({islak:0,ruzgar:null},secenek.kosullar||{});
+    /* T10e: atmosfer 0–1 (statın doluluğu ve sesi; tarayıcıda maç günü tarifinden, js/mac-sahnesi.js): hakemin ev sahibi eğilimi ve deplasmanın
+       güven tabanı. Ev sahibi takım 0 (secenek.evSahibi) */
+    this.kosullar=Object.assign({islak:0,ruzgar:null,atmosfer:0.5},secenek.kosullar||{});this.evSahibi=secenek.evSahibi!=null?secenek.evSahibi:0;
     this.zemin=clamp(this.kosullar.zemin!=null?this.kosullar.zemin:secenek.zemin!=null?secenek.zemin:0.7,0,1);this.kosullar.zemin=this.zemin;
     this.R=zeminYuvarlanma(this.zemin,this.kosullar.islak);
     /* T10b: hakem kişiliği (secenek.hakem ya da tohumdan; js/mac-kurallar.js hakemKisilik) */
@@ -235,6 +237,7 @@ class Match{
     /* T10c: maçın kaydı (kariyer Aşama 3'te sonucKaydi ile okur) ve sağlıkçılar (js/mac-sakatlik.js) */
     this.kayit={goller:[],kartlar:[],sakatliklar:[],degisiklikler:[]};
     this.zgUyari=[0,0];   /* T10d: zaman geçirmede hakemin uyarısı (takım başına; js/mac-kurallar.js zamanGecirmeGoruldu) */
+    this.guvenHazirla();   /* T10e: takım güveni (js/mac-takim.js) */
     this.ofsaytBekleyen=null;   /* T10d: bayrağı geç kalkacak ofsayt {p, t, x, z, fark, yanlis, g} (js/mac-kurallar.js ofsaytDokunus) */
     this.santraAcele=false;   /* T10d: gerideki takım topu ağdan alıp koştu: santra kurala göre (stepKick) */
     this.sakatlikHazirla();
@@ -253,7 +256,7 @@ class Match{
     return Object.assign({tur,kind:null,team:null,n:-1,rol:null,mevki:null,name:'',no:0,kaptan:false,kayit:null,oz:null,ayak:'sag',boy:1,
       x,z,vx:0,vz:0,spd:0,yon:0,maxSpd:7,tx:x,tz:z,hizOran:1,bak:null,yonHedef:null,eylem:null,kickCd:0,kararT:0,dokunT:0,surus:null,
       oyunda:false,cikiyor:false,kart:0,yorgunluk:0,destek:null,kosu:null,gorev:null,sevinc:false,hedef:null,tutus:null,_cikis:null,
-      ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,topBos:0,kartSira:null,kartKuyruk:null,sakat:null,topal:null,tedavide:false,gir:0,_kar:null,oturuyor:false,koltuk:null,cikti:false,poz:null,sg:null,yuk:0,zipla:null,
+      ilkSoruldu:-1,penaltiTahmin:0,ev:null,top:false,topBos:0,kartSira:null,kartKuyruk:null,sakat:null,topal:null,tedavide:false,guven:0,isiniyor:false,isinma:null,gir:0,_kar:null,oturuyor:false,koltuk:null,cikti:false,poz:null,sg:null,yuk:0,zipla:null,
       /* motor → çizim sözleşmesi (Faz 0; TEKNIK_PLAN §8): tavır, bakış yönü, denge, sprint enerjisi, son dokunuş */
       tavir:null,bakisYon:null,denge:1,enerji:1,sonDokunus:null,
       /* T3 (profil kapısı): oyuncu ve yedekte profilKur ile dolar {alt, rol, egilim, form, grup} (js/mac-profil.js); hakem ve top toplayıcıda null */
@@ -326,7 +329,7 @@ class Match{
       case 'goal':this.stepGoal(dt);break;
       default:this.stepBreak(dt);
     }
-    if(['kickoff','play','durus','goal'].includes(this.phase)){this.kenarAI(dt);this.sakatlikAdim(dt);}   /* T10c: sakatlık akışı (js/mac-sakatlik.js) */
+    if(['kickoff','play','durus','goal'].includes(this.phase)){this.kenarAI(dt);this.sakatlikAdim(dt);this.guvenAdim(dt);this.isinmaAdim(dt);}   /* T10c: sakatlık akışı (js/mac-sakatlik.js); T10e: güven (js/mac-takim.js), ısınan yedekler (js/mac-kurallar.js) */
     /* sıçramalar. T10c: maç boyu yorgunluk kısa duruşta azalmaz (eski dinlenme birikimi siliyordu; kısa toparlanma sprint enerjisindedir), devre
        arasında azalır (devreDinlen, js/mac-hareket.js) */
     for(const p of this.players)if(p.zipla)ziplaIlerle(p,dt);   /* T6a: kalkış hazırlığı, uçuş ve iniş (js/mac-hava.js) */
@@ -619,6 +622,7 @@ class Match{
     for(const p of this.players)if(p.eylem&&p.eylem.ad==='vurus')p.eylem=null;
     this.phase='goal';this.phaseT=0;this.celeb={team:att,side,scorer,own};this.uzatmaBirikim[this.half-1]+=50;
     this.on('goal',{team:att,scorer,own,score:this.score.slice()});
+    this.guvenOlay(att,'golAtti');this.guvenOlay(def,'golYedi');if(own)this.guvenOlay(def,'kendiKale');   /* T10e */
     this.kayit.goller.push({ad:scorer?scorer.name:'',no:scorer?scorer.no:0,takim:att,kendiKalesine:!!own,dakika:Math.floor(this.gameSec/60)+1});   /* T10c */
     /* T10b (T10 teşhisi hata 5): avantaj sürerken gol — avantaj tutulmuştur, kart şimdi gösterilir (sevinç sürerken hakem oyuncuya gider) */
     if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:true});if(a.kart&&a.yapan.oyunda)this.kartGoster(a.yapan,a.kart);}

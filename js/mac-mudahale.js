@@ -479,7 +479,7 @@ Object.assign(Match.prototype,{
          faulsüz düşürmesi neredeyse hiç olmuyordu; c-kayma) + N(0; 0,06) */
       cc=mdhSiddet(p,vrel,arkadan,kayma,gec,once)+this.normal()*0.06;
       /* T5: faul olunca hakem görür mü (faulGor); görmezse oyun sürer, temasın fiziği (faulle aynı düşüş) ve topun sonucu uygulanır */
-      if(this.rast()<sigma((cc-hkFaulEsik(this))/0.12)){   /* T10b: eşik hakemin sertliğiyle (js/mac-kurallar.js) */
+      if(this.rast()<sigma((cc-hkFaulEsik(this,p.team))/0.12)){   /* T10b: eşik hakemin sertliğiyle (js/mac-kurallar.js) */
         if(mdhGormeCek(this,s.x,s.z,p,s)){this.on('mudahaleSonuc',{p,rakip:s,kazan:false,topaDegdi:topa,topaOnce:topa&&!adamOnce&&!kalkan,adamaDegdi:true,faul:true,kayma,sonuc:'faul',tur:e.tur||(kayma?'kayma':'acik'),arkadan,kalkan,kontrol,once,siddet:cc,t:e.t});
           this.faul(p,s,{kayma,arkadan,gec,deneme:true,ciddiyet:cc,kaynak:kayma?'kayma':'mudahale',x:s.x,z:s.z});return;}
         this.faulDusur(p,s,{kayma,ciddiyet:cc});this.on('faulGorulmedi',{faulYapan:p,faulYiyen:s,kaynak:kayma?'kayma':'mudahale',siddet:cc,x:s.x,z:s.z});e.gorulmedi=true;}
@@ -526,7 +526,7 @@ Object.assign(Match.prototype,{
   /* T5: temastan faul — şiddet c ile P(faul) = σ((c − faulEsik)/0,12) (müdahaleyle aynı biçim); faulse hakem görür mü (faulGor). Faul
      çalındıysa (oyun durdu ya da avantaj) true */
   temasFaulu(yapan,yiyen,c,v){
-    if(this.phase!=='play'||!yapan.oyunda||!yiyen.oyunda||this.rast()>=sigma((c-hkFaulEsik(this))/0.12))return false;
+    if(this.phase!=='play'||!yapan.oyunda||!yiyen.oyunda||this.rast()>=sigma((c-hkFaulEsik(this,yapan.team))/0.12))return false;
     v.ciddiyet=c;return this.faulGor(yapan,yiyen,v);
   },
   /* T5: hakem faulü görür mü (mdhGorme; tek zar). Görmezse oyun sürer: faul yiyen temasın yönüne sendeler ya da düşer (faulle aynı fizik),
@@ -564,7 +564,7 @@ Object.assign(Match.prototype,{
     const spa=!dogso&&b.sonTakim===yiyen.team&&yu>-5&&arada<=4&&(yiyen.vx*yd>1.5||b.vx*yd>2);
     /* T5: kart müdahale şiddetine göre kuruludur; itme, çarpma, hava ve basmada kart için şiddet 0,3 düşük sayılır (itiş nadiren kartlık) */
     const ck=c-(v.kaynak==='carpma'||v.kaynak==='omuz'||v.kaynak==='hava'||v.kaynak==='basma'?0.3:0);
-    let kart=null,kartNeden=null;const r=this.rast(),r2=this.rast(),KE=hkKartEsik(this);   /* T10b: kart eşiği hakemin sertliğiyle */
+    let kart=null,kartNeden=null;const r=this.rast(),r2=this.rast(),KE=hkKartEsik(this,yapan.team);   /* T10b: kart eşiği hakemin sertliğiyle */
     if(ck>=KE+0.5&&(v.kayma||v.arkadan)&&r<0.35){kart='kirmizi';kartNeden='asiri';}                 /* aşırı sert */
     else if(dogso&&r2<MOTOR_AYAR.firsatKirmizi){kart=kutu&&v.deneme?'sari':'kirmizi';kartNeden='firsat';}          /* kutuda topa oynama girişimi: sarı */
     else if(r<sigma((ck-KE)/0.07)){kart='sari';kartNeden='siddet';}             /* pervasız */

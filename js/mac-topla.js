@@ -98,7 +98,7 @@ function vurusSapma(p,o){
   const oz=p.oz,tek=o.teknik!=null?o.teknik:o.sut?oz.sut:oz.pas,ayakK=o.stil==='dis'?1.22:o.zayif?1+1.2*(1-profilAlt(p,'zayifAyak',0.35)):1;
   const vole=o.stil==='vole'?(o.sut?1.3:1.5):o.stil==='yarimVole'?(o.sut?1.12:1.2):1,st=VURUS_STIL[o.stil];
   return(0.028+0.075*(1-tek))*(1+(o.baski||0)*0.9)*ayakK*(st&&o.stil!=='dis'?st.sap:1)*(1+(o.hizalanma||0)*0.9)*(o.ilk?1.35:1)*vole*(1+0.5*(o.acele||0))
-    *(1+0.35*(p.yorgunluk||0))*gucHataCarpani(o.guc,o.ref);}
+    *(1+0.35*(p.yorgunluk||0))*gucHataCarpani(o.guc,o.ref)*(1-MOTOR_AYAR.guvenEtki*(p.guven||0));}   /* T10e: güven (js/mac-takim.js) */
 /* T9b-b: kötü vuruş olasılığı (saf). Taban (MOTOR_AYAR.kotuVurus) duran topta, beceri 0,6, baskısız ve referans güçte; teknik, acele, baskı, zayıf
    ayak, gelen top (gelişine ×2,5, yarım vole ×6, vole ×7), yorgunluk, kötü ya da ıslak zemin, güç ve burunla vuruş artırır. Türü (altına
    girme, üstüne vurma, ayağın kenarı, ıska) vurusYap aynı zardan seçer */
