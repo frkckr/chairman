@@ -10,7 +10,7 @@
    Kapılar (T8; KAPI ilgili alt adımda açılır, açıkken kabul dışı “!” çıkış kodu 1): korner T8b, serbest vuruş T8c, penaltı/taç/kale vuruşu T8d.
    Kullanım: node araclar/mac-deneme.js --senaryo d-duran [N=400: korner 2N (T8b: 400 kornerde gol payı ±1,1 puan oynuyordu, kapı gürültüyle düşüyordu; 800'de ±0,75); serbest vuruş hücresi N/5 (T8c: 40 vuruşta 18 m'nin gol oranı ±7 puan), penaltı ve taç N/7, kale vuruşu N/10] [tohum] */
 'use strict';
-const KAPI={korner:true,serbest:true,penalti:false,tac:false,kaleVurusu:false};
+const KAPI={korner:true,serbest:true,penalti:true,tac:true,kaleVurusu:true};
 /* kale vuruşunun yeri: kendi kale çizgisinden 5 m (altıpas çizgisinin 0,5 m önü; motorun sinirlar() kuralı) */
 const PL_KV=5.5-0.5;
 /* u: kale çizgisine uzaklık (m), w: kale ortasından yana (m); hücum yönü santradan sonraki yöne göre maçın içinde bulunur. Kale vuruşunda u

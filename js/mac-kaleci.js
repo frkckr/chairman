@@ -14,7 +14,8 @@ ayarEkle('D',{
   kaleciErisim:1.0,            // uzanma (erişim elipsi) çarpanı
   kaleciUcus:[3.6,2.6],        // dalışta yanal hız (m/sn) = a + b·kalecilik (yüksek dalışta azalır)
   kaleciTutma:0.84,            // kurtarışta topu tutma olasılığı çarpanı (en çok 0,96 olan olasılığa uygulanır)
-  kaleciCikis:0.2              // boştaki topa çıkmak için rakibe göre gereken zaman payı (sn)
+  kaleciCikis:0.2,             // boştaki topa çıkmak için rakibe göre gereken zaman payı (sn)
+  penaltiOku:[0.07,0.04]       // T8d: penaltıda kalecinin vuranın koşusunu okuyup temastan önce kalkması (sn; ortalama, σ; Ek G5: −0,145 … +0,009)
 });
 /* model sabitleri: itiş (çömelme) süresi, uzanmanın tamamlanması (sn), yana adım ve geri çekilme hızı (m/sn), erişimdeki belirsizlik (m; P için), el+top yarıçapı */
 const KL_M={itis:0.12,uzanma:0.28,adim:3.0,geri:3.0,sapma:0.22,elR:0.21,
@@ -207,13 +208,13 @@ Object.assign(Match.prototype,{
   },
   /* penaltı: kaleci vuruşla birlikte bir tarafa uçar (ipucu varsa ona doğru, kalecilik ve ipucunun güveniyle), ~0,1 olasılıkla ortada kalır.
      Tahmin ettiği noktaya uçar; tepkiden sonra elleri gerçek topa döner. Kurtarış aynı temas modeliyle çözülür */
-  kaleciPenaltiUcus(gk){
-    const b=this.ball,sh=b.sut,ip=sh&&sh.ipucu,k=gk.oz.kalecilik,d=this.dir[gk.team],gx=-d*PL;gk._pen=null;let yan;
+  kaleciPenaltiUcus(gk,ip0,kalan){
+    const b=this.ball,sh=b.sut,ip=ip0||sh&&sh.ipucu,k=gk.oz.kalecilik,d=this.dir[gk.team],gx=-d*PL;gk._pen=null;let yan;
     if(ip&&ip.yan){yan=this.rast()<0.1?0:this.rast()<0.5+0.35*(k-0.5)*clamp(ip.guven||0,0,1)?Math.sign(ip.yan):-Math.sign(ip.yan);}
     else{const r=this.rast();yan=r<0.44?-1:r<0.88?1:0;}
     gk.penaltiTahmin=yan;if(!yan)return;
     const zg=MZ+yan*(1.4+this.rast()*1.6),r2=this.rast(),yg=r2<0.5?0.35:r2<0.85?1.0:1.75,pl={px:gx,pz:zg,nx:-d,nz:0,vj:clamp(1+this.normal()*0.07,0.85,1.15)};
-    this.kaleciUc(gk,pl,kaleciYanal(gk,pl),yg,0.46,kaleciItis(yg-0.1)-0.04,0.6);gk.eylem.tahmin={x:gx,y:yg,z:zg};
+    this.kaleciUc(gk,pl,kaleciYanal(gk,pl),yg,0.46+Math.max(0,kalan||0),kaleciItis(yg-0.1)-0.04,0.6);gk.eylem.tahmin={x:gx,y:yg,z:zg};
   },
   /* ============ kalecinin bedeni ve temas ============ */
   /* bu anki beden: kalça H, omuz S, ayak F, el E; kapanda yayılan bacaklar A–C. Eller topun geçeceği noktaya (tepkiden önce göğsün önüne)
@@ -448,18 +449,30 @@ Object.assign(Match.prototype,{
     this.dokunus(gk,true);gk.kickCd=0.5;b.hedefOyuncu=q;
     this.pasSay(gk,hx,hz,L,tur);this.ofsaytPasAni(gk);this.on(tur==='degaj'?'gkkick':'pass',{p:gk,q});
   },
+  /* T8d: kale vuruşu kısa ya da uzun — saf değer + Gumbel gürültüsü (eskiden zar: direktliğin 0,8'i): kısa, rakibe 7 m'den uzak en boştaki
+     stopere (boşluk arttıkça değerli); uzun, hocanın etkin direktliği (T7b: kurma basan rakiple sağlanamıyorsa +0,4 — baskı orada sayılır;
+     ilk denemede ayrıca basan sayısı düşülünce maçta %100 uzun çıktı) ve hedefin (forvet ya da orta saha; kafa ve ilerilik) kafasıyla. 1999 havasında çoğu uzun
+     (gerçekte ~%75–85): direkt 0,62'de kısa ~%8, 0,38'de ~%28 (Gumbel farkı lojistik, ölçek 0,35) */
   kaleVurusuSecenegi(du,tk){
-    const d=this.dir[du.takim];
-      const tkt=this.taktik[du.takim];
-      if(this.rast()>tkt.direkt*0.8){/* kısa: açıktaki stopere */let q=null,eb=-1;for(const p of this.sahadakiler(du.takim)){if(p.rol!=='DEF')continue;const bos=enYakinRakip(this,p.x,p.z,p.team).d;if(bos>eb){eb=bos;q=p;}}
-        if(q&&eb>7)return{tur:'kaleVurusu',hx:q.x,hz:q.z,tip:'yer',alici:q};}
-      let q=null,ep=-1e9;for(const p of this.sahadakiler(du.takim)){if(p.rol!=='FV'&&p.rol!=='OS')continue;const s=p.oz.kafa+p.x*d*0.01+this.rast()*0.5;if(s>ep){ep=s;q=p;}}
-      const hx=clamp(q.x+d*3,-PL+20,PL-20),L=hyp(hx-du.x,q.z-du.z);
-      return{tur:'kaleVurusu',hx,hz:q.z,tip:'hava',T:1.5+L/30,alici:q};
+    const d=this.dir[du.takim],t=du.takim,tkt=this.taktik[t];
+    let q=null,eb=-1;for(const p of this.sahadakiler(t)){if(p.rol!=='DEF')continue;const bos=enYakinRakip(this,p.x,p.z,p.team).d;if(bos>eb){eb=bos;q=p;}}
+    let h=null,ep=-1e9;for(const p of this.sahadakiler(t)){if(p.rol!=='FV'&&p.rol!=='OS')continue;const s=p.oz.kafa+p.x*d*0.01;if(s>ep){ep=s;h=p;}}
+    const Uk=q&&eb>7?(1-tkt.direkt)+0.05*Math.min(eb-7,8):-9,Uu=h?0.5+tkt.direkt*1.2+0.4*h.oz.kafa:-9;
+    const gum=()=>-Math.log(-Math.log(Math.max(1e-9,this.rast())))*0.35;
+    if(q&&(Uk+gum()>Uu+gum()||!h))return{tur:'kaleVurusu',hx:q.x,hz:q.z,tip:'yer',alici:q};
+    if(!h)return null;
+    const hx=clamp(h.x+d*3,-PL+20,PL-20),Lh=hyp(hx-du.x,h.z-du.z);
+    return{tur:'kaleVurusu',hx,hz:h.z,tip:'hava',T:1.5+Lh/30,alici:h};
   },
   /* penaltı: kaleci çizgide hazır bekler; tarafı vuruş anında seçer (kaleciPenaltiUcus) */
   penaltiKaleciHazirla(du){
-    const kl=this.kaleci(1-du.takim);kl._pen={t:this.t};kl.penaltiTahmin=0;if(!kl.tavir)kl.tavir='hazir';
+    const kl=this.kaleci(1-du.takim),O=MOTOR_AYAR.penaltiOku;kl._pen={t:this.t,oku:clamp(O[0]+this.normal()*O[1],-0.01,0.15)};kl.penaltiTahmin=0;if(!kl.tavir)kl.tavir='hazir';
+  },
+  /* T8d: penaltıda kaleci vuranın koşusunu okur (duruşun 'kullan' evresi, stepDurus): temasa _pen.oku sn kala ipucuna göre uçar (Ek G5). Eskiden
+     temasta (b.sut) uçuyordu; tetik orada yedek olarak kalır */
+  kaleciPenaltiErken(du){const gk=this.kaleci(1-du.takim),tk=du.kullanan,e=tk&&tk.eylem;
+    if(!gk||!gk.oyunda||!gk._pen||!e||e.ad!=='vurus'||!e.sec||!e.sec.penalti||e.faz==='takip')return;
+    if(e.kalan<=gk._pen.oku)this.kaleciPenaltiUcus(gk,e.sec.ipucu,e.kalan);
   }
 });
 /* dalış adımı: itiş (planlı, yanal hız sıfır), havada (yana e.v ile e.s kadar; kalça balistik), iniş (yerde kayar, 0,3 sn), sonra hızlı kalkış */

@@ -241,7 +241,9 @@ Object.assign(Match.prototype,{
     }else if(du.asama==='yerles'){
       tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=0.8;tk.bak=null;tk.yonHedef=Math.atan2(MZ-nk.z,d*20-nk.x);   /* T8a: 0,7 → 0,8 */
       if(hyp(tk.x-nk.x,tk.z-nk.z)<0.45){
-        if(du.tur==='tac'){tk.eylem={ad:'tac',t:0,faz:'tut',ft:0};du.asama='hazir';}
+        if(du.tur==='tac'){tk.eylem={ad:'tac',t:0,faz:'tut',ft:0};du.asama='hazir';
+          /* T8d: uzun taç kararı burada (atan koşu için çizginin 3 m gerisine çekilir; hedef atışta tazelenir) */
+          const U=this.tacUzunSecenegi(du,tk,true);if(U){du.tacUzun=U;const dis=nk.z<MZ?-1:1;du.tacGeri={x:nk.x,z:nk.z+dis*3};}}
         else{/* topu yere koy, geri çekil. T8a: topu yere koyma eylemi (yerlestir, 0,6 sn; çabuk vuruşta yok), geri çekilme türe ve profile göre
              (duranGeriMesafe; eskiden 1,3, penaltıda 2,2 m) */
           b.tasiyan=null;b.x=du.x;b.z=du.z;b.y=0;b.vx=b.vy=b.vz=0;this.topDegisti();du.asama='hazir';
@@ -252,13 +254,16 @@ Object.assign(Match.prototype,{
       if(du.tur!=='tac'){const yer=du.yerT!=null&&du.t-du.yerT<0.6;tk.tx=yer?tk.x:du.geriX;tk.tz=yer?tk.z:du.geriZ;tk.hizOran=0.4;tk.yonHedef=du.aci;tk.bak=null;b.x=du.x;b.z=du.z;b.vx=b.vz=0;
         /* T8a: geri adımlar düzenli (efor 0,8, yavaş; 3–7 m geri çekilme T1 hız kipinde ~3 sn sürüyordu) */
         if(!yer&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5){tk.hizOran=0.3;this.eforVer(tk,0.8);}}
+      /* T8d: uzun taçta atan topu başının üstünde tutarak çizginin 3 m gerisine yürür (koşu için) */
+      let tacHazir=true;if(du.tur==='tac'&&du.tacGeri){const G=du.tacGeri;tk.tx=G.x;tk.tz=G.z;tk.hizOran=0.3;tk.yonHedef=Math.atan2(MZ-G.z,0);tk.bak=null;tacHazir=hyp(tk.x-G.x,tk.z-G.z)<0.5||du.hazirT>4;}
       const degisimBekle=this.degisiklik&&!this.degisiklik.girdi;
       /* T8a: kullanım koşulu (hazırlık penceresi, görevliler yerinde, el işareti; js/mac-durantop.js duranHazirMi) */
-      if(!degisimBekle&&this.duranHazirMi(du,tk))this.durusKullan(du);
+      if(!degisimBekle&&tacHazir&&this.duranHazirMi(du,tk))this.durusKullan(du);
     }else if(du.asama==='kullan'){
       /* T8a: kullananın koşusu ve vuruşu (vuruş eylemi) sürerken duruş sürer, oyun temasta başlar (kullanimBildir); kullanan vuruştan vazgeçerse
          (hat kapandı, süre doldu, ıska) oyun başlar ve yeniden karar verir */
       if(!(tk.eylem&&tk.eylem.ad==='vurus')){this.phase='play';this.phaseT=0;this.durus=null;tk.kararT=0;}
+      else if(du.tur==='penalti')this.kaleciPenaltiErken(du);   /* T8d: kaleci koşuyu okur (js/mac-kaleci.js) */
     }
     this.degisiklikAdim(dt);
     this.hareketHepsi(dt);this.topAdim(dt);
@@ -273,7 +278,10 @@ Object.assign(Match.prototype,{
     /* T8b (inceleme bulgusu): görevliler kullanım anında yerinde miydi (k-duran ölçümü; yalnız okur) */
     if(this.duranTehlikeli(du)||du.tur==='penalti')du.yerinde=this.gorevlilerYerinde(du);
     this.kullanimBaslat(du.tur,tk,du,this.t-du.t);   /* T8-0: kullanım bayrağı; olay kullananın ilk dokunuşunda (js/mac-durantop.js) */
-    if(du.tur==='tac'){const e=tk.eylem;if(e&&e.ad==='tac'&&e.faz==='tut'){e.faz='at';e.ft=0;e.hedef=this.tacHedefi(tk);}return;}
+    /* T8d: uzun taçta (yerleşmede karar) atan çizgiye koşar ('kosu'), hedef atışta tazelenir; kısa taçta eski atış */
+    if(du.tur==='tac'){const e=tk.eylem;if(e&&e.ad==='tac'&&e.faz==='tut'){e.ft=0;
+      if(du.tacUzun){const U=this.tacUzunSecenegi(du,tk,false)||du.tacUzun,nk=this.durusNoktasi(du);e.uzun=U;e.hedef=U.q;e.faz='kosu';e.kx=nk.x;e.kz=nk.z;}
+      else{e.faz='at';e.hedef=this.tacHedefi(tk);}}return;}
     if(!du.hizli&&(du.duduk||du.tur==='penalti'||du.baraj))this.on('duduk',{tur:du.tur});
     b.tasiyan=null;b.x=du.x;b.z=du.z;b.y=0;b.vx=b.vz=b.vy=0;b.ust=0;this.topDegisti();
     tk.x=du.geriX;tk.z=du.geriZ;if(tk.eylem&&!tk.eylem.kilit)tk.eylem=null;
@@ -299,12 +307,16 @@ Object.assign(Match.prototype,{
   tacIlerle(p,e,dt){
     const b=this.ball;e.ft+=dt;
     if(e.faz==='tut'){if(b.tasiyan!==p)p.eylem=null;return;}
+    /* T8d: uzun taçta 3 m koşu (3–5 adım), topu başının arkasında tutarak; çizgiye varınca atar */
+    if(e.faz==='kosu'){if(b.tasiyan!==p){p.eylem=null;return;}p.tx=e.kx;p.tz=e.kz;p.hizOran=0.75;this.eforVer(p,1);p.yonHedef=Math.atan2(MZ-e.kz,0);p.bak=null;
+      if(hyp(p.x-e.kx,p.z-e.kz)<0.3||e.ft>1.6){e.faz='at';e.ft=0.2;}return;}
     if(e.faz==='at'&&!e.atti&&e.ft>=0.34){
-      e.atti=true;const q=e.hedef,hx=q?q.x+q.vx*0.6:p.x+this.dir[p.team]*8,hz=q?q.z+q.vz*0.6:clamp(p.z+(p.z<MZ?8:-8),1,PW-1);
+      e.atti=true;const q=e.hedef,U=e.uzun,hx=U?U.hx:q?q.x+q.vx*0.6:p.x+this.dir[p.team]*8,hz=U?U.hz:q?q.z+q.vz*0.6:clamp(p.z+(p.z<MZ?8:-8),1,PW-1);
       e.hx=hx;e.hz=hz;   /* T8-0: atışın hedefi (kullanım olayı okur) */
-      const L=hyp(hx-p.x,hz-p.z),c=this.havadanCoz(p.x,2.0*p.boy,p.z,hx,1.0,hz,0.4+L/20,0);
+      /* T8d: uzun taç kutudaki alıcının başına (sıçrayan başın hizası), ~16 m/sn'lik yatay hızla (havada 0,5 + L/16 sn) */
+      const L=hyp(hx-p.x,hz-p.z),c=this.havadanCoz(p.x,2.0*p.boy,p.z,hx,U?U.hy:1.0,hz,U?0.5+L/16:0.4+L/20,0);
       b.tasiyan=null;b.x=p.x+Math.cos(p.yon)*0.25;b.z=p.z+Math.sin(p.yon)*0.25;b.y=2.0*p.boy;b.vx=c.vx;b.vy=c.vy;b.vz=c.vz;b.egri=0;
-      this.dokunus(p,true);b.hedefOyuncu=q||null;p.kickCd=0.4;b.tac={p};b.ust=0;
+      this.dokunus(p,true);b.hedefOyuncu=q||null;p.kickCd=0.4;b.tac={p};b.ust=0;if(U&&q)b.pasHedef={x:hx,z:hz,tur:'orta'};   /* uzun taç orta gibi okunur */
       this.phase='play';this.phaseT=0;this.durus=null;
     }
     if(e.ft>=0.65)p.eylem=null;

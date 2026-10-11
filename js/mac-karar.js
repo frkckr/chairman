@@ -595,7 +595,25 @@ function sutAdaylari(m,p,ox,oz,sd,o){
           Ls.push({tur,zt,yt:y0,v,g,kz,ky:kyY,fg,stil,Pg,Pon});if(Pg>en)en=Pg;}}}}
   return{Ls,en};}
 
+/* ---- T8d: penaltı planı (saf; rastlantı çekmez) ----
+   Adaylar: hedef (köşe ±2,9, yanın ortası ±1,8, orta 0) × yükseklik (alçak 0,3, orta 1,0, yüksek 2,0; ortaya alçak ve orta) × güç (0,7 / 0,85 / 1,0;
+   0,9 üstü sert vuruş, altı plase). P(gol) = P(çerçeve) × (1 − P(kurtarış)). Hata modeli açık oyunla aynı (yön σ = sd·kz·fg·L, yükseklik
+   σ = sd·ky·fg·L·0,35; L = 11 m). Kurtarış: kaleci ~%45 aynı yana uçar (iyi kaleci biraz daha çok), %10 ortada kalır; aynı yana uçanın erişimi
+   kaleciPay'den (temastan 0,1 sn önce kalkar) × 0,6 — tahmin ettiği noktaya uçar, elleri topa tepkiden sonra döner (d-penalti: doğru yana uçan
+   kaleci %33 kurtarıyor); ortada kalan ayakta tepkiyle; ters yana uçan yalnız ortaya gelen topa (%25, bacak). Köşe kurtarılmaz ama dışarı da
+   gidebilir: plan isabetle kurtarışı tartar */
+function penaltiPlani(m,p,gk,sd){
+  const Lp=PENALTI_U,R=VURUS_GUC_REF.sut,vMax=sutHizTavani(p,false),k=gk&&gk.oyunda?gk.oz.kalecilik:0,ayni=0.45+0.1*(k-0.5),orta=0.1,Ls=[];let en=0;
+  for(const zt of[-2.9,-1.8,0,1.8,2.9])for(const yt of zt===0?[0.3,1.0]:[0.3,1.0,2.0])for(const g of[0.7,0.85,1.0]){
+    const tur=g>=0.9?'sert':'plase',TT=SUT_TUR[tur],v=Math.max(8,g*VURUS_STIL[TT.stil].hiz*vMax),fg=gucHataCarpani(g,R),T=Lp/v;
+    const sz=Math.max(0.05,sd*TT.kz*fg*Lp),sy=Math.max(0.05,sd*TT.ky*fg*Lp*0.35);
+    const Pon=(normalDagilim((GW2-0.12-zt)/sz)-normalDagilim((-GW2+0.12-zt)/sz))*normalDagilim((GH-0.12-yt)/sy);
+    let Ps=0;if(gk&&gk.oyunda){const rS=sigma(1.702*kaleciPay(gk,Math.abs(zt),yt,T+0.1,0,1).pay/KL_M.sapma)*0.6,rO=sigma(1.702*kaleciPay(gk,Math.abs(zt),yt,T,0.25,1).pay/KL_M.sapma);
+      Ps=zt===0?orta*rO+(1-orta)*0.25:ayni*rS+orta*rO;}
+    const Pg=Pon*(1-Ps);Ls.push({zt,yt,g,v,tur,kz:TT.kz,ky:TT.ky,fg,Pg,Pon});if(Pg>en)en=Pg;}
+  return{Ls,en};}
 /* şut seçeneği: iyi pozisyonda istekle; uzaktan ancak iyi şutçu ve önü boşsa. Atış hattındaki savunmacı bloklayabilir */
+
 function sutSecenegi(m,p,x0,z0,baski){
   const d=m.dir[p.team],u=x0*d;if(u<=PL-38)return null;
   const gx=d*PL,Lk=hyp(gx-x0,MZ-z0),oz=p.oz;let x=xG(u,z0,'ayak',baski*0.4)*(1-sutBlokOlasiligi(m,p,x0,z0,gx,MZ,'sert'));   /* 2B (T8c: 3B yalnız serbest vuruşun planında) */

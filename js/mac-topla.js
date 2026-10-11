@@ -293,7 +293,8 @@ Object.assign(Match.prototype,{
     const L=hyp(gx-bx,MZ-bz)||1;
     let sd=this.vurusHatasi(p,e,L)*MOTOR_AYAR.sutSapma*(1+Math.max(0,L-12)*MOTOR_AYAR.sutUzak);
     let hz,hy,v,egri=0,tur,kz=1,ky=1,fg=1,g;
-    if(sec.penalti){sd*=0.55;hz=sec.hz;hy=this.rast()<0.62?0.25+this.rast()*0.6:0.9+this.rast()*1.2;v=16+(0.5+this.rast()*0.3)*14*(0.85+oz.sut*0.25);tur='plase';g=clamp(v/32,0,1);}
+    /* T8d: penaltı planın hedefi, yüksekliği, gücü ve türüyle (penaltiAtisi); hata baskısız, soğukkanlılıkla (penaltiSapmaK) */
+    if(sec.penalti){sd*=penaltiSapmaK(p);hz=sec.hz;hy=sec.pHy;v=sec.pV;tur=sec.pTur;g=sec.pG;const TT=SUT_TUR[tur];kz=TT.kz;ky=TT.ky;fg=gucHataCarpani(g,VURUS_GUC_REF.sut);}
     /* T9b-a: hazırlığın başında planlanan tür ve güçle hedef tazelenir (planı olmayan vuruş burada planlanır) */
     else{const sp=e.sutPlan,pl=sutPlani(this,p,bx,bz,sd,{serbest:sec.serbest,tur:sp&&sp.tur,guc:sp?sp.g:sec.guc,zayif:p.ayak!=='iki'&&e.ayak!==p.ayak,acele:e.acele||0,
         stil:e.stil==='burun'?'burun':null,ayak:e.ayak});
@@ -315,9 +316,9 @@ Object.assign(Match.prototype,{
     /* T9b-e: burunla dürtmenin stili temasta korunur (çizim ve ölçüm okur; eskiden 'ust'e dönüyordu) */
     if(e.stil!=='vole'&&e.stil!=='yarimVole'&&e.stil!=='burun')e.stil=(SUT_TUR[tur]||SUT_TUR.plase).stil;
     e.guc=g;
-    const aldat=this.rast()<0.08+0.25*oz.sut;
+    const aldat=this.rast()<0.08+0.25*oz.sut,ip0=sec.penalti&&sec.ipucu;   /* T8d: penaltıda ipucu planda (kaleci koşuyu okur) */
     /* T9b-0: nisanZ/nisanY — hatası uygulanmış nişan (kale çizgisinde; salt okunur, ölçüm araclar/olcumler/v-vurus.js) */
-    this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'sut',sut:{hedefZ:hz0,hedefY:hy0,nisanZ:hz,nisanY:hy,tur,ipucu:{yan:(Math.sign(hz0-MZ)||1)*(aldat?-1:1),guven:clamp(0.85-0.7*oz.sut,0.15,0.8)}}});
+    this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'sut',sut:{hedefZ:hz0,hedefY:hy0,nisanZ:hz,nisanY:hy,tur,ipucu:ip0||{yan:(Math.sign(hz0-MZ)||1)*(aldat?-1:1),guven:clamp(0.85-0.7*oz.sut,0.15,0.8)}}});
   },
   /* yerden pas: ortak plandaki varış hızından ilk hız; yön hatası ve uzunluk hatası (mesafe oranı; baskıda hafif eksik) */
   yerPasVur(p,e){
@@ -645,8 +646,15 @@ Object.assign(Match.prototype,{
       let al=null,ed=1e9;for(const p of this.sahadakiler(du.takim)){if(p===tk||p.rol==='GK')continue;const dd=hyp(p.x-d*h[0],p.z-h[1]);if(dd<ed){ed=dd;al=p;}}
       return{tur:'korner',hx:d*h[0],hz:h[1],tip:'hava',T:1.15+hyp(d*h[0]-du.x,h[1]-du.z)/30,alici:al};
   },
+  /* T8d: penaltı planından (penaltiPlani; eskiden yan zarla, yükseklik ve güç vuruşta zarla): hedef, yükseklik ve güç sıcaklıklı seçilir (kararlı
+     vurucu daha tutarlı); vurucunun gövdesinin gösterdiği yan (ipucu) burada belirlenir — kaleci koşuyu okuyup temastan önce kalkar (Ek G5) */
   penaltiAtisi(du,tk){
-    const gx=this.dir[du.takim]*PL,yan=this.rast()<0.5?-1:1;return{tur:'sut',hx:gx,hz:MZ+yan*(GW2-0.7),penalti:true,xg:0.76};
+    const gx=this.dir[du.takim]*PL,d=this.dir[du.takim],gk=this.kaleci(1-du.takim),A=MOTOR_AYAR,oz=tk.oz;
+    const sd=vurusSapma(tk,{sut:true,guc:VURUS_GUC_REF.sut,ref:VURUS_GUC_REF.sut,stil:'ic'})*A.sutSapma*penaltiSapmaK(tk);
+    const X=penaltiPlani(this,tk,gk,sd),tau=Math.max(0.004,(0.06+0.18*(1-oz.karar))*X.en);let top=0;for(const c of X.Ls){c.a=Math.exp((c.Pg-X.en)/tau);top+=c.a;}
+    let r=this.rast()*top,c=X.Ls[X.Ls.length-1];for(const c2 of X.Ls){r-=c2.a;if(r<=0){c=c2;break;}}
+    const aldat=this.rast()<0.08+0.25*oz.sut,yan=(Math.sign(c.zt)||(this.rast()<0.5?-1:1))*(aldat?-1:1);
+    return{tur:'sut',hx:gx,hz:MZ+c.zt,penalti:true,xg:c.Pg,pHy:c.yt,pV:c.v,pG:c.g,pTur:c.tur,ipucu:{yan,guven:clamp(0.85-0.7*oz.sut,0.15,0.8)}};
   }
 });
 EYLEM_ADIM.vurus=function(p,e,dt){this.vurusIlerle(p,e,dt);return true;};

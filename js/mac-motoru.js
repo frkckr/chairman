@@ -82,7 +82,7 @@ const MOTOR_AYAR={
   koruTempo:undefined,dusunHz:undefined,pasTol:undefined,ikinciTopHedef:undefined,araKalib:undefined,birebirMenzil:undefined,birebirKayip:undefined,
   birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,
   /* D — js/mac-kaleci.js */
-  kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,
+  kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,penaltiOku:undefined,
   /* T — js/mac-takim.js */
   niyetEtki:undefined,macDurumEtki:undefined,niyetYenile:undefined,kontraSure:undefined,kurmaStoperW:undefined,gerideEk:undefined,rakipAlgi:undefined,
   kosuTetik:undefined,kosuRastgele:undefined,kosuEs:undefined,zon14:undefined,govdeAc:undefined,osDestek:undefined,presTetikSure:undefined,
@@ -90,7 +90,7 @@ const MOTOR_AYAR={
   mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,
   /* K — js/mac-durantop.js (T8) */
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
-  kornerKisa:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined
+  kornerKisa:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined
 };
 const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
@@ -356,7 +356,8 @@ class Match{
     this.hareketHepsi(dt);this.topAdim(dt);
     let hazir=yerinde;
     if(hazir)for(const p of this.players)if(p.oyunda&&hyp(p.tx-p.x,p.tz-p.z)>1.3){hazir=false;break;}
-    if(hazir&&this.phaseT>1.6||this.phaseT>22){
+    /* T8d: gerideyken ve süre azalmışken (acele) santra çabuk: 1,6 → 0,9 sn */
+    if(hazir&&this.phaseT>(this.macDurumu(this.kickTeam).acele>0.5?0.9:1.6)||this.phaseT>22){
       if(!yerinde)this.topuSifirla(0,MZ);
       const al=this.santraAlici(this.kickTeam),t0=this.t-this.phaseT;
       this.on('kickoff',{team:this.kickTeam,half:this.half});this.refs[0].eylem={ad:'duduk',t:0,sure:0.8};

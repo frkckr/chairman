@@ -39,11 +39,14 @@ ayarEkle('K',{
   serbestOrta:6.0,             // T8c: kenardan ve ceza sahasına yakından ortanın değeri (P(gol)·100; d-duran'da korner %4,8, kenar ortası biraz üstü);
                                // ortadan ve uzaktan azalır. 5,0'te kenardan %22 doğrudan şut
   serbestRutin:0.12,           // T8c: barajlı vuruşta kısa pas rutini olasılığı (kullananın yaratıcılığıyla 0,6–1,4 katı; taktik çeşitlilik; 0,08'de 18 m'de %92,5 şut)
-  serbestTau:1.0               // T8c: serbest vuruş kararının sıcaklığı (karar ve duran top becerisiyle 0,6–1,4 katı; 1,5'te kenardan %30–40 şut)
+  serbestTau:1.0,              // T8c: serbest vuruş kararının sıcaklığı (karar ve duran top becerisiyle 0,6–1,4 katı; 1,5'te kenardan %30–40 şut)
+  penaltiSapma:0.55            // T8d: penaltı vuruşunun hata çarpanı (baskısız 11 m; soğukkanlılıkla ×(1 + 0,8·(0,5 − s))); eski sabit 0,55
 });
 const DT_HAZIR={tac:0,korner:1,kaleVurusu:2,serbest:3,penalti:4};
 /* kafa sırası (T3'ten: sıçrama + boy) ve ikinci top (şut gücü, uzaktan vurma) */
 const dtKafa=p=>profilAlt(p,'sicrama',p.oz.kafa)+(p.boy||1);
+/* T8d: penaltı vuruşunun hata çarpanı: baskısız 11 m (penaltiSapma) × soğukkanlılık (0,5'te 1; 0,2'de 1,24, 0,8'de 0,76) — plan ve vuruş aynı */
+const penaltiSapmaK=p=>MOTOR_AYAR.penaltiSapma*(1+0.8*(0.5-profilAlt(p,'sogukkanlilik',p.oz.karar)));
 /* T8c: doğrudan serbest vuruşun tekniği (vuruş hatası ve karar aynı): şut becerisi + duran top */
 const serbestTeknik=p=>0.4*p.oz.sut+0.6*profilAlt(p,'duranTop',p.oz.sut);
 const dtIkinci=p=>profilAlt(p,'sutGucu',p.oz.sut)+0.3*profilEgilim(p,'uzaktanVurur')+(p.rol==='OS'?0.1:0);
@@ -228,6 +231,17 @@ Object.assign(Match.prototype,{
     if(c.tur==='sut')return{tur:'sut',hx:gx,hz:MZ,serbest:true,xg:c.P};
     if(c.tur==='orta'){const o=c.c;return{tur:'orta',hx:o.hx,hz:o.hz,tip:'hava',T:o.T,hy:o.hy,yay:'korner',alici:o.q};}
     return null;
+  },
+  /* T8d: uzun taç — son üçte birde (kaleye 32 m), atanın erişimi güçten ve boydan (14–26 m; uzun taç uzmanı 25 m'yi aşar). Kutudaki hedefler
+     korner seçeneklerinden (kutudakiler ve iki bölge); erişimdeki en iyi hedef 15 m'den uzaksa ve atan uzun atmayı seçerse (%70; karar
+     yerleşmede, koşudan önce — karar false iken yalnız hedef tazelenir) uzun taç, yoksa kısa taç (tacHedefi). Topun inişi sıçrayan başın
+     hizasında; alıcı ortadaki gibi topa gider ve sıçrar */
+  tacUzunSecenegi(du,tk,karar){
+    const d=this.dir[du.takim];if(du.x*d<PL-32)return null;
+    const R=14+12*profilAlt(tk,'guc',0.5)+8*((tk.boy||1)-1);let en=null;
+    for(const c of kornerSecenekleri(this,tk,du.x,du.z)){const Lc=hyp(c.hx-du.x,c.hz-du.z);if(Lc>R||Lc<15)continue;if(!en||c.deger>en.deger)en=Object.assign({L:Lc},c);}
+    if(!en||karar&&this.rast()>0.7)return null;
+    return{q:en.q,hx:en.hx,hz:en.hz,hy:en.hy,L:en.L};
   },
   /* baraj doğrudan şutta sıçrar (kullanimBildir): kalkış temastan hazırlık (sicramaHazir, durarak) + kişisel σ (barajZiplaZaman) sonra; tepe
      topun barajdan geçtiği ~0,4 sn'ye yakın. Yükseklik oyuncunun durarak sıçraması × barajZipla (planlayıcı aynısını bilir) */
