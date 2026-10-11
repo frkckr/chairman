@@ -79,7 +79,7 @@ const MOTOR_AYAR={
   verKacDeger:undefined,boslukDeger:undefined,ikinciTop:undefined,havaDeger:undefined,araDeger:undefined,araDar:undefined,donusDeger:undefined,
   ofsaytAlgi:undefined,kosuIstegi:undefined,aliciPay:undefined,uzaklastirDeger:undefined,hedefDeger:undefined,devamAgirlik:undefined,
   devamHedef:undefined,sabir:undefined,sabirSure:undefined,devamPas:undefined,bekleOran:undefined,koruDeger:undefined,koruSure:undefined,
-  koruTempo:undefined,dusunHz:undefined,pasTol:undefined,ikinciTopHedef:undefined,araKalib:undefined,birebirMenzil:undefined,birebirKayip:undefined,
+  koruTempo:undefined,dusunHz:undefined,pasTol:undefined,pasTolHava:undefined,ortaDestek:undefined,ikinciTopHedef:undefined,araKalib:undefined,birebirMenzil:undefined,birebirKayip:undefined,
   birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,
   /* D — js/mac-kaleci.js */
   kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,penaltiOku:undefined,

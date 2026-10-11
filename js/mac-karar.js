@@ -107,7 +107,11 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
   if(tip==='yer'){for(let k=0;k<K;k++){v0[k]=Math.min(29,yerIlkHiz(L,V[k],R));for(let i=0;i<N;i++)PA_TB[k*N+i]=t0+yerSure(v0[k],L*(i+1)/N,R);}}
   else{T=o.T||havaSure(L,o.yay);const hy=o.hy||0;for(let i=0;i<N;i++){const f=(i+1)/N,t=T*f;PA_TB[i]=t0+t;PA_H[i]=hy*f+G/2*t*(T-t);}}
   /* alıcı topu karşılar: yolda topa ondan önce yetişebildiği ilk nokta (havadan pasta yalnız iniş yeri) */
-  if(alici){const ek=MOTOR_AYAR.aliciPay;for(let i=0;i<N;i++)PA_TA[i]=varisSuresi(alici,PA_X[i],PA_Z[i],0.6)+ek;}
+  /* T10a (yalnız açık oyunda havadan orta, o.orta — uzun top ve kornerde maç içi kalibrasyon zaten tutuyordu; genellemesi 40 maçta uzun pası
+     %14 → 18'e çıkardı, pas isabetini 8 puan düşürdü, korner verimini bozdu): alıcı topu başıyla karşılar (kafa erişimi ~1 m; ayakta 0,6) ve inişe
+     koşu içinde gelir — aliciPay'in duran/dönen oyuncu payı eklenmez (c-orta: alıcının inişe yetişmesi tahmini %70'te kalıyordu) */
+  const hvO=tip==='hava'&&!!o.orta;
+  if(alici){const ek=hvO?0:MOTOR_AYAR.aliciPay,mz=hvO?1.0:0.6;for(let i=0;i<N;i++)PA_TA[i]=varisSuresi(alici,PA_X[i],PA_Z[i],mz)+ek;}
   const ir=[N-1,N-1,N-1],tr=[0,0,0],sure=[0,0,0];let sureMax=0;
   /* boşluğa ve ara pasında alıcı noktaya toptan biraz önce varmalı (koşu içinde yolu kesmek dar bir pencere) */
   const pay=o.alt==='bosluk'||o.alt==='ara'?-0.05:0.05;
@@ -136,7 +140,13 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
         let pr;
         if(i<r)pr=sigma((tb-to-0.1)/0.14);
         /* T6d: ikisi de inişteyse düello tahmini (havaDuelloTahmin, js/mac-hava.js; eskiden sabit 0,35), yalnız rakip oradaysa 0,85 */
-        else if(tip==='hava'){const dP=sigma((tb+0.25-to)/0.25),rP=sigma((tb+0.25-tr[k])/0.25),Pd=alici?1-havaDuelloTahmin(m,alici,op,PA_H[i]):0.5;pr=dP*((1-rP)*0.85+rP*Pd);}
+        /* T10a: düelloda varış hızı (inişe uzaklık / uçuş süresi): koşarak gelen koşarak sıçrar (yürütmeyle aynı) */
+        /* T10a (yalnız ortada, hvO): alıcı havadan topa koşusunu inişe göre ayarlar (topa nişan alınan odur): yetişme payı 0,25 sn geniş (tam zamanında varan %88, eskiden
+           %73); varış hızı en az şimdiki hızı (koşudaki alıcı koşarak sıçrar) */
+        else if(tip==='hava'){const dP=sigma((tb+0.25-to)/0.25),rP=sigma((tb+(hvO?0.5:0.25)-tr[k])/0.25),Tu=Math.max(0.3,tb-t0);
+          const va=hvO&&alici?Math.max(hyp(alici.vx||0,alici.vz||0),hyp(alici.x-PA_X[i],alici.z-PA_Z[i])/Tu):0,vd=hvO?Math.max(hyp(op.vx||0,op.vz||0),hyp(op.x-PA_X[i],op.z-PA_Z[i])/Tu):0;
+          const Pd=alici?1-havaDuelloTahmin(m,alici,op,PA_H[i],va,vd):0.5;pr=dP*((1-rP)*0.85+rP*Pd);
+          if(o.iz)(o.iz.L||(o.iz.L=[])).push({gk:kaleci,dP,rP,Pd,pr});}
         else pr=0.7*sigma((Math.min(tr[k],tb+0.3)-to-0.05)/0.16);
         if(pr>en)en=pr;}
       /* yerden pasta her rakip ayrı ayrı araya girebilir; havadan topta iniş yerinde asıl çekişme en iyi rakiple */
@@ -150,6 +160,7 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
     /* alıcı geç kalırsa top hedefin ötesine yuvarlanır: geciktikçe alma olasılığı düşer */
     /* T6d: havadan pasta alıcı inişte orada olmalı (top seker, sürer; yerden pasta olduğu gibi koşup yetişemez): geç kalma cezası sert */
     let al=1;if(alici){const gec=tr[k]-PA_TB[k*N+N-1];if(gec>0.05)al=tip==='hava'?clamp(1-gec*2.5,0.02,1):clamp(1-gec*0.9,0.25,1);}
+    if(o.iz&&tip==='hava')Object.assign(o.iz,{kalma:kalma[k],al,kalab:kalab[k],enIyi:enIyiH[k],gec:alici?tr[k]-PA_TB[k*N+N-1]:0});
     const r=ir[k],va=tip==='yer'?yerHiz(v0[k],L*(r+1)/N,R):hyp(L/T,G*T*0.3),ya=tip==='yer'?0:0.45;
     const bs=clamp((0.8-marj[k])/1.2,0,1),pk=alici&&alici.oz?kontrolOlasiligi(alici,va,ya,bs,Math.abs(aciFark(gelA,hucA))):1;
     const s=kalma[k]*al*(0.55+0.45*pk);if(s>enS){enS=s;enK=k;Pk=pk;bk=bs;Pt=kalma[k]*al;}}
@@ -160,8 +171,10 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
   /* T9b-a: mesafe çarpanı (1 + L/200) yerine vuruşun gücü (vurusSapma ile aynı; gucHataCarpani, pasGucu) */
   const PT=MOTOR_AYAR.pasTol,sd0=(0.028+0.075*(1-oz2.pas))*(1+baski*0.9)*(o.ilk?1.35:1)*(o.vole?1.5:1)*(1+0.35*(p.yorgunluk||0))
     *gucHataCarpani(pasGucu(tip,v0[enK],L,T),VURUS_GUC_REF.pas)*MOTOR_AYAR.pasSapma*(tip==='hava'?1.6:1);
-  const tol=PT[0]+PT[1]*Math.max(0,marj[enK]),Pex=(2*normalDagilim(tol/Math.max(0.05,sd0*L))-1)*(2*normalDagilim(tol/Math.max(0.05,sd0*(tip==='hava'?1.3:1+L/40)*L*PT[2]))-1);
-  return{P:clamp(Pt*teknik*Pex,0.02,0.99),Pk,baskiK:bk,sure:sure[enK],v0:v0[enK],varis:V[enK],T:tip==='yer'?PA_TB[enK*N+N-1]-t0:T,L,marj:marj[enK],Pex};}
+  /* T10a (yalnız ortada, hvO): havadan topta tolerans en az pasTolHava — isabet topun indiği bölgeye göredir (c-orta: hedeften 5 m'ye kadar sapma ilk temas payını
+     değiştirmiyor; kalabalıkta marj ~0 iken 1,2 m'lik tolerans ortanın tahminini 5 kat kötümser yapıyordu) */
+  const tol=Math.max(PT[0]+PT[1]*Math.max(0,marj[enK]),hvO?MOTOR_AYAR.pasTolHava:0),Pex=(2*normalDagilim(tol/Math.max(0.05,sd0*L))-1)*(2*normalDagilim(tol/Math.max(0.05,sd0*(tip==='hava'?1.3:1+L/40)*L*PT[2]))-1);
+  return{P:clamp(Pt*teknik*Pex,0.02,0.99),Pk,baskiK:bk,sure:sure[enK],v0:v0[enK],varis:V[enK],T:tip==='yer'?PA_TB[enK*N+N-1]-t0:T,L,marj:marj[enK],Pex,Pt,teknik};}
 function kaleCeza(m,o,x,z){const gx=-m.dir[o.team]*PL;return Math.abs(x-gx)<16.5&&Math.abs(z-MZ)<20.2;}
 
 /* ---- pas adayları (MM3) ---- */
@@ -481,7 +494,7 @@ function ortaSecenekleri(m,p,o,S){
     /* T6d: bölgeye orta yalnız uçuş süresinde (+0,3 sn) oraya varabilecek arkadaşa (eskiden 3 sn: top o inmeden çoktan düşüyordu) */
     const Tz=havaSure(hyp(zx-o.ox,zw-o.oz),yay);if(en&&enT<Tz+0.3)ekle(en,eg,zx,zw,'hava',yay,hy,Tz,yay);}
   for(const c of C){
-    const A2=pasAnaliz(m,p,c.hx,c.hz,c.tip,c.g,{ox:o.ox,oz:o.oz,T:c.T,yay:c.yay,hy:c.hy,varislar:c.tur==='alcak'?varisAdaylari(hyp(c.hx-o.ox,c.hz-o.oz),'orta'):null,baski:o.baski});
+    const iz=o.hepsi?{}:null,A2=pasAnaliz(m,p,c.hx,c.hz,c.tip,c.g,{ox:o.ox,oz:o.oz,T:c.T,yay:c.yay,hy:c.hy,varislar:c.tur==='alcak'?varisAdaylari(hyp(c.hx-o.ox,c.hz-o.oz),'orta'):null,baski:o.baski,iz,orta:true});
     /* ortacının önündeki rakip bacağı ortayı kesebilir — T5 (2026-10-09): motorla aynı saf işlev (ortaBlokTahmin, js/mac-mudahale.js); ilk hız
        uçuş süresinden (havadan: yatay L/T, dikey (hy + gT²/2)/T; yerden 18 m/sn), yön belirsizliği 0,25 m */
     const L=hyp(c.hx-o.ox,c.hz-o.oz)||1,ux=(c.hx-o.ox)/L,uz=(c.hz-o.oz)/L,Tu=c.tip==='hava'&&c.T>0?c.T:0,vh=Tu?L/Tu:18,vy0=Tu?((c.hy||0)+0.5*G*Tu*Tu)/Tu:0;
@@ -491,13 +504,19 @@ function ortaSecenekleri(m,p,o,S){
     const sans=xG(tu,c.hz,parca,A2.baskiK)*bec;
     /* isabet: ortanın hücumcudan 2,5 m'den fazla sapmaması (yön hatası vurusHatasi ile aynı ölçekte; baskı altında orta kötüleşir) */
     const sdO=(0.028+0.075*(1-p.oz.pas))*(1+o.baski*0.9)*(c.tip==='hava'?1.6:1)*(1+0.35*(p.yorgunluk||0)),Pis=2*normalDagilim(2.5/Math.max(0.1,sdO*L))-1;
-    const kal=c.tip==='hava'&&gk.oyunda?kaleciHavaTahmin(m,gk,c.hx,c.hz,c.hy,c.T).P:0,Pg=A2.P*(1-kal)*acik*Pis;
+    /* T10a: isabet yalnız pas analizinde (Pex); ortanın kendi isabeti (Pis) ikinci kez çarpılıyordu — yalnız c-orta raporuna gider */
+    const kal=c.tip==='hava'&&gk.oyunda?kaleciHavaTahmin(m,gk,c.hx,c.hz,c.hy,c.T).P:0,Pg0=A2.P*(1-kal)*acik;
+    /* T10a: havadan ortanın inişine alıcıdan başka hücumcu da gelir (c-orta: topa ilk dokunan hücumcu alıcıdan ~8 puan çok) — inişe uçuş süresinde
+       (+0,3 sn) yetişebilen her diğer arkadaş, alıcının kaybettiği topun ortaDestek'i kadarını alır (en çok 0,4) */
+    let nd=0;if(c.tip==='hava')for(const q of m.teams[p.team]){if(q===p||q===c.q||!q.oyunda||q.rol==='GK')continue;const g=algilanan(m,p,q);
+      if(g&&varisSuresi(g,c.hx,c.hz,1.0)<(c.T||A2.T||1)+0.3)nd++;}
+    const Pg=Pg0+(1-Pg0)*Math.min(0.4,A.ortaDestek*nd);
     /* T10-0 (2026-10-11): o.hepsi — c-orta senaryosu eşiksiz listeyi ve tahminin bileşenlerini alır (kalibrasyon); karar yolu aynı */
     if(Pg<0.1&&!o.hepsi)continue;   /* umutsuz orta düşünülmez */
     const U=(Pg*(sans*100+0.8)-(1-Pg)*pasKaybi(m,p,c.hx,c.hz)*0.5*takim.risk)*A.ortaIstegi;
     S.push({tur:c.tur==='geri'?'geriCevir':'orta',alici:c.q,hx:c.hx,hz:c.hz,tip:c.tip,yay:c.yay,hy:c.hy,T:c.tip==='hava'?A2.T:null,varis:A2.varis,
       mod:c.tip==='hava'?null:'ayak',deger:U,P:Pg,Pk:A2.Pk,sure:A2.sure,L:A2.L,ortaTuru:c.tur});
-    if(o.hepsi)S[S.length-1].bilesen={P2:A2.P,Pex:A2.Pex,kal,acik,Pis,sans};}
+    if(o.hepsi)S[S.length-1].bilesen={P2:A2.P,Pex:A2.Pex,Pt:A2.Pt,teknik:A2.teknik,kal,acik,Pis,sans,iz};}
 }
 /* korner: kafa vuranların ve koşuların noktası ya da bölge (ön direk, penaltı noktası); değer = xG(kafa) × kafa becerisi × P(ulaşır) × (1 − kaleci) */
 function kornerSecenekleri(m,p,ox,oz){

@@ -24,7 +24,7 @@ ayarEkle('B',{
   surusKarar:[0.3,0.62],       // top sürerken yeniden karar aralığı
   vurusHizalama:0.36,          // vuruş için gövdenin hedefe en fazla sapması (rad); gelişine vuruşta 1,05, dış ayakla 0,85
   sutIstegi:5.0,               // şut seçeneğinin değer çarpanı: 14 m'ye kadar tam, 22 m'de etkisiz (birleştirme 2026-10-03: 3 → 5)
-  ortaIstegi:4.0,              // orta ve geri çevirmenin değer çarpanı
+  ortaIstegi:2.0,              // orta ve geri çevirmenin değer çarpanı (T10a: 4,0 → 2,0 — 4,0 ortanın 5 kat kötümser tahminini telafi ediyordu; değer yalnız ilk temasın xG'sini sayar, ikinci top, geri çevirme ve korner devamını saymaz: c-orta'da ortadan sonra 4 sn'de şut %49, gol %12. 40 maç: 1,0 ile orta 2,3/maç ve başarı %21, 2,0 ile 3,15 ve %34; gol ve pas isabeti ikisinde de değişmedi)
   sutSapma:0.75,               // şut isabet hatası çarpanı (MM1: 0,8 → 0,7; beden blokları ve yorgunluk isabeti düşürdü; T1: 0,75, sakin oyunda şut daha az baskılı)
   uzaklastirCizgi:[0.45,0.18], // T8f: kendi ceza sahasında kafayla uzaklaştırmanın kale çizgisi dışına (kornere) gitme payı: kaleye dönükken / değilken (T8f tarama)
   pasSapma:1.0,                // pas yön hatası çarpanı
@@ -59,6 +59,8 @@ ayarEkle('B',{
   koruTempo:0.2,               // T4e: tutma süresine bağlı tempo bedeli (puan/sn): top tutuldukça atak söner; uzun tutmayı (3 sn+) bitirir (0,3 → 0,2: PPDA 5,4 → 5,9)
   dusunHz:[5,8],               // topu tutarken düşünme sıklığı (1/sn; karar özelliğiyle): her anda seçenekler yeniden tartılır
   pasTol:[1.2,4,0.5],          // pas hatası toleransı: taban (m) + alıcının rakipten önce varma payı (sn) × katsayı; uzunluk hatasının payı
+  pasTolHava:5.5,              // T10a: havadan topta en az tolerans (m) — topun indiği bölge: hücumcu ve savunmacı gerçek inişe birlikte ayar yapar, çekişme yer değiştirir (c-orta: 5 m'ye kadar sapma ilk temas payını değiştirmiyor, ötesinde yarıya iniyor)
+  ortaDestek:0.15,             // T10a: ortanın inişine uçuş süresinde yetişebilen her diğer hücumcunun, alıcının kaybettiği toptaki payı (en çok 0,4; c-orta: topa ilk dokunan hücumcu alıcıdan ~8 puan çok)
   ikinciTopHedef:0.3,          // hedef forvete uzun topta kaybedilen düelloda topun takımda kalma olasılığı (kaybın bedelini azaltır)
   araKalib:0.85,               // ara pasının başarı olasılığı düzeltmesi (ölçülen; kök neden savunmacının varış modeli, T5)
   /* T4 (2026-10-08): rakibi geç */
@@ -438,7 +440,7 @@ Object.assign(Match.prototype,{
       case 'sut':this.vurusBaslat(p,{tur:'sut',hx:this.dir[p.team]*PL,hz:MZ,xg:s.xg});break;
       case 'pas':case 'ara':case 'uzun':case 'orta':case 'geriCevir':
         this.vurusBaslat(p,{tur:s.tur,hx:s.hx,hz:s.hz,tip:s.tip,alici:s.alici,varisHizi:s.varis,T:s.T,hy:s.hy,yay:s.yay,mod:s.mod,ex:s.ex,ez:s.ez,es:s.es,guncelle:!!s.mod,
-          P:s.P,Pk:s.Pk,alt:s.alt});break;   /* P, Pk, alt: karar anındaki tahmin, salt okunur (ölçüm: araclar/olcumler/p-kalib.js) */
+          P:s.P,Pk:s.Pk,alt:s.alt,ortaTuru:s.ortaTuru});break;   /* P, Pk, alt, ortaTuru: karar anındaki tahmin, salt okunur (ölçüm: araclar/olcumler/p-kalib.js) */
       case 'uzaklastir':{/* uzağa ve kanada, çoğu zaman hedefsiz; baskı altında ayağın kenarından kaçıp taça ya da kornere gidebilir */
         const d=this.dir[p.team],yan=p.z<MZ?-1:1,kacti=this.rast()<0.25+baskiAltinda(this,p)*0.25;
         let hx=clamp(p.x+d*(28+this.rast()*22),-PL+4,PL-4),hz=p.z+yan*(10+this.rast()*26);

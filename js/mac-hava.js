@@ -88,11 +88,13 @@ const hvYuzey=p=>{const e=p._hvTy;if(e>0.12)return 'tepe';if(e<-0.12)return 'yuz
 const HV_YUZEY={alin:[1,1],yan:[1.6,0.85],tepe:[2.4,0.55],yuz:[3,0.4]};
 /* T6d: algı vekilinin (karar katmanı) kaynağı: vekil boy ve profil taşımayabilir */
 const hvKaynak=(m,o)=>o.kaynak||(o.vekil&&m.teams[o.team]?m.teams[o.team][o.n]:o)||o;
-/* başın temiz temas erişimi (m): ayaktaki alın + durarak sıçrama + 0,12 */
-const hvErisim=p=>hvAlinDur(p)+hvSicramaH(p,0)+0.12;
+/* başın temiz temas erişimi (m): ayaktaki alın + sıçrama + 0,12. T10a: v — topa varış hızı (≥ 2,5 m/sn koşarak sıçrar: hvSicramaH, yürütmeyle
+   aynı); verilmezse durarak */
+const hvErisim=(p,v)=>hvAlinDur(p)+hvSicramaH(p,v||0)+0.12;
 /* T6d: hava düellosu tahmini (saf): ikisi de inişteyken a, d'ye karşı y yüksekliğindeki topu alır mı (0,05–0,95). Topa (erişim + 0,11) yetişemeyen
-   kaybeder; ikisi de yetişemezse 0,5 */
-function havaDuelloTahmin(m,a,d,y){const A=hvKaynak(m,a),D=hvKaynak(m,d),ra=hvErisim(A),rd=hvErisim(D),ua=y>ra+0.11,ud=y>rd+0.11;
+   kaybeder; ikisi de yetişemezse 0,5. T10a: va, vd — oyuncuların inişe varış hızı (pas analizi: inişe uzaklık / uçuş süresi); koşarak gelen
+   hücumcu duran savunmacıdan 0,08–0,12 m yükseğe çıkar (c-orta: eskiden tahmin çekişmede %40, gerçekleşen %55) */
+function havaDuelloTahmin(m,a,d,y,va,vd){const A=hvKaynak(m,a),D=hvKaynak(m,d),ra=hvErisim(A,va),rd=hvErisim(D,vd),ua=y>ra+0.11,ud=y>rd+0.11;
   if(ua&&ud)return 0.5;if(ua)return 0.05;if(ud)return 0.95;return clamp(1/(1+Math.exp(-(ra-rd)/0.105)),0.05,0.95);}
 /* eşit temasta yerini koruyan: kütle ve sertlik */
 const hvGuc=p=>kutle(p)*(0.8+0.4*(p.oz.sertlik!=null?p.oz.sertlik:0.5));
