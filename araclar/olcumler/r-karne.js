@@ -46,8 +46,12 @@ module.exports={
     /* T8-0 (2026-10-11): oyuna dönüşte ceza sahasındaki savunmacı (kaleci hariç) ve kendi yarısında kalan hücumcu sayısı */
     ['Korner: ceza sahasındaki savunmacı','rKornerSav',1],['Korner: geride kalan hücumcu','rKornerGeri',1],
     ['Korner: geride kalanların hızı − takım ort. (özellik)','rKornerGeriHiz',2,[0,null,'T8']],
+    /* T10-0 (2026-10-11; T10 teşhisi hata 6): serbest vuruşun sınıfı T8'in sınıfıdır (du.sinif: baraj, kenar, uzak, geri; js/mac-durantop.js).
+       Eskiden barajdaki kişiye bakılıyordu: T8c'den beri kenar vuruşunun da 1–2 kişilik barajı olduğu için kenar vuruşları "barajlı" sayılıyor,
+       "barajsız (son 40 m)" satırı yalnız çabuk ve uzak vuruşları ölçüp hep 0 çıkıyordu. Barajlı = 'baraj' sınıfı; kenar satırı 'kenar' sınıfında
+       kullanım anında ceza sahasındaki hücumcu (planın T8 kabulü 4–6; k-duran'daki satırla aynı tanım) */
     ['Barajlı serbest vuruş: 8 sn içinde gol %','rBarajGol',1],['Barajlı serbest vuruş: barajdaki kişi','rBarajKisi',1],
-    ['Barajsız serbest vuruş (son 40 m): ceza sahasındaki hücumcu','rSerbestKutu',1,[4,6,'T8']],
+    ['Kenar serbest vuruşu: ceza sahasındaki hücumcu','rSerbestKutu',1,[4,6,'T8']],
     ['Tehlikeli duran topta hazırlık (sn, ortanca)','rDuranHazirlik',1,[10,14,'T8']],
     /* T4h (2026-10-09; gerçekçilik planı Ek H madde 39, bilgi): yön salınımı — 0,2 sn'de bir örneklenen gidiş yönü (hız > 1,5 m/sn, kilitli eylem
        dışında) 50°'den çok döner ve bir sonraki örnekte ilk yönün 30° içine geri gelir (gereksiz yön değişimi); sahipsiz duran top — oyunda top
@@ -104,9 +108,9 @@ module.exports={
           const A=m.teams[att].filter(p=>p.oyunda&&p.rol!=='GK'&&p!==du.kullanan),D=m.teams[1-att].filter(p=>p.oyunda&&p.rol!=='GK'),kutu=p=>kutuda(m,p,att);
           if(du.tur==='korner'){const geri=A.filter(p=>p.x*d<0),o={kutu:A.filter(kutu).length,sav:D.filter(kutu).length,geri:geri.length,geriHiz:geri.length?ort(geri.map(p=>p.oz.hiz))-ort(A.map(p=>p.oz.hiz)):NaN,gol:false};
             korner.push(o);hazirlik.push(m.t-duT0);bekleyen.push({t:m.t+8,att,g0:m.score[att],o});}
-          else if(du.tur==='serbest'&&du.x*d>0){const n=du.barajdakiler?du.barajdakiler.length:0,mesafe=hyp(d*R_PL-du.x,R_MZ-du.z);
-            if(n){const o={kisi:n,gol:false};baraj.push(o);hazirlik.push(m.t-duT0);bekleyen.push({t:m.t+8,att,g0:m.score[att],o});}
-            else if(mesafe<40)serbest.push(A.filter(kutu).length);}}
+          else if(du.tur==='serbest'&&du.x*d>0){const n=du.barajdakiler?du.barajdakiler.length:0,sinif=du.sinif||(n?'baraj':'?');
+            if(sinif==='baraj'){const o={kisi:n,gol:false};baraj.push(o);hazirlik.push(m.t-duT0);bekleyen.push({t:m.t+8,att,g0:m.score[att],o});}
+            else if(sinif==='kenar'){serbest.push(A.filter(kutu).length);hazirlik.push(m.t-duT0);}}}
         for(let i=bekleyen.length-1;i>=0;i--){const q=bekleyen[i];if(m.t>=q.t){q.o.gol=m.score[q.att]>q.g0;bekleyen.splice(i,1);}}
         onceki=ph;
         if(ph!=='play'){if(seq)kapat(m,'durdu');if(tas)tasima.push(tas);tas=null;sahipP=null;bosAn=0;return;}

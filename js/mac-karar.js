@@ -492,10 +492,12 @@ function ortaSecenekleri(m,p,o,S){
     /* isabet: ortanın hücumcudan 2,5 m'den fazla sapmaması (yön hatası vurusHatasi ile aynı ölçekte; baskı altında orta kötüleşir) */
     const sdO=(0.028+0.075*(1-p.oz.pas))*(1+o.baski*0.9)*(c.tip==='hava'?1.6:1)*(1+0.35*(p.yorgunluk||0)),Pis=2*normalDagilim(2.5/Math.max(0.1,sdO*L))-1;
     const kal=c.tip==='hava'&&gk.oyunda?kaleciHavaTahmin(m,gk,c.hx,c.hz,c.hy,c.T).P:0,Pg=A2.P*(1-kal)*acik*Pis;
-    if(Pg<0.1)continue;   /* umutsuz orta düşünülmez */
+    /* T10-0 (2026-10-11): o.hepsi — c-orta senaryosu eşiksiz listeyi ve tahminin bileşenlerini alır (kalibrasyon); karar yolu aynı */
+    if(Pg<0.1&&!o.hepsi)continue;   /* umutsuz orta düşünülmez */
     const U=(Pg*(sans*100+0.8)-(1-Pg)*pasKaybi(m,p,c.hx,c.hz)*0.5*takim.risk)*A.ortaIstegi;
     S.push({tur:c.tur==='geri'?'geriCevir':'orta',alici:c.q,hx:c.hx,hz:c.hz,tip:c.tip,yay:c.yay,hy:c.hy,T:c.tip==='hava'?A2.T:null,varis:A2.varis,
-      mod:c.tip==='hava'?null:'ayak',deger:U,P:Pg,Pk:A2.Pk,sure:A2.sure,L:A2.L,ortaTuru:c.tur});}
+      mod:c.tip==='hava'?null:'ayak',deger:U,P:Pg,Pk:A2.Pk,sure:A2.sure,L:A2.L,ortaTuru:c.tur});
+    if(o.hepsi)S[S.length-1].bilesen={P2:A2.P,Pex:A2.Pex,kal,acik,Pis,sans};}
 }
 /* korner: kafa vuranların ve koşuların noktası ya da bölge (ön direk, penaltı noktası); değer = xG(kafa) × kafa becerisi × P(ulaşır) × (1 − kaleci) */
 function kornerSecenekleri(m,p,ox,oz){

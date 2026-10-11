@@ -35,7 +35,7 @@ iframe{width:100%;aspect-ratio:4/3;border:0;background:#000;display:block}
     <option value="sahne">sahnenin önerisi</option><option value="loca">loca (oyundaki bakış)</option>
     <option value="yakin">yakın (yandan, 7 m)</option><option value="orta">orta (yandan, 16 m)</option></select></label>
   <label>Önce <select id="onceSurum">
-    <option value="t9b" selected>T9b (T8 öncesi)</option><option value="t6">T6 (T9b öncesi)</option><option value="t5">T5 (T7 öncesi)</option></select></label>
+    <option value="t8" selected>T8 (T10 öncesi)</option><option value="t9b">T9b (T8 öncesi)</option><option value="t6">T6 (T9b öncesi)</option><option value="t5">T5 (T7 öncesi)</option></select></label>
   <label>Tohum <input id="tohum" type="number" min="1" value="3"></label>
   <label>Hız <select id="hiz"><option value="1">1×</option><option value="0.5" selected>½×</option><option value="0.25">¼×</option></select></label>
   <button id="oynat" type="button" aria-pressed="false">▶ Oynat</button>
@@ -43,7 +43,7 @@ iframe{width:100%;aspect-ratio:4/3;border:0;background:#000;display:block}
   <button id="bastan" type="button" title="Sahneyi yeniden kur">Baştan</button>
 </header>
 <main>
-  <figure><figcaption>Önce <small id="onceAd">— T9b animasyonu (dondurulmuş)</small></figcaption><iframe id="fOnce" title="Önce"></iframe></figure>
+  <figure><figcaption>Önce <small id="onceAd">— T8 animasyonu (dondurulmuş)</small></figcaption><iframe id="fOnce" title="Önce"></iframe></figure>
   <figure><figcaption>Şimdi <small>— js/animasyon.js</small></figcaption><iframe id="fSimdi" title="Şimdi"></iframe></figure>
 </main>
 <div id="durum">Hazırlanıyor…</div>
@@ -100,7 +100,7 @@ const $=id=>document.getElementById(id),F={once:$('fOnce'),simdi:$('fSimdi')},Y=
 const UI_CSS='.controls,.gelistirici,.duraklatildi{display:none!important}body{margin:0!important;background:#000!important;overflow:hidden}.wrap{gap:0!important;display:block!important}.screen{width:100vw!important;max-width:none!important;box-shadow:none!important}';
 for(const [i,s] of SAHNELER.entries()){const o=document.createElement('option');o.value=i;o.textContent=s.ad;$('sahne').appendChild(o);}
 /* "önce" sürümleri (araclar/karsilastir/dondur.js <ad>): her tur başında dondurulan çizim; eski kopyalar (once, a2a, a2b, t4v, t4) 2026-10-10'da silindi */
-const ONCE_AD={t9b:'— T9b animasyonu (dondurulmuş; T8 öncesi)',t6:'— T6 animasyonu (dondurulmuş; T9b öncesi)',
+const ONCE_AD={t8:'— T8 animasyonu (dondurulmuş; T10 öncesi)',t9b:'— T9b animasyonu (dondurulmuş; T8 öncesi)',t6:'— T6 animasyonu (dondurulmuş; T9b öncesi)',
   t5:'— T5 animasyonu (dondurulmuş; T7 öncesi; çizim T5\'ten beri değişmedi, jestleri T7\'den beri motor yazar)'},ONCE_KAYNAK={};
 let TOHUM=3,oynuyor=false,kurulum=0,birikim=0,sonZaman=0;
 const durum=(m,uyari)=>{$('durum').innerHTML=uyari?'<span class="uyari">'+m+'</span>':m;};
