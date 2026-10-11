@@ -9,6 +9,7 @@
      durum, sütunlar zaman sırasıyla kareler. Sayfalar: ?sayfa=kosu | ikili | dusus | kaleci | vurus | sevinc | a2hareket | a2bekle (A2a, 2026-10-08) | t5temas (T5f, 2026-10-09) |
      a2vurus | a2hakem | a2kaleci | a2bekle2 | a2dokunus (A2b, 2026-10-08) | t4calim (T4g, 2026-10-09: çalım, aldatılan savunmacı, top saklama) |
      t6hava (T6f) | t9vurus (T9b-e: falso, burun, kötü vuruş) | t9kaleci (T9b-e: yana adım, dalış ve kolun topa IK'sı, çökme, K-blok, yıldız) |
+     t8duran (T8e: topu yerleştirme, barajın motor sıçraması, uzun taç koşusu, kutuda yer kapma, yarı plonjon kafa, top toplayıcı yuvarlama) |
      olcum (ayak kayması ve süre ölçümü). Satır seçeneği sabitY: kamera yüksekliği
      sabit (sıçrama görünsün).
      Açmak: python3 araclar/kontrol.py "araclar/poz-galerisi.html?sayfa=dusus" (görüntü araclar/son-kontrol-poz-galerisi-sayfa-dusus.png).
@@ -411,6 +412,26 @@ const SAYFALAR={
     kapanSatir('T9b K-blok (yakın alçak şut, top sağda): diz yerde, bacak yana',{tur:'kblok',yan:1}),
     kapanSatir('T9b Yıldız (bire bir): ayakta büyür',{tur:'yildiz',yan:1,az:5}),
     ayaktaSatir('T9b Alçak topa ayakta kurtarış (top 0,65 m): kalça iner, eller topta',{y:0.65,z:0.3})],
+  /* T8e (Ek G5): duran top hareketleri — motorun alanları yapay verilir (p.duranRol, p.zipla + p.yuk, tac.faz, atis.stil) */
+  t8duran:[
+    {ad:'T8e Topu yerleştirme (yerlestir 0,6 sn): eğilme, el topta, doğrulma',kit:0,kur:p=>{p.yon=0;const b=mac.ball;b.x=0.35;b.z=0;b.y=0;},
+      adim:[{ad:null,sure:0.3},{ad:'yerlestir',sure:0.6},{ad:null,sure:0.9}],kareler:[0.25,0.4,0.55,0.7,0.85,1.05,1.4],az:40,uzak:4.5},
+    {ad:'T8e Baraj: eller önde bekleme, motor sıçramasının hazırlığı (çömelme), uçuş ve iniş',kit:1,kur:p=>{p.yon=0;p.duranRol={rol:'baraj',hx:0,hz:0};p.__zip=false;mac.phase='durus';mac.durus={tur:'serbest',asama:'hazir',barajdakiler:[p],kullanan:null,x:9,z:0};mac.ball.x=9;mac.ball.z=0;},
+      her:(p,t,dt)=>{if(t>=1.0&&!p.zipla&&!p.__zip){p.__zip=true;p.zipla={t:-0.15,sure:0.49,tepe:0.3,kos:false,hz:0.15,cx:p.x,cz:p.z,tt:0.15,v0:0};}
+        const z=p.zipla;if(z){z.t+=dt;const f=z.t/z.sure;p.yuk=f>0&&f<1?z.tepe*4*f*(1-f):0;if(f>=1){p.zipla=null;p.yuk=0;}}if(t>=1.2)mac.phase='play';},
+      kareler:[0.5,1.05,1.15,1.3,1.4,1.55,1.8],az:20,uzak:4.5,sabitY:true},
+    {ad:'T8e Uzun taç: top başta koşu (kosu), çizgide bırakış (at)',kit:2,kur:p=>{p.yon=0;mac.ball.tasiyan=p;},
+      her:(p,t,dt)=>{let e=p.eylem;if(!e&&t<1.3){e={ad:'tac',t:0,faz:'kosu',ft:0};p.eylem=e;}if(!e)return;e.t=t;
+        if(t<0.9){e.faz='kosu';e.ft=t;p.vx=2.5;}else{if(e.faz!=='at'){e.faz='at';e.ft=0.2;}else e.ft+=dt;p.vx=Math.max(0,2.5-(t-0.9)*8);if(e.ft>=0.34&&mac.ball.tasiyan===p){mac.ball.tasiyan=null;mac.ball.x=p.x+1;mac.ball.y=2.2;}}
+        if(e.faz==='at'&&e.ft>=0.65)p.eylem=null;},
+      kareler:[0.3,0.6,0.9,0.98,1.04,1.12,1.3],az:70,uzak:5},
+    {ad:'T8e Kutuda yer kapma: rakip sol önde 0,7 m, kolla yer tutma (hafif)',kit:0,kur:p=>{p.yon=0;p.duranRol={rol:'hedefOn',hx:0,hz:0};mac.phase='durus';mac.durus={tur:'korner',asama:'hazir',x:30,z:30,kullanan:null};mac.teams[1]=[{x:0.2,z:-0.7,oyunda:true,team:1}];mac.ball.x=30;mac.ball.z=30;},
+      rakip:()=>mac.teams[1][0],kareler:[0.3,0.6,0.9,1.2,1.5,1.8,2.1],az:40,uzak:4.5},
+    {ad:'T8e Yarı plonjon kafa: koşarak alçak topa (alnın 0,2 m altı), gövde öne yatar, kollar öne',kit:1,kur:p=>{p.yon=0;mac.ball.y=1.5;mac.ball.x=3;mac.ball.z=0;},
+      adim:[{ad:null,sure:0.4,v:[5,0]},{ad:'kafa',sure:0.5,ek:{yuzey:'alin'},v:[5,0]},{ad:null,sure:0.6,v:[3.5,0]}],
+      her:(p,t)=>{const b=mac.ball;b.y=1.5;b.x=t<0.4?p.x+0.3+(0.4-t)*5:p.x+0.3-(t-0.4)*6;},kareler:[0.2,0.38,0.42,0.48,0.56,0.7,0.95],az:60,uzak:5},
+    {ad:'T8e Top toplayıcı yuvarlama (atis, stil yuvarla): çömelip yerden',kit:2,kur:p=>{p.yon=0;},
+      adim:[{ad:null,sure:0.2},{ad:'atis',sure:0.5,ek:{stil:'yuvarla'}},{ad:null,sure:0.6}],kareler:[0.15,0.25,0.32,0.4,0.5,0.65,0.9],az:40,uzak:4.5}],
   t4calim:[
     calimSatir('T4g Makas: sol ayak topun önünden dışa, sağ dış ayakla itiş',{hareket:'makas',sure:0.45,taraf:1,kay:0.3,hazHiz:0.55,v:3.5}),
     calimSatir('T4g Makas, öbür yan ve başka kimlik',{hareket:'makas',sure:0.45,taraf:-1,kay:0.3,hazHiz:0.55,v:3.2,kit:2,n:11,az:-20}),

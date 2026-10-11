@@ -26,6 +26,7 @@ ayarEkle('B',{
   sutIstegi:5.0,               // şut seçeneğinin değer çarpanı: 14 m'ye kadar tam, 22 m'de etkisiz (birleştirme 2026-10-03: 3 → 5)
   ortaIstegi:4.0,              // orta ve geri çevirmenin değer çarpanı
   sutSapma:0.75,               // şut isabet hatası çarpanı (MM1: 0,8 → 0,7; beden blokları ve yorgunluk isabeti düşürdü; T1: 0,75, sakin oyunda şut daha az baskılı)
+  uzaklastirCizgi:[0.45,0.18], // T8f: kendi ceza sahasında kafayla uzaklaştırmanın kale çizgisi dışına (kornere) gitme payı: kaleye dönükken / değilken (T8f tarama)
   pasSapma:1.0,                // pas yön hatası çarpanı
   sikisma:0.3,                 // pas hedefindeki alıcı sıkışıksa (rakip dibinde) o yerin değerinden düşülen pay
   geriPas:1.8,                 // geri pasın ek değeri (takımın 'sakin' ayarıyla çarpılır): topu tutma isteği (birleştirme 2026-10-03: 1,4 → 1,8)
@@ -563,7 +564,7 @@ Object.assign(Match.prototype,{
        uzaklaşır). Eskiden her yerde 12 m geriye ve 4–12 m yana nişan alınırdı: kale ağzının önündeki topta bu çizgi kalenin içinden geçiyor,
        savunmacı kendi kalesine kafa atıyordu (400 kornerde ~5 gol) */
     const dz0=Math.abs(b.z-MZ);
-    if(k.tur==='uzaklastir'&&kendiCeza&&dz0>GW2+1&&this.rast()<(kaleyeDonuk?0.45:0.18)){const gx=-d*PL,u=Math.max(0.5,Math.abs(b.x-gx)),zc=MZ+(b.z<MZ?-1:1)*(dz0+1.5+this.rast()*6),s=1+3/u;
+    if(k.tur==='uzaklastir'&&kendiCeza&&dz0>GW2+1&&this.rast()<(kaleyeDonuk?MOTOR_AYAR.uzaklastirCizgi[0]:MOTOR_AYAR.uzaklastirCizgi[1])){const gx=-d*PL,u=Math.max(0.5,Math.abs(b.x-gx)),zc=MZ+(b.z<MZ?-1:1)*(dz0+1.5+this.rast()*6),s=1+3/u;
       k.hx=b.x+(gx-b.x)*s;k.hz=b.z+(zc-b.z)*s;k.vy=3+this.rast()*3;}
     const L=hyp(k.hx-b.x,k.hz-b.z)||1,sig=(0.05+0.1*(1-p.oz.kafa))*(1+baskiAltinda(this,p)*0.5)*Q[0]*(cek?1.4:1)*(1+MOTOR_AYAR.kafaDonus*hvDonus(b.vx,b.vz,k.hx-b.x,k.hz-b.z)),gelen=hyp(b.vx,b.vz);
     /* kafa vuruşu gelen topun hızının bir kısmını kullanır: sert gelen orta sert gider */

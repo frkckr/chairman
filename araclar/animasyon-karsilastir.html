@@ -89,6 +89,12 @@ const SAHNELER=[
   {ad:'T4g Aldatılan savunmacı (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&!!(window.__takip=mac.players.find(q=>q.oyunda&&q.yutma&&mac.t-q.yutma.t<0.02))",en:900},
   {ad:'T4g Top saklama (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&!!(window.__takip=mac.players.find(p=>p.oyunda&&p.tavir==='koru'))",en:900},
   {ad:'T4g Bire bir — loca',kamera:'loca',kosul:"mac.phase==='play'&&!!(window.__takip=mac.players.find(p=>p.oyunda&&p.calim&&p.calim.faz===1&&p.calim.ft<0.02))",en:600},
+  /* T8e (2026-10-11): duran toplar — yerleştirme ve kol işareti, kutuda itişme ve koşular, barajın motor sıçraması, kalecinin penaltıda erken kalkışı, uzun taç koşusu. Önce = t9b */
+  {ad:'T8e Korner hazırlığı — yerleştirme ve kol işareti (yakın)',kamera:'yakin',kosul:"mac.phase==='durus'&&mac.durus.tur==='korner'&&mac.durus.asama==='hazir'&&!!(window.__takip=mac.durus.kullanan)",en:900},
+  {ad:'T8e Korner — kutuda yer kapma ve koşular (orta)',kamera:'orta',kosul:"mac.phase==='durus'&&mac.durus.tur==='korner'&&mac.durus.asama==='kullan'&&!!(window.__takip=mac.ball)",en:900},
+  {ad:'T8e Serbest vuruş — barajın sıçraması ve kaleci (orta)',kamera:'orta',kosul:"mac.phase==='durus'&&!!mac.durus.baraj&&mac.durus.asama==='kullan'&&!!mac.durus.barajdakiler&&!!(window.__takip=mac.durus.barajdakiler[0])",en:1800},
+  {ad:'T8e Penaltı — kalecinin erken kalkışı (yakın)',kamera:'yakin',kosul:"mac.phase==='durus'&&mac.durus.tur==='penalti'&&mac.durus.asama==='kullan'&&!!(window.__takip=mac.kaleci(1-mac.durus.takim))",en:3000},
+  {ad:'T8e Uzun taç — koşu ve bırakış (yakın)',kamera:'yakin',kosul:"mac.phase==='durus'&&mac.durus.tur==='tac'&&!!mac.durus.tacGeri&&!!(window.__takip=mac.durus.kullanan)",en:1800},
 ];
 const $=id=>document.getElementById(id),F={once:$('fOnce'),simdi:$('fSimdi')},Y={once:null,simdi:null};
 const UI_CSS='.controls,.gelistirici,.duraklatildi{display:none!important}body{margin:0!important;background:#000!important;overflow:hidden}.wrap{gap:0!important;display:block!important}.screen{width:100vw!important;max-width:none!important;box-shadow:none!important}';

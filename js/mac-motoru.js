@@ -75,7 +75,7 @@ const MOTOR_AYAR={
   sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,havaOkuma:undefined,havaEgilme:undefined,havaDuello:undefined,kafaDonus:undefined,
   /* B — js/mac-topla.js */
   kararGecikme:undefined,ilerleme:undefined,risk:undefined,surusKarar:undefined,vurusHizalama:undefined,sutIstegi:undefined,ortaIstegi:undefined,
-  sutSapma:undefined,pasSapma:undefined,sikisma:undefined,geriPas:undefined,kontrolZorluk:undefined,tekVurus:undefined,verKacIstegi:undefined,
+  sutSapma:undefined,uzaklastirCizgi:undefined,pasSapma:undefined,sikisma:undefined,geriPas:undefined,kontrolZorluk:undefined,tekVurus:undefined,verKacIstegi:undefined,
   verKacDeger:undefined,boslukDeger:undefined,ikinciTop:undefined,havaDeger:undefined,araDeger:undefined,araDar:undefined,donusDeger:undefined,
   ofsaytAlgi:undefined,kosuIstegi:undefined,aliciPay:undefined,uzaklastirDeger:undefined,hedefDeger:undefined,devamAgirlik:undefined,
   devamHedef:undefined,sabir:undefined,sabirSure:undefined,devamPas:undefined,bekleOran:undefined,koruDeger:undefined,koruSure:undefined,

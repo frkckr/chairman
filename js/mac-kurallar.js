@@ -119,9 +119,10 @@ Object.assign(Match.prototype,{
     const b=this.ball;b.tasiyan=null;k.top=false;k.topBos=0;
     const hx=clamp(tk.x+tk.vx*0.5,-PL-0.5,PL+0.5),hz=clamp(tk.z+tk.vz*0.5,-0.5,PW+0.5),L=hyp(hx-k.x,hz-k.z)||1;
     b.x=k.x+Math.cos(k.yon)*0.2;b.z=k.z+Math.sin(k.yon)*0.2;b.egri=0;b.ust=0;
-    if(du.tur==='korner'||L>14){b.y=0;b.vy=0;const v=yerIlkHiz(L,1.2,this.R);b.vx=(hx-b.x)/L*v;b.vz=(hz-b.z)/L*v;}
+    const yuvarla=du.tur==='korner'||L>14;
+    if(yuvarla){b.y=0;b.vy=0;const v=yerIlkHiz(L,1.2,this.R);b.vx=(hx-b.x)/L*v;b.vz=(hz-b.z)/L*v;}
     else{b.y=1.0;const c=this.havadanCoz(b.x,1.0,b.z,hx,1.3,hz,0.55+L/16,0);b.vx=c.vx;b.vy=c.vy;b.vz=c.vz;}
-    k.eylem={ad:'atis',t:0,sure:0.5};this.topDegisti();this.on('topcu',{k,tk});
+    k.eylem={ad:'atis',t:0,sure:0.5,stil:yuvarla?'yuvarla':'at'};this.topDegisti();this.on('topcu',{k,tk});   /* T8e: stil (çizim okur) */
   },
   /* duran topa uygun kenardaki en yakın, elinde top olan ve boştaki çocuk. Taçta o yan çizginin, kornerde o kale arkasının ya da o yan
      çizginin, autta o kale arkasının çocuğu; diğerlerinde en yakını. Duracağı yer kendi kenarında, çizginin dışında, atış noktasına en
@@ -393,7 +394,7 @@ Object.assign(Match.prototype,{
     else if(DY&&DY.h){h.tx=clamp(DY.h.x,-PL+1,PL-1);h.tz=clamp(DY.h.z,1,PW-1);const uz=hyp(h.tx-h.x,h.tz-h.z);h.hizOran=uz>8?0.9:0.6;h.bak=b;
       /* barajlı serbest vuruş: hakem barajın ucunda 9,15 m'yi gösterir, 1,2 sn sonra baraj dizilmiş sayılır ve hakem çaprazına çekilir */
       if(du.sinif==='baraj'&&!du.hakemHazir&&(du.asama==='yerles'||du.asama==='hazir')&&uz<1.2){du.hakemT=(du.hakemT||0)+dt;
-        if(!du.hakemYon){du.hakemYon=true;h.eylem={ad:'yon',t:0,sure:1.2,yon:Math.atan2(du.z-h.z,du.x-h.x)};}
+        if(!du.hakemYon){du.hakemYon=true;h.eylem={ad:'yon',t:0,sure:1.2,yon:Math.atan2(du.z-h.z,du.x-h.x)};this.on('barajYeri',{hedef:{x:du.x,z:du.z},x:h.x,z:h.z});}   /* T8e: çizim işareti */
         if(du.hakemT>1.2)du.hakemHazir=true;}}
     else{
       const cap=MZ-clamp(fx,-PL,PL)/PL*21;

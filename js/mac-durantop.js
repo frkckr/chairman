@@ -182,7 +182,7 @@ Object.assign(Match.prototype,{
     U.forEach((p,k)=>{const sk=kenar?(k-(U.length-1)/2)*0.5:k*0.5,x=Wx+px*sk,z=Wz+pz*sk;G.set(p,{rol:'baraj',hx:x,hz:z,takim:s,hedef:null,sira:k});BY.set(p,{x,z});});
     du.barajdakiler=U;du.barajYer=BY;du.barajAci=Math.atan2(du.z-Wz,du.x-Wx);
     if(!kenar){du.baraj=true;du.barajUc={x:Wx-px*1.8,z:Wz-pz*1.8};
-      const kl=this.kaleci(s);if(kl&&kl.oyunda)G.set(kl,{rol:'kaleci',hx:gx-d*0.8,hz:MZ-yan*0.3,takim:s,hedef:null});}
+      const kl=this.kaleci(s);if(kl&&kl.oyunda){G.set(kl,{rol:'kaleci',hx:gx-d*0.8,hz:MZ-yan*0.3,takim:s,hedef:null});this.jestVer(kl,'isaret',1.4,{x:Wx,z:Wz});}}   /* T8e: kaleci barajı kol işaretiyle kurar (Ek G5) */
   },
   /* kenar serbest vuruşu: orta için 4–6 hücumcu savunma çizgisinin 0,6 m gerisinde (çizgi kaleden 10–16 m; vuruş uzaklaştıkça geride),
      temastan 0,55 sn önce koşu noktalarına (ön direk, altıpas ortası, arka direk, penaltı noktası, uzak direk); biri yayda ikinci topa, ikisi
@@ -238,8 +238,12 @@ Object.assign(Match.prototype,{
      hizasında; alıcı ortadaki gibi topa gider ve sıçrar */
   tacUzunSecenegi(du,tk,karar){
     const d=this.dir[du.takim];if(du.x*d<PL-32)return null;
-    const R=14+12*profilAlt(tk,'guc',0.5)+8*((tk.boy||1)-1);let en=null;
+    /* T8e düzeltmesi: menzil 20–30 m (gerçek uzun taç 25–30 m, uzmanlar 35+); kutu hedefleri yan çizgiden 30+ m'de kaldığı için ayrıca altıpasın
+       atana yakın köşesi (kaleden 7 m, ortadan 6 m) hedeftir — oraya en yakın arkadaş alıcıdır */
+    const R=20+10*profilAlt(tk,'guc',0.5)+8*((tk.boy||1)-1),yan=Math.sign(du.z-MZ)||1;let en=null;
     for(const c of kornerSecenekleri(this,tk,du.x,du.z)){const Lc=hyp(c.hx-du.x,c.hz-du.z);if(Lc>R||Lc<15)continue;if(!en||c.deger>en.deger)en=Object.assign({L:Lc},c);}
+    if(!en){const ex=d*(PL-7),ez=MZ+yan*6,Lc=hyp(ex-du.x,ez-du.z);if(Lc<=R&&Lc>=15){let q=null,qd=8;for(const p of this.sahadakiler(du.takim)){if(p===tk||p.rol==='GK')continue;const dd=hyp(p.x-ex,p.z-ez);if(dd<qd){qd=dd;q=p;}}
+      if(q)en={q,hx:ex,hz:ez,hy:Math.min(2.0,hvAlinDur(q)+0.25),L:Lc,deger:0.5};}}
     if(!en||karar&&this.rast()>0.7)return null;
     return{q:en.q,hx:en.hx,hz:en.hz,hy:en.hy,L:en.L};
   },
