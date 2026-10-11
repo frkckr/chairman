@@ -40,7 +40,7 @@ vm.runInContext(`(function(){const _s=secenekler,_k=kararVer;let son=null;const 
 const profilKurCtx=vm.runInContext('profilKur',ctx),kirp=x=>Math.min(0.95,Math.max(0.15,x)),DUY=new Map();   /* takım:ad → özelliğin işareti */
 function duyarlilikUygula(m){let k=0;
   for(let t=0;t<2;t++){const G={};for(const p of m.teams[t]){if(p.rol==='GK')continue;const g=p.profil?p.profil.grup:p.rol;(G[g]||(G[g]=[])).push(p);}
-    for(const g of Object.keys(G).sort()){const L=G[g].sort((a,b)=>a.n-b.n),s=[k&1?1:-1,k&2?1:-1,k&4?1:-1,k&8?1:-1];k++;
+    for(const g of Object.keys(G).sort()){const L=G[g].sort((a,b)=>a.n-b.n),s=[k&1?1:-1,k&2?1:-1,k&4?1:-1,k&8?1:-1,((k>>1)^k)&1?1:-1];k++;   /* T8b: beşinci işaret (kafa) — bit0 ⊕ bit1, öbür dördünden bağımsız */
       L.forEach((p,j)=>{const w=j%2?-1:1,oz=p.oz;oz.surus=kirp(oz.surus+w*s[0]*DELTA);oz.mudahale=kirp(oz.mudahale+w*s[1]*DELTA);oz.sertlik=kirp(oz.sertlik+w*s[2]*DELTA);
         oz.sut=kirp(oz.sut+w*s[3]*DELTA);   /* T9b-f: şut → isabet */
         oz.kafa=kirp(oz.kafa+w*s[4]*DELTA);   /* T8-0: kafa → kafa şutu (duran top ve orta) */

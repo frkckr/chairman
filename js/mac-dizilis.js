@@ -118,7 +118,7 @@ Object.assign(Match.prototype,{
     const gecisSure=du?0:this.t-(this._sahiplikBas||0);
     /* T7a: takım niyeti ve maç durumu (js/mac-takim.js): etkin taktik ve düzen çarpanları */
     this.niyetAdim(dt,du);const NY=this._niyet;
-    if(!du)this.presTetikAdim();   /* T7d: pres tetikleyicileri (js/mac-takim.js) */
+    if(!du){this.presTetikAdim();this.duranSonrasiAdim();}   /* T7d: pres tetikleyicileri (js/mac-takim.js); T8b: duran topun görev düzeni (js/mac-durantop.js) */
     for(let t=0;t<2;t++){
       const d=this.dir[t],bu=odak.x*d,tk=this.taktik[t];
       /* serbest topta (pas yolda, sekme, ikili mücadele) son dokunan değil son sahip olan takımın düzeni sürer: takım şekli her sekmede
@@ -189,7 +189,9 @@ Object.assign(Match.prototype,{
         if(this.degisiklik&&(this.degisiklik.cikan===p||this.degisiklik.giren===p)&&!this.degisiklik.girdi)continue;
         p.yonHedef=null;p.bak=b;p.hizOran=0.7;
         /* efor (T1): kaleci (kaleciKonum), kovalama ve pres tam; karşı pres 0,9; 2. adam 0,8; bölge ve görevler bolgeKonumu'nda */
-        if(p.rol==='GK'){this.kaleciKonum(p,dt);continue;}
+        if(p.rol==='GK'){   /* T8b: kutuya çıkan kaleci vuruştan sonraki pencerede görevini izler */
+          if(this._duranSonrasi&&p.duranRol&&DT_HEDEF.has(p.duranRol.rol)){const r=this.duranRolKonum(p);if(r){this.hedefVer(p,r.x,r.z,r.ef,false,false);p.hizOran=r.h;continue;}}
+          this.kaleciKonum(p,dt);continue;}
         /* T1: topa rakibinden açıkça geç yetişecek kovalayan (kovalaPay sn) çekişmeye koşmaz, rahat ivmeyle yaklaşır; pasın alıcısı ve
            yüksek topta kovalayan tam eforla (rahat karşılayan alıcı geç kalıp pası kaybediyordu) */
         if(p===kovalayan[t]){const K=this._kov,S=K&&K.sure,f=S?S[t]-S[1-t]:0;
@@ -241,6 +243,8 @@ Object.assign(Match.prototype,{
   },
   /* bölge, destek, koşu ve markaj */
   bolgeKonumu(p,t,hucum,cizgi,dt,odak){
+    /* T8b: duran topun görev düzeni (vuruştan sonra en çok 6 sn; js/mac-durantop.js duranRolKonum) */
+    if(this._duranSonrasi&&p.duranRol){const r=this.duranRolKonum(p);if(r){this.hedefVer(p,r.x,r.z,r.ef,false,false);p.hizOran=r.h;return;}}
     const d=this.dir[t],bu=odak.x*d,bw=odak.z,diz=this.taktik[t].dizilis,N=this._niyet&&this._niyet[t];
     const k=dizilisKonumu(diz,p.n,bu,bw,hucum,N);let u=k.u,w=k.w,markajda=null,ef=0,zorla=false;
     if(p.rol==='DEF'&&!hucum)u=cizgi+(p.mevki.bek?0.6:0);

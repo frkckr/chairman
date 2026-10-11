@@ -448,7 +448,7 @@ Object.assign(Match.prototype,{
     const havada=b.y>1.3||b.vy>2;let hMax=havada?hvAlinDur(p)+hvSicramaH(p,p.spd)+0.12:0.7;   /* T6a: alın + sıçrama (js/mac-hava.js) */
     /* kendisine atılan havadan pası rakip zorlamıyorsa topun inmesini bekler: göğüs ya da ayakla alır, kafayla oynamaz. T6e: ortada beklemez —
        ortanın alıcısı topa başının hizasında gider (b.pasHedef.tur 'orta') */
-    if(havada&&b.hedefOyuncu===p&&!(b.pasHedef&&b.pasHedef.tur==='orta')){const k2=this.yakalamaNoktasi(p,1.5);if(enYakinRakip(this,k2.x,k2.z,p.team).d>3.5)hMax=1.5;}
+    if(havada&&b.hedefOyuncu===p&&!(b.pasHedef&&(b.pasHedef.tur==='orta'||b.pasHedef.tur==='korner'))){const k2=this.yakalamaNoktasi(p,1.5);if(enYakinRakip(this,k2.x,k2.z,p.team).d>3.5)hMax=1.5;}   /* T8b: korner servisi de orta gibi */
     let k=this.yakalamaNoktasi(p,hMax);
     /* kararlılık: önceki karşılama noktası hâlâ yetişilebilir durumdaysa ona sadık kal (hedef sürekli zıplamasın) */
     const on=p._kar;

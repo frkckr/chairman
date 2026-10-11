@@ -36,8 +36,12 @@ ayarEkle('C',{
   havaIvme:0.05,               // T6a: havadayken ivme sınırının çarpanı (ayak yerde değil; eskiden 0,25)
   havaOkuma:[0.12,0.36],       // T6b: topun uçuşunu okuma hatası (derinlik) σ = taban + çarpan × (1 − okuma) (m; yanal hata yarısı)
   havaEgilme:[0.35,0.10],      // T6b: başın gövde ve boyunla yatayda topa uzanması (m): ayakta / koşarak sıçrarken ek
-  havaDuello:0.035             // T6b: düelloda neredeyse aynı anda varan başların temas anı sapması σ (sn; boyun ve gövdenin son uzanması, itişme; fiziksel aralık 0,025–0,05)
+  havaDuello:0.035,            // T6b: düelloda neredeyse aynı anda varan başların temas anı sapması σ (sn; boyun ve gövdenin son uzanması, itişme; fiziksel aralık 0,025–0,05)
+  kafaDonus:1.6                // T8b: kafa vuruşunda topu geliş doğrultusundan saptırmanın zorluğu: yön σ × (1 + kafaDonus·sin θ) (90°'de en zor; sıyırma ve geri vurma kolay)
 });
+/* T8b (2026-10-11): kafanın topu geliş doğrultusundan saptırma açısının sinüsü (gelen top 3 m/sn altındaysa 0). Ortadan ve kornerden kaleye kafa
+   ~90° saptırmadır: gerçekte kafa şutlarının ~%30–35'i çerçeveyi bulur, motorda saptırma hesaba katılmadan %68–76'sı buluyordu */
+function hvDonus(vx,vz,dx,dz){const g=Math.hypot(vx,vz),L=Math.hypot(dx,dz);return g<3||L<1e-3?0:Math.abs(vx*dz-vz*dx)/(g*L);}
 /* alnın yüksekliği (m; sıçrayarak) ve ayaktaki yüksekliği: başın tepesinin (kafaYuksekligi) 0,10 m altı */
 const hvAlin=p=>1.72*(p.boy||1)+0.02+(p.yuk||0),hvAlinDur=p=>1.72*(p.boy||1)+0.02;
 /* topun uçuşunu okuma (0–1): sezgi ve kafa */
@@ -113,7 +117,7 @@ Object.assign(Match.prototype,{
       const e=p.eylem;if(e&&(e.kilit||e.ad==='vurus'||e.ad==='tac'||e.ad==='kafa'))continue;
       const dx0=b.x-p.x,dz0=b.z-p.z;if(dx0*dx0+dz0*dz0>400)continue;
       /* rakipsiz pası bekleyen alıcı sıçramaz (kovala: topun inmesini bekler; T6e: ortanın alıcısı beklemez) */
-      if(b.hedefOyuncu===p&&!(b.pasHedef&&b.pasHedef.tur==='orta')&&enYakinRakip(this,p.x,p.z,p.team).d>3.5)continue;
+      if(b.hedefOyuncu===p&&!(b.pasHedef&&(b.pasHedef.tur==='orta'||b.pasHedef.tur==='korner'))&&enYakinRakip(this,p.x,p.z,p.team).d>3.5)continue;   /* T8b: korner de */
       const sp=p.spd,kos=sp>=2.5,hz=kos?A.sicramaHazir[1]:A.sicramaHazir[0],hM=hvSicramaH(p,sp),aD=hvAlinDur(p),R=A.havaEgilme[0]+(kos?A.havaEgilme[1]:0)+0.2;
       /* T6b: kalkış yeri — hazırlıkta hedefine doğru hızıyla (koşarak; durarak yerinde); kalkıştan temasa sıçrama temas noktasına yönelir (koşarak
          ≤ min(4,5, sicramaYatay·hız), durarak ≤ 1 m/sn); baş erişimi R */
@@ -164,6 +168,10 @@ Object.assign(Match.prototype,{
         const dx=q.x-W.x,dz=q.z-W.z,n=hrkHyp(dx,dz)||1,yuk=(W.yuk||0)-(q.yuk||0);if(n<kd){kd=n;kay=q;}
         if(n<1.2)this.dengeBoz(q,(0.12+0.3*clamp((kutle(W)-kutle(q))/25+yuk*1.5,0,1)+0.1*W.oz.sertlik)*(1+(q.yuk||0)*2),dx/n,dz/n,'hava',W);}
       if(kay&&this.havaFaulu(W,kay))return;}
+    /* T8b (2026-10-11): aynı topa uzanan takım arkadaşları (erişende ya da 1,25 m içinde sıçrarken) topu kaçırdı: bir sonraki karede kafa
+       vuramazlar. Kornerde kutudaki iki hücumcu aynı topa art arda kafa vuruyordu (400'de ~4 gol) */
+    for(const o of this.teams[W.team]){if(o===W||!o.oyunda||o.kickCd>=0.3)continue;
+      if(kafa.some(a=>a.p===o)||o.zipla&&hrkHyp(o.x-W.x,o.z-W.z)<=1.25)o.kickCd=0.3;}
     this.kafaVur(W,R.length>0);
   },
   /* T5 (2026-10-09): hava topunda faul temastan — kaybeden kazanana (1,2 m'den yakın) çarpar; tek zar hakemin görmesi. T6b: şiddet = 1,8 m/sn'yi

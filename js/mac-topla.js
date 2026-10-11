@@ -92,7 +92,7 @@ const pasGucu=(tip,v0,L,T)=>clamp(tip==='hava'?hyp(L/Math.max(0.3,T),G*T*0.5)/30
    şut, pasta pas), baskı, ayak (dış ayak; zayıf ayak profilden: T9b-b, eskiden sabit 1,7), gövde hizası, gelişine ve havadaki top (vole), acele
    (T9b-b), yorgunluk, güç */
 function vurusSapma(p,o){
-  const oz=p.oz,tek=o.sut?oz.sut:oz.pas,ayakK=o.stil==='dis'?1.22:o.zayif?1+1.2*(1-profilAlt(p,'zayifAyak',0.35)):1;
+  const oz=p.oz,tek=o.teknik!=null?o.teknik:o.sut?oz.sut:oz.pas,ayakK=o.stil==='dis'?1.22:o.zayif?1+1.2*(1-profilAlt(p,'zayifAyak',0.35)):1;
   const vole=o.stil==='vole'?(o.sut?1.3:1.5):o.stil==='yarimVole'?(o.sut?1.12:1.2):1,st=VURUS_STIL[o.stil];
   return(0.028+0.075*(1-tek))*(1+(o.baski||0)*0.9)*ayakK*(st&&o.stil!=='dis'?st.sap:1)*(1+(o.hizalanma||0)*0.9)*(o.ilk?1.35:1)*vole*(1+0.5*(o.acele||0))
     *(1+0.35*(p.yorgunluk||0))*gucHataCarpani(o.guc,o.ref);}
@@ -282,7 +282,9 @@ Object.assign(Match.prototype,{
      verilmez (çarpan 1: şut planı türün ve gücün çarpanını ayrıca uygular) */
   vurusHatasi(p,e,L,g){
     const sec=e.sec,sut=sec.tur==='sut',R=sut?VURUS_GUC_REF.sut:VURUS_GUC_REF.pas;
-    return vurusSapma(p,{sut,guc:g==null?R:g,ref:R,stil:e.stil,zayif:p.ayak!=='iki'&&e.ayak!==p.ayak,hizalanma:e.hizalanma||0,baski:baskiAltinda(this,p),acele:e.acele||0,ilk:!!sec.ilk});
+    /* T8b: duran topun servisi (korner, serbest vuruşun ortası) ortadan ve duran top becerisinden (eskiden pastan) */
+    const tek=sec.duran&&(sec.tur==='korner'||sec.tur==='orta')?0.5*profilAlt(p,'orta',p.oz.pas)+0.5*profilAlt(p,'duranTop',p.oz.pas):undefined;
+    return vurusSapma(p,{sut,guc:g==null?R:g,ref:R,stil:e.stil,zayif:p.ayak!=='iki'&&e.ayak!==p.ayak,hizalanma:e.hizalanma||0,baski:baskiAltinda(this,p),acele:e.acele||0,ilk:!!sec.ilk,teknik:tek});
   },
   /* şut: hedef ve tür sutPlani'ndan (kaleci, blok, isabet olasılığı); penaltıda seçilen köşe. b.sut'a hedef, tür ve vurucunun gövde
      ipucu yazılır (ipucu.yan: gövdenin gösterdiği taraf, z'nin işareti; guven: ne kadar okunur — iyi şutçu az belli eder, bazen aldatır) */
@@ -556,8 +558,13 @@ Object.assign(Match.prototype,{
     const b=this.ball,k=kafaKarari(this,p),yz=hvYuzey(p),Q=HV_YUZEY[yz];
     /* kendi kalesine dönük savunmacının kafası çoğu zaman topu çizgiden dışarı atar (korner) */
     const d=this.dir[p.team],kaleyeDonuk=Math.cos(p.yon)*d<-0.3,kendiCeza=this.kendiCezaSahasinda(p,b.x,b.z);
-    if(k.tur==='uzaklastir'&&kendiCeza&&this.rast()<(kaleyeDonuk?0.45:0.18)){k.hx=b.x-d*12;k.hz=b.z+(b.z<MZ?-1:1)*(4+this.rast()*8);k.vy=3+this.rast()*3;}
-    const L=hyp(k.hx-b.x,k.hz-b.z)||1,sig=(0.05+0.1*(1-p.oz.kafa))*(1+baskiAltinda(this,p)*0.5)*Q[0]*(cek?1.4:1),gelen=hyp(b.vx,b.vz);
+    /* T8b (2026-10-11): yalnız direğin en az 1 m dışındaki topta; nişan kale çizgisini topun kendisinden de dışarıda keser (çizgi kaleden
+       uzaklaşır). Eskiden her yerde 12 m geriye ve 4–12 m yana nişan alınırdı: kale ağzının önündeki topta bu çizgi kalenin içinden geçiyor,
+       savunmacı kendi kalesine kafa atıyordu (400 kornerde ~5 gol) */
+    const dz0=Math.abs(b.z-MZ);
+    if(k.tur==='uzaklastir'&&kendiCeza&&dz0>GW2+1&&this.rast()<(kaleyeDonuk?0.45:0.18)){const gx=-d*PL,u=Math.max(0.5,Math.abs(b.x-gx)),zc=MZ+(b.z<MZ?-1:1)*(dz0+1.5+this.rast()*6),s=1+3/u;
+      k.hx=b.x+(gx-b.x)*s;k.hz=b.z+(zc-b.z)*s;k.vy=3+this.rast()*3;}
+    const L=hyp(k.hx-b.x,k.hz-b.z)||1,sig=(0.05+0.1*(1-p.oz.kafa))*(1+baskiAltinda(this,p)*0.5)*Q[0]*(cek?1.4:1)*(1+MOTOR_AYAR.kafaDonus*hvDonus(b.vx,b.vz,k.hx-b.x,k.hz-b.z)),gelen=hyp(b.vx,b.vz);
     /* kafa vuruşu gelen topun hızının bir kısmını kullanır: sert gelen orta sert gider */
     let a=Math.atan2(k.hz-b.z,k.hx-b.x)+this.normal()*sig;
     if(yz==='tepe'&&gelen>1){const ag=Math.atan2(b.vz,b.vx);a=ag+aciFark(a,ag)*0.35;}
@@ -625,9 +632,10 @@ Object.assign(Match.prototype,{
   /* korner: kısa korner ya da orta ile aynı hedef mantığı (kafa vuranlar, koşular, ön direk ve penaltı noktası bölgesi); sıcaklıklı seçim */
   kornerSecenegi(du,tk){
     const d=this.dir[du.takim];
-      const yan=Math.sign(du.z-MZ)||1,r=this.rast();
-      if(r<0.13){/* kısa korner */let q=null,ed=1e9;for(const p of this.sahadakiler(du.takim)){if(p===tk||p.rol==='GK')continue;const dd=hyp(p.x-du.x,p.z-du.z);if(dd<ed){ed=dd;q=p;}}
-        if(q&&ed<20)return{tur:'pas',hx:q.x,hz:q.z,tip:'yer',alici:q};}
+      const yan=Math.sign(du.z-MZ)||1;
+      /* T8b: rutin (js/mac-durantop.js kornerGorev) — kısa kornerde kısa seçeneğe yerden (eski %13'lük zar kalktı; 20 m içinde arkadaş olmadığı için
+         oluşmuyordu); ortada hedef görevlilerin koşu noktalarından değerle */
+      if(du.rutin==='kisa'&&du.gorev)for(const [q,g] of du.gorev)if(g.rol==='kisa'&&q.oyunda&&q!==tk)return{tur:'pas',hx:q.x,hz:q.z,tip:'yer',alici:q};
       const S=kornerSecenekleri(this,tk,du.x,du.z);
       if(S.length){let en=-1e9;for(const s of S)en=Math.max(en,s.deger);
         const tau=0.6+0.8*(1-tk.oz.karar);let top=0;for(const s of S){s.a=Math.exp((s.deger-en)/tau);top+=s.a;}

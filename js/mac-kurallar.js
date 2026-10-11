@@ -270,6 +270,8 @@ Object.assign(Match.prototype,{
   durusKullan(du){
     const tk=du.kullanan,b=this.ball,d=this.dir[du.takim];
     this.sonKullanim={tur:du.tur,p:tk,t:this.t};
+    /* T8b (inceleme bulgusu): görevliler kullanım anında yerinde miydi (k-duran ölçümü; yalnız okur) */
+    if(this.duranTehlikeli(du)||du.tur==='penalti')du.yerinde=this.gorevlilerYerinde(du);
     this.kullanimBaslat(du.tur,tk,du,this.t-du.t);   /* T8-0: kullanım bayrağı; olay kullananın ilk dokunuşunda (js/mac-durantop.js) */
     if(du.tur==='tac'){const e=tk.eylem;if(e&&e.ad==='tac'&&e.faz==='tut'){e.faz='at';e.ft=0;e.hedef=this.tacHedefi(tk);}return;}
     if(!du.hizli&&(du.duduk||du.tur==='penalti'||du.baraj))this.on('duduk',{tur:du.tur});
@@ -280,6 +282,9 @@ Object.assign(Match.prototype,{
     b.endirekt=du.endirekt?{p:tk}:null;
     const sec=this.durusSecenegi(du,tk);
     if(sec){sec.duran=true;du.asama='kullan';this.vurusBaslat(tk,sec);if(du.tur==='penalti')this.penaltiKaleciHazirla(du);return;}
+    /* T8b (inceleme bulgusu): vuruş seçeneği yoksa (kenar ve barajlı serbest vuruşun şutsuz payı; karar T8c) kullanan topun en çok 1,3 m
+       gerisinde başlar. Geri çekildiği 3–7 m'de oyun başlarsa sahiplik ilk karede düşüyor, top kimsenin değilken 9,15 m kuralı kalkıyordu */
+    const gx=du.geriX-du.x,gz=du.geriZ-du.z,gL=hyp(gx,gz);if(gL>1.3){tk.x=du.x+gx/gL*1.3;tk.z=du.z+gz/gL*1.3;}
     this.phase='play';this.phaseT=0;this.durus=null;tk.kararT=0;
   },
   /* duran topun ilk vuruşu: korner ve serbest vuruş mac-topla.js, kale vuruşu mac-kaleci.js (Faz 0) */
@@ -395,7 +400,9 @@ Object.assign(Match.prototype,{
     return Math.max(c>0?c:0,this.ball.x*side,0);},
   oyundanCikar(p){p.oyunda=false;p.cikiyor=true;p.eylem=null;p.surus=null;p.tx=this.tunel.x;p.tz=this.tunel.z-4;p.hizOran=0.35;
     const b=this.ball;if(b.sahip===p)b.sahip=null;if(b.tasiyan===p)b.tasiyan=null;this.on('oyundanCikti',{p});
-    this.yenidenDizil(p);},
+    const kaleciydi=p.rol==='GK';this.yenidenDizil(p);   /* yenidenDizil rolleri takas eder */
+    /* T8b (inceleme bulgusu): duruş sürerken kaleci atıldıysa kaleye geçen oyuncu kaleci görevini alır (görevler yeniden dağıtılır) */
+    if(kaleciydi&&this.phase==='durus'&&this.durus&&this.durus.gorev)this.duranGorevAta(this.durus);},
   /* kırmızı kartta yeniden diziliş (MM2): kaleci atılırsa en uygun saha oyuncusu (önce forvet, sonra kalecilik özelliği) kaleye geçer;
      savunma ya da orta saha oyuncusu atılırsa bir forvet onun mevkisine iner (takım 4-4-1 gibi oynar). Takım dizisindeki yerler takas edilir */
   yenidenDizil(p){

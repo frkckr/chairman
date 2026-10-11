@@ -98,7 +98,10 @@ Object.assign(Match.prototype,{
      6 karede bir; savunmada boş */
   gerideKalanlar(t){const G=this._geride||(this._geride=[new Set(),new Set()]);
     if(this.kare%6!==(t?3:0))return G[t];
-    const S=G[t];S.clear();const N=this._niyet&&this._niyet[t];if(!N||!MOTOR_AYAR.niyetEtki||N.ad==='savunma')return S;   /* (hız: tablo yeniden kullanılır) */
+    const S=G[t];S.clear();
+    /* T8b: duran topun görev düzeninde geride kalanlar görevden (js/mac-durantop.js; eskiden kafa için kutuya çıkan stoperler buradan geri çekiliyordu) */
+    const DS=this._duranSonrasi;if(DS&&DS.takim===t){for(const p of this.teams[t])if(p.oyunda&&p.duranRol&&p.duranRol.rol==='geride')S.add(p);return S;}
+    const N=this._niyet&&this._niyet[t];if(!N||!MOTOR_AYAR.niyetEtki||N.ad==='savunma')return S;   /* (hız: tablo yeniden kullanılır) */
     const d=this.dir[t];let rakip=0;for(const o of this.teams[1-t])if(o.oyunda&&o.rol!=='GK'&&o.x*d<0)rakip++;
     const gerek=Math.max(2,rakip+MOTOR_AYAR.gerideEk),b=this.ball;
     const C=this.teams[t].filter(p=>p.oyunda&&p.rol!=='GK'&&p!==b.sahip&&p!==N.stoperIleri&&(p.rol==='DEF'||p.mevki.derin));

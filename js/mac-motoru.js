@@ -72,7 +72,7 @@ const MOTOR_AYAR={
   mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
   acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,
   /* C — js/mac-hava.js (T6) */
-  sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,havaOkuma:undefined,havaEgilme:undefined,havaDuello:undefined,
+  sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,havaOkuma:undefined,havaEgilme:undefined,havaDuello:undefined,kafaDonus:undefined,
   /* B — js/mac-topla.js */
   kararGecikme:undefined,ilerleme:undefined,risk:undefined,surusKarar:undefined,vurusHizalama:undefined,sutIstegi:undefined,ortaIstegi:undefined,
   sutSapma:undefined,pasSapma:undefined,sikisma:undefined,geriPas:undefined,kontrolZorluk:undefined,tekVurus:undefined,verKacIstegi:undefined,
@@ -89,7 +89,8 @@ const MOTOR_AYAR={
   presTetikMesafe:undefined,golgePres:undefined,kosucuTakip:undefined,hatCik:undefined,kutuSavunma:undefined,kompakt:undefined,
   mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,
   /* K — js/mac-durantop.js (T8) */
-  duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined
+  duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
+  kornerKisa:undefined,duranRolSure:undefined
 };
 const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
@@ -330,7 +331,7 @@ class Match{
     return{x:u*d,z:w};
   }
   santraHazirla(takim,isinla){
-    this.phase='kickoff';this.phaseT=0;this.kickTeam=takim;this.durus=null;this.celeb=null;
+    this.phase='kickoff';this.phaseT=0;this.kickTeam=takim;this.durus=null;this.celeb=null;this.duranSonrasiBitir();   /* T8b */
     const b=this.ball;
     if(isinla||b.agda)this.topuSifirla(0,MZ);
     for(const p of this.players){
@@ -398,6 +399,9 @@ class Match{
   topAdim(dt){
     const b=this.ball;b.px=b.x;b.py=b.y;b.pz=b.z;
     if(b.tasiyan){const h=b.tasiyan,c=Math.cos(h.yon),s=Math.sin(h.yon),tac=h.eylem&&h.eylem.ad==='tac';
+      /* T8b (2026-10-11): topu tutan kaleci kendi kale çizgisini geçmez — plonjonun ivmesi onu topla ağlara taşıyor, kendi kalesine gol
+         sayılıyordu (kornerde 400'de 2). Kalecinin topu tuttuğu yer çizginin 0,45 m önünde kalır, geriye giden hızı kesilir */
+      if(h.rol==='GK'&&Math.abs(h.z-MZ)<GW2+1){const d=this.dir[h.team];if(d*h.x+PL<0.45){h.x=-d*(PL-0.45);if(d*h.vx<0)h.vx=0;}}
       b.x=h.x+c*(tac?0.05:0.32);b.z=h.z+s*(tac?0.05:0.32);b.y=tac?2.05*h.boy:1.05*h.boy;b.vx=h.vx;b.vz=h.vz;b.vy=0;return;}
     const once=b.vy;
     topFizikAdim(b,dt,false,this.R,this.kosullar);
@@ -498,10 +502,13 @@ class Match{
     /* T5: orta bloğu topun bacağa vardığı anda (ortaBlok, js/mac-mudahale.js) */
     const OB=b.ortaBlok;if(OB){if(OB.surum!==b.surum||!OB.o.oyunda||OB.o.eylem&&OB.o.eylem.kilit)b.ortaBlok=null;else if(this.t>=OB.t){b.ortaBlok=null;this.ortaBlokUygula(OB);return;}}
     this.sicramalar();   /* T6a: sıçrama planı (js/mac-hava.js) */
-    const ad=[];
+    const ad=[],ks=b.sut&&b.sut.cerceve?b.sut.team:-1;
     for(const p of this.players){
       if(!p.oyunda||p.kickCd>0)continue;const e=p.eylem;
       if(e&&(e.kilit||e.ad==='tac'))continue;
+      /* T8b (2026-10-11): takım arkadaşının çerçeveye giden şutunu oynamaz (yolundaysa top bedenine çarpar: govdeCarpmasi). Kornerde kaleye giden
+         kafa şutlarının %12'sine yoldaki arkadaş yeniden kafa vuruyordu (üçte biri gol); çerçeve dışına giden topu yine kaleye çevirebilir */
+      if(p.team===ks)continue;
       const dx=b.x-p.x,dz=b.z-p.z,d=hyp(dx,dz);if(d>1.3)continue;
       const tur=this.erisim(p,d);if(tur)ad.push({p,d,tur});
     }

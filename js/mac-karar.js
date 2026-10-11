@@ -503,7 +503,10 @@ function kornerSecenekleri(m,p,ox,oz){
   const deg=(q,hx,hz,hy)=>{const L=hyp(hx-ox,hz-oz),T=havaSure(L,'korner'),A2=pasAnaliz(m,p,hx,hz,'hava',q,{ox,oz,T,hy,baski:0});
     const kal=gk.oyunda?kaleciHavaTahmin(m,gk,hx,hz,hy,T).P:0,sans=xG(hx*d,hz,'kafa',A2.baskiK)*(0.5+q.oz.kafa);
     S.push({q,hx,hz,hy,T,deger:A2.P*(1-kal)*(sans*100+0.8)});};
-  for(const q of m.teams[p.team]){if(q===p||!q.oyunda||q.rol==='GK')continue;const qu=q.x*d;if(qu<PL-15||Math.abs(q.z-MZ)>10)continue;
+  /* T8b: görevli kafacıların koşu noktaları (p.duranRol kx, kz; js/mac-durantop.js), top sıçrayan başın hizasında (ayaktaki alın + 0,25; en çok 2,0 m) */
+  let rolVar=false;
+  for(const q of m.teams[p.team]){const G=q.duranRol;if(q===p||!q.oyunda||!G||G.kx==null||!DT_HEDEF.has(G.rol))continue;rolVar=true;deg(q,G.kx,G.kz,Math.min(2.0,hvAlinDur(q)+0.25));}
+  if(!rolVar)for(const q of m.teams[p.team]){if(q===p||!q.oyunda||q.rol==='GK')continue;const qu=q.x*d;if(qu<PL-15||Math.abs(q.z-MZ)>10)continue;
     deg(q,d*clamp((q.x+q.vx*0.5)*d,PL-12,PL-3),clamp(q.z+q.vz*0.5,MZ-8,MZ+8),1.8);}
   for(const [zu,zw] of[[PL-5.5,MZ+yan*1.5],[PL-11,MZ]]){let en=null,enT=99;
     for(const q of m.teams[p.team]){if(q===p||!q.oyunda||q.rol==='GK')continue;const t=varisSuresi(q,d*zu,zw,0.8);if(t<enT){enT=t;en=q;}}
@@ -677,7 +680,7 @@ function kafaKarari(m,p){
   if(u>PL-16&&Math.abs(w-MZ)<12){const x=xG(u,w,'kafa',baski*0.5);   /* T6e: ceza sahası çizgisine kadar (eskiden 14 m); 14–16 m'de gol beklentisi çoğu zaman 0,03 altı */
     if(x>0.03||u>PL-7){
       /* hedef: köşeler ve yükseklik; kaleciTahmin ile en açık yer (sıcaklıklı) */
-      const gk=m.kaleci(1-p.team),hx=d*PL,v=9+p.oz.kafa*5,sig=(0.05+0.1*(1-p.oz.kafa))*(1+baski*0.5);
+      const gk=m.kaleci(1-p.team),hx=d*PL,v=9+p.oz.kafa*5,sig=(0.05+0.1*(1-p.oz.kafa))*(1+baski*0.5)*(1+MOTOR_AYAR.kafaDonus*hvDonus(b.vx,b.vz,hx-b.x,MZ-b.z));   /* T8b: saptırma */
       let top=0,en=0;const Ls=[];
       for(const zt of[-3.0,-2.0,2.0,3.0])for(const yt of[0.3,1.7]){const L=hyp(hx-b.x,MZ+zt-b.z),sz=Math.max(0.05,sig*L),sy=Math.max(0.05,sig*6*L/v);
         const Pon=(normalDagilim((GW2-0.12-zt)/sz)-normalDagilim((-GW2+0.12-zt)/sz))*normalDagilim((GH-0.12-yt)/sy);

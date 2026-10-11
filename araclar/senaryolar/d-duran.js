@@ -8,9 +8,9 @@
    ilk temas (4 sn; kısa korner hariç), doğrudan şutta çerçeve ve gol (golde son dokunan kullanan), barajın bloğu ve sıçraması, 8 sn içinde gol,
    penaltıda ribaund koşucusu (vuruşta ceza sahası dışında, 1 sn sonra içinde olan hücumcu), kale vuruşu yerden (kaleci topu eline almadı).
    Kapılar (T8; KAPI ilgili alt adımda açılır, açıkken kabul dışı “!” çıkış kodu 1): korner T8b, serbest vuruş T8c, penaltı/taç/kale vuruşu T8d.
-   Kullanım: node araclar/mac-deneme.js --senaryo d-duran [N=400 korner; serbest vuruş hücresi N/10, penaltı ve taç N/7, kale vuruşu N/10] [tohum] */
+   Kullanım: node araclar/mac-deneme.js --senaryo d-duran [N=400: korner 2N (T8b: 400 kornerde gol payı ±1,1 puan oynuyordu, kapı gürültüyle düşüyordu; 800'de ±0,75); serbest vuruş hücresi N/10, penaltı ve taç N/7, kale vuruşu N/10] [tohum] */
 'use strict';
-const KAPI={korner:false,serbest:false,penalti:false,tac:false,kaleVurusu:false};
+const KAPI={korner:true,serbest:false,penalti:false,tac:false,kaleVurusu:false};
 /* kale vuruşunun yeri: kendi kale çizgisinden 5 m (altıpas çizgisinin 0,5 m önü; motorun sinirlar() kuralı) */
 const PL_KV=5.5-0.5;
 /* u: kale çizgisine uzaklık (m), w: kale ortasından yana (m); hücum yönü santradan sonraki yöne göre maçın içinde bulunur. Kale vuruşunda u
@@ -58,7 +58,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const kos=(tur,t,u,w)=>f(tn++,tur,t,u,w);
   /* korner: iki yan × iki takım */
   const K={L:[],yok:0};
-  for(let i=0;i<n;i++){const r=kos('korner',i%2,0.4,(i%4<2?1:-1)*(34-0.4));if(!r){K.yok++;continue;}K.L.push(r);}
+  for(let i=0;i<2*n;i++){const r=kos('korner',i%2,0.4,(i%4<2?1:-1)*(34-0.4));if(!r){K.yok++;continue;}K.L.push(r);}
   const KL=K.L,Kn=KL.length,Kc=KL.filter(r=>r.alt!=='kisa'),say=(L,f2)=>L.filter(f2).length;
   const ilkT={};for(const r of Kc)ilkT[r.ilk||'yok']=(ilkT[r.ilk||'yok']||0)+1;
   const kGol=100*say(KL,r=>r.gol)/Math.max(1,Kn),kKisa=100*say(KL,r=>r.alt==='kisa')/Math.max(1,Kn),kKutu=ort(KL.map(r=>r.kutuH)),kIn=Kc.filter(r=>r.inis!=null);
