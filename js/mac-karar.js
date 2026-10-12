@@ -31,7 +31,7 @@ function xT(u,w){
   const ilerleme=(u+PL)/(2*PL),yan=Math.abs(w-MZ)/MZ;
   let t=0.003+0.016*ilerleme*ilerleme*ilerleme*(1-0.15*yan);
   if(u>12)t=Math.max(t,0.75*xG(u,w,'ayak',0));
-  if(u>PL-24){const k=clamp((u-(PL-24))/20,0,1)*clamp((Math.abs(w-MZ)-6)/12,0,1);t=Math.max(t,0.01+0.022*k);}
+  if(u>PL-24){const k=clamp((u-(PL-24))/20,0,1)*clamp((Math.abs(w-MZ)-6)/12,0,1),XK=MOTOR_AYAR.xtKanat;t=Math.max(t,XK[0]+XK[1]*k);}   /* T12c: kanat değeri MOTOR_AYAR.xtKanat */
   return t;}
 /* ---- zaman modelleri ---- */
 /* bir oyuncunun bir noktaya varış süresi: tepki + dönüş + mesafe/hız */
@@ -648,7 +648,8 @@ function sutSecenegi(m,p,x0,z0,baski){
   /* şut isteği iyi pozisyonda tam, uzaklaştıkça azalır: 14 m'ye kadar tam, 22 m'de yalnız şutun kendi değeri, daha uzakta isteksiz.
      T3: uzaktan vurma eğilimi 14 m'den sonra isteği ±%60 değiştirir (kararVer'de ayrıca eğilim puanı); uzak şutun kapısı eğilimle de açılır */
   const uv=profilEgilim(p,'uzaktanVurur');
-  const istek=(Lk<22?1+(MOTOR_AYAR.sutIstegi-1)*clamp((22-Lk)/8,0,1):1-clamp((Lk-22)/14,0,0.5))*(1+0.6*uv*clamp((Lk-14)/8,0,1));
+  /* T12c: isteğin tam olduğu ve bittiği mesafe MOTOR_AYAR.sutIstekMesafe [tam, biter] (eskiden sabit 14 ve 22 m) */
+  const IM=MOTOR_AYAR.sutIstekMesafe,istek=(Lk<IM[1]?1+(MOTOR_AYAR.sutIstegi-1)*clamp((IM[1]-Lk)/(IM[1]-IM[0]),0,1):1-clamp((Lk-IM[1])/14,0,0.5))*(1+0.6*uv*clamp((Lk-14)/8,0,1));
   if(x>=0.017)return{tur:'sut',deger:x*100*q*istek+(1-x)*ik,xg:x};
   if(x>=0.008&&(oz.sut>0.5||uv>0.3)&&baski<0.6)return{tur:'sut',deger:x*100*q*(0.5+0.5*istek)+(1-x)*ik,xg:x};
   return null;}

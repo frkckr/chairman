@@ -24,9 +24,13 @@ ayarEkle('B',{
   surusKarar:[0.3,0.62],       // top sürerken yeniden karar aralığı
   vurusHizalama:0.36,          // vuruş için gövdenin hedefe en fazla sapması (rad); gelişine vuruşta 1,05, dış ayakla 0,85
   sutIstegi:5.0,               // şut seçeneğinin değer çarpanı: 14 m'ye kadar tam, 22 m'de etkisiz (birleştirme 2026-10-03: 3 → 5)
+  sutIstekMesafe:[11,20],      // T12c: şut isteğinin tam olduğu ve bittiği mesafe (m; kale ortasına; eskiden sabit 14 ve 22 — şutun ortanca mesafesi 18,1 → 17,0)
+  xtKanat:[0.01,0.022],        // T12c: son üçte birin kanadında (orta ve geri çevirme bölgesi) alan tehdidinin tabanı ve çizgiye inen artışı (xT)
   ortaIstegi:2.0,              // orta ve geri çevirmenin değer çarpanı (T10a: 4,0 → 2,0 — 4,0 ortanın 5 kat kötümser tahminini telafi ediyordu; değer yalnız ilk temasın xG'sini sayar, ikinci top, geri çevirme ve korner devamını saymaz: c-orta'da ortadan sonra 4 sn'de şut %49, gol %12. 40 maç: 1,0 ile orta 2,3/maç ve başarı %21, 2,0 ile 3,15 ve %34; gol ve pas isabeti ikisinde de değişmedi)
-  sutSapma:1.0,                // şut isabet hatası çarpanı (MM1: 0,8 → 0,7; beden blokları ve yorgunluk isabeti düşürdü; T1: 0,75, sakin oyunda şut daha az baskılı;
-                               // T12a 2026-10-12: 1,0 — mesafeyle büyüme sutUzak 0,04 → 0,02 ile birlikte: yakın ve orta mesafede hata büyür, 25 m'de ~aynı)
+  sutSapma:1.3,                // şut isabet hatası çarpanı (MM1: 0,8 → 0,7; beden blokları ve yorgunluk isabeti düşürdü; T1: 0,75, sakin oyunda şut daha az baskılı;
+                               // T12a 2026-10-12: 1,0 — mesafeyle büyüme sutUzak 0,04 → 0,02 ile birlikte: yakın ve orta mesafede hata büyür, 25 m'de ~aynı;
+                               // T12c: 1,3 ve sutUzak 0 — açı hatası mesafeden bağımsız, uzakta gücün hatası (gucHataCarpani) büyütür; baskısız şut v-sut'ta
+                               // 11 m'den %40, 16 m'den %13 gol (gerçek ~%35–40 ve ~%10–12; 1,0'da %55–62 ve %16–20))
   uzaklastirCizgi:[0.45,0.18], // T8f: kendi ceza sahasında kafayla uzaklaştırmanın kale çizgisi dışına (kornere) gitme payı: kaleye dönükken / değilken (T8f tarama)
   pasSapma:1.0,                // pas yön hatası çarpanı
   sikisma:0.3,                 // pas hedefindeki alıcı sıkışıksa (rakip dibinde) o yerin değerinden düşülen pay
@@ -75,7 +79,7 @@ ayarEkle('B',{
                                // (van den Tillaar ve Ulvik 2014: azami hıza çıkmak, isabete odaklanan vuruşa göre hatayı ~2 katına çıkarır, hız %20–25 artar)
   sutHiz:[23,9],               // şutun azami hızı (m/sn, uçuşun ortalama hızı) = a + b·sutGucu (23–32; çıkış hızı ~%5–8 fazla); seçilen güç ve stil payıyla çarpılır
   kotuVurus:[0.018,0.003],     // T9b-b: kötü vuruşun taban olasılığı [şut, pas] (duran top, şut/pas becerisi 0,6, baskısız, referans güçte; kotuVurusOlasiligi)
-  sutUzak:0.02,                // şutun yön hatası 12 m'den sonra metre başına bu kadar artar (1 + sutUzak·(L − 12)); MM-dönemi 0,04 (1/25); T12a: 0,02 (sutSapma 1,0 ile)
+  sutUzak:0,                   // şutun yön hatası 12 m'den sonra metre başına bu kadar artar (1 + sutUzak·(L − 12)); MM-dönemi 0,04 (1/25); T12a: 0,02; T12c: 0 (sutSapma 1,3 ile)
   sutIkinci:1.2,               // T9b-c: gol olmayan şutun değeri (puan): dönen top ve korner (kurtarılan şutun ~%20'si korner, ~%15'i dönen top); kayıp 0,4 düşülür
   duranSapma:0.75,             // T12a: duran topta (serbest vuruş, penaltı) şutun hata çarpanı — açık oyunun sutSapma/sutUzak artışı duran topa uygulanmaz (T8 kapıları)
   duranUzak:0.04,              // T12a: duran topta hatanın mesafeyle büyümesi (eski sutUzak)
