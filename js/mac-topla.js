@@ -298,13 +298,13 @@ Object.assign(Match.prototype,{
     const b=this.ball,sec=e.sec,oz=p.oz,d=this.dir[p.team],bx=b.x,bz=b.z,gx=d*PL;
     const L=hyp(gx-bx,MZ-bz)||1;
     let sd=this.vurusHatasi(p,e,L)*MOTOR_AYAR.sutSapma*(1+Math.max(0,L-12)*MOTOR_AYAR.sutUzak);
-    let hz,hy,v,egri=0,tur,kz=1,ky=1,fg=1,g;
+    let hz,hy,v,egri=0,tur,kz=1,ky=1,fg=1,g,plPg=null,plPon=null;
     /* T8d: penaltı planın hedefi, yüksekliği, gücü ve türüyle (penaltiAtisi); hata baskısız, soğukkanlılıkla (penaltiSapmaK) */
     if(sec.penalti){sd*=penaltiSapmaK(p);hz=sec.hz;hy=sec.pHy;v=sec.pV;tur=sec.pTur;g=sec.pG;const TT=SUT_TUR[tur];kz=TT.kz;ky=TT.ky;fg=gucHataCarpani(g,VURUS_GUC_REF.sut);}
     /* T9b-a: hazırlığın başında planlanan tür ve güçle hedef tazelenir (planı olmayan vuruş burada planlanır) */
     else{const sp=e.sutPlan,pl=sutPlani(this,p,bx,bz,sd,{serbest:sec.serbest,tur:sp&&sp.tur,guc:sp?sp.g:sec.guc,zayif:p.ayak!=='iki'&&e.ayak!==p.ayak,acele:e.acele||0,
         stil:e.stil==='burun'?'burun':null,ayak:e.ayak});
-      hz=MZ+pl.zt;hy=pl.yt;v=pl.v;tur=pl.tur;kz=pl.kz;ky=pl.ky;fg=pl.fg;g=pl.g;
+      hz=MZ+pl.zt;hy=pl.yt;v=pl.v;tur=pl.tur;kz=pl.kz;ky=pl.ky;fg=pl.fg;g=pl.g;plPg=pl.Pg;plPon=pl.Pon;
       /* falso: top kalenin dışından içeri döner (T9b-c: yanı vuran ayaktan, sutEgriYani; dış ayakla trivela biraz daha az döner) */
       if(tur==='falso')egri=-(Math.sign(pl.zt)||1)*d*(0.08+oz.sut*0.05);else if(tur==='trivela')egri=-(Math.sign(pl.zt)||1)*d*(0.06+oz.sut*0.04);}
     if(b.y>0.4)v*=0.9;
@@ -323,8 +323,14 @@ Object.assign(Match.prototype,{
     if(e.stil!=='vole'&&e.stil!=='yarimVole'&&e.stil!=='burun')e.stil=(SUT_TUR[tur]||SUT_TUR.plase).stil;
     e.guc=g;
     const aldat=this.rast()<0.08+0.25*oz.sut,ip0=sec.penalti&&sec.ipucu;   /* T8d: penaltıda ipucu planda (kaleci koşuyu okur) */
+    /* T12-0 (2026-10-12): kalecinin tahmini — hatası uygulanmış nişanın kale çizgisindeki yerine ve uçuş süresine kaleciTahmin (saf); planın seçtiği
+       adayın gol ve çerçeve olasılığı. Salt okunur, ölçüm araclar/olcumler/v-verim.js; sonucu değiştirmez */
+    const gk=this.kaleci(1-p.team),zc=Math.abs(hx-bx)>0.5?bz+(hz-bz)*(gx-bx)/(hx-bx):hz;
+    const pKurt=gk&&gk.oyunda&&!sec.penalti?kaleciTahmin(this,gk,zc,hy,T,tur==='falso'||tur==='trivela'?KL_M.egri:0).P:null;
     /* T9b-0: nisanZ/nisanY — hatası uygulanmış nişan (kale çizgisinde; salt okunur, ölçüm araclar/olcumler/v-vurus.js) */
-    this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'sut',sut:{hedefZ:hz0,hedefY:hy0,nisanZ:hz,nisanY:hy,tur,ipucu:ip0||{yan:(Math.sign(hz0-MZ)||1)*(aldat?-1:1),guven:clamp(0.85-0.7*oz.sut,0.15,0.8)}}});
+    const xgYer=xG(bx*d,bz,'ayak',0),gkTepki=gk&&gk.oyunda?kaleciTepkiSuresi(this,gk,bx,bz):null;   /* T12-0: konum xG'si (baskısız, bloksuz) ve kalecinin tepkisi (perde dahil) */
+    this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'sut',sut:{hedefZ:hz0,hedefY:hy0,nisanZ:hz,nisanY:hy,tur,pKurt,pPg:sec.penalti?null:plPg,pPon:sec.penalti?null:plPon,xgYer,gkTepki,
+      ipucu:ip0||{yan:(Math.sign(hz0-MZ)||1)*(aldat?-1:1),guven:clamp(0.85-0.7*oz.sut,0.15,0.8)}}});
   },
   /* yerden pas: ortak plandaki varış hızından ilk hız; yön hatası ve uzunluk hatası (mesafe oranı; baskıda hafif eksik) */
   yerPasVur(p,e){
@@ -581,7 +587,11 @@ Object.assign(Match.prototype,{
     p.sonDokunus={t:this.t,tur:'kafa',ayak:null,yuzey:yz};
     this.dokunus(p,true);b.hedefOyuncu=k.alici||null;
     if(k.tur==='sut'){b.sut={team:p.team,by:p,gkDone:false,cerceve:this.cerceveyeGider(p.team),kafa:true,t:this.t,hedefZ:k.hz,hedefY:k.hy,tur:'kafa',
-      ipucu:{yan:Math.sign(k.hz-MZ)||1,guven:clamp(0.8-0.5*p.oz.kafa,0.2,0.8)}};this.ist.sut[p.team]++;}
+      ipucu:{yan:Math.sign(k.hz-MZ)||1,guven:clamp(0.8-0.5*p.oz.kafa,0.2,0.8)}};this.ist.sut[p.team]++;
+      /* T12-0: kalecinin tahmini — topun kale çizgisine varışı hızından (sürüklemesiz yaklaşık); salt okunur, sonucu değiştirmez (v-verim) */
+      const gk=this.kaleci(1-p.team),gxa=d*PL;if(gk&&gk.oyunda&&b.vx*d>0.5){const tg=(gxa-b.x)/b.vx;
+        b.sut.nisanZ=b.z+b.vz*tg;b.sut.nisanY=b.y+b.vy*tg-0.5*G*tg*tg;b.sut.pKurt=kaleciTahmin(this,gk,b.sut.nisanZ,Math.max(0.05,b.sut.nisanY),tg,0).P;b.sut.gkTepki=kaleciTepkiSuresi(this,gk,b.x,b.z);}
+      b.sut.xgYer=xG(b.x*d,b.z,'kafa',0);}
     else if(k.tur==='indirme'||k.tur==='pas'){this.pasSay(p,k.hx,k.hz,L,'kafa');this.ofsaytPasAni(p);}
     this.on('header',{p,shot:k.tur==='sut',tur:k.tur,xg:k.xg||0,yuzey:yz,cek:!!cek});if(k.tur==='sut')this.sutTakipAta(p,k.xg);
   },
