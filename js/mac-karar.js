@@ -608,7 +608,10 @@ function sutAdaylari(m,p,ox,oz,sd,o){
              açıda (ky = kz / 0,35; açık oyunda yükseklik hatası yanalın 0,35'i — alçak şut yüksekliği tutar): üstten hem barajı aşıp hem üst direğin
              altına inmek fırlatma açısını, hızı ve dönüşü birlikte tutturmayı ister. Tarama (18 m merkez, 40 vuruş): düşen ve falsoda 1,4 katında
              gol %27, 2 katında %35; yalnız onlara uygulanınca plan barajın üstüne 'sert' şut seçti (30 şutta 15 gol) */
-          const kyY=o.serbest&&y0>=1?kz/0.35:ky,yt=y0+sapma,sy=Math.max(0.05,sd*kyY*fg*L*0.35);if(o.serbest)bl=sutBlokOlasiligi(m,p,ox,oz,gx,MZ+zt,tur,yt,T);for(let j=0;j<SUT_HY.length;j++)SUT_FY[j]=normalDagilim((SUT_HY[j]-yt)/sy);
+          /* T12a (2026-10-12): T8c kuralı açık oyuna da — 1 m ve üstüne nişanda yükseklik hatası yanal hatayla aynı açıda (ky = kz / 0,35); alçak
+             şut yüksekliğini tutar (0,35). Eskiden açık oyunda yüksek köşe (1,75 m) dikeyde neredeyse hatasızdı: 11–20 m'den çerçeveyi bulan şutların
+             %22'si üst köşedeydi, %30'u kurtarıldı (T12-0 teşhisi) */
+          const kyY=y0>=1&&(o.serbest||tur!=='asirtma')?kz*(o.serbest?1:MOTOR_AYAR.sutDikey)/0.35:ky,yt=y0+sapma,sy=Math.max(0.05,sd*kyY*fg*L*0.35);if(o.serbest)bl=sutBlokOlasiligi(m,p,ox,oz,gx,MZ+zt,tur,yt,T);for(let j=0;j<SUT_HY.length;j++)SUT_FY[j]=normalDagilim((SUT_HY[j]-yt)/sy);
           let Pon=0,Pk=0;
           for(let i=0;i<nZ;i++){const pz=SUT_FZ[i+1]-SUT_FZ[i];if(pz<1e-4)continue;
             for(let j=0;j<nY;j++){const pc=pz*(SUT_FY[j+1]-SUT_FY[j]);Pon+=pc;Pk+=pc*(1-SUT_PS[i*nY+j]);}}

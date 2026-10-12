@@ -218,7 +218,7 @@ Object.assign(Match.prototype,{
     const A=MOTOR_AYAR,d=this.dir[du.takim],gx=d*PL,u=du.x*d,L=hyp(gx-du.x,MZ-du.z),S=[];
     /* rutin: barajlı vuruşta kısa pas (kullananın kendi kararı: yanındakine, sürüş) — kısa kornerdeki gibi yaratıcılıkla */
     if(du.sinif==='baraj'&&this.rast()<A.serbestRutin*(0.6+0.8*profilAlt(tk,'yaraticilik',0.5))){du.karar={S:[],sec:'rutin'};return null;}
-    if(!du.endirekt&&u>0&&L<40){const R=VURUS_GUC_REF.sut,sd=vurusSapma(tk,{sut:true,guc:R,ref:R,stil:'falso',teknik:serbestTeknik(tk)})*A.sutSapma*(1+Math.max(0,L-12)*A.sutUzak);
+    if(!du.endirekt&&u>0&&L<40){const R=VURUS_GUC_REF.sut,sd=vurusSapma(tk,{sut:true,guc:R,ref:R,stil:'falso',teknik:serbestTeknik(tk)})*sutHataK(L,true);
       const P=sutAdaylari(this,tk,du.x,du.z,sd,{serbest:true}).en;S.push({tur:'sut',deger:P*100,P});}
     /* orta: hedef kornerSecenekleri'nin en iyisi; değeri ortanın gerçek veriminden (serbestOrta: kenarda ve kaleye 15 m'de tam; kaleden 30 m ötede
        yarısı, en az 0,3'ü; ortada yarısı — baraj ve top görmüş savunma). Planın değeri pas analizinden geliyor ve kalabalık kutuda hücumun ilk

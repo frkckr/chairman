@@ -25,7 +25,8 @@ ayarEkle('B',{
   vurusHizalama:0.36,          // vuruş için gövdenin hedefe en fazla sapması (rad); gelişine vuruşta 1,05, dış ayakla 0,85
   sutIstegi:5.0,               // şut seçeneğinin değer çarpanı: 14 m'ye kadar tam, 22 m'de etkisiz (birleştirme 2026-10-03: 3 → 5)
   ortaIstegi:2.0,              // orta ve geri çevirmenin değer çarpanı (T10a: 4,0 → 2,0 — 4,0 ortanın 5 kat kötümser tahminini telafi ediyordu; değer yalnız ilk temasın xG'sini sayar, ikinci top, geri çevirme ve korner devamını saymaz: c-orta'da ortadan sonra 4 sn'de şut %49, gol %12. 40 maç: 1,0 ile orta 2,3/maç ve başarı %21, 2,0 ile 3,15 ve %34; gol ve pas isabeti ikisinde de değişmedi)
-  sutSapma:0.75,               // şut isabet hatası çarpanı (MM1: 0,8 → 0,7; beden blokları ve yorgunluk isabeti düşürdü; T1: 0,75, sakin oyunda şut daha az baskılı)
+  sutSapma:1.0,                // şut isabet hatası çarpanı (MM1: 0,8 → 0,7; beden blokları ve yorgunluk isabeti düşürdü; T1: 0,75, sakin oyunda şut daha az baskılı;
+                               // T12a 2026-10-12: 1,0 — mesafeyle büyüme sutUzak 0,04 → 0,02 ile birlikte: yakın ve orta mesafede hata büyür, 25 m'de ~aynı)
   uzaklastirCizgi:[0.45,0.18], // T8f: kendi ceza sahasında kafayla uzaklaştırmanın kale çizgisi dışına (kornere) gitme payı: kaleye dönükken / değilken (T8f tarama)
   pasSapma:1.0,                // pas yön hatası çarpanı
   sikisma:0.3,                 // pas hedefindeki alıcı sıkışıksa (rakip dibinde) o yerin değerinden düşülen pay
@@ -74,8 +75,11 @@ ayarEkle('B',{
                                // (van den Tillaar ve Ulvik 2014: azami hıza çıkmak, isabete odaklanan vuruşa göre hatayı ~2 katına çıkarır, hız %20–25 artar)
   sutHiz:[23,9],               // şutun azami hızı (m/sn, uçuşun ortalama hızı) = a + b·sutGucu (23–32; çıkış hızı ~%5–8 fazla); seçilen güç ve stil payıyla çarpılır
   kotuVurus:[0.018,0.003],     // T9b-b: kötü vuruşun taban olasılığı [şut, pas] (duran top, şut/pas becerisi 0,6, baskısız, referans güçte; kotuVurusOlasiligi)
-  sutUzak:0.04,                // şutun yön hatası 12 m'den sonra metre başına bu kadar artar (1 + sutUzak·(L − 12)); MM-dönemi 0,04 (1/25)
-  sutIkinci:1.2                // T9b-c: gol olmayan şutun değeri (puan): dönen top ve korner (kurtarılan şutun ~%20'si korner, ~%15'i dönen top); kayıp 0,4 düşülür
+  sutUzak:0.02,                // şutun yön hatası 12 m'den sonra metre başına bu kadar artar (1 + sutUzak·(L − 12)); MM-dönemi 0,04 (1/25); T12a: 0,02 (sutSapma 1,0 ile)
+  sutIkinci:1.2,               // T9b-c: gol olmayan şutun değeri (puan): dönen top ve korner (kurtarılan şutun ~%20'si korner, ~%15'i dönen top); kayıp 0,4 düşülür
+  duranSapma:0.75,             // T12a: duran topta (serbest vuruş, penaltı) şutun hata çarpanı — açık oyunun sutSapma/sutUzak artışı duran topa uygulanmaz (T8 kapıları)
+  duranUzak:0.04,              // T12a: duran topta hatanın mesafeyle büyümesi (eski sutUzak)
+  sutDikey:1.0                 // T12a: açık oyunda 1 m ve üstüne nişanın yükseklik hatası, yanal hatanın açısı cinsinden (1: aynı açı — T8c serbest vuruş kuralı; alçak nişan 0,35·ky)
 });
 /* ---- T9b (2026-10-10; gerçekçilik planı §4 T9 “Vuruş”): vuruş modeli — saf, rastlantısız. Şut planı (js/mac-karar.js sutPlani), pas analizi
    (pasAnaliz) ve vuruş (sutVur, yerPasVur, havaPasVur) aynı işlevleri okur. Stilin payı: azami hıza göre hız (iç ayak plase en yavaşı, üst sert
@@ -86,6 +90,9 @@ const VURUS_STIL={ic:{hiz:0.75,sap:1},ust:{hiz:1,sap:1},falso:{hiz:0.85,sap:1},a
    eski mesafe çarpanı 1 + L/200) */
 const VURUS_GUC_REF={sut:0.75,pas:0.345};
 /* yön hatasının güç çarpanı (1 + c·g⁴) / (1 + c·ref⁴) */
+/* T12a (2026-10-12): şutun yön hatasının çarpanı — açık oyunda sutSapma·(1 + sutUzak·(L − 12)), duran topta (serbest vuruş, penaltı) duranSapma ve
+   duranUzak (açık oyunun hatası T12a'da arttı; hazırlıklı duran topun hatası T8'deki gibi kalır) */
+function sutHataK(L,duran){const A=MOTOR_AYAR;return duran?A.duranSapma*(1+Math.max(0,L-12)*A.duranUzak):A.sutSapma*(1+Math.max(0,L-12)*A.sutUzak);}
 function gucHataCarpani(g,ref){const c=MOTOR_AYAR.gucHata,g2=g*g,r2=ref*ref;return(1+c*g2*g2)/(1+c*r2*r2);}
 /* şutun azami hızı (m/sn; uçuşun ortalama hızı): sutGucu alt özelliğinden; zayıf ayakla azalır */
 function sutHizTavani(p,zayif){const H=MOTOR_AYAR.sutHiz;return(H[0]+H[1]*profilAlt(p,'sutGucu',0.5))*(zayif?0.8+0.2*profilAlt(p,'zayifAyak',0.35):1);}
@@ -194,7 +201,7 @@ Object.assign(Match.prototype,{
     /* T9b-a: şutun türü ve gücü hazırlığın başında planlanır (sutPlani: hedef × tür × güç); çizim gerilmeyi planın gücünden okur. Hedef temasta aynı
        tür ve güçle tazelenir (sutVur). sec.guc gücü sabitler (senaryo; duran topta T8). Penaltı ayrı (T8). T9b-b: burunla dürtmede tür sert, stil burun */
     if(sut&&!sec.penalti){const zy=p.ayak!=='iki'&&ayak!==p.ayak,R=VURUS_GUC_REF.sut;
-      const sd0=vurusSapma(p,{sut:true,guc:R,ref:R,stil:burun?'burun':'ust',zayif:zy,baski,acele,ilk:!!sec.ilk})*MOTOR_AYAR.sutSapma*(1+Math.max(0,L-12)*MOTOR_AYAR.sutUzak);
+      const sd0=vurusSapma(p,{sut:true,guc:R,ref:R,stil:burun?'burun':'ust',zayif:zy,baski,acele,ilk:!!sec.ilk})*sutHataK(L,!!sec.serbest);
       const pl=sutPlani(this,p,ox,oz,sd0,{serbest:sec.serbest,guc:sec.guc,zayif:zy,acele,tur:burun?'sert':null,stil:burun?'burun':null,ayak});
       sutPlan={tur:pl.tur,g:pl.g};gucPlan=pl.g;if(!sec.ilk)st=pl.stil;}
     /* sözleşme (TEKNIK_PLAN §8): kalan = temasa kalan süre (her adımda motor yazar, çizim okur), hazirlikT = hazırlıktan geri salınıma geçiş anı */
@@ -297,7 +304,7 @@ Object.assign(Match.prototype,{
   sutVur(p,e){
     const b=this.ball,sec=e.sec,oz=p.oz,d=this.dir[p.team],bx=b.x,bz=b.z,gx=d*PL;
     const L=hyp(gx-bx,MZ-bz)||1;
-    let sd=this.vurusHatasi(p,e,L)*MOTOR_AYAR.sutSapma*(1+Math.max(0,L-12)*MOTOR_AYAR.sutUzak);
+    let sd=this.vurusHatasi(p,e,L)*sutHataK(L,!!(sec.serbest||sec.penalti));
     let hz,hy,v,egri=0,tur,kz=1,ky=1,fg=1,g,plPg=null,plPon=null;
     /* T8d: penaltı planın hedefi, yüksekliği, gücü ve türüyle (penaltiAtisi); hata baskısız, soğukkanlılıkla (penaltiSapmaK) */
     if(sec.penalti){sd*=penaltiSapmaK(p);hz=sec.hz;hy=sec.pHy;v=sec.pV;tur=sec.pTur;g=sec.pG;const TT=SUT_TUR[tur];kz=TT.kz;ky=TT.ky;fg=gucHataCarpani(g,VURUS_GUC_REF.sut);}
@@ -666,7 +673,7 @@ Object.assign(Match.prototype,{
      vurucu daha tutarlı); vurucunun gövdesinin gösterdiği yan (ipucu) burada belirlenir — kaleci koşuyu okuyup temastan önce kalkar (Ek G5) */
   penaltiAtisi(du,tk){
     const gx=this.dir[du.takim]*PL,d=this.dir[du.takim],gk=this.kaleci(1-du.takim),A=MOTOR_AYAR,oz=tk.oz;
-    const sd=vurusSapma(tk,{sut:true,guc:VURUS_GUC_REF.sut,ref:VURUS_GUC_REF.sut,stil:'ic'})*A.sutSapma*penaltiSapmaK(tk);
+    const sd=vurusSapma(tk,{sut:true,guc:VURUS_GUC_REF.sut,ref:VURUS_GUC_REF.sut,stil:'ic'})*A.duranSapma*penaltiSapmaK(tk);
     const X=penaltiPlani(this,tk,gk,sd),tau=Math.max(0.004,(0.06+0.18*(1-oz.karar))*X.en);let top=0;for(const c of X.Ls){c.a=Math.exp((c.Pg-X.en)/tau);top+=c.a;}
     let r=this.rast()*top,c=X.Ls[X.Ls.length-1];for(const c2 of X.Ls){r-=c2.a;if(r<=0){c=c2;break;}}
     const aldat=this.rast()<0.08+0.25*oz.sut,yan=(Math.sign(c.zt)||(this.rast()<0.5?-1:1))*(aldat?-1:1);

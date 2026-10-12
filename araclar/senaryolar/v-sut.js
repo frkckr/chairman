@@ -11,10 +11,14 @@
    (kurtarıştan 1,5 sn içinde gol olursa gol), blok, dışarı; topun hızı, eylemin gücü ve stili, şut türü, açısal sapma, kötü vuruş ('kotuVurus'
    olayı; T9b-b'den) ve acele (eylemin acele alanı; T9b-b'den).
    Kapılar (gerçekçilik planı §4 T9 “T9b alt adımları”; KAPI açılınca kabul dışı çıkış kodu 1, T9b-0'da bilgi):
-   [1] güç: 16 m ortadan güç 0,65 → 1,0 çerçeveye giden en az 10 puan düşer (T9b-a)
-   [2] beceri: 16 m ortadan şut 0,9 olan 0,3 olandan en az 10 puan çok çerçeveye gönderir ve gol oranı en az 2 katı (T9b-a)
-   [3] zayıf ayak: çerçeveye giden en az 5 puan, gol oranı en az %30 düşer; kötü vuruş olasılığı en az 2 katı (T9b-b)
-   [4] acele: koşarak gelen savunmacı karşısında çerçeveye giden en az 10 puan düşer (T9b-b)
+   [1] güç: 16 m ortadan güç 0,65 → 1,0 yürütmenin açısal sapması en az 1,8 katı, hız en az 5 m/sn artar (T12a; T9b-a'da çerçeve payı en az 10 puan düşerdi)
+   [2] beceri: 16 m ortadan şut 0,3 olanın sapması 0,9 olanınkinin en az 1,5 katı ve gol oranı en az 2 katı (T12a; T9b-a'da çerçeve payı +10 puan)
+   [3] zayıf ayak: sapma en az 1,3 katı, gol oranı en az %30 düşer; kötü vuruş olasılığı en az 2 katı (T12a; T9b-b'de çerçeve payı −5 puan)
+   [4] acele: koşarak gelen savunmacı karşısında sapma en az 1,3 katı (T12a; T9b-b'de çerçeve payı −10 puan)
+   T12a (2026-10-12, Claude kararı): açık oyunda 1 m ve üstüne nişanın yükseklik hatası yanal hatayla aynı açıya çıkınca (sutDikey; T8c'nin serbest
+   vuruş kuralı) plan nişanı hatasına göre seçtiğinde (alçak ve içe) çerçeve payının güce, beceriye, zayıf ayağa ve aceleye duyarlılığı
+   maskelendi (T9b-b'nin [2] ve [3] için yazdığı gerekçenin aynısı). Kapılar yürütmenin kendisini ölçer: hatası uygulanmış nişanın amaçlanandan
+   açısal sapması (ortanca; vurusSapma'nın çarpanları değişmedi); çerçeve payı tabloda bilgi olarak kalır.
    [5] mesafe: ortalama şut hızı mesafeyle artar (11 → 25 m, adım başına en çok 0,5 m/sn geri düşebilir), 25 m'den çerçeveye giden 16 m'den az (T9b-a)
    [6] top: kötü vuruş olasılığı duran topta ≤ %3, seken ya da havadaki topta %8–20 (T9b-b)
    [7] aşırtma: kaleci 8 m öndeyken 18 m'den aşırtma seçilir (≥ %25) ve aşırtmaların en az %70'i gol (T9b-c)
@@ -22,12 +26,13 @@
    vuran oyuncu daha güvenli (ortaya yakın) nişan seçer; becerinin ve zayıf ayağın asıl bedeli gol olasılığındadır (16 m'de şut 0,3 → 0,9 gol
    %9 → 37; zayıf ayakla %22 → 7). Kötü vuruş kapıları modelin olasılığıyla (eylemin kotuP'si; deneme başına bir zarın sonucu 200 denemede ±1,5
    puan oynuyordu); gerçekleşen kötü vuruş tabloda. [7] aşırtma ile plase/sert golü kıyaslanmaz: 8 m öndeki kaleciye 10 m'den plase de çoğu
-   zaman goldür; kapı aşırtmanın seçilip işlediğini sınar. Hücre başına 200 deneme (60'ta çerçeve payı ±6 puan oynuyordu).
-   Kullanım: node araclar/mac-deneme.js --senaryo v-sut [N=200 hücre başına] [tohum] */
+   zaman goldür; kapı aşırtmanın seçilip işlediğini sınar. Hücre başına 400 deneme (T12a; 200'de [2]'nin gol oranı tohuma göre 1,9–3,1 kat
+   oynuyordu; 60'ta çerçeve payı ±6 puan).
+   Kullanım: node araclar/mac-deneme.js --senaryo v-sut [N=400 hücre başına] [tohum] */
 'use strict';
 const KAPI={1:true,2:true,3:true,4:true,5:true,6:true,7:true};   /* T9b-a: [1] [2] [5]; T9b-b: [3] [4] [6]; T9b-c: [7] açık */
 module.exports={calistir({ctx,vm,N,tohum}){
-  const n=N||200,dt=1/60,t0=Date.now();
+  const n=N||400,dt=1/60,t0=Date.now();
   const kur=vm.runInContext(`(tohum,olay)=>{const m=new Match(olay,{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();
     m.hakemAI=function(){};for(const r of m.refs){r.x=0;r.z=-25;r.tx=0;r.tz=-25;}return m;}`,ctx);
   const profilKur=vm.runInContext('profilKur',ctx),PL=vm.runInContext('PL',ctx),MZ=vm.runInContext('MZ',ctx);
@@ -109,11 +114,11 @@ module.exports={calistir({ctx,vm,N,tohum}){
       +(f(s.dis,0)+'%').padStart(8)+f(s.v,1).padStart(10)+(f(s.guc,2)+' ('+f(s.gucPlan,2)+')').padStart(13)+(f(s.kotu,0)+'% ('+f(s.kotuP,1)+')').padStart(11)+(f(s.acele,0)+'%').padStart(7)+f(s.sap,1).padStart(8)+'  '+SS.padEnd(44)+TT);}
   /* kapılar */
   const g=a=>O.get(a);let ok=true;const kapi=(k,kosul,metin)=>{const acik=KAPI[k];if(acik&&!kosul)ok=false;console.log((kosul?'  ':'! ')+`[${k}] ${metin}${acik?'':' (bilgi; kapı kapalı)'}`);};
-  {const a=g('16 m · güç 0,65'),b2=g('16 m · güç 1,0');kapi(1,a.cer-b2.cer>=10,`güç 0,65 → 1,0: çerçeveye giden %${f(a.cer,0)} → %${f(b2.cer,0)} (en az 10 puan düşer); hız ${f(a.v,1)} → ${f(b2.v,1)} m/sn`);}
-  {const a=g('16 m orta · şut 0.3'),b2=g('16 m orta · şut 0.9');kapi(2,b2.cer-a.cer>=10&&b2.gol>=2*a.gol,`şut 0,3 → 0,9 (16 m): çerçeveye giden %${f(a.cer,0)} → %${f(b2.cer,0)} (en az +10 puan), gol %${f(a.gol,0)} → %${f(b2.gol,0)} (en az 2 katı)`);}
-  {const a=g('16 m orta · şut 0.6'),z=g('16 m · zayıf ayak'),fark=a.cer-z.cer;
-    kapi(3,fark>=5&&z.gol<=0.7*a.gol&&z.kotuP>=2*a.kotuP,`zayıf ayak: çerçeveye giden %${f(a.cer,0)} → %${f(z.cer,0)} (en az 5 puan düşer), gol %${f(a.gol,0)} → %${f(z.gol,0)} (en az %30 düşer), kötü vuruş olasılığı %${f(a.kotuP,1)} → %${f(z.kotuP,1)} (en az 2 katı)`);}
-  {const a=g('16 m orta · şut 0.6'),z=g('16 m · acele (koşarak gelen)');kapi(4,a.cer-z.cer>=10,`acele: çerçeveye giden %${f(a.cer,0)} → %${f(z.cer,0)} (en az 10 puan düşer); acele payı %${f(z.acele,0)}, vurulmayan %${f(z.vurulmayan,0)}`);}
+  {const a=g('16 m · güç 0,65'),b2=g('16 m · güç 1,0');kapi(1,b2.sap>=1.8*a.sap&&b2.v>=a.v+5,`güç 0,65 → 1,0: sapma ${f(a.sap,1)}° → ${f(b2.sap,1)}° (en az 1,8 katı), hız ${f(a.v,1)} → ${f(b2.v,1)} m/sn (en az +5); çerçeveye giden %${f(a.cer,0)} → %${f(b2.cer,0)} (bilgi)`);}
+  {const a=g('16 m orta · şut 0.3'),b2=g('16 m orta · şut 0.9');kapi(2,a.sap>=1.5*b2.sap&&b2.gol>=2*a.gol,`şut 0,3 → 0,9 (16 m): sapma ${f(a.sap,1)}° → ${f(b2.sap,1)}° (en az 1,5 kat azalır), gol %${f(a.gol,0)} → %${f(b2.gol,0)} (en az 2 katı); çerçeveye giden %${f(a.cer,0)} → %${f(b2.cer,0)} (bilgi)`);}
+  {const a=g('16 m orta · şut 0.6'),z=g('16 m · zayıf ayak');
+    kapi(3,z.sap>=1.3*a.sap&&z.gol<=0.7*a.gol&&z.kotuP>=2*a.kotuP,`zayıf ayak: sapma ${f(a.sap,1)}° → ${f(z.sap,1)}° (en az 1,3 katı), çerçeveye giden %${f(a.cer,0)} → %${f(z.cer,0)} (bilgi), gol %${f(a.gol,0)} → %${f(z.gol,0)} (en az %30 düşer), kötü vuruş olasılığı %${f(a.kotuP,1)} → %${f(z.kotuP,1)} (en az 2 katı)`);}
+  {const a=g('16 m orta · şut 0.6'),z=g('16 m · acele (koşarak gelen)');kapi(4,z.sap>=1.3*a.sap,`acele: sapma ${f(a.sap,1)}° → ${f(z.sap,1)}° (en az 1,3 katı), çerçeveye giden %${f(a.cer,0)} → %${f(z.cer,0)} (bilgi); acele payı %${f(z.acele,0)}, vurulmayan %${f(z.vurulmayan,0)}`);}
   {const V=[11,16,20,25].map(L=>g(`${L} m orta · şut 0.6`).v);let artar=true;for(let i=1;i<V.length;i++)if(V[i]<V[i-1]-0.5)artar=false;
     const c16=g('16 m orta · şut 0.6').cer,c25=g('25 m orta · şut 0.6').cer;
     kapi(5,artar&&c25<c16,`mesafe: ortalama hız 11/16/20/25 m ${V.map(v=>f(v,1)).join(' / ')} m/sn (artar), çerçeveye giden 16 m %${f(c16,0)} > 25 m %${f(c25,0)}`);}

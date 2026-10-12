@@ -15,7 +15,7 @@
 const KAPI_D=true;   /* T9b-d: açık */
 /* U1 (2026-10-12): "alt köşe 16 m" T9b'den beri ızgaradaki yorgunluk birikimiyle (kaleci ~80 dk eylem sonrası) tutuyordu; dinç kalecide %31
    (bant 35–60) — maçta da ceza sahası içinden kurtarış %40 (gerçekte %55–65). Kaleci ve şut verimi T12'nin işi: o güne dek bilgi, T12 kabulünde kapı */
-const KAPI_ALT=false;
+const KAPI_ALT=true;   /* T12a (2026-10-12): yeniden kapı — kalecinin hazır avantajı ve kararın adım gecikmesi düzeldi, kaleciTepki 0,27 */
 const KOD=`(function(){
   const dt=1/60;
   function hazirla(tohum){

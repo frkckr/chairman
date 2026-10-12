@@ -9,8 +9,10 @@
    Tepki ve dalış hızındaki küçük sapmalar (tohumlu) kaleciTahmin'in P'sindeki belirsizliği (KL_M.sapma) üretir. */
 'use strict';
 ayarEkle('D',{
-  kaleciTepki:0.23,            // şuta tepki süresi (sn) ·(1,25 − 0,5·kalecilik); görüş kapalıysa +0,10–0,18, hazır duruşta −0,05. T9b-a (2026-10-10): 0,20 → 0,23 —
-                               // kaleci dalıştan önce yana adım atınca (yanAdim) d-sut kapıları (MM4) yeniden tuttu; kalecilik 0,7'de 0,21 sn (Ek G6: ~0,2 sn)
+  kaleciTepki:0.27,            // şuta tepki süresi (sn) ·(1,25 − 0,5·kalecilik); görüş kapalıysa +0,10–0,18, hazır duruşta −0,05. T9b-a (2026-10-10): 0,20 → 0,23 —
+                               // kaleci dalıştan önce yana adım atınca (yanAdim) d-sut kapıları (MM4) yeniden tuttu; kalecilik 0,7'de 0,21 sn (Ek G6: ~0,2 sn).
+                               // T12a (2026-10-12): 0,23 → 0,27 — d-sut'ta hazır avantajı kayboluyordu (kaleciTavir; gerçekleşen tepki ~0,20 sn), kapılar o kayıpla
+                               // tutuyordu; kayıp giderilince aynı kapılar 0,27 ile tutar (kalecilik 0,7'de hazır 0,19 sn, değilse 0,24 sn)
   kaleciErisim:1.0,            // uzanma (erişim elipsi) çarpanı
   kaleciUcus:[3.6,2.6],        // dalışta yanal hız (m/sn) = a + b·kalecilik (yüksek dalışta azalır)
   kaleciTutma:0.84,            // kurtarışta topu tutma olasılığı çarpanı (en çok 0,96 olan olasılığa uygulanır)
@@ -128,7 +130,7 @@ Object.assign(Match.prototype,{
       const yeni=b.vx*d<-1&&Math.abs(b.x-gx)<45&&!surulen&&!(b.pas&&b.pas.takim===gk.team)&&!(b.tac&&b.tac.p.team===gk.team)
         &&this.kendiCezaSahasinda(gk,gk.x,gk.z)?this.kaleciPlanla(gk):null;
       if(!yeni){gk._kp=null;return;}
-      if(pl&&hyp(yeni.pz-pl.pz,yeni.py-pl.py)<0.4&&Math.abs(yeni.an-pl.an)<0.15){yeni.tBas=pl.tBas;yeni.r=pl.r;yeni.vj=pl.vj;yeni.basladi=pl.basladi;}
+      if(pl&&hyp(yeni.pz-pl.pz,yeni.py-pl.py)<0.4&&Math.abs(yeni.an-pl.an)<0.15){yeni.tBas=pl.tBas;yeni.r=pl.r;yeni.vj=pl.vj;yeni.basladi=pl.basladi;yeni.karar=pl.karar;}
       else{yeni.tBas=this.t;yeni.r=Math.max(0.06,kaleciTepkiSuresi(this,gk,b.x,b.z)+(Math.abs(b.egri||0)>0.05?KL_M.egri:0)+this.normal()*0.035);yeni.vj=clamp(1+this.normal()*0.07,0.85,1.15);yeni.basladi=false;}
       pl=gk._kp=yeni;}
     /* top kaleciyi geçti */
@@ -137,7 +139,10 @@ Object.assign(Match.prototype,{
     /* plan sürerken genel temas sırası kaleciyi atlar (temas kaleciCarpisma'dadır) */
     if(!e||!e.kilit)gk.kickCd=Math.max(gk.kickCd,0.02);
     if(pl.basladi||this.t<pl.tBas+pl.r||(e&&e.kilit))return;
-    this.kaleciKarar(gk,pl);
+    /* T12a (2026-10-12): ilk kararda tepkinin bittiği andan bu adıma geçen süre (0–1 adım): eylem o andan başlamış sayılır (gk._asim). Model
+       (kaleciPay) süreklidir; yürütme kararı adımın sonunda verdiği için ortalama yarım adım geç kalıyordu */
+    gk._asim=pl.karar?0:clamp(this.t-(pl.tBas+pl.r),0,1/60);pl.karar=true;
+    this.kaleciKarar(gk,pl);gk._asim=0;
   },
   /* topun yolu (topYolu) üzerinde kalecinin düzlemini (topun yatay yönüne dik) ve kale çizgisini geçtiği yerler */
   kaleciPlanla(gk){
@@ -175,16 +180,16 @@ Object.assign(Match.prototype,{
        eylemiyle (yanAdim; çapraz, en çok KL_M.adim; kaleciTahmin'in geri çekilmesiyle aynı) ve dalışa süre bırakarak. Eskiden kaleciKonum'la
        koşarak çekiliyordu: duruştan hızlanma sınırı yüzünden yarım saniyede ~0,3 m gidiyor, tahminin varsaydığı yere varamıyordu */
     if(dd>0.35&&T-dd/KL_M.geri>0.2){const sure=Math.min(0.6,T-Math.max(need,0.2)-0.06);
-      if(sure>0.05){gk.eylem={ad:'yanAdim',t:0,sure,kilit:true,fren:0.001,yan:Math.sign(lat)||1};if(gk.tavir==='hazir')gk.tavir=null;return;}}
+      if(sure>0.05){gk.eylem={ad:'yanAdim',t:gk._asim||0,sure,kilit:true,fren:0.001,yan:Math.sign(lat)||1};if(gk.tavir==='hazir')gk.tavir=null;return;}}
     const k=kaleciPay(gk,lat,y,T,0,pl.vj);
-    if(k.mod==='ayak'){this.kaleciKapanBaslat(gk,Math.atan2(-pl.nz,-pl.nx),true);pl.basladi=true;return;}
+    if(k.mod==='ayak'){this.kaleciKapanBaslat(gk,Math.atan2(-pl.nz,-pl.nx),true);gk.eylem.t=gk._asim||0;pl.basladi=true;return;}
     /* ayakta rahatça yetişiyorsa uçmaz (adım atıp tutar) */
-    if(k.mod==='dur'||k.payA>=Math.min(0.5,k.pay)){gk.eylem={ad:'tutus',t:0,sure:Math.max(0.25,T+0.3),kilit:true,fren:10,kurtar:true,tur:y>1.75?'yukari':y<0.55?'yer':'gogus',hedefY:y,hy:(gk.tavir==='hazir'?0.88:0.95)*B};
+    if(k.mod==='dur'||k.payA>=Math.min(0.5,k.pay)){gk.eylem={ad:'tutus',t:gk._asim||0,sure:Math.max(0.25,T+0.3),kilit:true,fren:10,kurtar:true,tur:y>1.75?'yukari':y<0.55?'yer':'gogus',hedefY:y,hy:(gk.tavir==='hazir'?0.88:0.95)*B};
       if(gk.tavir==='hazir')gk.tavir=null;pl.basladi=true;return;}
     if(T>need+0.12&&T>0.42){
       /* T9b-a (dalış zinciri): top dalışın yolunun ötesindeyse zaman payında önce yana adım (kaleciPay'in yana adımıyla aynı hız); adım bitince
          karar yeniden verilir. Eskiden kaleci burada yerinde bekliyordu (kısa sürede hızlanamıyor, yolun ötesindeki topa yetişemiyordu) */
-      const tm=T-need-0.06;if(tm>0.05&&Math.abs(lat)-0.44*B*E>yol+0.05){gk.eylem={ad:'yanAdim',t:0,sure:Math.min(tm,0.6),kilit:true,fren:0.001,yan:Math.sign(lat)||1};if(gk.tavir==='hazir')gk.tavir=null;}
+      const tm=T-need-0.06;if(tm>0.05&&Math.abs(lat)-0.44*B*E>yol+0.05){gk.eylem={ad:'yanAdim',t:gk._asim||0,sure:Math.min(tm,0.6),kilit:true,fren:0.001,yan:Math.sign(lat)||1};if(gk.tavir==='hazir')gk.tavir=null;}
       return;}
     this.kaleciUc(gk,pl,lat,y,T,itisT,k.u);pl.basladi=true;
   },
@@ -194,7 +199,7 @@ Object.assign(Match.prototype,{
     const vy=kaleciSicrama(gk,yh,tp),v=kaleciDalisHizi(gk,yh)*(pl.vj||1),s=Math.min(kaleciUcusYolu(gk,yh),Math.max(0,Math.abs(lat)-0.35*1.25*B*E)),y0=0.8*B;
     const tIn=(vy+Math.sqrt(vy*vy+2*G*(y0-0.22)))/G,egH=clamp(Math.atan2(Math.max(0.15,Math.abs(lat)-s),y-yh),0.35,1.5);
     /* T9b-d: tur — 'dalis' ya da 'cokme' (yakın alçak top; sözleşme ucus.tur) */
-    gk.eylem={ad:'ucus',t:0,faz:'itis',itisT,inisT:itisT+tIn,sure:itisT+tIn+0.3,kilit:true,fren:4,yan:Math.sign(lz)||sg,y:clamp(y,0.15,2.4),hedefY:y,
+    gk.eylem={ad:'ucus',t:gk._asim||0,faz:'itis',itisT,inisT:itisT+tIn,sure:itisT+tIn+0.3,kilit:true,fren:4,yan:Math.sign(lz)||sg,y:clamp(y,0.15,2.4),hedefY:y,
       el:(u==null||u<0.85)&&y<1.95?'cift':'tek',lx,lz,v,s,gid:0,vy,y0,hy:0.88*B,eg:0,egH,tur:kaleciCokme(yh,lat,B)?'cokme':'dalis'};
     if(gk.tavir==='hazir')gk.tavir=null;this.on('dive',{p:gk,yan:gk.eylem.yan});
   },
@@ -412,7 +417,12 @@ Object.assign(Match.prototype,{
     if(olabilir&&s&&s.team!==p.team&&hyp(s.x-gx,s.z-MZ)<30){
       const vurus=s.eylem&&s.eylem.ad==='vurus'&&s.eylem.sec&&s.eylem.sec.tur==='sut';
       if(vurus){p.tx=p.x;p.tz=p.z;p.hizOran=0.25;hazir=true;}else if(hyp(p.tx-p.x,p.tz-p.z)<0.8){p.hizOran=0.5;hazir=true;}}
-    if(hazir){if(!p.tavir)p.tavir='hazir';}else if(p.tavir==='hazir')p.tavir=null;
+    /* T12a (2026-10-12; teşhis T12-0): şut ayaktan çıktıktan sonra plan kurulana kadar (en çok 0,1 sn) hazır duruş korunur — tepki süresinin hazır
+       avantajı (kaleciTepkiSuresi, −0,05 sn) şut anındaki duruştandır. Eskiden plan vuruşun adımında kurulmazsa (top bir adım sonra kaleye
+       döndüyse, d-sut gibi adımın dışında atılan şutta) takımın düzeni duruşu siliyor, kaleci avantajsız tepki veriyordu (d-sut: gerçekleşen tepki
+       ortalaması 0,20 sn ↔ model 0,157 sn; sınırdaki hücrelerde kurtarış tahminin 30–60 puan altında) */
+    const yeniSut=b.sut&&b.sut.team!==p.team&&!p._kp&&this.t-(b.sut.t||0)<0.1;
+    if(hazir){if(!p.tavir)p.tavir='hazir';}else if(p.tavir==='hazir'&&!yeniSut)p.tavir=null;
   },
   /* serbest topa çıkış (6 karede bir ya da top değişince): ceza sahasında rakipten zaman payı varsa ya da arkadaşı daha yakın değilse;
      yüksek topta (orta, korner) kaleciHavaTahmin; ceza sahası dışında süpürücü (savunma çizgisinin arkasındaki top, payı büyükse) */
