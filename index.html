@@ -33,6 +33,9 @@ body{font-family:var(--mono);font-size:14px;line-height:1.55;padding-inline:16px
 .controls{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 22px}
 .grp{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .lbl{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+/* U1: izleme hızının “önemli an” eki — yeri hep ayrılır (satır kaymasın), yalnız önemli anda görünür */
+.izAn{color:var(--amber);visibility:hidden}
+.izAn.acik{visibility:visible}
 .seg{display:flex;flex-wrap:wrap;gap:4px}
 button{font:inherit;font-size:12.5px;color:var(--text);background:#23211e;border:1px solid #3b372f;border-bottom-width:3px;border-radius:4px;padding:6px 11px 5px;cursor:pointer;line-height:1.2}
 button:hover{border-color:#5a5446}
@@ -320,6 +323,14 @@ html,body{margin:0}
         <button type="button" id="btnMacaGec" title="Maç öncesini (ısınma, tören, fotoğraf, yazı tura) atla">Santraya geç</button>
       </div>
     </div>
+    <!-- U1 (2026-10-12): izleme hızı; önemli anlarda kendiliğinden normal hıza iner (js/mac-izleme.js), göstergesi etiketin yanında -->
+    <div class="grp"><span class="lbl">Maç hızı <span class="izAn" id="izlemeAn">· önemli an</span></span>
+      <div class="seg" id="izlemeHiz">
+        <button type="button" data-izhiz="1" aria-pressed="false" title="Normal hız (tuş 1)">×1</button>
+        <button type="button" data-izhiz="2" aria-pressed="false" title="İki kat (tuş 2); önemli anlarda normal hıza iner">×2</button>
+        <button type="button" data-izhiz="4" aria-pressed="false" title="Dört kat (tuş 4); önemli anlarda normal hıza iner">×4</button>
+      </div>
+    </div>
   </div>
 
   <details class="gelistirici" aria-label="Geliştirici">
@@ -378,6 +389,7 @@ html,body{margin:0}
 <script src="js/mac-sakatlik.js"></script>
 <script src="js/mac-senaryo.js"></script>
 <script src="js/mac-oncesi.js"></script>
+<script src="js/mac-izleme.js"></script>
 <script src="js/goruntu.js"></script>
 <script src="js/stadyum-cevre.js"></script>
 <script src="js/stadyum.js"></script>

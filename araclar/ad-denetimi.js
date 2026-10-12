@@ -7,6 +7,7 @@
    (b) class Match ile Object.assign(Match.prototype,{…}) blokları arasında aynı yöntem adı (sonra yüklenen öncekini sessizce ezer).
    (c) çizim dosyaları motoru yalnız okur: mac.rast/normal ve önbellek yazan yöntemler (topYolu, topTahmin, yakalamaNoktasi, cerceveyeGider)
        çağrılmaz; oyuncu (p.) ve top (mac.ball., b.) alanlarına yazılmaz. Motoru ilerleten tek yer js/mac-sahnesi.js'tir (mac.step, mac.macaGec).
+       U1 (2026-10-12): js/mac-izleme.js de bu listededir — ana motora dokunmaz, yalnız kendi ikiz motorunu (aynı tohumla ikinci Match) ilerletir.
    (d) motor dosyalarında (js/mac-*.js) tohumsuz rastlantı yok: Math.random ve rnd( kullanılmaz (varsayılan tohum seçimi hariç).
    (e) MOTOR_AYAR (M1, 2026-10-10): bütün anahtarlar js/mac-motoru.js'te bildirilir ve her birinin değeri tam bir kez atanır (çekirdekte ya da
        akışın ayarEkle'sinde); motor araclar/motor-yukle.js ile yüklenir, bildirilmemiş, iki kez atanan ya da atanmamış anahtar bulgudur.
@@ -87,7 +88,7 @@ const BILINEN_SIZINTI=new Set(['ciz','kapat']);
   for(const [k,L] of Object.entries(yontem))if(L.length>1)bul('aynı Match yöntemi',`${k}: ${L.join(', ')}`);
 }
 /* (c) çizim dosyaları motoru yalnız okur */
-{const CIZIM=['js/mac-sahnesi.js','js/animasyon.js','js/kamera.js','js/okunurluk.js','js/baskan.js'];
+{const CIZIM=['js/mac-sahnesi.js','js/animasyon.js','js/kamera.js','js/okunurluk.js','js/baskan.js','js/mac-izleme.js'];
   const YASAK_CAGRI=/\bmac\.(rast|normal|topYolu|topTahmin|yakalamaNoktasi|cerceveyeGider|step|macaGec|kararVer)\s*\(/g;
   const IZIN={'js/mac-sahnesi.js':new Set(['step','macaGec'])};
   const YAZMA=[/\bp\.[A-Za-z_$][\w$]*(\.[\w$]+)*\s*(=(?!=)|\+=|-=|\*=|\/=|\+\+|--)/g,/\bmac\.ball\.[\w$.]+\s*(=(?!=)|\+=|-=|\*=)/g,/\bmac\.(players|refs|teams|ball|ist|score|phase|durus)\s*(=(?!=))/g];

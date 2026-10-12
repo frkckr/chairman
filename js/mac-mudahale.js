@@ -245,7 +245,7 @@ Object.assign(Match.prototype,{
     for(const q of this.teams[1-p.team]){if(!q.oyunda)continue;const d=hrkHyp(q.x-b.x,q.z-b.z);if(d<en){en=d;o=q;}}
     if(!o||this.rast()>=mdhGorme(this,b.x,b.z,p,o))return false;
     const x=clamp(b.x,-PL+0.3,PL-0.3),z=clamp(b.z,0.3,PW-0.3);
-    this.ist.faul[p.team]++;this.uzatmaBirikim[this.half-1]+=15;p.eylem=null;
+    this.ist.faul[p.team]++;p.eylem=null;   /* U1: faul uzatmaya eklenmez (kart eklenir: kartGoster) */
     this.on('faul',{faulYapan:p,faulYiyen:o,takim:o.team,aleyhe:p.team,x,z,penalti:false,kart:null,neden:'yuksekAyak',kaynak:'yuksekAyak',endirekt:true,siddet:0});
     this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};
     this.durusBaslat('serbest',o.team,x,z,{bekle:0.9+this.rast()*0.4,endirekt:true,duduk:true});
@@ -430,7 +430,9 @@ Object.assign(Match.prototype,{
   gecildiFaulu(o,p){
     if(!o.oyunda||o.rol==='GK'||o.eylem&&o.eylem.kilit||this.phase!=='play'||hrkHyp(o.x-p.x,o.z-p.z)>1.5)return;
     const kutu=this.kendiCezaSahasinda(o,p.x,p.z),ileri=p.x*this.dir[p.team]>0;
-    if(this.rast()<MOTOR_AYAR.taktikFaul*(0.1+1.7*profilAlt(o,'agresiflik',o.oz.sertlik))*(kutu?0.15:1)*(ileri?1.3:0.7)*(this._niyet?this._niyet[o.team].faulIstek:1))   /* T3: agresiflik; T7a: önde biterken taktik faul isteği */
+    /* T3: agresiflik; T7a: önde biterken taktik faul isteği; U1 (2026-10-12): sarı kartlı savunmacı taktik faulden kaçınır (×0,25; ikinci sarının
+       çoğu buradan geliyordu — 20 dakikalık maçta 40 maçta 9 ikinci sarının 5'i) */
+    if(this.rast()<MOTOR_AYAR.taktikFaul*(0.1+1.7*profilAlt(o,'agresiflik',o.oz.sertlik))*(kutu?0.15:1)*(ileri?1.3:0.7)*(this._niyet?this._niyet[o.team].faulIstek:1)*((o.kart||0)===1?0.25:1))
       {/* T5: kasıt zarı kalır, hakem görür mü; arkadan (sürücünün gidişine göre) forma çekme 'itme', yandan çelme 'müdahale' sayılır */
         const sp=hrkHyp(p.vx,p.vz)||1,arka=((o.x-p.x)*p.vx+(o.z-p.z)*p.vz)/(sp*(hrkHyp(o.x-p.x,o.z-p.z)||1))<-0.5;
         this.faulGor(o,p,{itme:arka,arkadan:arka,taktik:true,kaynak:'taktik',ciddiyet:0.25+0.25*this.rast(),x:p.x,z:p.z});}
@@ -570,6 +572,9 @@ Object.assign(Match.prototype,{
     else if(r<sigma((ck-KE)/0.07)){kart='sari';kartNeden='siddet';}             /* pervasız */
     else if(dogso){kart='sari';kartNeden='firsat';}   /* T10b (T10 teşhisi hata 2): kırmızı sayılmayan açık gol fırsatı en az sarıdır (eskiden gelişen atak dalı !dogso ile kartsız kalıyordu) */
     else if(spa&&r2<MOTOR_AYAR.sariAtak+(v.taktik?0.3:0)){kart='sari';kartNeden='atak';}                                       /* gelişen atağı kesti */
+    /* U1 (2026-10-12): sarı kartlı oyuncuya hakem hoşgörülü (ikinci sarıda isteksizlik): pervasızlık ya da gelişen atak sarısı kartliHosgoru
+       olasılığıyla gösterilir; aşırı sert ve açık gol fırsatı değişmez */
+    if(kart==='sari'&&(kartNeden==='siddet'||kartNeden==='atak')&&(yapan.kart||0)===1&&this.rast()>=MOTOR_AYAR.kartliHosgoru){kart=null;kartNeden=null;}
     if(v.el&&v.sut&&!kart){kart='sari';kartNeden='el';}   /* T10b: çerçeveye giden şutu elle kesmek */
     const penalti=kutu&&!v.hava||(v.hava&&kutu&&this.rast()<0.5);
     /* T8f (inceleme bulgusu): kutudaki hava faulünün penaltı verilmeyen yarısı ceza sahası içinde doğrudan serbest vuruş oluyordu (kural dışı);
@@ -580,7 +585,9 @@ Object.assign(Match.prototype,{
     if(!penalti&&kart!=='kirmizi'&&c<0.8&&this.avantajVar(yiyen,yu,ayakta)){
       this.avantaj={t:this.t,kare:this.kare,takim:yiyen.team,x,z,kart,yapan,yiyen,neden,tuttu:false,u0:b.x*yd};this.refs[0].eylem={ad:'avantaj',t:0,sure:1.4};
       this.on('avantaj',{takim:yiyen.team,aleyhe:yapan.team,faulYapan:yapan,faulYiyen:yiyen,neden,siddet:c,omuz:!!v.omuz,kartNeden,kaynak:v.kaynak||null});return;}
-    this.uzatmaBirikim[h]+=penalti?60:15+(kart?15:0);
+    /* U1 (2026-10-12; IFAB Kural 7): uzatmaya giren penaltı (60) ve kart (disiplin cezası, 30: kartGoster); sıradan faul eklenmez — eskiden faul 15
+       (+15 kart) sıkıştırılmış maça göreydi, 20 dakikalık maçta faul iki katına çıkınca ilk yarının uzatması gerçeğini aşıyordu */
+    if(penalti)this.uzatmaBirikim[h]+=60;
     this.on('faul',{faulYapan:yapan,faulYiyen:yiyen,takim:yiyen.team,aleyhe:yapan.team,x,z,penalti,kart,neden,siddet:c,omuz:!!v.omuz,kartNeden,kaynak:v.kaynak||null});
     this.refs[0].eylem={ad:penalti?'penaltiGoster':'duduk',t:0,sure:1.0};
     this.durusBaslat(penalti?'penalti':'serbest',yiyen.team,penalti?this.dir[yiyen.team]*(PL-PENALTI_U):x,penalti?MZ:z,
@@ -614,7 +621,7 @@ Object.assign(Match.prototype,{
     const kayip=b.sahip&&b.sahip.team!==a.takim,geri=a.u0-b.x*this.dir[a.takim]>=10;
     if(el<2.5&&(kayip||geri)||!a.tuttu&&el>1.5){/* avantaj gerçekleşmedi: faule dön */this.avantaj=null;
       this.on('faul',{faulYapan:a.yapan,faulYiyen:a.yiyen,takim:a.takim,aleyhe:a.yapan.team,x:a.x,z:a.z,penalti:false,kart:a.kart,neden:a.neden,avantajdan:true});this.on('avantajSonuc',{tutuldu:false});
-      this.uzatmaBirikim[this.half-1]+=15;this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};
+      this.refs[0].eylem={ad:'duduk',t:0,sure:1.0};   /* U1: faul uzatmaya eklenmez (kart kartGoster'de) */
       this.durusBaslat('serbest',a.takim,a.x,a.z,{bekle:1.0+(a.kart?2:0),kart:a.kart,faulYapan:a.yapan,duduk:true});if(a.kart)this.kartGoster(a.yapan,a.kart);}
     else if(el>=2.5){this.avantaj=null;if(a.kart)this.bekleyenKart=a;this.on('avantajSonuc',{tutuldu:true});}
   }

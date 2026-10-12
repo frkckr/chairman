@@ -633,7 +633,8 @@ async def olc(a):
                 print(f"olay düzeneği: {a.olay} yapay olay (sakatlık, sedye, kramp, uyarı, hakem topu, endirekt, gol, topallama; olay satırı)")
                 a.sure = 0
             if a.hiz != 1:
-                await pg.evaluate(f"MAC_HIZ.deger = {a.hiz}")
+                # U1: etkin hız seçimden hesaplanır (izlemeHizi); sabit hız için seçim yazılır, önemli anda yavaşlama kapatılır
+                await pg.evaluate(f"MAC_HIZ.oto = false; MAC_HIZ.secim = {a.hiz}; MAC_HIZ.deger = {a.hiz}")
                 print(f"oynatma hızı {a.hiz}× (kare başına {a.hiz} motor adımı; yalnız vuruş/zamanlama satırları anlamlıdır)")
             kalan = a.sure
             while kalan > 0:

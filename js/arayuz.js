@@ -20,9 +20,26 @@ const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();btnMacaGe
 addEventListener('keydown',e=>{if((e.code!=='Space'&&e.code!=='KeyP')||e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;
   if(t==='INPUT'||t==='TEXTAREA'||(t==='BUTTON'&&e.code==='Space'))return;if(ON_EKRAN.sayfa==='oda')return;e.preventDefault();duraklatDegistir();});
 /* geliştirici paneli (2.8O, kullanıcı kararı 2026-10-02): yalnız maç hızı ve durdurma. Doluluk, zemin ve baştan başlatma kaldırıldı;
-   doluluk ve zemin stat tarifinden gelir (js/stadyum-tarifleri.js) */
-{const ayarlaHiz=v=>{MAC_HIZ.deger=v;for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))press(b,+b.dataset.hiz===v);};
- for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))b.onclick=()=>ayarlaHiz(+b.dataset.hiz);ayarlaHiz(MAC_HIZ.deger);}
+   doluluk ve zemin stat tarifinden gelir (js/stadyum-tarifleri.js).
+   U1 (2026-10-12, kullanıcı kararı): izleme hızı oyuncunundur — üst şeritteki ×1 ×2 ×4 ve 1/2/4 tuşları seçimi ayarlara yazar (OYUN.ayarlar.macHizi;
+   Ayarlar > Maç ile aynı). Geliştirici panelinin 1×–8×'i (TEST) aynı seçimi yazar, kaydetmez. Etkin hız js/mac-sahnesi.js izlemeHizi'dir: önemli
+   anlarda 1×'e iner (js/mac-izleme.js); o sırada etiketin yeri ayrılmış eki "· önemli an" görünür (satır kaymaz) */
+function izlemeHizSec(v,kaydet){
+  MAC_HIZ.secim=v;
+  for(const b of document.querySelectorAll('#izlemeHiz button[data-izhiz]'))press(b,+b.dataset.izhiz===v);
+  for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))press(b,+b.dataset.hiz===v);
+  if(kaydet&&[1,2,4].includes(v)&&OYUN.ayarlar){OYUN.ayarlar.macHizi=v;OYUN.ayarlar.kaydet();}
+}
+for(const b of document.querySelectorAll('#izlemeHiz button[data-izhiz]'))b.onclick=()=>izlemeHizSec(+b.dataset.izhiz,true);
+for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))b.onclick=()=>izlemeHizSec(+b.dataset.hiz,false);
+izlemeHizSec(MAC_HIZ.secim,false);
+/* 1, 2, 4 tuşları: maç ekranında (oda, maç öncesi bülteni, karar anı ve açık telefon kendi tuşlarını kullanır) */
+addEventListener('keydown',e=>{const v={Digit1:1,Digit2:2,Digit4:4,Numpad1:1,Numpad2:2,Numpad4:4}[e.code];if(!v||e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;
+  const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;
+  if(ON_EKRAN.sayfa==='oda'||ON_EKRAN.acik||(typeof KARAR_ANI!=='undefined'&&KARAR_ANI.acik)||(typeof MAC_TELEFON!=='undefined'&&MAC_TELEFON.acik))return;
+  e.preventDefault();izlemeHizSec(v,true);});
+const izlemeAn=$('izlemeAn');let izlemeAndaSon=null;
+function izlemeGosterge(){const a=!!MAC_HIZ.anda;if(a===izlemeAndaSon)return;izlemeAndaSon=a;izlemeAn.classList.toggle('acik',a);}
 let last=0,time=0,onEkranCizildi=false;
 function frame(now){
   /* başkan odası: stat yerine oda sahnesi çizilir; maç zamanı ilerlemez (js/oda.js). Odadan çıkınca stat yeniden çizilir */
@@ -34,7 +51,7 @@ function frame(now){
   SEYIRCI_ZAMAN.value=time;
   for(const f of flags){const pa=f.m.geometry.attributes.position,a=pa.array;for(let i=0;i<pa.count;i++){const u=(f.base[i*3]+1.3)/2.6;a[i*3+2]=f.base[i*3+2]+Math.sin(time*5.5-u*4+f.ph)*0.2*u;}pa.needsUpdate=true;}
   fx(dt,time);
-  macKare(dt);baskanZaman(dt);
+  macKare(dt);baskanZaman(dt);izlemeGosterge();
   if(typeof locaGirisKare==='function')locaGirisKare(dt);   /* js/loca-giris.js (2.8T) */
   if(!btnMacaGec.hidden&&!MAC_ONCESI.includes(mac.phase))btnMacaGec.hidden=true;
   kameraUygula(curView());   /* js/kamera.js */

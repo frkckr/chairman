@@ -36,10 +36,10 @@ module.exports={
        oyuncuların düellosu / bütün düellolar. Top saklama: tavır 'koru'
        süresi. Dokunuş sıklığı: topu süren oyuncunun sürüş dokunuşları / sürüş süresi (koruma, bekletme ve çalım denemesi hariç); hız bantları
        < 3, 3–5,5, ≥ 5,5 m/sn */
-    ['Çalım (düello) / maç','rCalim',1,[10,14,'T4']],['Çalım: başarı %','rCalimOk',1,[40,50,'T4']],['Çalım: kanat oyuncularının payı %','rCalimKanat',1,[40,null,'T4']],
+    ['Çalım (düello) / maç','rCalim',1,[20,28,'T4']],   /* U1 (20 dakikalık maç): 10–14 × 2 */['Çalım: başarı %','rCalimOk',1,[40,50,'T4']],['Çalım: kanat oyuncularının payı %','rCalimKanat',1,[40,null,'T4']],
     ['Çalım: tahmin − gerçek (puan)','rCalimKalib',1,[-8,8,'T4']],['Çalım denemesi (düellosuz ve faul dahil) / maç','rCalimHepsi',1],['Çalım denemesi: düellosuz yarım %','rCalimYarim',1],
     ['Çalım denemesi: savunmacı aldatıldı %','rCalimYut',1],['Çalım denemesi: faulle biten %','rCalimFaul',1],
-    ['Top saklama (koru; oyuncu·sn / maç)','rKoru',1,[10,30,'T4']],   /* T4e (2026-10-09): 15–40 planın tahminiydi; ölçülen tutma ~10 durum × 1 sn, bant 10–30 */
+    ['Top saklama (koru; oyuncu·sn / maç)','rKoru',1,[20,60,'T4']],   /* T4e (2026-10-09): 15–40 planın tahminiydi; ölçülen tutma ~10 durum × 1 sn, bant 10–30; U1 (20 dakikalık maç): × 2 */
     ['Taşıma: dokunuş sıklığı (1/sn)','rDokunus',2,[2.3,3.0,'T4']],['Taşıma: dokunuş sıklığı <3 m/sn','rDokunusY',2],
     ['Taşıma: dokunuş sıklığı 3–5,5 m/sn','rDokunusO',2],['Taşıma: dokunuş sıklığı ≥5,5 m/sn','rDokunusH',2],
     ['Gol: duran toptan (korner, serbest, penaltı) %','rGolDuran',1,[25,35,'T8']],

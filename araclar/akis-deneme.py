@@ -19,6 +19,8 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
  16. Maç telefonu (2.8F, 2.8I).
  17. Topu izleyen bakış ve maçın netliği (2026-10-03): belirlenimli 30 sn oyunda (1× ve 4×) top ekranın ortasında; oyuncu boyu, topun
      çizim boyu, 960×720 maç ızgarası ve 2× iç çizim; dürbünün kaldırıldığı (2026-10-07: düğme, D, maske tuvali, ayar yok) denetlenir.
+ 18. İzleme hızı ve önemli anlar (U1, 2026-10-12): Ayarlar > Maç, maç şeridindeki ×1 ×2 ×4 ve 1/2/4 tuşları, kalıcılık; belirlenimli maçta
+     ×4'te şut ve golden önce 1×'e iniş (ikiz motor 7 sn önde), maçın sonuna dek ikizin ana motorla aynılığı.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız ve Durdur, eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
@@ -909,7 +911,8 @@ async def bolum_16(tarayici, site, tum_hatalar):
 ORNEK_JS = """(o) => {
   /* duraklatılmışken maçı elle ilerletir (kare döngüsü dt 0 verir); her 0,25 sn bakışı yerleştirip topu ve oyuncuları ekrana izdüşürür */
   let g = 0; while (!(mac.phase === 'play' && mac.phaseT > 1) && g < 3600) { macKare(1 / 60); g++; }
-  MAC_HIZ.deger = o.hiz;
+  /* U1: etkin hız seçimden hesaplanır (izlemeHizi); sabit hız için seçim yazılır, önemli anda yavaşlama kapatılır */
+  const oto0 = MAC_HIZ.oto; MAC_HIZ.oto = false; MAC_HIZ.secim = o.hiz; MAC_HIZ.deger = o.hiz;
   const v = new THREE.Vector3(), R = [], f2 = x => +x.toFixed(3);
   for (let i = 1; i <= o.sure * 60; i++) { macKare(1 / 60); if (i % 15) continue;
     kameraUygula(curView()); camera.updateMatrixWorld(); okunurlukKare(); const b = mac.ball; v.set(b.x, b.y + TOP_R, b.z - MOTOR_Z).project(camera);
@@ -919,7 +922,7 @@ ORNEK_JS = """(o) => {
       if (Math.abs(ay.x) <= 1 && Math.abs(ay.y) <= 1) boy.push(Math.abs(bas.y - ay.y) * 240); }
     boy.sort((a, b) => a - b);
     R.push({ faz: mac.phase, x: f2(v.x), y: f2(v.y), px: +px.toFixed(2), boy: boy.length ? boy[boy.length >> 1] : null }); }
-  MAC_HIZ.deger = 1;
+  MAC_HIZ.secim = 1; MAC_HIZ.deger = 1; MAC_HIZ.oto = oto0;
   const O = R.filter(r => r.faz === 'play'), n = Math.max(1, O.length), B = O.map(r => r.boy).filter(x => x != null).sort((a, b) => a - b);
   return { ornek: O.length, ic: +(O.filter(r => Math.abs(r.x) <= 0.45 && r.y >= -0.35 && r.y <= 0.45).length / n).toFixed(3),
     disarida: +(O.filter(r => Math.abs(r.x) > 1 || Math.abs(r.y) > 1).length / n).toFixed(3),
@@ -968,6 +971,87 @@ async def bolum_17(tarayici, site, tum_hatalar):
     # elle saatli sayfada kareler sunulmadan art arda verilir; yazılım çizimi (960×720 ızgara, 2×) birikir: görüntü öncesi kuyruk boşaltılır
     await pg.evaluate("renderer.getContext().finish()")
     await pg.screenshot(path=str(ARAC / "son-akis-17-mac.png"), timeout=180000)
+    tum_hatalar += hatalar
+    await baglam.close()
+
+
+# U1: maçı elle ilerletir (SAAT_JS sayfası); her karede motorun karesi ve etkin hız, ana motorun olayları kaydedilir
+IZLEME_JS = """(o) => {
+  const L = [], H = [], o0 = window.olay; window.olay = (ad, v) => { L.push([mac.kare, ad, ad === 'header' ? !!(v && v.shot) : null]); return o0(ad, v); };
+  MAC_HIZ.secim = o.secim; MAC_HIZ.oto = o.oto;
+  for (let g = 0; g < o.kare; g++) { macKare(1 / 60); H.push([mac.kare, +MAC_HIZ.deger.toFixed(3), mac.phase, MAC_HIZ.anda ? 1 : 0]); }
+  window.olay = o0;
+  const I = MAC_IZLEME; return { L, H, sapma: I.sapma, sapmaYer: I.sapmaYer, ikiz: !!I.ikiz, onde: I.ikiz ? I.ikiz.kare - mac.kare : null };
+}"""
+SONA_JS = """(n) => { MAC_HIZ.secim = 16; MAC_HIZ.oto = false; for (let g = 0; g < n && mac.phase !== 'fulltime'; g++) macKare(1 / 60);
+  for (let g = 0; g < 4; g++) macKare(1 / 60);
+  const I = MAC_IZLEME; return { faz: mac.phase, skor: mac.score.join('-'), sapma: I.sapma, sapmaYer: I.sapmaYer, son: I.son, ikizAdim: I.ikizAdim }; }"""
+
+
+async def bolum_18(tarayici, site, tum_hatalar):
+    """İzleme hızı ve önemli anlar (U1, 2026-10-12): 20 dakikalık maç, ×1 ×2 ×4, önemli anlarda kendiliğinden 1×, ikiz motor."""
+    # oda: Ayarlar > Maç (seçim ve önemli anlarda normal hız)
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.click('.od-nesne[data-panel="ayar"]')
+    await pg.click('[data-eylem="ayarBolum"][data-bolum="mac"]')
+    panel = await pg.text_content(".od-panel")
+    await pg.click('[data-eylem="macHizi"][data-hiz="4"]')
+    await pg.click('[data-eylem="otoYavas"]')
+    a1 = await pg.evaluate("({ h: OYUN.ayarlar.macHizi, o: OYUN.ayarlar.otoYavas, k: JSON.parse(localStorage.getItem('chairman:ayarlar')), m: [MAC_HIZ.secim, MAC_HIZ.oto] })")
+    await pg.click('[data-eylem="otoYavas"]')
+    a2 = await pg.evaluate("({ o: OYUN.ayarlar.otoYavas, k: JSON.parse(localStorage.getItem('chairman:ayarlar')).otoYavas, m: MAC_HIZ.oto })")
+    denetle("Ayarlar > Maç: hız (×1 ×2 ×4) ve 'önemli anlarda normal hız'; seçim ayarlara yazılıyor ve maçın hızına geçiyor; anahtar açılıp kapanıyor",
+            "Maç hızı" in panel and "Önemli anlarda normal hız" in panel and a1["h"] == 4 and a1["k"]["macHizi"] == 4 and a1["o"] is False and a1["k"]["otoYavas"] is False
+            and a1["m"] == [4, False] and a2["o"] is True and a2["k"] is True and a2["m"] is True, f"{a1} · {a2}")
+    await pg.context.close()
+    # maç: şeritteki düğmeler ve tuşlar, kalıcılık (ayarlar ortak depoda)
+    pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=3", "#btnMacaGec")
+    tum_hatalar += hatalar
+    d0 = await pg.evaluate("({ s: MAC_HIZ.secim, b: [...document.querySelectorAll('#izlemeHiz button')].map(b => b.textContent + ':' + b.getAttribute('aria-pressed')).join(',') })")
+    await pg.click('#izlemeHiz [data-izhiz="2"]')
+    d1 = await pg.evaluate("({ s: MAC_HIZ.secim, k: JSON.parse(localStorage.getItem('chairman:ayarlar')).macHizi, p: document.querySelector('#izlemeHiz [data-izhiz=\"2\"]').getAttribute('aria-pressed'), g: document.querySelector('#hizSeg [data-hiz=\"2\"]').getAttribute('aria-pressed') })")
+    await pg.keyboard.press("Digit4")
+    d2 = await pg.evaluate("({ s: MAC_HIZ.secim, k: JSON.parse(localStorage.getItem('chairman:ayarlar')).macHizi })")
+    await pg.reload()
+    await pg.wait_for_selector("#btnMacaGec", timeout=20000)
+    d3 = await pg.evaluate("({ s: MAC_HIZ.secim, o: MAC_HIZ.oto, p: document.querySelector('#izlemeHiz [data-izhiz=\"4\"]').getAttribute('aria-pressed') })")
+    denetle("Maç şeridi: ×1 ×2 ×4 (yeni depoda ×1); düğme ve 4 tuşu seçimi ayarlara yazar, geliştirici paneli aynı seçimi gösterir; yenilemede seçim korunur",
+            d0["s"] == 1 and d0["b"] == "×1:true,×2:false,×4:false" and d1["s"] == 2 and d1["k"] == 2 and d1["p"] == "true" and d1["g"] == "true"
+            and d2["s"] == 4 and d2["k"] == 4 and d3["s"] == 4 and d3["o"] is True and d3["p"] == "true", f"{d0} · {d1} · {d2} · {d3}")
+    await pg.click('#izlemeHiz [data-izhiz="1"]')
+    await pg.context.close()
+    # belirlenimli maç: ×4 seçiliyken önemli anlardan önce 1×'e iniş; ikiz önde ve aynı
+    baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
+    await baglam.add_init_script(SAAT_JS)
+    pg = await baglam.new_page()
+    hatalar = []
+    pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
+    pg.on("console", lambda m: hatalar.append("Konsol: " + m.text) if (m.type == "error" or m.type == "warning" and "İzleme" in m.text) and "Failed to load resource" not in m.text else None)
+    await pg.goto((site / "index.html").as_uri() + "?ekran=mac&tohum=3")
+    await pg.wait_for_selector("#btnMacaGec", timeout=30000)
+    await pg.evaluate("__kare(2)")
+    await pg.click("#btnMacaGec")
+    r = await pg.evaluate(IZLEME_JS, {"secim": 4, "oto": True, "kare": 2400})
+    H, L = r["H"], r["L"]
+    hiz = {k: v for k, v, _, _ in H}
+    ana = [x for x in L if x[1] in ("shot", "goal") or (x[1] == "header" and x[2])]
+    ana = [x for x in ana if x[0] > 600]   # öne çıkma (~1 sn) bittikten sonra
+    yavas = []
+    for k, ad, _ in ana[:6]:
+        once = [v for kk, v in hiz.items() if k - 150 <= kk <= k]
+        yavas.append((ad, k, max(once) if once else None))
+    tepe = max(v for _, v, f, _ in H if f == "play") if H else 0
+    denetle("×4'te şut ve golden en az 2,5 sn önce izleme 1×'e inmiş (ikiz önceden bildirdi); arada ×4'e çıkıyor; ikiz 7 sn önde, sapma 0; olay anında gösterge 'önemli an'",
+            yavas and all(m is not None and m <= 1.05 for _, _, m in yavas) and tepe >= 3.9 and r["sapma"] == 0 and r["ikiz"] and r["onde"] == 420
+            and any(a == 1 for _, _, _, a in H), f"{yavas} · tepe {tepe} · sapma {r['sapma']} {r['sapmaYer'] or ''} · önde {r['onde']}")
+    s = None
+    for _ in range(12):
+        s = await pg.evaluate(SONA_JS, 600)
+        if s["faz"] == "fulltime":
+            break
+    denetle("Tarayıcıda maçın sonuna dek ikiz motor ana motorla aynı: olaylar her adımda eşleşti (sapma 0), maç sonu kayıtları aynı",
+            s and s["faz"] == "fulltime" and s["sapma"] == 0 and s["son"] and s["son"]["ayni"], str(s))
     tum_hatalar += hatalar
     await baglam.close()
 
@@ -1068,6 +1152,9 @@ async def ana():
         if sec("17"):
             print("\n17. Topa odaklı bakış ve maçın netliği")
             await bolum_17(tarayici, site, tum_hatalar)
+        if sec("18"):
+            print("\n18. İzleme hızı ve önemli anlar (U1)")
+            await bolum_18(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

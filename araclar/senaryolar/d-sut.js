@@ -4,7 +4,7 @@
    (ve şutu atan, vuruş anında oyundan alınır) vardır; kaleci şuttan önce kendi yer tutmasıyla yerleşir (önünde bir savunmacı varken; bire bir değil).
    Şut topun bir kopyası gibi havadanCoz ile hedefe gönderilir (sutVur'daki gibi T = mesafe/hız·1,06, alçak şutta üst dönüş). Sonuç: gol, kurtarış
    (tutma/çelme; çelmeden sonraki 1,5 sn içinde gol olursa gol), dışarı. Kabul: orta alçak şut ≤20 m'den %90+, üst köşe ≥18 m'den ≤%25,
-   16 m'den alt köşe %35–60; hız ve mesafeyle düzgün düşüş.
+   16 m'den alt köşe %35–60 (U1'den T12'ye dek bilgi: KAPI_ALT); hız ve mesafeyle düzgün düşüş. Kaleci her şutta dinçtir (U1).
    T9b-0 (2026-10-10): çelmenin sonu — kendi kalesine (çelmeden sonra gol), oyun dışına (oyun durdu), kalecinin yeniden tuttuğu, tehlikeli bölgeye
    (top yavaşladığında ya da 1,5 sn sonra kale çizgisine 11 m ve kale ortasına 9,16 m içinde), güvenli (geri kalanı). İkinci bölüm kalecinin
    niteliğine göre (kalecilik 0,85 iyi / 0,45 kötü; 11, 16, 20 m ve 16 m açılı × beş hedef × tipik hız). Kapılar (T9b-d; KAPI_D açılınca kabul dışı
@@ -13,6 +13,9 @@
    Kullanım: node araclar/mac-deneme.js --senaryo d-sut [tekrar, varsayılan 24] */
 'use strict';
 const KAPI_D=true;   /* T9b-d: açık */
+/* U1 (2026-10-12): "alt köşe 16 m" T9b'den beri ızgaradaki yorgunluk birikimiyle (kaleci ~80 dk eylem sonrası) tutuyordu; dinç kalecide %31
+   (bant 35–60) — maçta da ceza sahası içinden kurtarış %40 (gerçekte %55–65). Kaleci ve şut verimi T12'nin işi: o güne dek bilgi, T12 kabulünde kapı */
+const KAPI_ALT=false;
 const KOD=`(function(){
   const dt=1/60;
   function hazirla(tohum){
@@ -26,7 +29,9 @@ const KOD=`(function(){
     m.phase='play';m.phaseT=0;m.gameSec=600;m.durus=null;m.avantaj=null;
     for(const p of m.players){p.oyunda=false;p.eylem=null;p.kickCd=0;p.surus=null;p.tutus=null;p.x=-d*30;p.z=-20;p.vx=p.vz=0;p.tx=p.x;p.tz=p.z;}
     for(const k in gk)if(k.charAt(0)==='_'&&k!=='_kutle')gk[k]=null;
-    Object.assign(gk,{oyunda:true,x:gx+d*1.2,z:MZ,vx:0,vz:0,spd:0,eylem:null,tavir:null,penaltiTahmin:0,yon:d>0?0:Math.PI,zipla:null,yuk:0});
+    /* U1 (2026-10-12): kaleci her şutta dinç (yorgunluk 0, sprint enerjisi tam). Eskiden ızgaranın 2520 şutu aynı maçta art arda atılırken maç boyu
+       yorgunluk birikiyordu (~80 dk eylem); sonuç maçın uzunluğuna bağlıydı (yorgunluk birikimi gerçek saniye başına) */
+    Object.assign(gk,{oyunda:true,x:gx+d*1.2,z:MZ,vx:0,vz:0,spd:0,eylem:null,tavir:null,penaltiTahmin:0,yon:d>0?0:Math.PI,zipla:null,yuk:0,yorgunluk:0,enerji:1});
     Object.assign(at,{oyunda:true,x:bx-d*0.35,z:bz,yon:d>0?Math.PI:0});
     /* savunmacı şutçu ile kale arasında (kaleci bire bir çıkmasın); vuruştan önce oyundan alınır */
     const L=hyp(gx-bx,MZ-bz);Object.assign(df,{oyunda:true,x:bx+(gx-bx)/L*2.2,z:bz+(MZ-bz)/L*2.2,vx:0,vz:0});
@@ -82,11 +87,11 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const ust=top((y,h)=>h==='üst köşe'&&['20 m','25 m'].includes(y));
   const alt=top((y,h)=>h==='alt köşe'&&y==='16 m');
   const genel=top(()=>true);
-  const sat=(ad,x,a,b)=>{const ok=x>=a&&x<=b;console.log((ok?'  ':'! ')+ad.padEnd(46)+x.toFixed(1).padStart(6)+'%'+`   hedef ${a}–${b}`);return ok;};
+  const sat=(ad,x,a,b,bilgi)=>{const ok=x>=a&&x<=b;console.log((ok?'  ':'! ')+ad.padEnd(46)+x.toFixed(1).padStart(6)+'%'+`   hedef ${a}–${b}`+(bilgi?` (${bilgi})`:''));return ok||!!bilgi;};
   let ok=true;
   ok=sat('Orta alçak şut ≤20 m kurtarış',orta,90,100)&&ok;
   ok=sat('Üst köşe ≥18 m kurtarış',ust,0,25)&&ok;
-  ok=sat('Alt köşe 16 m kurtarış',alt,35,60)&&ok;
+  ok=sat('Alt köşe 16 m kurtarış',alt,35,60,KAPI_ALT?null:'bilgi; T12 kapısı')&&ok;
   console.log('  '+'Bütün ızgara kurtarış (bilgi)'.padEnd(46)+genel.toFixed(1).padStart(6)+'%');
   console.log('  Kurtarış biçimleri: '+Object.keys(bicimler).sort().map(k=>k+' '+bicimler[k]).join(' · '));
   /* T9b-0: çelmenin sonu; kalecinin niteliğine göre (iyi 0,85 / kötü 0,45) */

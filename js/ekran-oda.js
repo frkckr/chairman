@@ -244,14 +244,19 @@ function odaEkraniKur(kap,oyun,ayarlar){
        sozler:o=>{const ol=olayi(o.mesele.id);return ol&&typeof olaySozleri==='function'?sozlerBolumu(olaySozleri(k,ol.id),'Sözler'):'';}});
   }
 
-  /* ---- ayarlar: Okuma, Kayıt, Geliştirici (2.8J: sakin hareket bütün oyunun standardıdır; hareket ayarı yoktur) ---- */
+  /* ---- ayarlar: Okuma, Maç, Kayıt, Geliştirici (2.8J: sakin hareket bütün oyunun standardıdır; hareket ayarı yoktur). U1 (2026-10-12): Maç —
+     izleme hızı (maçtaki üst şeritle aynı seçim) ve önemli anlarda normal hız ---- */
   function ayarPaneli(){
-    const B=[['okuma','Okuma'],['kayit','Kayıt'],['gelistirici','Geliştirici']];
+    const B=[['okuma','Okuma'],['mac','Maç'],['kayit','Kayıt'],['gelistirici','Geliştirici']];
     if(!B.some(b=>b[0]===ayarBolum))ayarBolum='okuma';
     let ic='<div class="od-sekmeler" role="tablist">'+B.map(([a,ad])=>'<button type="button" role="tab" data-eylem="ayarBolum" data-bolum="'+a+'" aria-selected="'+(ayarBolum===a?'true':'false')+'" aria-pressed="'+(ayarBolum===a?'true':'false')+'">'+ad+'</button>').join('')+'</div>';
     const ac=(a,deger)=>'<button type="button" data-eylem="'+a+'" aria-pressed="'+(deger?'true':'false')+'">'+(deger?'Açık':'Kapalı')+'</button>';
     if(ayarBolum==='okuma')ic+='<div class="od-ayarSatir"><span>Yazı büyüklüğü</span><span class="od-dugmeler"><button type="button" data-eylem="yazi" data-yazi="normal" aria-pressed="'+(ayarlar.yazi!=='buyuk'?'true':'false')+'">Normal</button>'+
       '<button type="button" data-eylem="yazi" data-yazi="buyuk" aria-pressed="'+(ayarlar.yazi==='buyuk'?'true':'false')+'">Büyük</button></span></div>';
+    else if(ayarBolum==='mac'){const h=[1,2,4].includes(ayarlar.macHizi)?ayarlar.macHizi:1;
+      ic+='<div class="od-ayarSatir"><span>Maç hızı</span><span class="od-dugmeler">'+[1,2,4].map(v=>'<button type="button" data-eylem="macHizi" data-hiz="'+v+'" aria-pressed="'+(h===v?'true':'false')+'">×'+v+'</button>').join('')+'</span></div>'+
+        '<div class="od-ayarSatir"><span>Önemli anlarda normal hız</span>'+ac('otoYavas',ayarlar.otoYavas!==false)+'</div>'+
+        '<p class="od-not">Maç 20 dakika sürer; ×2 ve ×4 ile hızlı izlersin. Gol, şut, faul ve kart, sakatlık, korner, tehlikeli serbest vuruş ve ofsaytta maç birkaç saniye önce normal hıza iner, an geçince seçtiğin hıza döner. Maçta 1, 2 ve 4 tuşlarıyla da seçilir; maçın sonucu hızdan etkilenmez.</p>';}
     else if(ayarBolum==='kayit')ic+='<div class="od-ayarSatir"><span>Kayıt durumu</span><span class="'+(oyun.kayitHata()?'od-uyari':'')+'">'+yaz(oyun.kayitYazi())+'</span></div>'+
       '<p class="od-not">Oyun her tamamlanan karardan sonra kendiliğinden kaydeder. Maçın ortasından kayıt yoktur.</p>'+
       '<div class="od-dugmeler"><button type="button" data-eylem="kayitDene">Şimdi yeniden kaydet</button></div>'+
@@ -531,6 +536,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='girisim'){try{mesaj=komut(x=>girisimBaslat(x,b.dataset.girisim));secili=null;ajandaGun=k.tarih;ajandaHafta=0;ciz();}catch(x){hataGoster(x);}}
     else if(ey==='test'){ayarlar.test=!ayarlar.test;ayarlar.kaydet();ciz('[data-eylem="test"]');}
     else if(ey==='yazi'){ayarlar.yazi=b.dataset.yazi;ayarlar.kaydet();ciz('[data-eylem="yazi"][data-yazi="'+ayarlar.yazi+'"]');}
+    /* U1: maç hızı ve önemli anlarda normal hız (js/arayuz.js izlemeHizSec ve MAC_HIZ aynı seçimi okur) */
+    else if(ey==='macHizi'){ayarlar.macHizi=Number(b.dataset.hiz);ayarlar.kaydet();if(typeof izlemeHizSec==='function')izlemeHizSec(ayarlar.macHizi,false);ciz('[data-eylem="macHizi"][data-hiz="'+ayarlar.macHizi+'"]');}
+    else if(ey==='otoYavas'){ayarlar.otoYavas=ayarlar.otoYavas===false;ayarlar.kaydet();if(typeof MAC_HIZ!=='undefined')MAC_HIZ.oto=ayarlar.otoYavas;ciz('[data-eylem="otoYavas"]');}
     else if(ey==='yeniSor'){yeniOnay=true;ciz('[data-eylem="yeniHayir"]');}
     else if(ey==='yeniHayir'){yeniOnay=false;ciz();}
     else if(ey==='yeniEvet'){yeniOnay=false;mesaj=oyun.yeniKariyer();k=oyun.kariyer;acik=null;secili=null;seciliMesele=null;secimler={};

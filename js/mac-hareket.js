@@ -268,7 +268,7 @@ Object.assign(Match.prototype,{
      yorgunluk maç boyu birikendir (C1: birikim 2/3'e indi, top daha uzun oyunda kalıyor). T10c: duruşlardaki eski dinlenme birikimi siliyordu (90.
      dakikada ~0,01); artık kısa duruşta azalmaz, devre arasında devreDinlen; yorgunlukHiz ile 44. dakikada ~0,23, 89.'da ~0,33 */
   bedenAdim(dt){
-    const c=MOTOR_AYAR.yorgunlukHiz;
+    const c=MOTOR_AYAR.yorgunlukHiz*sureOlcek();   /* U1: aynı maç dakikasında aynı yorgunluk (maçın gerçek süresinden bağımsız) */
     for(const p of this.players)if(p.oyunda){const k=p.spd/p.maxSpd;p.yorgunluk=hrkMin(1,p.yorgunluk+dt*(0.00053+0.0016*k*k)*(1.25-p.oz.dayaniklilik)*c);}
   },
   /* T10g (hız): ısınan yedeğin basit hareketi — saha dışında, kimseyle etkileşmez: hedefe sabit tempoda (hız oranı × tepe hızın %55'i, varışta

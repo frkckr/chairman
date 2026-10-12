@@ -1,6 +1,6 @@
 # Chairman — oyun tasarımı
 
-Son güncelleme: 2026-10-10 (§13'e maç motorunun T10'da sorulacak iki kararı). Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md). **2026-10-02 iki seçenekli karar ve sade ekran yenilemesi 2.8G–2.8K ile uygulandı (TEST içerik; ilgili bölümlerdeki “Bugünkü uygulama” notları).**
+Son güncelleme: 2026-10-12 (U1: maç 20 dakika, izleme hızı ve önemli anlarda normal hız — §1, §6, §11, §13). Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md). **2026-10-02 iki seçenekli karar ve sade ekran yenilemesi 2.8G–2.8K ile uygulandı (TEST içerik; ilgili bölümlerdeki “Bugünkü uygulama” notları).**
 
 ## 1. Amaç ve kararların durumu
 
@@ -25,7 +25,7 @@ Belgeler ana çerçeveyi ve kabul koşullarını belirler. Claude veya başka uy
 - Futbolcuların ve teknik direktörlerin yetenek ve potansiyel puanları kullanıcıya gösterilmez.
 - Oyuncular, personel ve başkan yaşlanır. Kuşaklar değişir; emeklilik, ayrılış ve kayıplar dünya geçmişine işlenir.
 - Kariyer ağır tempoludur. Yoğun bir oyun günü yaklaşık bir saat, bazı günler daha uzun sürebilir; sakin günler kısa geçebilir. Hızlıca sezon tüketmek hedeflenmez.
-- Maç deneyimi için yaklaşık 10–15 dakika hedeflenir. Törenler ve toplam maç günü süresi ayrıca ölçülür; bunlar birbirine karıştırılmaz.
+- Maç deneyimi için yaklaşık 10–15 dakika hedeflenir. Törenler ve toplam maç günü süresi ayrıca ölçülür; bunlar birbirine karıştırılmaz. **2026-10-12 (kullanıcı kararı, U1):** motorun maçı 20 gerçek dakikadır (eskiden 10; olayların sıkıştırılması yarıya iner). Oyuncu maçı ×1, ×2 ya da ×4 izler; önemli anlarda (gol, şut, faul ve kart, sakatlık, korner ve tehlikeli serbest vuruş, ofsayt) izleme birkaç saniye önceden kendiliğinden normal hıza iner, an geçince seçilen hıza döner. Ölçü (santradan maç sonuna, devre arası hariç): ×1 ~22,5, ×2 ~13, ×4 ~8,5 dakika — 10–15 dakikalık hedef hız seçimiyle tutar. Ayrıntı [§11](#11-maçlar-mekânlar-ve-kulübün-büyümesi).
 - Başarı finali, **Avrupa'nın en büyük kulüp kupasını kazanmak ve ardından başkanlığı bırakmaktır**. Daha küçük bir kupa bu finali tetiklemez.
 - Kupasız kariyer sonları mümkündür. Sabit sezon sayısı sınırı konmaz; yaş, görev ve kariyer koşulları doğal bir sınır oluşturabilir. Kesin sonlandırma şartları açıktır.
 
@@ -207,7 +207,7 @@ Ajanda; zorunlu, ertelenebilir ve isteğe bağlı işleri ayırır. Bekleyen gö
 | Ekibe iş vermek | Ekip takvim ilerledikçe çalışır; başkan başka işlerle ilgilenebilir |
 | Antrenman izlemek | Oyuncunun başlattığı gözlem süresince kontrollü ilerler; mesajı açıp karar verirken durur |
 | Uyumlu işleri birlikte yapmak | Ortak zaman aralığı iki kez tüketilmez; iki yüz yüze görüşmeye aynı anda katılınamaz |
-| Maç izlemek | Maçın izleme temposu ve takvimde kapladığı süre ayrı hesaplanır |
+| Maç izlemek | Maçın izleme temposu ve takvimde kapladığı süre ayrı hesaplanır; izleme hızı (×1, ×2, ×4) oyuncunundur, önemli anlarda kendiliğinden normal hıza iner (U1, 2026-10-12) |
 | Maçta telefonu açmak | Maç durur; telefon kapatılınca diğer duraklatma nedenleri yoksa aynı andan sürer |
 | Genel “Duraklat” | Takvim ilerlemesi, maç ve sahnedeki bütün hareket/süreler durur; bilgi incelenebilir |
 | Sonraki önemli gelişmeye ilerlemek | Rutin işler işlenir; gerekli karar, randevu veya önemli gelişmede durulur |
@@ -242,7 +242,7 @@ Transfer gibi uzun olaylar farklı günlere yayılır: hazırlık, görüşme, h
 | Sakin gün | 1–5 dakika veya boş günleri birlikte ilerleme |
 | Olağan yönetim günü | 5–15 dakika |
 | Yoğun gün | 30–60 dakika; gerektiğinde daha uzun |
-| Maç | Mevcut 10–15 dakika hedefi |
+| Maç | Mevcut 10–15 dakika hedefi (U1, 2026-10-12: motorun maçı 20 dk; ×2 ile ~13, ×4 ile ~8,5 dk izlenir — önemli anlar normal hızda) |
 | Toplam maç günü | Yaklaşık 20–35 dakika; tören ve çevresindeki içerik ayrıca ölçülür |
 | Normal sezon | Yaklaşık 20–35 saat; fikstür, yetki devri ve katılım tercihleriyle birlikte sınanır |
 
@@ -371,6 +371,8 @@ Balkona odadaki kapıya tıklayarak çıkılır. Başkan doğal biçimde ayağa 
 
 Maç öncesi açık tonlarda **tek kompakt ekran** sunulur: armalar/karşılaşma, lig/hafta/saat, kısa form/sıra bilgisi ve tek cümle bağlam. Stat resmi, ayrı kadro/lig sayfaları ve yoğun tablolar kaldırılır. En az **10 saniyelik hazırlık**, dolan bir çubukla görünür; bu gerçek dosya yükleme yüzdesi diye sunulmaz. Süre tamamlanıp gerekli kaynaklar hazır olunca “Maça geç” etkinleşir, oyuncu kendisi geçer. Duraklat çubuğu da durdurur. Bekleme takvimde süre tüketmez ve maçı başlatmaz; §6'daki süre hedefleri bekleme kotasına dönüştürülmez.
 
+**Maçın uzunluğu ve izleme hızı (kullanıcı kararı, 2026-10-12; U1 ile uygulandı).** Oyuncular gerçek hızda koştuğu için 90 dakika gerçek zamanda oynanamaz; motorun maçı 20 gerçek dakikadır (maç saati 4,5 kat akar; eskiden 10 dakika ve 9 kat). Olayların maç başına sayısı iki katına çıkar: gol, şut ve kart gerçek maç değerine yaklaşır, pas ve faul gibi sık olaylar yine gerçeğin altında kalır. Oyuncu izleme hızını maçın altındaki şeritte (×1, ×2, ×4; 1/2/4 tuşları) ya da Ayarlar > Maç'ta seçer; seçim saklanır, varsayılan ×1'dir. **Önemli anlarda normal hız** (varsayılan açık, Ayarlar'da kapatılabilir): gol, şut, faul ve kart, sakatlık (düşüş ve hakemin durdurması), korner ve tehlikeli serbest vuruş (penaltı dahil) ve ofsayt bayrağında izleme birkaç saniye önce yumuşakça normal hıza iner; an normal hızda izlenir, sonra seçilen hıza döner. Taç, kale vuruşu, değişiklik, hakem topu, zaman geçirme, tedavi, sedye, gol sonrası santraya yürüyüş ve duran topun hazırlığı seçilen hızda geçer. Önceden bilmek için oyun aynı maçı birkaç saniye önden oynayan ikinci bir motor kullanır (maç tohumlu ve belirlenimcidir); maçın sonucu izleme hızından etkilenmez. Hız seçimi geçicidir: ileride maçın kariyerdeki yeri (atlama, yalnız özet) Aşama 3.7'de ayrıca değerlendirilir.
+
 Yazılı maç spikeri/radyo akışı kaldırılır. Skor ve dakika stat tabelasında; ayrıntılar masadaki telefondaki Canlı Skor uygulamasında görülür. Kendi maçının istatistikleri mevcut motorun ürettiği verilerdir. Diğer lig maçları gerçek fikstür, maç kimlikleri, kadrolar ve sonuç temeli kurulduğunda bağlanır (Aşama 3); o zamana kadar veri eksikliği açıkça gösterilir, uydurma canlı skor üretilmez.
 
 **Kullanıcı kararları (2026-10-04; [YOL_HARITASI N1–N12](YOL_HARITASI.md#2026-10-04-notlar-paketi-n1n12)).** *Uygulandı (N2, N4):* Canlı Skor'daki veri eksikliği notu kalktı: maçlar bağlandığında listede görünür, bağlanmayan için uyarı yazılmaz; uydurma skor yine üretilmez. Maçta bakış hep topu izler; elle bakış kalktı. Top toplayıcılar geri geldi (N10): oyuncu topu almaya saha dışına gitmez. *Uygulandı (N9, N11, N12):* seyirci kapıdan girip yerine yürür; aşağıdaki varış, loca ve karar anı uygulandı (karar anının seçimi henüz kariyere işlenmez; ilk kayıt TEST). *Önceki plan metni:* Stada varış karanlıktan açılan bir sahnedir ve statta olunduğunu gösterir. Loca kalabalıktır; rakip başkan yerinde olabilir, sonra gelebilir ya da hiç gelmeyebilir (ilişkiye bağlı; yazılmış içerikten gelir, uydurulmaz). Tokalaşma anında iki büyük seçenekli, yaklaşık beş saniyelik bir karar anı açılır; [§10 “Süreli cevaplar”](#süreli-cevaplar) kuralları geçerlidir (süre seçenekler okunur olduktan sonra başlar; süre dolunca sahneye uygun susma). Maç günü kariyere bağlanana kadar (3.5) bu seçim yalnız sahnede karşılık bulur.
@@ -409,5 +411,6 @@ Başarı finali kutlama, şehre dönüş, insanlarla veda ve bırakmayla tamamla
 | Olay paketlerinin ayrıntılı seçenekleri, katkı/hak koşulları ve tekrar aralıkları | İlgili yol haritası adımında; katalog uygulama veya kesin denge sayılmaz. P03'ün ilk örneği hisse/yatırımcı sistemi kurmaz |
 | Maçta sakatlık sıklığı, değişiklik hakkı (3 ya da 5) ve dönem kuralları ile işaretleri ([gerçekçilik planı §7 madde 6](MAC_MOTORU_GERCEKCILIK_PLANI.md#7-kullanıcının-karar-vermesi-gerekenler), Ek G10) | **Karar verildi (2026-10-11, T10 başı):** maç başına ~1 kısa sakatlık duraklaması ve ~0,3 oyundan çıkma (kariyere süre kaybı olarak, Aşama 3); bugünün kuralları (5 değişiklik, çıkan oyuncu en yakın çizgiden, hakem topu bırakılır, hücumcu barajdan 1 m, hocaya ve forma çıkarmaya kart) 1999 görünümüyle (VAR, sprey, 8 sn sayımı ve yatan barajcı yok; avantaj iki kolla; en çok 3 yedek ısınır); uygulama T10'da |
 | Yağmur ve rüzgârın maçta gösterilmesi ([gerçekçilik planı §7 madde 8](MAC_MOTORU_GERCEKCILIK_PLANI.md#7-kullanıcının-karar-vermesi-gerekenler)) | **Karar verildi (2026-10-11, T10 başı):** şimdilik gösterilmez; motor kapısı (T9a) kalır, maç kuru ve rüzgârsız; görünüm stadın gündüz/ışık/gölge işiyle birlikte |
+| Maçın gerçek uzunluğu ve izleme hızı | **Karar verildi (2026-10-12, U1):** motorun maçı 20 dakika; ×1, ×2, ×4 izleme ve önemli anlarda (gol, şut, faul ve kart, sakatlık, korner ve tehlikeli serbest vuruş, ofsayt) kendiliğinden normal hız ([§11](#11-maçlar-mekânlar-ve-kulübün-büyümesi)); maç atlama ya da yalnız özet seçenekleri Aşama 3.7'de |
 
 Geliştirme aşamaları ve açık işlerin tek takip yeri [YOL_HARITASI.md](YOL_HARITASI.md) dosyasıdır.

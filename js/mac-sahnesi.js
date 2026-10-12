@@ -8,7 +8,15 @@
    kalkması, tribün heyecanı, canlı skor tabelası ve başkanın bakışı. Yazılı spiker/radyo satırı 2.8A'da kaldırıldı.
    Faz 0 (2026-10-03): oyuncu pozları ve aktör yerleşimi js/animasyon.js'te (E akışı), başkanın bakışı ve kamera js/kamera.js'te (A akışı). */
 const MOTOR_Z=34,ADIM=1/60;
-const MAC_HIZ={deger:(()=>{try{const v=parseFloat(new URLSearchParams(location.search).get('hiz'));return [1,2,4,8,16].includes(v)?v:1;}catch(e){return 1;}})()};
+/* U1 (2026-10-12, kullanıcı kararı): izleme hızı. secim: oyuncunun seçimi (1, 2, 4; OYUN.ayarlar.macHizi — üst şeritteki düğmeler, 1/2/4 tuşları ve
+   Ayarlar > Maç), oto: önemli anlarda 1× (OYUN.ayarlar.otoYavas; js/mac-izleme.js), deger: bu karenin etkin hızı (macKare ve kamera okur), hedef:
+   izleme eğrisinin istediği hız, anda: önemli anın penceresinde mi (üst şeritteki gösterge). Geliştirici: ?hiz=1|2|4|8|16 sabit hız (önemli anda
+   yavaşlamaz; &oto=1 ile yavaşlar), deneme panelinde 8×. Maçın sonucu hızdan bağımsızdır (adım hep 1/60 sn) */
+const MAC_HIZ=(()=>{let s=null,oto=null;
+  try{const q=new URLSearchParams(location.search),v=parseFloat(q.get('hiz'));if([1,2,4,8,16].includes(v)){s=v;oto=q.get('oto')==='1';}}catch(e){}
+  const A=typeof OYUN!=='undefined'&&OYUN.ayarlar?OYUN.ayarlar:null;
+  if(s==null){s=A&&[1,2,4].includes(A.macHizi)?A.macHizi:1;oto=!(A&&A.otoYavas===false);}
+  return{secim:s,oto,deger:s,hedef:s,anda:false};})();
 /* ?tohum=123 ile aynı maç yeniden oynatılabilir */
 const MAC_TOHUM=(()=>{try{const v=parseInt(new URLSearchParams(location.search).get('tohum'),10);return Number.isFinite(v)?v:null;}catch(e){return null;}})();
 /* DURAKLAT: eski ad; ortak duraklatma yönetimini okur (js/sunum-durumu.js, 2.8B) */
@@ -20,9 +28,14 @@ function tribunOnu(taraftar){
     return{ana:{x:clamp(u,-40,40),z:3.5,nx:0,nz:-1},karsi:{x:clamp(u,-40,40),z:PW-3.5,nx:0,nz:1},kale1:{x:-PL+3.5,z:MZ+clamp(u,-22,22),nx:-1,nz:0},kale2:{x:PL-3.5,z:MZ+clamp(u,-22,22),nx:1,nz:0}}[tr.yer];}
   return null;}
 /* T10e: atmosfer (hakemin ev sahibi eğilimi, deplasmanın güven tabanı) maç günü tarifinin doluluğundan */
-const mac=new Match((ad,v)=>olayKuyrugu.push([ad,v]),{kadro:MAC_KADRO,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC_TOHUM,zemin:STAT.zemin,kosullar:{atmosfer:clamp(MAC_GUNU.doluluk,0,1)},
+const MAC_SECENEK={kadro:MAC_KADRO,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC_TOHUM,zemin:STAT.zemin,kosullar:{atmosfer:clamp(MAC_GUNU.doluluk,0,1)},
   kulubeler:KULUBELER.map(k=>({takim:k.takim,koltuklar:k.koltuklar.map(s=>({x:s.x,z:s.z+MOTOR_Z})),alan:{x:k.alan.x,z:k.alan.z+MOTOR_Z}})),
-  taraftarYeri:tribunOnu('ev')||undefined,deplasmanYeri:tribunOnu('deplasman')});
+  taraftarYeri:tribunOnu('ev')||undefined,deplasmanYeri:tribunOnu('deplasman')};
+/* U1: izleme (js/mac-izleme.js) — ana motorun her olayı ikizinkiyle karşılaştırılır; aynı seçenek ve tohumla kurulan ikiz önemli anları önceden
+   bildirir. Kurucunun kendi olayları (izleme kurulmadan) karşılaştırılmaz */
+let MAC_IZLEME=null;
+const mac=new Match((ad,v)=>{olayKuyrugu.push([ad,v]);if(MAC_IZLEME)izlemeAnaOlay(MAC_IZLEME,ad,v);},MAC_SECENEK);
+MAC_IZLEME=izlemeKur(mac,Match,MAC_SECENEK);
 
 /* ---- aktörler: motordaki her oyuncu, hakem ve top toplayıcı için bir model ---- */
 const AKTORLER=[];
@@ -135,11 +148,19 @@ function olay(ad,v){
 
 
 /* ---- "Maça geç": maç öncesini atla ---- */
-function macaGecIste(){if(!MAC_ONCESI.includes(mac.phase))return;mac.macaGec();for(const F of FLASLAR)F.t=9;}
+function macaGecIste(){if(!MAC_ONCESI.includes(mac.phase))return;mac.macaGec();izlemeMacaGec(MAC_IZLEME);for(const F of FLASLAR)F.t=9;}
 
+/* U1: bu karenin etkin hızı — oyuncunun seçimi, önemli anlarda 1×'e iner (eğri motor zamanında: izlemeHedefHiz); seçim değişince ya da ikiz
+   yokken (pencere olayla başlar) ani sıçrama olmasın diye gerçek zamanda saniyede en çok IZLEME_GECIS kat değişir. Duraklatmada (dt 0) değişmez */
+const IZLEME_GECIS=8;
+function izlemeHizi(dt){
+  const H=MAC_HIZ,h=H.oto?izlemeHedefHiz(MAC_IZLEME,H.secim):H.secim;H.hedef=h;H.anda=H.oto&&H.secim>1&&izlemeAnda(MAC_IZLEME);
+  if(!(dt>0))return;const d=h-H.deger,s=IZLEME_GECIS*dt;H.deger=Math.abs(d)<=s?h:H.deger+Math.sign(d)*s;
+}
 /* ---- her kare: motoru ilerlet, modelleri yerleştir ---- */
 let birikim=0,zaman=0;
 function macKare(dt){
+  izlemeHizi(dt);
   const dts=dt*MAC_HIZ.deger;zaman+=dts;birikim+=dts;
   let n=0;
   while(birikim>=ADIM&&n<240){
@@ -147,6 +168,7 @@ function macKare(dt){
     const b=mac.ball;TOP.px=b.x;TOP.py=b.y;TOP.pz=b.z;
     mac.step(ADIM);birikim-=ADIM;n++;
     while(olayKuyrugu.length){const [ad,v]=olayKuyrugu.shift();olay(ad,v);}
+    izlemeAdim(MAC_IZLEME);   /* U1: ikiz motor (js/mac-izleme.js) */
   }
   if(n>=240)birikim=0;
   const al=birikim/ADIM,b=mac.ball,bx=lerp(TOP.px,b.x,al),bz=lerp(TOP.pz,b.z,al)-MOTOR_Z,T=mac.tunel;

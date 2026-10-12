@@ -18,6 +18,7 @@ ayarEkle('Kurallar',{
   hakemKart:0.25,              // T10b: sertliğin kart eşiğine etkisi (uçlarda ±0,1)
   hakemYorgun:0.15,            // T10b: 75. dakikadan sonra yorgunluk: görme × (1 − f·(1,3 − kondisyon)·hakemYorgun), koşu temposu da düşer (Ek G7: son 15 dakikada hata %23)
   itirazKart:0.035,            // T10b: itiraz başına sarı olasılığı (× hakemeItiraz eğilimi, × hakemin sertliği; gerçekte itiraz sarısı maç başına ~0,3)
+  kartliHosgoru:0.4,           // U1: sarı kartlı oyuncuya ikinci sarının (pervasızlık ya da gelişen atak) gösterilme olasılığı çarpanı — hakemin ikinci sarıdaki isteksizliği. 20 dakikalık maçta sarı gerçek düzeyde (4–5) ama faul gerçeğin yarısı olduğundan kart/faul ~%31 (gerçekte ~%17): ikinci sarıdan kırmızı 0,28/maç çıkıyordu (gerçekte ~0,05–0,1). İlk deneme (eşiği 0,07 kaydırmak) etkisizdi (40 maç: kartlının faulünde kart %34)
   evEtki:0.03,                 // T10e: hakemin ev sahibi eğilimi: faul ve kart eşiği ± evEtki × atmosfer × (0,5 + evEgilim) (gerçekte deplasman ~%10–20 fazla sarı)
   /* T10d: yan hakemin ofsayt kararı (ofsaytPasAni): algılanan fark = gerçek + hizalanma hatası + hareket yanılgısı + gürültü */
   ofsaytLag:0.06,              // T10d: hareket yanılgısı (flash-lag, sn): ileri koşan hücumcu ve geri çekilen çizgi bu kadar ileride/geride görülür
@@ -423,6 +424,10 @@ Object.assign(Match.prototype,{
   cezaSahasi(t,x,z){const gx=-this.dir[t]*PL;return Math.abs(x-gx)<CEZA_U&&Math.abs(z-MZ)<CEZA_W;},
   kartGoster(p,renk,neden){
     const r=this.refs[0];
+    /* U1 (2026-10-12): kırmızı görmüş (çıkışı bekleyen) oyuncuya yeni kart verilmez — eskiden aynı duruşta faulden ikinci sarıdan sonra itirazdan
+       gelen sarı p.kart'ı 2'den 1'e geri yazıyor, oyuncu oyundan atılmıyordu (20 dakikalık taramada tohum 1) */
+    if((p.kart||0)>=2)return;
+    this.uzatmaBirikim[this.half-1]+=30;   /* U1: disiplin cezası uzatmaya girer (IFAB Kural 7; eskiden faul 15 + kart 15 faulde eklenirdi) */
     if(renk==='sari'&&p.kart===1)renk='ikinciSari';
     if(renk==='sari'){p.kart=1;this.ist.sari[p.team]++;}
     else{if(renk==='ikinciSari')this.ist.sari[p.team]++;p.kart=2;this.ist.kirmizi[p.team]++;}
@@ -439,16 +444,18 @@ Object.assign(Match.prototype,{
      olasılık), takım başına bir kez */
   zamanGecirEk(t,taban){const N=this._niyet&&this._niyet[t],z=N?N.zamanGecir:0;return z>0.05&&taban>0?taban*z*(0.6+0.8*this.rast()):0;},
   zamanGecirmeGoruldu(p,ek){
-    if(!p||!(ek>0))return;this.uzatmaBirikim[this.half-1]+=ek*GPR/3;this.on('zamanGecirme',{p,ek});
+    if(!p||!(ek>0))return;const uz=ek*saatCarpani()/3;this.uzatmaBirikim[this.half-1]+=uz;this.on('zamanGecirme',{p,ek,uz});   /* U1: uz uzatmaya eklenen (maç sn) */
     const Z=this.zgUyari,t=p.team;if(ek<3||Z[t]>=2)return;
     if(this.rast()>=0.25+0.3*(hkDeger(this,'sertlik')-0.5))return;
     if(!Z[t]){Z[t]=1;this.on('uyari',{p,neden:'zaman'});}else{Z[t]=2;this.kartGoster(p,'sari','zaman');}
   },
   itirazEt(yapan){
     let n=0;for(const q of this.teams[yapan.team]){if(!q.oyunda||q.rol==='GK'||n>=2)continue;
-      if(hyp(q.x-yapan.x,q.z-yapan.z)<14&&this.rast()<0.55){q.eylem={ad:'itiraz',t:0,sure:1.4+this.rast()};n++;
+      /* U1: sarı kartlı oyuncu daha az itiraz eder (0,55 → 0,25), hakem ona itirazdan sarıyı yarı olasılıkla gösterir (ikinci sarıda isteksizlik) */
+      const kartli=q.kart===1;
+      if(hyp(q.x-yapan.x,q.z-yapan.z)<14&&this.rast()<(kartli?0.25:0.55)){q.eylem={ad:'itiraz',t:0,sure:1.4+this.rast()};n++;
         /* T10b: itirazdan sarı — oyuncunun hakeme itiraz eğilimi (profil; eskiden okunmuyordu) ve hakemin sertliği; kartı olan da görebilir (ikinci sarı) */
-        if(this.rast()<MOTOR_AYAR.itirazKart*(1+1.5*Math.max(0,profilEgilim(q,'hakemeItiraz')))*(0.5+hkDeger(this,'sertlik')))this.kartGoster(q,'sari','itiraz');}}
+        if(this.rast()<MOTOR_AYAR.itirazKart*(1+1.5*Math.max(0,profilEgilim(q,'hakemeItiraz')))*(0.5+hkDeger(this,'sertlik'))*(kartli?0.5:1))this.kartGoster(q,'sari','itiraz');}}
   },
 
   /* her karede: avantajın süresi, kaleci elde, kayma teması */

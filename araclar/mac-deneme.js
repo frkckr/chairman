@@ -52,30 +52,31 @@ require('./motor-yukle').ayarUygula(ctx,AYAR);
 const OLCUM_KLASOR=path.join(__dirname,'olcumler');
 const EKLENTILER=fs.existsSync(OLCUM_KLASOR)?fs.readdirSync(OLCUM_KLASOR).filter(f=>f.endsWith('.js')).sort().map(f=>Object.assign({dosya:f},require(path.join(OLCUM_KLASOR,f)))):[];
 
-/* ---- hedef tablo: 10 dakikalık, kesintisiz maç (2026-09-28'de gözden geçirildi; bkz. YOL_HARITASI.md kararları) ----
-   Oyuncular gerçek hızda koştuğu için bir maçta ~7 dakika (≈400 sn) oyun oynanır; gerçek bir maçta bu ~55 dakikadır.
-   Gerçekçi kararlarla motor şut ve gol gibi önemli olayları gerçeğin dakika başına 2,5–3 katı sıklıkta üretir:
-   gol sayısı gerçeğe yakındır; şut, korner, taç ve pas gibi sık tekrarlanan olaylar gerçek maçın yarısından azdır.
-   Oranlar (isabet, pas isabeti, pas yönleri, uzun pas) gerçek maçlara göre tutulur. Sıkıştırmanın olay türüne göre hesabı (pas oyun dakikası
-   başına sıkışmaz, sahiplik ×2, savunma eylemi ×2,5–3,5): MAC_MOTORU_GERCEKCILIK_PLANI §7 madde 7 (2026-10-10). */
+/* ---- hedef tablo: 20 dakikalık maç (U1, 2026-10-12, kullanıcı kararı; 2026-09-28'den beri 10 dakikaydı) ----
+   Oyuncular gerçek hızda koştuğu için 20 dakikalık maçta ~14,5 dakika (≈870 sn) oyun oynanır; gerçek bir maçta bu ~55 dakikadır (oran ~0,26;
+   10 dakikada ~0,13). Olayların oyun dakikası başına sıklığı uzunluktan bağımsızdır, maç başına sayıları iki katıdır. Bantların kuralı (gerçekçilik
+   planı §7 madde 7, U1): 10 dakikalık bandın iki katı, gerçek maç değeriyle tavanlanır — oyun dakikası başına gerçek sıklıktaki olaylar (pas,
+   taç, kale vuruşu, küçük faul, hava mücadelesi) yine gerçeğin altında kalır; öne çıkan olaylar (gol, şut, kart) gerçek maç değerine varır.
+   Oranlar (isabet, pas isabeti, pas yönleri, uzun pas), uzatma (dk), değişiklik ve top oyunda payı uzunluktan bağımsızdır. Önceki sıkıştırma
+   hesabı (pas oyun dakikası başına sıkışmaz, sahiplik ×2, savunma eylemi ×2,5–3,5): §7 madde 7 (2026-10-10). */
 const HEDEF=[
-  ['Gol','gol',1.8,3.0],
-  ['Şut','sut',8,14],
+  ['Gol','gol',2.2,3.3],   // U1: 1,8–3,0 (10 dk; gerçek maç değeri) — 20 dakikada gerçek lig ortalamaları (2,5–3,3) ± 80 maçın standart hatası
+  ['Şut','sut',16,28],     // U1: 8–14 × 2 (gerçekte 22–28)
   ['İsabetli şut oranı %','isabetOran',30,45],
-  ['Korner','korner',2,6],
-  ['Taç','tac',5,12],
-  ['Kale vuruşu','kaleVurusu',2.5,8],
-  ['Faul','faul',4,9],   // T10g kararı (2026-10-11; gerçekçilik planı §7 madde 11 ve “T10 — Sonuç”): 8–14 → 4–9
-  ['Sarı kart','sari',1.5,3.5],
-  ['Kırmızı kart','kirmizi',0,0.2],
-  ['Ofsayt','ofsayt',0.3,2],
-  ['Pas','pas',110,200],
+  ['Korner','korner',4,12],   // U1: 2–6 × 2 (gerçekte ~10)
+  ['Taç','tac',10,24],     // U1: 5–12 × 2
+  ['Kale vuruşu','kaleVurusu',5,16],   // U1: 2,5–8 × 2
+  ['Faul','faul',8,18],    // U1: 4–9 × 2 (T10g kararı 8–14 → 4–9; gerçekte 20–28)
+  ['Sarı kart','sari',3,6],   // U1: 1,5–3,5 × 2, gerçek maç değeriyle tavan (lig ortalamaları ~3,5–5,2)
+  ['Kırmızı kart','kirmizi',0,0.3],   // U1: 0–0,2 × 2, gerçek maç değeriyle tavan (~0,1–0,25)
+  ['Ofsayt','ofsayt',0.6,4],   // U1: 0,3–2 × 2
+  ['Pas','pas',220,400],   // U1: 110–200 × 2
   ['Pas isabeti %','pasOran',70,85],   // T9b kararı (2026-10-11; gerçekçilik planı §7 madde 1): 65–80 → 70–85
   ['İleri pas %','ileriOran',30,45],
   ['Yan pas %','yanOran',35,58],
   ['Geri pas %','geriOran',10,25],
   ['Uzun pas %','uzunOran',10,24],
-  ['Hava topu mücadelesi','havaTopu',4,10],   // T10g kararı (2026-10-11; “T10 — Sonuç”): 6–15 → 4–10
+  ['Hava topu mücadelesi','havaTopu',8,20],   // U1: 4–10 × 2 (T10g kararı 6–15 → 4–10)
   ['Uzatma 1. yarı (dk)','uzatma1',1,4],
   ['Uzatma 2. yarı (dk)','uzatma2',3,7],
   ['Değişiklik (takım başına)','degisiklik',2,4],
@@ -161,7 +162,7 @@ function macOyna(tohum,sinir){
     if(bu.goal){sutlar.gol++;return;}
     if(bu.save||gk){sutlar.kurtaris++;if(a.cerceve)sutlar.kurtarisCerceve++;if(bu.catch||gk)sutlar.tutma++;}}
   m.macaGec();
-  let adim=0;const MAKS=sinir||60*60*30,dt=1/60,onceki=new Map(),hizlar=[],ivmeler=[],icinde=new Set();let mesafe=0,gecti=0,gectiBaska=0,sprint=0;
+  let adim=0;const MAKS=sinir||60*60*60,dt=1/60,   /* güvenlik sınırı 60 gerçek dk (U1: 20 dakikalık maç ~23 dk sürer) */onceki=new Map(),hizlar=[],ivmeler=[],icinde=new Set();let mesafe=0,gecti=0,gectiBaska=0,sprint=0;
   let bosta=0,cift=0,karsiPres=0,kalecisiz=0,sonSahip=-1,kayip=[-99,-99];const boylar=[],enler=[];
   /* pas izleme: ist.pas artınca yeni pas (top.pas), ist.pasTamam artınca tamamlandı, top.pas boşalınca tamamlanmadı */
   const pasK={kisa:[0,0],orta:[0,0],uzun:[0,0],ara:[0,0],donus:[0,0],cross:[0,0],tek:[0,0]};let pasN=0,pasTN=0,aktifPas=null,sonTamam=null,verKac=0;
@@ -236,7 +237,7 @@ function macOyna(tohum,sinir){
   s.oyundaOran=100*s.oyunda/(s.toplam||1);
   Object.assign(s,{golEv:m.score[0],golDep:m.score[1],sutEv:I.sut[0],sutDep:I.sut[1],sahiplikEv:100*I.sahiplik[0]/((I.sahiplik[0]+I.sahiplik[1])||1),
     kurtaris:olay.save,kafa:olay.header,blok:olay.block,sekme:olay.sekme,kapma:olay.steal,pasHiz:ort(pasH),sutHiz:ort(sutH),sutHizMaks:sutH.length?Math.max(...sutH):NaN,
-    hizMaks:hizlar.length?Math.max(...hizlar):NaN,hiz99:yuzdelik(hizlar,0.99),ivme99:yuzdelik(ivmeler,0.99),mesafe:mesafe/22,icindenGecti:gecti,icindenGectiBaska:gectiBaska,
+    hizMaks:hizlar.length?hizlar.reduce((a,v)=>v>a?v:a,-Infinity):NaN,   /* U1: uzun maçta dizi yayılımı (Math.max(...)) yığını taşırıyordu */hiz99:yuzdelik(hizlar,0.99),ivme99:yuzdelik(ivmeler,0.99),mesafe:mesafe/22,icindenGecti:gecti,icindenGectiBaska:gectiBaska,
     bosta,cift,karsiPres,kalecisiz,boy:ort(boylar),en:ort(enler)});
   /* Faz 0 ölçümleri: oranlar toplam üzerinden hesaplanabilsin diye pay/payda ayrı saklanır (ham: [pay, payda]) */
   s.ham={pasKisaOran:[pasK.kisa[1],pasK.kisa[0]],pasOrtaOran:[pasK.orta[1],pasK.orta[0]],pasUzunOran:[pasK.uzun[1],pasK.uzun[0]],

@@ -1,6 +1,6 @@
 # Chairman
 
-Geliştirme aşamasındaki futbol kulübü başkanlığı oyunu: Türkiye'de geçen, tek kurgusal kulüpte (bugünkü adıyla Demirkapı SK) uzun bir başkanlık kariyeri. Oyuncu başkanı yönetir; maçları başkanın locasından, '99 dönemini anımsatan kodla çizilmiş üç boyutlu bir statta izler.
+Geliştirme aşamasındaki futbol kulübü başkanlığı oyunu: Türkiye'de geçen, tek kurgusal kulüpte (bugünkü adıyla Demirkapı SK) uzun bir başkanlık kariyeri. Oyuncu başkanı yönetir; maçları başkanın locasından, '99 dönemini anımsatan kodla çizilmiş üç boyutlu bir statta izler. Maç 20 dakika sürer; maçın altındaki şeritten (ya da 1, 2, 4 tuşlarıyla) ×2 ya da ×4 hızlandırılabilir, gol, şut, faul gibi önemli anlar kendiliğinden normal hızda izlenir.
 
 ## Açmak
 

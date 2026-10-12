@@ -5,7 +5,7 @@
    verilmeyen hava faulü — olay faulGorulmedi, P 0,5, kaynak hava — görme payına girmez, ayrı sayılır), kırmızı kart (ya da ikinci sarı) gördüğü
    hâlde 12 sn sonra sahada kalan oyuncu (T10 teşhisindeki hata 1; kabul 0), gol → santra süresi (gol olayından santraya; T10 kararı 20–35 sn),
    değişikliğin dakikası ve süresi (değişiklik olayından oyuncu girene), uzatmanın kaynakları (motorun birikimiyle aynı ölçek: gol 50, değişiklik 30,
-   faul 15 (+15 kart), penaltı 60, avantajdan dönen faul 15 sn), zaman geçirme göstergesi (önde olan takımın kullandığı taç, korner, kale vuruşu ve
+   kart 30, penaltı 60 sn; U1'e dek faul 15 (+15 kart) ve avantajdan dönen faul 15), zaman geçirme göstergesi (önde olan takımın kullandığı taç, korner, kale vuruşu ve
    serbest vuruşta duruşun süresi: 75. dakikadan önce ve sonra), topa çarpan hakem, sakatlık (olay sakatlik {tur, derece: agri|tedavi|cikis};
    T10c'de türe göre kas ve kramp; uzatmaya sakatlığın eklediği hakemTopu.ek), maç boyu yorgunluk (44. ve 89. dakika) ve gollerin zamanı
    (T10c); T10d: zaman geçirme (uyarı, sarı, uzatmaya eklenen), hakem topu (kaynak, ceza sahasında kaleciye, bırakıldı mı), ofsayt (yanlış bayrak,
@@ -34,7 +34,7 @@ module.exports={
     ['Değişiklik: gerideyken forvet giren %','oDegGeriFv',1],
     ['Uzatma kaynağı: gol (sn / maç)','oUzGol',0],
     ['Uzatma kaynağı: değişiklik (sn / maç)','oUzDeg',0],
-    ['Uzatma kaynağı: faul ve kart (sn / maç)','oUzFaul',0],
+    ['Uzatma kaynağı: kart (sn / maç; U1 — eskiden faul ve kart)','oUzFaul',0],
     ['Uzatma kaynağı: penaltı (sn / maç)','oUzPen',0],
     ['Uzatma kaynağı: sakatlık (sn / maç; T10c)','oUzSak',0],
     ['Zaman geçirme: öndeki takımın duruşu, 75. dk öncesi (sn)','oZgOnce',1],
@@ -77,16 +77,15 @@ module.exports={
         if(ad==='tutma')tutma++;else if(ad==='elleOynama')el++;else if(ad==='kart'&&v.neden==='itiraz')itiraz++;else if(ad==='kart'&&v.neden==='zaman')zgSari++;
         if(ad==='faul'&&v.neden==='el'&&v.penalti)elPen++;
         if(ad==='faul'&&v.penalti&&!v.avantajdan){const k=v.kaynak;pen[k==='mudahale'||k==='kayma'?0:k==='tutma'||k==='carpma'||k==='omuz'||k==='basma'?1:k==='hava'||k==='kaleci'?2:k==='el'?3:4]++;}
-        if(ad==='faul'){
-          if(v.avantajdan)uzFaul+=15;
-          else{if(v.penalti)uzPen+=60;else uzFaul+=15+(v.kart?15:0);gorme(m,v.x,v.z,true);}}
+        /* U1 (2026-10-12): uzatmaya penaltı 60 ve kart 30 girer, sıradan faul girmez (motorla aynı ölçek; eskiden faul 15 + kart 15) */
+        if(ad==='faul'){if(!v.avantajdan){if(v.penalti)uzPen+=60;gorme(m,v.x,v.z,true);}}
         else if(ad==='avantaj'){const q=v.faulYiyen;if(q)gorme(m,q.x,q.z,true);}
         else if(ad==='faulGorulmedi'){if(v.kaynak==='hava'&&v.P===0.5)kutuHava++;else gorme(m,v.x,v.z,false);}
-        else if(ad==='kart'){if(v.renk==='kirmizi'||v.renk==='ikinciSari')kirmizi.push({p:v.p,t:m.t});}
+        else if(ad==='kart'){uzFaul+=30;if(v.renk==='kirmizi'||v.renk==='ikinciSari')kirmizi.push({p:v.p,t:m.t});}
         else if(ad==='goal'){if(m.t-kactiT[v.team]<8)ofsGol++;uzGol+=50;golT=m.t;golH=m.half;golN++;if(m.half===2)golIki++;if(m.gameSec<900)golIlk++;else if(m.half===2&&m.gameSec>=4500)golSon++;}
         else if(ad==='hakemTopu'){uzSak+=v.ek||0;if(v.neden==='hakem')htHakem++;else htSak++;if(v.kutu)htKutu++;}
         else if(ad==='hakemTopuBirak')htBirak++;
-        else if(ad==='zamanGecirme')uzZg+=v.ek*9/3;
+        else if(ad==='zamanGecirme')uzZg+=v.uz;   /* U1: motorun eklediği (maç saati sn; eskiden elle 9 ile çevriliyordu) */
         else if(ad==='uyari'&&v.neden==='zaman')zgUyari++;
         else if(ad==='kickoff'){if(golT!=null&&golH===m.half)(golAcele?golSantraAcele:golSantra).push(m.t-golT);golT=null;golAcele=false;}
         else if(ad==='topuAgdanAldi'){agdan++;golAcele=true;}

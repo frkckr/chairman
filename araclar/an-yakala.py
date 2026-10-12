@@ -265,7 +265,7 @@ async def ana():
     ap.add_argument("--sonra", type=float, default=None)
     ap.add_argument("--yakin")
     ap.add_argument("--onek", default="")
-    ap.add_argument("--en-cok", dest="en_cok", type=float, default=900)
+    ap.add_argument("--en-cok", dest="en_cok", type=float, default=1500)   # U1 (2026-10-12): maç 20 dakika (~1400 sn); eskiden 900
     ap.add_argument("--js")
     ap.add_argument("--oncesi", action="store_true")
     ap.add_argument("--giris", action="store_true")

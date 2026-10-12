@@ -34,7 +34,7 @@ module.exports={
       ['Kafa: |zamanlama| ortanca (sn)','hKafaZamMut',3],['Kafa yüzeyi (T6c): alın %','hY_alin',1],['Kafa yüzeyi: yan %','hY_yan',1],
       ['Kafa yüzeyi: tepe (sıyırma) %','hY_tepe',1],['Kafa yüzeyi: yüz ve boyun %','hY_yuz',1],['Kafa: çekişmeli (düelloda) %','hY_cek',1],
       ['Sonra: atan takım topu tuttu %','hTuttu',1],
-      ['Hava faulü / maç','hFaul',2,[0.8,2.5,'T6']]]),
+      ['Hava faulü / maç','hFaul',2,[1.6,5,'T6']]]),   /* U1 (20 dakikalık maç): 0,8–2,5 × 2 */
   yeni:()=>{
     const hyp=Math.hypot,kaynak={},temas={};for(const k of H_KAYNAK)kaynak[k]=0;for(const k of H_TEMAS)temas[k]=0;
     let bolum=0,inis=0,cek15=0,cek3=0,bos3=0,cekKafa=0,cekN=0,temasAtan=0,temasN=0,duello=0,sicrama=0,sicramaKos=0,kafaSicrama=0,kafaN=0,tuttu=0,tuttuN=0,faul=0;

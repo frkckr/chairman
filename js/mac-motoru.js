@@ -1,6 +1,7 @@
 /* ============ Chairman — maç motoru: görüntüden bağımsız oyun mantığı ============
    Koordinatlar: x −52,5…52,5 (kaleler), z 0…68 (z=0 ana tribün tarafındaki taç çizgisi). Görüntü katmanı z'den 34 çıkarır.
-   Zaman: motor sabit adımla (1/60 sn) ilerler. Hareketler gerçek hızdadır; maç saati 9 kat hızlı akar (90 dk ≈ 10 dk).
+   Zaman: motor sabit adımla (1/60 sn) ilerler. Hareketler gerçek hızdadır; maç saati 90/macSuresiDk kat hızlı akar (U1, 2026-10-12: maçın
+   gerçek süresi MOTOR_AYAR.macSuresiDk; eskiden sabit GPR=9, 90 dk ≈ 10 dk).
    Evreler: isinma → giris → toren → selam → yazitura (maç günü: js/mac-oncesi.js) → kickoff → play ⇄ durus (taç, korner, aut,
    serbest vuruş, penaltı) / goal → halftime → … → fulltime.
    Oyuncunun gerçek bir bakış yönü (yon) vardır ve dönüşü sınırlıdır: hızlı koşarken yavaş döner, geri geri koşamaz.
@@ -17,7 +18,7 @@
    erişemediği topa çarpan beden topu yansıtır (blok ve bacaktan sekme de yansımadır; hakem de engeldir). Oyuncuların kütlesi (boy, yapı, sertlik)
    çarpışmada momentumu paylaştırır; ivme düşük hızda güçlü, tepe hıza yaklaştıkça azalır; hava topunda oyuncu gerçekten sıçrar (p.yuk) ve
    temas anında en yükseğe ulaşan avantajlıdır. Yorgunluk hız, ivme, vuruş isabeti ve karar süresini etkiler; duraklamada ve devre arasında azalır. */
-const PL=52.5,PW=68,MZ=34,GH=2.44,GW2=3.66,GPR=9,G=9.81;
+const PL=52.5,PW=68,MZ=34,GH=2.44,GW2=3.66,G=9.81;
 /* ---- top fiziği (T9a, 2026-10-07; gerçekçilik planı §4 T9 "Top"): sürükleme hıza bağlı, dönüş açısal hızla ve doyan Magnus, sekmede dik
    geri sekme çarpma hızıyla azalır ve sürtünme itkisi kaymayı giderir, yerde kayma → yuvarlanma, koşul kapısı (ıslak, rüzgâr). Dönüş iki açısal
    hızla tutulur (wYan düşey eksen: falso; wUst enine eksen: üst/kesik dönüş; rad/sn); egri ve ust vuruşun girdisi ve her adımda dönüşten yeniden
@@ -50,6 +51,7 @@ const VARSAYILAN_TAKTIK={dizilis:'4-4-2',sakin:0.5,direkt:0.5,risk:1,pres:0.5,te
    aynıdır. Yeni anahtar: önce buraya (sahibinin satırına), sonra akışın ayarEkle'sine. ayarEkle bildirilmemiş ya da iki kez atanan anahtarda hata
    verir; araclar/motor-yukle.js yüklemeden sonra değeri atanmamış anahtarı hata sayar, araclar/ad-denetimi.js ikisini kaynakta denetler. */
 const MOTOR_AYAR={
+  macSuresiDk:20,              // U1 (2026-10-12, kullanıcı kararı; eskiden 10): maçın gerçek süresi (dk; uzatma ve devre arası hariç): maç saati 90/macSuresiDk kat hızlı akar (saatCarpani)
   gecis:0.7,                   // topu kaybeden takımın savunma düzenine geçme gecikmesi (sn)
   donus:0.75,                  // savunmaya dönüşte topa uzak oyuncunun hız oranı (birleştirme 2026-10-03: 0,85 → 0,75, koşu mesafesi)
   karsiPres:3.0,               // top kaybından sonra karşı pres süresi (sn; takımın pres ayarıyla 0,6–1,4 katı) (MM2)
@@ -90,7 +92,7 @@ const MOTOR_AYAR={
   presTetikMesafe:undefined,golgePres:undefined,kosucuTakip:undefined,hatCik:undefined,kutuSavunma:undefined,kompakt:undefined,
   mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,guvenEtki:undefined,guvenRisk:undefined,guvenSure:undefined,evGuven:undefined,
   /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
-  hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,itirazKart:undefined,evEtki:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
+  hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,itirazKart:undefined,kartliHosgoru:undefined,evEtki:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
   ofsaytBayrak:undefined,ofsaytBekle:undefined,
   /* K — js/mac-durantop.js (T8) */
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
@@ -98,11 +100,15 @@ const MOTOR_AYAR={
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined
 };
-const MOTOR_AYAR_SAHIBI={gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
+const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
   if(!Object.prototype.hasOwnProperty.call(MOTOR_AYAR,k))throw new Error('MOTOR_AYAR.'+k+' bildirilmemiş ('+akis+'; önce js/mac-motoru.js MOTOR_AYAR)');
   if(MOTOR_AYAR_SAHIBI[k])throw new Error('MOTOR_AYAR.'+k+' iki kez eklendi ('+MOTOR_AYAR_SAHIBI[k]+', '+akis+')');
   MOTOR_AYAR[k]=o[k];MOTOR_AYAR_SAHIBI[k]=akis;}}
+/* U1 (2026-10-12): maç saatinin hızı (eski GPR; 10 dk'da 9) ve gerçek saniye başına tanımlı, 10 dakikalık maça göre ayarlanmış oranların
+   (maç boyu yorgunluk, sakatlık tehlikesi) çarpanı: oran × sureOlcek aynı maç dakikasında aynı değeri verir (10 dk'da 1). Duran top, sakatlık
+   duraklaması, sevinç gibi gerçek saniyeyle tanımlı süreler ölçeklenmez (izlenebilirlik kararları; gerçekçilik planı “U1”) */
+const saatCarpani=()=>90/MOTOR_AYAR.macSuresiDk,sureOlcek=()=>10/MOTOR_AYAR.macSuresiDk;
 /* eylem adımları: eylem adı → işlev(p, e, dt), this maçtır; sahibinin dosyasında kaydedilir (Faz 0) */
 const EYLEM_ADIM={};
 
@@ -221,7 +227,8 @@ class Match{
     this.ist={sut:[0,0],isabet:[0,0],korner:[0,0],tac:[0,0],kaleVurusu:[0,0],faul:[0,0],sari:[0,0],kirmizi:[0,0],ofsayt:[0,0],
       pas:[0,0],pasTamam:[0,0],pasYon:{ileri:0,yan:0,geri:0},uzunPas:0,havaTopu:0,uzatma:[0,0],degisiklik:[0,0],oyunda:0,toplam:0,sahiplik:[0,0]};
     this.shots=this.ist.sut;this.poss=this.ist.sahiplik;
-    /* uzatmanın birikimi (maç saati sn; yarı başına: gol 50, değişiklik 30, faul 15 (+15 kart), penaltı 60, sakatlık 60/90 …). T10d (T10 teşhisi
+    /* uzatmanın birikimi (maç saati sn; yarı başına: gol 50, değişiklik 30, kart 30 (U1; eskiden faul 15 + kart 15), penaltı 60, sakatlık 60/90,
+       zaman geçirme kaybın üçte biri). T10d (T10 teşhisi
        hata 7): eski adı duranSure'ydi, MOTOR_AYAR.duranSure (duran topun hazırlığı) ile aynı adı taşıyordu */
     this.uzatmaBirikim=[0,0];this.added=[60,120];this.uzatmaIlan=[false,false];
     this.taktik=[0,1].map(t=>Object.assign({},VARSAYILAN_TAKTIK,this.kadro&&this.kadro[t].taktik));
@@ -315,7 +322,7 @@ class Match{
   step(dt){
     this.t+=dt;this.phaseT+=dt;this.kare=(this.kare||0)+1;
     const saat=this.phase!=='halftime'&&this.phase!=='fulltime'&&!MAC_ONCESI.includes(this.phase);
-    if(saat){this.gameSec+=dt*GPR;this.ist.toplam+=dt;if(this.phase==='play')this.ist.oyunda+=dt;}
+    if(saat){this.gameSec+=dt*saatCarpani();this.ist.toplam+=dt;if(this.phase==='play')this.ist.oyunda+=dt;}
     this.hakemAI(dt);
     switch(this.phase){
       case 'isinma':this.stepIsinma(dt);break;

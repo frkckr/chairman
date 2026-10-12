@@ -49,7 +49,7 @@ Object.assign(Match.prototype,{
   sakatlikTemas(p,siddet,neden,kaynak){
     if(!kaynak||kaynak.team===p.team||!SK_TEMAS.has(neden)||!p.oyunda||p.sakat)return;
     const s=clamp(siddet||0,0,1);
-    if(this.skRast()>=MOTOR_AYAR.sakatTemas*(0.3+0.7*s*s)*skYatkinlik(p))return;
+    if(this.skRast()>=MOTOR_AYAR.sakatTemas*sureOlcek()*(0.3+0.7*s*s)*skYatkinlik(p))return;   /* U1: uzun maçta düşüş çok, maç başına sıklık aynı */
     const u=this.skRast(),Pc=0.025+0.14*s,Pt=0.28+0.2*s,derece=u<Pc?'cikis':u<Pc+Pt?'tedavi':'agri';
     const bolge=neden==='hava'?(u<0.5?'kafa':'omuz'):neden==='kayma'||neden==='takilma'?(u<0.6?'bilek':'diz'):u<0.5?'baldir':'diz';
     this.sakatlikBaslat(p,'temas',bolge,derece);
@@ -81,7 +81,7 @@ Object.assign(Match.prototype,{
     for(const s of this.kenar)if(s.kind==='saglikci'&&!s.gorev){s.tx=s.ev.x;s.tz=s.ev.z;s.hizOran=0.35;s.poz=null;s.bak=null;s.yonHedef=hyp(s.x-s.ev.x,s.z-s.ev.z)<1.5?Math.PI/2:null;}   /* T10g: yerinde sahaya dönük */
     for(const p of this.players)if(p.topal&&this.t>p.topal.son)p.topal=null;
     if(this.phase!=='play')return;
-    const ds=dt*6,son=this.half===2&&this.gameSec>4200;
+    const ds=dt*6*sureOlcek(),son=this.half===2&&this.gameSec>4200;   /* U1: tehlike gerçek saniye başına; maç dakikası başına aynı kalsın */
     for(const p of this.players){if(!p.oyunda||p.sakat||p.eylem&&p.eylem.kilit)continue;
       const y=p.yorgunluk||0,yt=skYatkinlik(p);
       if(p.spd>0.85*p.maxSpd){if(this.skRast()<MOTOR_AYAR.sakatKas*(0.3+y)*(0.3+y)*yt*ds){const u=this.skRast();this.sakatlikBaslat(p,'kas',u<0.6?'arkaAdale':'baldir',u<0.5?'cikis':u<0.9?'tedavi':'agri');}}
