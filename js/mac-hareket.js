@@ -688,6 +688,13 @@ Object.assign(Match.prototype,{
         if(Y.mek==='kesme'){p.tx=p.x+p.vx*0.45;p.tz=p.z+p.vz*0.45;}else{p.tx=p.x+hrkCos(Y.yon)*g;p.tz=p.z+hrkSin(Y.yon)*g;}
         p.hizOran=1;p.bak=b;p.yonHedef=Y.mek==='aldat'?Y.yon:null;return;}
       p.yutma=null;}
+    /* T12b (2026-10-12): orta bloğu — ortacı ortaya ya da geri çevirmeye gerildiğinde (vuruş eylemi, temastan önce) 4,5 m içindeki 1. adam ortanın
+       yoluna, toptan 1 m öteye adım atar; temasta bloğu ortaBlok çözer (bacak ve gövde erişimi, js/mac-mudahale.js). Ortacı karar anında bunu
+       göremez. Eskiden savunmacı jokeyde 1,5–2 m'de bekliyordu, top 3 m'de 1,2 m'nin üstüne çıktığı için orta hiç bloklanmıyordu (T12-0) */
+    const ev=s.eylem;
+    if(ev&&ev.ad==='vurus'&&ev.sec&&(ev.sec.tur==='orta'||ev.sec.tur==='geriCevir')&&ev.faz!=='takip'&&mesafe<4.5){
+      const lx=ev.sec.hx-b.x,lz=ev.sec.hz-b.z,ll=hrkHyp(lx,lz)||1;
+      p.tx=b.x+lx/ll;p.tz=b.z+lz/ll;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);p._ortaBlokT=this.t;return;}
     /* T4: çalım sırasında aldatılmayan savunmacı sürücüyü kısa gecikmeyle izler (0,08 sn; hareketi okudu): aldatma artık süzgecin yan etkisi değil,
        yutma zarının sonucudur. İtişten sonra (tepki süresi geçince) top sürücüden 1,2 m'den fazla açıldıysa ve savunmacı topun yoluna sürücüden
        önce yetişebiliyorsa topa koşar (birebirTahmin'in yarışı); yetişemiyorsa kale tarafında jokeyini sürdürür */

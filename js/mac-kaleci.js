@@ -305,7 +305,9 @@ Object.assign(Match.prototype,{
       let sx=-b.vz/hL,sz=b.vx/hL;const yr=Math.abs(b.z-MZ)>0.3?b.z-MZ:(b.z-gk.z)||1;if(sz*yr<0){sx=-sx;sz=-sz;}
       const al=b.y>1.6&&Math.abs(b.x-gx)<4?clamp((b.y-1.6)/0.6,0,1):0;
       let wx=sx*(1-al),wy=al,wz=sz*(1-al);const wv=wx*ux+wy*uy+wz*uz;wx-=wv*ux;wy-=wv*uy;wz-=wv*uz;const wn=hyp3(wx,wy,wz)||1;wx/=wn;wy/=wn;wz/=wn;
-      const th=0.2+0.4*clamp(Math.abs(b.z-MZ)/GW2,0,1)+0.1*(k-0.7)+this.normal()*(0.12+0.3*(1-k)+0.4*Math.max(0,(u||0)-0.6)+0.006*Math.max(0,v-20)),c=Math.cos(th),s=Math.sin(th);
+      /* T12b (2026-10-12): plan direğe yakın topta 34° → 46° (0,22 + 0,58·|z − orta| / 3,66): kaleci topu direğin dışına, kornere açar (T12-0: çelmenin
+         %19'u oyun dışına). Ortada da açmak (0,35 + 0,55: 20° / 52°) maçta kendi kalesine çelmeyi %3,5 → 9,5'e çıkardı, oyun dışına gideni artırmadı */
+      const th=0.22+0.58*clamp(Math.abs(b.z-MZ)/GW2,0,1)+0.1*(k-0.7)+this.normal()*(0.12+0.3*(1-k)+0.4*Math.max(0,(u||0)-0.6)+0.006*Math.max(0,v-20)),c=Math.cos(th),s=Math.sin(th);
       let nx=-ux*c+wx*s,ny=-uy*c+wy*s,nz=-uz*c+wz*s;const nn=hyp3(nx,ny,nz)||1;nx/=nn;ny/=nn;nz/=nn;
       const vn=b.vx*nx+b.vy*ny+b.vz*nz,it=1.5+2*k;if(vn<0){b.vx-=1.35*vn*nx;b.vy-=1.35*vn*ny;b.vz-=1.35*vn*nz;}
       b.vx+=nx*it;b.vy+=ny*it;b.vz+=nz*it;if(al>0.5)bicim='ust';}

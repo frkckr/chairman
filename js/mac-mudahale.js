@@ -120,19 +120,27 @@ function mudahaleTahmin(m,p,s){
     if(ilk)Pt+=w;if(G.adamOnce)Pa+=w;if(G.adama)Pad+=w;Pf+=w*pf;Pk+=w*Pb*(1-pf);}
   return{Ptop:Pt,Padam:Pa,Pdeg:Pad,Pfaul:Pf,Pkazan:Pk,T,arkadan,vrel,dokunus,yer:{px,pz,sx,sz,bx,bz,bv:hrkHyp(bvx,bvz),surer}};
 }
+/* T12b (2026-10-12): ortacının gerilişinde yola adım atan savunmacı (presYap, o._ortaBlokT) temasta tam erişimdedir (0,85 m); geometri T5'teki gibi
+   (ilk 3 m, 0,8 m'ye kadar; duran bacak 0,35 m, 0,15 sn'den sonra 0,2 sn içinde 0,85 m). Eskiden maçta hiçbir orta bloklanmıyordu (T12-0: orta sonucu
+   blok %0; gerçekte ~%20–25). Geniş geometri (5 m, 1,2 m, 0,6 → 1,05 m) maçta bloğu %12'ye çıkarıyordu ama c-orta'nın T10a kapısını bozdu (tahmin −
+   gerçek 6 puan: kutuya yakın ortada savunma ilk teması arttı); korneri de artırmadı */
+const OB_M={yol:3,boy:0.8,R0:0.35,R1:0.5,t0:0.15};
 /* T5 (2026-10-09; gerçekçilik planı T5 kararı 5): orta bloğu temastan (saf; motor ortaBlok ve planlayıcı js/mac-karar.js aynı işlevi kullanır).
    Ortanın ilk 3 m'si (en çok 0,5 sn) boyunca top 0,8 m'nin altındayken rakibin (yürüyüşüyle ileri sarılmış) bacak erişimi: duran bacak 0,35 m,
    tepkiye kalan süreyle (0,15 sn'den sonra, 0,2 sn içinde) 0,85 m'ye uzanır. pay = 0: topa en erken değen rakip {o, t, d, R} ya da null;
    pay > 0 (planlayıcı, yön belirsizliği m): her rakibin kesme olasılığı clamp((R + pay − d)/(2·pay)), {acik: Π(1 − P)}. Rastlantı çekmez */
 function ortaBlokTahmin(m,takim,ox,oz,oy,vx,vz,vy,pay){
-  const v=hrkHyp(vx,vz)||1,T3=hrkMin(3/v,0.5);let en=null,acik=1;
+  const v=hrkHyp(vx,vz)||1,T3=hrkMin(OB_M.yol/v,0.5);let en=null,acik=1;
   for(const o of m.teams[1-takim]){if(!o.oyunda||o.rol==='GK'||(o.eylem&&o.eylem.kilit))continue;
     if(hrkHyp(o.x-ox,o.z-oz)>v*T3+1.5)continue;
     let dmin=9,tmin=0;
-    for(let t=0.02;t<=T3+1e-9;t+=0.02){if(oy+vy*t-0.5*G*t*t>0.8)break;
+    for(let t=0.02;t<=T3+1e-9;t+=0.02){if(oy+vy*t-0.5*G*t*t>OB_M.boy)break;
       const d=hrkHyp(ox+vx*t-o.x-o.vx*t,oz+vz*t-o.z-o.vz*t);if(d<dmin){dmin=d;tmin=t;}}
     if(dmin>=9)continue;
-    const R=0.35+0.5*clamp((tmin-0.15)/0.2,0,1);
+    /* T12b: ortacının gerilişinde yola adım atan savunmacı (presYap, o._ortaBlokT) hamlesine başlamıştır: temasta tam erişim. Planlayıcı (pay > 0)
+       topa 4,5 m içindeki savunmacının hamle yapacağını bilir (aynı varsayım; T10a orta kalibrasyonu) */
+    const tam=pay>0?hrkHyp(o.x-ox,o.z-oz)<4.5:m.t-o._ortaBlokT<0.1;
+    const R=OB_M.R0+OB_M.R1*(tam?1:clamp((tmin-OB_M.t0)/0.2,0,1));
     if(pay>0){acik*=1-clamp((R+pay-dmin)/(2*pay),0,1);continue;}
     if(dmin<=R&&(!en||tmin<en.t))en={o,t:tmin,d:dmin,R};}
   return pay>0?{acik}:en;

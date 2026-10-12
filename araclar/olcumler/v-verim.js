@@ -35,11 +35,13 @@ module.exports={
     ['xG / şut (penaltısız; kararın değeri)','vvXg',3],['Gerçekleşen ÷ kararın xG\'si (penaltısız)','vvOran',2],
     ['Kaleci: tahmin − gerçekleşen kurtarış (puan; çerçeveye giden, bloksuz)','vvKalib',1],['Kaleci: tahmin edilen kurtarış ort. %','vvKTahmin',1],
     ['Şut anında kaleci hazır duruşta %','vvHazir',1],['Şut anında kaleci hareketli %','vvHareket',1],['Kalecinin açıortaya uzaklığı ortanca (m)','vvYer',2],
-    ['Uzaklaştırma / maç','vvUz',1]].concat(VV_UZ.map(k=>['Uzaklaştırma sonrası: '+VV_UZAD[k]+' %','vvU_'+k,1])),
+    ['Uzaklaştırma / maç','vvUz',1]].concat(VV_UZ.map(k=>['Uzaklaştırma sonrası: '+VV_UZAD[k]+' %','vvU_'+k,1]))
+    .concat(['<1,5','1,5–3','3–5','≥5'].map((a,i)=>['Orta anında en yakın rakip '+a+' m %','vvOY_'+i,1]))
+    .concat([['Orta anında topun önünde rakip (4 m, ±1,5 m) %','vvOO',1]]),
   yeni:()=>{
     const hyp=Math.hypot,PL=52.5,MZ=34,GW2=3.66;
     const sut=[],yerL=[];let aktif=null,uzN=0;const uzS={};for(const k of VV_UZ)uzS[k]=0;
-    const sonOrta=[-9,-9],bu={goal:false,save:false,block:false},uzA=[];
+    const sonOrta=[-9,-9],bu={goal:false,save:false,block:false},uzA=[],ortaYakin=[0,0,0,0];let ortaN=0,ortaOnde=0;
     /* şut kaydı: ad 'shot' ya da 'header' (şut); b.sut ve kaleci şut anında */
     function kaydet(m,p,v,kafa){
       const b=m.ball,s=b.sut;if(!p||!s)return;const t=p.team,d=m.dir[t],gx=d*PL,e=p.eylem,sec=e&&e.ad==='vurus'?e.sec:null;
@@ -67,7 +69,11 @@ module.exports={
         if(ad==='goal'){bu.goal=true;return;}
         if(ad==='save'){bu.save=true;return;}
         if(ad==='block'){if(!(v&&v.orta))bu.block=true;return;}
-        if(ad==='cross'||ad==='pass'&&v&&v.tur==='geriCevir'){if(v&&v.p)sonOrta[v.p.team]=m.t;return;}
+        if(ad==='cross'||ad==='pass'&&v&&v.tur==='geriCevir'){if(v&&v.p){sonOrta[v.p.team]=m.t;
+          /* T12b: orta anında savunmanın ortacıya yakınlığı — en yakın rakip (m) ve topun gidişinin önünde (±1,5 m yanal, 4 m içinde) rakip */
+          if(ad==='cross'){const b=m.ball,vh=hyp(b.vx,b.vz)||1,ux=b.vx/vh,uz=b.vz/vh;let en=99,onde=false;
+            for(const o of m.teams[1-v.p.team]){if(!o.oyunda||o.rol==='GK')continue;const dx=o.x-b.x,dz=o.z-b.z,dd=hyp(dx,dz);if(dd<en)en=dd;const ileri=dx*ux+dz*uz,yan=Math.abs(-dx*uz+dz*ux);if(ileri>0&&ileri<4&&yan<1.5)onde=true;}
+            ortaN++;if(en<1.5)ortaYakin[0]++;else if(en<3)ortaYakin[1]++;else if(en<5)ortaYakin[2]++;else ortaYakin[3]++;if(onde)ortaOnde++;}}return;}
         if(ad==='clear'||ad==='header'&&v&&v.tur==='uzaklastir'){if(v&&v.p){uzN++;uzA.push({t:m.t,team:v.p.team,surum:m.ball.surum});}return;}
         if(ad==='shot'){kaydet(m,v&&v.p,v,false);return;}
         if(ad==='header'&&v&&v.shot){kaydet(m,v.p,v,true);return;}},
@@ -115,6 +121,7 @@ module.exports={
           for(const s of['gol','kurt','blok','diger'])ham['vvS_'+k+'_'+s]=[D.filter(r=>r.sonuc===s).length,D.length];}
         const pen=sut.filter(r=>r.pen&&r.sonuc);ham.vvPen=[pen.filter(r=>r.sonuc==='gol').length,pen.length];
         let uT=0;for(const k of VV_UZ)uT+=uzS[k];for(const k of VV_UZ)ham['vvU_'+k]=[uzS[k],uT];
+        for(let i=0;i<4;i++)ham['vvOY_'+i]=[ortaYakin[i],ortaN];ham.vvOO=[ortaOnde,ortaN];
         const sy=yerL.filter(v=>v===v).sort((a,b)=>a-b),yo=sy.length?(sy.length%2?sy[(sy.length-1)/2]:(sy[sy.length/2-1]+sy[sy.length/2])/2):NaN;
         return{ham,vvXg:nG?x/nG:NaN,vvOran:x>0?g/x:NaN,vvXgK:nG?xk/nG:NaN,vvOranK:xk>0?g/xk:NaN,vvKalib:kN?100*(kT-kG)/kN:NaN,vvYer:yo,vvUz:uzN};}
     };

@@ -461,6 +461,13 @@ Object.assign(Match.prototype,{
         const d=this.dir[p.team],yan=p.z<MZ?-1:1,kacti=this.rast()<0.25+baskiAltinda(this,p)*0.25;
         let hx=clamp(p.x+d*(28+this.rast()*22),-PL+4,PL-4),hz=p.z+yan*(10+this.rast()*26);
         if(kacti){hx=p.x+d*(this.rast()*14-4);hz=p.z+yan*(18+this.rast()*20);}
+        /* T12b (2026-10-12): kendi ceza sahasında, direğin en az 1 m dışındaki topu baskı altındaki savunmacı kale çizgisinin dışına (kornere)
+           atar — kafadaki kuralın payıyla (uzaklastirCizgi: kaleye dönükken / değilken; T8f), baskı 0,2'nin üstündeyken. Eskiden ayakla uzaklaştırma kornere
+           yalnız kazayla gidiyordu (T12-0: uzaklaştırmadan sonra korner %2,5) */
+        const b0=this.ball,dz0=Math.abs(b0.z-MZ),bas=baskiAltinda(this,p);
+        if(this.kendiCezaSahasinda(p,b0.x,b0.z)&&dz0>GW2+1&&bas>0.2){const kd=Math.cos(p.yon)*d<-0.3,U=MOTOR_AYAR.uzaklastirCizgi;
+          if(this.rast()<(kd?U[0]:U[1])){const gx=-d*PL,u=Math.max(0.5,Math.abs(b0.x-gx)),zc=MZ+(b0.z<MZ?-1:1)*(dz0+1.5+this.rast()*6),s=1+3/u;
+            hx=b0.x+(gx-b0.x)*s;hz=b0.z+(zc-b0.z)*s;}}
         this.vurusBaslat(p,{tur:'uzaklastir',hx,hz,tip:'hava'});break;}
       /* T4e: top saklama — gövde rakiple top arasında (yön rakipten uzağa), seçeneğin süresi boyunca sürer (düşünme aralığında bozulmaz;
          destek gelince bırakma pası ya da dönüş yeniden tartılır) */
