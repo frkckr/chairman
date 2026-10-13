@@ -11,6 +11,10 @@
    (d) motor dosyalarında (js/mac-*.js) tohumsuz rastlantı yok: Math.random ve rnd( kullanılmaz (varsayılan tohum seçimi hariç).
    (e) MOTOR_AYAR (M1, 2026-10-10): bütün anahtarlar js/mac-motoru.js'te bildirilir ve her birinin değeri tam bir kez atanır (çekirdekte ya da
        akışın ayarEkle'sinde); motor araclar/motor-yukle.js ile yüklenir, bildirilmemiş, iki kez atanan ya da atanmamış anahtar bulgudur.
+   (f) V8 hızlı kip (A3, 2026-10-13): maçtaki her insan (oyuncu, yedek, hakem, kenar, top toplayıcı) ve top hızlı özellik kipinde kalır. Varlık
+       kurucusu (`varlik`, js/mac-motoru.js) 128 alanda sınırdadır: bir alan daha eklenince hakem ve kenar nesneleri sözlük kipine düştü, moveP
+       bütün insanlara aynı kodla eriştiği için motor 2,4 kat yavaşladı (1000 adım 91 → 218 ms). Yeni alan eklemeden önce bu satır okunur;
+       gerekirse seyrek alanlar alt nesneye toplanır. Alt süreçte `node --allow-natives-syntax` ile 20 sn oynanır, %HasFastProperties sorulur.
    Kullanım: node araclar/ad-denetimi.js   (bulgu varsa çıkış kodu 1) */
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm');
@@ -108,6 +112,17 @@ for(const f of dosyalar.filter(f=>/^js\/mac-/.test(f)&&f!=='js/mac-sahnesi.js'))
   let ctx=null;try{ctx=require('./motor-yukle').motorYukle().ctx;}catch(e){bul('MOTOR_AYAR',String(e.message).split('\n')[0]);}
   if(ctx){const A=vm.runInContext('MOTOR_AYAR',ctx),S=vm.runInContext('MOTOR_AYAR_SAHIBI',ctx);
     for(const k of Object.keys(A))if(!S[k])bul('MOTOR_AYAR sahibi yok',k);}}
+
+/* (f) V8 hızlı kip: bütün insanlar ve top (alt süreçte, yerel doğal sözdizimiyle) */
+{const kod=`const {motorYukle,ayarUygula}=require(${JSON.stringify(path.join(__dirname,'motor-yukle'))});const vm=require('vm');const {ctx}=motorYukle();ayarUygula(ctx,undefined);
+  ctx.__hizli=o=>%HasFastProperties(o);
+  const r=vm.runInContext(\`(()=>{const m=new Match(()=>{},{kadro:MAC_KADRO,tohum:3,tunel:{x:0,z:-6}});m.macaGec();for(let i=0;i<1200;i++)m.step(1/60);
+    const yavas=[];const bak=(ad,L)=>{for(const o of L||[])if(o&&!__hizli(o))yavas.push(ad+' ('+Object.keys(o).length+' alan)');};
+    bak('oyuncu',m.players);bak('yedek',m.yedekler);bak('hakem',m.refs);bak('kenar',m.kenar);bak('top toplayıcı',m.topcular);bak('top',[m.ball]);
+    return [...new Set(yavas)];})()\`,ctx);console.log(JSON.stringify(r));`;
+  const c=require('child_process').spawnSync(process.execPath,['--allow-natives-syntax','-e',kod],{cwd:KOK,env:process.env,encoding:'utf8'});
+  if(c.status!==0)bul('V8 hızlı kip','alt süreç çalışmadı: '+String(c.stderr||'').split('\n').filter(Boolean).slice(-1)[0]);
+  else{const L=JSON.parse(String(c.stdout).trim().split('\n').pop()||'[]');for(const x of L)bul('V8 sözlük kipi',x+' — varlik kurucusu 128 alan sınırında (başlıktaki (f))');}}
 
 if(bulgular.length){console.log(`Ad ve sınır denetimi: ${bulgular.length} bulgu`);for(const b of bulgular)console.log('  ! '+b);process.exitCode=1;}
 else console.log(`Ad ve sınır denetimi: ${dosyalar.length} betik, bulgu yok`+(bilinen.length?` (bilinen zararsız blok içi işlev adları: ${bilinen.length})`:''));

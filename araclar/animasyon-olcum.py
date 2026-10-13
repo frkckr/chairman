@@ -69,6 +69,11 @@ OLCUM_KUR_JS = r"""() => {
     adimNet: [[],[],[],[],[]], basHiz: [], basHiz600: 0, basGovdeHiz: [], kokHiz: [], kanalKirilma: {}, dyEylemsiz: 0, kirilmaBacakGecis: 0,
     basMax: 0, bas70: 0, basKare: 0, basPitchMax: 0, donus: [], donusKare: 0, donusAdimsiz: 0, kimlik: [], bekle: 0, bekleDonuk: 0, ikiz: 0, cift: 0,
     sparc: [], kokSicrama: 0, kanalSicramaEylem: {},
+    /* A3 (2026-10-13): fren ↔ sabit koşu (eylemsiz, çizilen hız > 2 m/sn; fren: hız 2,5 m/sn²'den hızlı düşüyor, sabit: |ivme| < 0,5) — kalça (P.dy),
+       kolun yana açıklığı (|aLz|), gövde eğimi (lean), yerdeki ayağın kökün önündeki uzaklığı (m) */
+    fren: { n: 0, dy: 0, kol: 0, egim: 0, ayak: 0, ayakN: 0, fr: 0 }, sabit: { n: 0, dy: 0, kol: 0, egim: 0, ayak: 0, ayakN: 0, fr: 0 }, basUc: [],
+    /* A3: adım boyu (ardışık iki basış arası, m) ve motorun hızı — frende ve sabit koşuda; sabit koşuda temas süresi (sn, banda göre) */
+    frenAdim: [], sabitAdim: [], sabitTemas: [[], [], [], [], []], frenDy: [], sabitDy: [],
     /* A2b zamanlama: hakem işareti olayla aynı karede mi (motor adımı farkı), vuruşta çizimin temas evresi motorun temas karesinde mi */
     zOlay: [], zIsaret: {}, zVurus: 0, zVurusAyni: 0, zVurusFark: [],
     /* T4-V vuruş hazırlığı: temas karesinde son adımın süresi / planı (tB), geri salınımın tepesi / planı, ilk görülme evresi, motorun karar→temas
@@ -140,31 +145,40 @@ OLCUM_KUR_JS = r"""() => {
   const aciF = (x, y) => { let d = x - y; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
   const yeni = a => ({ x: a.x, z: a.z, vs: 0, ayak: [[0, 0], [0, 0]], temas: [false, false], tn: [0, 0], gecis: [-9, -9], bas0: [[0, 0], [0, 0]], basVar: [false, false], epEylem: [false, false], yol: [0, 0], ilk: true, P1: new Float64Array(NK), P2: new Float64Array(NK), pn: 0,
     gecmis: [], sonDonus: -9, pen: { t0: t, bas: [], vmin: 1e9, vmax: -1e9, eylem: false, kolMin: 1e9, kolMax: -1e9 }, bekleT: 0, sp: [], spEylem: false, yawU: a.yaw, basU: null, basHam: null,
-    kimlik: { boy: [], kol: [] } });
+    kimlik: { boy: [], kol: [] }, basT: [0, 0], temasG: [] });
   function kaydet(a, dt) {
     const p = a.kaynak; if (!p || !(dt > 0) || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible) return;
     let k = K.get(a); if (!k) K.set(a, k = yeni(a));
     /* T6f: sıçramanın uçuşu ve inişin ilk 0,12 sn'si eylem sayılır (havadaki ayak yürüyüşün ayak kilidi ölçüsüne girmez; hazırlıkta ayak yerde, sayılır) */
     const zp = p.zipla, havada = !!(zp && zp.t >= 0) || (a.inisT >= 0 && a.inisT < 0.12);
     const P = a.P, e = p.eylem ? p.eylem.ad : (havada ? 'sicrama' : ''), eylemsiz = !e;
-    const v = Math.hypot(a.x - k.x, a.z - k.z) / dt, vsOnce = k.vs; k.x = a.x; k.z = a.z; k.vs += (Math.min(v, 12) - k.vs) * Math.min(1, dt * 8);
+    const v = Math.hypot(a.x - k.x, a.z - k.z) / dt, vsOnce = k.vs; if (v > 1) k.vAci = Math.atan2(a.z - k.z, a.x - k.x);   /* A3: gidiş yönü (kesme dönüşü için) */ k.x = a.x; k.z = a.z; k.vs += (Math.min(v, 12) - k.vs) * Math.min(1, dt * 8);
     const durum = p.zipla || a.inisT >= 0 ? 3 : !k.ilk && p.tavir === 'koru' ? 2 : !k.ilk && Math.abs(aciF(a.yaw, k.yawU)) / dt > 2 && k.vs > 0.6 ? 0 : !k.ilk && (vsOnce - k.vs) / dt > 3 ? 1 : -1;
     const b = BANT(k.vs);
     a.m.root.updateMatrixWorld(true);
+    /* A3: fren ↔ sabit koşu (motorun hızı p.spd, 0,2 sn'lik pencere: fren < −2,5 m/sn², sabit |ivme| < 0,5; çizilen yerin türevi kare hızına duyarlıydı) */
+    if (!k.spH) { k.spH = new Float64Array(12); k.spI = 0; k.spN = 0; } const spM = p.spd || 0, sp0 = k.spH[k.spI]; k.spH[k.spI] = spM; k.spI = (k.spI + 1) % 12; k.spN++;
+    const ivM = (spM - sp0) / 0.2, a3 = eylemsiz && !k.ilk && k.spN > 12 && spM > 2 ? (ivM < -2.5 ? 'fren' : Math.abs(ivM) < 0.5 ? 'sabit' : null) : null;
     const yer = [false, false];
     /* temas histerezisli: taban 0,02 m altına inince basar, 0,025 m üstüne çıkınca kalkar; ilk iki temas karesi (iniş) kaymaya sayılmaz */
     for (let i = 0; i < 2; i++) {
-      V.set(0, -0.5, 0.05).applyMatrix4((i ? a.m.kR : a.m.kL).matrixWorld); const c = k.temas[i] ? V.y < 0.025 : V.y < 0.02; yer[i] = c;
+      V.set(0, -0.5, 0.05).applyMatrix4((i ? a.m.kR : a.m.kL).matrixWorld); const c = k.temas[i] ? V.y < 0.025 : V.y < 0.02; yer[i] = c; (k.vy || (k.vy = [0, 0]))[i] = V.y;
       if (!k.ilk) {
         if (c && k.temas[i]) { k.tn[i]++; const d = Math.hypot(V.x - k.ayak[i][0], V.z - k.ayak[i][1]); k.yol[i] += d; if (!eylemsiz) k.epEylem[i] = true;
           if (eylemsiz && k.tn[i] > 2) { S.temas[b]++; if (d / dt > 0.2) S.kayma[b]++; if (durum >= 0) { S.dTemas[durum]++; if (d / dt > 0.2) S.dKayma[durum]++; } } }
         if (c !== k.temas[i]) k.gecis[i] = S.kare;
-        if (c && !k.temas[i]) { k.yol[i] = 0; k.tn[i] = 0; k.bas0[i][0] = V.x; k.bas0[i][1] = V.z; k.basVar[i] = true; k.epEylem[i] = !eylemsiz; k.pen.bas.push(t); }
-        if (!c && k.temas[i] && k.basVar[i] && !k.epEylem[i] && k.tn[i] > 2) { S.adimYol[b].push(k.yol[i]); S.adimNet[b].push(Math.hypot(k.ayak[i][0] - k.bas0[i][0], k.ayak[i][1] - k.bas0[i][1])); }
+        if (c && !k.temas[i]) { if (a3 && k.basVar[1 - i]) (a3 === 'fren' ? S.frenAdim : S.sabitAdim).push([Math.hypot(V.x - k.bas0[1 - i][0], V.z - k.bas0[1 - i][1]), spM]);
+          k.yol[i] = 0; k.tn[i] = 0; k.bas0[i][0] = V.x; k.bas0[i][1] = V.z; k.basVar[i] = true; k.epEylem[i] = !eylemsiz; k.pen.bas.push(t); k.basT[i] = t; }
+        if (!c && k.temas[i] && k.basVar[i] && !k.epEylem[i] && k.tn[i] > 2) { S.adimYol[b].push(k.yol[i]); S.adimNet[b].push(Math.hypot(k.ayak[i][0] - k.bas0[i][0], k.ayak[i][1] - k.bas0[i][1]));
+          const du = t - k.basT[i]; k.temasG.push([k.basT[i], du]); if (k.temasG.length > 12) k.temasG.shift(); if (a3 === 'sabit' && b >= 2) S.sabitTemas[b].push(du); }
       }
       k.ayak[i][0] = V.x; k.ayak[i][1] = V.z; k.temas[i] = c;
     }
     if (eylemsiz && b >= 1) { S.ucusN[b]++; if (!yer[0] && !yer[1]) S.ucus[b]++; }
+    /* A3: fren ↔ sabit koşu karelerinin duruşu (durum yukarıda, a3) */
+    { const F = a3 === 'fren' ? S.fren : a3 === 'sabit' ? S.sabit : null;
+      if (F) { F.n++; F.fr += a.fr || 0; F.dy += P.dy || 0; if (S.kareN % 3 === 0) (a3 === 'fren' ? S.frenDy : S.sabitDy).push([P.dy || 0, spM]); F.kol += Math.abs(P.aLz || 0); F.egim += P.lean || 0; const sY = Math.sin(a.yaw), cY = Math.cos(a.yaw);
+        for (let i = 0; i < 2; i++) if (yer[i]) { F.ayak += (k.ayak[i][0] - a.x) * sY + (k.ayak[i][1] - a.z) * cY; F.ayakN++; } } }
     /* eklem kanalları: sıçrama ve kırılma */
     /* T4-V: vuruşta aşağı salınım ve takip kareleri (diz hızı doğası gereği karede 25–33°) ile evre sınırı kareleri (son adım başı, temas, çıkışın
        ilk karesi) sıçramaya sayılmaz; sayılan: hazırlık, geri salınım, iniş ve çıkış (robotluğun görüldüğü yerler). Kanal değeri saçma (|x| ≥ 2π
@@ -188,20 +202,26 @@ OLCUM_KUR_JS = r"""() => {
     if (Math.abs(k.yawU - kokOnce) > 0.1745) S.kokSicrama++;
     const basHam = a.yaw + (P.hy || 0) + (P.gy || 0) + (P.by || 0), basOnce = k.basU; k.basU = k.basU === null ? basHam : k.basU + aciF(basHam, k.basHam); k.basHam = basHam;
     if (basOnce !== null && eylemsiz) { const w = Math.abs(k.basU - basOnce) / dt * 57.3; S.basHiz.push(w); if (w > 600) S.basHiz600++;
+      /* A3: en hızlı baş dönüşlerinin bağlamı (kök dönüşü, gövdeye göre baş, hız, kip) — tek karelik sarmanın kaynağı için */
+      if (w > 1500) { S.basUc.push({ w: Math.round(w), kok: Math.round(Math.abs(aciF(a.yaw, kokOnce)) / dt * 57.3), by: +(P.by || 0).toFixed(2), byO: +(k.byOnce || 0).toFixed(2), v: +k.vs.toFixed(1), kip: p.kip || '', hy: +((P.hy || 0) - (k.hyOnce || 0)).toFixed(2), gy: +((P.gy || 0) - (k.gyOnce || 0)).toFixed(2), tv: p.tavir || '', jest: p.jest ? p.jest.tur : '' }); if (S.basUc.length > 40) { S.basUc.sort((x, y) => y.w - x.w); S.basUc.length = 20; } }
       S.kokHiz.push(Math.abs(k.yawU - kokOnce) / dt * 57.3); if (k.byOnce !== undefined) S.basGovdeHiz.push(Math.abs((P.by || 0) - k.byOnce) / dt * 57.3); }
-    k.byOnce = P.by || 0;
+    k.byOnce = P.by || 0; k.hyOnce = P.hy || 0; k.gyOnce = P.gy || 0;
     /* baş */
     const by = Math.abs(P.by || 0); S.basKare++; if (by > S.basMax) S.basMax = by; if (by > 1.2217) S.bas70++; const hx = Math.abs(P.hx || 0); if (hx > S.basPitchMax) S.basPitchMax = hx;
     /* yerinde dönüş */
     const donHiz = Math.abs(k.yawU - kokOnce) / dt;
-    if (donHiz > 3 && k.vs < 0.6 && eylemsiz) { S.donusKare++; if (yer[0] && yer[1]) S.donusAdimsiz++; }
+    if (donHiz > 3 && k.vs < 0.6 && eylemsiz) { S.donusKare++; if (yer[0] && yer[1]) S.donusAdimsiz++;
+      /* A3: kaleci ve tavırlı (jokey, koru, bekle) kareler ayrı (kalecinin duruşu ve tavırlar ayakları bilerek yerde tutar) */
+      const tur = p.rol === 'GK' ? 'gk' : p.tavir ? 'tavir' : 'saha'; const D2 = S.donusTur || (S.donusTur = {}); const d2 = D2[tur] || (D2[tur] = [0, 0]); d2[0]++; if (yer[0] && yer[1]) d2[1]++;
+      if (tur === 'saha') { const G = S.donusTani || (S.donusTani = { n: 0, piv: 0, piv3: 0, cad: 0, iki: 0, ikiPiv: 0, v: 0 }); G.n++; (G.ust || (G.ust = [])).push(Math.max(k.vy[0], k.vy[1])); G.beta = (G.beta || 0) + (a.beta || 0); G.piv += a.pivO || 0; if ((a.pivO || 0) > 0.3) G.piv3++; G.cad += a.cadS || 0; G.v += k.vs; if (yer[0] && yer[1]) { G.iki++; if ((a.pivO || 0) > 0.3) G.ikiPiv++; } } }
     /* dönüş olayları: son 0,8 sn'de kök 90°'den çok döndüyse */
-    k.gecmis.push([t, k.yawU, k.basU, k.pen.bas.length ? k.pen.bas[k.pen.bas.length - 1] : -1]); while (k.gecmis.length && t - k.gecmis[0][0] > 1.2) k.gecmis.shift();
+    k.gecmis.push([t, k.yawU, k.basU, k.pen.bas.length ? k.pen.bas[k.pen.bas.length - 1] : -1, k.vAci == null ? null : k.vAci]); while (k.gecmis.length && t - k.gecmis[0][0] > 1.2) k.gecmis.shift();
     if (t - k.sonDonus > 1.2) { const g = k.gecmis, i0 = g.findIndex(s => t - s[0] <= 0.8);
       if (i0 >= 0 && Math.abs(k.yawU - g[i0][1]) > 1.5708) { k.sonDonus = t; const top = k.yawU - g[i0][1], yon = Math.sign(top);
         let tk = null, tb = null; for (let j = i0; j < g.length; j++) { if (tk === null && (g[j][1] - g[i0][1]) * yon >= Math.abs(top) / 2) tk = g[j][0]; if (tb === null && (g[j][2] - g[i0][2]) * yon >= Math.abs(top) / 2) tb = g[j][0]; }
         let adim = 0; const basT = new Set(); for (let j = i0; j < g.length; j++) if (g[j][3] >= g[i0][0]) basT.add(g[j][3]); adim = basT.size;
-        S.donus.push({ aci: +(Math.abs(top) * 57.3).toFixed(0), adim, onculuk: tk !== null && tb !== null ? Math.round((tk - tb) * 1000) : null, v: +k.vs.toFixed(2) }); } }
+        let tem = null; if (tk !== null) for (let j = k.temasG.length - 1; j >= 0; j--) { const [t0, du] = k.temasG[j]; if (t0 <= tk && t0 >= g[i0][0]) { tem = du; break; } }
+        S.donus.push({ aci: +(Math.abs(top) * 57.3).toFixed(0), adim, onculuk: tk !== null && tb !== null ? Math.round((tk - tb) * 1000) : null, v: +k.vs.toFixed(2), tem, bant: BANT(k.vs), kesme: g[i0][4] != null && k.vAci != null && Math.abs(aciF(k.vAci, g[i0][4])) >= 1.047 }); } }
     /* 2 sn'lik pencere: kadans ve kimlik */
     const pen = k.pen; pen.vmin = Math.min(pen.vmin, k.vs); pen.vmax = Math.max(pen.vmax, k.vs); if (!eylemsiz) pen.eylem = true;
     const kol = P.aL || 0; pen.kolMin = Math.min(pen.kolMin, kol); pen.kolMax = Math.max(pen.kolMax, kol);
@@ -350,7 +370,20 @@ SONUC_JS = r"""() => {
     basMaxDer: +(S.basMax * 57.3).toFixed(0), bas70: +(100 * S.bas70 / Math.max(1, S.basKare)).toFixed(2), basPitchMaxDer: +(S.basPitchMax * 57.3).toFixed(0),
     donus90: don90.length, donusAdim: don90.length ? +ort(don90.map(d => d.adim)).toFixed(2) : null, donusAdimsizPay: don90.length ? +(100 * don90.filter(d => d.adim === 0).length / don90.length).toFixed(1) : null,
     onculukMs: onc.length ? yuzde(onc, 0.5) : null, onculukP10: onc.length ? yuzde(onc, 0.1) : null,
-    yerindeDonusKare: S.donusKare, yerindeAdimsizPay: S.donusKare ? +(100 * S.donusAdimsiz / S.donusKare).toFixed(1) : null,
+    onc150: onc.length ? +(100 * onc.filter(x => x >= 150).length / onc.length).toFixed(0) : null,
+    basUc: S.basUc.slice().sort((x, y) => y.w - x.w).slice(0, 5),
+    /* A3: frende adım boyu ÷ sabit koşuda aynı hızdaki adım (sabit adımlara doğru: L = α + β·v); dönüşte fren adımı payı (90°+, koşarken: dönüşün
+       yarısından önceki son basmanın teması ≥ 1,15 × aynı banttaki sabit koşu temasının ortancası) */
+    frenAdimOran: (() => { const Sa = S.sabitAdim, Fa = S.frenAdim; if (Sa.length < 20 || !Fa.length) return null; let sv = 0, sl = 0, svv = 0, svl = 0; for (const [l, w] of Sa) { sv += w; sl += l; svv += w * w; svl += w * l; }
+      const n = Sa.length, be = (n * svl - sv * sl) / Math.max(1e-9, n * svv - sv * sv), al = (sl - be * sv) / n; return { oran: +ort(Fa.map(([l, w]) => l / Math.max(0.1, al + be * w))).toFixed(2), n: Fa.length, ns: n }; })(),
+    frenDyFark: (() => { const Sa = S.sabitDy, Fa = S.frenDy; if (Sa.length < 50 || !Fa.length) return null; let sv = 0, sl = 0, svv = 0, svl = 0; for (const [l, w] of Sa) { sv += w; sl += l; svv += w * w; svl += w * l; }
+      const n = Sa.length, be = (n * svl - sv * sl) / Math.max(1e-9, n * svv - sv * sv), al = (sl - be * sv) / n; return +ort(Fa.map(([l, w]) => l - (al + be * w))).toFixed(3); })(),
+    donusFren: (() => { const md = S.sabitTemas.map(L => L.length >= 10 ? yuzde(L.map(x => x * 1000), 0.5) / 1000 : null), D = S.donus.filter(d => d.aci >= 90 && d.v >= 2 && d.tem !== null && md[d.bant]);
+      const K = D.filter(d => d.kesme), pay = L => L.length ? +(100 * L.filter(d => d.tem >= 1.15 * md[d.bant]).length / L.length).toFixed(0) : null;
+      return D.length ? { pay: pay(D), n: D.length, oran: +ort(D.map(d => d.tem / md[d.bant])).toFixed(2), kPay: pay(K), kN: K.length, kOran: K.length ? +ort(K.map(d => d.tem / md[d.bant])).toFixed(2) : null } : null; })(),
+    fren: (() => { const f = S.fren, s = S.sabit, o = (F, k) => F.n ? +(F[k] / F.n).toFixed(3) : null, oa = F => F.ayakN ? +(F.ayak / F.ayakN).toFixed(3) : null;
+      return { n: f.n, sn: s.n, fr: o(f, 'fr'), dy: o(f, 'dy'), dyS: o(s, 'dy'), kol: o(f, 'kol'), kolS: o(s, 'kol'), egim: o(f, 'egim'), egimS: o(s, 'egim'), ayak: oa(f), ayakS: oa(s) }; })(),
+    yerindeDonusTur: S.donusTur || {}, donusTani: S.donusTani ? Object.assign({}, S.donusTani, { ust: null, ustY: S.donusTani.ust ? [0.1, 0.25, 0.5, 0.75, 0.9].map(q => +yuzde(S.donusTani.ust, q).toFixed(3)) : null }) : null, yerindeDonusKare: S.donusKare, yerindeAdimsizPay: S.donusKare ? +(100 * S.donusAdimsiz / S.donusKare).toFixed(1) : null,
     kimlikBoyCv: kim.length >= 4 ? +(100 * cv(kim.map(x => x.boy))).toFixed(1) : null, kimlikKolCv: kim.length >= 4 ? +(100 * cv(kim.map(x => x.kol))).toFixed(1) : null, kimlikN: kim.length,
     bekleKare: S.bekle, bekleDonuk: S.bekle ? +(100 * S.bekleDonuk / S.bekle).toFixed(1) : null, ikizPay: S.cift ? +(100 * S.ikiz / S.cift).toFixed(2) : null,
     sparcOrt: S.sparc.length ? +ort(S.sparc).toFixed(2) : null, sparcP10: S.sparc.length ? +yuzde(S.sparc, 0.1).toFixed(2) : null, sparcN: S.sparc.length,
@@ -520,8 +553,22 @@ def satirlar(o):
     kk = sorted((o.get("kanalKirilma") or {}).items(), key=lambda x: -x[1])[:8]
     if kk:
         S.append("A:   kırılan kanallar: " + ", ".join(f"{k} {n}" for k, n in kk))
-    S.append(f"A: baş: |baş–gövde| en çok {o['basMaxDer']}°, >70° kare payı %{v(o['bas70'], 2)}, eğim en çok {o['basPitchMaxDer']}° · dönüşte baş öncülüğü ortanca {o['onculukMs'] if o['onculukMs'] is not None else '—'} ms (p10 {o['onculukP10'] if o['onculukP10'] is not None else '—'})   [hedef ≤80°, ≥150 ms]")
-    S.append(f"A: dönüş: 90°+ dönüş {o['donus90']}, basma ort {v(o['donusAdim'], 2)}, basmasız %{v(o['donusAdimsizPay'])} · yerinde dönüşte iki ayak yerde %{v(o['yerindeAdimsizPay'])} ({o['yerindeDonusKare']} kare)   [hedef basmasız 0]")
+    S.append(f"A: baş: |baş–gövde| en çok {o['basMaxDer']}°, >70° kare payı %{v(o['bas70'], 2)}, eğim en çok {o['basPitchMaxDer']}° · dönüşte baş öncülüğü ortanca {o['onculukMs'] if o['onculukMs'] is not None else '—'} ms (p10 {o['onculukP10'] if o['onculukP10'] is not None else '—'}), ≥ 150 ms olan %{o.get('onc150') if o.get('onc150') is not None else '—'}   [hedef ≤80°, ≥150 ms; A3: ≥ 150 ms dönüşlerin ≥ %60'ı]")
+    df = o.get('donusFren')
+    S.append(f"A: dönüş: 90°+ dönüş {o['donus90']}, basma ort {v(o['donusAdim'], 2)}, basmasız %{v(o['donusAdimsizPay'])} · yerinde dönüşte iki ayak yerde %{v(o['yerindeAdimsizPay'])} ({o['yerindeDonusKare']} kare)"
+             + (f" · koşarken fren adımı payı %{df['pay']} (temas ÷ koşu {v(df['oran'], 2)}, {df['n']} dönüş; gidiş ≥ 60° değişen kesmede %{df.get('kPay')}, ÷ {v(df.get('kOran'), 2)}, {df.get('kN')} dönüş)" if df else "")
+             + (" · yerinde dönüş türe göre: " + ", ".join(f"{k} %{round(100*x[1]/max(1,x[0]))} ({x[0]})" for k, x in (o.get('yerindeDonusTur') or {}).items())) + "   [hedef basmasız 0; A3: iki ayak yerde ≤ %30, fren adımı ≥ %60]")
+    dt_ = o.get('donusTani')
+    if dt_:
+        n_ = max(1, dt_['n']); S.append(f"A:   yerinde dönüş tanı (saha): piv ort {dt_['piv']/n_:.2f}, piv > 0,3 %{100*dt_['piv3']/n_:.0f}, adım sıklığı ort {dt_['cad']/n_:.2f}, hız ort {dt_['v']/n_:.2f}, beta ort {dt_.get('beta',0)/n_:.2f}, yüksekteki ayak (m; p10/25/50/75/90) {dt_.get('ustY')} · iki ayak yerde {dt_['iki']} kare, bunların piv > 0,3 olanı {dt_['ikiPiv']}")
+    bu = o.get('basUc')
+    if bu:
+        S.append("A: baş — en hızlı dönüşler (°/sn; kök dönüşü, gövdeye göre baş önce→sonra, hız, kip): " + " · ".join(f"{x['w']} (kök {x['kok']}, baş {v(x['byO'], 2)}→{v(x['by'], 2)}, kalça Δ{x.get('hy')}, gövde Δ{x.get('gy')}, {v(x['v'])} m/sn, {x['kip']} {x.get('tv','')} {x.get('jest','')})" for x in bu))
+    fr = o.get('fren'); fa = o.get('frenAdimOran')
+    if fr:
+        S.append(f"A: fren (A3): {fr['n']} fren / {fr['sn']} sabit koşu karesi (çizimin fren ağırlığı ort {v(fr.get('fr'), 2)}) — kalça (dy) {v(fr['dy'], 3)} / {v(fr['dyS'], 3)} · kol yana (|aLz|) {v(fr['kol'], 3)} / {v(fr['kolS'], 3)}"
+                 f" · gövde eğimi {v(fr['egim'], 3)} / {v(fr['egimS'], 3)} · yerdeki ayak kökün önünde {v(fr['ayak'], 3)} / {v(fr['ayakS'], 3)} m · kalça aynı hızdaki sabite göre {v(o.get('frenDyFark'), 3)} m"
+                 + (f" · adım boyu frende × aynı hızda sabitin {v(fa['oran'], 2)} ({fa['n']} / {fa['ns']} adım)" if fa else "") + "   [A3: frende kalça ≥ 3 cm alçak, kol açık, ayak önde, adım ≤ 0,8]")
     S.append(f"A: kimlik (koşu bandı, {o['kimlikN']} oyuncu): adım boyu CV %{v(o['kimlikBoyCv'])} · kol genliği CV %{v(o['kimlikKolCv'])}   [hedef ≥8 / ≥20]")
     S.append(f"A: bekleyiş: {o['bekleKare']} kare, donuk %{v(o['bekleDonuk'])}, ikiz poz %{v(o['ikizPay'], 2)}   [hedef donuk ~0, ikiz ~0]")
     S.append(f"A: düzgünlük (SPARC, baş hızı, 3 sn, n {o['sparcN']}): ort {v(o['sparcOrt'], 2)} · p10 {v(o['sparcP10'], 2)}")

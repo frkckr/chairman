@@ -240,7 +240,7 @@ function aktorKur(K,kaynak,boy){
   return{m,kaynak,boy:boy||1,J:{},yaw:0,ilkYon:true,ph:rnd()*6,amp:0,w:{},px:kaynak?kaynak.x:0,pz:kaynak?kaynak.z:0,x:0,z:0,
     P,C,sw:new Float32Array(N),swV:new Float32Array(N),st:new Float32Array(N),sp:new Array(N).fill(null),faz0:rnd()*6.283,
     /* yürüyüş: dünya hızı/ivmesi, gövdeye göre hareket yönü, ayak hedefleri (x,y,z ×2), kalça/baş dönüşü, tavır parametreleri */
-    wvx:0,wvz:0,awx:0,awz:0,mX:0,mZ:1,sapma:0,W:new Float32Array(4),D:new Float32Array(4),anc:new Uint8Array(2),yawO:0,don:0,donY:0,yonM:null,cadS:0,ayakYaw:null,T:new Float32Array([-0.1,-0.034,0.025,0.1,-0.034,0.025]),qA:new Float32Array(2),beta:0.6,dyR:0,dyV:0,hy:0,hyV:0,hyT:0,hyTV:0,by:0,byV:0,kim:null,
+    wvx:0,wvz:0,awx:0,awz:0,mX:0,mZ:1,sapma:0,W:new Float32Array(4),D:new Float32Array(4),anc:new Uint8Array(2),yawO:0,don:0,donY:0,yonM:null,cadS:0,fr:0,dn:0,ayakYaw:null,T:new Float32Array([-0.1,-0.034,0.025,0.1,-0.034,0.025]),qA:new Float32Array(2),beta:0.6,dyR:0,dyV:0,hy:0,hyV:0,hyT:0,hyTV:0,by:0,byV:0,kim:null,
     gDrop:0,gGen:0,gAdim:1,gHy:0,gKal:1,tvSon:null,jYan:1,bekP:null,yEk:0,kucuk:false,phItme:0,dokT:-1,dokSon:undefined,dokSurum:-1,dokP:null,dokDon:false,dokCal:false,dokKoru:false,dokS:ANM.dokunus,
     /* T4g: çalım, aldatılan savunmacı ve top saklama katmanının durumu (anmCalimDurum) */
     ck:anmCkYeni(),
@@ -318,25 +318,34 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
   if(dt>0){const k=Math.min(1,dt*12),ox=a.wvx,oz=a.wvz;a.wvx+=(vx-a.wvx)*k;a.wvz+=(vz-a.wvz)*k;const k2=Math.min(1,dt*6);a.awx+=((a.wvx-ox)/dt-a.awx)*k2;a.awz+=((a.wvz-oz)/dt-a.awz)*k2;}
   const sY=Math.sin(a.yaw),cY=Math.cos(a.yaw),vf=a.wvx*sY+a.wvz*cY,vr=-a.wvx*cY+a.wvz*sY,v=Math.sqrt(vf*vf+vr*vr);
   const af=a.awx*sY+a.awz*cY,ar=-a.awx*cY+a.awz*sY;
+  /* A3a/A3b (2026-10-13; Ek G0.2–G0.3): fren ve dönüş ağırlıkları motorun ivmesinden okunur (p._iax, p._iaz: adımdaki hız değişimi, ÷ ADIM = m/sn²;
+     sarsıntı sınırlı, kare hızından bağımsız). Fren: hızın yönündeki bileşen −1,5 m/sn²'nin altında (−4'te tam), koşuda (> 1,5 m/sn); dönüş: hızın yönünün dönüş hızı (dik bileşen ÷ hız)
+     1,5 rad/sn'nin üstünde, koşuda (> 2 m/sn). Ağırlıklar ~0,1 sn'lik yayla izlenir */
+  if(dt>0){let fH=0,dH=0;const ms=p&&p.spd||0;
+    if(ms>1.5&&p._iax!=null){const ux=p.vx/ms,uz=p.vz/ms,aV=(p._iax*ux+p._iaz*uz)/ADIM,aD=(p._iaz*ux-p._iax*uz)/ADIM;
+      fH=clamp((-aV-1.5)/2.5,0,1)*clamp((ms-1.5)/2,0,1);if(ms>2)dH=clamp((Math.abs(aD/ms)-1.5)/2,0,1)*clamp((ms-2)/2,0,1);}
+    const vkw=a.vk&&a.vk.kw||0;fH*=1-vkw;dH*=1-vkw;   /* vuruş katmanı etkinken (bacaklar vuruşta) fren ve dönüş duruşu yok */
+    a.fr+=(fH-a.fr)*Math.min(1,dt*10);a.dn+=(dH-a.dn)*Math.min(1,dt*12);}
+  const fr=a.fr,dn=a.dn,FR=ANM.fren,DN=ANM.donus;
   if(v>0.05&&dt>0){const k=Math.min(1,dt*(3+4*v/sx));a.mX+=(-vr/v-a.mX)*k;a.mZ+=(vf/v-a.mZ)*k;const L=Math.sqrt(a.mX*a.mX+a.mZ*a.mZ)||1;a.mX/=L;a.mZ/=L;}
   const mX=a.mX,mZ=a.mZ,wF=mZ>0?mZ*mZ:0,wB=mZ<0?mZ*mZ:0,wS=mX*mX;
   /* kök dönüşü; ayakların yönü yalnız basışta köke yaklaşır: aradaki fark yerinde dönüşte basma ister, kalça bu farkla geride kalır */
-  if(dt>0){const d=anmAci(a.yaw-a.yawO);a.don+=(Math.abs(d)/dt-a.don)*Math.min(1,dt*6);
+  if(dt>0){const d=anmAci(a.yaw-a.yawO);a.don+=(Math.abs(d)/dt-a.don)*Math.min(1,dt*14);
     if(p&&p.yon!=null){const ym=Math.atan2(Math.cos(p.yon),Math.sin(p.yon));if(a.yonM!==null)a.donY+=(anmAci(ym-a.yonM)/dt-a.donY)*Math.min(1,dt*20);a.yonM=ym;}}a.yawO=a.yaw;
   if(a.ayakYaw===null)a.ayakYaw=a.yaw;
-  const fark=anmAci(a.yaw-a.ayakYaw),piv=v<1.2?clamp((Math.abs(fark)-0.08)/0.3+a.don/4,0,1)*(1-v/1.2):0;
+  const fark=anmAci(a.yaw-a.ayakYaw),piv=v<1.2?clamp((Math.abs(fark)-0.05)/0.2+a.don/3,0,1)*(1-v/1.2):0;   /* A3b: yerinde dönüşte basma erken başlar (eskiden fark 0,08, dönüş hızı /4, yay dt·6) */
   /* adım boyu (dünya m) ve kadans; koşu payı (yürüyüş → koşu 2–2,5 m/sn, boya göre) */
   const vn=v/Math.sqrt(sy),kos=clamp((vn-2)/0.5,0,1),Lf=anmAdimBoyu(vn)*sy,yor=clamp((0.6-(p&&p.enerji!=null?p.enerji:1))/0.6,0,1);   /* yor: yorgun koşu */
   /* T4h (2026-10-09): hızlı yan harekette (motorun vuruş hazırlığında gövde pas yönüne erken döner, oyuncu topa koşmayı sürdürür) yan adım 2 m/sn'den
      sonra uzar (yan galop, çapraz adım; 4,5 m/sn'de 0,95 m) ve adım sıklığı insan sınırında kalır (en çok 4,8 adım/sn): eskiden yan koşuda 7–9
      adım/sn çıkıyor, dizler karede 20°'den çok sıçrıyordu */
   const Ly=clamp(A.yanEn+A.yanHiz*v,A.yanEn,A.yanTavan),Lyan=v>2?lerp(Ly,0.95,clamp((v-2)/2.5,0,1)):Ly;
-  const wS2=wS*wS,wFB=wF+wB||1,L=Math.max(0.12,v/4.8,((1-wS2)*(wF*Lf+wB*A.geri*Lf)/wFB+wS2*sy*Lyan)*K.adim*a.gAdim);
+  const wS2=wS*wS,wFB=wF+wB||1,L=Math.max(0.12,v/4.8,((1-wS2)*(wF*Lf+wB*A.geri*Lf)/wFB+wS2*sy*Lyan)*K.adim*a.gAdim*(1-FR.adim*fr));   /* A3a: frende kısa kesik adım (kadans v/L ile artar) */
   let cad=Math.max(v/L,piv*A.donusKadans*(0.7+0.5*Math.min(1,Math.abs(fark)/1.5)),clamp((a.sapma-0.28)/0.2,0,1)*A.donusKadans);
   /* durunca havadaki ayak adımını tamamlar (süzülerek yerine gitmez) */
   if(cad<1.6&&(!a.anc[0]||!a.anc[1]))cad=1.6;
-  if(dt>0){a.cadS+=(cad-a.cadS)*Math.min(1,dt*10);cad=a.cadS;}
-  const betaH=lerp(lerp(clamp(0.62-0.03*vn,0.55,0.62),clamp(0.4-0.025*(vn-2.5),0.25,0.4)+0.04*yor,kos),0.45,piv);if(dt>0)a.beta+=(lerp(betaH,0.42,wS2*Math.min(1,v))-a.beta)*Math.min(1,dt*6);const beta=a.beta;
+  if(dt>0){a.cadS+=(cad-a.cadS)*Math.min(1,dt*(10+DN.basma*piv));cad=a.cadS;}   /* A3b: yerinde dönüşte basma gecikmesiz başlar (ayak burkulmaz) */
+  const betaH=lerp(lerp(clamp(0.62-0.03*vn,0.55,0.62),clamp(0.4-0.025*(vn-2.5),0.25,0.4)+0.04*yor,kos),0.45,piv)+(DN.yer*dn+FR.yer*fr)*Math.min(1,v/1.5);   /* A3: fren ve dönüş adımı yerde uzun kalır (keskin dönüşte basma düşük hızda gelir) */if(dt>0)a.beta+=(lerp(betaH,0.42,wS2*Math.min(1,v))-a.beta)*Math.min(1,dt*6);const beta=a.beta;
   const vk=a.vk;   /* A2b: vuruşta adım döngüsü durur (bacaklar vuruş katmanında) */
   /* T10f (Ek G4): topallama (p.topal) — sakat bacak (numaradan) yerdeyken evre kb = 1 + (1 − oran)·1,15 kat hızlı ilerler, öbür bacakta döngü
      süresi aynı kalacak kadar yavaşlar: sakat bacağın basma süresi öbürününkinin ~oran'ı (yürüyüşte ve koşuda 0,6–0,7) */
@@ -345,8 +354,8 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
     const kb=1+(1-tp.oran)*1.15;let ub=a.ph/TAU+a.topBacak*0.5;ub-=Math.floor(ub);a.topU=ub;tHiz=ub<beta?kb:(1-beta)/Math.max(0.05,1-beta/kb);}
   if(dt>0&&cad>0.02&&!(vk&&vk.dondur)){a.ph+=dt*Math.PI*cad*tHiz;if(a.ph>TAU)a.ph-=TAU;}
   const Lm=L/sx,R=2*beta*Lm*Math.min(1,v/Math.max(1e-3,cad*L)),run=Math.min(1,v/7.5);
-  let kal=clamp(A.kaldirEn+A.kaldirHiz*v,A.kaldirEn,A.kaldirTavan)*(wF+0.85*wB+0.75*wS)*K.kaldir*(1-0.2*yor*kos)*a.gKal;kal=Math.min(kal,Math.max(0.035,0.5*L))/sy;
-  const gen=Math.max(0,(Math.abs(mX)*R-0.12)/2)+a.gGen,zOff=0.025-0.05*run-0.12*R*kos*wF,yuv=A.yuvar*4*Math.min(1,R/0.5),yuvA=yuv*(1.1+1.9*run),Lr=0.92,W=a.W,Dv=a.D,us=lerp(1,0.75,kos);
+  let kal=clamp(A.kaldirEn+A.kaldirHiz*v,A.kaldirEn,A.kaldirTavan)*(wF+0.85*wB+0.75*wS)*K.kaldir*(1-0.2*yor*kos)*a.gKal;kal=Math.max(Math.min(kal,Math.max(0.035,0.5*L)),DN.kaldir*piv)/sy;   /* A3b: yerinde dönüşün adımı yerden belirgin kalkar (eskiden ~4 cm: sürüyordu) */
+  const gen=Math.max(0,(Math.abs(mX)*R-0.12)/2)+a.gGen,zOff=0.025-0.05*run-0.12*R*kos*wF+FR.ayak*fr*wF,yuv=A.yuvar*4*Math.min(1,R/0.5),yuvA=yuv*(1.1+1.9*run),Lr=0.92,W=a.W,Dv=a.D,us=lerp(1,0.75,kos);
   let need=9,sapma=0;const u0=a.ph/TAU,ck=a.ck;
   for(let i=0;i<2;i++){let u=u0+i*0.5;u-=Math.floor(u);let q,h=0,g=0;const yer=u<beta;
     /* salınım: yatayda Hermite eğrisi (kalkışta ve inişte ayak yere göre durur); dikeyde 1 − (2g−1)⁴: hızlı kalkış, düz tepe, geç ve kısa iniş
@@ -358,7 +367,7 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
     const ckS=!!ck&&ck.sIdx===i;
     if(ckS&&yer&&ck.sAktif&&!a.anc[i]){x+=ck.sSon;ck.sAktif=false;ck.sBitti=true;}
     /* yerdeki ayak dünyaya çivilenir; sapma 0,6 m'yi aşarsa sürüklenir. Basışta ayakların yönü köke yaklaşır. Kalkan ayak sapmayı salınımda kapatır */
-    if(yer){if(!a.anc[i]){W[k2]=a.x+(x*cY+z*sY)*sx;W[k2+1]=a.z+(-x*sY+z*cY)*sx;a.anc[i]=1;a.ayakYaw+=anmAci(a.yaw-a.ayakYaw)*0.85;}
+    if(yer){if(!a.anc[i]){W[k2]=a.x+(x*cY+z*sY)*sx;W[k2+1]=a.z+(-x*sY+z*cY)*sx;a.anc[i]=1;a.ayakYaw+=anmAci(a.yaw-a.ayakYaw)*(0.85+0.15*dn);}
       const dx=W[k2]-a.x,dz=W[k2+1]-a.z,ax=(dx*cY-dz*sY)/sx,az=(dx*sY+dz*cY)/sx;let ex=ax-x,ez=az-z;const e=Math.sqrt(ex*ex+ez*ez);
       if(e>0.6){const k=0.6/e;ex*=k;ez*=k;W[k2]=a.x+((x+ex)*cY+(z+ez)*sY)*sx;W[k2+1]=a.z+(-(x+ex)*sY+(z+ez)*cY)*sx;}
       x+=ex;z+=ez;Dv[k2]=ex;Dv[k2+1]=ez;if(e>sapma)sapma=e;}
@@ -379,9 +388,10 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
   /* iniş sınırı: gerçek yürüyüşte kütle merkezi 4–5 cm iner (geride kalan ayağın topuğu kalkar; hızlı yürüyüşte daha çok); yetişemeyen ayağı yumuşak IK kısa bırakır */
   const dyH=Math.max(Math.min(need,-yay*Math.cos(2*TAU*(u0-beta/2))),-lerp(0.09,0.1,kos)/sy);
   if(dt>0){const w=34,n=anmAltAdim(w,dt),h=dt/n;for(let s=0;s<n;s++){a.dyV+=(w*w*(dyH-a.dyR)-2*w*a.dyV)*h;a.dyR+=a.dyV*h;}}
-  P.dy=Math.min(-a.gDrop,a.dyR)-(a.gTop||0);
+  P.dy=Math.min(-a.gDrop,a.dyR)-(a.gTop||0)-(FR.kalca*fr+DN.kalca*dn)/sy;   /* A3: frende ve dönüşte kalça alçalır (dizler bükülür) */
   /* eğilme: koşu duruşu (kimlikle), ivmeden öne/arkaya, virajda içe (atan(a/g)) */
-  P.lean=Math.min(0.6,(E.kosu*run+K.egim*kos)*wF+0.05*wB*Math.min(1,v)+clamp(Math.atan(af/9.81)*E.ivme,E.ivmeAlt,E.ivmeUst)+0.6*a.gDrop);
+  /* A3d: depar başında (hız düşükken) ivmenin öne eğdirme tavanı yüksek (Ek G0.2: ilk adımlarda 40–50°), hız 3 m/sn'ye çıkınca normal */
+  P.lean=Math.min(0.75,(E.kosu*run+K.egim*kos)*wF+0.05*wB*Math.min(1,v)+clamp(Math.atan(af/9.81)*E.ivme,E.ivmeAlt,lerp(E.ivmeUstDepar,E.ivmeUst,clamp(v/3,0,1)))+0.6*a.gDrop);
   P.hz=clamp(Math.atan(ar/9.81)*E.yatis,-E.yatisTavan,E.yatisTavan)*Math.min(1,v/3);
   /* T10f: topallayan sakat bacağa basarken gövde o yana yatar, kalça biraz çöker */
   if(a.topU>=0&&a.topU<beta){const s=Math.sin(Math.PI*a.topU/beta);P.hz+=(a.topBacak?-0.09:0.09)*s;a.gTop=0.02*s;}else a.gTop=0;
@@ -398,7 +408,8 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
   const kolA=(KL.genlik[0]+KL.genlik[1]*run)*K.kol*(wF+0.6*wB+0.25*wS)*Math.min(1,v/0.4+piv*0.5);
   P.aL=kolA*cs*yk;P.aR=-kolA*cs*yk;
   P.eL=P.eR=-(KL.dirsek[0]+KL.dirsek[1]*run+K.dirsek);P.eL-=0.09*run*(1-cs*yk);P.eR-=0.09*run*(1+cs*yk);
-  P.aLz=-0.08-0.06*run-0.2*wS*Math.min(1,v);P.aRz=-P.aLz;
+  P.aLz=-0.08-0.06*run-0.2*wS*Math.min(1,v)-FR.kol*fr-DN.kol*dn;P.aRz=-P.aLz;   /* A3: frende ve dönüşte kollar yana açılır (denge) */
+  {const c=-ANM.viraj.kol*P.hz/E.yatisTavan;P.aLz+=c;P.aRz+=c;}   /* A3d: virajda içteki kol gövdeye yakın, dıştaki açık (yatışla) */
   /* baş (bakış zinciri): hedef p.bakisYon ya da top; arkada kalan hedefte baş döndüğü omuzda kalır (öbür omuza fırlamaz); dönüşte baş önden
      gider; hız sınırlı kritik sönümlü yay; baş–gövde sınırını aşan kısmı gövde alır */
   const ph=mac.phase,B=ANM.bas;let yH=0;
@@ -1305,11 +1316,13 @@ function anmEkler(a,p,dt){
   const wo=sw[S.omuz];if(wo>0.01&&ad==='omuz'&&e.kazandi===false){const f=clamp(e.t/(e.sure||0.5)*2-1,0,1)*wo;P.gz-=0.55*a.oSag*f;P.hz-=0.2*a.oSag*f;P.aRz+=0.5*f;P.aLz-=0.5*f;}
   const wh=sw[S.sarilma];if(wh>0.01)a.yEk=Math.max(a.yEk,Math.abs(Math.sin(zaman*6+a.faz0*0.3))*0.1*wh);
   /* jest: işaret ve kol kaldırmada gövde hedefe döner; alkışta eller vurur */
-  const wj=sw[S.jest],j=p.jest;if(wj>0.01&&j){if(j.hedef&&p.yon!=null){const r=-anmAci(Math.atan2(j.hedef.z-p.z,j.hedef.x-p.x)-p.yon);P.gy+=clamp(r,-0.9,0.9)*0.6*wj;P.by+=clamp(r,-0.9,0.9)*0.3*wj;}
+  /* A3c (2026-10-13): jest ve temas katmanında hedef tam arkaya geçerken dönüş payı ±0,9'dan sıçramasın — arkada (|r| > 2,2) sıfıra iner (eskiden
+     hedef arkadan geçince baş ve gövde bir karede ~100° dönüyordu: baş hızı en çok ~6000°/sn) */
+  const wj=sw[S.jest],j=p.jest;if(wj>0.01&&j){if(j.hedef&&p.yon!=null){const r=-anmAci(Math.atan2(j.hedef.z-p.z,j.hedef.x-p.x)-p.yon),rk=clamp(r,-0.9,0.9)*Math.min(1,(Math.PI-Math.abs(r))/0.94);P.gy+=rk*0.6*wj;P.by+=rk*0.3*wj;}
     if(j.tur==='alkis'){const v=Math.sin(zaman*15+a.faz0)*0.22*wj;P.aLz+=v;P.aRz-=v;}}
   const wi=sw[S.itiraz];if(wi>0.01){const v=Math.sin(zaman*6+a.faz0)*0.15*wi;P.aLz-=v;P.aRz+=v;}
   /* T5f: çeken/iten ve itiraz eden gövdesini hedefe (yiyen ya da hakem) döndürür */
-  const wc=sw[S.cekme]+sw[S.tepki];if(wc>0.01){const tmE=ANM_TEMAS.get(p);if(tmE&&tmE.hedef&&tmE.hedef.x!=null&&p.yon!=null){const r=-anmAci(Math.atan2(tmE.hedef.z-p.z,tmE.hedef.x-p.x)-p.yon);P.gy+=clamp(r,-0.9,0.9)*0.5*wc;P.by+=clamp(r,-0.9,0.9)*0.3*wc;}
+  const wc=sw[S.cekme]+sw[S.tepki];if(wc>0.01){const tmE=ANM_TEMAS.get(p);if(tmE&&tmE.hedef&&tmE.hedef.x!=null&&p.yon!=null){const r=-anmAci(Math.atan2(tmE.hedef.z-p.z,tmE.hedef.x-p.x)-p.yon),rk=clamp(r,-0.9,0.9)*Math.min(1,(Math.PI-Math.abs(r))/0.94);P.gy+=rk*0.5*wc;P.by+=rk*0.3*wc;}
     if(sw[S.tepki]>0.01){const v=Math.sin(zaman*5+a.faz0)*0.12*sw[S.tepki];P.aLz-=v;P.aRz+=v;}}
   /* boşta (T1): ağırlığı yavaşça bir bacaktan öbürüne verir, başı hafif oynar */
   /* boşta: ağırlığı yavaşça bir bacaktan öbürüne verir (kimliğin temposuyla), başı hafif oynar; nefes (A2a: göğüs inip kalkar, sert koşudan

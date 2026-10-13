@@ -85,7 +85,12 @@ const STIL={
        adımın boyu (m); donusKadans: yerinde dönerken basma sıklığı (adım/sn; dönüş farkı büyüdükçe artar).
      kalcaDonus: kalçanın hareket yönüne dönüşü (rad, gövde ters döner); kalcaSalinim: adımla kalça dönüşü (rad; yürüyüş, koşu);
        kalcaGecikme: dönüşte kalçanın ayakların yönünde kalan payı; yaylanma: koşuda kalçanın inip kalkması (m; yavaş koşu, hızlı koşu).
-     egilme: kosu koşuda öne eğilme (rad); ivme/yatis: ivmeden öne-arkaya ve virajda içe yatış (atan(a/g) çarpanı); ivmeAlt/ivmeUst/yatisTavan sınırlar (rad).
+     egilme: kosu koşuda öne eğilme (rad); ivme/yatis: ivmeden öne-arkaya ve virajda içe yatış (atan(a/g) çarpanı); ivmeAlt/ivmeUst/yatisTavan sınırlar (rad);
+       ivmeUstDepar: depar başında (hız 0) öne eğilme tavanı, hız 3 m/sn'ye çıkınca ivmeUst (A3d).
+     fren (A3a; motorun hız yönündeki ivmesi < −2 m/sn², koşuda): adim adım boyunun kısalma payı, yer yerde kalma payına ek, kalca kalçanın inişi (m),
+       kol kolların yana açılması (rad), ayak basan ayağın kütle merkezinin önüne kayması (m). donus (A3b; hızın yönü 1,5 rad/sn'den hızlı dönerken):
+       yer, kalca, kol aynı anlamda; basma yerinde dönüşte adım sıklığının izlenme hızına ek (1/sn); kaldir yerinde dönüş adımında ayağın en az kalkışı (m).
+     viraj (A3d): virajda içteki kolun gövdeye yaklaşması, dıştakinin açılması (rad; yatış tavanında).
      bas: bakış zinciri — yay (1/sn), hiz (en çok rad/sn), ivme (en çok rad/sn²), sinir (baş–gövde, rad; ötesini gövde alır, en çok govde rad), oncu (dönüşte baş, kökün
        dönüş hızının bu kadar saniye ilerisine bakar).
      kol: kol salınımının genliği (rad; yürüyüş + koşu payı) ve dirsek bükülmesi (rad; yürüyüş + koşu payı).
@@ -96,7 +101,8 @@ const STIL={
   animasyon:{
     adim:{yuvar:0.05,kaldirEn:0.06,kaldirHiz:0.055,kaldirTavan:0.42,geri:0.75,yanEn:0.3,yanHiz:0.08,yanTavan:0.5,donusKadans:3.2},
     kalcaDonus:0.5,kalcaSalinim:[0.05,0.1],kalcaGecikme:0.65,yaylanma:[0.04,0.022],
-    egilme:{kosu:0.2,ivme:0.8,yatis:0.8,ivmeAlt:-0.3,ivmeUst:0.42,yatisTavan:0.35},
+    egilme:{kosu:0.2,ivme:0.8,yatis:0.8,ivmeAlt:-0.4,ivmeUst:0.42,ivmeUstDepar:0.65,yatisTavan:0.35},
+    fren:{adim:0.3,yer:0.08,kalca:0.08,kol:0.3,ayak:0.08},donus:{yer:0.2,kalca:0.03,kol:0.12,basma:20,kaldir:0.09},viraj:{kol:0.22},
     bas:{yay:22,hiz:7,ivme:90,sinir:1.22,govde:0.7,oncu:0.32},
     kol:{genlik:[0.16,0.74],dirsek:[0.28,1.1]},
     dusus:{aci:1.45,yuzY:0.12,yanY:0.16},dokunus:0.18,kucukPiksel:12,
