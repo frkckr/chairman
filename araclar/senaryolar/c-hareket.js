@@ -45,7 +45,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   /* T4h (2026-10-09; gerçekçilik planı Ek H madde 7, bilgi): aynı 90° dönüş üç hızda — oyuncu +x yönünde v ile koşarken (tam efor, hız aynı tutulur)
      hedef 30 m yana verilir; gidiş yönü 80°'ye varana dek süre, o sürede ileri ve yana gidilen yol (dönüş yarıçapının yaklaşığı), en düşük hız.
      İvme, fren ve dönüş aynı fiziksel sınırdan (hrkYanal): hız arttıkça yarıçap büyür, süre uzar */
-  const donus=v=>{const p=m.players[5];Object.assign(p,{eylem:null,kickCd:0,yuk:0,zipla:null,tavir:null,yonHedef:null,bak:null,denge:1,surus:null,_iax:0,_iaz:0,
+  const donus=v=>{const p=m.players[5];Object.assign(p,{eylem:null,kickCd:0,yuk:0,zipla:null,tavir:null,yonHedef:null,bak:null,denge:1,surus:null,_iax:0,_iaz:0,_eforE:-1,
       yorgunluk:0,enerji:1,x:-20,z:30,vx:v,vz:0,spd:v,yon:0});
     const x0=p.x,z0=p.z,oran=Math.min(1,v/tepeF(p));let t=0,vmin=v,t80=null;p.tx=p.x;p.tz=p.z+30;
     while(t<4){m.kare++;m.t+=dt;p.hizOran=oran;p._eforK=m.kare;p.efor=1;p._varisHiz=v;p._varisKare=m.kare;m.moveP(p,dt);t+=dt;

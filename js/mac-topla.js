@@ -230,7 +230,7 @@ Object.assign(Match.prototype,{
       const kacan=!k&&topHiz>1.2&&ayakD>0.4,on2=kacan?clamp(ayakD/4,0.12,0.6):0.12;
       if(k){/* gelişine: topun yoluna gir */p.tx=k.x-c*on;p.tz=k.z-s*on;}
       else{p.tx=px+b.vx*on2;p.tz=pz+b.vz*on2;}
-      p.hizOran=1;p.yonHedef=a;p.bak=null;this.eforVer(p,k||kacan||baskiAltinda(this,p)>0.3?1:0.6);   /* T1: baskısız duran topa sakin yaklaşır */
+      p.hizOran=1;p.yonHedef=a;p.bak=null;{const ac=!!(k||kacan||baskiAltinda(this,p)>0.3);this.eforVer(p,ac?1:0.6,ac);}   /* T1: baskısız duran topa sakin yaklaşır */
       if(kacan){p._varisHiz=0.95*topHiz+0.3;p._varisKare=this.kare;}   /* topun hızıyla varır (sürüşteki gibi; durmak için yavaşlamaz) */
       /* T9b-b: acelede hizalanma sınırı gevşer (gövde tam dönmeden vurur; hata vurusSapma'nın hizalanma çarpanında). T9b-c (30–45° açılı yaklaşma,
          T4-V devri): üst ve falso şutu açıyla yaklaşarak vurulur — sınır 1,6 katı, hatanın hizalanma payı doğal açının (0,3 rad) ötesinden */
@@ -416,7 +416,7 @@ Object.assign(Match.prototype,{
       const devam=p.oyunda&&this.t<v.son&&!(p.eylem&&p.eylem.kilit)&&(b.sahip===v.q||(!b.sahip&&!b.tasiyan&&b.sonTakim===p.team&&(b.sonDokunan===p||b.sonDokunan===v.q)));
       if(!devam||hyp(p.x-v.x,p.z-v.z)<1.2){bv.vk=null;continue;}
       if(b.hedefOyuncu===p||(p.eylem&&p.eylem.ad==='vurus'))continue;
-      p.tx=v.x;p.tz=v.z;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);}
+      p.tx=v.x;p.tz=v.z;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1,true);}
   },
   /* pasın hedefi hazırlıkta ve vuruş anında tazelenir (ortak plan: aynı varış hızı / uçuş süresi). ayak: alıcının koşusunu ~1 sn sürdürdüğü
      buluşma noktası; bosluk: onun önündeki boşluk; ara: koşu çizgisinde alıcının her savunmacıdan 0,25 sn önce vardığı ilk nokta.
@@ -693,4 +693,4 @@ Object.assign(Match.prototype,{
 });
 EYLEM_ADIM.vurus=function(p,e,dt){this.vurusIlerle(p,e,dt);return true;};
 /* kontrol: iyi dokunuşta oyuncu topun arkasından koşusunu sürdürür (top bir adım önde) */
-EYLEM_ADIM.kontrol=function(p,e){const b=this.ball;if(!e.kotu&&b.sahip===p&&e.yon!=null){p.tx=b.x+b.vx*0.2-Math.cos(e.yon)*0.3;p.tz=b.z+b.vz*0.2-Math.sin(e.yon)*0.3;p.hizOran=1;this.eforVer(p,1);}return false;};
+EYLEM_ADIM.kontrol=function(p,e){const b=this.ball;if(!e.kotu&&b.sahip===p&&e.yon!=null){p.tx=b.x+b.vx*0.2-Math.cos(e.yon)*0.3;p.tz=b.z+b.vz*0.2-Math.sin(e.yon)*0.3;p.hizOran=1;this.eforVer(p,1,true);}return false;};

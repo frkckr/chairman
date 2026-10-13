@@ -385,13 +385,13 @@ Object.assign(Match.prototype,{
         const ox=uzak?go.hx:o.x+o.vx*0.3,oz=uzak?go.hz:o.z+o.vz*0.3,L=hyp(og-ox,MZ-oz)||1;g.hx=ox+(og-ox)/L*0.8;g.hz=oz+(MZ-oz)/L*0.8;}}
       if(g.hx==null)continue;
       this.gorevYaz(p,'duran');   /* T13-0: görev etiketi */
-      if(kos&&g.kx!=null){p.tx=g.kx;p.tz=g.kz;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);continue;}
+      if(kos&&g.kx!=null){p.tx=g.kx;p.tz=g.kz;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1,true);continue;}
       /* görevli yerine düzenli koşar (efor 0,8: T1 hız kipleri 8 m içinde yürütüyordu, hareket eden adamına yetişemiyordu), yerinde ağır */
       /* T10d: 6 sn'den sonra yerine varmamış görevli hızlanır (T8'den: görevliler yerinde %76–78, hedef ≥ %80; geç kalanlar kutuya kendi yarısından
          gelen koşucular, kullanımda hedeflerine ortanca 5,8 m) */
       const e=hyp(p.x-g.hx,p.z-g.hz),acil=du.t>6&&e>3;p.tx=g.hx;p.tz=g.hz;p.hizOran=acil?0.95:e>15?0.85:e>8?0.7:e>2?0.55:0.4;p.bak=b;
       /* markajcı koşan adamını tam eforla izler */
-      if(g.rol==='adam'&&g.hedef&&g.hedef.spd>2){p.hizOran=e>1?1:0.8;p.yonHedef=null;this.eforVer(p,1);continue;}
+      if(g.rol==='adam'&&g.hedef&&g.hedef.spd>2){p.hizOran=e>1?1:0.8;p.yonHedef=null;this.eforVer(p,1,true);continue;}
       if(p.rol!=='GK'){p.yonHedef=null;this.eforVer(p,acil?1:e>1.2||g.rol==='adam'?0.8:0.45);}}
     if(du.tur==='serbest'||du.tur==='kaleVurusu'){
       /* T8c: baraj görevlerden (barajKur; yerleri gorev döngüsünde): üyeler topa bakar */

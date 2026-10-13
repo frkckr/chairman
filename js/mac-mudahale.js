@@ -446,7 +446,7 @@ Object.assign(Match.prototype,{
         this.faulGor(o,p,{itme:arka,arkadan:arka,taktik:true,kaynak:'taktik',ciddiyet:0.25+0.25*this.rast(),x:p.x,z:p.z});}
   },
   mudahaleBaslat(p,s,x,z,tur){
-    p.eylem={ad:'mudahale',t:0,sure:0.5,temas:0.18,oldu:false,tur,bacak:null,gorulmedi:false};p.yonHedef=hrkAtan2(z-p.z,x-p.x);p.tx=x;p.tz=z;p.hizOran=1;p.tavir=null;this.eforVer(p,1);
+    p.eylem={ad:'mudahale',t:0,sure:0.5,temas:0.18,oldu:false,tur,bacak:null,gorulmedi:false};p.yonHedef=hrkAtan2(z-p.z,x-p.x);p.tx=x;p.tz=z;p.hizOran=1;p.tavir=null;this.eforVer(p,1,true);
     this.on('mudahale',{p,rakip:s,kayma:false,tur});
   },
   kaymaBaslat(p,s,x,z){

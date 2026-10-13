@@ -309,7 +309,7 @@ Object.assign(Match.prototype,{
       else{b.tasiyan=null;du.geriX=tk.x;du.geriZ=tk.z;du.aci=tk.yon;b.x=du.x;b.z=du.z;}}
     /* T7a: önde biten son dakikalarda duran topta acele yok (niyetin duranGecikme'si) */
     /* T9b-a (d-topcu bulgusu): topu kovalarken hızla çizgiyi aşan atan sert durur (azami fren; rahat frenle 5 m/sn'den ~2,8 m taşıyordu) */
-    if((du.asama==='bekle'||du.asama==='getir')&&tk.spd>3)this.eforVer(tk,1);
+    if((du.asama==='bekle'||du.asama==='getir')&&tk.spd>3)this.eforVer(tk,1,true);
     /* T8a: kullanan topa ve yerine düzenli yürür/koşar (efor 0,8; T1 hız kipi 8 m içinde 1,6 m/sn'lik yürüyüşe düşürüyordu: serbest vuruşta topu
        yerine taşımak ~3 sn sürüyordu) */
     else if(du.asama==='bekle'||du.asama==='getir'||du.asama==='yerles')this.eforVer(tk,0.8);
@@ -400,7 +400,7 @@ Object.assign(Match.prototype,{
     const b=this.ball;e.ft+=dt;
     if(e.faz==='tut'){if(b.tasiyan!==p)p.eylem=null;return;}
     /* T8d: uzun taçta 3 m koşu (3–5 adım), topu başının arkasında tutarak; çizgiye varınca atar */
-    if(e.faz==='kosu'){if(b.tasiyan!==p){p.eylem=null;return;}p.tx=e.kx;p.tz=e.kz;p.hizOran=0.75;this.eforVer(p,1);p.yonHedef=Math.atan2(MZ-e.kz,0);p.bak=null;
+    if(e.faz==='kosu'){if(b.tasiyan!==p){p.eylem=null;return;}p.tx=e.kx;p.tz=e.kz;p.hizOran=0.75;this.eforVer(p,1,true);p.yonHedef=Math.atan2(MZ-e.kz,0);p.bak=null;
       if(hyp(p.x-e.kx,p.z-e.kz)<0.3||e.ft>1.6){e.faz='at';e.ft=0.2;}return;}
     if(e.faz==='at'&&!e.atti&&e.ft>=0.34){
       e.atti=true;const q=e.hedef,U=e.uzun,hx=U?U.hx:q?q.x+q.vx*0.6:p.x+this.dir[p.team]*8,hz=U?U.hz:q?q.z+q.vz*0.6:clamp(p.z+(p.z<MZ?8:-8),1,PW-1);

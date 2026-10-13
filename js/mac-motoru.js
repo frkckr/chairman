@@ -53,6 +53,8 @@ const VARSAYILAN_TAKTIK={dizilis:'4-4-2',sakin:0.5,direkt:0.5,risk:1,pres:0.5,te
 const MOTOR_AYAR={
   macSuresiDk:20,              // U1 (2026-10-12, kullanıcı kararı; eskiden 10): maçın gerçek süresi (dk; uzatma ve devre arası hariç): maç saati 90/macSuresiDk kat hızlı akar (saatCarpani)
   gecis:0.7,                   // topu kaybeden takımın savunma düzenine geçme gecikmesi (sn)
+  gecisUzak:15,                // T13c: düzen değişiminde (ve T13d oyun başında) topa bu kadar (m) uzak oyuncu kişisel tepki süresince en çok 0,5 eforla gider
+  oyunBasi:1,                  // T13d: oyun duruştan ya da santradan başladıktan sonra bu kadar (sn) topa uzak oyuncunun eforu en çok 0,5
   donus:0.75,                  // savunmaya dönüşte topa uzak oyuncunun hız oranı (birleştirme 2026-10-03: 0,85 → 0,75, koşu mesafesi)
   karsiPres:3.0,               // top kaybından sonra karşı pres süresi (sn; takımın pres ayarıyla 0,6–1,4 katı) (MM2)
   blokYumusak:4,               // T1: bölge hedefinin izlediği top yerinin yumuşatma süresi (sn; 0: ham): tehlikesiz yönde
@@ -64,9 +66,9 @@ const MOTOR_AYAR={
   egilimGuc:undefined,formSapma:undefined,
   /* C — js/mac-hareket.js */
   ivme:undefined,ivmeRahat:undefined,frenRahat:undefined,yanRahat:undefined,varisRahat:undefined,sarsinti:undefined,sarsintiAzami:undefined,
-  kipSure:undefined,kipDur:undefined,donusYerinde:undefined,dinlenUzak:undefined,hedefOlu:undefined,hedefOluAzami:undefined,kovalaPay:undefined,
+  kipSure:undefined,kipDur:undefined,donusYerinde:undefined,dinlenUzak:undefined,hedefOlu:undefined,hedefOluAzami:undefined,kovalaPay:undefined,kovalaRahat:undefined,kovalaGuven:undefined,
   yorgunlukHiz:undefined,devreDinlenme:undefined,
-  dinlenKos:undefined,tepkiCarpan:undefined,eforUs:undefined,kipKos:undefined,fren:undefined,yanTutus:undefined,enerjiHarca:undefined,
+  dinlenKos:undefined,tepkiCarpan:undefined,eforUs:undefined,eforRampa:undefined,eforMesafe:undefined,gorevEfor:undefined,kipKos:undefined,fren:undefined,yanTutus:undefined,enerjiHarca:undefined,
   enerjiTopla:undefined,yanTavan:undefined,geriTavan:undefined,donusSiniri:undefined,ayakBas:undefined,varisHizi:undefined,varisFren:undefined,
   jokeyMesafe:undefined,birebirYayilim:undefined,birebirErisim:undefined,birebirYaris:undefined,birebirKayma:undefined,birebirDonus:undefined,
   birebirVazgec:undefined,yutmaGuc:undefined,yutmaSure:undefined,destekSure:undefined,kapatYakin:undefined,dokunusSiklik:undefined,
@@ -100,7 +102,7 @@ const MOTOR_AYAR={
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined
 };
-const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
+const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',gecisUzak:'cekirdek',oyunBasi:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
   if(!Object.prototype.hasOwnProperty.call(MOTOR_AYAR,k))throw new Error('MOTOR_AYAR.'+k+' bildirilmemiş ('+akis+'; önce js/mac-motoru.js MOTOR_AYAR)');
   if(MOTOR_AYAR_SAHIBI[k])throw new Error('MOTOR_AYAR.'+k+' iki kez eklendi ('+MOTOR_AYAR_SAHIBI[k]+', '+akis+')');
@@ -273,6 +275,8 @@ class Match{
       /* T13-0 (2026-10-13): oyuncunun bu karedeki görevi (takimAI, bolgeKonumu, durusYerlesim yazar: kovala, pres1, markaj, bolge …), önceki
          görevi ve görevin başladığı an (sn). Rastlantısız; ölçüm (araclar/olcumler/r-ivme.js, r-karne.js) ve T13 eforu okur, çizim okumaz */
       gorevAd:null,_gorevOnce:null,_gorevT:-9,
+      /* T13a: etkin efor (moveP'nin rampası; -1: ilk karede istenene oturur) ve bu karenin aciliyeti (eforVer'in üçüncü bağımsız değişkeni) */
+      _eforE:-1,_eforAcil:false,
       /* A2a (2026-10-08): jest {tur: kol|isaret|itiraz|cagir|basEl|alkis, t, sure, kol, hedef} — motor → çizim; yazan iş T7/T10 (bugün null) */
       jest:null,
       /* T4 (2026-10-08, bire bir): çalım denemesi {o, hareket, taraf, faz 0 yaklaşma / 1 hazırlık / 2 geçme, ft, t0, kare, …} ve aldatılan

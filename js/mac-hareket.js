@@ -32,9 +32,14 @@ ayarEkle('C',{
   hedefOlu:1,                  // T1: kararlı hedefin ölü bölgesi: clamp(hedefOlu + 0,08·topaUzaklık, hedefOlu, hedefOluAzami) (m)
   hedefOluAzami:4,
   kovalaPay:0.5,               // T1: topa rakibinden bu kadar (sn) geç yetişecek kovalayan sakin yaklaşır (efor 0,5)
+  kovalaRahat:0.6,             // T13a: topa rakibinden bu kadar (sn) önce varacak kovalayan ve pasın alıcısı yarışta değil: gereken eforla gider (kovala)
+  kovalaGuven:1.5,             // T13a: gereken ivmenin güvenlik çarpanı (topa varışın kalan süresinde hedefe yetişmek için 2·(D − v·T)/T²)
   dinlenKos:18,                // T1: dinlenen oyuncu hedefi bu kadar (m) uzaklaşınca yerine koşar
   tepkiCarpan:1.0,             // T1: kişisel tepki süresinin çarpanı (0,25–0,7 sn)
   eforUs:4,                    // T1: ivme sınırının eforla artışı lerp(rahat, azami, efor^eforUs) (plan 1,5; 4 ile yer tutma ve destek ivmesi ≤3 m/sn²)
+  gorevEfor:0.75,              // T13a: hücumun konum koşularının (bindirme, stoperin ileri çıkışı, uzak kanat) eforu (eskiden 0,8; savunma görevleri ve ortaya zamanlanan kutu rolü hariç)
+  eforMesafe:[0.55,1.5,7.5],   // T13a: acil olmayan görevde efor hedefe uzaklıkla: [en az, bu mesafeye (m) kadar en az, bu mesafeden sonra istenen]
+  eforRampa:[0.2,0.4],         // T13a: acil olmayan görevde etkin eforun 0'dan 1'e çıkış süresi (sn; çabukluk ve çalışkanlıkla kısa uç); düşüş anında
   kipKos:8,                    // T1: yerindeki oyuncunun hedefi bu kadar (m) uzaklaşınca yerine koşar (2 katından uzaksa hızlı)
   fren:7.5,                   // fren ivmesi (m/sn²; hız özelliğiyle +1,5); itiş + yanal toplamı da bunu aşamaz (C1)
   yanTutus:6.0,                // yanal tutunma (m/sn²; çeviklikle +3,5), hızla %30'a kadar azalır (C1)
@@ -83,7 +88,8 @@ const hrkHazirla=p=>{kutle(p);p._cev=null;hrkCeviklik(p);p._hk=null;p._kacKare=-
    İvme tipi (T1): kısa, çevik ve hafif oyuncu patlayıcıdır (A0 yüksek, S0 düşük), uzun ve iri olan uzun adımlı (tersi); ötekiler dengeli */
 const hrkSabit=p=>{const k=p._hk;if(k)return k;if(k===undefined)hrkHazirla(p);const h=p.oz&&p.oz.hiz!=null?p.oz.hiz:0.5,c=hrkCeviklik(p),A=MOTOR_AYAR;
   const tip=clamp((1-(p.boy||1))*6+(c-0.5)*1.2-(((p.kayit&&p.kayit.yapi)||1)-1)*4,-1,1);
-  return p._hk={A0:clamp(A.ivme+1.1*h+0.7*c+0.45*tip,6.0,7.8),S0:clamp(p.maxSpd+1.25-0.3*tip,8.6,10.0),B:A.fren+1.5*h,ly:A.yanTutus+3.5*c,w0:A.donusYerinde+2.5*c};};
+  const R=A.eforRampa,er=R[1]-(R[1]-R[0])*clamp(0.6*profilAlt(p,'cabukluk',0.5)+0.4*profilAlt(p,'caliskanlik',0.5),0,1);   /* T13a */
+  return p._hk={A0:clamp(A.ivme+1.1*h+0.7*c+0.45*tip,6.0,7.8),S0:clamp(p.maxSpd+1.25-0.3*tip,8.6,10.0),B:A.fren+1.5*h,ly:A.yanTutus+3.5*c,w0:A.donusYerinde+2.5*c,er};};
 /* o anki tepe hız: sprint enerjisi ve yorgunluk düşürür */
 const hrkTepe=p=>p.maxSpd*(0.86+0.14*(p.enerji!=null?p.enerji:1))*(1-0.12*(p.yorgunluk||0))*(p.topal?0.75:1);   /* T10c: topallayan %25 yavaş (Ek G4) */
 /* T4-V: vuruş hazırlığındaki gövde dönüş hızı (rad/sn; hızlanınca düşer). moveP ve vurusIlerle'nin kalan süre hesabı aynı değeri okur */
@@ -111,7 +117,9 @@ const hrkKosuSuresi=(D,v0,vm,A0,S0)=>{
   return((T[o]*(1-fj)+T[o+1]*fj)*(1-fi)+(T[o+N1]*(1-fj)+T[o+N1+1]*fj)*fi)*tau;
 };
 /* hız kipleri (T1): dur, yürü, tırıs, koş, hızlı, depar (tepe hız). Çizim p.kip'i okur (boşta pozlar) */
-const HRK_KIP_HIZ=[0,1.6,3.2,5.0,6.5,99];   /* sırasıyla dur, yuru, tiris, kos, hizli, depar */
+const HRK_KIP_HIZ=[0,1.6,3.2,5.0,6.5,99];
+/* T13a: etkin eforu gorevEfor ile sınırlanan hücum konum görevleri (p.gorevAd; js/mac-dizilis.js gorevYaz) */
+const HRK_KONUM_GOREV=new Set(['bindirme','stoperIleri','uzakKanat']);   /* sırasıyla dur, yuru, tiris, kos, hizli, depar */
 const hrkKipAdi=s=>s<0.2?'dur':s<2?'yuru':s<4?'tiris':s<5.75?'kos':s<7?'hizli':'depar';
 /* çalımda topun itileceği açı (rakibe göre): top rakibin ~1,25 m yanından geçsin (yakın rakipte daha geniş), en az a0, en çok 1,2 rad */
 const hrkCalimAci=(L,a0)=>hrkMin(1.2,hrkMax(a0,L>1.3?Math.asin(1.25/L)+0.1:1.2));
@@ -350,8 +358,20 @@ Object.assign(Match.prototype,{
       if(ic){tx=ax;tz=hrkAbs(p.x-ax)>0.2?p.z:T.z+2;}else if(hrkHyp(p.x-ax,p.z-T.z-1.5)>0.6){tx=ax;tz=T.z+1.5;}else tx=ax;}
     const dx=tx-p.x,dz=tz-p.z,d=hrkHyp(dx,dz),vm=hrkTepe(p);
     /* efor (T1): bu karede verildiyse o, verilmediyse hız oranından (maç öncesi, hakem, kenar; eski sürekli hız seçimi) */
-    const acik=p._eforK===this.kare,ef=acik?p.efor:p.hizOran>=0.95?1:0.2+0.6*p.hizOran,w=ef>=1?1:hrkUs(ef,A.eforUs),saha=p.tur==='oyuncu'&&p.rol!=='GK';
+    const acik=p._eforK===this.kare,ef=acik?p.efor:p.hizOran>=0.95?1:0.2+0.6*p.hizOran,saha=p.tur==='oyuncu'&&p.rol!=='GK';
     if(!acik)p.efor=ef;
+    /* T13a (2026-10-13): etkin efor — açık oyunda (duruşta eskisi gibi: görev yerleşimi ve kullanımın zamanlaması değişmesin) acil olmayan görevde istenen efor hemen değil, oyuncunun rampa süresiyle (0,2–0,4 sn; hrkSabit er) yükselir,
+       düşüşte anında; acilde (eforVer'in acil bayrağı) ve efor verilmeyen harekette (maç öncesi, hakem, kenar, c-hareket) eskisi gibi. İvme ve
+       sarsıntı sınırları etkin eforu, hız kipi istenen eforu okur. Eskiden görev değişince efor aynı karede tama çıkıyordu (T13-0: ivmelenmelerin
+       %66'sı görev değişiminden sonraki 0,5 sn'de) */
+    /* acil olmayan görevde efor hedefe uzaklıkla ölçeklenir: kısa yer düzeltmesinde depar yok (eforMesafe; 1,5 m'de 0,55, 7,5 m'den sonra
+       istenen). Hız kipi ölçeklenmemiş (görevin) eforunu okur */
+    let efE=ef;
+    /* hücumun konum koşularında (bindirme, stoperin ileri çıkışı, uzak kanat; T13-0 görev etiketi) etkin efor gorevEfor'u aşmaz */
+    if(acik&&saha&&this.phase==='play'){const EM=A.eforMesafe,efH=!p._eforAcil&&ef>EM[0]?hrkMin(ef,HRK_KONUM_GOREV.has(p.gorevAd)?A.gorevEfor:1,EM[0]+(1-EM[0])*clamp((d-EM[1])/(EM[2]-EM[1]),0,1)):ef;
+      if(p._eforAcil||p._eforE<0||efH<=p._eforE)p._eforE=efH;else p._eforE=hrkMin(efH,p._eforE+dt/hk.er);efE=p._eforE;}
+    else p._eforE=ef;
+    const w=efE>=1?1:hrkUs(efE,A.eforUs);
     /* varış hızı: karşılayan (kovala) bu karede verdiyse hedefe koşarak varır, yoksa durur; yavaşlama eforla rahattan azamiye */
     const vA=p._varisKare===this.kare?p._varisHiz:0,aV=A.varisRahat+(A.varisFren-A.varisRahat)*w;
     let hedefHiz=d<0.04?0:hrkMin(vm*p.hizOran,hrkKok(vA*vA+aV*2*hrkMax(0,d-0.03))+0.2);
@@ -403,7 +423,7 @@ Object.assign(Match.prototype,{
     /* ileri itiş a(v)=A0·(1−v/S0) (yorgunluk düşürür); rahat değer bunu aşamaz */
     const Aa=hk.A0*(1-0.15*(p.yorgunluk||0))*hrkMax(0,1-sp/hk.S0),Ar=hrkMin(A.ivmeRahat,Aa);
     const Ac=(Ar+(Aa-Ar)*w)*dk*dt,B=(A.frenRahat+(hk.B-A.frenRahat)*(acil?1:w))*dk*dt,Ly=Ly0*dt;
-    if(sp<0.6){const al=hrkHyp(ax,az),lim=s>sp?hrkMin(B,ef>=0.8?hrkMax(Ac,Ly):Ac):B;if(al>lim){ax*=lim/al;az*=lim/al;}}
+    if(sp<0.6){const al=hrkHyp(ax,az),lim=s>sp?hrkMin(B,efE>=0.8?hrkMax(Ac,Ly):Ac):B;if(al>lim){ax*=lim/al;az*=lim/al;}}
     else{const ex=p.vx/sp,ez=p.vz/sp;let ap=ax*ex+az*ez,qx=ax-ap*ex,qz=az-ap*ez;
       /* hızlıyken keskin dönüş (>100°): ayak basılır, önce fren, sonra yeni yöne */
       if(sp>3&&s>0.5&&ux*ex+uz*ez<-0.17){qx*=A.ayakBas;qz*=A.ayakBas;}
@@ -413,7 +433,7 @@ Object.assign(Match.prototype,{
       else{const q=(ap/B)*(ap/B)+(aq/Ly)*(aq/Ly);if(q>1){const k=1/hrkKok(q);ap*=k;qx*=k;qz*=k;}}
       ax=ap*ex+qx;az=ap*ez+qz;}
     /* sarsıntı sınırı: ivme vektörü karede en çok J·dt değişir (hız eğrisi çan biçimli; efor 1'de J azami) */
-    const J=(A.sarsinti+(A.sarsintiAzami-A.sarsinti)*(acil?1:ef*ef*ef))*dt*dt,jx=ax-p._iax,jz=az-p._iaz,jl=hrkHyp(jx,jz);
+    const J=(A.sarsinti+(A.sarsintiAzami-A.sarsinti)*(acil?1:efE*efE*efE))*dt*dt,jx=ax-p._iax,jz=az-p._iaz,jl=hrkHyp(jx,jz);
     if(jl>J){ax=p._iax+jx*J/jl;az=p._iaz+jz*J/jl;}
     p._iax=ax;p._iaz=az;
     p.vx+=ax;p.vz+=az;p.x+=p.vx*dt;p.z+=p.vz*dt;p.spd=hrkHyp(p.vx,p.vz);
@@ -426,7 +446,9 @@ Object.assign(Match.prototype,{
   /* ============ T1: efor, hız kipi, kararlı hedef ============ */
   /* hedef yazan her yer eforu da yazar (0–1): kovalama, pres, markaj, derin koşu, vuruş hazırlığı 1; karşı pres 0,9; destek 0,6; bölge 0,25–0,5;
      duran top yerleşimi 0,4. Bu karede yazılmadıysa moveP eforu hız oranından alır */
-  eforVer(p,ef){p.efor=ef;p._eforK=this.kare;},
+  /* T13a: acil — topa yetişme yarışı, pasın alıcısı, topu süren, müdahale, 1. adamın yakın baskısı ve topa koşuları, örtü, çizgi beki, markaj, kutu
+     savunması, dönen top, ortanın alıcısı, derin koşu, şutu takip, duran top görev koşusu: etkin efor rampasız ve ölçeksiz (moveP) */
+  eforVer(p,ef,acil){p.efor=ef;p._eforK=this.kare;p._eforAcil=!!acil;},
   /* hız kipi: yerindeki oyuncu yürür ya da durur; hedefi kipKos'tan uzaklaşınca kısa ve net bir koşuyla (koş; 2·kipKos'tan uzaksa hızlı)
      yerine döner, kipDur'a girince yine yürür. Dinlenmede (efor <0,2) eşik dinlenKos ve en çok koş; destekte (≥0,6) eşik yarı.
      Kip en az kipSure sürer; duruşa geçiş beklemez. Dönen: hız tavanı (m/sn) */
@@ -442,8 +464,8 @@ Object.assign(Match.prototype,{
   /* kararlı hedef: bölge hedefi oyuncunun düşünme anında (0,3–0,6 sn; oyuncuya göre kaydırılmış) güncellenir; yeni hedef eskisine
      clamp(1+0,08·topaUzaklık, 1, 4) m'den yakınsa eski kalır. Topa 12 m'den yakınken her kare düşünür; eforu 0,8 üstü görevde hedef doğrudan.
      xSerbest: x hep güncel (savunma çizgisi düz kalsın), ölü bölge yalnız yana; zorla: hemen güncelle (ofsayttan dönüş) */
-  hedefVer(p,x,z,ef,xSerbest,zorla){
-    this.eforVer(p,ef);
+  hedefVer(p,x,z,ef,xSerbest,zorla,acil){
+    this.eforVer(p,ef,acil);
     const k=this.kare;
     if(ef>=0.8||zorla||p._hdfK!==k-1){p._hdfX=x;p._hdfZ=z;p.dusunT=this.t;}
     else{const A=MOTOR_AYAR,b=this.ball,db=hrkHyp(p.x-b.x,p.z-b.z),P=p._dusP||(p._dusP=18+((this.tohum+p.n*13+p.team*5)%19));
@@ -452,8 +474,8 @@ Object.assign(Match.prototype,{
       if(xSerbest)p._hdfX=x;}
     p._hdfK=k;p.tx=p._hdfX;p.tz=p._hdfZ;
   },
-  kovala(p,ef){
-    const b=this.ball;this.eforVer(p,ef!=null?ef:1);
+  kovala(p,ef,acil){
+    const b=this.ball,efK=ef!=null?ef:1;this.eforVer(p,efK,acil!=null?acil:efK>=1);   /* T13a: aciliyet takimAI'dan (verilmezse tam efor acil) */
     /* tepki süresi: top yön değiştirdikten sonra oyuncu bir an eski hedefine gider (pası bekleyen alıcı daha çabuk). T5e (2026-10-09): top
        değişimi başına kişisel sapma N(0; 0,06 sn), ±0,12'de kesik (tek zar): yarı yarıya ve dönen topta ilk dokunuş varış farkıyla düzgün
        değişir, basamak değil (c-donen; eskiden aynı durum her seferinde aynı sonucu veriyordu) */
@@ -484,6 +506,14 @@ Object.assign(Match.prototype,{
        Pasın alıcısı topu kontrollü karşılar (koşarak geçip topun gerisinde kalmasın), yalnız geç kalıyorsa koşarak */
     /* çizgiye yakın karşılamada (3 m) koşarak varılmaz: hem top hem oyuncu sahada kalsın */
     const pay=k.t-varisZamani(p,k.x,k.z,0.45,0.1),vo=hrkAbs(k.x)>PL-3||k.z<3||k.z>PW-3?0:MOTOR_AYAR.varisHizi*p.maxSpd;
+    /* T13a (2026-10-13): yarışta olmayan kovalamada (serbest topa açıkça önce varan) efor gereken ivmeden — topa varışın kalan süresinde
+       (k.t − 0,15 sn) hedefe yetişmek için 2·(D − v·T)/T² (v: hedefe doğru hızı) güvenlik çarpanıyla; rahat ivme yetiyorsa 0,55, azami ivme
+       gerekiyorsa 1, arası efor⁴ eşlemesinin tersi. Her karede yeniden: geciken oyuncunun eforu kendiliğinden artar. Rampa ve uzaklık ölçeği
+       yok (acil bayrağı), hız kipi yok (karşılama). Eskiden açıkça önde olan da tam eforla fırlıyordu (T13-0: kovala ivmelenmelerin %19'u) */
+    if(acil===false&&efK>=1){const A=MOTOR_AYAR,hk=p._hk||hrkSabit(p),D=hrkMax(0,hrkHyp(k.x-p.x,k.z-p.z)-0.45),T=hrkMax(0.15,k.t-0.15),
+        v0=D>0.01?hrkMax(0,(p.vx*(k.x-p.x)+p.vz*(k.z-p.z))/(D+0.45)):0,aI=A.kovalaGuven*2*hrkMax(0,D-v0*T)/(T*T),
+        Aa=hk.A0*(1-0.15*(p.yorgunluk||0)),Ar=hrkMin(A.ivmeRahat,Aa),efI=aI<=Ar?0.55:aI>=Aa?1:hrkMax(0.55,hrkUs((aI-Ar)/(Aa-Ar),1/A.eforUs));
+      this.eforVer(p,efI,true);}
     if(b.hedefOyuncu===p)p._varisHiz=pay<0.1?0.6*vo:0;
     else p._varisHiz=(pay<0.25?vo:pay<0.8?vo*(0.8-pay)/0.55:0)*((b.vx*(p.x-k.x)+b.vz*(p.z-k.z))>0?0.45:1);
     p._varisKare=this.kare;
@@ -515,7 +545,7 @@ Object.assign(Match.prototype,{
          sınırı sürücüyü frenletiyordu */
       const on=clamp(d/(hrkTepe(p)*0.9),0.25,0.7);p.tx=b.x+b.vx*on;p.tz=b.z+b.vz*on;}
     else{p.tx=b.x+b.vx*0.22-tux*0.34+(M&&M.kx||0);p.tz=b.z+b.vz*0.22-tuz*0.34+(M&&M.kz||0);}
-    p.hizOran=hz*(0.8+0.12*p.oz.surus);p.bak=null;this.eforVer(p,hz>=0.6?1:0.85);
+    p.hizOran=hz*(0.8+0.12*p.oz.surus);p.bak=null;this.eforVer(p,hz>=0.6?1:0.85,true);
     /* T4: topla koşan oyuncu topa yaklaşırken frenlemez, karşılayan gibi koşarak varır (eskiden her dokunuştan önce hedefe varış freni hızı
        kesiyordu: hızlı sürüşte dokunuş olmuyordu); bekletme, koruma ve çalım bekleyişi dışında */
     const vp=hrkTepe(p)*p.hizOran;
@@ -694,18 +724,18 @@ Object.assign(Match.prototype,{
     const ev=s.eylem;
     if(ev&&ev.ad==='vurus'&&ev.sec&&(ev.sec.tur==='orta'||ev.sec.tur==='geriCevir')&&ev.faz!=='takip'&&mesafe<4.5){
       const lx=ev.sec.hx-b.x,lz=ev.sec.hz-b.z,ll=hrkHyp(lx,lz)||1;
-      p.tx=b.x+lx/ll;p.tz=b.z+lz/ll;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);p._ortaBlokT=this.t;return;}
+      p.tx=b.x+lx/ll;p.tz=b.z+lz/ll;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1,true);p._ortaBlokT=this.t;return;}
     /* T4: çalım sırasında aldatılmayan savunmacı sürücüyü kısa gecikmeyle izler (0,08 sn; hareketi okudu): aldatma artık süzgecin yan etkisi değil,
        yutma zarının sonucudur. İtişten sonra (tepki süresi geçince) top sürücüden 1,2 m'den fazla açıldıysa ve savunmacı topun yoluna sürücüden
        önce yetişebiliyorsa topa koşar (birebirTahmin'in yarışı); yetişemiyorsa kale tarafında jokeyini sürdürür */
     const Ci=s.calim,okudu=Ci&&Ci.o===p&&Ci.faz>=1;
     if(okudu&&Ci.faz===2&&Ci.ft>=hrkMax(0.06,0.16-0.1*p.oz.karar)&&b.y<0.5){
       if(hrkHyp(b.x-s.x,b.z-s.z)>1.2){const kn=this.yakalamaNoktasi(p,0.7);
-        if(kn.t<3&&kn.t<varisZamani(s,kn.x,kn.z,0.45,0.05)+0.1){p.tx=kn.x;p.tz=kn.z;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);this.yanindanGec(p,s);this.mudahaleDene(p,s,dt);return;}}
+        if(kn.t<3&&kn.t<varisZamani(s,kn.x,kn.z,0.45,0.05)+0.1){p.tx=kn.x;p.tz=kn.z;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1,true);this.yanindanGec(p,s);this.mudahaleDene(p,s,dt);return;}}
       /* topa yetişemiyor: toparlanma koşusu — sürücünün 0,5 sn sonraki yerinden kaleye doğru 2,5 m'deki noktaya, koşu yönüne bakarak (yan adımla
          jokey hedefi sürücü yanından geçerken üstüne düşüyor, savunmacı duruyordu) */
       const fx=s.x+s.vx*0.5,fz=s.z+s.vz*0.5,kx=gx-fx,kz=MZ-fz,kl=hrkHyp(kx,kz)||1;
-      p.tx=fx+kx/kl*2.5;p.tz=fz+kz/kl*2.5;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);this.yanindanGec(p,s);this.mudahaleDene(p,s,dt);return;}
+      p.tx=fx+kx/kl*2.5;p.tz=fz+kz/kl*2.5;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1,true);this.yanindanGec(p,s);this.mudahaleDene(p,s,dt);return;}
     /* T4 (2): başka savunmacıyı geçmiş sürücüye çıkan taze 1. adam (örtüden gelen; geçilen 1,5 sn 1. adam olmaz): yaklaşıp jokey yapmaz, topa
        koşar. Tetik: sürücünün kaçışı sürüyor (itişten 0,2–0,3 sn sonra) ya da bir takım arkadaşı 1,5 sn içinde geçildi ve top sürücüden
        1,2 m'den uzakta; topun yoluna sürücüyle aynı sıralarda (en çok 0,8 sn geç) yetişebiliyorsa oraya koşar, yetişemiyorsa aşağıdaki yaklaşma
@@ -713,7 +743,7 @@ Object.assign(Match.prototype,{
     if(b.y<0.5&&p._gecS!==s){let kacis=!!Ci&&Ci.faz===2&&Ci.o!==p&&Ci.ft>=0.3-0.1*p.oz.karar;
       if(!kacis&&!Ci&&hrkHyp(b.x-s.x,b.z-s.z)>1.2)for(const q of this.teams[p.team]){if(q!==p&&this.t-q._gecT<1.5){kacis=true;break;}}
       if(kacis){const kn=this.yakalamaNoktasi(p,0.7);
-        if(kn.t<2.5&&kn.t<varisZamani(s,kn.x,kn.z,0.45,0.05)+0.8){p.tx=kn.x;p.tz=kn.z;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);this.yanindanGec(p,s);this.mudahaleDene(p,s,dt);return;}}}
+        if(kn.t<2.5&&kn.t<varisZamani(s,kn.x,kn.z,0.45,0.05)+0.8){p.tx=kn.x;p.tz=kn.z;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1,true);this.yanindanGec(p,s);this.mudahaleDene(p,s,dt);return;}}}
     const tr=okudu?0.08:0.32-0.15*p.oz.karar,k=hrkMin(1,dt/tr);
     if(p._algS!==s){p._algS=s;p._algVx=s.vx;p._algVz=s.vz;}
     p._algVx+=(s.vx-p._algVx)*k;p._algVz+=(s.vz-p._algVz)*k;
@@ -781,9 +811,9 @@ Object.assign(Match.prototype,{
     if(C&&C.faz===2&&C.ft>=0.3-0.1*p.oz.karar&&b.y<0.5){
       /* yarış şartı yok: örtü topa koşar, geç kalsa da ilk dokunuşta sürücünün üstündedir (şartlıyken 2 m geride kalıyor, topa hiç gelmiyordu) */
       const kn=this.yakalamaNoktasi(p,0.7);
-      if(kn.t<2.5){p.tx=kn.x;p.tz=kn.z;p.hizOran=1;p.yonHedef=null;this.eforVer(p,1);this.mudahaleDene(p,s,dt);return;}
+      if(kn.t<2.5){p.tx=kn.x;p.tz=kn.z;p.hizOran=1;p.yonHedef=null;this.eforVer(p,1,true);this.mudahaleDene(p,s,dt);return;}
       const fx=s.x+s.vx*0.4,fz=s.z+s.vz*0.4,kx=gx-fx,kz=MZ-fz,kl=hrkHyp(kx,kz)||1;
-      p.tx=fx+kx/kl*2;p.tz=fz+kz/kl*2;p.hizOran=1;p.yonHedef=null;this.eforVer(p,1);this.mudahaleDene(p,s,dt);return;}
+      p.tx=fx+kx/kl*2;p.tz=fz+kz/kl*2;p.hizOran=1;p.yonHedef=null;this.eforVer(p,1,true);this.mudahaleDene(p,s,dt);return;}
     const kx=gx-o.x,kz=MZ-o.z,kl=hrkHyp(kx,kz)||1,nx=kx/kl,nz=kz/kl;let K=MOTOR_AYAR.kapatYakin,lx=-nz,lz=nx,yan=clamp((s.vx*lx+s.vz*lz)*0.3,-0.8,0.8);
     /* okuma: 1. adam hazırlığa girince (itiş geliyor; gövdeden yan bellidir) örtü beklenen toplama noktasının 0,8 m kale tarafına gider. Nokta
        hrkItis'in geometrisiyle (top → 1. adam doğrultusu, seçilen yana hrkCalimAci açısı, 1. adamın izdüşümünden 1,6 m öte; aldatma hareketlerinin
