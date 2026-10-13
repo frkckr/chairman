@@ -14,7 +14,7 @@ module.exports={
     ['— R: robotluk karnesi (gerçekçilik planı Ek F) —',null,0],
     ['Hareket: durma + yürüme (<2 m/sn) %','rDurYuru',1,[40,null,'T1']],['Hareket: depar (≥7 m/sn) %','rDepar',1,[null,3,'T1']],
     ['Hareket: topa >25 m iken >4 m/sn %','rUzakKosu',1,[null,25,'T1']],['Hareket: 16+ saha oyuncusu koşuyor (anların) %','rKalabalik',1,[null,25,'T1']],
-    ['Hareket: ortalama hız (m/dk)','rHizDk',0,[140,180,'T1']],['Hareket: >3 m/sn² ivmelenme / oyuncu·dk','rIvme',1,[null,5,'T1']],
+    ['Hareket: ortalama hız (m/dk)','rHizDk',0,[140,180,'T1']],['Hareket: >3 m/sn² ivmelenme / oyuncu·dk','rIvme',1,[null,5,'T1']],['Hareket: ivmelenme — görev değişiminden ≤ 0,5 sn % (T13-0)','rIvmeGorev',1],
     ['Top ayakta: ortanca (sn)','rAyakta',2,[1.2,2.0,'T2']],['Top ayakta: 1 sn\'den kısa %','rAyaktaKisa',1,[null,45,'T2']],['Top taşıma: >5 m %','rTasima',1,[25,35,'T2']],
     /* T7g (2026-10-10, §7.7 kararı): sıkıştırılmış maçta sahiplik sayısı oyun dakikası başına gerçeğin ~2 katı, pas sayısı aynı → sahiplik başına
        pas gerçeğin yarısı; bant 2,5–4 (gerçek) → 1,6–3. T10g (2026-10-11, aynı karardan): pas yapılamadan biten sahiplik ≤ 25 → ≤ 45 (sahiplik
@@ -66,7 +66,7 @@ module.exports={
   yeni:()=>{
     const hyp=Math.hypot,ort=L=>L.length?L.reduce((a,b)=>a+b,0)/L.length:NaN,ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b);return S[Math.floor(S.length/2)];};
     /* hareket */
-    let tOy=0,tDY=0,tDep=0,tUzak=0,tUzakKosu=0,mes=0,orn=0,kalabalik=0,efor=0,adim=0;const iv=new Map();
+    let tOy=0,tDY=0,tDep=0,tUzak=0,tUzakKosu=0,mes=0,orn=0,kalabalik=0,efor=0,eforGorev=0,adim=0;const iv=new Map();
     /* top */
     const ayakta=[],tasima=[];let sahipP=null,sahipT=0,tas=null;
     /* sahiplik ve kayıp */
@@ -140,11 +140,11 @@ module.exports={
           let h=iv.get(p);if(!h){h={v:new Float64Array(12),i:0,n:0,ust:false,son:-9,y0:0,y1:0,y2:0,yn:0};iv.set(p,h);}
           if(adim%12===0){if(sp>1.5&&!(p.eylem&&p.eylem.kilit)){h.y2=h.y1;h.y1=h.y0;h.y0=Math.atan2(p.vz,p.vx);h.yn++;
             if(h.yn>=3&&yonFark(h.y1,h.y2)>0.873&&yonFark(h.y0,h.y2)<0.524)salinim++;}else h.yn=0;}
-          if(h.n>=12&&!(p.eylem&&p.eylem.kilit)){const a=(sp-h.v[h.i])/0.2;if(a>3){if(!h.ust&&m.t-h.son>1){efor++;h.son=m.t;}h.ust=true;}else h.ust=false;}
+          if(h.n>=12&&!(p.eylem&&p.eylem.kilit)){const a=(sp-h.v[h.i])/0.2;if(a>3){if(!h.ust&&m.t-h.son>1){efor++;h.son=m.t;if(m.t-p._gorevT<=0.5)eforGorev++;}h.ust=true;}else h.ust=false;}
           h.v[h.i]=sp;h.i=(h.i+1)%12;h.n++;}
         if(adim%30===0){orn++;if(n>=16)kalabalik++;}},
       bitir(){const tk=Object.values(kayip).reduce((a,c)=>a+c,0),ham={
-          rDurYuru:[tDY,tOy],rDepar:[tDep,tOy],rUzakKosu:[tUzakKosu,tUzak],rKalabalik:[kalabalik,orn],
+          rDurYuru:[tDY,tOy],rIvmeGorev:[eforGorev,efor],rDepar:[tDep,tOy],rUzakKosu:[tUzakKosu,tUzak],rKalabalik:[kalabalik,orn],
           rAyaktaKisa:[ayakta.filter(x=>x<1).length,ayakta.length],rTasima:[tasima.filter(t=>t.yol>5).length,tasima.length],
           rSeqBos:[seqs.filter(s=>s.pas===0).length,seqs.length],rSeq10:[seqs.filter(s=>s.pas>=10).length,seqs.length],
           rAliciForvet:[alFv,alN],rAliciKanat:[alKn,alN],rSutKutu:[sutKutu,sut],rSutForvetDisi:[sutDisi,sut],rGolDuran:[golDuran,gol],

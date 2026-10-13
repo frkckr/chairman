@@ -270,6 +270,9 @@ class Match{
       profil:null,
       /* T1 (insan gibi hareket): efor 0–1, hız kipi (dur/yuru/tiris/kos/hizli/depar; çizim okur), son düşünme anı (sn) */
       efor:1,kip:'dur',dusunT:0,
+      /* T13-0 (2026-10-13): oyuncunun bu karedeki görevi (takimAI, bolgeKonumu, durusYerlesim yazar: kovala, pres1, markaj, bolge …), önceki
+         görevi ve görevin başladığı an (sn). Rastlantısız; ölçüm (araclar/olcumler/r-ivme.js, r-karne.js) ve T13 eforu okur, çizim okumaz */
+      gorevAd:null,_gorevOnce:null,_gorevT:-9,
       /* A2a (2026-10-08): jest {tur: kol|isaret|itiraz|cagir|basEl|alkis, t, sure, kol, hedef} — motor → çizim; yazan iş T7/T10 (bugün null) */
       jest:null,
       /* T4 (2026-10-08, bire bir): çalım denemesi {o, hareket, taraf, faz 0 yaklaşma / 1 hazırlık / 2 geçme, ft, t0, kare, …} ve aldatılan
