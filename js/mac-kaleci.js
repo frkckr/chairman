@@ -64,6 +64,10 @@ function kaleciPay(gk,lat,y,T,r,vj){
   return en;}
 /* temas olduğunda topu denetleme olasılığı (parmak ucu ve sert şutta top dokunsa da yoluna devam edebilir) */
 function kaleciKontrolP(gk,u,v){return clamp(1.0-0.85*clamp(u-0.7,0,0.6)-0.012*Math.max(0,v-22)+0.3*(gk.oz.kalecilik-0.7),0.35,0.99);}
+/* T15d (2026-10-14; Ek G6): tutuşun türü topun yüksekliğinden (B: boy çarpanı) — 'yer' kepçe (diz altı), 'gogus' kucak, 'W' baş hizası, 'yukari'
+   başın üstü. Motorun bütün tutuşları (ayakta kurtarış, temasta tutuş, ortada yakalama) aynı işlevi okur (eskiden üç yerde üç ayrı eşik); tür yalnız
+   çizimi etkiler (sözleşme tutus.tur) */
+function kaleciTutusTuru(y,B){B=B||1;return y<0.55*B?'yer':y<1.25*B?'gogus':y<1.9*B?'W':'yukari';}
 /* T15a (2026-10-14): tutma olasılığı (saf; T5 ilkesi — niyet kararı ve yürütmenin zarı aynı işlevi okur). Eskiden kaleciTemasSonuc'un içindeydi
    (MM4). parca: temas eden parça; u: elin erişim elipsindeki uzanma oranı; v: top hızı (m/sn); y: topun yüksekliği; cift: iki el; ucus: dalışta;
    yerde: dalıştan inmiş ya da kalkıyor.
@@ -249,7 +253,7 @@ Object.assign(Match.prototype,{
     const k=kaleciPay(gk,lat,y,T,0,pl.vj);
     if(k.mod==='ayak'){this.kaleciKapanBaslat(gk,Math.atan2(-pl.nz,-pl.nx),true);gk.eylem.t=gk._asim||0;pl.basladi=true;return;}
     /* ayakta rahatça yetişiyorsa uçmaz (adım atıp tutar) */
-    if(k.mod==='dur'||k.payA>=Math.min(0.5,k.pay)){gk.eylem={ad:'tutus',t:gk._asim||0,sure:Math.max(0.25,T+0.3),kilit:true,fren:10,kurtar:true,tur:y>1.75?'yukari':y<0.55?'yer':'gogus',hedefY:y,hy:(gk.tavir==='hazir'?0.88:0.95)*B,
+    if(k.mod==='dur'||k.payA>=Math.min(0.5,k.pay)){gk.eylem={ad:'tutus',t:gk._asim||0,sure:Math.max(0.25,T+0.3),kilit:true,fren:10,kurtar:true,tur:kaleciTutusTuru(y,B),hedefY:y,hy:(gk.tavir==='hazir'?0.88:0.95)*B,
         niyet:this.kaleciNiyetAl(gk,pl.px,pl.pz,k.u,y,true,false)};   /* T15a: ayakta kurtarışta niyet (iki el) */
       if(gk.tavir==='hazir')gk.tavir=null;pl.basladi=true;return;}
     if(T>need+0.12&&T>0.42){
@@ -354,7 +358,7 @@ Object.assign(Match.prototype,{
       if(this.rast()<clamp(v/30*(1-k)*0.25,0,0.2)){/* düşürdü: top dibine seker */const d=this.dir[gk.team];
         b.vx=d*(0.4+this.rast()*1.6);b.vz=this.normal()*1.0;b.vy=0.5+this.rast()*1.2;b.egri=0;b.ust=0;
         this.dokunus(gk,false);gk.kickCd=0.35;this.kaleciKaydet(gk,sh,false,'dusurdu',parca,v,y0,ek);return;}
-      const tur=b.y>1.75?'yukari':b.y<0.5?'yer':'gogus';this.kaleciTut(gk,tur);
+      const tur=kaleciTutusTuru(b.y,gk.boy);this.kaleciTut(gk,tur);
       if(!ucus&&ad!=='kapan')gk.eylem={ad:'tutus',t:0,sure:0.35,tur};
       this.kaleciKaydet(gk,sh,true,bicim,parca,v,y0,ek);return;}
     this.kaleciCel(gk,sh,parca,u,bicim,o,plan,ek);
@@ -456,7 +460,7 @@ Object.assign(Match.prototype,{
       const gel=hyp(b.vx,b.vz)||1,el=Math.abs(b.vx)/gel>0.8?'cift':'tek',yanS=b.z<MZ?-1:1,a=Math.atan2(yanS*(0.5+this.rast()*0.6),d),h=12+this.rast()*5;
       b.vx=Math.cos(a)*h;b.vz=Math.sin(a)*h;b.vy=4+this.rast()*2.5;b.sut=null;b.egri=0;b.ust=0;
       this.dokunus(gk,false);gk.kickCd=0.5;gk.eylem={ad:'yumruk',t:0,sure:0.5,el};this.on('yumruk',{p:gk,el,hiz:v,y:y0});return;}
-    if(this.rast()<clamp(0.95-(v-12)*0.02+(k-0.6)*0.3-(yuksek?0.04*kal:0)-(cek?0.1:0),0.5,0.98)){const tur=yuksek?'yukari':b.y<0.5?'yer':'gogus',ik=this.kaleciDonen(gk);
+    if(this.rast()<clamp(0.95-(v-12)*0.02+(k-0.6)*0.3-(yuksek?0.04*kal:0)-(cek?0.1:0),0.5,0.98)){const tur=kaleciTutusTuru(b.y,gk.boy),ik=this.kaleciDonen(gk);
       this.kaleciTut(gk,tur);gk.eylem={ad:'tutus',t:0,sure:0.35,tur};if(ik)this.kaleciKaydet(gk,null,true,'ikinci','el',v,y0);}
     else{/* tutamadı: top elinden kaleden ve merkezden uzağa seker */const yanS=Math.sign(b.z-MZ)||1,h=3+this.rast()*4,a=Math.atan2(yanS*(0.6+this.rast()*0.8),d);
       b.vx=Math.cos(a)*h;b.vz=Math.sin(a)*h;b.vy=1+this.rast()*1.5;b.egri=0;b.ust=0;this.dokunus(gk,false);gk.kickCd=0.45;this.kaleciKaydet(gk,sh,false,'yakala','el',v,y0);}

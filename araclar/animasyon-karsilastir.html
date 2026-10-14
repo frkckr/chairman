@@ -35,7 +35,7 @@ iframe{width:100%;aspect-ratio:4/3;border:0;background:#000;display:block}
     <option value="sahne">sahnenin önerisi</option><option value="loca">loca (oyundaki bakış)</option>
     <option value="yakin">yakın (yandan, 7 m)</option><option value="orta">orta (yandan, 16 m)</option></select></label>
   <label>Önce <select id="onceSurum">
-    <option value="t8" selected>T8 (T10 öncesi)</option><option value="t9b">T9b (T8 öncesi)</option><option value="t6">T6 (T9b öncesi)</option><option value="t5">T5 (T7 öncesi)</option></select></label>
+    <option value="t14" selected>T14 (T15 öncesi)</option><option value="a3">A3 (T14 öncesi)</option><option value="t12">T12 (A3 öncesi)</option><option value="t8">T8 (T10 öncesi)</option><option value="t9b">T9b (T8 öncesi)</option><option value="t6">T6 (T9b öncesi)</option><option value="t5">T5 (T7 öncesi)</option></select></label>
   <label>Tohum <input id="tohum" type="number" min="1" value="3"></label>
   <label>Hız <select id="hiz"><option value="1">1×</option><option value="0.5" selected>½×</option><option value="0.25">¼×</option></select></label>
   <button id="oynat" type="button" aria-pressed="false">▶ Oynat</button>
@@ -95,12 +95,16 @@ const SAHNELER=[
   {ad:'T8e Serbest vuruş — barajın sıçraması ve kaleci (orta)',kamera:'orta',kosul:"mac.phase==='durus'&&!!mac.durus.baraj&&mac.durus.asama==='kullan'&&!!mac.durus.barajdakiler&&!!(window.__takip=mac.durus.barajdakiler[0])",en:1800},
   {ad:'T8e Penaltı — kalecinin erken kalkışı (yakın)',kamera:'yakin',kosul:"mac.phase==='durus'&&mac.durus.tur==='penalti'&&mac.durus.asama==='kullan'&&!!(window.__takip=mac.kaleci(1-mac.durus.takim))",en:3000},
   {ad:'T8e Uzun taç — koşu ve bırakış (yakın)',kamera:'yakin',kosul:"mac.phase==='durus'&&mac.durus.tur==='tac'&&!!mac.durus.tacGeri&&!!(window.__takip=mac.durus.kullanan)",en:1800},
+  /* T15d (2026-10-14): kalecinin dalışı ve planlı çelmesi (niyet 'cel'), tutuş türleri, duraklı penaltı koşusu. Önce = t14 */
+  {ad:'T15d Kaleci: dalış — planlı çelme (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&!!(window.__takip=mac.players.find(p=>p.oyunda&&p.rol==='GK'&&p.eylem&&p.eylem.ad==='ucus'&&p.eylem.faz==='itis'&&p.eylem.niyet==='cel'))",en:1800},
+  {ad:'T15d Kaleci: tutuş (kepçe, kucak, W) (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&!!(window.__takip=mac.players.find(p=>p.oyunda&&p.rol==='GK'&&p.eylem&&p.eylem.ad==='tutus'&&p.eylem.kurtar&&p.eylem.t<0.05))",en:1800},
+  {ad:'T15d Penaltı — duraklı koşu (yakın)',kamera:'yakin',kosul:"mac.phase==='durus'&&mac.durus.tur==='penalti'&&mac.durus.asama==='kullan'&&!!mac.durus.kullanan&&!!mac.durus.kullanan.eylem&&mac.durus.kullanan.eylem.kosu==='durak'&&!!(window.__takip=mac.durus.kullanan)",en:3000},
 ];
 const $=id=>document.getElementById(id),F={once:$('fOnce'),simdi:$('fSimdi')},Y={once:null,simdi:null};
 const UI_CSS='.controls,.gelistirici,.duraklatildi{display:none!important}body{margin:0!important;background:#000!important;overflow:hidden}.wrap{gap:0!important;display:block!important}.screen{width:100vw!important;max-width:none!important;box-shadow:none!important}';
 for(const [i,s] of SAHNELER.entries()){const o=document.createElement('option');o.value=i;o.textContent=s.ad;$('sahne').appendChild(o);}
 /* "önce" sürümleri (araclar/karsilastir/dondur.js <ad>): her tur başında dondurulan çizim; eski kopyalar (once, a2a, a2b, t4v, t4) 2026-10-10'da silindi */
-const ONCE_AD={t8:'— T8 animasyonu (dondurulmuş; T10 öncesi)',t9b:'— T9b animasyonu (dondurulmuş; T8 öncesi)',t6:'— T6 animasyonu (dondurulmuş; T9b öncesi)',
+const ONCE_AD={t14:'— T14 animasyonu (dondurulmuş; T15 öncesi)',a3:'— A3 animasyonu (dondurulmuş; T14 öncesi)',t12:'— T12 animasyonu (dondurulmuş; A3 öncesi)',t8:'— T8 animasyonu (dondurulmuş; T10 öncesi)',t9b:'— T9b animasyonu (dondurulmuş; T8 öncesi)',t6:'— T6 animasyonu (dondurulmuş; T9b öncesi)',
   t5:'— T5 animasyonu (dondurulmuş; T7 öncesi; çizim T5\'ten beri değişmedi, jestleri T7\'den beri motor yazar)'},ONCE_KAYNAK={};
 let TOHUM=3,oynuyor=false,kurulum=0,birikim=0,sonZaman=0;
 const durum=(m,uyari)=>{$('durum').innerHTML=uyari?'<span class="uyari">'+m+'</span>':m;};

@@ -13,6 +13,7 @@
      t10olay (T10f: sakatın tutma pozları, kramp, sağlıkçının gerdirmesi ve sedyeyi tutması, sedyede sakat, topallama, hakem uyarısı ve hakem topu,
      pres koşusu ve markajda el teması, yeni sevinçler) |
      t14plonjon (T14e, 2026-10-14: tam plonjon kafa — dalış, yüzüstü iniş, ön kollardan kalkış) |
+     t15kaleci (T15d, 2026-10-14: tutuşun türleri — kepçe, kucak, W, yukarı; planlı dışa çelme ve kolun takibi; duraklı penaltı koşusu) |
      olcum (ayak kayması ve süre ölçümü). Satır seçeneği sabitY: kamera yüksekliği
      sabit (sıçrama görünsün).
      Açmak: python3 araclar/kontrol.py "araclar/poz-galerisi.html?sayfa=dusus" (görüntü araclar/son-kontrol-poz-galerisi-sayfa-dusus.png).
@@ -181,7 +182,7 @@ function ucusSatir(ad,o){const yan=o.yan||1,itisT=o.itisT||0.14,yh=o.yh||0.9,v=o
   const vy=Math.max(-1.5,Math.min(3.6,(yh-y0+0.5*G*tp*tp)/Math.max(0.08,tp))),tIn=(vy+Math.sqrt(vy*vy+2*G*(y0-0.22)))/G;let e=null,k=null,deg=false;   /* motorun kaleciUc'u gibi öngörülen iniş */
   return{ad,kit:1,kur:p=>{p.rol='GK';p.n=1;p.yon=0;p.tavir='hazir';p.x=0;p.z=0;p.__t9=false;e=null;k=null;deg=false;const b=mac.ball;b.x=12;b.y=o.y-0.11;b.z=yan*(o.lat||1.2);b.vx=b.vy=b.vz=0;},
     her:(p,t,dt)=>{const b=mac.ball;
-      if(t>=0.3&&!e&&!k&&!deg){e={ad:'ucus',t:0,faz:'itis',itisT,inisT:itisT+tIn,sure:itisT+tIn+0.3,kilit:true,yan,y:o.y,hedefY:o.y,el:o.el||'cift',lx:0,lz:yan,v,s,gid:0,vy,y0,hy:0.88,tur:o.tur||'dalis'};p.eylem=e;p.tavir=null;}
+      if(t>=0.3&&!e&&!k&&!deg){e={ad:'ucus',t:0,faz:'itis',itisT,inisT:itisT+tIn,sure:itisT+tIn+0.3,kilit:true,yan,y:o.y,hedefY:o.y,el:o.el||'cift',lx:0,lz:yan,v,s,gid:0,vy,y0,hy:0.88,tur:o.tur||'dalis',niyet:o.niyet||null};p.eylem=e;p.tavir=null;}
       if(e){e.t+=dt;const tq=e.t-itisT;
         if(tq<0){e.faz='itis';p.vz=0;e.hy=0.88+(y0-0.88)*Math.min(1,e.t/itisT);}
         else if(e.faz!=='inis'){e.faz='havada';const kl=s-e.gid;if(kl>1e-3){const h=Math.min(v,kl/dt);p.vz=yan*h;e.gid+=h*dt;}else p.vz=yan*0.6;
@@ -191,7 +192,7 @@ function ucusSatir(ad,o){const yan=o.yan||1,itisT=o.itisT||0.14,yh=o.yh||0.9,v=o
       else if(k){k.t+=dt;if(k.t>=k.sure){p.eylem=null;k=null;deg=true;}}
       /* top: temas noktasına (kalecinin başlangıç yerinden o.lat yanda, o.y yükseklikte) doğrusal gelir, tc'de olay, sonra seker */
       if(t<tc){const f=Math.max(0,(tc-t)/(tc-0.25));b.x=0.15+12*f;b.y=Math.max(0,o.y-0.11+0.4*f*(1-f));b.z=yan*(o.lat||1.2);b.vx=-12/(tc-0.25);b.vy=0;b.vz=0;}
-      else if(!p.__t9){p.__t9=true;animasyonOlay('save',{p,catch:false,parca:'el',el:o.el||'cift',bicim:'ucus'});b.vx=5;b.vy=3;b.vz=yan*2;}
+      else if(!p.__t9){p.__t9=true;animasyonOlay('save',{p,catch:false,parca:'el',el:o.el||'cift',bicim:'ucus',niyet:o.niyet||null,celN:o.celN||null});   /* T15d: planlı çelme */b.vx=5;b.vy=3;b.vz=yan*2;}
       else{b.x+=b.vx*dt;b.z+=b.vz*dt;b.y=Math.max(0,b.y+b.vy*dt);b.vy-=9.81*dt;}},
     kareler:o.kareler||[0.33,0.3+itisT,tc-0.12,tc,tc+0.06,tc+0.2,tc+0.45].map(x=>+x.toFixed(3)),az:o.az!=null?o.az:-8,uzak:o.uzak||6.5,sabitY:true,kamY:o.kamY||0.75};}
 /* T9b-e: kapanma türleri (K-blok, yıldız) ve alçak topa ayakta kurtarış (tutus kurtar; kalça motorun hy'sine iner) */
@@ -212,8 +213,42 @@ function ayaktaSatir(ad,o){let e=null;
       else if(!p.__t9){p.__t9=true;e=null;p.eylem={ad:'tutus',t:0,sure:0.35,tur:o.y<0.5?'yer':'gogus'};b.tasiyan=p;b.vx=0;animasyonOlay('save',{p,catch:true,parca:'el',el:'cift',bicim:'adim'});}
       else if(p.eylem){p.eylem.t+=dt;if(p.eylem.t>=0.35)p.eylem=null;}},
     kareler:[0.3,0.5,0.65,0.75,0.8,0.95,1.2],az:o.az!=null?o.az:30,uzak:4.6};}
-/* ---- sayfalar: satır = {ad, kit, kur(p) başlangıç, adim çizelgesi ya da her kare işlevi, kareler (sn), az (bakış açısı, derece), uzak (m)} ---- */
+/* T15d (2026-10-14): tutuşun türüyle ayakta kurtarış (ayaktaSatir gibi; kurtarış eylemi ve tutuş aynı tür: 'yer' kepçe, 'gogus' kucak, 'W', 'yukari') */
+function t15TutusSatir(ad,o){let e=null;
+  return{ad,kit:1,kur:p=>{p.rol='GK';p.n=1;p.yon=0;p.tavir='hazir';p.x=0;p.z=0;p.__t9=false;e=null;const b=mac.ball;b.x=10;b.y=o.y-0.11;b.z=o.z||0.1;b.tasiyan=null;},
+    her:(p,t,dt)=>{const b=mac.ball,tc=0.75;
+      if(t>=0.3&&!e&&!p.__t9){e={ad:'tutus',t:0,sure:0.75,kilit:true,kurtar:true,tur:o.tur,hedefY:o.y,hy:0.88,niyet:'tut'};p.eylem=e;p.tavir=null;}
+      if(e){e.t+=dt;if(o.y<0.7)e.hy=Math.max(0.55,e.hy-1.6*dt);}
+      if(t<tc){const f=(tc-t)/(tc-0.25);b.x=0.35+10*Math.max(0,f);b.y=o.y-0.11;b.z=o.z||0.1;b.vx=-14;}
+      else if(!p.__t9){p.__t9=true;e=null;p.eylem={ad:'tutus',t:0,sure:0.35,tur:o.tur};b.tasiyan=p;b.vx=0;animasyonOlay('save',{p,catch:true,parca:'el',el:'cift',bicim:'adim',niyet:'tut'});}
+      else if(p.eylem){p.eylem.t+=dt;if(p.eylem.t>=0.35)p.eylem=null;}},
+    kareler:[0.3,0.55,0.72,0.76,0.82,0.92,1.1],az:o.az!=null?o.az:35,uzak:4.6};}
+/* T15d: duraklı penaltı koşusu — vuran 4 m geriden topa koşar (3,5 m/sn), topa 1,6 m kala 0,4 sn durur (vurus.kosu 'durak'), sonra 5 m/sn ile
+   gelir ve vurur (hazırlık → geri salınım → takip; motorun vuruş zinciri gibi) */
+function t15DurakSatir(ad){let e=null,d=0;
+  return{ad,kit:0,kur:p=>{p.yon=0;p.x=-4;p.z=0;p.vx=0;e=null;d=0;const b=mac.ball;b.x=0.34;b.y=0;b.z=0.13;b.vx=b.vy=b.vz=0;},
+    her:(p,t,dt)=>{const b=mac.ball;
+      if(!e&&t>=0.1){e={ad:'vurus',faz:'hazirlik',t:0,ft:0,geri:0.33,stil:'ic',guc:0.85,sec:{tur:'sut',hx:12,hz:2,penalti:true,kosu:'durakli'},kalan:2};p.eylem=e;}
+      if(!e)return;e.t+=dt;e.ft+=dt;const ayakD=b.x-(p.x+0.3);
+      if(e.faz==='hazirlik'){
+        if(ayakD<1.6&&d<0.4){d+=dt;e.kosu='durak';p.vx=Math.max(0,p.vx-12*dt);}
+        else{if(d>=0.4)e.kosu='devam';p.vx=Math.min(d>=0.4?5:3.5,p.vx+10*dt);}
+        p.x+=p.vx*dt;e.kalan=Math.max(0,(ayakD-0.5)/Math.max(0.7,p.vx))+(d<0.4&&ayakD<1.6?0.4-d:0)+e.geri;
+        if(ayakD<0.5&&d>=0.4){e.faz='geri';e.ft=0;e.kalan=e.geri;}}
+      else if(e.faz==='geri'){p.vx*=0.9;p.x+=p.vx*dt;e.kalan=Math.max(0,e.geri-e.ft);if(e.ft>=e.geri){e.faz='takip';e.ft=0;e.kalan=0;b.vx=22;b.vz=4;}}
+      else{b.x+=b.vx*dt;b.z+=b.vz*dt;if(e.ft>=0.26){p.eylem=null;e=null;}}},
+    kareler:[0.3,0.62,0.8,0.98,1.12,1.3,1.5],az:70,uzak:7};}
 const SAYFALAR={
+  /* T15d (2026-10-14; Ek G6, G5): tutuşun türleri (motorun kaleciTutusTuru: kepçe < 0,55 m · kucak < 1,25 · W < 1,9 · yukarı), planlı dışa çelme
+     (dalış; save olayında niyet 'cel' ve normal celN — el topun içinden iter, temastan sonra normalin yönünde takip) ve duraklı penaltı koşusu */
+  t15kaleci:[
+    t15TutusSatir('T15d Kepçe: top 0,3 m — çömelme, avuçlar topun altında, sonra göğse çekme',{y:0.3,tur:'yer'}),
+    t15TutusSatir('T15d Kucak: top 1,0 m',{y:1.0,tur:'gogus'}),
+    t15TutusSatir('T15d W: top 1,6 m — eller topun arkasında, başparmaklar bitişik',{y:1.6,tur:'W'}),
+    t15TutusSatir('T15d Yukarı: top 2,05 m',{y:2.05,tur:'yukari'}),
+    ucusSatir('T15d Planlı dışa çelme: dalış, el topun içinden, normalin yönünde takip',{yan:1,y:0.9,yh:0.9,lat:1.5,el:'cift',niyet:'cel',celN:[0.7,0.05,0.71]}),
+    t15DurakSatir('T15d Duraklı penaltı koşusu: koşu → duraklama (tereddüt) → yeniden hızlanma → vuruş')
+  ],
   /* T14e (2026-10-14; Ek G4): tam plonjon kafa — motorun alanları yapay verilir (kafa.plonjon, yerde.neden 'plonjon'); koşucu 6 m/sn, top önünden
      alçak geçer, temas t = 0,4 sn'de */
   t14plonjon:[
@@ -542,7 +577,7 @@ function hucreCiz(a,p,S,x,y,w,h){
   const hp=new THREE.Vector3();a.m.hip.getWorldPosition(hp);
   const az=(S.az!=null?S.az:30)*D,u=S.uzak||5,hy=S.kamY!=null?S.kamY:S.sabitY?0.95:Math.max(0.55,hp.y)+0.05;   /* sabitY: sıçrama görünsün diye kamera yüksekliği sabit (A2b); kamY: sabit bakış yüksekliği (T6f: sıçramada baş görünsün) */
   camera.position.set(hp.x+Math.cos(az)*u,hy+0.9,hp.z+Math.sin(az)*u);camera.lookAt(hp.x,hy,hp.z);camera.aspect=w/h;camera.updateProjectionMatrix();
-  topMesh.position.set(mac.ball.tasiyan?a.m.root.position.x+0.25:mac.ball.x,TOP_R+(mac.ball.tasiyan?1.25:mac.ball.y),mac.ball.tasiyan?a.m.root.position.z:mac.ball.z);
+  {const b=mac.ball,o=[b.tasiyan?a.m.root.position.x+0.32:b.x,b.tasiyan?1.05:b.y,b.tasiyan?a.m.root.position.z:b.z];anmEldeKar(o,0);topMesh.position.set(o[0],TOP_R+o[1],o[2]);}   /* T15d: motorun tutuş yeri (1,05 m, 0,32 m önde) ve tutuşta yumuşak geçiş */
   /* T4g: satır rakibin dünyadaki yerini verirse (S.rakip) kutu orada */
   const Rk=S.rakip?S.rakip():null;
   RAKIP_M.visible=!!Rk||!!(p.eylem&&p.eylem.ad==='omuz'&&p.eylem.rakip)||p.tavir==='koru';
