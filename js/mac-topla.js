@@ -83,7 +83,9 @@ ayarEkle('B',{
   sutIkinci:1.2,               // T9b-c: gol olmayan şutun değeri (puan): dönen top ve korner (kurtarılan şutun ~%20'si korner, ~%15'i dönen top); kayıp 0,4 düşülür
   duranSapma:0.75,             // T12a: duran topta (serbest vuruş, penaltı) şutun hata çarpanı — açık oyunun sutSapma/sutUzak artışı duran topa uygulanmaz (T8 kapıları)
   duranUzak:0.04,              // T12a: duran topta hatanın mesafeyle büyümesi (eski sutUzak)
-  sutDikey:1.0                 // T12a: açık oyunda 1 m ve üstüne nişanın yükseklik hatası, yanal hatanın açısı cinsinden (1: aynı açı — T8c serbest vuruş kuralı; alçak nişan 0,35·ky)
+  sutDikey:1.0,                // T12a: açık oyunda 1 m ve üstüne nişanın yükseklik hatası, yanal hatanın açısı cinsinden (1: aynı açı — T8c serbest vuruş kuralı; alçak nişan 0,35·ky)
+  ortaAyak:1,                  // T14c: ortanın planlayıcısı zayıf ayağın sapmasını bilir (vurusAyakK; 0: ayaksız eski sapma)
+  devamOrta:1                  // T14c: kanattaki alıcının orta devamının payı (devamDegeri; 0: kapalı)
 });
 /* ---- T9b (2026-10-10; gerçekçilik planı §4 T9 “Vuruş”): vuruş modeli — saf, rastlantısız. Şut planı (js/mac-karar.js sutPlani), pas analizi
    (pasAnaliz) ve vuruş (sutVur, yerPasVur, havaPasVur) aynı işlevleri okur. Stilin payı: azami hıza göre hız (iç ayak plase en yavaşı, üst sert
@@ -169,6 +171,8 @@ Object.assign(Match.prototype,{
     /* T6d: havadan ortada alıcı ortanın noktasına koşar (vuruş hazırlığı ~0,5 sn; ortayı yapan koşuyu okur, hücumcu ortaya koşar — eskiden alıcı
        ortadan habersiz kendi koşusunu sürdürüp top havalanınca başın hizasındaki noktaya yetişemiyordu). Koşu takım düzeninde (bolgeKonumu) */
     if(sec.tur==='orta'&&sec.tip==='hava'&&sec.alici&&sec.alici.oyunda&&sec.alici.team===p.team){const d=this.dir[p.team];sec.alici.kosu={u:sec.hx*d,w:sec.hz,t:2.0,tur:'orta'};}
+    /* T14b: açık oyunda orta ve geri çevirmede forvet dışı oyuncular kutuya geç girer (js/mac-takim.js gecGirisAta) */
+    if((sec.tur==='orta'||sec.tur==='geriCevir')&&!sec.duran)this.gecGirisAta(p,sec);
     if(sec.ilk&&hyp(b.vx,b.vz)>2&&hyp(b.x-p.x,b.z-p.z)>1.2){const k=this.yakalamaNoktasi(p,1.0);ox=k.x;oz=k.z;}
     const a=Math.atan2(sec.hz-oz,sec.hx-ox),f=aciFark(a,p.yon),L=hyp(sec.hx-ox,sec.hz-oz),tip=sec.tip||'yer',sut=sec.tur==='sut',uzk=sec.tur==='uzaklastir',
       hava=tip==='hava',baski=baskiAltinda(this,p);
@@ -499,6 +503,13 @@ Object.assign(Match.prototype,{
         let rakip=false;for(const o of this.teams[1-p.team])if(o.oyunda&&hyp(o.x-b.x,o.z-b.z)<2.5){rakip=true;break;}
         if(!rakip)return null;}
       return 'kafa';}
+    /* T14e (2026-10-14; gerçekçilik planı §4 T14, Ek G4): tam plonjon kafa — rakip ceza sahasında koşan (≥ plonjonHiz m/sn) hücumcu, ayağının ve
+       göğsünün erişemediği (0,5–1,25 m), başının altında kalan (0,45 m ile alnın 0,3 m altı arası) uçan topa önündeyse (koşu yönünün ±50°'si) gövdesiyle
+       uzanır: erişim 'kafa', alnın tam ortası (havaTopu'nun temas alanları). Dalan oyuncu maçta tutulur (this._plonjon; oyuncu nesnesine alan
+       eklenmez — varlik 128 alan sınırı): kafaVur kilitli kısa kafa eylemi yapar, ardından yüzüstü yere iner (EYLEM_ADIM.kafa, js/mac-hava.js) */
+    if(MOTOR_AYAR.plonjon&&p.rol!=='GK'&&!p.zipla&&p.spd>=MOTOR_AYAR.plonjonHiz&&d>=0.5&&d<1.25&&yb>=0.45&&yb<=hvAlinDur(p)-0.3&&!b.sahip&&hyp(b.vx,b.vz)>5&&
+      (b.x-p.x)*p.vx+(b.z-p.z)*p.vz>0.64*d*p.spd&&Math.abs(b.x-this.dir[p.team]*PL)<CEZA_U+2&&Math.abs(b.z-MZ)<CEZA_W+2){
+      p._hvTs=0.5;p._hvTy=0;p._hvTd=0;const P=this._plonjon||(this._plonjon={p:null,k:-1});P.p=p;P.k=this.kare;return 'kafa';}
     return null;
   },
   /* temasın sonu: topa erişen oyuncu dokunur (kontrol, göğüs; sert gelen rakip topu bacaktan seker) */
@@ -601,7 +612,9 @@ Object.assign(Match.prototype,{
     if(yz==='tepe'&&gelen>1){const ag=Math.atan2(b.vz,b.vx);a=ag+aciFark(a,ag)*0.35;}
     const v=Math.min(22,(k.v*(0.85+this.rast()*0.15)+gelen*(k.tur==='sut'?0.12:0.2))*Q[1]*(cek?0.9:1));
     b.vx=Math.cos(a)*v;b.vz=Math.sin(a)*v;b.vy=(yz==='tepe'?Math.max(k.vy,2+gelen*0.12):k.vy)+this.normal()*sig*6;b.egri=0;b.ust=0;
-    b.sahip=null;p.kickCd=0.4;p.eylem={ad:'kafa',t:0,sure:0.5,tur:k.tur,yuzey:yz,cek:!!cek};
+    /* T14e: tam plonjon kafa (erisim) — kilitli kısa eylem, ardından yere iniş (EYLEM_ADIM.kafa) */
+    const PJ=this._plonjon,plonjon=!!(PJ&&PJ.p===p&&PJ.k===this.kare);
+    b.sahip=null;p.kickCd=0.4;p.eylem=plonjon?{ad:'kafa',t:0,sure:0.3,tur:k.tur,yuzey:yz,cek:!!cek,plonjon:true,kilit:true,fren:3}:{ad:'kafa',t:0,sure:0.5,tur:k.tur,yuzey:yz,cek:!!cek};
     p.sonDokunus={t:this.t,tur:'kafa',ayak:null,yuzey:yz};
     this.dokunus(p,true);b.hedefOyuncu=k.alici||null;
     if(k.tur==='sut'){b.sut={team:p.team,by:p,gkDone:false,cerceve:this.cerceveyeGider(p.team),kafa:true,t:this.t,hedefZ:k.hz,hedefY:k.hy,tur:'kafa',
@@ -646,6 +659,7 @@ Object.assign(Match.prototype,{
   derinKosu(p,s,ofs,dt){
     const d=this.dir[p.team],su=s.x*d;
     if(p.kosu&&p.kosu.tur==='takip')p.kosu=null;   /* T7e: şutu takip koşusu top birinin ayağına geçince biter */
+    if(p.kosu&&p.kosu.tur==='gecGiris')return null;   /* T14b: kutuya geç giriş bolgeKonumu'nda yürür */
     if(p.kosu){const k=p.kosu;k.t-=dt;
       if(k.t<=0||this.ball.sahip!==s||p.x*d>PL-6){p.kosu=null;return null;}
       return k;}
@@ -659,8 +673,13 @@ Object.assign(Match.prototype,{
       const bas=Math.abs(aciFark(s.bakisYon!=null?s.bakisYon:s.yon,d>0?0:Math.PI))<1.05;
       if(bas&&this.rast()<dt*A.kosuTetik*(0.5+profilAlt(p,'topsuzHareket',0.5))*(1+0.3*profilEgilim(p,'kanallaraKosar'))*(N?N.kosu:1))
         return this.kosuBaslat(p,s,Math.min(PL-8,AK.x*d+4),clamp(AK.z,4,PW-4),'arkaya');}
-    if(!ileriBakar||!serbest||su<-18||Math.abs(pu-ofs)>4||kos>=A.kosuEs||this.rast()>dt*(p.rol==='FV'?3.2:1.3)*A.kosuIstegi*A.kosuRastgele*(N?N.kosu:1))return null;   /* T7a: niyetin koşu çarpanı */
-    const hedefU=Math.min(PL-8,ofs+10+this.rast()*8),hw=clamp(p.z+(MZ-p.z)*0.35+(this.rast()-0.5)*10,8,PW-8);
+    if(!ileriBakar||!serbest||su<-18||Math.abs(pu-ofs)>4||kos>=A.kosuEs||this.rast()>dt*(p.rol==='FV'||A.kanatRol&&p.mevki.kanat?3.2:1.3)*A.kosuIstegi*A.kosuRastgele*(N?N.kosu:1))return null;   /* T7a: niyetin koşu çarpanı; T14a: kanat forvet sıklığında koşar (rolü savunma arkasıdır) */
+    const hedefU=Math.min(PL-8,ofs+10+this.rast()*8),r2=this.rast()-0.5;
+    /* T14a: kanadın koşusu çizgi boyunca ('genis'; içe kat eğilimi çaprazlama içeri alır), forvetin ve orta sahanınki kaleye doğru (eski);
+       çekiliş sayısı ve sırası aynı */
+    if(MOTOR_AYAR.kanatRol&&p.mevki.kanat){const f=clamp(0.1+0.3*profilEgilim(p,'iceKatEder'),0,0.45);
+      return this.kosuBaslat(p,s,hedefU,clamp(p.z+(MZ-p.z)*f+r2*6,3,PW-3),f<0.2?'genis':'arkaya');}
+    const hw=clamp(p.z+(MZ-p.z)*0.35+r2*10,8,PW-8);
     /* T2 olay: koşu başladı — topu tutan bir sonraki düşünme anını beklemeden yeniden bakar (kosuBaslat) */
     return this.kosuBaslat(p,s,hedefU,hw,'arkaya');
   },

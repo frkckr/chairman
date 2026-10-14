@@ -94,7 +94,7 @@ OLCUM_KUR_JS = r"""() => {
     /* T6f hava (Ek G4 ölçütü): kafa eyleminin ilk karesinde (motorun temas adımı; düellonun kaybedeni hariç) çizilen baş merkezinin topa açıklığı
        (merkezler arası − top yarıçapı 0,11 − baş 0,12); sıçrayarak vurulan pay; yüzey (kafa.yuzey); havadaki iki rakibin çizilen gövde merkezleri
        0,5 m'den yakın kare / 1,2 m içindeki havadaki çift-kare */
-    hv: { n: 0, acik: [], sic: 0, yz: {}, icIce: 0, cift: 0 },
+    hv: { n: 0, acik: [], sic: 0, yz: {}, icIce: 0, cift: 0, pl: 0, plAcik: [], plInis: [] },   /* T14e: tam plonjon — temas karesinde başın topa açıklığı, yere inişin ilk karesinde gövdenin yatışı (rad) */
     /* T9b-e kurtarış (Ek G6 ölçütü): elle temasın motor adımında (save parca 'el', yumruk, parmak) çizilen eldiven merkezlerinden topa en yakının
        açıklığı (merkezler arası − top yarıçapı 0,11); biçim, el (iki/tek), eylem (dalış/çökme, tutuş, kapanma …); dalışın evresi çizimde motorla aynı
        mı (kare payı); yana adım kare sayısı; kapanma türleri; kurtarışlarda temas parçası */
@@ -252,7 +252,7 @@ OLCUM_KUR_JS = r"""() => {
       if (v.tur === 'tac') zTac.set(v.p, { kare: mac.kare, alt: v.alt });
       else if (v.tur === 'penalti') { D.penN++; const gk = mac.kaleci(1 - v.takim), k = zPenKare.get(gk); if (k !== undefined && mac.kare - k <= 60) D.penDt.push(+((k - mac.kare) / 60).toFixed(3)); else zPenBekle = { gk, kare: mac.kare }; }
       else if (v.tur === 'korner') { D.kolN++; const k = zKol.get(v.du); if (k && k.t >= 0.5) D.kolIyi++; zKol.delete(v.du); } } };
-  const zK = new Map(), zC = new Map(), zIt = new Map(), zY = new Map(), zKor = new Map(), zTm = new Map(), zTmBekle = new Map(), zHv = new Map(), zKr = new Map(), zKp = new Map();
+  const zK = new Map(), zC = new Map(), zIt = new Map(), zY = new Map(), zKor = new Map(), zTm = new Map(), zTmBekle = new Map(), zHv = new Map(), zPj = new Map(), zKr = new Map(), zKp = new Map();
   const zTac = new Map(), zPenKare = new Map(), zPenE = new Map(), zKol = new Map(), zYer = new Map(); let zPenBekle = null;
   /* T5f temas ölçümü (aktör başına, kare sonunda) */
   function temasOlc(a, dt) { const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible) return; const e = p.eylem, ad = e ? e.ad : '', G = S.tm;
@@ -282,7 +282,8 @@ OLCUM_KUR_JS = r"""() => {
       if (p.rol === 'GK' && ad === 'ucus' && zPenE.get(p) !== e) { zPenE.set(p, e); zPenKare.set(p, mac.kare); if (zPenBekle && zPenBekle.gk === p) { if (p.penaltiTahmin === 0) D.penOrta++; else D.penDt.push(+((mac.kare - zPenBekle.kare) / 60).toFixed(3)); zPenBekle = null; } } }
     if (ad === 'kafa' && !e.bos) { let z = zHv.get(a); if (!z || z.e !== e) { zHv.set(a, { e }); const Hv = S.hv; a.m.root.updateMatrixWorld(true); a.m.head.getWorldPosition(H);
       const tb = anmVkTop(a.al), b = { x: tb[0], y: tb[1], z: tb[2] + MOTOR_Z }, d = Math.hypot(H.x - b.x, H.y - (b.y + 0.11), H.z - (b.z - MOTOR_Z)) - 0.23; Hv.n++;   /* topun çizilen yeri */ Hv.acik.push(+Math.max(0, d).toFixed(3)); if (p.zipla) Hv.sic++;
-      const y = e.yuzey || '-'; Hv.yz[y] = (Hv.yz[y] || 0) + 1; } } }
+      const y = e.yuzey || '-'; Hv.yz[y] = (Hv.yz[y] || 0) + 1; if (e.plonjon) { Hv.pl++; Hv.plAcik.push(+Math.max(0, d).toFixed(3)); zPj.set(a, true); } } }
+    if (ad === 'yerde' && e.neden === 'plonjon' && zPj.get(a)) { zPj.delete(a); S.hv.plInis.push(+a.lth.toFixed(3)); } }
   function zamanlama(a) {
     const p = a.kaynak; if (!p) return;
     if ((p.tur === 'hakem') && typeof ANM_HK !== 'undefined') { const h = ANM_HK.get(p); if (h && h.basKare >= 0) { const o = zK.get(a) || -1; if (h.basKare !== o) { zK.set(a, h.basKare); (S.zIsaret[p.kind] = S.zIsaret[p.kind] || []).push(h.basKare); } } }
@@ -389,7 +390,8 @@ SONUC_JS = r"""() => {
     sparcOrt: S.sparc.length ? +ort(S.sparc).toFixed(2) : null, sparcP10: S.sparc.length ? +yuzde(S.sparc, 0.1).toFixed(2) : null, sparcN: S.sparc.length,
     sureMs: +ort(S.sureler).toFixed(3), sureP99: +yuzde(S.sureler, 0.99).toFixed(3),
     hv: (() => { const G = S.hv, sa = sirala(G.acik); return { n: G.n, acikMed: sa.length ? sa[Math.floor(sa.length / 2)] : null, acikP90: sa.length ? sa[Math.min(sa.length - 1, Math.floor(0.9 * sa.length))] : null,
-      acikIyi: sa.length ? +(100 * sa.filter(x => x <= 0.15).length / sa.length).toFixed(0) : null, sicPay: G.n ? +(100 * G.sic / G.n).toFixed(0) : null, yz: G.yz, icIce: G.icIce, cift: G.cift }; })(),
+      acikIyi: sa.length ? +(100 * sa.filter(x => x <= 0.15).length / sa.length).toFixed(0) : null, sicPay: G.n ? +(100 * G.sic / G.n).toFixed(0) : null, yz: G.yz, icIce: G.icIce, cift: G.cift,
+      pl: G.pl, plAcikMed: G.plAcik.length ? sirala(G.plAcik)[Math.floor(G.plAcik.length / 2)] : null, plInisN: G.plInis.length, plInisYatay: G.plInis.filter(x => x >= 1.3).length }; })(),
     tm: (() => { const G = S.tm, sa = sirala(G.acik); return { n: G.n, acikMed: sa.length ? sa[Math.floor(sa.length / 2)] : null, acikP90: sa.length ? sa[Math.min(sa.length - 1, Math.floor(0.9 * sa.length))] : null,
       acikIyi: sa.length ? +(100 * sa.filter(x => x <= 0.15).length / sa.length).toFixed(0) : null, icIce: G.icIce, cift: G.cift, kalkN: G.kalkN, kalkDik: G.kalkDik, sendKare: G.sendKare,
       sendKisaPay: G.sendKare ? +(100 * G.sendKisa / G.sendKare).toFixed(0) : null, dususN: G.dususN, liste: G.liste }; })(),
@@ -600,7 +602,9 @@ def satirlar(o):
     if hv:
         yz = " / ".join(f"{k} {n}" for k, n in sorted((hv.get("yz") or {}).items()))
         S.append(f"A: hava (T6f): kafa {hv['n']} — çizilen başın topa açıklığı ortanca {v(hv['acikMed'], 3)} m (p90 {v(hv['acikP90'], 3)}), ≤ 0,15 olan %{v(hv['acikIyi'])}"
-                 f" · sıçrayarak %{v(hv['sicPay'])} · yüzey {yz or '—'} · havada gövdeler iç içe (< 0,5 m) {hv['icIce']} kare / {hv['cift']} havadaki çift-kare   [hedef ≤0,15 / bilgi / bilgi / ~0]")
+                 f" · sıçrayarak %{v(hv['sicPay'])} · yüzey {yz or '—'} · havada gövdeler iç içe (< 0,5 m) {hv['icIce']} kare / {hv['cift']} havadaki çift-kare"
+                 f" · tam plonjon {hv.get('pl', 0)} (başın topa açıklığı ortanca {v(hv.get('plAcikMed'), 3)} m; yere inişte gövde yatay {hv.get('plInisYatay', 0)}/{hv.get('plInisN', 0)})"
+                 f"   [hedef ≤0,15 / bilgi / bilgi / ~0 / T14e: plonjonda ≤0,15, iniş N/N]")
     sz = lambda d: " / ".join(f"{k} {n}" for k, n in sorted((d or {}).items())) or "—"
     kr = o.get("kr")
     if kr:

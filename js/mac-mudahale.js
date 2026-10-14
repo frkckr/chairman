@@ -23,7 +23,8 @@ ayarEkle('C',{
   sariAtak:0.8,                // gelişen atağı kesen faulde sarı olasılığı (taktik faulde +0,3) (C2)
   firsatKirmizi:0.45,          // açık gol fırsatını engelleyen faulde kırmızı olasılığı (hakem her zaman görmez; birleştirme 2026-10-03)
   elOlasilik:1.0,              // T10b: elle oynama olasılıklarının çarpanı (kol yüksekliğindeki temasta duruşa göre 0,03–0,25; elleOynamaDene)
-  tutmaIstek:0.35              // T10b: adamı koşuyla sıyrılan markajcının formadan tutma olasılığı (× 0,2 + 1,6·agresiflik; tutmaDene)
+  tutmaIstek:0.35,             // T10b: adamı koşuyla sıyrılan markajcının formadan tutma olasılığı (× 0,2 + 1,6·agresiflik; tutmaDene)
+  ortaTemas:1                  // T14c: ortanın planlayıcısı yolundaki rakibin ayak, göğüs ve gövde temasını bilir (ortaTemasP; 0: yalnız ilk 3 m'deki bacak)
 });
 /* dengeye dayanıklılık: kütle, sertlik ve çeviklik (C2) */
 const mdhDengeGuc=p=>(kutle(p)/78)*(0.8+0.4*(p.oz&&p.oz.sertlik!=null?p.oz.sertlik:0.5))*(0.85+0.3*hrkCeviklik(p));
@@ -129,22 +130,49 @@ const OB_M={yol:3,boy:0.8,R0:0.35,R1:0.5,t0:0.15};
    Ortanın ilk 3 m'si (en çok 0,5 sn) boyunca top 0,8 m'nin altındayken rakibin (yürüyüşüyle ileri sarılmış) bacak erişimi: duran bacak 0,35 m,
    tepkiye kalan süreyle (0,15 sn'den sonra, 0,2 sn içinde) 0,85 m'ye uzanır. pay = 0: topa en erken değen rakip {o, t, d, R} ya da null;
    pay > 0 (planlayıcı, yön belirsizliği m): her rakibin kesme olasılığı clamp((R + pay − d)/(2·pay)), {acik: Π(1 − P)}. Rastlantı çekmez */
-function ortaBlokTahmin(m,takim,ox,oz,oy,vx,vz,vy,pay){
-  const v=hrkHyp(vx,vz)||1,T3=hrkMin(OB_M.yol/v,0.5);let en=null,acik=1;
-  for(const o of m.teams[1-takim]){if(!o.oyunda||o.rol==='GK'||(o.eylem&&o.eylem.kilit))continue;
-    if(hrkHyp(o.x-ox,o.z-oz)>v*T3+1.5)continue;
+function ortaBlokTahmin(m,takim,ox,oz,oy,vx,vz,vy,pay,t0){
+  const v=hrkHyp(vx,vz)||1,T3=hrkMin(OB_M.yol/v,0.5),Tg=pay>0&&MOTOR_AYAR.ortaTemas?hrkMin(OT_M.yol/v,OT_M.sure):0;let en=null,acik=1;
+  /* T14c: 1. adamın yaklaşması (planlayıcı, t0 = karar anından temasa hazırlık süresi): motorda topa 4,5 m içindeki 1. adam ortacının gerilişinde
+     gecikmesiz ortanın yoluna, toptan 1 m öteye adım atar (presYap, js/mac-hareket.js). Planlayıcı en yakın rakibi (4,5 m içinde) o noktaya t0
+     içinde vardığı kadar yürütür ve orada durmuş sayar (varisZamani, tepki 0,05 sn); bacak ve gövde teması o yerden hesaplanır */
+  let P1=null;if(pay>0)OB_V.on=false;
+  if(pay>0&&t0>0&&MOTOR_AYAR.ortaTemas){const bx=ox+vx/v,bz=oz+vz/v;let eT=1e9;
+    /* 1. adam: 8 m içinde o noktaya en erken varacak rakip (hazırlıkta 4,5 m'ye giren 1. adam da adım atar) */
+    for(const o of m.teams[1-takim]){if(!o.oyunda||o.rol==='GK'||(o.eylem&&o.eylem.kilit)||hrkHyp(o.x-ox,o.z-oz)>8)continue;const tB=varisZamani(o,bx,bz,0.35,0.05);if(tB===tB&&tB<eT){eT=tB;P1=o;}}
+    if(P1){const f=eT>0?hrkMin(1,t0/eT):1;OB_V.x=P1.x+(bx-P1.x)*f;OB_V.z=P1.z+(bz-P1.z)*f;OB_V.boy=P1.boy;OB_V.on=true;}}
+  for(const o0 of m.teams[1-takim]){if(!o0.oyunda||o0.rol==='GK'||(o0.eylem&&o0.eylem.kilit))continue;const o=o0===P1?OB_V:o0;
+    const r0=hrkHyp(o.x-ox,o.z-oz);if(r0>v*hrkMax(T3,Tg)+1.5)continue;
+    /* T14c: planlayıcıda ayak, göğüs ve gövde teması (ortaTemasP); bacak bloğuyla aynı rakipte büyüğü */
+    const Pg=Tg>0?ortaTemasP(o,ox,oz,oy,vx,vz,vy,v,pay,Tg):0;
     let dmin=9,tmin=0;
-    for(let t=0.02;t<=T3+1e-9;t+=0.02){if(oy+vy*t-0.5*G*t*t>OB_M.boy)break;
+    if(r0<=v*T3+1.5)for(let t=0.02;t<=T3+1e-9;t+=0.02){if(oy+vy*t-0.5*G*t*t>OB_M.boy)break;
       const d=hrkHyp(ox+vx*t-o.x-o.vx*t,oz+vz*t-o.z-o.vz*t);if(d<dmin){dmin=d;tmin=t;}}
-    if(dmin>=9)continue;
+    if(dmin>=9){if(Pg>0)acik*=1-Pg;continue;}
     /* T12b: ortacının gerilişinde yola adım atan savunmacı (presYap, o._ortaBlokT) hamlesine başlamıştır: temasta tam erişim. Planlayıcı (pay > 0)
        topa 4,5 m içindeki savunmacının hamle yapacağını bilir (aynı varsayım; T10a orta kalibrasyonu) */
-    const tam=pay>0?hrkHyp(o.x-ox,o.z-oz)<4.5:m.t-o._ortaBlokT<0.1;
+    const tam=pay>0?r0<4.5:m.t-o._ortaBlokT<0.1;
     const R=OB_M.R0+OB_M.R1*(tam?1:clamp((tmin-OB_M.t0)/0.2,0,1));
-    if(pay>0){acik*=1-clamp((R+pay-dmin)/(2*pay),0,1);continue;}
+    if(pay>0){acik*=1-hrkMax(clamp((R+pay-dmin)/(2*pay),0,1),Pg);continue;}
     if(dmin<=R&&(!en||tmin<en.t))en={o,t:tmin,d:dmin,R};}
   return pay>0?{acik}:en;
 }
+/* T14c: planlayıcıda yaklaşan 1. adamın vekili (paylaşılan nesne; ortaBlokTahmin yazar, ortaSecenekleri vuruş anındaki baskı için okur): yerinde
+   durur; on: son planlayıcı çağrısında 1. adam bulundu */
+const OB_V={x:0,z:0,vx:0,vz:0,boy:1,oyunda:true,rol:'',eylem:null,_ortaBlokT:-9,on:false};
+/* T14c (2026-10-14; gerçekçilik planı §4 T14): planlayıcı (ortaBlokTahmin, pay > 0) motorun öteki temaslarını da bilir. Top beden yüksekliğindeyken
+   (yükselirken boy·1,8 m'yi geçene dek; en çok OT_M.sure sn ya da OT_M.yol m) yolundaki rakip topa ayakla (top 0,8 m'nin altında, 0,6 m içinde),
+   göğüsle (0,8–1,55 m, 0,5 m) ya da gövdesiyle (1,8·boy'a kadar, 0,37 m) değer — motorun erisim (js/mac-topla.js) ve govdeCarpmasi
+   (yukarıda) kuralları. Rakip yürüyüşüyle ileri sarılır ve topa adım atabilir (0,15 sn'den sonra 0,2 sn içinde +OT_M.adim m); yön belirsizliği
+   yolun uzunluğuyla büyür (pay + OT_M.pay·s). Saf; rastlantı çekmez. T14-0 teşhisi: maç içi ortaların %31'inde topa ilk değen, yolun ilk %30'unda
+   ve çoğu 1 m'nin altında ortacının dibindeki savunmacıydı; planlayıcı yalnız ilk 3 m'deki bacağı bildiği için ortanın tahmini 11'e 11'de ~22 puan
+   iyimserdi (c-orta'da ortacının önünde rakip olmadığından kapı tutuyordu) */
+const OT_M={sure:0.6,yol:10,ayakY:0.8,ayakR:0.6,gogusY:1.55,gogusR:0.5,govdeY:1.8,govdeR:0.37,adim:0.3,pay:0.03};
+function ortaTemasP(o,ox,oz,oy,vx,vz,vy,v,pay,Tg){
+  let P=0;const ust=OT_M.govdeY*(o.boy||1);
+  for(let t=0.02;t<=Tg+1e-9;t+=0.02){const y=oy+vy*t-0.5*G*t*t;if(y>ust)break;
+    const d=hrkHyp(ox+vx*t-o.x-o.vx*t,oz+vz*t-o.z-o.vz*t),R=(y<OT_M.ayakY?OT_M.ayakR:y<OT_M.gogusY?OT_M.gogusR:OT_M.govdeR)+OT_M.adim*clamp((t-0.15)/0.2,0,1);
+    const pp=pay+OT_M.pay*v*t,q=clamp((R+pp-d)/(2*pp),0,1);if(q>P)P=q;}
+  return P;}
 /* T5 (2026-10-09): hakemin temas noktasını görme olasılığı (saf; gerçekçilik planı T5 kararı 2). Orta hakemin uzaklığı: ≤ 10 m 0,95 · 20 m 0,82 ·
    30 m 0,65 · ≥ 40 m 0,5 (Ek G7: ceza sahasında < 10 m'de %83, > 20 m'de %50 doğru karar); iki oyuncunun hizasından bakıyorsa (biri ötekini
    kapatır) ×0,8; hakemle temas arasından 1 m'den yakın geçen her oyuncu ×0,85 (en çok iki). Temas yan hakemin yarısında ve çizgisine 15 m'den
@@ -652,7 +680,7 @@ EYLEM_ADIM.kayma=function(p,e){
   if(!e.oldu&&e.t>0.62){e.oldu=true;p.kickCd=0.8;this.on('mudahaleSonuc',{p,rakip:null,kazan:false,topaDegdi:false,faul:false,kayma:true,sonuc:'gecildi',tur:'kayma'});}
   if(e.t>=e.sure){p.eylem={ad:'kalkis',t:0,sure:0.7,kilit:true,fren:12,yon:p.yon,yuzustu:false,neden:'kayma'};return true;}return false;};   /* T5: kaymadan kalkış 0,7 sn */
 /* T5 (2026-10-09): kalkış süresi düşüşün türünden — yana düşen 1,1 sn, yüzüstü ya da sırtüstü 1,6 sn (Ek G4: sırtüstünden 1,5–3, elle basılı yandan 1–1,5) */
-const mdhKalkisSure=(p,e)=>hrkAbs(hrkSin((e.yon!=null?e.yon:p.yon)-p.yon))>0.7?1.1:1.6;
+const mdhKalkisSure=(p,e)=>e.neden==='plonjon'?0.8:hrkAbs(hrkSin((e.yon!=null?e.yon:p.yon)-p.yon))>0.7?1.1:1.6;   /* T14e: plonjondan kalkış (ön kollardan) kısa */
 /* düşüş → yerde → kalkış: yön, neden, şiddet ve yüzüstü bilgisi taşınır (çizim yönü bilir) */
 EYLEM_ADIM.dusus=function(p,e){if(e.t>=e.sure){p.eylem={ad:'yerde',t:0,sure:e.yerde||1.2,kilit:true,fren:12,yon:e.yon,neden:e.neden,siddet:e.siddet,yuzustu:e.yuzustu};return true;}return false;};
 EYLEM_ADIM.yerde=function(p,e){if(e.t>=e.sure){p.eylem={ad:'kalkis',t:0,sure:mdhKalkisSure(p,e),kilit:true,fren:12,yon:e.yon,neden:e.neden,siddet:e.siddet,yuzustu:e.yuzustu};return true;}return false;};

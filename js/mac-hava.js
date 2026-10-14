@@ -38,8 +38,14 @@ ayarEkle('C',{
   havaEgilme:[0.35,0.10],      // T6b: başın gövde ve boyunla yatayda topa uzanması (m): ayakta / koşarak sıçrarken ek
   havaDuello:0.035,            // T6b: düelloda neredeyse aynı anda varan başların temas anı sapması σ (sn; boyun ve gövdenin son uzanması, itişme; fiziksel aralık 0,025–0,05)
   havaKol:0.2,                 // T10b: hava düellosunda kolla yer kapma: şiddete havaKol × (0,4 + 1,2·agresiflik) (ikisi de sıçrarken, 0,9 m içinde)
+  plonjon:1,                   // T14e: tam plonjon kafa (0: kapalı; js/mac-topla.js erisim)
+  plonjonHiz:4.5,              // T14e: plonjona koşu hızı alt sınırı (m/sn; 4'te ve iki ceza sahasında maçta 0,85 — gerçekte ~0,3)
+  plonjonYerde:0.5,            // T14e: plonjondan sonra yerde kalma (sn; ardından kalkış)
   kafaDonus:1.6                // T8b: kafa vuruşunda topu geliş doğrultusundan saptırmanın zorluğu: yön ve yükseklik σ × (1 + kafaDonus·sin θ) (90°'de en zor; sıyırma ve geri vurma kolay)
 });
+/* T14e (2026-10-14): tam plonjon kafa (js/mac-topla.js erisim, kafaVur) — kafa eylemi bitince dalan oyuncu yüzüstü yere iner (yerde; kalkış
+   js/mac-mudahale.js yerde → kalkis). Sözleşme (çizim okur): kafa.plonjon, yerde.neden 'plonjon' */
+EYLEM_ADIM.kafa=function(p,e){if(e.plonjon&&e.t>=e.sure){p.eylem={ad:'yerde',t:0,sure:MOTOR_AYAR.plonjonYerde,kilit:true,fren:6,yon:p.yon,neden:'plonjon',siddet:0.15,yuzustu:true};return true;}return false;};
 /* T8b (2026-10-11): kafanın topu geliş doğrultusundan saptırma açısının sinüsü (gelen top 3 m/sn altındaysa 0). Ortadan ve kornerden kaleye kafa
    ~90° saptırmadır: gerçekte kafa şutlarının ~%30–35'i çerçeveyi bulur, motorda saptırma hesaba katılmadan %68–76'sı buluyordu */
 function hvDonus(vx,vz,dx,dz){const g=Math.hypot(vx,vz),L=Math.hypot(dx,dz);return g<3||L<1e-3?0:Math.abs(vx*dz-vz*dx)/(g*L);}

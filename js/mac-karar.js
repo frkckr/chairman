@@ -170,7 +170,7 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
      sapmaya duyarlıdır, boştaki arkadaşa kısa pas değildir */
   /* T9b-a: mesafe çarpanı (1 + L/200) yerine vuruşun gücü (vurusSapma ile aynı; gucHataCarpani, pasGucu) */
   const PT=MOTOR_AYAR.pasTol,sd0=(0.028+0.075*(1-oz2.pas))*(1+baski*0.9)*(o.ilk?1.35:1)*(o.vole?1.5:1)*(1+0.35*(p.yorgunluk||0))
-    *gucHataCarpani(pasGucu(tip,v0[enK],L,T),VURUS_GUC_REF.pas)*MOTOR_AYAR.pasSapma*(tip==='hava'?1.6:1);
+    *gucHataCarpani(pasGucu(tip,v0[enK],L,T),VURUS_GUC_REF.pas)*MOTOR_AYAR.pasSapma*(tip==='hava'?1.6:1)*(o.ayakK||1);   /* T14c: ortada zayıf ayağın beklenen payı (vurusAyakK) */
   /* T10a (yalnız ortada, hvO): havadan topta tolerans en az pasTolHava — isabet topun indiği bölgeye göredir (c-orta: hedeften 5 m'ye kadar sapma ilk temas payını
      değiştirmiyor; kalabalıkta marj ~0 iken 1,2 m'lik tolerans ortanın tahminini 5 kat kötümser yapıyordu) */
   const tol=Math.max(PT[0]+PT[1]*Math.max(0,marj[enK]),hvO?MOTOR_AYAR.pasTolHava:0),Pex=(2*normalDagilim(tol/Math.max(0.05,sd0*L))-1)*(2*normalDagilim(tol/Math.max(0.05,sd0*(tip==='hava'?1.3:1+L/40)*L*PT[2]))-1);
@@ -253,6 +253,16 @@ function devamDegeri(m,q,x,z,t,bakis,haric){
   if(A.devamBirebir>0&&o1&&o1.rol!=='GK'&&u>-12&&bs.t1<1.6&&sirt<0.5&&(o1.x-x)*d>0.5){const iso=clamp((bs.t2-bs.t1-0.6)/1.0,0,1);
     if(iso>0){const P1=clamp(0.15+0.5*q.oz.surus,0.1,0.65)*iso*(1-sirt),u2=Math.min(PL-8,u+9);
       const v1=(P1*(xT(u2,z+(MZ-z)*0.15)*100+9*A.ilerleme+0.5*A.birebirDeger)-(1-P1)*0.75*pasKaybi(m,q,x,z))*A.devamBirebir;if(v1>en)en=v1;}}
+  /* T14c (2026-10-14; gerçekçilik planı §4 T14): kanattaki alıcının orta devamı — son 35 m'de ve kanatta (|z − orta| > 12) top çizgiye
+     taşınıp ortalanabilir. Değer = taşımanın serbestliği (açıklık, yüz) × ortanın ucuz tahmini: ilk temas olasılığı ceza sahası önündeki (kaleye
+     18 m, ortaya 12 m) hücumcu (1 sn önünü okuyarak) ve savunmacı sayısından 0,08 + 0,09·hücumcu − 0,025·savunmacı (0,02–0,45; maç içi ortalama
+     ~0,22, T14c'nin kalibre ortasıyla aynı), şansı penaltı noktasının önünden kafa — × ortaIstegi × devamOrta. Önceden kanattaki alıcının devamı
+     oranın tehdidi, taşıma ve bire birdi; orta yoktu (kanada pas %12) */
+  if(A.devamOrta>0&&u>PL-35&&Math.abs(z-MZ)>12&&sirt<0.7){let na=0,nd=0;
+    for(const r of m.teams[q.team]){if(r===q||!r.oyunda||r.rol==='GK')continue;if((r.x+r.vx)*d>PL-18&&Math.abs(r.z+r.vz-MZ)<12)na++;}
+    for(const r of rakipler(m,q.team)){if(!r.oyunda||r.rol==='GK')continue;if(r.x*d>PL-18&&Math.abs(r.z-MZ)<12)nd++;}
+    const Pg=clamp(0.08+0.09*na-0.025*nd,0.02,0.45),v=acik*(1-0.6*sirt)*(Pg*(xG(PL-8,MZ,'kafa',0.3)*100+0.8)-(1-Pg)*0.4)*A.ortaIstegi*A.devamOrta;
+    if(v>en)en=v;}
   /* ön puan tam analizden iyimserdir (alıcının baskısı, vuruş hatası yok): devamPas kadar sayılır */
   const ip=ileriPasOnPuani(m,q,x,z,0);if(ip>-9)en=Math.max(en,ip*A.devamPas*(1-0.7*sirt));
   const g=clamp(0.62+0.38*acik-0.15*iki,0.4,1);
@@ -465,6 +475,17 @@ function pasSecenekleri(m,p,o){
     S.push(r);}
   return S;}
 
+/* T14c (2026-10-14; gerçekçilik planı §4 T14): vuruşun yön hatasında zayıf ayağın beklenen çarpanı (saf; vurusBaslat'ın ayak kuralının aynası,
+   zar yerine olasılık). Hedef çok yandaysa o yanın iç ayağı ya da top gövdenin zayıf ayak yanındaysa zayıf ayak olasılığı profilden (baskıda ve
+   hedef yandayken artar); çarpan 1 + P·1,2·(1 − zayıf ayak) (vurusSapma). İki ayaklı 1. T14-0: maç içi ortaların %32'si zayıf ayakla, sapması
+   8,7 m (güçlü ayakta 4,9) — planlayıcı bilmiyordu */
+function vurusAyakK(m,p,ox,oz,hx,hz,baski){if(p.ayak==='iki')return 1;
+  const f=aciFark(Math.atan2(hz-oz,hx-ox),p.yon),zayif=p.ayak==='sag'?'sol':'sag',geo=Math.abs(f)>0.9?(f>0?'sol':'sag'):null;
+  const yanU=Math.cos(p.yon)*(oz-p.z)-Math.sin(p.yon)*(ox-p.x),yakin=Math.abs(yanU)>0.18?(yanU>0?'sag':'sol'):null;
+  if(geo!==zayif&&yakin!==zayif)return 1;
+  const za=profilAlt(p,'zayifAyak',0.35);let P=clamp(0.1+0.45*za-0.25*profilEgilim(p,'zayifAyaktanKacinir'),0.05,0.8);
+  if(geo===zayif)P*=1.3;if(baski>0.5)P*=1.25;
+  return 1+Math.min(1,P)*1.2*(1-za);}
 /* ---- orta (MM3) ---- */
 /* hücumcuların varış noktalarına ve kaleciyle savunma arasına. Türler: alçak sert (yerden, altıpasın önünden), kesme (düz ve hızlı, kafa/vole
    yüksekliği), arka direğe asma, geri çevirme (ceza sahası içine yerden geri). Değer = xG(kafa/vole) × P(ulaşır) × (1 − kaleciHavaTahmin) */
@@ -494,11 +515,17 @@ function ortaSecenekleri(m,p,o,S){
     /* T6d: bölgeye orta yalnız uçuş süresinde (+0,3 sn) oraya varabilecek arkadaşa (eskiden 3 sn: top o inmeden çoktan düşüyordu) */
     const Tz=havaSure(hyp(zx-o.ox,zw-o.oz),yay);if(en&&enT<Tz+0.3)ekle(en,eg,zx,zw,'hava',yay,hy,Tz,yay);}
   for(const c of C){
-    const iz=o.hepsi?{}:null,A2=pasAnaliz(m,p,c.hx,c.hz,c.tip,c.g,{ox:o.ox,oz:o.oz,T:c.T,yay:c.yay,hy:c.hy,varislar:c.tur==='alcak'?varisAdaylari(hyp(c.hx-o.ox,c.hz-o.oz),'orta'):null,baski:o.baski,iz,orta:true});
+    const ayakK=A.ortaAyak?vurusAyakK(m,p,o.ox,o.oz,c.hx,c.hz,o.baski):1;
     /* ortacının önündeki rakip bacağı ortayı kesebilir — T5 (2026-10-09): motorla aynı saf işlev (ortaBlokTahmin, js/mac-mudahale.js); ilk hız
        uçuş süresinden (havadan: yatay L/T, dikey (hy + gT²/2)/T; yerden 18 m/sn), yön belirsizliği 0,25 m */
     const L=hyp(c.hx-o.ox,c.hz-o.oz)||1,ux=(c.hx-o.ox)/L,uz=(c.hz-o.oz)/L,Tu=c.tip==='hava'&&c.T>0?c.T:0,vh=Tu?L/Tu:18,vy0=Tu?((c.hy||0)+0.5*G*Tu*Tu)/Tu:0;
-    const acik=ortaBlokTahmin(m,p.team,o.ox,o.oz,0.11,ux*vh,uz*vh,vy0,0.25).acik;
+    /* T14c: hazırlık süresi (karar → temas): asgari hazırlık ya da gövdenin hedefe dönüşü (vurusIlerle'nin hizalanma sınırına kadar) + geri salınım;
+       1. adam bu sürede ortanın yoluna adım atar (ortaBlokTahmin) ve ortacının vuruş anındaki baskısı onun yerinden (baskiAltinda; motor vuruş
+       hatasını temas anındaki baskıdan hesaplar — planlayıcı eskiden karar anınınkini kullanıyordu) */
+    const vs=vurusSureleri(c.tip==='hava'?'hava':L>22?'uzunYer':'pas',o.baski||0),don=Math.max(0,Math.abs(aciFark(Math.atan2(uz,ux),p.yon))-A.vurusHizalama*1.35)/hrkVurusDonus(p);
+    const acik=ortaBlokTahmin(m,p.team,o.ox,o.oz,0.11,ux*vh,uz*vh,vy0,0.25,Math.max(vs.haz,don)+vs.geri).acik;
+    const bK=A.ortaTemas&&OB_V.on?Math.max(o.baski||0,clamp((4.5-hyp(OB_V.x-p.x,OB_V.z-p.z))/3.5,0,1)):o.baski;
+    const iz=o.hepsi?{}:null,A2=pasAnaliz(m,p,c.hx,c.hz,c.tip,c.g,{ox:o.ox,oz:o.oz,T:c.T,yay:c.yay,hy:c.hy,varislar:c.tur==='alcak'?varisAdaylari(hyp(c.hx-o.ox,c.hz-o.oz),'orta'):null,baski:bK,iz,orta:true,ayakK});
     const tu=c.hx*d,parca=c.tip==='hava'?(c.hy>1.3?'kafa':'vole'):'ayak';
     const bec=parca==='kafa'?0.6+0.8*c.q.oz.kafa:parca==='vole'?0.7+0.6*c.q.oz.sut:0.8+0.4*c.q.oz.sut;
     const sans=xG(tu,c.hz,parca,A2.baskiK)*bec;
@@ -510,7 +537,9 @@ function ortaSecenekleri(m,p,o,S){
        (+0,3 sn) yetişebilen her diğer arkadaş, alıcının kaybettiği topun ortaDestek'i kadarını alır (en çok 0,4) */
     let nd=0;if(c.tip==='hava')for(const q of m.teams[p.team]){if(q===p||q===c.q||!q.oyunda||q.rol==='GK')continue;const g=algilanan(m,p,q);
       if(g&&varisSuresi(g,c.hx,c.hz,1.0)<(c.T||A2.T||1)+0.3)nd++;}
-    const Pg=Pg0+(1-Pg0)*Math.min(0.4,A.ortaDestek*nd);
+    /* T14c (2026-10-14): destek yalnız inişteki çekişmeye — bloklanan ya da kalecinin aldığı ortaya, isabetsiz ortaya başka hücumcu yetişmez
+       (eskiden kaybın tamamına ekleniyordu: 2 m'den yakın baskıda bloklanan ortanın tahmini %30 kalıyordu, gerçek %10; T14-0 teşhisi) */
+    const Pg=A.ortaTemas?(1-kal)*acik*Math.min(0.99,A2.P+A2.teknik*A2.Pex*(1-A2.Pt)*Math.min(0.4,A.ortaDestek*nd)):Pg0+(1-Pg0)*Math.min(0.4,A.ortaDestek*nd);
     /* T10-0 (2026-10-11): o.hepsi — c-orta senaryosu eşiksiz listeyi ve tahminin bileşenlerini alır (kalibrasyon); karar yolu aynı */
     if(Pg<0.1&&!o.hepsi)continue;   /* umutsuz orta düşünülmez */
     const U=(Pg*(sans*100+0.8)-(1-Pg)*pasKaybi(m,p,c.hx,c.hz)*0.5*takim.risk)*A.ortaIstegi;

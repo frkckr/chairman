@@ -174,6 +174,8 @@ const ANM_POZ=(()=>{const G=anmGenis,P=POSE,Tm=anmTam,O=Object.assign;return{
   yerlestir:{lean:0.8,gx:0.25,dy:-0.2,aL:0.2,aLz:-0.1,eL:-0.4,aR:-0.3,aRz:0.15,eR:-0.1,hx:0.35},
   tacKosu:{aL:-2.9,aR:-2.9,eL:-0.6,eR:-0.6,lean:-0.3,hx:-0.1},
   kafaPlonjon:G({lean:0.55,hx:-0.3,aL:-1.3,aR:-1.3,aLz:-0.3,aRz:0.3,eL:-0.2,eR:-0.2,lL:0.3,kL:0.4,lR:-0.4,kR:0.6}),
+  /* T14e (Ek G4): tam plonjon — kök yatar (anmKok), gövde düz, kollar öne ve hafif açık (inişi karşılar), bacaklar geride uzun, baş kalkık (topa bakar) */
+  kafaPlonjonTam:Tm({aL:-2.3,aR:-2.3,aLz:-0.35,aRz:0.35,eL:-0.35,eR:-0.35,lL:0.08,kL:0.25,lR:-0.05,kR:0.35,hx:-0.75,lean:0}),
   /* A2b ikinci top için hazır duruş (Ek G3): dizler hafif bükük, kollar dengede */
   izle:{lean:0.14,aL:-0.12,aR:-0.12,aLz:-0.32,aRz:0.32,eL:-0.55,eR:-0.55},
   /* A2b bekleyiş kıpırtıları (Ek G0.7): kalecinin eldiveni; ölü topta esneme (sağ bacak; solda aynalanır) */
@@ -249,6 +251,8 @@ function aktorKur(K,kaynak,boy){
     sdX:0,sdZ:1,sdS:0.6,bosT:0,bosP:null,efor:0,bosK:null,bkW:new Float32Array(2),bkH:0,bkT:0,bkN:0,dizT:0,kpT:20,kpN:0,kpS:-1,kpTur:0,bakinH:0,sevSon:false,sevC:0,sevH:8,sevDiz:false,dizAktif:false,uzP:null,
     /* kök: yatış ekseni (gövde çerçevesinde x,z), açısı, uzun eksen etrafında dönüş; düşüş/kalkış pozları */
     lkx:1,lkz:0,lth:0,lps:0,lps0:0,lieTur:'',lieSag:true,dP:null,yP:null,kkP:null,kTh0:0,kPs0:0,
+    /* T14e: tam plonjon kafanın temas karesindeki açısı ve kökün topa kayması (anmEylemler → anmKok) */
+    pjTh0:0,pjOfs:0,pjKd:0,
     /* T5f: düşüşün ilk yarısı pozu ve karışım tamponu, uzun kalkışın diz pozu, blok sıçraması */
     dEl:null,dMix:anmTam({}),kkP2:null,bZip:false,
     /* A2b: vuruş katmanının durumu (anmVurusDurum) ve iki motor adımı arasındaki oran (topun çizilen yeri için) */
@@ -1070,9 +1074,13 @@ function anmBasla(a,p,e,ad){
   /* T6f: kafanın yüzeyi (sözleşme kafa.yuzey; düellonun kaybedeni alın) */
   else if(ad==='kafa'){const y=e.yuzey||'alin',sag=anmSagda(p,b.x,b.z);
     /* T8e (Ek G4/G5): koşarak (> 4,5 m/sn) alnın 0,15 m altındaki topa kafa — yarı plonjon: gövde öne yatar, kollar öne (motor oyuncuyu
-       düşürmez; tam plonjon ve yere iniş T10 beden işine) */
+       düşürmez; tam plonjon — motorun dalışı ve yere inişi — T14e'de, aşağıda) */
     const plonjon=!e.bos&&!p.zipla&&(p.spd||0)>4.5&&b.y<1.72*(p.boy||1)+0.02-0.15;
-    a.kfP=plonjon?ANM_POZ.kafaPlonjon:y==='tepe'?ANM_POZ.kafaTepe:y==='yuz'?(sag?ANM_POZ.kafaYuz:aynala(ANM_POZ.kafaYuz)):y==='yan'?(sag?ANM_POZ.kafaYan:aynala(ANM_POZ.kafaYan)):ANM_POZ.kafaAlin;}
+    a.kfP=plonjon?ANM_POZ.kafaPlonjon:y==='tepe'?ANM_POZ.kafaTepe:y==='yuz'?(sag?ANM_POZ.kafaYuz:aynala(ANM_POZ.kafaYuz)):y==='yan'?(sag?ANM_POZ.kafaYan:aynala(ANM_POZ.kafaYan)):ANM_POZ.kafaAlin;
+    /* T14e: tam plonjon (motor kafa.plonjon): temas karesinde baş topa — gövde topun yüksekliğine göre öne yatar (baş merkezi kökten 1,72·boy),
+       kalan yatay fark kökün topa kaymasıyla; yüzüstü iniş ve kalkış (yerde, kalkis) bu yatıştan sürer */
+    if(e.plonjon){a.kfP=ANM_POZ.kafaPlonjonTam;const tb=anmVkTop(a.al),dx=tb[0]-a.x,dz=tb[2]-a.z,Lh=1.72*(p.boy||1),th0=Math.acos(clamp((tb[1]+0.11)/Lh,0.15,1));
+      a.pjTh0=th0;a.pjOfs=clamp(Math.sqrt(dx*dx+dz*dz)-Lh*Math.sin(th0),-0.6,0.6);a.pjKd=Math.atan2(dz,dx);a.lkx=1;a.lkz=0;a.lps0=0;a.lieTur='yuz';a.lieSag=true;a.yP=ANM_POZ.yerdeYuz;}}
   /* T5f: şut bloğuna atlama — hızlı gelen topta (> 12 m/sn) bacaklar çekilir, küçük sıçrama (anmEylemler) */
   else if(ad==='blok'){a.bZip=Math.hypot(b.vx||0,b.vz||0)>12;const P0=a.bZip?ANM_POZ.blokZipla:ANM_POZ.blok;a.bP=anmSagda(p,b.x,b.z)?P0:aynala(P0);}
   else if(ad==='kayma'){const sag=anmSagda(p,b.x,b.z);a.kyP=sag?ANM_POZ.kayma:aynala(ANM_POZ.kayma);if(a.lth<0.1){a.lkx=0;a.lkz=sag?-1:1;}a.lieTur='kayma';a.lieSag=!sag;}
@@ -1382,6 +1390,10 @@ function anmKok(a,p,dt,M){
       if(a.uCok)th=0.45+(1.38-0.45)*c;else{th=0.22+(thA-0.22)*Math.min(1,(c+(sm*1.6-c)*hi));ekY=(0.2+0.4*hi)*Math.sin(Math.PI*g);}}
     else th=thA+(1.42-thA)*g*g*(3-2*g);}
   else if(ad==='kapan'){th=e.tur==='yildiz'||e.tur==='kblok'?0:0.3*a.sw[ANM_S.kapan];hiz=20;}
+  /* T14e (Ek G4): tam plonjon kafa — temas karesinde başı topa getiren açı (pjTh0) anında, 0,15 sn'de yatay (yüzüstü), kök topa doğru kayar
+     ve 0,3 sn'de motorun yerine döner; ardından yerde */
+  else if(ad==='kafa'&&e.plonjon){const f=clamp(e.t/0.15,0,1),g=clamp(1-e.t/0.3,0,1);th=a.pjTh0+(D.aci-a.pjTh0)*f*(2-f);hiz=e.t<0.02?1e3:40;
+    a.x+=Math.cos(a.pjKd)*a.pjOfs*g;a.z+=Math.sin(a.pjKd)*a.pjOfs*g;}
   if(dt>0){const k=Math.min(1,dt*hiz);a.lth+=(th-a.lth)*k;a.lps+=(ps-a.lps)*k;}
   /* yatarken gövde kalınlığı kadar yukarı */
   const yat=clamp((1-Math.cos(a.lth))/(1-Math.cos(D.aci)),0,1),yy=(a.lieTur==='yuz'||a.lieTur==='sirt'?D.yuzY:D.yanY)*yat;

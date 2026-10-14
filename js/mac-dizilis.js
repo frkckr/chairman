@@ -267,15 +267,18 @@ Object.assign(Match.prototype,{
       if(oK){oK.t-=dt;if(oK.t<=0||!s||s.team!==t){p.kosu=null;}else{u=Math.min(oK.u,ofs-0.4);w=oK.w;p.hizOran=1;ef=1;g='orta';}}
       if(orta&&!p.kosu){const r=geride?null:this.kutuRolu(p,t,bw);if(r){u=r.u;w=r.w;p.hizOran=0.95;ef=0.8;g='kutu';}}
       else if(s&&s.team===t&&!(p.kosu&&p.kosu.tur==='orta')){
+        /* T14a: kanat rolü — genişlik, derinlik, uzak kanatta arka direk (js/mac-takim.js kanatKonumu); kanat destek noktası aramaz */
+        const kr=kurma?null:this.kanatKonumu(p,t,s,ofs,geride);
+        if(kr){u=kr.u;w=kr.w;ef=kr.ef;g=kr.g;}
         /* destek: topa en yakın iki oyuncu açık pas yoluna gelir (T7b: kurmada stoperler ve bekler yerinde kalır) */
-        if(!geride&&!(kurma&&p.rol==='DEF')&&this.destekci(p,s)){const n=this.destekNoktasi(p,s,dt);if(n){u=n.u;w=n.w;p.hizOran=0.8;ef=0.6;g='destek';}}
+        else if(!geride&&!(kurma&&p.rol==='DEF')&&this.destekci(p,s)){const n=this.destekNoktasi(p,s,dt);if(n){u=n.u;w=n.w;p.hizOran=0.8;ef=0.6;g='destek';}}
         /* derin koşu: forvet (ve bazen kanat) topu tutan ileri bakınca savunmanın arkasına */
         const kosu=geride?null:this.derinKosu(p,s,ofs,dt);if(kosu){u=kosu.u;w=kosu.w;p.hizOran=1;ef=1;g='kosu';}
         /* bindirme: aynı kanatta top ilerideyse bek dışından geçer (kanatta ikiye bir) */
         const ayniKanat=Math.sign(s.z-MZ)===Math.sign(p.mevki.w-MZ)&&Math.abs(s.z-MZ)>10;
         if(!geride&&p.mevki.bek&&ayniKanat&&s!==p&&s.x*d>-5&&(!N||N.bekCik)){u=Math.max(u,s.x*d+(s.mevki.kanat?6:-4));w=p.mevki.w<MZ?3.5:PW-3.5;p.hizOran=0.95;ef=0.8;g='bindirme';}
         /* uzak kanat: top öbür kanatta ve ilerideyse içeri, ceza sahasına kayar (T7b: son bölge dışında genişliği tutar — yüklenip çevirmenin hedefi) */
-        if(p.mevki.kanat&&!ayniKanat&&Math.abs(s.z-MZ)>10&&s.x*d>10){u=Math.max(u,ofs-4);w=lerp(w,MZ,N&&N.ad!=='sonBolge'?0.15:0.55);ef=Math.max(ef,0.5);if(g==='bolge')g='uzakKanat';}
+        if(!kr&&p.mevki.kanat&&!ayniKanat&&Math.abs(s.z-MZ)>10&&s.x*d>10){u=Math.max(u,ofs-4);w=lerp(w,MZ,N&&N.ad!=='sonBolge'?0.15:0.55);ef=Math.max(ef,0.5);if(g==='bolge')g='uzakKanat';}
         /* T7a: geride son dakikalar — kafası en iyi stoper forvet hattına çıkar (maç durumu, js/mac-takim.js) */
         if(N&&N.stoperIleri===p&&bu>-5){u=Math.max(u,ofs-4);w=MZ+(p.mevki.w<MZ?-3:3);p.hizOran=0.95;ef=Math.max(ef,0.8);g='stoperIleri';}
       }
@@ -283,6 +286,9 @@ Object.assign(Match.prototype,{
       if(!p.kosu&&s&&s.team===t){if(p.rol==='FV')u=Math.max(u,ofs-(p.mevki.hedef?1.2:2.5));else if(p.mevki.kanat&&bu>-10)u=Math.max(u,ofs-9);}
       /* T7e: şutu takip koşusu (top sahipsizken; js/mac-takim.js sutTakipAta) */
       if(p.kosu&&p.kosu.tur==='takip'){p.kosu.t-=dt;if(p.kosu.t<=0||this.ball.sahip)p.kosu=null;else{u=p.kosu.u;w=p.kosu.w;p.hizOran=1;ef=1;g='takip';}}
+      /* T14b: kutuya geç giriş (js/mac-takim.js gecGirisAta) — top ortacıdayken ofsayt çizgisinin gerisinde, top ayaktan çıkınca hedefe; süre
+         bitince ya da top rakibe geçince biter */
+      if(p.kosu&&p.kosu.tur==='gecGiris'){const k=p.kosu;k.t-=dt;if(k.t<=0||s&&s.team!==t)p.kosu=null;else{u=s?Math.min(k.u,ofs-0.4):k.u;w=k.w;p.hizOran=1;ef=1;g='gecGiris';}}
       /* T7b: geride kalan topun 12 m gerisinde, rakip yarısının 5 m'sini geçmez, merkezi kapatır */
       if(geride){u=Math.min(u,bu-12,5);w=clamp(w,MZ-16,MZ+16);}
       if(!p.kosu&&u>ofs-0.6&&u>0)u=ofs-0.6;
@@ -342,6 +348,9 @@ Object.assign(Match.prototype,{
     if(m.hedef)return{u:PL-5.5,w:MZ+yan*2.2};         // ön direk: hedef forvet
     if((m.cizgi==='FV'&&!m.kanat)||m.onOrta)return{u:PL-7,w:MZ-yan*3.5};   // arka direk: ikinci forvet ya da 10 numara
     if(m.kanat&&Math.sign(m.w-MZ)!==yan)return{u:PL-9,w:MZ-yan*6};  // uzak kanat: arka direğin gerisi
+    /* T14a: aynı kanattaki kanat (topu tutan değil) ceza sahasına yakın yarım alana: geri çevirmenin ve ikinci topun alıcısı (eskiden orta saha
+       mevkili kanat penaltı noktasına, kanat forveti hiçbir role gitmiyordu) */
+    if(m.kanat&&MOTOR_AYAR.kanatRol)return{u:PL-13,w:MZ+yan*11};
     if(m.cizgi==='OS'&&!m.derin)return{u:PL-12.5,w:MZ+yan*1};  // penaltı noktası
     if(m.derin)return{u:PL-20,w:MZ-yan*2};           // ceza sahası dışı, ikinci top
     return null;

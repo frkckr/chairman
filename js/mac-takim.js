@@ -36,7 +36,15 @@ ayarEkle('T',{
   guvenEtki:0.06,    // T10e: güvenin vuruş hatasına etkisi: σ × (1 − guvenEtki × oyuncunun güveni) (güven −1…1; soğukkanlılık tepkiyi küçültür)
   guvenRisk:0.1,     // T10e: güvenin takım riskine (kayıp maliyeti çarpanı) etkisi: risk × (1 − guvenRisk × güven) — güvenen takım daha cesur
   guvenSure:30,      // T10e: güvenin tabana dönüş süresi sabiti (sn; ~4,5 oyun dakikası)
-  evGuven:0.2        // T10e: deplasmanın güven tabanı −evGuven × atmosfer (dolu statta deplasman biraz gergin)
+  evGuven:0.2,       // T10e: deplasmanın güven tabanı −evGuven × atmosfer (dolu statta deplasman biraz gergin)
+  /* T14a (2026-10-14; gerçekçilik planı §4 T14): kanat rolü — hücumun genişliği ve derinliği (kanatKonumu) */
+  kanatRol:1,        // T14a: kanat oyuncusunun hücum rolü (0: kapalı, T13'ün düzeni — tesisat kanıtı --ayni)
+  kanatBas:-10,      // T14a: topu tutanın u'su bundan ilerideyken kanat genişlik ve derinlik verir (m; hücum çerçevesi, orta çizgi 0)
+  kanatCizgi:5,      // T14a: kanadın taç çizgisine uzaklığı (m; içe kat eğilimi içeri, çizgiye inme eğilimi dışarı alır)
+  kanatDerin:2.5,    // T14a: kanadın ofsayt çizgisinin gerisinde beklediği mesafe (m; 4'te kanat derin koşu kapısının (çizgiye 4 m) sınırındaydı)
+  kanatOnde:14,      // T14a: orta alanda (top kaleye kanatUzak m'den uzakken) kanadın topu tutandan en çok önde durduğu mesafe (m)
+  kanatUzak:40,      // T14a: top öbür kanatta ve kaleye bu kadar yakınken uzak kanat arka direğe gelir (m)
+  gecGiris:2         // T14b: orta ve geri çevirmede ceza sahasına geç giren en çok forvet dışı oyuncu (0: kapalı; gecGirisAta)
 });
 /* niyet → düzen ve taktik farkı. Taktik: risk kayıp maliyetinin çarpanıdır (yüksek = temkinli), sakin geri pas ve sabır, tempo karar hızı, direkt ileri
    ve uzun oyun (mac-karar.js); toplanır (risk çarpılır). Düzen: genişlik hücumda mevkilerin yayılma çarpanı, derinlik bloğun öne/geriye kayması (m),
@@ -214,7 +222,39 @@ Object.assign(Match.prototype,{
     if(en.mevki.hedef||profilEgilim(en,'derineGelir')>0){en.kosu={u:Math.max(su+5,qu-7),w:lerp(en.z,s.z,0.35),t:1.4,tur:'gel'};this.jestVer(en,'cagir',1.0,{x:s.x,z:s.z});}   /* T7f: ayağa isteyen çağırır */
     else{const y=Math.sign(en.z-p.z)||1;en.kosu={u:qu,w:clamp(en.z+y*6,4,PW-4),t:1.2,tur:'aldatma'};}
     this.on('kosu',{p:en,tur:en.kosu.tur});},
-  kosuSayisi(t){let n=0;for(const q of this.teams[t])if(q.oyunda&&q.kosu&&q.kosu.tur==='arkaya')n++;return n;},
+  kosuSayisi(t){let n=0;for(const q of this.teams[t])if(q.oyunda&&q.kosu&&(q.kosu.tur==='arkaya'||q.kosu.tur==='genis'))n++;return n;},   /* T14a: kanat koşusu ('genis') da savunma arkasına koşudur */
+  /* T14a (2026-10-14; gerçekçilik planı §4 T14): kanat rolü. Topu tutan arkadaş rakip yarıya yaklaşınca (u > kanatBas) kanat mevkili oyuncu
+     (topu tutan değil, geride kalmayan; koşusu ve kutu rolü önceliklidir — bolgeKonumu) hücumun genişliği ve derinliğidir: kendi kanadında taç
+     çizgisine kanatCizgi m (içe kat eğilimi içeride, çizgiye inme eğilimi dışarıda), ofsayt çizgisinin kanatDerin m gerisinde, topu tutandan en
+     çok kanatOnde m önde; top kendi kanadında ve kaleye kanatUzak m içindeyken topun önünde, ofsayt çizgisinin hemen gerisinde. Topu tutan aynı kanatta çizgideyse (bek, forvet) kanat yarım alana girer (çizgiden 14 m; genişliği o verir). Top öbür kanatta
+     ve kaleye kanatUzak m'den yakınsa arka direğe gelir (kutuRolu'nun uzak kanat noktası; ofsayt çizgisi bolgeKonumu'nda); daha uzaktaysa eski
+     uzak kanat kuralı (null). Destek noktası aramaz (destekçiliği bek ve merkez verir). Eskiden (T13) aynı kanattaki kanat son üçte birde topun
+     8 m gerisinde destekçiydi (%51), uzak kanattaki kaleden ~31 m uzakta kalıyordu; kanatta topu tutan %55 forvetti (T14-0). Rastlantısız */
+  /* T14b (2026-10-14; gerçekçilik planı §4 T14): kutuya geç giriş. Orta ya da geri çevirmenin hazırlığı başlayınca (vurusBaslat) forvet ve savunma
+     dışından en çok gecGiris oyuncu (orta saha, kanat; ortacı, alıcı, geride kalanlar, kilitli eylemdekiler ve başka bir koşudakiler hariç — savunma
+     arkasına koşu bırakılır), penaltı noktasına 25 m içinde ve rakip yarının son 40 m'sindeyse, profiline göre (topsuz hareket, ceza sahasına geç
+     girme eğilimi; kanat önce; uzaklık cezası) ceza sahasına koşar: havadan ortada penaltı noktası ve uzak direğin önü, yerden ortada ve geri
+     çevirmede penaltı noktası ve yay. Tam efor; top ortacıdayken ofsayt çizgisinin gerisinde (bolgeKonumu), 1,8 sn. Eskiden orta anında ceza
+     sahasında forvet dışı 1,1 hücumcu vardı, şutların %81'i forvetten (T14-0). Rastlantısız */
+  gecGirisAta(p,sec){const A=MOTOR_AYAR;if(!A.gecGiris||!p||p.team==null)return;
+    const t=p.team,d=this.dir[t],yan=Math.sign(this.ball.z-MZ)||1,GR=this._geride&&this._geride[t],yer=sec.tur==='geriCevir'||sec.tip!=='hava';
+    const Z=yer?[[PL-11,MZ],[PL-17,MZ-yan*3]]:[[PL-11,MZ-yan],[PL-7,MZ-yan*4]],C=[];
+    for(const q of this.teams[t]){if(q===p||q===sec.alici||!q.oyunda||q.rol==='GK'||q.rol==='FV'||q.rol==='DEF'||(q.eylem&&q.eylem.kilit)||(GR&&GR.has(q))||(q.kosu&&q.kosu.tur!=='arkaya'))continue;
+      const L=hyp(q.x-d*(PL-11),q.z-MZ);if(L>25||q.x*d<PL-40)continue;
+      C.push([0.5*profilAlt(q,'topsuzHareket',0.5)+0.5*Math.max(0,profilEgilim(q,'cezaSahasinaGecGirer'))+(q.mevki.kanat?0.2:0)-L/30,q]);}
+    C.sort((a,c)=>c[0]-a[0]||a[1].n-c[1].n);
+    for(let i=0;i<Math.min(A.gecGiris,C.length,Z.length);i++){const q=C[i][1],z=Z[i];q.kosu={u:z[0],w:z[1],t:1.8,tur:'gecGiris'};
+      this.on('kosu',{p:q,tur:'gecGiris'});this.jestVer(q,'isaret',0.6,{x:z[0]*d,z:z[1]});}},
+  kanatKonumu(p,t,s,ofs,geride){
+    const A=MOTOR_AYAR;if(!A.kanatRol||geride||!p.mevki.kanat||!s||s.team!==t||s===p)return null;
+    const d=this.dir[t],su=s.x*d;if(su<A.kanatBas)return null;
+    const ky=Math.sign(p.mevki.w-MZ)||1,bk=Math.abs(s.z-MZ)>10?Math.sign(s.z-MZ):0;
+    if(bk===-ky)return su>PL-A.kanatUzak?{u:PL-9,w:MZ-bk*6,ef:0.8,g:'kutu'}:null;
+    let wc=clamp(A.kanatCizgi+2.5*profilEgilim(p,'iceKatEder')-1.5*profilEgilim(p,'cizgiyeIner'),2.5,10);
+    if(bk===ky&&Math.min(s.z,PW-s.z)<A.kanatCizgi+5)wc=14;
+    /* top kendi kanadında ve son bölgeye yakınken topun önünde, ofsayt çizgisinin hemen gerisinde (çizgiye ve savunma arkasına seçenek) */
+    const u=bk===ky&&su>PL-A.kanatUzak?Math.max(su-4,Math.min(ofs-1.2,su+8)):Math.max(Math.min(ofs-A.kanatDerin,su+A.kanatOnde),su-4);
+    return{u,w:ky<0?wc:PW-wc,ef:0.5,g:'genis'};},
   /* T7d: pres tetikleyicileri (plan T7 madde 8): kötü ilk dokunuş (kontrol eylemi kötü), geri pas (yeni sahip önceki sahipten ≥ 3 m geride),
      sırtı dönük alıcı (sahipliğin ilk 1 sn'si, yüzü kendi kalesine belirgin), çizgiye sıkışma (taç çizgisine ≤ 3 m). Savunan takımın tetiği
      presTetikSure sn sürer (takimAI: 1. adam daha uzaktan çıkar, 2. adam serbest). Her adım takimAI'nın başında. T7g: ilk sürümde çizgi 6 m ve
