@@ -85,7 +85,8 @@ ayarEkle('B',{
   duranUzak:0.04,              // T12a: duran topta hatanın mesafeyle büyümesi (eski sutUzak)
   sutDikey:1.0,                // T12a: açık oyunda 1 m ve üstüne nişanın yükseklik hatası, yanal hatanın açısı cinsinden (1: aynı açı — T8c serbest vuruş kuralı; alçak nişan 0,35·ky)
   ortaAyak:1,                  // T14c: ortanın planlayıcısı zayıf ayağın sapmasını bilir (vurusAyakK; 0: ayaksız eski sapma)
-  devamOrta:1                  // T14c: kanattaki alıcının orta devamının payı (devamDegeri; 0: kapalı)
+  devamOrta:1,                 // T14c: kanattaki alıcının orta devamının payı (devamDegeri; 0: kapalı)
+  penaltiDurak:1               // T15c (2026-10-14): penaltıda duraklı koşu (penaltiAtisi, vurusIlerle; 0: hep düz koşu, T14'ün yolu)
 });
 /* ---- T9b (2026-10-10; gerçekçilik planı §4 T9 “Vuruş”): vuruş modeli — saf, rastlantısız. Şut planı (js/mac-karar.js sutPlani), pas analizi
    (pasAnaliz) ve vuruş (sutVur, yerPasVur, havaPasVur) aynı işlevleri okur. Stilin payı: azami hıza göre hız (iç ayak plase en yavaşı, üst sert
@@ -246,12 +247,20 @@ Object.assign(Match.prototype,{
       /* T4-V: temasa kalan süre (çizim okur, tahmin etmez): asgari hazırlığın kalanı, hizalanma süresi ya da ayağa varış süresi + geri salınım */
       const w=hrkVurusDonus(p),donT=sapma>sinir?(sapma-sinir)/w:0,varT=ayakD>0.5&&!(sec.ilk&&gelir)?(ayakD-0.5)/Math.max(0.7,p.spd):0;
       e.kalan=Math.max(e.hazirlikEn-e.t,donT,varT)+e.geri;
+      /* T15c: duraklı penaltı koşusu — topa 1,6 m kala vuran durur (e.kosu 'durak'; çizim tereddüt pozunu okur), 0,3–0,5 sn sonra tam eforla
+         yeniden koşar (e.kosu 'devam'); duraklama bitince kaleci kalkmışsa ve plan onun yanıysa öbür köşeye döner (penaltiDonus). Kalan süre
+         duraklamayı içerir (kaleci okur: kaleciPenaltiErken) */
+      if(sec.penalti&&sec.kosu==='durakli'&&!e.durakBitti){
+        if(!e.durak&&ayakD<1.6)e.durak={t:0,sure:0.3+0.2*profilAlt(p,'sogukkanlilik',p.oz.karar)};
+        if(e.durak){e.durak.t+=dt;e.kosu='durak';p.tx=p.x;p.tz=p.z;p.hizOran=0.2;this.eforVer(p,0.5);e.kalan+=Math.max(0,e.durak.sure-e.durak.t);
+          if(e.durak.t>=e.durak.sure){e.durakBitti=true;e.kosu='devam';this.penaltiDonus(p,sec);}else return;}}
+      if(e.durakBitti)this.eforVer(p,1);
       if(sapma<sinir&&(ayakD<(sec.ilk?0.62:0.5)||(sec.ilk&&gelir))&&b.y<(sec.tur==='sut'||sec.ilk?1.1:0.6)&&e.t>=e.hazirlikEn){
         /* son an kontrolü: yerden pas hattı bu arada kapandıysa pastan vazgeç, yeniden karar ver (0,6 sn içinde yeniden başlayan vuruş beklemez) */
         if(sec.tip==='yer'&&sec.tur!=='sut'&&!sec.ilk&&this.hatKapali(p,a)){p.eylem=null;p.yonHedef=null;p.kararT=0.05;this.bVeri(p).vazT=this.t;this.on('vazgecti',{p});return;}
         e.faz='geri';e.ft=0;e.hizalanma=sutA?Math.max(0,sapma-0.3):sapma;e.sabit=sec.ilk&&topHiz>1.5;e.hazirlikT=e.t;e.kalan=e.geri;}
       /* T8a: duran topta kullanan 3–7 m geriden koşar (sec.duran; koşuya 2,5 sn ek süre) */
-      else if(e.t>(sec.ilk?2.2:1.3+e.hazirlikEn+(sec.duran?2.5:0))){p.eylem=null;p.yonHedef=null;p.kararT=0;if(b.sahip===p&&b.hedefOyuncu)b.hedefOyuncu=null;}
+      else if(e.t>(sec.ilk?2.2:1.3+e.hazirlikEn+(sec.duran?2.5:0)+(e.durak?e.durak.sure:0))){p.eylem=null;p.yonHedef=null;p.kararT=0;if(b.sahip===p&&b.hedefOyuncu)b.hedefOyuncu=null;}
     }else if(e.faz==='geri'){
       if(!e.sabit){p.tx=b.x+b.vx*0.1-Math.cos(p.yon)*0.3;p.tz=b.z+b.vz*0.1-Math.sin(p.yon)*0.3;}
       /* T4-V: geri salınımın temasa 0,12 sn kalana dek olan kısmında yerden pas hattı kapanırsa pasör vuruştan vazgeçer (gerçekte pas o ana dek
@@ -315,7 +324,7 @@ Object.assign(Match.prototype,{
     let sd=this.vurusHatasi(p,e,L)*sutHataK(L,!!(sec.serbest||sec.penalti));
     let hz,hy,v,egri=0,tur,kz=1,ky=1,fg=1,g,plPg=null,plPon=null;
     /* T8d: penaltı planın hedefi, yüksekliği, gücü ve türüyle (penaltiAtisi); hata baskısız, soğukkanlılıkla (penaltiSapmaK) */
-    if(sec.penalti){sd*=penaltiSapmaK(p);hz=sec.hz;hy=sec.pHy;v=sec.pV;tur=sec.pTur;g=sec.pG;const TT=SUT_TUR[tur];kz=TT.kz;ky=TT.ky;fg=gucHataCarpani(g,VURUS_GUC_REF.sut);}
+    if(sec.penalti){sd*=penaltiSapmaK(p)*(sec.kosu==='durakli'?1.1:1)*(sec.donus?1.15:1);hz=sec.hz;   /* T15c: duraklı koşu ×1,1, son anda öbür köşeye dönüş ×1,15 */hy=sec.pHy;v=sec.pV;tur=sec.pTur;g=sec.pG;const TT=SUT_TUR[tur];kz=TT.kz;ky=TT.ky;fg=gucHataCarpani(g,VURUS_GUC_REF.sut);}
     /* T9b-a: hazırlığın başında planlanan tür ve güçle hedef tazelenir (planı olmayan vuruş burada planlanır) */
     else{const sp=e.sutPlan,pl=sutPlani(this,p,bx,bz,sd,{serbest:sec.serbest,tur:sp&&sp.tur,guc:sp?sp.g:sec.guc,zayif:p.ayak!=='iki'&&e.ayak!==p.ayak,acele:e.acele||0,
         stil:e.stil==='burun'?'burun':null,ayak:e.ayak});
@@ -699,6 +708,12 @@ Object.assign(Match.prototype,{
       let al=null,ed=1e9;for(const p of this.sahadakiler(du.takim)){if(p===tk||p.rol==='GK')continue;const dd=hyp(p.x-d*h[0],p.z-h[1]);if(dd<ed){ed=dd;al=p;}}
       return{tur:'korner',hx:d*h[0],hz:h[1],tip:'hava',T:1.15+hyp(d*h[0]-du.x,h[1]-du.z)/30,alici:al};
   },
+  /* T15c: duraklamanın sonunda kaleci erken kalkmışsa (penaltiTahmin: uçtuğu yan; kalkmadıysa 0) ve plan onun yanıysa vuran öbür köşeye döner
+     (karar; köşe aynalanır, ortaya nişan değişmez) */
+  penaltiDonus(p,sec){
+    const gk=this.kaleci(1-p.team),yan=gk&&gk.oyunda?gk.penaltiTahmin||0:0,zt=sec.hz-MZ;
+    if(yan&&Math.abs(zt)>0.5&&Math.sign(zt)===yan&&this.rast()<0.85*(0.5+0.5*p.oz.karar)){sec.hz=MZ-zt;sec.donus=true;}
+  },
   /* T8d: penaltı planından (penaltiPlani; eskiden yan zarla, yükseklik ve güç vuruşta zarla): hedef, yükseklik ve güç sıcaklıklı seçilir (kararlı
      vurucu daha tutarlı); vurucunun gövdesinin gösterdiği yan (ipucu) burada belirlenir — kaleci koşuyu okuyup temastan önce kalkar (Ek G5) */
   penaltiAtisi(du,tk){
@@ -707,7 +722,10 @@ Object.assign(Match.prototype,{
     const X=penaltiPlani(this,tk,gk,sd),tau=Math.max(0.004,(0.06+0.18*(1-oz.karar))*X.en);let top=0;for(const c of X.Ls){c.a=Math.exp((c.Pg-X.en)/tau);top+=c.a;}
     let r=this.rast()*top,c=X.Ls[X.Ls.length-1];for(const c2 of X.Ls){r-=c2.a;if(r<=0){c=c2;break;}}
     const aldat=this.rast()<0.08+0.25*oz.sut,yan=(Math.sign(c.zt)||(this.rast()<0.5?-1:1))*(aldat?-1:1);
-    return{tur:'sut',hx:gx,hz:MZ+c.zt,penalti:true,xg:c.Pg,pHy:c.yt,pV:c.v,pG:c.g,pTur:c.tur,ipucu:{yan,guven:clamp(0.85-0.7*oz.sut,0.15,0.8)}};
+    /* T15c (2026-10-14; Ek G5): koşunun türü — duraklı koşu (topa 1,6 m kala 0,3–0,5 sn duraklama; vuranın soğukkanlılığı ve plase eğilimiyle,
+       kullananların ortalaması ~%20 — gerçekte bugün penaltıların ~%15–25'i; penaltıyı soğukkanlı oyuncular kullandığından ilk katsayılar %33 veriyordu) ya da düz */
+    const pD=clamp(0.2*profilAlt(tk,'sogukkanlilik',oz.karar)+0.08*profilEgilim(tk,'plaseVurur'),0.02,0.4),kosu=A.penaltiDurak&&this.rast()<pD?'durakli':'duz';
+    return{tur:'sut',hx:gx,hz:MZ+c.zt,penalti:true,xg:c.Pg,pHy:c.yt,pV:c.v,pG:c.g,pTur:c.tur,ipucu:{yan,guven:clamp(0.85-0.7*oz.sut,0.15,0.8)},kosu};
   }
 });
 EYLEM_ADIM.vurus=function(p,e,dt){this.vurusIlerle(p,e,dt);return true;};

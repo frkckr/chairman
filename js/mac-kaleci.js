@@ -19,6 +19,7 @@ ayarEkle('D',{
   kaleciCikis:0.2,             // boştaki topa çıkmak için rakibe göre gereken zaman payı (sn)
   penaltiOku:[0.07,0.04],      // T8d: penaltıda kalecinin vuranın koşusunu okuyup temastan önce kalkması (sn; ortalama, σ; Ek G5: −0,145 … +0,009)
   kaleciNiyet:1,               // T15a (2026-10-14): kalecinin niyeti — tutamayacağını bildiği topu planlı çeler (0: kapalı, T14'ün yolu; kaleciNiyet)
+  penaltiKanma:[0.25,0.25],    // T15c: vuran koşuda duraklayınca kalecinin kanıp erken kalkma olasılığı = a + b·(1 − kalecilik) (bir kez; ipucunun yarı güveniyle)
   kaleciNiyetEsik:[0.6,0.15]   // T15a: niyetin eşiği — beklenen tutma olasılığı (kaleciTutmaP) bunun altındaysa çelme; [taban, karşılama noktasının
                                // 3,5 m içinde rakip varsa ek] (beklenen gol hesabı: kaleciNiyet yorumu; ilk deneme 0,35 elden kaçan topu çok bıraktı)
 });
@@ -574,7 +575,12 @@ Object.assign(Match.prototype,{
      temasta (b.sut) uçuyordu; tetik orada yedek olarak kalır */
   kaleciPenaltiErken(du){const gk=this.kaleci(1-du.takim),tk=du.kullanan,e=tk&&tk.eylem;
     if(!gk||!gk.oyunda||!gk._pen||!e||e.ad!=='vurus'||!e.sec||!e.sec.penalti||e.faz==='takip')return;
-    if(e.kalan<=gk._pen.oku)this.kaleciPenaltiUcus(gk,e.sec.ipucu,e.kalan);
+    /* T15c: vuran koşuda duraklayınca kaleci bir kez kanabilir: vuruş geliyor sanıp ipucunun yarı güveniyle hemen kalkar (kalan 0: hemen vurulacakmış
+       gibi uçar). Kanmazsa koşunun ritmi bozulduğu için koşudan okuyamaz: temasta tepkiyle kalkar (okuma 0), ipucunun güveni yarıya iner */
+    if(e.durak&&!gk._pen.durak){gk._pen.durak=true;const K=MOTOR_AYAR.penaltiKanma;
+      if(this.rast()<K[0]+K[1]*(1-gk.oz.kalecilik)){const ip=e.sec.ipucu;this.kaleciPenaltiUcus(gk,ip?{yan:ip.yan,guven:(ip.guven||0)*0.5}:null,0);return;}
+      gk._pen.oku=0;gk._pen.ipK=0.5;}
+    if(e.kalan<=gk._pen.oku){const ip=e.sec.ipucu,k=gk._pen.ipK;this.kaleciPenaltiUcus(gk,ip&&k?{yan:ip.yan,guven:(ip.guven||0)*k}:ip,e.kalan);}
   }
 });
 /* dalış adımı: itiş (planlı, yanal hız sıfır), havada (yana e.v ile e.s kadar; kalça balistik), iniş (yerde kayar, 0,3 sn), sonra hızlı kalkış */
