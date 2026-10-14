@@ -17,7 +17,10 @@ ayarEkle('D',{
   kaleciUcus:[3.6,2.6],        // dalışta yanal hız (m/sn) = a + b·kalecilik (yüksek dalışta azalır)
   kaleciTutma:0.84,            // kurtarışta topu tutma olasılığı çarpanı (en çok 0,96 olan olasılığa uygulanır)
   kaleciCikis:0.2,             // boştaki topa çıkmak için rakibe göre gereken zaman payı (sn)
-  penaltiOku:[0.07,0.04]       // T8d: penaltıda kalecinin vuranın koşusunu okuyup temastan önce kalkması (sn; ortalama, σ; Ek G5: −0,145 … +0,009)
+  penaltiOku:[0.07,0.04],      // T8d: penaltıda kalecinin vuranın koşusunu okuyup temastan önce kalkması (sn; ortalama, σ; Ek G5: −0,145 … +0,009)
+  kaleciNiyet:1,               // T15a (2026-10-14): kalecinin niyeti — tutamayacağını bildiği topu planlı çeler (0: kapalı, T14'ün yolu; kaleciNiyet)
+  kaleciNiyetEsik:[0.6,0.15]   // T15a: niyetin eşiği — beklenen tutma olasılığı (kaleciTutmaP) bunun altındaysa çelme; [taban, karşılama noktasının
+                               // 3,5 m içinde rakip varsa ek] (beklenen gol hesabı: kaleciNiyet yorumu; ilk deneme 0,35 elden kaçan topu çok bıraktı)
 });
 /* model sabitleri: itiş (çömelme) süresi, uzanmanın tamamlanması (sn), yana adım ve geri çekilme hızı (m/sn), erişimdeki belirsizlik (m; P için), el+top yarıçapı */
 const KL_M={itis:0.12,uzanma:0.28,adim:3.0,geri:3.0,sapma:0.22,elR:0.21,
@@ -60,6 +63,67 @@ function kaleciPay(gk,lat,y,T,r,vj){
   return en;}
 /* temas olduğunda topu denetleme olasılığı (parmak ucu ve sert şutta top dokunsa da yoluna devam edebilir) */
 function kaleciKontrolP(gk,u,v){return clamp(1.0-0.85*clamp(u-0.7,0,0.6)-0.012*Math.max(0,v-22)+0.3*(gk.oz.kalecilik-0.7),0.35,0.99);}
+/* T15a (2026-10-14): tutma olasılığı (saf; T5 ilkesi — niyet kararı ve yürütmenin zarı aynı işlevi okur). Eskiden kaleciTemasSonuc'un içindeydi
+   (MM4). parca: temas eden parça; u: elin erişim elipsindeki uzanma oranı; v: top hızı (m/sn); y: topun yüksekliği; cift: iki el; ucus: dalışta;
+   yerde: dalıştan inmiş ya da kalkıyor.
+   T15b (2026-10-14): elle temasta niyet açıkken (kaleciNiyet) olasılık TUTMAYA ÇALIŞAN kalecinindir: MM4 formülü kaleci her topu tutmaya çalışırken
+   ayarlanmıştı, başarısızlığı gerçekte bilerek yapılan çelmeyi de içeriyordu (maçta 18–24 m/sn'de ortalama 0,46, 24–30'da 0,36; ayakta, gövde
+   hizasındaki 19 m/sn'lik topta 0,66). Yeni biçim: kolay top (yavaş, gövde hizası, ayakta, iki el) ~%97; hız 12 m/sn'den sonra her m/sn'de −0,02;
+   uzanma 0,35'ten sonra −0,8·fazlası; dalışta −0,2; 2,1 m üstü −0,2; tek el −0,6; kalecilik +0,8·(k − 0,7). Kaleci olasılığın düşük olduğu topu
+   tutmaya çalışmaz (niyet eşiği), çeler; böylece elden kaçan top seyrekleşir. Niyet kapalıyken (T14 yolu) MM4 formülü */
+function kaleciTutmaP(gk,parca,u,v,y,cift,ucus,yerde){
+  const k=gk.oz.kalecilik;let P;
+  if(parca==='el'&&MOTOR_AYAR.kaleciNiyet)return clamp(1.15-0.025*Math.max(0,v-12)-0.8*Math.max(0,u-0.35)+0.8*(k-0.7)-(ucus?0.2:0)-(y>2.1?0.2:0)-(cift?0:0.6),0,0.97);
+  if(parca==='el')P=1.4-v/28-0.7*Math.max(0,u-0.35)+0.8*(k-0.7)+(ucus?0:0.15)-(y>2.1?0.2:0)-(cift?0:0.6);
+  else if(parca==='govde')P=(ucus||yerde?0.9:1.25)-v/32+0.6*(k-0.7);
+  else P=v<7?0.9:0;
+  return clamp(P,0,0.96)*MOTOR_AYAR.kaleciTutma;}
+/* T15a: kalecinin niyeti — kurtarış eylemi başlarken (kaleciKarar, kaleciUc) beklenen tutma olasılığı (elle, planlanan uzanma, topun hızı ve
+   yüksekliği, el, dalış) kaleciNiyetEsik'in altındaysa 'cel': kaleci topu tutmaya çalışmaz, avucuyla dışa ya da üst direğin üstüne iter
+   (kaleciCelPlani); değilse 'tut' (tutamazsa top elinden kaçar: plansız çelme). Eşik beklenen golden (T15b): elden kaçan top kale önünde serbest
+   kalır (~0,15 gol), planlı çelmenin bedeli ~0,06 gol (yarısı korner ~0,03, kendi kalesine ~%3, tehlikeli bölgeye ~%9 × 0,15) → tutmaya
+   çalışmak (1 − P)·0,15 < 0,06 iken, P* ≈ 0,6 (kaleciNiyetEsik[0]). Karşılama noktasının 3,5 m içinde rakip varsa elden kaçan top daha pahalıdır
+   (~0,25 → P* ≈ 0,75): eşik kaleciNiyetEsik[1] kadar artar. Denetim (parmak ucu, kaleciKontrolP) niyetten bağımsızdır */
+function kaleciNiyet(gk,u,v,y,cift,ucus,yakin){
+  const E=MOTOR_AYAR.kaleciNiyetEsik;
+  return kaleciTutmaP(gk,'el',u,v,y,cift,ucus,false)>=E[0]+(yakin?E[1]:0)?'tut':'cel';}
+/* T15a: avucun normalinin topun gelişiyle açısı θ için yansıyan hız (kaleciCel'deki yansıma: e 0,35, itiş it). û: topun birim gidişi, w: dışa (ve
+   üste) birim yön (û'ya dik); döner: [vx, vy, vz, nx, ny, nz] (yeni dizi; modül düzeyi ortak durum yok — ikiz motor) */
+function kaleciCelHiz(vx,vy,vz,ux,uy,uz,wx,wy,wz,th,it){
+  const c=Math.cos(th),s=Math.sin(th);let nx=-ux*c+wx*s,ny=-uy*c+wy*s,nz=-uz*c+wz*s;const nn=hyp3(nx,ny,nz)||1;nx/=nn;ny/=nn;nz/=nn;
+  const vn=vx*nx+vy*ny+vz*nz;let ax=vx,ay=vy,az=vz;if(vn<0){ax-=1.35*vn*nx;ay-=1.35*vn*ny;az-=1.35*vn*nz;}
+  return[ax+nx*it,ay+ny*it,az+nz*it,nx,ny,nz];}
+/* T15a: çelinen topun sonu (saf; topun kopyası topFizikAdim ile, rastlantısız): 'kale' (kale çizgisini çerçevenin içinden geçer), 'korner' (dışından
+   ya da üst direğin üstünden), 'tac', oyunda — topun yavaşladığı (0,3 sn sonra yatayda < 6 m/sn ve 1 m'den alçak) ya da 1 sn'deki yeri ceza sahasının
+   tehlikeli bölgesindeyse (kale çizgisine 11 m, kale ortasına 9,16 m) 'tehlike', değilse 'guvenli'. Puan (KL_CS): kendi kalesine −10, tehlikeli
+   bölge −3, oyunda kalan top 0 (Opta'nın “güvenli çelme”si oyun dışı ya da arkadaşa gidendir; ortada kalan top çoğu zaman rakibe döner — ilk
+   denemede +1 idi), taç +1,5, korner +2 (“şüphedeysen dışarı at”) */
+const KL_CS={kale:-10,tehlike:-3,guvenli:0,tac:1.5,korner:2};
+function kaleciCelSonu(m,gx,x,y,z,vx,vy,vz){
+  const s={x,y,z,vx,vy,vz,egri:0,ust:0};
+  for(let i=1;i<=72;i++){const px=s.x,py=s.y,pz=s.z;topFizikAdim(s,1/60,false,m.R,m.kosullar);
+    if((px-gx)*(s.x-gx)<=0){const f=(gx-px)/((s.x-px)||1),zc=pz+(s.z-pz)*f,yc=py+(s.y-py)*f;
+      return Math.abs(zc-MZ)<GW2+0.12&&yc<GH+0.12?'kale':'korner';}
+    if(s.z<-TOP_YARICAP||s.z>PW+TOP_YARICAP)return'tac';
+    if(i>=18&&hyp(s.vx,s.vz)<6&&s.y<1||i===60)return Math.abs(s.x-gx)<11&&Math.abs(s.z-MZ)<9.16?'tehlike':'guvenli';}
+  return Math.abs(s.x-gx)<11&&Math.abs(s.z-MZ)<9.16?'tehlike':'guvenli';}
+/* T15a: niyetli çelmenin planı (saf). Adaylar: iki yan (topun yatay gidişine dik; topa kalecinin gövdesinin yanından erişilen el yalnız dışa
+   itebilir — top gövdenin 0,25 m içindeyse iki yan) × üstten karışım (al 0; kale çizgisine 4 m içinde 1,45 m üstündeki topta 0,5 ve 1) × θ
+   (0,15–1,15 rad, 0,1 adım; karar 3: n·v < 0 kalsın). Her adayın sonu kaleciCelSonu; puan (KL_CS) uygulama hatasıyla (σ; beş noktalı Gauss,
+   uçta sınırlı) yumuşatılır — hata büyüdükçe çerçeveden uzak açı seçilir. Döner: {wx,wy,wz,th,puan} (yeni nesne) */
+const KL_TH=[0.15,0.25,0.35,0.45,0.55,0.65,0.75,0.85,0.95,1.05,1.15];
+const KL_GN=[[-2,0.05],[-1,0.25],[0,0.4],[1,0.25],[2,0.05]];
+function kaleciCelPlani(m,gk,b,it,sg){
+  const gx=-m.dir[gk.team]*PL,v=hyp3(b.vx,b.vy,b.vz)||1,ux=b.vx/v,uy=b.vy/v,uz=b.vz/v,hL=hyp(b.vx,b.vz)||1,px=-b.vz/hL,pz=b.vx/hL;
+  const lat=(b.x-gk.x)*px+(b.z-gk.z)*pz,yuksek=b.y>1.45&&Math.abs(b.x-gx)<4,adim=0.1;
+  const en={wx:0,wy:0,wz:0,th:0.5,puan:-99},SP=new Array(KL_TH.length);
+  for(const yan of[1,-1]){if(Math.abs(lat)>0.25&&Math.sign(lat)!==yan)continue;
+    for(const al of yuksek?[0,0.5,1]:[0]){
+      let wx=px*yan*(1-al),wy=al,wz=pz*yan*(1-al);const wv=wx*ux+wy*uy+wz*uz;wx-=wv*ux;wy-=wv*uy;wz-=wv*uz;const wn=hyp3(wx,wy,wz)||1;wx/=wn;wy/=wn;wz/=wn;
+      for(let i=0;i<KL_TH.length;i++){const c=kaleciCelHiz(b.vx,b.vy,b.vz,ux,uy,uz,wx,wy,wz,KL_TH[i],it);SP[i]=KL_CS[kaleciCelSonu(m,gx,b.x,b.y,b.z,c[0],c[1],c[2])];}
+      for(let i=0;i<KL_TH.length;i++){let p=0;for(const [o,w] of KL_GN){const j=clamp(Math.round(i+o*sg/adim),0,KL_TH.length-1);p+=w*SP[j];}
+        if(p>en.puan+1e-9){en.puan=p;en.th=KL_TH[i];en.wx=wx;en.wy=wy;en.wz=wz;}}}}
+  return en;}
 /* planın (topun kaleci düzleminden geçeceği nokta) kalecinin yanal eksenindeki işaretli uzaklığı; yanal eksen topun yönüne dik */
 function kaleciYanal(gk,pl){return(pl.px-gk.x)*(-pl.nz)+(pl.pz-gk.z)*pl.nx;}
 /* iki doğru parçası arasındaki en kısa uzaklık (3B); KL_SS: [topun parçasındaki oran, kapsüldeki oran] */
@@ -184,7 +248,8 @@ Object.assign(Match.prototype,{
     const k=kaleciPay(gk,lat,y,T,0,pl.vj);
     if(k.mod==='ayak'){this.kaleciKapanBaslat(gk,Math.atan2(-pl.nz,-pl.nx),true);gk.eylem.t=gk._asim||0;pl.basladi=true;return;}
     /* ayakta rahatça yetişiyorsa uçmaz (adım atıp tutar) */
-    if(k.mod==='dur'||k.payA>=Math.min(0.5,k.pay)){gk.eylem={ad:'tutus',t:gk._asim||0,sure:Math.max(0.25,T+0.3),kilit:true,fren:10,kurtar:true,tur:y>1.75?'yukari':y<0.55?'yer':'gogus',hedefY:y,hy:(gk.tavir==='hazir'?0.88:0.95)*B};
+    if(k.mod==='dur'||k.payA>=Math.min(0.5,k.pay)){gk.eylem={ad:'tutus',t:gk._asim||0,sure:Math.max(0.25,T+0.3),kilit:true,fren:10,kurtar:true,tur:y>1.75?'yukari':y<0.55?'yer':'gogus',hedefY:y,hy:(gk.tavir==='hazir'?0.88:0.95)*B,
+        niyet:this.kaleciNiyetAl(gk,pl.px,pl.pz,k.u,y,true,false)};   /* T15a: ayakta kurtarışta niyet (iki el) */
       if(gk.tavir==='hazir')gk.tavir=null;pl.basladi=true;return;}
     if(T>need+0.12&&T>0.42){
       /* T9b-a (dalış zinciri): top dalışın yolunun ötesindeyse zaman payında önce yana adım (kaleciPay'in yana adımıyla aynı hız); adım bitince
@@ -197,11 +262,19 @@ Object.assign(Match.prototype,{
   kaleciUc(gk,pl,lat,y,T,itisT,u){
     const B=gk.boy||1,E=MOTOR_AYAR.kaleciErisim,sg=Math.sign(lat)||1,lx=-pl.nz*sg,lz=pl.nx*sg,yh=clamp(y-0.1,0.25,1.2*B),tp=Math.max(0.1,T-itisT);
     const vy=kaleciSicrama(gk,yh,tp),v=kaleciDalisHizi(gk,yh)*(pl.vj||1),s=Math.min(kaleciUcusYolu(gk,yh),Math.max(0,Math.abs(lat)-0.35*1.25*B*E)),y0=0.8*B;
-    const tIn=(vy+Math.sqrt(vy*vy+2*G*(y0-0.22)))/G,egH=clamp(Math.atan2(Math.max(0.15,Math.abs(lat)-s),y-yh),0.35,1.5);
+    const tIn=(vy+Math.sqrt(vy*vy+2*G*(y0-0.22)))/G,egH=clamp(Math.atan2(Math.max(0.15,Math.abs(lat)-s),y-yh),0.35,1.5),el=(u==null||u<0.85)&&y<1.95?'cift':'tek';
+    /* T15a: dalışın niyeti (penaltıda vuruştan önce top durur: beklenen hız 25 m/sn) */
+    const vb=hyp3(this.ball.vx,this.ball.vy,this.ball.vz),niyet=this.kaleciNiyetAl(gk,pl.px,pl.pz,u==null?0.6:u,y,el==='cift',true,vb<5?25:vb);
     /* T9b-d: tur — 'dalis' ya da 'cokme' (yakın alçak top; sözleşme ucus.tur) */
     gk.eylem={ad:'ucus',t:gk._asim||0,faz:'itis',itisT,inisT:itisT+tIn,sure:itisT+tIn+0.3,kilit:true,fren:4,yan:Math.sign(lz)||sg,y:clamp(y,0.15,2.4),hedefY:y,
-      el:(u==null||u<0.85)&&y<1.95?'cift':'tek',lx,lz,v,s,gid:0,vy,y0,hy:0.88*B,eg:0,egH,tur:kaleciCokme(yh,lat,B)?'cokme':'dalis'};
+      el,lx,lz,v,s,gid:0,vy,y0,hy:0.88*B,eg:0,egH,tur:kaleciCokme(yh,lat,B)?'cokme':'dalis',niyet};
     if(gk.tavir==='hazir')gk.tavir=null;this.on('dive',{p:gk,yan:gk.eylem.yan});
+  },
+  /* T15a: niyet (kaleciNiyet; saf) — topun hızı (verilmezse şimdiki) ve karşılama noktasının (px, pz) 3,5 m içindeki rakip saha oyuncusu */
+  kaleciNiyetAl(gk,px,pz,u,y,cift,ucus,v){
+    if(!MOTOR_AYAR.kaleciNiyet)return null;
+    const b=this.ball;let yakin=false;for(const o of this.teams[1-gk.team])if(o.oyunda&&o.rol!=='GK'&&hyp(o.x-px,o.z-pz)<3.5){yakin=true;break;}
+    return kaleciNiyet(gk,u,v!=null?v:hyp3(b.vx,b.vy,b.vz),y,cift,ucus,yakin);
   },
   /* kapanma: bire birde topa atılıp önünde yere yayılma; ayak: yakın alçak şutta bacakları açma (yon: kalecinin döndüğü yön). T9b-d (Ek G6): tur —
      'yayil' (topa atılıp yere yayılma), 'kblok' (yakın alçak şut: bir diz yerde, öbür bacak açık — K-blok), 'yildiz' (bire birde şutçu 2,6–7 m'de
@@ -269,28 +342,28 @@ Object.assign(Match.prototype,{
     const b=this.ball,sh=b.sut&&b.sut.team!==gk.team?b.sut:null,v=hyp3(b.vx,b.vy,b.vz),y0=b.y,k=gk.oz.kalecilik,e=gk.eylem,ad=e&&e.ad;
     const ucus=ad==='ucus',yerde=ucus&&e.faz==='inis'||ad==='kalkis',elle=this.elleOynar(gk),cift=!(ucus&&e.el==='tek');
     let bicim=ad==='kapan'?(e.ayak?'ayak':'kapan'):yerde?'yerden':ucus?'ucus':parca==='bacak'?'ayak':'adim';if(!sh&&this.kaleciDonen(gk))bicim='ikinci';
+    /* T15a: niyet kurtarış eyleminden (ucus, ayakta tutus); çelme niyetinde elle temasta tutma zarı atılmaz. Yönü planlı çelme yalnız erişimin içinde
+       (u < 1): u ≥ 1'de top erişim elipsinin kenarına ancak sürtünür, yön planlanamaz — plansız çelme (MM4/T12b açısı). İlk denemede sınır 0,85'ti
+       (iki elin sınırı): çelme niyetli temasların çoğu dışarıda kalıyordu. Tutma olasılığı kaleciTutmaP (saf) */
+    const niyet=(ad==='ucus'||ad==='tutus')&&e.niyet||null,celN=niyet==='cel'&&parca==='el',plan=celN&&(u==null||u<1),ek={niyet};
     gk._kp=null;
-    if(parca==='el'&&this.rast()>=kaleciKontrolP(gk,u,v)){this.kaleciParmak(gk,sh,o,v,y0);return;}
-    let Pc=0;
-    if(elle){if(parca==='el')Pc=1.4-v/28-0.7*Math.max(0,u-0.35)+0.8*(k-0.7)+(ucus?0:0.15)-(b.y>2.1?0.2:0)-(cift?0:0.6);
-      else if(parca==='govde')Pc=(ucus||yerde?0.9:1.25)-v/32+0.6*(k-0.7);
-      else Pc=v<7?0.9:0;
-      Pc=clamp(Pc,0,0.96)*MOTOR_AYAR.kaleciTutma;}
+    if(parca==='el'&&this.rast()>=kaleciKontrolP(gk,u,v)){this.kaleciParmak(gk,sh,o,v,y0,ek);return;}
+    const Pc=elle&&!celN?kaleciTutmaP(gk,parca,u,v,b.y,cift,ucus,yerde):0;
     if(Pc>0&&this.rast()<Pc){
       if(this.rast()<clamp(v/30*(1-k)*0.25,0,0.2)){/* düşürdü: top dibine seker */const d=this.dir[gk.team];
         b.vx=d*(0.4+this.rast()*1.6);b.vz=this.normal()*1.0;b.vy=0.5+this.rast()*1.2;b.egri=0;b.ust=0;
-        this.dokunus(gk,false);gk.kickCd=0.35;this.kaleciKaydet(gk,sh,false,'dusurdu',parca,v,y0);return;}
+        this.dokunus(gk,false);gk.kickCd=0.35;this.kaleciKaydet(gk,sh,false,'dusurdu',parca,v,y0,ek);return;}
       const tur=b.y>1.75?'yukari':b.y<0.5?'yer':'gogus';this.kaleciTut(gk,tur);
       if(!ucus&&ad!=='kapan')gk.eylem={ad:'tutus',t:0,sure:0.35,tur};
-      this.kaleciKaydet(gk,sh,true,bicim,parca,v,y0);return;}
-    this.kaleciCel(gk,sh,parca,u,bicim,o);
+      this.kaleciKaydet(gk,sh,true,bicim,parca,v,y0,ek);return;}
+    this.kaleciCel(gk,sh,parca,u,bicim,o,plan,ek);
   },
   /* parmak ucu: top yavaşlar ve kalecinin merkezinden uzağa biraz sapar. Yine kaleye gidiyorsa dokunuş sayılmaz (şut sürer, gol şutu atanın) */
-  kaleciParmak(gk,sh,o,v,y){
+  kaleciParmak(gk,sh,o,v,y,ek){
     const b=this.ball,lx=o?o.Ex-o.Hx:0,lz=o?o.Ez-o.Hz:1,L=hyp(lx,lz)||1,f=0.72+this.rast()*0.2,it=1.5+this.rast()*2.5;
     b.vx=b.vx*f+lx/L*it;b.vz=b.vz*f+lz/L*it;b.vy=b.vy*f+this.rast()*1.2;b.egri=0;b.ust=0;this.topDegisti();gk.kickCd=0.3;
     if(this.kaleciIceriGider(gk)){this.on('parmak',{p:gk,gol:true,parca:'el'});return;}
-    this.dokunus(gk,false);this.kaleciKaydet(gk,sh,false,'parmak','el',v,y);
+    this.dokunus(gk,false);this.kaleciKaydet(gk,sh,false,'parmak','el',v,y,ek);
   },
   /* çelme: elle temas geometriden (T9b-d, Ek H 19); gövdeye çarpan top yansır.
      El: kalecinin avucu topun gelişine bakar ve kaleci onu dışa (topun yatay gidişine dik, kale ortasından uzağa) ya da yüksek topta yukarı (üst
@@ -299,9 +372,15 @@ Object.assign(Match.prototype,{
      İlk denemede kalecilikten sabit 31–43° plan ortadaki alçak şutu kaleye çeliyordu (iyi kalecide kendi kalesine %6,5, tehlikeli bölgeye %1). Yansıma v′ = v − (1 + e)(v·n)n + n·itiş (e 0,35 eldivenli avuç; itiş 1,5 + 2·kalecilik m/sn). Açı küçük kalırsa
      top geri ve ortaya döner, büyük kalırsa yoluna devam eder: tehlikeli bölgeye ve kendi kalesine de gidebilir. Eskiden yön zarla seçilir, top
      kaleye gidiyorsa ikinci zar atılırdı (kaleciIceriGider); gövdede kaleye giden topun x'i ters çevrilirdi */
-  kaleciCel(gk,sh,parca,u,bicim,o){
+  kaleciCel(gk,sh,parca,u,bicim,o,plan,ek){
     const b=this.ball,k=gk.oz.kalecilik,d=this.dir[gk.team],gx=-d*PL,v=hyp3(b.vx,b.vy,b.vz),y0=b.y;
-    if(parca==='el'){const vl=v||1,ux=b.vx/vl,uy=b.vy/vl,uz=b.vz/vl,hL=hyp(b.vx,b.vz)||1;
+    /* T15a: planlı çelme — yön kaleciCelPlani'ndan (saf), açı uygulama hatasıyla: σ = 0,1 + 0,25·(1 − kalecilik) + 0,9·max(0, u − 0,7) — el önceden
+       hazır olduğundan orta uzanmada plansız çelmeninkinden küçük, tam uzanmada bilek itişin yönünü zor denetler (u 1'de ~25°; 0,3 ve 0,6 katsayıları
+       yapay şut ızgarasında üst köşeden gelen topu fazla isabetle dışarı yolluyordu) */
+    if(parca==='el'&&plan){const it=1.5+2*k,sg=0.1+0.25*(1-k)+0.9*Math.max(0,(u||0)-0.7),P=kaleciCelPlani(this,gk,b,it,sg),vl=v||1;
+      const c=kaleciCelHiz(b.vx,b.vy,b.vz,b.vx/vl,b.vy/vl,b.vz/vl,P.wx,P.wy,P.wz,clamp(P.th+this.normal()*sg,0.15,1.15),it);
+      b.vx=c[0];b.vy=c[1];b.vz=c[2];if(P.wy>0.5)bicim='ust';if(ek)ek.celN=[+c[3].toFixed(3),+c[4].toFixed(3),+c[5].toFixed(3)];}
+    else if(parca==='el'){const vl=v||1,ux=b.vx/vl,uy=b.vy/vl,uz=b.vz/vl,hL=hyp(b.vx,b.vz)||1;
       let sx=-b.vz/hL,sz=b.vx/hL;const yr=Math.abs(b.z-MZ)>0.3?b.z-MZ:(b.z-gk.z)||1;if(sz*yr<0){sx=-sx;sz=-sz;}
       const al=b.y>1.6&&Math.abs(b.x-gx)<4?clamp((b.y-1.6)/0.6,0,1):0;
       let wx=sx*(1-al),wy=al,wz=sz*(1-al);const wv=wx*ux+wy*uy+wz*uz;wx-=wv*ux;wy-=wv*uy;wz-=wv*uz;const wn=hyp3(wx,wy,wz)||1;wx/=wn;wy/=wn;wz/=wn;
@@ -319,7 +398,7 @@ Object.assign(Match.prototype,{
       if(nL<1e-3){const w=v||1;nx=-b.vx/w;ny=0.2;nz=-b.vz/w;}else{nx/=nL;ny/=nL;nz/=nL;}
       const vn=b.vx*nx+b.vy*ny+b.vz*nz;if(vn<0){b.vx-=1.35*vn*nx;b.vy-=1.35*vn*ny;b.vz-=1.35*vn*nz;}
       const a=this.normal()*0.35,c=Math.cos(a),s=Math.sin(a),vx=b.vx;b.vx=(vx*c-b.vz*s)*0.55;b.vz=(vx*s+b.vz*c)*0.55;b.vy=Math.abs(b.vy)*0.5+this.rast()*1.5;}
-    b.egri=0;b.ust=0;this.dokunus(gk,false);gk.kickCd=0.4;this.kaleciKaydet(gk,sh,false,bicim,parca,v,y0);
+    b.egri=0;b.ust=0;this.dokunus(gk,false);gk.kickCd=0.4;this.kaleciKaydet(gk,sh,false,bicim,parca,v,y0,ek);
   },
   /* özel kopya üzerinde: top kaleciden sonra kendi kalesine girer mi (1 sn) */
   kaleciIceriGider(gk){
@@ -331,11 +410,11 @@ Object.assign(Match.prototype,{
   /* kurtarış olayı (Faz 0 alanları korunur) ve sayımlar; ikinci: aynı kaleci, arada kimse topa sahip olmadan 4 sn içinde yeniden.
      T9b-e: parca — topa değen beden parçası ('el', 'govde', 'bacak', 'kapan'; çizim elin topa IK'sını yalnız el temasında yapar) */
   /* T15-0 (2026-10-14): hiz, y — temastan hemen önceki top hızı (m/sn) ve temas yüksekliği (m); ölçüm içindir (d-kaleci), olay yükü */
-  kaleciKaydet(gk,sh,tut,bicim,parca,hiz,y){
+  kaleciKaydet(gk,sh,tut,bicim,parca,hiz,y,ek){
     if(sh&&sh.cerceve)this.ist.isabet[sh.team]++;
     const s=gk._sonKurt,ikinci=s!=null&&this.t-s<4&&(this._dSahipT||-9)<s;gk._sonKurt=this.t;
     this.on('save',{p:gk,catch:tut,tur:'kurtaris',sut:!!sh,cerceve:!!(sh&&sh.cerceve),bicim,ikinci,el:gk.eylem&&gk.eylem.ad==='ucus'?gk.eylem.el:'cift',parca:parca||'el',
-      hiz:hiz!=null?hiz:null,y:y!=null?y:null});
+      hiz:hiz!=null?hiz:null,y:y!=null?y:null,niyet:ek&&ek.niyet||null,celN:ek&&ek.celN||null});   /* T15a: niyet ('tut'/'cel'), planlı çelmenin normali */
     this.kacanFirsat();   /* T7f: kurtarılan büyük fırsatta şutçu başını tutar (js/mac-takim.js) */
   },
   /* kalecinin kendi çelip düşürdüğü top (3 sn içinde, arada kimse sahip olmadan) ona dönüyor mu: yeniden alması ikinci kurtarıştır */

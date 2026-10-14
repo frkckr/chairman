@@ -12,13 +12,15 @@
    ≤ %25; kötü kalecide kendi kalesine ≤ %12.
    T15-0 (2026-10-14): oyun dışı ayrılır — korner (kalecinin çizgi dışına çeldiği top her zaman kornerdir) ve öteki oyun dışı (taç); iyi
    kalecide çelmenin kornere payı bilgi satırıdır (KAPI_KORNER; T15a'nın niyetli çelmesiyle kapı olur).
-   Kullanım: node araclar/mac-deneme.js --senaryo d-sut [tekrar, varsayılan 24] */
+   T15a (2026-10-14): varsayılan tekrar 24 → 48 — üst köşe kapısı (T12a'dan beri sınırda) 24 tekrarda koddan bağımsız ±3,6 puan oynuyordu (144 şutluk
+   hücre; T15 varyantlarında tek koşu %21–26, 48 tekrar × iki tohumla %21–23); 48'de σ ≈ 2,5 puan.
+   Kullanım: node araclar/mac-deneme.js --senaryo d-sut [tekrar, varsayılan 48] */
 'use strict';
 const KAPI_D=true;   /* T9b-d: açık */
 /* U1 (2026-10-12): "alt köşe 16 m" T9b'den beri ızgaradaki yorgunluk birikimiyle (kaleci ~80 dk eylem sonrası) tutuyordu; dinç kalecide %31
    (bant 35–60) — maçta da ceza sahası içinden kurtarış %40 (gerçekte %55–65). Kaleci ve şut verimi T12'nin işi: o güne dek bilgi, T12 kabulünde kapı */
 const KAPI_ALT=true;   /* T12a (2026-10-12): yeniden kapı — kalecinin hazır avantajı ve kararın adım gecikmesi düzeldi, kaleciTepki 0,27 */
-const KAPI_KORNER=null;   /* T15-0: iyi kalecide çelmenin kornere payı — null: bilgi; T15a'da alt sınır (%) */
+const KAPI_KORNER=40;   /* T15-0: iyi kalecide çelmenin kornere payı — null: bilgi; T15a (2026-10-14): kapı ≥ %40 (T14 %22; T15a %53) */
 const KOD=`(function(){
   const dt=1/60;
   function hazirla(tohum){
@@ -67,7 +69,7 @@ const KOD=`(function(){
     return{sonuc:sonuc||kurt||'yok',bicim,cy};}
   return{hazirla,dene};})()`;
 module.exports={calistir({ctx,vm,N,tohum}){
-  const R=N||24,S=vm.runInContext(KOD,ctx),GW2=3.66,GH=2.44;
+  const R=N||48,S=vm.runInContext(KOD,ctx),GW2=3.66,GH=2.44;
   const yerler=[{ad:'6 m',u:6,w:0},{ad:'11 m',u:11,w:0},{ad:'16 m',u:16,w:0},{ad:'20 m',u:20,w:0},{ad:'25 m',u:25,w:0},{ad:'12 m açılı',u:12,w:9},{ad:'16 m açılı',u:16,w:-12}];
   const hedefler=[{ad:'orta alt',tz:0,ty:0.3},{ad:'orta üst',tz:0,ty:1.9},{ad:'yan orta',tz:1.9,ty:1.1},{ad:'alt köşe',tz:GW2-0.45,ty:0.3},{ad:'üst köşe',tz:GW2-0.45,ty:GH-0.4}];
   /* hız sütunları: B'nin o mesafedeki tipik şut hızı (sutVur: 16 + 14·güç, güç ortalaması <11 m 0,5 · <18 m 0,7 · 18+ m 0,875) −3 / 0 / +3 m/sn */

@@ -27,12 +27,13 @@
    %9 → 37; zayıf ayakla %22 → 7). Kötü vuruş kapıları modelin olasılığıyla (eylemin kotuP'si; deneme başına bir zarın sonucu 200 denemede ±1,5
    puan oynuyordu); gerçekleşen kötü vuruş tabloda. [7] aşırtma ile plase/sert golü kıyaslanmaz: 8 m öndeki kaleciye 10 m'den plase de çoğu
    zaman goldür; kapı aşırtmanın seçilip işlediğini sınar. Hücre başına 400 deneme (T12a; 200'de [2]'nin gol oranı tohuma göre 1,9–3,1 kat
-   oynuyordu; 60'ta çerçeve payı ±6 puan).
-   Kullanım: node araclar/mac-deneme.js --senaryo v-sut [N=400 hücre başına] [tohum] */
+   oynuyordu; 60'ta çerçeve payı ±6 puan). T15a (2026-10-14): 400 → 800 — [3]'ün gol koşulu (en az %30 düşüş, taban ~%13) 400'de tohuma göre
+   −%25 … −%47 oynuyordu (T14 tohum 1'de −%31); 800'de T14 ve T15 birebir aynı (−%36).
+   Kullanım: node araclar/mac-deneme.js --senaryo v-sut [N=800 hücre başına] [tohum] */
 'use strict';
 const KAPI={1:true,2:true,3:true,4:true,5:true,6:true,7:true};   /* T9b-a: [1] [2] [5]; T9b-b: [3] [4] [6]; T9b-c: [7] açık */
 module.exports={calistir({ctx,vm,N,tohum}){
-  const n=N||400,dt=1/60,t0=Date.now();
+  const n=N||800,dt=1/60,t0=Date.now();
   const kur=vm.runInContext(`(tohum,olay)=>{const m=new Match(olay,{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();
     m.hakemAI=function(){};for(const r of m.refs){r.x=0;r.z=-25;r.tx=0;r.tz=-25;}return m;}`,ctx);
   const profilKur=vm.runInContext('profilKur',ctx),PL=vm.runInContext('PL',ctx),MZ=vm.runInContext('MZ',ctx);
