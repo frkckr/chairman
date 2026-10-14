@@ -31,7 +31,9 @@ const VV_DOKUM=process.env.MAC_DENEME_SUTLAR||null;
 const VV_MES=[0,6,11,16.5,20,25,99],VV_MESAD=['<6 m','6–11 m','11–16,5 m','16,5–20 m','20–25 m','≥25 m'];
 module.exports={
   bilgi:[['— Şutun verimi ve kaleci (v-verim; T12-0) —',null,0],
-    ['Gol / şut (penaltısız) %','vvGolSut',1],['Konum xG / şut (penaltısız; baskısız, bloksuz)','vvXgK',3],['Gerçekleşen ÷ konum xG (penaltısız; gerçekte ~1)','vvOranK',2,[0.85,1.25,'T12']],
+    ['Gol / şut (penaltısız) %','vvGolSut',1],['Konum xG / şut (penaltısız; baskısız, bloksuz)','vvXgK',3],['Gerçekleşen ÷ konum xG (penaltısız; maç oranlarının ortalaması)','vvOranK',2],
+    ['Gerçekleşen ÷ konum xG (havuz: Σ gol ÷ Σ xG; penaltısız)','vvOranH',2,[0.85,1.25,'T15']],
+    ['Kurtarış ceza sahası içinden % (penaltısız, çerçeveye giden, bloksuz; kafa dahil)','vvKurtIc',1,[50,65,'T15']],
     ['xG / şut (penaltısız; kararın değeri)','vvXg',3],['Gerçekleşen ÷ kararın xG\'si (penaltısız)','vvOran',2],
     ['Kaleci: tahmin − gerçekleşen kurtarış (puan; çerçeveye giden, bloksuz)','vvKalib',1],['Kaleci: tahmin edilen kurtarış ort. %','vvKTahmin',1],
     ['Şut anında kaleci hazır duruşta %','vvHazir',1],['Şut anında kaleci hareketli %','vvHareket',1],['Kalecinin açıortaya uzaklığı ortanca (m)','vvYer',2],
@@ -96,6 +98,12 @@ module.exports={
           if(r.cer&&r.pK!=null&&(r.sonuc==='gol'||r.sonuc==='kurt')){kN++;kT+=r.pK;if(r.sonuc==='kurt')kG++;}}
         nG=S.length;
         ham.vvGolSut=[g,nG];ham.vvHazir=[hz,nG];ham.vvHareket=[hr,nG];ham.vvKTahmin=[kT,kN];
+        /* T15-0 (2026-10-14): havuz oranı — xG'si olan şutların golleri ÷ xG toplamı (oran satırı 100·pay/payda yazar: payda 100·xG); vvOranK maç
+           oranlarının ortalamasıdır (gürültülü, yukarı çarpık). Ceza sahası içinden kurtarış: penaltısız, çerçeveye giden ve bloklanmayan şutlarda
+           kurtarış ÷ (kurtarış + gol), kafa dahil (v-vurus'un vK_ic'i ayak şutu ve penaltı dahildir) */
+        {let gH=0,xH=0,ki=0,kn=0;for(const r of S){if(r.xgK!=null){xH+=r.xgK;if(r.sonuc==='gol')gH++;}
+          if(r.ic&&r.cer&&(r.sonuc==='gol'||r.sonuc==='kurt')){kn++;if(r.sonuc==='kurt')ki++;}}
+         ham.vvOranH=[gH,100*xH];ham.vvKurtIc=[ki,kn];}
         /* dilim tabloları (ozet okur): [pay, payda] */
         const xk1=r=>r.xgK!=null?r.xgK:r.xg;
         for(let i=0;i<VV_XAD.length;i++){const D=S.filter(r=>vvDilim(VV_X,xk1(r))===i);ham['vvX_'+i]=[D.filter(r=>r.sonuc==='gol').length,D.length];ham['vvXs_'+i]=[D.reduce((a,r)=>a+xk1(r),0),D.length];}

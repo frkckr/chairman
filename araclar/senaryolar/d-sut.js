@@ -10,12 +10,15 @@
    niteliğine göre (kalecilik 0,85 iyi / 0,45 kötü; 11, 16, 20 m ve 16 m açılı × beş hedef × tipik hız). Kapılar (T9b-d; KAPI_D açılınca kabul dışı
    çıkış kodu 1, T9b-0'da bilgi): iyi kalecide çelmenin dışa (oyun dışı ya da güvenli) giden payı ≥ %60, kendi kalesine ≤ %5, tehlikeli bölgeye
    ≤ %25; kötü kalecide kendi kalesine ≤ %12.
+   T15-0 (2026-10-14): oyun dışı ayrılır — korner (kalecinin çizgi dışına çeldiği top her zaman kornerdir) ve öteki oyun dışı (taç); iyi
+   kalecide çelmenin kornere payı bilgi satırıdır (KAPI_KORNER; T15a'nın niyetli çelmesiyle kapı olur).
    Kullanım: node araclar/mac-deneme.js --senaryo d-sut [tekrar, varsayılan 24] */
 'use strict';
 const KAPI_D=true;   /* T9b-d: açık */
 /* U1 (2026-10-12): "alt köşe 16 m" T9b'den beri ızgaradaki yorgunluk birikimiyle (kaleci ~80 dk eylem sonrası) tutuyordu; dinç kalecide %31
    (bant 35–60) — maçta da ceza sahası içinden kurtarış %40 (gerçekte %55–65). Kaleci ve şut verimi T12'nin işi: o güne dek bilgi, T12 kabulünde kapı */
 const KAPI_ALT=true;   /* T12a (2026-10-12): yeniden kapı — kalecinin hazır avantajı ve kararın adım gecikmesi düzeldi, kaleciTepki 0,27 */
+const KAPI_KORNER=null;   /* T15-0: iyi kalecide çelmenin kornere payı — null: bilgi; T15a'da alt sınır (%) */
 const KOD=`(function(){
   const dt=1/60;
   function hazirla(tohum){
@@ -58,7 +61,7 @@ const KOD=`(function(){
     let cy=null;
     if(izle&&kurt==='celme'){if(sonuc==='gol')cy='kale';
       else for(let i=0;i<=90;i++){
-        if(golSonra){cy='kale';break;}if(m.phase!=='play'){cy='disari';break;}if(b.tasiyan===gk){cy='tutus';break;}
+        if(golSonra){cy='kale';break;}if(m.phase!=='play'){cy=m.phase==='durus'&&m.durus&&m.durus.tur==='korner'?'korner':'disari';break;}if(b.tasiyan===gk){cy='tutus';break;}
         if((Math.hypot(b.vx,b.vz)<4&&b.y<0.5)||i===90){cy=Math.abs(b.x-gx)<11&&Math.abs(b.z-MZ)<9.16&&Math.abs(b.x)<PL?'tehlike':'disa';break;}
         m.step(dt);}}
     return{sonuc:sonuc||kurt||'yok',bicim,cy};}
@@ -69,7 +72,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const hedefler=[{ad:'orta alt',tz:0,ty:0.3},{ad:'orta üst',tz:0,ty:1.9},{ad:'yan orta',tz:1.9,ty:1.1},{ad:'alt köşe',tz:GW2-0.45,ty:0.3},{ad:'üst köşe',tz:GW2-0.45,ty:GH-0.4}];
   /* hız sütunları: B'nin o mesafedeki tipik şut hızı (sutVur: 16 + 14·güç, güç ortalaması <11 m 0,5 · <18 m 0,7 · 18+ m 0,875) −3 / 0 / +3 m/sn */
   const hyp2=(a,b)=>Math.sqrt(a*a+b*b),tipik=u=>16+14*(u<11?0.5:u<18?0.7:0.875),hizlar=[-3,0,3],hizAd=['yavaş (−3)','tipik','sert (+3)'];
-  const m=S.hazirla(tohum||1),tablo={},bicimler={},CY=['kale','disari','tutus','tehlike','disa'];let n=0;
+  const m=S.hazirla(tohum||1),tablo={},bicimler={},CY=['kale','korner','disari','tutus','tehlike','disa'];let n=0;
   for(const y of yerler)for(const h of hedefler)for(const dv of hizlar){let kurt=0,tut=0,gol=0,dis=0;const v=tipik(hyp2(y.u,y.w))+dv;
     for(let r=0;r<R;r++){const s=r%2?1:-1,o={u:y.u,w:y.w,tz:h.tz*s,ty:h.ty,v};const x=S.dene(m,o);n++;
       if(x.sonuc==='gol')gol++;else if(x.sonuc==='tut'){kurt++;tut++;}else if(x.sonuc==='celme')kurt++;else dis++;
@@ -95,7 +98,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   console.log('  '+'Bütün ızgara kurtarış (bilgi)'.padEnd(46)+genel.toFixed(1).padStart(6)+'%');
   console.log('  Kurtarış biçimleri: '+Object.keys(bicimler).sort().map(k=>k+' '+bicimler[k]).join(' · '));
   /* T9b-0: çelmenin sonu; kalecinin niteliğine göre (iyi 0,85 / kötü 0,45) */
-  const CYAD={kale:'kendi kalesine',disari:'oyun dışına',tutus:'kaleci yeniden tuttu',tehlike:'tehlikeli bölgeye',disa:'güvenli'};
+  const CYAD={kale:'kendi kalesine',korner:'kornere',disari:'başka oyun dışı',tutus:'kaleci yeniden tuttu',tehlike:'tehlikeli bölgeye',disa:'güvenli'};
   const cyYaz=(ad,T)=>{const N2=CY.reduce((a,k)=>a+T[k],0);console.log('  '+ad.padEnd(28)+`çelme ${N2}: `+CY.map(k=>CYAD[k]+' '+(N2?(100*T[k]/N2).toFixed(0):'—')+'%').join(' · '));return N2;};
   console.log('');
   const nitelik={};
@@ -105,9 +108,12 @@ module.exports={calistir({ctx,vm,N,tohum}){
       const x=S.dene(m2,{u:y.u,w:y.w,tz:h.tz*s,ty:h.ty,v:tipik(hyp2(y.u,y.w))},true);if(x.cy)T[x.cy]++;if(x.sonuc==='gol')gol++;else if(x.sonuc==='tut'||x.sonuc==='celme')kurt++;}
     const N2=cyYaz(`Kaleci ${ad} (kalecilik ${k})`,T);console.log('  '+''.padEnd(28)+`kurtarış %${(100*kurt/Math.max(1,kurt+gol)).toFixed(0)}`);nitelik[ad]={T,N2};}
   {const I=nitelik['iyi'],K2=nitelik['kötü'],p=(T,k,N2)=>N2?100*T[k]/N2:NaN;
-    const disa=p(I.T,'disari',I.N2)+p(I.T,'disa',I.N2)+p(I.T,'tutus',I.N2),kale=p(I.T,'kale',I.N2),teh=p(I.T,'tehlike',I.N2),kaleK=p(K2.T,'kale',K2.N2);
+    const disa=p(I.T,'korner',I.N2)+p(I.T,'disari',I.N2)+p(I.T,'disa',I.N2)+p(I.T,'tutus',I.N2),kale=p(I.T,'kale',I.N2),teh=p(I.T,'tehlike',I.N2),kaleK=p(K2.T,'kale',K2.N2);
+    const kor=p(I.T,'korner',I.N2),korK=p(K2.T,'korner',K2.N2);
     const G=[[disa>=60,`iyi kalecide çelme dışa (oyun dışı, güvenli, yeniden tutuş) %${disa.toFixed(0)} (≥ 60)`],[kale<=5,`iyi kalecide kendi kalesine %${kale.toFixed(1)} (≤ 5)`],
       [teh<=25,`iyi kalecide tehlikeli bölgeye %${teh.toFixed(0)} (≤ 25)`],[kaleK<=12,`kötü kalecide kendi kalesine %${kaleK.toFixed(1)} (≤ 12)`]];
-    for(const [g,a] of G){if(KAPI_D&&!g)ok=false;console.log((g?'  ':'! ')+'Kapı (T9b-d): '+a+(KAPI_D?'':' (bilgi; kapı kapalı)'));}}
+    for(const [g,a] of G){if(KAPI_D&&!g)ok=false;console.log((g?'  ':'! ')+'Kapı (T9b-d): '+a+(KAPI_D?'':' (bilgi; kapı kapalı)'));}
+    {const g=KAPI_KORNER==null||kor>=KAPI_KORNER;if(!g)ok=false;
+     console.log((g?'  ':'! ')+(KAPI_KORNER==null?'Bilgi (T15-0): ':'Kapı (T15a): ')+`çelmenin kornere payı iyi kalecide %${kor.toFixed(0)}, kötü kalecide %${korK.toFixed(0)}`+(KAPI_KORNER==null?'':` (iyi ≥ ${KAPI_KORNER})`));}}
   return ok?0:1;
 }};

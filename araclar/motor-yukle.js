@@ -15,23 +15,24 @@
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const KOK=process.env.MOTOR_KOK?path.resolve(process.env.MOTOR_KOK):path.join(__dirname,'..');
 const DISARIDA=new Set(['js/stil-99.js','js/sunum-durumu.js','js/stadyum-tarifleri.js']);
-function mantikDosyalari(){
-  const html=fs.readFileSync(path.join(KOK,'index.html'),'utf8');
+function mantikDosyalari(kok){
+  const html=fs.readFileSync(path.join(kok||KOK,'index.html'),'utf8');
   const sira=[...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m=>m[1]);
   return sira.slice(0,sira.indexOf('js/goruntu.js')).filter(f=>!DISARIDA.has(f));
 }
-/* ek: bağlama konacak ek adlar (ör. oyuncu-karnesi'nin __kayit'ı) */
-function motorYukle(ek){
-  const mantik=mantikDosyalari();
+/* ek: bağlama konacak ek adlar (ör. oyuncu-karnesi'nin __kayit'ı); kok: motorun yükleneceği çalışma ağacı (T15-00: hiz-olcum.js --kok aynı süreçte
+   iki motoru yükler; verilmezse MOTOR_KOK ya da bu depo) */
+function motorYukle(ek,kok){
+  const K=kok?path.resolve(kok):KOK,mantik=mantikDosyalari(K);
   const eski=process.env.MOTOR_YUKLE_ESKI==='1'||!(vm.constants&&vm.constants.DONT_CONTEXTIFY);
   let ctx;
   if(eski)ctx=vm.createContext(Object.assign({console,Math,Date},ek));
   else{ctx=vm.createContext(vm.constants.DONT_CONTEXTIFY);ctx.console=console;if(ek)Object.assign(ctx,ek);}
-  for(const f of mantik)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),ctx,{filename:f});
+  for(const f of mantik)vm.runInContext(fs.readFileSync(path.join(K,f),'utf8'),ctx,{filename:f});
   /* M1 (2026-10-10): MOTOR_AYAR'da bildirilip değeri hiçbir akışta atanmamış anahtar (js/mac-motoru.js MOTOR_AYAR, ayarEkle) */
   const bos=vm.runInContext('Object.keys(MOTOR_AYAR).filter(k=>MOTOR_AYAR[k]===undefined)',ctx);
   if(bos.length)throw new Error('MOTOR_AYAR: değeri atanmamış anahtar: '+bos.join(', ')+' (akışın ayarEkle\'sine ekleyin)');
-  return{ctx,mantik,kip:(eski?'eski (sarılı bağlam)':'hızlı (sıradan genel nesne)')+(process.env.MOTOR_KOK?' · motor '+KOK:'')};
+  return{ctx,mantik,kip:(eski?'eski (sarılı bağlam)':'hızlı (sıradan genel nesne)')+(kok||process.env.MOTOR_KOK?' · motor '+K:'')};
 }
 /* metin: MAC_DENEME_AYAR biçiminde JSON (boşsa bir şey yapmaz). Döner: uygulanan nesne ya da null */
 function ayarUygula(ctx,metin){
