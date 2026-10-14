@@ -637,6 +637,8 @@ Motor adım evresini ve basan ayağı bilir (`p.adimFaz`, `p.basanAyak`); dokunu
 
 ### T14 — Kanat ve hücum koşuları (kullanıcı onayı 2026-10-13: “onay, sırasıyla başla”; T ve B akışları, çizim T14e)
 
+**Dal ve taban (2026-10-14).** `claude/motor-t14` (`main`'den; T13 ve A3 aynı gün `main`'e alındı); her alt adım yerel commit, `main` ve push kullanıcı isteğiyle. Turun tabanı `araclar/taban/t12.json` (T13 motoru değiştirmedi, yeni taban üretmedi), animasyon tabanı `a3-anm.json` (önce kopyası `dondur.js a3`), hız bütçesi `tur/t13` ile. **`varlik` bakımı (Claude'un kararı):** T14'ten önce yapılmaz; yeni koşu türleri mevcut `p.kosu` nesnesinde taşınır, ölçümler var olan alanlardan hesaplanır. Bir alt adım gerçekten yeni oyuncu alanı isterse önce seyrek alanlar tek alt nesneye toplanır (`--ayni` 40/40 ve aynı oturumda hız önce/sonra; `ad-denetimi.js` (f)).
+
 **Neden.** T12 sonunda tutmayan hücum satırları tek kökten (T12c teşhisi): forvet dışı şut %18,9 (≥ 30), kanat pas alıcısı %12,3 (≥ 15), kanat çalım payı %27,6 (≥ 40), şutun ortanca mesafesi 17,0 m (14–16), takip eden hücumcu 0,92 (1–3), korner 3,3 (≥ 4; orta kaynaklı korner az), maç içinde ortanın tahmini 11'e 11 hücrelerinde ~20 puan iyimser (`p-kalib`: orta türlerinde −18…−28 puan; `c-orta` kademeleri tutuyor). Gerçekleşen ÷ konum xG 1,39'un fazlası 11–20 m'de: şutlar kutunun önünden, forvetten.
 
 **Kök neden (kod).** Kanat oyuncusunun topsuz rolü yok: `dizilisKonumu`/`bolgeKonumu` bölgeyi topa kaydırır, kanat çizgide kalmaz ve derine inmez (T12c: `xtKanat` etkisizdi — değer değil rol işi). Orta sahanın kutuya geç girişi ve bindirme koşusu yok (koşu türleri `arkaya`, `gel`, `aldatma`, `takip`; `sutTakipAta` eşiği T6e'de gevşetildi, takip 0,92). 11'e 11'de ortanın çekişme tahmini (`ortaSecenekleri`, `pasAnaliz o.orta`) kutudaki savunmacıların hamlesini ve kalecinin almasını az sayıyor; kanat alıcısına pasın devam değeri (`devamDegeri`) ortayı ve çalımı yeterince görmüyor.
@@ -648,7 +650,7 @@ Motor adım evresini ve basan ayağı bilir (`p.adimFaz`, `p.basanAyak`); dokunu
 - **T14c — ortanın 11'e 11 çekişme modeli ve kanat alıcısının değeri (B, C).** `ortaSecenekleri` tahmini kutudaki savunmacıların hamlesi ve kalecinin almasıyla kalibre edilir (`p-kalib` orta hücrelerinde fark ≤ 5 puan; `c-orta` T10a kapısı bozulmaz); kanattaki alıcının devam değeri ortayı, geri çevirmeyi ve bire biri sayar (`devamDegeri`, `devamBirebir`) — kanat alıcısı ≥ 15, kanat çalım ≥ 40 rol ve değerle, `xtKanat` ayarıyla değil.
 - **T14d — şutun yeri.** Geç giren orta sahanın kutu içi şutu ve ortadan kafa (T6 bandı) forvet dışı payı ve mesafeyi taşır; gerçekleşen ÷ konum xG T15 ile birlikte okunur (fazlası 11–20 m'de).
 - **T14e — çizim (Ek G3, G4).** Orta alıcısının koşusu (ön direğe 45° sert, arka direğe geç varış; kol işareti var), kutuya geç girişin ritmi (yavaşla–patla), **tam plonjon kafa ve yere iniş** (gövde yatay, kollar öne, göğüs/ön kollara iniş, kalkış; T8 ve T10'dan devir) — “A: hava” satırına plonjon payı ve iniş karesi; turun başında `dondur.js a3`.
-- **T14f — kapanış.** 80 maç `--karsilastir t13.json` (yeni taban `t14.json`, `t14-anm.json`), `c-kanat` ([1], [2], [A]), `c-orta`, `c-hava`, `d-duran`, bütün senaryolar, duyarlılık karnesi, hız bütçesi (`tur/t13` ile), belgeler.
+- **T14f — kapanış.** 80 maç `--karsilastir t12.json` (yeni taban `t14.json`, `t14-anm.json`), `c-kanat` ([1], [2], [A]), `c-orta`, `c-hava`, `d-duran`, bütün senaryolar, duyarlılık karnesi, hız bütçesi (`tur/t13` ile), belgeler.
 
 **Kabul.** Forvet dışı şut ≥ 30, kanat alıcısı ≥ 15, kanat çalım ≥ 40, şut ortanca 14–16 m, takip 1–3, korner ≥ 4 (80 maç); gol 2,2–3,3 ve penaltısız gol/şut %10–14 korunur; orta 11'e 11 fark ≤ 5 puan; stoper + merkez pas payı ≥ 45 ve takım boyu korunur. **Risk:** orta hacmi artarsa gol ve kafa şutu artar (T6 ve gol bantları birlikte okunur); kanat çizgide kalırsa merkez pas payı düşer. **Büyüklük:** 1–1½ oturum. **Oyunda görülecek:** kanat oyuncusu çizgide kalıp beke karşı oynar ve orta açar, orta saha kutuya geç girer, korner ortadan ve kafadan doğar.
 
@@ -753,7 +755,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir (2026-10-08 
 | T12 Hücum hacmi ve şut profili (öneri 2026-10-11; U1 sonrası yeniden teşhis; uygulandı 2026-10-12, dizüstü kapanışı — hız masaüstünde) | T10, U1 | orta–büyük | yüksek (gol, kanat ve kutu oyunu) |
 | U1 Maçın uzunluğu ve izleme hızı (kullanıcı kararı, 2026-10-12) | T10 | orta | çok yüksek (20 dakikalık maç, ×2/×4, önemli anlar normal hızda) |
 | T13 İvmelenme ve hareketin sakinliği (onay 2026-10-13; kapandı aynı gün — kabul tutmadı, geri alındı) | T1, T12 | küçük–orta | çok yüksek (herkesin aynı anda fırlaması) |
-| A3 Hareket dili 2: fren, dönüş, depar (onay 2026-10-13) | A2, T13 | orta | çok yüksek (robot hissinin kalan çizim kaynağı) |
+| A3 Hareket dili 2: fren, dönüş, depar (onay 2026-10-13; kapandı aynı gün, `main` 2026-10-14) | A2, T13 | orta | çok yüksek (robot hissinin kalan çizim kaynağı) |
 | T14 Kanat ve hücum koşuları (onay 2026-10-13) | T7, T10a, T12 | büyük | yüksek (kanat oyunu, kutuya giriş, korner) |
 | T15 Kaleci: niyetli çelme ve kurtarış tarzları (onay 2026-10-13) | T9b, T12 | küçük | orta (korner, kurtarışın biçimi) |
 | T16 İkinci yarı (onay 2026-10-13) | T10, T12 | küçük (+ 240 maç ölçüm) | düşük (istatistik) |
