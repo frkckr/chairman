@@ -46,10 +46,11 @@ ayarEkle('K',{
   serbestAldatma:0.6,          // A4-1: iki kişiyken şut kararında ikinci vurucunun kullanandan önce topun üstünden koşma olasılığı
   aldatmaTepki:0.04,           // A4-1: aldatma koşusu topun yanından şuttan en çok 0,8 sn önce geçtiyse kalecinin tepkisine eklenen süre (sn; js/mac-kaleci.js)
   /* A4-2 (Ek D): kornerde perdeleme ve yaya geri pas */
-  kornerPerde:0.3,             // A4-2: ortalı kornerde (kutuda ≥ 4) kutudaki en zayıf kafacının en iyi kafacının markajcısını perdeleme olasılığı (0: kapalı; d-duran'da
-                               // kornerlerin %20'si; 0,5'te korner başına gol %5,1 — kapı %3–5, motorun korner verimi gerçeğin (~%3) üstünde)
-  kornerGeri:0.04              // A4-2: ortanın yerine ceza sahası kenarına geç koşan ikinci topçuya yerden pas (yaya geri pas) olasılığı (0: kapalı; d-duran'da %4,3,
-                               // korner başına 0,71 şut)
+  kornerPerde:0.15,            // A4-2: ortalı kornerde (kutuda ≥ 4) kutudaki en zayıf kafacının en iyi kafacının markajcısını perdeleme olasılığı (0: kapalı). 0,3'te
+                               // kornerlerin %20'si, perdeli kornerde gol %6,1 · perdesiz %4,2 (3200 korner). Motorun korner verimi gerçeğin (~%3) üstünde (A4: fazla
+                               // hücumun ilk kafası bloklandıktan sonraki karambolde, %16,4) — sıklık düşük: %10, korner başına gol %4,7 (kapı %3–5)
+  kornerGeri:0.03              // A4-2: ortanın yerine ceza sahası kenarına geç koşan ikinci topçuya yerden pas (yaya geri pas) olasılığı (0: kapalı; kornerlerin
+                               // %2,9'u, korner başına 0,83 şut; gol %11,7 — 213 korner, ±2,2: yaydaki savunmacı geç koşuyu izlemiyor)
 });
 const DT_HAZIR={tac:0,korner:1,kaleVurusu:2,serbest:3,penalti:4};
 /* kafa sırası (T3'ten: sıçrama + boy) ve ikinci top (şut gücü, uzaktan vurma) */

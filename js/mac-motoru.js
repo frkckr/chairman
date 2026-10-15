@@ -70,7 +70,7 @@ const MOTOR_AYAR={
   enerjiTopla:undefined,yanTavan:undefined,geriTavan:undefined,donusSiniri:undefined,ayakBas:undefined,varisHizi:undefined,varisFren:undefined,
   jokeyMesafe:undefined,birebirYayilim:undefined,birebirErisim:undefined,birebirYaris:undefined,birebirKayma:undefined,birebirDonus:undefined,
   birebirVazgec:undefined,yutmaGuc:undefined,yutmaSure:undefined,destekSure:undefined,kapatYakin:undefined,dokunusSiklik:undefined,
-  dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,govdeDinamik:undefined,donusIvme:undefined,bakOlu:undefined,donusGecikme:undefined,bakisOnce:undefined,
+  dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,govdeDinamik:undefined,donusIvme:undefined,bakOlu:undefined,donusGecikme:undefined,bakisOnce:undefined,cruyff:undefined,cruyffKal:undefined,cruyffKanat:undefined,sirtGovde:undefined,
   /* C — js/mac-mudahale.js */
   mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
   acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,elOlasilik:undefined,tutmaIstek:undefined,ortaTemas:undefined,

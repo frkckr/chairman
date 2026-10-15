@@ -106,5 +106,20 @@ module.exports={calistir({ctx,vm,N,tohum}){
    const say2=sk=>{let den=0,gec=0,faul=0;for(let i=0;i<N4;i++){const r=dene(0,3,i,'zorla',null,false,sk);if(r.sonuc!=='vazgecti'&&r.sonuc!=='sonucsuz'){den++;if(r.sonuc==='gecti')gec++;if(r.sonuc==='faul')faul++;}}return{gec:den?gec/den:NaN,faul:den?faul/den:NaN};};
    const zayif=say2(0.3),iyi=say2(0.9);
    console.log(`  [4c] (bilgi; faul modeli T5) savunma kalitesi 0,3 → 0,9: geçme %${(100*zayif.gec).toFixed(0)} → %${(100*iyi.gec).toFixed(0)} · faulle biten %${(100*zayif.faul).toFixed(0)} → %${(100*iyi.faul).toFixed(0)}`);}
+  /* [5] A4-5 (2026-10-15; bilgi): sırtla dönme — hücumcu sırtı kaleye dönük, top ayağında; savunmacı arkasında (kale tarafında) 1,6–2,6 m, ona dönük; çalım
+     niyeti sirtDon satırıyla zorlanır (cal.i, zorla). Tahmin (yaklaşmanın sonundaki birebirTahmin P'si) ile gerçekleşen geçme; satırın kal'ı buradan */
+  {const iS=vm.runInContext("HRK_HAREKET.findIndex(h=>h.ad==='sirtDon')",ctx),N5=n*2,R={n:0,ol:0,gecti:0,kayip:0,yarim:0,faul:0,Pt:0,Pn:0};
+   for(let i=0;i<N5;i++){deneme++;let ol=null;
+     const m=kur((tohum||1)*1000+50000+deneme,(ad,v)=>{if(ad==='calim'&&v&&v.p===A&&!ol)ol=v;else if(ad==='faul'&&!ol)ol={sonuc:'faul',P:null};});
+     const A=m.teams[0][9],D=m.teams[1][3],b=m.ball,d=m.dir[0],hy=d>0?0:Math.PI;bosalt(m,[A,D]);
+     A.oz.surus=0.6+FARK[i%5];A._kutle=0;A._cev=null;D._kutle=0;D._cev=null;A._hk=undefined;D._hk=undefined;profilKur(A,m.tohum);profilKur(D,m.tohum);
+     const L=1.6+(i%3)*0.5,ax=d*16,az=34+(i%7-3)*2;yerlestir(A,ax,az,hy+Math.PI,0);yerlestir(D,ax+d*L,az+(i%2?0.3:-0.3),hy+Math.PI,0);
+     m.phase='play';m.phaseT=1;m.durus=null;
+     Object.assign(b,{x:ax-d*0.4,z:az,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,sonTakim:0,sonDokunan:A});
+     m.topDegisti();m.sahipYap(A);
+     for(let k=0;k<60*5;k++){A.kararT=99;if(!ol&&b.sahip===A&&(!A.surus||!A.surus.cal)&&!A.calim)A.surus={yon:hy,hiz:1,cal:{o:D,i:iS,zorla:true}};
+       m.step(dt);if(m.phase!=='play'||ol)break;if(b.sonDokunan===D||b.sahip===D){ol={sonuc:'kayip',P:null};break;}}
+     R.n++;if(ol){R.ol++;R[ol.sonuc]=(R[ol.sonuc]||0)+1;if(ol.P!=null){R.Pt+=ol.P;R.Pn++;}}}
+   console.log(`\n[5] Sırtla dönme (bilgi; sırtı kaleye dönük, savunmacı arkada 1,6–2,6 m; ${N5} deneme): olay ${R.ol} · geçti ${y(R.gecti,R.ol)} · kayıp ${y(R.kayip,R.ol)} · yarım ${y(R.yarim,R.ol)} · faul ${y(R.faul,R.ol)} · tahmin ${y(R.Pt,R.Pn)} (${R.Pn})`);}
   return cikis;
 }};

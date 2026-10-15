@@ -935,7 +935,7 @@ function anmKenarOlay(ad,v){
    kesmede ataletle fren. Top saklama: gövde yan, yakın kol rakibe doğru geride bükük, uzak kol dengede, alçak ve geniş duruş; rakibin yanı her
    karede (0,12 sn histerezisle), baş kimliğin aralığıyla rakibe döner (omuz üstünden). Seçimler rastlantısız. Taraf: motorda +1 itiş sağa
    (yon + 90°); gövde çerçevesinde x sola artıdır (aldatma yanının x işareti = taraf). ---- */
-const ANM_CK={makas:'aldat',govde:'aldat',sutCalim:'sut',rulet:'rulet',durKalk:'dur',hiz:'tempo',atKos:'yaris',sagSol:'yaris',kesme:'kesme',sirtDon:'kesme'};
+const ANM_CK={makas:'aldat',govde:'aldat',sutCalim:'sut',rulet:'rulet',durKalk:'dur',hiz:'tempo',atKos:'yaris',sagSol:'yaris',kesme:'kesme',sirtDon:'kesme',cruyff:'sut'};   /* A4-5: Cruyff vuruş taklidi + iç ayakla sürükleme */
 /* hazırlıkta yürüyüş: diz bükme (m), duruş genişliği (m), adım boyu çarpanı (kısa ve sık adım) */
 const ANM_CK_YUR={aldat:[0.05,0.04,0.6],sut:[0.03,0,0.7],rulet:[0.08,0.08,0.55],dur:[0.04,0.02,0.6],tempo:[0.02,0,0.75],kesme:[0.09,0.05,0.65],yaris:[0,0,0.9]};
 const anmYumus=x=>{x=x<0?0:x>1?1:x;return x*x*(3-2*x);};
