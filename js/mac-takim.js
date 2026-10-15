@@ -44,7 +44,11 @@ ayarEkle('T',{
   kanatDerin:2.5,    // T14a: kanadın ofsayt çizgisinin gerisinde beklediği mesafe (m; 4'te kanat derin koşu kapısının (çizgiye 4 m) sınırındaydı)
   kanatOnde:14,      // T14a: orta alanda (top kaleye kanatUzak m'den uzakken) kanadın topu tutandan en çok önde durduğu mesafe (m)
   kanatUzak:40,      // T14a: top öbür kanatta ve kaleye bu kadar yakınken uzak kanat arka direğe gelir (m)
-  gecGiris:2         // T14b: orta ve geri çevirmede ceza sahasına geç giren en çok forvet dışı oyuncu (0: kapalı; gecGirisAta)
+  gecGiris:2,        // T14b: orta ve geri çevirmede ceza sahasına geç giren en çok forvet dışı oyuncu (0: kapalı; gecGirisAta)
+  /* T16b (2026-10-15; gerçekçilik planı §4 T16): öndeki takım maçın sonunda da hücum eder — gerçekte öndeki ÷ gerideki şut ~0,5–0,6 (son dilimde
+     motorda 0,33 idi) */
+  tutEtki:0.5        // T16b: öndeki takımın hücumdaki temkini (tut niyetinin ilerlet'ten farkı ve koru'nun risk, sakinlik, tempo terimleri; 1: eski — 40 maçta
+                     // son dilimde öndeki takımın şutu 0,24 → 0,47 / takım·dk, öndeki ÷ gerideki 0,33 → 0,59; 0'da ek kazanç yok)
 });
 /* niyet → düzen ve taktik farkı. Taktik: risk kayıp maliyetinin çarpanıdır (yüksek = temkinli), sakin geri pas ve sabır, tempo karar hızı, direkt ileri
    ve uzun oyun (mac-karar.js); toplanır (risk çarpılır). Düzen: genişlik hücumda mevkilerin yayılma çarpanı, derinlik bloğun öne/geriye kayması (m),
@@ -61,6 +65,9 @@ const NIYET_PARAM={
   tut:     {risk:1.3, sakin:0.35, tempo:-0.25,direkt:-0.2, genislik:1.12,derinlik:-2,bekIleri:0.6,kosu:0.5,bekCik:false},
   savunma: {risk:1,   sakin:0,    tempo:0,    direkt:0,    genislik:1,   derinlik:0, bekIleri:1,  kosu:1,  bekCik:true}
 };
+/* T16b (2026-10-15): öndeki takımın hücumdaki temkini — tut niyetinin sayısal değerleri ilerlet'ten tutEtki oranında ayrılır (1: eski değerin
+   kendisi; bekCik tut'unki). Saf, önbellek yok */
+function niyetDeger(ad,k){const P=NIYET_PARAM[ad],e=MOTOR_AYAR.tutEtki;if(ad!=='tut'||e===1)return P[k];const I=NIYET_PARAM.ilerlet;return I[k]+e*(P[k]-I[k]);}
 /* T10e: güven olaylarının büyüklüğü (takım güveninde) */
 const GUVEN_OLAY={golAtti:0.45,golYedi:-0.25,kendiKale:-0.15,kacanFirsat:-0.15,penaltiKacti:-0.3,penaltiKurtardi:0.2};
 Object.assign(Match.prototype,{
@@ -98,8 +105,8 @@ Object.assign(Match.prototype,{
       else if(D.koru>0.5&&u<PL-20)ad='tut';
       else ad=u<-15?'kur':u<PL-30?'ilerlet':'sonBolge';}
     if(ad!==N.ad){N.ad=ad;N.t0=this.t;}
-    const P=NIYET_PARAM[ad],k=A.niyetEtki;
-    N.genislik=1+k*(P.genislik-1);N.derinlik=k*P.derinlik;N.bekIleri=1+k*(P.bekIleri-1);N.kosu=1+k*(P.kosu-1);N.bekCik=k?P.bekCik:true;
+    const P=NIYET_PARAM[ad],k=A.niyetEtki;   /* T16b: tut'ta sayısal değerler niyetDeger'den (tutEtki) */
+    N.genislik=1+k*(niyetDeger(ad,'genislik')-1);N.derinlik=k*niyetDeger(ad,'derinlik');N.bekIleri=1+k*(niyetDeger(ad,'bekIleri')-1);N.kosu=1+k*(niyetDeger(ad,'kosu')-1);N.bekCik=k?P.bekCik:true;
     /* savunma çizgisi: geride kalan takım öne çıkar, öndeki ve eksik kalan geri çekilir (m) */
     N.blok=k*(4*D.acele-3*D.koru-3*D.eksik);
     N.duranGecikme=k*2*D.koru;N.faulIstek=1+k*0.6*D.koru;N.zamanGecir=k*D.koru;   /* T10d: zaman geçirme yoğunluğu (js/mac-kurallar.js zamanGecirEk) */
@@ -182,11 +189,12 @@ Object.assign(Match.prototype,{
   etkinTaktik(t){const B=this.taktikTaban[t],E=this.taktik[t],N=this._niyet[t],D=N.durum,k=MOTOR_AYAR.niyetEtki;
     E.dizilis=B.dizilis;
     if(!k){E.risk=B.risk;E.sakin=B.sakin;E.tempo=B.tempo;E.direkt=B.direkt;E.pres=B.pres;return;}
-    const P=NIYET_PARAM[N.ad];
-    E.risk=Math.max(0.3,B.risk*(1+k*(P.risk-1))*(1-0.25*k*D.acele)*(1+0.3*k*D.koru)*(1+0.1*k*D.eksik)*(1-MOTOR_AYAR.guvenRisk*(this.guven?this.guven[t]:0)));   /* T10e: güven */
-    E.sakin=clamp(B.sakin+k*(P.sakin-0.3*D.acele+0.3*D.koru),0,1);
-    E.tempo=clamp(B.tempo+k*(P.tempo+0.3*D.acele-0.25*D.koru),0,1);
-    E.direkt=clamp(B.direkt+k*(P.direkt+0.3*D.acele+(N.uzun?0.4:0)),0,1);
+    /* T16b: öndeki takımın hücumdaki temkini (tut niyeti ve koru'nun risk, sakinlik, tempo terimleri) tutEtki ile; pres, blok ve zaman geçirme aynen */
+    const ad=N.ad,kr=D.koru*MOTOR_AYAR.tutEtki;
+    E.risk=Math.max(0.3,B.risk*(1+k*(niyetDeger(ad,'risk')-1))*(1-0.25*k*D.acele)*(1+0.3*k*kr)*(1+0.1*k*D.eksik)*(1-MOTOR_AYAR.guvenRisk*(this.guven?this.guven[t]:0)));   /* T10e: güven */
+    E.sakin=clamp(B.sakin+k*(niyetDeger(ad,'sakin')-0.3*D.acele+0.3*kr),0,1);
+    E.tempo=clamp(B.tempo+k*(niyetDeger(ad,'tempo')+0.3*D.acele-0.25*kr),0,1);
+    E.direkt=clamp(B.direkt+k*(niyetDeger(ad,'direkt')+0.3*D.acele+(N.uzun?0.4:0)),0,1);
     E.pres=clamp(B.pres+k*(0.25*D.acele-0.1*D.koru-0.15*D.eksik),0,1);},
   /* hoca kapısı (plan T7 madde 10): hocanın tabanını değiştirir; diziliş değişirse mevkiler sıradan (n) yeniden okunur, markaj/pres/koşu tabloları
      sıfırlanır; 'taktik' olayı yayılır */
