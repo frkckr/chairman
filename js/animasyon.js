@@ -1017,7 +1017,7 @@ function anmCalimDurum(a,p,dt){
 /* top saklama: en yakın rakip (3 m içinde); yanı 0,12 sn histerezisle (gövdeye göre 0,2 m'den çok öbür yandaysa); baş kimliğin aralığıyla
    (1,3–2,0 sn) 0,6 sn rakibe döner */
 /* T8e: duruşta kutudaki görevliler (yer kapma) ve r m içindeki en yakın rakip */
-const ANM_KUTU_ROL=new Set(['hedefOn','hedefOrta','hedefArka','hedefNokta','hedefUzak','perde','adam','bolge','direk']);
+const ANM_KUTU_ROL=new Set(['hedefOn','hedefOrta','hedefArka','hedefNokta','hedefUzak','perde','perdeAdam','adam','bolge','direk']);   /* A4-2: perdeci markajcıyla itişir */
 function anmYakinRakip(p,r){let o=null,ed=r*r;const R=mac.teams&&mac.teams[1-p.team];if(R)for(const q of R){if(!q.oyunda)continue;const d=(q.x-p.x)*(q.x-p.x)+(q.z-p.z)*(q.z-p.z);if(d<ed){ed=d;o=q;}}return o;}
 function anmKorRakip(p){let o=null,ed=9;const R=mac.teams&&mac.teams[1-p.team];if(R)for(const q of R){if(!q.oyunda)continue;const d=(q.x-p.x)*(q.x-p.x)+(q.z-p.z)*(q.z-p.z);if(d<ed){ed=d;o=q;}}return o;}
 function anmKoru(a,p,dt){

@@ -731,6 +731,8 @@ Object.assign(Match.prototype,{
       /* T8b: rutin (js/mac-durantop.js kornerGorev) — kısa kornerde kısa seçeneğe yerden (eski %13'lük zar kalktı; 20 m içinde arkadaş olmadığı için
          oluşmuyordu); ortada hedef görevlilerin koşu noktalarından değerle */
       if(du.rutin==='kisa'&&du.gorev)for(const [q,g] of du.gorev)if(g.rol==='kisa'&&q.oyunda&&q!==tk)return{tur:'pas',hx:q.x,hz:q.z,tip:'yer',alici:q};
+      /* A4-2: yaya geri pas — ceza sahası kenarına geç koşan alıcının koşu noktasına yerden (js/mac-durantop.js kornerGorev) */
+      if(du.rutin==='geri'&&du.gorev)for(const [q,g] of du.gorev)if(g.rol==='geri'&&q.oyunda&&q!==tk)return{tur:'pas',hx:g.kx,hz:g.kz,tip:'yer',alici:q};
       const S=kornerSecenekleri(this,tk,du.x,du.z);
       if(S.length){let en=-1e9;for(const s of S)en=Math.max(en,s.deger);
         const tau=0.6+0.8*(1-tk.oz.karar);let top=0;for(const s of S){s.a=Math.exp((s.deger-en)/tau);top+=s.a;}

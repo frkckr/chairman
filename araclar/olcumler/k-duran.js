@@ -38,7 +38,8 @@ module.exports={
     .concat(K_TUR.map(k=>['Kullanım / maç: '+K_TUR_AD[k],'kN_'+k,2]))
     .concat(K_HZ.map(([k,ad,h])=>['Hazırlık ortancası (sn): '+ad,'kH_'+k,1,h]))
     .concat([['Zorla kullanım (28 sn) / maç','kZorla',2],['Tehlikeli duran topta görevliler yerinde %','kYerinde',1,[80,null,'T8']]])
-    .concat([['Korner: kısa %','kK_kisa',1],['Korner: içe dönen %','kK_ice',1],['Korner: dışa dönen %','kK_disa',1]])
+    .concat([['Korner: kısa %','kK_kisa',1],['Korner: içe dönen %','kK_ice',1],['Korner: dışa dönen %','kK_disa',1],
+      ['Korner: yaya geri pas % (A4-2)','kK_geri',1],['Korner: perdeleme % (A4-2)','kKPerde',1]])
     .concat(K_BOLGE.map(k=>['Korner hedefi: '+K_BOLGE_AD[k]+' %','kKB_'+k,1]))
     .concat([['Korner: kullanımda kutudaki hücumcu','kKKutuH',1,[4,7,'T8']],['Korner: kullanımda kutudaki savunmacı','kKKutuS',1],
       ['Korner: geride kalan hücumcu','kKGeri',1],['Korner: geride kalanların hızı − takım (özellik)','kKGeriHiz',2,[0,null,'T8']],
@@ -64,8 +65,8 @@ module.exports={
     const kutuda=(m,p,t)=>{const gx=m.dir[t]*K_PL;return Math.abs(p.x-gx)<K_CU&&Math.abs(p.z-K_MZ)<K_CW;};
     const N={},HZ={};for(const k of K_TUR)N[k]=0;for(const [k] of K_HZ)HZ[k]=[];
     const say=a=>{const o={};for(const k of a)o[k]=0;return o;};
-    const kAlt=say(['kisa','ice','disa','duz']),kBol=say(K_BOLGE),kIlk=say(K_ILK),kKay=say(K_KAYNAK),sS=say(K_SINIF);
-    let zorla=0,yerinde=0,tehlike=0,kInis=[0,0],kHava=[0,0],kGol=[0,0];const kSutL=[],kKutuH=[],kKutuS=[],kGeri=[],kGeriHiz=[];
+    const kAlt=say(['kisa','ice','disa','duz','geri']),kBol=say(K_BOLGE),kIlk=say(K_ILK),kKay=say(K_KAYNAK),sS=say(K_SINIF);
+    let zorla=0,yerinde=0,tehlike=0,kInis=[0,0],kHava=[0,0],kGol=[0,0],kPerde=[0,0];const kSutL=[],kKutuH=[],kKutuS=[],kGeri=[],kGeriHiz=[];
     const sA={baraj:[0,0],kenarOrta:[0,0],kenarSut:[0,0],uzak:[0,0]};let sHizli=[0,0];const sKenarKutu=[],bKisi=[],bYuk=[],_baraj=[];
     let bCer=[0,0],bGol=[0,0],bBlok=[0,0],bZip=[0,0],bIk=[0,0],bAld=[0,0],bGolAld=[0,0],tUzun=[0,0],tHizli=[0,0],tTut=[0,0],kvYer=[0,0],kvUzun=[0,0],kvTut=[0,0],kvDue=[0,0],pGol=[0,0];const pRib=[];
     let K=null,S=null,T=null,V=null,P=null,sonOlay=null;   /* izleyiciler: korner, serbest (doğrudan şut), taç, kale vuruşu, penaltı */
@@ -84,10 +85,11 @@ module.exports={
           const hk=tur==='serbest'?(sinif==='baraj'||sinif==='kenar'?sinif:'serbest'):tur;if(HZ[hk]&&!(du&&(du.zgEk>0||du.sakatBekledi)))HZ[hk].push(hz);   /* T10d: zaman geçirilen ve sakatlık tedavisini bekleyen duruş hazırlığa girmez (o-olay) */
           if(du&&du.yerinde!==undefined&&(tur==='korner'||sinif==='baraj'||sinif==='kenar')){tehlike++;if(du.yerinde)yerinde++;}
           if(tur==='korner'){if(kAlt[v.alt]!=null)kAlt[v.alt]++;if(v.bolge&&kBol[v.bolge]!=null)kBol[v.bolge]++;
+            kPerde[1]++;if(du&&du.gorev){for(const g of du.gorev.values())if(g.rol==='perdeAdam'){kPerde[0]++;break;}}   /* A4-2 */
             const A=m.teams[t].filter(q=>q.oyunda&&q.rol!=='GK'&&q!==p),D=m.teams[1-t].filter(q=>q.oyunda&&q.rol!=='GK');
             kKutuH.push(A.filter(q=>kutuda(m,q,t)).length);kKutuS.push(D.filter(q=>kutuda(m,q,t)).length);
             const geri=A.filter(q=>q.x*d<0);kGeri.push(geri.length);if(geri.length)kGeriHiz.push(ort(geri.map(q=>q.oz.hiz))-ort(A.map(q=>q.oz.hiz)));
-            K={t0:m.t,att:t,g0:m.score[t],sut:0,izle:v.alt!=='kisa',ilk:null,inis:false,hava0:m.ist.havaTopu,havaSay:false,inen:false};kGol[1]++;
+            K={t0:m.t,att:t,g0:m.score[t],sut:0,izle:v.alt!=='kisa'&&v.alt!=='geri',ilk:null,inis:false,hava0:m.ist.havaTopu,havaSay:false,inen:false};kGol[1]++;
             if(K.izle){kHava[1]++;}}
           else if(tur==='serbest'){sS[sinif]++;
             if(sinif==='baraj'){sA.baraj[1]++;if(v.alt==='sut')sA.baraj[0]++;const n=v.barajdakiler?v.barajdakiler.length:0;bKisi.push(n);bIk[1]++;if(du&&du.ikili)bIk[0]++;   /* A4-1 */
@@ -140,7 +142,7 @@ module.exports={
         const ham={kYerinde:[yerinde,tehlike],kKInis:kInis,kKHava:kHava,kKGol:kGol,kSA_baraj_sut:sA.baraj,kSA_kenar_orta:sA.kenarOrta,kSA_kenar_sut:sA.kenarSut,
           kSA_uzak_uzun:sA.uzak,kSHizli:sHizli,kBCerceve:bCer,kBGol:bGol,kBBlok:bBlok,kBZipla:bZip,kBIkili:bIk,kBAldatma:bAld,kBGolAld:bGolAld,kT_uzun:tUzun,kT_hizli:tHizli,kT_tut:tTut,
           kKV_yerden:kvYer,kKV_uzun:kvUzun,kKV_tut:kvTut,kKV_duello:kvDue,kP_gol:pGol};
-        const kT=kAlt.kisa+kAlt.ice+kAlt.disa+kAlt.duz;ham.kK_kisa=[kAlt.kisa,kT];ham.kK_ice=[kAlt.ice,kT];ham.kK_disa=[kAlt.disa,kT];
+        const kT=kAlt.kisa+kAlt.ice+kAlt.disa+kAlt.duz+kAlt.geri;ham.kK_kisa=[kAlt.kisa,kT];ham.kK_ice=[kAlt.ice,kT];ham.kK_disa=[kAlt.disa,kT];ham.kK_geri=[kAlt.geri,kT];ham.kKPerde=kPerde;
         let bT=0;for(const k of K_BOLGE)bT+=kBol[k];for(const k of K_BOLGE)ham['kKB_'+k]=[kBol[k],bT];
         let iT=0;for(const k of K_ILK)iT+=kIlk[k];for(const k of K_ILK)ham['kKI_'+k]=[kIlk[k],iT];
         let yT=0;for(const k of K_KAYNAK)yT+=kKay[k];for(const k of K_KAYNAK)ham['kKK_'+k]=[kKay[k],yT];
