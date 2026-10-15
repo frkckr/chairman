@@ -437,9 +437,12 @@ Object.assign(Match.prototype,{
   },
   kaleciTut(gk,tur){
     const b=this.ball;b.tasiyan=gk;b.sahip=null;b.vx=b.vy=b.vz=0;b.egri=0;this.dokunus(gk,true);
-    /* T16a (2026-10-15): zg — T10d'den beri eksikti; kaleciElde'de sure + zg NaN olunca kaleci eylemi biter bitmez dağıtıyordu (1,6–3,2 sn'lik
-       tutuş ve öndeyken topu tutma çalışmıyordu) */
-    gk.tutus={t:0,sure:1.6+this.rast()*1.6,tur:tur||'gogus',zg:this.zamanGecirEk(gk.team,4)};gk.kickCd=0.2;gk._kp=null;this._dSahipT=this.t;
+    /* T16a (2026-10-15): zg T10d'den beri eksikti (kaleciElde'de sure + zg NaN: öndeyken topu tutma hiç çalışmıyordu). Olağan tutuşta kaleci tutuş
+       eylemi biter bitmez dağıtır (sure 0 — T10d'den beri fiilen böyleydi); öndeyken (zaman geçirme) 1,6–3,2 sn + zg tutar. Her topu 1,6–3,2 sn
+       bekletmek denendi: bloklanan şut maç başına ~0,5 azaldı, korner ve gerçekleşen ÷ xG bandın dışına çıktı — kontra görünce hemen oynayan,
+       görmeyince bekleten tutuş ayrı iş (gerçekçilik planı “T16a — Sonuç”) */
+    const s=1.6+this.rast()*1.6,zg=this.zamanGecirEk(gk.team,4);
+    gk.tutus={t:0,sure:zg>0?s:0,tur:tur||'gogus',zg};gk.kickCd=0.2;gk._kp=null;this._dSahipT=this.t;
   },
   /* genel temasta elle (orta, korner, boştaki top): kalabalıkta ya da erişiminin sınırında yumrukla uzaklaştırır, yoksa tutar. T6d: yumruk kararı
      zar değil geometri — yüksek topta (1,45 m üstü) rakip 1,5 m içinde sıçrıyor ya da başı topa 0,1 sn içinde değecekse (çekişme; js/mac-hava.js
