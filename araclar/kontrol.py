@@ -42,6 +42,26 @@ def yerel_three():
     return hedef
 
 
+KIMLIK_URETICI = re.compile(rb"function (\w+)\(\)\{const t=4294967295\*Math\.random\(\)\|0,e=4294967295\*Math\.random\(\)\|0,"
+                            rb"n=4294967295\*Math\.random\(\)\|0,i=4294967295\*Math\.random\(\)\|0;")
+
+
+def kimlik_ayri_three():
+    """A5 (2026-10-15): Three.js'in nesne kimliği üreticisi (generateUUID; r128'de içeriden doğrudan çağrılan kapanış işlevi) sayfanın
+    __kimlikRastgele işlevinden (tanımlı değilse Math.random'dan) çeker. Ölçüm ve görüntü araçları Math.random'u tohumlar; böylece kurulan
+    Three.js nesnesi sayısı (geometri değişikliği) çizimin rastlantısını (adım fazı, düşüş türü) kaydırmaz. Kopya önbellekte tutulur."""
+    kaynak = yerel_three()
+    hedef = ONBELLEK / "three-kimlik.min.js"
+    if not hedef.exists() or hedef.stat().st_mtime < kaynak.stat().st_mtime:
+        metin = kaynak.read_bytes()
+        m = KIMLIK_URETICI.search(metin)
+        if not m:
+            sys.exit("three.min.js: kimlik üreticisi bulunamadı (three@0.128.0 beklenir)")
+        yeni = m.group(0).replace(b"Math.random()", b"(self.__kimlikRastgele||Math.random)()")
+        hedef.write_bytes(metin[:m.start()] + yeni + metin[m.end():])
+    return hedef
+
+
 def kopya_hazirla(three):
     gecici = pathlib.Path(tempfile.mkdtemp(prefix="chairman-"))
     site = gecici / "site"

@@ -10,6 +10,9 @@ Kullanım:
   python araclar/animasyon-olcum.py --json araclar/taban/t7-anm.json        # sonucu kaydet (tur kapanışında turun animasyon tabanı)
   python araclar/animasyon-olcum.py --karsilastir araclar/taban/t7-anm.json # kayıtlı sonuçla yan yana
   Seçenekler: --tohum N · --sure S (oyun saniyesi; varsayılan 180) · --ayar JSON (H1: MOTOR_AYAR'ı kodu değiştirmeden aç/kapat; ör. '{"govdeDinamik":0}')
+  · --ek '&model=kutu' (adres ekleri; A5: eski kutu modeli) · --eski-kimlik (A5 öncesi tabanlar: t15-anm, h1-anm ve öncesi). A5'ten (2026-10-15) beri Three.js'in nesne kimlikleri tohumlu Math.random'dan
+    değil ayrı bir diziden çekilir (kontrol.kimlik_ayri_three): geometri değişikliği (kurulan nesne sayısı) çizimin adım fazını kaydırmaz;
+    yalnız modeli değişen çizimde kemik tabanlı satırlar birebir aynı kalır.
 
 Ölçütler ("A:" satırları; tanım ve hedefler Ek G9). Bantlar oyuncunun çizilen hızından: duran < 0,3 · yürüyüş < 2 · koşu 2–5 ·
 hızlı 5–7 · depar ≥ 7 m/sn. "Eylemsiz": oyuncunun eylemi yok (vuruş, kontrol, düşüş, kaleci hareketi … dışında; tavır olabilir).
@@ -40,7 +43,7 @@ import shutil
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from kontrol import KOK, yerel_three, kopya_hazirla  # noqa: E402
+from kontrol import KOK, yerel_three, kopya_hazirla, kimlik_ayri_three  # noqa: E402
 
 RAPOR = KOK / "araclar" / "son-animasyon.txt"
 KARSILASTIR = KOK / "araclar" / "karsilastir"
@@ -50,6 +53,9 @@ BASLANGIC_JS = """
 (() => {
   let s = %d >>> 0;
   Math.random = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  /* A5: Three.js nesne kimlikleri ayrı diziden (kontrol.kimlik_ayri_three; --eski-kimlik ile kullanılmaz) */
+  let k = 0x2545F491;
+  window.__kimlikRastgele = () => { k = (k + 0x6D2B79F5) >>> 0; let t = k; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   window.__gercekZaman = performance.now.bind(performance);
   let kuyruk = [], an = 1000;
   window.requestAnimationFrame = f => { kuyruk.push(f); return kuyruk.length; };
@@ -674,7 +680,7 @@ def satirlar(o):
 
 async def olc(a):
     from playwright.async_api import async_playwright
-    site = kopya_hazirla(yerel_three())
+    site = kopya_hazirla(yerel_three() if a.eski_kimlik else kimlik_ayri_three())
     hatalar = []
     try:
         async with async_playwright() as p:
@@ -684,7 +690,7 @@ async def olc(a):
             pg = await baglam.new_page()
             pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
             pg.on("console", lambda m: hatalar.append("Konsol: " + m.text) if m.type == "error" and "Failed to load resource" not in m.text else None)
-            await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}")
+            await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}" + (a.ek or ""))
             await pg.wait_for_selector("#btnMacaGec", timeout=30000)
             await pg.evaluate("__kare(2)")
             if a.ayar:
@@ -746,6 +752,9 @@ def ana():
     ap.add_argument("--json")
     ap.add_argument("--ayar", default=None, help="H1: MOTOR_AYAR üzerine JSON (ör. '{\"govdeDinamik\":0}'; aynı kodla önce/sonra)")
     ap.add_argument("--karsilastir")
+    ap.add_argument("--ek", default=None, help="adrese ek parametreler (A5: '&model=kutu' ile eski kutu modeli; an-yakala.py --ek gibi)")
+    ap.add_argument("--eski-kimlik", dest="eski_kimlik", action="store_true",
+                    help="A5 öncesi: Three.js nesne kimlikleri tohumlu Math.random'dan çeker (t15-anm, h1-anm ve önceki tabanlar bu kipte üretildi)")
     ap.add_argument("--hiz", type=int, default=1, choices=[1, 2, 4, 8, 16], help="oynatma hızı (MAC_HIZ; T4-V: hız katlarında vuruş katmanının kararlılığı)")
     ap.add_argument("--kaleci", type=int, default=0, help="T9b-e: kaleye N yapay şut (d-sut kalıbı; maç oynanmaz; yalnız kurtarış satırı anlamlıdır)")
     ap.add_argument("--kotu", action="store_true", help="T9b-e: kötü vuruş olasılığı tavana (yalnız vuruş stili satırı anlamlıdır)")
@@ -757,11 +766,16 @@ def ana():
     except ImportError:
         sys.exit("Playwright bulunamadı. Kurmak için: pip install playwright==1.56.0")
     o, hatalar = asyncio.run(olc(a))
-    o["tohum"], o["sure"] = a.tohum, a.sure
+    o["tohum"], o["sure"], o["kimlik"] = a.tohum, a.sure, "eski" if a.eski_kimlik else "ayri"
+    if a.ek:
+        o["ek"] = a.ek
     S = satirlar(o)
     if a.karsilastir:
         e = json.loads(pathlib.Path(a.karsilastir).read_text(encoding="utf-8"))
         S.append(f"--- karşılaştırma: {a.karsilastir} (animasyon {e.get('surum')}, tohum {e.get('tohum')}, {e.get('sure')} sn) ---")
+        if e.get("kimlik", "eski") != o["kimlik"]:
+            S.append(f"  uyarı: Three.js kimlik kipi farklı (önce {e.get('kimlik', 'eski')}, şimdi {o['kimlik']}): çizimin rastlantısı (adım fazı) kayar, "
+                     f"aynı kodda da satırlar oynar — A5 öncesi tabanla --eski-kimlik")
         S += ["  önce " + x[3:] for x in satirlar(e)]
     for x in S:
         print(x)

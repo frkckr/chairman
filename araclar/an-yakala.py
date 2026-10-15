@@ -3,7 +3,8 @@
 
 Maçı başsız Chromium'da tohumlu ve sanal saatle oynatır, istenen anı başkanın gözünden (maç ızgarasında, 960×720) PNG olarak kaydeder.
 Bakış oyundaki gibi topu izler (N4, 2026-10-04: elle bakış ve --elle seçeneği kaldırıldı).
-Görüntüler tekrarlanabilir: Math.random tohumludur, requestAnimationFrame elle ilerletilir (her kare 1/60 sn).
+Görüntüler tekrarlanabilir: Math.random tohumludur, requestAnimationFrame elle ilerletilir (her kare 1/60 sn). Three.js'in nesne kimlikleri
+(A5, 2026-10-15) ayrı diziden çekilir: yalnız modeli değişen çizimde (--ek "&model=kutu" ile önce) pozlar birebir aynıdır.
 
 Kullanım:
   python3 araclar/an-yakala.py santra korner sut            # hazır anlar
@@ -32,7 +33,7 @@ import shutil
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from kontrol import KOK, yerel_three, kopya_hazirla  # noqa: E402
+from kontrol import KOK, kimlik_ayri_three, kopya_hazirla  # noqa: E402
 
 CIKTI = KOK / "araclar" / "anlar"
 KARSILASTIR = KOK / "araclar" / "karsilastir"
@@ -120,6 +121,9 @@ BASLANGIC_JS = """
   /* tohumlu Math.random (mulberry32) */
   let s = %d >>> 0;
   Math.random = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  /* A5 (2026-10-15): Three.js nesne kimlikleri ayrı diziden (kontrol.kimlik_ayri_three) — model değişince adım fazları kaymaz, önce/sonra aynı poz */
+  let k = 0x2545F491;
+  window.__kimlikRastgele = () => { k = (k + 0x6D2B79F5) >>> 0; let t = k; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   /* elle ilerleyen kare saati */
   let kuyruk = [], an = 1000;
   window.requestAnimationFrame = f => { kuyruk.push(f); return kuyruk.length; };
@@ -146,10 +150,13 @@ OLCU_JS = """() => {
   const piksel = (x, y, z, r) => { v.set(x, y, z); const d = v.distanceTo(camera.position); return 2 * r * (H / 2) / (d * Math.tan(f / 2)); };
   v.set(b.x, b.y + (typeof TOP_R !== 'undefined' ? TOP_R : 0.14), b.z - 34).project(camera);
   const topNdc = { x: +v.x.toFixed(3), y: +v.y.toFixed(3) }, topPx = +piksel(b.x, b.y, b.z - 34, typeof TOP_R !== 'undefined' ? TOP_R : 0.14).toFixed(2);
-  const boylar = [];
+  const boylar = [], kutular = [];
   for (const a of AKTORLER) { const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible) continue;
     const ay = new THREE.Vector3(a.x, 0, a.z).project(camera), bas = new THREE.Vector3(a.x, 1.8 * (p.boy || 1), a.z).project(camera);
-    if (Math.abs(ay.x) > 1 || Math.abs(ay.y) > 1) continue; boylar.push(Math.abs(bas.y - ay.y) / 2 * H); }
+    if (Math.abs(ay.x) > 1 || Math.abs(ay.y) > 1) continue; const h = Math.abs(bas.y - ay.y) / 2 * H; boylar.push(h);
+    /* A5 (2026-10-15): oyuncunun ekrandaki dikdörtgeni (ızgara pikseli; titreme ölçüsü araclar/titreme-olc.py okur) */
+    const cx = (ay.x + 1) / 2 * W, yAlt = (1 - ay.y) / 2 * H, yUst = (1 - bas.y) / 2 * H, g = 0.25 * h;
+    kutular.push([Math.round(cx - g), Math.round(Math.min(yUst, yAlt)), Math.round(cx + g), Math.round(Math.max(yUst, yAlt))]); }
   boylar.sort((x, y) => x - y);
   const yakin = mac.players.filter(p => p.oyunda && p.eylem).map(p => ({ no: p.no, takim: p.team, eylem: p.eylem.ad, x: +p.x.toFixed(1), z: +p.z.toFixed(1) }))
     .filter(o => Math.hypot(o.x - b.x, o.z - b.z) < 12);
@@ -157,7 +164,7 @@ OLCU_JS = """() => {
   return { faz: mac.phase, dakika: mac.minuteLabel(), t: +mac.t.toFixed(2), skor: mac.score.join('-'), fov: camera.fov,
     top: { x: +b.x.toFixed(2), y: +b.y.toFixed(2), z: +b.z.toFixed(2) }, topNdc, topPx, topCizimPx,
     oyuncuPx: { ortanca: boylar.length ? +boylar[boylar.length >> 1].toFixed(1) : null, enAz: boylar.length ? +boylar[0].toFixed(1) : null, sayi: boylar.length },
-    oyuncuPx480: boylar.length ? +(boylar[boylar.length >> 1] * 480 / H).toFixed(1) : null, izgara: [W, H], yakin };
+    oyuncuPx480: boylar.length ? +(boylar[boylar.length >> 1] * 480 / H).toFixed(1) : null, izgara: [W, H], yakin, kutular };
 }"""
 
 # görünümü tek tuvale bas; şerit için yan yana
@@ -173,7 +180,10 @@ CIZ_JS = """(o) => {
 
 async def giris_seridi(pg, ad, a, hatalar, baglam):
     """N11: varışı başlatır; kareler oyunun tam kare döngüsünden (__kare) ve sayfanın kendisinden (karartma, karar anı) alınır."""
-    from PIL import Image
+    try:
+        from PIL import Image
+    except ImportError:   # A5 (2026-10-15): PIL yoksa kareler ayrı dosyalara (<onek><ad>-1.png …); şerit birleştirilmez
+        Image = None
     import io
     await pg.evaluate("() => { const b = document.getElementById('btnBeklemedenGec'); if (ON_EKRAN.acik && b && !b.hidden) b.click(); else locaGirisBaslat(); }")
     if a.sonra:   # parça parça (tek uzun çağrı çizim sürecini kilitleyebiliyor)
@@ -186,17 +196,25 @@ async def giris_seridi(pg, ad, a, hatalar, baglam):
     for i in range(adet):
         if i:
             await pg.evaluate(f"__kare({max(1, round(a.aralik * 60))})")
-        kareler.append(Image.open(io.BytesIO(await pg.screenshot(clip=kutu))).convert('RGB'))
+        # A5 (2026-10-15): süre sınırı yok — yazılım WebGL'i (SwiftShader, iç çizim 1920×1440) biriken kareleri görüntü alınırken çizer
+        # (dizüstünde ~0,45 sn/kare); --sonra 10 ya da büyük --aralik 30 sn'lik varsayılanı aşıyordu
+        png = await pg.screenshot(clip=kutu, timeout=0)
+        kareler.append(Image.open(io.BytesIO(png)).convert('RGB') if Image else png)
         iz.append(await pg.evaluate("({ t: +LOCA_GIRIS.t.toFixed(2), evre: LOCA_GIRIS.evre, mod: LOCA_GIRIS.mod, rakip: LOCA_GIRIS.rk.evre, karar: KARAR_ANI.acik, secim: MAC_PROTOKOL.karar && MAC_PROTOKOL.karar.secim })"))
-    w, h = 480, 360
-    sut = min(adet, 4)
-    serit = Image.new('RGB', (w * sut, h * ((adet + sut - 1) // sut)))
-    for i, k in enumerate(kareler):
-        serit.paste(k.resize((w, h)), ((i % sut) * w, (i // sut) * h))
     CIKTI.mkdir(parents=True, exist_ok=True)
-    serit.save(CIKTI / f"{a.onek}{ad}.png")
+    if Image:
+        w, h = 480, 360
+        sut = min(adet, 4)
+        serit = Image.new('RGB', (w * sut, h * ((adet + sut - 1) // sut)))
+        for i, k in enumerate(kareler):
+            serit.paste(k.resize((w, h)), ((i % sut) * w, (i // sut) * h))
+        serit.save(CIKTI / f"{a.onek}{ad}.png")
+    else:
+        for i, k in enumerate(kareler):
+            (CIKTI / f"{a.onek}{ad}-{i + 1}.png").write_bytes(k)
+        print("  (PIL yok: kareler ayrı dosyalarda, şerit birleştirilmedi)")
     (CIKTI / f"{a.onek}{ad}.json").write_text(json.dumps({"ad": ad, "tohum": a.tohum, "ek": a.ek, "kareler": iz, "hatalar": hatalar}, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(f"{ad}: araclar/anlar/{a.onek}{ad}.png · " + " | ".join(f"{d['t']} {d['evre'] or '-'}" for d in iz))
+    print(f"{ad}: araclar/anlar/{a.onek}{ad}{'' if Image else '-N'}.png · " + " | ".join(f"{d['t']} {d['evre'] or '-'}" for d in iz))
     await baglam.close()
     return True, hatalar
 
@@ -287,7 +305,7 @@ async def ana():
             sys.exit(f"Bilinmeyen an: {ad}. Hazır anlar: {', '.join(HAZIR)}")
         k, s, on = HAZIR[ad]
         isler.append((ad, k, a.sonra if a.sonra is not None else s, on))
-    site = kopya_hazirla(yerel_three())
+    site = kopya_hazirla(kimlik_ayri_three())
     toplam_hata = 0
     async with async_playwright() as p:
         tarayici = await p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])

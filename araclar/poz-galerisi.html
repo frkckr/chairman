@@ -14,6 +14,8 @@
      pres koşusu ve markajda el teması, yeni sevinçler) |
      t14plonjon (T14e, 2026-10-14: tam plonjon kafa — dalış, yüzüstü iniş, ön kollardan kalkış) |
      t15kaleci (T15d, 2026-10-14: tutuşun türleri — kepçe, kucak, W, yukarı; planlı dışa çelme ve kolun takibi; duraklı penaltı koşusu) |
+     a5model (A5, 2026-10-15: kesitli model — kimlikler önden, yandan, arkadan; vuruş, eller dizlerde, düşüş; yakın ve loca uzaklığı;
+     karşılaştırma &model=kutu | duz | yumusak) |
      olcum (ayak kayması ve süre ölçümü). Satır seçeneği sabitY: kamera yüksekliği
      sabit (sıçrama görünsün).
      Açmak: python3 araclar/kontrol.py "araclar/poz-galerisi.html?sayfa=dusus" (görüntü araclar/son-kontrol-poz-galerisi-sayfa-dusus.png).
@@ -59,11 +61,14 @@ const topMesh=(()=>{const cv=mk(32,16),g=cv.getContext('2d');g.fillStyle='#f4f4e
   for(const [x,y] of[[2,3],[10,9],[18,3],[26,9],[6,13],[22,13]])g.fillRect(x,y,3,3);const m=new THREE.Mesh(new THREE.SphereGeometry(TOP_R,12,8),LAM({map:tx(cv)}));scene.add(m);return m;})();
 const RAKIP_M=new THREE.Mesh(new THREE.BoxGeometry(0.4,1.7,0.3),LAM({color:0x2a3a8a}));scene.add(RAKIP_M);RAKIP_M.visible=false;
 
-const KITLER=[{...STIL.formalar.ev,num:8,skin:STIL.tenler[1],hair:'#241a12',style:'short',h:1,w:1},
+const KITLER=[{...STIL.formalar.ev,num:8,skin:STIL.tenler[1],hair:'#241a12',style:'short',h:1,w:1,sekil:sekilKur({ad:'Sekiz',yapi:1,boy:1})},
   {...STIL.formalar.evKaleci,num:1,skin:STIL.tenler[0],hair:'#3c2616',style:'curly',h:1.03,w:1.03},
-  {...STIL.formalar.deplasman,num:4,skin:STIL.tenler[3],hair:'#141212',style:'bald',beard:true,h:0.98,w:1.02},
+  {...STIL.formalar.deplasman,num:4,skin:STIL.tenler[3],hair:'#141212',style:'bald',beard:true,h:0.98,w:1.02,sekil:sekilKur({ad:'Dört',yapi:1.08,boy:0.98})},
   {...STIL.formalar.hakem,num:0,skin:STIL.tenler[1],hair:'#8a8680',style:'bald',mus:true,h:1,w:1.06},
-  {...STIL.formalar.saglikci,num:0,skin:STIL.tenler[2],hair:'#3c2616',style:'short',h:0.98,w:1.04}];   /* T10f: sağlıkçı */
+  {...STIL.formalar.saglikci,num:0,skin:STIL.tenler[2],hair:'#3c2616',style:'short',h:0.98,w:1.04},   /* T10f: sağlıkçı */
+  /* A5 (2026-10-15): eşofmanlı uzun saçlı ince yedek; mullet ve sıyrık çoraplı kısa, yapılı oyuncu */
+  {...STIL.formalar.yedekEv,num:14,skin:STIL.tenler[2],hair:'#3c2616',style:'long',h:1.03,w:0.97,sekil:sekilKur({ad:'Uzun',yapi:0.95,boy:1.05})},
+  {...STIL.formalar.ev,num:10,skin:STIL.tenler[4],hair:'#5a4028',style:'mullet',rolled:true,h:0.97,w:1.05,sekil:sekilKur({ad:'Mullet',yapi:1.09,boy:0.96})}];
 function oyuncu(ek){return Object.assign({tur:'oyuncu',kind:null,team:0,n:5,no:8,rol:'OS',ayak:'sag',boy:1,x:0,z:0,vx:0,vz:0,spd:0,yon:0,yuk:0,eylem:null,
   sevinc:false,poz:null,oyunda:true,cikiyor:false,oturuyor:false,tavir:null,bakisYon:null,denge:1,enerji:1,sonDokunus:null},ek||{});}
 const AKTOR=[];
@@ -539,6 +544,16 @@ const SAYFALAR={
       her:(p,t)=>{p.tavir='koru';p.vx=0.4;p.vz=0;mac.t=t;const r=mac.teams[1][0];r.x=p.x-0.95;r.z=p.z+0.6-1.2*clamp((t-1.0)/0.8,0,1);mac.ball.x=p.x+0.4;mac.ball.z=p.z;},
       rakip:()=>mac.teams[1][0],kareler:[0.4,0.75,1.1,1.5,1.9,2.3,2.7],az:60,uzak:5}]
 };
+/* A5 (2026-10-15; gerçekçilik planı §4 A5): kesitli model — kimlikler önden, yandan, arkadan; vuruşta dirsek ve diz, eller dizlerde, düşüş; yakın
+   (uzak 4,5) ve loca eşdeğeri (uzak 12, oyuncu ~45 px). Satırlar öteki sayfalardan, başka kimlik ve açıyla. Karşılaştırma: &model=kutu | duz | yumusak */
+SAYFALAR.a5model=[
+  {...SAYFALAR.kosu[0],ad:'A5 Koşu 7 m/sn, önden (8)',kit:0,az:15,uzak:4.5},
+  {...SAYFALAR.kosu[0],ad:'A5 Koşu, yandan (4: yapılı, kel, sakallı)',kit:2,az:90,uzak:4.5},
+  {...SAYFALAR.kosu[0],ad:'A5 Koşu, arkadan (14: eşofman, uzun saç)',kit:5,az:180,uzak:4.5},
+  {...SAYFALAR.a2vurus[1],ad:'A5 Şut (8): dirsek ve diz bükülür',kit:0,az:60,uzak:4.5},
+  {...SAYFALAR.a2bekle[1],ad:'A5 Eller dizlerde (10: mullet, sıyrık çorap)',kit:6,az:35,uzak:4.5},
+  {...SAYFALAR.dusus[0],ad:'A5 Düşüş ve kalkış (kaleci)',kit:1,az:45,uzak:5},
+  {...SAYFALAR.kosu[0],ad:'A5 Loca uzaklığı (~45 px)',kit:0,az:30,uzak:12}];
 /* sevinç satırı: gol aşaması, golcü ve hız eğrisi (koşar, yavaşlar) */
 function sevincKur(S,p,a){mac.phase='goal';mac.phaseT=0;mac.score=[1,0];
   if(S.uzgun){p.team=1;mac.celeb={team:0,scorer:null,own:false};p.vx=1.2;return;}

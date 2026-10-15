@@ -77,6 +77,11 @@ const STIL={
   antrenman:{koni:0xff7a1e,flas:0xfff4dc},
 
   tenler:['#e2b48c','#cf9a70','#b07650','#8a5a3c','#ecc49e'],
+  /* A5 (2026-10-15; gerçekçilik planı §4 A5): insan modeli (js/oyuncular.js). tur 'kesit' değişken kesitli halkalardan tek kemikli mesh | 'kutu' eski
+     kutular (karşılaştırma için; kullanıcı A5'i değerlendirene dek, sonra kalkar); normal 'yumusak' Gouraud | 'duz' dilim başına düz gölge (PS1 gibi; köşe iki katı) — A5-0 titreme
+     ölçüsünde (araclar/titreme-olc.py, 10 an, aynı pozlar) dama payı kutu %23,0 · düz %20,8 · yumuşak %20,4: yumuşak gölge titremede gürültü yapmıyor; dilim çevredeki köşe sayısı;
+     eklem diz ve dirsek halkasının şişme payı (bükülünce büzülmesin); sacPay saç kabının kafadan uzaklığı (m). Adres anahtarı ?model=kutu|duz|yumusak. TEST */
+  model:{tur:'kesit',normal:'yumusak',dilim:8,eklem:1.1,sacPay:0.013},
 
   /* Oyuncu animasyonu (js/animasyon.js; E akışı, 2026-10-03; A2a 2026-10-08): yalnız görünüş ayarları, motoru etkilemez. Gerçek değerler
      gerçekçilik planı Ek G0/G1'dedir; adım boyu ve yerde kalma payı hızdan ve boydan hesaplanır (anmAdimBoyu).
