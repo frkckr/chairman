@@ -248,6 +248,7 @@ class Match{
     this.guvenHazirla();   /* T10e: takım güveni (js/mac-takim.js) */
     this.ofsaytBekleyen=null;   /* T10d: bayrağı geç kalkacak ofsayt {p, t, x, z, fark, yanlis, g} (js/mac-kurallar.js ofsaytDokunus) */
     this.santraAcele=false;   /* T10d: gerideki takım topu ağdan alıp koştu: santra kurala göre (stepKick) */
+    this.yariSantra=true;   /* T16a: yarının ilk santrası hazırlanıyor — maç saati düdükle başlar (step; santraHazirla) */
     this.sakatlikHazirla();
     this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,sonTakim:0,hedefOyuncu:null,sut:null,pas:null,
       surum:0,agda:false,direk:false,px:0,py:0,pz:0,ortaBlok:null,hakemDegdi:null,
@@ -331,7 +332,9 @@ class Match{
   /* ============ ana döngü ============ */
   step(dt){
     this.t+=dt;this.phaseT+=dt;this.kare=(this.kare||0)+1;
-    const saat=this.phase!=='halftime'&&this.phase!=='fulltime'&&!MAC_ONCESI.includes(this.phase);
+    /* T16a (2026-10-15): yarının ilk santrası hazırlanırken saat akmaz (ikinci yarıda oyuncular tünelden yürürken yarı 86 maç sn kaybediyordu);
+       gol sonrası santrada akar (uzatmaya gol başına 50 sn girer) */
+    const saat=this.phase!=='halftime'&&this.phase!=='fulltime'&&!MAC_ONCESI.includes(this.phase)&&!(this.yariSantra&&this.phase==='kickoff');
     if(saat){this.gameSec+=dt*saatCarpani();this.ist.toplam+=dt;if(this.phase==='play')this.ist.oyunda+=dt;}
     this.hakemAI(dt);
     switch(this.phase){
@@ -375,6 +378,7 @@ class Match{
   }
   santraHazirla(takim,isinla){
     this.phase='kickoff';this.phaseT=0;this.kickTeam=takim;this.durus=null;this.celeb=null;this.duranSonrasiBitir();   /* T8b */
+    this.yariSantra=this.gameSec<=(this.half-1)*2700;   /* T16a: yarının başı (maç başı ya da devre arası sonrası; gol sonrası değil) */
     const b=this.ball;
     if(isinla||b.agda)this.topuSifirla(0,MZ);
     for(const p of this.players){
@@ -410,7 +414,7 @@ class Match{
       if(!yerinde)this.topuSifirla(0,MZ);
       const al=this.santraAlici(this.kickTeam),t0=this.t-this.phaseT;
       this.on('kickoff',{team:this.kickTeam,half:this.half});this.refs[0].eylem={ad:'duduk',t:0,sure:0.8};
-      this.phase='play';this.phaseT=0;this.santraAcele=false;this.kullanimBaslat('santra',tk,null,t0);   /* T8-0 */
+      this.phase='play';this.phaseT=0;this.santraAcele=false;this.yariSantra=false;this.kullanimBaslat('santra',tk,null,t0);   /* T8-0 */
       tk.x=-0.35*this.dir[tk.team];tk.z=MZ-0.25;tk.vx=tk.vz=0;tk.yon=this.dir[tk.team]>0?0:Math.PI;
       this.sahipYap(tk);this.vurusBaslat(tk,{tur:'pas',hx:al.x,hz:al.z,tip:'yer',alici:al});
     }
