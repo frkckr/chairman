@@ -73,6 +73,9 @@ const STIL={
   sedye:{cerceve:0x8c8c90,bez:0xc8642a},
   /* top toplayıcı çocukların boyu ve eni (yetişkine oran) */
   topcuBoy:{h:0.74,w:0.8},
+  /* A4-7 (2026-10-15): ısınan yedeklerin kolsuz yeleği (eşofmanın üstünde; js/animasyon.js anmYelek): ev, deplasman. Top toplayıcının sarısı,
+     fotoğrafçının turuncusu ve ev kalecisinin sarısından ayrı */
+  yedekYelek:['#a2dc34','#ee5a9c'],
   /* antrenman: koniler, fotoğraf flaşı */
   antrenman:{koni:0xff7a1e,flas:0xfff4dc},
 

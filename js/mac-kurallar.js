@@ -17,6 +17,9 @@ ayarEkle('Kurallar',{
   hakemFaul:0.3,               // T10b: sertliğin faul eşiğine etkisi: eşik − hakemFaul × (sertlik − 0,5) (uçlarda ±0,12; 40'ar maç: sertlik 0,9 → faul 6,8 / sarı 2,6, 0,1 → 4,8 / 1,6 — gerçekte hakemden hakeme ±%15 / ±%25; 0,12'de faul farkı yalnız %5'ti)
   hakemKart:0.25,              // T10b: sertliğin kart eşiğine etkisi (uçlarda ±0,1)
   hakemYorgun:0.15,            // T10b: 75. dakikadan sonra yorgunluk: görme × (1 − f·(1,3 − kondisyon)·hakemYorgun), koşu temposu da düşer (Ek G7: son 15 dakikada hata %23)
+  hakemGeriDon:0.01,           // A4-6: yorgunluğu (hkYorgun) bunu aşan hakem, gideceği yer topa göre 60°'den gerideyse ve 3 m'den uzaksa topa bakmayı bırakıp döner
+                               // (moveP koşu yönüne bakar; Ek G7: son 15 dakikada geri ve yan koşu azalır). 0: kapalı. 0,04'te (72°) son 15 dakikada
+                               // geri + yan payı %33,6 → 28,3 (eşik ortalama hakemde ancak 80'de aşılıyordu)
   itirazKart:0.035,            // T10b: itiraz başına sarı olasılığı (× hakemeItiraz eğilimi, × hakemin sertliği; gerçekte itiraz sarısı maç başına ~0,3)
   kartliHosgoru:0.4,           // U1: sarı kartlı oyuncuya ikinci sarının (pervasızlık ya da gelişen atak) gösterilme olasılığı çarpanı — hakemin ikinci sarıdaki isteksizliği. 20 dakikalık maçta sarı gerçek düzeyde (4–5) ama faul gerçeğin yarısı olduğundan kart/faul ~%31 (gerçekte ~%17): ikinci sarıdan kırmızı 0,28/maç çıkıyordu (gerçekte ~0,05–0,1). İlk deneme (eşiği 0,07 kaydırmak) etkisizdi (40 maç: kartlının faulünde kart %34)
   evEtki:0.03,                 // T10e: hakemin ev sahibi eğilimi: faul ve kart eşiği ± evEtki × atmosfer × (0,5 + evEgilim) (gerçekte deplasman ~%10–20 fazla sarı)
@@ -558,6 +561,9 @@ Object.assign(Match.prototype,{
       const dd=hyp(tx-fx,tz-fz);if(dd<12){const s=12/(dd||1);tx=fx+(tx-fx)*s;tz=fz+(tz-fz)*s;}
       /* T10b: yorgun hakem son 15 dakikada daha yavaş koşar (hkYorgun; Ek G7: geri ve yan koşu yarıya iner) */
       h.tx=clamp(tx,-PL+2,PL-2);h.tz=clamp(tz,2,PW-2);const uzak=hyp(h.tx-h.x,h.tz-h.z);h.hizOran=(uzak>14?1:uzak>5?0.65:0.4)*(1-1.5*hkYorgun(this));h.bak=b;
+      /* A4-6 (Ek G7): yorgun hakem geri geri ve yan yan az koşar — gideceği yer topa göre 60°'den gerideyse ve 3 m'den uzaksa döner (bak yok) */
+      const gd=MOTOR_AYAR.hakemGeriDon;if(gd>0&&uzak>3&&hkYorgun(this)>=gd){const gx=h.tx-h.x,gz=h.tz-h.z,bx=b.x-h.x,bz=b.z-h.z;
+        if(gx*bx+gz*bz<0.5*uzak*(hyp(bx,bz)||1))h.bak=null;}
       /* T10b: hakem topun yolundan çekilir (Ek G7: pas hattını kapatmaz; T10-0'da topa çarpan hakem maç başına 0,5): top 6 m/sn'den hızlı ve
          önümüzdeki 1 sn'de 1,5 m yakınından geçecekse yolun dik yönünde 3 m kenara */
       const bv=hyp(b.vx,b.vz);if(bv>6&&!b.sahip){const nx=-b.vz/bv,nz=b.vx/bv;

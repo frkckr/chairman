@@ -94,7 +94,7 @@ const MOTOR_AYAR={
   kanatRol:undefined,kanatBas:undefined,kanatCizgi:undefined,kanatDerin:undefined,kanatOnde:undefined,kanatUzak:undefined,gecGiris:undefined,
   tutEtki:undefined,
   /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
-  hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,itirazKart:undefined,kartliHosgoru:undefined,evEtki:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
+  hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,hakemGeriDon:undefined,itirazKart:undefined,kartliHosgoru:undefined,evEtki:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
   ofsaytBayrak:undefined,ofsaytBekle:undefined,
   /* K — js/mac-durantop.js (T8) */
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,

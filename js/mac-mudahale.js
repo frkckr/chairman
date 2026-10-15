@@ -683,5 +683,11 @@ EYLEM_ADIM.kayma=function(p,e){
 const mdhKalkisSure=(p,e)=>e.neden==='plonjon'?0.8:hrkAbs(hrkSin((e.yon!=null?e.yon:p.yon)-p.yon))>0.7?1.1:1.6;   /* T14e: plonjondan kalkış (ön kollardan) kısa */
 /* düşüş → yerde → kalkış: yön, neden, şiddet ve yüzüstü bilgisi taşınır (çizim yönü bilir) */
 EYLEM_ADIM.dusus=function(p,e){if(e.t>=e.sure){p.eylem={ad:'yerde',t:0,sure:e.yerde||1.2,kilit:true,fren:12,yon:e.yon,neden:e.neden,siddet:e.siddet,yuzustu:e.yuzustu};return true;}return false;};
-EYLEM_ADIM.yerde=function(p,e){if(e.t>=e.sure){p.eylem={ad:'kalkis',t:0,sure:mdhKalkisSure(p,e),kilit:true,fren:12,yon:e.yon,neden:e.neden,siddet:e.siddet,yuzustu:e.yuzustu};return true;}return false;};
+/* A4-3 (Ek G4): duruşta yerden kalkana 2 m içindeki boştaki arkadaş el uzatır — yalnız okunur alan (eylem.yardim; js/animasyon.js iki bedenli kol
+   IK'sı). Motor kimseyi yürütmez, rastlantı çekmez; oyun sürerken ve plonjon kalkışında (ön kollardan, kısa) yok */
+const mdhKalkisYardim=(m,p,e)=>{if(m.phase==='play'||e.neden==='plonjon')return null;const b=m.ball;let en=null,ed=2;
+  for(const q of m.teams[p.team]){if(q===p||!q.oyunda||q.rol==='GK'||q.eylem||b.sahip===q||b.tasiyan===q)continue;const d=hrkHyp(q.x-p.x,q.z-p.z);if(d<ed){ed=d;en=q;}}
+  return en;};
+EYLEM_ADIM.yerde=function(p,e){if(e.t>=e.sure){p.eylem={ad:'kalkis',t:0,sure:mdhKalkisSure(p,e),kilit:true,fren:12,yon:e.yon,neden:e.neden,siddet:e.siddet,yuzustu:e.yuzustu,
+  yardim:mdhKalkisYardim(this,p,e)};return true;}return false;};
 EYLEM_ADIM.mudahale=function(p,e){if(!e.oldu&&e.t>=e.temas){e.oldu=true;this.mudahaleSonuc(p,e);}else if(e.bacak)mdhBacakTakilma(this,p,e);return false;};

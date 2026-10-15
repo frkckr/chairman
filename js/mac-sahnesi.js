@@ -174,6 +174,7 @@ function macKare(dt){
   const al=birikim/ADIM,b=mac.ball,bx=lerp(TOP.px,b.x,al),bz=lerp(TOP.pz,b.z,al)-MOTOR_Z,T=mac.tunel;
   /* aktörler: konum, poz ve kök (js/animasyon.js) */
   for(const a of AKTORLER)aktorGuncelle(a,al,dts,T);
+  anmYardimIK(AKTORLER);   /* A4-3: yerden kaldırma — iki bedenli kol IK'sı (bütün aktörler güncellendikten sonra) */
   /* hakemin kartı (ikinci sarıda önce sarı, sonra kırmızı; A2b) */
   {const e=mac.refs[0].eylem;KART.visible=!!(e&&e.ad==='kart');if(KART.visible)KART.material.color.setHex(e.renk==='sari'||(e.renk==='ikinciSari'&&e.t<(e.sure||1.7)*0.5)?0xf2d21d:0xd8201e);}
   if(UZATMA.t>=0){UZATMA.t+=dts;if(UZATMA.t>7)UZATMA.t=-1;}
