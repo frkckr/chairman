@@ -86,7 +86,19 @@ ayarEkle('B',{
   sutDikey:1.0,                // T12a: açık oyunda 1 m ve üstüne nişanın yükseklik hatası, yanal hatanın açısı cinsinden (1: aynı açı — T8c serbest vuruş kuralı; alçak nişan 0,35·ky)
   ortaAyak:1,                  // T14c: ortanın planlayıcısı zayıf ayağın sapmasını bilir (vurusAyakK; 0: ayaksız eski sapma)
   devamOrta:1,                 // T14c: kanattaki alıcının orta devamının payı (devamDegeri; 0: kapalı)
-  penaltiDurak:1               // T15c (2026-10-14): penaltıda duraklı koşu (penaltiAtisi, vurusIlerle; 0: hep düz koşu, T14'ün yolu)
+  penaltiDurak:1,              // T15c (2026-10-14): penaltıda duraklı koşu (penaltiAtisi, vurusIlerle; 0: hep düz koşu, T14'ün yolu)
+  /* H1a (2026-10-15; gerçekçilik planı §4 H1): taşıma yönleri (js/mac-karar.js tasimaSecenekleri). 0: yalnız 8 kaba yön, bedelsiz */
+  tasiInce:1,
+  tasiDevam:0.2,               // sürmekte olan yönden 45° (ve üstü) sapan taşımanın bedeli (puan; açıyla orantılı)
+  /* H1c (2026-10-15; gerçekçilik planı §4 H1): bakış (taramaAdim). 0: eski — taramada bakış bir karede 100°'ye sıçrar, 0,28 sn kalır, geri sıçrar;
+     her oyuncu hep aynı aralıkla, hep öbür yana tarar */
+  bakisDinamik:1,
+  bakisHiz:7,                  // bakışın gövdeye göre en çok dönüş hızı (rad/sn; ~400°/sn, çizimde başın sınırı STIL.animasyon.bas.hiz ile aynı)
+  taramaAralik:[0.75,1.3],     // tarama aralığının tarama başına çarpanı (rastlantısız özet; ortalaması ~1: sıklık aynı, ritim düzensiz)
+  taramaGenislik:[1.2,1.9],    // tarama genişliği, gövdeye göre (rad; eskiden hep 1,75)
+  taramaTut:[0.12,0.32],       // bakışın taramanın yönüne vardıktan sonra orada kalma süresi (sn; eskiden toplam 0,28)
+  taramaYan:0.7,               // taramanın yanının bir öncekinin tersi olma olasılığı (eskiden hep ters)
+  bakisDonus:0.5               // gövdenin hedefine bundan (rad) büyük dönüş kaldıkça bakış gövdenin hedefine bakar (gideceği yere bakma)
 });
 /* ---- T9b (2026-10-10; gerçekçilik planı §4 T9 “Vuruş”): vuruş modeli — saf, rastlantısız. Şut planı (js/mac-karar.js sutPlani), pas analizi
    (pasAnaliz) ve vuruş (sutVur, yerPasVur, havaPasVur) aynı işlevleri okur. Stilin payı: azami hıza göre hız (iç ayak plase en yavaşı, üst sert
@@ -142,19 +154,39 @@ Object.assign(Match.prototype,{
     return lerp(MOTOR_AYAR.kararGecikme[1],MOTOR_AYAR.kararGecikme[0],this.taktik[p.team].tempo)+(1-p.oz.karar)*0.15+(p.yorgunluk||0)*0.12;
   },
   /* etrafa bakma (tarama): her oyuncu 2,5 − 1,8·görüş sn'de bir (top ona gelirken daha sık, topu sürerken daha seyrek) omzunun üstünden bakar,
-     herkesin yerini ve hızını hafızaya alır. Baş: taramada gövdeden ±100°, yoksa topa (boyun ±80°). Rastlantısız; takımAI'dan önce */
+     herkesin yerini ve hızını hafızaya alır. Baş: taramada gövdeden ±100°, yoksa topa (boyun ±80°). Rastlantısız; takımAI'dan önce.
+     H1c (2026-10-15; bakisDinamik): bakış bir durumdur — gövdeye göre açısı hedefe en çok bakisHiz ile döner (eskiden bir karede sıçrıyordu), ±1,95
+     rad'ı aşmaz; taramanın aralığı, genişliği, tutma süresi ve yanı tarama başına rastlantısız özetle (h2) değişir (ortalama sıklık aynı); kasıtlı büyük
+     dönüşte (js/mac-hareket.js hrkGovdeDon: p.don.bt, hx) bakış önce yeni yöne gider, gövde arkadan gelir */
   taramaAdim(dt){
-    const b=this.ball,P=this.players,n=P.length,PI=Math.PI,kare=this.kare||0;
+    const b=this.ball,P=this.players,n=P.length,PI=Math.PI,kare=this.kare||0,A=MOTOR_AYAR,BD=A.bakisDinamik;
     for(let i=0;i<n;i++){const p=P[i];if(!p.oyunda||(i+kare)&1)continue;  /* her oyuncu iki karede bir */
       let per=2.5-1.8*p.oz.gorus;
       /* topu süren seyrek bakar; topu ayağının altında bekleten (T2) seçenek arar, daha sık bakar */
       if(b.hedefOyuncu===p)per*=0.55;else if(b.sahip===p)per*=p.tavir==='bekle'?0.5:1.25;
       const v=this.bVeri(p);let T=v.tara;
-      if(!T){T=v.tara={t:0,bas:-9,yan:p.n%2?1:-1,ok:false,x:new Float64Array(n),z:new Float64Array(n),vx:new Float64Array(n),vz:new Float64Array(n)};
+      if(!T){T=v.tara={t:0,bas:-9,yan:p.n%2?1:-1,ok:false,k:0,carp:1,gen:1.75,sure:0.28,r:0,rOk:false,x:new Float64Array(n),z:new Float64Array(n),vx:new Float64Array(n),vz:new Float64Array(n)};
         T.t=this.t-((p.n*0.37+p.team*0.53)%1)*per;this.taramaKaydi(T);}
-      if(this.t-T.t>=per){this.taramaKaydi(T);T.t=this.t;T.bas=this.t;T.yan=-T.yan;}
+      if(this.t-T.t>=per*T.carp){this.taramaKaydi(T);T.t=this.t;T.bas=this.t;
+        if(BD){const o=(p.team*131+p.n*17+(this.tohum|0)*7919)|0,k=++T.k;
+          T.carp=lerp(A.taramaAralik[0],A.taramaAralik[1],h2(o,4*k));T.gen=lerp(A.taramaGenislik[0],A.taramaGenislik[1],h2(o,4*k+1));
+          T.sure=T.gen/A.bakisHiz+lerp(A.taramaTut[0],A.taramaTut[1],h2(o,4*k+2));if(h2(o,4*k+3)<A.taramaYan)T.yan=-T.yan;}
+        else T.yan=-T.yan;}
       let by;
-      if(this.t-T.bas<0.28)by=p.yon+T.yan*1.75;
+      if(BD){/* bakış gövdeye göre bir açıdır (boyun: en çok ±1,95 rad, en çok bakisHiz ile döner; dünyadaki hızı gövdeninkiyle toplanır). Gideceği
+           yere bakar: kasıtlı büyük dönüşün başında (bt) ve gövdenin önünde bakisDonus'tan büyük dönüş kaldıkça hedef açı gövdenin hedefidir —
+           gövdenin döneceği yönde, boyun sınırına kadar (dünyada en kısa yoldan gidince bakış kimi dönüşte gövdenin tersine dönüyor, top arkadayken
+           ±80°'de kıstırılıp gövdeyle birlikte dönüyordu; baş öne geçemiyordu) */
+        const D=p.don;let rt;
+        if(D.ok&&(D.bt>this.t||Math.abs(aciFark(D.hx,p.yon))>A.bakisDonus))rt=aciFark(D.hx,p.yon);
+        else if(this.t-T.bas<T.sure)rt=T.yan*T.gen;
+        else{rt=aciFark(Math.atan2(b.z-p.z,b.x-p.x),p.yon);if(rt>1.4)rt=1.4;else if(rt<-1.4)rt=-1.4;}
+        if(rt>1.95)rt=1.95;else if(rt<-1.95)rt=-1.95;
+        /* gövdeye göre açı durumu (T.r): boyun en çok bakisHiz ile döner; ilk kez ya da bakış başka yerden yazıldıysa (maç başı) bakıştan alınır */
+        if(!T.rOk){const o0=p.bakisYon;T.r=o0==null?rt:aciFark(o0,p.yon);T.rOk=true;}
+        let r0=T.r;if(r0>1.95)r0=1.95;else if(r0<-1.95)r0=-1.95;
+        const lim=A.bakisHiz*2*dt,f=rt-r0;T.r=r0+(f>lim?lim:f<-lim?-lim:f);by=p.yon+T.r;}
+      else if(this.t-T.bas<0.28)by=p.yon+T.yan*1.75;
       else{let f=Math.atan2(b.z-p.z,b.x-p.x)-p.yon;if(f>PI)f-=2*PI;else if(f<-PI)f+=2*PI;by=p.yon+(f>1.4?1.4:f<-1.4?-1.4:f);}
       if(by>PI)by-=2*PI;else if(by<-PI)by+=2*PI;
       p.bakisYon=by;}
@@ -518,7 +550,7 @@ Object.assign(Match.prototype,{
        eklenmez — varlik 128 alan sınırı): kafaVur kilitli kısa kafa eylemi yapar, ardından yüzüstü yere iner (EYLEM_ADIM.kafa, js/mac-hava.js) */
     if(MOTOR_AYAR.plonjon&&p.rol!=='GK'&&!p.zipla&&p.spd>=MOTOR_AYAR.plonjonHiz&&d>=0.5&&d<1.25&&yb>=0.45&&yb<=hvAlinDur(p)-0.3&&!b.sahip&&hyp(b.vx,b.vz)>5&&
       (b.x-p.x)*p.vx+(b.z-p.z)*p.vz>0.64*d*p.spd&&Math.abs(b.x-this.dir[p.team]*PL)<CEZA_U+2&&Math.abs(b.z-MZ)<CEZA_W+2){
-      p._hvTs=0.5;p._hvTy=0;p._hvTd=0;const P=this._plonjon||(this._plonjon={p:null,k:-1});P.p=p;P.k=this.kare;return 'kafa';}
+      p._hv.Ts=0.5;p._hv.Ty=0;p._hv.Td=0;const P=this._plonjon||(this._plonjon={p:null,k:-1});P.p=p;P.k=this.kare;return 'kafa';}
     return null;
   },
   /* temasın sonu: topa erişen oyuncu dokunur (kontrol, göğüs; sert gelen rakip topu bacaktan seker) */

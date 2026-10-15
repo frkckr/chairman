@@ -10,10 +10,12 @@ module.exports={calistir({ctx,vm,N,tohum}){
   m.phase='play';m._hrkOyun=true;m.kare=0;m.t=0;
   const r=vm.runInContext('tohumluRastgele',ctx)((tohum||1)*7919+13),VZ=vm.runInContext('varisZamani',ctx),tepeF=vm.runInContext('hrkTepe',ctx);
   const ornek=[];
+  /* H1b (2026-10-15): gövde dönüşünün durumu (açısal hız, hedef) örnekten örneğe taşınmasın */
+  const donSifirla=p=>{if(p.don)Object.assign(p.don,{w:0,ok:false,hx:0,he:0,t0:-9,yeni:false,bt:-9});};
   for(let i=0;i<N;i++){
     const p=m.players[1+(i%21)];
     Object.assign(p,{eylem:null,kickCd:0,yuk:0,zipla:null,tavir:null,yonHedef:null,bak:null,denge:1,surus:null,_iax:0,_iaz:0,
-      yorgunluk:r()*0.4,enerji:0.5+0.5*r(),x:-30+60*r(),z:10+48*r()});
+      yorgunluk:r()*0.4,enerji:0.5+0.5*r(),x:-30+60*r(),z:10+48*r()});donSifirla(p);
     const vm0=tepeF(p),duran=r()<0.3,sp=duran?r()*0.4:(0.15+0.85*r())*vm0,a=r()*2*Math.PI;
     p.vx=Math.cos(a)*sp;p.vz=Math.sin(a)*sp;p.spd=sp;p.yon=duran?r()*2*Math.PI-Math.PI:a+(r()-0.5)*0.6;
     let b=r()*2*Math.PI,D=0.5+35*Math.pow(r(),1.5),tx=p.x+Math.cos(b)*D,tz=p.z+Math.sin(b)*D;if(tz<2||tz>66){b=-b;tz=p.z+Math.sin(b)*D;}
@@ -46,7 +48,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
      hedef 30 m yana verilir; gidiş yönü 80°'ye varana dek süre, o sürede ileri ve yana gidilen yol (dönüş yarıçapının yaklaşığı), en düşük hız.
      İvme, fren ve dönüş aynı fiziksel sınırdan (hrkYanal): hız arttıkça yarıçap büyür, süre uzar */
   const donus=v=>{const p=m.players[5];Object.assign(p,{eylem:null,kickCd:0,yuk:0,zipla:null,tavir:null,yonHedef:null,bak:null,denge:1,surus:null,_iax:0,_iaz:0,
-      yorgunluk:0,enerji:1,x:-20,z:30,vx:v,vz:0,spd:v,yon:0});
+      yorgunluk:0,enerji:1,x:-20,z:30,vx:v,vz:0,spd:v,yon:0});donSifirla(p);
     const x0=p.x,z0=p.z,oran=Math.min(1,v/tepeF(p));let t=0,vmin=v,t80=null;p.tx=p.x;p.tz=p.z+30;
     while(t<4){m.kare++;m.t+=dt;p.hizOran=oran;p._eforK=m.kare;p.efor=1;p._varisHiz=v;p._varisKare=m.kare;m.moveP(p,dt);t+=dt;
       const s=Math.hypot(p.vx,p.vz);if(s<vmin)vmin=s;if(Math.atan2(p.vz,p.vx)>=80*Math.PI/180){t80=t;break;}}

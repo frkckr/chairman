@@ -271,25 +271,42 @@ function devamDegeri(m,q,x,z,t,bakis,haric){
    taşıyanınki (dönüş + ivmelenme + mesafe/hız); her rakip için en kötü noktadan sigmoid, ulaşan rakip topu her zaman almaz (×0,7).
    Boş alanda ~0,97. Değer: yeni yerdeki devam değeri (yüzü taşıma yönünde) − kayıp */
 const TS_N=4,TS_ADIM=2.5,TS_P=new Float64Array(TS_N),TS_X=new Float64Array(TS_N),TS_Z=new Float64Array(TS_N),TS_T=new Float64Array(TS_N);
+/* H1a (2026-10-15; gerçekçilik planı §4 H1): yönler 8 kaba yön (hücum yönüne göre 45°'lik ızgara) ve tasiInce açıkken en iyi kaba yönün ±22,5°'si
+   ile sürmekte olan yön (topu süren serbest sürüşteyse niyetinin yönü, değilse 1,5 m/sn üstünde gidişi). Yön değiştirmenin bedeli: sürmekte olan
+   yönden açıyla orantılı, 45°'de tasiDevam puan (çok yakın iki değer arasında karar her düşünme anında komşu ızgara çizgisine zıplamasın; eskiden
+   niyet saniyede ~1,3 kez tam 45° değişiyordu). Bir yönün seçeneklerini S'ye ekler, en büyük değeri döndürür */
+function tasimaYonu(m,p,S,a,dv0,rakip,vC){
+  const b=m.ball,d=m.dir[p.team],A=MOTOR_AYAR,takim=m.taktik[p.team];
+  const c=Math.cos(a),s=Math.sin(a),don=Math.max(0,Math.abs(aciFark(a,p.yon))-0.6)/4,bedel=dv0===null?0:A.tasiDevam*Math.min(1,Math.abs(aciFark(a,dv0))/(Math.PI/4));
+  let n=0;for(let i=0;i<TS_N;i++){const x=b.x+c*TS_ADIM*(i+1),z=b.z+s*TS_ADIM*(i+1);if(Math.abs(x)>PL-1||z<1||z>PW-1)break;
+    TS_X[i]=x;TS_Z[i]=z;TS_T[i]=don+0.25+TS_ADIM*(i+1)/vC;TS_P[i]=1;n++;}
+  if(n<1)return -1e9;
+  /* her rakip: noktalara varış; i. noktaya kadarki en kötü risk (TS_P[i]: o noktaya kadar topu kaptırmama) */
+  for(const o of rakip){if(!o.oyunda||(o.eylem&&o.eylem.kilit))continue;
+    const ox=o.x-b.x,oz=o.z-b.z,r=o.maxSpd*1.1*(TS_T[n-1]+0.5)+TS_ADIM*n+1;if(ox*ox+oz*oz>r*r)continue;
+    let en=0;for(let i=0;i<n;i++){const to=varisZamani(o,TS_X[i],TS_Z[i],0.8,0.2),rr=sigma((TS_T[i]+0.1-to)/0.18);if(rr>en)en=rr;TS_P[i]*=1-0.7*en;}}
+  /* T7c: şut bölgesinde (kaleye 24 m) kısa taşıma da tartılır: tek dokunuşla şut açısını açmak */
+  const uz=[];if(don>0.15||b.x*d>PL-24)uz.push(0);if(n>=2)uz.push(1);if(n>=4)uz.push(3);
+  /* değer: yeni yerin devam değeri + taşımanın kendi kazandırdığı (kaybettirdiği) alan (paslardaki ilerleme teriminin aynısı; olmasa geriye
+     taşıyıp ileri pas atmak, oradan pas daha çok metre kazandırdığı için, ileri taşımak kadar değerli görünüyordu) */
+  let enD=-1e9;
+  for(const i of uz){const P=clamp(TS_P[i],0.05,0.98),x=TS_X[i],z=TS_Z[i];
+    const dv=devamDegeri(m,p,x,z,TS_T[i],a),mx=(b.x+x)/2,mz=(b.z+z)/2,ilr=(x-b.x)*d*A.ilerleme;
+    const deger=P*(dv+ilr)-(1-P)*pasKaybi(m,p,mx,mz)*takim.risk*A.risk-bedel;if(deger>enD)enD=deger;
+    S.push({tur:'tasi',hx:x,hz:z,yon:a,mesafe:TS_ADIM*(i+1),deger,P,dv});}
+  return enD;}
 function tasimaSecenekleri(m,p,S){
-  const b=m.ball,d=m.dir[p.team],hA=d>0?0:Math.PI,A=MOTOR_AYAR,takim=m.taktik[p.team],rakip=rakipler(m,p.team);
-  const vC=p.maxSpd*0.72*(0.8+0.12*p.oz.surus)/0.86;
-  for(let j=0;j<8;j++){
-    const a=aciNorm(hA+j*Math.PI/4),c=Math.cos(a),s=Math.sin(a),don=Math.max(0,Math.abs(aciFark(a,p.yon))-0.6)/4;
-    let n=0;for(let i=0;i<TS_N;i++){const x=b.x+c*TS_ADIM*(i+1),z=b.z+s*TS_ADIM*(i+1);if(Math.abs(x)>PL-1||z<1||z>PW-1)break;
-      TS_X[i]=x;TS_Z[i]=z;TS_T[i]=don+0.25+TS_ADIM*(i+1)/vC;TS_P[i]=1;n++;}
-    if(n<1)continue;
-    /* her rakip: noktalara varış; i. noktaya kadarki en kötü risk (TS_P[i]: o noktaya kadar topu kaptırmama) */
-    for(const o of rakip){if(!o.oyunda||(o.eylem&&o.eylem.kilit))continue;
-      const ox=o.x-b.x,oz=o.z-b.z,r=o.maxSpd*1.1*(TS_T[n-1]+0.5)+TS_ADIM*n+1;if(ox*ox+oz*oz>r*r)continue;
-      let en=0;for(let i=0;i<n;i++){const to=varisZamani(o,TS_X[i],TS_Z[i],0.8,0.2),rr=sigma((TS_T[i]+0.1-to)/0.18);if(rr>en)en=rr;TS_P[i]*=1-0.7*en;}}
-    /* T7c: şut bölgesinde (kaleye 24 m) kısa taşıma da tartılır: tek dokunuşla şut açısını açmak */
-    const uz=[];if(don>0.15||b.x*d>PL-24)uz.push(0);if(n>=2)uz.push(1);if(n>=4)uz.push(3);
-    /* değer: yeni yerin devam değeri + taşımanın kendi kazandırdığı (kaybettirdiği) alan (paslardaki ilerleme teriminin aynısı; olmasa geriye
-       taşıyıp ileri pas atmak, oradan pas daha çok metre kazandırdığı için, ileri taşımak kadar değerli görünüyordu) */
-    for(const i of uz){const P=clamp(TS_P[i],0.05,0.98),x=TS_X[i],z=TS_Z[i];
-      const dv=devamDegeri(m,p,x,z,TS_T[i],a),mx=(b.x+x)/2,mz=(b.z+z)/2,ilr=(x-b.x)*d*A.ilerleme;
-      S.push({tur:'tasi',hx:x,hz:z,yon:a,mesafe:TS_ADIM*(i+1),deger:P*(dv+ilr)-(1-P)*pasKaybi(m,p,mx,mz)*takim.risk*A.risk,P,dv});}}
+  const b=m.ball,d=m.dir[p.team],hA=d>0?0:Math.PI,A=MOTOR_AYAR,rakip=rakipler(m,p.team);
+  const vC=p.maxSpd*0.72*(0.8+0.12*p.oz.surus)/0.86,ince=!!A.tasiInce;
+  let dv0=null;
+  if(ince){const su=p.surus;if(b.sahip===p&&su&&!su.koru&&!su.bekle&&!su.cal)dv0=su.yon;else if(hyp(p.vx,p.vz)>1.5)dv0=Math.atan2(p.vz,p.vx);}
+  let enA=null,enD=-1e9;
+  for(let j=0;j<8;j++){const a=aciNorm(hA+j*Math.PI/4),v=tasimaYonu(m,p,S,a,dv0,rakip,vC);if(v>enD){enD=v;enA=a;}}
+  if(!ince||enA===null)return;
+  const a1=aciNorm(enA+Math.PI/8),a2=aciNorm(enA-Math.PI/8);tasimaYonu(m,p,S,a1,dv0,rakip,vC);tasimaYonu(m,p,S,a2,dv0,rakip,vC);
+  /* sürmekte olan yön, değerlendirilen yönlerden 3°'den uzaksa ayrıca */
+  if(dv0!==null){const k=aciFark(dv0,hA)/(Math.PI/4),uzak=Math.abs(k-Math.round(k))*(Math.PI/4)>0.052;
+    if(uzak&&Math.abs(aciFark(dv0,a1))>0.052&&Math.abs(aciFark(dv0,a2))>0.052)tasimaYonu(m,p,S,aciNorm(dv0),dv0,rakip,vC);}
 }
 /* bekle / koru: top ayağın altında, yerinde. Rakip yakınsa gövdeyle korur (koru), değilse başı yukarıda bekler (bekle). Tutma olasılığı baskı
    süresinden ve korumadan (top sürme, sertlik, kütle). Değer: buranın tehdidi ya da koşusu süren arkadaşa 0,6 sn sonra açılacak pas (yalnız

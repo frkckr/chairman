@@ -60,13 +60,13 @@ const hvUcus=h=>2*Math.sqrt(2*h/G);
 /* başın yatay uzanması (m): koşarak sıçrayan daha çok uzanır */
 const hvEgilme=p=>{const E=MOTOR_AYAR.havaEgilme;return E[0]+(p.zipla&&p.zipla.kos&&p.zipla.t>=0?E[1]:0);};
 /* okuma ve zamanlama zarları: oyuncu ve top sürümü başına bir kez (sırası sabit: zamanlama, derinlik, yanal) */
-function hvHataAl(m,p){const b=m.ball;if(p._hvS===b.surum)return;p._hvS=b.surum;const A=MOTOR_AYAR,Z=A.sicramaZaman,O=A.havaOkuma,ok=1-hvOkuma(p),v=hyp(b.vx,b.vz);
-  p._hvE=m.normal()*(Z[0]+Z[1]*ok)*(1+0.3*clamp((v-15)/10,0,1));const sd=O[0]+O[1]*ok;p._hvD=m.normal()*sd;p._hvL=m.normal()*sd*0.5;}
+function hvHataAl(m,p){const b=m.ball,H=p._hv;if(H.S===b.surum)return;H.S=b.surum;const A=MOTOR_AYAR,Z=A.sicramaZaman,O=A.havaOkuma,ok=1-hvOkuma(p),v=hyp(b.vx,b.vz);
+  H.E=m.normal()*(Z[0]+Z[1]*ok)*(1+0.3*clamp((v-15)/10,0,1));const sd=O[0]+O[1]*ok;H.D=m.normal()*sd;H.L=m.normal()*sd*0.5;}
 /* kafa teması (adımın topu b.p* → b.*): baş merkezi (p.x, hvAlin, p.z) yatayda hvEgilme'ye kadar topa uzanır; top merkezi baş merkezine
    0,23 m'den (iki yarıçap) yaklaşınca erişimdedir. Oyuncu alnını topun hizasına getirir: erişimdeki top alnın 0,12 m üstünden alçaksa değer
    (−0,12 altı: fazla yüksek sıçradı, top yüze ya da boyna gelir); daha yüksekse ve inerken alnın hizasına gelmeden erişimden çıkmayacaksa bekler,
-   çıkacaksa başın tepesiyle sıyırır. Adım 6 ara noktada taranır. Rastlantısız; temas yoksa false; varsa p._hvTs (kesir 0–1), p._hvTy (top − baş,
-   m), p._hvTd (yatay uzaklık, m) yazılır (oyuncu nesnesinde, ayırma yok) */
+   çıkacaksa başın tepesiyle sıyırır. Adım 6 ara noktada taranır. Rastlantısız; temas yoksa false; varsa p._hv.Ts (kesir 0–1), p._hv.Ty (top − baş,
+   m), p._hv.Td (yatay uzaklık, m) yazılır (oyuncunun _hv nesnesinde, ayırma yok; H1-0b 2026-10-15: yedi seyrek alan tek nesnede) */
 const HV_T={s:0,e:0,dh:0};
 /* genel sınama: top a → b parçası (hız v), baş merkezi (px, hy, pz), uzanma L. Temas varsa HV_T doldurulur (s kesir, e top − baş, dh topun
    yolunun başa en yakın yatay uzaklığı), kesir döner; yoksa −1 */
@@ -81,7 +81,7 @@ function hvTemasG(ax,ay,az,bx,by,bz,vx,vy,vz,px,hy,pz,L){const dx=bx-ax,dy=by-ay
     HV_T.s=s;HV_T.e=e;HV_T.dh=ca<dh?ca:dh;return s;}
   return -1;}
 function hvTemas(m,p){const b=m.ball;if(hvTemasG(b.px,b.py,b.pz,b.x,b.y,b.z,b.vx,b.vy,b.vz,p.x,hvAlin(p),p.z,hvEgilme(p))<0)return false;
-  p._hvTs=HV_T.s;p._hvTy=HV_T.e;p._hvTd=HV_T.dh;return true;}
+  const H=p._hv;H.Ts=HV_T.s;H.Ty=HV_T.e;H.Td=HV_T.dh;return true;}
 /* T6b: bu adımda teması olmayan düellocunun başı topa önümüzdeki n adımda değer mi (topun öngörülen yolu, sıçramanın parabolü, yatay hızı);
    değerse süre (sn), değmezse −1. Rastlantısız */
 function hvTemasOnu(m,p,n){const yol=m.topYolu(),i0=Math.max(0,Math.round((m.t-m._yolT0)*60)-1),z=p.zipla,b=m.ball,dt=1/60,aD=hvAlinDur(p),L=hvEgilme(p);
@@ -90,8 +90,8 @@ function hvTemasOnu(m,p,n){const yol=m.topYolu(),i0=Math.max(0,Math.round((m.t-m
     const s=hvTemasG(a.x,a.y,a.z,c.x,c.y,c.z,(c.x-a.x)/dt,(c.y-a.y)/dt,(c.z-a.z)/dt,p.x+p.vx*t,aD+yk,p.z+p.vz*t,L);
     if(s>=0)return(k-1+s)*dt;a=c;}
   return -1;}
-/* T6c: kafanın teması (bu adımın temasından: p._hvTy, p._hvTd) ve yüzeye göre [isabet σ çarpanı, güç çarpanı] */
-const hvYuzey=p=>{const e=p._hvTy;if(e>0.12)return 'tepe';if(e<-0.12)return 'yuz';return p._hvTd>hvEgilme(p)+0.06?'yan':'alin';};
+/* T6c: kafanın teması (bu adımın temasından: p._hv.Ty, p._hv.Td) ve yüzeye göre [isabet σ çarpanı, güç çarpanı] */
+const hvYuzey=p=>{const e=p._hv.Ty;if(e>0.12)return 'tepe';if(e<-0.12)return 'yuz';return p._hv.Td>hvEgilme(p)+0.06?'yan':'alin';};
 const HV_YUZEY={alin:[1,1],yan:[1.6,0.85],tepe:[2.4,0.55],yuz:[3,0.4]};
 /* T6d: algı vekilinin (karar katmanı) kaynağı: vekil boy ve profil taşımayabilir */
 const hvKaynak=(m,o)=>o.kaynak||(o.vekil&&m.teams[o.team]?m.teams[o.team][o.n]:o)||o;
@@ -153,24 +153,24 @@ Object.assign(Match.prototype,{
       hvHataAl(this,p);
       const h=cek?hM:clamp(ihtiyac+0.06,0.12,hM),T=hvUcus(h);
       /* kalkış anı: tepe temas anında (+ ε); kalkış temasa yetişmiyorsa (temastan en az 0,08 sn önce yerden kesilemiyorsa) sıçranmaz */
-      if(tc+p._hvE<=hz+T/2+0.5/60&&tc-hz>=0.08)p.zipla={t:-hz,sure:T,tepe:h,kos,hz,cx,cz,tt:tc-hz,v0:sp};
+      if(tc+p._hv.E<=hz+T/2+0.5/60&&tc-hz>=0.08)p.zipla={t:-hz,sure:T,tepe:h,kos,hz,cx,cz,tt:tc-hz,v0:sp};
     }
   },
   /* ============ T6b: hava topu — topa yolu boyunca ilk değen baş kazanır ============
-     kafa: bu adımda kafa teması olanlar (erisim → hvTemas; p._hvTs, p._hvTy, p._hvTd). Düello: kazananın 1,25 m içinde havadaki, sıçramaya
+     kafa: bu adımda kafa teması olanlar (erisim → hvTemas; p._hv.Ts, p._hv.Ty, p._hv.Td). Düello: kazananın 1,25 m içinde havadaki, sıçramaya
      hazırlanan ya da teması olan rakip (kaleci ve kilitli eylemdeki hariç). Düelloya girenler boş kafa eylemi alır; güçlü ve daha yükseğe çıkan
      rakibi iter (havadaki oyuncu yere dengesiz inebilir); en yakın rakiple hava faulü sınanır */
   havaTopu(kafa){
     let w=kafa[0];
-    for(const a of kafa){if(a===w)continue;const p=a.p,q=w.p;if(p._hvTs<q._hvTs-1e-9||(p._hvTs<=q._hvTs+1e-9&&hvGuc(p)>hvGuc(q)))w=a;}
+    for(const a of kafa){if(a===w)continue;const p=a.p,q=w.p;if(p._hv.Ts<q._hv.Ts-1e-9||(p._hv.Ts<=q._hv.Ts+1e-9&&hvGuc(p)>hvGuc(q)))w=a;}
     let W=w.p;const R=this._hvR||(this._hvR=[]);R.length=0;
     for(const o of this.teams[1-W.team]){if(!o.oyunda||o.rol==='GK'||(o.eylem&&o.eylem.kilit))continue;const d=hrkHyp(o.x-W.x,o.z-W.z);if(d>1.25)continue;
       if(o.zipla||kafa.some(a=>a.p===o))R.push(o);}
     if(R.length){this.ist.havaTopu++;let kay=null,kd=9;
       /* neredeyse aynı anda varış: rakibin başı topa 0,1 sn içinde değecekse temas anları (+ sapma havaDuello) karşılaştırılır; erken olan kazanır */
-      const sd=MOTOR_AYAR.havaDuello;let enT=W._hvTs/60+this.normal()*sd,en=-1;
-      for(let i=0;i<R.length;i++){const q=R[i],ak=kafa.some(a=>a.p===q),t0=ak?q._hvTs/60:hvTemasOnu(this,q,6);if(t0<0)continue;
-        if(!ak){q._hvTs=HV_T.s;q._hvTy=HV_T.e;q._hvTd=HV_T.dh;}   /* T6c: öngörülen temasın yüzeyi */
+      const sd=MOTOR_AYAR.havaDuello;let enT=W._hv.Ts/60+this.normal()*sd,en=-1;
+      for(let i=0;i<R.length;i++){const q=R[i],ak=kafa.some(a=>a.p===q),t0=ak?q._hv.Ts/60:hvTemasOnu(this,q,6);if(t0<0)continue;
+        if(!ak){const H=q._hv;H.Ts=HV_T.s;H.Ty=HV_T.e;H.Td=HV_T.dh;}   /* T6c: öngörülen temasın yüzeyi */
         const t=t0+this.normal()*sd;if(t<enT){enT=t;en=i;}}
       if(en>=0){const q=R[en];R[en]=W;W=q;}
       for(const q of R){q.eylem={ad:'kafa',t:0,sure:0.5,bos:true};q.kickCd=0.4;

@@ -70,7 +70,7 @@ const MOTOR_AYAR={
   enerjiTopla:undefined,yanTavan:undefined,geriTavan:undefined,donusSiniri:undefined,ayakBas:undefined,varisHizi:undefined,varisFren:undefined,
   jokeyMesafe:undefined,birebirYayilim:undefined,birebirErisim:undefined,birebirYaris:undefined,birebirKayma:undefined,birebirDonus:undefined,
   birebirVazgec:undefined,yutmaGuc:undefined,yutmaSure:undefined,destekSure:undefined,kapatYakin:undefined,dokunusSiklik:undefined,
-  dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,
+  dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,govdeDinamik:undefined,donusIvme:undefined,bakOlu:undefined,donusGecikme:undefined,bakisOnce:undefined,
   /* C — js/mac-mudahale.js */
   mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
   acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,elOlasilik:undefined,tutmaIstek:undefined,ortaTemas:undefined,
@@ -83,7 +83,7 @@ const MOTOR_AYAR={
   ofsaytAlgi:undefined,kosuIstegi:undefined,aliciPay:undefined,uzaklastirDeger:undefined,hedefDeger:undefined,devamAgirlik:undefined,
   devamHedef:undefined,sabir:undefined,sabirSure:undefined,devamPas:undefined,bekleOran:undefined,koruDeger:undefined,koruSure:undefined,
   koruTempo:undefined,dusunHz:undefined,pasTol:undefined,pasTolHava:undefined,ortaDestek:undefined,ikinciTopHedef:undefined,araKalib:undefined,birebirMenzil:undefined,birebirKayip:undefined,
-  birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,
+  birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,tasiInce:undefined,tasiDevam:undefined,bakisDinamik:undefined,bakisHiz:undefined,taramaAralik:undefined,taramaGenislik:undefined,taramaTut:undefined,taramaYan:undefined,bakisDonus:undefined,
   /* D — js/mac-kaleci.js */
   kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,penaltiOku:undefined,penaltiKanma:undefined,kaleciNiyet:undefined,kaleciNiyetEsik:undefined,
   /* T — js/mac-takim.js */
@@ -287,7 +287,13 @@ class Match{
       _algS:undefined,_algVx:undefined,_algVz:undefined,_omuzT:undefined,_tmsS:undefined,_tmsT:undefined,_tepkiS:undefined,_tepkiJ:undefined,_acikBas:undefined,_acikKare:undefined,_gecS:undefined,_gecT:undefined,_destek:undefined,_destekK:undefined,
       _kp:undefined,_duz:undefined,_pen:undefined,_poz:undefined,_sonKurt:undefined,
       /* T6a: sıçramanın zamanlama hatası (top sürümü, sn; js/mac-hava.js sicramalar) */
-      _hvS:-1,_hvE:0,_hvD:0,_hvL:0,_hvTs:0,_hvTy:0,_hvTd:0,
+      /* H1-0b (2026-10-15): T6a'nın yedi seyrek alanı tek nesnede (varlik 128 alan sınırı; TEKNIK_PLAN §8): S top sürümü, E zamanlama, D/L okuma
+         derinlik/yanal, Ts/Ty/Td kafa temasının kesri, top − baş ve yatay uzaklığı */
+      _hv:{S:-1,E:0,D:0,L:0,Ts:0,Ty:0,Td:0},
+      /* H1 (2026-10-15): gövde dönüşünün ve bakışın durumu (js/mac-hareket.js hrkGovdeDon, js/mac-topla.js taramaAdim; çizim okumaz): w açısal
+         hız (rad/sn), ok hedef tanımlı mı, hx son ham hedef, he etkin hedef, t0 hedef sıçramasının anı, yeni bakılan şeye yeniden yönelme sürüyor
+         mu, bt bakışın yeni yöne önden gittiği sürenin bitiş anı */
+      don:{w:0,ok:false,hx:0,he:0,t0:-9,yeni:false,bt:-9},
       /* T7d: müdahale tahmininin önbelleği (çarpan, kare, rakip; js/mac-takim.js mudahaleTahminCarpani) */
       _mt:undefined,_mtK:undefined,_mtS:undefined,
       /* T1 iç alanları: kararlı hedef, efor karesi, kip ve süresi, son ivme (karede hız değişimi), düşünme aralığı (kare) */

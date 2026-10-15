@@ -9,7 +9,7 @@ Kullanım:
   python araclar/animasyon-olcum.py --once t5            # dondurulmuş "önce" animasyonu (araclar/karsilastir/t5/animasyon.js; dondur.js üretir)
   python araclar/animasyon-olcum.py --json araclar/taban/t7-anm.json        # sonucu kaydet (tur kapanışında turun animasyon tabanı)
   python araclar/animasyon-olcum.py --karsilastir araclar/taban/t7-anm.json # kayıtlı sonuçla yan yana
-  Seçenekler: --tohum N · --sure S (oyun saniyesi; varsayılan 180)
+  Seçenekler: --tohum N · --sure S (oyun saniyesi; varsayılan 180) · --ayar JSON (H1: MOTOR_AYAR'ı kodu değiştirmeden aç/kapat; ör. '{"govdeDinamik":0}')
 
 Ölçütler ("A:" satırları; tanım ve hedefler Ek G9). Bantlar oyuncunun çizilen hızından: duran < 0,3 · yürüyüş < 2 · koşu 2–5 ·
 hızlı 5–7 · depar ≥ 7 m/sn. "Eylemsiz": oyuncunun eylemi yok (vuruş, kontrol, düşüş, kaleci hareketi … dışında; tavır olabilir).
@@ -687,6 +687,12 @@ async def olc(a):
             await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}")
             await pg.wait_for_selector("#btnMacaGec", timeout=30000)
             await pg.evaluate("__kare(2)")
+            if a.ayar:
+                # H1 (2026-10-15): motor ayarlarını kodu değiştirmeden aç/kapat (mac-deneme.js MAC_DENEME_AYAR karşılığı; bilinmeyen anahtar hata)
+                bil = await pg.evaluate("(o) => { const b = Object.keys(o).filter(k => !(k in MOTOR_AYAR)); Object.assign(MOTOR_AYAR, o); return b; }", json.loads(a.ayar))
+                if bil:
+                    raise SystemExit("bilinmeyen MOTOR_AYAR anahtarı: " + ", ".join(bil))
+                print(f"MOTOR_AYAR: {a.ayar}")
             if a.once:
                 await pg.evaluate(YUKLE.read_text(encoding="utf-8") + "\n;window.anmOnceYukle = anmOnceYukle; true;")
                 n = await pg.evaluate("(s) => anmOnceYukle(window, s)", (KARSILASTIR / a.once / "animasyon.js").read_text(encoding="utf-8"))
@@ -738,6 +744,7 @@ def ana():
     ap.add_argument("--once", default=None, choices=sorted(d.name for d in KARSILASTIR.iterdir() if (d / "animasyon.js").is_file()),
                     help="dondurulmuş animasyon: araclar/karsilastir/<ad>/animasyon.js (turun başında dondur.js <ad>)")
     ap.add_argument("--json")
+    ap.add_argument("--ayar", default=None, help="H1: MOTOR_AYAR üzerine JSON (ör. '{\"govdeDinamik\":0}'; aynı kodla önce/sonra)")
     ap.add_argument("--karsilastir")
     ap.add_argument("--hiz", type=int, default=1, choices=[1, 2, 4, 8, 16], help="oynatma hızı (MAC_HIZ; T4-V: hız katlarında vuruş katmanının kararlılığı)")
     ap.add_argument("--kaleci", type=int, default=0, help="T9b-e: kaleye N yapay şut (d-sut kalıbı; maç oynanmaz; yalnız kurtarış satırı anlamlıdır)")

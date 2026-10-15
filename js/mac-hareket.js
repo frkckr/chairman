@@ -71,7 +71,13 @@ ayarEkle('C',{
   /* T5 (2026-10-09): rakibe çarpmama (moveP) — kasıtlı temas dışında oyuncu rakibin gövdesine (merkezler 0,72 m) kendi hızının ona doğru payıyla
      en çok √(2·temasFren·(d − 0,72)) + temasHiz hızla yaklaşır */
   temasFren:4,                 // öngörülü yavaşlama (m/sn²; fren kapasitesinin ~yarısı: tepki payı)
-  temasHiz:1.2                 // gövde temasına izin verilen yaklaşma hızı (m/sn; hafif temas, omuz omuza)
+  temasHiz:1.2,                // gövde temasına izin verilen yaklaşma hızı (m/sn; hafif temas, omuz omuza)
+  /* H1b (2026-10-15; gerçekçilik planı §4 H1): saha oyuncusunun gövde dönüşü (hrkGovdeDon). 0: eski sabit hızlı dönüş */
+  govdeDinamik:1,
+  donusIvme:45,                // gövdenin açısal ivme sınırı (rad/sn²): yerinde 6 rad/sn'ye ~0,13 sn'de çıkar, hedefe aşmadan yavaşlayarak varır
+  bakOlu:0.35,                 // bakılan şeye (p.bak) ölü bölge (rad): içindeyken gövde dönmez (baş bakar); 1,8 katını aşınca gövde hedefe tam döner
+  donusGecikme:0.06,           // kasıtlı büyük hedef sıçramasında (> 0,6 rad) gövdenin eski hedefinde kalma süresi (sn): baş önden döner
+  bakisOnce:0.3                // kasıtlı büyük dönüşte bakışın yeni yöne önden gittiği süre (sn; js/mac-topla.js taramaAdim okur)
 });
 /* çeviklik (0–1): top sürme, hız ve hafiflikten türetilir (kadro verisi değişmez) */
 const hrkCeviklik=p=>{if(p._cev!=null)return p._cev;const o=p.oz||{},s=o.surus!=null?o.surus:0.5,h=o.hiz!=null?o.hiz:0.5;
@@ -88,6 +94,27 @@ const hrkSabit=p=>{const k=p._hk;if(k)return k;if(k===undefined)hrkHazirla(p);co
 const hrkTepe=p=>p.maxSpd*(0.86+0.14*(p.enerji!=null?p.enerji:1))*(1-0.12*(p.yorgunluk||0))*(p.topal?0.75:1);   /* T10c: topallayan %25 yavaş (Ek G4) */
 /* T4-V: vuruş hazırlığındaki gövde dönüş hızı (rad/sn; hızlanınca düşer). moveP ve vurusIlerle'nin kalan süre hesabı aynı değeri okur */
 const hrkVurusDonus=p=>{const w=MOTOR_AYAR.vurusDonus,k=hrkMin(1,p.spd/p.maxSpd);return hrkMin(w[1],hrkSabit(p).w0*w[0])*(1-0.3*k);};
+/* H1b (2026-10-15; gerçekçilik planı §4 H1): saha oyuncusunun gövde dönüşü. Eskiden gövde hedefe sabit hızla (yerinde 5,5–8 rad/sn) aynı karede
+   başlayıp aynı karede duruyor, bakılan topu taret gibi kesintisiz izliyordu. Şimdi açısal hız bir durumdur (p.don.w): ivme sınırıyla değişir
+   (donusIvme) ve hedefe aşmadan yaklaşır (ω* = min(ωmax, √(2α|f|), |f|/dt)); tepe hız eskisiyle aynıdır (wMax). Bakılan şeye (kay 2: p.bak) ölü
+   bölge: hedef bakOlu içindeyken gövde dönmez (çizimde baş bakar), 1,8·bakOlu'yu aşınca gövde hedefe tam döner (yeniden yönelme). Kasıtlı büyük
+   hedef sıçramasında (> 0,6 rad; kay 0 açık hedef, 1 koşu yönü, 3 yavaş gidiş) gövde donusGecikme kadar eski hedefinde kalır ve bakış bakisOnce
+   boyunca yeni yöne önden gider (p.don.bt, hx; js/mac-topla.js taramaAdim). Hedef yoksa gövde yavaşlayıp durur. Rastlantısız */
+function hrkGovdeDon(m,p,yh,kay,wMax,dt){
+  const D=p.don,A=MOTOR_AYAR;let tut=false,f=0;
+  if(yh==null)tut=true;
+  else{
+    if(!D.ok){D.ok=true;D.hx=yh;D.he=yh;}
+    if(kay!==2&&hrkAbs(hrkAciFark(yh,D.hx))>0.6){D.t0=m.t;D.bt=m.t+A.bakisOnce;}
+    D.hx=yh;if(m.t-D.t0>=A.donusGecikme)D.he=yh;
+    f=hrkAciFark(D.he,p.yon);
+    if(kay===2){const fa=hrkAbs(f);if(D.yeni){if(fa<0.05)D.yeni=false;}else if(fa>1.8*A.bakOlu)D.yeni=true;if(!D.yeni)tut=true;}
+    else D.yeni=false;}
+  const a=A.donusIvme,fa=tut?0:hrkAbs(f),wh=fa<1e-5?0:(f<0?-1:1)*hrkMin(wMax,hrkKok(2*a*fa),fa/dt);
+  let w=D.w+clamp(wh-D.w,-a*dt,a*dt),st=w*dt;
+  if(!tut&&st*f>0&&hrkAbs(st)>fa){st=f;w=f/dt;}
+  p.yon=hrkAciNorm(p.yon+st);D.w=w;
+}
 /* gövdenin baktığı yöne göre hız tavanı (oran; c: bakış ile gidiş yönü arasındaki açının kosinüsü): ileri 1, yana adım ~0,52, geri geri ~0,42 */
 const hrkYonTavan=c=>{const y=MOTOR_AYAR.yanTavan;return c>=0?y+(1-y)*c:y+(y-MOTOR_AYAR.geriTavan)*c;};
 /* yanal tutunma (k=v/vmax) */
@@ -341,7 +368,7 @@ Object.assign(Match.prototype,{
     if(oyun&&p.denge<1)p.denge=hrkMin(1,p.denge+dt*(e2&&e2.kilit?0.35:0.9));
     if(e2&&e2.kilit){/* düşme, yerde yatma, kayma, uçuş: kendi hareketi */
       p.x+=p.vx*dt;p.z+=p.vz*dt;const s=hrkHyp(p.vx,p.vz),ns=hrkMax(0,s-(e2.fren||9)*dt);if(s>0){p.vx*=ns/s;p.vz*=ns/s;}p.spd=ns;
-      p._iax=0;p._iaz=0;p.kip=hrkKipAdi(ns);return;}
+      p._iax=0;p._iaz=0;p.kip=hrkKipAdi(ns);p.don.w=0;return;}
     /* tavır (jokey, koru) her karede tazelenir; tazelenmediyse kalkar */
     if((p.tavir==='jokey'||p.tavir==='koru'||p.tavir==='bekle')&&p._tavirKare!==this.kare)p.tavir=null;
     /* tünelden geçerken önce ağza yürü (tribün duvarının içinden geçmesin) */
@@ -359,16 +386,22 @@ Object.assign(Match.prototype,{
     /* kovalayan (bu karede karşılama verdi) ve eylemdeki (vuruş hazırlığı) düşük eforda kip seçmez: rahat ivmeyle hedefe kadar gider */
     if(acik&&saha&&ef<0.8&&!e2&&p._varisKare!==this.kare)hedefHiz=hrkMin(hedefHiz,this.kipSec(p,d,ef,vm,dt));else p._kipT=0;
     /* bakış: açıkça verilmişse ona; yavaş ve kısa hareketlerde bakılan şeye (topa); koşuda gidilen yöne */
-    let yh=p.yonHedef;
+    let yh=p.yonHedef,kay=0;
+    const GD=A.govdeDinamik&&saha&&!(e2&&e2.ad==='vurus');
     if(yh==null){
-      /* hızlı gitmesi gereken oyuncu gideceği yöne döner ve koşar; bir iki adımlık ayarda yüzü topa (bakılan şeye) dönük kalır */
-      if(hedefHiz>2.8&&d>1.2)yh=hrkAtan2(dz,dx);
-      else if(p.bak){const bx=p.bak.x-p.x,bz=p.bak.z-p.z;if(bx*bx+bz*bz>0.04)yh=hrkAtan2(bz,bx);}
-      else if(hedefHiz>0.4)yh=hrkAtan2(dz,dx);
+      /* hızlı gitmesi gereken oyuncu gideceği yöne döner ve koşar; bir iki adımlık ayarda yüzü topa (bakılan şeye) dönük kalır. H1b'de giriş ve
+         çıkışı ayrı eşikli (histerezis) denendi: koşu ↔ bakış geçişi oyuncu·dk başına ~7+7 kez kaldı (geçişler eşik titremesi değil, gerçek koşu
+         başlangıcı ve duruşu); 3,2/2,4 m/sn'lik eşik savunma hattının geri çekilişini geciktirip ofsaytı +0,5/maç artırdı — tek eşik kaldı */
+      if(hedefHiz>2.8&&d>1.2){yh=hrkAtan2(dz,dx);kay=1;}
+      else if(p.bak){const bx=p.bak.x-p.x,bz=p.bak.z-p.z;if(bx*bx+bz*bz>0.04){yh=hrkAtan2(bz,bx);kay=2;}}
+      else if(hedefHiz>0.4){yh=hrkAtan2(dz,dx);kay=3;}
     }
     /* dönüş hızı: saha oyuncusu yerinde 5,5–8 rad/sn (çeviklik), hızlanınca yarıya yakın; vuruş hazırlığında hrkVurusDonus (T4-V; çizimle ortak);
        kaleci ve diğerleri eski değer */
-    if(yh!=null){const k=hrkMin(1,p.spd/p.maxSpd),f=hrkAciFark(yh,p.yon),oran=(saha?(e2&&e2.ad==='vurus'?hrkVurusDonus(p):hk.w0*(1-0.5*k)):11-7*k)*dt;p.yon=hrkAciNorm(p.yon+clamp(f,-oran,oran));}
+    if(GD)hrkGovdeDon(this,p,yh,kay,hk.w0*(1-0.5*hrkMin(1,p.spd/p.maxSpd)),dt);
+    else if(yh!=null){const k=hrkMin(1,p.spd/p.maxSpd),f=hrkAciFark(yh,p.yon),oran=(saha?(e2&&e2.ad==='vurus'?hrkVurusDonus(p):hk.w0*(1-0.5*k)):11-7*k)*dt,st=clamp(f,-oran,oran);p.yon=hrkAciNorm(p.yon+st);
+      /* H1b: vuruş hazırlığında eski dönüş (T4-V çizimle ortak); durum sürekli kalsın */
+      if(A.govdeDinamik&&saha){const D=p.don;D.w=st/dt;D.ok=true;D.hx=yh;D.he=yh;D.yeni=false;}}
     /* M1 (2026-10-10, hız): hedefinde duran oyuncu dışı varlık (hakem, kenar, ısınmayan yedek; adım başına ~19 çağrı). Buradan sonrası onun için
        kesindir: hedef hızı 0 ve yön birimi 0 olduğundan istenen hız, ivme ve sarsıntı +0, kip 'dur'; aşağıdaki tam yolun yaptığı atamalar aynen
        yapılır (±0 dahil: +0 eklenir). Oyuncunun enerji hesabı olduğu için oyuncu tam yoldan geçer */
@@ -472,7 +505,7 @@ Object.assign(Match.prototype,{
       if(tb!=null&&varisZamani(p,on.x,on.z,0.45,0.1)<=tb+0.15)k={x:on.x,z:on.z,t:tb};}
     p._kar={x:k.x,z:k.z,surum:b.surum};
     /* T6b: topun uçuşunu okuma — havadaki topta karşılama noktası derinlik ve yanal hata kadar kayar (karşılamaya 1 sn kalandan %60'a iner) */
-    if(havada&&hMax>1.6){hvHataAl(this,p);const v=hrkHyp(b.vx,b.vz);if(v>1){const ux=b.vx/v,uz=b.vz/v,f=clamp(k.t,0.6,1);k={x:k.x+(ux*p._hvD-uz*p._hvL)*f,z:k.z+(uz*p._hvD+ux*p._hvL)*f,t:k.t};}}
+    if(havada&&hMax>1.6){hvHataAl(this,p);const v=hrkHyp(b.vx,b.vz);if(v>1){const ux=b.vx/v,uz=b.vz/v,f=clamp(k.t,0.6,1);k={x:k.x+(ux*p._hv.D-uz*p._hv.L)*f,z:k.z+(uz*p._hv.D+ux*p._hv.L)*f,t:k.t};}}
     /* ara pasında alıcı koşusuna devam eder: pasın hedefine top gelmeden yetişebiliyorsa oraya gider */
     const ph=b.pasHedef;
     if(b.hedefOyuncu===p&&ph&&ph.tur==='ara'){const yol=this.topYolu(),i0=hrkMax(0,Math.round((this.t-this._yolT0)*60)-1);
