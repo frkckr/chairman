@@ -74,9 +74,9 @@ Object.assign(Match.prototype,{
       const giren=hucumcu&&cikan.rol!=='DEF'?hucumcu:savunmaci&&cikan.rol==='OS'?savunmaci:sec(y=>y.rol===cikan.rol)||yedek.find(y=>y.isiniyor)||yedek[0];
       plan.shift();
       giren.oturuyor=false;giren.poz=null;giren.tx=0;giren.tz=-0.7;giren.hizOran=0.5;giren.bak=cikan;
-      /* çıkan oyuncu en yakın çizgiden çıkar; ana tribün tarafındaysa kulübeye yürür. T10d: öndeki takımın çıkanı son dakikalarda yavaş yürür */
-      cikan.hizOran=0.35*(1-0.5*(this._niyet?this._niyet[t].zamanGecir:0));
-      this.degisiklik={t,cikan,giren,t0:this.t,girdi:false};
+      /* çıkan oyuncu en yakın çizgiden çıkar; ana tribün tarafındaysa kulübeye yürür. T10d: öndeki takımın çıkanı son dakikalarda yavaş yürür
+         (T16a: hız degisiklikAdim'de dg.cikHiz'den — eskiden her karede 0,6'ya eziliyordu; olağan hız 0,6 aynen) */
+      this.degisiklik={t,cikan,giren,t0:this.t,girdi:false,cikHiz:0.6*(1-0.5*(this._niyet?this._niyet[t].zamanGecir:0))};
       this.uzatmaBirikim[this.half-1]+=30;
       this.on('degisiklik',{takim:t,cikan,giren,skor:fark<0?'geri':fark>0?'onde':'esit'});
       return;}
@@ -131,7 +131,7 @@ Object.assign(Match.prototype,{
     const dg=this.degisiklik;if(!dg)return;
     const {cikan,giren,t}=dg;
     /* çıkan: en yakın çizgiye yürür (kulübe tarafına), geçince kulübeye */
-    if(!dg.girdi){cikan.tx=clamp(cikan.x,-PL+2,PL-2);cikan.tz=cikan.z<MZ?-0.8:PW+0.8;cikan.hizOran=0.6;cikan.bak=null;cikan.yonHedef=null;
+    if(!dg.girdi){cikan.tx=clamp(cikan.x,-PL+2,PL-2);cikan.tz=cikan.z<MZ?-0.8:PW+0.8;cikan.hizOran=dg.cikHiz||0.6;cikan.bak=null;cikan.yonHedef=null;
       giren.tx=0;giren.tz=-0.7;giren.hizOran=0.55;
       const disarida=cikan.z<0.2||cikan.z>PW-0.2,girenHazir=hyp(giren.x,giren.z+0.7)<1.2;
       if((disarida&&girenHazir)||this.t-dg.t0>14)this.degisiklikTakas(dg);}

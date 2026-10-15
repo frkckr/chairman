@@ -437,7 +437,9 @@ Object.assign(Match.prototype,{
   },
   kaleciTut(gk,tur){
     const b=this.ball;b.tasiyan=gk;b.sahip=null;b.vx=b.vy=b.vz=0;b.egri=0;this.dokunus(gk,true);
-    gk.tutus={t:0,sure:1.6+this.rast()*1.6,tur:tur||'gogus'};gk.kickCd=0.2;gk._kp=null;this._dSahipT=this.t;
+    /* T16a (2026-10-15): zg — T10d'den beri eksikti; kaleciElde'de sure + zg NaN olunca kaleci eylemi biter bitmez dağıtıyordu (1,6–3,2 sn'lik
+       tutuş ve öndeyken topu tutma çalışmıyordu) */
+    gk.tutus={t:0,sure:1.6+this.rast()*1.6,tur:tur||'gogus',zg:this.zamanGecirEk(gk.team,4)};gk.kickCd=0.2;gk._kp=null;this._dSahipT=this.t;
   },
   /* genel temasta elle (orta, korner, boştaki top): kalabalıkta ya da erişiminin sınırında yumrukla uzaklaştırır, yoksa tutar. T6d: yumruk kararı
      zar değil geometri — yüksek topta (1,45 m üstü) rakip 1,5 m içinde sıçrıyor ya da başı topa 0,1 sn içinde değecekse (çekişme; js/mac-hava.js
