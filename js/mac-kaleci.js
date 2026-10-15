@@ -27,12 +27,14 @@ ayarEkle('D',{
 const KL_M={itis:0.12,uzanma:0.28,adim:3.0,geri:3.0,sapma:0.22,elR:0.21,
   egri:0.07};   /* T9b-c: dönen topun (|egri| > 0,05) kalecinin tepkisine eklediği süre: yolu geç okur (topun kendi yolu tahminde biliniyor) */
 /* ---- saf model ---- */
-/* tepki süresi (sn): kalecilik; topla kaleci arasındaki çizgiye yakın beden görüşü kapatır (+0,10–0,18); hazır duruş −0,05 */
+/* tepki süresi (sn): kalecilik; topla kaleci arasındaki çizgiye yakın beden görüşü kapatır (+0,10–0,18); hazır duruş −0,05; A4-1: barajlı serbest
+   vuruşta aldatma koşusu topun yanından 0,8 sn içinde geçtiyse + aldatmaTepki (kaleci kimin, ne zaman vuracağını geç okur) */
 function kaleciTepkiSuresi(m,gk,bx,bz){
   const dx=gk.x-bx,dz=gk.z-bz,L2=dx*dx+dz*dz;let perde=0;
   if(L2>9){const L=Math.sqrt(L2);for(const o of m.players){if(!o.oyunda||o===gk)continue;const ox=o.x-bx,oz=o.z-bz,f=(ox*dx+oz*dz)/L2;if(f<0.12||f>0.88)continue;
     const yan=Math.abs(ox*dz-oz*dx)/L;if(yan<0.6)perde=Math.max(perde,0.1+0.08*(1-yan/0.6));}}
-  return MOTOR_AYAR.kaleciTepki*(1.25-0.5*gk.oz.kalecilik)+perde-(gk.tavir==='hazir'&&(gk.spd||0)<1.2?0.05:0);}
+  const ald=m._aldatmaT!=null&&m.t-m._aldatmaT<0.8?MOTOR_AYAR.aldatmaTepki:0;
+  return MOTOR_AYAR.kaleciTepki*(1.25-0.5*gk.oz.kalecilik)+perde+ald-(gk.tavir==='hazir'&&(gk.spd||0)<1.2?0.05:0);}
 /* dalış: kalça yükseğe (yh) sıçrarken itiş uzar, yana daha yavaş ve daha az gider (balistik uçuşta kalçanın yana en çok gidebileceği yol);
    alçak köşeye yere inmek de itişi biraz uzatır */
 const kaleciYuksek=yh=>clamp((yh-0.9)/0.5,0,1);

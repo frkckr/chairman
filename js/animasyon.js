@@ -1008,6 +1008,11 @@ function anmCalimDurum(a,p,dt){
     ck.yP=Y.mek==='aldat'?(sag?ANM_POZ.ytAldat:aynala(ANM_POZ.ytAldat)):Y.mek==='kesme'?ANM_POZ.ytKay:ANM_POZ.ytDur;ck.yS=Y.mek==='aldat'?0.6+0.4*clamp(Y.siddet,0,1):0.8;}
   ck.yW=0;
   if(Y&&!e&&mt!==null){ck.yW=anmZarf(mt-Y.t,Y.sure,0.08,0.18)*ck.yS;if(ck.yW>0.001){st[S.yutma]=ck.yW;sp[S.yutma]=ck.yP;}}
+  /* A4-1: barajlı serbest vuruşta aldatma koşusu (motor: duranRol 'ikinci', aldatma): topun yanından geçerken vuruş taklidi — vuruş gerilmesi pozu
+     topa 0,95 m'den yakınken artar, 0,35 m'de tam (0,85); vuran ayağa göre aynalı (önbellek aktörde) */
+  const R=p.duranRol;
+  if(R&&R.rol==='ikinci'&&R.aldatma&&!e&&mac.ball){const b=mac.ball,L=Math.hypot(b.x-p.x,b.z-p.z),w=0.85*(1-anmYumus((L-0.35)/0.6));
+    if(w>0.001&&w>st[S.ckA]){st[S.ckA]=w;sp[S.ckA]=p.ayak==='sol'?(a._aldP||(a._aldP=aynala(ANM_VK_POZ.ustG))):ANM_VK_POZ.ustG;}}
 }
 /* top saklama: en yakın rakip (3 m içinde); yanı 0,12 sn histerezisle (gövdeye göre 0,2 m'den çok öbür yandaysa); baş kimliğin aralığıyla
    (1,3–2,0 sn) 0,6 sn rakibe döner */

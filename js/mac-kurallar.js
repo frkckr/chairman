@@ -379,7 +379,8 @@ Object.assign(Match.prototype,{
     /* dolaylı serbest vuruş: başka bir oyuncu dokunmadan gol olmaz (Match.gol) */
     b.endirekt=du.endirekt?{p:tk,hakemTopu:!!du.hakemTopu}:null;   /* T10f: hakem topunda işaret yok (çizim ve ölçüm ayırır) */
     const sec=du.kisaGeri?null:this.durusSecenegi(du,tk);   /* T8f: topa yürüdükten sonra ilk karar (sürdürme) geçerlidir, yeniden zar atılmaz */
-    if(sec){sec.duran=true;du.asama='kullan';this.vurusBaslat(tk,sec);if(du.tur==='penalti')this.penaltiKaleciHazirla(du);return;}
+    if(sec){sec.duran=true;du.asama='kullan';if(du.ikili)this.aldatmaHazirla(du,sec);   /* A4-1: topun başında iki kişi (js/mac-durantop.js) */
+      this.vurusBaslat(tk,sec);if(du.tur==='penalti')this.penaltiKaleciHazirla(du);return;}
     /* T8b (inceleme bulgusu): vuruş seçeneği yoksa (serbest vuruşun şutsuz ve ortasız payı: oyunu sürdürme, rutin) oyun kullanan topun başındayken
        başlar — geri çekildiği 3–7 m'de başlarsa sahiplik ilk karede düşüyor, top kimsenin değilken 9,15 m kuralı kalkıyordu. T8f (inceleme): kullanan
        ışınlanmaz, duruş sürerken topun 1 m gerisine yürür (hazır evresi, hizOran 0,6), sonra yeniden kullanır (düdük bir kez çalar) */

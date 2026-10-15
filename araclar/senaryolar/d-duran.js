@@ -51,7 +51,7 @@ const KOD=`(function(tohum,tur,t,u,w){
     if(inis==null&&dt>0.2&&b.vy<0&&b.y<2.6&&!b.sahip&&!b.tasiyan){const n2=[0,0];for(const q of m.players)if(q.oyunda&&q.rol!=='GK'&&Math.hypot(q.x-b.x,q.z-b.z)<1.5)n2[q.team]++;inis=n2[0]>0&&n2[1]>0;}
     if(rib<0&&dt>=1.0&&A0)rib=A0.filter(q=>q.oyunda&&kutuda(q,t)).length;
     if(!ilk&&kul.alt!=='kisa'){if(b.tasiyan&&b.tasiyan.rol==='GK'&&b.tasiyan.team!==t)ilk='kaleci';else if(inis!=null&&b.y<0.3&&!b.sahip)ilk='yere';else if(dt>4)ilk='yok';}}
-  return{hz:kul.hazirlik,alt:kul.alt,bolge:kul.bolge,sut,gol,golDogrudan,dogrudan,cerceve,ilk,inis,blok,zip,rib,kutuH,kutuS,baraj,nb,elle};})`;
+  return{hz:kul.hazirlik,alt:kul.alt,bolge:kul.bolge,sut,gol,golDogrudan,dogrudan,cerceve,ilk,inis,blok,zip,rib,kutuH,kutuS,baraj,nb,elle,ikili:!!(kul.du&&kul.du.ikili),aldatma:!!(kul.du&&kul.du.aldatma),aldOnce:kul.du&&kul.du.aldatmaGecti!=null?su-kul.du.aldatmaGecti:null};})`;
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||400,f=vm.runInContext(KOD,ctx),t0=Date.now();let tn=(tohum||1)*10000,kabulDisi=0;   /* T8f: tohum blokları çakışmasın (koşu başına ~2N + 3N tohum) */
   const y=(a,c)=>c?(100*a/c).toFixed(1)+'%':'—',ort=L=>L.length?L.reduce((a,c)=>a+c,0)/L.length:NaN,ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,c)=>a-c);return S[Math.floor(S.length/2)];};
@@ -94,6 +94,11 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const uzSut=100*say(uz,r=>r.alt==='sut')/Math.max(1,uz.length),b18=ort(S.merkez18.L.filter(r=>r.baraj).map(r=>r.nb)),b26=ort(S.merkez26.L.filter(r=>r.baraj).map(r=>r.nb));
   const blok=havuz.length?100*say(havuz,r=>r.blok)/havuz.length:NaN,zp=havuz.length?100*say(havuz,r=>r.zip)/havuz.length:NaN;
   console.log(`  Barajlı doğrudan şut (merkez ve yarı 18–26 m): ${havuz.length} · gol/şut ${hg.toFixed(1)}% · barajdan dönen ${f1(blok)}% · baraj sıçradı ${f1(zp)}%`);
+  /* A4-1 (bilgi): topun başında iki kişi ve aldatma koşusu — havuzun ve barajlı vuruşların payı, aldatmalı ve aldatmasız doğrudan şutta gol/şut */
+  {const bL=[].concat(S.merkez18.L,S.merkez22.L,S.merkez26.L,S['yarı18'].L,S['yarı22'].L,S['yarı26'].L).filter(r=>r.baraj),hA=havuz.filter(r=>r.aldatma),hN=havuz.filter(r=>!r.aldatma);
+    const aG=hA.filter(r=>r.aldOnce!=null);
+    console.log(`  A4-1: barajlı vuruşta topun başında iki kişi ${y(say(bL,r=>r.ikili),bL.length)} · doğrudan şutta aldatma ${y(hA.length,havuz.length)} · gol/şut aldatmalı ${y(say(hA,r=>r.golDogrudan&&r.gol),hA.length)} (${hA.length}) · aldatmasız ${y(say(hN,r=>r.golDogrudan&&r.gol),hN.length)} (${hN.length})`);
+    console.log(`  A4-1: aldatma koşusu topun yanından geçti ${aG.length}/${hA.length} · şuttan önce ortanca ${f1(ortanca(aG.map(r=>r.aldOnce)),2)} sn (kalecinin tepkisine ek: 0,8 sn içinde)`);}
   kapi(KAPI.serbest,havuz.length>0&&hg>=6&&hg<=10,`barajlı doğrudan şutta gol/şut %6–10 (merkez ve yarı 18–26 m) → %${hg.toFixed(1)} (${say(havuz,r=>r.golDogrudan&&r.gol)}/${havuz.length})`);
   /* T8c: bilgi — 18–22 m merkezde fazlalık genel şut isabetinden ve kalecinin kurtarışından (maçta isabet %45–47, bant 30–45; kurtarış %55,
      gerçekte ~%70): T10 öncesi gözden geçirmede; havuz (6–10) kapıdır */

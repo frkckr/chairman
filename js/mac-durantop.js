@@ -40,7 +40,11 @@ ayarEkle('K',{
                                // ortadan ve uzaktan azalır. 5,0'te kenardan %22 doğrudan şut
   serbestRutin:0.12,           // T8c: barajlı vuruşta kısa pas rutini olasılığı (kullananın yaratıcılığıyla 0,6–1,4 katı; taktik çeşitlilik; 0,08'de 18 m'de %92,5 şut)
   serbestTau:1.0,              // T8c: serbest vuruş kararının sıcaklığı (karar ve duran top becerisiyle 0,6–1,4 katı; 1,5'te kenardan %30–40 şut)
-  penaltiSapma:0.55            // T8d: penaltı vuruşunun hata çarpanı (baskısız 11 m; soğukkanlılıkla ×(1 + 0,8·(0,5 − s))); eski sabit 0,55
+  penaltiSapma:0.55,           // T8d: penaltı vuruşunun hata çarpanı (baskısız 11 m; soğukkanlılıkla ×(1 + 0,8·(0,5 − s))); eski sabit 0,55
+  /* A4-1 (2026-10-15; gerçekçilik planı §4 A4, Ek D): barajlı serbest vuruşta topun başında iki kişi ve aldatma koşusu */
+  serbestIkili:0.45,           // A4-1: barajlı serbest vuruşta ikinci vurucunun topun yanında durma olasılığı (0: kapalı, T16'nın aynısı; d-duran'da %43)
+  serbestAldatma:0.6,          // A4-1: iki kişiyken şut kararında ikinci vurucunun kullanandan önce topun üstünden koşma olasılığı
+  aldatmaTepki:0.04            // A4-1: aldatma koşusu topun yanından şuttan en çok 0,8 sn önce geçtiyse kalecinin tepkisine eklenen süre (sn; js/mac-kaleci.js)
 });
 const DT_HAZIR={tac:0,korner:1,kaleVurusu:2,serbest:3,penalti:4};
 /* kafa sırası (T3'ten: sıçrama + boy) ve ikinci top (şut gücü, uzaktan vurma) */
@@ -101,7 +105,8 @@ Object.assign(Match.prototype,{
   /* duruşun başında (durusBaslat; kullanan seçildikten sonra) görevler dağıtılır; oyuncunun p.duranRol'ü aynı kayıttır */
   duranGorevAta(du){
     this.duranRolTemizle();this._duranSonrasi=null;const G=du.gorev=new Map();
-    if(du.tur==='serbest'){du.sinif=this.serbestSinif(du);if(du.sinif==='kenar')this.kenarGorev(du,G);if(du.sinif==='baraj'||du.sinif==='kenar')this.barajKur(du,G);}
+    if(du.tur==='serbest'){du.sinif=this.serbestSinif(du);if(du.sinif==='kenar')this.kenarGorev(du,G);if(du.sinif==='baraj'||du.sinif==='kenar')this.barajKur(du,G);
+      if(du.sinif==='baraj')this.ikiliKur(du,G);}   /* A4-1 */
     if(du.tur==='korner')this.kornerGorev(du,G);
     else if(du.tur==='penalti')this.penaltiGorev(du,G);
     for(const [p,g] of G)p.duranRol=g;
@@ -185,6 +190,29 @@ Object.assign(Match.prototype,{
     du.barajdakiler=U;du.barajYer=BY;du.barajAci=Math.atan2(du.z-Wz,du.x-Wx);
     if(!kenar){du.baraj=true;du.barajUc={x:Wx-px*1.8,z:Wz-pz*1.8};
       const kl=this.kaleci(s);if(kl&&kl.oyunda){G.set(kl,{rol:'kaleci',hx:gx-d*0.8,hz:MZ-yan*0.3,takim:s,hedef:null});this.jestVer(kl,'isaret',1.4,{x:Wx,z:Wz});}}   /* T8e: kaleci barajı kol işaretiyle kurar (Ek G5) */
+  },
+  /* A4-1 (Ek D “topun başında iki kişi”): barajlı serbest vuruşta serbestIkili olasılıkla ikinci vurucu (45 m içindeki en iyi serbest vuruş tekniği,
+     uzaklıkla azalır; hazırlık 10–14 sn) topun 1,3 m gerisinde ve 0,7 m yanında durur — kullananın vuran ayağının tersi yanda. Şut kararında aldatma
+     koşusu (aldatmaHazirla), kısa pas rutininde doğal alıcıdır. Rol 'ikinci' (çizim okur). Karar rastlantısız özetle (h2: maçın tohumu, kullanan,
+     an ve yer; H1 taramasındaki gibi) — ana zar dizisi kaymaz, iki kişisiz vuruş birebir aynı kalır */
+  ikiliOzet(du,tuz){return h2((this.tohum|0)*131+du.kullanan.n*17+Math.round(this.t*4),Math.round(du.x*10)*1031+Math.round(du.z*10)*7+tuz);},
+  ikiliKur(du,G){
+    const A=MOTOR_AYAR;if(!(A.serbestIkili>0)||this.ikiliOzet(du,0)>=A.serbestIkili)return;
+    const t=du.takim,tk=du.kullanan;let en=null,eP=-1e9;
+    for(const p of this.sahadakiler(t)){if(p===tk||p.rol==='GK'||G.has(p)||p.eylem&&p.eylem.kilit)continue;const L=hyp(p.x-du.x,p.z-du.z);if(L>45)continue;
+      const P=serbestTeknik(p)-0.006*L;if(P>eP){eP=P;en=p;}}
+    if(!en)return;
+    const a=this.durusHedefAcisi(du),c=Math.cos(a),s=Math.sin(a),yan=tk.ayak==='sol'?1:-1;
+    G.set(en,{rol:'ikinci',hx:du.x-c*1.3-s*0.7*yan,hz:du.z-s*1.3+c*0.7*yan,takim:t,hedef:tk});du.ikili=en;
+  },
+  /* A4-1: şut kararında (durusKullan) serbestAldatma olasılıkla ikinci vurucu kullanandan önce topun üstünden koşar: çapraz, topun ~0,4 m yanından
+     geçip toptan 1,2 m öne ve 1,8 m öbür yana — şutun yolunun dışına (ilk denemede bitiş toptan 2,4 m önde, çizgiye 0,35 m'deydi: aldatmalı şutta
+     gol/şut %3,7, aldatmasızda %7,1). Koşu kullananın temasına ~1 sn kala (durusYerlesim); kalecinin tepkisi js/mac-kaleci.js */
+  aldatmaHazirla(du,sec){
+    const q=du.ikili,G=q&&du.gorev?du.gorev.get(q):null;if(!G||!q.oyunda||sec.tur!=='sut')return;
+    if(this.ikiliOzet(du,1)>=MOTOR_AYAR.serbestAldatma)return;
+    const a=this.durusHedefAcisi(du),c=Math.cos(a),s=Math.sin(a),yan=Math.sign(-(G.hx-du.x)*s+(G.hz-du.z)*c)||1;
+    G.kx=du.x+c*1.2+s*1.8*yan;G.kz=du.z+s*1.2-c*1.8*yan;du.aldatma=true;
   },
   /* kenar serbest vuruşu: orta için 4–6 hücumcu savunma çizgisinin 0,6 m gerisinde (çizgi kaleden 10–16 m; vuruş uzaklaştıkça geride),
      temastan 0,55 sn önce koşu noktalarına (ön direk, altıpas ortası, arka direk, penaltı noktası, uzak direk); biri yayda ikinci topa, ikisi
@@ -303,7 +331,7 @@ Object.assign(Match.prototype,{
   duranRolKonum(p){
     const DS=this._duranSonrasi,G=p.duranRol;if(!DS||!G||G.hx==null||p.kosu&&p.kosu.tur==='orta')return null;
     if(p.team===DS.takim){
-      if(G.rol==='kisa')return null;
+      if(G.rol==='kisa'||G.rol==='ikinci')return null;   /* A4-1: ikinci vurucu vuruştan sonra açık oyunun kuralıyla */
       if(DT_HEDEF.has(G.rol)||G.rol==='perde'){const x=!DS.kisa&&G.kx!=null?G.kx:G.hx,z=!DS.kisa&&G.kz!=null?G.kz:G.hz,e=hyp(p.x-x,p.z-z);return{x,z,ef:1,h:e>3?1:0.6};}
       return{x:G.hx,z:G.hz,ef:0.6,h:0.7};}
     if(G.rol==='adam'){const o=G.hedef;if(!o||!o.oyunda)return null;const og=this.dir[o.team]*PL,ox=o.x+o.vx*0.3,oz=o.z+o.vz*0.3,L=hyp(og-ox,MZ-oz)||1;
@@ -385,6 +413,10 @@ Object.assign(Match.prototype,{
         const ox=uzak?go.hx:o.x+o.vx*0.3,oz=uzak?go.hz:o.z+o.vz*0.3,L=hyp(og-ox,MZ-oz)||1;g.hx=ox+(og-ox)/L*0.8;g.hz=oz+(MZ-oz)/L*0.8;}}
       if(g.hx==null)continue;
       this.gorevYaz(p,'duran');   /* T13-0: görev etiketi */
+      /* A4-1: aldatma koşusu — kullananın temasına ~1 sn kala ikinci vurucu tam eforla topun üstünden koşar; topun yanından geçtiği an kalecinin
+         tepkisi için kaydedilir (kaleciTepkiSuresi). g.aldatma çizim içindir */
+      if(g.rol==='ikinci'&&du.aldatma&&g.kx!=null&&ke&&ke.kalan<1.0){p.tx=g.kx;p.tz=g.kz;p.hizOran=1;p.bak=null;p.yonHedef=null;this.eforVer(p,1);g.aldatma=true;
+        if(du.aldatmaGecti==null&&hyp(p.x-du.x,p.z-du.z)<0.6){du.aldatmaGecti=this.t;this._aldatmaT=this.t;}continue;}
       if(kos&&g.kx!=null){p.tx=g.kx;p.tz=g.kz;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);continue;}
       /* görevli yerine düzenli koşar (efor 0,8: T1 hız kipleri 8 m içinde yürütüyordu, hareket eden adamına yetişemiyordu), yerinde ağır */
       /* T10d: 6 sn'den sonra yerine varmamış görevli hızlanır (T8'den: görevliler yerinde %76–78, hedef ≥ %80; geç kalanlar kutuya kendi yarısından

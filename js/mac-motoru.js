@@ -99,6 +99,7 @@ const MOTOR_AYAR={
   /* K — js/mac-durantop.js (T8) */
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
   kornerKisa:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined,
+  serbestIkili:undefined,serbestAldatma:undefined,aldatmaTepki:undefined,
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined
 };
@@ -250,6 +251,7 @@ class Match{
     this.ofsaytBekleyen=null;   /* T10d: bayrağı geç kalkacak ofsayt {p, t, x, z, fark, yanlis, g} (js/mac-kurallar.js ofsaytDokunus) */
     this.santraAcele=false;   /* T10d: gerideki takım topu ağdan alıp koştu: santra kurala göre (stepKick) */
     this.yariSantra=true;   /* T16a: yarının ilk santrası hazırlanıyor — maç saati düdükle başlar (step; santraHazirla) */
+    this._aldatmaT=null;   /* A4-1: barajlı serbest vuruşta aldatma koşusunun topun yanından geçtiği an (js/mac-durantop.js; kaleciTepkiSuresi okur) */
     this.sakatlikHazirla();
     this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,sonTakim:0,hedefOyuncu:null,sut:null,pas:null,
       surum:0,agda:false,direk:false,px:0,py:0,pz:0,ortaBlok:null,hakemDegdi:null,
