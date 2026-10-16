@@ -67,8 +67,14 @@ ayarEkle('T',{
   /* T18c: markaj ve kutu savunması eşleşmeleri hücumda silinmez, koşucu takibi histerezisli; derin koşu top kaybında biter */
   markajKalici:1,    // T18c: takım hücuma geçince markaj ve kutu savunması haritası silinmez (top geri gelince eski çiftler 12 m içindeyse sürer); kutu savunmasında önceki
                      // bölge eşleşmesi korunur, yalnız boş bölgeler dağıtılır; koşucu takibinde giriş 4, çıkış 3,2 m/sn; 0: T7 (her hücumda sıfırdan)
-  kosuSil:1          // T18c: derin koşu (arkaya, geniş, eş koşu) rakip topu alınca biter (eskiden yalnız sayaçla ve sayaç yalnız topa sahipken işliyordu: koşu askıda kalıp
+  kosuSil:1,         // T18c: derin koşu (arkaya, geniş, eş koşu) rakip topu alınca biter (eskiden yalnız sayaçla ve sayaç yalnız topa sahipken işliyordu: koşu askıda kalıp
                      // takım topu geri alınca efor 1'le sürüyordu); 0: eski
+  /* T18d (gerçekçilik planı §4 T18): yorgunluğun düzene etkisi — takım yorgunluğu (sahadaki saha oyuncularının ortalaması; pay = (y − 0,1) / 0,25, 0–1) */
+  yorgunBlok:2,      // T18d: savunma çizgisi takım yorgunluğuyla bu kadar m'ye kadar geri (N.blok) ve kompaktlık %60'a kadar gevşer; 0: kapalı.
+                     // 4 denendi (40 maç): dilim etkileri 2 ile aynı (HŞK son ÷ ilk 0,94 / 0,96) ama ofsayt 2,0 → 0,8 (2'de 1,5) ve gol 3,3 — derin çizgi ofsaytı siliyor
+  yorgunPres:0.25,   // T18d: 1. adamın çıkış mesafeleri (R1/R2) takım yorgunluğuyla bu orana kadar daralır; 0: kapalı
+  yorgunKosu:0.5,    // T18d: derin koşu sıklığı oyuncunun yorgunluğuyla bu orana kadar azalır (gerçekte yüksek şiddetli koşu ilk → son 15 dk −18…−20 %); 0: kapalı
+  yorgunKip:1        // T18d: yorgun (> 0,2) ve düşük eforlu (< 0,6) oyuncu yerine dönüşte koşu yerine tırıs (3,2 m/sn) kipini seçer; 0: koş
 });
 /* niyet → düzen ve taktik farkı. Taktik: risk kayıp maliyetinin çarpanıdır (yüksek = temkinli), sakin geri pas ve sabır, tempo karar hızı, direkt ileri
    ve uzun oyun (mac-karar.js); toplanır (risk çarpılır). Düzen: genişlik hücumda mevkilerin yayılma çarpanı, derinlik bloğun öne/geriye kayması (m),
@@ -118,6 +124,8 @@ Object.assign(Match.prototype,{
   },
   takimNiyet(t,sahip,du){
     const N=this._niyet[t],A=MOTOR_AYAR,D=this.macDurumu(t,N.durum),d=this.dir[t],u=(du?du.x:this.ball.x)*d;
+    /* T18d: takım yorgunluğu (sahadaki saha oyuncuları) ve düzen payı */
+    {let ys=0,yn=0;for(const p of this.teams[t])if(p.oyunda&&p.rol!=='GK'){ys+=p.yorgunluk||0;yn++;}N.yorgun=yn?ys/yn:0;N.yorgunPay=clamp((N.yorgun-0.1)/0.25,0,1);}
     let ad;
     if(sahip!==t)ad='savunma';
     else{const yeni=!du&&this._sahiplikBas!=null&&this.t-this._sahiplikBas<A.kontraSure;
@@ -128,10 +136,10 @@ Object.assign(Match.prototype,{
     const P=NIYET_PARAM[ad],k=A.niyetEtki;   /* T16b: tut'ta sayısal değerler niyetDeger'den (tutEtki) */
     N.genislik=1+k*(niyetDeger(ad,'genislik')-1);N.derinlik=k*niyetDeger(ad,'derinlik');N.bekIleri=1+k*(niyetDeger(ad,'bekIleri')-1);N.kosu=1+k*(niyetDeger(ad,'kosu')-1);N.bekCik=k?P.bekCik:true;
     /* savunma çizgisi: geride kalan takım öne çıkar, öndeki ve eksik kalan geri çekilir (m) */
-    N.blok=k*(4*D.acele-3*D.koru-3*D.eksik);
+    N.blok=k*(4*D.acele-3*D.koru-3*D.eksik)-(A.yorgunBlok||0)*N.yorgunPay;   /* T18d: yorgun takım derinleşir */
     N.duranGecikme=k*2*D.koru;N.faulIstek=1+k*0.6*D.koru;N.zamanGecir=k*D.koru;   /* T10d: zaman geçirme yoğunluğu (js/mac-kurallar.js zamanGecirEk) */
     N.stoperIleri=k&&D.acele>0.6&&ad!=='savunma'?this.ileriStoper(t):null;
-    N.kompakt=k&&ad==='savunma'?1-k*A.kompakt:1;   /* T7d: savunmada hatlar sıkışır (dizilisKonumu) */
+    N.kompakt=k&&ad==='savunma'?1-k*A.kompakt*(1-(A.yorgunBlok?0.6*N.yorgunPay:0)):1;   /* T7d: savunmada hatlar sıkışır (dizilisKonumu); T18d: yorgunlukla gevşer */
     /* T7b: kurma — altı numara, basan rakip sayısı ve +1 üstünlüğü (kaleci dahil); sağlanamıyorsa uzun (etkin direkt +0,4) */
     N.alti=null;N.basan=0;N.uzun=false;
     if(k&&ad==='kur'){const b=this.ball,bx=du?du.x:b.x,bz=du?du.z:b.z,bu=bx*d;let en=null;

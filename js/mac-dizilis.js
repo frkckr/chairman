@@ -159,7 +159,8 @@ Object.assign(Match.prototype,{
           if(puan<e1){e2=e1;pres2=pres1;e1=puan;pres1=p;}else if(puan<e2){e2=puan;pres2=p;}}
         /* orta sahada blok yerini korur: 1. adam ancak top kendi yarısına yaklaşınca ya da çok yakındaysa çıkar */
         /* T7d: pres tetiğinde (kötü ilk dokunuş, geri pas, sırtı dönük alıcı, çizgiye sıkışma) 1. adam daha uzaktan ve daha ileride çıkar, 2. adam serbest */
-        const tet=this.presTetikVar(t),R1=tet?MOTOR_AYAR.presTetikMesafe:16,R2=tet?11:7,B0=tet?-20:-8;
+        const yp=MOTOR_AYAR.yorgunPres?1-MOTOR_AYAR.yorgunPres*(NY[t].yorgunPay||0):1;   /* T18d: yorgun takım daha az uzaktan çıkar */
+        const tet=this.presTetikVar(t),R1=(tet?MOTOR_AYAR.presTetikMesafe:16)*yp,R2=(tet?11:7)*yp,B0=tet?-20:-8;
         /* T18a (presKalici): önceki 1. adama süzgeçte pay (çıkış eşiği giriş eşiğinden presKalici m geniş); süzgeçte elenen 1. adamın belleği silinmez */
         const pk=MOTOR_AYAR.presKalici>0&&pres1===onceki?MOTOR_AYAR.presKalici:0;if(MOTOR_AYAR.presKalici>0&&pres1)P1[t]=pres1;
         if(pres1&&(hyp(pres1.x-s.x,pres1.z-s.z)>R1+pk||(bu>B0+tk.pres*14&&hyp(pres1.x-s.x,pres1.z-s.z)>R2+pk)))pres1=null;

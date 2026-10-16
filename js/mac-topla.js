@@ -724,7 +724,7 @@ Object.assign(Match.prototype,{
       const bas=Math.abs(aciFark(s.bakisYon!=null?s.bakisYon:s.yon,d>0?0:Math.PI))<1.05;
       if(bas&&this.rast()<dt*A.kosuTetik*(0.5+profilAlt(p,'topsuzHareket',0.5))*(1+0.3*profilEgilim(p,'kanallaraKosar'))*(N?N.kosu:1))
         return this.kosuBaslat(p,s,Math.min(PL-8,AK.x*d+4),clamp(AK.z,4,PW-4),'arkaya');}
-    if(!ileriBakar||!serbest||su<-18||Math.abs(pu-ofs)>4||kos>=A.kosuEs||this.rast()>dt*(p.rol==='FV'||A.kanatRol&&p.mevki.kanat?3.2:1.3)*A.kosuIstegi*A.kosuRastgele*(N?N.kosu:1))return null;   /* T7a: niyetin koşu çarpanı; T14a: kanat forvet sıklığında koşar (rolü savunma arkasıdır) */
+    if(!ileriBakar||!serbest||su<-18||Math.abs(pu-ofs)>4||kos>=A.kosuEs||this.rast()>dt*(p.rol==='FV'||A.kanatRol&&p.mevki.kanat?3.2:1.3)*A.kosuIstegi*A.kosuRastgele*(N?N.kosu:1)*(1-(A.yorgunKosu||0)*clamp(((p.yorgunluk||0)-0.1)/0.25,0,1)))return null;   /* T18d: yorgun oyuncu daha seyrek koşar */   /* T7a: niyetin koşu çarpanı; T14a: kanat forvet sıklığında koşar (rolü savunma arkasıdır) */
     const hedefU=Math.min(PL-8,ofs+10+this.rast()*8),r2=this.rast()-0.5;
     /* T14a: kanadın koşusu çizgi boyunca ('genis'; içe kat eğilimi çaprazlama içeri alır), forvetin ve orta sahanınki kaleye doğru (eski);
        çekiliş sayısı ve sırası aynı */

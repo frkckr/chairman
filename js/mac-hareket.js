@@ -482,7 +482,7 @@ Object.assign(Match.prototype,{
     const A=MOTOR_AYAR;p._kipT-=dt;
     let i=0;
     if(d>0.35){const esik=ef<0.2?A.dinlenKos:ef>=0.6?A.kipKos*0.5:A.kipKos;
-      if(p._kipI>=2?d>A.kipDur:d>esik)i=ef>=0.2&&d>2*A.kipKos?4:3;
+      if(p._kipI>=2?d>A.kipDur:d>esik)i=ef>=0.2&&d>2*A.kipKos?4:(A.yorgunKip&&ef<0.6&&(p.yorgunluk||0)>0.2?2:3);   /* T18d: yorgun ve düşük eforlu oyuncu tırısla döner */
       else i=1;}
     if(i!==p._kipI&&(i===0||p._kipT<=0)){p._kipI=i;p._kipT=A.kipSure;}
     return HRK_KIP_HIZ[p._kipI];
