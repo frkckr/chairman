@@ -507,7 +507,8 @@ Object.assign(Match.prototype,{
        değişir, basamak değil (c-donen; eskiden aynı durum her seferinde aynı sonucu veriyordu) */
     if(p._tepkiS!==b.surum){p._tepkiS=b.surum;p._tepkiJ=b.hedefOyuncu===p?0:clamp(0.06*this.normal(),-0.12,0.12);}
     const tepki=b.hedefOyuncu===p?0.05:0.3-p.oz.karar*0.15+p._tepkiJ;
-    if(this.t-(this._degisimT||0)<tepki){p.hizOran=1;p.bak=b;return;}
+    /* T18a (kovalaKalici): kovalayan yeni atandıysa tepki süresinde eski hedefine değil topa koşar (eski: yeni kovalayan 0,05–0,3 sn eski hedefine tam eforla) */
+    if(this.t-(this._degisimT||0)<tepki&&!(MOTOR_AYAR.kovalaKalici>0&&p._gorevT===this.t&&p._gorevOnce!=='kovala')){p.hizOran=1;p.bak=b;return;}
     const havada=b.y>1.3||b.vy>2;let hMax=havada?hvAlinDur(p)+hvSicramaH(p,p.spd)+0.12:0.7;   /* T6a: alın + sıçrama (js/mac-hava.js) */
     /* kendisine atılan havadan pası rakip zorlamıyorsa topun inmesini bekler: göğüs ya da ayakla alır, kafayla oynamaz. T6e: ortada beklemez —
        ortanın alıcısı topa başının hizasında gider (b.pasHedef.tur 'orta') */

@@ -47,8 +47,15 @@ ayarEkle('T',{
   gecGiris:2,        // T14b: orta ve geri çevirmede ceza sahasına geç giren en çok forvet dışı oyuncu (0: kapalı; gecGirisAta)
   /* T16b (2026-10-15; gerçekçilik planı §4 T16): öndeki takım maçın sonunda da hücum eder — gerçekte öndeki ÷ gerideki şut ~0,5–0,6 (son dilimde
      motorda 0,33 idi) */
-  tutEtki:0.5        // T16b: öndeki takımın hücumdaki temkini (tut niyetinin ilerlet'ten farkı ve koru'nun risk, sakinlik, tempo terimleri; 1: eski — 40 maçta
+  tutEtki:0.5,       // T16b: öndeki takımın hücumdaki temkini (tut niyetinin ilerlet'ten farkı ve koru'nun risk, sakinlik, tempo terimleri; 1: eski — 40 maçta
                      // son dilimde öndeki takımın şutu 0,24 → 0,47 / takım·dk, öndeki ÷ gerideki 0,33 → 0,59; 0'da ek kazanç yok)
+  /* T18a (2026-10-16; gerçekçilik planı §4 T18): görev bağlılığı — kovalayan ve pres el değiştirmesin diye kalıcılık (T13'ün 0,15 sn'lik eşiği her topa
+     uygulanmıştı ve etkisizdi; burada yalnız savunan takımın kovalayanı, pasın alıcısı ve yüksek top hariç) */
+  kovalaKalici:0,    // T18a: savunan takımın (topa son dokunan rakip) o anki kovalayanı, yeni adaydan bu kadar sn geç kalmadıkça kalır; 0: her dokunuşta en erken.
+                     // Denendi (0,25; 40 maç): kovalama her dokunuşta bittiğinden giriş sayısı düşmedi (2,24 → 2,21), ivmelenme aynı; pas isabeti −2, hava topu +2,8 → kapalı
+  presKalici:0,      // T18a: 1. adamın mesafe süzgecinde (R1/R2) önceki 1. adama bu kadar m pay; süzgeçte elenen 1. adamın belleği silinmez; 0: T7d.
+                     // Denendi (2 m; 40 maç, kovalaKalici ile): PPDA 4,4 → 4,0, ivmelenme aynı → kapalı
+  kapatKalici:0.5    // T18a: 2. adam ve bire bir örtüsü bu kadar sn tutulur (geçerliyse: oyunda, kilitsiz, 14 m içinde); karşı pres üçlüsü sahiplik boyunca sabit; 0: her kare
 });
 /* niyet → düzen ve taktik farkı. Taktik: risk kayıp maliyetinin çarpanıdır (yüksek = temkinli), sakin geri pas ve sabır, tempo karar hızı, direkt ileri
    ve uzun oyun (mac-karar.js); toplanır (risk çarpılır). Düzen: genişlik hücumda mevkilerin yayılma çarpanı, derinlik bloğun öne/geriye kayması (m),
