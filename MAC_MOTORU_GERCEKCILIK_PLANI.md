@@ -883,6 +883,68 @@ Anahtarlar kapalıyken (`duranIkinciEvre`, `markajDevir`, `kutuOdakGercek`, `ort
 
 **Sınır ve riskler.** Pencere uzayınca hücumun kutudakileri pasif kalabilir → evre 2 kuralı; d-duran “ilk temas hücumda” ve “inişte düello” kapıları koruma. Markajın devri hattın çıkışını geciktirebilir → ofsayt ve gol bantları; `savunmaCizgisi` dokunulmaz; devir yalnız top 28 m içindeyken. Devam değeri ortayı şişirebilir → orta bandı tavanı (8), kafa vuruşu / hava topu bandı (8–20), pas isabeti bandı; `ortaIstegi` sabit. `ortaSecenekleri` maliyeti ve pencere içi markaj → hız bütçesi. Çizim değişmez; motorun yeni alanı yalnız maç nesnesinde (oyuncu `varlik` sınırı 128'e dokunulmaz). Blok payı ve orta bloğu için gerçek kaynak yok: bantlar Claude'un yargısı, T17-0 ve 80 maçla yeniden okunur; ayarla zorlanmaz (§6). **Büyüklük:** orta, ~1–1½ oturum. **Oyunda görülecek:** kornerde ilk kafa bloklanınca savunma kutuda kalır, adamlar bırakılmaz, karambol golü seyrekleşir; kafalar daha az bloklanır (markajcı kafanın yolunda değil yanında); orta sayısı aynı kalır ama baskıdaki ortacı yine ortalar ve topu savunmacıya çarpar — korner; kanat çizgiye inip geri çevirir, kutuya geç giren vurur; korner sayısı artar.
 
+### T18 — Görev çalkantısı ve yorgunluğun düzene etkisi (kullanıcı onayı 2026-10-16 akşam, dizüstü: plan kipinde sunuldu, “onay”; T ve C akışları, sonucu değiştirir)
+
+**Dal ve taban.** Dal `claude/motor-t18` (`main` 1a4b4eb'den), motor tabanı `araclar/taban/t17.json`, animasyon tabanı `a4-anm.json` (çizim değişmez), hız bütçesi `tur/t17` ile. T ve C akışları; **sonucu değiştirir**; anahtarlar kapalıyken `--ayni`. Gerçek değer araştırması (ivmelenme sayıları, yorgunlukla yüksek şiddetli koşunun dilimlere göre düşüşü, takım boyu) arka planda sürüyor; gelince kabul bantlarına işlenir, T18-0'da yeniden okunur.
+
+**Neden.** Locadan kalan en büyük robotluk: top her dokunulduğunda birçok oyuncunun aynı anda fırlaması. 3 m/sn² üstü ivmelenme **6,8 / oyuncu·dk** (hedef ≤ 5; GPS tanımıyla 5,0; gerçek referans ≥ 2 m/sn²'de ≈ 4,7/dk, > 3 m/sn²'de daha az). T13 bunu hareket katmanında (rampa, ölü bölge, geçiş gecikmesi) denedi ve tutmadı: rampa sayıyı geciktirir, düşürmez; düşük efor savunmayı ve pası bozar (gol +0,3…+0,9, boşta rakip +4…+12 sn). Kök karar katmanında: **görevler oyuncu başına dakikada 28,5 kez el değiştiriyor** ve her yeni yüksek eforlu görev aynı karede tam ivme izni alıyor. Yorgunluk 0,23 → 0,32 artıyor ama düzene etkisi yok: koşu kipi payı 44,7 / 45,0, savunma boyu 35,5 / 35,5 (yarılar aynı); gerçekte maç sonunda yüksek şiddetli koşu belirgin azalır, blok derinleşir ve açılır.
+
+**Kök neden (kod; keşif 2026-10-16 ve 12 maçlık `MAC_DENEME_IVME=1` teşhisi).** Teşhis: ivmelenmelerin %65'i görev değişiminden sonraki 0,5 sn'de; 4,1'i hedefin 3 m'den çok sıçramasıyla, 2,9'u top boştayken, 1,96'sı eşzamanlı (0,3 sn'de ≥ 3 oyuncu); efor ≥ 0,8 görevlerde 5,9. Görev tablosu (giriş / oyuncu·dk · ortalama süre): kovala 2,24 · 1,1 sn, pres2 1,25 · 0,9 sn, pres1 0,92 · 1,2 sn, markaj 0,68 · 1,4 sn, bölge 8,9 · 3,0 sn, kovala2 0,45 · 0,6 sn.
+
+1. **Kovalayan her dokunuşta sıfırdan seçiliyor** (`takimAI`, [js/mac-dizilis.js:76–102](js/mac-dizilis.js)): önbellek `b.surum` ile bağlı, yalnız en erken varış, o anki kovalayana avantaj yok; yeni kovalayan tepki dalında 0,05–0,3 sn eski hedefine tam eforla koşuyor (`kovala`, [js/mac-hareket.js:504–521](js/mac-hareket.js)).
+2. **Pas uçuşunda sahip yok:** hücumda topu tutana bağlı roller (destek, kanat, koşu, bindirme, kutu) ve savunmada pres1/2/3 aynı karede düşüyor, alışta aynı karede geri geliyor ([js/mac-dizilis.js:140, 269](js/mac-dizilis.js)); `savunmaCizgisi`'nin −4 m ve `hatCik` düzeltmeleri de aynı karede kalkıp geliyor (232–238).
+3. **Pres1'in histerezisi süzgeçte siliniyor** (`presHisterezis` puanı 147'de, R1/R2/B0 süzgeci 151–152 histerezissiz; `P1[t]` süzgeçten sonra yazılıyor); pres2 ve bire bir örtüsü her kare en yakına atlıyor (148, 163), `_kapatK` ile efor 1 ↔ 0,8 kare kare değişiyor (204).
+4. **Markaj her hücumda siliniyor** (184), 6 karede bir açgözlü eşleşme; kutu savunması 6 karede bir sıfırdan ([js/mac-takim.js:282–291](js/mac-takim.js)); koşucu takibinin 4 m/sn eşiği histerezissiz.
+5. **Top kaybında iki dalga:** t0'da karşı pres üçlüsü ve kazananın tamamı hücum düzenine; t0 + 0,7 sn'de (`gecis`) kaybedenin tamamı savunma düzenine ve aynı karede efor 1'li markaj ataması.
+6. **Görev eforu sabit, aynı karede uygulanıyor** (`eforVer` [js/mac-hareket.js:477](js/mac-hareket.js); `moveP` 452–454: izin verilen ivme `lerp(rahat, A0, efor⁴)`). Eşik eforu ≈ 0,6–0,66; bölge (≤ 0,55) eşiğin altında — ölçüye yalnız ≥ 0,6 eforlu görev değişimleri yansıyor.
+7. **Genel eşzamanlılık sınırı yok** (yalnız `kosuEs` 2, `takipSayi` 3, `gecGiris` 2, karşı pres 3). Derin koşunun sayacı yalnız topa sahipken işliyor ve koşu sahiplik değişiminde silinmiyor ([js/mac-topla.js:714–716](js/mac-topla.js)).
+8. **Yorgunluk** yalnız tepe hız (−%12·y), A0 (−%15·y), bölge eforu (×(1 − 0,3·y)), tepki ve karar süresi, pas/şut hatasına giriyor; görev ataması, görev eforları, derin koşu sıklığı, kip eşikleri, savunma çizgisi/blok/kompaktlık ve pres mesafeleri yorgunluğu bilmiyor. `tiris` kipi hiç seçilmiyor (`kipSec` 481–489).
+
+**Kapsam kararı (Claude).** T13'ün dersi: efor düşürmek olmaz, **bağlılık** artırılır — daha az ama daha uzun görev, görev değişimi tek karede toplu değil kişisel ve sıralı, acil olan yine tam güçte. Dört iş: **(a)** kovalayan ve presin kalıcılığı, **(b)** pas uçuşunda ve sahiplik değişiminde düzenin kademeli geçişi, **(c)** markaj ve kutu savunmasında eşleşmenin korunması, eşzamanlı koşu sınırı, **(d)** yorgunluğun düzene etkisi. Dışarıda: hareket katmanı rampası (T13, ret), ivme sınırları, çizim (A6), kanat savunması/orta bloğu (T17 devri, T19 ya da ayrı), görev etiketi dışında oyuncu nesnesine alan (`varlik` 128).
+
+**Alt adımlar.**
+- **T18-0 — ölçüm (`--ayni` 40/40).** `r-ivme.js`'e: aynı karede hedefi > 3 m değişen oyuncu sayısı dağılımı (takım başına; olay türüne göre: pas çıkışı, alış, top kaybı, duruş sonu), görev değişiminin kaynağı (kovalayan değişti / pres süzgeci / markaj yeniden kuruldu / düzen geçişi), kovalayan değişiminde eski ↔ yeni kovalayanın varış farkı; `y-yari.js`'e 15'lik dilimlere göre yüksek şiddetli koşu payı (> 5,5 m/sn), ivmelenme / oyuncu·dk, savunma boyu, pres mesafesi (1. adamın topa ortalama uzaklığı), PPDA; ver-kaç ve `presYap` iç dallarına görev etiketi; bölge ↔ dinlen/omuz/hat gidiş gelişleri “görev değişimi” sayısından ayrılır (düşük eforlu etiketler tek sınıf). `r-karne.js`'e bilgi satırı “ivmelenme: eşzamanlı (aynı karede ≥ 3)”. `MAC_DENEME_IVME` varsayılan açık olur mu: hız maliyeti ölçülür, küçükse açık.
+- **T18a — kovalayan ve presin kalıcılığı (T; `kovalaKalici`, `presKalici`, `kapatKalici`).** Kovalayan: o anki kovalayan, yeni adaydan `kovalaKalici` (0,25 sn; iki değer taranır 0,2/0,35) geç kalmadıkça kalır — pasın alıcısı, yüksek top ve `donen` hariç (acil); değişimde yeni kovalayan tepki dalında eski hedefe değil topa koşar. Pres1: süzgeç histerezisli (R1/R2 çıkışta +2 m), `P1[t]` süzgeçten önce yazılır; pres2 ve örtü 0,5 sn tutulur (`_kapatK` kare kare değil pencereyle), karşı pres üçlüsü pencere boyunca sabit. T13'ün 0,15 sn'lik eşiği etkisizdi, 0,25 sn pas isabetini düşürdü: bu kez eşik yalnız **savunan** takımın kovalayanına (hücumun serbest top kovalayanı ve alıcı aynen) — T18-0 ölçüsüyle kontrol.
+- **T18b — pas uçuşunda ve sahiplik değişiminde kademeli geçiş (T; `gecisKademe`, `gecisDalga`).** Pas uçuşunda “sahip” sanal olarak alıcı sayılır: topu tutana bağlı hücum rolleri ve pres1/2/3 düşmez, alış anında yeniden seçilmez (alıcıya göre devam eder); `savunmaCizgisi`'nin düzeltmeleri pas boyunca korunur. Top kaybında kaybeden takımın savunma düzenine geçişi tek karede değil kişisel tepkiyle (0,25–0,7 sn, topa uzaklıkla; `tepkiCarpan` modeli) — T13c'den farkı: efor düşmez, **ne zaman** başladığı dağılır ve karşı pres üçlüsü ile topa 12 m içindekiler hemen; markaj ataması geçişte 0,5 sn'ye yayılır (eşleşen oyuncu kendi tepki anında alır). Savunmada boşta rakip ve gol bantları her alt adımda okunur (T13'ün riski).
+- **T18c — markaj ve kutu savunmasında kalıcılık, eşzamanlı koşu sınırı (T; `markajKalici`, `kutuSavKalici`, `esKosu`).** `markajAta`: hücumdaki takımın haritası silinmez, dondurulur (top geri gelince eski çiftler 12 m içindeyse devam); eşleşmede değişim bedeli (yeni çift ancak Δ ≥ 3 m iyileşiyorsa); koşucu takibi 4 m/sn eşiğine histerezis (3,2 çıkış). Kutu savunması: önceki eşleşme korunur, yalnız boş kalan bölgeler yeniden dağıtılır. Eşzamanlı koşu: takım başına aynı 0,3 sn içinde yeni yüksek eforlu (≥ 0,8) görev başlatan oyuncu sayısı `esKosu` 3 ile sınırlanır — fazlası bir sonraki düşünme anına ertelenir (acil: kovalayan, alıcı, pres1, müdahale, kaleci dışı). Derin koşu sahiplik değişiminde silinir, sayacı sahiplikten bağımsız işler.
+- **T18d — yorgunluğun düzene etkisi (T; `yorgunBlok`, `yorgunPres`, `yorgunKosu`).** Takım yorgunluğu (ilk 11'in ortalaması, değişiklikler dahil) ile: savunma çizgisi `yorgunBlok` (en çok −4 m, y 0,35'te), kompaktlık gevşer (`kompakt` ×(1 + 0,3·y): boy +2…+3 m), pres tetiği mesafesi ve 2. adam bölgesi daralır (`yorgunPres`: R1/R2 ×(1 − 0,25·y), ileri pres eşiği), derin koşu ve bindirme sıklığı `kosuIstegi` ×(1 − `yorgunKosu`·y) (0,5), `tiris` kipi seçilebilir (4 kip → 5). Hedef (gerçek değerler araştırmadan gelince kesinleşir): son 15 dakikada yüksek şiddetli koşu payı ilk 15'e göre −%20…−30, savunma boyu +2…+3 m, PPDA 2. yarıda +10–20 %; ikinci yarının gol payı ≥ %50 (T16'da 49,6).
+- **T18e — kapanış.** 80 maç `--karsilastir araclar/taban/t17.json` (yeni taban `t18.json`; `a4.json` silinir), robotluk karnesi, bütün senaryolar (özellikle `c-hareket`, `c-1v1`, `c-koru`, `c-kanat`, `c-orta`, `c-temas`, `d-duran`, `d-sut`), `ikiz-deneme.js` (maç nesnesine yeni durum), duyarlılık karnesi, hız bütçesi `tur/t17` ile, `kontrol.py` maç sayfası, belgeler.
+
+**Kabul (TEST başlangıç; T18-0 ve araştırmayla gözden geçirilir).**
+
+| Ölçü | Bugün | Hedef |
+|---|---|---|
+| > 3 m/sn² ivmelenme / oyuncu·dk | 6,8 | ≤ 5 |
+| GPS tanımı (0,5 sn ortalaması) | 5,0 | ≤ 4 (gerçek > 3 m/sn² sayısı araştırmadan) |
+| Görev değişimi / oyuncu·dk (yüksek eforlu) | 28,5 (hepsi) | ≤ 15 |
+| Eşzamanlı ivmelenme (0,3 sn'de ≥ 3) | 1,96 | ≤ 1,0 |
+| Kovala görevinin ortalama süresi | 1,1 sn | ≥ 1,8 sn |
+| Gol / şut / pas isabeti / PPDA / top kapma | 3,11 · 18,4 · 80,9 · bant · 12,6 | gürültü içinde; PPDA 3,5–7 |
+| Ceza sahasında boşta rakip (sn/maç) | ölçülür | artmaz (±σ) |
+| Son 15 dk yüksek şiddetli koşu payı / ilk 15 dk | ≈ 1,0 | 0,70–0,80 |
+| Savunma boyu 2. yarı sonu − 1. yarı | 0 m | +2…+3 m |
+| İkinci yarının gol payı (240 maç) | %49,6 | ≥ %50 |
+| Hareketin öteki bantları (durma + yürüme ≥ 40, depar ≤ 3, 16+ koşan ≤ 25, ortalama hız 140–180) | tutuyor | korunur |
+| Hız | — | ortanca artış ≤ %10 |
+
+Anahtarlar kapalıyken `t17.json`'a `--ayni` 10/10. Denge kararı 80 maç (T18d için 240).
+
+**Riskler ve sınırlar.**
+- T13'ün riski aynen: savunma geç kapanırsa gol ve boşta rakip artar → acil görevler tam güçte, her alt adımda gol/şut/boşta rakip satırı; tutmayan alt adım geri alınır (ilerleme kuralı).
+- Pas uçuşunda sanal sahip, pas modeli ve ofsayt çizgisi düzeltmeleriyle etkileşir → ofsayt ve pas isabeti bantları; `c-orta`, `c-kanat` kapıları.
+- Eşzamanlılık sınırı takımın şeklini bozabilir → ertelenen koşu en çok 0,5 sn.
+- Yorgunluk etkileri T16'nın dengesini (ikinci yarı payı, uzatma) oynatır → 240 maçla okunur.
+- Çizim değişmez; oyuncu nesnesine alan eklenmez (maç nesnesinde).
+
+**Büyüklük.** Büyük: ~1½–2 oturum (T18-0 ¼, T18a ½, T18b ½, T18c ¼, T18d ¼, kapanış ¼).
+
+**Oyunda görülecek (locadan).** Top el değiştirince herkes aynı anda fırlamaz: en yakın iki üç oyuncu çıkar, ötekiler kademeli kayar; kovalayan topun her dokunuşunda değişmez; markajcı adamını daha uzun tutar; maçın sonunda takımlar derinleşir, daha az koşar, blok açılır.
+
+**Doğrulama.**
+- Hızlı: `node araclar/mac-deneme.js 4`, `MAC_DENEME_IVME=1 node araclar/mac-deneme.js 12` (görev tablosu), ilgili senaryo; yeni anahtarda `ad-denetimi.js`.
+- Oturum sonu: `node araclar/oturum-sonu.js araclar/taban/t17.json` (T18-0'da `--ayni`).
+- Kapanış: T18e listesi.
+
 ### Animasyon (her turda, E akışı)
 
 Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir (2026-10-08 araştırmasıyla doğrulandı: locadan uzuv 2–3 px; ayak, el ve boyun kemiği eklenmez, ayrıntı pozla değil zamanlamayla okutulur). Animasyon her turun ölçütlü bir işidir (2026-10-04, kullanıcı onayı); turun motor işiyle birlikte kapanır, sonraya bırakılmaz.
