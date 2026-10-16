@@ -33,7 +33,15 @@ module.exports={
     .concat(S_GRUP.map(g=>['Şut payı: '+g+' %','sR_'+g,1]))
     .concat(S_MESAFE.map((a,i)=>['Şut payı: '+a+' %','sM_'+i,1]))
     .concat([['Başlayıp vurulmayan şut / maç','sVurulmayan',2],['Başlayıp vurulmayan şut: başlayanın %','sVurulmayanOran',1],
-      ['Orta / maç','sOrta',1],['Orta: hava düellosu oldu %','sOrtaHava',1]])
+      ['Orta / maç','sOrta',1],['Orta: hava düellosu oldu %','sOrtaHava',1],
+      /* T17-0 (2026-10-16): ortanın türü (karar anındaki ortaTuru; duran top ortası ayrı), bloklanan ortada karar anındaki baskı ve bloğun sonucu,
+         yerden orta ve geri çevirmede alıcının 1,5 m'inde rakip varken hücumun ilk teması (T17d kalibrasyonu; orta bloğu sayılmaz) */
+      ['Orta / maç (T17): kesme','sOT_kesme',2],['Orta / maç (T17): arka direğe asma','sOT_asma',2],['Orta / maç (T17): alçak sert','sOT_alcak',2],
+      ['Geri çevirme / maç (T17)','sOT_geri',2],['Orta / maç (T17): duran top ortası','sOT_duran',2],
+      ['Orta (T17): karar anında baskı, bloklanan (ort.)','sOBaskiB',2],['Orta (T17): karar anında baskı, bloklanmayan (ort.)','sOBaskiN',2],
+      ['Bloklanan orta (T17): kornere %','sOB_korner',1],['Bloklanan orta (T17): taca %','sOB_tac',1],['Bloklanan orta (T17): oyunda kaldı %','sOB_oyunda',1],
+      ['Yerden orta ve geri çevirme (T17): alıcının 1,5 m içinde rakip %','sYA_yakinPay',1],['Yerden orta ve geri çevirme (T17): hücum ilk temas, rakip ≤ 1,5 m %','sYA_yakin',1],
+      ['Yerden orta ve geri çevirme (T17): hücum ilk temas, rakip > 1,5 m %','sYA_uzak',1]])
     .concat(S_ORTA.map(k=>['Orta sonucu: '+S_ORTA_AD[k]+' %','sO_'+k,1]))
     .concat([['Korner başına şut','sKornerSut',2],
       ['Serbest vuruş / maç','sSerbestMac',2],['Serbest vuruş: yakın (≤30 m) / maç','sSerbestYakin',2],['Serbest vuruş: yakında doğrudan şut %','sSerbestYakinSut',1],
@@ -47,10 +55,15 @@ module.exports={
     for(const k of S_KAYNAK){sut[k]=0;gol[k]=0;}for(const g of S_GRUP)rol[g]=0;for(const k of S_ORTA)orta[k]=0;
     let du=null;                         /* duran top bağlamı: {tur, team, taker, t0 (oyunun yeniden başladığı an), vurus, sure, ref (m.durus), yakin} */
     let sonOrta=null,sonGeri=null,sonSut=null,bekOrta=null,havaOnce=0;
+    /* T17-0 */
+    const oTur={kesme:0,asma:0,alcak:0,geri:0,duran:0},oBaski=[[0,0],[0,0]],oB={korner:0,tac:0,oyunda:0},yA={yakin:[0,0],uzak:[0,0]};let bekBlok=null,bekYer=null;
+    const yakinRakip=(m,t,q)=>{for(const o of m.teams[1-t])if(o.oyunda&&hyp(o.x-q.x,o.z-q.z)<=1.5)return true;return false;};
+    const YA_OLAY=new Set(['ilkDokunus','kotuKontrol','shot','header','pass','cross','block','sekme','save','kapan','yumruk','parmak','clear']);
     const acik=new Map(),gorulen=new WeakSet();   /* oyuncu → vurulmayı bekleyen şut eylemi; sayılmış şut eylemleri */
     /* orta biterken de hava düellosu sayılır: düello ile onu kazanan kafa aynı adımda gelince orta adim'den önce kapanır */
     let sonM=null;
-    const ortaBitir=s=>{if(!bekOrta)return;if(!bekOrta.hava&&sonM&&sonM.ist.havaTopu>havaOnce)ortaHava++;orta[s]++;bekOrta=null;};
+    const ortaBitir=s=>{if(!bekOrta)return;if(!bekOrta.hava&&sonM&&sonM.ist.havaTopu>havaOnce)ortaHava++;orta[s]++;
+      if(bekOrta.baski!=null){const o=oBaski[s==='blok'?0:1];o[0]+=bekOrta.baski;o[1]++;}if(s==='blok'&&sonM)bekBlok={t:sonM.t,team:bekOrta.team};bekOrta=null;};
     const sutSay=(m,p,kafa)=>{if(!p||p.team==null)return;const t=p.team;let k='acik';
       if(du&&du.team===t){
         if(du.tur==='penalti'&&du.vurus===0&&p===du.taker)k='penalti';
@@ -68,6 +81,10 @@ module.exports={
       if(du&&du.team===t)du.vurus++;};
     return{
       dinle(ad,v,m){if(!m)return;sonM=m;
+        /* T17-0: bloklanan ortanın sonucu; yerden ortanın alım noktası (ortacıdan sonraki ilk temas; orta bloğunda sayılmaz) */
+        if(bekBlok){if(ad==='korner'&&v&&v.team===bekBlok.team){oB.korner++;bekBlok=null;}else if(ad==='tac'){oB.tac++;bekBlok=null;}else if(ad==='kaleVurusu'||ad==='serbest'||ad==='penalti'||ad==='goal'){oB.oyunda++;bekBlok=null;}}
+        if(bekYer){if(ad==='block'&&v&&v.orta)bekYer=null;
+          else if(v&&v.p&&v.p!==bekYer.p&&m.t-bekYer.t<=2.5&&YA_OLAY.has(ad)){const k=yA[bekYer.yakin?'yakin':'uzak'];k[1]++;if(v.p.team===bekYer.team)k[0]++;bekYer=null;}}
         if(ad==='tac'||ad==='korner'||ad==='serbest'||ad==='penalti'||ad==='kaleVurusu'){
           if(ad==='kaleVurusu'){du=null;return;}
           const yakin=hyp(m.dir[v.team]*S_PL-v.x,S_MZ-v.z)<=30;
@@ -80,8 +97,12 @@ module.exports={
         if(ad==='kickoff'){du=null;sonOrta=null;sonGeri=null;bekOrta=null;return;}
         if(ad==='pass'||ad==='cross'){const p=v.p;if(!p||p.team==null)return;
           if(du&&du.team===p.team)du.vurus++;
-          if(ad==='cross'){ortaN++;sonOrta={t:m.t,team:p.team,p};bekOrta={t:m.t,team:p.team};havaOnce=m.ist.havaTopu;bekOrta.hava=false;}
-          else if(v.tur==='geriCevir')sonGeri={t:m.t,team:p.team,p};
+          const e=p.eylem,sec=e&&e.sec,duran=!!(sec&&sec.yay==='korner')||!!(du&&du.team===p.team&&du.vurus===1);   /* duran top ortası: vuruşun kendisi (serbest vuruşun ortası ya da duruştan sonraki ilk vuruş) */
+          if(ad==='cross'){ortaN++;sonOrta={t:m.t,team:p.team,p};bekOrta={t:m.t,team:p.team};havaOnce=m.ist.havaTopu;bekOrta.hava=false;
+            const tt=duran?'duran':sec&&sec.ortaTuru&&oTur[sec.ortaTuru]!=null?sec.ortaTuru:sec&&sec.tip==='yer'?'alcak':'kesme';oTur[tt]++;
+            if(!duran)bekOrta.baski=e&&e.baski!=null?e.baski:null;
+            if(!duran&&sec&&sec.tip==='yer'&&v.q)bekYer={t:m.t,team:p.team,p,q:v.q,yakin:yakinRakip(m,p.team,v.q)};}
+          else if(v.tur==='geriCevir'){sonGeri={t:m.t,team:p.team,p};oTur.geri++;if(v.q)bekYer={t:m.t,team:p.team,p,q:v.q,yakin:yakinRakip(m,p.team,v.q)};}
           return;}
         if(ad==='clear'||ad==='gkkick'){const p=v.p;if(du&&p&&du.team===p.team)du.vurus++;if(bekOrta&&p&&p.team!==bekOrta.team)ortaBitir('uzaklastirma');return;}
         if(bekOrta){
@@ -98,14 +119,20 @@ module.exports={
         if(bekOrta){if(m.ist.havaTopu>havaOnce&&!bekOrta.hava){bekOrta.hava=true;ortaHava++;}
           if(m.phase!=='play')ortaBitir('disari');
           else if(b.sahip&&b.sahip.team!=null)ortaBitir(b.sahip.team===bekOrta.team?'hucumAldi':'savunmaAldi');
-          else if(m.t-bekOrta.t>3)ortaBitir('diger');}},
+          else if(m.t-bekOrta.t>3)ortaBitir('diger');}
+        if(bekBlok&&m.t-bekBlok.t>4){oB.oyunda++;bekBlok=null;}
+        if(bekYer&&(m.t-bekYer.t>2.5||m.phase!=='play'))bekYer=null;},
       bitir(){
-        const ham={sVurulmayanOran:[vurulmayan,baslayan],sOrtaHava:[ortaHava,ortaN],sSerbestYakinSut:[syDogrudan,syN],sBarajliGol:[bjGol,bjN],sKafaCer:[kfCer,kfN],sKafaGol:[kfGol,kfN]};
+        const ham={sVurulmayanOran:[vurulmayan,baslayan],sOrtaHava:[ortaHava,ortaN],sSerbestYakinSut:[syDogrudan,syN],sBarajliGol:[bjGol,bjN],sKafaCer:[kfCer,kfN],sKafaGol:[kfGol,kfN],
+          sYA_yakin:yA.yakin,sYA_uzak:yA.uzak,sYA_yakinPay:[yA.yakin[1],yA.yakin[1]+yA.uzak[1]]};
+        {const n=oB.korner+oB.tac+oB.oyunda;for(const k in oB)ham['sOB_'+k]=[oB[k],n];}
         for(const k of S_KAYNAK)ham['sG_'+k]=[gol[k],sut[k]];
         for(const g of S_GRUP)ham['sR_'+g]=[rol[g],sutN];
         for(let i=0;i<4;i++)ham['sM_'+i]=[mes[i],sutN];
         let oT=0;for(const k of S_ORTA)oT+=orta[k];for(const k of S_ORTA)ham['sO_'+k]=[orta[k],oT];
-        const r={ham,sVurulmayan:vurulmayan,sOrta:ortaN,sKornerSut:korner?kornerSut/korner:NaN,sSerbestMac:syMac,sSerbestYakin:syN,sBarajliSut:bjN,sKafaSut:kfN};
+        const r={ham,sVurulmayan:vurulmayan,sOrta:ortaN,sKornerSut:korner?kornerSut/korner:NaN,sSerbestMac:syMac,sSerbestYakin:syN,sBarajliSut:bjN,sKafaSut:kfN,
+          sOBaskiB:oBaski[0][1]?oBaski[0][0]/oBaski[0][1]:NaN,sOBaskiN:oBaski[1][1]?oBaski[1][0]/oBaski[1][1]:NaN};
+        for(const k in oTur)r['sOT_'+k]=oTur[k];
         for(const k of S_KAYNAK)r['sS_'+k]=sut[k];
         return r;}
     };
