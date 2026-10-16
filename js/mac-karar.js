@@ -558,8 +558,11 @@ function ortaSecenekleri(m,p,o,S){
        (eskiden kaybın tamamına ekleniyordu: 2 m'den yakın baskıda bloklanan ortanın tahmini %30 kalıyordu, gerçek %10; T14-0 teşhisi) */
     const Pg=A.ortaTemas?(1-kal)*acik*Math.min(0.99,A2.P+A2.teknik*A2.Pex*(1-A2.Pt)*Math.min(0.4,A.ortaDestek*nd)):Pg0+(1-Pg0)*Math.min(0.4,A.ortaDestek*nd);
     /* T10-0 (2026-10-11): o.hepsi — c-orta senaryosu eşiksiz listeyi ve tahminin bileşenlerini alır (kalibrasyon); karar yolu aynı */
-    if(Pg<0.1&&!o.hepsi)continue;   /* umutsuz orta düşünülmez */
-    const U=(Pg*(sans*100+0.8)-(1-Pg)*pasKaybi(m,p,c.hx,c.hz)*0.5*takim.risk)*A.ortaIstegi;
+    /* T17c (ortaDevam): bloklanan orta çoğu zaman kale çizgisine doğru seker (ortaBlokUygula %60) — kornerin değeri ortanın devamıdır; bloklanması muhtemel orta
+       eşiğin altında kalmaz. T14c'den beri ortacı baskıdaki ortayı bırakıp adamını geçmeye ya da pasa dönüyordu (orta bloğu %2, gerçekte ~%25, orta kaynaklı korner yok) */
+    const devam=A.ortaDevam?(1-acik)*A.ortaBlokKorner*A.ortaKornerDeger:0;
+    if((A.ortaDevam?Pg+devam/100<A.ortaEsik:Pg<0.1)&&!o.hepsi)continue;   /* umutsuz orta düşünülmez */
+    const U=(Pg*(sans*100+0.8)+devam-(1-Pg)*pasKaybi(m,p,c.hx,c.hz)*0.5*takim.risk)*A.ortaIstegi;
     S.push({tur:c.tur==='geri'?'geriCevir':'orta',alici:c.q,hx:c.hx,hz:c.hz,tip:c.tip,yay:c.yay,hy:c.hy,T:c.tip==='hava'?A2.T:null,varis:A2.varis,
       mod:c.tip==='hava'?null:'ayak',deger:U,P:Pg,Pk:A2.Pk,sure:A2.sure,L:A2.L,ortaTuru:c.tur});
     if(o.hepsi)S[S.length-1].bilesen={P2:A2.P,Pex:A2.Pex,Pt:A2.Pt,teknik:A2.teknik,kal,acik,Pis,sans,iz};}

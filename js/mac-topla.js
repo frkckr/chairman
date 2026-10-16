@@ -98,7 +98,12 @@ ayarEkle('B',{
   taramaGenislik:[1.2,1.9],    // tarama genişliği, gövdeye göre (rad; eskiden hep 1,75)
   taramaTut:[0.12,0.32],       // bakışın taramanın yönüne vardıktan sonra orada kalma süresi (sn; eskiden toplam 0,28)
   taramaYan:0.7,               // taramanın yanının bir öncekinin tersi olma olasılığı (eskiden hep ters)
-  bakisDonus:0.5               // gövdenin hedefine bundan (rad) büyük dönüş kaldıkça bakış gövdenin hedefine bakar (gideceği yere bakma)
+  bakisDonus:0.5,              // gövdenin hedefine bundan (rad) büyük dönüş kaldıkça bakış gövdenin hedefine bakar (gideceği yere bakma)
+  /* T17c (2026-10-16; gerçekçilik planı §4 T17): ortanın devam değeri — bloklanan orta kornere gidebilir; ortacı baskıdaki ortayı bırakmaz */
+  ortaDevam:1,                 // T17c: ortanın değerine bloktan doğan korner eklenir ((1 − açıklık) × ortaBlokKorner × ortaKornerDeger); 0: T14c değeri (yalnız ilk temasın xG'si)
+  ortaKornerDeger:3,           // T17c: kornerin değeri (P(gol)·100; gerçek korner xG'si ≈ 0,03, Opta takımları 0,016–0,067)
+  ortaBlokKorner:0.4,          // T17c: bloklanan ortanın kornere gitme payı (planlayıcı; TEST — 40 maçta ölçülen değerle güncellenir, T17-0'da %20, n 5)
+  ortaEsik:0.05                // T17c: bu olasılığın (ilk temas + devam) altındaki orta düşünülmez (eskiden 0,1 sabit; bloklanması muhtemel ama kornere açık ortalar elenmesin)
 });
 /* ---- T9b (2026-10-10; gerçekçilik planı §4 T9 “Vuruş”): vuruş modeli — saf, rastlantısız. Şut planı (js/mac-karar.js sutPlani), pas analizi
    (pasAnaliz) ve vuruş (sutVur, yerPasVur, havaPasVur) aynı işlevleri okur. Stilin payı: azami hıza göre hız (iç ayak plase en yavaşı, üst sert
