@@ -19,7 +19,7 @@ const KOD=`(function(tohum,tur,t,u,w){
   let kul=null,su=0,sut=0,gol=false,golDogrudan=false,ilkP=null,ilkSut=false,golIlk=false,sonra1=null,ilkT=0,dogrudan=false,cerceve=false,ilk=null,inis=null,blok=false,zip=false,rib=-1,kutuH=0,kutuS=0,A0=null,elle=false;
   /* T17-0: ilk kafanın bloğu (rol, erişim, havada; önceki adımın top yeri), ikinci evre (1,5 sn sonra), pencerenin bitişi, kapanıştan sonra gol */
   let hkT=-1,hkX=0,hkZ=0,hkR=null,hkSav=-1,hkHuc=-1,evSav=-1,evHuc=-1,evMarkaj=null,evAcik=null,blokT=-1,blokRol=null,blokEr=null,blokHavada=null,blokD=NaN,golBlok=false,bitis=null,bitT=-1,golBitis=false,dsSon=null;const onc={x:0,z:0,y:0};
-  let sbIlk=null,sbIlkT=null,sbSut=null,golBlokT=null;   /* bloktan sonra: ilk dokunan, hücumun ilk şutu {t, L, gk, sav15, blok, gol} */
+  let sbIlk=null,sbIlkT=null,sbSut=null,golBlokT=null,bSonra=null;   /* bloktan sonra: ilk dokunan, hücumun ilk şutu {t, L, gk, sav15, blok, gol} */
   const kutuda=(p,tt)=>{const gx=m.dir[tt]*PL;return Math.abs(p.x-gx)<CEZA_U&&Math.abs(p.z-MZ)<CEZA_W;};
   const m=new Match((ad,v)=>{
     if(ad==='kullanim'&&!kul&&v&&v.takim===t){kul=v;su=m.t;elle=v.alt==='elle';
@@ -42,7 +42,9 @@ const KOD=`(function(tohum,tur,t,u,w){
       if(sbSut&&ad==='goal'&&v.team===t&&m.t-blokT-sbSut.t<=4)sbSut.gol=true;}
     /* A4 (bilgi): hücumun ilk kafasından sonraki ilk olay — kaleci, blok, savunmanın kafası ya da ayağı, hücumun ikinci dokunuşu */
     if(ilkP&&!sonra1&&m.t>ilkT+1e-6&&v&&v.p){if(ad==='save'||ad==='yumruk'||ad==='parmak'||ad==='kapan')sonra1='kaleci';else if(ad==='block'){sonra1=v.p.team===t?'hucBlok':'savBlok';
-        if(v.p.team!==t){const p=v.p;blokT=m.t;blokRol=hkR&&hkR.get(p)||'diger';const yb=onc.y-(p.yuk||0);blokEr=yb<0.8?'ayak':yb<1.55?'gogus':'ust';blokHavada=(p.yuk||0)>0.05||!!p.zipla;blokD=Math.hypot(p.x-hkX,p.z-hkZ);}}
+        if(v.p.team!==t){const p=v.p;blokT=m.t;blokRol=hkR&&hkR.get(p)||'diger';const yb=onc.y-(p.yuk||0);blokEr=yb<0.8?'ayak':yb<1.55?'gogus':'ust';blokHavada=(p.yuk||0)>0.05||!!p.zipla;blokD=Math.hypot(p.x-hkX,p.z-hkZ);
+        const b2=m.ball,dd=m.dir[t],gx=dd*PL,vh=Math.hypot(b2.vx,b2.vz),tg=b2.vx*dd>0.5?(gx-b2.x)/b2.vx:-1,zg=tg>0?b2.z+b2.vz*tg:NaN;
+        bSonra={v:vh,vOnce:Math.hypot(onc.vx||0,onc.vz||0),vy:b2.vy,y:b2.y,yOnce:onc.y,yuk:p.yuk||0,kaleye:tg>0&&tg<1.5&&Math.abs(zg-MZ)<GW2+0.6,ileri:b2.vx*dd>0};}}
       else if(ad==='header')sonra1=v.p.team===t?'hucKafa':'savKafa';else if(ad==='ilkDokunus'||ad==='sekme'||ad==='kotuKontrol'||ad==='shot')sonra1=v.p.team===t?'hucAyak':'savAyak';}
     /* T10b (2026-10-11): ilk temastan önce çalınan faul (kutuda tutma, havada kol, kaleciye çarpma) ayrı sınıf — eskiden "disari" sayılıyordu */
     if(!ilk&&ad==='faul'&&m.t-su<4&&(kul.alt!=='kisa'&&kul.alt!=='geri')){ilk='faul';return;}
@@ -76,9 +78,9 @@ const KOD=`(function(tohum,tur,t,u,w){
     if(inis==null&&dt>0.2&&b.vy<0&&b.y<2.6&&!b.sahip&&!b.tasiyan){const n2=[0,0];for(const q of m.players)if(q.oyunda&&q.rol!=='GK'&&Math.hypot(q.x-b.x,q.z-b.z)<1.5)n2[q.team]++;inis=n2[0]>0&&n2[1]>0;}
     if(rib<0&&dt>=1.0&&A0)rib=A0.filter(q=>q.oyunda&&kutuda(q,t)).length;
     if(!ilk&&(kul.alt!=='kisa'&&kul.alt!=='geri')){if(b.tasiyan&&b.tasiyan.rol==='GK'&&b.tasiyan.team!==t)ilk='kaleci';else if(inis!=null&&b.y<0.3&&!b.sahip)ilk='yere';else if(dt>4)ilk='yok';}
-    onc.x=b.x;onc.z=b.z;onc.y=b.y;}
+    onc.x=b.x;onc.z=b.z;onc.y=b.y;onc.vx=b.vx;onc.vz=b.vz;}
   return{hz:kul.hazirlik,alt:kul.alt,bolge:kul.bolge,sut,gol,golDogrudan,golIlk,ilkSut,sonra1,dogrudan,cerceve,ilk,inis,blok,zip,rib,kutuH,kutuS,baraj,nb,elle,perde:!!(kul.du&&kul.du.gorev&&[...kul.du.gorev.values()].some(g=>g.rol==='perdeAdam')),ikili:!!(kul.du&&kul.du.ikili),aldatma:!!(kul.du&&kul.du.aldatma),aldOnce:kul.du&&kul.du.aldatmaGecti!=null?su-kul.du.aldatmaGecti:null,
-    hkBlok:sonra1==='savBlok',blokRol,blokEr,blokHavada,blokD,golBlok,golBlokT,sbIlk,sbIlkT,sbSut,hkSav,hkHuc,evSav,evHuc,evMarkaj,evAcik,bitis,bitT:bitT>=0?bitT-su:null,golBitis,sutP:sut>0};})`;
+    hkBlok:sonra1==='savBlok',blokRol,blokEr,blokHavada,blokD,golBlok,golBlokT,sbIlk,sbIlkT,sbSut,bSonra,hkSav,hkHuc,evSav,evHuc,evMarkaj,evAcik,bitis,bitT:bitT>=0?bitT-su:null,golBitis,sutP:sut>0};})`;
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||400,f=vm.runInContext(KOD,ctx),t0=Date.now();let tn=(tohum||1)*10000,kabulDisi=0;   /* T8f: tohum blokları çakışmasın (koşu başına ~4N + 3N tohum) */
   const y=(a,c)=>c?(100*a/c).toFixed(1)+'%':'—',ort=L=>L.length?L.reduce((a,c)=>a+c,0)/L.length:NaN,ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,c)=>a-c);return S[Math.floor(S.length/2)];};
@@ -122,6 +124,8 @@ module.exports={calistir({ctx,vm,N,tohum}){
       console.log('  T17: bloktan sonra ilk dokunan '+Object.keys(SI).sort((a,c)=>SI[c]-SI[a]).map(k=>k+' '+y(SI[k],SB.length)).join(' · ')+' (ortanca '+f1(ortanca(SB.filter(r=>r.sbIlkT!=null).map(r=>r.sbIlkT)),2)+' sn) · 4 sn içinde hücum şutu '+y(SS.length,SB.length)+' (ortanca '+f1(ortanca(SS.map(r=>r.sbSut.t)),2)+' sn, '+f1(ortanca(SS.map(r=>r.sbSut.L)))+' m) · o şut bloklandı '+y(say(SS,r=>r.sbSut.blok),SS.length)+' · gol '+y(say(SS,r=>r.sbSut.gol),SS.length)+' · şutçunun 1,5 m içinde savunmacı ort. '+f1(ort(SS.map(r=>r.sbSut.sav15)),2));
       console.log('  T17: bloktan sonraki şutta kaleci '+Object.keys(GK).sort((a,c)=>GK[c]-GK[a]).map(k=>k+' '+y(GK[k],SS.length)).join(' · '));
       const SG=SB.filter(r=>r.golBlok),GI={};for(const r of SG){const k=r.sbIlk||'yok';GI[k]=(GI[k]||0)+1;}
+      {const BS=SB.filter(r=>r.bSonra),BG=BS.filter(r=>r.golBlok);const oz=L=>'kaleye '+y(say(L,r=>r.bSonra.kaleye),L.length)+' · ileri '+y(say(L,r=>r.bSonra.ileri),L.length)+' · hız önce '+f1(ortanca(L.map(r=>r.bSonra.vOnce)))+' → sonra '+f1(ortanca(L.map(r=>r.bSonra.v)))+' m/sn · vy '+f1(ortanca(L.map(r=>r.bSonra.vy)))+' · top y '+f1(ortanca(L.map(r=>r.bSonra.yOnce)),2)+' m · bloklayan yuk '+f1(ortanca(L.map(r=>r.bSonra.yuk)),2)+' m';
+        console.log('  T17: blok sonrası top — bütün bloklar ('+BS.length+'): '+oz(BS));console.log('  T17: blok sonrası top — gol olan bloklar ('+BG.length+'): '+(BG.length?oz(BG):'—'));}
       console.log('  T17: gol olan bloklarda ilk dokunan '+Object.keys(GI).sort((a,c)=>GI[c]-GI[a]).map(k=>k+' '+GI[k]).join(' · ')+' · gol bloktan sonra ortanca '+f1(ortanca(SG.map(r=>r.golBlokT)),2)+' sn ('+SG.length+')');}
     const HE=HK.filter(r=>r.evSav>=0);
     console.log('  T17: ilk kafada kutuda savunmacı '+f1(ort(HK.map(r=>r.hkSav)))+' · hücumcu '+f1(ort(HK.map(r=>r.hkHuc)))+' · 1,5 sn sonra savunmacı '+f1(ort(HE.map(r=>r.evSav)))+' · hücumcu '+f1(ort(HE.map(r=>r.evHuc)))+' · markajlı hücumcu '+y(HE.reduce((a,r)=>a+r.evMarkaj[0],0),HE.reduce((a,r)=>a+r.evMarkaj[1],0))+' · pencere açık '+y(say(HE,r=>r.evAcik),HE.length)+' ('+HE.length+')');

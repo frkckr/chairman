@@ -24,7 +24,12 @@ ayarEkle('C',{
   firsatKirmizi:0.45,          // açık gol fırsatını engelleyen faulde kırmızı olasılığı (hakem her zaman görmez; birleştirme 2026-10-03)
   elOlasilik:1.0,              // T10b: elle oynama olasılıklarının çarpanı (kol yüksekliğindeki temasta duruşa göre 0,03–0,25; elleOynamaDene)
   tutmaIstek:0.35,             // T10b: adamı koşuyla sıyrılan markajcının formadan tutma olasılığı (× 0,2 + 1,6·agresiflik; tutmaDene)
-  ortaTemas:1                  // T14c: ortanın planlayıcısı yolundaki rakibin ayak, göğüs ve gövde temasını bilir (ortaTemasP; 0: yalnız ilk 3 m'deki bacak)
+  ortaTemas:1,                 // T14c: ortanın planlayıcısı yolundaki rakibin ayak, göğüs ve gövde temasını bilir (ortaTemasP; 0: yalnız ilk 3 m'deki bacak)
+  govdeDar:1,                  // T17b (2026-10-16): gövde kapsülü omuz hizasının (1,45·boy) üstünde daralır — 0,37 m'den baş hizasında (1,8·boy) 0,14 m'ye (havada
+                               // kalan markajcının başı ve omzu kafa topunu gövde gibi bloklamasın); 0: silindir 0,37 m (A4)
+  blokGercek:1                 // T17a (2026-10-16; gerçekçilik planı §4 T17): blok ve sekme gerçek temastır — top gövde merkezini geçmişse yansıma normali bağıl hızın
+                               // tersi (yansit), şutu yalnız topa yaklaşan rakip bloklar, yanından geçip giden topa kimse değmez (sutBlok). 0: T17-0 davranışı (A4):
+                               // kornerde bloklanan kafaların %18'i dokunulmadan gole gidiyordu (top yoluna devam edip vy ile yükseliyordu — “hayalet blok”)
 });
 /* dengeye dayanıklılık: kütle, sertlik ve çeviklik (C2) */
 const mdhDengeGuc=p=>(kutle(p)/78)*(0.8+0.4*(p.oz&&p.oz.sertlik!=null?p.oz.sertlik:0.5))*(0.85+0.3*hrkCeviklik(p));
@@ -212,7 +217,13 @@ Object.assign(Match.prototype,{
   /* şut: topa erişen savunmacı bloklar; yalnız vuran erişiyorsa temas yok */
   sutBlok(ad){
     const b=this.ball;
-    if(b.sut){const bl=ad.find(a=>a.p.team!==b.sut.team&&a.p.rol!=='GK');if(bl){this.blok(bl.p);return true;}
+    if(b.sut){const R=ad.filter(a=>a.p.team!==b.sut.team&&a.p.rol!=='GK'),G=MOTOR_AYAR.blokGercek;
+      if(R.length){
+        /* T17a (blokGercek): yalnız topa yaklaşan (bağıl hız gövdeye doğru) rakip bloklar; top yanından geçip gidiyorsa kimse değmez (eskiden erişim listesindeki ilk
+           rakip blokluyor, geçmiş top yansımadan yoluna devam ediyordu) */
+        const bl=G?R.find(a=>(b.vx-(a.p.vx||0))*(a.p.x-b.x)+(b.vz-(a.p.vz||0))*(a.p.z-b.z)>0):R[0];
+        if(bl){this.blok(bl.p);return true;}
+        if(G&&!ad.some(a=>a.tur==='el')&&ad.every(a=>a.p.team!==b.sut.team||a.p===b.sut.by))return true;}
       if(ad.every(a=>a.p===b.sut.by))return true;}
     return false;
   },
@@ -249,11 +260,19 @@ Object.assign(Match.prototype,{
   yansit(p,e,sapma){
     const b=this.ball;let nx=b.x-p.x,nz=b.z-p.z,n=hrkHyp(nx,nz);
     if(n<1e-3){const v=hrkHyp(b.vx,b.vz)||1;nx=-b.vx/v;nz=-b.vz/v;n=1;}else{nx/=n;nz/=n;}
+    /* T17a (blokGercek): top gövde merkezini geçmişse (bağıl hız normal yönünde dışarı) temas yakın yüzdedir — normal bağıl hızın tersi; eskiden vn ≥ 0'da
+       yansıma yoktu, top yoluna devam edip vy ile yükseliyordu (kornerde “hayalet blok”: bloklanan kafaların %18'i dokunulmadan gol) */
+    let ny=0;
+    if(MOTOR_AYAR.blokGercek){const rx0=b.vx-(p.vx||0),rz0=b.vz-(p.vz||0),rv=hrkHyp(rx0,rz0);if(rv>1e-3&&rx0*nx+rz0*nz>=0){nx=-rx0/rv;nz=-rz0/rv;}
+      /* T17a-2: omuz hizasının (1,45·boy) üstündeki temasta normal yukarı eğilir (baş hizasında 0,9): başın tepesini sıyıran top durmaz, yukarı ve ileri
+         sıyrılır (kornerde bloklanan kafalar 2,15 m'de, bloklayanın havadaki kapsül tepesi ~2,16 m: yatay normal topu “durduruyor” sayıp yoluna bırakıyordu) */
+      const by=(p.boy||1),yb=b.y-(p.yuk||0),om=1.45*by,us=1.8*by;if(yb>om){ny=0.9*Math.min(1,(yb-om)/(us-om));const cy=Math.sqrt(1-ny*ny);nx*=cy;nz*=cy;}}
     const a=this.normal()*sapma,c=hrkCos(a),s=hrkSin(a),mx=nx*c-nz*s,mz=nx*s+nz*c;
-    const rx=b.vx-(p.vx||0),rz=b.vz-(p.vz||0),vn=rx*mx+rz*mz;
-    if(vn<0){b.vx-=(1+e)*vn*mx;b.vz-=(1+e)*vn*mz;}
+    const rx=b.vx-(p.vx||0),rz=b.vz-(p.vz||0),vn=rx*mx+rz*mz+b.vy*ny;
+    if(vn<0){b.vx-=(1+e)*vn*mx;b.vz-=(1+e)*vn*mz;if(ny>0)b.vy-=(1+e)*vn*ny;}
     b.vx=b.vx*0.92+(p.vx||0)*0.25;b.vz=b.vz*0.92+(p.vz||0)*0.25;
-    const yuk=b.y/((p.boy||1)*1.8);b.vy=yuk<0.35?hrkAbs(b.vy)*0.3+this.rast()*1.2:1+this.rast()*2.5;
+    const yuk=b.y/((p.boy||1)*1.8);
+    if(ny>0)b.vy=Math.max(b.vy,0.3)+this.rast()*0.6;else b.vy=yuk<0.35?hrkAbs(b.vy)*0.3+this.rast()*1.2:1+this.rast()*2.5;
     b.x=p.x+mx*(0.38);b.z=p.z+mz*(0.38);b.egri=0;b.ust=0;
   },
   /* ============ T10b: elle oynama (gerçekçilik planı §4 T10 madde 3; T5 madde 7) ============
@@ -330,7 +349,10 @@ Object.assign(Match.prototype,{
       if(p===b.sahip||ad.some(a=>a.p===p)||(p.eylem&&(p.eylem.ad==='vurus'||p.eylem.ad==='ucus'))||(!hakem&&p===b.sonDokunan&&p.kickCd>0))return false;
       /* T8c: barajdaki oyuncu omuz omuza (yanal 0,5 m; kollar ve baş 1,95·boy); havadakinin ayaklarının altından top geçer */
       const bj=!hakem&&!!(p.duranRol&&p.duranRol.rol==='baraj'),dx=b.x-p.x,dz=b.z-p.z,d=hrkHyp(dx,dz);
-      if(d>(bj?0.5:0.37)||b.y>(bj?1.95:1.8)*(p.boy||1)+(p.yuk||0)||b.y<(p.yuk||0)-0.08)return false;
+      let r=bj?0.5:0.37;
+      /* T17b (govdeDar): omuz üstünde kapsül daralır (baş ve omuz; havadaki markajcı kafa topunu gövdesiyle bloklamasın) */
+      if(MOTOR_AYAR.govdeDar&&!bj){const by=(p.boy||1),yb=b.y-(p.yuk||0),om=1.45*by,us=1.8*by;if(yb>om)r=0.37-0.23*Math.min(1,Math.max(0,(yb-om)/(us-om)));}
+      if(d>r||b.y>(bj?1.95:1.8)*(p.boy||1)+(p.yuk||0)||b.y<(p.yuk||0)-0.08)return false;
       if((b.vx-(p.vx||0))*dx+(b.vz-(p.vz||0))*dz>=0)return false;
       if(!hakem&&this.elleOynamaDene(p))return true;   /* T10b: elle oynama (çalındıysa oyun durdu) */
       this.yansit(p,0.3,0.25);

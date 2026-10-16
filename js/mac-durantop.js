@@ -51,6 +51,9 @@ ayarEkle('K',{
                                // hücumun ilk kafası bloklandıktan sonraki karambolde, %16,4) — sıklık düşük: %10, korner başına gol %4,7 (kapı %3–5)
   kornerGeri:0.03              // A4-2: ortanın yerine ceza sahası kenarına geç koşan ikinci topçuya yerden pas (yaya geri pas) olasılığı (0: kapalı; kornerlerin
                                // %2,9'u, korner başına 0,83 şut; gol %11,7 — 213 korner, ±2,2: yaydaki savunmacı geç koşuyu izlemiyor)
+  ,markajYan:[0.8,0.3]         // T17b (2026-10-16; gerçekçilik planı §4 T17): duran topta adam markajcısının duruşu — adamının [kale tarafında, top tarafında] (m); [0,5; 0,5]
+                               // markajcıyı kafanın yolundan çekti ama hücumcunun ilk kafasını serbest bıraktı (ilk kafadan gol %5 → 9, korner başına gol %5,5); [0,8; 0,3]: blok payı %23, ilk kafadan gol %4,9;
+                               // boş/0: T8 duruşu (kale tarafında 0,8 m, tam hücumcu–kale çizgisinde: ilk kafaların %38'i markajcının havadaki gövdesine çarpıyordu)
 });
 const DT_HAZIR={tac:0,korner:1,kaleVurusu:2,serbest:3,penalti:4};
 /* kafa sırası (T3'ten: sıçrama + boy) ve ikinci top (şut gücü, uzaktan vurma) */
@@ -354,6 +357,9 @@ Object.assign(Match.prototype,{
       if(DT_HEDEF.has(G.rol)||G.rol==='perde'){const x=!DS.kisa&&G.kx!=null?G.kx:G.hx,z=!DS.kisa&&G.kz!=null?G.kz:G.hz,e=hyp(p.x-x,p.z-z);return{x,z,ef:1,h:e>3?1:0.6};}
       return{x:G.hx,z:G.hz,ef:0.6,h:0.7};}
     if(G.rol==='adam'){const o=G.hedef;if(!o||!o.oyunda)return null;const og=this.dir[o.team]*PL,ox=o.x+o.vx*0.3,oz=o.z+o.vz*0.3,L=hyp(og-ox,MZ-oz)||1;
+      /* T17b (markajYan): kale tarafında ve top tarafında — adamla topun arasında durur, kafanın yolunda değil (T8: yalnız kale tarafında 0,8 m) */
+      const my=MOTOR_AYAR.markajYan;if(my&&(my[0]>0||my[1]>0)){const b=this.ball,bx=b.x-ox,bz=b.z-oz,Lb=hyp(bx,bz)||1;
+        return{x:ox+(og-ox)/L*my[0]+bx/Lb*my[1],z:oz+(MZ-oz)/L*my[0]+bz/Lb*my[1],ef:1,h:1};}
       return{x:ox+(og-ox)/L*0.8,z:oz+(MZ-oz)/L*0.8,ef:1,h:1};}
     if(G.rol==='kaleci'||G.rol==='baraj')return null;   /* T8c: baraj vuruştan sonra oyuna döner */
     return{x:G.hx,z:G.hz,ef:0.8,h:0.8};},

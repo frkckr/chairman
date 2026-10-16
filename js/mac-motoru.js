@@ -73,7 +73,7 @@ const MOTOR_AYAR={
   dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,govdeDinamik:undefined,donusIvme:undefined,bakOlu:undefined,donusGecikme:undefined,bakisOnce:undefined,cruyff:undefined,cruyffKal:undefined,cruyffKanat:undefined,sirtGovde:undefined,
   /* C — js/mac-mudahale.js */
   mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
-  acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,elOlasilik:undefined,tutmaIstek:undefined,ortaTemas:undefined,
+  acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,elOlasilik:undefined,tutmaIstek:undefined,ortaTemas:undefined,blokGercek:undefined,govdeDar:undefined,
   /* C — js/mac-hava.js (T6) */
   sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,havaOkuma:undefined,havaEgilme:undefined,havaDuello:undefined,havaKol:undefined,plonjon:undefined,plonjonHiz:undefined,plonjonYerde:undefined,kafaDonus:undefined,
   /* B — js/mac-topla.js */
@@ -99,7 +99,7 @@ const MOTOR_AYAR={
   /* K — js/mac-durantop.js (T8) */
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
   kornerKisa:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined,
-  serbestIkili:undefined,serbestAldatma:undefined,aldatmaTepki:undefined,kornerPerde:undefined,kornerGeri:undefined,
+  serbestIkili:undefined,serbestAldatma:undefined,aldatmaTepki:undefined,kornerPerde:undefined,kornerGeri:undefined,markajYan:undefined,
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined
 };
