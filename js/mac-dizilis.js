@@ -73,6 +73,8 @@ Object.assign(Match.prototype,{
     const b=this.ball;
     const odak=du?{x:du.x,z:du.z,sahip:null,takim:du.takim}:{x:b.x,z:b.z,sahip:b.sahip,takim:b.sahip?b.sahip.team:b.tasiyan&&b.tasiyan.team!=null?b.tasiyan.team:-1};
     const sahipTakim=odak.takim;
+    /* T18b (gecisKademe): pas uçuşunda alıcı rol düzeni için sanal sahip — odak.sahip/takim alıcıdır, sahipTakim (kovalayan, geçiş sayacı) gerçek kalır */
+    if(MOTOR_AYAR.gecisKademe&&!du&&!b.sahip&&!b.tasiyan&&b.hedefOyuncu&&b.hedefOyuncu.oyunda&&b.hedefOyuncu.team!=null&&!(b.hedefOyuncu.eylem&&b.hedefOyuncu.eylem.kilit)){odak.sahip=b.hedefOyuncu;odak.takim=b.hedefOyuncu.team;}
     /* serbest top: her takımdan topa en önce yetişecek oyuncu kovalar (6 karede bir ya da top değişince hesaplanır) */
     let kovalayan=[null,null];
     if(!du&&sahipTakim<0&&!b.tasiyan){
@@ -146,8 +148,8 @@ Object.assign(Match.prototype,{
           L.sort((x,y)=>x[0]-y[0]||x[1].n-y[1].n);
           if(L[0]&&L[0][0]<12)pres1=L[0][1];if(L[1]&&L[1][0]<10)pres2=L[1][1];if(L[2]&&L[2][0]<14)pres3=L[2][1];
           if(KL)KL[t]={bas:this._sahiplikBas,liste:[pres1,pres2,pres3]};}}
-      else if(!du&&sahipTakim===1-t&&b.sahip){
-        const s=b.sahip;let e1=1e9,e2=1e9;const P1=this._pres1||(this._pres1=[null,null]),onceki=P1[t];
+      else if(!du&&((sahipTakim===1-t&&b.sahip)||(odak.sahip&&!b.sahip&&odak.takim===1-t))){   /* T18b: pas uçuşunda alıcıya göre (sanal sahip) */
+        const s=odak.sahip;let e1=1e9,e2=1e9;const P1=this._pres1||(this._pres1=[null,null]),onceki=P1[t];
         for(const p of this.teams[t]){if(!p.oyunda||p.rol==='GK'||(p.eylem&&p.eylem.kilit))continue;
           /* T4: az önce geçilen savunmacı (1,5 sn) 1. adam olmaz: toparlanır, 2. adam öne çıkar */
           if(p._gecT!=null&&this.t-p._gecT<1.5)continue;
@@ -215,14 +217,17 @@ Object.assign(Match.prototype,{
           this.kovala(p,K&&K.yuksek||p===b.hedefOyuncu||donen||f<=MOTOR_AYAR.kovalaPay?1:0.5);continue;}
         if(p===kovalayan[2+t]){this.gorevYaz(p,'kovala2');this.kovala(p,1);continue;}
         if(p===cizgiBek){this.gorevYaz(p,'cizgi');p.tx=cbx;p.tz=cbz;p.hizOran=1;this.eforVer(p,1);continue;}   /* T5e */
-        if(p===pres1){this.gorevYaz(p,'pres1');this.eforVer(p,karsi?0.9:1);this.presYap(p,b.sahip,dt);continue;}
-        if(p===pres2){const yakin=MOTOR_AYAR.kapatKalici>0?(pres1!=null&&p._kapatK!=null&&this.kare-p._kapatK<=Math.round(60*MOTOR_AYAR.kapatKalici)):p._kapatK===this.kare;this.gorevYaz(p,'pres2');this.eforVer(p,yakin?1:karsi?0.9:0.8);if(yakin)this.kapatYakin(p,b.sahip,pres1,dt);else this.kapat(p,b.sahip);continue;}
-        if(p===pres3){this.gorevYaz(p,'pres3');this.eforVer(p,0.9);this.yolKapat(p,b.sahip);continue;}
-        let od=odak;
-        if(!du&&(!hucum||MOTOR_AYAR.hucumGecikme&&(MOTOR_AYAR.hucumGecikme>1||p.x*d<b.x*d))){/* kişisel tepki: topun tp sn önceki (yumuşatılmış) yeri */
-          const tp=clamp(0.62-0.22*p.oz.karar-0.12*p.oz.gorus+0.2*p.yorgunluk,0.25,0.7)*MOTOR_AYAR.tepkiCarpan,n=Math.min(15,Math.round(tp*20));
+        /* T18b: pas uçuşunda (sanal sahip) 1. adam alıcıya kapatır (presYap değil), 2. ve 3. adam alıcıya göre */
+        if(p===pres1){this.gorevYaz(p,'pres1');this.eforVer(p,karsi?0.9:1);if(b.sahip)this.presYap(p,b.sahip,dt);else this.kapat(p,odak.sahip);continue;}
+        if(p===pres2){const yakin=MOTOR_AYAR.kapatKalici>0?(pres1!=null&&p._kapatK!=null&&this.kare-p._kapatK<=Math.round(60*MOTOR_AYAR.kapatKalici)):p._kapatK===this.kare;this.gorevYaz(p,'pres2');this.eforVer(p,yakin?1:karsi?0.9:0.8);if(yakin&&b.sahip)this.kapatYakin(p,b.sahip,pres1,dt);else this.kapat(p,odak.sahip);continue;}
+        if(p===pres3){this.gorevYaz(p,'pres3');this.eforVer(p,0.9);this.yolKapat(p,odak.sahip);continue;}
+        let od=odak,hucumP=hucum;const tp0=clamp(0.62-0.22*p.oz.karar-0.12*p.oz.gorus+0.2*p.yorgunluk,0.25,0.7);
+        /* T18b (gecisDalga): top kaybında topa 12 m'den uzak oyuncu savunma düzenine kişisel gecikmeyle geçer (gecis + dalga·tepki payı); efor değişmez */
+        if(MOTOR_AYAR.gecisDalga>0&&!du&&!hucum&&this._kaybeden===t&&sahipTakim===1-t&&gecisSure<MOTOR_AYAR.gecis+MOTOR_AYAR.gecisDalga*(tp0-0.25)/0.45&&hyp(p.x-b.x,p.z-b.z)>12)hucumP=true;
+        if(!du&&(!hucumP||MOTOR_AYAR.hucumGecikme&&(MOTOR_AYAR.hucumGecikme>1||p.x*d<b.x*d))){/* kişisel tepki: topun tp sn önceki (yumuşatılmış) yeri */
+          const tp=tp0*MOTOR_AYAR.tepkiCarpan,n=Math.min(15,Math.round(tp*20));
           if(G.i>n){const j=(G.i-1-n)&15;OG.x=G.x[j];OG.z=G.z[j];OG.sahip=odak.sahip;OG.takim=odak.takim;od=OG;}}
-        this.bolgeKonumu(p,t,hucum,cizgi,dt,od);
+        this.bolgeKonumu(p,t,hucumP,cizgi,dt,od);
         if(b.sahip&&b.sahip.team!==t)this.yanindanGec(p,b.sahip);   /* T5: bölge oyuncusu da topu sürenin içinden geçmez */
       }
     }

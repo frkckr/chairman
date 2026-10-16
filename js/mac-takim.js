@@ -55,7 +55,15 @@ ayarEkle('T',{
                      // Denendi (0,25; 40 maç): kovalama her dokunuşta bittiğinden giriş sayısı düşmedi (2,24 → 2,21), ivmelenme aynı; pas isabeti −2, hava topu +2,8 → kapalı
   presKalici:0,      // T18a: 1. adamın mesafe süzgecinde (R1/R2) önceki 1. adama bu kadar m pay; süzgeçte elenen 1. adamın belleği silinmez; 0: T7d.
                      // Denendi (2 m; 40 maç, kovalaKalici ile): PPDA 4,4 → 4,0, ivmelenme aynı → kapalı
-  kapatKalici:0.5    // T18a: 2. adam ve bire bir örtüsü bu kadar sn tutulur (geçerliyse: oyunda, kilitsiz, 14 m içinde); karşı pres üçlüsü sahiplik boyunca sabit; 0: her kare
+  kapatKalici:0.5,   // T18a: 2. adam ve bire bir örtüsü bu kadar sn tutulur (geçerliyse: oyunda, kilitsiz, 14 m içinde); karşı pres üçlüsü sahiplik boyunca sabit; 0: her kare
+  /* T18b: pas uçuşunda sahip yok sayılmasın, top kaybında savunma düzenine geçiş tek karede olmasın */
+  gecisKademe:0,     // T18b: pas uçuşunda pasın alıcısı rol düzeni için sanal sahiptir (hücumun topu tutana bağlı rolleri ve 1. adam pas boyunca düşmez; 1. adam alıcıya
+                     // kapatır); kovalayan ve geçiş sayacı gerçek sahiplikle; 0: T13 (pas yolda bütün roller aynı karede düşüp alışta geri geliyordu)
+  gecisDalga:0       // T18b: top kaybında topa 12 m'den uzak oyuncu savunma düzenine gecis + bu kadar sn'ye yayılmış kişisel gecikmeyle geçer (tepki süresiyle; efor düşmez,
+                     // karşı pres ve kovalayan hemen); 0: herkes gecis (0,7 sn) sonunda aynı karede.
+                     // T18b denendi ve kapatıldı (12 ve 40 maç): gecisKademe 1 görev değişimini 27,5 → 32,5 (yüksek eforlu 8,4 → 11,9), ivmelenmeyi 6,5 → 7,3,
+                     // boşta rakibi 97 → 152 sn/maç yükseltti (pres üçlüsü pas boyunca alıcıya koşup alışta yeniden seçiliyor); gecisDalga 0,5 etkisiz (top kaybında
+                     // aynı karede ≥ 3 hedef sıçraması zaten 0,06/takım·dk — T18-0: toplu sıçramalar bölge güncellemesinde (16,6) ve duruş sonunda (5,4))
 });
 /* niyet → düzen ve taktik farkı. Taktik: risk kayıp maliyetinin çarpanıdır (yüksek = temkinli), sakin geri pas ve sabır, tempo karar hızı, direkt ileri
    ve uzun oyun (mac-karar.js); toplanır (risk çarpılır). Düzen: genişlik hücumda mevkilerin yayılma çarpanı, derinlik bloğun öne/geriye kayması (m),
