@@ -17,7 +17,7 @@ Kullanım:
               --oncesi (--kosul ile: maç öncesini atlamadan bekle; ör. tören ve takım fotoğrafı anları)
               --anm AD (A2, 2026-10-08: çizim dondurulmuş "önce" animasyonuyla; araclar/karsilastir/<AD>/animasyon.js, turun başında
                 araclar/karsilastir/dondur.js AD üretir; seçenekler klasörden okunur). Motor aynıdır, aynı tohumla aynı an; önce/sonra şeridi
-                git stash'siz alınır: --anm t5 --onek once- ile ve onsuz --onek sonra-. Silinen eski kopyalar (once, a2a, a2b, t4v, t4): ARSIV.md §0
+                git stash'siz alınır: --anm a5 --onek once- ile ve onsuz --onek sonra-. Silinen eski kopyalar (once, a2a, a2b, t4v, t4): ARSIV.md §0
               --giris (N11, 2026-10-04: stada varışı ve locaya girişi başlatıp film şeridi çeker; karartma ve karar anı gibi sayfa katmanları
                 da görüntüye girer; --sonra S: şeride başlamadan S sn oynat) · --ek "&rakipBaskan=yerinde" (adrese eklenir)
 Çıktı: araclar/anlar/<onek><ad>.png ve .json (topun ekrandaki yeri ve boyu (topPx gerçek, topCizimPx asgari boya büyütülmüş çizim), oyuncuların
