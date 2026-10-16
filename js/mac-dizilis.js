@@ -198,7 +198,8 @@ Object.assign(Match.prototype,{
          0,5 sn'den geç yetişecek kovalayan rahat ivmeyle yaklaşıyordu) */
       const donen=!du&&sahipTakim<0&&!b.tasiyan&&(this.cezaSahasi(0,b.x,b.z)||this.cezaSahasi(1,b.x,b.z));
       if(!hucum){this.markajAta(t,du?odak:gecikmeli,cizgi);this.kutuSavunmaAta(t,du?odak:gecikmeli);}
-      else{if(this._markaj)this._markaj[t]=new Map();if(this._kutuSav)this._kutuSav[t]=new Map();}
+      else if(!MOTOR_AYAR.markajKalici){if(this._markaj)this._markaj[t]=new Map();if(this._kutuSav)this._kutuSav[t]=new Map();}   /* T18c: markajKalici'de haritalar durur */
+      if(!hucum&&MOTOR_AYAR.kosuSil)for(const p of this.teams[t]){const k=p.kosu;if(k&&(k.tur==='arkaya'||k.tur==='genis'||k.tur==='gel'||k.tur==='aldatma'))p.kosu=null;}   /* T18c: derin koşu top kaybında biter */
       for(const p of this.teams[t]){
         if(!p.oyunda)continue;
         /* T13-0: görev etiketi (gorevYaz; salt okunur) — atlanan oyuncular da etiketlenir */
@@ -389,7 +390,8 @@ Object.assign(Match.prototype,{
     const yakin=odak.x*d<=-PL+32;
     if(!yakin&&!(MOTOR_AYAR.kosucuTakip&&cizgi!=null))return yeni;
     const S=this.teams[t].filter(p=>p.oyunda&&(p.rol==='DEF'||yakin&&p.rol==='OS')&&!(p.eylem&&p.eylem.kilit));
-    const R=this.teams[1-t].filter(o=>o.oyunda&&o.rol!=='GK'&&(yakin?o.x*d<=-PL+24:o!==b.sahip&&-o.vx*d>4&&o.x*d<cizgi+3&&o.x*d>cizgi-10));
+    const eskiR=MOTOR_AYAR.markajKalici?new Set(eski.values()):null;   /* T18c: koşucu takibinde histerezis (takip edilen koşucu 3,2 m/sn'ye dek takipte kalır) */
+    const R=this.teams[1-t].filter(o=>o.oyunda&&o.rol!=='GK'&&(yakin?o.x*d<=-PL+24:o!==b.sahip&&-o.vx*d>(eskiR&&eskiR.has(o)?3.2:4)&&o.x*d<cizgi+3&&o.x*d>cizgi-10));
     const S2=new Set(),R2=new Set();
     for(const [p,o] of eski)if(S.includes(p)&&R.includes(o)&&hyp(p.x-o.x,p.z-o.z)<12){yeni.set(p,o);S2.add(p);R2.add(o);}
     const C=[];

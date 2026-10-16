@@ -59,11 +59,16 @@ ayarEkle('T',{
   /* T18b: pas uçuşunda sahip yok sayılmasın, top kaybında savunma düzenine geçiş tek karede olmasın */
   gecisKademe:0,     // T18b: pas uçuşunda pasın alıcısı rol düzeni için sanal sahiptir (hücumun topu tutana bağlı rolleri ve 1. adam pas boyunca düşmez; 1. adam alıcıya
                      // kapatır); kovalayan ve geçiş sayacı gerçek sahiplikle; 0: T13 (pas yolda bütün roller aynı karede düşüp alışta geri geliyordu)
-  gecisDalga:0       // T18b: top kaybında topa 12 m'den uzak oyuncu savunma düzenine gecis + bu kadar sn'ye yayılmış kişisel gecikmeyle geçer (tepki süresiyle; efor düşmez,
+  gecisDalga:0,      // T18b: top kaybında topa 12 m'den uzak oyuncu savunma düzenine gecis + bu kadar sn'ye yayılmış kişisel gecikmeyle geçer (tepki süresiyle; efor düşmez,
                      // karşı pres ve kovalayan hemen); 0: herkes gecis (0,7 sn) sonunda aynı karede.
                      // T18b denendi ve kapatıldı (12 ve 40 maç): gecisKademe 1 görev değişimini 27,5 → 32,5 (yüksek eforlu 8,4 → 11,9), ivmelenmeyi 6,5 → 7,3,
                      // boşta rakibi 97 → 152 sn/maç yükseltti (pres üçlüsü pas boyunca alıcıya koşup alışta yeniden seçiliyor); gecisDalga 0,5 etkisiz (top kaybında
                      // aynı karede ≥ 3 hedef sıçraması zaten 0,06/takım·dk — T18-0: toplu sıçramalar bölge güncellemesinde (16,6) ve duruş sonunda (5,4))
+  /* T18c: markaj ve kutu savunması eşleşmeleri hücumda silinmez, koşucu takibi histerezisli; derin koşu top kaybında biter */
+  markajKalici:1,    // T18c: takım hücuma geçince markaj ve kutu savunması haritası silinmez (top geri gelince eski çiftler 12 m içindeyse sürer); kutu savunmasında önceki
+                     // bölge eşleşmesi korunur, yalnız boş bölgeler dağıtılır; koşucu takibinde giriş 4, çıkış 3,2 m/sn; 0: T7 (her hücumda sıfırdan)
+  kosuSil:1          // T18c: derin koşu (arkaya, geniş, eş koşu) rakip topu alınca biter (eskiden yalnız sayaçla ve sayaç yalnız topa sahipken işliyordu: koşu askıda kalıp
+                     // takım topu geri alınca efor 1'le sürüyordu); 0: eski
 });
 /* niyet → düzen ve taktik farkı. Taktik: risk kayıp maliyetinin çarpanıdır (yüksek = temkinli), sakin geri pas ve sabır, tempo karar hızı, direkt ileri
    ve uzun oyun (mac-karar.js); toplanır (risk çarpılır). Düzen: genişlik hücumda mevkilerin yayılma çarpanı, derinlik bloğun öne/geriye kayması (m),
@@ -296,13 +301,16 @@ Object.assign(Match.prototype,{
      sahalar ön direk, altıpas önü, arka direk ve penaltı noktasını tekil paylaşır (en yakın çiftten). 6 karede bir */
   kutuSavunmaAta(t,odak){const K=this._kutuSav||(this._kutuSav=[new Map(),new Map()]);
     if(this.kare%6!==(t?3:0))return K[t];
-    const M=K[t];M.clear();if(!MOTOR_AYAR.kutuSavunma)return M;
+    const M=K[t],eskiK=MOTOR_AYAR.markajKalici?new Map(M):null;M.clear();if(!MOTOR_AYAR.kutuSavunma)return M;
     const d=this.dir[t],bu=odak.x*d;if(bu>-PL+30||Math.abs(odak.z-MZ)<=12)return M;
     const yan=Math.sign(odak.z-MZ)||1,MK=this._markaj&&this._markaj[t],Z=[[-PL+5.5,MZ+yan*2.2],[-PL+6.5,MZ],[-PL+6,MZ-yan*4.5],[-PL+11,MZ-yan]];
     const S=this.teams[t].filter(p=>p.oyunda&&(p.rol==='DEF'||p.rol==='OS'&&p.mevki.derin)&&!(MK&&MK.has(p))&&!(p.eylem&&p.eylem.kilit)&&p!==this.ball.sahip);
+    const al=new Set();
+    /* T18c (markajKalici): önceki bölge eşleşmesi geçerliyse korunur (aynı bölge sırası), yalnız boş bölgeler yeniden dağıtılır */
+    if(eskiK)for(const [p,z] of eskiK){if(z.i!=null&&!al.has(z.i)&&S.includes(p)){al.add(z.i);M.set(p,{u:Z[z.i][0],w:Z[z.i][1],i:z.i});}}
     const C=[];for(let i=0;i<Z.length;i++)for(const p of S)C.push([Math.hypot(p.x-Z[i][0]*d,p.z-Z[i][1]),i,p]);
-    C.sort((a,c)=>a[0]-c[0]||a[1]-c[1]||a[2].n-c[2].n);const al=new Set();
-    for(const [,i,p] of C)if(!al.has(i)&&!M.has(p)){al.add(i);M.set(p,{u:Z[i][0],w:Z[i][1]});}
+    C.sort((a,c)=>a[0]-c[0]||a[1]-c[1]||a[2].n-c[2].n);
+    for(const [,i,p] of C)if(!al.has(i)&&!M.has(p)){al.add(i);M.set(p,{u:Z[i][0],w:Z[i][1],i});}
     return M;},
   /* T7d: girme/bekleme (plan T7; T5'ten devralınan): erken ve yandan müdahale isteği mudahaleTahmin'in kazanma − faul farkıyla ölçeklenir
      (1,05 + 1,2·(Pkazan − Pfaul), 0,4–1,6; maçta fark ortalaması −0,07, ortanca 0 → çarpan ortalaması ~1: hacim korunur, faul riski yüksek giriş

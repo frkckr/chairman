@@ -90,7 +90,7 @@ const MOTOR_AYAR={
   niyetEtki:undefined,macDurumEtki:undefined,niyetYenile:undefined,kontraSure:undefined,kurmaStoperW:undefined,gerideEk:undefined,rakipAlgi:undefined,
   kosuTetik:undefined,kosuRastgele:undefined,kosuEs:undefined,zon14:undefined,govdeAc:undefined,osDestek:undefined,presTetikSure:undefined,
   presTetikMesafe:undefined,golgePres:undefined,kosucuTakip:undefined,hatCik:undefined,kutuSavunma:undefined,kompakt:undefined,
-  mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,kovalaKalici:undefined,presKalici:undefined,kapatKalici:undefined,gecisKademe:undefined,gecisDalga:undefined,guvenEtki:undefined,guvenRisk:undefined,guvenSure:undefined,evGuven:undefined,
+  mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,kovalaKalici:undefined,presKalici:undefined,kapatKalici:undefined,gecisKademe:undefined,gecisDalga:undefined,markajKalici:undefined,kosuSil:undefined,guvenEtki:undefined,guvenRisk:undefined,guvenSure:undefined,evGuven:undefined,
   kanatRol:undefined,kanatBas:undefined,kanatCizgi:undefined,kanatDerin:undefined,kanatOnde:undefined,kanatUzak:undefined,gecGiris:undefined,
   tutEtki:undefined,
   /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
