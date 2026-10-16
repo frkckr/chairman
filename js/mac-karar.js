@@ -147,7 +147,7 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
           const va=hvO&&alici?Math.max(hyp(alici.vx||0,alici.vz||0),hyp(alici.x-PA_X[i],alici.z-PA_Z[i])/Tu):0,vd=hvO?Math.max(hyp(op.vx||0,op.vz||0),hyp(op.x-PA_X[i],op.z-PA_Z[i])/Tu):0;
           const Pd=alici?1-havaDuelloTahmin(m,alici,op,PA_H[i],va,vd):0.5;pr=dP*((1-rP)*0.85+rP*Pd);
           if(o.iz)(o.iz.L||(o.iz.L=[])).push({gk:kaleci,dP,rP,Pd,pr});}
-        else pr=0.7*sigma((Math.min(tr[k],tb+0.3)-to-0.05)/0.16);
+        else pr=(o.orta&&MOTOR_AYAR.yerdenOrtaKesme!=null?MOTOR_AYAR.yerdenOrtaKesme:0.7)*sigma((Math.min(tr[k],tb+0.3)-to-0.05)/0.16);   /* T17d: yerden orta ve geri çevirmede tavan yerdenOrtaKesme */
         if(pr>en)en=pr;}
       /* yerden pasta her rakip ayrı ayrı araya girebilir; havadan topta iniş yerinde asıl çekişme en iyi rakiple */
       if(tip==='hava'){if(en>enIyiH[k])enIyiH[k]=en;if(en>0.15)kalab[k]++;}else kalma[k]*=1-Math.min(0.97,en);
@@ -262,7 +262,14 @@ function devamDegeri(m,q,x,z,t,bakis,haric){
     for(const r of m.teams[q.team]){if(r===q||!r.oyunda||r.rol==='GK')continue;if((r.x+r.vx)*d>PL-18&&Math.abs(r.z+r.vz-MZ)<12)na++;}
     for(const r of rakipler(m,q.team)){if(!r.oyunda||r.rol==='GK')continue;if(r.x*d>PL-18&&Math.abs(r.z-MZ)<12)nd++;}
     const Pg=clamp(0.08+0.09*na-0.025*nd,0.02,0.45),v=acik*(1-0.6*sirt)*(Pg*(xG(PL-8,MZ,'kafa',0.3)*100+0.8)-(1-Pg)*0.4)*A.ortaIstegi*A.devamOrta;
-    if(v>en)en=v;}
+    if(v>en)en=v;
+    /* T17d (cizgiyeIn): çizgiye yakın (son 22 m) ve çizgi açıkken geri çevirme devamı — yay ve penaltı noktası önündeki (kaleye 7–21 m, ortaya 12 m) arkadaşa yerden
+       geri pas; ilk temas olasılığı oradaki hücumcu ve savunmacı sayısından (T17-0: markajlı alımda %50, boşta %76), şansı penaltı noktası önünden ayakla vuruş */
+    if(A.cizgiyeIn>0&&u>PL-22){let na2=0,nd2=0;
+      for(const r of m.teams[q.team]){if(r===q||!r.oyunda||r.rol==='GK')continue;const ru=(r.x+r.vx)*d;if(ru>PL-21&&ru<PL-7&&Math.abs(r.z+r.vz-MZ)<12)na2++;}
+      for(const r of rakipler(m,q.team)){if(!r.oyunda||r.rol==='GK')continue;const ru=r.x*d;if(ru>PL-21&&ru<PL-7&&Math.abs(r.z-MZ)<12)nd2++;}
+      if(na2>0){const Pg2=clamp(0.12+0.12*na2-0.04*nd2,0.03,0.5),v2=acik*(1-0.6*sirt)*(Pg2*(xG(PL-12,MZ,'ayak',0.3)*100+0.8)-(1-Pg2)*0.4)*A.ortaIstegi*A.cizgiyeIn;
+        if(v2>en)en=v2;}}}
   /* ön puan tam analizden iyimserdir (alıcının baskısı, vuruş hatası yok): devamPas kadar sayılır */
   const ip=ileriPasOnPuani(m,q,x,z,0);if(ip>-9)en=Math.max(en,ip*A.devamPas*(1-0.7*sirt));
   const g=clamp(0.62+0.38*acik-0.15*iki,0.4,1);

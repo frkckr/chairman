@@ -77,7 +77,7 @@ const MOTOR_AYAR={
   /* C — js/mac-hava.js (T6) */
   sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,havaOkuma:undefined,havaEgilme:undefined,havaDuello:undefined,havaKol:undefined,plonjon:undefined,plonjonHiz:undefined,plonjonYerde:undefined,kafaDonus:undefined,
   /* B — js/mac-topla.js */
-  kararGecikme:undefined,ilerleme:undefined,risk:undefined,surusKarar:undefined,vurusHizalama:undefined,sutIstegi:undefined,ortaIstegi:undefined,ortaDevam:undefined,ortaKornerDeger:undefined,ortaBlokKorner:undefined,ortaEsik:undefined,
+  kararGecikme:undefined,ilerleme:undefined,risk:undefined,surusKarar:undefined,vurusHizalama:undefined,sutIstegi:undefined,ortaIstegi:undefined,ortaDevam:undefined,ortaKornerDeger:undefined,ortaBlokKorner:undefined,ortaEsik:undefined,cizgiyeIn:undefined,yerdenOrtaKesme:undefined,
   sutSapma:undefined,uzaklastirCizgi:undefined,pasSapma:undefined,sikisma:undefined,geriPas:undefined,kontrolZorluk:undefined,tekVurus:undefined,verKacIstegi:undefined,
   verKacDeger:undefined,boslukDeger:undefined,ikinciTop:undefined,havaDeger:undefined,araDeger:undefined,araDar:undefined,donusDeger:undefined,
   ofsaytAlgi:undefined,kosuIstegi:undefined,aliciPay:undefined,uzaklastirDeger:undefined,hedefDeger:undefined,devamAgirlik:undefined,

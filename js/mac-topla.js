@@ -103,7 +103,12 @@ ayarEkle('B',{
   ortaDevam:1,                 // T17c: ortanın değerine bloktan doğan korner eklenir ((1 − açıklık) × ortaBlokKorner × ortaKornerDeger); 0: T14c değeri (yalnız ilk temasın xG'si)
   ortaKornerDeger:3,           // T17c: kornerin değeri (P(gol)·100; gerçek korner xG'si ≈ 0,03, Opta takımları 0,016–0,067)
   ortaBlokKorner:0.4,          // T17c: bloklanan ortanın kornere gitme payı (planlayıcı; TEST — 40 maçta ölçülen değerle güncellenir, T17-0'da %20, n 5)
-  ortaEsik:0.05                // T17c: bu olasılığın (ilk temas + devam) altındaki orta düşünülmez (eskiden 0,1 sabit; bloklanması muhtemel ama kornere açık ortalar elenmesin)
+  ortaEsik:0.05,               // T17c: bu olasılığın (ilk temas + devam) altındaki orta düşünülmez (eskiden 0,1 sabit; bloklanması muhtemel ama kornere açık ortalar elenmesin)
+  /* T17d (2026-10-16): geri çevirmenin tetiği ve yerden ortanın alım noktası */
+  cizgiyeIn:1,                 // T17d: kanattaki alıcının (ve taşıyanın) devamında geri çevirme — son 22 m'de çizgi açıkken yay ve penaltı noktası önündeki arkadaşa yerden geri pas
+                               // değeri (devamDegeri; tasimaYonu bunu okuduğu için çizgiye taşıma kendiliğinden tetiklenir); 0: T14c (yalnız havadan orta devamı)
+  yerdenOrtaKesme:0.5          // T17d: yerden orta ve geri çevirmede alım noktasındaki rakibin kesme payının tavanı (pasAnaliz; eskiden bütün yerden paslarda 0,7) —
+                               // T17-0: alıcının 1,5 m'inde rakip varken hücumun ilk teması %50, yokken %76; planlayıcı geri çevirmeyi −14,5, alçak sert ortayı −23,5 puan kötümser tahmin ediyordu
 });
 /* ---- T9b (2026-10-10; gerçekçilik planı §4 T9 “Vuruş”): vuruş modeli — saf, rastlantısız. Şut planı (js/mac-karar.js sutPlani), pas analizi
    (pasAnaliz) ve vuruş (sutVur, yerPasVur, havaPasVur) aynı işlevleri okur. Stilin payı: azami hıza göre hız (iç ayak plase en yavaşı, üst sert
