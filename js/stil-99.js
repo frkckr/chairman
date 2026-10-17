@@ -111,6 +111,9 @@ const STIL={
      sevincCesit: gol sevinci çeşidi sayısı (oyuncu ve gole göre karışık seçilir)
      zipla (A6a, 2026-10-17): sıçramanın uçuş pozu uçuşun bu payından sonra iner (inis; eski 0,8) ve inişte kalan uçuş pozu hemen kalkar (kes 1; 0: yuva
        kendi hızıyla söner) — inişte bacak pozu yere basan ayağın IK'sını eziyordu.
+     blok (A6c, 2026-10-17): şut ve orta bloğunda bacak — acik (0: eski poz), erisim (uzanan bacağın kökten yatay erişimi, m; motorun blokErisim'i 0,95),
+       tut (temastan sonra bacağın temas noktasında kaldığı süre, sn), hiz (hamlede uzanmanın hızı, 1/sn), kok (temasta ayak yetişmezse kökün topa kayması, en çok m),
+       yuksek (topun tabanı bundan yüksekse ayak topun altına basar, top bacağa değer; m).
      koru (A6a, 2026-10-17): top saklama — dokunus: motorun taban dokunuşunun çizimi (0: çizilmez; 1: yalnız salınımdaki ayakla, ayak yere basınca poz
        hemen kalkar; 2: eski — seçilen ayakla, yerdeyse bacak pozu IK'yı ezer). A6-0: top saklamada kayan karelerin %68'inde bilek çapadan kopuyordu */
   animasyon:{
@@ -122,7 +125,7 @@ const STIL={
     kol:{genlik:[0.16,0.74],dirsek:[0.28,1.1]},
     dusus:{aci:1.45,yuzY:0.12,yanY:0.16},dokunus:0.18,kucukPiksel:12,
     top:{ust:300,egri:150,kare:0.6},sevincCesit:4,
-    koru:{dokunus:1},zipla:{inis:0.6,kes:1,capa:1}
+    koru:{dokunus:1},zipla:{inis:0.6,kes:1,capa:1},blok:{acik:1,erisim:0.95,tut:0.15,hiz:14,kok:0.5,yuksek:0.25}
   },
 
 

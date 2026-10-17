@@ -341,8 +341,10 @@ Object.assign(Match.prototype,{
   blok(p){
     /* blok: şut savunmacının bacağına ya da gövdesine çarpıp yansır (korner, geri ya da yana gidebilir) */
     if(this.elleOynamaDene(p))return;   /* T10b */
-    const b=this.ball,v=hrkHyp(b.vx,b.vz);this.yansit(p,0.4,0.45);
-    b.sut=null;this.dokunus(p,false);p.kickCd=0.35;p.eylem={ad:'blok',t:0,sure:0.45};this.on('block',{p,v});
+    /* A6c (2026-10-17): blok eylemine temas noktası (bx, bz, by: topun yeri temas anında) ve uzanma (uzan: topun gövde merkezine yatay uzaklığı) — salt
+       okunur, çizim bacağı oraya uzatır (sonucu değiştirmez) */
+    const b=this.ball,v=hrkHyp(b.vx,b.vz),bx=b.x,bz=b.z,by=b.y,uzan=hrkHyp(b.x-p.x,b.z-p.z);this.yansit(p,0.4,0.45);
+    b.sut=null;this.dokunus(p,false);p.kickCd=0.35;p.eylem={ad:'blok',t:0,sure:0.45,bx,bz,by,uzan};this.on('block',{p,v});
   },
   /* erişemediği topa çarpan beden (oyuncu ya da hakem): yalnız hızlı ve bedene doğru gelen top. Topun sahibi, vuruş yapan ve topa
      erişen (ad) bunu yaşamaz. Hakeme çarpan top oyunda kalır, son dokunan değişmez */
@@ -358,9 +360,9 @@ Object.assign(Match.prototype,{
       if(d>r||b.y>(bj?1.95:1.8)*(p.boy||1)+(p.yuk||0)||b.y<(p.yuk||0)-0.08)return false;
       if((b.vx-(p.vx||0))*dx+(b.vz-(p.vz||0))*dz>=0)return false;
       if(!hakem&&this.elleOynamaDene(p))return true;   /* T10b: elle oynama (çalındıysa oyun durdu) */
-      this.yansit(p,0.3,0.25);
+      const bx=b.x,bz=b.z,by=b.y;this.yansit(p,0.3,0.25);   /* A6c: temas noktası (salt okunur) */
       if(hakem){this.topDegisti();b.hakemDegdi={takim:b.sonTakim,dokunan:b.sonDokunan,t:this.t,x:b.x,z:b.z};this.on('hakemeCarpti',{p});}   /* T10d: hakemDegdiAdim */
-      else{if(b.sut&&p.team!==b.sut.team){b.sut=null;p.eylem={ad:'blok',t:0,sure:0.45};this.on('block',{p,v});}else this.on('sekme',{p});
+      else{if(b.sut&&p.team!==b.sut.team){b.sut=null;p.eylem={ad:'blok',t:0,sure:0.45,bx,bz,by,uzan:hrkHyp(bx-p.x,bz-p.z)};this.on('block',{p,v});}else this.on('sekme',{p});
         this.dokunus(p,false);p.kickCd=0.3;}
       return true;};
     for(const p of this.players)if(p.oyunda&&dene(p,false))return true;
@@ -375,11 +377,11 @@ Object.assign(Match.prototype,{
     b.ortaBlok=B?{o:B.o,t:this.t+B.t,surum:b.surum,takim:p.team}:null;
   },
   ortaBlokUygula(OB){
-    const b=this.ball,o=OB.o,v=hrkHyp(b.vx,b.vz)||1,ux=b.vx/v,uz=b.vz/v,d=this.dir[OB.takim];
+    const b=this.ball,o=OB.o,v=hrkHyp(b.vx,b.vz)||1,ux=b.vx/v,uz=b.vz/v,d=this.dir[OB.takim],bx=b.x,bz=b.z,by=b.y;   /* A6c: temas noktası (salt okunur) */
     if(this.rast()<0.6){b.vx=d*(4+this.rast()*6);b.vz=(this.rast()-0.5)*7;}
     else{b.vx=-ux*v*(0.15+this.rast()*0.2)+this.normal()*2;b.vz=-uz*v*(0.15+this.rast()*0.2)+this.normal()*2;}
     b.vy=1.5+this.rast()*4;b.egri=0;b.pasHedef=null;
-    this.dokunus(o,false);o.kickCd=0.35;o.eylem={ad:'blok',t:0,sure:0.45};this.on('block',{p:o,v,orta:true});
+    this.dokunus(o,false);o.kickCd=0.35;o.eylem={ad:'blok',t:0,sure:0.45,bx,bz,by,uzan:hrkHyp(bx-o.x,bz-o.z)};this.on('block',{p:o,v,orta:true});
   },
   /* ============ denge, sendeleme, düşme (C2) ============ */
   /* denge kaybı m (dayanıklılığa bölünür), (ux,uz) itildiği yön. Denge 0,3'ün altına inerse sendeler (kilitsiz; ivme düşer), 0'ın altına

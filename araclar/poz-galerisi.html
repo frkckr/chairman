@@ -17,6 +17,7 @@
      a5model (A5, 2026-10-15: kesitli model — kimlikler önden, yandan, arkadan; vuruş, eller dizlerde, düşüş; yakın ve loca uzaklığı;
      karşılaştırma &model=kutu | duz | yumusak) |
      a4hareket (A4, 2026-10-15: aldatma koşusu, Cruyff, sırtla dönme, yorgun hakem, yelek) |
+     a6blok (A6c, 2026-10-17: şut bloğunda bacak topa uzanır — uzak, yakın, gövdede; eski atlama pozuyla karşılaştırma &satir=…) |
      olcum (ayak kayması ve süre ölçümü). Satır seçeneği sabitY: kamera yüksekliği
      sabit (sıçrama görünsün).
      Açmak: python3 araclar/kontrol.py "araclar/poz-galerisi.html?sayfa=dusus" (görüntü araclar/son-kontrol-poz-galerisi-sayfa-dusus.png).
@@ -577,6 +578,13 @@ function yrOlc(a,b,p,t){const R=window.A4_KALDIR||(window.A4_KALDIR={n:0,elMax:0
 const dtSifir=1e-6;
 /* A4 (2026-10-15; gerçekçilik planı §4 A4): eksik hareketler — motorun alanları yapay verilir. Aldatma koşusu (A4-1: duranRol 'ikinci', aldatma; top
    0,6 m yanda, koşucu 5 m/sn), Cruyff ve sırtla dönme (A4-5; T4g çalım kalıbı), yorgun hakem (A4-6: mac.hkY 0,12 = tam yorgunluk), yelek (A4-7) */
+/* A6c (2026-10-17): şut bloğu — motorun blok eylemindeki temas noktası (bx, bz, by) ve uzanma (uzan); çizimde uzanan bacak temas noktasına, ayak
+   yetişmezse kök topa kayar (ANM.blok.kok). Top sağ önde 0,85 m (uzak), 0,5 m (yakın), gövdede (0,35 m, diz hizası) */
+const a6blok=(ad,dx,dz,y)=>({ad,kur:p=>{},adim:[{ad:null,sure:0.5,bas:p=>{mac.ball.x=p.x+dx+4;mac.ball.z=p.z+dz;mac.ball.y=y;}},
+  {ad:'blok',sure:0.45,bas:(p,e)=>{mac.ball.x=p.x+dx;mac.ball.z=p.z+dz;mac.ball.y=y;e.bx=mac.ball.x;e.bz=mac.ball.z;e.by=y;e.uzan=Math.hypot(dx,dz);}},{ad:null,sure:1}],
+  kareler:[0.45,0.5,0.55,0.6,0.7,0.85,1.1],az:30});
+SAYFALAR.a6blok=[a6blok('A6c Şut bloğu: top sağ önde 0,85 m (bacak uzanır, kök kayar)',0.75,-0.4,0.12),a6blok('A6c Şut bloğu: top sağ önde 0,5 m',0.4,-0.3,0.15),
+  a6blok('A6c Şut bloğu: gövdede, diz hizası (0,35 m)',0.35,0,0.45)];
 SAYFALAR.a4hareket=[
   {ad:'A4-1 Aldatma koşusu: topun yanından geçerken vuruş taklidi (barajlı serbest vuruş, ikinci kişi)',kit:0,
     kur:p=>{p.duranRol={rol:'ikinci',aldatma:true};p.vx=5;const b=mac.ball;b.x=3.2;b.z=0.6;},

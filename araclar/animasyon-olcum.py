@@ -32,6 +32,7 @@ hızlı 5–7 · depar ≥ 7 m/sn. "Eylemsiz": oyuncunun eylemi yok (vuruş, kon
   vuruş stili    (T9b-e) temasta çizimin pozu motorun stiline uyuyor mu; kötü vuruşta vuran ayağın topa göre yeri türle uyumlu mu
   Kipler: --kaleci N  kaleye N yapay şut (d-sut kalıbı; maç oynanmaz, yalnız kurtarış satırı anlamlıdır)
           --koru N    A6-0: N yapay top saklama sahnesi (c-koru kalıbı; yalnız kaymanın "top saklama" bandı ve kaynağı anlamlıdır)
+          --blok N    A6c: N yapay şut bloğu (motorun şut eylemi ve hamlesi; yalnız blok teması satırı anlamlıdır)
           --duran N   T8e: N yapay duran top (korner, barajlı ve kenar serbest vuruş, penaltı, taç, kale vuruşu sırayla; maç oynanmaz, yalnız duran top satırı anlamlıdır)
           --kotu      kötü vuruş olasılığı tavana (MOTOR_AYAR.kotuVurus 0,5; yalnız vuruş stili satırı anlamlıdır)
 Çıktı: ekrana "A:" satırları; tam rapor araclar/son-animasyon.txt (Git dışında).
@@ -299,8 +300,13 @@ OLCUM_KUR_JS = r"""() => {
       if (G.liste.length < 40) { const e2 = p.eylem; G.liste.push([e2 ? e2.ad : '-', e2 && e2.tur || '-', +Math.max(0, en).toFixed(3), +(e2 && e2.t || 0).toFixed(2), +(e2 && e2.temas || 0).toFixed(2), +Math.hypot(b.vx, b.vz).toFixed(1), +b.y.toFixed(2), +Math.hypot(b.x - p.x, b.z - p.z).toFixed(2), a.kucuk ? 'kucuk' : '']); } } }
     /* A6-0: blok teması — top beden yüksekliğinin altındaysa (< 0,8 m) çizilen ayağın (taban ortası) topa açıklığı, motorun temas uzaklığıyla */
     { const bl = zBl.get(p); if (bl !== undefined) { zBl.delete(p); if (bl.kare === mac.kare) { const B = S.bl; B.n++;
-        if (bl.y >= 0.8) B.ust++; else { a.m.root.updateMatrixWorld(true); const tbm = anmVkTop(a.al); let en = 9;
-          for (let i = 0; i < 2; i++) { V.set(0, -0.5, 0.05).applyMatrix4((i ? a.m.kR : a.m.kL).matrixWorld); const d = Math.hypot(V.x - tbm[0], V.y - (tbm[1] + 0.11), V.z - tbm[2]) - 0.11; if (d < en) en = d; }
+        /* A6c: açıklık topun merkezinden bacağın (uyluk: kalça eklemi → diz, incik: diz → bilek) en yakın noktasına − top (0,11) − bacak (0,06) yarıçapı —
+           alçak topa ayak, diz hizasındaki topa incik ya da diz değer */
+        if (bl.y >= 0.8) B.ust++; else { a.m.root.updateMatrixWorld(true); const tbm = anmVkTop(a.al), cx = tbm[0], cy = tbm[1] + 0.11, cz = tbm[2]; let en = 9;
+          const sg = (ax, ay, az, bx, by, bz) => { const ux = bx - ax, uy = by - ay, uz = bz - az, L2 = ux * ux + uy * uy + uz * uz || 1; let s = ((cx - ax) * ux + (cy - ay) * uy + (cz - az) * uz) / L2; s = s < 0 ? 0 : s > 1 ? 1 : s; return Math.hypot(ax + ux * s - cx, ay + uy * s - cy, az + uz * s - cz); };
+          for (let i = 0; i < 2; i++) { const kb = i ? a.m.kR : a.m.kL, lb = i ? a.m.lR : a.m.lL; V.set(0, 0, 0).applyMatrix4(lb.matrixWorld); const hx = V.x, hy = V.y, hz = V.z;
+            V.set(0, 0, 0).applyMatrix4(kb.matrixWorld); const kx = V.x, ky = V.y, kz = V.z; V.set(0, -0.5, 0.05).applyMatrix4(kb.matrixWorld);
+            const d = Math.min(sg(hx, hy, hz, kx, ky, kz), sg(kx, ky, kz, V.x, V.y, V.z)) - 0.17; if (d < en) en = d; }
           (bl.uzan > 0.6 ? B.uzak : B.yakin).push(+Math.max(0, en).toFixed(3));
           if (B.liste.length < 40) B.liste.push([+bl.uzan.toFixed(2), +bl.y.toFixed(2), +Math.max(0, en).toFixed(3), e ? e.ad : '-']); } } } }
     { const kr = zKr.get(p); if (kr !== undefined) { zKr.delete(p); if (kr.kare === mac.kare) { a.m.root.updateMatrixWorld(true); const tb = anmVkTop(a.al); let en = 9;
@@ -625,6 +631,35 @@ KORU_JS = r"""() => {
   };
 }"""
 
+# A6c: yapay şut bloğu: şutçu topla kaleye 16–22 m'de, motorun gerçek şut eylemi (vurusBaslat); savunmacı şutun hattında 1,6–2,8 m önde, yanal
+# −0,66…+0,66 m, motorun hamlesiyle (sutHamleYap) atılır; kaleci kalesinde. Maç karesi (motor + çizim) top oyundan çıkana, kaleci alana ya da 2 sn dolana dek.
+# Işınlamadan önce ve yerleşmeden sonra ölçüm durumu unutulur. Yalnız blok teması satırı anlamlıdır
+BLOK_JS = r"""() => {
+  const dt = 1 / 60, S = window.__BLOK_SONUC = { deneme: 0, blok: 0, sut: 0 };
+  let blk = false, sut = false; const eski = window.animasyonOlay;
+  window.animasyonOlay = (ad, v) => { eski(ad, v); if (ad === 'block' && v && !v.orta) blk = true; if (ad === 'shot') sut = true; };
+  window.__blokDene = i => {
+    const m = mac, t = 1, d = m.dir[t], gx = -d * PL, at = m.teams[1 - t][9], df = m.teams[t][3], gk = m.kaleci(t), b = m.ball;
+    m.phase = 'play'; m.phaseT = 0; m.gameSec = 600; m.durus = null; m.avantaj = null; m.celeb = null; m.hakemAI = function () {};
+    for (const r of m.refs) { r.x = 0; r.z = -25; r.tx = 0; r.tz = -25; }
+    for (const p of m.players) { p.oyunda = false; p.eylem = null; p.kickCd = 0; p.surus = null; p.tutus = null; p.x = p.tx = -d * 30; p.z = p.tz = -20; p.vx = p.vz = 0; p.sevinc = false; }
+    const u = 16 + (i % 4) * 2, w = ((i % 5) - 2) * 3, bx = gx + d * u, bz = MZ + w, L = Math.hypot(gx - bx, MZ - bz), ux = (gx - bx) / L, uz = (MZ - bz) / L;
+    const on = 1.6 + (i % 3) * 0.6, yan = ((i % 7) - 3) * 0.22;
+    Object.assign(gk, { oyunda: true, x: gx + d * 1.2, z: MZ, tx: gx + d * 1.2, tz: MZ, vx: 0, vz: 0, eylem: null, tavir: null, yon: d > 0 ? 0 : Math.PI });
+    Object.assign(at, { oyunda: true, x: bx - ux * 0.35, z: bz - uz * 0.35, tx: bx - ux * 0.35, tz: bz - uz * 0.35, vx: 0, vz: 0, spd: 0, yon: Math.atan2(uz, ux), eylem: null, kosu: null, calim: null });
+    const dx = bx + ux * on - uz * yan, dz = bz + uz * on + ux * yan;
+    Object.assign(df, { oyunda: true, x: dx, z: dz, tx: dx, tz: dz, vx: 0, vz: 0, spd: 0, yon: Math.atan2(-uz, -ux), eylem: null, kickCd: 0, kosu: null, calim: null, yutma: null });
+    Object.assign(b, { x: bx, z: bz, y: 0, vx: 0, vy: 0, vz: 0, egri: 0, ust: 0, sahip: null, tasiyan: null, sut: null, pas: null, agda: false, direk: false, hedefOyuncu: null, endirekt: null, tac: null, sonTakim: 1 - t, sonDokunan: at });
+    b.px = b.x; b.py = b.y; b.pz = b.z; m.topDegisti(); m.sahipYap(at);
+    window.__ANM_OLCUM_UNUT(); for (const a of AKTORLER) { a.px = a.kaynak.x; a.pz = a.kaynak.z; } TOP.px = b.x; TOP.py = b.y; TOP.pz = b.z;
+    for (let k = 0; k < 30; k++) for (const a of AKTORLER) aktorGuncelle(a, 1, dt, m.tunel);
+    window.__ANM_OLCUM_UNUT();
+    m.vurusBaslat(at, { tur: 'sut', hx: gx, hz: MZ, xg: 0.1 }); blk = false; sut = false; S.deneme++;
+    for (let k = 0; k < 120; k++) { macKare(dt); if (blk || m.phase !== 'play' || b.tasiyan) break; }
+    if (sut) S.sut++; if (blk) { S.blok++; for (let k = 0; k < 20; k++) macKare(dt); }
+  };
+}"""
+
 BANT_AD = ["duran", "yürüyüş", "koşu", "hızlı", "depar"]
 
 
@@ -652,7 +687,7 @@ def satirlar(o):
     bl_ = o.get("blok")
     if bl_:
         h_ = lambda x: f"{x['n']} — ortanca {v(x['med'], 3)} m, ≤ 0,15 %{v(x['ic'])}" if x else "—"
-        S.append(f"A: blok teması (A6-0): şut bloğu {bl_['n']} (top ≥ 0,8 m {bl_['ust']}) · çizilen ayağın topa açıklığı: motorun temas uzaklığı ≤ 0,6 m " + h_(bl_.get("yakin")) + " · > 0,6 m " + h_(bl_.get("uzak")) + " · hepsi " + h_(bl_.get("hepsi")) + "   [A6c: ≤ 0,15 ≥ %90]")
+        S.append(f"A: blok teması (A6-0): şut bloğu {bl_['n']} (top ≥ 0,8 m {bl_['ust']}) · çizilen bacağın (uyluk, incik, taban) topa açıklığı: motorun temas uzaklığı ≤ 0,6 m " + h_(bl_.get("yakin")) + " · > 0,6 m " + h_(bl_.get("uzak")) + " · hepsi " + h_(bl_.get("hepsi")) + "   [A6c: ≤ 0,15 ≥ %90]")
     kd = o.get("kaymaDurum")
     if kd:
         S.append("A: ayak kayması % durumlara göre (bilgi; aynı tanım): " + " · ".join(f"{ad} {v(kd[i]['pay'], 2)} ({kd[i]['n']} temas)" if kd[i] else f"{ad} —" for i, ad in enumerate(["dar dönüş", "ani duruş", "top saklama", "sıçrama yakını"][:len(kd)])))
@@ -810,6 +845,13 @@ async def olc(a):
                 kr_ = await pg.evaluate("window.__KORU_SONUC")
                 print(f"top saklama düzeneği: {a.koru} yapay sahne, tavır 'koru' {kr_['koruSn']:.1f} sn (yalnız kaymanın 'top saklama' bandı ve kaynağı anlamlıdır)")
                 a.sure = 0
+            if a.blok:
+                await pg.evaluate(BLOK_JS)
+                for i in range(a.blok):
+                    await pg.evaluate(f"__blokDene({i})")
+                bs_ = await pg.evaluate("window.__BLOK_SONUC")
+                print(f"blok düzeneği: {a.blok} yapay şut, şut {bs_['sut']}, blok {bs_['blok']} (yalnız blok teması satırı anlamlıdır)")
+                a.sure = 0
             if a.duran:
                 await pg.evaluate(DURAN_JS)
                 for i in range(a.duran):
@@ -855,6 +897,7 @@ def ana():
     ap.add_argument("--kaleci", type=int, default=0, help="T9b-e: kaleye N yapay şut (d-sut kalıbı; maç oynanmaz; yalnız kurtarış satırı anlamlıdır)")
     ap.add_argument("--kotu", action="store_true", help="T9b-e: kötü vuruş olasılığı tavana (yalnız vuruş stili satırı anlamlıdır)")
     ap.add_argument("--olay", type=int, default=0, help="T10f: N yapay olay (sakatlık, sedye, kramp, uyarı, hakem topu, endirekt, gol, topallama sırayla; maç oynanmaz, yalnız olay satırı anlamlıdır)")
+    ap.add_argument("--blok", type=int, default=0, help="A6c: N yapay şut bloğu (şutçu motorun şut eylemiyle, savunmacı hatta; yalnız blok teması satırı anlamlıdır)")
     ap.add_argument("--koru", type=int, default=0, help="A6-0: N yapay top saklama sahnesi (c-koru kalıbı; maç oynanmaz; yalnız kaymanın 'top saklama' bandı ve kaynağı anlamlıdır)")
     ap.add_argument("--duran", type=int, default=0, help="T8e: N yapay duran top (korner, serbest vuruş, penaltı, taç, kale vuruşu sırayla; maç oynanmaz; yalnız duran top satırı anlamlıdır)")
     a = ap.parse_args()
