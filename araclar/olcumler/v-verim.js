@@ -29,6 +29,8 @@ const VV_UZ=['korner','tac','kaleVurusu','takim','rakip','bos'],VV_UZAD={korner:
 const vvDilim=(S,x)=>{for(let i=0;i<S.length-1;i++)if(x<S[i+1])return i;return S.length-2;};
 const VV_DOKUM=process.env.MAC_DENEME_SUTLAR||null;
 const VV_MES=[0,6,11,16.5,20,25,99],VV_MESAD=['<6 m','6–11 m','11–16,5 m','16,5–20 m','20–25 m','≥25 m'];
+const VV_RY=[0,1.5,3,99],VV_RYAD=['<1,5 m','1,5–3 m','≥3 m'];
+const VV_KB=['orta','pas','sut','kayip','tuttu'],VV_KBAD={orta:'orta / geri çevirme',pas:'pas',sut:'şut',kayip:'top kaybı',tuttu:'topu tuttu (2,5 sn)'};
 module.exports={
   bilgi:[['— Şutun verimi ve kaleci (v-verim; T12-0) —',null,0],
     ['Gol / şut (penaltısız) %','vvGolSut',1],['Konum xG / şut (penaltısız; baskısız, bloksuz)','vvXgK',3],['Gerçekleşen ÷ konum xG (penaltısız; maç oranlarının ortalaması)','vvOranK',2],
@@ -39,11 +41,25 @@ module.exports={
     ['Şut anında kaleci hazır duruşta %','vvHazir',1],['Şut anında kaleci hareketli %','vvHareket',1],['Kalecinin açıortaya uzaklığı ortanca (m)','vvYer',2],
     ['Uzaklaştırma / maç','vvUz',1]].concat(VV_UZ.map(k=>['Uzaklaştırma sonrası: '+VV_UZAD[k]+' %','vvU_'+k,1]))
     .concat(['<1,5','1,5–3','3–5','≥5'].map((a,i)=>['Orta anında en yakın rakip '+a+' m %','vvOY_'+i,1]))
-    .concat([['Orta anında topun önünde rakip (4 m, ±1,5 m) %','vvOO',1]]),
+    .concat([['Orta anında topun önünde rakip (4 m, ±1,5 m) %','vvOO',1]])
+    /* T19-0 (2026-10-17): şutun durumu — blok / şut (penaltısız; gerçek ~%25–30), şut anında en yakın saha oyuncusu rakibin uzaklığı ve
+       top–kale hattındaki (ileride 0,5–14 m, yanal < 1,3 m) savunmacı; kanatta baskı altındaki top sahibinin seçimi (son 30 m, kale ortasından
+       ≥ 14 m yanda, en yakın rakip ≤ 3 m): orta, pas, şut, top kaybı, topu tuttu (2,5 sn) */
+    .concat([['Blok / şut (penaltısız) %','vvBlok',1,[24,32,'T19']],['Şut anında en yakın rakip ortanca (m; penaltısız)','vvRy',2],
+      ['Şut anında hatta savunmacı (ort.; penaltısız)','vvHat',2],
+      /* T19a: kararın blok tahmini (sutSecenegi pBlok; yerleşik ayak şutu) ↔ aynı şutlarda gerçekleşen blok */
+      ['Blok: kararın tahmini (ort.; sutSecenegi) %','vvBlokT',1],['Blok: aynı şutlarda gerçekleşen %','vvBlokG',1]])
+    .concat(VV_RYAD.map((a,i)=>['Şut anında en yakın rakip '+a+': şutların %','vvRy_'+i,1]))
+    .concat(VV_RYAD.map((a,i)=>['  '+a+': blok %','vvRyB_'+i,1]))
+    .concat(VV_RYAD.map((a,i)=>['  '+a+': gol %','vvRyG_'+i,1]))
+    .concat([['Kanatta baskı altında top sahibi (1. adam ≤ 3 m; adet / maç)','vvKbN',2]])
+    .concat(VV_KB.map(k=>['  seçimi: '+VV_KBAD[k]+' %','vvKb_'+k,1])),
   yeni:()=>{
     const hyp=Math.hypot,PL=52.5,MZ=34,GW2=3.66;
     const sut=[],yerL=[];let aktif=null,uzN=0;const uzS={};for(const k of VV_UZ)uzS[k]=0;
     const sonOrta=[-9,-9],bu={goal:false,save:false,block:false},uzA=[],ortaYakin=[0,0,0,0];let ortaN=0,ortaOnde=0;
+    /* T19-0: kanatta baskı altındaki top sahibi (bölüm başına bir kez; aynı oyuncu topu bırakıp yeniden alana dek) */
+    const kbS={};for(const k of VV_KB)kbS[k]=0;let kb=null,kbSon=null;const kbBit=k=>{kbS[k]++;kb=null;};
     /* şut kaydı: ad 'shot' ya da 'header' (şut); b.sut ve kaleci şut anında */
     function kaydet(m,p,v,kafa){
       const b=m.ball,s=b.sut;if(!p||!s)return;const t=p.team,d=m.dir[t],gx=d*PL,e=p.eylem,sec=e&&e.ad==='vurus'?e.sec:null;
@@ -58,7 +74,11 @@ module.exports={
         ciz=Math.abs((gk.x-b.x)*(-lz/ll)+(gk.z-b.z)*(lx/ll));}
       const gkx=gx,ic=Math.abs(b.x-gkx)<16.5&&Math.abs(b.z-MZ)<20.16;
       const Lk=hyp(gx-b.x,MZ-b.z);
-      const r={L:Lk,t,pen,kafa,ilk,orta,xg:v&&v.xg||0,xgK:s.xgYer!=null?s.xgYer:null,pK:s.pKurt,cer:!!s.cerceve,hazir,hiz,yer,ciz,ic,sonuc:null};
+      /* T19-0: en yakın saha oyuncusu rakip ve hattaki savunmacı (top → kale ortası; ileride 0,5 … min(14, L − 1) m, yanal < 1,3 m) */
+      let ry=99,hat=0;{const ux=(gx-b.x)/(Lk||1),uz=(MZ-b.z)/(Lk||1);
+        for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;const dx=o.x-b.x,dz=o.z-b.z,dd=hyp(dx,dz);if(dd<ry)ry=dd;
+          const on=dx*ux+dz*uz,yan=Math.abs(-dx*uz+dz*ux);if(on>0.5&&on<Math.min(14,Lk-1)&&yan<1.3)hat++;}}
+      const r={L:Lk,t,pen,kafa,ilk,orta,xg:v&&v.xg||0,xgK:s.xgYer!=null?s.xgYer:null,pK:s.pKurt,cer:!!s.cerceve,hazir,hiz,yer,ciz,ic,ry,hat,pB:sec&&sec.pBlok!=null?sec.pBlok:null,sonuc:null};
       /* MAC_DENEME_SUTLAR=<dosya>: şut başına kayıt (çözümleme için; işçi başına <dosya>.<pid>) */
       if(VV_DOKUM){const sp=hyp(b.vx,b.vy,b.vz),L=hyp(gx-b.x,MZ-b.z);
         Object.assign(r,{tohum:m.tohum,dk:Math.round(m.gameSec/6)/10,L:+L.toFixed(2),w:+(b.z-MZ).toFixed(2),v:+sp.toFixed(1),zA:s.nisanZ!=null?+(s.nisanZ-MZ).toFixed(2):null,
@@ -68,6 +88,7 @@ module.exports={
       sut.push(r);if(gk&&!pen)yerL.push(yer);aktif={s,r};}
     return{
       dinle(ad,v,m){if(!m)return;
+        if(kb&&v&&v.p===kb.p){if(ad==='cross'||ad==='pass'&&v.tur==='geriCevir')kbBit('orta');else if(ad==='pass')kbBit('pas');else if(ad==='shot'||ad==='header'&&v.shot)kbBit('sut');}
         if(ad==='goal'){bu.goal=true;return;}
         if(ad==='save'){bu.save=true;return;}
         if(ad==='block'){if(!(v&&v.orta))bu.block=true;return;}
@@ -80,6 +101,12 @@ module.exports={
         if(ad==='shot'){kaydet(m,v&&v.p,v,false);return;}
         if(ad==='header'&&v&&v.shot){kaydet(m,v.p,v,true);return;}},
       adim(m){const b=m.ball;
+        /* T19-0: kanatta baskı altındaki top sahibi */
+        if(kb){const s=b.sahip||b.tasiyan;if(m.phase!=='play')kb=null;else if(s&&s.team!==kb.p.team)kbBit('kayip');else if(s&&s!==kb.p)kb=null;else if(m.t-kb.t>2.5)kbBit('tuttu');}
+        else if(m.phase==='play'&&b.sahip&&b.sahip!==kbSon){const p=b.sahip,d=m.dir[p.team];
+          if(b.x*d>PL-30&&Math.abs(b.z-MZ)>=14){let en=99;for(const o of m.teams[1-p.team])if(o.oyunda&&o.rol!=='GK'){const dd=hyp(o.x-p.x,o.z-p.z);if(dd<en)en=dd;}
+            if(en<=3){kb={p,t:m.t};kbSon=p;}}}
+        if(!b.sahip&&!kb)kbSon=null;
         if(aktif&&b.sut!==aktif.s){const r=aktif.r,gk=b.tasiyan&&b.tasiyan.rol==='GK'&&b.tasiyan.team!==r.t;
           r.sonuc=bu.goal?'gol':bu.save||gk?'kurt':bu.block?'blok':'diger';aktif=null;}
         bu.goal=false;bu.save=false;bu.block=false;
@@ -110,7 +137,7 @@ module.exports={
         /* mesafe dilimleri (konum xG'siyle): gol, xG toplamı, çerçeve ve kurtarış */
         for(let i=0;i<VV_MESAD.length;i++){const D=S.filter(r=>r.L>=VV_MES[i]&&r.L<VV_MES[i+1]),Dc=D.filter(r=>r.cer&&(r.sonuc==='gol'||r.sonuc==='kurt'));
           ham['vvM_'+i]=[D.filter(r=>r.sonuc==='gol').length,D.length];ham['vvMx_'+i]=[D.reduce((a,r)=>a+(r.xgK||0),0),D.length];
-          ham['vvMc_'+i]=[D.filter(r=>r.cer).length,D.length];ham['vvMk_'+i]=[Dc.filter(r=>r.sonuc==='kurt').length,Dc.length];}
+          ham['vvMc_'+i]=[D.filter(r=>r.cer).length,D.length];ham['vvMk_'+i]=[Dc.filter(r=>r.sonuc==='kurt').length,Dc.length];ham['vvMb_'+i]=[D.filter(r=>r.sonuc==='blok').length,D.length];}
         const C=S.filter(r=>r.cer&&r.pK!=null&&(r.sonuc==='gol'||r.sonuc==='kurt'));
         for(let i=0;i<VV_PAD.length;i++){const D=C.filter(r=>vvDilim(VV_P,r.pK)===i);ham['vvP_'+i]=[D.filter(r=>r.sonuc==='kurt').length,D.length];ham['vvPs_'+i]=[D.reduce((a,r)=>a+r.pK,0),D.length];}
         const tur=r=>r.kafa?'kafa':r.ilk?'ilk':'yer';
@@ -130,8 +157,16 @@ module.exports={
         const pen=sut.filter(r=>r.pen&&r.sonuc);ham.vvPen=[pen.filter(r=>r.sonuc==='gol').length,pen.length];
         let uT=0;for(const k of VV_UZ)uT+=uzS[k];for(const k of VV_UZ)ham['vvU_'+k]=[uzS[k],uT];
         for(let i=0;i<4;i++)ham['vvOY_'+i]=[ortaYakin[i],ortaN];ham.vvOO=[ortaOnde,ortaN];
+        /* T19-0: blok / şut, şut anında rakibin yakınlığı, kanatta baskı */
+        ham.vvBlok=[S.filter(r=>r.sonuc==='blok').length,nG];
+        {const B=S.filter(r=>r.pB!=null);ham.vvBlokT=[B.reduce((a,r)=>a+r.pB,0),B.length];ham.vvBlokG=[B.filter(r=>r.sonuc==='blok').length,B.length];}
+        for(let i=0;i<VV_RYAD.length;i++){const D=S.filter(r=>vvDilim(VV_RY,r.ry)===i);ham['vvRy_'+i]=[D.length,nG];
+          ham['vvRyB_'+i]=[D.filter(r=>r.sonuc==='blok').length,D.length];ham['vvRyG_'+i]=[D.filter(r=>r.sonuc==='gol').length,D.length];}
+        let kbN=0;for(const k of VV_KB)kbN+=kbS[k];for(const k of VV_KB)ham['vvKb_'+k]=[kbS[k],kbN];
+        const sR=S.map(r=>r.ry).filter(x=>x<99).sort((a,b)=>a-b),ryO=sR.length?sR[Math.floor(sR.length/2)]:NaN;
         const sy=yerL.filter(v=>v===v).sort((a,b)=>a-b),yo=sy.length?(sy.length%2?sy[(sy.length-1)/2]:(sy[sy.length/2-1]+sy[sy.length/2])/2):NaN;
-        return{ham,vvXg:nG?x/nG:NaN,vvOran:x>0?g/x:NaN,vvXgK:nG?xk/nG:NaN,vvOranK:xk>0?g/xk:NaN,vvKalib:kN?100*(kT-kG)/kN:NaN,vvYer:yo,vvUz:uzN};}
+        return{ham,vvXg:nG?x/nG:NaN,vvOran:x>0?g/x:NaN,vvXgK:nG?xk/nG:NaN,vvOranK:xk>0?g/xk:NaN,vvKalib:kN?100*(kT-kG)/kN:NaN,vvYer:yo,vvUz:uzN,
+          vvRy:ryO,vvHat:nG?S.reduce((a,r)=>a+r.hat,0)/nG:NaN,vvKbN:kbN};}
     };
   },
   /* dilim tabloları: bütün maçların toplamından */
@@ -141,9 +176,9 @@ module.exports={
     console.log('\n  Şutun verimi (v-verim; T12-0; penaltısız): konum xG dilimi · adet · ort. xG · gerçekleşen gol % · gerçekleşen ÷ xG');
     for(let i=0;i<VV_XAD.length;i++){const [g,n]=o('vvX_'+i),[xs]=o('vvXs_'+i);const xo=n?xs/n:NaN;
       console.log('  '+('xG '+VV_XAD[i]).padEnd(22)+f(n,6)+f(n?xo.toFixed(3):'—',9)+f(yuz(g,n),9)+f(n&&xo>0?(g/n/xo).toFixed(2):'—',8));}
-    console.log('  Mesafe (konum xG; gerçekte ÷ ~1): adet · gol % · konum xG % · gerçekleşen ÷ xG · çerçeve % · kurtarış %');
-    for(let i=0;i<VV_MESAD.length;i++){const [g,n]=o('vvM_'+i),[xs]=o('vvMx_'+i),[c]=o('vvMc_'+i),[kk,kn]=o('vvMk_'+i);
-      console.log('  '+VV_MESAD[i].padEnd(22)+f(n,6)+f(yuz(g,n),8)+f(n?(100*xs/n).toFixed(1):'—',8)+f(xs>0?(g/xs).toFixed(2):'—',8)+f(yuz(c,n),8)+f(yuz(kk,kn),8));}
+    console.log('  Mesafe (konum xG; gerçekte ÷ ~1): adet · gol % · konum xG % · gerçekleşen ÷ xG · çerçeve % · kurtarış % · blok % (T19-0)');
+    for(let i=0;i<VV_MESAD.length;i++){const [g,n]=o('vvM_'+i),[xs]=o('vvMx_'+i),[c]=o('vvMc_'+i),[kk,kn]=o('vvMk_'+i),[bb]=o('vvMb_'+i);
+      console.log('  '+VV_MESAD[i].padEnd(22)+f(n,6)+f(yuz(g,n),8)+f(n?(100*xs/n).toFixed(1):'—',8)+f(xs>0?(g/xs).toFixed(2):'—',8)+f(yuz(c,n),8)+f(yuz(kk,kn),8)+f(yuz(bb,n),8));}
     console.log('  Kaleci kalibrasyonu (çerçeveye giden, bloksuz): tahmin dilimi · adet · ort. tahmin % · gerçekleşen kurtarış % · fark (|fark| > 10 "!")');
     for(let i=0;i<VV_PAD.length;i++){const [k,n]=o('vvP_'+i),[ps]=o('vvPs_'+i);const po=n?100*ps/n:NaN,gz=n?100*k/n:NaN,fk=gz-po;
       console.log((n>=20&&Math.abs(fk)>10?'! ':'  ')+('P(kurtarış) '+VV_PAD[i]).padEnd(22)+f(n,6)+f(n?po.toFixed(1):'—',9)+f(n?gz.toFixed(1):'—',9)+f(n?(fk>0?'+':'')+fk.toFixed(1):'—',8));}

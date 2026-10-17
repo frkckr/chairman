@@ -201,6 +201,8 @@ Object.assign(Match.prototype,{
       if(!hucum){this.markajAta(t,du?odak:gecikmeli,cizgi);this.kutuSavunmaAta(t,du?odak:gecikmeli);}
       else if(!MOTOR_AYAR.markajKalici){if(this._markaj)this._markaj[t]=new Map();if(this._kutuSav)this._kutuSav[t]=new Map();}   /* T18c: markajKalici'de haritalar durur */
       if(!hucum&&MOTOR_AYAR.kosuSil)for(const p of this.teams[t]){const k=p.kosu;if(k&&(k.tur==='arkaya'||k.tur==='genis'||k.tur==='gel'||k.tur==='aldatma'))p.kosu=null;}   /* T18c: derin koşu top kaybında biter */
+      /* T19a: rakibin şut hazırlığı (vuruş eylemi, temastan önce; penaltı ve serbest vuruş hariç) — yakındaki savunmacılar hatta atılır (sutHamleYap) */
+      let sutE=null;if(MOTOR_AYAR.sutHamle&&!du)for(const q of this.teams[1-t]){const e=q.eylem;if(q.oyunda&&e&&e.ad==='vurus'&&e.faz!=='takip'&&e.sec&&e.sec.tur==='sut'&&!e.sec.penalti&&!e.sec.serbest){sutE=e;break;}}
       for(const p of this.teams[t]){
         if(!p.oyunda)continue;
         /* T13-0: görev etiketi (gorevYaz; salt okunur) — atlanan oyuncular da etiketlenir */
@@ -219,6 +221,7 @@ Object.assign(Match.prototype,{
           this.kovala(p,K&&K.yuksek||p===b.hedefOyuncu||donen||f<=MOTOR_AYAR.kovalaPay?1:0.5);continue;}
         if(p===kovalayan[2+t]){this.gorevYaz(p,'kovala2');this.kovala(p,1);continue;}
         if(p===cizgiBek){this.gorevYaz(p,'cizgi');p.tx=cbx;p.tz=cbz;p.hizOran=1;this.eforVer(p,1);continue;}   /* T5e */
+        if(sutE&&p.rol!=='GK'&&this.sutHamleYap(p,sutE)){this.gorevYaz(p,'blok');continue;}   /* T19a */
         /* T18b: pas uçuşunda (sanal sahip) 1. adam alıcıya kapatır (presYap değil), 2. ve 3. adam alıcıya göre */
         if(p===pres1){this.gorevYaz(p,'pres1');this.eforVer(p,karsi?0.9:1);if(b.sahip)this.presYap(p,b.sahip,dt);else this.kapat(p,odak.sahip);continue;}
         if(p===pres2){const yakin=MOTOR_AYAR.kapatKalici>0?(pres1!=null&&p._kapatK!=null&&this.kare-p._kapatK<=Math.round(60*MOTOR_AYAR.kapatKalici)):p._kapatK===this.kare;this.gorevYaz(p,'pres2');this.eforVer(p,yakin?1:karsi?0.9:0.8);if(yakin&&b.sahip)this.kapatYakin(p,b.sahip,pres1,dt);else this.kapat(p,odak.sahip);continue;}

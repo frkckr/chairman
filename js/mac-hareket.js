@@ -83,6 +83,11 @@ ayarEkle('C',{
   cruyffKal:0.15,              // A4-5: Cruyff tahmininin logit düzeltmesi (öbür satırların kal'ı gibi): c-1v1'de 0'da tahmin %55 · gerçek %60 → 0,15'te %64 · %67
   cruyffKanat:18,              // A4-5: Cruyff yalnız kanatta — topun orta çizgiye (MZ) en az bu kadar uzak olduğu yerde (m; 0: her yerde). Her yerdeyken
                                // ceza sahası önünde şut çalımının yerini alıyordu (80 maç: sutCalim 3,96 → 2,67, şut −0,9, gol −0,39 ± 0,24, korner −0,50 ± 0,30)
+  /* T19a (2026-10-17; gerçekçilik planı §4 T19): şutu kapatma. sutHamle: şut hazırlığında (vuruş eylemi, temastan önce; penaltı ve serbest vuruş
+     hariç) topa bu kadar (m) yakın saha oyuncusu savunmacı, tepkisinden sonra şutun hattına atılır (sutHamleYap); 0: kapalı (T18'in yolu).
+     blokErisim: hamledeki savunmacının ayağının topa erişimi (m; uzatılan bacak — birebirErisim ile aynı ölçü), damgadan 0,35 sn */
+  sutHamle:4,
+  blokErisim:0.95,
   sirtGovde:1                  // A4-5: sırtla dönmede savunmacı dibinde (≤ 2,6 m), hazırlıkta sırt ona dönük kalır, omuzla aldatır, top yana itilir (a0Sirt, amaxSirt)
                                // (0: eski — önce dönüp sonra keser; zorlanan c-1v1 [5]'te kayıp %41 → 24, geçti %5 → 8, tahmin %12)
 });
@@ -730,6 +735,20 @@ Object.assign(Match.prototype,{
     const cx=p.x+ex*u-s.x,cz=p.z+ez*u-s.z,dc=hrkHyp(cx,cz);if(dc>=0.95)return;
     const L=hrkKok(L2),yx=dc>1e-3?cx/dc:-ez/L,yz=dc>1e-3?cz/dc:ex/L;
     p.tx=s.x+s.vx*0.25+yx*0.95;p.tz=s.z+s.vz*0.25+yz*0.95;
+  },
+  /* T19a (2026-10-17; gerçekçilik planı §4 T19): şutu kapatma — şutçu vuruşa hazırlanırken (vuruş eylemi, temastan önce) topa sutHamle m içindeki
+     savunmacı tepki süresinden sonra (hazırlığın başından 0,12 + 0,12·(1 − karar) sn) şutun hattına (top → kale ortası) atılır: hattaki en yakın
+     noktaya, toptan en az 1 m öteye; tam efor, yüzü topa. Hamle damgası (_ortaBlokT; orta bloğuyla aynı alan — top aynı anda orta ve şut olamaz)
+     temasta erişimi uzatır (blokErisim; erisim, js/mac-topla.js). Topun gerisindeki ya da kalan sürede hatta yetişemeyecek savunmacı atılmaz.
+     Eskiden 1. adam jokeyde (1,6–2,4 m) kalıyor, vuruşa ancak 0,3 sn kala 0,8 m'ye geliyordu; 2. adam 1. adamın arkasında bekliyordu. Planlayıcı aynı
+     kuralı bilir (sutBlokOlasiligi, t0) */
+  sutHamleYap(p,e){
+    const A=MOTOR_AYAR,b=this.ball,dx=p.x-b.x,dz=p.z-b.z;if(hrkHyp(dx,dz)>A.sutHamle)return false;
+    if(e.t<0.12+0.12*(1-p.oz.karar))return false;
+    const gx=e.sec.hx,L=hrkHyp(gx-b.x,MZ-b.z)||1,ux=(gx-b.x)/L,uz=(MZ-b.z)/L,on=dx*ux+dz*uz;if(on<-0.3)return false;
+    const yan=hrkAbs(-dx*uz+dz*ux);if(yan>A.blokErisim+(p.maxSpd||7)*0.6*hrkMax(0,e.kalan||0)+0.3)return false;
+    const k=clamp(on,1,hrkMax(1,hrkMin(6,L-1)));
+    p.tx=b.x+ux*k;p.tz=b.z+uz*k;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);p._ortaBlokT=this.t;return true;
   },
   presYap(p,s,dt){
     const b=this.ball,gx=-this.dir[p.team]*PL,mesafe=hrkHyp(p.x-s.x,p.z-s.z);

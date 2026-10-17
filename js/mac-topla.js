@@ -512,7 +512,7 @@ Object.assign(Match.prototype,{
        çalımın kaybı sayılmasın) */
     if(p.calim&&s.tur!=='gec')this.calimBitir(p,this.calimSonucu(p,p.calim));
     switch(s.tur){
-      case 'sut':this.vurusBaslat(p,{tur:'sut',hx:this.dir[p.team]*PL,hz:MZ,xg:s.xg});break;
+      case 'sut':this.vurusBaslat(p,{tur:'sut',hx:this.dir[p.team]*PL,hz:MZ,xg:s.xg,pBlok:s.pBlok});break;   /* T19a: pBlok salt okunur (v-verim) */
       case 'pas':case 'ara':case 'uzun':case 'orta':case 'geriCevir':
         this.vurusBaslat(p,{tur:s.tur,hx:s.hx,hz:s.hz,tip:s.tip,alici:s.alici,varisHizi:s.varis,T:s.T,hy:s.hy,yay:s.yay,mod:s.mod,ex:s.ex,ez:s.ez,es:s.es,guncelle:!!s.mod,
           P:s.P,Pk:s.Pk,alt:s.alt,ortaTuru:s.ortaTuru});break;   /* P, Pk, alt, ortaTuru: karar anındaki tahmin, salt okunur (ölçüm: araclar/olcumler/p-kalib.js) */
@@ -545,6 +545,8 @@ Object.assign(Match.prototype,{
   erisim(p,d){
     const b=this.ball,y=b.y,yb=y-(p.yuk||0);
     if(this.elErisimi(p,d,y))return 'el';
+    /* T19a: şutu kapatmak için hatta atılan savunmacı (sutHamleYap; damga 0,35 sn) bacağını uzatır — ayağın erişimi blokErisim */
+    if(MOTOR_AYAR.sutHamle&&b.sut&&b.sut.team!==p.team&&p.rol!=='GK'&&this.t-p._ortaBlokT<0.35&&d<MOTOR_AYAR.blokErisim&&yb<0.8&&yb>-0.1)return 'ayak';
     if(d<0.6&&yb<0.8&&yb>-0.1)return 'ayak';   /* T8c: havadaki oyuncunun ayağının altından geçen top (sıçrayan baraj) */
     if(d<0.5&&yb>=0.8&&yb<1.55)return 'gogus';
     if(b.vy<3&&hvTemas(this,p)){

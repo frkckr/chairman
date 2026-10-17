@@ -35,13 +35,18 @@ module.exports={
     ['Çelmenin sonu: tehlikeli bölgeye (11 m, kale ±9 m) %','dCyTehlike',1],['Çelmenin sonu: güvenli (bölge dışı, oyunda) %','dCyDisa',1],
     ['Kurtarıştan korner / şut (T15-0)','dKurtKorner',3,[0.07,null,'T15']],
     ['Orta/korner sonrası kaleci tuttu (adet)','dOrtaTut',2],['Yumruk (adet)','dYumruk',2],
-    ['Kaleci dağıtımı (adet)','dDagitim',2],['  top takımda kaldı (adet)','dDagitimTamam',2]
+    ['Kaleci dağıtımı (adet)','dDagitim',2],['  top takımda kaldı (adet)','dDagitimTamam',2],
+    /* T19-0 (2026-10-17): kalecinin olağan tutuşu — tutuştan (kaleci topu eline aldı) elle dağıtıma süre; bekletme (> 1 sn) payı; hemen (≤ 1 sn)
+       dağıtımda alıcı kaleciden ≥ 30 m ileride (kontra); oyun durmadan (aynı oyun evresinde) ölçülür */
+    ['Tutuştan dağıtıma süre ortanca (sn; T19)','dTutSure',2],['Tutuşta bekletme (> 1 sn) %','dTutBekle',1],['  hemen dağıtımda uzun (≥ 30 m ileri) %','dTutKontra',1]
   ],
   yeni:()=>{
     let son=[-99,-99],celme=null,ikinci=0,celmeN=0,celmeAlti=0,celmeRakip=0,kapan=0,yumruk=0,ortaTut=0;
     let sonSut=null,olaylar=[],golSut=0,golOwn=0,golCelme=0,golBlok=0,golDiger=0,golN=0;
     let sutN=0,sutHazir=0,oncekiTasiyan=null,sonOrta=-99,dagitim=null,dagN=0,dagTamam=0,kurtKorner=0;
     const sonKapan=new Map(),bicimler={},cy={kale:0,korner:0,tac:0,durus:0,tehlike:0,disa:0};
+    /* T19-0: tutuş → dağıtım */
+    let tutus=null;const tutL=[];let tutHemen=0,tutHemenUzun=0;
     /* T15-0 tablo: sayaçlar [sınıf|son] */
     const tablo={};const say=(k)=>{tablo[k]=(tablo[k]||0)+1;};
     const yt={};for(let i=0;i<DK_YAD.length;i++)yt[i]=[0,0];
@@ -81,14 +86,15 @@ module.exports={
           if(tur==='diger'&&v.own)tur='own';
           if(tur==='sut')golSut++;else if(tur==='celme')golCelme++;else if(tur==='blok')golBlok++;else if(tur==='own')golOwn++;else golDiger++;
           if(celme)bitirCelme(m,null,null,false,false,'kale');}
-        if((ad==='gkkick'||ad==='pass')&&v&&v.p&&v.p.rol==='GK'){dagN++;dagitim={team:v.p.team,t:m.t};}
+        if((ad==='gkkick'||ad==='pass')&&v&&v.p&&v.p.rol==='GK'){dagN++;dagitim={team:v.p.team,t:m.t};
+          if(tutus&&tutus.p===v.p){const s=m.t-tutus.t;tutL.push(s);if(s<=1){tutHemen++;const q=v.q,d=m.dir[v.p.team];if(q&&(q.x-v.p.x)*d>=30)tutHemenUzun++;}tutus=null;}}
       },
       adim(m){
         const b=m.ball;
         /* bu adımın sonunda kayıtlı şut var mı (gol olayı sonraki adımın içinde gelir; gol() b.sut'u siler) */
         sonSut=b.sut||null;
         for(const p of m.players){const e=p.eylem;if(e&&e.ad==='kapan'&&sonKapan.get(p)!==e){kapan++;sonKapan.set(p,e);}}
-        if(m.phase!=='play'){son=[-99,-99];if(celme)bitirCelme(m,null,null,false,false,durusSon(m));dagitim=null;oncekiTasiyan=b.tasiyan;return;}
+        if(m.phase!=='play'){son=[-99,-99];if(celme)bitirCelme(m,null,null,false,false,durusSon(m));dagitim=null;tutus=null;oncekiTasiyan=b.tasiyan;return;}
         if(b.sahip||b.tasiyan){son=[-99,-99];}
         /* çelme sonrası top */
         if(celme){const c=celme,dok=b.sonDokunan;
@@ -98,6 +104,7 @@ module.exports={
           else if(m.t-c.t0>4)bitirCelme(m,b.x,b.z,false);}
         /* kaleci topu eline aldı: orta/korner sonrası mı */
         const ta=b.tasiyan;if(ta&&ta!==oncekiTasiyan&&ta.rol==='GK'&&m.t-sonOrta<3.5)ortaTut++;
+        if(ta&&ta!==oncekiTasiyan&&ta.rol==='GK')tutus={p:ta,t:m.t};
         oncekiTasiyan=ta;
         /* dağıtım: topu ilk alan takım */
         if(dagitim){const s=b.sahip||b.tasiyan;if(s&&s.rol!=='GK'){if(s.team===dagitim.team)dagTamam++;dagitim=null;}else if(m.t-dagitim.t>8)dagitim=null;}
@@ -109,8 +116,10 @@ module.exports={
           /* oran satırı 100·pay/payda yazar: payda 100·şut — satır korner / şut verir */
           dKurtKorner:[kurtKorner,100*sutN]};
         for(let i=0;i<DK_YAD.length;i++)ham['dYt_'+i]=yt[i];
+        ham.dTutBekle=[tutL.filter(s=>s>1).length,tutL.length];ham.dTutKontra=[tutHemenUzun,tutHemen];
+        const tS=tutL.slice().sort((a,c)=>a-c),dTutSure=tS.length?tS[Math.floor(tS.length/2)]:NaN;
         return{dIkinci:ikinci,dCelme:celmeN,dCelmeAlti:celmeAlti,dCelmeRakip:celmeRakip,dKapan:kapan,dSutN:sutN,dSutHazir:sutHazir,
-          dGolSut:golSut,dGolOwn:golOwn,dGolCelme:golCelme,dGolBlok:golBlok,dGolDiger:golDiger,dYumruk:yumruk,dOrtaTut:ortaTut,dDagitim:dagN,dDagitimTamam:dagTamam,
+          dGolSut:golSut,dGolOwn:golOwn,dGolCelme:golCelme,dGolBlok:golBlok,dGolDiger:golDiger,dYumruk:yumruk,dOrtaTut:ortaTut,dDagitim:dagN,dDagitimTamam:dagTamam,dTutSure,
           _dBicim:bicimler,_dTablo:tablo,ham};
       }
     };

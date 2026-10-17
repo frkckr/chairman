@@ -616,13 +616,20 @@ function sutEgriYani(tur,ayak,zt,d){if(tur!=='falso'&&tur!=='trivela'||!ayak||ay
    yükseklik hatasıyla belirsiz — ilk denemede rampa erişimin altında kalıyordu, plan barajı sıyıran düşen şutu temiz sanıyor, fizikte %41'i
    baraja çarpıyordu); barajda yanal (0,5 − yan)/0,2 (omuz omuza duvar), havadaki
    barajın altından (yOn < 0,45) ×0,4. yt verilmezse eski 2B (türün payı: plase ve sert 0,6, falso 0,45, uzaktaki engele düşen 0,3) */
-function sutBlokOlasiligi(m,p,ox,oz,tx,tz,tur,yt,T){
-  const Lk=hyp(tx-ox,tz-oz)||1,ucY=yt!=null;let acik=1;
-  for(const o of rakipler(m,p.team)){if(!o.oyunda||o.rol==='GK')continue;const on=((o.x-ox)*(tx-ox)+(o.z-oz)*(tz-oz))/Lk;if(on<0.5||on>Math.min(14,Lk-1))continue;
+/* T19a (2026-10-17): t0 — kararın gördüğü hazırlık süresi (karar → temas, sn; sutSecenegi verir). Motorda topa sutHamle m içindeki savunmacı tepkisinden
+   (0,12 + 0,12·(1 − karar) sn) sonra şutun hattına atılır ve bacağını uzatır (sutHamleYap, js/mac-hareket.js; erişim blokErisim): planlayıcı onu
+   hatta (toptan en az 1 m öteye) kalan sürede alabileceği yolla (3·τ² m; duruştan ~6 m/sn² ivme) yaklaşmış ve uzanma payı (blokErisim − 0,6)
+   genişlemiş sayar. t0 verilmezse (kaleye vuruşun planı; savunmacılar zaten hatta) eski hesap */
+function sutBlokOlasiligi(m,p,ox,oz,tx,tz,tur,yt,T,t0){
+  const Lk=hyp(tx-ox,tz-oz)||1,ucY=yt!=null,H=t0>0&&MOTOR_AYAR.sutHamle?MOTOR_AYAR:null;let acik=1;
+  for(const o of rakipler(m,p.team)){if(!o.oyunda||o.rol==='GK')continue;let on=((o.x-ox)*(tx-ox)+(o.z-oz)*(tz-oz))/Lk,yan=-1,R=1.3;
+    if(H&&on>=-0.3&&hyp(o.x-ox,o.z-oz)<=H.sutHamle){const tau=Math.max(0,t0-0.12-0.12*(1-o.oz.karar));
+      yan=Math.max(0,segD(o.x,o.z,ox,oz,tx,tz)-4*tau);on=clamp(on,1,Math.max(1,Math.min(6,Lk-1)));R=1.3+H.blokErisim-0.6;}
+    if(on<0.5||on>Math.min(14,Lk-1))continue;
     if(tur==='asirtma'&&on>4)continue;
-    const bj=!!(o.duranRol&&o.duranRol.rol==='baraj'),yan=segD(o.x,o.z,ox,oz,tx,tz);let P;
+    const bj=!!(o.duranRol&&o.duranRol.rol==='baraj');if(yan<0)yan=segD(o.x,o.z,ox,oz,tx,tz);let P;
     if(bj){if(yan>=0.5)continue;P=Math.min(1,(0.5-yan)/0.2);}
-    else{if(yan>=1.3)continue;P=(ucY?0.6:tur==='falso'?0.45:tur==='dusen'&&on>4?0.3:0.6)*(1-yan/1.3);}
+    else{if(yan>=R)continue;P=(ucY?0.6:tur==='falso'?0.45:tur==='dusen'&&on>4?0.3:0.6)*(1-yan/R);}
     if(ucY){const f=on/Lk,yOn=0.11+(yt-0.11)*f+0.5*G*(tur==='dusen'?1.3:1)*T*T*f*(1-f),Ry=1.8*(o.boy||1)+(bj?hvSicramaH(o,0)*MOTOR_AYAR.barajZipla:0)+0.15;
       P*=clamp((Ry-yOn)/0.35+0.5,0,1);if(bj&&yOn<0.45)P*=0.4;}
     acik*=1-P;}
@@ -696,7 +703,12 @@ function penaltiPlani(m,p,gk,sd){
 
 function sutSecenegi(m,p,x0,z0,baski){
   const d=m.dir[p.team],u=x0*d;if(u<=PL-38)return null;
-  const gx=d*PL,Lk=hyp(gx-x0,MZ-z0),oz=p.oz;let x=xG(u,z0,'ayak',baski*0.4)*(1-sutBlokOlasiligi(m,p,x0,z0,gx,MZ,'sert'));   /* 2B (T8c: 3B yalnız serbest vuruşun planında) */
+  /* T19a: blok olasılığı hazırlık süresiyle (savunmacının hamlesi; sutBlokOlasiligi t0) — pBlok seçeneğe yazılır (v-verim kalibrasyonu okur) */
+  /* hazırlık süresi orta planlayıcısındaki gibi (T14c): asgari hazırlık, gövdenin kaleye dönüşü (vurusHizalama sınırına kadar) ya da topa varış + geri salınım */
+  let t0=0;if(MOTOR_AYAR.sutHamle){const vs=vurusSureleri('sut',baski),don=Math.max(0,Math.abs(aciFark(Math.atan2(MZ-z0,d*PL-x0),p.yon))-MOTOR_AYAR.vurusHizalama)/hrkVurusDonus(p),
+    vr=Math.max(0,hyp(p.x-x0,p.z-z0)-0.5)/Math.max(0.7,p.spd||0);t0=Math.max(vs.haz,don,vr)+vs.geri;}
+  const pBlok=sutBlokOlasiligi(m,p,x0,z0,d*PL,MZ,'sert',undefined,undefined,t0);
+  const gx=d*PL,Lk=hyp(gx-x0,MZ-z0),oz=p.oz;let x=xG(u,z0,'ayak',baski*0.4)*(1-pBlok);   /* 2B (T8c: 3B yalnız serbest vuruşun planında) */
   /* T9b-c: şutçunun niteliği yakında şut becerisinden, 18 m'den sonra giderek gücünden (sutGucu; uzak şutu güç taşır). Gol olmayan şutun değeri:
      dönen top ve korner (sutIkinci; 13 m'ye kadar tam, 25 m'de sıfır — uzak şutun çoğu tutulur ya da auta gider, çelme ve blok yakında doğar)
      eksi top kaybı (0,4; eskiden yalnız kayıp cezası). İlk denemede mesafeden bağımsız değer 25 m ötesinden şutu %7'den %36'ya çıkarmıştı */
@@ -706,8 +718,8 @@ function sutSecenegi(m,p,x0,z0,baski){
   const uv=profilEgilim(p,'uzaktanVurur');
   /* T12c: isteğin tam olduğu ve bittiği mesafe MOTOR_AYAR.sutIstekMesafe [tam, biter] (eskiden sabit 14 ve 22 m) */
   const IM=MOTOR_AYAR.sutIstekMesafe,istek=(Lk<IM[1]?1+(MOTOR_AYAR.sutIstegi-1)*clamp((IM[1]-Lk)/(IM[1]-IM[0]),0,1):1-clamp((Lk-IM[1])/14,0,0.5))*(1+0.6*uv*clamp((Lk-14)/8,0,1));
-  if(x>=0.017)return{tur:'sut',deger:x*100*q*istek+(1-x)*ik,xg:x};
-  if(x>=0.008&&(oz.sut>0.5||uv>0.3)&&baski<0.6)return{tur:'sut',deger:x*100*q*(0.5+0.5*istek)+(1-x)*ik,xg:x};
+  if(x>=0.017)return{tur:'sut',deger:x*100*q*istek+(1-x)*ik,xg:x,pBlok};
+  if(x>=0.008&&(oz.sut>0.5||uv>0.3)&&baski<0.6)return{tur:'sut',deger:x*100*q*(0.5+0.5*istek)+(1-x)*ik,xg:x,pBlok};
   return null;}
 /* ---- seçenekler ---- */
 /* bütün değerler aynı ölçüdedir: gol olasılığı × 100 ("puan"). Pas = başarı × hedefin tehdidi − kayıp × rakibin oradaki tehdidi */

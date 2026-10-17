@@ -36,6 +36,10 @@ module.exports={calistir({ctx,vm,N,tohum}){
   console.log('  Koşu (T15-0): '+Object.keys(tur).sort().map(k=>{const T=tur[k];return `${k} %${(100*T.n/n).toFixed(0)} (gol %${(100*T.gol/T.n).toFixed(1)}, kaleci doğru tarafta %${T.uctu?(100*T.dogru/T.uctu).toFixed(0):'—'})`;}).join(' · '));
   if(kalkis.length){const s=kalkis.slice().sort((a,b)=>a-b),o=s[Math.floor(s.length/2)],ic=s.filter(x=>x>=-0.15&&x<=0.02).length;
     console.log(`  Kalecinin kalkışı − temas (sn): ortanca ${o.toFixed(3)} · [−0,15, +0,02] içinde %${(100*ic/s.length).toFixed(0)} · erken (< −0,15) %${(100*s.filter(x=>x<-0.15).length/s.length).toFixed(0)} · ${s.length} dalış`);}
+  /* T19-0 (2026-10-17; bilgi, T19c kabulü): kaçırma (direk + dışarı) ve kurtarış payı — gerçek lig ortalamaları kabaca gol %76–78, kurtarış
+     %16–20, kaçırma %4–8 */
+  {const kac=(say.direk||0)+(say.disari||0),ku=say.kurtaris||0;
+    console.log(`  T19: gol %${oran.toFixed(1)} (kabul 76–78, 4 × 1600) · kurtarış %${(100*ku/n).toFixed(1)} (16–20) · kaçırma (direk + dışarı) %${(100*kac/n).toFixed(1)} (4–8)`);}
   const ok=oran>=70&&oran<=82;
   console.log((ok?'  ':'! ')+'Gol oranı'.padEnd(30)+oran.toFixed(1).padStart(6)+'%   hedef 70–82 (T15 kabulü 72–80, 1600 atış)');
   return ok?0:1;
