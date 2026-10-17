@@ -691,7 +691,9 @@ function sutAdaylari(m,p,ox,oz,sd,o){
    gidebilir: plan isabetle kurtarışı tartar */
 function penaltiPlani(m,p,gk,sd){
   const Lp=PENALTI_U,R=VURUS_GUC_REF.sut,vMax=sutHizTavani(p,false),k=gk&&gk.oyunda?gk.oz.kalecilik:0,ayni=0.45+0.1*(k-0.5),orta=0.1,Ls=[];let en=0;
-  for(const zt of[-2.9,-1.8,0,1.8,2.9])for(const yt of zt===0?[0.3,1.0]:[0.3,1.0,2.0])for(const g of[0.7,0.85,1.0]){
+  /* T19c: direğe 0,46 m köşe adayı (penaltiKose) — gerçekte penaltıların ~%7'si dışarı ya da direğe gider; motorda ±2,9 m köşe kaçırmayı neredeyse sıfırlıyordu */
+  const PK=MOTOR_AYAR.penaltiKose,ZT=PK?[-PK,-2.9,-1.8,0,1.8,2.9,PK]:[-2.9,-1.8,0,1.8,2.9];
+  for(const zt of ZT)for(const yt of zt===0?[0.3,1.0]:[0.3,1.0,2.0])for(const g of[0.7,0.85,1.0]){
     const tur=g>=0.9?'sert':'plase',TT=SUT_TUR[tur],v=Math.max(8,g*VURUS_STIL[TT.stil].hiz*vMax),fg=gucHataCarpani(g,R),T=Lp/v;
     const sz=Math.max(0.05,sd*TT.kz*fg*Lp),sy=Math.max(0.05,sd*TT.ky*fg*Lp*0.35);
     const Pon=(normalDagilim((GW2-0.12-zt)/sz)-normalDagilim((-GW2+0.12-zt)/sz))*normalDagilim((GH-0.12-yt)/sy);

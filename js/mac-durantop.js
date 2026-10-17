@@ -40,7 +40,10 @@ ayarEkle('K',{
                                // ortadan ve uzaktan azalır. 5,0'te kenardan %22 doğrudan şut
   serbestRutin:0.12,           // T8c: barajlı vuruşta kısa pas rutini olasılığı (kullananın yaratıcılığıyla 0,6–1,4 katı; taktik çeşitlilik; 0,08'de 18 m'de %92,5 şut)
   serbestTau:1.0,              // T8c: serbest vuruş kararının sıcaklığı (karar ve duran top becerisiyle 0,6–1,4 katı; 1,5'te kenardan %30–40 şut)
-  penaltiSapma:0.55,           // T8d: penaltı vuruşunun hata çarpanı (baskısız 11 m; soğukkanlılıkla ×(1 + 0,8·(0,5 − s))); eski sabit 0,55
+  penaltiSapma:0.85,           // T8d: penaltı vuruşunun hata çarpanı (baskısız 11 m; soğukkanlılıkla ×(1 + 0,8·(0,5 − s))); eski sabit 0,55. T19c (2026-10-17): 0,85 —
+                               // d-penalti 4 × 1600 (penaltiKose 3,2 ile): 0,55'te gol %83,5 · kurtarış 14 · kaçırma 1,7; 0,7'de 79,8 · 16,5 · 2,3; 0,85'te 76,4 · 18,8 · 3,0
+                               // (gerçek ~76–78 · 16–20 · 5–7; plan hatası büyüyünce ortaya yaklaşır, kaçırma az artar)
+  penaltiKose:3.2,             // T19c (2026-10-17): penaltı planında direğe 0,46 m köşe adayı (±m; kale ortasından); 0: yalnız ±2,9 m köşe (T18'in yolu)
   /* A4-1 (2026-10-15; gerçekçilik planı §4 A4, Ek D): barajlı serbest vuruşta topun başında iki kişi ve aldatma koşusu */
   serbestIkili:0.45,           // A4-1: barajlı serbest vuruşta ikinci vurucunun topun yanında durma olasılığı (0: kapalı, T16'nın aynısı; d-duran'da %43)
   serbestAldatma:0.6,          // A4-1: iki kişiyken şut kararında ikinci vurucunun kullanandan önce topun üstünden koşma olasılığı

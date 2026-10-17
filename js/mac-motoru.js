@@ -99,7 +99,7 @@ const MOTOR_AYAR={
   /* K — js/mac-durantop.js (T8) */
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
   kornerKisa:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined,
-  serbestIkili:undefined,serbestAldatma:undefined,aldatmaTepki:undefined,kornerPerde:undefined,kornerGeri:undefined,markajYan:undefined,
+  serbestIkili:undefined,serbestAldatma:undefined,aldatmaTepki:undefined,kornerPerde:undefined,kornerGeri:undefined,markajYan:undefined,penaltiKose:undefined,
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined
 };
