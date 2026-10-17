@@ -88,6 +88,11 @@ ayarEkle('C',{
      blokErisim: hamledeki savunmacının ayağının topa erişimi (m; uzatılan bacak — birebirErisim ile aynı ölçü), damgadan 0,35 sn */
   sutHamle:4,
   blokErisim:0.95,
+  /* T19d (2026-10-17; T17 devri): kanat savunması — kanatta (son 30 m, kale ortasından ≥ 14 m yanda) 1. adam ortacıya yakın durur (jokey ×0,75) ve
+     ortaya 4,5 yerine 5,5 m'den adım atar (kanatOrtaR; planlayıcı aynı yarıçapı okur, ortaBlokTahmin); 0: kapalı (T18). Denendi ve 0 (40 maç t18.json'a):
+     orta bloğu %1,9 → 1,95 (değişmedi), korner 3,67 → 3,48, kanatçının son üçte bire topla girişi 8,1 → 6,2 / maç, ortada <1,5 m rakip %9,4 → 4,4 —
+     ortacı yakın beki görünce ortayı bırakıyor; orta bloğu bekin yerinin değil ortacının değer modelinin işi (gerçekçilik planı “T19d — Sonuç”) */
+  kanatKapat:0,
   sirtGovde:1                  // A4-5: sırtla dönmede savunmacı dibinde (≤ 2,6 m), hazırlıkta sırt ona dönük kalır, omuzla aldatır, top yana itilir (a0Sirt, amaxSirt)
                                // (0: eski — önce dönüp sonra keser; zorlanan c-1v1 [5]'te kayıp %41 → 24, geçti %5 → 8, tahmin %12)
 });
@@ -762,7 +767,8 @@ Object.assign(Match.prototype,{
        yoluna, toptan 1 m öteye adım atar; temasta bloğu ortaBlok çözer (bacak ve gövde erişimi, js/mac-mudahale.js). Ortacı karar anında bunu
        göremez. Eskiden savunmacı jokeyde 1,5–2 m'de bekliyordu, top 3 m'de 1,2 m'nin üstüne çıktığı için orta hiç bloklanmıyordu (T12-0) */
     const ev=s.eylem;
-    if(ev&&ev.ad==='vurus'&&ev.sec&&(ev.sec.tur==='orta'||ev.sec.tur==='geriCevir')&&ev.faz!=='takip'&&mesafe<4.5){
+    const kOR=kanatOrtaR(this,s.team,b.x,b.z);   /* T19d: kanatta 5,5 m, değilse 4,5 m */
+    if(ev&&ev.ad==='vurus'&&ev.sec&&(ev.sec.tur==='orta'||ev.sec.tur==='geriCevir')&&ev.faz!=='takip'&&mesafe<kOR){
       const lx=ev.sec.hx-b.x,lz=ev.sec.hz-b.z,ll=hrkHyp(lx,lz)||1;
       p.tx=b.x+lx/ll;p.tz=b.z+lz/ll;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);p._ortaBlokT=this.t;return;}
     /* T4: çalım sırasında aldatılmayan savunmacı sürücüyü kısa gecikmeyle izler (0,08 sn; hareketi okudu): aldatma artık süzgecin yan etkisi değil,
@@ -802,7 +808,7 @@ Object.assign(Match.prototype,{
     /* mesafe: kaleye dönük sürücüye jokey (1,6–2,4 m); sırtı ya da yanı dönükse sıkı (1–1,4 m, dönmesine izin verme); vuruş hazırlığında üstüne */
     /* T4: jokey mesafesi müdahale becerisinden değil sürücünün hızından (eskiden 2,25 − 0,5·müdahale: kötü müdahaleci geride durup daha zor geçiliyordu);
        arkasında yardım varsa %20'ye kadar yakın (destekHesapla) */
-    const des=this.destekHesapla(p),kale=hrkCos(s.yon)*nx+hrkSin(s.yon)*nz,R0=clamp(1.95+0.1*s.spd,1.6,2.4)*MOTOR_AYAR.jokeyMesafe*(1-0.2*des),
+    const des=this.destekHesapla(p),kale=hrkCos(s.yon)*nx+hrkSin(s.yon)*nz,R0=clamp(1.95+0.1*s.spd,1.6,2.4)*MOTOR_AYAR.jokeyMesafe*(1-0.2*des)*(kOR>4.5?0.75:1),
       /* T4-V: vuruşta üstüne gelme yalnız temasa 0,3 sn kala (uzayan hazırlık presçiyi davet etmesin; kalan alanı yoksa eskisi gibi) */
       R=s.eylem&&s.eylem.ad==='vurus'&&!(s.eylem.kalan>0.3)?hrkMin(R0,0.8):kale<0.3?lerp(0.9,R0,clamp((kale+1)/1.3,0,1)):R0;
     const al=orta?0.05+0.1*profilAlt(p,'sezgi',0.5):0.15+0.3*clamp((hrkAbs(oz-MZ)-6)/14,0,1);
