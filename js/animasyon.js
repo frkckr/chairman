@@ -252,7 +252,7 @@ function aktorKur(K,kaynak,boy){
   return{m,kaynak,boy:boy||1,J:{},yaw:0,ilkYon:true,ph:rnd()*6,amp:0,w:{},px:kaynak?kaynak.x:0,pz:kaynak?kaynak.z:0,x:0,z:0,
     P,C,sw:new Float32Array(N),swV:new Float32Array(N),st:new Float32Array(N),sp:new Array(N).fill(null),faz0:rnd()*6.283,
     /* yürüyüş: dünya hızı/ivmesi, gövdeye göre hareket yönü, ayak hedefleri (x,y,z ×2), kalça/baş dönüşü, tavır parametreleri */
-    wvx:0,wvz:0,awx:0,awz:0,mX:0,mZ:1,sapma:0,W:new Float32Array(4),D:new Float32Array(4),anc:new Uint8Array(2),yawO:0,don:0,donY:0,yonM:null,cadS:0,fr:0,dn:0,ayakYaw:null,T:new Float32Array([-0.1,-0.034,0.025,0.1,-0.034,0.025]),qA:new Float32Array(2),beta:0.6,dyR:0,dyV:0,hy:0,hyV:0,hyT:0,hyTV:0,by:0,byV:0,kim:null,
+    wvx:0,wvz:0,awx:0,awz:0,mX:0,mZ:1,sapma:0,W:new Float32Array(4),D:new Float32Array(4),anc:new Uint8Array(2),yawO:0,don:0,donY:0,yonM:null,cadS:0,fr:0,dn:0,ayakYaw:null,T:new Float32Array([-0.1,-0.034,0.025,0.1,-0.034,0.025]),qA:new Float32Array(2),beta:0.6,dyR:0,dyV:0,hy:0,hyV:0,hyT:0,hyTV:0,by:0,byV:0,byH:0,kim:null,
     gDrop:0,gGen:0,gAdim:1,gHy:0,gKal:1,tvSon:null,jYan:1,bekP:null,yEk:0,kucuk:false,phItme:0,dokT:-1,dokSon:undefined,dokSurum:-1,dokP:null,dokDon:false,dokCal:false,dokKoru:false,dokS:ANM.dokunus,dokAyak:-1,dokSal:false,bjwO:0,
     /* T4g: çalım, aldatılan savunmacı ve top saklama katmanının durumu (anmCalimDurum) */
     ck:anmCkYeni(),
@@ -438,7 +438,9 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
     /* T4g top saklama: baş arada rakibe döner (omuz üstünden; anmKoru) */
     if(!ucan&&ck&&ck.korBak&&ck.korO&&p.tavir==='koru')hed=Math.atan2(ck.korO.z-p.z,ck.korO.x-p.x);
     if(ucan&&d2>0.25)hxU=-clamp(Math.atan2(b.y+0.14-1.62*sy,Math.sqrt(d2)),0,1.15)*0.72;
-    if(hed!=null){yH=-anmAci(hed-p.yon);if(Math.abs(yH)>2.2&&yH*a.by<0&&Math.abs(a.by)>0.3)yH+=yH>0?-TAU:TAU;}
+    /* A6b (2026-10-17): başın hedefi çizilen gövdeye göre (eskiden motorun yönüne göre; gövde dönüşte başın gerisinde kalınca baş da onunla gecikirdi) */
+    const yonC=B.govdeSinir!=null?Math.PI/2-a.yaw:p.yon;
+    if(hed!=null){yH=-anmAci(hed-yonC);if(Math.abs(yH)>2.2&&yH*a.by<0&&Math.abs(a.by)>0.3)yH+=yH>0?-TAU:TAU;}
     yH+=clamp(a.donY*B.oncu,-1.5,1.5)+(a.kpS>=0&&a.kpTur===1?a.bakinH*Math.sin(Math.PI*Math.min(1,a.kpS/2.2)):0);
     /* yakındaki topa baş eğilir; bakış (tarama) topun yönünden uzaklaştıkça baş kalkar (T2 bakınma: omuz üstünden bakan başını kaldırır) */
     if(d2<16){let k=1;if(p.bakisYon!=null&&d2>0.01){const r=anmAci(p.bakisYon-Math.atan2(dz,dx));k=clamp(Math.cos(r),0,1);}
@@ -446,7 +448,7 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
   /* başın topa kalkması kritik sönümlü yayla (top inince ya da sahip olunca sıçramasın) */
   if(dt>0){const w=12,n=anmAltAdim(w,dt),h=dt/n;for(let s=0;s<n;s++){a.hxUV+=(w*w*(hxU-a.hxU)-2*w*a.hxUV)*h;a.hxU+=a.hxUV*h;}}
   P.hx+=a.hxU;if(a.hxU<-0.45)P.gx+=(a.hxU+0.45)*0.35;
-  yH=clamp(yH,-(B.sinir+B.govde),B.sinir+B.govde);
+  yH=clamp(yH,-(B.sinir+B.govde),B.sinir+B.govde);a.byH=yH;
   /* hız sınırı ve gövdenin payı yumuşak (tanh, softplus): sınırda ivme kırılmaz */
   if(dt>0){const w=B.yay,n=anmAltAdim(w,dt),h=dt/n;for(let s=0;s<n;s++){const ac=clamp(w*w*(yH-a.by)-2*w*a.byV,-B.ivme,B.ivme);a.byV+=ac*h;a.byV=B.hiz*Math.tanh(a.byV/B.hiz);a.by+=a.byV*h;}}
   {const x=Math.abs(a.by)-B.sinir;P.gy+=Math.sign(a.by)*(x>3?x:Math.log(1+Math.exp(8*x))/8);}
@@ -1625,7 +1627,14 @@ function aktorGuncelle(a,al,dts,T){
     if(a.ilkYon){a.ilkYon=false;a.yaw=a.yawO=Math.atan2(Math.cos(p.yon),Math.sin(p.yon));}
     /* T4g rulet: kök yönüne çalım katmanının eki (a.ck.yaw; dönerken tavan 10,5 rad/sn) */
     const ckYaw=a.ck?a.ck.yaw:0,yw0=Math.atan2(Math.cos(p.yon),Math.sin(p.yon)),yrYaw=a.yrQ?anmYardimYaw(a,p,yw0):0;   /* A4-3: yardım eden düşene döner */
-    aciYumusak(a,yw0+ckYaw+yrYaw,dts,40,ckYaw!==0?10.5:9);
+    /* A6b (2026-10-17; Ek G0 baş öncülüğü): kasıtlı dönüşte gövde başın gerisinde kalır — kök hedefine 0,35 rad'dan uzaksa, başın hedefi (a.byH, önceki
+       kare) dönüş yönündeyse ve baş gövdenin önünde ANM.bas.govdeSinir kadar değilse kök en çok govdeHiz rad/sn döner (baş 7 rad/sn ile önden gider,
+       sonra gövde 9 rad/sn ile yetişir). Eylemde, çalımda, kalecide ve başı başka yöne bakarken (tarama) kök sınırsızdır. A6-0: dönüşe baş gövdeyle hizalı
+       başladığında başın öncülüğü ≥ 150 ms dönüşlerin %33'ündeydi */
+    let kokTavan=ckYaw!==0?10.5:9;const BS=ANM.bas;
+    if(BS.govdeSinir!=null&&!ckYaw&&!yrYaw&&!p.eylem&&p.rol!=='GK'&&p.tur==='oyuncu'){const kal=anmAci(yw0-a.yaw),s=Math.abs(kal)>0.05?(kal>0?1:-1):(a.donY>0?1:-1);
+      if((Math.abs(a.donY)>1.5||Math.abs(kal)>0.35)&&Math.abs(kal)<1.2&&a.byH*s>0.2&&a.by*s<BS.govdeSinir)kokTavan=BS.govdeHiz;}
+    aciYumusak(a,yw0+ckYaw+yrYaw,dts,40,kokTavan);
     anmPozBasla(a,p,spd,dts,a.m);
     if(p.tur==='kenar'){a.sevinc=Math.max(0,(a.sevinc||0)-dts);const sv=yumusak(a,'kenarSevinc',a.sevinc>0?1:0,6,dts);
       if(p.oturuyor){anmKar(a,ANM_POZ.otur,1-sv);anmKulubeOturus(a,p,dts,1-sv);}
