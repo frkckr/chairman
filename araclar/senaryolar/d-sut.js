@@ -56,7 +56,9 @@ const KOD=`(function(){
     m.on=(ad,v)=>{if(ad==='goal'){golSonra=true;if(!sonuc)sonuc='gol';}else if(ad==='save'&&!kurt){kurt=v.catch?'tut':'celme';kurtT=m.t;bicim=v.bicim||'';}};
     for(let i=0;i<240&&!sonuc;i++){m.step(dt);
       if(!kurt&&b.tasiyan===gk){kurt='tut';kurtT=m.t;}
-      if(kurt==='tut'||(kurt&&m.t-kurtT>1.5)){sonuc=kurt;break;}
+      /* T19b (2026-10-17): çelmeden sonra kaleci topu yeniden tuttuysa sonuç bellidir (kurtarış) — kalecinin bekletmesi ve dağıtımı (kaleciBekle,
+         kaleciDagitim zarları) sonraki şutların rastlantısını değiştirmesin */
+      if(kurt==='tut'||(kurt&&(m.t-kurtT>1.5||b.tasiyan===gk))){sonuc=kurt;break;}
       if(m.phase!=='play'&&!sonuc)sonuc=kurt||'disari';}
     /* T9b-0: çelmenin sonu (top yavaşlayana ya da 1,5 sn daha); yalnız nitelik bölümünde (izle): ana ızgara aynı maçı sırayla kullanır, ek adımlar
        sonraki şutların rastlantısını değiştirmesin */

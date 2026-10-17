@@ -20,6 +20,11 @@ ayarEkle('D',{
   penaltiOku:[0.07,0.04],      // T8d: penaltıda kalecinin vuranın koşusunu okuyup temastan önce kalkması (sn; ortalama, σ; Ek G5: −0,145 … +0,009)
   kaleciNiyet:1,               // T15a (2026-10-14): kalecinin niyeti — tutamayacağını bildiği topu planlı çeler (0: kapalı, T14'ün yolu; kaleciNiyet)
   penaltiKanma:[0.25,0.25],    // T15c: vuran koşuda duraklayınca kalecinin kanıp erken kalkma olasılığı = a + b·(1 − kalecilik) (bir kez; ipucunun yarı güveniyle)
+  /* T19b (2026-10-17; gerçekçilik planı §4 T19): kalecinin olağan tutuşu — kontra görmezse topu bu aralıkta (sn; tutuş zarıyla) bekletip ileri yürür,
+     görürse (kaleciKontraVar) hemen oynar; beklerken kontra açılırsa hemen bırakır. [0, 0]: T16a'nın yolu (eylem biter bitmez dağıtır). Sıkıştırılmış
+     maçta (duruşlar gerçeğin ~1/3'ü) gerçeğin ~3–5 sn'si. 40 maç (t18.json'a): [1,2; 2,4] bekletme %45, gol 3,40, gerçekleşen ÷ xG 1,34 (T16a'nın
+     yönü: uzun bekleyişte takım hücum düzenine çıkıyor); [0,8; 1,6] bekletme %38, gol 3,00, ÷ xG 1,26 → seçildi */
+  kaleciBekle:[0.8,1.6],
   kaleciNiyetEsik:[0.6,0.15]   // T15a: niyetin eşiği — beklenen tutma olasılığı (kaleciTutmaP) bunun altındaysa çelme; [taban, karşılama noktasının
                                // 3,5 m içinde rakip varsa ek] (beklenen gol hesabı: kaleciNiyet yorumu; ilk deneme 0,35 elden kaçan topu çok bıraktı)
 });
@@ -69,6 +74,15 @@ function kaleciKontrolP(gk,u,v){return clamp(1.0-0.85*clamp(u-0.7,0,0.6)-0.012*M
 /* T15d (2026-10-14; Ek G6): tutuşun türü topun yüksekliğinden (B: boy çarpanı) — 'yer' kepçe (diz altı), 'gogus' kucak, 'W' baş hizası, 'yukari'
    başın üstü. Motorun bütün tutuşları (ayakta kurtarış, temasta tutuş, ortada yakalama) aynı işlevi okur (eskiden üç yerde üç ayrı eşik); tür yalnız
    çizimi etkiler (sözleşme tutus.tur) */
+/* T19b (2026-10-17): kontra (saf; rastlantı çekmez) — kalecinin takımından bir saha oyuncusu kaleciden en az 20 m ileride, en yakın rakibi 6 m'den
+   uzakta ve önünde (rakip kaleye doğru) en çok 4 rakip saha oyuncusu kalmış: kaleci topu bekletmez (kaleciTut, kaleciElde). Gerçekte kaleci kontra
+   görünce topu hemen yuvarlar ya da atar, görmezse takımı yerleşsin diye bekletip ceza sahasının kenarına yürür. İlk sürüm (önünde rakip sayısı
+   yok) neredeyse her tutuşta kontra görüyordu (40 maçta bekletme %18) */
+function kaleciKontraVar(m,gk){
+  const d=m.dir[gk.team];
+  for(const q of m.teams[gk.team]){if(q===gk||!q.oyunda||q.rol==='GK'||(q.x-gk.x)*d<20)continue;if(enYakinRakip(m,q.x,q.z,gk.team).d<6)continue;
+    let on=0;for(const o of m.teams[1-gk.team])if(o.oyunda&&o.rol!=='GK'&&(o.x-q.x)*d>0)on++;if(on<=4)return true;}
+  return false;}
 function kaleciTutusTuru(y,B){B=B||1;return y<0.55*B?'yer':y<1.25*B?'gogus':y<1.9*B?'W':'yukari';}
 /* T15a (2026-10-14): tutma olasılığı (saf; T5 ilkesi — niyet kararı ve yürütmenin zarı aynı işlevi okur). Eskiden kaleciTemasSonuc'un içindeydi
    (MM4). parca: temas eden parça; u: elin erişim elipsindeki uzanma oranı; v: top hızı (m/sn); y: topun yüksekliği; cift: iki el; ucus: dalışta;
@@ -443,8 +457,9 @@ Object.assign(Match.prototype,{
        eylemi biter bitmez dağıtır (sure 0 — T10d'den beri fiilen böyleydi); öndeyken (zaman geçirme) 1,6–3,2 sn + zg tutar. Her topu 1,6–3,2 sn
        bekletmek denendi: bloklanan şut maç başına ~0,5 azaldı, korner ve gerçekleşen ÷ xG bandın dışına çıktı — kontra görünce hemen oynayan,
        görmeyince bekleten tutuş ayrı iş (gerçekçilik planı “T16a — Sonuç”) */
-    const s=1.6+this.rast()*1.6,zg=this.zamanGecirEk(gk.team,4);
-    gk.tutus={t:0,sure:zg>0?s:0,tur:tur||'gogus',zg};gk.kickCd=0.2;gk._kp=null;this._dSahipT=this.t;
+    /* T19b: olağan tutuşta (zaman geçirme yokken) kontra yoksa kaleciBekle aralığında bekletir — süre aynı tutuş zarından (rastlantı sırası T18 ile aynı) */
+    const s=1.6+this.rast()*1.6,zg=this.zamanGecirEk(gk.team,4),KB=MOTOR_AYAR.kaleciBekle,bek=!(zg>0)&&KB&&KB[1]>0&&!kaleciKontraVar(this,gk)?lerp(KB[0],KB[1],(s-1.6)/1.6):0;
+    gk.tutus={t:0,sure:zg>0?s:bek,tur:tur||'gogus',zg,bek:bek>0};gk.kickCd=0.2;gk._kp=null;this._dSahipT=this.t;
   },
   /* genel temasta elle (orta, korner, boştaki top): kalabalıkta ya da erişiminin sınırında yumrukla uzaklaştırır, yoksa tutar. T6d: yumruk kararı
      zar değil geometri — yüksek topta (1,45 m üstü) rakip 1,5 m içinde sıçrıyor ya da başı topa 0,1 sn içinde değecekse (çekişme; js/mac-hava.js
@@ -542,6 +557,7 @@ Object.assign(Match.prototype,{
     const tu=gk.tutus||(gk.tutus={t:0,sure:2,zg:this.zamanGecirEk(gk.team,4)});tu.t+=dt;   /* T10d: öndeyken son dakikalarda topu tutar */
     const d=this.dir[gk.team],gx=-d*PL;
     gk.tx=gx+d*Math.min(14,Math.abs(gk.x-gx)+2);gk.tz=MZ+clamp(gk.z-MZ,-9,9);gk.hizOran=0.3;gk.bak=null;gk.yonHedef=d>0?0:Math.PI;
+    if(tu.bek&&tu.t<tu.sure&&kaleciKontraVar(this,gk))tu.sure=tu.t;   /* T19b: beklerken kontra açılırsa hemen oynar */
     if(tu.t<tu.sure+tu.zg||gk.eylem)return;
     if(tu.zg>0)this.zamanGecirmeGoruldu(gk,tu.zg);
     const k=kaleciDagitim(this,gk);gk.tutus=null;b.tasiyan=null;
