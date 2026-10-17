@@ -11,3 +11,6 @@ masaustu/node_modules/
 masaustu/oyun/
 masaustu/cikti/
 araclar/cevre/
+# A7 hareket verisinin ham dosyaları (CMU, RBDS; depoya girmez, araclar/hareket-egrileri.py okur)
+araclar/veri/
+araclar/son-egri.txt

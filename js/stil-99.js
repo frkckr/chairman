@@ -125,7 +125,16 @@ const STIL={
     kol:{genlik:[0.16,0.74],dirsek:[0.28,1.1]},
     dusus:{aci:1.45,yuzY:0.12,yanY:0.16},dokunus:0.18,kucukPiksel:12,
     top:{ust:300,egri:150,kare:0.6},sevincCesit:4,
-    koru:{dokunus:1},zipla:{inis:0.6,kes:1,capa:1},blok:{acik:1,erisim:0.95,tut:0.15,hiz:14,kok:0.5,yuksek:0.25}
+    koru:{dokunus:1},zipla:{inis:0.6,kes:1,capa:1},blok:{acik:1,erisim:0.95,tut:0.15,hiz:14,kok:0.5,yuksek:0.25},
+    /* A7 (2026-10-17): hareket verisinin eğrileri (js/hareket-egrileri.js) — acik 0 eski elle yazılmış eğriler; ayak (salınan ayağın yolu, duruşun ortası,
+       koşuda temas payı), kalca (yükseklik), egim (koşu eğimi), legen (leğen ve omuz hattının salınımı), kol (omuz, dirsek) ağırlıkları; kolOlcek omuz
+       salınımının veriye oranı (A7a taraması: ×0,85 omuzda veriden 2,4° uzak, 1,0); depar 4,5 m/sn'nin üstünde uzatma bandının dozu (A7a taraması: 0,5
+       üst gövde sıçramasını 36,8 → 25,2/oyuncu·dk, A6 26,7); aciklik salınımın ortasında tabanın en az yüksekliği (model birimi) */
+    egri:{acik:1,ayak:1,kalca:1,egim:1,legen:1,kol:1,kolOlcek:1,depar:0.5,aciklik:0.07,
+      /* A7b: top sürme — adım boyu çarpanı, koşu eğimine ek (rad), kol salınımından düşülen pay */
+      surus:{adim:0.8,egim:0.06,kol:0.3},
+      /* A7c: dolu vuruşta geri salınım, takip ve destek dizi veriden (0: eski) */
+      vurus:1}
   },
 
 

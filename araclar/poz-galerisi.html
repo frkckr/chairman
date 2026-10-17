@@ -48,6 +48,7 @@ const mac={phase:'play',phaseT:0,celeb:null,score:[0,0],teams:[[],[]],players:[]
 function hkYorgun(m){return m.hkY||0;}
 </script>
 <script src="../js/oyuncular.js"></script>
+<script src="../js/hareket-egrileri.js"></script>
 <script src="../js/animasyon.js"></script>
 <script>
 'use strict';
@@ -585,6 +586,20 @@ const a6blok=(ad,dx,dz,y)=>({ad,kur:p=>{},adim:[{ad:null,sure:0.5,bas:p=>{mac.ba
   kareler:[0.45,0.5,0.55,0.6,0.7,0.85,1.1],az:30});
 SAYFALAR.a6blok=[a6blok('A6c Şut bloğu: top sağ önde 0,85 m (bacak uzanır, kök kayar)',0.75,-0.4,0.12),a6blok('A6c Şut bloğu: top sağ önde 0,5 m',0.4,-0.3,0.15),
   a6blok('A6c Şut bloğu: gövdede, diz hizası (0,35 m)',0.35,0,0.45)];
+/* A7 (2026-10-17; gerçekçilik planı §4 "A7"): hareket verisinin eğrileriyle yürüyüş ve koşu (js/hareket-egrileri.js) — yandan, önden çapraz ve loca
+   uzaklığından; adım döngüsü boyunca 7 kare. Top sürme (A7b): kısa ve sık adım, gövde biraz daha önde, kollar hafif açık ve az salınır, dirsek veriden */
+const a7kare=T=>Array.from({length:7},(_,i)=>+(1+i*T/6).toFixed(3));
+const a7surus=(ad,v,T,az)=>({ad,kur:p=>{p.vx=v;mac.ball.sahip=p;},her:(p,t)=>{p.vx=v;const n=Math.floor(t/T);if(!p.sonDokunus||p.sonDokunus.n!==n)p.sonDokunus={n,t:n*T,tur:'surus',ayak:n%2?'sol':'sag'};
+  mac.ball.x=p.x+0.4+(t%T)*(v*0.3);mac.ball.z=p.z+(n%2?-0.1:0.1);},kareler:a7kare(T*1.5),az});
+SAYFALAR.a7egri=[
+  {ad:'A7 Yürüyüş 1,5 m/sn, yandan',kur:p=>{p.vx=1.5;},kareler:a7kare(1.0),az:90},
+  {ad:'A7 Koşu 3 m/sn, yandan',kur:p=>{p.vx=3;},kareler:a7kare(0.72),az:90},
+  {ad:'A7 Koşu 5 m/sn, yandan: diz önde yükselir, topuk kalçaya, dirsek bükük',kur:p=>{p.vx=5;},kareler:a7kare(0.62),az:90},
+  {ad:'A7 Depar 7,5 m/sn, yandan',kur:p=>{p.vx=7.5;},kareler:a7kare(0.5),az:90},
+  {ad:'A7 Koşu 5 m/sn, önden çapraz: leğen ve omuzlar karşıt döner',kur:p=>{p.vx=5;},kareler:a7kare(0.62),az:30},
+  {ad:'A7 Koşu 5 m/sn, loca uzaklığı',kur:p=>{p.vx=5;},kareler:a7kare(0.62),az:60,uzak:12}];
+SAYFALAR.a7surus=[a7surus('A7b Top sürme 3 m/sn, yandan',3,0.5,90),a7surus('A7b Top sürme 5 m/sn, yandan',5,0.42,90),a7surus('A7b Top sürme 6,5 m/sn, yandan',6.5,0.36,90),
+  a7surus('A7b Top sürme 5 m/sn, önden çapraz',5,0.42,30),{...SAYFALAR.a7egri[2],ad:'A7b Karşılaştırma: topsuz koşu 5 m/sn, yandan'}];
 SAYFALAR.a4hareket=[
   {ad:'A4-1 Aldatma koşusu: topun yanından geçerken vuruş taklidi (barajlı serbest vuruş, ikinci kişi)',kit:0,
     kur:p=>{p.duranRol={rol:'ikinci',aldatma:true};p.vx=5;const b=mac.ball;b.x=3.2;b.z=0.6;},

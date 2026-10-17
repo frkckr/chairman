@@ -269,8 +269,68 @@ OLCUM_KUR_JS = r"""() => {
     if (k.sp.length >= 180) { if (!k.spEylem) S.sparc.push(sparc(k.sp, 1 / dt)); k.sp = []; k.spEylem = false; }
     k.ilk = false;
   }
+  /* A7-0 (2026-10-17) "A: eğri": düz, sabit hızlı, eylemsiz yürüyüş ve koşuda çizilen kanalların adım döngüsü üzerindeki ortalaması — veri eğrileriyle
+     (js/hareket-egrileri.js, araclar/hareket-egrileri.py) aynı tanımla, eklemlerin dünyadaki yerinden: uyluk (kalça → diz, aşağı düşeyle, + öne), diz (uyluk ile
+     kemiğin ekseni boyunca baldır), omuz (omuz → dirsek, gövde eksenine göre), dirsek, egim (kalça eklemleri → omuzlar), legen ve gogus (hatların yatay açısı,
+     + sağ yan önde), kalcaH (kalça eklemlerinin yüksekliği / ayaktaki 0,94). Evre çizimin a.ph'ı (ayak 0 = lL, oyuncunun sağı, u = 0'da basar); sol yan
+     yarım döngü kaydırılıp aynalanarak aynı eğriye katılır. Bantlar verinin hızlarında: yürüyüş, 2,5, 3,5, 4,5 m/sn ve depar (uzatma, bilgi) */
+  const EG_BANT = [[0.9, 1.7], [2.1, 2.9], [3.0, 4.0], [4.0, 5.2], [6.5, 9.5], [1.5, 9.5]], EG_K = ['uyluk', 'diz', 'omuz', 'dirsek', 'egim', 'legen', 'gogus', 'kalcaH'], EGN = 50;
+  S.eg = EG_BANT.map(() => ({ n: new Float64Array(EGN), s: EG_K.map(() => new Float64Array(EGN)), v: 0, beta: 0, kare: 0 }));
+  const EJ = Array.from({ length: 12 }, () => new THREE.Vector3());
+  const egSag = (x, y, z, fx, fz) => Math.atan2(x * fx + z * fz, -y) * 57.29578;
+  const egAci = (a, b) => { const c = (a.x * b.x + a.y * b.y + a.z * b.z) / (Math.hypot(a.x, a.y, a.z) * Math.hypot(b.x, b.y, b.z) || 1); return Math.acos(Math.max(-1, Math.min(1, c))) * 57.29578; };
+  function egriOlc(a, dt) {
+    const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible || !(dt > 0) || p.eylem || p.zipla || p.tavir || a.ph == null || a.kucuk) return;
+    /* yalnız oyun: gol sevinci, üzgün dönüş ve sarılma koşuları (A7-0'da depar bandının %37'si, 2,5 bandının %85'i) ayrı; top süren son bantta (A7b, bilgi) */
+    if (mac.phase !== 'play' || p.sevinc || (typeof ANM_S !== 'undefined' && ['sevinc', 'uzgun', 'sarilma', 'dizKayma', 'mars'].some(n => ANM_S[n] != null && a.sw[ANM_S[n]] > 0.05))) return;
+    const surus = mac.ball.sahip === p;
+    const k = K.get(a); if (!k || k.ilk || !(k.spN > 12)) return;
+    if ((a.vk && a.vk.kw > 0.01) || (a.ck && a.ck.e) || !(a.mZ > 0.95) || (a.fr || 0) > 0.05 || (a.dn || 0) > 0.05 || (a.don || 0) > 0.6 || (a.inisT >= 0 && a.inisT < 0.4)) return;
+    const ivM = ((p.spd || 0) - k.spH[k.spI]) / 0.2; if (Math.abs(ivM) > (surus ? 2 : 0.8)) return;   /* top sürende hız dokunuşlarla oynar (bilgi bandı) */
+    const v = k.vs; let b = -1; if (surus) { if (v >= EG_BANT[5][0]) b = 5; } else for (let j = 0; j < 5; j++) if (v >= EG_BANT[j][0] && v < EG_BANT[j][1]) b = j; if (b < 0) return;
+    const fl = Math.hypot(a.wvx, a.wvz); if (!(fl > 0.5)) return; const fx = a.wvx / fl, fz = a.wvz / fl, rx = -fz, rz = fx;
+    a.m.root.updateMatrixWorld(true); const M = a.m, [hR, hL, kR, kL, bR, bL, oR, oL, dR, dL, eR, eL] = EJ;
+    M.lL.getWorldPosition(hR); M.lR.getWorldPosition(hL); M.kL.getWorldPosition(kR); M.kR.getWorldPosition(kL);
+    bR.set(0, -0.5, 0).applyMatrix4(M.kL.matrixWorld); bL.set(0, -0.5, 0).applyMatrix4(M.kR.matrixWorld);
+    M.aL.getWorldPosition(oR); M.aR.getWorldPosition(oL); M.eL.getWorldPosition(dR); M.eR.getWorldPosition(dL);
+    eR.set(0, -0.25, 0).applyMatrix4(M.eL.matrixWorld); eL.set(0, -0.25, 0).applyMatrix4(M.eR.matrixWorld);
+    const gx = (oR.x + oL.x - hR.x - hL.x) / 2, gy = (oR.y + oL.y - hR.y - hL.y) / 2, gz = (oR.z + oL.z - hR.z - hL.z) / 2, egim = Math.atan2(gx * fx + gz * fz, gy) * 57.29578;
+    const legen = Math.atan2((hR.x - hL.x) * fx + (hR.z - hL.z) * fz, (hR.x - hL.x) * rx + (hR.z - hL.z) * rz) * 57.29578;
+    const gogus = Math.atan2((oR.x - oL.x) * fx + (oR.z - oL.z) * fz, (oR.x - oL.x) * rx + (oR.z - oL.z) * rz) * 57.29578;
+    const kalcaH = ((hR.y + hL.y) / 2 + 0.03) / 0.94, u0 = a.ph / 6.283185307179586, B = S.eg[b], s1 = new THREE.Vector3(), s2 = new THREE.Vector3();
+    for (let yan = 0; yan < 2; yan++) {
+      const H = yan ? hL : hR, Kn = yan ? kL : kR, A = yan ? bL : bR, O = yan ? oL : oR, D = yan ? dL : dR, E = yan ? eL : eR, sg = yan ? -1 : 1;
+      let u = u0 + yan * 0.5; u -= Math.floor(u); const i = Math.min(EGN - 1, Math.floor(u * EGN));
+      const uy = egSag(Kn.x - H.x, Kn.y - H.y, Kn.z - H.z, fx, fz), dz = egAci(s1.subVectors(Kn, H), s2.subVectors(A, Kn));
+      const om = egSag(D.x - O.x, D.y - O.y, D.z - O.z, fx, fz) + egim, ds = egAci(s1.subVectors(D, O), s2.subVectors(E, D));
+      const X = [uy, dz, om, ds, egim, sg * legen, sg * gogus, kalcaH];
+      B.n[i]++; for (let c = 0; c < X.length; c++) B.s[c][i] += X[c]; }
+    B.v += v; B.beta += a.beta || 0; B.kare++;
+  }
+  /* A7c (2026-10-17): vuruşun eğrisi — her oyuncunun son 30 karesinde iki bacağın uyluk (kalça → diz, düşeyle, gövdenin önüne göre sagital, + öne) ve diz
+     açısı ile gövde eğimi; vuruşun temas karesinde (eylem faz 'takip' ilk görüldüğünde) vuran bacak (vk.ayak) seçilir, 24 kare daha eklenir: −0,5 … +0,4 sn.
+     Veri (CMU 10, 11, 74) araclar/hareket-egrileri.py --vurus ile karşılaştırılır */
+  S.vc = []; const VC = new Map();
+  function vurusOlc(a, dt) {
+    const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible || !(dt > 0)) return;
+    let h = VC.get(a); if (!h) VC.set(a, h = { tam: [], bek: null, e: null });
+    a.m.root.updateMatrixWorld(true); const M = a.m, [hR, hL, kR, kL, bR, bL, oR, oL] = EJ, fx = Math.sin(a.yaw), fz = Math.cos(a.yaw);
+    M.lL.getWorldPosition(hR); M.lR.getWorldPosition(hL); M.kL.getWorldPosition(kR); M.kR.getWorldPosition(kL);
+    bR.set(0, -0.5, 0).applyMatrix4(M.kL.matrixWorld); bL.set(0, -0.5, 0).applyMatrix4(M.kR.matrixWorld); M.aL.getWorldPosition(oR); M.aR.getWorldPosition(oL);
+    const s1 = new THREE.Vector3(), s2 = new THREE.Vector3(), gx = (oR.x + oL.x - hR.x - hL.x) / 2, gy = (oR.y + oL.y - hR.y - hL.y) / 2, gz = (oR.z + oL.z - hR.z - hL.z) / 2;
+    const egim = Math.atan2(gx * fx + gz * fz, gy) * 57.29578;
+    const X = [egSag(kR.x - hR.x, kR.y - hR.y, kR.z - hR.z, fx, fz), egAci(s1.subVectors(kR, hR), s2.subVectors(bR, kR)),
+      egSag(kL.x - hL.x, kL.y - hL.y, kL.z - hL.z, fx, fz), egAci(s1.subVectors(kL, hL), s2.subVectors(bL, kL)), egim];
+    h.tam.push(X); if (h.tam.length > 30) h.tam.shift();
+    if (h.bek) { const b = h.bek; b.seri.push(b.ayak ? [X[2], X[3], X[1], X[4]] : [X[0], X[1], X[3], X[4]]); if (b.seri.length >= 55) { if (S.vc.length < 400) S.vc.push(b); h.bek = null; } }
+    const e = p.eylem, vk = a.vk;
+    if (e && e.ad === 'vurus' && e.faz === 'takip' && vk && h.e !== e && h.tam.length === 30) { h.e = e; const sec = e.sec || {}, L = sec.hx != null ? Math.hypot(sec.hx - mac.ball.x, sec.hz - mac.ball.z) : 0;
+      const tur = sec.ilk ? 'ilk' : sec.tur === 'sut' ? 'sut' : (sec.tip === 'hava' || L > 22 || sec.tur === 'uzaklastir') ? 'uzun' : 'pas';
+      h.bek = { tur, stil: e.stil || '-', ayak: vk.ayak ? 1 : 0, seri: h.tam.slice(0, 29).map(x => vk.ayak ? [x[2], x[3], x[1], x[4]] : [x[0], x[1], x[3], x[4]]) };
+      h.bek.seri.push(vk.ayak ? [X[2], X[3], X[1], X[4]] : [X[0], X[1], X[3], X[4]]); }
+  }
   const asil = window.aktorGuncelle;
-  window.aktorGuncelle = (a, al, dts, T) => { const t0 = R(); asil(a, al, dts, T); kareSure += R() - t0; kaydet(a, dts); zamanlama(a); temasOlc(a, dts); olayOlc(a, dts); };
+  window.aktorGuncelle = (a, al, dts, T) => { const t0 = R(); asil(a, al, dts, T); kareSure += R() - t0; kaydet(a, dts); zamanlama(a); temasOlc(a, dts); olayOlc(a, dts); egriOlc(a, dts); vurusOlc(a, dts); };
   /* A6-0: yapay sahnelerde ışınlamadan sonra oyuncuların ölçüm durumu unutulur (ışınlama karesi kayma sayılmasın) */
   window.__ANM_OLCUM_UNUT = () => K.clear();
   const asilOlay = window.animasyonOlay;
@@ -359,7 +419,7 @@ OLCUM_KUR_JS = r"""() => {
         /* T4-V: eylem ilk görüldüğünde evresi (temasta görülen = hazırlık hiç çizilmedi); son adımda (evre 2, aşağı salınımdan önce) geri salınımın
            tepesi / planı; temas karesinde son adımın süresi / tB ve motorun karar→temas süresi (e.t) türe göre */
         let z = zK.get(a); if (!z || z.e !== e) { z = { e, tepe: 0, bitti: false }; zK.set(a, z); if (e.faz === 'takip') S.vkIlkTakip++; }
-        if (vk.e === e && vk.evre === 2 && !vk.asagi) { const h = (vk.kp[1] - ANM_VK_YG) / (0.08 + 0.26 * vk.S); if (h > z.tepe) z.tepe = h; }
+        if (vk.e === e && vk.evre === 2 && !vk.asagi) { const h = (vk.kp[1] - ANM_VK_YG) / (0.08 + (vk.wI != null ? 0.26 + 0.34 * vk.wI : 0.26) * vk.S);   /* A7c: dolu vuruşta plan veriden (vk.wI) */ if (h > z.tepe) z.tepe = h; }
         if (e.faz === 'takip' && !z.bitti) { z.bitti = true; S.zVurus++;
           { const st = e.stil || '-', pk = vk.pk || '-', bek = st === 'ic' ? ['ic', 'ust'] : st === 'dis' ? ['dis'] : st === 'asirtma' ? ['asirtma'] : st === 'vole' ? ['vole'] : st === 'falso' ? ['falso'] : st === 'burun' ? ['burun'] : ['ust', 'uzun'];
             const VS = S.vs, ok = bek.includes(pk); VS.n++; if (ok) VS.ayni++; const r = VS.stil[st] || (VS.stil[st] = [0, 0]); r[0]++; if (ok) r[1]++;
@@ -505,6 +565,29 @@ SONUC_JS = r"""() => {
     ol: (() => { const O = S.ol, yz = (a, b) => b ? +(100 * a / b).toFixed(1) : null; return { sakKare: O.sakKare, sakPoz: yz(O.sakPoz, O.sakKare), sedKare: O.sedKare, sedYuk: yz(O.sedYuk, O.sedKare),
       sedTut: yz(O.sedTut, O.sedTutN), tedKare: O.tedKare, tedPoz: yz(O.tedPoz, O.tedKare), gerdir: O.gerdir, topalN: O.topalN, topalOran: O.topalIyi ? +(O.topalKotu / O.topalIyi).toFixed(2) : null,
       endKare: O.endKare, endTut: yz(O.endTut, O.endKare), birakN: O.birakN, birakAyni: O.birakAyni, sev: O.sev, sevCesit: Object.keys(O.sev).length, gerdirOrtulu: O.gerdirOrtulu || 0, olay: window.__OLAY_SONUC || null }; })(),
+    /* A7-0: "A: eğri" — bant başına çizilen ortalama eğri (en az 4 örnekli kutular) ve aynı ortalama hızda veri eğrisi (bantların karışımı; çizimin
+       anmEgriKaris'iyle aynı kural, burada bağımsız yazılı: A6 çiziminde o işlev yok) */
+    eg: (() => { if (!S.eg || typeof HAREKET_EGRI === 'undefined') return null; const H = HAREKET_EGRI, KN = ['uyluk', 'diz', 'omuz', 'dirsek', 'egim', 'legen', 'gogus', 'kalcaH'], N = 50;
+      const deger = (F, u) => { let s = F[0]; for (let k = 1; k <= H.harmonik; k++) { const w = 2 * Math.PI * k * u; s += F[2 * k - 1] * Math.cos(w) + F[2 * k] * Math.sin(w); } return s; };
+      const karis = v => { const L = H.bant, g = H.gecis, nY = L.filter(b => b.yuru).length, n = L.length, W = new Array(n).fill(0);
+        const ara = (i0, i1, k) => { if (k <= 0) return; if (v <= L[i0].v) { W[i0] += k; return; } for (let i = i0; i < i1; i++) if (v < L[i + 1].v) { let w = (v - L[i].v) / (L[i + 1].v - L[i].v); w = w * w * (3 - 2 * w); W[i] += k * (1 - w); W[i + 1] += k * w; return; } W[i1] += k; };
+        let wk = Math.max(0, Math.min(1, (v - g[0]) / (g[1] - g[0]))); wk = wk * wk * (3 - 2 * wk); ara(0, nY - 1, 1 - wk); ara(nY, n - 1, wk);
+        return L.map((b, i) => [b, W[i]]).filter(x => x[1] > 0); };
+      return S.eg.map(B => { if (B.kare < 60) return { kare: B.kare };
+        /* veri eğrisi çizimin temas payına gerilir (duruş ve salınım ayrı; çizim de veriyi böyle okur): RMS biçimi ölçer, temas payı ayrı satırda */
+        const v = B.v / B.kare, K = karis(v), betaV = K.reduce((s, [b, w]) => s + w * b.beta, 0), beta = B.beta / B.kare, r = { kare: B.kare, v: +v.toFixed(2), beta: +beta.toFixed(3), betaV: +betaV.toFixed(3), kanal: {}, bant: K.map(([b, w]) => b.ad + ' ' + w.toFixed(2)).join(' + ') };
+        KN.forEach((kn, c) => { const cz = [], vr = [];
+          for (let i = 0; i < N; i++) { const u = (i + 0.5) / N; let d = 0;
+            for (const [b, w] of K) { const ub = u < beta ? u / beta * b.beta : b.beta + (u - beta) / (1 - beta) * (1 - b.beta); d += w * deger(b.F[kn], ub); }
+            vr.push(d); cz.push(B.n[i] >= 4 ? B.s[c][i] / B.n[i] : null); }
+          const ix = cz.map((x, i) => x === null ? -1 : i).filter(i => i >= 0); if (ix.length < N * 0.8) { r.kanal[kn] = { eksik: N - ix.length }; return; }
+          const rms = Math.sqrt(ix.reduce((s, i) => s + (cz[i] - vr[i]) ** 2, 0) / ix.length), s0 = Math.ceil(beta * N);
+          const mx = L => Math.max(...L.filter(x => x !== null)), mn = L => Math.min(...L.filter(x => x !== null));
+          const sal = (L, f) => f(L.slice(s0).filter(x => x !== null));
+          r.kanal[kn] = { rms: +rms.toFixed(kn === 'kalcaH' ? 3 : 1), cizEn: +mn(cz).toFixed(2), cizCok: +mx(cz).toFixed(2), veriEn: +mn(vr).toFixed(2), veriCok: +mx(vr).toFixed(2),
+            cizSal: +sal(cz, a => Math.max(...a)).toFixed(1), veriSal: +sal(vr, a => Math.max(...a)).toFixed(1), ciz: cz.map(x => x === null ? null : +x.toFixed(2)), veri: vr.map(x => +x.toFixed(2)) }; });
+        return r; }); })(),
+    vurusEgri: S.vc || null,
     surum: window.ANM_SURUM || 'simdiki'
   };
 }"""
@@ -692,6 +775,27 @@ def satirlar(o):
     if kd:
         S.append("A: ayak kayması % durumlara göre (bilgi; aynı tanım): " + " · ".join(f"{ad} {v(kd[i]['pay'], 2)} ({kd[i]['n']} temas)" if kd[i] else f"{ad} —" for i, ad in enumerate(["dar dönüş", "ani duruş", "top saklama", "sıçrama yakını"][:len(kd)])))
     yp = lambda d, i: f"{v(d[i]['ort'], 3)}/{v(d[i]['p90'], 3)}" if d[i] else "—"
+    eg_ = o.get("eg")
+    if eg_:
+        EGB = ["yürüyüş", "2,5 m/sn", "3,5 m/sn", "4,5 m/sn", "depar", "top sürme (bilgi, aynı hızdaki koşu verisine)"]
+        EGK = [("uyluk", "uyluk"), ("diz", "diz"), ("omuz", "omuz"), ("dirsek", "dirsek"), ("egim", "eğim"), ("legen", "leğen"), ("gogus", "göğüs"), ("kalcaH", "kalça")]
+        def egr(B):
+            if not B.get("kanal"): return f"{B.get('kare', 0)} kare (az)"
+            K = B["kanal"]
+            def r_(kn):
+                x = K.get(kn) or {}
+                return ("eksik " + str(x["eksik"])) if "eksik" in x else v(x.get("rms"), 3 if kn == "kalcaH" else 1)
+            return f"{v(B['v'], 2)} m/sn, {B['kare']} kare: " + " · ".join(f"{ad} {r_(kn)}" for kn, ad in EGK)
+        S.append("A: eğri (A7; çizilen ↔ veri, adım döngüsü RMS °, kalça boy oranı): " + " | ".join(f"{EGB[i]} {egr(B)}" for i, B in enumerate(eg_)) + "   [A7a: yürüyüş, 2,5 / 3,5 / 4,5 m/sn'de uyluk, diz, omuz, dirsek ≤ 10; depar bilgi (uzatma)]")
+        def egt(B):
+            K = B.get("kanal") or {}
+            g = lambda kn, a: K.get(kn, {}).get(a)
+            ar = lambda kn, p: (g(kn, p + "Cok") - g(kn, p + "En")) if g(kn, p + "Cok") is not None else None
+            orta = lambda kn, p: (sum(x for x in K[kn][p] if x is not None) / max(1, sum(1 for x in K[kn][p] if x is not None))) if kn in K and p in K[kn] else None
+            return (f"diz salınımda en çok {v(g('diz', 'cizSal'))} / {v(g('diz', 'veriSal'))} · uyluk aralığı {v(ar('uyluk', 'ciz'))} / {v(ar('uyluk', 'veri'))} · omuz aralığı {v(ar('omuz', 'ciz'))} / {v(ar('omuz', 'veri'))}"
+                    f" · dirsek ort {v(orta('dirsek', 'ciz'))} / {v(orta('dirsek', 'veri'))} · eğim ort {v(orta('egim', 'ciz'))} / {v(orta('egim', 'veri'))} · leğen aralığı {v(ar('legen', 'ciz'))} / {v(ar('legen', 'veri'))}"
+                    f" · göğüs aralığı {v(ar('gogus', 'ciz'))} / {v(ar('gogus', 'veri'))} · temas payı {v(B.get('beta'), 3)} / {v(B.get('betaV'), 3)}") if K else "—"
+        S.append("A:   eğri tepeleri (çizilen / veri; °): " + " | ".join(f"{EGB[i]} {egt(B)}" for i, B in enumerate(eg_)) + "   [A7a: salınımda diz tepesi veri ±10]")
     S.append(f"A: adım başına kayma (m; yerdeki ayağın temas boyunca yolu / net yer değiştirmesi, ort/p90): " + " · ".join(f"{BANT_AD[i]} {yp(o['adimYol'], i)} | {yp(o['adimNet'], i)}" for i in range(1, 5)) + "   [hedef yürüyüş ≤0,03, depar ≤0,08]")
     S.append(f"A: kadans (adım/sn, ort [p10–p90] n): " + " · ".join(f"{BANT_AD[i]} {v(o['kadans'][i]['ort'], 2)} [{v(o['kadans'][i]['p10'], 2)}–{v(o['kadans'][i]['p90'], 2)}] {o['kadans'][i]['n']}" if o['kadans'][i] else f"{BANT_AD[i]} —" for i in range(1, 5)) + "   [hedef 1,6–2,2 / 2,5–3,0 / 3,0–3,6 / 3,5–4,2]")
     S.append(f"A: uçuş evresi % (iki ayak havada): " + " · ".join(f"{BANT_AD[i]} {v(o['ucus'][i])}" for i in range(1, 5)) + "   [hedef yürüyüşte 0, koşuda var]")
