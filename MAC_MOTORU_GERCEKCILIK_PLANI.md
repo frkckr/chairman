@@ -1082,6 +1082,34 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir (2026-10-08 
 
 **T18 kapandı (2026-10-16 gece, dizüstü; “T18 — Sonuç”; kullanıcı isteğiyle `main`'e alındı, `tur/t18`).** Sıradaki (Claude'un önerisi; karar ve sıra kullanıcının; her tur ayrı planlanıp onaylanır): önce **hız bakımı** (T18 dizüstünde +%14,4; masaüstü ölçümü doğrularsa `_niyet` alanları, kutu savunması girdisi, `kapatKalici` süzgeci) → **T19** şutun durumu ve kaleci (T17 devirleriyle) → **A6** çizim kalanları → **A7** hareket verisi → görsel tarz; ivmelenme (≤ 5) için kalan yol ayrı aday: **hedef noktasının yumuşatılması** (kovalayanın kesişme noktası ≥ 2 m değişince, 1. adamın noktası sürücü, bölge hedefinin aynı kareye toplanmaması; T18-0 ölçümüyle, “T18 — Sonuç” (b)). Önceki: **T17 kapandı (2026-10-16 akşam, dizüstü; “T17 — Sonuç”; kullanıcı kararıyla duruldu).** Sıradaki (Claude'un önerisi; karar ve sıra kullanıcının; her tur ayrı planlanıp onaylanır): **T18** görev çalkantısı ve yorgunluğun düzene etkisi → **T19** şutun durumu ve kaleci — T17'den devredilenlerle birlikte: kanat savunması ve orta bloğu (bekin ortacıya kapanması, ortacının baskı altında erken ortası; orta kaynaklı korner ve korner ≥ 4'ün kalan kanalı), blok payı (%18 → ~27: şutçuyu kapatan savunma), kalecinin kornerde dokunduğu topun gole gitmesi (%14) ve saptırılan topa yetişmesi, maç içi kornerden gol %6,8'in 160 maçla okunması → **A6** çizim kalanları → **A7** hareket verisi (mocap eğrileri; kullanıcı kararı 2026-10-16, §7.9: CC BY / CMU eğrileri sayı tablosu olarak, 11 kemik ve görünüm aynı; planı kodun son hâline bakılarak Claude yazar) → görsel tarz, gündüz ve hava.
 
+### 5a — Açık kabul satırları (borç defteri; 2026-10-17, A6-0)
+
+Kullanıcının sorusu üzerine (2026-10-17: “tutmayan, tam istediğin gibi yapamadığın şeyleri not alıyor musun, ileride tekrar bakılacak diye?”) her turun tutmayan kabul satırı ve ertelenen işi tek tabloda toplanır. Ayrıntı turun “Sonuç” paragrafında kalır; bu tablo yalnız nerede olduğunu, son değeri ve sıradaki adayı gösterir. **Kural (Claude):** her tur kapanışında tablo güncellenir — kapanan satır “kapandı (tur)” olur ve bir sonraki kapanışta silinir, yeni tutmayan satır eklenir. Durum: *aday* (çözümü bilinen, sırası kullanıcının), *ölçüm* (önce ölçü gerekir), *bilgi* (bilerek bırakıldı), *kullanıcı* (karar ya da izleme bekliyor).
+
+| # | Ölçü | Hedef | Son değer (tur) | Teşhis | Aday çözüm | Durum |
+|---|---|---|---|---|---|---|
+| 1 | İvmelenme > 3 m/sn² / oyuncu·dk (GPS tanımı) | ≤ 5 (≤ 2,5) | 6,69 (T19; 4,8) | T13 hareket katmanında (rampa, ölü bölge) çürüdü; T18 görev çalkantısını yarıya indirdi ama ivmelenme değişmedi — kaynak **hedef noktasının her dokunuşta yenilenmesi** (kovalayan ve 1. adamın kesişme noktası; topu süren %13) | hedef noktasının yumuşatılması: kovalayanın kesişme noktası ≥ 2 m değişince güncellenir, 1. adamın bastığı nokta top değil sürücü, bölge hedefi takım içinde aynı kareye toplanmaz (“T18 — Sonuç” (b)) | aday (motor turu) |
+| 2 | Eşzamanlı ivmelenme (0,3 sn'de ≥ 3) | ≤ 1,0 | 1,9 (T18) | 1 ile aynı kaynak | 1 ile birlikte | aday |
+| 3 | Yüksek şiddetli koşu son ÷ ilk 15 dk | 0,80–0,90 | 0,97 (T18) | HŞK'nin kaynağı kovalayan ve 1. adamın tam eforu; T13 dersiyle efor yorgunlukla düşürülmedi | yorgun oyuncunun kovalama kararı (kim kovalar), efor değil | aday |
+| 4 | İkinci yarının gol payı (240 maç) | ≥ 50 (gerçek ~55) | 42,9 (T19; T18 eşdeğeri 46,4; T16 49,6) | T18d tırıs kipi ikinci yarıda koşuyu %41 → 29 düşürdü | yorgunluğun düzene etkisinin dozu (`yorgunKip`, `yorgunBlok`), 240 maçla | aday |
+| 5 | Gerçekleşen ÷ konum xG (havuz) | 0,85–1,20 | 1,27 (T19, 240 maç) | 6–20 m'de 1,5–1,7; yakın savunmacı bloklanmayan şutun golünü düşürmüyor (T19-0) | baskının isabete etkisi (`vurusSapma` × (1 + 0,9·baskı)) ve yakın mesafede kaleci | aday |
+| 6 | Blok / şut (penaltısız) | 24–32 | 21,8 (T19, 240 maç; T18 18,7) | kararın blok tahmini gerçeğin yarısı (savunmacı hazırlıkta hatta giriyor); gelişine şut (`ilkDokunusSutu`) bloğu hiç bilmiyor | planlayıcının ve gelişine şutun blok tahmini | aday |
+| 7 | Kornerde bloktan sonra 8 sn'de gol | ≤ 8 (kapı ≤ 10) | 12,1 (T19) | başın tepesinden süzülen top (T17); kaleci saptırılan topa yeniden tepki kuruyor | sapan topa kısa tepki — T19b'de yapılmadı (gerçekte sapma kaleciyi yener) | bilgi |
+| 8 | Penaltıda kaçırma (4 × 1600) | 4–8 | 3,0 (T19c) | hata büyüyünce plan ortaya yaklaşır | planın köşe seçiminde kararlılık | bilgi |
+| 9 | Orta bloğu · orta kaynaklı korner | ≥ 8 · > 0 (gerçek 20–25) | 0,7–2 · 0 (T19) | ortacı yakın beki görünce ortayı bırakıyor (T19d çürüdü) | ortanın baskı altındaki değeri (değer modeli) | aday |
+| 10 | Kanat alıcısı · kanat çalım payı | ≥ 15 · ≥ 40 | 12,7 · 26,5 (T19) | kanat rolünün değeri (T12c, T14) | kanat değer modeli (xT ızgarası) | aday |
+| 11 | Forvet dışı şut · şutun ortanca mesafesi | ≥ 30 · 14–16 | 23,3 · 16,5 (T19) | orta saha ve beklerin kutuya girişi (T14 geç giriş kısmen) | 10 ile birlikte | aday |
+| 12 | Kurtarıştan korner / şut | ≥ 0,07 | 0,07 (T19, sınırda) | — | — | bilgi |
+| 13 | Duyarlılık: müdahale → girişim | ≥ 1,25 | 1,29 (T19; T16 1,24) | sınırda, gürültü | — | bilgi |
+| 14 | Başın öncülüğü (90°+ dönüş, ≥ 150 ms) | ≥ %60 | %31 (hizalı başlayanda %33; A6-0) | çizimde kök motorun yönünü gecikmesiz izliyor | A6b | A6 |
+| 15 | Top saklarken ayak kayması | ≤ 20 (A6) | %51 (`--koru 40`; A6-0) | kayan karelerin %89'unda çapa yerinde — bacak IK'sı ya da poz kanalı ayağı çekiyor | A6a | A6 |
+| 16 | Sıçrama yakını ayak kayması | ≤ 20 (A6) | %27 (A6-0) | iniş ve kalkış kareleri (%60 salınım) | A6a | A6 |
+| 17 | Şut bloğunda çizilen ayak topa | ≤ 0,15 m ≥ %90 | 0,9 m, %0 (A6-0) | blok pozu bacakları toplayan sıçrama; motor 0,95 m'ye uzanıyor (T19a) | A6c | A6 |
+| 18 | Hız bütçesinin esas ölçüsü | kural | — | süreçler arası çiftler ısınma gürültüsünde (M3) | aynı süreç ölçüsü esas olsun (YOL_HARITASI açık konu 12) | kullanıcı |
+| 19 | Kutu modeli (`?model=kutu`) | kaldırılsın mı | duruyor (A5) | — | kullanıcı A5'i değerlendirince | kullanıcı |
+| 20 | Maçın izlenmesi (T13 … T19) ve tam akış denemesi | kullanıcı onayı | bekliyor | hazır tanımının son şartı | — | kullanıcı |
+| 21 | Hareket verisi (A7), görsel tarz, gündüz ve hava | — | sırada | §7.9, STIL_REHBERI | ayrı planlar | aday |
+
 ---
 
 ## 6. Uygulayıcı için kurallar
