@@ -105,7 +105,11 @@ const STIL={
      dusus: yerde yatış açısı (rad) ve gövde kalınlığı (yüzüstü/sırtüstü, yan). dokunus: top sürerken ayak dokunuşunun süresi (sn).
      kucukPiksel: ekranda (720 satırlık ızgarada) bundan kısa görünen oyuncuda bakış ve dokunuş gibi ayrıntı katmanları atlanır (480 satırdaki 8 ile aynı eşik).
      top: havadaki topun üst/kesik (ust) ve yan (egri) dönüşünün görünür hız çarpanları; kare: bir karede en çok dönüş (rad, örnekleme kırılmasın).
-     sevincCesit: gol sevinci çeşidi sayısı (oyuncu ve gole göre karışık seçilir) */
+     sevincCesit: gol sevinci çeşidi sayısı (oyuncu ve gole göre karışık seçilir)
+     zipla (A6a, 2026-10-17): sıçramanın uçuş pozu uçuşun bu payından sonra iner (inis; eski 0,8) ve inişte kalan uçuş pozu hemen kalkar (kes 1; 0: yuva
+       kendi hızıyla söner) — inişte bacak pozu yere basan ayağın IK'sını eziyordu.
+     koru (A6a, 2026-10-17): top saklama — dokunus: motorun taban dokunuşunun çizimi (0: çizilmez; 1: yalnız salınımdaki ayakla, ayak yere basınca poz
+       hemen kalkar; 2: eski — seçilen ayakla, yerdeyse bacak pozu IK'yı ezer). A6-0: top saklamada kayan karelerin %68'inde bilek çapadan kopuyordu */
   animasyon:{
     adim:{yuvar:0.05,kaldirEn:0.06,kaldirHiz:0.055,kaldirTavan:0.42,geri:0.75,yanEn:0.3,yanHiz:0.08,yanTavan:0.5,donusKadans:3.2},
     kalcaDonus:0.5,kalcaSalinim:[0.05,0.1],kalcaGecikme:0.65,yaylanma:[0.04,0.022],
@@ -114,7 +118,8 @@ const STIL={
     bas:{yay:22,hiz:7,ivme:90,sinir:1.22,govde:0.7,oncu:0.32},
     kol:{genlik:[0.16,0.74],dirsek:[0.28,1.1]},
     dusus:{aci:1.45,yuzY:0.12,yanY:0.16},dokunus:0.18,kucukPiksel:12,
-    top:{ust:300,egri:150,kare:0.6},sevincCesit:4
+    top:{ust:300,egri:150,kare:0.6},sevincCesit:4,
+    koru:{dokunus:1},zipla:{inis:0.6,kes:1,capa:1}
   },
 
 

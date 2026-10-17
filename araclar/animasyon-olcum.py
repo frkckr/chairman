@@ -127,8 +127,10 @@ OLCUM_KUR_JS = r"""() => {
      ayağın dünyadaki çapası (a.W) bu karede kaydı (surukle: 0,6 m sapma sınırında sürüklenme ya da yeniden çapa) ya da çapa yerinde duruyor ama çizilen
      ayak ondan kayıyor (sabit: bacak IK'sı erişemiyor ya da poz kanalı IK'yı eziyor); genel ve durum bandına göre. Blok teması (T19'un hamlesi): blok
      olayının karesinde çizilen ayağın topa açıklığı (top beden yüksekliğinin altında, < 0,8 m), motorun temas uzaklığına göre (≤ 0,6 / > 0,6 m) */
-  S.kKaynak = { genel: { salinim: 0, surukle: 0, sabit: 0 }, durum: [0, 1, 2, 3].map(() => ({ salinim: 0, surukle: 0, sabit: 0 })) };
+  S.kKaynak = { genel: { salinim: 0, surukle: 0, sabit: 0, erisim: 0 }, durum: [0, 1, 2, 3].map(() => ({ salinim: 0, surukle: 0, sabit: 0, erisim: 0 })), hiz: [] };
   S.bl = { n: 0, ust: 0, yakin: [], uzak: [], liste: [] };
+  /* A6a: sıçrama yakınının evresi — [temas, kayma]: hazırlık (baraj / açık oyun) ve iniş */
+  S.zEvre = { hazB: [0, 0], haz: [0, 0], inis: [0, 0] };
   S.ol = { sakKare: 0, sakPoz: 0, sedKare: 0, sedYuk: 0, sedTutN: 0, sedTut: 0, tedKare: 0, tedPoz: 0, gerdir: 0, topalN: 0, topalKotu: 0, topalIyi: 0, endKare: 0, endTut: 0, birakN: 0, birakAyni: 0, sev: {} };
   function olayOlc(a, dt) {
     const p = a.kaynak; if (!p || !(dt > 0) || typeof ANM_S === 'undefined') return; const O = S.ol, sw = a.sw, SL = ANM_S, e = p.eylem, A = mac.sakatlikAkis;
@@ -183,9 +185,13 @@ OLCUM_KUR_JS = r"""() => {
       if (!k.ilk) {
         if (c && k.temas[i]) { k.tn[i]++; const d = Math.hypot(V.x - k.ayak[i][0], V.z - k.ayak[i][1]); k.yol[i] += d; if (!eylemsiz) k.epEylem[i] = true;
           if (eylemsiz && k.tn[i] > 2) { S.temas[b]++; const kay = d / dt > 0.2; if (kay) S.kayma[b]++; if (durum >= 0) { S.dTemas[durum]++; if (kay) S.dKayma[durum]++; }
+            if (durum === 3) { const ze = S.zEvre[p.zipla && p.zipla.t < 0 ? (p.duranRol && p.duranRol.rol === 'baraj' ? 'hazB' : 'haz') : 'inis']; ze[0]++; if (kay) ze[1]++; }
             /* A6-0: kaymanın kaynağı (çizimin çapası a.W ve adım döngüsünün durumu a.anc) */
-            if (kay && a.anc && a.W) { const W = a.W, Wp = k.Wp, ks = !a.anc[i] ? 'salinim' : Wp && Math.hypot(W[2 * i] - Wp[2 * i], W[2 * i + 1] - Wp[2 * i + 1]) / dt > 0.2 ? 'surukle' : 'sabit';
-              S.kKaynak.genel[ks]++; if (durum >= 0) S.kKaynak.durum[durum][ks]++; } } }
+            /* çapa yerindeyse: ayak bileği (diz kemiğinde 0,5 m aşağı) çapadan 0,05 m'den uzak → erisim (bacak IK'sı yetişemiyor ya da poz kanalı ezdi);
+               değilse sabit (bilek çapada, taban noktası bileğin çevresinde dönüyor: gövdenin dönüşü ya da bacak eğimi) */
+            if (kay && a.anc && a.W) { const W = a.W, Wp = k.Wp; let ks = !a.anc[i] ? 'salinim' : Wp && Math.hypot(W[2 * i] - Wp[2 * i], W[2 * i + 1] - Wp[2 * i + 1]) / dt > 0.2 ? 'surukle' : 'sabit';
+              if (ks === 'sabit') { H.set(0, -0.5, 0).applyMatrix4((i ? a.m.kR : a.m.kL).matrixWorld); if (Math.hypot(H.x - W[2 * i], H.z - W[2 * i + 1]) > 0.05) ks = 'erisim'; }
+              S.kKaynak.genel[ks]++; if (durum >= 0) { S.kKaynak.durum[durum][ks]++; if (durum === 2 && S.kKaynak.hiz.length < 4000) S.kKaynak.hiz.push(+(d / dt).toFixed(2)); } } } }
         if (c !== k.temas[i]) k.gecis[i] = S.kare;
         if (c && !k.temas[i]) { if (a3 && k.basVar[1 - i]) (a3 === 'fren' ? S.frenAdim : S.sabitAdim).push([Math.hypot(V.x - k.bas0[1 - i][0], V.z - k.bas0[1 - i][1]), spM]);
           k.yol[i] = 0; k.tn[i] = 0; k.bas0[i][0] = V.x; k.bas0[i][1] = V.z; k.basVar[i] = true; k.epEylem[i] = !eylemsiz; k.pen.bas.push(t); k.basT[i] = t; }
@@ -464,8 +470,9 @@ SONUC_JS = r"""() => {
         disiEvre: Object.entries(S.vkDisiEvre).sort((a, b) => b[1] - a[1]).slice(0, 10), evreKare: S.vkEvreKare }; })(),
     kaymaDurum: S.dTemas.map((n, i) => n ? { pay: +(100 * S.dKayma[i] / n).toFixed(2), n } : null),
     /* A6-0: kaymanın kaynağı (kayan karelerin payı), dönüşte başın öncülüğü başlangıç hizasına göre, blok teması */
-    kaymaKaynak: (() => { const f = o => { const n = o.salinim + o.surukle + o.sabit; return n ? { n, salinim: +(100 * o.salinim / n).toFixed(0), surukle: +(100 * o.surukle / n).toFixed(0), sabit: +(100 * o.sabit / n).toFixed(0) } : null; };
-      return { genel: f(S.kKaynak.genel), durum: S.kKaynak.durum.map(f) }; })(),
+    kaymaKaynak: (() => { const f = o => { const n = o.salinim + o.surukle + o.sabit + o.erisim; return n ? { n, salinim: +(100 * o.salinim / n).toFixed(0), surukle: +(100 * o.surukle / n).toFixed(0), sabit: +(100 * o.sabit / n).toFixed(0), erisim: +(100 * o.erisim / n).toFixed(0) } : null; };
+      const h = S.kKaynak.hiz; return { genel: f(S.kKaynak.genel), durum: S.kKaynak.durum.map(f), koruHiz: h.length ? { med: yuzde(h, 0.5), p90: yuzde(h, 0.9), n: h.length } : null,
+        zEvre: Object.fromEntries(Object.entries(S.zEvre).map(([k, x]) => [k, x[0] ? { n: x[0], pay: +(100 * x[1] / x[0]).toFixed(1) } : null])) }; })(),
     onculukAlt: (() => { const R = {}; for (const [ad, sec] of [['hizali', d => Math.abs(d.bas0) <= 0.35], ['onde', d => d.bas0 > 0.35], ['ters', d => d.bas0 < -0.35]]) {
         const L = don90.filter(d => d.bas0 != null && sec(d)).map(d => d.onculuk).filter(x => x !== null);
         R[ad] = L.length ? { n: L.length, med: yuzde(L, 0.5), p10: yuzde(L, 0.1), p150: +(100 * L.filter(x => x >= 150).length / L.length).toFixed(0) } : null; } return R; })(),
@@ -632,8 +639,12 @@ def satirlar(o):
     S.append(f"A: ayak kayması % (eylemsiz temas karesi, bant): " + " · ".join(f"{BANT_AD[i]} {v(o['kayma'][i], 2)}" for i in range(1, 5)) + "   [hedef ≤5 / ≤5 / ≤15 / ≤15]")
     kk_ = o.get("kaymaKaynak")
     if kk_:
-        f_ = lambda x: f"{x['n']} kare: salınım %{x['salinim']} · sürükleme %{x['surukle']} · çapa yerinde %{x['sabit']}" if x else "—"
-        S.append("A: kayma kaynağı (A6-0; kayan karelerin payı): genel " + f_(kk_["genel"]) + " | " + " | ".join(f"{ad} {f_(kk_['durum'][i])}" for i, ad in enumerate(["dar dönüş", "ani duruş", "top saklama", "sıçrama yakını"])))
+        f_ = lambda x: f"{x['n']} kare: salınım %{x['salinim']} · sürükleme %{x['surukle']} · bilek çapadan kopuk %{x.get('erisim', 0)} · bilek çapada, taban dönüyor %{x['sabit']}" if x else "—"
+        kh_ = kk_.get("koruHiz")
+        S.append("A: kayma kaynağı (A6-0; kayan karelerin payı): genel " + f_(kk_["genel"]) + " | " + " | ".join(f"{ad} {f_(kk_['durum'][i])}" for i, ad in enumerate(["dar dönüş", "ani duruş", "top saklama", "sıçrama yakını"]))
+                 + (f" · top saklamada kayan tabanın hızı ortanca {v(kh_['med'], 2)}, p90 {v(kh_['p90'], 2)} m/sn" if kh_ else ""))
+        ze_ = kk_.get("zEvre") or {}
+        S.append("A:   sıçrama yakını evreye göre (A6a; kayma %, temas): " + " · ".join(f"{ad} " + (f"%{v(ze_[k]['pay'])} ({ze_[k]['n']})" if ze_.get(k) else "—") for k, ad in [("hazB", "barajın hazırlığı"), ("haz", "açık oyunda hazırlık"), ("inis", "iniş (0,12 sn'den sonra)")]))
     oa_ = o.get("onculukAlt")
     if oa_:
         g_ = lambda x: f"{x['n']} dönüş, ortanca {x['med']} ms (p10 {x['p10']}), ≥ 150 ms %{x['p150']}" if x else "—"
@@ -772,6 +783,10 @@ async def olc(a):
                 if bil:
                     raise SystemExit("bilinmeyen MOTOR_AYAR anahtarı: " + ", ".join(bil))
                 print(f"MOTOR_AYAR: {a.ayar}")
+            if a.anm:
+                # A6 (2026-10-17): çizim ayarlarını (STIL.animasyon) kodu değiştirmeden aç/kapat — iç içe nesneler birleşir (ör. '{"koru":{"dokunus":0}}')
+                await pg.evaluate("(o) => { const f = (t, s) => { for (const k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object') f(t[k], s[k]); else t[k] = s[k]; } }; f(STIL.animasyon, o); }", json.loads(a.anm))
+                print(f"STIL.animasyon: {a.anm}")
             if a.once:
                 await pg.evaluate(YUKLE.read_text(encoding="utf-8") + "\n;window.anmOnceYukle = anmOnceYukle; true;")
                 n = await pg.evaluate("(s) => anmOnceYukle(window, s)", (KARSILASTIR / a.once / "animasyon.js").read_text(encoding="utf-8"))
@@ -831,6 +846,7 @@ def ana():
                     help="dondurulmuş animasyon: araclar/karsilastir/<ad>/animasyon.js (turun başında dondur.js <ad>)")
     ap.add_argument("--json")
     ap.add_argument("--ayar", default=None, help="H1: MOTOR_AYAR üzerine JSON (ör. '{\"govdeDinamik\":0}'; aynı kodla önce/sonra)")
+    ap.add_argument("--anm", default=None, help="A6: STIL.animasyon üzerine JSON (iç içe birleşir; ör. '{\"koru\":{\"dokunus\":0}}'; çizimi kodu değiştirmeden aç/kapat)")
     ap.add_argument("--karsilastir")
     ap.add_argument("--ek", default=None, help="adrese ek parametreler (A5: '&model=kutu' ile eski kutu modeli; an-yakala.py --ek gibi)")
     ap.add_argument("--eski-kimlik", dest="eski_kimlik", action="store_true",
