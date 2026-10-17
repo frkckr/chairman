@@ -35,7 +35,7 @@ iframe{width:100%;aspect-ratio:4/3;border:0;background:#000;display:block}
     <option value="sahne">sahnenin önerisi</option><option value="loca">loca (oyundaki bakış)</option>
     <option value="yakin">yakın (yandan, 7 m)</option><option value="orta">orta (yandan, 16 m)</option></select></label>
   <label>Önce <select id="onceSurum">
-    <option value="a5" selected>A5 (A4 öncesi)</option></select></label>
+    <option value="a4" selected>A4 (A6 öncesi)</option></select></label>
   <label>Tohum <input id="tohum" type="number" min="1" value="3"></label>
   <label>Hız <select id="hiz"><option value="1">1×</option><option value="0.5" selected>½×</option><option value="0.25">¼×</option></select></label>
   <button id="oynat" type="button" aria-pressed="false">▶ Oynat</button>
@@ -105,7 +105,7 @@ const UI_CSS='.controls,.gelistirici,.duraklatildi{display:none!important}body{m
 for(const [i,s] of SAHNELER.entries()){const o=document.createElement('option');o.value=i;o.textContent=s.ad;$('sahne').appendChild(o);}
 /* "önce" sürümleri (araclar/karsilastir/dondur.js <ad>): her tur başında dondurulan çizim; eski kopyalar (once, a2a, a2b, t4v, t4) 2026-10-10'da,
    t5, t6, t8, t9b, t12, a3, t14, t15 2026-10-16'da (M2) silindi — etiketlerinde dururlar: git show tur/<sonraki tur>:araclar/karsilastir/<ad>/animasyon.js */
-const ONCE_AD={a5:'— A5 animasyonu (dondurulmuş; A4 öncesi)'},ONCE_KAYNAK={};
+const ONCE_AD={a4:'— A4 animasyonu (dondurulmuş; A6 öncesi)'},ONCE_KAYNAK={};
 let TOHUM=3,oynuyor=false,kurulum=0,birikim=0,sonZaman=0;
 const durum=(m,uyari)=>{$('durum').innerHTML=uyari?'<span class="uyari">'+m+'</span>':m;};
 

@@ -6,7 +6,7 @@ dışarıdan okur ve ölçer. Animasyon dosyasına ölçüm kodu girmez: araç a
 
 Kullanım:
   python araclar/animasyon-olcum.py                      # şimdiki animasyon, tohum 3, 180 sn oyun
-  python araclar/animasyon-olcum.py --once a5            # dondurulmuş "önce" animasyonu (araclar/karsilastir/a5/animasyon.js; dondur.js üretir)
+  python araclar/animasyon-olcum.py --once a4            # dondurulmuş "önce" animasyonu (araclar/karsilastir/a4/animasyon.js; dondur.js üretir)
   python araclar/animasyon-olcum.py --json araclar/taban/t7-anm.json        # sonucu kaydet (tur kapanışında turun animasyon tabanı)
   python araclar/animasyon-olcum.py --karsilastir araclar/taban/t7-anm.json # kayıtlı sonuçla yan yana
   Seçenekler: --tohum N · --sure S (oyun saniyesi; varsayılan 180) · --ayar JSON (H1: MOTOR_AYAR'ı kodu değiştirmeden aç/kapat; ör. '{"govdeDinamik":0}')
