@@ -116,9 +116,9 @@ const MOTOR_AYAR={
   /* · */
   /*T24g*/bosKale:undefined,trivelaEsik:undefined,burunKarambol:undefined,
   /* · */
-  /*T24c*/
+  /*T24c*/blokTahmin:undefined,ilkSutBlok:undefined,
   /* · */
-  /*T24h*/
+  /*T24h*/sutPlase:undefined,
   /* · */
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined

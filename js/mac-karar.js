@@ -649,15 +649,20 @@ function sutEgriYani(tur,ayak,zt,d){if(tur!=='falso'&&tur!=='trivela'||!ayak||ay
    hatta (toptan en az 1 m öteye) kalan sürede alabileceği yolla (3·τ² m; duruştan ~6 m/sn² ivme) yaklaşmış ve uzanma payı (blokErisim − 0,6)
    genişlemiş sayar. t0 verilmezse (kaleye vuruşun planı; savunmacılar zaten hatta) eski hesap */
 function sutBlokOlasiligi(m,p,ox,oz,tx,tz,tur,yt,T,t0){
-  const Lk=hyp(tx-ox,tz-oz)||1,ucY=yt!=null,H=t0>0&&MOTOR_AYAR.sutHamle?MOTOR_AYAR:null;let acik=1;
-  for(const o of rakipler(m,p.team)){if(!o.oyunda||o.rol==='GK')continue;let on=((o.x-ox)*(tx-ox)+(o.z-oz)*(tz-oz))/Lk,yan=-1,R=1.3;
-    if(H&&on>=-0.3&&hyp(o.x-ox,o.z-oz)<=H.sutHamle){const tau=Math.max(0,t0-0.12-0.12*(1-o.oz.karar));
+  const Lk=hyp(tx-ox,tz-oz)||1,ucY=yt!=null,H=t0>0&&MOTOR_AYAR.sutHamle?MOTOR_AYAR:null,BT=H?MOTOR_AYAR.blokTahmin:0,U=BT?MOTOR_AYAR.sutHamleUzak||0:0;let acik=1;
+  for(const o of rakipler(m,p.team)){if(!o.oyunda||o.rol==='GK')continue;let on=((o.x-ox)*(tx-ox)+(o.z-oz)*(tz-oz))/Lk,yan=-1,R=1.3,hm=false;
+    if(BT&&on>=-0.3){/* T24c (blokTahmin): sutHamleYap'ın kümesi ve erişimi — yakın (sutHamle) ve uzak (sutHamleUzak) savunmacı; yer o.v·min(τ, 0,3) ileride */
+      const r=hyp(o.x-ox,o.z-oz),uzak=r>H.sutHamle;
+      if(!uzak||(U>H.sutHamle&&r<=U)){const tau0=Math.max(0,t0-0.12-0.12*(1-o.oz.karar)),tau=tau0+(uzak?Math.max(0,on)/25:0),ti=Math.min(tau0,0.3),qx=o.x+(o.vx||0)*ti,qz=o.z+(o.vz||0)*ti;
+        const y0=segD(qx,qz,ox,oz,tx,tz),ey=(o.maxSpd||7)*0.6*tau;
+        if(y0<=H.blokErisim+ey+0.3){yan=Math.max(0,y0-ey);on=clamp(((qx-ox)*(tx-ox)+(qz-oz)*(tz-oz))/Lk,1,Math.max(1,uzak?Lk-1:Math.min(6,Lk-1)));R=1.3+H.blokErisim-0.6;hm=true;}}}
+    else if(H&&on>=-0.3&&hyp(o.x-ox,o.z-oz)<=H.sutHamle){const tau=Math.max(0,t0-0.12-0.12*(1-o.oz.karar));
       yan=Math.max(0,segD(o.x,o.z,ox,oz,tx,tz)-4*tau);on=clamp(on,1,Math.max(1,Math.min(6,Lk-1)));R=1.3+H.blokErisim-0.6;}
     if(on<0.5||on>Math.min(14,Lk-1))continue;
     if(tur==='asirtma'&&on>4)continue;
     const bj=!!(o.duranRol&&o.duranRol.rol==='baraj');if(yan<0)yan=segD(o.x,o.z,ox,oz,tx,tz);let P;
     if(bj){if(yan>=0.5)continue;P=Math.min(1,(0.5-yan)/0.2);}
-    else{if(yan>=R)continue;P=(ucY?0.6:tur==='falso'?0.45:tur==='dusen'&&on>4?0.3:0.6)*(1-yan/R);}
+    else{if(yan>=R)continue;P=(ucY?0.6:tur==='falso'?0.45:tur==='dusen'&&on>4?0.3:0.6)*(1-yan/R);if(hm)P*=BT/0.6;}   /* T24c: hamlecinin katkı tavanı */
     if(ucY){const f=on/Lk,yOn=0.11+(yt-0.11)*f+0.5*G*(tur==='dusen'?1.3:1)*T*T*f*(1-f),Ry=1.8*(o.boy||1)+(bj?hvSicramaH(o,0)*MOTOR_AYAR.barajZipla:0)+0.15;
       P*=clamp((Ry-yOn)/0.35+0.5,0,1);if(bj&&yOn<0.45)P*=0.4;}
     acik*=1-P;}
@@ -696,9 +701,10 @@ function sutAdaylari(m,p,ox,oz,sd,o){
   const Ls=[],sapma=Math.max(0,L-18)*0.01;let en=0;
   const nZ=SUT_HZM.length,nY=SUT_HYM.length;
   /* T22b (sutYeni): plase ve aşırtma isabetli, sert hatalı (serbest vuruş hariç) — yerleştirmenin isabet kazancı gücün tepki kazancıyla tartılsın (eskiden sert %81) */
-  for(const tur of turler){const TT=SUT_TUR[tur]||SUT_TUR.plase,kz=MOTOR_AYAR.sutYeni&&!o.serbest?(tur==='plase'?0.65:tur==='sert'?1.15:tur==='asirtma'?0.75:tur==='dusen'&&MOTOR_AYAR.sutDusen?1.2:TT.kz):TT.kz,ky=TT.ky,BL=[],stil=o.stil||TT.stil;
+  const SP=!o.serbest&&MOTOR_AYAR.sutPlase?MOTOR_AYAR.sutPlase:null;   /* T24h (sutPlase): açık oyunda plasenin isabeti ve hızı */
+  for(const tur of turler){const TT=SUT_TUR[tur]||SUT_TUR.plase,kz=MOTOR_AYAR.sutYeni&&!o.serbest?(tur==='plase'?(SP?SP[0]:0.65):tur==='sert'?1.15:tur==='asirtma'?0.75:tur==='dusen'&&MOTOR_AYAR.sutDusen?1.2:TT.kz):TT.kz,ky=TT.ky,BL=[],stil=o.stil||TT.stil;
     const ZL=bos&&tur==='plase'?SUT_ZB:SUT_Z,GL=bos&&tur==='plase'&&o.guc==null?SUT_GUCB:gucler;   /* T24g1 */
-    for(const g of GL){const v=Math.max(8,g*VURUS_STIL[stil].hiz*vMax),fg=gucHataCarpani(g,R),T=L/v*1.06*(tur==='falso'?1.08:1);
+    for(const g of GL){const v=Math.max(8,g*(SP&&tur==='plase'?SP[1]:VURUS_STIL[stil].hiz)*vMax),fg=gucHataCarpani(g,R),T=L/v*1.06*(tur==='falso'?1.08:1);
       /* kalecinin hücre ortalarındaki kurtarışı (bu tür ve güçle uçuş süresi T) */
       /* T9b-c: aşırtmanın kurtarışı da kalecinin modelinden (eski ×0,3 düzeltmesi kalktı): top kalecinin düzleminde erişiminin üstünden geçer,
          kale çizgisine çapraz geri çekilmesi (kaleciTahmin) yetişirse kurtarır */
@@ -883,10 +889,12 @@ function kafaKarari(m,p){
   return{tur:'uzaklastir',hx:b.x+d*14,hz:b.z,v:10,vy:4};
 }
 /* ---- gelişine vuruş: pas ya da orta gelirken alıcı, top gelmeden şutu seçebilir ---- */
-function ilkDokunusSutu(m,p,x,z,y){
+function ilkDokunusSutu(m,p,x,z,y,kt){
   const d=m.dir[p.team],u=x*d;if(u<PL-24||Math.abs(z-MZ)>16)return null;
-  const parca=y>1.4?'kafa':y>0.45?'vole':'ayak',x2=xG(u,z,parca,baskiAltinda(m,p)*0.7);
+  const parca=y>1.4?'kafa':y>0.45?'vole':'ayak';let x2=xG(u,z,parca,baskiAltinda(m,p)*0.7);
   if(parca==='kafa')return null;  /* kafayı temas anı belirler */
+  /* T24c (ilkSutBlok): gelişine şutun blok olasılığı (karşılama süresi + geri salınım 0,24 sn; hamle eden savunmacılar sayılır) — eskiden bloğu hiç bilmiyordu */
+  let pB=0;if(MOTOR_AYAR.ilkSutBlok&&kt!=null){pB=sutBlokOlasiligi(m,p,x,z,d*PL,MZ,'sert',undefined,undefined,Math.max(0,kt)+0.24);x2*=1-pB;}
   const esik=0.07-p.oz.sut*0.03;
-  return x2>esik&&m.rast()<0.5+x2*4?{tur:'sut',hx:d*PL,hz:MZ,xg:x2,ilk:true,tekDokunus:true}:null;
+  return x2>esik&&m.rast()<0.5+x2*4?{tur:'sut',hx:d*PL,hz:MZ,xg:x2,ilk:true,tekDokunus:true,pBlok:pB}:null;
 }

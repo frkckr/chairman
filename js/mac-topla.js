@@ -46,9 +46,14 @@ ayarEkle('B',{
      çoğunlukla gelişine; stili vurusStili'nden); 14 m'ye genişletmek 12 m'den burun vuruşu doğurur */
   /*T24g*/bosKale:1,trivelaEsik:0.55,burunKarambol:0,
   /* · */
-  /*T24c*/
+  /* T24c (2026-10-18; gerçekçilik planı §4 T24): planlayıcının blok tahmini. blokTahmin — şut planında hamle eden savunmacının blok katkı tavanı
+     (0: eski — 0,6 ve yalnız sutHamle içindekiler, yaklaşma 4·τ); açıkken sutHamleYap'ın kümesi ve erişimi (sutHamleUzak; yanal 0,6·tepe hız·(τ + on/25),
+     savunmacının yeri o.v·min(τ, 0,3) ileride). ilkSutBlok — gelişine şut kararı (ilkDokunusSutu) xG'yi blok olasılığıyla düşürür (karşılama süresi + 0,24 sn) */
+  /*T24c*/blokTahmin:0.6,ilkSutBlok:1,
   /* · */
-  /*T24h*/
+  /* T24h (2026-10-18; gerçekçilik planı §4 T24): açık oyunda plasenin [isabet çarpanı kz, hız payı] (0: eski 0,65 ve iç ayağın 0,75'i; serbest vuruş
+     ve penaltı dışında). Plan ve yürütme aynı değeri kullanır (sutVur planın v, kz'sini okur) */
+  /*T24h*/sutPlase:0,
   /* · */
   kararGecikme:[0.3,0.6],      // topu kontrol ettikten sonra karar süresi (sn): tempo yüksekse kısa (T4-V 2026-10-09: 0,4–0,7 → 0,3–0,6 — vuruş hazırlığı (hazirlikEn + geri) karar süresinin bir kısmıyla örtüşür, top ayakta ortancası 1,2–2 bandında kalır; T2: 0,12–0,36 → 0,4–0,7; top ayakta ortancası 0,85 sn idi)
   ilerleme:0.05,               // topu ileri taşımanın metre başına değeri (puan): oyunun ne kadar dikine aktığı (birleştirme 2026-10-03: 0,036 → 0,027; T1: 0,04; T7g: 0,05 — kompakt savunmaya karşı ileri pas %26,6 → %30,7, bant 30–45)
@@ -842,7 +847,7 @@ Object.assign(Match.prototype,{
     p.ilkSoruldu=b.surum;
     const s=this.topTahmin(k.t);
     if(b.sonTakim===p.team){
-      const sut=p.rol!=='GK'&&ilkDokunusSutu(this,p,k.x,k.z,s.y);if(sut){this.vurusBaslat(p,sut);return;}
+      const sut=p.rol!=='GK'&&ilkDokunusSutu(this,p,k.x,k.z,s.y,k.t);   /* T24c: karşılama süresi (ilkSutBlok) */if(sut){this.vurusBaslat(p,sut);return;}
       const tk=tekVurusKarari(this,p,k,s,hyp(p.x-k.x,p.z-k.z)<=3.0);if(tk.sec){this.vurusBaslat(p,tk.sec);return;}
       this.bVeri(p).plan=this.dokunusPlani(p,k,s,tk.hedef);}
     else this.bVeri(p).plan=this.dokunusPlani(p,k,s,null);
