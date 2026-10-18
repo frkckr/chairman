@@ -181,9 +181,10 @@ Object.assign(Match.prototype,{
               const dd=(q.x-hx)*(q.x-hx)+(q.z-hz)*(q.z-hz);if(dd<ed){ed=dd;en=q;}}
             if(en){pres2=en;en._kapatK=this.kare;}}}
         /* T18a (kapatKalici): 2. adam kapatKalici sn tutulur — geçerliyse (oyunda, kilitsiz, 1. adam değil, 14 m içinde); yeni seçim pencere dolunca */
-        if(MOTOR_AYAR.kapatKalici>0){const P2=this._pres2||(this._pres2=[null,null]),o2=P2[t];
-          if(o2&&o2.p!==pres2&&this.t-o2.t<MOTOR_AYAR.kapatKalici&&o2.p.oyunda&&!(o2.p.eylem&&o2.p.eylem.kilit)&&o2.p!==pres1&&hyp(o2.p.x-s.x,o2.p.z-s.z)<14)pres2=o2.p;
-          if(pres2&&!(o2&&o2.p===pres2))P2[t]={p:pres2,t:this.t};else if(!pres2)P2[t]=null;}
+        if(MOTOR_AYAR.kapatKalici>0){const P2=this._pres2||(this._pres2=[null,null]),o2=P2[t];let tut=false;
+          if(o2&&o2.p!==pres2&&this.t-o2.t<MOTOR_AYAR.kapatKalici&&o2.p.oyunda&&!(o2.p.eylem&&o2.p.eylem.kilit)&&o2.p!==pres1&&hyp(o2.p.x-s.x,o2.p.z-s.z)<14){pres2=o2.p;tut=true;}
+          if(pres2&&!(o2&&o2.p===pres2))P2[t]={p:pres2,t:this.t};else if(!pres2)P2[t]=null;
+          else if(MOTOR_AYAR.kapatSon&&!tut)o2.t=this.t;}   /* T23a3 (kapatSon): kendiliğinden yeniden seçildikçe tutma süresi tazelenir */
       }
       const cizgi=this.savunmaCizgisi(t,hucum,odak);
       /* T7b: geride kalanlar ve koridor sahipliği (6 karede bir; js/mac-takim.js) */
@@ -294,7 +295,7 @@ Object.assign(Match.prototype,{
       /* T6d: ortanın alıcısı ortanın noktasına koşar (js/mac-topla.js vurusBaslat); top ayaktan çıkana dek ofsayt çizgisinin gerisinde */
       const oK=p.kosu&&p.kosu.tur==='orta'?p.kosu:null;
       if(oK){oK.t-=dt;if(oK.t<=0||!s||s.team!==t){p.kosu=null;}else{u=Math.min(oK.u,ofs-0.4);w=oK.w;p.hizOran=1;ef=1;g='orta';}}
-      if(orta&&!p.kosu){const r=geride?null:this.kutuRolu(p,t,bw);if(r){u=r.u;w=r.w;p.hizOran=0.95;ef=0.8;g='kutu';}}
+      if(orta&&!p.kosu){const r=geride?null:this.kutuRolu(p,t,bw);if(r&&!this.kapiGecik(p,t,'kutu',true,MOTOR_AYAR.kapiFaz)){u=r.u;w=r.w;p.hizOran=0.95;ef=0.8;g='kutu';}}   /* T23a3: kapiFaz */
       else if(s&&s.team===t&&!(p.kosu&&p.kosu.tur==='orta')){
         /* T14a: kanat rolü — genişlik, derinlik, uzak kanatta arka direk (js/mac-takim.js kanatKonumu); kanat destek noktası aramaz */
         const kr=kurma?null:this.kanatKonumu(p,t,s,ofs,geride);
@@ -325,9 +326,16 @@ Object.assign(Match.prototype,{
       zorla=!p.kosu&&p._hdfX*d>ofs-0.3&&p._hdfX*d>0;
     }else{
       /* kendi ceza sahası çevresinde adam markajı */
-      markajda=this.markaj(p,t,odak);if(markajda){u=markajda.u;w=markajda.w;ef=1;g='markaj';}
+      markajda=this.markaj(p,t,odak);
+      /* T23a3 (kapiFazSav): top 32 m içine girince açılan markaj kapısında oyuncu rolü tepki süresi × çarpan kadar sonra alır; adamı 6 m içinde kaleye koşuyorsa hemen */
+      if(markajda&&MOTOR_AYAR.kapiFazSav>0){const yk=odak.x*this.dir[t]<=-PL+32,M=this._markaj&&this._markaj[t],o=M&&M.get(p);
+        const acil=!!o&&hyp(o.x-p.x,o.z-p.z)<6&&-o.vx*this.dir[t]>2;if(this.kapiGecik(p,t,'markaj',yk,MOTOR_AYAR.kapiFazSav)&&!acil)markajda=null;}
+      if(markajda){u=markajda.u;w=markajda.w;ef=1;g='markaj';}
       /* T7d: orta savunması — markajı olmayan bölgesini tutar (kutuSavunmaAta) */
-      else{const KZ=this._kutuSav&&this._kutuSav[t],z=KZ&&KZ.get(p);if(z){markajda=z;u=z.u;w=z.w;ef=1;g='kutuSav';}}
+      else{const KZ=this._kutuSav&&this._kutuSav[t],z=KZ&&KZ.get(p);
+        /* T23a3 (kapiFazSav): kutu savunması kapısı da oyuncuya göre gecikmeli; top ceza sahasındaysa hemen */
+        const kg=!!z&&MOTOR_AYAR.kapiFazSav>0&&this.kapiGecik(p,t,'kutuSav',true,MOTOR_AYAR.kapiFazSav)&&odak.x*this.dir[t]>-PL+16.5;
+        if(z&&!kg){markajda=z;u=z.u;w=z.w;ef=1;g='kutuSav';}}
       /* T7e: dönen top — şuttan sonra 1,5 sn kaleciye en yakın stoper kale önünü, uzak bek uzak direği tutar */
       const DS=this._donenSav;if(DS&&DS.team===t&&this.t-DS.t<1.5){const z=DS.M.get(p);if(z){markajda=z;u=z.u;w=z.w;ef=1;g='donenSav';}}
     }
@@ -410,6 +418,15 @@ Object.assign(Match.prototype,{
     return yeni;
   },
   /* markaj: eşleştiği rakibi kale tarafından 1,2 m'den tut */
+  /* T23a3: eşik kapısı oyuncuya göre gecikmeli — kapı (takım, ad) açıldığı an tutulur (son görüldüğü kareden 0,05 sn'den eskiyse yeniden açılmış sayılır);
+     oyuncu rolü kendi tepki süresi (0,25–0,7 sn: karar, görüş, yorgunluk; takimAI'daki tp0) × faz kadar sonra alır. Döner: hâlâ bekliyor mu. Saf (zar yok) */
+  kapiGecik(p,t,ad,acik,faz){
+    if(!(faz>0))return false;const K=this._kapi||(this._kapi=[{},{}]),k=K[t];
+    if(!acik){k[ad]=null;return false;}
+    let q=k[ad];if(!q||this.t-q.S>0.05){q=k[ad]={T:this.t,S:this.t};}else q.S=this.t;
+    const tp0=clamp(0.62-0.22*p.oz.karar-0.12*p.oz.gorus+0.2*(p.yorgunluk||0),0.25,0.7);
+    return this.t-q.T<tp0*faz;
+  },
   markaj(p,t,odak){
     const M=this._markaj&&this._markaj[t],en=M&&M.get(p);
     if(!en||!en.oyunda)return null;

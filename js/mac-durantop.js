@@ -31,6 +31,8 @@ ayarEkle('K',{
   penaltiSure:[6,9],           // T8a: penaltıda duruşun başından koşunun başına en az / en çok (sn; temas 8–12; T10d: 6,5–9,5 → 6–9)
   hizliSerbest:0.6,            // T8a: çabuk serbest vuruş için kullananın en az karar özelliği
   kornerKutu:5,                // T8a: kornerde kutuya çıkan hücumcu (maç durumuyla 4–7)
+  duranKosFaz:0.15,            // T23a3 (2026-10-18): duran topta koşu tetiği (kullananın temasına 0,55 sn kala) oyuncuya göre kayar — ön direk +, penaltı noktası ve
+                               // orta 0, arka direk −½, uzak −1 kat; öbürleri numaradan ±1 kat (ortalaması 0); 0: hepsi aynı karede (kümelerin %17'si)
   kornerKisa:0.18,             // T8b: kısa korner olasılığı (kullananın yaratıcılığıyla 0,6–1,4 katı; gerçek ~%20, Ek E)
   duranRolSure:6,              // T8b: vuruştan sonra görev düzeninin en uzun süresi (sn)
   barajZipla:1.0,              // T8c: barajın sıçrama yüksekliği, oyuncunun durarak sıçramasının katı (planlayıcı ve motor aynı)
@@ -449,7 +451,9 @@ Object.assign(Match.prototype,{
         if(kos)g.don=true;}
       if(g.rol==='ikinci'&&du.aldatma&&g.kx!=null&&ke&&ke.kalan<1.0){p.tx=g.kx;p.tz=g.kz;p.hizOran=1;p.bak=null;p.yonHedef=null;this.eforVer(p,1);g.aldatma=true;
         if(du.aldatmaGecti==null&&hyp(p.x-du.x,p.z-du.z)<0.6){du.aldatmaGecti=this.t;this._aldatmaT=this.t;}continue;}
-      if(kos&&g.kx!=null){p.tx=g.kx;p.tz=g.kz;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);continue;}
+      /* T23a3 (duranKosFaz): koşu tetiği oyuncuya göre kayar */
+      let kosP=kos;{const F=MOTOR_AYAR.duranKosFaz;if(F>0&&ke&&du.rutin!=='kisa'){const r=g.rol,dl=r==='hedefOn'?F:r==='hedefNokta'||r==='hedefOrta'?0:r==='hedefArka'?-F/2:r==='hedefUzak'?-F:((p.n*7+p.team*3)%5-2)/2*F;kosP=ke.kalan<0.55+dl;}}
+      if(kosP&&g.kx!=null){p.tx=g.kx;p.tz=g.kz;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);continue;}
       /* görevli yerine düzenli koşar (efor 0,8: T1 hız kipleri 8 m içinde yürütüyordu, hareket eden adamına yetişemiyordu), yerinde ağır */
       /* T10d: 6 sn'den sonra yerine varmamış görevli hızlanır (T8'den: görevliler yerinde %76–78, hedef ≥ %80; geç kalanlar kutuya kendi yarısından
          gelen koşucular, kullanımda hedeflerine ortanca 5,8 m) */

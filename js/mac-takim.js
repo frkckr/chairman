@@ -47,6 +47,11 @@ ayarEkle('T',{
   gecGiris:2,        // T14b: orta ve geri çevirmede ceza sahasına geç giren en çok forvet dışı oyuncu (0: kapalı; gecGirisAta)
   /* T16b (2026-10-15; gerçekçilik planı §4 T16): öndeki takım maçın sonunda da hücum eder — gerçekte öndeki ÷ gerideki şut ~0,5–0,6 (son dilimde
      motorda 0,33 idi) */
+  /* T23a3 (2026-10-18; gerçekçilik planı §4 T23): eşzamanlı fırlamanın kaynağı eşik kapıları — rol aynı karede bütün uygun oyunculara açılmasın */
+  kapatSon:1,        // T23a3: 2. adamın kapatKalici tutma süresi son geçerli (seçildiği) kareden sayılır (eskiden ilk atamadan: kapı kapanınca aynı karede düşüyordu); 0: eski
+  kapiFaz:1,         // T23a3: hücumda kutu rolü (orta kapısı) kapı açıldıktan sonra oyuncunun tepki süresi (0,25–0,7 sn) × bu kadar sonra alınır; 0: aynı karede
+  kapiFazSav:0.5,    // T23a3: savunmada markaj (top 32 m içinde) ve kutu savunması aynı kuralla, yarım çarpanla; acil olan beklemez (adamı 6 m içinde kaleye koşan
+                     // markaj, top ceza sahasındayken kutu savunması); 0: aynı karede
   kovala2Pay:0.5,    // T23a1 (2026-10-18): yüksek topta ikinci adam ve 1. kovalayan rakibin en erken varışından bu kadar sn'den çok geç kalacaksa efor 0,5 (gelir,
                      // düelloya hazırlanır, depar atmaz); varışı ≤ 1 sn, pasın alıcısı ya da dönen top eski kural (efor 1); 0: hep efor 1
   tutEtki:0.5,       // T16b: öndeki takımın hücumdaki temkini (tut niyetinin ilerlet'ten farkı ve koru'nun risk, sakinlik, tempo terimleri; 1: eski — 40 maçta
