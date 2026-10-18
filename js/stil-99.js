@@ -159,6 +159,15 @@ const STIL={
          havada tutuyorduysa capaIK 1/sn hızla yere iner), ayak kalkınca pozun payı aynı hızla geri gelir (0: kapalı) — A9-0: alış penceresinde kayan karelerin
          %75'inde bu yuvalar yerdeki bacağı tutuyordu (tutmadığında kayma %5) */
       /*A9-pivot*/destek:1,capaIK:20,
+      /* A9-vurus2 (borç 38; A9b, koşu döngüsünün kaynağı): salIK — salınan bacağın IK uzanması (kalça → taban) veri dizinin ileri kinematiğindeki uzanmayı aşmaz (koşuda,
+         veri yolunda; ağırlık 0–1): uzun çizilen duruş, adım uçlarının kaydırması ve duruşun çapası hedefi bacağın erişiminin dışına itiyor, yumuşak IK dizi geç
+         salınımda karede 20–30° açıp kalkıştan sonra düz tutuyordu (vuruşa yaklaşmada da: evre 1); yön aynı, uyluk hedefe döner — 0: eski */
+      /* salYan (m): salınımda (koşuda) uyluğun yana açılması √(aa² + salYan²)'den — bükük dizde (aa: bacağın uyluk eksenindeki payı, ~0,2) yanal hedef payı uyluğu
+         karede 20–40° yana açıp kapatıyordu (çapraz koşu, vuruşa yaklaşma) — 0: eski */
+      /*A9-vurus2*/salIK:1,salYan:0.25,
+      /* A9-vurus3 (borç 38; A9b, vuruş penceresinin güvenlik tavanı — kök salIK/salYanda): vkHiz — vuruş penceresinde (hazırlıktan çıkışa) yerde olmayan bacağın dizi en çok vkHiz rad/sn döner (3 m/sn'ye dek; 8 m/sn'de ×1,5), uyluk 0,8'i,
+         yana açma 0,6'sı, aşağı salınımda vuran bacak ×2,5; temas, takip ve yerdeki bacak sınırsız (anmVkHiz) — 0: eski */
+      /*A9-vurus3*/vkHiz:15,
       /*A9-son*/z:0},
     /* A7 (2026-10-17): hareket verisinin eğrileri (js/hareket-egrileri.js) — acik 0 eski elle yazılmış eğriler; ayak (salınan ayağın yolu, duruşun ortası,
        koşuda temas payı), kalca (yükseklik), egim (koşu eğimi), legen (leğen ve omuz hattının salınımı), kol (omuz, dirsek) ağırlıkları; kolOlcek omuz
