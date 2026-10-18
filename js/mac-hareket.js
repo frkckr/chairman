@@ -78,6 +78,11 @@ ayarEkle('C',{
   bakOlu:0.35,                 // bakılan şeye (p.bak) ölü bölge (rad): içindeyken gövde dönmez (baş bakar); 1,8 katını aşınca gövde hedefe tam döner
   donusGecikme:0.06,           // kasıtlı büyük hedef sıçramasında (> 0,6 rad) gövdenin eski hedefinde kalma süresi (sn): baş önden döner
   bakisOnce:0.3,               // kasıtlı büyük dönüşte bakışın yeni yöne önden gittiği süre (sn; js/mac-topla.js taramaAdim okur)
+  /* T23c (2026-10-18; gerçekçilik planı §4 T23, borç 14): acil olmayan kasıtlı dönüşte gövde biraz daha bekler, baş önden gider (oyuncular önce
+     bakar, sonra döner — hizalı başlayan 90°+ dönüşlerin %40'ında baş ≥ 150 ms öndeydi) */
+  bakisBekle:0.08,             // T23c: acil değilse donusGecikme'ye eklenen bekleme (sn); 0: eski
+  bakisBekleEfor:0.8,          // T23c: efor bundan büyük ya da eşitse acil (pres, kovalama, koşu) — beklemez
+  bakisBekleUzak:8,            // T23c: top bundan yakınsa (m) acil; tavırda (jokey, koru, bekle) ve hatta/omuzda (hrkHatMi) da beklemez
   /* A4-5 (2026-10-15; gerçekçilik planı §4 A4, Ek C): Cruyff ve sırtla dönme */
   cruyff:1,                    // A4-5: Cruyff satırı açık mı (0: kapalı, T16'nın tablosu). 40 maçta çalımların ~%12'si (maç başına 2,7), başarı %52
   cruyffKal:0.15,              // A4-5: Cruyff tahmininin logit düzeltmesi (öbür satırların kal'ı gibi): c-1v1'de 0'da tahmin %55 · gerçek %60 → 0,15'te %64 · %67
@@ -136,13 +141,15 @@ const hrkVurusDonus=p=>{const w=MOTOR_AYAR.vurusDonus,k=hrkMin(1,p.spd/p.maxSpd)
    bölge: hedef bakOlu içindeyken gövde dönmez (çizimde baş bakar), 1,8·bakOlu'yu aşınca gövde hedefe tam döner (yeniden yönelme). Kasıtlı büyük
    hedef sıçramasında (> 0,6 rad; kay 0 açık hedef, 1 koşu yönü, 3 yavaş gidiş) gövde donusGecikme kadar eski hedefinde kalır ve bakış bakisOnce
    boyunca yeni yöne önden gider (p.don.bt, hx; js/mac-topla.js taramaAdim). Hedef yoksa gövde yavaşlayıp durur. Rastlantısız */
+/* T23c (2026-10-18; bakisBekle): kasıtlı dönüşte gövdenin ek beklemesi (sn) — acilse 0. Saf */
+const hrkBekle=(m,p)=>{const A=MOTOR_AYAR,b=m.ball;if(p.efor>=A.bakisBekleEfor||p.tavir||hrkHatMi(m,p)||hrkHyp(b.x-p.x,b.z-p.z)<A.bakisBekleUzak)return 0;return A.bakisBekle;};
 function hrkGovdeDon(m,p,yh,kay,wMax,dt){
   const D=p.don,A=MOTOR_AYAR;let tut=false,f=0;
   if(yh==null)tut=true;
   else{
     if(!D.ok){D.ok=true;D.hx=yh;D.he=yh;}
     if(kay!==2&&hrkAbs(hrkAciFark(yh,D.hx))>0.6){D.t0=m.t;D.bt=m.t+A.bakisOnce;}
-    D.hx=yh;if(m.t-D.t0>=A.donusGecikme)D.he=yh;
+    D.hx=yh;if(m.t-D.t0>=A.donusGecikme+(A.bakisBekle>0?hrkBekle(m,p):0))D.he=yh;   /* T23c: bakisBekle */
     f=hrkAciFark(D.he,p.yon);
     if(kay===2){const fa=hrkAbs(f);if(D.yeni){if(fa<0.05)D.yeni=false;}else if(fa>1.8*A.bakOlu)D.yeni=true;if(!D.yeni)tut=true;}
     else D.yeni=false;}

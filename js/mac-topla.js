@@ -103,6 +103,8 @@ ayarEkle('B',{
   aliciRahat:0,                // T23a2 (2026-10-18; denendi, kapalı — 0,8 ile 40 maçta pas isabeti −3,8 ± 1,2 (sabit hızlı varış tahminiyle −10,6), toplam ivmelenme aynı
                                // (alıcınınki −0,2, başka yerde geri geliyor), eşzamanlı +0,18; kod kalır): rakipsiz ayağa yerden pasta (planın rakip payı ≥ bu kadar sn) alıcı en erken noktaya tam eforla fırlamaz: yoldaki
                                // ilk rahat noktaya (0,6 eforla toptan 0,1 sn önce varır, yolda ve orada rakip ≥ payla geride) efor 0,6, tepe hızın %62'siyle gider; 0: eski
+  bakisHerKare:1,              // T23c (2026-10-18): kasıtlı büyük dönüşte (p.don.bt penceresi ya da gövdenin önünde bakisDonus'tan büyük dönüş) bakış her karede
+                               // işlenir (boyun adımı geçen kare sayısıyla); öbür zamanlar iki karede bir; 0: hep iki karede bir
   gidisBakis:1.95,             // T23b (2026-10-18): gidiş kipinde (p.don.gm; js/mac-hareket.js hrkGidis) topa bakışın boyun sınırı (rad; eskiden ve öbür durumlarda 1,4)
   surukle:1,                   // T22a: sürükleme (basıp gitmek) — 15/22/30 m'lik uzun taşıma seçeneği (mac-karar.js surukleSecenegi), depar, top 2,8 m önde, 1,2 sn bağlılık; 0: yok
   surukleKanat:0.5,            // T22a: kanat oyuncusunun sürüklemesine ek değer (puan; kullanıcı notu: kanadın hızlanıp basıp gitmesi); 0: yok
@@ -194,12 +196,15 @@ Object.assign(Match.prototype,{
      dönüşte (js/mac-hareket.js hrkGovdeDon: p.don.bt, hx) bakış önce yeni yöne gider, gövde arkadan gelir */
   taramaAdim(dt){
     const b=this.ball,P=this.players,n=P.length,PI=Math.PI,kare=this.kare||0,A=MOTOR_AYAR,BD=A.bakisDinamik;
-    for(let i=0;i<n;i++){const p=P[i];if(!p.oyunda||(i+kare)&1)continue;  /* her oyuncu iki karede bir */
+    const HK=A.bakisHerKare&&BD;
+    for(let i=0;i<n;i++){const p=P[i];if(!p.oyunda)continue;
+      /* her oyuncu iki karede bir; T23c (bakisHerKare): kasıtlı büyük dönüşteki her karede */
+      if((i+kare)&1){if(!HK)continue;const D=p.don;if(!(D&&D.ok&&(D.bt>this.t||Math.abs(aciFark(D.hx,p.yon))>A.bakisDonus)))continue;}
       let per=2.5-1.8*p.oz.gorus;
       /* topu süren seyrek bakar; topu ayağının altında bekleten (T2) seçenek arar, daha sık bakar */
       if(b.hedefOyuncu===p)per*=0.55;else if(b.sahip===p)per*=p.tavir==='bekle'?0.5:1.25;
       const v=this.bVeri(p);let T=v.tara;
-      if(!T){T=v.tara={t:0,bas:-9,yan:p.n%2?1:-1,ok:false,k:0,carp:1,gen:1.75,sure:0.28,r:0,rOk:false,x:new Float64Array(n),z:new Float64Array(n),vx:new Float64Array(n),vz:new Float64Array(n)};
+      if(!T){T=v.tara={t:0,bas:-9,yan:p.n%2?1:-1,ok:false,k:0,carp:1,gen:1.75,sure:0.28,r:0,rOk:false,sk:-1,x:new Float64Array(n),z:new Float64Array(n),vx:new Float64Array(n),vz:new Float64Array(n)};
         T.t=this.t-((p.n*0.37+p.team*0.53)%1)*per;this.taramaKaydi(T);}
       if(this.t-T.t>=per*T.carp){this.taramaKaydi(T);T.t=this.t;T.bas=this.t;
         if(BD){const o=(p.team*131+p.n*17+(this.tohum|0)*7919)|0,k=++T.k;
@@ -219,7 +224,8 @@ Object.assign(Match.prototype,{
         /* gövdeye göre açı durumu (T.r): boyun en çok bakisHiz ile döner; ilk kez ya da bakış başka yerden yazıldıysa (maç başı) bakıştan alınır */
         if(!T.rOk){const o0=p.bakisYon;T.r=o0==null?rt:aciFark(o0,p.yon);T.rOk=true;}
         let r0=T.r;if(r0>1.95)r0=1.95;else if(r0<-1.95)r0=-1.95;
-        const lim=A.bakisHiz*2*dt,f=rt-r0;T.r=r0+(f>lim?lim:f<-lim?-lim:f);by=p.yon+T.r;}
+        let kk=2;if(HK){kk=T.sk>=0?Math.min(2,kare-T.sk):2;T.sk=kare;}   /* T23c: boyun adımı geçen kare sayısıyla */
+        const lim=A.bakisHiz*kk*dt,f=rt-r0;T.r=r0+(f>lim?lim:f<-lim?-lim:f);by=p.yon+T.r;}
       else if(this.t-T.bas<0.28)by=p.yon+T.yan*1.75;
       else{let f=Math.atan2(b.z-p.z,b.x-p.x)-p.yon;if(f>PI)f-=2*PI;else if(f<-PI)f+=2*PI;by=p.yon+(f>1.4?1.4:f<-1.4?-1.4:f);}
       if(by>PI)by-=2*PI;else if(by<-PI)by+=2*PI;
