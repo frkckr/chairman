@@ -136,11 +136,29 @@ const STIL={
     a8:{dokunus:1,dokSal:1,alisAyak:1,dokAlcak:1,capaCiz:1,bakis:0.45,surukle:1,alis:0.45,sutEgim:0.12,yarim:1},
     /* A9 (2026-10-18; gerçekçilik planı §4 “A9”): adım ve baş temposu — her anahtar 0'da eski çizim (anahtarların açıklaması kendi satırında) */
     a9:{
-      /*A9-adim*/
-      /*A9-bas*/
-      /*A9-govde*/
-      /*A9-vurus*/
-      /*A9-pivot*/
+      /* A9-adim: yanEn/yanTavan yan adımın en kısası ve tavanı (m; artış eski adim.yanHiz·v; 0: eski 0,3 / 0,5; veride yan adım ~0,5–0,6 m) · geri yürüyüşte geri adımın ileri adıma oranı (koşuya geçerken eski adim.geri 0,75'e döner; 0: eski) · kalTut salınan ayağın yüksekliği kalkıştan beri en yükseği, hız düşünce ayak salınımda inmez (0: eski — kalecinin ve yavaş yürüyenin kesik hızında ayak salınımın ortasında yere değip kalkıyordu) · kosuBoy koşu adımının uzaması (3 m/sn'de 0, 5 m/sn'den hızlıda tam; 0: eski) */
+      /*A9-adim*/yanEn:0.45,yanTavan:0.6,geri:0.65,kalTut:1,kosuBoy:0.06,
+      /* A9 bas: basDunya başın dünyadaki dönüş hızının yumuşak tavanı (rad/sn; kök + başın köke göre hızı; 0 tavansız), basIleri başın yayına hedefin
+         hızının ileri beslenme payı (0–1; 0: yay hedefi ~2/yay sn geriden izler), basKok başın hedefi çizilen köke göre (0: motorun yönüne göre),
+         basSon katmanlardan sonra boyun sınırı (rad; 0 yok) — her biri 0: eski */
+      /*A9-bas*/basDunya:10,basIleri:1,basKok:1,basSon:1.38,
+      /* A9-govde (borç 23, üst gövde kırılması): kolSigma kol eğrisinin (omuz, dirsek) adım frekansında Gauss süzgeci (σ sn; anmEgriKazanc — yavaşta etkisiz, deparda
+         ve frende üst harmonikler söner); dokItme dokunuşun adım evresi itişinin kritik sönümlü yayı (ω rad/sn; eskiden birinci derece); kolYay kolların veri ağırlığının
+         kritik sönümlü yayı (ω rad/sn; a.egWk — bacaklar, eğim ve leğen eski birinci derece ağırlıkta); dokTepe bacaksız dokunuş yuvasının zarfı sin² (1; eskiden sin);
+         dokDirsek top sürmede dönüş dokunuşunun bacaksız pozu dirseksiz (1; koşunun dirseği kalır); elTemas markajda el temasının ve kutudaki itişmenin uzaklığa göre
+         geçiş aralığı (m; yan yuva sönükken seçilir; eskiden aç-kapa); govdeIvme gövde eğimi ve yatışının kaynağı olan çizilen ivmenin kritik sönümlü yayı (ω rad/sn;
+         eskiden birinci derece 6/sn) — her biri 0: eski */
+      /*A9-govde*/kolSigma:0.025,dokItme:20,kolYay:10,dokTepe:1,dokDirsek:1,elTemas:0.3,govdeIvme:12,
+      /* A9-vurus (borç 38): vkSurek — son adımda destek ayağı önceki karenin yerinden, hızıyla ve yüksekliğinden sürer (Hermite; eskiden yerden ve durağan başlıyordu, havadaki ayak karede yere çekiliyordu);
+         vkGec — son adım bundan kısaysa (sn) destek ayağı temastan tD önce değil, en geç 0,02 sn önce basar; vkUzan — basış yeri gövdenin bu kadar önündeyse (m) ayak gövde yetişene dek havada bekler
+         (hızlı koşuda bacak gerilip diz açılıyordu); ikYan — bacak IK'sında uyluğun yana açılması bu yan erişim oranından sonra yumuşakça doyar (asin ±90°'de atlıyordu) — her biri 0: eski */
+      /*A9-vurus*/vkSurek:1,vkGec:0.2,vkUzan:0.4,ikYan:0.85,
+      /* A9-pivot (borç 36; alıştan sonra yerdeki ayağın kayması): destek — alışta destek bacağının kanalları hep pozdan çıkar (A8'de yalnız alışın başında yerdeyse;
+         uçuştaki destek ayağı poz tutarken basıp kayıyordu); capaIK — adım döngüsünde çapadaki ayağı yalnız alış ve dokunuş yuvaları (kontrol, kontrol2, kontrolB,
+         kontrol2B, dokun) tutuyorsa uyluk ve diz IK'ya kalır (burulma pozdan kalır, IK onu hesaba katar; bırakış başlarken ayak çizildiği yere çivilenir, poz
+         havada tutuyorduysa capaIK 1/sn hızla yere iner), ayak kalkınca pozun payı aynı hızla geri gelir (0: kapalı) — A9-0: alış penceresinde kayan karelerin
+         %75'inde bu yuvalar yerdeki bacağı tutuyordu (tutmadığında kayma %5) */
+      /*A9-pivot*/destek:1,capaIK:20,
       /*A9-son*/z:0},
     /* A7 (2026-10-17): hareket verisinin eğrileri (js/hareket-egrileri.js) — acik 0 eski elle yazılmış eğriler; ayak (salınan ayağın yolu, duruşun ortası,
        koşuda temas payı), kalca (yükseklik), egim (koşu eğimi), legen (leğen ve omuz hattının salınımı), kol (omuz, dirsek) ağırlıkları; kolOlcek omuz
