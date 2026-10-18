@@ -26,6 +26,19 @@ const S_MESAFE=['<11 m','11–16,5 m','16,5–25 m','>25 m'];
 const S_ORTA=['blok','kaleci','kafaSut','kafaHucum','kafaSavunma','ayakSut','hucumAldi','savunmaAldi','uzaklastirma','disari','diger'];
 const S_ORTA_AD={blok:'blok',kaleci:'kaleci',kafaSut:'hücumun kafa şutu',kafaHucum:'hücumun diğer kafası',kafaSavunma:'savunmanın kafası',
   ayakSut:'hücumun ayak şutu',hucumAldi:'hücum topu aldı',savunmaAldi:'savunma topu aldı',uzaklastirma:'uzaklaştırma',disari:'top oyun dışı',diger:'diğer'};
+/* T24-0 (2026-10-18; T24 planı, ölçüm 5): rol × mesafe ve rol × kaynak (şut / maç). Rol dört grup: forvet, orta saha (merkez ve kanat), bek, stoper
+   (kaleci sayılmaz). Mesafe yukarıdaki dilimler. Kaynak — şutçunun topu nasıl aldığı — sırayla: duran top (yukarıdaki kaynak korner, serbest vuruş,
+   doğrudan serbest vuruş, penaltı ya da taç), dönen top (takımın şutundan sonraki 4 sn: rakip kalecinin kurtarışı, parmağı, yumruğu, rakibin şut
+   bloğu — orta bloğu sayılmaz — ya da takımın direği; r-karne “dönen toptan” ile aynı), kafa, gelişine (ayak; vuruş eylemi gelişine — sec.ilk — ya
+   da şut şutçunun topa ilk dokunuşu), sürüş (topa ilk dokunduğu yerden şut anına ≥ 5 m taşıdı), pas (< 5 m; önceki dokunan takım arkadaşı),
+   diğer (< 5 m; önceki dokunan rakip ya da yok: kazanılan, boşta top). Ortanca mesafe ozet() tablosunda (penaltısız, kafa dahil; bütün maçlar). */
+const S_ROL4=['forvet','ortaSaha','bek','stoper'],S_ROL4_AD={forvet:'forvet',ortaSaha:'orta saha',bek:'bek',stoper:'stoper'};
+const S_ROL4_G={forvet:'forvet',merkez:'ortaSaha',kanat:'ortaSaha',bek:'bek',stoper:'stoper'};
+const S_YOL=['pas','surus','gelisine','kafa','duran','donen','diger'];
+const S_YOL_AD={pas:'pastan (< 5 m taşıdı)',surus:'sürüşten (≥ 5 m taşıdı)',gelisine:'gelişine (ayak)',kafa:'kafa',duran:'duran top',donen:'dönen top',
+  diger:'kazanılan ya da boşta top (< 5 m)'};
+const S_DURAN=new Set(['korner','serbest','dogrudan','penalti','tac']);
+const sOrtanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b),n=S.length;return n%2?S[(n-1)/2]:(S[n/2-1]+S[n/2])/2;};
 module.exports={
   bilgi:[['— Şut kaynağı (s-sut; M1 ölçümü; T6, T9b, T8) —',null,0]]
     .concat(S_KAYNAK.map(k=>['Şut: '+S_KAYNAK_AD[k]+' / maç','sS_'+k,2]))
@@ -46,7 +59,10 @@ module.exports={
     .concat([['Korner başına şut','sKornerSut',2],
       ['Serbest vuruş / maç','sSerbestMac',2],['Serbest vuruş: yakın (≤30 m) / maç','sSerbestYakin',2],['Serbest vuruş: yakında doğrudan şut %','sSerbestYakinSut',1],
       ['Barajlı doğrudan serbest vuruş / maç','sBarajliSut',2],['Barajlı doğrudan serbest vuruşta şut başına gol %','sBarajliGol',1],
-      ['Kafa şutu / maç','sKafaSut',2],['Kafa şutu: çerçeveye giden %','sKafaCer',1],['Gol / şut: kafa (bütün kaynaklar) %','sKafaGol',1]]),
+      ['Kafa şutu / maç','sKafaSut',2],['Kafa şutu: çerçeveye giden %','sKafaCer',1],['Gol / şut: kafa (bütün kaynaklar) %','sKafaGol',1]])
+    .concat([['— T24-0: rol × mesafe ve rol × kaynak (s-sut; şut / maç) —',null,0]])
+    .concat(S_ROL4.flatMap(r=>S_MESAFE.map((a,i)=>['Şut / maç (T24-0): '+S_ROL4_AD[r]+' '+a,'sRM_'+r+'_'+i,2])))
+    .concat(S_ROL4.flatMap(r=>S_YOL.map(k=>['Şut / maç (T24-0): '+S_ROL4_AD[r]+' — '+S_YOL_AD[k],'sRK_'+r+'_'+k,2]))),
   yeni:()=>{
     const hyp=Math.hypot;
     const grup=q=>!q?'-':q.rol==='GK'?'kaleci':q.mevki&&q.mevki.bek?'bek':q.rol==='DEF'?'stoper':q.mevki&&q.mevki.kanat?'kanat':q.rol==='OS'?'merkez':'forvet';
@@ -55,6 +71,12 @@ module.exports={
     for(const k of S_KAYNAK){sut[k]=0;gol[k]=0;}for(const g of S_GRUP)rol[g]=0;for(const k of S_ORTA)orta[k]=0;
     let du=null;                         /* duran top bağlamı: {tur, team, taker, t0 (oyunun yeniden başladığı an), vurus, sure, ref (m.durus), yakin} */
     let sonOrta=null,sonGeri=null,sonSut=null,bekOrta=null,havaOnce=0;
+    /* T24-0: rol × mesafe, rol × kaynak; topa ilk dokunuş (oyuncu → {x, z, önceki dokunan}), dönen topun anı (hücum eden takıma göre) */
+    const rm={},rk={},mesRol={};for(const r of S_ROL4){rm[r]=[0,0,0,0];rk[r]={};for(const k of S_YOL)rk[r][k]=0;mesRol[r]=[];}
+    const alis=new Map(),donenT=[-9,-9];let sdCur=null;
+    const yolBul=(m,p,kafa,k)=>{if(S_DURAN.has(k))return'duran';if(m.t-donenT[p.team]<=4)return'donen';if(kafa)return'kafa';
+      const e=p.eylem,sec=e&&e.sec;if(sec&&sec.ilk||sdCur!==p)return'gelisine';
+      const a=alis.get(p);if(!a)return'diger';if(hyp(p.x-a.x,p.z-a.z)>=5)return'surus';return a.from&&a.from.team===p.team?'pas':'diger';};
     /* T17-0 */
     const oTur={kesme:0,asma:0,alcak:0,geri:0,duran:0},oBaski=[[0,0],[0,0]],oB={korner:0,tac:0,oyunda:0},yA={yakin:[0,0],uzak:[0,0]};let bekBlok=null,bekYer=null;
     const yakinRakip=(m,t,q)=>{for(const o of m.teams[1-t])if(o.oyunda&&hyp(o.x-q.x,o.z-q.z)<=1.5)return true;return false;};
@@ -75,12 +97,15 @@ module.exports={
         if(sonOrta&&sonOrta.team===t&&sonOrta.p!==p&&m.t-sonOrta.t<=3)k=kafa?'ortaKafa':'ortaAyak';
         else if(sonGeri&&sonGeri.team===t&&sonGeri.p!==p&&m.t-sonGeri.t<=3)k='geriCevir';}
       sutN++;sut[k]++;const g=grup(p);if(rol[g]!=null)rol[g]++;
-      const L=hyp(m.dir[t]*S_PL-p.x,S_MZ-p.z);mes[L<11?0:L<16.5?1:L<25?2:3]++;
+      const L=hyp(m.dir[t]*S_PL-p.x,S_MZ-p.z),mi=L<11?0:L<16.5?1:L<25?2:3;mes[mi]++;
+      {const r4=S_ROL4_G[g];if(r4){rm[r4][mi]++;rk[r4][yolBul(m,p,kafa,k)]++;if(k!=='penalti')mesRol[r4].push(L);}}   /* T24-0 */
       sonSut={t:m.t,team:t,k,barajli:k==='dogrudan'&&!!(du&&du.ref&&du.ref.baraj),kafa};
       if(kafa){kfN++;if(m.ball.sut&&m.ball.sut.cerceve)kfCer++;}
       if(du&&du.team===t)du.vurus++;};
     return{
       dinle(ad,v,m){if(!m)return;sonM=m;
+        /* T24-0: dönen topun anı */
+        if(v&&v.p&&v.p.team!=null){if(ad==='save'||ad==='parmak'||ad==='yumruk'||ad==='block'&&!v.orta)donenT[1-v.p.team]=m.t;else if(ad==='wood')donenT[v.p.team]=m.t;}
         /* T17-0: bloklanan ortanın sonucu; yerden ortanın alım noktası (ortacıdan sonraki ilk temas; orta bloğunda sayılmaz) */
         if(bekBlok){if(ad==='korner'&&v&&v.team===bekBlok.team){oB.korner++;bekBlok=null;}else if(ad==='tac'){oB.tac++;bekBlok=null;}else if(ad==='kaleVurusu'||ad==='serbest'||ad==='penalti'||ad==='goal'){oB.oyunda++;bekBlok=null;}}
         if(bekYer){if(ad==='block'&&v&&v.orta)bekYer=null;
@@ -109,6 +134,8 @@ module.exports={
           if(ad==='block')ortaBitir('blok');
           else if(ad==='save'||ad==='kapan'||ad==='yumruk'||ad==='parmak')ortaBitir('kaleci');}},
       adim(m){const b=m.ball;sonM=m;
+        /* T24-0: topa ilk dokunuş (son dokunan değişince) */
+        {const sd=b.sonDokunan;if(sd!==sdCur){if(sd)alis.set(sd,{x:sd.x,z:sd.z,from:sdCur});sdCur=sd;}}
         /* başlayan şutlar: vuruş eylemi şut olayına varmadan bittiyse vurulmadı */
         for(const p of m.players){const e=p.eylem,se=e&&e.ad==='vurus'&&e.sec&&e.sec.tur==='sut'?e:null,a=acik.get(p);
           if(a&&a!==se){vurulmayan++;acik.delete(p);}
@@ -134,7 +161,13 @@ module.exports={
           sOBaskiB:oBaski[0][1]?oBaski[0][0]/oBaski[0][1]:NaN,sOBaskiN:oBaski[1][1]?oBaski[1][0]/oBaski[1][1]:NaN};
         for(const k in oTur)r['sOT_'+k]=oTur[k];
         for(const k of S_KAYNAK)r['sS_'+k]=sut[k];
+        for(const g of S_ROL4){for(let i=0;i<4;i++)r['sRM_'+g+'_'+i]=rm[g][i];for(const k of S_YOL)r['sRK_'+g+'_'+k]=rk[g][k];}r._sMesRol=mesRol;   /* T24-0 */
         return r;}
     };
-  }
+  },
+  /* T24-0: rol başına şut mesafesi ortancası (penaltısız, kafa dahil; bütün maçların şutları) */
+  ozet(sonuclar){const T={};for(const r of S_ROL4)T[r]=[];for(const s of sonuclar){const M=s._sMesRol;if(M)for(const r of S_ROL4)if(M[r])for(const L of M[r])T[r].push(L);}
+    const fd=[].concat(T.ortaSaha,T.bek,T.stoper),hep=fd.concat(T.forvet);if(!hep.length)return;const fm=x=>Number.isNaN(x)?'—':x.toFixed(1);
+    console.log('  Şut mesafesi ortancası (s-sut, T24-0; penaltısız, kafa dahil; m (adet)): '+S_ROL4.map(r=>S_ROL4_AD[r]+' '+fm(sOrtanca(T[r]))+' ('+T[r].length+')').join(' · ')
+      +' · forvet dışı '+fm(sOrtanca(fd))+' ('+fd.length+') · hepsi '+fm(sOrtanca(hep))+' ('+hep.length+')');}
 };

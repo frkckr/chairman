@@ -5,6 +5,8 @@
    top ve oyuncu alanlarını okur. Oranlar bütün maçların toplamından (ham), diğer satırlar maç başına ortalamadır. Gerçek futbol karşılıkları planın
    §1 tablosundadır. */
 const R_PL=52.5,R_MZ=34,R_CU=16.5,R_CW=20.16;
+/* T24-0: direğe çarpan şuttan sonraki 4 sn'de ilk gelen (sınıf, ad) */
+const R_DIREK=[['gol','gol'],['kurt','kurtarış'],['uzak','uzaklaştırma'],['sut','hücum şutu'],['rakip','rakip topu aldı'],['durdu','oyun durdu'],['tuttu','hücum topu tuttu (şutsuz)'],['yok','hiçbiri']];
 const R_KAYIP=[['pas','kesilen / isabetsiz pas'],['diger','çalım, sürüş kaybı, seken top'],['hava','hava topu, kafa sonrası'],['mudahale','müdahale'],['kontrol','kötü ilk dokunuş']];
 /* T0: satırlara planın tur kabul hedefleri bağlandı (4. öğe [alt, üst, tur]; bilgi amaçlı, dışındaysa "!", çıkış kodu değişmez).
    T1/T2 hedefleri §4 "Kabul"den; T8 satırları da aynı tanımı ölçtüğü için eklendi. Hedefsiz satırların planda doğrudan karşılığı yok
@@ -27,6 +29,10 @@ module.exports={
     /* T7g (§7.7): pas sıkışmaz, savunma eylemi (müdahale, çalım düellosu) 2,5–3,5 kat sıkışık → PPDA bandı 7–12 (gerçek) → 3,5–7 */
     .concat([['PPDA (rakibin kendi %60\'ında pas / savunma eylemi)','rPpda',1,[3.5,7,'T7']],
     ['Şut: ceza sahası içinden %','rSutKutu',1,[55,null,'T2']],['Şut: ortanca mesafe (m)','rSutMesafe',1,[14,16,'T2']],
+    /* T24-0 (2026-10-18; bilgi): FBref "Dist" tanımı — penaltısız, kafa dahil (doğrudan serbest vuruş dahil; FBref ortalama verir, burada maç
+       başına ortanca, eski satırla aynı). Eski satır ayak şutlarından: penaltı ve serbest vuruş dahil, kafa hariç. Kafanın mesafesi temas anında
+       topun yerinden kale ortasına (ayak şutunun dist'i gibi) */
+    ['Şut: ortanca mesafe (penaltısız, kafa dahil; FBref Dist) (m)','rSutMesafeF',1],
     ['Şut: forvet dışı %','rSutForvetDisi',1,[30,null,'T3']],
     /* T4 (2026-10-08, bire bir): çalım denemesi motorun 'calim' olayıdır (hazırlığı başlamış deneme; sonuç gecti/kayip/faul/disari/yarim).
        Hedefli satırlar düelloya giren çalımlardır (Claude kararı 2026-10-08; Opta'nın "rakibini geçmeye çalışma" tanımı): başarılı = rakibi geçip
@@ -62,7 +68,15 @@ module.exports={
     ['Faul: itme ve tutma payı %','rFaulItme',1,[null,40,'T5']],['Faul: görülmeyen / maç','rFaulGorulmedi',2],
     /* T5e (2026-10-09; plan T5 madde 8, bilgi — gerçek veri kaynağı bulununca hedef bağlanır): kurtarış, parmak, yumruk, blok ya da direkten
        sonraki 4 sn içinde aynı takımın attığı gol */
-    ['Gol: dönen toptan (kurtarış, blok, direk sonrası 4 sn) %','rGolDonen',1]]),
+    ['Gol: dönen toptan (kurtarış, blok, direk sonrası 4 sn) %','rGolDonen',1],
+    /* T24-0 (2026-10-18; bilgi): direğe çarpan şut — 'wood' olayı (js/mac-motoru.js direkVurdu; yük {p: topa son dokunan}) top şut nesnesini
+       taşırken (b.sut: şuttan sonra başkası dokunmadı; şut başına bir, penaltı dahil); taşımazken (sapan ya da kurtarılan top, orta, uzaklaştırma;
+       0,5 sn içindeki ikinci çarpma sayılmaz) ayrı satır. Direkten sonraki 4 sn'de ilk gelen: gol (şutu atan takımın; kendi kalesine dahil),
+       kurtarış (rakip kalecinin kurtarışı, yumruğu ya da topu eline alması), uzaklaştırma (rakibin 'clear'ı ya da uzaklaştırma kafası), hücum şutu
+       (şutu atan takımdan şut ya da kafa şutu); bütün sınıflar (rakip topu aldı, oyun durdu, hücum topu tuttu, hiçbiri) ozet satırında */
+    ['Direk: şut / maç (T24-0)','rDirek',2],['Direk: şut dışı top (sapan, kurtarılan, orta) / maç','rDirekDiger',2],
+    ['Direkten sonra 4 sn: gol %','rDirekGol',1],['Direkten sonra 4 sn: kurtarış %','rDirekKurt',1],
+    ['Direkten sonra 4 sn: uzaklaştırma %','rDirekUzak',1],['Direkten sonra 4 sn: hücum şutu %','rDirekSut',1]]),
   yeni:()=>{
     const hyp=Math.hypot,ort=L=>L.length?L.reduce((a,b)=>a+b,0)/L.length:NaN,ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b);return S[Math.floor(S.length/2)];};
     /* hareket */
@@ -76,7 +90,7 @@ module.exports={
     /* sahiplik ve kayıp */
     const seqs=[],kayip={};let seq=null;const son={steal:null,kotu:null,pas:null,kafa:null};let ppdaPas=0,ppdaEylem=0;
     /* şut ve gol */
-    let sut=0,sutKutu=0,sutDisi=0,gol=0,golDuran=0;const sutL=[];
+    let sut=0,sutKutu=0,sutDisi=0,gol=0,golDuran=0;const sutL=[],sutLF=[];
     /* duran top */
     let onceki=null,lastDu=null,duT0=0;const bekleyen=[],korner=[],baraj=[],serbest=[],hazirlik=[];
     /* pasın alıcısı ve boyu (T2) */
@@ -86,27 +100,40 @@ module.exports={
     let clN=0,clHep=0,clYarim=0,clOk=0,clKanat=0,clFaul=0,clPn=0,clPt=0,clPok=0,clYn=0,clY=0,tKoru=0;const clHar={},dkT=[0,0,0],dkN=[0,0,0];
     /* T4h: yön salınımı, sahipsiz duran top */
     let salinim=0,bosT=0,bosAn=0,bosEn=0,faulN=0,faulItme=0,faulGor=0,golDonen=0;const donenT=[-9,-9];const yonFark=(x,y)=>{let r=x-y;r=Math.atan2(Math.sin(r),Math.cos(r));return r<0?-r:r;};
+    /* T24-0: direğe çarpan şut ve sonraki 4 sn (dr: {t, att: şutu atan takım, tut: hücum topu aldı}) */
+    const drS={};for(const [k] of R_DIREK)drS[k]=0;let drN=0,drDiger=0,drDigT=-9,drSon=null,dr=null;const drBit=k=>{drS[k]++;dr=null;};
     const kapat=(m,neden)=>{if(!seq)return;seqs.push({sure:m.t-seq.t0,pas:m.ist.pasTamam[seq.team]-seq.pt0,neden});seq=null;};
     const kutuda=(m,p,t)=>{const gx=m.dir[t]*R_PL;return Math.abs(p.x-gx)<R_CU&&Math.abs(p.z-R_MZ)<R_CW;};
     return{
       dinle(ad,v,m){if(!m)return;const b=m.ball;
+        if(dr){const q=v&&v.p;
+          if(ad==='goal')drBit(v.team===dr.att?'gol':'rakip');
+          else if((ad==='save'||ad==='yumruk')&&q&&q.team!==dr.att)drBit('kurt');
+          else if((ad==='clear'||ad==='header'&&v.tur==='uzaklastir')&&q&&q.team!==dr.att)drBit('uzak');
+          else if((ad==='shot'||ad==='header'&&v.shot)&&q)drBit(q.team===dr.att?'sut':'rakip');}
         if(ad==='pass'||ad==='cross'){if(v.p&&sahipP===v.p)ayakta.push(m.t-sahipT);if(v.p){son.pas={t:m.t,team:v.p.team};if(b.x*m.dir[v.p.team]<10.5)ppdaPas++;}
           if(ad==='pass'&&v.L!=null){pasN++;pasL+=v.L;}
           if(v.q&&v.q.team!=null){const g=grup(v.q);alN++;if(g==='forvet')alFv++;else if(g==='kanat')alKn++;}}
-        else if(ad==='shot'){sut++;if(v.p&&kutuda(m,v.p,v.p.team))sutKutu++;if(v.p&&v.p.rol!=='FV')sutDisi++;if(v.dist!=null)sutL.push(v.dist);if(v.p&&sahipP===v.p)ayakta.push(m.t-sahipT);}
-        else if(ad==='header'){son.kafa={t:m.t};if(v.shot){sut++;sutKutu++;if(v.p&&v.p.rol!=='FV')sutDisi++;}}
+        else if(ad==='shot'){sut++;if(v.p&&kutuda(m,v.p,v.p.team))sutKutu++;if(v.p&&v.p.rol!=='FV')sutDisi++;if(v.dist!=null)sutL.push(v.dist);if(v.p&&sahipP===v.p)ayakta.push(m.t-sahipT);
+          const e=v.p&&v.p.eylem;if(v.dist!=null&&!(e&&e.ad==='vurus'&&e.sec&&e.sec.penalti))sutLF.push(v.dist);}
+        else if(ad==='header'){son.kafa={t:m.t};if(v.shot){sut++;sutKutu++;if(v.p&&v.p.rol!=='FV')sutDisi++;if(v.p)sutLF.push(hyp(m.dir[v.p.team]*R_PL-b.x,R_MZ-b.z));}}
         else if(ad==='mudahale'){if(v.p&&b.x*m.dir[1-v.p.team]<10.5)ppdaEylem++;}
         else if(ad==='steal'){if(v.p)son.steal={t:m.t,team:v.p.team};}
         else if((ad==='faul'&&!v.avantajdan)||ad==='avantaj'){const f=v.faulYapan;if(f&&b.x*m.dir[1-f.team]<10.5)ppdaEylem++;faulN++;if(v.neden==='itme')faulItme++;}
         else if(ad==='kotuKontrol'){if(v.p)son.kotu={t:m.t,team:v.p.team};}
         else if(ad==='faulGorulmedi')faulGor++;
         else if(ad==='save'||ad==='parmak'||ad==='yumruk'||ad==='block'){if(v.p&&v.p.team!=null)donenT[1-v.p.team]=m.t;}
-        else if(ad==='wood'){if(v.p&&v.p.team!=null)donenT[v.p.team]=m.t;}
+        else if(ad==='wood'){if(v.p&&v.p.team!=null)donenT[v.p.team]=m.t;
+          const s=b.sut;if(s){if(s!==drSon){drSon=s;drN++;if(dr)drBit(dr.tut?'tuttu':'yok');dr={t:m.t,att:s.team,tut:false};}}else{if(m.t-drDigT>0.5)drDiger++;drDigT=m.t;}}
         else if(ad==='calim'){clHep++;if(v.sonuc==='faul')clFaul++;if(v.sonuc==='yarim'&&!v.duello)clYarim++;if(v.yut!=null){clYn++;if(v.yut)clY++;}
           if(v.sonuc==='gecti'||v.sonuc==='kayip'||v.sonuc==='yarim'&&v.duello){clN++;const ok=v.sonuc==='gecti';if(ok)clOk++;if(grup(v.p)==='kanat')clKanat++;if(v.P!=null){clPn++;clPt+=v.P;if(ok)clPok++;}
             const h=clHar[v.hareket||'?']||(clHar[v.hareket||'?']=[0,0]);h[0]++;if(ok)h[1]++;}}
         else if(ad==='goal'){gol++;if(!v.own&&m.t-donenT[v.team]<4)golDonen++;const sk=m.sonKullanim;if(!v.own&&sk&&m.t-sk.t<10&&sk.p&&sk.p.team===v.team&&(sk.tur==='korner'||sk.tur==='serbest'||sk.tur==='penalti'))golDuran++;}},
       adim(m){adim++;const b=m.ball,ph=m.phase;
+        /* T24-0: direkten sonra — oyun durdu, topu kim aldı, 4 sn doldu */
+        if(dr){if(ph!=='play')drBit('durdu');
+          else{const q=b.sahip||b.tasiyan;if(q&&q.team!=null){if(q.team!==dr.att)drBit(q.rol==='GK'?'kurt':'rakip');else dr.tut=true;}
+            if(dr&&m.t-dr.t>4)drBit(dr.tut?'tuttu':'yok');}}
         /* duran top: oyuna dönüş anında düzen; 8 sn sonra şut/gol */
         if(ph==='durus'){if(onceki!=='durus')duT0=m.t;lastDu=m.durus;}
         if(onceki==='durus'&&ph==='play'&&lastDu){const du=lastDu,att=du.takim,d=m.dir[att];
@@ -157,16 +184,17 @@ module.exports={
           if(h.gn>=30&&!(p.eylem&&p.eylem.kilit)){if((sp-h.g[h.gi])/0.5>3){if(!h.gust&&m.t-h.gson>1){eforGps++;h.gson=m.t;}h.gust=true;}else h.gust=false;}
           h.g[h.gi]=sp;h.gi=(h.gi+1)%30;h.gn++;}
         if(adim%30===0){orn++;if(n>=16)kalabalik++;}},
-      bitir(){const tk=Object.values(kayip).reduce((a,c)=>a+c,0),ham={
+      bitir(){if(dr)drBit(dr.tut?'tuttu':'yok');const tk=Object.values(kayip).reduce((a,c)=>a+c,0),ham={
           rDurYuru:[tDY,tOy],rIvmeGorev:[eforGorev,efor],rDepar:[tDep,tOy],rUzakKosu:[tUzakKosu,tUzak],rKalabalik:[kalabalik,orn],
           rAyaktaKisa:[ayakta.filter(x=>x<1).length,ayakta.length],rTasima:[tasima.filter(t=>t.yol>5).length,tasima.length],
           rSeqBos:[seqs.filter(s=>s.pas===0).length,seqs.length],rSeq10:[seqs.filter(s=>s.pas>=10).length,seqs.length],
           rAliciForvet:[alFv,alN],rAliciKanat:[alKn,alN],rSutKutu:[sutKutu,sut],rSutForvetDisi:[sutDisi,sut],rGolDuran:[golDuran,gol],
           rKornerGol:[korner.filter(k=>k.gol).length,korner.length],rBarajGol:[baraj.filter(k=>k.gol).length,baraj.length],
-          rCalimOk:[clOk,clN],rCalimKanat:[clKanat,clN],rCalimYut:[clY,clYn],rCalimFaul:[clFaul,clHep],rCalimYarim:[clYarim,clHep],rFaulItme:[faulItme,faulN],rGolDonen:[golDonen,gol]};
+          rCalimOk:[clOk,clN],rCalimKanat:[clKanat,clN],rCalimYut:[clY,clYn],rCalimFaul:[clFaul,clHep],rCalimYarim:[clYarim,clHep],rFaulItme:[faulItme,faulN],rGolDonen:[golDonen,gol],
+          rDirekGol:[drS.gol,drN],rDirekKurt:[drS.kurt,drN],rDirekUzak:[drS.uzak,drN],rDirekSut:[drS.sut,drN]};
         for(const [k] of R_KAYIP)ham['rKayip_'+k]=[kayip[k]||0,tk];
         return{ham,rPasBoy:pasN?pasL/pasN:NaN,rHizDk:tOy?mes/tOy*60:NaN,rIvme:tOy?efor/(tOy/60):NaN,rIvmeGps:tOy?eforGps/(tOy/60):NaN,rIvmeEski:tOy?eforEski/(tOy/60):NaN,rIvmeEs:tOy?esN/(tOy/60):NaN,rAyakta:ortanca(ayakta),rSeqPas:ort(seqs.map(s=>s.pas)),rSeqSure:ort(seqs.map(s=>s.sure)),
-          rIvmeKume:tOy?kume/(tOy/600):NaN,rPpda:ppdaEylem?ppdaPas/ppdaEylem:NaN,rSutMesafe:ortanca(sutL),rKornerKutu:ort(korner.map(k=>k.kutu)),rKornerSav:ort(korner.map(k=>k.sav)),rKornerGeri:ort(korner.map(k=>k.geri)),rKornerGeriHiz:ort(korner.map(k=>k.geriHiz).filter(x=>x===x)),
+          rIvmeKume:tOy?kume/(tOy/600):NaN,rPpda:ppdaEylem?ppdaPas/ppdaEylem:NaN,rSutMesafe:ortanca(sutL),rSutMesafeF:ortanca(sutLF),rDirek:drN,rDirekDiger:drDiger,rDirekDokum:drS,rKornerKutu:ort(korner.map(k=>k.kutu)),rKornerSav:ort(korner.map(k=>k.sav)),rKornerGeri:ort(korner.map(k=>k.geri)),rKornerGeriHiz:ort(korner.map(k=>k.geriHiz).filter(x=>x===x)),
           rBarajKisi:ort(baraj.map(k=>k.kisi)),rSerbestKutu:ort(serbest),rDuranHazirlik:ortanca(hazirlik),
           rCalim:clN,rCalimHepsi:clHep,rCalimKalib:clPn?100*(clPt-clPok)/clPn:NaN,rKoru:tKoru,rCalimHareket:clHar,
           rDokunus:dkT[0]+dkT[1]+dkT[2]>0?(dkN[0]+dkN[1]+dkN[2])/(dkT[0]+dkT[1]+dkT[2]):NaN,
@@ -176,6 +204,9 @@ module.exports={
   },
   /* T4: hareket başına çalım denemesi ve başarı (bütün maçlar) */
   ozet(sonuclar){const T={};for(const r of sonuclar){const H=r.rCalimHareket;if(!H)continue;for(const k in H){const t=T[k]||(T[k]=[0,0]);t[0]+=H[k][0];t[1]+=H[k][1];}}
-    const K=Object.keys(T).sort((a,b)=>T[b][0]-T[a][0]);if(!K.length)return;
-    console.log('  Çalım hareketleri (düello; maç başına · başarı %): '+K.map(k=>k+' '+(T[k][0]/sonuclar.length).toFixed(2)+' · %'+(100*T[k][1]/T[k][0]).toFixed(0)).join('  |  '));}
+    const K=Object.keys(T).sort((a,b)=>T[b][0]-T[a][0]);
+    if(K.length)console.log('  Çalım hareketleri (düello; maç başına · başarı %): '+K.map(k=>k+' '+(T[k][0]/sonuclar.length).toFixed(2)+' · %'+(100*T[k][1]/T[k][0]).toFixed(0)).join('  |  '));
+    /* T24-0: direğe çarpan şuttan sonraki 4 sn, bütün sınıflar (bütün maçların toplamı) */
+    const D={};let dn=0;for(const r of sonuclar){const H=r.rDirekDokum;if(!H)continue;for(const k in H){D[k]=(D[k]||0)+H[k];dn+=H[k];}}
+    if(dn)console.log(`  Direğe çarpan şuttan sonra 4 sn (T24-0; ${dn} şut, maç başına ${(dn/sonuclar.length).toFixed(2)}): `+R_DIREK.map(([k,ad])=>ad+' '+(D[k]||0)+' (%'+(100*(D[k]||0)/dn).toFixed(0)+')').join(' · '));}
 };

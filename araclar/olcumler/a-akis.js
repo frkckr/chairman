@@ -18,7 +18,11 @@
    - Terk edilen vuruş hazırlığı: vuruş eylemi hazırlık evresindeyken top hâlâ takımdayken vuruşsuz biter (süre aşımı; T20 teşhisi: koşarken arkaya pas
      kararında gövde pas yönüne döner, oyuncu topu geri geri kovalayıp yetişemez). Hat kapanınca vazgeçme (`vazgecti` olayı) bundan düşülür; rakibin
      dokunuşuyla ya da düşüş gibi başka bir eylemle biten hazırlık “kesilen”dir.
-   - Şut türü: şut nesnesinin türü (sert, plase, falso + trivela, aşırtma, düşen) ve vuruş stili (vole, yarım vole). */
+   - Şut türü: şut nesnesinin türü (sert, plase, falso + trivela, aşırtma, düşen) ve vuruş stili (vole, yarım vole).
+   - T24-0 (2026-10-18): kabulün şut türü satırları penaltı ve doğrudan serbest vuruş hariç (vuruş eyleminin sec.penalti / sec.serbest'i; ikisinin
+     kendi planlayıcısı var); eski “Şut:” satırları bilgi kalır. Stil değişimi (borç 40): şut eyleminin ilk görüldüğü adımdaki stili (hazırlık; çizim
+     bunu gösterir) ile şut olayındaki stili (temas; vurusYap ve sutVur yeniden yazar) farklı. Gelişine şutta ayrıca: değişimde vole ya da yarım vole
+     var (topun temas yüksekliği) ya da öteki (planın türü: gelişine şutta hazırlıkta planın stili yazılmıyor). */
 const A_PL=52.5,A_MZ=34;
 module.exports={
   bilgi:[['— T20–T22: topla oyunun akıcılığı (gerçekçilik planı §4 “2026-10-18 maç notları”) —',null,0],
@@ -41,7 +45,12 @@ module.exports={
     ['Orta / maç','aOrta',2],['Orta: kanat oyuncusundan %','aOrtaKanat',1],['Orta: içe dönen (eğrililer) %','aOrtaIce',1],
     ['Sürükleme kararı (T22a) / maç','aSurukle',2],['Kanat taşıması ≥ 15 m / maç','aKanat15',2],['Kanat taşıması ≥ 25 m / maç','aKanat25',2],
     ['Şut: sert %','aSut_sert',1],['Şut: plase %','aSut_plase',1],['Şut: falso ve trivela %','aSut_falso',1],['Şut: aşırtma %','aSut_asirtma',1],
-    ['Şut: vole ve yarım vole %','aSut_vole',1]],
+    ['Şut: vole ve yarım vole %','aSut_vole',1],
+    ['Şut (penaltı, serbest vuruş hariç; kabul): sert %','aSutA_sert',1,[null,50,'T24']],['Şut (penaltı, serbest vuruş hariç; kabul): plase %','aSutA_plase',1,[25,null,'T24']],
+    ['Şut (penaltı, serbest vuruş hariç): falso ve trivela %','aSutA_falso',1],['Şut (penaltı, serbest vuruş hariç; kabul): aşırtma %','aSutA_asirtma',1,[2,5,'T24']],
+    ['Şut (penaltı, serbest vuruş hariç): düşen %','aSutA_dusen',1],['Şut (penaltı, serbest vuruş hariç): vole ve yarım vole %','aSutA_vole',1],
+    ['Gelişine şut: hazırlıktan temasa stil değişti %','aStilDeg',1,[null,0,'T24']],['  stil değişimi vole ya da yarım vole ile %','aStilDegV',1],
+    ['  stil değişimi öteki (planın türü: üst → iç, falso …) %','aStilDegT',1],['Yerleşik şut (penaltı, serbest vuruş hariç): hazırlıktan temasa stil değişti %','aStilDegY',1]],
   yeni:()=>{
     const hyp=(a,b)=>Math.sqrt(a*a+b*b),aN=a=>a-2*Math.PI*Math.floor((a+Math.PI)/(2*Math.PI)),dt=1/60;
     let surK=0,arkaK=0,arkaEp=0,donukK=0,donukN=0,surT=0,dokN=0,hizT=0;const hizL=[];
@@ -51,6 +60,8 @@ module.exports={
     let surukle=0;const sonSur=new Map();
     let egriN=0,egriP=0,havaUzun=0,kosanHava=0,ortaN=0,ortaKanat=0,ortaEgri=0,ortaIce=0,kan15=0,kan25=0;
     const sut={sert:0,plase:0,falso:0,asirtma:0,vole:0};
+    /* T24-0 */
+    const sutA={sert:0,plase:0,falso:0,asirtma:0,dusen:0,vole:0};let sutAN=0,ilkSN=0,ilkDeg=0,ilkDegV=0,ilkDegT=0,yerSN=0,yerDeg=0;const stil0=new WeakMap();
     let hazTerk=0,hazKesik=0,vazgec=0,yavasla=0;const eyl=new Map();
     const arka=new Map(),alis=new Map(),tas=new Map();let sonSd=new Map(),pbx=0,pbz=0;
     /* T23-0 */
@@ -75,9 +86,17 @@ module.exports={
           if(e&&e.sec&&e.sec.ilk)tekSut++;
           if(e&&(e.stil==='vole'||e.stil==='yarimVole'))sut.vole++;
           if(tur==='sert')sut.sert++;else if(tur==='plase')sut.plase++;else if(tur==='falso'||tur==='trivela')sut.falso++;else if(tur==='asirtma')sut.asirtma++;
+          /* T24-0: penaltı ve doğrudan serbest vuruş hariç türler; hazırlıktan temasa stil değişimi */
+          const vs=e&&e.ad==='vurus'?e:null,ac=!(vs&&vs.sec&&(vs.sec.penalti||vs.sec.serbest));
+          if(ac){sutAN++;if(vs&&(vs.stil==='vole'||vs.stil==='yarimVole'))sutA.vole++;
+            if(tur==='sert')sutA.sert++;else if(tur==='plase')sutA.plase++;else if(tur==='falso'||tur==='trivela')sutA.falso++;else if(tur==='asirtma')sutA.asirtma++;else if(tur==='dusen')sutA.dusen++;}
+          if(vs&&stil0.has(vs)){const s0=stil0.get(vs),deg=s0!==vs.stil,vo=x=>x==='vole'||x==='yarimVole';
+            if(vs.sec&&vs.sec.ilk){ilkSN++;if(deg){ilkDeg++;if(vo(s0)||vo(vs.stil))ilkDegV++;else ilkDegT++;}}else if(ac){yerSN++;if(deg)yerDeg++;}}
           alisBitir(p,true,m);return;}
         if(ad==='clear'){if(p)alisBitir(p,true,m);}},
       adim(m){const b=m.ball;
+        /* T24-0: şut eyleminin hazırlıktaki ilk stili (borç 40) */
+        for(const q of m.players){const e=q.eylem;if(e&&e.ad==='vurus'&&e.sec&&e.sec.tur==='sut'&&!stil0.has(e))stil0.set(e,e.stil);}
         if(m.phase!=='play'){arka.clear();alis.clear();tas.clear();eyl.clear();pbx=b.vx;pbz=b.vz;return;}
         /* terk edilen vuruş hazırlığı: hazırlıktaki vuruş eylemi vuruşsuz bitti (vazgeçme olayı ayrı) */
         for(const q of m.players){const e0=eyl.get(q),e=q.eylem;
@@ -115,6 +134,8 @@ module.exports={
         const ham={aArkaPay:[arkaK,surK],aDonukPay:[donukK,donukN],aDonukKalici:[donukKal,donukN],aDonukDon:[donukDon,donukN],aDonukYuz:[donukYuz,donukN],aGeriPay:[geriN,alisN],aYonGeriPay:[yonGeriN,alisN],aTekPay:[tekN,pasN],aTekSutPay:[tekSut,sutN],
           aSantraTek:[santraTek,santraN],aSantraGeri:[santraGeri,santraN],aEgriPay:[egriP,egriN],aOrtaKanat:[ortaKanat,ortaN],aOrtaIce:[ortaIce,ortaEgri]};
         for(const k in sut)ham['aSut_'+k]=[sut[k],sutN];
+        for(const k in sutA)ham['aSutA_'+k]=[sutA[k],sutAN];
+        ham.aStilDeg=[ilkDeg,ilkSN];ham.aStilDegV=[ilkDegV,ilkSN];ham.aStilDegT=[ilkDegT,ilkSN];ham.aStilDegY=[yerDeg,yerSN];
         return{ham,aArkaEp:arkaEp,aArkaAlis:arkaAlis,aArkaDon:arkaDon,aArkaDiger:arkaDiger,aNiyetDeg:surT?niyetDeg/surT:NaN,aNiyetGeri:surT?niyetGeri/surT:NaN,aDokunusHz:surT?dokN/surT:NaN,aSurHiz:surK?hizT/surK:NaN,aSurHiz90:hizL.length?hizL[Math.floor(hizL.length*0.9)]:NaN,
           aGeriSn:geriSn,aHazTerk:Math.max(0,hazTerk-vazgec),aHazKesik:hazKesik,aYavasla:yavasla,aVazgec:vazgec,aAlisSure:alisN?alisSure/alisN:NaN,aAlisN:alisN,aTekAci:tekAciN?tekAci/tekAciN:NaN,aHavaUzun:havaUzun,aKosanHava:kosanHava,aOrta:ortaN,
           aSurukle:surukle,aKanat15:kan15,aKanat25:kan25};}

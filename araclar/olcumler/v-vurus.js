@@ -4,7 +4,8 @@
    'pass', 'cross', 'kotuVurus') ve her adımın sonunda topu, şut nesnesini (b.sut) ve oyuncuların vuruş eylemini (p.eylem 'vurus') okur. Oranlar
    bütün maçların toplamından (ham), diğer satırlar maç başına ortalamadır. Tanımlar:
    - Şut: 'shot' olayı (ayak şutu; kafa şutu sayılmaz). Hız: olay anındaki topun 3B hızı. Güç: vuruş eyleminin planlanan (gucPlan) ve gerçekleşen
-     (guc) gücü. Stil: eylemin stili (ic plase, ust sert, dis, asirtma, vole, yarimVole, burun).
+     (guc) gücü. Stil: eylemin stili (ic plase, ust sert, falso, dis, asirtma, vole, yarimVole, burun; falso T24-0'da eklendi — eskiden sayılmıyordu,
+     öbür stillerin payı falsosuz paydadandı).
    - Sapma: şut nesnesindeki amaçlanan nokta (hedefZ, hedefY) ile hatası uygulanmış nişan (nisanZ, nisanY) arası, kale çizgisinde (m); açısal
      sapma = atan(|Δz| / mesafe). Nişan T9b-0'da motorun şut nesnesine eklendi (salt okunur; sonucu değiştirmez).
    - Çerçeveye giden: vuruş anında top kalecisiz ve oyuncusuz çerçeveyi bulacak mı (b.sut.cerceve; motorun hesabı). Mesafe sınıfı: şutun atıldığı
@@ -18,8 +19,8 @@
    - Acele: eylemin acele alanı (T9b-b'den); yoksa karar anında baskı > 0,5 (b-olcum ile aynı tanım).
    - Ortalama hız satırları: ham [toplam / 100, adet] (mac-deneme.js oranı 100 ile çarpar; sonuç toplam / adet). */
 const V_HIZ=['<20','20–25','25–30','>30'];
-const V_STIL=['ic','ust','dis','asirtma','vole','yarimVole','burun'];
-const V_STIL_AD={ic:'iç ayak (plase)',ust:'üst (sert)',dis:'dış ayak',asirtma:'aşırtma',vole:'vole',yarimVole:'yarım vole',burun:'burun'};
+const V_STIL=['ic','ust','falso','dis','asirtma','vole','yarimVole','burun'];
+const V_STIL_AD={ic:'iç ayak (plase)',ust:'üst (sert)',falso:'falso (iç ayak, dönen)',dis:'dış ayak',asirtma:'aşırtma',vole:'vole',yarimVole:'yarım vole',burun:'burun'};
 const V_MES=['<11 m','11–16,5 m','16,5–25 m','>25 m'];
 const V_NEDEN=['durus','rakip','beden','degisti','hazirlik','kacti','iska'];
 const V_NEDEN_AD={durus:'oyun durdu',rakip:'rakip aldı ya da dokundu',beden:'beden (düşüş, sendeleme …)',degisti:'başka vuruşa döndü',
