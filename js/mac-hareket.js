@@ -94,6 +94,7 @@ ayarEkle('C',{
      ortacı yakın beki görünce ortayı bırakıyor; orta bloğu bekin yerinin değil ortacının değer modelinin işi (gerçekçilik planı “T19d — Sonuç”) */
   kanatKapat:0,
   /* T20a–b (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): sürüşün ve topla gövdenin akıcılığı */
+  sagSolAc:0.55,               // T22a (2026-10-18): “sağından at solundan geç” satırının yetenek eşiği (hız, çabukluk, sürüş); eskiden 9 (fiilen kapalı) — 0: eski
   surusYetis:1,                // T20a: serbest sürüşte top öndeyken (2,5 m) sürücü topa topun hızıyla (+0,5 m/sn) varır, yetişiyorsa dokunuş zamanlayıcısını beklemeden
                                // dokunur, top gövdenin yanındaysa (0,6 m, 0,35 m gerisine dek) da dokunur; 0: eski (varış hızı hedef hızın %95'i, zamanlayıcı, yalnız öndeki top)
   surusYuz:1,                  // T20a: sürüşte gövdenin hedefi histerezisli (top ±72° dışında ve 0,6 m'den uzaksa topa, ±32° içinde ya da 0,5 m'de niyete); 0: tek eşik (±60°)
@@ -274,7 +275,7 @@ function birebirTahmin(m,p,o,yon,zorla){
     if(H.ayar&&!(A[H.ayar]>0))continue;   /* A4-5: anahtarla açılan satır (Cruyff) */
     if(zorla==null){if(H.kosul==='sut'&&!sut||H.kosul==='kanat'&&!(son&&vNow<4&&hrkAbs(b.z-MZ)>=A.cruyffKanat)||H.kosul==='gelen'&&!gelen||H.kosul==='dar'&&!dar||H.kosul==='atak'&&!(vNow>=3&&L>=2.5))continue;if(H.kosul==='sirt'?!sirt:sirt&&H.kosul!=='dar')continue;
       if(H.Lmax&&A.sirtGovde&&L>H.Lmax)continue;}   /* A4-5: sırtla dönme savunmacı dibindeyken */
-    const yet=hrkYetenek(p,H.yet);if(zorla==null&&yet<H.esik)continue;
+    const yet=hrkYetenek(p,H.yet),es=H.ad==='sagSol'&&MOTOR_AYAR.sagSolAc?MOTOR_AYAR.sagSolAc:H.esik;if(zorla==null&&yet<es)continue;   /* T22a: sagSolAc */
     /* hazırlığın başladığı uzaklık (kapanma hızıyla) ve itişteki uzaklık; aldatma zarı hazırlığın başındaki uzaklıktan */
     const Lb=hrkMin(L,hrkMin(H.tetik,H.itisL+kapanma*H.haz+0.1)),Lp=hrkMax(0.9,hrkMin(L,H.itisL)),Pyut=hrkYutma(p,o,H,yet,0.5*(Lb+Lp)),tYak=hrkMax(0,L-Lb)/hrkMax(1,vmP*H.yakHiz)+H.haz;
     const ox=b.x+ux*Lp,oz=b.z+uz*Lp,vP=hrkMax(vmP*H.hazHiz,spP-4*tYak);
@@ -613,8 +614,10 @@ Object.assign(Match.prototype,{
     const onde=dx*hrkCos(p.yon)+dz*hrkSin(p.yon),ulas=lerp(A.dokunusUlas[0],A.dokunusUlas[1],clamp((p.spd-3)/4,0,1));
     /* T20a (surusYetis): sürücü topa yetişiyorsa (kendi hızı topunkinden 0,8 m/sn fazla, top uzanmanın 0,8'inde) zamanlayıcıyı beklemeden dokunur (son dokunuştan ≥ 0,3 sn);
        top gövdenin yanındaysa (0,6 m içinde, 0,35 m gerisine dek) da dokunur — eskiden yalnız öndeki topa dokunuyor, yanda kalan topun dönmesini bekliyordu */
+    /* T22a (surukle): sürüklemede (niyette surukle, süresi içinde) top 2,8 m öne itilir, dokunuş ~1,7 / sn, yetişince erken dokunuş yok (depar dokunuşu) */
+    const sur=serbestT&&s.surukle&&this.t<s.surukle;
     let erken=false,yanda=false;
-    if(A.surusYetis&&serbestT&&b.y<0.35){const sd=p.sonDokunus;erken=p.dokunT>0&&d<0.8*ulas&&onde>0.05&&p.spd>bva+0.8&&(!sd||this.t-sd.t>=0.3);yanda=d<0.6&&onde>-0.35;}
+    if(A.surusYetis&&serbestT&&!sur&&b.y<0.35){const sd=p.sonDokunus;erken=p.dokunT>0&&d<0.8*ulas&&onde>0.05&&p.spd>bva+0.8&&(!sd||this.t-sd.t>=0.3);yanda=d<0.6&&onde>-0.35;}
     if((d<ulas&&(p.dokunT<=0||erken)||M&&(M.itme||M.durdur)&&d<0.75)&&b.y<0.35&&(onde>-0.15||yanda)&&!(M&&M.bekle)){
       let a=yon;const f=hrkAciFark(a,p.yon);
       /* T4: topu çekme — öndeki baskıda arkaya (>2 rad) dönüş tabanla tek dokunuşta (sonDokunus.hareket 'cekme'); başka zaman gövdeye göre en çok 0,85 rad,
@@ -622,7 +625,7 @@ Object.assign(Match.prototype,{
          (θ = 0,7·yanal tutunma·Δt / hız; 0,2–0,85 rad): top gidiş çizgisinden fazla saparsa oyuncu ona dönmek için yavaşlıyor, dokunuş gecikiyordu.
          Çalım itişi (M.itme) yönünü ve hızını yürütücüden alır: rastlantı ve düzeltme yok (kötü itiş zarı yürütücüdedir) */
       const itis=!!(M&&M.itme),kacis=!!(M&&M.kac),kontrol=!!M&&!itis&&!kacis&&!M.durdur,surer=serbest||kacis||kontrol;
-      const Dt0=serbest?1/(lerp(A.dokunusSiklik[0],A.dokunusSiklik[1],clamp(vp/7,0,1))*(1+0.3*bOn)):kacis?0.5:kontrol?0.3:0.22;
+      const Dt0=sur?0.6:serbest?1/(lerp(A.dokunusSiklik[0],A.dokunusSiklik[1],clamp(vp/7,0,1))*(1+0.3*bOn)):kacis?0.5:kontrol?0.3:0.22;
       /* T20a (surusYetis): 1,5 m/sn'den hızlı sürücü niyetini gidişinin tersine (> 100°) çevirince de topu tabanla geri çekip döner (baskı olmasa da;
          eskiden gövde yeni niyete dönüyor, top eski yönde kayıp arkada kalıyordu) */
       const tersDon=A.surusYetis&&serbestT&&sp>1.5&&hrkAbs(hrkAciFark(yon,va))>1.75;
@@ -645,7 +648,7 @@ Object.assign(Match.prototype,{
           küçük olduğundan dokunuş kendiliğinden kısadır; çekmede top 0,8 m geri. Çalımın hazırlığında kısa (0,3 sn, top 0,45 m önde), kaçışında
           uzun (0,5 sn, top 1,8 m önde) */
         Dt=Dt0;
-        const Lc=kacis?1.8:kontrol?0.45:0.9*ulas,vort=ileri+0.5*clamp(vp-ileri,-4*Dt,3*Dt),simdi=dx*ca+dz*sa;let yol=cekme?0.8:hrkMax(0.15,vort*Dt+Lc-simdi);
+        const Lc=sur?2.8:kacis?1.8:kontrol?0.45:0.9*ulas,vort=ileri+0.5*clamp(vp-ileri,-4*Dt,3*Dt),simdi=dx*ca+dz*sa;let yol=cekme?0.8:hrkMax(0.15,vort*Dt+Lc-simdi);
         /* çizgi: top kaçarsa da (0,8 m daha) saha içinde kalsın; çizgiye yakın sürücü topu kısa tutar */
         const sx=ca>0.05?(PL-0.4-b.x)/ca:ca<-0.05?(-PL+0.4-b.x)/ca:99,sz=sa>0.05?(PW-0.4-b.z)/sa:sa<-0.05?(0.4-b.z)/sa:99;
         yol=hrkMin(yol,hrkMax(0.3,hrkMin(sx,sz)-0.8));

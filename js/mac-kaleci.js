@@ -24,6 +24,8 @@ ayarEkle('D',{
      görürse (kaleciKontraVar) hemen oynar; beklerken kontra açılırsa hemen bırakır. [0, 0]: T16a'nın yolu (eylem biter bitmez dağıtır). Sıkıştırılmış
      maçta (duruşlar gerçeğin ~1/3'ü) gerçeğin ~3–5 sn'si. 40 maç (t18.json'a): [1,2; 2,4] bekletme %45, gol 3,40, gerçekleşen ÷ xG 1,34 (T16a'nın
      yönü: uzun bekleyişte takım hücum düzenine çıkıyor); [0,8; 1,6] bekletme %38, gol 3,00, ÷ xG 1,26 → seçildi */
+  kaleciEgri:0.12,             // T22b (2026-10-18): dönen topun (falso, trivela; |egri| > 0,05) kalecinin tepkisine eklediği süre (sn; eskiden KL_M.egri 0,07) —
+                               // dönen topun varış noktası geç ve yanlış okunur (Craig ve ark. 2006); tahmin ve yürütme aynı değeri okur
   kaleciBekle:[0.8,1.6],
   kaleciNiyetEsik:[0.6,0.15]   // T15a: niyetin eşiği — beklenen tutma olasılığı (kaleciTutmaP) bunun altındaysa çelme; [taban, karşılama noktasının
                                // 3,5 m içinde rakip varsa ek] (beklenen gol hesabı: kaleciNiyet yorumu; ilk deneme 0,35 elden kaçan topu çok bıraktı)
@@ -216,7 +218,7 @@ Object.assign(Match.prototype,{
         &&this.kendiCezaSahasinda(gk,gk.x,gk.z)?this.kaleciPlanla(gk):null;
       if(!yeni){gk._kp=null;return;}
       if(pl&&hyp(yeni.pz-pl.pz,yeni.py-pl.py)<0.4&&Math.abs(yeni.an-pl.an)<0.15){yeni.tBas=pl.tBas;yeni.r=pl.r;yeni.vj=pl.vj;yeni.basladi=pl.basladi;yeni.karar=pl.karar;}
-      else{yeni.tBas=this.t;yeni.r=Math.max(0.06,kaleciTepkiSuresi(this,gk,b.x,b.z)+(Math.abs(b.egri||0)>0.05?KL_M.egri:0)+this.normal()*0.035);yeni.vj=clamp(1+this.normal()*0.07,0.85,1.15);yeni.basladi=false;}
+      else{yeni.tBas=this.t;yeni.r=Math.max(0.06,kaleciTepkiSuresi(this,gk,b.x,b.z)+(Math.abs(b.egri||0)>0.05?(b.sut?MOTOR_AYAR.kaleciEgri:KL_M.egri):0)+this.normal()*0.035);   /* T22b: uzayan geç okuma yalnız şutta (orta, uzun top: KL_M.egri — ortanın planlayıcısı bilmez) */yeni.vj=clamp(1+this.normal()*0.07,0.85,1.15);yeni.basladi=false;}
       pl=gk._kp=yeni;}
     /* top kaleciyi geçti */
     if((b.x-gk.x)*pl.nx+(b.z-gk.z)*pl.nz>1.0){gk._kp=null;return;}

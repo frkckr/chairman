@@ -320,6 +320,23 @@ function tasimaSecenekleri(m,p,S){
   if(dv0!==null){const k=aciFark(dv0,hA)/(Math.PI/4),uzak=Math.abs(k-Math.round(k))*(Math.PI/4)>0.052;
     if(uzak&&Math.abs(aciFark(dv0,a1))>0.052&&Math.abs(aciFark(dv0,a2))>0.052)tasimaYonu(m,p,S,aciNorm(dv0),dv0,rakip,vC);}
 }
+/* T22a (2026-10-18; surukle): sürükleme — 15 / 22 / 30 m'lik uzun taşıma (kullanıcı notu: kanadın hızlanıp basıp gitmesi). Yön hücum yönü ve kaleye doğru; sürücü
+   tepe hızın ~0,88'iyle gider. Başarı: yol boyunca 5 m'de bir rakiplerin varışı (tasimaYonu'nun ölçeği); değer: yolun sonundaki devam değeri + ilerleme
+   − kayıp. Kendi yarısının derininde ve kaleci için yok. Saf */
+const SR_L=[15,22,30];
+function surukleSecenegi(m,p,S){
+  const A=MOTOR_AYAR;if(!A.surukle||p.rol==='GK')return;
+  const b=m.ball,d=m.dir[p.team],u=b.x*d;if(u<-15)return;
+  const hA=d>0?0:Math.PI,gA=Math.atan2(MZ-b.z,d*PL-b.x),vC=p.maxSpd*0.88,rakip=rakipler(m,p.team),takim=m.taktik[p.team];
+  const YON=Math.abs(aciFark(gA,hA))>0.2?[hA,gA]:[hA];
+  for(const a of YON){const c=Math.cos(a),s=Math.sin(a);let P=1,son=0;
+    for(let i=1;i<=6;i++){const L=5*i,x=b.x+c*L,z=b.z+s*L;if(Math.abs(x)>PL-2||z<2||z>PW-2)break;const tp=0.3+L/vC;let en=0;
+      for(const o of rakip){if(!o.oyunda||(o.eylem&&o.eylem.kilit))continue;const rr=sigma((tp+0.1-varisZamani(o,x,z,1.0,0.2))/0.2);if(rr>en)en=rr;}
+      P*=1-0.75*en;son=L;
+      if(SR_L.includes(L)){const Pk=clamp(P,0.05,0.97),dv=devamDegeri(m,p,x,z,tp,a),ilr=(x-b.x)*d*A.ilerleme;
+        const deger=Pk*(dv+ilr+(p.mevki&&p.mevki.kanat?A.surukleKanat:0))-(1-Pk)*pasKaybi(m,p,b.x+c*L/2,b.z+s*L/2)*takim.risk*A.risk;   /* kanadın basıp gitmesi */
+        S.push({tur:'surukle',hx:x,hz:z,yon:a,mesafe:L,deger,P:Pk,dv});}}
+    if(son<15)continue;}}
 /* bekle / koru: top ayağın altında, yerinde. Rakip yakınsa gövdeyle korur (koru), değilse başı yukarıda bekler (bekle). Tutma olasılığı baskı
    süresinden ve korumadan (top sürme, sertlik, kütle). Değer: buranın tehdidi ya da koşusu süren arkadaşa 0,6 sn sonra açılacak pas (yalnız
    ileri koşanlar: duran arkadaşın pası şimdi de var, beklemek onu iyileştirmez) */
@@ -659,16 +676,17 @@ function sutAdaylari(m,p,ox,oz,sd,o){
   o=o||{};const d=m.dir[p.team],gx=d*PL,gk=m.kaleci(1-p.team),L=Math.max(1,hyp(gx-ox,MZ-oz)),onde=gk.oyunda?Math.abs(gk.x-gx):0;
   /* T9b-c: aşırtma kaleci 3,5 m'den öndeyse ve 9 m'den uzaktan (eskiden 5 m ve 11 m: maçta şutların ~%0,6'sında); dış ayakla falso yalnız becerili şutçuda */
   const tv=p.oz.sut>=0.65?['trivela']:[];
-  const turler=o.tur?[o.tur]:o.serbest?['falso','dusen','sert','plase']:onde>3.5&&L>9?['plase','sert','falso',...tv,'asirtma']:L>14?['plase','sert','falso',...tv]:['plase','sert'];
+  const turler=o.tur?[o.tur]:o.serbest?['falso','dusen','sert','plase']:onde>3.5&&L>9?['plase','sert','falso',...tv,'asirtma']:L>(MOTOR_AYAR.sutYeni?9:14)?['plase','sert','falso',...tv]:['plase','sert'];
   const gucler=o.guc!=null?[o.guc]:SUT_GUC,vMax=sutHizTavani(p,!!o.zayif)*(1-0.15*(o.acele||0)),R=VURUS_GUC_REF.sut;
   const Ls=[],sapma=Math.max(0,L-18)*0.01;let en=0;
   const nZ=SUT_HZM.length,nY=SUT_HYM.length;
-  for(const tur of turler){const TT=SUT_TUR[tur]||SUT_TUR.plase,kz=TT.kz,ky=TT.ky,BL=[],stil=o.stil||TT.stil;
+  /* T22b (sutYeni): plase ve aşırtma isabetli, sert hatalı (serbest vuruş hariç) — yerleştirmenin isabet kazancı gücün tepki kazancıyla tartılsın (eskiden sert %81) */
+  for(const tur of turler){const TT=SUT_TUR[tur]||SUT_TUR.plase,kz=MOTOR_AYAR.sutYeni&&!o.serbest?(tur==='plase'?0.65:tur==='sert'?1.15:tur==='asirtma'?0.75:TT.kz):TT.kz,ky=TT.ky,BL=[],stil=o.stil||TT.stil;
     for(const g of gucler){const v=Math.max(8,g*VURUS_STIL[stil].hiz*vMax),fg=gucHataCarpani(g,R),T=L/v*1.06*(tur==='falso'?1.08:1);
       /* kalecinin hücre ortalarındaki kurtarışı (bu tür ve güçle uçuş süresi T) */
       /* T9b-c: aşırtmanın kurtarışı da kalecinin modelinden (eski ×0,3 düzeltmesi kalktı): top kalecinin düzleminde erişiminin üstünden geçer,
          kale çizgisine çapraz geri çekilmesi (kaleciTahmin) yetişirse kurtarır */
-      const ek=tur==='falso'||tur==='trivela'?KL_M.egri:0;   /* dönen topu kaleci geç okur (yürütmede kaleciTehdit aynı süreyi ekler) */
+      const ek=tur==='falso'||tur==='trivela'?MOTOR_AYAR.kaleciEgri:0;   /* dönen topu kaleci geç okur (yürütmede kaleciTehdit aynı süreyi ekler) */
       for(let i=0;i<nZ;i++)for(let j=0;j<nY;j++)SUT_PS[i*nY+j]=gk.oyunda?kaleciTahmin(m,gk,MZ+SUT_HZM[i],SUT_HYM[j],T,ek).P:0;
       for(let k=0;k<SUT_Z.length;k++){const zt=SUT_Z[k];
         if(tur==='asirtma'&&Math.abs(zt)>2.6||!sutEgriYani(tur,o.ayak,zt,d))continue;
@@ -751,6 +769,8 @@ function secenekler0(m,p){
   if((u>PL-30||MOTOR_AYAR.ortaErken&&u>PL-40&&p.mevki&&(p.mevki.kanat||p.mevki.bek))&&Math.abs(w-MZ)>8)ortaSecenekleri(m,p,{ox:b.x,oz:b.z,baski,ofs},S);   /* T21d: erken orta */
   /* T2: taşıma (8 yön × 5/10 m; eskiden 5 yön × 6 m, boş alanda bile başarı 0,6 + 0,35·sürüş ve değer buranın tehdidi + 2,5 ile sınırlıydı) */
   tasimaSecenekleri(m,p,S);
+  /* T22a: sürükleme (15–30 m) */
+  surukleSecenegi(m,p,S);
   /* T4: rakibi geç (bire bir) */
   birebirSecenegi(m,p,S);
   /* uzaklaştırma: kendi bölgesinde baskı altında; kaleye yaklaştıkça ve baskı arttıkça daha cazip (birleştirme 2026-10-03: alt ligde sık,

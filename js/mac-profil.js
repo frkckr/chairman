@@ -132,6 +132,7 @@ function profilEgilimPuani(m,p,s){
     case 'ara':return g*e.oldurucuPas;
     case 'pas':case 'uzun':return s.hz!=null&&Math.abs(s.hz-m.ball.z)>=25?g*e.yonDegistirir:0;
     case 'tasi':return g*(0.5*e.topuSurer+0.4*e.topuAtipKosar*(s.mesafe>=10?1:0.2));
+    case 'surukle':return g*(0.4*e.topuSurer+0.6*e.topuAtipKosar);   /* T22a: sürükleme — topu atıp koşan ve top süren */
     case 'bekle':return g*(0.8*e.topuTutar-0.4*e.tekVurus);
     case 'koru':return g*(0.5*e.topuTutar+0.5*e.sirtiDonuk);
     /* T4: rakibi geç — top süren ve (yarış hareketlerinde) topu atıp koşan */

@@ -99,6 +99,10 @@ ayarEkle('B',{
   taramaTut:[0.12,0.32],       // bakışın taramanın yönüne vardıktan sonra orada kalma süresi (sn; eskiden toplam 0,28)
   taramaYan:0.7,               // taramanın yanının bir öncekinin tersi olma olasılığı (eskiden hep ters)
   bakisDonus:0.5,              // gövdenin hedefine bundan (rad) büyük dönüş kaldıkça bakış gövdenin hedefine bakar (gideceği yere bakma)
+  /* T22 (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): kanat hızı ve şut kütüphanesi */
+  surukle:1,                   // T22a: sürükleme (basıp gitmek) — 15/22/30 m'lik uzun taşıma seçeneği (mac-karar.js surukleSecenegi), depar, top 2,8 m önde, 1,2 sn bağlılık; 0: yok
+  surukleKanat:0.5,            // T22a: kanat oyuncusunun sürüklemesine ek değer (puan; kullanıcı notu: kanadın hızlanıp basıp gitmesi); 0: yok
+  sutYeni:1,                   // T22b: şutta isabet–güç ödünleşimi (plase hata çarpanı 0,9 → 0,65, sert 1,0 → 1,15 — 0,55 / 1,3 denendi: sert %59 ama gol +0,6, gerçekleşen ÷ xG 1,35; serbest vuruş hariç) ve 9 m'den (eskiden 14) falso adayı; 0: eski
   /* T21 (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): topun yolu — eğri, uzun top, orta */
   pasFalso:1,                  // T21b: pasın doğal eğrisi çarpanı — iç ayakla yerden pas 0,01–0,05 (boyla), dış ayakla ters yöne 0,05–0,09, iç ayakla uzun havadan 0,04–0,08; nişan
                                // yerdeki eğriyi telafi eder (yerPasVur). 0: eski (yerden pas ve uzun top dönüşsüz)
@@ -443,7 +447,7 @@ Object.assign(Match.prototype,{
     /* T12-0 (2026-10-12): kalecinin tahmini — hatası uygulanmış nişanın kale çizgisindeki yerine ve uçuş süresine kaleciTahmin (saf); planın seçtiği
        adayın gol ve çerçeve olasılığı. Salt okunur, ölçüm araclar/olcumler/v-verim.js; sonucu değiştirmez */
     const gk=this.kaleci(1-p.team),zc=Math.abs(hx-bx)>0.5?bz+(hz-bz)*(gx-bx)/(hx-bx):hz;
-    const pKurt=gk&&gk.oyunda&&!sec.penalti?kaleciTahmin(this,gk,zc,hy,T,tur==='falso'||tur==='trivela'?KL_M.egri:0).P:null;
+    const pKurt=gk&&gk.oyunda&&!sec.penalti?kaleciTahmin(this,gk,zc,hy,T,tur==='falso'||tur==='trivela'?MOTOR_AYAR.kaleciEgri:0).P:null;
     /* T9b-0: nisanZ/nisanY — hatası uygulanmış nişan (kale çizgisinde; salt okunur, ölçüm araclar/olcumler/v-vurus.js) */
     const xgYer=xG(bx*d,bz,'ayak',0),gkTepki=gk&&gk.oyunda?kaleciTepkiSuresi(this,gk,bx,bz):null;   /* T12-0: konum xG'si (baskısız, bloksuz) ve kalecinin tepkisi (perde dahil) */
     this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'sut',sut:{hedefZ:hz0,hedefY:hy0,nisanZ:hz,nisanY:hy,tur,pKurt,pPg:sec.penalti?null:plPg,pPon:sec.penalti?null:plPon,xgYer,gkTepki,
@@ -596,6 +600,8 @@ Object.assign(Match.prototype,{
         p.kararT=Math.max(this.dusunmeAraligi(p),(s.sure||0.5)*0.85);break;}
       /* T2: taşıma — yön ve uzunluk seçimden; uzun taşıma daha hızlı. Bekleme — top ayağın altında, baş yukarıda */
       case 'tasi':p.surus={yon:s.yon,hiz:clamp(0.55+0.035*s.mesafe,0.55,0.92)};p.kararT=this.dusunmeAraligi(p);break;
+      /* T22a: sürükleme — depar, uzun itiş; 1,2 sn bağlılık (rakip 2,5 m'ye girerse karar yine açılır: topluAI olayı) */
+      case 'surukle':p.surus={yon:s.yon,hiz:1,surukle:this.t+1.5};p.kararT=Math.max(this.dusunmeAraligi(p),1.2);break;
       /* T4: rakibi geç — çalım niyeti (hareket, yan, tahmin); yaklaşma süresince karar bağlı (yürütücü yaklaşmanın sonunda yeniden tartar) */
       case 'gec':p.surus={yon:s.yon,hiz:HRK_HAREKET[s.i].yakHiz,cal:{o:s.o,i:s.i,taraf:s.taraf,P:s.P}};p.kararT=Math.max(this.dusunmeAraligi(p),s.tYak-HRK_HAREKET[s.i].haz+0.2);break;
       case 'bekle':p.surus={yon:p.yon,hiz:0.1,bekle:true};p.kararT=this.dusunmeAraligi(p);break;

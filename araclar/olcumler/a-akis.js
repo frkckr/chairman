@@ -33,7 +33,7 @@ module.exports={
     ['Santra: orta noktada tek oyuncu %','aSantraTek',1],['Santra: ilk pas geri %','aSantraGeri',1],
     ['Eğrili pas ve orta %','aEgriPay',1],['Uzun havadan pas (orta dışı, ≥ 30 m) / maç','aHavaUzun',2],['Koşana havadan pas / maç','aKosanHava',2],
     ['Orta / maç','aOrta',2],['Orta: kanat oyuncusundan %','aOrtaKanat',1],['Orta: içe dönen (eğrililer) %','aOrtaIce',1],
-    ['Kanat taşıması ≥ 15 m / maç','aKanat15',2],['Kanat taşıması ≥ 25 m / maç','aKanat25',2],
+    ['Sürükleme kararı (T22a) / maç','aSurukle',2],['Kanat taşıması ≥ 15 m / maç','aKanat15',2],['Kanat taşıması ≥ 25 m / maç','aKanat25',2],
     ['Şut: sert %','aSut_sert',1],['Şut: plase %','aSut_plase',1],['Şut: falso ve trivela %','aSut_falso',1],['Şut: aşırtma %','aSut_asirtma',1],
     ['Şut: vole ve yarım vole %','aSut_vole',1]],
   yeni:()=>{
@@ -42,6 +42,7 @@ module.exports={
     let geriSn=0,alisN=0,geriN=0,yonGeriN=0,alisSure=0;
     let pasN=0,tekN=0,tekAci=0,tekAciN=0,sutN=0,tekSut=0;
     let santraN=0,santraTek=0,santraGeri=0,santraBek=null;
+    let surukle=0;const sonSur=new Map();
     let egriN=0,egriP=0,havaUzun=0,kosanHava=0,ortaN=0,ortaKanat=0,ortaEgri=0,ortaIce=0,kan15=0,kan25=0;
     const sut={sert:0,plase:0,falso:0,asirtma:0,vole:0};
     let hazTerk=0,hazKesik=0,vazgec=0,yavasla=0;const eyl=new Map();
@@ -91,6 +92,7 @@ module.exports={
           const sd=p.sonDokunus;if(sd&&sd!==sonSd.get(p)&&sd.tur==='surus')dokN++;
           if(p.mevki&&p.mevki.kanat){let t=tas.get(p);if(!t||t.no!==m.sahiplikNo){t={no:m.sahiplikNo,L:0};tas.set(p,t);}t.L+=p.spd*dt;}}
         if(p)sonSd.set(p,p.sonDokunus);
+        if(p&&p.surus&&p.surus.surukle&&p.surus!==sonSur.get(p)){surukle++;sonSur.set(p,p.surus);}
         for(const [q,t] of tas)if(b.sahip!==q||t.no!==m.sahiplikNo){if(t.L>=15)kan15++;if(t.L>=25)kan25++;tas.delete(q);}
         pbx=b.vx;pbz=b.vz;},
       bitir(){
@@ -101,7 +103,7 @@ module.exports={
         for(const k in sut)ham['aSut_'+k]=[sut[k],sutN];
         return{ham,aArkaEp:arkaEp,aDokunusHz:surT?dokN/surT:NaN,aSurHiz:surK?hizT/surK:NaN,aSurHiz90:hizL.length?hizL[Math.floor(hizL.length*0.9)]:NaN,
           aGeriSn:geriSn,aHazTerk:Math.max(0,hazTerk-vazgec),aHazKesik:hazKesik,aYavasla:yavasla,aVazgec:vazgec,aAlisSure:alisN?alisSure/alisN:NaN,aAlisN:alisN,aTekAci:tekAciN?tekAci/tekAciN:NaN,aHavaUzun:havaUzun,aKosanHava:kosanHava,aOrta:ortaN,
-          aKanat15:kan15,aKanat25:kan25};}
+          aSurukle:surukle,aKanat15:kan15,aKanat25:kan25};}
     };
   }
 };
