@@ -99,6 +99,15 @@ ayarEkle('B',{
   taramaTut:[0.12,0.32],       // bakışın taramanın yönüne vardıktan sonra orada kalma süresi (sn; eskiden toplam 0,28)
   taramaYan:0.7,               // taramanın yanının bir öncekinin tersi olma olasılığı (eskiden hep ters)
   bakisDonus:0.5,              // gövdenin hedefine bundan (rad) büyük dönüş kaldıkça bakış gövdenin hedefine bakar (gideceği yere bakma)
+  /* T21 (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): topun yolu — eğri, uzun top, orta */
+  pasFalso:1,                  // T21b: pasın doğal eğrisi çarpanı — iç ayakla yerden pas 0,01–0,05 (boyla), dış ayakla ters yöne 0,05–0,09, iç ayakla uzun havadan 0,04–0,08; nişan
+                               // yerdeki eğriyi telafi eder (yerPasVur). 0: eski (yerden pas ve uzun top dönüşsüz)
+  uzunKosu:1,                  // T21c: koşana savunma arkasına havadan (boşluğa) pas adayı (≥ 15 m; eskiden yasak) ve boşluğa pasta yerden ↔ havadan ikili analiz; 0: eski
+  acmaDokunus:1,               // T21c: baskısızken uzun vuruştan (havadan ≥ 28 m, yerden ≥ 32 m) önce topu vuran ayağın önüne 1–1,5 m açma dokunuşu; 0: eski
+  donusBos:0.5,                // T21c: oyunun yönünü değiştiren pasın (|Δz| ≥ 25 m) ek değeri, hedefte en yakın rakip 4 → 12 m uzaklaştıkça 0 → bu (puan; tarama 1,2: uzun havadan pas 7 → 17,6, şut −4; 0,3 / 0,5: 8,1 / 11,2); 0: eski (sabit donusDeger)
+  ortaIkinci:0.15,             // T21d: ortanın değerine ikinci top — ilk teması alamayan ortada inişin tehdidinin (xT) bu payı; 0: eski
+  ortaErken:1,                 // T21d: kanat ve bek kaleye 40 m'den (eskiden 30) orta seçeneğini tartar (erken orta); 0: eski
+  tersKanat:1,                 // T21d: ters ayaklı kanat (sağda sol ayaklı, solda sağ ayaklı) son 35 m'de içe kesen taşımayı bu kadar (puan) daha değerli bulur; 0: eski
   /* T20b–c (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): alış, vuruşa yaklaşma ve gelişine oyun */
   vurusYaklas:1,               // T20b: vuruş hazırlığında gövde önce gidilen yola bakar, topa yaklaştıkça (1,4 → 0,5 m) vuruş yönüne döner; vuruş yönünün tersine kaçan topu
                                // önce tabanla durdurur. 0: eski (hazırlığın ilk karesinden vuruş yönüne döner, arkaya pasta topu geri geri kovalar)
@@ -267,9 +276,12 @@ Object.assign(Match.prototype,{
       const sd0=vurusSapma(p,{sut:true,guc:R,ref:R,stil:burun?'burun':'ust',zayif:zy,baski,acele,ilk:!!sec.ilk})*sutHataK(L,!!sec.serbest);
       const pl=sutPlani(this,p,ox,oz,sd0,{serbest:sec.serbest,guc:sec.guc,zayif:zy,acele,tur:burun?'sert':null,stil:burun?'burun':null,ayak});
       sutPlan={tur:pl.tur,g:pl.g};gucPlan=pl.g;if(!sec.ilk)st=pl.stil;}
+    /* T21c (acmaDokunus): baskısızken uzun vuruştan önce topu vuran ayağın önüne açar (stoper bakar, bir iki adım açar, gerilir, vurur); hazırlık 0,45 sn uzar */
+    const acma=MOTOR_AYAR.acmaDokunus&&!sut&&!uzk&&!sec.ilk&&!sec.duran&&!sec.penalti&&(hava&&L>=28||tip==='yer'&&L>=32)&&baski<0.3&&b.sahip===p&&hyp(b.vx,b.vz)<1.5&&hyp(b.x-p.x,b.z-p.z)<0.9?{yapildi:false}:null;
+    if(acma)hazEn+=0.45;
     /* sözleşme (TEKNIK_PLAN §8): kalan = temasa kalan süre (her adımda motor yazar, çizim okur), hazirlikT = hazırlıktan geri salınıma geçiş anı */
     p.eylem={ad:'vurus',faz:'hazirlik',t:0,ft:0,sec,ayak,stil:st,guc:0,tekDokunus:!!sec.tekDokunus,geri,hazirlikEn:hazEn,hazirlikT:null,kalan:hazEn+geri,baski,gucPlan,sutPlan,
-      acele,kotu:null,kotuU:0,kotuP:0};
+      acele,kotu:null,kotuU:0,kotuP:0,acma};
     p.surus=null;
   },
   vurusIlerle(p,e,dt){
@@ -290,6 +302,9 @@ Object.assign(Match.prototype,{
       /* T9b-b (hazırlık kalitesi): önünden kaçan topa (son dokunuşla yuvarlanan; 1,2 m/sn'den hızlı) tam eforla ve topun varacağı yere koşar.
          Eskiden topun 0,12 sn önüne ve baskısızken 0,6 eforla gidiyordu: top ondan hızlı yuvarlanınca yetişemiyor, şut süresi dolup bitiyordu
          (başlayıp vurulmayan şutların yarısı; ayak–top 0,7–1,7 m, gövde hizalı) */
+      /* T21c: açma dokunuşu — top vuran ayağın önüne ve biraz o yana 1,2 m itilir, oyuncu peşinden gidip vurur */
+      if(e.acma&&!e.acma.yapildi&&ayakD<0.6&&b.y<0.2){e.acma.yapildi=true;const ya=aciNorm(a+(e.ayak==='sag'?0.35:-0.35)),v0=hrkItmeHizi(1.2,0.55,this.R);
+        b.vx=Math.cos(ya)*v0;b.vz=Math.sin(ya)*v0;this.dokunus(p,true);p.sonDokunus={t:this.t,tur:'surus',ayak:e.ayak,yuzey:'ic'};}
       const kacan=!k&&topHiz>1.2&&ayakD>0.4,on2=kacan?clamp(ayakD/4,0.12,0.6):0.12;
       if(k){/* gelişine: topun yoluna gir */p.tx=k.x-c*on;p.tz=k.z-s*on;}
       else{p.tx=px+b.vx*on2;p.tz=pz+b.vz*on2;}
@@ -446,9 +461,18 @@ Object.assign(Match.prototype,{
     const eL=this.normal()*sd*(1+L/40)-0.035*baski;let v=pasPlani(this,Math.max(0.5,L*(1+eL)),'yer',varis).v0;
     if(e.kotu==='alt')v*=0.8;else if(e.kotu==='ust')v*=0.55;else if(e.kotu==='kenar')v*=0.75;
     b.vx=(hx-bx)/L*v;b.vz=(hz-bz)/L*v;b.vy=e.kotu==='alt'?2.5+2*ku:0;b.y=Math.min(b.y,0.02);b.egri=0;b.ust=0;
+    /* T21b (pasFalso): pasın doğal eğrisi — iç ayakla sağ ayak sola, sol ayak sağa kıvırır (orta ve kornerle aynı işaret), dış ayakla ters yöne ve daha çok;
+       nişan yerdeki kıvrılmayı telafi eder (topun kopyası L kadar yürütülür, yanal sapma kadar döndürülür) */
+    if(MOTOR_AYAR.pasFalso&&!e.kotu&&L>=6&&MOTOR_AYAR.yerFalso){const dis=e.stil==='dis',isr=(e.ayak==='sol'?1:-1)*(dis?-1:1);
+      const eg=isr*MOTOR_AYAR.pasFalso*(dis?0.05+0.04*this.rast():0.01+0.04*clamp(L/30,0,1)*this.rast());b.egri=eg;
+      const D=this.yerEgriSapma(bx,bz,b.vx,b.vz,eg,L),ac=-Math.atan2(D,L),c2=Math.cos(ac),s2=Math.sin(ac),vx0=b.vx;b.vx=vx0*c2-b.vz*s2;b.vz=vx0*s2+b.vz*c2;}
     e.guc=clamp(v/29,0,1);if(v>20&&e.stil==='ic')e.stil='ust';
     this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'yer'});
   },
+  /* T21b: yerden eğrili pasın L metredeki yanal sapması (m; işaret: sola +). Topun kopyası top fiziğiyle yürütülür (en çok 4 sn); saf, rastlantısız */
+  yerEgriSapma(bx,bz,vx,vz,egri,L){const s={x:bx,y:0,z:bz,vx,vy:0,vz,egri,ust:0},v=hyp(vx,vz)||1,ux=vx/v,uz=vz/v;
+    for(let i=0;i<240;i++){topFizikAdim(s,1/60,false,this.R,this.kosullar);const on=(s.x-bx)*ux+(s.z-bz)*uz;if(on>=L||hyp(s.vx,s.vz)<0.3)break;}
+    return -(s.x-bx)*uz+(s.z-bz)*ux;},
   /* havadan: pas, aşırtma, uzun top, orta, korner, uzaklaştırma, degaj. Uçuş süresi ortak plandan */
   havaPasVur(p,e){
     const b=this.ball,sec=e.sec;
@@ -459,6 +483,8 @@ Object.assign(Match.prototype,{
     /* orta ve korner hedefteki oyuncunun baş (kesmede göğüs-baş) yüksekliğine gönderilir */
     hy=sec.hy!=null?sec.hy:(sec.tur==='orta'||sec.tur==='korner')?1.7:0;
     if(sec.tur==='orta'||sec.tur==='korner')egri=(e.ayak==='sag'?-1:1)*(sec.yay==='kesme'?0.08+this.rast()*0.06:0.05+this.rast()*0.07);
+    /* T21b (pasFalso): iç ayakla uzun havadan pas ve uzun top kıvrılarak gider (havadanCoz eğriyi bilir, top hedefe iner) */
+    else if(MOTOR_AYAR.pasFalso&&L>=25&&sec.tur!=='uzaklastir'&&sec.tur!=='degaj'&&sec.yay!=='asirtma'&&e.stil!=='dis')egri=(e.ayak==='sag'?-1:1)*(0.04+0.04*this.rast())*MOTOR_AYAR.pasFalso;
     /* havadan pas ve orta kesik dönüşle gider: havada biraz asılı kalır, yerde frenlenir */
     ust=sec.tur==='uzaklastir'||sec.tur==='degaj'?0:sec.yay==='asirtma'?-0.06:-0.04;
     const ah=this.normal()*sd*1.6,ca=Math.cos(ah),sa=Math.sin(ah),rx=hx-bx,rz=hz-bz;

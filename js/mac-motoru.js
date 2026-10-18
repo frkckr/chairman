@@ -59,6 +59,8 @@ const MOTOR_AYAR={
   blokHizli:4,                 // T1: aynısı tehlikede (savunmada top kalemize gelirken, hücumda top ileri giderken)
   hucumGecikme:1,              // T1: hücumdaki takımın bölge oyuncuları da kişisel tepkiyle kayar: 1 topun gerisindekiler, 2 hepsi, 0 hiçbiri
   presHisterezis:1.5,          // T4: 1. adam seçimi kare kare değişmesin: önceki 1. adam yeni adaydan bu kadar (puan, ~m) kötü olmadıkça kalır
+  yerFalso:0.5,                // T21a (2026-10-18): yerde kayan ve yuvarlanan topun yan dönüşü yolu kıvırır (eğik eksen; çimle sürtünme): yanal ivme = yerFalso × wYan·r
+                               // (kayarken tam, yuvarlanırken yarısı); 0: eski (yerde yan dönüş yalnız söner — T9b-c'nin “top yerde dönmez” reddi)
   santraTek:1,                 // T20d (2026-10-18, kullanıcı kararı): santrada topun başında tek oyuncu (2016 kuralı), ilk pası geriye verir ve alıcıya dönük durur; 0: eski iki kişilik santra (yardımcı topun 2,8 m yanında)
 
   /* P — js/mac-profil.js */
@@ -84,7 +86,7 @@ const MOTOR_AYAR={
   ofsaytAlgi:undefined,kosuIstegi:undefined,aliciPay:undefined,uzaklastirDeger:undefined,hedefDeger:undefined,devamAgirlik:undefined,
   devamHedef:undefined,sabir:undefined,sabirSure:undefined,devamPas:undefined,bekleOran:undefined,koruDeger:undefined,koruSure:undefined,
   koruTempo:undefined,dusunHz:undefined,pasTol:undefined,pasTolHava:undefined,ortaDestek:undefined,ikinciTopHedef:undefined,araKalib:undefined,birebirMenzil:undefined,birebirKayip:undefined,
-  birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,tasiInce:undefined,tasiDevam:undefined,bakisDinamik:undefined,bakisHiz:undefined,taramaAralik:undefined,taramaGenislik:undefined,taramaTut:undefined,taramaYan:undefined,bakisDonus:undefined,vurusYaklas:undefined,pasAcik:undefined,pasDogal:undefined,alisYon:undefined,tekKoni:undefined,
+  birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,tasiInce:undefined,tasiDevam:undefined,bakisDinamik:undefined,bakisHiz:undefined,taramaAralik:undefined,taramaGenislik:undefined,taramaTut:undefined,taramaYan:undefined,bakisDonus:undefined,pasFalso:undefined,uzunKosu:undefined,acmaDokunus:undefined,donusBos:undefined,ortaIkinci:undefined,ortaErken:undefined,tersKanat:undefined,vurusYaklas:undefined,pasAcik:undefined,pasDogal:undefined,alisYon:undefined,tekKoni:undefined,
   /* D — js/mac-kaleci.js */
   kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,penaltiOku:undefined,penaltiKanma:undefined,kaleciNiyet:undefined,kaleciNiyetEsik:undefined,kaleciBekle:undefined,
   /* T — js/mac-takim.js */
@@ -104,7 +106,7 @@ const MOTOR_AYAR={
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined
 };
-const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek',santraTek:'cekirdek'};
+const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek',santraTek:'cekirdek',yerFalso:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
   if(!Object.prototype.hasOwnProperty.call(MOTOR_AYAR,k))throw new Error('MOTOR_AYAR.'+k+' bildirilmemiş ('+akis+'; önce js/mac-motoru.js MOTOR_AYAR)');
   if(MOTOR_AYAR_SAHIBI[k])throw new Error('MOTOR_AYAR.'+k+' iki kez eklendi ('+MOTOR_AYAR_SAHIBI[k]+', '+akis+')');
@@ -198,7 +200,11 @@ function topFizikAdim(b,dt,ucus,R,K){
       const a=yerKayma(K),slip=s-b.sw;let ns;
       if(Math.abs(slip)>0.05){const f=a*dt*Math.sign(slip);if(Math.abs(slip)<=3.5*Math.abs(f)){ns=s-slip*(2/7);b.sw=ns;}else{ns=s-f;b.sw+=2.5*f;}}
       else{ns=Math.max(0,s-((R||ROLL)+TOP_FIZIK.yerDirenc*s*s)*dt);b.sw=ns;}
-      b.vx*=ns/s;b.vz*=ns/s;b.wUst=b.sw/TOP_YARICAP;b.wYan*=1-1.5*dt;}
+      b.vx*=ns/s;b.vz*=ns/s;
+      /* T21a (yerFalso): yan dönüşlü top yerde de kıvrılır — eğik eksenli dönüşün çime sürtünmesi (kayarken tam, yuvarlanırken yarısı); hızı değiştirmez, yönü döndürür.
+         Yön havadaki Magnus'la aynı (wYan > 0 hızı sola döndürür) */
+      if(MOTOR_AYAR.yerFalso&&b.wYan&&ns>0.5){const k=MOTOR_AYAR.yerFalso*(Math.abs(slip)>0.05?1:0.5)*b.wYan*TOP_YARICAP*dt/ns,vx=b.vx;b.vx-=b.vz*k;b.vz+=vx*k;}
+      b.wUst=b.sw/TOP_YARICAP;b.wYan*=1-1.5*dt;}
     else{b.sw=0;b.wUst=0;}
     b.x+=b.vx*dt;b.z+=b.vz*dt;topDonusYaz(b,hyp(b.vx,b.vz));
   }
