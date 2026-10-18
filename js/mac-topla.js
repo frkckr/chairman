@@ -18,6 +18,14 @@
    Sözleşme alanları (TEKNIK_PLAN §8): vurus.stil/guc/tekDokunus, kontrol.yuzey/yon, kafa.tur, p.bakisYon, p.sonDokunus — rastlantısız. */
 'use strict';
 ayarEkle('B',{
+  /*T24d*/
+  /* · */
+  /*T24g*/
+  /* · */
+  /*T24c*/
+  /* · */
+  /*T24h*/
+  /* · */
   kararGecikme:[0.3,0.6],      // topu kontrol ettikten sonra karar süresi (sn): tempo yüksekse kısa (T4-V 2026-10-09: 0,4–0,7 → 0,3–0,6 — vuruş hazırlığı (hazirlikEn + geri) karar süresinin bir kısmıyla örtüşür, top ayakta ortancası 1,2–2 bandında kalır; T2: 0,12–0,36 → 0,4–0,7; top ayakta ortancası 0,85 sn idi)
   ilerleme:0.05,               // topu ileri taşımanın metre başına değeri (puan): oyunun ne kadar dikine aktığı (birleştirme 2026-10-03: 0,036 → 0,027; T1: 0,04; T7g: 0,05 — kompakt savunmaya karşı ileri pas %26,6 → %30,7, bant 30–45)
   risk:1.0,                    // top kaybından çekinme çarpanı (takımın risk ayarıyla çarpılır)

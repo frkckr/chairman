@@ -10,6 +10,8 @@
    sonDokunus: top sürme dokunuşu tur 'surus' (çalım dokunuşunda calim:true, mac-hareket.js), müdahale dokunuşu tur 'cal'. */
 'use strict';
 ayarEkle('C',{
+  /*T24b*/
+  /* · */
   mudahaleIstegi:1.25,         // pres yapan oyuncunun müdahaleye girme isteği
   yanIstek:6,                  // sürücünün yanında ya da arka yanında koşan savunmacının topu dürtme sıklığı (1/sn; T5: yandan dürtme, toparlanma; eski faulOrani kalktı — faul temastan)
   faulEsik:0.55,               // müdahale temasında faul eşiği (şiddet; P=σ((c−eşik)/0,12)) (C2)

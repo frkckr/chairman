@@ -9,6 +9,12 @@
    Tepki ve dalış hızındaki küçük sapmalar (tohumlu) kaleciTahmin'in P'sindeki belirsizliği (KL_M.sapma) üretir. */
 'use strict';
 ayarEkle('D',{
+  /*T24b*/
+  /* · */
+  /*T24d*/
+  /* · */
+  /*T24h*/
+  /* · */
   kaleciTepki:0.27,            // şuta tepki süresi (sn) ·(1,25 − 0,5·kalecilik); görüş kapalıysa +0,10–0,18, hazır duruşta −0,05. T9b-a (2026-10-10): 0,20 → 0,23 —
                                // kaleci dalıştan önce yana adım atınca (yanAdim) d-sut kapıları (MM4) yeniden tuttu; kalecilik 0,7'de 0,21 sn (Ek G6: ~0,2 sn).
                                // T12a (2026-10-12): 0,23 → 0,27 — d-sut'ta hazır avantajı kayboluyordu (kaleciTavir; gerçekleşen tepki ~0,20 sn), kapılar o kayıpla

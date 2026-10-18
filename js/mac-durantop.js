@@ -23,6 +23,8 @@
    seçilmez (penaltı hariç). Rastlantı çekmez. */
 'use strict';
 ayarEkle('K',{
+  /*T24f*/
+  /* · */
   duranSure:[8,11],            // T8a (§7 madde 5): tehlikeli duran topta duruşun başından koşunun başına en az / en çok (sn; koşu ve işaret ~1,5–2,5 sn: temas 10–14; T10d: 8,5–11,5 → 8–11);
                                // arada koşul “görevliler yerinde”
   duranHazir:[0.25,1.4,0.15,0.35,1.2],   // T8a: kullanan hazır olduktan sonra en az bekleme (sn): taç, korner, kale vuruşu, serbest vuruş, penaltı (T10d: kale vuruşu 0,5 → 0,3, penaltı 1,5 → 1,2; T10g: taç 0,5 → 0,25, kale vuruşu 0,3 → 0,15, serbest 0,6 → 0,35)

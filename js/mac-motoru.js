@@ -103,6 +103,23 @@ const MOTOR_AYAR={
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
   kornerKisa:undefined,duranKosFaz:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined,
   serbestIkili:undefined,serbestAldatma:undefined,aldatmaTepki:undefined,kornerPerde:undefined,kornerGeri:undefined,markajYan:undefined,penaltiKose:undefined,
+  /* T24 (2026-10-18; gerçekçilik planı §4 “T24”): alt adımların anahtarları (sahibi akışın ayarEkle'si atar) */
+  /*T24a*/
+  /* · */
+  /*T24b*/
+  /* · */
+  /*T24d*/
+  /* · */
+  /*T24e*/
+  /* · */
+  /*T24f*/
+  /* · */
+  /*T24g*/
+  /* · */
+  /*T24c*/
+  /* · */
+  /*T24h*/
+  /* · */
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined
 };
