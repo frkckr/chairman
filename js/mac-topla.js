@@ -767,9 +767,16 @@ Object.assign(Match.prototype,{
     this.dokunus(p,true);b.hedefOyuncu=k.alici||null;
     if(k.tur==='sut'){b.sut={team:p.team,by:p,gkDone:false,cerceve:this.cerceveyeGider(p.team),kafa:true,t:this.t,hedefZ:k.hz,hedefY:k.hy,tur:'kafa',
       ipucu:{yan:Math.sign(k.hz-MZ)||1,guven:clamp(0.8-0.5*p.oz.kafa,0.2,0.8)}};this.ist.sut[p.team]++;
-      /* T12-0: kalecinin tahmini — topun kale çizgisine varışı hızından (sürüklemesiz yaklaşık); salt okunur, sonucu değiştirmez (v-verim) */
-      const gk=this.kaleci(1-p.team),gxa=d*PL;if(gk&&gk.oyunda&&b.vx*d>0.5){const tg=(gxa-b.x)/b.vx;
-        b.sut.nisanZ=b.z+b.vz*tg;b.sut.nisanY=b.y+b.vy*tg-0.5*G*tg*tg;b.sut.pKurt=kaleciTahmin(this,gk,b.sut.nisanZ,Math.max(0.05,b.sut.nisanY),tg,0).P;b.sut.gkTepki=kaleciTepkiSuresi(this,gk,b.x,b.z);}
+      /* T12-0: kalecinin tahmini; salt okunur, sonucu değiştirmez (v-verim). T24-0 (2026-10-18): topun kale çizgisine varışı (süre, yer, yükseklik)
+         topun bir kopyasının yolundan — topFizikAdim ile, sürükleme ve sekme dahil (topYolu'nun kopyası gibi; önbelleğe dokunmaz, rastlantı çekmez).
+         Eskiden hızdan sürüklemesiz parabol (tg = Δx/vx): kafa top planlanandan alçak ve geç gidiyor, tahmin kafada %53, gerçekleşen %71 (T23, 80
+         maç). 5 sn içinde çizgiye varmayan topta eski yaklaşık kalır */
+      const gk=this.kaleci(1-p.team),gxa=d*PL;if(gk&&gk.oyunda&&b.vx*d>0.5){let tg=(gxa-b.x)/b.vx,zc=b.z+b.vz*tg,yc=b.y+b.vy*tg-0.5*G*tg*tg;
+        const s={x:b.x,y:b.y,z:b.z,vx:b.vx,vy:b.vy,vz:b.vz,egri:b.egri,ust:b.ust||0,wYan:b.wYan,wUst:b.wUst,sw:b.sw,surum:b.surum,_donSurum:b._donSurum};
+        for(let i=1;i<=300;i++){const px=s.x,py=s.y,pz=s.z;topFizikAdim(s,1/60,false,this.R,this.kosullar);
+          if((px-gxa)*(s.x-gxa)<=0){const f=(gxa-px)/((s.x-px)||1);tg=(i-1+f)/60;zc=pz+(s.z-pz)*f;yc=py+(s.y-py)*f;break;}
+          if(s.vx*d<=0.05)break;}
+        b.sut.nisanZ=zc;b.sut.nisanY=yc;b.sut.pKurt=kaleciTahmin(this,gk,zc,Math.max(0.05,yc),tg,0).P;b.sut.gkTepki=kaleciTepkiSuresi(this,gk,b.x,b.z);}
       b.sut.xgYer=xG(b.x*d,b.z,'kafa',0);}
     else if(k.tur==='indirme'||k.tur==='pas'){this.pasSay(p,k.hx,k.hz,L,'kafa');this.ofsaytPasAni(p);}
     this.on('header',{p,shot:k.tur==='sut',tur:k.tur,xg:k.xg||0,yuzey:yz,cek:!!cek});if(k.tur==='sut')this.sutTakipAta(p,k.xg);

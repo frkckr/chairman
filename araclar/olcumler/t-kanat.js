@@ -17,6 +17,13 @@
 const W_PL=52.5,W_MZ=34,W_PW=68,W_CU=16.5,W_CW=20.16;
 const W_ILK=['orta','geri','pas','sut','calim','kayip'],W_ILK_AD={orta:'orta',geri:'geri çevirme',pas:'pas',sut:'şut',calim:'çalım',kayip:'kayıp ya da diğer'};
 const W_KOSU=['arkaya','gel','aldatma','takip','orta','genis','bindirme','gecGiris'];
+/* T24-0 (2026-10-18; T24 planı, ölçüm 5): şut anında ceza sahasındaki forvet dışı arkadaşın (şutu atan ve kaleci hariç) kaynağı, sırayla:
+   duran top görevi (görev etiketi 'duran' ya da duran top penceresinde görevi var), geç giriş (koşusu 'gecGiris' ya da son 3 sn'de böyle bir koşu
+   başlattı), takip (aynı, 'takip'; bu şutun takibi şuttan sonra atanır, sayılmaz), kutu rolü (görev etiketi 'kutu': kutuRolu ve kanadın arka
+   direği), başka koşu (başka türde koşusu var ya da görev etiketi koşu, orta, genişlik, bindirme), diğer (bölge, destek, uzak kanat …) */
+const W_FDK=['gecGiris','kutu','takip','kosu','duran','diger'];
+const W_FDK_AD={gecGiris:'geç giriş',kutu:'kutu rolü',takip:'takip',kosu:'başka koşu',duran:'duran top görevi',diger:'diğer (bölge, destek, uzak kanat …)'};
+const W_KOSU_G=new Set(['kosu','orta','genis','bindirme']);
 module.exports={
   bilgi:[['— T14: kanat ve hücum koşuları (gerçekçilik planı §4 T14) —',null,0],
     ['Kanat topsuz (son üçte bir): çizgiye ≤ 8 m %','wGenis',1],
@@ -31,17 +38,23 @@ module.exports={
     ['Şut anı: ceza sahasında forvet dışı arkadaş (ort.)','wSutFd',2],['Şut anı: ceza sahasında ≥ 1 forvet dışı arkadaş %','wSutFd1',1],
     ['Kanat topla son üçte birde / maç','wKanatTop',1],['Tam plonjon kafa / maç (T14e)','wPlonjon',2],['Tam plonjon kafa: şut %','wPlonjonSut',1]]
     .concat(W_ILK.map(k=>['Kanadın ilk işi: '+W_ILK_AD[k]+' %','wIlk_'+k,1]))
-    .concat(W_KOSU.map(k=>['Koşu: '+k+' / maç','wKosu_'+k,2])),
+    .concat(W_KOSU.map(k=>['Koşu: '+k+' / maç','wKosu_'+k,2]))
+    .concat(W_FDK.map(k=>['Şut anı (T24-0): kutudaki forvet dışı arkadaşın kaynağı — '+W_FDK_AD[k]+' %','wFK_'+k,1])),
   yeni:()=>{
     const hyp=Math.hypot;
     let n=0,genis=0,ayN=0,ayG=0,ayO=0,uzN=0,uzK=0,uzG=0,orN=0,orG=0,adim=0;
     let plN=0,plS=0,oN=0,oHuc=0,oFd=0,oSav=0,oKanat=0,oBek=0,oFv=0,oMk=0,oFvN=0,oFvK=0,oBitN=0,oAlici=0,oHucIlk=0,sN=0,sFd=0,sFd1=0,ktN=0;const ilk={},kosu={};
     let orta=null,kt=null,sonS=null;
+    /* T24-0 */
+    const sonKosu=new Map(),fdk={};for(const k of W_FDK)fdk[k]=0;
+    const fdKaynak=(m,q)=>{const g=q.gorevAd,k=q.kosu,sk=sonKosu.get(q),tur=a=>k&&k.tur===a||!!(sk&&sk.tur===a&&m.t-sk.t<=3);
+      if(g==='duran'||m._duranSonrasi&&q.duranRol)return'duran';if(tur('gecGiris'))return'gecGiris';if(tur('takip'))return'takip';if(g==='kutu')return'kutu';
+      if(k||W_KOSU_G.has(g))return'kosu';return'diger';};
     const kutuda=(m,x,z,t)=>Math.abs(x-m.dir[t]*W_PL)<W_CU&&Math.abs(z-W_MZ)<W_CW;
     const genisMi=z=>z<=8||z>=W_PW-8;
     const ilkYaz=k=>{ilk[k]=(ilk[k]||0)+1;kt=null;};
     const sutAni=(m,p)=>{if(!p||p.team==null)return;const t=p.team;let f=0;
-      for(const q of m.teams[t])if(q!==p&&q.oyunda&&q.rol!=='GK'&&q.rol!=='FV'&&kutuda(m,q.x,q.z,t))f++;sN++;sFd+=f;if(f)sFd1++;};
+      for(const q of m.teams[t])if(q!==p&&q.oyunda&&q.rol!=='GK'&&q.rol!=='FV'&&kutuda(m,q.x,q.z,t)){f++;fdk[fdKaynak(m,q)]++;}sN++;sFd+=f;if(f)sFd1++;};
     const ortaAni=(m,p,q)=>{if(!p||p.team==null)return;const t=p.team;let h=0,f=0,s=0;
       for(const r of m.teams[t])if(r!==p&&r.oyunda&&r.rol!=='GK'&&kutuda(m,r.x,r.z,t)){h++;if(r.rol!=='FV')f++;}
       for(const r of m.teams[1-t])if(r.oyunda&&r.rol!=='GK'&&kutuda(m,r.x,r.z,t))s++;
@@ -50,7 +63,7 @@ module.exports={
       orta={t:m.t,p,q:q||null,team:t};};
     return{
       dinle(ad,v,m){if(!m)return;
-        if(ad==='kosu'&&v.tur){kosu[v.tur]=(kosu[v.tur]||0)+1;return;}
+        if(ad==='kosu'&&v.tur){kosu[v.tur]=(kosu[v.tur]||0)+1;if(v.p)sonKosu.set(v.p,{tur:v.tur,t:m.t});return;}
         const p=v&&v.p;
         if(ad==='cross'){ortaAni(m,p,v.q);if(kt&&kt.p===p)ilkYaz('orta');}
         else if(ad==='pass'){if(v.tur==='geriCevir'){ortaAni(m,p,v.q);if(kt&&kt.p===p)ilkYaz('geri');}else if(kt&&kt.p===p)ilkYaz('pas');}
@@ -77,6 +90,7 @@ module.exports={
         const ilkTop=W_ILK.reduce((a,k)=>a+(ilk[k]||0),0),ham={wGenis:[genis,n],wAyniGenis:[ayG,ayN],wAyniOnde:[ayO,ayN],wUzakKutu:[uzK,uzN],wUzakGenis:[uzG,uzN],
           wOrtaGenis:[orG,orN],wOrtaKanat:[oKanat,oN],wOrtaBek:[oBek,oN],wOrtaForvet:[oFv,oN],wOrtaMerkez:[oMk,oN],wOrtaAlici:[oAlici,oBitN],wOrtaHucumIlk:[oHucIlk,oBitN],wSutFd1:[sFd1,sN],wPlonjonSut:[plS,plN]};
         for(const k of W_ILK)ham['wIlk_'+k]=[ilk[k]||0,ilkTop];
+        {let n=0;for(const k of W_FDK)n+=fdk[k];for(const k of W_FDK)ham['wFK_'+k]=[fdk[k],n];}   /* T24-0 */
         const r={ham,wOrtaHucum:oN?oHuc/oN:NaN,wOrtaFd:oN?oFd/oN:NaN,wOrtaSav:oN?oSav/oN:NaN,wSutFd:sN?sFd/sN:NaN,wOrtaFvKutu:oFvN?oFvK/oFvN:NaN,wKanatTop:ktN,wPlonjon:plN};
         for(const k of W_KOSU)r['wKosu_'+k]=kosu[k]||0;return r;}
     };

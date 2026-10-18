@@ -5,6 +5,8 @@
    T15-0 (2026-10-14) bilgi satırları: koşunun türü (vuruş eyleminin sec.kosu'su; T15c'den önce hep düz), türe göre gol ve kalecinin doğru
    tarafa uçması; kalecinin kalkışı — dalışın başı ile temas (şut olayı) arasındaki süre (eksi: temastan önce; Ek G5 −0,145 … +0,009),
    ortancası ve [−0,15, +0,02] içindeki payı.
+   T24-0 (2026-10-18): direğe çarpıp 3 sn içinde gol, kurtarış ya da oyun dışıyla bitmeyen top ('direkOyun'; eskiden 'yok' sayılıyordu — tohum 1'de
+   1600 atışta 33 'yok'un 33'ü direkten sonra oyunda kalan toptu) kaçırmaya sayılır, ayrı sütunda yazılır; direğe çarpan atışların dökümü.
    Kullanım: node araclar/mac-deneme.js --senaryo d-penalti [atış, varsayılan 400] */
 'use strict';
 const KOD=`(function(tohum){
@@ -20,12 +22,12 @@ const KOD=`(function(tohum){
   for(let i=0;i<60*25&&!sonuc;i++){m.step(1/60);
     if(atis>=0&&!sonuc&&m.ball.tasiyan===gk)sonuc='kurtaris';
     if(atis>=0&&m.phase!=='play'&&!sonuc)sonuc=direk?'direk':'disari';
-    if(atis>=0&&m.t-atis>3&&!sonuc)sonuc='yok';}
+    if(atis>=0&&m.t-atis>3&&!sonuc)sonuc=direk?'direkOyun':'yok';}
   if(kyan==null)kyan=0;
-  return{sonuc:sonuc||'yok',yan,kyan,kosu,kalkis:dalis!=null&&atis>=0?dalis-atis:null};})`;
+  return{sonuc:sonuc||'yok',yan,kyan,kosu,direk,kalkis:dalis!=null&&atis>=0?dalis-atis:null};})`;
 module.exports={calistir({ctx,vm,N,tohum}){
-  const n=N||400,f=vm.runInContext(KOD,ctx),say={},dogru={n:0,kurt:0},t0=Date.now(),tur={},kalkis=[];
-  for(let i=0;i<n;i++){const x=f((tohum||1)*1000+i);say[x.sonuc]=(say[x.sonuc]||0)+1;
+  const n=N||400,f=vm.runInContext(KOD,ctx),say={},dogru={n:0,kurt:0},t0=Date.now(),tur={},kalkis=[],dk={};let dkN=0;
+  for(let i=0;i<n;i++){const x=f((tohum||1)*1000+i);say[x.sonuc]=(say[x.sonuc]||0)+1;if(x.direk){dkN++;dk[x.sonuc]=(dk[x.sonuc]||0)+1;}
     if(x.kyan&&x.yan&&x.kyan===x.yan){dogru.n++;if(x.sonuc==='kurtaris')dogru.kurt++;}
     const T=tur[x.kosu]||(tur[x.kosu]={n:0,gol:0,dogru:0,uctu:0});T.n++;if(x.sonuc==='gol')T.gol++;if(x.kyan){T.uctu++;if(x.yan&&x.kyan===x.yan)T.dogru++;}
     if(x.kalkis!=null)kalkis.push(x.kalkis);}
@@ -38,8 +40,11 @@ module.exports={calistir({ctx,vm,N,tohum}){
     console.log(`  Kalecinin kalkışı − temas (sn): ortanca ${o.toFixed(3)} · [−0,15, +0,02] içinde %${(100*ic/s.length).toFixed(0)} · erken (< −0,15) %${(100*s.filter(x=>x<-0.15).length/s.length).toFixed(0)} · ${s.length} dalış`);}
   /* T19-0 (2026-10-17; bilgi, T19c kabulü): kaçırma (direk + dışarı) ve kurtarış payı — gerçek lig ortalamaları kabaca gol %76–78, kurtarış
      %16–20, kaçırma %4–8 */
-  {const kac=(say.direk||0)+(say.disari||0),ku=say.kurtaris||0;
-    console.log(`  T19: gol %${oran.toFixed(1)} (kabul 76–78, 4 × 1600) · kurtarış %${(100*ku/n).toFixed(1)} (16–20) · kaçırma (direk + dışarı) %${(100*kac/n).toFixed(1)} (4–8)`);}
+  /* T24-0 (2026-10-18): kaçırma = direkten dışarı ('direk') + dışarı + direkten oyunda kalan ('direkOyun'); eski tanım (direkten oyunda kalan hariç) karşılaştırma için yazılır */
+  {const dd=say.direk||0,ds=say.disari||0,dO=say.direkOyun||0,kac=dd+ds+dO,ku=say.kurtaris||0,y=k=>(100*k/n).toFixed(1);
+    console.log(`  T19: gol %${oran.toFixed(1)} (kabul 76–78, 4 × 1600) · kurtarış %${y(ku)} (16–20) · kaçırma %${y(kac)} (4–8)`);
+    console.log(`  Kaçırma (T24-0): direkten dışarı %${y(dd)} · dışarı %${y(ds)} · direkten oyunda kalan %${y(dO)} · eski tanım (direk + dışarı) %${y(dd+ds)}`);
+    if(dkN)console.log(`  Direğe çarpan (T24-0): ${dkN} (%${y(dkN)}) → `+Object.keys(dk).sort().map(k=>k+' '+dk[k]).join(' · '));}
   const ok=oran>=70&&oran<=82;
   console.log((ok?'  ':'! ')+'Gol oranı'.padEnd(30)+oran.toFixed(1).padStart(6)+'%   hedef 70–82 (T15 kabulü 72–80, 1600 atış)');
   return ok?0:1;

@@ -32,6 +32,11 @@ const K_KAYNAK_AD={kafa:'savunmanın kafası',uzaklastirma:'uzaklaştırma',blok
   kontrol:'kontrol',pas:'pas ve orta',sut:'kendi şutu (hücum)',diger:'diğer'};
 const K_BOLGE=['on','arka','orta','nokta','disari'],K_BOLGE_AD={on:'ön direk',arka:'arka direk',orta:'altıpas ortası',nokta:'penaltı noktası',disari:'ceza sahası kenarı'};
 const K_SINIF=['baraj','kenar','uzak','geri'],K_SINIF_AD={baraj:'barajlı',kenar:'kenar',uzak:'uzak',geri:'kendi yarısı'};
+/* T24-0 (2026-10-18; T24 planı, ölçüm 7): barajlı serbest vuruşun maç içi mesafe dağılımı — kale ortasına uzaklık dilimleri (d-duran hücreleri:
+   merkez 18 / 22 / 26 / 30 m birer dilimde; yarı 18 / 22 / 26 → 20,6 / 24,2 / 27,9 m). Dilim başına barajlı vuruş / maç, doğrudan şut kararı
+   (kullanımın türü 'sut'; kSA_baraj_sut ile aynı) ve doğrudan şutta gol / şut (kBGol ile aynı: atan takımın şutu, 5 sn içinde gol). ozet():
+   kale çizgisine u × yana w ızgarası (vuruş / şut / gol; d-duran hücrelerini maç içi dağılımla ağırlıklandırmak için) */
+const K_BLAD=['< 20 m','20–24 m','24–28 m','≥ 28 m'],kBin=L=>L<20?0:L<24?1:L<28?2:3;
 const kOrtanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b),n=S.length;return n%2?S[(n-1)/2]:(S[n/2-1]+S[n/2])/2;};
 module.exports={
   bilgi:[['— Duran toplar (k-duran; T8) —',null,0]]
@@ -71,7 +76,9 @@ module.exports={
       ['Taç: uzun (≥ 18 m) %','kT_uzun',1],['Taç: hızlı (< 4 sn) %','kT_hizli',1],['Taç: atan takım topu aldı %','kT_tut',1],
       ['Kale vuruşu: yerden (ayakla) %','kKV_yerden',1,[99,null,'T8']],['Kale vuruşu: uzun %','kKV_uzun',1],['Kale vuruşu: atan takım topu aldı %','kKV_tut',1],
       ['Kale vuruşu (uzun): hava düellosu %','kKV_duello',1],
-      ['Penaltı: gol %','kP_gol',1],['Penaltı: ribaund koşucusu (ort.)','kP_rib',2]]),
+      ['Penaltı: gol %','kP_gol',1],['Penaltı: ribaund koşucusu (ort.)','kP_rib',2]])
+    .concat(K_BLAD.flatMap((a,i)=>[['Barajlı serbest vuruş / maç (T24-0): '+a,'kBL_'+i,2],['Barajlı serbest vuruş (T24-0): '+a+' doğrudan şut %','kBLS_'+i,1],
+      ['Barajlı doğrudan şut (T24-0): '+a+' gol / şut %','kBLG_'+i,1]])),
   yeni:()=>{
     const hyp=Math.hypot,ort=L=>L.length?L.reduce((a,b)=>a+b,0)/L.length:NaN;
     const kutuda=(m,p,t)=>{const gx=m.dir[t]*K_PL;return Math.abs(p.x-gx)<K_CU&&Math.abs(p.z-K_MZ)<K_CW;};
@@ -81,6 +88,7 @@ module.exports={
     let zorla=0,yerinde=0,tehlike=0,kInis=[0,0],kHava=[0,0],kGol=[0,0],kPerde=[0,0];const kSutL=[],kKutuH=[],kKutuS=[],kGeri=[],kGeriHiz=[];
     const sA={baraj:[0,0],kenarOrta:[0,0],kenarSut:[0,0],uzak:[0,0]};let sHizli=[0,0];const sKenarKutu=[],bKisi=[],bYuk=[],_baraj=[];
     let bCer=[0,0],bGol=[0,0],bBlok=[0,0],bZip=[0,0],bIk=[0,0],bAld=[0,0],bGolAld=[0,0],tUzun=[0,0],tHizli=[0,0],tTut=[0,0],kvYer=[0,0],kvUzun=[0,0],kvTut=[0,0],kvDue=[0,0],pGol=[0,0];const pRib=[];
+    const bL=[0,0,0,0],bLS=[[0,0],[0,0],[0,0],[0,0]],bLG=[[0,0],[0,0],[0,0],[0,0]],bYer=[];   /* T24-0 */
     let K=null,S=null,T=null,V=null,P=null,sonOlay=null;   /* izleyiciler: korner, serbest (doğrudan şut), taç, kale vuruşu, penaltı */
     /* T17-0: ilk kafanın bloğu (geometri bir önceki adımın top yerinden), ikinci evre (ilk kafadan 1,5 sn sonra), görev penceresinin bitiş
        nedeni (motorun duranSonrasiAdim sırasıyla: duruş, süre, 28 m, sahiplik, şut; süre MAC_DENEME_AYAR'dan ya da 6), kapanıştan sonra gol */
@@ -113,8 +121,9 @@ module.exports={
             if(K.izle){kHava[1]++;}}
           else if(tur==='serbest'){sS[sinif]++;
             if(sinif==='baraj'){sA.baraj[1]++;if(v.alt==='sut')sA.baraj[0]++;const n=v.barajdakiler?v.barajdakiler.length:0;bKisi.push(n);bIk[1]++;if(du&&du.ikili)bIk[0]++;   /* A4-1 */
-              _baraj.push([Math.round(hyp(d*K_PL-v.x,K_MZ-v.z)*10)/10,n]);
-              if(v.alt==='sut')S={t0:m.t,att:t,x:v.x,z:v.z,B:v.barajdakiler||[],sut:false,zip:false,yuk:null,blok:false,gol:false,ald:!!(du&&du.aldatma)};}
+              const bLen=hyp(d*K_PL-v.x,K_MZ-v.z),bi=kBin(bLen),yer={u:K_PL-v.x*d,w:Math.abs(v.z-K_MZ),s:v.alt==='sut'?1:0,ss:0,g:0};_baraj.push([Math.round(bLen*10)/10,n]);
+              bL[bi]++;bLS[bi][1]++;if(v.alt==='sut')bLS[bi][0]++;bYer.push(yer);   /* T24-0 */
+              if(v.alt==='sut')S={t0:m.t,att:t,x:v.x,z:v.z,B:v.barajdakiler||[],sut:false,zip:false,yuk:null,blok:false,gol:false,ald:!!(du&&du.aldatma),bi,yer};}
             else{sHizli[1]++;if(hz<4)sHizli[0]++;
               if(sinif==='kenar'){sA.kenarOrta[1]++;sA.kenarSut[1]++;if(v.alt==='orta')sA.kenarOrta[0]++;if(v.alt==='sut')sA.kenarSut[0]++;
                 sKenarKutu.push(m.teams[t].filter(q=>q.oyunda&&q.rol!=='GK'&&q!==p&&kutuda(m,q,t)).length);}
@@ -143,9 +152,9 @@ module.exports={
             else if(ad==='header')K.hk.sonra=h?'hucKafa':'savKafa';
             else if(ad==='ilkDokunus'||ad==='sekme'||ad==='kotuKontrol'||ad==='shot')K.hk.sonra=h?'hucAyak':'savAyak';}}
         /* barajlı doğrudan şut */
-        if(S){if(ad==='shot'&&v.p&&v.p.team===S.att&&!S.sut){S.sut=true;bCer[1]++;bGol[1]++;bBlok[1]++;bZip[1]++;if(m.ball.sut&&m.ball.sut.cerceve)bCer[0]++;bAld[1]++;if(S.ald){bAld[0]++;bGolAld[1]++;}}
+        if(S){if(ad==='shot'&&v.p&&v.p.team===S.att&&!S.sut){S.sut=true;bLG[S.bi][1]++;S.yer.ss=1;bCer[1]++;bGol[1]++;bBlok[1]++;bZip[1]++;if(m.ball.sut&&m.ball.sut.cerceve)bCer[0]++;bAld[1]++;if(S.ald){bAld[0]++;bGolAld[1]++;}}
           if(ad==='block'&&v.p&&S.sut&&!S.blok&&S.B.includes(v.p)&&m.t-S.t0<1){S.blok=true;bBlok[0]++;}
-          if(ad==='goal'&&v.team===S.att&&S.sut&&!S.gol&&m.t-S.t0<5){S.gol=true;bGol[0]++;if(S.ald)bGolAld[0]++;}}
+          if(ad==='goal'&&v.team===S.att&&S.sut&&!S.gol&&m.t-S.t0<5){S.gol=true;bGol[0]++;bLG[S.bi][0]++;S.yer.g=1;if(S.ald)bGolAld[0]++;}}
         if(P&&ad==='goal'&&v.team===P.att&&m.t-P.t0<5&&!P.gol){P.gol=true;pGol[0]++;}},
       adim(m){const b=m.ball;
         if(K){const dt=m.t-K.t0;
@@ -198,6 +207,7 @@ module.exports={
         const r={ham,kZorla:zorla,kKKutuH:ort(kKutuH),kKKutuS:ort(kKutuS),kKGeri:ort(kGeri),kKGeriHiz:ort(kGeriHiz),kKSut:kSutL.length?ort(kSutL):NaN,
           kSKenarKutu:ort(sKenarKutu),kBKisi:ort(bKisi),kBYuk:kOrtanca(bYuk),kP_rib:ort(pRib),_kBaraj:_baraj,
           kBD:kOrtanca(kBlokD),kHKSav:ort(kHKSav),kHKHuc:ort(kHKHuc),kEvSav:ort(kEvSav),kEvHuc:ort(kEvHuc),kKOrtaMac:kOrtaKorner};
+        for(let i=0;i<4;i++){r['kBL_'+i]=bL[i];ham['kBLS_'+i]=bLS[i];ham['kBLG_'+i]=bLG[i];}r._kBYer=bYer.map(o=>[o.u,o.w,o.s,o.ss,o.g]);   /* T24-0 */
         for(const k of K_TUR)r['kN_'+k]=N[k];for(const [k] of K_HZ)r['kH_'+k]=kOrtanca(HZ[k]);for(const k of K_SINIF)r['kS_'+k]=sS[k];
         return r;}
     };
@@ -206,5 +216,9 @@ module.exports={
   ozet(sonuclar){const B=[[16,20],[20,25],[25,30],[30,35],[35,99]],T=B.map(()=>[0,0]);
     for(const s of sonuclar)for(const [L,n] of(s._kBaraj||[])){const i=B.findIndex(([a,c])=>L>=a&&L<c);if(i>=0){T[i][0]+=n;T[i][1]++;}}
     if(!T.some(t=>t[1]))return;
-    console.log('  Barajdaki kişi mesafeye göre (k-duran; kale ortasına m · ort. kişi · adet): '+B.map(([a,c],i)=>(c>90?a+'+':a+'–'+c)+' m '+(T[i][1]?(T[i][0]/T[i][1]).toFixed(1):'—')+' ('+T[i][1]+')').join('  |  '));}
+    console.log('  Barajdaki kişi mesafeye göre (k-duran; kale ortasına m · ort. kişi · adet): '+B.map(([a,c],i)=>(c>90?a+'+':a+'–'+c)+' m '+(T[i][1]?(T[i][0]/T[i][1]).toFixed(1):'—')+' ('+T[i][1]+')').join('  |  '));
+    /* T24-0: barajlı serbest vuruşun yeri — kale çizgisine u × yana w (vuruş / doğrudan şut / gol; bütün maçlar) */
+    const U=[[0,20,'u<20'],[20,24,'u 20–24'],[24,28,'u 24–28'],[28,99,'u≥28']],W=[[0,5,'merkez (w<5)'],[5,14,'yarı (w 5–14)'],[14,99,'geniş (w≥14)']],G=W.map(()=>U.map(()=>[0,0,0]));
+    for(const s of sonuclar)for(const [u,w,,ss,g] of(s._kBYer||[])){const j=W.findIndex(([a,c])=>w>=a&&w<c),i=U.findIndex(([a,c])=>u>=a&&u<c);if(i>=0&&j>=0){const c=G[j][i];c[0]++;c[1]+=ss;c[2]+=g;}}
+    console.log('  Barajlı serbest vuruşun yeri (k-duran, T24-0; kale çizgisine u, yana w m · vuruş / doğrudan şut / gol): '+W.map(([,,wa],j)=>wa+' '+U.map(([,,ua],i)=>ua+' '+G[j][i].join('/')).join(' · ')).join('  |  '));}
 };

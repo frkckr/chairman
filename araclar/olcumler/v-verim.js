@@ -31,6 +31,37 @@ const VV_DOKUM=process.env.MAC_DENEME_SUTLAR||null;
 const VV_MES=[0,6,11,16.5,20,25,99],VV_MESAD=['<6 m','6–11 m','11–16,5 m','16,5–20 m','20–25 m','≥25 m'];
 const VV_RY=[0,1.5,3,99],VV_RYAD=['<1,5 m','1,5–3 m','≥3 m'];
 const VV_KB=['orta','pas','sut','kayip','tuttu'],VV_KBAD={orta:'orta / geri çevirme',pas:'pas',sut:'şut',kayip:'top kaybı',tuttu:'topu tuttu (2,5 sn)'};
+/* T24-0 (2026-10-18; T24 “Şut ve bitiş” ölçüm adımı, sonuç değişmez): şutun türü × mesafe tablosu, türe göre kaleci kalibrasyonu, dilimli blok
+   kalibrasyonu, hamle eden savunmacı ve gelişine şutta blok. Tanımlar:
+   - Tür: şut nesnesinin türü (b.sut.tur: sert, plase, falso + trivela, aşırtma, düşen; kafa şutunda 'kafa'). Türler açık oyundandır: penaltı ve
+     doğrudan serbest vuruş (vuruş eyleminin sec.serbest'i) hariç; serbest vuruş tabloda ayrı satırdır. Gelişine (ayak) ve vole + yarım vole (eylemin
+     stili) türlerle örtüşen ek satırlardır. Mesafe dilimleri v-vurus'unki (<11, 11–16,5, 16,5–25, ≥25 m; kale ortasına).
+   - Planın P(gol)'ü: sutVur'un seçtiği adayın gol olasılığı (b.sut.pPg; isabet × (1 − kaleci) × (1 − blok), temas anının yerleriyle; salt okunur).
+     Kafada ve penaltıda yok. Hız: şut olayı anındaki topun 3B hızı. Kurtarış ve tahmini: çerçeveye giden, bloklanmayan (gol ya da kurtarış) şutlarda.
+   - Türe göre kaleci: aynı kümede tür başına gerçekleşen kurtarış − tahmin (pKurt; puan) ve tahmin dilimlerinde (<0,4 / 0,4–0,8 / ≥0,8) fark.
+   - Dilimli blok: kararın pBlok'u (sutSecenegi; yerleşik ayak şutu, gelişine hariç) 0 / 0–0,1 / > 0,1 dilimlerinde şut payı, ortalama tahmin ve
+     gerçekleşen blok. pBlok tam 0: hesapta hiçbir savunmacı hatta sayılmadı.
+   - Hamle eden savunmacı: şut anında hamle damgası (_ortaBlokT; sutHamleYap, js/mac-hareket.js) ≤ 0,35 sn önce olan rakip saha oyuncusu — erisim'in
+     uzatılmış blok erişimiyle aynı pencere (js/mac-topla.js). Açık oyun ayak şutlarında; kafada yok. Orta bloğu da aynı damgayı kullanır (top aynı
+     anda orta ve şut olamaz).
+   - Gelişine ayak şutu (sec.ilk): blok, kararın blok tahmini (pBlok yazılırsa; ilkDokunusSutu bugün yazmaz) ve hamle eden savunmacı ayrı satırlarda. */
+const VV_ST=['sert','plase','falso','asirtma','dusen','kafa'],VV_STAD={sert:'sert',plase:'plase',falso:'falso + trivela',asirtma:'aşırtma',dusen:'düşen',kafa:'kafa'};
+const VV_SE=['ilk','vole','serbest'],VV_SEAD={ilk:'gelişine ayak (örtüşür)',vole:'vole + yarım vole (örtüşür)',serbest:'doğrudan serbest vuruş'};
+const VV_STB=['sert','plase','falso','asirtma','kafa'];
+const VV_TM=[0,11,16.5,25,99],VV_TMAD=['<11 m','11–16,5 m','16,5–25 m','≥25 m'];
+const VV_KP=[0,0.4,0.8,9],VV_KPAD=['<0,4','0,4–0,8','≥0,8'];
+const VV_BD=['pB = 0','pB 0–0,1','pB > 0,1'];
+const vvTurK=r=>r.kafa?'kafa':r.tur==='trivela'?'falso':VV_ST.indexOf(r.tur)>=0?r.tur:null;
+const vvBDilim=x=>x<1e-9?0:x<=0.1?1:2;
+const VV_T24_BILGI=(()=>{const L=[['— T24-0: şut türü, kaleci ve blok (v-verim; türler açık oyun: penaltı ve doğrudan serbest vuruş hariç) —',null,0]];
+  for(const k of VV_STB){L.push(['Tür '+VV_STAD[k]+': gol / şut %','vvSt_'+k,1]);if(k!=='kafa')L.push(['Tür '+VV_STAD[k]+': planın P(gol) ort. % (b.sut.pPg)','vvStP_'+k,1]);
+    L.push(['Tür '+VV_STAD[k]+': kaleci gerçekleşen − tahmin kurtarış (puan)','vvStK_'+k,1]);}
+  for(let i=0;i<VV_BD.length;i++){L.push(['Blok dilimi '+VV_BD[i]+' (yerleşik ayak şutu): şutların %','vvBdN_'+i,1]);if(i)L.push(['  '+VV_BD[i]+': kararın tahmini ort. %','vvBdT_'+i,1]);
+    L.push(['  '+VV_BD[i]+': gerçekleşen blok %','vvBd_'+i,1]);}
+  L.push(['Hamle eden savunmacı olan şut % (açık oyun ayak şutu; damga ≤ 0,35 sn)','vvHm',1],['  hamle olan şutta blok %','vvHmB',1],['  hamlesiz şutta blok %','vvHmY',1],
+    ['Gelişine ayak şutu: blok %','vvIlkB',1],['Gelişine ayak şutu: kararın blok tahmini ort. % (pBlok olanlar)','vvIlkT',1],
+    ['Gelişine ayak şutu: hamle eden savunmacı olan %','vvIlkH',1],['  gelişine, hamle olan şutta blok %','vvIlkHB',1]);
+  return L;})();
 module.exports={
   bilgi:[['— Şutun verimi ve kaleci (v-verim; T12-0) —',null,0],
     ['Gol / şut (penaltısız) %','vvGolSut',1],['Konum xG / şut (penaltısız; baskısız, bloksuz)','vvXgK',3],['Gerçekleşen ÷ konum xG (penaltısız; maç oranlarının ortalaması)','vvOranK',2],
@@ -53,7 +84,8 @@ module.exports={
     .concat(VV_RYAD.map((a,i)=>['  '+a+': blok %','vvRyB_'+i,1]))
     .concat(VV_RYAD.map((a,i)=>['  '+a+': gol %','vvRyG_'+i,1]))
     .concat([['Kanatta baskı altında top sahibi (1. adam ≤ 3 m; adet / maç)','vvKbN',2]])
-    .concat(VV_KB.map(k=>['  seçimi: '+VV_KBAD[k]+' %','vvKb_'+k,1])),
+    .concat(VV_KB.map(k=>['  seçimi: '+VV_KBAD[k]+' %','vvKb_'+k,1]))
+    .concat(VV_T24_BILGI),
   yeni:()=>{
     const hyp=Math.hypot,PL=52.5,MZ=34,GW2=3.66;
     const sut=[],yerL=[];let aktif=null,uzN=0;const uzS={};for(const k of VV_UZ)uzS[k]=0;
@@ -79,6 +111,9 @@ module.exports={
         for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;const dx=o.x-b.x,dz=o.z-b.z,dd=hyp(dx,dz);if(dd<ry)ry=dd;
           const on=dx*ux+dz*uz,yan=Math.abs(-dx*uz+dz*ux);if(on>0.5&&on<Math.min(14,Lk-1)&&yan<1.3)hat++;}}
       const r={L:Lk,t,pen,kafa,ilk,orta,xg:v&&v.xg||0,xgK:s.xgYer!=null?s.xgYer:null,pK:s.pKurt,cer:!!s.cerceve,hazir,hiz,yer,ciz,ic,ry,hat,pB:sec&&sec.pBlok!=null?sec.pBlok:null,sonuc:null};
+      /* T24-0: tür (kafada 'kafa'), stil, hız, planın P(gol)'ü (b.sut.pPg), doğrudan serbest vuruş, hamle eden savunmacı sayısı (_ortaBlokT ≤ 0,35 sn) */
+      {let hm=0;if(!kafa)for(const o of m.teams[1-t])if(o.oyunda&&o.rol!=='GK'&&m.t-o._ortaBlokT<=0.35)hm++;
+       Object.assign(r,{tur:kafa?'kafa':s.tur||null,stil:!kafa&&e&&e.ad==='vurus'?e.stil:null,sp:hyp(b.vx,b.vy,b.vz),pPg:s.pPg!=null?s.pPg:null,serbest:!!(sec&&sec.serbest),hm});}
       /* MAC_DENEME_SUTLAR=<dosya>: şut başına kayıt (çözümleme için; işçi başına <dosya>.<pid>) */
       if(VV_DOKUM){const sp=hyp(b.vx,b.vy,b.vz),L=hyp(gx-b.x,MZ-b.z);
         Object.assign(r,{tohum:m.tohum,dk:Math.round(m.gameSec/6)/10,L:+L.toFixed(2),w:+(b.z-MZ).toFixed(2),v:+sp.toFixed(1),zA:s.nisanZ!=null?+(s.nisanZ-MZ).toFixed(2):null,
@@ -159,14 +194,33 @@ module.exports={
         for(let i=0;i<4;i++)ham['vvOY_'+i]=[ortaYakin[i],ortaN];ham.vvOO=[ortaOnde,ortaN];
         /* T19-0: blok / şut, şut anında rakibin yakınlığı, kanatta baskı */
         ham.vvBlok=[S.filter(r=>r.sonuc==='blok').length,nG];
-        {const B=S.filter(r=>r.pB!=null);ham.vvBlokT=[B.reduce((a,r)=>a+r.pB,0),B.length];ham.vvBlokG=[B.filter(r=>r.sonuc==='blok').length,B.length];}
+        /* T24-0: gelişine şut (pBlok yazılırsa) kendi satırında; bugün pBlok yalnız yerleşik şutta olduğundan değer aynı */
+        {const B=S.filter(r=>r.pB!=null&&!r.ilk);ham.vvBlokT=[B.reduce((a,r)=>a+r.pB,0),B.length];ham.vvBlokG=[B.filter(r=>r.sonuc==='blok').length,B.length];}
+        /* T24-0: tür × mesafe hücreleri (vvTT; ozet okur): [adet, çerçeve, gol, blok, kurtarış paydası, kurtarış, Σ tahmin, Σ hız, Σ planın P(gol)'ü,
+           P'li adet]; türe göre kaleci 'K<tür>:<dilim>': [adet, kurtarış, Σ tahmin] */
+        const TT={};
+        const hucre=(k,i,r)=>{const a=TT[k+':'+i]||(TT[k+':'+i]=[0,0,0,0,0,0,0,0,0,0]);a[0]++;if(r.cer)a[1]++;if(r.sonuc==='gol')a[2]++;else if(r.sonuc==='blok')a[3]++;
+          if(r.cer&&r.pK!=null&&(r.sonuc==='gol'||r.sonuc==='kurt')){a[4]++;if(r.sonuc==='kurt')a[5]++;a[6]+=r.pK;}a[7]+=r.sp;if(r.pPg!=null){a[8]+=r.pPg;a[9]++;}};
+        for(const r of S){const i=vvDilim(VV_TM,r.L);if(r.serbest){hucre('serbest',i,r);continue;}const k=vvTurK(r);if(k)hucre(k,i,r);
+          if(r.ilk)hucre('ilk',i,r);if(r.stil==='vole'||r.stil==='yarimVole')hucre('vole',i,r);
+          if(k&&r.cer&&r.pK!=null&&(r.sonuc==='gol'||r.sonuc==='kurt')){const q='K'+k+':'+vvDilim(VV_KP,r.pK),a=TT[q]||(TT[q]=[0,0,0]);a[0]++;if(r.sonuc==='kurt')a[1]++;a[2]+=r.pK;}}
+        for(const q in TT){const a=TT[q];if(q[0]==='K')a[2]=+a[2].toFixed(4);else{a[6]=+a[6].toFixed(4);a[7]=+a[7].toFixed(2);a[8]=+a[8].toFixed(4);}}
+        const A=S.filter(r=>!r.serbest),bl=L=>L.filter(r=>r.sonuc==='blok').length;
+        for(const k of VV_STB){const D=A.filter(r=>vvTurK(r)===k),Dc=D.filter(r=>r.cer&&r.pK!=null&&(r.sonuc==='gol'||r.sonuc==='kurt')),Dp=D.filter(r=>r.pPg!=null);
+          ham['vvSt_'+k]=[D.filter(r=>r.sonuc==='gol').length,D.length];ham['vvStP_'+k]=[Dp.reduce((a,r)=>a+r.pPg,0),Dp.length];
+          ham['vvStK_'+k]=[Dc.reduce((a,r)=>a+(r.sonuc==='kurt'?1:0)-r.pK,0),Dc.length];}
+        {const B=S.filter(r=>r.pB!=null&&!r.ilk);for(let i=0;i<VV_BD.length;i++){const D=B.filter(r=>vvBDilim(r.pB)===i);
+          ham['vvBdN_'+i]=[D.length,B.length];ham['vvBdT_'+i]=[D.reduce((a,r)=>a+r.pB,0),D.length];ham['vvBd_'+i]=[bl(D),D.length];}}
+        {const F=A.filter(r=>!r.kafa),H=F.filter(r=>r.hm>0),Y=F.filter(r=>!(r.hm>0)),I=F.filter(r=>r.ilk),IH=I.filter(r=>r.hm>0),Ip=I.filter(r=>r.pB!=null);
+          ham.vvHm=[H.length,F.length];ham.vvHmB=[bl(H),H.length];ham.vvHmY=[bl(Y),Y.length];
+          ham.vvIlkB=[bl(I),I.length];ham.vvIlkT=[Ip.reduce((a,r)=>a+r.pB,0),Ip.length];ham.vvIlkH=[IH.length,I.length];ham.vvIlkHB=[bl(IH),IH.length];}
         for(let i=0;i<VV_RYAD.length;i++){const D=S.filter(r=>vvDilim(VV_RY,r.ry)===i);ham['vvRy_'+i]=[D.length,nG];
           ham['vvRyB_'+i]=[D.filter(r=>r.sonuc==='blok').length,D.length];ham['vvRyG_'+i]=[D.filter(r=>r.sonuc==='gol').length,D.length];}
         let kbN=0;for(const k of VV_KB)kbN+=kbS[k];for(const k of VV_KB)ham['vvKb_'+k]=[kbS[k],kbN];
         const sR=S.map(r=>r.ry).filter(x=>x<99).sort((a,b)=>a-b),ryO=sR.length?sR[Math.floor(sR.length/2)]:NaN;
         const sy=yerL.filter(v=>v===v).sort((a,b)=>a-b),yo=sy.length?(sy.length%2?sy[(sy.length-1)/2]:(sy[sy.length/2-1]+sy[sy.length/2])/2):NaN;
         return{ham,vvXg:nG?x/nG:NaN,vvOran:x>0?g/x:NaN,vvXgK:nG?xk/nG:NaN,vvOranK:xk>0?g/xk:NaN,vvKalib:kN?100*(kT-kG)/kN:NaN,vvYer:yo,vvUz:uzN,
-          vvRy:ryO,vvHat:nG?S.reduce((a,r)=>a+r.hat,0)/nG:NaN,vvKbN:kbN};}
+          vvRy:ryO,vvHat:nG?S.reduce((a,r)=>a+r.hat,0)/nG:NaN,vvKbN:kbN,vvTT:TT};}
     };
   },
   /* dilim tabloları: bütün maçların toplamından */
@@ -195,5 +249,21 @@ module.exports={
     console.log('  Sonuç dağılımı (penaltısız): içeriden / dışarıdan · gol · kurtarış · blok · diğer %');
     for(const k of['ic','dis']){const [, n]=o('vvK_'+k);console.log('  '+(k==='ic'?'ceza sahası içinden':'ceza sahası dışından').padEnd(22)+f(n,6)+['gol','kurt','blok','diger'].map(s=>f(yuz(o('vvS_'+k+'_'+s)[0],n),8)).join(''));}
     const [pg,pn]=o('vvPen');console.log('  Penaltı: '+pn+' · gol '+yuz(pg,pn)+' %');
+    /* T24-0: tür × mesafe ve türe göre kaleci (maçların vvTT hücreleri toplanır) */
+    const TT={};for(const s of sonuclar){const t=s.vvTT;if(!t)continue;for(const q in t){const a=TT[q]||(TT[q]=t[q].map(()=>0));for(let j=0;j<t[q].length;j++)a[j]+=t[q][j];}}
+    const topla=(k,ii)=>{const a=[0,0,0,0,0,0,0,0,0,0];for(const i of ii){const c=TT[k+':'+i];if(c)for(let j=0;j<10;j++)a[j]+=c[j];}return a;};
+    const satirT=(ad,a)=>console.log('  '+ad.padEnd(28)+f(a[0],6)+f(yuz(a[1],a[0]),8)+f(yuz(a[5],a[4]),8)+(' ('+(a[4]?(100*a[6]/a[4]).toFixed(0):'—')+')').padEnd(6)
+      +f(yuz(a[3],a[0]),7)+f(yuz(a[2],a[0]),8)+f(a[9]?(100*a[8]/a[9]).toFixed(1):'—',8)+f(a[0]?(a[7]/a[0]).toFixed(1):'—',7));
+    console.log('  Şut türü × mesafe (T24-0; penaltısız; türler doğrudan serbest vuruş hariç, gelişine ve vole türlerle örtüşür): adet · çerçeve % · kurtarış % (tahmin)'
+      +' · blok % · gol/şut % · planın P(gol) % · hız m/sn');
+    for(const k of VV_ST.concat(VV_SE)){const a=topla(k,[0,1,2,3]);satirT(VV_STAD[k]||VV_SEAD[k],a);if(!a[0])continue;
+      for(let i=0;i<VV_TMAD.length;i++){const c=topla(k,[i]);if(c[0])satirT('  '+VV_TMAD[i],c);}}
+    console.log('  Kaleci kalibrasyonu türe göre (T24-0; açık oyun, çerçeveye giden, bloksuz): adet · ort. tahmin % · gerçekleşen kurtarış % · fark (gerçek − tahmin;'
+      +' |fark| > 10 "!") · dilimlerde fark (adet): P '+VV_KPAD.join(' / '));
+    const isr=x=>{let s=x.toFixed(1);if(s==='-0.0')s='0.0';return(s[0]==='-'?'':'+')+s;};
+    for(const k of VV_ST){let n=0,kk=0,ps=0;const dl=[];
+      for(let j=0;j<VV_KPAD.length;j++){const c=TT['K'+k+':'+j]||[0,0,0],d=c[0]?100*(c[1]-c[2])/c[0]:NaN;n+=c[0];kk+=c[1];ps+=c[2];dl.push((c[0]?isr(d):'—')+' ('+c[0]+')');}
+      const fk=n?100*(kk-ps)/n:NaN;
+      console.log((n>=20&&Math.abs(fk)>10?'! ':'  ')+VV_STAD[k].padEnd(22)+f(n,6)+f(n?(100*ps/n).toFixed(1):'—',9)+f(yuz(kk,n),9)+f(n?isr(fk):'—',8)+'   '+dl.join(' / '));}
   }
 };
