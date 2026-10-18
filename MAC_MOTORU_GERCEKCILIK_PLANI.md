@@ -1197,6 +1197,66 @@ Senaryoların hepsi geçti; iki istisna var. Biri c-temas [2] (borç 29, T27). �
 
 **Kabul (`animasyon-olcum.py --karsilastir araclar/taban/a8-anm.json`).** Kadans dört bantta hedefte (1,6–2,2 / 2,5–3,0 / 3,0–3,6 / 3,5–4,2); baş dönüş hızı gövdeye göre p99 ≤ 400°/sn, dünyada p99 ≤ 600; üst gövde kırılması ≤ 15; vuruşta evre sınırı dışı sıçrama ≤ 1,0 / vuruş; alıştan sonra dönüşte kayma ≤ 15; ayak kayması dört bandı korunur; “A: eğri” yürüyüşte diz ≤ 10; vuruş eğrisi RMS ≤ 15 ya da gerekçeli bilgi; yapay kipler ve olay satırları korunur; çizim süresi ≤ 2 ms/kare; motor `--ayni`.
 
+### A9 — Sonuç (2026-10-18 akşam, masaüstü; oto mod)
+
+**Yapılanlar** (dal `claude/motor-a9`; motor değişmedi — `t23.json`'a `--ayni` 40/40 ve 10/10; çizim ayarları `STIL.animasyon.a9`, her anahtar 0'da A8 çizimi). Altı iş ayrı çalışma ağaçlarında, ajanlarla uygulanıp ölçüldü, sonra birleştirildi (A9a, 098c50e); vuruş hazırlığındaki diz sıçraması iki bağımsız yaklaşımla çözüldü ve ikisi birlikte alındı (A9b, c9e917c).
+- *Adım:* yan adım 0,45–0,6 m (`yanEn`, `yanTavan`), geri yürüyüşte geri adım ileri adımın 0,65'i (`geri`; koşuya geçerken eski 0,75), salınan ayağın yüksekliği kalkıştan beri en yükseği (`kalTut`; hız düşünce ayak salınımda inmiyordu — yavaş yürüyüş ve kalecide adım ortasında yere değip yeniden kalkıyordu, 2 sn'lik pencerede 3,3 yerine 5,2 basış sayılıyordu), koşu adımı 5 m/sn üstünde ×1,06 (`kosuBoy`). Yerinde dönüşün kadansı (`donusKadans` 3,2) değişmedi: ölçülen ortalama 2,21 (1,5–2,5 içinde).
+- *Baş:* başın dünyadaki hızına yumuşak tavan (`basDunya` 10 rad/sn; > 600°/sn karelerin %99'unda kök > 300°/sn dönüyor ve baş aynı yöne gidiyordu), hedef hızının ileri beslenmesi (`basIleri`), hedef çizilen köke göre (`basKok`), jest, tepki ve sevinç katmanlarından sonra boyun sınırı (`basSon` 1,38 rad).
+- *Üst gövde:* kol eğrisine adım frekanslı Gauss süzgeci (`kolSigma`; deparda ve frende verinin üst harmonikleri söner), dokunuşun adım evresi itişi ve kolların veri ağırlığı kritik sönümlü yayla (`dokItme`, `kolYay`), bacaksız dokunuş zarfı sin² (`dokTepe`), top sürmede dönüş dokunuşunda dirsek yok (`dokDirsek`), el teması ve kutuda itişme uzaklıkla geçişli (`elTemas`), eğilme ve yatışın kaynağı çizilen ivme yayla (`govdeIvme`).
+- *Vuruş:* son adımda destek ayağı önceki karenin yerinden, hızından ve yüksekliğinden sürer (`vkSurek`), kısa son adımda geç basar (`vkGec`), basış yeri gövdenin önündeyse gövde yetişene dek havada bekler (`vkUzan`), IK'da yana açma yumuşakça doyar (`ikYan`); A9b: vuruş penceresinde yerde olmayan bacağın eklem hızına fizyolojik tavan (`vkHiz` 15 rad/sn, 8 m/sn'de ×1,5).
+- *Koşu döngüsü (A9b):* salınan bacağın IK uzanması veri dizinin ileri kinematiğindeki uzanmayı aşmaz (`salIK`; yumuşak IK hedef erişimin dışındayken dizi düzlükte kilitliyordu — geç salınımda diz karede 17–24° açılıyordu, veride 13–15°), bükük dizde yana açma sıçramaz (`salYan`). Bu, eylemsiz bacak sıçramasını da kökünden düşürdü.
+- *Pivot:* alışta destek bacağı her zaman pozdan çıkar (`destek`), çapadaki bacağı yalnız alış ve dokunuş yuvaları tutuyorsa uyluk ve diz IK'ya kalır (`capaIK`; burulmalı IK). Ölçü tanımı değişmedi: alış penceresinde kayan karelerin %75'inde bu yuvalar yerdeki bacağı tutuyordu (pivotun payı küçük; bilek noktasından ölçmek sonucu kötüleştiriyordu).
+- *Ölçüm:* `animasyon-olcum.py --kosu N` yapay koşu kipi (boş sahada sabit hızlı düz koşu ve top sürme; 2,5 ve 3,5 m/sn bantları ~4700 kare), baş > 600°/sn kaynağı, alış kaymasının kaynağı, üst gövde kırılmasının bant/kanal dağılımı, vuruşta sınırda destek bacağı (bilgi satırları).
+- *Dönüşlü veri (borç 39):* yereldeki 12 CMU 16 kaydının hepsi düz yürüyüş ve koşu (net leğen dönüşü ≤ 8°); A7 aracı yalnız düz ve dönemli adım döngüsü alıyor. Dönüş adımı prosedürel kalır; dönüşlü kayıtları indirmek ayrı karardır.
+
+**Kabul** (`animasyon-olcum.py`, 180 sn; önce = T23 motoru ve A8 çizimi, aynı tohum).
+
+| Satır | Hedef | Tohum 3: önce → sonra | Tohum 4 · 5 (sonra) | |
+|---|---|---|---|---|
+| Kadans yürüyüş · koşu · hızlı · depar | 1,6–2,2 · 2,5–3,0 · 3,0–3,6 · 3,5–4,2 | 2,25 · 3,13 · 3,48 · 4,29 → 1,98 · 2,96 · 3,28 · 4,04 | 1,95 · 3,06 · 3,45 · 4,17 · 1,95 · 3,05 · 3,08 · 4,08 | tuttu (koşu tohum 4–5'te 15–23 pencereyle sınırın 0,06 üstünde) |
+| Baş dönüş hızı p99 dünyada · gövdeye göre | ≤ 600 · ≤ 400°/sn | 649 · 386 → 558 · 386 | 557 · 384 · 557 · 371 | tuttu |
+| Baş–gövde açısı en çok | ≤ 80° | 91 → 79 | 79 · 79 | tuttu |
+| Üst gövde kırılması | ≤ 15 / oyuncu·dk | 30,5 → 10,6 | 12,6 · 9,4 | tuttu |
+| Vuruşta evre sınırı dışı > 20° sıçrama | ≤ 1,0 / vuruş | 1,67 → 0,09 | 0,13 · 0,10 | tuttu |
+| Alıştan sonra dönüşte kayma | ≤ %15 | 24,9 → 4,9 | 10,9 · 10,4 | tuttu |
+| Ayak kayması dört bant | ≤ 5 · 5 · 15 · 15 | 3,70 · 1,54 · 1,05 · 0,43 → 2,98 · 1,67 · 0,76 · 0,42 | bantta | korundu |
+| “A: eğri” yürüyüşte diz | ≤ 10 | 10,2 → 10,3 | 10,0 · 11,3 | tutmadı (borç 22) |
+| Vuruş eğrisi RMS | ≤ 15 ya da gerekçeli bilgi | şut uyluk 22,8 · diz 35,1; pas 27,0 · 18,3; uzun 14,4 · 28,6 | — | bilgi (aşağıda) |
+| Çizim süresi | ≤ 2 ms/kare | 0,79 → 0,66 | — | tuttu |
+
+- **Ayrıca (bilgi):** eylemsiz bacak > 20° sıçraması 66,9 → 19,1 / oyuncu·dk (tohum 4 · 5: 17,4 · 14,7), bacak kırılması 99,1 → 77,7, eylemde > 20° 184 → 141, üst gövde > 10° sıçrama 28,4 → 9,1; alıştan sonra genel kayma %22,0 → 6,2; baş öncülüğü ≥ 150 ms (hizalı) %34 → 35–42.
+- **Yapay kipler:**
+  - top saklama (`--koru 30`) %4,2;
+  - blok (`--blok 84`) %100;
+  - kurtarış (`--kaleci 96`) eldiven %99,0, tutuşun türü 41/41;
+  - duran top (`--duran 24`) bütün satırlar tuttu;
+  - olay (`--olay 80`) tutma %99,6, sedye %98,5, sağlıkçı %96,9, topallama 0,67, hakem topu 33/33, ama endirekt işareti %87,7 (≥ 90) ve sevinç 4 çeşit (≥ 5). Bu ikisi T23 motorundan geliyor: A9 anahtarları kapalıyken ve dondurulmuş A8 çizimiyle de aynı (A8'de T22 motoruyla %99,1 · 5); borç 46.
+  - `--kosu 60` (yeni):
+    - 2,5 ve 3,5 m/sn bantları ölçülüyor (diz RMS 8,9 · 8,5);
+    - 2,5 m/sn'de dirsek RMS 32 — kolların yürüyüş → koşu geçiş penceresi (`ANM_EGKG` 1,8–3 m/sn) veriden geniş;
+    - düz deparda ve top sürmede bacak > 20° sıçrama 159,5 / oyuncu·dk (A9b'den önce 198,5);
+    - düz koşuda kadans hızlı 4,89, depar 4,56 (maç ölçüsünde bantta; bu bantlar maçta seyrek);
+    - borç 47.
+- **Tutmayanlar:**
+  - *Yürüyüşte diz:* kaynağı katı ayak (borç 22): veride bilek duruşta ayağın üstünde öne yuvarlanır, modelde ayak yere çivili.
+  - *Vuruş eğrisi:* pas ve gelişine iç ayakla kısa salınım, veri ise tam vuruş (geride uyluk +21°/+6°, veride −27°). Uzun ve şutta geri salınımın tepesinde diz 102–103° (veride 83°), çünkü salınım payı 1'in üstünde ölçekleniyor (uzun ×1,2, kimlik ×1,12'ye dek). Aday: tepeyi pay 1'de sınırlamak (ölçünün tepe/plan formülüyle birlikte; borç 24).
+  - *Baş öncülüğü:* çizimde %60 hedefi, gövdeye göre ≤ 400°/sn sınırıyla birlikte tutmuyor (`bas.hiz` 10 + `bas.ivme` 150 → %44, ama 495°/sn). Hız sınırı korundu (borç 48).
+  - *Kimlik satırı:* koşu bandında yalnız 12 oyuncu var (A8'de 19); adım boyu CV %6,7, kol genliği CV %11,1 (≥ 8 · ≥ 20; borç 49).
+
+**Denetimler:**
+- **Oturum sonu:** `t23.json --ayni` 40/40; 23 senaryonun 21'i çıkış 0 (`c-temas` [2] borç 29, `d-duran` korner %5,2 borç 44); ad denetimi bulgusuz.
+- **`kontrol.py`:** `index.html` ve galeri (`a8alis`, `a8vurus`, `a2dokunus`, `a7surus`, `a7egri`, `a3hareket`, `t4calim`, `a6blok`, `t9vurus`, `a4hareket`) hatasız.
+- **`akis-deneme.py`:** tam koşu, bütün denetimler geçti.
+- **`an-yakala`:** şut anı önce (`--anm a8`) ve sonra, loca bakışı. Claude'un incelemesi: locadan fark ince, yeni bozukluk yok.
+- **Taban ve kopya:** yeni animasyon tabanı `araclar/taban/a9-anm.json` (T23 motoru, A9 çizimi). Dondurulmuş kopya `a8`; `a7` silindi. Karşılaştırma sayfasının önce listesi `a8`.
+
+**Oyunda görülecek:**
+- **Yürüyüş:** adımlar sakin (saniyede ~2 adım). Yan ve geri adımlar daha uzun. Yavaş yürüyende ayak adım ortasında yere değmiyor.
+- **Baş:** gövde hızla dönerken başın dünyadaki dönüşü daha yumuşak.
+- **Kollar:** deparda ve frende titremiyor.
+- **Şut ve paslar:** destek ayağı vuruştan önce sıçramadan basıyor. Koşan oyuncunun dizi salınımın sonunda bir karede açılmıyor.
+- **Alış:** topu alıp dönen oyuncunun yerdeki ayağı kaymıyor.
+
 ### T24 — Şut ve bitiş (kullanıcı onayı 2026-10-18 akşam; B ve D akışları)
 
 **Dal ve taban.** `claude/motor-t24` (`claude/motor-a9`'un ucundan); motor tabanı T23'ünki.
@@ -1314,7 +1374,7 @@ Mevcut iskelet (11 kemik, bacak IK'sı, eylem yuvaları) yeterlidir (2026-10-08 
 | T22 Kanat hızı ve şut kütüphanesi (onay 2026-10-18; oto mod; kapandı aynı gün — şut 15,4 → 16,4, gerçekleşen ÷ xG 1,16 banda girdi, falso %3 → 14; kanat sürüklemesi ve sert ≤ %50 tutmadı; “T22 — Sonuç”) | T21, T9b | orta–büyük (1 oturum) | yüksek (kanadın basıp gitmesi, plase ve falsolu şut, vole) |
 | A8 Çizim: yeni tetiklerin hareketi (onay 2026-10-18; oto mod; kapandı aynı gün — alıştan sonra yerdeki ayağın kayması %70 → 28, ayak kayması bantları düştü, blok %89 → 99, hazırlıktaki dokunuşlar çiziliyor; dönüşte kayma ≤ 15, geri basış 0 ve sıçrama satırları tutmadı; “A8 — Sonuç”) | T20–T22, A7 | orta (1 oturum) | yüksek (açma dokunuşu ve gerilme, yönlü alış ve top etrafında dönüş, yeni şut pozları) |
 | T23 Hareketin sakinliği 2: hedef noktası, yürüyüş yönü, bakış (onay 2026-10-18 akşam; oto mod; kapandı aynı gün — kabulün bir kısmı tuttu, “T23 — Sonuç”; `tur/t23`) | T22 | orta–büyük | yüksek (pres gecikmesi, savunmanın dönüşü) |
-| A9 Çizim: adım ve baş temposu (onay 2026-10-18 akşam) | T23, A8 | orta | orta |
+| A9 Çizim: adım ve baş temposu (onay 2026-10-18 akşam; kapandı aynı gün — kadans, baş hızı, üst gövde kırılması, vuruşta sıçrama ve alıştan sonra kayma tuttu; yürüyüşte diz ve vuruş eğrisi tutmadı, “A9 — Sonuç”; `tur/a9`) | T23, A8 | orta | orta |
 | T24 Şut ve bitiş (onay 2026-10-18 akşam) | A9 | orta–büyük | yüksek (gol ve xG bandı) |
 | T25 Kanat ve orta (onay 2026-10-18 akşam) | T24 | orta–büyük | yüksek (şut ↔ orta değeri) |
 | T26 Yorgunluk ve ikinci yarı (onay 2026-10-18 akşam) | T25 | orta | orta (240 maç ölçüsü) |
@@ -1353,18 +1413,15 @@ Kullanıcının sorusu üzerine (2026-10-17: “tutmayan, tam istediğin gibi ya
 | 10 | Kanat alıcısı · kanat çalım payı | ≥ 15 · ≥ 40 | 12,7 · 26,5 (T19) | kanat rolünün değeri (T12c, T14) | kanat değer modeli (xT ızgarası) | aday |
 | 11 | Forvet dışı şut · şutun ortanca mesafesi | ≥ 30 · 14–16 | 23,3 · 16,5 (T19) | orta saha ve beklerin kutuya girişi (T14 geç giriş kısmen) | 10 ile birlikte | aday |
 | 12 | Kurtarıştan korner / şut | ≥ 0,07 | 0,07 (T19, sınırda) | — | — | bilgi |
-| 13 | Duyarlılık: müdahale → girişim | ≥ 1,25 | **1,38** (T23; T19 1,29) | — | — | kapandı (T23) |
-| 14 | Başın öncülüğü (90°+ dönüş, ≥ 150 ms; hizalı başlayan) | ≥ %50 (A3: 60) | **%59,4** motorda (T23c; çizimde %34 — A9) | çizimde gövde gecikmesi denendi (%36–38, A6b) — baş, motorun bakışı dönüşten önce gitmedikçe öne geçemiyor | — (motor kısmı kapandı; çizimdeki baş zinciri A9'da) | kapandı (T23) |
 | 18 | Hız bütçesinin esas ölçüsü | kural | — | süreçler arası çiftler ısınma gürültüsünde (M3) | aynı süreç ölçüsü esas olsun (YOL_HARITASI açık konu 12) | kullanıcı |
 | 19 | Kutu modeli (`?model=kutu`) | kaldırılsın mı | duruyor (A5) | — | kullanıcı A5'i değerlendirince | kullanıcı |
 | 20 | Maçın izlenmesi (T13 … T19) ve tam akış denemesi | kullanıcı onayı | bekliyor | hazır tanımının son şartı | — | kullanıcı |
 | 21 | Hareket verisi (A7), görsel tarz, gündüz ve hava | — | A7 kapandı (2026-10-17); görsel tarz sırada | §7.9, STIL_REHBERI | görsel tarz ayrı plan | aday |
-| 22 | Yürüyüşte duruş: diz RMS · uyluk aralığı (çizilen / veri) | ≤ 10 · veri ±10 | 11,0 · 64,3 / 49,1 (A8; T22 motorunun yürüyüş örneği — A7'de T19 motoruyla 10,0 · 62,6 / 49,5) | katı ayak: veride bilek duruşta ayak üstünde ~20 cm öne yuvarlanır, modelde ayak yere çivili — duruş açıklığı veriden geniş | ayak bileği eklemi (model işi) ya da yürüyüşte duruş açıklığının veriye çekilmesi (kadansı yükseltir) | bilgi |
-| 23 | Üst gövde kırılması (ikinci fark > 0,06 rad) | ≤ 15 / oyuncu·dk | 31,4 (A8; A8 öncesi 30,2 — T20–T22 motorunun dönüşleri; A7 24,9, A6 11,1) | deparda (6–8 m/sn) omuzun veri salınımı (karede 10–15°); depar veri dışı (uzatma, doz 0,5) | depar kol genliğinin kullanıcının izlemesiyle ayarı (`egri.depar`, araçta genlik sınırı) | aday |
-| 24 | Vuruş eğrisi RMS (şut; `hareket-egrileri.py --vurus`) | ≤ 15 | uyluk ~20 · diz ~27 (A7c) | geri salınımda uyluk −5° (veri −27°); aşağı salınımın zamanlaması ve diz bükülmesi veriden farklı | vuruş katmanının evre zamanlaması (`tD`, tempo) veriden | aday |
-| 25 | 2,5 / 3,5 m/sn ve top sürme bantlarının ölçüsü | ölçü | maçta 16 / 52 / 65 kare (A7) | oyuncular bu hızlarda düzgün koşmuyor (hızlanma, yön), top süren çoğu karede dokunuşta | yapay koşu kipi (`animasyon-olcum.py --kosu N`) | bilgi |
+| 22 | Yürüyüşte duruş: diz RMS · uyluk aralığı (çizilen / veri) | ≤ 10 · veri ±10 | 10,3 · 62,3 / 49,6 (A9, tohum 3; tohum 4 · 5 diz 10,0 · 11,3 — A8'de 11,0) | katı ayak: veride bilek duruşta ayak üstünde ~20 cm öne yuvarlanır, modelde ayak yere çivili — duruş açıklığı veriden geniş | ayak bileği eklemi (model işi) ya da yürüyüşte duruş açıklığının veriye çekilmesi (kadansı yükseltir) | bilgi |
+| 23 | Üst gövde kırılması (ikinci fark > 0,06 rad) | ≤ 15 / oyuncu·dk | **10,6** (A9; tohum 4 · 5: 12,6 · 9,4; A8 31,4) | — | — | kapandı (A9) |
+| 24 | Vuruş eğrisi RMS (şut; `hareket-egrileri.py --vurus`) | ≤ 15 | şut uyluk 22,8 · diz 35,1; uzun 14,4 · 28,6; pas 27,0 · 18,3 (A9) | pas ve gelişine iç ayakla kısa salınım (veri tam vuruş); uzun ve şutta geri salınımın tepesinde diz 102–103° (veri 83°) — salınım payı 1'in üstünde ölçekleniyor | tepeyi pay 1'de sınırlamak (ölçünün tepe/plan formülüyle); pas için ayrı veri yok | bilgi |
+| 25 | 2,5 / 3,5 m/sn ve top sürme bantlarının ölçüsü | ölçü | `--kosu 60` ile ~4700 kare (A9): diz 8,9 · 8,5; 2,5 m/sn'de dirsek 32 (borç 47) | — | — | kapandı (A9) |
 | 26 | Sürüşte top ≥ 0,15 sn arkada / maç · arkada kare | ≤ 5 · ≤ %1 | 6,8 · %1,19 (T23; T20 10,5) | kalan: tam dönüşlü alış (~3,4; top ilk dokunuşla arkaya, gövde 150–180° döner — gerçekte de olan an) ve sürüş yönünün > 100° değişimi (~2,7) | dönüşlü alışın ilk dokunuşunu yana alma (yarım dönüş) ya da ölçünün tam dönüşlü alışı ayırması | aday |
-| 27 | Top erişimdeyken gövde niyetten > 57° dönük | ≤ %10 | **%3,9** kalıcı (T23; toplam %15,8 bilgi — dönüş sürerken ve topa bakarken ayrıldı, T23-0) | — | — | kapandı (T23) |
 | 28 | Santrada orta noktanın 3 m içinde tek oyuncu | %100 | %92,1 (T20) | kalanın kaynağı ölçülmedi | iz | ölçüm |
 | 29 | `c-temas` [2]: adama değen temasta faul payının bağıl hızla düzgün artması | kapı | varsayılan örneklemde sınırda (T20: önden 51 → 43, tolerans 8) | 144 000 denemede T19 ve T20 aynı: önden 20/41/39/32 — eğilim hızla hafif düşüyor, yandan 2–4 → 4–6 m/sn 97 → 71 | kapının tanımı (dilim başına en az temas, tolerans) ya da faul modelinin önden hızlı temastaki payı | ölçüm |
 | 31 | Koşana havadan pas / maç | ≥ 10 | 4,9 (T21) | aday var (boşluğa havadan, derin koşunun 10 m önü), kararın değeri seçmiyor | koşuya havadan pasın değeri (devam: kaleciyle karşı karşıya) | aday |
@@ -1372,16 +1429,20 @@ Kullanıcının sorusu üzerine (2026-10-17: “tutmayan, tam istediğin gibi ya
 | 33 | Kanat taşıması ≥ 15 m / maç · topla hızın %90'lığı | ≥ 4 · ≥ 7 m/sn | 1,2 · 6,1 (T22) | sürükleme kararı ~4,5 / maç ama 1,2 sn'lik bağlılıktan sonra çoğu pasla bitiyor | sürüklemenin süresi (hedefe dek bağlılık) ve depar itişinin hızı | aday |
 | 34 | Şut türü: sert · plase · aşırtma | ≤ 50 · ≥ 25 · 2–5 | 66,7 · 17,7 · 0,5 (T22) | plase daha isabetli olunca gol ve gerçekleşen ÷ xG bandı aşıyor (0,55 / 1,3: ÷ xG 1,35) | plasenin kurtarılabilirliği (hız) ile birlikte | aday |
 | 35 | Hız bütçesi (T22) | ≤ +%10 | +%9,5 ortanca, en az −%0,3 | turlar iki kümeli; sürükleme seçeneğinin karar maliyeti | sürükleme yollarının önbelleği ya da seyrek düşünme | ölçüm |
-| 36 | Alıştan sonra yerdeki ayağın kayması · dönüşte (“A: alış”) | dönüşte ≤ 15 | 27,7 · 22,7 (A8; önce 69,8 · 68,8) | kalan: alış pozu sürerken kalça dönüyor, taban bilek çevresinde dönüyor (ölçü taban noktasından; pivot), top saklama ve bekletme tavırlarının pozları, yere değen salınım ayağı | pivotu ölçüde ayırmak (bilek noktası) ya da duruştaki ayağın yönünü kalçayla döndürmek; tavır pozlarının bacak kanallarını IK'ya bırakmak | ölçüm |
+| 36 | Alıştan sonra yerdeki ayağın kayması · dönüşte (“A: alış”) | dönüşte ≤ 15 | **6,2 · 4,9** (A9, tohum 3; tohum 4 · 5 dönüşte 10,9 · 10,4) | kaynak pozla IK çakışması (kayan karelerin %75'inde alış ve dokunuş yuvaları yerdeki bacağı tutuyordu) | — (`bekle` tavırının destek bacağı ayrı aday) | kapandı (A9) |
 | 37 | Geri basışlı alış → vuruş | 0 | 4 / 18 (A8; hareketli karede geriye %8,75) | motorun alıştan vuruşa geri hareketi (T20 `aGeriPay` %7,6); çizim izliyor | motor: alıştan vuruşa geri hızın tavanı (`geriTopla`) ya da dönüş adımının yanlaması | aday |
-| 38 | Vuruşta evre sınırı dışı > 20° sıçrama · eylemde sıçrama | ~0 | 1,47 / vuruş · 253 / oyuncu·dk (A8; önce 1,05 · 228) | dokunuştan hemen sonra başlayan vuruşta destek ayağı son adımın başında 0,5 m geride, 0,1 sn'de 1 m öne gidiyor (diz karede 29°); adım evresi denk gelince | vuruş katmanında geride kalan destek ayağına uzun son adım ya da destek ayağını adım evresine göre seçmek | aday |
-| 39 | Dönüşlü yürüyüş ve koşu verisi (A8 madde 5) | — | denenmedi (A8) | yerelde CMU 16'da dönüşlü kayıtlar var; alıştaki kayma pozla IK çakışmasıydı (A8'de düzeltildi) | A7 aracıyla dönüş adımının eğrisi; yetmezse prosedürel (A3b) | aday |
+| 38 | Vuruşta evre sınırı dışı > 20° sıçrama · eylemde sıçrama | ~0 (kabul ≤ 1,0) | **0,09** / vuruş · 141 / oyuncu·dk (A9, tohum 3; tohum 4 · 5: 0,13 · 0,10; A8 1,47 · 253) | — | — | kapandı (A9) |
+| 39 | Dönüşlü yürüyüş ve koşu verisi (A8 madde 5) | — | yerelde yok (A9: 12 CMU 16 kaydının hepsi düz; 09_12'de 9 dönüş adımı, yavaş) | A7 aracı yalnız düz ve dönemli adım döngüsü alıyor | dönüşlü kayıtları indirmek (kullanıcının veri kararı, §7.9); yoksa prosedürel kalır | bilgi |
 | 40 | Yarım vole pozu (“A: vuruş stili”) | ≥ %90 | 0/1 (A8; maçta seyrek) | motor stili temasta kesinleştiriyor, üst gövde pozu hazırlıkta seçiliyor (aşağı salınım başladıysa değişmez) | motorun yarım vole kararını hazırlıkta yazması (sözleşme) | bilgi |
-| 41 | Yürüyüş kadansı (çizim) · yürüme bandında yan + geri hareket (motor) | 1,6–2,2 adım/sn · ≤ %30 | 2,25 · %30,6 (T23; A8'de 2,53 · %59) | topsuz oyuncu topa dönük yürüyor (yan %37, geri %22); çizimin yan adımı kısa | motor kısmı T23b'de (kalan: kısa ayar ve topa açılımın ölçü sınırına yakınlığı); kadans ve yan ve geri adım boyu A9 | aday (A9) |
+| 41 | Yürüyüş kadansı (çizim) · yürüme bandında yan + geri hareket (motor) | 1,6–2,2 adım/sn · ≤ %30 | **1,98** (A9; dört bant hedefte) · %30,6 (T23; A8'de 2,53 · %59) | topsuz oyuncu topa dönük yürüyor (yan %37, geri %22); çizimin yan adımı kısa | kadans kapandı (A9); motor kısmı sınırda (kalan: kısa ayar ve topa açılımın ölçü sınırına yakınlığı) | bilgi |
 | 42 | Duruş süreleri: taç · kale vuruşu · korner · gol → santra | gerçek 13–16 · 24–28 · ~30 · 60–90 sn | 5,6 · 8,2 · 12,3 · 25 (6 maç) | U1 kararı: 20 dakikalık maçta izlenebilirlik | kullanıcı kararıyla aynı kalır (2026-10-18 akşam: “tempo bugünkü kalsın”) | bilgi |
-| 43 | Baş dönüş hızı p99 (dünyada) | ≤ 600°/sn (yürüyüşte gerçek ≤ 90) | 649, en çok 2038 (T23 motoru, A8 çizimi; A8 644) | baş hedefe sıçrıyor; dönüşte baş–gövde zinciri | A9 | aday (A9) |
+| 43 | Baş dönüş hızı p99 (dünyada) | ≤ 600°/sn (yürüyüşte gerçek ≤ 90) | **558** (A9; > 600°/sn 84 → 1,9 / oyuncu·dk; en hızlı tek kareler ~1950°/sn — gövde sıçraması) | — | — | kapandı (A9) |
 | 44 | `d-duran` kapısı: korner başına gol | %3–5 | %5,2 (T23, tohum 1; tohum 2 %4,6 — 3200 kornerde %4,9) | sınırda; ilk kafadan sonraki evreden gol 16 → 25 / 1600; `niyetDonus`, alış ve yürüyüş anahtarları kapatılınca 4,8–5,2 (tek kaynak yok) | T24'te (şut ve sapan top) yeniden okunur | ölçüm (T24) |
 | 45 | Vuruş hazırlığında bakış (`bakisVurus`; T23 sentezi) | — | yapılmadı (T23) | dönüşlerin ~%1,6'sı; ölçülmedi | vuruş hazırlığında bakışın hedefe önden gitmesi | bilgi |
+| 46 | “A: olay” endirekt işareti · golcü sevinci çeşidi (`--olay 80`) | ≥ %90 · ≥ 5 | %87,7 · 4 (T23 motoru; A9 anahtarları kapalıyken ve A8 çizimiyle aynı; A8'de T22 motoruyla %99,1 · 5) | motorun olay sırası değişti: endirekt süresince hakemin işaret kuyruğunda başka işaret; yapay golde golcünün kimliği | hakemin işaret önceliği; sevinç çeşidinin seçimi | aday (T27) |
+| 47 | Düz koşuda depar ve top sürme (`--kosu 60`) | bacak sıçraması ~0 · kadans bandı | bacak > 20° 159,5 / oyuncu·dk (A9; A9b öncesi 198,5); kadans hızlı 4,89 · depar 4,56; 2,5 m/sn'de dirsek RMS 32 | maçta bu bantlar seyrek (maç ölçüsünde kadans bantta); kolların geçiş penceresi (`ANM_EGKG` 1,8–3) veriden geniş (2–2,5) | deparda ve top sürmede salınım IK'sı, adım boyu; kol geçiş penceresi | aday |
+| 48 | Başın öncülüğü çizimde (hizalı, ≥ 150 ms) | A3: ≥ %60 | %35–42 (A9; motorda %59) | gövdeye göre ≤ 400°/sn sınırıyla birlikte tutmuyor (`bas.hiz` 10 + `bas.ivme` 150 → %44, 495°/sn) | hız sınırı mı öncülük mü — Claude A9'da sınırı korudu | bilgi |
+| 49 | “A: kimlik” adım boyu · kol genliği CV | ≥ 8 · ≥ 20 | 6,7 · 11,1 (A9 ve T23 motoru; A8'de 13,1 · 40,1) | T23 motorunda koşu bandında örnek az (12 oyuncu; A8'de 19) | ölçünün yapay koşu kipinde okunması (`--kosu`, bütün oyuncular) | ölçüm |
 
 ---
 
