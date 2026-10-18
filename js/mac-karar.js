@@ -484,7 +484,7 @@ function pasAdayiTam(m,p,o,c,tip,yay){
   /* havadan topta kaybedilen hava mücadelesi çoğu zaman ikinci top olur (temiz kayıp değil): kaybın bedeli daha az */
   const U=A.P*(c.dg+dEk+pasTurDegeri(m,p,tip,yay))*(0.7+0.3*A.Pk)-(1-A.P)*c.kay*(hedef?1-c.Pi:tip==='hava'?MA.ikinciTop:1)*takim.risk*MA.risk;
   return{tur:c.alt==='ara'?'ara':A.L>34?'uzun':'pas',alici:c.q,hx:c.hx,hz:c.hz,tip,yay,varis:A.varis,T:tip==='hava'?A.T:null,
-    mod:c.alt==='ara'?'ara':c.alt==='bosluk'?'bosluk':'ayak',ex:c.ex,ez:c.ez,es:c.es,deger:U,P:A.P,Pk:A.Pk,sure:A.sure,L:A.L,alt:c.alt,dv};}
+    mod:c.alt==='ara'?'ara':c.alt==='bosluk'?'bosluk':'ayak',ex:c.ex,ez:c.ez,es:c.es,deger:U,P:A.P,Pk:A.Pk,sure:A.sure,L:A.L,alt:c.alt,dv,marj:A.marj};}   /* T23a2: marj salt okunur (alıcının rahat noktası) */
 /* bütün pas seçenekleri. o: {ox,oz: topun çıkacağı yer, t0: vuruşa kalan süre, ilk: gelişine (tek vuruş), gelA: gelen topun yönü,
    sinirA: hizalanma sınırı, baski: pasörün baskısı, ofs: algılanan ofsayt çizgisi, vole: top havada} */
 const BOSLUK_KISA=[3,6],BOSLUK_UZUN=[3,6,10];
@@ -836,7 +836,7 @@ function tekVurusKarari0(m,p,k,s,yakin){
   const tau=0.12+0.42*(1-p.oz.karar),P1=1/(1+Math.exp((U2-U1-MOTOR_AYAR.tekVurus-0.5*MOTOR_AYAR.egilimGuc*profilEgilim(p,'tekVurus'))/tau));
   if(m.rast()>=P1)return{sec:null,hedef};
   return{sec:{tur:en1.tur,hx:en1.hx,hz:en1.hz,tip:en1.tip,alici:en1.alici,varisHizi:en1.varis,mod:en1.mod,ex:en1.ex,ez:en1.ez,es:en1.es,
-    guncelle:true,ilk:true,tekDokunus:true,P:en1.P,Pk:en1.Pk,alt:en1.alt},hedef};   /* P, Pk, alt salt okunur (ölçüm) */
+    guncelle:true,ilk:true,tekDokunus:true,P:en1.P,Pk:en1.Pk,alt:en1.alt,marj:en1.marj},hedef};   /* P, Pk, alt salt okunur (ölçüm) */
 }
 /* ---- kafa: ceza sahasında kaleye, geride uzaklaştırma, ileride arkadaşa indirme ya da koşana uzatma ---- */
 function kafaKarari(m,p){

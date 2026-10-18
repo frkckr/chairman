@@ -100,6 +100,9 @@ ayarEkle('B',{
   taramaYan:0.7,               // taramanın yanının bir öncekinin tersi olma olasılığı (eskiden hep ters)
   bakisDonus:0.5,              // gövdenin hedefine bundan (rad) büyük dönüş kaldıkça bakış gövdenin hedefine bakar (gideceği yere bakma)
   /* T22 (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): kanat hızı ve şut kütüphanesi */
+  aliciRahat:0,                // T23a2 (2026-10-18; denendi, kapalı — 0,8 ile 40 maçta pas isabeti −3,8 ± 1,2 (sabit hızlı varış tahminiyle −10,6), toplam ivmelenme aynı
+                               // (alıcınınki −0,2, başka yerde geri geliyor), eşzamanlı +0,18; kod kalır): rakipsiz ayağa yerden pasta (planın rakip payı ≥ bu kadar sn) alıcı en erken noktaya tam eforla fırlamaz: yoldaki
+                               // ilk rahat noktaya (0,6 eforla toptan 0,1 sn önce varır, yolda ve orada rakip ≥ payla geride) efor 0,6, tepe hızın %62'siyle gider; 0: eski
   surukle:1,                   // T22a: sürükleme (basıp gitmek) — 15/22/30 m'lik uzun taşıma seçeneği (mac-karar.js surukleSecenegi), depar, top 2,8 m önde, 1,2 sn bağlılık; 0: yok
   surukleKanat:0.5,            // T22a: kanat oyuncusunun sürüklemesine ek değer (puan; kullanıcı notu: kanadın hızlanıp basıp gitmesi); 0: yok
   sutYeni:1,                   // T22b: şutta isabet–güç ödünleşimi (plase hata çarpanı 0,9 → 0,65, sert 1,0 → 1,15 — 0,55 / 1,3 denendi: sert %59 ama gol +0,6, gerçekleşen ÷ xG 1,35; serbest vuruş hariç) ve 9 m'den (eskiden 14) falso adayı; 0: eski
@@ -509,7 +512,7 @@ Object.assign(Match.prototype,{
     const b=this.ball,sec=e.sec,{hx,hz,L,bx,bz,tip}=k;
     b.sahip=null;b.tasiyan=null;p.kickCd=0.3;p.surus=null;
     this.dokunus(p,true);
-    b.hedefOyuncu=sec.alici||null;b.pasHedef=sec.alici?{x:hx,z:hz,tur:sec.tur}:null;
+    b.hedefOyuncu=sec.alici||null;b.pasHedef=sec.alici?{x:hx,z:hz,tur:sec.tur,mod:sec.mod||null,marj:sec.marj!=null?sec.marj:null,tip:tip||null,rahat:null}:null;   /* T23a2: mod, marj, tip salt okunur */
     const tur=sec.tur;
     if(tur==='sut'){b.sut={team:p.team,by:p,gkDone:false,cerceve:this.cerceveyeGider(p.team),xg:sec.xg||0,t:this.t};if(k.sut)Object.assign(b.sut,k.sut);this.ist.sut[p.team]++;
       this.ofsaytPasAni(p);this.on('shot',{p,dist:L,xg:sec.xg||0});this.sutTakipAta(p,sec.xg);}   /* T7e: şutu takip ve dönen top (js/mac-takim.js) */
@@ -581,7 +584,7 @@ Object.assign(Match.prototype,{
       case 'sut':this.vurusBaslat(p,{tur:'sut',hx:this.dir[p.team]*PL,hz:MZ,xg:s.xg,pBlok:s.pBlok});break;   /* T19a: pBlok salt okunur (v-verim) */
       case 'pas':case 'ara':case 'uzun':case 'orta':case 'geriCevir':
         this.vurusBaslat(p,{tur:s.tur,hx:s.hx,hz:s.hz,tip:s.tip,alici:s.alici,varisHizi:s.varis,T:s.T,hy:s.hy,yay:s.yay,mod:s.mod,ex:s.ex,ez:s.ez,es:s.es,guncelle:!!s.mod,
-          P:s.P,Pk:s.Pk,alt:s.alt,ortaTuru:s.ortaTuru});break;   /* P, Pk, alt, ortaTuru: karar anındaki tahmin, salt okunur (ölçüm: araclar/olcumler/p-kalib.js) */
+          P:s.P,Pk:s.Pk,alt:s.alt,ortaTuru:s.ortaTuru,marj:s.marj});break;   /* P, Pk, alt, ortaTuru: karar anındaki tahmin, salt okunur (ölçüm: araclar/olcumler/p-kalib.js) */
       case 'uzaklastir':{/* uzağa ve kanada, çoğu zaman hedefsiz; baskı altında ayağın kenarından kaçıp taça ya da kornere gidebilir */
         const d=this.dir[p.team],yan=p.z<MZ?-1:1,kacti=this.rast()<0.25+baskiAltinda(this,p)*0.25;
         let hx=clamp(p.x+d*(28+this.rast()*22),-PL+4,PL-4),hz=p.z+yan*(10+this.rast()*26);

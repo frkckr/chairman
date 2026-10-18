@@ -550,6 +550,11 @@ Object.assign(Match.prototype,{
     if(on&&(on.surum===b.surum||MOTOR_AYAR.kovalaSadik)&&hrkHyp(on.x-k.x,on.z-k.z)>1.5){   /* T23a1 (kovalaSadik): sürüm değişince de sınanır */const yol=this.topYolu(),i0=hrkMax(0,Math.round((this.t-this._yolT0)*60)-1);
       let tb=null;for(let i=i0;i<yol.length;i+=2){const s=yol[i];if(hrkHyp(s.x-on.x,s.z-on.z)<0.9&&s.y<(havada?2.3:0.8)){tb=(i-i0)/60;break;}}
       if(tb!=null&&varisZamani(p,on.x,on.z,0.45,0.1)<=tb+0.15)k={x:on.x,z:on.z,t:tb};}
+    /* T23a2 (aliciRahat): rakipsiz ayağa yerden pasın alıcısı yoldaki ilk rahat noktaya 0,6 eforla — pas başına bir kez hesaplanır (b.pasHedef.rahat) */
+    let rahatK=false;{const AR=MOTOR_AYAR.aliciRahat,ph0=b.pasHedef;
+      if(AR>0&&b.hedefOyuncu===p&&ph0&&ph0.mod==='ayak'&&ph0.tip==='yer'&&ph0.marj!=null&&ph0.marj>=AR&&!havada&&b.y<0.3){
+        if(!ph0.rahat||ph0.rahat.surum!==b.surum)ph0.rahat={surum:b.surum,n:this.aliciRahatNokta(p,k,AR)};
+        const rn=ph0.rahat.n;if(rn){k={x:rn.x,z:rn.z,t:Math.max(0,rn.t0-(this.t-rn.tH))};this.eforVer(p,0.6);rahatK=true;}}}
     p._kar={x:k.x,z:k.z,surum:b.surum};
     /* T6b: topun uçuşunu okuma — havadaki topta karşılama noktası derinlik ve yanal hata kadar kayar (karşılamaya 1 sn kalandan %60'a iner) */
     if(havada&&hMax>1.6){hvHataAl(this,p);const v=hrkHyp(b.vx,b.vz);if(v>1){const ux=b.vx/v,uz=b.vz/v,f=clamp(k.t,0.6,1);k={x:k.x+(ux*p._hv.D-uz*p._hv.L)*f,z:k.z+(uz*p._hv.D+ux*p._hv.L)*f,t:k.t};}}
@@ -558,7 +563,7 @@ Object.assign(Match.prototype,{
     if(b.hedefOyuncu===p&&ph&&ph.tur==='ara'){const yol=this.topYolu(),i0=hrkMax(0,Math.round((this.t-this._yolT0)*60)-1);
       let tb=null;for(let i=i0;i<yol.length;i+=3){const s=yol[i];if(hrkHyp(s.x-ph.x,s.z-ph.z)<1.5&&s.y<0.8){tb=(i-i0)/60;break;}}
       if(tb!=null&&varisZamani(p,ph.x,ph.z,0.45,0.1)<=tb+0.1&&k.t>0.4)k={x:ph.x,z:ph.z,t:tb};}
-    p.tx=clamp(k.x,-PL-1,PL+1);p.tz=clamp(k.z,-1,PW+1);p.hizOran=1;p.bak=b;
+    p.tx=clamp(k.x,-PL-1,PL+1);p.tz=clamp(k.z,-1,PW+1);p.hizOran=rahatK?0.62:1;p.bak=b;   /* T23a2: rahat noktaya tepe hızın %62'siyle */
     if(hrkHyp(k.x-p.x,k.z-p.z)<1.5)p.yonHedef=hrkAtan2(b.z-p.z,b.x-p.x);
     /* karşılayan koşarak varır: topa zamanında ancak yetişecekse hızını kesmez, payı çoksa durur; üstüne gelen topa doğru yavaş.
        Pasın alıcısı topu kontrollü karşılar (koşarak geçip topun gerisinde kalmasın), yalnız geç kalıyorsa koşarak */
@@ -569,6 +574,22 @@ Object.assign(Match.prototype,{
     p._varisKare=this.kare;
     /* gelişine karar (şut, ileride tek vuruşla pas): mac-topla.js */
     this.gelisineKarar(p,k);
+  },
+  /* T23a2: alıcının rahat noktası — yolda en erken karşılama noktasından sonra, 0,6 eforla (tepe hızın %62'si, 0,3 sn tepki) toptan 0,1 sn önce
+     varabildiği ilk nokta; o noktaya kadar yolun her örneğinde rakipler toptan ≥ 0,3 sn, noktada ≥ AR sn geride. Yoksa null (eski kural). Saf */
+  aliciRahatNokta(p,k,AR){
+    const yol=this.topYolu(),i0=hrkMax(0,Math.round((this.t-this._yolT0)*60)-1),rk=this.teams[1-p.team],vR=0.62*p.maxSpd;
+    let basla=false;
+    for(let i=i0;i<yol.length;i+=3){const s=yol[i],tb=(i-i0)/60;if(s.y>0.3)continue;
+      if(!basla){if(hrkHyp(s.x-k.x,s.z-k.z)<1.0||tb>=k.t-0.02)basla=true;else continue;}
+      let tr=99;for(const o of rk){if(!o.oyunda)continue;const t=varisZamani(o,s.x,s.z,0.75,0.2);if(t<tr)tr=t;}
+      if(tr<tb+0.3)return null;
+      /* varış: 0,2 sn tepki + düşük eforun ivmesiyle (≈2,6 m/sn²) gidiş yönündeki hızdan vR'ye + duruş payı 0,15 sn (sabit hızlı tahmin alıcıyı geç bırakıyordu) */
+      const ddx=s.x-p.x,ddz=s.z-p.z,dd=hrkHyp(ddx,ddz),D=hrkMax(0,dd-0.45),v0=dd>0.01?clamp((p.vx*ddx+p.vz*ddz)/dd,0,vR):0,aR=2.6,t1=(vR-v0)/aR,d1=v0*t1+0.5*aR*t1*t1;
+      const tA=0.35+(D<=d1?(-v0+hrkKok(v0*v0+2*aR*D))/aR:t1+(D-d1)/vR);
+      if(tA+0.1<=tb&&tr>=tb+AR)return{x:s.x,z:s.z,t0:tb,tH:this.t};
+      if(s.v<0.05)return null;}
+    return null;
   },
   /* dokunuşlarla top sürme: top öne itilir, oyuncu yetişince yeniden dokunur. Rakip yakınsa dokunuşlar kısa. B niyeti verir (p.surus);
      koruma niyetinde gövde rakiple top arasında (p.tavir='koru'), önünde rakip varsa çalım manevrası (calimAdim). Her dokunuş p.sonDokunus */
