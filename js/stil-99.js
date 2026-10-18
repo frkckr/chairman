@@ -134,6 +134,14 @@ const STIL={
        kuralı), alisAyak (alışta dokunan ayak yerdeyse havadaki ayak alır; yerdeki destek bacağı pozdan çıkar), dokAlcak (top sürme dokunuşunda bacak kanalları
        pozdan çıkar, salınan ayak alçaktan süpürür), capaCiz (poz bacağı tutarken basan ayak çizildiği yere çivilenir) — her biri 0: eski */
     a8:{dokunus:1,dokSal:1,alisAyak:1,dokAlcak:1,capaCiz:1,bakis:0.45,surukle:1,alis:0.45,sutEgim:0.12,yarim:1},
+    /* A9 (2026-10-18; gerçekçilik planı §4 “A9”): adım ve baş temposu — her anahtar 0'da eski çizim (anahtarların açıklaması kendi satırında) */
+    a9:{
+      /*A9-adim*/
+      /*A9-bas*/
+      /*A9-govde*/
+      /*A9-vurus*/
+      /*A9-pivot*/
+      /*A9-son*/z:0},
     /* A7 (2026-10-17): hareket verisinin eğrileri (js/hareket-egrileri.js) — acik 0 eski elle yazılmış eğriler; ayak (salınan ayağın yolu, duruşun ortası,
        koşuda temas payı), kalca (yükseklik), egim (koşu eğimi), legen (leğen ve omuz hattının salınımı), kol (omuz, dirsek) ağırlıkları; kolOlcek omuz
        salınımının veriye oranı (A7a taraması: ×0,85 omuzda veriden 2,4° uzak, 1,0); depar 4,5 m/sn'nin üstünde uzatma bandının dozu (A7a taraması: 0,5
