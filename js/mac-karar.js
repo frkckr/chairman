@@ -412,7 +412,7 @@ function pasAdayiEkle(m,p,o,C,q,g,hx,hz,alt,ex,ez,es,ek){
   const d=m.dir[p.team],ox=o.ox,oz=o.oz;
   if(hz<1||hz>PW-1||Math.abs(hx)>PL-1||hx*d>PL-1)return;
   const L=hyp(hx-ox,hz-oz);if(L<3||L>66)return;
-  if((alt==='ara'&&L<15)||(alt==='bosluk'&&(L<8||o.ilk)))return;   /* kısa ara pası, kısa ya da tek vuruşla boşluğa pas: tutmaz */
+  if((alt==='ara'&&L<15)||(alt==='bosluk'&&(L<8||o.ilk&&!MOTOR_AYAR.tekKoni)))return;   /* kısa ara pası, kısa ya da tek vuruşla boşluğa pas: tutmaz (T20c: tekKoni açıkken gelişine boşluğa pas olur) */
   if(o.ilk&&(L>(alt==='ara'?30:25)||Math.abs(aciFark(Math.atan2(hz-oz,hx-ox),o.gelA+Math.PI))>o.sinirA))return;
   const ux=(hx-ox)/L,uz=(hz-oz)/L,vOrt=10+L*0.25;
   let r60=0,rSon=0,inis=99,blok=99;
@@ -797,7 +797,8 @@ function tekVurusKarari0(m,p,k,s,yakin){
   /* tek vuruş yalnız top ayağına (yerden ya da yarım yükseklikte) gelirken ve karşılama noktasına yakınken; koşarak yetişilen ya da havadan
      inen topu önce kontrol eder */
   if(p.rol==='GK'||s.y>0.45||!yakin)return{sec:null,hedef};
-  const ilk=pasSecenekleri(m,p,{ox:k.x,oz:k.z,t0:k.t,ilk:true,gelA,sinirA:0.6+0.35*p.oz.pas,baski,ofs,vole:s.y>0.15});
+  /* T20c (tekKoni): yönlendirme konisi 90–120° (eskiden 34–54°: gelişine pas yalnız pasöre doğru) */
+  const ilk=pasSecenekleri(m,p,{ox:k.x,oz:k.z,t0:k.t,ilk:true,gelA,sinirA:MOTOR_AYAR.tekKoni?MOTOR_AYAR.tekKoni*(0.75+0.25*p.oz.pas):0.6+0.35*p.oz.pas,baski,ofs,vole:s.y>0.15});
   let en1=null;for(const c of ilk)if(!en1||c.deger>en1.deger)en1=c;
   if(!en1)return{sec:null,hedef};
   /* tek vuruşun kendi riski: top ayağa tam gelmeyebilir */

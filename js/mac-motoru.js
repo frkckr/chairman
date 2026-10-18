@@ -59,6 +59,7 @@ const MOTOR_AYAR={
   blokHizli:4,                 // T1: aynısı tehlikede (savunmada top kalemize gelirken, hücumda top ileri giderken)
   hucumGecikme:1,              // T1: hücumdaki takımın bölge oyuncuları da kişisel tepkiyle kayar: 1 topun gerisindekiler, 2 hepsi, 0 hiçbiri
   presHisterezis:1.5,          // T4: 1. adam seçimi kare kare değişmesin: önceki 1. adam yeni adaydan bu kadar (puan, ~m) kötü olmadıkça kalır
+  santraTek:1,                 // T20d (2026-10-18, kullanıcı kararı): santrada topun başında tek oyuncu (2016 kuralı), ilk pası geriye verir ve alıcıya dönük durur; 0: eski iki kişilik santra (yardımcı topun 2,8 m yanında)
 
   /* P — js/mac-profil.js */
   egilimGuc:undefined,formSapma:undefined,
@@ -70,7 +71,7 @@ const MOTOR_AYAR={
   enerjiTopla:undefined,yanTavan:undefined,geriTavan:undefined,donusSiniri:undefined,ayakBas:undefined,varisHizi:undefined,varisFren:undefined,
   jokeyMesafe:undefined,birebirYayilim:undefined,birebirErisim:undefined,birebirYaris:undefined,birebirKayma:undefined,birebirDonus:undefined,
   birebirVazgec:undefined,yutmaGuc:undefined,yutmaSure:undefined,destekSure:undefined,kapatYakin:undefined,dokunusSiklik:undefined,
-  dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,govdeDinamik:undefined,donusIvme:undefined,bakOlu:undefined,donusGecikme:undefined,bakisOnce:undefined,cruyff:undefined,cruyffKal:undefined,cruyffKanat:undefined,sirtGovde:undefined,sutHamle:undefined,blokErisim:undefined,kanatKapat:undefined,
+  dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,govdeDinamik:undefined,donusIvme:undefined,bakOlu:undefined,donusGecikme:undefined,bakisOnce:undefined,cruyff:undefined,cruyffKal:undefined,cruyffKanat:undefined,sirtGovde:undefined,sutHamle:undefined,blokErisim:undefined,kanatKapat:undefined,surusYetis:undefined,surusYuz:undefined,geriTopla:undefined,
   /* C — js/mac-mudahale.js */
   mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
   acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,elOlasilik:undefined,tutmaIstek:undefined,ortaTemas:undefined,blokGercek:undefined,govdeDar:undefined,
@@ -83,7 +84,7 @@ const MOTOR_AYAR={
   ofsaytAlgi:undefined,kosuIstegi:undefined,aliciPay:undefined,uzaklastirDeger:undefined,hedefDeger:undefined,devamAgirlik:undefined,
   devamHedef:undefined,sabir:undefined,sabirSure:undefined,devamPas:undefined,bekleOran:undefined,koruDeger:undefined,koruSure:undefined,
   koruTempo:undefined,dusunHz:undefined,pasTol:undefined,pasTolHava:undefined,ortaDestek:undefined,ikinciTopHedef:undefined,araKalib:undefined,birebirMenzil:undefined,birebirKayip:undefined,
-  birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,tasiInce:undefined,tasiDevam:undefined,bakisDinamik:undefined,bakisHiz:undefined,taramaAralik:undefined,taramaGenislik:undefined,taramaTut:undefined,taramaYan:undefined,bakisDonus:undefined,
+  birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,tasiInce:undefined,tasiDevam:undefined,bakisDinamik:undefined,bakisHiz:undefined,taramaAralik:undefined,taramaGenislik:undefined,taramaTut:undefined,taramaYan:undefined,bakisDonus:undefined,vurusYaklas:undefined,pasAcik:undefined,pasDogal:undefined,alisYon:undefined,tekKoni:undefined,
   /* D — js/mac-kaleci.js */
   kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,penaltiOku:undefined,penaltiKanma:undefined,kaleciNiyet:undefined,kaleciNiyetEsik:undefined,kaleciBekle:undefined,
   /* T — js/mac-takim.js */
@@ -103,7 +104,7 @@ const MOTOR_AYAR={
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined
 };
-const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek'};
+const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek',santraTek:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
   if(!Object.prototype.hasOwnProperty.call(MOTOR_AYAR,k))throw new Error('MOTOR_AYAR.'+k+' bildirilmemiş ('+akis+'; önce js/mac-motoru.js MOTOR_AYAR)');
   if(MOTOR_AYAR_SAHIBI[k])throw new Error('MOTOR_AYAR.'+k+' iki kez eklendi ('+MOTOR_AYAR_SAHIBI[k]+', '+akis+')');
@@ -375,7 +376,7 @@ class Match{
     const d=this.dir[p.team],k=dizilisKonumu(this.taktik[p.team].dizilis,p.n,0,MZ,p.team===takim);
     let u=Math.min(k.u,p.rol==='GK'?k.u:-1.2),w=k.w;
     if(p.team===takim&&p===this.santraci(takim)){u=-0.3;w=MZ-0.2;}
-    else if(p.team===takim&&p===this.santraYardimcisi(takim)){u=-0.9;w=MZ+2.6;}
+    else if(!MOTOR_AYAR.santraTek&&p.team===takim&&p===this.santraYardimcisi(takim)){u=-0.9;w=MZ+2.6;}   /* T20d: santraTek açıkken yardımcı dizilişteki yerinde */
     else if(p.team!==takim&&p.rol!=='GK'){const dz=w-MZ,dd=hyp(u,dz);if(dd<10){const s=10/(dd||1);u=-Math.abs(u*s||10);w=MZ+dz*s;}}
     return{x:u*d,z:w};
   }
@@ -400,7 +401,9 @@ class Match{
     if(!yerinde){
       if(b.tasiyan===tk){tk.tx=-0.35*this.dir[tk.team];tk.tz=MZ-0.25;tk.hizOran=0.5;if(hyp(tk.x,tk.z-MZ)<0.7)this.topuSifirla(0,MZ);}
       /* T10d: topu ağdan alan gerideki takımın oyuncusu orta noktaya koşup koyar */
-      else if(b.tasiyan&&b.tasiyan.team===this.kickTeam&&b.tasiyan.rol!=='GK'){const c=b.tasiyan;c.tx=0;c.tz=MZ;c.hizOran=1;c.bak=null;if(hyp(c.x,c.z-MZ)<0.8)this.topuSifirla(0,MZ);}
+      else if(b.tasiyan&&b.tasiyan.team===this.kickTeam&&b.tasiyan.rol!=='GK'){const c=b.tasiyan;c.tx=0;c.tz=MZ;c.hizOran=1;c.bak=null;if(hyp(c.x,c.z-MZ)<0.8){this.topuSifirla(0,MZ);
+        /* T20d (santraTek): topu koyan oyuncu santracı değilse yerine döner (eskiden orta noktada kalıyordu: topun başında iki kişi) */
+        if(MOTOR_AYAR.santraTek&&c!==tk){const k=this.santraKonumu(c,this.kickTeam);c.tx=k.x;c.tz=k.z;c.hizOran=0.8;}}}
       else if(!b.tasiyan){/* kalecinin gönderdiği topu santrayı yapacak oyuncu karşılar, eliyle ya da ayağıyla tutar */
         const k=this.yakalamaNoktasi(tk,2.2);tk.tx=k.x;tk.tz=k.z;tk.hizOran=0.8;tk.bak=b;
         if(hyp(b.x-tk.x,b.z-tk.z)<1.2&&b.y<2.2){b.tasiyan=tk;this.topDegisti();}}
@@ -410,7 +413,7 @@ class Match{
     /* T10d: topu ağdan alıp koşan gerideki takımın santrasında kural yeter: herkes kendi yarısında, rakipler çemberin dışında (santracı yerinde) */
     if(hazir){const ac=this.santraAcele;
       for(const p of this.players){if(!p.oyunda||p.sakat)continue;
-        if(ac&&p!==tk){if(p.x*this.dir[p.team]>0.3||p.team!==this.kickTeam&&hyp(p.x,p.z-MZ)<9.15){hazir=false;break;}}
+        if(ac&&p!==tk){if(p.x*this.dir[p.team]>0.3||p.team!==this.kickTeam&&hyp(p.x,p.z-MZ)<9.15||MOTOR_AYAR.santraTek&&hyp(p.x,p.z-MZ)<2){hazir=false;break;}}   /* T20d: topun başında tek kişi */
         else if(hyp(p.tx-p.x,p.tz-p.z)>1.3){hazir=false;break;}}}
     /* T8d: gerideyken ve süre azalmışken (acele) santra çabuk: 1,6 → 0,9 sn. T10c: tedavi ya da sedye sürerken santra bekler */
     if(!this.sakatlikBekletir()&&(hazir&&this.phaseT>(this.macDurumu(this.kickTeam).acele>0.5?0.9:1.6)||this.phaseT>22)){
@@ -419,6 +422,8 @@ class Match{
       this.on('kickoff',{team:this.kickTeam,half:this.half});this.refs[0].eylem={ad:'duduk',t:0,sure:0.8};
       this.phase='play';this.phaseT=0;this.santraAcele=false;this.yariSantra=false;this.kullanimBaslat('santra',tk,null,t0);   /* T8-0 */
       tk.x=-0.35*this.dir[tk.team];tk.z=MZ-0.25;tk.vx=tk.vz=0;tk.yon=this.dir[tk.team]>0?0:Math.PI;
+      /* T20d: tek santracı geriye oynayacağı alıcıya yarı dönük durur (ayak içiyle geri pas; eskiden hücum yönüne bakıp 180° dönüyordu) */
+      if(MOTOR_AYAR.santraTek)tk.yon=aciNorm(tk.yon+0.6*aciFark(Math.atan2(al.z-tk.z,al.x-tk.x),tk.yon));
       this.sahipYap(tk);this.vurusBaslat(tk,{tur:'pas',hx:al.x,hz:al.z,tip:'yer',alici:al});
     }
   }
