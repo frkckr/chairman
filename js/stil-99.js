@@ -125,7 +125,15 @@ const STIL={
     kol:{genlik:[0.16,0.74],dirsek:[0.28,1.1]},
     dusus:{aci:1.45,yuzY:0.12,yanY:0.16},dokunus:0.18,kucukPiksel:12,
     top:{ust:300,egri:150,kare:0.6},sevincCesit:4,
-    koru:{dokunus:1},zipla:{inis:0.6,kes:1,capa:1},blok:{acik:1,erisim:0.95,tut:0.15,hiz:14,kok:0.5,yuksek:0.25},
+    koru:{dokunus:1},zipla:{inis:0.6,kes:1,capa:1},blok:{acik:1,erisim:0.95,tut:0.15,hiz:14,kok:0.5,yuksek:0.25,yukAyak:0.2},
+    /* A8 (2026-10-18): T20–T22'nin yeni tetiklerinin hareketi — dokunus (vuruş hazırlığındaki sürüş dokunuşları çizilir: uzun topta açma, ters yöne kaçan topu
+       tabanla durdurma; tabanla geri çekme taban pozuyla), bakis (uzun topta hazırlığın ilk bakis sn'sinde baş hedefe), surukle (top 1,8 m'den öndeyken ve 4,5 m/sn'den
+       hızlıyken top sürme adımı söner — depar adımı; ileri uzun itişte süpürme 0,24 sn), alis (yönlü alışta kalça dokunuşun yönüne açılır, rad/rad; gövde yarısı),
+       sutEgim (şutun takibinde gövde topun yükselişinden: yerden sertte öne, yükselende geriye; rad), yarim (yarım vole kendi pozuyla). blok.yukAyak (tarama 0 / 0,15 / 0,2 / 0,25 / 0,3 / 0,4 / 0,55: --blok 252'de %89,0 / 99,5 / 99,0 / 97,6 / 94,8 / 89,5 / 89,0): bel hizasındaki
+       topta ayak topun yukAyak m altına kalkar (diz ve incik topa; 0: ayak yerde, eski); dokSal (top sürmede dokunuş yalnız salınımdaki ayakla; A6a'nın top saklama
+       kuralı), alisAyak (alışta dokunan ayak yerdeyse havadaki ayak alır; yerdeki destek bacağı pozdan çıkar), dokAlcak (top sürme dokunuşunda bacak kanalları
+       pozdan çıkar, salınan ayak alçaktan süpürür), capaCiz (poz bacağı tutarken basan ayak çizildiği yere çivilenir) — her biri 0: eski */
+    a8:{dokunus:1,dokSal:1,alisAyak:1,dokAlcak:1,capaCiz:1,bakis:0.45,surukle:1,alis:0.45,sutEgim:0.12,yarim:1},
     /* A7 (2026-10-17): hareket verisinin eğrileri (js/hareket-egrileri.js) — acik 0 eski elle yazılmış eğriler; ayak (salınan ayağın yolu, duruşun ortası,
        koşuda temas payı), kalca (yükseklik), egim (koşu eğimi), legen (leğen ve omuz hattının salınımı), kol (omuz, dirsek) ağırlıkları; kolOlcek omuz
        salınımının veriye oranı (A7a taraması: ×0,85 omuzda veriden 2,4° uzak, 1,0); depar 4,5 m/sn'nin üstünde uzatma bandının dozu (A7a taraması: 0,5

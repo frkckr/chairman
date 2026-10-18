@@ -130,6 +130,10 @@ OLCUM_KUR_JS = r"""() => {
      olayının karesinde çizilen ayağın topa açıklığı (top beden yüksekliğinin altında, < 0,8 m), motorun temas uzaklığına göre (≤ 0,6 / > 0,6 m) */
   S.kKaynak = { genel: { salinim: 0, surukle: 0, sabit: 0, erisim: 0 }, durum: [0, 1, 2, 3].map(() => ({ salinim: 0, surukle: 0, sabit: 0, erisim: 0 })), hiz: [] };
   S.bl = { n: 0, ust: 0, yakin: [], uzak: [], liste: [] };
+  /* A8 (2026-10-18): alış — iyi kontrol dokunuşundan vuruşun temasına, topun gidişine ya da 2,5 sn'ye dek pencere: hareketli (çizilen hız > 0,5 m/sn) karelerde
+     geriye (çizilen gidiş gövdenin 120°'den gerisinde: a.mZ < −0,5) kare payı, basış ve geri basış, geri basışlı alış (vuruşla bitenlerde ve hepsinde), yerdeki
+     ayağın kayması (genel ve kök dönüşü > 2 rad/sn iken; ayak kayması satırıyla aynı tanım: ilk iki temas karesinden sonra > 0,2 m/sn), alıştan vuruşa süre */
+  S.al = { n: 0, vurus: 0, kare: 0, geriKare: 0, adim: 0, geriAdim: 0, geriAlis: 0, geriAlisH: 0, temas: 0, kayma: 0, donT: 0, donK: 0, temasE: 0, kaymaE: 0, sure: [] };
   /* A6a: sıçrama yakınının evresi — [temas, kayma]: hazırlık (baraj / açık oyun) ve iniş */
   S.zEvre = { hazB: [0, 0], haz: [0, 0], inis: [0, 0] };
   S.ol = { sakKare: 0, sakPoz: 0, sedKare: 0, sedYuk: 0, sedTutN: 0, sedTut: 0, tedKare: 0, tedPoz: 0, gerdir: 0, topalN: 0, topalKotu: 0, topalIyi: 0, endKare: 0, endTut: 0, birakN: 0, birakAyni: 0, sev: {} };
@@ -175,6 +179,14 @@ OLCUM_KUR_JS = r"""() => {
     const v = Math.hypot(a.x - k.x, a.z - k.z) / dt, vsOnce = k.vs; if (v > 1) k.vAci = Math.atan2(a.z - k.z, a.x - k.x);   /* A3: gidiş yönü (kesme dönüşü için) */ k.x = a.x; k.z = a.z; k.vs += (Math.min(v, 12) - k.vs) * Math.min(1, dt * 8);
     const durum = p.zipla || a.inisT >= 0 ? 3 : !k.ilk && p.tavir === 'koru' ? 2 : !k.ilk && Math.abs(aciF(a.yaw, k.yawU)) / dt > 2 && k.vs > 0.6 ? 0 : !k.ilk && (vsOnce - k.vs) / dt > 3 ? 1 : -1;
     const b = BANT(k.vs);
+    /* A8: alış penceresi (S.al) */
+    const pe = p.eylem, mb = mac.ball;
+    if (pe && pe.ad === 'kontrol' && !pe.kotu && k.alisE !== pe) { k.alisE = pe; k.alis = { t0: t, geri: 0 }; S.al.n++; }
+    if (k.alis) { const vur = pe && pe.ad === 'vurus';
+      if (vur && pe.faz === 'takip') { S.al.vurus++; S.al.sure.push(+(t - k.alis.t0).toFixed(2)); if (k.alis.geri) { S.al.geriAlis++; S.al.geriAlisH++; } k.alis = null; }
+      else if (t - k.alis.t0 > 2.5 || (!vur && !(pe && pe.ad === 'kontrol') && mb.sahip !== p)) { if (k.alis.geri) S.al.geriAlisH++; k.alis = null; } }
+    const alisAc = !!k.alis, alisGeri = alisAc && k.vs > 0.5 && a.mZ != null && a.mZ < -0.5, alisDon = k.ilk ? 0 : Math.abs(aciF(a.yaw, k.yawU)) / dt;
+    if (alisAc && k.vs > 0.5) { S.al.kare++; if (alisGeri) S.al.geriKare++; }
     a.m.root.updateMatrixWorld(true);
     /* A3: fren ↔ sabit koşu (motorun hızı p.spd, 0,2 sn'lik pencere: fren < −2,5 m/sn², sabit |ivme| < 0,5; çizilen yerin türevi kare hızına duyarlıydı) */
     if (!k.spH) { k.spH = new Float64Array(12); k.spI = 0; k.spN = 0; } const spM = p.spd || 0, sp0 = k.spH[k.spI]; k.spH[k.spI] = spM; k.spI = (k.spI + 1) % 12; k.spN++;
@@ -185,6 +197,7 @@ OLCUM_KUR_JS = r"""() => {
       V.set(0, -0.5, 0.05).applyMatrix4((i ? a.m.kR : a.m.kL).matrixWorld); const c = k.temas[i] ? V.y < 0.025 : V.y < 0.02; yer[i] = c; (k.vy || (k.vy = [0, 0]))[i] = V.y;
       if (!k.ilk) {
         if (c && k.temas[i]) { k.tn[i]++; const d = Math.hypot(V.x - k.ayak[i][0], V.z - k.ayak[i][1]); k.yol[i] += d; if (!eylemsiz) k.epEylem[i] = true;
+          if (alisAc && k.tn[i] > 2) { const ky = d / dt > 0.2; if (eylemsiz) { S.al.temas++; if (ky) S.al.kayma++; if (alisDon > 2) { S.al.donT++; if (ky) S.al.donK++; } } else { S.al.temasE++; if (ky) S.al.kaymaE++; } }
           if (eylemsiz && k.tn[i] > 2) { S.temas[b]++; const kay = d / dt > 0.2; if (kay) S.kayma[b]++; if (durum >= 0) { S.dTemas[durum]++; if (kay) S.dKayma[durum]++; }
             if (durum === 3) { const ze = S.zEvre[p.zipla && p.zipla.t < 0 ? (p.duranRol && p.duranRol.rol === 'baraj' ? 'hazB' : 'haz') : 'inis']; ze[0]++; if (kay) ze[1]++; }
             /* A6-0: kaymanın kaynağı (çizimin çapası a.W ve adım döngüsünün durumu a.anc) */
@@ -194,7 +207,8 @@ OLCUM_KUR_JS = r"""() => {
               if (ks === 'sabit') { H.set(0, -0.5, 0).applyMatrix4((i ? a.m.kR : a.m.kL).matrixWorld); if (Math.hypot(H.x - W[2 * i], H.z - W[2 * i + 1]) > 0.05) ks = 'erisim'; }
               S.kKaynak.genel[ks]++; if (durum >= 0) { S.kKaynak.durum[durum][ks]++; if (durum === 2 && S.kKaynak.hiz.length < 4000) S.kKaynak.hiz.push(+(d / dt).toFixed(2)); } } } }
         if (c !== k.temas[i]) k.gecis[i] = S.kare;
-        if (c && !k.temas[i]) { if (a3 && k.basVar[1 - i]) (a3 === 'fren' ? S.frenAdim : S.sabitAdim).push([Math.hypot(V.x - k.bas0[1 - i][0], V.z - k.bas0[1 - i][1]), spM]);
+        if (c && !k.temas[i]) { if (alisAc) { S.al.adim++; if (alisGeri) { S.al.geriAdim++; k.alis.geri++; } }
+          if (a3 && k.basVar[1 - i]) (a3 === 'fren' ? S.frenAdim : S.sabitAdim).push([Math.hypot(V.x - k.bas0[1 - i][0], V.z - k.bas0[1 - i][1]), spM]);
           k.yol[i] = 0; k.tn[i] = 0; k.bas0[i][0] = V.x; k.bas0[i][1] = V.z; k.basVar[i] = true; k.epEylem[i] = !eylemsiz; k.pen.bas.push(t); k.basT[i] = t; }
         if (!c && k.temas[i] && k.basVar[i] && !k.epEylem[i] && k.tn[i] > 2) { S.adimYol[b].push(k.yol[i]); S.adimNet[b].push(Math.hypot(k.ayak[i][0] - k.bas0[i][0], k.ayak[i][1] - k.bas0[i][1]));
           const du = t - k.basT[i]; k.temasG.push([k.basT[i], du]); if (k.temasG.length > 12) k.temasG.shift(); if (a3 === 'sabit' && b >= 2) S.sabitTemas[b].push(du); }
@@ -339,7 +353,7 @@ OLCUM_KUR_JS = r"""() => {
     if (HK_OLAY[ad] && !(ad === 'duduk' && h0 && h0.cur && h0.cur.tur === 'endirekt')) S.zOlay.push({ ad, kare: mac.kare, tur: HK_OLAY[ad] });
     if (ad === 'mudahaleSonuc' && v && v.p && v.topaDegdi) zTmBekle.set(v.p, mac.kare);
     /* A6-0: şut bloğu (orta bloğu değil) — motorun temas uzaklığı ve topun yüksekliği olay anında */
-    if (ad === 'block' && v && v.p && !v.orta) { const b = mac.ball; zBl.set(v.p, { kare: mac.kare, uzan: Math.hypot(b.x - v.p.x, b.z - v.p.z), y: b.y - (v.p.yuk || 0) }); }
+    if (ad === 'block' && v && v.p && !v.orta) { const b = mac.ball; zBl.set(v.p, { kare: mac.kare, uzan: Math.hypot(b.x - v.p.x, b.z - v.p.z), y: b.y - (v.p.yuk || 0), tur: b.sut && b.sut.tur || '-', v: Math.hypot(b.vx, b.vz), eg: b.egri || 0 }); }
     if (v && v.p && v.p.rol === 'GK' && ((ad === 'save' && (!v.parca || v.parca === 'el')) || ad === 'yumruk' || ad === 'parmak')) zKr.set(v.p, { kare: mac.kare, bicim: ad === 'save' ? (v.bicim || '-') : ad, el: v.el || '-' });
     if (ad === 'save' && v) S.kr.parca[v.parca || '-'] = (S.kr.parca[v.parca || '-'] || 0) + 1;
     if (ad === 'save' && v && v.p && v.niyet === 'cel' && v.celN) zCel.set(v.p, { kare: mac.kare, N: v.celN, P0: null, i: -1 });   /* T15d */
@@ -368,7 +382,7 @@ OLCUM_KUR_JS = r"""() => {
             V.set(0, 0, 0).applyMatrix4(kb.matrixWorld); const kx = V.x, ky = V.y, kz = V.z; V.set(0, -0.5, 0.05).applyMatrix4(kb.matrixWorld);
             const d = Math.min(sg(hx, hy, hz, kx, ky, kz), sg(kx, ky, kz, V.x, V.y, V.z)) - 0.17; if (d < en) en = d; }
           (bl.uzan > 0.6 ? B.uzak : B.yakin).push(+Math.max(0, en).toFixed(3));
-          if (B.liste.length < 40) B.liste.push([+bl.uzan.toFixed(2), +bl.y.toFixed(2), +Math.max(0, en).toFixed(3), e ? e.ad : '-']); } } } }
+          if (B.liste.length < 200) B.liste.push([+bl.uzan.toFixed(2), +bl.y.toFixed(2), +Math.max(0, en).toFixed(3), e ? e.ad : '-', bl.tur, +bl.v.toFixed(1), +bl.eg.toFixed(3)]); } } } }
     { const kr = zKr.get(p); if (kr !== undefined) { zKr.delete(p); if (kr.kare === mac.kare) { a.m.root.updateMatrixWorld(true); const tb = anmVkTop(a.al); let en = 9;
         for (const kb of [a.m.eL, a.m.eR]) { V.set(0, -0.3, 0).applyMatrix4(kb.matrixWorld); const d = Math.hypot(V.x - tb[0], V.y - (tb[1] + 0.11), V.z - tb[2]) - 0.11; if (d < en) en = d; }
         const R = S.kr; R.n++; R.acik.push(+Math.max(0, en).toFixed(3)); R.bicim[kr.bicim] = (R.bicim[kr.bicim] || 0) + 1; R.el[kr.el] = (R.el[kr.el] || 0) + 1;
@@ -421,7 +435,7 @@ OLCUM_KUR_JS = r"""() => {
         let z = zK.get(a); if (!z || z.e !== e) { z = { e, tepe: 0, bitti: false }; zK.set(a, z); if (e.faz === 'takip') S.vkIlkTakip++; }
         if (vk.e === e && vk.evre === 2 && !vk.asagi) { const h = (vk.kp[1] - ANM_VK_YG) / (0.08 + (vk.wI != null ? 0.26 + 0.34 * vk.wI : 0.26) * vk.S);   /* A7c: dolu vuruşta plan veriden (vk.wI) */ if (h > z.tepe) z.tepe = h; }
         if (e.faz === 'takip' && !z.bitti) { z.bitti = true; S.zVurus++;
-          { const st = e.stil || '-', pk = vk.pk || '-', bek = st === 'ic' ? ['ic', 'ust'] : st === 'dis' ? ['dis'] : st === 'asirtma' ? ['asirtma'] : st === 'vole' ? ['vole'] : st === 'falso' ? ['falso'] : st === 'burun' ? ['burun'] : ['ust', 'uzun'];
+          { const st = e.stil || '-', pk = vk.pk || '-', bek = st === 'ic' ? ['ic', 'ust'] : st === 'dis' ? ['dis'] : st === 'asirtma' ? ['asirtma'] : st === 'vole' ? ['vole'] : st === 'yarimVole' ? ['yarim', 'ust', 'uzun'] : st === 'falso' ? ['falso'] : st === 'burun' ? ['burun'] : ['ust', 'uzun'];
             const VS = S.vs, ok = bek.includes(pk); VS.n++; if (ok) VS.ayni++; const r = VS.stil[st] || (VS.stil[st] = [0, 0]); r[0]++; if (ok) r[1]++;
             a.m.root.updateMatrixWorld(true); V.set(0, -0.5, 0.05).applyMatrix4((vk.ayak ? a.m.kR : a.m.kL).matrixWorld); const tb = anmVkTop(a.al), dx = V.x - tb[0], dy = V.y - (tb[1] + 0.11), dz = V.z - tb[2];
             const c = Math.cos(a.yaw), s = Math.sin(a.yaw), kay = { acik: +(Math.hypot(dx, dy, dz) - 0.11).toFixed(3), dy: +dy.toFixed(3), yan: +((dx * c - dz * s) * (vk.ayak ? 1 : -1)).toFixed(3) };
@@ -544,6 +558,9 @@ SONUC_JS = r"""() => {
         R[ad] = L.length ? { n: L.length, med: yuzde(L, 0.5), p10: yuzde(L, 0.1), p150: +(100 * L.filter(x => x >= 150).length / L.length).toFixed(0) } : null; } return R; })(),
     blok: (() => { const B = S.bl, f = L => { const s = sirala(L); return s.length ? { n: s.length, med: s[Math.floor(s.length / 2)], p90: yuzde(s, 0.9), ic: +(100 * s.filter(x => x <= 0.15).length / s.length).toFixed(1) } : null; };
       return { n: B.n, ust: B.ust, yakin: f(B.yakin), uzak: f(B.uzak), hepsi: f(B.yakin.concat(B.uzak)), liste: B.liste }; })(),
+    alis: (() => { const A = S.al, s = sirala(A.sure); return { n: A.n, vurus: A.vurus, kare: A.kare, geriPay: A.kare ? +(100 * A.geriKare / A.kare).toFixed(2) : null, adim: A.adim, geriAdim: A.geriAdim,
+      geriAlis: A.geriAlis, geriAlisH: A.geriAlisH, temas: A.temas, kayma: A.temas ? +(100 * A.kayma / A.temas).toFixed(2) : null, donT: A.donT, donKayma: A.donT ? +(100 * A.donK / A.donT).toFixed(2) : null, temasE: A.temasE, kaymaE: A.temasE ? +(100 * A.kaymaE / A.temasE).toFixed(2) : null,
+      sureMed: s.length ? s[Math.floor(s.length / 2)] : null }; })(),
     ck: (() => { const G = S.ck, Y = G.yutKayit.filter(y => y.n >= 3);
       return { N: G.N, bas: G.bas, basAyni: G.basAyni, basFark: G.basFark.slice(0, 10), it: G.it, itAyni: G.itAyni,
         makasN: G.makas.length, makasIyi: G.makas.filter(x => x >= 0.35).length, makasMed: G.makas.length ? +yuzde(G.makas, 0.5).toFixed(2) : null,
@@ -771,6 +788,9 @@ def satirlar(o):
     if bl_:
         h_ = lambda x: f"{x['n']} — ortanca {v(x['med'], 3)} m, ≤ 0,15 %{v(x['ic'])}" if x else "—"
         S.append(f"A: blok teması (A6-0): şut bloğu {bl_['n']} (top ≥ 0,8 m {bl_['ust']}) · çizilen bacağın (uyluk, incik, taban) topa açıklığı: motorun temas uzaklığı ≤ 0,6 m " + h_(bl_.get("yakin")) + " · > 0,6 m " + h_(bl_.get("uzak")) + " · hepsi " + h_(bl_.get("hepsi")) + "   [A6c: ≤ 0,15 ≥ %90]")
+    al_ = o.get("alis")
+    if al_ and al_.get("n"):
+        S.append(f"A: alış (A8): iyi kontrol {al_['n']} (vuruşla biten {al_['vurus']}, ortanca {v(al_.get('sureMed'), 2)} sn) · hareketli karede geriye %{v(al_.get('geriPay'), 2)} · basış {al_['adim']}, geri basış {al_['geriAdim']} · geri basışlı alış → vuruş {al_['geriAlis']} / {al_['vurus']} (hepsi {al_['geriAlisH']}) · yerdeki ayağın kayması %{v(al_.get('kayma'), 2)} ({al_['temas']} temas), dönüşte (kök > 2 rad/sn) %{v(al_.get('donKayma'), 2)} ({al_['donT']}) — eylemsiz karelerde; eylemde (kontrol, vuruş hazırlığı; bilgi) %{v(al_.get('kaymaE'), 2)} ({al_.get('temasE')})   [A8: alıştan vuruşa geri basış 0, dönüşte kayma ≤ 15]")
     kd = o.get("kaymaDurum")
     if kd:
         S.append("A: ayak kayması % durumlara göre (bilgi; aynı tanım): " + " · ".join(f"{ad} {v(kd[i]['pay'], 2)} ({kd[i]['n']} temas)" if kd[i] else f"{ad} —" for i, ad in enumerate(["dar dönüş", "ani duruş", "top saklama", "sıçrama yakını"][:len(kd)])))

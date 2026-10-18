@@ -18,6 +18,8 @@
      karşılaştırma &model=kutu | duz | yumusak) |
      a4hareket (A4, 2026-10-15: aldatma koşusu, Cruyff, sırtla dönme, yorgun hakem, yelek) |
      a6blok (A6c, 2026-10-17: şut bloğunda bacak topa uzanır — uzak, yakın, gövdede; eski atlama pozuyla karşılaştırma &satir=…) |
+     a8alis (A8, 2026-10-18: yönlü alışta açık beden, uzun topta açma dokunuşu ve hedefe bakış, tabanla durdurma, alçak top sürme dokunuşu, sürüklemede
+     uzun itiş ve depar) | a8vurus (A8: yerden ve yükselen sert şut, yarım vole, plase, bel hizasında blok) |
      olcum (ayak kayması ve süre ölçümü). Satır seçeneği sabitY: kamera yüksekliği
      sabit (sıçrama görünsün).
      Açmak: python3 araclar/kontrol.py "araclar/poz-galerisi.html?sayfa=dusus" (görüntü araclar/son-kontrol-poz-galerisi-sayfa-dusus.png).
@@ -103,8 +105,11 @@ function vurusSim(o){
       if(o.don){p.yon=o.don;p.yonHedef=0;}},
     her:(p,t,dt)=>{const b=mac.ball;
       if(!e&&!bitti){e={ad:'vurus',faz:'hazirlik',t:0,ft:0,ayak:o.ayak||'sag',stil:o.stil,guc:0,tekDokunus:!!o.tek,geri,hazirlikEn:haz,hazirlikT:null,kalan:haz+geri,
-        baski:o.baski||0,gucPlan:o.gucPlan!=null?o.gucPlan:0.5,sec:{tur:o.tur||'pas',tip:o.tip||'yer',hx:b.x+(o.L||12),hz:b.z,yay:o.stil==='asirtma'?'asirtma':undefined}};p.eylem=e;}
+        baski:o.baski||0,gucPlan:o.gucPlan!=null?o.gucPlan:0.5,sec:{tur:o.tur||'pas',tip:o.tip||'yer',hx:b.x+(o.L||12),hz:b.z+(o.hzOfs||0),yay:o.stil==='asirtma'?'asirtma':undefined}};p.eylem=e;}
       if(e){e.t+=dt;e.ft+=dt;
+        /* A8: hazırlıkta sürüş dokunuşu (o.acmaT sn'de; motorun açma dokunuşu ya da tabanla durdurması gibi): top o.acmaV ile itilir, 2,5 m/sn² ile yavaşlar */
+        if(e.faz==='hazirlik'&&o.acmaT!=null){if(!e._acma&&e.t>=o.acmaT){e._acma=true;p.sonDokunus={t,tur:'surus',ayak:o.ayak||'sag',yuzey:o.acmaYuzey||'ic',hareket:o.acmaHareket,donus:!!o.acmaHareket};b.vx=o.acmaV!=null?o.acmaV:2.2;}
+          else if(e._acma)b.vx=b.vx>0?Math.max(0,b.vx-2.5*dt):Math.min(0,b.vx+2.5*dt);}
         if(e.faz==='hazirlik'){p.vx=v;const d=b.x-(p.x+0.3);let don=0;
           if(o.don&&Math.abs(p.yon)>0.02){const s=Math.min(Math.abs(p.yon),7*dt);p.yon-=Math.sign(p.yon)*s;don=Math.abs(p.yon)/7;}
           /* kalan: asgari hazırlığın kalanı, ayağa varış ya da dönüş + geri salınım (motorun vurusIlerle hesabı gibi) */
@@ -600,6 +605,25 @@ SAYFALAR.a7egri=[
   {ad:'A7 Koşu 5 m/sn, loca uzaklığı',kur:p=>{p.vx=5;},kareler:a7kare(0.62),az:60,uzak:12}];
 SAYFALAR.a7surus=[a7surus('A7b Top sürme 3 m/sn, yandan',3,0.5,90),a7surus('A7b Top sürme 5 m/sn, yandan',5,0.42,90),a7surus('A7b Top sürme 6,5 m/sn, yandan',6.5,0.36,90),
   a7surus('A7b Top sürme 5 m/sn, önden çapraz',5,0.42,30),{...SAYFALAR.a7egri[2],ad:'A7b Karşılaştırma: topsuz koşu 5 m/sn, yandan'}];
+/* A8 (2026-10-18; gerçekçilik planı §4 "A8"): yeni tetiklerin hareketi. a8alis — yönlü alış (kontrol.yon gövdenin önünden sapıyor: kalça ve gövde açılır;
+   dokunan ayak yerdeyse havadaki ayak alır), vuruş hazırlığında açma dokunuşu (uzun havadan pas, hedef 35 m ve sağa: baş önce hedefe) ve tabanla durdurma,
+   top sürmede alçak dokunuş (bacak kanalı yok: yerdeki ayak çapada), sürüklemede uzun itiş ve depar adımı (top 2,8 m'ye dek önde). a8vurus — yerden sert
+   şut (takipte gövde topun üstünde), yükselen sert şut (geride), yarım vole (kendi pozu), plase, bel hizasında blok (diz ve incik topa) */
+const a8alis=(ad,yon,o)=>{o=o||{};const ay=o.ayak||'sag',r=dokunusSatir(ad,o.yuzey||'ic',ay,{});
+  r.adim=[{ad:null,sure:0.45},{ad:'kontrol',sure:0.22,ek:{yuzey:o.yuzey||'ic',yon},bas:p=>{p.sonDokunus={t:0,tur:'kontrol',ayak:ay,yuzey:o.yuzey||'ic'};const b=mac.ball;b.vx=Math.cos(yon)*2.2;b.vz=Math.sin(yon)*2.2;}},{ad:null,sure:1}];
+  r.her=(p,t,dt)=>{const b=mac.ball;b.x+=b.vx*dt;b.z+=(b.vz||0)*dt;};r.kareler=[0.4,0.46,0.5,0.56,0.62,0.7,0.85];r.az=o.az!=null?o.az:35;return r;};
+const a8surukle=(ad,v,T,az)=>({ad,kur:p=>{p.vx=v;mac.ball.sahip=p;},her:(p,t,dt)=>{p.vx=v;const b=mac.ball,n=Math.floor(t/T),f=(t%T)/T;
+    if(!p.sonDokunus||p.sonDokunus.n!==n){b.vx=v+2.4*Math.PI/T;p.sonDokunus={n,t:n*T,tur:'surus',ayak:n%2?'sol':'sag',yuzey:'ust'};}else b.vx=v+2.4*Math.PI/T*Math.cos(Math.PI*f);
+    b.x=p.x+0.4+2.4*Math.sin(Math.PI*f);b.z=p.z;},kareler:a7kare(T*1.5),az});
+SAYFALAR.a8alis=[a8alis('A8 Yönlü alış: dokunuş gövdenin 70° soluna, açık beden',1.22),a8alis('A8 Yönlü alış: dokunuş gövdenin 110° sağına (dönerek)',-1.92,{az:-35}),
+  vurusSatir('A8 Uzun havadan pas: açma dokunuşu, baş önce hedefe (sağda), sonra gerilme',{v:1.8,stil:'ust',guc:0.8,tur:'pas',tip:'hava',L:35,hzOfs:-14,geri:0.2,haz:1.1,acmaT:0.15,acmaV:2.4,topX:0.75,topV:20,topVy:7,tg:1.2}),
+  vurusSatir('A8 Ters yöne kaçan topu tabanla durdurma, sonra pas',{v:1.2,stil:'ic',guc:0.5,tur:'pas',geri:0.12,haz:0.8,acmaT:0.1,acmaV:-0.4,acmaYuzey:'taban',acmaHareket:'cekme',topX:0.65,topV:9,tg:0.9}),
+  a7surus('A8 Top sürme 5 m/sn: alçak dokunuş, yerdeki ayak çapada',5,0.42,90),a8surukle('A8 Sürükleme 7 m/sn: uzun itiş, top 2,8 m önde, depar adımı',7,0.9,90)];
+SAYFALAR.a8vurus=[vurusSatir('A8 Yerden sert şut: takipte gövde topun üstünde, takip alçak',{v:3,stil:'ust',guc:0.95,tur:'sut',geri:0.17,topV:26,topVy:0.6}),
+  vurusSatir('A8 Yükselen sert şut: takipte gövde geride',{v:3,stil:'ust',guc:0.95,tur:'sut',geri:0.17,topV:24,topVy:5.5}),
+  vurusSatir('A8 Yarım vole: gövde topun üstünde, takip kısa',{v:2.5,stil:'yarimVole',guc:0.9,tur:'sut',geri:0.15,topY:0.22,topV:22,topVy:1.2}),
+  vurusSatir('A8 Plase (iç ayak) şut',{v:2.8,stil:'ic',guc:0.6,tur:'sut',geri:0.14,topV:17,topVy:0.4}),
+  a6blok('A8 Bel hizasında blok (0,62 m): diz ve incik topa',0.45,-0.25,0.62),a6blok('A8 Bel hizasında blok (0,55 m), yakın',0.35,-0.15,0.55)];
 SAYFALAR.a4hareket=[
   {ad:'A4-1 Aldatma koşusu: topun yanından geçerken vuruş taklidi (barajlı serbest vuruş, ikinci kişi)',kit:0,
     kur:p=>{p.duranRol={rol:'ikinci',aldatma:true};p.vx=5;const b=mac.ball;b.x=3.2;b.z=0.6;},
