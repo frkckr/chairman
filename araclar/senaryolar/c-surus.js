@@ -10,6 +10,10 @@
        açıda 14 m ötede (0°: topun gidişi doğrultusunda — tam dönüş). Oyuncu topu alır (motorun karşılaması, gelişine kararı ve kontrolü), sahip olunca
        pas o arkadaşa başlatılır (karar katmanının pası yerine); alıştan pasa gövdeye göre geri geri yol. Kabul (T20b): > 0,3 m geri kayma denemelerin
        ≤ %10'unda; alış → pas süresi bilgi.
+   [4] Alış → sürüş (T23d, 2026-10-18; borç 26): pas 15 m'den yerden, topun gidişi hücum yönüne göre 0° (pasör arkada: alıcı tam döner), 90°
+       (yandan) ve 180° (önden); alıcı pasöre dönük duruyor ya da ona 2 m/sn yürüyor. İyi kontrolden sonra niyet bir kez verilir (hücum yönü, 0,75;
+       karar kapalı). Alıştan sonraki 1,5 sn'de (sahip ve eylemsiz karelerde; maç ölçüsü a-akis'le aynı tanım) top ≥ 0,15 sn gövdenin arkasında
+       kalan deneme payı. Kabul (T23d): 0° ve 90°'de birlikte ≤ %25; 180° ve arkada süre bilgi.
    Kabul dışıysa çıkış kodu 1. Kullanım: node araclar/mac-deneme.js --senaryo c-surus [N=24 hücre başına] [tohum] */
 'use strict';
 module.exports={calistir({ctx,vm,N,tohum}){
@@ -79,6 +83,28 @@ module.exports={calistir({ctx,vm,N,tohum}){
    const ok3=nTop>=ACI.length*n*0.6&&geriTop/nTop<=0.10;
    console.log((ok3?'  ':'! ')+`[3] Kabul (T20b): geri kayma > 0,3 m denemelerin ≤ %10'unda → %${pc(geriTop,nTop)} (${nTop} pas)`);
    if(!ok3)cikis=1;}
+  /* [4] */
+  {const ACI=[0,90,180],R4={};let epK=0,nK=0;
+   for(const aci of ACI){const L={n:0,al:0,ep:0,arka:[]};R4[aci]=L;
+     for(let i=0;i<n;i++){deneme++;let alT=null,verildi=false,arkaArd=0,ep=false,arka=0;
+       const m=kur((tohum||1)*1000+40000+deneme,(ad,v)=>{if(ad==='ilkDokunus'&&v.p===A&&alT==null&&v.iyi)alT=m.t;});
+       const A=m.teams[0][7],P=m.teams[0][6],b=m.ball,d=m.dir[0],hy=d>0?0:Math.PI;bosalt(m,[A,P]);
+       const ax=-d*8,az=34+(i%3-1)*6,uin=hy+(i%2?1:-1)*aci*Math.PI/180,px=ax-Math.cos(uin)*15,pz=az-Math.sin(uin)*15,yuru=(i>>1)%2?2:0;
+       yerlestir(A,ax,az,uin+Math.PI,yuru);yerlestir(P,px,pz,uin,0);m.phase='play';m.phaseT=1;m.durus=null;
+       Object.assign(b,{x:px+Math.cos(uin)*0.45,z:pz+Math.sin(uin)*0.45,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,sonTakim:0,sonDokunan:P});
+       m.topDegisti();m.sahipYap(P);m.vurusBaslat(P,{tur:'pas',hx:ax,hz:az,tip:'yer',alici:A,mod:'ayak',guncelle:true});
+       for(let k=0;k<60*5;k++){P.kararT=99;A.kararT=99;
+         if(alT!=null&&b.sahip===A&&!A.eylem&&!verildi){verildi=true;A.surus={yon:hy,hiz:0.75};}
+         m.step(dt);if(m.phase!=='play')break;
+         if(alT!=null){if(m.t-alT>1.5||b.sahip!==A&&!A.eylem)break;
+           if(b.sahip===A&&!A.eylem&&A.surus){const on=(b.x-A.x)*Math.cos(A.yon)+(b.z-A.z)*Math.sin(A.yon);if(on<-0.15){arka+=dt;if(++arkaArd===9)ep=true;}else arkaArd=0;}}}
+       L.n++;if(alT!=null){L.al++;L.arka.push(arka);if(ep)L.ep++;if(aci<180){nK++;if(ep)epK++;}}}}
+   console.log(`\n[4] Alış → sürüş (15 m'den yerden pas; topun gidişi hücum yönüne göre açıda; iyi kontrolden sonra niyet hücum yönüne; ${n} deneme / açı)`);
+   console.log('  Açı    iyi alış   top ≥ 0,15 sn arkada (deneme %)   arkada süre ort. (sn)');
+   for(const aci of ACI){const L=R4[aci];console.log('  '+(aci+'°').padEnd(6)+String(L.al).padStart(9)+(pc(L.ep,L.al)+'%').padStart(33)+ort(L.arka).toFixed(2).padStart(24));}
+   const ok4=nK>=2*n*0.6&&epK/nK<=0.25;
+   console.log((ok4?'  ':'! ')+`[4] Kabul (T23d): 0° ve 90°'de top ≥ 0,15 sn arkada kalan deneme ≤ %25 → %${pc(epK,nK)} (${nK} alış)`);
+   if(!ok4)cikis=1;}
   console.log(`\n  süre ${((Date.now()-t0)/1000).toFixed(1)} sn`);
   return cikis;
 }};

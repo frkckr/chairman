@@ -123,6 +123,12 @@ ayarEkle('B',{
                                // önce tabanla durdurur. 0: eski (hazırlığın ilk karesinden vuruş yönüne döner, arkaya pasta topu geri geri kovalar)
   pasAcik:2.2,                 // T20b: 30 m'ye dek yerden pasta gövdenin hedefe en çok sapması vurusHizalama × bu (iç ayakla açık beden; eskiden 1,35)
   pasDogal:0.45,               // T20b: yerden pasta isabet bedeli bu açının (rad) ötesinden başlar (iç ayakla 25°'lik açık beden doğal); 0: eski
+  alisNiyet:1,                 // T23d1 (2026-10-18; gerçekçilik planı §4 T23, borç 26): iyi kontrolde gövde dokunuşla birlikte topun itildiği yöne döner (kontrol ve
+                               // göğüs eylemi boyunca hedef dokunuşun yönü; kötü kontrolde topa bakar). Eskiden eylem boyunca gövde gelen topa — pasçıya — dönük
+                               // kalıyor, yarı dönüşlü alışta top arkada kalıyordu (sürüşte top ≥ 0,15 sn arkada epizotlarının yarısı alıştan ≤ 0,5 sn); 0: eski
+  alisCizgi:1,                 // T23d1 (2026-10-18): koşan alıcının (dokunuş yönündeki hızı > 1,5 m/sn) iyi kontrolünde top koşu çizgisine onun hızıyla (+0,4, en çok
+                               // 6 m/sn) konur; iyi göğüs kontrolünde top dokunuş yönündeki hızıyla (0,8–5,5) düşer ve oyuncu eylem boyunca topu izler. Eskiden
+                               // göğüste top 0,8 m/sn ile düşerken oyuncu 3–5 m/sn koşup topu geçiyordu (alış epizotlarının ~%40'ı); 0: eski
   alisYon:1,                   // T20b: yönlü ilk dokunuş (dokunusPlani) sonraki işin yönünü 1,2 ağırlıkla (eskiden 0,6) ve koşu yönünden sapmanın bedelini hızla tartar; 0: eski
   tekKoni:2.1,                 // T20c: gelişine pasın koni yarı açısı (rad) × (0,75 + 0,25·pas) — yönlendirme 90–120°; gelişine boşluğa pas açılır; 0: eski (0,6 + 0,35·pas)
   /* T17c (2026-10-16; gerçekçilik planı §4 T17): ortanın devam değeri — bloklanan orta kornere gidebilir; ortacı baskıdaki ortayı bırakmaz */
@@ -669,7 +675,9 @@ Object.assign(Match.prototype,{
     const P=kontrolOlasiligi(p,v,b.y,baski,aci),r=this.rast();
     if(r<P){
       /* iyi dokunuş: planlı ve gidiş yönündeyse koşu içinde (top bir adım önde), değilse yumuşak; gelen hızın bir kısmı kalır */
-      const ayni=Math.abs(aciFark(a,p.yon))<1.2,h=pl&&ayni?clamp(p.spd*0.85+0.6,1.0,5.5):clamp(p.spd*0.75,0,4.5)*(pl?0.6:1)+0.5;
+      const ayni=Math.abs(aciFark(a,p.yon))<1.2,h0=pl&&ayni?clamp(p.spd*0.85+0.6,1.0,5.5):clamp(p.spd*0.75,0,4.5)*(pl?0.6:1)+0.5;
+      /* T23d1 (alisCizgi): koşan alıcı topu kendi koşu çizgisine onun hızıyla koyar — top koşucunun önünde kalır */
+      const vAl=p.vx*Math.cos(a)+p.vz*Math.sin(a),h=MOTOR_AYAR.alisCizgi&&vAl>1.5?Math.max(h0,Math.min(6,vAl+0.4)):h0;
       const k=clamp((1-teknik)*0.18+baski*0.05+(1-P)*0.4,0.02,0.3),y=this.kontrolYuzeyi(p,a,h);
       b.vx=Math.cos(a)*h+gx*k;b.vz=Math.sin(a)*h+gz*k;b.vy=0;b.y=Math.min(b.y,0.05);b.egri=0;b.ust=0;this.govdedenGecmesin(p);
       if(pl)pl.hazir=true;
@@ -696,7 +704,9 @@ Object.assign(Match.prototype,{
   gogusKontrol(p){
     const b=this.ball,baski=baskiAltinda(this,p),iyi=this.rast()<clamp(0.9-baski*0.2+(p.oz.surus-0.6)*0.3,0.4,0.97);
     const bv=this.bVeri(p),pl=bv.plan&&bv.plan.surum===b.surum?bv.plan:null,a=pl?pl.yon:this.kontrolYonu(p);
-    b.vx=Math.cos(a)*(iyi?0.8:2.5)+(iyi?0:this.normal()*1.5);b.vz=Math.sin(a)*(iyi?0.8:2.5)+(iyi?0:this.normal()*1.5);b.vy=iyi?-0.5:1.2;
+    /* T23d1 (alisCizgi): iyi göğüs kontrolünde top dokunuş yönündeki koşu hızıyla düşer (0,8–5,5 m/sn) */
+    const vAl=p.vx*Math.cos(a)+p.vz*Math.sin(a),hG=iyi?(MOTOR_AYAR.alisCizgi?clamp(vAl,0.8,5.5):0.8):2.5;
+    b.vx=Math.cos(a)*hG+(iyi?0:this.normal()*1.5);b.vz=Math.sin(a)*hG+(iyi?0:this.normal()*1.5);b.vy=iyi?-0.5:1.2;
     if(pl&&iyi)pl.hazir=true;
     this.dokunus(p,true);if(iyi)this.sahipYap(p);else if(b.sahip===p)b.sahip=null;
     p.eylem={ad:'gogus',t:0,sure:0.4,yuzey:'gogus',yon:a};p.kickCd=iyi?0.18:0.35;
@@ -861,4 +871,12 @@ Object.assign(Match.prototype,{
 });
 EYLEM_ADIM.vurus=function(p,e,dt){this.vurusIlerle(p,e,dt);return true;};
 /* kontrol: iyi dokunuşta oyuncu topun arkasından koşusunu sürdürür (top bir adım önde) */
-EYLEM_ADIM.kontrol=function(p,e){const b=this.ball;if(!e.kotu&&b.sahip===p&&e.yon!=null){p.tx=b.x+b.vx*0.2-Math.cos(e.yon)*0.3;p.tz=b.z+b.vz*0.2-Math.sin(e.yon)*0.3;p.hizOran=1;this.eforVer(p,1);}return false;};
+EYLEM_ADIM.kontrol=function(p,e){const b=this.ball;if(!e.kotu&&b.sahip===p&&e.yon!=null){p.tx=b.x+b.vx*0.2-Math.cos(e.yon)*0.3;p.tz=b.z+b.vz*0.2-Math.sin(e.yon)*0.3;p.hizOran=1;this.eforVer(p,1);
+    if(MOTOR_AYAR.alisNiyet)p.yonHedef=e.yon;}   /* T23d1 (alisNiyet): gövde dokunuşun yönüne */
+  else if(MOTOR_AYAR.alisNiyet&&e.kotu)p.yonHedef=null;   /* T23d1: kötü kontrolde topa (p.bak) bakar */
+  return false;};
+/* T23d1 (alisNiyet): iyi göğüs kontrolünde top düştükten sonra (0,2 sn) gövde dokunuşun yönüne döner */
+EYLEM_ADIM.gogus=function(p,e){const b=this.ball;if(MOTOR_AYAR.alisNiyet&&e.t>=0.2&&b.sahip===p&&e.yon!=null)p.yonHedef=e.yon;
+  /* T23d1 (alisCizgi): iyi göğüs kontrolünde oyuncu topun ardından gider (kontroldeki gibi; eskiden eski karşılama noktasına koşup topu geçiyordu) */
+  if(MOTOR_AYAR.alisCizgi&&b.sahip===p&&e.yon!=null){p.tx=b.x+b.vx*0.2-Math.cos(e.yon)*0.3;p.tz=b.z+b.vz*0.2-Math.sin(e.yon)*0.3;p.hizOran=1;this.eforVer(p,1);}
+  return false;};

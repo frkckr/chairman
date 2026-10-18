@@ -50,8 +50,10 @@ ayarEkle('T',{
   /* T23a3 (2026-10-18; gerçekçilik planı §4 T23): eşzamanlı fırlamanın kaynağı eşik kapıları — rol aynı karede bütün uygun oyunculara açılmasın */
   kapatSon:1,        // T23a3: 2. adamın kapatKalici tutma süresi son geçerli (seçildiği) kareden sayılır (eskiden ilk atamadan: kapı kapanınca aynı karede düşüyordu); 0: eski
   kapiFaz:1,         // T23a3: hücumda kutu rolü (orta kapısı) kapı açıldıktan sonra oyuncunun tepki süresi (0,25–0,7 sn) × bu kadar sonra alınır; 0: aynı karede
-  kapiFazSav:0.5,    // T23a3: savunmada markaj (top 32 m içinde) ve kutu savunması aynı kuralla, yarım çarpanla; acil olan beklemez (adamı 6 m içinde kaleye koşan
-                     // markaj, top ceza sahasındayken kutu savunması); 0: aynı karede
+  kapiFazSav:0,      // T23a3: savunmada markaj (top 32 m içinde) ve kutu savunması aynı kuralla (çarpan); acil olan beklemez (adamı 6 m içinde kaleye koşan
+                     // markaj, top ceza sahasındayken kutu savunması); 0: aynı karede. Denendi (0,5) ve 0 (T23 kapanışı, 80 maç eşleşmiş): 0,5'te gol
+                     // 2,60 → 3,08 (± 0,50), çerçeveye giden şutta kurtarış %66,3 → 58,3, kalecinin tahmini kurtarışı 67 → 63 (şutlar daha boştan),
+                     // korner 5,25 → 4,0 — markajın gecikmesi kutuda adamı boş bırakıyor (plan riski 4; T13c'deki gibi)
   kovala2Pay:0.5,    // T23a1 (2026-10-18): yüksek topta ikinci adam ve 1. kovalayan rakibin en erken varışından bu kadar sn'den çok geç kalacaksa efor 0,5 (gelir,
                      // düelloya hazırlanır, depar atmaz); varışı ≤ 1 sn, pasın alıcısı ya da dönen top eski kural (efor 1); 0: hep efor 1
   tutEtki:0.5,       // T16b: öndeki takımın hücumdaki temkini (tut niyetinin ilerlet'ten farkı ve koru'nun risk, sakinlik, tempo terimleri; 1: eski — 40 maçta

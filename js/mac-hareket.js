@@ -113,6 +113,11 @@ ayarEkle('C',{
   gidisTopYakin:8,             // T23b: top bundan yakınsa (m; çıkış ×0,8) gidiş kipi açılmaz — topa yakın oyuncu topa dönük kalır
   gidisMesafe:[2,1.5],         // T23b: gidiş kipine giriş için hedefe en az bu kadar yol (m): top yanda / top arkada (> 126°); çıkış 0,6 m
   gidisHat:[5,3],              // T23b: savunma hattında ve omuzda (rakip toplayken DEF; hrkHatMi) aynı eşik daha uzun — hat geri geri ve yan kayarak çekilir
+  alisAcik:1.0,                // T23d1 (2026-10-18): yönlü ilk dokunuş planı varken alıcının gövdesi topla planın yönü arasına en çok bu kadar (rad) açılır (yarı dönük
+                               // alış; eskiden gövde tam topa dönük); 0: eski
+  niyetDonus:0.6,              // T23d2 (2026-10-18; borç 26): serbest sürüşte niyet topun gidişinden bu kadar (rad) saptıysa ve karardan beri dokunulmadıysa gövde yeni
+                               // yöne topun önünden dönmez (topa bakar) ve top erişimdeyse son dokunuştan 0,2 sn sonra hemen yeni yöne dokunulur — dönüşü dokunuş
+                               // başlatır (eskiden gövde yeni niyete dönüp eski yönde yuvarlanan topu arkasında bırakıyordu); 0: eski
   surusYetis:1,                // T20a: serbest sürüşte top öndeyken (2,5 m) sürücü topa topun hızıyla (+0,5 m/sn) varır, yetişiyorsa dokunuş zamanlayıcısını beklemeden
                                // dokunur, top gövdenin yanındaysa (0,6 m, 0,35 m gerisine dek) da dokunur; 0: eski (varış hızı hedef hızın %95'i, zamanlayıcı, yalnız öndeki top)
   surusYuz:1,                  // T20a: sürüşte gövdenin hedefi histerezisli (top ±72° dışında ve 0,6 m'den uzaksa topa, ±32° içinde ya da 0,5 m'de niyete); 0: tek eşik (±60°)
@@ -600,7 +605,10 @@ Object.assign(Match.prototype,{
       let tb=null;for(let i=i0;i<yol.length;i+=3){const s=yol[i];if(hrkHyp(s.x-ph.x,s.z-ph.z)<1.5&&s.y<0.8){tb=(i-i0)/60;break;}}
       if(tb!=null&&varisZamani(p,ph.x,ph.z,0.45,0.1)<=tb+0.1&&k.t>0.4)k={x:ph.x,z:ph.z,t:tb};}
     p.tx=clamp(k.x,-PL-1,PL+1);p.tz=clamp(k.z,-1,PW+1);p.hizOran=rahatK?0.62:1;p.bak=b;   /* T23a2: rahat noktaya tepe hızın %62'siyle */
-    if(hrkHyp(k.x-p.x,k.z-p.z)<1.5)p.yonHedef=hrkAtan2(b.z-p.z,b.x-p.x);
+    if(hrkHyp(k.x-p.x,k.z-p.z)<1.5){p.yonHedef=hrkAtan2(b.z-p.z,b.x-p.x);
+      /* T23d1 (alisAcik): yönlü ilk dokunuş planı varken gövde topla planın yönü arasına açılır — dokunuştan sonra top gövdenin arkasında kalmasın */
+      const AA=MOTOR_AYAR.alisAcik;if(AA>0&&b.hedefOyuncu===p&&b.y<0.5&&this._bv){const v=this._bv.get(p),pl=v&&v.plan;
+        if(pl&&pl.surum===b.surum)p.yonHedef=hrkAciNorm(p.yonHedef+clamp(hrkAciFark(pl.yon,p.yonHedef),-AA,AA));}}
     /* karşılayan koşarak varır: topa zamanında ancak yetişecekse hızını kesmez, payı çoksa durur; üstüne gelen topa doğru yavaş.
        Pasın alıcısı topu kontrollü karşılar (koşarak geçip topun gerisinde kalmasın), yalnız geç kalıyorsa koşarak */
     /* çizgiye yakın karşılamada (3 m) koşarak varılmaz: hem top hem oyuncu sahada kalsın */
@@ -646,6 +654,9 @@ Object.assign(Match.prototype,{
        (0,5 m'den uzak ve uzaklaşıyor) ona yetişecek hızla kovalar; top gövdenin çok yanında kaldıysa yüzünü topa döner */
     /* T4: gidiş yönü ve istenen yöne göre fark; keskin dönüşte (hızda) önce yavaşlar */
     const sp=p.spd,va=sp>1.2?hrkAtan2(p.vz,p.vx):p.yon,fv=hrkAciFark(yon,va);
+    /* T23d2 (niyetDonus): karardan (bu niyet nesnesinin ilk karesi) beri dokunulmadıysa ve niyet topun gidişinden saptıysa dönüşü dokunuş başlatır */
+    let nd=false,ba=p.yon;{const ND=A.niyetDonus;if(ND>0&&serbestT&&!(s.surukle&&this.t<s.surukle)){if(s._t0==null)s._t0=this.t;
+      const sd=p.sonDokunus,bvv=b.vx*b.vx+b.vz*b.vz;ba=bvv>0.64?hrkAtan2(b.vz,b.vx):p.yon;nd=!(sd&&sd.t>=s._t0)&&hrkAbs(hrkAciFark(yon,ba))>ND;}}
     /* T20b (surusYetis): yavaşlama niyetinde (hız ≤ 0,3) top uzanma içindeyken (1,2 m) hız topa yetişmek için yükselmez — dokunuşlar topu da yavaşlatır
        (eskiden kaçan topa yetişme hızı itişi besliyor, top ve sürücü niyetten bağımsız 5–6 m/sn'de kalıyordu) */
     const kac=d>0.5?(b.vx*dx+b.vz*dz)/d:0,yavas=A.surusYetis&&serbestT&&s.hiz<=0.3&&d<1.2;let hz=kac>0&&!yavas?hrkMax(hiz,hrkMin(1,(kac+1.5)/(0.87*p.maxSpd))):hiz;
@@ -670,7 +681,8 @@ Object.assign(Match.prototype,{
       /* top erişim dışında (0,9 m) ve yuvarlanırken (> 0,8 m/sn) gövde önce topa bakar, yön dokunuşla değişir (eskiden yeni niyete dönüp topu yanında bırakıyordu) */
       const kovTop=d>0.9&&b.vx*b.vx+b.vz*b.vz>0.64;
       if(s._yuz){if(!kovTop&&(d<0.5||cs>0.85))s._yuz=false;}else if(kovTop||d>0.6&&cs<0.3)s._yuz=true;
-      p.yonHedef=s._yuz?hrkAtan2(dz,dx):yon;}
+      p.yonHedef=s._yuz?hrkAtan2(dz,dx):yon;
+      if(nd)p.yonHedef=d>0.35?hrkAtan2(dz,dx):ba;}   /* T23d2: dokunuşa dek gövde topa */
     else p.yonHedef=d>0.45&&(dx*hrkCos(p.yon)+dz*hrkSin(p.yon))<0.5*d?hrkAtan2(dz,dx):yon;
     /* T7c (Ek H 6): serbest sürüşte gövde en iyi pasın hedefine biraz açılır (pas kararı gelince dönüş kısalır); 0,6 sn taze, 0,9 rad'dan geniş değil */
     if(serbest&&A.govdeAc&&this._bv){const v=this._bv.get(p),ep=v&&v.enPas;
@@ -683,6 +695,7 @@ Object.assign(Match.prototype,{
     const sur=serbestT&&s.surukle&&this.t<s.surukle;
     let erken=false,yanda=false;
     if(A.surusYetis&&serbestT&&!sur&&b.y<0.35){const sd=p.sonDokunus;erken=p.dokunT>0&&d<0.8*ulas&&onde>0.05&&p.spd>bva+0.8&&(!sd||this.t-sd.t>=0.3);yanda=d<0.6&&onde>-0.35;}
+    if(nd&&b.y<0.35&&d<ulas){const sd=p.sonDokunus;if(!sd||this.t-sd.t>=0.2)erken=true;}   /* T23d2: yön değişimine hemen dokunuş */
     if((d<ulas&&(p.dokunT<=0||erken)||M&&(M.itme||M.durdur)&&d<0.75)&&b.y<0.35&&(onde>-0.15||yanda)&&!(M&&M.bekle)){
       let a=yon;const f=hrkAciFark(a,p.yon);
       /* T4: topu çekme — öndeki baskıda arkaya (>2 rad) dönüş tabanla tek dokunuşta (sonDokunus.hareket 'cekme'); başka zaman gövdeye göre en çok 0,85 rad,
