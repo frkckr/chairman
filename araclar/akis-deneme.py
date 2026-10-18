@@ -116,7 +116,10 @@ async def bolum_1(tarayici, site, tum_hatalar):
     denetle("Telefon ana ekranla açılıyor; 'Kaldığın yer' özeti yok", "Mesajlar" in tel and "Canlı Skor" in tel and "Kaldığın" not in tel
             and await pg.query_selector('[data-eylem="devam"]') is None, tel[:80])
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
-    denetle("Mesajlar boş: kişi yok", "Mesaj yok" in await pg.text_content(".tel") and await pg.query_selector(".tel-kisi") is None)
+    # N14 (kullanıcı kararı 2026-10-18): konuşma yoksa liste boş, boş durum yazısı yok (eskiden "Mesaj yok. Telefon sessiz.")
+    msj = await pg.text_content(".tel-govde")
+    denetle("N14: Mesajlar boş: kişi yok, boş durum yazısı yok", await pg.query_selector(".tel-kisi") is None and await pg.query_selector(".tel-govde .tel-bos") is None
+            and "Mesaj yok" not in msj and "sessiz" not in msj, msj[:80])
     await pg.click('.tel [data-eylem="telEv"]')
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
     sk, skor = await pg.evaluate(TEK_SATIR_JS, ".od-telefonPanel"), await pg.text_content(".tel")
@@ -152,6 +155,13 @@ async def bolum_1(tarayici, site, tum_hatalar):
     denetle("Yenileme aynı anda açıyor; telefonda dönüş rozeti yok", await durum(pg) == d1 and rozet is None)
     await pg.screenshot(path=str(ARAC / "son-akis-1-mac-gunu.png"))
     await pg.keyboard.press("Digit1")
+    # N14 (kullanıcı kararı 2026-10-18): maç gününde ana ekranda Canlı Skor kartı yok; iki uygulama altta sabit sırada
+    ana1 = await pg.evaluate("""() => ({ kart: [...document.querySelectorAll('.tel-bildirim')].map(b => b.textContent),
+      skorKart: !!document.querySelector('.tel-bildirim[data-uyg="skor"]'), sabit: [...document.querySelectorAll('.tel-sabit .tel-uyg')].map(b => b.dataset.uyg).join(',') })""")
+    denetle("N14: maç günü ana ekranda Canlı Skor kartı yok, bildirim yok; Mesajlar ve Canlı Skor uygulama olarak altta",
+            not ana1["skorKart"] and ana1["kart"] == [] and ana1["sabit"] == "mesajlar,skor", str(ana1))
+    await pg.wait_for_timeout(300)  # N7: telefonun açılış geçişi (0,18 sn) bitsin
+    await pg.screenshot(path=str(ARAC / "son-akis-1-telefon-ana-mac-gunu.png"))
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
     sk, skor = await pg.evaluate(TEK_SATIR_JS, ".od-telefonPanel"), await pg.text_content(".tel")
     denetle("N2: maç günü Canlı Skor'da bugünün maçı tek satır; not yok", sk and sk["satir"] <= 2.8 and sk["yayilim"] <= 4 and sk["tasma"] <= 0 and "19:00" in sk["yazi"]
@@ -458,7 +468,10 @@ async def bolum_12(tarayici, site, tum_hatalar):
     pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&hiz=4&tohum=5", "#btnMacaGec")
     tum_hatalar += hatalar
     await pg.click("#btnMacaGec")
-    await pg.wait_for_timeout(2500)
+    # T16a (2026-10-15) sonrası: yarının ilk santrası hazırlanırken saat akmaz; "önce" ölçümü oyun saati akarken alınır (N14 sırasında bulundu,
+    # 2026-10-18: eskiden 2,5 sn beklenip santra hazırlığında ölçülüyordu — önce kare başına 0, karşılaştırma anlamsızdı)
+    await pg.wait_for_function("mac.phase === 'play' && mac.gameSec > 3", timeout=60000)
+    await pg.wait_for_timeout(300)
     once = await pg.evaluate(KARE_JS, 5)
     await pg.keyboard.press("KeyP")
     m1 = await pg.evaluate(MAC_JS)
@@ -866,6 +879,10 @@ async def bolum_16(tarayici, site, tum_hatalar):
     ana = await pg.text_content("#macTelefon")
     denetle("Masadaki telefona tıklayınca odadakiyle aynı telefon ana ekranla açıldı; 'telefon' duraklatma nedeni eklendi, maç durdu",
             a["acik"] and a["nedenler"] == "telefon" and a["sn"] == b["sn"] and await pg.is_visible("#macTelefon") and "Mesajlar" in ana and "Canlı Skor" in ana, f"{a} → {b}")
+    # N14 (kullanıcı kararı 2026-10-18): maçta da ana ekranda Canlı Skor kartı yok; skor yalnız uygulamasından açılır
+    denetle("N14: maç telefonunun ana ekranında Canlı Skor kartı yok; iki uygulama altta",
+            await pg.query_selector('#macTelefon .tel-bildirim[data-uyg="skor"]') is None
+            and await pg.eval_on_selector_all("#macTelefon .tel-sabit .tel-uyg", "L => L.map(b => b.dataset.uyg).join(',')") == "mesajlar,skor")
     await pg.click('#macTelefon [data-eylem="telUyg"][data-uyg="skor"]')
     await pg.click('#macTelefon [data-eylem="skorAc"]')
     yazi = await pg.text_content("#macTelefon")
@@ -881,7 +898,9 @@ async def bolum_16(tarayici, site, tum_hatalar):
     await pg.screenshot(path=str(ARAC / "son-akis-16-canli-skor.png"))
     await pg.click('#macTelefon [data-eylem="telEv"]')
     await pg.click('#macTelefon [data-eylem="telUyg"][data-uyg="mesajlar"]')
-    denetle("Mesajlar: kariyer olmadan sakin boş durum", "Mesaj yok" in await pg.text_content("#macTelefon"))
+    mg = await pg.text_content("#macTelefon .tel-govde")
+    denetle("N14: Mesajlar: kariyer olmadan boş liste, boş durum yazısı yok", await pg.query_selector("#macTelefon .tel-kisi") is None
+            and await pg.query_selector("#macTelefon .tel-govde .tel-bos") is None and "Mesaj yok" not in mg and "sessiz" not in mg, mg[:80])
     await pg.wait_for_timeout(300)  # N7: telefonun açılış geçişi (0,18 sn) bitsin
     await pg.screenshot(path=str(ARAC / "son-akis-16-telefon.png"))
     # N7: Esc önce ana ekrana döner (maç yine durur), ana ekranda telefonu kapatır

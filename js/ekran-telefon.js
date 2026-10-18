@@ -7,8 +7,9 @@
      ozetsiz: konu ve hazır görüş kartta yazılmaz (telefonda konuşmanın akışında durur, kart alttaki cevap alanındadır; N7).
      İkiden fazla seçenek yalnız eski kayıtların kararlarında görülür (js/uyum-icerik2.js); aynı kart onları sırayla dizer.
    telefonCiz(k, T, s)      T: {ekran:'ana'|'mesajlar'|'konusma'|'skor', kisi, skorAc}. s: {macta, mac, secimler, onay, kapali, kasa, acilis}
-     Ana ekran: tarih, büyük saat, bildirim kartları (okunmamış ya da cevap bekleyen konuşmalar; bugün maç varsa Canlı Skor), altta sabit sırada
-     iki uygulama (Mesajlar, Canlı Skor). Mesajlar: kişi listesi → tek konuşma. Canlı Skor: günün maçları → ayrıntı. acilis: ekran yeni açıldı
+     Ana ekran: tarih, büyük saat, bildirim kartları (yalnız okunmamış ya da cevap bekleyen konuşmalar; N14, 2026-10-18: maç gününün Canlı Skor
+     kartı kalktı), altta sabit sırada iki uygulama (Mesajlar, Canlı Skor). Mesajlar: kişi listesi → tek konuşma (konuşma yoksa boş liste, yazı
+     yok). Canlı Skor: günün maçları → ayrıntı. acilis: ekran yeni açıldı
      (kısa büyüyerek belirme; aynı ekran yeniden çizilirken verilmez).
      Maçta görünüm aynıdır; cevap verilmez (maç içi kariyer cevabı Aşama 3'te). Diğer maçların verisi 3.8'e kadar bağlı değildir;
      bağlanınca aynı tek satır kalıbıyla listeye gelirler, eksikleri için uyarı yazılmaz (N2, kullanıcı kararı 2026-10-04). */
@@ -233,19 +234,13 @@ function telefonCiz(k,T,s={}){
   const geri=(ey,ek,etiket)=>'<button type="button" class="tel-geri" data-eylem="'+ey+'"'+(ek||'')+' aria-label="'+etiket+'">Geri</button>';
   let ic='',alt='';
   if(ekran==='ana'){
-    /* bildirimler: okunmamış ya da cevap bekleyen konuşmalar (en çok dört), bugün maç varsa Canlı Skor */
+    /* bildirimler: yalnız okunmamış ya da cevap bekleyen konuşmalar (en çok dört). N14 (kullanıcı kararı 2026-10-18): maç gününün Canlı Skor kartı
+       kalktı — ana ekranda skor “açık” görünüyordu; Canlı Skor yalnız uygulamasından açılır (odada ve maçta aynı) */
     const B=L.filter(c=>c.okunmamis>0||c.cevapBekliyor).slice(0,4).map(c=>{
       const son=c.mesajlar[c.mesajlar.length-1];
       return'<button type="button" class="tel-bildirim" data-eylem="telKisi" data-kisi="'+yazT(c.anahtar)+'">'+telSimge('mesajlar')+'<b>'+yazT(c.ad)+'</b><time>'+(son?yazT(telKisaAn(k,son.tarih,son.dakika)):'')+'</time>'+
         '<span>'+(c.cevapBekliyor?'<span class="tel-bekliyor">Cevap bekliyor</span> · ':'')+yazT(telOnizle(c))+'</span></button>';
     });
-    if(M)B.push('<button type="button" class="tel-bildirim" data-eylem="telUyg" data-uyg="skor">'+telSimge('skor')+'<b>Canlı Skor</b><time>'+(M.canli?'şimdi':'bugün')+'</time>'+
-      '<span>'+yazT(M.ev+' '+M.skor+' '+M.dep+' · '+(M.kisaDurum||M.durum))+'</span></button>');
-    else if(k){
-      const mac=bekleyenIsler(k).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'&&x.tarih===k.tarih);
-      if(mac)B.push('<button type="button" class="tel-bildirim" data-eylem="telUyg" data-uyg="skor">'+telSimge('skor')+'<b>Canlı Skor</b><time>bugün</time>'+
-        '<span>'+yazT(mac.veri.baslik.replace(/^Maç: /,'')+' · '+saatYazi(mac.dakika))+'</span></button>');
-    }
     const rozet=cevap?'<i class="tel-rozet">'+cevap+'</i>':okunmamis?'<i class="tel-rozet">'+okunmamis+'</i>':'';
     ic='<div class="tel-saatBlok"><p class="tel-tarih">'+(k?yazT(telGunAdi(k.tarih)+', '+gunAyYazi(k.tarih)):'Maç günü')+'</p><p class="tel-saat">'+yazT(saat)+'</p></div>'+
       '<div class="tel-bildirimler" aria-label="Bildirimler">'+B.join('')+'</div>'+
@@ -254,8 +249,8 @@ function telefonCiz(k,T,s={}){
         '<button type="button" class="tel-uyg tel-uygSkor" data-eylem="telUyg" data-uyg="skor">'+telSimge('skor')+'Canlı Skor</button></div>';
   }else if(ekran==='mesajlar'){
     ic='<header class="tel-nav">'+geri('telEv','','Ana ekran')+'</header><h4 class="tel-buyukBaslik">Mesajlar</h4>';
-    if(!L.length)ic+='<p class="tel-bos">Mesaj yok. Telefon sessiz.</p>';
-    else ic+='<ul class="tel-liste">'+L.map(c=>{
+    /* N14 (kullanıcı kararı 2026-10-18): konuşma yoksa liste boş kalır, boş durum yazısı yok (eskiden “Mesaj yok. Telefon sessiz.”) */
+    if(L.length)ic+='<ul class="tel-liste">'+L.map(c=>{
       const son=c.mesajlar[c.mesajlar.length-1];
       return'<li><button type="button" class="tel-kisi" data-eylem="telKisi" data-kisi="'+yazT(c.anahtar)+'"><i class="tel-nokta'+(c.okunmamis?' tel-okunmamis':'')+'" aria-hidden="true"></i>'+portreHtml(c.kisi,'tel-portre')+
         '<b>'+yazT(c.ad)+'</b><time>'+(son?yazT(telKisaAn(k,son.tarih,son.dakika)):'')+'</time>'+
