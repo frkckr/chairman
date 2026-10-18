@@ -51,7 +51,8 @@ module.exports={
         else if(ad==='kickoff'){const h=(v&&v.half||m.half)-1;if(kayip[h]!==kayip[h])kayip[h]=m.gameSec-(h?2700:0);}
         else if(ad==='kosu'){if(m.phase==='play')kosu[m.half-1]++;}
         else if(ad==='oyuncuGirdi'){if(v&&v.giren)yedek.add(v.giren);}},
-      adim(m){adimN++;if(m.phase!=='play')return;const h=m.half-1,b=dilim(m);oy[h]+=dt;dOy[b]+=dt;
+      /* T23-0 (2026-10-18): ivmelenme halkası oyun dışında da dolar (r-karne ile aynı düzeltme) */
+      adim(m){adimN++;if(m.phase!=='play'){for(const p of m.players){const q=ivH.get(p);if(!q||!p.oyunda||p.rol==='GK')continue;q.v[q.i]=Math.hypot(p.vx,p.vz);q.i=(q.i+1)%12;q.n++;}return;}const h=m.half-1,b=dilim(m);oy[h]+=dt;dOy[b]+=dt;
         /* T18-0: ivmelenme dilime (r-karne tanımı: 0,2 sn pencerede hız > 3 m/sn² artış, 1 sn'de tek) */
         for(const p of m.players){if(!p.oyunda||p.rol==='GK'||p.tur!=='oyuncu')continue;const sp=Math.hypot(p.vx,p.vz);dOyun[b]+=dt;
           let q=ivH.get(p);if(!q){q={v:new Float64Array(12),i:0,n:0,ust:false,son:-9};ivH.set(p,q);}

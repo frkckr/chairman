@@ -14,7 +14,7 @@ module.exports={
     ['— R: robotluk karnesi (gerçekçilik planı Ek F) —',null,0],
     ['Hareket: durma + yürüme (<2 m/sn) %','rDurYuru',1,[40,null,'T1']],['Hareket: depar (≥7 m/sn) %','rDepar',1,[null,3,'T1']],
     ['Hareket: topa >25 m iken >4 m/sn %','rUzakKosu',1,[null,25,'T1']],['Hareket: 16+ saha oyuncusu koşuyor (anların) %','rKalabalik',1,[null,25,'T1']],
-    ['Hareket: ortalama hız (m/dk)','rHizDk',0,[140,180,'T1']],['Hareket: >3 m/sn² ivmelenme / oyuncu·dk','rIvme',1,[null,5,'T1']],['Hareket: ivmelenme kümesi (aynı takımdan 0,3 sn içinde ≥ 3) / takım·dk (T18-0)','rIvmeKume',2],['Hareket: ivmelenme — görev değişiminden ≤ 0,5 sn % (T13-0)','rIvmeGorev',1],['Hareket: >3 m/sn² ivmelenme, ≥ 0,5 sn süren (GPS tanımı, bilgi) / oyuncu·dk','rIvmeGps',2],
+    ['Hareket: ortalama hız (m/dk)','rHizDk',0,[140,180,'T1']],['Hareket: >3 m/sn² ivmelenme / oyuncu·dk','rIvme',1,[null,5,'T1']],['Hareket: ivmelenme kümesi (aynı takımdan 0,3 sn içinde ≥ 3) / takım·dk (T18-0)','rIvmeKume',2],['Hareket: eşzamanlı ivmelenme (iki takımdan 0,3 sn içinde ≥ 3; borç 2) / oyuncu·dk (T23-0)','rIvmeEs',2,[null,1,'T23']],['Hareket: >3 m/sn² ivmelenme, eski tanım (tampon yalnız oyunda; T22 ve öncesiyle kıyas) / oyuncu·dk (T23-0)','rIvmeEski',2],['Hareket: ivmelenme — görev değişiminden ≤ 0,5 sn % (T13-0)','rIvmeGorev',1],['Hareket: >3 m/sn² ivmelenme, ≥ 0,5 sn süren (GPS tanımı, bilgi) / oyuncu·dk','rIvmeGps',2,[null,2.5,'T23']],
     ['Top ayakta: ortanca (sn)','rAyakta',2,[1.2,2.0,'T2']],['Top ayakta: 1 sn\'den kısa %','rAyaktaKisa',1,[null,45,'T2']],['Top taşıma: >5 m %','rTasima',1,[25,35,'T2']],
     /* T7g (2026-10-10, §7.7 kararı): sıkıştırılmış maçta sahiplik sayısı oyun dakikası başına gerçeğin ~2 katı, pas sayısı aynı → sahiplik başına
        pas gerçeğin yarısı; bant 2,5–4 (gerçek) → 1,6–3. T10g (2026-10-11, aynı karardan): pas yapılamadan biten sahiplik ≤ 25 → ≤ 45 (sahiplik
@@ -66,7 +66,11 @@ module.exports={
   yeni:()=>{
     const hyp=Math.hypot,ort=L=>L.length?L.reduce((a,b)=>a+b,0)/L.length:NaN,ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b);return S[Math.floor(S.length/2)];};
     /* hareket */
-    let tOy=0,tDY=0,tDep=0,tUzak=0,tUzakKosu=0,mes=0,orn=0,kalabalik=0,efor=0,eforGorev=0,eforGps=0,adim=0,kume=0;const iv=new Map(),kumeT=[[],[]],kumeSon=[-9,-9];
+    let tOy=0,tDY=0,tDep=0,tUzak=0,tUzakKosu=0,mes=0,orn=0,kalabalik=0,efor=0,eforGorev=0,eforGps=0,adim=0,kume=0,eforEski=0,esN=0;const iv=new Map(),kumeT=[[],[]],kumeSon=[-9,-9],sonHep=[];
+    /* T23-0 (2026-10-18): hız tamponu oyun dışında da dolar — eskiden duruşta donuyordu, oyun başlarken hız duruştan önceki son hızla karşılaştırılıp
+       sahte ivmelenme sayılıyordu (6,62 → 6,26 / oyuncu·dk). Sayım yalnız oyunda; eski tanım (tampon yalnız oyunda) ayrı tamponla bilgi satırında */
+    const tampon=m=>{for(const p of m.players){if(!p.oyunda||p.rol==='GK')continue;const h=iv.get(p);if(!h)continue;const sp=hyp(p.vx,p.vz);
+      h.v[h.i]=sp;h.i=(h.i+1)%12;h.n++;h.g[h.gi]=sp;h.gi=(h.gi+1)%30;h.gn++;}};
     /* top */
     const ayakta=[],tasima=[];let sahipP=null,sahipT=0,tas=null;
     /* sahiplik ve kayıp */
@@ -114,7 +118,7 @@ module.exports={
             else if(sinif==='kenar'){serbest.push(A.filter(kutu).length);hazirlik.push(m.t-duT0);}}}
         for(let i=bekleyen.length-1;i>=0;i--){const q=bekleyen[i];if(m.t>=q.t){q.o.gol=m.score[q.att]>q.g0;bekleyen.splice(i,1);}}
         onceki=ph;
-        if(ph!=='play'){if(seq)kapat(m,'durdu');if(tas)tasima.push(tas);tas=null;sahipP=null;bosAn=0;return;}
+        if(ph!=='play'){if(seq)kapat(m,'durdu');if(tas)tasima.push(tas);tas=null;sahipP=null;bosAn=0;tampon(m);return;}
         {const bv=hyp(b.vx,b.vz);if(!b.sahip&&!b.tasiyan&&bv<0.3&&b.y<0.2){bosT+=1/60;bosAn+=1/60;if(bosAn>bosEn)bosEn=bosAn;}else bosAn=0;}
         /* sahiplik zinciri, top ayakta, taşıma */
         const s=b.sahip;
@@ -137,12 +141,17 @@ module.exports={
         for(const p of m.players){if(!p.oyunda||p.rol==='GK')continue;const sp=hyp(p.vx,p.vz);tOy+=dt;mes+=sp*dt;if(sp<2)tDY+=dt;if(sp>=7)tDep+=dt;if(sp>2)n++;
           if(p.tavir==='koru')tKoru+=dt;
           if(hyp(p.x-b.x,p.z-b.z)>25){tUzak+=dt;if(sp>4)tUzakKosu+=dt;}
-          let h=iv.get(p);if(!h){h={v:new Float64Array(12),i:0,n:0,ust:false,son:-9,y0:0,y1:0,y2:0,yn:0,g:new Float64Array(30),gi:0,gn:0,gust:false,gson:-9};iv.set(p,h);}
+          let h=iv.get(p);if(!h){h={v:new Float64Array(12),i:0,n:0,ust:false,son:-9,y0:0,y1:0,y2:0,yn:0,g:new Float64Array(30),gi:0,gn:0,gust:false,gson:-9,vo:new Float64Array(12),io:0,no:0,usto:false,sono:-9};iv.set(p,h);}
+          /* T23-0: eski tanım (tampon yalnız oyunda dolar) */
+          if(h.no>=12&&!(p.eylem&&p.eylem.kilit)){if((sp-h.vo[h.io])/0.2>3){if(!h.usto&&m.t-h.sono>1){eforEski++;h.sono=m.t;}h.usto=true;}else h.usto=false;}
+          h.vo[h.io]=sp;h.io=(h.io+1)%12;h.no++;
           if(adim%12===0){if(sp>1.5&&!(p.eylem&&p.eylem.kilit)){h.y2=h.y1;h.y1=h.y0;h.y0=Math.atan2(p.vz,p.vx);h.yn++;
             if(h.yn>=3&&yonFark(h.y1,h.y2)>0.873&&yonFark(h.y0,h.y2)<0.524)salinim++;}else h.yn=0;}
           if(h.n>=12&&!(p.eylem&&p.eylem.kilit)){const a=(sp-h.v[h.i])/0.2;if(a>3){if(!h.ust&&m.t-h.son>1){efor++;h.son=m.t;if(m.t-p._gorevT<=0.5)eforGorev++;
                 /* T18-0: aynı takımdan 0,3 sn içinde ≥ 3 ivmelenme bir küme (küme başına bir) */
-                const KT=kumeT[p.team];KT.push(m.t);while(KT.length&&m.t-KT[0]>0.3)KT.shift();if(KT.length>=3&&m.t-kumeSon[p.team]>0.3){kume++;kumeSon[p.team]=m.t;}}h.ust=true;}else h.ust=false;}
+                const KT=kumeT[p.team];KT.push(m.t);while(KT.length&&m.t-KT[0]>0.3)KT.shift();if(KT.length>=3&&m.t-kumeSon[p.team]>0.3){kume++;kumeSon[p.team]=m.t;}
+                /* T23-0: eşzamanlı (r-ivme s_es tanımı: iki takımdan son 0,3 sn içinde kendisi dahil ≥ 3 ivmelenme) */
+                while(sonHep.length&&m.t-sonHep[0]>0.3)sonHep.shift();sonHep.push(m.t);if(sonHep.length>=3)esN++;}h.ust=true;}else h.ust=false;}
           h.v[h.i]=sp;h.i=(h.i+1)%12;h.n++;
           /* T13: GPS tanımı (bilgi) — 0,5 sn'lik pencerede ortalama ivme > 3 m/sn² (hız 1,5 m/sn'den çok arttı), 1 sn içinde tek */
           if(h.gn>=30&&!(p.eylem&&p.eylem.kilit)){if((sp-h.g[h.gi])/0.5>3){if(!h.gust&&m.t-h.gson>1){eforGps++;h.gson=m.t;}h.gust=true;}else h.gust=false;}
@@ -156,7 +165,7 @@ module.exports={
           rKornerGol:[korner.filter(k=>k.gol).length,korner.length],rBarajGol:[baraj.filter(k=>k.gol).length,baraj.length],
           rCalimOk:[clOk,clN],rCalimKanat:[clKanat,clN],rCalimYut:[clY,clYn],rCalimFaul:[clFaul,clHep],rCalimYarim:[clYarim,clHep],rFaulItme:[faulItme,faulN],rGolDonen:[golDonen,gol]};
         for(const [k] of R_KAYIP)ham['rKayip_'+k]=[kayip[k]||0,tk];
-        return{ham,rPasBoy:pasN?pasL/pasN:NaN,rHizDk:tOy?mes/tOy*60:NaN,rIvme:tOy?efor/(tOy/60):NaN,rIvmeGps:tOy?eforGps/(tOy/60):NaN,rAyakta:ortanca(ayakta),rSeqPas:ort(seqs.map(s=>s.pas)),rSeqSure:ort(seqs.map(s=>s.sure)),
+        return{ham,rPasBoy:pasN?pasL/pasN:NaN,rHizDk:tOy?mes/tOy*60:NaN,rIvme:tOy?efor/(tOy/60):NaN,rIvmeGps:tOy?eforGps/(tOy/60):NaN,rIvmeEski:tOy?eforEski/(tOy/60):NaN,rIvmeEs:tOy?esN/(tOy/60):NaN,rAyakta:ortanca(ayakta),rSeqPas:ort(seqs.map(s=>s.pas)),rSeqSure:ort(seqs.map(s=>s.sure)),
           rIvmeKume:tOy?kume/(tOy/600):NaN,rPpda:ppdaEylem?ppdaPas/ppdaEylem:NaN,rSutMesafe:ortanca(sutL),rKornerKutu:ort(korner.map(k=>k.kutu)),rKornerSav:ort(korner.map(k=>k.sav)),rKornerGeri:ort(korner.map(k=>k.geri)),rKornerGeriHiz:ort(korner.map(k=>k.geriHiz).filter(x=>x===x)),
           rBarajKisi:ort(baraj.map(k=>k.kisi)),rSerbestKutu:ort(serbest),rDuranHazirlik:ortanca(hazirlik),
           rCalim:clN,rCalimHepsi:clHep,rCalimKalib:clPn?100*(clPt-clPok)/clPn:NaN,rKoru:tKoru,rCalimHareket:clHar,

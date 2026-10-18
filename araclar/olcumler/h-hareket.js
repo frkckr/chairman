@@ -25,7 +25,12 @@ module.exports={
     ['Gövde: yerinde dönüş hızı p99 (°/sn)','hGovdeYer99',0],['Gövde: koşarken dönüş hızı p99 (°/sn)','hGovdeKos99',0],
     ['Gövde: dönüş ivmesi p99 (rad/sn²)','hGovdeIvme99',0,[null,120,'H1']],
     ['Bakış: dünyada dönüş hızı p99 (°/sn)','hBakis99',0],['Bakış: gövdeye göre dönüş hızı p99 (°/sn)','hBakisG99',0,[null,410,'H1']],['Bakış: > 60° sıçrama / oyuncu·dk','hBakisSic',2,[null,1,'H1']],
-    ['Bakış: 90°+ gövde dönüşünde öncülük ortanca (ms)','hOnculuk',0],['Bakış: öncülük ≥ 150 ms olan dönüş %','hOnc150',1,[60,null,'H1']],
+    ['Bakış: 90°+ gövde dönüşünde öncülük ortanca (ms)','hOnculuk',0],['Bakış: öncülük ≥ 150 ms olan dönüş % (bütün başlangıçlar; bilgi — T23-0)','hOnc150',1],
+    /* T23-0 (2026-10-18): öncülük başlangıçtaki baş–gövde hizasına göre (çizimdeki A6-0 tanımı): hizalı |baş − gövde| ≤ 0,35 rad, önde (baş dönüş yönünde
+       zaten önde: ölçü bir yarım dönüş daha istediği için sayamaz — boyun sınırı), ters (taramanın geri dönüşü sahte öncülük verir). Kabul hizalı satırla
+       (borç defteri 14); eski bütün başlangıçlar satırı bilgi */
+    ['Bakış: öncülük ≥ 150 ms, hizalı başlayan dönüş %','hOnc150H',1,[50,null,'T23']],['Bakış: öncülük ≥ 150 ms, önde başlayan %','hOnc150O',1],
+    ['Bakış: öncülük ≥ 150 ms, ters başlayan %','hOnc150T',1],['Bakış: hizalı başlayan dönüşün payı %','hHizaliPay',1],
     ['Gövde: 90°+ dönüş / oyuncu·dk','hDonusDk',2]],
   yeni:()=>{
     const ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b);return S[Math.floor(S.length/2)];};
@@ -33,7 +38,7 @@ module.exports={
     /* taşıma */
     let tasSon=null,tasDon=[],tasDon30=0,izgara=0,serbestKare=0,kararN=0,kararAci=[],kararSon=null,tasT=0,kirik=0,kirikPen=null;
     /* gövde ve bakış */
-    const yer=hHist(10,400),kos=hHist(10,400),ivme=hHist(5,800),bak=hHist(10,400),bakG=hHist(10,400);let bakSic=0;const onc=[];let onc150=0,donusN=0;
+    const yer=hHist(10,400),kos=hHist(10,400),ivme=hHist(5,800),bak=hHist(10,400),bakG=hHist(10,400);let bakSic=0;const onc=[];let onc150=0,donusN=0;const oH=[0,0],oO=[0,0],oT=[0,0];   /* T23-0: [≥ 150 ms, hepsi] hizalı / önde / ters */
     return{
       adim(m){adim++;if(m.phase!=='play'){tasSon=null;kirikPen=null;return;}const b=m.ball,t=m.t;
         /* taşıma */
@@ -71,8 +76,9 @@ module.exports={
           if(h.bOk&&t-h.son>1.2){const g=h.g;let i0=-1;for(let j=0;j<g.length;j+=3)if(t-g[j]<=0.8){i0=j;break;}
             if(i0>=0&&Math.abs(h.yu-g[i0+1])>H_PI/2){h.son=t;donusN++;const top=h.yu-g[i0+1],sg=Math.sign(top);let tk=null,tb=null;
               for(let j=i0;j<g.length;j+=3){if(tk===null&&(g[j+1]-g[i0+1])*sg>=Math.abs(top)/2)tk=g[j];if(tb===null&&(g[j+2]-g[i0+2])*sg>=Math.abs(top)/2)tb=g[j];}
-              if(tk!==null&&tb!==null){const ms=(tk-tb)*1000;onc.push(ms);if(ms>=150)onc150++;}}}}},
-      bitir(){return{ham:{hTasDon30:[tasDon30,tasDon.length],hTasIzgara:[izgara,serbestKare],hOnc150:[onc150,onc.length]},
+              if(tk!==null&&tb!==null){const ms=(tk-tb)*1000;onc.push(ms);if(ms>=150)onc150++;
+                const bas0=(g[i0+2]-g[i0+1])*sg,K=Math.abs(bas0)<=0.35?oH:bas0>0?oO:oT;K[1]++;if(ms>=150)K[0]++;}}}}},
+      bitir(){return{ham:{hTasDon30:[tasDon30,tasDon.length],hTasIzgara:[izgara,serbestKare],hOnc150:[onc150,onc.length],hOnc150H:oH,hOnc150O:oO,hOnc150T:oT,hHizaliPay:[oH[1],onc.length]},
         hTasDon:ortanca(tasDon),hTasKararSn:tasT?kararN/tasT:NaN,hTasKararAci:ortanca(kararAci),hTasKirik:tasT?kirik/tasT:NaN,
         hGovdeYer99:hYuzde(yer,0.99),hGovdeKos99:hYuzde(kos,0.99),hGovdeIvme99:hYuzde(ivme,0.99),
         hBakis99:hYuzde(bak,0.99),hBakisG99:hYuzde(bakG,0.99),hBakisSic:tOy?bakSic/(tOy/60):NaN,hOnculuk:ortanca(onc),hDonusDk:tOy?donusN/(tOy/60):NaN};}

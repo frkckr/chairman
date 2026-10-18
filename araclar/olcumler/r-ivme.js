@@ -48,7 +48,8 @@ module.exports={
     return{
       adim(m){
         if(m.phase==='play'&&onceki!=='play')oyunT=m.t;onceki=m.phase;
-        if(m.phase!=='play'){oncekiSahip=-2;return;}   /* r-karne gibi: yalnız oyunda (hız halkası duruşta donar) */
+        /* T23-0 (2026-10-18): hız halkası oyun dışında da dolar (r-karne ile aynı düzeltme; eskiden duruşta donuyordu, oyun başı sahte ivmelenme) */
+        if(m.phase!=='play'){oncekiSahip=-2;for(const p of m.players){const h=H.get(p);if(!h||!p.oyunda||p.rol==='GK')continue;h.v[h.i]=hyp(p.vx,p.vz);h.i=(h.i+1)%12;h.n++;}return;}
         const b=m.ball,s=b.sahip,st=s&&s.team!=null?s.team:-1;
         /* T18-0: bu karenin olay sınıfı */
         let olay='diger';if(m.t-oyunT<=1)olay='durus';else if(oncekiSahip>=0&&st<0&&(b.pas||b.pasHedef))olay='pas';else if(oncekiSahip<0&&st>=0&&oncekiSahip!==-2)olay='alis';

@@ -22,8 +22,14 @@
 const A_PL=52.5,A_MZ=34;
 module.exports={
   bilgi:[['— T20–T22: topla oyunun akıcılığı (gerçekçilik planı §4 “2026-10-18 maç notları”) —',null,0],
-    ['Sürüş: top gövdenin arkasında (kare) %','aArkaPay',1],['Sürüş: top ≥ 0,15 sn arkada / maç','aArkaEp',1],
-    ['Sürüş: top erişimdeyken (0,9 m) gövde niyetten > 57° dönük %','aDonukPay',1],['Sürüş: dokunuş / sn','aDokunusHz',2],
+    ['Sürüş: top gövdenin arkasında (kare) %','aArkaPay',1,[null,1,'T23']],['Sürüş: top ≥ 0,15 sn arkada / maç','aArkaEp',1,[null,5,'T23']],
+    /* T23-0 (2026-10-18): arkada epizodunun kaynağı (epizodun başında): alıştan ≤ 0,5 sn, karar yönünün > 100° dönüşünden ≤ 0,6 sn, öteki */
+    ['Sürüş: arkada epizodu — alıştan ≤ 0,5 sn / maç','aArkaAlis',2],['Sürüş: arkada epizodu — > 100° yön değişiminden ≤ 0,6 sn / maç','aArkaDon',2],['Sürüş: arkada epizodu — öteki / maç','aArkaDiger',2],
+    ['Sürüş: top erişimdeyken (0,9 m) gövde niyetten > 57° dönük % (bütün; bilgi)','aDonukPay',1],
+    /* T23-0: dönük kareler üçe ayrılır — karar yönü (p.surus.hedef ya da yon) > 57° değiştikten ≤ 0,6 sn (dönüş sürüyor), gövde bilerek topa (s._yuz),
+       kalıcı (öbürleri; kabul borç 27). Karar yönü değişimi: önceki referanstan > 1 rad; geri dönüş: değişimden ≤ 0,6 sn sonra bir öncekinin ±20°'sine */
+    ['Sürüş: gövde niyetten dönük — kalıcı %','aDonukKalici',1,[null,10,'T23']],['Sürüş: gövde niyetten dönük — dönüş sürüyor %','aDonukDon',1],['Sürüş: gövde niyetten dönük — topa bakıyor (_yuz) %','aDonukYuz',1],
+    ['Sürüş: niyet > 57° değişimi / taşıma·sn','aNiyetDeg',2],['Sürüş: niyetin geri dönüşü (0,6 sn içinde) / taşıma·sn','aNiyetGeri',2],['Sürüş: dokunuş / sn','aDokunusHz',2],
     ['Sürüş: topla hız ortalaması (m/sn)','aSurHiz',2],['Sürüş: topla hızın %90\'lığı (m/sn)','aSurHiz90',2],
     ['Geri geri (sahip ve vuruş hazırlığı) sn / maç','aGeriSn',1],['Terk edilen vuruş hazırlığı (süre aşımı) / maç','aHazTerk',2],['Kesilen vuruş hazırlığı (rakip, düşüş) / maç','aHazKesik',2],['Dönmeden önce topla yavaşlama (T20b) / maç','aYavasla',2],
     ['Vazgeçilen pas (hat kapandı) / maç','aVazgec',2],
@@ -47,12 +53,15 @@ module.exports={
     const sut={sert:0,plase:0,falso:0,asirtma:0,vole:0};
     let hazTerk=0,hazKesik=0,vazgec=0,yavasla=0;const eyl=new Map();
     const arka=new Map(),alis=new Map(),tas=new Map();let sonSd=new Map(),pbx=0,pbz=0;
+    /* T23-0 */
+    const yonIz=new Map(),alisT=new Map();let donukKal=0,donukDon=0,donukYuz=0,niyetDeg=0,niyetGeri=0,arkaAlis=0,arkaDon=0,arkaDiger=0;
     const alisBitir=(p,vurus,m)=>{const r=alis.get(p);if(!r)return;alis.delete(p);if(!vurus)return;
       alisN++;alisSure+=m.t-r.t0;if(r.geri>0.3)geriN++;if(r.yonGeri>0.3)yonGeriN++;};
     return{
       dinle(ad,v,m){if(!m)return;const b=m.ball,p=v&&v.p;
         if(ad==='vazgecti'){vazgec++;return;}
         if(ad==='kickoff'){let n=0;for(const q of m.players)if(q.oyunda&&hyp(q.x,q.z-A_MZ)<3)n++;santraN++;if(n===1)santraTek++;santraBek=v.team;return;}
+        if(ad==='ilkDokunus'&&p)alisT.set(p,m.t);
         if(ad==='ilkDokunus'&&v.iyi&&p){const sp=hyp(p.vx,p.vz),h=sp>0.8?Math.atan2(p.vz,p.vx):p.yon;alis.set(p,{t0:m.t,hx:Math.cos(h),hz:Math.sin(h),geri:0,yonGeri:0});return;}
         if(ad==='pass'||ad==='cross'){if(!p)return;const e=p.eylem,d=m.dir[p.team];
           if(santraBek!=null&&p.team===santraBek){if((v.hx-v.x0)*d<-1)santraGeri++;}santraBek=null;
@@ -86,8 +95,13 @@ module.exports={
         const p=b.sahip;
         if(p&&!b.tasiyan&&p.surus&&!p.surus.koru&&!p.surus.bekle&&!p.calim&&!p.eylem){
           surK++;surT+=dt;const c=Math.cos(p.yon),s=Math.sin(p.yon),onde=(b.x-p.x)*c+(b.z-p.z)*s,dd0=hyp(b.x-p.x,b.z-p.z);
-          if(onde<-0.15){arkaK++;const n=(arka.get(p)||0)+1;arka.set(p,n);if(n===9)arkaEp++;}else arka.set(p,0);
-          if(dd0<0.9){donukN++;if(Math.abs(aN(p.yon-p.surus.yon))>1.0)donukK++;}
+          /* T23-0: karar yönü (niyetDonus açıkken s.hedef) ve değişimi */
+          const kd=p.surus.hedef!=null?p.surus.hedef:p.surus.yon;let yi=yonIz.get(p);if(!yi){yi={kd,tDeg:-9,eski:null,donA:0};yonIz.set(p,yi);}
+          {const d=Math.abs(aN(kd-yi.kd));if(d>1.0){niyetDeg++;if(yi.eski!=null&&m.t-yi.tDeg<=0.6&&Math.abs(aN(kd-yi.eski))<0.35)niyetGeri++;yi.eski=yi.kd;yi.tDeg=m.t;yi.donA=d;yi.kd=kd;}}
+          if(onde<-0.15){arkaK++;const n=(arka.get(p)||0)+1;arka.set(p,n);if(n===9){arkaEp++;const ta=alisT.get(p);
+            if(ta!=null&&m.t-ta<=0.65)arkaAlis++;else if(m.t-yi.tDeg<=0.75&&yi.donA>1.745)arkaDon++;else arkaDiger++;}}else arka.set(p,0);
+          if(dd0<0.9){donukN++;if(Math.abs(aN(p.yon-p.surus.yon))>1.0)donukK++;
+            if(Math.abs(aN(p.yon-kd))>1.0){if(p.surus._yuz)donukYuz++;else if(m.t-yi.tDeg<=0.6)donukDon++;else donukKal++;}}
           hizT+=p.spd;hizL.push(p.spd);
           const sd=p.sonDokunus;if(sd&&sd!==sonSd.get(p)&&sd.tur==='surus')dokN++;
           if(p.mevki&&p.mevki.kanat){let t=tas.get(p);if(!t||t.no!==m.sahiplikNo){t={no:m.sahiplikNo,L:0};tas.set(p,t);}t.L+=p.spd*dt;}}
@@ -98,10 +112,10 @@ module.exports={
       bitir(){
         for(const [,t] of tas){if(t.L>=15)kan15++;if(t.L>=25)kan25++;}
         hizL.sort((a,c)=>a-c);
-        const ham={aArkaPay:[arkaK,surK],aDonukPay:[donukK,donukN],aGeriPay:[geriN,alisN],aYonGeriPay:[yonGeriN,alisN],aTekPay:[tekN,pasN],aTekSutPay:[tekSut,sutN],
+        const ham={aArkaPay:[arkaK,surK],aDonukPay:[donukK,donukN],aDonukKalici:[donukKal,donukN],aDonukDon:[donukDon,donukN],aDonukYuz:[donukYuz,donukN],aGeriPay:[geriN,alisN],aYonGeriPay:[yonGeriN,alisN],aTekPay:[tekN,pasN],aTekSutPay:[tekSut,sutN],
           aSantraTek:[santraTek,santraN],aSantraGeri:[santraGeri,santraN],aEgriPay:[egriP,egriN],aOrtaKanat:[ortaKanat,ortaN],aOrtaIce:[ortaIce,ortaEgri]};
         for(const k in sut)ham['aSut_'+k]=[sut[k],sutN];
-        return{ham,aArkaEp:arkaEp,aDokunusHz:surT?dokN/surT:NaN,aSurHiz:surK?hizT/surK:NaN,aSurHiz90:hizL.length?hizL[Math.floor(hizL.length*0.9)]:NaN,
+        return{ham,aArkaEp:arkaEp,aArkaAlis:arkaAlis,aArkaDon:arkaDon,aArkaDiger:arkaDiger,aNiyetDeg:surT?niyetDeg/surT:NaN,aNiyetGeri:surT?niyetGeri/surT:NaN,aDokunusHz:surT?dokN/surT:NaN,aSurHiz:surK?hizT/surK:NaN,aSurHiz90:hizL.length?hizL[Math.floor(hizL.length*0.9)]:NaN,
           aGeriSn:geriSn,aHazTerk:Math.max(0,hazTerk-vazgec),aHazKesik:hazKesik,aYavasla:yavasla,aVazgec:vazgec,aAlisSure:alisN?alisSure/alisN:NaN,aAlisN:alisN,aTekAci:tekAciN?tekAci/tekAciN:NaN,aHavaUzun:havaUzun,aKosanHava:kosanHava,aOrta:ortaN,
           aSurukle:surukle,aKanat15:kan15,aKanat25:kan25};}
     };
