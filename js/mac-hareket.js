@@ -95,6 +95,10 @@ ayarEkle('C',{
   kanatKapat:0,
   /* T20a–b (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): sürüşün ve topla gövdenin akıcılığı */
   sagSolAc:0.55,               // T22a (2026-10-18): “sağından at solundan geç” satırının yetenek eşiği (hız, çabukluk, sürüş); eskiden 9 (fiilen kapalı) — 0: eski
+  /* T23a1 (2026-10-18; gerçekçilik planı §4 T23): kovalayanın hedefi her dokunuşta basamak gibi yenilenmesin */
+  kovalaAtalet:1,              // T23a1: tepki süresinde kovalayan hızını ve yönünü korur, eforu önceki karedeki (eskiden eski hedefe efor 1 ile gidip orada durmak üzere
+                               // frenliyor — dokunuşta kovalayanların %28'i ≥ 0,8 m/sn frenliyordu —, süre dolunca hedef > 5 m sıçrıyordu); 0: eski
+  kovalaSadik:1,               // T23a1: top sürümü değişince de önceki karşılama noktası yeni yolda (0,9 m) ve yetişilebilirse (+0,15 sn) korunur; 0: yalnız aynı sürümde
   surusYetis:1,                // T20a: serbest sürüşte top öndeyken (2,5 m) sürücü topa topun hızıyla (+0,5 m/sn) varır, yetişiyorsa dokunuş zamanlayıcısını beklemeden
                                // dokunur, top gövdenin yanındaysa (0,6 m, 0,35 m gerisine dek) da dokunur; 0: eski (varış hızı hedef hızın %95'i, zamanlayıcı, yalnız öndeki top)
   surusYuz:1,                  // T20a: sürüşte gövdenin hedefi histerezisli (top ±72° dışında ve 0,6 m'den uzaksa topa, ±32° içinde ya da 0,5 m'de niyete); 0: tek eşik (±60°)
@@ -524,14 +528,18 @@ Object.assign(Match.prototype,{
     p._hdfK=k;p.tx=p._hdfX;p.tz=p._hdfZ;
   },
   kovala(p,ef){
-    const b=this.ball;this.eforVer(p,ef!=null?ef:1);
+    const b=this.ball,efOnce=p.efor;this.eforVer(p,ef!=null?ef:1);
     /* tepki süresi: top yön değiştirdikten sonra oyuncu bir an eski hedefine gider (pası bekleyen alıcı daha çabuk). T5e (2026-10-09): top
        değişimi başına kişisel sapma N(0; 0,06 sn), ±0,12'de kesik (tek zar): yarı yarıya ve dönen topta ilk dokunuş varış farkıyla düzgün
        değişir, basamak değil (c-donen; eskiden aynı durum her seferinde aynı sonucu veriyordu) */
     if(p._tepkiS!==b.surum){p._tepkiS=b.surum;p._tepkiJ=b.hedefOyuncu===p?0:clamp(0.06*this.normal(),-0.12,0.12);}
     const tepki=b.hedefOyuncu===p?0.05:0.3-p.oz.karar*0.15+p._tepkiJ;
     /* T18a (kovalaKalici): kovalayan yeni atandıysa tepki süresinde eski hedefine değil topa koşar (eski: yeni kovalayan 0,05–0,3 sn eski hedefine tam eforla) */
-    if(this.t-(this._degisimT||0)<tepki&&!(MOTOR_AYAR.kovalaKalici>0&&p._gorevT===this.t&&p._gorevOnce!=='kovala')){p.hizOran=1;p.bak=b;return;}
+    if(this.t-(this._degisimT||0)<tepki&&!(MOTOR_AYAR.kovalaKalici>0&&p._gorevT===this.t&&p._gorevOnce!=='kovala')){p.hizOran=1;p.bak=b;
+      /* T23a1 (kovalaAtalet): tepki süresinde hız ve yön korunur (hedef gidiş yönünde, varış hızı bugünkü hız), efor önceki karedeki — eski hedefte frenleme yok */
+      if(MOTOR_AYAR.kovalaAtalet&&efOnce!=null){const v=hrkHyp(p.vx,p.vz);if(v>0.5){const kal=tepki-(this.t-(this._degisimT||0))+0.3;p.tx=p.x+p.vx*kal;p.tz=p.z+p.vz*kal;p._varisHiz=v;p._varisKare=this.kare;}
+        this.eforVer(p,efOnce);}
+      return;}
     const havada=b.y>1.3||b.vy>2;let hMax=havada?hvAlinDur(p)+hvSicramaH(p,p.spd)+0.12:0.7;   /* T6a: alın + sıçrama (js/mac-hava.js) */
     /* kendisine atılan havadan pası rakip zorlamıyorsa topun inmesini bekler: göğüs ya da ayakla alır, kafayla oynamaz. T6e: ortada beklemez —
        ortanın alıcısı topa başının hizasında gider (b.pasHedef.tur 'orta') */
@@ -539,7 +547,7 @@ Object.assign(Match.prototype,{
     let k=this.yakalamaNoktasi(p,hMax);
     /* kararlılık: önceki karşılama noktası hâlâ yetişilebilir durumdaysa ona sadık kal (hedef sürekli zıplamasın) */
     const on=p._kar;
-    if(on&&on.surum===b.surum&&hrkHyp(on.x-k.x,on.z-k.z)>1.5){const yol=this.topYolu(),i0=hrkMax(0,Math.round((this.t-this._yolT0)*60)-1);
+    if(on&&(on.surum===b.surum||MOTOR_AYAR.kovalaSadik)&&hrkHyp(on.x-k.x,on.z-k.z)>1.5){   /* T23a1 (kovalaSadik): sürüm değişince de sınanır */const yol=this.topYolu(),i0=hrkMax(0,Math.round((this.t-this._yolT0)*60)-1);
       let tb=null;for(let i=i0;i<yol.length;i+=2){const s=yol[i];if(hrkHyp(s.x-on.x,s.z-on.z)<0.9&&s.y<(havada?2.3:0.8)){tb=(i-i0)/60;break;}}
       if(tb!=null&&varisZamani(p,on.x,on.z,0.45,0.1)<=tb+0.15)k={x:on.x,z:on.z,t:tb};}
     p._kar={x:k.x,z:k.z,surum:b.surum};

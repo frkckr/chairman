@@ -93,11 +93,12 @@ Object.assign(Match.prototype,{
           kovalayan[t]=en;sure[t]=enT;}
         /* yüksek top: her takımdan iki oyuncu topun ineceği yere gider (hava mücadelesi) */
         kovalayan[2]=null;kovalayan[3]=null;
+        const sure2=[1e9,1e9];   /* T23a1: ikinci adamın varışı (kovala2Pay) */
         if(yuksek)for(let t=0;t<2;t++){let en=null,enT=1e9;
           for(const p of this.teams[t]){if(!p.oyunda||p===kovalayan[t]||p.rol==='GK'||(p.eylem&&p.eylem.kilit))continue;
             const k=this.yakalamaNoktasi(p,2.3);if(k.t<enT){enT=k.t;en=p;}}
-          if(en&&enT<3)kovalayan[2+t]=en;}
-        this._kov={surum:b.surum,kare:this.kare,liste:kovalayan,sure,yuksek};}
+          if(en&&enT<3){kovalayan[2+t]=en;sure2[t]=enT;}}
+        this._kov={surum:b.surum,kare:this.kare,liste:kovalayan,sure,yuksek,sure2};}
       /* top dışarı gidiyorsa ve son rakip dokunduysa: kullanım bizim; oyuncu topu dışarı bırakır */
       const son=this.topYolu(),dur=son[son.length-1];
       if(Math.abs(dur.x)>PL+0.3||dur.z<-0.3||dur.z>PW+0.3){const sonT=b.sonTakim;
@@ -217,9 +218,12 @@ Object.assign(Match.prototype,{
           this.gorevYaz(p,'kaleci');this.kaleciKonum(p,dt);continue;}
         /* T1: topa rakibinden açıkça geç yetişecek kovalayan (kovalaPay sn) çekişmeye koşmaz, rahat ivmeyle yaklaşır; pasın alıcısı ve
            yüksek topta kovalayan tam eforla (rahat karşılayan alıcı geç kalıp pası kaybediyordu) */
-        if(p===kovalayan[t]){const K=this._kov,S=K&&K.sure,f=S?S[t]-S[1-t]:0;this.gorevYaz(p,'kovala');
-          this.kovala(p,K&&K.yuksek||p===b.hedefOyuncu||donen||f<=MOTOR_AYAR.kovalaPay?1:0.5);continue;}
-        if(p===kovalayan[2+t]){this.gorevYaz(p,'kovala2');this.kovala(p,1);continue;}
+        if(p===kovalayan[t]){const K=this._kov,S=K&&K.sure,f=S?S[t]-S[1-t]:0,K2=MOTOR_AYAR.kovala2Pay;this.gorevYaz(p,'kovala');
+          /* T23a1 (kovala2Pay): yüksek topta da açıkça geç kalacak (rakibin en erken varışından K2 sn'den çok) ve inişe 1 sn'den uzak kovalayan depar atmaz */
+          const yuksekGec=!!(K2>0&&K&&K.yuksek&&S&&S[t]>1&&S[t]-Math.min(S[1-t],K.sure2?K.sure2[1-t]:1e9)>K2);
+          this.kovala(p,(K&&K.yuksek&&!yuksekGec)||p===b.hedefOyuncu||donen||(!(K&&K.yuksek)&&f<=MOTOR_AYAR.kovalaPay)?1:0.5);continue;}
+        if(p===kovalayan[2+t]){const K=this._kov,S=K&&K.sure,K2=MOTOR_AYAR.kovala2Pay,s2=K&&K.sure2?K.sure2[t]:0;this.gorevYaz(p,'kovala2');
+          this.kovala(p,K2>0&&!donen&&s2>1&&S&&s2-Math.min(S[1-t],K.sure2[1-t])>K2?0.5:1);continue;}
         if(p===cizgiBek){this.gorevYaz(p,'cizgi');p.tx=cbx;p.tz=cbz;p.hizOran=1;this.eforVer(p,1);continue;}   /* T5e */
         if(sutE&&p.rol!=='GK'&&this.sutHamleYap(p,sutE)){this.gorevYaz(p,'blok');continue;}   /* T19a */
         /* T18b: pas uçuşunda (sanal sahip) 1. adam alıcıya kapatır (presYap değil), 2. ve 3. adam alıcıya göre */
