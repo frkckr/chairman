@@ -7,7 +7,17 @@
    Kural: rastlantı çekmez, alan sırası ve sayısı belirlenimli (oyuncu sırası n); çizim kodu yok. niyetEtki 0 iken etkin taktik tabanın aynısıdır ve
    düzen çarpanları nötrdür (tesisat kanıtı: --ayni). */
 ayarEkle('T',{
-  /*T24e*/
+  /* T24e (2026-10-18; gerçekçilik planı §4 T24): kutuya giriş ve forvet dışı şut — atak merkezden gelişirken orta sahayı kutuya taşıyan yol yoktu
+     (geç giriş yalnız orta ve geri çevirmede, kutu rolü yalnız top kanattayken, derin koşu ofsayt çizgisine 4 m yakınlık istiyor; T24-0: şutların
+     %76'sı forvetten) */
+  /* gecGirisPas (T24e1): açık oyunda forvete son 30 m'de ve merkezde (|z − MZ| < 20) giden pasta forvet dışı oyuncular kutuya geç girer
+     (gecGirisAta'nın adayları; yerler: topun varacağı yerin ters yarısında PL−12, MZ ∓ 4 ve yay PL−15, MZ; 2,4 sn); takımda aynı anda en çok bu
+     kadar geç giriş koşusu; 0: eski. Rastlantısız. gecKosu (T24e2): derin olmayan merkez orta sahanın açık oyunda kutuya geç koşusu
+     (gecKosuAta; sıklık 1/sn × topsuz hareket × ceza sahasına geç girme eğilimi × niyetin koşu çarpanı; takımda aynı anda en çok bir); 0: eski.
+     40 maç (t24-0 tabanına göre, eşleşmiş): gecGirisPas 1 / 2 tek başına forvet dışı şut 23,8 → 24,2 / 24,5, ofsayt +0,55 / +0,38; gecKosu 0,3 / 0,6
+     tek başına 24,8 / 26,2 (maçta 4,6 / 7,2 koşu), ortanca mesafe (rSutMesafeF) 15,9 → 15,4 / 15,5, ÷ konum xG 1,14 → 1,36 / 1,34 (gürültüde);
+     ikisi birlikte (1, 0,6) forvet dışı 27,2, rSutMesafeF 15,2, gol 2,52 → 2,55, şut 17,1 → 16,7, ÷ xG 1,17, ofsayt 1,4 → 1,7, ivmelenme +0,03 */
+  /*T24e*/gecGirisPas:1,gecKosu:0.6,
   /* · */
   niyetEtki:1,       // T7a: niyet ve maç durumunun taktiğe ve düzene etkisi (0: yok, tabanın aynısı)
   macDurumEtki:1,    // T7a: maç durumunun (skor × kalan süre × eksik adam) payı (0: niyet var, maç durumu yok)
@@ -283,15 +293,34 @@ Object.assign(Match.prototype,{
      girme eğilimi; kanat önce; uzaklık cezası) ceza sahasına koşar: havadan ortada penaltı noktası ve uzak direğin önü, yerden ortada ve geri
      çevirmede penaltı noktası ve yay. Tam efor; top ortacıdayken ofsayt çizgisinin gerisinde (bolgeKonumu), 1,8 sn. Eskiden orta anında ceza
      sahasında forvet dışı 1,1 hücumcu vardı, şutların %81'i forvetten (T14-0). Rastlantısız */
-  gecGirisAta(p,sec){const A=MOTOR_AYAR;if(!A.gecGiris||!p||p.team==null)return;
+  /* T24e1: Zp verilirse (gecGirisPas; js/mac-topla.js vurusBaslat) yerler Zp, en çok nEn koşucu, koşu sure sn; olay pas:1 ile (t-kanat sayar) */
+  gecGirisAta(p,sec,Zp,nEn,sure){const A=MOTOR_AYAR;if(!(Zp?nEn>0:A.gecGiris)||!p||p.team==null)return;
     const t=p.team,d=this.dir[t],yan=Math.sign(this.ball.z-MZ)||1,GR=this._geride&&this._geride[t],yer=sec.tur==='geriCevir'||sec.tip!=='hava';
-    const Z=yer?[[PL-11,MZ],[PL-17,MZ-yan*3]]:[[PL-11,MZ-yan],[PL-7,MZ-yan*4]],C=[];
+    const Z=Zp||(yer?[[PL-11,MZ],[PL-17,MZ-yan*3]]:[[PL-11,MZ-yan],[PL-7,MZ-yan*4]]),C=[];
     for(const q of this.teams[t]){if(q===p||q===sec.alici||!q.oyunda||q.rol==='GK'||q.rol==='FV'||q.rol==='DEF'||(q.eylem&&q.eylem.kilit)||(GR&&GR.has(q))||(q.kosu&&q.kosu.tur!=='arkaya'))continue;
       const L=hyp(q.x-d*(PL-11),q.z-MZ);if(L>25||q.x*d<PL-40)continue;
       C.push([0.5*profilAlt(q,'topsuzHareket',0.5)+0.5*Math.max(0,profilEgilim(q,'cezaSahasinaGecGirer'))+(q.mevki.kanat?0.2:0)-L/30,q]);}
     C.sort((a,c)=>c[0]-a[0]||a[1].n-c[1].n);
-    for(let i=0;i<Math.min(A.gecGiris,C.length,Z.length);i++){const q=C[i][1],z=Z[i];q.kosu={u:z[0],w:z[1],t:1.8,tur:'gecGiris'};
-      this.on('kosu',{p:q,tur:'gecGiris'});this.jestVer(q,'isaret',0.6,{x:z[0]*d,z:z[1]});}},
+    for(let i=0;i<Math.min(Zp?nEn:A.gecGiris,C.length,Z.length);i++){const q=C[i][1],z=Z[i];q.kosu={u:z[0],w:z[1],t:Zp?sure:1.8,tur:'gecGiris'};
+      this.on('kosu',Zp?{p:q,tur:'gecGiris',pas:1}:{p:q,tur:'gecGiris'});this.jestVer(q,'isaret',0.6,{x:z[0]*d,z:z[1]});}},
+  /* T24e2 (2026-10-18; gerçekçilik planı §4 T24): açık oyunda kutuya geç koşu. Takımı topu tutarken (topu tutan başkası) derin olmayan merkez orta
+     saha (kanat değil; geride kalan değil), top kaleye 40 m içinde ve merkezdeyken (|z − MZ| < 16), oyuncu ofsayt çizgisinin 4 m'den çok
+     gerisinde ve topun en çok 14 m gerisindeyse, dt × gecKosu × (0,5 + topsuz hareket) × (1 + 0,5 × ceza sahasına geç girme eğilimi) × niyetin koşu
+     çarpanı olasılıkla kutuya koşar: penaltı noktasının önü (PL−11,5), topun ters yarısında MZ ∓ 7; süre yolun uzunluğundan (L/7 + 0,6 sn,
+     2,2–4,5), tam efor; top takımdayken ofsayt çizgisinin gerisinde (bolgeKonumu; gecGiris'in kalıbı). Takımda aynı anda en çok bir (_gecKosu).
+     Derin koşu kapısı (|u − ofs| ≤ 4) merkez orta sahayı pratikte hiç koşturmuyordu. Plandaki kapı (top 38 m içinde, oyuncu topun ≤ 6 m
+     gerisinde, 2,2 sn) 2 maçta uygun oyuncu için yalnız 1,8 sn/maç açılıyordu (merkez orta saha son 38 m'de topun ortanca 19 m gerisinde; gecKosu
+     0,3'te maç başına ~1,5 koşu): 40 m ve 14 m'de ~15 sn/maç. Süre bitince top takımda ve son 40 m'deyken koşucunun kutuda kalması (en çok 8 sn)
+     denendi, alınmadı (40 maç, gecKosu 0,6: forvet dışı 26,2 → 23,5, gol +0,8, ÷ konum xG 1,60; maçta koşu 7,2 → 6,8).
+     js/mac-topla.js derinKosu çağırır; gecKosu 0 iken çağrılmaz (rastlantı çekilmez) */
+  gecKosuAta(p,s,ofs,dt){const A=MOTOR_AYAR;if(!A.gecKosu||p.rol!=='OS'||p.mevki.derin||p.mevki.kanat||!s||s===p||s.team!==p.team)return null;
+    const t=p.team,d=this.dir[t],su=s.x*d,pu=p.x*d,GR=this._geride&&this._geride[t];
+    if(GR&&GR.has(p)||Math.abs(s.z-MZ)>=16||hyp(PL-su,s.z-MZ)>40||pu>=ofs-4||su-pu>14)return null;
+    const G=this._gecKosu||(this._gecKosu=[null,null]),o=G[t];if(o&&o.oyunda&&o.kosu&&o.kosu.tur==='gecKosu')return null;
+    const N=this._niyet&&this._niyet[t];
+    if(this.rast()>=dt*A.gecKosu*(0.5+profilAlt(p,'topsuzHareket',0.5))*(1+0.5*profilEgilim(p,'cezaSahasinaGecGirer'))*(N?N.kosu:1))return null;
+    const yan=Math.sign(s.z-MZ)||-(Math.sign(p.z-MZ)||1);
+    const hw=MZ-yan*7;p.kosu={u:PL-11.5,w:hw,t:clamp(hyp(PL-11.5-pu,hw-p.z)/7+0.6,2.2,4.5),tur:'gecKosu'};G[t]=p;this.on('kosu',{p,tur:'gecKosu'});return p.kosu;},
   kanatKonumu(p,t,s,ofs,geride){
     const A=MOTOR_AYAR;if(!A.kanatRol||geride||!p.mevki.kanat||!s||s.team!==t||s===p)return null;
     const d=this.dir[t],su=s.x*d;if(su<A.kanatBas)return null;

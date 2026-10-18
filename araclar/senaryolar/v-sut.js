@@ -22,6 +22,8 @@
    [5] mesafe: ortalama şut hızı mesafeyle artar (11 → 25 m, adım başına en çok 0,5 m/sn geri düşebilir), 25 m'den çerçeveye giden 16 m'den az (T9b-a)
    [6] top: kötü vuruş olasılığı duran topta ≤ %3, seken ya da havadaki topta %8–20 (T9b-b)
    [7] aşırtma: kaleci 8 m öndeyken 18 m'den aşırtma seçilir (≥ %25) ve aşırtmaların en az %70'i gol (T9b-c)
+   [8] kaleci geçildi: kaleci topun 2 m gerisinde (yanda 1,2 m), 12 m'den plase seçilir (≥ %80) ve şutların en az %90'ı gol (T24g1, bosKale;
+       anahtar kapalıyken bilgi)
    T9b-b (2026-10-10, Claude kararı): [2] ve [3] çerçeve payıyla tek başına ölçülmez — plan hatasını bilir, becerisi düşük ya da zayıf ayağıyla
    vuran oyuncu daha güvenli (ortaya yakın) nişan seçer; becerinin ve zayıf ayağın asıl bedeli gol olasılığındadır (16 m'de şut 0,3 → 0,9 gol
    %9 → 37; zayıf ayakla %22 → 7). Kötü vuruş kapıları modelin olasılığıyla (eylemin kotuP'si; deneme başına bir zarın sonucu 200 denemede ±1,5
@@ -31,12 +33,13 @@
    −%25 … −%47 oynuyordu (T14 tohum 1'de −%31); 800'de T14 ve T15 birebir aynı (−%36).
    Kullanım: node araclar/mac-deneme.js --senaryo v-sut [N=800 hücre başına] [tohum] */
 'use strict';
-const KAPI={1:true,2:true,3:true,4:true,5:true,6:true,7:true};   /* T9b-a: [1] [2] [5]; T9b-b: [3] [4] [6]; T9b-c: [7] açık */
+const KAPI={1:true,2:true,3:true,4:true,5:true,6:true,7:true,8:true};   /* T9b-a: [1] [2] [5]; T9b-b: [3] [4] [6]; T9b-c: [7]; T24g: [8] (bosKale açıkken) açık */
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||800,dt=1/60,t0=Date.now();
   const kur=vm.runInContext(`(tohum,olay)=>{const m=new Match(olay,{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();
     m.hakemAI=function(){};for(const r of m.refs){r.x=0;r.z=-25;r.tx=0;r.tz=-25;}return m;}`,ctx);
   const profilKur=vm.runInContext('profilKur',ctx),PL=vm.runInContext('PL',ctx),MZ=vm.runInContext('MZ',ctx);
+  if(!vm.runInContext('MOTOR_AYAR.bosKale',ctx))KAPI[8]=false;   /* T24g: boş kale planı kapalıyken [8] bilgi */
   const bosalt=(m,kal)=>{for(const p of m.players){if(kal.includes(p)||p.rol==='GK')continue;p.oyunda=false;p.x=p.tx=-300;p.z=p.tz=-300;p.vx=p.vz=0;p.eylem=null;}};
   const yerlestir=(p,x,z,yon,v)=>{Object.assign(p,{x,z,tx:x,tz:z,vx:Math.cos(yon)*(v||0),vz:Math.sin(yon)*(v||0),spd:v||0,yon,eylem:null,kickCd:0,surus:null,kosu:null,
     oyunda:true,denge:1,calim:null,yutma:null,zipla:null,yuk:0,tavir:null});};
@@ -68,6 +71,8 @@ module.exports={calistir({ctx,vm,N,tohum}){
     for(let i=0;i<90;i++){m.t+=dt;m.kare=(m.kare||0)+1;m.kaleciKonum(K,dt);m.moveP(K,dt);}
     G.oyunda=false;G.x=G.tx=-300;G.z=G.tz=-300;
     if(o.kaleciOnde){K.x=gx-d*o.kaleciOnde;K.z=MZ;K.vx=K.vz=0;K.tx=K.x;K.tz=K.z;}
+    /* T24g: kaleci geçildi — topun kaleciGeride m gerisinde (şutçunun hattının 1,2 m yanında), kaleye dönmüş, duruşta */
+    if(o.kaleciGeride){K.x=bx-c*o.kaleciGeride-s*1.2;K.z=bz-s*o.kaleciGeride+c*1.2;K.vx=K.vz=0;K.spd=0;K.tx=K.x;K.tz=K.z;K.yon=ay;K.eylem=null;}
     /* baskı: yakın (1,6 m, kale tarafında çaprazda) ya da acele (2,6 m yandan koşarak gelir) */
     if(o.baski==='yakin'){const a=ay+0.9;yerlestir(D,bx+Math.cos(a)*1.6,bz+Math.sin(a)*1.6,a+Math.PI,0);}
     else if(o.baski==='acele'){const a=ay+1.5,x=bx+Math.cos(a)*2.6,z=bz+Math.sin(a)*2.6;yerlestir(D,x,z,a+Math.PI,5.5);D.tx=bx;D.tz=bz;}
@@ -87,7 +92,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
         if(m.phase!=='play'){if(r.sonuc==='yok')r.sonuc='disari';break;}if(m.t-atisT>3)break;}}
     return r;};
   /* hücreler */
-  const H=[];const hucre=(ad,grup,o)=>H.push({ad,grup,o:Object.assign({L:16,w:0,sut:0.6,zayif:false,baski:'yok',top:'duran',guc:null,kaleciOnde:0},o)});
+  const H=[];const hucre=(ad,grup,o)=>H.push({ad,grup,o:Object.assign({L:16,w:0,sut:0.6,zayif:false,baski:'yok',top:'duran',guc:null,kaleciOnde:0,kaleciGeride:0},o)});
   for(const L of[11,16,20,25,30])for(const s of[0.3,0.6,0.9])hucre(`${L} m orta · şut ${s}`,'A',{L,sut:s});
   hucre('12 m açılı (w 7) · şut 0.6','B',{L:12,w:7});hucre('16 m açılı (w −10) · şut 0.6','B',{L:16,w:-10});
   hucre('16 m · güç 0,65','C',{guc:0.65});hucre('16 m · güç 1,0','C',{guc:1.0});
@@ -96,6 +101,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   hucre('12 m · yuvarlanan (gelişine)','F',{L:12,top:'yuvarlanan'});hucre('12 m · seken','F',{L:12,top:'seken'});hucre('12 m · havada (vole)','F',{L:12,top:'havada'});
   hucre('12 m · duran','F',{L:12});
   hucre('18 m · kaleci 8 m önde','G',{L:18,kaleciOnde:8});
+  hucre('12 m · kaleci geçildi (2 m geride)','H',{L:12,kaleciGeride:2});
   const STIL=['ic','ust','dis','asirtma','vole','yarimVole','burun'],TUR=['plase','sert','falso','asirtma','dusen'];
   const R=new Map();
   for(const h of H){const L=[];for(let i=0;i<n;i++)L.push(dene(h.o));R.set(h,L);}
@@ -128,5 +134,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   {const k=g('18 m · kaleci 8 m önde'),A=k.A,as=A.filter(r=>r.tur==='asirtma'),di=A.filter(r=>r.tur==='plase'||r.tur==='sert');
     const ga=y(as.filter(r=>r.sonuc==='gol').length,as.length),gd=y(di.filter(r=>r.sonuc==='gol').length,di.length),pay=y(as.length,A.length);
     kapi(7,pay>=25&&ga>=70,`aşırtma (kaleci 8 m önde, 18 m): seçilme %${f(pay,0)} (≥ 25), aşırtmanın golü %${f(ga,0)} (≥ 70; plase/sert %${f(gd,0)})`);}
+  {const k=g('12 m · kaleci geçildi (2 m geride)'),A=k.A,pl=A.filter(r=>r.tur==='plase'),pay=y(pl.length,A.length);
+    kapi(8,pay>=80&&k.gol>=90,`kaleci geçildi (12 m, kaleci topun 2 m gerisinde): plase %${f(pay,0)} (≥ 80), gol %${f(k.gol,0)} (≥ 90); çerçeve %${f(k.cer,0)}, hız ${f(k.v,1)} m/sn, güç ${f(k.guc,2)}, dışarı %${f(k.dis,0)}, kurtarış %${f(k.kurt,0)}`);}
   return ok?0:1;
 }};

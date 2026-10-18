@@ -9,9 +9,26 @@
    Tepki ve dalış hızındaki küçük sapmalar (tohumlu) kaleciTahmin'in P'sindeki belirsizliği (KL_M.sapma) üretir. */
 'use strict';
 ayarEkle('D',{
-  /*T24b*/
+  /* T24b-b2 (2026-10-18; gerçekçilik planı §4 “T24”, T24b): sapan topa kalecinin yeni tepkisi (sn; ×(1,25 − 0,5·kalecilik)). Kaleci önceki
+     yola tepkisini bitirmişken (dalışta, kapanmada ya da dalıştan kalkarken değil; ayakta tutuş ve yan adım sayılır) topun yolu başkasının
+     kasıtsız dokunuşuyla (blok, sekme; şut ve pas değil) değişirse yeni tepki kaleciTepki yerine bununla kurulur (görüş ve hazır duruş payı
+     yok: top zaten izleniyor); tepki sürerken eller eski planın noktasında kalır, göğse dönmez. 0 = eski (sapmada tam tepki). Dalıştaki
+     kaleci için hiçbir şey değişmez (T19b: geç sapma kaleciyi yener). Denendi, 0: kornerde sapma çoğunlukla kalecinin kafaya tepkisi
+     sürerken (800 kornerde yeniden kurulan 28 tepkinin 17'si) ya da planı yokken gelir; tepkisini bitirip dik bekleyen kalecide sapma 800
+     kornerde ~2. İlk sürüm (her kilitli eylemi dışarıda bırakan) hiç çalışmadı; dalış dışını ve şutu da sayan ikinci sürüm (0,15;
+     basSiyirma 0,25 ile) d-duran iki tohumda bloktan sonra 8 sn'de gol 10,6/12,6 → 10,8/11,3, korner başına gol 4,9/4,3 → 5,0/4,2, gol
+     olan bloklarda yeni tepki r ortancası 0,26 sn (değişmedi); kafa şutuna da kısa tepki verdi (ilk kafaya kaleci dokundu 55/60 → 56/62):
+     şut ve pas bu yüzden dışarıda. Bloktan sonraki golün kaynağı topun hızı ve yakınlığıdır (b1 basSiyirma, mac-mudahale.js) */
+  /*T24b*/kaleciSapmaTepki:0,
   /* · */
-  /*T24d*/
+  /* T24d (2026-10-18; gerçekçilik planı §4 T24): düşen sert şut (üst dönüşlü; b.sut.tur 'dusen': serbest vuruşta ve sutDusen açıkken açık oyunda).
+     dusenTahmin (0/1): kaleciTahmin topun kalecinin düzlemindeki yüksekliğinde üst dönüşün düşüşünü bilir (g′ = 1,3·g; sutBlokOlasiligi'ndaki gibi) —
+     eskiden düz g ile topu olduğundan alçak sanıp kurtarışı fazla tahmin ediyordu (planlayıcı düşen şutu küçümsüyordu). kaleciDusen (sn; 0: eski):
+     düşen topun kalecinin tepkisine eklediği süre (topun düşüşü geç okunur; kaleciEgri kalıbı: tahmin ve yürütme — kaleciTehdit — aynı değeri okur;
+     türe bakar, b.ust'e değil: alçak sert şutun üst dönüşü 0,05–0,10).
+     Ölçüm (40 maç, sutDusen 20 ile): açık oyunda düşen şutta tahmin ↔ gerçek kurtarış %85 ↔ 91, %82 ↔ 89, %84 ↔ 80 (üç koşu, her biri ~10 şut);
+     d-duran barajlı doğrudan şutta gol/şut %7,3 → 7,8, 26–30 m serbest vuruşta gol değişmedi (%1,7 / 0: planın beklediği %2–4 tutmadı) */
+  /*T24d*/dusenTahmin:1,kaleciDusen:0.06,
   /* · */
   /*T24h*/
   /* · */
@@ -41,11 +58,12 @@ const KL_M={itis:0.12,uzanma:0.28,adim:3.0,geri:3.0,sapma:0.22,elR:0.21,
   egri:0.07};   /* T9b-c: dönen topun (|egri| > 0,05) kalecinin tepkisine eklediği süre: yolu geç okur (topun kendi yolu tahminde biliniyor) */
 /* ---- saf model ---- */
 /* tepki süresi (sn): kalecilik; topla kaleci arasındaki çizgiye yakın beden görüşü kapatır (+0,10–0,18); hazır duruş −0,05; A4-1: barajlı serbest
-   vuruşta aldatma koşusu topun yanından 0,8 sn içinde geçtiyse + aldatmaTepki (kaleci kimin, ne zaman vuracağını geç okur) */
+   vuruşta aldatma koşusu topun yanından 0,8 sn içinde geçtiyse + aldatmaTepki (kaleci kimin, ne zaman vuracağını geç okur); T24f2: barajlı serbest
+   vuruşta kalecinin kendi barajındaki oyuncunun perdesi barajPerde payı kadar azalır (0 = eski) */
 function kaleciTepkiSuresi(m,gk,bx,bz){
-  const dx=gk.x-bx,dz=gk.z-bz,L2=dx*dx+dz*dz;let perde=0;
+  const dx=gk.x-bx,dz=gk.z-bz,L2=dx*dx+dz*dz,bP=MOTOR_AYAR.barajPerde;let perde=0;
   if(L2>9){const L=Math.sqrt(L2);for(const o of m.players){if(!o.oyunda||o===gk)continue;const ox=o.x-bx,oz=o.z-bz,f=(ox*dx+oz*dz)/L2;if(f<0.12||f>0.88)continue;
-    const yan=Math.abs(ox*dz-oz*dx)/L;if(yan<0.6)perde=Math.max(perde,0.1+0.08*(1-yan/0.6));}}
+    const yan=Math.abs(ox*dz-oz*dx)/L;if(yan<0.6){let pe=0.1+0.08*(1-yan/0.6);if(bP&&o.team===gk.team&&o.duranRol&&o.duranRol.rol==='baraj')pe*=1-bP;perde=Math.max(perde,pe);}}}   /* T24f2 (barajPerde) */
   const ald=m._aldatmaT!=null&&m.t-m._aldatmaT<0.8?MOTOR_AYAR.aldatmaTepki:0;
   return MOTOR_AYAR.kaleciTepki*(1.25-0.5*gk.oz.kalecilik)+perde+ald-(gk.tavir==='hazir'&&(gk.spd||0)<1.2?0.05:0);}
 /* dalış: kalça yükseğe (yh) sıçrarken itiş uzar, yana daha yavaş ve daha az gider (balistik uçuşta kalçanın yana en çok gidebileceği yol);
@@ -169,7 +187,8 @@ function kaleciSegD(p1x,p1y,p1z,q1x,q1y,q1z,p2x,p2y,p2z,q2x,q2y,q2z){
 /* kalecinin, kale çizgisinden (z, y) noktasında T sn sonra geçecek şutu kurtarma olasılığı P ve erişim payı (m). Şut topun bugünkü yerinden
    gider (B şutu seçerken top ayağındadır); top kalecinin düzleminden (topun yoluna dik) T·f sn sonra geçer. P: erişim × denetim */
 /* T9b-c: ek — fazladan tepki (sn): dönen top (falso, trivela) kalecinin okumasını geciktirir (KL_M.egri); şut planı türüne göre verir */
-function kaleciTahmin(m,gk,z,y,T,ek){
+/* T24d: gc — yerçekiminin çarpanı (düşen topta 1,3; verilmezse 1) */
+function kaleciTahmin(m,gk,z,y,T,ek,gc){
   const b=m.ball,gx=-m.dir[gk.team]*PL,dx=gx-b.x,dz=z-b.z,L=hyp(dx,dz)||1,nx=dx/L,nz=dz/L,y0=Math.max(b.y,0.11),e=gk.eylem;
   const f0=clamp(((gk.x-b.x)*nx+(gk.z-b.z)*nz)/L,0.05,1),r=kaleciTepkiSuresi(m,gk,b.x,b.z)+(e&&e.kilit?0.35:0)+(ek||0);let en=null;
   /* adaylar: kalecinin düzlemi, düzlemle kale çizgisinin ortası ve kale çizgisi (düşen topa geri çekilerek; geri çekilme zamanı düşülür) */
@@ -180,7 +199,7 @@ function kaleciTahmin(m,gk,z,y,T,ek){
      kurtarış olasılığı 0,2–0,5 çıkıyor, plan bu şutları seçiyordu (serbest vuruşta 30 m'den %14 gol bekleniyordu, gerçekleşen %0) */
   for(let i=0;i<3;i++){const f=i===0?f0:i===1?(f0+1)/2:1;if(i&&(f-f0)*L<0.3)continue;
     const px=b.x+dx*f,pz=b.z+dz*f,lt=(px-gk.x)*(-nz)+(pz-gk.z)*nx,gr=(f-f0)*L,Ti=T*f-(Math.sqrt(lt*lt+gr*gr)-Math.abs(lt))/KL_M.geri;
-    const yi=Math.max(0.05,y0+(y-y0)*f+0.5*G*T*T*f*(1-f));
+    const yi=Math.max(0.05,y0+(y-y0)*f+0.5*G*(gc||1)*T*T*f*(1-f));
     const k=kaleciPay(gk,lt,yi,Ti,r,1);if(!en||k.pay>en.pay)en=k;}
   return{P:sigma(1.702*en.pay/KL_M.sapma)*kaleciKontrolP(gk,en.u,L/Math.max(0.05,T)),pay:en.pay};}
 /* havadan gelen top (orta, korner): kalecinin (x, z) noktasına T sn içinde çıkıp y yüksekliğinde alma olasılığı ve zaman payı (sn).
@@ -224,7 +243,12 @@ Object.assign(Match.prototype,{
         &&this.kendiCezaSahasinda(gk,gk.x,gk.z)?this.kaleciPlanla(gk):null;
       if(!yeni){gk._kp=null;return;}
       if(pl&&hyp(yeni.pz-pl.pz,yeni.py-pl.py)<0.4&&Math.abs(yeni.an-pl.an)<0.15){yeni.tBas=pl.tBas;yeni.r=pl.r;yeni.vj=pl.vj;yeni.basladi=pl.basladi;yeni.karar=pl.karar;}
-      else{yeni.tBas=this.t;yeni.r=Math.max(0.06,kaleciTepkiSuresi(this,gk,b.x,b.z)+(Math.abs(b.egri||0)>0.05?(b.sut?MOTOR_AYAR.kaleciEgri:KL_M.egri):0)+this.normal()*0.035);   /* T22b: uzayan geç okuma yalnız şutta (orta, uzun top: KL_M.egri — ortanın planlayıcısı bilmez) */yeni.vj=clamp(1+this.normal()*0.07,0.85,1.15);yeni.basladi=false;}
+      else{yeni.tBas=this.t;yeni.r=Math.max(0.06,kaleciTepkiSuresi(this,gk,b.x,b.z)+(Math.abs(b.egri||0)>0.05?(b.sut?MOTOR_AYAR.kaleciEgri:KL_M.egri):0)+(b.sut&&b.sut.tur==='dusen'?MOTOR_AYAR.kaleciDusen:0)+this.normal()*0.035);   /* T22b: uzayan geç okuma yalnız şutta (orta, uzun top: KL_M.egri — ortanın planlayıcısı bilmez) */yeni.vj=clamp(1+this.normal()*0.07,0.85,1.15);yeni.basladi=false;
+        /* T24b (kaleciSapmaTepki): tepkisini bitirmiş kaleci, yolu başkasının dokunuşuyla değişen topa kısa tepkiyle döner; eller eski plan noktasında (eskiE).
+           Dalış ailesi (ucus, kapan, kalkis) dışarıda; ayakta tutuş ve yan adım (kilitli ama dik) içeride. Yalnız kasıtsız dokunuş (blok, sekme):
+           şut (b.sut.by) ve pas (b.pas.p) yeni vuruştur, tam tepki */
+        const kST=MOTOR_AYAR.kaleciSapmaTepki,e0=gk.eylem,sd=b.sonDokunan;
+        if(kST&&pl&&this.t>=pl.tBas+pl.r&&!(e0&&(e0.ad==='ucus'||e0.ad==='kapan'||e0.ad==='kalkis'))&&sd&&sd!==gk&&!(b.sut&&b.sut.by===sd)&&!(b.pas&&b.pas.p===sd)){yeni.r=Math.max(0.06,kST*(1.25-0.5*gk.oz.kalecilik));yeni.eskiE={x:pl.px,y:pl.py,z:pl.pz};}}
       pl=gk._kp=yeni;}
     /* top kaleciyi geçti */
     if((b.x-gk.x)*pl.nx+(b.z-gk.z)*pl.nz>1.0){gk._kp=null;return;}
@@ -337,7 +361,8 @@ Object.assign(Match.prototype,{
     else if(ad==='kapan'){mod='kapan';hy=e.hy;a=0.75*B;bU=0.6*B;bD=Math.max(0.2,hy);}
     else{hy=(ad==='tutus'&&e.hy)||(gk.tavir==='hazir'?0.88*B:0.95*B);a=(tr>=0?0.5+0.4*clamp(tr/0.25,0,1):0.45)*B*E;bU=1.35*B;bD=hy;}
     let tx,ty,tz;
-    if(pl&&tr>=0){const q=this.kaleciDuzlem(gk,pl);tx=q.x;ty=q.y;tz=q.z;}else if(e&&e.tahmin){tx=e.tahmin.x;ty=e.tahmin.y;tz=e.tahmin.z;}else{tx=gk.x+Fx*0.3;ty=hy+0.35;tz=gk.z+Fz*0.3;}
+    if(pl&&tr>=0){const q=this.kaleciDuzlem(gk,pl);tx=q.x;ty=q.y;tz=q.z;}else if(pl&&pl.eskiE){tx=pl.eskiE.x;ty=pl.eskiE.y;tz=pl.eskiE.z;}   /* T24b (kaleciSapmaTepki) */
+    else if(e&&e.tahmin){tx=e.tahmin.x;ty=e.tahmin.y;tz=e.tahmin.z;}else{tx=gk.x+Fx*0.3;ty=hy+0.35;tz=gk.z+Fz*0.3;}
     let rl=(tx-gk.x)*lx+(tz-gk.z)*lz,ru=ty-hy;const D=hyp(rl/a,ru/(ru>0?bU:Math.max(0.2,bD)));o.u=D;if(D>1){rl/=D;ru/=D;}
     o.Hx=gk.x;o.Hy=hy;o.Hz=gk.z;o.Ex=gk.x+lx*rl+Fx*0.2;o.Ey=Math.max(0.05,hy+ru);o.Ez=gk.z+lz*rl+Fz*0.2;o.kapan=false;
     if(mod==='ucus'){const sg=e.lx*lx+e.lz*lz>=0?1:-1,eg=e.eg||0,ux=lx*sg*Math.sin(eg),uy=Math.cos(eg),uz=lz*sg*Math.sin(eg);

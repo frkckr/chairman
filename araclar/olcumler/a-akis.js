@@ -50,7 +50,8 @@ module.exports={
     ['Şut (penaltı, serbest vuruş hariç): falso ve trivela %','aSutA_falso',1],['Şut (penaltı, serbest vuruş hariç; kabul): aşırtma %','aSutA_asirtma',1,[2,5,'T24']],
     ['Şut (penaltı, serbest vuruş hariç): düşen %','aSutA_dusen',1],['Şut (penaltı, serbest vuruş hariç): vole ve yarım vole %','aSutA_vole',1],
     ['Gelişine şut: hazırlıktan temasa stil değişti %','aStilDeg',1,[null,0,'T24']],['  stil değişimi vole ya da yarım vole ile %','aStilDegV',1],
-    ['  stil değişimi öteki (planın türü: üst → iç, falso …) %','aStilDegT',1],['Yerleşik şut (penaltı, serbest vuruş hariç): hazırlıktan temasa stil değişti %','aStilDegY',1]],
+    ['  stil değişimi öteki (planın türü: üst → iç, falso …) %','aStilDegT',1],['Yerleşik şut (penaltı, serbest vuruş hariç): hazırlıktan temasa stil değişti %','aStilDegY',1],
+    ['Gelişine şut: stil sınıfı temastaki yükseklikle uyumlu % (vole > 0,45 m, yarım vole > 0,15 m, öteki; T24d bilgi)','aStilUyum',1]],
   yeni:()=>{
     const hyp=(a,b)=>Math.sqrt(a*a+b*b),aN=a=>a-2*Math.PI*Math.floor((a+Math.PI)/(2*Math.PI)),dt=1/60;
     let surK=0,arkaK=0,arkaEp=0,donukK=0,donukN=0,surT=0,dokN=0,hizT=0;const hizL=[];
@@ -61,7 +62,7 @@ module.exports={
     let egriN=0,egriP=0,havaUzun=0,kosanHava=0,ortaN=0,ortaKanat=0,ortaEgri=0,ortaIce=0,kan15=0,kan25=0;
     const sut={sert:0,plase:0,falso:0,asirtma:0,vole:0};
     /* T24-0 */
-    const sutA={sert:0,plase:0,falso:0,asirtma:0,dusen:0,vole:0};let sutAN=0,ilkSN=0,ilkDeg=0,ilkDegV=0,ilkDegT=0,yerSN=0,yerDeg=0;const stil0=new WeakMap();
+    const sutA={sert:0,plase:0,falso:0,asirtma:0,dusen:0,vole:0};let sutAN=0,ilkSN=0,ilkDeg=0,ilkDegV=0,ilkDegT=0,yerSN=0,yerDeg=0,ilkUN=0,ilkUyum=0;const stil0=new WeakMap();
     let hazTerk=0,hazKesik=0,vazgec=0,yavasla=0;const eyl=new Map();
     const arka=new Map(),alis=new Map(),tas=new Map();let sonSd=new Map(),pbx=0,pbz=0;
     /* T23-0 */
@@ -90,6 +91,8 @@ module.exports={
           const vs=e&&e.ad==='vurus'?e:null,ac=!(vs&&vs.sec&&(vs.sec.penalti||vs.sec.serbest));
           if(ac){sutAN++;if(vs&&(vs.stil==='vole'||vs.stil==='yarimVole'))sutA.vole++;
             if(tur==='sert')sutA.sert++;else if(tur==='plase')sutA.plase++;else if(tur==='falso'||tur==='trivela')sutA.falso++;else if(tur==='asirtma')sutA.asirtma++;else if(tur==='dusen')sutA.dusen++;}
+          /* T24d: stil sınıfı (vole, yarım vole, öteki) ile topun temastaki yüksekliğinin sınıfı aynı mı */
+          if(vs&&vs.sec&&vs.sec.ilk){ilkUN++;const kh=b.y>0.45?2:b.y>0.15?1:0,ks=vs.stil==='vole'?2:vs.stil==='yarimVole'?1:0;if(kh===ks)ilkUyum++;}
           if(vs&&stil0.has(vs)){const s0=stil0.get(vs),deg=s0!==vs.stil,vo=x=>x==='vole'||x==='yarimVole';
             if(vs.sec&&vs.sec.ilk){ilkSN++;if(deg){ilkDeg++;if(vo(s0)||vo(vs.stil))ilkDegV++;else ilkDegT++;}}else if(ac){yerSN++;if(deg)yerDeg++;}}
           alisBitir(p,true,m);return;}
@@ -135,7 +138,7 @@ module.exports={
           aSantraTek:[santraTek,santraN],aSantraGeri:[santraGeri,santraN],aEgriPay:[egriP,egriN],aOrtaKanat:[ortaKanat,ortaN],aOrtaIce:[ortaIce,ortaEgri]};
         for(const k in sut)ham['aSut_'+k]=[sut[k],sutN];
         for(const k in sutA)ham['aSutA_'+k]=[sutA[k],sutAN];
-        ham.aStilDeg=[ilkDeg,ilkSN];ham.aStilDegV=[ilkDegV,ilkSN];ham.aStilDegT=[ilkDegT,ilkSN];ham.aStilDegY=[yerDeg,yerSN];
+        ham.aStilDeg=[ilkDeg,ilkSN];ham.aStilDegV=[ilkDegV,ilkSN];ham.aStilDegT=[ilkDegT,ilkSN];ham.aStilDegY=[yerDeg,yerSN];ham.aStilUyum=[ilkUyum,ilkUN];
         return{ham,aArkaEp:arkaEp,aArkaAlis:arkaAlis,aArkaDon:arkaDon,aArkaDiger:arkaDiger,aNiyetDeg:surT?niyetDeg/surT:NaN,aNiyetGeri:surT?niyetGeri/surT:NaN,aDokunusHz:surT?dokN/surT:NaN,aSurHiz:surK?hizT/surK:NaN,aSurHiz90:hizL.length?hizL[Math.floor(hizL.length*0.9)]:NaN,
           aGeriSn:geriSn,aHazTerk:Math.max(0,hazTerk-vazgec),aHazKesik:hazKesik,aYavasla:yavasla,aVazgec:vazgec,aAlisSure:alisN?alisSure/alisN:NaN,aAlisN:alisN,aTekAci:tekAciN?tekAci/tekAciN:NaN,aHavaUzun:havaUzun,aKosanHava:kosanHava,aOrta:ortaN,
           aSurukle:surukle,aKanat15:kan15,aKanat25:kan25};}

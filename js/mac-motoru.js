@@ -104,17 +104,17 @@ const MOTOR_AYAR={
   kornerKisa:undefined,duranKosFaz:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined,
   serbestIkili:undefined,serbestAldatma:undefined,aldatmaTepki:undefined,kornerPerde:undefined,kornerGeri:undefined,markajYan:undefined,penaltiKose:undefined,
   /* T24 (2026-10-18; gerçekçilik planı §4 “T24”): alt adımların anahtarları (sahibi akışın ayarEkle'si atar) */
-  /*T24a*/
+  /*T24a*/ilkHamle:undefined,sutHamleUzak:undefined,
   /* · */
-  /*T24b*/
+  /*T24b*/basSiyirma:undefined,kaleciSapmaTepki:undefined,
   /* · */
-  /*T24d*/
+  /*T24d*/stilHazirlik:undefined,asirtmaOnde:undefined,sutDusen:undefined,dusenTahmin:undefined,kaleciDusen:undefined,
   /* · */
-  /*T24e*/
+  /*T24e*/gecGirisPas:undefined,gecKosu:undefined,
   /* · */
-  /*T24f*/
+  /*T24f*/barajKaleciYan:undefined,barajPerde:undefined,
   /* · */
-  /*T24g*/
+  /*T24g*/bosKale:undefined,trivelaEsik:undefined,burunKarambol:undefined,
   /* · */
   /*T24c*/
   /* · */

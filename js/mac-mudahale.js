@@ -10,7 +10,16 @@
    sonDokunus: top sürme dokunuşu tur 'surus' (çalım dokunuşunda calim:true, mac-hareket.js), müdahale dokunuşu tur 'cal'. */
 'use strict';
 ayarEkle('C',{
-  /*T24b*/
+  /* T24b (2026-10-18; gerçekçilik planı §4 “T24”, T24b): baş tepesini sıyıran topun yavaşlaması. yansit'te omuz hizasının (1,45·boy)
+     üstündeki temasta (normal yukarı eğik, ny > 0; T17a-2) yatay hız ×0,92'ye ek olarak ×(1 − basSiyirma·ny) olur: omuzun hemen üstünde
+     eski davranış, baş hizasında (ny 0,9) en çok. T17a-2'nin amacı korunur (top durmaz, yalnız yavaşlar). 0 = eski. Dayanak: d-duran T24-0
+     dökümü — gol olan bloklarda top 7,3 m/sn, %68'i kaleye, ortanca 0,7 sn sonra gol; kalecinin tepkisi çoğunlukla bitmiş (sürüyor %25),
+     erişim payı ortancası 0,00 m: kaleci yetişiyor ama top hızlı ve yakın → b1 (b2 kaleciSapmaTepki denendi, 0: mac-kaleci.js).
+     0,25 (baş hizasında yatay hız ×0,71; saç ve deriyle sürtünmenin kestirimi μ ≈ 0,4–0,5 ile aynı mertebe): d-duran iki tohumda (1600 korner)
+     bloktan sonra 8 sn'de gol 14,4/14,8 → 10,6/12,6 (kabul ≤ 10 tam tutmadı), blok sonrası top 7,2/7,0 → 6,3/6,2 m/sn, korner başına gol
+     5,2/4,6 → 4,9/4,3, ilk kafadan gol aynı; 40 maçta gol 2,52 → 2,60, bloktan/sekmeden sonra gol 0,25 → 0,10 / maç. 0,4 daha kötü
+     (bloktan sonra gol 15,2/13,3: yavaşlayan top kutuda kalıp ikinci evreye düşüyor; korner 5,3/4,4) */
+  /*T24b*/basSiyirma:0.25,
   /* · */
   mudahaleIstegi:1.25,         // pres yapan oyuncunun müdahaleye girme isteği
   yanIstek:6,                  // sürücünün yanında ya da arka yanında koşan savunmacının topu dürtme sıklığı (1/sn; T5: yandan dürtme, toparlanma; eski faulOrani kalktı — faul temastan)
@@ -275,7 +284,9 @@ Object.assign(Match.prototype,{
     const a=this.normal()*sapma,c=hrkCos(a),s=hrkSin(a),mx=nx*c-nz*s,mz=nx*s+nz*c;
     const rx=b.vx-(p.vx||0),rz=b.vz-(p.vz||0),vn=rx*mx+rz*mz+b.vy*ny;
     if(vn<0){b.vx-=(1+e)*vn*mx;b.vz-=(1+e)*vn*mz;if(ny>0)b.vy-=(1+e)*vn*ny;}
-    b.vx=b.vx*0.92+(p.vx||0)*0.25;b.vz=b.vz*0.92+(p.vz||0)*0.25;
+    /* T24b (basSiyirma): baş tepesindeki temasta yatay hız ayrıca ×(1 − basSiyirma·ny); 0 = eski ×0,92 (rastlantı çekmez) */
+    const kS=ny>0&&MOTOR_AYAR.basSiyirma?0.92*(1-MOTOR_AYAR.basSiyirma*ny):0.92;
+    b.vx=b.vx*kS+(p.vx||0)*0.25;b.vz=b.vz*kS+(p.vz||0)*0.25;
     const yuk=b.y/((p.boy||1)*1.8);
     if(ny>0)b.vy=Math.max(b.vy,0.3)+this.rast()*0.6;else b.vy=yuk<0.35?hrkAbs(b.vy)*0.3+this.rast()*1.2:1+this.rast()*2.5;
     b.x=p.x+mx*(0.38);b.z=p.z+mz*(0.38);b.egri=0;b.ust=0;

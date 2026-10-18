@@ -621,6 +621,8 @@ function kornerSecenekleri(m,p,ox,oz){
    hatası türün çarpanı × gücün çarpanı (gucHataCarpani: güç arttıkça dik artar). Güçlü şut kalecinin tepkisini geçer, isabeti düşer: plan
    ikisini tartar. Tür: plase iç ayak, sert üst, falso içüstü (eğri), düşen (serbest vuruş), aşırtma */
 const SUT_Z=[-3.4,-3.0,-2.0,2.0,3.0,3.4],SUT_Y=[0.35,1.75],SUT_GUC=[0.6,0.75,0.9,1.0];
+/* T24g1 (bosKale): kaleci geçildiyse ya da şutun hattından uzaksa plaseye kale ortası hedefleri (0, ±1 m) ve yumuşak güç (0,4) eklenir */
+const SUT_ZB=[...SUT_Z,-1.0,0,1.0],SUT_GUCB=[0.4,...SUT_GUC];
 /* T8c: serbest vuruşta türün hedef yükseklikleri — barajın üstünden falso ve düşen üst köşeye, sert iki yükseklikte, plase sıçrayan barajın altından */
 const SUT_YS={falso:[1.75,2.05],dusen:[1.95,2.2],sert:SUT_Y,plase:[0.3]};
 /* T9b-a: kalenin ağzı hücrelere bölünür (kale ortasına göre z sınırları, y sınırları; dış sınırlar topun yarıçapı kadar içeride). Kalecinin
@@ -674,21 +676,36 @@ function sutPlani(m,p,ox,oz,sd,o){
 /* T8c: şut adayları ve en iyisinin P(gol)'ü (saf; rastlantı çekmez): serbest vuruş kararı (serbestKarar) seçmeden değerlendirir */
 function sutAdaylari(m,p,ox,oz,sd,o){
   o=o||{};const d=m.dir[p.team],gx=d*PL,gk=m.kaleci(1-p.team),L=Math.max(1,hyp(gx-ox,MZ-oz)),onde=gk.oyunda?Math.abs(gk.x-gx):0;
-  /* T9b-c: aşırtma kaleci 3,5 m'den öndeyse ve 9 m'den uzaktan (eskiden 5 m ve 11 m: maçta şutların ~%0,6'sında); dış ayakla falso yalnız becerili şutçuda */
-  const tv=p.oz.sut>=0.65?['trivela']:[];
-  const turler=o.tur?[o.tur]:o.serbest?['falso','dusen','sert','plase']:onde>3.5&&L>9?['plase','sert','falso',...tv,'asirtma']:L>(MOTOR_AYAR.sutYeni?9:14)?['plase','sert','falso',...tv]:['plase','sert'];
+  /* T9b-c: aşırtma kaleci 3,5 m'den öndeyse ve 9 m'den uzaktan (eskiden 5 m ve 11 m: maçta şutların ~%0,6'sında); dış ayakla falso yalnız becerili şutçuda.
+     T24g2 (trivelaEsik): dış ayakla falsonun şut becerisi eşiği (0 = eski 0,65) */
+  const tv=p.oz.sut>=(MOTOR_AYAR.trivelaEsik||0.65)?['trivela']:[];
+  /* T24g1 (bosKale): kaleci topun gerisindeyse (kaleye doğru izdüşümü topun arkasında: bos 2) ya da top–kale ortası hattından ≥ 2 m uzaksa (bos 1)
+     plase kale ortasına (0, ±1 m) ve 0,4 güçle de aday olur; topun gerisindeki kaleci yetişemez (kurtarış tahmini 0; kaleciTahmin onu topun
+     önündeki düzleme kırpıyordu: f0 ≥ 0,05) ve şutçu boş kaleye yalnız plase yerleştirir (adayların P(gol)'ü ~1'e yakınken göreli sıcaklık
+     sert, falso ve aşırtmayı da seçtiriyordu). v-sut [8] (800 deneme): kapalıyken plase %54, gol %79, dışarı %18; açıkken plase %100, gol %93,
+     dışarı %6. Maçta seyrek: 8 maçta 121 şut planının 5'inde bos 1, hiçbirinde bos 2 (bilgi) */
+  let bos=0;if(MOTOR_AYAR.bosKale&&!o.serbest&&gk.oyunda){if((gk.x-ox)*(gx-ox)+(gk.z-oz)*(MZ-oz)<0)bos=2;else if(segD(gk.x,gk.z,ox,oz,gx,MZ)>=2)bos=1;}
+  /* T24d: asirtmaOnde [öndelik, mesafe] (0: eski 3,5 m ve 9 m; 9 m'den yakında aday plase, sert, aşırtma); sutDusen: açık oyunda bu mesafeden uzakta düşen şut */
+  const AO=MOTOR_AYAR.asirtmaOnde,DU=MOTOR_AYAR.sutDusen,uzT=L>(MOTOR_AYAR.sutYeni?9:14);let turler;
+  if(o.tur)turler=[o.tur];else if(o.serbest)turler=['falso','dusen','sert','plase'];
+  else if(bos===2)turler=['plase'];   /* T24g1: kaleci topun gerisinde — boş kaleye yalnız plase */
+  else if(AO?onde>AO[0]&&L>AO[1]:onde>3.5&&L>9)turler=AO&&!uzT?['plase','sert','asirtma']:['plase','sert','falso',...tv,'asirtma'];
+  else turler=uzT?['plase','sert','falso',...tv]:['plase','sert'];
+  if(DU&&!o.tur&&!o.serbest&&bos!==2&&L>DU)turler.push('dusen');
   const gucler=o.guc!=null?[o.guc]:SUT_GUC,vMax=sutHizTavani(p,!!o.zayif)*(1-0.15*(o.acele||0)),R=VURUS_GUC_REF.sut;
   const Ls=[],sapma=Math.max(0,L-18)*0.01;let en=0;
   const nZ=SUT_HZM.length,nY=SUT_HYM.length;
   /* T22b (sutYeni): plase ve aşırtma isabetli, sert hatalı (serbest vuruş hariç) — yerleştirmenin isabet kazancı gücün tepki kazancıyla tartılsın (eskiden sert %81) */
-  for(const tur of turler){const TT=SUT_TUR[tur]||SUT_TUR.plase,kz=MOTOR_AYAR.sutYeni&&!o.serbest?(tur==='plase'?0.65:tur==='sert'?1.15:tur==='asirtma'?0.75:TT.kz):TT.kz,ky=TT.ky,BL=[],stil=o.stil||TT.stil;
-    for(const g of gucler){const v=Math.max(8,g*VURUS_STIL[stil].hiz*vMax),fg=gucHataCarpani(g,R),T=L/v*1.06*(tur==='falso'?1.08:1);
+  for(const tur of turler){const TT=SUT_TUR[tur]||SUT_TUR.plase,kz=MOTOR_AYAR.sutYeni&&!o.serbest?(tur==='plase'?0.65:tur==='sert'?1.15:tur==='asirtma'?0.75:tur==='dusen'&&MOTOR_AYAR.sutDusen?1.2:TT.kz):TT.kz,ky=TT.ky,BL=[],stil=o.stil||TT.stil;
+    const ZL=bos&&tur==='plase'?SUT_ZB:SUT_Z,GL=bos&&tur==='plase'&&o.guc==null?SUT_GUCB:gucler;   /* T24g1 */
+    for(const g of GL){const v=Math.max(8,g*VURUS_STIL[stil].hiz*vMax),fg=gucHataCarpani(g,R),T=L/v*1.06*(tur==='falso'?1.08:1);
       /* kalecinin hücre ortalarındaki kurtarışı (bu tür ve güçle uçuş süresi T) */
       /* T9b-c: aşırtmanın kurtarışı da kalecinin modelinden (eski ×0,3 düzeltmesi kalktı): top kalecinin düzleminde erişiminin üstünden geçer,
          kale çizgisine çapraz geri çekilmesi (kaleciTahmin) yetişirse kurtarır */
-      const ek=tur==='falso'||tur==='trivela'?MOTOR_AYAR.kaleciEgri:0;   /* dönen topu kaleci geç okur (yürütmede kaleciTehdit aynı süreyi ekler) */
-      for(let i=0;i<nZ;i++)for(let j=0;j<nY;j++)SUT_PS[i*nY+j]=gk.oyunda?kaleciTahmin(m,gk,MZ+SUT_HZM[i],SUT_HYM[j],T,ek).P:0;
-      for(let k=0;k<SUT_Z.length;k++){const zt=SUT_Z[k];
+      const ek=tur==='falso'||tur==='trivela'?MOTOR_AYAR.kaleciEgri:tur==='dusen'?MOTOR_AYAR.kaleciDusen:0;   /* dönen topu kaleci geç okur (yürütmede kaleciTehdit aynı süreyi ekler); T24d: düşen top */
+      const gc=tur==='dusen'&&MOTOR_AYAR.dusenTahmin?1.3:1;   /* T24d (dusenTahmin): düşen topun üst dönüşü (g′ = 1,3·g) */
+      for(let i=0;i<nZ;i++)for(let j=0;j<nY;j++)SUT_PS[i*nY+j]=gk.oyunda&&bos<2?kaleciTahmin(m,gk,MZ+SUT_HZM[i],SUT_HYM[j],T,ek,gc).P:0;
+      for(let k=0;k<ZL.length;k++){const zt=ZL[k];
         if(tur==='asirtma'&&Math.abs(zt)>2.6||!sutEgriYani(tur,o.ayak,zt,d))continue;
         /* blok olasılığı güçten bağımsız: tür ve hedef başına bir kez. T8c: serbest vuruşta 3B (barajın yüksekliği; yükseklik ve uçuş başına) */
         let bl=o.serbest?0:BL[k];if(!o.serbest&&bl===undefined)bl=BL[k]=sutBlokOlasiligi(m,p,ox,oz,gx,MZ+zt,tur);

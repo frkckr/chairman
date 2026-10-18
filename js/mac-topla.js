@@ -18,9 +18,33 @@
    Sözleşme alanları (TEKNIK_PLAN §8): vurus.stil/guc/tekDokunus, kontrol.yuzey/yon, kafa.tur, p.bakisYon, p.sonDokunus — rastlantısız. */
 'use strict';
 ayarEkle('B',{
-  /*T24d*/
+  /* T24d (2026-10-18; gerçekçilik planı §4 T24): şut türü ve vuruş sözleşmesi.
+     stilHazirlik (0/1): şutun stili hazırlıkta kesinleşir — gelişine şutta da planın stili (eskiden hazırlıkta “üst” kalıyor, temasta sutVur planın
+     türüne çeviriyordu: gelişine şutların %32'sinde stil hazırlıkla temas arasında değişiyordu, borç 40); vole ve yarım vole topun temas anındaki
+     tahmini yüksekliğinden (yakalamaNoktasi'nın y'si; yakın ya da yavaş topta yolun ayağa en yakın noktası; eşikler eskisi gibi 0,45 ve 0,15 m).
+     Temasta (vurusYap, sutVur) şutun stili artık değişmez: çizimin gösterdiği stil ile fiziğin kullandığı (yön hatası, kötü vuruş) aynıdır. Gelişine
+     şut eskisi gibi açıyla vurulur (vurusIlerle sutA). Penaltı atışı eski yolda (birebir aynı; direkten dönen topun takibi açık oyundur: d-penalti
+     1600 atışta bir sonuç değişti). 0: eski
+     asirtmaOnde ([kalecinin öndeliği m, mesafe m]; 0: eski 3,5 m ve 9 m): aşırtma adayının eşiği — kaleci şutların %31'inde 2–3,5 m, yalnız %2'sinde
+     ≥ 3,5 m önde (T24 şut raporu); aday yalnız eklenir, seçimi planın P(gol)'ü yapar
+     sutDusen (asgari mesafe m; 0: yok): açık oyunda bu mesafeden uzakta düşen sert şut adayı (üst dönüş 0,09, hedef 1,9 m; eskiden yalnız serbest
+     vuruşta); açık oyunda yön hatası sertinkinin (sutYeni 1,15) 1,05 katı: 1,2 (SUT_TUR'daki düşen ÷ sert oranı).
+     Ölçüm (40 maç, tohum 1–40, T24-0 tabanına göre): stilHazirlik — gelişine şutta stil değişimi %31,9 → 0, stil sınıfı temastaki yükseklikle
+     %91–94 uyumlu (maç içi teşhis, 12 maçta 35 şut: karşılama noktasının yüksekliği %97; kare çözünürlüğünde ilk nokta ya da 1–3 kare önce %89–94),
+     gol +0,13 ± 0,37; v-sut seken hücrede temas 0,37–0,49 m (eşiğin dibi) hep vole sayılıyor: kötü vuruş olasılığı %17,1 → 19,3 ([6] ≤ 20).
+     asirtmaOnde [2, 7] — aşırtma %1,4 → 2,4, gol/şut %55, kalecinin tahmini ile gerçek −3 puan, gol ±0. sutDusen tarama 20 / 24: düşen %5,6 / 0,4,
+     sert −2,4 / −0,6 puan (24 m'den uzakta açık oyunda şut az); düşen şutun gol/şut ~%3, kurtarış ~%90. Hepsi açık: gol tohum 1–40'ta +0,83 ± 0,57, 41–80'de +0,03 ± 0,36;
+     ÷ konum xG 1,14 → 1,65 ve 1,06 → 1,33 (yükselen dönüşüm T24a–c blok ve T24h plase dengesiyle okunur); ≥ 25 m'den gol 0 / 62 */
+  /*T24d*/stilHazirlik:1,asirtmaOnde:[2,7],sutDusen:20,
   /* · */
-  /*T24g*/
+  /* T24g1 bosKale (0/1): kaleci topun gerisindeyse ya da top–kale ortası hattından ≥ 2 m uzaksa şut planına kale ortası hedefleri (0, ±1 m) ve
+     0,4 güçle plase girer; topun gerisindeki kalecinin kurtarış tahmini 0, yalnız plase aday olur (js/mac-karar.js sutAdaylari; v-sut [8]:
+     plase %54 → 100, gol %79 → 93, dışarı %18 → 6). Maçta seyrek (bilgi).
+     T24g2 trivelaEsik: dış ayakla falsonun şut becerisi eşiği (0 = eski 0,65; 0,55: maçta dış ayak stili %3,5 → 3,8, bant ≤ 5).
+     burunKarambol (m; denendi, 0): kaleye bu mesafeden yakın yerleşik şutta topun 1 m'inde rakip (kaleci dahil) varsa burunla dürtülür
+     (0 = eski: yalnız acele > 0,75 ve rakibin varışı < 0,3 sn). 8 m'de koşul 8 maçta 121 şut başlangıcının hiçbirinde tutmadı (yakın şutlar
+     çoğunlukla gelişine; stili vurusStili'nden); 14 m'ye genişletmek 12 m'den burun vuruşu doğurur */
+  /*T24g*/bosKale:1,trivelaEsik:0.55,burunKarambol:0,
   /* · */
   /*T24c*/
   /* · */
@@ -260,7 +284,7 @@ Object.assign(Match.prototype,{
     if(sec.tur==='orta'&&sec.tip==='hava'&&sec.alici&&sec.alici.oyunda&&sec.alici.team===p.team){const d=this.dir[p.team];sec.alici.kosu={u:sec.hx*d,w:sec.hz,t:2.0,tur:'orta'};}
     /* T14b: açık oyunda orta ve geri çevirmede forvet dışı oyuncular kutuya geç girer (js/mac-takim.js gecGirisAta) */
     if((sec.tur==='orta'||sec.tur==='geriCevir')&&!sec.duran)this.gecGirisAta(p,sec);
-    if(sec.ilk&&hyp(b.vx,b.vz)>2&&hyp(b.x-p.x,b.z-p.z)>1.2){const k=this.yakalamaNoktasi(p,1.0);ox=k.x;oz=k.z;}
+    let kY=null;if(sec.ilk&&hyp(b.vx,b.vz)>2&&hyp(b.x-p.x,b.z-p.z)>1.2){const k=this.yakalamaNoktasi(p,1.0);ox=k.x;oz=k.z;kY=k.y;}   /* T24d: kY temas yüksekliğinin tahmini */
     const a=Math.atan2(sec.hz-oz,sec.hx-ox),f=aciFark(a,p.yon),L=hyp(sec.hx-ox,sec.hz-oz),tip=sec.tip||'yer',sut=sec.tur==='sut',uzk=sec.tur==='uzaklastir',
       hava=tip==='hava',baski=baskiAltinda(this,p);
     /* T20b (vurusYaklas): 3 m/sn'den hızlı koşan topun sahibi gidişinden 110°'den çok dönen pas ve uzun topa başlamaz: önce topla yavaşlar (sürüş niyeti
@@ -268,6 +292,11 @@ Object.assign(Match.prototype,{
        durdurup geçiyordu (T20-0: maç başına ~20 terk edilen hazırlık; şut, gelişine vuruş ve duran top hariç) */
     if(MOTOR_AYAR.vurusYaklas&&!sut&&!sec.ilk&&!sec.duran&&!sec.penalti&&b.sahip===p&&p.spd>3&&Math.abs(aciFark(a,Math.atan2(p.vz,p.vx)))>1.9){
       p.surus={yon:Math.atan2(p.vz,p.vx),hiz:0.25};p.kararT=0.2;return;}
+    /* T24e1 (gecGirisPas): açık oyunda forvete son 30 m'de ve merkezde giden pasta forvet dışı oyuncular kutuya geç girer (js/mac-takim.js
+       gecGirisAta; yerler topun varacağı yerin ters yarısında penaltı noktasının önü ve yay; takımda aynı anda en çok gecGirisPas geç giriş). Rastlantısız */
+    if(MOTOR_AYAR.gecGirisPas&&!sec.duran&&!sec.penalti&&(sec.tur==='pas'||sec.tur==='ara'||sec.tur==='uzun'||sec.tur==='indirme')&&sec.alici&&sec.alici.rol==='FV'&&
+      sec.alici.team===p.team&&sec.hx*this.dir[p.team]>PL-30&&Math.abs(sec.hz-MZ)<20){let n0=0;for(const q of this.teams[p.team])if(q.oyunda&&q.kosu&&q.kosu.tur==='gecGiris')n0++;
+      const yz=Math.sign(sec.hz-MZ)||Math.sign(b.z-MZ)||1;if(n0<MOTOR_AYAR.gecGirisPas)this.gecGirisAta(p,sec,[[PL-12,MZ-yz*4],[PL-15,MZ]].slice(n0),MOTOR_AYAR.gecGirisPas-n0,2.4);}
     /* ayak (T4-V, tek zar): hedef güçlü ayağın dış tarafında ve açı orta büyüklükteyse çoğu zaman dış ayak (zayıf ayağı zorlamaz); hedef çok
        yandaysa o yanın iç ayağı (f > 0: hedef sağda → sol ayağın içi) ya da top gövdenin zayıf ayak yanındaysa (≥ 0,18 m) zayıf ayakla vuruş: olasılık
        profilin zayıf ayağına ve kaçınma eğilimine göre, hedef ters yandaysa, baskıda ve şutta değişir; zar tutmazsa güçlü ayak (hazırlık hedefi
@@ -280,7 +309,10 @@ Object.assign(Match.prototype,{
     let acele=0,tR=9;
     if(sut&&!sec.penalti&&!sec.serbest){for(const o of this.teams[1-p.team]){if(!o.oyunda||o.rol==='GK')continue;const t=varisSuresi(o,ox,oz,0.9);if(t<tR)tR=t;}
       const don=Math.max(0,Math.abs(f)-MOTOR_AYAR.vurusHizalama)/hrkVurusDonus(p);acele=clamp((vsr.haz+vsr.geri+don-tR+0.1)/0.4,0,1);}
-    const burun=sut&&!sec.ilk&&acele>0.75&&tR<0.3;
+    /* T24g2 (burunKarambol): kale önündeki karambolde (L < burunKarambol, topun 1 m'inde rakip ya da kaleci) burunla dürtme */
+    let bk=false;const BK=MOTOR_AYAR.burunKarambol;
+    if(BK&&sut&&!sec.ilk&&!sec.penalti&&!sec.serbest&&L<BK)for(const o of this.teams[1-p.team])if(o.oyunda&&hyp(o.x-ox,o.z-oz)<=1){bk=true;break;}
+    const burun=sut&&!sec.ilk&&(acele>0.75&&tR<0.3||bk);
     /* ayak (T4-V, tek zar): hedef güçlü ayağın dış tarafında ve açı orta büyüklükteyse çoğu zaman dış ayak (zayıf ayağı zorlamaz); hedef çok
        yandaysa o yanın iç ayağı (f > 0: hedef sağda → sol ayağın içi) ya da top gövdenin zayıf ayak yanındaysa (≥ 0,18 m) zayıf ayakla vuruş: olasılık
        profilin zayıf ayağına ve kaçınma eğilimine göre, hedef ters yandaysa, baskıda ve şutta değişir; zar tutmazsa güçlü ayak (hazırlık hedefi
@@ -303,7 +335,14 @@ Object.assign(Match.prototype,{
     if(sut&&!sec.penalti){const zy=p.ayak!=='iki'&&ayak!==p.ayak,R=VURUS_GUC_REF.sut;
       const sd0=vurusSapma(p,{sut:true,guc:R,ref:R,stil:burun?'burun':'ust',zayif:zy,baski,acele,ilk:!!sec.ilk})*sutHataK(L,!!sec.serbest);
       const pl=sutPlani(this,p,ox,oz,sd0,{serbest:sec.serbest,guc:sec.guc,zayif:zy,acele,tur:burun?'sert':null,stil:burun?'burun':null,ayak});
-      sutPlan={tur:pl.tur,g:pl.g};gucPlan=pl.g;if(!sec.ilk)st=pl.stil;}
+      sutPlan={tur:pl.tur,g:pl.g};gucPlan=pl.g;
+      /* T24d (stilHazirlik): gelişine şutta da planın stili; vole ve yarım vole topun temas anındaki tahmini yüksekliğinden (karşılama noktası; yoksa topun
+         yolunun 0,8 sn içinde ayağa en yakın noktası). Eşikler vurusYap'ınkiler; temasta stil artık değişmez */
+      if(MOTOR_AYAR.stilHazirlik){st=pl.stil;
+        if(sec.ilk&&st!=='burun'){let yc=kY;if(yc==null){const yol=this.topYolu(),i0=Math.max(0,Math.round((this.t-this._yolT0)*60)-1),fx=p.x+Math.cos(p.yon)*0.3,fz=p.z+Math.sin(p.yon)*0.3;
+            let enD=1e9;yc=b.y;for(let i=i0,n=Math.min(yol.length,i0+48);i<n;i++){const s=yol[i],dd=(s.x-fx)*(s.x-fx)+(s.z-fz)*(s.z-fz);if(dd<enD){enD=dd;yc=s.y;}}}
+          if(yc>0.45)st='vole';else if(yc>0.15)st='yarimVole';}}
+      else if(!sec.ilk)st=pl.stil;}
     /* T21c (acmaDokunus): baskısızken uzun vuruştan önce topu vuran ayağın önüne açar (stoper bakar, bir iki adım açar, gerilir, vurur); hazırlık 0,45 sn uzar */
     const acma=MOTOR_AYAR.acmaDokunus&&!sut&&!uzk&&!sec.ilk&&!sec.duran&&!sec.penalti&&(hava&&L>=28||tip==='yer'&&L>=32)&&baski<0.3&&b.sahip===p&&hyp(b.vx,b.vz)<1.5&&hyp(b.x-p.x,b.z-p.z)<0.9?{yapildi:false}:null;
     if(acma)hazEn+=0.45;
@@ -319,6 +358,8 @@ Object.assign(Match.prototype,{
       if(sec.guncelle&&!sec.ilk)this.hedefGuncelle(p,sec);
       /* gelişine vuruşta yön karşılama noktasından ölçülür */
       const topHiz=hyp(b.vx,b.vz);let k=null;if(sec.ilk&&topHiz>2)k=this.yakalamaNoktasi(p,1.0);
+      /* T24a (ilkHamle): gelişine şutta karşılama noktası ve temas anı eyleme (savunmacının hamlesi okur: sutHamleYap) */
+      if(MOTOR_AYAR.ilkHamle&&sec.ilk&&sec.tur==='sut'){if(k){e.kx=k.x;e.kz=k.z;e.kt=this.t+k.t;}else e.kx=null;}
       const a=k?Math.atan2(sec.hz-k.z,sec.hx-k.x):Math.atan2(sec.hz-b.z,sec.hx-b.x),c=Math.cos(a),s=Math.sin(a),yan=e.ayak==='sag'?1:-1;
       /* vuran ayak topun arkasında, destek ayağı yanında: gövde topun biraz gerisinde ve yanında */
       const on=sec.ilk?0.42:0.34;let px=b.x-c*on-(-s)*0.13*yan,pz=b.z-s*on-c*0.13*yan;
@@ -356,7 +397,8 @@ Object.assign(Match.prototype,{
       if(kacan){p._varisHiz=0.95*topHiz+0.3;p._varisKare=this.kare;}   /* topun hızıyla varır (sürüşteki gibi; durmak için yavaşlamaz) */
       /* T9b-b: acelede hizalanma sınırı gevşer (gövde tam dönmeden vurur; hata vurusSapma'nın hizalanma çarpanında). T9b-c (30–45° açılı yaklaşma,
          T4-V devri): üst ve falso şutu açıyla yaklaşarak vurulur — sınır 1,6 katı, hatanın hizalanma payı doğal açının (0,3 rad) ötesinden */
-      const sutA=sec.tur==='sut'&&(e.stil==='ust'||e.stil==='falso'||e.stil==='dis');
+      /* T24d (stilHazirlik): gelişine şut stilinden bağımsız açıyla vurulur (vole ve yarım vole hariç) — eskiden hazırlıkta stili 'üst' kalıyordu */
+      const sutA=sec.tur==='sut'&&(e.stil==='ust'||e.stil==='falso'||e.stil==='dis'||MOTOR_AYAR.stilHazirlik&&sec.ilk&&e.stil!=='vole'&&e.stil!=='yarimVole');
       const yerPas=sec.tur!=='sut'&&sec.tur!=='uzaklastir'&&(sec.tip||'yer')==='yer'&&hyp(sec.hx-b.x,sec.hz-b.z)<=30;   /* T20b: pasAcik yalnız 30 m'ye dek yerden pasta */
       const sapma=Math.abs(aciFark(a,p.yon)),sinir=sec.ilk?(MOTOR_AYAR.tekKoni?1.45:1.05):e.stil==='dis'&&sec.tur!=='sut'?0.85:MOTOR_AYAR.vurusHizalama*(sec.tur!=='sut'&&sec.tur!=='uzaklastir'?(yerPas?MOTOR_AYAR.pasAcik:1.35):(1+0.6*(e.acele||0))*(sutA?1.6:1));
       /* hareketli top: ayağa ne zaman gelir (yol boyunca uzaklık / hız) ve yoldan ne kadar yanda */
@@ -409,7 +451,8 @@ Object.assign(Match.prototype,{
     if(sec.tur!=='sut'){const sap=Math.abs(aciFark(Math.atan2(sec.hz-b.z,sec.hx-b.x),p.yon));
       /* dış ayak ve gelişine iç ayak, gövdeyi tam çevirmeden açılı vurur */
       e.hizalanma=e.stil==='dis'?Math.max(0,sap-0.6):sec.ilk?Math.max(0,sap-0.4):(sec.tip||'yer')==='yer'?Math.max(0,sap-MOTOR_AYAR.pasDogal):sap;}   /* T20b: pasDogal */
-    if(e.stil!=='asirtma'&&e.stil!=='dis'&&e.stil!=='burun'){if(b.y>0.45)e.stil='vole';else if(b.y>0.15&&sec.ilk)e.stil='yarimVole';}
+    /* T24d (stilHazirlik): şutun stili hazırlıkta kesinleşti (penaltı hariç) */
+    if(e.stil!=='asirtma'&&e.stil!=='dis'&&e.stil!=='burun'&&!(MOTOR_AYAR.stilHazirlik&&sec.tur==='sut'&&!sec.penalti)){if(b.y>0.45)e.stil='vole';else if(b.y>0.15&&sec.ilk)e.stil='yarimVole';}
     /* T10b: yüksek ayak (tehlikeli oyun): baş hizasındaki topa (≥ 1,3 m) ayakla vurulurken rakip 1 m içindeyse ve hakem görürse vuruş olmaz,
        rakibe dolaylı serbest vuruş (js/mac-mudahale.js yuksekAyak) */
     if(b.y>=1.3&&this.yuksekAyak(p))return;
@@ -465,13 +508,14 @@ Object.assign(Match.prototype,{
     const c=this.havadanCoz(bx,Math.max(b.y,0.11),bz,hx,hy,hz,T,egri,ust);
     b.vx=c.vx;b.vy=c.vy;b.vz=c.vz;b.y=Math.max(b.y,0.11);b.egri=egri;b.ust=ust;
     /* T9b-e: burunla dürtmenin stili temasta korunur (çizim ve ölçüm okur; eskiden 'ust'e dönüyordu) */
-    if(e.stil!=='vole'&&e.stil!=='yarimVole'&&e.stil!=='burun')e.stil=(SUT_TUR[tur]||SUT_TUR.plase).stil;
+    if(e.stil!=='vole'&&e.stil!=='yarimVole'&&e.stil!=='burun'&&!(MOTOR_AYAR.stilHazirlik&&!sec.penalti))e.stil=(SUT_TUR[tur]||SUT_TUR.plase).stil;   /* T24d: hazırlıkta yazıldı */
     e.guc=g;
     const aldat=this.rast()<0.08+0.25*oz.sut,ip0=sec.penalti&&sec.ipucu;   /* T8d: penaltıda ipucu planda (kaleci koşuyu okur) */
     /* T12-0 (2026-10-12): kalecinin tahmini — hatası uygulanmış nişanın kale çizgisindeki yerine ve uçuş süresine kaleciTahmin (saf); planın seçtiği
        adayın gol ve çerçeve olasılığı. Salt okunur, ölçüm araclar/olcumler/v-verim.js; sonucu değiştirmez */
     const gk=this.kaleci(1-p.team),zc=Math.abs(hx-bx)>0.5?bz+(hz-bz)*(gx-bx)/(hx-bx):hz;
-    const pKurt=gk&&gk.oyunda&&!sec.penalti?kaleciTahmin(this,gk,zc,hy,T,tur==='falso'||tur==='trivela'?MOTOR_AYAR.kaleciEgri:0).P:null;
+    const pKurt=gk&&gk.oyunda&&!sec.penalti?kaleciTahmin(this,gk,zc,hy,T,tur==='falso'||tur==='trivela'?MOTOR_AYAR.kaleciEgri:tur==='dusen'?MOTOR_AYAR.kaleciDusen:0,
+      tur==='dusen'&&MOTOR_AYAR.dusenTahmin?1.3:1).P:null;   /* T24d: düşen top (dusenTahmin, kaleciDusen) */
     /* T9b-0: nisanZ/nisanY — hatası uygulanmış nişan (kale çizgisinde; salt okunur, ölçüm araclar/olcumler/v-vurus.js) */
     const xgYer=xG(bx*d,bz,'ayak',0),gkTepki=gk&&gk.oyunda?kaleciTepkiSuresi(this,gk,bx,bz):null;   /* T12-0: konum xG'si (baskısız, bloksuz) ve kalecinin tepkisi (perde dahil) */
     this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'sut',sut:{hedefZ:hz0,hedefY:hy0,nisanZ:hz,nisanY:hy,tur,pKurt,pPg:sec.penalti?null:plPg,pPon:sec.penalti?null:plPon,xgYer,gkTepki,
@@ -637,8 +681,9 @@ Object.assign(Match.prototype,{
   erisim(p,d){
     const b=this.ball,y=b.y,yb=y-(p.yuk||0);
     if(this.elErisimi(p,d,y))return 'el';
-    /* T19a: şutu kapatmak için hatta atılan savunmacı (sutHamleYap; damga 0,35 sn) bacağını uzatır — ayağın erişimi blokErisim */
-    if(MOTOR_AYAR.sutHamle&&b.sut&&b.sut.team!==p.team&&p.rol!=='GK'&&this.t-p._ortaBlokT<0.35&&d<MOTOR_AYAR.blokErisim&&yb<0.8&&yb>-0.1)return 'ayak';
+    /* T19a: şutu kapatmak için hatta atılan savunmacı (sutHamleYap; damga 0,35 sn) bacağını uzatır — ayağın erişimi blokErisim. T24a (sutHamleUzak):
+       temas anında hamlede olan savunmacı (damga şutun anından en çok 0,05 sn önce) şut sürdükçe erişimdedir (ilerideki savunmacıya top 0,35 sn'den geç varır) */
+    if(MOTOR_AYAR.sutHamle&&b.sut&&b.sut.team!==p.team&&p.rol!=='GK'&&(this.t-p._ortaBlokT<0.35||MOTOR_AYAR.sutHamleUzak>0&&p._ortaBlokT>=b.sut.t-0.05)&&d<MOTOR_AYAR.blokErisim&&yb<0.8&&yb>-0.1)return 'ayak';
     if(d<0.6&&yb<0.8&&yb>-0.1)return 'ayak';   /* T8c: havadaki oyuncunun ayağının altından geçen top (sıçrayan baraj) */
     if(d<0.5&&yb>=0.8&&yb<1.55)return 'gogus';
     if(b.vy<3&&hvTemas(this,p)){
@@ -822,10 +867,11 @@ Object.assign(Match.prototype,{
   derinKosu(p,s,ofs,dt){
     const d=this.dir[p.team],su=s.x*d;
     if(p.kosu&&p.kosu.tur==='takip')p.kosu=null;   /* T7e: şutu takip koşusu top birinin ayağına geçince biter */
-    if(p.kosu&&p.kosu.tur==='gecGiris')return null;   /* T14b: kutuya geç giriş bolgeKonumu'nda yürür */
+    if(p.kosu&&(p.kosu.tur==='gecGiris'||p.kosu.tur==='gecKosu'))return null;   /* T14b: kutuya geç giriş bolgeKonumu'nda yürür (T24e2: geç koşu da) */
     if(p.kosu){const k=p.kosu;k.t-=dt;
       if(k.t<=0||this.ball.sahip!==s||p.x*d>PL-6){p.kosu=null;return null;}
       return k;}
+    if(MOTOR_AYAR.gecKosu&&this.gecKosuAta(p,s,ofs,dt))return null;   /* T24e2: açık oyunda merkez orta sahanın kutuya geç koşusu (js/mac-takim.js; yürütme bolgeKonumu) */
     if(!(p.rol==='FV'||p.mevki.kanat||(p.rol==='OS'&&!p.mevki.derin&&su>5)))return null;
     const ileriBakar=Math.cos(s.yon)*d>0.2,serbest=baskiAltinda(this,s)<0.8,pu=p.x*d,A=MOTOR_AYAR,N=this._niyet&&this._niyet[p.team];
     /* T7c: tetikli koşu (plan T7 madde 5) — taşıyanın son kararında bu oyuncu için savunma arkasında bir ara noktası bulunduysa (0,5 sn içinde;

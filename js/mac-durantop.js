@@ -23,7 +23,19 @@
    seçilmez (penaltı hariç). Rastlantı çekmez. */
 'use strict';
 ayarEkle('K',{
-  /*T24f*/
+  // T24f1 (2026-10-18; T24 planı, f1; denendi, 0): barajlı serbest vuruşta kalecinin uzak direğe ek kayması (m): MZ − yan·(0,3 + k); 0 = eski
+  // (0,3 m). Ters yönde çalıştı: d-duran 18 m merkezde gol/şut (iki tohum, 80'er vuruş) 0 → %26,7/27,5 · 0,3 → 32,0/33,8 · 0,6 → 44,0/45,0;
+  // 18–22 m %17,6/18,8 → 19,6/25,8 · 27,3/33,1; 0,6'da 30 m'de doğrudan şut %60 (kapı 20–50). Kaleci uzaklaşınca planlayıcı barajın üstünden
+  // yakın köşeye düşen şuta geçer (teşhis, 18 m: 46 şutta 24 gol) ve kaleci barajın iç ucunun arkasında kalmayı sürdürür (perde ~0,11 sn);
+  // T8c'nin 0,3/0,6/0,9 taramasıyla aynı yön. Rastlantı çekmez
+  // T24f2 (barajPerde; f1 tutmayınca): barajlı serbest vuruşta kalecinin kendi barajındaki oyuncunun (duranRol 'baraj', görev penceresi boyunca)
+  // perdesinden düşülen pay (kaleciTepkiSuresi, js/mac-kaleci.js; planlayıcının tahmini ve yürütme aynı işlevi okur). 0 = eski (tam perde,
+  // +0,10–0,18 sn). Kaleci barajı kendisi dizer ve topu görecek yerde durur: kendi barajı onu ancak kısmen perdeler; rakibin (hücumcunun)
+  // perdesi tam kalır. 18 m'nin fazla golü barajın iç ucunun yanından kalecinin kendi yarısına giden alçak sert şuttandı
+  // (teşhis: 50 şutta 15 gol, çoğu kale çizgisinde z −2,3…−3,6, y < 1). d-duran (iki tohum): 0,2 → 18 m %18,7/21,3, 18–22 m %12,8/14,1;
+  // 0,3 → %20,0/18,8, %12,9/12,1 (küçük olan seçildi). Maç dağılımıyla ağırlıklı gol/şut 6,6 → 5,3: uzak hücreler (24–28 m %1, ≥ 28 m %0;
+  // gerçekte %3–5) kapanmadıkça bant altında kalır. Rastlantı çekmez
+  /*T24f*/barajKaleciYan:0,barajPerde:0.2,
   /* · */
   duranSure:[8,11],            // T8a (§7 madde 5): tehlikeli duran topta duruşun başından koşunun başına en az / en çok (sn; koşu ve işaret ~1,5–2,5 sn: temas 10–14; T10d: 8,5–11,5 → 8–11);
                                // arada koşul “görevliler yerinde”
@@ -216,7 +228,8 @@ Object.assign(Match.prototype,{
     U.forEach((p,k)=>{const sk=kenar?(k-(U.length-1)/2)*0.5:k*0.5,x=Wx+px*sk,z=Wz+pz*sk;G.set(p,{rol:'baraj',hx:x,hz:z,takim:s,hedef:null,sira:k});BY.set(p,{x,z});});
     du.barajdakiler=U;du.barajYer=BY;du.barajAci=Math.atan2(du.z-Wz,du.x-Wx);
     if(!kenar){du.baraj=true;du.barajUc={x:Wx-px*1.8,z:Wz-pz*1.8};
-      const kl=this.kaleci(s);if(kl&&kl.oyunda){G.set(kl,{rol:'kaleci',hx:gx-d*0.8,hz:MZ-yan*0.3,takim:s,hedef:null});this.jestVer(kl,'isaret',1.4,{x:Wx,z:Wz});}}   /* T8e: kaleci barajı kol işaretiyle kurar (Ek G5) */
+      const kl=this.kaleci(s);if(kl&&kl.oyunda){const kY=MOTOR_AYAR.barajKaleciYan?0.3+MOTOR_AYAR.barajKaleciYan:0.3;   /* T24f1 */
+        G.set(kl,{rol:'kaleci',hx:gx-d*0.8,hz:MZ-yan*kY,takim:s,hedef:null});this.jestVer(kl,'isaret',1.4,{x:Wx,z:Wz});}}   /* T8e: kaleci barajı kol işaretiyle kurar (Ek G5) */
   },
   /* A4-1 (Ek D “topun başında iki kişi”): barajlı serbest vuruşta serbestIkili olasılıkla ikinci vurucu (45 m içindeki en iyi serbest vuruş tekniği,
      uzaklıkla azalır; hazırlık 10–14 sn) topun 1,3 m gerisinde ve 0,7 m yanında durur — kullananın vuran ayağının tersi yanda. Şut kararında aldatma

@@ -202,7 +202,7 @@ Object.assign(Match.prototype,{
       const donen=!du&&sahipTakim<0&&!b.tasiyan&&(this.cezaSahasi(0,b.x,b.z)||this.cezaSahasi(1,b.x,b.z));
       if(!hucum){this.markajAta(t,du?odak:gecikmeli,cizgi);this.kutuSavunmaAta(t,du?odak:gecikmeli);}
       else if(!MOTOR_AYAR.markajKalici){if(this._markaj)this._markaj[t]=new Map();if(this._kutuSav)this._kutuSav[t]=new Map();}   /* T18c: markajKalici'de haritalar durur */
-      if(!hucum&&MOTOR_AYAR.kosuSil)for(const p of this.teams[t]){const k=p.kosu;if(k&&(k.tur==='arkaya'||k.tur==='genis'||k.tur==='gel'||k.tur==='aldatma'))p.kosu=null;}   /* T18c: derin koşu top kaybında biter */
+      if(!hucum&&MOTOR_AYAR.kosuSil)for(const p of this.teams[t]){const k=p.kosu;if(k&&(k.tur==='arkaya'||k.tur==='genis'||k.tur==='gel'||k.tur==='aldatma'||k.tur==='gecKosu'))p.kosu=null;}   /* T18c: derin koşu top kaybında biter (T24e2: geç koşu da) */
       /* T19a: rakibin şut hazırlığı (vuruş eylemi, temastan önce; penaltı ve serbest vuruş hariç) — yakındaki savunmacılar hatta atılır (sutHamleYap) */
       let sutE=null;if(MOTOR_AYAR.sutHamle&&!du)for(const q of this.teams[1-t]){const e=q.eylem;if(q.oyunda&&e&&e.ad==='vurus'&&e.faz!=='takip'&&e.sec&&e.sec.tur==='sut'&&!e.sec.penalti&&!e.sec.serbest){sutE=e;break;}}
       for(const p of this.teams[t]){
@@ -219,6 +219,8 @@ Object.assign(Match.prototype,{
           this.gorevYaz(p,'kaleci');this.kaleciKonum(p,dt);continue;}
         /* T1: topa rakibinden açıkça geç yetişecek kovalayan (kovalaPay sn) çekişmeye koşmaz, rahat ivmeyle yaklaşır; pasın alıcısı ve
            yüksek topta kovalayan tam eforla (rahat karşılayan alıcı geç kalıp pası kaybediyordu) */
+        /* T24a (ilkHamle): gelişine şutta topa şutçunun temasından önce yetişemeyecek kovalayan topun peşinden değil şutun hattına koşar (sutHamleYap) */
+        if(p===kovalayan[t]&&sutE&&MOTOR_AYAR.ilkHamle&&sutE.sec.ilk&&sutE.kx!=null&&this._kov&&this._kov.sure[t]>sutE.kt-this.t&&this.sutHamleYap(p,sutE,false)){this.gorevYaz(p,'blok');continue;}
         if(p===kovalayan[t]){const K=this._kov,S=K&&K.sure,f=S?S[t]-S[1-t]:0,K2=MOTOR_AYAR.kovala2Pay;this.gorevYaz(p,'kovala');
           /* T23a1 (kovala2Pay): yüksek topta da açıkça geç kalacak (rakibin en erken varışından K2 sn'den çok) ve inişe 1 sn'den uzak kovalayan depar atmaz */
           const yuksekGec=!!(K2>0&&K&&K.yuksek&&S&&S[t]>1&&S[t]-Math.min(S[1-t],K.sure2?K.sure2[1-t]:1e9)>K2);
@@ -226,7 +228,7 @@ Object.assign(Match.prototype,{
         if(p===kovalayan[2+t]){const K=this._kov,S=K&&K.sure,K2=MOTOR_AYAR.kovala2Pay,s2=K&&K.sure2?K.sure2[t]:0;this.gorevYaz(p,'kovala2');
           this.kovala(p,K2>0&&!donen&&s2>1&&S&&s2-Math.min(S[1-t],K.sure2[1-t])>K2?0.5:1);continue;}
         if(p===cizgiBek){this.gorevYaz(p,'cizgi');p.tx=cbx;p.tz=cbz;p.hizOran=1;this.eforVer(p,1);continue;}   /* T5e */
-        if(sutE&&p.rol!=='GK'&&this.sutHamleYap(p,sutE)){this.gorevYaz(p,'blok');continue;}   /* T19a */
+        if(sutE&&p.rol!=='GK'&&this.sutHamleYap(p,sutE,p===pres1)){this.gorevYaz(p,'blok');continue;}   /* T19a; T24a: pres1 (sutHamleUzak) */
         /* T18b: pas uçuşunda (sanal sahip) 1. adam alıcıya kapatır (presYap değil), 2. ve 3. adam alıcıya göre */
         if(p===pres1){this.gorevYaz(p,'pres1');this.eforVer(p,karsi?0.9:1);if(b.sahip)this.presYap(p,b.sahip,dt);else this.kapat(p,odak.sahip);continue;}
         if(p===pres2){const yakin=MOTOR_AYAR.kapatKalici>0?(pres1!=null&&p._kapatK!=null&&this.kare-p._kapatK<=Math.round(60*MOTOR_AYAR.kapatKalici)):p._kapatK===this.kare;this.gorevYaz(p,'pres2');this.eforVer(p,yakin?1:karsi?0.9:0.8);if(yakin&&b.sahip)this.kapatYakin(p,b.sahip,pres1,dt);else this.kapat(p,odak.sahip);continue;}
@@ -245,18 +247,19 @@ Object.assign(Match.prototype,{
   /* oyuncunun topa yetişebileceği en erken nokta (top yolundan). yukseklik: erişebildiği top yüksekliği.
      M0 (2026-10-07, sonucu değiştirmez): varisZamani'nin alt sınırı (düz çizgi uzaklığı − menzil) / vk'dir; vk anlık hız ile tepe hızın büyüğü
      (modelin hiçbir evresi bundan hızlı gitmez). Bu sınırla 0,05 sn payla bile yetişemeyeceği kesin noktada varisZamani çağrılmaz */
+  /* T24d (2026-10-18): y — topun o noktadaki yüksekliği (gelişine şutta vole ve yarım vole hazırlıkta seçilir; stilHazirlik) */
   yakalamaNoktasi(p,yukseklik){
     const yol=this.topYolu(),t0=this.t-this._yolT0,i0=Math.max(0,Math.round(t0*60)-1);
     const vk=Math.max(hyp(p.vx,p.vz),hrkTepe(p)),px=p.x,pz=p.z;
     let onceki=null;
     for(let i=i0;i<yol.length;i+=3){const s=yol[i],t=(i-i0)/60;if(s.y>yukseklik)continue;
       /* top durduysa sonraki noktalar aynıdır */
-      if(onceki&&s.v<0.05&&s.y<0.01&&onceki.v<0.05)return{x:s.x,z:s.z,t:Math.max(t,varisZamani(p,s.x,s.z,0.4,0.15))};
+      if(onceki&&s.v<0.05&&s.y<0.01&&onceki.v<0.05)return{x:s.x,z:s.z,t:Math.max(t,varisZamani(p,s.x,s.z,0.4,0.15)),y:s.y};
       onceki=s;
       const r=0.45+vk*(t-0.05),dx=s.x-px,dz=s.z-pz;if(r<=0||dx*dx+dz*dz>r*r)continue;
       /* topa ondan biraz önce varabileceği ilk nokta (güvenlik payı 0,1 sn) */
-      if(varisZamani(p,s.x,s.z,0.45,0.15)+0.1<=t)return{x:s.x,z:s.z,t};}
-    const s=yol[yol.length-1];return{x:s.x,z:s.z,t:3.5+hyp(s.x-p.x,s.z-p.z)/p.maxSpd};
+      if(varisZamani(p,s.x,s.z,0.45,0.15)+0.1<=t)return{x:s.x,z:s.z,t,y:s.y};}
+    const s=yol[yol.length-1];return{x:s.x,z:s.z,t:3.5+hyp(s.x-p.x,s.z-p.z)/p.maxSpd,y:s.y};
   },
   /* düz savunma çizgisi (takımın çerçevesinde u): top önü açık ve ileri bakan birindeyse geri çekil, geri pasta çık */
   savunmaCizgisi(t,hucum,odak){
@@ -319,6 +322,8 @@ Object.assign(Match.prototype,{
       /* T14b: kutuya geç giriş (js/mac-takim.js gecGirisAta) — top ortacıdayken ofsayt çizgisinin gerisinde, top ayaktan çıkınca hedefe; süre
          bitince ya da top rakibe geçince biter */
       if(p.kosu&&p.kosu.tur==='gecGiris'){const k=p.kosu;k.t-=dt;if(k.t<=0||s&&s.team!==t)p.kosu=null;else{u=s?Math.min(k.u,ofs-0.4):k.u;w=k.w;p.hizOran=1;ef=1;g='gecGiris';}}
+      /* T24e2: açık oyunda kutuya geç koşu (js/mac-takim.js gecKosuAta) — gecGiris'in kalıbı */
+      if(p.kosu&&p.kosu.tur==='gecKosu'){const k=p.kosu;k.t-=dt;if(k.t<=0||s&&s.team!==t)p.kosu=null;else{u=s?Math.min(k.u,ofs-0.4):k.u;w=k.w;p.hizOran=1;ef=1;g='gecKosu';}}
       /* T7b: geride kalan topun 12 m gerisinde, rakip yarısının 5 m'sini geçmez, merkezi kapatır */
       if(geride){u=Math.min(u,bu-12,5);w=clamp(w,MZ-16,MZ+16);}
       if(!p.kosu&&u>ofs-0.6&&u>0)u=ofs-0.6;

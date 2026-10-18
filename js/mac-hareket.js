@@ -18,7 +18,19 @@ const hrkKok=Math.sqrt,hrkUs=Math.pow,hrkMin=Math.min,hrkMax=Math.max,hrkAbs=Mat
 const hrkHyp=(a,b)=>hrkKok(a*a+b*b);
 const hrkAciNorm=a=>a-HRK_2PI*hrkTaban((a+HRK_PI)/HRK_2PI),hrkAciFark=(a,b)=>hrkAciNorm(a-b);
 ayarEkle('C',{
-  /*T24a*/
+  /* T24a (2026-10-18; gerçekçilik planı §4 T24): fiziksel blok.
+     ilkHamle: gelişine şutta savunmacının hamlesi (sutHamleYap) havadaki toptan değil şutçunun karşılama noktasından (vurusIlerle yazar: e.kx, e.kz;
+     temas anı e.kt) ve oradan kaleye uzanan hattan ölçülür, kalan süre topun o noktaya varışı ve geri salınım (eski e.kalan'ın anlamı); topa şutçudan
+     önce yetişemeyecek kovalayan (js/mac-dizilis.js takimAI; _kov.sure > temasa kalan) topun peşinden değil şutun hattına koşar. 0: eski (top uzaktayken
+     hamle ancak son ~0,2 sn'de başlıyordu; kovalayan hiç hamle etmiyordu).
+     sutHamleUzak (m): topa sutHamle ile bu kadar arasındaki savunmacı, şut hattına kalan sürede ve topun ona uçuşunda (on/25 sn) yetişebiliyorsa kendi
+     derinliğinde hatta kayar (ilerideki savunmacı da şutu kapatır; T23'te dışarıdan blok %14,6, gerçekte 30–35); uzaktaki 1. adam (pres1) baskısını
+     sürdürür, yalnız erişimi uzar. Temas anında hamlede olan savunmacının erişimi (blokErisim) şut sürdükçe geçerlidir (js/mac-topla.js erisim; eskiden
+     damgadan 0,35 sn: 7 m'den öteye top varmadan bitiyordu). 0: kapalı.
+     40 maç (t24-0 → ilkHamle 1 · sutHamleUzak 12): blok / şut 20,3 → 24,3, gelişine şutta blok 19,6 → 26,1, dışarıdan blok 13,5 → 20,9; tarama 8'de
+     20,4. ilkHamle tek başına (sutHamleUzak 0) blok / şut 18,9, gelişine 19,6 (değişmedi; hamle eden savunmacının bloğu 35,6 → 46,5): değeri
+     karşılama noktası doğru yer olduğu için ve uzak hamleyle birlikte 1 */
+  /*T24a*/ilkHamle:1,sutHamleUzak:12,
   /* · */
   ivme:6.0,                    // T1: ivme–hız profilinin A0 tabanı (m/sn²; hız +1,1, çeviklik +0,7, ivme tipi ±0,45; 6,0–7,8); a(v)=A0·(1−v/S0)
   ivmeRahat:2.3,               // T1: düşük eforda ileri ivme (m/sn²; yer tutma ve destek koşusu 3 m/sn² altında kalsın)
@@ -863,13 +875,22 @@ Object.assign(Match.prototype,{
      temasta erişimi uzatır (blokErisim; erisim, js/mac-topla.js). Topun gerisindeki ya da kalan sürede hatta yetişemeyecek savunmacı atılmaz.
      Eskiden 1. adam jokeyde (1,6–2,4 m) kalıyor, vuruşa ancak 0,3 sn kala 0,8 m'ye geliyordu; 2. adam 1. adamın arkasında bekliyordu. Planlayıcı aynı
      kuralı bilir (sutBlokOlasiligi, t0) */
-  sutHamleYap(p,e){
-    const A=MOTOR_AYAR,b=this.ball,dx=p.x-b.x,dz=p.z-b.z;if(hrkHyp(dx,dz)>A.sutHamle)return false;
+  /* T24a (2026-10-18): ilkHamle — gelişine şutta uzaklık, hat ve kalan süre karşılama noktasından (e.kx, e.kz, e.kt; vurusIlerle). sutHamleUzak —
+     topa sutHamle ile sutHamleUzak arasındaki savunmacı, kalan süre artı topun ona uçuşu (on/25 sn) içinde hatta yetişebiliyorsa (yakındakinin sınaması:
+     ortalama yanal hız 0,6 · tepe hız) kendi derinliğinde (k = on) hatta kayar; damga aynı (erişim blokErisim). p1: oyuncu takımın 1. adamı (pres1) —
+     uzaktaysa yalnız damga alır, baskısı sürer (false döner). İkisi 0'dayken eski yol.
+     Denendi (2026-10-18, 40 maç): uzaktakini gerçek erişimle sınamak (hatta doğru yanal hız + ~6 m/sn² ivme): blok / şut 24,3 → 21,4, dışarıdan blok
+     20,9 → 15,0, ivmelenme 5,9 → 5,8 — geri alındı (sınırdaki savunmacının hatta doğru koşusu ve uzun erişimi de şutu kesiyor) */
+  sutHamleYap(p,e,p1){
+    const A=MOTOR_AYAR,b=this.ball,ilk=A.ilkHamle&&e.sec.ilk&&e.kx!=null,ox=ilk?e.kx:b.x,oz=ilk?e.kz:b.z,dx=p.x-ox,dz=p.z-oz,r=hrkHyp(dx,dz),U=A.sutHamleUzak;
+    if(r>A.sutHamle&&!(U>A.sutHamle&&r<=U))return false;
     if(e.t<0.12+0.12*(1-p.oz.karar))return false;
-    const gx=e.sec.hx,L=hrkHyp(gx-b.x,MZ-b.z)||1,ux=(gx-b.x)/L,uz=(MZ-b.z)/L,on=dx*ux+dz*uz;if(on<-0.3)return false;
-    const yan=hrkAbs(-dx*uz+dz*ux);if(yan>A.blokErisim+(p.maxSpd||7)*0.6*hrkMax(0,e.kalan||0)+0.3)return false;
-    const k=clamp(on,1,hrkMax(1,hrkMin(6,L-1)));
-    p.tx=b.x+ux*k;p.tz=b.z+uz*k;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);p._ortaBlokT=this.t;return true;
+    const gx=e.sec.hx,L=hrkHyp(gx-ox,MZ-oz)||1,ux=(gx-ox)/L,uz=(MZ-oz)/L,on=dx*ux+dz*uz;if(on<-0.3)return false;
+    const uzak=r>A.sutHamle,kalan=ilk&&e.faz!=='geri'?hrkMax(0,e.kt-this.t)+(e.geri||0):e.kalan||0;
+    const yan=hrkAbs(-dx*uz+dz*ux);if(yan>A.blokErisim+(p.maxSpd||7)*0.6*hrkMax(0,uzak?kalan+on/25:kalan)+0.3)return false;
+    if(uzak&&p1){p._ortaBlokT=this.t;return false;}
+    const k=clamp(on,1,hrkMax(1,uzak?L-1:hrkMin(6,L-1)));
+    p.tx=ox+ux*k;p.tz=oz+uz*k;p.hizOran=1;p.bak=b;p.yonHedef=null;this.eforVer(p,1);p._ortaBlokT=this.t;return true;
   },
   presYap(p,s,dt){
     const b=this.ball,gx=-this.dir[p.team]*PL,mesafe=hrkHyp(p.x-s.x,p.z-s.z);

@@ -16,13 +16,13 @@
    - Koşu: 'kosu' olayı (motorun topsuz koşu başlangıcı; tür: arkaya, gel, aldatma, takip, T14 türleri) maç başına. */
 const W_PL=52.5,W_MZ=34,W_PW=68,W_CU=16.5,W_CW=20.16;
 const W_ILK=['orta','geri','pas','sut','calim','kayip'],W_ILK_AD={orta:'orta',geri:'geri çevirme',pas:'pas',sut:'şut',calim:'çalım',kayip:'kayıp ya da diğer'};
-const W_KOSU=['arkaya','gel','aldatma','takip','orta','genis','bindirme','gecGiris'];
+const W_KOSU=['arkaya','gel','aldatma','takip','orta','genis','bindirme','gecGiris','gecGirisPas','gecKosu'];   /* T24e: gecGirisPas (forvete pasla tetiklenen geç giriş; gecGiris'in içinde), gecKosu */
 /* T24-0 (2026-10-18; T24 planı, ölçüm 5): şut anında ceza sahasındaki forvet dışı arkadaşın (şutu atan ve kaleci hariç) kaynağı, sırayla:
    duran top görevi (görev etiketi 'duran' ya da duran top penceresinde görevi var), geç giriş (koşusu 'gecGiris' ya da son 3 sn'de böyle bir koşu
    başlattı), takip (aynı, 'takip'; bu şutun takibi şuttan sonra atanır, sayılmaz), kutu rolü (görev etiketi 'kutu': kutuRolu ve kanadın arka
    direği), başka koşu (başka türde koşusu var ya da görev etiketi koşu, orta, genişlik, bindirme), diğer (bölge, destek, uzak kanat …) */
-const W_FDK=['gecGiris','kutu','takip','kosu','duran','diger'];
-const W_FDK_AD={gecGiris:'geç giriş',kutu:'kutu rolü',takip:'takip',kosu:'başka koşu',duran:'duran top görevi',diger:'diğer (bölge, destek, uzak kanat …)'};
+const W_FDK=['gecGiris','gecKosu','kutu','takip','kosu','duran','diger'];
+const W_FDK_AD={gecGiris:'geç giriş',gecKosu:'açık oyunda geç koşu (T24e2)',kutu:'kutu rolü',takip:'takip',kosu:'başka koşu',duran:'duran top görevi',diger:'diğer (bölge, destek, uzak kanat …)'};
 const W_KOSU_G=new Set(['kosu','orta','genis','bindirme']);
 module.exports={
   bilgi:[['— T14: kanat ve hücum koşuları (gerçekçilik planı §4 T14) —',null,0],
@@ -48,7 +48,7 @@ module.exports={
     /* T24-0 */
     const sonKosu=new Map(),fdk={};for(const k of W_FDK)fdk[k]=0;
     const fdKaynak=(m,q)=>{const g=q.gorevAd,k=q.kosu,sk=sonKosu.get(q),tur=a=>k&&k.tur===a||!!(sk&&sk.tur===a&&m.t-sk.t<=3);
-      if(g==='duran'||m._duranSonrasi&&q.duranRol)return'duran';if(tur('gecGiris'))return'gecGiris';if(tur('takip'))return'takip';if(g==='kutu')return'kutu';
+      if(g==='duran'||m._duranSonrasi&&q.duranRol)return'duran';if(tur('gecGiris'))return'gecGiris';if(tur('gecKosu'))return'gecKosu';if(tur('takip'))return'takip';if(g==='kutu')return'kutu';
       if(k||W_KOSU_G.has(g))return'kosu';return'diger';};
     const kutuda=(m,x,z,t)=>Math.abs(x-m.dir[t]*W_PL)<W_CU&&Math.abs(z-W_MZ)<W_CW;
     const genisMi=z=>z<=8||z>=W_PW-8;
@@ -63,7 +63,7 @@ module.exports={
       orta={t:m.t,p,q:q||null,team:t};};
     return{
       dinle(ad,v,m){if(!m)return;
-        if(ad==='kosu'&&v.tur){kosu[v.tur]=(kosu[v.tur]||0)+1;if(v.p)sonKosu.set(v.p,{tur:v.tur,t:m.t});return;}
+        if(ad==='kosu'&&v.tur){kosu[v.tur]=(kosu[v.tur]||0)+1;if(v.pas)kosu.gecGirisPas=(kosu.gecGirisPas||0)+1;if(v.p)sonKosu.set(v.p,{tur:v.tur,t:m.t});return;}
         const p=v&&v.p;
         if(ad==='cross'){ortaAni(m,p,v.q);if(kt&&kt.p===p)ilkYaz('orta');}
         else if(ad==='pass'){if(v.tur==='geriCevir'){ortaAni(m,p,v.q);if(kt&&kt.p===p)ilkYaz('geri');}else if(kt&&kt.p===p)ilkYaz('pas');}
