@@ -103,6 +103,7 @@ ayarEkle('B',{
   aliciRahat:0,                // T23a2 (2026-10-18; denendi, kapalı — 0,8 ile 40 maçta pas isabeti −3,8 ± 1,2 (sabit hızlı varış tahminiyle −10,6), toplam ivmelenme aynı
                                // (alıcınınki −0,2, başka yerde geri geliyor), eşzamanlı +0,18; kod kalır): rakipsiz ayağa yerden pasta (planın rakip payı ≥ bu kadar sn) alıcı en erken noktaya tam eforla fırlamaz: yoldaki
                                // ilk rahat noktaya (0,6 eforla toptan 0,1 sn önce varır, yolda ve orada rakip ≥ payla geride) efor 0,6, tepe hızın %62'siyle gider; 0: eski
+  gidisBakis:1.95,             // T23b (2026-10-18): gidiş kipinde (p.don.gm; js/mac-hareket.js hrkGidis) topa bakışın boyun sınırı (rad; eskiden ve öbür durumlarda 1,4)
   surukle:1,                   // T22a: sürükleme (basıp gitmek) — 15/22/30 m'lik uzun taşıma seçeneği (mac-karar.js surukleSecenegi), depar, top 2,8 m önde, 1,2 sn bağlılık; 0: yok
   surukleKanat:0.5,            // T22a: kanat oyuncusunun sürüklemesine ek değer (puan; kullanıcı notu: kanadın hızlanıp basıp gitmesi); 0: yok
   sutYeni:1,                   // T22b: şutta isabet–güç ödünleşimi (plase hata çarpanı 0,9 → 0,65, sert 1,0 → 1,15 — 0,55 / 1,3 denendi: sert %59 ama gol +0,6, gerçekleşen ÷ xG 1,35; serbest vuruş hariç) ve 9 m'den (eskiden 14) falso adayı; 0: eski
@@ -213,7 +214,7 @@ Object.assign(Match.prototype,{
         const D=p.don;let rt;
         if(D.ok&&(D.bt>this.t||Math.abs(aciFark(D.hx,p.yon))>A.bakisDonus))rt=aciFark(D.hx,p.yon);
         else if(this.t-T.bas<T.sure)rt=T.yan*T.gen;
-        else{rt=aciFark(Math.atan2(b.z-p.z,b.x-p.x),p.yon);if(rt>1.4)rt=1.4;else if(rt<-1.4)rt=-1.4;}
+        else{rt=aciFark(Math.atan2(b.z-p.z,b.x-p.x),p.yon);const L=D.gm&&A.gidisGovde?A.gidisBakis:1.4;if(rt>L)rt=L;else if(rt<-L)rt=-L;}   /* T23b: gidisBakis */
         if(rt>1.95)rt=1.95;else if(rt<-1.95)rt=-1.95;
         /* gövdeye göre açı durumu (T.r): boyun en çok bakisHiz ile döner; ilk kez ya da bakış başka yerden yazıldıysa (maç başı) bakıştan alınır */
         if(!T.rOk){const o0=p.bakisYon;T.r=o0==null?rt:aciFark(o0,p.yon);T.rOk=true;}

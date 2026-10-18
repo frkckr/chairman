@@ -99,6 +99,15 @@ ayarEkle('C',{
   kovalaAtalet:1,              // T23a1: tepki süresinde kovalayan hızını ve yönünü korur, eforu önceki karedeki (eskiden eski hedefe efor 1 ile gidip orada durmak üzere
                                // frenliyor — dokunuşta kovalayanların %28'i ≥ 0,8 m/sn frenliyordu —, süre dolunca hedef > 5 m sıçrıyordu); 0: eski
   kovalaSadik:1,               // T23a1: top sürümü değişince de önceki karşılama noktası yeni yolda (0,9 m) ve yetişilebilirse (+0,15 sn) korunur; 0: yalnız aynı sürümde
+  /* T23b (2026-10-18; gerçekçilik planı §4 T23, borç 41): yürüyerek yer değiştiren oyuncu yengeç gibi yan ve geri gitmesin — gövde gidiş yönüne
+     döner, topa açılım kadar yan durur (baş topa bakar, gidisBakis); kısa ayarda, hatta ve topa yakınken eski kural (gövde topa) */
+  gidisGovde:1,                // T23b: açık mı (0: eski — topa bakan gövde, yürüyüşte 0,3–2 m/sn'lik yolun %59'u yan ya da geri)
+  gidisAcik:[0.8,0.5],         // T23b: gövdenin gidiş yönünden topa açılımı (rad): top 8 m'de ilk değer, 25 m ve ötesinde ikinci (uzaktaki topa daha az dönük).
+                               // 40 maç (t23-a3'e): 1,1'de yan + geri %58 → 33,2, top kapma −0,55, ofsayt +0,38; 0,8'de → 30,4, top kapma −0,10, ofsayt −0,17
+                               // (gürültü içinde); gidisTopYakin 12 (1,1 ile) yürüyüşü değiştirmedi (33,4), top kapma −1,38 — 8 kaldı
+  gidisTopYakin:8,             // T23b: top bundan yakınsa (m; çıkış ×0,8) gidiş kipi açılmaz — topa yakın oyuncu topa dönük kalır
+  gidisMesafe:[2,1.5],         // T23b: gidiş kipine giriş için hedefe en az bu kadar yol (m): top yanda / top arkada (> 126°); çıkış 0,6 m
+  gidisHat:[5,3],              // T23b: savunma hattında ve omuzda (rakip toplayken DEF; hrkHatMi) aynı eşik daha uzun — hat geri geri ve yan kayarak çekilir
   surusYetis:1,                // T20a: serbest sürüşte top öndeyken (2,5 m) sürücü topa topun hızıyla (+0,5 m/sn) varır, yetişiyorsa dokunuş zamanlayıcısını beklemeden
                                // dokunur, top gövdenin yanındaysa (0,6 m, 0,35 m gerisine dek) da dokunur; 0: eski (varış hızı hedef hızın %95'i, zamanlayıcı, yalnız öndeki top)
   surusYuz:1,                  // T20a: sürüşte gövdenin hedefi histerezisli (top ±72° dışında ve 0,6 m'den uzaksa topa, ±32° içinde ya da 0,5 m'de niyete); 0: tek eşik (±60°)
@@ -141,6 +150,23 @@ function hrkGovdeDon(m,p,yh,kay,wMax,dt){
   let w=D.w+clamp(wh-D.w,-a*dt,a*dt),st=w*dt;
   if(!tut&&st*f>0&&hrkAbs(st)>fa){st=f;w=f/dt;}
   p.yon=hrkAciNorm(p.yon+st);D.w=w;
+}
+/* T23b (2026-10-18): savunma hattında ya da omuzda mı (görev 'hat'/'omuz' ya da rakip toplayken DEF). gidisGovde ve bakisBekle ortak tanımı */
+const hrkHatMi=(m,p)=>{const b=m.ball;return p.gorevAd==='hat'||p.gorevAd==='omuz'||(p.rol==='DEF'&&!!b.sahip&&b.sahip.team!==p.team);};
+/* T23b (2026-10-18; gidisGovde): yürüyerek yer değiştirenin gövde hedefi. Gidiş kipi (p.don.gm, histerezisli) açıkken gidiş yönü + topa açılım
+   (en çok gidisAcik; top tam arkadaysa yan önceki yanında kalır, p.don.ya), değilse null (eski kural: gövde topa). Giriş: yürüyüş kipinde (ya da
+   hedefe ≤ 1,2 m), top gidiş yönünden > 0,8 rad açık, hedefe gidisMesafe (hatta gidisHat) kadar yol, top ≥ gidisTopYakin. Çıkış: hedefe < 0,6 m,
+   top ≤ 0,8 rad'a girdi ya da top 0,8·gidisTopYakin'e yaklaştı. Saf (zar yok) */
+function hrkGidis(m,p,dx,dz,d,bx,bz){
+  const D=p.don,A=MOTOR_AYAR,db=hrkHyp(bx,bz);
+  if(!((p._kipI<=1||d<=1.2)&&d>0.04&&db>0.2)){D.gm=false;return null;}
+  const ga=hrkAtan2(dz,dx),r=hrkAciFark(hrkAtan2(bz,bx),ga),ar=hrkAbs(r),hat=hrkHatMi(m,p),M=hat?A.gidisHat:A.gidisMesafe,L=ar>2.2?M[1]:M[0],TY=A.gidisTopYakin;
+  if(D.gm){if(d<0.6||ar<=0.8||db<TY*0.8)D.gm=false;}
+  else if(ar>0.8&&d>L&&db>=TY)D.gm=true;
+  if(!D.gm)return null;
+  if(ar<Math.PI-0.3||(r<0?-1:1)===D.ya)D.ya=r<0?-1:1;
+  const O=A.gidisAcik,k=clamp((db-8)/17,0,1),ac=O[0]+(O[1]-O[0])*k,rr=ar>Math.PI-0.3?D.ya*hrkMin(ac,ar):clamp(r,-ac,ac);
+  return hrkAciNorm(ga+rr);
 }
 /* gövdenin baktığı yöne göre hız tavanı (oran; c: bakış ile gidiş yönü arasındaki açının kosinüsü): ileri 1, yana adım ~0,52, geri geri ~0,42 */
 const hrkYonTavan=c=>{const y=MOTOR_AYAR.yanTavan;return c>=0?y+(1-y)*c:y+(y-MOTOR_AYAR.geriTavan)*c;};
@@ -421,18 +447,21 @@ Object.assign(Match.prototype,{
     /* kovalayan (bu karede karşılama verdi) ve eylemdeki (vuruş hazırlığı) düşük eforda kip seçmez: rahat ivmeyle hedefe kadar gider */
     if(acik&&saha&&ef<0.8&&!e2&&p._varisKare!==this.kare)hedefHiz=hrkMin(hedefHiz,this.kipSec(p,d,ef,vm,dt));else p._kipT=0;
     /* bakış: açıkça verilmişse ona; yavaş ve kısa hareketlerde bakılan şeye (topa); koşuda gidilen yöne */
-    let yh=p.yonHedef,kay=0;
+    let yh=p.yonHedef,kay=0,gid=false;
     const GD=A.govdeDinamik&&saha&&!(e2&&e2.ad==='vurus');
     if(yh==null){
       /* hızlı gitmesi gereken oyuncu gideceği yöne döner ve koşar; bir iki adımlık ayarda yüzü topa (bakılan şeye) dönük kalır. H1b'de giriş ve
          çıkışı ayrı eşikli (histerezis) denendi: koşu ↔ bakış geçişi oyuncu·dk başına ~7+7 kez kaldı (geçişler eşik titremesi değil, gerçek koşu
          başlangıcı ve duruşu); 3,2/2,4 m/sn'lik eşik savunma hattının geri çekilişini geciktirip ofsaytı +0,5/maç artırdı — tek eşik kaldı */
       if(hedefHiz>2.8&&d>1.2){yh=hrkAtan2(dz,dx);kay=1;}
-      else if(p.bak){const bx=p.bak.x-p.x,bz=p.bak.z-p.z;if(bx*bx+bz*bz>0.04){yh=hrkAtan2(bz,bx);kay=2;}}
+      else if(p.bak){const bx=p.bak.x-p.x,bz=p.bak.z-p.z;if(bx*bx+bz*bz>0.04){yh=hrkAtan2(bz,bx);kay=2;
+        /* T23b (gidisGovde): yürüyerek yer değiştiren düşük eforlu saha oyuncusu gidiş yönüne döner, topa açılım kadar yan durur */
+        if(A.gidisGovde&&acik&&saha&&ef<0.8&&!e2&&this.phase==='play'){const g=hrkGidis(this,p,dx,dz,d,bx,bz);if(g!=null){yh=g;kay=3;gid=true;}}}}
       else if(hedefHiz>0.4){yh=hrkAtan2(dz,dx);kay=3;}
     }
     /* dönüş hızı: saha oyuncusu yerinde 5,5–8 rad/sn (çeviklik), hızlanınca yarıya yakın; vuruş hazırlığında hrkVurusDonus (T4-V; çizimle ortak);
        kaleci ve diğerleri eski değer */
+    if(!gid&&p.don&&p.don.gm)p.don.gm=false;   /* T23b: gidiş kipi yalnız sürdükçe */
     if(GD)hrkGovdeDon(this,p,yh,kay,hk.w0*(1-0.5*hrkMin(1,p.spd/p.maxSpd)),dt);
     else if(yh!=null){const k=hrkMin(1,p.spd/p.maxSpd),f=hrkAciFark(yh,p.yon),oran=(saha?(e2&&e2.ad==='vurus'?hrkVurusDonus(p):hk.w0*(1-0.5*k)):11-7*k)*dt,st=clamp(f,-oran,oran);p.yon=hrkAciNorm(p.yon+st);
       /* H1b: vuruş hazırlığında eski dönüş (T4-V çizimle ortak); durum sürekli kalsın */

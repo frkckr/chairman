@@ -11,7 +11,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const r=vm.runInContext('tohumluRastgele',ctx)((tohum||1)*7919+13),VZ=vm.runInContext('varisZamani',ctx),tepeF=vm.runInContext('hrkTepe',ctx);
   const ornek=[];
   /* H1b (2026-10-15): gövde dönüşünün durumu (açısal hız, hedef) örnekten örneğe taşınmasın */
-  const donSifirla=p=>{if(p.don)Object.assign(p.don,{w:0,ok:false,hx:0,he:0,t0:-9,yeni:false,bt:-9});};
+  const donSifirla=p=>{if(p.don)Object.assign(p.don,{w:0,ok:false,hx:0,he:0,t0:-9,yeni:false,bt:-9,gm:false,ya:1});};
   for(let i=0;i<N;i++){
     const p=m.players[1+(i%21)];
     Object.assign(p,{eylem:null,kickCd:0,yuk:0,zipla:null,tavir:null,yonHedef:null,bak:null,denge:1,surus:null,_iax:0,_iaz:0,

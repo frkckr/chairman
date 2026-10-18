@@ -73,7 +73,7 @@ const MOTOR_AYAR={
   enerjiTopla:undefined,yanTavan:undefined,geriTavan:undefined,donusSiniri:undefined,ayakBas:undefined,varisHizi:undefined,varisFren:undefined,
   jokeyMesafe:undefined,birebirYayilim:undefined,birebirErisim:undefined,birebirYaris:undefined,birebirKayma:undefined,birebirDonus:undefined,
   birebirVazgec:undefined,yutmaGuc:undefined,yutmaSure:undefined,destekSure:undefined,kapatYakin:undefined,dokunusSiklik:undefined,
-  kovalaAtalet:undefined,kovalaSadik:undefined,dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,govdeDinamik:undefined,donusIvme:undefined,bakOlu:undefined,donusGecikme:undefined,bakisOnce:undefined,cruyff:undefined,cruyffKal:undefined,cruyffKanat:undefined,sirtGovde:undefined,sutHamle:undefined,blokErisim:undefined,kanatKapat:undefined,sagSolAc:undefined,surusYetis:undefined,surusYuz:undefined,geriTopla:undefined,
+  kovalaAtalet:undefined,kovalaSadik:undefined,gidisGovde:undefined,gidisAcik:undefined,gidisTopYakin:undefined,gidisMesafe:undefined,gidisHat:undefined,dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,govdeDinamik:undefined,donusIvme:undefined,bakOlu:undefined,donusGecikme:undefined,bakisOnce:undefined,cruyff:undefined,cruyffKal:undefined,cruyffKanat:undefined,sirtGovde:undefined,sutHamle:undefined,blokErisim:undefined,kanatKapat:undefined,sagSolAc:undefined,surusYetis:undefined,surusYuz:undefined,geriTopla:undefined,
   /* C — js/mac-mudahale.js */
   mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
   acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,elOlasilik:undefined,tutmaIstek:undefined,ortaTemas:undefined,blokGercek:undefined,govdeDar:undefined,
@@ -86,7 +86,7 @@ const MOTOR_AYAR={
   ofsaytAlgi:undefined,kosuIstegi:undefined,aliciPay:undefined,uzaklastirDeger:undefined,hedefDeger:undefined,devamAgirlik:undefined,
   devamHedef:undefined,sabir:undefined,sabirSure:undefined,devamPas:undefined,bekleOran:undefined,koruDeger:undefined,koruSure:undefined,
   koruTempo:undefined,dusunHz:undefined,pasTol:undefined,pasTolHava:undefined,ortaDestek:undefined,ikinciTopHedef:undefined,araKalib:undefined,birebirMenzil:undefined,birebirKayip:undefined,
-  birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,tasiInce:undefined,tasiDevam:undefined,bakisDinamik:undefined,bakisHiz:undefined,taramaAralik:undefined,taramaGenislik:undefined,taramaTut:undefined,taramaYan:undefined,bakisDonus:undefined,surukle:undefined,surukleKanat:undefined,sutYeni:undefined,aliciRahat:undefined,pasFalso:undefined,uzunKosu:undefined,acmaDokunus:undefined,donusBos:undefined,ortaIkinci:undefined,ortaErken:undefined,tersKanat:undefined,vurusYaklas:undefined,pasAcik:undefined,pasDogal:undefined,alisYon:undefined,tekKoni:undefined,
+  birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,tasiInce:undefined,tasiDevam:undefined,bakisDinamik:undefined,bakisHiz:undefined,taramaAralik:undefined,taramaGenislik:undefined,taramaTut:undefined,taramaYan:undefined,bakisDonus:undefined,surukle:undefined,surukleKanat:undefined,sutYeni:undefined,aliciRahat:undefined,gidisBakis:undefined,pasFalso:undefined,uzunKosu:undefined,acmaDokunus:undefined,donusBos:undefined,ortaIkinci:undefined,ortaErken:undefined,tersKanat:undefined,vurusYaklas:undefined,pasAcik:undefined,pasDogal:undefined,alisYon:undefined,tekKoni:undefined,
   /* D — js/mac-kaleci.js */
   kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,penaltiOku:undefined,penaltiKanma:undefined,kaleciNiyet:undefined,kaleciNiyetEsik:undefined,kaleciBekle:undefined,kaleciEgri:undefined,
   /* T — js/mac-takim.js */
@@ -304,7 +304,7 @@ class Match{
       /* H1 (2026-10-15): gövde dönüşünün ve bakışın durumu (js/mac-hareket.js hrkGovdeDon, js/mac-topla.js taramaAdim; çizim okumaz): w açısal
          hız (rad/sn), ok hedef tanımlı mı, hx son ham hedef, he etkin hedef, t0 hedef sıçramasının anı, yeni bakılan şeye yeniden yönelme sürüyor
          mu, bt bakışın yeni yöne önden gittiği sürenin bitiş anı */
-      don:{w:0,ok:false,hx:0,he:0,t0:-9,yeni:false,bt:-9},
+      don:{w:0,ok:false,hx:0,he:0,t0:-9,yeni:false,bt:-9,gm:false,ya:1},   /* T23b: gm gidiş kipi (hrkGidis), ya arkadaki topa açılımın yanı */
       /* T7d: müdahale tahmininin önbelleği (çarpan, kare, rakip; js/mac-takim.js mudahaleTahminCarpani) */
       _mt:undefined,_mtK:undefined,_mtS:undefined,
       /* T1 iç alanları: kararlı hedef, efor karesi, kip ve süresi, son ivme (karede hız değişimi), düşünme aralığı (kare) */
