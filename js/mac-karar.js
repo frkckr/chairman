@@ -692,7 +692,9 @@ function sutPlani(m,p,ox,oz,sd,o){
   /* T9b-a: sıcaklık en iyi adayın değerine göre (göreli): uzak şutta bütün adayların P(gol)'ü küçükken mutlak sıcaklık seçimi neredeyse rastgele
      yapıyordu (25 m'de plan tam güçlü vuruşu en iyi bulsa da ortalama güç 0,84 çıkıyordu); karar 0,6'da 16 m'de eskisiyle aynı keskinlik */
   const tau=Math.max(0.004,(0.06+0.18*(1-p.oz.karar))*en);let top=0;
-  for(const c of Ls){c.a=Math.exp((c.Pg-en)/tau);top+=c.a;}
+  /* Z6b (sutEgilim): plase vuran ve kaleciyi aşırtan şutçunun türü — seçimde pay (P(gol) değişmez; yürütme aynı) */
+  const SE=MOTOR_AYAR.sutEgilim,eP=SE?SE*0.15*en*profilEgilim(p,'plaseVurur'):0,eA=SE?SE*0.25*en*profilEgilim(p,'kaleciyiAsirtir'):0;
+  for(const c of Ls){c.a=Math.exp((c.Pg+(c.tur==='plase'?eP:c.tur==='asirtma'?eA:0)-en)/tau);top+=c.a;}
   let r=m.rast()*top;for(const c of Ls){r-=c.a;if(r<=0)return c;}
   return Ls[Ls.length-1];}
 /* T8c: şut adayları ve en iyisinin P(gol)'ü (saf; rastlantı çekmez): serbest vuruş kararı (serbestKarar) seçmeden değerlendirir */
@@ -752,6 +754,16 @@ function penaltiPlani(m,p,gk,sd){
       Ps=zt===0?orta*rO+(1-orta)*0.25:ayni*rS+orta*rO;}
     const Pg=Pon*(1-Ps);Ls.push({zt,yt,g,v,tur,kz:TT.kz,ky:TT.ky,fg,Pg,Pon});if(Pg>en)en=Pg;}
   return{Ls,en};}
+/* Z6a (sutKaleci; FUTBOL_KUTUPHANESI §5, kutuphane/C §1): şutçunun gördüğü kale ağzının (direkten direğe açı) kalecinin örtmediği payı. Kalecinin
+   örtüsü uzanma yarıçapıyla (ayakta ve kapanmada 1,6 m; uçuşta, kalkışta ya da düşüşte 0,35 m) kaleciye uzaklıktan açı aralığıdır. Oran: bu payın, kale
+   çizgisinin ortasında ayakta duran kalecinin bırakacağı paya oranı (konum xG'si bu ortalama kaleciyle kurulu). Saf; rastlantı çekmez */
+function kaleciAcikOran(m,p,x0,z0){
+  const gk=m.kaleci(1-p.team),d=m.dir[p.team],gx=d*PL;if(!gk||!gk.oyunda)return 2;
+  const a1=Math.atan2(MZ-GW2-z0,gx-x0),a2=Math.atan2(MZ+GW2-z0,gx-x0),lo=Math.min(a1,a2),hi=Math.max(a1,a2),w=hi-lo;if(w<0.02)return 1;
+  const ortu=(cx,cz,r)=>{const dk=Math.max(0.5,hyp(cx-x0,cz-z0)),ak=Math.atan2(cz-z0,cx-x0),h=Math.atan(r/dk);return Math.max(0,Math.min(hi,ak+h)-Math.max(lo,ak-h));};
+  const e=gk.eylem,yer=!!(e&&e.kilit&&(e.ad==='ucus'||e.ad==='kalkis'||e.ad==='dusus'));   /* kapanma (ayağa yatış) örtü sayılır: kaleci şutçunun üstünde */
+  const acik=1-ortu(gk.x,gk.z,yer?0.35:1.6)/w,ref=Math.max(0.05,1-ortu(gx,MZ,1.6)/w);
+  return acik/ref;}
 /* şut seçeneği: iyi pozisyonda istekle; uzaktan ancak iyi şutçu ve önü boşsa. Atış hattındaki savunmacı bloklayabilir */
 
 function sutSecenegi(m,p,x0,z0,baski){
@@ -762,6 +774,8 @@ function sutSecenegi(m,p,x0,z0,baski){
     vr=Math.max(0,hyp(p.x-x0,p.z-z0)-0.5)/Math.max(0.7,p.spd||0);t0=Math.max(vs.haz,don,vr)+vs.geri;}
   const pBlok=sutBlokOlasiligi(m,p,x0,z0,d*PL,MZ,'sert',undefined,undefined,t0);
   const gx=d*PL,Lk=hyp(gx-x0,MZ-z0),oz=p.oz;let x=xG(u,z0,'ayak',baski*0.4)*(1-pBlok);   /* 2B (T8c: 3B yalnız serbest vuruşun planında) */
+  /* Z6a (sutKaleci): kaleciyi gören karar — açık açının ortalama kaleciye oranı (0,5–2 kat; karar becerisi okumayı keskinleştirir) */
+  if(MOTOR_AYAR.sutKaleci>0){const r=kaleciAcikOran(m,p,x0,z0),k=MOTOR_AYAR.sutKaleci*(0.6+0.4*oz.karar);x*=clamp(1+k*(r-1),0.5,2);}
   /* T9b-c: şutçunun niteliği yakında şut becerisinden, 18 m'den sonra giderek gücünden (sutGucu; uzak şutu güç taşır). Gol olmayan şutun değeri:
      dönen top ve korner (sutIkinci; 13 m'ye kadar tam, 25 m'de sıfır — uzak şutun çoğu tutulur ya da auta gider, çelme ve blok yakında doğar)
      eksi top kaybı (0,4; eskiden yalnız kayıp cezası). İlk denemede mesafeden bağımsız değer 25 m ötesinden şutu %7'den %36'ya çıkarmıştı */

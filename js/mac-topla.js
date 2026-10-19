@@ -23,6 +23,9 @@ ayarEkle('B',{
   risk:1.0,                    // top kaybından çekinme çarpanı (takımın risk ayarıyla çarpılır)
   surusKarar:[0.3,0.62],       // top sürerken yeniden karar aralığı
   vurusHizalama:0.36,          // vuruş için gövdenin hedefe en fazla sapması (rad); gelişine vuruşta 1,05, dış ayakla 0,85
+  sutKaleci:1,                 // Z6a (C §1; 12. not "zekâsız bitiriş"): şut kararı kaleciyi görür — kalecinin örtmediği açı payı, kale çizgisinin ortasında duran kaleciye
+                               // göre konum xG'sini 0,5–2 kat değiştirir (yerde ya da yerinden çıkmış kaleci: vur; açıyı daraltan kaleci: başka seçenek); 0: eski
+  sutEgilim:1,                 // Z6b: plaseVurur ve kaleciyiAsirtir eğilimleri şut planında türün seçimine pay verir (en iyi adayın P(gol)'ünün en çok %15'i ve %25'i); 0: eski
   sutIstegi:5.0,               // şut seçeneğinin değer çarpanı: 14 m'ye kadar tam, 22 m'de etkisiz (birleştirme 2026-10-03: 3 → 5)
   sutIstekMesafe:[11,20],      // T12c: şut isteğinin tam olduğu ve bittiği mesafe (m; kale ortasına; eskiden sabit 14 ve 22 — şutun ortanca mesafesi 18,1 → 17,0)
   xtKanat:[0.01,0.022],        // T12c: son üçte birin kanadında (orta ve geri çevirme bölgesi) alan tehdidinin tabanı ve çizgiye inen artışı (xT)
