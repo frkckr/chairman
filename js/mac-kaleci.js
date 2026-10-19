@@ -29,8 +29,8 @@ ayarEkle('D',{
   kaleciBekle:[0.8,1.6],
   /* Z3 (2026-10-19 gece; FUTBOL_KUTUPHANESI §12.2, kutuphane/A-oyun-kurma.md A1–A17): oyun kurma ve kalecinin dağıtımı */
   kurma:15,                    // Z3: bit maskesi — 1 kale vuruşu planı (beş kategori, presi okuma, bekleyiş ve bakış), 2 kurma şekli (kale vuruşunda ve kurma niyetinde:
-                               // stoperler açılır, altı iner, bek içe girer, kaleci +1), 4 savunanın kale vuruşu presi (yüksek preste kısa seçenekler adam adama), 8 uzun
-                               // topta ikinci top düzeni; 0: Z2 (tarzEtki 0 ve planTarz 0 ile birebir)
+                               // stoperler açılır, altı iner, bek içe girer, kaleci +1), 4 savunanın kale vuruşu presi (yüksek preste kısa seçenekler adam adama), 8 ayrılmış
+                               // (açık oyunda uzun topun ikinci top düzeni; Z4'e borç — kale vuruşundaki ikinci top düzeni 2'nin içinde); 0: Z2 (tarzEtki 0 ve planTarz 0 ile birebir)
   kvBekle:[1.5,4],             // Z3a: kale vuruşunda kalecinin top yerinde bekleyişi (sn; tarzın kısa payıyla: kısa kuran şeklin oturmasını bekler; A1: 2–6 sn, kural 5 sn sayımı)
   kvPres:12.5,                 // Z3a: kısa seçeneğe bu mesafede (m) rakip varsa presli sayılır (FIFA KDK 2025: presçi 12,5 m içinde; A §4)
   kvKurmaU:[-46,-44,-36,-28],  // Z3b: kale vuruşunda kısa kurma şekli, takımın hücum çerçevesinde u (kendi kale çizgisi −52,5): stoperler (ceza sahasının içinde, geniş),
