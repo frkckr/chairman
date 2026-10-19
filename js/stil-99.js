@@ -207,8 +207,9 @@ const STIL={
   /* karar anı ekranı (N12, js/ekran-an.js): kenar kararması (0–1), kartların yerine oturma süresi (süre ondan sonra başlar), seçimden sonra
      kartın kalış süresi, son kaç saniyede çubuk amber olur (sn); yazı büyüklüğü (cqw; normal, büyük). TEST değerleri */
   an:{kararma:0.35,giris:0.4,sonra:0.9,amber:1.5,yazi:{normal:1.3,buyuk:1.6}},
-  /* raf (N5, 2026-10-04): y = rafın üst yüzeyi (ön plan kamerasına göre metre; eski masa -0,47'deydi), derinlik = rafın eni (m), duvar = altındaki ön duvarın iç yüzü */
-  baskan:{aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,raf:{y:-0.56,derinlik:0.3,duvar:0x44474d},takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.15,egimUst:0.02,govdeHiz:0.05},
+  /* raf (N5, 2026-10-04): y = rafın üst yüzeyi (ön plan kamerasına göre metre; eski masa -0,47'deydi), derinlik = rafın eni (m), duvar = altındaki ön duvarın iç yüzü.
+     govde (Z1, kullanıcı kararı 2026-10-19): ön planın bakışı izleme çarpanları [eğim, sapma] — 0: raf ve telefon ekranda sabit (eskiden 0,22 ve 0,25: baş dönünce raf kayıyordu) */
+  baskan:{govde:[0,0],aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,raf:{y:-0.56,derinlik:0.3,duvar:0x44474d},takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.15,egimUst:0.02,govdeHiz:0.05},
 
   /* Başkan bölümü: halı, ahşap bölmeler, başkanın koltuğu */
   baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
@@ -335,22 +336,21 @@ const STIL={
      kaldırıldı (ayarı da). */
   kameralar:{
     /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre). js/kamera.js
-       N4 (kullanıcı kararı 2026-10-04): bakış hep topu izler; fareyle/ok tuşlarıyla elle bakış ve “Topu izle” düğmesi kaldırıldı (elleAci ve
-       elle ayarları da). Bakış topa odaklıdır: görüş açısı oyunda oyunAci aralığında, ölü topta
-       oluGecikme saniye sonra, maç öncesi/sonrası, devre arası ve törende aci'ye (geniş) döner. aciSure: görüş açısı yumuşama süresi (sn, maç
-       zamanı). yayOyun: oyunda bakış yayının açısal sıklığı (1/sn), hizSiniri: bakışın en hızlı dönüşü (derece/sn); yay ve sahneSinir aynısı
-       oyun dışı (ilgi noktaları) için. oluBolge: [derece (oyunAci[1]'de), m/sn] top bu hızdan yavaşken bakışın kıpırdamadığı açı. egim: oyunda
-       bakışın topun ne kadar altına indiği (derece, oyunAci[1]'de; top alttaki masanın açıkta bıraktığı alanın ortasına yakın). sahneEgim: oyun
-       dışında bakışın odağın altına inme payı (uzaklığa oran). asagiSinir/yukariSinir: takipte bakışın en çok aşağı/yukarı eğimi (radyan).
-       top: onde = taşıyanın önüne bakış (m), ongoru = serbest topta balistik öngörü (sn), inis = [başlangıç sn, süre sn, en çok pay] uzun havadan
-       topta iniş yerine kayma, kale = son üçte birde kale ağzına kayma payı, korner = kornerde penaltı noktasına kayma payı, butce = [sapma, eğim]
-       nişanın topun yönünden en çok sapması (derece, oyunAci[1]'de). genislik (görüş açısı için 0 dar – 1 geniş): hiz = top hızı aralığı (m/sn),
-       kale = kaleye uzaklık aralığı (m, yakında geniş), yayilim = [m, m, pay] topa üçüncü en yakın oyuncunun uzaklığı (dağınık oyunda geniş).
-       TEST değerleri */
-    baskan:{goz:0.78,hedef:[0,1,0],aci:36,oyunAci:[21,26],aciSure:0.8,oluGecikme:1.5,yayOyun:5,hizSiniri:120,yay:1.0,sahneSinir:60,
-      oluBolge:[0.8,2.5],egim:1.6,sahneEgim:0.18,asagiSinir:0.5,yukariSinir:0.12,
-      top:{onde:0.6,ongoru:0.35,inis:[0.5,1.6,0.55],kale:0.25,korner:0.45,butce:[2.5,1.6]},
-      genislik:{hiz:[7,22],kale:[30,12],yayilim:[6,18,0.6]}}
+       Z1 (kullanıcı kararı 2026-10-19; kullanıcının 9. maç notu "kamera yakınlaşıp uzaklaşıyor, raf kayıyor"): görüş açısı maç günü boyunca SABİTTİR
+       (aci = 32° dikey, 4:3'te yatayda ~42°; oyunda yakınlaşma yok — eski oyunAci 21–26°, ölü topta ve maç dışında 36° yolu kalktı). Bakış topu
+       PENCEREYLE izler: top bakış merkezinin yatayda ±pencere[0]°, dikeyde ±pencere[1]° içindeyken baş kıpırdamaz; dışına çıkınca topu pencerenin
+       kenarına getirecek kadar döner (N4'ün "bakış hep topu izler" kuralı gevşedi: top ortada tutulmaz, geniş pencerede kalır). ileriSure:
+       pencere kenarına itilen hedefin açısal hızının yumuşatma süresi (sn); yay bu hızı ileri besleme olarak alır (yoksa hızlı pasta yay sabit
+       gecikmeyle geride kalıyor, top ekranın kenarına kayıyordu; akis-deneme §17: pencere bandında %76 → %99). yayOyun: oyunda bakış
+       yayının açısal sıklığı (1/sn), hizSiniri: bakışın en hızlı dönüşü (derece/sn) — ikisi de yavaş baş dönüşü için düşük; yay ve sahneSinir aynısı oyun
+       dışı (ilgi noktaları) için. egim: oyunda bakışın topun ne kadar altına indiği (derece; top alttaki rafın açıkta bıraktığı alanın ortasına yakın).
+       sahneEgim: oyun dışında bakışın odağın altına inme payı (uzaklığa oran). asagiSinir/yukariSinir: takipte bakışın en çok aşağı/yukarı eğimi
+       (radyan). top: onde = taşıyanın önüne bakış (m), ongoru = serbest topta balistik öngörü (sn), inis = [başlangıç sn, süre sn, en çok pay] uzun
+       havadan topta iniş yerine kayma, kale = son üçte birde kale ağzına kayma payı, korner = kornerde penaltı noktasına kayma payı, butce = [sapma,
+       eğim] nişanın topun yönünden en çok sapması (derece). TEST değerleri (açı kullanıcı kararı) */
+    baskan:{goz:0.78,hedef:[0,1,0],aci:32,pencere:[9,5],ileriSure:0.15,yayOyun:2.2,hizSiniri:40,yay:1.0,sahneSinir:60,
+      egim:1.6,sahneEgim:0.18,asagiSinir:0.5,yukariSinir:0.12,
+      top:{onde:0.6,ongoru:0.35,inis:[0.5,1.6,0.55],kale:0.25,korner:0.45,butce:[2.5,1.6]}}
   },
 
   /* Maçın okunurluğu (js/okunurluk.js, js/goruntu.js; A akışı, 2026-10-03): locadan uzaktaki maçın net görünmesi için çizim ayarları.

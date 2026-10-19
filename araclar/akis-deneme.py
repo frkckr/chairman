@@ -14,11 +14,12 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
  14b. N12: rakip başkan yerinde / sonra / yok; beş saniyelik karar anı (süre, duraklatma, klavye, büyük yazı, atlamanın geçememesi).
  15. Ortak çatısız stat ve mekân (2.8D, 2.8J, 2.8O): tek tarif, balkon/pencere aynı stat, iskele, kapıya tıklama, doğal yürüyüş;
      N6 (2026-10-04): insan gibi kalkış, adım ve oturma (ivme ve hız sıçraması sınırı), telefonu alma ve masaya koyma.
- 15b. Maçta binadaki loca, 52°'lik geniş bakışta yedek kulübeleri ve okunur tabela; N4 (2026-10-04): bakış hep topu izler (elle bakış,
-     Topu izle düğmesi ve F tuşu yok); topa odaklı yakın bakış.
+ 15b. Maçta binadaki loca, 52°'lik geniş bakışta yedek kulübeleri ve okunur tabela; N4 (2026-10-04): bakış topu izler (elle bakış,
+     Topu izle düğmesi ve F tuşu yok); Z1 (2026-10-19): görüş açısı sabit 32°, top geniş pencerede (±9° / ±5°), raf sabit.
  16. Maç telefonu (2.8F, 2.8I).
- 17. Topu izleyen bakış ve maçın netliği (2026-10-03): belirlenimli 30 sn oyunda (1× ve 4×) top ekranın ortasında; oyuncu boyu, topun
-     çizim boyu, 960×720 maç ızgarası ve 2× iç çizim; dürbünün kaldırıldığı (2026-10-07: düğme, D, maske tuvali, ayar yok) denetlenir.
+ 17. Topu izleyen bakış ve maçın netliği (2026-10-03; Z1 2026-10-19): belirlenimli 30 sn oyunda (1× ve 4×) top ekranda ve pencere bandında,
+     görüş açısı sabit, raf kıpırdamıyor; oyuncu boyu, topun çizim boyu, 960×720 maç ızgarası ve 2× iç çizim; dürbünün kaldırıldığı (2026-10-07:
+     düğme, D, maske tuvali, ayar yok) denetlenir.
  18. İzleme hızı ve önemli anlar (U1, 2026-10-12): Ayarlar > Maç, maç şeridindeki ×1 ×2 ×4 ve 1/2/4 tuşları, kalıcılık; belirlenimli maçta
      ×4'te şut ve golden önce 1×'e iniş (ikiz motor 7 sn önde), maçın sonuna dek ikizin ana motorla aynılığı.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız ve Durdur, eski ayar kaydı, sessiz maç.
@@ -821,9 +822,9 @@ async def bolum_15b(tarayici, site, tum_hatalar):
         await pg.wait_for_timeout(300)
     y0 = await pg.evaluate(YON_JS)
     A = await pg.evaluate("STIL.kameralar.baskan")
-    ortada = sum(1 for o in ornek if abs(o["x"]) <= 0.45 and -0.35 <= o["y"] <= 0.45)
-    denetle("N4: bakış hep topu izliyor: Topu izle düğmesi ve elle bakış kodu yok; fareyle sürükledikten sonra da top ekranın ortasına yakın, görüş açısı oyun/ölü top aralığında",
-            not yapi["dugme"] and not yapi["elle"] and not yapi["sinif"] and (ortada >= 5 or y0["mod"] == "sahne") and A["oyunAci"][0] - 0.5 <= y0["fov"] <= A["aci"] + 0.5, f"{yapi} · {y0} · ortada {ortada}/8")
+    ortada = sum(1 for o in ornek if abs(o["x"]) <= 0.6 and -0.5 <= o["y"] <= 0.5)
+    denetle("N4/Z1: bakış topu pencerede izliyor: Topu izle düğmesi ve elle bakış kodu yok; fareyle sürükledikten sonra da top pencere bandında (|x| ≤ 0,6), görüş açısı sabit (STIL aci)",
+            not yapi["dugme"] and not yapi["elle"] and not yapi["sinif"] and (ortada >= 5 or y0["mod"] == "sahne") and abs(y0["fov"] - A["aci"]) <= 0.5, f"{yapi} · {y0} · ortada {ortada}/8")
     # duraklatılmışken bakış sabittir: sürükleme, ok tuşları ve F başı çevirmez
     await pg.keyboard.press("KeyP")
     d0 = await pg.evaluate(YON_JS)
@@ -850,10 +851,9 @@ async def bolum_15b(tarayici, site, tum_hatalar):
         return { x: +v.x.toFixed(3), y: +v.y.toFixed(3), fov: +camera.fov.toFixed(2) }; };
       const top = [];
       for (const [x, z] of [[30, 52], [-38, 12], [5, 62], [-15, 30]]) { Object.assign(b, { x, z, y: 0, vx: 0, vy: 0, vz: 0, sahip: null, tasiyan: null }); for (let i = 0; i < 150; i++) kameraAdim(1 / 60); top.push(olc()); }
-      Object.assign(b, eski); return { faz: mac.phase, top, oyunAci: K.baskan.oyunAci, aci: K.baskan.aci }; }""")
-    A = odak["oyunAci"]
-    denetle("Bakış topa odaklı: duraklatılmışken dört yere konan topa bakış yayla döndü; top ekranın ortasına yakın (|x| ≤ 0,15, −0,1 ≤ y ≤ 0,3), görüş açısı oyunAci içinde, geniş açı 36°",
-            odak["faz"] == "play" and odak["aci"] == 36 and all(abs(o["x"]) <= 0.15 and -0.1 <= o["y"] <= 0.3 and A[0] - 0.01 <= o["fov"] <= A[1] + 0.01 for o in odak["top"]), str(odak["top"]))
+      Object.assign(b, eski); return { faz: mac.phase, top, aci: K.baskan.aci, pencere: K.baskan.pencere }; }""")
+    denetle("Z1: bakış topu pencerede: duraklatılmışken dört yere konan topa bakış yavaşça döndü; top pencerenin içinde ya da kenarında (|x| ≤ 0,46, |y| ≤ 0,45), görüş açısı sabit 32°",
+            odak["faz"] == "play" and odak["aci"] == 32 and all(abs(o["x"]) <= 0.46 and abs(o["y"]) <= 0.45 and abs(o["fov"] - 32) <= 0.01 for o in odak["top"]), str(odak["top"]))
     await pg.screenshot(path=str(ARAC / "son-akis-15-mac.png"))
     await pg.context.close()
 
@@ -940,12 +940,14 @@ ORNEK_JS = """(o) => {
     for (const a of AKTORLER) { const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !p.oyunda) continue; const ay = new THREE.Vector3(a.x, 0, a.z).project(camera), bas = new THREE.Vector3(a.x, 1.8 * (p.boy || 1), a.z).project(camera);
       if (Math.abs(ay.x) <= 1 && Math.abs(ay.y) <= 1) boy.push(Math.abs(bas.y - ay.y) * 240); }
     boy.sort((a, b) => a - b);
-    R.push({ faz: mac.phase, x: f2(v.x), y: f2(v.y), px: +px.toFixed(2), boy: boy.length ? boy[boy.length >> 1] : null }); }
+    const G = kameraGovdeHedefi(KAM.a.y, KAM.a.p, null);
+    R.push({ faz: mac.phase, x: f2(v.x), y: f2(v.y), px: +px.toFixed(2), boy: boy.length ? boy[boy.length >> 1] : null, fov: camera.fov, raf: Math.max(Math.abs(G.p), Math.abs(G.y)) }); }
   MAC_HIZ.secim = 1; MAC_HIZ.deger = 1; MAC_HIZ.oto = oto0;
   const O = R.filter(r => r.faz === 'play'), n = Math.max(1, O.length), B = O.map(r => r.boy).filter(x => x != null).sort((a, b) => a - b);
-  return { ornek: O.length, ic: +(O.filter(r => Math.abs(r.x) <= 0.45 && r.y >= -0.35 && r.y <= 0.45).length / n).toFixed(3),
+  return { ornek: O.length, ic: +(O.filter(r => Math.abs(r.x) <= 0.55 && r.y >= -0.35 && r.y <= 0.5).length / n).toFixed(3),
     disarida: +(O.filter(r => Math.abs(r.x) > 1 || Math.abs(r.y) > 1).length / n).toFixed(3),
-    boy: B.length ? +B[B.length >> 1].toFixed(1) : 0, topPx: O.length ? Math.min(...O.map(r => r.px)) : 0 };
+    boy: B.length ? +B[B.length >> 1].toFixed(1) : 0, topPx: O.length ? Math.min(...O.map(r => r.px)) : 0,
+    fovFark: O.length ? +(Math.max(...O.map(r => r.fov)) - Math.min(...O.map(r => r.fov))).toFixed(4) : 0, raf: O.length ? Math.max(...O.map(r => r.raf)) : 0 };
 }"""
 
 
@@ -975,18 +977,18 @@ async def bolum_17(tarayici, site, tum_hatalar):
     o1 = await pg.evaluate(ORNEK_JS, {"sure": 30, "hiz": 1})
     o4 = await pg.evaluate(ORNEK_JS, {"sure": 30, "hiz": 4})
     for ad, o in (("1×", o1), ("4×", o4)):
-        denetle(f"Belirlenimli 30 sn oyunda ({ad}) top 0,25 sn'lik örneklerin ≥ %90'ında ekranın ortasında (|x| ≤ 0,45, −0,35 ≤ y ≤ 0,45), ≤ %1'inde ekran dışında",
-                o["ornek"] >= 40 and o["ic"] >= 0.9 and o["disarida"] <= 0.01, str(o))
-    denetle("Oyunda oyuncu boyu ortancası 480 satır karşılığı ≥ 28 piksel (önce ~21), top ≥ 3 piksel", o1["boy"] >= 28 and o1["topPx"] >= 2.95, f"{o1['boy']} px · top en az {o1['topPx']} px")
+        denetle(f"Belirlenimli 30 sn oyunda ({ad}) top 0,25 sn'lik örneklerin ≥ %90'ında pencere bandında (|x| ≤ 0,55, −0,35 ≤ y ≤ 0,5), ≤ %1'inde ekran dışında; görüş açısı sabit (fark ≤ 0,01°), raf kıpırdamıyor (Z1)",
+                o["ornek"] >= 40 and o["ic"] >= 0.9 and o["disarida"] <= 0.01 and o["fovFark"] <= 0.01 and o["raf"] <= 1e-9, str(o))
+    denetle("Oyunda oyuncu boyu ortancası 480 satır karşılığı ≥ 23 piksel (Z1: sabit 32°; 26°'de ~31, 36°'de ~23 hesaplanmıştı), top ≥ 3 piksel", o1["boy"] >= 23 and o1["topPx"] >= 2.95, f"{o1['boy']} px · top en az {o1['topPx']} px")
     # dürbün kaldırıldı (kullanıcı kararı 2026-10-07): D tuşu bir şey yapmaz; düğme, maske tuvali, ayar, el hareketi ve kamera geçiş durumu yok
     await pg.keyboard.press("KeyD")
     await pg.evaluate("__kare(45)")
     yok = await pg.evaluate("""({ bino: typeof bino, dugme: !!document.getElementById('btnBino'), hud: !!document.getElementById('hud'), ayar: 'durbun' in STIL.kameralar,
       islev: typeof baskanDurbun, kam: ('gecis' in KAM) || ('dfov' in KAM) || ('d' in KAM), eylem: BASKAN.eylem ? BASKAN.eylem.ad : null, fov: +camera.fov.toFixed(2),
-      oyunAci: STIL.kameralar.baskan.oyunAci, aci: STIL.kameralar.baskan.aci })""")
+      aci: STIL.kameralar.baskan.aci })""")
     denetle("Dürbün kaldırıldı (2026-10-07): bino, btnBino, maske tuvali, STIL.kameralar.durbun, baskanDurbun ve kameranın dürbün durumu yok; D tuşu görüş açısını oyun aralığından çıkarmıyor",
             yok["bino"] == "undefined" and not yok["dugme"] and not yok["hud"] and not yok["ayar"] and yok["islev"] == "undefined" and not yok["kam"]
-            and not (yok["eylem"] or "").startswith("durbun") and yok["oyunAci"][0] - 0.5 <= yok["fov"] <= yok["aci"] + 0.5, str(yok))
+            and not (yok["eylem"] or "").startswith("durbun") and abs(yok["fov"] - yok["aci"]) <= 0.5, str(yok))
     # elle saatli sayfada kareler sunulmadan art arda verilir; yazılım çizimi (960×720 ızgara, 2×) birikir: görüntü öncesi kuyruk boşaltılır
     await pg.evaluate("renderer.getContext().finish()")
     await pg.screenshot(path=str(ARAC / "son-akis-17-mac.png"), timeout=180000)
