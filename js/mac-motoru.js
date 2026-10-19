@@ -96,6 +96,8 @@ const MOTOR_AYAR={
   mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,kovalaKalici:undefined,presKalici:undefined,kapatKalici:undefined,gecisKademe:undefined,gecisDalga:undefined,markajKalici:undefined,kosuSil:undefined,yorgunBlok:undefined,yorgunPres:undefined,yorgunKosu:undefined,yorgunKip:undefined,guvenEtki:undefined,guvenRisk:undefined,guvenSure:undefined,evGuven:undefined,
   kanatRol:undefined,kanatBas:undefined,kanatCizgi:undefined,kanatDerin:undefined,kanatOnde:undefined,kanatUzak:undefined,gecGiris:undefined,
   tutEtki:undefined,kovala2Pay:undefined,kapatSon:undefined,kapiFaz:undefined,kapiFazSav:undefined,
+  /* Z — js/mac-plan.js (Z1, 2026-10-19: plan katmanı; js/mac-ilkeller.js ilkel tablosu, js/mac-tarz.js tarz iskeleti) */
+  plan:undefined,planDeger:undefined,planTut:undefined,planIstek:undefined,planHiz:undefined,planEs:undefined,planTeklif:undefined,planTarz:undefined,
   /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
   hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,hakemGeriDon:undefined,itirazKart:undefined,kartliHosgoru:undefined,evEtki:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
   ofsaytBayrak:undefined,ofsaytBekle:undefined,
@@ -440,6 +442,7 @@ class Match{
     if(b.sahip)this.ist.sahiplik[b.sahip.team]+=dt;
     this.bedenAdim(dt);    /* yorgunluk ve beden (mac-hareket.js) */
     this.taramaAdim(dt);   /* etrafa bakma (mac-topla.js) */
+    if(MOTOR_AYAR.plan)this.planAdim(dt);   /* Z1: plan katmanı (js/mac-plan.js) — 0 iken çağrılmaz, motor T23 ile birebir */
     this.takimAI(dt);
     this.topluAI(dt);
     this.hareketHepsi(dt);

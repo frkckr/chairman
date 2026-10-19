@@ -282,9 +282,10 @@ Object.assign(Match.prototype,{
      çevirmede penaltı noktası ve yay. Tam efor; top ortacıdayken ofsayt çizgisinin gerisinde (bolgeKonumu), 1,8 sn. Eskiden orta anında ceza
      sahasında forvet dışı 1,1 hücumcu vardı, şutların %81'i forvetten (T14-0). Rastlantısız */
   gecGirisAta(p,sec){const A=MOTOR_AYAR;if(!A.gecGiris||!p||p.team==null)return;
+    if(this._pln&&this.planGeriAcik(p.team))return;   /* Z1 (H5): açık geri çevirme planı kutu rollerini kendisi verir */
     const t=p.team,d=this.dir[t],yan=Math.sign(this.ball.z-MZ)||1,GR=this._geride&&this._geride[t],yer=sec.tur==='geriCevir'||sec.tip!=='hava';
     const Z=yer?[[PL-11,MZ],[PL-17,MZ-yan*3]]:[[PL-11,MZ-yan],[PL-7,MZ-yan*4]],C=[];
-    for(const q of this.teams[t]){if(q===p||q===sec.alici||!q.oyunda||q.rol==='GK'||q.rol==='FV'||q.rol==='DEF'||(q.eylem&&q.eylem.kilit)||(GR&&GR.has(q))||(q.kosu&&q.kosu.tur!=='arkaya'))continue;
+    for(const q of this.teams[t]){if(q===p||q===sec.alici||!q.oyunda||q.rol==='GK'||q.rol==='FV'||q.rol==='DEF'||(q.eylem&&q.eylem.kilit)||(GR&&GR.has(q))||(q.kosu&&q.kosu.tur!=='arkaya')||(this._pln&&this._pln.rol.has(q)))continue;
       const L=hyp(q.x-d*(PL-11),q.z-MZ);if(L>25||q.x*d<PL-40)continue;
       C.push([0.5*profilAlt(q,'topsuzHareket',0.5)+0.5*Math.max(0,profilEgilim(q,'cezaSahasinaGecGirer'))+(q.mevki.kanat?0.2:0)-L/30,q]);}
     C.sort((a,c)=>c[0]-a[0]||a[1].n-c[1].n);

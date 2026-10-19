@@ -533,7 +533,7 @@ Object.assign(Match.prototype,{
       this.pasSay(p,sec.hx,sec.hz,L,tur);this.ofsaytPasAni(p);
       this.on(tur==='orta'?'cross':'pass',{p,q:sec.alici,long:L>=32,tur,L,x0:bx,z0:bz,hx,hz,tip,ilk:!!sec.ilk});
       if(tur==='orta'||tur==='geriCevir')this.ortaBlok(p);
-      if(tur==='pas'&&tip==='yer'&&sec.alici&&L>=5&&L<=22&&p.rol!=='GK')this.verKacBaslat(p,sec.alici);}
+      if(tur==='pas'&&tip==='yer'&&sec.alici&&L>=5&&L<=22&&p.rol!=='GK'&&!(this._pln&&(MOTOR_AYAR.plan&1)))this.verKacBaslat(p,sec.alici);}   /* Z1 (H4): plan&1'de ver-kaç duvar pası ilkelinin */
     else if(tur==='uzaklastir'||tur==='degaj')this.on(tur==='degaj'?'gkkick':'clear',{p});
     else if(tur==='serbest'||tur==='korner'||tur==='kaleVurusu'){this.pasSay(p,sec.hx,sec.hz,L,tur);this.ofsaytPasAni(p);}
   },
@@ -818,6 +818,7 @@ Object.assign(Match.prototype,{
     if(p.kosu){const k=p.kosu;k.t-=dt;
       if(k.t<=0||this.ball.sahip!==s||p.x*d>PL-6){p.kosu=null;return null;}
       return k;}
+    if(this._pln&&(MOTOR_AYAR.plan&4))return null;   /* Z1 (H3): derin koşuyu plan katmanı başlatır (ilk hareket eden koşucu; js/mac-ilkeller.js derinKosu) */
     if(!(p.rol==='FV'||p.mevki.kanat||(p.rol==='OS'&&!p.mevki.derin&&su>5)))return null;
     const ileriBakar=Math.cos(s.yon)*d>0.2,serbest=baskiAltinda(this,s)<0.8,pu=p.x*d,A=MOTOR_AYAR,N=this._niyet&&this._niyet[p.team];
     /* T7c: tetikli koşu (plan T7 madde 5) — taşıyanın son kararında bu oyuncu için savunma arkasında bir ara noktası bulunduysa (0,5 sn içinde;

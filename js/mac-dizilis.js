@@ -319,6 +319,8 @@ Object.assign(Match.prototype,{
       /* T14b: kutuya geç giriş (js/mac-takim.js gecGirisAta) — top ortacıdayken ofsayt çizgisinin gerisinde, top ayaktan çıkınca hedefe; süre
          bitince ya da top rakibe geçince biter */
       if(p.kosu&&p.kosu.tur==='gecGiris'){const k=p.kosu;k.t-=dt;if(k.t<=0||s&&s.team!==t)p.kosu=null;else{u=s?Math.min(k.u,ofs-0.4):k.u;w=k.w;p.hizOran=1;ef=1;g='gecGiris';}}
+      /* Z1 (H2): plan rolü (js/mac-plan.js planRolKonumu) — bağlılık süresince öbür görevlerin önünde; top yoldayken de (sahip null) */
+      if(this._pln){const r=this.planRolKonumu(p,t);if(r){u=r.u;w=r.w;ef=r.ef;p.hizOran=r.h;g=r.g;}}
       /* T7b: geride kalan topun 12 m gerisinde, rakip yarısının 5 m'sini geçmez, merkezi kapatır */
       if(geride){u=Math.min(u,bu-12,5);w=clamp(w,MZ-16,MZ+16);}
       if(!p.kosu&&u>ofs-0.6&&u>0)u=ofs-0.6;

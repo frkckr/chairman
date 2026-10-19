@@ -518,6 +518,8 @@ function pasSecenekleri(m,p,o){
   }
   C.sort((a,c)=>c.U0-a.U0||a.q.n-c.q.n||PAS_ALT_SIRA[a.alt]-PAS_ALT_SIRA[c.alt]||(a.es||0)-(c.es||0));
   const K=Math.min(C.length,o.ilk?6:10),S=[];
+  /* Z1 (H6): planın bu pasördan beklediği alıcının en iyi ön adayı tam analize zorla girer (plan 0'da m._pln yok) */
+  if(m._pln&&K>0){const hq=m.planAlici(p);if(hq){let j=-1;for(let i=0;i<C.length;i++)if(C[i].q===hq){j=i;break;}if(j>=K){const c=C[j];C.splice(j,1);C.splice(K-1,0,c);}}}
   for(let i=0;i<K;i++){const c=C[i];let r=pasAdayiTam(m,p,o,c,c.tip,c.yay);
     if(c.iki){const t2=c.tip==='yer'?'hava':'yer',r2=pasAdayiTam(m,p,o,c,t2,t2==='hava'&&hyp(c.hx-o.ox,c.hz-o.oz)<24?'asirtma':null);if(r2.deger>r.deger)r=r2;}
     S.push(r);}
@@ -780,6 +782,7 @@ function secenekler0(m,p){
   if(u<-PL+30&&(baski>0.3||dn))S.push({tur:'uzaklastir',deger:MOTOR_AYAR.uzaklastirDeger+baski*1.1+(u<-PL+18?0.4:0)+(dn?MOTOR_AYAR.donenUzak:0)});
   /* T2: bekleme ya da gövdeyle koruma (eskiden yalnız koru: değeri her zaman eksiydi) */
   bekleSecenegi(m,p,S);koruSecenegi(m,p,S);
+  if(m._pln)m.planEkle(p,S,0);   /* Z1 (H7): planın adımı ve istek sinyali seçenek değerine (koruSecenegi'nden sonra: koruma payı devralmasın) */
   return S;
 }
 /* sabır eşiği (T2, puan): topu tutmanın (taşıma, bekleme) pasa göre ek değeri. Takımın sakin ve tempo ayarından 0,1–0,6; oyuncunun önü açıksa
@@ -800,10 +803,11 @@ function kararVer0(m,p){
   const S=secenekler(m,p);if(!S.length)return{tur:'bekle'};
   const v=m.bVeri(p),b=m.ball;if(!v.gur||v.gur.no!==m.sahiplikNo)v.gur={no:m.sahiplikNo,M:new Map(),t0:m.t};
   const G=v.gur.M,tau=0.1+0.5*(1-profilAlt(p,'tutarlilik',0.5+0.4*p.oz.karar)),esik=sabirEsigi(m,p,baskiSuresi(m,p.team,b.x,b.z,0).t1,m.t-v.gur.t0);
+  const pt=m._pln?m.planTut(p,esik):0;   /* Z1 (H8): derin koşu gençken bekleme payı (sabır eşiğinin üstüne) */
   let en=S[0],enP=-1e9;
   for(const s of S){const k=s.tur==='tasi'||s.tur==='bekle'||s.tur==='koru'?'tut':s.alici?(s.tur==='orta'||s.tur==='geriCevir'?'o':'p')+s.alici.n:s.tur;
     let g=G.get(k);if(g===undefined){const r=Math.max(1e-12,m.rast());g=-Math.log(-Math.log(r))*tau;G.set(k,g);}
-    const puan=s.deger+g+profilEgilimPuani(m,p,s)+(k==='tut'?esik:0);if(puan>enP){enP=puan;en=s;}}
+    const puan=s.deger+g+profilEgilimPuani(m,p,s)+(k==='tut'?esik+pt:0);if(puan>enP){enP=puan;en=s;}}
   /* T7c (Ek H 6): en iyi pasın hedefi — taşırken gövde ona açılır (mac-hareket.js surusIlerle) */
   if(MOTOR_AYAR.govdeAc){let bp=null;for(const s of S)if(s.alici&&(!bp||s.deger>bp.deger))bp=s;v.enPas=bp?{hx:bp.hx,hz:bp.hz,t:m.t}:null;}
   return en;
@@ -817,6 +821,7 @@ function tekVurusKarari0(m,p,k,s,yakin){
   let dd=99;for(const o of rakipler(m,p.team))if(o.oyunda)dd=Math.min(dd,hyp(o.x-k.x,o.z-k.z)-o.maxSpd*k.t*0.6);
   const baski=clamp((4.5-dd)/3.5,0,1),ofs=ofsaytCizgisi(m,p.team)+m.normal()*MOTOR_AYAR.ofsaytAlgi*(1.2-p.oz.gorus);
   const ktr=pasSecenekleri(m,p,{ox:k.x,oz:k.z,t0:k.t+0.45,ilk:false,baski:Math.min(1,baski+0.15),ofs});
+  if(m._pln)m.planEkle(p,ktr,2);   /* Z1 (H9) */
   let en2=null;for(const c of ktr)if(!en2||c.deger>en2.deger)en2=c;
   const Pk=kontrolOlasiligi(p,s.v||hyp(b.vx,b.vz),s.y,baski,0.8),kay=pasKaybi(m,p,k.x,k.z);
   /* kontrol sonrası: en iyi pas, şut ya da topu tutmak (T2: oranın devam değeri ve sabır eşiği; eskiden buranın tehdidi − baskı) */
@@ -828,6 +833,7 @@ function tekVurusKarari0(m,p,k,s,yakin){
   if(p.rol==='GK'||s.y>0.45||!yakin)return{sec:null,hedef};
   /* T20c (tekKoni): yönlendirme konisi 90–120° (eskiden 34–54°: gelişine pas yalnız pasöre doğru) */
   const ilk=pasSecenekleri(m,p,{ox:k.x,oz:k.z,t0:k.t,ilk:true,gelA,sinirA:MOTOR_AYAR.tekKoni?MOTOR_AYAR.tekKoni*(0.75+0.25*p.oz.pas):0.6+0.35*p.oz.pas,baski,ofs,vole:s.y>0.15});
+  if(m._pln)m.planEkle(p,ilk,1);   /* Z1 (H9): ver-kaç dönüşü ve üçüncü adam bırakışı gelişine */
   let en1=null;for(const c of ilk)if(!en1||c.deger>en1.deger)en1=c;
   if(!en1)return{sec:null,hedef};
   /* tek vuruşun kendi riski: top ayağa tam gelmeyebilir */
