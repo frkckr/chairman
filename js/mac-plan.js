@@ -33,22 +33,27 @@ function planYeni(){return{no:0,tur:'',takim:0,durum:'teklif',i:0,K:null,A:null,
 const PLN_SIRA={duvarPasi:0,ucuncuAdam:1,derinKosu:2,geriCevirme:3};
 Object.assign(Match.prototype,{
   planHazirla(){return this._pln={no:0,T:[[],[]],rol:new Map(),sonPas:null,sonDok:null,sonSurum:-1,kare:-1,cizgi:[0,0],cizgiD:[0,0],
-    hd:{u:0,w:0,ef:0,h:1,g:''},aday:[],istek:new Map()};},
+    hd:{u:0,w:0,ef:0,h:1,g:''},aday:[],istek:new Map(),istekKare:-99};},
+  /* gerçek ofsayt çizgisi (sondan ikinci rakip) ve topla birlikte: t takımının çerçevesinde (u). ofsaytCizgisi her karede çağrılmaz (bellek ayırır) */
+  planCizgi(t){const S=this._pln,d=this.dir[t];let a=-1e9,c=-1e9;
+    for(const o of this.teams[1-t]){if(!o.oyunda)continue;const u=o.x*d;if(u>a){c=a;a=u;}else if(u>c)c=u;}
+    S.cizgiD[t]=Math.max(c,0);S.cizgi[t]=Math.max(c,this.ball.x*d,0);},
+  /* duruş başladı (js/mac-kurallar.js durusBaslat): açık planlar 'durus' (rol oyuncusu ofsayttaysa 'ofsayt') nedeniyle kapanır; duruş boyunca rol hedefi yok */
+  planDurusKapat(){const S=this._pln;for(let t=0;t<2;t++)for(let i=S.T[t].length-1;i>=0;i--){const P=S.T[t][i];this.planKapat(P,P.durum==='teklif'?'reddedildi':'bozuldu',P.ofs?'ofsayt':'durus');}},
   /* H1 (stepPlay, takimAI'den önce): olayları oku, planları denetle, öner */
   planAdim(dt){
     const S=this._pln||this.planHazirla(),b=this.ball;
     if(S.kare>=0&&this.kare-S.kare>1)for(let t=0;t<2;t++)for(let i=S.T[t].length-1;i>=0;i--){const P=S.T[t][i];this.planKapat(P,P.durum==='teklif'?'reddedildi':'bozuldu',P.ofs?'ofsayt':'durus');}
     S.kare=this.kare;
-    /* gerçek ofsayt çizgisi (sondan ikinci rakip) ve topla birlikte — yalnız açık plan varken (ofsaytCizgisi her karede çağrılmaz: bellek ayırır) */
-    for(let t=0;t<2;t++){if(!S.T[t].length)continue;const d=this.dir[t];let a=-1e9,c=-1e9;
-      for(const o of this.teams[1-t]){if(!o.oyunda)continue;const u=o.x*d;if(u>a){c=a;a=u;}else if(u>c)c=u;}
-      S.cizgiD[t]=Math.max(c,0);S.cizgi[t]=Math.max(c,b.x*d,0);}
+    /* çizgi yalnız açık planı olan takım için (yeni açılan planın takımı planAc'te) */
+    for(let t=0;t<2;t++)if(S.T[t].length)this.planCizgi(t);
     if(b.pas&&b.pas!==S.sonPas){S.sonPas=b.pas;this.planPas(b.pas);}
     const sd=b.sonDokunan;if(sd&&sd.team!=null&&(sd!==S.sonDok||b.surum!==S.sonSurum))this.planDokunus(sd);
     S.sonDok=sd;S.sonSurum=b.surum;
     for(let t=0;t<2;t++){const L=S.T[t];for(let i=L.length-1;i>=0;i--)this.planDenetle(L[i]);}
+    /* öneri: topa sahip takım, 5 Hz; takimAI ofsayt çizgisini kurmadan (maçın ilk oyun karesi) ve taşıyan vuruş hazırlığındayken (pas kararı verilmiş) yok */
     const k=b.sahip;
-    if(k&&k.team!=null&&this.kare%12===(k.team?6:0)&&!(k.eylem&&k.eylem.kilit)){
+    if(k&&k.team!=null&&this._ofs&&this.kare%12===(k.team?6:0)&&!(k.eylem&&(k.eylem.kilit||k.eylem.ad==='vurus'))){
       if(S.T[k.team].length<MOTOR_AYAR.planEs)this.planOner(k.team,k);
       if(MOTOR_AYAR.plan&16)this.planIstekAdim(k.team,k);}
   },
@@ -125,6 +130,7 @@ Object.assign(Match.prototype,{
   },
   planAc(a){
     const S=this._pln,P=planYeni(),t=a.K.team,d=this.dir[t],bg=tarzBaglilik(this,t);
+    this.planCizgi(t);   /* rol hedefi aynı karede okunur: çizgi bayat kalmasın */
     P.no=++S.no;P.tur=a.tur;P.takim=t;P.K=a.K;P.A=a.A;P.B=a.B;P.C=a.C;P.R=a.R;P.D=a.D;P.nu=a.nu;P.nw=a.nw;P.yan=a.yan;P.deger=a.deger;P.kz=a.kz;P.t0=this.t;
     if(a.tur==='duvarPasi'||a.tur==='ucuncuAdam'){P.durum='teklif';P.i=0;P.son=this.t+MOTOR_AYAR.planTeklif[a.tur==='duvarPasi'?0:1];
       S.rol.set(a.B,P);if(a.C)S.rol.set(a.C,P);
@@ -141,6 +147,7 @@ Object.assign(Match.prototype,{
   },
   /* H2 (bolgeKonumu): rol hedefi (paylaşılan nesne; aynı çağrıda yazılır ve okunur) */
   planRolKonumu(p,t){
+    if(this.phase!=='play')return null;   /* duruşta rol yok (planlar durusBaslat'ta kapanır) */
     const P=this._pln.rol.get(p);if(!P||P.takim!==t)return null;
     const r=ILK_TABLO[P.tur].hedef(this,P,p,this._pln.hd);if(!r)return null;
     if(p.kosu&&P.tur==='derinKosu'&&p===P.R){p.kosu.u=r.u;p.kosu.w=r.w;if(p.kosu.t<0.5)p.kosu.t=0.5;}
@@ -171,8 +178,11 @@ Object.assign(Match.prototype,{
   /* bit 16 — istek sinyali: açık ve oyuna dönük arkadaş 0,6 sn açık kalınca top ister (jest 'cagir'; 2,5 sn'de bir). Rastlantısız */
   planIstekAdim(t,K){
     const S=this._pln,d=this.dir[t],ku=K.x*d;
-    for(const q of this.teams[t]){if(q===K||!q.oyunda||q.rol==='GK'||q.eylem&&q.eylem.kilit)continue;
-      let e=S.istek.get(q);if(!e){e={acik:-1,son:-9};S.istek.set(q,e);}
+    if(this.kare-S.istekKare>12)for(const e of S.istek.values())e.acik=-1;   /* sahiplik ya da öneri kesildi: açıklık sayacı baştan */
+    S.istekKare=this.kare;
+    for(const q of this.teams[t]){let e=S.istek.get(q);
+      if(q===K||!q.oyunda||q.rol==='GK'||q.eylem&&q.eylem.kilit){if(e)e.acik=-1;continue;}
+      if(!e){e={acik:-1,son:-9};S.istek.set(q,e);}
       const L=hyp(q.x-K.x,q.z-K.z);let acik=L<=25&&q.x*d>=ku-5&&Math.cos(aciFark(q.yon,d>0?0:Math.PI))>-0.2;
       if(acik){let r=99;for(const o of this.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;const dd=hyp(o.x-q.x,o.z-q.z);if(dd<r)r=dd;}acik=r>5&&!ilkHatKesen(this,t,K.x,K.z,q.x,q.z,1.0,null);}
       if(!acik){e.acik=-1;continue;}

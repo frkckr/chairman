@@ -1,6 +1,6 @@
 /* ============ Z1 sınav sahnesi S10 — geri çevirme ve üç derinlikli kutu girişi (FUTBOL_KUTUPHANESI §8; H.7 S10) ============
    Esin: İspanya–İtalya 2012 (Silva), Türkiye–Senegal 2002 (İlhan), Man City'nin geri çevirmeleri. Örnek kodlanmaz; kabul biçimdir.
-   Kurulum (ev sahibinin hücum çerçevesinde): sağ kanat (5) topla kale çizgisine 8 m, ortanın 22 m sağında, çizgiye 4 m/sn ile iniyor. Hücumcular:
+   Kurulum (ev sahibinin hücum çerçevesinde): sağ kanat (5) topla kale çizgisine 8 m, ortanın 17 m sağında (2026-10-19: 22'den; geri çevirme tanımı ortanın 5–20 m yanı), çizgiye 4 m/sn ile iniyor. Hücumcular:
    forvet (10) kaleye 15 m'de ortanın 3 m sağında, hedef forvet (9) 19 m'de 4 m solunda, merkez orta saha (7) 27 m'de ortada (geç gelen adayı), sol
    kanat (8) 17 m'de 15 m solda; hepsi kaleye 3 m/sn ile. Konuk savunma kendi kalesine geri koşuyor: bek (1) kanadın 2,5 m önünde, stoperler (2, 3)
    kaleye 9–10 m'de, öbür bek (4) 12 m'de, iki orta saha (6, 7) 24 m'den geri koşuyor (3–5 m/sn kaleye). Kaleciler kalede, öbürleri oyun dışı.
@@ -9,7 +9,8 @@
    ve pası ±0,2.
    Ölçü: kanadın ilk bırakışı — geri çevirme (yerden, geriye ya da yana, kaleye 4–22 m ve ortaya 12 m içindeki hedefe; z-kalip ile aynı geometri),
    orta (havadan), şut, öteki pas, kayıp. Geri çevirme anında üç bandın (ön direk ≤ 7 m, penaltı noktası 7–14 m, yay 14–22 m; ortaya 10–12 m) kaçında
-   hücumcu var; geç gelenin (7) koşusu (≥ 4,2 m/sn, kaleye) pastan kaç sn önce başladı.
+   hücumcu var; geç gelenin (rolden bağımsız: pas anında ön direk ya da penaltı noktası bandında olup 1,5 sn önce ceza sahası
+   dışında olan hücumcu) koşusu (≥ 4,2 m/sn) pastan kaç sn önce başladı.
    Kabul (Z1 kapanışında açılır, KAPI): plan 31'de geri çevirme anında ≥ 2 bant ≥ %60 ve plan 0'dan ≥ 20 puan; geç gelenin koşusu kesişten 0,7–2,0 sn
    önce ≥ %40 (geri çevirmelerde); geri çevirme kararının payı plan 0'dan en çok 5 puan düşük.
    Kullanım: node araclar/mac-deneme.js --senaryo z-s10 [N=60 kol başına] [tohum] */
@@ -25,23 +26,30 @@ module.exports={calistir({ctx,vm,N,tohum}){
       if(v.p===K&&(ad==='pass'||ad==='cross'||ad==='shot')){bitti=true;
         if(ad==='shot'){r.karar='şut';return;}
         if(ad==='cross'){r.karar='orta';return;}
-        const u0=K.x*d,hu=(v.hx!=null?v.hx:K.x)*d,hz=v.hz!=null?v.hz:K.z;
-        const gc=v.tip!=='hava'&&hu<=u0+1&&hu>=PL-22&&hu<=PL-4&&Math.abs(hz-MZ)<12;
+        /* z-kalip'in geri çevirme tanımının (gcMu) tamamı: topun çıkış yeri, çizgiye 11 m içi, ortanın 5–20 m yanı */
+        const x0=v.x0!=null?v.x0:K.x,z0=v.z0!=null?v.z0:K.z,u0=x0*d,hu=(v.hx!=null?v.hx:x0)*d,hz=v.hz!=null?v.hz:z0;
+        const gc=v.tip!=='hava'&&u0>PL-11&&Math.abs(z0-MZ)>5&&Math.abs(z0-MZ)<20&&hu<=u0+1&&hu>=PL-22&&hu<=PL-4&&Math.abs(hz-MZ)<12;
         if(!gc){r.karar=v.tip==='hava'?'orta':'öteki pas';return;}
         r.karar='geri çevirme';let ne=0,sp=0,ar=0;
         for(const p of ATK){const u=p.x*d,w=Math.abs(p.z-MZ);if(u>=PL-7&&w<=10)ne++;else if(u>=PL-14&&u<PL-7&&w<=10)sp++;else if(u>=PL-22&&u<PL-14&&w<=12)ar++;}
-        r.bant=(ne>0)+(sp>0)+(ar>0);const o=kos.get(G);r.gecDt=o&&o.ks>=0?o.ks-m.t:null;}});
+        r.bant=(ne>0)+(sp>0)+(ar>0);
+        /* geç gelen (rolden bağımsız, z-kalip gibi): pas anında penaltı noktası ya da ön direk bandında (kaleye ≤ 14 m, ortaya ≤ 10 m) olup 1,5 sn önce
+           ceza sahası dışında bulunan hücumcu; birden çoksa koşusu 0,7–2,0 sn önce başlayan, yoksa pasa en yakın başlayan */
+        for(const p of ATK){const u=p.x*d,w=Math.abs(p.z-MZ);if(u<PL-14||w>10)continue;const o=kos.get(p),e=o&&o.iz.length?o.iz[0]:null;
+          if(!e||!(e.x*d<PL-16.5||Math.abs(e.z-MZ)>20.16))continue;const dt=o.ks>=0?o.ks-m.t:null;if(dt==null)continue;const ic=x=>x<=-0.7&&x>=-2.0;
+          if(r.gecDt==null||ic(dt)&&!ic(r.gecDt)||ic(dt)===ic(r.gecDt)&&dt>r.gecDt)r.gecDt=dt;}}});
     d=m.dir[0];const hy=d>0?0:Math.PI,T0=m.teams[0],T1=m.teams[1];
     K=T0[5];G=T0[7];ATK=[T0[10],T0[9],T0[7],T0[8]];const D=[T1[1],T1[2],T1[3],T1[4],T1[6],T1[7]];
     O.bosalt(m,[K,...ATK,...D]);const yer=(p,u,w,yon,v)=>O.yerlestir(p,u*d,w,yon,v);
     const geri=hy;   /* savunmanın kendi kalesine koşusu da +u yönünde (aynı kale) */
-    yer(K,PL-8,MZ-22,hy,4);yer(T0[10],PL-15,MZ-3,hy,3);yer(T0[9],PL-19,MZ+4,hy,3);yer(T0[7],PL-27,MZ,hy,3);yer(T0[8],PL-17,MZ+15,hy,3);
-    yer(D[0],PL-5.5,MZ-20,geri,3);yer(D[1],PL-9,MZ-4,geri,4);yer(D[2],PL-10,MZ+3,geri,4);yer(D[3],PL-12,MZ+12,geri,3);yer(D[4],PL-24,MZ-2,geri,5);yer(D[5],PL-24,MZ+6,geri,5);
+    yer(K,PL-8,MZ-17,hy,4);yer(T0[10],PL-15,MZ-3,hy,3);yer(T0[9],PL-19,MZ+4,hy,3);yer(T0[7],PL-27,MZ,hy,3);yer(T0[8],PL-17,MZ+15,hy,3);
+    yer(D[0],PL-5.5,MZ-15,geri,3);yer(D[1],PL-9,MZ-4,geri,4);yer(D[2],PL-10,MZ+3,geri,4);yer(D[3],PL-12,MZ+12,geri,3);yer(D[4],PL-24,MZ-2,geri,5);yer(D[5],PL-24,MZ+6,geri,5);
     if(kol.profil){for(const p of [K,...ATK]){for(const k of ['gorus','karar','pas'])p.oz[k]=Math.max(0,Math.min(1,p.oz[k]+kol.profil));p._kutle=0;p._cev=null;p._hk=undefined;profilKur(p,m.tohum);}}
     O.oyunda(m);O.topVer(m,K,hy,4,0.9);
     for(let k=0;k<60*4&&!bitti;k++){m.step(dt);if(m.phase!=='play')break;const b=m.ball;
-      for(const p of ATK){const v=Math.hypot(p.vx,p.vz);let o=kos.get(p);if(!o){o={ks:-1,alt:0};kos.set(p,o);}
-        if(v>=4.2){if(o.ks<0)o.ks=m.t;o.alt=0;}else if(o.ks>=0){o.alt+=dt;if(o.alt>0.2){o.ks=-1;o.alt=0;}}}
+      for(const p of ATK){const v=Math.hypot(p.vx,p.vz);let o=kos.get(p);if(!o){o={ks:-1,alt:0,iz:[]};kos.set(p,o);}
+        if(v>=4.2){if(o.ks<0)o.ks=m.t;o.alt=0;}else if(o.ks>=0){o.alt+=dt;if(o.alt>0.2){o.ks=-1;o.alt=0;}}
+        o.iz.push({x:p.x,z:p.z});if(o.iz.length>90)o.iz.shift();}   /* 1,5 sn'lik konum geçmişi (iz[0]: 1,5 sn önce ya da başlangıç) */
       if(b.sahip&&b.sahip.team===1||b.tasiyan&&b.tasiyan.team===1){r.karar='kayıp';break;}}
     if(!r.karar)r.karar='tuttu';
     return r;};

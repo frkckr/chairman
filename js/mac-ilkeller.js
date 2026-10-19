@@ -63,13 +63,13 @@ const ILK_TABLO={
   ucuncuAdam:{bit:2,ad:'üçüncü adam',roller:['K: ilk pasçı (A)','B: duvar, sırtı kaleye','C: üçüncü adam (koşucu)'],baglilik:[0.8,4],
     kapi:{gorme:['sezgi','gorus'],secme:['yaraticilik','oldurucuPas'],yapma:['ilkDokunus']},
     aday(m,t,K,out){
-      const d=m.dir[t],ku=K.x*d;if(ku<-30||ku>PL-18)return;const ofs=m._ofs[t];let nB=0;
-      for(const B of m.teams[t]){if(nB>=3)break;if(B===K||!B.oyunda||B.rol==='GK'||B.eylem&&B.eylem.kilit||m._pln.rol.has(B))continue;
+      const d=m.dir[t],ku=K.x*d;if(ku<-30||ku>PL-18)return;const ofs=m._ofs[t],GR=m._geride&&m._geride[t];let nB=0;
+      for(const B of m.teams[t]){if(nB>=3)break;if(B===K||!B.oyunda||B.rol==='GK'||B.eylem&&B.eylem.kilit||m._pln.rol.has(B)||GR&&GR.has(B))continue;
         const bu=B.x*d,ileri=bu-ku;if(ileri<8||ileri>22||bu>ofs-0.3)continue;
         if(Math.cos(aciFark(B.yon,d>0?0:Math.PI))>0)continue;   /* sırtı kaleye */
         let M=null;for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;if(o.x*d>bu-0.5&&hyp(o.x-B.x,o.z-B.z)<3){M=o;break;}}
         if(!M||!ilkCanli(K,B)||ilkHatKesen(m,t,K.x,K.z,B.x,B.z,1.2,M))continue;nB++;
-        let nC=0;for(const C of m.teams[t]){if(nC>=2)break;if(C===K||C===B||!C.oyunda||C.rol==='GK'||C.eylem&&C.eylem.kilit||m._pln.rol.has(C))continue;
+        let nC=0;for(const C of m.teams[t]){if(nC>=2)break;if(C===K||C===B||!C.oyunda||C.rol==='GK'||C.eylem&&C.eylem.kilit||m._pln.rol.has(C)||GR&&GR.has(C))continue;
           const L=hyp(C.x-B.x,C.z-B.z);if(L<6||L>16||C.x*d>ofs-0.3)continue;
           const nu=Math.min(bu+6,ofs+3,PL-8),nw=lerp(C.z,B.z,0.3),nx=nu*d;if(!ilkSahada(nx,nw,2))continue;
           let bos=true;for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;if(hyp(o.x-nx,o.z-nw)<4){bos=false;break;}}if(!bos)continue;

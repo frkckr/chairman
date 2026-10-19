@@ -4,16 +4,18 @@
    okumaz. Yalnız pas, orta, şut, çalım ve ofsayt olaylarını, topu ve oyuncuların konum, hız, yön, bakış ve jest alanlarını okur; rastlantı çekmez,
    motor yöntemi çağırmaz. Plan katmanının ürettiği örüntü böylece kendi sayaçlarından (z-plan.js) ayrı doğrulanır. Tanımlar:
    - Koşu: hız ≥ 4,2 m/sn (15 km/sa) en az 0,7 sn (SkillCorner, Gradient); başlangıcı serinin ilk karesidir (hız 3,6 m/sn'nin altında 0,2 sn'den
-     uzun kalınca seri biter). Konumlar 0,1 sn'de bir 3 sn'lik halkada tutulur.
-   - Dokunuş: topun son dokunanı ya da sürümü değişti (b.sonDokunan, b.surum).
+     uzun kalınca seri biter). Ver-kaç ve üçüncü adamda seri sorgu anında (ikinci pas) en az 0,4 sn sürmüş olmalı: tek dokunuşlu dönüş 0,7 sn
+     dolmadan gelir (2026-10-19 inceleme). Konumlar 0,1 sn'de bir 3 sn'lik halkada tutulur.
+   - Dokunuş: topun son dokunanı değişti ya da sürümü değişti ve son dokunanın dokunuş kaydı (sonDokunus) yenilendi — sekme, direk ve yan ağ
+     (topDegisti) dokunuş sayılmaz (2026-10-19 inceleme).
    - Ver-kaç: A→B yerden ≤ 15 m pas; 2 sn içinde B'nin A'ya pası (B en çok 2 dokunuş, arada başkası dokunmadan); A'nın koşusu ilk pastan en çok
      0,3 sn önce ile 0,8 sn sonra arasında başlamış ve A ikinci pasa kadar ≥ 4 m ileri gitmiş. Tamamlanan: ikinci pastan sonra ilk dokunan A
      (2,5 sn içinde). Savunmacı elendi: ilk pas anında A'nın önünde (ileri yönde) 8 m içindeki en yakın rakip, A topu aldığında A'nın gerisinde.
    - Üçüncü adam: A→B ileri pas (B'nin alışı A'nın yerinden ≥ 6 m ileride), B alışta sırtı kaleye (gövdesi hücum yönünden > 90° dönük), B en çok
-     2 dokunuşla 1,6 sn içinde C'ye (C ≠ A) pas, hedef B'nin en çok 3 m gerisi; C'nin koşusu ilk pastan 0,5 sn önce ile B'nin pasından 0,2 sn önce
+     2 dokunuşla 1,6 sn içinde C'ye (C ≠ A) pas (gelişine bırakışta B'nin alışı bu pasın kendisidir), hedef B'nin en çok 3 m gerisi; C'nin koşusu ilk pastan 0,5 sn önce ile B'nin pasından 0,2 sn önce
      arasında başlamış. Tamamlanan: sonra ilk dokunan C (2,5 sn içinde); C ileri gidiyor: alışta C'nin ileri hızı > 2 m/sn.
    - Derin pas: hedefi pas anındaki ofsayt çizgisinin (sondan ikinci rakip) 1 m gerisini geçen ya da türü 'ara' olan açık oyun pası. Alıcının koşu
-     başı − pas anı (Δt): erken ≤ −0,3 sn, aynı an |Δt| < 0,3, geç > +0,3 (paylar koşanlar arasında; IDSSE ölçümüyle aynı tanım), koşusuz (1,5 sn içinde koşu yok). Ofsayt: 3 sn içinde alıcıya ofsayt.
+     başı − pas anı (Δt): erken ≤ −0,3 sn, aynı an |Δt| < 0,3, geç > +0,3 (paylar koşanlar arasında; IDSSE ölçümüyle aynı tanım), koşusuz (pastan sonra 1,5 sn içinde başlayıp 0,7 sn süren koşu yok). Ofsayt: 3 sn içinde alıcıya ofsayt.
    - Geri çevirme (geometri; Opta "pull-back"): kale çizgisine ≤ 11 m ve orta noktadan 5–20 m yanda başlayan, geriye ya da yana (hedef başlangıcın
      en çok 1 m önünde), hedefi kaleye 4–22 m ve ortaya 12 m içinde yerden pas. Pas anında hücumcunun üç bandı: ön direk (kaleye ≤ 7 m), penaltı
      noktası (7–14 m), yay (14–22 m); ortaya 10–12 m içinde. Geç gelen: ön direk ya da penaltı noktası bandındaki, 1,5 sn önce ceza sahası dışında
@@ -57,12 +59,12 @@ module.exports={
     /* oyuncu durumu: koşu serisi ve konum halkası */
     const S=new Map();let ringI=0,adimN=0;
     const durum=p=>{let o=S.get(p);if(!o){o={ks:-1,alt:0,rx:new Float32Array(Z_RING),rz:new Float32Array(Z_RING),dolu:0,jest:null};S.set(p,o);}return o;};
-    const kosuBasi=(p,t)=>{const o=S.get(p);return o&&o.ks>=0&&t-o.ks>=0?o.ks:-1;};
+    const kosuBasi=(p,t,enAz)=>{const o=S.get(p);return o&&o.ks>=0&&t-o.ks>=(enAz||0)?o.ks:-1;};
     const eskiYer=(p,geri)=>{const o=S.get(p);if(!o||o.dolu<=geri)return null;const j=((ringI-1-geri)%Z_RING+Z_RING)%Z_RING;return{x:o.rx[j],z:o.rz[j]};};
     /* olay günlükleri */
     const pas=[];   /* son paslar {t,p,q,team,d,u0,x0,z0,hx,hz,hu,tur,tip,ilk,L,D,Du,Au,yon} */
     const dok=[];   /* dokunuşlar {t,p,yon} */
-    let sonDok=null,sonSurum=-1;
+    let sonDok=null,sonSurum=-1,sonDokObj=null;
     let vkD=0,vkT=0,vkElen=0,uaD=0,uaT=0,uaOnce=0,uaIleri=0;
     let dpN=0,dpE=0,dpA=0,dpG=0,dpY=0,dpAldi=0,dpOfs=0;const dpBek=[],dtL=[];
     let gcN=0,gc2=0,gc3=0,gcGec=0,gcTam=0,gcSut=0;const gcBek=[];
@@ -96,10 +98,10 @@ module.exports={
           if(P1&&P1.q===p&&P1.team===t&&P.t-P1.t<=2.5){
             let nB=0,baska=false;for(const k of dok)if(k.t>P1.t&&k.t<=P.t){if(k.p===p)nB++;else baska=true;}
             if(!baska&&nB<=2){
-              if(P.q===P1.p&&P1.tip!=='hava'&&P1.L<=15&&P.t-P1.t<=2){const A=P1.p,ks=kosuBasi(A,P.t);
+              if(P.q===P1.p&&P1.tip!=='hava'&&P1.L<=15&&P.t-P1.t<=2){const A=P1.p,ks=kosuBasi(A,P.t,0.4);
                 if(ks>=P1.t-0.3&&ks<=P1.t+0.8&&(A.x*d-P1.Au)>=4){vkD++;vkBek.push({P1,P,A});}}
-              else if(P.q&&P.q!==P1.p&&P.q.team===t){const B=p,C=P.q,ilkB=dok.find(k=>k.t>P1.t&&k.p===B);
-                if(ilkB&&ilkB.u-P1.Au>=6&&Math.cos(aN(ilkB.yon-(d>0?0:Math.PI)))<0&&P.t-ilkB.t<=1.6&&P.hu>=ilkB.u-3){uaD++;const ks=kosuBasi(C,P.t);
+              else if(P.q&&P.q!==P1.p&&P.q.team===t){const B=p,C=P.q,ilkB=dok.find(k=>k.t>P1.t&&k.p===B)||(nB===0?{t:P.t,p:B,yon:B.yon,u:P.Au}:null);
+                if(ilkB&&ilkB.u-P1.Au>=6&&Math.cos(aN(ilkB.yon-(d>0?0:Math.PI)))<0&&P.t-ilkB.t<=1.6&&P.hu>=ilkB.u-3){uaD++;const ks=kosuBasi(C,P.t,0.4);
                   if(ks>=P1.t-0.5&&ks<=P.t-0.2)uaOnce++;uaBek.push({P,C});}}}}
           /* derin pas */
           if(ad==='pass'&&P.q&&P.q.team===t){const c=cizgi(m,t);if(P.hu>c-1&&P.hu>P.u0||P.tur==='ara'){dpN++;dpBek.push({P,q:P.q,son:null});}}
@@ -135,8 +137,8 @@ module.exports={
         if(halka)ringI=(ringI+1)%Z_RING;
         /* dokunuşlar */
         const sd=b.sonDokunan;
-        if(sd&&(sd!==sonDok||b.surum!==sonSurum)){const d=sd.team!=null?m.dir[sd.team]:1;dok.push({t,p:sd,yon:sd.yon,u:sd.x*d,team:sd.team});if(dok.length>40)dok.shift();}
-        sonDok=sd;sonSurum=b.surum;
+        if(sd&&(sd!==sonDok||b.surum!==sonSurum&&sd.sonDokunus&&sd.sonDokunus!==sonDokObj)){const d=sd.team!=null?m.dir[sd.team]:1;dok.push({t,p:sd,yon:sd.yon,u:sd.x*d,team:sd.team});if(dok.length>40)dok.shift();}
+        sonDok=sd;sonSurum=b.surum;sonDokObj=sd?sd.sonDokunus:null;
         /* sahiplik (çeşitlilik): taşıma başlangıcı */
         const sh=b.sahip;if(sh&&sh.team!=null){if(!pos||pos.team!==sh.team){posBitir();pos={team:sh.team,tok:['^'],sahip:sh,sx:sh.x,sz:sh.z};}
           else if(pos.sahip!==sh){pos.sahip=sh;pos.sx=sh.x;pos.sz=sh.z;}}
@@ -147,8 +149,8 @@ module.exports={
           if(k){if(k.p===U.C&&k.t-U.P.t<=2.5){uaT++;const d=U.P.d;if(U.C.vx*d>2)uaIleri++;}uaBek.splice(i,1);}else if(t-U.P.t>2.5)uaBek.splice(i,1);}
         for(let i=dpBek.length-1;i>=0;i--){const B=dpBek[i];
           if(B.son===null){const ks=kosuBasi(B.q,t);
-            if(ks>=0&&t-ks>=0.7){const dt=ks-B.P.t;B.son=dt;dtL.push(+dt.toFixed(2));if(dt<=-0.3)dpE++;else if(dt<0.3)dpA++;else dpG++;}
-            else if(t-B.P.t>1.5){B.son=99;dpY++;}}
+            if(ks>=0&&ks<=B.P.t+1.5&&t-ks>=0.7){const dt=ks-B.P.t;B.son=dt;dtL.push(+dt.toFixed(2));if(dt<=-0.3)dpE++;else if(dt<0.3)dpA++;else dpG++;}
+            else if(t-B.P.t>1.5&&(ks<0||ks>B.P.t+1.5)){B.son=99;dpY++;}}
           if(B.aldi==null){const k=sonrakiDokunan(B.P.t,t);if(k){B.aldi=k.p===B.q;if(B.aldi)dpAldi++;}}
           if(B.son!==null&&B.aldi!=null&&t-B.P.t>3)dpBek.splice(i,1);else if(t-B.P.t>6)dpBek.splice(i,1);}
         for(let i=gcBek.length-1;i>=0;i--){const G=gcBek[i];if(!G.son){const k=sonrakiDokunan(G.P.t,t);if(k){G.son=true;if(k.team===G.P.team&&k.t-G.P.t<=2)gcTam++;}}

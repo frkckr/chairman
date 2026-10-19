@@ -320,12 +320,14 @@ Object.assign(Match.prototype,{
          bitince ya da top rakibe geçince biter */
       if(p.kosu&&p.kosu.tur==='gecGiris'){const k=p.kosu;k.t-=dt;if(k.t<=0||s&&s.team!==t)p.kosu=null;else{u=s?Math.min(k.u,ofs-0.4):k.u;w=k.w;p.hizOran=1;ef=1;g='gecGiris';}}
       /* Z1 (H2): plan rolü (js/mac-plan.js planRolKonumu) — bağlılık süresince öbür görevlerin önünde; top yoldayken de (sahip null) */
-      if(this._pln){const r=this.planRolKonumu(p,t);if(r){u=r.u;w=r.w;ef=r.ef;p.hizOran=r.h;g=r.g;}}
+      let plR=false;if(this._pln){const r=this.planRolKonumu(p,t);if(r){u=r.u;w=r.w;ef=r.ef;p.hizOran=r.h;g=r.g;plR=true;}}
       /* T7b: geride kalan topun 12 m gerisinde, rakip yarısının 5 m'sini geçmez, merkezi kapatır */
       if(geride){u=Math.min(u,bu-12,5);w=clamp(w,MZ-16,MZ+16);}
-      if(!p.kosu&&u>ofs-0.6&&u>0)u=ofs-0.6;
+      /* Z1: plan rolünde çizgi topu da sayar (topun gerisindeki oyuncu ofsaytta değildir; geri çevirmenin kutu rolleri) */
+      const ofsK=plR?Math.max(ofs,this.ball.x*d):ofs;
+      if(!p.kosu&&u>ofsK-0.6&&u>0)u=ofsK-0.6;
       /* kararlı hedef ofsayttaysa hemen geri (T1) */
-      zorla=!p.kosu&&p._hdfX*d>ofs-0.3&&p._hdfX*d>0;
+      zorla=!p.kosu&&p._hdfX*d>ofsK-0.3&&p._hdfX*d>0;
     }else{
       /* kendi ceza sahası çevresinde adam markajı */
       markajda=this.markaj(p,t,odak);

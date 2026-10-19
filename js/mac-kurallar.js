@@ -244,6 +244,7 @@ Object.assign(Match.prototype,{
     const b=this.ball;
     this.phase='durus';this.phaseT=0;
     for(const p of this.players){if(p.eylem&&!p.eylem.kilit)p.eylem=null;p.surus=null;p.kosu=null;p.destek=null;p.yonHedef=null;}
+    if(this._pln)this.planDurusKapat();   /* Z1: açık planlar duruşla biter (js/mac-plan.js) */
     b.sahip=null;b.hedefOyuncu=null;b.sut=null;b.pas=null;b.ofsaytta=null;b.endirekt=null;b.tac=null;b.kullanim=null;b.hakemDegdi=null;
     const du=Object.assign({tur,takim,x,z,t:0,asama:'bekle',kullanan:null,topcu:null,hazirT:0},veri||{});
     this.durus=du;
