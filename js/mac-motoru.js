@@ -90,6 +90,7 @@ const MOTOR_AYAR={
   koruTempo:undefined,dusunHz:undefined,pasTol:undefined,pasTolHava:undefined,ortaDestek:undefined,ikinciTopHedef:undefined,araKalib:undefined,birebirMenzil:undefined,birebirKayip:undefined,
   birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,tasiInce:undefined,tasiDevam:undefined,bakisDinamik:undefined,bakisHiz:undefined,taramaAralik:undefined,taramaGenislik:undefined,taramaTut:undefined,taramaYan:undefined,bakisDonus:undefined,surukle:undefined,surukleKanat:undefined,sutYeni:undefined,aliciRahat:undefined,gidisBakis:undefined,bakisHerKare:undefined,pasFalso:undefined,uzunKosu:undefined,acmaDokunus:undefined,donusBos:undefined,ortaIkinci:undefined,ortaErken:undefined,tersKanat:undefined,vurusYaklas:undefined,pasAcik:undefined,pasDogal:undefined,alisYon:undefined,alisNiyet:undefined,alisCizgi:undefined,tekKoni:undefined,
   /* D — js/mac-kaleci.js */
+  kurma:undefined,kvBekle:undefined,kvPres:undefined,kvKurmaU:undefined,
   kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,penaltiOku:undefined,penaltiKanma:undefined,kaleciNiyet:undefined,kaleciNiyetEsik:undefined,kaleciBekle:undefined,kaleciEgri:undefined,
   /* T — js/mac-takim.js */
   niyetEtki:undefined,macDurumEtki:undefined,niyetYenile:undefined,kontraSure:undefined,kurmaStoperW:undefined,gerideEk:undefined,rakipAlgi:undefined,
@@ -99,7 +100,7 @@ const MOTOR_AYAR={
   kanatRol:undefined,kanatBas:undefined,kanatCizgi:undefined,kanatDerin:undefined,kanatOnde:undefined,kanatUzak:undefined,gecGiris:undefined,
   tutEtki:undefined,kovala2Pay:undefined,kapatSon:undefined,kapiFaz:undefined,kapiFazSav:undefined,
   /* Z — js/mac-plan.js (Z1, 2026-10-19: plan katmanı; js/mac-ilkeller.js ilkel tablosu, js/mac-tarz.js tarz iskeleti) */
-  plan:undefined,planDeger:undefined,planTavan:undefined,planTut:undefined,planSabir:undefined,planArka:undefined,planIstek:undefined,planHiz:undefined,planEs:undefined,planTeklif:undefined,planTarz:undefined,
+  plan:undefined,planDeger:undefined,planTavan:undefined,planTut:undefined,planSabir:undefined,planArka:undefined,planIstek:undefined,planHiz:undefined,planEs:undefined,planTeklif:undefined,planTarz:undefined,tarzEtki:undefined,
   /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
   hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,hakemGeriDon:undefined,itirazKart:undefined,kartliHosgoru:undefined,evEtki:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
   ofsaytBayrak:undefined,ofsaytBekle:undefined,

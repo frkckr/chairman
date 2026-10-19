@@ -146,6 +146,7 @@ Object.assign(Match.prototype,{
     N.genislik=1+k*(niyetDeger(ad,'genislik')-1);N.derinlik=k*niyetDeger(ad,'derinlik');N.bekIleri=1+k*(niyetDeger(ad,'bekIleri')-1);N.kosu=1+k*(niyetDeger(ad,'kosu')-1);N.bekCik=k?P.bekCik:true;
     /* savunma çizgisi: geride kalan takım öne çıkar, öndeki ve eksik kalan geri çekilir (m) */
     N.blok=k*(4*D.acele-3*D.koru-3*D.eksik)-(A.yorgunBlok||0)*N.yorgunPay;   /* T18d: yorgun takım derinleşir */
+    {const V=tarzTakim(this,t);if(V)N.blok+=MOTOR_AYAR.tarzEtki*V.blokCizgi;}   /* Z3: tarzın hat yüksekliği (yüksek pres önde, orta blok geride) */
     N.duranGecikme=k*2*D.koru;N.faulIstek=1+k*0.6*D.koru;N.zamanGecir=k*D.koru;   /* T10d: zaman geçirme yoğunluğu (js/mac-kurallar.js zamanGecirEk) */
     N.stoperIleri=k&&D.acele>0.6&&ad!=='savunma'?this.ileriStoper(t):null;
     N.kompakt=k&&ad==='savunma'?1-k*A.kompakt*(1-(A.yorgunBlok?0.6*N.yorgunPay:0)):1;   /* T7d: savunmada hatlar sıkışır (dizilisKonumu); T18d: yorgunlukla gevşer */
@@ -160,11 +161,42 @@ Object.assign(Match.prototype,{
   },
   /* T7b: kurma dizilişi (plan T7 madde 2): stoperler ceza sahası genişliğine açılır, altı numara basan iki rakip varsa aralarına, yoksa önlerine
      gelir, bekler yükselir ve çizgiye açılır. k: mevkinin dizilişteki yeri ({u, w}, hücum çerçevesi); kurmada rolü olmayana null */
-  kurmaKonumu(p,t,k,N){const m=p.mevki;
+  kurmaKonumu(p,t,k,N,bw){const m=p.mevki;
     if(p.rol==='DEF'&&!m.bek)return{u:k.u,w:MZ+(m.w<MZ?-1:1)*MOTOR_AYAR.kurmaStoperW};
+    /* Z3b (kurma&2; A6): içe giren bek — tarzın bekIceri ≥ 0,5 iken topun uzak yanındaki bek orta sahaya, altının yanına girer */
+    if(m.bek&&(MOTOR_AYAR.kurma&2)&&bw!=null){const V=tarzTakim(this,t);if(V&&V.bekIceri>=0.5&&(m.w<MZ)===(bw>MZ))return{u:k.u+6,w:MZ+(m.w<MZ?-1:1)*11};}
     if(m.bek)return{u:k.u+10,w:m.w<MZ?4:PW-4};
     if(p===N.alti)return N.basan>=2?{u:k.u-10,w:MZ}:{u:k.u-3,w:MZ+(m.w-MZ)*0.3};
     return null;},
+  /* Z3b (kurma&2; kutuphane/A A1, A3, A4, A5): kale vuruşunda (duruş) kurma şekli. Kısa kuran takım (kisaPay ≥ 0,5; tarzsızda 1 − direkt): stoperler
+     ceza sahasının içinde geniş (kvKurmaU[0], ortadan 18 m), altı iki presçiye karşı stoperlerin arasına iner (kvKurmaU[1]) yoksa önlerinde (kvKurmaU[2]),
+     bekler yüksek ve çizgide (kvKurmaU[3]; bekIceri ≥ 0,5 ise topun uzak yanındaki içeride); uzun atan takım yükselir: stoperler ceza sahasının önünde,
+     bekler orta sahaya yakın, orta saha ve forvetler hedefin çevresinde ikinci topa (uzunHedef kadar ileri). k: dizilişteki yeri; null: değişmez */
+  kvKonumu(p,t,k,N,bw){
+    const V=tarzTakim(this,t),mv=p.mevki,U=MOTOR_AYAR.kvKurmaU,kp=V?V.kisaPay:1-this.taktik[t].direkt;
+    if(kp>=0.5){
+      if(p.rol==='DEF'&&!mv.bek)return{u:U[0],w:MZ+(mv.w<MZ?-1:1)*18};
+      if(mv.bek){if(V&&V.bekIceri>=0.5&&(mv.w<MZ)===(bw>MZ))return{u:U[3]-2,w:MZ+(mv.w<MZ?-1:1)*12};return{u:U[3],w:mv.w<MZ?3:PW-3};}
+      if(N&&p===N.alti)return N.basan>=2?{u:U[1],w:MZ}:{u:U[2],w:MZ};
+      return null;}
+    const uh=V?V.uzunHedef:this.taktik[t].direkt;
+    if(p.rol==='DEF'&&!mv.bek)return{u:-34,w:MZ+(mv.w<MZ?-1:1)*12};
+    if(mv.bek)return{u:-22,w:mv.w<MZ?6:PW-6};
+    if(p.rol==='OS')return{u:k.u+8*uh,w:MZ+(k.w-MZ)*0.75};
+    if(p.rol==='FV')return{u:k.u+6*uh,w:k.w};
+    return null;},
+  /* Z3 (kurma&4; A §4, G2.2): rakibin kale vuruşunda yüksek pres — tarzın presYuksek ≥ 0,6 iken forvetler, kanatlar ve gerekirse orta saha rakibin
+     kısa seçeneklerine (stoperler, altı, bekler) en yakından eşlenir (en çok 4); presçi seçeneğinin yanında, topa doğru durur (js/mac-dizilis.js
+     bolgeKonumu; ceza sahası dışında). du.kvPres: presçi → seçenek. Rastlantı çekmez */
+  kvPresKur(du){
+    const s=1-du.takim,V=tarzTakim(this,s);if(!V||V.presYuksek<0.6)return;
+    const sec=this.sahadakiler(du.takim).filter(q=>q.rol==='DEF'||q.rol==='OS'&&q.mevki.derin);
+    const pc=this.sahadakiler(s).filter(o=>o.rol==='FV'||o.rol==='OS'&&(o.mevki.kanat||!o.mevki.derin)).sort((a,c)=>(a.rol==='FV'?0:1)-(c.rol==='FV'?0:1)||a.n-c.n);
+    const M=new Map(),kul=new Set();
+    for(const o of pc){if(M.size>=4)break;let en=null,ed=1e9;for(const q of sec){if(kul.has(q))continue;const dd=hyp(o.x-q.x,o.z-q.z);if(dd<ed){ed=dd;en=q;}}
+      if(en){M.set(o,en);kul.add(en);}}
+    if(M.size)du.kvPres=M;
+  },
   /* T7b: geride kalanlar (plan T7 madde 7): hücumda bizim yarıdaki rakip saha oyuncusu + gerideEk kadar oyuncu (en az 2) geride kalır: önce
      stoperler, sonra pozisyon alması ve çabukluğu en iyi bek/derin orta saha. Koşmaz, bindirmez, destek ve ceza sahası rolü almaz (bolgeKonumu).
      6 karede bir; savunmada boş */
@@ -232,7 +264,9 @@ Object.assign(Match.prototype,{
     E.sakin=clamp(B.sakin+k*(niyetDeger(ad,'sakin')-0.3*D.acele+0.3*kr),0,1);
     E.tempo=clamp(B.tempo+k*(niyetDeger(ad,'tempo')+0.3*D.acele-0.25*kr),0,1);
     E.direkt=clamp(B.direkt+k*(niyetDeger(ad,'direkt')+0.3*D.acele+(N.uzun?0.4:0)),0,1);
-    E.pres=clamp(B.pres+k*(0.25*D.acele-0.1*D.koru-0.15*D.eksik),0,1);},
+    E.pres=clamp(B.pres+k*(0.25*D.acele-0.1*D.koru-0.15*D.eksik),0,1);
+    /* Z3 (tarzEtki): tarzın vektörü tabanı kaydırır — kısa kurma payı direktliği (1 − kisaPay), pres yüksekliği presi belirler */
+    const V=tarzTakim(this,t);if(V){const e=MOTOR_AYAR.tarzEtki;E.direkt=clamp(E.direkt+e*((1-V.kisaPay)-B.direkt),0,1);E.pres=clamp(E.pres+e*(V.presYuksek-B.pres),0,1);}},
   /* hoca kapısı (plan T7 madde 10): hocanın tabanını değiştirir; diziliş değişirse mevkiler sıradan (n) yeniden okunur, markaj/pres/koşu tabloları
      sıfırlanır; 'taktik' olayı yayılır */
   taktikDegistir(t,yeni,neden){

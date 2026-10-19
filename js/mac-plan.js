@@ -30,7 +30,7 @@ ayarEkle('Z',{
   planHiz:[1.5,1.0,2.5,1.0],   // ilkel başına taban öneri oranı (1/sn): duvar pası, üçüncü adam, derin koşu, geri çevirme (Z1 ayar turu: FUTBOL_KUTUPHANESI §12.5)
   planEs:2,                    // takım başına en çok açık plan (kutuphane/B "Motor için notlar" 2)
   planTeklif:[0.6,0.8],        // teklifin geçerliliği (sn): duvar pası, üçüncü adam — taşıyan bu sürede pası vermezse "reddedildi"
-  planTarz:0                   // tarz ağırlıklarının etkisi (js/mac-tarz.js; 0: hepsi 1 — Z1 iskeleti, Z3'te iki canlı arketiple açılır)
+  planTarz:1                   // tarz ağırlıklarının etkisi (js/mac-tarz.js; 0: hepsi 1 — Z1 iskeleti; Z3 (2026-10-19 gece): 1, iki canlı arketip)
 });
 /* plan nesnesi (tek biçim) */
 function planYeni(){return{no:0,tur:'',takim:0,durum:'teklif',i:0,K:null,A:null,B:null,C:null,R:null,D:null,nu:0,nw:0,u0:0,w0:0,yan:1,kz:1,

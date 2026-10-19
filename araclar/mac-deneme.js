@@ -36,6 +36,9 @@ const ARG=process.argv.slice(2);
 function secenek(ad,degerli){const i=ARG.indexOf(ad);if(i<0)return null;if(!degerli){ARG.splice(i,1);return true;}return ARG.splice(i,2)[1];}
 /* seçenek: --dizilis A,B  iki takımın dizilişini kadro verisine dokunmadan değiştirir (ör. 4-3-3,4-2-3-1; MM2) */
 const DIZILIS=secenek('--dizilis',true)||process.env.MAC_DENEME_DIZILIS||'';
+/* seçenek: --tarz A,B  iki takımın tarzını (js/mac-tarz.js arketip adı; 'yok': tarzsız) kadro verisine dokunmadan değiştirir — aynı tohumlarda iki tarz
+   (FUTBOL_KUTUPHANESI §11.1 madde 3, Z3) */
+const TARZ=secenek('--tarz',true)||process.env.MAC_DENEME_TARZ||'';
 const JSON_DOSYA=secenek('--json',true),KARSILASTIR=secenek('--karsilastir',true),AYNI=!!secenek('--ayni',false),SENARYO=secenek('--senaryo',true);
 const ISCI=parseInt(secenek('--isci',true)||process.env.MAC_DENEME_ISCI||'0',10),TAM_TEKRAR=!!secenek('--tam-tekrar',false);
 const AYAR=process.env.MAC_DENEME_AYAR||'';
@@ -142,8 +145,9 @@ function macOyna(tohum,sinir){
     if(ad==='shot'||(ad==='header'&&v.shot))sutBasla(v);
     const b=m&&m.ball;if(!b)return;const h=Math.sqrt(b.vx*b.vx+b.vy*b.vy+b.vz*b.vz);
     if(ad==='pass'||ad==='cross')pasH.push(h);else if(ad==='shot')sutH.push(h);};
-  m=vm.runInContext(`(on,tohum,D)=>{const K=D?MAC_KADRO.map((k,i)=>Object.assign({},k,{taktik:Object.assign({},k.taktik,{dizilis:D[i]})})):MAC_KADRO;
-    return new Match(on,{kadro:K,tohum,tunel:{x:0,z:-6}});}`,ctx)(dinle,tohum,DIZILIS?DIZILIS.split(','):null);
+  m=vm.runInContext(`(on,tohum,D,Z)=>{let K=D?MAC_KADRO.map((k,i)=>Object.assign({},k,{taktik:Object.assign({},k.taktik,{dizilis:D[i]})})):MAC_KADRO;
+    if(Z)K=K.map((k,i)=>Object.assign({},k,{taktik:Object.assign({},k.taktik,{tarz:Z[i]==='yok'?undefined:Z[i]})}));
+    return new Match(on,{kadro:K,tohum,tunel:{x:0,z:-6}});}`,ctx)(dinle,tohum,DIZILIS?DIZILIS.split(','):null,TARZ?TARZ.split(','):null);
   const PLm=52.5,MZm=34,GW2m=3.66,GHm=2.44,topAdimFn=ctx.topFizikAdim||vm.runInContext('topFizikAdim',ctx);
   /* şutlar: kick anında topun kopyası kale çizgisine kadar ilerletilir (çerçeve ve direğe uzaklık); sonuç top.sut değişince yazılır */
   const sutlar={n:0,cerceve:0,kurtarisCerceve:0,gol:0,tutma:0,kurtaris:0,kutuIsabet:0,direkYakin:0};let aktifSut=null;
@@ -277,7 +281,7 @@ else if(process.env.MAC_DENEME_TEKRAR){
   /* ---- maçları işçilere dağıt, sonuçları topla, özetle; tekrarlanabilirlik ayrı işçide aynı anda ---- */
   const t0=Date.now(),isci=Math.max(1,Math.min(ISCI>0?ISCI:Math.floor(os.cpus().length/2),MAC_SAYISI)),parca=Math.ceil(MAC_SAYISI/isci),isler=[];
   const surec=(env,ad)=>new Promise((tamam,hata)=>{
-    const c=spawn(process.execPath,[__filename],{env:Object.assign({},process.env,{MAC_DENEME_DIZILIS:DIZILIS},env)});let s='';
+    const c=spawn(process.execPath,[__filename],{env:Object.assign({},process.env,{MAC_DENEME_DIZILIS:DIZILIS,MAC_DENEME_TARZ:TARZ},env)});let s='';
     c.stdout.on('data',d=>s+=d);c.stderr.on('data',d=>process.stderr.write(d));
     c.on('close',k=>k===0?tamam(JSON.parse(s)):hata(new Error(`${ad} oynatılamadı (çıkış kodu ${k})`)));});
   for(let i=0;i<isci;i++){const a=ILK_TOHUM+i*parca,b=Math.min(ILK_TOHUM+MAC_SAYISI,a+parca);if(a>=b)break;
@@ -293,7 +297,7 @@ else if(process.env.MAC_DENEME_TEKRAR){
     const oran=(k,L)=>{let a=0,b=0;for(const s of(L||sonuclar)){const h=s.ham&&s.ham[k];if(h){a+=h[0];b+=h[1];}}return b?100*a/b:NaN;};
     const degerAl=(k,L)=>sonuclar[0]&&sonuclar[0].ham&&k in sonuclar[0].ham?oran(k,L):ort(k,L);
     const f=(x,n)=>Number.isNaN(x)?'—':x.toFixed(n);
-    console.log(`\nChairman maç deneme aracı · ${MAC_SAYISI} maç · tohum ${ILK_TOHUM}…${ILK_TOHUM+MAC_SAYISI-1} · ${isler.length} işçi + 1 tekrar işçisi · ${((Date.now()-t0)/1000).toFixed(1)} sn${DIZILIS?' · diziliş '+DIZILIS:''}${AYAR?' · ayar '+AYAR:''}`);
+    console.log(`\nChairman maç deneme aracı · ${MAC_SAYISI} maç · tohum ${ILK_TOHUM}…${ILK_TOHUM+MAC_SAYISI-1} · ${isler.length} işçi + 1 tekrar işçisi · ${((Date.now()-t0)/1000).toFixed(1)} sn${DIZILIS?' · diziliş '+DIZILIS:''}${TARZ?' · tarz '+TARZ:''}${AYAR?' · ayar '+AYAR:''}`);
     console.log(`Motor dosyaları (bağlam ${BAGLAM}): ${mantik.join(', ')}${EKLENTILER.length?'\nEklenti ölçümleri: '+EKLENTILER.map(e=>e.dosya).join(', '):''}\n`);
     console.log('  '+'Ölçüm'.padEnd(32)+'Ortalama'.padStart(10)+'  ±'.padEnd(8)+'Sağlık aralığı'.padStart(16));
     let disarida=0;

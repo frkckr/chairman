@@ -424,7 +424,10 @@ function pasDegeri(m,p,o,hx,hz,alt,q){
   let v=xT(alt==='ara'?Math.min(PL-8,hu+5):hu,hz)*100*(1-A.sikisma*sik)+ilerleme*(A.ilerleme+0.015*takim.direkt)*(ilerleme<0?0.3:1-0.5*sik);
   if(ilerleme<-4)v+=takim.sakin*A.geriPas+o.baski*0.8;    /* geri pas: topu tutmak, baskıda güvenli çıkış */
   if(alt==='ara')v+=A.araDeger*(0.5+takim.direkt);else if(alt==='bosluk')v+=A.boslukDeger;else if(alt==='hedef')v+=A.hedefDeger*(0.4+takim.direkt);
-  if(q.rol==='GK')v-=0.3;
+  if(q.rol==='GK'){const KA=(MOTOR_AYAR.kurma&2)?tarzTakim(m,p.team):null;v-=KA?0.3*(1-0.7*KA.kaleciArti):0.3;}   /* Z3: kaleci +1 tarzda geri pas cezası küçük */
+  /* Z3 (tarzEtki; G1.1): tarzın açık oyundaki izi — kisaPay 16 m'den kısa pasa küçük pay (0,5'in altında ceza). Tarzsız takımda yok */
+  {const V=MOTOR_AYAR.tarzEtki>0?tarzTakim(m,p.team):null;if(V){const L=hyp(hx-o.ox,hz-o.oz),e=MOTOR_AYAR.tarzEtki;
+    if(L<16)v+=e*(V.kisaPay-0.5)*0.5;}}   /* uzun top payı başarıdan bağımsız: tarzUzunEk (U0, pasAdayiTam) */
   if(Math.abs(hz-o.oz)>=25){v+=A.donusDeger;if(A.donusBos)v+=A.donusBos*clamp((qB-4)/8,0,1);}   /* T21c (donusBos): boş uzak kanada yön değiştirme daha değerli */
   const vq=m._bv&&m._bv.get(q);if(vq&&vq.vk&&vq.vk.q===p)v+=A.verKacDeger;
   return v;}
@@ -452,7 +455,7 @@ function pasAdayiEkle(m,p,o,C,q,g,hx,hz,alt,ex,ez,es,ek){
   if(tip==='hava'&&(o.ilk||alt==='bosluk'&&!(MOTOR_AYAR.uzunKosu&&L>=15)))return;   /* T21c (uzunKosu): koşana savunma arkasına havadan */
   const P0=alt==='hedef'?Ph:Math.exp(-1.2*(tip==='yer'?r60+rSon:rSon*1.2+(yay==='asirtma'?0:r60*0.15)))*(tip==='hava'?0.85:1);
   const dg=pasDegeri(m,p,o,hx,hz,alt,q)+(ek||0),kay=pasKaybi(m,p,hx,hz);
-  const U0=P0*(dg+pasTurDegeri(m,p,tip,yay))-(1-P0)*kay*(alt==='hedef'?1-Pi:tip==='hava'?MOTOR_AYAR.ikinciTop:1);
+  const U0=P0*(dg+pasTurDegeri(m,p,tip,yay))-(1-P0)*kay*(alt==='hedef'?1-Pi:tip==='hava'?MOTOR_AYAR.ikinciTop*tarzIkinciK(m,p):1)+tarzUzunEk(m,p,L,(hx-o.ox)*m.dir[p.team],tip);
   C.push({q,g,hx,hz,alt,ex,ez,es,tip,yay,dg,kay,U0,Ph,Pi,iki:!o.ilk&&(alt!=='bosluk'||!!MOTOR_AYAR.uzunKosu)&&alt!=='hedef'&&L>=12&&L<=38&&r60>0.3&&r60<1.4});}
 /* hedef forvete uzun top (T2: iki ayrı terim). kazan: forvet topa ilk dokunur (iniş yerinde boşsa yüksek; çekişmeliyse kafa, boy ve gövde
    düellosu); pasın tamamlanmasıdır. ikinci: kaybedilen düelloda dönen topun takımda kalma olasılığı; tamamlanma sayılmaz, kaybın bedelini
@@ -464,6 +467,11 @@ function hedefHavaP(m,q,hx,hz){
   if(!e||ed>4){HH.kazan=0.8;return HH;}
   const duello=havaDuelloTahmin(m,q,e,2.1),bos=clamp((ed-1)/3,0,1);   /* T6d: düello tahmini (js/mac-hava.js; eskiden kafa, kütle ve boy formülü) */
   HH.kazan=clamp(lerp(duello,0.8,bos),0.1,0.85);return HH;}
+/* Z3 (tarzEtki; G1.5 direkt oyun ve ikinci top): tarzın uzun top eğilimi — ileriye 28 m'den uzun pasın faydasına başarıdan bağımsız pay (alan ve ikinci
+   top; uzunHedef 0,5'in altında ceza), havadan kaybın bedeli ikinciTop ile azalır. Tarzsız takımda 0 / 1 (birebir) */
+function tarzUzunEk(m,p,L,il,tip){const V=MOTOR_AYAR.tarzEtki>0?tarzTakim(m,p.team):null;if(!V||L<28||il<12)return 0;
+  return MOTOR_AYAR.tarzEtki*(V.uzunHedef-0.5)*1.4*clamp((L-28)/12,0,1)*(tip==='hava'?1:0.6);}
+function tarzIkinciK(m,p){const V=MOTOR_AYAR.tarzEtki>0?tarzTakim(m,p.team):null;return V?1-0.6*MOTOR_AYAR.tarzEtki*(V.ikinciTop-0.5):1;}
 /* tam analiz: seçilen türde (sınırdaysa diğerinde de) pasAnaliz ve fayda. T2: alıcının devam değeri; alıcı topu pasın geldiği yöne (pasöre)
    dönük alır, ara pasında ve boşluğa koşarak yüzü koşu yönündedir. Devam değeri oranın tehdidinden (xT) ne kadar farklıysa (devamAgirlik) değer
    o kadar düzelir: sırtı dönük ve markajdaki forvete pas eksi, önü açık ve yüzü oyuna dönük arkadaşa artı */
@@ -483,7 +491,7 @@ function pasAdayiTam(m,p,o,c,tip,yay){
   /* hedef forvete uzun topun değeri çoğunlukla alan ve ikinci toptur, forvetin devamı daha az belirler (devamHedef) */
   const dv=devamDegeri(m,c.q,c.hx,c.hz,A.sure,bakis),dEk=MA.devamAgirlik*(hedef?MA.devamHedef:1)*(dv-xT(c.hx*d,c.hz)*100);
   /* havadan topta kaybedilen hava mücadelesi çoğu zaman ikinci top olur (temiz kayıp değil): kaybın bedeli daha az */
-  const U=A.P*(c.dg+dEk+pasTurDegeri(m,p,tip,yay))*(0.7+0.3*A.Pk)-(1-A.P)*c.kay*(hedef?1-c.Pi:tip==='hava'?MA.ikinciTop:1)*takim.risk*MA.risk;
+  const U=A.P*(c.dg+dEk+pasTurDegeri(m,p,tip,yay))*(0.7+0.3*A.Pk)-(1-A.P)*c.kay*(hedef?1-c.Pi:tip==='hava'?MA.ikinciTop*tarzIkinciK(m,p):1)*takim.risk*MA.risk+tarzUzunEk(m,p,A.L,(c.hx-o.ox)*d,tip);
   return{tur:c.alt==='ara'?'ara':A.L>34?'uzun':'pas',alici:c.q,hx:c.hx,hz:c.hz,tip,yay,varis:A.varis,T:tip==='hava'?A.T:null,
     mod:c.alt==='ara'?'ara':c.alt==='bosluk'?'bosluk':'ayak',ex:c.ex,ez:c.ez,es:c.es,deger:U,P:A.P,Pk:A.Pk,sure:A.sure,L:A.L,alt:c.alt,dv,marj:A.marj};}   /* T23a2: marj salt okunur (alıcının rahat noktası) */
 /* bütün pas seçenekleri. o: {ox,oz: topun çıkacağı yer, t0: vuruşa kalan süre, ilk: gelişine (tek vuruş), gelA: gelen topun yönü,
@@ -493,7 +501,9 @@ function pasSecenekleri(m,p,o){
   const d=m.dir[p.team],u=o.ox*d,C=[];
   for(const q of m.teams[p.team]){
     if(q===p||!q.oyunda||(q.eylem&&q.eylem.kilit))continue;
-    if(q.rol==='GK'&&(u>-10||o.baski<0.3))continue;
+    /* Z3 (kurma&2; A4): kaleci +1 — tarzın kaleciArti ≥ 0,5 iken kurma niyetinde geri pas kaleciye daha erken ve daha az baskıda açılır */
+    {const KA=(MOTOR_AYAR.kurma&2)&&q.rol==='GK'?tarzTakim(m,p.team):null,kaU=!!(KA&&KA.kaleciArti>=0.5&&m._niyet&&m._niyet[p.team]&&m._niyet[p.team].ad==='kur');
+      if(q.rol==='GK'&&(kaU?(u>-15||o.baski<0.12):(u>-10||o.baski<0.3)))continue;}
     const g=algilanan(m,p,q);if(!g)continue;
     const dq=hyp(g.x-o.ox,g.z-o.oz);if(dq<3||dq>64)continue;
     const qu=g.x*d,ofsaytta=qu>o.ofs+0.3&&qu>u&&qu>0;

@@ -356,6 +356,8 @@ Object.assign(Match.prototype,{
     const tk=du.kullanan,Y=A.duranYay,d=this.dir[du.takim];
     if(tk&&Y&&(tur==='korner'||tur==='baraj'||tur==='kenar'||tur==='penalti'))du.yay=Y[0]+(Y[1]-Y[0])*clamp(0.3+0.4*this.sahneOzet(du,1)+0.3*profilAlt(tk,'duranTop',0.5),0,1);
     if(tur==='korner'||tur==='kenar')du.bakis={x:d*(PL-8),z:MZ};else if(tur==='baraj'||tur==='penalti')du.bakis={x:d*PL,z:MZ};
+    /* Z3a (kurma&1): kale vuruşunda kısa kuran kaleci şeklin oturmasını bekler (kisaPay ile ×0,85–1,2), sahaya bakar */
+    if(tur==='kaleVurusu'&&(A.kurma&1)){const V=tarzTakim(this,du.takim),kp=V?V.kisaPay:1-this.taktik[du.takim].direkt;du.sahneT*=0.85+0.35*kp;du.zorlaHazir=Math.max(28,du.sahneT+10);du.bakis={x:du.x+d*30,z:MZ};}
   },
   /* Z2a: kullananın topa ve yerine yürüyüşü — hedef süreye zaman varsa yürür (≥ 1,6 m/sn; gerçek duruşta oyuncular yürür), yoksa eski hızla (v0) */
   sahneHiz(du,tk,v0,x,z){
@@ -471,6 +473,9 @@ Object.assign(Match.prototype,{
     /* Z2a: sahnenin hedef süresi (el işareti kornerde ve kenarda hedeften 0,8 sn önce); taçta ve kale vuruşunda geciktirme hakemin sayımıyla */
     if(du.sahneT){const isa=du.tur==='korner'||du.sinif==='kenar'?0.8:0,son=du.sahneT-du.sahneKos-isa;
       if((du.tur==='tac'||du.tur==='kaleVurusu')&&du.zgEk>1&&!du.sayim&&du.t>=son){du.sayim=true;this.on('sayim',{takim:du.takim,sure:MOTOR_AYAR.tacSayim||5});}
+      /* Z3a (kurma&1): kale vuruşundan ~2 sn önce kaleci kolunu kaldırıp şekli gösterir (kısa kuranda stopere, uzun atanda ileriye; jest 'kol', motor okumaz) */
+      if(du.tur==='kaleVurusu'&&(MOTOR_AYAR.kurma&1)&&!du.kvIsaret&&du.t>=son-2.2&&tk){du.kvIsaret=true;const d=this.dir[du.takim],V=tarzTakim(this,du.takim),kp=V?V.kisaPay:1-this.taktik[du.takim].direkt;
+        this.jestVer(tk,'kol',0.9,kp>=0.5?{x:du.x+d*8,z:du.z+(du.z<MZ?1:-1)*16}:{x:du.x+d*45,z:MZ});}
       if(du.t<son+(du.zgEk||0))return false;}
     if(!(du.hazirT>=H&&(du.tur==='tac'||hyp(tk.x-du.geriX,tk.z-du.geriZ)<0.5||du.hazirT>H+2)))return false;
     if(du.hakemTopu)return this.hakemTopuBirak(du);   /* T10d */

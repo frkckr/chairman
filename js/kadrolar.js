@@ -11,7 +11,7 @@
    eksikler: kadroda olmayanlar; durum: sakat | cezali, neden, donus (ne zaman döneceği). */
 const KADROLAR={
   demirkapi:{ad:'Demirkapı',kisa:'DEM',forma:'ev',kaleciForma:'evKaleci',
-    taktik:{dizilis:'4-4-2',sakin:0.4,direkt:0.62,risk:0.95,pres:0.55,tempo:0.6},
+    taktik:{dizilis:'4-4-2',sakin:0.4,direkt:0.62,risk:0.95,pres:0.55,tempo:0.6,tarz:'direkt'},   /* Z3: uzun atan + orta blok (js/mac-tarz.js) */
     td:{ad:'Şükrü Hoca',ten:1,sac:'kel',sacRenk:'#8a8680',biyik:true,boy:1.02,yapi:1.1},
     oyuncular:[
       {ad:'Engin',no:1,ten:0,sac:'kisa',sacRenk:'#241a12',boy:1.08,yapi:1.04,oz:[44,46,20,32,26,22,52,64,74,62,40]},
@@ -38,7 +38,7 @@ const KADROLAR={
       {ad:'Yusuf',no:20,mevki:'FV',durum:'cezali',neden:'Kırmızı kart',donus:'1 maç'}
     ]},
   akdeniz:{ad:'Akdeniz',kisa:'AKD',forma:'deplasman',kaleciForma:'deplasmanKaleci',
-    taktik:{dizilis:'4-4-2',sakin:0.62,direkt:0.38,risk:1.05,pres:0.45,tempo:0.52},
+    taktik:{dizilis:'4-4-2',sakin:0.62,direkt:0.38,risk:1.05,pres:0.45,tempo:0.52,tarz:'konumsal'},   /* Z3: kısa kuran + yüksek pres (js/mac-tarz.js) */
     td:{ad:'Nuri Hoca',ten:0,sac:'kisa',sacRenk:'#cfcac0',boy:0.98,yapi:1.04},
     oyuncular:[
       {ad:'Nihat',no:1,ten:0,sac:'kel',sacRenk:'#141212',boy:1.1,yapi:1.0,oz:[42,44,18,30,24,20,50,62,71,60,38]},

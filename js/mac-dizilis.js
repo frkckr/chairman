@@ -269,7 +269,8 @@ Object.assign(Match.prototype,{
       u=Math.min(u,bu-4);
       /* rakip forvetlerin arkaya kaçmasına izin verme: en derindeki rakipten çok önde durma */
       let enDerin=99;for(const o of this.teams[1-t])if(o.oyunda&&o.rol!=='GK')enDerin=Math.min(enDerin,o.x*d);
-      u=Math.min(u,enDerin+2.5);
+      /* Z3: yüksek hatlı tarz (blokCizgi > 0) en derindeki forvetin önünde de durabilir — onu ofsayta bırakır, geri iter */
+      {const V=tarzTakim(this,t);u=Math.min(u,enDerin+2.5+(V?MOTOR_AYAR.tarzEtki*Math.max(0,V.blokCizgi)*0.8:0));}
     }
     return clamp(u,-PL+6,20);
   },
@@ -280,6 +281,8 @@ Object.assign(Match.prototype,{
   bolgeKonumu(p,t,hucum,cizgi,dt,odak){
     /* T8b: duran topun görev düzeni (vuruştan sonra en çok 6 sn; js/mac-durantop.js duranRolKonum) */
     if(this._duranSonrasi&&p.duranRol){const r=this.duranRolKonum(p);if(r){this.gorevYaz(p,'duran');this.hedefVer(p,r.x,r.z,r.ef,false,false);p.hizOran=r.h;return;}}
+    /* Z3 (kurma&4): rakibin kale vuruşunda yüksek pres — presçi kısa seçeneğinin yanında (topa doğru; ceza sahası dışında: durusYerlesim) */
+    {const DU=this.durus;if(DU&&DU.kvPres){const q=DU.kvPres.get(p);if(q&&q.oyunda){this.gorevYaz(p,'kvPres');this.hedefVer(p,q.x+(DU.x-q.x)*0.12,q.z+(DU.z-q.z)*0.12,0.7,false,false);p.hizOran=0.8;return;}}}
     const d=this.dir[t],bu=odak.x*d,bw=odak.z,diz=this.taktik[t].dizilis,N=this._niyet&&this._niyet[t];
     const k=dizilisKonumu(diz,p.n,bu,bw,hucum,N);let u=k.u,w=k.w,markajda=null,ef=0,zorla=false,g='bolge';   /* g: T13-0 görev etiketi */
     if(p.rol==='DEF'&&!hucum)u=cizgi+(p.mevki.bek?0.6:0);
@@ -287,9 +290,11 @@ Object.assign(Match.prototype,{
       const ofs=this._ofs[t],s=odak.sahip;
       /* T7b (js/mac-takim.js): koridor sahipliği yanal yeri verir; kurmada stoperler, bekler ve altı numara kurma dizilişinde; geride kalanlar
          (top rakip yarısındayken) koşmaz, bindirmez, destek ve ceza sahası rolü almaz */
-      const KR=this._koridor&&this._koridor[t],GR=this._geride&&this._geride[t],geride=!!(GR&&GR.has(p))&&bu>0,kurma=!!(N&&N.ad==='kur'&&s&&s.team===t);
+      /* Z3b (kurma&2): kale vuruşunda (duruş) kurma şekli tarzdan — kısa kuran stoperleri ceza sahasında açar, altıyı indirir; uzun atan yükselir */
+      const kvD=(MOTOR_AYAR.kurma&2)&&this.durus&&this.durus.tur==='kaleVurusu'&&this.durus.takim===t?this.durus:null;
+      const KR=this._koridor&&this._koridor[t],GR=this._geride&&this._geride[t],geride=!!(GR&&GR.has(p))&&bu>0,kurma=!!(N&&N.ad==='kur'&&s&&s.team===t)||!!kvD;
       if(KR&&KR.has(p))w=KR.get(p);
-      if(kurma){const k2=this.kurmaKonumu(p,t,k,N);if(k2){u=k2.u;w=k2.w;}}
+      if(kurma){const k2=kvD?this.kvKonumu(p,t,k,N,bw):this.kurmaKonumu(p,t,k,N,bw);if(k2){u=k2.u;w=k2.w;}}
       /* ortaya koşu rolleri: top kanatta ve son üçte birde */
       const orta=bu>PL-30&&Math.abs(bw-MZ)>11&&s&&s.team===t;
       /* T6d: ortanın alıcısı ortanın noktasına koşar (js/mac-topla.js vurusBaslat); top ayaktan çıkana dek ofsayt çizgisinin gerisinde */

@@ -27,6 +27,14 @@ ayarEkle('D',{
   kaleciEgri:0.12,             // T22b (2026-10-18): dönen topun (falso, trivela; |egri| > 0,05) kalecinin tepkisine eklediği süre (sn; eskiden KL_M.egri 0,07) —
                                // dönen topun varış noktası geç ve yanlış okunur (Craig ve ark. 2006); tahmin ve yürütme aynı değeri okur
   kaleciBekle:[0.8,1.6],
+  /* Z3 (2026-10-19 gece; FUTBOL_KUTUPHANESI §12.2, kutuphane/A-oyun-kurma.md A1–A17): oyun kurma ve kalecinin dağıtımı */
+  kurma:15,                    // Z3: bit maskesi — 1 kale vuruşu planı (beş kategori, presi okuma, bekleyiş ve bakış), 2 kurma şekli (kale vuruşunda ve kurma niyetinde:
+                               // stoperler açılır, altı iner, bek içe girer, kaleci +1), 4 savunanın kale vuruşu presi (yüksek preste kısa seçenekler adam adama), 8 uzun
+                               // topta ikinci top düzeni; 0: Z2 (tarzEtki 0 ve planTarz 0 ile birebir)
+  kvBekle:[1.5,4],             // Z3a: kale vuruşunda kalecinin top yerinde bekleyişi (sn; tarzın kısa payıyla: kısa kuran şeklin oturmasını bekler; A1: 2–6 sn, kural 5 sn sayımı)
+  kvPres:12.5,                 // Z3a: kısa seçeneğe bu mesafede (m) rakip varsa presli sayılır (FIFA KDK 2025: presçi 12,5 m içinde; A §4)
+  kvKurmaU:[-46,-44,-36,-28],  // Z3b: kale vuruşunda kısa kurma şekli, takımın hücum çerçevesinde u (kendi kale çizgisi −52,5): stoperler (ceza sahasının içinde, geniş),
+                               // iki presçiye karşı stoperlerin arasına inen altı, altı, bekler (A1, A4, A5)
   kaleciNiyetEsik:[0.6,0.15]   // T15a: niyetin eşiği — beklenen tutma olasılığı (kaleciTutmaP) bunun altındaysa çelme; [taban, karşılama noktasının
                                // 3,5 m içinde rakip varsa ek] (beklenen gol hesabı: kaleciNiyet yorumu; ilk deneme 0,35 elden kaçan topu çok bıraktı)
 });
@@ -586,6 +594,7 @@ Object.assign(Match.prototype,{
      ilk denemede ayrıca basan sayısı düşülünce maçta %100 uzun çıktı) ve hedefin (forvet ya da orta saha; kafa ve ilerilik) kafasıyla. 1999 havasında çoğu uzun
      (gerçekte ~%75–85): direkt 0,62'de kısa ~%8, 0,38'de ~%28 (Gumbel farkı lojistik, ölçek 0,35) */
   kaleVurusuSecenegi(du,tk){
+    if(MOTOR_AYAR.kurma&1)return this.kaleVurusuPlani(du,tk);   /* Z3a */
     const d=this.dir[du.takim],t=du.takim,tkt=this.taktik[t];
     let q=null,eb=-1;for(const p of this.sahadakiler(t)){if(p.rol!=='DEF')continue;const bos=enYakinRakip(this,p.x,p.z,p.team).d;if(bos>eb){eb=bos;q=p;}}
     let h=null,ep=-1e9;for(const p of this.sahadakiler(t)){if(p.rol!=='FV'&&p.rol!=='OS')continue;const s=p.oz.kafa+p.x*d*0.01;if(s>ep){ep=s;h=p;}}
@@ -595,6 +604,37 @@ Object.assign(Match.prototype,{
     if(!h)return null;
     const hx=clamp(h.x+d*3,-PL+20,PL-20),Lh=hyp(hx-du.x,h.z-du.z);
     return{tur:'kaleVurusu',hx,hz:h.z,tip:'hava',T:1.5+Lh/30,alici:h};
+  },
+  /* ============ Z3a: kale vuruşu planı (2026-10-19 gece; kutuphane/A A1–A3, A14; FIFA beş kategori) ============
+     Kaleci kısa seçenekleri (stoperler, bekler, orta saha; 40 m içinde, yerden) pas analiziyle, uzunları — üstüne (hedef adama: forvet ya da orta
+     sahanın en iyi kafacısı) ve ötesine (rakibin çizgisinin arkasına koşana; arkada en az 22 m boşluk varsa) — takımın tarzıyla (kisaPay, uzunHedef;
+     tarzsız takımda direktlik) tartar. Presi okur: kısa seçeneğin 4 m içinde rakip değeri düşürür; en az iki kısa seçenek presliyse rakip yüksek
+     basıyordur, üstüne ve ötesine değer kazanır (presi üstüne çekip arkasına, A2). Kategori (cevrele, icinden, icine, ustune, otesine) ve pres du.kv'ye
+     yazılır (ölçü, k-kurma). Seçim aday başına bir Gumbel zarıyla (ölçek 0,3) */
+  kaleVurusuPlani(du,tk){
+    const t=du.takim,d=this.dir[t],V=tarzTakim(this,t),tkt=this.taktik[t],kp=V?V.kisaPay:1-tkt.direkt,uh=V?V.uzunHedef:tkt.direkt;
+    const ox=du.x,oz=du.z,S=[];
+    let a=-1e9,c=-1e9;for(const o of this.teams[1-t]){if(!o.oyunda)continue;const u=o.x*d;if(u>a){c=a;a=u;}else if(u>c)c=u;}
+    let presli=0,presSayi=0;for(const o of this.teams[1-t])if(o.oyunda&&o.rol!=='GK'&&hyp(o.x-ox,o.z-oz)<MOTOR_AYAR.kvPres)presSayi++;
+    const K=[];
+    for(const q of this.sahadakiler(t)){if(q===tk||q.rol==='GK'||q.rol==='FV'||q.eylem&&q.eylem.kilit)continue;const L=hyp(q.x-ox,q.z-oz);if(L<6||L>40)continue;
+      const bos=enYakinRakip(this,q.x,q.z,t).d;if(bos<4)presli++;K.push([q,L,bos]);}
+    const yuksek=presli>=2?1:0;
+    for(const [q,L,bos] of K){const P=pasAnaliz(this,tk,q.x,q.z,'yer',q,{ox,oz}).P;
+      const kat=q.rol==='DEF'&&!q.mevki.bek||q.mevki.bek&&L<22?'cevrele':q.rol==='OS'&&!q.mevki.kanat?'icinden':'icine';
+      S.push({kat,U:kp*(1.6*P-0.8)+(kat==='cevrele'?0.15:0)-(bos<4?0.3:0),sec:{tur:'kaleVurusu',hx:q.x,hz:q.z,tip:'yer',alici:q}});}
+    /* üstüne: hedef adam (kafa ve ileride olmak) */
+    let h=null,ep=-1e9;for(const q of this.sahadakiler(t)){if(q.rol!=='FV'&&q.rol!=='OS')continue;const s=q.oz.kafa+q.x*d*0.01;if(s>ep){ep=s;h=q;}}
+    if(h){const hx=clamp(h.x+d*3,-PL+20,PL-20),Lh=hyp(hx-ox,h.z-oz);
+      S.push({kat:'ustune',U:(1-kp)*(0.9+0.4*h.oz.kafa)+0.25*uh+0.3*yuksek-0.1,sec:{tur:'kaleVurusu',hx,hz:h.z,tip:'hava',T:1.5+Lh/30,alici:h}});}
+    /* ötesine: savunma çizgisinin arkasına koşan hızlı oyuncu (arkada ≥ 22 m) */
+    if(PL-c>=22){let r=null,er=-1e9;for(const q of this.sahadakiler(t)){if(q.rol!=='FV'&&!q.mevki.kanat)continue;if(q.x*d<c-10)continue;const s=q.oz.hiz-Math.abs(q.x*d-c)*0.02;if(s>er){er=s;r=q;}}
+      if(r){const hx=d*clamp(c+8,-PL+20,PL-12),hz=clamp(r.z,6,PW-6),L=hyp(hx-ox,hz-oz);
+        S.push({kat:'otesine',U:(1-kp)*0.6+0.35*yuksek+0.2*r.oz.hiz-(PL-c<30?0.2:0),sec:{tur:'kaleVurusu',hx,hz,tip:'hava',T:1.6+L/30,alici:r}});}}
+    if(!S.length)return null;
+    let en=null,eU=-1e9;for(const x of S){const u=x.U-Math.log(-Math.log(Math.max(1e-9,this.rast())))*0.3;if(u>eU){eU=u;en=x;}}
+    du.kv={kategori:en.kat,presSayi,presli,kp};
+    return en.sec;
   },
   /* penaltı: kaleci çizgide hazır bekler; tarafı vuruş anında seçer (kaleciPenaltiUcus) */
   penaltiKaleciHazirla(du){

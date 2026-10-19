@@ -253,6 +253,7 @@ Object.assign(Match.prototype,{
     du.kullanan=this.kullananSec(du);
     this.duranGorevAta(du);   /* T8a: görevler profilden (js/mac-durantop.js) */
     if(MOTOR_AYAR.sahne&1)this.sahneKur(du);   /* Z2a: sahnenin hedef süresi, yay koşusu ve bakış (js/mac-durantop.js) */
+    if(tur==='kaleVurusu'&&(MOTOR_AYAR.kurma&4))this.kvPresKur(du);   /* Z3: rakibin kale vuruşu presi (js/mac-takim.js) */
     this.hocaKapisi();   /* T7a: hoca kapısı — m.hoca geri çağrısı varsa her duruşta sorulur (js/mac-takim.js) */
     /* taç, korner, aut ve saha dışında kalan top: top toplayıcı yedek topu verir (N10). Faulde top sahadadır; atan alıp yerine taşır */
     b.tasiyan=null;
