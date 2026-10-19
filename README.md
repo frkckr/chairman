@@ -18,6 +18,7 @@ Başkan odasıyla açılan kariyerin sistemleri (kayıt, takvim, para, mesele ve
 - [Oyun tasarımı](OYUN_TASARIMI.md) — onaylı oyun yönü ve açık kararlar
 - [Görsel ve arayüz kuralları](STIL_REHBERI.md)
 - [Teknik plan](TEKNIK_PLAN.md) — mimari, motor dosyaları ve motor → çizim sözleşmesi
+- [Futbol kütüphanesi](FUTBOL_KUTUPHANESI.md) — oyun zekâsının bilgi tabanı: ilkeller, hoca tarzları, ünlü örnekler, motor eşlemesi ve Z programı (ayrıntılar `kutuphane/`)
 - [Olay kütüphanesi ve içerik geçişi](OLAY_KUTUPHANESI.md)
 - [Ortak çalışma talimatı](CLAUDE.md) · [Araç girişi](AGENTS.md)
 - [Arşiv](ARSIV.md) — ana belgelerden taşınan tarihsel notlar ve silinen dosyaların geri alınışı
