@@ -121,8 +121,13 @@ OLCUM_KUR_JS = r"""() => {
        duruşta kutudaki görevlilerin çizilen gövdeleri 0,3 m'den yakın kare */
     dr: { bjKare: 0, bjFazla: 0, bjPoz: 0, bjOnce: 0, yerN: 0, yerIyi: 0, kolN: 0, kolIyi: 0, tacN: 0, tacTepe: 0, tacUzun: 0, penN: 0, penDt: [], penOrta: 0, icIce: 0,
       /* T15d: duraklı penaltı koşusunda kanıp erken kalkan kaleci (kalkış penceresinden ayrı), duraklamada tereddüt pozu */
-      penKan: 0, dkN: 0, dkIyi: 0 } };
-  const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin', barajYeri: 'ref', uyari: 'ref', tedaviBasladi: 'ref' };
+      penKan: 0, dkN: 0, dkIyi: 0,
+      /* Z2e (2026-10-19): yay koşusu — kullanımda (korner, serbest vuruş) kullananın son adımdaki çizilen gidiş yönü (temastan 0,4 → 0,1 sn önce) ile vuruş
+         yönü (vk.kd) arasındaki açı (derece; durgun < 0,3 m sayılmaz); yatan barajcı — yatan rolünde yatış görülen (kök yatışı > 1,2 rad), motorun kalkışının
+         (kalkis, neden 'yatan') son karesinde dik (≤ 0,05 rad) */
+      yay: { korner: [], serbest: [] }, yayDurgun: 0, ytN: 0, ytYat: 0, ytKalkN: 0, ytKalkDik: 0 } };
+  const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin', barajYeri: 'ref', uyari: 'ref', tedaviBasladi: 'ref',
+    sprey: 'ref', sayim: 'ref' };   /* Z2e: hakemin spreyi ve 5 sn sayımı */
   /* T10f olay (Ek G4, G7, G8): yerdeki sakatın tutma pozu (sakat yuvası > 0,8), sedyede kökün yüksekliği (0,55–0,9 m) ve sedyeyi tutan sağlıkçı,
      tedavide sağlıkçının çömelmesi ya da gerdirmesi, topallamada iki ayağın yerde kalma karesi (sakat / sağlam), endirekt işaretin tutulduğu kare
      payı (duruşun 2. saniyesinden — önce düdük ve yön —; hakem topu hariç), hakem topunu bırakma işaretinin motorun eylemiyle aynı karede başlaması, golcünün sevinç çeşidi */
@@ -204,6 +209,8 @@ OLCUM_KUR_JS = r"""() => {
     const v = Math.hypot(a.x - k.x, a.z - k.z) / dt, vsOnce = k.vs; if (v > 1) k.vAci = Math.atan2(a.z - k.z, a.x - k.x);   /* A3: gidiş yönü (kesme dönüşü için) */ k.x = a.x; k.z = a.z; k.vs += (Math.min(v, 12) - k.vs) * Math.min(1, dt * 8);
     const durum = p.zipla || a.inisT >= 0 ? 3 : !k.ilk && p.tavir === 'koru' ? 2 : !k.ilk && Math.abs(aciF(a.yaw, k.yawU)) / dt > 2 && k.vs > 0.6 ? 0 : !k.ilk && (vsOnce - k.vs) / dt > 3 ? 1 : -1;
     const b = BANT(k.vs);
+    /* Z2e: çizilen yerin halkası (son 32 kare; yay açısı) */
+    if (!k.iz) { k.iz = new Float64Array(64); k.izN = 0; } { const ii = (k.izN % 32) * 2; k.iz[ii] = a.x; k.iz[ii + 1] = a.z; k.izN++; }
     /* A8: alış penceresi (S.al) */
     const pe = p.eylem, mb = mac.ball;
     if (pe && pe.ad === 'kontrol' && !pe.kotu && k.alisE !== pe) { k.alisE = pe; k.alis = { t0: t, geri: 0 }; S.al.n++; }
@@ -416,10 +423,17 @@ OLCUM_KUR_JS = r"""() => {
     if (ad === 'kullanim' && v && v.p) { const D = S.dr;
       if (v.tur === 'tac') zTac.set(v.p, { kare: mac.kare, alt: v.alt });
       else if (v.tur === 'penalti') { D.penN++; const gk = mac.kaleci(1 - v.takim), k = zPenKare.get(gk); if (zPenKan.has(gk)) { zPenKan.delete(gk); D.penKan++; } else if (k !== undefined && mac.kare - k <= 60) D.penDt.push(+((k - mac.kare) / 60).toFixed(3)); else zPenBekle = { gk, kare: mac.kare }; }
-      else if (v.tur === 'korner') { D.kolN++; const k = zKol.get(v.du); if (k && k.t >= 0.5) D.kolIyi++; zKol.delete(v.du); } } };
+      else if (v.tur === 'korner') { D.kolN++; const k = zKol.get(v.du); if (k && k.t >= 0.5) D.kolIyi++; zKol.delete(v.du); }
+      /* Z2e: yay açısı (kaydet'in çizilen yer halkası; olay motor adımında, bu karenin çiziminden önce gelir) */
+      if (v.tur === 'korner' || v.tur === 'serbest') { let a = null; for (const x of K.keys()) if (x.kaynak === v.p) { a = x; break; } const k = a && K.get(a);
+        if (k && k.izN >= 25) { const n = k.izN, iz = k.iz, q = j => ((n - 1 - j) % 32 + 32) % 32 * 2, i1 = q(6), i0 = q(24), dx = iz[i1] - iz[i0], dz = iz[i1 + 1] - iz[i0 + 1];
+          if (Math.hypot(dx, dz) < 0.3) D.yayDurgun++;
+          else { const kd = a.vk && a.vk.evre > 0 ? a.vk.kd : v.hedef ? Math.atan2(v.hedef.z - v.p.z, v.hedef.x - v.p.x) : null;
+            if (kd != null) { const c = Math.cos(kd), s = Math.sin(kd); D.yay[v.tur].push(+(Math.abs(Math.atan2(c * dz - s * dx, c * dx + s * dz)) * 180 / Math.PI).toFixed(1)); } } } } } };
   const zCel = new Map(), zTt = new Map(), zDk = new Map(), zPenKan = new Set();   /* T15d */
   const zK = new Map(), zC = new Map(), zIt = new Map(), zY = new Map(), zKor = new Map(), zTm = new Map(), zTmBekle = new Map(), zHv = new Map(), zPj = new Map(), zKr = new Map(), zKp = new Map(), zBl = new Map();
   const zTac = new Map(), zPenKare = new Map(), zPenE = new Map(), zKol = new Map(), zYer = new Map(); let zPenBekle = null;
+  const zYt = new Map(), zYk = new Map();   /* Z2e: yatan barajcı */
   /* T5f temas ölçümü (aktör başına, kare sonunda) */
   function temasOlc(a, dt) { const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible) return; const e = p.eylem, ad = e ? e.ad : '', G = S.tm;
     /* T9b-e: topun çizilen yeri (anmVkTop; temas karesinde temas yerinde tutulur) — eski çizimde motorun yeriyle aynı (iki adım arası oran ≈ 1) */
@@ -474,6 +488,9 @@ OLCUM_KUR_JS = r"""() => {
       /* T15d: duraklı penaltı koşusunda tereddüt pozu (a.w.durak > 0,5 görüldü) */
       if (ad === 'vurus' && e.kosu === 'durak') { let z = zDk.get(a); if (!z || z.e !== e) { z = { e, iyi: false }; zDk.set(a, z); D.dkN++; } if (!z.iyi && (a.w.durak || 0) > 0.5) { z.iyi = true; D.dkIyi++; } }
       const tc = zTac.get(p); if (tc !== undefined) { zTac.delete(p); if (tc.kare === mac.kare) { D.tacN++; if (a.sw[ANM_S.tacAt] >= 0.5) D.tacTepe++; if (tc.alt === 'uzun') D.tacUzun++; } }
+      /* Z2e: yatan barajcı — yatik rolü (duruş başına bir kez), yatış görüldü mü, motorun kalkışının son karesinde dik mi */
+      if (G && G.rol === 'yatan' && G.yatik) { let z = zYt.get(a); if (!z || z.G !== G) { z = { G, yat: false }; zYt.set(a, z); D.ytN++; } if (!z.yat && a.lth > 1.2) { z.yat = true; D.ytYat++; } }
+      if (ad === 'kalkis' && e.neden === 'yatan') { let z = zYk.get(a); if (!z || z.e !== e) { z = { e, bitti: false }; zYk.set(a, z); D.ytKalkN++; } if (!z.bitti && e.t >= (e.sure || 0.7) - dt * 1.01) { z.bitti = true; if (a.lth <= 0.05) D.ytKalkDik++; } }
       /* ortada kalan kaleci (penaltiTahmin 0; motor %10) sonradan topa tepkiyle dalar: erken kalkış sayılmaz */
       if (p.rol === 'GK' && ad === 'ucus' && zPenE.get(p) !== e) { zPenE.set(p, e); zPenKare.set(p, mac.kare); if (du && du.tur === 'penalti' && du.kullanan && du.kullanan.eylem && du.kullanan.eylem.kosu === 'durak') zPenKan.add(p); if (zPenBekle && zPenBekle.gk === p) { if (p.penaltiTahmin === 0) D.penOrta++; else D.penDt.push(+((mac.kare - zPenBekle.kare) / 60).toFixed(3)); zPenBekle = null; } } }
     if (ad === 'kafa' && !e.bos) { let z = zHv.get(a); if (!z || z.e !== e) { zHv.set(a, { e }); const Hv = S.hv; a.m.root.updateMatrixWorld(true); a.m.head.getWorldPosition(H);
@@ -591,9 +608,10 @@ SONUC_JS = r"""() => {
     tm: (() => { const G = S.tm, sa = sirala(G.acik); return { n: G.n, acikMed: sa.length ? sa[Math.floor(sa.length / 2)] : null, acikP90: sa.length ? sa[Math.min(sa.length - 1, Math.floor(0.9 * sa.length))] : null,
       acikIyi: sa.length ? +(100 * sa.filter(x => x <= 0.15).length / sa.length).toFixed(0) : null, icIce: G.icIce, cift: G.cift, kalkN: G.kalkN, kalkDik: G.kalkDik, sendKare: G.sendKare,
       sendKisaPay: G.sendKare ? +(100 * G.sendKisa / G.sendKare).toFixed(0) : null, dususN: G.dususN, liste: G.liste }; })(),
-    zaman: (() => { if (typeof ANM_HK === 'undefined') return null; const r = { olay: S.zOlay.length, ayni: 0, bir: 0, yok: 0, yokAd: {}, birAd: {} };
+    zaman: (() => { if (typeof ANM_HK === 'undefined') return null; const r = { olay: S.zOlay.length, ayni: 0, bir: 0, yok: 0, yokAd: {}, birAd: {}, adN: {}, adAyni: {} };   /* Z2e: olay türü başına (sprey, sayim) */
       for (const o of S.zOlay) { const L = o.tur === 'ref' ? ['ref'] : o.tur === 'lin' ? ['lin'] : o.tur === 'ikisi' ? ['ref', 'lin'] : ['ref', 'lin'];
         let enIyi = 99; for (const k of L) for (const b of (S.zIsaret[k] || [])) { const d = b - o.kare; if (d >= 0 && d < enIyi) enIyi = d; }
+        r.adN[o.ad] = (r.adN[o.ad] || 0) + 1; if (enIyi === 0) r.adAyni[o.ad] = (r.adAyni[o.ad] || 0) + 1;
         if (enIyi === 0) r.ayni++; else if (enIyi === 1) { r.bir++; r.birAd[o.ad] = (r.birAd[o.ad] || 0) + 1; } else { r.yok++; r.yokAd[o.ad] = (r.yokAd[o.ad] || 0) + 1; } }
       r.vurus = S.zVurus; r.vurusAyni = S.zVurusAyni; r.vurusFark = S.zVurusFark.slice(0, 10); return r; })(),
     vk: (() => { const med = a => a.length ? +yuzde(a, 0.5).toFixed(3) : null, kt = S.vkKT;
@@ -633,7 +651,10 @@ SONUC_JS = r"""() => {
       return { n: G.n, ayni: G.ayni, stil: G.stil, kotu: r, normalN: G.normal.length, normalDy: nd, normalYan: ny, normalAcik: med(G.normal.map(x => x.acik)), ornek: G.normal.slice(0, 30) }; })(),
     dr: (() => { const G = S.dr, d = G.penDt.filter(x => x !== null), sd = sirala(d); return { bjKare: G.bjKare, bjFazla: G.bjKare ? +(100 * G.bjFazla / G.bjKare).toFixed(1) : null, bjPoz: G.bjKare ? +(100 * G.bjPoz / G.bjKare).toFixed(1) : null, bjOnce: G.bjOnce,
       yerN: G.yerN, yerIyi: G.yerIyi, kolN: G.kolN, kolIyi: G.kolIyi, tacN: G.tacN, tacTepe: G.tacTepe, tacUzun: G.tacUzun, penN: G.penN, penMed: sd.length ? sd[Math.floor(sd.length / 2)] : null,
-      penIcinde: d.filter(x => x >= -0.15 && x <= 0.02).length, penYok: G.penDt.filter(x => x === null).length, penOrta: G.penOrta, penKan: G.penKan, dkN: G.dkN, dkIyi: G.dkIyi, penDt: G.penDt.slice(0, 20), icIce: G.icIce, duran: window.__DURAN_SONUC || null }; })(),
+      penIcinde: d.filter(x => x >= -0.15 && x <= 0.02).length, penYok: G.penDt.filter(x => x === null).length, penOrta: G.penOrta, penKan: G.penKan, dkN: G.dkN, dkIyi: G.dkIyi, penDt: G.penDt.slice(0, 20), icIce: G.icIce, duran: window.__DURAN_SONUC || null,
+      z2: (() => { const r = { yayDurgun: G.yayDurgun, ytN: G.ytN, ytYat: G.ytYat, ytKalkN: G.ytKalkN, ytKalkDik: G.ytKalkDik };
+        for (const k of ['korner', 'serbest']) { const L = sirala(G.yay[k]); r[k] = { n: L.length, med: L.length ? L[Math.floor(L.length / 2)] : null, aralik: L.filter(x => x >= 20 && x <= 45).length, ornek: G.yay[k].slice(0, 16) }; }
+        return r; })() }; })(),
     ol: (() => { const O = S.ol, yz = (a, b) => b ? +(100 * a / b).toFixed(1) : null; return { sakKare: O.sakKare, sakPoz: yz(O.sakPoz, O.sakKare), sedKare: O.sedKare, sedYuk: yz(O.sedYuk, O.sedKare),
       sedTut: yz(O.sedTut, O.sedTutN), tedKare: O.tedKare, tedPoz: yz(O.tedPoz, O.tedKare), gerdir: O.gerdir, topalN: O.topalN, topalOran: O.topalIyi ? +(O.topalKotu / O.topalIyi).toFixed(2) : null,
       endKare: O.endKare, endTut: yz(O.endTut, O.endKare), birakN: O.birakN, birakAyni: O.birakAyni, sev: O.sev, sevCesit: Object.keys(O.sev).length, gerdirOrtulu: O.gerdirOrtulu || 0, olay: window.__OLAY_SONUC || null }; })(),
@@ -1038,6 +1059,19 @@ def satirlar(o):
                  f"   [hedef 0 / ≥90 / 0 / N/N / N/N / N/N / N/N / ~0]")
         if dr.get("duran"):
             S.append("A:   duran top düzeneği (yapay): " + json.dumps(dr["duran"], ensure_ascii=False))
+    # Z2e (2026-10-19): yay açısı (bilgi; gerçek 20–45°), hakemin spreyi ve 5 sn sayımı olayla aynı karede (N/N), yatan barajcı (bilgi)
+    z2 = (dr or {}).get("z2") or {}
+    zm = o.get("zaman") or {}
+    adN, adAy = zm.get("adN") or {}, zm.get("adAyni") or {}
+    yk, ys = z2.get("korner") or {}, z2.get("serbest") or {}
+    if yk.get("n") or ys.get("n") or adN.get("sprey") or adN.get("sayim") or z2.get("ytN") or z2.get("ytKalkN"):
+        S.append(f"A: duran top (Z2e): yay açısı (son adımdaki çizilen gidiş ↔ vuruş yönü) korner ortanca {v(yk.get('med'))}°, 20–45° içinde {yk.get('aralik', 0)}/{yk.get('n', 0)}"
+                 f" · serbest vuruş ortanca {v(ys.get('med'))}°, 20–45° içinde {ys.get('aralik', 0)}/{ys.get('n', 0)} (durgun {z2.get('yayDurgun', 0)})"
+                 f" · hakem spreyi aynı karede {adAy.get('sprey', 0)}/{adN.get('sprey', 0)} · sayım aynı karede {adAy.get('sayim', 0)}/{adN.get('sayim', 0)}"
+                 f" · yatan barajcı yatış {z2.get('ytYat', 0)}/{z2.get('ytN', 0)}, kalkış sonunda dik {z2.get('ytKalkDik', 0)}/{z2.get('ytKalkN', 0)}"
+                 f"   [bilgi 20–45 / bilgi / N/N / N/N / bilgi]")
+        if yk.get("ornek") or ys.get("ornek"):
+            S.append("A:   yay açısı örnekleri (derece): korner " + json.dumps(yk.get("ornek") or []) + " · serbest " + json.dumps(ys.get("ornek") or []))
     vs = o.get("vs")
     if vs:
         st = " · ".join(f"{k} {r[1]}/{r[0]}" for k, r in sorted(vs["stil"].items()))

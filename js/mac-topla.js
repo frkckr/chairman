@@ -851,7 +851,7 @@ Object.assign(Match.prototype,{
       if(du.rutin==='kisa'&&du.gorev)for(const [q,g] of du.gorev)if(g.rol==='kisa'&&q.oyunda&&q!==tk)return{tur:'pas',hx:q.x,hz:q.z,tip:'yer',alici:q};
       /* A4-2: yaya geri pas — ceza sahası kenarına geç koşan alıcının koşu noktasına yerden (js/mac-durantop.js kornerGorev) */
       if(du.rutin==='geri'&&du.gorev)for(const [q,g] of du.gorev)if(g.rol==='geri'&&q.oyunda&&q!==tk)return{tur:'pas',hx:g.kx,hz:g.kz,tip:'yer',alici:q};
-      const S=kornerSecenekleri(this,tk,du.x,du.z),Z2=!!(MOTOR_AYAR.sahne&2);
+      const Z2=!!(MOTOR_AYAR.sahne&2),S=kornerSecenekleri(this,tk,du.x,du.z,Z2?'kornerHizli':'korner');
       /* Z2b: rutinin hedef koşucusuna giden orta öncelikli (kornerOncelik); vurucu güçlü ayağıyla, iki ayaklı içe dönenle */
       if(Z2&&du.hedefQ)for(const s of S)if(s.q===du.hedefQ)s.deger*=MOTOR_AYAR.kornerOncelik;
       if(S.length){let en=-1e9;for(const s of S)en=Math.max(en,s.deger);

@@ -125,7 +125,7 @@ Object.assign(Match.prototype,{
     const gecisSure=du?0:this.t-(this._sahiplikBas||0);
     /* T7a: takım niyeti ve maç durumu (js/mac-takim.js): etkin taktik ve düzen çarpanları */
     this.niyetAdim(dt,du);const NY=this._niyet;
-    if(!du){this.presTetikAdim();this.duranSonrasiAdim();}   /* T7d: pres tetikleyicileri (js/mac-takim.js); T8b: duran topun görev düzeni (js/mac-durantop.js) */
+    if(!du){this.presTetikAdim();this.duranSonrasiAdim();if(this._yatan)this.yatanAdim();}   /* Z2c: kalkan yatan barajcı */   /* T7d: pres tetikleyicileri (js/mac-takim.js); T8b: duran topun görev düzeni (js/mac-durantop.js) */
     for(let t=0;t<2;t++){
       const d=this.dir[t],bu=odak.x*d,tk=this.taktik[t];
       /* serbest topta (pas yolda, sekme, ikili mücadele) son dokunan değil son sahip olan takımın düzeni sürer: takım şekli her sekmede
