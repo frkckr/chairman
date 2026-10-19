@@ -132,7 +132,7 @@ Object.assign(Match.prototype,{
          değişmez (T1, kararlı hedef) */
       const sonSahip=this._sonSahipTakim!=null?this._sonSahipTakim:b.sonTakim;
       /* T1'deki sekilGecikme (yeni kazanılan topta hücum düzenine geçme gecikmesi) 0'da kaldı; 2026-10-10 bakımında kaldırıldı */
-      const hucum=sahipTakim===t||(sahipTakim<0&&sonSahip===t)||(sahipTakim===1-t&&gecisSure<MOTOR_AYAR.gecis);
+      const hucum=sahipTakim===t||(sahipTakim<0&&sonSahip===t)||(sahipTakim===1-t&&gecisSure<MOTOR_AYAR.gecis&&!(du&&du.sahneT));   /* Z2a: sahneli duruşta savunan savunma düzeninde (eskiden iki takım da hücum düzenindeydi) */
       HT[t]=hucum;
       const G=GG[t],gecikmeli=du||G.i<=8?odak:{x:G.x[(G.i-9)&15],z:G.z[(G.i-9)&15],sahip:odak.sahip,takim:odak.takim};
       /* bölgesel pres: topa, top kendi bölgesine giren oyuncu çıkar (1. adam); diğerleri yerini korur.

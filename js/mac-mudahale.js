@@ -352,6 +352,12 @@ Object.assign(Match.prototype,{
     const b=this.ball,v=hrkHyp(b.vx,b.vz);if(v<2||b.y>2.1)return false;
     const dene=(p,hakem)=>{
       if(p===b.sahip||ad.some(a=>a.p===p)||(p.eylem&&(p.eylem.ad==='vurus'||p.eylem.ad==='ucus'))||(!hakem&&p===b.sonDokunan&&p.kickCd>0))return false;
+      /* Z2c: yatan barajcı (duruşta ya da vuruştan sonraki kalkışında) yerde barajın doğrultusunda 1,8 m, 0,32 m'ye dek: alçak şut gövdesine çarpıp geri döner */
+      const YR=!hakem&&p.duranRol&&p.duranRol.rol==='yatan'&&p.duranRol.yatik&&(this.phase==='durus'||p.eylem&&p.eylem.ad==='kalkis'&&p.eylem.neden==='yatan')?p.duranRol:null;
+      if(YR){if(b.y>0.32)return false;const ex=b.x-p.x,ez=b.z-p.z,al=ex*YR.wx+ez*YR.wz,dik=ex*YR.nx+ez*YR.nz;if(Math.abs(al)>0.9||Math.abs(dik)>0.28)return false;
+        const vn=b.vx*YR.nx+b.vz*YR.nz;if(vn<=0)return false;b.vx-=1.3*vn*YR.nx;b.vz-=1.3*vn*YR.nz;b.vx*=0.7;b.vz*=0.7;b.vy=Math.max(b.vy,1.2);
+        if(b.sut&&p.team!==b.sut.team){b.sut=null;this.on('block',{p,v,yatan:true});}else this.on('sekme',{p});
+        this.dokunus(p,false);p.kickCd=0.3;return true;}
       /* T8c: barajdaki oyuncu omuz omuza (yanal 0,5 m; kollar ve baş 1,95·boy); havadakinin ayaklarının altından top geçer */
       const bj=!hakem&&!!(p.duranRol&&p.duranRol.rol==='baraj'),dx=b.x-p.x,dz=b.z-p.z,d=hrkHyp(dx,dz);
       let r=bj?0.5:0.37;

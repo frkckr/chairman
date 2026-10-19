@@ -22,8 +22,10 @@
    - Penaltı: gol (5 sn içinde), ribaund koşucusu (vuruşta ceza sahası dışında olup 1 sn sonra içinde olan hücumcu). */
 const K_PL=52.5,K_MZ=34,K_CU=16.5,K_CW=20.16;
 const K_TUR=['korner','serbest','tac','kaleVurusu','penalti'],K_TUR_AD={korner:'korner',serbest:'serbest vuruş',tac:'taç',kaleVurusu:'kale vuruşu',penalti:'penaltı'};
-const K_HZ=[['korner','korner',[10,14,'T8']],['baraj','barajlı serbest vuruş',[10,14,'T8']],['kenar','kenar serbest vuruşu',[10,14,'T8']],
-  ['serbest','diğer serbest vuruş',[3,8,'T10']],['tac','taç',[3,6,'T8']],['kaleVurusu','kale vuruşu',[4,10,'T10']],['penalti','penaltı',[8,12,'T8']]];
+/* Z2 (2026-10-19 gece): bantlar tempo B'nin hedefleri (kullanıcı kararı; MOTOR_AYAR.tempo ± bağlam ve sapma; eski T8/T10 bantları: korner, barajlı ve kenar
+   10–14, diğer serbest 3–8, taç 3–6, kale vuruşu 4–10, penaltı 8–12) */
+const K_HZ=[['korner','korner',[15,22,'Z2']],['baraj','barajlı serbest vuruş',[20,30,'Z2']],['kenar','kenar serbest vuruşu',[15,22,'Z2']],
+  ['serbest','diğer serbest vuruş',[6,12,'Z2']],['tac','taç',[3,10,'Z2']],['kaleVurusu','kale vuruşu',[8,14,'Z2']],['penalti','penaltı',[22,32,'Z2']]];
 const K_ILK=['hucumKafa','savunmaKafa','kaleci','hucumAyak','savunmaAyak','yere','disari','yok'];
 const K_ILK_AD={hucumKafa:'hücumun kafası',savunmaKafa:'savunmanın kafası',kaleci:'kaleci',hucumAyak:'hücum (ayak, gövde)',savunmaAyak:'savunma (ayak, gövde)',
   yere:'yere düştü',disari:'oyun dışı',yok:'4 sn içinde yok'};
@@ -42,7 +44,7 @@ module.exports={
   bilgi:[['— Duran toplar (k-duran; T8) —',null,0]]
     .concat(K_TUR.map(k=>['Kullanım / maç: '+K_TUR_AD[k],'kN_'+k,2]))
     .concat(K_HZ.map(([k,ad,h])=>['Hazırlık ortancası (sn): '+ad,'kH_'+k,1,h]))
-    .concat([['Zorla kullanım (28 sn) / maç','kZorla',2],['Tehlikeli duran topta görevliler yerinde %','kYerinde',1,[80,null,'T8']]])
+    .concat([['Zorla kullanım (güvenlik ağı; 28 sn, Z2 sahnesinde hedef + 10) / maç','kZorla',2],['Tehlikeli duran topta görevliler yerinde %','kYerinde',1,[80,null,'T8']]])
     .concat([['Korner: kısa %','kK_kisa',1],['Korner: içe dönen %','kK_ice',1],['Korner: dışa dönen %','kK_disa',1],
       ['Korner: yaya geri pas % (A4-2)','kK_geri',1],['Korner: perdeleme % (A4-2)','kKPerde',1]])
     .concat(K_BOLGE.map(k=>['Korner hedefi: '+K_BOLGE_AD[k]+' %','kKB_'+k,1]))
@@ -108,7 +110,7 @@ module.exports={
           if(s&&sonOlay&&sonOlay.p===s&&m.t-sonOlay.t<4)k=KAY[sonOlay.ad]||'diger';kKay[k]++;if(k==='blokOrta')kOrtaKorner++;return;}
         if(ad==='kullanim'){const tur=v.tur;if(!N.hasOwnProperty(tur))return;if(tur==='serbest'&&v.du&&v.du.hakemTopu)return;   /* T10d: hakem topu ayrı (o-olay) */
           N[tur]++;const p=v.p,t=v.takim,d=m.dir[t],du=v.du,hz=v.hazirlik;
-          if(hz>=27.9)zorla++;
+          if(hz>=(du&&du.zorlaHazir||28)-0.1)zorla++;   /* Z2: güvenlik ağı sahnenin hedefiyle uzar (du.zorlaHazir) */
           const u=v.x*d,dz=Math.abs(v.z-K_MZ),sinif=tur!=='serbest'?null:du&&du.baraj?'baraj':u<=0?'geri':u>K_PL-35&&dz>12?'kenar':'uzak';
           const hk=tur==='serbest'?(sinif==='baraj'||sinif==='kenar'?sinif:'serbest'):tur;if(HZ[hk]&&!(du&&(du.zgEk>0||du.sakatBekledi)))HZ[hk].push(hz);   /* T10d: zaman geçirilen ve sakatlık tedavisini bekleyen duruş hazırlığa girmez (o-olay) */
           if(du&&du.yerinde!==undefined&&(tur==='korner'||sinif==='baraj'||sinif==='kenar')){tehlike++;if(du.yerinde)yerinde++;}

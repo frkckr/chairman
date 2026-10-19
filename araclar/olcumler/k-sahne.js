@@ -23,7 +23,7 @@ const KS_AD={tac:'taç',korner:'korner',kaleVurusu:'kale vuruşu',baraj:'barajl�
   hizli:'çabuk serbest vuruş',penalti:'penaltı'};
 const KS_BAG=['notr','onde','geride'],KS_EVRE=['bekle','getir','yerles','hazir','kullan'];
 const KS_GETIREN=['topcu','kendisi','rakip','arkadas'],KS_GETIREN_AD={topcu:'top toplayıcı',kendisi:'kullanan kendisi',rakip:'rakip',arkadas:'arkadaş'};
-const KS_RUTIN=['orta','kisa','geri','onDirek','arkaDirek','tren','kesme','alcak'];
+const KS_RUTIN=['orta','kisa','geri','onDirek','arkaDirek','tren','alcak'];   /* geri: ceza sahası dışına yerden kesme (F.1.9) */
 const KS_MZ=34,KS_PL=52.5;
 const ksOrt=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b),n=S.length;return n%2?S[(n-1)/2]:(S[n/2-1]+S[n/2])/2;};
 function ksTur(du){

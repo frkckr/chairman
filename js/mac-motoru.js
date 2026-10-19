@@ -62,6 +62,8 @@ const MOTOR_AYAR={
   yerFalso:0.5,                // T21a (2026-10-18): yerde kayan ve yuvarlanan topun yan dönüşü yolu kıvırır (eğik eksen; çimle sürtünme): yanal ivme = yerFalso × wYan·r
                                // (kayarken tam, yuvarlanırken yarısı); 0: eski (yerde yan dönüş yalnız söner — T9b-c'nin “top yerde dönmez” reddi)
   santraTek:1,                 // T20d (2026-10-18, kullanıcı kararı): santrada topun başında tek oyuncu (2016 kuralı), ilk pası geriye verir ve alıcıya dönük durur; 0: eski iki kişilik santra (yardımcı topun 2,8 m yanında)
+  durusSaat:2,                 // Z2a (2026-10-19 gece, kullanıcı kararı "tempo B"): oyun dışında (duran top, gol, golden sonra santra) maç saatinin hızı (maç sn / gerçek sn);
+                               // oyunda saatCarpani (20 dk'da 4,5). Duruşlar gerçeğin yarısına uzayınca oyunun maç dakikası azalmasın; 0: eski (her evrede saatCarpani)
 
   /* P — js/mac-profil.js */
   egilimGuc:undefined,formSapma:undefined,
@@ -105,10 +107,13 @@ const MOTOR_AYAR={
   duranSure:undefined,duranHazir:undefined,duranYerinde:undefined,duranGeri:undefined,penaltiSure:undefined,hizliSerbest:undefined,kornerKutu:undefined,
   kornerKisa:undefined,duranKosFaz:undefined,duranRolSure:undefined,barajZipla:undefined,barajZiplaZaman:undefined,serbestDevam:undefined,serbestOrta:undefined,serbestRutin:undefined,serbestTau:undefined,penaltiSapma:undefined,
   serbestIkili:undefined,serbestAldatma:undefined,aldatmaTepki:undefined,kornerPerde:undefined,kornerGeri:undefined,markajYan:undefined,penaltiKose:undefined,
+  /* K — Z2 (2026-10-19 gece): duran top sahnesi (js/mac-durantop.js) */
+  sahne:undefined,tempo:undefined,tempoBaglam:undefined,tempoSapma:undefined,duranYay:undefined,kornerIce:undefined,kornerRutin:undefined,kornerOncelik:undefined,
+  yatanBaraj:undefined,barajYani:undefined,uzakDolum:undefined,tacPres:undefined,tacSayim:undefined,
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined
 };
-const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek',santraTek:'cekirdek',yerFalso:'cekirdek'};
+const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek',santraTek:'cekirdek',yerFalso:'cekirdek',durusSaat:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
   if(!Object.prototype.hasOwnProperty.call(MOTOR_AYAR,k))throw new Error('MOTOR_AYAR.'+k+' bildirilmemiş ('+akis+'; önce js/mac-motoru.js MOTOR_AYAR)');
   if(MOTOR_AYAR_SAHIBI[k])throw new Error('MOTOR_AYAR.'+k+' iki kez eklendi ('+MOTOR_AYAR_SAHIBI[k]+', '+akis+')');
@@ -117,6 +122,9 @@ function ayarEkle(akis,o){for(const k in o){
    (maç boyu yorgunluk, sakatlık tehlikesi) çarpanı: oran × sureOlcek aynı maç dakikasında aynı değeri verir (10 dk'da 1). Duran top, sakatlık
    duraklaması, sevinç gibi gerçek saniyeyle tanımlı süreler ölçeklenmez (izlenebilirlik kararları; gerçekçilik planı “U1”) */
 const saatCarpani=()=>90/MOTOR_AYAR.macSuresiDk,sureOlcek=()=>10/MOTOR_AYAR.macSuresiDk;
+/* Z2a (2026-10-19 gece, tempo B): bu adımda maç saatinin hızı — oyunda saatCarpani, oyun dışında (duran top, gol, golden sonra santra) durusSaat
+   (0 iken her evrede saatCarpani; ifade birebir aynı kalır) */
+const saatHizi=m=>m.phase!=='play'&&MOTOR_AYAR.durusSaat>0?MOTOR_AYAR.durusSaat:saatCarpani();
 /* eylem adımları: eylem adı → işlev(p, e, dt), this maçtır; sahibinin dosyasında kaydedilir (Faz 0) */
 const EYLEM_ADIM={};
 
@@ -347,7 +355,7 @@ class Match{
     /* T16a (2026-10-15): yarının ilk santrası hazırlanırken saat akmaz (ikinci yarıda oyuncular tünelden yürürken yarı 86 maç sn kaybediyordu);
        gol sonrası santrada akar (uzatmaya gol başına 50 sn girer) */
     const saat=this.phase!=='halftime'&&this.phase!=='fulltime'&&!MAC_ONCESI.includes(this.phase)&&!(this.yariSantra&&this.phase==='kickoff');
-    if(saat){this.gameSec+=dt*saatCarpani();this.ist.toplam+=dt;if(this.phase==='play')this.ist.oyunda+=dt;}
+    if(saat){this.gameSec+=dt*saatHizi(this);this.ist.toplam+=dt;if(this.phase==='play')this.ist.oyunda+=dt;}
     this.hakemAI(dt);
     switch(this.phase){
       case 'isinma':this.stepIsinma(dt);break;

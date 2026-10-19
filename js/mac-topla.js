@@ -286,6 +286,7 @@ Object.assign(Match.prototype,{
         let P=clamp(0.1+0.45*profilAlt(p,'zayifAyak',0.35)-0.25*profilEgilim(p,'zayifAyaktanKacinir'),0.05,0.8);
         if(geo===zayif)P*=1.3;if(baski>0.5)P*=1.25;if(sut)P*=0.8*(0.6+0.8*acele);
         if(zar<P)ayak=zayif;}}
+    if(sec.ayak)ayak=sec.ayak;   /* Z2b/Z2c: duran topun vurucusu güçlü ayağıyla (sahnenin seçtiği dönüş; zar yine çekildi) */
     const geri=burun?Math.min(0.14,vsr.geri):vsr.geri*(1-0.35*acele);let hazEn=vsr.haz*(1-acele);if(this.t-this.bVeri(p).vazT<0.6)hazEn=0;
     /* planlanan güç (çizim temastan önce okur; uzun yerden pasta gerilme): yerden pasta plandan, temasta kesinleşir (yerPasVur: v > 20 → üst) */
     let gucPlan=sut?0.85:hava||uzk?0.7:0.5,st=stil||vurusStili(sec,b.y),sutPlan=null;
@@ -850,11 +851,17 @@ Object.assign(Match.prototype,{
       if(du.rutin==='kisa'&&du.gorev)for(const [q,g] of du.gorev)if(g.rol==='kisa'&&q.oyunda&&q!==tk)return{tur:'pas',hx:q.x,hz:q.z,tip:'yer',alici:q};
       /* A4-2: yaya geri pas — ceza sahası kenarına geç koşan alıcının koşu noktasına yerden (js/mac-durantop.js kornerGorev) */
       if(du.rutin==='geri'&&du.gorev)for(const [q,g] of du.gorev)if(g.rol==='geri'&&q.oyunda&&q!==tk)return{tur:'pas',hx:g.kx,hz:g.kz,tip:'yer',alici:q};
-      const S=kornerSecenekleri(this,tk,du.x,du.z);
+      const S=kornerSecenekleri(this,tk,du.x,du.z),Z2=!!(MOTOR_AYAR.sahne&2);
+      /* Z2b: rutinin hedef koşucusuna giden orta öncelikli (kornerOncelik); vurucu güçlü ayağıyla, iki ayaklı içe dönenle */
+      if(Z2&&du.hedefQ)for(const s of S)if(s.q===du.hedefQ)s.deger*=MOTOR_AYAR.kornerOncelik;
       if(S.length){let en=-1e9;for(const s of S)en=Math.max(en,s.deger);
         const tau=0.6+0.8*(1-tk.oz.karar);let top=0;for(const s of S){s.a=Math.exp((s.deger-en)/tau);top+=s.a;}
         let x=this.rast()*top,c=S[S.length-1];for(const s of S){x-=s.a;if(x<=0){c=s;break;}}
-        return{tur:'korner',hx:c.hx,hz:c.hz,tip:'hava',T:c.T,hy:c.hy,yay:'korner',alici:c.q};}
+        const sc={tur:'korner',hx:c.hx,hz:c.hz,tip:'hava',T:c.T,hy:c.hy,yay:'korner',alici:c.q};
+        if(Z2){sc.ayak=tk.ayak==='iki'?this.kornerIceAyak(du):tk.ayak;
+          /* alçak sert içe dönen (ön direğe dalış): baş hizasının altında, kısa uçuş */
+          if(du.teslim==='alcak'&&c.q===du.hedefQ){sc.hy=1.1;sc.T=havaSure(hyp(c.hx-du.x,c.hz-du.z),'alcak');sc.yay='alcak';}}
+        return sc;}
       const hedefler=[[PL-5.5,MZ+yan*2.2],[PL-7,MZ-yan*3.2],[PL-11,MZ],[PL-6,MZ]],h=hedefler[Math.floor(this.rast()*hedefler.length)];
       let al=null,ed=1e9;for(const p of this.sahadakiler(du.takim)){if(p===tk||p.rol==='GK')continue;const dd=hyp(p.x-d*h[0],p.z-h[1]);if(dd<ed){ed=dd;al=p;}}
       return{tur:'korner',hx:d*h[0],hz:h[1],tip:'hava',T:1.15+hyp(d*h[0]-du.x,h[1]-du.z)/30,alici:al};

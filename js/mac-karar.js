@@ -39,7 +39,8 @@ function xT(u,w){
 function varisSuresi(o,x,z,menzil){const t=varisZamani(o,x,z,menzil,0.22);return t===t?t:0.22+Math.max(0,hyp(x-o.x,z-o.z)-(menzil||0))/(o.maxSpd*0.95);}
 /* ---- ortak pas planı (MM3): karar, hedef tazeleme ve vuruş aynı hızı ve uçuşu kullanır ----
    yerden: istenen varış hızından ilk hız ve süre. Havadan: uçuş süresi yaya göre (düz havadan pas, aşırtma, orta kesme/asma, korner) */
-function havaSure(L,yay){return yay==='asirtma'?0.95+L/22:yay==='asma'?1.05+L/30:yay==='kesme'?0.72+L/40:yay==='korner'?1.15+L/30:0.75+L/28;}
+/* Z2b (sahne&2): kornerHizli — kornerin uçuşu 1,2–2,0 sn (kutuphane/F F.8.1 K5; eski 'korner' 34 m'de 2,3 sn), alcak — alçak sert içe dönen (~1,4 sn) */
+function havaSure(L,yay){return yay==='asirtma'?0.95+L/22:yay==='asma'?1.05+L/30:yay==='kesme'?0.72+L/40:yay==='korner'?1.15+L/30:yay==='kornerHizli'?0.85+L/30:yay==='alcak'?0.55+L/38:0.75+L/28;}
 function pasPlani(m,L,tip,varis,yay){
   if(tip==='yer'){const v0=Math.min(29,yerIlkHiz(L,varis||pasVarisHizi(L),m.R));return{tip,L,v0,T:yerSure(v0,L,m.R)};}
   return{tip,L,v0:0,T:havaSure(L,yay)};}
@@ -607,7 +608,7 @@ function ortaSecenekleri(m,p,o,S){
 /* korner: kafa vuranların ve koşuların noktası ya da bölge (ön direk, penaltı noktası); değer = xG(kafa) × kafa becerisi × P(ulaşır) × (1 − kaleci) */
 function kornerSecenekleri(m,p,ox,oz){
   const d=m.dir[p.team],yan=Math.sign(oz-MZ)||1,gk=m.kaleci(1-p.team),S=[];
-  const deg=(q,hx,hz,hy)=>{const L=hyp(hx-ox,hz-oz),T=havaSure(L,'korner'),A2=pasAnaliz(m,p,hx,hz,'hava',q,{ox,oz,T,hy,baski:0});
+  const deg=(q,hx,hz,hy)=>{const L=hyp(hx-ox,hz-oz),T=havaSure(L,MOTOR_AYAR.sahne&2?'kornerHizli':'korner'),A2=pasAnaliz(m,p,hx,hz,'hava',q,{ox,oz,T,hy,baski:0});
     const kal=gk.oyunda?kaleciHavaTahmin(m,gk,hx,hz,hy,T).P:0,sans=xG(hx*d,hz,'kafa',A2.baskiK)*(0.5+q.oz.kafa);
     S.push({q,hx,hz,hy,T,deger:A2.P*(1-kal)*(sans*100+0.8)});};
   /* T8b: görevli kafacıların koşu noktaları (p.duranRol kx, kz; js/mac-durantop.js), top sıçrayan başın hizasında (ayaktaki alın + 0,25; en çok 2,0 m) */
@@ -657,6 +658,10 @@ function sutBlokOlasiligi(m,p,ox,oz,tx,tz,tur,yt,T,t0){
       yan=Math.max(0,segD(o.x,o.z,ox,oz,tx,tz)-4*tau);on=clamp(on,1,Math.max(1,Math.min(6,Lk-1)));R=1.3+H.blokErisim-0.6;}
     if(on<0.5||on>Math.min(14,Lk-1))continue;
     if(tur==='asirtma'&&on>4)continue;
+    /* Z2c: yatan barajcı alçak şutu keser (barajın doğrultusunda ±0,9 m, 0,32 m'ye dek; ayaktaki gövdesi yok) */
+    const YR=o.duranRol&&o.duranRol.rol==='yatan'&&o.duranRol.yatik?o.duranRol:null;
+    if(YR){if(!ucY)continue;if(yan<0)yan=segD(o.x,o.z,ox,oz,tx,tz);if(yan>=0.9)continue;const f=on/Lk,yOn=0.11+(yt-0.11)*f+0.5*G*(tur==='dusen'?1.3:1)*T*T*f*(1-f);
+      if(yOn<0.32)acik*=0.08;continue;}
     const bj=!!(o.duranRol&&o.duranRol.rol==='baraj');if(yan<0)yan=segD(o.x,o.z,ox,oz,tx,tz);let P;
     if(bj){if(yan>=0.5)continue;P=Math.min(1,(0.5-yan)/0.2);}
     else{if(yan>=R)continue;P=(ucY?0.6:tur==='falso'?0.45:tur==='dusen'&&on>4?0.3:0.6)*(1-yan/R);}
@@ -849,6 +854,12 @@ function tekVurusKarari0(m,p,k,s,yakin){
 /* ---- kafa: ceza sahasında kaleye, geride uzaklaştırma, ileride arkadaşa indirme ya da koşana uzatma ---- */
 function kafaKarari(m,p){
   const b=m.ball,d=m.dir[p.team],u=b.x*d,w=b.z,baski=baskiAltinda(m,p);
+  /* Z2b (sahne&2; kutuphane/F F.1.3): ön direk sıyırması — kornerin rutininde sıyırıcı, kornerden sonraki ilk 2,5 sn'de ve dar açıda (ortadan 1,6 m'den
+     yanda) topu kafayla arka direğe uzatır; oradaki en yakın arkadaş alıcıdır. Rastlantı çekmez */
+  if(MOTOR_AYAR.sahne&2){const R=p.duranRol,DS=m._duranSonrasi;
+    if(R&&R.siyir&&DS&&DS.takim===p.team&&DS.tur==='korner'&&m.t-DS.t0<2.5&&u>PL-9&&Math.abs(w-MZ)>1.6){const hx=d*(PL-4.2),hz=MZ-(R.siyirYan||1)*2.6;
+      let q=null,qd=9;for(const o of m.teams[p.team]){if(o===p||!o.oyunda||o.rol==='GK')continue;const dd=hyp(o.x-hx,o.z-hz);if(dd<qd){qd=dd;q=o;}}
+      if(q)return{tur:'pas',alt:'siyir',hx,hz,v:7.5,vy:2.2,alici:q};}}
   if(u>PL-16&&Math.abs(w-MZ)<12){const x=xG(u,w,'kafa',baski*0.5);   /* T6e: ceza sahası çizgisine kadar (eskiden 14 m); 14–16 m'de gol beklentisi çoğu zaman 0,03 altı */
     if(x>0.03||u>PL-7){
       /* hedef: köşeler ve yükseklik; kaleciTahmin ile en açık yer (sıcaklıklı) */
