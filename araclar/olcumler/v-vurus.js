@@ -99,7 +99,7 @@ module.exports={
   /* sıkıştırmadan bağımsız oran (gerçekçilik planı §7 madde 7, T9b kararı): dışarıdan şutun gol verimi içeriden olanın en çok 0,45'i (gerçek ~0,3) */
   ozet(sonuclar){
     let a=0,b=0,c=0,d=0;for(const s of sonuclar){const h=s.ham||{};if(h.vG_ic){a+=h.vG_ic[0];b+=h.vG_ic[1];}if(h.vG_dis){c+=h.vG_dis[0];d+=h.vG_dis[1];}}
-    const r=b&&d&&a?(c/d)/(a/b):NaN,ok=!(r>0.45);
-    console.log((ok?'  ':'! ')+'Gol / şut: dışarıdan ÷ içeriden (v-vurus)'.padEnd(46)+(Number.isNaN(r)?'—':r.toFixed(2)).padStart(8)+'   hedef T9b: ≤0.45');
+    const r=b&&d&&a?(c/d)/(a/b):NaN,ok=!(r>0.45);   /* Z1: eski hedef bilgi satırıdır ("!" basmaz; FUTBOL_KUTUPHANESI §11.1) */
+    console.log('  '+'Gol / şut: dışarıdan ÷ içeriden (v-vurus)'.padEnd(46)+(Number.isNaN(r)?'—':r.toFixed(2)).padStart(8)+'   eski hedef T9b: ≤0.45'+(ok?'':' (dışında)'));
   }
 };

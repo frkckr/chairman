@@ -2,7 +2,7 @@
    Takım zekâsının ilk katmanı: birkaç saniyelik, rollü, bağlılıklı ortak niyet (plan). İlkellerin tanımı js/mac-ilkeller.js'te (veri), tarz
    ağırlıkları js/mac-tarz.js'te. Bu dosya planı açar, rolleri dağıtır, adımları ilerletir, bitirir ve sonucu olay olarak yayar.
    - Bütün durum this._pln'de, planAdim'da tembel kurulur; MOTOR_AYAR.plan 0 iken hiç kurulmaz, hiçbir kanca iş yapmaz, rastlantı çekilmez:
-     motor T23 ile birebir (araclar/taban/t23.json --ayni). Oyuncuya, topa, b.pas'a ve seçenek nesnelerine alan eklenmez (varlik 128 sınırı).
+     motor — cizgiKoru 0 ile — T23 ile birebir (araclar/taban/t23.json --ayni). Oyuncuya, topa, b.pas'a ve seçenek nesnelerine alan eklenmez (varlik 128 sınırı).
    - Öneri (planOner): saniyede beş kez, yalnız topa sahip takım için. Her ilkelin adayı (ucuz geometri) bir oran λ taşır (1/sn: taban × bağlam önseli
      × tarz × seçme kapısı × değer × güven); tikte TEK çekilişle P(aç) = 1 − e^(−Λ·0,2) ve hangisi oranlarla seçilir (log λ üzerinde softmax'ın eşi;
      ezber yok). Açılışta derin koşu için bir çekiliş daha (koşunun pastan önceki süresi). Takım başına en çok planEs açık plan, ilkel türü başına bir.
@@ -11,7 +11,7 @@
      (çizgiye inen taşıyan; ön direk, geç gelen, yay).
    - Bitiş motorun izinden (planAdim her karenin başında): beklenen pasördan beklenen alıcıya yeni pas → adım; başkasına pas → vazgeçti; beklenen
      alıcı dokundu → adım ya da tamamlandı (kötü kontrol: teknik); rakip dokundu → savunma (planın pası yoldaysa ya da 3 sn içinde alındıysa) ya da
-     kayıp; rol oyuncusuna ofsayt → ofsayt; pastan önce gerçek çizginin 0,5 m önüne geçen koşu → hat; süre → zaman (teklifte reddedildi); duruş, gol →
+     kayıp; rol oyuncusuna ofsayt → ofsayt; pastan önce gerçek çizginin 1,5 m önüne geçen koşu → hat (taşıyanın bu koşucuya vuruş hazırlığında denetlenmez); süre → zaman (teklifte reddedildi); duruş, gol →
      duruş. Olay: on('plan', {takim, ilkel, olay: teklif|basladi|tamamlandi|bozuldu|reddedildi, neden, no, t, kosuPas, bekle, K, A, B, C, R}).
    - Oyuncu kararı planın adımını bir SEÇENEK DEĞERİ olarak görür (planEkle: secenekler0 ve tekVurusKarari0; pay kombinasyonun beklenen
      değeri, en çok planTavan); taşıyan kabul etmeyebilir (algısı, kapısı, sabır eşiği, Gumbel sapması). Planın pası koşucunun gideceği boşluğa aday olur
@@ -26,7 +26,7 @@ ayarEkle('Z',{
   planSabir:0.7,               // teklif açıkken (duvar pası, üçüncü adam) taşıyanın sabır eşiğinin bu payı düşer: arkadaşının top istediğini görür, tutmaya daha az eğilimlidir
   planArka:0.5,                // plan&4'te eski (plansız) arka plan koşularının oranı (js/mac-topla.js derinKosu; 0: kapalı)
   planTut:0.45,                // derin koşu gençken taşıyanın 'tut' seçeneklerine bekleme payı (puan; sabır eşiğinin üstüne eklenen kadarı, baskı > 0,5'te yok)
-  planIstek:0.15,              // istek sinyali payı (puan × (0,5 + 0,5·görüş) × kimya; plan payıyla toplanmaz, büyüğü alınır)
+  planIstek:0.15,              // istek sinyali payı (puan × (0,5 + 0,5·görüş); kimya Z1'de yok — Z7/Z9; plan payıyla toplanmaz, büyüğü alınır)
   planHiz:[1.5,1.0,2.5,1.0],   // ilkel başına taban öneri oranı (1/sn): duvar pası, üçüncü adam, derin koşu, geri çevirme (Z1 ayar turu: FUTBOL_KUTUPHANESI §12.5)
   planEs:2,                    // takım başına en çok açık plan (kutuphane/B "Motor için notlar" 2)
   planTeklif:[0.6,0.8],        // teklifin geçerliliği (sn): duvar pası, üçüncü adam — taşıyan bu sürede pası vermezse "reddedildi"

@@ -10,7 +10,7 @@
    ileri hız ≥ 2 m/sn; seri 2,5 sn içinde ≥ 4,2 m/sn'ye ulaşır) en az bir kez;
    forvetin bırakışı — hedef forvetin tek dokunuşla koşan (≥ 4,2 m/sn, ileri) arkadaşa pası (forvete top gelen denemelerde); 3 sn'de ≥ 3 tek dokunuş;
    son pas ofsaytsız (şut ya da ceza sahasında alış olan denemelerde ofsayt yok); şut, gol, kayıp.
-   Kabul (Z1 kapanışında açılır, KAPI; o güne dek bilgi): plan 31'de pas sonrası koşu ≥ %40 ve plan 0'dan ≥ 15 puan (fark > 2 SE); forvetin
+   Kabul (KAPI; Z1 kapanışında açılmadı — ilkeller kapalı, borç; Z4'te ilkeller açılınca; o güne dek bilgi): plan 31'de pas sonrası koşu ≥ %40 ve plan 0'dan ≥ 15 puan (fark > 2 SE); forvetin
    bırakışı ≥ %30 ve ≥ 10 puan; son pas ofsaytsız ≥ %80. Kullanım: node araclar/mac-deneme.js --senaryo z-s3 [N=60 kol başına] [tohum] */
 'use strict';
 const KAPI=false;
@@ -65,6 +65,6 @@ module.exports={calistir({ctx,vm,N,tohum}){
     console.log(`  [1] pas sonrası koşu plan 31 ≥ %40 ve +15 puan (2 SE): ${k1?'tuttu':'TUTMADI'} · [2] forvetin bırakışı ≥ %30 ve +10: ${k2?'tuttu':'TUTMADI'} · [3] son pas ofsaytsız ≥ %80: ${k3?'tuttu':'TUTMADI'}`);
     console.log(`  Kabiliyet (bilgi): pas sonrası koşu yüksek ÷ düşük ${(yk.pk/Math.max(1e-9,dk.pk)).toFixed(2)} · 3 sn zinciri ${(yk.zc/Math.max(1e-9,dk.zc)).toFixed(2)}`);
     if(KAPI&&!(k1&&k2&&k3))cikis=1;}
-  console.log(`  (${((Date.now()-t0)/1000).toFixed(1)} sn)${KAPI?'':' · kapılar Z1 kapanışında açılır (KAPI)'}`);
+  console.log(`  (${((Date.now()-t0)/1000).toFixed(1)} sn)${KAPI?'':' · kapılar bilgi: Z1 kapanışında açılmadı (ilkeller kapalı, borç), ilkeller açılınca (Z4) açılır'}`);
   return cikis;
 }};

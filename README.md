@@ -9,7 +9,7 @@ Geliştirme aşamasındaki futbol kulübü başkanlığı oyunu: Türkiye'de ge�
 
 ## Bugün
 
-Başkan odasıyla açılan kariyerin sistemleri (kayıt, takvim, para, mesele ve iki cevaplı kararlar) boş kabuk olarak çalışır; oyun içeriği kullanıcı tarafından yazılacaktır. Geliştirme 2026-10-07'den beri maç motorundadır: gerçekçilik planının turları sırayla ilerler. Güncel durum, sıradaki iş ve açılış notu [yol haritasındadır](YOL_HARITASI.md#devam-notu).
+Başkan odasıyla açılan kariyerin sistemleri (kayıt, takvim, para, mesele ve iki cevaplı kararlar) boş kabuk olarak çalışır; oyun içeriği kullanıcı tarafından yazılacaktır. Geliştirme 2026-10-07'den beri maç motorundadır: önce gerçekçilik planının turları, 2026-10-19'dan beri futbol kütüphanesinin Z turları ([FUTBOL_KUTUPHANESI §12](FUTBOL_KUTUPHANESI.md#12-program-z-turları-kullanıcı-onayı-2026-10-19-dört-düzeltmeyle)). Güncel durum, sıradaki iş ve açılış notu [yol haritasındadır](YOL_HARITASI.md#devam-notu).
 
 ## Belgeler
 

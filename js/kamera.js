@@ -7,7 +7,7 @@
    önündeki raf ekranda sabittir (kameraGovdeHedefi çarpanları STIL.baskan.govde = 0).
    Oyun sürerken bakış topa odaklıdır: topu taşıyanın hemen önü, serbest
    topta kısa balistik öngörü (topFizikAdim topun özel kopyasında; motorun önbelleklerine dokunulmaz), uzun havadan topta iniş yeri, son üçte
-   birde kale ağzı. Bu kaymalar topun yönünden en fazla bir açı bütçesi kadar sapar: top hep ekranın ortasına yakın kalır. Maç öncesi, devre
+   birde kale ağzı. Bu kaymalar topun yönünden en fazla bir açı bütçesi kadar sapar; bakış bu nişanı pencerede tutar (Z1: top ortada tutulmaz). Maç öncesi, devre
    arası, maç sonu, gol sevinci ve kart anında bakisOdagi'nin ilgi noktaları izlenir. Bakış yönü (sapma/eğim) kritik sönümlü yaylarla, açısal
    hız sınırıyla ve maç zamanıyla (dt × maç hızı, alt adımlı) ilerler: 2–8× hızda geride kalmaz; duraklatmada (dt 0) hiçbir şey kıpırdamaz.
    kameraAdim durumu ilerletir (js/mac-sahnesi.js macKare sonunda), kameraUygula kameraya yerleştirir (js/arayuz.js frame). Motoru yalnız okur. */

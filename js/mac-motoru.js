@@ -442,7 +442,7 @@ class Match{
     if(b.sahip)this.ist.sahiplik[b.sahip.team]+=dt;
     this.bedenAdim(dt);    /* yorgunluk ve beden (mac-hareket.js) */
     this.taramaAdim(dt);   /* etrafa bakma (mac-topla.js) */
-    if(MOTOR_AYAR.plan)this.planAdim(dt);   /* Z1: plan katmanı (js/mac-plan.js) — 0 iken çağrılmaz, motor T23 ile birebir */
+    if(MOTOR_AYAR.plan)this.planAdim(dt);   /* Z1: plan katmanı (js/mac-plan.js) — 0 iken çağrılmaz; plan 0 ve cizgiKoru 0 ile motor T23 ile birebir */
     this.takimAI(dt);
     this.topluAI(dt);
     this.hareketHepsi(dt);

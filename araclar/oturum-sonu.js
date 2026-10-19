@@ -2,7 +2,7 @@
 /* ============ Chairman — oturum sonu kontrolü (M0, 2026-10-07; CLAUDE.md "Kontrol", orta kademe; Z1, 2026-10-19: çekirdek/seyrek senaryo ayrımı) ============
    Yerel commit'ten önce tek komutla: ad ve sınır denetimi, N maç tabanla karşılaştırma (sağlık aralığı, ilkel ve örüntü satırları) ve çekirdek
    senaryolar. Arka planda çalıştırılabilir; geliştirme sürerken biter. Tam rapor araclar/son-oturum.txt'ye yazılır (Git dışında), ekrana özet basılır.
-   Kullanım: node araclar/oturum-sonu.js [taban, varsayılan araclar/taban/t23.json] [--mac N, varsayılan 40; dizüstünde 24] [--seyrek] [--senaryo a,b,…] [--ayni]
+   Kullanım: node araclar/oturum-sonu.js [taban, varsayılan araclar/taban/z1.json] [--mac N, varsayılan 40; dizüstünde 24] [--seyrek] [--senaryo a,b,…] [--ayni]
      taban      turun tabanı (YOL_HARITASI devam notu yazar); varsayılan her tur kapanışında güncellenir
      --seyrek   seyrek senaryoları da koşar (SEYREK listesi: korudukları dosyalar seyrek değişir, süreleri uzundur — sahibi dosya değiştiğinde ya da
                 tur kapanışında; FUTBOL_KUTUPHANESI §11.2)
@@ -17,7 +17,7 @@ const KOK=path.join(__dirname,'..');
 const ARG=process.argv.slice(2);
 function secenek(ad,degerli){const i=ARG.indexOf(ad);if(i<0)return null;if(!degerli){ARG.splice(i,1);return true;}return ARG.splice(i,2)[1];}
 const MAC=parseInt(secenek('--mac',true)||'40',10),SECILI=secenek('--senaryo',true),AYNI=!!secenek('--ayni',false),SEYREKLER=!!secenek('--seyrek',false);
-const TABAN=ARG[0]||path.join('araclar','taban','t23.json');   /* T23 kapanışı: t23.json; T23-0: t22.json (T19–T22'de t19.json silinmişti); T19: t19.json (M3'te t18.json); M3: varsayılan taban güncel tura (A4'te a4.json — T18'de silinmişti, varsayılan boşa düşüyordu; T16'da t16.json, T16-0'da h1.json, T15-0'da t14.json; eskiden t8.json, 10 dakikalık maç) */
+const TABAN=ARG[0]||path.join('araclar','taban','z1.json');   /* Z1 kapanışı: z1.json (plan 0 + cizgiKoru 0 için t23.json elle verilir); T23 kapanışı: t23.json; T23-0: t22.json (T19–T22'de t19.json silinmişti); T19: t19.json (M3'te t18.json); M3: varsayılan taban güncel tura (A4'te a4.json — T18'de silinmişti, varsayılan boşa düşüyordu; T16'da t16.json, T16-0'da h1.json, T15-0'da t14.json; eskiden t8.json, 10 dakikalık maç) */
 const RAPOR=path.join(__dirname,'son-oturum.txt');
 /* Z1 (2026-10-19; FUTBOL_KUTUPHANESI §11.2): seyrek senaryolar — korudukları dosyalar 2026-10-04'ten beri 1–4 kez değişti, senaryo toplamının yarısı */
 const SEYREK=['d-duran','d-topcu','m-isinma','m-fotograf','p-tip','o-sakatlik','d-penalti'];

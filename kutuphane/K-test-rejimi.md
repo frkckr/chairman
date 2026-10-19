@@ -1,6 +1,8 @@
 # K — Test ve denetim rejiminin envanteri (Z0, 2026-10-19)
 
-Salt okuma envanteri; A9 kapanışı (`main` 9530cb5) ve `araclar/` üzerinden. Hiçbir test koşturulmadı; tek hesap `araclar/taban/t23.json`'daki 80 maçlık sonuçlardan ortalama ve σ ("(hesap)" işaretli). "(tahmin)" işaretli süreler belgede yok, koddan ve deneme sayısından çıkarıldı. Satır numaraları o güne aittir. Öneri ve karar [FUTBOL_KUTUPHANESI §11](../FUTBOL_KUTUPHANESI.md#11-ölçüler-ve-test-rejimi-öneri)'dedir; bu dosya yalnız bulgudur.
+Salt okuma envanteri; A9 kapanışı (`main` 9530cb5) ve `araclar/` üzerinden. Hiçbir test koşturulmadı; tek hesap `araclar/taban/t23.json`'daki 80 maçlık sonuçlardan ortalama ve σ ("(hesap)" işaretli). "(tahmin)" işaretli süreler belgede yok, koddan ve deneme sayısından çıkarıldı. Satır numaraları o güne aittir. Öneri ve uygulama (Z1) [FUTBOL_KUTUPHANESI §11](../FUTBOL_KUTUPHANESI.md#11-ölçüler-ve-test-rejimi-z1de-uygulandı)'dedir; bu dosya yalnız bulgudur.
+
+**Uygulandı (Z1, 2026-10-19):** FUTBOL_KUTUPHANESI §11.2'nin önerisi uygulandı — `oturum-sonu.js` varsayılanı 18 çekirdek senaryo (`z-s3`, `z-s10`, `z-s14` dahil), seyrekler `--seyrek` ile, `--mac N` (dizüstünde 24); `mac-deneme.js`'te dar `HEDEF` bantları yerine §11.1 sağlık aralığı (eski hedefler "eski hedef T…" bilgi satırı, "!"siz); `r-karne`'nin duran top satırları kalktı (`rGolDuran` kaldı); `c-kayma` `c-temas`'ın [3] hücresi oldu (çıktı birebir); ortak kurulum `araclar/senaryo-ortak.js` (`v-sut` ve `z-*`; `d-sut` ve `d-penalti` henüz taşınmadı — çıktılarının birebirliği ayrıca doğrulanmalı); `d-duran`'ın kalıcı "!" bilgi satırı kalktı. Aşağıdaki envanter Z0 günüdür.
 
 ## 0. Özet
 

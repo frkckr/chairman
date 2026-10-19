@@ -11,7 +11,7 @@
    orta (havadan), şut, öteki pas, kayıp. Geri çevirme anında üç bandın (ön direk ≤ 7 m, penaltı noktası 7–14 m, yay 14–22 m; ortaya 10–12 m) kaçında
    hücumcu var; geç gelenin (rolden bağımsız: pas anında ön direk ya da penaltı noktası bandında olup 1,5 sn önce ceza sahası
    dışında olan hücumcu) koşusu (≥ 4,2 m/sn) pastan kaç sn önce başladı.
-   Kabul (Z1 kapanışında açılır, KAPI): plan 31'de geri çevirme anında ≥ 2 bant ≥ %60 ve plan 0'dan ≥ 20 puan; geç gelenin koşusu kesişten 0,7–2,0 sn
+   Kabul (KAPI; Z1 kapanışında açılmadı — ilkeller kapalı, borç; Z4'te ilkeller açılınca): plan 31'de geri çevirme anında ≥ 2 bant ≥ %60 ve plan 0'dan ≥ 20 puan; geç gelenin koşusu kesişten 0,7–2,0 sn
    önce ≥ %40 (geri çevirmelerde); geri çevirme kararının payı plan 0'dan en çok 5 puan düşük.
    Kullanım: node araclar/mac-deneme.js --senaryo z-s10 [N=60 kol başına] [tohum] */
 'use strict';
@@ -72,6 +72,6 @@ module.exports={calistir({ctx,vm,N,tohum}){
     console.log(`  [1] ≥ 2 bant plan 31 ≥ %60 ve +20: ${k1?'tuttu':'TUTMADI'} · [2] geç gelen zamanında ≥ %40: ${k2?'tuttu':'TUTMADI'} · [3] geri çevirme payı ≥ plan 0 − 5: ${k3?'tuttu':'TUTMADI'}`);
     console.log(`  Kabiliyet (bilgi): ≥ 2 bant yüksek ÷ düşük ${(yk.b2/Math.max(1e-9,dk.b2)).toFixed(2)} · geri çevirme payı ${(yk.gc/Math.max(1e-9,dk.gc)).toFixed(2)}`);
     if(KAPI&&!(k1&&k2&&k3))cikis=1;}
-  console.log(`  (${((Date.now()-t0)/1000).toFixed(1)} sn)${KAPI?'':' · kapılar Z1 kapanışında açılır (KAPI)'}`);
+  console.log(`  (${((Date.now()-t0)/1000).toFixed(1)} sn)${KAPI?'':' · kapılar bilgi: Z1 kapanışında açılmadı (ilkeller kapalı, borç), ilkeller açılınca (Z4) açılır'}`);
   return cikis;
 }};
