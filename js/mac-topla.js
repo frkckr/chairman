@@ -612,7 +612,7 @@ Object.assign(Match.prototype,{
         this.vurusBaslat(p,{tur:'uzaklastir',hx,hz,tip:'hava'});break;}
       /* T4e: top saklama — gövde rakiple top arasında (yön rakipten uzağa), seçeneğin süresi boyunca sürer (düşünme aralığında bozulmaz;
          destek gelince bırakma pası ya da dönüş yeniden tartılır) */
-      case 'koru':{const o=s.o||enYakinRakip(this,p.x,p.z,p.team).o;const a=o?Math.atan2(p.z-o.z,p.x-o.x):p.yon;p.surus={yon:A.cizgiKoru?hrkCizgiYon(b.x,b.z,a).a:a,hiz:0.22,koru:true};   /* Z1c: çizgiye doğru koruma yok */
+      case 'koru':{const o=s.o||enYakinRakip(this,p.x,p.z,p.team).o;const a=o?Math.atan2(p.z-o.z,p.x-o.x):p.yon;p.surus={yon:A.cizgiKoru?hrkCizgiYon(b.x,b.z,a,this.dir[p.team]).a:a,hiz:0.22,koru:true};   /* Z1c: çizgiye doğru koruma yok */
         p.kararT=Math.max(this.dusunmeAraligi(p),(s.sure||0.5)*0.85);break;}
       /* T2: taşıma — yön ve uzunluk seçimden; uzun taşıma daha hızlı. Bekleme — top ayağın altında, baş yukarıda */
       case 'tasi':p.surus={yon:s.yon,hiz:clamp(0.55+0.035*s.mesafe,0.55,0.92)};p.kararT=this.dusunmeAraligi(p);break;
@@ -620,7 +620,7 @@ Object.assign(Match.prototype,{
       case 'surukle':p.surus={yon:s.yon,hiz:1,surukle:this.t+1.5};p.kararT=Math.max(this.dusunmeAraligi(p),1.2);break;
       /* T4: rakibi geç — çalım niyeti (hareket, yan, tahmin); yaklaşma süresince karar bağlı (yürütücü yaklaşmanın sonunda yeniden tartar) */
       case 'gec':p.surus={yon:s.yon,hiz:HRK_HAREKET[s.i].yakHiz,cal:{o:s.o,i:s.i,taraf:s.taraf,P:s.P}};p.kararT=Math.max(this.dusunmeAraligi(p),s.tYak-HRK_HAREKET[s.i].haz+0.2);break;
-      case 'bekle':p.surus={yon:A.cizgiKoru?hrkCizgiYon(b.x,b.z,p.yon).a:p.yon,hiz:0.1,bekle:true};p.kararT=this.dusunmeAraligi(p);break;   /* Z1c */
+      case 'bekle':p.surus={yon:A.cizgiKoru?hrkCizgiYon(b.x,b.z,p.yon,this.dir[p.team]).a:p.yon,hiz:0.1,bekle:true};p.kararT=this.dusunmeAraligi(p);break;   /* Z1c */
       default:{p.surus={yon:s.yon!=null?s.yon:p.yon,hiz:s.hiz||0.88};p.kararT=lerp(A.surusKarar[0],A.surusKarar[1],this.rast());}
     }
   },
