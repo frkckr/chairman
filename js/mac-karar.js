@@ -469,8 +469,10 @@ function hedefHavaP(m,q,hx,hz){
   HH.kazan=clamp(lerp(duello,0.8,bos),0.1,0.85);return HH;}
 /* Z3 (tarzEtki; G1.5 direkt oyun ve ikinci top): tarzın uzun top eğilimi — ileriye 28 m'den uzun pasın faydasına başarıdan bağımsız pay (alan ve ikinci
    top; uzunHedef 0,5'in altında ceza), havadan kaybın bedeli ikinciTop ile azalır. Tarzsız takımda 0 / 1 (birebir) */
-function tarzUzunEk(m,p,L,il,tip){const V=MOTOR_AYAR.tarzEtki>0?tarzTakim(m,p.team):null;if(!V||L<28||il<12)return 0;
-  return MOTOR_AYAR.tarzEtki*(V.uzunHedef-0.5)*1.4*clamp((L-28)/12,0,1)*(tip==='hava'?1:0.6);}
+function tarzUzunEk(m,p,L,il,tip){const V=MOTOR_AYAR.tarzEtki>0?tarzTakim(m,p.team):null;if(!V||L<28)return 0;
+  const e=MOTOR_AYAR.tarzEtki,r=clamp((L-28)/12,0,1);
+  if(il>=12)return e*(V.uzunHedef-0.5)*MOTOR_AYAR.tarzUzun*r*(tip==='hava'?1:0.6);
+  return -e*Math.max(0,V.kisaPay-0.5)*MOTOR_AYAR.tarzYanUzun*r;}   /* kısa kuran tarz dolaşımı kısa paslarla yapar: savunmanın 30 m'yi aşan yan ve geri pası seyrek */
 function tarzIkinciK(m,p){const V=MOTOR_AYAR.tarzEtki>0?tarzTakim(m,p.team):null;return V?1-0.6*MOTOR_AYAR.tarzEtki*(V.ikinciTop-0.5):1;}
 /* tam analiz: seçilen türde (sınırdaysa diğerinde de) pasAnaliz ve fayda. T2: alıcının devam değeri; alıcı topu pasın geldiği yöne (pasöre)
    dönük alır, ara pasında ve boşluğa koşarak yüzü koşu yönündedir. Devam değeri oranın tehdidinden (xT) ne kadar farklıysa (devamAgirlik) değer

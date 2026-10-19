@@ -15,7 +15,9 @@
    (takimNiyet), kale vuruşu planını ve kurma şeklini (js/mac-kaleci.js, js/mac-dizilis.js) ölçekler. */
 'use strict';
 ayarEkle('Z',{
-  tarzEtki:1                   // Z3: takım vektörünün etkisi (0: kadro.taktik'in eski değerleri; 1: tarzın vektörü etkin taktiğe ve kurmaya tam girer)
+  tarzEtki:1,                  // Z3: takım vektörünün etkisi (0: kadro.taktik'in eski değerleri; 1: tarzın vektörü etkin taktiğe ve kurmaya tam girer)
+  tarzUzun:3,                  // Z3: ileriye uzun topun tarz payı katsayısı (uzunHedef − 0,5 ile; js/mac-karar.js tarzUzunEk; 1,4'te direkt takımın uzun pas payı konumsalınkinden düşüktü)
+  tarzYanUzun:1.5              // Z3: kısa kuran tarzda yana ve geriye uzun pasın (≥ 28 m) cezası (kisaPay − 0,5'in artısı ile; konumsal takımın uzun paslarının çoğu savunmalar arası yan ve geri pastı)
 });
 const TARZ_ARKETIP={
   dengeli:  {ad:'dengeli',ilkel:{duvarPasi:1,ucuncuAdam:1,derinKosu:1,geriCevirme:1},baglilik:1,takim:null},
