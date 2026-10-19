@@ -169,6 +169,17 @@ const STIL={
          yana açma 0,6'sı, aşağı salınımda vuran bacak ×2,5; temas, takip ve yerdeki bacak sınırsız (anmVkHiz) — 0: eski */
       /*A9-vurus3*/vkHiz:15,
       /*A9-son*/z:0},
+    /* Z2e (2026-10-19; duran topların evreli sahnesi, FUTBOL_KUTUPHANESI §12.2 Z2, gerçekçilik planı Ek G5/G7) — her anahtar 0'da eski çizim (tetikler motordan):
+       sprey hakemin spreyi (olay sprey: 'top' topun yanında çömelme, köpük topun önünde yarım yay; 'cizgi' eğilip yürüme, köpük barajın çizgisi; sprey kutusu
+       elde yalnız sıkarken), spreyOmur köpüğün ömrü (sn, maç saati), spreySolma son kaç saniyede solar; sayim hakemin 5 sn sayımı (olay sayim: kol dik, el açık;
+       süre bitince ya da kullanımda iner); yatan yatan barajcı (rol 'yatan': barajın arkasında yan yatış, yüzü topa; vuruştaki kalkışa yumuşak geçiş),
+       yatanSure yere yatışın süresi (sn); bakis duran topu kullananın başı mac.durus.bakis'e ve topa sırayla döner (0,8–1,5 sn); kolHedef hedefli kol jestinde
+       (jest 'kol', hedef) kolun hedefe doğru yüksekliği (rad, yatayın üstü; 0: eski dik kol); yayKalca yay koşusunda (duran topta, koşunun vuruş yönüne açısı vuran
+       ayağın ters yanından) kalçanın açılma payı (rad/rad; göğüs 0,6'sı karşıya); tacPres taçta markajcının alçak yan duruşu (rol tacMarkaj, alıcıya dönük);
+       tacPerde taçta atana 2 m'deki perdenin açık kolları ve yaylanması; istek alıcının topu istemesi (rol taç alıcısı, istek: el aşağı ileri, önünü gösterir) */
+    z2:{sprey:1,spreyOmur:45,spreySolma:15,sayim:1,yatan:1,yatanSure:0.8,bakis:1,kolHedef:1,yayKalca:0.6,tacPres:1,tacPerde:1,istek:1},
+    /* Z2e: hakem spreyinin köpüğü ve kutusunun rengi */
+    z2Renk:{kopuk:0xf3f3ee,kutu:0xe4e8ec},
     /* A7 (2026-10-17): hareket verisinin eğrileri (js/hareket-egrileri.js) — acik 0 eski elle yazılmış eğriler; ayak (salınan ayağın yolu, duruşun ortası,
        koşuda temas payı), kalca (yükseklik), egim (koşu eğimi), legen (leğen ve omuz hattının salınımı), kol (omuz, dirsek) ağırlıkları; kolOlcek omuz
        salınımının veriye oranı (A7a taraması: ×0,85 omuzda veriden 2,4° uzak, 1,0); depar 4,5 m/sn'nin üstünde uzatma bandının dozu (A7a taraması: 0,5

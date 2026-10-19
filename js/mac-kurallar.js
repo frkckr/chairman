@@ -350,7 +350,7 @@ Object.assign(Match.prototype,{
           b.tasiyan=null;b.x=du.x;b.z=du.z;b.y=0;b.vx=b.vy=b.vz=0;this.topDegisti();du.asama='hazir';
           const a=this.durusHedefAcisi(du),gm=this.duranGeriMesafe(du,tk);du.aci=a;du.geriX=du.x-Math.cos(a)*gm;du.geriZ=du.z-Math.sin(a)*gm;
           /* Z2a (yay koşusu): geri çekilme noktası vuran ayağın ters yanına du.yay kadar dönük — sağ ayaklı topa soldan, 20–45°'lik açıyla gelir */
-          if(du.yay){const r=a+(tk.ayak==='sol'?-1:1)*du.yay;du.geriX=du.x-Math.cos(r)*gm;du.geriZ=du.z-Math.sin(r)*gm;}
+          if(du.yay){const ay=tk.ayak==='iki'?(du.tur==='korner'||du.sinif==='kenar'?this.kornerIceAyak(du):'sag'):tk.ayak,r=a+(ay==='sol'?-1:1)*du.yay;du.geriX=du.x-Math.cos(r)*gm;du.geriZ=du.z-Math.sin(r)*gm;}
           if(!du.hizli&&(du.tur!=='serbest'||this.duranTehlikeli(du))){tk.eylem={ad:'yerlestir',t:0,sure:0.6};du.yerT=du.t;}}}
     }else if(du.asama==='hazir'){
       du.hazirT+=dt;
@@ -366,7 +366,7 @@ Object.assign(Match.prototype,{
     }else if(du.asama==='kullan'){
       /* T8a: kullananın koşusu ve vuruşu (vuruş eylemi) sürerken duruş sürer, oyun temasta başlar (kullanimBildir); kullanan vuruştan vazgeçerse
          (hat kapandı, süre doldu, ıska) oyun başlar ve yeniden karar verir */
-      if(!(tk.eylem&&tk.eylem.ad==='vurus')){this.phase='play';this.phaseT=0;this.durus=null;tk.kararT=0;}
+      if(!(tk.eylem&&tk.eylem.ad==='vurus')){this.phase='play';this.phaseT=0;this.durus=null;tk.kararT=0;this.yatanKaldir(du);}
       else if(du.tur==='penalti')this.kaleciPenaltiErken(du);   /* T8d: kaleci koşuyu okur (js/mac-kaleci.js) */
     }
     this.degisiklikAdim(dt);
@@ -401,7 +401,7 @@ Object.assign(Match.prototype,{
        ışınlanmaz, duruş sürerken topun 1 m gerisine yürür (hazır evresi, hizOran 0,6), sonra yeniden kullanır (düdük bir kez çalar) */
     const gx=du.geriX-du.x,gz=du.geriZ-du.z,gL=hyp(gx,gz);
     if(gL>1.3&&!du.kisaGeri){du.kisaGeri=true;du.geriX=du.x+gx/gL*1.0;du.geriZ=du.z+gz/gL*1.0;b.sahip=null;b.endirekt=null;b.kullanim=null;du.asama='hazir';return;}
-    this.phase='play';this.phaseT=0;this.durus=null;tk.kararT=0;
+    this.phase='play';this.phaseT=0;this.durus=null;tk.kararT=0;this.yatanKaldir(du);
   },
   /* duran topun ilk vuruşu: korner ve serbest vuruş mac-topla.js, kale vuruşu mac-kaleci.js (Faz 0) */
   durusSecenegi(du,tk){

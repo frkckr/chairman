@@ -616,9 +616,10 @@ function ortaSecenekleri(m,p,o,S){
     if(o.hepsi)S[S.length-1].bilesen={P2:A2.P,Pex:A2.Pex,Pt:A2.Pt,teknik:A2.teknik,kal,acik,Pis,sans,iz};}
 }
 /* korner: kafa vuranların ve koşuların noktası ya da bölge (ön direk, penaltı noktası); değer = xG(kafa) × kafa becerisi × P(ulaşır) × (1 − kaleci) */
-function kornerSecenekleri(m,p,ox,oz){
+/* Z2b: yay — uçuşun modeli (havaSure; varsayılan 'korner'): kornerin ve serbest vuruş ortasının kendi teslimi sahne&2'de 'kornerHizli', uzun taç eski uçuşla */
+function kornerSecenekleri(m,p,ox,oz,yay){
   const d=m.dir[p.team],yan=Math.sign(oz-MZ)||1,gk=m.kaleci(1-p.team),S=[];
-  const deg=(q,hx,hz,hy)=>{const L=hyp(hx-ox,hz-oz),T=havaSure(L,MOTOR_AYAR.sahne&2?'kornerHizli':'korner'),A2=pasAnaliz(m,p,hx,hz,'hava',q,{ox,oz,T,hy,baski:0});
+  const deg=(q,hx,hz,hy)=>{const L=hyp(hx-ox,hz-oz),T=havaSure(L,yay||'korner'),A2=pasAnaliz(m,p,hx,hz,'hava',q,{ox,oz,T,hy,baski:0});
     const kal=gk.oyunda?kaleciHavaTahmin(m,gk,hx,hz,hy,T).P:0,sans=xG(hx*d,hz,'kafa',A2.baskiK)*(0.5+q.oz.kafa);
     S.push({q,hx,hz,hy,T,deger:A2.P*(1-kal)*(sans*100+0.8)});};
   /* T8b: görevli kafacıların koşu noktaları (p.duranRol kx, kz; js/mac-durantop.js), top sıçrayan başın hizasında (ayaktaki alın + 0,25; en çok 2,0 m) */
@@ -669,7 +670,7 @@ function sutBlokOlasiligi(m,p,ox,oz,tx,tz,tur,yt,T,t0){
     if(on<0.5||on>Math.min(14,Lk-1))continue;
     if(tur==='asirtma'&&on>4)continue;
     /* Z2c: yatan barajcı alçak şutu keser (barajın doğrultusunda ±0,9 m, 0,32 m'ye dek; ayaktaki gövdesi yok) */
-    const YR=o.duranRol&&o.duranRol.rol==='yatan'&&o.duranRol.yatik?o.duranRol:null;
+    const YR=o.duranRol&&o.duranRol.rol==='yatan'&&o.duranRol.yatik&&(m.phase==='durus'||o.eylem&&o.eylem.ad==='kalkis'&&o.eylem.neden==='yatan')?o.duranRol:null;   /* fizikle aynı yüklem; kalkınca ayaktaki gövde */
     if(YR){if(!ucY)continue;if(yan<0)yan=segD(o.x,o.z,ox,oz,tx,tz);if(yan>=0.9)continue;const f=on/Lk,yOn=0.11+(yt-0.11)*f+0.5*G*(tur==='dusen'?1.3:1)*T*T*f*(1-f);
       if(yOn<0.32)acik*=0.08;continue;}
     const bj=!!(o.duranRol&&o.duranRol.rol==='baraj');if(yan<0)yan=segD(o.x,o.z,ox,oz,tx,tz);let P;
