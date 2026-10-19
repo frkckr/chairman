@@ -78,7 +78,7 @@ const KOD=`(function(tohum,tur,t,u,w){
   if(tur==='serbest')veri={bekle:1.0,duduk:true};else if(tur==='penalti')veri={bekle:0.3};
   m.durusBaslat(tur,t,x,z,veri);
   const du=m.durus;let baraj=false,nb=0;
-  for(let n=0;n<60*32&&!kul;n++){if(m.durus){baraj=!!m.durus.baraj;nb=m.durus.barajdakiler?m.durus.barajdakiler.length:0;}m.step(1/60);}
+  for(let n=0;n<60*60&&!kul;n++){if(m.durus){baraj=!!m.durus.baraj;nb=m.durus.barajdakiler?m.durus.barajdakiler.length:0;}m.step(1/60);}
   if(!kul)return null;
   const b=m.ball;
   for(let k=0;k<60*8;k++){

@@ -19,7 +19,7 @@ const A=kurAl(KOK),B=kurAl(KOK_B);
 function oyna(kur){
   const E={};
   for(let t=T0;t<T0+N;t++){const m=kur(t);let a=0;
-    while(m.phase!=='fulltime'&&a<60*60*30){const ph=m.phase,n0=process.hrtime.bigint();m.step(1/60);const d=Number(process.hrtime.bigint()-n0);
+    while(m.phase!=='fulltime'&&a<60*60*45){const ph=m.phase,n0=process.hrtime.bigint();m.step(1/60);const d=Number(process.hrtime.bigint()-n0);
       const e=E[ph]||(E[ph]={n:0,ns:0});e.n++;e.ns+=d;a++;}}
   return E;
 }

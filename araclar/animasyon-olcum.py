@@ -710,7 +710,7 @@ KALECI_JS = r"""() => {
 }"""
 
 # T8e: yapay duran toplar (araclar/senaryolar/d-duran.js kalıbı): motorun gerçek duruşu (durusBaslat) oyunun içinde kurulur, kullanım olayına kadar
-# (en çok 32 sn) ve sonra 6 sn maç karesi (motor + çizim) ilerler. Sırayla: korner (iki yan), barajlı serbest vuruş (19 ve 24 m), kenar, penaltı, uzun taç, kale vuruşu
+# (en çok 60 sn; Z2 öncesi 32) ve sonra 6 sn maç karesi (motor + çizim) ilerler. Sırayla: korner (iki yan), barajlı serbest vuruş (19 ve 24 m), kenar, penaltı, uzun taç, kale vuruşu
 DURAN_JS = r"""() => {
   const dt = 1 / 60, T = [['korner', 1, 0.4, 33.6], ['korner', 0, 0.4, -33.6], ['serbest', 1, 19, 0], ['serbest', 0, 24, -3], ['serbest', 1, 22, 16], ['penalti', 0, PENALTI_U, 0], ['tac', 1, 12, 33.9], ['kaleVurusu', 0, 5, -4]];
   const S = window.__DURAN_SONUC = { deneme: 0, kullanim: 0, turler: {} }; let kul = null;
@@ -722,7 +722,7 @@ DURAN_JS = r"""() => {
     const b = m.ball; b.px = b.x; b.py = b.y; b.pz = b.z;
     m.durusBaslat(tur, t, x, z, tur === 'serbest' ? { bekle: 1.0, duduk: true } : tur === 'penalti' ? { bekle: 0.3 } : undefined); window.__DURAN_DU = m.durus; kul = null;
     S.deneme++; S.turler[tur] = (S.turler[tur] || 0) + 1;
-    for (let k = 0; k < 60 * 32 && !kul; k++) macKare(dt);
+    for (let k = 0; k < 60 * 60 && !kul; k++) macKare(dt);
     if (kul) { S.kullanim++; for (let k = 0; k < 60 * 6 && (m.phase === 'play' || m.phase === 'goal'); k++) macKare(dt); } };
 }"""
 

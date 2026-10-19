@@ -65,7 +65,7 @@ for(let tohum=T0;tohum<T0+N;tohum++){
     return new Match(on,{kadro:K,tohum:t,tunel:{x:0,z:-6}});}`,ctx)(dinle,tohum,DIZILIS);
   if(DUYARLILIK)duyarlilikUygula(m);
   m.macaGec();let a=0,sahipOnce=null,yol=0;   /* yol: sahipliğin kesintisiz yolu (m); 5 m'den uzunu taşıma sayılır (T3; r-karne ile aynı) */
-  while(m.phase!=='fulltime'&&a<60*60*30){m.step(dt);a++;if(m.phase!=='play'){if(sahipOnce&&yol>5)oy(sahipOnce).tasima++;sahipOnce=null;yol=0;continue;}
+  while(m.phase!=='fulltime'&&a<60*60*45){m.step(dt);a++;if(m.phase!=='play'){if(sahipOnce&&yol>5)oy(sahipOnce).tasima++;sahipOnce=null;yol=0;continue;}
     const sh=m.ball.sahip;if(sh!==sahipOnce){if(sahipOnce&&yol>5)oy(sahipOnce).tasima++;sahipOnce=sh;yol=0;}
     for(const p of m.players){if(!p.oyunda)continue;const P=oy(p),sp=hyp(p.vx,p.vz);P.sure+=dt;P.mes+=sp*dt;if(sp>7)P.sprint+=sp*dt;if(sp<2)P.yuru+=dt;
       if(m.ball.sahip===p){P.top+=dt;yol+=sp*dt;}}}

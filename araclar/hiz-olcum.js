@@ -39,7 +39,7 @@ const GIT=gitAl(KOK);
 function oyna(kurF){
   const sureler=[];let ns=0n,adim=0;
   for(let t=T0;t<T0+N;t++){const m=(kurF||kur)(t);let a=0,n0=process.hrtime.bigint();
-    while(m.phase!=='fulltime'&&a<60*60*30){m.step(1/60);a++;}
+    while(m.phase!=='fulltime'&&a<60*60*45){m.step(1/60);a++;}
     const d=process.hrtime.bigint()-n0;ns+=d;adim+=a;sureler.push(Number(d)/1e6/(a/1000));}
   return{ms:Number(ns)/1e6,adim,sureler};
 }

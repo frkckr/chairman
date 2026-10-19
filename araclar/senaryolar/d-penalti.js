@@ -19,7 +19,7 @@ const KOD=`(function(tohum){
   const px=m.dir[0]*(PL-PENALTI_U);m.topuSifirla(px-m.dir[0]*0.8,MZ+0.5);m.phase='play';
   m.durusBaslat('penalti',0,px,MZ,{bekle:0.3});
   const gk=m.kaleci(1);
-  for(let i=0;i<60*25&&!sonuc;i++){m.step(1/60);
+  for(let i=0;i<60*50&&!sonuc;i++){m.step(1/60);
     if(atis>=0&&!sonuc&&m.ball.tasiyan===gk)sonuc='kurtaris';
     if(atis>=0&&m.phase!=='play'&&!sonuc)sonuc=direk?'direk':'disari';
     if(atis>=0&&m.t-atis>3&&!sonuc)sonuc=direk?'direkOyun':'yok';}

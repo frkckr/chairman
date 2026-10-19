@@ -14,11 +14,11 @@ const KOD=`(function(tohum){
   const dis=p=>Math.max(0,Math.abs(p.x)-PL,-p.z,p.z-PW),ic=p=>Math.abs(p.x)<PL&&p.z>0&&p.z<PW?Math.min(PL-Math.abs(p.x),p.z,PW-p.z):0;
   const bitir=()=>{if(!kayit)return;const R=T[kayit.tur];R.hazir+=kayit.t;if(kayit.teslim!=null){R.teslim+=kayit.teslim;R.teslimN++;}if(kayit.zorla)R.zorla++;
     if(kayit.dis>atanDis)atanDis=kayit.dis;if(kayit.dis>2){atanDisN++;asan.push(kayit.tur+(kayit.cocuk?' çocuklu':' çocuksuz')+' '+kayit.dis.toFixed(1)+' m');}kayit=null;};
-  while(m.phase!=='fulltime'&&adim<60*60*30){m.step(1/60);adim++;
+  while(m.phase!=='fulltime'&&adim<60*60*45){m.step(1/60);adim++;
     const du=m.phase==='durus'?m.durus:null,K=m.topcular||[];
     if(du!==du0){bitir();du0=du;if(du&&T[du.tur]){T[du.tur].n++;if(du.topcu)T[du.tur].cocuk++;kayit={tur:du.tur,t:0,teslim:null,zorla:false,dis:0,asama:du.asama,cocuk:!!du.topcu};}}
     if(du&&kayit){kayit.t=du.t;const tk=du.kullanan;
-      if(kayit.teslim==null&&(du.asama==='yerles'||du.asama==='hazir')){kayit.teslim=du.t;if(du.t>16)kayit.zorla=true;}
+      if(kayit.teslim==null&&(du.asama==='yerles'||du.asama==='hazir')){kayit.teslim=du.t;if(du.t>(du.zorlaGetir||16))kayit.zorla=true;}
       /* yalnız top çocuğun elinden çıktıktan (ya da çocuk yoksa baştan) sonra: atan topu almak için ne kadar dışarı gitti */
       if(tk&&kayit.teslim==null&&!(m.ball.tasiyan&&m.ball.tasiyan.tur==='topcu')){const d=dis(tk);if(d>kayit.dis)kayit.dis=d;}}
     for(const k of K){const d=ic(k);if(d>cocukIc)cocukIc=d;if(!(isFinite(k.x)&&isFinite(k.z)))nan++;}

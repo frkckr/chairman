@@ -850,10 +850,16 @@ async def bolum_15b(tarayici, site, tum_hatalar):
       const v = new THREE.Vector3(), K = STIL.kameralar, olc = () => { kameraUygula(curView()); camera.updateMatrixWorld(); v.set(b.x, b.y + TOP_R, b.z - MOTOR_Z).project(camera);
         return { x: +v.x.toFixed(3), y: +v.y.toFixed(3), fov: +camera.fov.toFixed(2) }; };
       const top = [];
-      for (const [x, z] of [[30, 52], [-38, 12], [5, 62], [-15, 30]]) { Object.assign(b, { x, z, y: 0, vx: 0, vy: 0, vz: 0, sahip: null, tasiyan: null }); for (let i = 0; i < 150; i++) kameraAdim(1 / 60); top.push(olc()); }
-      Object.assign(b, eski); return { faz: mac.phase, top, aci: K.baskan.aci, pencere: K.baskan.pencere }; }""")
-    denetle("Z1: bakış topu pencerede: duraklatılmışken dört yere konan topa bakış yavaşça döndü; top pencerenin içinde ya da kenarında (|x| ≤ 0,46, |y| ≤ 0,45), görüş açısı sabit 32°",
-            odak["faz"] == "play" and odak["aci"] == 32 and all(abs(o["x"]) <= 0.46 and abs(o["y"]) <= 0.45 and abs(o["fov"] - 32) <= 0.01 for o in odak["top"]), str(odak["top"]))
+      for (const [x, z] of [[30, 52], [-38, 12], [5, 62], [-15, 30]]) { Object.assign(b, { x, z, y: 0, vx: 0, vy: 0, vz: 0, sahip: null, tasiyan: null }); for (let i = 0; i < 240; i++) kameraAdim(1 / 60); top.push(olc()); }
+      Object.assign(b, eski); return { faz: mac.phase, top, aci: K.baskan.aci, pencere: K.baskan.pencere, butce: K.baskan.top.butce, oran: camera.aspect }; }""")
+    # Z1 borcu (2026-10-19 gece, masaüstü): son üçte birde nişan kale ağzına kayar (kamTopNisani; en çok butce derece) — top pencerenin kenarından
+    # bütçe kadar dışarıda kalabilir; sınır pencere + bütçe (ekran x'i perspektifle), 45°'lik ani sıçramada yayın oturması için 4 sn
+    import math
+    _yx = math.tan(math.radians(odak["aci"] / 2)) * odak["oran"]
+    sx = math.tan(math.radians(odak["pencere"][0] + odak["butce"][0])) / _yx + 0.03
+    sy = math.tan(math.radians(odak["pencere"][1] + odak["butce"][1])) / math.tan(math.radians(odak["aci"] / 2)) + 0.03
+    denetle(f"Z1: bakış topu pencerede: duraklatılmışken dört yere konan topa bakış yavaşça döndü; top pencerenin içinde ya da kenarında, nişanın kale ağzı payı dahil (|x| ≤ {sx:.2f}, |y| ≤ {sy:.2f}), görüş açısı sabit 32°",
+            odak["faz"] == "play" and odak["aci"] == 32 and all(abs(o["x"]) <= sx and abs(o["y"]) <= sy and abs(o["fov"] - 32) <= 0.01 for o in odak["top"]), str(odak["top"]))
     await pg.screenshot(path=str(ARAC / "son-akis-15-mac.png"))
     await pg.context.close()
 

@@ -24,9 +24,9 @@ const KOD=`(function(tohum,devre){
   const as=[0,1].map(t=>{const k=K.find(q=>q.tur==='kaleci'&&q.t===t),g=k.p.sg;return{dis:k.dis,beklenen:g.iceri-g.cikis};});
   const enUzun={};for(const k of K)enUzun[k.tur]=Math.max(enUzun[k.tur]||0,k.enUzun);
   /* törenin sonuna kadar; istenirse ilk yarı ve devre arası (yedeklerin şut çalışması aynı antKaleci'yi kullanır) */
-  while(m.phase!=='play'&&adim<60*900){m.step(1/60);adim++;bak(m.phase);}
+  while(m.phase!=='play'&&adim<60*1200){m.step(1/60);adim++;bak(m.phase);}
   const santra=m.phase==='play';let ikinci=!devre;
-  if(devre&&santra){let gordu=false;const son=adim+60*900;
+  if(devre&&santra){let gordu=false;const son=adim+60*1200;
     while(adim<son){m.step(1/60);adim++;bak(m.phase);if(m.phase==='halftime')gordu=true;else if(gordu&&m.phase==='play'){ikinci=true;break;}}}
   return{nan,isinma,kal,as,enUzun,santra,ikinci};})`;
 module.exports={calistir({ctx,vm,N,tohum}){
