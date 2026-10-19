@@ -34,12 +34,9 @@
 const KAPI={1:true,2:true,3:true,4:true,5:true,6:true,7:true};   /* T9b-a: [1] [2] [5]; T9b-b: [3] [4] [6]; T9b-c: [7] açık */
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||800,dt=1/60,t0=Date.now();
-  const kur=vm.runInContext(`(tohum,olay)=>{const m=new Match(olay,{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();
-    m.hakemAI=function(){};for(const r of m.refs){r.x=0;r.z=-25;r.tx=0;r.tz=-25;}return m;}`,ctx);
+  const ORTAK=require('../senaryo-ortak')(ctx,vm),kur=(tohum,olay)=>ORTAK.kur(tohum,olay,null,{hakemYok:true});   /* Z1a: ortak kurulum (araclar/senaryo-ortak.js) */
   const profilKur=vm.runInContext('profilKur',ctx),PL=vm.runInContext('PL',ctx),MZ=vm.runInContext('MZ',ctx);
-  const bosalt=(m,kal)=>{for(const p of m.players){if(kal.includes(p)||p.rol==='GK')continue;p.oyunda=false;p.x=p.tx=-300;p.z=p.tz=-300;p.vx=p.vz=0;p.eylem=null;}};
-  const yerlestir=(p,x,z,yon,v)=>{Object.assign(p,{x,z,tx:x,tz:z,vx:Math.cos(yon)*(v||0),vz:Math.sin(yon)*(v||0),spd:v||0,yon,eylem:null,kickCd:0,surus:null,kosu:null,
-    oyunda:true,denge:1,calim:null,yutma:null,zipla:null,yuk:0,tavir:null});};
+  const bosalt=ORTAK.bosalt,yerlestir=(p,x,z,yon,v)=>ORTAK.yerlestir(p,x,z,yon,v,{zipla:null,yuk:0,tavir:null});
   let deneme=0;
   /* o: {L, w (kale ortasına göre yanal), sut, zayif, baski 'yok'|'yakin'|'acele', top 'duran'|'yuvarlanan'|'seken'|'havada', guc, kaleciOnde} */
   const dene=o=>{deneme++;

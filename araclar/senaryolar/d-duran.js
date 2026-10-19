@@ -108,7 +108,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||400,f=vm.runInContext(KOD,ctx),t0=Date.now();let tn=(tohum||1)*10000,kabulDisi=0;   /* T8f: tohum blokları çakışmasın (koşu başına ~4N + 3N tohum) */
   const y=(a,c)=>c?(100*a/c).toFixed(1)+'%':'—',ort=L=>L.length?L.reduce((a,c)=>a+c,0)/L.length:NaN,ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,c)=>a-c);return S[Math.floor(S.length/2)];};
   const f1=(x,k)=>Number.isNaN(x)?'—':x.toFixed(k==null?1:k);
-  const kapi=(acik,ok,metin)=>{const dis=!ok;if(dis&&acik)kabulDisi++;console.log((dis?'! ':'  ')+(acik?'Kapı':'Kabul (T8, bilgi)')+': '+metin);};
+  const kapi=(acik,ok,metin)=>{const dis=!ok;if(dis&&acik)kabulDisi++;console.log((dis&&acik?'! ':'  ')+(acik?'Kapı':'Bilgi (eski T8 kabulü)')+': '+metin+(dis&&!acik?' (dışında)':''));};   /* Z1a (2026-10-19): bilgi satırı "!" basmaz (oturum sonu özetinde kalıcı "!" sayılıyordu) */
   const kos=(tur,t,u,w)=>f(tn++,tur,t,u,w);
   /* korner: iki yan × iki takım */
   const K={L:[],yok:0};

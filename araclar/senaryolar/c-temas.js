@@ -11,8 +11,11 @@
    işidir. Savunmacının hızı bağıl (kapanma) hızı dilimlerini tarar. Başlangıçta motorun saf tahmini alınır (mudahaleTahmin: topa önce değme,
    adama değme, faul olasılığı; hakemin görmesinden önce) ve gerçekleşenle karşılaştırılır (faul: çalınan ya da hakemin görmediği).
    [1] Kabul: her yönde ve toplamda |tahmin − gerçek| ≤ 10 puan — topa önce değme ve faul.
-   [2] Kabul: adama değen temaslarda faul payı her yönde bağıl hızla düzgün artar (komşu dilimde 8 puandan büyük düşüş yok; dilimde ≥ 40 adama
+   [2] Kabul: adama değen temaslarda faul payı her yönde bağıl hızla düzgün artar (komşu dilimde 8 puandan ve farkın 2 standart hatasından
+       büyük düşüş yok — Z1a, borç 29; dilimde ≥ 40 adama
        teması) ve arkadan gelişte faul payı önden gelişten yüksek.
+   [3] (Z1a, 2026-10-19; eski c-kayma, T5 kapısı): hücumcu kaleye sürer, topu ~1,6 m önünde; savunmacı yandan, çaprazdan ya da arkadan-yandan
+       kayarak girer (kaymaBaslat); kabul: kayma kaynaklı faulsüz düşüş > 0. Hücre başına 60 deneme (N verilirse 2N).
    Kabul dışıysa çıkış kodu 1. Teşhis: TEMAS_DOK=1 (yön × dilim: temas anı, bayrak payları, şiddet, sabit hızdan ve modelden konum sapması,
    dokunuşlar); TEMAS_IZ=1 TEMAS_IZ_YON=önden [TEMAS_IZ_VA=5 TEMAS_IZ_OFF=0.9 TEMAS_IZ_VD=4.5 TEMAS_IZ_I=0] tek denemenin kare kare izi.
    Kullanım: node araclar/mac-deneme.js --senaryo c-temas [N=30 hücre başına] [tohum] */
@@ -83,7 +86,9 @@ module.exports={calistir({ctx,vm,N,tohum}){
   for(const [,ad] of YON){const G=H[ad];if(!G.n)continue;for(const k of ['n','pT','pF','gT','gF','pA','gA'])TT[k]+=G[k];
     const dT=Math.abs(G.pT-G.gT)/G.n,dF=Math.abs(G.pF-G.gF)/G.n;if(dT>0.1||dF>0.1)ok1=false;
     /* [2] adama değen temaslarda faul payı dilimler boyunca düzgün artar */
-    let onceki=-1;for(const c of G.d){if(c.gA<40)continue;const f=c.gF/c.gA;if(f<onceki-0.08)ok2=false;onceki=Math.max(onceki,f);}
+    /* Z1a (2026-10-19; borç 29 — kapının tanımı): düşüş, 8 puandan ve iki dilimin farkının 2 standart hatasından büyükse kabul dışı (eskiden yalnız 8 puan:
+       80 ve 56 temaslı iki dilimde farkın 2 SE'si ~17 puan, gürültü kapıyı düşürüyordu) */
+    let oF=-1,oN=1;for(const c of G.d){if(c.gA<40)continue;const f=c.gF/c.gA,se=oF<0?0:Math.sqrt(f*(1-f)/c.gA+oF*(1-oF)/oN);if(oF>=0&&f<oF-Math.max(0.08,2*se))ok2=false;if(f>oF){oF=f;oN=c.gA;}}
     fo[ad]=G.gA?G.gF/G.gA:null;
     console.log((dT>0.1||dF>0.1?'! ':'  ')+ad.padEnd(14)+String(G.n).padStart(5)+y(G.pT/G.n).padStart(16)+y(G.gT/G.n).padStart(9)+y(G.pF/G.n).padStart(15)+y(G.gF/G.n).padStart(9)+
       y(G.pA/G.n).padStart(14)+y(G.gA/G.n).padStart(9)+'     '+G.d.map(c=>c.n?pay(c.gF,c.n)+'/'+pay(c.pF,c.n)+' ('+c.n+')':'—').join(' · '));
@@ -101,6 +106,41 @@ module.exports={calistir({ctx,vm,N,tohum}){
   console.log('  '+'toplam'.padEnd(14)+String(TT.n).padStart(5)+y(TT.pT/TT.n).padStart(16)+y(TT.gT/TT.n).padStart(9)+y(TT.pF/TT.n).padStart(15)+y(TT.gF/TT.n).padStart(9)+y(TT.pA/TT.n).padStart(14)+y(TT.gA/TT.n).padStart(9)+(olaysiz?`     (sonuçsuz ${olaysiz})`:''));
   const arkaOn=fo['arkadan']!=null&&fo['önden']!=null?fo['arkadan']>fo['önden']:true;if(!arkaOn)ok2=false;
   console.log((ok1?'  ':'! ')+`Kabul [1]: her yönde ve toplamda |tahmin − gerçek| ≤ 10 puan (topa önce, faul) → ${ok1?'evet':'HAYIR'}`);
-  console.log((ok2?'  ':'! ')+`Kabul [2]: adama değende faul payı her yönde bağıl hızla düzgün artar (8 puan tolerans, dilimde ≥ 40 adama teması) ve arkadan (${fo['arkadan']!=null?(100*fo['arkadan']).toFixed(0)+'%':'—'}) > önden (${fo['önden']!=null?(100*fo['önden']).toFixed(0)+'%':'—'}) → ${ok2?'evet':'HAYIR'}`);
-  return ok1&&ok2?0:1;
+  console.log((ok2?'  ':'! ')+`Kabul [2]: adama değende faul payı her yönde bağıl hızla düzgün artar (anlamlı düşüş yok: 8 puan ve farkın 2 SE'si; dilimde ≥ 40 adama teması) ve arkadan (${fo['arkadan']!=null?(100*fo['arkadan']).toFixed(0)+'%':'—'}) > önden (${fo['önden']!=null?(100*fo['önden']).toFixed(0)+'%':'—'}) → ${ok2?'evet':'HAYIR'}`);
+  /* [3] kayarak müdahale (Z1a, 2026-10-19: eski c-kayma senaryosu; kendi kurulum dizisi ve sayaçlarıyla, sayıları aynı) */
+  const ok3=(()=>{
+  const n=N?N*2:60,dt=1/60,t0=Date.now();let sd=(tohum||1)*2654435761>>>0;
+  const r=()=>{sd=(sd+0x6D2B79F5)>>>0;let t=sd;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};   /* kurulum rastlantısı (mulberry32) */
+  const kur=vm.runInContext(`(tohum,olay)=>{const m=new Match(olay,{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();return m;}`,ctx);
+  const profilKur=vm.runInContext('profilKur',ctx);
+  const bosalt=(m,kal)=>{for(const p of m.players){if(kal.includes(p)||p.rol==='GK')continue;p.oyunda=false;p.x=p.tx=-300;p.z=p.tz=-300;p.vx=p.vz=0;p.eylem=null;}};
+  /* geliş açısı: savunmacının hücumcunun koşu yönüne göre yeri (derece; 90 yandan, 135 arkadan-yandan, 60 önden-çapraz) */
+  const ACI=[[60,'önden çapraz (60°)'],[90,'yandan (90°)'],[135,'arkadan-yandan (135°)']],BEC=[0.4,0.8],T={};let deneme=0;
+  const SONUC=['temiz','durttu','blok','gecildi','faul'];
+  for(const [aci] of ACI)for(const bc of BEC){const h=T[aci+'|'+bc]={n:0,dusus:0,kart:0,yok:0};for(const s of SONUC)h[s]=0;
+    for(let i=0;i<n;i++){deneme++;let son=null,dusus=false,kart=false;
+      const m=kur((tohum||1)*1000+deneme,(ad,v)=>{if(ad==='mudahaleSonuc'&&!son)son=v;else if(ad==='dusus'&&v&&v.p===A&&v.neden==='kayma')dusus=true;else if(ad==='faul'&&v&&v.kart)kart=true;});
+      const A=m.teams[0][7],D=m.teams[1][2],b=m.ball,d=m.dir[0],hy=d>0?0:Math.PI;bosalt(m,[A,D]);
+      D.oz.mudahale=bc;profilKur(D,m.tohum);   /* T3: profil özellikten türetilir */
+      const yan=i%2?1:-1,ax=d*10,az=34+yan*8,v=4.5+2*r();
+      Object.assign(A,{x:ax,z:az,tx:ax,tz:az,vx:d*v,vz:0,spd:v,yon:hy,eylem:null,kickCd:0,surus:null,denge:1,oyunda:true,calim:null});
+      Object.assign(b,{x:ax+d*1.6,z:az,y:0,vx:d*7,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,hedefOyuncu:null,sut:null,pas:null,sonTakim:0,sonDokunan:A});
+      /* savunmacı topun 2–3,4 m ötesinde, açıya göre (±15°); topa doğru 5–7 m/sn */
+      const a=hy+yan*(aci+(r()-0.5)*30)*Math.PI/180,R=2.0+1.4*r(),vd=5+2*r(),dx=b.x+Math.cos(a)*R,dz=b.z+Math.sin(a)*R,ya=Math.atan2(b.z-dz,b.x-dx);
+      Object.assign(D,{x:dx,z:dz,tx:dx,tz:dz,vx:Math.cos(ya)*vd,vz:Math.sin(ya)*vd,spd:vd,yon:ya,eylem:null,kickCd:0,surus:null,denge:1,oyunda:true});
+      m.phase='play';m.phaseT=1;m.durus=null;m.topDegisti();m.sahipYap(A);A.surus={yon:hy,hiz:1};
+      /* motorun koşulundaki gibi: savunmacının topa yetişme anı ve yeri */
+      const db=Math.hypot(b.x-D.x,b.z-D.z),tK=(db-1.1)/(D.spd+1.2);m.kaymaBaslat(D,A,b.x+b.vx*tK,b.z+b.vz*tK);
+      for(let k=0;k<60*2.5;k++){A.kararT=99;if(b.sahip===A&&!A.surus)A.surus={yon:hy,hiz:1};m.step(dt);if(son&&k>40)break;if(m.phase!=='play'&&son)break;}
+      h.n++;if(!son)h.yok++;else h[son.faul?'faul':son.sonuc||'gecildi']++;if(dusus&&!(son&&son.faul))h.dusus++;if(kart)h.kart++;}}
+  const y=(a,c)=>c?(100*a/c).toFixed(0).padStart(4)+'%':'   —';
+  console.log(`\n[3] Kayarak müdahale (eski c-kayma; T5) · hücre başına ${n} deneme · ${((Date.now()-t0)/1000).toFixed(1)} sn\n`);
+  console.log('  Geliş                   müdahale    n   temiz  dürttü    blok  geçildi   faul   kart   faulsüz düşüş   temas yok');
+  let dus=0;
+  for(const [aci,ad] of ACI)for(const bc of BEC){const h=T[aci+'|'+bc];dus+=h.dusus;
+    console.log('  '+ad.padEnd(24)+bc.toFixed(1).padStart(8)+String(h.n).padStart(5)+SONUC.map(s=>y(h[s],h.n).padStart(s==='gecildi'?9:8)).join('')+y(h.kart,h.n).padStart(7)+y(h.dusus,h.n).padStart(16)+y(h.yok,h.n).padStart(12));}
+  console.log((dus>0?'  ':'! ')+`Kabul [3] (T5): kayma kaynaklı faulsüz düşüş > 0 → ${dus} düşüş`);
+  return dus>0;
+})();
+  return ok1&&ok2&&ok3?0:1;
 }};

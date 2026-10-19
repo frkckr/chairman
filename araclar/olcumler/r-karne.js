@@ -49,17 +49,9 @@ module.exports={
     ['Taşıma: dokunuş sıklığı (1/sn)','rDokunus',2,[2.3,3.0,'T4']],['Taşıma: dokunuş sıklığı <3 m/sn','rDokunusY',2],
     ['Taşıma: dokunuş sıklığı 3–5,5 m/sn','rDokunusO',2],['Taşıma: dokunuş sıklığı ≥5,5 m/sn','rDokunusH',2],
     ['Gol: duran toptan (korner, serbest, penaltı) %','rGolDuran',1,[25,35,'T8']],
-    ['Korner: 8 sn içinde gol %','rKornerGol',1,[3,5,'T8']],['Korner: ceza sahasındaki hücumcu','rKornerKutu',1],
-    /* T8-0 (2026-10-11): oyuna dönüşte ceza sahasındaki savunmacı (kaleci hariç) ve kendi yarısında kalan hücumcu sayısı */
-    ['Korner: ceza sahasındaki savunmacı','rKornerSav',1],['Korner: geride kalan hücumcu','rKornerGeri',1],
-    ['Korner: geride kalanların hızı − takım ort. (özellik)','rKornerGeriHiz',2,[0,null,'T8']],
-    /* T10-0 (2026-10-11; T10 teşhisi hata 6): serbest vuruşun sınıfı T8'in sınıfıdır (du.sinif: baraj, kenar, uzak, geri; js/mac-durantop.js).
-       Eskiden barajdaki kişiye bakılıyordu: T8c'den beri kenar vuruşunun da 1–2 kişilik barajı olduğu için kenar vuruşları "barajlı" sayılıyor,
-       "barajsız (son 40 m)" satırı yalnız çabuk ve uzak vuruşları ölçüp hep 0 çıkıyordu. Barajlı = 'baraj' sınıfı; kenar satırı 'kenar' sınıfında
-       kullanım anında ceza sahasındaki hücumcu (planın T8 kabulü 4–6; k-duran'daki satırla aynı tanım) */
-    ['Barajlı serbest vuruş: 8 sn içinde gol %','rBarajGol',1],['Barajlı serbest vuruş: barajdaki kişi','rBarajKisi',1],
-    ['Kenar serbest vuruşu: ceza sahasındaki hücumcu','rSerbestKutu',1,[4,6,'T8']],
-    ['Tehlikeli duran topta hazırlık (sn, ortanca)','rDuranHazirlik',1,[10,14,'T8']],
+    /* Z1a (2026-10-19; FUTBOL_KUTUPHANESI §11.2 örtüşme temizliği): korner, barajlı ve kenar serbest vuruşu ve hazırlık satırları kalktı — aynı
+       tanımlar araclar/olcumler/k-duran.js'te (kKGol, kKKutuH, kKKutuS, kKGeri, kKGeriHiz, kSKenarKutu, kBKisi, kH_*). Duran toptan gol payı k-duran'da
+       olmadığı için burada kaldı */
     /* T4h (2026-10-09; gerçekçilik planı Ek H madde 39, bilgi): yön salınımı — 0,2 sn'de bir örneklenen gidiş yönü (hız > 1,5 m/sn, kilitli eylem
        dışında) 50°'den çok döner ve bir sonraki örnekte ilk yönün 30° içine geri gelir (gereksiz yön değişimi); sahipsiz duran top — oyunda top
        kimsenin değil, yerde ve 0,3 m/sn'den yavaş (kimse almıyor) */
@@ -91,8 +83,6 @@ module.exports={
     const seqs=[],kayip={};let seq=null;const son={steal:null,kotu:null,pas:null,kafa:null};let ppdaPas=0,ppdaEylem=0;
     /* şut ve gol */
     let sut=0,sutKutu=0,sutDisi=0,gol=0,golDuran=0;const sutL=[],sutLF=[];
-    /* duran top */
-    let onceki=null,lastDu=null,duT0=0;const bekleyen=[],korner=[],baraj=[],serbest=[],hazirlik=[];
     /* pasın alıcısı ve boyu (T2) */
     const grup=q=>!q?'-':q.rol==='GK'?'kaleci':q.mevki&&q.mevki.bek?'bek':q.rol==='DEF'?'stoper':q.mevki&&q.mevki.kanat?'kanat':q.rol==='OS'?'merkez':'forvet';
     let pasN=0,pasL=0,alFv=0,alKn=0,alN=0;
@@ -134,17 +124,6 @@ module.exports={
         if(dr){if(ph!=='play')drBit('durdu');
           else{const q=b.sahip||b.tasiyan;if(q&&q.team!=null){if(q.team!==dr.att)drBit(q.rol==='GK'?'kurt':'rakip');else dr.tut=true;}
             if(dr&&m.t-dr.t>4)drBit(dr.tut?'tuttu':'yok');}}
-        /* duran top: oyuna dönüş anında düzen; 8 sn sonra şut/gol */
-        if(ph==='durus'){if(onceki!=='durus')duT0=m.t;lastDu=m.durus;}
-        if(onceki==='durus'&&ph==='play'&&lastDu){const du=lastDu,att=du.takim,d=m.dir[att];
-          const A=m.teams[att].filter(p=>p.oyunda&&p.rol!=='GK'&&p!==du.kullanan),D=m.teams[1-att].filter(p=>p.oyunda&&p.rol!=='GK'),kutu=p=>kutuda(m,p,att);
-          if(du.tur==='korner'){const geri=A.filter(p=>p.x*d<0),o={kutu:A.filter(kutu).length,sav:D.filter(kutu).length,geri:geri.length,geriHiz:geri.length?ort(geri.map(p=>p.oz.hiz))-ort(A.map(p=>p.oz.hiz)):NaN,gol:false};
-            korner.push(o);hazirlik.push(m.t-duT0);bekleyen.push({t:m.t+8,att,g0:m.score[att],o});}
-          else if(du.tur==='serbest'&&du.x*d>0){const n=du.barajdakiler?du.barajdakiler.length:0,sinif=du.sinif||(n?'baraj':'?');
-            if(sinif==='baraj'){const o={kisi:n,gol:false};baraj.push(o);hazirlik.push(m.t-duT0);bekleyen.push({t:m.t+8,att,g0:m.score[att],o});}
-            else if(sinif==='kenar'){serbest.push(A.filter(kutu).length);hazirlik.push(m.t-duT0);}}}
-        for(let i=bekleyen.length-1;i>=0;i--){const q=bekleyen[i];if(m.t>=q.t){q.o.gol=m.score[q.att]>q.g0;bekleyen.splice(i,1);}}
-        onceki=ph;
         if(ph!=='play'){if(seq)kapat(m,'durdu');if(tas)tasima.push(tas);tas=null;sahipP=null;bosAn=0;tampon(m);return;}
         {const bv=hyp(b.vx,b.vz);if(!b.sahip&&!b.tasiyan&&bv<0.3&&b.y<0.2){bosT+=1/60;bosAn+=1/60;if(bosAn>bosEn)bosEn=bosAn;}else bosAn=0;}
         /* sahiplik zinciri, top ayakta, taşıma */
@@ -189,13 +168,11 @@ module.exports={
           rAyaktaKisa:[ayakta.filter(x=>x<1).length,ayakta.length],rTasima:[tasima.filter(t=>t.yol>5).length,tasima.length],
           rSeqBos:[seqs.filter(s=>s.pas===0).length,seqs.length],rSeq10:[seqs.filter(s=>s.pas>=10).length,seqs.length],
           rAliciForvet:[alFv,alN],rAliciKanat:[alKn,alN],rSutKutu:[sutKutu,sut],rSutForvetDisi:[sutDisi,sut],rGolDuran:[golDuran,gol],
-          rKornerGol:[korner.filter(k=>k.gol).length,korner.length],rBarajGol:[baraj.filter(k=>k.gol).length,baraj.length],
           rCalimOk:[clOk,clN],rCalimKanat:[clKanat,clN],rCalimYut:[clY,clYn],rCalimFaul:[clFaul,clHep],rCalimYarim:[clYarim,clHep],rFaulItme:[faulItme,faulN],rGolDonen:[golDonen,gol],
           rDirekGol:[drS.gol,drN],rDirekKurt:[drS.kurt,drN],rDirekUzak:[drS.uzak,drN],rDirekSut:[drS.sut,drN]};
         for(const [k] of R_KAYIP)ham['rKayip_'+k]=[kayip[k]||0,tk];
         return{ham,rPasBoy:pasN?pasL/pasN:NaN,rHizDk:tOy?mes/tOy*60:NaN,rIvme:tOy?efor/(tOy/60):NaN,rIvmeGps:tOy?eforGps/(tOy/60):NaN,rIvmeEski:tOy?eforEski/(tOy/60):NaN,rIvmeEs:tOy?esN/(tOy/60):NaN,rAyakta:ortanca(ayakta),rSeqPas:ort(seqs.map(s=>s.pas)),rSeqSure:ort(seqs.map(s=>s.sure)),
-          rIvmeKume:tOy?kume/(tOy/600):NaN,rPpda:ppdaEylem?ppdaPas/ppdaEylem:NaN,rSutMesafe:ortanca(sutL),rSutMesafeF:ortanca(sutLF),rDirek:drN,rDirekDiger:drDiger,rDirekDokum:drS,rKornerKutu:ort(korner.map(k=>k.kutu)),rKornerSav:ort(korner.map(k=>k.sav)),rKornerGeri:ort(korner.map(k=>k.geri)),rKornerGeriHiz:ort(korner.map(k=>k.geriHiz).filter(x=>x===x)),
-          rBarajKisi:ort(baraj.map(k=>k.kisi)),rSerbestKutu:ort(serbest),rDuranHazirlik:ortanca(hazirlik),
+          rIvmeKume:tOy?kume/(tOy/600):NaN,rPpda:ppdaEylem?ppdaPas/ppdaEylem:NaN,rSutMesafe:ortanca(sutL),rSutMesafeF:ortanca(sutLF),rDirek:drN,rDirekDiger:drDiger,rDirekDokum:drS,
           rCalim:clN,rCalimHepsi:clHep,rCalimKalib:clPn?100*(clPt-clPok)/clPn:NaN,rKoru:tKoru,rCalimHareket:clHar,
           rDokunus:dkT[0]+dkT[1]+dkT[2]>0?(dkN[0]+dkN[1]+dkN[2])/(dkT[0]+dkT[1]+dkT[2]):NaN,
           rDokunusY:dkT[0]>0?dkN[0]/dkT[0]:NaN,rDokunusO:dkT[1]>0?dkN[1]/dkT[1]:NaN,rDokunusH:dkT[2]>0?dkN[2]/dkT[2]:NaN,
