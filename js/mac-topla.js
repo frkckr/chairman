@@ -37,8 +37,8 @@ ayarEkle('B',{
   geriPas:1.8,                 // geri pasın ek değeri (takımın 'sakin' ayarıyla çarpılır): topu tutma isteği (birleştirme 2026-10-03: 1,4 → 1,8)
   kontrolZorluk:0.7,           // ilk dokunuş hatası çarpanı (kontrolOlasiligi)
   tekVurus:0.25,               // tek vuruşla pasın, kontrol edip oynamaya göre ek değeri (puan) (MM3; T20c 2026-10-18: 0 → 0,25 — koni açılınca gelişine pas %17 → 24, tarama 0,25 / 0,4: %24 / 29,5, şut −1,9)
-  verKacIstegi:0.35,           // kısa pastan sonra pasörün ver-kaç koşusuna çıkma olasılığı (baskıcısı yakınsa tam) (MM3)
-  verKacDeger:0.4,             // ver-kaç koşusundaki pasöre dönüş pasının ek değeri (MM3)
+  verKacIstegi:0.6,            // kısa pastan sonra pasörün ver-kaç koşusuna çıkma olasılığı (baskıcısı yakınsa tam) (MM3; Z4b: 0,35 → 0,6 — pas ver ve koş)
+  verKacDeger:1.1,             // ver-kaç koşusundaki pasöre dönüş pasının ek değeri (MM3; Z4b: 0,4 → 1,1 — dönüş savunmacıyı geçirir; 24 maçta tamamlanan ver-kaç 0 → 1,3 / maç)
   boslukDeger:0.1,             // alıcının önündeki boşluğa pasın ek değeri (MM3)
   ikinciTop:0.75,              // havadan pasta kaybın bedel çarpanı: kaybedilen hava topu çoğu zaman ikinci top olur (MM3)
   havaDeger:0.0,               // havadan pasın ek değeri (takımın 'direkt' ayarıyla +0–0,4) (MM3: eskiden −0,85; birleştirme 2026-10-03: −0,25 → 0)
@@ -113,6 +113,13 @@ ayarEkle('B',{
   pasFalso:1,                  // T21b: pasın doğal eğrisi çarpanı — iç ayakla yerden pas 0,01–0,05 (boyla), dış ayakla ters yöne 0,05–0,09, iç ayakla uzun havadan 0,04–0,08; nişan
                                // yerdeki eğriyi telafi eder (yerPasVur). 0: eski (yerden pas ve uzun top dönüşsüz)
   uzunKosu:1,                  // T21c: koşana savunma arkasına havadan (boşluğa) pas adayı (≥ 15 m; eskiden yasak) ve boşluğa pasta yerden ↔ havadan ikili analiz; 0: eski
+  verKacKalkis:0.05,           // Z4b (ver-kaç): koşuya çıkan pasörün vuruş takibi bu kadar (sn) sürer — pas verir vermez kalkar (0: eski 0,26)
+  verKacTarz:1,                // Z4b: ver-kaç koşusunun sıklığı takımın tarzıyla (duvar pası ağırlığı; konumsal 1, ilişkisel 2, direkt 0,7; 0: tarzsız)
+  bindirme:7,                  // Z4c (B.4, B.5): bit maskesi — 1 iç bindirme (tarzın bekIceri ≥ 0,5 iken kanat çizgideyse bek iç koridordan geçer), 2 bindirene pasın değeri
+                               // (bindirmeDeger), 4 zamanlı bindirme (kanat rakibiyle yüz yüzeyken geçer, yoksa gerisinde destek); 0: eski (bek hep önde ve dışta, pas payı yok)
+  bindirmeDeger:0.35,          // Z4c: bindiren (ya da içten bindiren) ve ileri koşan beke pasın ek değeri (puan; verKacDeger gibi)
+  uzunBakis:0.3,               // Z4a (6. not): uzun pasın (≥ 28 m) hazırlığında bakış hedefe; temasa bu kadar (sn) kala topa döner (0: eski — bakış topta)
+  uzunHaz:0.55,                // Z4a (6. not): baskısızken (< 0,3) uzun pasın hazırlığı en az bu kadar (sn): hedefe bakış ve 2–3 adımlık yaklaşma (0: eski)
   acmaDokunus:1,               // T21c: baskısızken uzun vuruştan (havadan ≥ 28 m, yerden ≥ 32 m) önce topu vuran ayağın önüne 1–1,5 m açma dokunuşu; 0: eski
   donusBos:0.5,                // T21c: oyunun yönünü değiştiren pasın (|Δz| ≥ 25 m) ek değeri, hedefte en yakın rakip 4 → 12 m uzaklaştıkça 0 → bu (puan; tarama 1,2: uzun havadan pas 7 → 17,6, şut −4; 0,3 / 0,5: 8,1 / 11,2); 0: eski (sabit donusDeger)
   ortaIkinci:0.15,             // T21d: ortanın değerine ikinci top — ilk teması alamayan ortada inişin tehdidinin (xT) bu payı; 0: eski
@@ -222,8 +229,10 @@ Object.assign(Match.prototype,{
            yere bakar: kasıtlı büyük dönüşün başında (bt) ve gövdenin önünde bakisDonus'tan büyük dönüş kaldıkça hedef açı gövdenin hedefidir —
            gövdenin döneceği yönde, boyun sınırına kadar (dünyada en kısa yoldan gidince bakış kimi dönüşte gövdenin tersine dönüyor, top arkadayken
            ±80°'de kıstırılıp gövdeyle birlikte dönüyordu; baş öne geçemiyordu) */
-        const D=p.don;let rt;
-        if(D.ok&&(D.bt>this.t||Math.abs(aciFark(D.hx,p.yon))>A.bakisDonus))rt=aciFark(D.hx,p.yon);
+        const D=p.don,ve=p.eylem;let rt;
+        /* Z4a (uzunBakis; 6. not): uzun pasın hazırlığında bakış hedefe — topu kafayı kaldırıp hedefe bakarak hazırlar, temasa uzunBakis kala topa iner */
+        if(A.uzunBakis>0&&ve&&ve.ad==='vurus'&&ve.faz==='hazirlik'&&ve.sec&&ve.sec.tur!=='sut'&&ve.sec.hx!=null&&ve.kalan>A.uzunBakis&&hyp(ve.sec.hx-p.x,ve.sec.hz-p.z)>=28)rt=aciFark(Math.atan2(ve.sec.hz-p.z,ve.sec.hx-p.x),p.yon);
+        else if(D.ok&&(D.bt>this.t||Math.abs(aciFark(D.hx,p.yon))>A.bakisDonus))rt=aciFark(D.hx,p.yon);
         else if(this.t-T.bas<T.sure)rt=T.yan*T.gen;
         else{rt=aciFark(Math.atan2(b.z-p.z,b.x-p.x),p.yon);const L=D.gm&&A.gidisGovde?A.gidisBakis:1.4;if(rt>L)rt=L;else if(rt<-L)rt=-L;}   /* T23b: gidisBakis */
         if(rt>1.95)rt=1.95;else if(rt<-1.95)rt=-1.95;
@@ -300,6 +309,8 @@ Object.assign(Match.prototype,{
     /* T21c (acmaDokunus): baskısızken uzun vuruştan önce topu vuran ayağın önüne açar (stoper bakar, bir iki adım açar, gerilir, vurur); hazırlık 0,45 sn uzar */
     const acma=MOTOR_AYAR.acmaDokunus&&!sut&&!uzk&&!sec.ilk&&!sec.duran&&!sec.penalti&&(hava&&L>=28||tip==='yer'&&L>=32)&&baski<0.3&&b.sahip===p&&hyp(b.vx,b.vz)<1.5&&hyp(b.x-p.x,b.z-p.z)<0.9?{yapildi:false}:null;
     if(acma)hazEn+=0.45;
+    /* Z4a (uzunHaz; 6. not): baskısızken uzun pas (≥ 28 m) aceleyle çıkmaz — hazırlık en az uzunHaz: kafa kalkar, hedefe bakılır, 2–3 adımla gelinir */
+    if(MOTOR_AYAR.uzunHaz>0&&!sut&&!sec.ilk&&!sec.duran&&!sec.penalti&&L>=28&&baski<0.3&&hazEn<MOTOR_AYAR.uzunHaz)hazEn=MOTOR_AYAR.uzunHaz;
     /* sözleşme (TEKNIK_PLAN §8): kalan = temasa kalan süre (her adımda motor yazar, çizim okur), hazirlikT = hazırlıktan geri salınıma geçiş anı */
     p.eylem={ad:'vurus',faz:'hazirlik',t:0,ft:0,sec,ayak,stil:st,guc:0,tekDokunus:!!sec.tekDokunus,geri,hazirlikEn:hazEn,hazirlikT:null,kalan:hazEn+geri,baski,gucPlan,sutPlan,
       acele,kotu:null,kotuU:0,kotuP:0,acma};
@@ -390,7 +401,7 @@ Object.assign(Match.prototype,{
         if(ayakD<0.85&&b.y<1.2&&!b.tasiyan&&this.phase!=='goal'){this.vurusYap(p,e);e.faz='takip';e.ft=0;e.kalan=0;}
         else{p.eylem=null;p.yonHedef=null;p.kararT=0;}
       }
-    }else if(e.ft>=0.26){p.eylem=null;p.yonHedef=null;}
+    }else if(e.ft>=(MOTOR_AYAR.verKacKalkis>0&&this.bVeri(p).vk?MOTOR_AYAR.verKacKalkis:0.26)){p.eylem=null;p.yonHedef=null;}   /* Z4b: ver-kaç koşusu takibi kısaltır */
   },
   /* pas hattının ilk metrelerinde rakip bacağı var mı */
   hatKapali(p,a){const b=this.ball,ux=Math.cos(a),uz=Math.sin(a);
@@ -542,7 +553,8 @@ Object.assign(Match.prototype,{
   verKacBaslat(p,q){
     const d=this.dir[p.team],pu=p.x*d;if(pu<-25||pu>PL-14)return;
     const yr=enYakinRakip(this,p.x,p.z,p.team),yakin=yr.o&&yr.d<6;
-    if(this.rast()>=MOTOR_AYAR.verKacIstegi*(0.5+0.5*p.oz.karar)*(yakin?1:0.4))return;
+    const tw=MOTOR_AYAR.verKacTarz>0?1+MOTOR_AYAR.verKacTarz*(tarzAgirlik(this,p.team,'duvarPasi')-1):1;   /* Z4b: tarz */
+    if(this.rast()>=MOTOR_AYAR.verKacIstegi*(0.5+0.5*p.oz.karar)*(yakin?1:0.4)*tw)return;
     const wz=yakin?(p.z-yr.o.z)/(yr.d||1)*2.5:0,u=Math.min(pu+8+this.rast()*4,ofsaytCizgisi(this,p.team)+2,PL-8);
     this.bVeri(p).vk={q,x:u*d,z:clamp(p.z+wz,3,PW-3),son:this.t+2.8};this.on('kosu',{p,verKac:true});
   },

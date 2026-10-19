@@ -423,6 +423,8 @@ function pasDegeri(m,p,o,hx,hz,alt,q){
   /* ara pasında alıcı savunmanın arkasında topu kaleye taşır: tehdit 5 m ileriden ölçülür (kaleciyle karşı karşıya kalma değeri) */
   let v=xT(alt==='ara'?Math.min(PL-8,hu+5):hu,hz)*100*(1-A.sikisma*sik)+ilerleme*(A.ilerleme+0.015*takim.direkt)*(ilerleme<0?0.3:1-0.5*sik);
   if(ilerleme<-4)v+=takim.sakin*A.geriPas+o.baski*0.8;    /* geri pas: topu tutmak, baskıda güvenli çıkış */
+  /* Z4c (bindirme&2; B.4): bindiren ya da içten bindiren, ileri koşan beke pas — kanatta ikiye bir */
+  if(A.bindirme&2&&(q.gorevAd==='bindirme'||q.gorevAd==='icBindirme')&&(q.vx*d)>3)v+=A.bindirmeDeger;
   if(alt==='ara')v+=A.araDeger*(0.5+takim.direkt);else if(alt==='bosluk')v+=A.boslukDeger;else if(alt==='hedef')v+=A.hedefDeger*(0.4+takim.direkt);
   if(q.rol==='GK'){const KA=(MOTOR_AYAR.kurma&2)?tarzTakim(m,p.team):null;v-=KA?0.3*(1-0.7*KA.kaleciArti):0.3;}   /* Z3: kaleci +1 tarzda geri pas cezası küçük */
   /* Z3 (tarzEtki; G1.1): tarzın açık oyundaki izi — kisaPay 16 m'den kısa pasa küçük pay (0,5'in altında ceza). Tarzsız takımda yok */

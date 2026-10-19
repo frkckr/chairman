@@ -275,7 +275,7 @@ Object.assign(Match.prototype,{
   },
   kullananSec(du){
     const tm=this.sahadakiler(du.takim);
-    if(du.tur==='kaleVurusu'||du.kaleciye)return this.kaleci(du.takim)||tm[0];   /* T10d: ceza sahasındaki hakem topu kaleciye */
+    if(du.tur==='kaleVurusu'||du.kaleciye){const k=this.kaleci(du.takim);if(k&&k.oyunda)return k;if(du.tur==='kaleVurusu')return tm[0];}   /* T10d: ceza sahasındaki hakem topu kaleciye; Z4 (hata, 2026-10-20): kaleci sahada değilse (tedavide, oyundan çıkmış) hakem topu en yakına — eskiden sahada olmayan kaleciye veriliyor, maç duruşta kalıyordu (konumsal ↔ direkt takasında tohum 65) */
     let en=null,ep=1e9;
     for(const p of tm){if(p.rol==='GK'&&du.tur!=='serbest')continue;
       let c=hyp(p.x-du.x,p.z-du.z);

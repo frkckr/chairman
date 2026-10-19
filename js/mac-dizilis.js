@@ -311,7 +311,12 @@ Object.assign(Match.prototype,{
         const kosu=geride?null:this.derinKosu(p,s,ofs,dt);if(kosu){u=kosu.u;w=kosu.w;p.hizOran=1;ef=1;g='kosu';}
         /* bindirme: aynı kanatta top ilerideyse bek dışından geçer (kanatta ikiye bir) */
         const ayniKanat=Math.sign(s.z-MZ)===Math.sign(p.mevki.w-MZ)&&Math.abs(s.z-MZ)>10;
-        if(!geride&&p.mevki.bek&&ayniKanat&&s!==p&&s.x*d>-5&&(!N||N.bekCik)){u=Math.max(u,s.x*d+(s.mevki.kanat?6:-4));w=p.mevki.w<MZ?3.5:PW-3.5;p.hizOran=0.95;ef=0.8;g='bindirme';}
+        if(!geride&&p.mevki.bek&&ayniKanat&&s!==p&&s.x*d>-5&&(!N||N.bekCik)){
+          /* Z4c (bindirme&4; B.4): zamanlı bindirme — kanat topla rakibiyle yüz yüzeyken (9 m içinde) bek arkadan geçer; yoksa kanadın gerisinde destek */
+          let ik=s.mevki.kanat?6:-4;if(MOTOR_AYAR.bindirme&4&&s.mevki.kanat&&enYakinRakip(this,s.x,s.z,t).d>=9)ik=-3;
+          u=Math.max(u,s.x*d+ik);w=p.mevki.w<MZ?3.5:PW-3.5;p.hizOran=0.95;ef=0.8;g='bindirme';
+          /* Z4c (bindirme&1; B.5): iç bindirme — kısa kuran tarzda (bekIceri ≥ 0,5) kanat çizgideyken bek kanatla stoperin arasındaki iç koridordan geçer */
+          if(MOTOR_AYAR.bindirme&1&&s.mevki.kanat&&Math.abs(s.z-MZ)>=22){const V=tarzTakim(this,t);if(V&&V.bekIceri>=0.5){u=Math.max(u,s.x*d+5);w=MZ+(p.mevki.w<MZ?-13:13);g='icBindirme';}}}
         /* uzak kanat: top öbür kanatta ve ilerideyse içeri, ceza sahasına kayar (T7b: son bölge dışında genişliği tutar — yüklenip çevirmenin hedefi) */
         if(!kr&&p.mevki.kanat&&!ayniKanat&&Math.abs(s.z-MZ)>10&&s.x*d>10){u=Math.max(u,ofs-4);w=lerp(w,MZ,N&&N.ad!=='sonBolge'?0.15:0.55);ef=Math.max(ef,0.5);if(g==='bolge')g='uzakKanat';}
         /* T7a: geride son dakikalar — kafası en iyi stoper forvet hattına çıkar (maç durumu, js/mac-takim.js) */
