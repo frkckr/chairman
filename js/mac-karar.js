@@ -516,6 +516,8 @@ function pasSecenekleri(m,p,o){
         /* T7c: tetikli koşunun kaydı — alıcı bu noktaya koşabilir (mac-topla.js derinKosu; 0,5 sn geçerli) */
         const AK=m._araKayit||(m._araKayit=[new Map(),new Map()]),e=AK[p.team].get(q);if(e){e.x=h.x;e.z=h.z;e.t=m.t;}else AK[p.team].set(q,{x:h.x,z:h.z,t:m.t});}}
   }
+  /* Z1 (H6 uzantısı): planın pası koşucunun gideceği boşluğa aday olur (plan 0'da m._pln yok) */
+  if(m._pln){const h=m.planHedefPas(p);if(h){const g=algilanan(m,p,h.q);if(g){const L=hyp(h.x-o.ox,h.z-o.oz);pasAdayiEkle(m,p,o,C,h.q,g,h.x,h.z,L>=8?'bosluk':'ayak',h.ex,h.ez,0);}}}
   C.sort((a,c)=>c.U0-a.U0||a.q.n-c.q.n||PAS_ALT_SIRA[a.alt]-PAS_ALT_SIRA[c.alt]||(a.es||0)-(c.es||0));
   const K=Math.min(C.length,o.ilk?6:10),S=[];
   /* Z1 (H6): planın bu pasördan beklediği alıcının en iyi ön adayı tam analize zorla girer (plan 0'da m._pln yok) */

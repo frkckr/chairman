@@ -40,18 +40,18 @@ const ILK_TABLO={
     aday(m,t,K,out){
       const d=m.dir[t],ku=K.x*d;if(ku<-20||ku>PL-12)return;
       /* önündeki (±60°) 1,5–7 m'de, yaklaşan ya da 3 m içindeki savunmacı */
-      let D=null,dd=7;for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK'||o.eylem&&o.eylem.kilit)continue;const ox=o.x-K.x,oz=o.z-K.z,r=hyp(ox,oz);
-        if(r<1.5||r>dd||ox*d<r*0.5)continue;const yak=-(o.vx*ox+o.vz*oz)/r;if(yak<0.3&&r>3)continue;dd=r;D=o;}
+      let D=null,dd=6;for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK'||o.eylem&&o.eylem.kilit)continue;const ox=o.x-K.x,oz=o.z-K.z,r=hyp(ox,oz);
+        if(r<2||r>dd||ox*d<r*0.34)continue;dd=r;D=o;}
       if(!D)return;const ofs=m._ofs[t];
       for(const B of m.teams[t]){if(B===K||!B.oyunda||B.rol==='GK'||B.eylem&&B.eylem.kilit||m._pln.rol.has(B))continue;
-        const bx=B.x-K.x,bz=B.z-K.z,L=hyp(bx,bz);if(L<4||L>10)continue;if(hyp(B.vx,B.vz)>3.5||B.x*d>ofs-0.3&&B.x*d>0)continue;
-        if(!ilkCanli(K,B)||ilkHatKesen(m,t,K.x,K.z,B.x,B.z,1.0,null))continue;
+        const bx=B.x-K.x,bz=B.z-K.z,L=hyp(bx,bz);if(L<3||L>12)continue;if(hyp(B.vx,B.vz)>4.5||B.x*d>ofs-0.3&&B.x*d>0)continue;
+        if(!ilkCanli(K,B)||ilkHatKesen(m,t,K.x,K.z,B.x,B.z,0.8,null))continue;
         /* koşunun hedefi: savunmacının 4 m ötesi, B'nin yanına 0,4 yaklaşık; ikinci savunmacı 5 m içinde olmamalı, saha içinde, çizgiye en çok 4 m ötede */
         const nu=Math.min(Math.max(ku+8,D.x*d+4),ofs+4,PL-6),nw=K.z+0.4*(B.z-K.z),nx=nu*d;if(!ilkSahada(nx,nw,2))continue;
-        let ikinci=false;for(const o of m.teams[1-t]){if(!o.oyunda||o===D||o.rol==='GK')continue;if(hyp(o.x-nx,o.z-nw)<5){ikinci=true;break;}}if(ikinci)continue;
+        let ikinci=false;for(const o of m.teams[1-t]){if(!o.oyunda||o===D||o.rol==='GK')continue;if(hyp(o.x-nx,o.z-nw)<3.5){ikinci=true;break;}}if(ikinci)continue;
         const kz=ILK_KAPI(0.5*K.oz.karar+0.5*K.oz.pas,0.45)*ILK_KAPI(0.5*profilAlt(B,'ilkDokunus',B.oz.pas)+0.5*B.oz.pas,0.45);
-        const deger=Math.max(0,(xT(nu,nw)-xT(ku,K.z))*100);if(deger<1)continue;
-        const a=ILK_ADAY();a.tur='duvarPasi';a.kz=kz;a.K=K;a.B=B;a.D=D;a.nu=nu;a.nw=nw;a.deger=deger;a.lam=kz*clamp(deger/5,0.4,2);out.push(a);}
+        const deger=1+Math.max(0,(xT(nu,nw)-xT(ku,K.z))*100);   /* savunmacıyı geçmenin tabanı (1 puan; orta sahada 8 m'nin xT kazancı ~0,5) + alan kazancı */
+        const a=ILK_ADAY();a.tur='duvarPasi';a.kz=kz;a.K=K;a.B=B;a.D=D;a.nu=nu;a.nw=nw;a.deger=deger;a.lam=kz*clamp(deger/3,0.4,2);out.push(a);}
     },
     hedef(m,P,p,o){
       const d=m.dir[P.takim];
@@ -67,16 +67,16 @@ const ILK_TABLO={
       for(const B of m.teams[t]){if(nB>=3)break;if(B===K||!B.oyunda||B.rol==='GK'||B.eylem&&B.eylem.kilit||m._pln.rol.has(B)||GR&&GR.has(B))continue;
         const bu=B.x*d,ileri=bu-ku;if(ileri<8||ileri>22||bu>ofs-0.3)continue;
         if(Math.cos(aciFark(B.yon,d>0?0:Math.PI))>0)continue;   /* sırtı kaleye */
-        let M=null;for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;if(o.x*d>bu-0.5&&hyp(o.x-B.x,o.z-B.z)<3){M=o;break;}}
+        let M=null;for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;if(o.x*d>bu-0.5&&hyp(o.x-B.x,o.z-B.z)<4){M=o;break;}}
         if(!M||!ilkCanli(K,B)||ilkHatKesen(m,t,K.x,K.z,B.x,B.z,1.2,M))continue;nB++;
         let nC=0;for(const C of m.teams[t]){if(nC>=2)break;if(C===K||C===B||!C.oyunda||C.rol==='GK'||C.eylem&&C.eylem.kilit||m._pln.rol.has(C)||GR&&GR.has(C))continue;
           const L=hyp(C.x-B.x,C.z-B.z);if(L<6||L>16||C.x*d>ofs-0.3)continue;
           const nu=Math.min(bu+6,ofs+3,PL-8),nw=lerp(C.z,B.z,0.3),nx=nu*d;if(!ilkSahada(nx,nw,2))continue;
-          let bos=true;for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;if(hyp(o.x-nx,o.z-nw)<4){bos=false;break;}}if(!bos)continue;
+          let bos=true;for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;if(hyp(o.x-nx,o.z-nw)<3.5){bos=false;break;}}if(!bos)continue;
           const tC=hyp(C.x-nx,C.z-nw)/(C.maxSpd*0.9)+0.4;if(ilkRakipVaris(m,t,nx,nw)<tC-0.3)continue;nC++;
           const kz=ILK_KAPI(0.5*profilAlt(K,'yaraticilik',K.oz.gorus)+0.5*K.oz.gorus,0.5)*ILK_KAPI(profilAlt(B,'ilkDokunus',B.oz.pas),0.45)*ILK_KAPI(profilAlt(C,'topsuzHareket',C.oz.karar),0.45);
-          const deger=Math.max(0,(xT(nu,nw)-xT(ku,K.z))*100);if(deger<1)continue;
-          const a=ILK_ADAY();a.tur='ucuncuAdam';a.kz=kz;a.K=K;a.B=B;a.C=C;a.D=M;a.nu=nu;a.nw=nw;a.deger=deger;a.lam=kz*clamp(deger/5,0.4,2);out.push(a);}}
+          const deger=0.5+Math.max(0,(xT(nu,nw)-xT(ku,K.z))*100);
+          const a=ILK_ADAY();a.tur='ucuncuAdam';a.kz=kz;a.K=K;a.B=B;a.C=C;a.D=M;a.nu=nu;a.nw=nw;a.deger=deger;a.lam=kz*clamp(deger/3,0.4,2);out.push(a);}}
     },
     hedef(m,P,p,o){
       const d=m.dir[P.takim];
@@ -110,9 +110,10 @@ const ILK_TABLO={
     },
     hedef(m,P,p,o){
       if(p!==P.R||P.i!==1)return null;const d=m.dir[P.takim],K=P.K,yas=m.t-P.tBas,e=K&&K.eylem;
-      const kir=e&&e.ad==='vurus'&&e.sec&&e.sec.alici===p||yas>P.tHedef+0.6;
+      const kir=e&&e.ad==='vurus'&&e.sec&&e.sec.alici===p;
       if(kir){o.u=P.nu;o.w=P.nw;o.ef=1;o.h=1;}
-      else{const cz=m._pln.cizgi[P.takim];o.u=Math.min(cz-0.3,p.x*d+2);o.w=P.w0+P.yan*Math.min(3,5*yas);o.ef=0.85;o.h=0.85;}   /* kavis: çizgi hizasında, koridora doğru en çok 3 m yana */
+      else{const cz=Math.max(m._ofs[P.takim],m.ball.x*d);o.u=Math.min(cz-0.3,p.x*d+4);   /* algılanan (0,5 sn gecikmeli) çizgi: çizgi çıkınca ara sıra ofsayt */
+        o.w=P.w0+P.yan*Math.min(6,6*yas);o.ef=1;o.h=1;}   /* kavis: çizgi hizasında hızlı ve çapraz, koridora doğru en çok 6 m yana */
       o.g='planKosu';return o;}
   },
   /* ---- B.13 + B.24 geri çevirme ve üç derinlikli kutu girişi: çizgiye inen taşıyan; ön direk (aldatma), penaltı noktası (geç gelen), yay (ikinci top) ---- */
@@ -139,8 +140,8 @@ const ILK_TABLO={
     hedef(m,P,p,o){
       if(P.i!==1)return null;const d=m.dir[P.takim],yan=P.yan,cz=m._pln.cizgi[P.takim],K=P.K;
       if(p===P.A){o.u=Math.min(PL-5.5,cz-0.3);o.w=MZ+yan*2.5;o.ef=1;o.h=1;o.g='planKutu';return o;}
-      if(p===P.B){const ileri=Math.max(2,K.vx*d),tKes=Math.max(0,(PL-4-K.x*d)/ileri),tV=hyp(p.x-(PL-11)*d,p.z-(MZ+yan))/(p.maxSpd*0.9)+0.3;
-        if(tKes-tV-0.2>0&&!P.ek){o.u=Math.min(PL-19,cz-0.3);o.w=MZ-3*yan;o.ef=0.6;o.h=0.7;}   /* bekler (geç gelen) */
+      if(p===P.B){const ileri=Math.max(2,K.vx*d),tKes=Math.max(0,(PL-7-K.x*d)/ileri),tV=hyp(p.x-(PL-11)*d,p.z-(MZ+yan))/(p.maxSpd*0.9)+0.3;
+        if(tKes-tV-0.4>0&&!P.ek){o.u=Math.min(PL-19,cz-0.3);o.w=MZ-3*yan;o.ef=0.6;o.h=0.7;}   /* bekler (geç gelen) */
         else{P.ek=1;o.u=Math.min(PL-11,cz-0.3);o.w=MZ+yan;o.ef=1;o.h=1;}
         o.g='planKutu';return o;}
       if(p===P.C){o.u=Math.min(PL-18,cz-0.3);o.w=MZ-2*yan;o.ef=0.7;o.h=0.8;o.g='planKutu';return o;}
