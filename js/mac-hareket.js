@@ -122,9 +122,26 @@ ayarEkle('C',{
                                // dokunur, top gövdenin yanındaysa (0,6 m, 0,35 m gerisine dek) da dokunur; 0: eski (varış hızı hedef hızın %95'i, zamanlayıcı, yalnız öndeki top)
   surusYuz:1,                  // T20a: sürüşte gövdenin hedefi histerezisli (top ±72° dışında ve 0,6 m'den uzaksa topa, ±32° içinde ya da 0,5 m'de niyete); 0: tek eşik (±60°)
   geriTopla:0.05,              // T20b: topun sahibi ve vuruş hazırlığındaki saha oyuncusu gövdesinin tersine en çok tepe hızın bu payıyla gider (önce döner); 0: geriTavan (0,42)
+  cizgiKoru:1,                 // Z1c (2026-10-19; kullanıcının 7. notu): sürüş dokunuşunda topun serbest yuvarlanışı çizginin 0,7 m içinde biter (çalımın itişi dahil),
+                               // çizgiye 3 m'den yakınken dokunuşun ve koruma/bekleme yönünün dışa payı daralır (1 m'de sıfır; hrkCizgiYon), yolun 0,3 m alt sınırı kalkar;
+                               // 0: eski (T23'te maçta 3,8 kendi kendine çıkış: çizgiye 3–9 m'den dik, 5–7 m/sn'lik dokunuşla sürücünün yetişemediği top)
   sirtGovde:1                  // A4-5: sırtla dönmede savunmacı dibinde (≤ 2,6 m), hazırlıkta sırt ona dönük kalır, omuzla aldatır, top yana itilir (a0Sirt, amaxSirt)
                                // (0: eski — önce dönüp sonra keser; zorlanan c-1v1 [5]'te kayıp %41 → 24, geçti %5 → 8, tahmin %12)
 });
+/* Z1c (2026-10-19): çizgi koruması — top (x, z) çizgiye yaklaştıkça a yönünün o çizgiye doğru (dışa) bileşenine izin verilen pay daralır:
+   clamp(uzaklık − 1, 0, 2) / 2 (3 m'de serbest, 1 m'de sıfır). Kırpılan yönün kalanı çizgi boyunca gidişin yanına (yan bileşen yoksa saha ortasına
+   doğru) verilir, öbür çizginin payıyla sınırlı; köşede kalan küçükse 'dur' (kısa durdurma dokunuşu, yön saha ortasına). Saf; paylaşılan nesne
+   döner (aynı çağrıda okunur) */
+const HRK_CY={a:0,dur:false},hrkCizgiPay=d=>d>=3?1:d<=1?0:(d-1)/2;
+function hrkCizgiYon(x,z,a){let c=hrkCos(a),s=hrkSin(a);HRK_CY.dur=false;HRK_CY.a=a;
+  const sA=hrkCizgiPay(z),sU=hrkCizgiPay(PW-z),cA=hrkCizgiPay(x+PL),cU=hrkCizgiPay(PL-x);let ks=false,kc=false;
+  if(s<-sA){s=-sA;ks=true;}else if(s>sU){s=sU;ks=true;}
+  if(c<-cA){c=-cA;kc=true;}else if(c>cU){c=cU;kc=true;}
+  if(!ks&&!kc)return HRK_CY;
+  if(ks&&!kc){const g=hrkAbs(c)>0.1?(c>0?1:-1):(x>0?-1:1);c=g*hrkMin(hrkKok(hrkMax(0,1-s*s)),g>0?cU:cA);}
+  else if(kc&&!ks){const g=hrkAbs(s)>0.1?(s>0?1:-1):(z>MZ?-1:1);s=g*hrkMin(hrkKok(hrkMax(0,1-c*c)),g>0?sU:sA);}
+  if(hrkHyp(c,s)<0.25){HRK_CY.dur=true;HRK_CY.a=hrkAtan2(MZ-z,-x);return HRK_CY;}
+  HRK_CY.a=hrkAtan2(s,c);return HRK_CY;}
 /* çeviklik (0–1): top sürme, hız ve hafiflikten türetilir (kadro verisi değişmez) */
 const hrkCeviklik=p=>{if(p._cev!=null)return p._cev;const o=p.oz||{},s=o.surus!=null?o.surus:0.5,h=o.hiz!=null?o.hiz:0.5;
   return p._cev=clamp(0.5*s+0.3*h+0.2*clamp((95-kutle(p))/30,0,1),0,1);};
@@ -716,10 +733,11 @@ Object.assign(Match.prototype,{
          ("sürerken saklama"): c-1v1 beceri eğimini 15,8 → 14,0'a düşürdü (zayıf sürücü de topu kaçırıyor), geri alındı */
       if(!itis&&!s.koru&&!cekme){const {o,d:od}=enYakinRakip(this,b.x,b.z,p.team);if(o&&od<2){const yy=hrkCos(a)*(o.z-p.z)-hrkSin(a)*(o.x-p.x);a-=hrkIsaret(yy)*0.3*(2-od)/2;}}
       if(!itis)a+=this.normal()*(0.04+0.1*(1-p.oz.surus))*(1+baski);
+      let cizgiDur=false;if(A.cizgiKoru&&!itis){const Y=hrkCizgiYon(b.x,b.z,a);a=Y.a;cizgiDur=Y.dur;}   /* Z1c: çizgi koruması */
       const ca=hrkCos(a),sa=hrkSin(a),ileri=hrkMax(0,p.vx*ca+p.vz*sa);
       let v,Dt=0.22;
       if(itis)v=M.itme;
-      else if(M&&M.durdur){v=0.2;Dt=0.5;}
+      else if(M&&M.durdur||cizgiDur){v=0.2;Dt=0.5;}
       else if(s.koru||s.bekle)v=ileri*0.95+(s.koru?0.3:0.15);
       else{/* T4: dokunuş aralığı Δt = 1/f, f = lerp(dokunusSiklik; sürüş hızı)·(1 + 0,3·öndeki baskı). Top Δt sonra yine ayağın önünde olsun: yolu,
           oyuncunun bu sürede gideceği yol + (uzanma − topun şimdiki öndeliği); ilk hız top fiziğinden (hrkItmeHizi). Dönüşte oyuncunun yeni yöndeki hızı
@@ -729,9 +747,13 @@ Object.assign(Match.prototype,{
         const Lc=sur?2.8:kacis?1.8:kontrol?0.45:0.9*ulas,vort=ileri+0.5*clamp(vp-ileri,-4*Dt,3*Dt),simdi=dx*ca+dz*sa;let yol=cekme?0.8:hrkMax(0.15,vort*Dt+Lc-simdi);
         /* çizgi: top kaçarsa da (0,8 m daha) saha içinde kalsın; çizgiye yakın sürücü topu kısa tutar */
         const sx=ca>0.05?(PL-0.4-b.x)/ca:ca<-0.05?(-PL+0.4-b.x)/ca:99,sz=sa>0.05?(PW-0.4-b.z)/sa:sa<-0.05?(0.4-b.z)/sa:99;
-        yol=hrkMin(yol,hrkMax(0.3,hrkMin(sx,sz)-0.8));
+        yol=hrkMin(yol,hrkMax(A.cizgiKoru?0.05:0.3,hrkMin(sx,sz)-0.8));   /* Z1c: alt sınır (0,3 m) dışa giden topu çizgiden atıyordu */
         if(cekme)Dt=0.45;
         v=hrkMin(14,hrkItmeHizi(yol,Dt,this.R));}
+      /* Z1c: topun serbest yuvarlanışı çizginin 0,7 m içinde biter (çalımın itişi ve kaçışı dahil). Yukarıdaki yol sınırı yalnız dokunuş aralığının
+         sonuna bakıyordu: çizgiye dik 5–7 m/sn'lik top aralıktan sonra da yuvarlanıp sürücü yetişemeden çıkıyordu */
+      if(A.cizgiKoru&&!cekme&&v>0.5){const qx=ca>0.05?(PL-0.7-b.x)/ca:ca<-0.05?(-PL+0.7-b.x)/ca:99,qz=sa>0.05?(PW-0.7-b.z)/sa:sa<-0.05?(0.7-b.z)/sa:99,Lq=hrkMax(0.1,hrkMin(qx,qz));
+        if(Lq<40&&yerHiz(v,Lq,this.R)>0.4)v=hrkMin(v,yerIlkHiz(Lq,0.4,this.R));}
       /* son dokunuş (çizim için, rastlantısız): ayak topun gövdeye göre yanı; yüzey: dönüş ayağın kendi yanına dış, öbür yana iç, düz uzun itiş üst */
       const ayak=mdhAyak(p,b.x,b.z),fy=hrkAciFark(a,p.yon);
       /* donus (T2, sözleşme): gövdeye göre keskin yönlü dokunuş (sırtı dönükken dönme, içe/dışa kesme); çizim gövdeyi dönüşe yatırır.
