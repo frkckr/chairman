@@ -164,7 +164,10 @@ Object.assign(Match.prototype,{
         const tet=this.presTetikVar(t),R1=(tet?MOTOR_AYAR.presTetikMesafe:16)*yp,R2=(tet?11:7)*yp,B0=tet?-20:-8;
         /* T18a (presKalici): önceki 1. adama süzgeçte pay (çıkış eşiği giriş eşiğinden presKalici m geniş); süzgeçte elenen 1. adamın belleği silinmez */
         const pk=MOTOR_AYAR.presKalici>0&&pres1===onceki?MOTOR_AYAR.presKalici:0;if(MOTOR_AYAR.presKalici>0&&pres1)P1[t]=pres1;
+        const aday1=pres1;   /* Z5a: süzgeçten önceki en iyi aday */
         if(pres1&&(hyp(pres1.x-s.x,pres1.z-s.z)>R1+pk||(bu>B0+tk.pres*14&&hyp(pres1.x-s.x,pres1.z-s.z)>R2+pk)))pres1=null;
+        /* Z5a (surenCik; D4, D9): kalemize doğru süren taşıyan müdahalesiz koşmaz — blok yerini korusa da en iyi aday (16 m içinde) çıkar, geciktirir */
+        if(!pres1&&aday1&&MOTOR_AYAR.surenCik>0&&s.surus&&-(s.vx*d)>MOTOR_AYAR.surenCik&&hyp(aday1.x-s.x,aday1.z-s.z)<=R1)pres1=aday1;
         /* T4: üstüne sürülen (çalımın hedefi olan) savunmacı 1. adamdır: ikili mücadeleye girer (bölgesinde kalırsa çalıma tepki vermiyordu) */
         const ch=s.calim&&s.calim.o;if(ch&&ch.team===t&&ch.oyunda&&ch.rol!=='GK'&&!(ch.eylem&&ch.eylem.kilit)&&ch!==pres1){if(pres2===ch)pres2=pres1;pres1=ch;}
         if(!(MOTOR_AYAR.presKalici>0)||pres1)P1[t]=pres1;
@@ -363,6 +366,10 @@ Object.assign(Match.prototype,{
       ef=clamp((0.25+0.2*clamp((uz0-3)/12,0,1)+0.15*tehlike)*calis,0.2,0.55);
       /* hücumda topun önündeki oyuncu (ofsayt çizgisi, koşu) dinlenmez */
       if(db>MOTOR_AYAR.dinlenUzak&&!(hucum&&p.x*d>b.x*d-5)&&!this.tehditVar(p,hucum)){ef=0.15;g='dinlen';}}
+    /* Z5b (geriKosu; D11): geri koşu — top oyuncunun kendi kalesi tarafına (≥ 2 m) geçtiyse ve yeri gerideyse koşarak döner (forvet yalnız top
+       bizim yarımızdayken, daha az eforla); markaj, kutu ve görev eforları değişmez */
+    if(MOTOR_AYAR.geriKosu>0&&!hucum&&ef<MOTOR_AYAR.geriKosu&&(g==='bolge'||g==='dinlen')){const pu=p.x*d,tu=b.x*d;
+      if(tu<pu-2&&u<pu-3&&(p.rol!=='FV'||tu<0)){ef=MOTOR_AYAR.geriKosu*(p.rol==='FV'?0.7:1);g='geriKosu';}}
     /* düz savunma çizgisi: savunmacının derinliği hep güncel, ölü bölge yalnız yana */
     /* hücumda forvet savunmanın omzunda (ofsayt çizgisi) kalır: derinliği hep güncel, yerinden 3 m'de döner */
     const omuz=hucum&&p.rol==='FV'&&!p.kosu&&bu>-10;if(omuz&&ef<0.6)ef=0.6;

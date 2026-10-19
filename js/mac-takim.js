@@ -7,6 +7,10 @@
    Kural: rastlantı çekmez, alan sırası ve sayısı belirlenimli (oyuncu sırası n); çizim kodu yok. niyetEtki 0 iken etkin taktik tabanın aynısıdır ve
    düzen çarpanları nötrdür (tesisat kanıtı: --ayni). */
 ayarEkle('T',{
+  surenCik:2.5,                // Z5a (D4, D9; 2. not "müdahalesiz koşu"): kalemize doğru bu hızdan (m/sn) hızlı süren taşıyana, orta sahada yakın 1. adam yoksa en iyi aday
+                               // (16 m içinde) çıkar ve geciktirir (eskiden süzgeçten düşen adayın yerine kimse çıkmıyordu); 0: eski
+  geriKosu:0.75,               // Z5b (D11): geri koşu — top oyuncunun kendi kalesi tarafına geçtiyse ve yeri gerideyse bu eforla döner (forvet × 0,7, yalnız top bizim
+                               // yarımızdayken); eskiden bölge eforu 0,2–0,55 (geçilenler yürüyordu); 0: eski. 0,95'te şut 17,9 → 12,4 (12 maç), 0,75'te 15,7
   niyetEtki:1,       // T7a: niyet ve maç durumunun taktiğe ve düzene etkisi (0: yok, tabanın aynısı)
   macDurumEtki:1,    // T7a: maç durumunun (skor × kalan süre × eksik adam) payı (0: niyet var, maç durumu yok)
   niyetYenile:0.5,   // T7a: niyet en çok bu aralıkla yeniden hesaplanır (sn; sahiplik değişince ve duruşta hemen)
