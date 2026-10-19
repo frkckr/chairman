@@ -6,7 +6,7 @@
      (stil ve stat tarifleri hariç; motor onlara bağlı değildir).
    - Her maç santradan başlar (maç öncesi atlanır). Tohum aynıysa maç da aynıdır.
    - Maçlar işlemci çekirdeği sayısı kadar paralel oynatılır.
-   - Hedef dışında kalan satırlar "!" ile işaretlenir.
+   - Sağlık aralığının (Z1, 2026-10-19; FUTBOL_KUTUPHANESI §11.1) dışında kalan satırlar "!" ile işaretlenir (çıkış kodu değişmez).
    - Seçenek --dizilis A,B: iki takımın dizilişi (MM2). Bilgi satırlarında takım savunması: ceza sahasında boşta rakip, çift markaj,
      karşı pres kazanımı, savunmada takım boyu/eni, kalecisiz süre.
    - MM0 (2026-10-02): hedefsiz bilgi satırları ve tekrarlanabilirlik denetimi (ilk tohum iki kez daha oynatılır; sonuç aynı
@@ -52,39 +52,34 @@ require('./motor-yukle').ayarUygula(ctx,AYAR);
 const OLCUM_KLASOR=path.join(__dirname,'olcumler');
 const EKLENTILER=fs.existsSync(OLCUM_KLASOR)?fs.readdirSync(OLCUM_KLASOR).filter(f=>f.endsWith('.js')).sort().map(f=>Object.assign({dosya:f},require(path.join(OLCUM_KLASOR,f)))):[];
 
-/* ---- hedef tablo: 20 dakikalık maç (U1, 2026-10-12, kullanıcı kararı; 2026-09-28'den beri 10 dakikaydı) ----
-   Oyuncular gerçek hızda koştuğu için 20 dakikalık maçta ~14,5 dakika (≈870 sn) oyun oynanır; gerçek bir maçta bu ~55 dakikadır (oran ~0,26;
-   10 dakikada ~0,13). Olayların oyun dakikası başına sıklığı uzunluktan bağımsızdır, maç başına sayıları iki katıdır. Bantların kuralı (gerçekçilik
-   planı §7 madde 7, U1): 10 dakikalık bandın iki katı, gerçek maç değeriyle tavanlanır — oyun dakikası başına gerçek sıklıktaki olaylar (pas,
-   taç, kale vuruşu, küçük faul, hava mücadelesi) yine gerçeğin altında kalır; öne çıkan olaylar (gol, şut, kart) gerçek maç değerine varır.
-   Oranlar (isabet, pas isabeti, pas yönleri, uzun pas), uzatma (dk), değişiklik ve top oyunda payı uzunluktan bağımsızdır. Önceki sıkıştırma
-   hesabı (pas oyun dakikası başına sıkışmaz, sahiplik ×2, savunma eylemi ×2,5–3,5): §7 madde 7 (2026-10-10). */
-const HEDEF=[
-  ['Gol','gol',2.2,3.3],   // U1: 1,8–3,0 (10 dk; gerçek maç değeri) — 20 dakikada gerçek lig ortalamaları (2,5–3,3) ± 80 maçın standart hatası
-  ['Şut','sut',16,28],     // U1: 8–14 × 2 (gerçekte 22–28)
-  ['İsabetli şut oranı %','isabetOran',30,45],
-  ['Korner','korner',4,12],   // U1: 2–6 × 2 (gerçekte ~10)
-  ['Taç','tac',10,24],     // U1: 5–12 × 2
-  ['Kale vuruşu','kaleVurusu',5,16],   // U1: 2,5–8 × 2
-  ['Faul','faul',8,18],    // U1: 4–9 × 2 (T10g kararı 8–14 → 4–9; gerçekte 20–28)
-  ['Sarı kart','sari',3,6],   // U1: 1,5–3,5 × 2, gerçek maç değeriyle tavan (lig ortalamaları ~3,5–5,2)
-  ['Kırmızı kart','kirmizi',0,0.3],   // U1: 0–0,2 × 2, gerçek maç değeriyle tavan (~0,1–0,25)
-  ['Ofsayt','ofsayt',0.6,4],   // U1: 0,3–2 × 2
-  ['Pas','pas',220,400],   // U1: 110–200 × 2
-  ['Pas isabeti %','pasOran',70,85],   // T9b kararı (2026-10-11; gerçekçilik planı §7 madde 1): 65–80 → 70–85
-  ['İleri pas %','ileriOran',30,45],
-  ['Yan pas %','yanOran',35,58],
-  ['Geri pas %','geriOran',10,25],
-  ['Uzun pas %','uzunOran',10,24],
-  ['Hava topu mücadelesi','havaTopu',8,20],   // U1: 4–10 × 2 (T10g kararı 6–15 → 4–10)
-  ['Uzatma 1. yarı (dk)','uzatma1',1,4],
-  ['Uzatma 2. yarı (dk)','uzatma2',3,7],
-  ['Değişiklik (takım başına)','degisiklik',2,4],
-  ['Top oyunda %','oyundaOran',58,72]
+/* ---- sağlık aralığı: 20 dakikalık maç (Z1, 2026-10-19; FUTBOL_KUTUPHANESI §11.1, kullanıcı onayı) ----
+   Dar kabul bantları (U1'den T23'e "hedef tablosu"; ARSIV ve kutuphane/K-test-rejimi.md §2.1) kalktı: motor "istatistik tutturan" değil zeki ve
+   keyifli oyun için ölçülür (ilkel görünürlüğü, çeşitlilik, kabiliyet duyarlılığı — araclar/olcumler/z-kalip.js, z-plan.js). Bu tablo yalnız
+   oyunun futbol olmaktan çıkmadığını denetler: dışındaki satır "!" basar, çıkış kodu değişmez. 20 dakikalık maçta ~14,5 dakika oyun oynanır
+   (gerçeğin ~%26'sı); öne çıkan olaylar (gol, şut, kart) gerçek maç değerine, sık olaylar (pas, faul) gerçeğin yarısı civarına düşer (U1).
+   Oran satırları (penaltısız gol/şut, gerçekleşen ÷ konum xG) araclar/olcumler/v-verim.js'in havuz anahtarlarıdır. Kurala bağlı satırlar
+   (uzatma, değişiklik) ve eski bantların öbürleri (taç, kale vuruşu, ofsayt, yan ve geri pas, hava topu) bilgi satırına indi. */
+const SAGLIK=[
+  ['Gol','gol',1.8,4.0],
+  ['Şut','sut',12,32],
+  ['İsabetli şut oranı %','isabetOran',25,50],
+  ['Korner','korner',3,14],
+  ['Faul','faul',6,20],
+  ['Sarı kart','sari',2,7],
+  ['Kırmızı kart','kirmizi',0,0.6],   // tek koşunun gürültüsü (40 maçta σ ≈ 0,08)
+  ['Pas','pas',180,420],
+  ['Pas isabeti %','pasOran',65,90],
+  ['İleri pas %','ileriOran',25,50],
+  ['Uzun pas %','uzunOran',8,30],
+  ['Top oyunda %','oyundaOran',55,75],
+  ['Gol / şut (penaltısız) %','vvGolSut',7,16],
+  ['Gerçekleşen ÷ konum xG (havuz)','vvOranH',0.8,1.35]
 ];
 
 /* ---- bilgi satırları (hedefsiz): motorun fiziğini ve hareketini izlemek için ---- */
 const BILGI=[
+  ['Taç','tac',null,1],['Kale vuruşu','kaleVurusu',null,1],['Ofsayt','ofsayt',null,2],['Yan pas %','yanOran',null,1],['Geri pas %','geriOran',null,1],
+  ['Hava topu mücadelesi','havaTopu',null,1],['Uzatma 1. yarı (dk)','uzatma1',null,2],['Uzatma 2. yarı (dk)','uzatma2',null,2],['Değişiklik (takım başına)','degisiklik',null,2],
   ['Gol ev / deplasman','golEv','golDep',1],['Şut ev / deplasman','sutEv','sutDep',1],['Topa sahip olma ev %','sahiplikEv',null,1],
   ['Kurtarış (kaleci)','kurtaris',null,1],['Kafa vuruşu','kafa',null,1],['Blok','blok',null,1],['Sekme','sekme',null,1],['Top kapma','kapma',null,1],
   ['Pas hızı ort. (m/sn)','pasHiz',null,1],['Şut hızı ort. (m/sn)','sutHiz',null,1],['Şut hızı en yüksek (m/sn)','sutHizMaks',null,1],
@@ -300,26 +295,27 @@ else if(process.env.MAC_DENEME_TEKRAR){
     const f=(x,n)=>Number.isNaN(x)?'—':x.toFixed(n);
     console.log(`\nChairman maç deneme aracı · ${MAC_SAYISI} maç · tohum ${ILK_TOHUM}…${ILK_TOHUM+MAC_SAYISI-1} · ${isler.length} işçi + 1 tekrar işçisi · ${((Date.now()-t0)/1000).toFixed(1)} sn${DIZILIS?' · diziliş '+DIZILIS:''}${AYAR?' · ayar '+AYAR:''}`);
     console.log(`Motor dosyaları (bağlam ${BAGLAM}): ${mantik.join(', ')}${EKLENTILER.length?'\nEklenti ölçümleri: '+EKLENTILER.map(e=>e.dosya).join(', '):''}\n`);
-    console.log('  '+'Ölçüm'.padEnd(28)+'Ortalama'.padStart(10)+'  ±'.padEnd(8)+'Hedef'.padStart(12));
+    console.log('  '+'Ölçüm'.padEnd(32)+'Ortalama'.padStart(10)+'  ±'.padEnd(8)+'Sağlık aralığı'.padStart(16));
     let disarida=0;
-    for(const [ad,k,a,b] of HEDEF){
-      const o=ort(k),dis=!Number.isNaN(o)&&(o<a||o>b);if(dis)disarida++;
-      console.log((dis?'! ':'  ')+ad.padEnd(28)+f(o,1).padStart(10)+('  '+f(sap(k),1)).padEnd(8)+`${a}–${b}`.padStart(12));
+    for(const [ad,k,a,b] of SAGLIK){
+      const o=degerAl(k),dis=!Number.isNaN(o)&&(o<a||o>b),oranli=sonuclar[0]&&sonuclar[0].ham&&k in sonuclar[0].ham;if(dis)disarida++;
+      console.log((dis?'! ':'  ')+ad.padEnd(32)+f(o,b<10?2:1).padStart(10)+('  '+(oranli?'':f(sap(k),1))).padEnd(8)+`${a}–${b}`.padStart(16));
     }
     const bitmeyen=sonuclar.filter(s=>s.bitmedi).length;
     console.log(`\nOrtalama maç süresi: ${f(ort('sure')/60,1)} dakika (gerçek zaman)${bitmeyen?` · BİTMEYEN MAÇ: ${bitmeyen}`:''}`);
-    console.log(`Hedef dışında: ${disarida} satır`);
-    console.log('\n  Bilgi (hedefsiz; "hedef T…" gerçekçilik planı turunun kabulüdür, bilgi amaçlı)');
+    console.log(`Sağlık aralığı dışında: ${disarida} satır`);
+    console.log('\n  Bilgi (hedefsiz; "eski hedef T…" dar bant döneminin — gerçekçilik planı turları — kabulüdür, Z1\'den beri yalnız bilgi)');
     const msAdim=ort('_msAdim');
-    /* T0: eklenti satırı isteğe bağlı plan hedefi taşır: [ad,anahtar,basamak,[alt|null,üst|null,'T1']]; dışındaysa "!" (bilgi, çıkış kodu değişmez) */
+    /* T0: eklenti satırı isteğe bağlı plan hedefi taşır: [ad,anahtar,basamak,[alt|null,üst|null,'T1']]. Z1 (2026-10-19): "!" basmaz (dar bantlar kalktı,
+       FUTBOL_KUTUPHANESI §11.1); dışındaysa satır sonunda "(dışında)" yazar */
     const bilgiSatirlari=BILGI.concat(...EKLENTILER.map(e=>(e.bilgi||[]).map(([ad,k,n,h])=>[ad,k,null,n,h])));
     for(const [ad,k,k2,n,h] of bilgiSatirlari){
       if(!k){console.log('  '+ad);continue;}
       if(k==='msAdim'){console.log('  '+ad.padEnd(28)+f(msAdim,n).padStart(16));continue;}
       const oranli=sonuclar[0]&&sonuclar[0].ham&&k in sonuclar[0].ham,v=degerAl(k);
       const dis=h&&!Number.isNaN(v)&&((h[0]!=null&&v<h[0])||(h[1]!=null&&v>h[1]));
-      const hedef=h?`   hedef ${h[2]}: ${h[0]==null?'≤'+h[1]:h[1]==null?'≥'+h[0]:h[0]+'–'+h[1]}`:'';
-      console.log((dis?'! ':'  ')+ad.padEnd(28)+(f(v,n)+(k2?' / '+f(ort(k2),n):'')).padStart(16)+(k2||oranli?'':('  ± '+f(sap(k),n)))+hedef);}
+      const hedef=h?`   eski hedef ${h[2]}: ${h[0]==null?'≤'+h[1]:h[1]==null?'≥'+h[0]:h[0]+'–'+h[1]}${dis?' (dışında)':''}`:'';
+      console.log('  '+ad.padEnd(28)+(f(v,n)+(k2?' / '+f(ort(k2),n):'')).padStart(16)+(k2||oranli?'':('  ± '+f(sap(k),n)))+hedef);}
     /* eylem histogramı ve tavır süreleri (maç başına) */
     const EH={},TV={};for(const s of sonuclar){for(const [a,v] of Object.entries(s.eylemler||{}))EH[a]=(EH[a]||0)+v;for(const [a,v] of Object.entries(s.tavir||{}))TV[a]=(TV[a]||0)+v;}
     console.log('  Eylemler / maç: '+Object.keys(EH).sort().map(a=>a+' '+f(EH[a]/sonuclar.length,1)).join(' · '));
@@ -354,7 +350,7 @@ else if(process.env.MAC_DENEME_TEKRAR){
           const y=oranli?oran(k,Lyeni):ort(k,Lyeni),e=oranli?oran(k,Leski):ort(k,Leski);
           const se=oranli?NaN:Math.sqrt((sap(k,Lyeni)**2+sap(k,Leski)**2)/Math.max(1,Lyeni.length));
           console.log('  '+ad.padEnd(34)+f(e,2).padStart(9)+' → '+f(y,2).padStart(9)+('  ('+(y-e>=0?'+':'')+f(y-e,2)+(Number.isNaN(se)?'':' ± '+f(se,2))+')').padEnd(20));};
-        for(const [ad,k] of HEDEF)satir(ad,k);
+        for(const [ad,k] of SAGLIK)satir(ad,k);
         for(const [ad,k] of bilgiSatirlari){if(!k||k==='msAdim')continue;satir(ad,k);}
         const me=ort('_msAdim',Leski);console.log('  '+'Süre / 1000 adım (ms)'.padEnd(34)+f(me,1).padStart(9)+' → '+f(ort('_msAdim',Lyeni),1).padStart(9));}}
   }).catch(e=>{console.error(e.message);process.exit(1);});
