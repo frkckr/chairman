@@ -295,9 +295,10 @@ Object.assign(Match.prototype,{
     /* T7f (Ek G3): koşu başında kol koşunun gideceği yeri gösterir */
     const hx=hu*this.dir[p.team];this.jestVer(p,'isaret',0.9,{x:hx,z:hw});
     this.kosuOrtak(p,s);return p.kosu;},
-  /* T7f (Ek G3): jest yazımı — {tur: kol|isaret|itiraz|cagir|basEl|alkis, t, sure, kol: hedefin olduğu kol ('sol' aynalanır), hedef}. Aynı jest
-     sürerken yenilenmez. Rastlantısız */
-  jestVer(p,tur,sure,hedef){if(!p||p.jest&&p.jest.tur===tur)return;let kol=null;
+  /* T7f (Ek G3): jest yazımı — {tur: kol|isaret|itiraz|cagir|basEl|alkis|yonlendir|kolIki, t, sure, kol: hedefin olduğu kol ('sol' aynalanır), hedef}.
+     Aynı jest sürerken yenilenmez; S1 (js/mac-sahne.js): yenile true ise aynı tür sürerken de yeniden yazılır (S1a kalecinin 'yonlendir'i, S1e
+     kullananın 'kolIki'si). Rastlantısız */
+  jestVer(p,tur,sure,hedef,yenile){if(!p||p.jest&&p.jest.tur===tur&&!yenile)return;let kol=null;
     if(hedef){const c=Math.cos(p.yon),s=Math.sin(p.yon),yan=(hedef.x-p.x)*-s+(hedef.z-p.z)*c;kol=yan>0?'sag':'sol';}
     p.jest={tur,t:0,sure,kol,hedef:hedef||null};},
   /* T7f: ofsayt verilince topa en yakın iki savunmacı kolunu kaldırır (1,5 sn) */

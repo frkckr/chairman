@@ -1008,7 +1008,7 @@ function anmHakemOlay(ad,v){
     anmHkIsaret(h0,[{tur:'duduk',sure:pen?0.7:0.45},pen&&du?{tur:'yon',sure:1.6,hedef:{x:du.x,z:du.z},theta:-0.5}:{tur:'yon',sure:1.3,yon:dir(v.takim),theta:0.35}],true);
     if(v.endirekt)anmHkIsaret(h0,[{tur:'endirekt',sure:14}]);}   /* T10f: dolaylı serbest vuruşta (yüksek ayak) kol top başka oyuncuya değene dek havada */
   /* T10f: zaman geçirmede uyarı — oyuncuya parmak sallar, saatine vurur; sakatlıkta sağlıkçıları kulübeden çağırır */
-  else if(ad==='uyari'&&v.p)anmHkIsaret(h0,[{tur:'uyari',sure:1.1,p:v.p},{tur:'saat',sure:0.9}],true);
+  else if(ad==='uyari'&&v.p)anmHkIsaret(h0,[{tur:'uyari',sure:1.1,p:v.p}].concat(v.neden==='zaman'?[{tur:'saat',sure:0.9}]:[]),true);   /* S1: saat yalnız zaman geçirmede (S1d'nin 'kalabalik' ve 'kaleciOyun' uyarısında yok) */
   else if(ad==='tedaviBasladi'&&v.p&&mac.kulubeler){const kb=mac.kulubeler[v.p.team];if(kb)anmHkIsaret(h0,[{tur:'cagir',sure:1.4,hedef:{x:kb.alan.x,z:kb.alan.z},theta:0.5}],true);}
   else if(ad==='avantaj')anmHkIsaret(h0,[{tur:'avantaj',sure:1.4,yon:dir(v.takim)}],true);
   else if(ad==='ofsayt'&&v.p){const y=yh(v.p.x),uz=Math.abs(v.p.z-y.z);
@@ -1022,7 +1022,9 @@ function anmHakemOlay(ad,v){
   else if(ad==='tac'){const y=yh(v.x);
     if((v.z>Mz)===(y.z>Mz))anmHkIsaret(y,[{tur:'tacYon',sure:1.6,yon:dir(v.team),theta:0.75}],true);
     else anmHkIsaret(h0,[{tur:'yon',sure:1.2,yon:dir(v.team),theta:0.45}],true);}
-  else if(ad==='duduk'){const h=anmHk(h0);if(!(h.cur&&h.cur.tur==='endirekt'||h.sira.some(s=>s.tur==='endirekt')))anmHkIsaret(h0,[{tur:'duduk',sure:0.5}],true);}   /* T10f: bekleyen endirekt işareti silinmez */
+  /* T10f: bekleyen endirekt işareti silinmez. S1: seremonili düdük (v.seremoni; js/mac-sahne.js dudukCal — barajlı serbest vuruş, penaltı, kart sonrası,
+     santra) STIL.animasyon.s1.duduk sn; hakemin aynı karedeki 'duduk' eylemi ikinci işaret çizmez (aşağıda: olaydan 0,1 sn içinde atlanır) */
+  else if(ad==='duduk'){const h=anmHk(h0),S1=ANM.s1;if(!(h.cur&&h.cur.tur==='endirekt'||h.sira.some(s=>s.tur==='endirekt')))anmHkIsaret(h0,[{tur:'duduk',sure:v.seremoni&&S1&&S1.duduk>0?S1.duduk:0.5}],true);}
   /* T8e (Ek G5): barajlı serbest vuruşta hakem barajın ucunda 9,15 m'yi gösterir (motor olayı barajYeri; hedef top) */
   else if(ad==='barajYeri'&&v.hedef)anmHkIsaret(h0,[{tur:'yon',sure:1.2,hedef:v.hedef,theta:-0.25}],true);
   else if(ad==='kickoff')anmHkIsaret(h0,[{tur:'duduk',sure:0.7}],true);

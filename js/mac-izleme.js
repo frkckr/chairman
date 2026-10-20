@@ -32,7 +32,10 @@ const IZLEME={
     kart:{once:0,sonra:v=>v&&v.renk==='sari'?2.5:4},
     sakatlik:{once:2,sonra:2,acik:v=>!!(v&&v.derece!=='agri')},   // tedavi ve çıkış: hakem durdurana ya da tedavi başlayana dek; tedavi seçilen hızda
     ofsayt:{once:2,sonra:2},
-    kullanim:{once:1.5,sonra:4,kosul:v=>!!(v&&v.du&&(v.du.tur==='korner'||v.du.tur==='penalti'||v.du.sinif==='baraj'||v.du.sinif==='kenar'))}
+    kullanim:{once:1.5,sonra:4,kosul:v=>!!(v&&v.du&&(v.du.tur==='korner'||v.du.tur==='penalti'||v.du.sinif==='baraj'||v.du.sinif==='kenar'))},
+    /* S1 (js/mac-sahne.js dudukCal): barajlı serbest vuruşun ve penaltının seremonili düdüğü — düdükten kullanıma bekleyiş, koşu ve vuruş normal
+       hızda; santranın ve kartlı sıradan duruşun düdüğü seçilen hızda kalır (U1'in seçilen anları) */
+    duduk:{once:1,sonra:5,kosul:v=>!!(v&&v.seremoni&&(v.tur==='penalti'||v.sinif==='baraj'))}
   },
   kapat:{hakemTopu:1.5,tedaviBasladi:1.5}                    // açık pencereyi kapatan olay → sonrası (motor sn)
 };

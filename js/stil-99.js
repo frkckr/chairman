@@ -185,6 +185,11 @@ const STIL={
     z2:{sprey:1,spreyOmur:45,spreySolma:15,sayim:1,yatan:1,yatanSure:0.8,bakis:1,kolHedef:1,yayKalca:0.6,tacPres:1,tacPerde:1,istek:1,spreyBirak:0.12},
     /* Z2e: hakem spreyinin köpüğü ve kutusunun rengi */
     z2Renk:{kopuk:0xf3f3ee,kutu:0xe4e8ec},
+    /* S1 (2026-10-20; FUTBOL_KUTUPHANESI §12.15, kutuphane/L-sahne-protokolleri.md): sahne protokollerinin çizimi (tetikler motordan, js/mac-sahne.js) —
+       duduk seremonili düdüğün işaret süresi (sn; olay 'duduk' v.seremoni: barajlı serbest vuruş, penaltı, kart sonrası, santra; 0: eski 0,5 sn);
+       defterRenk hakemin not defterinin rengi (S1d ve S1c'nin 'not' eylemi, js/mac-sahnesi.js DEFTER). Alanların anahtarları (serbest, kart, kaptan,
+       bosalt, gol, rutin …) kendi alt adımında eklenir; her biri 0'da eski çizim */
+    s1:{duduk:0.8,defterRenk:0x22262b},
     /* K1 (2026-10-20; FUTBOL_KUTUPHANESI §12.13 kullanıcı notu, kutuphane/L L.2): penaltıda çizgideki kalecinin bekleyişi (js/animasyon.js anmPenaltiKaleci;
        tetik motorun penaltiKaleciBakis'i; MOTOR_AYAR.penaltiBakis 0 iken de kapalı) — acik 0'da eski çizim (bekleyiş katmanı: eller belde, bakınma, eldiven);
        dik hazır duruşun eğilme ve diz payı (1 tam kaleciHazir); kolAc kolların iki yana açılması (rad, jestin tepesinde), kolInis kolun önden yana inişi (rad),

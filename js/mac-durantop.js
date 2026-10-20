@@ -504,15 +504,16 @@ Object.assign(Match.prototype,{
       /* Z3a (kurma&1): kale vuruşundan ~2 sn önce kaleci kolunu kaldırıp şekli gösterir (kısa kuranda stopere, uzun atanda ileriye; jest 'kol', motor okumaz) */
       if(du.tur==='kaleVurusu'&&(MOTOR_AYAR.kurma&1)&&!du.kvIsaret&&du.t>=son-2.2&&tk){du.kvIsaret=true;const d=this.dir[du.takim],V=tarzTakim(this,du.takim),kp=V?V.kisaPay:1-this.taktik[du.takim].direkt;
         this.jestVer(tk,'kol',0.9,kp>=0.5?{x:du.x+d*8,z:du.z+(du.z<MZ?1:-1)*16}:{x:du.x+d*45,z:MZ});}
-      if(du.t<son+(du.zgEk||0))return false;
-      /* Z2c: spreyli barajda hakem barajı dizmeden vuruş yok (güvenlik ağından 2 sn öncesine dek) */
-      if(du.hk&&(du.hk.evre!=='cekil'||!du.hakemHazir)&&du.t<du.zorlaHazir-2)return false;}
-    if(!(du.hazirT>=H&&(du.tur==='tac'||hyp(tk.x-du.geriX,tk.z-du.geriZ)<0.5||du.hazirT>H+2)))return false;
+      if(du.kr){if(!du.kr.hazir)return false;}else if(!du.s1Sure&&du.t<son+(du.zgEk||0))return false;   /* S1 (js/mac-sahne.js): rutinde (du.kr, S1e) hazırı rutin verir; du.s1Sure'de süreyi sahne planı */
+      /* Z2c: spreyli barajda hakem barajı dizmeden vuruş yok (güvenlik ağından 2 sn öncesine dek); S1a seremonisinde (du.hk.s1) kapı düdüktür */
+      if(du.hk&&!du.hk.s1&&(du.hk.evre!=='cekil'||!du.hakemHazir)&&du.t<du.zorlaHazir-2)return false;}
+    if(!(du.hazirT>=H&&(du.tur==='tac'||hyp(tk.x-du.geriX,tk.z-du.geriZ)<0.5||!du.kr&&du.hazirT>H+2)))return false;   /* S1e: rutinde geri noktası muafiyeti yok */
     if(du.hakemTopu)return this.hakemTopuBirak(du);   /* T10d */
     if(du.zgEk>0&&du.hazirT<H+du.zgEk)return false;   /* T10d: zaman geçirme (js/mac-kurallar.js zamanGecirEk) */
     if(this.duranTehlikeli(du)){if(du.t<A.duranSure[0])return false;if(du.t<A.duranSure[1]&&!this.gorevlilerYerinde(du))return false;}
     else if(du.tur==='penalti'){if(du.t<A.penaltiSure[0])return false;if(du.t<A.penaltiSure[1]&&!this.gorevlilerYerinde(du))return false;}
-    if(du.tur==='korner'||du.sinif==='kenar'){if(du.isaret==null){du.isaret=du.t;this.jestVer(tk,'kol',0.8,du.bakis||null);return false;}if(du.t-du.isaret<0.8)return false;}
+    if(!du.kr&&(du.tur==='korner'||du.sinif==='kenar')){if(du.isaret==null){du.isaret=du.t;this.jestVer(tk,'kol',0.8,du.bakis||null);return false;}if(du.t-du.isaret<0.8)return false;}   /* S1e: rutinin kol işareti kendi evresinde */
+    if(du.dudukGerek&&!this.s1DudukKapisi(du,tk))return false;   /* S1: düdük ön koşulu (js/mac-sahne.js; kuran S1a, S1b, S1d) */
     return true;},
   /* ============ T8b: vuruştan sonra görev düzeni ============
      Korner (T8c'de barajlı ve kenar serbest vuruşu da) kullanıldıktan sonra görevler duranRolSure sn sürer (bolgeKonumu'nun başında
