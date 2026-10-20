@@ -551,13 +551,15 @@ function pasSecenekleri(m,p,o){
    8,7 m (güçlü ayakta 4,9) — planlayıcı bilmiyordu */
 /* V1a-1 (yuzeyKarar & 1): yüzey ve ayak karar tablosunun (yuzeyOlasilik) beklenen değeri — 1 + Pz·1,2·(1 − zayıf ayak)·(1 − Pd) + Pd·0,22 (dış ayağın
    sapma çarpanı 1,22). o2: {tip, tur, tR} — tR rakibin topa varışı algıyla (zamanButcesi; verilmezse burada), hazırlık + geri salınım vurusSureleri'nden;
-   koni ailesi ortada üst, yerden geri çevirmede iç. Pas planlayıcısının t0'ı değişmez */
-function vurusAyakK(m,p,ox,oz,hx,hz,baski,o2){if(p.ayak==='iki')return 1;
+   koni ailesi ortada üst, yerden geri çevirmede iç. Pas planlayıcısının t0'ı değişmez.
+   V1a-2 (yuzeyKarar & 2): o2 verilmişse tablo o2.Y'ye de yazılır (ortaSecenekleri hazırlığın dönüşünü aynı tablodan okur; iki ayaklıda da — çarpan 1) */
+function vurusAyakK(m,p,ox,oz,hx,hz,baski,o2){if(p.ayak==='iki'&&!(o2&&(MOTOR_AYAR.yuzeyKarar&3)===3))return 1;
   const f=aciFark(Math.atan2(hz-oz,hx-ox),p.yon),zayif=p.ayak==='sag'?'sol':'sag',geo=Math.abs(f)>0.9?(f>0?'sol':'sag'):null;
   const yanU=Math.cos(p.yon)*(oz-p.z)-Math.sin(p.yon)*(ox-p.x),yakin=Math.abs(yanU)>0.18?(yanU>0?'sag':'sol'):null;
   if(MOTOR_AYAR.yuzeyKarar&1){const tip=o2&&o2.tip||'hava',tur=o2&&o2.tur||'orta',L=hyp(hx-ox,hz-oz),vs=vurusSureleri(tip==='hava'?'hava':L>22?'uzunYer':'pas',baski||0);
     const Y=yuzeyOlasilik(m,p,{f,L,tip,tur,ilk:false,duran:false,baski:baski||0,tR:o2&&o2.tR!=null?o2.tR:zamanButcesi(m,p,ox,oz),hazGeri:vs.haz+vs.geri,yakin,
       aile:tur==='orta'||tip==='hava'?'ust':'ic'});
+    if(o2)o2.Y=Y;
     return 1+Y.Pz*1.2*(1-profilAlt(p,'zayifAyak',0.35))*(1-Y.Pd)+Y.Pd*0.22;}
   if(geo!==zayif&&yakin!==zayif)return 1;
   const za=profilAlt(p,'zayifAyak',0.35);let P=clamp(0.1+0.45*za-0.25*profilEgilim(p,'zayifAyaktanKacinir'),0.05,0.8);
@@ -591,16 +593,22 @@ function ortaSecenekleri(m,p,o,S){
       const t=varisSuresi(g,zx,zw,0.8);if(t<enT){enT=t;en=q;eg=g;}}
     /* T6d: bölgeye orta yalnız uçuş süresinde (+0,3 sn) oraya varabilecek arkadaşa (eskiden 3 sn: top o inmeden çoktan düşüyordu) */
     const Tz=havaSure(hyp(zx-o.ox,zw-o.oz),yay);if(en&&enT<Tz+0.3)ekle(en,eg,zx,zw,'hava',yay,hy,Tz,yay);}
-  const tRo=A.ortaAyak&&(A.yuzeyKarar&1)&&C.length?zamanButcesi(m,p,o.ox,o.oz):null;   /* V1a-1: rakibin topa varışı ortacının yerinde bir kez (algıyla) */
+  /* V1a-1: rakibin topa varışı ortacının yerinde bir kez (algıyla); V1a-2: hazırlığın dönüşü de aynı tablodan (ortaAyak kapalıyken de) */
+  const YK=A.yuzeyKarar,tRo=(A.ortaAyak||(YK&2))&&(YK&1)&&C.length?zamanButcesi(m,p,o.ox,o.oz):null;
   for(const c of C){
-    const ayakK=A.ortaAyak?vurusAyakK(m,p,o.ox,o.oz,c.hx,c.hz,o.baski,tRo!=null?{tip:c.tip,tur:c.tur==='geri'?'geriCevir':'orta',tR:tRo}:null):1;
+    const o2=tRo!=null?{tip:c.tip,tur:c.tur==='geri'?'geriCevir':'orta',tR:tRo,Y:null}:null;
+    const ayakK0=A.ortaAyak||o2&&(YK&2)?vurusAyakK(m,p,o.ox,o.oz,c.hx,c.hz,o.baski,o2):1,ayakK=A.ortaAyak?ayakK0:1;
     /* ortacının önündeki rakip bacağı ortayı kesebilir — T5 (2026-10-09): motorla aynı saf işlev (ortaBlokTahmin, js/mac-mudahale.js); ilk hız
        uçuş süresinden (havadan: yatay L/T, dikey (hy + gT²/2)/T; yerden 18 m/sn), yön belirsizliği 0,25 m */
     const L=hyp(c.hx-o.ox,c.hz-o.oz)||1,ux=(c.hx-o.ox)/L,uz=(c.hz-o.oz)/L,Tu=c.tip==='hava'&&c.T>0?c.T:0,vh=Tu?L/Tu:18,vy0=Tu?((c.hy||0)+0.5*G*Tu*Tu)/Tu:0;
     /* T14c: hazırlık süresi (karar → temas): asgari hazırlık ya da gövdenin hedefe dönüşü (vurusIlerle'nin hizalanma sınırına kadar) + geri salınım;
        1. adam bu sürede ortanın yoluna adım atar (ortaBlokTahmin) ve ortacının vuruş anındaki baskısı onun yerinden (baskiAltinda; motor vuruş
        hatasını temas anındaki baskıdan hesaplar — planlayıcı eskiden karar anınınkini kullanıyordu) */
-    const vs=vurusSureleri(c.tip==='hava'?'hava':L>22?'uzunYer':'pas',o.baski||0),don=Math.max(0,Math.abs(aciFark(Math.atan2(uz,ux),p.yon))-A.vurusHizalama*1.35)/hrkVurusDonus(p);
+    /* V1a-2 (yuzeyKarar & 2): dönüş simetrik sınır yerine vuran ayağın doğal konisinden (motorun kapısının aynası) — ayak ve yüzey olasılıklarıyla
+       beklenen koni dışı açı (1 − Pd)·((1 − Pz)·needG + Pz·needZ) / dönüş hızı; zaman yokken ('acik' yol) acele payı düşülür, dış ayakta gövde dönmez */
+    const vs=vurusSureleri(c.tip==='hava'?'hava':L>22?'uzunYer':'pas',o.baski||0),Yo=o2&&(YK&2)?o2.Y:null,tY=Yo&&Yo.zamanYok?A.yuzeyKon[4]:0;
+    const don=Yo?(1-Yo.Pd)*((1-Yo.Pz)*Math.max(0,Yo.G.need-tY)+Yo.Pz*Math.max(0,Yo.Z.need-tY))/Yo.rate
+      :Math.max(0,Math.abs(aciFark(Math.atan2(uz,ux),p.yon))-A.vurusHizalama*1.35)/hrkVurusDonus(p);
     const acik=ortaBlokTahmin(m,p.team,o.ox,o.oz,0.11,ux*vh,uz*vh,vy0,0.25,Math.max(vs.haz,don)+vs.geri).acik;
     const bK=A.ortaTemas&&OB_V.on?Math.max(o.baski||0,clamp((4.5-hyp(OB_V.x-p.x,OB_V.z-p.z))/3.5,0,1)):o.baski;
     const iz=o.hepsi?{}:null,A2=pasAnaliz(m,p,c.hx,c.hz,c.tip,c.g,{ox:o.ox,oz:o.oz,T:c.T,yay:c.yay,hy:c.hy,varislar:c.tur==='alcak'?varisAdaylari(hyp(c.hx-o.ox,c.hz-o.oz),'orta'):null,baski:bK,iz,orta:true,ayakK});
