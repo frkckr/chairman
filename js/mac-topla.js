@@ -213,6 +213,19 @@ Object.assign(Match.prototype,{
   taramaAdim(dt){
     const b=this.ball,P=this.players,n=P.length,PI=Math.PI,kare=this.kare||0,A=MOTOR_AYAR,BD=A.bakisDinamik;
     const HK=A.bakisHerKare&&BD;
+    /* K1 (penaltiBakis, 2026-10-20): penaltı duruşunda çizgideki kalecinin bakışı vurucuda/topta (penaltiKaleciBakis, js/mac-kaleci.js). Tarama aynen
+       yürür (aralık, genişlik, h2 özetleri, hafıza, gövdeye göre açı T.r): yalnız yazılan bakış kilidin açısıdır — en çok bakisHiz ile döner, boyun
+       sınırında (±1,95 rad). Kilit bitince bakış taramanın son değerine döner (this._pkB.by); motorun durumu ve sonraki bakışlar kilitsiz motorla bit bit
+       aynıdır. Duruş temasta biter; penaltının şutu uçarken (vurucunun şutu, temastan en çok 1 sn) bakış topta kalır — bırakış uçan topta bakışı
+       taramanın yanına savurmasın. Kilit sürerken kalecinin bakışını motorda okuyan yok: algı, plan ve koşu tetiği yalnız topu tutanın ya da karar
+       verenin bakışını okur; kilit topu tutan ya da pasın alıcısı olan kaleciye konmaz (karenin başında bakılır), duruşta top kaleciye geçmez (temaslar
+       yalnız oyunda), oyunda kaleciye ancak temaslarda (okuyanlardan sonra) geçer — sonraki karenin başında kilit bırakılmış olur */
+    let pkG=null,pkA=0;
+    if(A.penaltiBakis){const du=this.durus,K=this._pkB;
+      if(du&&du.tur==='penalti'){const g=this.kaleci(1-du.takim),a=g?this.penaltiKaleciBakis(g):null;if(a!=null){pkG=g;pkA=a;}}
+      else if(this.phase==='play'&&K&&K.tk&&b.sut&&b.sut.by===K.tk&&this.t-b.sut.t<1){const g=K.p;
+        if(g.oyunda&&b.sahip!==g&&b.tasiyan!==g&&b.hedefOyuncu!==g){pkG=g;pkA=Math.atan2(b.z-g.z,b.x-g.x);}}}
+    {const K=this._pkB;if(K&&K.p!==pkG){K.p.bakisYon=K.by;this._pkB=null;}}
     for(let i=0;i<n;i++){const p=P[i];if(!p.oyunda)continue;
       /* her oyuncu iki karede bir; T23c (bakisHerKare): kasıtlı büyük dönüşteki her karede */
       if((i+kare)&1){if(!HK)continue;const D=p.don;if(!(D&&D.ok&&(D.bt>this.t||Math.abs(aciFark(D.hx,p.yon))>A.bakisDonus)))continue;}
@@ -247,6 +260,13 @@ Object.assign(Match.prototype,{
       else if(this.t-T.bas<0.28)by=p.yon+T.yan*1.75;
       else{let f=Math.atan2(b.z-p.z,b.x-p.x)-p.yon;if(f>PI)f-=2*PI;else if(f<-PI)f+=2*PI;by=p.yon+(f>1.4?1.4:f<-1.4?-1.4:f);}
       if(by>PI)by-=2*PI;else if(by<-PI)by+=2*PI;
+      /* K1: kilitli kaleci — taramanın bakışı saklanır, yazılan kilidin açısı (başta başın durduğu yerden, en çok bakisHiz ile) */
+      if(p===pkG){let K=this._pkB;
+        if(!K){const o=p.bakisYon;K=this._pkB={p,by:0,r:o==null?0:aciFark(o,p.yon),k:kare-2,tk:null};}
+        if(this.durus)K.tk=this.durus.kullanan;   /* vurucu: duruş bitince onun şutu uçarken bakış topta kalır */
+        K.by=by;let f=aciFark(pkA,p.yon);if(f>1.95)f=1.95;else if(f<-1.95)f=-1.95;
+        const lim=A.bakisHiz*Math.min(2,Math.max(1,kare-K.k))*dt;K.k=kare;f-=K.r;K.r+=f>lim?lim:f<-lim?-lim:f;
+        by=p.yon+K.r;if(by>PI)by-=2*PI;else if(by<-PI)by+=2*PI;}
       p.bakisYon=by;}
   },
   /* oyuncuya özel B verisi: {tara: tarama hafızası, plan: yönlü ilk dokunuş planı, vk: ver-kaç koşusu, gur: kararın sahiplik boyu sapması (T2),
@@ -314,8 +334,10 @@ Object.assign(Match.prototype,{
     if(acma)hazEn+=0.45;
     /* Z4a (uzunHaz; 6. not): baskısızken uzun pas (≥ 28 m) aceleyle çıkmaz — hazırlık en az uzunHaz: kafa kalkar, hedefe bakılır, 2–3 adımla gelinir */
     if(MOTOR_AYAR.uzunHaz>0&&!sut&&!sec.ilk&&!sec.duran&&!sec.penalti&&L>=28&&baski<0.3&&hazEn<MOTOR_AYAR.uzunHaz)hazEn=MOTOR_AYAR.uzunHaz;
-    /* sözleşme (TEKNIK_PLAN §8): kalan = temasa kalan süre (her adımda motor yazar, çizim okur), hazirlikT = hazırlıktan geri salınıma geçiş anı */
-    p.eylem={ad:'vurus',faz:'hazirlik',t:0,ft:0,sec,ayak,stil:st,guc:0,tekDokunus:!!sec.tekDokunus,geri,hazirlikEn:hazEn,hazirlikT:null,kalan:hazEn+geri,baski,gucPlan,sutPlan,
+    /* sözleşme (TEKNIK_PLAN §8): kalan = temasa kalan süre (her adımda motor yazar, çizim okur), hazirlikT = hazırlıktan geri salınıma geçiş anı;
+       kalanCiz (K1) = hazırlıkta geçişin kapılarının çoğunu yansıtan temasa kalan süre (vurusIlerle yazar; yalnız çizimin vuruş katmanı okur:
+       anmVkKalan ciz, motor kararları okumaz; sınırı çizimin sigortası ve eSig sağlar) */
+    p.eylem={ad:'vurus',faz:'hazirlik',t:0,ft:0,sec,ayak,stil:st,guc:0,tekDokunus:!!sec.tekDokunus,geri,hazirlikEn:hazEn,hazirlikT:null,kalan:hazEn+geri,kalanCiz:hazEn+geri,baski,gucPlan,sutPlan,
       acele,kotu:null,kotuU:0,kotuP:0,acma};
     p.surus=null;
   },
@@ -372,15 +394,26 @@ Object.assign(Match.prototype,{
       /* T4-V: temasa kalan süre (çizim okur, tahmin etmez): asgari hazırlığın kalanı, hizalanma süresi ya da ayağa varış süresi + geri salınım */
       const w=hrkVurusDonus(p),donT=sapma>sinir?(sapma-sinir)/w:0,varT=ayakD>0.5&&!(sec.ilk&&gelir)?(ayakD-0.5)/Math.max(0.7,p.spd):0;
       e.kalan=Math.max(e.hazirlikEn-e.t,donT,varT)+e.geri;
+      /* K1 (2026-10-20; kullanıcı notu 7, çizim sözleşmesi): kalan geri salınıma geçişin iki kapısını bilmez — top yerden yüksekte (yerden pasta 0,6, şutta ve
+         gelişine 1,1 m) ve ayak topa yetişmemişken (0,5; gelişine 0,62 m) — ve ayağa varışı oyuncunun hızıyla sayar (önünden kaçan topta topa göre hız çok
+         küçük). Çizim kalan'ı mutlak sayıp son adıma giriyor, motor hazırlıkta kalıp oyuncuyu topun peşinden sürerken adım döngüsü donuyor, ayak havada
+         ve kök topla kayıyordu (sigorta 0,7 sn sonra çıkıp hemen yeniden giriyordu: ~1,5–2 sn). kalanCiz kapıların çoğunu yansıtır: ayağa varış topa göre
+         yaklaşma hızıyla (en az 0,1 m/sn sayılır: sürekli kalsın; gövdenin dönüşüyle ayağın topa yaklaşmasını ve anlık hızın gürültüsünü bilmez), yüksek
+         topta inişe kalan süre (balistik; sekmeyi bilmez) — tek başına yetmez, sınırı çizimin sigortası ve eSig sağlar. Motor kararları kalanCiz'i okumaz (kalan'ı okuyanlar —
+         duran top koşusu, blok erişimi, kaleci, uzun pas bakışı — aynı kalır): sonuç değişmez */
+      const aKapi=sec.ilk?0.62:0.5,yKapi=sec.tur==='sut'||sec.ilk?1.1:0.6;
+      {let vT=0;if(ayakD>=aKapi&&!(sec.ilk&&gelir)){const vc=((p.vx-b.vx)*(b.x-ax)+(p.vz-b.vz)*(b.z-az))/Math.max(1e-6,ayakD);vT=(ayakD-aKapi)/Math.max(0.1,vc);}
+        const yT=b.y>=yKapi?(b.vy+Math.sqrt(b.vy*b.vy+2*G*(b.y-yKapi)))/G:0;
+        e.kalanCiz=Math.min(9,Math.max(e.hazirlikEn-e.t,donT,vT,yT)+e.geri);}
       /* T15c: duraklı penaltı koşusu — topa 1,6 m kala vuran durur (e.kosu 'durak'; çizim tereddüt pozunu okur), 0,3–0,5 sn sonra tam eforla
          yeniden koşar (e.kosu 'devam'); duraklama bitince kaleci kalkmışsa ve plan onun yanıysa öbür köşeye döner (penaltiDonus). Kalan süre
          duraklamayı içerir (kaleci okur: kaleciPenaltiErken) */
       if(sec.penalti&&sec.kosu==='durakli'&&!e.durakBitti){
         if(!e.durak&&ayakD<1.6)e.durak={t:0,sure:0.3+0.2*profilAlt(p,'sogukkanlilik',p.oz.karar)};
-        if(e.durak){e.durak.t+=dt;e.kosu='durak';p.tx=p.x;p.tz=p.z;p.hizOran=0.2;this.eforVer(p,0.5);e.kalan+=Math.max(0,e.durak.sure-e.durak.t);
+        if(e.durak){e.durak.t+=dt;e.kosu='durak';p.tx=p.x;p.tz=p.z;p.hizOran=0.2;this.eforVer(p,0.5);const dk=Math.max(0,e.durak.sure-e.durak.t);e.kalan+=dk;e.kalanCiz+=dk;
           if(e.durak.t>=e.durak.sure){e.durakBitti=true;e.kosu='devam';this.penaltiDonus(p,sec);}else return;}}
       if(e.durakBitti)this.eforVer(p,1);
-      if(sapma<sinir&&(ayakD<(sec.ilk?0.62:0.5)||(sec.ilk&&gelir))&&b.y<(sec.tur==='sut'||sec.ilk?1.1:0.6)&&e.t>=e.hazirlikEn){
+      if(sapma<sinir&&(ayakD<aKapi||(sec.ilk&&gelir))&&b.y<yKapi&&e.t>=e.hazirlikEn){
         /* son an kontrolü: yerden pas hattı bu arada kapandıysa pastan vazgeç, yeniden karar ver (0,6 sn içinde yeniden başlayan vuruş beklemez) */
         if(sec.tip==='yer'&&sec.tur!=='sut'&&!sec.ilk&&this.hatKapali(p,a)){p.eylem=null;p.yonHedef=null;p.kararT=0.05;this.bVeri(p).vazT=this.t;this.on('vazgecti',{p});return;}
         e.faz='geri';e.ft=0;e.hizalanma=sutA?Math.max(0,sapma-0.3):sapma;e.sabit=sec.ilk&&topHiz>1.5;e.hazirlikT=e.t;e.kalan=e.geri;}

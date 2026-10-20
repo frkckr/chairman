@@ -3,7 +3,7 @@
    olunduğu belli olur. Akış (~20 sn): kulüp binasının sokak cephesindeki otoparkta, armalı kapının önünde başlar (yanlarda seyirci kapılara
    yürür, N9) → kapıya yürünür, eşikte kısa bir karartma kesmesi (12 m'lik tırmanış yerine) → loş merdivenin son katı, sahanlık penceresinden
    projektör ışığı → loca kapısı açılır, aydınlık saha → kalabalık loca: önde iki yönetici ve rakip başkanın koltuğu, arkada basamakta konuklar
-   (adsız ve sözsüz; içerik değildir); başkan ön sıranın önünden geçer, oturur; raf ve eller oturunca gelir.
+   (adsız ve sözsüz; içerik değildir); başkan ön sıranın önünden geçer, oturur; masa ve eller oturunca gelir.
    Rakip başkan (N12): maç gününün protokol kaydı MAC_PROTOKOL.rakipBaskan: 'yerinde' | 'sonra' | 'yok'. Kaynak sırası: ?rakipBaskan= (deneme),
    yazılmış içerik (bugün yok), TEST olarak maç tohumundan (h2; motor rastlantısı çekilmez) yerinde ya da sonra. 'yok' yalnız parametreden ya
    da içerikten gelir. Yerinde: koltuğunda oturur, başkan yaklaşınca kalkar ve döner; eller buluşur → karar anı → tepki → ikisi de oturur.
@@ -232,7 +232,7 @@ function lgSelamAdim(dt){
     G.fov+=(LG.aci-G.fov)*Math.min(1,dt*5);if(G.tl>=T.otur+T.raf)locaGirisBitir();}
   if(G.aktif)lgOnPlan();
 }
-/* ön plan: raf ve eller yalnız otururken (sağ el tokalaşırken de) */
+/* ön plan: masa ve eller yalnız otururken (sağ el tokalaşırken de) */
 function lgOnPlan(){
   const G=LOCA_GIRIS,otur=G.evre==='son'||(G.evre==='otur'&&G.tl>LG.sure.otur*0.55)||(G.mod==='selam'&&G.evre==='bak');
   BK_MASA.visible=otur;BK_EL.sol.g.visible=otur;BK_EL.sag.g.visible=otur||!!(BASKAN.eylem&&BASKAN.eylem.ad==='tokalasAn');

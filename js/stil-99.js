@@ -71,6 +71,9 @@ const STIL={
   },
   /* T10f: sedye (çerçeve ve bez; js/mac-sahnesi.js) */
   sedye:{cerceve:0x8c8c90,bez:0xc8642a},
+  /* K1 (D-saglikci, 2026-10-20): sağlıkçı kulübedeki yerine bu kadar yakınken (m) görünmez (js/animasyon.js aktorGuncelle; yer kulübenin açık
+     önünden ~0,65 m içeride: belirme ve kaybolma kulübenin önünde) */
+  saglikciGizle:0.6,
   /* top toplayıcı çocukların boyu ve eni (yetişkine oran) */
   topcuBoy:{h:0.74,w:0.8},
   /* A4-7 (2026-10-15): ısınan yedeklerin kolsuz yeleği (eşofmanın üstünde; js/animasyon.js anmYelek): ev, deplasman. Top toplayıcının sarısı,
@@ -176,10 +179,18 @@ const STIL={
        yatanSure yere yatışın süresi (sn); bakis duran topu kullananın başı mac.durus.bakis'e ve topa sırayla döner (0,8–1,5 sn); kolHedef hedefli kol jestinde
        (jest 'kol', hedef) kolun hedefe doğru yüksekliği (rad, yatayın üstü; 0: eski dik kol); yayKalca yay koşusunda (duran topta, koşunun vuruş yönüne açısı vuran
        ayağın ters yanından) kalçanın açılma payı (rad/rad; göğüs 0,6'sı karşıya); tacPres taçta markajcının alçak yan duruşu (rol tacMarkaj, alıcıya dönük);
-       tacPerde taçta atana 2 m'deki perdenin açık kolları ve yaylanması; istek alıcının topu istemesi (rol taç alıcısı, istek: el aşağı ileri, önünü gösterir) */
-    z2:{sprey:1,spreyOmur:45,spreySolma:15,sayim:1,yatan:1,yatanSure:0.8,bakis:1,kolHedef:1,yayKalca:0.6,tacPres:1,tacPerde:1,istek:1},
+       tacPerde taçta atana 2 m'deki perdenin açık kolları ve yaylanması; istek alıcının topu istemesi (rol taç alıcısı, istek: el aşağı ileri, önünü gösterir);
+       spreyBirak (K1, 2026-10-20) motor gövdeyi spreyden çevirince (olayın zamanı, js/mac-durantop.js DT_SPREY.don; 'cizgi'de topa) elin hedefi, kol, gövde ve
+       baş kaç saniyede bırakır (sn; 0: bırakış yok, el çizginin ucunda zarfla söner) */
+    z2:{sprey:1,spreyOmur:45,spreySolma:15,sayim:1,yatan:1,yatanSure:0.8,bakis:1,kolHedef:1,yayKalca:0.6,tacPres:1,tacPerde:1,istek:1,spreyBirak:0.12},
     /* Z2e: hakem spreyinin köpüğü ve kutusunun rengi */
     z2Renk:{kopuk:0xf3f3ee,kutu:0xe4e8ec},
+    /* K1 (2026-10-20; FUTBOL_KUTUPHANESI §12.13 kullanıcı notu, kutuphane/L L.2): penaltıda çizgideki kalecinin bekleyişi (js/animasyon.js anmPenaltiKaleci;
+       tetik motorun penaltiKaleciBakis'i; MOTOR_AYAR.penaltiBakis 0 iken de kapalı) — acik 0'da eski çizim (bekleyiş katmanı: eller belde, bakınma, eldiven);
+       dik hazır duruşun eğilme ve diz payı (1 tam kaleciHazir); kolAc kolların iki yana açılması (rad, jestin tepesinde), kolInis kolun önden yana inişi (rad),
+       dirsek dirseğin açılması (rad); ilk ilk jestin varıştan gecikmesi (×0,5–1,5 sn), aralik jestler arası (sn), sure bir açıp kapamanın süresi (sn);
+       salinim ağırlık aktarımında kalçanın yatışı (rad), salinimSure bir gidip gelişin süresi (sn); tut tetiğin histerezisi (sn: kısa düşüşte bekleyiş sürer) */
+    penaltiKaleci:{acik:1,dik:0.6,kolAc:0.75,kolInis:0.2,dirsek:0.5,ilk:1.5,aralik:[2.4,4.2],sure:1.4,salinim:0.035,salinimSure:2.8,tut:0.3},
     /* A7 (2026-10-17): hareket verisinin eğrileri (js/hareket-egrileri.js) — acik 0 eski elle yazılmış eğriler; ayak (salınan ayağın yolu, duruşun ortası,
        koşuda temas payı), kalca (yükseklik), egim (koşu eğimi), legen (leğen ve omuz hattının salınımı), kol (omuz, dirsek) ağırlıkları; kolOlcek omuz
        salınımının veriye oranı (A7a taraması: ×0,85 omuzda veriden 2,4° uzak, 1,0); depar 4,5 m/sn'nin üstünde uzatma bandının dozu (A7a taraması: 0,5
@@ -204,7 +215,7 @@ const STIL={
      acilisAci: karanlıktan açılışta (geniş; yürürken aci'ya daralır), elAci: tokalaşırken (karar anı); goz: ayakta göz yüksekliği (m); kapi: locanın arka duvarındaki kapı; merdiven: kapının ardındaki
      sahanlık ve son kat basamakları; dis: başkanın binanın sokak kapısının önünde başladığı uzaklık (m); yol: ortak yürüyüşün hızı ve
      merdivendeki hızı (js/yuruyus.js yrYolKur); sure: karanlıktan açılış, ilk adıma kadar bekleyiş, kapıda kesme (kararma, siyah, açılma),
-     rakip başkanın kalkışı, tepki, geri adım, oturma ve raf (sn); rakip: rakip başkanın koltuğu (x), tokalaşma mesafesi, görünüşü (diğer
+     rakip başkanın kalkışı, tepki, geri adım, oturma ve raf (sn; oturduktan sonra ön plandaki masa ve ellerin gelişi, ad N5'ten); rakip: rakip başkanın koltuğu (x), tokalaşma mesafesi, görünüşü (diğer
      loca kişileriyle aynı insan ölçeği); kalabalik: önde iki yönetici (x), arkada basamak (ön kenardan uzaklık, yükseklik) ve konuklar (x);
      sonra: rakip başkan sonra gelirse başkan oturduktan kaç sn sonra (aralık; takımlar ısınmaya çıkmadan, senaryo sn sinir'den önce).
      TEST değerleri */
@@ -218,9 +229,24 @@ const STIL={
   /* karar anı ekranı (N12, js/ekran-an.js): kenar kararması (0–1), kartların yerine oturma süresi (süre ondan sonra başlar), seçimden sonra
      kartın kalış süresi, son kaç saniyede çubuk amber olur (sn); yazı büyüklüğü (cqw; normal, büyük). TEST değerleri */
   an:{kararma:0.35,giris:0.4,sonra:0.9,amber:1.5,yazi:{normal:1.3,buyuk:1.6}},
-  /* raf (N5, 2026-10-04): y = rafın üst yüzeyi (ön plan kamerasına göre metre; eski masa -0,47'deydi), derinlik = rafın eni (m), duvar = altındaki ön duvarın iç yüzü.
-     govde (Z1, kullanıcı kararı 2026-10-19): ön planın bakışı izleme çarpanları [eğim, sapma] — 0: raf ve telefon ekranda sabit (eskiden 0,22 ve 0,25: baş dönünce raf kayıyordu) */
-  baskan:{govde:[0,0],aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,raf:{y:-0.56,derinlik:0.3,duvar:0x44474d},takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.15,egimUst:0.02,govdeHiz:0.05},
+  /* onMasa (K1, kullanıcı kararı 2026-10-20; kullanıcının 1. maç notu "masa tüm ekranı kaplamasın, önde kare ayaklı bir masa gözüksün"; N5'in
+     2,6 m'lik rafının ve altındaki ön duvarın yerini aldı): başkanın önündeki küçük masa, ön plan kamerasına göre metre. en × derinlik = tabla,
+     uzak = tablanın yakın kenarının gözden uzaklığı, y = tablanın üst yüzeyi (gözün altında), kalinlik = tabla, etek = tablanın altındaki
+     kuşağın yüksekliği, etekKalinlik = kuşağın kalınlığı, boy = masanın yerden yüksekliği (oturan gözün yerden ~1,22 m yüksekliğiyle ayakların
+     ucu her pozda ekranın altından çıkar), ayak = kare kesitli ayağın kenarı, ayakIc = ayağın tabla kenarından içerisi, ayakRenk = ayak ve etek;
+     serit = uzak kenardaki pirinç şeridin yüksekliği ve derinliği; tel = telefonun masadaki yeri (x, yakın kenardan içerisi, y ekseninde dönüş
+     rad); telAlan = telefonun çizilmeyen tıklama kutusu (en, yükseklik, boy; telefon uzaklaştığı için ekranda 57×43 → 42×20 piksele küçüldü,
+     isabet alanı eski boyuna yakın tutulur). Tabla odadaki masayla aynı ceviz dokudadır (masa, masaKoyu, masaAcik), uzak kenarında pirinç şerit.
+     Ekran payı (oturuşta; 50° dikey, 4:3: yatayda yarım genişlik 0,622·uzaklık, dikeyde 0,466·uzaklık): yakın kenar ekran genişliğinin %40'ı
+     (0,9 / (2·0,622·1,8)); tabla ekranın alttan %18–27'sinde (720 satırda 528–589); yakın ayakların üst yarısı (%46), uzak ayakların %74'ü
+     görünür; ayakların ucu (y −1,22) iki sırada da ekranın alt kenarının altındadır (yakın sırada kenar −0,86, uzakta −1,05). Ayakta (kamera
+     +0,34 yukarı, 0,1 geri) masa alttan %1–12'ye iner, ayaklar neredeyse kaybolur, tablanın altı görünmez. 0,9 m: telefon ve iki el sığan
+     küçük masa; %40 sınırında 0,9 m masayı 1,8 m'ye götürür (1,1 m için 2,2 m gerekirdi; eller ve telefon daha da küçülürdü).
+     govde (Z1, kullanıcı kararı 2026-10-19): ön planın bakışı izleme çarpanları [eğim, sapma] — 0: masa ve telefon ekranda sabit (eskiden 0,22 ve 0,25: baş dönünce raf kayıyordu) */
+  baskan:{govde:[0,0],aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,
+    onMasa:{en:0.9,derinlik:0.5,uzak:1.8,y:-0.5,kalinlik:0.035,etek:0.07,etekKalinlik:0.02,boy:0.72,ayak:0.045,ayakIc:0.025,ayakRenk:'#4a2c18',
+      serit:[0.026,0.03],tel:[0.09,0.15,-0.3],telAlan:[0.1,0.06,0.19]},
+    takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.15,egimUst:0.02,govdeHiz:0.05},
 
   /* Başkan bölümü: halı, ahşap bölmeler, başkanın koltuğu */
   baskanBolumu:{hali:0x5e1a1c,bolme:0x3a2618,bolmeUst:0x6a4a2c,masa:0x4a2c18,masaUst:0x6a4228,koltuk:'#3a0e0c'},
@@ -348,18 +374,23 @@ const STIL={
   kameralar:{
     /* konum stadyum tarifindeki başkan koltuğundan gelir; goz = koltuk üstünde göz yüksekliği (metre). js/kamera.js
        Z1 (kullanıcı kararı 2026-10-19; kullanıcının 9. maç notu "kamera yakınlaşıp uzaklaşıyor, raf kayıyor"): görüş açısı maç günü boyunca SABİTTİR
-       (aci = 32° dikey, 4:3'te yatayda ~42°; oyunda yakınlaşma yok — eski oyunAci 21–26°, ölü topta ve maç dışında 36° yolu kalktı). Bakış topu
-       PENCEREYLE izler: top bakış merkezinin yatayda ±pencere[0]°, dikeyde ±pencere[1]° içindeyken baş kıpırdamaz; dışına çıkınca topu pencerenin
-       kenarına getirecek kadar döner (N4'ün "bakış hep topu izler" kuralı gevşedi: top ortada tutulmaz, geniş pencerede kalır). ileriSure:
+       (oyunda yakınlaşma yok — eski oyunAci 21–26°, ölü topta ve maç dışında 36° yolu kalktı). aci: dikey görüş açısı — Z1'de 32°; K1 (kullanıcı
+       kararı 2026-10-20, 10. maç notu "bir tık daha uzaklaşalım"): 36° (4:3'te yatayda ~47°; sabit açı kuralı sürer, yalnız değer değişti).
+       olcekAci: pencere, top.butce ve egim bu açıda (32°, Z1) ayarlandı; başka bir açıda ekrandaki oranları aynı kalsın diye js/kamera.js onları
+       tan(aci/2) / tan(olcekAci/2) ile çarpar (36°'de ×1,13: pencere ~±10,2° / ±5,7°, egim ~1,8°) — top ekranın aynı oranındaki pencerede ve aynı
+       yükseklikte kalır. Bakış topu PENCEREYLE izler: top bakış merkezinin yatayda ±pencere[0]°, dikeyde ±pencere[1]° (olcekAci'de) içindeyken
+       baş kıpırdamaz; dışına çıkınca topu pencerenin kenarına getirecek kadar döner (N4'ün "bakış hep topu izler" kuralı gevşedi: top ortada tutulmaz, geniş pencerede kalır). ileriSure:
        pencere kenarına itilen hedefin açısal hızının yumuşatma süresi (sn); yay bu hızı ileri besleme olarak alır (yoksa hızlı pasta yay sabit
        gecikmeyle geride kalıyor, top ekranın kenarına kayıyordu; akis-deneme §17: pencere bandında %76 → %99). yayOyun: oyunda bakış
        yayının açısal sıklığı (1/sn), hizSiniri: bakışın en hızlı dönüşü (derece/sn) — ikisi de yavaş baş dönüşü için düşük; yay ve sahneSinir aynısı oyun
-       dışı (ilgi noktaları) için. egim: oyunda bakışın topun ne kadar altına indiği (derece; top alttaki rafın açıkta bıraktığı alanın ortasına yakın).
-       sahneEgim: oyun dışında bakışın odağın altına inme payı (uzaklığa oran). asagiSinir/yukariSinir: takipte bakışın en çok aşağı/yukarı eğimi
-       (radyan). top: onde = taşıyanın önüne bakış (m), ongoru = serbest topta balistik öngörü (sn), inis = [başlangıç sn, süre sn, en çok pay] uzun
+       dışı (ilgi noktaları) için (açıyla ölçeklenmez: baş dünyada aynı hızla döner, geniş açıda görüntü ekranda biraz daha yavaş kayar). egim: oyunda
+       bakışın topun ne kadar altına indiği (derece, olcekAci'de; top ekranın ortasının biraz üstünde durur — K1'den beri alttaki raf yok; dikey
+       pencerenin alt ucunda bile alt ortadaki küçük masanın tablasının üstünde kalır).
+       sahneEgim: oyun dışında bakışın odağın altına inme payı (uzaklığa oran; ölçeklenmez — 2.8U'dan Z1'e 36°'lik oyun dışı açıyla kullanıldı).
+       asagiSinir/yukariSinir: takipte bakışın en çok aşağı/yukarı eğimi (radyan; dünyadaki sınır, ölçeklenmez). top: onde = taşıyanın önüne bakış (m), ongoru = serbest topta balistik öngörü (sn), inis = [başlangıç sn, süre sn, en çok pay] uzun
        havadan topta iniş yerine kayma, kale = son üçte birde kale ağzına kayma payı, korner = kornerde penaltı noktasına kayma payı, butce = [sapma,
-       eğim] nişanın topun yönünden en çok sapması (derece). TEST değerleri (açı kullanıcı kararı) */
-    baskan:{goz:0.78,hedef:[0,1,0],aci:32,pencere:[9,5],ileriSure:0.15,yayOyun:2.2,hizSiniri:40,yay:1.0,sahneSinir:60,
+       eğim] nişanın topun yönünden en çok sapması (derece, olcekAci'de). TEST değerleri (açı kullanıcı kararı) */
+    baskan:{goz:0.78,hedef:[0,1,0],aci:36,olcekAci:32,pencere:[9,5],ileriSure:0.15,yayOyun:2.2,hizSiniri:40,yay:1.0,sahneSinir:60,
       egim:1.6,sahneEgim:0.18,asagiSinir:0.5,yukariSinir:0.12,
       top:{onde:0.6,ongoru:0.35,inis:[0.5,1.6,0.55],kale:0.25,korner:0.45,butce:[2.5,1.6]}}
   },

@@ -30,6 +30,7 @@ hızlı 5–7 · depar ≥ 7 m/sn. "Eylemsiz": oyuncunun eylemi yok (vuruş, kon
   süre           bütün aktörlerin aktorGuncelle süresi (ms/kare; gerçek saat)
   kurtarış       (T9b-e) elle temasın motor adımında çizilen eldivenin topa açıklığı; dalış evresi; yana adım; kapanma türleri
   vuruş stili    (T9b-e) temasta çizimin pozu motorun stiline uyuyor mu; kötü vuruşta vuran ayağın topa göre yeri türle uyumlu mu
+  donuk son adım (K1) vuruşun son adımında (evre 2) adım döngüsü donukken kökün 1 m/sn'den hızlı gittiği koşular: ≥ 0,5 sn olanların maç başına sayısı ve en uzunu
   Kipler: --kaleci N  kaleye N yapay şut (d-sut kalıbı; maç oynanmaz, yalnız kurtarış satırı anlamlıdır)
           --koru N    A6-0: N yapay top saklama sahnesi (c-koru kalıbı; yalnız kaymanın "top saklama" bandı ve kaynağı anlamlıdır)
           --blok N    A6c: N yapay şut bloğu (motorun şut eylemi ve hamlesi; yalnız blok teması satırı anlamlıdır)
@@ -137,6 +138,17 @@ OLCUM_KUR_JS = r"""() => {
      olayının karesinde çizilen ayağın topa açıklığı (top beden yüksekliğinin altında, < 0,8 m), motorun temas uzaklığına göre (≤ 0,6 / > 0,6 m) */
   S.kKaynak = { genel: { salinim: 0, surukle: 0, sabit: 0, erisim: 0 }, durum: [0, 1, 2, 3].map(() => ({ salinim: 0, surukle: 0, sabit: 0, erisim: 0 })), hiz: [] };
   S.bl = { n: 0, ust: 0, yakin: [], uzak: [], liste: [] };
+  /* K1 (2026-10-20; kullanıcı notu 7 "ayağı havada kaldı, topla çizgi şeklinde kaydı"): donuk son adım — vuruş katmanının son adımında (evre 2) adım döngüsü
+     donukken (vk.dondur) kök 1 m/sn'den hızlı (a.wvx/a.wvz: motorun yerinden) giden kareler; oyuncu başına ardışık koşu (≤ 3 karelik kesinti — eski
+     sigortanın çıkış ve yeniden giriş karesi — aynı koşu sayılır), süresi (sn) ve içinde motorun hâlâ hazırlıkta kaldığı süre */
+  S.dk = { kare: 0, kosu: [], acik: new Map() };
+  function donukOlc(a, dt) {
+    const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !(dt > 0)) return; const vk = a.vk, D = S.dk;
+    const on = !!(vk && vk.evre === 2 && vk.dondur && Math.hypot(a.wvx || 0, a.wvz || 0) > 1); let z = D.acik.get(a);
+    if (on) { D.kare++; if (!z) { z = { t: 0, hz: 0, bosT: 0, bosK: 0 }; D.acik.set(a, z); } z.t += dt + z.bosT; z.bosT = 0; z.bosK = 0;
+      const e = p.eylem; if (e && e.ad === 'vurus' && e.faz === 'hazirlik') z.hz += dt; }
+    else if (z) { z.bosT += dt; if (++z.bosK > 3) { D.kosu.push([+z.t.toFixed(3), +z.hz.toFixed(3)]); D.acik.delete(a); } }
+  }
   S.kirB = { ey: [0, 0, 0, 0, 0], ust: [0, 0, 0, 0, 0], kol: [0, 0, 0, 0, 0], dirsek: [0, 0, 0, 0, 0], sic: [0, 0, 0, 0, 0], dur: {}, durN: {}, ivm: {}, ivmN: {}, kay: {}, kayN: {}, kb: {} };   /* A9: üst gövde kırılmasının dağılımı */
   const BANT_AD9 = ['duran', 'yuru', 'kosu', 'hizli', 'depar'];
   /* A8 (2026-10-18): alış — iyi kontrol dokunuşundan vuruşun temasına, topun gidişine ya da 2,5 sn'ye dek pencere: hareketli (çizilen hız > 0,5 m/sn) karelerde
@@ -406,7 +418,7 @@ OLCUM_KUR_JS = r"""() => {
   }
   const asil = window.aktorGuncelle;
   /* A9: yapay kiplerin ısınması (__ANM_SUS) ölçülmez; __ANM_YALNIZ (oyuncu kümesi) verildiyse yalnız onlar ölçülür — ikisi de tanımsızken (kipsiz) davranış aynı */
-  window.aktorGuncelle = (a, al, dts, T) => { const t0 = R(); asil(a, al, dts, T); kareSure += R() - t0; if (window.__ANM_SUS || (window.__ANM_YALNIZ && !window.__ANM_YALNIZ.has(a.kaynak))) return; kaydet(a, dts); zamanlama(a); temasOlc(a, dts); olayOlc(a, dts); egriOlc(a, dts); vurusOlc(a, dts); };
+  window.aktorGuncelle = (a, al, dts, T) => { const t0 = R(); asil(a, al, dts, T); kareSure += R() - t0; if (window.__ANM_SUS || (window.__ANM_YALNIZ && !window.__ANM_YALNIZ.has(a.kaynak))) return; kaydet(a, dts); zamanlama(a); temasOlc(a, dts); olayOlc(a, dts); egriOlc(a, dts); vurusOlc(a, dts); donukOlc(a, dts); };
   /* A6-0: yapay sahnelerde ışınlamadan sonra oyuncuların ölçüm durumu unutulur (ışınlama karesi kayma sayılmasın) */
   window.__ANM_OLCUM_UNUT = () => K.clear();
   const asilOlay = window.animasyonOlay;
@@ -621,6 +633,11 @@ SONUC_JS = r"""() => {
         ktPas: med(kt.pas), ktSut: med(kt.sut), ktUzun: med(kt.uzun), ktIlk: med(kt.ilk), disiVurus: S.vkN ? +(S.vkDisi / S.vkN).toFixed(2) : null, sinirDestek: S.vkSinirDestek, kare: S.vkKare, kararsiz: S.kararsiz,
         kararsizKanal: Object.entries(S.kararsizKanal).sort((a, b) => b[1] - a[1]).slice(0, 6),
         disiEvre: Object.entries(S.vkDisiEvre).sort((a, b) => b[1] - a[1]).slice(0, 10), evreKare: S.vkEvreKare }; })(),
+    /* K1: donuk son adım — açık kalan koşular kapatılır; maç başına = sayı × maçın karesi (macSuresiDk · 3600) ÷ ölçülen kare (yalnız maç kipinde anlamlı) */
+    donuk: (() => { const D = S.dk; if (!D) return null; for (const z of D.acik.values()) D.kosu.push([+z.t.toFixed(3), +z.hz.toFixed(3)]); D.acik.clear();
+      const L = D.kosu.map(x => x[0]), U = D.kosu.filter(x => x[0] >= 0.5), olcek = ((typeof MOTOR_AYAR !== 'undefined' && MOTOR_AYAR.macSuresiDk) || 20) * 3600 / Math.max(1, S.kare);
+      return { kare: D.kare, n: L.length, uzun: U.length, uzunHz: U.filter(x => x[1] >= 0.3).length, macBasina: +(U.length * olcek).toFixed(2),
+        enUzun: L.length ? +Math.max(...L).toFixed(2) : 0, med: L.length ? +yuzde(L, 0.5).toFixed(2) : null, liste: D.kosu.filter(x => x[0] >= 0.4).slice(0, 20) }; })(),
     kaymaDurum: S.dTemas.map((n, i) => n ? { pay: +(100 * S.dKayma[i] / n).toFixed(2), n } : null),
     /* A6-0: kaymanın kaynağı (kayan karelerin payı), dönüşte başın öncülüğü başlangıç hizasına göre, blok teması */
     kaymaKaynak: (() => { const f = o => { const n = o.salinim + o.surukle + o.sabit + o.erisim; return n ? { n, salinim: +(100 * o.salinim / n).toFixed(0), surukle: +(100 * o.surukle / n).toFixed(0), sabit: +(100 * o.sabit / n).toFixed(0), erisim: +(100 * o.erisim / n).toFixed(0) } : null; };
@@ -1018,6 +1035,13 @@ def satirlar(o):
             S.append("A:   vuruşta >20° sıçrama evre:kanal (1 hazırlık, 2g geri salınım, 2a aşağı salınım, 3 takip, 4 iniş, 5 çıkış; evre kare sayısı " + ", ".join(f"{e} {n}" for e, n in sorted((k.get("evreKare") or {}).items())) + "): " + ", ".join(f"{c} {n}" for c, n in k["disiEvre"]))
         if k.get("kararsizKanal"):
             S.append("A:   kararsız kanallar: " + ", ".join(f"{c} {n}" for c, n in k["kararsizKanal"]))
+    dn = o.get("donuk")
+    if dn:
+        S.append(f"A: donuk son adım (K1; kullanıcı notu 7): son adımda adım döngüsü donuk ve kök > 1 m/sn {dn['kare']} kare, {dn['n']} koşu (ortanca {v(dn['med'], 2)} sn)"
+                 f" — ≥ 0,5 sn {dn['uzun']} ({v(dn['macBasina'], 2)}/maç; motor ≥ 0,3 sn hazırlıkta kalan {dn['uzunHz']}) · en uzun {v(dn['enUzun'], 2)} sn"
+                 f"   [hedef ≥ 0,5 sn ~0/maç; meşru son adım geri salınım kadar: ≤ 0,4 sn]")
+        if dn.get("liste"):
+            S.append("A:   ≥ 0,4 sn donuk koşular (süre, motor hazırlıkta sn): " + ", ".join(f"{x[0]:.2f}/{x[1]:.2f}" for x in dn["liste"]))
     c = o.get("ck")
     if c:
         ad = " · ".join(f"{h} {n}" for h, n in sorted(c["N"].items(), key=lambda x: -x[1])) or "—"

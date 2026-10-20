@@ -91,6 +91,12 @@ const DT_KORNER_HUCUM=[['hedefOrta',PL-10,-0.5,PL-6.5,-0.3],['hedefOn',PL-9.5,2.
 const DT_HEDEF=new Set(['hedefOrta','hedefOn','hedefArka','hedefNokta','hedefUzak']);
 /* Z2d: taç sahnesinin rolleri (js/mac-durantop.js tacGorev, tacRolAdim; çizim okur) */
 const TAC_ROL=new Set(['tacGelgit','tacIce','tacGeri','tacMarkaj','tacPerde']);
+/* K1 (2026-10-20; madde F): hakemin spreyinin zamanı (sn; evrenin başından) — motorla çizimin tek kaynağı. sure: evrenin süresi ('top' topun yeri,
+   'cizgi' barajın çizgisi); s0 → s0 + sw: elin ve köpüğün açılışı; don: gövdenin işaretten dönüşü. 'cizgi'de motorun bakışı sıkılan noktayı aynı
+   s0 → s0 + sw'de süpürür, don'da gövde topa döner ('cekil'den önce biter); 'top'ta gövde evre boyunca topa bakar (yay topun çevresinde), evre bitince
+   gidiş yönüne döner (don = sure). Motor evreleri ve bakışı buradan, çizim (js/animasyon.js anmHkPoz, anmHakemAdim, anmSpreyKare) olayın zaman
+   alanından okur (sprey {…, zaman}) */
+const DT_SPREY={top:{sure:1.2,s0:0.1,sw:0.95,don:1.2},cizgi:{sure:1.6,s0:0.1,sw:1.15,don:1.25}};
 /* T8c: kenar serbest vuruşunda kutudakiler, kafa sırasıyla: [rol, başlangıç w (savunma çizgisinin 0,6 m gerisinde), koşu u, w] — w yan çarpanıyla
    (ön direk +) */
 const DT_KENAR=[['hedefOn',3.5,PL-6,2.2],['hedefOrta',0.5,PL-7,0],['hedefArka',-3,PL-7.5,-3.5],['hedefNokta',-6,PL-11,-0.5],['hedefUzak',-9,PL-8.5,-6],['hedefNokta',6.5,PL-12,2]];
@@ -265,7 +271,13 @@ Object.assign(Match.prototype,{
   },
   /* Z2c (sahne&4): hakemin spreyi — barajlı serbest vuruşta hakem topun yanına gelir, topun yerini işaretler (olay 'sprey' tur 'top', 1,2 sn), 9,15 m'yi
      barajın yerine yürür, barajın çizgisini çeker ('sprey' tur 'cizgi', 1,6 sn), sonra barajın ucuna çekilip barajı dizer (eski hakemHazir yolu).
-     du.hk {evre: top | adim | cizgi | cekil, t, s}; 14 sn'de sprey bitmezse çekilir. Rastlantı çekmez */
+     du.hk {evre: top | adim | cizgi | cekil, t, s, nk}; 12 sn'de sprey bitmezse çekilir. Rastlantı çekmez.
+     K1 (2026-10-20; kullanıcı notu 11, kutuphane/L L.1): hakemin yüzü — 'top'ta topa; 'adim'da gidiş yönüne (toptan barajın çizgisine), baş da önüne
+     (h.bakisYon; eskiden h.bak = top ve adımlama 2,8 m/sn'nin altında kaldığından hakem 9,15 m'yi geri geri yürüyordu, 8 maçta adımlama karelerinin
+     %75'i); 'cizgi'de gövde ve baş çizgide sıkılan noktaya (uçtan uca 0,1 → 1,25 sn; zaman DT_SPREY'den, çizimin eli ve köpüğü aynı zamanlamayla açılır,
+     köpük gövdenin önünde), sonra topa — dönüş çizginin bittiği yandan, 'cekil'den önce biter; sahne&1 kapalıyken (vuruş spreyi beklemez) eski yüz.
+     Yalnız yön değişir: moveP'de yön yalnız hız tavanını (yanTavan/geriTavan) belirler, adımlamanın hızı (0,24 × 7,2) geri geri tavanının (0,42 × 7,2) altında, çizgide hakem durur — konum, süreler ve hakemHazir aynı; 'cekil'e gövde eskisi gibi topa dönük girer
+     (çekilişte tavan bağlayabilir), sprey kesilecekse (12 sn tavanı, güvenlik ağının vuruşu) 0,5 sn önceden topa döner. Sonucu değiştirmez */
   hakemSpreyHedef(du){const H=du.hk,W=du.barajW;
     if(H.evre==='top')return{x:du.x+W.px*0.8,z:du.z+W.pz*0.8};
     const c=0.25*(W.n-1);return{x:W.x+W.px*c-W.ux*0.6,z:W.z+W.pz*c-W.uz*0.6};},
@@ -273,11 +285,19 @@ Object.assign(Match.prototype,{
     /* süre top yerine konunca sayılır (kullanan topu getirirken hakem topun yanında bekler); 12 sn'de bitmeyen sprey bırakılır */
     const H=du.hk,yer=du.asama==='yerles'||du.asama==='hazir'||du.asama==='kullan';if(yer)H.t+=dt;if(H.t>12){H.evre='cekil';return;}
     if(H.evre==='top'){h.hizOran=uz>6?0.7:0.4;
-      if(uz<0.6&&yer){h.hizOran=0;if(H.s==null){H.s=0;this.on('sprey',{tur:'top',x:du.x,z:du.z});}H.s+=dt;if(H.s>1.2){H.evre='adim';H.s=null;}}}
+      if(uz<0.6&&yer){h.hizOran=0;if(H.s==null){H.s=0;this.on('sprey',{tur:'top',x:du.x,z:du.z,zaman:DT_SPREY.top});}H.s+=dt;if(H.s>DT_SPREY.top.sure){H.evre='adim';H.s=null;}}}
     else if(H.evre==='adim'){h.hizOran=0.24;if(uz<0.5)H.evre='cizgi';}
     else if(H.evre==='cizgi'){h.hizOran=0;
-      if(H.s==null){H.s=0;const W=du.barajW,a=-0.3,b=0.5*(W.n-1)+0.3;this.on('sprey',{tur:'cizgi',x:W.x+W.px*a,z:W.z+W.pz*a,x2:W.x+W.px*b,z2:W.z+W.pz*b});}
-      H.s+=dt;if(H.s>1.6)H.evre='cekil';}
+      if(H.s==null){H.s=0;const W=du.barajW,a=-0.3,b=0.5*(W.n-1)+0.3;this.on('sprey',{tur:'cizgi',x:W.x+W.px*a,z:W.z+W.pz*a,x2:W.x+W.px*b,z2:W.z+W.pz*b,zaman:DT_SPREY.cizgi});}
+      H.s+=dt;if(H.s>DT_SPREY.cizgi.sure)H.evre='cekil';}
+    /* K1: yüz (yukarıda); 'top', 'cekil' ve kesilmeden 0,5 sn önce hakemAI'nın h.bak'ı (top). Çizgiden topa dönüş en çok ~160° (yerinde 11 rad/sn:
+       ≤ 16 kare; don'dan 'cekil'e ~21 kare). Vuruş spreyi beklemiyorsa (du.sahneT yok: sahne&1 kapalı — duranHazirMi'nin sprey koşulu yalnız sahnede;
+       du.zorlaHazir da yalnız orada) eski yüz: hakem topa bakar */
+    if(!du.sahneT||H.evre==='top'||H.evre==='cekil'||H.t>11.5||du.t>du.zorlaHazir-2.5)return;
+    if(H.evre==='adim'){h.bak=null;h.bakisYon=Math.atan2(h.tz-h.z,h.tx-h.x);return;}
+    const Z=DT_SPREY.cizgi,s=H.s||0;if(s>Z.don)return;
+    const W=du.barajW,k=-0.3+(0.5*(W.n-1)+0.6)*clamp((s-Z.s0)/Z.sw,0,1),N=H.nk||(H.nk={x:0,z:0});
+    N.x=W.x+W.px*k;N.z=W.z+W.pz*k;h.bak=N;h.bakisYon=Math.atan2(N.z-h.z,N.x-h.x);
   },
   /* penaltı görevleri (T8a): herkes ceza sahası ve yayın dışında; iki hücumcu ve iki savunmacı yayın kenarında ribaunda hazır, kaleci çizgide */
   penaltiGorev(du,G){

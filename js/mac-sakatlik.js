@@ -29,16 +29,64 @@ const skYatkinlik=p=>0.7+0.6*(1-(p.oz&&p.oz.dayaniklilik!=null?p.oz.dayaniklilik
 /* rakip temasıyla düşüş nedenleri (js/mac-mudahale.js dus) */
 const SK_TEMAS=new Set(['faul','kayma','takilma','omuz','hava','itme']);
 Object.assign(Match.prototype,{
-  /* kurulum (Match.reset): sağlıkçılar saha kenarı kişisidir (takım başına iki, kulübenin yanında saha dışında) */
+  /* kurulum (Match.reset): sağlıkçılar saha kenarı kişisidir (takım başına iki). K1 (D-saglikci, 2026-10-20; kullanıcı kararı, FUTBOL_KUTUPHANESI
+     §12.13): boştayken kulübede bekler ve görünmezler (js/animasyon.js aktorGuncelle); işleri olunca kulübenin önünden çıkıp koşar, iş bitince
+     kulübeye dönerler. Yerleri (ev) kulübenin dış ucunda, koltukların önünde, çatının altındadır (eskiden kulübenin dışında, yan çizgiye 1,9 m'de
+     bütün maç ayakta duruyorlardı). ev: {x, z} yer, bx ve bw kulübenin ortası ve yarı genişliği (js/stadyum.js: 6,5 m, camlar ±3,25), kz kapı
+     çizgisi (kulübenin açık önünün ~0,5 m önü; dönüşte kd: dıştaki 0,2 m geride, içteki 0,4 m önde — iç içe iki yol, dönen iki sağlıkçı çizgide
+     üst üste binmez), ox ve oz teknik alanın dış ön köşesi (yolun ara noktaları yan = (ox, kz), ön = (ox, oz);
+     saglikciGit): ox teknik direktörün gezinme bandının (alan.x ± 3,5; js/mac-oncesi.js kenarAI) 1,1 / 1,7 m dışı (köşeyi dönerken kayma payı),
+     oz TD'nin (alan.z) ve 4. hakemin (−2,6) çizgisinin 0,8 m önü — ön noktası eski bekleme yeridir. z, tünelin içi sayılan şeridin
+     (js/mac-hareket.js moveP: z < tünel + 0,5) önünde kalır. Dıştaki yer ve dıştaki sütun tedavide sakatın dış yanına giden sağlıkçınındır
+     (sağlıkçı i: sakatın x − 0,75 / + 0,75'i): iki sağlıkçının yolları kesişmez */
   sakatlikHazirla(){
     /* sakatlık zarları ve süreleri ayrı tohumdan (mac-oncesi srast gibi): sakatlık olmayan maçta ana rastgele dizisi değişmez */
     this.skRast=tohumluRastgele((this.tohum^0x85ebca6b)>>>0);
     this.sakatlikAkis=null;this.sakatlikSira=[];this.sedye=null;this.tedavideBekleyen=[];
-    for(let t=0;t<2;t++){const kb=this.kulubeler[t],s=kb.alan.x>=0?1:-1;
-      for(let i=0;i<2;i++){const ev={x:kb.alan.x+s*(4.4+0.8*i),z:-1.9};
+    for(let t=0;t<2;t++){const kb=this.kulubeler[t],s=kb.alan.x>=0?1:-1,kz0=kb.koltuklar.length?kb.koltuklar[0].z:kb.alan.z-3.35,bw=3.25;
+      const ez=Math.max(kz0+0.8,this.tunel.z+0.6);
+      for(let i=0;i<2;i++){const j=s>0?1-i:i,ev={x:kb.alan.x+s*(bw-0.45-0.6*j),z:ez,bx:kb.alan.x,bw,kz:kz0+1.95,kd:kz0+1.95+(j?0.4:-0.2),ox:kb.alan.x+s*(4.6+0.6*(1-j)),oz:kb.alan.z+0.8};
         this.kenar.push(this.varlik('kenar',ev.x,ev.z,{kind:'saglikci',team:t,name:'Sağlıkçı',maxSpd:6.2,oz:{hiz:0.5},yon:Math.PI/2,ev,gorev:null}));}}
   },
   saglikcilar(t){return this.kenar.filter(p=>p.kind==='saglikci'&&p.team===t);},
+  /* K1 (D-saglikci): sağlıkçı kulübenin ve teknik alanın bölgesinde mi — ön noktasının (oz) gerisinde, yan sütunun (ox) içinde. Dışarı giden yol bu
+     bölgeden ara noktalarla çıkar; 'kos' evresinin süre sınırı bölgeden çıkınca başlar */
+  saglikciKenarda(s){const e=s.ev;return s.z<e.oz-0.3&&Math.abs(s.x-e.bx)<Math.abs(e.ox-e.bx)+0.4;},
+  /* K1 (D-saglikci): sağlıkçının hedefini (x, z) kulübenin kapısından ve teknik alanın dışından geçirerek verir. Yol zinciri: yer (ev) ↔ kapı (ev.x,
+     kz) ↔ yan (ox, kz) ↔ ön (ox, oz) ↔ hedef; dönüş tersi. Her çağrıda bulunduğu halkaya göre sıradaki halkayı hedef verir (varış 0,4 m). Kapı çizgisi
+     TD'nin ve 4. hakemin gerisinde, yan sütun TD'nin gezinme bandının dışında, ön noktası ikisinin çizgisinin önündedir: görünür sağlıkçı teknik
+     direktörün, kondisyonerin ve 4. hakemin içinden geçmez; yan camlardan, öteki kulübenin içinden ya da tribün önünden de kestirme geçmez. Kapı
+     çizgisinin gerisinde başka yerdeyse (tünelden çıkış) önce çizgiye çıkar, çizgi boyunca kapıya yürür. Rastlantısız */
+  saglikciGit(s,x,z){
+    const e=s.ev,c=e.kz-0.3,on=e.oz-0.3,sK=s.z<c&&Math.abs(s.x-e.bx)<e.bw,hK=z<c&&Math.abs(x-e.bx)<e.bw,kz=hK?e.kd:e.kz,
+      kapi=hyp(s.x-e.x,s.z-kz)<=0.4,yan=hyp(s.x-e.ox,s.z-kz)<=0.4,cizgi=Math.abs(s.z-kz)<=0.4,sutun=s.z<on&&Math.abs(s.x-e.ox)<=0.4;
+    let tx=x,tz=z;
+    /* yolun dışında (sedyenin ucu, yarıda kalan görev, kapıda koşunun taşması): kapı çizgisinin gerisindeyse çizgiye; TD ile ön çizgisi arasındaysa
+       dönüşte öne çıkar, çıkışta teknik alanın içindeyse yana döner — TD'nin ve 4. hakemin çizgisini yalnız yan sütunda geçer */
+    if(hK){   /* içeri (yerine): ön → yan → kapı → yer */
+      if(sK||kapi){}
+      else if(cizgi){tx=e.x;tz=kz;}
+      else if(sutun){tx=e.ox;tz=kz;}
+      else if(s.z<kz-0.4){tx=s.x;tz=kz;}
+      else if(s.z<on){tx=s.x;tz=e.oz;}
+      else if(hyp(s.x-e.ox,s.z-e.oz)>0.2){tx=e.ox;tz=e.oz;}   /* öne 0,2 m: köşeyi TD'nin bandına doğru kesmesin */
+      else{tx=e.ox;tz=kz;}}
+    else if(this.saglikciKenarda(s)){   /* dışarı: yer → kapı → yan → ön → hedef */
+      if(sK&&!kapi){tx=e.x;tz=e.kz;}
+      else if(sutun||yan){tx=e.ox;tz=e.oz;}
+      else if(cizgi||kapi){tx=e.ox;tz=e.kz;}
+      else if(s.z<e.kz-0.4){tx=s.x;tz=e.kz;}
+      else if(Math.abs(s.x-e.bx)<Math.abs(e.ox-e.bx)){tx=e.ox;tz=e.kz;}
+      else{tx=s.x;tz=e.oz;}}
+    s.tx=tx;s.tz=tz;
+  },
+  /* K1: boştaki sağlıkçı kulübedeki yerine (kapıdan) yürür; yerine varınca sahaya döner ve bekler (görünmez). Sahanın içindeyse (kaleci tedavisi,
+     karşı yan çizgiden dönüş) oyunun içinden tempolu çıkar (en az 0,6). Oyunda 6 karede bir (sakatlikAdim), maç öncesinde ilk yedekle
+     (js/mac-oncesi.js kenarOncesi), devre arasında ve maç sonunda (stepBreak) */
+  saglikciEve(s,hiz){const e=s.ev,saha=Math.abs(s.x)<PL&&s.z>0&&s.z<PW,de=hyp(s.x-e.x,s.z-e.z);this.saglikciGit(s,e.x,e.z);s.hizOran=saha?Math.max(hiz,0.6):hiz;
+    /* iki sağlıkçı aynı yoldan dönerken üst üste binmesin (kenar kişileri çarpışmaz): arkadaşına 0,7 m'den yakın olup yerine ondan uzak olan yavaşlar */
+    for(const q of this.kenar)if(q!==s&&q.kind==='saglikci'&&q.team===s.team&&hyp(q.x-s.x,q.z-s.z)<0.7&&de>hyp(q.x-q.ev.x,q.z-q.ev.z))s.hizOran*=0.4;
+    s.poz=null;s.bak=null;s.yonHedef=de<0.6?Math.PI/2:null;},
   /* sakatlık gününü kariyer için (Aşama 3 okur): ağrı 0–1, kramp 0, tedavi 0–5, temaslı çıkış 7–42 (uzun sakatlık %12: 60–150), kas 10–30 */
   sakatlikGun(tur,derece){const r=this.skRast();
     if(derece==='agri'||tur==='kramp')return derece==='agri'?Math.floor(r*2):0;
@@ -78,7 +126,7 @@ Object.assign(Match.prototype,{
   sakatlikAdim(dt){
     this.sakatlikAkisAdim(dt);if(this.tedavideBekleyen.length)this.tedavidenDonus();
     if(this.kare%6)return;   /* T10g (hız): boştaki sağlıkçılar, topallamanın bitişi ve temassız zar 6 karede bir */
-    for(const s of this.kenar)if(s.kind==='saglikci'&&!s.gorev){s.tx=s.ev.x;s.tz=s.ev.z;s.hizOran=0.35;s.poz=null;s.bak=null;s.yonHedef=hyp(s.x-s.ev.x,s.z-s.ev.z)<1.5?Math.PI/2:null;}   /* T10g: yerinde sahaya dönük */
+    for(const s of this.kenar)if(s.kind==='saglikci'&&!s.gorev)this.saglikciEve(s,0.35);   /* T10g: yerinde sahaya dönük; K1: kulübede, kapıdan */
     for(const p of this.players)if(p.topal&&this.t>p.topal.son)p.topal=null;
     if(this.phase!=='play')return;
     const ds=dt*6*sureOlcek(),son=this.half===2&&this.gameSec>4200;   /* U1: tehlike gerçek saniye başına; maç dakikası başına aynı kalsın */
@@ -88,7 +136,8 @@ Object.assign(Match.prototype,{
       else if(son&&y>0.38&&p.spd>3){const k=Math.min(1,(y-0.38)/0.12);if(this.skRast()<MOTOR_AYAR.sakatKramp*k*yt*ds)this.sakatlikBaslat(p,'kramp','baldir',this.skRast()<0.7?'tedavi':'agri');}}
   },
   /* akış: bekle (oyun sürer; hakem durdurur) → cagir (sağlıkçılar koşar) → kos → tedavi → kalk ve cik (tedavi: kenara yürür; çizgide akış biter,
-     oyuncu tedavideBekleyen listesinde dönüşü bekler) / sedye (çıkış) → degis (değişiklik ya da eksik). Aynı anda tek akış; ötekiler sırada */
+     oyuncu tedavideBekleyen listesinde dönüşü bekler) / sedye (çıkış) → degis (değişiklik ya da eksik) / don (kaleci tedavisi: sağlıkçılar sahadan
+     çıkar; K1). Aynı anda tek akış; ötekiler sırada */
   sakatlikAkisAdim(dt){
     let A=this.sakatlikAkis;
     if(!A){if(!this.sakatlikSira.length||this.degisiklik)return;const p=this.sakatlikSira.shift();if(!p.oyunda||!p.sakat)return;
@@ -108,21 +157,36 @@ Object.assign(Match.prototype,{
       M.forEach((s,i)=>{s.gorev=A;s.poz=null;s.hizOran=1;s.bak=p;});
       this.on('tedaviBasladi',{p,saglikcilar:M});evre('kos');}
     if(A.evre==='kos'){
-      M.forEach((s,i)=>{const yan=i?1:-1;s.tx=p.x+yan*0.75;s.tz=p.z+0.35;s.hizOran=1;s.bak=p;});
-      if(M.every(s=>hyp(s.x-s.tx,s.z-s.tz)<0.6)||A.et>9){evre('tedavi');A.sure=p.sakat.derece==='cikis'?4:MOTOR_AYAR.tedaviSure[0]+this.skRast()*(MOTOR_AYAR.tedaviSure[1]-MOTOR_AYAR.tedaviSure[0]);
-        M.forEach(s=>{s.poz='comel';s.vx=s.vz=0;});}}
+      /* K1: kulübeden kapıdan ve teknik alanın dışından çıkar (saglikciGit); varış sakatın yanındaki yere göre. 9 sn'lik sınır ikisi de kulübenin ve
+         teknik alanın bölgesinden çıkınca başlar (A.cikti; ön noktası eski bekleme yeridir, dolanma sınırdan yemez); en geç 14 sn. Sınıra takılınca
+         yalnız yerine varan çömelir, uzaktaki koşusunu sürdürür ve tedavide varınca çömelir (eskiden bulunduğu yerde durup çömeliyordu) */
+      let vardi=true;
+      M.forEach((s,i)=>{const yan=i?1:-1,hx=p.x+yan*0.75,hz=p.z+0.35;this.saglikciGit(s,hx,hz);s.hizOran=1;s.bak=p;if(hyp(s.x-hx,s.z-hz)>=0.6)vardi=false;});
+      if(A.cikti==null&&!M.some(s=>this.saglikciKenarda(s)))A.cikti=A.et;
+      if(vardi||A.cikti!=null&&A.et-A.cikti>9||A.et>14){evre('tedavi');A.sure=p.sakat.derece==='cikis'?4:MOTOR_AYAR.tedaviSure[0]+this.skRast()*(MOTOR_AYAR.tedaviSure[1]-MOTOR_AYAR.tedaviSure[0]);
+        M.forEach((s,i)=>{if(hyp(s.x-p.x-(i?0.75:-0.75),s.z-p.z-0.35)<0.6){s.poz='comel';s.vx=s.vz=0;}});}}
     else if(A.evre==='tedavi'){
-      M.forEach((s,i)=>{const yan=i?1:-1;s.tx=p.x+yan*0.75;s.tz=p.z+0.35;s.bak=p;});
+      M.forEach((s,i)=>{const hx=p.x+(i?0.75:-0.75),hz=p.z+0.35;this.saglikciGit(s,hx,hz);s.bak=p;
+        if(s.poz!=='comel'&&hyp(s.x-hx,s.z-hz)<0.6){s.poz='comel';s.vx=s.vz=0;}});
       if(A.et>=A.sure){M.forEach(s=>{s.poz=null;});
         if(p.sakat.derece==='cikis'){/* sedye: oyuncu yatarak en yakın yan çizgiye taşınır (sağlıkçılar iki uçta) */
           p.oyunda=false;p.cikiyor=true;const kz=p.z<MZ?-1.2:PW+1.2;A.hedef={x:clamp(p.x,-PL+2,PL-2),z:kz};
           this.sedye={x:p.x,z:p.z,yon:Math.atan2(kz-p.z,0),p};this.on('sedye',{p});evre('sedye');}
         else if(p.rol==='GK'){/* kaleci sahada tedavi edilir, kalkar, yerinde kalır */
           p.eylem={ad:'kalkis',t:0,sure:1.4,kilit:true,fren:12,yon:p.eylem&&p.eylem.yon,neden:'sakatlik'};p.sakat=null;p.topal={oran:0.7,son:this.t+8};
-          this.sakatlikBitir();return;}
+          /* K1: sağlıkçılar sahadan çıkar, oyun onları bekler ('don'; eskiden görevleri silinmiyor, devre sonuna dek ceza sahasında kalecinin
+             yanında duruyorlardı) */
+          evre('don');}
         else{/* kalkar, kenara yürür; takım kısa süre eksik */
           p.eylem={ad:'kalkis',t:0,sure:1.2,kilit:true,fren:12,yon:p.eylem&&p.eylem.yon,neden:'sakatlik'};
           A.hedef={x:clamp(p.x,-PL+2,PL-2),z:p.z<MZ?-0.9:PW+0.9};evre('kalk');}}}
+    else if(A.evre==='don'){
+      /* K1: kaleci tedavisinden sonra sağlıkçılar sahadan kısa yoldan, kulübe tarafındaki yan çizginin dışına (ön noktalarının çizgisine; kulübeye
+         doğru en çok ~22° açıyla) koşar adım çıkar; oyun (bekletir) ikisi de sahadan çıkana dek, en çok 10 sn bekler — sağlık ekibi sahadayken oyun başlamaz (kutuphane/L L.5: ekip kenara
+         çıkar, kulübeye döner). Çıkınca görev biter; kulübeye dönüş boştaki gibi saha dışından (saglikciEve). Kulübeye çapraz dönüş (~50 m, 0,6 hızla)
+         10 sn'ye sığmıyor, oyun sağlıkçılar sahadayken başlıyordu */
+      M.forEach(s=>{const e=s.ev,d=Math.max(1,s.z-e.oz);s.tx=s.x+clamp(e.ox-s.x,-0.4*d,0.4*d);s.tz=e.oz;s.hizOran=0.8;s.poz=null;s.bak=null;s.yonHedef=null;});
+      if(M.every(s=>Math.abs(s.x)>=PL||s.z<=0||s.z>=PW)||A.et>10){M.forEach(s=>{s.gorev=null;});this.sakatlikBitir();}}
     else if(A.evre==='kalk'){if(!(p.eylem&&p.eylem.ad==='kalkis')){p.oyunda=false;p.cikiyor=true;p.tedavide=true;p.topal={oran:0.66,son:this.t+60};evre('cik');}}
     else if(A.evre==='cik'){
       /* sağlıkçılarla en yakın yan çizgiye yürür (~3 m/sn; sıkıştırılmış maç); 6 sn'den sonra oyun başlayabilir, o çizgiye varınca bekler */

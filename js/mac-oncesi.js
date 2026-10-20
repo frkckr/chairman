@@ -93,6 +93,11 @@ Object.assign(Match.prototype,{
        (yazı-tura ve maçın kendisi aynı kalsın); ilk ikisi tünelden çıkış gecikmesini verir (0–1,5 sn) */
     {const F=this.kenar.filter(p=>p.kind==='foto'),[fa,fb]=S.fotografcilar;
      for(let i=0;i<4;i++){const v=ara(S.fotografcilar);if(F[i])F[i].sg={cikis:(v-fa)/(fb-fa)*1.5};}}
+    /* K1 (D-saglikci, 2026-10-20): sağlıkçılar takımlarının ilk yedeğinden 2 sn (ikincisi 2,8 sn) sonra kulübeye geçer, orada görünmez beklerler
+       (js/mac-sakatlik.js saglikciEve; eskiden ilk santraya dek tünelde kalıp maçın başında yürüyorlardı). Çekiliş tüketmez: senaryonun geri
+       kalanı ve maç aynı kalır */
+    for(let t=0;t<2;t++){const Y=this.yedekler[t],k0=Y.length?Math.min(...Y.map(p=>p.sg.kulube)):S.yedekler[0];
+      this.saglikcilar(t).forEach((s,i)=>{s.sg={kulube:k0+2+0.8*i};});}
     this.on('oncesi',{ad:'basla'});
   },
 
@@ -279,6 +284,7 @@ Object.assign(Match.prototype,{
     for(const p of this.kenar){const g=p.sg;
       if(p.oturuyor||g.kulube==null||sn.t<g.kulube)continue;if(g.iceri&&sn.t<g.iceri+5)continue;
       if(p.kind==='kaleciAnt'){p.tx=p.ev.x;p.tz=p.ev.z+0.7;p.hizOran=0.45;p.poz=null;if(hyp(p.x-p.tx,p.z-p.tz)<0.35)this.otur(p);continue;}
+      if(p.kind==='saglikci'){this.saglikciEve(p,0.4);continue;}   /* K1: kulübeye kapıdan (js/mac-sakatlik.js) */
       const h=p.ev;p.tx=h.x;p.tz=h.z;p.hizOran=0.4;p.poz=null;
       p.bak=hyp(p.x-h.x,p.z-h.z)<1.2?{x:0,z:MZ}:null;}
   },
@@ -491,6 +497,9 @@ Object.assign(Match.prototype,{
     const T=this.tunel;
     if(this.sen)this.sen.t+=dt;
     if(this.phase==='fulltime')this.macSonu(dt);else this.devreArasi(dt);
+    /* K1 (D-saglikci): boştaki sağlıkçılar devre arasında ve maç sonunda kulübede görünmez kalır; devre sonunda süren akıştan sahada kalan
+       kapıdan kulübeye döner (js/mac-sakatlik.js saglikciEve; oyunda olduğu gibi 6 karede bir) */
+    if(this.kare%6===0)for(const s of this.kenar)if(s.kind==='saglikci'&&!s.gorev)this.saglikciEve(s,0.35);
     this.hareketHepsi(dt,true);this.topAdim(dt);
     if(this.sen)this.antrenmanTopu(dt);
     if(this.phase==='halftime'&&this.phaseT>DEVRE_ARASI){
@@ -542,6 +551,6 @@ Object.assign(Match.prototype,{
         const vardi=hyp(p.x-p.tx,p.z-p.tz)<1;p.bak=vardi?{x:p.x+y.nx*30,z:p.z+y.nz*30}:null;p.poz=vardi?'alkis':null;continue;}
       tunele(p);}
     if(tau>12){for(const t of[0,1])for(const p of this.yedekler[t]){if(p.oturuyor){p.oturuyor=false;}tunele(p);}
-      for(const p of this.kenar)if(p.kind!=='foto'&&p.kind!=='dorduncu'){p.oturuyor=false;tunele(p);}}
+      for(const p of this.kenar)if(p.kind!=='foto'&&p.kind!=='dorduncu'&&p.kind!=='saglikci'){p.oturuyor=false;tunele(p);}}   /* K1: sağlıkçılar kulübede (stepBreak) */
   }
 });

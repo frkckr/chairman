@@ -15,7 +15,8 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
  15. Ortak çatısız stat ve mekân (2.8D, 2.8J, 2.8O): tek tarif, balkon/pencere aynı stat, iskele, kapıya tıklama, doğal yürüyüş;
      N6 (2026-10-04): insan gibi kalkış, adım ve oturma (ivme ve hız sıçraması sınırı), telefonu alma ve masaya koyma.
  15b. Maçta binadaki loca, 52°'lik geniş bakışta yedek kulübeleri ve okunur tabela; N4 (2026-10-04): bakış topu izler (elle bakış,
-     Topu izle düğmesi ve F tuşu yok); Z1 (2026-10-19): görüş açısı sabit 32°, top geniş pencerede (±9° / ±5°), raf sabit.
+     Topu izle düğmesi ve F tuşu yok); Z1 (2026-10-19): görüş açısı sabit (K1 2026-10-20: 36°), top geniş pencerede (32°'de ±9° / ±5°;
+     açıyla ekrandaki oranı korunarak ölçeklenir), raf sabit.
  16. Maç telefonu (2.8F, 2.8I).
  17. Topu izleyen bakış ve maçın netliği (2026-10-03; Z1 2026-10-19): belirlenimli 30 sn oyunda (1× ve 4×) top ekranda ve pencere bandında,
      görüş açısı sabit, raf kıpırdamıyor; oyuncu boyu, topun çizim boyu, 960×720 maç ızgarası ve 2× iç çizim; dürbünün kaldırıldığı (2026-10-07:
@@ -774,6 +775,13 @@ async def bolum_15(tarayici, site, tum_hatalar):
 
 
 YON_JS = """() => ({ y: +KAM.a.y.toFixed(5), p: +KAM.a.p.toFixed(5), mod: KAM.mod, fov: +camera.fov.toFixed(3) })"""
+# koltuktaki loca bakışının görüş açısı (dikey, derece) sayfadan, STIL.kameralar.baskan.aci'den okunur: Z1'de 32°, K1'de (kullanıcı kararı
+# 2026-10-20, 10. maç notu) 36°; açı yeniden değişirse (ör. 40°) yalnız STIL değişir, §15b ve §17 kendiliğinden izler
+
+
+def loca_aci_olcek(aci, olcek_aci):
+    """K1: STIL'deki pencere, nişan bütçesi ve eğim olcekAci'de derecedir; js/kamera.js kamAciOlcek ekrandaki oranları korumak için çarpar."""
+    return math.tan(math.radians(aci / 2)) / math.tan(math.radians((olcek_aci or aci) / 2))
 # topun ekrandaki yeri (-1…1)
 TOP_JS = """() => { kameraUygula(curView()); camera.updateMatrixWorld(); const b = mac.ball, v = new THREE.Vector3(b.x, b.y + TOP_R, b.z - MOTOR_Z).project(camera);
   return { x: +v.x.toFixed(3), y: +v.y.toFixed(3) }; }"""
@@ -851,15 +859,16 @@ async def bolum_15b(tarayici, site, tum_hatalar):
         return { x: +v.x.toFixed(3), y: +v.y.toFixed(3), fov: +camera.fov.toFixed(2) }; };
       const top = [];
       for (const [x, z] of [[30, 52], [-38, 12], [5, 62], [-15, 30]]) { Object.assign(b, { x, z, y: 0, vx: 0, vy: 0, vz: 0, sahip: null, tasiyan: null }); for (let i = 0; i < 240; i++) kameraAdim(1 / 60); top.push(olc()); }
-      Object.assign(b, eski); return { faz: mac.phase, top, aci: K.baskan.aci, pencere: K.baskan.pencere, butce: K.baskan.top.butce, oran: camera.aspect }; }""")
+      Object.assign(b, eski); return { faz: mac.phase, top, aci: K.baskan.aci, olcekAci: K.baskan.olcekAci || null, pencere: K.baskan.pencere, butce: K.baskan.top.butce, oran: camera.aspect }; }""")
     # Z1 borcu (2026-10-19 gece, masaüstü): son üçte birde nişan kale ağzına kayar (kamTopNisani; en çok butce derece) — top pencerenin kenarından
-    # bütçe kadar dışarıda kalabilir; sınır pencere + bütçe (ekran x'i perspektifle), 45°'lik ani sıçramada yayın oturması için 4 sn
-    import math
+    # bütçe kadar dışarıda kalabilir; sınır pencere + bütçe (ekran x'i perspektifle), 45°'lik ani sıçramada yayın oturması için 4 sn.
+    # K1 (2026-10-20): pencere ve bütçe açıyla ölçeklenir (loca_aci_olcek), sınır ekranda 32°'dekiyle aynı kalır
+    _s = loca_aci_olcek(odak["aci"], odak["olcekAci"])
     _yx = math.tan(math.radians(odak["aci"] / 2)) * odak["oran"]
-    sx = math.tan(math.radians(odak["pencere"][0] + odak["butce"][0])) / _yx + 0.03
-    sy = math.tan(math.radians(odak["pencere"][1] + odak["butce"][1])) / math.tan(math.radians(odak["aci"] / 2)) + 0.03
-    denetle(f"Z1: bakış topu pencerede: duraklatılmışken dört yere konan topa bakış yavaşça döndü; top pencerenin içinde ya da kenarında, nişanın kale ağzı payı dahil (|x| ≤ {sx:.2f}, |y| ≤ {sy:.2f}), görüş açısı sabit 32°",
-            odak["faz"] == "play" and odak["aci"] == 32 and all(abs(o["x"]) <= sx and abs(o["y"]) <= sy and abs(o["fov"] - 32) <= 0.01 for o in odak["top"]), str(odak["top"]))
+    sx = math.tan(math.radians((odak["pencere"][0] + odak["butce"][0]) * _s)) / _yx + 0.03
+    sy = math.tan(math.radians((odak["pencere"][1] + odak["butce"][1]) * _s)) / math.tan(math.radians(odak["aci"] / 2)) + 0.03
+    denetle(f"Z1/K1: bakış topu pencerede: duraklatılmışken dört yere konan topa bakış yavaşça döndü; top pencerenin içinde ya da kenarında, nişanın kale ağzı payı dahil (|x| ≤ {sx:.2f}, |y| ≤ {sy:.2f}), görüş açısı sabit {odak['aci']}° (STIL)",
+            odak["faz"] == "play" and odak["aci"] > 0 and all(abs(o["x"]) <= sx and abs(o["y"]) <= sy and abs(o["fov"] - odak["aci"]) <= 0.01 for o in odak["top"]), str(odak["top"]))
     await pg.screenshot(path=str(ARAC / "son-akis-15-mac.png"))
     await pg.context.close()
 
@@ -985,7 +994,12 @@ async def bolum_17(tarayici, site, tum_hatalar):
     for ad, o in (("1×", o1), ("4×", o4)):
         denetle(f"Belirlenimli 30 sn oyunda ({ad}) top 0,25 sn'lik örneklerin ≥ %90'ında pencere bandında (|x| ≤ 0,55, −0,35 ≤ y ≤ 0,5), ≤ %1'inde ekran dışında; görüş açısı sabit (fark ≤ 0,01°), raf kıpırdamıyor (Z1)",
                 o["ornek"] >= 40 and o["ic"] >= 0.9 and o["disarida"] <= 0.01 and o["fovFark"] <= 0.01 and o["raf"] <= 1e-9, str(o))
-    denetle("Oyunda oyuncu boyu ortancası 480 satır karşılığı ≥ 23 piksel (Z1: sabit 32°; 26°'de ~31, 36°'de ~23 hesaplanmıştı), top ≥ 3 piksel", o1["boy"] >= 23 and o1["topPx"] >= 2.95, f"{o1['boy']} px · top en az {o1['topPx']} px")
+    # Z1'de (32°) kapı ≥ 23 piksel; K1 (2026-10-20, 36°): oyuncular açıyla tan 16° / tan(aci/2) oranında küçülür (36°'de ×0,88), kapı da onunla.
+    # Kapının açıyla ölçeklenmesi bilinçlidir (kullanıcı kararı: geniş açı okunurluk pahasına istendi); 36°'de kapı ~20,3 px (ölçülen ~20,9 px).
+    # Açının kendisi okunurluğu korumaz: açı yeniden değişirse kapının yeni değeri (40°'de ~18,2 px) kullanıcıya gösterilir
+    aci = await pg.evaluate("STIL.kameralar.baskan.aci")
+    esik = 23 * math.tan(math.radians(16)) / math.tan(math.radians(aci / 2))
+    denetle(f"Oyunda oyuncu boyu ortancası 480 satır karşılığı ≥ {esik:.1f} piksel (Z1: 32°'de ≥ 23; K1: {aci}°, kapı açıyla küçülür), top ≥ 3 piksel", o1["boy"] >= esik and o1["topPx"] >= 2.95, f"{o1['boy']} px · top en az {o1['topPx']} px")
     # dürbün kaldırıldı (kullanıcı kararı 2026-10-07): D tuşu bir şey yapmaz; düğme, maske tuvali, ayar, el hareketi ve kamera geçiş durumu yok
     await pg.keyboard.press("KeyD")
     await pg.evaluate("__kare(45)")

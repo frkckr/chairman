@@ -2,9 +2,11 @@
    Sahibi: A akışı (2026-10-03). Başkanın gözü başkan koltuğundadır.
    N4 (kullanıcı kararı 2026-10-04): bakış topu izler. Fareyle sürükleme ve ok tuşlarıyla elle bakış, “Topu izle” düğmesi ve F tuşu kaldırıldı
    (2026-10-03 ikinci paketteki varsayılan elle bakışın yerini alır). Dürbün 2026-10-07'de kullanıcı kararıyla tamamen kaldırıldı: tek bakış vardır.
-   Z1 (kullanıcı kararı 2026-10-19): görüş açısı maç günü boyunca sabit (STIL aci 32°; yakınlaşma yok); bakış topu ortada tutmaz, geniş bir
-   PENCEREDE tutar (yatayda ±9°, dikeyde ±5°: top pencerenin içindeyken baş kıpırdamaz, dışına çıkınca topu kenara getirecek kadar yavaşça döner);
-   önündeki raf ekranda sabittir (kameraGovdeHedefi çarpanları STIL.baskan.govde = 0).
+   Z1 (kullanıcı kararı 2026-10-19): görüş açısı maç günü boyunca sabit (STIL aci; yakınlaşma yok — Z1'de 32°, K1'de (kullanıcı kararı 2026-10-20)
+   36°); bakış topu ortada tutmaz, geniş bir PENCEREDE tutar (32°'de yatayda ±9°, dikeyde ±5°: top pencerenin içindeyken baş kıpırdamaz, dışına
+   çıkınca topu kenara getirecek kadar yavaşça döner); pencere, nişan bütçesi ve eğim STIL olcekAci'de ayarlıdır ve ekrandaki oranları aynı
+   kalsın diye açıyla ölçeklenir (kamAciOlcek); önündeki masa (K1'den beri kare ayaklı küçük masa; eskiden raf) ekranda sabittir
+   (kameraGovdeHedefi çarpanları STIL.baskan.govde = 0).
    Oyun sürerken bakış topa odaklıdır: topu taşıyanın hemen önü, serbest
    topta kısa balistik öngörü (topFizikAdim topun özel kopyasında; motorun önbelleklerine dokunulmaz), uzun havadan topta iniş yeri, son üçte
    birde kale ağzı. Bu kaymalar topun yönünden en fazla bir açı bütçesi kadar sapar; bakış bu nişanı pencerede tutar (Z1: top ortada tutulmaz). Maç öncesi, devre
@@ -92,8 +94,11 @@ function kameraYay(s,ty,tp,w,sinir,h,tvy,tvp){
   const v=Math.hypot(s.vy,s.vp);if(v>sinir){s.vy*=sinir/v;s.vp*=sinir/v;}
   s.y+=s.vy*h;s.p+=s.vp*h;
 }
-/* bu anın hedefleri: başkanın bakışı (y, p, yay, sınır, fov) */
-const KAM_H={y:0,p:0,w:1,sinir:1,fov:52};
+/* K1 (2026-10-20): pencere, nişan bütçesi ve eğim STIL'de olcekAci'de (32°) derece olarak verilir; ekrandaki oranları aynı kalsın diye
+   tan(aci/2) / tan(olcekAci/2) ile çarpılır (küçük açılarda doğrusal yaklaşım yeterli: 36°'de ±9° → ±10,2°, ekranda fark %0,3) */
+function kamAciOlcek(){return Math.tan(KAM_B.aci*KAM_DER/2)/Math.tan((KAM_B.olcekAci||KAM_B.aci)*KAM_DER/2);}
+/* bu anın hedefleri: başkanın bakışı (y, p, yay, sınır, fov; olcek: açının pencereye ölçeği) */
+const KAM_H={y:0,p:0,w:1,sinir:1,fov:52,olcek:1};
 function kameraHedefleri(dtm){
   const ph=mac.phase,odak=bakisOdagi(),b=mac.ball;
   if(odak){
@@ -103,7 +108,8 @@ function kameraHedefleri(dtm){
     KAM_H.w=KAM_B.yay;KAM_H.sinir=KAM_B.sahneSinir*KAM_DER;
   }else{
     KAM.mod='top';
-    kamTopYonu(KAM_B.top.ongoru,true,KAM_B.top.butce,1,KAM_H);KAM_H.p-=KAM_B.egim*KAM_DER;
+    const s=kamAciOlcek();KAM_H.olcek=s;
+    kamTopYonu(KAM_B.top.ongoru,true,KAM_B.top.butce,s,KAM_H);KAM_H.p-=KAM_B.egim*KAM_DER*s;
     KAM_H.w=KAM_B.yayOyun;KAM_H.sinir=KAM_B.hizSiniri*KAM_DER;
   }
   KAM_H.fov=KAM_B.aci;   /* Z1: sabit görüş açısı (yakınlaşma yok) */
@@ -118,7 +124,7 @@ function kameraAdim(dt){
   /* Z1 pencere: top (nişanı) bakışın hedefinin ±pencere içindeyken hedef kıpırdamaz; dışına çıkınca nişanı pencerenin kenarına getirecek kadar kayar.
      Oyun dışı ilgi noktalarında hedef doğrudan izlenir */
   /* İleri besleme: pencerenin kenarına itilen hedefin açısal hızı (yumuşatılmış, hız sınırıyla); pencere içinde hedef durduğundan sıfıra iner */
-  if(KAM.mod==='top'){const wy=KAM_B.pencere[0]*KAM_DER,wp=KAM_B.pencere[1]*KAM_DER,ey=kamAciFark(H.y,KAM.ty),ep=H.p-KAM.tp,y0=KAM.ty,p0=KAM.tp;
+  if(KAM.mod==='top'){const wy=KAM_B.pencere[0]*KAM_DER*H.olcek,wp=KAM_B.pencere[1]*KAM_DER*H.olcek,ey=kamAciFark(H.y,KAM.ty),ep=H.p-KAM.tp,y0=KAM.ty,p0=KAM.tp;
     if(ey>wy)KAM.ty+=ey-wy;else if(ey<-wy)KAM.ty+=ey+wy;
     if(ep>wp)KAM.tp+=ep-wp;else if(ep<-wp)KAM.tp+=ep+wp;
     KAM.tp=clamp(KAM.tp,-KAM_B.asagiSinir,KAM_B.yukariSinir);
@@ -135,8 +141,8 @@ function kameraOturt(){
   Object.assign(KAM.a,{y:H.y,p:H.p,vy:0,vp:0});
   KAM.ty=H.y;KAM.tp=H.p;KAM.tvy=0;KAM.tvp=0;KAM.fov=H.fov;
 }
-/* başkanın önündeki raf (js/baskan.js ön plan): Z1 (kullanıcı kararı 2026-10-19) ekranda sabit — STIL.baskan.govde çarpanları 0 (eskiden 0,22 ve
-   0,25: baş dönünce raf ters yöne kayıyordu) */
+/* başkanın önündeki masa (js/baskan.js ön plan; K1'den beri küçük masa, eskiden raf): Z1 (kullanıcı kararı 2026-10-19) ekranda sabit —
+   STIL.baskan.govde çarpanları 0 (eskiden 0,22 ve 0,25: baş dönünce raf ters yöne kayıyordu) */
 function kameraGovdeHedefi(yaw,pitch,G){
   if(typeof LOCA_GIRIS!=='undefined'&&LOCA_GIRIS.aktif)return{p:0,y:0,hiz:8};
   const B=STIL.baskan,k=B.govde||[0.22,0.25];

@@ -563,6 +563,7 @@ Object.assign(Match.prototype,{
     /* orta hakem: çapraz çizgi, oyunu kendisiyle aktif yan hakem arasında tutar, 12–20 m uzakta */
     const h=r[0],du=this.durus,fx=du?du.x:b.x,fz=du?du.z:b.z;
     const kartSira=h.kartSira,DY=du?this.hakemDuranYeri(du):null;   /* T8a: duran topta hakemlerin yeri (js/mac-durantop.js) */
+    h.bakisYon=null;   /* K1: başın yönünü (çizim okur) yalnız sprey yazar (js/mac-durantop.js hakemSpreyAdim); yoksa baş topta */
     if(kartSira){kartSira.t+=dt;const p=kartSira.p;h.tx=p.x+(h.x<p.x?-1.6:1.6);h.tz=p.z;h.hizOran=1;h.bak=p;
       if(hyp(h.x-p.x,h.z-p.z)<2.2&&!(h.eylem&&h.eylem.ad==='kart')){h.eylem={ad:'kart',t:0,sure:1.7,renk:kartSira.renk};}
       if(h.eylem&&h.eylem.ad==='kart'&&h.eylem.t>1.5||kartSira.t>6){const Q=h.kartKuyruk;if(Q&&Q[0]===kartSira)Q.shift();h.kartSira=Q&&Q.length?Q[0]:null;

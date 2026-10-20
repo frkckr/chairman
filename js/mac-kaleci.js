@@ -20,6 +20,8 @@ ayarEkle('D',{
   penaltiOku:[0.07,0.04],      // T8d: penaltıda kalecinin vuranın koşusunu okuyup temastan önce kalkması (sn; ortalama, σ; Ek G5: −0,145 … +0,009)
   kaleciNiyet:1,               // T15a (2026-10-14): kalecinin niyeti — tutamayacağını bildiği topu planlı çeler (0: kapalı, T14'ün yolu; kaleciNiyet)
   penaltiKanma:[0.25,0.25],    // T15c: vuran koşuda duraklayınca kalecinin kanıp erken kalkma olasılığı = a + b·(1 − kalecilik) (bir kez; ipucunun yarı güveniyle)
+  penaltiBakis:1,              // K1 (2026-10-20; FUTBOL_KUTUPHANESI §12.13): penaltı duruşunda çizgideki kalecinin bakışı vurucuda (yoksa topta), şut uçarken (≤ 1 sn) topta;
+                               // tarama yazılmaz (penaltiKaleciBakis, taramaAdim). Sonucu değiştirmez — taramanın durumu aynen yürür, kilit bitince bakış taramanın değerine döner (0: eski)
   /* T19b (2026-10-17; gerçekçilik planı §4 T19): kalecinin olağan tutuşu — kontra görmezse topu bu aralıkta (sn; tutuş zarıyla) bekletip ileri yürür,
      görürse (kaleciKontraVar) hemen oynar; beklerken kontra açılırsa hemen bırakır. [0, 0]: T16a'nın yolu (eylem biter bitmez dağıtır). Sıkıştırılmış
      maçta (duruşlar gerçeğin ~1/3'ü) gerçeğin ~3–5 sn'si. 40 maç (t18.json'a): [1,2; 2,4] bekletme %45, gol 3,40, gerçekleşen ÷ xG 1,34 (T16a'nın
@@ -639,6 +641,18 @@ Object.assign(Match.prototype,{
   /* penaltı: kaleci çizgide hazır bekler; tarafı vuruş anında seçer (kaleciPenaltiUcus) */
   penaltiKaleciHazirla(du){
     const kl=this.kaleci(1-du.takim),O=MOTOR_AYAR.penaltiOku;kl._pen={t:this.t,oku:clamp(O[0]+this.normal()*O[1],-0.01,0.15)};kl.penaltiTahmin=0;if(!kl.tavir)kl.tavir='hazir';
+  },
+  /* K1 (2026-10-20; FUTBOL_KUTUPHANESI §12.13 kullanıcı notu: penaltı atılmadan önce kalecinin başı oynuyor; kutuphane/L L.2): penaltı duruşunda
+     çizgideki kalecinin bakışı — vurucuda (vurucu yoksa topta), etrafa bakmaz. Kale ortasının 1 m'sine varınca başlar; koşu boyunca (asama 'kullan')
+     yer aranmaz; duruş temasta biter (kullanimBildir), şutun uçuşunu taramaAdim sürdürür. Topu tutan ya da pasın alıcısı olan kaleci için yoktur.
+     Dönüş: dünyadaki açı ya da null. Salt okur, rastlantı çekmez: taramaAdim bakışı buna kilitler (penaltiBakis), çizim bekleyişteki hazır duruşu
+     buradan okur. p.tavir'e dokunulmaz (bekleyişte 'hazir' gövdenin dönüş beklemesini — hrkBekle, eforun 0,8'in altında kaldığı karede — değiştirebilirdi) */
+  penaltiKaleciBakis(p){
+    const du=this.durus;if(this.phase!=='durus'||!du||du.tur!=='penalti'||!p||!p.oyunda||p.rol!=='GK'||p.team===du.takim)return null;
+    const b=this.ball;if(b.sahip===p||b.tasiyan===p||b.hedefOyuncu===p)return null;
+    if(du.asama!=='kullan'&&hyp(p.x+this.dir[p.team]*PL,p.z-MZ)>=1)return null;
+    const tk=du.kullanan,q=tk&&tk.oyunda?tk:b;
+    return Math.atan2(q.z-p.z,q.x-p.x);
   },
   /* T8d: penaltıda kaleci vuranın koşusunu okur (duruşun 'kullan' evresi, stepDurus): temasa _pen.oku sn kala ipucuna göre uçar (Ek G5). Eskiden
      temasta (b.sut) uçuyordu; tetik orada yedek olarak kalır */
