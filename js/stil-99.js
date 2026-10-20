@@ -185,6 +185,11 @@ const STIL={
     z2:{sprey:1,spreyOmur:45,spreySolma:15,sayim:1,yatan:1,yatanSure:0.8,bakis:1,kolHedef:1,yayKalca:0.6,tacPres:1,tacPerde:1,istek:1,spreyBirak:0.12},
     /* Z2e: hakem spreyinin köpüğü ve kutusunun rengi */
     z2Renk:{kopuk:0xf3f3ee,kutu:0xe4e8ec},
+    /* K1h (2026-10-20; kullanıcı notu 7 "topla giderken ayağı havada kaldı, ~2 sn topla çizgi şeklinde kaydı"): topu ayağın altında bekletme pozunun (tavır 'bekle'
+       ve çalımda dur-kalk hazırlığı; ANM_POZ.bekle iki bacağı da tutar: taban topun üstünde, destek bacağı dik) ağırlığı çizilen hızdan — bekleHiz[0] m/sn'ye dek
+       tam, bekleHiz[1]'de 0 (yumuşak); kalan payı adım döngüsü alır (bacak IK'sı, adım boyu, veri eğrisi). null: eski (hızdan bağımsız tam ağırlık; motor tavrı
+       4–7 m/sn'den yavaşlarken de verdiğinden ayak top hizasında havada kalıp destek ayağı ve gövde topla kayıyordu) */
+    bekleHiz:[0.8,1.5],
     /* K1 (2026-10-20; FUTBOL_KUTUPHANESI §12.13 kullanıcı notu, kutuphane/L L.2): penaltıda çizgideki kalecinin bekleyişi (js/animasyon.js anmPenaltiKaleci;
        tetik motorun penaltiKaleciBakis'i; MOTOR_AYAR.penaltiBakis 0 iken de kapalı) — acik 0'da eski çizim (bekleyiş katmanı: eller belde, bakınma, eldiven);
        dik hazır duruşun eğilme ve diz payı (1 tam kaleciHazir); kolAc kolların iki yana açılması (rad, jestin tepesinde), kolInis kolun önden yana inişi (rad),
