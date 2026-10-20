@@ -14,8 +14,14 @@
      Özet tablo (ozet): çelmenin sonu temasın türüne (çift el, tek el, parmak ucu, gövde/bacak, yumruk), temastaki top hızına ve kalecinin
      niyetine (T15a; olayda niyet) göre; şut kurtarışında tutma payı temas yüksekliğine göre (kepçe < 0,55 · kucak < 1,25 · W < 1,9 · yukarı).
      Yumruk tabloya girer, "çelmenin sonu" satırlarına girmez (eski satırlar karşılaştırılabilir kalsın). */
+/* V1-0b (2026-10-20; FUTBOL_KUTUPHANESI §12.14, V1e): elden dağıtım — kalecinin elle bıraktığı top ('pass' olayı, eylem elleAtis: yuvarla, omuz,
+   üst) ve degajı ('gkkick', eylem degaj: düşürme, punt). Tür (eylemin stil'i); hazırlık süresi (V1e'nin 'dagitim' eylemi başladıysa bırakışa
+   kadar geçen süre; yoksa 0); bırakışta |gövde–atış| (kalecinin yönü ile topun çıkış yönü arasındaki açı); tutuştan bırakışa süre (aynı kalecinin
+   topu eline almasından; havuzlanmış yüzdelikler özette). */
 'use strict';
+const DK_O=require('../olcum-ortak');
 const PL=52.5,MZ=34;
+const DK_STIL=['yuvarla','omuz','ust','dusurme','punt'],DK_STILAD={yuvarla:'yuvarla',omuz:'omuzdan',ust:'üstten',dusurme:'düşürme',punt:'punt'};
 const DK_SON=['kale','korner','tac','durus','tehlike','disa','tutus'],DK_SONAD={kale:'kendi kale',korner:'korner',tac:'taç',durus:'başka duruş',tehlike:'tehlike',disa:'güvenli',tutus:'yeniden tuttu'};
 const DK_TEMAS=['cift','tek','parmak','govde','yumruk'],DK_TEMASAD={cift:'çift el',tek:'tek el',parmak:'parmak ucu',govde:'gövde / bacak',yumruk:'yumruk'};
 const DK_HIZ=[0,18,24,99],DK_HIZAD=['≤ 18 m/sn','18–24 m/sn','> 24 m/sn'];
@@ -38,7 +44,11 @@ module.exports={
     ['Kaleci dağıtımı (adet)','dDagitim',2],['  top takımda kaldı (adet)','dDagitimTamam',2],
     /* T19-0 (2026-10-17): kalecinin olağan tutuşu — tutuştan (kaleci topu eline aldı) elle dağıtıma süre; bekletme (> 1 sn) payı; hemen (≤ 1 sn)
        dağıtımda alıcı kaleciden ≥ 30 m ileride (kontra); oyun durmadan (aynı oyun evresinde) ölçülür */
-    ['Tutuştan dağıtıma süre ortanca (sn; T19)','dTutSure',2],['Tutuşta bekletme (> 1 sn) %','dTutBekle',1],['  hemen dağıtımda uzun (≥ 30 m ileri) %','dTutKontra',1]
+    ['Tutuştan dağıtıma süre ortanca (sn; T19)','dTutSure',2],['Tutuşta bekletme (> 1 sn) %','dTutBekle',1],['  hemen dağıtımda uzun (≥ 30 m ileri) %','dTutKontra',1],
+    ['— V1: elden dağıtım (d-kaleci; V1-0b) —',null,0],
+    ['Elden dağıtım (adet)','dV1N',2],...DK_STIL.map(k=>[`  ${DK_STILAD[k]} %`,'dV1S_'+k,1]),
+    ['Elden dağıtım: hazırlık ortanca (sn; dagitim eylemi)','dV1Haz',2],
+    ['Elden dağıtım: bırakışta |gövde–atış| ortanca (°)','dV1Aci',0],['  %90 (°)','dV1Aci90',0],['  en çok (°)','dV1AciMax',0]
   ],
   yeni:()=>{
     let son=[-99,-99],celme=null,ikinci=0,celmeN=0,celmeAlti=0,celmeRakip=0,kapan=0,yumruk=0,ortaTut=0;
@@ -47,6 +57,8 @@ module.exports={
     const sonKapan=new Map(),bicimler={},cy={kale:0,korner:0,tac:0,durus:0,tehlike:0,disa:0};
     /* T19-0: tutuş → dağıtım */
     let tutus=null;const tutL=[];let tutHemen=0,tutHemenUzun=0;
+    /* V1-0b: elden dağıtım */
+    const EL=[],DAG=new WeakMap(),SONDAG=new Map();
     /* T15-0 tablo: sayaçlar [sınıf|son] */
     const tablo={};const say=(k)=>{tablo[k]=(tablo[k]||0)+1;};
     const yt={};for(let i=0;i<DK_YAD.length;i++)yt[i]=[0,0];
@@ -86,11 +98,18 @@ module.exports={
           if(tur==='diger'&&v.own)tur='own';
           if(tur==='sut')golSut++;else if(tur==='celme')golCelme++;else if(tur==='blok')golBlok++;else if(tur==='own')golOwn++;else golDiger++;
           if(celme)bitirCelme(m,null,null,false,false,'kale');}
+        if((ad==='gkkick'||ad==='pass')&&v&&v.p&&v.p.rol==='GK'){const gk=v.p,e=gk.eylem;
+          if(e&&(e.ad==='elleAtis'||e.ad==='degaj')){const b=m.ball,d0=SONDAG.get(gk);
+            const t0=d0&&DAG.has(d0)?DAG.get(d0):null;SONDAG.delete(gk);
+            EL.push({stil:e.stil||e.ad,haz:t0!=null&&m.t-t0<5?m.t-t0:0,aci:Math.abs(DK_O.aciFark(Math.atan2(b.vz,b.vx),gk.yon))*180/Math.PI,
+              tut:tutus&&tutus.p===gk?m.t-tutus.t:null});}}
         if((ad==='gkkick'||ad==='pass')&&v&&v.p&&v.p.rol==='GK'){dagN++;dagitim={team:v.p.team,t:m.t};
           if(tutus&&tutus.p===v.p){const s=m.t-tutus.t;tutL.push(s);if(s<=1){tutHemen++;const q=v.q,d=m.dir[v.p.team];if(q&&(q.x-v.p.x)*d>=30)tutHemenUzun++;}tutus=null;}}
       },
       adim(m){
         const b=m.ball;
+        /* V1-0b: V1e'nin dağıtım eylemi (hazırlık) başladı — kalecide en son dagitim eylemi */
+        for(const t of[0,1]){const gk=m.kaleci(t);if(!gk)continue;const e=gk.eylem;if(e&&e.ad==='dagitim'&&!DAG.has(e)){DAG.set(e,m.t);SONDAG.set(gk,e);}}
         /* bu adımın sonunda kayıtlı şut var mı (gol olayı sonraki adımın içinde gelir; gol() b.sut'u siler) */
         sonSut=b.sut||null;
         for(const p of m.players){const e=p.eylem;if(e&&e.ad==='kapan'&&sonKapan.get(p)!==e){kapan++;sonKapan.set(p,e);}}
@@ -118,7 +137,12 @@ module.exports={
         for(let i=0;i<DK_YAD.length;i++)ham['dYt_'+i]=yt[i];
         ham.dTutBekle=[tutL.filter(s=>s>1).length,tutL.length];ham.dTutKontra=[tutHemenUzun,tutHemen];
         const tS=tutL.slice().sort((a,c)=>a-c),dTutSure=tS.length?tS[Math.floor(tS.length/2)]:NaN;
-        return{dIkinci:ikinci,dCelme:celmeN,dCelmeAlti:celmeAlti,dCelmeRakip:celmeRakip,dKapan:kapan,dSutN:sutN,dSutHazir:sutHazir,
+        /* V1-0b */
+        for(const k of DK_STIL)ham['dV1S_'+k]=[EL.filter(x=>x.stil===k).length,EL.length];
+        const ac=EL.map(x=>x.aci),r2=x=>x!=null&&x===x?Math.round(x*100)/100:null;
+        const v1={dV1N:EL.length,dV1Haz:DK_O.ortanca(EL.map(x=>x.haz)),dV1Aci:DK_O.ortanca(ac),dV1Aci90:DK_O.yuzde(ac,0.9),dV1AciMax:ac.length?Math.max(...ac):NaN,
+          _dV1:EL.map(x=>({stil:x.stil,haz:r2(x.haz),aci:r2(x.aci),tut:r2(x.tut)}))};
+        return{...v1,dIkinci:ikinci,dCelme:celmeN,dCelmeAlti:celmeAlti,dCelmeRakip:celmeRakip,dKapan:kapan,dSutN:sutN,dSutHazir:sutHazir,
           dGolSut:golSut,dGolOwn:golOwn,dGolCelme:golCelme,dGolBlok:golBlok,dGolDiger:golDiger,dYumruk:yumruk,dOrtaTut:ortaTut,dDagitim:dagN,dDagitimTamam:dagTamam,dTutSure,
           _dBicim:bicimler,_dTablo:tablo,ham};
       }
@@ -132,6 +156,10 @@ module.exports={
       console.log('  '+AD(k).padEnd(26)+f(n,6)+DK_SON.map(s=>f((100*(T[on+'|'+k+'|'+s]||0)/n).toFixed(0)+'%',14)).join(''));}};
     console.log('\n  Çelmenin sonu (d-kaleci; T15-0): temas · top hızı · niyet (yumruk dahil; satır yüzdeleri)');console.log(bas);
     tab('T',DK_TEMAS,k=>DK_TEMASAD[k]);tab('H',[0,1,2,-1],k=>k<0?'hız bilinmiyor':DK_HIZAD[k]);tab('N',DK_NIYET,k=>DK_NIYETAD[k]);
+    /* V1-0b: elden dağıtım (havuzlanmış) */
+    {const L=[].concat(...sonuclar.map(s=>s._dV1||[]));if(L.length){const f=x=>x===x&&x!=null?x.toFixed(2):'—',P=a=>{const c=a.filter(x=>x!=null);return `${f(DK_O.yuzde(c,0.1))} / ${f(DK_O.yuzde(c,0.5))} / ${f(DK_O.yuzde(c,0.9))}`;};
+      console.log(`\n  V1 (d-kaleci): elden dağıtım n ${L.length} — %10 / %50 / %90: bırakışta |gövde–atış| ${P(L.map(x=>x.aci))}° (en çok ${f(Math.max(...L.map(x=>x.aci)))}) · hazırlık ${P(L.map(x=>x.haz))} sn · tutuştan bırakışa ${P(L.map(x=>x.tut))} sn`);
+      console.log('  türe göre |gövde–atış| ortanca: '+DK_STIL.map(k=>{const a=L.filter(x=>x.stil===k);return a.length?`${DK_STILAD[k]} ${f(DK_O.ortanca(a.map(x=>x.aci)))}° (${a.length})`:null;}).filter(Boolean).join(' · '));}}
     console.log('  Şut kurtarışında tutma payı (temas yüksekliği): '+DK_YAD.map((a,i)=>{const [t,n]=H['dYt_'+i]||[0,0];return a+' '+(n?(100*t/n).toFixed(0)+'%':'—')+' ('+n+')';}).join(' · '));
   }
 };

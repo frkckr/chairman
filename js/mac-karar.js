@@ -849,6 +849,8 @@ function kararVer0(m,p){
     const puan=s.deger+g+profilEgilimPuani(m,p,s)+(k==='tut'?esik+pt:0);if(puan>enP){enP=puan;en=s;}}
   /* T7c (Ek H 6): en iyi pasın hedefi — taşırken gövde ona açılır (mac-hareket.js surusIlerle) */
   if(MOTOR_AYAR.govdeAc){let bp=null;for(const s of S)if(s.alici&&(!bp||s.deger>bp.deger))bp=s;v.enPas=bp?{hx:bp.hx,hz:bp.hz,t:m.t}:null;}
+  /* V1-0b (2026-10-20): uzaklaştırmada en iyi diğer seçeneğin değeri — salt okunur (secenekUygula sec'e taşır; ölçü araclar/olcumler/u-uzak.js) */
+  if(en.tur==='uzaklastir'){let d2=-9;for(const s of S)if(s!==en&&s.deger>d2)d2=s.deger;en.enDiger=d2;}
   return en;
 }
 /* ---- gelişine tek vuruş (MM3): top gelirken alıcı tek vuruşla pası (geri, bırakma, ara) kontrol edip oynamakla (+~0,5 sn, daha çok baskı)
