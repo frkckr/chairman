@@ -47,6 +47,8 @@ const HAKEMLER=mac.refs.map((r,i)=>{const a=aktorKur({...KIT.hakem,num:0,skin:ST
   AKTORLER.push(a);return a;});
 /* hakemin kartı: elinde küçük sarı/kırmızı kart */
 const KART=new THREE.Mesh(new THREE.PlaneGeometry(0.08,0.11),LAM({color:0xf2d21d,side:THREE.DoubleSide}));KART.position.set(0,-0.36,0.04);KART.visible=false;HAKEMLER[0].m.eL.add(KART);
+/* S1d (2026-10-20): hakemin not defteri — sol elde, yalnız deftere yazarken (motorda hakem eylemi 'not'; STIL.animasyon.s1.kart 0'da çizilmez) */
+const DEFTER=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.12,0.015),LAM({color:STIL.animasyon.s1.defterRenk}));DEFTER.position.set(0,-0.33,0.05);DEFTER.visible=false;HAKEMLER[0].m.eR.add(DEFTER);
 
 /* ---- yedekler: motordaki kulübe oyuncuları. Kulübede eşofmanla oturur, oyuna girince formayla görünür ---- */
 mac.yedekler.forEach((Y,t)=>Y.forEach(y=>{const kd=MAC_KADRO[t],k=y.kayit||{};
@@ -176,7 +178,8 @@ function macKare(dt){
   for(const a of AKTORLER)aktorGuncelle(a,al,dts,T);
   anmYardimIK(AKTORLER);   /* A4-3: yerden kaldırma — iki bedenli kol IK'sı (bütün aktörler güncellendikten sonra) */
   /* hakemin kartı (ikinci sarıda önce sarı, sonra kırmızı; A2b) */
-  {const e=mac.refs[0].eylem;KART.visible=!!(e&&e.ad==='kart');if(KART.visible)KART.material.color.setHex(e.renk==='sari'||(e.renk==='ikinciSari'&&e.t<(e.sure||1.7)*0.5)?0xf2d21d:0xd8201e);}
+  {const e=mac.refs[0].eylem;KART.visible=!!(e&&e.ad==='kart');if(KART.visible)KART.material.color.setHex(e.renk==='sari'||(e.renk==='ikinciSari'&&e.t<(e.sure||1.7)*0.5)?0xf2d21d:0xd8201e);
+    DEFTER.visible=!!(e&&e.ad==='not'&&STIL.animasyon.s1.kart>0);}   /* S1d: deftere yazma */
   if(UZATMA.t>=0){UZATMA.t+=dts;if(UZATMA.t>7)UZATMA.t=-1;}
   /* uzatma tabelası dördüncü hakemin başının üstünde */
   {const w=DORDUNCU.w.tabela||0;UZATMA_TABELA.visible=w>0.5;if(UZATMA_TABELA.visible){UZATMA_TABELA.position.set(DORDUNCU.x,1.95+0.25*w,DORDUNCU.z+0.2);UZATMA_TABELA.rotation.set(0,Math.PI,0);}}

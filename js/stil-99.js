@@ -192,8 +192,11 @@ const STIL={
        S1a (seremonili barajlı serbest vuruş; olay 'seremoni', kalecinin jesti 'yonlendir', baraj üyesinin g.dizik): serbest 1 — hakemin "düdüğü bekle"
        (dudukBekle, 1,1 sn) ve "geri it" (geriIt, 1,0 sn) işaretleri, kalecinin yönlendirmesi, kaosta baraj pozunun kalkması, hakem restart yerinde
        dururken saat bakışının bastırılması; 0'da hiçbiri çizilmez. itHz geri itmede dirseklerin açılıp kapanma sıklığı (Hz; iki itme), yonHz ve
-       yonSalinim kalecinin yönlendiren kolunun sağa sola sallanması (Hz, rad), yonTh kolun yatayın üstündeki açısı (rad) */
-    s1:{duduk:0.8,defterRenk:0x22262b,serbest:1,itHz:2.5,yonHz:2.5,yonSalinim:0.2,yonTh:0.15},
+       yonSalinim kalecinin yönlendiren kolunun sağa sola sallanması (Hz, rad), yonTh kolun yatayın üstündeki açısı (rad).
+       S1d (kart sahnesi; olaylar 'kartSahne', 'kaptanIsareti' kaynak 'kart', hakem eylemleri 'kart' ve 'not'): kart 1 — yaklaşırken "yerinde kal" (durdur)
+       ya da çağırma işareti motorun evresiyle, kaptan işareti (kaptanCapraz, kaptanDur), ikinci sarıda kolun inip kalkması, deftere yazma (not) ve sol
+       eldeki DEFTER, teknik direktörün itirazı kartın gösterildiği anda; 0'da eski çizim ('kart' olayında 3 m'den uzaksa çağırma, defter yok) */
+    s1:{duduk:0.8,defterRenk:0x22262b,serbest:1,itHz:2.5,yonHz:2.5,yonSalinim:0.2,yonTh:0.15,kart:1},
     /* K1 (2026-10-20; FUTBOL_KUTUPHANESI §12.13 kullanıcı notu, kutuphane/L L.2): penaltıda çizgideki kalecinin bekleyişi (js/animasyon.js anmPenaltiKaleci;
        tetik motorun penaltiKaleciBakis'i; MOTOR_AYAR.penaltiBakis 0 iken de kapalı) — acik 0'da eski çizim (bekleyiş katmanı: eller belde, bakınma, eldiven);
        dik hazır duruşun eğilme ve diz payı (1 tam kaleciHazir); kolAc kolların iki yana açılması (rad, jestin tepesinde), kolInis kolun önden yana inişi (rad),
@@ -399,7 +402,8 @@ const STIL={
        asagiSinir/yukariSinir: takipte bakışın en çok aşağı/yukarı eğimi (radyan; dünyadaki sınır, ölçeklenmez). top: onde = taşıyanın önüne bakış (m), ongoru = serbest topta balistik öngörü (sn), inis = [başlangıç sn, süre sn, en çok pay] uzun
        havadan topta iniş yerine kayma, kale = son üçte birde kale ağzına kayma payı, korner = kornerde penaltı noktasına kayma payı, butce = [sapma,
        eğim] nişanın topun yönünden en çok sapması (derece, olcekAci'de). TEST değerleri (açı kullanıcı kararı) */
-    baskan:{goz:0.78,hedef:[0,1,0],aci:36,olcekAci:32,pencere:[9,5],ileriSure:0.15,yayOyun:2.2,hizSiniri:40,yay:1.0,sahneSinir:60,
+    /* kartIzle (S1d, 2026-10-20): kart sahnesi hakemi tutarken yaklaşmada ve kalabalıkta bakış hakemle oyuncunun ortasına (0: kapalı; js/kamera.js bakisOdagi) */
+    baskan:{goz:0.78,hedef:[0,1,0],aci:36,olcekAci:32,pencere:[9,5],ileriSure:0.15,yayOyun:2.2,hizSiniri:40,yay:1.0,sahneSinir:60,kartIzle:1,
       egim:1.6,sahneEgim:0.18,asagiSinir:0.5,yukariSinir:0.12,
       top:{onde:0.6,ongoru:0.35,inis:[0.5,1.6,0.55],kale:0.25,korner:0.45,butce:[2.5,1.6]}}
   },

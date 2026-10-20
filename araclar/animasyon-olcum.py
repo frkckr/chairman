@@ -131,7 +131,7 @@ OLCUM_KUR_JS = r"""() => {
          (kalkis, neden 'yatan') son karesinde dik (≤ 0,05 rad) */
       yay: { korner: [], serbest: [] }, yayDurgun: 0, ytN: 0, ytYat: 0, ytKalkN: 0, ytKalkDik: 0 } };
   const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin', barajYeri: 'ref', uyari: 'ref', tedaviBasladi: 'ref',
-    sprey: 'ref', sayim: 'ref', seremoni: 'ref' };   /* Z2e: hakemin spreyi ve 5 sn sayımı; S1a: "düdüğü bekle" ve "geri it" */
+    sprey: 'ref', sayim: 'ref', seremoni: 'ref', kartSahne: 'ref', kaptanIsareti: 'ref' };   /* Z2e: hakemin spreyi ve 5 sn sayımı; S1a: "düdüğü bekle" ve "geri it"; S1d: kart sahnesinin yaklaşma işareti (durdur, cagir) ve kaptan işareti */
   /* T10f olay (Ek G4, G7, G8): yerdeki sakatın tutma pozu (sakat yuvası > 0,8), sedyede kökün yüksekliği (0,55–0,9 m) ve sedyeyi tutan sağlıkçı,
      tedavide sağlıkçının çömelmesi ya da gerdirmesi, topallamada iki ayağın yerde kalma karesi (sakat / sağlam), endirekt işaretin tutulduğu kare
      payı (duruşun 2. saniyesinden — önce düdük ve yön —; hakem topu hariç), hakem topunu bırakma işaretinin motorun eylemiyle aynı karede başlaması, golcünün sevinç çeşidi */
@@ -427,7 +427,7 @@ OLCUM_KUR_JS = r"""() => {
   const asilOlay = window.animasyonOlay;
   /* endirekt kolu havadayken yeniden başlama düdüğü çizilmez (kol inmez): ölçüme alınmaz */
   window.animasyonOlay = (ad, v) => { asilOlay(ad, v); const h0 = typeof ANM_HK !== 'undefined' && mac.refs ? ANM_HK.get(mac.refs[0]) : null;
-    if (HK_OLAY[ad] && !(ad === 'duduk' && h0 && h0.cur && h0.cur.tur === 'endirekt')) S.zOlay.push({ ad, kare: mac.kare, tur: HK_OLAY[ad] });
+    if (HK_OLAY[ad] && !(ad === 'duduk' && h0 && h0.cur && h0.cur.tur === 'endirekt') && !(ad === 'kartSahne' && !(v && v.evre === 'yaklas'))) S.zOlay.push({ ad, kare: mac.kare, tur: HK_OLAY[ad] });   /* S1d: kartSahne'de işaret yalnız yaklaşmada */
     if (ad === 'mudahaleSonuc' && v && v.p && v.topaDegdi) zTmBekle.set(v.p, mac.kare);
     /* A6-0: şut bloğu (orta bloğu değil) — motorun temas uzaklığı ve topun yüksekliği olay anında */
     if (ad === 'block' && v && v.p && !v.orta) { const b = mac.ball; zBl.set(v.p, { kare: mac.kare, uzan: Math.hypot(b.x - v.p.x, b.z - v.p.z), y: b.y - (v.p.yuk || 0), tur: b.sut && b.sut.tur || '-', v: Math.hypot(b.vx, b.vz), eg: b.egri || 0 }); }
@@ -1107,6 +1107,10 @@ def satirlar(o):
                  f"   [bilgi 20–45 / bilgi / N/N / N/N / bilgi]")
         if yk.get("ornek") or ys.get("ornek"):
             S.append("A:   yay açısı örnekleri (derece): korner " + json.dumps(yk.get("ornek") or []) + " · serbest " + json.dumps(ys.get("ornek") or []))
+    # S1d (2026-10-20): kart sahnesinin işaretleri olayla aynı karede (yaklaşmada durdur / cagir; kaptan işareti) — N/N
+    if adN.get("kartSahne") or adN.get("kaptanIsareti"):
+        S.append(f"A: kart (S1d): yaklaşma işareti olayla aynı karede {adAy.get('kartSahne', 0)}/{adN.get('kartSahne', 0)}"
+                 f" · kaptan işareti aynı karede {adAy.get('kaptanIsareti', 0)}/{adN.get('kaptanIsareti', 0)}   [hedef N/N / N/N]")
     vs = o.get("vs")
     if vs:
         st = " · ".join(f"{k} {r[1]}/{r[0]}" for k, r in sorted(vs["stil"].items()))

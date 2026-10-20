@@ -81,7 +81,9 @@ module.exports={
         if(ad==='faul'){if(!v.avantajdan){if(v.penalti)uzPen+=60;gorme(m,v.x,v.z,true);}}
         else if(ad==='avantaj'){const q=v.faulYiyen;if(q)gorme(m,q.x,q.z,true);}
         else if(ad==='faulGorulmedi'){if(v.kaynak==='hava'&&v.P===0.5)kutuHava++;else gorme(m,v.x,v.z,false);}
-        else if(ad==='kart'){uzFaul+=30;if(v.renk==='kirmizi'||v.renk==='ikinciSari')kirmizi.push({p:v.p,t:m.t});}
+        else if(ad==='kart'){uzFaul+=30;if(v.renk==='kirmizi'||v.renk==='ikinciSari')kirmizi.push({p:v.p,t:v.sahne?null:m.t});}
+        /* S1d (2026-10-20): sahneli kartta 12 sn kartın sahnesinin kuruluşundan (olay kartSahne evre 'karar'; kuyrukta ikinci kart ilki bitince başlar) */
+        else if(ad==='kartSahne'&&v.evre==='karar'&&v.renk!=='sari'){const k=kirmizi.find(x=>x.p===v.p&&x.t==null);if(k)k.t=m.t;}
         else if(ad==='goal'){if(m.t-kactiT[v.team]<8)ofsGol++;uzGol+=50;golT=m.t;golH=m.half;golN++;if(m.half===2)golIki++;if(m.gameSec<900)golIlk++;else if(m.half===2&&m.gameSec>=4500)golSon++;}
         else if(ad==='hakemTopu'){uzSak+=v.ek||0;if(v.neden==='hakem')htHakem++;else htSak++;if(v.kutu)htKutu++;}
         else if(ad==='hakemTopuBirak')htBirak++;
@@ -110,7 +112,7 @@ module.exports={
         else if(onceki==='durus'&&ph!=='durus'&&du){if(ph==='play')(du.sonra?zgSonra:zgOnce).push(m.t-du.t0);du=null;}
         onceki=ph;
         for(let i=kirmizi.length-1;i>=0;i--){const k=kirmizi[i];if(!k.p.oyunda){kirmizi.splice(i,1);continue;}
-          if(m.t-k.t>12){kirmiziSahada++;kirmizi.splice(i,1);}}},
+          if(k.t!=null&&m.t-k.t>12){kirmiziSahada++;kirmizi.splice(i,1);}}},
       bitir(){
         return{oHkTop:hkN?hkT/hkN:NaN,oHkFaul:ooOrt(faulD),oKutuHava:kutuHava,oKirmiziSahada:kirmiziSahada,oGolSantra:ooOrt(golSantra),oGolSantraAcele:ooOrt(golSantraAcele),oAgdan:agdan,
           oDegDk:ooOrt(degDk),oDegGeriDk:ooOrt(degGeriDk),oDegDigerDk:ooOrt(degDigerDk),oDegSure:ooOrt(degSure),oUzGol:uzGol,oUzDeg:uzDeg,oUzFaul:uzFaul,oUzPen:uzPen,oUzSak:uzSak,oZgUyari:zgUyari,oZgSari:zgSari,oFaulEv:sonM?sonM.ist.faul[sonM.evSahibi||0]:NaN,oFaulDep:sonM?sonM.ist.faul[1-(sonM.evSahibi||0)]:NaN,oSariEv:sonM?sonM.ist.sari[sonM.evSahibi||0]:NaN,oSariDep:sonM?sonM.ist.sari[1-(sonM.evSahibi||0)]:NaN,oGvEv:gvT[2]?gvT[0]/gvT[2]:NaN,oGvDep:gvT[2]?gvT[1]/gvT[2]:NaN,oIsinma:isinma/2,oOfsYanlis:ofsYanlis,oOfsKacti:ofsKacti,oOfsGec:ooOrt(ofsGec),oIptalOfs:iptalOfs,oIptalHakem:iptalHakem,oOfsGol:ofsGol,oUzZg:uzZg,oHtSak:htSak,oHtHakem:htHakem,oSakKas:sakKas,oSakKramp:sakKramp,oYorg45:yorg45,oYorg90:yorg90,oZgOnce:ooOrt(zgOnce),oZgSonra:ooOrt(zgSonra),

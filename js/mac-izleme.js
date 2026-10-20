@@ -29,7 +29,9 @@ const IZLEME={
     header:{once:3,sonra:2.5,kosul:v=>!!(v&&v.shot)},        // kafa şutu
     save:{once:0,sonra:2},wood:{once:0,sonra:2},
     faul:{once:2,sonra:3},avantaj:{once:2,sonra:2.5},
-    kart:{once:0,sonra:v=>v&&v.renk==='sari'?2.5:4},
+    kart:{once:0,sonra:v=>v&&v.renk==='sari'?2.5:4,kosul:v=>!(v&&v.sahne)},
+    /* S1d (js/mac-sahne.js kartSahneAdim): sahneli kartta pencere kartın gösterildiği evrede (ikiz önden gittiği için 2 sn önceden); faulün kendi penceresi sürer */
+    kartSahne:{once:2,sonra:v=>v&&v.renk==='sari'?2.5:4,kosul:v=>!!(v&&v.evre==='goster')},
     sakatlik:{once:2,sonra:2,acik:v=>!!(v&&v.derece!=='agri')},   // tedavi ve çıkış: hakem durdurana ya da tedavi başlayana dek; tedavi seçilen hızda
     ofsayt:{once:2,sonra:2},
     kullanim:{once:1.5,sonra:4,kosul:v=>!!(v&&v.du&&(v.du.tur==='korner'||v.du.tur==='penalti'||v.du.sinif==='baraj'||v.du.sinif==='kenar'))},

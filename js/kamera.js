@@ -49,8 +49,11 @@ function bakisOdagi(){
   const ortala=L=>{let n=0,x=0,z=0;for(const p of L)if(p.z>mac.tunel.z){x+=p.x;z+=p.z;n++;}return n?BAKIS_HEDEF.set(x/n,1,z/n-MOTOR_Z):BAKIS_HEDEF.set(0,1,TUNEL.z+10);};
   if(ph==='halftime'){if(mac.phaseT<10)return ortala(mac.players.filter(p=>p.oyunda));if(mac.phaseT<DEVRE_ARASI-8)return BAKIS_HEDEF.set(-PL+14,1,0);return BAKIS_HEDEF.set(0,1,TUNEL.z+10);}
   if(ph==='fulltime'){if(mac.phaseT<14)return ortala(mac.players.filter(p=>p.oyunda));if(mac.phaseT<30)return ortala(mac.teams[0].filter(p=>p.oyunda));return BAKIS_HEDEF.set(0,1,TUNEL.z+10);}
-  /* kart gösterilirken hakeme; gol sevincinde golcüye */
-  const h=mac.refs[0];if(h.eylem&&h.eylem.ad==='kart')return BAKIS_HEDEF.set(h.x,1.3,h.z-MOTOR_Z);
+  /* kart gösterilirken hakeme; gol sevincinde golcüye. S1d (2026-10-20; S1 planı §1.10): kart sahnesi hakemi tutarken yaklaşmada ve kalabalıkta
+     hakemle oyuncunun ortasına (STIL.kameralar.baskan.kartIzle 0'da kapalı), kart gösterilirken ve sahnede deftere yazarken hakeme */
+  const h=mac.refs[0],ks=h.kartSira,KS=ks&&ks.s,KI=KAM_B.kartIzle;
+  if(KI!==0&&KS&&KS.tut&&(KS.evre==='yaklas'||KS.evre==='kalabalik')&&ks.p)return BAKIS_HEDEF.set((h.x+ks.p.x)/2,1.2,(h.z+ks.p.z)/2-MOTOR_Z);
+  if(h.eylem&&(h.eylem.ad==='kart'||h.eylem.ad==='not'&&ks))return BAKIS_HEDEF.set(h.x,1.3,h.z-MOTOR_Z);
   if(ph==='goal'){const f=mac.focus();return BAKIS_HEDEF.set(f.x,1,f.z-MOTOR_Z);}
   return null;
 }

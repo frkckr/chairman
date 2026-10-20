@@ -999,6 +999,11 @@ const ANM_HK=new Map(),ANM_HK_KANAL=['aL','aLy','aLz','eL','aR','aRy','aRz','eR'
 const ANM_HK_DUDUK={aL:-1.1,eL:-2.15,aLz:0.32,aLy:0.45,hx:-0.06},ANM_HK_SAAT={aR:-1.25,aRz:-0.3,aRy:0.3,eR:-1.5,hx:0.42};
 /* T10f: hakem topunu bırakma (iki el önde, top bel hizasında; motor hakemde eylem 'birak') */
 const ANM_HK_BIRAK={aL:-0.95,aR:-0.95,aLz:-0.15,aRz:0.15,eL:-0.6,eR:-0.6,hx:0.45};
+/* S1d (2026-10-20; kutuphane/L L.2–L.4): kaptan işareti — iki kol baş üstünde bileklerden çapraz (kaptanCapraz; IFAB kaptan protokolü), ardından kollar
+   göğüs hizasında öne, avuçlar dışa "yaklaşmayın" (kaptanDur; dirsekte 7 rad/sn ile ±0,2 itiş); deftere yazma (not): sol el defteri göğüste tutar
+   (R kanalları; DEFTER js/mac-sahnesi.js sol elde), sağ el yazar (L kanalları, küçük salınım), baş eğik. L kanalları sağ koldur (anmKolYon: sag → aL) */
+const ANM_HK_KAPTAN={aL:-2.85,aR:-2.85,eL:-0.75,eR:-0.75,aLz:0.5,aRz:-0.5,hx:-0.08},ANM_HK_KAPTAN_DUR={aL:-1.45,aR:-1.45,aLz:-0.2,aRz:0.2,eL:-0.35,eR:-0.35,hx:-0.1};
+const ANM_HK_NOT={aR:-0.45,aRz:-0.35,eR:-1.35,aL:-0.55,aLz:0.35,eL:-1.45,hx:0.42};
 function anmHk(r){let h=ANM_HK.get(r);if(!h){h={sira:[],cur:null,t:0,slot:0,P:[{},{}],olayT:-9,sonE:null,saatT:30,bayrakSag:false,isaretSag:false,basKare:-1};ANM_HK.set(r,h);}return h;}
 /* işaret sırası: {tur, sure, hedef {x,z} (motor), yon (±1: atak yönü), theta (kol yüksekliği, rad), p (oyuncu)}; sifirla: öncekini keser */
 function anmHkIsaret(r,liste,sifirla){if(!r)return;const h=anmHk(r);if(sifirla){h.sira.length=0;h.cur=null;}for(const s of liste)h.sira.push(s);h.olayT=mac.t||0;}
@@ -1016,7 +1021,15 @@ function anmHakemOlay(ad,v){
   else if(ad==='ofsayt'&&v.p){const y=yh(v.p.x),uz=Math.abs(v.p.z-y.z);
     anmHkIsaret(y,[{tur:'bayrakDik',sure:0.6},{tur:'ofsaytYon',sure:1.8,hedef:{x:y.x,z:Mz},theta:uz<23?-0.7:uz<45?0:0.7}],true);
     anmHkIsaret(h0,[{tur:'duduk',sure:0.45},{tur:'endirekt',sure:14}],true);}
-  else if(ad==='kart'&&v.p){if(Math.hypot(v.p.x-h0.x,v.p.z-h0.z)>3)anmHkIsaret(h0,[{tur:'cagir',sure:0.9,p:v.p}],true);}
+  else if(ad==='kart'&&v.p){const S1=ANM.s1;if(!(v.sahne&&S1&&S1.kart>0)&&Math.hypot(v.p.x-h0.x,v.p.z-h0.z)>3)anmHkIsaret(h0,[{tur:'cagir',sure:0.9,p:v.p}],true);}
+  /* S1d (2026-10-20; olay kartSahne {evre, tarz, p, renk, no}; STIL.animasyon.s1.kart): sahneli kartta işaretler motorun evresiyle — yaklaşırken
+     yürürde ve kalabalıkta "yerinde kal" (durdur, 0,9 sn: kol oyuncuya, dirsek düz, avuç öne), çağırırda çağırma (1,4 sn). Kart ve deftere yazma
+     hakemin eyleminden (anmHakemAdim). Kaptan işareti (olay kaptanIsareti {kaynak 'kart' | 'penalti', ikinci, hx, hz}): çapraz bilekler 1,1 sn,
+     sonra "yaklaşmayın" 1,2–1,4 sn; ikinci işarette yalnız "yaklaşmayın" (kaynak 'kart' s1.kart, 'penalti' s1.kaptan ile; S1b) */
+  else if(ad==='kartSahne'){const S1=ANM.s1;if(S1&&S1.kart>0&&v.evre==='yaklas'&&v.p)anmHkIsaret(h0,[v.tarz==='cagir'?{tur:'cagir',sure:1.4,p:v.p}:{tur:'durdur',sure:0.9,p:v.p,theta:0.15}],true);}
+  else if(ad==='kaptanIsareti'){const S1=ANM.s1,ac=S1&&(v.kaynak==='penalti'?S1.kaptan:S1.kart)>0;
+    if(ac){const H=v.hx!=null?{x:v.hx,z:v.hz}:null,d=1.2+0.2*h2(Math.round((mac.t||0)*60),31);
+      anmHkIsaret(h0,(v.ikinci?[]:[{tur:'kaptanCapraz',sure:1.1,hedef:H}]).concat([{tur:'kaptanDur',sure:d,hedef:H}]),true);}}
   else if(ad==='goal')anmHkIsaret(h0,[{tur:'bekle',sure:0.8},{tur:'yon',sure:1.8,hedef:{x:0,z:Mz},theta:-0.15}],true);
   else if(ad==='korner'||ad==='kaleVurusu'){const k=ad==='korner';
     anmHkIsaret(h0,[{tur:'yon',sure:1.3,hedef:{x:v.x,z:v.z},theta:k?0.35:-0.3}],true);
@@ -1056,6 +1069,11 @@ function anmHkPoz(a,p,c,Q){
   if(tur==='birak'){Object.assign(Q,ANM_HK_BIRAK);return;}
   if(tur==='degisiklik'){Q.aL=Q.aR=-2.75;Q.eL=Q.eR=-0.95;Q.aLz=0.4;Q.aRz=-0.4;Q.hx=-0.1;return;}
   if(tur==='endirekt'||tur==='bayrakDik'){const sag=yan?h.bayrakSag:true;if(sag){Q.aL=-3.08;Q.aLz=-0.04;Q.eL=-0.03;}else{Q.aR=-3.08;Q.aRz=0.04;Q.eR=-0.03;}return;}
+  /* S1d: kaptan işareti ve deftere yazma (sabit pozlar; ANM_HK_KAPTAN, ANM_HK_KAPTAN_DUR, ANM_HK_NOT); gövde %45, baş kalabalığa (hedef) */
+  if(tur==='kaptanCapraz'||tur==='kaptanDur'){Object.assign(Q,tur==='kaptanCapraz'?ANM_HK_KAPTAN:ANM_HK_KAPTAN_DUR);
+    if(tur==='kaptanDur'){const w=0.2*Math.sin(7*h.t);Q.eL+=w;Q.eR+=w;}
+    if(c.hedef){const psi=anmHkAci(a,c.hedef.x,c.hedef.z),gy=clamp(0.45*psi,-0.6,0.6);Q.gy=gy;Q.by=clamp((psi-gy-(a.P.hy||0))*0.7,-1.1,1.1);}return;}
+  if(tur==='not'){Object.assign(Q,ANM_HK_NOT);const w=Math.sin(h.t*11);Q.eL+=0.12*w;Q.aLz+=0.05*w;return;}
   /* S1a: "düdüğü bekle" — sağ el düdüğü çene hizasında tutar (yüz hizasını geçmez; L.1), sol kol öne yarı açık, avuç vurucuya; gövde ve baş vurucuya */
   if(tur==='dudukBekle'){Q.aL=-1.0;Q.eL=-1.9;Q.aLz=0.3;Q.aLy=0.45;Q.hx=-0.04;
     if(c.p){const psi=anmHkAci(a,c.p.x,c.p.z),gy=clamp(0.45*psi,-0.6,0.6),r=psi-gy-(a.P.hy||0);Q.gy=gy;Q.by=clamp(r*0.7,-1.1,1.1);anmKolYon(Q,false,r,-0.2);Q.eR=-0.35;}return;}
@@ -1082,7 +1100,10 @@ function anmHkPoz(a,p,c,Q){
     const S=a.spIK||(a.spIK={w:0,k:1,x:0,y:0,z:0});S.k=yw;S.x=tx;S.y=0.35;S.z=tz-(typeof MOTOR_Z!=='undefined'?MOTOR_Z:0);return;}
   let hx=null,hz=null;
   if(c.hedef){hx=c.hedef.x;hz=c.hedef.z;}else if(c.yon!=null){hx=p.x+20*c.yon;hz=p.z;}else if(c.p){hx=c.p.x;hz=c.p.z;}
-  if(tur==='kart'){Q.aL=-2.95;Q.aLz=-0.12;Q.eL=-0.05;Q.hx=-0.12;if(hx!=null){const r=anmHkAci(a,hx,hz)-(a.P.hy||0);Q.by=clamp(r,-1.1,1.1)*0.8;}return;}
+  if(tur==='kart'){Q.aL=-2.95;Q.aLz=-0.12;Q.eL=-0.05;Q.hx=-0.12;if(hx!=null){const r=anmHkAci(a,hx,hz)-(a.P.hy||0);Q.by=clamp(r,-1.1,1.1)*0.8;}
+    /* S1d: ikinci sarıda sürenin %42–58'inde kol iner ve kalkar (kart bu arada sarıdan kırmızıya döner: js/mac-sahnesi.js, sürenin yarısı) */
+    if(c.renk==='ikinciSari'&&ANM.s1&&ANM.s1.kart>0){const f=h.t/(c.sure||2.4);if(f>0.42&&f<0.58){const w=Math.sin(Math.PI*(f-0.42)/0.16);Q.aL=-2.95+1.9*w;Q.eL=-0.05-0.7*w;}}
+    return;}
   if(hx==null)return;
   const psi=anmHkAci(a,hx,hz),gy=clamp(0.45*psi,-0.6,0.6),r=psi-gy-(a.P.hy||0),th=c.theta!=null?c.theta:0;
   Q.gy=gy;Q.by=clamp(r*0.7,-1.1,1.1);
@@ -1093,6 +1114,7 @@ function anmHkPoz(a,p,c,Q){
   /* T10f uyarı: işaret parmağı oyuncuya, kol hafifçe sallanır; çağırmada el kendine doğru */
   if(tur==='uyari'){const w=0.2*Math.sin(h.t*13);if(sag){Q.aLz+=w;Q.eL=-0.45;}else{Q.aRz-=w;Q.eR=-0.45;}}
   else if(tur==='cagir'){const w=0.5+0.5*Math.sin(h.t*9);if(sag)Q.eL=-0.2-1.3*w;else Q.eR=-0.2-1.3*w;}
+  else if(tur==='durdur'){if(sag){Q.aLy=0.9;Q.eL=-0.03;}else{Q.aRy=-0.9;Q.eR=-0.03;}}   /* S1d: "yerinde kal" — dirsek düz, avuç öne */
 }
 /* yan hakemin bayrağı: sahaya yakın elde (koşarken sahanın tarafı; yön değişince el değiştirir), işarette işaret eden elde */
 function anmBayrakSec(a,p,h){
@@ -1104,7 +1126,8 @@ function anmHakemAdim(a,p,dt){
   const h=anmHk(p),e=p.eylem,st=a.st,sp=a.sp,S=ANM_S;
   /* motorun eylemleri: kart her zaman; düdük olaysız geldiyse (maç öncesi, devre ve maç sonu) */
   if(e!==h.sonE){h.sonE=e;
-    if(e&&e.ad==='kart'){const ks=p.kartSira;anmHkIsaret(p,[{tur:'kart',sure:e.sure||1.7,p:ks&&ks.p}],true);}
+    if(e&&e.ad==='kart'){const ks=p.kartSira;anmHkIsaret(p,[{tur:'kart',sure:e.sure||1.7,p:ks&&ks.p,renk:e.renk}],true);}
+    else if(e&&e.ad==='not'&&ANM.s1&&ANM.s1.kart>0)anmHkIsaret(p,[{tur:'not',sure:e.sure||1}],true);   /* S1d: deftere yazma (S1c'de de) */
     else if(e&&e.ad==='duduk'&&(mac.t||0)-h.olayT>0.1)anmHkIsaret(p,[{tur:'duduk',sure:Math.min(e.sure||0.6,0.9)}],true);
     else if(e&&e.ad==='birak')anmHkIsaret(p,[{tur:'birak',sure:e.sure||0.7}],true);}   /* T10f: hakem topu (motor eylemi) */
   if(h.cur){h.t+=dt;const c=h.cur;let bitti=h.t>=c.sure;
@@ -1261,7 +1284,8 @@ function anmTeknikDirektor(a,p,dts,sv){
   const wi=yumusak(a,'tdItiraz',it?1:0,6,dts);if(wi>0.01){anmKar(a,ANM_POZ.jestItiraz,wi);const q=Math.sin(zaman*6+a.faz0)*0.15*wi;a.P.aLz-=q;a.P.aRz+=q;}}
 function anmKenarOlay(ad,v){
   if(ad==='faul'&&!v.avantajdan&&v.aleyhe!=null){ANM_KENAR.n++;if(v.kart||h2(ANM_KENAR.n,7)<0.55)ANM_KENAR.itiraz[v.aleyhe]=zaman+1.8;}
-  else if(ad==='kart'&&v.p)ANM_KENAR.itiraz[v.p.team]=zaman+1.8;
+  else if(ad==='kart'&&v.p&&!(v.sahne&&ANM.s1&&ANM.s1.kart>0))ANM_KENAR.itiraz[v.p.team]=zaman+1.8;
+  else if(ad==='kartSahne'&&v.evre==='goster'&&v.p&&ANM.s1&&ANM.s1.kart>0)ANM_KENAR.itiraz[v.p.team]=zaman+1.8;   /* S1d: kart gösterildiği anda */
 }
 
 /* ---- 1h. çalım, aldatılan savunmacı ve top saklama (T4g, 2026-10-09; gerçekçilik planı Ek G2 “Taşıma ve çalım”, “Top saklama”). Motor yalnız

@@ -24,6 +24,7 @@
      ve alıcının isteği, korner kullananın bakışı ve hedefli kolu, yay koşusunun son 1,5 sn'si; &z2=0 eski çizim) |
      s1serbest (S1a, 2026-10-20: seremonili barajlı serbest vuruş — hakemin "düdüğü bekle" ve "geri it" işaretleri, kalecinin sağa ve sola
      yönlendirmesi, kaostaki barajcı ↔ dizik baraj pozu; &s1=0 eski çizim) |
+     s1kart (S1d, 2026-10-20: kart sahnesi — "yerinde kal", çağırma, kaptan işareti (çapraz bilekler, "yaklaşmayın"), ikinci sarı, deftere yazma) |
      olcum (ayak kayması ve süre ölçümü). Satır seçeneği sabitY: kamera yüksekliği
      sabit (sıçrama görünsün).
      Açmak: python3 araclar/kontrol.py "araclar/poz-galerisi.html?sayfa=dusus" (görüntü araclar/son-kontrol-poz-galerisi-sayfa-dusus.png).
@@ -62,7 +63,7 @@ STIL.animasyon.kucukPiksel=-1;
 const SAYFA=(new URLSearchParams(location.search).get('sayfa'))||'kosu';
 /* Z2e: &z2=0 duran top sahnesinin çizim anahtarlarını kapatır (eski çizimle karşılaştırma) */
 if(new URLSearchParams(location.search).get('z2')==='0')for(const k in STIL.animasyon.z2)STIL.animasyon.z2[k]=0;
-if(new URLSearchParams(location.search).get('s1')==='0')STIL.animasyon.s1.serbest=0;   /* S1a: seremoninin çizimi kapalı (eski çizim) */
+if(new URLSearchParams(location.search).get('s1')==='0'){STIL.animasyon.s1.serbest=0;STIL.animasyon.s1.kart=0;}   /* S1a, S1d: seremoninin ve kart sahnesinin çizimi kapalı (eski çizim) */
 const W=1180,H=1000,TUNEL={x:0,z:-1e4};
 const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
 renderer.setPixelRatio(1);renderer.setSize(W,H,false);renderer.autoClear=false;renderer.setScissorTest(true);
@@ -724,6 +725,18 @@ SAYFALAR.s1serbest=[
     kur:p=>{p.yon=Math.PI;p.duranRol={rol:'baraj',hx:0,hz:0,sira:0,dizik:false};mac.phase='durus';
       mac.durus={tur:'serbest',asama:'hazir',x:-9.15,z:0,barajdakiler:[p],barajAci:Math.PI};mac.ball.x=-9.15;mac.ball.z=0;},
     her:(p,t)=>{const R=p.duranRol;if(R&&t>=1.0)R.dizik=true;},kareler:[0.3,0.6,0.9,1.1,1.3,1.6,2.0],az:150,uzak:4.6}];
+/* S1d (2026-10-20; kutuphane/L L.2–L.4): kart sahnesinin hakem işaretleri — motorun olaylarındaki gibi anmHkIsaret'le ve hakemin eylemiyle ('kart' ikinci
+   sarı, 'not'); eylemin süresi burada ilerler (motor moveP'de). Hakem x +'ya bakar, sağı +z */
+const s1kartEylem=(ad,o)=>hakemSatir(ad,{her:(p,t,dt)=>{if(t>=0.3&&!p.__ke){p.__ke=1;p.eylem=Object.assign({t:0},o.eylem);p.kartSira={p:{x:1.6,z:0.6}};}
+  const e=p.eylem;if(e){e.t+=dt;if(e.t>=e.sure)p.eylem=null;}},kareler:o.kareler});
+SAYFALAR.s1kart=[
+  hakemSatir('S1d Hakem "yerinde kal" (durdur, 0,9 sn): kol oyuncuya, dirsek düz, avuç öne (oyuncu sağ önde)',{isaret:[{tur:'durdur',sure:0.9,p:{x:4,z:2},theta:0.15}],kareler:[0.25,0.4,0.55,0.75,0.95,1.1,1.4]}),
+  hakemSatir('S1d Hakem "yerinde kal" yandan (az 100)',{isaret:[{tur:'durdur',sure:0.9,p:{x:4,z:2},theta:0.15}],kareler:[0.25,0.4,0.55,0.75,0.95,1.1,1.4],az:100}),
+  hakemSatir('S1d Hakem çağırır (cagir, 1,4 sn; oyuncu sol önde)',{isaret:[{tur:'cagir',sure:1.4,p:{x:5,z:-2}}],kareler:[0.25,0.45,0.65,0.9,1.15,1.4,1.8]}),
+  hakemSatir('S1d Kaptan işareti: bilekler baş üstünde çapraz (1,1 sn), sonra kollar öne "yaklaşmayın" (1,3 sn)',{isaret:[{tur:'kaptanCapraz',sure:1.1,hedef:{x:3,z:0.6}},{tur:'kaptanDur',sure:1.3,hedef:{x:3,z:0.6}}],
+    kareler:[0.3,0.55,0.9,1.3,1.6,2.0,2.4]}),
+  s1kartEylem('S1d İkinci sarı (2,4 sn): sarı başın üstünde, sürenin %42–58 aralığında kol iner ve kalkar (kırmızı)',{eylem:{ad:'kart',sure:2.4,renk:'ikinciSari'},kareler:[0.35,0.9,1.3,1.5,1.7,2.1,2.6]}),
+  s1kartEylem('S1d Deftere yazma (not, 1,1 sn): sol el defteri göğüste tutar, sağ el yazar, baş eğik',{eylem:{ad:'not',sure:1.1},kareler:[0.3,0.45,0.6,0.8,1.0,1.2,1.5]})];
 /* sevinç satırı: gol aşaması, golcü ve hız eğrisi (koşar, yavaşlar) */
 function sevincKur(S,p,a){mac.phase='goal';mac.phaseT=0;mac.score=[1,0];
   if(S.uzgun){p.team=1;mac.celeb={team:0,scorer:null,own:false};p.vx=1.2;return;}

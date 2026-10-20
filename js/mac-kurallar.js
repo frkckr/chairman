@@ -369,6 +369,7 @@ Object.assign(Match.prototype,{
       if(!(tk.eylem&&tk.eylem.ad==='vurus')){this.phase='play';this.phaseT=0;this.durus=null;tk.kararT=0;this.yatanKaldir(du);}
       else if(du.tur==='penalti')this.kaleciPenaltiErken(du);   /* T8d: kaleci koşuyu okur (js/mac-kaleci.js) */
     }
+    if(this.s1Kart())this.kartOyuncuAdim(du,dt);   /* S1d: kart sahnesinin oyuncuları (js/mac-sahne.js) */
     this.degisiklikAdim(dt);
     this.hareketHepsi(dt);this.topAdim(dt);
     /* saha dışındaki top panolarda durur; panoların üstünden tribüne giderse top toplayıcı yenisini verir */
@@ -378,8 +379,8 @@ Object.assign(Match.prototype,{
      görevliler koşu boyunca yerinde kalır, eskiden düzen koşunun başında dağılıyor, presçi koşuya giriyordu); vuruş seçimi yoksa hemen */
   durusKullan(du){
     const tk=du.kullanan,b=this.ball,d=this.dir[du.takim];
+    const S1K=this.s1Kart();if(du.zgEk>0&&!(S1K&&du.zgGoruldu)){if(S1K)du.zgGoruldu=true;this.zamanGecirmeGoruldu(tk,du.zgEk);if(S1K&&du.kartS&&this.refs[0].kartSira)return;}   /* T10d; S1d: zaman kartı kullanımdan önce (sahne ve düdükten sonra yeniden çağrılır), tek sayım */
     this.sonKullanim={tur:du.tur,p:tk,t:this.t};
-    if(du.zgEk>0)this.zamanGecirmeGoruldu(tk,du.zgEk);   /* T10d */
     /* T8b (inceleme bulgusu): görevliler kullanım anında yerinde miydi (k-duran ölçümü; yalnız okur) */
     if(this.duranTehlikeli(du)||du.tur==='penalti')du.yerinde=this.gorevlilerYerinde(du);
     this.kullanimBaslat(du.tur,tk,du,this.t-du.t);   /* T8-0: kullanım bayrağı; olay kullananın ilk dokunuşunda (js/mac-durantop.js) */
@@ -454,9 +455,10 @@ Object.assign(Match.prototype,{
     else{if(renk==='ikinciSari')this.ist.sari[p.team]++;p.kart=2;this.ist.kirmizi[p.team]++;}
     /* T10b (T10 teşhisi hata 1): kartlar sıraya girer — eskiden tek yer vardı (r.kartSira), birkaç saniye içinde ikinci kart gelirse ilki eziliyor,
        kırmızı gören oyuncu oyundan çıkarılmayabiliyordu. Hakem sıradakini gösterir; r.kartSira gösterilen karttır (çizim okur) */
-    const k={p,renk,t:0};(r.kartKuyruk||(r.kartKuyruk=[])).push(k);if(!r.kartSira)r.kartSira=k;
+    const k={p,renk,t:0};if(this.s1Kart())this.kartKur(k,neden);   /* S1d: sırası, gerekçesi ve duruşta seremoni (js/mac-sahne.js) */
+    (r.kartKuyruk||(r.kartKuyruk=[])).push(k);if(!r.kartSira)r.kartSira=k;
     this.kayit.kartlar.push({ad:p.name,no:p.no,takim:p.team,renk,neden:neden||null,dakika:Math.floor(this.gameSec/60)+1});   /* T10c: maçın kaydı */
-    this.on('kart',{p,renk,aleyhe:p.team,takim:p.team,neden:neden||null});   /* T10b: neden (itiraz …; faul kartının gerekçesi faul olayındadır) */
+    this.on('kart',{p,renk,aleyhe:p.team,takim:p.team,neden:neden||null,sahne:this.s1Kart()});   /* T10b: neden (itiraz …; faul kartının gerekçesi faul olayındadır); S1d: sahne (motor okumaz) */
   },
   /* T10d: zaman geçirme — öndeki takım son dakikalarda (niyetin zamanGecir'i, maç durumunun koru'su 0–1): duran topu geç kullanır (durusBaslat
      zgEk: taç 3,5 · kale vuruşu 6 · serbest 3 · korner 2,5 sn × yoğunluk × 0,6–1,4; js/mac-durantop.js duranHazirMi bekler), kaleci topu elinde
@@ -564,10 +566,12 @@ Object.assign(Match.prototype,{
     const h=r[0],du=this.durus,fx=du?du.x:b.x,fz=du?du.z:b.z;
     const kartSira=h.kartSira,DY=du?this.hakemDuranYeri(du):null;   /* T8a: duran topta hakemlerin yeri (js/mac-durantop.js) */
     h.bakisYon=null;   /* K1: başın yönünü (çizim okur) yalnız sprey yazar (js/mac-durantop.js hakemSpreyAdim); yoksa baş topta */
-    if(kartSira){kartSira.t+=dt;const p=kartSira.p;h.tx=p.x+(h.x<p.x?-1.6:1.6);h.tz=p.z;h.hizOran=1;h.bak=p;
+    const KS=kartSira&&this.s1Kart();if(KS)this.kartSahneAdim(h,kartSira,dt,du);const ks=h.kartSira;   /* S1d: kart sahnesi (js/mac-sahne.js) */
+    if(kartSira&&!KS){kartSira.t+=dt;const p=kartSira.p;h.tx=p.x+(h.x<p.x?-1.6:1.6);h.tz=p.z;h.hizOran=1;h.bak=p;
       if(hyp(h.x-p.x,h.z-p.z)<2.2&&!(h.eylem&&h.eylem.ad==='kart')){h.eylem={ad:'kart',t:0,sure:1.7,renk:kartSira.renk};}
       if(h.eylem&&h.eylem.ad==='kart'&&h.eylem.t>1.5||kartSira.t>6){const Q=h.kartKuyruk;if(Q&&Q[0]===kartSira)Q.shift();h.kartSira=Q&&Q.length?Q[0]:null;
         if(p.kart===2&&p.oyunda)this.oyundanCikar(p);}}
+    else if(KS&&ks&&ks.s&&ks.s.tut){}   /* S1d: hakemi kart sahnesi sürer */
     else if(DY&&DY.h){h.tx=clamp(DY.h.x,-PL+1,PL-1);h.tz=clamp(DY.h.z,1,PW-1);const uz=hyp(h.tx-h.x,h.tz-h.z);h.hizOran=uz>8?0.9:0.6;h.bak=b;
       /* Z2c (sahne&4): hakemin spreyi — topun yeri ve barajın çizgisi (js/mac-durantop.js hakemSpreyAdim); bitince barajın ucuna çekilir */
       const sprey=du.hk&&du.hk.evre!=='cekil';if(sprey)this.hakemSpreyAdim(du,h,uz,dt);

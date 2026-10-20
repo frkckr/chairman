@@ -660,7 +660,7 @@ Object.assign(Match.prototype,{
     this.on('faul',{faulYapan:yapan,faulYiyen:yiyen,takim:yiyen.team,aleyhe:yapan.team,x,z,penalti,kart,neden,siddet:c,omuz:!!v.omuz,kartNeden,kaynak:v.kaynak||null});
     this.refs[0].eylem={ad:penalti?'penaltiGoster':'duduk',t:0,sure:1.0};
     this.durusBaslat(penalti?'penalti':'serbest',yiyen.team,penalti?this.dir[yiyen.team]*(PL-PENALTI_U):x,penalti?MZ:z,
-      {bekle:0.8+(kart?2.0:0)+this.rast()*0.4,kart,faulYapan:yapan,duduk:true});   /* T8a: düdük ve itiraz 1,4–2,2 → 1,0–1,6 sn; T10d: 0,8–1,2 sn, kartta +2 (serbest vuruş hazırlığı 3–6 sn) */
+      {bekle:0.8+(kart?2.0:0)+this.rast()*0.4,kart,faulYapan:yapan,duduk:true,kartNeden});   /* T8a: düdük ve itiraz 1,4–2,2 → 1,0–1,6 sn; T10d: 0,8–1,2 sn, kartta +2 (serbest vuruş hazırlığı 3–6 sn); S1d: kartNeden (yalnız okunur: js/mac-sahne.js kartKur) */
     if(kart)this.kartGoster(yapan,kart);
     this.itirazEt(yapan);
   },
