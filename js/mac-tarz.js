@@ -16,7 +16,10 @@
 'use strict';
 ayarEkle('Z',{
   tarzEtki:1,                  // Z3: takım vektörünün etkisi (0: kadro.taktik'in eski değerleri; 1: tarzın vektörü etkin taktiğe ve kurmaya tam girer)
-  tarzUzun:3,                  // Z3: ileriye uzun topun tarz payı katsayısı (uzunHedef − 0,5 ile; js/mac-karar.js tarzUzunEk; 1,4'te direkt takımın uzun pas payı konumsalınkinden düşüktü)
+  tarzUzun:2.2,                // Z3: ileriye uzun topun tarz payı katsayısı (uzunHedef − 0,5 ile; js/mac-karar.js tarzUzunEk; 1,4'te direkt takımın uzun pas payı konumsalınkinden
+                               // düşüktü; Z3'te 3; Z7a'da 2,2 — payın bir kısmı yüksek hattın arkasına, tarzArka: uzun pas %20 → %22)
+  tarzArka:1.5,                // Z7a (G2.3 uzun top ↔ yüksek hat): hedefi rakibin çizgisinin arkasındaki ileri uzun topa, rakibin hattı kalesinden 28 m'den uzaksa
+                               // uzun topa eğilimli tarz (uzunHedef − 0,3) pay alır (hat 38 m'de tam); 0: eski
   tarzYanUzun:1.5              // Z3: kısa kuran tarzda yana ve geriye uzun pasın (≥ 28 m) cezası (kisaPay − 0,5'in artısı ile; konumsal takımın uzun paslarının çoğu savunmalar arası yan ve geri pastı)
 });
 const TARZ_ARKETIP={

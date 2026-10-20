@@ -100,7 +100,7 @@ const MOTOR_AYAR={
   kanatRol:undefined,kanatBas:undefined,kanatCizgi:undefined,kanatDerin:undefined,kanatOnde:undefined,kanatUzak:undefined,gecGiris:undefined,
   tutEtki:undefined,kovala2Pay:undefined,kapatSon:undefined,kapiFaz:undefined,kapiFazSav:undefined,
   /* Z — js/mac-plan.js (Z1, 2026-10-19: plan katmanı; js/mac-ilkeller.js ilkel tablosu, js/mac-tarz.js tarz iskeleti) */
-  plan:undefined,planDeger:undefined,planTavan:undefined,planTut:undefined,planSabir:undefined,planArka:undefined,planIstek:undefined,planHiz:undefined,planEs:undefined,planTeklif:undefined,planTarz:undefined,tarzEtki:undefined,tarzUzun:undefined,tarzYanUzun:undefined,uzunBakis:undefined,uzunHaz:undefined,verKacKalkis:undefined,verKacTarz:undefined,bindirme:undefined,bindirmeDeger:undefined,surenCik:undefined,geriKosu:undefined,sutKaleci:undefined,sutEgilim:undefined,
+  plan:undefined,planDeger:undefined,planTavan:undefined,planTut:undefined,planSabir:undefined,planArka:undefined,planIstek:undefined,planHiz:undefined,planEs:undefined,planTeklif:undefined,planTarz:undefined,tarzEtki:undefined,tarzUzun:undefined,tarzYanUzun:undefined,uzunBakis:undefined,uzunHaz:undefined,verKacKalkis:undefined,verKacTarz:undefined,bindirme:undefined,bindirmeDeger:undefined,surenCik:undefined,geriKosu:undefined,sutKaleci:undefined,sutEgilim:undefined,tarzArka:undefined,
   /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
   hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,hakemGeriDon:undefined,itirazKart:undefined,kartliHosgoru:undefined,evEtki:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
   ofsaytBayrak:undefined,ofsaytBekle:undefined,

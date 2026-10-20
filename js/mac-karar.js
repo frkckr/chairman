@@ -457,7 +457,7 @@ function pasAdayiEkle(m,p,o,C,q,g,hx,hz,alt,ex,ez,es,ek){
   if(tip==='hava'&&(o.ilk||alt==='bosluk'&&!(MOTOR_AYAR.uzunKosu&&L>=15)))return;   /* T21c (uzunKosu): koşana savunma arkasına havadan */
   const P0=alt==='hedef'?Ph:Math.exp(-1.2*(tip==='yer'?r60+rSon:rSon*1.2+(yay==='asirtma'?0:r60*0.15)))*(tip==='hava'?0.85:1);
   const dg=pasDegeri(m,p,o,hx,hz,alt,q)+(ek||0),kay=pasKaybi(m,p,hx,hz);
-  const U0=P0*(dg+pasTurDegeri(m,p,tip,yay))-(1-P0)*kay*(alt==='hedef'?1-Pi:tip==='hava'?MOTOR_AYAR.ikinciTop*tarzIkinciK(m,p):1)+tarzUzunEk(m,p,L,(hx-o.ox)*m.dir[p.team],tip);
+  const U0=P0*(dg+pasTurDegeri(m,p,tip,yay))-(1-P0)*kay*(alt==='hedef'?1-Pi:tip==='hava'?MOTOR_AYAR.ikinciTop*tarzIkinciK(m,p):1)+tarzUzunEk(m,p,L,(hx-o.ox)*m.dir[p.team],tip,hx*m.dir[p.team]);
   C.push({q,g,hx,hz,alt,ex,ez,es,tip,yay,dg,kay,U0,Ph,Pi,iki:!o.ilk&&(alt!=='bosluk'||!!MOTOR_AYAR.uzunKosu)&&alt!=='hedef'&&L>=12&&L<=38&&r60>0.3&&r60<1.4});}
 /* hedef forvete uzun top (T2: iki ayrı terim). kazan: forvet topa ilk dokunur (iniş yerinde boşsa yüksek; çekişmeliyse kafa, boy ve gövde
    düellosu); pasın tamamlanmasıdır. ikinci: kaybedilen düelloda dönen topun takımda kalma olasılığı; tamamlanma sayılmaz, kaybın bedelini
@@ -471,9 +471,12 @@ function hedefHavaP(m,q,hx,hz){
   HH.kazan=clamp(lerp(duello,0.8,bos),0.1,0.85);return HH;}
 /* Z3 (tarzEtki; G1.5 direkt oyun ve ikinci top): tarzın uzun top eğilimi — ileriye 28 m'den uzun pasın faydasına başarıdan bağımsız pay (alan ve ikinci
    top; uzunHedef 0,5'in altında ceza), havadan kaybın bedeli ikinciTop ile azalır. Tarzsız takımda 0 / 1 (birebir) */
-function tarzUzunEk(m,p,L,il,tip){const V=MOTOR_AYAR.tarzEtki>0?tarzTakim(m,p.team):null;if(!V||L<28)return 0;
+function tarzUzunEk(m,p,L,il,tip,hu){const V=MOTOR_AYAR.tarzEtki>0?tarzTakim(m,p.team):null;if(!V||L<28)return 0;
   const e=MOTOR_AYAR.tarzEtki,r=clamp((L-28)/12,0,1);
-  if(il>=12)return e*(V.uzunHedef-0.5)*MOTOR_AYAR.tarzUzun*r*(tip==='hava'?1:0.6);
+  if(il>=12){let v=e*(V.uzunHedef-0.5)*MOTOR_AYAR.tarzUzun*r*(tip==='hava'?1:0.6);
+    /* Z7a (tarzArka; G2.3): yüksek hatta uzun top — hedef rakibin çizgisinin (sondan ikinci) arkasındaysa ve hattı kalesinden 28 m'den uzaksa pay */
+    const TA=MOTOR_AYAR.tarzArka;if(TA>0&&hu!=null&&m._ofs){const ofs=m._ofs[p.team],hat=PL-ofs;if(hu>ofs-1&&hat>28)v+=e*TA*Math.max(0,V.uzunHedef-0.3)*clamp((hat-28)/10,0,1);}
+    return v;}
   return -e*Math.max(0,V.kisaPay-0.5)*MOTOR_AYAR.tarzYanUzun*r;}   /* kısa kuran tarz dolaşımı kısa paslarla yapar: savunmanın 30 m'yi aşan yan ve geri pası seyrek */
 function tarzIkinciK(m,p){const V=MOTOR_AYAR.tarzEtki>0?tarzTakim(m,p.team):null;return V?1-0.6*MOTOR_AYAR.tarzEtki*(V.ikinciTop-0.5):1;}
 /* tam analiz: seçilen türde (sınırdaysa diğerinde de) pasAnaliz ve fayda. T2: alıcının devam değeri; alıcı topu pasın geldiği yöne (pasöre)
@@ -495,7 +498,7 @@ function pasAdayiTam(m,p,o,c,tip,yay){
   /* hedef forvete uzun topun değeri çoğunlukla alan ve ikinci toptur, forvetin devamı daha az belirler (devamHedef) */
   const dv=devamDegeri(m,c.q,c.hx,c.hz,A.sure,bakis),dEk=MA.devamAgirlik*(hedef?MA.devamHedef:1)*(dv-xT(c.hx*d,c.hz)*100);
   /* havadan topta kaybedilen hava mücadelesi çoğu zaman ikinci top olur (temiz kayıp değil): kaybın bedeli daha az */
-  const U=A.P*(c.dg+dEk+pasTurDegeri(m,p,tip,yay))*(0.7+0.3*A.Pk)-(1-A.P)*c.kay*(hedef?1-c.Pi:tip==='hava'?MA.ikinciTop*tarzIkinciK(m,p):1)*takim.risk*MA.risk+tarzUzunEk(m,p,A.L,(c.hx-o.ox)*d,tip);
+  const U=A.P*(c.dg+dEk+pasTurDegeri(m,p,tip,yay))*(0.7+0.3*A.Pk)-(1-A.P)*c.kay*(hedef?1-c.Pi:tip==='hava'?MA.ikinciTop*tarzIkinciK(m,p):1)*takim.risk*MA.risk+tarzUzunEk(m,p,A.L,(c.hx-o.ox)*d,tip,c.hx*d);
   return{tur:c.alt==='ara'?'ara':A.L>34?'uzun':'pas',alici:c.q,hx:c.hx,hz:c.hz,tip,yay,varis:A.varis,T:tip==='hava'?A.T:null,
     mod:c.alt==='ara'?'ara':c.alt==='bosluk'?'bosluk':'ayak',ex:c.ex,ez:c.ez,es:c.es,deger:U,P:A.P,Pk:A.Pk,sure:A.sure,L:A.L,alt:c.alt,dv,marj:A.marj};}   /* T23a2: marj salt okunur (alıcının rahat noktası) */
 /* bütün pas seçenekleri. o: {ox,oz: topun çıkacağı yer, t0: vuruşa kalan süre, ilk: gelişine (tek vuruş), gelA: gelen topun yönü,
