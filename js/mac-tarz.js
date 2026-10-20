@@ -25,19 +25,21 @@ ayarEkle('Z',{
 const TARZ_ARKETIP={
   dengeli:  {ad:'dengeli',ilkel:{duvarPasi:1,ucuncuAdam:1,derinKosu:1,geriCevirme:1},baglilik:1,takim:null},
   konumsal: {ad:'konumsal oyun',ilkel:{duvarPasi:1.0,ucuncuAdam:1.8,derinKosu:1.0,geriCevirme:1.8},baglilik:1.6,
-    takim:{kisaPay:0.8,presYuksek:0.8,blokCizgi:5,bekIceri:0.6,kaleciArti:0.8,uzunHedef:0.15,ikinciTop:0.3}},
+    takim:{kisaPay:0.8,presYuksek:0.8,blokCizgi:5,bekIceri:0.6,kaleciArti:0.8,uzunHedef:0.15,ikinciTop:0.3,karsiSn:5.5}},
   iliskisel:{ad:'ilişkisel oyun',ilkel:{duvarPasi:2.0,ucuncuAdam:1.5,derinKosu:0.8,geriCevirme:1.2},baglilik:0.7,
-    takim:{kisaPay:0.6,presYuksek:0.55,blokCizgi:2,bekIceri:0.3,kaleciArti:0.5,uzunHedef:0.25,ikinciTop:0.4}},
+    takim:{kisaPay:0.6,presYuksek:0.55,blokCizgi:2,bekIceri:0.3,kaleciArti:0.5,uzunHedef:0.25,ikinciTop:0.4,karsiSn:4}},
   dikey:    {ad:'dikey / geçiş',ilkel:{duvarPasi:1.2,ucuncuAdam:1.0,derinKosu:2.0,geriCevirme:1.2},baglilik:0.7,
-    takim:{kisaPay:0.45,presYuksek:0.85,blokCizgi:6,bekIceri:0.2,kaleciArti:0.4,uzunHedef:0.5,ikinciTop:0.7}},
+    takim:{kisaPay:0.45,presYuksek:0.85,blokCizgi:6,bekIceri:0.2,kaleciArti:0.4,uzunHedef:0.5,ikinciTop:0.7,karsiSn:6}},
   kanatOrta:{ad:'kanat ve orta',ilkel:{duvarPasi:0.8,ucuncuAdam:0.8,derinKosu:1.2,geriCevirme:1.0},baglilik:1.1,
-    takim:{kisaPay:0.35,presYuksek:0.45,blokCizgi:0,bekIceri:0,kaleciArti:0.2,uzunHedef:0.5,ikinciTop:0.6}},
+    takim:{kisaPay:0.35,presYuksek:0.45,blokCizgi:0,bekIceri:0,kaleciArti:0.2,uzunHedef:0.5,ikinciTop:0.6,karsiSn:2.5}},
   /* Z3: uzun atan + orta blok (G1.5 direkt oyun ve ikinci top; Brentford/Burnley tipi): kale vuruşu ve kaleci uzun, hat ve pres orta, uzun topta
      ikinci top düzeni; derin koşu sık, kombinasyon az */
   direkt:   {ad:'direkt ve ikinci top',ilkel:{duvarPasi:0.7,ucuncuAdam:0.7,derinKosu:1.4,geriCevirme:0.9},baglilik:0.8,
-    takim:{kisaPay:0.12,presYuksek:0.3,blokCizgi:-5,bekIceri:0,kaleciArti:0.1,uzunHedef:0.9,ikinciTop:0.9}}
+    takim:{kisaPay:0.12,presYuksek:0.3,blokCizgi:-5,bekIceri:0,kaleciArti:0.1,uzunHedef:0.9,ikinciTop:0.9,karsiSn:2}}
 };
-const TARZ_ALAN=['kisaPay','presYuksek','blokCizgi','bekIceri','kaleciArti','uzunHedef','ikinciTop'];
+/* Z5c: karsiSn — hocanın karşı pres penceresi (sn; E.3 N2, N12: kolektif karşı pres 5–6 sn, tavan 8; Klopp tipi dikey 6, konumsal 5,5, direkt 2 —
+   direkt takım kayıpta çoğunlukla geri çekilir; değerler tahmin, js/mac-takim.js karsiPresKarar okur) */
+const TARZ_ALAN=['kisaPay','presYuksek','blokCizgi','bekIceri','kaleciArti','uzunHedef','ikinciTop','karsiSn'];
 /* takımın tarz harmanı: {arketip: pay} (paylar 1'e bölünür); kadro verisinde yoksa dengeli */
 function tarzKur(m,t){
   const k=m.kadro&&m.kadro[t]&&m.kadro[t].taktik&&m.kadro[t].taktik.tarz;

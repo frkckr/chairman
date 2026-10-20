@@ -121,7 +121,8 @@ Object.assign(Match.prototype,{
         G.ax+=(b.x-G.ax)*((HT[t]?fu>0:fu<0)?kH:kS);G.az+=(b.z-G.az)*kY;G.x[G.i&15]=G.ax;G.z[G.i&15]=G.az;G.i++;}}
     const OG=this._odakG||(this._odakG={x:0,z:0,sahip:null,takim:-1});
     /* geçiş: topu kaybeden takım savunma düzenine bir gecikmeyle geçer (kontra atak anı) */
-    if(sahipTakim>=0&&sahipTakim!==this._sonSahipTakim){this._kaybeden=this._sonSahipTakim;this._sonSahipTakim=sahipTakim;this._sahiplikBas=this.t;}
+    if(sahipTakim>=0&&sahipTakim!==this._sonSahipTakim){this._kaybeden=this._sonSahipTakim;this._sonSahipTakim=sahipTakim;this._sahiplikBas=this.t;
+      if(MOTOR_AYAR.karsiKarar>0&&this._kaybeden>=0)(this._karsiK||(this._karsiK=[null,null]))[this._kaybeden]=this.karsiPresKarar(this._kaybeden);}   /* Z5c: kayıpta karşı pres kararı */
     const gecisSure=du?0:this.t-(this._sahiplikBas||0);
     /* T7a: takım niyeti ve maç durumu (js/mac-takim.js): etkin taktik ve düzen çarpanları */
     this.niyetAdim(dt,du);const NY=this._niyet;
@@ -132,14 +133,23 @@ Object.assign(Match.prototype,{
          değişmez (T1, kararlı hedef) */
       const sonSahip=this._sonSahipTakim!=null?this._sonSahipTakim:b.sonTakim;
       /* T1'deki sekilGecikme (yeni kazanılan topta hücum düzenine geçme gecikmesi) 0'da kaldı; 2026-10-10 bakımında kaldırıldı */
-      const hucum=sahipTakim===t||(sahipTakim<0&&sonSahip===t)||(sahipTakim===1-t&&gecisSure<MOTOR_AYAR.gecis&&!(du&&du.sahneT));   /* Z2a: sahneli duruşta savunan savunma düzeninde (eskiden iki takım da hücum düzenindeydi) */
+      const KK=MOTOR_AYAR.karsiKarar>0&&this._karsiK?this._karsiK[t]:null;   /* Z5c: kayıptaki karşı pres kararı (geri kipinde takım savunma düzenine hemen geçer) */
+      const hucum=sahipTakim===t||(sahipTakim<0&&sonSahip===t)||(sahipTakim===1-t&&gecisSure<MOTOR_AYAR.gecis&&!(du&&du.sahneT)&&!(KK&&(MOTOR_AYAR.karsiKarar&4)&&KK.kip==='geri'&&KK.bas===this._sahiplikBas));   /* Z2a: sahneli duruşta savunan savunma düzeninde (eskiden iki takım da hücum düzenindeydi) */
       HT[t]=hucum;
       const G=GG[t],gecikmeli=du||G.i<=8?odak:{x:G.x[(G.i-9)&15],z:G.z[(G.i-9)&15],sahip:odak.sahip,takim:odak.takim};
       /* bölgesel pres: topa, top kendi bölgesine giren oyuncu çıkar (1. adam); diğerleri yerini korur.
          2. adam (kapatan) yalnızca kendi ceza sahası önünde ya da ileri preste */
       let pres1=null,pres2=null,pres3=null;
       /* karşı pres (MM2): top az önce kaybedildiyse en yakın üç oyuncu topa basar, kapatır ve en yakın pas yolunu keser */
-      const karsi=!du&&sahipTakim===1-t&&b.sahip&&this._kaybeden===t&&gecisSure<MOTOR_AYAR.karsiPres*(0.6+tk.pres*0.8);
+      let karsi;
+      if(MOTOR_AYAR.karsiKarar>0){
+        /* Z5c: pencere kayıptaki karardan (karsiPresKarar); Z5d (E7) vazgeçme — top presçilerin gerisine geçtiyse (en arkadaki presçiden 5 m) ya da
+           1,5 sn'den sonra hiçbir presçi taşıyana 4 m'den yakın değilse pencere kapanır, takım bloğa döner (geri koşu, Z5b) */
+        karsi=!du&&sahipTakim===1-t&&!!b.sahip&&this._kaybeden===t&&!!KK&&KK.bas===this._sahiplikBas&&gecisSure<KK.pencere;
+        if(karsi&&KK.liste&&(MOTOR_AYAR.karsiKarar&8)){const s=b.sahip,L=KK.liste.filter(q=>q&&q.oyunda);let geri=99,yakin=false;
+          for(const q of L){geri=Math.min(geri,q.x*d);if(hyp(q.x-s.x,q.z-s.z)<4)yakin=true;}
+          if(!L.length||s.x*d<geri-5||gecisSure>1.5&&!yakin){KK.pencere=gecisSure;karsi=false;}}}   /* presçi yoksa da (12 m içinde kimse) kapanır */
+      else karsi=!du&&sahipTakim===1-t&&b.sahip&&this._kaybeden===t&&gecisSure<MOTOR_AYAR.karsiPres*(0.6+tk.pres*0.8);
       if(karsi){const s=b.sahip,KL=MOTOR_AYAR.kapatKalici>0?(this._karsiL||(this._karsiL=[null,null])):null,o=KL&&KL[t];
         /* T18a (kapatKalici): karşı pres üçlüsü aynı sahiplik boyunca sabit (geçerli kaldıkça: oyunda, kilitsiz, 16 m içinde) — her kare en yakına atlamasın */
         const gec=q=>q&&q.oyunda&&!(q.eylem&&q.eylem.kilit)&&hyp(q.x-s.x,q.z-s.z)<16;
@@ -148,7 +158,8 @@ Object.assign(Match.prototype,{
           for(const p of this.teams[t]){if(!p.oyunda||p.rol==='GK'||(p.eylem&&p.eylem.kilit))continue;L.push([hyp(p.x-s.x,p.z-s.z),p]);}
           L.sort((x,y)=>x[0]-y[0]||x[1].n-y[1].n);
           if(L[0]&&L[0][0]<12)pres1=L[0][1];if(L[1]&&L[1][0]<10)pres2=L[1][1];if(L[2]&&L[2][0]<14)pres3=L[2][1];
-          if(KL)KL[t]={bas:this._sahiplikBas,liste:[pres1,pres2,pres3]};}}
+          if(KL)KL[t]={bas:this._sahiplikBas,liste:[pres1,pres2,pres3]};}
+        if(KK){if(KK.kip==='anlik')pres3=null;KK.liste=[pres1,pres2,pres3];}}   /* Z5c: anlık kipte ilk presör ve örten (D not 5: 1. adam yalnız gitmez); yol kesen yok */
       else if(!du&&((sahipTakim===1-t&&b.sahip)||(odak.sahip&&!b.sahip&&odak.takim===1-t))){   /* T18b: pas uçuşunda alıcıya göre (sanal sahip) */
         const s=odak.sahip;let e1=1e9,e2=1e9;const P1=this._pres1||(this._pres1=[null,null]),onceki=P1[t];
         for(const p of this.teams[t]){if(!p.oyunda||p.rol==='GK'||(p.eylem&&p.eylem.kilit))continue;

@@ -11,6 +11,13 @@ ayarEkle('T',{
                                // (16 m içinde) çıkar ve geciktirir (eskiden süzgeçten düşen adayın yerine kimse çıkmıyordu); 0: eski
   geriKosu:0.75,               // Z5b (D11): geri koşu — top oyuncunun kendi kalesi tarafına geçtiyse ve yeri gerideyse bu eforla döner (forvet × 0,7, yalnız top bizim
                                // yarımızdayken); eskiden bölge eforu 0,2–0,55 (geçilenler yürüyordu); 0: eski. 0,95'te şut 17,9 → 12,4 (12 maç), 0,75'te 15,7
+  karsiKarar:0,                // Z5c–d (E1, E6, E7; FUTBOL_KUTUPHANESI §12.12; bit maskesi): top kaybında karşı pres kararı (karsiPresKarar). 1: karar — kolektif
+                               // (tarzın karsiSn penceresi, üç presçi), anlık (en çok 2 sn; ilk presör ve örten) ya da geri çekilme (pencere 0); 2: ikinci top
+                               // (uzun atan tarz rakip yarısının ilerisinde kolektif basar); 4: geri kipinde takım savunma düzenine hemen geçer; 8: vazgeçme (top
+                               // presçilerin 5 m gerisine geçerse, presçi yoksa ya da 1,5 sn'den sonra presçi taşıyana 4 m'den yakın değilse pencere kapanır).
+                               // 0: eski (karsiPres × (0,6 + 0,8·pres)). Z5 ikinci bölümde (2026-10-20) 1, 3, 5, 7, 9 ve vazgeçmesiz 1, 3 denendi: tarz izi
+                               // yönüyle doğru (konumsal kayıpların %70–75'inde kolektif, direkt anlık ya da geri) ama her değişkende şut ~1 düştü (direktin
+                               // şutu 8,1 → 6,4–7,3) ve gerçekleşen ÷ konum xG 40 maçta 1,26 → 1,46–1,75 — kapalı (borç: dinlenme savunması E10 ve 2. adamla birlikte)
   niyetEtki:1,       // T7a: niyet ve maç durumunun taktiğe ve düzene etkisi (0: yok, tabanın aynısı)
   macDurumEtki:1,    // T7a: maç durumunun (skor × kalan süre × eksik adam) payı (0: niyet var, maç durumu yok)
   niyetYenile:0.5,   // T7a: niyet en çok bu aralıkla yeniden hesaplanır (sn; sahiplik değişince ve duruşta hemen)
@@ -347,6 +354,23 @@ Object.assign(Match.prototype,{
     if(s&&s!==this._ptSon){const o=this._ptSon;if(o&&o.team===s.team&&s.team!=null&&(s.x-this._ptX)*this.dir[s.team]<-3)PT[1-s.team]=this.t;this._ptSon=s;this._ptT=this.t;}
     if(s&&s.team!=null){this._ptX=s.x;const t=1-s.team,d=this.dir[s.team];
       if(s.eylem&&s.eylem.ad==='kontrol'&&s.eylem.kotu||this.t-this._ptT<1&&Math.cos(s.yon)*d<-0.6||s.z<3||s.z>PW-3)PT[t]=this.t;}},
+  /* Z5c (karsiKarar; FUTBOL_KUTUPHANESI §12.12; kutuphane/E-gecisler.md E1, E6, E7, E.3 N1–N3, N12): top kaybında karşı pres kararı — sahiplik
+     değiştiği karede bir kez, kaybeden takım t için (js/mac-dizilis.js takimAI). Saf: rastlantı çekmez, oyuncuya yazmaz. Girdiler: kaybın yeri
+     (kaybedenin hücum yönünde; rakip yarısında ileride artı), topun 10 m çevresindeki sayı farkı, topun gerisindeki kendi saha oyuncusu sayısı
+     (dinlenme savunması; 4'ün altı eksi), yorgunluk, maç durumu (önde koruyan eksi, geride acele artı), hocanın penceresi (tarzın karsiSn'i;
+     tarzsız takımda eski formül). Sonuç {bas, kip, pencere, liste}: kolektif (pencere karsiSn, tavan 8 sn; üç presçi), anlık (en çok 2 sn; yalnız ilk
+     presör) ya da geri (pencere 0; olağan 1. adam kuralı ve geri koşu) */
+  karsiPresKarar(t){
+    const V=tarzTakim(this,t),b=this.ball,s=b.sahip,d=this.dir[t],N=this._niyet&&this._niyet[t],D=N&&N.durum;
+    const W=Math.min(8,V&&V.karsiSn!=null?V.karsiSn:MOTOR_AYAR.karsiPres*(0.6+this.taktik[t].pres*0.8));
+    const hx=s?s.x:b.x,hz=s?s.z:b.z,u=hx*d;let yak=0,rak=0,ark=0;
+    for(const p of this.teams[t]){if(!p.oyunda||p.rol==='GK')continue;if(hyp(p.x-hx,p.z-hz)<10)yak++;if(p.x*d<u-2)ark++;}
+    for(const o of this.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;if(hyp(o.x-hx,o.z-hz)<10)rak++;}
+    const P=clamp((u+10)/30,-1,1)+0.35*(yak-rak)+(ark>=4?0.3:-0.25*(4-ark))-0.8*(N?N.yorgunPay||0:0)-0.8*(D?D.koru:0)+0.5*(D?D.acele:0)+0.35*(W-3.5);
+    /* ikinci top (G1.5): uzun atan tarz (ikinciTop ≥ 0,6) rakip yarısının ilerisinde (≥ 17,5 m) kaybettiği topa kısa pencereyle kolektif basar */
+    const ikinci=(MOTOR_AYAR.karsiKarar&2)&&!!V&&V.ikinciTop>=0.6&&u>17.5&&P>0;
+    const kip=P>0.4&&W>=3.5||ikinci?'kolektif':P>-0.4?'anlik':'geri';
+    return{bas:this.t,kip,pencere:kip==='kolektif'?Math.max(W,3):kip==='anlik'?Math.min(2,W):0,liste:null,puan:P};},
   presTetikVar(t){return!!this._presTetik&&this.t-this._presTetik[t]<MOTOR_AYAR.presTetikSure;},
   /* T7d: sürücünün en tehlikeli pas yolu — 3–18 m içinde en çok ilerleten arkadaşı (ilerleme − 0,25·uzaklık > 2 m) */
   tehlikeliAlici(s){const d=this.dir[s.team];let en=null,ep=2;
