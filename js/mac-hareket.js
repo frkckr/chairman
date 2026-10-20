@@ -426,9 +426,15 @@ Object.assign(Match.prototype,{
         a.x-=ux*w*ia;a.z-=uz*w*ia;c.x+=ux*w*ic;c.z+=uz*w*ic;
         const vr=(c.vx-a.vx)*ux+(c.vz-a.vz)*uz;
         if(vr<0){const aA=a.vx*ux+a.vz*uz,aC=-(c.vx*ux+c.vz*uz),J=-vr*0.8/(ia+ic);a.vx-=J*ia*ux;a.vz-=J*ia*uz;c.vx+=J*ic*ux;c.vz+=J*ic*uz;
-          if(this.phase==='play'){const va=J*ia,vc=J*ic;if(va>1.2&&a.tur==='oyuncu')this.dengeBoz(a,0.16*(va-1.2),-ux,-uz,'takilma',c);if(vc>1.2&&c.tur==='oyuncu')this.dengeBoz(c,0.16*(vc-1.2),ux,uz,'takilma',a);
+          /* A11a (2026-10-20): çarpışmanın hız değişimi (J·i) çizime 'darbe' olayıyla gider — dengeBoz'un etkili çağrısı kendi olayını yayar; ona gitmeyen
+             ya da orada etkisiz kalan beden (hakem dahil, bütün evrelerde) darbeEsik'ten büyük değişimde doğrudan (salt okunur; sıra ve sonuç aynı) */
+          const va=J*ia,vc=J*ic,DE=MOTOR_AYAR.darbe?MOTOR_AYAR.darbeEsik:-1;
+          if(this.phase==='play'){
+            if(!(va>1.2&&a.tur==='oyuncu'&&this.dengeBoz(a,0.16*(va-1.2),-ux,-uz,'takilma',c,'carpisma',DE>=0?{dv:va}:null))&&DE>=0&&va>=DE)mdhDarbeOlay(this,a,c,'carpisma',-ux,-uz,va,null,'yok',null);
+            if(!(vc>1.2&&c.tur==='oyuncu'&&this.dengeBoz(c,0.16*(vc-1.2),ux,uz,'takilma',a,'carpisma',DE>=0?{dv:vc}:null))&&DE>=0&&vc>=DE)mdhDarbeOlay(this,c,a,'carpisma',ux,uz,vc,null,'yok',null);
             /* T5 (2026-10-09): rakiplerin 1 m/sn'den hızlı çarpışması temas faulü adayı (govdeTemasi; faul çalındıysa adım biter) */
-            if(-vr>1&&a.tur==='oyuncu'&&c.tur==='oyuncu'&&a.team!==c.team&&this.govdeTemasi(a,c,-vr,aA,aC))return;}}}}
+            if(-vr>1&&a.tur==='oyuncu'&&c.tur==='oyuncu'&&a.team!==c.team&&this.govdeTemasi(a,c,-vr,aA,aC))return;}
+          else if(DE>=0){if(va>=DE)mdhDarbeOlay(this,a,c,'carpisma',-ux,-uz,va,null,'yok',null);if(vc>=DE)mdhDarbeOlay(this,c,a,'carpisma',ux,uz,vc,null,'yok',null);}}}}
     if(this.phase==='play')this.omuzlar(dt);
   },
   /* takım arkadaşları birbirine doğru koşuyorsa (0,7 sn içinde 0,9 m'den yakın geçecekse) yanlara ayrılır; topu süren ve vuran yolunu değiştirmez */
@@ -838,7 +844,7 @@ Object.assign(Match.prototype,{
     const sid=clamp(H.yanilt*(0.6+0.6*hrkYetenek(p,H.yet))*(1.2-hrkOkuma(o)),0.2,1),ax=o.x-p.x,az=o.z-p.z,L=hrkHyp(ax,az)||1,lx=-az/L,lz=ax/L,A=MOTOR_AYAR;
     o.yutma={yon:hrkAtan2(-C.taraf*lz,-C.taraf*lx),t:this.t,sure:lerp(A.yutmaSure[0],A.yutmaSure[1],sid)+H.gecikme,siddet:sid,mek:H.mek};
     this.on('yutma',{p:o,surucu:p,hareket:H.ad,siddet:sid});
-    if(H.mek==='aldat'&&sid>0.6&&L<2.6)this.dengeBoz(o,0.25+0.35*(sid-0.6),-C.taraf*lx,-C.taraf*lz,'takilma',p);
+    if(H.mek==='aldat'&&sid>0.6&&L<2.6)this.dengeBoz(o,0.25+0.35*(sid-0.6),-C.taraf*lx,-C.taraf*lz,'takilma',p,'aldatma');
   },
   /* sürüş yönünde önündeki en yakın rakip (3,2 m içinde, ±55°; koni: kosinüs eşiği); T4: kaleci yalnız kaleciDe ile (bire bir kaleciye yapılmaz, T9b) */
   calimRakibi(p,yon,menzil,kaleciDe,koni){

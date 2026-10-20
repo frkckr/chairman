@@ -27,6 +27,9 @@ ayarEkle('C',{
   ortaTemas:1,                 // T14c: ortanın planlayıcısı yolundaki rakibin ayak, göğüs ve gövde temasını bilir (ortaTemasP; 0: yalnız ilk 3 m'deki bacak)
   govdeDar:1,                  // T17b (2026-10-16): gövde kapsülü omuz hizasının (1,45·boy) üstünde daralır — 0,37 m'den baş hizasında (1,8·boy) 0,14 m'ye (havada
                                // kalan markajcının başı ve omzu kafa topunu gövde gibi bloklamasın); 0: silindir 0,37 m (A4)
+  darbe:1,                     // A11a (2026-10-20; kutuphane/J J.6, J.7 D5/D7): sendeleme ve düşüş eylemine (e.darbe: tip, tür, temas anı) ve 'darbe' olayına çizimin
+                               // okuyacağı temas anı; rastlantısız, motor okumaz — 0 ve 1'de sonuç birebir; 0: alan null, olay yok (çizimin yedek yolu)
+  darbeEsik:0.25,              // A11a: dengeBoz'a gitmeyen ya da orada etkisiz kalan gövde çarpışmasında 'darbe' olayının alt sınırı (bedenin hız değişimi, m/sn)
   blokGercek:1                 // T17a (2026-10-16; gerçekçilik planı §4 T17): blok ve sekme gerçek temastır — top gövde merkezini geçmişse yansıma normali bağıl hızın
                                // tersi (yansit), şutu yalnız topa yaklaşan rakip bloklar, yanından geçip giden topa kimse değmez (sutBlok). 0: T17-0 davranışı (A4):
                                // kornerde bloklanan kafaların %18'i dokunulmadan gole gidiyordu (top yoluna devam edip vy ile yükseliyordu — “hayalet blok”)
@@ -254,7 +257,7 @@ Object.assign(Match.prototype,{
     kay.p.kickCd=0.55;if(b.sahip===kay.p)b.sahip=null;
     if(this.phase==='play'&&kay.p.team!==k.p.team&&hrkAbs(fark)<0.15){const vk=hrkHyp(kay.p.vx-k.p.vx,kay.p.vz-k.p.vz);
       if(vk>3&&this.temasFaulu(kay.p,k.p,0.2+(vk-3)/4+(profilAlt(kay.p,'agresiflik',kay.p.oz.sertlik)-0.5)*0.5,{basma:true,kaynak:'basma',x:k.p.x,z:k.p.z}))return null;}
-    const dx=kay.p.x-k.p.x,dz=kay.p.z-k.p.z,n=hrkHyp(dx,dz)||1;this.dengeBoz(kay.p,0.14,dx/n,dz/n,'takilma',k.p);
+    const dx=kay.p.x-k.p.x,dz=kay.p.z-k.p.z,n=hrkHyp(dx,dz)||1;this.dengeBoz(kay.p,0.14,dx/n,dz/n,'takilma',k.p,'ikili');
     return k;
   },
   /* sekme: top oyuncunun bacağına çarpıp rastgele yöne gider, hızının bir kısmını kaybeder */
@@ -325,7 +328,8 @@ Object.assign(Match.prototype,{
       if(p._tutS===b.surum)return;p._tutS=b.surum;
       const agr=profilAlt(p,'agresiflik',p.oz.sertlik);
       if(this.rast()>=MOTOR_AYAR.tutmaIstek*(0.2+1.6*agr)*((p.kart||0)>=1?0.5:1))return;
-      o.vx*=0.55;o.vz*=0.55;p.vx*=0.8;p.vz*=0.8;this.dengeBoz(o,0.08,-dx/d,-dz/d,'itme',p);
+      const dv=MOTOR_AYAR.darbe?{dv:0.45*hrkHyp(o.vx,o.vz)}:null;   /* A11a: tutulanın hız değişimi (salt okunur) */
+      o.vx*=0.55;o.vz*=0.55;p.vx*=0.8;p.vz*=0.8;this.dengeBoz(o,0.08,-dx/d,-dz/d,'itme',p,'tutma',dv);
       this.on('tutma',{p,o});
       const kutu=this.kendiCezaSahasinda(p,o.x,o.z);
       this.temasFaulu(p,o,0.2+vr/5+(agr-0.5)*0.5+(o.zipla?0.1:0)-(kutu?0.45:0),{itme:true,kaynak:'tutma',x:o.x,z:o.z});};
@@ -335,6 +339,7 @@ Object.assign(Match.prototype,{
   },
   sekme(p){
     if(this.elleOynamaDene(p))return;   /* T10b */
+    if(MOTOR_AYAR.darbe)mdhDarbeOlay(this,p,null,'top',0,0,null,null,'yok',null);   /* A11a: topun bedene çarpması (yansımadan önce) */
     const b=this.ball;this.yansit(p,0.45,0.35);
     if(b.sut)b.sut=null;this.dokunus(p,false);p.kickCd=0.35;this.on('sekme',{p});
   },
@@ -343,7 +348,9 @@ Object.assign(Match.prototype,{
     if(this.elleOynamaDene(p))return;   /* T10b */
     /* A6c (2026-10-17): blok eylemine temas noktası (bx, bz, by: topun yeri temas anında) ve uzanma (uzan: topun gövde merkezine yatay uzaklığı) — salt
        okunur, çizim bacağı oraya uzatır (sonucu değiştirmez) */
-    const b=this.ball,v=hrkHyp(b.vx,b.vz),bx=b.x,bz=b.z,by=b.y,uzan=hrkHyp(b.x-p.x,b.z-p.z);this.yansit(p,0.4,0.45);
+    const b=this.ball,v=hrkHyp(b.vx,b.vz),bx=b.x,bz=b.z,by=b.y,uzan=hrkHyp(b.x-p.x,b.z-p.z);
+    if(MOTOR_AYAR.darbe)mdhDarbeOlay(this,p,null,'top',0,0,null,null,'yok',null);   /* A11a */
+    this.yansit(p,0.4,0.45);
     b.sut=null;this.dokunus(p,false);p.kickCd=0.35;p.eylem={ad:'blok',t:0,sure:0.45,bx,bz,by,uzan};this.on('block',{p,v});
   },
   /* erişemediği topa çarpan beden (oyuncu ya da hakem): yalnız hızlı ve bedene doğru gelen top. Topun sahibi, vuruş yapan ve topa
@@ -355,7 +362,8 @@ Object.assign(Match.prototype,{
       /* Z2c: yatan barajcı (duruşta ya da vuruştan sonraki kalkışında) yerde barajın doğrultusunda 1,8 m, 0,32 m'ye dek: alçak şut gövdesine çarpıp geri döner */
       const YR=!hakem&&p.duranRol&&p.duranRol.rol==='yatan'&&p.duranRol.yatik&&(this.phase==='durus'||p.eylem&&p.eylem.ad==='kalkis'&&p.eylem.neden==='yatan')?p.duranRol:null;
       if(YR){if(b.y>0.32)return false;const ex=b.x-p.x,ez=b.z-p.z,al=ex*YR.wx+ez*YR.wz,dik=ex*YR.nx+ez*YR.nz;if(Math.abs(al)>0.9||Math.abs(dik)>0.28)return false;
-        const vn=b.vx*YR.nx+b.vz*YR.nz;if(vn<=0)return false;b.vx-=1.3*vn*YR.nx;b.vz-=1.3*vn*YR.nz;b.vx*=0.7;b.vz*=0.7;b.vy=Math.max(b.vy,1.2);
+        const vn=b.vx*YR.nx+b.vz*YR.nz;if(vn<=0)return false;if(MOTOR_AYAR.darbe)mdhDarbeOlay(this,p,null,'top',0,0,null,null,'yok',null);   /* A11a */
+        b.vx-=1.3*vn*YR.nx;b.vz-=1.3*vn*YR.nz;b.vx*=0.7;b.vz*=0.7;b.vy=Math.max(b.vy,1.2);
         if(b.sut&&p.team!==b.sut.team){b.sut=null;this.on('block',{p,v,yatan:true});}else this.on('sekme',{p});
         this.dokunus(p,false);p.kickCd=0.3;return true;}
       /* T8c: barajdaki oyuncu omuz omuza (yanal 0,5 m; kollar ve baş 1,95·boy); havadakinin ayaklarının altından top geçer */
@@ -366,6 +374,7 @@ Object.assign(Match.prototype,{
       if(d>r||b.y>(bj?1.95:1.8)*(p.boy||1)+(p.yuk||0)||b.y<(p.yuk||0)-0.08)return false;
       if((b.vx-(p.vx||0))*dx+(b.vz-(p.vz||0))*dz>=0)return false;
       if(!hakem&&this.elleOynamaDene(p))return true;   /* T10b: elle oynama (çalındıysa oyun durdu) */
+      if(MOTOR_AYAR.darbe)mdhDarbeOlay(this,p,null,'top',0,0,null,null,'yok',null);   /* A11a: oyuncu ya da hakem (yansımadan önce) */
       const bx=b.x,bz=b.z,by=b.y;this.yansit(p,0.3,0.25);   /* A6c: temas noktası (salt okunur) */
       if(hakem){this.topDegisti();b.hakemDegdi={takim:b.sonTakim,dokunan:b.sonDokunan,t:this.t,x:b.x,z:b.z};this.on('hakemeCarpti',{p});}   /* T10d: hakemDegdiAdim */
       else{if(b.sut&&p.team!==b.sut.team){b.sut=null;p.eylem={ad:'blok',t:0,sure:0.45,bx,bz,by,uzan:hrkHyp(bx-p.x,bz-p.z)};this.on('block',{p,v});}else this.on('sekme',{p});
@@ -384,6 +393,7 @@ Object.assign(Match.prototype,{
   },
   ortaBlokUygula(OB){
     const b=this.ball,o=OB.o,v=hrkHyp(b.vx,b.vz)||1,ux=b.vx/v,uz=b.vz/v,d=this.dir[OB.takim],bx=b.x,bz=b.z,by=b.y;   /* A6c: temas noktası (salt okunur) */
+    if(MOTOR_AYAR.darbe)mdhDarbeOlay(this,o,null,'top',0,0,null,null,'yok',null);   /* A11a: topun bacağa çarpması (sekmeden önce) */
     if(this.rast()<0.6){b.vx=d*(4+this.rast()*6);b.vz=(this.rast()-0.5)*7;}
     else{b.vx=-ux*v*(0.15+this.rast()*0.2)+this.normal()*2;b.vz=-uz*v*(0.15+this.rast()*0.2)+this.normal()*2;}
     b.vy=1.5+this.rast()*4;b.egri=0;b.pasHedef=null;
@@ -391,24 +401,34 @@ Object.assign(Match.prototype,{
   },
   /* ============ denge, sendeleme, düşme (C2) ============ */
   /* denge kaybı m (dayanıklılığa bölünür), (ux,uz) itildiği yön. Denge 0,3'ün altına inerse sendeler (kilitsiz; ivme düşer), 0'ın altına
-     inerse itildiği yöne düşer. Topu elinde tutan kaleci ve kilitli eylemdeki oyuncu etkilenmez */
-  dengeBoz(p,m,ux,uz,neden,kaynak){
-    if(!p.oyunda||!(m>0)||this.ball.tasiyan===p)return;
-    const e=p.eylem;if(e&&e.kilit)return;
-    p.denge-=m/mdhDengeGuc(p);
-    if(p.denge<0){this.dus(p,ux,uz,neden,clamp(0.35-p.denge,0.2,1),kaynak);return;}
+     inerse itildiği yöne düşer. Topu elinde tutan kaleci ve kilitli eylemdeki oyuncu etkilenmez.
+     A11a (2026-10-20): tur temasın türü (verilmezse neden; faulde 'mudahale'), ek {faul, c, itme, bacak, dv} (yalnız darbe 1'de) — sendele ve düşüş
+     eylemine darbe nesnesi (mdhDarbe), etkili her çağrının sonunda 'darbe' olayı (sonuc 'yok' | 'sendele' | 'dusus'). Denge kaybı ayrı hesaplanır
+     (p.denge bit düzeyinde aynı); etkiliyse true (dönüşü yalnız çarpışmanın 'darbe' olayı okur) */
+  dengeBoz(p,m,ux,uz,neden,kaynak,tur,ek){
+    if(!p.oyunda||!(m>0)||this.ball.tasiyan===p)return false;
+    const e=p.eylem;if(e&&e.kilit)return false;
+    const kayip=m/mdhDengeGuc(p),D=MOTOR_AYAR.darbe,T=D?tur||(neden==='faul'?'mudahale':neden):null,dv=ek&&ek.dv!=null?ek.dv:null;
+    p.denge-=kayip;
+    if(p.denge<0){const B=this.dus(p,ux,uz,neden,clamp(0.35-p.denge,0.2,1),kaynak,undefined,T,ek,kayip);if(D)mdhDarbeOlay(this,p,kaynak,T,ux,uz,dv,kayip,'dusus',B);return true;}
     if(p.denge<0.3&&(!e||e.ad==='omuz'||e.ad==='sendele'||e.ad==='kontrol')){const sd=clamp((0.3-p.denge)/0.3,0,1);
-      p.eylem={ad:'sendele',t:0,sure:(0.3+0.4*sd)*(this.ball.sahip===p?0.6:1),yon:hrkAtan2(uz,ux),siddet:sd};}
+      p.eylem={ad:'sendele',t:0,sure:(0.3+0.4*sd)*(this.ball.sahip===p?0.6:1),yon:hrkAtan2(uz,ux),siddet:sd,darbe:D?mdhDarbe(this,p,T,kaynak,ek,kayip):null};
+      if(D)mdhDarbeOlay(this,p,kaynak,T,ux,uz,dv,kayip,'sendele',p.eylem.darbe);return true;}
+    if(D)mdhDarbeOlay(this,p,kaynak,T,ux,uz,dv,kayip,'yok',null);
+    return true;
   },
-  /* düşüş: yön itilme yönüdür (rastlantısız); arkadan itilen ya da koşarken takılan yüzüstü, önden itilen sırtüstü düşer */
-  dus(p,ux,uz,neden,siddet,kaynak,yerde){
+  /* düşüş: yön itilme yönüdür (rastlantısız); arkadan itilen ya da koşarken takılan yüzüstü, önden itilen sırtüstü düşer.
+     A11a: darbe nesnesi (temas anı: hız ve konum itkiden önce) eyleme ve 'dusus' olayına; kalk motorun kalkış süresi. Darbe nesnesini döndürür */
+  dus(p,ux,uz,neden,siddet,kaynak,yerde,tur,ek,kayip){
     const b=this.ball,a=hrkAtan2(uz,ux),sp=hrkHyp(p.vx,p.vz),c=hrkCos(a-p.yon);
     const yuzustu=c>0.25||(neden!=='omuz'&&neden!=='hava'&&sp>3&&c>-0.6);
-    p.eylem={ad:'dusus',t:0,sure:0.45,kilit:true,fren:6,yerde:yerde||0.5+1.3*siddet,yon:a,neden,siddet,yuzustu};
+    const D=MOTOR_AYAR.darbe?mdhDarbe(this,p,tur||(neden==='faul'?'mudahale':neden),kaynak,ek,kayip):null;
+    p.eylem={ad:'dusus',t:0,sure:0.45,kilit:true,fren:6,yerde:yerde||0.5+1.3*siddet,yon:a,neden,siddet,yuzustu,darbe:D};if(D)D.kalk=mdhKalkisSure(p,p.eylem);
     p.vx+=ux*siddet;p.vz+=uz*siddet;p.surus=null;p.tavir=null;if(p.zipla&&p.zipla.t<0)p.zipla=null;p.denge=0;if(p.calim)this.calimBitir(p,'kayip');
     if(b.sahip===p)b.sahip=null;
-    this.on('dusus',{p,neden,siddet,yon:a,yuzustu,kaynak:kaynak||null});
+    this.on('dusus',{p,neden,siddet,yon:a,yuzustu,kaynak:kaynak||null,darbe:D});
     this.sakatlikTemas(p,siddet,neden,kaynak);   /* T10c: rakibin temasıyla düşüşte sakatlık zarı (js/mac-sakatlik.js) */
+    return D;
   },
   /* ============ omuz omuza mücadele (C2) ============ */
   /* yan yana koşan iki rakip (0,45–0,9 m, ikisi de >3,5 m/sn, yönleri 35° içinde; top birinde ya da serbest ve yakın) ~0,3 sn'de bir birbirini iter:
@@ -436,9 +456,10 @@ Object.assign(Match.prototype,{
     /* T5 (2026-10-09): arkadaki itişin şiddetinden (eski zar kalktı): 0,1 + üstünlük (fark/0,3 × 0,4) + kazandıysa 0,1 + agresiflik */
     if(arkadaki){const cc=0.1+0.4*fark/0.3+(arkadaki===kaz?0.1:0)+(profilAlt(arkadaki,'agresiflik',arkadaki.oz.sertlik)-0.5)*0.5;
       if(this.temasFaulu(arkadaki,on,cc,{itme:true,omuz:true,arkadan:true,kaynak:'omuz',x:on.x,z:on.z}))return;}
-    const nx=kay.x-kaz.x,nz=kay.z-kaz.z,n=hrkHyp(nx,nz)||1,ux=nx/n,uz=nz/n;
+    const nx=kay.x-kaz.x,nz=kay.z-kaz.z,n=hrkHyp(nx,nz)||1,ux=nx/n,uz=nz/n,kvx=kay.vx,kvz=kay.vz;
     kay.vx=kay.vx*(0.9-fark*0.4)+ux*(0.4+3*fark);kay.vz=kay.vz*(0.9-fark*0.4)+uz*(0.4+3*fark);
-    this.dengeBoz(kay,(0.12+1.6*fark)*MOTOR_AYAR.omuzGuc,ux,uz,'omuz',kaz);this.dengeBoz(kaz,0.04,-ux,-uz,'omuz',kay);
+    /* A11a: kaybedenin gerçek hız değişimi darbeye (salt okunur); kazananınki yok */
+    this.dengeBoz(kay,(0.12+1.6*fark)*MOTOR_AYAR.omuzGuc,ux,uz,'omuz',kaz,undefined,MOTOR_AYAR.darbe?{dv:hrkHyp(kay.vx-kvx,kay.vz-kvz)}:null);this.dengeBoz(kaz,0.04,-ux,-uz,'omuz',kay);
     for(const p of[a,c]){const q=p===a?c:a,e=p.eylem,taraf=hrkCos(p.yon)*(q.z-p.z)-hrkSin(p.yon)*(q.x-p.x)>0?1:-1;
       if(!e)p.eylem={ad:'omuz',t:0,sure:0.35,taraf,rakip:q,kazandi:p===kaz};
       else if(e.ad==='omuz'){e.sure=e.t+0.35;e.kazandi=p===kaz;e.rakip=q;e.taraf=taraf;}}
@@ -556,7 +577,7 @@ Object.assign(Match.prototype,{
         this.faulDusur(p,s,{kayma,ciddiyet:cc});this.on('faulGorulmedi',{faulYapan:p,faulYiyen:s,kaynak:kayma?'kayma':'mudahale',siddet:cc,x:s.x,z:s.z});e.gorulmedi=true;}
       else{/* faulsüz temas: sürücünün dengesi bozulur; önce topa değen kayma çoğu zaman düşürür */
         const ix=s.x-p.x+c*0.5,iz=s.z-p.z+sn*0.5,n=hrkHyp(ix,iz)||1;
-        this.dengeBoz(s,(0.2+0.55*clamp(cc+0.4,0,1.2))*(kayma?1.6:1),ix/n,iz/n,kayma?'kayma':'takilma',p);}}
+        this.dengeBoz(s,(0.2+0.55*clamp(cc+0.4,0,1.2))*(kayma?1.6:1),ix/n,iz/n,kayma?'kayma':'takilma',p,kayma?'kayma':'mudahale');}}
     if(topa&&!adamOnce&&!kalkan){
       const vfx=p.vx+c*(kayma?2.5:3.5),vfz=p.vz+sn*(kayma?2.5:3.5),yan=(b.x-ax)*(-sn)+(b.z-az)*c,sap=clamp(yan/0.26,-1,1)*0.5;
       p.sonDokunus={t:this.t,tur:'cal',ayak:mdhAyak(p,b.x,b.z),yuzey:kayma?'ust':sonuc==='temiz'?'ic':hrkAbs(yan)>0.12?'dis':'ic'};
@@ -567,7 +588,7 @@ Object.assign(Match.prototype,{
       else{/* blok: iki ayak aynı anda; top aradan yana seker */const k=yan>=0?1:-1;b.vx=-sn*k*2.2+b.vx*-0.2;b.vz=c*k*2.2+b.vz*-0.2;b.vy=0.8;b.egri=0;b.ust=0;
         b.sahip=null;this.dokunus(p,false);}}
     /* geçilen ya da bloklanan: savunmacı bir an toparlanamaz, hızla girdiyse dengesini kaybeder */
-    if(!kazan){p.kickCd=kayma?0.8:0.5;if(!kayma)this.dengeBoz(p,0.12+0.05*p.spd,c,sn,'takilma',s);}
+    if(!kazan){p.kickCd=kayma?0.8:0.5;if(!kayma)this.dengeBoz(p,0.12+0.05*p.spd,c,sn,'takilma',s,'gecilme');}
     /* T5 (2026-10-09; plan T5 madde 6): uzanan bacak 0,25 sn yerinde kalır; sürücü üstünden geçerken takılabilir (mdhBacakTakilma) */
     if(s&&!(s&&adama))e.bacak={s,fa,top:topa&&!adamOnce&&!kalkan,t0:this.t};
     this.on('mudahaleSonuc',{p,rakip:s,kazan,topaDegdi:topa,topaOnce:topa&&!adamOnce&&!kalkan,adamaDegdi:!!(s&&adama),faul:false,gorulmedi:!!e.gorulmedi,kayma,sonuc,tur:e.tur||(kayma?'kayma':'acik'),arkadan,kalkan,kontrol,once,siddet:cc,t:e.t});
@@ -615,8 +636,10 @@ Object.assign(Match.prototype,{
   faulDusur(yapan,yiyen,v){
     const b=this.ball,c=v.ciddiyet||0;let ix=yiyen.x-yapan.x+(yapan.vx-yiyen.vx)*0.15,iz=yiyen.z-yapan.z+(yapan.vz-yiyen.vz)*0.15;const n=hrkHyp(ix,iz)||1;ix/=n;iz/=n;
     const ayakta=c<0.35&&!v.kayma&&!v.hava&&yiyen.denge>0.5&&!(yiyen.eylem&&yiyen.eylem.kilit);
-    if(ayakta){yiyen.denge=0.28;this.dengeBoz(yiyen,0.01,ix,iz,'faul',yapan);}
-    else if(!(yiyen.eylem&&yiyen.eylem.kilit))this.dus(yiyen,ix,iz,'faul',clamp(c,0.2,1),yapan,0.6+this.rast()*1.6*(0.4+clamp(c,0,1)));
+    /* A11a: faulün türü (faul olayının kaynağı; kaynaksız görülmeyen faulde faul() neden kuralı) ve ciddiyeti darbe nesnesine (salt okunur) */
+    const tur=v.kaynak||(v.kayma?'kayma':v.hava?'hava':v.itme?'itme':'mudahale'),ek=MOTOR_AYAR.darbe?{faul:true,c,itme:!!v.itme,bacak:v.bacak||null,dv:null}:null;
+    if(ayakta){yiyen.denge=0.28;this.dengeBoz(yiyen,0.01,ix,iz,'faul',yapan,tur,ek);}
+    else if(!(yiyen.eylem&&yiyen.eylem.kilit))this.dus(yiyen,ix,iz,'faul',clamp(c,0.2,1),yapan,0.6+this.rast()*1.6*(0.4+clamp(c,0,1)),tur,ek,null);
     if(b.sahip===yiyen&&!ayakta)b.sahip=null;
     return ayakta;
   },
@@ -705,8 +728,13 @@ function mdhBacakTakilma(m,p,e){
   const c=hrkCos(B.fa),sn=hrkSin(B.fa),r0=kay?-0.3:0.15,R=kay?1.05:0.75;
   if(segD(s.x,s.z,p.x+c*r0,p.z+sn*r0,p.x+c*R,p.z+sn*R)>=(kay?0.6:0.5))return;
   e.bacak=null;const vr=hrkHyp(p.vx-s.vx,p.vz-s.vz),dx=s.x-p.x,dz=s.z-p.z,n=hrkHyp(dx,dz)||1;
-  if(!B.top&&m.temasFaulu(p,s,0.35+vr/6+(kay?0.25:0)+(profilAlt(p,'agresiflik',p.oz.sertlik)-0.5)*0.5,{kayma:kay,kaynak:kay?'kayma':'mudahale',x:s.x,z:s.z}))return;
-  if(!(s.eylem&&s.eylem.kilit))m.dengeBoz(s,(0.25+0.08*hrkHyp(s.vx,s.vz))*(kay?1.4:1),dx/n,dz/n,kay?'kayma':'takilma',p);
+  /* A11a: takılan bacağın yanı (salt okunur) — uzanan bacak segmentinin sürücüye en yakın noktası onun gövdesinin sağında mı solunda mı ((−sin, cos) sağ);
+     kaymada iki bacak birden */
+  let bc=null;if(MOTOR_AYAR.darbe){if(kay)bc='iki';else{const qx=c*(R-r0),qz=sn*(R-r0),u=clamp(((s.x-p.x-c*r0)*qx+(s.z-p.z-sn*r0)*qz)/((R-r0)*(R-r0)),0,1);
+    bc=hrkCos(s.yon)*(p.z+sn*r0+qz*u-s.z)-hrkSin(s.yon)*(p.x+c*r0+qx*u-s.x)>=0?'sag':'sol';}}
+  const v={kayma:kay,kaynak:kay?'kayma':'mudahale',x:s.x,z:s.z};if(bc)v.bacak=bc;
+  if(!B.top&&m.temasFaulu(p,s,0.35+vr/6+(kay?0.25:0)+(profilAlt(p,'agresiflik',p.oz.sertlik)-0.5)*0.5,v))return;
+  if(!(s.eylem&&s.eylem.kilit))m.dengeBoz(s,(0.25+0.08*hrkHyp(s.vx,s.vz))*(kay?1.4:1),dx/n,dz/n,kay?'kayma':'takilma',p,kay?'kayma':'bacak',bc?{bacak:bc}:null);
 }
 EYLEM_ADIM.kayma=function(p,e){
   if(e.bacak)mdhBacakTakilma(this,p,e);
@@ -714,13 +742,37 @@ EYLEM_ADIM.kayma=function(p,e){
   if(e.t>=e.sure){p.eylem={ad:'kalkis',t:0,sure:0.7,kilit:true,fren:12,yon:p.yon,yuzustu:false,neden:'kayma'};return true;}return false;};   /* T5: kaymadan kalkış 0,7 sn */
 /* T5 (2026-10-09): kalkış süresi düşüşün türünden — yana düşen 1,1 sn, yüzüstü ya da sırtüstü 1,6 sn (Ek G4: sırtüstünden 1,5–3, elle basılı yandan 1–1,5) */
 const mdhKalkisSure=(p,e)=>e.neden==='plonjon'?0.8:hrkAbs(hrkSin((e.yon!=null?e.yon:p.yon)-p.yon))>0.7?1.1:1.6;   /* T14e: plonjondan kalkış (ön kollardan) kısa */
-/* düşüş → yerde → kalkış: yön, neden, şiddet ve yüzüstü bilgisi taşınır (çizim yönü bilir) */
-EYLEM_ADIM.dusus=function(p,e){if(e.t>=e.sure){p.eylem={ad:'yerde',t:0,sure:e.yerde||1.2,kilit:true,fren:12,yon:e.yon,neden:e.neden,siddet:e.siddet,yuzustu:e.yuzustu};return true;}return false;};
+/* düşüş → yerde → kalkış: yön, neden, şiddet ve yüzüstü bilgisi taşınır (çizim yönü bilir); A11a: darbe nesnesi aynen taşınır (kopyalanmaz) */
+EYLEM_ADIM.dusus=function(p,e){if(e.t>=e.sure){p.eylem={ad:'yerde',t:0,sure:e.yerde||1.2,kilit:true,fren:12,yon:e.yon,neden:e.neden,siddet:e.siddet,yuzustu:e.yuzustu,darbe:e.darbe||null};return true;}return false;};
 /* A4-3 (Ek G4): duruşta yerden kalkana 2 m içindeki boştaki arkadaş el uzatır — yalnız okunur alan (eylem.yardim; js/animasyon.js iki bedenli kol
    IK'sı). Motor kimseyi yürütmez, rastlantı çekmez; oyun sürerken ve plonjon kalkışında (ön kollardan, kısa) yok */
 const mdhKalkisYardim=(m,p,e)=>{if(m.phase==='play'||e.neden==='plonjon')return null;const b=m.ball;let en=null,ed=2;
   for(const q of m.teams[p.team]){if(q===p||!q.oyunda||q.rol==='GK'||q.eylem||b.sahip===q||b.tasiyan===q)continue;const d=hrkHyp(q.x-p.x,q.z-p.z);if(d<ed){ed=d;en=q;}}
   return en;};
 EYLEM_ADIM.yerde=function(p,e){if(e.t>=e.sure){p.eylem={ad:'kalkis',t:0,sure:mdhKalkisSure(p,e),kilit:true,fren:12,yon:e.yon,neden:e.neden,siddet:e.siddet,yuzustu:e.yuzustu,
-  yardim:mdhKalkisYardim(this,p,e)};return true;}return false;};
+  yardim:mdhKalkisYardim(this,p,e),darbe:e.darbe||null};return true;}return false;};
+/* ============ A11a (2026-10-20; kutuphane/J J.6, J.7 D5/D7; TEKNIK_PLAN §8): motor → çizim temas sözleşmesi ============
+   darbe: sendeleme ve düşüşün temas anı — çizim düşüşün ailesini, görsel yönünü ve şiddetini buradan seçer. Salt okunur: rastlantı çekmez, motor okumaz,
+   oyuncu nesnesine alan eklenmez (eylemin alt nesnesi); hız ve konum düşüş itkisinden önceki anlık kopyadır (×4 izlemede çizim eylemi geç görse de
+   temas anını bilir). tip: J.6 ailesi (kademe eylemin adında: sendele 1, dusus 2; 'kayarak' 3. kademe). Temas anında havadaki düşen (kayarak dışında)
+   havaInis; tablo havaInis dediği hâlde yerdeyse itilme. Taktik faulde arkadan çekme (v.itme) cekilme, yandan çelme takilma */
+const MDH_DARBE_TIP={kayma:'kayarak',tutma:'cekilme',carpma:'itilme',carpisma:'itilme',omuz:'itilme',itme:'itilme',hava:'havaInis',kaleci:'havaInis',aldatma:'aldatma'};
+function mdhDarbe(m,p,tur,yapan,ek,kayip){
+  const z=p.zipla,havada=(p.yuk||0)>0.05||!!(z&&z.t>=0);let tip=MDH_DARBE_TIP[tur]||'takilma';
+  if(tur==='taktik'&&ek&&ek.itme)tip='cekilme';
+  if(havada&&tip!=='kayarak')tip='havaInis';else if(!havada&&tip==='havaInis')tip='itilme';
+  const R=yapan&&yapan.x!=null?yapan:null;
+  return{tip,tur,faul:!!(ek&&ek.faul),c:ek&&ek.c!=null?ek.c:null,kayip:kayip!=null?kayip:null,guc:mdhDengeGuc(p),bacak:ek&&ek.bacak?ek.bacak:tur==='kayma'?'iki':null,
+    x:p.x,z:p.z,vx:p.vx,vz:p.vz,yon0:p.yon,sahip:m.ball.sahip===p,havada:p.yuk||0,ucus:z&&z.t>=0?hrkMax(0,z.sure-z.t):0,
+    ra:R?hrkAciNorm(hrkAtan2(R.z-p.z,R.x-p.x)-p.yon):null,rx:R?R.x:null,rz:R?R.z:null,rvx:R?R.vx||0:null,rvz:R?R.vz||0:null,ryon:R?R.yon:null,yapan:R,
+    kalk:null,kare:m.kare||0};
+}
+/* A11a: 'darbe' olayı (sabit şekil {p, o, tur, ux, uz, dv, v, y, kayip, sonuc, darbe}). Kaynaklar: dengeBoz'un etkili çağrısı (sonuc 'yok' | 'sendele' |
+   'dusus'), dengeBoz'a gitmeyen ya da etkisiz kalan gövde çarpışması (dv ≥ darbeEsik; hakem dahil, bütün evrelerde) ve topun bedene çarpması (tur 'top':
+   ux, uz bağıl hızın yatay birim yönü, v bağıl hızın büyüklüğü — dikey dahil, y temas yüksekliği p.yuk üstünde; yansımadan önce) */
+function mdhDarbeOlay(m,p,o,tur,ux,uz,dv,kayip,sonuc,darbe){
+  let v=null,y=null;
+  if(tur==='top'){const b=m.ball,rx=b.vx-(p.vx||0),rz=b.vz-(p.vz||0),rh=hrkHyp(rx,rz);v=Math.sqrt(rh*rh+b.vy*b.vy);y=b.y-(p.yuk||0);if(rh>1e-6){ux=rx/rh;uz=rz/rh;}}
+  m.on('darbe',{p,o:o||null,tur,ux,uz,dv:dv!=null?dv:null,v,y,kayip:kayip!=null?kayip:null,sonuc,darbe:darbe||null});
+}
 EYLEM_ADIM.mudahale=function(p,e){if(!e.oldu&&e.t>=e.temas){e.oldu=true;this.mudahaleSonuc(p,e);}else if(e.bacak)mdhBacakTakilma(this,p,e);return false;};

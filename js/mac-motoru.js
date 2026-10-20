@@ -78,7 +78,7 @@ const MOTOR_AYAR={
   kovalaAtalet:undefined,kovalaSadik:undefined,gidisGovde:undefined,gidisAcik:undefined,gidisTopYakin:undefined,gidisMesafe:undefined,gidisHat:undefined,alisAcik:undefined,niyetDonus:undefined,dokunusUlas:undefined,vurusDonus:undefined,temasFren:undefined,temasHiz:undefined,govdeDinamik:undefined,donusIvme:undefined,bakOlu:undefined,donusGecikme:undefined,bakisOnce:undefined,bakisBekle:undefined,bakisBekleEfor:undefined,bakisBekleUzak:undefined,cruyff:undefined,cruyffKal:undefined,cruyffKanat:undefined,sirtGovde:undefined,sutHamle:undefined,blokErisim:undefined,kanatKapat:undefined,sagSolAc:undefined,surusYetis:undefined,surusYuz:undefined,geriTopla:undefined,cizgiKoru:undefined,
   /* C — js/mac-mudahale.js */
   mudahaleIstegi:undefined,yanIstek:undefined,faulEsik:undefined,kutuIstek:undefined,sabirsiz:undefined,omuzGuc:undefined,kartEsik:undefined,
-  acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,elOlasilik:undefined,tutmaIstek:undefined,ortaTemas:undefined,blokGercek:undefined,govdeDar:undefined,
+  acikIstek:undefined,kaymaIstek:undefined,taktikFaul:undefined,sariAtak:undefined,firsatKirmizi:undefined,elOlasilik:undefined,tutmaIstek:undefined,ortaTemas:undefined,blokGercek:undefined,govdeDar:undefined,darbe:undefined,darbeEsik:undefined,
   /* C — js/mac-hava.js (T6) */
   sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,havaOkuma:undefined,havaEgilme:undefined,havaDuello:undefined,havaKol:undefined,plonjon:undefined,plonjonHiz:undefined,plonjonYerde:undefined,kafaDonus:undefined,
   /* B — js/mac-topla.js */
