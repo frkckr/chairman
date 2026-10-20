@@ -63,7 +63,8 @@ HAZIR = {
     "kalkis": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='kalkis'&&p.eylem.t>0.2)", 0, "mac"),
     "ucus": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='ucus'&&p.eylem.t>0.15)", 0, "mac"),
     # sözleşmedeki yeni durumlar (TEKNIK_PLAN §8): ilgili akış birleşene kadar gerçekleşmez
-    "omuz": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='omuz')", 0.1, "mac"),
+    # A11b (2026-10-20): omuz anı darbe sözleşmesinden — kaybedenin itildiği adım ('darbe' olayı, tür omuz, hız değişimi var); MOTOR_AYAR.darbe 0'da eski koşul
+    "omuz": ("__son('darbe',0.05,v=>v.tur==='omuz'&&v.dv!=null)||(!MOTOR_AYAR.darbe&&mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='omuz'))", 0.1, "mac"),
     "sendele": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='sendele')", 0.1, "mac"),
     "jokey": ("mac.players.some(p=>p.oyunda&&p.tavir==='jokey')&&mac.ball.sahip", 0.3, "mac"),
     "tek-vurus": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='vurus'&&p.eylem.tekDokunus&&p.eylem.faz==='takip')", 0, "mac"),
@@ -113,6 +114,15 @@ HAZIR = {
     "uzun-tac": ("__son('kullanim',0.05,v=>v.tur==='tac'&&v.alt==='uzun')", 0, "mac"),
     "penalti-vurus": ("__son('kullanim',0.05,v=>v.tur==='penalti')", 0, "mac"),
     "kale-vurusu": ("mac.phase==='durus'&&mac.durus.tur==='kaleVurusu'&&mac.durus.asama==='hazir'", 0.3, "mac"),
+    # A11b (2026-10-20): düşüş aileleri ve temas — motorun darbe sözleşmesinden (A11a: e.darbe.tip, 'darbe' olayı); önce/sonra film şeridi (--onek once- / sonra-,
+    # --kare 6 --aralik 0.1). "omuz" yukarıda (A11b'den beri darbe olayından). Claude'un kendi incelemesi, kullanıcıya gösterilmez
+    "dusus-kayarak": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='dusus'&&p.eylem.darbe&&p.eylem.darbe.tip==='kayarak'&&p.eylem.t<0.03)", 0, "mac"),
+    "dusus-cekilme": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='dusus'&&p.eylem.darbe&&p.eylem.darbe.tip==='cekilme'&&p.eylem.t<0.03)", 0, "mac"),
+    "dusus-hava": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='dusus'&&p.eylem.darbe&&p.eylem.darbe.tip==='havaInis'&&p.eylem.t<0.03)", 0, "mac"),
+    "kalkis-sirt": ("mac.players.some(p=>p.oyunda&&p.eylem&&p.eylem.ad==='kalkis'&&p.eylem.darbe&&!p.eylem.yuzustu&&p.eylem.sure>=1.4&&p.eylem.t<0.03)", 0, "mac"),
+    "takilma": ("__son('darbe',0.05,v=>v.darbe&&v.darbe.tip==='takilma'&&v.sonuc==='sendele')", 0.1, "mac"),
+    "carpisma": ("__son('darbe',0.05,v=>v.tur==='carpisma'&&v.sonuc==='yok'&&v.dv>=0.8)", 0.05, "mac"),
+    "gogse-top": ("__son('darbe',0.05,v=>v.tur==='top'&&v.v>=10&&v.p&&v.y>=1.0*(v.p.boy||1)&&v.y<=1.5*(v.p.boy||1))", 0.05, "mac"),
 }
 VARSAYILAN_SET = ["santra", "orta-saha", "korner", "sut", "faul", "sol-ceza", "uzak-kenar", "yakin-kenar"]
 
