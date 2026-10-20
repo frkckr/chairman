@@ -11,13 +11,15 @@
       ortanca; vazgeçen ve başlamayan ayrıca.
    2) Kale vuruşu: kaleci (sağ, sol ya da iki ayaklı) kale vuruşunu tek kalan stopere (sağdaki ya da soldaki) kullanır; duruş motorun akışıyla
       (durusBaslat → yerleşim → durusKullan). Ölçülen: dış ve zayıf payı, karar anında |gövde–hedef| (dil.don.a0), temasta |gövde–top yönü|, yol.
-   V1-0b: kapı yok, bugünkü değerleri yazar (çıkış 0). Kapılar V1a-1…V1a-3 ve V1e-1'de açılır (V1-plan: (+45°, 18 m, serbest) dış 0 ve yanlış yan
+   V1a-1 (2026-10-20): yuzeyKarar & 1 iken kapılar (geçmezse çıkış 1; bit kapalıyken bilgi) — (+45°, 18 m, serbest) dış 0; (+45°, 8 m, baskılı) dış
+   ≥ %25; (−45°, 18 m, bütün kipler) dış 0; kale vuruşunda dış 0.
+   V1-0b: iskelet. Öbür kapılar V1a-2…V1a-3 ve V1e-1'de açılır (V1-plan: (+45°, 18 m, serbest) dış 0 ve yanlış yan
    ≤ %2; (+45°, 8 m, baskılı) dış ≥ %25; (+90°, 18 m, serbest) zayıf %10–35; (−45°, 18 m) hizalı ya da pelvis ≥ %90, dış 0; (0°) karar→temas
    yuzeyKarar 0'a göre ±0,02 sn; kale vuruşunda dış 0, tek ayaklıda zayıf 0, temasta |sapma| ≤ 0,26 rad). Kurulum rastlantısı senaryonun kendi
    tohumlu üretecindendir; motor kendi tohumunu kullanır. */
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||24,t0=Date.now(),O=require('../senaryo-ortak')(ctx,vm),OO=require('../olcum-ortak');
-  const G=vm.runInContext('({pasSecenekleri,baskiAltinda,yerIlkHiz,PL,MZ,PW})',ctx);
+  const G=vm.runInContext('({pasSecenekleri,baskiAltinda,yerIlkHiz,PL,MZ,PW,MOTOR_AYAR})',ctx),YK=G.MOTOR_AYAR.yuzeyKarar|0;
   let sr=((tohum||1)*2654435761)>>>0;const r=()=>{sr=(sr+0x6D2B79F5)>>>0;let t=sr;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};
   const TH=[-135,-90,-45,0,45,90,135],LL=[8,18,30],KIP=['serbest','baskili','gelisine'],KIPAD={serbest:'serbest',baskili:'baskılı',gelisine:'gelişine'};
   let deneme=0;
@@ -59,7 +61,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
     const e=tem.e,D0=e.dil;
     return{durum:'vurdu',dis:e.stil==='dis',zay:A.ayak!=='iki'&&e.ayak!==A.ayak,yol:D0&&D0.don?D0.don.yol:'—',fkG,fkT:tem.fkT,t:tem.t,ust:e.stil==='ust'};};
   const ortanca=OO.ortanca,y=(a,c)=>c?(100*a/c).toFixed(0).padStart(4)+'%':'   —';
-  console.log(`\nV1 · v-yuzey (V1-0b iskeleti; kapısız) · pas: hücre başına ${n} deneme · pasör ${'sağ ayaklı orta saha'}`);
+  console.log(`\nV1 · v-yuzey (V1a-1 kapıları) · pas: hücre başına ${n} deneme · pasör ${'sağ ayaklı orta saha'}`);
   console.log('  Kip       θ (°)  L (m)    n   dış  zayıf güçlü   üst   hizalı pelvis  adım  açık   geri>15° temas>15°  karar→temas  vazgeçti/başlamadı');
   const OZ={};
   for(const kip of KIP)for(const th of TH)for(const L of LL){const h={n:0,dis:0,zay:0,ust:0,yol:{},g:0,gN:0,tk:0,tN:0,t:[],vaz:0,bas:0};
@@ -86,11 +88,21 @@ module.exports={calistir({ctx,vm,N,tohum}){
       fTe,yol:D0&&D0.don?D0.don.yol:'—',kisa:(e.sec.tip||'yer')==='yer',hedefYan:fa>0?'sag':'sol'};};
   console.log(`\n  Kale vuruşu: hücre başına ${n} · kaleci ayağı × kalan stoper (sağ: hücum yönüne bakarken f > 0 yanı)`);
   console.log('  Kaleci   Stoper    n  kısa   dış  zayıf  sağ ayakla  hedef sağda  karar |f| ort. (°)  temasta |sapma| ort. / en çok (°)  yol');
+  const KV={n:0,dis:0};
   for(const ayak of['sag','sol','iki'])for(const yan of['sag','sol']){const h={n:0,kisa:0,dis:0,zay:0,sagA:0,hs:0,f0:[],fT:[],yol:{}};
     for(let i=0;i<n;i++){const R=kvDene(ayak,yan);if(!R||R.elle)continue;h.n++;if(R.kisa)h.kisa++;if(R.dis)h.dis++;if(R.zay)h.zay++;if(R.ayakK==='sag')h.sagA++;if(R.hedefYan==='sag')h.hs++;
-      h.f0.push(R.f0*180/Math.PI);h.fT.push(R.fTe*180/Math.PI);h.yol[R.yol]=(h.yol[R.yol]||0)+1;}
+      h.f0.push(R.f0*180/Math.PI);h.fT.push(R.fTe*180/Math.PI);h.yol[R.yol]=(h.yol[R.yol]||0)+1;KV.n++;if(R.dis)KV.dis++;}
     console.log('  '+ayak.padEnd(9)+yan.padEnd(7)+String(h.n).padStart(4)+y(h.kisa,h.n).padStart(6)+y(h.dis,h.n).padStart(6)+y(h.zay,h.n).padStart(7)+y(h.sagA,h.n).padStart(12)+y(h.hs,h.n).padStart(13)+
       ortanca(h.f0).toFixed(0).padStart(20)+(ortanca(h.fT).toFixed(1)+' / '+(h.fT.length?Math.max(...h.fT):NaN).toFixed(1)).padStart(36)+'  '+Object.keys(h.yol).sort().map(k=>k+' '+h.yol[k]).join(' · '));}
-  console.log(`\n  Süre ${((Date.now()-t0)/1000).toFixed(1)} sn · V1-0b: kapı yok (bugünkü değerler); kapılar V1a ve V1e alt adımlarında açılır`);
-  return 0;
+  /* ---- kapılar (V1a-1; yuzeyKarar & 1 iken, kapalıyken bilgi) ---- */
+  const H=(kip,th,L)=>OZ[kip+'|'+th+'|'+L],KP=[];
+  const kapi=(ad,ok,deger)=>{KP.push(ok);console.log(`  ${ok?' ':'!'} ${ad}: ${deger}`);};
+  console.log(`\n  Kapılar (V1a-1; yuzeyKarar ${YK}${YK&1?'':' — bit 1 kapalı: bilgi, çıkışı etkilemez'})`);
+  {const h=H('serbest',45,18);kapi('(+45°, 18 m, serbest) dış = 0',h.dis===0&&h.n>0,`${h.dis}/${h.n}`);}
+  {const h=H('baskili',45,8);kapi('(+45°, 8 m, baskılı) dış ≥ %25',h.n>0&&h.dis>=0.25*h.n,`${h.dis}/${h.n}`+y(h.dis,h.n));}
+  {let d=0,nn=0;for(const kip of KIP){const h=H(kip,-45,18);d+=h.dis;nn+=h.n;}kapi('(−45°, 18 m, bütün kipler) dış = 0',d===0&&nn>0,`${d}/${nn}`);}
+  kapi('Kale vuruşu dış = 0',KV.dis===0&&KV.n>0,`${KV.dis}/${KV.n}`);
+  const gec=KP.every(Boolean);
+  console.log(`\n  Süre ${((Date.now()-t0)/1000).toFixed(1)} sn · ${YK&1?(gec?'kapılar geçti':'KAPI GEÇMEDİ'):'bilgi (bit 1 kapalı)'}`);
+  return YK&1&&!gec?1:0;
 }};
