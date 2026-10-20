@@ -78,7 +78,15 @@ const KOD=`(function(tohum,tur,t,u,w){
   if(tur==='serbest')veri={bekle:1.0,duduk:true};else if(tur==='penalti')veri={bekle:0.3};
   m.durusBaslat(tur,t,x,z,veri);
   const du=m.durus;let baraj=false,nb=0;
-  for(let n=0;n<60*60&&!kul;n++){if(m.durus){baraj=!!m.durus.baraj;nb=m.durus.barajdakiler?m.durus.barajdakiler.length:0;}m.step(1/60);}
+  /* S1a (bilgi; 2026-10-20): seremonili barajlı serbest vuruşta (du.hk.s1) adımlamanın başında baraj dizili (bütün üyeler son yerine ≤ 1 m), düdükte
+     hakemin hızı, düdük → koşu (ilk kullanım: m.sonKullanim'ın yeni nesnesi); kullanım oyunu başlattıysa duruş önceki adımınkidir */
+  let s1=null,s1D=null,s1K=m.sonKullanim;
+  for(let n=0;n<60*60&&!kul;n++){if(m.durus){baraj=!!m.durus.baraj;nb=m.durus.barajdakiler?m.durus.barajdakiler.length:0;}m.step(1/60);
+    const D=m.durus||s1D;if(D&&D.hk&&D.hk.s1){s1D=D;const H=D.hk;if(!s1)s1={once:null,duduk:null,hkV:null,kos:null};
+      if(H.evre==='adim'&&s1.once==null){let h=true;for(const [p,y] of D.barajYer)if(p.oyunda&&Math.hypot(p.x-y.x,p.z-y.z)>1)h=false;s1.once=h;}
+      if(D.dudukT!=null&&s1.duduk==null){s1.duduk=D.dudukT;s1.hkV=m.refs[0].spd||0;}
+      if(m.sonKullanim!==s1K&&s1.kos==null&&D.dudukT!=null)s1.kos=D.t-D.dudukT;}
+    s1K=m.sonKullanim;}
   if(!kul)return null;
   const b=m.ball;
   for(let k=0;k<60*8;k++){
@@ -103,7 +111,7 @@ const KOD=`(function(tohum,tur,t,u,w){
       if(m.t-gkD.t>3)gkD.gk=null;}
     onc.x=b.x;onc.z=b.z;onc.y=b.y;onc.vx=b.vx;onc.vz=b.vz;}
   return{hz:kul.hazirlik,alt:kul.alt,bolge:kul.bolge,sut,gol,golDogrudan,golIlk,ilkSut,sonra1,dogrudan,cerceve,ilk,inis,blok,zip,rib,kutuH,kutuS,baraj,nb,elle,perde:!!(kul.du&&kul.du.gorev&&[...kul.du.gorev.values()].some(g=>g.rol==='perdeAdam')),ikili:!!(kul.du&&kul.du.ikili),aldatma:!!(kul.du&&kul.du.aldatma),aldOnce:kul.du&&kul.du.aldatmaGecti!=null?su-kul.du.aldatmaGecti:null,
-    sonra1K,hkBlok:sonra1==='savBlok',blokRol,blokEr,blokHavada,blokD,golBlok,golBlokT,sbIlk,sbIlkT,sbSut,bSonra,hkSav,hkHuc,evSav,evHuc,evMarkaj,evAcik,bitis,bitT:bitT>=0?bitT-su:null,golBitis,sutP:sut>0,kd:gkD?gkD.o:null};})`;
+    sonra1K,s1,hkBlok:sonra1==='savBlok',blokRol,blokEr,blokHavada,blokD,golBlok,golBlokT,sbIlk,sbIlkT,sbSut,bSonra,hkSav,hkHuc,evSav,evHuc,evMarkaj,evAcik,bitis,bitT:bitT>=0?bitT-su:null,golBitis,sutP:sut>0,kd:gkD?gkD.o:null};})`;
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||400,f=vm.runInContext(KOD,ctx),t0=Date.now();let tn=(tohum||1)*10000,kabulDisi=0;   /* T8f: tohum blokları çakışmasın (koşu başına ~4N + 3N tohum) */
   const y=(a,c)=>c?(100*a/c).toFixed(1)+'%':'—',ort=L=>L.length?L.reduce((a,c)=>a+c,0)/L.length:NaN,ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,c)=>a-c);return S[Math.floor(S.length/2)];};
@@ -193,7 +201,11 @@ module.exports={calistir({ctx,vm,N,tohum}){
   {const bL=[].concat(S.merkez18.L,S.merkez22.L,S.merkez26.L,S['yarı18'].L,S['yarı22'].L,S['yarı26'].L).filter(r=>r.baraj),hA=havuz.filter(r=>r.aldatma),hN=havuz.filter(r=>!r.aldatma);
     const aG=hA.filter(r=>r.aldOnce!=null);
     console.log(`  A4-1: barajlı vuruşta topun başında iki kişi ${y(say(bL,r=>r.ikili),bL.length)} · doğrudan şutta aldatma ${y(hA.length,havuz.length)} · gol/şut aldatmalı ${y(say(hA,r=>r.golDogrudan&&r.gol),hA.length)} (${hA.length}) · aldatmasız ${y(say(hN,r=>r.golDogrudan&&r.gol),hN.length)} (${hN.length})`);
-    console.log(`  A4-1: aldatma koşusu topun yanından geçti ${aG.length}/${hA.length} · şuttan önce ortanca ${f1(ortanca(aG.map(r=>r.aldOnce)),2)} sn (kalecinin tepkisine ek: 0,8 sn içinde)`);}
+    console.log(`  A4-1: aldatma koşusu topun yanından geçti ${aG.length}/${hA.length} · şuttan önce ortanca ${f1(ortanca(aG.map(r=>r.aldOnce)),2)} sn (kalecinin tepkisine ek: 0,8 sn içinde)`);
+    /* S1a (bilgi; 2026-10-20, js/mac-sahne.js): seremonili barajlı vuruş — hazırlık (duruşun başından temasa), düdük → koşu ≥ 1 sn (kabul %100),
+       düdükte hakem durmuş ≤ 0,3 m/sn (kabul ≥ %95), adımlamadan önce baraj dizili (kabul ≤ %10) */
+    const B1=bL.filter(r=>r.s1),K1=B1.filter(r=>r.s1.kos!=null),D1=B1.filter(r=>r.s1.duduk!=null),O1=B1.filter(r=>r.s1.once!=null);
+    if(B1.length)console.log(`  S1a: seremonili ${B1.length}/${bL.length} · hazırlık ortancası ${f1(ortanca(B1.map(r=>r.hz)))} sn · düdük → koşu ortancası ${f1(ortanca(K1.map(r=>r.s1.kos)),2)} sn, ≥ 1 sn ${y(say(K1,r=>r.s1.kos>=1),K1.length)} · düdükte hakem durmuş ${y(say(D1,r=>r.s1.hkV<=0.3),D1.length)} · adımlamadan önce dizili ${y(say(O1,r=>r.s1.once),O1.length)} · düdüksüz ${B1.length-D1.length}`);}
   kapi(KAPI.serbest,havuz.length>0&&hg>=6&&hg<=10,`barajlı doğrudan şutta gol/şut %6–10 (merkez ve yarı 18–26 m) → %${hg.toFixed(1)} (${say(havuz,r=>r.golDogrudan&&r.gol)}/${havuz.length})`);
   /* T8c: bilgi — 18–22 m merkezde fazlalık genel şut isabetinden ve kalecinin kurtarışından (maçta isabet %45–47, bant 30–45; kurtarış %55,
      gerçekte ~%70): T10 öncesi gözden geçirmede; havuz (6–10) kapıdır */

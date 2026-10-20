@@ -188,8 +188,12 @@ const STIL={
     /* S1 (2026-10-20; FUTBOL_KUTUPHANESI §12.15, kutuphane/L-sahne-protokolleri.md): sahne protokollerinin çizimi (tetikler motordan, js/mac-sahne.js) —
        duduk seremonili düdüğün işaret süresi (sn; olay 'duduk' v.seremoni: barajlı serbest vuruş, penaltı, kart sonrası, santra; 0: eski 0,5 sn);
        defterRenk hakemin not defterinin rengi (S1d ve S1c'nin 'not' eylemi, js/mac-sahnesi.js DEFTER). Alanların anahtarları (serbest, kart, kaptan,
-       bosalt, gol, rutin …) kendi alt adımında eklenir; her biri 0'da eski çizim */
-    s1:{duduk:0.8,defterRenk:0x22262b},
+       bosalt, gol, rutin …) kendi alt adımında eklenir; her biri 0'da eski çizim.
+       S1a (seremonili barajlı serbest vuruş; olay 'seremoni', kalecinin jesti 'yonlendir', baraj üyesinin g.dizik): serbest 1 — hakemin "düdüğü bekle"
+       (dudukBekle, 1,1 sn) ve "geri it" (geriIt, 1,0 sn) işaretleri, kalecinin yönlendirmesi, kaosta baraj pozunun kalkması, hakem restart yerinde
+       dururken saat bakışının bastırılması; 0'da hiçbiri çizilmez. itHz geri itmede dirseklerin açılıp kapanma sıklığı (Hz; iki itme), yonHz ve
+       yonSalinim kalecinin yönlendiren kolunun sağa sola sallanması (Hz, rad), yonTh kolun yatayın üstündeki açısı (rad) */
+    s1:{duduk:0.8,defterRenk:0x22262b,serbest:1,itHz:2.5,yonHz:2.5,yonSalinim:0.2,yonTh:0.15},
     /* K1 (2026-10-20; FUTBOL_KUTUPHANESI §12.13 kullanıcı notu, kutuphane/L L.2): penaltıda çizgideki kalecinin bekleyişi (js/animasyon.js anmPenaltiKaleci;
        tetik motorun penaltiKaleciBakis'i; MOTOR_AYAR.penaltiBakis 0 iken de kapalı) — acik 0'da eski çizim (bekleyiş katmanı: eller belde, bakınma, eldiven);
        dik hazır duruşun eğilme ve diz payı (1 tam kaleciHazir); kolAc kolların iki yana açılması (rad, jestin tepesinde), kolInis kolun önden yana inişi (rad),

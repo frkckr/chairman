@@ -87,6 +87,9 @@ OLCUM_KUR_JS = r"""() => {
     frenAdim: [], sabitAdim: [], sabitTemas: [[], [], [], [], []], frenDy: [], sabitDy: [],
     /* A2b zamanlama: hakem işareti olayla aynı karede mi (motor adımı farkı), vuruşta çizimin temas evresi motorun temas karesinde mi */
     zOlay: [], zIsaret: {}, zVurus: 0, zVurusAyni: 0, zVurusFark: [],
+    /* S1a (2026-10-20): seremonili barajlı serbest vuruş — kaosta (görevde dizik false) baraj pozu (yuva > 0,5) kare payı, dizikken pozlu kare payı
+       (motor sıçraması hariç), kalecinin 'yonlendir' jesti çizildi (jest yuvası > 0,5; jest başına), hakem restart yerinde ('dur', 'duduk') saatine baktı */
+    s1: { kaos: 0, kaosPoz: 0, dizik: 0, dizikPoz: 0, jestN: 0, jestCiz: 0, dur: 0, saat: 0 },
     /* T4-V vuruş hazırlığı: temas karesinde son adımın süresi / planı (tB), geri salınımın tepesi / planı, ilk görülme evresi, motorun karar→temas
        süresi (e.t, türe göre); vuruş sırasında evre sınırları (son adım başı, temas, çıkış) dışındaki > 20° sıçramalar; hız katlarında kararsız kare */
     vkN: 0, vkHazirliksiz: 0, vkSonAdim: [], vkTepe: [], vkIlkTakip: 0, vkKT: { pas: [], sut: [], uzun: [], ilk: [] }, vkKare: 0, vkDisi: 0, vkSinirDestek: 0, vkDisiEvre: {}, vkEvreKare: {}, kararsiz: 0, kararsizKanal: {},
@@ -128,7 +131,7 @@ OLCUM_KUR_JS = r"""() => {
          (kalkis, neden 'yatan') son karesinde dik (≤ 0,05 rad) */
       yay: { korner: [], serbest: [] }, yayDurgun: 0, ytN: 0, ytYat: 0, ytKalkN: 0, ytKalkDik: 0 } };
   const HK_OLAY = { faul: 'ref', avantaj: 'ref', ofsayt: 'ikisi', korner: 'ikisi', kaleVurusu: 'ikisi', tac: 'biri', kickoff: 'ref', duduk: 'ref', degisiklik: 'lin', barajYeri: 'ref', uyari: 'ref', tedaviBasladi: 'ref',
-    sprey: 'ref', sayim: 'ref' };   /* Z2e: hakemin spreyi ve 5 sn sayımı */
+    sprey: 'ref', sayim: 'ref', seremoni: 'ref' };   /* Z2e: hakemin spreyi ve 5 sn sayımı; S1a: "düdüğü bekle" ve "geri it" */
   /* T10f olay (Ek G4, G7, G8): yerdeki sakatın tutma pozu (sakat yuvası > 0,8), sedyede kökün yüksekliği (0,55–0,9 m) ve sedyeyi tutan sağlıkçı,
      tedavide sağlıkçının çömelmesi ya da gerdirmesi, topallamada iki ayağın yerde kalma karesi (sakat / sağlam), endirekt işaretin tutulduğu kare
      payı (duruşun 2. saniyesinden — önce düdük ve yön —; hakem topu hariç), hakem topunu bırakma işaretinin motorun eylemiyle aynı karede başlaması, golcünün sevinç çeşidi */
@@ -446,6 +449,7 @@ OLCUM_KUR_JS = r"""() => {
   const zK = new Map(), zC = new Map(), zIt = new Map(), zY = new Map(), zKor = new Map(), zTm = new Map(), zTmBekle = new Map(), zHv = new Map(), zPj = new Map(), zKr = new Map(), zKp = new Map(), zBl = new Map();
   const zTac = new Map(), zPenKare = new Map(), zPenE = new Map(), zKol = new Map(), zYer = new Map(); let zPenBekle = null;
   const zYt = new Map(), zYk = new Map();   /* Z2e: yatan barajcı */
+  const zS1j = new Map();   /* S1a: kalecinin yönlendirme jesti */
   /* T5f temas ölçümü (aktör başına, kare sonunda) */
   function temasOlc(a, dt) { const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible) return; const e = p.eylem, ad = e ? e.ad : '', G = S.tm;
     /* T9b-e: topun çizilen yeri (anmVkTop; temas karesinde temas yerinde tutulur) — eski çizimde motorun yeriyle aynı (iki adım arası oran ≈ 1) */
@@ -492,6 +496,10 @@ OLCUM_KUR_JS = r"""() => {
     if (ad === 'kalkis') { let z = zTm.get(a); if (!z || z.e !== e) { z = { e, bitti: false }; zTm.set(a, z); } if (!z.bitti && e.t >= (e.sure || 0.6) - dt * 1.01) { z.bitti = true; G.kalkN++; if (a.lth <= 0.05) G.kalkDik++; } }
     if (ad === 'sendele') { G.sendKare++; if (a.gAdim < 0.7) G.sendKisa++; }
     if (ad === 'dusus' && e.t < dt * 1.01) G.dususN++;
+    /* S1a: kaosta baraj pozu yok, dizikken var; kalecinin yönlendirmesi çizildi */
+    { const G = p.duranRol, Q = S.s1;
+      if (G && G.rol === 'baraj' && G.dizik !== undefined && mac.phase === 'durus' && !p.zipla) { const w = a.sw[ANM_S.baraj] > 0.5; if (G.dizik === false) { Q.kaos++; if (w) Q.kaosPoz++; } else { Q.dizik++; if (w) Q.dizikPoz++; } }
+      const j = p.jest; if (j && j.tur === 'yonlendir') { let z = zS1j.get(p); if (!z || z.j !== j) { z = { j, ciz: false }; zS1j.set(p, z); Q.jestN++; } if (!z.ciz && a.sw[ANM_S.jest] > 0.5) { z.ciz = true; Q.jestCiz++; } } }
     /* T8e duran top */
     { const D = S.dr, G = p.duranRol, du = mac.durus;
       if (G && G.rol === 'baraj') { const z = p.zipla; if (z && z.t >= 0) { D.bjKare++; if (a.yEk > 0.05) D.bjFazla++; if (a.sw[ANM_S.barajZ] > 0.5) D.bjPoz++; } else if (!z && mac.phase === 'durus' && a.yEk > 0.03) D.bjOnce++; }
@@ -511,6 +519,8 @@ OLCUM_KUR_JS = r"""() => {
     if (ad === 'yerde' && e.neden === 'plonjon' && zPj.get(a)) { zPj.delete(a); S.hv.plInis.push(+a.lth.toFixed(3)); } }
   function zamanlama(a) {
     const p = a.kaynak; if (!p) return;
+    if (p.tur === 'hakem' && p.kind === 'ref' && typeof ANM_HK !== 'undefined') { const du = mac.durus, H = du && du.hk;   /* S1a: restart yerinde saat bakışı yok */
+      if (H && H.s1 && (H.evre === 'dur' || H.evre === 'duduk')) { S.s1.dur++; const h = ANM_HK.get(p); if (h && h.cur && h.cur.tur === 'saat') S.s1.saat++; } }
     if ((p.tur === 'hakem') && typeof ANM_HK !== 'undefined') { const h = ANM_HK.get(p); if (h && h.basKare >= 0) { const o = zK.get(a) || -1; if (h.basKare !== o) { zK.set(a, h.basKare); (S.zIsaret[p.kind] = S.zIsaret[p.kind] || []).push(h.basKare); } } }
     if (p.tur === 'oyuncu' && a.vk) { const e = p.eylem, vk = a.vk;
       if (e && e.ad === 'vurus') {
@@ -620,6 +630,7 @@ SONUC_JS = r"""() => {
     tm: (() => { const G = S.tm, sa = sirala(G.acik); return { n: G.n, acikMed: sa.length ? sa[Math.floor(sa.length / 2)] : null, acikP90: sa.length ? sa[Math.min(sa.length - 1, Math.floor(0.9 * sa.length))] : null,
       acikIyi: sa.length ? +(100 * sa.filter(x => x <= 0.15).length / sa.length).toFixed(0) : null, icIce: G.icIce, cift: G.cift, kalkN: G.kalkN, kalkDik: G.kalkDik, sendKare: G.sendKare,
       sendKisaPay: G.sendKare ? +(100 * G.sendKisa / G.sendKare).toFixed(0) : null, dususN: G.dususN, liste: G.liste }; })(),
+    s1: S.s1,
     zaman: (() => { if (typeof ANM_HK === 'undefined') return null; const r = { olay: S.zOlay.length, ayni: 0, bir: 0, yok: 0, yokAd: {}, birAd: {}, adN: {}, adAyni: {} };   /* Z2e: olay türü başına (sprey, sayim) */
       for (const o of S.zOlay) { const L = o.tur === 'ref' ? ['ref'] : o.tur === 'lin' ? ['lin'] : o.tur === 'ikisi' ? ['ref', 'lin'] : ['ref', 'lin'];
         let enIyi = 99; for (const k of L) for (const b of (S.zIsaret[k] || [])) { const d = b - o.kare; if (d >= 0 && d < enIyi) enIyi = d; }
@@ -1111,6 +1122,15 @@ def satirlar(o):
                  f"   [hedef ≥90 / ≥90 / ≥80 / ≥80 / 0,55–0,75 / ≥90 / N/N / ≥5]")
         if ol.get("olay"):
             S.append("A:   olay düzeneği (yapay): " + json.dumps(ol["olay"], ensure_ascii=False))
+    # S1a (2026-10-20): seremonili barajlı serbest vuruş — işaretler olayla aynı karede (N/N), kaosta baraj pozu ~0, dizikken pozlu ≥ %90, kalecinin
+    # yönlendirmesi çizildi N/N, hakem restart yerinde saatine bakmaz (0)
+    s1 = o.get("s1") or {}
+    if s1.get("kaos") or s1.get("dizik") or s1.get("jestN") or adN.get("seremoni"):
+        yz = lambda a_, b_: f"%{v(100 * a_ / b_)}" if b_ else "—"
+        S.append(f"A: seremoni (S1a): işaret olayla aynı karede {adAy.get('seremoni', 0)}/{adN.get('seremoni', 0)}"
+                 f" · kaosta baraj pozu {yz(s1.get('kaosPoz', 0), s1.get('kaos', 0))} ({s1.get('kaos', 0)} kare) · dizikken pozlu {yz(s1.get('dizikPoz', 0), s1.get('dizik', 0))} ({s1.get('dizik', 0)} kare)"
+                 f" · kalecinin yönlendirmesi çizildi {s1.get('jestCiz', 0)}/{s1.get('jestN', 0)} · restart yerinde saat bakışı {s1.get('saat', 0)}/{s1.get('dur', 0)} kare"
+                 f"   [hedef N/N / ~0 / ≥90 / N/N / 0]")
     S.append(f"A: süre: aktorGuncelle {v(o['sureMs'], 3)} ms/kare (p99 {v(o['sureP99'], 3)}) · {o['kare']} kare, {v(o['oyuncuDk'])} oyuncu·dk · animasyon: {o['surum']}   [hedef ≤2 ms]")
     return S
 

@@ -114,7 +114,7 @@ const MOTOR_AYAR={
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined,
   /* S1 — js/mac-sahne.js (S1, 2026-10-20: sahne protokolleri; bit maskesi S1_BIT, parametre anahtarları kendi alt adımında) */
-  protokol:undefined
+  protokol:undefined,seremoni:undefined
 };
 const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek',santraTek:'cekirdek',yerFalso:'cekirdek',durusSaat:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
@@ -299,7 +299,7 @@ class Match{
       /* T13-0 (2026-10-13): oyuncunun bu karedeki görevi (takimAI, bolgeKonumu, durusYerlesim yazar: kovala, pres1, markaj, bolge …), önceki
          görevi ve görevin başladığı an (sn). Rastlantısız; ölçüm (araclar/olcumler/r-ivme.js, r-karne.js) ve T13 eforu okur, çizim okumaz */
       gorevAd:null,_gorevOnce:null,_gorevT:-9,
-      /* A2a (2026-10-08): jest {tur: kol|isaret|itiraz|cagir|basEl|alkis, t, sure, kol, hedef} — motor → çizim; yazan iş T7/T10 (bugün null) */
+      /* A2a (2026-10-08): jest {tur: kol|isaret|itiraz|cagir|basEl|alkis|yonlendir|kolIki, t, sure, kol, hedef} — motor → çizim; yazan iş T7/T10, S1 (yonlendir kalecide S1a, kolIki S1e) */
       jest:null,
       /* T4 (2026-10-08, bire bir): çalım denemesi {o, hareket, taraf, faz 0 yaklaşma / 1 hazırlık / 2 geçme, ft, t0, kare, …} ve aldatılan
          savunmacının yanılgısı {yon, t, sure, siddet} — motor → çizim (js/mac-hareket.js) */

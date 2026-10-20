@@ -279,10 +279,12 @@ Object.assign(Match.prototype,{
      Yalnız yön değişir: moveP'de yön yalnız hız tavanını (yanTavan/geriTavan) belirler, adımlamanın hızı (0,24 × 7,2) geri geri tavanının (0,42 × 7,2) altında, çizgide hakem durur — konum, süreler ve hakemHazir aynı; 'cekil'e gövde eskisi gibi topa dönük girer
      (çekilişte tavan bağlayabilir), sprey kesilecekse (12 sn tavanı, güvenlik ağının vuruşu) 0,5 sn önceden topa döner. Sonucu değiştirmez */
   hakemSpreyHedef(du){const H=du.hk,W=du.barajW;
+    if(H.s1)return this.barajSeremoniHedef(du);   /* S1a: seremonili barajlı serbest vuruşun evreleri (js/mac-sahne.js) */
     if(H.evre==='top')return{x:du.x+W.px*0.8,z:du.z+W.pz*0.8};
     const c=0.25*(W.n-1);return{x:W.x+W.px*c-W.ux*0.6,z:W.z+W.pz*c-W.uz*0.6};},
   hakemSpreyAdim(du,h,uz,dt){
     /* süre top yerine konunca sayılır (kullanan topu getirirken hakem topun yanında bekler); 12 sn'de bitmeyen sprey bırakılır */
+    if(du.hk.s1){this.barajSeremoniAdim(du,h,uz,dt);return;}   /* S1a: hakemi seremoninin evre makinesi sürer (js/mac-sahne.js; 12 sn tavanı yok) */
     const H=du.hk,yer=du.asama==='yerles'||du.asama==='hazir'||du.asama==='kullan';if(yer)H.t+=dt;if(H.t>12){H.evre='cekil';return;}
     if(H.evre==='top'){h.hizOran=uz>6?0.7:0.4;
       if(uz<0.6&&yer){h.hizOran=0;if(H.s==null){H.s=0;this.on('sprey',{tur:'top',x:du.x,z:du.z,zaman:DT_SPREY.top});}H.s+=dt;if(H.s>DT_SPREY.top.sure){H.evre='adim';H.s=null;}}}
@@ -294,7 +296,13 @@ Object.assign(Match.prototype,{
        ≤ 16 kare; don'dan 'cekil'e ~21 kare). Vuruş spreyi beklemiyorsa (du.sahneT yok: sahne&1 kapalı — duranHazirMi'nin sprey koşulu yalnız sahnede;
        du.zorlaHazir da yalnız orada) eski yüz: hakem topa bakar */
     if(!du.sahneT||H.evre==='top'||H.evre==='cekil'||H.t>11.5||du.t>du.zorlaHazir-2.5)return;
+    this.hakemSpreyYuz(du,h);
+  },
+  /* K1'in yüz kuralı (S1-0 planı §1.5: ortak yardımcı; S1a'nın seremonisi de kullanır — js/mac-sahne.js barajSeremoniAdim): 'adim'da gövde ve baş
+     gidiş yönüne, 'cizgi'de çizginin sıkılan noktasına (DT_SPREY.cizgi.don'a dek), öbür evrelerde dokunmaz (hakemAI'nın h.bak'ı: top) */
+  hakemSpreyYuz(du,h){const H=du.hk;
     if(H.evre==='adim'){h.bak=null;h.bakisYon=Math.atan2(h.tz-h.z,h.tx-h.x);return;}
+    if(H.evre!=='cizgi')return;
     const Z=DT_SPREY.cizgi,s=H.s||0;if(s>Z.don)return;
     const W=du.barajW,k=-0.3+(0.5*(W.n-1)+0.6)*clamp((s-Z.s0)/Z.sw,0,1),N=H.nk||(H.nk={x:0,z:0});
     N.x=W.x+W.px*k;N.z=W.z+W.pz*k;h.bak=N;h.bakisYon=Math.atan2(N.z-h.z,N.x-h.x);
@@ -333,7 +341,7 @@ Object.assign(Match.prototype,{
     U.forEach((p,k)=>{const sk=kenar?(k-(U.length-1)/2)*0.5:k*0.5,x=Wx+px*sk,z=Wz+pz*sk;G.set(p,{rol:'baraj',hx:x,hz:z,takim:s,hedef:null,sira:k});BY.set(p,{x,z});});
     du.barajdakiler=U;du.barajYer=BY;du.barajAci=Math.atan2(du.z-Wz,du.x-Wx);
     if(!kenar){du.baraj=true;du.barajUc={x:Wx-px*1.8,z:Wz-pz*1.8};
-      const kl=this.kaleci(s);if(kl&&kl.oyunda){G.set(kl,{rol:'kaleci',hx:gx-d*0.8,hz:MZ-yan*0.3,takim:s,hedef:null});this.jestVer(kl,'isaret',1.4,{x:Wx,z:Wz});}   /* T8e: kaleci barajı kol işaretiyle kurar (Ek G5) */
+      const kl=this.kaleci(s);if(kl&&kl.oyunda){G.set(kl,{rol:'kaleci',hx:gx-d*0.8,hz:MZ-yan*0.3,takim:s,hedef:null});if(!this.s1SerbestAcik())this.jestVer(kl,'isaret',1.4,{x:Wx,z:Wz});}   /* T8e: kaleci barajı kol işaretiyle kurar (Ek G5); S1a'da yönlendirme seremonide ('yonlendir') */
       if(MOTOR_AYAR.sahne&4)this.barajSahne(du,G,U,Wx,Wz,px,pz,ux,uz);}   /* Z2c */
   },
   /* Z2c (sahne&4; kutuphane/F F.2.1, F.2.3, F.2.9; IFAB Law 13): hakemin spreyi (du.hk, du.barajW), en az 3 kişilik barajın arkasına yatan oyuncu
@@ -342,7 +350,8 @@ Object.assign(Match.prototype,{
      keser: kaleciTepkiSuresi'nin perdesi). Hücumcular barajdan en az 1 m uzakta durur (durusYerlesim). Rastlantı çekmez */
   barajSahne(du,G,U,Wx,Wz,px,pz,ux,uz){
     const A=MOTOR_AYAR,t=du.takim,s=1-t,n=U.length;
-    du.barajW={x:Wx,z:Wz,px,pz,ux,uz,n};if(!du.hk)du.hk={evre:'top',t:0,s:null};   /* yeniden dağıtımda sprey baştan başlamaz */
+    du.barajW={x:Wx,z:Wz,px,pz,ux,uz,n};if(!du.hk)du.hk=this.s1SerbestAcik()?this.barajSeremoniKur(du):{evre:'top',t:0,s:null};   /* yeniden dağıtımda sprey baştan başlamaz */
+    if(du.hk.s1)this.barajSeremoniUyeler(du,G,U);   /* S1a (js/mac-sahne.js): üyelerin kaostaki yeri (g.kaos) ve dizilme bayrağı (g.dizik) */
     if(n>=3&&this.sahneOzet(du,5)<(A.yatanBaraj||0)){const c=0.25*(n-1),yx=Wx+px*c+ux*0.9,yz=Wz+pz*c+uz*0.9;
       let en=null,ed=1e9;for(const p of this.sahadakiler(s)){if(p.rol==='GK'||G.has(p)||p.eylem&&p.eylem.kilit)continue;const dd=hyp(p.x-yx,p.z-yz);if(dd<ed){ed=dd;en=p;}}
       if(en){G.set(en,{rol:'yatan',hx:yx,hz:yz,takim:s,hedef:null,wx:px,wz:pz,nx:ux,nz:uz,yatik:false});du.yatan=en;}}
@@ -368,7 +377,7 @@ Object.assign(Match.prototype,{
   sahneOzet(du,tuz){return h2((this.tohum|0)*149+(du.kullanan?du.kullanan.n:0)*23+Math.round(this.t*4),Math.round(du.x*10)*1013+Math.round(du.z*10)*13+tuz*7+3);},
   sahneKur(du){
     if(du.hakemTopu)return;
-    const A=MOTOR_AYAR,T=A.tempo||{},tur=du.tur==='serbest'?(du.sinif==='baraj'?'baraj':du.sinif==='kenar'||du.dolum?'kenar':'serbest'):du.tur,t0=T[tur];
+    const A=MOTOR_AYAR,T=A.tempo||{},tur=du.tur==='serbest'?(du.sinif==='baraj'?'baraj':du.sinif==='kenar'||du.dolum?'kenar':'serbest'):du.tur,t0=tur==='baraj'&&du.hk&&du.hk.s1?A.seremoni.hedef:T[tur];   /* S1a: seremonili barajın hedefi */
     if(!(t0>0))return;
     const D=this.macDurumu(du.takim),B=A.tempoBaglam;let k=1;
     if(B){k*=1+(B[0]-1)*D.koru;k*=1-(1-B[1])*D.acele;}
@@ -378,6 +387,7 @@ Object.assign(Match.prototype,{
     du.sahneKos=tur==='tac'?0.35:tur==='penalti'?1.6:tur==='kaleVurusu'?1.0:1.3;
     /* güvenlik ağları sahnenin planlı varışından sonra (sahneHiz'in payıyla aynı: taç 1, spreyli baraj 12, öbürleri 3 sn) */
     du.zorlaGetir=Math.max(16,du.sahneT-du.sahneKos-(tur==='tac'?1.0:du.hk?12:3.0)+2);du.zorlaHazir=Math.max(28,du.sahneT+10);
+    if(du.hk&&du.hk.s1){du.zorlaGetir=Math.max(16,du.hk.yerT+6);du.zorlaHazir=Math.max(28,du.sahneT+14);}   /* S1a: top yerT'de konur; düdük kapısının ağı zorlaHazir − 2 */
     if((tur==='tac'||tur==='kaleVurusu')&&du.zgEk>0&&A.tacSayim>0)du.zgEk=Math.min(du.zgEk,A.tacSayim-0.5);
     const tk=du.kullanan,Y=A.duranYay,d=this.dir[du.takim];
     if(tk&&Y&&(tur==='korner'||tur==='baraj'||tur==='kenar'||tur==='penalti'))du.yay=Y[0]+(Y[1]-Y[0])*clamp(0.3+0.4*this.sahneOzet(du,1)+0.3*profilAlt(tk,'duranTop',0.5),0,1);
@@ -389,7 +399,7 @@ Object.assign(Match.prototype,{
   sahneHiz(du,tk,v0,x,z){
     if(!du.sahneT||du.hizli||du.hizliTac)return v0;   /* çabuk serbest vuruş ve hızlı taç beklemez */
     /* topun yerine konmasından sonraki sahne payı: taçta 1 sn, hakemin spreyli barajında 12 sn (sprey, 9,15 m, çizgi, baraj), öbürlerinde 3 sn */
-    const kalan=du.sahneT-du.sahneKos-(du.tur==='tac'?1.0:du.hk?12:3.0)-du.t,L=hyp(x-tk.x,z-tk.z);
+    const kalan=du.hk&&du.hk.s1?du.hk.yerT+(du.zgEk||0)-du.t:du.sahneT-du.sahneKos-(du.tur==='tac'?1.0:du.hk?12:3.0)-du.t,L=hyp(x-tk.x,z-tk.z);   /* S1a: top seremoninin yerT'sinde konur */
     if(!(kalan>0.5)||L<0.6)return v0;
     return Math.min(v0,Math.max(1.6,L/kalan)/tk.maxSpd);},
   ikiliKur(du,G){
@@ -611,6 +621,7 @@ Object.assign(Match.prototype,{
     if(du.tur==='korner'){const yan=Math.sign(du.z-MZ)||1;
       return{h:{x:d*(PL-12),z:MZ-yan*12},yh,yhYer:{x:sx*(PL+0.8),z:Math.sign(yz-MZ)===yan?yz+Math.sign(yz-MZ)*0.2:yz}};}
     if(du.tur==='penalti')return{h:{x:d*(PL-17),z:MZ+(yz>MZ?-6:6)},yh,yhYer:{x:sx*PL,z:yz>MZ?MZ+CEZA_W:MZ-CEZA_W}};
+    if(du.sinif==='baraj'&&du.hk&&du.hk.s1&&du.barajW)return{h:this.hakemSpreyHedef(du),yh:null,yhYer:null};   /* S1a: duruş bitene dek seremoninin yeri (hakemHazir'dan sonra restart yeri) */
     if(du.sinif==='baraj'&&!du.hakemHazir&&du.barajUc)return{h:du.hk&&du.hk.evre!=='cekil'?this.hakemSpreyHedef(du):du.barajUc,yh:null,yhYer:null};   /* Z2c: sprey evreleri */
     /* T10d: hakem topunda hakem topun yanına gelir ve bırakır (hakemTopuBirak), sonra topun gerisine ve içeriye 2,5 m çekilir */
     if(du.hakemTopu)return{h:du.birak==null?{x:du.x,z:du.z+(du.z<MZ?0.55:-0.55)}:{x:du.x-d*2.5,z:du.z+(du.z<MZ?2.5:-2.5)},yh:null,yhYer:null};
@@ -638,7 +649,7 @@ Object.assign(Match.prototype,{
       /* Z2c: yatan barajcı yerine yürür, varınca barajın arkasında yatar (vuruşta kalkar: kullanimBildir) */
       if(g.rol==='yatan'){this.gorevYaz(p,'duran');if(g.yatik){p.tx=p.x;p.tz=p.z;p.hizOran=0;p.vx=0;p.vz=0;p.bak=b;continue;}
         const e=hyp(p.x-g.hx,p.z-g.hz);p.tx=g.hx;p.tz=g.hz;p.hizOran=e>4?0.7:0.4;p.bak=b;p.yonHedef=null;this.eforVer(p,0.6);
-        if(e<0.35&&(du.asama==='yerles'||du.asama==='hazir'))g.yatik=true;continue;}
+        if(e<0.35&&(du.asama==='yerles'||du.asama==='hazir')&&!(du.hk&&du.hk.s1&&!du.hakemHazir))g.yatik=true;continue;}   /* S1a: baraj dizildikten sonra yatar */
       /* adam markajı: adamının 0,3 sn sonraki yerinin kale tarafında 0,8 m (koşuyu okur; vuruştan sonra duranRolKonum aynı) */
       /* T10d: adamı kendi görev yerinden 6 m'den uzaktaysa markajcı o yerin kale tarafında bekler (adamının önünde geri geri koşup kutuya gelen
          koşucuyu 3 m/sn'ye kilitliyordu: görevliler yerinde %71) */
@@ -646,6 +657,7 @@ Object.assign(Match.prototype,{
         const ox=uzak?go.hx:o.x+o.vx*0.3,oz=uzak?go.hz:o.z+o.vz*0.3,L=hyp(og-ox,MZ-oz)||1;g.hx=ox+(og-ox)/L*0.8;g.hz=oz+(MZ-oz)/L*0.8;}}
       if(g.hx==null)continue;
       this.gorevYaz(p,'duran');   /* T13-0: görev etiketi */
+      if(du.hk&&du.hk.s1&&this.barajSeremoniYer(du,p,g))continue;   /* S1a: kaosta baraj üyesi ve kaleci (js/mac-sahne.js) */
       /* A4-1: aldatma koşusu — kullananın temasına ~1 sn kala ikinci vurucu tam eforla topun üstünden koşar; topun yanından geçtiği an kalecinin
          tepkisi için kaydedilir (kaleciTepkiSuresi). g.aldatma çizim içindir */
       /* A4-2: perdeci markajcıyla arkadaşının koşu noktası arasında 0,8 m; koşu başlayınca (kos) yeri donar, yerinde kalır */
@@ -669,10 +681,11 @@ Object.assign(Match.prototype,{
       for(const w of du.barajYer.values()){const dx=p.tx-w.x,dz=p.tz-w.z,L=hyp(dx,dz);if(L<1.05){const s=1.05/(L||1);p.tx=w.x+(L>1e-6?dx:1)*s;p.tz=w.z+dz*s;}}}
     if(du.tur==='serbest'||du.tur==='kaleVurusu'){
       /* T8c: baraj görevlerden (barajKur; yerleri gorev döngüsünde): üyeler topa bakar */
-      if(du.barajdakiler)for(const p of du.barajdakiler){if(p.oyunda&&p.duranRol&&p.duranRol.rol==='baraj'){p.bak=b;p.yonHedef=du.barajAci;}}
+      if(du.barajdakiler)for(const p of du.barajdakiler){if(p.oyunda&&p.duranRol&&p.duranRol.rol==='baraj'){p.bak=b;p.yonHedef=p.duranRol.dizik===false?null:du.barajAci;}}   /* S1a: dizilmeyen üye yürürken döner */
       /* 9,15 m: savunan takım topa yaklaşmaz (çabuk serbest vuruşta itilmez); kale vuruşunda ceza sahası dışında kalır */
       if(!du.hizli)for(const p of this.sahadakiler(savunan)){if(du.barajdakiler&&du.barajdakiler.includes(p))continue;if(p.rol==='GK'&&du.tur==='serbest')continue;
-        const dx=p.tx-du.x,dz=p.tz-du.z,L=hyp(dx,dz),R=du.hakemTopu?4.5:9.6;if(L<R){const s=R/(L||1);p.tx=du.x+dx*s;p.tz=du.z+dz*s;}   /* T10d: hakem topunda 4 m */
+        if(du.hk&&du.hk.s1&&this.barajHeykel(du,p))continue;   /* S1a: heykel ilk itişe dek topun önünde */
+        const dx=p.tx-du.x,dz=p.tz-du.z,L=hyp(dx,dz),R=du.hakemTopu?4.5:du.hk&&du.hk.s1?this.barajItisR(du,p):9.6;if(L<R){const s=R/(L||1);p.tx=du.x+dx*s;p.tz=du.z+dz*s;}   /* T10d: hakem topunda 4 m */
         if(du.tur==='kaleVurusu'){const u=p.tx*this.dir[du.takim];if(u<-PL+CEZA_U+1&&Math.abs(p.tz-MZ)<CEZA_W+1)p.tx=this.dir[du.takim]*(-PL+CEZA_U+1.5);}}
     }else if(du.tur==='tac'){
       for(const p of this.sahadakiler(savunan)){const L=hyp(p.tx-du.x,p.tz-du.z);if(L<2.5){p.tz=du.z<MZ?Math.max(p.tz,2.8):Math.min(p.tz,PW-2.8);}}
