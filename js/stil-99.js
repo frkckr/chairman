@@ -237,20 +237,24 @@ const STIL={
   /* onMasa (K1, kullanıcı kararı 2026-10-20; kullanıcının 1. maç notu "masa tüm ekranı kaplamasın, önde kare ayaklı bir masa gözüksün"; N5'in
      2,6 m'lik rafının ve altındaki ön duvarın yerini aldı): başkanın önündeki küçük masa, ön plan kamerasına göre metre. en × derinlik = tabla,
      uzak = tablanın yakın kenarının gözden uzaklığı, y = tablanın üst yüzeyi (gözün altında), kalinlik = tabla, etek = tablanın altındaki
-     kuşağın yüksekliği, etekKalinlik = kuşağın kalınlığı, boy = masanın yerden yüksekliği (oturan gözün yerden ~1,22 m yüksekliğiyle ayakların
-     ucu her pozda ekranın altından çıkar), ayak = kare kesitli ayağın kenarı, ayakIc = ayağın tabla kenarından içerisi, ayakRenk = ayak ve etek;
-     serit = uzak kenardaki pirinç şeridin yüksekliği ve derinliği; tel = telefonun masadaki yeri (x, yakın kenardan içerisi, y ekseninde dönüş
-     rad); telAlan = telefonun çizilmeyen tıklama kutusu (en, yükseklik, boy; telefon uzaklaştığı için ekranda 57×43 → 42×20 piksele küçüldü,
-     isabet alanı eski boyuna yakın tutulur). Tabla odadaki masayla aynı ceviz dokudadır (masa, masaKoyu, masaAcik), uzak kenarında pirinç şerit.
-     Ekran payı (oturuşta; 50° dikey, 4:3: yatayda yarım genişlik 0,622·uzaklık, dikeyde 0,466·uzaklık): yakın kenar ekran genişliğinin %40'ı
-     (0,9 / (2·0,622·1,8)); tabla ekranın alttan %18–27'sinde (720 satırda 528–589); yakın ayakların üst yarısı (%46), uzak ayakların %74'ü
-     görünür; ayakların ucu (y −1,22) iki sırada da ekranın alt kenarının altındadır (yakın sırada kenar −0,86, uzakta −1,05). Ayakta (kamera
-     +0,34 yukarı, 0,1 geri) masa alttan %1–12'ye iner, ayaklar neredeyse kaybolur, tablanın altı görünmez. 0,9 m: telefon ve iki el sığan
-     küçük masa; %40 sınırında 0,9 m masayı 1,8 m'ye götürür (1,1 m için 2,2 m gerekirdi; eller ve telefon daha da küçülürdü).
+     kuşağın yüksekliği, etekKalinlik = kuşağın kalınlığı, boy = masanın yerden yüksekliği (göz yerden 1,2 m), ayak = kare kesitli ayağın
+     kenarı, ayakIc = ayağın tabla kenarından içerisi (tabla ayakların dışına taşar; eller köşelerde ayakların üstünde durur, kollar ayakların
+     dışından iner), ayakRenk = ayak ve etek; panel = uzak ayakların arasında etekten yere yakın inen ön panel (renk, kalınlık, yerden boşluk;
+     ayakların arası locanın dışını, ana tribünü göstermez; tablanın altının gölgesi gibi koyu); serit = uzak kenardaki pirinç şeridin
+     yüksekliği (üstü tablanın 3 mm üstünde) ve derinliği; tel = telefonun masadaki yeri (x, yakın kenardan içerisi, y ekseninde dönüş rad);
+     telAlan = telefonun çizilmeyen tıklama kutusu (en, yükseklik, boy). Tabla odadaki masayla aynı ceviz dokudadır (masa, masaKoyu, masaAcik).
+     K1i (2026-10-20, bağımsız inceleme): ilk K1 masası (0,9 × 0,5 m, 1,8 m ötede) ekranın alttan %27'sine çıkıp yakın yan çizgiyi kesiyor,
+     ayaklarının arasından ana tribünün seyircisi görünüyor, uzaktaki ellere inen ön kollar ayaklara paralel dikey direkler gibi okunuyordu.
+     Ekran payı (oturuşta; 50° dikey, 4:3: yatayda yarım genişlik 0,622·uzaklık, dikeyde 0,466·uzaklık): yakın kenar ekran genişliğinin
+     %39,6'sı (0,64 / (2·0,622·1,3)), uzak kenar %33; tabla ekranın alttan %10,4–17,2'sinde (720 satırda 596–645; ≤ %18 kapısı), tablanın
+     altı %7,9'da; ayakların üst 0,13–0,17 m'si görünür (yakın ve uzak ayak ekranda üst üste biner, yanda boşluk kalmaz), uçları ekranın çok
+     altındadır. Ayakta (kamera +0,34 yukarı, 0,1 geri) masa ekranın altından çıkar (yarı kalkışta şerit alttan %7). Telefon ekranda ~39×25
+     piksel (N5 rafında 57×43, ilk K1 masasında 42×20). 0,64 m: telefon ve iki el sığan küçük masa; 1,3 m eller N5 rafındaki uzaklıktadır
+     (1,24 m), ön kollar alt köşelerden doğal perspektifle gelir.
      govde (Z1, kullanıcı kararı 2026-10-19): ön planın bakışı izleme çarpanları [eğim, sapma] — 0: masa ve telefon ekranda sabit (eskiden 0,22 ve 0,25: baş dönünce raf kayıyordu) */
   baskan:{govde:[0,0],aci:50,masa:'#5a3620',masaKoyu:'#4a2c18',masaAcik:'#6a4228',pirinc:0xb89a4a,sumen:0x5a1a1c,
-    onMasa:{en:0.9,derinlik:0.5,uzak:1.8,y:-0.5,kalinlik:0.035,etek:0.07,etekKalinlik:0.02,boy:0.72,ayak:0.045,ayakIc:0.025,ayakRenk:'#4a2c18',
-      serit:[0.026,0.03],tel:[0.09,0.15,-0.3],telAlan:[0.1,0.06,0.19]},
+    onMasa:{en:0.64,derinlik:0.27,uzak:1.3,y:-0.48,kalinlik:0.03,etek:0.04,etekKalinlik:0.02,boy:0.72,ayak:0.045,ayakIc:0.07,ayakRenk:'#4a2c18',
+      panel:{renk:'#26160d',kalinlik:0.015,yerden:0.2},serit:[0.012,0.02],tel:[0.03,0.13,-0.3],telAlan:[0.1,0.06,0.19]},
     takim:0x27324e,ten:0xd2a07a,saat:0xd4af37,dinlenmeEgimi:-0.15,egimUst:0.02,govdeHiz:0.05},
 
   /* Başkan bölümü: halı, ahşap bölmeler, başkanın koltuğu */

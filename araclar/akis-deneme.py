@@ -16,10 +16,10 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
      N6 (2026-10-04): insan gibi kalkış, adım ve oturma (ivme ve hız sıçraması sınırı), telefonu alma ve masaya koyma.
  15b. Maçta binadaki loca, 52°'lik geniş bakışta yedek kulübeleri ve okunur tabela; N4 (2026-10-04): bakış topu izler (elle bakış,
      Topu izle düğmesi ve F tuşu yok); Z1 (2026-10-19): görüş açısı sabit (K1 2026-10-20: 36°), top geniş pencerede (32°'de ±9° / ±5°;
-     açıyla ekrandaki oranı korunarak ölçeklenir), raf sabit.
+     açıyla ekrandaki oranı korunarak ölçeklenir), masa sabit; K1i (2026-10-20): kulübeler ön plandaki masanın ve ellerin arkasında kalmaz.
  16. Maç telefonu (2.8F, 2.8I).
  17. Topu izleyen bakış ve maçın netliği (2026-10-03; Z1 2026-10-19): belirlenimli 30 sn oyunda (1× ve 4×) top ekranda ve pencere bandında,
-     görüş açısı sabit, raf kıpırdamıyor; oyuncu boyu, topun çizim boyu, 960×720 maç ızgarası ve 2× iç çizim; dürbünün kaldırıldığı (2026-10-07:
+     görüş açısı sabit, masa kıpırdamıyor; oyuncu boyu, topun çizim boyu, 960×720 maç ızgarası ve 2× iç çizim; dürbünün kaldırıldığı (2026-10-07:
      düğme, D, maske tuvali, ayar yok) denetlenir.
  18. İzleme hızı ve önemli anlar (U1, 2026-10-12): Ayarlar > Maç, maç şeridindeki ×1 ×2 ×4 ve 1/2/4 tuşları, kalıcılık; belirlenimli maçta
      ×4'te şut ve golden önce 1×'e iniş (ikiz motor 7 sn önde), maçın sonuna dek ikizin ana motorla aynılığı.
@@ -848,9 +848,18 @@ async def bolum_15b(tarayici, site, tum_hatalar):
       kameraUygula(curView()); camera.updateMatrixWorld(); }""")
     await pg.wait_for_timeout(300)
     t = await pg.evaluate(TABELA_JS)
-    kul = await pg.evaluate("""() => KULUBELER.map(k => { const v = new THREE.Vector3(k.x, 1, k.z).project(camera); return [+v.x.toFixed(2), +v.y.toFixed(2)]; })""")
-    denetle("Locadan 52°'lik geniş bakışla orta sahaya bakarken iki yedek kulübesi de görüş alanında ve rafın üstünde",
-            len(kul) == 2 and all(abs(x) < 0.97 and -0.62 < y < 0.9 for x, y in kul), str(kul))
+    # K1i (2026-10-20): N5 rafı ekranı kenardan kenara kestiğinden kapı kulübenin ortasının rafın üst kenarının (y −0,62) üstünde kalmasıydı.
+    # Raf yerine ekranın alt ortasında küçük masa var: kulübenin önünden 5 × 3 nokta ekrana izdüşürülür, her nokta ön plan kamerasından
+    # (BASKAN.kamera) ışınla masaya ve ellere karşı sınanır (görünmez tıklama kutusu sayılmaz); hiçbiri masanın ya da ellerin arkasında kalmaz
+    kul = await pg.evaluate("""() => { BASKAN.sahne.updateMatrixWorld(true); BASKAN.kamera.updateMatrixWorld(true);
+      const R = new THREE.Raycaster(), on = [], gor = o => { for (let q = o; q; q = q.parent) if (!q.visible) return false; return true; };
+      BK_MASA.traverse(o => { if (o.isMesh) on.push(o); }); for (const el of ['sol', 'sag']) BK_EL[el].g.traverse(o => { if (o.isMesh) on.push(o); });
+      return KULUBELER.map(k => { const v = new THREE.Vector3(k.x, 1, k.z).project(camera); let ortulu = 0, n = 0;
+        for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) { const p = new THREE.Vector3(k.x - 3.25 + i * 1.625, 0.05 + j, k.z).project(camera); n++;
+          R.setFromCamera({ x: p.x, y: p.y }, BASKAN.kamera); if (R.intersectObjects(on, false).some(h => gor(h.object))) ortulu++; }
+        return [+v.x.toFixed(2), +v.y.toFixed(2), ortulu, n]; }); }""")
+    denetle("Locadan 52°'lik geniş bakışla orta sahaya bakarken iki yedek kulübesi de görüş alanında ve başkanın masasının ve ellerinin arkasında kalmıyor (K1i: kulübenin önündeki 15 noktanın hiçbiri örtülmüyor)",
+            len(kul) == 2 and all(abs(x) < 0.97 and -0.97 < y < 0.9 and ortulu == 0 for x, y, ortulu, n in kul), str(kul))
     denetle("Tek tabela 52°'lik geniş bakışla orta sahaya bakarken ekranın içinde, okunacak büyüklükte (640 satır karşılığı ≥ 60 piksel en)",
             abs(t["x"]) < 0.95 and abs(t["y"]) < 0.95 and t["en"] >= 60 and t["boy"] >= 25, str(t))
     # bakış topa odaklı ve yakın: bakış oturtulur; duraklatılmışken top yerleştirilir, bakış elle ilerletilir
@@ -956,13 +965,13 @@ ORNEK_JS = """(o) => {
       if (Math.abs(ay.x) <= 1 && Math.abs(ay.y) <= 1) boy.push(Math.abs(bas.y - ay.y) * 240); }
     boy.sort((a, b) => a - b);
     const G = kameraGovdeHedefi(KAM.a.y, KAM.a.p, null);
-    R.push({ faz: mac.phase, x: f2(v.x), y: f2(v.y), px: +px.toFixed(2), boy: boy.length ? boy[boy.length >> 1] : null, fov: camera.fov, raf: Math.max(Math.abs(G.p), Math.abs(G.y)) }); }
+    R.push({ faz: mac.phase, x: f2(v.x), y: f2(v.y), px: +px.toFixed(2), boy: boy.length ? boy[boy.length >> 1] : null, fov: camera.fov, masa: Math.max(Math.abs(G.p), Math.abs(G.y)) }); }
   MAC_HIZ.secim = 1; MAC_HIZ.deger = 1; MAC_HIZ.oto = oto0;
   const O = R.filter(r => r.faz === 'play'), n = Math.max(1, O.length), B = O.map(r => r.boy).filter(x => x != null).sort((a, b) => a - b);
   return { ornek: O.length, ic: +(O.filter(r => Math.abs(r.x) <= 0.55 && r.y >= -0.35 && r.y <= 0.5).length / n).toFixed(3),
     disarida: +(O.filter(r => Math.abs(r.x) > 1 || Math.abs(r.y) > 1).length / n).toFixed(3),
     boy: B.length ? +B[B.length >> 1].toFixed(1) : 0, topPx: O.length ? Math.min(...O.map(r => r.px)) : 0,
-    fovFark: O.length ? +(Math.max(...O.map(r => r.fov)) - Math.min(...O.map(r => r.fov))).toFixed(4) : 0, raf: O.length ? Math.max(...O.map(r => r.raf)) : 0 };
+    fovFark: O.length ? +(Math.max(...O.map(r => r.fov)) - Math.min(...O.map(r => r.fov))).toFixed(4) : 0, masa: O.length ? Math.max(...O.map(r => r.masa)) : 0 };
 }"""
 
 
@@ -992,8 +1001,8 @@ async def bolum_17(tarayici, site, tum_hatalar):
     o1 = await pg.evaluate(ORNEK_JS, {"sure": 30, "hiz": 1})
     o4 = await pg.evaluate(ORNEK_JS, {"sure": 30, "hiz": 4})
     for ad, o in (("1×", o1), ("4×", o4)):
-        denetle(f"Belirlenimli 30 sn oyunda ({ad}) top 0,25 sn'lik örneklerin ≥ %90'ında pencere bandında (|x| ≤ 0,55, −0,35 ≤ y ≤ 0,5), ≤ %1'inde ekran dışında; görüş açısı sabit (fark ≤ 0,01°), raf kıpırdamıyor (Z1)",
-                o["ornek"] >= 40 and o["ic"] >= 0.9 and o["disarida"] <= 0.01 and o["fovFark"] <= 0.01 and o["raf"] <= 1e-9, str(o))
+        denetle(f"Belirlenimli 30 sn oyunda ({ad}) top 0,25 sn'lik örneklerin ≥ %90'ında pencere bandında (|x| ≤ 0,55, −0,35 ≤ y ≤ 0,5), ≤ %1'inde ekran dışında; görüş açısı sabit (fark ≤ 0,01°), masa kıpırdamıyor (Z1)",
+                o["ornek"] >= 40 and o["ic"] >= 0.9 and o["disarida"] <= 0.01 and o["fovFark"] <= 0.01 and o["masa"] <= 1e-9, str(o))
     # Z1'de (32°) kapı ≥ 23 piksel; K1 (2026-10-20, 36°): oyuncular açıyla tan 16° / tan(aci/2) oranında küçülür (36°'de ×0,88), kapı da onunla.
     # Kapının açıyla ölçeklenmesi bilinçlidir (kullanıcı kararı: geniş açı okunurluk pahasına istendi); 36°'de kapı ~20,3 px (ölçülen ~20,9 px).
     # Açının kendisi okunurluğu korumaz: açı yeniden değişirse kapının yeni değeri (40°'de ~18,2 px) kullanıcıya gösterilir
