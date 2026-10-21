@@ -1,0 +1,790 @@
+[
+ {
+  "ad": "V1a — Yüzey ve ayak karar tablosu, asimetrik doğal koni ve ayar adımı",
+  "ozet": "Bugün vurusBaslat yüzeyi o anki gövde yönüne göre tek zarla seçiyor. Ölçüme göre (8 maç, K1 çalışma ağacı, motor yalnız okundu) açık oyundaki yerden pasların %12,2'si dış ayakla atılıyor. Bunların %81'inde baskı 0,2'nin altında, rakibin topa varışı ortanca 1,94 sn; yani dönmeye bol zaman varken dış ayak seçiliyor. Hedef güçlü ayağın dış yanında 40–80° iken dış ayak payı %59,6. Hizalanma kapısı simetrik (0,79 rad): gelişine olmayan yerden paslarda geri salınım başında hedef vuran ayağın dış yanında >15° olan pay %20,9 (>30°: %11,6); güçlü iç ayakta temas anında bu pay %14,1. Kale vuruşunda dış ayak payı %5,7. Tasarım tek bir saf işlev (yuzeyOlasilik) ve dört MOTOR_AYAR anahtarı getiriyor. Dış ayak yalnız şu durumda seçilir: hedef dış yanda 17–72°, dönüşe zaman yok (gelişine ya da baskı > 0,5 ya da rakip dönüşten önce varıyor) ve menzil ≤ 12 m fiske ya da becerikli oyuncuda ≤ 28 m trivela. Zayıf ayak, güçlü ayaktan belirgin az dönüş gerektirdiğinde seçilir. Bunların dışında güçlü ayak içi kullanılır; geri salınım, gövde vuran ayağın asimetrik doğal konisine (iç: −40°/+15°, üst: −45°/+10°) girmeden başlamaz ve zaman varken büyük dönüş ayar adımı hızıyla (5 rad/sn) yapılır. Duran topta (kale vuruşu dahil) zaman hep var sayıldığı için dış ayak yoktur. Karşı-olgusal tahmin: dış ayak %12,2'den ~%3,3'e, zayıf ayak %19,3'ten ~%10–16'ya iner. Karar→temas ortancası 0,55 sn'den yalnız kapıyla ~0,57'ye, ayar adımı hızıyla ~0,62'ye çıkar (ortalama ek +0,03 / +0,06 sn). Çizime e.dil sözleşmesi verilir: şema, salınım, dönüş (ilk açı, kapanma yolu, kalan açı, adım süresi ve yanı), eğim. Bayraklar 0 iken motor bugünküyle birebir aynıdır.",
+  "tasarim": "0. ÖLÇÜLEN BUGÜN (taban; ölçüm betiği scratchpad/v1a/olc.js Match.prototype.vurusBaslat/vurusIlerle/vurusYap'ı yalnız okuyarak sarar, 8 maç tohum 1–8, K1 çalışma ağacının kopyası scratchpad/v1a/kok; çözümleme analiz.js, karsi.js, karsi2.js, karsi3.js; ham veri k0–k3.json):\n- Açık oyun yerden pas (vurulan 2035): stil ic 1710 / dis 249 (%12,2) / ust 61. Zayıf ayak %19,3. İki ayaklı oyuncu kadroda yok. Gelişine %23,2. Baskı > 0,5 %11,3.\n- Karar anı açısı (fs: + = güçlü ayağın dış yanı) × seçim: 15..40° → dış %28; 40..80° → dış %59,6 (stoperden sağ beke kalıbı); 80..183° → zayıf %56,7; −183..−15° → güçlü iç %80–85.\n- Dış ayak: L ortanca 16,4 m, L > 12 %69,5, baskı < 0,2 %80,7, tR (rakibin topa varışı) ortanca 1,94 sn. Yeni kurala (zaman yok ∧ L ≤ 12) uyan pay yalnız %14,5.\n- Güçlü iç: karar anında |f| > 40° %57,7. Temasta hedef vuran ayağın dış yanında >15° %14,1, >30° %6,9. Gelişine olmayan bütün yerden paslarda geri salınım başında yanlış yan >15° %20,9, >30° %11,6. Hedef güçlü ayağın dış yanında > 45° olan güçlü iç pasta, geri başındaki sapma ortanca 0,55 rad (31°); kapı simetrik 0,79 rad.\n- Zayıf iç: temasta hedef zayıf ayağın dış yanında >15° %13,6 (topun zayıf ayak yanında olması tek başına zayıf ayağı tetikliyor).\n- Tempo: karar→temas %10/50/90 = 0,38/0,55/1,17 sn (gelişine değil). Bırakılan (vazgeçme ya da süre) yerden pas %18,6.\n- Kale vuruşu kısa (35): dış %5,7. Karar anında fs > 0 %45,7, temasta sapma 0 (3 m yaklaşma gövdeyi zaten hizalıyor; sorun yalnız yüzey zarı).\n- Stoper: pasların %40,9'unda hedef dış yanda > 20°; bunların %28,9'u dış ayakla.\n- Gelişine: L ortanca 10 m; temasta yanlış yan > 0,26 rad %9,7, > 0,61 rad %4,2.\n- Dönüş hızı: hrkVurusDonus 6,3–9 rad/sn; 90°'lik dönüş ~0,2 sn. Geri salınımda yonHedef değişmediği için gövde hedefe dönmeyi sürdürüyor (temasta sapma çoğu zaman ~0).\n\n1. GEOMETRİ. f = aciFark(a, p.yon), a = atan2(hz−oz, hx−ox); f > 0 hedef sağda (bugünkü işaret: 'hedef sağda → sol ayağın içi'). sg(ayak) = sol ? −1 : +1. fk = f·sg(vuran ayak): + = vuran ayağın dış yanı. need(fk, lo, hi) = fk > hi ? fk−hi : fk < lo ? lo−fk : 0.\nDoğal koniler (geri salınım başında, vuran ayağın çerçevesinde; MOTOR_AYAR.yuzeyKon). Pelvis salınımda doğal yana döner (J.1, J.3.1):\n- iç (itme, sert iç, chip): [−0,70, +0,26] = −40°/+15°\n- üst (sürülmüş, havadan, uzaklaştırma, orta): [−0,79, +0,17] = −45°/+10°; yaklaşma vurmayan yandan 30–45° gelir (J.1).\n- dış: [+0,30, +1,25] = 17–72° (disAyak[0..1])\n- acele payı +0,35 rad: zaman yokken vuran yana tolerans.\nAile şöyle belirlenir: stil0 = vurusStili(sec, b.y), yerden pasta gucPlan·29 > 20 ise 'ust'. stil0 ∈ {ust, falso} → üst konisi, aksi hâlde iç konisi.\n\n2. SAF İŞLEV yuzeyOlasilik(m, p, o) — js/mac-topla.js, vurusStili'nin yanında; rastlantı çekmez, önbellek yazmaz.\no = {f, L, tip, tur, ilk, duran, baski, tR, hazGeri, yakin, aile}. Dönüş: {Pd, Pz, G:{ayak, fk, need}, Z:{ayak, fk, need}, zamanYok, beceri, rate}.\n- rate = ayarAdim[0] > 0 ? ayarAdim[0] : hrkVurusDonus(p). needG ve needZ ailenin konisiyle hesaplanır.\n- zamanYok = ilk || (!duran && (baski > 0,5 || tR < hazGeri + needG/rate + ayarAdim[2])). hazGeri = vsr.haz + vsr.geri, acma ve uzunHaz eklenmeden önceki değer. tR, vurusBaslat'taki şut döngüsünün aynısıdır: rakip saha oyuncuları için varisSuresi(o, ox, oz, 0,9), kaleci hariç.\n- beceri = disAyakBecerisi(p) = clamp(0,5·oz.pas + 0,3·profilAlt(p, 'yaraticilik', 0,5) + 0,2·profilAlt(p, 'ilkDokunus', 0,5)). Kadroda 0,39–0,77.\n- Dış adayı. Koşullar: !duran ∧ tur ∉ {uzaklastir, orta} ∧ tip = 'yer' ∧ fkG ∈ [D0, D1] ∧ zamanYok ∧ (L ≤ D2 ya da (L ≤ D3 ∧ beceri ≥ D4)). Olasılık: Pd = min(0,9, (D5 + D6·beceri)·(L > D2 ? 0,5 : 1)·(1 + 0,3·baski)). disAyak = [0,30, 1,25, 12, 28, 0,66, 0,35, 0,5]; fiske menzili 12 m, J.3.2.\n- Zayıf adayı (p.ayak ≠ 'iki'). Koşul: (needG > ayarAdim[1] ∧ needZ + 0,4 < needG) ya da (yakin = zayıf ∧ |fkG| ≤ 0,26). Topun zayıf yanda olması tek başına yetmez. Olasılık: Pz = min(0,9, clamp(0,1 + 0,45·za − 0,25·kaçınma, 0,05, 0,8) · (needG > 0,9 ? 1,3 : 1) · (baski > 0,5 ? 1,25 : 1) · (zamanYok ? 1,3 : 0,85) · (L > 25 ? 0,6 : 1) · (duran ? 0,4 : 1)).\n- İki ayaklı oyuncu: ayak = argmin need (eşitlikte top yanı, sonra 'sag'), zar kullanılmaz.\n\n3. vurusBaslat (yuzeyKarar & 1). Satır 313–321'deki dış ve zayıf bloğunun yerine geçer; şut, penaltı ve sec.ayak yolları bugünkü gibi kalır.\n(a) gucPlan ve stil0 hesabı ayak kararından önceye alınır (pasPlani saftır, rastlantı sırası değişmez).\n(b) tR döngüsü pas için de koşar.\n(c) Tek zar (bugün de her vuruşta çekilen `zar`): u < Pd → stil 'dis', ayak = güçlü; aksi hâlde (u − Pd)/(1 − Pd) < Pz → ayak = zayıf; aksi hâlde ayak = güçlü. Çekilen rastlantı sayısı bugünle aynıdır.\n(d) Yol (kapanma yolu) karar anında belirlenir. fk0 = f·sg(ayak), need0 vuran ayağın konisinden:\n- stil 'dis' → 'dis'\n- need0 = 0 → fk0 < −0,26 ise 'pelvis', değilse 'hizali'\n- need0 > 0 ve zamanYok → 'acik'\n- need0 > ayarAdim[1] → 'adim'\n- değilse → 'pelvis'\n(e) adimT = yol 'adim' ise min(need0/rate, ayarAdim[3]), değilse 0. adimYan = fk0 > hi ? sg : −sg (dünyada açının arttığı yön +1).\n(f) e.dil kurulur (bkz. sözleşme): bayrak 0 iken dil: null.\n\n4. vurusIlerle.\n(a) Bit 2, kapı (satır 389, 414): `sapma < sinir` yerine kd ≤ tol. Burada kd = need(fkŞimdi, lo, hi) ve tol yol 'acik' ise yuzeyKon[4] (0,35), değilse 0.\n- Gelişine: doğal yan bugünkü tekKoni sınırı (−1,45), vuran yan hi + 0,35.\n- Şut: bugünkü sinir değişmez.\n- Dış: koni [D0 − 0,15, D1] ve gövde tutulur. Yuz = a − sg·clamp(fkŞimdi, D0, D1): dış ayakta gövde hedefe dönmez (J.2, J.7 D3).\n- Geçiş anında p.yonHedef son yöne yazılır (dışta tutulan açı, ötekilerde a). e.dil.don.kalan = o andaki fk.\n- donT = kd > tol ? (kd − tol)/rateŞimdi : 0. kalan ve kalanCiz aynı rateŞimdi'yi kullanır.\n(b) Bit 4, ayar adımı (yalnız yol 'adim' ve kd > 0 iken): p.yonHedef = p.yon + clamp(aciFark(yuz, p.yon), ±r·dt), r = max(ayarAdim[0], need0/ayarAdim[3]). eylemIlerle moveP'de dönüşten hemen önce koştuğu için aynı karede geçerlidir; mac-hareket.js'e dokunulmaz.\n(c) Bit 8, doğal yaklaşma (satır 355, duran ya da yavaş top): yay adayları i ∈ [−3..3] içinden iç ve üst için i·sg ≥ 0, dış için i·sg ≤ 0. Böylece sağ ayaklı topa vurmayan yandan gelir (Z2a yayının açık oyundaki karşılığı).\n\n5. vurusYap (bit 2, satır 449). Hizalanma bedeli koniden ölçülür: e.hizalanma = need(fkTemas, lo, hi). Gelişine bugünkü gibi max(0, sap − 0,4); şut değişmez. Temasta e.dil.sema kesinleşir: yerPasVur'da v > 20 ise ic → ust olur.\n\n6. Planlayıcı aynası (yuzeyKarar & 1 ve ortaAyak).\n- vurusAyakK (mac-karar.js:552) yuzeyOlasilik'i okur: 1 + Pz·1,2·(1 − za)·(1 − Pd) + Pd·0,22.\n- Orta hazırlığının dönüşü (mac-karar.js:595) bit 2'de: don = ((1 − Pz)·needG + Pz·needZ)/rate.\n- Pas planlayıcısının t0 = 0 değeri değişmez (kalibre, mac-karar.js:804). Zaman yokken hızlı yol (dış, zayıf, açık) seçildiği için ek süre yalnız baskısız pasa düşer. Tempo bu yolla sınırlanır.\n\n7. Duran top ve kaleci.\n- duran ⇒ zamanYok = false ⇒ dış yok. Zayıf ×0,4. Güçlü iç 'adim' 3 m'lik yaklaşmaya sığar (ölçüm: temasta sapma 0).\n- Kale vuruşunda sağ ayaklı kaleci sağdaki stopere sağ ayak içiyle, sol yay yaklaşmasıyla (bit 8) vurur; solak kaleci sol ayak içiyle vurur (pasFalso eğrisi V1c'nin işi).\n- Korner ve kenar serbest vuruşu sec.ayak ile kalır; Z2a yayıyla zaten doğal yandan gelir, üst konisinde kalır.\n\n8. Karşı-olgusal beklenti (8 maç verisinde kural uygulandı, zarlar olasılık olarak sayıldı):\n- Yüzey: dış %3,3 (fiske 2,7 + trivela 0,6), zayıf ~%10 (çarpanlarla %10–16).\n- Yol: hizalı %13,6, pelvis %9,8, adım %43,7, açık %19,4.\n- Tempo (karar→temas): yalnız kapı → ortalama +0,027 sn, ortanca 0,55 → 0,57. Kapı + ayar adımı 5 rad/sn → ortalama +0,063, ortanca 0,62, ek %90/99 = 0,15/0,23 sn. 4,5 rad/sn + 0,08 sn sabit → +0,11 (önerilmez).\n- Öneri: ayarAdim[0] = 5, tavan 0,35 sn. 40 maçta yalnız {5, 0} taranır; 0'da dönüş bugünkü w ile olur, yani yalnız kapı.\n\n9. EVRELER.\n- V1a-0: ölçü satırları ve v-yuzey senaryosu, yuzeyKarar 0 ile taban.\n- V1a-1: yuzeyOlasilik, bit 1, vurusAyakK aynası. 0'da turun tabanına --ayni.\n- V1a-2: bit 2 (koni kapısı, dışta gövde tutma, hizalanma).\n- V1a-3: bit 4 (ayar adımı); 40 maçta 2 değer.\n- V1a-4: bit 8 (doğal yaklaşma); c-surus, d-duran.\n- V1a-5: e.dil sözleşmesi ve belgeler (TEKNIK_PLAN §8 sözleşme, J.8 güncellemesi).\nHer adımdan sonra hızlı kademe (mac-deneme 4, ilgili senaryo, ad-denetimi), V1a sonunda oturum sonu (--seyrek dahil: d-duran ve seyrek sahiplerinden mac-durantop etkilenmez, ama kale vuruşu yolu değiştiği için d-duran koşar).",
+  "kodDegisiklikleri": [
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "yuzeyOlasilik (yeni, üst düzey saf işlev; vurusStili'nin yanında)",
+    "ne": "Dış ve zayıf adaylarını, olasılıklarını (Pd, Pz), güçlü ve zayıf ayağın koni dışı dönüşünü (need), zamanYok ve beceriyi döndürür. Rastlantısız; vurusBaslat ve vurusAyakK aynı işlevi okur."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "disAyakBecerisi (yeni, üst düzey saf)",
+    "ne": "clamp(0,5·oz.pas + 0,3·yaratıcılık + 0,2·ilk dokunuş). Trivela kapısı ve dış ayak olasılığı bundan okunur. Profil dosyasına alan eklenmez."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusKoni (yeni küçük saf yardımcı)",
+    "ne": "(stil, ilk, sut, yol) → [lo, hi, tol], yuzeyKon ve disAyak'tan; need(fk, lo, hi) hesabı. vurusIlerle kapısı ve vurusYap hizalanması ortak kullanır."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusBaslat (~280–342)",
+    "ne": "yuzeyKarar & 1 iken: gucPlan ve stil0 ayak kararından önce hesaplanır. tR döngüsü pas için de koşar (bugün yalnız şutta). Satır 313–321'deki dış/zayıf bloğunun yerine yuzeyOlasilik ile tek zar seçimi gelir (zar sayısı aynı). sec.ayak, şut ve penaltı yolları değişmez. yol, adimT ve adimYan hesaplanır, e.dil kurulur (p.eylem literaline dil alanı; bayrak 0'da null)."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusIlerle (hazırlık dalı ~343–420, geri dalı)",
+    "ne": "Bit 2: satır 389'daki simetrik sinir yerine asimetrik koni kapısı (kd ≤ tol). Dış ayakta yuz tutulan açıya yazılır. Kapı geçişinde p.yonHedef son yöne yazılır, e.dil.don.kalan doldurulur. donT, kalan ve kalanCiz koni ve rateŞimdi ile hesaplanır. Bit 4: yol 'adim' iken p.yonHedef adım başına r·dt ile ilerletilir. Bit 8: satır 355'teki yay adayları vuran ayağın doğal yanıyla sınırlanır."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusYap (~444–468)",
+    "ne": "Bit 2: e.hizalanma koniden ölçülür (need(fkTemas)); gelişine ve şut bugünkü gibi. Temasta e.dil.sema kesinleşir (stil ve v0'dan)."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "yerPasVur / havaPasVur / sutVur (yalnız sözleşme)",
+    "ne": "Temastaki stil değişikliğinde (ic→ust) e.dil.sema güncellenir. Top fiziği ve hata modeli değişmez."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "ayarEkle('B', …)",
+    "ne": "yuzeyKarar: 15, yuzeyKon: [0.70, 0.26, 0.79, 0.17, 0.35], disAyak: [0.30, 1.25, 12, 28, 0.66, 0.35, 0.5], ayarAdim: [5, 0.35, 0.15, 0.35] — her biri açıklamalı; yuzeyKarar 0 ise bugünkü davranış."
+   },
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "MOTOR_AYAR bildirimi (~85–93)",
+    "ne": "yuzeyKarar, yuzeyKon, disAyak, ayarAdim anahtarları undefined olarak bildirilir (M1 kuralı)."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "vurusAyakK (552–558)",
+    "ne": "yuzeyKarar & 1 iken yuzeyOlasilik'in beklenen değerinden: 1 + Pz·1,2·(1 − za)·(1 − Pd) + Pd·0,22. tR ve hazGeri aynı yoldan; 0'da bugünkü ayna."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "ortaSecenekleri (595: hazırlık dönüşü)",
+    "ne": "Bit 2'de don = ((1 − Pz)·needG + Pz·needZ)/rate (üst konisi). Simetrik vurusHizalama·1,35 kalkar. ortaBlokTahmin'in süresi buna uyar."
+   },
+   {
+    "dosya": "araclar/olcumler/b-olcum.js",
+    "islev": "bilgi satırları ve dinle",
+    "ne": "pass ve clear olayında p.eylem.dil okunur. Eklenen satırlar: yüzey payları (dış, zayıf), dışta L ≤ 12 ve trivela payı, dışta zaman var (0 olmalı), yol payları, geri başında yanlış yan > 15° (açık hariç ve dahil), temasta yanlış yan, adım süresi ortanca ve %90, kale vuruşu kısa: dış ve zayıf. Rastlantı çekmez."
+   },
+   {
+    "dosya": "araclar/senaryolar/v-yuzey.js",
+    "islev": "yeni senaryo (kapı)",
+    "ne": "Topla duran oyuncu; alıcı θ ∈ {−135, −90, −45, 0, +45, +90, +135}° (+ = güçlü ayağın dış yanı), L ∈ {8, 18, 30}; baskı yok ya da 1,5 m'de rakip; gelişine çeşidi; ayrıca kaleci kale vuruşu iki yana. Hücre başına 24 tekrar. Yüzey/ayak/yol dağılımı, geri başı yanlış yan, karar→temas yazar; kapılar ölçüler bölümünde."
+   },
+   {
+    "dosya": "TEKNIK_PLAN.md §8, kutuphane/J-beden-dili.md J.8, MAC_MOTORU_GERCEKCILIK_PLANI Ek G2",
+    "islev": "belge",
+    "ne": "Sözleşme alanı e.dil (şema, salınım, dönüş, eğim) ve V1a'nın karar tablosu. J.8'deki 'yüzey ve ayak' farkı kapandı olarak yazılır, ölçülen önce/sonra sayılarıyla."
+   }
+  ],
+  "ayarlar": [
+   "yuzeyKarar: 15 — V1a bit maskesi (0: bugünkü, birebir). 1 yüzey/ayak karar tablosu ve planlayıcı aynası; 2 asimetrik doğal koni kapısı, dışta gövdenin tutulması ve koniden hizalanma bedeli; 4 ayar adımı dönüş hızı; 8 doğal yandan yaklaşma (duran ve yavaş topta vuruş yayı). Varsayılan 40 maç taramasından sonra kesinleşir (bit 4 kapıyı geçmezse 11).",
+   "yuzeyKon: [0.70, 0.26, 0.79, 0.17, 0.35] — iç koni doğal yan / vuran yan (−40°/+15°), üst koni doğal / vuran (−45°/+10°), zaman yokken vuran yana acele payı (+20°); rad, vuran ayağın çerçevesinde.",
+   "disAyak: [0.30, 1.25, 12, 28, 0.66, 0.35, 0.5] — dış ayakta hedefin vuran ayağın dış yanındaki açı aralığı (17–72°), fiske menzili (m; J.3.2), trivela menzili (m), trivela beceri eşiği (disAyakBecerisi; kadroda ~8/22 oyuncu), dış ayak olasılığı tabanı, beceri payı (trivela ×0,5, baskıyla ×(1 + 0,3·baskı), tavan 0,9).",
+   "ayarAdim: [5, 0.35, 0.15, 0.35] — ayar adımında gövdenin dönüş hızı (rad/sn; 0: bugünkü hrkVurusDonus 6,3–9), adım sayılan koni dışı dönüş eşiği (rad; altı pelvisle kapanır), zamanYok için zaman payı (sn), adım süresi tavanı (sn; daha büyük dönüşte hız need/tavan'a çıkar).",
+   "Kodda sabit kalan çarpanlar (bugünkü T4-V kalıbı gibi): zayıf adayı için gereken dönüş farkı 0,4 rad; Pz ×1,3 (needG > 0,9), ×1,25 (baskı > 0,5), ×1,3 / ×0,85 (zaman yok / var), ×0,6 (L > 25), ×0,4 (duran). Bayrak 0 iken hiçbiri okunmaz.",
+   "Dokunulmayan mevcut anahtarlar: vurusHizalama, pasAcik, pasDogal, tekKoni yuzeyKarar & 2 kapalıyken bugünkü gibi okunur; açıkken pasAcik ve pasDogal kapıdan ve hizalanmadan çıkar (tekKoni gelişinenin doğal yanında kalır)."
+  ],
+  "sozlesme": [
+   "e.dil (yeni alt nesne, vurusBaslat'ta p.eylem literaliyle kurulur; yuzeyKarar 0'da null). Oyuncu nesnesine alan eklenmez. Çizim yalnız okur, motor kararları dil'i okumaz.",
+   "e.dil.sema: 'itme' | 'sertIc' | 'surulmus' | 'lofted' | 'chip' | 'dis' | 'vole' — yedi şema (J.5). V1a başlangıçta yazar, temasta kesinleşir. Eşleme: dis → 'dis'; asirtma → 'chip'; vole ve yarimVole → 'vole'; havadan (üst, uzaklaştırma, orta, korner) → 'lofted'; yerden iç v0 ≤ 14 → 'itme', 14–20 → 'sertIc'; yerden üst (v0 > 20) ya da uzunYer → 'surulmus'. Şutta: plase ve falso → 'sertIc', sert → 'surulmus', trivela → 'dis', aşırtma → 'chip', burun → 'itme'. V1c hız aileleri bu eşikleri devralır.",
+   "e.dil.sal: 0–1 — geri salınım genliği. V1a varsayılanı planlanan güç (yerden gucPlan = v0/29, havadan 0,7, şutta sutPlan.g); V1b/V1c teknik × mesafe × baskıyla günceller.",
+   "e.dil.don.a0: rad — karar anında gövde–hedef açısı, vuran ayağın çerçevesinde (+ = vuran ayağın dış yanı).",
+   "e.dil.don.yol: 'hizali' | 'pelvis' | 'adim' | 'acik' | 'dis' — kapanma yolu. hizali: düz. pelvis: doğal yanda açık beden, pelvis salınımda kapatır. adim: ayar adımı (destek ayağı hedefe, pelvis dönüşü). acik: zaman yok, aceleyle dönüp açık bedenle vuruş. dis: gövde hedefe dönmez, dış ayakla kamçı.",
+   "e.dil.don.secim: 'guclu' | 'zayif' | 'dis' | 'sabit' (sec.ayak) | 'iki' — yüzey ve ayağın neden seçildiği (ölçü ve çizimin ayna kararı için).",
+   "e.dil.don.hedef: dünya açısı (rad) — hazırlıkta gövdenin hedef yönü. Dışta tutulan açı (a − sg·clamp(fk, 0,30, 1,25)), ötekilerde a.",
+   "e.dil.don.kalan: rad ya da null — geri salınıma geçiş anında (motor yazar) vuran ayağın çerçevesinde kalan açı. Pelvisin salınımda kapatacağı (iç ve üstte ≤ 0, açıkta ≤ +0,61, dışta 0,30–1,25).",
+   "e.dil.don.adimT: sn — planlanan ayar adımı süresi (0: adım yok; tavan 0,35). Çizim destek ayağının plant adımını ve pelvis dönüşünü bu süreye yayar (J.7 D2 faz modülasyonu).",
+   "e.dil.don.adimYan: −1 | +1 — ayar adımında gövdenin dünyada döneceği yön (+1: açının arttığı yön).",
+   "e.dil.egim: {ileri, yana, kol} — gövde eğimi (−1 geriye/havaya … +1 topun üstünde), yana yatış (rad; vole/temizleme 0,06–0,55), karşı kolun açılması 0–1. V1b doldurur; V1a varsayılanı null.",
+   "Var olan alanlar korunur ve anlamı değişmez: e.stil (yüzey: ic/dis/ust/asirtma/vole/yarimVole/falso/burun), e.ayak, e.guc, e.gucPlan, e.geri, e.hazirlikEn, e.kalan, e.kalanCiz (V1a'da ayar adımı hızıyla), e.baski, e.acele, e.tekDokunus, e.sec, e.kotu. p.sonDokunus.yuzey = e.stil."
+  ],
+  "olcu": [
+   "Taban (bugün, 8 maç, scratchpad/v1a): açık oyun yerden pasta dış ayak %12,2; zayıf %19,3; güçlü iç temasta yanlış yan > 15° %14,1 (> 30° %6,9); gelişine olmayan yerden pasta geri başında yanlış yan > 15° %20,9 (> 30° %11,6); dışta L > 12 %69,5, baskısız %80,7; kale vuruşu kısa dış %5,7; stoperin dış yandaki pasında dış %28,9; karar→temas %10/50/90 = 0,38/0,55/1,17 sn.",
+   "b-olcum yeni satırlar (V1a): 'Yüzey: dış ayak %' (hedef 2–6), 'Dış ayakta L ≤ 12 ya da trivela %' (≥ 95), 'Dış ayakta zaman vardı %' (0), 'Zayıf ayak %' (10–18; gerçek ~13, K26), 'Yol: hizalı / pelvis / adım / açık / dış %', 'Geri başında yanlış yan > 15° % (açık hariç)' (≤ 2), '… açık dahil' (bilgi), 'Temasta yanlış yan > 15° %' (≤ 3), 'Ayar adımı süresi ortanca / %90 (sn)', 'Kale vuruşu kısa: dış % / zayıf %' (dış 0), 'Stoperin dış yandaki (> 20°) pası: dış / zayıf / adım %'.",
+   "Tempo kapısı: 'Vuruş: karar→temas ortanca (sn) yerden pas ≤ 22 m' artışı ≤ +0,08 sn (karşı-olgusal beklenti: yalnız kapı +0,02, ayar adımıyla +0,07); 'Vuruş: hazırlık ortanca' bilgi; 'Vuruş: vazgeçme / maç' artışı ≤ +1.",
+   "40 maç --karsilastir (yön; tarama yalnız ayarAdim[0] ∈ {5, 0}): pas/maç düşüşü < %5, pas isabeti düşüşü < 1,5 puan, kesilen pas ve top kaybı gürültü içinde, ileri/yan/geri pas payları ±2 puan, sağ ayaklı pasörün sağ ve sol yana pas oranı ±3 puan (yan önyargısı denetimi), sağlık aralığı (gol, şut, pas isabeti, gerçekleşen ÷ konum xG) bugünden kötü değil — tabanın 8 maçında iki satır zaten dışarıda: gol/şut %16,4, oran 1,54.",
+   "80 maç (V1 tur kapanışında): yukarıdakilerin kabulü; 'Orta: zayıf ayak %' ve c-orta tahmin–gerçek farkı ≤ 10.",
+   "--ayni: yuzeyKarar 0 ile turun tabanına (z5-2/k1) tohum başına birebir; bit bit açılışta yalnız beklenen ayrışma.",
+   "Hız bütçesi: pas başına ek ~10 varisSuresi çağrısı (vuruş başına, saniyede ~3); aynı süreçte hiz-olcum --ayarlar ile yuzeyKarar 0 ↔ 15, artış < %1 beklenir."
+  ],
+  "senaryolar": [
+   "v-yuzey (yeni, kapı): topla duran güçlü ayaklı oyuncu; alıcı θ ∈ {−135, −90, −45, 0, +45, +90, +135}°, L ∈ {8, 18, 30} m; baskı yok / 1,5 m'de rakip (baskı ~0,85); gelişine çeşidi (top 8 m/sn ile gelir). Hücre başına 24 tekrar. Kapılar: (+45°, 18 m, baskısız) dış 0, geri başında yanlış yan > 15° ≤ %2, güçlü ve adım ≥ %60; (+45°, 8 m, baskılı) dış ≥ %25; (+90°, 18 m, baskısız) zayıf %10–35, kalanı güçlü ve adım; (−45°, 18 m) hizalı ya da pelvis ≥ %90, dış 0; (0°) karar→temas yuzeyKarar 0 ile ±0,02 sn; kaleci kale vuruşu sağ ve sol stopere dış 0, temasta |sapma| ≤ 0,26.",
+   "b-pas (kapı): gelişine ve pas akışı; vazgeçme ve tamamlanma bugünkü gürültüde.",
+   "c-surus (kapı): vuruşa yaklaşma; bit 8 yay kısıtı ve ayar adımı 'Alış → vuruş', 'Geri geri' satırlarını bozmamalı.",
+   "c-1v1, c-koru, c-kanat (kapı): taşıyıcının pas bırakışı; dış ayak düşüşü kanat oyununu yavaşlatmamalı.",
+   "c-orta (T10a kapısı): planlayıcı aynası (vurusAyakK yeni) — geri çevirme ve alçak satırları |tahmin − gerçek| ≤ 10, orta zayıf ayak payı bilgi.",
+   "d-duran (seyrek, kale vuruşu yolu değiştiği için koşar): korner ve serbest vuruş sec.ayak yolu değişmez, kale vuruşu ve kısa duran pas dış 0.",
+   "z-s3, z-s10, z-s14 (oturum sonu çekirdeği): plan katmanının pas temposuna duyarlılığı.",
+   "ad-denetimi: yeni üst düzey adlar (yuzeyOlasilik, disAyakBecerisi, vurusKoni) ve dört MOTOR_AYAR anahtarı.",
+   "mac-deneme 4 (hızlı kademe; tekrarlanabilirlik 'sonuç aynı'); ikiz-deneme gerekmez (modül düzeyi ortak durum yok), kuşkuda koşulur."
+  ],
+  "riskler": [
+   "Tempo: büyük dönüşte ayar adımı hızı (5 rad/sn) ortalama +0,06 sn hazırlık ekler. Pas/maç düşebilir, hatKapali vazgeçmesi artabilir, kesilen pas yükselebilir. Sınır: zaman yokken hızlı yol (dış, zayıf, açık) seçilir. Ek süre yalnız baskısız pasa düşer, tavanı 0,35 sn. Kapı geçmezse ayarAdim[0] = 0 (yalnız asimetrik kapı, +0,03 sn) ve görünür adım A10'un faz modülasyonuna kalır.",
+   "Pas planlayıcısı (t0 = 0) ayar adımını görmez. Hazırlık sırasında hattı kapanan baskısız pas sayısı artabilir; vazgeçme / maç satırı izlenir, gerekirse yalnız adımlı pasta t0 = adimT denenir (T4-V'deki geri alma notu akılda).",
+   "Dış ayak payının %12'den ~%3'e inmesi hızlı bırakışları azaltır. Baskı 0,3–0,5 bandında tR tahmini yanılırsa (rakip hızlanır) güçlü ayakla dönen pasör kapatılabilir. b-olcum 'acele' ve kayıp satırları izlenir.",
+   "Zayıf ayak payı düşerse (%19 → ~%10–16) zayıf ayağın yüksek hatası azalır, pas isabeti hafif artabilir. Orta planlayıcısının T14c kalibrasyonu değişir (c-orta kapısı).",
+   "Asimetrik koni sağ ayaklı pasörün sağa pasını sistematik olarak yavaşlatır. Takımın sağ/sol pas dağılımında yan önyargısı oluşabilir; sağ ve sol yana pas oranı ölçülür.",
+   "Dış ayakta gövdenin tutulması (hedefe dönmemesi) pastan sonraki ilk hareketin yönünü değiştirir (ver-kaç kalkışı, takip). verKac ve a-akis satırları izlenir.",
+   "Gelişine kapısında vuran yana tolerans 0,61 rad'a iner (bugün 1,45 simetrik). Gelişine paslarının ~%4'ü etkilenir: top gövde dönmeden gelirse gelişine düşebilir ('Gelişine' a-akis satırları, b-pas). Kapı geçmezse gelişine bit 2'nin dışında bırakılır (borç).",
+   "K1 çalışma ağacı mac-topla.js'te aynı bölgeyi (kalan, kalanCiz) değiştiriyor. V1a K1 commit'inden sonra uygulanmalı; kalanCiz de ayar adımı hızını kullanmalı, yoksa çizim son adıma erken girer (K1'in kapattığı donma geri gelir).",
+   "V1b (hazırlık ve gerilme) zamanYok'un girdisini (hazEn + geri) değiştirir. Sıra şöyle: zamanYok acma ve uzunHaz eklenmeden önceki vsr ile hesaplanır, V1b ekleri karardan sonra gelir. V1b hazırlık tablosunu değiştirirse V1a'nın dış ve zayıf payları yeniden okunur.",
+   "Çizim (A10) gelmeden önce de motorun gövde hareketi görünür değişir: dışta gövde dönmez, adımda dönüş yavaşlar. Bugünkü çizim vur.kalan ile zamanlandığı için tutarlı kalır, ama 'dış' pozu tutulan açıyla ilk kez gerçekten açılı çizilir; A10'a kadar 'A: vuruş stili' ve 'A: zamanlama' satırları denetlenir.",
+   "Bayrak 0'da birebirlik için dil alanı literalde null kalmalı (gizli sınıf değişir, sonuç değişmez). gucPlan ve stil0'ın öne alınması şutta sutPlani sırasını bozmamalı: şut yolu dokunulmadan kalır."
+  ]
+ },
+ {
+  "ad": "V1b — Hazırlık ve gerilme modeli (vuruşun zaman bütçesi)",
+  "ozet": "Bugün vuruş hazırlığı mesafe etiketlerinden (vurusSureleri: pas/uzunYer/hava) ve baskıdan (haz×(1−0,8·baskı), geri×(1−0,25·baskı)) kısalıyor. Gerilme yalnız baskısız ≥ 28 m pasta var (uzunHaz 0,55, açma dokunuşu). Ölçüm (5 maç, HEAD 6628e08 motoru, scratchpad/v1b): baskı ≥ 0,6 iken ≥ 28 m havadan top karar→temas ortanca 0,48–0,60 sn (en kısası 0,33). Bu vuruşların 11'inin 7'sinde rakip topa 1 m'den yakındı, top yine 20–29 m/sn çıktı. Uzaklaştırma baskı ortancası 0,92, karar→temas 0,52 sn, menzil ortancası 32 m, çıkış hızı 19–22 m/sn. J.3.3'e göre sıfır adımla gerçekte 15–25 m, bir adımla ~30 m.\n\nV1b yeni modeli üç parçaya dayanır:\n(1) Tarif. Tekniğin istenen çıkış hızı, ayar adımı sayısını (0/1/2) ve salınım genliğini (0–1) belirler. Yaklaşmada atılmış adımlar (topa koşarak gelmek) krediye sayılır.\n(2) Zaman bütçesi. En yakın rakibin topa varışı +0,1 sn; bu, T9b-b şut acelesiyle aynı ölçü. Tam hazırlık bütçeye sığmazsa üç sonuç var: soğukkanlı oyuncu eksik küçükse adımı yine atar ('adim'), ya da sığan adımla vurur ('kisa': hız tavanı, kısa menzil, acele hatası, gövde geriye/yana), ya da rakip gelince hazırlık yarıda kesilir ('yarida').\n(3) Planlayıcının aynası. pasAnaliz aynı saf işlevle hız tavanını ve 'adim' riskini bilir. t0 = 0 kalibrasyonu korunur. Havadan uzun vuruşta 1. adamın yola adımı ve bloğu (T12b orta bloğunun genişlemesi) planlayıcıda ortaBlokTahmin ile tartılır.\n\nSözleşme olarak her vuruş eylemine e.tarif yazılır: teknik, salınım, adım, mod, acele, eğim, karşı kol. MOTOR_AYAR.hazirlik 0 iken motor bugünküyle birebir aynıdır.",
+  "tasarim": "## 0. Bugünkü durum (kod ve ölçü)\n- Kod: `vurusSureleri` (js/mac-topla.js:191). Değerler: pas geri 0,26 / haz 0,12; uzunYer 0,34 / 0,14; hava ve uzaklaştırma 0,39 / 0,15; şut 0,33 / 0,10. Baskı haz'ı ×(1−0,8·baskı), geri'yi ×(1−0,25·baskı) kısaltır.\n- vurusBaslat:322'de acele yalnız açık oyun şutunda var (T9b-b, :304–307).\n- Uzun topa özgü kurallar ikisi de `baskı < 0,3` kapısıyla çalışır:\n  - `acmaDokunus` +0,45 sn (:333; havadan ≥ 28 m, yerden ≥ 32 m).\n  - `uzunHaz` asgari 0,55 sn (:336; L ≥ 28).\n- Planlayıcı:\n  - Paslarda hazırlığı bilmez. secenekler0:808 t0 = 0, T4-V kalibrasyonu: t0 = hazırlık+geri denendiğinde vazgeçme 2,6 → 8/maç çıktı, geri alındı.\n  - Yalnız yerden pasta pasörün dibindeki bacak (`yakinP`, pasAnaliz:130) var.\n  - Ortada 1. adamın hazırlık süresindeki adımı var (T14c: ortaBlokTahmin t0, mac-karar.js:595).\n  - Şutta blok için t0 var (T19a, :776).\n  - Uzaklaştırmada analiz yok: değer 1,1·baskı (:821), hedef rastgele 28–50 m (mac-topla.js:648).\n- Motor bugün \"rakip yetişir\" sonucunu vermez. Presçi uzun hazırlıkta jokey mesafesinde (1,6–2,4 m) bekler, ancak temasa 0,3 sn kala 0,8 m'ye girer (mac-hareket.js:952). Bu yüzden uzun hazırlığın bugün bedeli yok, kısa hazırlığın da cezası yok.\n- Ölçüm: 5 maç (tohum 1, 2, 4, 5, 6), vuruş eylemi ~1.800. Probe betikleri scratchpad/v1b/hazirlik-probe*.js, karşı-olgu cf.js.\n\n## 1. Saf işlevler (js/mac-topla.js, vurusSureleri'nin yanına; B akışı; rastlantısız)\n\n### 1.1 Teknik tablosu\n`VURUS_HAZ` (sabit). Değerler sutGucu 0,5'te verilir:\n- `v` = [0 adım, 1 adım, tam (2+)] azami çıkış hızı (m/sn; yerden ilk hız, havadan 3B).\n- `g` = [salınım 0, salınım 1] geri salınım süresi (sn).\n- `on`, `yan` = eğim tabanı.\n- `k` = [taban, salınım payı] karşı kol.\n- `guc` = güç ailesi mi.\n\n| Teknik | v | g | on | yan | k | guc |\n|---|---|---|---|---|---|---|\n| itme | [13, 15, 16] | [0,20, 0,28] | +0,1 | 0 | [0,15, 0,25] | – |\n| sertIc | [14, 19, 24] | [0,20, 0,32] | +0,15 | 0,1 | [0,25, 0,5] | ✓ |\n| surulmus | [17, 24, 30] | [0,22, 0,36] | +0,3 | 0,1 | [0,35, 0,55] | ✓ |\n| lofted | [17, 23, 29] | [0,24, 0,40] | −0,5 | 0,2 | [0,4, 0,55] | ✓ |\n| chip | [13, 16, 18] | [0,18, 0,28] | −0,35 | 0 | [0,2, 0,3] | – |\n| dis | [12, 16, 20] | [0,14, 0,30] | 0 | −0,2 | [0,15, 0,35] | – |\n| vole | [18, 21, 24] | [0,13, 0,16] | −0,1 | 0,5 | [0,3, 0,45] | ✓ |\n\nKaynaklar:\n- J.1: tek adım ≈ koşarak vuruşun 2/3'ü.\n- J.3.2: fiske dış ayak 10–13 m/sn.\n- J.3.3: bir adım + gövde ile 20–24 m/sn.\n- Tablo J-1: sürülmüş 29,9 ± 2,9; havadan 20–28; hesap tablosu scratchpad/v1b/hiz-tablo.js.\n- Motor fiziğinde havadan 35°'de menzil: 17 m/sn ≈ 20 m, 23 m/sn ≈ 34 m, 29 m/sn ≈ 48 m. J.3.3 ile uyumlu.\n\nOyuncu çarpanı kG:\n- Güç ailesinde (0,85 + 0,3·sutGucu), ötekilerde (0,92 + 0,16·pas).\n- Zayıf ayakta ×(0,8 + 0,2·zayifAyak) (`sutHizTavani` ile aynı).\n- Yorgunlukta ×(1 − 0,1·yorgunluk).\n\nAdlar V1a'nın yedi şemasıyla ortaktır; V1a başka ad koyarsa onunki geçerlidir.\n\n### 1.2 hazTeknik(sec, tip, v, stil)\nV1a'nın `sec.tek`'i yokken kullanılan yedek eşleme:\n- yay aşırtma ya da stil 'asirtma' → chip\n- vole / yarimVole → vole\n- dis → dis\n- havadan ya da uzaklaştırma → lofted\n- yerden: v ≤ 13 → itme, ≤ 20 → sertIc, üstü → surulmus\n- şutta SUT_TUR stili: ic ve falso → sertIc, ust → surulmus, dis → dis, asirtma → chip, burun → itme\n\n### 1.3 zamanButcesi(m, p, x, z)\ntR = min varisSuresi(o, x, z, 0,9) — saha oyuncusu rakipler, kaleci hariç (T9b-b :305 ile aynı). Karar başına bir kez hesaplanır.\n\n### 1.4 havaCikisHizi(m, L, T, hy, ust)\nHavadan vuruşun gerektirdiği 3B hız.\n- Değer `m.havadanCoz(0, 0,11, 0, L, hy, 0, T, 0, ust)`'un büyüklüğüdür.\n- Not defteri Match örneğinde tutulur (`m._vhM`, Map). Anahtar round(L) × round(T·20) × round(hy·4). reset()'te null'lanır.\n- Modül düzeyi önbellek yoktur, ikiz motorlar paylaşmaz.\n\n### 1.5 vurusMenzil(m, p, tek, n, aile, hy)\n`vAz(n)` ile o ailenin uçuş süresiyle (pas: havaSure; uzaklaştırma: 1,3 + L/30; orta: 0,95 + L/32) varılan en uzak L. Not defteri üzerinde ikiye bölme ile bulunur, ≤ 7 adım.\n\n### 1.6 vurusHazirlik(p, o)\nPaylaşılan VH nesnesine yazar (HH / OB_V kalıbı); çağıran kopyalar.\n\nGirdi o: {tek, v (istenen çıkış hızı), L, ux, uz (vuruş yönü), tR, ayakD (ayak noktası–top), zayif, uzun (L ≥ 28 ve şut değil), don (gövdenin hedefe dönüş süresi: max(0, |f| − sınır)/hrkVurusDonus — T9b-b'deki gibi)}.\n\nHesap:\n- `vAz(n) = VURUS_HAZ[tek].v[n]·kG`\n- `nG = v ≤ vAz(0) ? 0 : v ≤ vAz(1) ? 1 : 2`\n- Kredi (yaklaşmanın adımları; ayrıca beklenmez):\n  `kr = min(2, max(⌊(ayakD − 0,5)/0,55⌋, vk > 4 ? 2 : vk > 2 ? 1 : 0))`, vk = p.vx·ux + p.vz·uz (koşarak gelen tam yaklaşmadadır, J.1).\n- `tAdim = hazAdim[0] + hazAdim[1]·(1 − ceviklik)` → 0,22–0,32 sn.\n- `tBak = uzun ? hazBak[0] + hazBak[1]·(1 − görüş) : 0` → 0,15–0,25 sn.\n- `sal(n) = min(1, min(v, n<2 ? vAz(n) : ∞)/vAz(2))`\n- `geri(n) = g0 + (g1 − g0)·sal(n)`\n- `Tq(n, bak) = (bak ? tBak : 0) + max((n − kr)⁺·tAdim, don) + geri(n)`\n- `B = tR + hazButce` (0,1)\n\nMod seçimi (belirlenimli):\n- Tq(nG, bakışlı) ≤ B → 'tam' (n = nG, bakış var).\n- Tq(nG, bakışsız) ≤ B → 'tam', tBak = 0.\n- Değilse nF = sığan en büyük n (kr..nG; hiç sığmazsa kr), d = Tq(nG, bakışsız) − B:\n  - tR > geri(nG) + 0,05 ve d ≤ hazRisk[0] + hazRisk[1]·sogukkanlilik → 'adim'. Plan tam, risk yarıda kesmede.\n  - değilse → 'kisa': n = nF, vCap = vAz(nF), acele = clamp(d/hazAcele, 0, 1).\n- Azami hızı aşan istek (v > vAz(2)) sert bir sınır değildir: 'tam'da tavan yok, sal = 1. Hata zaten gucHataCarpani'yla büyür. Böylece baskısız uzun top payı bozulmaz (karşı-olguda ≥ 28 m havadan topların 15/38'i bu durumda).\n\nÇıktılar:\n- `haz = tBak + (n − kr)⁺·tAdim`\n- `geri = geri(n)·(1 − 0,35·acele)`\n- `nEk = (n − kr)⁺`\n- `acma = nEk ≥ 2 ∧ !uzk ∧ baskı < 0,3 ∧ B ≥ tBak + 0,45 + geri + 0,2`. İki adım açma dokunuşuyla atılır; haz = tBak + 0,45.\n- Eğim ve kol (J.3.3, J.5):\n  - `egOn = clamp(on·(0,5 + 0,5·sal) − 0,6·acele, −1, 1)`\n  - `egYan = clamp(yan·(0,5 + 0,5·sal) + 0,5·acele, −1, 1)` — volede temasta +0,6·clamp(top.y/0,75)\n  - `kol = clamp(k0 + k1·sal + 0,25·acele, 0, 1)`\n\n## 2. Motor (bit 1; js/mac-topla.js)\n- **vurusBaslat**, şut, gelişine, duran top ve penaltı dışında:\n  - İstenen hız v: yerden gucPlan·29 (pasPlani v0); havadan havaCikisHizi(L, T ailesi, hy); uzaklaştırmada uzaklaştırma ailesi.\n  - tek = sec.tek (V1a) || hazTeknik. tR = zamanButcesi(this, p, ox, oz).\n  - H = vurusHazirlik(...), e.tarif = kopya.\n  - :322'nin yerine `geri = H.geri; hazEn = H.haz`. Vazgeçmeden 0,6 sn içindeki yeniden başlamada hazEn = 0 kuralı kalır.\n  - :333 açma koşulu H.acma olur.\n  - :336 uzunHaz bütçeye bağlanır: yalnız mod 'tam' ∧ L ≥ 28 ∧ B ≥ uzunHaz + geri + 0,1 iken taban. Z4a'nın \"≥ 0,6 sn hedefe bakış\"ı baskısız uzun topta korunur.\n  - `acele = H.acele` → mevcut vurusSapma (×(1+0,5·acele)) ve kotuVurusOlasiligi (×(1+1,5·acele)) pasta ve uzaklaştırmada da işler.\n- Şut, gelişine ve duran top: davranış aynı (vsr). Yalnız e.tarif yazılır. Şutta sal = sutPlan.g, acele = T9b-b'ninki, duranda kr = 2.\n- **Hız tavanı** (yalnız 'kisa' / 'yarida'):\n  - `yerPasVur` (:519): pasPlani v'si hata uygulanmadan önce `min(v, tarif.vCap)`. Pas daha yavaş gider; kesilme fiziği kendiliğinden işler.\n  - `havaPasVur` (:543): T hesaplanınca, hatadan önce, havaCikisHizi(L, T) > vCap ise hedef doğrultuda vurusMenzil'e kısaltılır ve T aileden yeniden alınır.\n  - tarif.kisaldi = true (ölçü).\n- **vurusYap**: temasta tarif.sal = kullanılan hız ÷ vAz(2); vole eğimi topun yüksekliğinden.\n- **Uzaklaştırma** (secenekUygula :648): örneklenen hedef vektörü vurusMenzil(lofted, nF)·0,95'e kısaltılır. Aynı rast çağrıları kalır. Hedefin amacı V1d'nindir.\n\n## 3. Planlayıcının aynası (bit 2; js/mac-karar.js)\n- **secenekler0** (:808): karar başına bir kez `hzB = {tR}` hesaplanır ve pasSecenekleri'nin o'suna eklenir.\n  - pasAdayiTam (:485) bunu pasAnaliz'e geçirir.\n  - tekVurusKarari'nın kontrol sonrası dalı (ktr, :862) karşılama noktasındaki tR'den (k.t + 0,45) düşer, kredi 0.\n  - Gelişine (o.ilk) dalında V1b yok.\n- **pasAnaliz** (:101), o.hzB varken:\n  - Yerden: her varış adayı k için v0[k] hesaplanır, H = vurusHazirlik(...) çağrılır. 'kisa' ise PA_TB süreleri hesaplanmadan önce `v0[k] = min(v0[k], vCap)` olur; kesilme ve kontrol daha yavaş pasla dürüstçe hesaplanır.\n  - Havadan: v = havaCikisHizi(L, T, hy). 'kisa'da kısa kalan yol s = L·(1 − (vCap/v)²), tolerans tol = orta ? pasTolHava : pasTol[0] + pasTol[1]·max(0, marj). `mk = clamp(1 − max(0, s − tol)/6, 0, 1)`.\n  - 'adim'da `mk = 1 − 0,5·(1 − mk_kisa(nF))`. Rakip hazırlık sırasında yarı yarıya yetişir (yarıda kesmenin aynası).\n  - Hız seçimi `s = kalma·al·(0,55+0,45·pk)·mk[k]`. Son olarak P ×= mk[enK].\n  - sd0 ×= (1 + 0,5·acele[enK]).\n  - Sonuç A.hz = {mod, n, vCap, acele}, salt okunur.\n  - **t0 = 0 olarak kalır** (T4-V dersi): hazırlık süresi kesilme modeline girmez, ayrı çarpandır.\n- **ortaSecenekleri** (:595): `vurusSureleri` yerine `t0 = max(H.haz, don) + H.geri`. Ortanın 1. adam tahmini motorun yeni hazırlığıyla aynı olur.\n- **Uzaklaştırma seçeneği** (:821):\n  - H lofted ile, nominal L = 32 için hesaplanır. Seçeneğe {menzil, acele} yazılır.\n  - Değer, V1d gelene kadar −0,6·(1 − clamp(menzil/28, 0, 1)) alır (20 m'lik vuruş 30 m'likten az değerli). V1d kendi değeriyle değiştirebilir.\n\n## 4. Yarıda kesme ve uzun vuruşta 1. adam (bit 4)\n- **vurusIlerle**, hazırlık evresinde (:343–418): kesilebilir süre varsa (hazirlikEn − t > 0,02 ve tarif.nEk + tBak > 0; şut, gelişine, duran top yok):\n  - `tR_now = zamanButcesi(b.x, b.z)`.\n  - `tR_now ≤ e.geri + 0,05` ise \"şimdi vurmazsam yetişir\" kuralı işler:\n    - `hazirlikEn = e.t`\n    - `nYap = min(nG, kr + ⌊(e.t − tBak)/tAdim⌋)` (açma yapıldıysa +2)\n    - `vCap = vAz(nYap)`, `acele = clamp((e.kalan − tR_now)/hazAcele, 0, 1)`\n    - geri ×(1 − 0,35·acele); mod = 'yarida'; olay 'vurusYarida' {p}.\n  - Fizik tetik: rakip uzaktayken hiç işlemez. Rastlantı çekmez.\n- **Presçinin adımı** (mac-hareket.js:910): T12b orta bloğunun koşulu, tarif.blok vuruşlara (havadan ve L ≥ 20, ya da uzaklaştırma; yerden değil) genişler. 1. adam 4,5 / 5,5 m içindeyse vuruşun yoluna, toptan 1 m öteye adım atar.\n- **Temasta blok**: vurusSon (:570) bu vuruşlarda `this.ortaBlok(p)` çağırır (bacak erişimi; gövde teması zaten govdeCarpmasi'nde). b.ortaBlok'a uzun:true, olay 'block' {uzun:true}.\n- **Planlayıcının aynası**: havadan adayda hzB.tR < 1,5 ise `P ×= ortaBlokTahmin(m, takım, ox, oz, 0,11, ux·vh, uz·vh, vy0, 0,25, Tq).acik` (ortaSecenekleri'nin aynı çağrısı).\n- Yerden uzun pasa adım yok: T4-V'deki vazgeçme artışını önlemek için.\n\n## 5. Ortalar (bit 8)\nBit 1, 2 ve 4 açık ortaya (tur orta / geriCevir) de uygulanır. c-orta kapısı tutmazsa varsayılan 7'ye iner, ortalar vsr ile kalır.\n\n## 6. Sayısal örnekler (sutGucu 0,5; görüş 0,5; çeviklik 0,5)\n- **A. Stoper, top ayağında, rakip uzak (tR 2), 40 m havadan pas** (v 26,1):\n  - nG 2, kredi 0 → açma.\n  - haz = 0,2 + 0,45 = 0,65; geri 0,38 → karar→temas ≈ 1,05 sn (bugün 0,95).\n  - sal 0,9 → kol 0,95; egOn −0,48 (geriye).\n- **B. Aynı vuruş, rakip 1,5 m'de (tR 0,32, B 0,42):**\n  - Tq(0) = 0,33 sığar, Tq(2) = 0,92 → d 0,5 → 'kisa', vCap 17 (menzil ~19 m), acele 1.\n  - Planlayıcıda mk = 0: bu pas seçilmez, başka seçenek kazanır.\n- **C. Ceza sahasında uzaklaştırma, rakip 1 m'de** (tR 0,22): nF 0 → menzil ~20 m (bugün ortanca 32 m), acele ~0,8, gövde geriye ve topun ters yanına.\n- **D. Aynı uzaklaştırma, rakip 3 m'de** (tR ~0,52): bir adım sığar ya da 'adim' → ~32–34 m.\n- **E. 5 m/sn koşarak topa gelen oyuncu, 40 m:** kredi 2, ek bekleme yok (yalnız bakış).\n- **F. Duran oyuncu, 18 m sert yerden pas** (16 m/sn): sertIc nG 1 → +0,27 sn ayar adımı. Görünür gerilme: sal 0,67, kol 0,58.\n\nKarşı-olgu (3 maç, 685 açık oyun vuruşu):\n- 'kisa' 11, 'adim' 3; geri kalanı 'tam'.\n- Ek ayar adımı: yerden ≤ 22 m'de 33/337, yerden > 22 m'de 192/263, havadan ≥ 28 m'de 36/38.\n- Ek adımlı paslarda hazEn ortancası: yerden ≤ 22 m 0,09 → 0,26; yerden > 22 m 0,55 → 0,45.\n- Etki dar ve hedefli: çoğu kısa pas değişmez, sert ve uzun vuruş gerilir, baskıda uzun vuruş kısa düşer.\n\n## 7. Evreler (V1 içinde)\n- **V1b-0 — ölçü**, sonucu değiştirmez (`--ayni`): b-olcum genişlemesi ve v-hazirlik senaryosu iskeleti.\n- **V1b-1 — saf işlevler ve sözleşme**: e.tarif her zaman yazılır; hazirlik 0'da `--ayni`. A10 buradan başlayabilir.\n- **V1b-2 — motor** (bit 1).\n- **V1b-3 — planlayıcı** (bit 2 ve 8).\n- **V1b-4 — yarıda kesme ve uzun vuruş bloğu** (bit 4).\n- **V1b-5 — denge**: 40 maç, hazirlik 0 ↔ 15, aynı tohum. Tarama en çok iki değer: hazRisk ve lofted v. Kapanışta 80 maç.\n\n## 8. V1'in öbür alanlarıyla dikiş\n- **V1a:** tekniği (sec.tek) ve dönüşün yolunu seçer. Dönüş süresi kalan'daki donT'ye girer. V1b'nin adımı haz'a girer. kalan = max(haz − t, donT, varT) + geri olduğundan aynı adım iki kez sayılmaz. Acelede pasın hizalanma sınırının gevşemesi (T9b-b'nin ×(1 + 0,6·acele)'si) V1a'nın kararıdır; öneri yalnız 'kisa' / 'yarida'da.\n- **V1c:** hız ailesini ve varış adaylarını seçer. V1b her adayın v0'ına tavanı uygular. Tavan, V1c'nin aday listesinden sonra hesaplanır.\n- **V1d:** uzaklaştırmanın hedefi ve değeri vurusMenzil ve acele'yi okur.\n- **V1e:** kale vuruşu duran topta kalır (kredi 2). Kalecinin açık oyun pası aynı kuralla işler.",
+  "kodDegisiklikleri": [
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "VURUS_HAZ, VH, hazTeknik, zamanButcesi, havaCikisHizi, vurusMenzil, vurusHazirlik (yeni, vurusSureleri'nin yanında ~:191)",
+    "ne": "Saf ve rastlantısız hazırlık modeli. Teknik tablosu (0/1/tam adım azami hızı, geri salınım, eğim, kol), kredi, ayar adımı süresi, zaman bütçesi, mod (tam/adim/kisa), hız tavanı, acele, eğim ve kol. VH paylaşılan çıktı nesnesidir; havaCikisHizi'nin not defteri Match örneğinde (m._vhM) tutulur."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "ayarEkle('B', …)",
+    "ne": "Yeni anahtarlar: hazirlik 15, hazAdim [0.22, 0.1], hazBak [0.15, 0.1], hazButce 0.1, hazRisk [0.12, 0.12], hazAcele 0.4, hazGuc [0.85, 0.3]."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusBaslat (:280–341)",
+    "ne": "bit 1: şut, gelişine, duran top ve penaltı dışında H = vurusHazirlik; geri ve hazEn tariften (:322'nin yerine); açma koşulu H.acma (:333); uzunHaz bütçeye bağlı (:336); acele pasta ve uzaklaştırmada da; e.tarif her vuruşta yazılır (şutta sutPlan.g ve T9b-b acelesinden, davranış aynı)."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusIlerle (hazırlık dalı :345–418)",
+    "ne": "bit 4: yarıda kesme — kesilebilir süre varken tR_now ≤ e.geri + 0,05 ise hazirlikEn = e.t, atılan adıma göre vCap, acele, geri kısalır, mod 'yarida', olay 'vurusYarida'. Rastlantı çekmez."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusYap (:444)",
+    "ne": "Temasta tarif.sal (kullanılan hız ÷ vAz(2)) ve volede eğim (topun yüksekliği) güncellenir; salt okunur."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "yerPasVur (:519), havaPasVur (:543)",
+    "ne": "bit 1: 'kisa' / 'yarida'da hız tavanı. Yerden v = min(v, vCap); havadan hedef vurusMenzil'e kısalır, T aileden yeniden alınır. Tavan hata ve kötü vuruştan önce uygulanır, tarif.kisaldi yazılır."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusSon (:570)",
+    "ne": "bit 4: tarif.blok olan vuruşta (havadan ve L ≥ 20, ya da uzaklaştırma) this.ortaBlok(p); b.ortaBlok.uzun = true."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "secenekUygula case 'uzaklastir' (:648)",
+    "ne": "bit 1: örneklenen hedef vektörü vurusMenzil(lofted, nF)·0,95'e kısaltılır; aynı rast çağrıları kalır."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "secenekler0 (:797–826)",
+    "ne": "bit 2: karar başına hzB = {tR: zamanButcesi} hesaplanıp pasSecenekleri'nin o'suna eklenir. Uzaklaştırma seçeneğine {menzil, acele} ve geçici menzil terimi −0,6·(1 − clamp(menzil/28)); V1d değiştirebilir."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "pasAdayiTam (:485), pasSecenekleri (:507), tekVurusKarari0 (:858–862)",
+    "ne": "o.hzB pasAnaliz'e geçirilir. Kontrol sonrası dalda (ktr) tR karşılama noktasından (k.t + 0,45) düşülür; gelişinede (ilk) V1b yok."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "pasAnaliz (:101–178)",
+    "ne": "bit 2: aday hız başına H. Yerden 'kisa'da v0[k] tavana iner (PA_TB'den önce). Havadan 'kisa'da menzil açığı toleransla mk'ya çevrilir. 'adim'da mk = 1 − 0,5·(1 − mk_kisa). Seçim ve P mk ile çarpılır, sd0 acele ile büyür, A.hz salt okunur. bit 4: havadan ve tR < 1,5 iken P ×= ortaBlokTahmin(…, t0 = Tq).acik. t0 = 0 kalır."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "ortaSecenekleri (:595)",
+    "ne": "bit 2 + 8: ortanın 1. adam tahmininde t0 = max(H.haz, don) + H.geri (vurusSureleri yerine)."
+   },
+   {
+    "dosya": "js/mac-hareket.js",
+    "islev": "presYap, orta bloğu dalı (:910)",
+    "ne": "bit 4: koşul ev.tarif.blok vuruşlara genişler; 1. adam 4,5 / 5,5 m içindeyse havadan uzun vuruşun ve uzaklaştırmanın yoluna adım atar. Yerden pas hariç."
+   },
+   {
+    "dosya": "js/mac-mudahale.js",
+    "islev": "ortaBlok (:381), ortaBlokUygula (:385)",
+    "ne": "Değişmez; yalnız b.ortaBlok.uzun bayrağı olay 'block' {uzun: true} olarak geçer (ölçü)."
+   },
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "MOTOR_AYAR bildirimi (B listesi :91), reset() (:246)",
+    "ne": "hazirlik, hazAdim, hazBak, hazButce, hazRisk, hazAcele, hazGuc bildirilir; reset'te this._vhM = null."
+   },
+   {
+    "dosya": "araclar/olcumler/b-olcum.js",
+    "islev": "B: karar ve vuruş satırları",
+    "ne": "V1b satırları: mod payları, ek adım 0/1/2, teknik başına salınım %10/50/90, sınıf × baskı karar→temas ortancası, sıfır hazırlıkla ≥ 28 m havadan (kapı), kısa düşen / yarıda kesilen / uzun vuruş bloğu sayısı (maç başına), pasta acele payı."
+   },
+   {
+    "dosya": "araclar/senaryolar/v-hazirlik.js",
+    "islev": "yeni senaryo",
+    "ne": "Denetimli hücreler (senaryolar listesinde); kapı satırı çıkış kodu 1."
+   },
+   {
+    "dosya": "TEKNIK_PLAN.md §8, FUTBOL_KUTUPHANESI §12.13 V1 satırı, CLAUDE.md senaryo kapıları",
+    "islev": "belge",
+    "ne": "e.tarif sözleşmesi, hazirlik anahtarı ve v-hazirlik kapısı; kapanışta kutuphane/J J.8 'Hazırlık' maddesi güncellenir."
+   }
+  ],
+  "ayarlar": [
+   "hazirlik: 15 — bit maskesi. 1 motor (tarif, ek ayar adımı, zaman bütçesi, 'kisa' tavanı, pasta/uzaklaştırmada acele; uzunHaz ve açma bütçeye bağlı), 2 planlayıcının aynası (pasAnaliz tavan/mk, ortanın t0'ı, uzaklaştırmanın menzili), 4 yarıda kesme + havadan uzun vuruşta 1. adamın adımı ve bloğu, 8 ortalar dahil. 0: bugünkü motor birebir (e.tarif yine yazılır, sonucu değiştirmez). c-orta tutmazsa 7.",
+   "hazAdim: [0.22, 0.1] — bir ayar adımının süresi, taban + (1 − çeviklik)·pay (sn)",
+   "hazBak: [0.15, 0.1] — ≥ 28 m vuruşta (şut hariç) hedefe bakış, taban + (1 − görüş)·pay (sn); yalnız 'tam' hazırlıkta (Z4a'nın uzunBakis'i bakışı yönetir)",
+   "hazButce: 0.1 — zaman bütçesi B = tR + bu (sn; T9b-b'nin 0,1'i)",
+   "hazRisk: [0.12, 0.12] — eksik süre ≤ taban + soğukkanlılık·pay ise adım yine atılır ('adim'), ötesinde 'kisa' (sn)",
+   "hazAcele: 0.4 — eksik sürenin aceleye ölçeği (sn; T9b-b ile aynı)",
+   "hazGuc: [0.85, 0.3] — güç ailesinde (sertIc, surulmus, lofted, vole) azami hız × (taban + pay·sutGucu); öbürlerinde 0,92 + 0,16·pas",
+   "VURUS_HAZ (sabit, MOTOR_AYAR değil): itme v[13, 15, 16] g[0,20, 0,28]; sertIc [14, 19, 24] [0,20, 0,32]; surulmus [17, 24, 30] [0,22, 0,36]; lofted [17, 23, 29] [0,24, 0,40]; chip [13, 16, 18] [0,18, 0,28]; dis [12, 16, 20] [0,14, 0,30]; vole [18, 21, 24] [0,13, 0,16]. Eğim on/yan ve kol tabloda; tarama yalnız lofted v ile.",
+   "Etkilenen eski anahtarlar (değeri değişmez, kapısı değişir): uzunHaz 0,55 (bit 1'de baskı < 0,3 yerine bütçe), acmaDokunus 1 (bit 1'de H.acma), uzunBakis 0,3 (aynı)"
+  ],
+  "sozlesme": [
+   "Motor her vuruş eylemine e.tarif yazar (vurusBaslat'ta; temasta ve yarıda kesmede güncellenir). Alt nesnedir, oyuncu nesnesine alan eklenmez. Çizim yalnız okur; rastlantısızdır.",
+   "tarif.tek: 'itme' | 'sertIc' | 'surulmus' | 'lofted' | 'chip' | 'dis' | 'vole' — yedi beden şeması (V1a seçer; yoksa hazTeknik). Bugünkü e.stil korunur.",
+   "tarif.sal: 0–1 geri salınım genliği = kullanılan çıkış hızı ÷ tekniğin tam yaklaşmalı azamisi (J.9 madde 1: hedef hız ÷ azami). Hazırlığın başından planlıdır, temasta kesinleşir. Çizim bugün gucPlan'ı okumuyordu; bu alan onun yerine geçer.",
+   "tarif.n (ek ayar adımı 0–2), tarif.kredi (yaklaşmadan sayılan adım 0–2), tarif.acma (adımlar açma dokunuşuyla), tarif.tBak (hazırlığın başında hedefe bakış, sn), tarif.tAdim (bir adımın süresi, sn). Zaman pencereleri e.t ile: bakış [0, tBak], ayar adımları [tBak, tBak + n·tAdim] (A10'un D2 faz ayarı), son adım ve geri salınım e.geri (bugünkü vurus.kalan / kalanCiz sözleşmesi aynı).",
+   "tarif.mod: 'tam' | 'adim' | 'kisa' | 'yarida' — hazırlığın bütçeye göre biçimi; tarif.acele: 0–1 (= e.acele; artık pas ve uzaklaştırmada da).",
+   "tarif.egOn: −1…+1 gövde eğimi (− geriye: havadan, aşırtma, acele; + öne: sürülmüş ve alçak). tarif.egYan: −1…+1 (+ vurmayan tarafa / topun ters yanına: vole, acele; − vuran tarafa: dış ayak). Çizimde ±1 ≈ ±25° öne/arkaya, ≈ 30° yana (J.3.3: vole çalışmalarında 14–31°).",
+   "tarif.kol: 0–1 karşı kolun yukarı-dışa açılma genliği (gerilim yayı, J.1 ve J.5 madde 1); sal ve acele ile büyür. Örnek: 40 m havadan pas ~0,95, kısa itme ~0,35.",
+   "V1a aynı nesneye tarif.don (temasta gövde–hedef açısı, rad) ve tarif.yol ('adim' | 'pelvis' | 'dis') yazar; V1c tekniği ve hızı belirler (tarif.tek ve vIst).",
+   "Salt okunur ölçü alanları: tarif.vIst (istenen çıkış hızı), tarif.vCap, tarif.tR, tarif.d (eksik süre), tarif.kisaldi, tarif.blok (uzun vuruş bloğuna açık)."
+  ],
+  "olcu": [
+   "Bugün, 5 maç (tohum 1, 2, 4, 5, 6; HEAD 6628e08 motoru; scratchpad/v1b): baskı ≥ 0,6 iken ≥ 28 m havadan top 11 kez. Karar→temas ortancası 0,48–0,60 sn, en kısası 0,33. Çıkış hızı ortancası 20–21 m/sn, en çok 29. 11'in 7'sinde rakip topa 1 m'den yakındı.",
+   "Bugün uzaklaştırma: baskı ortancası 0,92; karar→temas ortancası 0,52 sn (hazırlık evresi 0,18–0,22 + geri 0,30); hedef uzaklığı ortancası 32 m (%10–90: 17–37); çıkış hızı ortancası 19,4–21,9 m/sn (%90: 24); kararda gövde–hedef açısı ortancası 36–57°, %90'ı 75–78°.",
+   "Bugün yerden > 22 m pas, baskı ≥ 0,6: karar→temas ortancası 0,43–0,48 sn, %10'u 0,30–0,32, hız 14–16 m/sn. Baskısız: 0,90 sn (uzunHaz ve açma dokunuşu).",
+   "Bugün zaman bütçesi: havadan / uzaklaştırma vuruşlarında tR %10/50/90 = 0,22 / 1,32 / 2,47 sn (vuruşların ~%10'unda rakip topun dibinde). Yerden paslarda tR < 0,5 yalnız %1,3.",
+   "Bugün temassız biten vuruş eylemleri (3 maç): 1054 başlatmada 170 'zaman', 18 vazgeçme, 6 kayıp. 'Zaman'ın çoğu T20b'nin topla yavaşlayıp yeniden başlaması (bilinçli); maç başına birkaç tane 1,9 sn'lik dönüş zaman aşımı (V1a / K1 bilgisi).",
+   "Yeni kapı (b-olcum ve v-hazirlik): sıfır hazırlıkla ≥ 28 m havadan vuruş = 0. Tanım: n + kredi = 0, karar→temas < 0,35 sn ve gerçekleşen uçuş ≥ 28 m. Bugün 54 vuruşun 2'si < 0,35 sn, 9'u < 0,5 sn.",
+   "Yeni (görünürlük ve çeşitlilik): mod payları tam / adim / kisa / yarida; ek ayar adımı 0 / 1 / 2 payı (beklenen: yerden ≤ 22 m ~%10, yerden > 22 m ~%70, havadan ≥ 28 m ~%95); teknik başına salınım %10/50/90 (beklenen üç ayrık bant: itme ~0,5, sert ~0,7, uzun ~0,9); kol ve eğim dağılımı; pasta ve uzaklaştırmada acele payı.",
+   "Yeni (duyarlılık): sınıf × baskı karar→temas tablosu. Uzaklaştırma menzili baskıya göre tekdüze azalmalı: rakip ≤ 1 m'de ortanca ≤ 24 m (bugün 32), 3 m'de ~30–34, uzakta tam. Kısa düşen uzun vuruş, yarıda kesilen ve uzun vuruş bloğu maç başına (bilgi; beklenen 1–4 / 0–2 / 0,5–2).",
+   "Sağlık aralığı (40 maç hazirlik 0 ↔ 15, aynı tohum; kapanışta 80): gol, şut, pas isabeti, gerçekleşen ÷ konum xG, uzun pas payı (gerçek %10–20; bugün ~%14), uzaklaştırma / maç, vazgeçme / maç (bugünün 1,5 katını geçmesin), orta / maç ve orta bloğu.",
+   "Hız: karar başına ~10 varisSuresi, aday başına ucuz işlev, havadan adayda (tR < 1,5) ortaBlokTahmin, not defteri. Beklenen < %3; aynı süreç ölçüsü (hiz-olcum.js 2 --tekrar 8 --kok)."
+  ],
+  "senaryolar": [
+   "v-hazirlik (yeni, kapı; araclar/senaryolar/v-hazirlik.js). Hücreler [1]–[6]:",
+   "[1] Stoper, top ayağında, rakip > 10 m, 40 m havadan pas zorlanır: karar→temas ≥ 0,6 sn ve ek adım ≥ 1 (≥ %90), sal ≥ 0,75, kol ≥ 0,8.",
+   "[2] Aynısı, rakip 1 m'de 5 m/sn ile geliyor: planlayıcı pası seçmez (≥ %90). Zorlanırsa mod 'kisa' / 'yarida', iniş ≤ 25 m, acele ≥ 0,5 (N/N).",
+   "[3] Kendi ceza sahasında uzaklaştırma, rakip 1 / 3 / 6 m: menzil ortancası tekdüze artar, 1 m'de ≤ 24 m; egOn < 0 ve egYan > 0 acelede.",
+   "[4] 5 m/sn koşarak topa gelen oyuncu, 40 m havadan: kredi 2; karar→temas hazirlik 0'a göre en çok +0,1 sn.",
+   "[5] Duran oyuncu, 18 m sert yerden pas (~16 m/sn): ek adım 1, karar→temas +0,1–0,25 sn.",
+   "[6] Baskıda havadan uzun vuruşta 1. adamın blok payı %5–30 (bilgi). Planlayıcının modu motorunkiyle aynı karede N/N (aynalık). Belirlenimlilik: aynı tohum iki koşu aynı.",
+   "Bugünkü kapılar: b-pas, t-top (fizik değişmez, aynı kalmalı), c-orta (T10a |tahmin − gerçek| ≤ 10; ortanın t0'ı ve bit 8 değişir), c-kanat, c-1v1, c-koru, c-surus (ön ayar ve hazırlık), c-temas ve c-yariyariya (yeni blok ve yakın temas), d-duran ve d-sut (duran top ve şut davranışı aynı; gürültü içinde), v-sut (şut aynı).",
+   "z-s3, z-s10, z-s14 (plan katmanı pas seçimini okur); o-ofsayt (pasın zamanı).",
+   "node araclar/ikiz-deneme.js: VH paylaşılan nesne ve m._vhM — Aynılık N/N; kuşkuda --esit.",
+   "node araclar/ad-denetimi.js: yeni üst düzey adlar (VURUS_HAZ, VH, vurusHazirlik, hazTeknik, zamanButcesi, havaCikisHizi, vurusMenzil); motorda tohumsuz rastlantı yok.",
+   "hazirlik 0 ile turun tabanına --ayni (e.tarif yazımı sonucu değiştirmemeli). 40 maç --karsilastir hazirlik 0 ↔ 15; tarama en çok iki değer (hazRisk, lofted v); 80 maç tur kapanışında."
+  ],
+  "riskler": [
+   "T4-V dersi: hazırlığı uzatmak hatKapali vazgeçmesini ve pas hacmini bozabilir (t0 = hazırlık+geri ile vazgeçme 2,6 → 8/maç olmuştu). Önlem: t0 = 0 kalır; ek adım yalnız istenen hız onu gerektirip yaklaşma kredisi yetmezken; yerden pasa 1. adam adımı yok. Ölçü vazgeçme/maç; 1,5 katı aşılırsa sertIc'nin 1 adım eşiği ya da kredi gevşetilir.",
+   "Uzun top ve orta sayısı düşebilir: baskıda 'kisa' planlayıcıda değersizleşir. Bu istenen yön ama uzun pas payı sağlık aralığında (gerçek %10–20) kalmalı. Ortalar bit 8 ile ayrı kapanabilir. Azami hızın ötesi 'tam'da tavansız bırakıldı, yoksa karşı-olguda baskısız uzun topların ~%40'ı yetenek dışı sayılıyordu.",
+   "Kısa uzaklaştırma ve uzun vuruş bloğu kendi ceza sahası önünde dönen topu artırıp golü yükseltebilir. Gol, gerçekleşen ÷ konum xG ve uzaklaştırmadan sonraki 5 sn'de rakip şutu izlenir. V1d'nin amaçlı hedefi bunu dengeler.",
+   "Acele artık pasta ve uzaklaştırmada da var: kotuVurus ×(1+1,5·acele), sapma ×(1+0,5·acele). Baskıdaki pas isabeti düşer (gerçekçi) ama pas isabeti sağlık aralığı gözlenir.",
+   "c-orta kapısı (T10a ±10 puan) ortanın t0'ının ve tavanının değişmesiyle kayabilir; tutmazsa hazirlik 7 (ortalar bugünkü gibi).",
+   "A10 gelene kadar çizim ek ayar adımını yerinde göstermez: hazırlık uzar (evre 1 rampası hazirlikEn'i okur). Duran oyuncu topun başında ~0,27 sn fazla bekler gibi görünebilir. Program V1 → A10 sırasında olduğu için geçici.",
+   "V1a ve V1c ile dikiş: teknik adı ve hız adayları onlardan gelir. Sırayla uygulanmazsa hazTeknik yedeği çalışır. Dönüş süresi (V1a, donT) ile ayar adımı (V1b, haz) kalan = max(...) ile örtüşür; iki kez sayılmamalı. V1a hizalanma sınırına aceleyi bağlamazsa 'kisa' / 'yarida'da oyuncu yine dönmeyi bekler, kazanç azalır.",
+   "'adim' ve yarıda kesme: presçi temasa 0,3 sn kalana dek jokey mesafesinde durduğundan (mac-hareket.js:952) 2 m içindeki rakipte 'adim' pratikte hemen 'yarida'ya döner. Planlayıcı bunu tR ≤ geri + 0,05 iken 'adim'ı kapatarak aynalıyor. Soğukkanlılığın alt özellik yayılımı dar olduğundan karakter farkı küçük kalabilir (bilgi).",
+   "Performans: havaCikisHizi not defterinin ilk ıskaları (havadanCoz 3×n adım) maç içinde küçük sıçrama yapar. Maç başına toplam birkaç on ms, bütçe %10'un çok altında beklenir; yine de aynı süreçte ölçülür.",
+   "Ölçüde dikkat: 'zaman' bitişlerinin çoğu T20b'nin bilinçli yeniden başlaması. Yeni hedef noktası ya da açma koşulu bunları artırmamalı (açma yalnız top ayakta ve yavaşken)."
+  ]
+ },
+ {
+  "ad": "V1c — Pas hızı üç aile ve topun yolu (itme / sert ayak içi / sürülmüş + bırakma; alçak havadan kısa pas; sert pasta hafif havalanma; aileye bağlı, sönümlü yerde eğri)",
+  "ozet": "Yerden pasın hızı bugün tek aileden çıkıyor: pasVarisHizi(L) etrafında ±2,5 m/sn'lik varış adayları, çıkış hızı %10/50/90 = 9,1/13,3/18,0. Tasarım bunun yerine adayları çıkış hızı uzayında ve aile başına üretiyor: bırakma 5,5–9, itme 8–14, sert ayak içi 14–20, sürülmüş 18–25 m/sn, mesafeyle ölçekli, en çok 3 aday. Hangi ailenin seçileceğini gerçekçi bir fayda belirliyor: kesilmeme × isabet × kontrol, artı zaman değeri.\n\nPrototip (yalnız scratchpad'de, 3'er maç) üç bulgu verdi:\n1. Saf \"yapabildiğin kadar sert\" kuralı ortancayı 15,4'e çıkardı ama pas isabetini 85,1'den 73,6'ya düşürdü.\n2. Kök neden planlayıcının üç iyimserliği. Pasın çizgisindeki rakip varisZamani'nden tepki süresini (0,22 sn) döndürüyor; bu yüzden hızlı top onu \"geçiyor\", oysa yürütmede temas pasif. Yön toleransı topun uçuş süresinden bağımsız. Geç kalma cezası da yumuşak.\n3. Bu üçü düzeltilince aile başına kalibrasyon tuttu (itme 91,8↔93,4, sert 80,7↔84,6) ve isabet 83,9–86,6'ya döndü. Ancak sert pas gerçekten riskli olduğu için dağılım itmeye kaydı (sert %12–24, sürülmüş ~%2, ortanca 13,7–13,9). Bu yüzden bağlama göre ölçeklenen bir zaman değeri terimi var (pasZaman).\n\nAyrıca: aileye ve tekniğe bağlı eğri (plase iç ayak 20 m'de 0,50–0,59 m, bant içinde), sert ve sürülmüşte vy ≤ 1,25 m/sn'lik sekmesiz havalanma (planlayıcı süre farkı ≤ %3), bacağın üstünden tepe 0,8–1,4 m'lik alçak havadan kısa pas (yay 'alcakPas'). Hepsi pasAile bit maskesiyle kapatılabilir; 0 iken motor bugünküyle birebir. Top fiziği (TOP_FIZIK, topFizikAdim) değişmiyor, bu yüzden t-top'un T9a kapıları aynı kalıyor; t-top'a üç yeni denetim ekleniyor.\n\nAçık konu: ~16 m/sn'lik ortanca, isabet korunarak V1c tek başına ~14–15'e kadar çıkabiliyor. Kalanı V1a (ayar adımıyla daha az hizalanma hatası) ve V1b'nin (hazırlıklı vuruş) isabet kazancından sonra pasZaman yeniden taranarak geliyor. A10 sözleşmesi: e.aile, e.teknik (7 şema), e.v0Plan, e.salinim, e.plase, e.f0 ve topun egri/vy/yay alanları.",
+  "tasarim": "## 0. Kapsam ve ilke\nV1c yerden pasın (ve kısa havadan pasın) HIZINI, YOLUNU ve bunların çizime giden TEKNİK adını belirler. Top fiziği (TOP_FIZIK, topFizikAdim, yerHiz/yerIlkHiz/yerSure, yerFalso 0,5) DEĞİŞMEZ; değişen pasın seçimi (js/mac-karar.js pasAnaliz ve aday üretimi) ve vuruşun girdileri (js/mac-topla.js vurusBaslat/yerPasVur). Her alt adım MOTOR_AYAR.pasAile bit maskesinin bir bitidir; pasAile 0 → bugünkü kod yolu birebir (varisAdaylari, argmax s, T21b eğrisi aynı tek rast çekimiyle, vy=0, alçak pas yok, v>20'de stil 'ust'). Yeni rastlantı yok: plase ve havalanma kararları h2(o,k) özetiyle (o = tohum + p.n·131 + p.team·7, k = ist.pas toplamı·3 + 1/2); yerPasVur'daki tek this.rast() çekimi aynen kalır → bitler rastlantı dizisini kaydırmaz (ablation temiz).\n\n## 1. Bugün (ölçülen)\n- 8 maç (N2): yerden çıkış hızı %10/50/90 = 9,1 / 13,5 / 17,9; havadan %8,8; havalanma %0,9. Scratchpad sondası (3 maç, tohum 1–3; C:\\Users\\FARUKA~1\\AppData\\Local\\Temp\\claude\\...\\scratchpad\\v1c\\probe-hiz.js): 9,1 / 13,3 / 18,0; pas boyu ortanca 18,8 m.\n- Planlayıcının skoru s = Pt·(0,55+0,45·Pk) hızda çok yassı: en iyinin %97'si içindeki hız aralığı ortanca 5 m/sn (L 10–18: 9–14; 18–26: 11–17; 26–34: 14–19). Hızı bağlam değil adayların dar ızgarası belirliyor; ızgara 6–26'ya açılınca kontrol modeli yavaşı seçiyor (ortanca 12; %18'i 6 m/sn alt uçta).\n- Eğri: iç ayak 0,01–0,05 (L ile) → 20 m'de telafisiz sapma ortanca 0,29 m; dış ayak 0,74; kirişten sehim ortanca 0,06 m.\n\n## 2. Prototip bulguları (scratchpad proto.js; depo değişmedi; 3'er maç → yalnız yön)\n| Varyant | isabet | çıkış %10/50/90 | aile payı (bır/itme/sert/sür) |\n|---|---|---|---|\n| taban | 85,1 | 9,1/13,3/18,0 | — |\n| A: en sert ε=%3 içinde | 73,6 | 11,1/15,4/20,5 | 8/39/31/23 |\n| B: A + Pex seçimde | 74,9 | 11,1/15,5/20,4 | 6/38/38/19 |\n| C: B + 3 gerçekçilik düzeltmesi (τ=0) | 86,6 | 9,4/13,7/18,1 | 10/76/12/1,5 |\n| D: C + zaman değeri τ=0,3 | 83,9 | 11,4/13,9/20,0 | 2/72/24/2 |\n\n- A/B'de başarısız sert ve sürülmüş paslar yolun ≥ %90'ında kayboldu (sert 56/65, sürülmüş 27/35); alıcı topa hiç 1,2 m yaklaşamadı. Planlayıcı sert için %87,5 tahmin etti, gerçekleşen %76,5'ti (itmede 93,4↔91,9 tutuyordu). Yön hatası ortanca 0,05–0,09 rad, %90 0,13–0,30 rad. Bu hata yavaş topta alıcının ayarlama süresiyle örtülüyor, hızlı topta örtülmüyor.\n- Üç kök neden:\n  - (i) varisZamani, rakip zaten erişimdeyse (D ≤ menzil) tepki süresini (0,22 sn) döndürüyor. Hızlı top hattın üstündeki rakibi \"geçiyor\"; yürütmede ise temas pasif (topErisim: d < 0,6 m her oyuncu aday).\n  - (ii) Yön toleransı tol = 1,2 + 4·marj topun uçuş süresinden bağımsız.\n  - (iii) Geç kalma cezası al = 1 − 0,9·geç (≥ 0,25) kaçan topun hızını bilmiyor.\n- Düzeltmelerle aile başına tahmin↔gerçek tuttu: itme 91,8↔93,4, sert 80,7↔84,6, sürülmüş 49,5↔50,0. İsabet korundu. Ama sert pas bu motorda gerçekten daha riskli; doğru planlayıcıyla dağılım itmeye kaydı. Bu yüzden \"tempo\" değeri ayrı bir terimdir.\n\n## 3. V1c-1 — Üç hız ailesi (pasAile & 1)\n**Aday üretimi (js/mac-karar.js, saf, yeni):** `aileAdaylari(m,p,L,alt,alici,o)` modül düzeyi dizileri AA_V0, AA_VA, AA_F (Float64Array/Uint8Array(4)) doldurur ve K ≤ 3 döner (PA_TB N·3 ve v0=[0,0,0] sınırı).\n- Aile tablosu MOTOR_AYAR.pasAileHiz = [[a, b, alt, üst, Lmin, Lmax], …]:\n  - bırakma [5, 0,45, 5,5, 9, 0, 12]\n  - itme [7,5, 0,45, 8, 14, 3, 24]\n  - sert [12, 0,30, 14, 20, 8, 60]\n  - sürülmüş [15, 0,22, 18, 25, 18, 70]\n  - v0_f(L) = clamp(a + b·L, alt, üst). Örnek (varış): L 12 → itme 12,9 (8,9), sert 15,6 (12,2), sürülmüş —; L 25 → itme 14 (7,3), sert 19,5 (13,6), sürülmüş 20,5 (15,0); L 40 → sert 20 (10,9), sürülmüş 23,8 (15,8).\n- Ailelerin sırası: alt === 'birak' ya da L < 7 → [bırakma, itme, sert]; aksi hâlde [itme, sert, sürülmüş].\n- Uygunluk: Lmin ≤ L ≤ Lmax; varış va = yerHiz(v0, L, R) bırakmada ≥ 2,5, ötekilerde ≥ 3,5 ve ≤ 18.\n- Tavan: v0 ≤ pasTavan·sutHizTavani(p, zayıfAyakBeklenir)·(1 − 0,25·baskı_pasör). pasTavan 0,9; J.1'deki hedefli vuruş ~%86; ortalama oyuncu ~24,7, baskı 1'de ~18,6 m/sn. Sürülmüş baskıda kendiliğinden düşer.\n- Gelişine (o.ilk): sürülmüş yalnız L ≥ 25.\n- Uygun aile 2'den azsa üçüncü yuva itmenin yumuşak eşidir (v0·0,8, aile ≤ 8,5 ise bırakma). Hiç yoksa eski pasVarisHizi çözümü (aile v0'dan sınıflanır).\n- V[k] = AA_VA[k]. v0[k] doğrudan AA_V0[k] olur, yerIlkHiz ikiye bölmesi atlanır: aday başına 16 yerHiz yerine 1 → pasAnaliz hızlanır.\n\n**Seçim (pasAnaliz, yalnız AF iken):** s döngüsü aynen çalışır; döngü sonrasında aday başına:\n- sd_k = sdTaban·gucHataCarpani(clamp(v0_k/29), VURUS_GUC_REF.pas). sdTaban mevcut sd0 formülünün güç çarpanı dışındaki kısmıdır.\n- tol_k = min(PT0 + PT1·max(0, marj_k), Rlat(T_k)), Rlat(T) = 0,6 + 2·max(0, T − 0,25)² (alıcının yanal erişimi: tepki 0,25 sn, ~4 m/sn² ivme); Pex_k bundan.\n- U_k = SPT_k·Pex_k·(0,7 + 0,3·Pk_k)·(1 + τ_eff·min(1,5, Tmax − T_k)). Burada T_k = PA_TB[k·N+N−1] − t0 ve Tmax en yavaş adayın süresi.\n- τ_eff = pasZaman·(0,3 + 0,7·(1 − acik(marj_enYavaş)))·(0,6 + 0,8·tempo). acik(x) = clamp((x − 0,2)/1,6, 0, 1); tempo = m.taktik[t].tempo. alt 'birak' iken τ_eff 0.\n- Anlamı: alıcı yavaş pasla bile boşsa zaman değeri küçülür ve yumuşak pas korunur; rakip kapanıyorsa sert pas değer kazanır.\n- enK = argmax U_k. Döndürülen P'deki tol aynı min(…, Rlat(T_enK)) ile hesaplanır (pas seçimi de bunu görür).\n- Dönüşe eklenecekler: aile: AILE_AD[AF[enK]], gec, Pk (zaten var).\n\n**Planlayıcı gerçekçiliği (yalnız AF iken; bit 1'in parçası, ablation için pasAile & 16):**\n- (a) Pasif erişim. Rakip döngüsünde tip 'yer' ve 1 < boy < L·(r+1)/N − 0,5 ve ds < 0,85 ise en = max(en, pasPasif[2]·σ((pasPasif[0] − ds)/pasPasif[1])); pasPasif = [0,6, 0,1, 0,95]. Rakibin karar anındaki yeri kullanılır; içeri hareket eden rakibi zaman modeli yakalamaya devam eder.\n- (b) Tolerans yukarıdaki Rlat(T).\n- (c) Aşım: tip 'yer' ve AF ise geç kalınca al = clamp(1 − geç·max(3, V[k])/pasAsim, 0,1, 1); pasAsim 6.\n- Bunlar yalnız aile adaylarında (AF) çalışır. o.varislar verilen yerden orta ve geri çevirme (c-orta, T17d) değişmez.\n\n**Taşıma:**\n- pasAdayiTam dönüşüne `aile:A.aile` eklenir.\n- secenekUygula ve tekVurusKarari0 sec'e `aile` (ölçü için `P`, `Pk`) ekler.\n- hedefGuncelle ve bulusmaNoktasi sec.varisHizi ile tutarlı kalır (değişmez).\n\n**vurusBaslat:**\n- Yerden pasta e.aile = sec.aile || aileSinifi(gucPlan·29). Eşikler: < 8,5 bırakma, < 14 itme, < 19 sert, değilse sürülmüş.\n- AF iken stil kuralı \"gucPlan·29 > 20 → ust\" yerine şu: aile sürülmüş ve stil 'ic' → 'ust'; aksi hâlde 'ic' kalır (dış ayak V1a'nın).\n- yerPasVur'da v, aile bandına sınırlanır: [alt − 1,5, üst + 1,5]. Böylece hedef tazelense de teknik kimliği korunur.\n- pasAile 0'da eski kural (v > 20 → ust) aynen kalır.\n- V1b'ye bağ: vurusSureleri türü aileden okunabilir (sürülmüş → 'uzunYer', itme/bırakma → 'pas').\n\n## 4. V1c-2 — Aileye ve tekniğe bağlı eğri (pasAile & 2)\nyerPasVur'da tek rast çekimi u ile egri = isr·pasFalso·(taban + aralık·u). pasEgri tablosu:\n- itme/bırakma [0,004, 0,010]\n- sert iç [0,02, 0,02]\n- plase [0,035, 0,03]\n- sürülmüş ('ust') [0,004, 0,008]\n- dış ayak [0,05, 0,04] (işaret ters, bugünkü gibi)\n\n**Plase** (e.plase): stil 'ic' ∧ aile ≠ sürülmüş ∧ L ≥ 10 ∧ güçlü ayak ∧ hedef vuran ayağın tarafında, |f0| > pasPlase[0] (0,3 rad) ∧ h2 < pasPlase[1] + pasPlase[2]·pas (0,3 + 0,4·pas). f0 karar anındaki gövde–hedef açısıdır. Bu, J.3.1'deki \"kendi sağına iç ayakla hafif falsolu plase\"dir.\n\n**Sonuç** (fizik sondası probe-fizik.js, yerFalso 0,5; telafisiz sapma 20 m'de):\n- egri 0,035–0,065, v0 13–19 → 0,34–0,78 m (bant 0,3–0,8). Prototipte plase ortanca 0,50–0,59 m, %90 0,66–0,74.\n- sert iç 0,23–0,25 m; itme 0,11; sürülmüş 0,07; dış ayak 0,71–0,77.\n- Kiriş sehimi plasede 0,10–0,16 m: uzaktan görünürlük çoğunlukla A10'un pozundan gelir.\n- Pay: plase yerden pasların %6–9'u (V1a dış ayağı iç ayak + pelvise çevirince artar).\n\n**Nişan:** yerEgriSapma(bx,bz,vx,vz,egri,L,vy) imzasına vy eklenir (kopya y = vy > 0 ? 0,02 : 0). Fizik: yerde yan dönüş 1,5/sn'de söner, yuvarlanırken etki yarıya iner. Bu, GRF desenini (D6) zaten karşılıyor; TOP_FIZIK'e dokunulmaz.\n\n## 5. V1c-3 — Sert pasta hafif havalanma (pasAile & 4)\n- L ≥ 10 ve kötü vuruş değilse:\n  - sürülmüş: vy = min(1,25, 0,8 + 0,45·h)\n  - sert: h2 < 0,4 iken vy = min(1,25, 0,5 + 0,5·h)\n  - b.y = 0,02. pasKalkis = [0,5, 0,5, 0,4, 0,8, 0,45, 1,25].\n- Fizik sondası: vy ≤ 1,25'te tepe 2–8 cm, ilk iniş 2,5–5,5 m, inişte vn < 1,3 olduğundan sekme yok.\n- Planlayıcı süre farkı L 15/25'te v0 14–23 için ≤ %3,4 (vy 0'da ≤ %2,2). vy 1,6+ sekme sürtünmesiyle %6–12 sapma ve 1,3–1,5 m/sn varış kaybı getirir → tavan 1,25.\n- Pay: yerden pasların %13–26'sı (aile payına göre).\n\n## 6. V1c-4 — Alçak havadan kısa pas (pasAile & 8)\n- **Tetik:** pasAdayiEkle'de tip 'yer' ∧ !o.ilk ∧ alt ≠ 'hedef' ∧ alcakPas[0] ≤ L ≤ alcakPas[1] (6–16) ∧ blok < alcakPas[2] (3,5 m) ise aday işaretlenir (bacak ilk metrelerde). pasSecenekleri iki tipli analizden sonra `pasAdayiTam(…,'hava','alcakPas')` dener, değeri büyükse onu alır.\n- **havaSure:** 'alcakPas' → √(8·clamp(0,6 + 0,05·L, 0,8, 1,4)/G) (0,90–1,07 sn).\n- **Sonuç:** L 8–16'da tepe 0,8–1,4 m, 2 m'de 0,64–0,81 m (bacağın üstü), inişte 5,7–9,8 m/sn.\n- **Değer:** pasTurDegeri 0 (uzun top tarz payı yok), kayıp bedelinde ikinciTop çarpanı 1 (temiz kayıp).\n- **Yürütme:** havaPasVur sec.T ile, kesik −0,03, eğri yok. vurusSureleri 'asirtma' (geri 0,30 / hazırlık 0,12). stil 'ic', e.teknik 'lofted'.\n- **Kalibrasyon riski:** prototipte tahmin 76–85 ↔ gerçek 25–67 (n < 10). pasAnaliz hava yolunda PA_H[i] < 0,8 olan noktalara pasif erişim uygulanır; iniş kontrolünde ya 0,45 yerine 0,6 alınır (sekiyor).\n- **Hedef sıklık:** 1–4 / maç.\n\n## 7. Sözleşme (A10'un okuduğu; V1a ve V1b aynı nesneye yazar)\n- p.eylem (vurus) alanları: aile, teknik, v0Plan, salinim, plase, f0.\n- teknik eşlemesi:\n  - stil 'dis' → 'dis'\n  - stil 'vole'/'yarimVole' → 'vole'\n  - yay 'asirtma' → 'chip'\n  - tip hava (alcakPas, uzun, orta, uzaklaştırma, korner) → 'lofted'\n  - aile sürülmüş ya da stil 'ust' → 'surulmus'\n  - aile sert → 'sertIc'\n  - değilse 'itme'\n- teknik vurusBaslat'ta kesinleşir; temasta yalnız vole/yarımVole'ye dönebilir. Çizim temas pozunu o zaman günceller (bugünkü stil kuralı gibi).\n- salinim = clamp(v0Plan / (0,95·sutHizTavani(p, zayıf)), 0,12, 1). Ortalama oyuncuda itme 10 m/sn → 0,36, sert 17 → 0,62, sürülmüş 22 → 0,80, uzun havadan 26 → 0,94. V1b aceleyle ölçekleyebilir.\n- Yardımcı: pasTeknigi(e, sec) saf işlevi.\n\n## 8. Ölçüler, kapılar ve evreler\n**V1c-0 (sonucu değiştirmez, --ayni):** b-olcum genişlemesi (J.10) ve t-top yeni denetimleri pasAile 0 ile → taban sayıları.\n\n**V1c-1 (bit 1+16):**\n- 40 maç, pasZaman en çok iki değer (0,2 / 0,35).\n- Kabul: pas isabeti ≥ taban − 2 puan; P'li pasta aile başına tahmin↔gerçek ±5 puan (p-kalib); aile payları bırakma ≥ %4, sert+sürülmüş ≥ %25; çıkış hızı ortancası ≥ 14,5 (hedef ~16, dar bant değil); %10–%90 aralığı ≥ 9 m/sn (bugün 8,9) ve histogramda en az iki ayrı tepe; sağlık aralığı (gol, şut, gerçekleşen ÷ konum xG) içinde.\n- Ortanca hedefin altında kalırsa V1a ve V1b'den sonra pasZaman yeniden taranır; isabet koşulu önceliklidir.\n\n**V1c-2:** t-top eğri bandı. a-akis 'Eğrili pas %' düşer (~58 → ~45, itme düzleşir; anlam notu).\n\n**V1c-3:** t-top süre farkı ≤ %5, b-pas.\n\n**V1c-4:** alcakPas tahmin↔gerçek ve sıklık.\n\n**Tur kapanışı:** 80 maç, duyarlılık karnesi (pas ve sutGucu'nun sert/sürülmüş payına etkisi görünmeli), hız bütçesi (aynı süreç; beklenen ≤ ±%2).\n\n## 9. Kod sırası\n1. js/mac-motoru.js — MOTOR_AYAR bildirimleri.\n2. js/mac-topla.js — ayarEkle, vurusBaslat, yerPasVur, yerEgriSapma, havaPasVur, secenekUygula, pasTeknigi.\n3. js/mac-karar.js — aile tabloları ve aileAdaylari, pasAnaliz, havaSure, pasAdayiEkle, pasSecenekleri, pasAdayiTam, tekVurusKarari0.\n4. Ölçü ve senaryolar.\n5. ad-denetimi ve ikiz-deneme (yeni modül düzeyi geçici diziler).",
+  "kodDegisiklikleri": [
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "MOTOR_AYAR bildirimi (B — js/mac-topla.js satırı)",
+    "ne": "pasAile, pasAileHiz, pasTavan, pasZaman, pasPasif, pasAsim, pasEgri, pasPlase, pasKalkis, alcakPas anahtarları undefined olarak bildirilir. TOP_FIZIK, topFizikAdim ve pasVarisHizi değişmez; pasVarisHizi santra, korner kısa, kale vuruşu ve yuvarlama için yedek kalır."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "ayarEkle('B',…)",
+    "ne": "Değerler: pasAile 31 (0: eski), pasAileHiz [[5,0.45,5.5,9,0,12],[7.5,0.45,8,14,3,24],[12,0.3,14,20,8,60],[15,0.22,18,25,18,70]], pasTavan 0.9, pasZaman 0.3 (V1a/V1b sonrası yeniden taranır), pasPasif [0.6,0.1,0.95], pasAsim 6, pasEgri [[0.004,0.01],[0.02,0.02],[0.035,0.03],[0.004,0.008],[0.05,0.04]], pasPlase [0.3,0.3,0.4], pasKalkis [0.5,0.5,0.4,0.8,0.45,1.25], alcakPas [6,16,3.5,0.6,0.05,0.8,1.4]; her birinin satır içi açıklaması."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "yeni saf işlevler ve modül dizileri: AILE_AD, AA_V0/AA_VA/AA_F (Float64Array/Uint8Array(4)), aileV0(f,L), aileAdaylari(m,p,L,alt,alici,o), aileSinifi(v0)",
+    "ne": "Çıkış hızı uzayında aile adayları üretir: Lmin/Lmax, varış 2,5/3,5–18, pasTavan·sutHizTavani·(1−0,25·baskı) tavanı, gelişinede sürülmüş yalnız L ≥ 25, uygun aile 2'den azsa yumuşak üçüncü yuva. En çok 3 aday döner (PA_TB N·3 sınırı)."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "pasAnaliz",
+    "ne": "(1) pasAile&1, tip 'yer' ve o.varislar yoksa adaylar aileAdaylari'ndan; v0 doğrudan alınır, yerIlkHiz atlanır. (2) bit 16: rakip döngüsünde pasif erişim; aile adaylarında aşım cezası al = clamp(1−geç·max(3,V[k])/pasAsim, 0,1, 1). (3) Seçim U_k = SPT_k·Pex_k·(0,7+0,3·Pk_k)·(1+τ_eff·min(1,5, Tmax−T_k)); tol_k = min(1,2+4·marj_k, 0,6+2·max(0,T_k−0,25)²); döndürülen Pex de aynı tol ile. (4) Dönüşe aile ve gec eklenir. Hava yolunda yay 'alcakPas' için PA_H < 0,8 noktalarına pasif erişim ve iniş kontrolünde ya 0,6. pasAile 0: kod yolu birebir."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "havaSure",
+    "ne": "'alcakPas' dalı: √(8·clamp(0,6+0,05·L, 0,8, 1,4)/G)."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "pasAdayiEkle / pasSecenekleri",
+    "ne": "pasAile&8: tip 'yer' ∧ !o.ilk ∧ alt ≠ 'hedef' ∧ 6 ≤ L ≤ 16 ∧ blok < 3,5 iken aday c.alcak işaretlenir. pasSecenekleri iki tipli denemeden sonra pasAdayiTam(m,p,o,c,'hava','alcakPas') değerini karşılaştırır."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "pasAdayiTam",
+    "ne": "Dönüşe aile:A.aile eklenir. yay 'alcakPas' iken pasTurDegeri 0 ve kayıp bedelinde ikinciTop çarpanı 1."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "tekVurusKarari0",
+    "ne": "Gelişine pas sec'ine aile:en1.aile eklenir (ölçü için P ve Pk zaten var)."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "secenekUygula",
+    "ne": "vurusBaslat sec'ine aile:s.aile; ölçü için P:s.P, Pk:s.Pk (salt okunur, p-kalib aile kalibrasyonu)."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusBaslat",
+    "ne": "Karar anı açısı e.f0. Yerden pasta e.aile = sec.aile || aileSinifi(gucPlan·29). AF iken stil: sürülmüş → 'ust', diğerleri 'ic' (dış ayak V1a'nın); 'gucPlan·29 > 20 → ust' kuralı yalnız pasAile&1 = 0'da. e.plase kuralı pasAile&2 ve h2. alcakPas için vurusSureleri 'asirtma', stil 'ic'. Sözleşme alanları teknik, v0Plan, salinim pasTeknigi ile yazılır. V1b için vurusSureleri türünü aileden seçme kancası."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "yerPasVur",
+    "ne": "Aile varsa v bandı [alt−1,5, üst+1,5]. pasAile&2: eğri büyüklüğü pasEgri tablosundan, aynı tek rast çekimiyle. pasAile&4: sert (h2 < 0,4) ve sürülmüş için vy ≤ 1,25 ve b.y 0,02. Nişan telafisine vy geçer. e.guc aynı."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "yerEgriSapma",
+    "ne": "İmza (bx,bz,vx,vz,egri,L,vy): kopya vy ile başlar (y = vy>0 ? 0,02 : 0). Saf ve rastlantısız kalır."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "havaPasVur",
+    "ne": "yay 'alcakPas': kesik −0,03, eğri 0, T sec.T'den (havaSure). Uzun havadan pas, orta ve uzaklaştırma değişmez."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "pasTeknigi(e,sec) (yeni, saf)",
+    "ne": "stil, aile ve yay → yedi şema ('itme','sertIc','surulmus','lofted','chip','dis','vole'). salinim = clamp(v0Plan/(0,95·sutHizTavani(p,zayıf)), 0,12, 1). Şutta SUT_TUR eşlemesi (plase → sertIc ya da itme, sert → surulmus, trivela → dis, asirtma → chip) A10 için."
+   },
+   {
+    "dosya": "js/mac-kaleci.js",
+    "islev": "kaleVurusuPlani (V1e ile birlikte)",
+    "ne": "Kısa adayın pasAnaliz sonucundaki varis ve aile sec'e taşınır (varisHizi:A.varis, aile:A.aile). Yoksa pasVarisHizi yedeği itme ailesine düşer."
+   },
+   {
+    "dosya": "araclar/olcumler/b-olcum.js",
+    "islev": "bilgi satırları ve dinle",
+    "ne": "Yeni satırlar (J.10): yerden çıkış hızı %10/%50/%90; 2 m/sn histogram tepeleri; aile payları (bırakma/itme/sert/sürülmüş); aile başına tamamlama ve kötü ilk dokunuş; havalanma (vy > 0,3) payı; eğri 20 m'ye ölçekli telafisiz sapma ortancası (plase/sert/itme/sürülmüş/dış; topFizikAdim ile salt okunur kopya); kiriş sehimi ortancası; alçak havadan / maç ve tamamlanması; plase payı. Rastlantı çekmez."
+   },
+   {
+    "dosya": "araclar/olcumler/p-kalib.js",
+    "islev": "P'li pas kalibrasyonu",
+    "ne": "Tahmin↔gerçek satırları aileye göre (sec.P ve e.aile) ve alcakPas için ayrı."
+   },
+   {
+    "dosya": "araclar/senaryolar/t-top.js",
+    "islev": "yeni bölümler 6–8",
+    "ne": "(6) Yerden eğri: v0 13/16/19 × egri 0,035/0,05/0,065'te 20 m telafisiz sapma 0,3–0,8 m (kapı); itme egri 0,01, v0 10'da ≤ 0,2. (7) Havalanma: vy ≤ 1,25'te L 15/25 ve v0 14–23 için plan↔fizik süre farkı ≤ %5 (kapı); tepe ≤ 0,1 m. (8) Alçak havadan: L 8–16'da tepe 0,8–1,4 m, 2 m'de ≥ 0,5 m, inişte ≤ 12 m/sn (kapı). Mevcut T9a kapıları değişmez."
+   },
+   {
+    "dosya": "araclar/senaryolar/b-pas.js",
+    "islev": "pas ızgarası tablosu",
+    "ne": "Hücre başına aile payı, çıkış hızı ortancası ve alçak havadan payı sütunları. Uzunluk gruplarında (<15, 15–30, >30) tamamlama, taban çıktısıyla yan yana bilgi satırında. 1,5 m baskı hücrelerinde alçak havadan pasın görünmesi beklenir."
+   },
+   {
+    "dosya": "FUTBOL_KUTUPHANESI.md, kutuphane/J-beden-dili.md, TEKNIK_PLAN.md §8",
+    "islev": "belgeler (tur kapanışı)",
+    "ne": "V1c sonucu, prototip bulgusu (planlayıcının üç iyimserliği), sözleşme alanları (TEKNIK_PLAN §8 motor → çizim) ve J.8'in güncellenmesi."
+   }
+  ],
+  "ayarlar": [
+   "pasAile: 31 — bit maskesi: 1 üç hız ailesi (aday çıkış hızı uzayında, sec/eylem.aile, stil aileden); 2 aileye bağlı eğri ve plase; 4 sert/sürülmüş pasta havalanma; 8 alçak havadan kısa pas (yay 'alcakPas'); 16 planlayıcı gerçekçiliği (pasif erişim, alıcının yanal erişimiyle tolerans, aşım cezası, Pex'li seçim). 0: bugünkü motor birebir. 1, 16 olmadan prototipte isabeti 10 puan düşürdü; kabul 1+16 birlikte.",
+   "pasAileHiz: [[5,0.45,5.5,9,0,12],[7.5,0.45,8,14,3,24],[12,0.3,14,20,8,60],[15,0.22,18,25,18,70]] — bırakma, itme, sert, sürülmüş: [a, b, alt, üst, Lmin, Lmax]; v0 = clamp(a + b·L, alt, üst) (çıkış hızı, m/sn). Varış penceresi: bırakmada ≥ 2,5, diğerlerinde 3,5–18 m/sn. Prototipte sürülmüş Lmin 16'ydı; 18'e çekildi (kısa mesafede sürülmüş isabetsiz).",
+   "pasTavan: 0.9 — ailelerin v0 tavanı = pasTavan·sutHizTavani(p, zayıf)·(1 − 0,25·pasörün baskısı); hedefli vuruş azaminin ~%86'sı (J.1). Gelişinede sürülmüş yalnız L ≥ 25.",
+   "pasZaman: 0.3 — zaman değeri τ: U_k çarpanı 1 + τ_eff·min(1,5, Tmax − T_k), τ_eff = pasZaman·(0,3 + 0,7·(1 − acik(marj_enYavaş)))·(0,6 + 0,8·tempo); bırakmada 0. Prototip τ 0,15 / 0,3: sert payı %19 / %24, isabet 80,7 / 83,9 (3 maç; gürültülü). 40 maçta en çok iki değer (0,2 / 0,35); V1a/V1b sonrası yeniden.",
+   "pasPasif: [0.6,0.1,0.95] — pasif erişim: yolun 1 m'si ile alım noktasının 0,5 m gerisi arasında, hatta ds uzaklığındaki rakibin teması pasPasif[2]·σ((pasPasif[0] − ds)/pasPasif[1]). Yürütmede erişim pasif (d < 0,6 m); planlayıcının tepki süresi açığını kapatır.",
+   "pasAsim: 6 — aile adaylarında geç kalma cezası al = clamp(1 − geç·max(3, varış)/pasAsim, 0,1, 1); eskisi 1 − 0,9·geç (≥ 0,25), topun kaçma hızını bilmiyordu.",
+   "alıcının yanal erişimi (sabit, pasAile&16): tol_k = min(1,2 + 4·marj_k, 0,6 + 2·max(0, T_k − 0,25)²) m — yön toleransı topun uçuş süresine bağlı; döndürülen P de bununla.",
+   "pasEgri: [[0.004,0.010],[0.02,0.02],[0.035,0.03],[0.004,0.008],[0.05,0.04]] — itme/bırakma, sert iç, plase, sürülmüş (üst), dış ayak: egri = taban + aralık·u (tek rast çekimi). 20 m telafisiz sapma: plase 0,34–0,78 (bant 0,3–0,8), sert ~0,3, itme ~0,1, sürülmüş ~0,07, dış ~0,75. pasFalso çarpan olarak kalır; yerFalso 0,5 değişmez.",
+   "pasPlase: [0.3,0.3,0.4] — plase: hedef vuran güçlü ayağın tarafında ve |f0| > 0,3 rad, L ≥ 10, stil iç, aile sürülmüş değil; h2 < 0,3 + 0,4·pas.",
+   "pasKalkis: [0.5,0.5,0.4,0.8,0.45,1.25] — sert: h2 < 0,4 iken vy = 0,5 + 0,5·h; sürülmüş: vy = 0,8 + 0,45·h; tavan 1,25 m/sn (sekmesiz iniş: planlayıcı süre farkı ≤ %3,4); L ≥ 10.",
+   "alcakPas: [6,16,3.5,0.6,0.05,0.8,1.4] — Lmin, Lmax, ilk metrelerdeki bacak (blok) < 3,5 m; tepe = clamp(0,6 + 0,05·L, 0,8, 1,4) m, T = √(8·tepe/G). Değer terimi 0, kayıpta ikinciTop çarpanı 1.",
+   "Değişmeyenler: TOP_FIZIK (yerFalso 0,5, kayma 0,4, yerde yan dönüş sönümü 1,5/sn), pasVarisHizi (yedek), varisAdaylari (pasAile 0 ve o.varislar: yerden orta, geri çevirme), gucHata 3, pasSapma 1, pasTol [1,2, 4, 0,5] (aile dışı paslar)."
+  ],
+  "sozlesme": [
+   "p.eylem.aile — yerden pasın hız ailesi: 'birak' | 'itme' | 'sert' | 'surulmus' (havadan pasta null). vurusBaslat'ta kesinleşir; çizim hazırlığın ilk karesinden okuyabilir.",
+   "p.eylem.teknik — yedi beden şeması (J.5): 'itme' | 'sertIc' | 'surulmus' | 'lofted' | 'chip' | 'dis' | 'vole'. Eşleme: stil dis → dis; vole/yarimVole → vole; yay asirtma → chip; tip hava (alcakPas, uzun, orta, uzaklaştırma, korner) → lofted; aile sürülmüş ya da stil ust → surulmus; aile sert → sertIc; değilse itme. vurusBaslat'ta yazılır; temasta yalnız vole'ye dönebilir, çizim temas pozunu o karede günceller (bugünkü stil kuralı gibi).",
+   "p.eylem.v0Plan — planlanan çıkış hızı (m/sn). Yerden: aile adayının v0'ı (pasPlani ile aynı); havadan: hyp(L/T, G·T/2); şutta sutPlan.g × şut tavanı. Bugünkü gucPlan = v0Plan/29 korunur.",
+   "p.eylem.salinim — geri salınım genliği 0–1 = clamp(v0Plan/(0,95·sutHizTavani(p, zayıf)), 0,12, 1). Ortalama oyuncuda itme ~0,36, sert ~0,62, sürülmüş ~0,80, uzun havadan ~0,94. Karşı kol açıklığı, geri salınım açısı ve bitiriş yüksekliği bundan (A10); V1b aceleyle ölçekleyebilir.",
+   "p.eylem.plase — iç ayak falsolu pas (bilek sarılır, gövde hafif yana, bitiriş hedefin dışına); true ise top eğrisi 20 m'de 0,3–0,8 m.",
+   "p.eylem.f0 — karar anındaki gövde–hedef açısı (rad, işaretli). V1a'nın 'dönüş/kapanma yolu' parametresinin girdisi; V1c plase kuralı okur.",
+   "top (temastan sonra, var olan alanlar): b.egri aileye göre büyüklükte (yön bugünkü işaret kuralı); b.vy sert ve sürülmüşte ≤ 1,25 m/sn (tepe ≤ 8 cm, ilk iniş 2–5,5 m); b.ust 0. Çizim topu yalnız konumdan okur.",
+   "sec.yay 'alcakPas' — alçak havadan kısa pas (tepe 0,8–1,4 m, T 0,90–1,07 sn; sec.T); çizim teknik 'lofted' ve düşük salınımla (öne değil hafif geri yatık, kısa bitiriş).",
+   "sec.aile (ve ölçü için sec.P, sec.Pk) — karar katmanından vuruşa taşınır; çizim okumaz, ölçü okur.",
+   "Motor yalnız yazar, çizim yalnız okur: alanlar eylem alt nesnesindedir (oyuncu nesnesine alan eklenmez; varlik 128 sınırı)."
+  ],
+  "olcu": [
+   "Pas: yerden çıkış hızı %10 / %50 / %90 (m/sn). Bugün 9,1/13,5/17,9 (8 maç); sonda 9,1/13,3/18,0. Kabul: ortanca ≥ 14,5 (hedef ~16, bant değil), %10–%90 aralığı ≥ 9 ve histogramda (2 m/sn) en az iki ayrı tepe.",
+   "Pas ailesi payı %: bırakma / itme / sert / sürülmüş. Kabul: bırakma ≥ 4, sert+sürülmüş ≥ 25. Prototip τ 0,3: 2/72/24/2; τ 0: 10/76/12/1,5.",
+   "Pas tamamlama ve kötü ilk dokunuş %, aile başına (prototip τ 0,3: itme 93,6/10,4, sert 87,3/16,5, sürülmüş 77/10, bırakma 100/0).",
+   "Pas isabeti (40 maç): ≥ taban − 2 puan. Prototip: A 73,6, B 74,9, C 86,6, D 83,9; taban 85,1.",
+   "P'li pas kalibrasyonu (p-kalib) aile başına tahmin ↔ gerçek, ±5 puan. Prototip C: itme 92,5↔93,2, sert 81,1↔87,6, sürülmüş 44↔64 (n 14); D: itme 91,8↔93,4, sert 80,7↔84,6.",
+   "Başarısız pasın yeri: yolun < %30 / %30–90 / ≥ %90 ve alıcıya 1,2 m'den yakın geçti. A'da sert başarısızlıklarının 56/65'i ≥ %90'da ve alıcıdan uzakta; bu tanı satırı kalır.",
+   "Eğri: 20 m'ye ölçekli telafisiz yanal sapma ortancası (m): plase 0,3–0,8 bandında (prototip 0,50–0,59, %90 0,66–0,74); sert ~0,25–0,3; itme ~0,1; sürülmüş ~0,07; dış ~0,75. Kiriş sehimi ortancası (plase 0,10–0,16 m) görünürlük bilgisi.",
+   "Plase payı (yerden pasların %'si; prototip 6–9; V1a'dan sonra artması beklenir).",
+   "Yerden pasta havalanma (vy > 0,3) % (bugün 0,9; prototip 13–26 aile payına göre).",
+   "Alçak havadan kısa pas / maç (hedef 1–4; prototip 0,7–3) ve tamamlanması ↔ tahmini.",
+   "a-akis 'Eğrili pas ve orta %' (|egri| > 0,02): bugün 57,8; itme düzleştiği için ~45'e inmesi beklenir (anlam notu, kabul dışı).",
+   "Sağlık aralığı (40/80 maç): gol, şut, pas sayısı, ileri pas %, uzun pas %, gerçekleşen ÷ konum xG.",
+   "Duyarlılık karnesi (tur kapanışı): pas ve sutGucu yüksek oyuncuda sert+sürülmüş payı ve isabet görünür biçimde yüksek.",
+   "Hız: hiz-olcum.js aynı süreçte eşleştirilmiş oran ≤ %10 (beklenen −%2…+%2; aileAdaylari aday başına 16 yerHiz yerine 1)."
+  ],
+  "senaryolar": [
+   "t-top — üç yeni kapı: (6) eğri bandı 0,3–0,8 m; (7) vy ≤ 1,25'te plan↔fizik süre farkı ≤ %5; (8) alçak havadan pasın tepesi ve 2 m'deki yüksekliği. Mevcut T9a kapıları (25 m falso 2–4 m, sekme 0,6–0,8 m, durma 30–60 m, süre ≤ %5) değişmez, çünkü TOP_FIZIK'e dokunulmuyor.",
+   "b-pas — pas ızgarasına aile, hız ve alçak havadan sütunları; uzunluk gruplarında tamamlama tabanla yan yana. 8–15 m'lik 1,5 m baskı hücrelerinde alçak havadan payı görünmeli; grup tamamlaması tabanın 5 puanından fazla düşmemeli (bilgi; esas kapı 40 maç isabeti). İlk dokunuş ızgarası değişmez.",
+   "mac-deneme 40 maç --karsilastir — her bitte; pasAile 0 ile --ayni (birebirlik). V1c-1'de pasZaman 0,2 ve 0,35 taraması (MAC_DENEME_AYAR).",
+   "c-orta — yerden orta o.varislar ile varisAdaylari 'orta'yı kullanır; aile ve bit 16 dışında kalır, değişmemeli (kapı).",
+   "c-kanat, c-1v1, c-koru — pas ve taşıma dengesi (planlayıcının P ölçeği değişiyor).",
+   "z-s14 (kapı), z-s3, z-s10 — plan katmanının pas teklifleri pasSecenekleri'nden geçer.",
+   "d-duran (seyrek) — korner kısa ve geri pas pasVarisHizi yedeğiyle aile sınıflaması alır; sonucun gürültü içinde kalması.",
+   "m-fotograf, m-isinma (seyrek) — santra pası yedek yolda; değişmemeli.",
+   "ikiz-deneme.js — modül düzeyi yeni geçici diziler (AA_V0, AA_VA, AA_F); 'Aynılık N/N'.",
+   "ad-denetimi.js — yeni üst düzey adlar (AILE_AD, AA_*, aileV0, aileAdaylari, aileSinifi, pasTeknigi) ve rakip bilgisi."
+  ],
+  "riskler": [
+   "Sertlik ↔ isabet çatışması (ölçüldü): saf sertlik tercihi isabeti 85,1'den 73,6–74,9'a düşürdü. Planlayıcı gerçekçiliği (bit 16) olmadan bit 1 açılmamalı; kabul 1+16 birlikte.",
+   "~16 m/sn ortanca isabet korunarak V1c tek başına tutmayabilir. Prototip düzeltilmiş planlayıcıyla ortanca 13,7–13,9, %90 18–20 verdi; sert pas bu motorda gerçekten daha riskli (yön hatası ortanca 0,05–0,09 rad, %90 0,13–0,30; hızlı topta alıcının ayarlama süresi kısa). Kalan kazanç V1a (ayar adımıyla daha az hizalanma) ve V1b'nin (hazırlıklı vuruşta düşük hata) ardından pasZaman yeniden taranarak gelir. İsterse ileride ayrı bir bitle güç–hata çarpanı oyuncunun tavanına göre ölçeklenir (güçlü vurucunun sert pası isabetli).",
+   "Bit 16 bütün aile paslarının P ölçeğini değiştirir. Pas ↔ taşıma ↔ şut dengesi, ileri pas %, sahiplik ve gol oynayabilir; 40 maçta sağlık aralığına ve tabana bakılır. Pasif erişim rakibin karar anındaki yerini kullanır; hattan çekilecek rakipte biraz kötümser.",
+   "Alçak havadan pasta planlayıcı iyimser: tahmin 76–85 ↔ gerçek 25–67 (n < 10). Düşük noktalara pasif erişim ve inişte ya 0,6 eklenir. Kalibrasyon satırı ±10 puanı aşarsa blok/L koşulları daraltılır; sıklık düşük tutulur.",
+   "Eğrinin uzaktan görünürlüğü sınırlı: plasede 20 m'deki 0,5–0,6 m'lik sapma nişan telafisiyle kirişte yalnız 0,10–0,16 m sehim bırakıyor. Görünür ipucu A10'un plase pozu (sarılan bilek, yatış) ve dış ayakta gövde–pas açısı. Fiziği abartmak D6'ya (abartısız) aykırı, yapılmaz.",
+   "Havalanma vy > 1,3'te sekmeye dönüşür; plan süresi %6–12 sapar, varış 1,3–1,5 m/sn düşer. Tavan 1,25 m/sn; tepe en çok 8 cm, uzaktan neredeyse görünmez (gölge ayrımı).",
+   "Plase payı V1a'ya bağlı: bugünkü kodda hedef kendi tarafındayken iç ayak payı düşük (dış ayak zarı). V1a'dan önce %6–9, sonra artar; V1c V1a'dan önce yapılırsa eşikler yeniden okunur.",
+   "K ≤ 3 sınırı: PA_TB N·3 ve v0 = [0,0,0]. aileAdaylari 3'ten fazla döndürmemeli, yoksa Float64Array sessizce yazmaz.",
+   "a-akis 'Eğrili pas %' anlamı değişir (itme düzleşir): eski hedef satırlarıyla karşılaştırma yanıltıcı olur, belgeye not düşülür.",
+   "Rastlantı yalıtımı: plase ve havalanma h2 ile, eğri büyüklüğü mevcut tek rast çekimiyle. Yeni bir this.rast() eklenirse bitlerin ablation'ı ve --ayni karşılaştırması bozulur.",
+   "Kale vuruşu kısa pasları (V1e) sec.varisHizi ve aile taşımazsa pasVarisHizi yedeğiyle itme ailesine düşer; kaleci dağıtımında sertlik çeşitliliği görünmez.",
+   "Prototip örneklemi küçük (varyant başına 3 maç): yön göstericidir; denge kararı 40/80 maçla verilir (CLAUDE.md). Prototip betikleri (proto.js, probe-hiz.js, probe-fizik.js, analiz-*.js) scratchpad'in v1c klasöründe; depoya girmez."
+  ]
+ },
+ {
+  "ad": "V1d — Amaçlı uzaklaştırma (ayak ailesi, kaleciye geri pasın risk değeri, kafa)",
+  "ozet": "Bugün uzaklaştırmanın değeri yalnızca bir sabit pay (1,1·baskı + 0,4). Hedef de kasıtlı olarak saha dışına konuyor: ayakla yapılanların %63'ünde hedef aut, 5 saniye içinde top %60 oyun dışında. Hazırlık ortancası 0,037 sn, topa ilk dokunan %17 bizden. Ölçüm 9 maçlık; motor HEAD 6628e08, kopyası scratchpad/v1d/kok altında.\n\nÖneri: tek seçenek yerine aynı listede beklenen değeri hesaplanan bir aday ailesi:\n- ileri / ters kanat: rakip yarıya, ikinci top için 36 ve 48 m; ceza yayına hiç gönderilmez.\n- kurtarış topu: kanattaki ya da öndeki arkadaşa alıcılı uzun pas.\n- kısa taç ve korner: yalnız gerçek tehlikede ve en kısa yoldan.\n- acil vuruş: adımsız, en çok 22 m.\n\nMenzil ve hazırlık adım tablosundan gelir: adımsız ≤ 20 m, bir adım ≤ 32 m, iki adım ≤ 50 m. Rakibin topa varışı ile vuruş anı karşılaştırılıp bloklanma riski fiyatlanır.\n\nBrifteki \"kaleciye pas baskıda aday değil\" bilgisi kodla ters. Kaleci tam da baskıda (≥ 0,3) aday. Asıl sorun değeri: kayıp terimi yüzünden ortanca −7. Kayıp, hatta kesilme ile isabetsiz vuruş diye ayrılınca değer +0,6'ya çıkıyor.\n\nKafa uzaklaştırması amaçsız bir yöne gidiyor ve 60 vakanın 5'inde top 8 m'den yükseğe çıkıyor (dikey gürültü). Bunun için aday seçimi ve dikey hız sınırı önerildi.\n\nHer şey `uzakAmac` bitleriyle açılıp kapanır; 0 iken kod bugünküyle bit bit aynı. Tasarım, motoru değiştirmeyen bir denemeyle sınandı (8 maç, 281 karar anı). uzakPay [0,2; 0,3] ile uzaklaştırma sıklığı bugünkü düzeyde kalıyor (vekil %38,8, bugün %38,1). Kararın hedefi hiçbir anda saha dışı olmadı: taç ve korner adayları en iyi seçenek hiç çıkmadı. Kapıyla ayarlanacak açık nokta bu.",
+  "tasarim": "0. BUGÜNKÜ DURUM (ölçüm; yalnız okundu, depo değişmedi)\nKopya: git archive HEAD (6628e08 = main 57681ca motoru + K1-0 belgesi) → scratchpad/v1d/kok. Betikler: scratchpad/v1d/uzak-probe.js (9 maç, tohum 1–9; olaylar, karar bağlamı, 5 sn sonucu), tasarim-probe2.js (8 maç; önerilen adayların saf değerleri karar anında), özetler ozet.js / ozet3.js, veriler o*.json / d*.json. Rastlantı çekmezler, yalnız saf işlevleri çağırırlar.\n- Ayakla uzaklaştırma 5,2/maç (47 vuruş). Karar 82 kez seçildi, 65'inde vuruş başladı (17'si vurusYaklas ile yavaşladı), 47'si vuruldu: başlayan uzaklaştırmaların %28'i vurulamadı.\n- Karar hedefi saha dışı %63,1 (taç %60, çizgi %3,1). Topun yolu saha dışı %78,7 (%68,1'i havadan çıkıyor). 5 sn içinde oyun dışı %59,6; 47 vuruşun 24'ü rakibin tacı. 5 sn içinde topa ilk dokunan: biz %17, rakip %26.\n- Çıkış hızı %10/50/90 = 15,9 / 20,2 / 27,7 m/sn; iniş uzaklığı 20 / 34 / 52 m; tepe ortancası 6,9 m. Hazırlık (hazirlikEn) %10/50/90 = 0,030 / 0,037 / 0,081 sn, geri salınım 0,30 sn.\n- Baskı ortancası 0,93 (rakip 1,67 m). Topun kendi kale çizgisine uzaklığı ortanca 14 m. Ceza sahasında %38,5, kaleye dönük %27,7, dönen top %7,7.\n- Kararın değeri: uzaklaştırma ortanca 1,1, en iyi pas 0,75 (P ortancası 0,79). Uzaklaştırılanların %41,5'inde başarı olasılığı P ≥ 0,85 olan bir pas vardı.\n- Kendi 30 m dışında vuruş %4,3 (karar kapıda, vuruş birkaç adım sonra).\n- Kafa uzaklaştırması 6,7/maç: 5 sn içinde oyun dışı %10, ilk dokunan rakip %53 / biz %32, %53'ü kendi 30 m'sinin dışında (orta saha \"panik\" kafası). 60 kafanın 5'inde tepe 8 m'yi aşıyor; 2'si kale önünde, dikey hız 20–21 m/sn. Neden kafaVur'daki dikey gürültü (normal·sig·6): 'yüz' yüzeyi (HV_YUZEY 3), dönüş (kafaDonus 1,6) ve çekişme (1,4) σ'yı ~1,5'e, dikey gürültüyü ~9 m/sn/σ'ya çıkarıyor.\n- Kaleciye pas, brifin tersine baskıda adaydır: mac-karar.js:513'te kurma tarzı dışındaki takımlarda kaleci yalnız u ≤ −10 ve baskı ≥ 0,3 iken aday; baskısızken değil. Uzaklaştırma karar anlarının %42'sinde aday, ama değeri ortanca −7 (%10/90 −18,7 / −4,3; P 0,90). Kayıp terimi (1−P)·pasKaybi(kale önü ≈ 70 puan) bütün başarısızlığı \"kale önünde top kaybı\" sayıyor; 10–15 m'lik geri pasın genel teknik hatası (teknik ≈ 0,915) bile 5–8 puanlık ceza getiriyor. Uzaklaştırılan hiçbir anın ilk 3 alternatifinde kaleci yok.\nKök: seçeneğin değeri bedava bir artı (uzaklastirDeger + 1,1·baskı + 0,4), hedef rastgele (secenekUygula: kacti zarı %25–50 kasıtla saha dışı, alıcı yok, T12b çizgi zarı), hazırlık havadan vuruş tablosunun baskıyla erimiş hâli.\n\n1. İLKELER (kaynaklar)\nD18: uzaklaştırma kenara ve yükseğe, ceza yayına değil; ayakla ters kanada ya da taca; asla kalenin önünden yatay değil; rakip 2 m'den yakınsa ve top havadaysa temizle, serbest ve arkadaş açıksa kontrol et; alçak blok ekolleri erken, yapım ekolleri geç temizler; öndeyken ve son dakikalarda eşik düşer.\nJ.3.3: sıfır adımla 15–25 m, bir adımla ~30 m; acelede gövde geriye ve topun ters yanına yatar.\nJ.9 madde 5: alternatifler aynı listede, saha dışı yalnız gerçek tehlikede.\nÖlçek: bütün değerler pas değerleriyle aynı ölçüde (gol olasılığı × 100). Uzaklaştırma da \"başarı × kazanç − başarısızlık × kayıp\" ile değerlenir; bedava sabit kalmaz, yalnız hoca/tarz payı (uzakPay) kalır.\n\n2. KAPI (değişmez)\nAyakla uzaklaştırma ailesi yalnız bugünkü kapıda doğar: u < −PL+30 ∧ (baskı > 0,3 ∨ dn), dn = şuttan sonra 3 sn içinde kendi ceza sahasında dönen top. Kendi 30 m'si dışında ayakla uzaklaştırma yok.\n\n3. BAĞLAM (secenekler0 içinde bir kez, saf; rakipler(m,team) algısıyla, GOZ.p altında)\n- d = hücum yönü, u = b.x·d, uo = u + PL, w = b.z, yan = w < MZ ? −1 : +1, kz = min(w, PW−w), dz0 = |w−MZ|.\n- tR, o1: en yakın rakip saha oyuncusunun topa varışı (varisSuresi(o, b.x, b.z, 0,9); kaleci hariç). rk = enYakinRakip uzaklığı.\n- sekiyor = b.y > 0,25 ∨ |b.vy| > 1,5. kd (kaleye dönük) = cos(p.yon)·d < −0,3.\n- yakinCeza = uo < 22 ∧ dz0 < 26. ceza = kendiCezaSahasinda.\n- tehlike = yakinCeza ∧ (rk < uzakTehlike (1,8 m) ∨ sekiyor ∨ (kd ∧ rk < 3) ∨ dn).\n- kayHere = pasKaybi(m, p, b.x, b.z); geri = uzakGeri[1]·(1 − 0,25·baskı) (0,30); guc = 0,85 + 0,3·oz.sut; kaleci ×1,15.\n\n4. HAZIRLIK, MENZİL VE BLOK (V1b ile ortak; tek kaynak)\nplan(hx, hz):\n- L = mesafe; a = hedefin açısı.\n- don = max(0, |aciFark(a, p.yon)| − sinir) / hrkVurusDonus(p); sinir 0,36 (vurusHizalama, adımlı), acilde 1,0 (pelvisle kanca).\n- Adım sayısı L'den: L ≤ uzakAdimL[0]·guc (20 m) → 0 (acil); ≤ [1] (32 m) → 1; ≤ [2] (50 m) → 2; ötesi aday değil.\n- \"En az bir ayar adımı\" kuralı: adım 0 yalnız zaman yokken. tk1 = max(uzakHaz[1], don) + geri; tR ≥ tk1 − 0,05 ise adım en az 1.\n- haz = uzakHaz[adım] = [0,06; 0,22; 0,42]. tk = max(haz, don) + (adım 0 ? uzakGeri[0]·(1−0,25b) = 0,22 : geri).\n- Blok/kapma riski: Pb = clamp((tk − tR + 0,1)/0,35, 0, 1) · uzakBlok (0,6) · yönK; yönK: rakip gövdenin önünde (cos > 0,5) 1, yanda 0,75, arkada 0,5 (arkadan gelen topa ya da bacağa uzanır).\n- Yan sapma σ = sd0 · L; sd0 = (0,028 + 0,075·(1−pas))·(1 + 0,9·baskı)·1,6 (havadan) · (adım 0 ? 1,5 : 1). vurusSapma ile aynı biçim, saf.\n- Sonuç dalı: − Pb · uzakBlokKay (0,5) · kayHere. Bloklanan ya da kapılan topu yarı yarıya rakip alır.\n\n5. ADAYLAR VE DEĞERLERİ (yeni saf işlev uzaklastirSecenekleri(m, p, o, S); rastlantısız)\ndg(x, z) = xT(x·d, z)·100 + (x·d − u)·(ilerleme + 0,015·direkt) — pasDegeri'nin tür bağımsız çekirdeği.\nİkinci top uzakIkinciTop(m, team, x, z, T, haric):\n- tb, tr: en yakın arkadaşın ve rakibin varışı (varisSuresi(·, x, z, 1,0); kaleciler ve vuran hariç).\n- tb < T+0,3 ∧ tr < T+0,3 ise P2 = 0,5 + 0,15·clamp((tr−tb)/1, −1, 1); değilse P2 = σ((tr−tb)/0,45).\n(a) ileri / ters — boşluğa, ikinci top için:\n- Şeritler: top tarafı kanat (kenardan uzakSerit[0] = 10 m), top tarafı yarım alan (ortadan uzakSerit[1] = 12 m), ters kanat (kenardan 10 m).\n- Uzunluk uzakIleri = [36; 48] m. İleri bileşen ≥ 0,5·L (en çok 60° yan; kale önünden yatay yok) ve ≥ 20 m. İniş u ≤ PL−22. Orta şerit (|z−MZ| < 8) yok: ceza yayı değil.\n- T = havaSure(L, 'uzak') = 1,3 + L/30 (bugünkü uzaklaştırmanın uçuşu).\n- Pout = 1 − Φ(kenara uzaklık / σ).\n- U = (1−Pb)·[(1−Pout)·(P2·dg − (1−P2)·pasKaybi(iniş)·ikinciTop·tarzIkinciK) − Pout·uzakTac·pasKaybi(aut noktası)] − Pb·uzakBlokKay·kayHere.\n(b) acil — yalnız zaman yokken (tR < tk1), adım 0:\n- 18–20 m ileri çapraz top tarafı kanada, saha içinde (kenardan ≥ 4 m), gövdenin ±60°'si içinde.\n- Değer (a) gibi; T = 1,1 + L/30; e.acele = 0,5.\n(c) taç — yalnız tehlikede ve kz < 22 m:\n- Hedef en yakın taç çizgisinin 2,5 m dışı, ileri çapraz: hx = b.x + d·clamp(0,7·kz + 4, 4, 16). Geriye ya da kale çizgisine doğru değil.\n- T = havaSure(L, 'tac') = 0,55 + L/30 (alçak, sert).\n- Pin = 0,5·(1 − Φ(2,5/σ)) (kısa kalıp sahada kalma).\n- U = (1−Pb)·[(1−Pin)·(−uzakTac·pasKaybi(çizgi noktası)) + Pin·(0,5·dg − 0,5·pasKaybi)] − Pb·uzakBlokKay·kayHere.\n- uzakTac 0,4: rakibin tacı o yerdeki açık top kaybının ~%40'ı (savunma yerleşir, ofsayt yok, uzun taç riski).\n(d) çizgi (korner) — yalnız tehlike ∧ ceza ∧ dz0 > GW2+1 ∧ (kd ∨ rk < 1,5):\n- Geometri T12b'nin rastlantısız hâli: zc = MZ + yan·(dz0 + 4), çizgi kaleden uzaklaşır.\n- U = −(1−Pb)·uzakKorner (3,5 puan ≈ korner başına xG + ikinci faz) − Pb·uzakBlokKay·kayHere.\n(e) kurtarış topu — alıcılı:\n- Önde (qu ≥ u+18) forvet, kanat ya da çok ilerideki orta saha; en çok 3 alıcı (ön puan: ilerilik + rakipten uzaklık); algilanan(p, q) ile.\n- Hedef q + v·1,2 + d·2 (saha içi); L ≥ 18 ve plan(L) geçerli.\n- pasAnaliz(m, p, hx, hz, 'hava', g, {ox, oz, t0: 0, baski, T: havaSure(L, 'kurtar') = 1,0 + L/32}).\n- U = (1−Pb)·[P·(pasDegeri + devamAgirlik·(dv − xT))·(0,7 + 0,3·Pk) − (1−P)·pasKaybi(hedef)·ikinciTop·tarzIkinciK·risk] − Pb·uzakBlokKay·kayHere.\n- Dönen nesne pas biçimindedir: tur L > 34 ? 'uzun' : 'pas', tip 'hava', yay 'kurtar', mod 'ayak', alt 'kurtar', alici q, P, Pk, T, varis yok.\n- Pas sayılır ('pass' olayı); kararVer0'ın Gumbel anahtarı 'p'+q.n, aynı alıcıya giden olağan pasla paylaşılır: ikisi aynı zarı paylaşır, değeri yüksek olan kazanır, çift sayım yok.\n(f) ikinci top payı:\n- uzakPay = (uzakPay[0] + uzakPay[1]·tehlike) · (1 + uzakTarz·(0,5 − kisaPay)) + 0,3·macDurumu.koru + (dn ? donenUzak : 0) + uzaklastirDeger.\n- kisaPay tarzTakim'den; tarzsız takımda çarpan 1. Bu, D18'in \"riskten kaçınma\" hoca parametresi.\n- Öneri [0,2; 0,3]: tasarım denemesinde seçim vekili %38,8, bugün %38,1 (pay 0 → %25,6; [0,2; 0,4] → %41,3).\n- Pay alıcısız en iyi adaya eklenir; kurtarış topuna yalnız tehlike payı eklenmez.\nListeye giden: alıcısız adaylardan değeri en yüksek tek seçenek. Hepsi 'uzaklastir' anahtarını paylaştığı için birden çok eklemek seçimi değiştirmez, maliyeti artırır. Biçim: {tur: 'uzaklastir', uz: 'ileri'|'ters'|'acil'|'tac'|'cizgi', hx, hz, T, adim, haz, Pb, deger}. Kurtarış adayları ayrıca listeye girer. Profil eğilimi (−0,6·g·oynayarakCikar) hem 'uzaklastir'e hem alt 'kurtar' paslara uygulanır.\nTasarım denemesi (8 maç, 281 karar):\n- Alıcısız en iyi aday hep ileri ya da ters. U %10/50/90 = −0,75 / 0,14 / 1,05; ikinci top P2 ortancası 0,47 (gerçekte ~%40–50 korunur).\n- Kurtarış topu U ortancası −0,65 (P 0,58).\n- Taç −0,9: hiç en iyi olmadı. Karar hedefi saha dışı %0.\n- Taç/acil payını belirleyen uzakBlok, uzakTac ve uzakTehlike, u-uzak senaryosunun U1 ve U4 hücreleriyle ayarlanır (madde 9).\n\n6. KALECİYE GERİ PAS (bit 2; js/mac-karar.js pasSecenekleri ve pasAdayiTam)\n- Adaylık kapısı: uzaklaştırma bölgesinde (u < −PL+30) baskı ≥ 0,12 (eski 0,3). Kurma tarzının (kaU) kapısı aynı; bölge dışında eski kural.\n- Risk değeri (yalnız q.rol === 'GK'): kayıp terimi (1−P)·kay yerine [(1−Pt)·pasKaybi(hattın ortası) + Pt·(1 − teknik·Pex)·kaleciHata·pasKaybi(kaleci)]·risk.\n  - Pt, teknik ve Pex pasAnaliz'in zaten döndürdüğü alanlar.\n  - Kesilen geri pas gerçek kayıptır. İsabetsiz geri pası kaleci çoğunlukla yine alır (kaleciHata 0,1).\n- Kale ağzı: pas doğrultusu kale çizgisini direkler arasında (±GW2 + 0,5 m) ve kaleci kale çizgisine 4 m'den yakınken kesiyorsa değer −kaleciAgiz (0,5): \"kalenin önünden oynama\".\n- Denemede kaleci pası değeri ortanca −7 → +0,6 (%10/90 −4,0 / +1,2); kaleciHata 0,25'te −0,4. En iyi diğerinden iyi olduğu karar %3 (deterministik vekil; Gumbel ile daha çok).\n- Kalecinin sonraki işi (baskıda uzaklaştırma ailesi, kalecide menzil ×1,15) değişmez.\n\n7. YÜRÜTME (bit 1; js/mac-topla.js)\n- secenekUygula 'uzaklastir': s.uz varsa vurusBaslat(p, {tur: 'uzaklastir', hx, hz, tip: 'hava', T: s.T, uz: s.uz, uzAdim: s.adim, uzHaz: s.haz}).\n  - Hedef sabit: kacti zarı ve T12b çizgi zarı yalnız eski yolda kalır.\n  - 'pas'/'uzun' durumu alt, yay ve uzAdim'i geçirir.\n- vurusBaslat:\n  - hazEn = max(vsr.haz, sec.uzHaz); acmaDokunus ve uzunHaz dışında kalır (bugünkü gibi).\n  - Adım ≥ 1 ve duran ya da yavaş topta (≤ 1,2 m/sn) hazırlığın ilk %60'ında vurusIlerle'nin gövde hedefi a doğrultusunda 0,5 m (1 adım) / 1,0 m (2 adım) geri alınır, sonra bugünkü \"on\" noktasına döner. Böylece oyuncu motorda da 1–2 adımla topa gelir; yalnız bekleme olmaz. V1b genel bir ayar adımı mekanizması kurarsa uzAdim onu besler, burada tekrarlanmaz.\n  - Acil (adım 0): e.acele = 0,5, geri = uzakGeri[0]; vurusIlerle'de sinir = 1,0 (pelvisle kanca). Hata vurusSapma'nın hizalanma ve acele çarpanlarından, kötü vuruş kotuVurusOlasiligi'nin acele çarpanından.\n  - gucPlan = planlanan çıkış hızı / 29 (bugün sabit 0,7).\n- havaPasVur: T = sec.T (ileri/acil 1,3 + L/30 / 1,1 + L/30, taç 0,55 + L/30, kurtarış 1,0 + L/32). Eğri 0, üst dönüş 0 (bugünkü gibi); kurtarışta pasFalso'nun iç ayak eğrisi (L ≥ 25) kalır.\n  - Menzil: 48 m'lik ileri v0 ≈ 22 m/sn; 32 m'lik bir adımlık ≈ 18; acil 20 m ≈ 14; taç 15 m ≈ 15 m/sn. J.3.2–J.3.3 ile uyumlu.\n- hedefGuncelle kurtarışta havaSure(L, 'kurtar') ile tazeler: yeni yay anahtarı, eski çağrılar etkilenmez.\n- vurusSon: 'clear' olayına {uz, L, adim, deger, enDiger} salt okunur alanlar; kurtarış 'pass' olayına alt.\n\n8. KAFA (bit 4; kafaKarari ve kafaVur)\nPanik kafası kapısı aynı: (u < −PL+30 ∧ baskı > 0,12) ∨ (DEF ∧ u < 5 ∧ baskı > 0,3) ∨ (baskı > 0,7 ∧ u < 10). Saf adaylar:\n- (a) arkadaş: 8–20 m'de, \"kaleden uzak\" yönün ±80°'sinde, kaleci olmayan; hedef q + v·T. P = σ((tr − tq)/0,4).\n  - U = P·dg − (1−P)·pasKaybi·ikinciTop. Dönüş {tur: L < 12 ? 'indirme' : 'pas', alici: q, v: min(14, 0,8·L + 5), vy: 3,2}.\n- (b) kenar ve yukarı: uzak yön top tarafı kanada 40° döndürülür. L = v·T·0,9 (v = 10 + 5·kafa, vy 5–7).\n  - Saha içi (kenardan ≥ 3 m); yalnız tehlike ∧ kendi ceza sahası ise bugünkü ±3 m dış sınır. Değer uzakIkinciTop ile.\n- (c) yarım alan: 15°. İniş orta şeritte (|z−MZ| < 8) ve kendi 30 m'sinde ise aday değil.\n- En yüksek U seçilir. Tek m.rast() ile ±2 m yan sapma; bugünkü iki zar yerine.\n- Orta sahada (u > −PL+30) hedef her zaman saha içi.\n- kafaVur'daki çizgi kuralı (uzaklastirCizgi, T8f) aynen kalır.\n- kafaVur'da uzaklaştırma kafasının dikey gürültüsü ±uzakKafaVy[0] (2,5) ile kırpılır, toplam vy ≤ uzakKafaVy[1] (9). Kafa topu bugün 60 vakada 5 kez 8 m'den, 2 kez 17–19 m yükseğe çıkıyor. Bu dikey gürültü bütün kafalarda var; genel düzeltme T6/C akışının borcu olarak kalır.\n\n9. EVRELER\n- V1d-0 — ölçü, sonucu değiştirmez:\n  - araclar/olcumler/u-uzak.js (madde 10) ve olay alanları.\n  - araclar/senaryolar/u-uzak.js iskeleti; bugünkü değerler ilk taban.\n  - `--ayni` S1 tabanıyla tutmalı.\n- V1d-1 — ayak ailesi ve yürütme (bit 1):\n  - Hızlı kademe; u-uzak, c-koru, c-temas, c-yariyariya, c-donen, d-duran, b-pas, c-orta.\n  - 40 maç `--karsilastir` (uzakPay[0] taraması yalnız {0,1; 0,4}).\n- V1d-2 — kaleci pası riski (bit 2): u-uzak U3; d-sut ve k-kurma bilgi satırları; 40 maç.\n- V1d-3 — kafa (bit 4): c-hava, d-duran, u-uzak U7.\n- V1d-4 — kalibrasyon:\n  - uzakTac, uzakBlok ve uzakTehlike yalnız senaryo hücreleriyle ayarlanır.\n  - 80 maç ve hız, V1 kapanışında.\n- Bağımlılık: V1b (adım mekanizması ve hazırlık tablosu; tek kaynak), V1a (vuran ayak; hedef zayıf ayak tarafında 60°'yi aşıyorsa ayar adımıyla güçlü ayak, acilde zayıf ayak), V1c (havadan aileler).\n\n10. BEKLENEN SONUÇ (bilgi bantları; dar kabul bandı değil, kapı senaryodadır)\n- Ayakla uzaklaştırma 3–7/maç (bugün 5,2); kafa 4–8 (6,7).\n- Hedef saha dışı %63 → ≤ %15; 5 sn içinde oyun dışı (ayak) %60 → ≤ %30; ilk dokunan biz %17 → ≥ %30.\n- Kendi 30 m'si dışında vuruş ≤ %5; adımsız vuruş ≤ %25 ve hepsi ≤ 22 m; hazırlık ortancası ≥ 0,22 sn (bugün 0,037).\n- Kafada tepe > 8 m: 5/60 → 0; orta sahadaki kafa %100 saha içi.\n- Kaleci pası baskıda > 0 (bölgede ≥ 0,5/maç).\n- Sağlık aralığı aynen: gol 1,8–4, şut, pas isabeti 65–90, uzun pas 8–30, gerçekleşen ÷ konum xG 0,8–1,35.",
+  "kodDegisiklikleri": [
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "MOTOR_AYAR bildirimi (B bölümü)",
+    "ne": "Yeni anahtarlar undefined olarak bildirilir: uzakAmac, uzakAdimL, uzakHaz, uzakGeri, uzakBlok, uzakBlokKay, uzakTac, uzakKorner, uzakTehlike, uzakPay, uzakTarz, uzakIleri, uzakSerit, kaleciHata, kaleciAgiz, uzakKafaVy."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "ayarEkle('B',…)",
+    "ne": "Değerler (madde 'ayarlar') ve gerekçe yorumları. uzaklastirDeger, uzaklastirCizgi ve donenUzak aynı anlamda kalır."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "havaSure (satır 43)",
+    "ne": "Yeni yay anahtarları: 'uzak' 1,3 + L/30, 'kurtar' 1,0 + L/32, 'tac' 0,55 + L/30. Eski anahtarlar değişmez."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "yeni uzaklastirSecenekleri(m,p,o,S) ve uzakIkinciTop(m,team,x,z,T,haric); paylaşılan sonuç nesnesi UZ_MD (macDurumu için)",
+    "ne": "Madde 3–5: bağlam, plan (adım, haz, tk, Pb, σ), ileri/ters/acil/taç/çizgi adayları ve en çok 3 kurtarış topu (pasAnaliz 'hava'). Alıcısız en iyi aday ile kurtarışlar S'ye eklenir. Saf ve rastlantısız; rakipler(m,team) algısıyla."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "secenekler0 (satır 820–821)",
+    "ne": "uzakAmac&1 ise eski tek S.push yerine uzaklastirSecenekleri çağrılır (kapı aynı: u < −PL+30 ∧ (baskı > 0,3 ∨ dn)); 0 ise eski satır bit bit aynı."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "pasSecenekleri (satır 513, kalecinin adaylık kapısı)",
+    "ne": "uzakAmac&2 ve u < −PL+30 ise kaleci baskı ≥ 0,12'de aday (eski 0,3). Kurma tarzının kapısı ve bölge dışı değişmez."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "pasAdayiTam (satır 485–504)",
+    "ne": "uzakAmac&2 ∧ q.rol==='GK': kayıp, hattın kesilmesi (1−Pt)·pasKaybi(hattın ortası) ile isabetsizlik Pt·(1−teknik·Pex)·kaleciHata·pasKaybi(kaleci) olarak ayrışır. Pas doğrultusu kale ağzını kesiyor ve kaleci çizgiye 4 m'den yakınsa −kaleciAgiz."
+   },
+   {
+    "dosya": "js/mac-karar.js",
+    "islev": "kafaKarari (satır 909–911) ve yeni kafaUzakHedef(m,p,baski,u)",
+    "ne": "uzakAmac&4: panik kafasında arkadaş / kenar-yukarı / yarım alan adayları (madde 8); orta sahada saha içi; tek rastlantı ile ±2 m; çizgi kuralı kafaVur'da aynen."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "secenekUygula 'uzaklastir' (satır 648–659) ve 'pas/uzun' durumu",
+    "ne": "s.uz varsa hedef sabit (kacti ve T12b çizgi zarı yalnız eski yolda); sec'e uz, uzAdim, uzHaz ve T geçer. Kurtarış pasında alt, yay ve uzAdim geçer."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusBaslat (satır 280–)",
+    "ne": "sec.uzHaz ile hazEn alt sınırı; adım ≥ 1'de hazırlığın ilk %60'ında gövde hedefi 0,5/1,0 m geri (yaklaşma adımı; V1b'nin genel mekanizması varsa onu çağırır); acilde e.acele 0,5 ve geri uzakGeri[0]; gucPlan planlanan çıkış hızından; V1'in ortak çizim alt nesnesine uzaklaştırma değerleri (sözleşme)."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusIlerle (satır ~389, hizalanma sınırı)",
+    "ne": "sec.uzAdim===0 (acil) iken sinir 1,0 (pelvisle kanca); öbür uzaklaştırmalarda bugünkü 0,36·(1+0,6·acele)."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "havaPasVur (satır 543–568)",
+    "ne": "Uzaklaştırmada T = sec.T (tür başına uçuş). Eğri ve üst dönüş bugünkü gibi 0; kurtarış 'uzun/pas' olduğundan iç ayak eğrisi kalır."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusSon (satır 583)",
+    "ne": "'clear' olayına salt okunur {uz, L, adim, deger, enDiger}; kurtarış 'pass' olayına alt. Motor durumu değişmez."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "kafaVur (satır 794–809)",
+    "ne": "uzakAmac&4 ∧ k.tur==='uzaklastir': dikey gürültü ±uzakKafaVy[0] ile kırpılır, toplam vy ≤ uzakKafaVy[1]; öbür kafalar aynen."
+   },
+   {
+    "dosya": "js/mac-profil.js",
+    "islev": "profilEgilimPuani (satır 141)",
+    "ne": "uzakAmac&1 ise 'pas'/'uzun' durumunda alt==='kurtar' için de −g·0,6·oynayarakCikar (yonDegistirir payına ek)."
+   },
+   {
+    "dosya": "araclar/olcumler/u-uzak.js (yeni)",
+    "islev": "bilgi satırları ve özet",
+    "ne": "Uzaklaştırma ölçüleri (madde 'olcu'); scratchpad/v1d/uzak-probe.js'in olay ve adım mantığının sözleşmeye uygun hâli: rastlantı çekmez, motor yöntemi çağırmaz."
+   },
+   {
+    "dosya": "araclar/senaryolar/u-uzak.js (yeni)",
+    "islev": "kapı senaryosu",
+    "ne": "U1–U7 hücreleri (madde 'senaryolar'); kabul dışıysa çıkış kodu 1."
+   },
+   {
+    "dosya": "araclar/oturum-sonu.js ve CLAUDE.md senaryo kapıları listesi",
+    "islev": "çekirdek / seyrek listesi",
+    "ne": "u-uzak çekirdek senaryoya eklenir. Sahibi: uzaklastirSecenekleri, kafaKarari panik dalı, pasAdayiTam'ın kaleci dalı, uzak* ayarları. Belge satırı V1 kapanışında."
+   }
+  ],
+  "ayarlar": [
+   "uzakAmac: 7 — bit 1 ayakla uzaklaştırma ailesi ve yürütme, bit 2 kaleciye geri pasın risk değeri ve bölge kapısı, bit 4 kafa adayları ve dikey hız sınırı; 0: bugünkü kod bit bit aynı (rastlantı çekilişleri dahil; `--ayni` ile S1 tabanına).",
+   "uzakAdimL: [20, 32, 50] m — adımsız / bir ayar adımı / iki adımla en çok menzil (J.3.3); × (0,85 + 0,3·oz.sut), kalecide × 1,15.",
+   "uzakHaz: [0,06, 0,22, 0,42] sn — adım sayısına göre asgari hazırlık (karar → geri salınıma geçiş).",
+   "uzakGeri: [0,22, 0,30] sn — acil kanca / adımlı vuruşun geri salınımı (baskıda × (1 − 0,25·b)).",
+   "uzakBlok: 0,6 — rakip vuruştan önce topa varıyorsa bloklama/kapma payı; yön çarpanı önde 1, yanda 0,75, arkada 0,5.",
+   "uzakBlokKay: 0,5 — bloklanan ya da kapılan topta buradaki kaybın payı.",
+   "uzakTac: 0,4 — rakibin tacının o yerdeki açık top kaybına oranı.",
+   "uzakKorner: 3,5 puan — rakibe korner vermenin bedeli.",
+   "uzakTehlike: 1,8 m — gerçek tehlike eşiği (rakip bu kadar yakın; ayrıca top sekiyor, kaleye dönük ve rakip 3 m'den yakın, ya da dönen top; hepsi kendi ceza sahası çevresinde: çizgiye < 22 m, ortaya < 26 m).",
+   "uzakPay: [0,2, 0,3] puan — taban ve tehlike eki (D18'in hoca 'riskten kaçınma' parametresi); × (1 + uzakTarz·(0,5 − kisaPay)) + 0,3·macDurumu.koru. 40 maç taraması yalnız uzakPay[0] ∈ {0,1, 0,4}.",
+   "uzakTarz: 1,0 — tarzın uzaklaştırma eğilimine etkisi (direkt tarz ×1,38, konumsal ×0,7).",
+   "uzakIleri: [36, 48] m — ileri/ters adayların uzunlukları.",
+   "uzakSerit: [10, 12] m — kanat şeridinin kenardan, yarım alan şeridinin ortadan uzaklığı; orta şerit (|z − MZ| < 8) aday değil.",
+   "kaleciHata: 0,1 — isabetsiz geri pasın kayıp payı (kaleci çoğunu yine alır).",
+   "kaleciAgiz: 0,5 puan — kale ağzını kesen geri pasın cezası.",
+   "uzakKafaVy: [2,5, 9] m/sn — uzaklaştırma kafasının dikey gürültü sınırı ve azami dikey hızı.",
+   "Değişmeyen ve anlamı korunan: uzaklastirDeger 0 (taban, uzakPay'e eklenir), uzaklastirCizgi [0,45, 0,18] (kafanın çizgi kuralı), donenUzak (dn payı), ikinciTop 0,75 (ileri ve kurtarış kayıp çarpanı)."
+  ],
+  "sozlesme": [
+   "Sözleşme çizimin okuduğu alanlardır (motor → çizim). Alan adları V1'in ortak sözleşmesinde kesinleşir; uzaklaştırma yalnız değerlerini doldurur. A10 bunları çizer.",
+   "e.sec.uz: 'ileri' | 'ters' | 'acil' | 'tac' | 'cizgi' (tur 'uzaklastir'); 'kurtar' ise e.sec.alt (tur 'uzun' ya da 'pas', yay 'kurtar'). Rastlantısız, karar anında yazılır.",
+   "e.sec.uzAdim: 0 | 1 | 2 — planlanan ayar adımı sayısı. A10 D2'nin faz modülasyonu ve görünen adımları bundan; motorda da adım ≥ 1'de gövde hedefi hazırlığın ilk %60'ında 0,5/1,0 m geride.",
+   "e.hazirlikEn, e.kalan, e.kalanCiz (mevcut): uzaklaştırmada hazirlikEn ≥ uzakHaz[adım]; kalanCiz bugünkü kapılarla. Gerilme penceresi artık 0,03–0,1 sn değil, 0,22–0,42 sn + geri.",
+   "e.gucPlan: planlanan çıkış hızı / 29 (bugün sabit 0,7). Ortak alt nesnenin salınım genliği bundan: salinim = clamp(v0/24, 0,35, 1); ileri ve kurtarış 0,85–1, taç 0,55–0,75, acilde en çok 0,55.",
+   "Ortak alt nesne (V1 adı; ör. e.vk) — teknik: ileri, ters, kurtarış, çizgi ve acil için 'lofted' (üstten, ayağın üst-iç kısmı); taçta L ≤ 14 m 'sert ayak içi', daha uzunu 'sürülmüş' (alçak, sert); dış ayak ve chip uzaklaştırmada yok.",
+   "Ortak alt nesne — dönüş: açı = karar anında gövde–hedef farkı; yol = 'adim' (uzAdim ≥ 1 ve |açı| > 0,35: gövde ayar adımıyla kapanır) | 'pelvis' (acil ve kısa taç, |açı| ≤ 1,0: kalça dönüşüyle kanca). 'dis' uzaklaştırmada hiç yazılmaz.",
+   "Ortak alt nesne — eğim ve kol: ileri ve kurtarışta geriye 0,21–0,31 rad (12–18°), topun ters yanına 0,1 rad, karşı kol 0,9 (yukarı-dışa); taçta geriye 0,1 rad, yana 0,15 rad, kol 0,6; acilde geriye ve yana 0,25–0,5 rad (J.3.3: 14–31°), kol 1,0 (denge), destek ayağı sıçrar (sicra true); salınım ≥ 0,95 olan ileri vuruşta da sicra true.",
+   "e.acele (mevcut, 0–1): acilde 0,5 (çizim kısa geri salınım ve yatış okur; motorda hizalanma sınırı ve hata çarpanı).",
+   "Kafa eylemi: p.eylem.uz = 'arkadas' | 'kenar' | 'yarim' | 'cizgi' ve hedefin açısı (eylem alt alanı; oyuncu nesnesine alan eklenmez). A10 boyun ve gövde yönünü bundan çevirir; öncelik düşük.",
+   "'clear' olayı {p, uz, L, adim, deger, enDiger} ve kurtarış 'pass' olayı {…, alt: 'kurtar'}: salt okunur (ölçü ve çizimin olay tetiği); motor kararları okumaz."
+  ],
+  "olcu": [
+   "Yeni eklenti araclar/olcumler/u-uzak.js (J.10). Başlangıç tabanı bugünkü değerler: scratchpad/v1d/o*.json, 9 maç.",
+   "Sayı / maç: ayakla uzaklaştırma (bugün 5,2), kafa uzaklaştırması (6,7), kurtarış topu (alıcılı; 0), uzaklaştırma bölgesinde kaleciye geri pas (bugün ~0).",
+   "Tür payı: ileri / ters / acil / taç / çizgi; kurtarış topunun tamamlanma oranı.",
+   "Karar hedefi saha dışı % (ayak; bugün %63,1) ve topun yolu saha dışı % (%78,7; havada çıkan %68,1).",
+   "5 sn içinde oyun dışı % (ayak %59,6, kafa %10) ve rakibe taç/korner payı; 5 sn içinde ilk dokunan biz / rakip % (ayak %17 / %26, kafa %32 / %53).",
+   "Kendi 30 m'si dışındaki uzaklaştırma, vuruş anında: ayak (bugün %4,3; karar kapıda) ve kafa (bugün %53, bilgi).",
+   "Adım payı 0/1/2 ve adımsızda menzil (hepsi ≤ 22 m olmalı); karar → temas ve hazırlık ortancası (bugün hazırlık 0,037 sn); başlayıp vurulamayan uzaklaştırma % (bugün %28) ve bloklanan uzaklaştırma %.",
+   "Çıkış hızı %10/50/90 (bugün 15,9 / 20,2 / 27,7 m/sn), iniş uzaklığı (20 / 34 / 52 m), tepe yüksekliği (ayak ortancası 6,9 m; kafada > 8 m payı, bugün 5/60).",
+   "Karar anında uzaklaştırmanın değeri − en iyi diğer seçenek (bugün %10/50/90: −1,5 / −0,2 / +0,6); kaleci pasının adaylık payı (%42) ve değeri (ortanca −7 → hedef ~0–1).",
+   "Seçimin planlanan Pb'si ile gerçekleşen blok/kapma oranı (planlayıcının kalibrasyonu; bire bir kalibrasyon kalıbı).",
+   "Sağlık ve bilgi satırları: gol, şut, pas isabeti, uzun pas %, gerçekleşen ÷ konum xG, v-verim'in uzaklaştırma tablosu, k-duran'da golün kaynağı, s-sut ve h-hava'da uzaklaştırma kaynağı. Kurtarış topu 'pass' olduğu için bu bilgi satırlarının kaydığı beklenir; gerileme sayılmaz, belgeye yazılır."
+  ],
+  "senaryolar": [
+   "Yeni kapı araclar/senaryolar/u-uzak.js. Kurulum c-koru kalıbıyla: kur, bosalt, yerlestir, profilKur, m.sahipYap. Karar katmanı açık, hücre başına 80 deneme, 5 sn.",
+   "U1 kanatta sıkışma (kullanıcı notu 4): sol bek kendi çizgisine 12 m, kenara 4 m, rakip 1,0 m önde-yanda, top ayağında. Kabul: uzun (L > 30 m) havadan saha dışı hedef 0; seçimler taç, acil, kısa pas ve koruma arasında dağılır; adımsız vuruş yalnız L ≤ 22 m; adımlı vuruşun hazırlığı ≥ 0,22 sn. uzakTac ve uzakBlok bu hücreyle ayarlanır.",
+   "U2 amaçlı ve baskısıza yakın: stoper ceza sahası köşesinde, rakip 3 m (baskı ~0,4), kanat forvet 35 m ileride boş. Kabul: kurtarış + ileri ≥ %60 (uzaklaştırma seçildiğinde); saha dışı hedef ≤ %5; 5 sn sonunda top bizde ≥ %40.",
+   "U3 kaleciye geri pas: stoper kendi çizgisine 20 m, ortada, rakip 2,2 m önden (baskı ~0,65), kaleci 12 m geride ve hattı açık. Kabul: kaleci pası kararların ≥ %20'si; kale ağzını kesen geri pas 0; kesilen geri pas ≤ %5.",
+   "U4 kaleye dönük, direğin dışı: kendi ceza sahasında, direğin 3 m dışında, kaleye dönük, rakip 1,2 m arkada. Kabul: çizgi + taç + acil ≥ %40; kale önünden yatay vuruş (kendi 16 m'sinde, iniş |z − MZ| < 8) 0.",
+   "U5 kapı: kendi çizgisine 35 m, baskı 1. Kabul: ayakla uzaklaştırma 0.",
+   "U6 dönen top: şuttan sonra kale önünde 8 m, top seken (vy > 1,5), rakip 1,5 m. Kabul: kendi kalesine doğru vuruş 0; seçimler acil, ileri ve çizgi; tepe ≤ 15 m.",
+   "U7 kafa: kendi ceza sahasında baskı altında gelen ortaya kafa ve orta sahada (u = 0) panik kafası. Kabul: tepe ≤ 8 m %100; orta sahada saha içi %100; ceza sahasında saha dışı yalnız tehlike ve çizgi kuralıyla.",
+   "Mevcut kapılar V1d'nin dokunduğu kodla: c-koru, c-temas, c-yariyariya, c-donen (donenUzak), d-duran (korner sonrası uzaklaştırma, golün kaynağı), c-hava ve h-hava (kafa), c-orta (orta savunması), b-pas (pas kararı), d-sut (kaleci pasından sonra); ikiz-deneme (UZ_MD modül düzeyi geçici nesne, CLAUDE.md kuralı); ad-denetimi (yeni üst düzey adlar uzaklastirSecenekleri, uzakIkinciTop, kafaUzakHedef, UZ_MD).",
+   "Bütünlük: MAC_DENEME_AYAR='{\"uzakAmac\":0}' ile 40 maç `--ayni`, S1 tabanına. Denge: 40 maç `--karsilastir` (uzakPay[0] ∈ {0,1, 0,4}); 80 maç ve hız ölçümü (hiz-olcum --kok) V1 kapanışında."
+  ],
+  "riskler": [
+   "Sıklık ve gol dengesi: uzaklaştırmanın bedava artısı kalkınca kendi ceza sahasında pas artabilir (kale önünde kayıp, yenen gol artar) ya da uzakPay yüksek kalırsa uzun top ve topu kaybetme artar. uzakPay ile 40 maçta (iki değer) ayarlanır; tasarım denemesinin vekili tek belirteçtir (%38,8 ↔ bugün %38,1; Gumbel sapması dahil değil).",
+   "Taç ve korner hiç seçilmeyebilir: denemede karar hedefi saha dışı %0 çıktı (taç U −0,9, ileri 0,14). Kasıtlı taç payının gerçekçi düzeye gelmesi U1/U4 hücrelerinde uzakTac, uzakBlok ve uzakTehlike ayarına bağlı; ayar yanlış yönde aşarsa eski 'her şey auta' görüntüsü geri gelir.",
+   "Uzayan hazırlık (en az bir ayar adımı, 0,22–0,42 sn) bloklanan ve kapılan uzaklaştırmayı artırır; bugün başlayanların %28'i zaten vurulamıyor. Planlayıcının Pb'si gerçekleşenle karşılaştırılmalı; kendi ceza sahasında kayıplar ve penaltı/faul payı izlenir.",
+   "Kaleciye geri pasın yeni değeri kaleciye dokunuşları, kale önünde kesilen geri pası ve kendi kalesine golü artırabilir; kale ağzı cezası ve U3 kapısı bunun için. d-kaleci ve k-kurma bilgi satırları kayar; kurma tarzının (Z3) kaleci +1 ayarlarıyla etkileşir.",
+   "Olay anlamı değişir: kurtarış topu 'pass' olduğu için pas sayısı, pas isabeti (uzun havadan pas ~%50–60) ve uzun pas payı oynar; v-verim uzaklaştırma tablosu, k-duran golün kaynağı, s-sut ve h-hava kaynak satırları, r-karne 'uzak' bitişi kayar. Sağlık aralığında kalmalı; kaymalar belgeye yazılır.",
+   "V1b ve V1a ile çift sayım: hazırlık tablosu (vurusSureleri) ve ayar adımı mekanizması tek kaynakta olmalı. V1b genel adım modelini kurarsa uzakHaz onun girdisi olur; ikisi ayrı ayrı uygulanırsa hazırlık iki kez uzar.",
+   "A10 gelmeden motordaki 0,22–0,42 sn bekleme oyuncuyu topun başında duruyor gösterebilir. Gövde hedefinin 0,5/1,0 m geri alınması (yaklaşma adımı) bunu azaltır ama yeni hareket sesi getirir: c-hareket ve a-akis 'Alış → vuruş' satırlarıyla bakılır.",
+   "Belirlenimcilik ve hız: planlayıcı rastlantısız olmalı (yalnız m.rast; kafada tek çekiliş); bit 0'da eski kacti ve T12b zarları aynen korunmalı, yoksa `--ayni` bozulur. Ek maliyet maç başına ~35 kararda ~300 varisSuresi + 3 pasAnaliz (ihmal edilebilir); yine de hiz-olcum ile ölçülür. UZ_MD modül düzeyi nesne olduğu için ikiz-deneme gerekir.",
+   "İkinci top modeli yalnız varış sürelerinden (varisSuresi) hesaplanıyor; hava düellosunun gücünü ve takımın ikinci top düzenini bilmez. D13'ün 'temizlemeden sonra hat 5–10 m yükselir' kuralı bu turda yok (savunma turunun işi); ikinci topu kazanma oranı beklentinin altında kalabilir.",
+   "Kafadaki dikey gürültü sınırı yalnız uzaklaştırma kafasına uygulanıyor; öbür kafalarda (ön direk sıyırması, indirme) aynı aşırı dikey hız sürer. Genel düzeltme T6/C akışının borcu olarak kalır.",
+   "Brifteki iki bilgi koda göre düzeltilmeli: (1) kaleciye pas baskıda adaydır; eksik olan baskısız adaylık ve doğru risk değeri. (2) Satır numaraları çalışma ağacındaki K1 düzenlemeleriyle kaydı; S1 sonrası yeniden okunmalı (işlev adları esas)."
+  ]
+ },
+ {
+  "ad": "V1e — kale vuruşu, elden dağıtım ve A10 vuruş sözleşmesi",
+  "ozet": "Bugün kale vuruşunda kaleci sahaya dönük durur, top konunca 3 m düz geriye çekilir ve 2,5–6,7 sn hareketsiz bekler. Planı ancak kullanım anında seçer, sonra hedefe dönerek topun etrafından yürür. Karar anında gövde ile hedef arasındaki açının ortancası 46°; 6 maçta kısa kale vuruşlarının %4'ü (8 maçta %6) dış ayakla atıldı. kvBekle hiçbir yerde okunmuyor. Elden dağıtımda top karar karesinde fırlıyor; bırakış anında gövde ile atış yönü arasındaki açı 10., 50. ve 90. yüzdelikte 8/29/71°, en çok 170°.\n\nTasarım üç bölümden oluşuyor:\n(1) kvV1 bit maskesi: bit 1 yüzey ve ayak kuralı, bit 2 erken plan ve koşu çizgisi, bit 4 kvBekle. Kaleci kale vuruşunda hiç dış ayak kullanmaz. Kısa paslarda güçlü ayağının içiyle vurur ve hedefe hafif falso verir. Planı topun başından ayrılırken seçer ve hedefe 14–34°'lik açıyla bakan koşu çizgisine çekilir. Bakışı ve kol işareti gerçek hedeftedir; kullanım anında bağlılık eşiği altında kalırsa yeniden plan yapar. kvBekle okunur: top başında en az bekleme süresidir, koşu noktasında hareketsiz kalma 0,8 sn'ye iner.\n(2) dagitimHaz: elden dağıtıma 0,4–0,8 sn'lik bir hazırlık evresi eklenir. Bu evre yeni 'dagitim' eylemidir; kaleci hedefe döner, 1–3 adım atar, bakışı hedeftedir ve hedefi tazelenir. Bırakış bugünkü kodla yapılır.\n(3) vurusSoz: A10 sözleşmesi. vurusSozlesme(m,p,e,evre) adlı saf işlev vuruş eylemine şu alanları yazar: teknik (10 şema), salinim, donus{aci,yol,kalan,yaklas}, egim{on,yan,geri}, karsiKol, ayarAdimSayisi. Kalecinin 'dagitim' ve bırakış eylemleri benzer alanları taşır.\n\nBütün anahtarlar 0 iken motor bugünküyle birebir aynıdır. vurusSoz tek başına açıldığında da sonuç değişmez (--ayni).",
+  "tasarim": "0) KAPSAM, BAĞIMLILIK, BİREBİRLİK\n- V1'in beşinci alt adımı. Uygulama K1 ve S1 kapanınca S1'in ucundan (claude/motor-v1) başlar; satır numaraları bugünkü çalışma ağacından, işlev adları kesindir.\n- V1a'nın ortak yüzey/ayak işlevi yazılırsa kale vuruşu onu 'zaman var, duran' girdisiyle çağırır, ikinci bir kural doğmaz. Aşağıdaki kvAyakYuzey o işlevin kale vuruşundaki sonucunu tanımlar; V1a yoksa tek başına çalışır.\n- V1c'nin 'plase falsolu' ailesi varsa sec.falso onu seçer; yoksa yedek formül (§2.4) kullanılır.\n- S1 duran topa genel bir kullanan rutini kurarsa (koy → geri çekil → işaret → bakış) kvBekle evreleri onun kale vuruşu parametresi olur; aynı durum alanları ikiye bölünmez.\n- Oyuncu nesnesine alan eklenmez. Durum du (duruş), sec, p.eylem ve gk.tutus alt nesnelerindedir. Rastlantı yalnız this.rast/normal'dan gelir; yeni sapmalar h2 (sahneOzet) ile rastlantısızdır.\n- Ablation: kvV1 0, dagitimHaz [0,0] ve vurusSoz 0 iken 40 maç --ayni tabana birebir tutar. vurusSoz 1 tek başına da --ayni tutar: alanlar saf hesaplanır ve motorda okuyan yoktur.\n\n1) BUGÜN (ölçüm; scratchpad v1e/kv-probe*.js, HEAD 6628e08 = main 57681ca motoru, tohum 1–6)\n- Kale vuruşu: 44 adet (7,3/maç). Kısa 25 (%57): çevrele 12, içinden 9, içine 4. Uzun 19: üstüne 16, ötesine 3.\n- Kısa kale vuruşu, karar anı (kaleci du.aci'ye dönük):\n  - |gövde–hedef| 10., 50. ve 90. yüzdelikte 16/46/87°.\n  - Hedef güçlü ayağın dış yanında 8/25.\n  - Dış ayak 1/25 (%4; sabahki 8 maçlık ölçümde %6), zayıf ayak 1/25.\n- Temasta gövde–hedef 0°: yürüyüş gövdeyi hizalıyor. Bu yüzden dış ayak, gövde hedefe tam dönükken çiziliyor.\n- Karar → temas 1,63/1,77/1,90 sn: kaleci 3 m düz geriden topun etrafından yürüyor.\n- Topun konuşundan kullanıma 3,7/5,5/8,9 sn. Koşu noktasına varış 2,1–2,3 sn. Koşu noktasında hareketsiz 2,5/3,4/6,7 sn.\n- Geri mesafe 3,0 m (duranGeri alt sınırı). Kısa vuruşta top hızı 12,8/16,2/18,9 m/sn, mesafe 12/22/28 m.\n- kvIsaret jesti seçilen vuruşa değil tarzın kisaPay'ine bakıyor.\n- Erken planın kararlılığı (bağlılık 0,35): top konunca seçilen planın %73'ü, kullanımdan 3 sn önce seçilenin %86'sı, 2 sn önce seçilenin %87'si korunuyor. Kayıpların çoğu kimlik eşleşmesinden: aynı oyuncu kategori değiştiriyor, üstüne hedefi başka oyuncuya geçiyor.\n- Elden dağıtım: 32 adet (5,3/maç): yuvarlama 22, omuzdan 9, üstten 1, degaj 0.\n  - Bırakışta |gövde–atış| 8/29/71°, en çok 170°; > 45° %25.\n  - Tutuştan bırakışa 0,37/0,87/1,47 sn. Bırakışta hız 1,5 m/sn.\n\n2) V1e-1 KALE VURUŞUNDA YÜZEY VE AYAK (kvV1 & 1)\n2.1 Saf kvAyakYuzey(p, f, tip, L, v0) → {ayak, stil, teknik, yol, falso}.\n- f: hedefin kalecinin o anki gövdesine göre açısı, vurusBaslat'taki işaretle (f > 0 hedef sağda).\n- ayak: p.ayak 'iki' ise f > 0,1 → 'sol', değilse 'sag'. Tek ayaklı kaleci duran topta güçlü ayakla vurur (ayar zamanı var).\n- ic: (ayak 'sag' ? f ≤ 0,05 : f ≥ −0,05) — hedef vuran ayağın çapraz yanında.\n- Yerden:\n  - stil 'ic'; teknik v0 ≤ 14 m/sn ise 'itme', değilse 'sertIc'.\n  - yol: |f| ≤ 0,35 → 'yok'; ic ∧ |f| ≤ 0,9 → 'pelvis'; diğer → 'ayarAdimi'.\n  - falso 'plase'.\n- Havadan: stil 'ust', teknik 'lofted', yol 'yok' (yaklaşma açısıyla).\n- 'dis' hiçbir dalda yok. Sonuç: sağ ayaklı kaleci sağdaki stopere sağ ayak içiyle vurur (koşu çizgisi ya da yürüyüşteki dönüşle); solak kaleci aynı stopere sol ayak içiyle falsolu vurur.\n2.2 Match.kvVurusAyari(du, tk, sec), kaleVurusuSecenegi'nin sonunda (iki yolda da):\n- f = aciFark(atan2(sec.hz − b.z, sec.hx − b.x), tk.yon).\n- Yazar: sec.ayak (bit 2'de plan değişmediyse du.kvAyak), sec.stil, sec.teknik, sec.falso, sec.yaklas (bit 2'de ±yay, yoksa 0) ve sec.kosuEfor (kısa 0,6; uzun 0,9 — yaklaşma hızı top hızıyla ilişkili, J.1).\n2.3 vurusBaslat (mac-topla.js ~321): mevcut 'if(sec.ayak)ayak=sec.ayak' satırının yanına 'if(sec.stil)stil=sec.stil'.\n- Zar zaten koşulsuz çekiliyor (~312), çekiliş sayısı değişmez. sec.stil yoksa yol birebir.\n- vurusIlerle'de eforVer(p, sec.kosuEfor ?? bugünkü).\n2.4 yerPasVur'da sec.falso 'plase' iken (V1c yoksa yedek):\n- eg = isr · pasFalso · (0,025 + 0,02·clamp((L − 10)/15, 0, 1)) · (0,8 + 0,4·rast); isr = (ayak 'sol' ? 1 : −1).\n- Bugünkü gibi tek çekiliş; nişan telafisi yerEgriSapma ile.\n- 20 m'de yaklaşık 0,35–0,5 m görünür ama hafif eğri ('hafif falsolu plase').\n\n3) V1e-2 ERKEN PLAN VE KOŞU ÇİZGİSİ (kvV1 & 2; kurma&1 gerekir)\n3.1 kaleVurusuPlani ikiye bölünür, davranış birebir (aynı aday sırası, aday başına bir Gumbel):\n- Saf kvAdaylar(m, du, tk): S = [{kat, U, sec}], ayrıca S.presSayi, S.presli, S.kp.\n- kvSec(m, S): Gumbel ölçeği 0,3.\n- kaleVurusuPlani = kvAdaylar + kvSec + du.kv.\n3.2 Plan anı: bit 4 varsa kaleci top başından ayrılırken (du.kvGeriT), yoksa top konup yerleştirme bitince (yerT + 0,6). İkisi de mac-kurallar.js stepDurus 'hazir' içinde, bir kez çalışır.\n3.3 Match.kvPlanla(du, tk):\n- S = kvAdaylar; en = kvSec(S).\n- du.kvPlan = {kat, q: en.sec.alici, uzun: en.sec.tip === 'hava'}.\n- a = hedefin açısı; a0 = durusHedefAcisi(du) (sahaya); Y = kvAyakYuzey(tk, aciFark(a, a0), tip, L, v0); du.kvAyak = Y.ayak.\n- yay: kvYay[0] (itme), ortalama (sertIc), kvYay[1] (lofted).\n- gm: kısa lerp(kvGeri.kisa[0], kvGeri.kisa[1], clamp((L − 8)/22, 0, 1)); uzun lerp(kvGeri.uzun[0], kvGeri.uzun[1], profilAlt(tk,'sutGucu',0,5)).\n- r = a + (Y.ayak 'sol' ? −1 : 1)·yay — vuran ayağın ters yanından gelir, du.yay ile aynı işaret.\n- Koşu noktası = top − (cos r, sin r)·gm. Kendi kale çizgisine en az 0,5 m kalır, sahanın içinde kalır; taşarsa gm çizgi boyunca kısalır.\n- du.aci = r, du.geriX/Z, du.bakis = {x: hx, z: hz} (çizimin Z2e bakışı hedef↔top sırası bugün de okur).\n- du.sahneKos: kısa 1,1, uzun 1,5 sn.\n- kvIsaret jestinin hedefi = plan hedefi.\n3.4 Kullanımda bağlılık (kaleVurusuSecenegi, du.kvPlan varsa):\n- S' = kvAdaylar (taze). x' kısa planda alıcıyla, uzun planda kategoriyle eşlenir.\n- x' ∧ x'.U ≥ max(S'.U) − kvBaglilik ise x'.sec kullanılır (taze koordinatlar, T yeniden).\n- Değilse kvSec(S') (bugünkü yol; du.kv.degisti = true); kaleci yaklaşmayı yürüyüşle düzeltir, f bugünkü gibi o anki gövdeden.\n- du.kv'ye erken, degisti eklenir (k-kurma ve v-kaleci okur).\n3.5 Sonuç:\n- Kısa vuruşta kaleci hedefe 14–20°'lik açıyla 1,6–2,4 m'den gelir: f ≈ −yay, çapraz yan, yol 'yok'.\n- Uzunda 3,6–5 m'den 34° ile gelir: yol 'pelvis', lofted.\n- vurusYaklas'ın ±0,6 rad yay noktası koşu çizgisine düşer: düz koşu, sonda 0,9 m'lik dönüş.\n\n4) V1e-3 kvBekle OKUNUR (kvV1 & 4; sahne&1 gerekir)\nGerekçe:\n- Z3a'da bildirildi; TEKNIK_PLAN §8 D satırı 'kalecinin bekleyişi kvBekle' diyor ama okunmuyor.\n- Bekleyişi bugün sahneT × (0,85 + 0,35·kp) üretiyor ve bu süre koşu noktasında hareketsiz geçiyor (2,5/3,4/6,7 sn).\n- Okunduğunda iki şey olur: (a) Z3a'nın niyeti — kısa kuran kaleci şeklin oturmasını bekler — geç konan topta da tutar (alt sınır); (b) bekleyiş top başındaki düzenleme evresine taşınır, koşu noktasındaki hareketsizlik ≤ 0,8 sn olur (S1'in korner rutini ölçütü).\n- Kaldırmak belgedeki yanlışı silerdi ama hazırlık evresi kazandırmazdı.\n\nFormüller (top konunca, yerT):\n- kvB = lerp(kvBekle[0], kvBekle[1], kp) · (1 + 0,15·(2·sahneOzet(du, 9) − 1)).\n- kvBasT = yerT + 0,6 (yerleştirme eylemi).\n- gmE: bit 2'de lerp(4,3, 2,0, kp), değilse duranGeriMesafe; walkT = gmE / 1,6.\n- son = sahneT − sahneKos + zgEk.\n- du.kvGeriT = max(kvBasT + kvB, son − 0,8 − walkT).\n- du.kvSon = max(son, kvGeriT + walkT + 0,8).\n\nEvreler:\n- (a) Top başı (du.t < kvGeriT): kaleci topun 0,9 m gerisinde, sahaya (a0) dönük. kvBasT + 0,3·kvB'de bir kez 'isaret' jesti (bugünkü kvIsaret noktası formülü), tarama sürer.\n- (b) kvGeriT'de bit 2 ise kvPlanla. Koşu noktasına geri yürüyüş: hizOran = clamp(gm / max(0,5, kvSon − 0,8 − du.t) / maxSpd, 0,2, 0,6); yonHedef = du.aci (topa dönük, geri adım).\n- (c) Varışta (< 0,5 m) ya da kvSon − 1,0'da 'kol' jesti hedefe. Çizim başı hedef↔top sırasıyla döndürür.\n- (d) duranHazirMi'de du.t < kvSon iken false.\n\nGüvenlik ağları:\n- zorlaHazir = max(28, kvSon + 10), zorlaGetir aynen.\n- Sayım (zgEk) kuralı aynen; son zgEk'i içerir.\n\n5) V1e-4 ELDEN DAĞITIMIN HAZIRLIK EVRESİ (dagitimHaz [0,4; 0,8]; [0,0] ise bugünkü yol)\nBaşlangıç:\n- kaleciElde'de bugün karar verilen karede kaleciDagitim aynen çağrılır (çekilişler aynı yerde).\n- Ardından Match.dagitimBaslat(gk, k) çalışır. gk.tutus ve b.tasiyan sürer; top elde kalır.\n- stil karar anında kesinleşir: yuvarla; elleAtis → L > 28 'ust', değilse 'omuz'; degaj → 'dusurme' (koşan arkadaş, < 45 m) ya da 'punt'.\n- Süre: Th = lerp(H0, H1, KV_DAG[stil].w) + 0,12·max(0, |f| − 0,5), kontrada (kaleciKontraVar) × 0,8, clamp [0,3, H1 + 0,25].\n  - w: yuvarla 0, omuz 0,25, ust 0,6, dusurme 0,6, punt 1.\n  - f = aciFark(hedef açısı, gk.yon).\n- Adım: KV_DAG[stil].adim = 1/1/2/2/3; yol = adim · 0,7 m.\n- gk.eylem = {ad: 'dagitim', t, sure: Th, kalan, tur, stil, q, hx, hz, adim, x0, z0, ...sözleşme}.\n\nMatch.dagitimAdim(gk, e, dt) (kaleciElde'nin başında; yürüyüş hedeflerinden önce):\n- Hedef her adımda bugünkü formülle tazelenir (q.x + q.vx·0,5; degajda h.x + d·4, kıstırmalı).\n- gk.yonHedef = hedef açısı, gk.bak = null.\n- Adım hedefi = (x0, z0) + birim(hedef)·yol; ceza sahasında kalır: kendi çizgisinden u ≤ CEZA_U − 1,0, |z − MZ| ≤ CEZA_W − 0,7.\n- hizOran = clamp(yol / Th / maxSpd, 0,15, 0,6); e.kalan = sure − t.\n\nBırakış: t ≥ sure olunca Match.dagitimBirak(gk, e).\n- Bugünkü bırakış gövdesi (yuvarla / elleAtis / degaj; normal() yön hatası burada çekilir). gk.tutus = null, b.tasiyan = null.\n- Eylem bugünkü 'elleAtis'/'degaj' {t: 0} olur; çizim değişmeden çalışır.\n\nDiğer:\n- EYLEM_ADIM.dagitim true döner (bitişi bırakış yönetir).\n- taramaAdim'da (B) e.ad 'dagitim' iken bakış hedefe (uzunBakis kuralı gibi).\n- Bırakış bugünkünden 0,3–1,05 sn geç ve 0,7–2,1 m ileride olur.\n\n6) A10 SÖZLEŞMESİ (vurusSoz 1; saf vurusSozlesme(m, p, e, evre); rastlantı çekmez, motor okumaz)\nYazma anları:\n- (1) vurusBaslat sonu: plan.\n- (2) 'geri'ye geçiş: donus.kalan, yaklas, aceleyle egim.\n- (3) vurusYap sonu: stil değiştiyse (vole/yarımVole/burun) teknik; salinim gerçek hızla.\n\nteknik:\n- Şut: sutPlan.tur plase → 'sertIc', sert → 'surulmus', falso → 'sertIc' (+egim.yan), trivela → 'dis', asirtma → 'chip', dusen → 'surulmus', burun → 'uc'.\n- Yerden pas: stil 'dis' → 'dis'; 'ic' ∧ v0 ≤ 14 → 'itme'; 'ic' → 'sertIc'; 'ust' (v0 > 20) → 'surulmus'.\n- Havadan: yay 'asirtma' ya da L < 20 → 'chip'; orta/korner hy ≤ 1,2 → 'sertIc'; diğer havadan, uzaklaştırma, degaj → 'lofted'.\n- Gelişine: top > 0,45 m → 'vole'; 0,15–0,45 → 'yarimVole'.\n- 'topuk' ayrılmış.\n- stil (temas yüzeyi) aynen kalır.\n\nsalinim = clamp(v0 / (SOZ_VMAKS[teknik]·(0,85 + 0,3·sutGucu)), 0,1, 1) · (ilk ∨ tekDokunus ? 0,8 : 1) · (1 − 0,35·acele), en çok geri / SOZ_GERI[teknik].\n- v0: yerden gucPlan·29; havadan pasGucu('hava', 0, L, T)·30; şutta sutPlan.g · sutHizTavani.\n- SOZ_VMAKS (m/sn): itme 15, sertIc 22, surulmus 30, lofted 28, chip 18, dis 21, vole 24, yarimVole 26, uc 16, topuk 12.\n- SOZ_GERI (sn): 0,2 / 0,26 / 0,33 / 0,37 / 0,28 / 0,24 / 0,3 / 0,3 / 0,14 / 0,15.\n\ndonus:\n- aci = f (vurusBaslat).\n- yol: V1a'dan; yedek kural: dis → 'disAyak'; |f| ≤ 0,35 → 'yok'; çapraz ∧ |f| ≤ 0,9 → 'pelvis'; diğer → 'ayarAdimi'.\n- kalan = işaretli aciFark(a, p.yon), 'geri'de ve temasta.\n- yaklas = sec.yaklas ya da hız yönü − vuruş yönü (spd > 1).\n\negim (rad, ≥ 0; on ile geri birbirini dışlar):\n- Taban: itme on 0,05; sertIc on 0,04, yan 0,08; surulmus on 0,12 (yüksek hedefte 0,02); lofted geri 0,12 + 0,12·salinim; chip geri 0,2; dis on 0,04; vole geri 0,06, yan 0,065 + 0,65·min(y, 0,75) (J-1: 3,7°→31°); yarimVole on 0,08, yan 0,1; uc on 0,1; topuk on 0,15.\n- Acele: ac = e.acele; uzaklaştırmada baskı > 0,5 ∧ hazEn < 0,15 ise (baskı − 0,5)·2. Etkisi: geri += 0,15·ac, yan += 0,2·ac.\n- Falso: yan += 0,1.\n\nkarsiKol = clamp((0,2 + 0,8·salinim)·SOZ_KOL[teknik] + 0,4·egim.yan + 0,2·ac, 0, 1).\n- SOZ_KOL: itme 0,45, sertIc 0,8, surulmus 1, lofted 1, chip 0,6, dis 0,7, vole 1, yarimVole 0,9, uc 0,3, topuk 0,3.\n\nayarAdimSayisi:\n- 0: ilk ∨ tekDokunus ∨ burun ∨ acele > 0,5 ('minimal wind-up').\n- Duran topta clamp(round(gm / 0,75), 1, 6).\n- Açık oyunda: yol 'ayarAdimi' → 1 (|aci| > 1,2 ise 2); lofted/surulmus ∧ hazEn ≥ 0,4 → +1; en çok 3.\n\nhazirlikEn: mevcut alan, formülü V1b'nin.\n\nKalecinin 'dagitim' eylemi: aynı üçlü.\n- salinim: yuvarla v/22, elle hız/24, degaj /28.\n- egim: yuvarla on 0,55; omuz on 0,2; ust on 0,25, yan 0,1; dusurme geri 0,1; punt geri 0,2.\n- karsiKol: 0,3 / 0,8 / 1 / 0,8 / 1.\n- topY: yuvarla 0,1, elle 1,9, degaj 0,9 (bugünkü y0).\n- Bırakış eylemleri 'elleAtis'/'degaj' üçlüyü kopyalar; degajda teknik punt → 'lofted', dusurme → 'surulmus'.\n- Her alan yoksa çizim bugünkü yoluna düşer (yedek).\n\n7) UYGULAMA SIRASI (her adımda hızlı kademe)\n- V1e-a: kvAdaylar/kvSec bölünmesi (--ayni).\n- V1e-b: vurusSoz + vurusSozlesme (--ayni).\n- V1e-c: bit 1 + vurusBaslat sec.stil + falso yedeği.\n- V1e-d: bit 2 ve bit 4.\n- V1e-e: dagitimHaz + taramaAdim bakışı.\n- Her bit ayrı 40 maç --karsilastir, kapanışta 80 maç.",
+  "kodDegisiklikleri": [
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "MOTOR_AYAR bildirimi (~93, kurma/kvBekle satırı)",
+    "ne": "kvV1, kvGeri, kvYay, kvBaglilik, dagitimHaz bildirilir (sahibi D), B'nin satırına vurusSoz eklenir. kvBekle zaten bildirilmiş."
+   },
+   {
+    "dosya": "js/mac-kaleci.js",
+    "islev": "ayarEkle('D') (~11–41)",
+    "ne": "Değerler: kvV1 7, kvGeri {kisa:[1.6,2.4],uzun:[3.6,5.0]}, kvYay [0.25,0.6], kvBaglilik 0.35, dagitimHaz [0.4,0.8]. Her biri 0/[0,0] iken eski yol. kvBekle yorumu 'bit 4 ile okunur: top başında en az bekleme' olarak düzeltilir."
+   },
+   {
+    "dosya": "js/mac-kaleci.js",
+    "islev": "kaleVurusuPlani (~616–643) → kvAdaylar(m,du,tk) + kvSec(m,S)",
+    "ne": "Aday listesi saf işleve, Gumbel seçimi ayrı işleve ayrılır. kaleVurusuPlani ikisini aynı sırayla çağırıp du.kv'yi yazar: birebir aynı (--ayni)."
+   },
+   {
+    "dosya": "js/mac-kaleci.js",
+    "islev": "yeni saf kvAyakYuzey(p,f,tip,L,v0)",
+    "ne": "Kale vuruşunun ayak/yüzey/teknik/yol/falso kuralı (§2.1); dış ayak yok. V1a'nın ortak işlevi yazılınca bu işlev onu zaman=var ve duran ile çağıran ince bir sarmalayıcı olur."
+   },
+   {
+    "dosya": "js/mac-kaleci.js",
+    "islev": "yeni Match.kvPlanla(du,tk)",
+    "ne": "Erken plan (bit 2): kvAdaylar + kvSec ile du.kvPlan ve du.kvAyak yazılır. Koşu noktası r = a ± yay ile hesaplanır; gm kvGeri'den gelir, kale çizgisine ve saha sınırına kıstırılır. Ayrıca du.aci, du.geriX/Z, du.bakis = hedef ve du.sahneKos (kısa 1,1, uzun 1,5) yazılır."
+   },
+   {
+    "dosya": "js/mac-kaleci.js",
+    "islev": "kaleVurusuSecenegi (~598–611)",
+    "ne": "du.kvPlan varsa bağlılık denetimi yapılır: taze kvAdaylar; kısa plan alıcıyla, uzun plan kategoriyle eşlenir; x'.U ≥ max − kvBaglilik ise taze sec, değilse kvSec ve du.kv.degisti. du.kv'ye erken ve degisti eklenir. bit 1 ile her iki yolda (kurma&1 açık ya da kapalı) kvVurusAyari çağrılır."
+   },
+   {
+    "dosya": "js/mac-kaleci.js",
+    "islev": "yeni Match.kvVurusAyari(du,tk,sec)",
+    "ne": "f o anki gövdeden ölçülür; sec.ayak, stil, teknik, falso, yaklas ve kosuEfor (kısa 0,6, uzun 0,9) yazılır."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "stepDurus 'yerles' (~340–354) ve 'hazir' (~355–365)",
+    "ne": "Top konunca bit 4 için kvB, kvBasT, kvGeriT, kvSon hesaplanır (§4). Plan anı: bit 4 varsa kvGeriT, yoksa yerT+0,6'da kvPlanla (bit 2). bit 4'te du.t < kvGeriT iken kaleci topun 0,9 m gerisinde, sahaya dönük durur ve bir kez 'isaret' jesti yapar. Sonra koşu noktasına süreye göre hızla (hizOran 0,2–0,6) yürür."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "sahneKur (~362–381), duranHazirMi (~491–507)",
+    "ne": "Kale vuruşunda zorlaHazir = max(28, kvSon+10). duranHazirMi'de bit 4 ile du.t < kvSon iken false döner. kvIsaret: bit 2'de hedef plan hedefidir; bit 4'te zamanı koşu noktasına varış ya da kvSon − 1,0'dır (bugün son − 2,2)."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "duranGeriMesafe / durusHedefAcisi (~562–572)",
+    "ne": "Değişmez. kvPlanla yerleştirmeden sonra du.aci ve geri noktasının üstüne yazar (yay koşusu du.yay'daki gibi). Kale vuruşunda duranGeri [3,7] kıstırması plan yolunda kullanılmaz (kısa vuruş 1,6–2,4 m)."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusBaslat (~280–342)",
+    "ne": "'if(sec.ayak)ayak=sec.ayak' yanına 'if(sec.stil)stil=sec.stil' (zar koşulsuz çekilmeye devam eder). Sonunda vurusSoz açıksa vurusSozlesme(this,p,e,0) çağrılır."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusIlerle (~343–440)",
+    "ne": "eforVer için sec.kosuEfor varsa o kullanılır. 'geri'ye geçişte vurusSozlesme(…,1) çağrılır (donus.kalan, yaklas, aceleyle egim)."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "vurusYap (~444) / yerPasVur (~519)",
+    "ne": "Temasta vurusSozlesme(…,2) (son teknik ve gerçek hızla salinim). yerPasVur'da sec.falso 'plase' ise V1c'nin ailesi kullanılır; o yoksa yedek: eg = isr·pasFalso·(0,025+0,02·clamp((L−10)/15))·(0,8+0,4·rast), bugünkü gibi tek çekiliş."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "yeni saf vurusSozlesme(m,p,e,evre) + SOZ_VMAKS, SOZ_GERI, SOZ_KOL, SOZ_EGIM tabloları",
+    "ne": "teknik, salinim, donus{aci,yol,kalan,yaklas}, egim{on,yan,geri}, karsiKol, ayarAdimSayisi alanlarını §6 formülleriyle yazar. Rastlantı çekmez, motor okumaz."
+   },
+   {
+    "dosya": "js/mac-topla.js",
+    "islev": "taramaAdim (~213)",
+    "ne": "dagitimHaz açıkken kalecinin 'dagitim' eyleminde bakış hedefe yönelir (uzunBakis dalının yanına bir dal)."
+   },
+   {
+    "dosya": "js/mac-kaleci.js",
+    "islev": "kaleciElde (~567–593) + yeni Match.dagitimBaslat/dagitimAdim/dagitimBirak + EYLEM_ADIM.dagitim + KV_DAG",
+    "ne": "Karar karesinde kaleciDagitim aynen çağrılır, ardından 'dagitim' eylemi başlar (Th, adımlar, dönüş, hedef tazeleme, ceza sahası sınırı, kontra ×0,8). Bırakış bugünkü gövdeyle dagitimBirak'ta yapılır ve 'elleAtis'/'degaj' eylemine üçlü (salinim, egim, karsiKol) kopyalanır. EYLEM_ADIM.dagitim true döner."
+   },
+   {
+    "dosya": "araclar/olcumler/v-kaleci.js (yeni)",
+    "islev": "ölçü eklentisi",
+    "ne": "Rastlantı çekmez. Kale vuruşunda stil, ayak, f, temas hizası, karar→temas, top başı / koşu noktası süreleri, plan değişme payı ve jest–hedef uyumu ölçülür. Dağıtımda tür, hazırlık süresi, bırakışta |gövde–atış| ve tutuştan bırakışa süre ölçülür. Sözleşme alanlarının dağılımı (teknik × salinim, yol payları) b-olcum'a ya da bu dosyaya eklenir."
+   },
+   {
+    "dosya": "TEKNIK_PLAN.md §8 / FUTBOL_KUTUPHANESI.md §12.13",
+    "islev": "belge",
+    "ne": "Sözleşme listesine vurus V1 alanları ve kalecinin 'dagitim' eylemi eklenir. D satırındaki 'kvBekle' iddiası düzeltilir. V1e sonucu ve ablation yazılır."
+   }
+  ],
+  "ayarlar": [
+   "kvV1: 7 (D, js/mac-kaleci.js) — bit maskesi. 1: kale vuruşunda yüzey ve ayak kuralı (dış ayak yok, güçlü ayak içi, iki ayaklıda çapraz ayak, kısa vuruşta hafif plase falsolu). 2: erken plan, koşu çizgisi, bakış ve kol işareti hedefe, kullanımda bağlılık (kurma&1 gerekir). 4: kvBekle okunur (top başında en az bekleme, koşu noktasında hareketsiz ≤ 0,8 sn; sahne&1 gerekir). 0: bugünkü yol birebir.",
+   "kvBekle: [1.5, 4] (D; mevcut, bit 4 ile okunur) — kısa kuran takımda uzun. kvB = lerp(kvBekle, kisaPay) · (1 ± 0,15 h2).",
+   "kvGeri: {kisa:[1.6,2.4], uzun:[3.6,5.0]} (D; bit 2) — koşu mesafesi (m). Kısada mesafeyle (8→30 m), uzunda sutGucu ile; duranGeri [3,7] kıstırması kullanılmaz.",
+   "kvYay: [0.25, 0.6] (D; bit 2) — koşunun hedefe açısı (rad): itme 0,25, sertIc ortalama, lofted 0,6 (J-1: 0–20° / 30–45°).",
+   "kvBaglilik: 0.35 (D; bit 2) — erken planın kullanımda korunma eşiği (fayda birimi). Ölçümde 0,2–0,5 arasında korunma payı %73–77'den yalnız ±%2 oynuyor.",
+   "dagitimHaz: [0.4, 0.8] (D) — elden dağıtım hazırlık süresinin aralığı (sn; yuvarla → punt; dönüşle +0,12·(|f|−0,5); kontrada ×0,8). [0,0]: top karar karesinde fırlar (bugün).",
+   "vurusSoz: 1 (B, js/mac-topla.js) — A10 sözleşme alanlarını yazar. Sonucu değiştirmez (--ayni); 0 iken alan yazılmaz, çizim yedek yolunu kullanır."
+  ],
+  "sozlesme": [
+   "vurus.teknik — 'itme'|'sertIc'|'surulmus'|'lofted'|'chip'|'dis'|'vole'|'yarimVole'|'uc'|'topuk' ('topuk' ayrılmış). Motor: vurusBaslat sonunda stil + sec.tip + L + planlanan hız + sutPlan.tur + sec.yay'dan, temasta stil değişirse yeniden (§6). Çizim: D1 tarif satırını seçer (anahtar pozlar G/T, temas yeri, destek ayağının yanı ve gerisi, bitiriş). Yoksa bugünkü stil eşlemesi (anmVkPoz).",
+   "vurus.salinim — 0–1, geri salınımın genliği: planlanan top hızı ÷ (SOZ_VMAKS[teknik]·(0,85+0,3·sutGucu)); ilk ve tek dokunuşta ×0,8, acelede ×(1−0,35·acele), en çok geri/SOZ_GERI. Temasta gerçek hızla tazelenir. Çizim: kalça ekstansiyonu ve diz bükülmesi teknik aralığında (itme 0→10°/20→50°, surulmus 10→29°/60→105°), takip yüksekliği. ANM_VK_STIL.S × mesafe × tek dokunuş × baskı sezgisinin yerine geçer; kimlik çarpanı (vurS) kalır. Yoksa bugünkü S.",
+   "vurus.donus = {aci, yol, kalan, yaklas}. aci: vurusBaslat'taki gövde–hedef açısı (rad, f ile aynı işaret). yol: 'ayarAdimi'|'pelvis'|'disAyak'|'yok' (V1a; yedek kural §6). kalan: 'geri'ye geçişte ve temasta işaretli aciFark(hedef, p.yon). yaklas: duran topta sec.yaklas (±yay), açık oyunda hız yönü − vuruş yönü. Çizim (D2): 'ayarAdimi' son destek adımı hedefe min(|aci|,1,2) dönük basar, pelvis temastan 0,2 sn önce döner; 'pelvis' ayaklar yerinde, pelvis kalan kadar döner; 'disAyak' pelvis dönmez, bilek inversiyonu ve kalça iç rotasyonu, kısa kamçı takip; yaklas son iki adımın yayıdır. Yoksa düz.",
+   "vurus.egim = {on, yan, geri} — rad, ≥ 0, on ile geri birbirini dışlar. Temastaki öne/geriye ve vuran ayağın ters yanına yatış. Motor: teknik tabanı + vole yüksekliği (0,065+0,65·y) + acele (geri +0,15·ac, yan +0,2·ac) + falso (yan +0,1). Çizim: gövdenin sagital eğimi on−geri, yan yatış; geri salınım tepesinde %50, temasta tam. Pozlardaki gömülü lean'in yerine geçer. Yoksa poz lean'i.",
+   "vurus.karsiKol — 0–1, vurmayan kolun yukarı-dışa açılması (gerilme yayı). Motor: clamp((0,2+0,8·salinim)·SOZ_KOL[teknik] + 0,4·egim.yan + 0,2·acele). Çizim: kol hazırlıkta (evre 1) yükselir, geri salınım tepesinde tam açılır (kalça ve omuz ekstansiyonu aynı anda, J.1), takipte öne süpürür. Bugünkü 'karşı kol yalnız geri salınımda 0,2–0,35 sn' davranışının yerine geçer. Yoksa bugünkü.",
+   "vurus.ayarAdimSayisi — 0–6, temastan önce planlanan adım sayısı. 0: ilk dokunuş / tek dokunuş / burun / acele > 0,5. Duran topta round(gm/0,75). Açık oyunda ayarAdimi 1–2, gerilmeli lofted/surulmus +1. Çizim: D2 faz modülasyonu (±%25) son N adımda, destek ayağı T − tD'de basar; 0'da yerinden salınım (minimal wind-up). Yoksa bugünkü son adım.",
+   "vurus.hazirlikEn (mevcut; formül V1b'nin) — çizim üst gövde hazırlığının başlangıcını okur. Sözleşme alanlarının üç yazma anı: vurusBaslat sonu (plan), 'geri'ye geçiş, temas. Çizim evre 1 başında, son adımın başında ve temasta okur.",
+   "kaleci eylemi 'dagitim' (yeni) = {t, sure, kalan, tur: 'yuvarla'|'elleAtis'|'degaj', stil: 'yuvarla'|'omuz'|'ust'|'dusurme'|'punt', hx, hz (her adımda tazelenen hedef), adim (1/1/2/2/3), donus {aci, yol: 'adim'|'yok'}, salinim, egim {on,yan,geri}, karsiKol, topY (bırakış yüksekliği 0,1/1,9/0,9)}. Motor: kaleciElde → dagitimBaslat/dagitimAdim; top gk.tutus ile elde. Çizim: stile göre hazırlık pozları — yuvarlamada adım ve çömelme, omuzda top omuzda, üstten atışta top başın arkasında iki adım, düşürme ve punt'ta top iki elde önde, adımlar ve sonda bırakma; karşı kol hedefe uzanır. Elde taşınan topun çizilen yeri kalan → 0 iken topY'ye ve gk + yon·0,3 noktasına iner. Yoksa (bilinmeyen eylem) topu elde yürüyen kaleci.",
+   "kaleci 'elleAtis'/'degaj' (mevcut, stil aynen) + salinim, egim, karsiKol (dagitim eyleminden kopya); degajda teknik ('punt' → 'lofted', 'dusurme' → 'surulmus'). Çizim: takip genliği ve gövde eğimi bunlardan. Yoksa bugünkü pozlar (degajTemas/Takip, omuzAt, yuvarlaAt).",
+   "duruş (motor yazar, çizim okur): kale vuruşunda du.bakis = plan hedefi (bit 2; Z2e başı hedef↔top sırasıyla döndürür), du.aci = koşu çizgisi; jest 'kol' hedefi = plan hedefi; top başında 'isaret' jesti. du.kv'ye erken ve degisti eklenir (yalnız ölçü, çizim okumaz); du.kvPlan, kvGeriT, kvSon motorun iç durumudur."
+  ],
+  "olcu": [
+   "Kısa kale vuruşunda dış ayak payı: bugün 1/25 (%4; 8 maçta %6) → 0 (kvV1&1). Tek ayaklı kalecide zayıf ayak: bugün 1/25 → 0.",
+   "Kısa kale vuruşu, karar anında |gövde–hedef| (10./50./90. yüzdelik): bugün 16/46/87° → bit 2 ile ≤ yay + 10° (90. yüzdelik ≤ ~25°; uzunda ≤ ~45°).",
+   "Karar → temas: bugün 1,63/1,77/1,90 sn → kısa ~0,9–1,3, uzun ~1,3–1,8 sn (koşu çizgisi; kosuEfor). Temasta gövde–hedef ≤ 0,5 rad.",
+   "Kale vuruşu süreleri: bugün topun konuşundan kullanıma 3,7/5,5/8,9 sn, koşu noktasında hareketsiz 2,5/3,4/6,7 sn → bit 4 ile top başında ≥ kvB (1,5–4 sn), koşu noktasında hareketsiz 90. yüzdelik ≤ 1,0 sn; duruşun başından kullanıma (tempo) ortanca ±1 sn.",
+   "Erken planın kullanımda değişme payı (bilgi): bugünkü kimlikle tahmin top konunca %27, 2–3 sn önce %13–14 → alıcı/kategori eşleşmesiyle ≤ %10–15 beklenir. kvIsaret jestinin gerçek hedefle uyumu %100 (bugün kisaPay'e göre).",
+   "Kale vuruşu kategorileri ve kısa payı (k-kurma): gürültü içinde değişmemeli (kısa ~%57). Kale vuruşundan sonraki 12 sn'de kendi 40 m'sinde kayıp ve son üçte bir payı izlenir.",
+   "Kısa kale vuruşunda yerden eğri (v-kaleci): 20 m'de 0,3–0,6 m (bugün iç ayakta 0,1–0,3 m); top hızı 10./50./90. yüzdelik bilgi.",
+   "Elden dağıtım: bırakışta |gövde–atış| bugün 8/29/71/170° → 90. yüzdelik ≤ 20°, en çok ≤ 35°. Hazırlık süresi türe göre (yuvarla 0,4–0,5, omuz ~0,5, üstten ~0,65, punt ~0,8 sn). Tutuştan bırakışa bugün 0,37/0,87/1,47 sn → +0,3–1,05 sn. Dağıtımda topun takımda kalması (d-kaleci) gürültü içinde.",
+   "Sözleşme dağılımı (b-olcum / v-kaleci): teknik payları (yerden pasta itme / sertIc / surulmus), salinim 10./50./90. yüzdelik teknik başına, donus.yol payları, ayarAdimSayisi 0 payı. Alanlar her vurus eyleminde mevcut olmalı (vurusSoz 1).",
+   "Sağlık aralığı (40 maç her bit için, kapanışta 80 maç): gol, şut, pas isabeti, gerçekleşen ÷ konum xG, top oyunda süre; Z ölçüleri ve robotluk karnesi.",
+   "Birebirlik: kvV1 0 + dagitimHaz [0,0] + vurusSoz 0 → --ayni; vurusSoz 1 tek başına → --ayni; kvAdaylar/kvSec bölünmesi → --ayni. ikiz-deneme.js 'Aynılık N/N' (duruş ve kaleci akışı değişti). ad-denetimi.js (yeni üst düzey adlar ve Match yöntemleri). Hız: vuruş başına üç saf hesap ve kale vuruşu başına bir taze aday listesi — aynı süreç oranı ≤ %10."
+  ],
+  "senaryolar": [
+   "Sağ ayaklı kaleci, sağdaki stoper gövdeye 60–80° (çevrele, 14–22 m), kvV1 3 → koşu noktası hedef doğrultusunun 0,25 rad (14°) solunda, 1,6–2,2 m geride; karar anında f ≈ −0,25 (çapraz yan), yol 'yok', sağ ayak içi itme/sertIc, top 20 m'de 0,3–0,5 m hafif falsolu; dış ayak 0; bakış ve kol işareti stoperde.",
+   "Solak kaleci aynı stopere → sol ayak içi, koşu hedefin sağından; eğri sağa (sol ayak iç falso), nişan telafili; kvV1 1 tek başına (koşu çizgisi yok) iken f relative du.aci ≈ +1,3 → ic tarafı, yol 'ayarAdimi' (|f| > 0,9) ya da 'pelvis'; dış ayak yine 0.",
+   "İki ayaklı kaleci soldaki stopere → f < −0,1 → 'sag' (çapraz iç ayak); sağdakine → 'sol'.",
+   "Uzun kale vuruşu (üstüne, 50 m) → koşu 3,6–5 m, açı 0,6 rad, kosuEfor 0,9, teknik lofted, salinim ~0,8, egim.geri ~0,2, karsiKol 1, ayarAdimSayisi 5–6; uzunBakis koşuda başı hedefe kaldırır.",
+   "Kısa kuran takım (kisaPay 0,8), top geç konuyor (top toplayıcı uzaktan): kvB ≈ 3,5 sn top başında; kvSon = konuş + 0,6 + 3,5 + yürüyüş + 0,8 tempo hedefini aşar; zorlaHazir uzar; sayım (zgEk) kuralı aynen.",
+   "Erken plan kısa (sağ stoper), kaleci geri yürürken rakip presçi stopere 4 m'den yakına girer → kullanımda x'.U < max − 0,35 → kvSec yeniden (çoğunlukla üstüne), du.kv.degisti; kaleci yürüyüşle döner; jest ve bakış önceki hedefteydi (görünür fikir değişikliği).",
+   "Ötesine planı: kullanımda savunma çizgisi 22 m'lik boşluğu kapattı → kategori yok → yeniden plan.",
+   "Kaleci ortayı tuttu, sol bek 60° solunda ve boş (yuvarla, 14 m) → dagitim 0,4 + 0,12·(1,05 − 0,5) ≈ 0,47 sn: gövde döner, 0,7 m adım, bakış bekte; bırakışta |gövde–atış| < 15°, top 0,1 m'den gk + yon·0,35'ten çıkar.",
+   "Kontra: kaleci kontrayı görüyor, 35 m'deki kanada üstten atış → Th = (0,4 + 0,6·0,4)·0,8 ≈ 0,51 sn, iki adım; kaleci 14 m'de ise adım u ≤ 15,5 m'de kıstırılır.",
+   "Punt (seyrek; 6 maçta 0): üç adım 2,1 m, ceza sahası sınırında kıstırılır; çizim topu iki elde önde tutup sonda bırakır, bırakışta topY 0,9.",
+   "Ablation: kvV1 0, dagitimHaz [0,0], vurusSoz 0 → 40 maç --ayni tabana; vurusSoz 1 tek başına → --ayni; her bit ayrı 40 maç --karsilastir (sağlık aralığı, k-kurma, d-kaleci, v-kaleci satırları).",
+   "Seyrek kapılar (duruş ve kaleci dosyaları değişti): d-duran (kale vuruşu hücresi), d-sut, d-topcu, m-isinma, m-fotograf; çekirdekler b-pas, c-kanat, c-orta; ikiz-deneme.js."
+  ],
+  "riskler": [
+   "Erken plan bayat bilgiyle seçilir: top konunca seçilen planın ölçülen korunma payı %73. Bu yüzden plan anı bit 4 ile kaleci top başından ayrılırken (kullanımdan 2–4 sn önce; ölçülen korunma %86–87); alıcı/kategori eşleşmesi ve bağlılık denetimi var. Yine de kısa pasın kesilmesi artabilir — k-kurma'nın '12 sn'de kendi 40 m'sinde kayıp' satırı izlenir.",
+   "kvBekle alt sınırı, geç konan topta duruşu uzatır: top oyunda süre ve uzatma etkilenir. Etki küçük (yalnız geç konuşta), 40 maçta tempo satırı okunur; zorlaHazir kvSon'a göre uzatılmalı, yoksa güvenlik ağı bekleyişi keser.",
+   "Koşu noktası kale çizgisinin gerisine ya da saha dışına taşabilir (kale vuruşu noktası çizgiye 5 m; uzun koşu 5 m × cos 0,6 ≈ 4,1 m). Kıstırma gm'yi çizgi boyunca kısaltır; kalenin içine giren yol olmamalı.",
+   "Dağıtım hazırlığında kaleci 2,1 m ilerleyip ceza sahası dışına taşabilir (topu elde taşıma ihlali): adım hedefi u ≤ CEZA_U − 1,0, |z − MZ| ≤ CEZA_W − 0,7 ile kıstırılır. Rakip elindeki topa giremez, iptal dalı gerekmez.",
+   "Bırakışın 0,3–1,05 sn gecikmesi kontra etkinliğini düşürür: kontrada ×0,8. d-kaleci 'dağıtımda topun takımda kalması' ve gol/şut sağlık satırları okunur.",
+   "V1a/V1c/S1 ile çakışma: kale vuruşu kuralı V1a'nın ortak işlevine, falso V1c'nin plase ailesine, kvBekle evreleri S1'in kullanan rutinine bağlanmalı; aynı iş iki yerde yazılmamalı. V1 uygulaması S1'in ucundan başlar.",
+   "K1 dalında mac-kaleci.js, mac-durantop.js, mac-kurallar.js ve mac-topla.js'te commit edilmemiş değişiklikler var (penaltiBakis, kalanCiz…). Satır numaraları kayacak; uygulama K1/S1 kapanışından sonra işlev adlarıyla yapılmalı.",
+   "Sözleşme alanları rastlantısız hesaplansa da her vuruşta iki küçük nesne ayırır; hız bütçesinde ihmal edilebilir olmalı, aynı süreç oranıyla doğrulanır. Motor bu alanları okumamalı (ad-denetimi ve --ayni ile).",
+   "Çizim A10'dan önce 'dagitim' eylemini tanımaz: yedek davranışla kaleci topu elde tutarak döner ve adım atar, top bırakış karesinde ele göre yer değiştirir (bugün de böyle). Yuvarlamada top 1,05·boy yüksekliğinden 0,1 m'ye bir karede iner — A10 topY ile düzeltir.",
+   "Erken plan ve koşu çizgisi rastlantı sırasını kaydırır: Gumbel çekilişleri yerleştirmede ya da kvGeriT'de yapılır. Sonuç parmak izi düzeyinde değişir (bit kapalıyken birebir); denge kararı yalnız 80 maçla verilir."
+  ]
+ }
+]
