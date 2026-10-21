@@ -25,9 +25,9 @@
    Ölçü araclar/olcumler/k-protokol.js (s1D_ ortak düdük satırları; alanlar s1a_, s1d_, s1b_, s1c_, s1e_). */
 'use strict';
 ayarEkle('S1',{
-  protokol:3                   // S1: sahne protokolleri bit maskesi (S1_BIT) — 1 seremonili barajlı serbest vuruş (S1a), 2 kart sahnesi (S1d), 4 penaltı sahnesi
+  protokol:7                   // S1: sahne protokolleri bit maskesi (S1_BIT) — 1 seremonili barajlı serbest vuruş (S1a), 2 kart sahnesi (S1d), 4 penaltı sahnesi
                                // (S1b), 8 gol sonrası akış (S1c), 16 bakış odağı (S1c; sonucu değiştirmez), 32 korner ve kenar kullananının rutini (S1e), 64 rutinin
-                               // barajlı vuruşa ve penaltıya genişlemesi (S1e); 0: K1 (birebir). Varsayılan o ana dek uygulanan bitlerin toplamı (S1a: 1, S1d: 3)
+                               // barajlı vuruşa ve penaltıya genişlemesi (S1e); 0: K1 (birebir). Varsayılan o ana dek uygulanan bitlerin toplamı (S1a: 1, S1d: 3, S1b: 7)
   /* S1a (bit 1; sahne&1 ve sahne&4 ile): seremonili barajlı serbest vuruş — hedef temasa hedef süre (gerçek sn; tempo.baraj 24'ün karşılığı, × tempoBaglam
      × (1 ± tempoSapma)); topYer topun konma anı; kaos kaosun sınırları, kaosTaban varyantın alt sınırı (sakin kendi aralığıyla: kaos[0] … kaos[0] + 1);
      ek çizgi, dizilme, duruş ve koşunun payı; sakin, uzun varyant olasılıkları (kalanı olağan), uzunEk uzun varyantın kaosuna ek; yakin üyenin topa ilk
@@ -47,8 +47,23 @@ ayarEkle('S1',{
      süresi (kalabalıkta + 6; kırmızıda karardan 12 sn içinde sahadan çıkış). Kısaltmak için: zaman.itiraz [2,3], tavan 12 (nesne bütün olarak) */
   ,kartAyar:{tarz:[0.5,0.4,0.15],kalabalik:0.3,hiz:[1.8,2.8,3.4],
     zaman:{karar:[0.5,0.9],tepki:[0.3,1.0],sari:1.3,ikinci:2.4,kirmizi:1.8,yaz:[0.8,1.3],itiraz:[3,5],protokol:1.6,dagil:0.8,duduk:[0.8,1.5],kul:[1.0,2.0],tavan:16}}
+  /* S1b (bit 4; sahne&1 ile): penaltı sahnesi (kutuphane/L L.2 ve L.9 madde 2; tempo B, gerçek sn). sure faulden temasa hedefin ortası; aralik kaos 0 → 1 süre
+     çarpanı (sahneT = sure × aralık: sakin 30, kaotik 50 sn); kos kullanımdan temasa (planlı düdüğün hesabı; ölçülen koşu 2,34 sn); kaos* kaosun payları
+     (taban, h2, kırmızı kart, ikinci yarının son 15 dakikasında fark ≤ 1, faul yapanın hakeme itiraz eğilimi; hakemin sertliği kısaltır); goster gösterme
+     evresinin en kısa ve en uzun süresi; itiraz itirazın planlı sonu ve bosalt boşaltmanın planlı sonu (düdükten önceki planlı sürenin payı; itiraz kaos
+     0 → 1); kalabalik hakeme yürüyen faul yapan takım oyuncusu (kaos 0 → 1); kaptanYakin kaptanın hakeme uzaklığı, halka öbürlerinin kaptan işaretinden
+     önceki, kaptanR sonraki uzaklığı (m; IFAB'ın 4 m bölgesi); gerHiz hakemin geri geri yürüyüşü (hız oranı); yuruHiz boşaltmada yürüyüş, uzakHiz kutu
+     dışından son yerine gelenler (m/sn); bekle vurucunun düdükten koşuya beklemesi (sn; h2 ve soğukkanlılık); hazirDur hakemin son yerinde durup baktığı
+     süre (sn); kaleciItiraz (× (0,6 + 0,8·kaos)), kaleciOyun, karsi (× (0,5 + kaos)), duzelt varyant olasılıkları; protokolSari kaptan işaretinden sonra
+     itiraz bölgesindeki oyuncuya sarının çarpanı (itirazKart × eğilim × sertlik × (1 + kaos); 0: yok); zorlaGetir vurucunun topu alması için güvenlik ağı
+     (sn). tempo.penalti (27) yalnız bit 4 kapalıyken. Kısaltmak için: sure 36 (nesne bütün olarak) */
+  ,penaltiSahne:{sure:40,aralik:[0.75,1.25],kos:2.3,kaosTaban:0.15,kaosH:0.55,kaosKirmizi:0.3,kaosSon:0.15,kaosItiraz:0.2,kaosSert:0.15,goster:[1.6,5],
+    itiraz:[0.30,0.55],bosalt:0.85,kalabalik:[3,6],kaptanYakin:1.1,halka:[1.6,2.4],kaptanR:[4.2,5.2],gerHiz:0.12,yuruHiz:[1.2,2.2],uzakHiz:[1.0,4.0],
+    bekle:[0.4,3.0],hazirDur:[0.6,1.4],kaleciItiraz:0.3,kaleciOyun:0.12,karsi:0.3,duzelt:0.2,protokolSari:1,zorlaGetir:12}
 });
 const S1_BIT=Object.freeze({SERBEST:1,KART:2,PENALTI:4,GOL:8,ODAK:16,RUTIN:32,RUTIN2:64});
+/* S1b: penaltı kalabalığının yuvaları (rad; hakemden kümeye donmuş yönün çevresinde; kaptan 0'da) — fazlası ±0,55'lik adımlarla sürer (penaltiYuvaAci) */
+const PEN_YUVA=Object.freeze([0,0.55,-0.55,1.1,-1.1,1.65,-1.65]);
 Object.assign(Match.prototype,{
   /* sahneOzet'in [0, 1) değerinden alanın tohumu (h2'nin ilk girdisi; tamsayı) */
   s1Tohum(v){return(v*2147483647)|0;},
@@ -354,5 +369,241 @@ Object.assign(Match.prototype,{
     const o9=this.kartOzet(k,9);
     if(S.tarz==='yuru'&&S.evre==='yaklas'&&!S.adim&&dd<6&&o9<0.5){S.adim=true;const L=hyp(h.x-S.dur.x,h.z-S.dur.z)||1,a=Math.min(1.2,Math.max(0,L-2))*(0.5+o9);
       S.dur={x:S.dur.x+(h.x-S.dur.x)/L*a,z:S.dur.z+(h.z-S.dur.z)/L*a};}
-    yaz(p,S.dur.x,S.dur.z,S.adim?1.0:1.2,p.spd>1.5?1:0.3);}   /* koşarken durması istenen oyuncu kararlı frenler */
+    yaz(p,S.dur.x,S.dur.z,S.adim?1.0:1.2,p.spd>1.5?1:0.3);},   /* koşarken durması istenen oyuncu kararlı frenler */
+
+  /* ============ S1b (2026-10-20): penaltı sahnesi — bit 4 (S1_BIT.PENALTI), sahne&1 ile ============
+     kutuphane/L L.2 ve L.9 madde 2; kullanıcı notu (penaltıda herkes yerinde bekliyor, itiraz yok, hakem kart için depar atıyor). Tempo B: faulden temasa
+     ~40 sn (sakin 30, kaotik 50). Durum du.pk (oyuncuya alan eklenmez); evreler goster → itiraz → bosalt → hazir → duduk:
+     - goster: hakem noktanın yanına koşar (gösterme yeri: nokta + (−d·3, hakemin yanı · 2,5)), noktaya bakar; faul yapan takımdan 3–6 kişi (kaos) ve kaptan
+       0–1,2 sn gecikmeyle hakeme yürür (ortak kalabalık: kalabalikKur/kalabalikAdim, yuvalar PEN_YUVA, kaptan 1,1 m, öbürleri 1,6–2,4 m), hücumdan ≤ 3
+       kişi sevinir (jest kol/alkış), biri yerdeki faul yiyene gider (A4-3'ün el uzatması), vurucu bekler ve topu alır (top ışınlanmaz).
+     - itiraz: kalabalığın yönü donar (itirazEt'in seçtikleri katılır), hakem geri geri yürür (gerHiz), yüzü kaptanda; kaptan işareti (olay kaptanIsareti
+       kaynak 'penalti'; ≥ 2 kişi 3,5 m içinde ya da 2,5 sn) — kaptan dışındakiler 0,5 sn sonra 4,2–5,2 m'ye çekilir; kaos > 0,6'da biri yeniden yaklaşır,
+       ikinci işaret ve protokol sarısı (kartGoster neden 'itiraz'; S1d'nin sahnesi koşar); karsi varyantında hücumcu faul yapana itiraz eder; kaleci itiraza
+       katılır ya da altıpasta gezinir; vurucu topu elinde tutar (tut). Kutudakiler bekleme noktasında, dışarıdakiler son yerine yürür.
+     - bosalt: hakem 1,6 sn kutuyu boşaltma işareti (olay penaltiSahne evre 'bosalt'), son yerine yürür; oyuncular kişisel gecikmeyle (kaptan en son)
+       1,2–2,2 m/sn yürüyerek çıkar; vurucu tY'de topu noktaya koyar (eski yerleştirme yolu; duzelt varyantında ikinci kez); kaleci çizgiye döner
+       (kaleciOyun varyantında önce noktaya yürüyüp oyalar, hakem uyarır: olay 'uyari' neden 'kaleciOyun').
+     - hazir: hakem son yerinde durur, önce kaleciye sonra vurucuya bakar; ön koşullar (planlı an, hakemin duruşu, dudukOnKosul, vurucu geri noktasında,
+       kaleci çizgide — penaltiKaleciBakis) → düdük (dudukCal, bekleme bekle sn) → duduk; kullanım s1DudukKapisi'yle (duranHazirMi).
+     Kararlar h2(P.s, i) — P.s = s1Tohum(sahneOzet(du, 21)): 1 kaos, 2 bekle, 3 tY, 4 kaleciItiraz, 5 kaleciOyun, 6 karsi, 7 duzelt, 8 protokol sarısı,
+     9 hazirDur, 10 vurucunun kol jesti; 200 + i kalabalığın kuruluşu; oyuncu başına 100 + n + 11·takım + 1000·k (k: 0 kalabalık puanı, 1 kalabalığın
+     gecikmesi, 2 boşaltmanın gecikmesi, 3 dışarıdakinin varışı, 4 sevincin anı, 5 sevincin türü, 7 kıpırtının fazı); kalecinin gezinmesi 600 + k;
+     kaptan işaretinden sonraki jestler 10000 + …; kıpırtı h2(P.s + 131·(n + 11·takım), k). Ana zar dizisi kaymaz (itirazEt'in çekimi yerinde).
+     Kancalar: js/mac-durantop.js sahneKur (penaltiSahneKur), durusYerlesim (penaltiSahneAdim, penaltiSahneRol), hakemDuranYeri (du.pk.hk); js/mac-kurallar.js
+     durusBaslat (top ışınlanmaz), stepDurus (penaltiKullanan, penaltiDuzelt), hakemAI (DY.hiz, DY.bak). Ölçü araclar/olcumler/k-protokol.js s1b_
+     (s1bIzleyici; araclar/senaryolar/d-sahne.js [2] de kullanır) */
+  s1PenaltiAcik(){const A=MOTOR_AYAR;return(A.protokol&S1_BIT.PENALTI)!==0&&(A.sahne&1)!==0;},
+  /* oyuncu başına h2 kararı (k: yukarıdaki liste) */
+  penaltiOz(P,p,k){return h2(P.s,100+p.n+11*p.team+1000*k);},
+  /* i. yuva (0 kaptan; fazlası ±0,55'lik adımlarla) */
+  penaltiYuvaAci(i){return i<PEN_YUVA.length?PEN_YUVA[i]:(i%2?1:-1)*0.55*Math.ceil(i/2);},
+  /* kalabalığın yönü c'den kümenin ortasına donar; yuvalar açı sırasıyla dağılır (kaptan 0'da, öbürleri yönün çevresindeki açılarına göre: yollar kesişmez) */
+  penaltiYuva(K,c){let x=0,z=0,n=0;for(const e of K.uyeler)if(e.q.oyunda){x+=e.q.x;z+=e.q.z;n++;}
+    if(n){const ux=x/n-c.x,uz=z/n-c.z,L=hyp(ux,uz);if(L>0.5){K.ux=ux/L;K.uz=uz/L;}}
+    const ux=K.ux,uz=K.uz,D=[];for(const e of K.uyeler){if(e.q===K.kaptan){e.aci=0;continue;}const vx=e.q.x-c.x,vz=e.q.z-c.z;D.push({e,a:Math.atan2(ux*vz-uz*vx,ux*vx+uz*vz)});}
+    D.sort((p,q)=>p.a-q.a||p.e.q.n-q.e.q.n);
+    const Y=[];for(let i=1;Y.length<D.length;i++)Y.push(this.penaltiYuvaAci(i));Y.sort((p,q)=>p-q);
+    D.forEach((d,i)=>{d.e.aci=Y[i];});},
+  /* plan (sahneKur; rastlantısız): kaos, zamanlar (sahneT, Tpre planlı düdük, tI itirazın sonu, tB boşaltmanın sonu, tY topun konması, bekle), yerler (nokta,
+     gösterme yeri gY, son yer sonYer — eski hakemDuranYeri —, vurucunun topu tuttuğu tut, faulün yeri fy), kalabalık (K) ve kaptan, roller (R: oyuncu →
+     {rol, bek, varis, gB, jT, j, jk}; rol kalabalik | kaptan | kaleci | yardim | sevinc | karsi | yerles — görev dağıtımı yenilenince eksik oyuncu tembel
+     'yerles'), varyantlar ve hakemin ilk hedefi (P.hk {x, z, hiz, bak}: hakemDuranYeri → hakemAI). Duruşa: s1Sure, dudukGerek 'penalti', sahneT, sahneKos,
+     güvenlik ağları (zorlaGetir, zorlaHazir = max(28, sahneT + 12)) */
+  penaltiSahneKur(du){
+    const S=MOTOR_AYAR.penaltiSahne,s=this.s1Tohum(this.sahneOzet(du,21)),o=i=>h2(s,i),ar=(a,x)=>a[0]+(a[1]-a[0])*clamp(x,0,1);
+    const t=du.takim,sv=1-t,d=this.dir[t],h=this.refs[0],tk=du.kullanan,b=this.ball,fy=du.faulYapan&&du.faulYapan.oyunda?du.faulYapan:null;
+    const son=this.half===2&&this.gameSec>=4500&&Math.abs(this.score[0]-this.score[1])<=1;
+    const kaos=clamp(S.kaosTaban+S.kaosH*o(1)+(du.kart==='kirmizi'?S.kaosKirmizi:0)+(son?S.kaosSon:0)+S.kaosItiraz*Math.max(0,fy?profilEgilim(fy,'hakemeItiraz'):0)
+      -S.kaosSert*(2*hkDeger(this,'sertlik')-1),0,1);
+    const sahneT=S.sure*ar(S.aralik,kaos),bekle=ar(S.bekle,0.45*o(2)+0.55*(tk?profilAlt(tk,'sogukkanlilik',tk.oz.karar):0.5));
+    const Tpre=sahneT-S.kos-bekle,tI=Tpre*ar(S.itiraz,kaos),tB=S.bosalt*Tpre,tY=tI+(tB-tI)*(0.25+0.35*o(3));
+    const sy=Math.sign(h.z-MZ)||1,sx=Math.sign(du.x)||1,nokta={x:du.x,z:du.z},gY={x:du.x-d*3,z:du.z+sy*2.5};
+    const P={s,kaos,evre:'goster',et:0,sahneT,bekle,Tpre,tI,tB,tY,nokta,gY,sonYer:{x:d*(PL-17),z:MZ+(sx>0?-6:6)},tut:{x:du.x-d*1.6,z:du.z-sy*1.2},fy:{x:b.x,z:b.z},
+      hk:{x:gY.x,z:gY.z,hiz:0.6,bak:nokta},K:null,kaptan:null,R:new Map(),izin:new Set(),km:{x:gY.x,z:gY.z},kaptanT:null,k2:false,kaptan2T:null,sariK:false,sari:false,
+      ihlal:null,bosaltT:null,bx:null,hazirT:null,durT:null,hazirDur:ar(S.hazirDur,o(9)),dudukT:null,kaleciItiraz:false,kaleciOyun:null,karsi:null,
+      duzelt:o(7)<S.duzelt,dz:false,yiyen:null,kolJ:false};
+    const R=P.R,rol=(p,r,ek)=>{R.set(p,Object.assign({rol:r,bek:undefined,varis:null,gB:null,jT:null,j:false,jk:null},ek||null));};
+    /* kalabalık: faul yapan takımın gösterme yerine 40 m içindeki saha oyuncuları — uzaklık, itiraz eğilimi, faul yapan, kaptan, sarı kartlı, h2 */
+    const C=[];for(const q of this.sahadakiler(sv)){if(q.rol==='GK')continue;const L=hyp(q.x-gY.x,q.z-gY.z);if(L>40)continue;
+      C.push({q,s:-L/10+0.8*profilEgilim(q,'hakemeItiraz')+(q===fy?1.5:0)+(q.kaptan?1:0)-(q.kart===1?0.5:0)+0.4*h2(s,100+q.n+11*q.team)});}
+    C.sort((a,c)=>c.s-a.s||a.q.n-c.q.n);
+    const Q=C.slice(0,Math.round(ar(S.kalabalik,kaos))).map(e=>e.q);
+    let kp=this.sahadakiler(sv).find(q=>q.kaptan&&q.rol!=='GK'&&hyp(q.x-gY.x,q.z-gY.z)<=45)||null;
+    if(kp&&!Q.includes(kp))Q.push(kp);
+    if(!kp&&Q.length)kp=Q.reduce((a,c)=>c.oz.karar>a.oz.karar?c:a);
+    if(Q.length){const L=[kp].concat(Q.filter(q=>q!==kp));
+      const K=P.K=this.kalabalikKur(L,kp,{r0:S.halka,r1:S.kaptanR,rk:S.kaptanYakin,yuva:()=>0},i=>h2(s,200+i),-d,0);
+      for(const e of K.uyeler){e.d0=e.q===fy?0:1.2*this.penaltiOz(P,e.q,1);if(e.q===kp)e.r0=S.kaptanYakin;rol(e.q,e.q===kp?'kaptan':'kalabalik');}
+      this.penaltiYuva(K,gY);}
+    P.kaptan=kp;
+    /* kaleci ve varyantları */
+    const kl=this.kaleci(sv);if(kl&&kl.oyunda){rol(kl,'kaleci');P.kaleciItiraz=o(4)<S.kaleciItiraz*(0.6+0.8*kaos);if(!P.kaleciItiraz&&o(5)<S.kaleciOyun)P.kaleciOyun={t0:null,uyari:false,bitti:false};}
+    /* hücum: yerdeki faul yiyen (topa 5 m içinde kilitli eylemde), karşı itiraz (faul yapana en yakın), yardım (yiyene en yakın) ve sevinç (noktaya en yakın; ≤ 3) */
+    const serbest=q=>q!==tk&&q.rol!=='GK'&&!(q.eylem&&q.eylem.kilit),HC=this.sahadakiler(t);
+    let y=null,ey=5;for(const q of HC){if(q===tk||q.rol==='GK'||!(q.eylem&&q.eylem.kilit))continue;const L=hyp(q.x-b.x,q.z-b.z);if(L<ey){ey=L;y=q;}}P.yiyen=y;
+    if(fy&&o(6)<S.karsi*(0.5+kaos)){let en=null,ed=25;for(const q of HC){if(!serbest(q))continue;const L=hyp(q.x-fy.x,q.z-fy.z);if(L<ed){ed=L;en=q;}}if(en){P.karsi=en;rol(en,'karsi');}}
+    let n=0;
+    if(y){let en=null,ed=15;for(const q of HC){if(!serbest(q)||R.has(q))continue;const L=hyp(q.x-y.x,q.z-y.z);if(L<ed){ed=L;en=q;}}if(en){rol(en,'yardim',{jT:0.3+1.2*this.penaltiOz(P,en,4)});n++;}}
+    for(const q of HC.filter(q=>serbest(q)&&!R.has(q)&&hyp(q.x-nokta.x,q.z-nokta.z)<30).sort((a,c)=>hyp(a.x-nokta.x,a.z-nokta.z)-hyp(c.x-nokta.x,c.z-nokta.z)||a.n-c.n)){
+      if(n>=3)break;rol(q,'sevinc',{jT:0.3+1.2*this.penaltiOz(P,q,4)});n++;}
+    du.pk=P;du.s1Sure=true;du.dudukGerek='penalti';
+    du.sahneT=sahneT;du.sahneKos=S.kos;du.zorlaGetir=S.zorlaGetir;du.zorlaHazir=Math.max(28,sahneT+12);
+  },
+  /* evrenin makinesi (durusYerlesim'in başı; hakemAI bu karenin P.hk'sini sonraki karede okur): geçişler ve olaylar ('penaltiSahne' {evre, du, x, z, hx?, hz?,
+     n?, bek?, kaos}, 'kaptanIsareti' kaynak 'penalti', 'uyari' neden 'kaleciOyun' rolde), hakemin hedefi, kalabalık ve jestleri. Kart gösterilirken (hakemAI'nın
+     kart dalı; S1d) evre geçişi ve işaret bekler */
+  penaltiSahneAdim(du,dt){
+    const P=du.pk,S=MOTOR_AYAR.penaltiSahne,h=this.refs[0],K=P.K,kart=!!h.kartSira,tk=du.kullanan,b=this.ball,d=this.dir[du.takim],H=P.hk;
+    P.et+=dt;
+    if(du.dudukT!=null&&P.evre!=='duduk'){P.dudukT=du.dudukT;P.evre='duduk';P.et=0;this.on('penaltiSahne',{evre:'duduk',du,x:h.x,z:h.z,bek:du.dudukBek,kaos:P.kaos});}   /* güvenlik ağının düdüğü */
+    switch(P.evre){
+    case 'goster':{   /* hakem gösterme yerine (6 m'den uzakta ~4,3 m/sn, içinde ~2,2), yüzü noktada; geçiş: en az goster[0] sn ve varış, ya da goster[1] sn ve yavaş (≤ 2,5 m/sn;
+         itirazda hakem koşmaz), kart dalı; tavan goster[1] + 7 sn */
+      const L=hyp(h.x-P.gY.x,h.z-P.gY.z);H.x=P.gY.x;H.z=P.gY.z;H.hiz=L>6?0.6:0.3;H.bak=P.nokta;
+      if(kart||du.t>=S.goster[0]&&L<1.5||du.t>=S.goster[1]&&(h.spd||0)<2.5||du.t>=S.goster[1]+7)this.penaltiItirazBasla(du,h);
+      break;}
+    case 'itiraz':{   /* hakem gösterme yerinden kümenin tersine 2,5 m geri geri (uzaktaysa ~2,2 m/sn), yüzü kaptanda; kaptan işaretini yerine yakınken (4 m)
+         verir ve işaret boyunca (2,6 sn) durur */
+      const ux=K?K.ux:-d,uz=K?K.uz:0,tx=P.gY.x-ux*2.5,tz=P.gY.z-uz*2.5,L=hyp(h.x-tx,h.z-tz);
+      if(P.kaptanT!=null&&du.t<P.kaptanT+2.6){H.x=h.x;H.z=h.z;H.hiz=0;}else{H.x=tx;H.z=tz;H.hiz=L>4?0.3:S.gerHiz;}H.bak=P.kaptan&&P.kaptan.oyunda?P.kaptan:P.km;
+      if(K&&!kart){
+        if(P.kaptanT==null){let n=0;for(const e of K.uyeler)if(e.q.oyunda&&hyp(e.q.x-h.x,e.q.z-h.z)<3.5)n++;
+          if((n>=2||P.et>=2.5)&&(L<4||P.et>=8)){P.kaptanT=du.t;K.protoT=K.t;this.on('kaptanIsareti',{kaynak:'penalti',ikinci:false,hx:P.km.x,hz:P.km.z});
+            /* kaos > 0,6: itiraz eğilimi en yüksek kaptan dışı üye sonra yeniden yaklaşır (ikinci işaret ve protokol sarısının adayı) */
+            if(P.kaos>0.6){let eg=-1e9;for(const e of K.uyeler){if(e.q===K.kaptan||!e.q.oyunda)continue;const g=profilEgilim(e.q,'hakemeItiraz');if(g>eg){eg=g;P.ihlal=e;}}}}}
+        else{
+          if(P.kaos>0.6&&!P.k2&&du.t>=P.kaptanT+4.5){P.k2=true;P.kaptan2T=du.t;this.on('kaptanIsareti',{kaynak:'penalti',ikinci:true,hx:P.km.x,hz:P.km.z});}
+          if(!P.sariK&&du.t>=P.kaptanT+3.8){P.sariK=true;this.penaltiSari(du,P,h);}}}
+      if(!kart&&((P.kaptanT!=null&&du.t>=P.kaptanT+2.4||!K)&&du.t>=P.tI&&L<4||du.t>=P.tI+8))this.penaltiBosaltBasla(du,h);   /* hakem yerine dönmüş olmalı (kartta uzaklaşır) */
+      break;}
+    case 'bosalt':{   /* 1,6 sn boşaltma işareti yerinde, sonra son yerine (~2,2 m/sn), yüzü topta; geçiş: hakem yerinde, top konmuş, görevliler yerinde (en geç tB + 8) */
+      const L=hyp(h.x-P.sonYer.x,h.z-P.sonYer.z);
+      if(P.et<1.6){H.x=h.x;H.z=h.z;H.hiz=0;H.bak=P.bx;}else{H.x=P.sonYer.x;H.z=P.sonYer.z;H.hiz=L>0.5?0.3:0;H.bak=b;}
+      if(P.et>=1.6&&!kart&&(L<1.2&&du.asama==='hazir'&&this.gorevlilerYerinde(du)||du.t>=P.tB+8)){P.hazirT=du.t;P.durT=null;P.evre='hazir';P.et=0;
+        this.on('penaltiSahne',{evre:'hazir',du,x:h.x,z:h.z,hx:d*PL,hz:MZ,kaos:P.kaos});}
+      break;}
+    case 'hazir':{   /* son yerinde durur, önce kaleciye (0,8 sn) sonra vurucuya bakar; ön koşullar ve düdük (güvenlik: zorlaHazir − 3) */
+      const L=hyp(h.x-P.sonYer.x,h.z-P.sonYer.z),kl=this.kaleci(1-du.takim);
+      H.x=P.sonYer.x;H.z=P.sonYer.z;H.hiz=L>0.4?0.25:0;H.bak=P.et<0.8&&kl&&kl.oyunda?kl:tk&&tk.oyunda?tk:b;
+      if(P.durT==null&&(h.spd||0)<0.3)P.durT=du.t;
+      const vur=!!tk&&du.asama==='hazir'&&du.hazirT>=MOTOR_AYAR.duranHazir[4]&&hyp(tk.x-du.geriX,tk.z-du.geriZ)<0.5;
+      const kal=!kl||!kl.oyunda||this.penaltiKaleciBakis(kl)!=null;
+      const hazir=du.t>=P.Tpre&&P.durT!=null&&du.t>=P.durT+P.hazirDur&&vur&&kal&&(!du.kr||du.kr.hazir);
+      if(this.dudukOnKosul(du)&&(hazir||du.t>=du.zorlaHazir-3)){this.dudukCal(du,P.bekle);P.dudukT=du.t;P.evre='duduk';P.et=0;
+        this.on('penaltiSahne',{evre:'duduk',du,x:h.x,z:h.z,bek:P.bekle,kaos:P.kaos});}
+      break;}
+    case 'duduk':H.x=h.x;H.z=h.z;H.hiz=0;H.bak=tk&&tk.oyunda?tk:b;break;}
+    /* kalabalık (gösterme ve itiraz): gecikmesi dolan, meşgul olmayan üyeler hakemle yürür (kalabalikAdim); kaptan itirazla faulün yerini gösterme arasında,
+       işaretten sonra öbürleri başı ellerinde / itiraz / suskun */
+    if(K&&(P.evre==='goster'||P.evre==='itiraz')){
+      const A=P.izin;A.clear();
+      for(const e of K.uyeler){const q=e.q;if(q.oyunda&&du.t>=e.d0&&q!==tk&&!this.kartMesgul(q,du))A.add(q);}
+      const I=P.ihlal;if(I&&P.kaptanT!=null){if(I.r1s==null)I.r1s=I.r1;I.r1=du.t>=P.kaptanT+2.6&&du.t<P.kaptanT+5.2?I.r0+0.3:I.r1s;}
+      const ke=K.uyeler.find(e=>e.q===K.kaptan),jk0=ke?ke.jk:null;
+      this.kalabalikAdim(K,h,dt,q=>A.has(q));
+      /* "yaklaşmayın"dan sonra kaptan dışındakiler 4 m bölgesinden çabuk çıkar: hedefe 1,2 m'den uzakken arkasını dönüp yürür (yüzü hakemdeyken geri adım
+         ~1,6 m/sn'de kalıyordu), en az 2,2 m/sn (efor 0,8: yürüme kipine düşmez) */
+      if(K.protoT!=null)for(const e of K.uyeler){const q=e.q;if(!e.gec||!A.has(q))continue;const L=hyp(q.x-q.tx,q.z-q.tz);if(L<0.6)continue;q.hizOran=Math.max(q.hizOran,2.2/q.maxSpd);this.eforVer(q,0.8);if(L>1.2)q.bak=null;}
+      if(ke&&ke.jk!==jk0&&(ke.jk&1)&&A.has(K.kaptan))this.jestVer(K.kaptan,'isaret',1.3,P.fy,true);
+      if(K.protoT!=null)for(const e of K.uyeler){if(!e.gec||!A.has(e.q))continue;const k=Math.floor((K.t+e.jT)/1.6);if(k===e.jk2)continue;e.jk2=k;
+        const r=h2(P.s,10000+(e.q.n+11*e.q.team)*211+k%200);if(r<0.35)this.jestVer(e.q,'basEl',1.4,null,true);else if(r<0.6)this.jestVer(e.q,'itiraz',1.2,{x:h.x,z:h.z},true);}
+      let x=0,z=0,n=0;for(const e of K.uyeler)if(A.has(e.q)){x+=e.q.x;z+=e.q.z;n++;}if(n){P.km.x=x/n;P.km.z=z/n;}}
+  },
+  /* itirazın başı: itirazEt'in seçtikleri (eylem 'itiraz', faul yapan takım) kalabalığa katılır, yön hakemden kümeye donar, yuvalar yeniden dağılır */
+  penaltiItirazBasla(du,h){const P=du.pk,K=P.K,S=MOTOR_AYAR.penaltiSahne;
+    if(K){for(const q of this.sahadakiler(1-du.takim)){if(q.rol==='GK'||!(q.eylem&&q.eylem.ad==='itiraz')||K.uyeler.some(e=>e.q===q))continue;
+        K.uyeler.push({q,aci:0,r0:S.halka[0]+(S.halka[1]-S.halka[0])*h2(P.s,260+q.n),r1:S.kaptanR[0]+(S.kaptanR[1]-S.kaptanR[0])*h2(P.s,270+q.n),gec:false,jT:1.8*h2(P.s,280+q.n),jk:-1,d0:0});
+        P.R.set(q,{rol:'kalabalik',bek:undefined,varis:null,gB:null,jT:null,j:false,jk:null});}
+      this.penaltiYuva(K,h);}
+    P.evre='itiraz';P.et=0;this.on('penaltiSahne',{evre:'itiraz',du,x:h.x,z:h.z,n:K?K.uyeler.length:0,kaos:P.kaos});},
+  /* protokol sarısı (kaptan işaretinden 3,8 sn sonra, bir kez): hakemin 4 m içindeki kaptan dışı üyelerden itiraz eğilimi en yüksek olana; olasılık itirazKart ×
+     (1 + 1,5·eğilim) × (0,5 + sertlik) × (1 + kaos) × protokolSari (sarı kartlıya yarısı) */
+  penaltiSari(du,P,h){const S=MOTOR_AYAR.penaltiSahne,K=P.K;if(!(S.protokolSari>0)||!K)return;
+    let en=null,eg=-1e9;for(const e of K.uyeler){const q=e.q;if(q===K.kaptan||!q.oyunda||(q.kart||0)>=2||hyp(q.x-h.x,q.z-h.z)>=4)continue;const g=profilEgilim(q,'hakemeItiraz');if(g>eg){eg=g;en=q;}}
+    if(!en)return;
+    const pr=MOTOR_AYAR.itirazKart*(1+1.5*Math.max(0,eg))*(0.5+hkDeger(this,'sertlik'))*(1+P.kaos)*S.protokolSari*(en.kart===1?0.5:1);
+    if(h2(P.s,8)<pr){P.sari=true;this.kartGoster(en,'sari','itiraz');}},
+  /* boşaltmanın başı: kişisel gecikmeler (bosaltT + h2 · 0,5 · (tB − bosaltT); kaptan + 2 sn), işaretin hedefi (ceza sahası çizgisinin 1,5 m dışı, hakemin hizası) */
+  penaltiBosaltBasla(du,h){const P=du.pk,d=this.dir[du.takim];P.bosaltT=du.t;const sure=Math.max(0,P.tB-du.t);
+    for(const [p,r] of P.R)r.gB=du.t+(r.rol==='kaptan'?2:0)+this.penaltiOz(P,p,2)*0.5*sure;
+    P.bx={x:d*(PL-CEZA_U-1.5),z:clamp(h.z,MZ-CEZA_W+2,MZ+CEZA_W-2)};
+    P.evre='bosalt';P.et=0;this.on('penaltiSahne',{evre:'bosalt',du,x:h.x,z:h.z,hx:P.bx.x,hz:P.bx.z,kaos:P.kaos});},
+  /* görev döngüsünün kancası (durusYerlesim; penaltıda her görevli için true): rolün ve evrenin hedefi. Kilitli eylemdeki (yerde, kalkışta) oyuncuya
+     dokunulmaz. Kıpırtı: son yerine varan oyuncu 2,8 sn'de bir kaleden uzağa ve dışa doğru 0,8 × 0,6 m içinde yer değiştirir (hareketsiz bekleyiş yok;
+     ceza sahası ve yay boş kalır) — düdükten sonra durur. Boşaltmada kişisel gecikme dolana dek ağır ağır (0,7 m/sn) yürür */
+  penaltiSahneRol(du,p,g){
+    const P=du.pk,S=MOTOR_AYAR.penaltiSahne,e=P.evre,b=this.ball,h=this.refs[0],d=this.dir[du.takim];
+    let r=P.R.get(p);if(!r){r={rol:g.rol==='kaleci'?'kaleci':'yerles',bek:undefined,varis:null,gB:P.bosaltT,jT:null,j:false,jk:null};P.R.set(p,r);}
+    if(p.eylem&&p.eylem.kilit)return true;
+    const once=e==='goster'||e==='itiraz';
+    if((r.rol==='kalabalik'||r.rol==='kaptan')&&once&&P.izin.has(p))return true;   /* kalabalikAdim yazdı */
+    this.gorevYaz(p,'duran');
+    const git=(x,z,v,ef,bak)=>{p.tx=clamp(x,-PL+0.3,PL-0.3);p.tz=clamp(z,0.3,PW-0.3);p.hizOran=Math.min(1,v/p.maxSpd);p.bak=bak===undefined?b:bak;p.yonHedef=null;this.eforVer(p,ef);};
+    if(r.rol==='kaleci'){this.penaltiKaleciRol(du,p,g,r,git);return true;}
+    if(once){
+      if(r.rol==='kalabalik'||r.rol==='kaptan'){git(p.x,p.z,0.6,0.3,h);return true;}   /* gecikme dolmadı ya da topu durduruyor */
+      if(r.rol==='yardim'){const y=P.yiyen;if(y&&y.oyunda&&y.eylem&&y.eylem.kilit&&du.t<10){const L=hyp(p.x-y.x,p.z-y.z)||1;git(y.x+(p.x-y.x)/L*1.2,y.z+(p.z-y.z)/L*1.2,L>3?3.0:1.0,0.6,y);
+        if(!r.j&&du.t>=r.jT){r.j=true;this.jestVer(p,'kol',1.2,null,true);}return true;}}
+      if(r.rol==='karsi'){const f=du.faulYapan;if(f&&f.oyunda&&!(P.kaptanT!=null&&du.t>=P.kaptanT+2)){const L=hyp(p.x-f.x,p.z-f.z)||1;
+        git(f.x+(p.x-f.x)/L*1.5,f.z+(p.z-f.z)/L*1.5,L>3?2.5:1.0,0.6,f);
+        const k=Math.floor(du.t/1.6);if(k!==r.jk){r.jk=k;this.jestVer(p,k&1?'itiraz':'isaret',1.3,k&1?{x:f.x,z:f.z}:P.nokta,true);}return true;}}
+      if(r.rol==='sevinc'&&!r.j&&du.t>=r.jT){r.j=true;const v=this.penaltiOz(P,p,5);this.jestVer(p,v<0.5?'kol':'alkis',1.2+0.4*v,null,true);}
+      /* kutudakiler (ceza sahası ya da yay) bekleme noktasında: 0,3 sn'deki yer, noktadan ≥ 2,5 m, gösterme yerinden ≥ 5 m (kaptan protokolünün 4 m bölgesi dışı) */
+      if(r.bek===undefined&&du.t>=0.3){const gx=d*PL,ic=Math.abs(p.x-gx)<CEZA_U&&Math.abs(p.z-MZ)<CEZA_W||hyp(p.x-P.nokta.x,p.z-P.nokta.z)<9.15;
+        if(!ic)r.bek=null;else{let x=p.x,z=p.z;const it=(c,R)=>{const L=hyp(x-c.x,z-c.z);if(L<R){const u=L>0.05?1/L:0;x=c.x+(L>0.05?(x-c.x)*u:-d)*R;z=c.z+(L>0.05?(z-c.z)*u:0)*R;}};
+          it(P.nokta,2.5);it(P.gY,5);r.bek={x,z};}}
+      if(r.bek){const L=hyp(p.x-r.bek.x,p.z-r.bek.z);git(r.bek.x,r.bek.z,L>1?1.5:0.8,0.4);return true;}
+      if(r.varis==null)r.varis=P.tI+(P.tB-P.tI)*this.penaltiOz(P,p,3);
+      const L=hyp(p.x-g.hx,p.z-g.hz);
+      if(L>0.6&&!r.var){git(g.hx,g.hz,clamp(L/Math.max(0.5,r.varis-du.t),S.uzakHiz[0],S.uzakHiz[1]),0.6);return true;}
+      r.var=true;}
+    else{
+      if(e==='bosalt'&&r.gB!=null&&du.t<r.gB&&!r.var){git(g.hx,g.hz,0.7,0.3,r.rol==='kalabalik'||r.rol==='kaptan'?h:b);return true;}   /* kişisel gecikme: ağır ağır (0,7 m/sn) */
+      const L=hyp(p.x-g.hx,p.z-g.hz);
+      if(L>0.6&&!r.var){git(g.hx,g.hz,clamp(L/Math.max(0.5,P.tB-du.t),S.yuruHiz[0],S.yuruHiz[1]),0.45);return true;}
+      r.var=true;}
+    if(e==='duduk'){git(g.hx,g.hz,0.8,0.3);return true;}
+    const k=Math.floor(du.t/2.8+this.penaltiOz(P,p,7)),z0=P.s+131*(p.n+11*p.team),sg=Math.sign(g.hz-MZ)||1;
+    git(g.hx-d*0.8*h2(z0,2*k),g.hz+sg*0.6*h2(z0,2*k+1),0.9,0.3);
+    return true;},
+  /* kaleci: itirazda kalabalığa katılır (hakemden 2,6 m, işaretten sonra 4,5) ya da altıpasta gezinir (5 sn'de bir; kale çizgisinden 2,5 m, ortadan ≤ 2,5 m);
+     boşaltmadan sonra çizgiye döner — kaleciOyun varyantında önce noktanın 2,2 m önüne yürür, 2,5 sn oyalar, hakem uyarır */
+  penaltiKaleciRol(du,p,g,r,git){
+    const P=du.pk,e=P.evre,h=this.refs[0],d=this.dir[du.takim],tk=du.kullanan,b=this.ball;
+    if(e==='goster'||e==='itiraz'){
+      if(P.kaleciItiraz){const L=hyp(p.x-h.x,p.z-h.z)||1,R=P.kaptanT!=null&&du.t>P.kaptanT+1.2?4.5:2.6,x=h.x+(p.x-h.x)/L*R,z=h.z+(p.z-h.z)/L*R,dd=hyp(p.x-x,p.z-z);
+        git(x,z,dd>8?4.5:dd>3?2.6:1.4,dd>3?0.6:0.3,h);this.gorevYaz(p,'kalabalik');
+        const k=Math.floor(du.t/1.9);if(k!==r.jk){r.jk=k;if(L<4.5&&R<3)this.jestVer(p,'itiraz',1.2,{x:h.x,z:h.z},true);}return;}
+      const k=Math.floor(du.t/5),sg=h2(P.s,600+k)<0.5?1:-1;git(d*(PL-2.5),MZ+sg*2.5*h2(P.s,650+k),1.4,0.3,tk&&tk.oyunda?tk:b);return;}
+    const O=P.kaleciOyun;
+    if(O&&!O.bitti&&e==='bosalt'&&du.t>=P.tY+1){const x=P.nokta.x+d*2.2,z=P.nokta.z,L=hyp(p.x-x,p.z-z);
+      if(O.t0==null){if(L<0.6)O.t0=du.t;git(x,z,1.8,0.4,tk&&tk.oyunda?tk:b);return;}
+      git(x,z,0.6,0.3,tk&&tk.oyunda?tk:b);if(du.t>=O.t0+2.5){O.bitti=true;if(!O.uyari){O.uyari=true;this.on('uyari',{p,neden:'kaleciOyun'});}}return;}
+    const L=hyp(p.x-g.hx,p.z-g.hz);git(g.hx,g.hz,L>6?3.2:L>1?(O&&O.bitti?2.5:2.2):0.8,0.4,tk&&tk.oyunda?tk:b);},
+  /* vurucu (stepDurus 'bekle', 'getir', 'yerles'; true: eski yol atlanır): bekle — yerinde (%50 kol jesti), du.bekle'den sonra getir; getir — topa koşar adım
+     (≤ 3,2 m/sn), 1 m'de alır (top topçudaysa ya da saha dışındaysa eski yol); yerles — tY'ye dek topu tut noktasında tutar, yüzü kalecide (sonra eski
+     yerleştirme yolu: noktaya yürür, koyar, geri çekilir) */
+  penaltiKullanan(du,tk,nk){
+    const P=du.pk,b=this.ball;
+    if(du.asama==='bekle'){if(!(tk.eylem&&tk.eylem.kilit)){tk.tx=tk.x;tk.tz=tk.z;tk.hizOran=0.3;tk.bak=P.nokta;tk.yonHedef=null;}
+      if(!P.kolJ&&du.t>0.4){P.kolJ=true;if(h2(P.s,10)<0.5)this.jestVer(tk,'kol',1.2,null);}
+      if(du.t>(du.bekle||0.45))du.asama='getir';return true;}
+    if(du.asama==='getir'){
+      if(b.tasiyan)return false;
+      if(Math.abs(b.x)>PL||b.z<0||b.z>PW)return false;
+      if(tk.eylem&&tk.eylem.kilit)return true;
+      const k=this.yakalamaNoktasi(tk,2.2);tk.tx=clamp(k.x,-PL-1.6,PL+1.6);tk.tz=clamp(k.z,-1.6,PW+1.6);tk.hizOran=Math.min(0.8,3.2/tk.maxSpd);tk.bak=b;tk.yonHedef=null;
+      if(hyp(b.x-tk.x,b.z-tk.z)<1.0&&b.y<2.3){b.tasiyan=tk;b.vx=b.vy=b.vz=0;this.topDegisti();du.asama='yerles';}
+      return true;}
+    if(du.asama==='yerles'){
+      if(b.tasiyan!==tk||du.t>=P.tY)return false;
+      const kl=this.kaleci(1-du.takim);tk.tx=P.tut.x;tk.tz=P.tut.z;tk.hizOran=Math.min(0.3,2.4/tk.maxSpd);tk.bak=kl&&kl.oyunda?kl:null;tk.yonHedef=null;
+      return true;}
+    return false;},
+  /* duzelt varyantı (stepDurus 'hazir', geri hedefinden sonra): hazırlıktan 1 sn sonra vurucu topa döner, ikinci kez yerleştirir (düdükten önce, bir kez) */
+  penaltiDuzelt(du,tk){const P=du.pk;if(!P.duzelt||P.dz||du.kr||P.evre==='duduk'||du.hazirT<1)return;
+    const a=du.aci,x=du.x-Math.cos(a)*0.45,z=du.z-Math.sin(a)*0.45;
+    tk.tx=x;tk.tz=z;tk.hizOran=0.3;tk.yonHedef=a;tk.bak=null;this.eforVer(tk,0.8);
+    if(hyp(tk.x-x,tk.z-z)<0.4){P.dz=true;tk.eylem={ad:'yerlestir',t:0,sure:0.6};du.yerT=du.t;}}
 });

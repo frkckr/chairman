@@ -81,7 +81,8 @@ const KOD=`(function(tohum,tur,t,u,w){
   /* S1a (bilgi; 2026-10-20): seremonili barajlı serbest vuruşta (du.hk.s1) adımlamanın başında baraj dizili (bütün üyeler son yerine ≤ 1 m), düdükte
      hakemin hızı, düdük → koşu (ilk kullanım: m.sonKullanim'ın yeni nesnesi); kullanım oyunu başlattıysa duruş önceki adımınkidir */
   let s1=null,s1D=null,s1K=m.sonKullanim;
-  for(let n=0;n<60*60&&!kul;n++){if(m.durus){baraj=!!m.durus.baraj;nb=m.durus.barajdakiler?m.durus.barajdakiler.length:0;}m.step(1/60);
+  /* S1b: penaltı sahnesi ~40 sn (kaotikte 50 + koşu): penaltıda tavan 75 sn */
+  for(let n=0;n<60*(tur==='penalti'?75:60)&&!kul;n++){if(m.durus){baraj=!!m.durus.baraj;nb=m.durus.barajdakiler?m.durus.barajdakiler.length:0;}m.step(1/60);
     const D=m.durus||s1D;if(D&&D.hk&&D.hk.s1){s1D=D;const H=D.hk;if(!s1)s1={once:null,duduk:null,hkV:null,kos:null};
       if(H.evre==='adim'&&s1.once==null){let h=true;for(const [p,y] of D.barajYer)if(p.oyunda&&Math.hypot(p.x-y.x,p.z-y.z)>1)h=false;s1.once=h;}
       if(D.dudukT!=null&&s1.duduk==null){s1.duduk=D.dudukT;s1.hkV=m.refs[0].spd||0;}

@@ -8,8 +8,15 @@
        Kapılar (S1 planı, kabul): gösterilmeden biten kart 0; kart sürerken kullanılan duran top 0; yavaşladıktan sonra 5 m/sn'yi aşan sahne 0;
        hakemin tepe hızı ortancası ≤ 3,5 m/sn; gösterilirken hakem–oyuncu ≤ 5 m ≥ %95 (uzaktan hariç); yürür tarzında oyuncu durur ≥ %70 (kare);
        tek tarz ≤ %80; kartın düdüğünden kullanıma 1–2 sn %100; kırmızı gören karardan 12 sn sonra sahada 0.
-   [2] Penaltı sahnesi (S1b) ve [3] gol sonrası (S1c): kendi alt adımlarında eklenir.
-   Çıkış kodu 1: kabul dışı. Kullanım: node araclar/mac-deneme.js --senaryo d-sahne [N=80] [tohum]; DSAHNE_HUCRE=1 yalnız o hücre */
+   [2] Penaltı sahnesi (S1b; protokol bit 4): her deneme ayrı tohumlu maçta 20–40 sn oyundan sonra (en çok 4 dk beklenir) topun sahibi ceza sahasının
+       5 m yakınındayken (kaleye 21,5 m, ortadan 25 m içinde) ona en yakın rakip (8 m içinde) faul yapar; faulün yeri ceza sahasına izdüşür (m.faul, kaynak
+       'mudahale', ciddiyet 0,3 — her üçüncü denemede 0,5: kartlı penaltı). Penaltının duruşu bitene dek (en çok 90 sn) ve 5 sn sonrası izlenir. Ölçü
+       k-protokol'ün s1bIzleyici'si (tam maçtaki s1b_ satırlarıyla aynı tanımlar), havuz bütün penaltılar.
+       Kapılar (S1 planı, kabul): düdük kullanımdan ≥ 0,4 sn önce %100; düdükte ceza sahası ve yay boş (vurucu ve kaleciler hariç) ≥ %95; faulden temasa
+       ortanca 32–48 sn, %10 ≥ 25, %90 ≤ 58; itiraz eden (hakemin 4 m içine gelen) ortalaması ≥ 2,5; kaptan işareti ≥ %90; hakemin itiraz ve boşaltmadaki
+       tepe hızı (kart hariç; penaltı başına en çok) %90'ı ≤ 2,5 m/sn; düdükten önceki son 20 sn'de hareketsiz ≤ %65; duruş 90 sn içinde biter.
+   [3] Gol sonrası (S1c): kendi alt adımında eklenir.
+   Çıkış kodu 1: kabul dışı. Kullanım: node araclar/mac-deneme.js --senaryo d-sahne [N=80] [tohum]; DSAHNE_HUCRE=1 (ya da 1,2) yalnız o hücreler */
 'use strict';
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||80,dt=1/60,t0=Date.now(),HUC=process.env.DSAHNE_HUCRE?process.env.DSAHNE_HUCRE.split(',').map(Number):null,acik=i=>!HUC||HUC.includes(i);
@@ -72,6 +79,51 @@ module.exports={calistir({ctx,vm,N,tohum}){
       kapi(DK.length>0&&dk12===DK.length,`[1] kartın düdüğünden kullanıma 1–2 sn %100 (${dk12}/${DK.length})`);
       kapi(kirS===0,`[1] kırmızı gören karardan 12 sn sonra sahada 0 (${kirS})`);
       kapi(bitmeyen===0,`[1] duruş 90 sn içinde biter (${bitmeyen})`);}
+  }
+  /* ---- [2] penaltı sahnesi ---- */
+  if(acik(2)){
+    if(!(P&4))console.log('  [2] penaltı sahnesi: protokol bit 4 kapalı — yalnız bilgi (bugünkü değerler; kapılar sahneli penaltıda)');
+    const PL=vm.runInContext('PL',ctx),MZ=vm.runInContext('MZ',ctx),cl=(x,a,b)=>Math.max(a,Math.min(b,x));
+    const D=KP.s1bIzleyici();let gecerli=0,deneme=0,bulunamadi=0,bitmeyen=0,kartli=0;
+    for(let i=0;gecerli<n&&i<2*n;i++){deneme++;
+      let m=null;m=O.kur((tohum||1)*20011+i*37,(ad,v)=>{if(m)D.dinle(ad,v,m);});
+      const T=20+(i*7)%21;for(let a=0;a<60*T;a++){m.step(dt);D.adim(m);}
+      /* faul: topun sahibi ceza sahasının 5 m yakınında, en yakın rakip 8 m içinde; yer ceza sahasına izdüşer */
+      let yapan=null;
+      for(let a=0;a<60*240&&!yapan;a++){
+        if(m.phase==='play'){const s=m.ball.sahip;if(s&&s.oyunda&&s.rol!=='GK'){const d=m.dir[s.team],u=s.x*d;
+          if(u>PL-21.5&&Math.abs(s.z-MZ)<25){let en=null,ed=8;for(const q of m.teams[1-s.team]){if(!q.oyunda||q.rol==='GK')continue;const e=Math.hypot(q.x-s.x,q.z-s.z);if(e<ed){ed=e;en=q;}}
+            if(en){yapan=en;m.faul(en,s,{x:d*cl(u,PL-15.5,PL-1),z:cl(s.z,MZ-19,MZ+19),ciddiyet:i%3===2?0.5:0.3,kaynak:'mudahale'});break;}}}}
+        m.step(dt);D.adim(m);}
+      if(!yapan){bulunamadi++;continue;}
+      if(m.phase!=='durus'||!m.durus||m.durus.tur!=='penalti')continue;
+      gecerli++;if(m.refs[0].kartSira||(m.refs[0].kartKuyruk&&m.refs[0].kartKuyruk.length))kartli++;
+      let s=0;for(;m.phase==='durus'&&s<60*90;s++){m.step(dt);D.adim(m);}
+      if(m.phase==='durus')bitmeyen++;
+      for(let a=0;a<60*5;a++){m.step(dt);D.adim(m);}}
+    D.bitir();
+    const L=D.L,say=f=>L.filter(f).length,sayi=f=>L.map(f).filter(x=>x!=null&&Number.isFinite(x)),S=L.filter(x=>x.sahneli),R=KP.s1bOzet(L);
+    console.log(`  [2] ${gecerli} geçerli deneme (${deneme} deneme; faul yeri bulunamayan ${bulunamadi}, kartlı ${kartli}) · ${L.length} penaltı (${S.length} sahneli) · duruşu bitmeyen ${bitmeyen}`);
+    const TM=sayi(x=>x.temas),DT=sayi(x=>x.temas!=null&&x.duduk!=null?x.temas-x.duduk:null),DU=sayi(x=>x.duduk);
+    console.log(`      faulden temasa (gerçek sn, %10 / ortanca / %90): ${f1(yuzde(TM,0.1))} / ${f1(ortanca(TM))} / ${f1(yuzde(TM,0.9))} · faulden düdüğe ortanca ${f1(ortanca(DU))} · düdük → temas ortanca ${f2(ortanca(DT))}`);
+    console.log('      evre süresi (ortanca gerçek sn): '+['goster','itiraz','bosalt','hazir','duduk'].map(e=>`${e} ${f1(R['s1b_ev_'+e])}`).join(' · ')+` · kaos ortalaması ${f2(R.s1b_kaos)}`);
+    console.log('      varyant: '+['kaleciItiraz','kaleciOyun','karsi','duzelt','sari'].map(k=>`${k} ${yz(R.ham['s1b_'+k][0],R.ham['s1b_'+k][1])}`).join(' · '));
+    const KB=L.filter(x=>x.kul!=null&&x.duduk!=null),k04=KB.filter(x=>x.kul-x.duduk>=0.4-1e-6).length,dyok=say(x=>x.kul!=null&&x.duduk==null);
+    const KD=L.filter(x=>x.kutuD!=null),k0=KD.filter(x=>x.kutuD===0).length,HK=sayi(x=>x.duduk!=null||x.kul!=null?x.hk:null),DG=R.ham.s1b_durgun;
+    console.log(`      düdükten kullanıma ≥ 0,4 sn ${k04}/${KB.length} (düdüksüz kullanım ${dyok}) · düdükte ceza sahası ve yay boş ${yz(k0,KD.length)} (ortalama ${f2(R.s1b_kutuD)} kişi) · 5. sn ${f2(R.s1b_kutu5)} · 15. sn ${f2(R.s1b_kutu15)}`);
+    console.log(`      itiraz eden ortalaması ${f2(R.s1b_kalabalik)} · itiraz ${f1(R.s1b_itirazSn)} oyuncu·sn · kaptan işareti ${yz(R.ham.s1b_kaptan[0],R.ham.s1b_kaptan[1])} · işaretten 2 sn sonra 4 m içinde ${f2(R.s1b_ihlal)} kişi`);
+    console.log(`      hakemin tepe hızı (itiraz ve boşaltma, kart hariç; ortanca / %90 / en çok): ${f2(ortanca(HK))} / ${f2(yuzde(HK,0.9))} / ${f2(HK.length?Math.max(...HK):NaN)} m/sn · son 20 sn'de hareketsiz ${yz(DG[0],DG[1])}`);
+    console.log(`      gol ${yz(say(x=>x.gol),say(x=>x.temas!=null))} (n küçük; kabul d-penalti'de) · duruşta kart ${L.reduce((a,x)=>a+x.kart,0)}`);
+    if(P&4){
+      kapi(KB.length>0&&k04===KB.length&&dyok===0,`[2] düdük kullanımdan ≥ 0,4 sn önce %100 (${k04}/${KB.length}; düdüksüz ${dyok})`);
+      kapi(KD.length>0&&k0>=0.95*KD.length,`[2] düdükte ceza sahası ve yay boş ≥ %95 (${yz(k0,KD.length)})`);
+      const o=ortanca(TM),q1=yuzde(TM,0.1),q9=yuzde(TM,0.9);
+      kapi(o>=32&&o<=48&&q1>=25&&q9<=58,`[2] faulden temasa ortanca 32–48, %10 ≥ 25, %90 ≤ 58 (${f1(o)} / ${f1(q1)} / ${f1(q9)})`);
+      kapi(R.s1b_kalabalik>=2.5,`[2] itiraz eden ortalaması ≥ 2,5 (${f2(R.s1b_kalabalik)})`);
+      kapi(R.ham.s1b_kaptan[1]>0&&R.ham.s1b_kaptan[0]>=0.9*R.ham.s1b_kaptan[1],`[2] kaptan işareti ≥ %90 (${yz(R.ham.s1b_kaptan[0],R.ham.s1b_kaptan[1])})`);
+      kapi(HK.length>0&&yuzde(HK,0.9)<=2.5,`[2] hakemin itiraz ve boşaltmadaki tepe hızı (kart hariç) %90'ı ≤ 2,5 m/sn (${f2(yuzde(HK,0.9))})`);
+      kapi(DG[1]>0&&DG[0]<=0.65*DG[1],`[2] düdükten önceki son 20 sn'de hareketsiz ≤ %65 (${yz(DG[0],DG[1])})`);
+      kapi(bitmeyen===0,`[2] duruş 90 sn içinde biter (${bitmeyen})`);}
   }
   console.log(`  Toplam ${((Date.now()-t0)/1000).toFixed(1)} sn · kapı dışı ${kabulDisi}`);
   return kabulDisi?1:0;

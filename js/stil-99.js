@@ -195,8 +195,11 @@ const STIL={
        yonSalinim kalecinin yönlendiren kolunun sağa sola sallanması (Hz, rad), yonTh kolun yatayın üstündeki açısı (rad).
        S1d (kart sahnesi; olaylar 'kartSahne', 'kaptanIsareti' kaynak 'kart', hakem eylemleri 'kart' ve 'not'): kart 1 — yaklaşırken "yerinde kal" (durdur)
        ya da çağırma işareti motorun evresiyle, kaptan işareti (kaptanCapraz, kaptanDur), ikinci sarıda kolun inip kalkması, deftere yazma (not) ve sol
-       eldeki DEFTER, teknik direktörün itirazı kartın gösterildiği anda; 0'da eski çizim ('kart' olayında 3 m'den uzaksa çağırma, defter yok) */
-    s1:{duduk:0.8,defterRenk:0x22262b,serbest:1,itHz:2.5,yonHz:2.5,yonSalinim:0.2,yonTh:0.15,kart:1},
+       eldeki DEFTER, teknik direktörün itirazı kartın gösterildiği anda; 0'da eski çizim ('kart' olayında 3 m'den uzaksa çağırma, defter yok).
+       S1b (penaltı sahnesi; olaylar 'penaltiSahne', 'kaptanIsareti' kaynak 'penalti'): kaptan 1 — kaptan işareti (kaptanCapraz, kaptanDur); bosalt 1 — kutuyu
+       boşaltma işareti (1,6 sn); cizgi 1 — hazırda kaleciye çizgiyi gösterme ('yon', 0,9 sn) ve son yerinde saat bakışının bastırılması; goster faulde noktayı
+       gösteren kolun süresi (sn; eski 1,6). 0'da eski çizim */
+    s1:{duduk:0.8,defterRenk:0x22262b,serbest:1,itHz:2.5,yonHz:2.5,yonSalinim:0.2,yonTh:0.15,kart:1,kaptan:1,bosalt:1,cizgi:1,goster:2.4},
     /* K1 (2026-10-20; FUTBOL_KUTUPHANESI §12.13 kullanıcı notu, kutuphane/L L.2): penaltıda çizgideki kalecinin bekleyişi (js/animasyon.js anmPenaltiKaleci;
        tetik motorun penaltiKaleciBakis'i; MOTOR_AYAR.penaltiBakis 0 iken de kapalı) — acik 0'da eski çizim (bekleyiş katmanı: eller belde, bakınma, eldiven);
        dik hazır duruşun eğilme ve diz payı (1 tam kaleciHazir); kolAc kolların iki yana açılması (rad, jestin tepesinde), kolInis kolun önden yana inişi (rad),

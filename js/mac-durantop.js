@@ -388,6 +388,7 @@ Object.assign(Match.prototype,{
     /* güvenlik ağları sahnenin planlı varışından sonra (sahneHiz'in payıyla aynı: taç 1, spreyli baraj 12, öbürleri 3 sn) */
     du.zorlaGetir=Math.max(16,du.sahneT-du.sahneKos-(tur==='tac'?1.0:du.hk?12:3.0)+2);du.zorlaHazir=Math.max(28,du.sahneT+10);
     if(du.hk&&du.hk.s1){du.zorlaGetir=Math.max(16,du.hk.yerT+6);du.zorlaHazir=Math.max(28,du.sahneT+14);}   /* S1a: top yerT'de konur; düdük kapısının ağı zorlaHazir − 2 */
+    if(tur==='penalti'&&this.s1PenaltiAcik())this.penaltiSahneKur(du);   /* S1b: penaltı sahnesinin planı — süre, ağlar, kalabalık, roller (js/mac-sahne.js) */
     if((tur==='tac'||tur==='kaleVurusu')&&du.zgEk>0&&A.tacSayim>0)du.zgEk=Math.min(du.zgEk,A.tacSayim-0.5);
     const tk=du.kullanan,Y=A.duranYay,d=this.dir[du.takim];
     if(tk&&Y&&(tur==='korner'||tur==='baraj'||tur==='kenar'||tur==='penalti'))du.yay=Y[0]+(Y[1]-Y[0])*clamp(0.3+0.4*this.sahneOzet(du,1)+0.3*profilAlt(tk,'duranTop',0.5),0,1);
@@ -620,6 +621,7 @@ Object.assign(Match.prototype,{
     const d=this.dir[du.takim],sx=Math.sign(du.x)||1,yh=sx>0?this.refs[1]:this.refs[2],yz=sx>0?PW+1.0:-1.0;
     if(du.tur==='korner'){const yan=Math.sign(du.z-MZ)||1;
       return{h:{x:d*(PL-12),z:MZ-yan*12},yh,yhYer:{x:sx*(PL+0.8),z:Math.sign(yz-MZ)===yan?yz+Math.sign(yz-MZ)*0.2:yz}};}
+    if(du.pk)return{h:du.pk.hk,hiz:du.pk.hk.hiz,bak:du.pk.hk.bak,yh,yhYer:{x:sx*PL,z:yz>MZ?MZ+CEZA_W:MZ-CEZA_W}};   /* S1b: penaltı sahnesinin evresi (js/mac-sahne.js); yan hakem eski yerinde */
     if(du.tur==='penalti')return{h:{x:d*(PL-17),z:MZ+(yz>MZ?-6:6)},yh,yhYer:{x:sx*PL,z:yz>MZ?MZ+CEZA_W:MZ-CEZA_W}};
     if(du.sinif==='baraj'&&du.hk&&du.hk.s1&&du.barajW)return{h:this.hakemSpreyHedef(du),yh:null,yhYer:null};   /* S1a: duruş bitene dek seremoninin yeri (hakemHazir'dan sonra restart yeri) */
     if(du.sinif==='baraj'&&!du.hakemHazir&&du.barajUc)return{h:du.hk&&du.hk.evre!=='cekil'?this.hakemSpreyHedef(du):du.barajUc,yh:null,yhYer:null};   /* Z2c: sprey evreleri */
@@ -643,6 +645,7 @@ Object.assign(Match.prototype,{
     const d=this.dir[du.takim],gx=d*PL,tk=du.kullanan,savunan=1-du.takim,b=this.ball;
     /* T8b: kullananın temasına ~0,55 sn kala kutudakiler koşu hedeflerine koşar (kısa kornerde değil) */
     const ke=du.asama==='kullan'&&tk&&tk.eylem&&tk.eylem.ad==='vurus'?tk.eylem:null,kos=!!ke&&ke.kalan<0.55&&du.rutin!=='kisa';
+    if(du.pk)this.penaltiSahneAdim(du,dt);   /* S1b: penaltı sahnesinin evreleri, hakemin hedefi ve kalabalık (js/mac-sahne.js) */
     if(du.gorev)for(const [p,g] of du.gorev){if(!p.oyunda||p===tk)continue;
       /* Z2d: taç rolleri (gel-git, içe, geri; markaj ve perde) */
       if(du.tur==='tac'&&TAC_ROL.has(g.rol)){this.gorevYaz(p,'duran');this.tacRolAdim(du,p,g);continue;}
@@ -650,6 +653,7 @@ Object.assign(Match.prototype,{
       if(g.rol==='yatan'){this.gorevYaz(p,'duran');if(g.yatik){p.tx=p.x;p.tz=p.z;p.hizOran=0;p.vx=0;p.vz=0;p.bak=b;continue;}
         const e=hyp(p.x-g.hx,p.z-g.hz);p.tx=g.hx;p.tz=g.hz;p.hizOran=e>4?0.7:0.4;p.bak=b;p.yonHedef=null;this.eforVer(p,0.6);
         if(e<0.35&&(du.asama==='yerles'||du.asama==='hazir')&&!(du.hk&&du.hk.s1&&!du.hakemHazir))g.yatik=true;continue;}   /* S1a: baraj dizildikten sonra yatar */
+      if(du.pk&&this.penaltiSahneRol(du,p,g))continue;   /* S1b: penaltı sahnesinin rolleri (js/mac-sahne.js) */
       /* adam markajı: adamının 0,3 sn sonraki yerinin kale tarafında 0,8 m (koşuyu okur; vuruştan sonra duranRolKonum aynı) */
       /* T10d: adamı kendi görev yerinden 6 m'den uzaktaysa markajcı o yerin kale tarafında bekler (adamının önünde geri geri koşup kutuya gelen
          koşucuyu 3 m/sn'ye kilitliyordu: görevliler yerinde %71) */

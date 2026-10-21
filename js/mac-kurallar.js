@@ -259,7 +259,7 @@ Object.assign(Match.prototype,{
     b.tasiyan=null;
     if(tur==='tac'||tur==='korner'||tur==='kaleVurusu'||Math.abs(b.x)>PL+0.2||b.z<-0.2||b.z>PW+0.2)this.durusTopu(du);
     /* T10d: penaltıda top noktaya konur (hakem gösterir; kullanan topu taşımaz, noktaya yürür — T8'den penaltı hazırlığı 14–16 sn, hedef 8–12) */
-    else if(tur==='penalti'){b.tasiyan=null;b.x=x;b.z=z;b.y=0;b.vx=b.vy=b.vz=0;this.topDegisti();}
+    else if(tur==='penalti'&&!du.pk){b.tasiyan=null;b.x=x;b.z=z;b.y=0;b.vx=b.vy=b.vz=0;this.topDegisti();}   /* S1b: sahneli penaltıda top yerinde kalır, vurucu alır (js/mac-sahne.js) */
     /* T10b (T10 teşhisi hata 5): avantaj sürerken oyun durdu — avantaj kapanır, kart bu duruşta gösterilir (eskiden oyun dönünce kapanıyor, kart bir
        duruş geç kalıyordu). Avantajdan kalan kart ilk duruşta gösterilir */
     if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:!!a.tuttu});if(a.kart)this.bekleyenKart=a;}
@@ -324,7 +324,8 @@ Object.assign(Match.prototype,{
     /* T8a: kullanan topa ve yerine düzenli yürür/koşar (efor 0,8; T1 hız kipi 8 m içinde 1,6 m/sn'lik yürüyüşe düşürüyordu: serbest vuruşta topu
        yerine taşımak ~3 sn sürüyordu) */
     else if(du.asama==='bekle'||du.asama==='getir'||du.asama==='yerles')this.eforVer(tk,0.8);
-    if(du.asama==='bekle'){tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=du.sahneT?this.sahneHiz(du,tk,0.8,nk.x,nk.z):0.8;if(du.t>(du.hizli?0.3:(du.bekle||0.45)+(this._niyet&&du.tur!=='penalti'?this._niyet[du.takim].duranGecikme:0)))du.asama='getir';}
+    if((du.asama==='bekle'||du.asama==='getir'||du.asama==='yerles')&&du.pk&&this.penaltiKullanan(du,tk,nk)){}   /* S1b: vurucu bekler, topu alır, elinde tutar (js/mac-sahne.js) */
+    else if(du.asama==='bekle'){tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=du.sahneT?this.sahneHiz(du,tk,0.8,nk.x,nk.z):0.8;if(du.t>(du.hizli?0.3:(du.bekle||0.45)+(this._niyet&&du.tur!=='penalti'?this._niyet[du.takim].duranGecikme:0)))du.asama='getir';}
     else if(du.asama==='getir'){
       if(b.tasiyan===tk)du.asama='yerles';
       /* top çocuğun elinde: atan atış yerine gelir, çocuğa döner ve topu bekler (saha dışına çıkmaz) */
@@ -356,7 +357,8 @@ Object.assign(Match.prototype,{
       du.hazirT+=dt;
       if(du.tur!=='tac'){const yer=du.yerT!=null&&du.t-du.yerT<0.6;tk.tx=yer?tk.x:du.geriX;tk.tz=yer?tk.z:du.geriZ;tk.hizOran=0.4;tk.yonHedef=du.aci;tk.bak=null;b.x=du.x;b.z=du.z;b.vx=b.vz=0;
         /* T8a: geri adımlar düzenli (efor 0,8, yavaş; 3–7 m geri çekilme T1 hız kipinde ~3 sn sürüyordu); T8f: topa yürüyüş (kisaGeri) 0,6 */
-        if(!yer&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5){tk.hizOran=du.kisaGeri?0.6:0.3;this.eforVer(tk,0.8);}}
+        if(!yer&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5){tk.hizOran=du.kisaGeri?0.6:0.3;this.eforVer(tk,0.8);}
+        if(du.pk)this.penaltiDuzelt(du,tk);}   /* S1b: topu yeniden yerleştirme varyantı (js/mac-sahne.js) */
       /* T8d: uzun taçta atan topu başının üstünde tutarak çizginin 3 m gerisine yürür (koşu için) */
       let tacHazir=true;if(du.tur==='tac'&&du.tacGeri){const G=du.tacGeri;tk.tx=G.x;tk.tz=G.z;tk.hizOran=0.3;tk.yonHedef=Math.atan2(MZ-G.z,0);tk.bak=null;tacHazir=hyp(tk.x-G.x,tk.z-G.z)<0.5||du.hazirT>4;}
       const sakatBekle=this.sakatlikBekletir();if(sakatBekle)du.sakatBekledi=true;   /* T10d: ölçüm (k-duran hazırlığı sakatlık bekleyişini ayırır) */
@@ -572,7 +574,8 @@ Object.assign(Match.prototype,{
       if(h.eylem&&h.eylem.ad==='kart'&&h.eylem.t>1.5||kartSira.t>6){const Q=h.kartKuyruk;if(Q&&Q[0]===kartSira)Q.shift();h.kartSira=Q&&Q.length?Q[0]:null;
         if(p.kart===2&&p.oyunda)this.oyundanCikar(p);}}
     else if(KS&&ks&&ks.s&&ks.s.tut){}   /* S1d: hakemi kart sahnesi sürer */
-    else if(DY&&DY.h){h.tx=clamp(DY.h.x,-PL+1,PL-1);h.tz=clamp(DY.h.z,1,PW-1);const uz=hyp(h.tx-h.x,h.tz-h.z);h.hizOran=uz>8?0.9:0.6;h.bak=b;
+    else if(DY&&DY.h){h.tx=clamp(DY.h.x,-PL+1,PL-1);h.tz=clamp(DY.h.z,1,PW-1);const uz=hyp(h.tx-h.x,h.tz-h.z);h.hizOran=DY.hiz!=null?DY.hiz:(uz>8?0.9:0.6);h.bak=DY.bak!==undefined?DY.bak:b;   /* S1b: sahnenin hızı ve bakışı (yoksa eski) */
+      if(DY.bakisYon!=null)h.bakisYon=DY.bakisYon;
       /* Z2c (sahne&4): hakemin spreyi — topun yeri ve barajın çizgisi (js/mac-durantop.js hakemSpreyAdim); bitince barajın ucuna çekilir */
       const sprey=du.hk&&du.hk.evre!=='cekil';if(sprey)this.hakemSpreyAdim(du,h,uz,dt);
       /* barajlı serbest vuruş: hakem barajın ucunda 9,15 m'yi gösterir, 1,2 sn sonra baraj dizilmiş sayılır ve hakem çaprazına çekilir */

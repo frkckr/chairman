@@ -36,7 +36,16 @@
    - Gösterilirken ≤ 5 m %: kartın ilk karesinde hakem–oyuncu (uzaktan hariç). Gösterilmeden biten %: hakem kartı göstermeden sıradaki karta geçti.
    - Kart sürerken kullanılan / maç: kullanım anında kuyrukta sahnesi bitmemiş kart. Düdük → kullanım: düdüğün sahibi kart olan duruşta du.t − du.dudukT.
    - Kalabalık: kişi sayısı (ortalama), protokol kaptan işareti / uyarı (sayı). Kırmızı 12 sn: kırmızı gören karardan 12 sn sonra sahada (kabul 0).
-   - Kartlı duruşun süresi (du.t; kart görülen duruş), tür başına (serbestte sınıfı) ortanca. */
+   - Kartlı duruşun süresi (du.t; kart görülen duruş), tür başına (serbestte sınıfı) ortanca.
+   Tanımlar (s1b_; S1b, 2026-10-20 — penaltı duruşları, bit kapalıyken de: bugünkü değerler; izleyici s1bIzleyici, araclar/senaryolar/d-sahne.js [2] de
+   kullanır): faulden düdüğe — 'duduk' olayı (tur 'penalti'; bit kapalıyken durusKullan'ın düdüğü) anında du.t; düdük → temas — 'kullanim' olayında
+   du.t − düdük; faulden temasa — 'kullanim' olayında du.t; düdükten kullanıma ≥ 1 sn — ilk kullanımda (m.sonKullanim) du.t − düdük; evre süresi — du.pk.evre
+   başına gerçek sn (yalnız sahneli); itiraz eden — düdükten önce hakemin 4 m içine gelen faul yapan takımın saha oyuncusu (kişi; kart dalı dahil);
+   itiraz (oyuncu·sn) — düdükten önce eylemi ya da jesti 'itiraz' olan oyuncuların süresi; kaptan işareti — 'kaptanIsareti' kaynak 'penalti' (penaltı
+   payı); işaretten 2 sn sonra hakemin 4 m içinde kaptan dışı savunmacı (kişi); ceza sahasında ya da yayda oyuncu (vurucu ve kaleciler hariç) 5. sn,
+   15. sn, düdükte; düdükten önceki son 20 sn'de hareketsiz (< 0,3 m/sn) saha oyuncusu payı (vurucu hariç; 0,25 sn'lik örnekler); hakemin tepe hızı —
+   sahnelide itiraz ve boşaltmada, sahnesizde 2. sn'den düdüğe, kart dalı ve bitişinden sonraki 1 sn hariç (m/sn; penaltı başına en çok, ortanca);
+   kaos ve varyant payları du.pk'den. */
 const S1D_SAHIP=['baraj','penalti','kart','santra'];
 const S1D_AD={baraj:'barajlı serbest vuruş',penalti:'penaltı',kart:'kart',santra:'santra'};
 const s1Ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b),n=S.length;return n%2?S[(n-1)/2]:(S[n/2-1]+S[n/2])/2;};
@@ -90,6 +99,60 @@ function s1dIzleyici(){
       oncekiDu=simdi;},
     bitir(){}};   /* maçın sonunda süren kart kapanmaz */
 }
+/* S1b (2026-10-20): penaltı duruşunun izleyicisi — k-protokol'ün s1b_ satırları ve araclar/senaryolar/d-sahne.js [2] (birden çok maçta tek örnek). Yalnız
+   okur: olaylar ('duduk', 'kullanim', 'kaptanIsareti', 'kart', 'goal'), m.durus (du.pk), m.refs[0], oyuncuların konumu, hızı, eylemi ve jesti, m.sonKullanim.
+   Kayıt: {du, sahneli, kaos, varyant (kaleciItiraz, kaleciOyun, karsi, duzelt, sari), ev {evre: sn}, duduk (du.t), seremoni, kul (ilk kullanımda du.t),
+   temas (du.t), temasM (m.t), it (kişi), itSn, kaptan (işaret sayısı), kaptanT, ihlal (kişi), kutu5, kutu15, kutuD, durgun [hareketsiz, örnek], hk (m/sn),
+   kart (duruşta gösterilen kart), gol (temastan 5 sn içinde)} */
+const S1B_PL=52.5,S1B_MZ=34,S1B_CU=16.5,S1B_CW=20.16,S1B_EVRE=['goster','itiraz','bosalt','hazir','duduk'],S1B_VAR=['kaleciItiraz','kaleciOyun','karsi','duzelt','sari'];
+function s1bIzleyici(){
+  const L=[];let m0=null,cur=null,sonK=null,son=null;
+  const kutuda=(m,du,q)=>{const gx=m.dir[du.takim]*S1B_PL;return Math.abs(q.x-gx)<S1B_CU&&Math.abs(q.z-S1B_MZ)<S1B_CW||Math.hypot(q.x-du.x,q.z-du.z)<9.15;};
+  const kutuSay=(m,du)=>{let n=0;for(const q of m.players)if(q.oyunda&&q.rol!=='GK'&&q!==du.kullanan&&kutuda(m,du,q))n++;return n;};
+  const kapat=()=>{const r=cur;cur=null;if(!r)return;const du=r.du,P=du.pk;
+    if(P){r.kaos=P.kaos;r.varyant={kaleciItiraz:!!P.kaleciItiraz,kaleciOyun:!!P.kaleciOyun,karsi:!!P.karsi,duzelt:!!P.duzelt,sari:!!P.sari};}
+    const D=r.duduk!=null?r.duduk:r.kul;if(D!=null){let a=0,b=0;for(const o of r.ornek)if(o[0]<D&&o[0]>=D-20){a+=o[1];b+=o[2];}r.durgun=[a,b];}
+    r.it=r.itSet.size;delete r.itSet;delete r.ornek;L.push(r);son=r;};
+  const yeniMac=m=>{if(m===m0)return;if(cur)kapat();m0=m;sonK=m.sonKullanim;son=null;};
+  return{L,
+    dinle(ad,v,m){if(!m)return;yeniMac(m);
+      if(ad==='duduk'&&v&&v.tur==='penalti'&&cur&&cur.duduk==null){cur.duduk=cur.du.t;cur.seremoni=!!v.seremoni;cur.kutuD=kutuSay(m,cur.du);}
+      else if(ad==='kullanim'&&v&&v.tur==='penalti'&&v.du){const r=cur&&cur.du===v.du?cur:L.find(x=>x.du===v.du);if(r&&r.temas==null){r.temas=v.du.t;r.temasM=m.t;}}
+      else if(ad==='kaptanIsareti'&&v&&v.kaynak==='penalti'&&cur){cur.kaptan++;if(cur.kaptanT==null)cur.kaptanT=cur.du.t;}
+      else if(ad==='kart'&&cur)cur.kart++;
+      else if(ad==='goal'){const r=son&&son.temasM!=null?son:cur&&cur.temasM!=null?cur:null;if(r&&m.t-r.temasM<=5)r.gol=true;}},
+    adim(m){yeniMac(m);
+      const du=m.phase==='durus'&&m.durus&&m.durus.tur==='penalti'?m.durus:null,h=m.refs[0];
+      const KU=m.sonKullanim;if(cur&&KU&&KU!==sonK&&cur.kul==null&&(du===cur.du||!du))cur.kul=cur.du.t;sonK=KU;
+      if(cur&&cur.du!==du)kapat();
+      if(!du)return;
+      if(!cur)cur={du,sahneli:!!du.pk,kaos:null,varyant:null,ev:{},duduk:null,seremoni:false,kul:null,temas:null,temasM:null,itSet:new Set(),itSn:0,kaptan:0,kaptanT:null,ihlal:null,
+        kutu5:null,kutu15:null,kutuD:null,ornek:[],ok:0,durgun:null,hk:0,kartSon:-9,kart:0,gol:false};
+      const r=cur,dt=1/60,P=du.pk,once=r.duduk==null;
+      if(P)r.ev[P.evre]=(r.ev[P.evre]||0)+dt;
+      if(h&&h.kartSira)r.kartSon=m.t;
+      if(once){const sv=1-du.takim;
+        if(h)for(const q of m.teams[sv])if(q.oyunda&&q.rol!=='GK'&&Math.hypot(q.x-h.x,q.z-h.z)<4)r.itSet.add(q);
+        for(const q of m.players)if(q.oyunda&&(q.eylem&&q.eylem.ad==='itiraz'||q.jest&&q.jest.tur==='itiraz'&&(q.jest.t||0)<(q.jest.sure||0)))r.itSn+=dt;
+        if(r.kutu5==null&&du.t>=5)r.kutu5=kutuSay(m,du);if(r.kutu15==null&&du.t>=15)r.kutu15=kutuSay(m,du);
+        if(++r.ok%15===0){let a=0,b=0;for(const q of m.players){if(!q.oyunda||q.rol==='GK'||q===du.kullanan)continue;b++;if(Math.hypot(q.vx||0,q.vz||0)<0.3)a++;}r.ornek.push([du.t,a,b]);}
+        const hz=P?(P.evre==='itiraz'||P.evre==='bosalt'):du.t>=2;
+        if(h&&hz&&!h.kartSira&&m.t-r.kartSon>=1){const v=Math.hypot(h.vx||0,h.vz||0);if(v>r.hk)r.hk=v;}
+        if(r.kaptanT!=null&&r.ihlal==null&&du.t>=r.kaptanT+2&&h){const kp=P&&P.kaptan;let n=0;for(const q of m.teams[sv])if(q.oyunda&&q.rol!=='GK'&&q!==kp&&Math.hypot(q.x-h.x,q.z-h.z)<4)n++;r.ihlal=n;}}},
+    bitir(){if(cur)kapat();}};
+}
+/* S1b: izleyicinin kayıtlarından satır değerleri (k-protokol bitir ve d-sahne [2]) */
+function s1bOzet(L){const say=f=>L.filter(f).length,sayi=f=>L.map(f).filter(x=>x!=null&&Number.isFinite(x)),S=L.filter(x=>x.sahneli),r={ham:{}};
+  r.s1b_n=L.length;r.ham.s1b_sahneli=[S.length,L.length];
+  r.s1b_duduk=s1Ortanca(sayi(x=>x.duduk));r.s1b_temas=s1Ortanca(sayi(x=>x.temas));r.s1b_dudukTemas=s1Ortanca(sayi(x=>x.temas!=null&&x.duduk!=null?x.temas-x.duduk:null));
+  const B=sayi(x=>x.kul!=null&&x.duduk!=null?x.kul-x.duduk:null);r.ham.s1b_bek1=[B.filter(x=>x>=1).length,B.length];
+  for(const e of S1B_EVRE)r['s1b_ev_'+e]=s1Ortanca(S.map(x=>x.ev[e]||0));
+  r.s1b_kalabalik=s1Ort(sayi(x=>x.it));r.s1b_itirazSn=s1Ort(sayi(x=>x.itSn));r.ham.s1b_kaptan=[say(x=>x.kaptan>0),L.length];r.s1b_ihlal=s1Ort(sayi(x=>x.ihlal));
+  r.s1b_kutu5=s1Ort(sayi(x=>x.kutu5));r.s1b_kutu15=s1Ort(sayi(x=>x.kutu15));r.s1b_kutuD=s1Ort(sayi(x=>x.kutuD));
+  r.ham.s1b_durgun=[L.reduce((a,x)=>a+(x.durgun?x.durgun[0]:0),0),L.reduce((a,x)=>a+(x.durgun?x.durgun[1]:0),0)];
+  r.s1b_hkHiz=s1Ortanca(sayi(x=>x.duduk!=null||x.kul!=null?x.hk:null));r.s1b_kaos=s1Ort(sayi(x=>x.kaos));
+  for(const k of S1B_VAR)r.ham['s1b_'+k]=[say(x=>x.varyant&&x.varyant[k]),S.length];
+  return r;}
 module.exports={
   bilgi:[['— S1: sahne protokolleri (k-protokol; S1-0 ortak düdük) —',null,0],['Seremonili düdük / maç','s1D_n',2]]
     .concat(S1D_SAHIP.map(k=>['Seremonili düdük / maç: '+S1D_AD[k],'s1D_'+k,2]))
@@ -116,13 +179,24 @@ module.exports={
       ['S1d: kart sürerken kullanılan duran top / maç (kabul 0)','s1d_kul',2],['S1d: kartın düdüğünden kullanıma (gerçek sn; ortanca)','s1d_dudukKul',2],
       ['S1d: kalabalıkta hakeme gelen (kişi; ortalama)','s1d_kal',2],['S1d: kalabalıkta kaptan işareti / maç','s1d_kaptan',2],['S1d: kalabalıkta uyarı / maç','s1d_uyari',2],
       ['S1d: kırmızı gören karardan 12 sn sonra sahada / maç (kabul 0)','s1d_kirmizi',2]])
-    .concat(S1D_DURUS.map(k=>['S1d: kartlı duruşun süresi, '+k+' (gerçek sn; ortanca)','s1d_durus_'+k,1])),
+    .concat(S1D_DURUS.map(k=>['S1d: kartlı duruşun süresi, '+k+' (gerçek sn; ortanca)','s1d_durus_'+k,1]))
+    .concat([['— S1b: penaltı sahnesi (k-protokol; bit kapalıyken bugünkü değerler) —',null,0],['S1b: penaltı / maç','s1b_n',2],['S1b: sahneli %','s1b_sahneli',1],
+      ['S1b: faulden düdüğe (gerçek sn; ortanca)','s1b_duduk',1],['S1b: faulden temasa (gerçek sn; ortanca)','s1b_temas',1],['S1b: düdük → temas (gerçek sn; ortanca)','s1b_dudukTemas',2],
+      ['S1b: düdükten kullanıma ≥ 1 sn %','s1b_bek1',1]])
+    .concat(S1B_EVRE.map(e=>['S1b: evre süresi, '+e+' (gerçek sn; ortanca, sahneli)','s1b_ev_'+e,1]))
+    .concat([['S1b: itiraz eden, hakemin 4 m içine gelen (kişi; ortalama)','s1b_kalabalik',2],['S1b: itiraz (oyuncu·sn; ortalama)','s1b_itirazSn',1],
+      ['S1b: kaptan işareti %','s1b_kaptan',1],['S1b: işaretten 2 sn sonra 4 m içinde kaptan dışı (kişi; ortalama)','s1b_ihlal',2],
+      ['S1b: ceza sahasında ve yayda oyuncu, 5. sn (ortalama)','s1b_kutu5',2],['S1b: ceza sahasında ve yayda oyuncu, 15. sn (ortalama)','s1b_kutu15',2],
+      ['S1b: ceza sahasında ve yayda oyuncu, düdükte (ortalama)','s1b_kutuD',2],["S1b: düdükten önceki son 20 sn'de hareketsiz saha oyuncusu %",'s1b_durgun',1],
+      ['S1b: hakemin tepe hızı, itiraz ve boşaltmada — kart hariç (m/sn; ortanca)','s1b_hkHiz',2],['S1b: kaos (ortalama)','s1b_kaos',2]])
+    .concat(S1B_VAR.map(k=>['S1b: varyant '+k+' %','s1b_'+k,1])),
   yeni:()=>{
     const N={};for(const k of S1D_SAHIP)N[k]=0;
     let n=0,dur=0,durN=0,yok=0,once=0,bek1=0,sg=0,sonK=null,oncekiDu=null;const bek=[];
     /* S1a: duruşun kaydı (A) ve kapanan kayıtlar (AL) */
     let A=null;const AL=[];
     const D=s1dIzleyici();   /* S1d */
+    const PB=s1bIzleyici();   /* S1b */
     const aYeni=du=>{const yol=new Map();for(const p of du.barajdakiler||[])yol.set(p,{s:0,x:p.x,z:p.z,x0:p.x,z0:p.z});
       return{du,ev:{},yol,once:null,yakin:Infinity,k9:0,it:0,bekle:0,adN:0,adI:0,kos:null,temas:null,hkDur:null,hkArka:null,kaleci:null};};
     const aKapat=()=>{const a=A;A=null;if(!a)return;const H=a.du.hk;a.tur=H.tur;a.kaosT=H.kaosT;a.kay=H.kayI||0;a.heykel=!!H.heykelP;
@@ -136,7 +210,7 @@ module.exports={
     return{
       dinle(ad,v,m){
         if(!v||!m)return;
-        D.dinle(ad,v,m);
+        D.dinle(ad,v,m);PB.dinle(ad,v,m);
         if(A&&m.durus===A.du){
           if(ad==='seremoni'){if(v.tur==='it')A.it++;else if(v.tur==='bekle')A.bekle++;}
           else if(ad==='duduk'&&v.seremoni&&A.hkDur==null){const h=m.refs[0],du=A.du,d=m.dir[du.takim],W=du.hk.wc;A.hkDur=(h.spd||0)<=0.3;
@@ -146,7 +220,7 @@ module.exports={
         const k=v.tur==='santra'?'santra':v.sahip;if(k in N)N[k]++;
         const h=m.refs&&m.refs[0];if(h){durN++;if((h.spd||0)<=0.3)dur++;}},
       adim(m){
-        D.adim(m);
+        D.adim(m);PB.adim(m);
         const K=m.sonKullanim,du=m.phase==='durus'&&m.durus?m.durus:oncekiDu;
         if(K&&K!==sonK&&du&&du.dudukGerek){
           if(du.dudukT==null)yok++;
@@ -185,8 +259,11 @@ module.exports={
         r.s1d_kul=D.kul;r.s1d_dudukKul=s1Ortanca(D.dudKul);r.s1d_kal=s1Ort(kSayi(x=>x.tarz==='kalabalik'?x.kal:null));
         r.s1d_kaptan=kSay(x=>x.tip==='kaptan');r.s1d_uyari=kSay(x=>x.tip==='uyari');r.s1d_kirmizi=kSay(x=>x.kirSahada===true);
         for(const k of S1D_DURUS)r['s1d_durus_'+k]=s1Ortanca(D.DU.filter(x=>x.tur===k).map(x=>x.sure));
+        /* S1b */
+        PB.bitir();const RB=s1bOzet(PB.L);Object.assign(r.ham,RB.ham);delete RB.ham;Object.assign(r,RB);
         return r;}
     };
   }
 };
 module.exports.s1dIzleyici=s1dIzleyici;   /* S1d: araclar/senaryolar/d-sahne.js */
+module.exports.s1bIzleyici=s1bIzleyici;module.exports.s1bOzet=s1bOzet;   /* S1b: araclar/senaryolar/d-sahne.js [2] */

@@ -1012,7 +1012,8 @@ function anmHakemOlay(ad,v){
   const R=mac.refs;if(!R||!R.length||!v)return;
   const h0=R[0],Mz=typeof MZ!=='undefined'?MZ:0,yh=x=>x>0?R[1]:R[2],dir=t=>mac.dir?mac.dir[t]:1;
   if(ad==='faul'){const pen=!!v.penalti,du=mac.durus;
-    anmHkIsaret(h0,[{tur:'duduk',sure:pen?0.7:0.45},pen&&du?{tur:'yon',sure:1.6,hedef:{x:du.x,z:du.z},theta:-0.5}:{tur:'yon',sure:1.3,yon:dir(v.takim),theta:0.35}],true);
+    const S1=ANM.s1,gs=pen&&du&&du.pk&&S1&&S1.goster>0?S1.goster:1.6;   /* S1b: sahneli penaltıda hakem koşarken kol noktada (s1.goster sn) */
+    anmHkIsaret(h0,[{tur:'duduk',sure:pen?0.7:0.45},pen&&du?{tur:'yon',sure:gs,hedef:{x:du.x,z:du.z},theta:-0.5}:{tur:'yon',sure:1.3,yon:dir(v.takim),theta:0.35}],true);
     if(v.endirekt)anmHkIsaret(h0,[{tur:'endirekt',sure:14}]);}   /* T10f: dolaylı serbest vuruşta (yüksek ayak) kol top başka oyuncuya değene dek havada */
   /* T10f: zaman geçirmede uyarı — oyuncuya parmak sallar, saatine vurur; sakatlıkta sağlıkçıları kulübeden çağırır */
   else if(ad==='uyari'&&v.p)anmHkIsaret(h0,[{tur:'uyari',sure:1.1,p:v.p}].concat(v.neden==='zaman'?[{tur:'saat',sure:0.9}]:[]),true);   /* S1: saat yalnız zaman geçirmede (S1d'nin 'kalabalik' ve 'kaleciOyun' uyarısında yok) */
@@ -1030,6 +1031,12 @@ function anmHakemOlay(ad,v){
   else if(ad==='kaptanIsareti'){const S1=ANM.s1,ac=S1&&(v.kaynak==='penalti'?S1.kaptan:S1.kart)>0;
     if(ac){const H=v.hx!=null?{x:v.hx,z:v.hz}:null,d=1.2+0.2*h2(Math.round((mac.t||0)*60),31);
       anmHkIsaret(h0,(v.ikinci?[]:[{tur:'kaptanCapraz',sure:1.1,hedef:H}]).concat([{tur:'kaptanDur',sure:d,hedef:H}]),true);}}
+  /* S1b (2026-10-20; olay penaltiSahne {evre, du, x, z, hx, hz}; STIL.animasyon.s1.bosalt, cizgi): boşaltmada kutuyu boşaltma işareti (bosalt, 1,6 sn: kol ceza
+     sahası çizgisine doğru yatay, dışarı süpürür, öbür kol aşağıda yana açık), hazırda kaleciye çizgiyi gösterme ('yon', 0,9 sn, kale ortasına). Kaptan
+     işareti kaptanIsareti olayından (kaynak 'penalti': s1.kaptan) */
+  else if(ad==='penaltiSahne'){const S1=ANM.s1;if(S1&&v.hx!=null){
+    if(v.evre==='bosalt'&&S1.bosalt>0)anmHkIsaret(h0,[{tur:'bosalt',sure:1.6,hedef:{x:v.hx,z:v.hz},theta:0.1}],true);
+    else if(v.evre==='hazir'&&S1.cizgi>0)anmHkIsaret(h0,[{tur:'yon',sure:0.9,hedef:{x:v.hx,z:v.hz},theta:-0.35}],true);}}
   else if(ad==='goal')anmHkIsaret(h0,[{tur:'bekle',sure:0.8},{tur:'yon',sure:1.8,hedef:{x:0,z:Mz},theta:-0.15}],true);
   else if(ad==='korner'||ad==='kaleVurusu'){const k=ad==='korner';
     anmHkIsaret(h0,[{tur:'yon',sure:1.3,hedef:{x:v.x,z:v.z},theta:k?0.35:-0.3}],true);
@@ -1115,6 +1122,8 @@ function anmHkPoz(a,p,c,Q){
   if(tur==='uyari'){const w=0.2*Math.sin(h.t*13);if(sag){Q.aLz+=w;Q.eL=-0.45;}else{Q.aRz-=w;Q.eR=-0.45;}}
   else if(tur==='cagir'){const w=0.5+0.5*Math.sin(h.t*9);if(sag)Q.eL=-0.2-1.3*w;else Q.eR=-0.2-1.3*w;}
   else if(tur==='durdur'){if(sag){Q.aLy=0.9;Q.eL=-0.03;}else{Q.aRy=-0.9;Q.eR=-0.03;}}   /* S1d: "yerinde kal" — dirsek düz, avuç öne */
+  /* S1b: kutuyu boşaltma — hedef yanındaki kol yatay (theta 0,1), ψ ± 0,3·sin(5t) ile dışarı süpürür; öbür kol aşağıda yana açık */
+  else if(tur==='bosalt'){const w=0.3*Math.sin(5*h.t);if(sag){Q.aLz=clamp(r+w,-1.6,0.45);Q.aR=-0.15;Q.aRz=0.35;Q.eR=-0.2;}else{Q.aRz=clamp(r-w,-0.45,1.6);Q.aL=-0.15;Q.aLz=-0.35;Q.eL=-0.2;}}
 }
 /* yan hakemin bayrağı: sahaya yakın elde (koşarken sahanın tarafı; yön değişince el değiştirir), işarette işaret eden elde */
 function anmBayrakSec(a,p,h){
@@ -1137,8 +1146,9 @@ function anmHakemAdim(a,p,dt){
     if(bitti)h.cur=null;}
   if(!h.cur&&h.sira.length){h.cur=h.sira.shift();h.t=0;h.slot^=1;h.basKare=mac.kare;}   /* basKare: işaretin başladığı motor adımı (ölçüm) */
   /* orta hakem ölü topta arada saatine bakar (kimliğin aralığıyla) */
-  /* S1a: hakem restart yerinde durup düdüğü beklerken ('dur', 'duduk') saatine bakmaz, yüzü barajda kalır */
-  const s1Dur=!!(ANM.s1&&ANM.s1.serbest>0&&mac.durus&&mac.durus.hk&&mac.durus.hk.s1&&(mac.durus.hk.evre==='dur'||mac.durus.hk.evre==='duduk'));
+  /* S1a: hakem restart yerinde durup düdüğü beklerken ('dur', 'duduk') saatine bakmaz, yüzü barajda kalır; S1b: penaltıda son yerinde kaleciye ve vurucuya
+     bakarken ('hazir', 'duduk'; s1.cizgi) de bakmaz */
+  const du0=mac.durus,s1Dur=!!(ANM.s1&&du0&&(ANM.s1.serbest>0&&du0.hk&&du0.hk.s1&&(du0.hk.evre==='dur'||du0.hk.evre==='duduk')||ANM.s1.cizgi>0&&du0.pk&&(du0.pk.evre==='hazir'||du0.pk.evre==='duduk')));
   if(p.kind==='ref'&&!h.cur&&!s1Dur&&(mac.phase==='durus'||mac.phase==='kickoff')&&(p.spd||0)<0.6){h.saatT-=dt;
     if(h.saatT<=0){const K=a.kim||anmKimlik(a,p);h.saatT=22+18*h2(((mac.t||0)*7)|0,(K.faz*100)|0);h.cur={tur:'saat',sure:1.3};h.t=0;h.slot^=1;}}
   /* Z2e: spreyin pozu gövde kanallarını da yazar (eğilme, kalça, gövde) — ayrı poz nesnelerinde (öbür işaretler bu kanallara dokunmaz); giriş 0,25, çıkış 0,3 sn

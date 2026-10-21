@@ -25,7 +25,7 @@ const K_TUR=['korner','serbest','tac','kaleVurusu','penalti'],K_TUR_AD={korner:'
 /* Z2 (2026-10-19 gece): bantlar tempo B'nin hedefleri (kullanıcı kararı; MOTOR_AYAR.tempo ± bağlam ve sapma; eski T8/T10 bantları: korner, barajlı ve kenar
    10–14, diğer serbest 3–8, taç 3–6, kale vuruşu 4–10, penaltı 8–12) */
 const K_HZ=[['korner','korner',[15,22,'Z2']],['baraj','barajlı serbest vuruş',[20,30,'Z2']],['kenar','kenar serbest vuruşu',[15,22,'Z2']],
-  ['serbest','diğer serbest vuruş',[6,12,'Z2']],['tac','taç',[3,10,'Z2']],['kaleVurusu','kale vuruşu',[8,14,'Z2']],['penalti','penaltı',[22,32,'Z2']]];
+  ['serbest','diğer serbest vuruş',[6,12,'Z2']],['tac','taç',[3,10,'Z2']],['kaleVurusu','kale vuruşu',[8,14,'Z2']],['penalti','penaltı',[30,50,'S1']]]   /* S1b: penaltı sahnesi (tempo B ~40 sn) */;
 const K_ILK=['hucumKafa','savunmaKafa','kaleci','hucumAyak','savunmaAyak','yere','disari','yok'];
 const K_ILK_AD={hucumKafa:'hücumun kafası',savunmaKafa:'savunmanın kafası',kaleci:'kaleci',hucumAyak:'hücum (ayak, gövde)',savunmaAyak:'savunma (ayak, gövde)',
   yere:'yere düştü',disari:'oyun dışı',yok:'4 sn içinde yok'};
