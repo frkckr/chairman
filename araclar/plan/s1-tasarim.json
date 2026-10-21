@@ -1,0 +1,1003 @@
+[
+ {
+  "ad": "S1a-serbest — seremonili barajlı serbest vuruş (bekle işareti → sprey → baraj kaosu → adımlama ve çizgi → dizilme → hakem restart yerinde durur → düdük ön koşul → 1–3 sn → yay koşusu)",
+  "ozet": "Bugünkü davranışı K1 ağacının anlık kopyasında ölçtüm (scratchpad/s1a/kopya). d-duran kurulumunda 40 barajlı vuruş var. Tam maçta 12 maçta 13 barajlı vuruş çıktı (maç başına 1,0–1,2; %77'si kartlı).\n\n- Baraj t=0'da barajKur'da kuruluyor. Tam maçta 7,4–8,1 sn'de, d-duran'da 10,7 sn'de tam dizili. Bu, spreyin çizgisinden önce oluyor (%100).\n- Sprey ancak top konunca başlıyor: top 10,7 sn'de konuyor, adımlama 12,2 sn'de, çizgi 17,4 sn'de.\n- hakemHazir 19–21 sn'de geliyor. Hemen ardından hakem genel dala düşüp çapraza koşuyor.\n- Düdük, durusKullan'da koşunun başladığı karede çıkan bir olay. Düdük → koşu 0 sn, düdük → temas 2,5 sn.\n- Düdük anında hakemin hızı ortalama 5,4 m/sn; hiç durmuyor (%0).\n- Temas ortancası ~25,5 sn.\n\nTasarım: protokol&1 ve sahne&4 açıkken yalnız 'baraj' sınıfında du.hk'ye seremoni durum makinesi eklenir. Sıra: gel → top → kaos → adim → cizgi → dizil → yer → dur → duduk.\n- Hakem gelir, vurucuya \"düdüğü bekle\" işareti verir. Vurucu çoğu zaman barajı gösterip mesafe ister. Hakem topun yerini sıkar.\n- Baraj önce topa 6–7,8 m'de dağınık ve kıpır kıpır durur. Barajsız savunmacılar 4 m'ye kadar kalabalık eder. %12 olasılıkla bir \"heykel\" topun önüne dikilir.\n- Kaleci ön direğe gider, barajı 1–3 kez sağa sola kaydırır ('yonlendir' jesti). Hakem 1–3 kez geri iter ('it' işareti).\n- Sonra hakem barajın dış ucuna doğru öne yürüyerek 9,15 m'yi adımlar; baraj önünde geri çekilir. Çizgiyi çeker; baraj çizgiye tam oturur (g.dizik).\n- Hakem vurucunun arkasında, çaprazdaki restart yerine yürür ve DURUR; yüzü baraja dönük.\n- Ön koşullar sağlanınca düdük çalar. Vurucu 1–3 sn sonra (h2) yay koşusuna başlar.\n\nKaosun süresi, sahne hedefinden (seremoni.hedef 28 × bağlam × 1±0,15) kalan süredir. Sakin / olağan / uzun varyantlar var. Bütün kararlar h2 (sahneOzet) ile alınır, ana zar dizisi kaymaz. Hızlı vuruş istisnası değişmez: barajlı sınıf zaten çabuk değil.\n\nTasarımı scratchpad'de motor prototipiyle doğruladım; depoya dokunmadım. Prototip: s1a/proto5, fark dosyası s1a/s1a-proto5.diff (121 satır). Sonuçlar:\n\n| Ölçü | Bugün | Prototip |\n|---|---|---|\n| Temas ortancası, d-duran (40 vuruş) | 25,5 sn | 30,1 sn (sakin 28,2 · olağan 29,2 · uzun 34,8) |\n| Temas ortancası, tam maç (14 maç, 24 barajlı vuruş) | ~25–27 sn | 28,1–28,9 sn |\n| Düdükte hakem durmuş | %0 | %100 |\n| Düdük → koşu | 0 sn | 1,0–2,9 sn (%100'ü ≥ 1 sn) |\n| Düdük → temas | 2,5 sn | 4,2–4,5 sn |\n| Adımlamada yüz gidiş yönünde | — | %92–97 |\n| Adımlama başlamadan baraj dizili | %100 | %0–5 |\n| Kaosta üyenin topa en yakın uzaklığı | — | 6,2–6,4 m |\n| Kaosta 9,15 m içinde savunmacı | — | 4 |\n| Kaleci vuruşta son yerinden uzaklığı | — | 0,01–0,05 m |\n\nBit 0 birebir çalışıyor: tohum 1'de (bir barajlı vuruş var) protokol 0 ile K1, 102.176 adımlık parmak izinde AYNI.\n\nVuruş anı denk: aynı tohumla eşleştirilmiş 300 vuruşta karar %97 aynı, doğrudan şut 248 → 247, gol 26 → 27.\n\nPrototipte iki tuzak çıktı, tasarıma işlendi:\n- Adımlama hedefi barajın ortasıyken, baraj otururken hakem barajın arkasına sıkışıyordu. Hedef barajın dış ucunun yanına alındı.\n- Düdük, üyeler ≤ 1 m iken çaldığında baraj aralıklı kalıyordu (d-duran 200: gol/şut %7,1 → %9,0). Ön koşul sıkılaştırıldı: üyeler ≤ 0,35 m ve duruyor, yatan yatık, kaleci yerinde.",
+  "durumMakinesi": "Kapsam: yalnız sinif 'baraj' (tehlikeliSerbest), sahne&4 ve protokol&1. du.hk.s1 = true; durum du.hk.evre'dedir (barajSahne kurar, ilk değer 'gel'). Süreler gerçek saniye (tempo B); duruşta maç saati durusSaat 2 ile akar. Hakemi şu zincir sürer: hakemAI'nın DY dalı → hakemDuranYeri → hakemSpreyHedef / hakemSpreyAdim → barajSeremoniAdim. kartSira dalı önceliklidir: kart gösterilirken seremoni bekler.\n\n0) Faul (değişmez): düdük ve yön, bekle 0,8–1,2 sn (kartta +2), kart, itiraz.\n\n1) 'gel'\n- Hakem topun 0,8 m yanına yürür (hizOran 0,7 / 0,4; yüzü topa).\n- 2,5 m'ye girince bir kez: vurucu 12 m içindeyse ve h2 < seremoni.mesafe (0,6) ise vurucu jest 'isaret' yapar (0,9 sn, hedef barajın ortası: mesafe isteği).\n- Olay seremoni{tur:'bekle', p:kullanan, x, z}. Hakemin yüzü vurucuya.\n- 1,1 sn sonra 'top'. Tavan: evrede 10 sn.\n\n2) 'top' (Z2c spreyi)\n- Top yerine konmuşsa (asama yerles / hazir / kullan) 1,2 sn sürer; olay sprey{tur:'top'}.\n- Vurucu topu hk.yerT'de koyar (3,5–6 sn, h2, + zgEk; sahneHiz). Bugün bu an ~10,7 sn.\n- Çıkışta kaosT ve heykel belirlenir.\n\n3) 'kaos'\n- Süre: sakin varyantta 1,5–2,5 sn (h2). Öbür varyantlarda kaosT = clamp(sahneT − t − [adımlama (6,2 m / (0,24·7,2) + 0,8) + restart yürüyüşü (|R − barajın ortası| / 3,2) + ek 7 + dudukBekle], taban, 10). Taban: olağan 3, uzun 4,5. Uzun varyanta ayrıca uzunEk (3–5) eklenir.\n- Baraj üyeleri: g.dizik = false, baraj pozu yok. Hedef = top + u·(g.kr + boyuna kıpırtı) + p·(sira·0,5·1,4 + hk.kayV + yan kıpırtı).\n  - g.kr ilk değeri 6,0–7,8 m (h2, üye başına).\n  - Kıpırtı yanda ±0,35 m, boyuna ±0,3 m; her 1,0–1,5 sn'de yenilenir (h2). İtişme gövde çarpışmasından kendiliğinden doğar.\n  - hizOran 0,35–0,85; yüz topa.\n- Barajsız savunmacılar: o an 9,15 m içindeyse, ilk itişe dek topa 4 m'ye kadar yaklaşabilir (kalabalık); sonra 9,6 m.\n- Heykel (h2 < 0,12; 6 m içindeki en yakın savunmacı): ilk itişe dek topun 2,2 m önünde, yüzü vurucuya.\n- Kaleci ön direkte: kale çizgisinden 0,7 m, direğin 0,4 m içinde.\n- Hakem: topun önünde, kümeye doğru hk.dR uzaklıkta (1,2 m'den başlar, her itişte +1,3, en çok 4,5). Yüzü kümenin ortasına, hizOran 0,3.\n- İtiş: itN kez (sakin 1, olağan 1–2, uzun 2–3), s = 0,5 + i·max(1, kaosT−1)/itN anlarında.\n  - Olay seremoni{tur:'it', hedef, p: heykel | null}.\n  - Üyelerin kr'si +0,7 (en çok 8,6).\n  - İlk itiş heykeli ve kalabalığı bırakır.\n- Kaydırma: kay dizisi (sakin 1, olağan 1–2, uzun 3 adım; her biri ±0,4–1,0 m, işaret dönüşümlü), s = 0,8 + i·max(0,8, kaosT−0,8)/kayN anlarında.\n  - hk.kayV = kay[i].\n  - Kalecide jest 'yonlendir' 1,0 sn; hedef barajın ucunun 2 m kayma yanı.\n- Çıkış: s ≥ kaosT ve bütün üyeler kaos hedefine ≤ 2,5 m. Yetişmezlerse s ≥ kaosT + 4.\n\n4) 'adim' (K1 adımlaması, öne yürüyerek)\n- Hedef barajın dış ucunun yanı: W − p·0,9 − u·0,4. Eski hedef barajın ortasıydı; prototipte baraj otururken hakem barajın arkasına sıkışıyordu.\n- hizOran 0,24 (~1,7 m/sn); h.bak = null; baş gidiş yönünde (bakisYon).\n- Üyelerin kr'si = max(kr, hakemin topa göre ilerisi + 0,8), en çok 9,55: baraj hakemin önünde geri çekilir.\n- Çıkış: uz < 0,5 ya da 8 sn.\n\n5) 'cizgi' (K1): 1,6 sn; olay sprey{tur:'cizgi'}; gövde ve baş sıkılan noktada.\n\n6) 'dizil'\n- hk.kayV = 0.\n- Olay barajYeri: mevcut 'yon' işareti topa (9,15 m).\n- h2 < 0,5 ise kalecinin son 'yonlendir' jesti.\n- Üyeler son yerlerine gider (mevcut görev yolu). 0,35 m içine girince g.dizik = true: baraj pozu başlar, yatan bundan sonra yatar.\n- Kaleci son yerine döner.\n- Çıkış: s ≥ 1,2 ve bütün üyeler ≤ 1 m (ya da 6 sn). O anda du.hakemHazir = true ve hk.R = barajRestartYeri.\n\n7) 'yer'\n- R = top − u_kale·2 + n·5,5. n, vurucunun geri / yay noktasının öbür yanıdır; R saha içine kırpılır.\n- Uzakta hizOran 0,6 ve yüz gidiş yönüne. 2,5 m içinde 0,3 ve yüz barajın ortasına (hk.wc).\n- Çıkış: uz < 0,6 ve hız < 0,4. Tavan 8 sn; tavanda R o anki yer olur (dur ↔ yer döngüsü yok).\n\n8) 'dur'\n- Hakem R'de, hizOran 0, yüzü barajda. R'den 0,8 m uzaklaşırsa (ör. kart) 'yer'e döner.\n- s ≥ hk.dur (0,4–0,9 sn) ve barajDudukHazir sağlanınca dudukCal. barajDudukHazir koşulları:\n  - vurucu 'hazir'da ve geri noktasında (≤ 0,5 m ya da hazirT > duranHazir + 2);\n  - zgEk doldu;\n  - gorevlilerYerinde;\n  - bütün baraj üyeleri dizik, son yerine ≤ 0,35 m ve < 0,3 m/sn;\n  - yatan yatık;\n  - kaleci son yerine ≤ 0,6 m ve < 0,5 m/sn;\n  - değişiklik ve sakatlık beklemiyor.\n- Tavan 5 sn (yalnız değişiklik ve sakatlık yokken).\n\n9) 'duduk'\n- dudukCal: du.dudukCalindi = true, du.dudukT = du.t, du.dudukBekle = hk.dudukBekle (1,0–3,0, h2). Olay duduk{tur:'serbest', seremoni:true}.\n- Hakem duruş bitene dek R'de kalır.\n- duranHazirMi: du.t ≥ dudukT + dudukBekle olunca durusKullan (düdük ikinci kez çalmaz) → yay koşusu (~2,4 sn) → temas.\n- Güvenlik ağları: zorlaGetir = max(16, yerT + 6); zorlaHazir = max(28, sahneT + 14). zorlaHazir − 2'de düdük çalınmamışsa önce dudukCal (bekle 0,5), sonra vuruş. Düdüksüz vuruş hiç yok.\n\nVaryantlar: sakin %25, olağan %55, uzun %20; heykel %12; mesafe isteği %60; kalecinin son jesti %50. Rastgelelik kaynakları:\n- sahneOzet tuz 20–35: 20 varyant, 21 yerT, 22 itN, 23 kayN, 24 kay işareti, 25–27 kay büyüklüğü, 29 heykel, 30 dudukBekle, 31 dur, 32 uzunEk, 33 mesafe, 34 son jest, 35 sakin kaos süresi;\n- 40 + sira: üyenin ilk uzaklığı;\n- kıpırtı: h2(tohum, oyuncu, ½ sn kovası).\nAna zar dizisi kaymaz. Bağlam tempoBaglam ile gelir: önde ve son dakikalarda ×1,3, gerideyken ×0,75.\n\nPrototip süreleri (proto5, maç, ortanca): top 7,4 · kaos 8,6 · adim 12,9 · cizgi 16,6 · dizil 18,2 · yer 19,4 · dur 23,4 · düdük 23,9 · koşu 27,6 · temas 28,1 sn. Daha kısası istenirse: seremoni.hedef 26, kaosTaban.olagan 2,5.\n\nHızlı vuruş değişmez: hizliSerbestMi barajlı sınıfı hiç çabuk saymaz. Çabuk serbest vuruş (barajsız, kartsız) düdüksüz ve 9,15 m itişi olmadan sürer.",
+  "kodDegisiklikleri": [
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "MOTOR_AYAR bildirimi",
+    "ne": "K grubuna (Z2 satırının yanına 'K — S1') protokol ve seremoni anahtarları undefined olarak bildirilir. varlik'in jest açıklamasındaki tür listesine 'yonlendir' eklenir. Yeni alan yok."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "ayarEkle('K', …) ve dosya başı yorumu",
+    "ne": "protokol:1 ve seremoni:{hedef 28, topYer, kaos, kaosTaban, ek, sakin, uzun, uzunEk, yakin, dagin, itAdim, kipir, kalabalik, heykel, mesafe, dur, duduk, restart, kayM, adimHiz} eklenir. Yoruma S1a paragrafı yazılır: L.1, L.9 madde 1, kullanıcı notları 11–13."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "barajKur",
+    "ne": "S1a açıkken (protokol&1 && sahne&4) kalecinin t=0'daki jestVer('isaret', 1,4) verilmez; yönlendirme kaos evresine taşınır. Bit 0'da satır aynı."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "barajSahne",
+    "ne": "if(!du.hk) du.hk = (protokol&1) ? this.barajSeremoniKur(du) : {evre:'top', t:0, s:null}. S1a'da her baraj üyesinin görev nesnesine dizik:false, kr (seremoni.yakin, sahneOzet 40+sira), kj, ku, kT yazılır. Görevler yeniden dağıtılırsa bunlar yeniden kurulur; hk korunur."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "barajSeremoniKur (yeni)",
+    "ne": "Seremoni planını h2 ile kurar: tur, yerT, itN, kay[], heykelVar, dudukBekle, dur, uzunEk, mesafe, sonJest. Ayrıca evre 'gel', itI/kayI/kayV, dR, R, wc, nk. Rastlantı çekmez."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "sahneKur",
+    "ne": "S1a'da t0 = seremoni.hedef (tempo.baraj yerine). Güvenlik ağları: zorlaGetir = max(16, hk.yerT + 6), zorlaHazir = max(28, sahneT + 14)."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "sahneHiz",
+    "ne": "S1a'da kalan = hk.yerT + zgEk − du.t. Vurucu topu 3,5–6 sn'de koyar; bugün sahneT − sahneKos − 12'ye göre ~10,7 sn'de koyuyor."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "hakemSpreyHedef",
+    "ne": "S1a hedefleri eklenir:\n- gel ve top: top + p·0,8;\n- kaos: top + u·dR + p·(kümenin ortası + kayV);\n- adim, cizgi, dizil: barajın dış ucunun yanı, W − p·0,9 − u·0,4;\n- yer, dur, duduk: hk.R.\nBit 0'da eski dal değişmez."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "hakemSpreyAdim",
+    "ne": "Başa if(du.hk.s1){this.barajSeremoniAdim(du,h,uz,dt);return;} eklenir. K1'in yüz kuralı (adimda h.bak null ve bakisYon gidiş yönünde; cizgide sıkılan noktaya bakış) ortak bir yardımcıya (hakemSpreyYuz) çıkarılır, iki yol da onu kullanır. Bit 0'da sonuç aynı."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "barajSeremoniAdim (yeni)",
+    "ne": "Hakemin durum makinesi: evre başına hizOran, bak ve bakisYon. Olaylar: seremoni, sprey, barajYeri. Ayrıca it ve kay zamanlaması, kaleci jesti, adımlamada üyelerin kr itişi, dizilde hakemHazir ve R, durda ön koşul ve tavanlar, dudukCal."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "barajKaosHedef, barajSeremoniYer, barajRestartYeri, barajDudukHazir, dudukCal (yeni)",
+    "ne": "- barajKaosHedef: üyenin kaos hedefi.\n- barajSeremoniYer: görev döngüsü kancası. Kaos ve adımlamada baraj üyesinin hedefi, hızı ve kıpırtısı (h2 kovası); kaosta kalecinin ön direk yeri; dizilde g.dizik (≤ 0,35 m). Geri dönüş değeri true ise döngünün varsayılan yolu atlanır.\n- barajRestartYeri: R (kaleye göre 2 m geride, yay koşusunun öbür yanında 5,5 m).\n- barajDudukHazir: düdük ön koşulları.\n- dudukCal(du, bekle): du.dudukT, du.dudukBekle, du.dudukCalindi ve on('duduk', {tur, seremoni:true}). S1b (penaltı) da kullanabilir.\nAd denetimi temiz: bu adların hiçbiri bugün depoda yok."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "durusYerlesim",
+    "ne": "- Görev döngüsünde gorevYaz'dan sonra: if(du.hk&&du.hk.s1&&this.barajSeremoniYer(du,p,g)) continue.\n- Yatan, S1a'da yalnız du.hakemHazir'dan sonra yatar.\n- Savunanın 9,15 m itişinde: heykel ilk itişe dek topun 2,2 m önünde; o an 9,15 m içindeki barajsız savunmacılar için itiş yarıçapı ilk itişe dek seremoni.kalabalik (4 m), sonra 9,6.\n- Barajdakilerin yonHedef'i dizik değilken null (yürürken dönebilsin).\n- İsteğe bağlı: barajdan 1 m kuralı S1a'da dizilden sonra uygulanır."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "duranHazirMi",
+    "ne": "S1a'da sahneT kapısı (son + zgEk) yoktur; sprey kapısının yerine düdük kapısı gelir:\n- du.dudukT yoksa false; zorlaHazir − 2'de önce dudukCal(du, 0,5).\n- du.t < dudukT + dudukBekle ise false.\nBit 0'da eski iki satır aynen çalışır."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "hakemDuranYeri",
+    "ne": "Barajlı dalın önüne eklenir: S1a ve barajW varsa duruş bitene dek {h: hakemSpreyHedef(du), yh:null}. Bu, hakemHazir'dan sonrası ve 'kullan' evresi için de geçerli. Bugün hakemHazir'dan sonra genel dala düşüp çapraza koşuyor."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "hakemAI, durusKullan, stepDurus",
+    "ne": "Kod değişmez, yalnız yorum notu eklenir:\n- Sprey dalı S1a evrelerinde de çağrılır; 'cekil'e hiç girilmez, eski hakemHazir bloğu çalışmaz.\n- durusKullan'daki düdük dudukCalindi sayesinde atlanır.\n- kartSira dalı önceliği seremoniyi bekletir.\n- stepDurus'un değişiklik ve sakatlık beklemesi düdük ön koşulunda da var."
+   },
+   {
+    "dosya": "js/mac-takim.js",
+    "islev": "jestVer (yorum ya da küçük bayrak)",
+    "ne": "Tür listesine 'yonlendir' eklenir. jestVer, aynı tür sürerken yenilemez. Kalecinin art arda yönlendirmeleri için ya prototipteki gibi seremoni önce jest = null yazar, ya da jestVer'e yenile bayrağı eklenir (tercih: bayrak; kalecinin başka jestini kesmez)."
+   },
+   {
+    "dosya": "js/animasyon.js",
+    "islev": "anmHakemOlay, anmHkPoz, ANM_JEST / ANM_POZ, jest katmanı, anmBaraj, anmHakemAdim",
+    "ne": "- 'seremoni' olayı: tur 'bekle' → hakem işareti 'dudukBekle' (1,1 sn); tur 'it' → 'geriIt' (1,0 sn).\n- duduk olayında seremoni:true ise duduk 0,7 sn.\n- Yeni pozlar anmHkPoz'a eklenir.\n- ANM_JEST.yonlendir → ANM_POZ.jestYonlendir; nişanlı yatay kol, sallanmalı.\n- anmBaraj: gorevli && G.dizik === false → 0 (kaosta baraj pozu yok).\n- anmHakemAdim: mac.durus.hk.evre 'dur' ya da 'duduk' iken saat bakışı bastırılır."
+   },
+   {
+    "dosya": "js/stil-99.js",
+    "islev": "STIL.animasyon.s1 (yeni)",
+    "ne": "{seremoni:1, itHz:2.5, yonHz:2.5, yonSalinim:0.2, yonTh:0.15} ve dudukBekle / geriIt poz sabitleri. 0: yeni işaretler, 'yonlendir' ve kaos pozu çizilmez. z2 değişmez."
+   },
+   {
+    "dosya": "js/mac-izleme.js",
+    "islev": "IZLEME.anlar",
+    "ne": "duduk:{once:0.5, sonra:6, kosul:v=>!!(v&&v.seremoni)}. Düdük, bekleyiş ve yay koşusu 4×'te de 1× izlenir; kullanım penceresi temastan yalnız 1,5 sn önce başlıyor. Gerektirir: ikiz-deneme ve akis-deneme 18."
+   },
+   {
+    "dosya": "araclar/olcumler/k-sahne.js",
+    "islev": "bilgi, dinle, adim, bitir, ozet",
+    "ne": "S1a satırları eklenir (olcu alanında). dinle 'seremoni' ve 'duduk' olaylarını alır. adim, du.hk.s1 iken evre sürelerini, kaos uzaklığını, kalabalığı, üye yolunu, adımlamada yüzü ve düdük anındaki hakemi ölçer. ozet'e barajlı seremoninin evre × bağlam tablosu eklenir."
+   },
+   {
+    "dosya": "araclar/senaryolar/d-duran.js",
+    "islev": "serbest hücreleri raporu",
+    "ne": "S1a bilgi satırı eklenir (kapı değil): hazırlık, düdük → koşu ≥ 1 sn %, düdükte hakem durmuş %, adımlamadan önce dizili %."
+   },
+   {
+    "dosya": "araclar/animasyon-olcum.py, araclar/poz-galerisi.html",
+    "islev": "HK_OLAY, --duran, galeri satırı",
+    "ne": "HK_OLAY'a seremoni:'ref' eklenir ('A: zamanlama' satırı). Yeni 'A: seremoni' satırı: işaret olayla aynı karede N/N, kaosta baraj pozu ~0, dizikken pozlu, yonlendir nişanı. Galeriye 's1serbest' satırı."
+   },
+   {
+    "dosya": "Belgeler",
+    "islev": "FUTBOL_KUTUPHANESI §12.13, kutuphane/L L.1 ve L.9, TEKNIK_PLAN §8, CLAUDE.md senaryo kapıları",
+    "ne": "- S1a planı ve sonucu;\n- L.1'e 'Motorda' notu;\n- motor → çizim sözleşmesi: du.hk evreleri, g.dizik, seremoni olayı, yonlendir jesti, du.dudukT;\n- kapı satırı: S1a kodu → d-duran, m-* --ayni, k-sahne, ikiz."
+   }
+  ],
+  "yeniAlanlar": [
+   "du.hk (S1a; mac-durantop.js yazar).\n- Alanlar: s1, evre ('gel'|'top'|'kaos'|'adim'|'cizgi'|'dizil'|'yer'|'dur'|'duduk'), t (top konduktan beri sn), s (evre sayacı), es (evrede geçen), tur ('sakin'|'olagan'|'uzun'), yerT, itN, itI, kay[], kayI, kayV, kaosT, dR, heykelVar, heykelP, dudukBekle, dur, uzunEk, mesafe, sonJest, R{x,z}, wc{x,z}, nk{x,z}.\n- Okuyan motor işlevleri: hakemSpreyHedef, barajSeremoniAdim, barajSeremoniYer, durusYerlesim, sahneHiz, sahneKur, duranHazirMi.\n- k-sahne okur: evre, tur, itI, kayI, heykelP, kaosT.\n- Çizim yalnız evre 'dur'/'duduk'u okur (saat bakışını bastırmak için); işaretleri olaylardan alır.",
+   "du.dudukT ve du.dudukBekle (du nesnesinde; S1b penaltı da kullanabilir): düdüğün anı ve düdükten koşuya bekleme. Okuyanlar: duranHazirMi, k-sahne. Mevcut du.dudukCalindi, S1a'da düdük anında true olur.",
+   "Baraj üyesinin görev nesnesi (p.duranRol = du.gorev.get(p); alt nesne, oyuncuya alan eklenmez):\n- dizik (false → true; motor → çizim, anmBaraj);\n- kr (kaostaki uzaklık), kj / ku (kıpırtı), kT (sonraki kıpırtı anı) — motor içi.",
+   "p.jest türleri (mevcut jest alanı):\n- kalecide yeni tür 'yonlendir' {tur, t, sure, kol, hedef}; çizim okur;\n- vurucuda mevcut 'isaret' jesti, hedefi barajın ortası (mesafe isteği).",
+   "Yeni olay 'seremoni' {tur:'bekle'|'it', p, x, z, hedef}. Okuyanlar: çizim (anmHakemOlay), k-sahne, animasyon-olcum ('A: zamanlama').",
+   "Olay 'duduk'a ek alan seremoni:true. Okuyanlar: çizim (0,7 sn), k-sahne, izleme (IZLEME.anlar.duduk).",
+   "Hakem nesnesine yeni alan yok: mevcut h.tx/tz, hizOran, bak, bakisYon, eylem kullanılır. Oyuncu nesnesine yeni alan yok; varlik'in 128 alan sınırı korunur."
+  ],
+  "ayarlar": [
+   "protokol (yeni; K grubunda bildirilir, değeri mac-durantop.js'te ayarEkle ile atanır): S1 sahne protokollerinin bit maskesi.\n- Bit 1 = S1a, seremonili barajlı serbest vuruş. Diğer S1 alanları sonraki bitleri alır (orkestratör birleştirir).\n- Varsayılan 1; S1 bitince bütün S1 bitleri açılır.\n- Yalnız sahne&4 açıkken etkili (sprey ve barajW gerekir).",
+   "protokol 0 iken (birebir yol):\n- barajSahne eski {evre:'top'} nesnesini kurar;\n- sahneKur, sahneHiz, hakemSpreyHedef, hakemSpreyAdim, durusYerlesim, duranHazirMi, hakemDuranYeri, barajKur eski yoldadır.\n- Motor K1 ile birebir. Prototipte tohum 1'de (bir barajlı vuruş) 102.176 adımlık parmak izi AYNI.\n- Ablation: MAC_DENEME_AYAR='{\"protokol\":0}'.",
+   "seremoni (yeni nesne):\n- hedef 28 — temasa hedef süre (tempo.baraj 24'ün S1a karşılığı; × tempoBaglam × 1 ± tempoSapma).\n- topYer [3.5, 6] — topun konma anı.\n- kaos [1.5, 10] — kaos süresinin sınırları.\n- kaosTaban {sakin 1.5, olagan 3, uzun 4.5}.\n- ek 7.0 — çizgi, dizil, dur ve koşunun payı.\n- sakin 0.25, uzun 0.2 — varyant olasılıkları; uzunEk [3, 5].\n- yakin [6.0, 7.8] — üyenin topa ilk uzaklığı.\n- dagin 1.4 — kaostaki yan aralık çarpanı.\n- itAdim 0.7 — itişte geri çekilme (m).\n- kipir [1.0, 1.5] — kıpırtının yenilenme aralığı (sn).\n- kalabalik 4.0 — ilk itişe dek barajsız savunmacının topa en yakın uzaklığı (m).\n- heykel 0.12, mesafe 0.6 — olasılıklar.\n- dur [0.4, 0.9] — hakemin durup düdükten önce bekleyişi (sn).\n- duduk [1.0, 3.0] — düdükten koşuya (sn).\n- restart [2.0, 5.5] — R: kaleye göre geride, yanda (m).\n- kayM [0.4, 1.0] — kaydırma büyüklüğü (m).\n- adimHiz 0.24 — K1 adımlamasıyla aynı.",
+   "Mevcut anahtarlar değişmez:\n- tempo.baraj 24 (S1a kapalıyken kullanılır);\n- tempoBaglam [1.3, 0.75] ve tempoSapma 0.15 S1a hedefine de uygulanır;\n- duranHazir[3] 0.35 düdük ön koşulunda;\n- duranSure, gorevlilerYerinde, yatanBaraj, barajYani, serbestIkili, serbestAldatma aynı.",
+   "Ayar taraması kod değiştirmeden yapılabilir. Örnekler: '{\"seremoni\":{…,\"sakin\":1}}' (hep sakin); kısaltmak için hedef 26 ve kaosTaban.olagan 2.5.",
+   "Çizim: STIL.animasyon.s1.seremoni 1. 0 iken yeni işaretler, 'yonlendir' ve kaos pozu çizilmez; motor aynı kalır."
+  ],
+  "cizim": [
+   "Hakem 'dudukBekle' (olay seremoni{tur:'bekle'}, 1,1 sn):\n- Sağ el düdüğü çene hizasında tutar: ANM_HK_DUDUK'a yakın, aL ~−1,0, eL ~−1,9, aLz 0,3. Yüz hizasını geçmez (L.1).\n- Sol kol öne yarı açık, avuç vurucuya: anmKolYon θ ~−0,2, eR −0,35.\n- Gövde ve baş vurucuya (c.p).\n- Adı 'bekle' olamaz: 'bekle' gol işaretinde ağırlıksız bekleme olarak kullanılıyor.",
+   "Hakem 'geriIt' (olay seremoni{tur:'it'}, 1,0 sn):\n- İki kol göğüs hizasında öne (anmKolYon iki yana θ ~−0,1), avuçlar ileri.\n- Dirsekler s1.itHz (2,5 Hz) ile açılıp kapanır: iki itme.\n- Gövde öne ~0,12 eğik; hedefe döner (c.hedef; heykel varsa c.p).\n- Motor hakemi her itişte ~1,3 m kümeye yaklaştırır.",
+   "Düdük (duduk{seremoni:true}): mevcut duduk pozu 0,7 sn (eskiden 0,5). Hakem motorda duruyor ve yüzü barajda; bugünkü 'koşarken düdük' görüntüsü kalkar. 'barajYeri' (dizil başı) mevcut 'yon' işaretidir (topa, 9,15 m).",
+   "Adımlama ve çizgi: K1'in yüzü, bakışı ve sprey pozu aynen kullanılır. Hedef barajın dış ucunun yanı olduğu için 'cizgi'de kol IK'sı çizgiyi uçtan uca daha geniş açıyla süpürür; an-yakala ile denetlenir. Köpük izi aynı (sprey olayı).",
+   "Kaleci 'yonlendir' jesti (p.jest, 1,0 sn; kaosta 1–3 kez, dizilde %50 son kez):\n- ANM_JEST.yonlendir → ANM_POZ.jestYonlendir.\n- anmZ2KolHedef benzeri nişan: kol hedefe, yatayın s1.yonTh (0,15 rad) üstünde.\n- Kol s1.yonSalinim (0,2 rad) × sin(2π·yonHz·t) ile sağa sola sallanır ('biraz sağa').\n- Gövde mevcut jest katmanıyla hedefe yarı döner.\n- Kaleci kaos boyunca ön direkte (motor).",
+   "Vurucunun mesafe isteği: mevcut 'isaret' jesti, hedefi barajın ortası.",
+   "Kaos:\n- anmBaraj'da gorevli && G.dizik === false && s1.seremoni > 0 ise 0 döner. Eller önde baraj pozu yok; boşta ve yürüme pozları görünür. İtişme gövde çarpışmasından kendiliğinden gelir.\n- Dizik olunca baraj pozu (1) ve sıçrama (2/3) eskisi gibi.\n- Yatan dizilden sonra yatar (motor).\n- İsteğe bağlı: 0,75 m'den yakın iki üyede küçük omuz sallantısı (yalnız çizim).",
+   "anmHakemAdim: hakem 'dur' ya da 'duduk' evresindeyken orta hakemin saat bakışı (h.saatT) bastırılır; yüz barajda kalır.",
+   "Kamera değişmez: duruşta odak top; kaos topun 6–9 m önünde ve 36°'lik görüşün içinde.",
+   "Doğrulama Claude'un kendisinindir; kullanıcıya sahne üretilmez:\n- poz-galerisi 's1serbest' satırı: dudukBekle, geriIt'in iki evresi, sağ/sol yonlendir, kaostaki barajcı ↔ dizik baraj pozu;\n- an-yakala: barajlı serbest vuruşun gel, kaos, adim, cizgi, yer ve düdük anları;\n- animasyon-olcum --duran 24: 'A: duran top' satırları aynı kalmalı; 'A: zamanlama'da seremoni N/N;\n- kontrol.py."
+  ],
+  "olcu": [
+   "Ortak kurallar: k-sahne genişlemesi bilgi satırlarından oluşur, dar bant yok. Sözleşme aynı: rastlantı çekmez, motor yöntemi çağırmaz. Satırlar yalnız du.hk.s1 duruşlarından sayılır.",
+   "ksBEv_<evre> — 'Barajlı seremoni: <evre> (gerçek sn)'; gel, top, kaos, adim, cizgi, dizil, yer, dur. ozet'e evre × bağlam tablosu. Prototip, maçta evreye giriş ortancaları: top 7,4 · kaos 8,6 · adim 12,9 · cizgi 16,6 · dizil 18,2 · yer 19,4 · dur 23,4 · düdük 23,9 sn.",
+   "ksBTur_sakin / _olagan / _uzun varyant %; ksBKaosT planlanan kaos süresi (prototip ortanca ~3, aralık 1,5–9,4 sn).",
+   "ksBOnce — 'adımlama başlamadan baraj dizili (bütün üyeler son yerine ≤ 1 m) %'. Kaos ölçüsüdür: bugün %100, prototip %0–5. 'Çizgiden önce dizili' tanımı kullanılmaz: adımlama barajı çizgiye ittiği için 1 m eşiğiyle %20–40 çıkıyor.",
+   "ksBKaosYakin — 'kaosta üyenin topa en yakın uzaklığı (m)' (prototip 6,2–6,4). ksBKalabalik — 'kaosta topa 9,15 m içindeki savunmacı (en çok)' (prototip 4).",
+   "ksBYol — 'baraj üyesinin duruştaki yolu ÷ ilk konumdan son yerine doğrudan uzaklık'. Kaos ve düzelme ölçüsü: d-duran'da bugün 1,03 → 1,19; maçta 1,6–1,8.",
+   "ksBIt, ksBKay, ksBBekle (işaret ve jest sayısı / duruş; prototip 1,6 / ~1,7 / 1,0); ksBHeykel %.",
+   "ksBYuz — 'sprey adımlamasında yüz gidiş yönünde (kare payı %)'; L.10. K1 öncesi %25, prototip %92–97.",
+   "ksBDudukKos — 'düdük → koşunun başı (sn)'; ksBDuduk1 — '≥ 1 sn %'. Bugün 0 sn / %0; prototip 1,0–2,9 sn / %100.",
+   "ksBDudukTemas — 'düdük → temas (sn)'. Bugün 2,5; prototip 4,2–4,5.",
+   "ksBHkDur — 'düdükte hakem durmuş (≤ 0,3 m/sn) %'. Bugün %0 (ortalama 5,4 m/sn); prototip %100.",
+   "ksBHkArka — 'düdükte hakem vurucunun arkasında (kaleye göre toptan ≥ 1 m geride) ve yüzü barajın 45° içinde %'.",
+   "ksBOnceKul — 'düdükten önce kullanım %'. 0 olmalı; 0'dan büyükse kural hatasıdır.",
+   "ksBKaleci — 'koşunun başında kalecinin son yerine uzaklığı (m)'; ≤ 0,1 (prototip 0,01–0,05).",
+   "Mevcut satırlar aynı tanımla kalır:\n- ksS_baraj (barajlı duruş süresi): ~25 → ~28–30 beklenir;\n- ksBHakem (hakemHazir anı, S1a'da dizilin sonu): ~19–21 → ~18–20.",
+   "d-duran'a bilgi satırı: 'S1a: hazırlık · düdük → koşu ≥ 1 sn % · düdükte hakem durmuş % · adımlamadan önce dizili %'."
+  ],
+  "senaryolar": [
+   "d-duran (sahibi dosya değişir, koşar):\n- Korner, penaltı, taç ve kale vuruşu birebir. Prototip v1, N=200: korner satırları protokol 0 ile 1 arasında aynı.\n- Serbest hücrelerinde hazırlık 24,6–25,9 → 28,5–30,7 sn; 'yok' sütunu 0.\n- Kapılar (barajlı doğrudan şutta gol/şut %6–10, 18 m merkezde doğrudan şut %60–90, baraj kişi) gürültü içinde. Eşleştirilmiş 300 vuruşta (proto5): karar %97 aynı, doğrudan şut 248 → 247, gol 26 → 27.\n- '30 m merkezde %20–50' kapısı bugün de dışarıda (%60).",
+   "d-penalti, d-sut, v-sut: birebir; seremoni yalnız barajlı serbest vuruşta.",
+   "d-topcu: birebir; top toplayıcı yolları barajlı vuruşa girmez.",
+   "m-isinma, m-fotograf: birebir (maç öncesi); oturum sonunda --ayni.",
+   "o-ofsayt: senaryo içinde birebir (ofsayt serbest vuruşu endirekt, dolayısıyla barajsız). Tam maç sayıları gürültüde.",
+   "c-temas, c-yariyariya, c-donen, c-1v1, c-koru, c-kanat, c-orta, b-pas, z-s3 / z-s10 / z-s14: birebir ya da gürültüde. Barajlı vuruş yalnız tam maçta oluşur; faul kurulumları duruşla biter.",
+   "40 maç --karsilastir (z5-2 ya da K1 tabanı):\n- Parmak izi ilk barajlı vuruştan sonra değişir (maç başına ~1–2,4; prototipte tohum 1: 2-0 → 0-1). Sağlık aralığı satırları gürültüde beklenir.\n- k-sahne'de barajlı süre +3–5 sn, duruş dakikası çok az artar.\n- protokol 0 ile --ayni geçmeli.",
+   "ikiz-deneme: 'Aynılık N/N' beklenir (modül düzeyinde ortak durum yok). mac-izleme'nin duduk penceresi eklenirse akis-deneme 18 de çalıştırılır.",
+   "ad-denetimi: yeni Match yöntemleri için. animasyon-olcum --duran 24: 'A: duran top' aynı kalmalı (tek pencere 60 sn, S1a en çok ~38 sn), yeni 'A: seremoni' satırı. kontrol.py, an-yakala ve poz-galerisi s1serbest de çalıştırılır."
+  ],
+  "riskler": [
+   "Süre uzuyor: barajlı vuruş +3–5 sn (maçta ortanca ~25–27 → ~28–29; uzun varyantta 34–38; kartla 30+). Gerçek doğrudan şut serbest vuruşu ~75 sn olduğundan tempo B sınırı içinde. Kullanıcı uzun bulursa: seremoni.hedef 26, kaosTaban.olagan 2,5.",
+   "Hakemin baraja sıkışması (prototipte bulundu, giderildi): adımlama hedefi barajın ortasıyken baraj otururken hakem barajın arkasına itiliyor, restart yürüyüşü 8 sn tavanına takılıyordu. Hedef barajın dış ucunun yanına alındı; 'yer' tavanı R'yi o anki yere çeker. Kalan bir yan: adımlamada kümenin içinden geçiş bazen 6–8 sn sürüyor (tavan 8).",
+   "Vuruş anının denkliği: düdük üyeler ≤ 1 m iken çalarsa baraj aralıklı kalır (prototip v1, d-duran 200: gol/şut %7,1 → %9,0). Ön koşul ≤ 0,35 m, duruyor, yatan yatık ve kaleci yerinde olmalı; bu gevşetilmemeli. Sıkı ön koşulla eşleştirilmiş 300 vuruşta dağılım aynı çıktı.",
+   "Ön koşulda kilitlenme: kilitli eylemdeki ya da sakat üye, yetişemeyen görevli (barajYani'nin 1 m itişi, ikinci vurucu). Önlem: 'dizil' 6 sn ve 'dur' 5 sn tavanları. Değişiklik ya da sakatlık beklerken tavan bilerek işlemez. Son ağ zorlaHazir − 2'dir ve orada da önce düdük çalar.",
+   "Kart ve itiraz: barajlı vuruşların %58–77'si kartlı. Kart sırasında seremoni durur; 'dur' evresinde hakem R'den 0,8 m çıkarsa 'yer'e döner. S1d hakemi yürütürse 'gel' gecikir ve kaos tabana iner (olağan 3 sn).",
+   "Parmak izi: protokol 1 ilk barajlı vuruştan sonra bütün maç akışını değiştirir. Denge kararı 80 maçla verilir; 4 ya da 10 maçla verilmez.",
+   "Kalabalık ve heykel:\n- 4 m'ye yaklaşan savunmacılar topun konmasını engellemez; vurucu arkadan gelir.\n- Heykel topun 2,2 m önünde ve yalnız ilk itişe dek durur; topun konması 3,5–6 sn'de.\n- Endirekt, hakem topu ve kenar sınıflarına dokunulmaz.\n- Heykele sarı kart yok; disiplin istatistiği değişmesin diye bilerek.",
+   "İzleme: 4×'te düdük ve bekleyiş rampa içinde kalır (kullanım penceresi temastan yalnız 1,5 sn önce). IZLEME.anlar.duduk eklenmezse kullanıcı seremoninin sonunu hızlı görür.",
+   "Ortak dosyalar:\n- S1b–S1e aynı yerlere yazar: mac-durantop.js, hakemAI, anmHakemOlay / anmHkPoz, k-sahne.\n- MOTOR_AYAR.protokol tek sahipte olmalı (ayarEkle iki kez eklenemez).\n- sahneOzet tuz 20–35 ve 40+sira S1a'ya ayrılmalı.",
+   "jestVer aynı tür sürerken yenilemez. Prototip kaleci jestini null'layarak yeniliyor; bu kalecinin başka bir jestini kesebilir. Uygulamada jestVer'e yenile bayrağı önerilir.",
+   "Ölçü tanımı: 'çizgiden önce dizili' kaosu az gösteriyor (adımlama barajı çizgiye ittiği için %20–40). Kaos ölçüsü 'adımlama başlamadan önce dizili' olarak tanımlanmalı.",
+   "Hız: kaos karesinde 5 üye için hedef hesabı ve kovalı h2 — ihmal edilebilir. Duruş kareleri oyun karelerinden ucuz olduğundan ms / 1000 adım az düşebilir; kodun payı hiz-evre ile ayrılmalı."
+  ],
+  "digerAlanlarlaTemas": [
+   "Düdük kapısı (S1b penaltı ile ortak): du.dudukT, du.dudukBekle ve dudukCal(du, bekle) tek düdük yolu olsun. Penaltının 'işaret / düdük → 1–3 sn → koşu' adımı da aynı duranHazirMi kapısını kullanabilir. durusKullan'daki eski düdük yalnız dudukCalindi yoksa çalar.",
+   "hakemAI (mac-kurallar.js): kartSira dalının önceliği S1a'yı bekletir. S1d (kart: hakem yürür / çağırır, oyuncu durur) bu dalı değiştirince seremoni otomatik bekler; 'dur'dan çıkışı 'yer'e dönüşle karşılanır. Gol dalı (S1c) ayrıdır, çakışma yok.",
+   "hakemDuranYeri (mac-durantop.js): penaltı dalı S1b'nin, barajlı dal S1a'nın. Aynı işlevde iki yeni dal olur; sıra önemli: önce S1a/S1b kontrolü, sonra eski dallar.",
+   "MOTOR_AYAR.protokol: tek anahtar, tek sahip (ayarEkle iki kez eklenemez). Bit dağılımını orkestratör yapar: S1a = 1, diğer alanlar sonraki bitler. seremoni nesnesi yalnız S1a'nın.",
+   "sahneKur / sahneOzet (Z2a): S1a tuz 20–35 ve 40+sira kullanır. S1b ve korner rutini (S1e) başka tuz aralıkları seçmeli. sahneT ve zorlaHazir'ı S1b de değiştirecek; S1a'nın dalı tur === 'baraj' ile sınırlı.",
+   "Çizim (animasyon.js anmHakemOlay / anmHkPoz): S1b'nin çapraz kol ve kaptan işaretleri, S1c'nin santraya yürüme ve not alma, S1d'nin çağırma işaretleri aynı tabloya eklenir. 'bekle' adı gol işaretinde kullanıldığından yeni işaretlere yeni adlar verilmeli (S1a: 'dudukBekle', 'geriIt'). Saat bakışının bastırılması S1b'nin bekleyişine de gerekir.",
+   "jestVer (mac-takim.js): 'yonlendir' türü kaleci içindir. S1b'nin penaltı bekleyişi K1'in çizim katmanında, motor jesti değil; çakışma yok. Yenile bayrağı S1d'nin çağırma jestine de yarar.",
+   "K1 F maddesi (hakemSpreyAdim'in yüz yönü, hakemAI'nın h.bakisYon sıfırlaması): S1a aynı kuralı barajSeremoniAdim'de kullanır. hakemSpreyYuz ortak yardımcıya çıkarılmalı; K1'in 12 sn tavanı ve 11,5 eşiği S1a'da plana bağlanır.",
+   "duranHazirMi ve stepDurus: değişiklik ve sakatlık beklemesi düdük ön koşuluna da girer. Sağlıkçı alanının (S1, sağlıkçılar) tedavi süresi barajlı vuruşu uzatır; L.1'e göre sakatlıktan sonra düdük zaten gerekir.",
+   "Z2c: yatan barajcı, barajYani perdesi, ikinci vurucu ve aldatma (A4-1) korunur. Yalnız yatanın yatma anı hakemHazir'dan sonraya kayar.",
+   "k-sahne.js ortak dosya: S1b (penaltı evreleri, itiraz), S1c (gol → santra, bakış sevinçte), S1d (kartta hakem tepe hızı) satırları aynı dinle / adim / bitir yapısına eklenir. 'duduk' olayını S1a ve S1b birlikte dinler (seremoni bayrağı ve du.tur ile ayrılır).",
+   "mac-izleme.js: IZLEME.anlar.duduk penceresi penaltının (S1b) düdüğüne de yarar. İki alan aynı satırı paylaşmalı."
+  ]
+ },
+ {
+  "ad": "S1b — Penaltı sahnesi: gösterme, itiraz ve kaptan protokolü, kutunun boşaltılması, düdüğün ön koşul olması (tempo B, ~40 sn)",
+  "ozet": "Bugünkü durum 15 tohumluk zorlanmış penaltıyla ölçüldü (scratchpad/s1b/olc.js, olc2.js, olc3.js). penaltiGorev herkesi t=0'da son yerine yolluyor. Görevliler 8,1. saniyede yerinde, ceza sahası 6. saniyeden sonra boş. Düdük faulden 25,1 sn sonra (ortanca) çalıyor ve vuruşun başladığı karede çıkıyor. Düdükten temasa geçen süre 2,34 sn ve bu yalnız koşu. 10. saniyeden düdüğe kadar oyuncuların ~%89'u hareketsiz. Bütün itiraz 1,8 oyuncu·sn. Kaptan protokolü yok. Hakem kart için 7,2 m/sn depar atıyor.\n\nTasarım, Z2 sahnesinin üstüne yeni bir bit ekler: `MOTOR_AYAR.sahne&32`, bit 1'i gerektirir. Bu bit `du.pk` adında, h2 tohumlu bir penaltı planı kurar. Evreler sırasıyla şöyle:\n- **goster:** Hakem noktaya koşup noktayı gösterir.\n- **itiraz:** Faul yapan takımdan 3–6 kişi hakeme yürür. Hakem bileklerini baş üstünde çaprazlar, sonra avuçlarını öne iter. Kaptan 1,1 m'de konuşur, diğerleri 4–5 m'lik halkaya çekilir. Hakem geri geri yürür, kalabalık onunla kayar. Hücumda sevinç ve yerdeki arkadaşa el uzatma olur. Vurucu topu alıp elinde tutar.\n- **bosalt:** Hakem kol işaretiyle kutuyu boşaltır. Oyuncular kişisel gecikmeyle 1,2–2,2 m/sn yürüyerek çıkar. Vurucu topu noktaya koyup geri çekilir. Kaleci çizgiye döner.\n- **hazir:** Hakem son yerinde durur, kaleciye bakar.\n- **duduk:** Ön koşul olan törensel düdük çalar. Vurucu 0,4–3 sn bekler, sonra koşar.\n\nSüre `sahneT = 40·(0,75 + 0,5·kaos)` ile belirlenir: sakin 30, ortanca ~39, kaotik 50 sn. Kaos h2'den, kırmızı karttan, son dakika gerginliğinden, hakeme itiraz eğiliminden ve hakemin sertliğinden gelir. Varyantlar:\n- kalecinin itiraza katılması,\n- kalecinin noktaya gidip oyalaması ve hakemin uyarısı,\n- hücumdan karşı itiraz,\n- vurucunun topu yeniden yerleştirmesi,\n- itiraz bölgesine giren kaptan dışı oyuncuya sarı (protokol sarısı; mevcut kartGoster yolu, neden 'itiraz'),\n- kaos yüksekse ikinci \"yaklaşmayın\" işareti.\n\nKurallar:\n- Sahne `this.rast()` çekmez. `itirazEt`in mevcut zar çekimi aynen kalır, seçtikleri kalabalığa katılır.\n- Oyuncu nesnesine yeni alan eklenmez. Durum `du.pk`, `p.jest` ve olaylarda tutulur.\n- Bit 0 iken sonuç birebir aynı kalır: `tempo.penalti` 27 ve `sahneKos` 1,6 korunur, top ışınlanması ve bütün kancalar `du.pk` ile korunur. `MAC_DENEME_AYAR='{\"sahne\":15}'` ile K1 tabanına karşı `--ayni` çalıştırılır.\n- Vuruşun kodu (penaltiAtisi, kalecinin okuması) değişmez. Gol oranı gürültü içinde kalır.\n- Yalnız penaltılı maçların parmak izi ayrılır (8 maçta ~1).\n\nÇizim için gereken üç yeni hakem işareti: kaptanCapraz, kaptanDur, bosalt. Bunlara törensel düdük (0,8 sn) ve isteğe bağlı çizgi işareti eklenir. Oyuncular yalnız mevcut jestleri kullanır (itiraz, isaret, basEl, alkis, kol).\n\nÖlçme ve kapılar:\n- Ölçü `k-sahne`'nin penaltı satırlarıyla yapılır.\n- Ana kapı yeni seyrek senaryo `d-pensahne`: oyundan zorlanmış penaltı, gerçek kalabalık konumları.\n- `d-penalti` (60·50 → 60·80) ve `d-duran` (60·60 → 60·75) döngüleri uzamalı. Uzamazsa kaotik sahneler sonuçsuz kalır ve d-penalti'nin gol kapısı düşer.",
+  "durumMakinesi": "Durum `du.pk.evre` alanında tutulur, `du.evre` de aynı değeri alır (k-sahne okur). Bütün zamanlar duruşun başından gerçek saniyedir (`du.t`). Maç saati duruşta `durusSaat` 2 ile akar.\n\n**Plan (`penaltiSahneKur`, t=0; durusBaslat → sahneKur içinde; rastlantısız)**\n- Sahnenin tohumu: `P.s = (sahneOzet(du,20)·2147483647)|0`. Karar i için `h2(P.s,i)`. Oyuncu başına `h2(P.s, 100+n+11·team+1000·k)`. sahneOzet tuz aralığı 20–39 S1b'ye ayrılır.\n- Kaos: `kaos = clamp(0,15 + 0,55·h2(1) + 0,30·[kart kırmızı] + 0,15·[2. yarı, kalan ≤ 15 dk, |fark| ≤ 1] + 0,20·max(0, profilEgilim(faulYapan,'hakemeItiraz')) − 0,15·(2·sertlik − 1), 0, 1)`. Ortalaması ~0,45.\n- Süre: `du.sahneT = 40·(0,75 + 0,5·kaos)`, yani 30–50 sn. Bağlam ve tempoSapma uygulanmaz.\n- `du.sahneKos = 2,3` (ölçülen koşu: düdükten temasa 2,34 sn).\n- Vurucunun düdükten sonraki beklemesi: `bekle = lerp(0,4, 3,0, 0,45·h2(2) + 0,55·soğukkanlılık)`.\n- Planlı düdük: `Tpre = sahneT − sahneKos − bekle`.\n- Evre bitişleri:\n  - `tI = Tpre·(0,30 + 0,25·kaos)`: itirazın planlı sonu.\n  - `tB = 0,85·Tpre`: boşaltmanın planlı sonu.\n  - `tY = tI + (tB − tI)·(0,25 + 0,35·h2(3))`: vurucunun topu koyduğu an.\n- Örnek zaman çizelgeleri (itiraz sonu / boşaltma sonu / düdük):\n  - sakin (kaos 0): ~8 / 22 / 26 sn\n  - orta (kaos 0,45): ~14,5 / 30 / 35 sn\n  - kaotik (kaos 1): ~25 / 39 / 46 sn\n- Kalabalık: `n = round(3 + 3·kaos)` kişi. Adaylar faul yapan takımın 40 m içindeki saha oyuncularıdır. Puan: `−uzaklık/10 + 0,8·eğilim + 1,5·[faul yapan] + 1·[kaptan] − 0,5·[sarı kartlı] + 0,4·h2`.\n- Kaptan: `p.kaptan` sahadaysa ve kaleci değilse o. Değilse kalabalıkta kararı en yüksek oyuncu. 45 m içindeyse kalabalığa eklenir.\n- Yerler:\n  - `gosterYer`: nokta + (−d·3, s·2,5); s hakemin bulunduğu yan.\n  - `sonYer`: bugünkü hakemDuranYeri (PL−17, MZ±6).\n  - `tut`: vurucunun topu tuttuğu yer, nokta + (−d·1,6, −s·1,2).\n- Varyantlar:\n\n| Varyant | Olasılık |\n|---|---|\n| kaleciItiraz | h2 < 0,3·(0,6 + 0,8·kaos) |\n| kaleciOyun | h2 < 0,12 (kaleciItiraz yoksa) |\n| karsi | h2 < 0,3·(0,5 + kaos) |\n| duzelt | h2 < 0,2 |\n| protokol sarısı | h2(8) < itirazKart·(1 + 1,5·eğilim)·(0,5 + sertlik)·(1 + kaos), ≈ %5 |\n| ikinci kaptan işareti | kaos > 0,6 |\n\n**1. goster (0 → 1,6–5 sn)**\n- Hakemde mevcut `penaltiGoster` eylemi (1,0 sn) ve çizimde düdük + noktaya kol (s1.goster 2,4 sn).\n- Hakem gosterYer'e koşar: hizOran 0,6 (~4,3 m/sn), 6 m içinde 0,3. Bakışı noktada.\n- Kalabalık üyeleri 0–1,2 sn gecikmeyle hakeme yönelir:\n  - 8 m'den uzakta hizOran 0,6 (efor 0,8), 3–8 m'de 0,35, 3 m içinde 0,2.\n  - Bakışları hakemde, `jest 'itiraz'` yaparlar.\n- Hücum:\n  - ≤ 3 kişi 0,3–1,5 sn'de `jest 'kol'` ya da `'alkis'` (1,2–1,6 sn).\n  - Biri yerdeki faul yiyene 1,2 m'ye gider; mevcut A4-3 yardımı devreye girer.\n- Vurucu `du.bekle`'den sonra topa koşar adım gider (≤ 3,2 m/sn) ve topu eline alır (`b.tasiyan`, asama 'yerles').\n- Top ışınlanmaz: yuvarlanan topu topDurdur durdurur, saha dışına çıktıysa topçu verir.\n- **Geçiş → itiraz:** (du.t ≥ 1,6 ve hakem gosterYer'in 1,5 m içinde) ya da du.t ≥ 5 ya da hakemin kart dalı başladı (`h.kartSira`).\n- Olay: `'penaltiSahne' {evre:'itiraz'}`.\n- Geçişte kalabalığın yönü `u` (hakemden kalabalığın ağırlık merkezine) donar. Yuvalar açıya göre dağıtılır: 0, ±0,55, ±1,1, ±1,65 rad. `itirazEt`in 'itiraz' eylemi verdiği oyuncular kalabalığa eklenir.\n\n**2. itiraz (→ tI)**\n- Hakemin hedefi `gosterYer − u·2,5`. Geri geri yürür (hizOran 0,12, ~0,9 m/sn), bakışı kaptanda. Kart dalı sürerken hedefi kart dalı yazar (öncelik onda).\n- Kalabalığın hedefi her karede hakemin konumuna göre yeniden hesaplanır, kalabalık hakemle kayar:\n  - kaptan 1,1 m'de,\n  - diğerleri önce 1,6–2,4 m'de,\n  - kaptan işaretinden 1,2 sn sonra 4,2–5,2 m'lik halkada.\n- Kaptan işareti: hakemin 3,5 m içinde ≥ 2 kişi olunca ya da evrenin başından 2,5 sn sonra.\n  - `kaptanT` kaydedilir, olay `{evre:'kaptan'}`.\n  - Çizim: kaptanCapraz 1,1 sn + kaptanDur 1,4 sn.\n- Kaos > 0,6 ise kaptanT + 4,5'te 3 m içinde kaptan dışı biri varsa olay `{evre:'kaptan2'}`.\n- Protokol sarısı: kaptanT + 3'te, 4 m içindeki kaptan dışı oyunculardan eğilimi en yüksek olana `kartGoster(p,'sari','itiraz')` (bir kez).\n- Jestler (h2 takvimi):\n  - kaptan 'itiraz' ve 'isaret' (hedef faulün yeri) dönüşümlü,\n  - diğerleri işaretten önce 'itiraz', sonra 'basEl' / 'itiraz' / yok,\n  - süre 1,2–2,0 sn, aralık 0,8–2,5 sn.\n- karsi varyantı: faul yapana en yakın hücumcu ondan 1,5 m'ye gelir, jest 'isaret' (noktaya) ve 'itiraz'. kaptanT + 2'de ayrılır.\n- Kaleci:\n  - kaleciItiraz varyantında kalabalık yuvasında: 2,6 m, işaretten sonra 4,5 m.\n  - Değilse altıpasta (PL−2,5, MZ±2,5) arasında 4–6 sn'de bir gezinir (hizOran 0,2). Bu sırada K1 kilidi kapalıdır ve eski bekleyiş katmanı çizilir.\n- Diğerleri ('yerles' rolü):\n  - Kutudakiler bekleme noktasında durur: t=0,3'teki yerleri, noktadan ≥ 2,5 m ve hakemden ≥ 3 m uzakta.\n  - Kutu dışındakiler son yerlerine `v = uzaklık/(varış − du.t)` hızıyla ([1,0; 4,0] m/sn) yürür. Varış = tI + (tB − tI)·h2.\n- Vurucu topu `tut`ta tutar (hizOran 0,3), bakışı kalecide.\n- **Geçiş → bosalt:** du.t ≥ tI ve kart dalı yok ve kaptanT + 2,4 geçti. Güvenlik: tI + 8 (kart sürmüyorsa).\n\n**3. bosalt (→ kutu boş ve yerleşme)**\n- Olay `{evre:'bosalt', hx/hz: ceza sahası kenarı}`.\n- Hakem 1,6 sn yerinde boşaltma işareti yapar, sonra sonYer'e yürür (hizOran 0,3), bakışı topta.\n- Her oyuncu kişisel gecikmeyle (bosaltT + h2·0,5·(tB − bosaltT)) yürümeye başlar. Kaptan en son çıkar (+2 sn).\n- Hız: `clamp(uzaklık/(tB − du.t), 1,2, 2,2)/maxSpd`, efor 0,45; hedef penaltiGorev'in son yeri.\n- Vurucu tY'de noktaya yürür, topu koyar (mevcut 'yerlestir' eylemi, 0,6 sn), geri çekilir (mevcut duranGeri ve yay koşusu).\n- duzelt varyantı: hazirT ≥ 1'de topa döner ve ikinci kez 'yerlestir' yapar.\n- Kaleci çizgiye döner (hizOran 0,3). 1 m içine gelince K1'in bakış kilidi ve kol ritmi kendiliğinden başlar.\n- kaleciOyun varyantı: tY + 1'de kaleci nokta + d·2,2'ye yürür (hizOran 0,25), vurucuya bakar, 2,5 sn durur. Sonra olay `'uyari' {p:kaleci, neden:'kaleciOyun'}` ve kaleci çizgiye döner (hizOran 0,35).\n- **Geçiş → hazir:** gorevlilerYerinde(du) ve hakem sonYer'in 1,2 m içinde ve top yerinde (asama 'hazir'). Güvenlik: tB + 8.\n\n**4. hazir (~4–7 sn)**\n- Olay `{evre:'hazir', hx/hz: kale ortası}`; çizimde isteğe bağlı çizgi işareti.\n- Hakem sonYer'de durur. Bakışı önce 0,8 sn kalecide, sonra vurucuda.\n- **Geçiş → duduk:** aşağıdakilerin hepsi doğru olmalı:\n  - du.t ≥ Tpre,\n  - hakem durduktan sonra 0,6–1,4 sn (h2) geçti,\n  - `!sakatlikBekletir()` ve süren değişiklik yok,\n  - vurucu geri noktasında (< 0,5 m) ve hazirT ≥ duranHazir (1,2),\n  - kaleci çizgide (penaltiKaleciBakis null değil) ya da kaleci yok.\n- Güvenlik: zorlaHazir − 3.\n\n**5. duduk**\n- `P.dudukT = du.t`, `du.dudukCalindi = true`.\n- Hakem eylemi `{ad:'duduk', sure:0,8}`.\n- Olaylar: `'duduk' {tur:'penalti', sahne:true, bekle}` ve `'penaltiSahne' {evre:'duduk'}`.\n- duranHazirMi ancak `du.t ≥ dudukT + bekle` iken doğru döner. Ardından durusKullan çalışır: ikinci düdük çıkmaz, vurusBaslat ve penaltiKaleciHazirla aynen; asama 'kullan'. Koşu ~2,3 sn sürer, temas olur, oyun başlar.\n\n**Güvenlik ağları:** zorlaGetir 12 sn (vurucu topu alamadıysa top eline verilir). zorlaHazir = max(28, sahneT + 12). Penaltı golünden sonraki akış S1c'nindir. VAR varyantı yoktur (Z10).",
+  "kodDegisiklikleri": [
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "MOTOR_AYAR (K grubu bildirimi, Z2 satırı)",
+    "ne": "`penaltiSahne:undefined` bildirilir. Değeri js/mac-durantop.js ayarEkle('K')'de atanır."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "ayarEkle('K')",
+    "ne": "`sahne:15 → 47` (32 = S1b penaltı sahnesi, bit 1'i gerektirir; S1 bütünleştiricisi öbür S1 bitleriyle birleştirir; S1a 16 önerilir). `penaltiSahne:{…}` değerleri eklenir (ayarlar listesinde). Başlık yorumuna S1b paragrafı yazılır. `tempo.penalti:27` bit 0 için aynen kalır."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "sahneKur",
+    "ne": "`tur==='penalti'&&(A.sahne&32)` ise tempo hesabı yerine `this.penaltiSahneKur(du)` çağrılır. Bu işlev sahneT, sahneKos (2,3), zorlaGetir (12) ve zorlaHazir (max(28, sahneT+12)) değerlerini yazar. du.yay ve du.bakis eski satırlarla kurulur. Bağlam ve tempoSapma penaltıda uygulanmaz."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "penaltiSahneKur(du) [yeni Match yöntemi]",
+    "ne": "du.pk planını kurar: tohum, kaos, zamanlar (Tpre, tI, tB, tY, bekle), gosterYer, sonYer, tut, kalabalık ve kaptan seçimi, rol haritası R, varyantlar ve hakemin ilk hedefi (P.hk = gosterYer). Rastlantısızdır, sahneOzet tuz 20 ve h2(P.s,i) kullanır. duranGorevAta yeniden çağrılırsa du.pk korunur (`if(!du.pk)`), R'de olmayan oyuncu tembel olarak 'yerles' rolüyle eklenir."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "penaltiSahneAdim(du,dt) [yeni]",
+    "ne": "durusYerlesim'in ilk satırında çağrılır: `if(du.pk)this.penaltiSahneAdim(du,dt)`. İşleri: evre geçişleri ve du.evre; 'penaltiSahne' olayları; kaptan işaret zamanları; protokol sarısı (kartGoster(p,'sari','itiraz')); kaleciOyun uyarısı (on('uyari',{p,neden:'kaleciOyun'})); jest takvimi (jestVer; hedef hakem varlığı ya da nokta); hakemin bu karedeki hedefi P.hk {x,z,hiz,bak}; düdük (refs[0].eylem duduk 0,8, on('duduk',{tur:'penalti',sahne:true,bekle}), du.dudukCalindi, P.dudukT). Top düzeyinde yeni ad olarak yalnız yuva açıları sabiti PEN_YUVA eklenir; ad-denetimi.js çalıştırılır."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "durusYerlesim (görev döngüsü)",
+    "ne": "Taç ve yatan dallarından sonra, adam markajı dalından önce `if(du.pk&&this.penaltiSahneRol(du,p,g))continue;` eklenir. Penaltıda eski 'acil' dalı (6 sn'den sonra hizOran 0,95 koşu) böylece hiç çalışmaz."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "penaltiSahneRol(du,p,g) [yeni]",
+    "ne": "Rol başına evreye göre tx/tz, hizOran, bak, yonHedef=null, efor ve gorevYaz(p,'duran') yazar. Roller: kalabalik/kaptan (hakeme göre yuva: 1,1 / 1,6–2,4 / işaretten sonra 4,2–5,2 m), sevinc, karsi, yerles (bekleme noktası ya da varışa göre hız), kaleci (itiraz yuvası, altıpasta gezinme, oyalama, çizgi). bosalt ve hazir evrelerinde son yere (g.hx, g.hz) `clamp(uzaklık/(tB−du.t),1,2,2,2)/maxSpd` hızıyla yürür. true döner."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "penaltiKullanan(du,tk,nk) ve penaltiDuzelt(du,tk) [yeni]",
+    "ne": "Vurucu: 'bekle' evresinde yerinde (h2 ile %50 'kol' jesti). 'getir'de topa koşar adım (min(0,8, 3,2/maxSpd)), 1 m'de topu alır (b.tasiyan=tk, asama 'yerles'); top topçudaysa false döner, eski yol işler. 'yerles'te du.t < tY iken `tut` noktasında topu tutar (hizOran 0,3, bakış kalecide); sonra false döner, eski yerleştirme yolu işler. penaltiDuzelt: duzelt varyantında 'hazir' evresinde ikinci 'yerlestir' eylemi."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "duranHazirMi",
+    "ne": "Sahne kapısından (`du.t<son+zgEk`) sonra `if(du.pk&&!(du.pk.dudukT!=null&&du.t>=du.pk.dudukT+du.pk.bekle))return false;` eklenir: düdük ön koşul olur. S1a'nın barajlı düdüğüyle ortak alan adları önerilir (du.dudukT, du.dudukBekle)."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "hakemDuranYeri (penaltı dalı)",
+    "ne": "du.pk varsa `{h:P.hk, hiz:P.hk.hiz, bak:P.hk.bak, yh, yhYer}` döner; yan hakem bugünkü yerinde kalır. du.pk yoksa eski dönüş aynen."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "durusBaslat",
+    "ne": "`else if(tur==='penalti')` ışınlamasına `&&!du.pk` eklenir. Sahneli penaltıda top faulden sonraki yerinde kalır; topDurdur durdurur, vurucu getir evresinde alır (T10d'den önceki davranış, bu kez sahneyle)."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "stepDurus",
+    "ne": "'bekle', 'getir' ve 'yerles' dallarının başına `if(du.pk&&this.penaltiKullanan(du,tk,nk)){}else{…eski…}` eklenir. 'hazir' dalında geri hedefinden sonra `if(du.pk)this.penaltiDuzelt(du,tk);` eklenir. Diğer satırlar değişmez."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "hakemAI (DY dalı)",
+    "ne": "`h.hizOran=DY.hiz!=null?DY.hiz:(uz>8?0.9:0.6);h.bak=DY.bak||b;` olur. Bit 0'da DY.hiz tanımsız olduğundan sonuç aynı kalır. Kart dalının (kartSira) önceliği değişmez."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "durusKullan, itirazEt, kartGoster",
+    "ne": "Değişiklik yok. Sahne düdüğü dudukCalindi'yi kurduğu için ikinci düdük çıkmaz. itirazEt'in rast çekimi aynen kalır, seçtikleri kalabalığa katılır. Protokol sarısı kartGoster(p,'sari','itiraz') yoluyla verilir."
+   },
+   {
+    "dosya": "js/animasyon.js",
+    "islev": "anmHakemOlay",
+    "ne": "Yeni olay 'penaltiSahne':\n- evre kaptan → `[{tur:'kaptanCapraz',sure:1.1},{tur:'kaptanDur',sure:1.4,hedef:{x:v.hx,z:v.hz}}]` (sifirla)\n- kaptan2 → kaptanDur 1,2 sn\n- bosalt → `{tur:'bosalt',sure:1.6,hedef,theta:0.1}`\n- hazir → isteğe bağlı 'yon' işareti, kale ortasına, theta −0,35, 0,9 sn (s1.cizgi)\n\nDeğişen olaylar:\n- 'duduk' (v.sahne): işaret süresi s1.duduk (0,8).\n- 'uyari' (neden 'kaleciOyun'): yalnız 'uyari', 'saat' yok.\n- 'faul' (penaltı): noktaya 'yon' süresi 1,6 → s1.goster (2,4).\n\nBütün anahtarlar 0 iken çizim eskisi gibidir."
+   },
+   {
+    "dosya": "js/animasyon.js",
+    "islev": "anmHkPoz + sabit ANM_HK_KAPTAN",
+    "ne": "- kaptanCapraz: `{aL:-2.85,aR:-2.85,eL:-0.75,eR:-0.75,aLz:0.5,aRz:-0.5,hx:-0.08}`; 'degisiklik'in baş üstü iki elinin içe kapanmışı.\n- kaptanDur: `{aL:-1.45,aR:-1.45,aLz:-0.2,aRz:0.2,eL:-0.35,eR:-0.35,hx:-0.1}`, dirsekte ±0,2·max(0,sin 7t) itiş; gövde %45, baş hedefe (anmHkAci).\n- bosalt: hedef yanındaki kol anmKolYon(r ± 0,3·sin 5t, theta), öbür kol aşağıda yana açık (aRz 0,35).\n\nDeğerler poz galerisinde kesinleşir."
+   },
+   {
+    "dosya": "js/stil-99.js",
+    "islev": "STIL.animasyon",
+    "ne": "Yeni alt nesne `s1:{kaptan:1,bosalt:1,cizgi:1,duduk:0.8,goster:2.4}`; her anahtar 0'da eski çizim. Öbür S1 alanları da bu nesneyi paylaşır."
+   },
+   {
+    "dosya": "js/mac-izleme.js",
+    "islev": "IZLEME.anlar (isteğe bağlı, sunum)",
+    "ne": "faul: `sonra:v=>v&&v.penalti?9:3`, itiraz ve kaptan işareti 1× hızda izlenir. Yeni `duduk:{once:1,sonra:5,kosul:v=>!!(v&&v.sahne)}`, düdük → bekleme → koşu 1× hızda izlenir. Sonrasında ikiz-deneme.js (Aynılık N/N) ve akis-deneme.py 18 çalıştırılır."
+   },
+   {
+    "dosya": "araclar/olcumler/k-sahne.js",
+    "islev": "bilgi satırları, yeni(), ozet()",
+    "ne": "Penaltı sahnesi satırları eklenir (olcu listesi). Kaynaklar: du.pk/du.evre, olaylar ('duduk' tur penalti, 'kullanim', 'penaltiSahne', 'kart') ve konumlar. du.pk yokken de bugünkü değerleri ölçen satırlar vardır (düdük, düdük→temas, kutu, hareketsiz pay, itiraz oyuncu·sn, hakemin hızı). ozet() tablosu: penaltı evre × ortalama sn."
+   },
+   {
+    "dosya": "araclar/olcumler/k-duran.js",
+    "islev": "K_HZ",
+    "ne": "Penaltı hazırlık bandı [22,32,'Z2'] → [30,50,'S1'] olur."
+   },
+   {
+    "dosya": "araclar/senaryolar/d-penalti.js",
+    "islev": "KOD döngüsü ve çıktı",
+    "ne": "Adım tavanı 60·50 → 60·80. Kaotik sahne 50 sn + koşu 2,3 sn + güvenlik payıyla tavanı aşarsa sonuç 'yok' olur ve gol kapısı düşer. Bilgi satırı eklenir: sahne süresi ortancası ve düdük→temas."
+   },
+   {
+    "dosya": "araclar/senaryolar/d-duran.js",
+    "islev": "kos (penaltı hücresi)",
+    "ne": "Kullanım bekleme döngüsü 60·60 → 60·75 (güvenlik)."
+   },
+   {
+    "dosya": "araclar/senaryolar/d-pensahne.js [yeni, seyrek] + araclar/oturum-sonu.js",
+    "islev": "senaryo ve seyrekler listesi",
+    "ne": "Oyundan zorlanmış penaltı senaryosu (scratchpad/s1b/olc.js kalıbı). Kurulum: O.kur(tohum) ile maçı kur, oyunu 30 sn'den sonra top hücum üçte birinde bir oyuncudayken m.faul(en yakın rakip, sahip, {x: ceza sahasına izdüşüm, z, ciddiyet:0.4, kaynak:'mudahale'}) ile kes; 70 sn izle; N varsayılan 80. Kapılar d-pensahne satırında. Seyrekler listesine eklenir (sahibi dosyalar: mac-durantop.js penaltı sahnesi, mac-kurallar.js stepDurus/hakemAI)."
+   },
+   {
+    "dosya": "araclar/poz-galerisi.html",
+    "islev": "satırlar",
+    "ne": "'s1penalti' satırı: kaptanCapraz, kaptanDur, bosalt. Yalnız Claude'un kendi doğrulaması içindir."
+   },
+   {
+    "dosya": "CLAUDE.md, FUTBOL_KUTUPHANESI.md §12 (S1 planı/sonucu), kutuphane/L-sahne-protokolleri.md L.9 madde 2",
+    "islev": "belge",
+    "ne": "Senaryo kapıları satırı eklenir: penaltı sahnesi (penaltiSahne*, sahne&32) → d-pensahne, d-penalti, d-duran. L.9 (2) 'uygulandı' olarak işaretlenir, sürer ve ölçü sonuçları yazılır."
+   }
+  ],
+  "yeniAlanlar": [
+   "**du.pk — penaltı sahnesinin planı ve durumu.** Yalnız `sahne&32` iken vardır. Yazan: mac-durantop.js penaltiSahneKur/Adim. Okuyanlar: hakemDuranYeri, duranHazirMi, stepDurus kancaları, k-sahne ve d-pensahne. Alanlar:\n- s: tohum\n- kaos\n- evre: goster | itiraz | bosalt | hazir | duduk\n- evreT\n- Tpre, tG, tI, tB, tY\n- bekle, dudukT\n- kaptanT, kaptan2T, bosaltT, hazirDurT\n- kaptan (oyuncu), kalabalik (dizi), n\n- ux, uz (kalabalığın yönü)\n- km {x,z}: kalabalığın merkezi, hakemin bakışı\n- nokta, gosterYer, sonYer, tut ({x,z})\n- hk {x,z,hiz,bak}: hakemin bu karedeki hedefi\n- kaleciItiraz (bool)\n- kaleciOyun ({t0, uyari, bitti} | null)\n- karsi (oyuncu | null)\n- duzelt, duzeltYapildi\n- sari (bool), sariT\n- R: Map oyuncu → {rol, aci, r0, r1, gec, gec2, bek {x,z}, varis, jT, jN}; rol: kalabalik | kaptan | sevinc | karsi | yerles | kaleci",
+   "**du.evre** = du.pk.evre. Yazan: penaltiSahneAdim. Okuyan: k-sahne (Z2-0 yorumundaki 'motor du.evre yazarsa' sayımı). Bütün S1 alanları için ortak alan önerilir.",
+   "**du.dudukCalindi.** Mevcut alandır, artık sahne düdüğünde kurulur. Okuyan: durusKullan (ikinci düdük çıkmaz).",
+   "**Olay 'penaltiSahne'** {evre: itiraz | kaptan | kaptan2 | bosalt | hazir | duduk, du, x, z (hakem), hx, hz (işaretin hedefi), n, kaos}. Okuyanlar: animasyon.js anmHakemOlay (hakem işaretleri), k-sahne, d-pensahne.",
+   "**Olay 'duduk'** {tur:'penalti', sahne:true, bekle}. Mevcut olaydır, artık vuruştan önce yayılır. Okuyanlar: anmHakemOlay (0,8 sn törensel düdük), k-sahne (faulden düdüğe, düdük→temas), mac-izleme (isteğe bağlı pencere).",
+   "**Olay 'uyari'** {p: kaleci, neden:'kaleciOyun'}. Okuyan: anmHakemOlay (yalnız parmak sallama). o-olay yalnız neden 'zaman'ı saydığı için etkilenmez.",
+   "**Olay 'kart'** (mevcut) neden 'itiraz' ile protokol sarısı. Okuyanlar: çizim, o-olay oItiraz, c-beden.",
+   "**Hakem eylemi** refs[0].eylem {ad:'duduk', t:0, sure:0.8}, sahne düdüğünde. Okuyan: anmHakemAdim (olayla aynı karede çift işaret çıkmaz).",
+   "**p.jest** {tur: itiraz | isaret | basEl | alkis | kol, t, sure, kol, hedef}. Mevcut sözleşmedir (mac-takim.js jestVer, niyetAdim süreyi işletir). hedef hakem varlığı ya da {x,z} noktasıdır. Yazan: penaltiSahneAdim. Okuyan: animasyon.js jest katmanı (ANM_JEST pozları, hedefe dönüş).",
+   "**DY.hiz, DY.bak** (hakemDuranYeri dönüşü). Okuyan: hakemAI DY dalı; bit 0'da yoktur.",
+   "**Oyuncu nesnesine yeni alan yok.** p.tx/tz/hizOran/bak/yonHedef/efor ve mevcut b.tasiyan, p.eylem ('yerlestir') kullanılır. A4-3'ün kalkis.yardim alanı mevcut kuralla kendiliğinden yazılır."
+  ],
+  "ayarlar": [
+   "**sahne: 15 → 47.** Bit 32 = S1b penaltı sahnesi; bit 1 (tempo) olmadan kurulmaz. Bit 32 0 iken du.pk hiç kurulmaz ve bütün kancalar (`du.pk`, `DY.hiz`) eski yola düşer. tempo.penalti 27, sahneKos 1,6, top ışınlanması, hakemDuranYeri ve durusKullan'daki düdük eski hâlindedir; motor bugünküyle birebir aynıdır. Doğrulama: `MAC_DENEME_AYAR='{\"sahne\":15}' node araclar/mac-deneme.js 40 --karsilastir <K1 tabanı> --ayni`. S1 bütünleştiricisi bit numaralarını kesinleştirir (öneri: S1a 16, S1b 32).",
+   "**penaltiSahne.sure: 40.** Ortanca hedef süre (gerçek sn, faulden temasa; tempo B; gerçek ortanca 67 sn, L.2).",
+   "**penaltiSahne.aralik: [0.75, 1.25].** Kaos 0 → 1 süre çarpanı: sakin 30, kaotik 50 sn.",
+   "**penaltiSahne.kos: 2.3.** Kullanımdan temasa (ölçülen düdük→temas 2,34 sn); planlı düdüğün hesabında kullanılır.",
+   "**penaltiSahne kaos katsayıları.** kaosTaban 0.15, kaosH 0.55 (h2 payı), kaosKirmizi 0.3, kaosSon 0.15 (son 15 dk, fark ≤ 1), kaosItiraz 0.2 (faul yapanın hakemeItiraz eğilimi), kaosSert 0.15 (hakemin sertliği kısaltır).",
+   "**penaltiSahne.goster: [1.6, 5].** Gösterme evresinin en kısa ve en uzun süresi (sn).",
+   "**penaltiSahne.itiraz: [0.30, 0.55].** İtirazın planlı bitişi, Tpre payı olarak (kaos 0 → 1).",
+   "**penaltiSahne.bosalt: 0.85.** Boşaltmanın planlı bitişi, Tpre payı olarak.",
+   "**penaltiSahne.kalabalik: [3, 6].** Hakeme yürüyen faul yapan takım oyuncusu sayısı (kaos 0 → 1).",
+   "**penaltiSahne mesafeleri (m).** kaptanYakin 1.1; halka [1.6, 2.4] (işaretten önce); kaptanR [4.2, 5.2] (işaretten sonra, IFAB 4 m bölgesi).",
+   "**penaltiSahne hızları.** gerHiz 0.12 (hakemin geri geri yürüyüşü, hizOran ~0,9 m/sn); yuruHiz [1.2, 2.2] (boşaltma yürüyüşü, m/sn); uzakHiz [1.0, 4.0] (kutu dışından gelenler, m/sn).",
+   "**penaltiSahne.bekle: [0.4, 3.0].** Vurucunun düdükten sonra beklemesi (sn); 0,45·h2 + 0,55·soğukkanlılık.",
+   "**penaltiSahne.hazirDur: [0.6, 1.4].** Hakemin son yerinde durup baktığı süre (sn).",
+   "**penaltiSahne varyant olasılıkları.** kaleciItiraz 0.3 (×(0,6 + 0,8·kaos)); kaleciOyun 0.12; karsi 0.3 (×(0,5 + kaos)); duzelt 0.2.",
+   "**penaltiSahne.protokolSari: 1.** itirazKart × (1 + 1,5·eğilim) × (0,5 + sertlik) × (1 + kaos) çarpanı; 0'da protokol sarısı yok.",
+   "**penaltiSahne.zorlaGetir: 12.** Vurucu topu bu sürede almadıysa top eline verilir (sn).",
+   "**tempo.penalti: 27 (değişmez).** Yalnız bit 32 kapalıyken kullanılır.",
+   "**STIL.animasyon.s1 (çizim).** {kaptan:1, bosalt:1, cizgi:1, duduk:0.8, goster:2.4}; her anahtar 0'da eski çizim.",
+   "**IZLEME.anlar (sunum, isteğe bağlı).** faul.sonra penaltıda 3 → 9; duduk {once:1, sonra:5, kosul: v.sahne}. Kaldırılırsa izleme eskisi gibidir."
+  ],
+  "cizim": [
+   "**Hakem 'kaptanCapraz' (yeni işaret ve poz).** Olay 'penaltiSahne' evre 'kaptan' ile başlar, 1,1 sn sürer. İki kol baş üstünde bileklerden çapraz (IFAB kaptan protokolü): `ANM_HK_KAPTAN {aL:-2.85,aR:-2.85,eL:-0.75,eR:-0.75,aLz:0.5,aRz:-0.5,hx:-0.08}`. 'degisiklik' işaretinin baş üstü pozundan türetilmiştir.",
+   "**Hakem 'kaptanDur' (yeni).** kaptanCapraz'ın ardından 1,4 sn; 'kaptan2'de tek başına 1,2 sn. Kollar göğüs hizasında öne, avuçlar dışa: `{aL:-1.45,aR:-1.45,aLz:-0.2,aRz:0.2,eL:-0.35,eR:-0.35,hx:-0.1}`. Dirsekte 7 rad/sn ile ±0,2 'yaklaşmayın' itişi; gövde %45, baş kalabalığın merkezine (anmHkAci, hedef km).",
+   "**Hakem 'bosalt' (yeni).** 1,6 sn. Hedef yanındaki kol ceza sahası kenarına yatay (theta 0,1), ψ ± 0,3·sin(5t) ile dışarı süpürür. Öbür kol aşağıda yana açık (aRz 0,35).",
+   "**Çizgi işareti (isteğe bağlı, s1.cizgi).** Evre 'hazir'de mevcut 'yon' işareti kale ortasına (theta −0,35, 0,9 sn): hakem kaleciye çizgiyi gösterir.",
+   "**Törensel düdük.** 'duduk' olayı (sahne:true) → işaret 0,8 sn (eski 0,5). Hakem eylemi aynı karede olduğundan anmHakemAdim çift işaret üretmez.",
+   "**Faulde noktayı gösterme.** 'faul' (penaltı) → düdük 0,7 + noktaya kol; 'yon' 1,6 → 2,4 sn (hakem koşarken kol noktada).",
+   "**'uyari' neden 'kaleciOyun'.** Yalnız parmak sallama (mevcut 'uyari' pozu); 'saat' işareti eklenmez.",
+   "**Oyuncular: yeni poz yok.**\n- p.jest itiraz (jestItiraz + kol salınımı), isaret, basEl (eller başta), alkis, kol (yumruk): mevcut ANM_JEST ve hedefe dönüş katmanı.\n- Vurucu topu elde taşır: mevcut 'tasi' pozu (b.tasiyan). Ardından 'yerlestir' (duzelt varyantında iki kez).\n- Yerdeki faul yiyene arkadaşın el uzatması: mevcut A4-3 (kalkis.yardim).\n- Hareket motordan: kalabalık hakemle yürür, hakem geri geri yürür (bakış kaptanda), oyuncular kutudan yürüyerek çıkar.",
+   "**Kaleci.**\n- Çizgide: K1 anmPenaltiKaleci (baş vurucuda, kol açma ritmi, ağırlık aktarımı) kendiliğinden; bosalt evresinde çizgiye dönünce başlar.\n- İtiraz varyantında ve altıpasta gezinirken: eski bekleyiş katmanı (eller belde, bakınma, eldiven).\n- Oyalama varyantında: noktaya yürür, vurucuya bakar.",
+   "**STIL.animasyon.s1** {kaptan, bosalt, cizgi, duduk, goster}. 0'da olaylar yok sayılır ve çizim eskisi gibidir.",
+   "**Doğrulama (Claude'un kendi işi; kullanıcıya sahne üretilmez).**\n- poz-galerisi 's1penalti' satırı.\n- animasyon-olcum.py 'A: zamanlama': yeni işaretler olayla aynı karede.\n- kontrol.py.\n- an-yakala.py ile penaltı anı önce ve sonra (kalabalık, kaptan işareti, boşaltma, düdük)."
+  ],
+  "olcu": [
+   "**k-sahne 'Penaltı: faulden düdüğe (sn)' (ksP_dudukT).** 'duduk' olayı (tur penalti) − duruşun başı. Bugün 25,1 (ortanca); S1b ~35 (26–46).",
+   "**k-sahne 'Penaltı: düdük → temas (sn)' (ksP_dudukTemas).** 'kullanim' (penaltı) − 'duduk'. Bugün 2,34 (yalnız koşu); S1b ~4 (bekleme 0,4–3 + koşu 2,3).",
+   "**k-sahne 'Penaltı: düdükten kullanıma ≥ 1 sn %' (ksP_bekle1).** Düdük ile durusKullan arası ≥ 1 sn (Jordet; düdük ön koşul). Bugün %0; S1b ~%75 (bekleme dağılımı).",
+   "**k-sahne 'Penaltı sahnesi evre süresi (gerçek sn): gösterme / itiraz / boşaltma / hazır / düdük→kullanım / kullanım→temas' (ksPE_goster, ksPE_itiraz, ksPE_bosalt, ksPE_hazir, ksPE_duduk, ksPE_kullan).** du.evre'nin her değerinde geçen süre; 'kullan' du.asama'dan. Yalnız du.pk varken dolar.",
+   "**k-sahne 'Penaltı: itiraz eden (kişi)' (ksP_kalabalik).** Duruş boyunca hakemin 4 m içine gelen, faul yapan takımdan farklı saha oyuncusu sayısı (kart dalı dahil). Bugün ~0–1; S1b 3–6.",
+   "**k-sahne 'Penaltı: itiraz (oyuncu·sn)' (ksP_itirazSn).** eylem 'itiraz' + jest 'itiraz' süreleri toplamı. Bugün 1,8; S1b ≥ 15.",
+   "**k-sahne 'Penaltı: kaptan işareti %' ve 'işaretten 2 sn sonra hakemin 4 m içinde kaptan dışı (ortalama)' (ksP_kaptan, ksP_ihlal).** 'penaltiSahne' evre 'kaptan' olayı ve o anki konumlar. Hedef: %100 ve ≤ 0,3.",
+   "**k-sahne 'Penaltı: ceza sahasında oyuncu (vurucu ve kaleciler hariç) — 5. sn / 15. sn / düdükte' (ksP_kutu5, ksP_kutu15, ksP_kutuD).** Bugün 5. sn'den sonra ~0. S1b'de itirazda 3–8 (kaos), düdükte 0 olmalı.",
+   "**k-sahne 'Penaltı: düdükten önceki son 20 sn'de hareketsiz (< 0,3 m/sn) saha oyuncusu payı %' (ksP_durgun).** Kullanıcının 'herkes yerinde bekliyor' notunun ölçüsü. Bugün (olc3.js) 10. sn'den düdüğe %88–93; S1b hedefi ≤ %60.",
+   "**k-sahne 'Penaltı: hakemin tepe hızı, itiraz ve boşaltmada, kart dalı hariç (m/sn)' (ksP_hkHiz).** Bugün kart koşusuyla 7,2; S1b ≤ 2,5 (gösterme koşusu ayrı).",
+   "**k-sahne 'Penaltı: kaos (ortalama)' ve varyant payları % (ksP_kaos, ksP_kaleciItiraz, ksP_kaleciOyun, ksP_karsi, ksP_duzelt, ksP_sari).** du.pk'den.",
+   "**k-sahne ozet() tablosu.** 'Penaltı sahnesi (havuz): evre × ortalama gerçek sn (n)'. Maçta penaltı seyrek (8 maçta ~1) olduğundan satırlar bilgi niteliğindedir; kabul d-pensahne'dedir.",
+   "**k-duran 'Hazırlık ortancası (sn): penaltı' (kH_penalti).** Bilgi bandı [22,32] → [30,50] (S1).",
+   "**d-pensahne (yeni seyrek senaryo) kapıları.**\n1. Her penaltıda düdük kullanımdan ≥ 0,4 sn önce: %100.\n2. Düdükte ceza sahası ve yayın içinde (vurucu ve kaleci hariç) oyuncu yok: ≥ %95.\n3. Faulden temasa ortanca 32–48 sn; 10. yüzdelik ≥ 25, 90. yüzdelik ≤ 58.\n4. İtiraz eden ortalaması ≥ 2,5 ve kaptan işareti ≥ %90.\n5. Hakemin itirazdaki tepe hızı (kart hariç) ≤ 2,5 m/sn.\n6. Son 20 sn'de hareketsiz pay ≤ %65.\n\nBilgi satırları: evre süreleri, varyant payları, kart, gol oranı (n küçük)."
+  ],
+  "senaryolar": [
+   "**d-penalti (seyrek; gol kapısı %70–82, T15/T19c 4×1600).**\n- Vuruşun kodu değişmez. Gol, kurtarış ve kaçırma dağılımı gürültü içinde kalır; yalnız tohum başına rast durumu sahnenin uzunluğuyla kayar.\n- Adım tavanı 60·50 → 60·80 olmalı. Olmazsa kaotik sahneler 'yok' sonucuna düşer ve kapı başarısız olur.\n- Koşu süresi ~1,5 kat uzar (sahne 27 → ~40 sn).\n- Bu senaryoda faulYapan yoktur: kalabalık başlama dizilişindeki uzak savunmacılardan kurulur. Senaryo sahnenin görüntüsünü değil vuruşu ölçer.",
+   "**d-duran penaltı hücresi.** Ribaund koşucusu ≥ %70 kapısı aynı kalır: düdükte herkes son yerinde ve görevler değişmez. Hazırlık ortancası 27 → ~38 sn (bilgi). Kullanım döngüsü 60·60 → 60·75 güvenlik için.",
+   "**d-pensahne (yeni, seyrek; sahibi mac-durantop.js penaltı sahnesi ve mac-kurallar.js stepDurus/hakemAI).** Sahnenin ana kabulüdür; kapılar olcu listesinde. N=80, süresi ~15–30 sn.",
+   "**40 maç --karsilastir (K1 tabanına).**\n- Yalnız penaltılı maçlarda (~%12) parmak izi penaltıdan sonra ayrılır.\n- Gol/maç, kart/maç (protokol sarısıyla +~0,005), duruş dk/maç (+~0,03) ve maç saati gürültü içinde kalır.\n- ksS_penalti 27,5 → ~40.\n- Bit 32 kapalıyken --ayni birebir tutmalıdır.\n- Hız: sahne kodu yalnız penaltı duruşunda O(22)/kare çalışır; ms/1000 adım değişmez, %10 bütçe güvenle içinde.",
+   "**m-isinma, m-fotograf, d-topcu, o-ofsayt, o-sakatlik.** Değişmez: penaltı yoktur ve ortak işlevler (durusBaslat, stepDurus, hakemAI, duranHazirMi) du.pk null iken eski yoldadır. o-sakatlik'te penaltı duruşunda tedavi varsa düdük sakatlikBekletir'i bekler.",
+   "**c-temas, c-yariyariya, c-donen.** Faul anına kadar ölçer, etkilenmez. o-olay'da oItiraz (itiraz sarısı) protokol sarısıyla çok az artar.",
+   "**ikiz-deneme.js.** mac-izleme anları değişirse 'Aynılık N/N' olmalı. Sahne belirlenimcidir (h2) ve modül düzeyinde ortak durum eklenmez.",
+   "**Çizim ve ekran denetimleri.**\n- akis-deneme.py (izleme değişirse §18 dahil) ve kontrol.py.\n- animasyon-olcum.py 'A: zamanlama': yeni hakem işaretleri olayla aynı karede.\n- ad-denetimi.js: yeni Match yöntemleri penaltiSahneKur, penaltiSahneAdim, penaltiSahneRol, penaltiKullanan, penaltiDuzelt ve top düzeyinde PEN_YUVA."
+  ],
+  "riskler": [
+   "**Senaryo döngü tavanları.** d-penalti 60·50 ve d-duran 60·60 kaotik sahneyi (50 sn + koşu + güvenlik payı) kesebilir. Tavanlar yükseltilmezse d-penalti'nin gol kapısı 'yok' sonuçlarıyla düşer.",
+   "**Top artık ışınlanmıyor.** Faulden sonra top kaleye, saha dışına ya da kalecinin eline gidebilir.\n- Saha dışındaki top: topDurdur, durusTopu (topçu) ve getir yolu karşılar.\n- Son ağ: zorlaGetir 12 sn'de top vurucunun eline verilir (nadir görsel sıçrama).\n- Ağdaki top için vurucu kale içine uzanır (getir'in ±1,6 m sınırı içinde).",
+   "**Kart dalının önceliği.** hakemAI'da kartSira dalı önce gelir: kart sürerken itiraz uzar, hakemi kart dalı yürütür. S1d (kart: yürü/çağır) aynı işleve dokunur, sıra ve tavanlar (tI + 8) birlikte sınanmalı. S1d değişmeden hakemin kart koşusu 7,2 m/sn kalır; ksP_hkHiz kart dalını dışarıda tutar.",
+   "**Kalabalıkta gövde çarpışması.** Duruşta hareketHepsi gövdeleri iter, hakem de bir gövdedir. Yuvalar ≥ 1,0 m aralıklı ve kaptan 1,1 m'de olmalı. 3 m içinde yaklaşma hızı düşük tutulur; yoksa kalabalık hakemi iter ya da 'kovalıyor' gibi görünür. Hedefler hakemin konumuna bağlı olduğundan kalabalığın hızı hakeminkini fazla aşmamalı.",
+   "**Kaptan bulunamıyor.** Kaptan sahada değilse, kaleciyse ya da 45 m'den uzaksa yedek kural (kararı en yüksek protestocu) devreye girer. IFAB'ın 'kaleci kaptansa kura öncesi bildirilen saha oyuncusu' kuralı bu yedekle yaklaşık karşılanır.",
+   "**Sahne sürerken oyuncu değişirse.**\n- Vurucu değişirse (sakat, kırmızı): stepDurus kullananı yeniden seçer ve duranGorevAta görevleri yeniden kurar. du.pk korunmalı (`if(!du.pk)`), R'ye eksik oyuncu tembel eklenmeli, P.tut yeni vurucuya göre kullanılmalı.\n- Kaleci atılırsa: kaleyeGecti → duranGorevAta; kaleci varyantları yeni kaleciye taşınmaz.",
+   "**Bit 0 birebirliği.** tempo.penalti'ye, sahneKos 1,6'ya, durusBaslat'taki ışınlamaya, hakemAI'nın hizOran/bak satırına ve durusKullan'a yalnız du.pk ya da DY.hiz ile dokunulmalı. Tek bir koşulsuz değişiklik --ayni'yi bozar.",
+   "**Ana zar dizisi.** Sahne rast çekmez. itirazEt'in çekimi aynen kalır ve h2 kararları ana diziyi kaydırmaz. Ancak sahne uzadığı için duruşta kare başına zar çeken başka kod (ör. tarama) penaltıdan sonraki maçı zaten değiştirir; bu, bit açıkken beklenen ayrılmadır.",
+   "**Maçta ölçüm gürültüsü.** Penaltı seyrek olduğundan 40/80 maçta k-sahne satırları gürültülüdür. Kabul d-pensahne'ye dayanır. Bu senaryonun zorlanmış faulü (izdüşümle kutuya taşınan faul yeri) gerçek penaltının dağılımını kabaca temsil eder.",
+   "**İzleme hızı.** mac-izleme pencereleri genişletilmezse kullanıcı ×2/×4'te itirazı birkaç saniyede görür ve 'itiraz yok' izlenimi sürebilir. Genişletme ikiz-deneme ister.",
+   "**Jordet etkisi modellenmedi.** Bekleme vuruşun başarısını değiştirmez; düdüğe < 200 ms tepki ve zorla uzun bekletme etkisi yoktur. İleride ayrı bir anahtarla (varsayılan 0) eklenebilir, d-penalti kapısını etkiler.",
+   "**S1a ile çakışma.** Barajlı serbest vuruştaki düdük ön koşulu duranHazirMi ve durusKullan'daki aynı satırlara dokunur. Alan adları (du.dudukT, du.dudukBekle, olayın sahne:true'su) tek yerde birleştirilmezse iki alanın kapıları çakışır.",
+   "**Kapsam dışı (ileride).** VAR incelemesi (Z10), kalecinin 8 sn sayımı (Z10), vurucu belirleme tartışması (iki hücumcunun topu istemesi), savunmacının topu kaçırması ya da tekmelemesi (sarı)."
+  ],
+  "digerAlanlarlaTemas": [
+   "**S1a (seremonili barajlı serbest vuruş).**\n- Ortak düdük ön koşulu: duranHazirMi kapısı, durusKullan'daki on('duduk') satırı, du.dudukCalindi.\n- Önerilen ortak alanlar: du.dudukT, du.dudukBekle, olay {sahne:true}.\n- Ortak: hakemin 'hazır → düdük' evresi, çizimdeki törensel düdük (s1.duduk), mac-izleme 'duduk' penceresi (kosul: v.sahne).\n- Sahne bitleri: S1a 16, S1b 32.",
+   "**S1d (kart).**\n- hakemAI kart dalı (kartSira) penaltı sahnesinden önceliklidir; S1d'nin yürü/çağır değişikliği penaltıdaki kart görüntüsünü belirler.\n- Kaptan protokolü (kaptanCapraz/kaptanDur işaretleri, 4 m halkası, protokol sarısı = kartGoster(p,'sari','itiraz')) iki alanın ortak parçasıdır. Tek yardımcı olarak yazılmalı (ör. kalabalikKur, kalabalikAdim; hedef hakem, yuvalar, jest takvimi).\n- itirazEt'in rast çekimi korunur.",
+   "**S1e (sağlıkçılar).** Düdük sakatlikBekletir() ve süren değişiklik bitmeden çalınmaz. Yerdeki faul yiyenin tedavisi varsa hazır evresi bekler.",
+   "**S1c (gol sonrası).** Penaltı golünden sonraki stepGoal akışı (bakış sevinçte, top ve hakem santraya) S1c'nindir. Penaltı sahnesi temasla biter. 'duduk' olayı santranın düdüğüyle karışmamalı (kickoff olayı ayrıdır).",
+   "**K1.** penaltiKaleciBakis ve anmPenaltiKaleci (kalecinin başı vurucuda, kol ritmi) kalecinin kale ortasına 1 m içinde olmasına bağlıdır. Sahnede kaleci çizgiye bosalt evresinde döner; itiraz ve oyalama varyantlarında kilit kendiliğinden kapalıdır. Bu aynı zamanda hazır evresinin 'kaleci çizgide' koşuludur.",
+   "**Z2 altyapısı.**\n- sahneKur ve sahneOzet: tuz 20–39 S1b'ye ayrılır, öbür S1 alanları başka aralık seçmeli.\n- durusYerlesim görev döngüsü, gorevlilerYerinde, sahneHiz, duranGeriMesafe ve yay koşusu aynen kullanılır.\n- tempo.penalti 27 yalnız bit 32 kapalıyken.",
+   "**hakemAI ve hakemDuranYeri.** DY.hiz ve DY.bak genişlemesi barajlı serbest vuruş (S1a: hakemin çapraz 'yer' evresi) ve gol sonrası (S1c: hakemin santraya yürüyüşü) için de kullanılabilir; aynı biçimde yazılmalı.",
+   "**jest sistemi (mac-takim.js jestVer, niyetAdim).** Kart kalabalığı (S1d) ve korner kullananın işaretleri (S1f) de bunu kullanır. hedef olarak varlık nesnesi verilebilir; çizim yalnız x/z okur.",
+   "**k-sahne.** du.evre sayımı ve evre × süre tablosu bütün S1 alanlarının ortak genişlemesidir. Satır adları 'Penaltı: …' önekiyle ayrılır.",
+   "**STIL.animasyon.s1.** Bütün S1 çizim anahtarlarının ortak nesnesi.",
+   "**mac-izleme.** faul (penaltı) ve duduk (sahne) pencereleri ile kart pencereleri (S1d) birleşir; birlestir payı 2 sn.",
+   "**Z10.** VAR'lı penaltı varyantı, kalecinin 8 sn sayımı ve çoklu top bu sahnenin evrelerine bağlanacak (itiraz ile bosalt arasına 'var' evresi)."
+  ]
+ },
+ {
+  "ad": "S1c — Gol sonrası akış: takım sevinci, topun yenen takımca noktaya gönderilmesi, santraya yürüyen hakem, düdükle başlayan santra ve sevinci izleyen bakış",
+  "ozet": "Bugünkü davranışı salt okunur motor betiğiyle ölçtüm: 8 maç, tohum 1–8, HEAD 6628e08 = main 57681ca kodu, scratchpad kopyası. Betikler: C:\\Users\\FARUKA~1\\AppData\\Local\\Temp\\claude\\C--Users-Faruk-AKIR-code-chairman\\d683dfae-9eba-4af0-8067-151302484a8d\\scratchpad\\s1gol\\gol-probe.js ve yuvarla-probe.js.\n\nBugün ne oluyor (23 gol):\n- Golden santraya geçen süre ortanca 25,6 sn, ortalama 28,1 sn.\n- Sevinç her golde 6,5 sn sürüyor. Golcü köşe bayrağına koşarken arkadaşlar 7 sn içinde ona yetişemiyor. Golcünün 6 m içindeki arkadaş sayısı 0–6. sn'de 0–1; küme ancak sevinç bittikten sonra, herkes santraya yürürken oluşuyor.\n- 17 golde kaleci topu 5,2. sn'de 32–33 m/sn hızla havadan attı. Top gol yiyen kaleden ortalama 61 m uzağa gitti. 6 golde 78–94 m gidip atan takımın yarısına düştü.\n- Santracı topu x=±24–40'a kadar kovaladı. 5 golde (%22) santra stepKick'in 22 sn tavanına takıldı ve top orta noktaya ışınlandı (topuSifirla).\n- Hakem topun peşinden koşuyor: tepe hızı ortalama 7,0 m/sn (depar), yolu 40–134 m (ortalama 71).\n- Yan hakem gol evresinde topa (ağa) bakan ofsayt hizası yüzünden kale çizgisine koşuyor (`yan()` top terimi).\n- Kamera 7 sn golcüde kalıyor, sonra `kickoff` evresinde topa dönüyor. Sevinç kümesi bir hedef olarak yok.\n\nÖnerilen tasarım: 'goal' evresi sahnenin tamamını taşıyan bir durum makinesine dönüşür (kutla → donus → duduk). Sahne `this.celeb` nesnesinde yaşar; oyuncu nesnesine yeni alan eklenmez.\n- Sevinç (tempo B): 11–15 sn, kritik geç golde ×1,3. Golcünün koşu türü h2 özetiyle ve profilden seçilir: köşe, tribün, pasçıya koşu, kulübe ya da yerinde. 35 m içindeki arkadaşlar kümeye koşar; uzaktakiler yerinde sevinir ve ikili sarılır.\n- Top: yenen takımın topa en yakın oyuncusu (kaleci ya da savunmacı) ağdan alır, 3–5 m dışarı taşır, elle yuvarlar/atar ya da ayakla gönderir. Hedef ya yolun üstündeki bir arkadaş ya da doğrudan santra noktasıdır. Yerde yuvarlanan topun ilk hızı yerIlkHiz(L, 0,3) ile hesaplanır. Ölçtüm: top 10–45 m'de hedefin ±6 cm'inde, 4,6–9,2 sn'de duruyor; kaleci 50 m'lik degaj atmaz. Yoldaki oyuncu (iki takımdan biri, sevinçte değilse) topu durdurup yeniden gönderir. Santracı yalnız noktadaki topa gider ve gerekirse yerleştirir. T10d'nin acele 'alan' yolu korunur. Atan takım gerideyken ya da geç eşitlemede golcü topu ağdan kapıp ortaya koşar.\n- Hakem: 2,4 sn santrayı gösterir, sonra deftere yazar (yeni eylem 'not'). 1,2–1,8 m/sn yürüyerek santra yerine gider ve orada bekler.\n- Yan hakem: 1,5 sn hakemle göz göze, sonra topu saymadan savunma hizasına çizgi boyunca koşar.\n- Takım: sevinçten sonra oyuncular kendi yarılarına süreyi dolduracak hızla döner (1,4–3,6 m/sn).\n- Düdük artık ön koşuldur. Koşullar: top noktada, santracı topun başında, herkes kendi yarısında, rakipler çemberin dışında ve noktanın 3 m içinde tek oyuncu (Law 8), hakem yerinde, planlanan an gelmiş. Düdükten sonra stepKick'in mevcut 1,6 sn'lik (acelede 0,9) gecikmesiyle santra vurulur.\n- Süreler: tarafsız durumda toplam ~35 sn (30–40). Gol yiyen takım gerideyse ~26–30, öndeyse ~40–48; atan takım acele ediyorsa ~20–25.\n- Bakış: motor salt okunur `celeb.odak`'ı yazar (golcü → küme → dönen takım → nokta). kamera.js 'goal' evresinde odak olarak bunu okur.\n\nKapatma: MOTOR_AYAR.golSahne (bitler 1 akış, 2 hakemler, 4 odak, 8 sevinç türleri). 0 iken motor bugünküyle birebir aynı çalışır. Bütün kararlar h2 özetiyle verilir; ana zar dizisi kaymaz.",
+  "durumMakinesi": "Evre alanı c.evre (c = this.celeb). Zaman ölçüsü phaseT, gerçek sn. Maç saati bu evrede durusSaat=2 ile akar. Gol anında golSahneKur(c) bütün planı h2 özetiyle bir kez kurar: golOzet(c,tuz) = h2(tohum·157 + sc.n·29 + golNo·31, (skor0·7 + skor1·13 + half·3)·1013 + tuz·7 + 11). Tuzlar: 0 tempo sapması, 1 sevinç süresi, 2 koşu türü, 3 eşli, 4 topun el/ayak yolu, 5 kaleci gecikmesi, 6+n oyuncunun üzgün süresi, 7 hakemin not gecikmesi.\n\nPLAN (gol anında)\n- kickTeam = 1 − c.team.\n- Bağlam k = (1 + (tempoBaglam[0] − 1)·koru)·(1 − (1 − tempoBaglam[1])·acele). Kaynak macDurumu(kickTeam), Z2a ile aynı.\n- c.sevincT = lerp(golTempo.sevinc = [11, 15], h2₁). Kritik golde ×1,3 (2. yarı, kalan ≤ 6 dk, fark ≤ 1). 'atan' varyantında ×0,35. Kendi kalesine golde ×0,7.\n- c.dudukT = max(toplam·k·(1 ± tempoSapma·h2₀) − 1,6; sevincT + L_dönüş/3,6 + 2), toplam = 35. L_dönüş = golcünün sevinç yerinden kendi yarısına uzaklığı. Tarafsız sonuç 28–38 sn.\n- c.tur (bit 8): 'kose' .32, 'tribun' .30, 'yerinde' .18, 'pasci' .12 (pasör varsa), 'kulube' .04. Ağırlıklar profilden: agresiflik → tribün/köşe, soğukkanlılık → yerinde. Kendi kalesine golde c.sc = topa en yakın hücumcu.\n- c.es: eşli sevinç, olasılık .19.\n- c.katil = sc'ye 35 m içindeki arkadaşlar. Uzaktakiler ikili sarılmaya c.cift ile eşlenir.\n- Top yolu (c.top.tur), sırayla:\n  1. 'tasi' — T10d'nin c.alan'ı: gol yiyen takım geride ve 2. yarı ya da acele. Yol aynen korunur.\n  2. 'atan' — atan takımın acelesi > 0,3 ya da 2. yarıda kalan ≤ 10 dk'da eşitlik. Topu atan takımın topa en yakın saha oyuncusu alır.\n  3. Değilse kaleci (süre = uzaklık/2,2 + kaleciAl [1,2–2,6]) ile 14 m içindeki savunanlar arasında en kısa süre seçilir. Kaleci 'el'; saha oyuncusu h2₄ < .75 ise 'ayak', değilse 'el'.\n\nEVRE 'kutla' (0 → sevincT)\n- Golcü: kosuYer'e depar. Hedefler: köşe = yakın köşe bayrağı (PL−3, 3 | PW−3); tribün = taraftarYeri/deplasmanYeri'nin taç çizgisi ya da kale arkası panosu; pasçı = pasör (c.asist, sc.bak = pasör); kulübe = kulubeler[t].alan'ın çizgi içi; yerinde = 3 m dışa.\n- Arkadaşlar (katil): 0,5 sn'de hizOran 0,9 ile sc'nin çevresinde 0,9–1,6 m'lik halkaya. Hedef açı n'den. 3–7 sn'de küme oluşur.\n- Uzaktakiler: sevinç 0,5–5 sn yerinde ve ikili sarılma; sonra santraKonumu.\n- Atan takımın kalecisi: sevinç, ceza sahasında ≤ 8 m çıkar, kalesine döner.\n- Yenen takım: üzgün durur (uzgun [2, 5] sn, hizOran 0). Sonra hizOran 0,25 (~2 m/sn) ile santraKonumu'na yürür; santracı noktaya.\n- Top alt makinesi c.top.evre (golTopAdim), bu evrede de sürer:\n  - 'git': alan oyuncu ağa yürür, hizOran 0,3; kaleci kaleciAl gecikmesinden sonra.\n  - 'al': 0,9 m içinde b.agda = false, b.tasiyan = p, olay golTopAl. ~3–5 sn.\n  - 'cik': (side·(PL−4,5), MZ ± 3) noktasına yürür, ~2 sn.\n  - 'gonder' (golGonder; ~6–8 sn). Noktaya ≤ 45 m ve 'ayak' ya da alıcı yoksa doğrudan noktaya yerIlkHiz(L, 0,3). Değilse alıcı: gol yiyen takımın 12–30 m'deki, noktaya 8 m daha yakın, yola en az sapan saha oyuncusu; varış 1,2. Kaleci L ≤ 26 için elleAtis 'yuvarla', üstünde 'omuz' (havadanCoz, 3 m kısa düşer). Saha oyuncusu: tekme {kucuk} ya da elleAtis 'yuvarla'.\n  - 'yol': yoldaki oyuncu topu keser. Koşul: iki takımdan biri, sevinçte değil, gönderen değil, kaleci değil, 0,9 m içinde, top < 5 m/sn. Gol yiyen takımdansa elle alır ya da durdurur; atan takımdansa noktaya tek dokunuşla yollar. Zincirde en çok 4 gönderme.\n  - 'tasi': noktaya ≤ 12 m olan alıcı elinde yürür (0,3); 0,7 m'de 'yerlestir' 0,6 sn, top tam noktaya.\n  - 'nokta': top ≤ 2,5 m ve < 0,3 m/sn ise santracı 1,0 m içinde yerleştirir; olay golTopNokta. Beklenen an 12–22 sn.\n  - Yedek: top 3 sn yerinde dururken noktada değilse en yakın gol yiyen saha oyuncusu alır.\n- Hakem (bit 2, c.hk):\n  - 'isaret' 0–2,4 sn: hizOran 0, bak = sc. Çizim mevcut goal işaretiyle santrayı gösterir.\n  - 'yuru': 2,4 sn'de eylem 'not' (2,4 sn; yürürken 0,17 hızla yazar); sonra santra yerine {−6·dir[kickTeam], MZ−8}. Hız 0,25 (1,8 m/sn), geç kalırsa ≤ 0,5. bak = null (yüz gidiş yönünde), bakisYon = gidiş yönü.\n  - 'bekle': 1 m'de durur, nokta/topa bakar, c.hk.bekT sayar.\n- Yan hakem (bit 2): ilk 1,5 sn hakeme bakar. Sonra hizOran 0,6 ile ofsayt hizasına koşar (yalnız savunmacılar, top terimi yok); hiza dönen savunmayla orta çizgiye kayar.\n- Odak (bit 4): sc + ağırlıklı küme merkezi (sc ×2, sc'ye 8 m içindekiler ×1), exp(−dt/0,5) ile süzülür.\n\nEVRE 'donus' (sevincT → düdük)\n- p.sevinc = false. Atan takımın bütün oyuncuları santraKonumu'na hız = clamp(L / max(1, dudukT − 1,5 − phaseT), 1,4, 3,6) m/sn ile döner (sahneHiz deseni: süreyi yürüyerek doldurur, geç kalınca tırıs). Varan durur ve noktaya bakar.\n- Odak: dönen takımın merkezi (kendi yarısına geçmemiş olanlar ×1, geçenler ×0,3) noktaya w = (kendi yarısındakilerin payı)²·0,8 kadar karışır; düdüğe son 2 sn'de tamamen noktaya.\n\nEVRE 'duduk' — golSantraHazirMi her adımda sorulur. Koşullar:\n- top noktada (≤ 0,3 m, taşıyan yok, < 0,2 m/sn);\n- santracı ≤ 1,2 m;\n- santraKuralHazir(kickTeam): herkes kendi yarısında (x·dir ≤ 0,3); rakipler 9,15 m dışında; santracı dışında noktanın 3 m içinde kimse yok;\n- hakem 'bekle'de ≥ 0,5 sn;\n- sakatlikBekletir yok; hakemde kartSira yok;\n- phaseT ≥ dudukT.\nTavan golTempo.tavan = 55 sn: top gerekiyorsa noktaya konur ve düdük yine çalar.\ngolDuduk: refs[0].eylem duduk 0,8; on('duduk', {tur: 'santra'}); santraHazirla(kickTeam, false); santraAcele = !!c.alan; _santraS1 = {t}.\n\n'kickoff' evresi (mevcut stepKick, S1 bayrağıyla)\n- Hazır sayılma Law 8 kuralıyla (tek oyuncu yarıçapı 3 m).\n- Hakem yerinde kalır (hizOran 0).\n- Düdük → vuruş 1,6 sn (acelede 0,9).\n- Santrada ikinci düdük yok; olay {dudukOnce: true}.\n- stepKick'in 22 sn tavanı yedek olarak kalır.\n\nSüreler\n- Tarafsız: gol → santra 33–37 sn (ortanca hedef 35); sevinç 11–15; top noktada 12–22; hakem yerinde 15–25.\n- Gol yiyen takım geride ('tasi'): 26–30. Gol yiyen takım önde (koru ×1,3): 40–48. Atan takım acele ('atan', sevinç ~4–5 sn): 20–25. Kendi kalesine: sevinç ×0,7.\n\ngolSahne 0: stepGoal'ın 7 sn'lik eski yolu, santraHazirla ve stepKick birebir aynı kalır.",
+  "kodDegisiklikleri": [
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "MOTOR_AYAR (K bildirimleri, ~satır 112, Z2 satırının yanı)",
+    "ne": "Yeni bildirimler: golSahne:undefined, golTempo:undefined. Değerler ayarEkle('K') ile mac-durantop.js'te atanır."
+   },
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "reset()",
+    "ne": "Match alanları: this._asist=null (son tamamlanan pasın {p, q, t} kaydı) ve this._santraS1=null (golden sonra düdüklü santra bayrağı). Oyuncu nesnesine alan eklenmez."
+   },
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "dokunus() (~533)",
+    "ne": "Mevcut `if(b.pas&&p!==b.pas.p)` dalında, alıcı arkadaşsa this._asist={p:b.pas.p,q:p,t:this.t} yazılır. Yalnız kayıttır, sonucu değiştirmez; golSahne 0 iken de yazılır ve --ayni bozulmaz."
+   },
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "gol() (~660)",
+    "ne": "celeb kurulduktan sonra golSahne&1 açıksa this.golSahneKur(c) çağrılır. 'goal' olayına {sevincT, tur, asist} eklenir (izleme ve ölçüler okur). Pasör: _asist.q === scorer ve 15 sn içinde ise _asist.p."
+   },
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "stepGoal() (~678)",
+    "ne": "İlk satır: if(MOTOR_AYAR.golSahne&1){this.golSahneAdim(dt);return;}. Eski 7 sn'lik yol (kalecinin havadanCoz degajı, T10d alan) bit 0 için olduğu gibi kalır."
+   },
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "stepKick() (~414–447)",
+    "ne": "S1=this._santraS1 okunur. Hazır sayılma koşulu: ac=this.santraAcele||!!S1. Tek oyuncu yarıçapı S1?3:2 (a-akis'in 3 m'lik ölçüsüyle aynı). Vuruşta: S1 varsa refs[0].eylem düdüğü yazılmaz; kickoff olayına dudukOnce:!!S1 eklenir; _santraS1=null. Topun noktada olmadığı yollar (yedek) aynen kalır."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "ayarEkle('K', …) (Z2 bloğunun sonuna)",
+    "ne": "golSahne:15 ve golTempo:{toplam:35,sevinc:[11,15],kritik:1.3,atan:0.35,kumeR:35,donus:[1.4,3.6],kaleciAl:[1.2,2.6],uzgun:[2,5],tavan:55} eklenir; açıklama satırlarıyla."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "yeni bölüm 'S1c: gol sonrası sahnesi' — golOzet(c,tuz)",
+    "ne": "sahneOzet desenindeki h2 özeti (tohum, sc.n, gol sayısı, skor, yarı, tuz). Rastlantı çekmez."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "golSahneKur(c)",
+    "ne": "Gol anında bütün plan bir kez kurulur: kickTeam, bağlam (tempoBaglam, tempoSapma), sevincT, dudukT (taban: sevincT + L_dönüş/3,6 + 2), c.tur ve kosuYer (bit 8; kapalıyken eski köşe), c.sc (kendi kalesine golde vekil), c.asist, c.es, c.katil, c.cift, c.top {tur: tasi | atan | el | ayak, p, evre:'git', zincir:0}, c.hk {evre:'isaret'} ve c.odak (bit 4). T10d c.alan hesabı eski formülle buraya taşınır."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "golSahneAdim(dt)",
+    "ne": "Evre makinesinin her adımı: kutla, donus ve duduk sınaması. Oyuncu grupları sırayla: top sahibi ya da alıcısı (golTopAdim); atan takım (golcü, küme, uzaktakiler, kaleci); yenen takım (üzgün bekleme, sonra santraKonumu). Ardından: jestlerin süresi (niyetAdim gol evresinde çağrılmadığı için aynı döngü burada), golOdak(dt) (bit 4), golSantraHazirMi → golDuduk, tavan; sonra hareketHepsi(dt) ve topAdim(dt). Sakat, kilitli eylemdeki ve oyunda olmayan oyuncu atlanır."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "golTopAdim(c,dt), golGonder(p,hx,hz,tur), golHedefSec(p)",
+    "ne": "Top zinciri: git → al → cik → gonder → yol → (tasi | yeniden gonder) → nokta; yoldaki oyuncunun kesmesi, yedek ve tavan. golGonder topun hızını doğrudan yazar (topDurdur deseni): yerde yuvarlanan top yerIlkHiz(L, 0,3 | 1,2, R); 'omuz' havadanCoz. Eylem: elleAtis {stil yuvarla | omuz} ya da tekme {kucuk:true, ayak}; ardından b.agda=false, b.tasiyan=null, kickCd 0,3, topDegisti(). Olaylar: golTopAl, golTopGonder, golTopNokta. T10d yolu topuAgdanAldi olayını korur."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "santraKuralHazir(t), golSantraHazirMi(c), golDuduk(c)",
+    "ne": "Law 8 sınaması (stepKick'in acele dalıyla aynı ölçüt, tek oyuncu 3 m) ve düdük ön koşulu. golDuduk: hakemde duduk eylemi, on('duduk',{tur:'santra'}), sevinç bayrakları kapanır, santraHazirla(kickTeam,false), santraAcele=!!c.alan, _santraS1={t}."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "golHakemAdim(h,dt), golYanHakem(q,s,z) (bit 2)",
+    "ne": "Orta hakem: isaret → yuru (2,4 sn'de eylem {ad:'not',t:0,sure:2.4}; bakisYon gidiş yönünde) → bekle. Santra yeri {−6·dir[kickTeam], MZ−8} (yarı başı yerinin aynası). Yan hakem: 1,5 sn hakeme bakar; sonra ofsayt hizasına (yalnız savunmacılar, top yok) hizOran 0,6 ile, yonHedef çizgi boyunca."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "golOdak(c,dt) (bit 4)",
+    "ne": "c.odak={x,y:1,z} (motor koordinatı, salt okunur). Kutla: golcü ×2 + 8 m içindeki küme. Donus: dönen takımın merkezi noktaya w=(kendi yarısındaki payı)²·0,8 kadar karışır; düdüğe son 2 sn'de noktada. Süzme exp(−dt/0,5). Sonucu değiştirmez (--ayni bit 4 açık ↔ kapalı)."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "hakemAI() (~558)",
+    "ne": "kartSira dalından sonra yeni dal: else if(ph==='goal'&&this.celeb&&this.celeb.hk&&(MOTOR_AYAR.golSahne&2))this.golHakemAdim(h,dt). kickoff evresinde _santraS1 varken hakem yerinde kalır (hizOran 0, bak = top). yan() kapanışında (~592) gol evresinde ve bit 2 açıkken golYanHakem kullanılır. Bit 0 iken dallar aynen kalır."
+   },
+   {
+    "dosya": "js/kamera.js",
+    "islev": "bakisOdagi() (~54)",
+    "ne": "goal dalı: const o=mac.celeb&&mac.celeb.odak; varsa BAKIS_HEDEF o'ya, yoksa eski mac.focus(). Sahne kipinin yayı ve sınırı (yay 1.0, sahneSinir 60°/sn) ile okunurluk ve pencere kuralları değişmez; kickoff'ta top kipine geçiş, odak zaten noktaya karıştığı için yumuşak olur."
+   },
+   {
+    "dosya": "js/animasyon.js",
+    "islev": "anmHakemAdim (~1083), anmHkPoz, anmHakemOlay (~1014, ~1024)",
+    "ne": "Eylem 'not' → anmHkIsaret 'not' (sol elde defter, sağ el yazar, baş eğik). 'kickoff' olayında v.dudukOnce varsa düdük işareti verilmez. Hakemin saatine bakışı (~1092) 'goal' evresinde de çalışır: c.hk.evre 'bekle' iken."
+   },
+   {
+    "dosya": "js/animasyon.js",
+    "islev": "anmSevincSec (~1424), sevinç ve üzgün bölümü (~1684–1697), ANM_POZ/ANM_SEVINC (~200–238)",
+    "ne": "Yeni ANM_POZ.sevGoster (iki kol öne, işaret) ANM_SEVINC[8]'e girer ('pasci' golcüsü). Golcünün çeşidi c.tur'a göre ağırlıklanır (tribün → el kulakta / kollar; yerinde → kollar / sakin; kulübe → yumruk). Arkadaşlar STIL payıyla seçer (L.3). c.es çifti aynı pozu aynalı yapar. c.cift eşleri ve kendi kalesine golde c.sc ile sarılma. Üzgün poz S1c'de ilk uzgunSure (6 sn) boyunca ya da oyuncu durdukça."
+   },
+   {
+    "dosya": "js/stil-99.js",
+    "islev": "STIL.animasyon",
+    "ne": "Yeni blok s1:{gol:{not:1,notSure:2.4,defterRenk:0x161616,sevincTur:1,sevincPay:[0.30,0.27,0.16,0.12,0.15],uzgunSure:6,goster:1,esli:1,cift:1}}. Her anahtar 0'da eski çizim; açıklama z2 bloğu biçiminde."
+   },
+   {
+    "dosya": "js/mac-izleme.js",
+    "islev": "IZLEME.anlar.goal (~26)",
+    "ne": "sonra:v=>v&&v.sevincT?Math.min(18,v.sevincT+1.5):7. Sevinç boyunca 1×, dönüş seçilen hızda. ikiz-deneme gerekir."
+   },
+   {
+    "dosya": "js/mac-sahnesi.js",
+    "islev": "olay 'goal' (~134)",
+    "ne": "İsteğe bağlı: kenarın sevinç süresi a.sevinc=v.sevincT?Math.min(10,0.6*v.sevincT):6 (yalnız çizim)."
+   },
+   {
+    "dosya": "araclar/olcumler/k-sahne.js",
+    "islev": "bilgi, yeni(), dinle, adim, bitir",
+    "ne": "'— S1c: gol sonrası —' bölümü (satırlar olcu alanında). Olaylar: goal, golTopAl, golTopGonder, golTopNokta, duduk, kickoff; alanlar: m.celeb (evre, odak, sc), refs, ball. Sözleşme aynı: rastlantı çekmez, motor yöntemi çağırmaz."
+   },
+   {
+    "dosya": "araclar/olcumler/o-olay.js",
+    "islev": "bilgi satırı 'Gol → santra (sn)'",
+    "ne": "Eski [20,35,'T10'] bilgisinin yanına S1 hedefi (~35; bilgi) yazılır. topuAgdanAldi anlamı (T10d) değişmez."
+   },
+   {
+    "dosya": "araclar/senaryolar/d-gol.js (yeni, seyrek)",
+    "islev": "senaryo",
+    "ne": "Yapay gol (animasyon-olcum'daki yöntemle: top ağa konur, m.gol(side) çağrılır). Bağlamlar: tarafsız, gol yiyen geride (T10d), atan takım acele, gol yiyen önde (koru), kendi kalesine, kartlı (avantaj); her biri 40 tekrar. Kapılar senaryolar alanında. Sahibi golSahne kodu."
+   },
+   {
+    "dosya": "araclar/animasyon-olcum.py, araclar/an-yakala.py, araclar/poz-galerisi.html",
+    "islev": "--olay, anlar, galeri",
+    "ne": "'A: olay'a eklenir: 'not' işareti N/N ve santrada çift düdük 0. Yeni anlar golKume (kutla, phaseT > 6), golDonus, golDuduk. Galeri satırı s1gol (sevGoster, hakemin not pozu). Yalnız Claude'un kendi doğrulaması için; kullanıcıya gösterilmez."
+   }
+  ],
+  "yeniAlanlar": [
+   "celeb (this.celeb; oyuncu nesnesi değil). Ortak: c.s1 (S1c açık), c.evre ('kutla' | 'donus'), c.sevincT, c.dudukT (planlanan düdük, phaseT). Motor yazar. Okuyanlar: golSahneAdim; animasyon (evre); k-sahne ve d-gol.",
+   "celeb sevinç: c.tur ('kose' | 'tribun' | 'pasci' | 'kulube' | 'yerinde' | 'atan'), c.kosuYer {x, z}, c.sc (sevincin merkezi; kendi kalesine golde vekil), c.asist (pasör ya da null), c.es ([golcü, eş] ya da null), c.katil (Set: kümeye koşanlar), c.cift (Map: uzaktaki ikili sarılma eşleri), c.uzgunT (oyuncu → üzgün bekleme süresi). Motor yazar. Animasyon okur (poz seçimi, sarılma); ölçüler okur.",
+   "celeb top: c.top {tur: 'tasi' | 'atan' | 'el' | 'ayak', p (sahibi ya da alıcısı), evre: 'git' | 'al' | 'cik' | 'gonder' | 'yol' | 'tasi' | 'nokta', t, hedef {x, z}, alici, son (son gönderen), zincir (gönderme sayısı)}. c.alan (T10d alanı) korunur. Motor yazar ve okur; k-sahne ile d-gol okur.",
+   "celeb hakemler: c.hk {evre: 'isaret' | 'yuru' | 'bekle', t, yer {x, z}, bekT}, c.yhT (yan hakemin göz teması süresi). Motor (hakemAI dalı) yazar ve okur; animasyon hakemin saatine bakışı için c.hk.evre'yi okur.",
+   "celeb odak: c.odak {x, y, z} (motor koordinatı; bit 4). Motor yazar; yalnız js/kamera.js bakisOdagi okur (salt okunur).",
+   "Match alanı this._asist {p, q, t}: dokunus yazar, gol() okur (pasçıya koşu ve sevGoster).",
+   "Match alanı this._santraS1 {t}: golDuduk yazar; stepKick okur ve siler (Law 8 hazırlığı, 3 m, ikinci düdüğün olmaması). Ölçüler kickoff olayının dudukOnce'unu okur.",
+   "Hakem eylemi refs[0].eylem {ad: 'not', t, sure: 2.4}: motor yazar; çizim (anmHakemAdim) okur. EYLEM_ADIM kaydı yok, süresi dolunca biter; kilit değildir, hakem yürümeyi sürdürür.",
+   "Mevcut alanlar yeni anlamla kullanılır: alan oyuncunun eylemi elleAtis {stil yuvarla | omuz}, tekme {kucuk, ayak}, yerlestir; golcünün jest 'isaret' (hedef = pasör nesnesi; isteğe bağlı); p.sevinc, p.bak, p.hizOran, p.tx/tz; hakemde h.bakisYon (K1 sözleşmesi: yürürken gidiş yönü).",
+   "Olaylar (this.on): 'goal' + {sevincT, tur, asist}; yeni 'golTopAl' {p, tur, takim}; 'golTopGonder' {p, q | null, tur: 'yuvarla' | 'omuz' | 'tekme' | 'birak', L}; 'golTopNokta' {p}; 'duduk' {tur: 'santra'}; 'kickoff' + {dudukOnce}. Okuyanlar: izleme (sevincT), animasyon (duduk, kickoff), k-sahne, d-gol. topuAgdanAldi yalnız T10d yolunda kalır (o-olay'ın acele sınıfı bozulmasın)."
+  ],
+  "ayarlar": [
+   "MOTOR_AYAR.golSahne = 15 (bit maskesi; K akışı, mac-durantop.js ayarEkle; bildirim mac-motoru.js K bölümünde). Bitler: 1 akış (evreler, plan, top zinciri — kaleci uzağa atmaz, santracı yalnız noktadaki topa gider —, yenen takımın duruşu, dönüş hızları, Law 8 ve düdük ön koşulu, stepKick'in S1 bayrağı); 2 hakemler (hakemin işaret, not ve yürüyüşü; yan hakemin göz teması ve çizgi boyu koşusu, top terimsiz hiza); 4 bakış odağı (c.odak; sonucu değiştirmez); 8 sevinç türleri (golcünün koşu türü, eşli, pasçı, kulübe, uzaktakilerin ikili sarılması, kümeye katılma yarıçapı). 2, 4 ve 8 bit 1 olmadan etkisizdir. golSahne 0 (ve _asist kaydı) iken motor bugünküyle birebir: stepGoal 7 sn, kalecinin degajı, santracının kovalaması, genel hakem dalı; --ayni 80/80 beklenir.",
+   "MOTOR_AYAR.golTempo = {toplam: 35 (gol → santra vuruşu, gerçek sn; düdük = toplam − 1,6), sevinc: [11, 15] (sevinç evresi, h2), kritik: 1.3 (2. yarıda son 6 dk'da fark ≤ 1 iken sevinç çarpanı), atan: 0.35 (atan takımın acelesinde sevinç çarpanı), kumeR: 35 (kümeye koşma yarıçapı, m), donus: [1.4, 3.6] (dönüşte süre dolduran hızın sınırları, m/sn), kaleciAl: [1.2, 2.6] (kalecinin ağa yürümeye başlaması, sn), uzgun: [2, 5] (yenen takımın yerinde üzgün bekleyişi, sn), tavan: 55 (zorla düdük, sn)}.",
+   "Yeniden kullanılan Z2a anahtarları: tempoBaglam [1.3, 0.75] (gol yiyen, yani santrayı yapan takımın koru/acele bağlamı) ve tempoSapma 0.15 (golden gole ± pay, h2).",
+   "durusSaat 2 değişmez: gol ve santra evresinde maç saati 2× akar; 35 sn ≈ 70 maç sn (bugün ~52). uzatmaBirikim'de gol başına 50 sn aynı kalır (karar: değiştirilmez; risklerde not edildi).",
+   "Çizim ayarı STIL.animasyon.s1.gol = {not: 1, notSure: 2.4, defterRenk: 0x161616, sevincTur: 1, sevincPay: [kollar .30, yumruk .27, el kulakta .16, uçak .12, göğe işaret .15], uzgunSure: 6, goster: 1, esli: 1, cift: 1}. Her anahtar 0'da eski çizim."
+  ],
+  "cizim": [
+   "Hakemin 'not' işareti (yeni). Motor eylemi {ad: 'not', sure: 2.4}; anmHakemAdim'in e!==h.sonE dalında anmHkIsaret(p, [{tur: 'not', sure}], true). anmHkPoz: sol önkol göğüs hizasında yatay, defter sol elde. Defter yeni bir prop (~0,09×0,13×0,01 m, kart propunun el bağlantısı ve görünürlük deseniyle; STIL s1.gol.defterRenk). Sağ el kalemle defterde: dirsek bükük, bilekte ~4 Hz küçük salınım. Baş öne eğik (hx +0,35). Bacaklar yürüyüş döngüsünde kalır (yalnız kol ve baş kanalları). Zarf 0,2 / 0,3 sn.",
+   "Gol anındaki hakem işareti aynı kalır: 'goal' olayında [bekle 0,8, yon 1,8 → orta nokta, theta −0,15]. Motor bu sürede hakemi durdurduğu için işaret yerinde verilir (bugün koşarken).",
+   "Santrada tek düdük: golDuduk'un on('duduk', {tur: 'santra'}) olayı mevcut 'duduk' dalıyla 0,5 sn'lik düdük pozunu verir. 'kickoff' olayında v.dudukOnce varsa anmHakemOlay düdük işareti eklemez. Yarı başı santrası değişmez.",
+   "Hakemin saatine bakışı (anmHakemAdim ~1092) 'goal' evresinde de çalışır: c.hk.evre 'bekle' ve hız < 0,6 iken.",
+   "Golcü pozları c.tur'a göre. 'pasci': yeni ANM_POZ.sevGoster (iki kol öne uzanmış, işaret; kol açıları jestIsaret'ten aL ≈ aR ≈ −1,55, eL/eR −0,05, baş hafif kalkık), ANM_SEVINC[8]; gövdeyi motorun bak'ı pasöre döndürür. 'tribun': el kulakta / kollar açık ağırlıklı. 'yerinde': kollar açık / sakin. 'kulube': yumruk. Diz kayması (a.sevDiz) aynen.",
+   "Arkadaşların çeşidi L.3 paylarıyla (STIL s1.gol.sevincPay; bugün ilk dört çeşit eşit): açık kollar .30, yumruk .27, el kulakta (tribüne) .16, uçak (planlı) .12, göğe işaret (dinî) .15.",
+   "Eşli sevinç: c.es çifti aynı pozu ayna simetrisiyle (aynala) yapar, yüz yüze (motorun bak'ı). İkili sarılma: c.cift eşleri birbirine 2,35 m içinde ve < 2,2 m/sn iken sarilma yuvası; bugün yalnız golcüyle. Kendi kalesine golde sarılma merkezi c.sc.",
+   "Yenen takımın üzgün pozu (eller başta, belde, baş önde): S1c'de yalnız ilk uzgunSure (6 sn) boyunca ya da oyuncu durdukça. Yürüyüşte 0,5 sn'de kalkar; bugün 'goal' evresinin tamamı (artık ~35 sn olacaktı).",
+   "Topun yolculuğunda mevcut pozlar: kalecinin ve savunmacının elleAtis 'yuvarla' / 'omuz', saha oyuncusunun tekme {kucuk}, noktaya 'yerlestir' (0,6 sn), topu elde taşıma ('elde' yuvası). Yeni poz gerekmez.",
+   "Kenar: kulübenin ve teknik direktörün sevinci goal olayının sevincT'siyle (mac-sahnesi, en çok 10 sn); isteğe bağlı.",
+   "Kamera (çizim dosyası): bakisOdagi'nin goal dalı mac.celeb.odak'ı okur (yoksa eski focus()). Sevinç boyunca golcü ve küme, dönüşte takım, düdüğe yakın nokta; kickoff'ta top kipi. Pencere, bütçe ve okunurluk kuralları değişmez."
+  ],
+  "olcu": [
+   "k-sahne bölüm başlığı: '— S1c: gol sonrası (k-sahne; kutuphane/L L.3, L.10) —'",
+   "Gol → santra (gerçek sn) dört bağlamda: tarafsız (ksGS_std; hedef ortanca ~35, sağlık aralığı 28–42), gol yiyen geride / T10d (ksGS_acele; ~26–30), atan takım acele (ksGS_atan; ~20–25), gol yiyen önde / koru (ksGS_koru; ~40–48). Bugün 25,6 ortanca, tek ölçü.",
+   "Gol: sevinç evresi (gerçek sn) — ksGKutla, c.evre 'kutla' süresi; hedef 11–15, kritik geç golde ≤ 19,5. Bugün 6,5.",
+   "Gol: küme — golcünün 3 m içinde ≥ 3 arkadaşın ilk anı (sn; ksGKume, hedef ortanca ≤ 7) ve sevinç evresinde kümeli zamanın payı (%; ksGKumeP, ≥ 40). Bugün sevinç içinde 6 m'de 0–1 arkadaş.",
+   "Gol: golcünün koşu türü % — köşe / tribün / pasçı / kulübe / yerinde / atan (ksGT_*), çeşitlilik ölçüsü.",
+   "Gol: topu ağdan alan % — kaleci / gol yiyen saha oyuncusu / atan takım / T10d alanı (ksGA_*).",
+   "Gol: topun gol yiyen kaleden en uzak gidişi (m; ksGTopUzak, ≤ 53) ve topun orta çizgiyi atan takımın yarısına geçtiği gol % (ksGTopGecti, hedef 0). Bugün ortalama 61 m, %26 geçti.",
+   "Gol: top noktada, golden sn (ksGTopNokta; hedef ortanca 12–22) ve zincirdeki gönderme sayısı (ksGZincir; ortalama 1–2, en çok 4).",
+   "Gol: santracı topa noktanın 3 m dışında dokundu / taşıdı % (ksGKovala; hedef 0) ve stepKick tavanıyla ışınlanan top % (ksGIsinla; hedef 0). Bugün %22.",
+   "Gol: hakemin tepe hızı (m/sn; gol ve santra evresi, kartsız; ksGHkTepe ≤ 3,0 — bugün 7,0), yolu (m; ksGHkYol — bugün 71), düdükten önce santra yerinde bekleme (sn; ksGHkBekle ≥ 0,5).",
+   "Gol: yan hakemin çizgi boyu koşusu (m; ksGYh) ve gol evresinde kale çizgisine gidiş % (ksGYhCizgi; hedef 0).",
+   "Gol: düdük → santra vuruşu (sn; ksGDuduk; ~1,6, acelede 0,9, ≥ 0,9 %100) ve düdüksüz santra % (ksGDuduksuz; hedef 0).",
+   "Gol: santra anında Law 8 ihlali (kendi yarısında olmayan, çemberdeki rakip, noktanın 3 m içindeki ikinci oyuncu; ksGLaw8 / santra; hedef 0).",
+   "Gol: bakış odağı sevinç kümesinde (c.odak golcüye ya da küme merkezine ≤ 8 m; sevinç evresinin %'si; ksGOdakKume, hedef ≥ 95) ve odak topa ≤ 5 m iken top noktada değil (sn; ksGOdakTop, hedef ~0).",
+   "Gol: santrada yerine varmamış oyuncu (santraKonumu'na > 3 m; ortalama, bilgi): Law 8'le başlayan santranın düzene etkisini izler."
+  ],
+  "senaryolar": [
+   "d-gol (yeni, seyrek; sahibi golSahne kodu: mac-durantop.js S1c bölümü, stepGoal, stepKick'in S1 dalı, hakemAI gol dalı). Yapay goller: tarafsız, gol yiyen geride, atan takım acele, gol yiyen önde, kendi kalesine, avantaj kartlı; her biri 40. Kapılar (çıkış 1 kabul dışı): tarafsız gol → santra ortancası 28–42; acele ≤ tarafsız ≤ koru; topun atan takımın yarısına geçmesi 0; santracı kovalaması ve ışınlanma 0; düdüksüz santra 0; Law 8 ihlali 0; kartsız denemelerde hakemin tepe hızı ≤ 3,2; tavana (55 sn) varan 0; sevinç evresinin %95'inde odak kümede. Bilgi: koşu türü ve top alanı payları.",
+   "d-duran: değişmez beklenir. Ölçüler gol olayına kadar; vuruştan 8 sn içindeki 'ilk' sınıfı doğrudan gollerde atanmış olur. Kaleci gol evresinde topu ağdan alırsa 'ilk = kaleci' kenar durumu bugünkünden farklı anda gelebilir (bilgi satırı). Çıkış 0.",
+   "d-penalti, d-sut, v-sut, c-orta, z-s3: sonuç olayında ya da kısa pencerede durur, gol evresine girmez; değişmez.",
+   "d-topcu: değişmez. Top toplayıcılar gol evresinde iş almaz; çoklu top ve yeni top Z10'da.",
+   "m-isinma, m-fotograf: değişmez. Yarı başı santrası (santraHazirla(isinla), yariSantra) S1c dışında; _santraS1 yalnız golDuduk'ta kurulur.",
+   "o-ofsayt: değişmez. Gol iptali gol evresinden önce (golIptalMi) ve 'goal' sayımı aynı.",
+   "ikiz-deneme.js: gerekli (izleme goal penceresi sevincT'ye bağlanır; gol evresi uzar). 'Aynılık N/N' ve kuşkuda --esit. Pencere olayın verisinden okunur; ikiz ve ana motorda aynıdır.",
+   "40 maç --karsilastir (oturum sonu) ve tur kapanışında 80 maç. Sonuç değişir (parmak izi); golSahne 0 ile güncel tabana --ayni birebir. Beklenen: o-olay gol → santra 26 → ~35; k-sahne 'duruş, gol ve santra' +~0,4 gerçek dk/maç; maç saatinde oyun payı −~0,5 puan; gol/maç gürültü içinde (oyun dakikası goldan sonra gol başına ~18 maç sn azalır, ~−0,03); a-akis 'Santra: orta noktada tek oyuncu' ~%100 korunur (3 m kuralı), 'ilk pas geri' ≥ bugünkü; o-olay 'topu ağdan alan gerideki takım' aynı (T10d yolu).",
+   "animasyon-olcum.py --olay 80: gol denemesi ilerle(9) + ilerle(40, play) içinde biter (~35 sn). 'A: olay'da 10 golde ≥ 5 sevinç çeşidi korunur (sevGoster yeni çeşittir); yeni 'not' işareti N/N ve santrada çift düdük 0.",
+   "akis-deneme.py §17/§18: §17 pencere bandı oyunda ölçülür, etkilenmez. §18 ×4 izleme penceresi sevinçte daha uzun 1× gösterir; çalıştırılmalı (izleme değişti).",
+   "an-yakala.py: yeni anlar golKume, golDonus, golDuduk (Claude'un kendi incelemesi; kullanıcıya sunulmaz). Kamera dosyası değiştiği için kontrol.py ve akis-deneme gerekir."
+  ],
+  "riskler": [
+   "Santra Law 8 ile başlar; oyuncular dizilişteki yerlerine tam varmamış olabilir (atan takım hâlâ yayılıyor). İlk 5–10 sn'lik oyunu ve santra presini (F.5.3) biraz değiştirir. Ölçü: 'santrada yerine varmamış oyuncu' satırı ve a-akis Santra satırları. Gerekirse düdük koşuluna '≥ 9/11 oyuncu 3 m'de' eklenir.",
+   "Top zinciri takılabilir: alıcı sakatlanır, kart görür ya da başka yöne yürür; top bir oyuncunun içinden yuvarlanır (gol evresinde temaslar() çağrılmaz). Önlem: yoldaki oyuncunun kesmesi, 3 sn'lik boşta yedeği, 55 sn'lik tavan ve hedeflerin kendi yarısına sıkıştırılması (x·side ∈ [3, PL−8], z ∈ [6, PW−6]). Ölçü: ksGTopGecti ve ksGIsinla = 0.",
+   "'omuz' atışı sekerse topAdim'in kötü zemin dalı this.normal() çeker; ana zar dizisi gol evresinde kayar. Bit 1 açıkken sonuç zaten değişir; yine de yerde yuvarlama (zar çekmez) ağırlıklıdır, omuz yalnız L > 26 m'de.",
+   "Gol evresi yarı sonunu ertelemez. Uzatmada gelen golde düdük çalar, kickoff evresinde devreSonuKontrol yarıyı bitirir. Santra düdüğü bitiş düdüğüne dönüşür (bugün de benzeri var). Görünüm sorunu çıkarsa golSantraHazirMi süre dolunca santra yerine endHalf'ı bekletebilir.",
+   "Saat: gol evresi uzayınca (gerçek ~35 sn, maç ~70 sn) gol başına oyun ~18 maç sn azalır. Uzatma birikimi 50 sn'de kalır. Gol/maç etkisi gürültü düzeyinde (~−0,03) ama 80 maçta izlenmeli.",
+   "İzleme: ×2/×4'te sevinç ~13–17 sn 1× oynar, maçın gerçek süresi biraz uzar (gol başına ~+9 sn, ~+0,5 dk/maç). Kullanıcının gol sonrası santraya yürüyüşü seçilen hızda geçme isteği korunur.",
+   "hakemAI dal sırası (kartSira > gol > duran top > genel) S1d (kart: hakem yürür) ile çakışabilir. Avantajdan gelen kart gol anında gösterilir; S1d'nin yürüyen hakemiyle gol dalı kart bitince devralır. İki tasarımın aynı kapanış bayrağını (h.kartSira null) kullanması gerekir.",
+   "ad-denetimi: yeni Match yöntemleri (golOzet, golSahneKur, golSahneAdim, golTopAdim, golGonder, golHedefSec, santraKuralHazir, golSantraHazirMi, golDuduk, golHakemAdim, golYanHakem, golOdak) var olan adlarla çakışmamalı. Blok içi function sızıntısı yok, hepsi Object.assign(Match.prototype).",
+   "Hız: gol ve santra evresinde adım ucuzdur (takimAI yok). Evre ~26 → ~35 sn uzar ve odak ile Law 8 hesabı O(22) ekler. ms/1000 adım oranı evre payıyla oynar; kodun payı hiz-evre.js ile ayrılır, risk düşük.",
+   "Jestin süresi gol evresinde golSahneAdim'de ilerler (niyetAdim çağrılmaz). Golden önce başlamış jestler (ör. basEl) artık gol evresinde biter; bugün oyun dönene dek donuk kalıyorlardı. Bit 1'e bağlıdır, istenen davranıştır.",
+   "Kamera: odak oyunda değilken sahne kipindedir (yay 1,0, 60°/sn). Kulübe ya da köşe koşusu locanın altına düşerse asagiSinir sınırına dayanabilir; an-yakala ile golKume ve golDonus incelenir. Kickoff'ta top kipine geçişte pencere ve ileri besleme sıfırlanır, küçük bir sıçrama kalabilir (odak noktaya karıştığı için az).",
+   "o-olay: 'Gol → santra' satırının eski [20,35,'T10'] bilgisi sınırda okunabilir. Z1'den beri bilgi satırıdır; etiketi S1 hedefiyle güncellenir, karar sağlık aralığıyla verilir."
+  ],
+  "digerAlanlarlaTemas": [
+   "hakemAI (js/mac-kurallar.js ~558): S1a (spreyli barajda hakemin çapraza geçip durması), S1b (penaltıda nokta, itiraz, çapraz kol), S1d (kartta yürüyen hakem, çağırma) aynı işleve dal ekliyor. Önerilen sıra: kartSira > gol (S1c) > duran top DY (S1a/S1b) > genel. K1'in h.bakisYon sözleşmesi (yalnız sahne dalları yazar, yoksa baş topta) ortak kullanılır.",
+   "Düdük ön koşulu: S1a'nın seremonili serbest vuruşu (du.dudukT, durusKullan'daki on('duduk') vuruş karesinden öne alınır) ve S1b'nin penaltı düdüğüyle aynı ilke. Ortak yardımcı önerisi hakemDuduk(tur, veri): refs[0].eylem duduk + on('duduk', {tur}), dönüşü this.t. Çizimde çift düdüğün önlenmesi aynı (S1c'de kickoff.dudukOnce, S1a'da kullanım karesindeki düdük).",
+   "duranHazirMi ve sahneKur/sahneOzet (Z2a): S1c bunları kullanmaz ama tempoBaglam ve tempoSapma'yı yeniden kullanır, h2 özetini aynı desenle kurar (golOzet). S1b'nin penaltı temposu (27 → ~40) aynı tablodan.",
+   "Hakem işaretleri (js/animasyon.js anmHkIsaret, anmHkPoz): S1c'nin 'not' pozu ve defter propu, S1d'nin 'kartı baş üstünde, deftere yazma' maddesiyle (L.9 madde 4) ortak olmalı. Tek ANM_HK_NOT pozu ve tek defter propu iki alanda kullanılır.",
+   "Yan hakem (yan() kapanışı): S1a (yan hakemin sahaya girip 9,15 m'ye yardımı) ve S1b (penaltıda kale çizgisinde) aynı kapanışa dokunuyor; gol dalı yalnız 'goal' evresinde ve bit 2 ile.",
+   "Kart (S1d): gol anında avantajdan kart gösterilebilir (gol() → kartGoster). Hakem kartSira dalındayken gol dalı bekler; kartlı oyuncunun durması (S1d) sevinç kümesindeki hedefle çakışırsa kart hedefi önceliklidir.",
+   "Sağlıkçılar (S1e): sakatlikBekletir gol düdüğünü de bekletir. Kulübedeki sağlıkçıların görünmezliği kenarın sevinç çizimini etkilemez.",
+   "Korner rutini (S1f): ortak yer yok; k-sahne genişlemesi aynı dosyada, satır adları 'ksG*' önekiyle ayrışır.",
+   "İzleme (js/mac-izleme.js anlar): S1b penaltının kullanım penceresini değiştirirse aynı tabloda; ikiz-deneme ortak kapı.",
+   "Kamera (js/kamera.js bakisOdagi): K1'in açı ve pencere ölçeği değişikliği korunur. S1c'nin salt okunur odak deseni (motorun celeb.odak'ı) ileride penaltı ve kart odakları için de kullanılabilir.",
+   "durusSaat ve saatHizi: gol ve santra evreleri 2× maç saati. S1'in bütün sahneleri aynı saat kuralıyla uzar; uzatma birikimi (gol 50 sn) S1b'nin penaltı (60 sn) payıyla birlikte değerlendirilmeli.",
+   "Z10 (VAR, çoklu top): S1c'nin varyantları buraya bağlanır. VAR'ın sessiz kontrolü (hakem kulağında bekler; gol iptali ekranda) ve top toplayıcının yeni topu c.top zincirine yeni bir 'yeni top' türü olarak eklenir."
+  ]
+ },
+ {
+  "ad": "S1d-kart: kart sahnesi (hakem yürür, çağırır, kalabalık ya da uzaktan gösterir; kart başın üstünde, sonra deftere yazma; seremonili yeniden başlama)",
+  "ozet": "Bugünkü durumu ölçtüm: HEAD 6628e08 motoru, 16 maç, tohum 1–16, yalnız okuyan betik. Maç başına 4,4 kart çıkıyor. Kart anında hakemle oyuncu arası ortanca 17,2 m (%10–90 aralığı 10,7–26,7 m). Hakem karta ortanca 7,2 m/sn tepe hızla koşuyor (%10'u 6,3), yani depar atıyor. Kartların %21'i (70 karttan 15'i) hiç gösterilmiyor: hakem oyuncuya yetişemeden 6 sn'lik tavan doluyor ve ekranda yalnız çizimin 'cagir' işareti kalıyor. Oyuncu sahne boyunca ortanca 12,3 m yol alıyor, tepe hızı 5,2 m/sn; kendi yerine gidiyor, hakem de peşinden koşuyor. 70 kartın 6'sında duran top kart gösterilirken kullanıldı.\n\nTasarım: hakemin kart kuyruğundaki kayıt nesnesine (k = hakem.kartKuyruk öğesi; oyuncuya da hakeme de yeni alan eklenmez) küçük bir durum makinesi k.s eklenir. Tarz h2 özetiyle seçilir: yürür, çağırır, kalabalık, uzaktan. Hakem ≤ 2,8 m/sn yürür; 6 m içinde 1,8 m/sn'ye iner, yalnız 15 m'den uzakta 3,4 m/sn hafif tırısa çıkar, depar hiç yok. Oyuncu ya durup bekler ya da 1,9 m/sn ile hakeme yürür. Kalabalıkta 1–4 takım arkadaşı hakemin 1,4–1,9 m'sine gelip itiraz eder; hakem kaptan işareti ya da uyarı verir, kaptan dışındakiler 4,6 m'ye çekilir. Kart başın üstünde gösterilir (ikinci sarıda önce sarı, sonra kırmızı), ardından deftere yazılır. Bit 4 açıkken duran top kart bitmeden kullanılmaz; hakemin seremonili düdüğünden 1–2 sn sonra kullanılır.\n\nTasarımı scratchpad'de prototip olarak uyguladım (kart-yontem.js ve yama.py; HEAD kopyası) ve 16 maçla ölçtüm:\n- Tarz payları: çağırır %42–46, yürür %34–38, kalabalık %15, uzaktan %5–7.\n- Faul düdüğünden kartın gösterilmesine (uzaktan hariç) %10/50/90 = 4,8 / 6,6 / 9,8 sn. Yürür ve çağırırda kartın inişine 6,0 / 7,7 / 10,8 sn.\n- Kalabalık sahnesi 9,2 / 10,5 / 17,1 sn.\n- Hakemin tepe hızı, yavaşladıktan sonra: ortanca 2,8, %90 3,45 m/sn. 5 m/sn'yi aşan kare 0.\n- Yürür tarzında oyuncunun durduğu kare payı %80.\n- Gösterilmeden biten kart 0. Kart sürerken kullanılan duran top 0.\n- Kartların %86'sı ≤ 3 m'den gösterildi, gerisi 3–5 m'den.\n- Düdükten vuruş temasına (koşu dahil) 1,4 / 2,8 / 4,3 sn.\n- Kartlı duruşların süresi (ortanca, bugün → prototip): barajlı serbest vuruş 23,9 → 27,4; uzak serbest 12,5 → 15,3; geri serbest 8,3 → 13,1; kenar 18,5 → 21,4; penaltı 26,3 → 31,3 sn.\n\nBit 0 iken birebirlik: tohum 1 ve 2'de tam maç, her 30 adımda bütün oyuncu, hakem ve top durumu ile skor AYNI çıktı. Bu deneme prototipin ilk sürümüyle yapıldı; sonraki düzeltmeler yalnız bitle kapalı yöntemlerin içinde. Gol, şut ve denge kararı 16 maçla verilemez; 40/80 maçla okunmalı.\n\nPrototip dosyaları: C:\\Users\\FARUKA~1\\AppData\\Local\\Temp\\claude\\C--Users-Faruk-AKIR-code-chairman\\d683dfae-9eba-4af0-8067-151302484a8d\\scratchpad\\s1d\\betik\\ altında kart-yontem.js (yöntemler), yama.py (bağlantı noktaları), kart-probe.js (bugünkü ölçüm), kart-probe2.js ve ozet2.js (prototip ölçümü), ayni.js (bit 0 denetimi). Prototipte çizim, kamera, oyuncunun tepki jesti, k-sahne/o-olay ve kartNeden aktarımı yok; bunlar yalnız tasarımda.",
+  "durumMakinesi": "Yer: k.s (k = hakem.kartKuyruk öğesi {p, renk, t, no, neden, s}). hakemAI her karede kartSira varken ve kartSahne&1 açıkken kartSahneAdim(h,k,dt,du) çağırır. S.tut (faz 'play' değil) iken hakemin hedefini sahne yazar; yoksa DY/genel dal sürer. Oyuncuların hedeflerini stepDurus'ta kartOyuncuAdim(du) yazar: durusYerlesim ve topDurdur'dan sonra, hareketHepsi'nden önce. Bütün süreler gerçek sn (tempo B); köşeli parantezler kartOzet tuzudur.\n\nKURULUŞ (kartSahneKur; ilk karede çalışır, itirazEt'ten sonra olduğu için itiraz edenler bilinir). d0 = hakem–oyuncu uzaklığı. Tarz öncelik sırasıyla:\n(a) Faz 'durus' değilse (gol, santra, oyunda kalecinin zaman kartı) ya da oyuncu sahada değilse → uzak.\n(b) Oyuncu duran topu kullanan ise → yuru (oyuncu zaten yerinde, ona dokunulmaz).\n(c) neden 'zaman' → uzak.\n(d) kartSahne&2 açık, penaltı değil ve h2[1] < eşik ise → kalabalik. Eşik: itiraz eden varsa kartKalabalik 0,3; kırmızı ya da ikinci sarıda 0,15; yoksa 0,05.\n(e) Oyuncu kilitli eylemdeyse (yerde) → yuru.\n(f) Ağırlıklı h2[2]:\n- yuru: 0,5·clamp((18−d0)/8, 0, 1,2)\n- cagir: 0,4·clamp((d0−6)/8, 0,2, 1,4)\n- uzak: 0,15·(neden 'asiri' ise ×3)·clamp((30−d0)/15, 0,3, 1)\n\nEVRELER:\n1) karar: 0,5–0,9 sn [3]; uzakta 0,3–0,6 sn. Faulün düdük ve yön işareti sürer. Hakem eldeki hızını keser (hedef 0,35 sn önü, hizOran 0,3), yüzü oyuncuda. Oyuncu kendi yolunda devam eder (tepki payı).\n\n2a) yaklas, tarz yuru: olay hakemde 'durdur' işaretini başlatır. Hakem oyuncunun 1,3 m yanına gider; hız kartHiz [1,8; 2,8; 3,4]: dd ≤ 6 m'de 1,8, ≤ 15 m'de 2,8, ötesinde 3,4. Oyuncu tepki süresinden (0,3–1,0 sn [4]) sonra S.dur noktasında durur, yüzü hakemde. %50 olasılıkla [9], hakem 6 m'ye gelince oyuncu ≤ 1,2 m hakeme doğru bir iki adım atar.\n\n2b) yaklas, tarz cagir: olay hakemde 'cagir' işaretini başlatır. Oyuncu tepkiden sonra hakemin 1,3 m önüne 1,9 m/sn yürür (kip 'yuru'). Hakem d0 > 10 m ise min(2,4; hız) ile buluşmaya yürür, değilse 1,0 m/sn ile.\n\nOyuncu meşgulse (kartMesgul: topu durduran ve top gönderilmemiş, ya da yerde/kilitli) tavan saati durur ve hakem cagir'da bile yuru hızıyla ona gider. Geçiş: dd < 1,9 m ya da S.et > min(9; 1,5 + d0/3,5) + meşgul süresi.\n\n2c) kalabalik (sarıda karar'dan hemen sonra; kırmızı ve ikinci sarıda goster'den sonra, oyuncu çıkarken). Liste (kartKalabalikKur): önce kartı gören, sonra itiraz eylemindekiler, kaptan, 18 m içindeki en yakınlar. Kişi sayısı n = 1 + ⌊3·h2[7]⌋, kırmızıda +1, en çok 4. Kaleci ve kullanan hariç. Her biri hakemin r = 1,4–1,9 m'sine [10+i] gelir; oyuncu yönü etrafında 0,6 rad aralıkla, 3 m/sn ve efor 0,55 ile. 4 m içinde 1,8 sn'de bir 'itiraz' jesti yapar (faz h2[20+i]). Hakem oyuncuya 1,6 m/sn ile 1,6 m'ye yaklaşır, yüzü kümenin ortasında. Ti = 3,0–5,0 sn [6] sonra 'protokol': %60 'kaptan' işareti, %40 'uyari' [8]. Protokolden 0,5 sn sonra kaptan dışındakiler 4,6 m'ye çekilir (kaptan bölgesi 4 m), kaptan 1,7 m'de kalır. Protokol 1,6 + dağılma 0,8 sn sonra: sarıda dd < 2,4 ise goster, değilse yaklas; kırmızıda yaz.\n\n3) goster: hakem durur. Eylem {ad:'kart', sure, renk}: sarı 1,3 sn; ikinci sarı 2,4 sn (ilk yarı sarı, sonra kırmızı, arada kol iner ve kalkar); kırmızı 1,8 sn. Sonunda kırmızıysa oyundanCikar(p) (bugünkü yol). Oyuncu bekler, yüzü hakemde. Tepki jesti (tasarım): sarıda %30 'itiraz', kırmızı ve ikinci sarıda %50 'basEl' (h2).\n\n4) yaz: eylem {ad:'kartYaz', sure} 0,8–1,3 sn [5], uzakta ×0,7. Hakem durur; oyuncu 0,4 sn sonra serbest kalır. Bitince kuyruk ilerler (sıradaki kartın sahnesi kurulur), olay evre 'bitti' {sure}.\n\nTAVAN: sahne 16 sn'yi (kalabalıkta 22) aşar ve kart gösterilmemişse doğrudan goster'e geçilir; bugünkü '%21 hiç gösterilmeyen kart' biter.\nOYUN BAŞLARSA (bit 4 kapalı ablasyonda ya da kaleci zaman kartı gibi oyunda çıkan kartta): kalan sahne uzak'a düşer, S.tut false olur. Hakem oyunu izler; yalnız kart ve yazma eylemi oynar.\n\nSEREMONİ (kartSahne&4):\n- kartGoster faz 'durus'ta çağrıldıysa du.kartS = du.seremoni = true; du.hizli null ise false yapılır, du.hizliTac false olur.\n- duranHazirMi'nin başında: kuyrukta kart varken false.\n- Sahne bitince du.kartBitT = du.t; du.kartDudukT 0,8–1,5 sn [11], du.dudukBek 1,0–2,0 sn [12].\n- duranHazirMi'nin sonunda (öbür bütün koşullar sağlanmışken): du.t < kartBitT + kartDudukT ise bekler. Sonra hakem düdük çalar: eylem duduk 0,8 sn, olay 'duduk' {tur, seremoni:true}, du.dudukAn = du.t, du.dudukCalindi = true. durusKullan'daki düdük böylece tekrarlanmaz. Kullanım düdükten dudukBek sonra.\n- Sahne başında du.sahneT tahminle uzatılır: karar + yol + göster + yaz + düdük payı + koşu; barajda sprey henüz başlamadıysa +12 sn. zorlaGetir ve zorlaHazir de birlikte uzatılır; kullanan topa acele etmez.\n- Zaman kartı (durusKullan → zamanGecirmeGoruldu): kart çıkarsa kullanım ertelenir, sahne ve düdükten sonra yeniden çağrılır; du.zgGoruldu tek sayım sağlar.\n\nh2 TANIMI: kartOzet(k,tuz) = h2(tohum·157 + p.n·31 + p.team·11 + k.no·7, k.no·1009 + tuz·13 + 9), k.no = kayit.kartlar.length. this.rast çekilmez; itirazEt ve faul()'un zar dizisi aynı yerde kalır.",
+  "kodDegisiklikleri": [
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "MOTOR_AYAR bildirimi (Kurallar satırı)",
+    "ne": "hakemSabit'in yanına bildirim: kartSahne, kartTarz, kartKalabalik, kartHiz, kartZaman (undefined). Değerler mac-kurallar.js ayarEkle('Kurallar') içinde atanır."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "ayarEkle('Kurallar')",
+    "ne": "kartSahne:7; kartTarz:[0.5,0.4,0.15]; kartKalabalik:0.3; kartHiz:[1.8,2.8,3.4]; kartZaman:{karar:[0.5,0.9], tepki:[0.3,1.0], sari:1.3, ikinci:2.4, kirmizi:1.8, yaz:[0.8,1.3], itiraz:[3.0,5.0], protokol:1.6, dagil:0.8, duduk:[0.8,1.5], kul:[1.0,2.0], tavan:16}. Her birine kaynak yorumu: kutuphane/L L.4 ve L.9 madde 4, tempo B."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "kartGoster",
+    "ne": "Bit 1: k.no = this.kayit.kartlar.length (kayda yazılmadan önce); k.neden = neden || (du && du.faulYapan===p ? du.kartNeden : null). Bit 4 ve faz 'durus': du.kartS = du.seremoni = true; du.hizli null ise false; du.hizliTac = false. 'kart' olayına sahne:!!(kartSahne&1) alanı (motor okumaz, parmak izi aynı kalır)."
+   },
+   {
+    "dosya": "js/mac-mudahale.js",
+    "islev": "faul",
+    "ne": "durusBaslat veri'sine kartNeden eklenir ({bekle, kart, faulYapan, duduk, kartNeden}). Yalnız okunan alan; bit 0'da da yazılabilir, motor okumaz. Uzaktan tarzın misilleme ağırlığı ('asiri' ×3) bunu kullanır. kartGoster çağrısının imzası ve 'kart' olayının neden alanı değişmez: c-beden.js'in sayımı kaymaz."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "hakemAI",
+    "ne": "Kart dalı: const KS = kartSahne&1; if(kartSira&&KS) this.kartSahneAdim(h,kartSira,dt,du); if(kartSira&&KS&&kartSira.s&&kartSira.s.tut){} else if(kartSira&&!KS){bugünkü dal aynen} else if(DY&&DY.h){…} else{genel}. K1'in h.bakisYon=null satırı korunur."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "yeni yöntemler: kartOzet, kartSahneKur, kartKalabalikKur, kartMesgul, kartSahneAdim, kartOyuncuAdim",
+    "ne": "Prototip metni scratchpad\\s1d\\betik\\kart-yontem.js'te (çalışır, 16 maçla ölçüldü). Prototipte olmayıp eklenecekler: goster sonunda oyuncunun tepki jesti (jestVer itiraz/basEl, h2[13]); kalabalıkta ve itirazda jestVer'in mevcut 'aynı jest sürerken yenilenmez' kuralı. Konum: '/* hakemler */' bölümünün başı. Alternatif olarak S1'in ortak sahne dosyası açılırsa oraya taşınır; o durumda index.html sırası değişir ve ad-denetimi gerekir."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "stepDurus",
+    "ne": "Bit 1: if(MOTOR_AYAR.kartSahne&1) this.kartOyuncuAdim(du); satırı this.degisiklikAdim(dt)'den hemen önce. Kullanan ve meşgul oyuncu (topu durduran, yerdeki) ezilmez; görev etiketi gorevYaz(q,'kart')."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "durusKullan",
+    "ne": "const B4 = kartSahne&4; if(du.zgEk>0 && !(B4&&du.zgGoruldu)){ if(B4) du.zgGoruldu=true; this.zamanGecirmeGoruldu(tk,du.zgEk); if(B4&&du.kartS&&this.refs[0].kartSira) return; }. Zaman kartı kullanımdan önce gösterilir; kisaGeri dalındaki ikinci çağrıda bugünkü çift sayım (çift uzatma ve zar) bitte kalkar."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "duranHazirMi",
+    "ne": "Başta (hizli dalından önce): if((A.kartSahne&4)&&du.kartS&&this.refs[0].kartSira) return false. Sonda, 'return true'dan önce S1 ortak seremoni kapısı: if((A.kartSahne&4)&&du.seremoni&&du.kartBitT!=null){ if(du.t<du.kartBitT+du.kartDudukT) return false; if(du.dudukAn==null){ düdük: refs[0].eylem={ad:'duduk',t:0,sure:0.8}; on('duduk',{tur,seremoni:true}); du.dudukCalindi=true; return false; } if(du.t<du.dudukAn+du.dudukBek) return false; }. S1a/S1b aynı kapıyı kendi koşullarıyla kullanırsa tek bir seremoniKapisi(du) yardımcısına alınır."
+   },
+   {
+    "dosya": "js/animasyon.js",
+    "islev": "anmHakemOlay",
+    "ne": "'kart' olayı: v.sahne && ANM.s1 && ANM.s1.kart>0 ise eski 'cagir' işareti çizilmez. Yeni 'kartSahne' olayı:\n- evre 'yaklas', tarz yuru ya da kalabalik → [{tur:'durdur', sure:0.9, p:v.p}]\n- evre 'yaklas', tarz cagir → [{tur:'cagir', sure:1.4, p:v.p}] (mevcut işaret)\n- evre 'protokol', tip 'kaptan' → [{tur:'kaptan', sure:1.6}]\n- evre 'protokol', tip 'uyari' → [{tur:'uyari', sure:1.1, p:v.kaptan}]\nKart ve kartYaz motor eyleminden (anmHakemAdim). Tedavi çağrısı işareti sürerken (tedaviBasladi) sıfırlanmadan sıraya eklenir."
+   },
+   {
+    "dosya": "js/animasyon.js",
+    "islev": "anmHkPoz / anmHakemAdim / anmKenarOlay",
+    "ne": "anmHkPoz yeni turlar:\n- 'durdur': kol oyuncuya θ≈0,15, dirsek düz, avuç öne (aLy/aRy ±0,9), gövde ve baş hedefe.\n- 'kaptan': ilk %45 iki bilek başın üstünde çapraz (aL=aR≈−2,85, aLz=+0,4, aRz=−0,4, eL=eR≈−0,4); sonra kollar öne ve açık, avuçlar iter (aL=aR≈−1,45, aLz=−0,45, aRz=+0,45, eL=eR≈−0,1, ±0,1 itme nabzı).\n- 'kartYaz': sol el göğüste defteri tutar (aL≈−0,95, aLz≈0,4, eL≈−1,75), sağ el yazar (aR≈−0,75, aRz≈−0,3, eR≈−1,6, küçük salınım), baş eğik (hx≈0,42).\n- 'kart': c.renk==='ikinciSari' iken sürenin %42–58'inde kol iner ve kalkar.\nanmHakemAdim: eylem 'kartYaz' → işaret 'kartYaz'; 'kart' işaretine renk:e.renk. anmKenarOlay: v.sahne'de TD itirazı 'kartSahne' evre 'goster' anında."
+   },
+   {
+    "dosya": "js/mac-sahnesi.js",
+    "islev": "hakem eli: KART yanına DEFTER",
+    "ne": "DEFTER = BoxGeometry(0.09,0.12,0.015), renk STIL.animasyon.s1Renk.defter, HAKEMLER[0].m.eL'e bağlı, konum (0,−0.33,0.05). Görünürlük: refs[0].eylem.ad==='kartYaz'. KART mantığı değişmez; ikinci sarıda e.t < sure·0,5 sarı, sonra kırmızı (sure 2,4 → 1,2 + 1,2 sn)."
+   },
+   {
+    "dosya": "js/stil-99.js",
+    "islev": "STIL.animasyon",
+    "ne": "s1:{kart:1} — 0'da eski çizim yanıtı ('kart' olayında 'cagir'); yeni işaretler ve TD zamanlaması kapanır. s1Renk:{defter:0x22262b}. S1'in öbür alanları kendi anahtarlarını aynı s1 nesnesine ekler."
+   },
+   {
+    "dosya": "js/kamera.js",
+    "islev": "loca bakışının odağı (satır 53'ün önü)",
+    "ne": "Sahne yaklas ya da kalabalik evresinde ve S.tut iken bakış hakemle oyuncunun ortası: BAKIS_HEDEF.set((h.x+p.x)/2, 1.2, (h.z+p.z)/2−MOTOR_Z). 'kart' ve 'kartYaz' eyleminde hakeme (bugün yalnız 'kart'). İsteğe bağlı bayrak STIL.kameralar.baskan.kartIzle (1). Z1'in sabit açı kararını etkilemez; bugünkü kart istisnası genişler."
+   },
+   {
+    "dosya": "araclar/olcumler/k-sahne.js",
+    "islev": "bilgi, yeni(), ozet()",
+    "ne": "S1d satırları (olcu alanındaki liste). Kaynaklar: 'kart' ve 'kartSahne' olayları, m.refs[0].kartSira ve .s, refs[0].eylem, m.durus. Rastlantı çekmez, motora yazmaz. Bit 0'da yalnız 'kart' olayı ve hakem eylemiyle aynı tanımlar (tepe hız, gösterilmeyen, kart sürerken kullanım) karşılaştırma için hesaplanır. ozet(): tarz × (n, sahne süresi, kart gösterilene, tepe hız) tablosu."
+   },
+   {
+    "dosya": "araclar/olcumler/o-olay.js",
+    "islev": "dinle ('kart', yeni 'kartSahne')",
+    "ne": "'Kırmızı görüp 12 sn sonra sahada kalan' sayacının başlangıcı, aynı oyuncunun 'kartSahne' evre 'karar' anına çekilir. İtiraz kartı kuyrukta ikinci sıradaysa sahnesi ilk kart bittikten sonra başlar. Bit 0'da olay yok, ölçü aynı."
+   },
+   {
+    "dosya": "araclar/poz-galerisi.html, araclar/animasyon-olcum.py",
+    "islev": "galeri satırı s1kart; 'A: zamanlama'",
+    "ne": "Claude'un kendi doğrulaması (kullanıcıya gösterilmez). Galeri satırı: durdur, cagir, kaptan (iki evre), kart (sarı, ikinci sarı), kartYaz. 'A: zamanlama'da yeni işaretlerin 'kartSahne' olayıyla aynı karede başladığı denetlenir."
+   }
+  ],
+  "yeniAlanlar": [
+   "k.no (kayit.kartlar sırası; h2 tuzu) ve k.neden (kart gerekçesi; faulde du.kartNeden'den). k = hakem.kartKuyruk öğesi; varlik alanı değildir. Okuyan: motor (kartOzet, kartSahneKur) ve k-sahne.",
+   "k.s = kart sahnesi {tarz, evre, et, tt, d0, Tk, Tr, Tg, Td, Ti, dur{x,z}, adim, ms (meşgul süresi), kal[{q,r,a,j}], proto{t,tip,kaptan}, gosterildi, yazildi, tut, itz}. Yazan: hakemAI → kartSahneAdim. Okuyan: kartOyuncuAdim, duranHazirMi (dolaylı, kartSira üzerinden), kamera.js (evre, tut, p), k-sahne.js.",
+   "du alanları:\n- du.kartS: bu duruşta kart sahnesi var (kapı)\n- du.seremoni: S1 ortak, düdük ön koşul\n- du.kartBitT, du.kartDudukT, du.dudukBek\n- du.dudukAn: S1 ortak, seremoni düdüğünün duruş saati\n- du.dudukCalindi: mevcut alan, tek düdük için\n- du.zgGoruldu: zaman kartı tek sayım\n- du.kartNeden: faul() veri'si\nOkuyan: duranHazirMi, durusKullan, kartSahneKur (du.sahneT, zorlaGetir, zorlaHazir'ı uzatır), k-sahne.",
+   "Hakem eylemleri: {ad:'kart', t, sure:Tg, renk} (süre artık tarza ve renge göre: 1,3 / 2,4 / 1,8) ve yeni {ad:'kartYaz', t, sure}. Okuyan: mac-sahnesi.js (KART, DEFTER), animasyon.js anmHakemAdim, kamera.js.",
+   "Olaylar:\n- 'kartSahne' {evre: karar | kalabalik | protokol | yaklas | goster | yaz | bitti, tarz, p, renk, no, tip?, kaptan?, sure?}\n- 'kart' olayına sahne:bool\n- 'duduk' olayına seremoni:true\nOkuyan: animasyon.js anmHakemOlay ve anmKenarOlay, k-sahne.js, o-olay.js.",
+   "Oyuncuda yeni alan yok. Mevcut alanlar yazılır: p.tx/tz, hizOran, bak, yonHedef, efor (eforVer), gorevAd 'kart' (gorevYaz), p.jest 'itiraz' / 'basEl' (jestVer; çizim okur)."
+  ],
+  "ayarlar": [
+   "kartSahne: 7 (bit maskesi; mac-kurallar.js, 'Kurallar' akışı).\n- 1: temel sahne. Tarz h2 ile yürür / çağırır / uzaktan; hakem ≤ kartHiz (depar yok); oyuncu durur ya da hakeme yürür; kart başın üstünde, sonra deftere yazma; tavan ve meşgul kuralı.\n- 2: kalabalık. İtiraz edenler hakeme gelir; kaptan işareti ya da uyarı; kaptan dışındakiler 4,6 m'ye çekilir.\n- 4: seremoni. Kart sahnesi bitmeden duran top kullanılmaz; sonra hakemin düdüğü ve 1–2 sn; hızlı serbest vuruş ve hızlı taç kapanır; zaman kartı kullanımdan önce; du.sahneT uzatılır.\n0 iken motor bugünküyle birebir: hakem depar atar, kart 1,7 sn, 6 sn tavan. Doğrulama: prototip v1, tohum 1–2 tam maç, her 30 adımda bütün oyuncu, hakem ve top durumu ile skor AYNI. Gerçek uygulamada 40 maç --ayni (kartSahne 0, tabana karşı) kapanış denetimidir. Ablasyon: 1 ya da 3, seremoni kapısız; bu durumda oyun başlarsa sahne uzaktan tarza düşer.",
+   "kartTarz: [0.5, 0.4, 0.15] — yürür, çağırır, uzaktan taban ağırlıkları. Uzaklıkla ölçeklenir: yürür ×clamp((18−d0)/8, 0, 1,2), çağırır ×clamp((d0−6)/8, 0,2, 1,4), uzaktan ×clamp((30−d0)/15, 0,3, 1) ve misillemede (neden 'asiri') ×3. Prototipte payları: çağırır %42–46, yürür %34–38, kalabalık %15, uzaktan %5–7.",
+   "kartKalabalik: 0.3 — itiraz eden varken kalabalık tarzı olasılığı. Kırmızı ya da ikinci sarıda (itirazsız) ×0,5; ikisi de yoksa 0,05. 0,6 iken kalabalık %37'ye çıktı; itirazEt kartGoster'den sonra koştuğu için kuruluş anında kartların yarısında itiraz eden var. 0,3'te %15.",
+   "kartHiz: [1.8, 2.8, 3.4] — hakemin yaklaşma hızı (m/sn): 6 m içinde, 6–15 m arasında, 15 m ötesinde. 3,4 (hafif tırıs) yalnız 15 m'den uzaktayken. Prototipte tepe hız ortanca 2,8, %90 3,45 m/sn; 5 m/sn üstü kare 0.",
+   "kartZaman: {karar:[0.5,0.9], tepki:[0.3,1.0], sari:1.3, ikinci:2.4, kirmizi:1.8, yaz:[0.8,1.3], itiraz:[3.0,5.0], protokol:1.6, dagil:0.8, duduk:[0.8,1.5], kul:[1.0,2.0], tavan:16} — tempo B evre süreleri (gerçek sn). Aralıklar h2 ile seçilir; kalabalıkta tavan +6."
+  ],
+  "cizim": [
+   "Yeni hakem işareti 'durdur' (yaklaş, tarz yürür ve kalabalık; 0,9 sn): kol oyuncuya θ≈0,15, dirsek düz, avuç öne — 'yerinde kal'. anmHkPoz'a anmKolYon ile eklenir. Gövde ve baş hedefe yarı döner (mevcut gy/by kuralı).",
+   "Mevcut 'cagir' işareti (çağırır tarzı, 1,4 sn) artık motorun evresiyle başlar. Eskiden 'kart' olayında 3 m'den uzaksa çiziliyordu; motorda oyuncu tepki vermiyordu.",
+   "Yeni hakem işareti 'kaptan' (kalabalıkta protokol, 1,6 sn): önce iki bilek başın üstünde çapraz, sonra kollar öne ve açık, avuçlar 'yaklaşmayın' diye iter (IFAB kaptan protokolü, L.2 [K15]). Aynı poz S1b penaltısının kaptan protokolünde ortak kullanılır. Uyarı türünde mevcut 'uyari' (parmak) kaptana.",
+   "'kart' işaretinde ikinci sarı: süre 2,4 sn; kart sarıdan kırmızıya mac-sahnesi.js'in mevcut kuralıyla (e.t < sure·0,5) döner; sürenin %42–58'inde kol iner ve yeniden kalkar. Sarı 1,3, kırmızı 1,8 sn.",
+   "Yeni hakem eylemi ve işareti 'kartYaz' (0,8–1,3 sn): sol el göğüste defteri tutar, sağ el yazar, baş eğik. Sol eldeki DEFTER (mac-sahnesi.js; renk STIL.animasyon.s1Renk.defter) yalnız bu eylemde görünür.",
+   "Oyuncu tarafında yeni poz yok. Duran oyuncu mevcut 'dur' kipinde (gevşek/belde) hakeme döner. Çağrılan oyuncu 'yuru' kipinde yürür (hız < 2 m/sn). Kalabalıkta mevcut jest 'itiraz' (jestItiraz, iki el açık) 1,8 sn'de bir. Kart sonrası tepki: sarıda 'itiraz', kırmızıda 'basEl' (mevcut jestler).",
+   "Teknik direktörün itiraz jesti (anmKenarOlay) sahneli kartta 'kartSahne' evre 'goster' anında. Ekran böylece kartın gösterildiği anda tepki verir.",
+   "STIL.animasyon.s1:{kart:1}: 0 iken motor sahneli olsa da eski çizim yanıtı (kart olayında 'cagir'), yeni işaretler ve DEFTER kapalı. STIL.animasyon.z2'ye dokunulmaz.",
+   "Kamera (js/kamera.js): yaklaş ve kalabalık evresinde bakış hakemle oyuncunun ortasında; 'kart' ve 'kartYaz' eyleminde hakemde. Bugün yalnız 'kart' eyleminde hakeme bakılıyor. İsteğe bağlı bayrak STIL.kameralar.baskan.kartIzle.",
+   "Doğrulama (Claude'un kendisi; kullanıcıya sahne sunulmaz): poz galerisinde 's1kart' satırı; an-yakala.py ile tohumlu bir kart anı (önce/sonra); animasyon-olcum.py 'A: zamanlama' (işaret olayla aynı karede); kontrol.py; akis-deneme.py §17 (kamera)."
+  ],
+  "olcu": [
+   "k-sahne 'Kart sahnesi / maç' (ksKN): 'kart' olayı sayısı; sahneliyse k.no ile eşlenir.",
+   "k-sahne 'Kart tarzı: yürür / çağırır / kalabalık / uzaktan %' (ksKP_*): 'kartSahne' karar olayının tarzı; oyunda uzaktana düşen ayrı sayılmaz, son tarz geçerlidir. Çeşitlilik ölçüsü; tek tarz %80'i geçmemeli.",
+   "k-sahne 'Kart sahnesi süresi (gerçek sn): yürür / çağırır / kalabalık / uzaktan' (ksKS_*): karar olayından 'bitti' olayına. Sağlık aralığı (öneri): yürür ve çağırır ortanca 6–10, kalabalık 9–15, uzaktan 2–4.",
+   "k-sahne 'Kart: düdükten kartın gösterilmesine (gerçek sn; uzaktan hariç)' (ksKGoster): kart olayından hakemin 'kart' eyleminin başladığı kareye. Hedef ortanca 5–8 (prototip 6,6). Bit 0'da da hesaplanır (bugün ~1–6 sn, depar ile).",
+   "k-sahne 'Kart: hakemin tepe hızı, yavaşladıktan sonra (m/sn)' (ksKHTepe): kartSira etkinken, faz 'play' değilken, hakemin hızı bir kez 3 m/sn'nin altına indikten sonraki en yüksek değer (maç ortancası). Hedef ≤ 3,5 (prototip ortanca 2,8, %90 3,45; bugün 7,2).",
+   "k-sahne 'Kart: hakemin 5 m/sn üstüne çıktığı sahne %' (ksKDepar): aynı pencerede. Hedef 0 (bugün ~%100).",
+   "k-sahne 'Kart: yürür tarzında oyuncunun durduğu kare %' (ksKDur): yaklaş evresinde, tepkiden 0,6 sn sonra, oyuncu meşgul ve kullanan değilken, hızı < 0,6 m/sn olan kareler. Hedef ≥ %70 (prototip %80).",
+   "k-sahne 'Kart: gösterilirken hakem–oyuncu uzaklığı ≤ 5 m %' (ksKYakin): uzaktan hariç, kart eyleminin ilk karesinde. Hedef ≥ %95 (prototip ≤ 3 m'de %86, ≤ 5 m'de ~%100).",
+   "k-sahne 'Kart: kart gösterilmeden biten %' (ksKGorunmez): kartSira değişti ve o kart için hakemin 'kart' eylemi görülmedi. Hedef 0 (bugün %21).",
+   "k-sahne 'Kart: kart sürerken kullanılan duran top / maç' (ksKKul): duruş biterken kuyrukta sahnesi bitmemiş kart. Hedef 0 (bugün 6/70 kart).",
+   "k-sahne 'Kart: seremonili düdükten kullanıma (gerçek sn)' (ksKDudukKul): du.dudukAn'dan kullanım olayına. Hedef 1,0–2,0 (prototipte vuruş temasına dek, koşu dahil, ortanca 2,8). S1a'nın düdük satırıyla aynı tanım; tek satırda birleşebilir.",
+   "k-sahne 'Kart: kalabalıkta hakeme gelen oyuncu (ortalama)' (ksKKal) ve 'Kart: protokol kaptan / uyarı %'. Prototip kişi sayısı 1 / 3 / 3 (%10/50/90), kaptan–uyarı ~yarı yarıya.",
+   "k-sahne 'Kartlı duruşun süresi (gerçek sn), tür başına' (ksKDurus_*): du.kartS'li duruşun başından oyunun yeniden başlamasına. Bilgi satırı; bugünle karşılaştırılır. Prototip ortanca: barajlı 27,4 (bugün 23,9), uzak serbest 15,3 (12,5), geri 13,1 (8,3), kenar 21,4 (18,5), penaltı 31,3 (26,3).",
+   "o-olay 'Kırmızı görüp 12 sn sonra sahada kalan / maç' (oKirmiziSahada): başlangıç 'kartSahne' karar anı. Hedef 0 kalır; prototipte kırmızının gösterilmesi ≤ ~10,7 sn."
+  ],
+  "senaryolar": [
+   "40 maç --karsilastir (oturum sonu) ve 80 maç (tur kapanışı), bit açık. Parmak izi ilk karttan sonra ayrılır; yeni taban gerekir. Beklenen etki:\n- Kart, faul ve penaltı sayısı aynı dağılımda (karar kodu değişmez).\n- Kartlı duruşlar ortanca +2…+5 sn uzar, maç başına ~15–20 gerçek sn duruş eklenir; saat duruşta 2 kat aktığı için oyun maç başına ~7–9 gerçek sn kısalır (~%1).\n- Gol ve şut gürültü içinde (beklenen fark ≤ %1). 'Top oyunda %' sağlık aralığında (55–75) birkaç onda bir puan düşer.\n- Uzatma: kart başına 30 sn aynı; zaman kartının çift sayımı bitte kalktığı için uzatma çok az düşebilir.\nDenge kararı 40/80 maçla; 16 maçlık prototip okuması (gol 3,4–3,7/maç) karar değildir.",
+   "40 maç --ayni, kartSahne 0, tabana karşı: tohum başına birebir olmalı (bit 0 kabulü). Prototipte tohum 1–2 tam maç AYNI.",
+   "d-duran: kart üretmez (durusBaslat'la doğrudan); dosyalar dokunulduğu için koşulur. Beklenen: aynı sonuç (bit açıkken de; kartsız duruşta kapı ve sahne çalışmaz). Korner ilk temasından önceki faulde kart sahnesi deneme bittikten sonra kalır, ölçüyü etkilemez.",
+   "d-penalti: durusBaslat('penalti') ile kartsız; duranHazirMi değiştiği için koşulur. Beklenen birebir. Penaltıda kartın etkisi tam maçta ölçülür: duruş ortanca 26,3 → 31,3 sn; S1b'nin ~40 sn hedefinin içinde.",
+   "d-topcu: top toplayıcı ve atış yolu değişmez; durusKullan değiştiği için koşulur. Beklenen aynı.",
+   "m-isinma, m-fotograf: maç öncesi; kart yok. hakemAI'da kart dalı yalnız kartSira varken. Beklenen aynı.",
+   "o-ofsayt: ofsayt duruşu kartsız (avantajdan kalan bekleyen kart nadir). duranHazirMi değiştiği için koşulur. Beklenen kapı içinde, büyük olasılıkla aynı.",
+   "o-sakatlik: [2] tam maç. Kartlı faulle sakatlık çakışınca tedavi bekleyişi (sakatlikBekletir) ile kart kapısı birlikte bekler; duraklama süreleri birkaç saniye uzayabilir. Kapı içinde kalmalı; tedaviBasladi'nın 'cagir' işareti kart işaretiyle sıra paylaşır (çizim).",
+   "c-temas: faul olayının kart alanını sayar, sahne dışı. Beklenen aynı.",
+   "z-s3, z-s10, z-s14 (sınav sahneleri) ve çekirdek senaryoların geri kalanı (c-1v1, c-koru, c-yariyariya, c-donen, c-hareket, c-hava, c-kanat, c-orta, c-surus, t-top, v-sut, d-sut, b-pas): kart sahnesine bağlı değiller. Oturum sonunda koşulur; aynı ya da gürültü.",
+   "ikiz-deneme.js: modül düzeyi ortak durum eklenmez (sahne k.s'de, maça ait). Duruşun süresi değiştiği için koşulur; 'Aynılık N/N' beklenir.",
+   "ad-denetimi.js: yeni Match yöntemleri kartOzet, kartSahneKur, kartKalabalikKur, kartMesgul, kartSahneAdim, kartOyuncuAdim. Ad çakışması aradım, yok. varlik'e alan eklenmez (f maddesi temiz). Çizim motora yazmaz: kamera k.s'yi yalnız okur.",
+   "Ekran ve çizim: kontrol.py, akis-deneme.py (kamera değiştiği için §17 bandı), an-yakala.py (tohumlu kart anı, önce/sonra), animasyon-olcum.py 'A: zamanlama'. Hız: sahne yalnız kart sırasında ve O(1–4) iş yapar; hız bütçesine etkisi ölçülemeyecek kadar küçük beklenir, tur kapanışında hiz-olcum ile doğrulanır."
+  ],
+  "riskler": [
+   "Duruş uzar, oyun kısalır: kartlı duruşlar ortanca +2…+5 sn. Gol, şut ve 'Top oyunda %' küçük ölçüde düşer. Dengenin okunması 80 maçla yapılmalı; S1'in öbür alanlarıyla (penaltı ~40, gol sonrası ~35 sn) toplanınca birlikte okunmalı.",
+   "Parmak izi ilk karttan sonra ayrılır. Bit açıkken tabanla --ayni beklenmez; S1 kapanışında yeni taban. Bit 0'ın birebirliği her düzenlemeden sonra 40 maç --ayni ile korunmalı. Prototipte hakemAI'daki dal sırası ve durusKullan'daki erken dönüş bit 0'da dokunulmamış kaldı.",
+   "Uzak mesafe: motor hakemi toptan 12–20 m'de tutuyor (hakemAI). Kart anında d0 ortanca 17 m, %10'u 27 m üstünde. Bu nedenle 'yürür' yalnız yakında ağırlıklı; uzakta 'çağırır' buluşması kullanılıyor. 15 m ötesinde hakem 3,4 m/sn hafif tırısa çıkıyor; L.10'un '≤ 3 m/sn' önerisi '≤ 3,5 ve depar 0' olarak ölçülmeli. Kartların %14'ü 3–5 m'den gösteriliyor (tavanda).",
+   "Meşgul oyuncu: faulü yapan çoğu zaman yuvarlanan topu durduran (du.durduran) oluyor. topDurdur durduran alanını hiç temizlemediği için prototipin ilk sürümünde oyuncu hiç çağrılamadı. kartMesgul yalnız 'bekle/getir' evresinde ve top gönderilmemişken meşgul sayar, tavan saatini durdurur. Uygulamada bu kural korunmalı.",
+   "Kalabalık oyuncuları baraj, kutu ve markaj görevlilerini sahneden çeker. gorevlilerYerinde gecikir; seremoni düdüğü bekler; kalabalıklı duruşlar 4–6 sn uzar. Kalabalıkta oyuncular 3 m/sn ile gelir; kip 'tiris' (tasarım gereği acele).",
+   "Seremoni kapısı ve düdük S1a (serbest vuruş) ve S1b (penaltı) ile çakışabilir. du.seremoni, du.dudukAn, du.dudukBek ve du.dudukCalindi ortak tutulmalı; aksi hâlde çift düdük (durusKullan'daki eski düdük) ya da sonsuz bekleme olur. Prototipte kart sürerken kullanım 0, bitmeyen sahne 0.",
+   "Zaman kartı: bit 4'te durusKullan erken dönüyor. Taçta kullanan zaten çizgide topu tutuyor (tarz yürür, oyuncuya dokunulmaz). Kaleci elde tutarken oyunda çıkan zaman kartı 'uzaktan' gösterilir, oyun durmaz (8 sn kuralı Z10).",
+   "Oyunda kalan sahne (ablasyonda bit 1 açık, bit 4 kapalı): kart sürerken kullanılırsa sahne uzaktan tarza düşer, oyuncuların hedefleri bırakılır. kartOyuncuAdim yalnız faz 'durus'ta çağrılır; böyle bir ablasyon oyun içinde 0,5–1 sn'lik hedef kesintisi yaratabilir.",
+   "Kırmızı kartın sahadan çıkışı geç başlar (kart gösterilince). o-olay'ın 12 sn ölçüsü sahne başına alınmazsa ikinci sıradaki kırmızı yanlış '!' basar.",
+   "Gol evresinde kart (avantaj → gol) uzaktan tarzda hakemi ~3 sn yerinde tutar. S1c'nin 'hakem santraya yürür' dalı kart dalından sonra gelmeli; santra sahne bitmeden başlarsa (S.tut santrada da açık) santra düdüğü birkaç saniye gecikebilir.",
+   "Kamera: yaklaşma evresinde bakışın hakemle oyuncu ortasına gitmesi Z1'in 'bakış topu izler' kararını genişletir (bugün kartta zaten hakeme bakılıyor). Kullanıcı izleyip beğenmezse STIL bayrağıyla kapanır.",
+   "Prototipte olmayanlar: çizim, kamera, k-sahne/o-olay, oyuncunun kart sonrası tepki jesti, kartNeden aktarımı. Bunlar için süre ve sıra ölçüsü yok; tepki jesti jestVer'in 'aynı jest sürerken yenilenmez' kuralına takılabilir."
+  ],
+  "digerAlanlarlaTemas": [
+   "hakemAI (js/mac-kurallar.js): kart dalı her zaman önce gelir; kart sürerken spreyin (S1a, hakemSpreyAdim), penaltı yerinin (S1b, hakemDuranYeri) ve gol sonrası santra yürüyüşünün (S1c) dalları bekler. K1'in h.bakisYon=null satırı ve hakemSpreyAdim'in bakışı korunur.",
+   "duranHazirMi (js/mac-durantop.js): S1a, S1b ve korner rutini alanlarıyla ortak dosya ve ortak işlev. Kart kapısı en başta; seremoni düdüğü en sonda, korner/kenar el işaretinden sonra. Hepsi tek seremoniKapisi(du) yardımcısında toplanırsa düdük bir kez çalar (du.dudukCalindi).",
+   "Düdük olayı: S1a'nın 'düdük ön koşul' tasarımıyla aynı alanlar (du.seremoni, du.dudukAn, du.dudukBek) ve aynı olay biçimi ('duduk' {tur, seremoni:true}). durusKullan'daki eski düdük satırı du.dudukCalindi ile susar. Barajda kart bitmeden sprey başlamaz; kart sahnesi sahneT'ye 12 sn sprey payı ekler.",
+   "S1b penaltı: penaltıda kart tarzı kalabalık olmaz; penaltının itiraz ve kaptan protokolü evresi S1b'nindir, kart sahnesi o evrenin içinde koşar. Kalabalık mantığı (kartKalabalikKur ve kartOyuncuAdim'daki küme) ile hakem işareti 'kaptan' ortak kullanılabilir. Penaltı düdüğü S1b'nin kapısı.",
+   "S1c gol sonrası: avantajdan kalan kartın gol evresinde gösterilmesi (mac-motoru.js stepGoal/gol yolu) uzaktan tarzda. Kamera önceliği: sevinç bakışı ↔ kart bakışı. Kart eylemi kısa olduğu için gol evresinde sevinç önce; çakışmada S1c'nin kuralı geçerli.",
+   "Sağlıkçı alanı (L.5): kartlı faulle sakatlıkta 'kart sakat oyuncu çıkmadan' kuralı. Kartı gören yerdeyse tarz yürür (hakem gider). Tedavi bekleyişi (sakatlikBekletir) ile kart kapısı birlikte bekler. Hakemin tedaviye 'cagir' işareti ile kart işaretleri anmHkIsaret sırasını paylaşır (sıfırlama yerine kuyruğa ekleme).",
+   "itirazEt (T10b): zar sırası ve itiraz kartları değişmez. İtiraz edenler kalabalığın ilk adaylarıdır; itiraz kartı kuyrukta ikinci kart olarak kendi sahnesini alır (protestocu yakında olduğu için kısa).",
+   "zamanGecirmeGoruldu (T10d) ve durusKullan: bit 4'te zaman kartı kullanımdan önce gösterilir ve tek sayılır. Kalecinin elde tutma kartı oyunda uzaktan gösterilir. 8 sn kuralı ve çoklu top Z10'da.",
+   "kamera.js bakış odağı: S1c'nin sevinç bakışı ve K1'in 36° açısıyla aynı işlev. Kart istisnası genişlerken öbür istisnaların sırası korunur.",
+   "k-sahne.js: S1'in bütün alanlarının ortak ölçü dosyası. Kart satırları ayrı başlıkta; düdük → kullanım satırı S1a ile tek tanım. o-olay.js'in kırmızı ölçüsü kart sahnesine bağlanır.",
+   "Z10 (kaptan protokolünün kural yanı: bölgeye giren ikinci oyuncuya sarı; VAR ile kırmızıya yükseltme): S1d yalnız görüntü ve akıştır, yeni kart üretmez."
+  ]
+ },
+ {
+  "ad": "S1e — Korner kullananının rutini (kRutin)",
+  "ozet": "Teşhis 12 maçta ölçüldü: 34 korner, scratchpad kopyasında, depoya dokunulmadı. Bugün korneri kullanacak oyuncu, top toplayıcı topu tutarken köşeye 0,85·maxSpd hızla koşuyor. Sebep getir dalının (js/mac-kurallar.js stepDurus, `tk.hizOran=0.85;tk.bak=b.tasiyan`) sahneHiz'i hiç çağırmaması. Topa ortanca 4,6 m/sn ile gidiyor ve topu ortanca 7,6. sn'de koyuyor. Sonra 2,2 sn geri çekiliyor ve `son = sahneT − sahneKos − 0,8`'e kadar tasarlanmış bir davranış olmadan duruyor. Hazır evresinde hareketsiz süre ortanca 4,4 sn. Jestsiz ve eylemsiz boş bekleme ortanca 3,5 sn, q90 6,1 sn. En uzun kesintisiz boş bekleme ortanca 2,9 sn, q90 5,3 sn, en çok 6,9 sn. Kol işareti koşudan hemen önce, 0,8 sn'de veriliyor. Kenar serbest vuruşunda kullanan yakında durduğu için topu erken koyuyor: en uzun boş bekleme q75 7,1 sn, q90 8,8 sn, en çok 12,4 sn. Yerleş evresinde kullanan topu elinde, yüzü sahaya dönük (`yonHedef`) taşıyor; 2,8 m/sn'nin altında olduğu için köşeye geri geri yürüyor. Çömelme K1'de kalktı. Tasarım: rutin, duruşun alt nesnesinde (`du.kr`) bir durum makinesi. Sahnenin süresi şu sırayla doluyor: topa yürüyüş → koy (bazen düzelt) → yayla geri çekil (bazen sırtı dönük yürüyüp dönme) → kutuya bakış (ön direkten arka direğe) → isteğe bağlı ellerle arkadaşa işaret → kol kodu (tek ya da iki kol, kısa kornerde yok) → isteğe bağlı kolu indirip yeniden kaldırma → kısa okuma (1–2 sn, tek boş an) → koşu. Plan, top konunca kalan süreye sığdırılıyor: fazla süre hareketli ara işlere dağıtılıyor, eksik süre seçmeli evreleri düşürüp sıkıştırıyor. Varyantlar h2 ile seçiliyor, ana zar dizisi kaymıyor. sahneHiz'e rutinin payı (B) veriliyor, yani topa yürüyüş kalan süreye göre ayarlanıyor. Prototipi scratchpad'de çalıştırdım (kRutin 3; aynı 12 tohum):\n- Korner: topun konduğu an 7,6 → 9,9 sn. Topa yürüyüş 4,6 → 3,4 m/sn. Hazırda hareketsiz 4,4 → 2,8 sn. Boş bekleme 3,5 → 1,7 sn (q90 6,1 → 3,3). En uzun boş bekleme ortanca 2,9 → 1,2 sn, q90 5,3 → 2,1, en çok 6,9 → 2,8. Kol işaretinden koşuya 0,8 → 2,6 sn. Kullanım anının hedeften sapması ortanca 0,0, q90 0,0.\n- Kenar: en uzun boş bekleme q90 8,8 → 2,9 sn.\n- kRutin 0 iken tam maçta konum izi ve skor tabanla birebir aynı (tohum 7).\n- d-duran (n 50, 200 korner): korner kararları birebir (kısa %18,5, içe %58,5, dışa %18,0). Hazırlık ortancası +0,4 sn. Korner başına gol %5,0 → %6,5; 200 kornerde bu fark gürültü olabilir, karar 1600 kornerle verilir.\nKale vuruşunda rutine gerek yok: bugün en uzun boş bekleme q90 1,3 sn ve Z3a'nın kol işareti var; bit 4 ayrılmış ve kapalı kalır. Barajsız uzak/diğer serbest vuruşta da gerek yok (hazırda hareketsiz ~0 sn). Kutu dolumu kenar yoluyla bit 2'ye girer. Barajlı vuruşta kullanan 5–8 sn, penaltıda 14–16 sn hareketsiz; bu ikisinde aynı ilkeller, kr.tKos düdüğe bağlanarak S1a ve S1b'ye bırakılır. Prototip ve ölçüm betikleri: C:\\Users\\FARUKA~1\\AppData\\Local\\Temp\\claude\\C--Users-Faruk-AKIR-code-chairman\\d683dfae-9eba-4af0-8067-151302484a8d\\scratchpad\\s1e\\ (proto-durantop-ek.js, korner-olc2.js, ozet2.js, ayni.js; kok = prototip, kok0 = taban kopyası).",
+  "durumMakinesi": "KAPSAM: du.sahneTur 'korner' (bit 1) ve 'kenar' (bit 2; kutu dolumu da bu türden geçer). Rutin şu durumlarda kurulmaz: du.hizli, du.hakemTopu, sahne&1 kapalı (du.sahneT yok). Mevcut du.asama zinciri (bekle → getir → yerles → hazir → kullan) aynı kalır; rutin hazir evresinin içinde alt evre olarak çalışır.\n\nKURULUŞ: sahneKur'un sonunda kRutinKur(du) çağrılır.\n- kr.tKos = sahneT − sahneKos + (zgEk || 0). Bu, du.t cinsinden planlanan koşu anıdır. S1a ve S1b ileride düdüğe bağlayabilir.\n- Varyantlar h2 ile seçilir. Tohum: kr.oz = h2(tohum·151 + kullanan.n·29 + round(t·4), round(x·10)·1019 + round(z·10)·17 + 41). Türetme: u(k) = h2(floor(oz·1e9), 7k+5). Ana zar dizisi kaymaz; sahneOzet'in tuz numaralarıyla çakışmaz.\n- Varyantlar ve olasılıkları:\n  - duzelt: 0,3·(1+koru)\n  - el: 0,45; kısa kornerde her zaman. Hedef arkadaş: kısa kornerde 'kisa' rolü, yoksa du.hedefQ, yoksa ilk DT_HEDEF rolü.\n  - tekrar: 0,3·(1+koru)\n  - sirt: 0,35\n  - kolOku: 0,5\n  - iki kol, Z2b rutin koduna göre: arkaDirek ve tren → iki kol; onDirek, alcak ve geri → tek kol; orta ve kenar → h2 0,5.\n  - kol: kısa kornerde yok.\n  - Gerideyken (acele > 0,5) seçmeli varyantların hepsi kapalı, bak ve oku yarıya iner (hızlı korner).\n- Süreler: bak 0,8–1,8 sn; oku 1,0–2,0 sn; geriV 1,0–1,8 m/sn; gm = duranGeriMesafe (kornerde 3–4,5 m).\n- kr.B = 0,6 + gm/geriV + bak + 0,8 (kol) + oku + seçilen varyantlar (duzelt 1,05; don 0,7; el 1,1; tekrar 1,3). Nötr kornerde ortanca ≈ 7–8 sn, onde (×1,3) ≈ 9–11 sn, gerideyken ≈ 4,5 sn.\n- du.zorlaGetir = max(16, sahneT − sahneKos − B − pay + 2).\n\nTOPA YÜRÜYÜŞ (getir, yerles):\n- sahneHiz'in payı kr.B + pay (0,5 sn) olur. Hız = max(kRutinSure.yuru 1,3 m/sn, L/kalan).\n- Top toplayıcıyı bekleyen getir dalı da sahneHiz kullanır (bugün 0,85 sabit).\n- Yerles'te kullanan topu elinde, gidiş yönüne bakarak yürür (yonHedef null). Son 1,5 m'de sahaya döner.\n- Nötr 18 sn'lik kornerde top ~9–10. sn'de konur (prototip ortanca 9,9).\n- Top toplayıcı, kullanan 2,5 m/sn'den yavaşken 16 m'de atar; topun atana ulaşması ortanca 8,2 sn, en çok 13,0 sn (< 16).\n\nSIĞDIRMA (top konunca, kRutinSigdir):\n- Kalan süre Rm = tKos − du.t, F = Rm − plan toplamı.\n- F < 0 (sıkıştır), şu sırayla: don, duzelt, el (kısa kornerde düşmez), tekrar düşer. Sonra geri hızı 2,4 m/sn'ye çıkar, bak 0,4 sn'ye, oku 0,5 sn'ye iner. Hâlâ yetmezse koşu tKos'tan geç başlar (bugünkü geç gelişler gibi). En kısa plan ≈ 3,9 sn.\n- F > 0 (doldur): sıra h2 ile döndürülür. Geri hızı 1,0 m/sn'ye iner, el, tekrar ve duzelt eklenir, bak 1,8 sn'ye, oku 2,0 sn'ye çıkar, sırt varyantı eklenir. Artan süre, oku öncesi dolgu evreleriyle dolar.\n\nEVRELER (kRutinAdim; ilerleme kRutinBitti, kRutinSonraki, kRutinBasla, kRutinHedef; top yerinde sabit tutulur):\n- koy, 0,6 sn: mevcut yerlestir eylemi. Kullanan yerinde, bakışı topta.\n- duzelt, 1,05 sn: 0,45 sn doğrulup topa bakar, sonra ikinci yerlestir eylemi ({ad:'yerlestir', sure:0.6, duzelt:true}).\n- geri, ~2–4 sn (prototip ortanca 2,9): geri noktasına (du.geriX/Z; yay açısı mevcut du.yay) kr.geriVf hızla, efor 0,45 ile yürür.\n  - Olağan: yüz du.aci'de, yani geri geri; bakış önce topta, sonra kutuda.\n  - Sırt varyantı: gidiş yönüne bakarak yürür (yonHedef null).\n  - Biter: 0,35 m içinde (10 sn tavan).\n- don, ≤ 0,7–1,2 sn (yalnız sırt varyantında): yonHedef du.aci; biter: |açı| < 0,2 rad.\n- bak, 0,8–1,8 sn: yerinde. kr.bakis ön direkten (PL−2, yan·3) arka direğe (yan·−4) süre boyunca kayar.\n- el, 1,1 sn: jestVer('isaret', 0,9, arkadaşın yeri); bakış arkadaşta.\n- kol, 0,8 sn: jestVer('kol' ya da 'kolIki', kolOku ise 0,8 + oku, aksi hâlde 0,8, du.bakis). du.isaret = du.t yazılır (mevcut ölçümlerle uyum için).\n- tekrar, 1,3 sn: kol indirilir; 0,5 sn sonra yeniden kaldırılır (0,8 sn). Kodun ikinci işareti.\n- dolgu (oku'dan önce, yalnız kalan süre okuMax 2,0 + 0,35'i aşıyorsa), h2 ile:\n  - ayar (%40): 0,5 m yan adım, sonra geri noktasına dönüş (~1,4–1,6 sn).\n  - bak (%35): 1,0–1,6 sn.\n  - el (%25): 1,1 sn.\n- oku: du.t ≥ tKos'a kadar (1,0–2,0 sn). Rutinin tek boş anı. Bakış kalecide; son 0,35 sn'de top çizimde. Kısa kornerde kısa oyuncu bu evrenin başında 'cagir' jesti yapar (0,8 sn, koşudan ≥ 1 sn önce biter).\n- hazir (kr.hazir = true): duranHazirMi artık geçebilir.\n- dolgu döngüsü: kapı tutarsa (görevliler yerinde, değişiklik ya da sakatlık bekleyişi) 1,0 sn sonra başlar. Yerinde bak 1,2–1,8 sn; h2 ile %30 kol. Yer değiştirmez (durusKullan'ın ışınlaması olmasın).\n- kos: durusKullan mevcut yolla çalışır (sahneKos 1,3, ölçülen ~2,0 sn); temas ≈ sahneT + 0,8, bugünküyle aynı.\n\nKAPI (duranHazirMi, du.kr varken):\n- sahneT bloğunda `du.t < son + zgEk` yerine `!kr.hazir → false`.\n- Geri noktası şartından `du.hazirT > H + 2` muafiyeti kalkar; 0,5 m şart kesin olur.\n- Eski 'kol' jesti bloğu atlanır.\n- duranSure, gorevlilerYerinde, zgEk ve değişiklik/sakatlık bekleyişi aynen kalır.\n- kisaGeri (serbest vuruşta 'devam' kararı) olursa eski hazır kodu çalışır.\n- Kullanan değişirse rutin yeniden kurulur ve kalan süreye sığdırılır.\n\nTEMPO B (nötr korner 18 sn), prototip ortancaları: top 9,9 · koy 0,6 · geri 2,9 · bak 1,2 · el 1,1 · kol 0,8 · oku 1,6 → kullanım 16,7 · temas ~19.\n- Varyant payları: don %26, el %29, düzelt %15, iki kol %47, kolOku %53, tekrar %3.\n- Tekrar düşük çıktı çünkü sıkıştırma önce onu düşürüyordu. Uygulamada sahneHiz'e +0,5 sn pay verilecek ve düşürme sırası don → duzelt → el → tekrar olacak.\n- Önde (×1,3): duzelt ve tekrar olasılığı ×(1+koru), dolgu artar.\n- Zaman geçirme (zgEk) tKos'a eklenir; düzeltme, ayar ve bakışla dolar.",
+  "kodDegisiklikleri": [
+   {
+    "dosya": "js/mac-motoru.js",
+    "islev": "MOTOR_AYAR bildirimi (K bölümü, Z2 satırının yanı)",
+    "ne": "kRutin:undefined, kRutinSure:undefined, kRutinVaryant:undefined bildirimleri. Değerleri ayarEkle('K') ile js/mac-durantop.js'te atanır (M1 kuralı)."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "ayarEkle('K', …)",
+    "ne": "kRutin:3 (bit maskesi: 1 korner, 2 kenar serbest vuruşu ve kutu dolumu, 4 kale vuruşu ayrılmış ve kapalı, 8 barajlı serbest vuruş S1a'ya ayrılmış; 0 bugünküyle birebir). kRutinSure:{bak:[0.8,1.8], oku:[1.0,2.0], okuMax:2.0, geriV:[1.0,1.8], yuru:1.3, pay:0.5}. kRutinVaryant:{duzelt:0.3, el:0.45, tekrar:0.3, iki:0.5, sirt:0.35, kolOku:0.5}. Başlık yorumu S1e ve FUTBOL_KUTUPHANESI §12.13 / kutuphane/L L.6, L.9 madde 6'ya bağlanır."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "yeni Match yöntemleri: kRutinBit, kRutinKur, kRutinSigdir, kRutinAdim, kRutinBitti, kRutinSonraki, kRutinBasla, kRutinHedef (sabit KR_TOG = {duzelt:1.05, don:0.7, el:1.1, tekrar:1.3})",
+    "ne": "Durum makinesi (durumMakinesi alanı). Yalnız du.kr, tk.tx/tz/hizOran/yonHedef/bak, tk.eylem (yerlestir) ve jestVer'e yazar. Rastlantı yerine h2 kullanır, modül düzeyi durum yoktur. Prototip scratchpad/s1e/proto-durantop-ek.js'te (~90 satır)."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "sahneKur",
+    "ne": "Sonunda `if(MOTOR_AYAR.kRutin)this.kRutinKur(du)`. Kurulursa du.zorlaGetir = max(16, sahneT − sahneKos − kr.B − pay + 2)."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "sahneHiz",
+    "ne": "Topun konmasından sonraki pay du.kr varken kr.B + kRutinSure.pay olur (bugün taçta 1, spreyli barajda 12, diğerlerinde 3 sn). En düşük yürüyüş hızı du.kr varken kRutinSure.yuru (1,3), yoksa 1,6."
+   },
+   {
+    "dosya": "js/mac-durantop.js",
+    "islev": "duranHazirMi",
+    "ne": "du.kr varken: sahne bloğunda `du.t < son + zgEk` yerine `if(!du.kr.hazir)return false`. Geri noktası şartındaki `du.hazirT > H + 2` muafiyeti yalnız rutinsiz duruşta kalır. Korner/kenar 'kol' jesti bloğu `&&!du.kr` ile atlanır. Diğer kapılar (duranSure, gorevlilerYerinde, zgEk, du.hk) aynen kalır."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "stepDurus (getir dalı, top toplayıcı topu tutarken)",
+    "ne": "`tk.hizOran=0.85` yerine `du.kr ? this.sahneHiz(du,tk,0.85,nk.x,nk.z) : 0.85`. Kök neden: kullanan köşeye 4,6–5,5 m/sn koşuyor, topu ~7,6. sn'de koyuyordu."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "stepDurus (yerles dalı)",
+    "ne": "du.kr varken ve topun yerine 1,5 m'den uzaktayken tk.yonHedef = null (gidiş yönüne yürür). Son 1,5 m'de bugünkü yön (sahaya). Bugün topu elinde tutan kullanan köşeye geri geri yürüyordu."
+   },
+   {
+    "dosya": "js/mac-kurallar.js",
+    "islev": "stepDurus (hazir dalı)",
+    "ne": "`if(du.tur!=='tac'&&du.kr&&!du.kisaGeri&&this.kRutinAdim(du,tk,dt)){} else if(du.tur!=='tac'){…bugünkü…}`. Taç, kisaGeri ve rutinsiz duruşlarda kod aynen kalır."
+   },
+   {
+    "dosya": "js/animasyon.js",
+    "islev": "baş bloğu (Z2e bakış, ~satır 568–577)",
+    "ne": "STIL.animasyon.s1.kRutin > 0 ve duB.kr varken baş duB.kr.bakis noktasına döner. Oku evresinin son 0,35 sn'sinde topa (kZor ile yakındaki topa eğilir). Yoksa bugünkü kutu ↔ top dönüşümü. Yerles evresinde de geçerli (topu taşırken bakış gidiş yönünde, çizimin olağan yolu)."
+   },
+   {
+    "dosya": "js/animasyon.js",
+    "islev": "anmBekleyis (kıpırtı seçimi)",
+    "ne": "Kullanan rutindeyken (mac.durus.kr ve mac.durus.kullanan === p) kıpırtı (bakınma) başlamaz. Bak, el, kol ve oku art arda 3–4 sn hareketsiz sürdüğünde bosT > 2,5 olup başı 60° yana çeviriyor, rutinin bakışını bozuyordu. Eller belde/gevşek bekleyiş aynen kalır."
+   },
+   {
+    "dosya": "js/animasyon.js",
+    "islev": "ANM_POZ ve ANM_JEST (jest katmanı, ~satır 107–110 ve 236)",
+    "ne": "Yeni poz jestKolIki:{aL:-3.0,aR:-3.0,eL:-0.05,eR:-0.05,aLz:-0.12,aRz:0.12,hx:-0.12} (iki kol dik; simetrik, aynalama etkisiz). ANM_JEST.kolIki = STIL.animasyon.s1.kolIki > 0 ? 'jestKolIki' : 'jestKol'. Jest katmanında zk (kolHedef) yalnız 'kol' için kalır; kolIki dik çizilir, gövde hedefe yarı döner (mevcut satır 1797)."
+   },
+   {
+    "dosya": "js/stil-99.js",
+    "islev": "STIL.animasyon",
+    "ne": "Yeni grup s1:{kRutin:1, kolIki:1}. Her anahtar 0'da eski çizim. S1'in öbür alanları aynı gruba anahtar ekleyecekse birleştirmede tek nesne olur."
+   },
+   {
+    "dosya": "araclar/olcumler/k-sahne.js",
+    "islev": "bilgi, yeni, adim, ozet",
+    "ne": "S1e satırları (olcu alanı): korner ve kenar için topun konduğu an, topa yürüyüş hızı, hazırda hareketsiz, boş bekleme (hareketsiz + jestsiz + eylemsiz), en uzun kesintisiz boş bekleme (ortanca ve q90), kol işaretinden kullanıma, kullanım − kr.tKos. Özette evre ortancaları ve varyant payları. Yalnız m.durus (du.kr) ile kullananın vx/vz, jest ve eylem alanlarını okur (k-sahne sözleşmesi)."
+   },
+   {
+    "dosya": "araclar/animasyon-olcum.py",
+    "islev": "T8e duran top bölümü (dr) ve rapor",
+    "ne": "Yeni satır 'A: duran top (S1e)': kolIki pozu (jest yuvası > 0,5) N/N; rutinin bak ve oku karelerinde çizilen başın kr.bakis yönüne sapması ≤ 25° olan kare payı (≥ %80); rutin sürerken kullananda kıpırtı karesi (0); düzeltmede yerleştirme yuvası > 0,5 (mevcut yerN/yerIyi). Yapay --duran kipinde ölçülür."
+   },
+   {
+    "dosya": "araclar/poz-galerisi.html",
+    "islev": "satır ekle (Claude'un kendi denetimi; kullanıcıya gösterilmez)",
+    "ne": "s1kol: jestKolIki ve hedefli kol karşılaştırması, ikinci yerleştirme."
+   },
+   {
+    "dosya": "FUTBOL_KUTUPHANESI.md, kutuphane/L-sahne-protokolleri.md, TEKNIK_PLAN.md §8, CLAUDE.md (senaryo kapıları), YOL_HARITASI.md",
+    "islev": "belgeler",
+    "ne": "§12.13 S1 sonucuna S1e. L.9 madde 6 'uygulandı'. L.6'ya kol kodu eşlemesi (tek kol ön direk, iki kol arka direk ve tren). TEKNIK_PLAN §8 motor → çizim sözleşmesine du.kr (bakis, evre) ve jest 'kolIki'. CLAUDE.md senaryo kapıları satırı: kullananın rutini (kRutin*, kRutinAdim, sahneHiz payı, getir dalı) → d-duran (korner, kenar), d-topcu, k-sahne S1e satırları, ikiz-deneme, kRutin 0 ile --ayni."
+   }
+  ],
+  "yeniAlanlar": [
+   "du.kr (yeni duruş alt nesnesi; oyuncu nesnesine alan eklenmez). Kuran kRutinKur, ilerleten kRutinAdim. Alanlar: p (kurulduğu kullanan), oz (h2 tohumu), gm (geri mesafesi), plan [[evre, süre], …], i, evre, t, sure, tKos (planlanan koşu anı, du.t cinsinden; S1a/S1b düdüğe bağlayabilir), B (topun konmasından koşuya planlı süre), hazir, bakis {x,z}, q (el işaretinin hedef arkadaşı), kol, iki, kolOku, kisa, duzelt, el, tekrar, sirt, geriV, geriVf, okuS, F (sığdırma payı), Rm, on (seçilenler), ek ve dolgu (dolgu sayaçları), ax/az (ayar adımı), dz.",
+   "Okuyanlar: kr.hazir → duranHazirMi (js/mac-durantop.js). kr.B → sahneHiz ve sahneKur (zorlaGetir). Bütün du.kr → stepDurus (rutin kurulmuşsa hazır dalı kRutinAdim'e gider). kr.bakis ve kr.evre → çizim (js/animasyon.js baş bloğu, kıpırtı engeli). kr.* → araclar/olcumler/k-sahne.js ve araclar/animasyon-olcum.py.",
+   "tk.eylem {ad:'yerlestir', t, sure:0.6, duzelt:true} (eylem alt nesnesi). Yazan rutinin 'duzelt' evresi, okuyan mevcut yerlestir çizimi (yuva 'yerlestir'). duzelt bayrağı yalnız ölçü ve isteğe bağlı daha hafif eğilme içindir.",
+   "p.jest.tur = 'kolIki' (yeni jest türü). Yazan jestVer, rutinin 'kol' evresinde. Okuyan çizim (ANM_JEST.kolIki → jestKolIki). Motorda p.jest'i okuyan tek yer (mac-plan.js planEkle) yalnız 'cagir' ve 'isaret' türlerine bakar; rutinin isaret jesti koşudan ≥ 1,8 sn önce biter.",
+   "Kısa kornerde kısa oyuncunun p.jest 'cagir' jesti (mevcut tür). Yazan rutinin 'oku' evresi; 0,8 sn, koşudan önce biter. Okuyan çizim.",
+   "du.isaret (mevcut alan): rutinin 'kol' anında yazılır; mevcut ölçümler (animasyon-olcum korner kol jesti, k-duran) ile uyum için.",
+   "İsteğe bağlı olay this.on('kullananEvre', {p, evre, sure, du}): her evre başında, kRutinBasla'da. Okuyanlar k-sahne (evre sayımı) ve an-yakala (kol anını yakalama tetiği). Sonucu değiştirmez. Yeni düdük olayı yok; IFAB'a göre kornerde düdük gerekmez."
+  ],
+  "ayarlar": [
+   "kRutin: 3 (bit maskesi). 1 korner; 2 kenar serbest vuruşu ve uzak serbest vuruşta kutu dolumu (sahneTur 'kenar'); 4 kale vuruşu (ayrılmış, varsayılan kapalı: bugün en uzun boş bekleme q90 1,3 sn); 8 barajlı serbest vuruş (S1a'ya ayrılmış). 0 iken motor bugünküyle birebir: bütün yeni yol du.kr'ye bağlı, du.kr yalnız bit açıkken kurulur. Prototipte kRutin 0 ile tam maç (tohum 7) konum izi ve skor tabanla aynı çıktı.",
+   "kRutinSure: {bak:[0.8,1.8], oku:[1.0,2.0], okuMax:2.0, geriV:[1.0,1.8], yuru:1.3, pay:0.5}. bak kutuya bakış (sn), oku son kısa okuma (sn; tek boş an, L.6 '1–2 sn'), okuMax'ın üstündeki fazla süre dolguya gider, geriV geri çekilme yürüyüşü (m/sn), yuru rutinli türlerde sahneHiz'in en düşük hızı (bugün 1,6), pay sahneHiz'e planın üstüne eklenen güvenlik payı (sn).",
+   "kRutinVaryant: {duzelt:0.3, el:0.45, tekrar:0.3, iki:0.5, sirt:0.35, kolOku:0.5}. h2 olasılıkları. Önde duzelt ve tekrar ×(1+koru); gerideyken (acele > 0,5) hepsi kapalı. 'iki' yalnız Z2b'nin orta rutininde ve kenarda zarla; arkaDirek ve tren iki kol, onDirek, alcak ve geri tek kol. Kısa kornerde el her zaman, kol yok."
+  ],
+  "cizim": [
+   "Yeni poz ANM_POZ.jestKolIki: iki kol dik ({aL:-3.0, aR:-3.0, eL:-0.05, eR:-0.05, aLz:-0.12, aRz:0.12, hx:-0.12}). Jest 'kolIki'; L.6 / K34'e göre takıma özgü kod, uzak direk ve tren. ANM_JEST.kolIki; STIL.animasyon.s1.kolIki = 0 iken tek kol (jestKol).",
+   "Mevcut hedefli kol (jest 'kol' + hedef du.bakis; Z2e kolHedef) tek kol kodu olarak sürer. kolOku varyantında jest süresi 0,8 + oku: kol koşunun başına kadar kalkık kalır, koşuyla iner (L.6 'kolu kaldır, vuruştan hemen önce indir').",
+   "Baş: Z2e bakış bloğu STIL.animasyon.s1.kRutin > 0 iken mac.durus.kr.bakis'i okur.\n- geri geri: top, sonra kutu\n- sırt yürüyüşü: gidiş yönü\n- bak: ön direkten arka direğe kayan nokta\n- el: işaret edilen arkadaş\n- kol: jestin hedefi (bugünkü gibi)\n- oku: kaleci; son 0,35 sn'de top, baş yakındaki topa eğilir (kZor)\nMotorun p.bakisYon'u değişmez; çizim yalnız okur.",
+   "Kıpırtı (bakınma, baş 60° yana) rutin sürerken kullananda başlamaz. Eller belde ve gevşek bekleyiş aynen kalır. Çömelme ve eller dizde yok (K1 kararı; L.6'da kaynağı yok).",
+   "duzelt: mevcut 'yerlestir' pozu ikinci kez (yerlestir yuvası, 0,6 sn). İki yerleştirmenin arasında doğrulup topa bakma. Yeni poz yok.",
+   "el: mevcut jestIsaret hedefli (gövde hedefe 0,6·r döner). Kısa kornerde kısa oyuncunun mevcut jestCagir'ı.",
+   "Geri çekilme (geri geri ya da sırt dönük), sırtla dönüş ('don') ve 0,5 m'lik 'ayar' yan adımı mevcut yürüyüş ve gövde dönüşü dinamiğiyle çizilir; yeni poz yok. 1,0–1,8 m/sn yavaş yürüyüş ve geri geri yürüyüş mevcut A7/A9 eğrileriyle zaten çiziliyor."
+  ],
+  "olcu": [
+   "k-sahne 'S1e: korner kullananı — topun konduğu an (duruşun başından sn)': du.asama'nın 'hazir'a geçtiği an. Bugün ortanca 7,6, prototip 9,9 (hedef ≈ tKos − B).",
+   "k-sahne 'S1e: korner — topa yürüyüş hızı (getir + yerleş, m/sn)': kullananın 0,3 m/sn üstündeki hızlarının ortalaması. Bugün 4,6, prototip 3,4; yakındaki kullanan 1,3.",
+   "k-sahne 'S1e: korner — hazırda hareketsiz (sn/korner)': kök hızı < 0,2 m/sn. Bilgi satırı. Bugün 4,4, prototip 2,8.",
+   "k-sahne 'S1e: korner — boş bekleme (sn/korner)': hazır evresinde hareketsiz, p.jest yok, p.eylem yok; gözlemlenebilir tanım, rutinin etiketlerine dayanmaz. Bugün ortanca 3,5 (q90 6,1), prototip 1,7 (q90 3,3). Sağlık aralığı ortanca ≤ 2,5.",
+   "k-sahne 'S1e: korner — en uzun kesintisiz boş bekleme (sn; ortanca / q90 / en çok)': bugün 2,9 / 5,3 / 6,9, prototip 1,2 / 2,1 / 2,8. Sağlık aralığı ortanca ≤ 2, q90 ≤ 2,5 (L.6 'hareketsiz bekleme en çok 1–2 sn').",
+   "k-sahne 'S1e: korner — kol işaretinden kullanıma (sn)': bugün 0,8, prototip 2,6 (kol + kısa okuma; L.6 'kol işareti → kısa bakış 1–2 sn → koşu').",
+   "k-sahne 'S1e: korner — kullanım − sahnenin hedefi (kr.tKos, sn; ortanca / q90)': prototip 0,0 / 0,0. Duruş süresinin değişmediğinin ölçüsü.",
+   "k-sahne aynı satırlar kenar serbest vuruşu için (ksKN_*). Bugün en uzun boş bekleme q75 7,1, q90 8,8, en çok 12,4; prototip 2,4 / 2,9 / 3,9.",
+   "k-sahne özeti: rutin evrelerinin ortanca süreleri (koy, duzelt, geri, don, bak, el, kol, tekrar, dolgu/ayar, oku, hazır bekleyişi) ve varyant payları (düzelt, sırt, el, tekrar, iki kol, kolOku, oku öncesi dolgu). Çeşitlilik ölçüsü; prototipte don %26, el %29, düzelt %15, iki kol %47, kolOku %53, tekrar %3 (uygulamada pay +0,5 ile artmalı).",
+   "animasyon-olcum --duran 24, yeni satır 'A: duran top (S1e)': iki kol pozu N/N; bak ve oku karelerinde başın kr.bakis yönüne ≤ 25° olan pay ≥ %80; rutinde kullananda kıpırtı 0 kare; düzeltmede yerleştirme yuvası > 0,5 N/N."
+  ],
+  "senaryolar": [
+   "d-duran (korner 4N, kenar hücreleri):\n- Korner kararları birebir aynı kalır. Prototipte 200 kornerde kısa %18,5, içe %58,5, dışa %18,0 tabanla aynı; rutin rastlantı çekmez, kornerGorev'in rast'ı rutinden önce.\n- Hazırlık ortancası +0,4 sn (19,4 → 19,8). Sebep: d-duran'da kullanan santra dizilişinden 50+ m öteden geliyor, plan sıkışıyor. Gerçek maçta kullanım − hedef ortanca 0,0, q90 0,0.\n- Korner başına gol %5,0 → %6,5, ilk temas hücumda %32,9 → %29,4 (200 kornerde gürültü ±1,5 puan). Kapının kararı 1600 kornerle verilir; kapı %3–5 sınırına yakın olduğu için izlenmeli.\n- Kenar hücrelerinde hazırlık −0,3..−0,7 sn. Kenardaki doğrudan şut %16,7 → %16,7 (tabanda da '!' — önceden var olan sınır durumu).",
+   "d-topcu: zorla teslim 0 kalmalı. Prototipte topun atana ulaşması ortanca 8,2 sn (bugün 6,5), en çok 13,0 sn (16'nın altında). Top toplayıcı artık yürüyen kullanana 16 m'den atıyor (spd < 2,5 kuralı); 'atan çizginin ≤ 2 m dışı' değişmez, çünkü hedef köşedeki atış noktası.",
+   "ikiz-deneme: Aynılık N/N. Rutin yalnız du.kr ve h2 kullanır, iki Match örneğinin paylaştığı durum yok. Duruş evreleri değiştiği için turda bir kez çalıştırılmalı.",
+   "mac-deneme --ayni, kRutin 0 ile güncel tabana karşı: birebir. Prototipte tam maç konum izi ve skor aynı; bit 0 bütünlüğü.",
+   "40 maç --karsilastir: duruş süresi (korner, kenar) ±0,3 sn içinde (kullanım anı aynı hedefe). Gol/maç ve öbür satırlar gürültü içinde. Parmak izi değişir (kullananın yolu, hızı, enerjisi).",
+   "k-sahne S1e satırları: korner en uzun boş bekleme q90 ≤ 2,5 sn, kenar ≤ 3 sn. Çeşitlilik satırında her varyant > %5.",
+   "Etkilenmeyenler: m-isinma, m-fotograf (maç öncesi), d-penalti, d-sut (bit yok), o-ofsayt, c-kanat, c-orta (yalnız parmak izi). Seyrekler tur kapanışındaki `oturum-sonu.js --seyrek` ile koşar.",
+   "Çizim: kontrol.py (animasyon.js ve stil-99.js değişti) ve animasyon-olcum --duran 24 (A: duran top satırları + S1e satırı) gerekli. An-yakala korner anı Claude'un kendi denetimi; kullanıcıya gösterilmez."
+  ],
+  "riskler": [
+   "Uzaktan gelen kullanan (L0 > 45 m; d-duran'ın santra kurulumu) B'yi sığdıramaz. Plan sıkışır, kullanım ~0,4 sn geç kalır. Önlem: kRutinKur'da L0/v0 ile varış tahmin edilir; erken varış imkânsızsa varyantlar baştan kapatılır.",
+   "Korner verimi: 200 kornerde %5,0 → %6,5 (gürültü olabilir). Mekanizma adayı: kullanan koşmadığı için daha dinç (enerji → vuruş sapması). d-duran 1600 ile doğrulanmalı. Kapı %3–5'i aşarsa yorgunluk yolu ve kullanım anı karşılaştırılır.",
+   "'tekrar' varyantı prototipte nadir kaldı (%3). Sebep: top konduğunda kalan süre çoğu kez plana tam eşitti (F ≈ 0), sıkıştırma önce tekrar'ı düşürüyordu. Uygulamada sahneHiz'e +0,5 sn pay verilecek, düşürme sırası don → duzelt → el → tekrar olacak.",
+   "Kapı tutarken dolgu döngüsü (değişiklik ya da sakatlık bekleyişi uzun sürebilir) tekrarlı kol jestiyle yapay görünebilir. Bu yüzden kol payı %30 ve dolgu yerinde (ışınlama olmasın diye yer değiştirmez).",
+   "Prototipte 'ayar' dolgusunda 1 durumda geri noktasına 0,2 m'den yakın dönülemedi, 3 sn tavana takıldı. Eşik 0,3 m olmalı; ayar yalnız oku öncesi dolguda, dolgu döngüsünde yok.",
+   "duranHazirMi'deki 'hazirT > H + 2' muafiyeti rutinde kalkıyor. Kullanan geri noktasına hiç varamazsa (önünde engel) geri evresinin 10 sn tavanı ve zorlaHazir (sahneT + 10) son ağdır. Uygulamada geri evresine 'varamadı' dalı eklenmeli: geriX/Z kullananın yerine çekilir.",
+   "S1'in öbür alanlarıyla aynı işlevlere dokunuluyor (duranHazirMi, sahneHiz, stepDurus hazır dalı, durusKullan, animasyon.js Z2e baş bloğu, STIL.animasyon.s1, k-sahne.js). Birleştirmede çakışma riski var. Rutin kendi h2 tohumunu (kr.oz, tuz 41) kullanır, sahneOzet tuzlarıyla çakışmaz.",
+   "Çizim: iki kol pozu yeni, sürgün gerekebilir. Rutin bakışı kıpırtı engeli olmadan bozulur. Yavaş geri geri yürüyüşte (1,0 m/sn) ayak kayması animasyon-olcum'la bakılmalı.",
+   "Hız etkisi ihmal edilebilir: kare başına yalnız kullananda tek işlev, yalnız korner ve kenar hazır evresinde."
+  ],
+  "digerAlanlarlaTemas": [
+   "S1a (seremonili serbest vuruş):\n- Ortak işlevler: duranHazirMi (du.hk kapısı, ileride düdük ön koşulu), sahneHiz (spreyli barajın 12 sn payı), stepDurus hazır dalı, durusKullan (on('duduk')).\n- Barajlı vuruşta kullanan bugün hazırda 5–8 sn hareketsiz (ölçüldü). Bit 8 ayrıldı: S1a, kr.tKos'u düdük + 1–2 sn'ye bağlayıp aynı ilkellerle (düzelt, ikinci vurucuya el işareti, baraj ve kaleciye bakış, geri, oku) doldurabilir.",
+   "S1b (penaltı): kullanan bugün hazırda 14–16 sn hareketsiz (ölçüldü). Aynı ilkeller kol jesti olmadan kullanılabilir: topu düzeltme, 4–6 m geri, kaleciye bakış, oku 1–3 sn (Jordet; tKos = düdük + 1–3 sn). K1'in penaltiBakis'i (taramaAdim) ve anmPenaltiKaleci kaleci tarafıdır, çakışmaz.",
+   "K1: 'dizler', 'corap' ve 'esneme' pozları silindi; çömelme yok, bu tasarım onu varsayar. K1'in hakemSpreyAdim ve hakemAI değişikliklerine dokunulmaz (kornerde hakem işi yok).",
+   "Z2b korner rutinleri: du.rutin kol kodunu belirler (tek ya da iki kol, kısa kornerde kol yok). du.hedefQ el işaretinin hedefidir. 'kisa' rolü çağrı jesti yapar. kornerGorev ve kornerSecenegi değişmez.",
+   "Z2e: çizimin bakış bloğu (animasyon.js 568–577) ve kolHedef. STIL.animasyon.z2.bakis = 0 iken rutin bakışı da kapalı; s1.kRutin ayrı anahtar.",
+   "Z3a kale vuruşu: kvIsaret (kol jesti son − 2,2 sn) bugün kale vuruşunun rutini sayılır. Bit 4 açılırsa rutinin 'kol' evresi kvIsaret'in yerini alır (aynı hedef: kısa kuranda stopere, uzun atanda ileri).",
+   "Top toplayıcı (topcuAI): atış şartı kullananın hızına bağlı (L < 6 ya da L < 16 ve spd < 2,5). Rutin kullananı yavaşlattığı için atış 6 m yerine 16 m'de gelir; d-topcu kapısı izlenir.",
+   "mac-plan.js planEkle p.jest 'cagir' ve 'isaret' türlerini okur (Z1 istek sinyali). Rutinin jestleri koşudan önce biter; kısa oyuncunun çağrısı da öyle. Açık oyuna sızmaz.",
+   "Değişiklik ve sakatlık bekleyişi (degisiklikBaslat, sakatlikBekletir) durusKullan'ı tutar. Rutin o sırada yerinde dolgu döngüsünde bekler, boş durmaz.",
+   "araclar/olcumler/k-sahne.js ve araclar/animasyon-olcum.py öbür S1 alanlarıyla ortak dosya; satır adları S1e önekiyle ayrışır."
+  ]
+ }
+]
