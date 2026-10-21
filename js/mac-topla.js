@@ -155,7 +155,7 @@ ayarEkle('B',{
   yuzeyKarar:15,               // V1a bit maskesi (0: bugünkü, birebir). 1 yüzey ve ayak karar tablosu (yuzeyOlasilik; tek zar, çekiliş sayısı aynı) ve planlayıcı
                                // aynası (vurusAyakK) — V1a-1; 2 asimetrik doğal koni kapısı, dışta tutulan gövde, koniden hizalanma bedeli (V1a-2); 4 ayar adımının
                                // dönüş hızı (V1a-3; kapalıyken yuzeyOlasilik'in dönüş hızı hrkVurusDonus); 8 doğal yandan yaklaşma (V1a-3).
-                               // V1a-2'den beri bit 1 ve 2 işler (bit 2 vuruş planını, yani bit 1'i ister)
+                               // V1a-3'ten beri dört bit de işler (bit 2 vuruş planını, yani bit 1'i; bit 4 koni kapısını, yani bit 2'yi; bit 8 bit 1'i ister)
   yuzeyKon:[0.70,0.26,0.79,0.17,0.35], // V1a: doğal koniler (rad; vuran ayağın çerçevesinde, + = dış yanı) — iç: doğal yan / vuran yan (−40°/+15°), üst: doğal / vuran
                                // (−45°/+10°), zaman yokken ('acik' yol) vuran yana acele payı (+20°)
   disAyak:[0.30,1.25,12,28,0.66,0.35,0.5], // V1a: dış ayak — hedefin güçlü ayağın dış yanındaki açı aralığı (rad; 17–72°), fiske menzili (m; J.3.2), trivela menzili (m),
@@ -525,8 +525,12 @@ Object.assign(Match.prototype,{
       const on=sec.ilk?0.42:0.34;let px=b.x-c*on-(-s)*0.13*yan,pz=b.z-s*on-c*0.13*yan;
       /* T20b (vurusYaklas): duran ya da yavaş topta (≤ 1,2 m/sn) gövdenin yeri vuruş doğrultusunun tam arkası değil, geçerli vuruş yayının (pasta ±0,6, şutta ±0,25 rad)
          oyuncuya en yakın noktası — eskiden 90–110° dönüşte oyuncu topun etrafından tam arkaya yürüyor, bu yürüyüş son yüzüne göre geriye düşüyordu */
-      if(MOTOR_AYAR.vurusYaklas&&!sec.ilk&&topHiz<=1.2){const tv=sec.tur==='sut'?0.25:0.6;let en=hyp(px-p.x,pz-p.z);
-        for(let i=-3;i<=3;i++){if(!i)continue;const t=a+tv*i/3,ct=Math.cos(t),st=Math.sin(t),qx=b.x-ct*on-(-st)*0.13*yan,qz=b.z-st*on-ct*0.13*yan,dq=hyp(qx-p.x,qz-p.z);if(dq<en){en=dq;px=qx;pz=qz;}}}
+      /* V1a-3 (yuzeyKarar & 8; vuruş planı e.vp — şut ve penaltıda yok): doğal yandan yaklaşma — yay adayları vuran ayağın doğal yanıyla sınırlı: iç ve
+         üst konide i·sg ≥ 0 (sağ ayaklı topun vurmayan yanında, sol arkasında durur; gövde hedefin sağına bakar, hedef doğal konide), dış ayakta
+         i·sg ≤ 0 (vuran yanda; hedef dış yanda). Eskiden en yakın aday vuran yanda da olabiliyordu: gövde koninin dışında durup topun çevresinde
+         dönüyordu. Duran topun yayıyla (Z2a) ve V1e'nin koşu çizgisiyle aynı işaret: vurmayan yandan gelinir (J.1) */
+      if(MOTOR_AYAR.vurusYaklas&&!sec.ilk&&topHiz<=1.2){const tv=sec.tur==='sut'?0.25:0.6,y8=vp&&(MOTOR_AYAR.yuzeyKarar&8)?(vp.koni==='dis'?-sgV:sgV):0;let en=hyp(px-p.x,pz-p.z);
+        for(let i=-3;i<=3;i++){if(!i||i*y8<0)continue;const t=a+tv*i/3,ct=Math.cos(t),st=Math.sin(t),qx=b.x-ct*on-(-st)*0.13*yan,qz=b.z-st*on-ct*0.13*yan,dq=hyp(qx-p.x,qz-p.z);if(dq<en){en=dq;px=qx;pz=qz;}}}
       const ax=p.x+Math.cos(p.yon)*0.3,az=p.z+Math.sin(p.yon)*0.3,ayakD=hyp(b.x-ax,b.z-az);
       /* T9b-b (hazırlık kalitesi): önünden kaçan topa (son dokunuşla yuvarlanan; 1,2 m/sn'den hızlı) tam eforla ve topun varacağı yere koşar.
          Eskiden topun 0,12 sn önüne ve baskısızken 0,6 eforla gidiyordu: top ondan hızlı yuvarlanınca yetişemiyor, şut süresi dolup bitiyordu
@@ -567,12 +571,20 @@ Object.assign(Match.prototype,{
          iç [−0,70, +0,26], üst [−0,79, +0,17], gelişine doğal yan −1,45 / vuran yan hi + 0,35, dış ayakta [D0 − 0,15, D1]); geçiş kd ≤ tol ('acik'
          yolda acele payı yuzeyKon[4], öbürlerinde 0). Şutun sınırı (T9b-b) değişmez (şutta vp yok) */
       const kd=V2?koniAsimi(aciFark(a,p.yon)*sgV,vp.koni==='dis'?vp.lo-0.15:vp.lo,vp.hi):0,hizali=V2?kd<=vp.tol:sapma<sinir;
+      /* V1a-3 (yuzeyKarar & 4; bit 2'yi ister — kd koniden): ayar adımının hızı. 'adim' yolunda gövde koninin dışındayken (kd > 0) dönüş hızı
+         r = max(donusAdim[0], need0 / donusAdim[3]) ile sınırlı: destek ayağı hedefe basar, pelvis döner (adım süresi ≤ donusAdim[3]; vp.adimT aynı
+         r'den). Eskiden gövde hrkVurusDonus ile (6,3–9 rad/sn) yerinde fırıl dönüyordu. js/mac-hareket.js'e dokunulmaz: eylemIlerle moveP'nin
+         dönüşünden önce koşar, yonHedef bu karenin adımı kadar ileride tutulur (moveP onu hrkVurusDonus sınırıyla izler). donusAdim[0] 0: kapalı
+         (yalnız kapı, bugünkü dönüş hızı) */
+      const DA=MOTOR_AYAR.donusAdim,V4=V2&&(MOTOR_AYAR.yuzeyKarar&4)>0&&DA[0]>0&&vp.yol==='adim',r4=V4?Math.max(DA[0],vp.need0/DA[3]):0;
+      if(V4&&kd>0&&p.yonHedef!=null){const st=r4*dt;p.yonHedef=aciNorm(p.yon+clamp(aciFark(p.yonHedef,p.yon),-st,st));}
       /* hareketli top: ayağa ne zaman gelir (yol boyunca uzaklık / hız) ve yoldan ne kadar yanda */
       let gelir=false;if(topHiz>1.5){const yol=((ax-b.x)*b.vx+(az-b.z)*b.vz)/topHiz,yan2=Math.abs((ax-b.x)*b.vz-(az-b.z)*b.vx)/topHiz;
         gelir=yol>0&&yol/topHiz<=e.geri+0.03&&yan2<0.45;}
       /* T4-V: temasa kalan süre (çizim okur, tahmin etmez): asgari hazırlığın kalanı, hizalanma süresi ya da ayağa varış süresi + geri salınım */
-      /* V1a-2: dönüş süresi koniden (kd − tol) / bugünkü dönüş hızı — kalan ve K1'in kalanCiz'i aynı donT'yi okur (çizim son adıma erken girmez) */
-      const w=hrkVurusDonus(p),donT=V2?(kd>vp.tol?(kd-vp.tol)/w:0):sapma>sinir?(sapma-sinir)/w:0,varT=ayakD>0.5&&!(sec.ilk&&gelir)?(ayakD-0.5)/Math.max(0.7,p.spd):0;
+      /* V1a-2: dönüş süresi koniden (kd − tol) / bugünkü dönüş hızı — kalan ve K1'in kalanCiz'i aynı donT'yi okur (çizim son adıma erken girmez);
+         V1a-3: ayar adımında (bit 4) dönüş hızı adımın hızı (moveP'nin sınırıyla en azı) */
+      const w=V4?Math.min(r4,hrkVurusDonus(p)):hrkVurusDonus(p),donT=V2?(kd>vp.tol?(kd-vp.tol)/w:0):sapma>sinir?(sapma-sinir)/w:0,varT=ayakD>0.5&&!(sec.ilk&&gelir)?(ayakD-0.5)/Math.max(0.7,p.spd):0;
       e.kalan=Math.max(e.hazirlikEn-e.t,donT,varT)+e.geri;
       /* K1 (2026-10-20; kullanıcı notu 7, çizim sözleşmesi): kalan geri salınıma geçişin iki kapısını bilmez — top yerden yüksekte (yerden pasta 0,6, şutta ve
          gelişine 1,1 m) ve ayak topa yetişmemişken (0,5; gelişine 0,62 m) — ve ayağa varışı oyuncunun hızıyla sayar (önünden kaçan topta topa göre hız çok
