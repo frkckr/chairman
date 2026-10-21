@@ -38,7 +38,7 @@ function cevreKur(kok,sec){
   const pencere=(M,w,h,x,y,z,ry,anahtar,isikRenk,koyuRenk,oran)=>{
     const yan=!gunduz&&h2(anahtar,7)<(oran===undefined?R.pencereOrani:oran);
     yduz(M,w,h,x,y,z,ry,yan?rk(isikRenk||R.pencereIsik):rk(koyuRenk||R.pencere),yan?ISIK:P);};
-  const W={bati:-(KALE_MESAFE+7),kuzey:YAN_MESAFE+10,guney:-(YAN_MESAFE+11),dogu:KALE_MESAFE+5.5},DH=CV.duvar||2.4;
+  const W={...STAT_OLCU.duvar},DH=CV.duvar||2.4;   /* P2: çevre duvarı tribün arkalarından (js/stadyum.js STAT_OLCU) */
   const cephe=t=>CV.cepheler.find(c=>c.tip===t),kurulan=[];   /* kurulan: kurulan cephelerin tipleri (kok.userData.cevre; akış denemesi okur) */
 
   /* ---- ev: ön yüzü yerel +z'de; kat sayısı, kiremit çatı ya da düz dam ---- */
@@ -149,6 +149,8 @@ function cevreKur(kok,sec){
     const taban=f=>O.y0+Math.max(0,Math.min(t.sira-1,Math.floor(-f/O.dp)))*O.eg;
     if(t.tip==='set'){/* setin girişi: çevre kapısından basamakları çıkıp duvardaki açıklıktan setin tepesine */
       const g=yerel(t,u,-O.D+0.4),a=yerel(t,u,-O.D-1.9);giris=[g[0],O.y1,g[1]];ic=[a[0],0,a[1]];}
+    else if(t.tip==='yamac'){/* P2: yamaç terasları — giriş terasların ucundan, zeminden (kayaya oyulmuş basamakların dibi); kapı güney duvarında */
+      const sg=Math.sign(u)||-1,g=yerel(t,u,-O.D/2),a=yerel(t,u+sg*2.5,-O.D/2);giris=[g[0],O.y0,g[1]];ic=[a[0],0,a[1]];}
     else{/* arka duvarda kapı (dışarıdan) ve oturma tribününde basamakların üstünde giriş ağzı */
       const [dx,dz]=yerel(t,u,-O.D-0.63),M=mat(dx,0,dz,Y.rot);
       yduz(M,1.8,2.4,0,1.2,0,Math.PI,koyu);ykutu(M,0.25,2.7,0.3,-1.05,1.35,0.05,0,b);ykutu(M,0.25,2.7,0.3,1.05,1.35,0.05,0,b);ykutu(M,2.35,0.3,0.3,0,2.55,0.05,0,b);
@@ -161,15 +163,15 @@ function cevreKur(kok,sec){
         ykutu(A,1.4,1.15,0.9,0,O.y1+0.2,0,0,koyu);ykutu(A,0.2,1.45,1.0,-0.8,O.y1+0.32,0,0,b);ykutu(A,0.2,1.45,1.0,0.8,O.y1+0.32,0,0,b);ykutu(A,1.8,0.22,1.0,0,O.y1+0.95,0,0,b);
         const g=yerel(t,u,-O.D+1.0);giris=[g[0],taban(-O.D+1.0),g[1]];}}
     /* karşısındaki çevre kapısı */
-    const [gx,gz]=yerel(t,u,-O.D-1);
-    const yan=t.yer==='ana'?'guney':t.yer==='karsi'?'kuzey':t.yer==='kale1'?'bati':'dogu';
+    const [gx,gz]=t.tip==='yamac'?yerel(t,u,-O.D/2):yerel(t,u,-O.D-1);
+    const yan=t.tip==='yamac'?(u<0?'guney':'kuzey'):t.yer==='ana'?'guney':t.yer==='karsi'?'kuzey':t.yer==='kale1'?'bati':'dogu';
     const ana=t.yer==='kale1'&&cephe('kapi');
     const kp=yan==='bati'||yan==='dogu'?{u:gz,ic:yan==='bati'?1:-1,en:ana?7:4,kapi:[W[yan],gz]}:{u:gx,ic:yan==='kuzey'?-1:1,en:4,kapi:[gx,W[yan]]};
     kapi[yan].push(kp);
     if(mac){const dis=yan==='bati'?[W.bati-4,gz]:yan==='dogu'?[W.dogu+1.2,gz]:yan==='kuzey'?[gx,W.kuzey+3]:[gx,W.guney-3];
       /* uzak: seyircinin geldiği yer (sokaktan; güneyde arka sokak, kuzeyde ön sokak, batıda ana sokak, doğuda kaya dibi) */
       const uzak=yan==='bati'?[W.bati-8,gz+30]:yan==='dogu'?[W.dogu+1.2,-40]:yan==='kuzey'?[gx,W.kuzey+9]:[gx,W.guney-36];
-      KAPILAR.push({tribun:t.yer,u,kapi:kp.kapi,uzak,dis,ic,giris,gizli:t.tip!=='set'});}
+      KAPILAR.push({tribun:t.yer,u,kapi:kp.kapi,uzak,dis,ic,giris,gizli:t.tip!=='set'&&t.tip!=='yamac'});}
   }
 
   /* ---- çevre duvarı (kuzey, batı; güney yalnız maçta: kulüp binasının iki yanı) ve doğuda tel örgü ---- */
@@ -177,11 +179,12 @@ function cevreKur(kok,sec){
   duvar(W.bati,W.guney,W.bati,W.kuzey,kapi.bati);
   const binaX=12;
   if(mac&&cephe('kulupBinasi')){duvar(W.bati,W.guney,-binaX,W.guney,kapi.guney);duvar(binaX,W.guney,W.dogu,W.guney,kapi.guney);}
-  {const g=kapi.dogu.map(k=>k.u).sort((a,b)=>a-b);let s=W.guney;for(const u of g){telOrgu(W.dogu,s,u-2);s=u+2;}telOrgu(W.dogu,s,W.kuzey);}
+  /* P2: yamaç tribünü varsa kaya terasların hemen arkasından yükselir; doğuda tel örgü yok */
+  if(!STAT_OLCU.yamac){const g=kapi.dogu.map(k=>k.u).sort((a,b)=>a-b);let s=W.guney;for(const u of g){telOrgu(W.dogu,s,u-2);s=u+2;}telOrgu(W.dogu,s,W.kuzey);}
 
   /* ---- doğu: kaya yamaç (Braga esinli) ---- */
   {const c=cephe('yamac');
-   if(c){kurulan.push(c.tip);const H=c.yukseklik||30,N=c.basamak||5,x0=W.dogu+1.5,adim=4.5,ZY=100,isik=R.yamacIsik||[1,1];
+   if(c){kurulan.push(c.tip);const H=c.yukseklik||30,N=c.basamak||5,x0=W.dogu+(STAT_OLCU.yamac?0:1.5),adim=4.5,ZY=100,isik=R.yamacIsik||[1,1];
     for(let t=0;t<N;t++){const xt=x0+t*adim,yTop=(t+1)*H/N,k=gunduz?1:isik[0]+(isik[1]-isik[0])*t/Math.max(1,N-1);
       for(let z=-ZY,i=0;z<ZY;i++){const w=5+h2(i,t*7+1)*5,zc=z+w/2,uc=Math.min(1,Math.max(0.25,(ZY+6-Math.abs(zc))/30)),j=(h2(i,t*7+2)-0.5)*2.4;
         const top=yTop*uc+j,dp=adim+3,jx=(h2(i,t*7+3)-0.5)*1.4;
@@ -224,7 +227,7 @@ function cevreKur(kok,sec){
   /* ---- ana tribünün arkası: kulüp binası, giriş, otopark, arka sokak (yalnız maç) ---- */
   {const c=cephe('kulupBinasi');
    if(c&&mac&&LOCA){kurulan.push(c.tip);const zOn=LOCA.on,zArka=zOn-10.7;LOCA.binaArka=zArka;   /* N11: stada varış sokak kapısının önünde başlar */
-    const zT=-(YAN_MESAFE+tribunOlcu(STAT.tribunler.find(x=>x.yer==='ana')).D+0.8),altUst=tribunTepe('ana')-0.2;
+    const zT=-(STAT_OLCU.arka.ana+0.8),altUst=tribunTepe('ana')-0.2;
     const bina=rk(R.bina),koyu=rk(R.binaKoyu),ust=LOCA.zemin-0.36;
     /* locanın önündeki alçak kısım tribün tepesini geçmez (başkanın bakışı); locanın altında üç katlı gövde */
     kutu(2*binaX,altUst-Z0,zOn-zT,0,(altUst+Z0)/2,(zOn+zT)/2,0,koyu);
@@ -276,7 +279,7 @@ function cevreKur(kok,sec){
    if(pos.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
      kok.add(new THREE.Mesh(g,BAS({vertexColors:true,side:THREE.DoubleSide})));}}
 
-  kok.userData.cevre=kurulan;
+  kok.userData.cevre=kurulan;kok.userData.duvar=W;   /* P2: akış denemesi duvarın yerini buradan okur */
   /* ---- birleştirme: yapılar (gece yüzeyin yönüyle hafif gölgeli), yanık pencereler, lamba ışıkları ---- */
   if(P.length){const g=geoBirlestir(P);
     if(!gunduz){const n=g.attributes.normal.array,c=g.attributes.color.array;for(let i=0;i<n.length;i+=3){const k=0.72+0.28*Math.max(0,n[i+1])+0.1*n[i]-0.06*Math.abs(n[i+2]);c[i]*=k;c[i+1]*=k;c[i+2]*=k;}}

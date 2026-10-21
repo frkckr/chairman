@@ -6,11 +6,13 @@
                 canlı skor tabelası (TABELA), tünel ve kulübe verisi (TUNEL, KULUBELER) burada üretilir.
    mac: false → balkon ve oda penceresi (js/balkon.js): aynı yapı gündüz, boş tribünlerle; maç günü eşyası ve seyirci yeri üretilmez.
    gunduz: çevrenin ve dış zeminin gündüz renkleri (STIL.cevre.gunduz, STIL.balkon). Maçtaki hâl ile aynı yapıdır, yalnız ışık/doluluk değişir;
-     ana tribünün arkasındaki kulüp binası yalnız maçta kurulur (balkon ve pencere o binadadır). */
+     ana tribünün arkasındaki kulüp binası yalnız maçta kurulur (balkon ve pencere o binadadır).
+   P2 (kullanıcı kararı 2026-10-21 gece; tarif v2): tribünlerin çizgiye mesafesi tariften (STAT_OLCU); yamac tipi (kayaya oyulmuş ayakta
+   basamaklar), bölüm durumu (kapali, insaat); panolar, tel örgü, tünel körüğü, tabelanın dönüşü, loca ve (verilmezse) projektör direkleri ölçülerden.
+   Motorun okuduğu tünel, kulübe ve taraftar noktaları değişmez (TEKNIK_PLAN §8). */
 const SK=STIL.stadyum;
 const PISTLI=STAT.pist!=='yok';
-const YAN_MESAFE={tartan:44,toprak:42,yok:40}[STAT.pist],KALE_MESAFE={tartan:64,toprak:61,yok:59}[STAT.pist];
-const SIRA={oturma:{derinlik:0.8,egim:0.5,kisi:0.5},ayakta:{derinlik:0.55,egim:0.28,kisi:0.45},set:{derinlik:1,egim:0.4,kisi:0.6}};
+const SIRA={oturma:{derinlik:0.8,egim:0.5,kisi:0.5},ayakta:{derinlik:0.55,egim:0.28,kisi:0.45},set:{derinlik:1,egim:0.4,kisi:0.6},yamac:{derinlik:1.8,egim:1.1,kisi:0.45}};
 
 /* ---- saha: zemin kalitesi düştükçe çim sararır, kel ve çamurlu alanlar çoğalır, çizgiler solar ---- */
 const RGB=h=>{const n=parseInt(h.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255];},mixRGB=(a,b,t)=>'rgb('+a.map((v,i)=>Math.round(v*(1-t)+b[i]*t)).join(',')+')';
@@ -62,11 +64,22 @@ const ADS_CV=(()=>{const cv=mk(1024,16),g=cv.getContext('2d');ADS.forEach((a,i)=
 const KULUBE_BOSLUK=16,TUNEL_X=STAT.tunelX||0;
 /* tribün ölçüleri ve kapasite (kişi) */
 function tribunOlcu(t){
-  const S=SIRA[t.tip],eg=t.egim||S.egim,y0=t.tip==='set'?0.2:PISTLI?1.2:1.0;
-  return{S,dp:S.derinlik,eg,y0,D:t.sira*S.derinlik,y1:y0+t.sira*eg,kap:Math.floor(t.uzunluk/S.kisi)*t.sira};
+  const S=SIRA[t.tip],eg=t.egim||S.egim,y0=t.tip==='set'?0.2:t.tip==='yamac'?0.4:PISTLI?1.2:1.0;
+  /* P2: kapalı ve inşaattaki bölümler kapasiteden düşer */
+  const kapali=(t.bolumler||[]).reduce((s,b)=>s+(b.durum==='insaat'||b.durum==='kapali'?Math.max(0,b.to-b.from):0),0);
+  return{S,dp:S.derinlik,eg,y0,D:t.sira*S.derinlik,y1:y0+t.sira*eg,kap:Math.floor(Math.max(0,t.uzunluk-kapali)/S.kisi)*t.sira};
 }
+/* P2: tribün önleri ve arkaları (stat koordinatında mutlak metre: ana ve karşı z, kale arkaları x), çevre duvarının yerleri. Saha merkezi orijin;
+   taç çizgileri z = ±34, kale çizgileri x = ±52,5. Tribünü olmayan yerde eski ölçü (pistli 8 / 8,5, pistsiz 6 / 6,5) */
+const STAT_OLCU=(()=>{const yarim={ana:34,karsi:34,kale1:52.5,kale2:52.5},on={},arka={};
+  for(const yer of['ana','karsi','kale1','kale2']){const t=STAT.tribunler.find(x=>x.yer===yer),m=t&&t.mesafe!=null?t.mesafe:(PISTLI?8:6)+(yer==='ana'||yer==='karsi'?0:0.5);
+    on[yer]=yarim[yer]+m;arka[yer]=on[yer]+(t?tribunOlcu(t).D:0);}
+  const yamac=(STAT.tribunler.find(x=>x.yer==='kale2')||{}).tip==='yamac';
+  return{on,arka,yamac,duvar:{bati:-(arka.kale1+3),kuzey:arka.karsi+6,guney:-(arka.ana+3.8),dogu:arka.kale2+(yamac?0.5:5.5)}};})();
+/* P2: projektör direkleri tarifte yoksa köşelerde, sahanın köşe çaprazında (js/golgeler.js yüklenirken okur) */
+if(STAT.projektor&&STAT.projektor.tip==='direk'&&!STAT.projektor.konumlar)STAT.projektor.konumlar=[[-57,-39.5],[57,-39.5],[-57,39.5],[57,39.5]];
 const STAT_KAPASITE=STAT.tribunler.reduce((s,t)=>s+tribunOlcu(t).kap,0);
-function tribunYeri(yer){return{ana:{pos:[0,-YAN_MESAFE],rot:0},karsi:{pos:[0,YAN_MESAFE],rot:Math.PI},kale1:{pos:[-KALE_MESAFE,0],rot:Math.PI/2},kale2:{pos:[KALE_MESAFE,0],rot:-Math.PI/2}}[yer];}
+function tribunYeri(yer){const o=STAT_OLCU.on;return{ana:{pos:[0,-o.ana],rot:0},karsi:{pos:[0,o.karsi],rot:Math.PI},kale1:{pos:[-o.kale1,0],rot:Math.PI/2},kale2:{pos:[o.kale2,0],rot:-Math.PI/2}}[yer];}
 /* tribünün en yüksek noktası (stat koordinatında metre): çatı, yoksa en üst sıra; protokol locası yükseltilmişse onun üstü. Balkon bunun üstündedir */
 /* başkan locasının döşeme yüksekliği: balkon döşemesinin (tribün tepesi + 1,8 m) kat metre üstü (js/balkon.js BLK_STAT ile aynı hesap) */
 const locaZemini=t=>tribunTepe('ana')+(t.cati?0.9:1.8)+t.loca.kat;
@@ -92,7 +105,9 @@ function netM(w,h){return LAM({map:tx(NET_CV,'m',[w/0.16,h/0.16]),transparent:tr
 /* maç sahnesinin ürettiği paylaşılan veriler (seyirci, efektler, maç sahnesi, başkan ve arayüz okur) */
 /* YERLER: seyircinin oturabileceği ya da durabileceği her nokta (dünya matrisi, tip, bölüm) */
 const lamps=[],TRIBUNLER={},YERLER=[],flags=[],MESALE_YERLERI=[],TABELA={ciz(){}},KULUBELER=[];
-const TUNEL={x:TUNEL_X,z:-(YAN_MESAFE-2.2)}; // tünel ağzı tribün önünde kısa bir körük
+/* tünel ağzı tribün önünde kısa bir körük. Motor sözleşmesi (P2): ağzın yeri z −39,8'den sahaya yaklaşmaz (eski toprak pistli ölçü; motor
+   oyuncuları buradan çıkarır), tribün daha gerideyse eskisi gibi tribün önünün 2,2 m önünde */
+const TUNEL={x:TUNEL_X,z:-Math.max(39.8,STAT_OLCU.on.ana-2.2)};
 let BASKAN_KOLTUGU=null;
 /* başkan locası ölçüleri (2.8T: locaya giriş js/loca-giris.js okur): zemin yüksekliği, ön kenar z, genişlik, derinlik, arka duvar */
 let LOCA=null;
@@ -106,8 +121,10 @@ function statKur(kok,sec){
   /* ---- reklam panoları (piksel yazı); küçük statta panolar seyrek ---- */
   function board(len,x,z,rot,ofs){const side=LAM({color:0x202226}),t=tx(ADS_CV,'m',[len/64,1]);t.offset.x=ofs||0;const face=BAS({map:t});
     const b=new THREE.Mesh(new THREE.BoxGeometry(len,0.9,0.12),[side,side,side,side,face,side]);b.position.set(x,0.45,z);b.rotation.y=rot;kok.add(b);}
-  if(STAT.reklam>=1&&!TUNEL_X){board(56-KULUBE_BOSLUK,-(56+KULUBE_BOSLUK)/2,-38.2,0);board(56-KULUBE_BOSLUK,(56+KULUBE_BOSLUK)/2,-38.2,0,0.5);board(76,57.8,0,-Math.PI/2);board(76,-57.8,0,Math.PI/2);board(112,0,38.2,Math.PI);}
-  else{let n=0;for(const [len,cx,cz,rot] of[[112,0,-38.2,0],[76,57.8,0,-Math.PI/2],[76,-57.8,0,Math.PI/2],[112,0,38.2,Math.PI]]){
+  /* P2: panolar tribün önlerinin reklamPay önünde; boyları kale arkası ve yan tribünlerin önlerinden */
+  const RO=STAT_OLCU.on,RP=SK.reklamPay,RZa=-(RO.ana-RP),RZk=RO.karsi-RP,RXb=-(RO.kale1-RP),RXd=RO.kale2-RP,RU=2*Math.min(RO.kale1,RO.kale2)-2*RP-2,RK=2*Math.min(RO.ana,RO.karsi)-2*RP-2,RY=RU/2;
+  if(STAT.reklam>=1&&!TUNEL_X){board(RY-KULUBE_BOSLUK,-(RY+KULUBE_BOSLUK)/2,RZa,0);board(RY-KULUBE_BOSLUK,(RY+KULUBE_BOSLUK)/2,RZa,0,0.5);board(RK,RXd,0,-Math.PI/2);board(RK,RXb,0,Math.PI/2);board(RU,0,RZk,Math.PI);}
+  else{let n=0;for(const [len,cx,cz,rot] of[[RU,0,RZa,0],[RK,RXd,0,-Math.PI/2],[RK,RXb,0,Math.PI/2],[RU,0,RZk,Math.PI]]){
     const k=Math.floor(len/8);for(let i=0;i<k;i++){const u=-len/2+4+i*8;if((STAT.reklam<1&&h2(i,n*7+3)>STAT.reklam)||(n===0&&(Math.abs(u)<KULUBE_BOSLUK||Math.abs(u-TUNEL_X)<4)))continue;const c=Math.cos(rot),s=Math.sin(rot);board(8,cx+u*c,cz-u*s,rot,((i+n*3)%8)/8);}n++;}}
 
   /* ---- tribünler: tarifteki her tribün. Basamaklar ve koltuklar burada; seyirciler js/seyirci.js'te koltuk yerlerine oturur (yalnız maçta) ---- */
@@ -118,11 +135,12 @@ function statKur(kok,sec){
     /* basamaklar (set tipinde düz eğimli toprak) */
     if(t.tip==='set'){const sl=Math.hypot(y1-y0,D),pl=new THREE.Mesh(new THREE.PlaneGeometry(L,sl,Math.max(2,Math.round(L/8)),4),LAM({color:SK.set}));
       pl.rotation.x=-(Math.PI/2-Math.atan2(y1-y0,D));pl.position.set(0,(y0+y1)/2,-D/2);g.add(pl);}
-    else{const bm=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),LAM({color:t.tip==='ayakta'?SK.basamak:SK.beton}),t.sira),M=new THREE.Matrix4();
+    else{const yam=t.tip==='yamac',bm=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),LAM({color:t.tip==='ayakta'?SK.basamak:yam?SK.yamac:SK.beton}),t.sira),M=new THREE.Matrix4();
       for(let r=0;r<t.sira;r++){const yr=y0+r*eg;M.makeScale(L,eg,dp).setPosition(0,yr-eg/2,-(r+0.5)*dp);bm.setMatrixAt(r,M);}bm.frustumCulled=false;g.add(bm);
-      box(L,y0,0.4,LAM({color:SK.beton}),0,y0/2,0.2,g);
-      box(L,y1+1,0.6,LAM({color:SK.betonKoyu}),0,(y1+1)/2,-D-0.3,g);
-      for(const sx of[-1,1])box(0.5,y1+1,D,LAM({color:SK.yanDuvar}),sx*(L/2+0.25),(y1+1)/2,-D/2,g);}
+      box(L,y0,0.4,LAM({color:yam?SK.yamacKenar:SK.beton}),0,y0/2,0.2,g);
+      /* P2: yamaç basamaklarının arkası doğrudan kaya (js/stadyum-cevre.js); yanlarda kayadan kesilmiş kenar */
+      if(!yam)box(L,y1+1,0.6,LAM({color:SK.betonKoyu}),0,(y1+1)/2,-D-0.3,g);
+      for(const sx of[-1,1])box(yam?1.2:0.5,y1+(yam?0.3:1),D,LAM({color:yam?SK.yamacKenar:SK.yanDuvar}),sx*(L/2+(yam?0.6:0.25)),(y1+(yam?0.3:1))/2,-D/2,g);}
     if(t.tip==='ayakta')for(let r=3;r<t.sira;r+=3)box(L-1,0.06,0.06,LAM({color:SK.direk}),0,y0+r*eg+1.0,-r*dp,g); // korkuluklar
     if(t.cati){const f=-D*(1-t.cati),b=-D-1,ry=y1+4;
       box(L+4,0.6,f-b,LAM({color:SK.cati}),0,ry,(f+b)/2,g);box(L+4,1,0.8,LAM({color:SK.catiKenar}),0,ry-0.7,f,g);
@@ -135,7 +153,10 @@ function statKur(kok,sec){
     const edges=[...new Set(cuts.flatMap(c=>[c.from,c.to]))].filter(v=>v>=-L/2&&v<=L/2).sort((a,b)=>a-b);
     const koltuklar=[],K=new THREE.Matrix4(),Q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Y.rot),V=new THREE.Vector3(),BIR=new THREE.Vector3(1,1,1);
     const yer=(x,y,z,bolum,r,ek)=>{if(!mac)return;V.set(x,y,z);g.localToWorld(V);YERLER.push({m:new THREE.Matrix4().compose(V.clone(),Q,BIR),tip:t.tip,bolum,r,u:2*x/L,...ek});};
-    edges.forEach((a,i)=>{const b=edges[i+1];if(b==null||b-a<0.01)return;const mid=(a+b)/2;let tr=t.taraftar;for(const c of cuts)if(mid>c.from&&mid<c.to)tr=c.taraftar;
+    edges.forEach((a,i)=>{const b=edges[i+1];if(b==null||b-a<0.01)return;const mid=(a+b)/2;let tr=t.taraftar,du='acik';for(const c of cuts)if(mid>c.from&&mid<c.to){tr=c.taraftar;du=c.durum||'acik';}
+      /* P2: inşaattaki bölümde yer ve koltuk yok (branda ve iskele); kapalı bölüm boş kalır */
+      if(du==='insaat'){insaat(g,a,b,O);return;}
+      if(du==='kapali')tr='bos';
       const bolum={taraftar:tr==='baskan'?t.taraftar:tr,yer:t.yer,kap:Math.floor((b-a)/O.S.kisi)*t.sira};
       for(let r=0;r<t.sira;r++){const yr=y0+r*eg;
         if(tr==='baskan'&&r===bs-1)continue; // geçit
@@ -172,26 +193,35 @@ function statKur(kok,sec){
     if(mac)TRIBUNLER[t.yer]=tribunler[t.yer];
     return g;
   }
+  /* P2: inşaat bölümü (tribün gelişimi maçta görünür): basamakların üstünde branda, önde şeritli bariyer, üstte iskele boruları ve kalaslar
+     (tepeden ızgara gibi okunur), önde malzeme. Renkler STIL.balkon iskelesiyle aynı */
+  function insaat(g,a,b,O){const B=STIL.balkon,w=b-a,cx=(a+b)/2,{D,y0,y1}=O,demir=LAM({color:B.iskele}),branda=LAM({color:B.iskeleBranda,side:THREE.DoubleSide}),serit=LAM({color:B.iskeleSerit}),torba=LAM({color:B.iskeleTorba});
+    const sl=Math.hypot(y1-y0,D),pl=new THREE.Mesh(new THREE.PlaneGeometry(w-0.4,sl),branda);pl.rotation.x=-(Math.PI/2-Math.atan2(y1-y0,D));pl.position.set(cx,(y0+y1)/2+0.35,-D/2);g.add(pl);
+    const yu=y1+1.8;
+    for(let x=a+0.4;x<=b-0.39;x+=2){box(0.1,yu-y0,0.1,demir,x,(y0+yu)/2,-0.3,g);box(0.1,yu-y1,0.1,demir,x,(y1+yu)/2,-D+0.3,g);box(0.3,0.08,D,demir,x,yu,-D/2,g);}
+    for(const z of[-0.3,-D+0.3])box(w-0.6,0.1,0.1,demir,cx,yu,z,g);
+    for(let x=a+0.5,k=0;x<b-0.4;x+=1,k++)box(0.95,0.1,0.06,k%2?serit:demir,x+0.5,0.9,0.9,g);
+    for(let i=0;i<6;i++)box(0.5,0.22,0.34,torba,cx-1.5+(i%3)*0.55,0.11+Math.floor(i/3)*0.22,1.6,g);}
   for(const t of STAT.tribunler)stand(t);
   /* ---- başkan locası (2.8O): ana tribünün arkasındaki kulüp binasında, balkonun bir kat üstünde. Beton döşeme, alçak ön bordür (başkanın
      masası korkuluk işini görür), yan duvarlar ve öndeki iki ayak; başkanın koltuğu ön kenardadır. Kamera buradan bakar. Yalnız maçta kurulur
      (2026-10-03): balkon ve pencere statı ters döndüğünden döşeme odanın içine, baş hizasına düşüyordu ---- */
   {const t=STAT.tribunler.find(x=>x.yer==='ana');
-   if(t&&t.loca&&mac){const L=t.loca,O=tribunOlcu(t),arka=YAN_MESAFE+O.D+0.6,zemin=locaZemini(t),on=-(arka+L.geri)+0.7,W=L.genislik,D=L.derinlik;
+   if(t&&t.loca&&mac){const L=t.loca,O=tribunOlcu(t),arka=STAT_OLCU.arka.ana+0.6,zemin=locaZemini(t),on=-(arka+L.geri)+0.7,W=L.genislik,D=L.derinlik;
      const beton=LAM({color:SK.beton}),koyu=LAM({color:SK.betonKoyu});
      kutu(W+0.4,0.35,D,beton,0,zemin-0.18,on-D/2);kutu(W+0.4,0.22,0.18,koyu,0,zemin+0.11,on);
      for(const sx of[-1,1]){kutu(0.25,2.6,D,koyu,sx*(W/2+0.1),zemin+1.3,on-D/2);kutu(0.5,zemin,0.5,beton,sx*(W/2-0.3),zemin/2,on-0.4);}
      const arkaDuvar=kutu(W,2.8,0.25,koyu,0,zemin+1.4,on-D);
      if(mac)LOCA={zemin,on,W,D,arka:arkaDuvar,beton,koyu};
      if(mac)BASKAN_KOLTUGU=new THREE.Vector3(0,zemin+KOLTUK_YUKSEKLIGI*1.14,on-0.55);}}
-  if(mac&&!BASKAN_KOLTUGU)BASKAN_KOLTUGU=new THREE.Vector3(0,6,-YAN_MESAFE-6);
+  if(mac&&!BASKAN_KOLTUGU)BASKAN_KOLTUGU=new THREE.Vector3(0,6,-STAT_OLCU.on.ana-6);
 
   /* ---- tel örgü ---- */
   function fence(len,x,z,rot){const gr=new THREE.Group();gr.position.set(x,0,z);gr.rotation.y=rot;kok.add(gr);
     const f=new THREE.Mesh(new THREE.PlaneGeometry(len,3,8,1),LAM({map:tx(FENCE_CV,'m',[len/0.4,3/0.4]),transparent:true,depthWrite:false,side:THREE.DoubleSide}));f.position.y=1.5;gr.add(f);
     const pm=LAM({color:0x7a7f86});box(len,0.08,0.08,pm,0,3,0,gr);for(let u=-len/2;u<=len/2+0.1;u+=4)box(0.08,3,0.08,pm,u,1.5,0,gr);}
   for(const yer of STAT.telOrgu){const T=tribunler[yer];if(!T)continue;const Y=tribunYeri(yer),n=[Math.sign(Y.pos[0]),Math.sign(Y.pos[1])];
-    fence(T.t.uzunluk,Y.pos[0]-n[0]*1.4,Y.pos[1]-n[1]*1.4,Y.rot);}
+    fence(T.t.uzunluk,Y.pos[0]-n[0]*SK.telPay,Y.pos[1]-n[1]*SK.telPay,Y.rot);}   /* P2: tribün önünün telPay önünde (panoların arkasında) */
 
   /* ---- taraftar çekirdeği (yalnız maç günü): pankart, bayraklar, meşaleler (tarifte mesale:true olan tribün) ---- */
   {const T=STAT.tribunler.map(t=>tribunler[t.yer]).find(T=>T.t.mesale);
@@ -213,7 +243,7 @@ function statKur(kok,sec){
   /* ---- skor tabelası: tek fiziksel tabela (2.8J). Büyük statta ampullü; kasabada direkler üstünde sade tabela: iki arma, skor ve dakika/durum.
      Başkanın yerine döner, normal bakışta okunur. Maçta TABELA.ciz() yeniden yazar (js/mac-sahnesi.js tabelaGuncelle); balkon ve pencere
      maç dışındadır: tabelada yalnız kulübün arması ve adı durur, hayalî skor gösterilmez ---- */
-  {const T=STAT.tabela,sb=new THREE.Group();sb.position.set(T.konum[0],0,T.konum[1]);sb.rotation.y=Math.atan2(-T.konum[0],-YAN_MESAFE-T.konum[1]);kok.add(sb);
+  {const T=STAT.tabela,sb=new THREE.Group();sb.position.set(T.konum[0],0,T.konum[1]);sb.rotation.y=Math.atan2(-T.konum[0],-STAT_OLCU.on.ana-T.konum[1]);kok.add(sb);
    const lm=LAM({color:0x3a3d42});let ciz;
    if(T.tip==='ampullu'){
     const cv=mk(96,24),g=cv.getContext('2d'),dk=tx(cv,'n');
@@ -241,8 +271,8 @@ function statKur(kok,sec){
 
   /* ---- tünel ağzı ve yedek kulübeleri (ana tribün önünde, orta çizginin iki yanında) ---- */
   {const K=STIL.kulube,duvar=LAM({color:K.duvar}),cam=LAM({color:K.cam,transparent:true,opacity:0.35,depthWrite:false}),ic=BAS({color:0x050507});
-   const L=YAN_MESAFE-(-TUNEL.z),zc=TUNEL.z-L/2;
-   const tx0=TUNEL.x;for(const sx of[-1,1])kutu(0.15,2.3,L,duvar,tx0+sx*1.45,1.15,zc);kutu(3.05,0.12,L,duvar,tx0,2.35,zc);kutu(2.8,2.2,0.05,ic,tx0,1.1,-YAN_MESAFE+0.1);
+   const L=STAT_OLCU.on.ana-(-TUNEL.z),zc=TUNEL.z-L/2;
+   const tx0=TUNEL.x;for(const sx of[-1,1])kutu(0.15,2.3,L,duvar,tx0+sx*1.45,1.15,zc);kutu(3.05,0.12,L,duvar,tx0,2.35,zc);kutu(2.8,2.2,0.05,ic,tx0,1.1,-STAT_OLCU.on.ana+0.1);
    kutu(3.2,0.25,0.2,LAM({color:K.serit}),tx0,2.3,TUNEL.z);
    const KX=STAT.kulubeX||11.5;
    for(const [takim,cx] of[[0,-KX],[1,KX]]){

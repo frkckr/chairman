@@ -288,7 +288,10 @@ const STIL={
   /* Stat yapı malzemeleri (tribün betonu, çatı, direk, toprak pist, set, kötü zemin renkleri) */
   stadyum:{
     beton:0x6d6e72,betonKoyu:0x4d4e53,yanDuvar:0x5a5b60,basamak:0x66665f,set:0x4c5a2c,cati:0x8c9096,catiKenar:0x3c3f44,direk:0x4a4d52,disZemin:0x232428,
-    toprakPist:'#6e4a33',pistsizKenar:'#2a6526',kuruCim:'#8f8a44',camur:'78,56,34'
+    toprakPist:'#6e4a33',pistsizKenar:'#2a6526',kuruCim:'#8f8a44',camur:'78,56,34',
+    /* P2 (2026-10-21 gece): yamaç basamakları ve kenarı (kaya, projektörle aydınlanır); reklamPay/telPay: panoların ve tel örgünün tribün önünden
+       sahaya doğru uzaklığı (m). TEST değerleri */
+    yamac:0x6b6457,yamacKenar:0x57514a,reklamPay:1.2,telPay:0.5
   },
   /* stadın çevresi (N8, js/stadyum-cevre.js): gündüz (balkon, pencere; Lambert ile aydınlanır) ve gece (maç; ışıksız koyu renkler, yanık pencere
      ve lamba). Listelerde renk karmayla seçilir. kaya: Braga esinli yamaç; duvar/kiremit: evler; tente: dükkân tenteleri; tepe: ufuktaki iki sıra.

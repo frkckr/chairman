@@ -705,7 +705,7 @@ async def bolum_15(tarayici, site, tum_hatalar):
     denetle("Tek kulüp stadı ve çatısız: şehir tarifi yok, ?stat=sehir güvenli varsayılana düştü; hiçbir tribünün çatısı yok; balkon aynı kurucuyla, pencere dışarı açık; görünür 'Balkona çık' düğmesi yok",
             stat["tarifler"] == "kulup" and stat["ad"] == "Demirkapı İlçe Stadı" and not stat["secim"] and stat["cati"] == 0 and stat["balkon"] > 10 and stat["pencere"] and stat["yer"] == "masa" and stat["balkonButonu"] is False, str(stat))
     # N8: çevre her cephe ayrı; kulüp binası yalnız maç kurulumunda; tribün girişleri ve çevre kapıları tarifle tutarlı
-    cevre = await pg.evaluate("""() => { const D = [-(KALE_MESAFE + 7), KALE_MESAFE + 5.5], Z = [YAN_MESAFE + 10, -(YAN_MESAFE + 11)];
+    cevre = await pg.evaluate("""() => { const W = scene.userData.duvar, D = [W.bati, W.dogu], Z = [W.kuzey, W.guney];
       const icinde = p => p[0] > D[0] && p[0] < D[1] && p[2] < Z[0] && p[2] > Z[1];
       return { mac: (scene.userData.cevre || []).join(','), balkon: (BALKON.stat.userData.cevre || []).join(','), kapi: KAPILAR.length, tarif: STAT.kapilar.length,
         duvarda: KAPILAR.every(k => D.includes(k.kapi[0]) || Z.includes(k.kapi[1])), icerde: KAPILAR.every(k => icinde(k.giris)),
@@ -810,7 +810,7 @@ async def bolum_15b(tarayici, site, tum_hatalar):
     denetle("N9: seyirci kapıdan girip yerine yürüyor: kimse yerinde belirmiyor (her belirme kapıda ya da giriş ağzında), yolda sıçrama yok, her yürüyen yerine kesintisiz varıyor; havuz taşmıyor; doluluk eğrisi aynı; çıkıştan sonra geç gelenler yürüyor",
             n9["yuruyen"] > 300 and n9["belirme"] == n9["kapida"] and not n9["kotu"] and n9["varis"] == n9["yuruyen"] and n9["enCok"] <= n9["havuz"]
             and n9["egri"] and n9["gec"] > 0 and n9["saat"] == [270.0, 322.0], str({k: v for k, v in n9.items() if k != "kotu"}) + str(n9["kotu"][:3]))
-    k = await pg.evaluate("""() => { const t = STAT.tribunler.find(x => x.yer === 'ana'), O = tribunOlcu(t), arka = YAN_MESAFE + O.D + 0.6;
+    k = await pg.evaluate("""() => { const t = STAT.tribunler.find(x => x.yer === 'ana'), O = tribunOlcu(t), arka = STAT_OLCU.arka.ana + 0.6;
       return { y: +BASKAN_KOLTUGU.y.toFixed(2), beklenen: +(locaZemini(t) + KOLTUK_YUKSEKLIGI * 1.14).toFixed(2), balkon: +(tribunTepe('ana') + 1.8).toFixed(2),
         z: +BASKAN_KOLTUGU.z.toFixed(2), arka: -arka, goz: +(BASKAN_KOLTUGU.y + STIL.kameralar.baskan.goz).toFixed(2), ad: STAT.ad }; }""")
     denetle("Maçta başkan binadaki locada: balkonun bir kat üstünde, ana tribünün arkasında; göz 12–15 m yüksekte; konum tarifin geometrisinden",

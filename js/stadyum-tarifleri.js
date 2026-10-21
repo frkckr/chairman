@@ -8,7 +8,13 @@
    seyrek reklam, alçak projektörler. Çatı, koltuk ve kapsamlı iyileştirmeler yatırımla gelir (8.3); tarif o zaman etap etap değişir.
 
    Tribün yerleri: ana = başkanın oturduğu uzun kenar, karsi = karşı uzun kenar, kale1 = batı kale arkası, kale2 = doğu kale arkası.
-   Tribün tipleri: oturma = koltuklu, ayakta = beton basamak, set = toprak/çim set.
+   Tribün tipleri: oturma = koltuklu, ayakta = beton basamak, set = toprak/çim set, yamac = kayaya oyulmuş ayakta basamaklar (P2: arkası
+     doğrudan kaya yamaç; js/stadyum-cevre.js yamacı terasların hemen arkasından yükseltir).
+   P2 (kullanıcı kararı 2026-10-21 gece; tarif v2): mesafe = çizgiden (taç ya da kale çizgisi) tribünün önüne metre; verilmezse pistli statta
+     8, pistsizde 6. uzunluk tribünün boyu (kompakt kasaba stadında uzun kenarlar tam boy). bolumler[].durum: acik (varsayılan) | kapali
+     (boş bölüm, seyirci oturmaz) | insaat (basamaklar brandayla örtülü, iskele ve bariyer; yer ve kapasite yok). Reklam panoları, tel
+     örgü, çevre duvarı, kapı yolları, tabelanın dönüşü, tünel körüğü ve (verilmezse) projektör direkleri bu ölçülerden türetilir (js/stadyum.js
+     STAT_OLCU). Motorun okuduğu tünel, kulübe ve taraftar noktaları değişmez (TEKNIK_PLAN §8).
    cati: tribünün arkadan ne kadarının örtülü olduğu (0 ya da yok = çatısız, 1 = tamamı). Başlangıç stadında hiçbir tribünün çatısı yoktur.
    taraftar: ev | karisik. bolumler: tribünün bir kısmını başka taraftara ayırır (from/to metre, tribün ortasına göre).
    baskanSira: başkan bölümünün ilk sırası (altında geçit; başkan bölümü 4 sıradır). Altındaki sıralar maçta başkanın önünde görünür.
@@ -38,21 +44,24 @@
 const STADYUMLAR={
   kulup:{
     ad:'Demirkapı İlçe Stadı',lig:'3. Lig',
-    pist:'toprak',zemin:0.22,
+    pist:'yok',zemin:0.22,
     cevre:{
       cepheler:[{yer:'kale2',tip:'yamac',yukseklik:30,basamak:5},{yer:'karsi',tip:'evler',sira:4},{yer:'kale1',tip:'kapi'},{yer:'ana',tip:'kulupBinasi'}],
       ufuk:[{yaricap:205,yukseklik:[17,36]},{yaricap:290,yukseklik:[34,78]}],duvar:2.4
     },
-    kapilar:[{tribun:'ana',u:-0.38},{tribun:'ana',u:0.38},{tribun:'karsi',u:-0.3},{tribun:'karsi',u:0.3},{tribun:'kale1',u:0},{tribun:'kale2',u:0}],
-    projektor:{tip:'direk',konumlar:[[-58,-40],[58,-40],[-58,40],[58,40]],yukseklik:17,guc:0.75},
+    kapilar:[{tribun:'ana',u:-0.38},{tribun:'ana',u:0.38},{tribun:'karsi',u:-0.3},{tribun:'karsi',u:0.3},{tribun:'kale1',u:0},{tribun:'kale2',u:-0.5}],
+    projektor:{tip:'direk',yukseklik:17,guc:0.75},
     reklam:0.32,telOrgu:['karsi','kale1','kale2'],
-    tabela:{tip:'elle',konum:[-20,49],yukseklik:6.5,genislik:13},
-    bakim:{yer:'karsi',u:0.3},tunelX:-19,kulubeX:7,
+    tabela:{tip:'elle',konum:[-20,47],yukseklik:6.5,genislik:13},
+    bakim:{yer:'karsi',u:0.41},tunelX:-19,kulubeX:7,
+    /* P2 (2026-10-21 gece): kompakt kasaba stadı — pist yok, üç tarafta tribün (uzun kenarlar tam boy, çatısız), doğu kale arkası kaya yamaçta
+       ayakta basamaklar (Braga). Ana tribün çizgiye 6,7 m (yedek kulübelerinin arkası), karşı 5, batı kale arkası 5,5, yamaç 6. Karşıda demo
+       inşaat bölümü (tribün gelişimi maçta görünür). TEST değerleri */
     tribunler:[
-      {yer:'ana',tip:'oturma',uzunluk:40,sira:9,koltuk:'#b8b2a4',taraftar:'karisik',baskanSira:5,protokol:1.5,loca:{kat:3.0,geri:6.2,genislik:9,derinlik:4.2}},
-      {yer:'karsi',tip:'ayakta',uzunluk:60,sira:5,taraftar:'ev',mesale:true},
-      {yer:'kale1',tip:'set',uzunluk:34,sira:4,taraftar:'karisik',bolumler:[{from:-17,to:17,taraftar:'deplasman'}]},
-      {yer:'kale2',tip:'set',uzunluk:28,sira:3,taraftar:'karisik'}
+      {yer:'ana',tip:'oturma',mesafe:6.7,uzunluk:100,sira:9,koltuk:'#b8b2a4',taraftar:'karisik',baskanSira:5,protokol:1.5,loca:{kat:3.0,geri:6.2,genislik:9,derinlik:4.2}},
+      {yer:'karsi',tip:'ayakta',mesafe:5,uzunluk:100,sira:7,taraftar:'ev',mesale:true,bolumler:[{from:32,to:50,taraftar:'bos',durum:'insaat'}]},
+      {yer:'kale1',tip:'set',mesafe:5.5,uzunluk:40,sira:4,taraftar:'karisik',bolumler:[{from:-17,to:17,taraftar:'deplasman'}]},
+      {yer:'kale2',tip:'yamac',mesafe:6,uzunluk:44,sira:5,taraftar:'ev'}
     ]
   }
 };

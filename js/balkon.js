@@ -16,7 +16,7 @@ const BALKON={antrenman:false,zaman:0,aktorler:[],kosu:[],rondo:[],sut:[],kaleci
 /* stadın balkona göre yeri (tariften): ana tribünün arka duvarı balkon korkuluğunun hemen önünde, tepesi (protokol locası dahil) balkon döşemesinin altında.
    Stat grubu 180° döndürülür: ana tribün balkon tarafında kalır. [CX, PY, CZ] sahanın ortası; bakış sahanın ortasına */
 const BLK_STAT=(()=>{
-  const t=STAT.tribunler.find(x=>x.yer==='ana'),O=tribunOlcu(t),arka=YAN_MESAFE+O.D+0.6,ust=tribunTepe('ana')+(t.cati?0.3:1.2);
+  const t=STAT.tribunler.find(x=>x.yer==='ana'),O=tribunOlcu(t),arka=STAT_OLCU.arka.ana+0.6,ust=tribunTepe('ana')+(t.cati?0.3:1.2);
   return{CX:0,PY:-(ust+0.6),CZ:BLK.korkulukZ-0.7-arka};
 })();
 BLK.saha=[BLK_STAT.CX,BLK_STAT.PY,BLK_STAT.CZ];
