@@ -1,5 +1,6 @@
-/* ============ Chairman — 2D maç görünümü: pullar (P1, 2026-10-21; DENEME, kullanıcının kararı bekliyor) ============
-   Kullanıcı kararı (2026-10-21 akşam): maç FM 2D gibi tepeden izlenir — başkanın loca bakışı ve ön planı (masa, eller) maçta kalkar, kamera tepeden
+/* ============ Chairman — 2D maç görünümü: pullar (P1 2026-10-21 akşam; P2 2026-10-21 gece: karar kesin, 2D varsayılan) ============
+   Kullanıcı kararı (2026-10-21 gece, kesin): maç FM 2D gibi tepeden izlenir; figürlü motor antrenman sahneleri içindir. Başkanın loca bakışı
+   ve ön planı (masa, eller) maçta kalkar, locaya giriş sahnesi atlanır (js/loca-giris.js tepeAnBaslat), kamera tepeden
    bakar (js/kamera.js tepeKamera), stat, tribünler, reklamlar ve dumanlar 3B olarak çevrede kalır. Sahadaki her insan (oyuncu, kaleci, hakemler,
    kulübedeki yedekler, kenar personeli, top toplayıcılar) aynı numaralı pul olarak çizilir: üst yüzde forma rengi, forma süsünün renginde kenar
    halkası ve numara, önde gövde yönünü gösteren iki ayak çizgisi. Boy, saç, yapı ayrımı yoktur; ayrım yalnız renk ve numaradır.
@@ -7,15 +8,13 @@
    bağlı kart, bayrak, defter ve sprey görünsün diye — r128'de görünmez kök çocuklarını da gizler) ve insan gölgeleri kapanır (js/golgeler.js
    GOLGE.insanGizli). Her pul kendi modelinin kökünü izler: tünel, kulübe, sağlıkçı gizleme ve yedeğin eşofman/forma geçişi aynen.
    Çizim motoru yalnız okur (TEKNIK_PLAN §8); bu dosya rastlantı çağırmaz. Ayarlar STIL.pul (js/stil-99.js).
-   Açma: Ayarlar > Maç > 2D maç görünümü (OYUN.ayarlar.pul), maçta G tuşu, adres ?pul=1 (?pul=0 ayarı ezer). Maçta Z tuşu yakınlığı değiştirir
-   (?tepeSeviye=0|1|2). Karşılaştırma için ?tepe=0 pulları loca bakışında gösterir (?pulEgim=0..1, ?pulEnAz=2..20); arayüzde yoktur. */
+   2D varsayılandır. Loca bakışı yalnız geliştirme ve araçlar için (TEST): Ayarlar > Geliştirici > "Maçta loca bakışı" (OYUN.ayarlar.locaBakisi),
+   maçta G tuşu, adres ?pul=0 (figürlü loca bakışı; animasyon araçları bunu kullanır) ya da ?pul=1 (2D; ayarı ezer). Maçta Z tuşu yakınlığı
+   değiştirir (?tepeSeviye=0|1|2); ?pulEnAz=2..20 pulun en küçük ekran yarıçapı (deneme). */
 const PUL_PARAM=(()=>{try{const v=new URLSearchParams(location.search).get('pul');return v==='1'?true:v==='0'?false:null;}catch(e){return null;}})();
-const PUL_EGIM_PARAM=(()=>{try{const v=parseFloat(new URLSearchParams(location.search).get('pulEgim'));return isFinite(v)?clamp(v,0,1):null;}catch(e){return null;}})();
 const PUL_ENAZ_PARAM=(()=>{try{const v=parseFloat(new URLSearchParams(location.search).get('pulEnAz'));return isFinite(v)?clamp(v,2,20):null;}catch(e){return null;}})();
-const PUL_TEPE_PARAM=(()=>{try{return new URLSearchParams(location.search).get('tepe')!=='0';}catch(e){return true;}})();
 const PUL_SEVIYE_PARAM=(()=>{try{const v=parseInt(new URLSearchParams(location.search).get('tepeSeviye'),10);return v>=0&&v<=2?v:null;}catch(e){return null;}})();
-const PUL={acik:false,tepe:true,seviye:1,liste:[],geo:null,ayakGeo:null,golgeGeo:null,golgeMat:null,parlak:null,egim:0.5,enAz:6,
-  UP:new THREE.Vector3(0,1,0),V:new THREE.Vector3(),N:new THREE.Vector3()};
+const PUL={acik:false,seviye:1,liste:[],geo:null,ayakGeo:null,golgeGeo:null,golgeMat:null,parlak:null,enAz:6,stat:null};
 /* modelin doku atlasındaki düz renk karesinden renk (js/oyuncular.js atlasCiz: forma 0. kare (4,36), süs 7. kare (60,36)); kaleci, hakem, eşofman,
    kenar personeli ve top toplayıcı renkleri böylece kendiliğinden doğru gelir */
 function pulAtlasRenk(m,x,y){try{const d=m.mesh.material.map.image.getContext('2d').getImageData(x,y,1,1).data;
@@ -46,32 +45,26 @@ function pulKur(){const S=STIL.pul;PUL.stat=pulStatKur();pulTopKur();
   PUL.geo=new THREE.CylinderGeometry(1,1,1,16,1);PUL.ayakGeo=new THREE.BoxGeometry(1,1,1);PUL.golgeGeo=new THREE.CircleGeometry(1,16);
   PUL.golgeMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:S.golge,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
   PUL.parlak=BAS({color:S.ayak.parlak});
-  PUL.egim=PUL_EGIM_PARAM!=null?PUL_EGIM_PARAM:S.egim;PUL.enAz=PUL_ENAZ_PARAM!=null?PUL_ENAZ_PARAM:S.enAzPx;
-  PUL.tepe=PUL_TEPE_PARAM;PUL.seviye=PUL_SEVIYE_PARAM!=null?PUL_SEVIYE_PARAM:S.tepe.seviye;
+  PUL.enAz=PUL_ENAZ_PARAM!=null?PUL_ENAZ_PARAM:S.enAzPx;PUL.seviye=PUL_SEVIYE_PARAM!=null?PUL_SEVIYE_PARAM:S.tepe.seviye;
   for(const a of AKTORLER){pulEkle(a,a.m);if(a.esofman)pulEkle(a,a.esofman);}}
 /* 2D görünüm açık mı (tepeden kamera; js/kamera.js ve js/arayuz.js okur) */
-function pulTepe(){return PUL.acik&&PUL.tepe;}
+function pulTepe(){return PUL.acik;}
 /* aç / kapa (canlı): insan malzemeleri, insan gölgeleri ve pullar */
 function pulUygula(acik){PUL.acik=!!acik;GOLGE.insanGizli=PUL.acik;GOLGE.topGizli=pulTepe();
   for(const a of AKTORLER)for(const m of[a.m,a.esofman])if(m&&m.mesh&&m.mesh.material)m.mesh.material.visible=!PUL.acik;
-  if(!PUL.acik)for(const E of PUL.liste){E.root.visible=false;E.golge.visible=false;}
-  if(STIL.pul.topUstte&&typeof topMesh!=='undefined'){topMesh.material.depthTest=!PUL.acik;topMesh.renderOrder=PUL.acik?3:0;}}
+  if(!PUL.acik)for(const E of PUL.liste){E.root.visible=false;E.golge.visible=false;}}
 /* her kare (js/mac-sahnesi.js macKare; aktörlerin kökleri kesinleştikten sonra) */
 function pulKare(dts){if(!PUL.acik)return;
-  const S=STIL.pul,A=S.ayak,T=S.tepe,tepe=PUL.tepe,cp=camera.position,tf=Math.tan(camera.fov*Math.PI/360),t=mac.t,D=STIL.animasyon.dusus.aci,V=PUL.V,N=PUL.N;
+  const S=STIL.pul,A=S.ayak,T=S.tepe,cp=camera.position,tf=Math.tan(camera.fov*Math.PI/360),t=mac.t,D=STIL.animasyon.dusus.aci;
   for(const E of PUL.liste){const a=E.a,m=E.m,p=a.kaynak,gor=m.root.visible&&!!m.root.parent;E.root.visible=gor;E.golge.visible=gor;if(!gor)continue;
     /* yatan oyuncu: pul yere yatar ve kararır (a.lth: çizimin yatış açısı) */
     const yat=m===a.m?clamp(a.lth/D,0,1):0,x=a.x,z=a.z;
     const y=p.oturuyor?S.oturmaY:Math.max(0,m.root.position.y-0.16*yat);
-    /* eğim: pulun yüzü yerden kameraya doğru (yatarken düz; tepeden hep düz); en küçük ekran boyu için ölçek (tepeden ayrıca yaricapKat);
-       eğik pulun yakın kenarı çime girmesin diye kaldırma */
-    V.set(cp.x-x,cp.y-y,cp.z-z);const d=Math.max(1,V.length());V.multiplyScalar(1/d);
-    const eg=tepe?0:PUL.egim*(1-yat);N.copy(PUL.UP).multiplyScalar(1-eg).addScaledVector(V,eg).normalize();
-    E.root.quaternion.setFromUnitVectors(PUL.UP,N);
-    const kat=tepe?T.yaricapKat:1,px=E.r*kat*(RH/2)/(d*tf),s=kat*clamp(PUL.enAz/Math.max(0.01,px),1,S.enCokKat);E.root.scale.setScalar(s);
-    E.root.position.set(x,y+E.r*s*Math.sqrt(Math.max(0,1-N.y*N.y)),z);
-    /* numara ekranda dik: dokunun üstü (yerel +x) kameradan uzağa; tepeden ekranın üstü dünya +z (js/kamera.js tepeKamera: kameranın üstü +z) */
-    E.disk.rotation.y=tepe?-Math.PI/2:S.sayiKameraya&&(V.x*V.x+V.z*V.z)>1e-6?Math.atan2(V.z,-V.x):0;
+    /* boy: tepeden yaricapKat, uzakta en küçük ekran boyu; pul düz yatar */
+    const d=Math.max(1,Math.hypot(cp.x-x,cp.y-y,cp.z-z)),kat=T.yaricapKat,px=E.r*kat*(RH/2)/(d*tf),s=kat*clamp(PUL.enAz/Math.max(0.01,px),1,S.enCokKat);
+    E.root.scale.setScalar(s);E.root.position.set(x,y,z);
+    /* numara ekranda dik: dokunun üstü (yerel +x) ekranın üstüne, dünya +z'ye (js/kamera.js tepeKamera: kameranın üstü +z) */
+    E.disk.rotation.y=-Math.PI/2;
     /* ayaklar: gövde yönü (çizimin yumuşatılmış açısı), adım salınımı çizimin adım evresinden (a.ph), genlik hızla */
     E.ayak.rotation.y=a.yaw;
     const spd=p.oturuyor?0:(p.spd||0);E.amp+=(clamp(spd/1.2,0,1)-E.amp)*Math.min(1,dts*8);
@@ -85,7 +78,7 @@ function pulKare(dts){if(!PUL.acik)return;
     E.aL.scale.set(A.en*kL,0.03,A.boy*kL);E.aR.scale.set(A.en*kR,0.03,A.boy*kR);
     /* kararma ve yerdeki leke (havadayken yerde kalır: yükseklik ipucu) */
     const dim=1-S.yatDim*yat;E.ustMat.color.setScalar(dim);E.yanMat.color.copy(E.yan0).multiplyScalar(dim);
-    const gk=tepe?s:0;E.golge.position.set(x+T.golgeKay[0]*gk,0.025,z+T.golgeKay[1]*gk);E.golge.scale.setScalar(E.r*s*1.05);}}
+    E.golge.position.set(x+T.golgeKay[0]*s,0.025,z+T.golgeKay[1]*s);E.golge.scale.setScalar(E.r*s*1.05);}}
 /* ---- P2: 2D'de topun yüksekliği ve yolu (kullanıcı: "topun havada olduğu anlaşılmıyor"; FM27 de topa güçlü gölge verdi) ----
    Boy: top havada STIL.pul.top.yukseklik payı kadar büyür (tepe m'de tam). Gölge: kendi yumuşak diski; yükseldikçe ekranda sağ-aşağı kayar,
    büyür ve solar (projektör gölgeleri 2D'de kapalı: GOLGE.topGizli). İz: hızlı ya da havadaki topun ardında kısa, sönen noktalar (eğri pas
@@ -130,10 +123,10 @@ function pulTopKare(acik){const P=PUL_TOP,T=STIL.pul.top,t=topMesh,b=mac.ball;
        P.inisVar=tt<4;P.inis.position.set(K.x,0.04,K.z-MOTOR_Z);}
      P.inis.visible=P.inisVar;if(P.inisVar){const r=N.yaricap*(1+0.12*Math.sin(zaman*9));P.inis.scale.set(r,r,1);}}
    else P.inis.visible=false;}}
-/* maçta G tuşu (görünüm; D eski dürbünündü ve akış denemesi §17 onun etkisizliğini sınar): 2D görünümü aç / kapa (ayara yazılır); Z tuşu: 2D'de yakınlık seviyesi (yakın, orta, bütün stat).
+/* maçta G tuşu (görünüm; TEST — D eski dürbünündü ve akış denemesi §17 onun etkisizliğini sınar): 2D ↔ loca bakışı (OYUN.ayarlar.locaBakisi) (ayara yazılır); Z tuşu: 2D'de yakınlık seviyesi (yakın, orta, bütün stat).
    Yazı alanında, oda açıkken ve değiştirici tuşla çalışmaz */
 addEventListener('keydown',e=>{if((e.code!=='KeyG'&&e.code!=='KeyZ')||e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;
   if(t==='INPUT'||t==='TEXTAREA')return;if(typeof ON_EKRAN!=='undefined'&&ON_EKRAN.sayfa==='oda')return;
   if(e.code==='KeyZ'){if(pulTepe())PUL.seviye=(PUL.seviye+1)%STIL.pul.tepe.genislik.length;return;}
-  pulUygula(!PUL.acik);if(typeof OYUN!=='undefined'&&OYUN.ayarlar){OYUN.ayarlar.pul=PUL.acik;OYUN.ayarlar.kaydet();}});
-pulKur();pulUygula(PUL_PARAM!=null?PUL_PARAM:!!(OYUN.ayarlar&&OYUN.ayarlar.pul));
+  pulUygula(!PUL.acik);if(typeof OYUN!=='undefined'&&OYUN.ayarlar){OYUN.ayarlar.locaBakisi=!PUL.acik;OYUN.ayarlar.kaydet();}});
+pulKur();pulUygula(PUL_PARAM!=null?PUL_PARAM:!(OYUN.ayarlar&&OYUN.ayarlar.locaBakisi));

@@ -132,7 +132,7 @@ function lgKisilerKare(dt){
 /* ---- karar anı (N12) ---- */
 function lgKararAni(){
   const G=LOCA_GIRIS,kayit=KARAR_ANLARI.rakipTokalasma;if(!kayit||MAC_PROTOKOL.karar){lgKararBitti(null);return;}
-  const rakip=(typeof LIG!=='undefined'&&(LIG.takimlar.find(t=>t.id===LIG.buMac.konuk)||{}).ad)||'Rakip kulüp';
+  const rakip=lgRakipKulup();
   lgRakipEvre('el');baskanEylem('tokalasAn',9);
   kararAniAc(kayit,{kim:kayit.kim({rakipKulup:rakip}),bitince:lgKararBitti});
 }
@@ -144,6 +144,25 @@ function lgKararBitti(secim){
   const e=BASKAN.eylem;if(e&&e.ad==='tokalasAn')e.t=Math.max(e.t,G.tepki==='karsilik'?6.8:7.4);
   lgRakipEvre('tepki');G.evre='tepki';G.tl=0;
 }
+/* ---- P2 (kullanıcı kararı 2026-10-21 gece): 2D maçta locaya giriş sahnesi atlanır ----
+   Maç öncesi ekranından doğrudan tepeden stat (js/ekran-mac-oncesi.js ilerle). Rakip başkan varsa (yerinde ya da sonra fark etmez)
+   STIL.locaGiris.tepeGecikme sn sonra karar anı 2D'nin üstünde kart olarak açılır (js/ekran-an.js; tokalaşma görseli yoktur). Seçim
+   MAC_PROTOKOL.karar'a yazılır; açıkken ON_EKRAN.sayfa 'loca' (masadaki telefon kapalı). "Santraya geç" karar anı bitene dek bekler.
+   Loca bakışında (TEST, ?pul=0) eski giriş aynen çalışır (locaGirisBaslat) */
+const TEPE_AN={aktif:false,bekle:0,acildi:false};
+function lgRakipKulup(){return(typeof LIG!=='undefined'&&(LIG.takimlar.find(t=>t.id===LIG.buMac.konuk)||{}).ad)||'Rakip kulüp';}
+function tepeAnBaslat(){
+  MAC_PROTOKOL.rakipBaskan=MAC_PROTOKOL.rakipBaskan||rakipBaskanDurumu();
+  if(MAC_PROTOKOL.rakipBaskan==='yok'||MAC_PROTOKOL.karar||!KARAR_ANLARI.rakipTokalasma)return;
+  Object.assign(TEPE_AN,{aktif:true,bekle:LG.tepeGecikme,acildi:false});ON_EKRAN.sayfa='loca';}
+function tepeAnKare(dt){const T=TEPE_AN;
+  if(!T.acildi){T.bekle-=dt;if(T.bekle>0)return;T.acildi=true;const kayit=KARAR_ANLARI.rakipTokalasma;
+    kararAniAc(kayit,{kim:kayit.kim({rakipKulup:lgRakipKulup()}),bitince:tepeAnBitti});}
+  if(KARAR_ANI.acik)kararAniKare(dt);}
+function tepeAnBitti(secim){
+  if(secim)MAC_PROTOKOL.karar={id:'rakipTokalasma',secim,an:typeof mac!=='undefined'?+mac.sen.t.toFixed(2):null};
+  TEPE_AN.aktif=false;if(ON_EKRAN.sayfa==='loca')ON_EKRAN.sayfa=null;
+  const G=LOCA_GIRIS;if(G.atlamaBekliyor){G.atlamaBekliyor=false;if(G.atla)G.atla();}}
 /* ---- varış ---- */
 function locaGirisBaslat(){
   if(!LOCA||!BASKAN_KOLTUGU)return;
@@ -176,6 +195,7 @@ function lgKarartma(){
 }
 function locaGirisKare(dt){
   const G=LOCA_GIRIS;
+  if(TEPE_AN.aktif){tepeAnKare(dt);return;}   /* P2: 2D'de karar anı */
   if(!G.aktif){
     /* sonra gelecek rakip başkan: başkan oturduktan bir süre sonra (takımlar ısınmaya çıkmadan) */
     if(G.kuruldu&&MAC_PROTOKOL.rakipBaskan==='sonra'&&!G.selamYapildi&&G.oturdu!==null&&typeof mac!=='undefined'){
@@ -276,6 +296,7 @@ addEventListener('keydown',e=>{if(e.code==='Escape'&&LOCA_GIRIS.aktif){e.prevent
 /* “Santraya geç”: karar anı ya da karşılanacak rakip başkan varsa ertelenir; o an bitince yapılır */
 {const eski=btnMacaGec.onclick;LOCA_GIRIS.atla=eski;
  btnMacaGec.onclick=()=>{const G=LOCA_GIRIS,bekleyen=MAC_PROTOKOL.rakipBaskan&&MAC_PROTOKOL.rakipBaskan!=='yok'&&!MAC_PROTOKOL.karar;
+   if(TEPE_AN.aktif){G.atlamaBekliyor=true;TEPE_AN.bekle=0;return;}   /* P2: 2D'de karar anı hemen açılır, ardından santraya geçilir */
    if(!bekleyen){locaGirisBitir();eski();return;}
    G.atlamaBekliyor=true;
    if(G.aktif){if(G.mod==='giris'&&MAC_PROTOKOL.rakipBaskan==='yerinde'){if(!['el','tepki'].includes(G.evre))lgElAtla();}

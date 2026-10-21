@@ -111,8 +111,10 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
   duraklatmaDinle(()=>{if(P.acik)hazirlikYaz();});
   /* Maça geç: program kapanır, başkan düğmeleri görünür, maç günü baştan başlar */
   /* 2.8T: ardından başkan merdivenden locaya çıkar, rakip başkanla tokalaşır ve oturur (js/loca-giris.js; atlanabilir) */
+  /* P2 (kullanıcı kararı 2026-10-21 gece): 2D maçta locaya giriş atlanır, doğrudan tepeden stat; rakip başkanın karar anı 2D üstünde (tepeAnBaslat) */
   function ilerle(){if(ON_EKRAN.sayfa!=='bulten'||btnIlerle.disabled)return;P.acik=false;ON_EKRAN.acik=false;ON_EKRAN.sayfa=null;E.hidden=true;baskanDugmeleri.hidden=false;
-    if(typeof locaGirisBaslat==='function')locaGirisBaslat();}
+    if(typeof pulTepe==='function'&&pulTepe()){if(typeof tepeAnBaslat==='function')tepeAnBaslat();}
+    else if(typeof locaGirisBaslat==='function')locaGirisBaslat();}
   btnIlerle.onclick=ilerle;
   /* N3: süre koşulunu tamamlanmış sayar; kaynak hazırlığı ve Duraklat yine beklenir (hazirlikYaz geçirir) */
   btnAtla.onclick=()=>{if(ON_EKRAN.sayfa!=='bulten'||btnAtla.disabled)return;P.atla=true;P.gecen=Math.max(P.gecen,STIL.program.hazirlikSn);hazirlikYaz();};

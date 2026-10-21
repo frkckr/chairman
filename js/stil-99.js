@@ -249,7 +249,7 @@ const STIL={
      loca kişileriyle aynı insan ölçeği); kalabalik: önde iki yönetici (x), arkada basamak (ön kenardan uzaklık, yükseklik) ve konuklar (x);
      sonra: rakip başkan sonra gelirse başkan oturduktan kaç sn sonra (aralık; takımlar ısınmaya çıkmadan, senaryo sn sinir'den önce).
      TEST değerleri */
-  locaGiris:{aci:46,acilisAci:58,elAci:42,goz:1.62,kapi:{x:-3.0,en:1.0,boy:2.15},merdiven:{basamak:8,yukseklik:0.17,derinlik:0.3,sahanlik:1.4},
+  locaGiris:{tepeGecikme:2,aci:46,acilisAci:58,elAci:42,goz:1.62,kapi:{x:-3.0,en:1.0,boy:2.15},merdiven:{basamak:8,yukseklik:0.17,derinlik:0.3,sahanlik:1.4},
     dis:6.5,yol:{hiz:1.3,viraj:0.4,ivme:1.0,merdivenHiz:0.62},
     sure:{acilis:1.6,bekle:1.2,kesmeKarar:0.8,kesmeSiyah:0.25,kesmeAc:0.45,kalk:1.3,tepki:1.5,geri:1.0,otur:2.2,raf:0.5,selamKalk:1.6},
     rakip:{x:1.5,mesafe:1.35,gorunus:{ten:2,sac:'kisa',sacRenk:'#8a8680',biyik:true,boy:1.0,yapi:1.0}},
@@ -440,14 +440,13 @@ const STIL={
      yerden bu kadar (m) yükselince). parlama: oyuncu dokusunun kendi renginden ışıma payı (gece ışığında koyu leke olmasınlar).
      disCizgi: oyuncu ve topun çevresinde 1 piksellik koyu çizgi denemesi (karşılaştırma için; varsayılan kapalı). TEST değerleri */
   okunurluk:{cizgi:{acik:true,genislik:1,opak:0.7,parlaklik:1,y:0.02},topEnAz:4.5,topEnCok:3,topLeke:{opak:0.5,boy:2.2,yukseklik:0.3},parlama:0.12,disCizgi:false},
-  /* P1 (2026-10-21, kullanıcı kararı; DENEME, karar bekliyor): pul görünümü (js/pul.js) — maçta sahadaki her insan aynı numaralı pul olarak çizilir
-     (FM 2D gibi; boy, saç, yapı ayrımı yok). Açma: Ayarlar > Maç > 2D maç görünümü, maçta G tuşu ya da adres ?pul=1 (?pulEgim=0..1, ?pulEnAz=2..20 ile
-     deneme). yaricap/yukseklik: pulun boyu (m). egim: pulun yüzü yerden kameraya ne kadar döner (0 düz yatar, 1 kameraya bakar). enAzPx: pulun ekrandaki
+  /* P1 (2026-10-21 akşam), P2 (2026-10-21 gece; kullanıcı kararı kesin): 2D maç görünümü (js/pul.js) — maçta sahadaki her insan aynı numaralı pul
+     olarak çizilir (FM 2D gibi; boy, saç, yapı ayrımı yok). 2D varsayılandır; loca bakışı TEST (Ayarlar > Geliştirici, G tuşu, ?pul=0).
+     yaricap/yukseklik: pulun boyu (m). enAzPx: pulun ekrandaki
      en küçük yarıçapı (960 ızgara pikseli; uzakta büyütülür, en çok enCokKat). doku: üst yüzün piksel boyu; sayiOlcek: numaranın piksel ölçeği; halka: kenar
      halkasının kalınlığı (doku pikseli). yanKoyu: yan yüzün forma rengine oranı. yatDim: yatan oyuncunun kararma payı. oturmaY: kulübede oturanın pul
      yüksekliği (m). topcuOran: top toplayıcı pulunun oranı. golge: pulun altındaki koyu lekenin opaklığı (havadayken yerde kalır: yükseklik ipucu).
-     ayak: iki ayak çizgisi (en, boy, yandan uzaklık, on: merkezin pul kenarından öne taşması, adım salınımı m; parlak: vuran ayağın rengi). sayiKameraya: numara ekranda dik durur.
-     topUstte: top pulların önünde çizilir (eğik pul topu örterse; varsayılan kapalı).
+     ayak: iki ayak çizgisi (en, boy, yandan uzaklık, on: merkezin pul kenarından öne taşması, adım salınımı m; parlak: vuran ayağın rengi).
      tepe (kullanıcı kararı, 2026-10-21 akşam): 2D maç görünümü — başkanın loca bakışı yerine FM gibi tepeden bakan kamera (js/kamera.js tepeKamera);
      pullar düz yatar. yukseklik: kameranın yerden yüksekliği (m). genislik: yakınlık seviyelerinde ekranda görünen dikey uzunluk (m; Z tuşu sırayla
      değiştirir); maç öncesinde bütün stat (P2: tribün arkalarından türetilir, js/pul.js PUL.stat). seviye: açılıştaki seviye. takip: topu izlemenin
@@ -457,8 +456,8 @@ const STIL={
      gölgesi yükseldikçe ekranda sağ-aşağı kayar (kay m / m yükseklik, enCok m'ye dek; taban yerdeki kayma), büyür ve solar; hızlı ya da havadaki
      topun ardında kısa iz (sayi örnek, aralik sn, sure sn ömür, hiz m/sn ve y m eşikleri, boy topun yarıçapına oran: baş, son; parlak: izin
      parlaklığı); havadaki topun ineceği yerde halka (inis). TEST değerleri */
-  pul:{yaricap:0.5,yukseklik:0.12,egim:0.5,enAzPx:6,enCokKat:3,doku:32,sayiOlcek:3,halka:2.5,yanKoyu:0.55,yatDim:0.4,oturmaY:0.55,topcuOran:0.75,golge:0.3,
-    ayak:{en:0.12,boy:0.24,yan:0.2,on:0.02,adim:0.1,parlak:'#ffb530'},sayiKameraya:true,topUstte:false,
+  pul:{yaricap:0.5,yukseklik:0.12,enAzPx:6,enCokKat:3,doku:32,sayiOlcek:3,halka:2.5,yanKoyu:0.55,yatDim:0.4,oturmaY:0.55,topcuOran:0.75,golge:0.3,
+    ayak:{en:0.12,boy:0.24,yan:0.2,on:0.02,adim:0.1,parlak:'#ffb530'},
     tepe:{yukseklik:110,genislik:[34,46,70],seviye:1,takip:0.35,yakinlik:0.6,kenar:3,yaricapKat:1.7,golgeKay:[-0.14,-0.14]},
     top:{kat:2.0,yukseklik:0.6,tepe:6,golge:{opak:0.45,boy:1.6,kay:[-0.35,-0.35],enCok:4,taban:0.1},
       iz:{sayi:24,aralik:0.05,sure:0.6,hiz:9,y:0.4,boy:[0.85,0.3],parlak:0.65},inis:{acik:true,yaricap:0.9,opak:0.5}}}

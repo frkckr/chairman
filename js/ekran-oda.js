@@ -256,9 +256,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ayarBolum==='mac'){const h=[1,2,4].includes(ayarlar.macHizi)?ayarlar.macHizi:1;
       ic+='<div class="od-ayarSatir"><span>Maç hızı</span><span class="od-dugmeler">'+[1,2,4].map(v=>'<button type="button" data-eylem="macHizi" data-hiz="'+v+'" aria-pressed="'+(h===v?'true':'false')+'">×'+v+'</button>').join('')+'</span></div>'+
         '<div class="od-ayarSatir"><span>Önemli anlarda normal hız</span>'+ac('otoYavas',ayarlar.otoYavas!==false)+'</div>'+
-        '<div class="od-ayarSatir"><span>2D maç görünümü (deneme)</span>'+ac('pul',!!ayarlar.pul)+'</div>'+
-        '<p class="od-not">Maç 20 dakika sürer; ×2 ve ×4 ile hızlı izlersin. Gol, şut, faul ve kart, sakatlık, korner, tehlikeli serbest vuruş ve ofsaytta maç birkaç saniye önce normal hıza iner, an geçince seçtiğin hıza döner. Maçta 1, 2 ve 4 tuşlarıyla da seçilir; maçın sonucu hızdan etkilenmez.</p>'+
-        '<p class="od-not">2D maç görünümünde maç tepeden izlenir, oyuncular numaralı pullardır. Maçta G tuşu görünümü değiştirir, Z tuşu yakınlaştırır.</p>';}
+        '<p class="od-not">Maç 20 dakika sürer; ×2 ve ×4 ile hızlı izlersin. Gol, şut, faul ve kart, sakatlık, korner, tehlikeli serbest vuruş ve ofsaytta maç birkaç saniye önce normal hıza iner, an geçince seçtiğin hıza döner. Maçta 1, 2 ve 4 tuşlarıyla da seçilir; maçın sonucu hızdan etkilenmez. Maç tepeden izlenir; Z tuşu yakınlaştırır ve uzaklaştırır.</p>';}
     else if(ayarBolum==='kayit')ic+='<div class="od-ayarSatir"><span>Kayıt durumu</span><span class="'+(oyun.kayitHata()?'od-uyari':'')+'">'+yaz(oyun.kayitYazi())+'</span></div>'+
       '<p class="od-not">Oyun her tamamlanan karardan sonra kendiliğinden kaydeder. Maçın ortasından kayıt yoktur.</p>'+
       '<div class="od-dugmeler"><button type="button" data-eylem="kayitDene">Şimdi yeniden kaydet</button></div>'+
@@ -266,6 +264,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
         :'<button type="button" data-eylem="yeniSor">Yeni kariyer…</button>')+'</span></div>';
     else ic+='<p class="od-not">Geliştirme aşamasının araçları; yayından önce kaldırılacak.</p>'+
       '<div class="od-ayarSatir"><span>Test bilgileri</span>'+ac('test',!!ayarlar.test)+'</div>'+
+      '<div class="od-ayarSatir"><span>Maçta loca bakışı (TEST)</span>'+ac('locaBakisi',!!ayarlar.locaBakisi)+'</div>'+
+      '<p class="od-not">Maç tepeden 2D izlenir. Açıkken maç eski figürlü loca bakışıyla açılır (geliştirme için); maçta G tuşu da değiştirir.</p>'+
       '<p class="od-not">Açıkken ilgili satırlarda küçük TEST simgesi belirir: yönetici katkıları, gizli koşullar, seçeneklerin sonucu ve futbolcu özellikleri.</p>'+
       '<div class="od-dugmeler">'+(testAcik()?'<button type="button" data-eylem="ac" data-panel="kadro">Kadro (TEST) ▸</button>':'')+
         '<button type="button" data-eylem="goruntu">Görüntüyü kaydet</button></div>'+
@@ -540,7 +540,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='yazi'){ayarlar.yazi=b.dataset.yazi;ayarlar.kaydet();ciz('[data-eylem="yazi"][data-yazi="'+ayarlar.yazi+'"]');}
     /* U1: maç hızı ve önemli anlarda normal hız (js/arayuz.js izlemeHizSec ve MAC_HIZ aynı seçimi okur) */
     else if(ey==='macHizi'){ayarlar.macHizi=Number(b.dataset.hiz);ayarlar.kaydet();if(typeof izlemeHizSec==='function')izlemeHizSec(ayarlar.macHizi,false);ciz('[data-eylem="macHizi"][data-hiz="'+ayarlar.macHizi+'"]');}
-    else if(ey==='pul'){ayarlar.pul=!ayarlar.pul;ayarlar.kaydet();if(typeof pulUygula==='function')pulUygula(ayarlar.pul);ciz('[data-eylem="pul"]');}   /* P1 (deneme) */
+    else if(ey==='locaBakisi'){ayarlar.locaBakisi=!ayarlar.locaBakisi;ayarlar.kaydet();if(typeof pulUygula==='function')pulUygula(!ayarlar.locaBakisi);ciz('[data-eylem="locaBakisi"]');}   /* P2 (TEST) */
     else if(ey==='otoYavas'){ayarlar.otoYavas=ayarlar.otoYavas===false;ayarlar.kaydet();if(typeof MAC_HIZ!=='undefined')MAC_HIZ.oto=ayarlar.otoYavas;ciz('[data-eylem="otoYavas"]');}
     else if(ey==='yeniSor'){yeniOnay=true;ciz('[data-eylem="yeniHayir"]');}
     else if(ey==='yeniHayir'){yeniOnay=false;ciz();}
