@@ -1,0 +1,3 @@
+# araclar/plan — tur uygulama planları
+
+2026-10-20 oto mod oturumunda (dizüstü) K1, S1, V1, A10 ve A11 için tasarım ajanlarının çıkardığı planlar; uygulayıcı ajanlar bunları alt adım alt adım uyguladı. Belge değildir: kullanıcı onaylı program ve kararlar FUTBOL_KUTUPHANESI §12.13, tur sonuçları §12.14'ten itibaren. Her `<tur>-uygulama.md` dosyasının başında o günkü durum (yapılan ve kalan alt adımlar, dal, taban) yazar; `<tur>-tasarim.json` alan tasarımlarının ham çıktısıdır (ölçümler, prototip notları). Tur kapanınca planı ARSIV'e taşımak ya da silmek serbesttir (Git'te kalır). `claude/motor-t24` dalındaki T24–T27 planları aynı klasördedir (askıda, §12.3).
