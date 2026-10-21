@@ -199,7 +199,29 @@ const STIL={
       /* A7b: top sürme — adım boyu çarpanı, koşu eğimine ek (rad), kol salınımından düşülen pay */
       surus:{adim:0.8,egim:0.06,kol:0.3},
       /* A7c: dolu vuruşta geri salınım, takip ve destek dizi veriden (0: eski) */
-      vurus:1}
+      vurus:1},
+    /* A11 (2026-10-20; FUTBOL_KUTUPHANESI §12.13, kutuphane/J J.6, J.7 D5/D7): düşüşler ve temas — acik 0'da A11 öncesi (K1) çizimi birebir (A11 yolunda rastlantı yok).
+       A11c, temas katmanı I (js/animasyon.js anmDengeAdim, anmDengeUygula, anmDengeDarbe): gövde çerçevesinde üç sönümlü yay — kuvvet basamağı f += ΔΩ/τ (rad/sn; f τ ile
+       söner), yarı örtük Euler (anmAltAdim). denge: bütün beden itilme yönüne yatar (leğen legen, gövde govde payı; baş basDuz payıyla dik kalır; diz bükülmesi diz),
+       w ω (oyuncuya göre × 1 ± kim), z sönüm, tau, tavan (rad, tanh); sendele girişi ΔΩ = sendele[0] + sendele[1]·h (h: görsel hassasiyet, hassas katsayıları —
+       g, hız, rakibin açısı, top sahipliği, dayanıklılık); takılma ve kaymada takilmaHiz'dan hızlıyken yön koşu + takilmaItme·itilme. darbe: temasın yüksekliğine
+       (yuk: tür → boy oranı; top için gerçek yükseklik) göre leğen / gövde / baş bantları (agirlik: [tepe, merkez, genişlik] Gauss; gövde bandı gövdenin leğene göre
+       sarsılmasıdır — D7'nin görünür tepkisi) ve iki burulma (leğen, gövde; yükseklikle paylaşılır), w, z, tau, tavan [leğen, gövde, baş], basGecik başın gövdeye göre
+       gecikmesi; girdiler: sendele[0] + sendele[1]·h; çarpışma, omuz ve tutmada dv (m/sn): dvA·(1 − e^(−(dv − dv0)/dvS)) (A11c kalibrasyonu, plan 1,8·(dv − 0,25):
+       dv 0,5'te gövde ~0,4° kalıyordu, görünür tepki kapısı 3 cm), denge dvDenge·(dv − dv0) (tavan dvDengeTavan), burulma burulma·(teğetsel bağıl hız) (tavan);
+       dv'siz dengeBoz'da kayip ≥ kayip0 iken kayipDarbe·h ve kayipDenge·h; top (gelen bağıl hız v): bacakta (< 0,45 boy) yalnız leğen burulması bacak·v, gövdede
+       govde·(1 − e^(−(v − esik)/govdeS)), başta bas·v (en çok dvA), v ≥ denge[0]'da denge denge[1]·v, burulma·v·yanal sapma. kol: kollar dengeye açılır
+       (talep 0,65·|b|/0,3 + 0,35·|ḃ|/3, kritik sönümlü w; ac yana, uzak yan uzak kadar fazla, one öne, dirsek açılması). sonme kilitli eylemde sönme (1/sn),
+       birikim 'darbe' olayının en çok bekleyeceği süre (sn; görünmez aktör). Değerler TEST başlangıcıdır */
+    a11:{acik:1,hassas:[0.45,0.2,0.15,0.1,0.1],
+      yuk:{carpisma:0.55,omuz:0.8,tutma:0.8,itme:0.8,faul:0.5,mudahale:0.5,hava:0.6,takilma:0.3,bacak:0.3,kayma:0.3,gecilme:0.3,ikili:0.3,aldatma:0.5},
+      agirlik:{P:[0.4,0.5,0.18],T:[1,0.75,0.3],H:[1,0.92,0.1]},
+      denge:{w:6,z:0.7,tau:0.06,tavan:0.45,kim:0.1,legen:0.45,govde:0.55,basDuz:0.5,diz:0.06,sendele:[2,4.5],takilmaHiz:2,takilmaItme:0.3,hava:1.5},
+      darbe:{w:15,z:0.45,tau:0.04,tavan:[0.2,0.35,0.45],basGecik:0.35,sendele:[1.5,2.5],dv0:0.25,dvA:6,dvS:0.33,dvDenge:0.5,dvDengeTavan:3,burulma:0.3,burulmaTavan:2,
+        kayip0:0.05,kayipDarbe:3.5,kayipDenge:1.5,legenBurul:0.3,basBurul:0.5},
+      kol:{w:14,ac:1.1,uzak:0.5,one:0.7,dirsek:0.35},
+      top:{esik:8,govde:6,govdeS:8.75,bas:0.25,bacak:0.04,burulma:0.08,denge:[25,0.05]},
+      sonme:12,birikim:0.2}
   },
 
 
