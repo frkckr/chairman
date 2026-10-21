@@ -267,7 +267,7 @@ function aktorKur(K,kaynak,boy){
     P,C,sw:new Float32Array(N),swV:new Float32Array(N),st:new Float32Array(N),sp:new Array(N).fill(null),faz0:rnd()*6.283,
     /* yürüyüş: dünya hızı/ivmesi, gövdeye göre hareket yönü, ayak hedefleri (x,y,z ×2), kalça/baş dönüşü, tavır parametreleri */
     wvx:0,wvz:0,awx:0,awz:0,awxV:0,awzV:0,mX:0,mZ:1,sapma:0,W:new Float32Array(4),D:new Float32Array(4),anc:new Uint8Array(2),yawO:0,don:0,donY:0,yonM:null,cadS:0,fr:0,dn:0,ayakYaw:null,T:new Float32Array([-0.1,-0.034,0.025,0.1,-0.034,0.025]),qA:new Float32Array(2),beta:0.6,dyR:0,dyV:0,hy:0,hyV:0,hyT:0,hyTV:0,by:0,byV:0,byH:0,kim:null,
-    gDrop:0,gGen:0,gAdim:1,gHy:0,gKal:1,kalS:new Float32Array(2),tvSon:null,jYan:1,bekP:null,yEk:0,kucuk:false,phItme:0,phItmeV:0,dokT:-1,dokSon:undefined,dokSurum:-1,dokP:null,dokDon:false,dokCal:false,dokKoru:false,dokS:ANM.dokunus,dokAyak:-1,dokSal:false,bjwO:0,blkW:0,blkI:-1,blkT:null,blkE:null,blkP:null,egW:0,egWk:0,egWkV:0,egVa:0,egVaV:0,ctSag:null,
+    gDrop:0,gGen:0,gAdim:1,gHy:0,gKal:1,kalS:new Float32Array(2),tvSon:null,jYan:1,bekP:null,bekW:1,yEk:0,kucuk:false,phItme:0,phItmeV:0,dokT:-1,dokSon:undefined,dokSurum:-1,dokP:null,dokDon:false,dokCal:false,dokKoru:false,dokS:ANM.dokunus,dokAyak:-1,dokSal:false,bjwO:0,blkW:0,blkI:-1,blkT:null,blkE:null,blkP:null,egW:0,egWk:0,egWkV:0,egVa:0,egVaV:0,ctSag:null,
     /* T4g: çalım, aldatılan savunmacı ve top saklama katmanının durumu (anmCalimDurum) */
     ck:anmCkYeni(),
     /* eylem: son görülen eylem nesnesi ve başında seçilenler */
@@ -419,7 +419,7 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
   /* ağırlık ~0,15 sn'lik yayla izlenir: yön değişince eski ve veri pozu arasında (özellikle dirsekte ~50°) sıçramasın */
   /* tavırlarda (top saklama, jokey, bekletme, kalecinin hazır duruşu) yavaş ve düzensiz adım kendi yolunda kalır: veri yolu A6a'nın top saklama ayarını
      bozuyordu (--koru 30: kayma %14,2 → 24,9, salınımdaki ayak yere sürtüyordu) */
-  if(egAcik&&dt>0){const hW=wF*clamp((v-0.4)/0.5,0,1)*(1-piv)*(p&&p.tavir?0:1);a.egW+=(hW-a.egW)*Math.min(1,dt*7);
+  if(egAcik&&dt>0){const hW=wF*clamp((v-0.4)/0.5,0,1)*(1-piv)*(p&&p.tavir?(p.tavir==='bekle'?1-a.bekW:0):1);   /* K1h: bekletmede pozun bıraktığı pay veri yolunda */a.egW+=(hW-a.egW)*Math.min(1,dt*7);
     /* A9 (kolYay): kolların veri ağırlığı (a.egWk) aynı hedefi kritik sönümlü yayla izler (ω rad/sn; hızı sürekli) — birinci derecede hedef sıçrayınca (tavır,
        yerinde dönüşün piv'i) ağırlığın hızı ilk karede birden değişiyor, eski ve veri kolunun farkıyla (dirsekte ~50°) kol karede 0,06 rad'dan çok kırılıyordu;
        bacaklar, eğim ve leğen eski ağırlıkta kalır (ayak yolu değişmez); 0: kollar da eski ağırlıkta */
@@ -633,6 +633,10 @@ function anmBekleyis(a,p,dt,duruyor){
 const ANM_HKY_KANAL=[...new Set(Object.keys(ANM_POZ.hkBekle).concat(Object.keys(ANM_POZ.belde)))];
 function anmHkYorgunPoz(a,w){const P=a.hkYP||(a.hkYP={}),A=ANM_POZ.hkBekle,B=ANM_POZ.belde;for(const k of ANM_HKY_KANAL)P[k]=(A[k]||0)*(1-w)+(B[k]||0)*w;return P;}
 /* ---- tavır (sözleşme: p.tavir) → yürüyüş parametreleri ve üst gövde ---- */
+/* K1h (2026-10-20; kullanıcı notu 7 "topla giderken ayağı havada kaldı ve ~2 sn o şekilde topla çizgi şeklinde kaydı"): bekletme pozunun (ANM_POZ.bekle: iki
+   bacağı da tutar) ağırlığı — çizilen hızdan (a.wvx/a.wvz: anmYuruyus'un yumuşatılmış hızı, önceki kare) ANM.bekleHiz[0] m/sn'ye dek 1, [1]'de 0 (yumuşak geçiş;
+   yuvanın yayı da yumuşatır). Ayağı topun üstünde tutmak yalnız yavaşken; ANM.bekleHiz null: eski (hızdan bağımsız 1) */
+function anmBekleW(a){const B=ANM.bekleHiz;if(!B)return 1;return 1-anmYumus((Math.sqrt(a.wvx*a.wvx+a.wvz*a.wvz)-B[0])/(B[1]-B[0]));}
 function anmTavir(a,p,dt){
   let drop=0,gen=0,adim=1,hyE=0,yanA=false,kalK=1;
   if(p&&p.tur==='oyuncu'){const tv=p.tavir,b=mac.ball,st=a.st,sp=a.sp,S=ANM_S;
@@ -655,7 +659,10 @@ function anmTavir(a,p,dt){
     else if(tv==='jokey'){st[S.jokey]=1;sp[S.jokey]=ANM_POZ.jokey;drop=0.12;gen=0.07;adim=0.65;hyE=-0.35*a.jYan;}
     /* T4g top saklama: rakibin yanı her karede (anmKoru); iki yuva (sağ/sol) çapraz geçer; alçak, geniş, kısa adım */
     else if(tv==='koru'){anmKoru(a,p,dt);const sg=a.ck.korSag;st[S.koru]=sg?1:0;sp[S.koru]=ANM_POZ.koru;st[S.koruS]=sg?0:1;sp[S.koruS]=aynala(ANM_POZ.koru);drop=0.1;gen=0.12;adim=0.7;}
-    else if(tv==='bekle'){st[S.bekle]=1;sp[S.bekle]=a.bekP||ANM_POZ.bekle;adim=0.7;}
+    /* K1h (2026-10-20; kullanıcı notu 7): bekletme pozu iki bacağı da tutar (taban topun üstünde, destek bacağı dik); ağırlığı çizilen hızdan (anmBekleW) —
+       motor tavrı 4–7 m/sn'den yavaşlarken de verir: tam ağırlıkta ayak top hizasında havada kalıyor, destek ayağı ve gövde topla kayıyordu. Kalan payı adım
+       döngüsü alır (bacak IK'sı, adım boyu; veri eğrisi anmYuruyus'ta a.bekW ile) */
+    else if(tv==='bekle'){const wb=a.bekW=anmBekleW(a);st[S.bekle]=wb;sp[S.bekle]=a.bekP||ANM_POZ.bekle;adim=lerp(1,0.7,wb);}
     /* Z2e: duran top sahnesinin rolleri (anmZ2Rol): 1 yatan barajcı, 2 taç markajı (jokey gibi alçak, geniş, kısa adım; kalça topun yanına açık), 3 taç perdesi */
     const z2r=anmZ2Rol(a,p,dt);if(z2r===2){drop=0.12;gen=0.07;adim=0.65;hyE=-0.35*a.z2.tmYan;}else if(z2r===3)gen=0.08;
     /* T2 taşıma: topu süren oyuncu (eylemsiz, tavırsız) koşarken hafif öne eğik, kollar dengede (hızla artar) */
@@ -1301,7 +1308,7 @@ function anmCalimDurum(a,p,dt){
     if(mek==='aldat'){wA=anmYumus(f/0.2)*(1-anmYumus((f-0.55)/0.35));wB=0.55*anmYumus((f-0.5)/0.5);if(f>0.6)ck.sAcik=false;}
     else if(mek==='sut'){wA=0.9*anmYumus(f/0.45)*(1-anmYumus((f-0.6)/0.3));wB=0.5*anmYumus((f-0.6)/0.4);if(f>0.5)ck.sAcik=false;}
     else if(mek==='rulet'){wA=anmYumus(f/0.15)*(1-anmYumus((f-0.85)/0.15));wB=0.4*anmYumus((f-0.75)/0.25);}
-    else if(mek==='dur'){wA=0.85*anmYumus(f/0.25)*(1-anmYumus((f-0.8)/0.2));wB=0.6*anmYumus((f-0.75)/0.25);}
+    else if(mek==='dur'){wA=0.85*anmYumus(f/0.25)*(1-anmYumus((f-0.8)/0.2))*anmBekleW(a);wB=0.6*anmYumus((f-0.75)/0.25);}   /* K1h: bekletme pozu hızdan (anmBekleW) */
     else if(mek==='tempo'){wA=0.8*anmYumus(f/0.3)*(1-anmYumus((f-0.7)/0.3));wB=0.6*anmYumus((f-0.65)/0.35);}
     else if(mek==='kesme'){wA=0.9*anmYumus(f/0.3);wB=0.5*anmYumus((f-0.6)/0.4);}
     else wB=0.6*anmYumus(f/0.8);}
