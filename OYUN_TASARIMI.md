@@ -351,6 +351,8 @@ Okuma süresi, flaş ve sarsıntı için erişilebilirlik seçenekleri planlanı
 
 ## 11. Maçlar, mekânlar ve kulübün büyümesi
 
+**P2 (kullanıcı kararı, 2026-10-21 gece; kesin):** maç FM gibi tepeden 2D izlenir; oyuncular sade numaralı pullardır, topun havada olduğu gölge, boy ve izle okunur. Başkanın maçtaki yeri (başkan bölümü, rakip başkan, karar anı) içerik olarak sürer ama görüntü locadan değildir: locaya giriş sahnesi şimdilik atlanır, rakip başkanın karar anı 2D üstünde kart olarak gelir. Kulübün kimliği statın tepeden görüntüsüdür: başlangıçta kompakt kasaba stadı (üç tarafta uzun tribün, bir kale arkası kaya yamaç); tribünlerin gelişimi (kapanan bölüm, inşaat) maçta görünür; başka kulüplerin statları aynı modelden üretilir, büyük kulübün statı tepeden de büyük ve dolu görünür. Figürlü insan modeli antrenman ve kişi sahneleri içindir. Bu bölümdeki loca ve bakış cümleleri maçın izlenme biçimi bakımından tarihseldir. Ayrıntı [kutuphane/M](kutuphane/M-pul-gorunumu.md), [STIL_REHBERI §5–§6](STIL_REHBERI.md).
+
 Maçlar karakterin bulunduğu yerden izlenir. Görevdeyken ev sahibi veya deplasman başkan bölümündesin; yanında yöneticiler ve rakip başkan bulunabilir. İlişkiler selamlaşma, oturma düzeni, kısa konuşma ve katılmama gibi ayrıntılara yansır. Görev dışında farklı izleme konumu kullanılır.
 
 Az sayıda anlamlı mekân zaman içinde değişir: kulüp odası, görüşme alanı, basın alanı, antrenman ve stat. Eski personel, fotoğraflar, kupalar ve nesneler yaşanan geçmişi görünür kılar. Gerektikçe yeni mekân eklenir; her konuşma için ayrı mekân yapılmaz.

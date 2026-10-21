@@ -146,7 +146,7 @@ async function sahneKur(){
   const OS=$('onceSurum').value;$('onceAd').textContent=ONCE_AD[OS]||OS;
   if(!ONCE_KAYNAK[OS]){try{const r=await fetch('karsilastir/'+OS+'/animasyon.js',{cache:'no-store'});if(!r.ok)throw new Error(r.status);ONCE_KAYNAK[OS]=await r.text();}
     catch(e){durum('Dondurulmuş animasyon okunamadı (karsilastir/'+OS+'/animasyon.js; yerel sunucu gerekir: python -m http.server 8765).',true);return;}}
-  const adres='../index.html?ekran=mac&tohum='+TOHUM+'&k='+Date.now();
+  const adres='../index.html?ekran=mac&pul=0&tohum='+TOHUM+'&k='+Date.now();   /* P2: maç 2D varsayılan; karşılaştırma figürlü loca bakışıyla */
   const yk=[yuklendi(F.once),yuklendi(F.simdi)];F.once.src=adres;F.simdi.src=adres;await Promise.all(yk);
   if(no!==kurulum)return;
   if(!Y.once||!Y.simdi){durum('Çerçeveler kancayı çağırmadı (js/ortak.js) ya da sayfa farklı kökenden açıldı.',true);return;}

@@ -1,5 +1,7 @@
 # P2 — 2D maç kesinleşti: kompakt kasaba stadı, 2D ölçek ve top ipuçları, falso, akış ve temizlik (2026-10-21 gece, dizüstü)
 
+**Durum (2026-10-21 gece):** P2-0, P2-A–P2-H ve P2-J yapıldı (commit'ler 4a1bd93, 51ba201, c7594f5, 6536436 ve kapanış), P2-I (demo büyük tarif) yapılmadı. §6'daki akış denemesi 2D bloğu yerine ayrı araç `araclar/akis-2d.py`; akış denemesi bütünüyle `?pul=0`. Kullanıcı isteğiyle `main`'e alındı (`tur/p2`); gece listesi YOL_HARITASI devam notunda ve FUTBOL_KUTUPHANESI §12.18'de.
+
 ## Bağlam
 
 - **Karar (kullanıcı, 2026-10-21 gece, kesin):** maç 2D tepeden izlenir; figürlü motor antrenman sahneleri içindir. Bu tur kararın gerektirdiği düzenleme ve temizliği yapar, görüntüyü kullanıcının istediği yöne çeker. **Görsel turdur:** adım sonlarında yalnız hızlı denetimler; 40/80 maçlık karşılaştırmalar, bütün senaryolar ve tam akış denemesi **gece oturumuna** ertelenir (liste aşağıda). Kullanıcı görüntüyü izleyip yeniden not verir.

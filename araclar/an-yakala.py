@@ -230,7 +230,9 @@ async def yakala(tarayici, site, ad, kosul, sonra, on, a):
     hatalar = []
     pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
     pg.on("console", lambda m: hatalar.append("Konsol: " + m.text) if m.type == "error" and "Failed to load resource" not in m.text else None)
-    await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}" + (a.ek or ""))
+    # P2 (2026-10-21 gece): maç 2D varsayılan; animasyon anları figürlü loca bakışıyla (?pul=0), --2d tepeden pullu görünüm (--ek'te pul= varsa o geçer)
+    pul = "" if (a.ek and "pul=" in a.ek) else ("&pul=1" if a.iki_d else "&pul=0")
+    await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}" + pul + (a.ek or ""))
     await pg.wait_for_selector("#btnMacaGec", timeout=30000)
     await pg.evaluate("__kare(2)")
     if a.anm != "simdi":
@@ -292,6 +294,7 @@ async def ana():
     ap.add_argument("--oncesi", action="store_true")
     ap.add_argument("--giris", action="store_true")
     ap.add_argument("--ek")
+    ap.add_argument("--2d", dest="iki_d", action="store_true")
     ap.add_argument("--anm", choices=sorted(d.name for d in KARSILASTIR.iterdir() if (d / "animasyon.js").is_file()) + ["simdi"], default="simdi")
     a = ap.parse_args()
     try:

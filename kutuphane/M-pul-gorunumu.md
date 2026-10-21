@@ -1,4 +1,4 @@
-# M — 2D maç görünümü ve pullar (P1 denemesi, 2026-10-21)
+# M — 2D maç görünümü ve pullar (P1 denemesi 2026-10-21 akşam; P2 kararı 2026-10-21 gece)
 
 Bu bölüm maçı FM'deki gibi tepeden 2D izleme denemesinin bilgi tabanıdır: neden düşünüldü, araştırma ne dedi, bugün ne uygulandı ve neyin açık karar olduğu. Kural değildir. Yön kararı kullanıcınındır; kullanıcı denemeyi izleyip "2D mi, figür mü, karma mı" diye karar verir. Program ve tur sırası [YOL_HARITASI](../YOL_HARITASI.md), turun sonucu [FUTBOL_KUTUPHANESI §12.17](../FUTBOL_KUTUPHANESI.md#1217-p1--2d-maç-görünümü-denemesi-2026-10-21-akşam-dizüstü-dal-claudemotor-p1).
 
@@ -20,7 +20,9 @@ Bu bölüm maçı FM'deki gibi tepeden 2D izleme denemesinin bilgi tabanıdır: 
 
 **Teknik ipuçları (kaynaklı).** Yükseklik için gölge ayrılması ana ipucudur, top en çok ~1,5 kat büyür; uzak pullar için ekranda en küçük boy; yön için çentik ya da ayak; sürüşte top ayağa yapışmaz (Kick Off öğretisi); izleme verisi görselleştirmelerinde (SkillCorner, Metrica, mplsoccer) top taşıyan ayrı renk ve kısa iz.
 
-## M.3 Bugünkü uygulama (P1, deneme)
+**P2 (kullanıcı kararı, 2026-10-21 gece, kesin):** maç 2D izlenir; figürlü motor antrenman içindir. Aşağıdaki M.3 P1'in kaydıdır; bugünkü uygulama M.5'te.
+
+## M.3 P1 denemesinin uygulaması (2026-10-21 akşam; tarihsel)
 
 - **Açma:** Ayarlar > Maç > "2D maç görünümü (deneme)", maçta G tuşu, adres `?pul=1` (`?pul=0` ayarı ezer). Z tuşu yakınlık (yakın 40 m, orta 60 m, bütün stat 100 m; `?tepeSeviye=0|1|2`). Maç öncesinde kendiliğinden bütün stat görünür.
 - **Kamera** (`js/kamera.js` `tepeKamera`): 110 m yukarıdan dik aşağı, saha yatay, ana tribün altta (locadakiyle aynı sol–sağ). Kamera topu yumuşakça izler, statın dışına taşmaz. Başkanın ön planı (masa, eller) çizilmez. Locaya giriş sahnesi şimdilik aynen.
@@ -35,6 +37,16 @@ Bu bölüm maçı FM'deki gibi tepeden 2D izleme denemesinin bilgi tabanıdır: 
 - **Pul dili:** olay işaretleri (kart, sakatlık, değişiklik simgeleri), top taşıyanın ad etiketi, kısa top izi, gol sonrası ve seremoni sahnelerinin tepeden okunuşu, kalabalık kutuda pul boyu.
 - **Locaya giriş ve karar anı:** 2D'de locaya giriş ve rakip başkanla karar anı ayrı tasarlanır (bugün giriş birinci şahıs, sonra tepeye geçilir).
 - **Hız:** pullarda figür animasyonu gereksizdir; kalıcı karar sonrası çizimden çıkarılırsa çizim süresi düşer (bugün çalışmaya devam ediyor).
+
+## M.5 Bugünkü uygulama (P2, 2026-10-21 gece)
+
+- **Görünüm:** 2D varsayılan. Kamera 110 m'den dik aşağı, saha yatay, ana tribün altta; üç yakınlık (dikey 34, 46, 70 m; Z tuşu), maç öncesinde bütün stat; kamera statın sınırında kalır (tribün arkalarından türetilir). Loca bakışı TEST: Ayarlar > Geliştirici "Maçta loca bakışı (TEST)", maçta G tuşu, `?pul=0`.
+- **Pullar:** 1,7 kat (orta seviyede çap ~27 px), numara 32 piksellik dokuda 3 kat, ayaklar çizgi, vuran ayak amber, yatan oyuncu düz ve koyu.
+- **Top:** 2 kat boy, havada büyür; yumuşak gölgesi yükseldikçe sağ-aşağı kayar ve solar; ardında sönen iz (eğri görünür); havadaki topun ineceği yerde halka; projektör top gölgeleri kapalı.
+- **Stat:** kompakt kasaba stadı — üç tarafta uzun, çatısız tribün; doğu kale arkasında kayaya oyulmuş ayakta teraslar ve yamaç; karşıda demo inşaat bölümü. Tarif v2 (mesafe, uzunluk, sıra, bölüm durumu, tip yamac) başka kulüplerin statları ve tribün gelişimi içindir.
+- **Falso:** `pasEgriKat` 1,6 (gece dengesi bekliyor).
+- **Akış:** locaya giriş şimdilik atlanır; rakip başkanın karar anı 2D üstünde kart.
+- Sonuç ve denetimler [FUTBOL_KUTUPHANESI §12.18](../FUTBOL_KUTUPHANESI.md#1218-p2--2d-maç-kesinleşti-kompakt-kasaba-stadı-2d-ölçek-ve-top-ipuçları-falso-akış-2026-10-21-gece-dizüstü-dal-claudemotor-p1).
 
 ## Kaynaklar — M
 

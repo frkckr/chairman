@@ -116,7 +116,7 @@ async def sayfa_ac(tarayici, site, sorgu, bekle, tohum):
     hatalar = []
     pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
     pg.on("console", lambda m: hatalar.append("Konsol: " + m.text) if m.type == "error" and "Failed to load resource" not in m.text else None)
-    await pg.goto((site / "index.html").as_uri() + sorgu)
+    await pg.goto((site / "index.html").as_uri() + sorgu + ("&" if "?" in sorgu else "?") + "pul=0")   # P2: çizim sayıları önceki tabanlarla aynı görünümde
     await pg.wait_for_selector(bekle, timeout=30000)
     await pg.evaluate("__kare(3)")
     return pg, hatalar

@@ -1236,7 +1236,8 @@ async def olc(a):
             pg = await baglam.new_page()
             pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
             pg.on("console", lambda m: hatalar.append("Konsol: " + m.text) if m.type == "error" and "Failed to load resource" not in m.text else None)
-            await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}" + (a.ek or ""))
+            # P2: maç 2D varsayılan; ölçüm figürlü loca bakışıyla (iskelet ve kamera s1-anm.json ile aynı)
+            await pg.goto((site / "index.html").as_uri() + f"?ekran=mac&tohum={a.tohum}" + ("" if (a.ek and "pul=" in a.ek) else "&pul=0") + (a.ek or ""))
             await pg.wait_for_selector("#btnMacaGec", timeout=30000)
             await pg.evaluate("__kare(2)")
             if a.ayar:

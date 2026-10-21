@@ -70,6 +70,13 @@ async def durum(pg):
     return await pg.evaluate(DURUM_JS)
 
 
+def loca(sorgu):
+    """P2 (2026-10-21 gece): maç 2D varsayılan; bu aracın denetimleri figürlü loca bakışını varsayar → ?pul=0 (2D akışı: araclar/akis-2d.py)"""
+    if "pul=" in sorgu:
+        return sorgu
+    return sorgu + ("&" if "?" in sorgu else "?") + "pul=0"
+
+
 async def sayfa(tarayici, site, sorgu, bekle, ad="index.html"):
     baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
     pg = await baglam.new_page()
@@ -77,7 +84,7 @@ async def sayfa(tarayici, site, sorgu, bekle, ad="index.html"):
     pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
     pg.on("console", lambda m: hatalar.append("Konsol: " + m.text)
           if m.type == "error" and "Failed to load resource" not in m.text else None)
-    await pg.goto((site / ad).as_uri() + sorgu)
+    await pg.goto((site / ad).as_uri() + (loca(sorgu) if ad == "index.html" else sorgu))
     await pg.wait_for_selector(bekle, timeout=20000)
     return pg, hatalar
 
@@ -182,7 +189,7 @@ async def bolum_2(tarayici, site, tum_hatalar):
     pg = await baglam.new_page()
     hatalar = []
     pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
-    await pg.goto((site / "index.html").as_uri())
+    await pg.goto((site / "index.html").as_uri() + loca(""))
     await pg.wait_for_selector(".od-bozuk", timeout=20000)
     yazi = await pg.text_content(".od-bozuk")
     denetle("Eski kayıt: 'Kayıt açılamadı' ve nedeni (eski sürüm, içerik kaldırıldı); kayda dokunulmadı",
@@ -572,7 +579,7 @@ async def bolum_14(tarayici, site, tum_hatalar):
             son["sayfa"] is None and son["masa"] and son["d"] < 0.6 and son["faz"] == "isinma" and son["kar"] == 0, str(son))
     await pg.screenshot(path=str(ARAC / "son-akis-14-loca.png"))
     await pg.set_viewport_size({"width": 900, "height": 800})
-    await pg.goto((site / "index.html").as_uri() + "?ekran=bulten")
+    await pg.goto((site / "index.html").as_uri() + loca("?ekran=bulten"))
     await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle")
     tasma = await pg.evaluate("() => { const g = document.querySelector('.prg-kart'); return [g.scrollWidth - g.clientWidth, document.getElementById('onEkran').scrollHeight - document.getElementById('onEkran').clientHeight]; }")
     denetle("Dar pencerede maç öncesi ekranında taşma yok", all(t <= 0 for t in tasma), str(tasma))
@@ -990,7 +997,7 @@ async def bolum_17(tarayici, site, tum_hatalar):
     hatalar = []
     pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
     pg.on("console", lambda m: hatalar.append("Konsol: " + m.text) if m.type == "error" and "Failed to load resource" not in m.text else None)
-    await pg.goto((site / "index.html").as_uri() + "?ekran=mac&tohum=5")
+    await pg.goto((site / "index.html").as_uri() + loca("?ekran=mac&tohum=5"))
     await pg.wait_for_selector("#btnMacaGec", timeout=30000)
     await pg.evaluate("__kare(2)")
     cizim = await pg.evaluate("({ rt: [rt.width, rt.height], tuval: [renderer.domElement.width, renderer.domElement.height], ic: [RW, RH], ornek: STIL.ekran.ornekleme, hud: !!document.getElementById('hud'), ikinciHedef: typeof rtMac !== 'undefined' })")
@@ -1078,7 +1085,7 @@ async def bolum_18(tarayici, site, tum_hatalar):
     hatalar = []
     pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
     pg.on("console", lambda m: hatalar.append("Konsol: " + m.text) if (m.type == "error" or m.type == "warning" and "İzleme" in m.text) and "Failed to load resource" not in m.text else None)
-    await pg.goto((site / "index.html").as_uri() + "?ekran=mac&tohum=3")
+    await pg.goto((site / "index.html").as_uri() + loca("?ekran=mac&tohum=3"))
     await pg.wait_for_selector("#btnMacaGec", timeout=30000)
     await pg.evaluate("__kare(2)")
     await pg.click("#btnMacaGec")
@@ -1119,7 +1126,7 @@ async def bolum_11(tarayici, site, tum_hatalar):
     pg = await baglam.new_page()
     hatalar = []
     pg.on("pageerror", lambda e: hatalar.append("Betik hatası: " + str(e)))
-    await pg.goto((site / "index.html").as_uri() + "?dunya=7")
+    await pg.goto((site / "index.html").as_uri() + loca("?dunya=7"))
     await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=20000)
     cerceve = await pg.evaluate("""() => ({ ust: !!document.querySelector('header.top, .rules, .pal, .radyo, #radyoMetin, #radyoSkor'),
       gelistirici: !!document.querySelector('details.gelistirici:not([open]) #hizSeg'), santra: (document.getElementById('btnMacaGec') || {}).textContent,
@@ -1139,7 +1146,7 @@ async def bolum_11(tarayici, site, tum_hatalar):
     ses = await pg.evaluate("({ sayac: window.__sesSayaci, tanim: ['sesCal', 'sesBaslat', 'sesOrtam', 'sesAyarla', 'SES'].filter(a => a in window), cay: typeof BK_CAY !== 'undefined' || typeof BK_BUHAR !== 'undefined', soyle: typeof soyle !== 'undefined' })")
     denetle("Ses yok: paneller ve balkon sonrası ses bağlamı kurulmadı, ses işlevleri tanımsız, ayarlarda Ses ya da Hareket bölümü yok; çay ve spiker işlevi yok",
             ses["sayac"] == 0 and not ses["tanim"] and not ses["cay"] and not ses["soyle"] and "Ses" not in ayar_yazi and "Hareket" not in ayar_yazi, str(ses))
-    await pg.goto((site / "index.html").as_uri() + "?ekran=mac&hiz=16&tohum=3")
+    await pg.goto((site / "index.html").as_uri() + loca("?ekran=mac&hiz=16&tohum=3"))
     await pg.wait_for_timeout(1500)
     await pg.click("#btnMacaGec")
     await pg.wait_for_timeout(8000)
