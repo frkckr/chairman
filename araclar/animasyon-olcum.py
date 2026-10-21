@@ -31,6 +31,9 @@ hızlı 5–7 · depar ≥ 7 m/sn. "Eylemsiz": oyuncunun eylemi yok (vuruş, kon
   kurtarış       (T9b-e) elle temasın motor adımında çizilen eldivenin topa açıklığı; dalış evresi; yana adım; kapanma türleri
   vuruş stili    (T9b-e) temasta çizimin pozu motorun stiline uyuyor mu; kötü vuruşta vuran ayağın topa göre yeri türle uyumlu mu
   donuk son adım (K1) vuruşun son adımında (evre 2) adım döngüsü donukken kökün 1 m/sn'den hızlı gittiği koşular: ≥ 0,5 sn olanların maç başına sayısı ve en uzunu
+                 (maç başına motor saatiyle: --hiz N'de de doğru; yapay kiplerde satır yazılmaz)
+  havada ayak    (K1h) nedenden bağımsız: oyunda bir ayağın çizilen tabanı 0,12 m'den yukarıdayken çizilen kök hızı 1 m/sn'den büyük ardışık kareler (ayak başına
+                 koşu); ≥ 0,5 sn olanların sayısı, maç başına (motor saatiyle), ortancası, en uzunu ve ilk anlarındaki durum; yapay kiplerde satır yazılmaz
   Kipler: --kaleci N  kaleye N yapay şut (d-sut kalıbı; maç oynanmaz, yalnız kurtarış satırı anlamlıdır)
           --koru N    A6-0: N yapay top saklama sahnesi (c-koru kalıbı; yalnız kaymanın "top saklama" bandı ve kaynağı anlamlıdır)
           --blok N    A6c: N yapay şut bloğu (motorun şut eylemi ve hamlesi; yalnız blok teması satırı anlamlıdır)
@@ -152,6 +155,36 @@ OLCUM_KUR_JS = r"""() => {
       const e = p.eylem; if (e && e.ad === 'vurus' && e.faz === 'hazirlik') z.hz += dt; }
     else if (z) { z.bosT += dt; if (++z.bosK > 3) { D.kosu.push([+z.t.toFixed(3), +z.hz.toFixed(3)]); D.acik.delete(a); } }
   }
+  /* K1h (2026-10-20; kullanıcı notu 7 "topla giderken ayağı havada kaldı ve ~2 sn o şekilde topla çizgi şeklinde kaydı"): havada ayak — nedenden bağımsız.
+     Oyunda (faz 'play'), görünür oyuncuda (kaydet'in süzgeci) bir ayağın çizilen tabanı (kaydet'in taban noktası) 0,12 m'den yukarıdayken çizilen kök hızı
+     (k.vs: çizilen yerin yumuşatılmış hızı) 1 m/sn'den büyük olan ardışık kareler; ayak başına koşu. Koşunun süresi (oyun sn), motor saati, ayağın en yüksek
+     yeri, ilk karedeki durum (tavır, eylem:faz, vuruş katmanının evresi, topa sahip mi), koşu boyunca öbür ayağın yerde (taban < 0,05 m) kaldığı kare payı
+     ve çizilen kalçanın en alçağı (m), destek ayağının yerdeki yolu (m: öbür ayak bu ve önceki karede yerdeyken tabanının yatay yolu), çizilen kökün
+     ortalama hızı ve 0,5 sn'deki durum. Ayrım: "kayan destek" — öbür ayak karelerin ≥ %90'ında yerde, kalça ≥ 0,6 m ve destek ayağının yerdeki yolu ≥ 0,3 m
+     (notun görüntüsü: ayak havada, dik gövde, destek ayağı gövdeyle çizgi gibi kayar; hedef 0). Kalanı bilgi: koşu salınımında ve sıçramada öbür ayak da
+     havaya kalkar (uçuş), yerde kaymada kalça alçaktır, yerinde basan destek ayağı kaymaz. Aktör arada görünmez olduysa (ölçülmeyen kare) koşu kapanır */
+  S.hva = { kare: 0, sure: [], kosu: [], acik: new Map() };
+  const HVA_K = new THREE.Vector3();
+  S.hvaKapat = r => { S.hva.sure.push(r.t); if (r.t >= 0.4) S.hva.kosu.push([+r.t.toFixed(3), +r.t0.toFixed(1), +r.ymax.toFixed(2), r.ilk, +(r.yer / r.n).toFixed(2), +r.kalca.toFixed(2),
+    +r.kay.toFixed(2), +(r.v / r.n).toFixed(1), r.orta || '']); };
+  /* durum: tavır, eylem:faz, vuruş evresi, topa sahip mi ve havadaki bacağı tutan (o bacağın uyluk, diz ya da yana açma kanalını yazan en ağır, > 0,02) çizim
+     yuvası ile ağırlığı — yoksa vuruş katmanı ya da adım döngüsü (bilgi; ölçü nedenden bağımsız, yuva yalnız teşhis için) */
+  const hvaYuva = (a, i) => { const LK = i ? ['lR', 'kR', 'lRz'] : ['lL', 'kL', 'lLz']; let ad = 'döngü', w0 = 0.02;
+    if (typeof ANM_SLOT !== 'undefined' && a.sw) for (let q = 0; q < a.sw.length; q++) { const pq = a.sp[q]; if (a.sw[q] > w0 && pq && (LK[0] in pq || LK[1] in pq || LK[2] in pq)) { w0 = a.sw[q]; ad = ANM_SLOT[q][0]; } }
+    return ad !== 'döngü' ? ad + ':' + w0.toFixed(2) : a.vk && a.vk.kw > 0.02 ? 'vurus:' + a.vk.kw.toFixed(2) : ad; };
+  const hvaDurum = (a, p, i) => { const e = p.eylem, vk = a.vk; return [p.tavir || '-', e ? e.ad + ':' + (e.faz || '') : '-', 'vk' + (vk ? vk.evre : '-'), mac.ball && mac.ball.sahip === p ? 'sahip' : '-', hvaYuva(a, i)].join(' '); };
+  function havaOlc(a, p, k, dt) {
+    const H = S.hva, on = mac.phase === 'play' && k.vs > 1 && !!k.vy; let z = H.acik.get(a);
+    for (let i = 0; i < 2; i++) { let r = z ? z[i] : null;
+      if (r && r.son !== S.kare - 1) { S.hvaKapat(r); r = z[i] = null; }
+      if (on && k.vy[i] > 0.12) { H.kare++;
+        if (!r) { if (!z) H.acik.set(a, z = [null, null]); r = z[i] = { t: 0, t0: mac.t || 0, n: 0, yer: 0, ymax: 0, kalca: 9, kay: 0, v: 0, son: -1, ilk: hvaDurum(a, p, i), orta: null }; }
+        r.t += dt; r.n++; r.son = S.kare; r.v += k.vs; if (k.vy[i] > r.ymax) r.ymax = k.vy[i];
+        const ys = k.vy[1 - i] < 0.05; if (ys) { r.yer++; if (r.oncekiYer && k.dA) r.kay += k.dA[1 - i]; } r.oncekiYer = ys;
+        if (!r.orta && r.t >= 0.4999) r.orta = hvaDurum(a, p, i);
+        const hy = (HVA_K.setFromMatrixPosition(a.m.lL.matrixWorld).y + HVA_K.setFromMatrixPosition(a.m.lR.matrixWorld).y) / 2; if (hy < r.kalca) r.kalca = hy; }
+      else if (r) { S.hvaKapat(r); z[i] = null; } }
+  }
   S.kirB = { ey: [0, 0, 0, 0, 0], ust: [0, 0, 0, 0, 0], kol: [0, 0, 0, 0, 0], dirsek: [0, 0, 0, 0, 0], sic: [0, 0, 0, 0, 0], dur: {}, durN: {}, ivm: {}, ivmN: {}, kay: {}, kayN: {}, kb: {} };   /* A9: üst gövde kırılmasının dağılımı */
   const BANT_AD9 = ['duran', 'yuru', 'kosu', 'hizli', 'depar'];
   /* A8 (2026-10-18): alış — iyi kontrol dokunuşundan vuruşun temasına, topun gidişine ya da 2,5 sn'ye dek pencere: hareketli (çizilen hız > 0,5 m/sn) karelerde
@@ -261,10 +294,12 @@ OLCUM_KUR_JS = r"""() => {
         if (!c && k.temas[i] && k.basVar[i] && !k.epEylem[i] && k.tn[i] > 2) { S.adimYol[b].push(k.yol[i]); S.adimNet[b].push(Math.hypot(k.ayak[i][0] - k.bas0[i][0], k.ayak[i][1] - k.bas0[i][1]));
           const du = t - k.basT[i]; k.temasG.push([k.basT[i], du]); if (k.temasG.length > 12) k.temasG.shift(); if (a3 === 'sabit' && b >= 2) S.sabitTemas[b].push(du); }
       }
+      (k.dA || (k.dA = [0, 0]))[i] = k.ilk ? 0 : Math.hypot(V.x - k.ayak[i][0], V.z - k.ayak[i][1]);   /* K1h: tabanın bu karedeki yatay yolu */
       k.ayak[i][0] = V.x; k.ayak[i][1] = V.z; k.temas[i] = c;
       if (alisAc) { if (!k.altN) k.altN = [new Float64Array(6), new Float64Array(6)]; altNokta(i ? a.m.kR : a.m.kL, k.altN[i]); } else if (k.altN) k.altN = null;   /* A9-pivot: bu karenin noktaları */
     }
     if (a.W) { const Wp = k.Wp || (k.Wp = [0, 0, 0, 0]); for (let j = 0; j < 4; j++) Wp[j] = a.W[j]; }   /* A6-0: çapanın önceki karesi */
+    if (!k.ilk) havaOlc(a, p, k, dt);   /* K1h: havada ayak (k.vy bu karenin taban yükseklikleri) */
     if (eylemsiz && b >= 1) { S.ucusN[b]++; if (!yer[0] && !yer[1]) S.ucus[b]++; }
     /* A3: fren ↔ sabit koşu karelerinin duruşu (durum yukarıda, a3) */
     { const F = a3 === 'fren' ? S.fren : a3 === 'sabit' ? S.sabit : null;
@@ -565,7 +600,10 @@ OLCUM_KUR_JS = r"""() => {
         const ks = zKor.get(a); if (ks !== undefined && ks !== ck.korSag) G.korDegis++; zKor.set(a, ck.korSag); } else zKor.delete(a); }
   }
   const asilKare = window.macKare;
-  window.macKare = dt => { kareSure = 0; bekleyenler = []; asilKare(dt); t += dt; S.kare++; S.sureler.push(kareSure);
+  /* K1h: ölçülen motor saati (sn; maç başına ölçeği — --hiz N'de kare başına N motor adımı) */
+  S.macSn = 0;
+  window.macKare = dt => { kareSure = 0; bekleyenler = []; const mt0 = typeof mac !== 'undefined' && mac ? mac.t || 0 : 0; asilKare(dt); t += dt; S.kare++; S.sureler.push(kareSure);
+    if (typeof mac !== 'undefined' && mac) S.macSn += Math.max(0, (mac.t || 0) - mt0);
     { const L = []; for (const a of K.keys()) { const p = a.kaynak; if (p && p.tur === 'oyuncu' && p.oyunda && a.m.root.visible && !(p.eylem && p.eylem.kilit)) L.push(a); }
       for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) { const dx = L[i].x - L[j].x, dz = L[i].z - L[j].z, d2 = dx * dx + dz * dz; if (d2 < 1) { S.tm.cift++; if (d2 < 0.09) S.tm.icIce++; } } }
     /* T6f: havadaki iki rakip (motorun p.zipla'sı uçuşta) çizilen gövde merkezleri 0,5 m'den yakın mı */
@@ -588,6 +626,8 @@ SONUC_JS = r"""() => {
   const kim = window.__ANM_KIMLIK();
   const don = S.donus, don90 = don.filter(d => d.aci >= 90), onc = don90.map(d => d.onculuk).filter(x => x !== null);
   const dk = S.kareN / 60 / 60;   /* oyuncu·dakika (kare sayısı / 60 / 60) */
+  /* K1h: maç başına ölçek — maçın süresi (macSuresiDk · 60 sn) ÷ ölçülen motor saati */
+  const macOlcek = ((typeof MOTOR_AYAR !== 'undefined' && MOTOR_AYAR.macSuresiDk) || 20) * 60 / Math.max(1e-9, S.macSn || S.kare / 60);
   return {
     kare: S.kare, oyuncuDk: +dk.toFixed(1),
     kayma: S.temas.map((n, i) => n ? +(100 * S.kayma[i] / n).toFixed(2) : null),
@@ -645,11 +685,19 @@ SONUC_JS = r"""() => {
         ktPas: med(kt.pas), ktSut: med(kt.sut), ktUzun: med(kt.uzun), ktIlk: med(kt.ilk), disiVurus: S.vkN ? +(S.vkDisi / S.vkN).toFixed(2) : null, sinirDestek: S.vkSinirDestek, kare: S.vkKare, kararsiz: S.kararsiz,
         kararsizKanal: Object.entries(S.kararsizKanal).sort((a, b) => b[1] - a[1]).slice(0, 6),
         disiEvre: Object.entries(S.vkDisiEvre).sort((a, b) => b[1] - a[1]).slice(0, 10), evreKare: S.vkEvreKare }; })(),
-    /* K1: donuk son adım — açık kalan koşular kapatılır; maç başına = sayı × maçın karesi (macSuresiDk · 3600) ÷ ölçülen kare (yalnız maç kipinde anlamlı) */
+    /* K1: donuk son adım — açık kalan koşular kapatılır; maç başına = sayı × maçın süresi (macSuresiDk · 60 sn) ÷ ölçülen motor saati (K1h: eskiden ölçülen
+       kare ÷ 60 — --hiz N'de N kat büyük çıkıyordu; yalnız maç kipinde anlamlı, yapay kiplerde satır yazılmaz) */
     donuk: (() => { const D = S.dk; if (!D) return null; for (const z of D.acik.values()) D.kosu.push([+z.t.toFixed(3), +z.hz.toFixed(3)]); D.acik.clear();
-      const L = D.kosu.map(x => x[0]), U = D.kosu.filter(x => x[0] >= 0.5), olcek = ((typeof MOTOR_AYAR !== 'undefined' && MOTOR_AYAR.macSuresiDk) || 20) * 3600 / Math.max(1, S.kare);
+      const L = D.kosu.map(x => x[0]), U = D.kosu.filter(x => x[0] >= 0.5), olcek = macOlcek;
       return { kare: D.kare, n: L.length, uzun: U.length, uzunHz: U.filter(x => x[1] >= 0.3).length, macBasina: +(U.length * olcek).toFixed(2),
         enUzun: L.length ? +Math.max(...L).toFixed(2) : 0, med: L.length ? +yuzde(L, 0.5).toFixed(2) : null, liste: D.kosu.filter(x => x[0] >= 0.4).slice(0, 20) }; })(),
+    /* K1h: havada ayak — açık koşular kapatılır; ≥ 0,5 sn olanlar ve bunların "kayan destek" (öbür ayak ≥ %90 yerde, kalça ≥ 0,6 m, destek ayağının yerdeki
+       yolu ≥ 0,3 m) kısmı */
+    hava: (() => { const H = S.hva; if (!H) return null; for (const z of H.acik.values()) for (const r of z) if (r) S.hvaKapat(r); H.acik.clear();
+      const U = H.kosu.filter(x => x[0] >= 0.5), D = U.filter(x => x[4] >= 0.9 && x[5] >= 0.6 && x[6] >= 0.3), uL = U.map(x => x[0]);
+      return { kare: H.kare, n: H.sure.length, medHepsi: H.sure.length ? +yuzde(H.sure, 0.5).toFixed(2) : null, enUzun: H.sure.length ? +H.sure.reduce((x, y) => x > y ? x : y, 0).toFixed(2) : 0,
+        uzun: U.length, macBasina: +(U.length * macOlcek).toFixed(2), med: uL.length ? +yuzde(uL, 0.5).toFixed(2) : null, dik: D.length, dikMac: +(D.length * macOlcek).toFixed(2),
+        macSn: +(S.macSn || 0).toFixed(1), liste: D.concat(U.filter(x => !D.includes(x))).sort((x, y) => (D.includes(y) - D.includes(x)) || y[0] - x[0]).slice(0, 30) }; })(),   /* kayan destekliler önce */
     kaymaDurum: S.dTemas.map((n, i) => n ? { pay: +(100 * S.dKayma[i] / n).toFixed(2), n } : null),
     /* A6-0: kaymanın kaynağı (kayan karelerin payı), dönüşte başın öncülüğü başlangıç hizasına göre, blok teması */
     kaymaKaynak: (() => { const f = o => { const n = o.salinim + o.surukle + o.sabit + o.erisim; return n ? { n, salinim: +(100 * o.salinim / n).toFixed(0), surukle: +(100 * o.surukle / n).toFixed(0), sabit: +(100 * o.sabit / n).toFixed(0), erisim: +(100 * o.erisim / n).toFixed(0) } : null; };
@@ -1047,13 +1095,25 @@ def satirlar(o):
             S.append("A:   vuruşta >20° sıçrama evre:kanal (1 hazırlık, 2g geri salınım, 2a aşağı salınım, 3 takip, 4 iniş, 5 çıkış; evre kare sayısı " + ", ".join(f"{e} {n}" for e, n in sorted((k.get("evreKare") or {}).items())) + "): " + ", ".join(f"{c} {n}" for c, n in k["disiEvre"]))
         if k.get("kararsizKanal"):
             S.append("A:   kararsız kanallar: " + ", ".join(f"{c} {n}" for c, n in k["kararsizKanal"]))
+    yapay = o.get("yapay")
     dn = o.get("donuk")
-    if dn:
+    if dn and not yapay:
         S.append(f"A: donuk son adım (K1; kullanıcı notu 7): son adımda adım döngüsü donuk ve kök > 1 m/sn {dn['kare']} kare, {dn['n']} koşu (ortanca {v(dn['med'], 2)} sn)"
                  f" — ≥ 0,5 sn {dn['uzun']} ({v(dn['macBasina'], 2)}/maç; motor ≥ 0,3 sn hazırlıkta kalan {dn['uzunHz']}) · en uzun {v(dn['enUzun'], 2)} sn"
                  f"   [hedef ≥ 0,5 sn ~0/maç; meşru son adım geri salınım kadar: ≤ 0,4 sn]")
         if dn.get("liste"):
             S.append("A:   ≥ 0,4 sn donuk koşular (süre, motor hazırlıkta sn): " + ", ".join(f"{x[0]:.2f}/{x[1]:.2f}" for x in dn["liste"]))
+    hv_ = o.get("hava")
+    if hv_ and not yapay:
+        S.append(f"A: havada ayak (K1; kullanıcı notu 7): oyunda bir ayağın çizilen tabanı > 0,12 m ve çizilen kök > 1 m/sn {hv_['kare']} ayak-kare, {hv_['n']} koşu"
+                 f" (ortanca {v(hv_['medHepsi'], 2)} sn) — ≥ 0,5 sn {hv_['uzun']} ({v(hv_['macBasina'], 2)}/maç; ortanca {v(hv_['med'], 2)} sn), en uzun {v(hv_['enUzun'], 2)} sn"
+                 f" · bunların kayan destekli olanı (dik gövde, öbür ayak ≥ %90 yerde ve yerde ≥ 0,3 m kayıyor) {hv_['dik']} ({v(hv_['dikMac'], 2)}/maç)"
+                 f"   [hedef kayan destekli ≥ 0,5 sn 0; kalanı bilgi: koşu salınımı ve sıçrama (öbür ayak da havada), yerde kayma (kalça alçak)]")
+        if hv_.get("liste"):
+            kd_ = lambda x: len(x) > 6 and x[4] >= 0.9 and x[5] >= 0.6 and x[6] >= 0.3
+            S.append("A:   ≥ 0,5 sn koşular (* kayan destekli; süre sn @ motor saati, ayağın en yükseği m, ilk anda → 0,5 sn'de tavır · eylem:faz · vuruş evresi · topa sahip · bacağı tutan yuva,"
+                     " öbür ayak yerde payı, kalça en alçak m, destek ayağının yerdeki yolu m, kök m/sn): "
+                     + " · ".join(f"{'*' if kd_(x) else ''}{x[0]:.2f}@{x[1]:.0f} {x[2]:.2f} [{x[3]} → {x[8] if len(x) > 8 else '?'}] {x[4]:.2f} {x[5]:.2f} {x[6] if len(x) > 6 else '?'} {x[7] if len(x) > 7 else '?'}" for x in hv_["liste"]))
     c = o.get("ck")
     if c:
         ad = " · ".join(f"{h} {n}" for h, n in sorted(c["N"].items(), key=lambda x: -x[1])) or "—"
@@ -1265,6 +1325,7 @@ def ana():
         sys.exit("Playwright bulunamadı. Kurmak için: pip install playwright==1.56.0")
     o, hatalar = asyncio.run(olc(a))
     o["tohum"], o["sure"], o["kimlik"] = a.tohum, a.sure, "eski" if a.eski_kimlik else "ayri"
+    o["hiz"], o["yapay"] = a.hiz, [k for k in ("kaleci", "koru", "blok", "duran", "olay", "kosu") if getattr(a, k)]   # K1h: maç başına satırları yalnız maç kipinde
     if a.ek:
         o["ek"] = a.ek
     S = satirlar(o)
