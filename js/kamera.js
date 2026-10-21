@@ -51,6 +51,9 @@ function bakisOdagi(){
   if(ph==='fulltime'){if(mac.phaseT<14)return ortala(mac.players.filter(p=>p.oyunda));if(mac.phaseT<30)return ortala(mac.teams[0].filter(p=>p.oyunda));return BAKIS_HEDEF.set(0,1,TUNEL.z+10);}
   /* kart gösterilirken hakeme; gol sevincinde golcüye. S1d (2026-10-20; S1 planı §1.10): kart sahnesi hakemi tutarken yaklaşmada ve kalabalıkta
      hakemle oyuncunun ortasına (STIL.kameralar.baskan.kartIzle 0'da kapalı), kart gösterilirken ve sahnede deftere yazarken hakeme */
+  /* S1c (bit 16; motorun salt okunur odağı celeb.odak): gol sevincinde golcü ve küme, dönüşte takım, düdüğe yakın nokta — sevinç karttan önce gelir
+     (avantajdan gelen kart sevinci bölmez) */
+  if(ph==='goal'&&mac.celeb&&mac.celeb.odak){const o=mac.celeb.odak;return BAKIS_HEDEF.set(o.x,1,o.z-MOTOR_Z);}
   const h=mac.refs[0],ks=h.kartSira,KS=ks&&ks.s,KI=KAM_B.kartIzle;
   if(KI!==0&&KS&&KS.tut&&(KS.evre==='yaklas'||KS.evre==='kalabalik')&&ks.p)return BAKIS_HEDEF.set((h.x+ks.p.x)/2,1.2,(h.z+ks.p.z)/2-MOTOR_Z);
   if(h.eylem&&(h.eylem.ad==='kart'||h.eylem.ad==='not'&&ks))return BAKIS_HEDEF.set(h.x,1.3,h.z-MOTOR_Z);

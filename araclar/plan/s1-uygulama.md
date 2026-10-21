@@ -2,7 +2,7 @@
 
 # S1 — uygulama planı (2026-10-20; Claude'un tasarımı, kullanıcı onaylı program §12.13)
 
-**Durum (2026-10-21 sabah, dizüstü):** Dal `claude/motor-s1` (ana ağaç). Yapıldı: S1-0 (7807d9d), S1a (2523afa), S1d (73347a7), S1b (75515df). Kaldı: S1c (gol sonrası akış), S1e (korner rutini), inceleme ve düzeltme, kapanış (S1-K). Birebirlik tabanı: K1 ucunda `araclar/taban/k1.json` (`protokol` 0 ile `--ayni`).
+**Durum (2026-10-21 öğle, dizüstü):** Dal `claude/motor-s1` (ana ağaç). Yapıldı: S1-0 (7807d9d), S1a (2523afa), S1d (73347a7), S1b (75515df), S1c (gol sonrası akış ve bakış odağı; `protokol` 31). Kaldı: S1e (korner rutini), inceleme ve düzeltme, kapanış (S1-K). Birebirlik tabanı: K1 ucunda `araclar/taban/k1.json` (`protokol` 0 ile `--ayni`).
 
 ## Plan
 

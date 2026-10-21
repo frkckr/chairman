@@ -135,7 +135,7 @@ function olay(ad,v){
     case 'yanAg':if(v.p)heyecanla(v.p.team,H.sut);break;
     case 'goal':
       heyecanla(v.team,H.gol,8);if(v.team===0){HEY.dep=0;HEY.tutDep=0;}else{HEY.ev=0;HEY.tutEv=0;}
-      for(const a of AKTORLER)if((a.esofman||a.kaynak.tur==='kenar')&&a.kaynak.team===v.team)a.sevinc=6;
+      for(const a of AKTORLER)if((a.esofman||a.kaynak.tur==='kenar')&&a.kaynak.team===v.team)a.sevinc=v.sevincT?Math.min(10,0.6*v.sevincT):6;   /* S1c: sevinç süresinden */
       AYAKTA[v.team?1:0]=6;break;
     case 'korner':heyecanla(v.team,H.sut*0.5);break;
     case 'faul':if(v.penalti)heyecanla(v.takim,H.gol*0.8,3);break;

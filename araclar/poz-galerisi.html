@@ -26,6 +26,7 @@
      yönlendirmesi, kaostaki barajcı ↔ dizik baraj pozu; &s1=0 eski çizim) |
      s1kart (S1d, 2026-10-20: kart sahnesi — "yerinde kal", çağırma, kaptan işareti (çapraz bilekler, "yaklaşmayın"), ikinci sarı, deftere yazma) |
      s1penalti (S1b, 2026-10-20: penaltı sahnesi — noktayı gösterme (2,4 sn), kaptan işareti, kutuyu boşaltma, kaleciye çizgiyi gösterme) |
+     s1gol (S1c, 2026-10-21: gol sonrası — golcünün pasçıyı göstermesi (sevGoster), santraya yürürken deftere yazan hakem, santra yerinde saat bakışı) |
      olcum (ayak kayması ve süre ölçümü). Satır seçeneği sabitY: kamera yüksekliği
      sabit (sıçrama görünsün).
      Açmak: python3 araclar/kontrol.py "araclar/poz-galerisi.html?sayfa=dusus" (görüntü araclar/son-kontrol-poz-galerisi-sayfa-dusus.png).
@@ -749,6 +750,13 @@ SAYFALAR.s1penalti=[
     kareler:[0.25,0.45,0.65,0.85,1.05,1.3,1.8]}),
   hakemSatir('S1b Kutuyu boşaltma yandan (az 100)',{isaret:[{tur:'bosalt',sure:1.6,hedef:{x:-2,z:6},theta:0.1}],kareler:[0.25,0.45,0.65,0.85,1.05,1.3,1.8],az:100}),
   hakemSatir('S1b Hazırda kaleciye çizgiyi gösterme (yon, 0,9 sn; theta −0,35; kale önde)',{isaret:[{tur:'yon',sure:0.9,hedef:{x:17,z:-3},theta:-0.35}],kareler:[0.2,0.35,0.5,0.65,0.8,0.95,1.2]})];
+/* S1c (2026-10-21): gol sonrası — golcünün pasçıyı göstermesi (ANM_SEVINC[8]), santraya yürürken deftere yazan hakem (not, 2,4 sn; 1,2 m/sn), yürüyüşte
+   kalkan üzgün poz yerine dik yürüyüş (yalnız Claude'un kendi incelemesi) */
+SAYFALAR.s1gol=[
+  {ad:'S1c Golcü pasçıyı gösterir (sevGoster): koşar, yavaşlar, iki kol öne',sev:8,kareler:[0.6,0.8,1.0,1.4,1.8,2.2,2.4],az:30},
+  {ad:'S1c Golcü pasçıyı gösterir, önden (az 90)',sev:8,kareler:[0.6,1.0,1.4,1.8,2.2,2.4],az:90},
+  hakemSatir('S1c Hakem santraya yürürken deftere yazar (not, 2,4 sn; 1,2 m/sn)',{isaret:[{tur:'not',sure:2.4}],her:p=>{p.vx=1.2;},kareler:[0.3,0.6,1.0,1.4,1.8,2.2,2.7]}),
+  hakemSatir('S1c Hakem santra yerinde saatine bakar (saat, 1,3 sn)',{isaret:[{tur:'saat',sure:1.3}],kareler:[0.3,0.5,0.7,0.9,1.1,1.4,1.7]})];
 /* sevinç satırı: gol aşaması, golcü ve hız eğrisi (koşar, yavaşlar) */
 function sevincKur(S,p,a){mac.phase='goal';mac.phaseT=0;mac.score=[1,0];
   if(S.uzgun){p.team=1;mac.celeb={team:0,scorer:null,own:false};p.vx=1.2;return;}

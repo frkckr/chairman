@@ -15,8 +15,14 @@
        Kapılar (S1 planı, kabul): düdük kullanımdan ≥ 0,4 sn önce %100; düdükte ceza sahası ve yay boş (vurucu ve kaleciler hariç) ≥ %95; faulden temasa
        ortanca 32–48 sn, %10 ≥ 25, %90 ≤ 58; itiraz eden (hakemin 4 m içine gelen) ortalaması ≥ 2,5; kaptan işareti ≥ %90; hakemin itiraz ve boşaltmadaki
        tepe hızı (kart hariç; penaltı başına en çok) %90'ı ≤ 2,5 m/sn; düdükten önceki son 20 sn'de hareketsiz ≤ %65; duruş 90 sn içinde biter.
-   [3] Gol sonrası (S1c): kendi alt adımında eklenir.
-   Çıkış kodu 1: kabul dışı. Kullanım: node araclar/mac-deneme.js --senaryo d-sahne [N=80] [tohum]; DSAHNE_HUCRE=1 (ya da 1,2) yalnız o hücreler */
+   [3] Gol sonrası (S1c; protokol bit 8 ve 16): her deneme ayrı tohumlu maçta 20–40 sn oyundan sonra (en çok 4 dk) atan takım topa son üçte birde
+       sahipken yapay gol: top ağa konur, son dokunan topa en yakın hücumcu (kendi kalesine bağlamında savunan), m.gol(side). Altı bağlam (her biri N/6,
+       sırayla): tarafsız (birinci yarı, 0-0), gol yiyen geride (ikinci yarı, 70. dk, gol yiyen 0-1 geride: T10d), atan takım acele (85. dk, atan 0-1 geride
+       atar), gol yiyen önde (76. dk, gol yiyen 2-0 öndeyken yer), kendi kalesine (birinci yarı), avantaj kartlı (birinci yarı; gol anında avantajdan sarı).
+       Santra vurulana dek (en çok 90 sn) izlenir. Ölçü k-protokol s1cIzleyici. Kapılar (S1 planı, kabul): tarafsız gol → santra ortancası 28–42;
+       acele ≤ tarafsız ≤ koru (ortancalar); topun atan takımın yarısına geçmesi 0; santracı kovalaması ve ışınlanma 0; düdüksüz santra 0; Law 8 ihlali 0;
+       kartsız denemelerde hakemin tepe hızı %90'ı ≤ 3,2 m/sn; tavana (55 sn) varan 0; sevinç evresinin ≥ %95'inde odak kümede; santra 90 sn içinde.
+   Çıkış kodu 1: kabul dışı. Kullanım: node araclar/mac-deneme.js --senaryo d-sahne [N=80] [tohum]; DSAHNE_HUCRE=1 (ya da 1,2; 3) yalnız o hücreler */
 'use strict';
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||80,dt=1/60,t0=Date.now(),HUC=process.env.DSAHNE_HUCRE?process.env.DSAHNE_HUCRE.split(',').map(Number):null,acik=i=>!HUC||HUC.includes(i);
@@ -124,6 +130,61 @@ module.exports={calistir({ctx,vm,N,tohum}){
       kapi(HK.length>0&&yuzde(HK,0.9)<=2.5,`[2] hakemin itiraz ve boşaltmadaki tepe hızı (kart hariç) %90'ı ≤ 2,5 m/sn (${f2(yuzde(HK,0.9))})`);
       kapi(DG[1]>0&&DG[0]<=0.65*DG[1],`[2] düdükten önceki son 20 sn'de hareketsiz ≤ %65 (${yz(DG[0],DG[1])})`);
       kapi(bitmeyen===0,`[2] duruş 90 sn içinde biter (${bitmeyen})`);}
+  }
+  /* ---- [3] gol sonrası ---- */
+  if(acik(3)){
+    if(!(P&8))console.log('  [3] gol sonrası: protokol bit 8 kapalı — yalnız bilgi (bugünkü değerler; kapılar sahneli golde)');
+    const PL=vm.runInContext('PL',ctx),MZ=vm.runInContext('MZ',ctx),BAG=['std','acele','atan','koru','kendi','kart'],BAD={std:'tarafsız',acele:'gol yiyen geride',atan:'atan acele',koru:'gol yiyen önde',kendi:'kendi kalesine',kart:'avantaj kartlı'};
+    const D=KP.s1cIzleyici();let gecerli=0,deneme=0,bulunamadi=0,bitmeyen=0;const B=[];
+    for(let i=0;gecerli<n&&i<2*n;i++){deneme++;const bag=BAG[gecerli%6];
+      let m=null,izle=false;m=O.kur((tohum||1)*30011+i*41,(ad,v)=>{if(m&&izle)D.dinle(ad,v,m);});   /* yalnız yapay gol izlenir (ısınmadaki doğal goller değil) */
+      const T=20+(i*7)%21;for(let a=0;a<60*T;a++)m.step(dt);
+      /* atan takım: tek bağlamlarda 0, çiftlerde 1 (iki takım da atar) */
+      const att=i%2,kt=1-att;let tamam=false;
+      for(let a=0;a<60*240&&!tamam;a++){
+        if(m.phase==='play'){const s=m.ball.sahip;if(s&&s.oyunda&&s.team===att&&s.rol!=='GK'&&s.x*m.dir[att]>PL-30){
+          const b=m.ball,side=m.dir[att],kendi=bag==='kendi';
+          if(bag==='std'||bag==='kendi'||bag==='kart'){m.half=1;m.gameSec=Math.min(m.gameSec,2400);m.score[0]=m.score[1]=0;}
+          else if(bag==='acele'){m.half=2;m.gameSec=4200;m.score[att]=0;m.score[kt]=0;}    /* gol sonrası 1-0: gol yiyen geride, ikinci yarı */
+          else if(bag==='atan'){m.half=2;m.gameSec=5100;m.score[att]=0;m.score[kt]=1;}     /* atan 0-1 gerideyken eşitler, 85. dk */
+          else if(bag==='koru'){m.half=2;m.gameSec=4560;m.score[att]=0;m.score[kt]=2;}     /* gol yiyen 2-0 önde, 76. dk (atan 1-2 geride ama aceleye geçmedi) */
+          let sc=null,ed=1e9;for(const q of m.teams[kendi?kt:att]){if(!q.oyunda||q.rol==='GK')continue;const d=Math.hypot(q.x-side*PL,q.z-MZ);if(d<ed){ed=d;sc=q;}}
+          if(bag==='kart'){let y=null,ey=1e9;for(const q of m.teams[kt]){if(!q.oyunda||q.rol==='GK')continue;const d=Math.hypot(q.x-s.x,q.z-s.z);if(d<ey){ey=d;y=q;}}
+            if(y)m.avantaj={t:m.t,kare:m.kare,takim:att,x:s.x,z:s.z,kart:'sari',yapan:y,yiyen:s,neden:'mudahale',tuttu:true,u0:0};}
+          m.ofsaytBekleyen=null;b.hakemDegdi=null;b.endirekt=null;b.sahip=null;b.tasiyan=null;
+          Object.assign(b,{x:side*(PL+0.6),z:MZ+((i%3)-1)*1.5,y:0.3,vx:0,vy:0,vz:0,sonDokunan:sc,sonTakim:kendi?kt:att});m.topDegisti();
+          for(const q of m.players)if(q.eylem&&!q.eylem.kilit)q.eylem=null;
+          izle=true;m.gol(side);tamam=m.phase==='goal';if(tamam)B.push(bag);else izle=false;break;}}
+        m.step(dt);}
+      if(!tamam){bulunamadi++;continue;}
+      gecerli++;
+      let s=0;for(;m.phase!=='play'&&s<60*90;s++){m.step(dt);D.adim(m);}
+      if(m.phase!=='play')bitmeyen++;
+      izle=false;}
+    D.bitir();
+    const L=D.L,say=f=>L.filter(f).length,sayi=f=>L.map(f).filter(x=>x!=null&&Number.isFinite(x)),R=KP.s1cOzet(L);
+    L.forEach((x,j)=>{x.bag=B[j];});
+    console.log(`  [3] ${gecerli} geçerli deneme (${deneme} deneme; gol yeri bulunamayan ${bulunamadi}) · ${L.length} gol (${say(x=>x.sahneli)} sahneli) · santrası 90 sn'de vurulmayan ${bitmeyen}`);
+    const ST=k=>sayi(x=>x.bag===k?x.santra:null);
+    console.log('      gol → santra (gerçek sn; %10 / ortanca / %90): '+BAG.map(k=>{const Lk=ST(k);return `${BAD[k]} ${f1(yuzde(Lk,0.1))} / ${f1(ortanca(Lk))} / ${f1(yuzde(Lk,0.9))}`;}).join(' · '));
+    console.log('      izleyicinin bağlamı (gol → santra ortancası): '+['std','acele','atan','koru'].map(k=>`${k} ${f1(R['s1c_santra_'+k])} (${say(x=>x.baglam===k)})`).join(' · '));
+    console.log(`      sevinç evresi ortanca ${f1(R.s1c_kutla)} sn · küme ilk an ${f1(R.s1c_kumeT)} sn · kümeli ${yz(R.ham.s1c_kumeP[0],R.ham.s1c_kumeP[1])} · top noktada ${f1(R.s1c_nokta)} sn · zincir ${f2(R.s1c_zincir)}`);
+    console.log('      koşu türü: '+['kose','tribun','pasci','kulube','yerinde','atan'].map(k=>`${k} ${yz(R.ham['s1c_tur_'+k][0],R.ham['s1c_tur_'+k][1])}`).join(' · '));
+    console.log('      topu ağdan alan: '+['kaleci','savunan','atan','T10d'].map(k=>`${k} ${yz(R.ham['s1c_alan_'+k][0],R.ham['s1c_alan_'+k][1])}`).join(' · '));
+    const HK=sayi(x=>x.kart?null:x.hkTepe),LW=sayi(x=>x.law8);
+    console.log(`      top en uzak ${f1(R.s1c_topUzak)} m · geçti ${R.ham.s1c_gecti[0]} · kovala ${R.ham.s1c_kovala[0]}/${R.ham.s1c_kovala[1]} · ışınla ${R.ham.s1c_isinla[0]} · tavan ${R.ham.s1c_tavan[0]} · düdüksüz ${R.ham.s1c_duduksuz[0]}/${R.ham.s1c_duduksuz[1]} · Law 8 ihlali ${LW.reduce((a,x)=>a+x,0)} · yan hakem çizgiye ${R.ham.s1c_yh[0]}`);
+    console.log(`      hakem: tepe hız kartsız (ortanca / %90 / en çok) ${f2(ortanca(HK))} / ${f2(yuzde(HK,0.9))} / ${f2(HK.length?Math.max(...HK):NaN)} m/sn · yol ${f1(R.s1c_hkYol)} m · santra yerinde bekleme ${f1(R.s1c_hkBek)} sn · düdük → santra ${f2(R.s1c_dudukSantra)} sn · odak kümede ${yz(R.ham.s1c_odak[0],R.ham.s1c_odak[1])}`);
+    if(P&8){const o=k=>ortanca(ST(k)),os=o('std'),oa=o('acele'),ok=o('koru');
+      kapi(os>=28&&os<=42,`[3] tarafsız gol → santra ortancası 28–42 (${f1(os)})`);
+      kapi(oa<=os&&os<=ok,`[3] acele ≤ tarafsız ≤ gol yiyen önde (${f1(oa)} / ${f1(os)} / ${f1(ok)})`);
+      kapi(R.ham.s1c_gecti[0]===0,`[3] topun atan takımın yarısına geçmesi 0 (${R.ham.s1c_gecti[0]})`);
+      kapi(R.ham.s1c_kovala[0]===0&&R.ham.s1c_isinla[0]===0,`[3] santracı kovalaması ve ışınlanma 0 (${R.ham.s1c_kovala[0]} / ${R.ham.s1c_isinla[0]})`);
+      kapi(R.ham.s1c_duduksuz[0]===0,`[3] düdüksüz santra 0 (${R.ham.s1c_duduksuz[0]})`);
+      kapi(LW.length>0&&LW.every(x=>x===0),`[3] santrada Law 8 ihlali 0 (${LW.reduce((a,x)=>a+x,0)})`);
+      kapi(HK.length>0&&yuzde(HK,0.9)<=3.2,`[3] kartsız hakemin tepe hızı %90'ı ≤ 3,2 m/sn (${f2(yuzde(HK,0.9))})`);
+      kapi(R.ham.s1c_tavan[0]===0,`[3] tavana (55 sn) varan 0 (${R.ham.s1c_tavan[0]})`);
+      kapi(R.ham.s1c_odak[1]>0&&R.ham.s1c_odak[0]>=0.95*R.ham.s1c_odak[1],`[3] sevinç evresinde odak kümede ≥ %95 (${yz(R.ham.s1c_odak[0],R.ham.s1c_odak[1])})`);
+      kapi(bitmeyen===0,`[3] santra 90 sn içinde (${bitmeyen})`);}
   }
   console.log(`  Toplam ${((Date.now()-t0)/1000).toFixed(1)} sn · kapı dışı ${kabulDisi}`);
   return kabulDisi?1:0;

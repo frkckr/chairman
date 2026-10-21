@@ -23,7 +23,7 @@ const IZLEME={
   acikEnCok:14,      // sonu sonraki bir olayla belirlenen pencerenin en uzun süresi (motor sn; sakatlık)
   /* olay → pencere: once/sonra (motor sn; sonra işlev olabilir), kosul (olayın verisine göre), acik (pencere kapat olaylarından birine dek sürer) */
   anlar:{
-    goal:{once:4,sonra:7},                                   // gol ve sevinç (gol evresi 7 sn); santraya yürüyüş seçilen hızda
+    goal:{once:4,sonra:v=>v&&v.sevincT?Math.min(18,v.sevincT+1.5):7},   // gol ve sevinç (S1c: sevinç evresi + 1,5 sn, en çok 18; eskiden gol evresi 7 sn); santraya yürüyüş seçilen hızda
     golIptal:{once:3,sonra:4},
     shot:{once:3,sonra:2.5},
     header:{once:3,sonra:2.5,kosul:v=>!!(v&&v.shot)},        // kafa şutu

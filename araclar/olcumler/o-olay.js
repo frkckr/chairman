@@ -3,7 +3,7 @@
    Hakemin topa uzaklığı (top oyundayken her adım; Ek G7 ölçütü ortalama 12–22 m — gerçekte 18–19 m, sürenin ~%80'i 5–30 m), faule uzaklığı
    (görülen, avantaj ve görülmeyen faul; avantajdan dönen faul ikinci kez sayılmaz), hakemin faule uzaklığına göre görülmeyen faul payı (kutuda
    verilmeyen hava faulü — olay faulGorulmedi, P 0,5, kaynak hava — görme payına girmez, ayrı sayılır), kırmızı kart (ya da ikinci sarı) gördüğü
-   hâlde 12 sn sonra sahada kalan oyuncu (T10 teşhisindeki hata 1; kabul 0), gol → santra süresi (gol olayından santraya; T10 kararı 20–35 sn),
+   hâlde 12 sn sonra sahada kalan oyuncu (T10 teşhisindeki hata 1; kabul 0), gol → santra süresi (gol olayından santraya; T10 kararı 20–35 sn, S1c'den beri ~35 sn: 28–42),
    değişikliğin dakikası ve süresi (değişiklik olayından oyuncu girene), uzatmanın kaynakları (motorun birikimiyle aynı ölçek: gol 50, değişiklik 30,
    kart 30, penaltı 60 sn; U1'e dek faul 15 (+15 kart) ve avantajdan dönen faul 15), zaman geçirme göstergesi (önde olan takımın kullandığı taç, korner, kale vuruşu ve
    serbest vuruşta duruşun süresi: 75. dakikadan önce ve sonra), topa çarpan hakem, sakatlık (olay sakatlik {tur, derece: agri|tedavi|cikis};
@@ -26,7 +26,7 @@ module.exports={
     ['Görülmeyen faul payı: hakeme >25 m %','oGorUzak',1],
     ['Kutuda verilmeyen hava faulü / maç','oKutuHava',2],
     ['Kırmızı görüp 12 sn sonra sahada kalan / maç','oKirmiziSahada',2,[0,0,'T10']],
-    ['Gol → santra (sn)','oGolSantra',1,[20,35,'T10']],
+    ['Gol → santra (sn)','oGolSantra',1,[28,42,'S1']],   /* S1c (2026-10-21): tempo B, ~35 sn (kullanıcı onaylı); T10'un 20–35'i eski hedef */
     ['Gol → santra: gerideki takım topu ağdan aldı (sn; T10d)','oGolSantraAcele',1],['Topu ağdan alan gerideki takım / maç','oAgdan',2],
     ['Değişiklik: dakika ort.','oDegDk',1],
     ['Değişiklik: süre (sn; olaydan oyuncu girene)','oDegSure',1],

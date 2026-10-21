@@ -114,7 +114,7 @@ const MOTOR_AYAR={
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined,
   /* S1 — js/mac-sahne.js (S1, 2026-10-20: sahne protokolleri; bit maskesi S1_BIT, parametre anahtarları kendi alt adımında) */
-  protokol:undefined,seremoni:undefined,kartAyar:undefined,penaltiSahne:undefined
+  protokol:undefined,seremoni:undefined,kartAyar:undefined,penaltiSahne:undefined,golTempo:undefined
 };
 const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek',santraTek:'cekirdek',yerFalso:'cekirdek',durusSaat:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
@@ -271,6 +271,7 @@ class Match{
     this.guvenHazirla();   /* T10e: takım güveni (js/mac-takim.js) */
     this.ofsaytBekleyen=null;   /* T10d: bayrağı geç kalkacak ofsayt {p, t, x, z, fark, yanlis, g} (js/mac-kurallar.js ofsaytDokunus) */
     this.santraAcele=false;   /* T10d: gerideki takım topu ağdan alıp koştu: santra kurala göre (stepKick) */
+    this._asist=null;this._santraS1=null;   /* S1c (js/mac-sahne.js): son tamamlanan pas {p, q, t} (dokunus yazar, gol okur) ve golden sonra düdüklü santra {t} (golDuduk yazar, stepKick okur) */
     this.yariSantra=true;   /* T16a: yarının ilk santrası hazırlanıyor — maç saati düdükle başlar (step; santraHazirla) */
     this._aldatmaT=null;   /* A4-1: barajlı serbest vuruşta aldatma koşusunun topun yanından geçtiği an (js/mac-durantop.js; kaleciTepkiSuresi okur) */
     this.sakatlikHazirla();
@@ -401,6 +402,7 @@ class Match{
     return{x:u*d,z:w};
   }
   santraHazirla(takim,isinla){
+    this._santraS1=null;   /* S1c: düdüklü santranın bayrağını yalnız golDuduk (bu çağrıdan sonra) kurar */
     this.phase='kickoff';this.phaseT=0;this.kickTeam=takim;this.durus=null;this.celeb=null;this.duranSonrasiBitir();   /* T8b */
     this.yariSantra=this.gameSec<=(this.half-1)*2700;   /* T16a: yarının başı (maç başı ya da devre arası sonrası; gol sonrası değil) */
     const b=this.ball;
@@ -431,15 +433,19 @@ class Match{
     this.hareketHepsi(dt);this.topAdim(dt);
     let hazir=yerinde;
     /* T10d: topu ağdan alıp koşan gerideki takımın santrasında kural yeter: herkes kendi yarısında, rakipler çemberin dışında (santracı yerinde) */
-    if(hazir){const ac=this.santraAcele;
+    /* S1c (js/mac-sahne.js golDuduk): golden sonra düdükle başlayan santra — hazırlık Law 8 kuralıyla (topun başında tek oyuncu, 3 m) */
+    const S1=this._santraS1;
+    if(hazir){const ac=this.santraAcele||!!S1,r1=S1?3:2;
       for(const p of this.players){if(!p.oyunda||p.sakat)continue;
-        if(ac&&p!==tk){if(p.x*this.dir[p.team]>0.3||p.team!==this.kickTeam&&hyp(p.x,p.z-MZ)<9.15||MOTOR_AYAR.santraTek&&hyp(p.x,p.z-MZ)<2){hazir=false;break;}}   /* T20d: topun başında tek kişi */
+        if(ac&&p!==tk){if(p.x*this.dir[p.team]>0.3||p.team!==this.kickTeam&&hyp(p.x,p.z-MZ)<9.15||MOTOR_AYAR.santraTek&&hyp(p.x,p.z-MZ)<r1){hazir=false;break;}}   /* T20d: topun başında tek kişi */
         else if(hyp(p.tx-p.x,p.tz-p.z)>1.3){hazir=false;break;}}}
     /* T8d: gerideyken ve süre azalmışken (acele) santra çabuk: 1,6 → 0,9 sn. T10c: tedavi ya da sedye sürerken santra bekler */
     if(!this.sakatlikBekletir()&&(hazir&&this.phaseT>(this.macDurumu(this.kickTeam).acele>0.5?0.9:1.6)||this.phaseT>22)){
       if(!yerinde)this.topuSifirla(0,MZ);
       const al=this.santraAlici(this.kickTeam),t0=this.t-this.phaseT;
-      this.on('kickoff',{team:this.kickTeam,half:this.half});this.refs[0].eylem={ad:'duduk',t:0,sure:0.8};
+      /* S1c: düdük santradan önce çaldı (golDuduk) — ikinci düdük yok, olayda dudukOnce */
+      if(S1){this.on('kickoff',{team:this.kickTeam,half:this.half,dudukOnce:true});this._santraS1=null;}
+      else{this.on('kickoff',{team:this.kickTeam,half:this.half});this.refs[0].eylem={ad:'duduk',t:0,sure:0.8};}
       this.phase='play';this.phaseT=0;this.santraAcele=false;this.yariSantra=false;this.kullanimBaslat('santra',tk,null,t0);   /* T8-0 */
       tk.x=-0.35*this.dir[tk.team];tk.z=MZ-0.25;tk.vx=tk.vz=0;tk.yon=this.dir[tk.team]>0?0:Math.PI;
       /* T20d: tek santracı geriye oynayacağı alıcıya yarı dönük durur (ayak içiyle geri pas; eskiden hücum yönüne bakıp 180° dönüyordu) */
@@ -538,7 +544,7 @@ class Match{
     if(K){if(p===K.p){if(!K.cikti){K.cikti=true;this.kullanimBildir(p,K);}}else b.kullanim=null;}
     b.sonDokunan=p;b.sonTakim=p.team;b.hedefOyuncu=null;b.direk=false;
     if(b.endirekt&&p!==b.endirekt.p)b.endirekt=null;if(b.tac&&p!==b.tac.p)b.tac=null;
-    if(b.pas&&p!==b.pas.p){if(p.team===b.pas.takim)this.ist.pasTamam[p.team]++;b.pas=null;}
+    if(b.pas&&p!==b.pas.p){if(p.team===b.pas.takim){this.ist.pasTamam[p.team]++;const A=this._asist||(this._asist={p:null,q:null,t:0});A.p=b.pas.p;A.q=p;A.t=this.t;}b.pas=null;}   /* S1c: asist kaydı (yalnız kayıt) */
     if(b.sut&&p!==b.sut.by)b.sut=null;
     this.ofsaytDokunus(p,kasitli);
     this.topDegisti();
@@ -671,13 +677,17 @@ class Match{
     b.agda=true;b.sut=null;b.sahip=null;b.hedefOyuncu=null;b.pas=null;
     for(const p of this.players)if(p.eylem&&p.eylem.ad==='vurus')p.eylem=null;
     this.phase='goal';this.phaseT=0;this.celeb={team:att,side,scorer,own};this.uzatmaBirikim[this.half-1]+=50;
-    this.on('goal',{team:att,scorer,own,score:this.score.slice()});
+    /* S1c (protokol bit 8; js/mac-sahne.js): gol sonrası sahnenin planı bir kez kurulur; olaya sevinç süresi, golcünün koşu türü ve asist */
+    const c=this.celeb,gv={team:att,scorer,own,score:this.score.slice()};
+    if(MOTOR_AYAR.protokol&S1_BIT.GOL){this.golSahneKur(c);gv.sevincT=c.sevincT;gv.tur=c.tur;gv.asist=c.asist;}
+    this.on('goal',gv);
     this.guvenOlay(att,'golAtti');this.guvenOlay(def,'golYedi');if(own)this.guvenOlay(def,'kendiKale');   /* T10e */
     this.kayit.goller.push({ad:scorer?scorer.name:'',no:scorer?scorer.no:0,takim:att,kendiKalesine:!!own,dakika:Math.floor(this.gameSec/60)+1});   /* T10c */
     /* T10b (T10 teşhisi hata 5): avantaj sürerken gol — avantaj tutulmuştur, kart şimdi gösterilir (sevinç sürerken hakem oyuncuya gider) */
     if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:true});if(a.kart&&a.yapan.oyunda)this.kartGoster(a.yapan,a.kart);}
   }
   stepGoal(dt){
+    if(this.celeb&&this.celeb.s1){this.golSahneAdim(dt);return;}   /* S1c (js/mac-sahne.js): gol sonrası akış */
     const c=this.celeb,sc=c.own?null:c.scorer,cx=c.side*(PL-3),cz=c.side>0?PW-3:3,b=this.ball,gk=this.kaleci(1-c.team);
     /* T10d: gol yiyen takım hâlâ gerideyse (ikinci yarıda ya da acelede) kaleye en yakın saha oyuncusu topu ağdan alır, orta noktaya koşup koyar
        (olay topuAgdanAldi); santra kurala göre hazırlanır (stepKick santraAcele) */

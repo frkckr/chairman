@@ -574,6 +574,8 @@ Object.assign(Match.prototype,{
       if(h.eylem&&h.eylem.ad==='kart'&&h.eylem.t>1.5||kartSira.t>6){const Q=h.kartKuyruk;if(Q&&Q[0]===kartSira)Q.shift();h.kartSira=Q&&Q.length?Q[0]:null;
         if(p.kart===2&&p.oyunda)this.oyundanCikar(p);}}
     else if(KS&&ks&&ks.s&&ks.s.tut){}   /* S1d: hakemi kart sahnesi sürer */
+    else if(ph==='goal'&&this.celeb&&this.celeb.hk)this.golHakemAdim(h,dt);   /* S1c: gol sonrası — santrayı gösterir, deftere yazar, santraya yürür (js/mac-sahne.js) */
+    else if(ph==='kickoff'&&this._santraS1){h.tx=h.x;h.tz=h.z;h.hizOran=0;h.bak=b;}   /* S1c: düdük çaldı, hakem yerinde */
     else if(DY&&DY.h){h.tx=clamp(DY.h.x,-PL+1,PL-1);h.tz=clamp(DY.h.z,1,PW-1);const uz=hyp(h.tx-h.x,h.tz-h.z);h.hizOran=DY.hiz!=null?DY.hiz:(uz>8?0.9:0.6);h.bak=DY.bak!==undefined?DY.bak:b;   /* S1b: sahnenin hızı ve bakışı (yoksa eski) */
       if(DY.bakisYon!=null)h.bakisYon=DY.bakisYon;
       /* Z2c (sahne&4): hakemin spreyi — topun yeri ve barajın çizgisi (js/mac-durantop.js hakemSpreyAdim); bitince barajın ucuna çekilir */
@@ -599,6 +601,7 @@ Object.assign(Match.prototype,{
     const yan=(q,s,z)=>{q.tx=clamp(this.ofsaytHizasi(s),0,PL-1)*s;q.tz=z;const uz=Math.abs(q.tx-q.x);q.hizOran=uz>8?1:0.55;
       q.yonHedef=uz>6?null:(z>MZ?-Math.PI/2:Math.PI/2);q.bak=b;};
     yan(r[1],1,PW+1.3);yan(r[2],-1,-1.3);
+    if(ph==='goal'&&this.celeb&&this.celeb.hk){this.golYanHakem(r[1],1,PW+1.3);this.golYanHakem(r[2],-1,-1.3);}   /* S1c: göz teması, sonra savunma hizası (top terimsiz) */
     if(DY&&DY.yh){const q=DY.yh;q.tx=DY.yhYer.x;q.tz=DY.yhYer.z;q.hizOran=hyp(q.tx-q.x,q.tz-q.z)>8?1:0.6;q.yonHedef=null;q.bak=b;}
   },
   /* sondan ikinci savunmacının hizası (M0: her karede iki kez çağrılır; dizi kurmadan en büyük iki değer, sonuç aynı) */

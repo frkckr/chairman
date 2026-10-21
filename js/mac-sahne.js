@@ -25,9 +25,10 @@
    Ölçü araclar/olcumler/k-protokol.js (s1D_ ortak düdük satırları; alanlar s1a_, s1d_, s1b_, s1c_, s1e_). */
 'use strict';
 ayarEkle('S1',{
-  protokol:7                   // S1: sahne protokolleri bit maskesi (S1_BIT) — 1 seremonili barajlı serbest vuruş (S1a), 2 kart sahnesi (S1d), 4 penaltı sahnesi
+  protokol:31                  // S1: sahne protokolleri bit maskesi (S1_BIT) — 1 seremonili barajlı serbest vuruş (S1a), 2 kart sahnesi (S1d), 4 penaltı sahnesi
                                // (S1b), 8 gol sonrası akış (S1c), 16 bakış odağı (S1c; sonucu değiştirmez), 32 korner ve kenar kullananının rutini (S1e), 64 rutinin
-                               // barajlı vuruşa ve penaltıya genişlemesi (S1e); 0: K1 (birebir). Varsayılan o ana dek uygulanan bitlerin toplamı (S1a: 1, S1d: 3, S1b: 7)
+                               // barajlı vuruşa ve penaltıya genişlemesi (S1e); 0: K1 (birebir). Varsayılan o ana dek uygulanan bitlerin toplamı (S1a: 1, S1d: 3, S1b: 7,
+                               // S1c: 31)
   /* S1a (bit 1; sahne&1 ve sahne&4 ile): seremonili barajlı serbest vuruş — hedef temasa hedef süre (gerçek sn; tempo.baraj 24'ün karşılığı, × tempoBaglam
      × (1 ± tempoSapma)); topYer topun konma anı; kaos kaosun sınırları, kaosTaban varyantın alt sınırı (sakin kendi aralığıyla: kaos[0] … kaos[0] + 1);
      ek çizgi, dizilme, duruş ve koşunun payı; sakin, uzun varyant olasılıkları (kalanı olağan), uzunEk uzun varyantın kaosuna ek; yakin üyenin topa ilk
@@ -60,10 +61,21 @@ ayarEkle('S1',{
   ,penaltiSahne:{sure:40,aralik:[0.75,1.25],kos:2.3,kaosTaban:0.15,kaosH:0.55,kaosKirmizi:0.3,kaosSon:0.15,kaosItiraz:0.2,kaosSert:0.15,goster:[1.6,5],
     itiraz:[0.30,0.55],bosalt:0.85,kalabalik:[3,6],kaptanYakin:1.1,halka:[1.6,2.4],kaptanR:[4.2,5.2],gerHiz:0.12,yuruHiz:[1.2,2.2],uzakHiz:[1.0,4.0],
     bekle:[0.4,3.0],hazirDur:[0.6,1.4],kaleciItiraz:0.3,kaleciOyun:0.12,karsi:0.3,duzelt:0.2,protokolSari:1,zorlaGetir:12}
+  /* S1c (bit 8; bit 16 bakış odağı): gol sonrası akış (kutuphane/L L.3, L.9 madde 3; tempo B, gerçek sn; kullanıcı onaylı ~35 sn). toplam golden santra
+     vuruşuna hedef (düdük = toplam − 1,6; × bağlam: gol yiyen takımın koru/acele'si tempoBaglam ile, atan takımın acelesinde tempoBaglam[1]; ± tempoSapma, h2);
+     sevinc sevinç evresi (h2); kritik ikinci yarının son 6 dakikasında fark ≤ 1 iken sevinç çarpanı; atan atan takım acele ederken (geride ya da geç
+     eşitlemede) sevinç çarpanı — golcü topu ağdan kapıp ortaya koşar; kumeR golcünün kümesine koşan arkadaşların yarıçapı (m); donus dönüşte süreyi
+     dolduran hızın sınırları (m/sn); kaleciAl kalecinin ağa yürümeye başlaması (sn); uzgun yenen takımın yerinde üzgün bekleyişi (sn); tavan zorla
+     düdük (sn); tur golcünün koşu türü ağırlıkları (L.3; profilden: agresiflik köşe ve tribün, soğukkanlılık yerinde; pasçıya koşu yalnız asistte) —
+     yalnız kose bırakılırsa çeşitlilik kapanır. Kısaltmak için: toplam 30 (MAC_DENEME_AYAR'da nesne bütün olarak verilir) */
+  ,golTempo:{toplam:35,sevinc:[11,15],kritik:1.3,atan:0.35,kumeR:35,donus:[1.4,3.6],kaleciAl:[1.2,2.6],uzgun:[2,5],tavan:55,
+    tur:{kose:0.32,tribun:0.30,yerinde:0.18,pasci:0.12,kulube:0.04}}
 });
 const S1_BIT=Object.freeze({SERBEST:1,KART:2,PENALTI:4,GOL:8,ODAK:16,RUTIN:32,RUTIN2:64});
 /* S1b: penaltı kalabalığının yuvaları (rad; hakemden kümeye donmuş yönün çevresinde; kaptan 0'da) — fazlası ±0,55'lik adımlarla sürer (penaltiYuvaAci) */
 const PEN_YUVA=Object.freeze([0,0.55,-0.55,1.1,-1.1,1.65,-1.65]);
+/* S1c: santra noktası (bakış hedefi; salt okunur) */
+const GOL_NOKTA=Object.freeze({x:0,z:MZ});
 Object.assign(Match.prototype,{
   /* sahneOzet'in [0, 1) değerinden alanın tohumu (h2'nin ilk girdisi; tamsayı) */
   s1Tohum(v){return(v*2147483647)|0;},
@@ -605,5 +617,228 @@ Object.assign(Match.prototype,{
   penaltiDuzelt(du,tk){const P=du.pk;if(!P.duzelt||P.dz||du.kr||P.evre==='duduk'||du.hazirT<1)return;
     const a=du.aci,x=du.x-Math.cos(a)*0.45,z=du.z-Math.sin(a)*0.45;
     tk.tx=x;tk.tz=z;tk.hizOran=0.3;tk.yonHedef=a;tk.bak=null;this.eforVer(tk,0.8);
-    if(hyp(tk.x-x,tk.z-z)<0.4){P.dz=true;tk.eylem={ad:'yerlestir',t:0,sure:0.6};du.yerT=du.t;}}
+    if(hyp(tk.x-x,tk.z-z)<0.4){P.dz=true;tk.eylem={ad:'yerlestir',t:0,sure:0.6};du.yerT=du.t;}},
+
+  /* ============ S1c (2026-10-21): gol sonrası akış ve bakış odağı (protokol bit 8; bit 16 odak) ============
+     'goal' evresi sahnenin tamamını taşır: kutla (sevinç, sevincT) → donus (dönüş) → düdük (Law 8 ve hakemin hazırlığı; golDuduk) → 'kickoff'
+     (stepKick düdükten 1,6 sn sonra vurur, ikinci düdük yok). Plan gol anında bir kez kurulur (golSahneKur; h2 özeti golOzet, ana zar dizisi
+     kaymaz). Sahnenin durumu this.celeb'de (oyuncu nesnesine alan yok):
+     - c.s1, c.kt (santrayı yapan, gol yiyen takım), c.evre ('kutla' | 'donus'), c.sevincT, c.dudukT (planlanan düdük; phaseT, gerçek sn).
+     - c.sc sevincin merkezi (golcü; kendi kalesine golde atan takımın topa en yakın saha oyuncusu), c.tur koşu türü ('kose' | 'tribun' | 'pasci' |
+       'kulube' | 'yerinde' | 'atan'), c.kosuYer, c.asist (pasör ya da null), c.es (eşli sevinçte golcünün eşi), c.katil (kümeye koşanlar), c.cift
+       (uzaktakilerin ikili sarılma eşleri), c.uzgunT (yenen takımın üzgün bekleyişi).
+     - c.top {tur 'tasi' (T10d: gerideki takım ağdan alıp koşar) | 'atan' | 'el' | 'ayak', p, evre 'git' | 'cik' | 'gonder' | 'yol' | 'tasi' | 'nokta',
+       t, hedef, alici, son, zincir, bos}: yenen takımın topa en yakını (kaleci ya da 14 m içindeki savunmacı) ağdan alır, kaleci 4,5 m dışarı taşır,
+       elle yuvarlar ya da ayakla gönderir — hedef yolun üstündeki bir arkadaş ya da doğrudan santra noktası (yerIlkHiz ile). Kaleci uzağa atmaz;
+       yoldaki oyuncu durdurup yeniden gönderir, noktaya 12 m içinde (ya da 4 göndermeden sonra) elde taşınır ve yerleştirilir. Santracı yalnız
+       noktadaki topa gider.
+     - c.hk {evre 'isaret' | 'yuru' | 'bekle', yer, bekT}: hakem 2,4 sn santrayı gösterir, deftere yazar ('not' eylemi), santra yerine yürür
+       (≤ 3 m/sn), orada bekler. Yan hakem 1,5 sn hakeme bakar, sonra savunmanın hizasına (top terimi yok).
+     - c.odak {x, y, z} (bit 16; yalnız js/kamera.js okur, sonucu değiştirmez): sevinçte golcü ve küme, dönüşte takım, düdüğe yakın nokta.
+     Olaylar: 'goal' + {sevincT, tur, asist}; 'golTopAl' {p, tur, takim}; 'golTopGonder' {p, q, tur, L}; 'golTopNokta' {p}; 'duduk' {tur 'santra',
+     seremoni}; 'kickoff' + {dudukOnce}. */
+  golOzet(c,t){return h2(c.oz,c.oz2+t*7+11);},
+  golSahneKur(c){
+    const A=MOTOR_AYAR,T=A.golTempo,b=this.ball,att=c.team,kt=1-att,B=A.tempoBaglam;
+    c.s1=true;c.kt=kt;c.evre='kutla';c.odak=null;c.yon=new Set();
+    c.oz=((this.tohum|0)*157+(c.scorer?c.scorer.n|0:0)*29+(this.score[0]+this.score[1])*31+att*5)|0;c.oz2=(this.score[0]*7+this.score[1]*13+this.half*3)*1013;
+    const D=this.macDurumu(kt),DA=this.macDurumu(att);
+    let sc=c.own?null:c.scorer;
+    if(!sc||!sc.oyunda||sc.team!==att){sc=null;let ed=1e9;for(const q of this.teams[att])if(q.oyunda&&!q.sakat&&q.rol!=='GK'){const d=hyp(q.x-b.x,q.z-b.z);if(d<ed){ed=d;sc=q;}}}
+    c.sc=sc;
+    const as=this._asist;c.asist=!c.own&&sc&&as&&as.q===c.scorer&&as.p!==sc&&as.p.oyunda&&this.t-as.t<=15?as.p:null;
+    /* T10d alanı (eski formül): gol yiyen takım hâlâ gerideyse (ikinci yarıda ya da acelede) topa en yakın saha oyuncusu ağdan alıp koşar */
+    c.alan=null;
+    if(this.score[kt]<this.score[att]&&(this.half===2||D.acele>0)){let en=1e9;for(const q of this.teams[kt])if(q.oyunda&&q.rol!=='GK'&&!q.sakat){const d=hyp(q.x-b.x,q.z-b.z);if(d<en){en=d;c.alan=q;}}}
+    const atan=!c.alan&&!!sc&&(DA.acele>0.3||this.half===2&&DA.kalanDk<=10&&DA.fark===0);
+    /* bağlam: atan takımın acelesinde ve T10d'de (gerideki takım topu kapıp koşar) acele çarpanı; değilse gol yiyenin koru/acele'si (Z2a deseni) */
+    let k=1;if(atan||c.alan)k=B?B[1]:0.75;else if(B){k*=1+(B[0]-1)*D.koru;k*=1-(1-B[1])*D.acele;}
+    let sv=lerp(T.sevinc[0],T.sevinc[1],this.golOzet(c,1));
+    if(this.half===2&&DA.kalanDk<=6&&Math.abs(DA.fark)<=1)sv*=T.kritik;
+    if(atan)sv*=T.atan;else if(c.own)sv*=0.7;
+    c.sevincT=sv;c.tur=atan?'atan':this.golTurSec(c,sc);c.kosuYer=this.golKosuYer(c,sc);
+    /* dönüşün üst hızı: gerideki takım beklerken (T10d ya da atan takımın acelesi) hakem dönüşü hızlandırır — tırıs (5 m/sn), değilse donus[1] */
+    c.donusUst=atan||c.alan?Math.max(T.donus[1],5):T.donus[1];
+    const K=sc?this.santraKonumu(sc,kt):GOL_NOKTA,Ld=hyp(K.x-c.kosuYer.x,K.z-c.kosuYer.z);
+    c.dudukT=Math.max(T.toplam*k*(1+(A.tempoSapma||0)*(2*this.golOzet(c,0)-1))-1.6,sv+Ld/c.donusUst+2);
+    /* küme, eş ve uzaktakilerin ikilileri */
+    c.es=null;c.katil=new Set();c.cift=new Map();c.uzgunT=new Map();
+    if(sc){const uzak=[];
+      for(const q of this.teams[att]){if(!q.oyunda||q.sakat||q===sc||q.rol==='GK')continue;if(hyp(q.x-sc.x,q.z-sc.z)<=T.kumeR)c.katil.add(q);else uzak.push(q);}
+      if(!atan&&this.golOzet(c,3)<0.19){let ed=1e9;for(const q of c.katil){const d=hyp(q.x-sc.x,q.z-sc.z);if(d<ed){ed=d;c.es=q;}}}
+      while(uzak.length>=2){const a=uzak.shift();let j=-1,ed=25;for(let i=0;i<uzak.length;i++){const d=hyp(uzak[i].x-a.x,uzak[i].z-a.z);if(d<ed){ed=d;j=i;}}
+        if(j>=0){const e=uzak.splice(j,1)[0];c.cift.set(a,e);c.cift.set(e,a);}}}
+    for(const q of this.teams[kt])if(q.oyunda)c.uzgunT.set(q,lerp(T.uzgun[0],T.uzgun[1],this.golOzet(c,20+(q.n|0))));
+    /* top: kimin alacağı */
+    const gk=this.kaleci(kt),top={tur:null,p:null,evre:'git',t:0,bekle:0,hedef:null,alici:null,son:null,zincir:0,bos:0,nokta:false};
+    if(c.alan){top.tur='tasi';top.p=c.alan;top.bekle=0.6;}
+    else if(atan){top.tur='atan';top.p=sc;}
+    else{let en=null,et=1e9,bek=0;
+      if(gk&&gk.oyunda&&!gk.sakat){const g=lerp(T.kaleciAl[0],T.kaleciAl[1],this.golOzet(c,5));et=hyp(gk.x-b.x,gk.z-b.z)/2.2+g;en=gk;bek=g;}
+      for(const q of this.teams[kt]){if(!q.oyunda||q.sakat||q.rol==='GK')continue;const d=hyp(q.x-b.x,q.z-b.z);if(d>14)continue;const u=c.uzgunT.get(q)||0,tq=d/2.2+u;if(tq<et){et=tq;en=q;bek=u;}}
+      if(!en){let ed=1e9;for(const q of this.teams[kt])if(q.oyunda&&!q.sakat&&q.rol!=='GK'){const d=hyp(q.x-b.x,q.z-b.z);if(d<ed){ed=d;en=q;}}}
+      top.p=en;top.bekle=bek;top.tur=en&&en.rol==='GK'?'el':this.golOzet(c,4)<0.75?'ayak':'el';}
+    c.top=top;
+    c.hk={evre:'isaret',yer:{x:-6*this.dir[kt],z:MZ-8},bekT:0};c.yh0=[Math.abs(this.refs[1].x),Math.abs(this.refs[2].x)];
+  },
+  /* golcünün koşu türü (L.3): taban ağırlıklar golTempo.tur, profilden (agresiflik köşe ve tribün, soğukkanlılık yerinde), pasçıya koşu yalnız asistte */
+  golTurSec(c,sc){const W=MOTOR_AYAR.golTempo.tur||{},al=sc&&sc.profil&&sc.profil.alt,f=k=>al&&al[k]!=null?al[k]:0.5;
+    const w=[['kose',(W.kose||0)*(0.7+0.6*f('agresiflik'))],['tribun',(W.tribun||0)*(0.7+0.6*f('agresiflik'))],['yerinde',(W.yerinde||0)*(0.7+0.6*f('sogukkanlilik'))],
+      ['pasci',c.asist?(W.pasci||0):0],['kulube',W.kulube||0]];
+    let top=0;for(const x of w)top+=x[1];if(!(top>0)||!sc)return'yerinde';
+    let u=this.golOzet(c,2)*top;for(const x of w){u-=x[1];if(u<0)return x[0];}return'yerinde';},
+  golKosuYer(c,sc){const s=c.side;if(!sc)return{x:s*(PL-3),z:MZ};const t=c.tur;
+    if(t==='kose')return{x:s*(PL-3),z:sc.z<MZ?3:PW-3};
+    if(t==='tribun'){const y=c.team===0?this.taraftarYeri:this.deplasmanYeri;if(!y)return{x:s*(PL-3),z:sc.z<MZ?3:PW-3};
+      let x=clamp(y.x,-PL+2,PL-2),z=clamp(y.z,1.5,PW-1.5);const d=hyp(x-sc.x,z-sc.z);if(d>30){x=sc.x+(x-sc.x)*30/d;z=sc.z+(z-sc.z)*30/d;}return{x,z};}
+    if(t==='pasci'&&c.asist)return{x:c.asist.x,z:c.asist.z};
+    if(t==='kulube'){const k=this.kulubeler[c.team].alan;return{x:clamp(k.x,-PL+2,PL-2),z:k.z<MZ?1.2:PW-1.2};}
+    if(t==='atan')return{x:sc.x,z:sc.z};
+    const gx=s*PL,dx=sc.x-gx,dz=sc.z-MZ,d=hyp(dx,dz)||1;return{x:clamp(sc.x+dx/d*3,-PL,PL),z:clamp(sc.z+dz/d*3,0.5,PW-0.5)};},
+  /* dönüş: kendi yarısındaki santra yerine, düdüğe kalan süreyi yürüyerek dolduran hızla (geç kalınca tırıs; donus sınırları), en az hz oranı */
+  golDonusHedef(p,kt,kalan,hz){const k=this.santraKonumu(p,kt),L=hyp(k.x-p.x,k.z-p.z),D=MOTOR_AYAR.golTempo.donus,c=this.celeb,rk=p.team!==kt;p.tx=k.x;p.tz=k.z;
+    /* varış: rakip yarıda kalan (noktayı geçen) ve santrayı yapmayan takımda orta yuvarlağın içinde kalan durmaz */
+    if(L<0.4||L<1&&p.x*this.dir[p.team]<=0&&(!rk||hyp(p.x,p.z-MZ)>=9.3)){p.hizOran=0;p.bak=GOL_NOKTA;return;}
+    /* santrayı yapmayan takım orta yuvarlağın içinden geçmez: yolu yuvarlağı kesiyorsa 10,3 m'lik çemberi izler (her karede en çok 0,8 rad ileri) */
+    if(rk&&segD(0,MZ,p.x,p.z,k.x,k.z)<9.6){const ap=Math.atan2(p.z-MZ,p.x),a=ap+clamp(aciFark(Math.atan2(k.z-MZ,k.x),ap),-0.8,0.8);p.tx=Math.cos(a)*10.3;p.tz=MZ+Math.sin(a)*10.3;}
+    p.hizOran=Math.max(hz||0,clamp(L/kalan,D[0],c&&c.donusUst||D[1])/p.maxSpd);p.bak=null;},
+  golSahneAdim(dt){
+    const c=this.celeb,T=MOTOR_AYAR.golTempo,ph=this.phaseT,att=c.team,kt=c.kt,sc=c.sc;
+    if(c.evre==='kutla'&&ph>=c.sevincT){c.evre='donus';for(const p of this.teams[att])p.sevinc=false;}
+    const Y=this.golTopAdim(c,dt),kutla=c.evre==='kutla',kalan=Math.max(1,c.dudukT-1.5-ph);
+    for(const p of this.players){
+      if(!p.oyunda||p.sakat||p.eylem&&p.eylem.kilit||Y.has(p))continue;
+      p.surus=null;p.yonHedef=null;
+      if(p.team===att){
+        if(p.rol==='GK'){const ileri=ph<Math.min(4,c.sevincT);p.tx=-c.side*(PL-(ileri?8:1.5));p.tz=MZ;p.hizOran=ileri?0.5:0.3;p.bak=null;p.sevinc=ileri&&ph>0.5;continue;}
+        if(!kutla||!sc){this.golDonusHedef(p,kt,kalan,0);p.sevinc=false;continue;}
+        if(p===sc){const pa=c.tur==='pasci'&&c.asist&&c.asist.oyunda,y=pa?c.asist:c.kosuYer,d=hyp(p.x-y.x,p.z-y.z);
+          if(pa&&d<1.3){p.tx=p.x;p.tz=p.z;p.hizOran=0;}else{p.tx=y.x;p.tz=y.z;p.hizOran=d>8?1:d>2.5?0.6:0.2;}
+          p.bak=pa?c.asist:null;p.sevinc=ph>0.3;continue;}
+        if(c.katil.has(p)){
+          if(ph<0.5){p.tx=p.x;p.tz=p.z;p.hizOran=0.3;p.bak=sc;}
+          else{let a,r;if(p===c.es){a=sc.yon+Math.PI/2;r=1.0;}else{a=((p.n|0)*2.39996+(sc.n|0))%6.2832;r=0.9+0.7*h2(c.oz,(p.n|0)+40);}
+            p.tx=clamp(sc.x+Math.cos(a)*r,-PL-2,PL+2);p.tz=clamp(sc.z+Math.sin(a)*r,-2,PW+2);const d=hyp(p.tx-p.x,p.tz-p.z);p.hizOran=d>6?0.9:d>2?0.6:0.25;p.bak=sc;}
+          p.sevinc=ph>0.5;continue;}
+        const e=c.cift.get(p);
+        if(e&&ph<5){const d=hyp(e.x-p.x,e.z-p.z);if(d>1.0){p.tx=(p.x+e.x)/2;p.tz=(p.z+e.z)/2;p.hizOran=d>8?0.5:0.3;}else{p.tx=p.x;p.tz=p.z;p.hizOran=0;}p.bak=e;p.sevinc=ph>0.5;continue;}
+        if(ph<0.5+5*h2(c.oz,(p.n|0)+60)){p.tx=p.x;p.tz=p.z;p.hizOran=0;p.bak=null;p.sevinc=ph>0.5;continue;}
+        this.golDonusHedef(p,kt,kalan,0);p.sevinc=false;continue;}
+      /* yenen takım: yerinde üzgün, sonra santra yerine (kaleci kalesine) */
+      const u=c.uzgunT.get(p)||0;
+      if(ph<u){p.tx=p.x;p.tz=p.z;p.hizOran=0;p.bak=null;continue;}
+      if(p.rol==='GK'){p.tx=c.side*(PL-1.5);p.tz=MZ;p.hizOran=0.3;p.bak=null;continue;}
+      this.golDonusHedef(p,kt,kalan,0.25);}
+    /* jestlerin süresi (oyunda niyetAdim ilerletir; gol evresinde burada) */
+    for(const p of this.players){const j=p.jest;if(j){j.t+=dt;if(j.t>=j.sure)p.jest=null;}}
+    if(MOTOR_AYAR.protokol&S1_BIT.ODAK)this.golOdak(c,dt);
+    this.hareketHepsi(dt);this.topAdim(dt);
+    if(this.golSantraHazirMi(c)||ph>=T.tavan)this.golDuduk(c);
+  },
+  /* top zinciri: git → (cik → gonder) → yol → (tasi | yeniden gonder) → nokta. Döner: bu karede top makinesinin yönettiği oyuncular */
+  golTopAdim(c,dt){
+    const T=c.top,b=this.ball,Y=c.yon,kt=c.kt;Y.clear();T.t+=dt;
+    let p=T.p;if(p&&(!p.oyunda||p.sakat)){T.p=p=null;if(b.tasiyan&&!b.tasiyan.oyunda)b.tasiyan=null;if(T.evre!=='yol'&&T.evre!=='nokta'){T.evre='yol';T.bos=0;}}
+    const al=(q,tur)=>{b.agda=false;b.tasiyan=q;b.vx=b.vy=b.vz=0;this.topDegisti();T.p=q;T.alici=null;T.t=0;
+      if(tur)this.on(tur==='tasi'?'topuAgdanAldi':'golTopAl',tur==='tasi'?{p:q}:{p:q,tur,takim:q.team});
+      T.evre=T.tur==='tasi'||T.tur==='atan'||hyp(q.x,q.z-MZ)<=12||T.zincir>=4?'tasi':T.zincir===0?'cik':'gonder';T.hedef=null;};   /* ağdan alan (kaleci ya da savunan) önce dışarı taşır */
+    if(T.evre==='git'){
+      if(!p){T.evre='yol';T.bos=0;}
+      else{Y.add(p);p.sevinc=false;p.surus=null;
+        if(this.phaseT<T.bekle){p.tx=p.x;p.tz=p.z;p.hizOran=0;p.bak=b;}
+        else{const kos=T.tur==='tasi'||T.tur==='atan';p.tx=b.x-(b.agda?c.side*0.4:0);p.tz=b.z;p.hizOran=kos?1:0.3;p.bak=b;p.yonHedef=null;
+          if(b.tasiyan&&b.tasiyan!==p){T.evre='yol';T.bos=0;}
+          else if(hyp(p.x-b.x,p.z-b.z)<0.9&&b.y<1.5)al(p,b.agda?T.tur:null);}}}
+    else if(T.evre==='cik'){Y.add(p);const cx=c.side*(PL-4.5),cz=MZ+(this.golOzet(c,8)<0.5?-3:3);p.tx=cx;p.tz=cz;p.hizOran=0.3;p.bak=null;p.yonHedef=null;
+      if(hyp(p.x-cx,p.z-cz)<0.8){T.evre='gonder';T.t=0;}}
+    else if(T.evre==='gonder'){Y.add(p);if(!T.hedef)T.hedef=this.golHedefSec(c,p);const H=T.hedef;
+      if(H.q){Y.add(H.q);H.q.tx=H.q.x;H.q.tz=H.q.z;H.q.hizOran=0;H.q.bak=p;H.q.yonHedef=null;H.x=H.q.x;H.z=H.q.z;}
+      p.tx=p.x;p.tz=p.z;p.hizOran=0;p.bak=H.q||H;p.yonHedef=Math.atan2(H.z-p.z,H.x-p.x);
+      if(T.t>0.7)this.golGonder(c,p,H);}
+    else if(T.evre==='yol'){
+      const q=T.alici,v=hyp(b.vx,b.vz);
+      if(q&&q.oyunda&&!q.sakat){Y.add(q);q.tx=q.x;q.tz=q.z;q.hizOran=0;q.bak=b;q.yonHedef=null;
+        if(!b.tasiyan&&hyp(q.x-b.x,q.z-b.z)<1.2&&b.y<2.2){al(q,null);return Y;}}
+      if(!b.tasiyan&&b.y<0.5&&v<5){let en=null,ed=0.9;
+        for(const o of this.players){if(!o.oyunda||o.sakat||o.sevinc||o===T.son||o.rol==='GK'||o.eylem&&o.eylem.kilit)continue;const d=hyp(o.x-b.x,o.z-b.z);if(d<ed){ed=d;en=o;}}
+        if(en){if(en.team===kt){al(en,null);return Y;}
+          Y.add(en);this.golGonder(c,en,{x:0,z:MZ,q:null,tur:'tekme'});return Y;}}
+      if(b.tasiyan){const o=b.tasiyan;T.p=o;T.evre=hyp(o.x,o.z-MZ)<=12?'tasi':'gonder';T.hedef=null;T.t=0;return Y;}
+      if(v<0.3&&b.y<0.05){T.bos+=dt;
+        if(hyp(b.x,b.z-MZ)<=2.5){T.evre='nokta';T.t=0;}
+        else if(T.bos>3){let en=null,ed=1e9;for(const o of this.teams[kt])if(o.oyunda&&!o.sakat&&o.rol!=='GK'){const d=hyp(o.x-b.x,o.z-b.z);if(d<ed){ed=d;en=o;}}
+          if(en){T.p=en;T.evre='git';T.bekle=0;T.t=0;}}}
+      else T.bos=0;}
+    else if(T.evre==='tasi'){
+      if(!p||b.tasiyan!==p){T.evre='yol';T.bos=0;return Y;}
+      Y.add(p);const kos=T.tur==='tasi'?1:T.tur==='atan'?0.9:0.3;p.tx=0;p.tz=MZ;p.hizOran=kos;p.bak=null;p.yonHedef=null;p.sevinc=false;
+      if(hyp(p.x,p.z-MZ)<0.8){b.tasiyan=null;Object.assign(b,{x:0,z:MZ,y:0,vx:0,vy:0,vz:0,egri:0,ust:0});this.topDegisti();p.eylem={ad:'yerlestir',t:0,sure:0.6};
+        T.evre='nokta';T.p=null;T.son=p;T.t=0;if(!T.nokta){T.nokta=true;this.on('golTopNokta',{p});}}}
+    else if(T.evre==='nokta'){
+      const d=hyp(b.x,b.z-MZ),v=hyp(b.vx,b.vz);
+      if(b.tasiyan){T.p=b.tasiyan;T.evre='tasi';return Y;}
+      if(d>2.5&&v<0.3){T.evre='yol';T.bos=0;return Y;}
+      if(d>0.3&&v<0.3){const s=this.santraci(kt);if(s&&s.oyunda&&!s.sakat&&!(s.eylem&&s.eylem.kilit)){Y.add(s);s.tx=b.x-0.5*this.dir[kt];s.tz=b.z;s.hizOran=0.3;s.bak=b;s.yonHedef=null;
+          if(hyp(s.x-b.x,s.z-b.z)<1.0){Object.assign(b,{x:0,z:MZ,y:0,vx:0,vy:0,vz:0,egri:0,ust:0});this.topDegisti();s.eylem={ad:'yerlestir',t:0,sure:0.6};
+            if(!T.nokta){T.nokta=true;this.on('golTopNokta',{p:s});}}}}
+      else if(d<=0.3&&v<0.2&&!T.nokta){T.nokta=true;this.on('golTopNokta',{p:T.son});}}
+    return Y;
+  },
+  /* hedef: noktaya ≤ 45 m ve ayakla ise doğrudan nokta; değilse yolun üstündeki arkadaş (kendi yarısında, 12–30 m, noktaya 8 m daha yakın, yola en az
+     sapan saha oyuncusu), yoksa nokta. Kaleci 26 m'ye dek yuvarlar, ötesinde omuzdan atar (yalnız alıcıya; noktaya yuvarlar) */
+  golHedefSec(c,p){const L=hyp(p.x,p.z-MZ)||0.1,T=c.top,ayak=p.rol!=='GK'&&(T.zincir===0?T.tur==='ayak':this.golOzet(c,30+T.zincir)<0.5);
+    let q=null;
+    if(!(ayak&&L<=45)){let es=1e9;const ux=-p.x/L,uz=(MZ-p.z)/L;
+      for(const o of this.teams[c.kt]){if(!o.oyunda||o.sakat||o===p||o.rol==='GK'||o===T.son||o.eylem&&o.eylem.kilit||o.x*this.dir[c.kt]>-2)continue;const d=hyp(o.x-p.x,o.z-p.z);if(d<12||d>30)continue;   /* alıcı kendi yarısında */
+        if(hyp(o.x,o.z-MZ)>L-8)continue;const sap=Math.abs((o.x-p.x)*uz-(o.z-p.z)*ux);if(sap<es){es=sap;q=o;}}}
+    const Lh=q?hyp(q.x-p.x,q.z-p.z):L;
+    return{x:q?q.x:0,z:q?q.z:MZ,q,tur:p.rol==='GK'?(q&&Lh>26?'omuz':'yuvarla'):ayak?'tekme':'yuvarla'};},
+  golGonder(c,p,H){const T=c.top,b=this.ball,L=hyp(H.x-p.x,H.z-p.z)||0.1,ux=(H.x-p.x)/L,uz=(H.z-p.z)/L;
+    b.tasiyan=null;b.agda=false;b.sahip=null;b.egri=0;b.ust=0;
+    if(H.tur==='omuz'){const Tu=0.9+L/18;b.x=p.x+ux*0.3;b.z=p.z+uz*0.3;b.y=1.9;const v=this.havadanCoz(b.x,1.9,b.z,H.x,1.2,H.z,Tu,0);b.vx=v.vx;b.vy=v.vy;b.vz=v.vz;
+      p.eylem={ad:'elleAtis',t:0,sure:0.6,stil:'omuz'};}
+    else{const v0=yerIlkHiz(Math.max(0.5,L-0.35),H.q?1.2:0.3,undefined,this.kosullar);b.x=p.x+ux*0.35;b.z=p.z+uz*0.35;b.y=0;b.vy=0;b.vx=ux*v0;b.vz=uz*v0;
+      p.eylem=H.tur==='tekme'?{ad:'tekme',t:0,sure:0.3,ayak:p.ayak==='sol'?'sol':'sag',kucuk:true}:{ad:'elleAtis',t:0,sure:0.6,stil:'yuvarla'};}
+    p.kickCd=0.3;this.topDegisti();
+    this.on('golTopGonder',{p,q:H.q||null,tur:H.tur,L});
+    T.son=p;T.zincir++;T.alici=H.q||null;T.p=null;T.evre='yol';T.t=0;T.bos=0;T.hedef=null;},
+  /* Law 8: herkes kendi yarısında, rakipler orta yuvarlağın dışında, noktanın 3 m içinde santracıdan başka kimse yok (santraTek 0 iken yardımcı da) */
+  santraKuralHazir(t){const s=this.santraci(t),y=MOTOR_AYAR.santraTek?null:this.santraYardimcisi(t);
+    for(const p of this.players){if(!p.oyunda||p.sakat)continue;
+      if(p.x*this.dir[p.team]>0.3)return false;
+      const d=hyp(p.x,p.z-MZ);if(p.team!==t&&d<9.15||p!==s&&p!==y&&d<3)return false;}
+    return true;},
+  /* düdüğün ön koşulu: planlanan an geldi, top noktada ve durgun, santracı topun başında, hakem santra yerinde ≥ 0,5 sn, sakatlık ve kart yok, Law 8 */
+  golSantraHazirMi(c){const b=this.ball,H=c.hk;
+    if(this.phaseT<c.dudukT||b.tasiyan||hyp(b.x,b.z-MZ)>0.3||hyp(b.vx,b.vz)>0.2||b.y>0.05)return false;
+    const s=this.santraci(c.kt);if(!s||hyp(s.x,s.z-MZ)>1.2)return false;
+    if(!H||H.evre!=='bekle'||H.bekT<0.5||this.sakatlikBekletir()||this.refs[0].kartSira)return false;
+    return this.santraKuralHazir(c.kt);},
+  golDuduk(c){const tavan=this.phaseT>=MOTOR_AYAR.golTempo.tavan,b=this.ball;
+    if(tavan&&(b.tasiyan||hyp(b.x,b.z-MZ)>0.3))this.topuSifirla(0,MZ);
+    this.refs[0].eylem={ad:'duduk',t:0,sure:0.8};this.on('duduk',{tur:'santra',sinif:null,seremoni:true,bek:0,sahip:'santra',tavan});
+    for(const p of this.players)p.sevinc=false;
+    const al=c.alan;this.santraHazirla(c.kt,false);this.santraAcele=!!al;this._santraS1={t:this.t};},
+  /* hakem (hakemAI'nın gol dalı): isaret 2,4 sn yerinde, golcüye bakar (çizim santrayı gösterir) → yuru: deftere yazarak (not, 2,4 sn; 0,17 hız)
+     sonra santra yerine 0,25–0,42 hız oranıyla (düdüğe yetişecek hız; ≤ 3 m/sn), yüz gidiş yönünde → bekle: yerinde, topa bakar */
+  golHakemAdim(h,dt){const c=this.celeb,H=c.hk,ph=this.phaseT,y=H.yer;
+    if(H.evre==='isaret'){h.tx=h.x;h.tz=h.z;h.hizOran=0;h.bak=c.sc||this.ball;if(ph>=2.4){H.evre='yuru';h.eylem={ad:'not',t:0,sure:2.4};}return;}
+    const d=hyp(y.x-h.x,y.z-h.z);
+    if(H.evre==='yuru'){h.tx=y.x;h.tz=y.z;h.bak=null;const not=h.eylem&&h.eylem.ad==='not',kal=c.dudukT-ph-1.5;
+      h.hizOran=not?0.17:clamp(kal>0?d/kal/h.maxSpd:1,0.25,0.42);if(d>0.3)h.bakisYon=Math.atan2(y.z-h.z,y.x-h.x);
+      if(d<1.0){H.evre='bekle';H.bekT=0;}return;}
+    h.tx=y.x;h.tz=y.z;h.hizOran=d>0.5?0.15:0;h.bak=this.ball;H.bekT+=dt;},
+  /* yan hakem: 1,5 sn hakemle göz göze, sonra savunmanın sondan ikinci oyuncusunun gittiği yerin hizasına (hedefleri, tx; top terimi yok) — golden
+     önceki yerinden kaleye doğru inmez (kale çizgisine koşmaz), dönen savunmayla orta çizgiye kayar */
+  golYanHakem(q,s,z){if(this.phaseT<1.5){q.tx=q.x;q.tz=q.z;q.hizOran=0;q.bak=this.refs[0];q.yonHedef=null;return;}
+    const def=this.dir[0]===-s?0:1,c=this.celeb,ust=c&&c.yh0?c.yh0[s>0?0:1]:PL-1;let a=-Infinity,e=-Infinity;for(const p of this.teams[def])if(p.oyunda){const v=p.tx*s;if(v>a){e=a;a=v;}else if(v>e)e=v;}
+    q.tx=clamp(Math.max(e,0),0,Math.min(PL-1,Math.max(ust,0)))*s;q.tz=z;const uz=Math.abs(q.tx-q.x);q.hizOran=uz>8?0.6:0.45;q.yonHedef=uz>6?null:(z>MZ?-Math.PI/2:Math.PI/2);q.bak=uz>6?null:this.ball;},
+  /* bakış odağı (bit 16; sonucu değiştirmez, yalnız js/kamera.js okur): sevinçte golcü (×2) ve 8 m içindeki küme; dönüşte dönen takımın merkezi
+     kendi yarısındakilerin payının karesiyle (× 0,8) noktaya karışır; düdüğe son 2 sn'de nokta. exp(−dt/0,5) ile süzülür */
+  golOdak(c,dt){const sc=c.sc,ph=this.phaseT;let x=0,z=MZ;
+    if(c.evre==='kutla'&&sc){let n=2,sx=sc.x*2,sz=sc.z*2;for(const p of this.teams[c.team])if(p!==sc&&p.oyunda&&hyp(p.x-sc.x,p.z-sc.z)<8){sx+=p.x;sz+=p.z;n++;}x=sx/n;z=sz/n;}
+    else if(ph<c.dudukT-2){let n=0,sx=0,sz=0,ev=0,top=0;
+      for(const p of this.teams[c.team]){if(!p.oyunda||p.rol==='GK')continue;top++;const evde=p.x*this.dir[p.team]<=0.3;if(evde)ev++;const w=evde?0.3:1;sx+=p.x*w;sz+=p.z*w;n+=w;}
+      const w=top?Math.pow(ev/top,2)*0.8:1;x=n?sx/n:0;z=n?sz/n:MZ;x=lerp(x,0,w);z=lerp(z,MZ,w);}
+    const o=c.odak;if(!o){c.odak={x,y:1,z};return;}const k=1-Math.exp(-dt/0.5);o.x+=(x-o.x)*k;o.z+=(z-o.z)*k;},
 });

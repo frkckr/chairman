@@ -229,7 +229,10 @@ OLCUM_KUR_JS = r"""() => {
     if (p.kind === 'ref') { const du = mac.durus, b = mac.ball, h = typeof ANM_HK !== 'undefined' ? ANM_HK.get(p) : null;
       const end = (mac.phase === 'durus' && du && du.endirekt && !du.hakemTopu && du.t > 2.0) || (mac.phase === 'play' && b && b.endirekt && !b.endirekt.hakemTopu);
       if (end) { O.endKare++; if (h && h.cur && h.cur.tur === 'endirekt') O.endTut++; }
-      if (e && e.ad === 'birak' && e.t <= dt * 1.01) { O.birakN++; if (h && h.cur && h.cur.tur === 'birak') O.birakAyni++; } }
+      if (e && e.ad === 'birak' && e.t <= dt * 1.01) { O.birakN++; if (h && h.cur && h.cur.tur === 'birak') O.birakAyni++; }
+      /* S1c: deftere yazma ('not' eylemi; gol evresinde ve kartta) işareti eylemle aynı karede; golden sonraki santrada ikinci düdük (kickoff'tan sonraki 40 karede başlayan 'duduk') */
+      if (e && e.ad === 'not' && e.t <= dt * 1.01) { O.notN = (O.notN || 0) + 1; if (h && h.cur && h.cur.tur === 'not') O.notAyni = (O.notAyni || 0) + 1; }
+      if (O.kickKare != null && mac.kare - O.kickKare <= 40 && h && h.cur && h.cur.tur === 'duduk' && h.basKare >= O.kickKare) { O.cift = (O.cift || 0) + 1; O.kickKare = null; } }
   }
   const K = new Map(), V = new THREE.Vector3(), H = new THREE.Vector3();
   let t = 0, kareSure = 0, bekleyenler = [];
@@ -462,7 +465,9 @@ OLCUM_KUR_JS = r"""() => {
   const asilOlay = window.animasyonOlay;
   /* endirekt kolu havadayken yeniden başlama düdüğü çizilmez (kol inmez): ölçüme alınmaz */
   window.animasyonOlay = (ad, v) => { asilOlay(ad, v); const h0 = typeof ANM_HK !== 'undefined' && mac.refs ? ANM_HK.get(mac.refs[0]) : null;
-    if (HK_OLAY[ad] && !(ad === 'duduk' && h0 && h0.cur && h0.cur.tur === 'endirekt') && !(ad === 'kartSahne' && !(v && v.evre === 'yaklas')) && !(ad === 'penaltiSahne' && !(v && (v.evre === 'bosalt' || v.evre === 'hazir'))))
+    /* S1c: golden sonraki santrada düdük santradan önce çalar (kickoff dudukOnce) — işaret yok, zamanlamaya girmez; çift düdük ayrı sayılır (olayOlc) */
+    if (ad === 'kickoff' && v && v.dudukOnce) { S.ol.kickN = (S.ol.kickN || 0) + 1; S.ol.kickKare = mac.kare; }
+    if (HK_OLAY[ad] && !(ad === 'kickoff' && v && v.dudukOnce) && !(ad === 'duduk' && h0 && h0.cur && h0.cur.tur === 'endirekt') && !(ad === 'kartSahne' && !(v && v.evre === 'yaklas')) && !(ad === 'penaltiSahne' && !(v && (v.evre === 'bosalt' || v.evre === 'hazir'))))
       S.zOlay.push({ ad: ad === 'penaltiSahne' ? 'penaltiSahne:' + v.evre : ad === 'kaptanIsareti' && v && v.kaynak === 'penalti' ? 'kaptanPenalti' : ad, kare: mac.kare, tur: HK_OLAY[ad] });   /* S1d: kartSahne'de işaret yalnız yaklaşmada; S1b: penaltiSahne'de boşaltma ve hazır (çizgi), kaptan işaretinin kaynağı ayrı */
     if (ad === 'mudahaleSonuc' && v && v.p && v.topaDegdi) zTmBekle.set(v.p, mac.kare);
     /* A6-0: şut bloğu (orta bloğu değil) — motorun temas uzaklığı ve topun yüksekliği olay anında */
@@ -734,7 +739,7 @@ SONUC_JS = r"""() => {
         return r; })() }; })(),
     ol: (() => { const O = S.ol, yz = (a, b) => b ? +(100 * a / b).toFixed(1) : null; return { sakKare: O.sakKare, sakPoz: yz(O.sakPoz, O.sakKare), sedKare: O.sedKare, sedYuk: yz(O.sedYuk, O.sedKare),
       sedTut: yz(O.sedTut, O.sedTutN), tedKare: O.tedKare, tedPoz: yz(O.tedPoz, O.tedKare), gerdir: O.gerdir, topalN: O.topalN, topalOran: O.topalIyi ? +(O.topalKotu / O.topalIyi).toFixed(2) : null,
-      endKare: O.endKare, endTut: yz(O.endTut, O.endKare), birakN: O.birakN, birakAyni: O.birakAyni, sev: O.sev, sevCesit: Object.keys(O.sev).length, gerdirOrtulu: O.gerdirOrtulu || 0, olay: window.__OLAY_SONUC || null }; })(),
+      endKare: O.endKare, endTut: yz(O.endTut, O.endKare), birakN: O.birakN, birakAyni: O.birakAyni, notN: O.notN || 0, notAyni: O.notAyni || 0, kickN: O.kickN || 0, cift: O.cift || 0, sev: O.sev, sevCesit: Object.keys(O.sev).length, gerdirOrtulu: O.gerdirOrtulu || 0, olay: window.__OLAY_SONUC || null }; })(),
     /* A7-0: "A: eğri" — bant başına çizilen ortalama eğri (en az 4 örnekli kutular) ve aynı ortalama hızda veri eğrisi (bantların karışımı; çizimin
        anmEgriKaris'iyle aynı kural, burada bağımsız yazılı: A6 çiziminde o işlev yok) */
     eg: (() => { if (!S.eg || typeof HAREKET_EGRI === 'undefined') return null; const H = HAREKET_EGRI, KN = ['uyluk', 'diz', 'omuz', 'dirsek', 'egim', 'legen', 'gogus', 'kalcaH'], N = 50;
@@ -1188,6 +1193,7 @@ def satirlar(o):
         S.append(f"A: olay (T10f): sakatın tutma pozu %{v(ol['sakPoz'])} ({ol['sakKare']} kare) · sedyede kök 0,55–0,9 m %{v(ol['sedYuk'])} ({ol['sedKare']} kare), sedyeyi tutan sağlıkçı %{v(ol['sedTut'])}"
                  f" · tedavide sağlıkçı çömelik/gerdirir %{v(ol['tedPoz'])} ({ol['tedKare']} kare; gerdirme {ol['gerdir']}, çömelmenin altında {ol.get('gerdirOrtulu', 0)}) · topallama basma oranı {v(ol['topalOran'], 2)} ({ol['topalN']} kare)"
                  f" · endirekt işaret tutuldu %{v(ol['endTut'])} ({ol['endKare']} kare) · hakem topu bırakma aynı karede {ol['birakAyni']}/{ol['birakN']} · golcü sevinci {ol['sevCesit']} çeşit ({sev or '—'})"
+                 f" · S1c: deftere yazma aynı karede {ol.get('notAyni', 0)}/{ol.get('notN', 0)}, düdüklü santrada çift düdük {ol.get('cift', 0)}/{ol.get('kickN', 0)}"
                  f"   [hedef ≥90 / ≥90 / ≥80 / ≥80 / 0,55–0,75 / ≥90 / N/N / ≥5]")
         if ol.get("olay"):
             S.append("A:   olay düzeneği (yapay): " + json.dumps(ol["olay"], ensure_ascii=False))

@@ -113,6 +113,10 @@ HAZIR = {
     "uzun-tac": ("__son('kullanim',0.05,v=>v.tur==='tac'&&v.alt==='uzun')", 0, "mac"),
     "penalti-vurus": ("__son('kullanim',0.05,v=>v.tur==='penalti')", 0, "mac"),
     "kale-vurusu": ("mac.phase==='durus'&&mac.durus.tur==='kaleVurusu'&&mac.durus.asama==='hazir'", 0.3, "mac"),
+    # S1c (2026-10-21): gol sonrası — küme (sevinç evresinin 6. sn'si), dönüş (sevinçten 4 sn sonra), santranın düdüğü (Claude'un kendi incelemesi)
+    "golKume": ("mac.phase==='goal'&&mac.celeb&&mac.celeb.s1&&mac.celeb.evre==='kutla'&&mac.phaseT>6", 0, "mac"),
+    "golDonus": ("mac.phase==='goal'&&mac.celeb&&mac.celeb.s1&&mac.celeb.evre==='donus'&&mac.phaseT>mac.celeb.sevincT+4", 0, "mac"),
+    "golDuduk": ("__son('duduk',0.05,v=>v.tur==='santra')", 0.2, "mac"),
 }
 VARSAYILAN_SET = ["santra", "orta-saha", "korner", "sut", "faul", "sol-ceza", "uzak-kenar", "yakin-kenar"]
 
