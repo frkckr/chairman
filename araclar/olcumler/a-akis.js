@@ -41,7 +41,7 @@ module.exports={
     ['Alış → vuruş: süre (sn)','aAlisSure',2],['Alış → vuruş / maç','aAlisN',1],
     ['Gelişine pas %','aTekPay',1],['Gelişine pas: açı ort. (°)','aTekAci',1],['Gelişine şut %','aTekSutPay',1],
     ['Santra: orta noktada tek oyuncu %','aSantraTek',1],['Santra: ilk pas geri %','aSantraGeri',1],
-    ['Eğrili pas ve orta %','aEgriPay',1],['Uzun havadan pas (orta dışı, ≥ 30 m) / maç','aHavaUzun',2],['Koşana havadan pas / maç','aKosanHava',2],
+    ['Eğrili pas ve orta %','aEgriPay',1],['Eğri: |egri| ort. ×100 (pas ve orta; P2)','aEgriOrt',2],['Uzun havadan pas (orta dışı, ≥ 30 m) / maç','aHavaUzun',2],['Koşana havadan pas / maç','aKosanHava',2],
     ['Orta / maç','aOrta',2],['Orta: kanat oyuncusundan %','aOrtaKanat',1],['Orta: içe dönen (eğrililer) %','aOrtaIce',1],
     ['Sürükleme kararı (T22a) / maç','aSurukle',2],['Kanat taşıması ≥ 15 m / maç','aKanat15',2],['Kanat taşıması ≥ 25 m / maç','aKanat25',2],
     ['Şut: sert %','aSut_sert',1],['Şut: plase %','aSut_plase',1],['Şut: falso ve trivela %','aSut_falso',1],['Şut: aşırtma %','aSut_asirtma',1],
@@ -58,7 +58,7 @@ module.exports={
     let pasN=0,tekN=0,tekAci=0,tekAciN=0,sutN=0,tekSut=0;
     let santraN=0,santraTek=0,santraGeri=0,santraBek=null;
     let surukle=0;const sonSur=new Map();
-    let egriN=0,egriP=0,havaUzun=0,kosanHava=0,ortaN=0,ortaKanat=0,ortaEgri=0,ortaIce=0,kan15=0,kan25=0;
+    let egriN=0,egriP=0,egriT=0,havaUzun=0,kosanHava=0,ortaN=0,ortaKanat=0,ortaEgri=0,ortaIce=0,kan15=0,kan25=0;
     const sut={sert:0,plase:0,falso:0,asirtma:0,vole:0};
     /* T24-0 */
     const sutA={sert:0,plase:0,falso:0,asirtma:0,dusen:0,vole:0};let sutAN=0,ilkSN=0,ilkDeg=0,ilkDegV=0,ilkDegT=0,yerSN=0,yerDeg=0;const stil0=new WeakMap();
@@ -76,7 +76,7 @@ module.exports={
         if(ad==='ilkDokunus'&&v.iyi&&p){const sp=hyp(p.vx,p.vz),h=sp>0.8?Math.atan2(p.vz,p.vx):p.yon;alis.set(p,{t0:m.t,hx:Math.cos(h),hz:Math.sin(h),geri:0,yonGeri:0});return;}
         if(ad==='pass'||ad==='cross'){if(!p)return;const e=p.eylem,d=m.dir[p.team];
           if(santraBek!=null&&p.team===santraBek){if((v.hx-v.x0)*d<-1)santraGeri++;}santraBek=null;
-          pasN++;if(Math.abs(b.egri||0)>0.02)egriP++;egriN++;
+          pasN++;if(Math.abs(b.egri||0)>0.02)egriP++;egriN++;egriT+=Math.abs(b.egri||0);
           if(v.ilk){tekN++;if(hyp(pbx,pbz)>2){const gelen=Math.atan2(-pbz,-pbx),giden=Math.atan2(v.hz-v.z0,v.hx-v.x0);tekAci+=Math.abs(aN(giden-gelen))*180/Math.PI;tekAciN++;}}
           if(v.tip==='hava'&&ad!=='cross'&&v.L>=30)havaUzun++;
           if(v.tip==='hava'&&ad!=='cross'&&v.q&&hyp(v.q.vx,v.q.vz)>3.5)kosanHava++;
@@ -132,7 +132,7 @@ module.exports={
         for(const [,t] of tas){if(t.L>=15)kan15++;if(t.L>=25)kan25++;}
         hizL.sort((a,c)=>a-c);
         const ham={aArkaPay:[arkaK,surK],aDonukPay:[donukK,donukN],aDonukKalici:[donukKal,donukN],aDonukDon:[donukDon,donukN],aDonukYuz:[donukYuz,donukN],aGeriPay:[geriN,alisN],aYonGeriPay:[yonGeriN,alisN],aTekPay:[tekN,pasN],aTekSutPay:[tekSut,sutN],
-          aSantraTek:[santraTek,santraN],aSantraGeri:[santraGeri,santraN],aEgriPay:[egriP,egriN],aOrtaKanat:[ortaKanat,ortaN],aOrtaIce:[ortaIce,ortaEgri]};
+          aSantraTek:[santraTek,santraN],aSantraGeri:[santraGeri,santraN],aEgriPay:[egriP,egriN],aEgriOrt:[egriT,egriN],aOrtaKanat:[ortaKanat,ortaN],aOrtaIce:[ortaIce,ortaEgri]};
         for(const k in sut)ham['aSut_'+k]=[sut[k],sutN];
         for(const k in sutA)ham['aSutA_'+k]=[sutA[k],sutAN];
         ham.aStilDeg=[ilkDeg,ilkSN];ham.aStilDegV=[ilkDegV,ilkSN];ham.aStilDegT=[ilkDegT,ilkSN];ham.aStilDegY=[yerDeg,yerSN];

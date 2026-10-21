@@ -115,6 +115,10 @@ ayarEkle('B',{
   /* T21 (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): topun yolu — eğri, uzun top, orta */
   pasFalso:1,                  // T21b: pasın doğal eğrisi çarpanı — iç ayakla yerden pas 0,01–0,05 (boyla), dış ayakla ters yöne 0,05–0,09, iç ayakla uzun havadan 0,04–0,08; nişan
                                // yerdeki eğriyi telafi eder (yerPasVur). 0: eski (yerden pas ve uzun top dönüşsüz)
+  pasEgriKat:1.6,              // P2 (kullanıcı, 2026-10-21 gece: "daha çok falsolu pas olmalı ki izlemesi keyif versin"): eğri büyüklüğü çarpanı — 18 m'den uzun
+                               // yerden pas, uzun havadan pas, orta ve korner (orta/korner |egri| ≤ 0,16). Nişan telafisi aynı eğriyle (top yine hedefe),
+                               // rastlantı çekilmez. 1: eski (s1 ile birebir). Denge gece ölçülür (c-orta, d-duran, b-pas, 80 maç); V1c-2'nin pasEgri tablosu
+                               // gelince dış çarpan olarak kalır ya da tabloya katlanır
   uzunKosu:1,                  // T21c: koşana savunma arkasına havadan (boşluğa) pas adayı (≥ 15 m; eskiden yasak) ve boşluğa pasta yerden ↔ havadan ikili analiz; 0: eski
   verKacKalkis:0.05,           // Z4b (ver-kaç): koşuya çıkan pasörün vuruş takibi bu kadar (sn) sürer — pas verir vermez kalkar (0: eski 0,26)
   verKacTarz:1,                // Z4b: ver-kaç koşusunun sıklığı takımın tarzıyla (duvar pası ağırlığı; konumsal 1, ilişkisel 2, direkt 0,7; 0: tarzsız)
@@ -532,7 +536,7 @@ Object.assign(Match.prototype,{
     /* T21b (pasFalso): pasın doğal eğrisi — iç ayakla sağ ayak sola, sol ayak sağa kıvırır (orta ve kornerle aynı işaret), dış ayakla ters yöne ve daha çok;
        nişan yerdeki kıvrılmayı telafi eder (topun kopyası L kadar yürütülür, yanal sapma kadar döndürülür) */
     if(MOTOR_AYAR.pasFalso&&!e.kotu&&L>=6&&MOTOR_AYAR.yerFalso){const dis=e.stil==='dis',isr=(e.ayak==='sol'?1:-1)*(dis?-1:1);
-      const eg=isr*MOTOR_AYAR.pasFalso*(dis?0.05+0.04*this.rast():0.01+0.04*clamp(L/30,0,1)*this.rast());b.egri=eg;
+      const eg=isr*MOTOR_AYAR.pasFalso*(dis?0.05+0.04*this.rast():0.01+0.04*clamp(L/30,0,1)*this.rast())*(L>=18?MOTOR_AYAR.pasEgriKat:1);b.egri=eg;
       const D=this.yerEgriSapma(bx,bz,b.vx,b.vz,eg,L),ac=-Math.atan2(D,L),c2=Math.cos(ac),s2=Math.sin(ac),vx0=b.vx;b.vx=vx0*c2-b.vz*s2;b.vz=vx0*s2+b.vz*c2;}
     e.guc=clamp(v/29,0,1);if(v>20&&e.stil==='ic')e.stil='ust';
     this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'yer'});
@@ -550,9 +554,9 @@ Object.assign(Match.prototype,{
     const sd=this.vurusHatasi(p,e,L,pasGucu('hava',0,L,T));   /* T9b-a: güç uçuş süresinden (çıkış hızı) */
     /* orta ve korner hedefteki oyuncunun baş (kesmede göğüs-baş) yüksekliğine gönderilir */
     hy=sec.hy!=null?sec.hy:(sec.tur==='orta'||sec.tur==='korner')?1.7:0;
-    if(sec.tur==='orta'||sec.tur==='korner')egri=(e.ayak==='sag'?-1:1)*(sec.yay==='kesme'?0.08+this.rast()*0.06:0.05+this.rast()*0.07);
+    if(sec.tur==='orta'||sec.tur==='korner')egri=(e.ayak==='sag'?-1:1)*Math.min(0.16,(sec.yay==='kesme'?0.08+this.rast()*0.06:0.05+this.rast()*0.07)*MOTOR_AYAR.pasEgriKat);
     /* T21b (pasFalso): iç ayakla uzun havadan pas ve uzun top kıvrılarak gider (havadanCoz eğriyi bilir, top hedefe iner) */
-    else if(MOTOR_AYAR.pasFalso&&L>=25&&sec.tur!=='uzaklastir'&&sec.tur!=='degaj'&&sec.yay!=='asirtma'&&e.stil!=='dis')egri=(e.ayak==='sag'?-1:1)*(0.04+0.04*this.rast())*MOTOR_AYAR.pasFalso;
+    else if(MOTOR_AYAR.pasFalso&&L>=25&&sec.tur!=='uzaklastir'&&sec.tur!=='degaj'&&sec.yay!=='asirtma'&&e.stil!=='dis')egri=(e.ayak==='sag'?-1:1)*(0.04+0.04*this.rast())*MOTOR_AYAR.pasFalso*MOTOR_AYAR.pasEgriKat;
     /* havadan pas ve orta kesik dönüşle gider: havada biraz asılı kalır, yerde frenlenir */
     ust=sec.tur==='uzaklastir'||sec.tur==='degaj'?0:sec.yay==='asirtma'?-0.06:-0.04;
     const ah=this.normal()*sd*1.6,ca=Math.cos(ah),sa=Math.sin(ah),rx=hx-bx,rz=hz-bz;
