@@ -436,5 +436,22 @@ const STIL={
      piksel; daha uzakta büyütülür), topEnCok: en çok büyütme katı. topLeke: havadaki topun altındaki koyu leke (opak, boy = top yarıçapına oran, yukseklik = top
      yerden bu kadar (m) yükselince). parlama: oyuncu dokusunun kendi renginden ışıma payı (gece ışığında koyu leke olmasınlar).
      disCizgi: oyuncu ve topun çevresinde 1 piksellik koyu çizgi denemesi (karşılaştırma için; varsayılan kapalı). TEST değerleri */
-  okunurluk:{cizgi:{acik:true,genislik:1,opak:0.7,parlaklik:1,y:0.02},topEnAz:4.5,topEnCok:3,topLeke:{opak:0.5,boy:2.2,yukseklik:0.3},parlama:0.12,disCizgi:false}
+  okunurluk:{cizgi:{acik:true,genislik:1,opak:0.7,parlaklik:1,y:0.02},topEnAz:4.5,topEnCok:3,topLeke:{opak:0.5,boy:2.2,yukseklik:0.3},parlama:0.12,disCizgi:false},
+  /* P1 (2026-10-21, kullanıcı kararı; DENEME, karar bekliyor): pul görünümü (js/pul.js) — maçta sahadaki her insan aynı numaralı pul olarak çizilir
+     (FM 2D gibi; boy, saç, yapı ayrımı yok). Açma: Ayarlar > Maç > 2D maç görünümü, maçta G tuşu ya da adres ?pul=1 (?pulEgim=0..1, ?pulEnAz=2..20 ile
+     deneme). yaricap/yukseklik: pulun boyu (m). egim: pulun yüzü yerden kameraya ne kadar döner (0 düz yatar, 1 kameraya bakar). enAzPx: pulun ekrandaki
+     en küçük yarıçapı (960 ızgara pikseli; uzakta büyütülür, en çok enCokKat). doku: üst yüzün piksel boyu; sayiOlcek: numaranın piksel ölçeği; halka: kenar
+     halkasının kalınlığı (doku pikseli). yanKoyu: yan yüzün forma rengine oranı. yatDim: yatan oyuncunun kararma payı. oturmaY: kulübede oturanın pul
+     yüksekliği (m). topcuOran: top toplayıcı pulunun oranı. golge: pulun altındaki koyu lekenin opaklığı (havadayken yerde kalır: yükseklik ipucu).
+     ayak: iki ayak çizgisi (en, boy, yandan uzaklık, on: merkezin pul kenarından öne taşması, adım salınımı m; parlak: vuran ayağın rengi). sayiKameraya: numara ekranda dik durur.
+     topUstte: top pulların önünde çizilir (eğik pul topu örterse; varsayılan kapalı).
+     tepe (kullanıcı kararı, 2026-10-21 akşam): 2D maç görünümü — başkanın loca bakışı yerine FM gibi tepeden bakan kamera (js/kamera.js tepeKamera);
+     pullar düz yatar. yukseklik: kameranın yerden yüksekliği (m). genislik: yakınlık seviyelerinde ekranda görünen dikey uzunluk (m; Z tuşu sırayla
+     değiştirir; 100 bütün stat — maç öncesinde kendiliğinden), seviye: açılıştaki seviye. takip: topu izlemenin yumuşaklığı (sn), yakinlik:
+     seviye geçişinin yumuşaklığı (sn). sinir: kameranın merkezinin gidebileceği yarı
+     uzunluklar (x, z; m — statın dışı görünmesin). yaricapKat: tepeden pulun büyütülmesi. golgeKay: pul lekesinin kayması (dünya x, z; m — ekranda
+     sağ aşağı). TEST değerleri */
+  pul:{yaricap:0.5,yukseklik:0.12,egim:0.5,enAzPx:6,enCokKat:3,doku:32,sayiOlcek:3,halka:2.5,yanKoyu:0.55,yatDim:0.4,oturmaY:0.55,topcuOran:0.75,golge:0.3,
+    ayak:{en:0.12,boy:0.24,yan:0.2,on:0.02,adim:0.1,parlak:'#ffb530'},sayiKameraya:true,topUstte:false,
+    tepe:{yukseklik:110,genislik:[40,60,100],seviye:1,takip:0.35,yakinlik:0.6,sinir:[78,60],yaricapKat:1.5,golgeKay:[-0.14,-0.14]}}
 };

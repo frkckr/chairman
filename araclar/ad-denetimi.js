@@ -92,7 +92,7 @@ const BILINEN_SIZINTI=new Set(['ciz','kapat']);
   for(const [k,L] of Object.entries(yontem))if(L.length>1)bul('aynı Match yöntemi',`${k}: ${L.join(', ')}`);
 }
 /* (c) çizim dosyaları motoru yalnız okur */
-{const CIZIM=['js/mac-sahnesi.js','js/animasyon.js','js/kamera.js','js/okunurluk.js','js/baskan.js','js/mac-izleme.js'];
+{const CIZIM=['js/mac-sahnesi.js','js/animasyon.js','js/kamera.js','js/okunurluk.js','js/baskan.js','js/mac-izleme.js','js/pul.js'];
   const YASAK_CAGRI=/\bmac\.(rast|normal|topYolu|topTahmin|yakalamaNoktasi|cerceveyeGider|step|macaGec|kararVer)\s*\(/g;
   const IZIN={'js/mac-sahnesi.js':new Set(['step','macaGec'])};
   const YAZMA=[/\bp\.[A-Za-z_$][\w$]*(\.[\w$]+)*\s*(=(?!=)|\+=|-=|\*=|\/=|\+\+|--)/g,/\bmac\.ball\.[\w$.]+\s*(=(?!=)|\+=|-=|\*=)/g,/\bmac\.(players|refs|teams|ball|ist|score|phase|durus)\s*(=(?!=))/g];

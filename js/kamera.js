@@ -157,12 +157,30 @@ function kameraGovdeHedefi(yaw,pitch,G){
   const B=STIL.baskan,k=B.govde||[0.22,0.25];
   return{p:clamp((pitch-B.dinlenmeEgimi)*k[0],-0.12,B.egimUst),y:clamp(yaw*k[1],-0.3,0.3),hiz:B.govdeHiz};
 }
+/* P1 (2026-10-21 akşam, kullanıcı kararı; DENEME): 2D maç görünümü — loca bakışı yerine FM gibi tepeden bakan kamera (js/pul.js pulTepe; pullar).
+   Saha yatay, ana tribün ekranın altında (locadakiyle aynı sol–sağ: kameranın üstü dünya +z); kamera topu yumuşakça izler (STIL.pul.tepe.takip),
+   merkezi STIL.pul.tepe.sinir içinde kalır (statın dışı görünmesin); görüş açısı yakınlık seviyesinin dikey uzunluğundan (Z tuşu). Maç öncesinde
+   ve top görünmezken saha ortası; maç öncesinde bütün stat (son seviye) görünür, santrada seçili seviyeye yaklaşır (yakınlık geçişi STIL.pul.tepe
+   .yakinlik sn; duraklatılmışken anında). Zaman maçın çizim saatinden (zaman; duraklatınca durur, hız katında hızlanır) */
+const TEPE_KAM={x:0,z:0,E:60,son:-1,ilk:true};
+function tepeKamera(){const T=STIL.pul.tepe,b=topMesh,G=T.genislik,H=T.yukseklik,once=MAC_ONCESI.includes(mac.phase);
+  const Eh=once?G[G.length-1]:(G[PUL.seviye]||G[1]),dt=TEPE_KAM.son<0?0:Math.max(0,zaman-TEPE_KAM.son);TEPE_KAM.son=zaman;
+  if(TEPE_KAM.ilk)TEPE_KAM.E=Eh;else TEPE_KAM.E+=(Eh-TEPE_KAM.E)*(dt>0?1-Math.exp(-dt/T.yakinlik):1);
+  const E=TEPE_KAM.E,fov=2*Math.atan(E/2/H)/KAM_DER,yx=Math.max(0,T.sinir[0]-E*RW/RH/2),yz=Math.max(0,T.sinir[1]-E/2);
+  const oyunda=b.visible&&!once,hx=clamp(oyunda?b.position.x:0,-yx,yx),hz=clamp(oyunda?b.position.z:0,-yz,yz);
+  if(TEPE_KAM.ilk){TEPE_KAM.ilk=false;TEPE_KAM.x=hx;TEPE_KAM.z=hz;}
+  else{const k=dt>0?1-Math.exp(-dt/T.takip):0;TEPE_KAM.x=clamp(TEPE_KAM.x+(hx-TEPE_KAM.x)*k,-yx,yx);TEPE_KAM.z=clamp(TEPE_KAM.z+(hz-TEPE_KAM.z)*k,-yz,yz);}
+  camera.up.set(0,0,1);camera.position.set(TEPE_KAM.x,H,TEPE_KAM.z);camera.lookAt(TEPE_KAM.x,0,TEPE_KAM.z);
+  if(Math.abs(camera.fov-fov)>1e-6){camera.fov=fov;camera.updateProjectionMatrix();}}
 /* sakin kamera (2.8J): baş salınımı ve gol sarsıntısı yok; ayağa kalkış (kalk) gerçek harekettir */
 function kameraUygula(V){
+  const tepe=typeof pulTepe==='function'&&pulTepe();
+  if(!tepe){TEPE_KAM.ilk=true;if(camera.up.y!==1)camera.up.set(0,1,0);}
   /* locaya giriş (2.8T, js/loca-giris.js): kamera yürüyüşün yolundadır */
-  if(typeof LOCA_GIRIS!=='undefined'&&LOCA_GIRIS.aktif){locaGirisKamera();return;}
+  if(typeof LOCA_GIRIS!=='undefined'&&LOCA_GIRIS.aktif){if(camera.up.y!==1)camera.up.set(0,1,0);locaGirisKamera();return;}
   if(KAMERA_ZORLA){const h=KAMERA_ZORLA.hedef,f=KAMERA_ZORLA.fov||KAM_B.aci;camera.position.set(V.p[0],V.p[1],V.p[2]);camera.lookAt(h.x,h.y,h.z);
     if(camera.fov!==f){camera.fov=f;camera.updateProjectionMatrix();}return;}
+  if(tepe){tepeKamera();return;}
   const kalk=typeof BASKAN!=='undefined'?BASKAN.kalk:0;
   camera.position.set(V.p[0],V.p[1]+kalk*0.38,V.p[2]+kalk*0.12);
   const y=KAM.a.y,p=KAM.a.p,c=Math.cos(p);

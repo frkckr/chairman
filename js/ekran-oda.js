@@ -256,7 +256,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ayarBolum==='mac'){const h=[1,2,4].includes(ayarlar.macHizi)?ayarlar.macHizi:1;
       ic+='<div class="od-ayarSatir"><span>Maç hızı</span><span class="od-dugmeler">'+[1,2,4].map(v=>'<button type="button" data-eylem="macHizi" data-hiz="'+v+'" aria-pressed="'+(h===v?'true':'false')+'">×'+v+'</button>').join('')+'</span></div>'+
         '<div class="od-ayarSatir"><span>Önemli anlarda normal hız</span>'+ac('otoYavas',ayarlar.otoYavas!==false)+'</div>'+
-        '<p class="od-not">Maç 20 dakika sürer; ×2 ve ×4 ile hızlı izlersin. Gol, şut, faul ve kart, sakatlık, korner, tehlikeli serbest vuruş ve ofsaytta maç birkaç saniye önce normal hıza iner, an geçince seçtiğin hıza döner. Maçta 1, 2 ve 4 tuşlarıyla da seçilir; maçın sonucu hızdan etkilenmez.</p>';}
+        '<div class="od-ayarSatir"><span>2D maç görünümü (deneme)</span>'+ac('pul',!!ayarlar.pul)+'</div>'+
+        '<p class="od-not">Maç 20 dakika sürer; ×2 ve ×4 ile hızlı izlersin. Gol, şut, faul ve kart, sakatlık, korner, tehlikeli serbest vuruş ve ofsaytta maç birkaç saniye önce normal hıza iner, an geçince seçtiğin hıza döner. Maçta 1, 2 ve 4 tuşlarıyla da seçilir; maçın sonucu hızdan etkilenmez.</p>'+
+        '<p class="od-not">2D maç görünümünde maç tepeden izlenir, oyuncular numaralı pullardır. Maçta G tuşu görünümü değiştirir, Z tuşu yakınlaştırır.</p>';}
     else if(ayarBolum==='kayit')ic+='<div class="od-ayarSatir"><span>Kayıt durumu</span><span class="'+(oyun.kayitHata()?'od-uyari':'')+'">'+yaz(oyun.kayitYazi())+'</span></div>'+
       '<p class="od-not">Oyun her tamamlanan karardan sonra kendiliğinden kaydeder. Maçın ortasından kayıt yoktur.</p>'+
       '<div class="od-dugmeler"><button type="button" data-eylem="kayitDene">Şimdi yeniden kaydet</button></div>'+
@@ -538,6 +540,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='yazi'){ayarlar.yazi=b.dataset.yazi;ayarlar.kaydet();ciz('[data-eylem="yazi"][data-yazi="'+ayarlar.yazi+'"]');}
     /* U1: maç hızı ve önemli anlarda normal hız (js/arayuz.js izlemeHizSec ve MAC_HIZ aynı seçimi okur) */
     else if(ey==='macHizi'){ayarlar.macHizi=Number(b.dataset.hiz);ayarlar.kaydet();if(typeof izlemeHizSec==='function')izlemeHizSec(ayarlar.macHizi,false);ciz('[data-eylem="macHizi"][data-hiz="'+ayarlar.macHizi+'"]');}
+    else if(ey==='pul'){ayarlar.pul=!ayarlar.pul;ayarlar.kaydet();if(typeof pulUygula==='function')pulUygula(ayarlar.pul);ciz('[data-eylem="pul"]');}   /* P1 (deneme) */
     else if(ey==='otoYavas'){ayarlar.otoYavas=ayarlar.otoYavas===false;ayarlar.kaydet();if(typeof MAC_HIZ!=='undefined')MAC_HIZ.oto=ayarlar.otoYavas;ciz('[data-eylem="otoYavas"]');}
     else if(ey==='yeniSor'){yeniOnay=true;ciz('[data-eylem="yeniHayir"]');}
     else if(ey==='yeniHayir'){yeniOnay=false;ciz();}

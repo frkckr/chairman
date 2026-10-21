@@ -177,6 +177,7 @@ function macKare(dt){
   /* aktörler: konum, poz ve kök (js/animasyon.js) */
   for(const a of AKTORLER)aktorGuncelle(a,al,dts,T);
   anmYardimIK(AKTORLER);   /* A4-3: yerden kaldırma — iki bedenli kol IK'sı (bütün aktörler güncellendikten sonra) */
+  pulKare(dts);   /* P1 (deneme): pul görünümü açıksa her modelin pulu kökünü izler (js/pul.js) */
   /* hakemin kartı (ikinci sarıda önce sarı, sonra kırmızı; A2b) */
   {const e=mac.refs[0].eylem;KART.visible=!!(e&&e.ad==='kart');if(KART.visible)KART.material.color.setHex(e.renk==='sari'||(e.renk==='ikinciSari'&&e.t<(e.sure||1.7)*0.5)?0xf2d21d:0xd8201e);
     DEFTER.visible=!!(e&&e.ad==='not'&&STIL.animasyon.s1.kart>0);}   /* S1d: deftere yazma */

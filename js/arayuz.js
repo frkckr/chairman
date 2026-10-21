@@ -59,7 +59,7 @@ function frame(now){
   camera.updateMatrixWorld();baskanKare(dt,camera);
   /* ornekleme katında, oda ve balkonla aynı hedefe (js/goruntu.js) */
   renderer.setRenderTarget(rt);renderer.setClearColor(STIL.ekran.arkaPlan,1);renderer.clear();renderer.render(scene,camera);
-  baskanCiz();
+  if(!(typeof pulTepe==='function'&&pulTepe()))baskanCiz();   /* P1 (deneme): 2D maç görünümünde başkanın ön planı (masa, eller) çizilmez */
   renderer.setRenderTarget(null);renderer.clear();renderer.render(post,postCam);
   onEkranCizildi=ON_EKRAN.acik;if(ON_EKRAN.acik)ON_EKRAN.cizildi=true;
   requestAnimationFrame(frame);

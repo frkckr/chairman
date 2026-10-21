@@ -32,7 +32,8 @@ function golgeMalzeme(L,bit){
     stencilWrite:true,stencilRef:bit,stencilFuncMask:bit,stencilWriteMask:bit,
     stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.KeepStencilOp,stencilZFail:THREE.KeepStencilOp,stencilZPass:THREE.ReplaceStencilOp});
 }
-const GOLGE={insanlar:[],top:null,isiklar:[]};
+/* insanGizli (P1, deneme): pul görünümünde (js/pul.js) insan gölgeleri yazılmaz; topun gölgesi sürer */
+const GOLGE={insanlar:[],top:null,isiklar:[],insanGizli:false};
 {const kutu=new THREE.BoxGeometry(1,1,1),tp=new THREE.IcosahedronGeometry(1,1),ortak=new THREE.InstancedBufferAttribute(new Float32Array(GOLGE_KAPASITE*16),16);
  ortak.setUsage(THREE.DynamicDrawUsage);
  STAT.projektor.konumlar.forEach((L,i)=>{const bit=1<<i;
@@ -47,7 +48,7 @@ function golgeTop(mesh,yaricap){GOLGE.top=mesh;GOLGE.topR=yaricap;}
 const GOLGE_M=new THREE.Matrix4(),GOLGE_K=new THREE.Matrix4();
 function golgeleriGuncelle(){
   const a=GOLGE.ortak.array;let n=0;
-  for(const m of GOLGE.insanlar){
+  if(!GOLGE.insanGizli)for(const m of GOLGE.insanlar){
     if(!m.root.visible||!m.root.parent)continue;
     m.root.updateMatrixWorld(true);
     for(let i=0;i<GOLGE_VEKIL.length;i++){if(n>=GOLGE_KAPASITE)break;const v=GOLGE_VEKIL[i];
