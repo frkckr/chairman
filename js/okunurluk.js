@@ -66,6 +66,8 @@ function oknDisCizgiKur(){OKN_DIS_KURULU=true;
 const OKN_TOP={sonY:NaN,tabanY:0};
 function okunurlukKare(){
   const dis=!!OKN.disCizgi;if(dis&&!OKN_DIS_KURULU)oknDisCizgiKur();postMat.uniforms.uDis.value=dis?1:0;
+  /* P2: 2D görünümde topun boyu, gölgesi, izi ve iniş halkası js/pul.js'te (havadaki topun lekesi orada yanıltıcı: tepeden topun tam altında kalır) */
+  const tp=typeof pulTepe==='function'&&pulTepe();if(typeof pulTopKare==='function')pulTopKare(tp);if(tp){OKN_LEKE.visible=false;return;}
   const t=topMesh,T=OKN_TOP;
   if(!t.visible){OKN_LEKE.visible=false;return;}
   /* topCiz konumu her kare yeniden yazar; yazmadıysa önceki kaldırmayı geri al */

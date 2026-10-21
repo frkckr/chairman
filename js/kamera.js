@@ -160,16 +160,18 @@ function kameraGovdeHedefi(yaw,pitch,G){
 /* P1 (2026-10-21 akşam, kullanıcı kararı; DENEME): 2D maç görünümü — loca bakışı yerine FM gibi tepeden bakan kamera (js/pul.js pulTepe; pullar).
    Saha yatay, ana tribün ekranın altında (locadakiyle aynı sol–sağ: kameranın üstü dünya +z); kamera topu yumuşakça izler (STIL.pul.tepe.takip),
    merkezi STIL.pul.tepe.sinir içinde kalır (statın dışı görünmesin); görüş açısı yakınlık seviyesinin dikey uzunluğundan (Z tuşu). Maç öncesinde
-   ve top görünmezken saha ortası; maç öncesinde bütün stat (son seviye) görünür, santrada seçili seviyeye yaklaşır (yakınlık geçişi STIL.pul.tepe
-   .yakinlik sn; duraklatılmışken anında). Zaman maçın çizim saatinden (zaman; duraklatınca durur, hız katında hızlanır) */
-const TEPE_KAM={x:0,z:0,E:60,son:-1,ilk:true};
-function tepeKamera(){const T=STIL.pul.tepe,b=topMesh,G=T.genislik,H=T.yukseklik,once=MAC_ONCESI.includes(mac.phase);
-  const Eh=once?G[G.length-1]:(G[PUL.seviye]||G[1]),dt=TEPE_KAM.son<0?0:Math.max(0,zaman-TEPE_KAM.son);TEPE_KAM.son=zaman;
+   ve top görünmezken stadın ortası; maç öncesinde bütün stat görünür (P2: tribün arkalarından türetilen PUL.stat), santrada seçili seviyeye
+   yaklaşır (yakınlık geçişi STIL.pul.tepe.yakinlik sn; duraklatılmışken anında). Görüntü statın sınırında kalır (sınırdan geniş görüntüde stadın
+   ortası). Zaman maçın çizim saatinden (zaman; duraklatınca durur, hız katında hızlanır) */
+const TEPE_KAM={x:0,z:0,E:46,son:-1,ilk:true};
+function tepeSinir(a,b,y,v){return b-a>2*y?clamp(v,a+y,b-y):(a+b)/2;}
+function tepeKamera(){const T=STIL.pul.tepe,b=topMesh,G=T.genislik,H=T.yukseklik,once=MAC_ONCESI.includes(mac.phase),S=PUL.stat;
+  const Eh=once?S.E:(G[PUL.seviye]||G[1]),dt=TEPE_KAM.son<0?0:Math.max(0,zaman-TEPE_KAM.son);TEPE_KAM.son=zaman;
   if(TEPE_KAM.ilk)TEPE_KAM.E=Eh;else TEPE_KAM.E+=(Eh-TEPE_KAM.E)*(dt>0?1-Math.exp(-dt/T.yakinlik):1);
-  const E=TEPE_KAM.E,fov=2*Math.atan(E/2/H)/KAM_DER,yx=Math.max(0,T.sinir[0]-E*RW/RH/2),yz=Math.max(0,T.sinir[1]-E/2);
-  const oyunda=b.visible&&!once,hx=clamp(oyunda?b.position.x:0,-yx,yx),hz=clamp(oyunda?b.position.z:0,-yz,yz);
+  const E=TEPE_KAM.E,fov=2*Math.atan(E/2/H)/KAM_DER,yw=E*RW/RH/2,yh=E/2;
+  const oyunda=b.visible&&!once,hx=tepeSinir(S.x0,S.x1,yw,oyunda?b.position.x:S.cx),hz=tepeSinir(S.z0,S.z1,yh,oyunda?b.position.z:S.cz);
   if(TEPE_KAM.ilk){TEPE_KAM.ilk=false;TEPE_KAM.x=hx;TEPE_KAM.z=hz;}
-  else{const k=dt>0?1-Math.exp(-dt/T.takip):0;TEPE_KAM.x=clamp(TEPE_KAM.x+(hx-TEPE_KAM.x)*k,-yx,yx);TEPE_KAM.z=clamp(TEPE_KAM.z+(hz-TEPE_KAM.z)*k,-yz,yz);}
+  else{const k=dt>0?1-Math.exp(-dt/T.takip):0;TEPE_KAM.x=tepeSinir(S.x0,S.x1,yw,TEPE_KAM.x+(hx-TEPE_KAM.x)*k);TEPE_KAM.z=tepeSinir(S.z0,S.z1,yh,TEPE_KAM.z+(hz-TEPE_KAM.z)*k);}
   camera.up.set(0,0,1);camera.position.set(TEPE_KAM.x,H,TEPE_KAM.z);camera.lookAt(TEPE_KAM.x,0,TEPE_KAM.z);
   if(Math.abs(camera.fov-fov)>1e-6){camera.fov=fov;camera.updateProjectionMatrix();}}
 /* sakin kamera (2.8J): baş salınımı ve gol sarsıntısı yok; ayağa kalkış (kalk) gerçek harekettir */

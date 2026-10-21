@@ -32,8 +32,9 @@ function golgeMalzeme(L,bit){
     stencilWrite:true,stencilRef:bit,stencilFuncMask:bit,stencilWriteMask:bit,
     stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.KeepStencilOp,stencilZFail:THREE.KeepStencilOp,stencilZPass:THREE.ReplaceStencilOp});
 }
-/* insanGizli (P1, deneme): pul görünümünde (js/pul.js) insan gölgeleri yazılmaz; topun gölgesi sürer */
-const GOLGE={insanlar:[],top:null,isiklar:[],insanGizli:false};
+/* insanGizli (P1): 2D görünümde (js/pul.js) insan gölgeleri yazılmaz. topGizli (P2): 2D'de topun projektör gölgeleri de yazılmaz — havadaki
+   topun dört gölgesi onlarca metre öteye düşüp yanıltıyordu; topun yüksekliğini js/pul.js'in yumuşak gölgesi gösterir */
+const GOLGE={insanlar:[],top:null,isiklar:[],insanGizli:false,topGizli:false};
 {const kutu=new THREE.BoxGeometry(1,1,1),tp=new THREE.IcosahedronGeometry(1,1),ortak=new THREE.InstancedBufferAttribute(new Float32Array(GOLGE_KAPASITE*16),16);
  ortak.setUsage(THREE.DynamicDrawUsage);
  STAT.projektor.konumlar.forEach((L,i)=>{const bit=1<<i;
@@ -54,6 +55,6 @@ function golgeleriGuncelle(){
     for(let i=0;i<GOLGE_VEKIL.length;i++){if(n>=GOLGE_KAPASITE)break;const v=GOLGE_VEKIL[i];
       GOLGE_K.makeScale(v[1],v[2],v[3]).setPosition(v[4],v[5],v[6]);GOLGE_M.multiplyMatrices(m[v[0]].matrixWorld,GOLGE_K);GOLGE_M.toArray(a,n*16);n++;}}
   GOLGE.ortak.needsUpdate=true;
-  const t=GOLGE.top,tg=!!(t&&t.visible);
+  const t=GOLGE.top,tg=!!(t&&t.visible)&&!GOLGE.topGizli;
   for(const I of GOLGE.isiklar){I.im.count=n;I.tm.visible=tg;if(tg){I.tm.position.copy(t.position);I.tm.scale.setScalar(GOLGE.topR);}}
 }

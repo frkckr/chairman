@@ -450,11 +450,16 @@ const STIL={
      topUstte: top pulların önünde çizilir (eğik pul topu örterse; varsayılan kapalı).
      tepe (kullanıcı kararı, 2026-10-21 akşam): 2D maç görünümü — başkanın loca bakışı yerine FM gibi tepeden bakan kamera (js/kamera.js tepeKamera);
      pullar düz yatar. yukseklik: kameranın yerden yüksekliği (m). genislik: yakınlık seviyelerinde ekranda görünen dikey uzunluk (m; Z tuşu sırayla
-     değiştirir; 100 bütün stat — maç öncesinde kendiliğinden), seviye: açılıştaki seviye. takip: topu izlemenin yumuşaklığı (sn), yakinlik:
-     seviye geçişinin yumuşaklığı (sn). sinir: kameranın merkezinin gidebileceği yarı
-     uzunluklar (x, z; m — statın dışı görünmesin). yaricapKat: tepeden pulun büyütülmesi. golgeKay: pul lekesinin kayması (dünya x, z; m — ekranda
-     sağ aşağı). TEST değerleri */
+     değiştirir); maç öncesinde bütün stat (P2: tribün arkalarından türetilir, js/pul.js PUL.stat). seviye: açılıştaki seviye. takip: topu izlemenin
+     yumuşaklığı (sn), yakinlik: seviye geçişinin yumuşaklığı (sn). kenar: kameranın tribün arkalarının ötesinde gösterebileceği pay (m; P2: statın
+     dışı görünmesin). yaricapKat: tepeden pulun büyütülmesi. golgeKay: pul lekesinin kayması (dünya x, z; m — ekranda sağ aşağı).
+     top (P2, kullanıcı: "topun havada olduğu anlaşılmıyor"): 2D'de topun boyu kat, havada yukseklik payı kadar büyür (tepe m'de tam); yumuşak
+     gölgesi yükseldikçe ekranda sağ-aşağı kayar (kay m / m yükseklik, enCok m'ye dek; taban yerdeki kayma), büyür ve solar; hızlı ya da havadaki
+     topun ardında kısa iz (sayi örnek, aralik sn, sure sn ömür, hiz m/sn ve y m eşikleri, boy topun yarıçapına oran: baş, son; parlak: izin
+     parlaklığı); havadaki topun ineceği yerde halka (inis). TEST değerleri */
   pul:{yaricap:0.5,yukseklik:0.12,egim:0.5,enAzPx:6,enCokKat:3,doku:32,sayiOlcek:3,halka:2.5,yanKoyu:0.55,yatDim:0.4,oturmaY:0.55,topcuOran:0.75,golge:0.3,
     ayak:{en:0.12,boy:0.24,yan:0.2,on:0.02,adim:0.1,parlak:'#ffb530'},sayiKameraya:true,topUstte:false,
-    tepe:{yukseklik:110,genislik:[40,60,100],seviye:1,takip:0.35,yakinlik:0.6,sinir:[78,60],yaricapKat:1.5,golgeKay:[-0.14,-0.14]}}
+    tepe:{yukseklik:110,genislik:[34,46,70],seviye:1,takip:0.35,yakinlik:0.6,kenar:3,yaricapKat:1.7,golgeKay:[-0.14,-0.14]},
+    top:{kat:2.0,yukseklik:0.6,tepe:6,golge:{opak:0.45,boy:1.6,kay:[-0.35,-0.35],enCok:4,taban:0.1},
+      iz:{sayi:24,aralik:0.05,sure:0.6,hiz:9,y:0.4,boy:[0.85,0.3],parlak:0.65},inis:{acik:true,yaricap:0.9,opak:0.5}}}
 };
