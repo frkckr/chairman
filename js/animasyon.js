@@ -110,6 +110,8 @@ const ANM_POZ=(()=>{const G=anmGenis,P=POSE,Tm=anmTam,O=Object.assign;return{
   jestCagir:{aL:-1.35,eL:-2.35,aLz:0.32,aLy:0.4,hx:-0.08},jestBasEl:{aL:-2.5,aR:-2.5,aLz:-0.75,aRz:0.75,eL:-2.1,eR:-2.1,hx:-0.2},
   /* S1a: kalecinin barajı yönlendirmesi — kol yana-öne, yatayın biraz üstünde (hedefli çizimde anmS1Yonlendir nişan alır ve sallar; bu yedek poz) */
   jestYonlendir:{aL:-1.72,eL:-0.08,aLz:-0.55,hx:0.02},
+  /* S1e (2026-10-21; kutuphane/L L.6): korner kodu — iki kol dik (arka direk ve tren; simetrik) */
+  jestKolIki:{aL:-3.0,aR:-3.0,eL:-0.05,eR:-0.05,aLz:-0.12,aRz:0.12,hx:-0.12},
   gevsek:{aLz:-0.06,aRz:0.1,eL:-0.15,eR:-0.3,hz:0.05,gz:0.06,hx:0.08},
   sendele:{aL:-0.6,aR:-0.6,aLz:-1.15,aRz:1.15,eL:-0.4,eR:-0.4,hx:-0.25},
   /* A2b hakem bekleyişi: orta hakem eller arkada, 4. hakem eller önde birleşik */
@@ -237,7 +239,7 @@ const ANM_POZ=(()=>{const G=anmGenis,P=POSE,Tm=anmTam,O=Object.assign;return{
   otur:Tm(P.otur),kafaEski:G(P.kafa),tac:P.tac,tacAt:G(P.tacAt),vurusTakip:G(P.vurusTakip),yumruk:G(P.yumruk),elleAtis:G(P.elleAtis),
   esneme1:Tm(P.esneme1),comel:Tm(P.comel),fotoCek:Tm(P.fotoCek)
 };})();
-const ANM_JEST={kol:'jestKol',isaret:'jestIsaret',itiraz:'jestItiraz',cagir:'jestCagir',basEl:'jestBasEl',alkis:'alkis',yonlendir:'jestYonlendir'};
+const ANM_JEST={kol:'jestKol',isaret:'jestIsaret',itiraz:'jestItiraz',cagir:'jestCagir',basEl:'jestBasEl',alkis:'alkis',yonlendir:'jestYonlendir',kolIki:'jestKolIki'};
 const ANM_VURUS={ic:['icG','icT'],dis:['disG','disT'],ust:['ustG','ustT'],asirtma:['asirtmaG','asirtmaT'],vole:['voleG','voleT'],yarimVole:['yarimVoleG','yarimVoleT']};
 const ANM_SEVINC=[ANM_POZ.sevKollar,ANM_POZ.sevUcak,ANM_POZ.sevYumruk,ANM_POZ.sevGok,ANM_POZ.sevArma,ANM_POZ.sevSus,ANM_POZ.sevKulak,ANM_POZ.sevSakin,ANM_POZ.sevGoster],ANM_UZGUN=[ANM_POZ.basEl,ANM_POZ.belEl,ANM_POZ.egik];
 
@@ -574,8 +576,14 @@ function anmYuruyus(a,p,spd,dt,sx,sy){
     /* Z2e (bakis; Ek G5): duran topu kullanan hazırken (du.asama 'hazir') baş motorun bakış noktasına (mac.durus.bakis: kornerde ve kenar serbest vuruşunda
        kutudaki hedef bölge, penaltıda ve barajlı şutta kale) ve topa sırayla döner — önce hedef, aralar h2 ile 0,8–1,5 sn; hedefli kol jestinde (jest 'kol',
        hedef) baş hedefte. Topa bakarken baş yakındaki topa eğilir (kZor, yayla; hedefe bakarken eğilmez). Motorun bakışı (p.bakisYon) değişmez */
-    let kZor=null;const Z2b=ANM.z2,duB=mac.durus;
-    if(!ucan&&Z2b&&Z2b.bakis>0&&ph==='durus'&&duB&&duB.kullanan===p&&duB.bakis&&duB.asama==='hazir'){const Z=a.z2||(a.z2=anmZ2Yeni()),j=p.jest;let top=false;
+    let kZor=null;const Z2b=ANM.z2,duB=mac.durus,krB=duB&&duB.kr;
+    /* S1e (STIL.animasyon.s1.rutin): rutinli kullananın başı motorun rutin bakışına (kr.bakis); okumanın son 0,35 sn'sinde topa (yakındaki topa eğilir) */
+    if(!ucan&&ANM.s1&&ANM.s1.rutin>0&&ph==='durus'&&krB&&duB.kullanan===p&&duB.asama==='hazir'&&krB.evre){const Z=a.z2||(a.z2=anmZ2Yeni());
+      const son=krB.evre==='oku'&&krB.okuSon!=null&&duB.t>=krB.okuSon-0.35,j=p.jest,B0=krB.bakis;let top=false;
+      if(j&&(j.tur==='kol'||j.tur==='kolIki')&&j.hedef)hed=Math.atan2(j.hedef.z-p.z,j.hedef.x-p.x);
+      else if(son||!B0)top=true,hed=Math.atan2(dz,dx);else hed=Math.atan2(B0.z-p.z,B0.x-p.x);
+      if(dt>0)Z.dbK+=((top?1:0)-Z.dbK)*Math.min(1,dt*8);kZor=Z.dbK;}
+    else if(!ucan&&Z2b&&Z2b.bakis>0&&ph==='durus'&&duB&&duB.kullanan===p&&duB.bakis&&duB.asama==='hazir'){const Z=a.z2||(a.z2=anmZ2Yeni()),j=p.jest;let top=false;
       if(Z.dbDu!==duB){Z.dbDu=duB;Z.dbT=0;}if(dt>0)Z.dbT+=dt;
       if(j&&j.tur==='kol'&&j.hedef)hed=Math.atan2(j.hedef.z-p.z,j.hedef.x-p.x);
       else{let t=Z.dbT,i=0;const sd=(p.n|0)*13+(p.team|0)*5+3;for(;i<64;i++){const d=0.8+0.7*h2(sd+i,61);if(t<d)break;t-=d;}
@@ -688,7 +696,9 @@ function anmTavir(a,p,dt){
     /* A2b ikinci top: havadan inen top yakına düşecekse dizler bükük, baş topta */
     else if(!p.eylem&&!sahip&&mac.phase==='play'&&anmIkinciTop(p,b)){st[S.izle]=0.7;sp[S.izle]=ANM_POZ.izle;drop=Math.max(drop,0.05);}
     if(!tv&&!hazir&&!bjw&&!z2r&&!sahip&&!p.eylem&&!p.poz&&!p.sevinc&&(ph==='play'||ph==='durus'||ph==='kickoff')){
-      a.bosT=kip==='dur'?a.bosT+dt:0;
+      /* S1e: rutinli kullananda kıpırtı (bakınma) başlamaz — baş rutinin bakışında kalır */
+      const krK=ph==='durus'&&ANM.s1&&ANM.s1.rutin>0&&mac.durus&&mac.durus.kr&&mac.durus.kullanan===p;
+      a.bosT=kip==='dur'&&!krK?a.bosT+dt:0;
       anmBekleyis(a,p,dt,kip==='dur');
       st[S.bosta]=kip==='dur'?(a.bosT>1.2?1:0):kip==='yuru'?0.45:0;sp[S.bosta]=a.bosK;
       if(a.kpS>=0&&a.kpTur>=2){const K=ANM_KIPIRTI[a.kpTur];st[S.kipirti]=anmZarf(a.kpS,K.s,K.g,K.c);sp[S.kipirti]=K.P;}}
@@ -1118,7 +1128,7 @@ function anmHkPoz(a,p,c,Q){
   if(c.hedef){hx=c.hedef.x;hz=c.hedef.z;}else if(c.yon!=null){hx=p.x+20*c.yon;hz=p.z;}else if(c.p){hx=c.p.x;hz=c.p.z;}
   if(tur==='kart'){Q.aL=-2.95;Q.aLz=-0.12;Q.eL=-0.05;Q.hx=-0.12;if(hx!=null){const r=anmHkAci(a,hx,hz)-(a.P.hy||0);Q.by=clamp(r,-1.1,1.1)*0.8;}
     /* S1d: ikinci sarıda sürenin %42–58'inde kol iner ve kalkar (kart bu arada sarıdan kırmızıya döner: js/mac-sahnesi.js, sürenin yarısı) */
-    if(c.renk==='ikinciSari'&&ANM.s1&&ANM.s1.kart>0){const f=h.t/(c.sure||2.4);if(f>0.42&&f<0.58){const w=Math.sin(Math.PI*(f-0.42)/0.16);Q.aL=-2.95+1.9*w;Q.eL=-0.05-0.7*w;}}
+    if(c.renk==='ikinciSari'&&c.sahne&&ANM.s1&&ANM.s1.kart>0){const f=h.t/(c.sure||2.4);if(f>0.42&&f<0.58){const w=Math.sin(Math.PI*(f-0.42)/0.16);Q.aL=-2.95+1.9*w;Q.eL=-0.05-0.7*w;}}
     return;}
   if(hx==null)return;
   const psi=anmHkAci(a,hx,hz),gy=clamp(0.45*psi,-0.6,0.6),r=psi-gy-(a.P.hy||0),th=c.theta!=null?c.theta:0;
@@ -1144,7 +1154,7 @@ function anmHakemAdim(a,p,dt){
   const h=anmHk(p),e=p.eylem,st=a.st,sp=a.sp,S=ANM_S;
   /* motorun eylemleri: kart her zaman; düdük olaysız geldiyse (maç öncesi, devre ve maç sonu) */
   if(e!==h.sonE){h.sonE=e;
-    if(e&&e.ad==='kart'){const ks=p.kartSira;anmHkIsaret(p,[{tur:'kart',sure:e.sure||1.7,p:ks&&ks.p,renk:e.renk}],true);}
+    if(e&&e.ad==='kart'){const ks=p.kartSira;anmHkIsaret(p,[{tur:'kart',sure:e.sure||1.7,p:ks&&ks.p,renk:e.renk,sahne:!!(ks&&ks.s)}],true);}   /* S1d: kol inişi yalnız sahneli kartta */
     else if(e&&e.ad==='not'&&ANM.s1&&(mac.phase==='goal'?ANM.s1.gol&&ANM.s1.gol.not>0:ANM.s1.kart>0))anmHkIsaret(p,[{tur:'not',sure:e.sure||1}],true);   /* S1d: deftere yazma; S1c: santraya yürürken (s1.gol.not) */
     else if(e&&e.ad==='duduk'&&(mac.t||0)-h.olayT>0.1)anmHkIsaret(p,[{tur:'duduk',sure:Math.min(e.sure||0.6,0.9)}],true);
     else if(e&&e.ad==='birak')anmHkIsaret(p,[{tur:'birak',sure:e.sure||0.7}],true);}   /* T10f: hakem topu (motor eylemi) */
@@ -1153,6 +1163,11 @@ function anmHakemAdim(a,p,dt){
     /* T10f: serbest vuruş kullanıldı (oyun başladı), endirekt işareti sırada — yön işareti kesilir, kol hemen kalkar */
     else if(mac.phase==='play'&&mac.ball&&mac.ball.endirekt&&h.sira.length&&h.sira[0].tur==='endirekt')bitti=true;
     if(bitti)h.cur=null;}
+  /* S1 (2026-10-21; IFAB: dolaylı serbest vuruşta kol vuruşa hazır olunca kalkar, top başka oyuncuya değene dek kalır): seremoni, sprey ya da kart işaretleri sırayı
+     sıfırlayınca bekleyen endirekt işareti siliniyordu, kol bir daha kalkmıyordu — işaret yokken dolaylı duruşta kol yeniden kalkar (S1a seremonisinde
+     yalnız restart yerinde: 'dur', 'duduk'; kart sırasında değil) */
+  if(p.kind==='ref'&&!h.cur&&!h.sira.length&&mac.phase==='durus'){const du=mac.durus;
+    if(du&&du.endirekt&&!du.hakemTopu&&du.t>2&&!p.kartSira&&(!du.hk||!du.hk.s1||du.hk.evre==='dur'||du.hk.evre==='duduk'))h.sira.push({tur:'endirekt',sure:14});}
   if(!h.cur&&h.sira.length){h.cur=h.sira.shift();h.t=0;h.slot^=1;h.basKare=mac.kare;}   /* basKare: işaretin başladığı motor adımı (ölçüm) */
   /* orta hakem ölü topta arada saatine bakar (kimliğin aralığıyla) */
   /* S1a: hakem restart yerinde durup düdüğü beklerken ('dur', 'duduk') saatine bakmaz, yüzü barajda kalır; S1b: penaltıda son yerinde kaleciye ve vurucuya
@@ -1754,8 +1769,10 @@ function anmEylemler(a,p,dt){
   /* A2a jest katmanı: p.jest {tur, t, sure, kol:'sol'|'sag', hedef:{x,z}} (yazan motor işi T7/T10); giriş 0,15 sn, çıkış 0,25 sn */
   /* Z2e (kolHedef): hedefli kol jestinde kol hedefe doğru (anmZ2KolHedef; poz yanı kendinde, aynalanmaz) */
   /* S1a (s1.serbest): kalecinin 'yonlendir' jesti hedefe nişanlı ve sallanan kol (anmS1Yonlendir); 0'da çizilmez */
-  const j=p.jest;if(j&&ANM_JEST[j.tur]&&!(j.tur==='yonlendir'&&!(ANM.s1&&ANM.s1.serbest>0))){const zk=j.tur==='kol'&&!!j.hedef&&!!ANM.z2&&ANM.z2.kolHedef>0&&p.yon!=null,yk=j.tur==='yonlendir'&&!!j.hedef&&p.yon!=null;
-    const P0=zk?anmZ2KolHedef(a,p,j):yk?anmS1Yonlendir(a,p,j):j.tur==='alkis'?POSE.alkis:ANM_POZ[ANM_JEST[j.tur]];st[S.jest]=anmZarf(j.t||0,j.sure||1.2,0.15,0.25);sp[S.jest]=!zk&&!yk&&j.kol==='sol'?aynala(P0):P0;}
+  /* S1e: iki kol kodu (kolIki) STIL.animasyon.s1.kolIki 0 iken tek kol (eski); tür yerel (çizim motora yazmaz) */
+  const j=p.jest;if(j&&ANM_JEST[j.tur]&&!(j.tur==='yonlendir'&&!(ANM.s1&&ANM.s1.serbest>0))){const jt=j.tur==='kolIki'&&!(ANM.s1&&ANM.s1.kolIki>0)?'kol':j.tur;
+    const zk=jt==='kol'&&!!j.hedef&&!!ANM.z2&&ANM.z2.kolHedef>0&&p.yon!=null,yk=jt==='yonlendir'&&!!j.hedef&&p.yon!=null;
+    const P0=zk?anmZ2KolHedef(a,p,j):yk?anmS1Yonlendir(a,p,j):jt==='alkis'?POSE.alkis:ANM_POZ[ANM_JEST[jt]];st[S.jest]=anmZarf(j.t||0,j.sure||1.2,0.15,0.25);sp[S.jest]=!zk&&!yk&&j.kol==='sol'?aynala(P0):P0;}
   /* T5f (Ek G4): temas olaylarından tepkiler (ANM_TEMAS): forma çekme (taktik faul; çekenin kolu yiyene uzanır), gövdeyle çarpma (iki kol önde itiş),
      görülmeyen faulde yiyenin kollarını açıp hakeme dönmesi (0,5 sn sonra). Kilitli eylemde (düşüş, kayma) çizilmez */
   const tm=ANM_TEMAS.get(p);if(tm){const k=zaman-tm.t0;if(k>tm.sure+0.35)ANM_TEMAS.delete(p);else if(k>=0&&!(e&&e.kilit)){const w=anmZarf(k,tm.sure,0.12,0.25);
@@ -1797,7 +1814,7 @@ function anmEylemler(a,p,dt){
   if(ph==='goal'&&c&&p.tur==='oyuncu'&&p.oyunda&&p.team!==c.team&&b.tasiyan!==p){
     if(!a.uzP){const n=(p.n!=null?p.n:p.no||0)|0;a.uzP=ANM_UZGUN[Math.floor(h2(n,(mac.score[0]+mac.score[1])*3)*3)%3];}
     /* S1c: üzgün poz en çok uzgunSure sn (sonra yalnız dururken; santraya yürüyüşte kalkar) */
-    st[S.uzgun]=mac.phaseT>0.7&&(!G1||mac.phaseT<(G1.uzgunSure||6)||(p.spd||0)<0.3)?1:0;sp[S.uzgun]=a.uzP;}
+    const gecU=!!G1&&mac.phaseT>=(G1.uzgunSure||6);st[S.uzgun]=mac.phaseT>0.7&&(!gecU||(p.spd||0)<0.3)?(gecU?0.6:1):0;sp[S.uzgun]=gecU?ANM_POZ.belEl:a.uzP;}   /* S1c: sonra dururken yalnız eller belde */
   else if(a.sw[S.uzgun]<0.01)a.uzP=null;
   st[S.mars]=ph==='toren'&&p.tur!=='hakem'?1:0;sp[S.mars]=POSE.mars;
   /* A2b: hakem, yan hakem ve 4. hakem işaretleri */

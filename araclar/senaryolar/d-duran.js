@@ -8,7 +8,7 @@
    ilk temas (4 sn; kısa korner hariç), doğrudan şutta çerçeve ve gol (golde son dokunan kullanan), barajın bloğu ve sıçraması, 8 sn içinde gol,
    penaltıda ribaund koşucusu (vuruşta ceza sahası dışında, 1 sn sonra içinde olan hücumcu), kale vuruşu yerden (kaleci topu eline almadı).
    Kapılar (T8; KAPI ilgili alt adımda açılır, açıkken kabul dışı “!” çıkış kodu 1): korner T8b, serbest vuruş T8c, penaltı/taç/kale vuruşu T8d.
-   Kullanım: node araclar/mac-deneme.js --senaryo d-duran [N=400: korner 4N (T8b: 400 kornerde gol payı ±1,1 puan oynuyordu, kapı gürültüyle düşüyordu; 800'de ±0,75; A4, 2026-10-15: 1600'de ±0,53 — gerçek oran bandın ucuna yakınken (%4,5–4,8) 800'lük kapı gürültüyle düşüyordu); serbest vuruş hücresi N/5 (T8c: 40 vuruşta 18 m'nin gol oranı ±7 puan), penaltı ve taç N/7, kale vuruşu N/5] [tohum] */
+   Kullanım: node araclar/mac-deneme.js --senaryo d-duran [N=400: korner 4N (T8b: 400 kornerde gol payı ±1,1 puan oynuyordu, kapı gürültüyle düşüyordu; 800'de ±0,75; A4, 2026-10-15: 1600'de ±0,53 — gerçek oran bandın ucuna yakınken (%4,5–4,8) 800'lük kapı gürültüyle düşüyordu; S1e, 2026-10-21: ayrı tohum tabanlı ikinci 4N blok, toplam 8N = 3200, ±0,39); serbest vuruş hücresi N/5 (T8c: 40 vuruşta 18 m'nin gol oranı ±7 puan), penaltı ve taç N/7, kale vuruşu N/5] [tohum] */
 'use strict';
 const KAPI={korner:true,serbest:true,penalti:true,tac:true,kaleVurusu:true};
 /* kale vuruşunun yeri: kendi kale çizgisinden 5 m (altıpas çizgisinin 0,5 m önü; motorun sinirlar() kuralı) */
@@ -81,13 +81,24 @@ const KOD=`(function(tohum,tur,t,u,w){
   /* S1a (bilgi; 2026-10-20): seremonili barajlı serbest vuruşta (du.hk.s1) adımlamanın başında baraj dizili (bütün üyeler son yerine ≤ 1 m), düdükte
      hakemin hızı, düdük → koşu (ilk kullanım: m.sonKullanim'ın yeni nesnesi); kullanım oyunu başlattıysa duruş önceki adımınkidir */
   let s1=null,s1D=null,s1K=m.sonKullanim;
+  /* S1e (bilgi ve kapı; 2026-10-21, js/mac-sahne.js): kullananın rutini (du.kr) — topun konduğu an, boş bekleme (hareketsiz < 0,2 m/sn, jestsiz, eylemsiz;
+     korner ve kenarda hazırdan kullanıma, düdüklüde hazırdan düdüğe), en uzun kesintisiz boş bekleme, kullanım − planlanan koşu anı (kr.tKos), kol
+     işaretinden kullanıma, varyantlar (sığdırmadan sonra) */
+  let s1e=null,s1eD=null;
   /* S1b: penaltı sahnesi ~40 sn (kaotikte 50 + koşu): penaltıda tavan 75 sn */
   for(let n=0;n<60*(tur==='penalti'?75:60)&&!kul;n++){if(m.durus){baraj=!!m.durus.baraj;nb=m.durus.barajdakiler?m.durus.barajdakiler.length:0;}m.step(1/60);
     const D=m.durus||s1D;if(D&&D.hk&&D.hk.s1){s1D=D;const H=D.hk;if(!s1)s1={once:null,duduk:null,hkV:null,kos:null};
       if(H.evre==='adim'&&s1.once==null){let h=true;for(const [p,y] of D.barajYer)if(p.oyunda&&Math.hypot(p.x-y.x,p.z-y.z)>1)h=false;s1.once=h;}
       if(D.dudukT!=null&&s1.duduk==null){s1.duduk=D.dudukT;s1.hkV=m.refs[0].spd||0;}
       if(m.sonKullanim!==s1K&&s1.kos==null&&D.dudukT!=null)s1.kos=D.t-D.dudukT;}
-    s1K=m.sonKullanim;}
+    s1K=m.sonKullanim;
+    const DE=m.durus||s1eD;if(DE&&DE.kr){s1eD=DE;const R=DE.kr,tk=DE.kullanan;
+      if(!s1e)s1e={tur:DE.sahneTur||DE.tur,dB:R.dudukBagli,yerT:null,bos:0,run:0,maxRun:0,kulT:null,tKos:null,isaret:null,on:null,kol:R.kol,iki:R.iki,kolOku:R.kolOku,kisa:R.kisa,ek:0};
+      if(DE.asama==='hazir'||DE.asama==='kullan'){if(s1e.yerT==null)s1e.yerT=DE.t;
+        if(DE.asama==='hazir'&&(!R.dudukBagli||DE.dudukT==null)&&tk){const j=tk.jest,bos=Math.hypot(tk.vx,tk.vz)<0.2&&!(j&&(j.t||0)<(j.sure||0))&&!tk.eylem;
+          const B=R.bakis;if(B){if(s1e.bx!=null&&Math.hypot(B.x-s1e.bx,B.z-s1e.bz)>2.5)s1e.run=0;s1e.bx=B.x;s1e.bz=B.z;}   /* bakış başka hedefe sıçradı: baş döner */
+          if(bos){s1e.bos+=1/60;s1e.run+=1/60;if(s1e.run>s1e.maxRun)s1e.maxRun=s1e.run;}else s1e.run=0;}
+        if(DE.asama==='kullan'&&s1e.kulT==null){s1e.kulT=DE.t;s1e.tKos=R.tKos;s1e.isaret=DE.isaret;s1e.on=R.on;s1e.ek=R.ek;s1e.dolgu=R.dolgu;}}}}
   if(!kul)return null;
   const b=m.ball;
   for(let k=0;k<60*8;k++){
@@ -112,7 +123,7 @@ const KOD=`(function(tohum,tur,t,u,w){
       if(m.t-gkD.t>3)gkD.gk=null;}
     onc.x=b.x;onc.z=b.z;onc.y=b.y;onc.vx=b.vx;onc.vz=b.vz;}
   return{hz:kul.hazirlik,alt:kul.alt,bolge:kul.bolge,sut,gol,golDogrudan,golIlk,ilkSut,sonra1,dogrudan,cerceve,ilk,inis,blok,zip,rib,kutuH,kutuS,baraj,nb,elle,perde:!!(kul.du&&kul.du.gorev&&[...kul.du.gorev.values()].some(g=>g.rol==='perdeAdam')),ikili:!!(kul.du&&kul.du.ikili),aldatma:!!(kul.du&&kul.du.aldatma),aldOnce:kul.du&&kul.du.aldatmaGecti!=null?su-kul.du.aldatmaGecti:null,
-    sonra1K,s1,hkBlok:sonra1==='savBlok',blokRol,blokEr,blokHavada,blokD,golBlok,golBlokT,sbIlk,sbIlkT,sbSut,bSonra,hkSav,hkHuc,evSav,evHuc,evMarkaj,evAcik,bitis,bitT:bitT>=0?bitT-su:null,golBitis,sutP:sut>0,kd:gkD?gkD.o:null};})`;
+    sonra1K,s1,hkBlok:sonra1==='savBlok',blokRol,blokEr,blokHavada,blokD,golBlok,golBlokT,sbIlk,sbIlkT,sbSut,bSonra,hkSav,hkHuc,evSav,evHuc,evMarkaj,evAcik,bitis,bitT:bitT>=0?bitT-su:null,golBitis,sutP:sut>0,kd:gkD?gkD.o:null,s1e};})`;
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||400,f=vm.runInContext(KOD,ctx),t0=Date.now();let tn=(tohum||1)*10000,kabulDisi=0;   /* T8f: tohum blokları çakışmasın (koşu başına ~4N + 3N tohum) */
   const y=(a,c)=>c?(100*a/c).toFixed(1)+'%':'—',ort=L=>L.length?L.reduce((a,c)=>a+c,0)/L.length:NaN,ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,c)=>a-c);return S[Math.floor(S.length/2)];};
@@ -122,6 +133,9 @@ module.exports={calistir({ctx,vm,N,tohum}){
   /* korner: iki yan × iki takım */
   const K={L:[],yok:0};
   for(let i=0;i<4*n;i++){const r=kos('korner',i%2,0.4,(i%4<2?1:-1)*(34-0.4));if(!r){K.yok++;continue;}K.L.push(r);}
+  /* S1e (2026-10-21): ikinci korner bloğu (4N daha; ayrı tohum tabanı, öbür hücrelerin tohumları kaymaz) — korner başına gol 1600'de ±0,55 puan oynuyor, %3–5
+     kapısına yakın oran (tohum 1: rutin kapalı %4,6 / açık %5,3; tohum 2: %4,7 / %3,4) gürültüyle düşüyordu; 3200'de ±0,39 */
+  {let tn2=(tohum||1)*10000+50000;for(let i=0;i<4*n;i++){const r=f(tn2++,'korner',i%2,0.4,(i%4<2?1:-1)*(34-0.4));if(!r){K.yok++;continue;}K.L.push(r);}}
   const KL=K.L,Kn=KL.length,Kc=KL.filter(r=>r.alt!=='kisa'&&r.alt!=='geri'),say=(L,f2)=>L.filter(f2).length;
   const ilkT={};for(const r of Kc)ilkT[r.ilk||'yok']=(ilkT[r.ilk||'yok']||0)+1;
   const kGol=100*say(KL,r=>r.gol)/Math.max(1,Kn),kKisa=100*say(KL,r=>r.alt==='kisa')/Math.max(1,Kn),kKutu=ort(KL.map(r=>r.kutuH)),kIn=Kc.filter(r=>r.inis!=null);
@@ -231,6 +245,25 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const vy=100*say(V,r=>!r.elle)/Math.max(1,V.length);
   console.log(`  Kale vuruşu: ${V.length} · hazırlık ortancası ${f1(ortanca(V.map(r=>r.hz)))} sn · yerden ${vy.toFixed(1)}% · uzun ${y(say(V,r=>r.alt==='uzun'),V.length)}`);
   kapi(KAPI.kaleVurusu,vy>=99,`kale vuruşu yerden (kaleci topu eline almadan) %100 → %${vy.toFixed(1)}`);
+  /* S1e (2026-10-21; protokol bit 32 korner ve kenar, bit 64 barajlı ve penaltı): kullananın rutini — kapılar S1 planı (kabul): kornerde en uzun kesintisiz
+     boş bekleme ortanca ≤ 2, %90 ≤ 2,5 sn; kenarda %90 ≤ 3; kullanım − planlanan koşu anı |ortanca| ≤ 0,3 sn; varyant payları bilgi (kapı maçta); düdüklüde
+     (barajlı ve penaltı) düdükten önceki en uzun boş bekleme %90 ≤ 3 sn */
+  {const PR=vm.runInContext('MOTOR_AYAR.protokol',ctx),b32=(PR&32)!==0,b64=(PR&96)===96,yz=(L,q)=>{if(!L.length)return NaN;const S2=L.slice().sort((a,c)=>a-c);return S2[Math.min(S2.length-1,Math.floor(q*S2.length))];};
+    const tum=[].concat(K.L,...Object.values(S).map(x=>x.L),P).filter(r=>r&&r.s1e),kor=tum.filter(r=>r.s1e.tur==='korner'&&!r.s1e.dB),ken=tum.filter(r=>r.s1e.tur==='kenar'&&!r.s1e.dB),dud=tum.filter(r=>r.s1e.dB);
+    const sat=(ad,L)=>{if(!L.length)return;const M=L.map(r=>r.s1e.maxRun),KT=L.filter(r=>r.s1e.kulT!=null&&r.s1e.tKos!=null).map(r=>r.s1e.kulT-r.s1e.tKos),KK=L.filter(r=>r.s1e.isaret!=null&&r.s1e.kulT!=null).map(r=>r.s1e.kulT-r.s1e.isaret);
+      console.log(`  S1e ${ad}: rutinli ${L.length} · top konduğu an ortanca ${f1(ortanca(L.map(r=>r.s1e.yerT)))} sn · boş bekleme ortanca ${f1(ortanca(L.map(r=>r.s1e.bos)))} sn · en uzun kesintisiz boş (ortanca / %90 / en çok) ${f1(ortanca(M))} / ${f1(yz(M,0.9))} / ${f1(Math.max(...M))} sn`+
+        (KT.length?` · kullanım − planlanan koşu (ortanca / |%90|) ${f1(ortanca(KT),2)} / ${f1(yz(KT.map(Math.abs),0.9),2)} sn`:'')+(KK.length?` · kol işaretinden kullanıma ortanca ${f1(ortanca(KK))} sn`:''));
+      return{M,KT};};
+    const rk=sat('korner',kor),re=sat('kenar',ken),rd=sat('düdüklü (barajlı ve penaltı; düdükten önce)',dud);
+    const V=kor.concat(ken).filter(r=>r.s1e.on),vp=k=>100*say(V,r=>r.s1e.on[k])/Math.max(1,V.length);
+    if(V.length){const iki=kor.concat(ken).filter(r=>r.s1e.kol),ok=kor.concat(ken).filter(r=>r.s1e.kol);
+      console.log(`  S1e varyantlar (korner + kenar, sığdırmadan sonra): düzelt ${vp('duzelt').toFixed(1)}% · sırtla dönüş ${vp('don').toFixed(1)}% · el ${vp('el').toFixed(1)}% · tekrar ${vp('tekrar').toFixed(1)}% · iki kol ${y(say(iki,r=>r.s1e.iki),iki.length)} · kol okumada kalkık ${y(say(ok,r=>r.s1e.kolOku),ok.length)} · okumadan önce dolgu ${y(say(V,r=>r.s1e.ek>0),V.length)}`);}
+    if(rk){kapi(b32,ortanca(rk.M)<=2&&yz(rk.M,0.9)<=2.5,`S1e kornerde en uzun kesintisiz boş bekleme ortanca ≤ 2, %90 ≤ 2,5 sn → ${f1(ortanca(rk.M))} / ${f1(yz(rk.M,0.9))}`);
+      kapi(b32,rk.KT.length>0&&Math.abs(ortanca(rk.KT))<=0.3,`S1e kornerde kullanım − planlanan koşu anı |ortanca| ≤ 0,3 sn → ${f1(ortanca(rk.KT),2)}`);}
+    if(re)kapi(b32,yz(re.M,0.9)<=3,`S1e kenarda en uzun kesintisiz boş bekleme %90 ≤ 3 sn → ${f1(yz(re.M,0.9))}`);
+    /* varyant payı bu senaryoda bilgi: kullanan santra dizilişinden (40–60 m) gelir, sığdırma seçmeli evreleri düşürür; kapı maçın ölçüsünde (k-protokol s1e_v_*; S1 planı kabul) */
+    if(V.length)kapi(false,vp('duzelt')>=5&&vp('don')>=5&&vp('el')>=5&&vp('tekrar')>=3,`S1e her varyant ≥ %5 (tekrar ≥ %3) → düzelt ${vp('duzelt').toFixed(1)} · dönüş ${vp('don').toFixed(1)} · el ${vp('el').toFixed(1)} · tekrar ${vp('tekrar').toFixed(1)}`);
+    if(rd)kapi(b64,yz(rd.M,0.9)<=3,`S1e düdüklüde düdükten önceki en uzun boş bekleme %90 ≤ 3 sn → ${f1(yz(rd.M,0.9))}`);}
   console.log(`\n  Toplam ${((Date.now()-t0)/1000).toFixed(1)} sn${kabulDisi?` · kapı dışı ${kabulDisi}`:''}`);
   return kabulDisi?1:0;
 }};

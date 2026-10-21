@@ -114,7 +114,7 @@ const MOTOR_AYAR={
   /* S — js/mac-sakatlik.js (T10c) */
   sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined,
   /* S1 — js/mac-sahne.js (S1, 2026-10-20: sahne protokolleri; bit maskesi S1_BIT, parametre anahtarları kendi alt adımında) */
-  protokol:undefined,seremoni:undefined,kartAyar:undefined,penaltiSahne:undefined,golTempo:undefined
+  protokol:undefined,seremoni:undefined,kartAyar:undefined,penaltiSahne:undefined,golTempo:undefined,kRutin:undefined
 };
 const MOTOR_AYAR_SAHIBI={macSuresiDk:'cekirdek',gecis:'cekirdek',donus:'cekirdek',karsiPres:'cekirdek',blokYumusak:'cekirdek',blokHizli:'cekirdek',hucumGecikme:'cekirdek',presHisterezis:'cekirdek',santraTek:'cekirdek',yerFalso:'cekirdek',durusSaat:'cekirdek'};
 function ayarEkle(akis,o){for(const k in o){
@@ -684,7 +684,7 @@ class Match{
     this.guvenOlay(att,'golAtti');this.guvenOlay(def,'golYedi');if(own)this.guvenOlay(def,'kendiKale');   /* T10e */
     this.kayit.goller.push({ad:scorer?scorer.name:'',no:scorer?scorer.no:0,takim:att,kendiKalesine:!!own,dakika:Math.floor(this.gameSec/60)+1});   /* T10c */
     /* T10b (T10 teşhisi hata 5): avantaj sürerken gol — avantaj tutulmuştur, kart şimdi gösterilir (sevinç sürerken hakem oyuncuya gider) */
-    if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:true});if(a.kart&&a.yapan.oyunda)this.kartGoster(a.yapan,a.kart);}
+    if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:true});if(a.kart&&a.yapan.oyunda){if(c.s1)c.kartBekle=a;else this.kartGoster(a.yapan,a.kart);}}   /* S1c: kart sevinçten sonra */
   }
   stepGoal(dt){
     if(this.celeb&&this.celeb.s1){this.golSahneAdim(dt);return;}   /* S1c (js/mac-sahne.js): gol sonrası akış */

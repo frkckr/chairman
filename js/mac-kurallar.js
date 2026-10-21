@@ -329,7 +329,7 @@ Object.assign(Match.prototype,{
     else if(du.asama==='getir'){
       if(b.tasiyan===tk)du.asama='yerles';
       /* top çocuğun elinde: atan atış yerine gelir, çocuğa döner ve topu bekler (saha dışına çıkmaz) */
-      else if(b.tasiyan&&b.tasiyan.tur==='topcu'){tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=0.85;tk.bak=b.tasiyan;}
+      else if(b.tasiyan&&b.tasiyan.tur==='topcu'){tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=du.kr&&!du.kr.dudukBagli?this.sahneHiz(du,tk,0.85,nk.x,nk.z):0.85;tk.bak=b.tasiyan;}   /* S1e: rutinde topa yürür (eskiden 0,85 ile koşuyordu) */
       else if(!b.tasiyan){/* top havada ya da yerde: atan alır. T4h (2026-10-09, N10 kuralı): atan çizginin en çok 1,6 m dışına gider (tahmin topun
            1,5 m içinde duracağını söylese de yavaş top öteye yuvarlanabiliyor; 1 m'lik alma erimiyle 2,6 m'ye dek yetişir); top 2,5 m'den öteye
            yuvarlanıp yavaşladıysa top toplayıcı yenisini verir (uygun çocuk yoksa atan gider). T6b (2026-10-10, d-topcu bulgusu): çocuğun attığı
@@ -340,6 +340,7 @@ Object.assign(Match.prototype,{
           if(hyp(b.x-tk.x,b.z-tk.z)<1.0&&b.y<2.3){b.tasiyan=tk;b.vx=b.vy=b.vz=0;this.topDegisti();du.asama='yerles';}}}
     }else if(du.asama==='yerles'){
       tk.tx=nk.x;tk.tz=nk.z;tk.hizOran=du.sahneT?this.sahneHiz(du,tk,0.8,nk.x,nk.z):0.8;tk.bak=null;tk.yonHedef=Math.atan2(MZ-nk.z,d*20-nk.x);   /* T8a: 0,7 → 0,8; Z2a: sahnede yürür */
+      if(du.kr&&!du.kr.dudukBagli&&hyp(tk.x-nk.x,tk.z-nk.z)>1.5)tk.yonHedef=null;   /* S1e: topu elinde gidiş yönüne yürür (eskiden köşeye geri geri), son 1,5 m'de sahaya döner */
       if(hyp(tk.x-nk.x,tk.z-nk.z)<0.45){
         if(du.tur==='tac'){tk.eylem={ad:'tac',t:0,faz:'tut',ft:0};du.asama='hazir';
           /* T8d: uzun taç kararı burada (atan koşu için çizginin 3 m gerisine çekilir; hedef atışta tazelenir) */
@@ -352,10 +353,12 @@ Object.assign(Match.prototype,{
           const a=this.durusHedefAcisi(du),gm=this.duranGeriMesafe(du,tk);du.aci=a;du.geriX=du.x-Math.cos(a)*gm;du.geriZ=du.z-Math.sin(a)*gm;
           /* Z2a (yay koşusu): geri çekilme noktası vuran ayağın ters yanına du.yay kadar dönük — sağ ayaklı topa soldan, 20–45°'lik açıyla gelir */
           if(du.yay){const ay=tk.ayak==='iki'?(du.tur==='korner'||du.sinif==='kenar'?this.kornerIceAyak(du):'sag'):tk.ayak,r=a+(ay==='sol'?-1:1)*du.yay;du.geriX=du.x-Math.cos(r)*gm;du.geriZ=du.z-Math.sin(r)*gm;}
-          if(!du.hizli&&(du.tur!=='serbest'||this.duranTehlikeli(du))){tk.eylem={ad:'yerlestir',t:0,sure:0.6};du.yerT=du.t;}}}
+          if(!du.hizli&&(du.tur!=='serbest'||this.duranTehlikeli(du))){tk.eylem={ad:'yerlestir',t:0,sure:0.6};du.yerT=du.t;}
+          if(this.s1RutinBit(du)===S1_BIT.RUTIN2)this.kRutinKur(du);}}   /* S1e (bit 64): barajlı ve penaltıda vurucunun düdüğe dek rutini (js/mac-sahne.js) */
     }else if(du.asama==='hazir'){
       du.hazirT+=dt;
-      if(du.tur!=='tac'){const yer=du.yerT!=null&&du.t-du.yerT<0.6;tk.tx=yer?tk.x:du.geriX;tk.tz=yer?tk.z:du.geriZ;tk.hizOran=0.4;tk.yonHedef=du.aci;tk.bak=null;b.x=du.x;b.z=du.z;b.vx=b.vz=0;
+      if(du.tur!=='tac'&&du.kr&&!du.kisaGeri&&this.kRutinAdim(du,tk,dt)){}   /* S1e: kullananın rutini (js/mac-sahne.js) */
+      else if(du.tur!=='tac'){const yer=du.yerT!=null&&du.t-du.yerT<0.6;tk.tx=yer?tk.x:du.geriX;tk.tz=yer?tk.z:du.geriZ;tk.hizOran=0.4;tk.yonHedef=du.aci;tk.bak=null;b.x=du.x;b.z=du.z;b.vx=b.vz=0;
         /* T8a: geri adımlar düzenli (efor 0,8, yavaş; 3–7 m geri çekilme T1 hız kipinde ~3 sn sürüyordu); T8f: topa yürüyüş (kisaGeri) 0,6 */
         if(!yer&&hyp(tk.x-du.geriX,tk.z-du.geriZ)>0.5){tk.hizOran=du.kisaGeri?0.6:0.3;this.eforVer(tk,0.8);}
         if(du.pk)this.penaltiDuzelt(du,tk);}   /* S1b: topu yeniden yerleştirme varyantı (js/mac-sahne.js) */

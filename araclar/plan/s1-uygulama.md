@@ -2,7 +2,7 @@
 
 # S1 — uygulama planı (2026-10-20; Claude'un tasarımı, kullanıcı onaylı program §12.13)
 
-**Durum (2026-10-21 öğle, dizüstü):** Dal `claude/motor-s1` (ana ağaç). Yapıldı: S1-0 (7807d9d), S1a (2523afa), S1d (73347a7), S1b (75515df), S1c (gol sonrası akış ve bakış odağı; `protokol` 31). Kaldı: S1e (korner rutini), inceleme ve düzeltme, kapanış (S1-K). Birebirlik tabanı: K1 ucunda `araclar/taban/k1.json` (`protokol` 0 ile `--ayni`).
+**Durum (2026-10-21 öğleden sonra, dizüstü): S1 kapandı ve `main`'e alındı (etiket `tur/s1`).** Yapıldı: S1-0 (7807d9d), S1a (2523afa), S1d (73347a7), S1b (75515df), S1c (fe309bd; gol sonrası akış ve bakış odağı), S1e (korner ve kenar kullananının rutini, barajlı vuruşa ve penaltıya düdüklü genişlemesi), üç gözle inceleme ve düzeltmeleri, S1-K kapanışı; `protokol` 127. Sonuç ve borçlar [FUTBOL_KUTUPHANESI §12.16](../../FUTBOL_KUTUPHANESI.md#1216-s1--sonuç-2026-10-21-dizüstü-dal-claudemotor-s1-oto-mod-kullanıcı-onaylı-plan-s1i-bitir--v1i-bitir). Yeni taban `araclar/taban/s1.json` (`protokol` 0 ile `k1.json`'a `--ayni`), animasyon tabanı `araclar/taban/s1-anm.json`. Bu plan tarihsel kayıttır; aşağıdaki adımlar uygulanmıştır.
 
 ## Plan
 

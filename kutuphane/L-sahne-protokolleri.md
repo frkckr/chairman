@@ -27,6 +27,8 @@ Topun oyunda kalma süresi 2023-24 58:11, 2024-25 56:59, 2025-26 (7. hafta) 55:0
 
 **Rastgelelik için varyantlar:** hızlı vuruş (düdüksüz, baraj kurulmadan; 9,15 m içindeki rakip keserse oyun devam); mesafe isteği → seremoni (yukarıdaki kaos: oyuncular yakın durur, hakem iki kez iter, kaleci barajı kaydırır); "heykel" / topu kaçırma → uyarı ya da sarı; yan hakem sahaya girip mesafeyi kurar; düdükten önce vuruş → tekrar (+ sarı); baraja 1 m içinde hücumcu → savunmaya endirekt; faul için önce kart → vuruş zorunlu seremonili; baraj üstünden erken çıkan savunmacı (top çarparsa sarı + tekrar).
 
+**Motorda (S1a ve S1e, 2026-10-21; `js/mac-sahne.js`, `protokol` bit 1 ve 64; FUTBOL_KUTUPHANESI §12.16).** Hakem topa gelip vurucuya "düdüğü bekle" der, topun yerini sıkar; baraj 6–7,8 m'de kaos içinde kurulur (kalecinin yönlendirmesi, hakemin 1–3 itişi — itiş üyeden üyeye), hakem topun yanına dönüp 9,15 m'yi gidiş yönüne bakarak adımlar, çizgiyi sıkar, baraj dizilir, hakem restart yerinde durur. Düdük ön koşuldur (kart, sakatlık ve değişiklik yok, baraj dizik, kaleci yerinde, vurucunun rutini bitti); düdük → koşu 1–3 sn. Vurucu düdüğe dek boş durmaz: koyar, geri çekilir, bakışını baraj ↔ kaleci arasında değiştirir, yan adım atar, bir kez topu yeniden düzeltir. Dolaylı vuruşta kol restart yerinde kalkar. Hızlı vuruş istisnası korunur.
+
 ## L.2 Penaltı
 
 **Kurallar (IFAB Law 14, 2025/26) [K12].** Top sabit, "bir kısmı penaltı noktasının merkezine değmeli ya da üstüne taşmalı"; direkler/ağ hareketsiz. Vurucu açıkça belirlenir. Kaleci "top vurulana kadar kale çizgisinde, vurucuya dönük, direkler arasında" kalır; "vurucunun dikkatini haksız biçimde dağıtamaz, ör. vuruşu geciktiremez, direklere/üst direğe/ağa dokunamaz". Diğer oyuncular noktadan ≥ 9,15 m, noktanın gerisinde, ceza sahası ve yayın dışında. **"Oyuncular yerlerini aldıktan sonra hakem vuruş için işaret verir."** Top ileri vurulmalı. **Top vurulduğunda kalecinin en az bir ayağının bir kısmı kale çizgisine değiyor, çizgiyle hizada ya da gerisinde olmalıdır.** 2025/26'da Law 14 için değişiklik yoktur; yeni: kazara çift dokunuş + gol → tekrar (gol yoksa endirekt), kasıtlı çift dokunuş → endirekt; GLT/VAR varsa yan hakem taç çizgisinde penaltı noktası hizasında [K13] [K14]. İhlaller: hakem işaretinden sonra vuruş zorunlu; koşu tamamlandıktan sonra aldatma → endirekt + sarı (koşu sırasında serbest); kaleci ihlalinde gol → gol, kurtarırsa tekrar (ilkinde uyarı, sonra sarı); savunmacı ihlalinde gol yoksa tekrar.
@@ -40,6 +42,8 @@ Topun oyunda kalma süresi 2023-24 58:11, 2024-25 56:59, 2025-26 (7. hafta) 55:0
 **Kaleci bekleyişi (gözlem ve kural):** çizgide ağırlık aktarımı, kollar açılıp kapanır, dizler bükük, bazen zıplama ya da direğe dokunma (artık yasak); baş vurucuda sabittir — **baş çevirme/tarama olmaz**; eldiven düzeltme nadirdir. (Ölçülmüş süre dağılımı bulunamadı; G0.7 "kaleci bekleyişi" ile tutarlı.)
 
 **Varyantlar:** sakin (düdük, kaptan konuşur, VAR sessiz onay, ~60–70 sn); uzun itiraz + VAR monitörü (> 150 sn; dönüşüm %73); kaleci oyunu (kol sallama, zıplama; ağa dokunma → uyarı); vurucu düdükten hemen koşar (< 200 ms → düşük oran); hakem topu yeniden yerleştirtir (düşük oran); kazara çift dokunuş + gol → tekrar; kutuya erken giren savunmacı → tekrar. **Tempo B önerisi (Claude):** penaltı sahnesi 27 → ~40 sn (gerçek ortanca 67'nin yarısından biraz fazla; itiraz ve dizilim evreleri görünür olsun), VAR'lı inceleme varyantı Z10 ile.
+
+**Motorda (S1b ve S1e, 2026-10-21; bit 4 ve 64).** Faulden temasa ~39 sn (80 maç ortancası 39,2): hakem noktayı gösterir; faul yapan takımdan 3–6 kişi ve kaptan gelir, kaptan protokolü (bilekler çapraz, "yaklaşmayın"), kaotikte ikinci işaret ve protokol sarısı; kutu boşaltılır, vurucu topu tutar ve koyar, kaleci çizgiye döner (kaleci oyunu varyantında uyarı); hakem son yerinde durur, düdük, vurucu 0,4–3 sn bekler (alt sınır bilinçli: Jordet'in < 200 ms acelesi dışarıda). Vurucunun bekleyişi bakış top ↔ kaleci ve yan adımla dolar. Kaleci başı vurucuda (K1). VAR Z10'da.
 
 ## L.3 Gol sonrası akış
 
@@ -58,6 +62,8 @@ Topun oyunda kalma süresi 2023-24 58:11, 2024-25 56:59, 2025-26 (7. hafta) 55:0
 
 **Varyantlar:** standart (~60–75 sn gerçek); gerideki takımın acelesi (kaleci topu ağdan çıkarıp uzun atar ya da koşarak taşır; ~45–50 sn); öndeki takımın yavaşlığı (top yavaş taşınır, kaleci oyalanır; 90+ sn, sarı riski); VAR kontrolü (hakem kulağında bekler; 100–150 sn; iptalde ekranda gösterim — Z10); forma çıkarma → sarı; tribüne/kulübeye koşma, eşli sevinç, pasçıyı gösterme, dinî jest (sıklıklar yukarıda).
 
+**Motorda (S1c, 2026-10-21; bit 8 ve 16).** Gol → santra ~35 sn (80 maç ortancası 34,4; tarafsız ~37, gol yiyen geride ~30, atan takım acele ~27, gol yiyen önde ~39). Sevinç 11–15 sn; golcünün koşu türü köşe, tribün (saha kenarında), pasçı, kulübe ya da yerinde; küme, eşli ve ikili sevinç; yenen takım 2–5 sn üzgün durur. Topu yenen takımın kalecisi ya da savunmacısı ağdan alır, kendi yarısındaki arkadaşa ya da noktaya yuvarlar (kaleci uzağa atmaz); gerideki takım koşarak taşır. Hakem gösterir, deftere yazarak santraya yürür, bekler; yan hakem savunmanın hizasına geçer. Law 8 sağlanınca düdük, santra 1,6 sn sonra, tek düdük. Bakış sevinçte kümede.
+
 ## L.4 Kart
 
 **Kurallar.** Law 12.4: hakemin disiplin yetkisi saha incelemesinden ayrılışa kadar; avantaj oynanmışsa kart **top bir sonraki oyun dışı olduğunda**; sarı: restartı geciktirme, itiraz, izinsiz giriş/çıkış, mesafeye uymama, ısrarlı ihlal, sportmenlik dışı, VAR alanına girme [K21]. Law 5: sakatlanan oyuncuya kart "oyuncu sahayı terk etmeden" gösterilir [K27]. Law 13: hızlı vuruşu engelleyen → sarı. Kaptan protokolü: kaptan dışındakiler yaklaşırsa "hareketle itiraz"tan sarı [K15].
@@ -67,6 +73,8 @@ Topun oyunda kalma süresi 2023-24 58:11, 2024-25 56:59, 2025-26 (7. hafta) 55:0
 **Süreler.** Faulden karta saniye verisi (bulunamadı). Tek örnek (Opta): korner çıkışından karta 46 sn (28. sn'de uyarıldı, 18 sn daha bekledi) [K1]. Zaman kaybı kartları 2023-24 ilk 19 maçta 14 (0,7/maç).
 
 **Varyantlar:** anında (faul düdüğü, hakem 5–10 m yürür, oyuncu bekler, kart; ≈ 10–15 sn); oyuncu uzaklaşır (hakem durdurur, takip eder, kalabalık toplanır, kaptan protokolü, kart; 30–60 sn); avantaj → kart sonraki duruşta; sakat oyuncuya kart sahadan çıkmadan; ikinci sarı → sarı + kırmızı ardışık; misilleme riski → kart mesafeden hemen; gol sonrası forma → sarı. Oyundaki "hakem oyuncunun peşinden depar atar" görüntüsü hiçbir varyantta yoktur.
+
+**Motorda (S1d, 2026-10-20; bit 2; gol evresindeki kart 2026-10-21).** Hakem oyuncuya yürür (≤ 3,4 m/sn, depar yok) ya da çağırır; itirazda kalabalık ve kaptan protokolü ya da uyarı; kart baş üstünde, ikinci sarıda sarı sonra kırmızı, ardından deftere yazma. Kart bitmeden duran top kullanılmaz; kartın düdüğünden kullanıma 1–2 sn. Gol evresinde avantajdan gelen kart sevinçten sonra gösterilir (uzaktan; yürüyerek gösterme borç).
 
 ## L.5 Sağlıkçılar ve teknik alan
 
@@ -78,6 +86,8 @@ Topun oyunda kalma süresi 2023-24 58:11, 2024-25 56:59, 2025-26 (7. hafta) 55:0
 
 **Varyantlar:** oyuncu yerde, hakem bakar, kalkar (duruş yok); hakem durdurur, kolla sağlıkçıyı çağırır, iki kişi koşar, 60–90 sn, oyuncu kenara çıkar, 1 dk sonra işaretle döner; kartlı faul → hızlı tedavi, kalır (20–25 sn); kaleci sahada tedavi; sedye (2–3 dk, değişiklik); baş yaralanması protokolü (≥ 30 sn kenarda, PL 2025/26); önde olan takımın "taktik" duruşu.
 
+**Motorda.** K1 (2026-10-20): sağlıkçılar kulübede ve görünmez, görevde kapı → yan → ön yoluyla çıkar. S1'de yalnız ölçülür (`k-protokol` s1D_saglikci).
+
 ## L.6 Korner kullananın rutini
 
 **Kurallar (Law 17, 2025/26) [K33].** Top köşe alanında (8 sn kaleci kuralında kalecinin konumuna en yakın köşe); bayrak direği oynatılamaz; rakipler yaydan ≥ 9,15 m; top vurulup hareket edince oyunda; vurucu tekrar dokunursa endirekt; **düdük gerekmez**; kasten geciktirme → sarı. Yan hakem bayrağın arkasında kale çizgisi hizasında durur, "kullanan oyuncuya müdahale etmez".
@@ -87,6 +97,8 @@ Topun oyunda kalma süresi 2023-24 58:11, 2024-25 56:59, 2025-26 (7. hafta) 55:0
 **Süre.** PL korner restartı 2024-25 tam sezon **33,6 sn** (F.0.3'ün ~34 sn'si teyit), 2025-26 36,9; takımlar: Arsenal 47,9 / 45, Sunderland ~50, Brentford 38,1, Liverpool 40,6, Man City 29,1 [K1] [K2]. Tempo B hedefi 18 sn: sürenin tamamı **yürüyüş + yerleştirme + geri çekilme + işaret + bakış** ile dolar; hareketsiz bekleme en çok 1–2 sn (tasarım).
 
 **Varyantlar:** hızlı korner (< 15 sn, işaretsiz); standart (yerleştir, 5–8 m geri, kol, 2–3 sn, koşu; 30–35 sn); yavaş / zaman kaybı (45–50 sn; hakem uyarısı, sarı riski); kısa korner çağrısı (ikinci oyuncu yaklaşır, savunmacı çıkar); topu yeniden yerleştirme (yan hakem bayrak kaldırır).
+
+**Motorda (S1e, 2026-10-21; bit 32).** Kullanan topa yürür (≥ 1,3 m/sn, sahnenin süresine göre), topu elde gidiş yönünde taşır, koyar (bazen düzeltir), geri çekilir (bazen sırtı dönük yürüyüp döner), ön direkten arka direğe bakar, isteğe bağlı el işareti verir, kol kodunu gösterir (tek kol ön direk, alçak, geri; iki kol arka direk, tren; orta ve kenarda zarla; kısa kornerde kol yok, kısa oyuncu çağırır), bazen kolu indirip yeniden kaldırır, 1–2 sn okur. Plan kalan süreye sığar. 80 maçta en uzun kesintisiz boş bekleme %90'ı kornerde 1,6, kenarda 1,7 sn; kullanım planlanan anın 0,24 sn ardında.
 
 ## L.7 Korner sonrası ikinci top (veri)
 
@@ -100,15 +112,17 @@ StatsBomb (kanattan isabetli şutlar): uzak direk üçlüsü %32, orta %7, yakı
 
 ## L.9 Motor için notlar (S1 turunun girdisi; program §12.13)
 
-1. **Seremonili vuruş zinciri:** hakem "bekle" işareti → sprey (öne yürüyerek, yüzü baraja) → baraj kuruluşu kaos evresi (önce yakın duruş, kaleci yönlendirmesi, hakemin itmesi, sprey sonrası yerleşme; h2 özetli rastgelelik) → hakem çaprazda durur → düdük → 1–3 sn → vuruş. Hızlı vuruş istisnası korunur. Düdük ön koşuldur, olay değil.
-2. **Penaltı zinciri:** nokta gösterme → itiraz/kalabalık (kaptan protokolü: kaptan hakeme, diğerleri 4 m; hakemin çapraz kol işareti) → kutunun boşaltılması → top ve kaleci (kollar açık, ağırlık aktarımı, zıplama varyantı; **baş vurucuda, tarama yok**) → işaret/düdük → 1–3 sn → koşu. Süre ~40 sn (tempo B); VAR varyantı Z10.
-3. **Gol sonrası:** bakış sevinçte (golcü + küme, sevinç süresi 15–25 sn tempo B'de 10–15); top yenen takımın kalecisi/stoperi tarafından elle ya da ayakla ortaya (gerideyse koşarak), kaleci topu orta yuvarlağa atmaz; hakem not eder ve santraya yürür, yan hakem orta çizgiye koşar; düdükle santra; toplam ~35 sn.
-4. **Kart:** hakem oyuncuya yürür (depar yok), oyuncu durur; varyant çağırma (kol işareti, oyuncu gelir); kalabalık/itiraz ve kaptan protokolü; kartı baş üstünde, deftere yazma; 10–15 sn, kalabalıkta 30–60 sn (tempo B'de yarısı).
-5. **Sağlıkçılar:** kulübede otururlar (görünmez ya da kulübe içinde), çağrıda çıkıp koşarlar, dönerler; teknik alanda ayakta yalnız TD.
-6. **Korner kullanan:** tempo yürüyüş + yerleştirme + geri çekilme + işaret + bakış ile dolar; hareketsiz bekleme ≤ 1–2 sn; eller dizde yok; kısa korner çağrısı ve ikinci bakış varyantları.
+1. *(S1a'da uygulandı, 2026-10-20; vurucunun bekleyişi S1e'de, 2026-10-21)* **Seremonili vuruş zinciri:** hakem "bekle" işareti → sprey (öne yürüyerek, yüzü baraja) → baraj kuruluşu kaos evresi (önce yakın duruş, kaleci yönlendirmesi, hakemin itmesi, sprey sonrası yerleşme; h2 özetli rastgelelik) → hakem çaprazda durur → düdük → 1–3 sn → vuruş. Hızlı vuruş istisnası korunur. Düdük ön koşuldur, olay değil.
+2. *(S1b'de uygulandı, 2026-10-20)* **Penaltı zinciri:** nokta gösterme → itiraz/kalabalık (kaptan protokolü: kaptan hakeme, diğerleri 4 m; hakemin çapraz kol işareti) → kutunun boşaltılması → top ve kaleci (kollar açık, ağırlık aktarımı, zıplama varyantı; **baş vurucuda, tarama yok**) → işaret/düdük → 1–3 sn → koşu. Süre ~40 sn (tempo B); VAR varyantı Z10.
+3. *(S1c'de uygulandı, 2026-10-21)* **Gol sonrası:** bakış sevinçte (golcü + küme, sevinç süresi 15–25 sn tempo B'de 10–15); top yenen takımın kalecisi/stoperi tarafından elle ya da ayakla ortaya (gerideyse koşarak), kaleci topu orta yuvarlağa atmaz; hakem not eder ve santraya yürür, yan hakem orta çizgiye koşar; düdükle santra; toplam ~35 sn.
+4. *(S1d'de uygulandı, 2026-10-20)* **Kart:** hakem oyuncuya yürür (depar yok), oyuncu durur; varyant çağırma (kol işareti, oyuncu gelir); kalabalık/itiraz ve kaptan protokolü; kartı baş üstünde, deftere yazma; 10–15 sn, kalabalıkta 30–60 sn (tempo B'de yarısı).
+5. *(K1'de uygulandı, 2026-10-20)* **Sağlıkçılar:** kulübede otururlar (görünmez ya da kulübe içinde), çağrıda çıkıp koşarlar, dönerler; teknik alanda ayakta yalnız TD.
+6. *(S1e'de uygulandı, 2026-10-21)* **Korner kullanan:** tempo yürüyüş + yerleştirme + geri çekilme + işaret + bakış ile dolar; hareketsiz bekleme ≤ 1–2 sn; eller dizde yok; kısa korner çağrısı ve ikinci bakış varyantları.
 7. **İkinci top:** `_duranSonrasi` penceresinde kutudaki arkadaş sayısı ve markaj durumu yeniden ortanın değerine ekler, geri pasa ceza; "hep böyle" değil.
 
 ## L.10 Ölçüler (öneri)
+
+*Uygulandı (S1, 2026-10-20/21):* `araclar/olcumler/k-protokol.js` (s1D_ ortak düdük, s1a_, s1d_, s1b_, s1c_, s1e_ satırları) ve `araclar/senaryolar/d-sahne.js` (kart, penaltı, gol hücreleri); `k-sahne.js`'in süre satırları değişmedi.
 
 `k-sahne` genişlemesi: evre süreleri (bekle / sprey / baraj / düdük / vuruş), hakemin sprey adımlamasında yüz yönü (ileri payı), düdük → kullanım aralığı (≥ 1 sn payı), baraj üyelerinin ilk konumdan son konuma hareket mesafesi (kaos ölçüsü), penaltı evre süreleri ve itiraz sayısı, gol → santra süresi ve bakış hedefinin sevinçte kaldığı süre, kartta hakemin tepe hızı (≤ 3 m/sn) ve oyuncunun durma payı, sağlıkçıların görünür olduğu süre, korner kullananın hareketsiz süresi.
 

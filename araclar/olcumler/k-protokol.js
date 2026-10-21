@@ -55,10 +55,15 @@
    sn); zincir — 'golTopGonder' sayısı; kovalama — 'kickoff' evresinde top taşınıyor ya da noktadan 0,3 m uzakta (santracı kovalıyor); ışınlama —
    santra stepKick'in 22 sn tavanında (evrenin süresi > 22); hakem — gol ve santra evresinde, bir kez 3 m/sn'nin altına indikten sonra kart
    sırası yokken en yüksek hız, ve yol; düdükten önce
-   santra yerinde bekleme (c.hk.bekT); yan hakem — gol evresinde bir yan hakem kale çizgisine 8 m'den yaklaşıp golden bu yana 3 m'den çok ilerledi;
+   santra yerinde bekleme (c.hk.bekT); yan hakem — gol evresinde, golden 2 sn sonraki yerine göre (golden önce koşan yan hakemin fren yolu sayılmaz)
+   bir yan hakem kale çizgisine 8 m'den yaklaşıp 1 m'den çok ilerledi; tavanın nedeni — zorla düdükte (55 sn) karşılanmayan ön koşullar;
    düdük → santra — 'duduk' (tur 'santra') ile 'kickoff' arası; düdüksüz santra — sahneli golde 'kickoff'tan önce düdük yok; Law 8 — 'kickoff'
    anında kendi yarısında olmayan, orta yuvarlakta rakip ya da noktanın 3 m içinde ikinci oyuncu (kişi); odak kümede — sevinç evresinde c.odak
-   golcüye ya da 8 m içindeki kümenin merkezine ≤ 8 m (kare payı). */
+   golcüye ya da 8 m içindeki kümenin merkezine ≤ 8 m (kare payı).
+   Tanımlar (s1e_; S1e, 2026-10-21 — kullananın rutini, du.kr olan duruşlar; korner ve kenar ayrı, düdüklü (barajlı ve penaltı) ayrı): topun konduğu an —
+   du.asama'nın 'hazir'a geçtiği du.t; boş bekleme — hazırda kullanan hareketsiz (< 0,2 m/sn), jestsiz, eylemsiz (korner ve kenarda kullanıma dek,
+   düdüklüde düdüğe dek; sn/duruş); en uzun kesintisiz boş bekleme (ortanca, %90; bakış noktasının bir karede 2,5 m'den çok sıçraması — başın başka hedefe dönmesi — kesintidir); kullanım − planlanan koşu anı (kr.tKos; ortanca); varyantlar — kr.on
+   (sığdırmadan sonra açık: düzelt, sırtla dönüş, el, tekrar), iki kol, okumadan önce dolgu (kr.ek > 0). */
 const S1D_SAHIP=['baraj','penalti','kart','santra'];
 const S1D_AD={baraj:'barajlı serbest vuruş',penalti:'penaltı',kart:'kart',santra:'santra'};
 const s1Ortanca=L=>{if(!L.length)return NaN;const S=L.slice().sort((a,b)=>a-b),n=S.length;return n%2?S[(n-1)/2]:(S[n/2-1]+S[n/2])/2;};
@@ -183,14 +188,18 @@ function s1cIzleyici(){
         cur={t0:m.t,side:c.side,att,kt,sahneli:!!c.s1,baglam:c.s1?(c.alan?'acele':c.tur==='atan'?'atan':koru?'koru':'std'):(koru?'koru':'std'),tur:v.tur||null,sevincT:v.sevincT,
           kutla:null,kumeT:null,kumeK:0,kumeN:0,alan:null,topUzak:0,gecti:false,nokta:null,zincir:0,kovala:false,isinla:false,hkTepe:0,hkYol:0,hkX:null,hkZ:null,hkBek:null,
           yh:false,yavas:false,dudukT:null,tavan:false,santra:null,dudukSantra:null,law8:null,odakK:0,odakN:0,kart:false};
-        const r=m.refs;yh0=[Math.abs(r[1].x),Math.abs(r[2].x)];return;}
+        yh0=null;return;}
       if(!cur)return;
       if(ad==='topuAgdanAldi'){cur.alan='T10d';if(!cur.sahneli)cur.baglam='acele';}
       else if(ad==='golTopAl'&&v&&cur.alan==null)cur.alan=v.p.rol==='GK'?'kaleci':v.p.team===cur.kt?'savunan':'atan';
       else if(ad==='golTopGonder')cur.zincir++;
       else if(ad==='golTopNokta'&&cur.nokta==null)cur.nokta=m.t-cur.t0;
       else if(ad==='kart')cur.kart=true;
-      else if(ad==='duduk'&&v&&v.tur==='santra'&&cur.dudukT==null){cur.dudukT=m.t-cur.t0;cur.tavan=!!v.tavan;const c=m.celeb;if(c&&c.hk)cur.hkBek=c.hk.bekT;}
+      else if(ad==='duduk'&&v&&v.tur==='santra'&&cur.dudukT==null){cur.dudukT=m.t-cur.t0;cur.tavan=!!v.tavan;const c=m.celeb;if(c&&c.hk)cur.hkBek=c.hk.bekT;
+        if(v.tavan&&c){const b=m.ball,N=[],kt=c.kt;if(b.tasiyan||Math.hypot(b.x,b.z-34)>0.3)N.push('top:'+(c.top&&c.top.evre));if(!c.hk||c.hk.evre!=='bekle')N.push('hakem:'+(c.hk&&c.hk.evre));
+          if(m.sakatlikAkis)N.push('sakatlik');if(m.refs[0].kartSira)N.push('kart');
+          for(const p of m.players){if(!p.oyunda||p.sakat)continue;const d=Math.hypot(p.x,p.z-34);if(p.x*m.dir[p.team]>0.3)N.push('yari:'+p.rol);else if(p.team!==kt&&d<9.15)N.push('yuvarlak:'+p.rol);}
+          cur.tavanNeden=N.slice(0,6).join(',');}}
       else if(ad==='kickoff'&&v){cur.santra=m.t-cur.t0;cur.isinla=m.phaseT>22;if(cur.dudukT!=null)cur.dudukSantra=cur.santra-cur.dudukT;
         let n=0,kt=v.team,s1=null,e1=1e9;for(const p of m.teams[kt]){if(!p.oyunda||p.sakat)continue;const d=Math.hypot(p.x,p.z-34);if(d<e1){e1=d;s1=p;}}
         for(const p of m.players){if(!p.oyunda||p.sakat||p===s1)continue;const d=Math.hypot(p.x,p.z-34);if(p.x*m.dir[p.team]>0.3||p.team!==kt&&d<9.15||d<3)n++;}
@@ -202,7 +211,8 @@ function s1cIzleyici(){
       if(ph==='kickoff'&&(b.tasiyan||Math.hypot(b.x,b.z-34)>0.3))cur.kovala=true;
       {const v=Math.hypot(h.vx||0,h.vz||0);if(v<3)cur.yavas=true;if(cur.yavas&&!h.kartSira&&!(h.eylem&&h.eylem.ad==='kart')&&v>cur.hkTepe)cur.hkTepe=v;}
       if(cur.hkX!=null)cur.hkYol+=Math.hypot(h.x-cur.hkX,h.z-cur.hkZ);cur.hkX=h.x;cur.hkZ=h.z;
-      if(ph==='goal'){const r=m.refs;for(let i=1;i<=2;i++){const ax=Math.abs(r[i].x);if(ax>52.5-8&&ax-yh0[i-1]>3)cur.yh=true;}
+      if(ph==='goal'){const r=m.refs;if(!yh0&&m.phaseT>=2)yh0=[Math.abs(r[1].x),Math.abs(r[2].x)];
+        if(yh0)for(let i=1;i<=2;i++){const ax=Math.abs(r[i].x);if(ax>52.5-8&&ax-yh0[i-1]>1)cur.yh=true;}
         const sc=c&&(c.sc!==undefined?c.sc:c.own?null:c.scorer),kutla=c&&(c.s1?c.evre==='kutla':m.phaseT<7);
         if(kutla){cur.kutla=m.phaseT;
           if(sc){let n=0,kx=sc.x*2,kz=sc.z*2,kn=2;for(const p of m.teams[cur.att]){if(p===sc||!p.oyunda)continue;const d=Math.hypot(p.x-sc.x,p.z-sc.z);if(d<3)n++;if(d<8){kx+=p.x;kz+=p.z;kn++;}}
@@ -223,7 +233,7 @@ function s1cOzet(L){const say=f=>L.filter(f).length,sayi=f=>L.map(f).filter(x=>x
   r.s1c_hkTepe=s1Ortanca(sayi(x=>x.kart?null:x.hkTepe));r.s1c_hkYol=s1Ort(sayi(x=>x.hkYol));r.s1c_hkBek=s1Ortanca(sayi(x=>x.hkBek));
   r.ham.s1c_yh=[say(x=>x.yh),L.length];r.s1c_dudukSantra=s1Ortanca(sayi(x=>x.dudukSantra));
   r.ham.s1c_duduksuz=[say(x=>x.sahneli&&x.santra!=null&&x.dudukT==null),say(x=>x.sahneli&&x.santra!=null)];r.s1c_law8=s1Ort(sayi(x=>x.law8));
-  r.ham.s1c_tavan=[say(x=>x.tavan),say(x=>x.dudukT!=null)];r.ham.s1c_odak=[L.reduce((a,x)=>a+x.odakK,0),L.reduce((a,x)=>a+x.odakN,0)];
+  r.ham.s1c_tavan=[say(x=>x.tavan),say(x=>x.dudukT!=null)];r.s1c_tavanNeden=L.filter(x=>x.tavanNeden).map(x=>x.tavanNeden).slice(0,3).join(' | ')||null;r.ham.s1c_odak=[L.reduce((a,x)=>a+x.odakK,0),L.reduce((a,x)=>a+x.odakN,0)];
   return r;}
 module.exports={
   bilgi:[['— S1: sahne protokolleri (k-protokol; S1-0 ortak düdük) —',null,0],['Seremonili düdük / maç','s1D_n',2]]
@@ -262,6 +272,12 @@ module.exports={
       ['S1b: ceza sahasında ve yayda oyuncu, düdükte (ortalama)','s1b_kutuD',2],["S1b: düdükten önceki son 20 sn'de hareketsiz saha oyuncusu %",'s1b_durgun',1],
       ['S1b: hakemin tepe hızı, itiraz ve boşaltmada — kart hariç (m/sn; ortanca)','s1b_hkHiz',2],['S1b: kaos (ortalama)','s1b_kaos',2]])
     .concat(S1B_VAR.map(k=>['S1b: varyant '+k+' %','s1b_'+k,1]))
+    .concat([['— S1e: kullananın rutini (k-protokol; du.kr olan duruşlar) —',null,0],['S1e: rutinli korner / maç','s1e_kN',2],['S1e: rutinli kenar / maç','s1e_eN',2],
+      ['S1e: rutinli düdüklü (barajlı, penaltı) / maç','s1e_dN',2],['S1e: kornerde top konduğu an (duruşun başından sn; ortanca)','s1e_kYer',1],
+      ['S1e: kornerde boş bekleme (sn/korner; ortanca)','s1e_kBos',2],['S1e: kornerde en uzun kesintisiz boş bekleme (sn; ortanca)','s1e_kRun',2],['S1e: kornerde en uzun kesintisiz boş bekleme (sn; %90)','s1e_kRun9',2],
+      ['S1e: kenarda en uzun kesintisiz boş bekleme (sn; %90)','s1e_eRun9',2],['S1e: düdüklüde düdükten önceki en uzun boş bekleme (sn; %90)','s1e_dRun9',2],
+      ['S1e: kullanım − planlanan koşu anı (sn; ortanca, korner ve kenar)','s1e_kul',2],['S1e: varyant düzelt %','s1e_v_duzelt',1],['S1e: varyant sırtla dönüş %','s1e_v_don',1],
+      ['S1e: varyant el işareti %','s1e_v_el',1],['S1e: varyant kolun tekrarı %','s1e_v_tekrar',1],['S1e: iki kol %','s1e_v_iki',1],['S1e: okumadan önce dolgu %','s1e_v_dolgu',1]])
     .concat([['— S1c: gol sonrası (k-protokol; bit kapalıyken bugünkü değerler) —',null,0],['S1c: gol / maç','s1c_n',2],['S1c: sahneli %','s1c_sahneli',1],
       ['S1c: gol → santra (gerçek sn; ortanca, hepsi)','s1c_santra',1]])
     .concat(S1C_BAGLAM.map(k=>['S1c: gol → santra, '+S1C_BAGLAM_AD[k]+' (gerçek sn; ortanca)','s1c_santra_'+k,1]))
@@ -284,6 +300,9 @@ module.exports={
     const D=s1dIzleyici();   /* S1d */
     const PB=s1bIzleyici();   /* S1b */
     const PC=s1cIzleyici();   /* S1c */
+    /* S1e: rutinli duruşlar (E: süren, EL: kapanan) */
+    let E=null;const EL=[];
+    const eKapat=()=>{if(E&&E.yerT!=null)EL.push(E);E=null;};
     const aYeni=du=>{const yol=new Map();for(const p of du.barajdakiler||[])yol.set(p,{s:0,x:p.x,z:p.z,x0:p.x,z0:p.z});
       return{du,ev:{},yol,once:null,yakin:Infinity,k9:0,it:0,bekle:0,adN:0,adI:0,kos:null,temas:null,hkDur:null,hkArka:null,kaleci:null};};
     const aKapat=()=>{const a=A;A=null;if(!a)return;const H=a.du.hk;a.tur=H.tur;a.kaosT=H.kaosT;a.kay=H.kayI||0;a.heykel=!!H.heykelP;
@@ -308,6 +327,13 @@ module.exports={
         const h=m.refs&&m.refs[0];if(h){durN++;if((h.spd||0)<=0.3)dur++;}},
       adim(m){
         D.adim(m);PB.adim(m);PC.adim(m);
+        {const du=m.phase==='durus'?m.durus:null;if(E&&E.du!==du)eKapat();
+          if(du&&du.kr){const R=du.kr,tk=du.kullanan;if(!E)E={du,tur:du.sahneTur||du.tur,dB:R.dudukBagli,yerT:null,bos:0,run:0,maxRun:0,kul:null,on:null,iki:R.kol&&R.iki,kol:R.kol,ek:0};
+            if(du.asama==='hazir'||du.asama==='kullan'){if(E.yerT==null)E.yerT=du.t;
+              if(du.asama==='hazir'&&(!R.dudukBagli||du.dudukT==null)&&tk){const j=tk.jest,bos=Math.hypot(tk.vx||0,tk.vz||0)<0.2&&!(j&&(j.t||0)<(j.sure||0))&&!tk.eylem;
+                const B=R.bakis;if(B){if(E.bx!=null&&Math.hypot(B.x-E.bx,B.z-E.bz)>2.5)E.run=0;E.bx=B.x;E.bz=B.z;}
+                if(bos){E.bos+=1/60;E.run+=1/60;if(E.run>E.maxRun)E.maxRun=E.run;}else E.run=0;}
+              if(du.asama==='kullan'&&E.kul==null){E.kul=R.dudukBagli?null:du.t-R.tKos;E.on=R.on;E.ek=R.ek;}}}}
         const K=m.sonKullanim,du=m.phase==='durus'&&m.durus?m.durus:oncekiDu;
         if(K&&K!==sonK&&du&&du.dudukGerek){
           if(du.dudukT==null)yok++;
@@ -348,6 +374,13 @@ module.exports={
         for(const k of S1D_DURUS)r['s1d_durus_'+k]=s1Ortanca(D.DU.filter(x=>x.tur===k).map(x=>x.sure));
         /* S1b */
         PB.bitir();const RB=s1bOzet(PB.L);Object.assign(r.ham,RB.ham);delete RB.ham;Object.assign(r,RB);
+        /* S1e */
+        eKapat();{const kor=EL.filter(x=>x.tur==='korner'&&!x.dB),ken=EL.filter(x=>x.tur==='kenar'&&!x.dB),dud=EL.filter(x=>x.dB),q9=L=>{if(!L.length)return NaN;const S2=L.slice().sort((a,b)=>a-b);return S2[Math.min(S2.length-1,Math.floor(0.9*S2.length))];};
+          r.s1e_kN=kor.length;r.s1e_eN=ken.length;r.s1e_dN=dud.length;r.s1e_kYer=s1Ortanca(kor.map(x=>x.yerT));r.s1e_kBos=s1Ortanca(kor.map(x=>x.bos));
+          r.s1e_kRun=s1Ortanca(kor.map(x=>x.maxRun));r.s1e_kRun9=q9(kor.map(x=>x.maxRun));r.s1e_eRun9=q9(ken.map(x=>x.maxRun));r.s1e_dRun9=q9(dud.map(x=>x.maxRun));
+          r.s1e_kul=s1Ortanca(kor.concat(ken).map(x=>x.kul).filter(x=>x!=null));const V=kor.concat(ken).filter(x=>x.on);
+          for(const k of['duzelt','don','el','tekrar'])r.ham['s1e_v_'+k]=[V.filter(x=>x.on[k]).length,V.length];
+          r.ham.s1e_v_iki=[kor.concat(ken).filter(x=>x.iki).length,kor.concat(ken).filter(x=>x.kol).length];r.ham.s1e_v_dolgu=[V.filter(x=>x.ek>0).length,V.length];}
         /* S1c */
         PC.bitir();const RC=s1cOzet(PC.L);Object.assign(r.ham,RC.ham);delete RC.ham;Object.assign(r,RC);
         return r;}

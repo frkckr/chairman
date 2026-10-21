@@ -29,7 +29,9 @@ const IZLEME={
     header:{once:3,sonra:2.5,kosul:v=>!!(v&&v.shot)},        // kafa şutu
     save:{once:0,sonra:2},wood:{once:0,sonra:2},
     /* S1b (js/mac-sahne.js penaltı sahnesi): sahneli penaltıda faulün penceresi 8 sn — gösterme, itiraz ve kaptan işareti normal hızda */
-    faul:{once:2,sonra:v=>v&&v.penalti&&(MOTOR_AYAR.protokol&4)?8:3},avantaj:{once:2,sonra:2.5},
+    faul:{once:2,sonra:v=>v&&v.penalti&&(MOTOR_AYAR.protokol&4)&&(MOTOR_AYAR.sahne&1)?8:3},avantaj:{once:2,sonra:2.5},
+    /* S1b, S1d: kaptan işareti (penaltıda ikinci işaret ve protokol sarısı faulün penceresinden sonra gelebilir) */
+    kaptanIsareti:{once:1,sonra:2.5},
     kart:{once:0,sonra:v=>v&&v.renk==='sari'?2.5:4,kosul:v=>!(v&&v.sahne)},
     /* S1d (js/mac-sahne.js kartSahneAdim): sahneli kartta pencere kartın gösterildiği evrede (ikiz önden gittiği için 2 sn önceden); faulün kendi penceresi sürer */
     kartSahne:{once:2,sonra:v=>v&&v.renk==='sari'?2.5:4,kosul:v=>!!(v&&v.evre==='goster')},

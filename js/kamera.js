@@ -53,10 +53,13 @@ function bakisOdagi(){
      hakemle oyuncunun ortasına (STIL.kameralar.baskan.kartIzle 0'da kapalı), kart gösterilirken ve sahnede deftere yazarken hakeme */
   /* S1c (bit 16; motorun salt okunur odağı celeb.odak): gol sevincinde golcü ve küme, dönüşte takım, düdüğe yakın nokta — sevinç karttan önce gelir
      (avantajdan gelen kart sevinci bölmez) */
-  if(ph==='goal'&&mac.celeb&&mac.celeb.odak){const o=mac.celeb.odak;return BAKIS_HEDEF.set(o.x,1,o.z-MOTOR_Z);}
+  const cG=ph==='goal'&&mac.celeb&&mac.celeb.odak?mac.celeb:null;
+  if(cG&&cG.evre==='kutla')return BAKIS_HEDEF.set(cG.odak.x,1,cG.odak.z-MOTOR_Z);
   const h=mac.refs[0],ks=h.kartSira,KS=ks&&ks.s,KI=KAM_B.kartIzle;
   if(KI!==0&&KS&&KS.tut&&(KS.evre==='yaklas'||KS.evre==='kalabalik')&&ks.p)return BAKIS_HEDEF.set((h.x+ks.p.x)/2,1.2,(h.z+ks.p.z)/2-MOTOR_Z);
-  if(h.eylem&&(h.eylem.ad==='kart'||h.eylem.ad==='not'&&ks))return BAKIS_HEDEF.set(h.x,1.3,h.z-MOTOR_Z);
+  /* deftere yazma ('not') oyun sürerken bakışı çekmez (yalnız duruşta ve gol evresinde kartla) */
+  if(h.eylem&&(h.eylem.ad==='kart'||h.eylem.ad==='not'&&ks&&ph!=='play'))return BAKIS_HEDEF.set(h.x,1.3,h.z-MOTOR_Z);
+  if(cG)return BAKIS_HEDEF.set(cG.odak.x,1,cG.odak.z-MOTOR_Z);   /* S1c: dönüşte odak (kart varsa önce kart) */
   if(ph==='goal'){const f=mac.focus();return BAKIS_HEDEF.set(f.x,1,f.z-MOTOR_Z);}
   return null;
 }

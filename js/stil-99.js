@@ -204,9 +204,12 @@ const STIL={
        sevincTur 1: golcünün sevinç çeşidi koşu türünden (pasçı: sevGoster, iki kol pasöre; tribün: el kulakta ya da kollar; yerinde: kollar ya da sakin;
        kulübe: yumruk; köşe: profilden), sevincPay arkadaşların çeşit payları [kollar, yumruk, el kulakta, uçak, göğe işaret] (L.3); esli 1: eşli sevinçte
        golcünün eşi aynı pozu aynalı yapar; cift 1: uzaktaki ikililer sarılır; uzgunSure yenen takımın üzgün pozu en çok bu kadar (sn), sonra yalnız
-       dururken; goster 1: santrada ikinci düdük işareti yok (düdük golDuduk'ta). 0'da eski çizim */
+       dururken; goster 1: santrada ikinci düdük işareti yok (düdük golDuduk'ta). 0'da eski çizim.
+       S1e (kullananın rutini; motor du.kr: bakis, evre, okuSon; jest 'kolIki'): rutin 1 — rutinli kullananın başı kr.bakis'e döner (geri geri yürürken top,
+       kutuya bakışta ön direkten arka direğe, el işaretinde arkadaş, okumada kaleci; okumanın son 0,35 sn'sinde top), rutin sürerken kıpırtı (bakınma) başlamaz;
+       kolIki 1 — iki kol kodu (jestKolIki; 0'da tek kol). 0'da eski çizim */
     s1:{duduk:0.8,defterRenk:0x22262b,serbest:1,itHz:2.5,yonHz:2.5,yonSalinim:0.2,yonTh:0.15,kart:1,kaptan:1,bosalt:1,cizgi:1,goster:2.4,
-      gol:{not:1,sevincTur:1,sevincPay:[0.30,0.27,0.16,0.12,0.15],esli:1,cift:1,uzgunSure:6,goster:1}},
+      gol:{not:1,sevincTur:1,sevincPay:[0.30,0.27,0.16,0.12,0.15],esli:1,cift:1,uzgunSure:6,goster:1},rutin:1,kolIki:1},
     /* K1h (2026-10-20; kullanıcı notu 7 "topla giderken ayağı havada kaldı, ~2 sn topla çizgi şeklinde kaydı"): topu ayağın altında bekletme pozunun (tavır 'bekle'
        ve çalımda dur-kalk hazırlığı; ANM_POZ.bekle iki bacağı da tutar: taban topun üstünde, destek bacağı dik) ağırlığı çizilen hızdan — bekleHiz[0] m/sn'ye dek
        tam, bekleHiz[1]'de 0 (yumuşak); kalan payı adım döngüsü alır (bacak IK'sı, adım boyu, veri eğrisi). null: eski (hızdan bağımsız tam ağırlık; motor tavrı
