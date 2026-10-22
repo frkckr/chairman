@@ -8,7 +8,8 @@
    kesici; (3) forvet, rakip yarıda: falsolu 10 ↔ fırsatçı; (4) stoper, kendi yarısında: sert stoper ↔ oyun kuran stoper (C2'de kapı); (5) forvet:
    hava 9'u ↔ koşucu 9 (bilgi).
    Seviye ekseni (C2): her çiftin ilk profili ±δ (0,12; kalecilik dışındaki 10 özellik) — "seviye TVD ÷ profil TVD" (karar 22: aynı profilin güçlüsü
-   işi daha iyi yapar ama aynı zihniyetle oynar; C5 kabulü < 0,5). Gürültü satırı: seçilen seçeneklerin |profilEgilimPuani| ortancası ÷ oyuncunun
+   işi daha iyi yapar ama aynı zihniyetle oynar; C5 kabulü < 0,5). Her örnek taze karar gürültüsüyle (kararVer0'ın sahiplik önbelleği temizlenir, t0 kalır).
+   Gürültü satırı: eğilim terimi sıfır olmayan seçilmiş seçeneklerin |profilEgilimPuani| ortancası ÷ oyuncunun
    Gumbel sapması (π/√3 · τ, τ = 0,1 + 0,5·(1 − tutarlılık)) — eğilimin karar gürültüsüne oranı (C5 kabulü ≥ 1,0).
    Çıktı: seçim dağılımı ve toplam değişim uzaklığı (TVD = ½·Σ|p−q|). Kullanım: node araclar/mac-deneme.js --senaryo p-tip [N=60 sahne] [tohum];
    kabul dışıysa çıkış kodu 1 */
@@ -41,11 +42,12 @@ module.exports={calistir({ctx,vm,N,tohum}){
       for(let k=0;k<60*300&&sahne<n&&m.phase!=='fulltime';k++){
         const p=b.sahip;
         if(m.phase==='play'&&p&&!p.eylem&&p.kararT<=1/60&&p.profil&&dn.kosul(p,b.x*m.dir[p.team])&&b.y<0.5&&Math.hypot(b.x-p.x,b.z-p.z)<1.1&&m.t-son>4){
-          son=m.t;sahne++;
+          son=m.t;sahne++;const vb=m.bVeri(p),g0=vb.gur,M0=g0&&g0.M;   /* C2 gözden geçirme: kararVer0 Gumbel gürültüsünü sahiplik boyunca saklıyordu (30 karar tek kararın kopyasıydı) */
           [[0,0],[1,0],[0,DELTA],[0,-DELTA]].forEach(([pi,dl],kol)=>{const geri=O.profilDegis(m,p,dn.profiller[pi][1],dl);
             const tau=0.1+0.5*(1-((p.profil.alt&&p.profil.alt.tutarlilik)||0.5));
-            for(let j=0;j<K;j++){const s=kararVer(m,p),c=sinif(m,p,s);turlar.add(c);D[kol][c]=(D[kol][c]||0)+1;if(kol<2)EG.push(Math.abs(egP(m,p,s))/(Math.PI/Math.sqrt(3)*tau));}
-            geri();});}
+            for(let j=0;j<K;j++){if(vb.gur&&vb.gur.no===m.sahiplikNo)vb.gur.M=new Map();   /* her örnekte taze gürültü; t0 (sabır) korunur */
+              const s=kararVer(m,p),c=sinif(m,p,s);turlar.add(c);D[kol][c]=(D[kol][c]||0)+1;if(kol<2){const e=egP(m,p,s);if(e!==0)EG.push(Math.abs(e)/(Math.PI/Math.sqrt(3)*tau));}}
+            geri();});vb.gur=g0;if(g0)g0.M=M0;}
         m.step(1/60);}}
     const T=[...turlar].sort(),top=D.map(d=>Object.values(d).reduce((a,c)=>a+c,0)||1),pay=(i,t)=>(D[i][t]||0)/top[i];
     console.log(`\n${di?'   ':'T3 ·'} aynı sahne, farklı profil · ${dn.ad} · ${sahne} sahne (${mac} maç), sahne başına profil başına ${K} karar\n`);
@@ -56,7 +58,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
     if(dn.kabul!=null){const ok=tvd>=dn.kabul;if(!ok)kod=1;
       console.log((ok?'  ':'! ')+`Kabul: ${dn.profiller[0][0]} ile ${dn.profiller[1][0]} seçim dağılımı belirgin farklı (TVD ≥ ${String(dn.kabul).replace('.',',')}) → TVD ${tvd.toFixed(3)}`);}
     else console.log(`  Bilgi: TVD ${tvd.toFixed(3)}`);
-    console.log(`  Seviye (bilgi; C5): ${dn.profiller[0][0]} ±${String(DELTA).replace('.',',')} → seviye TVD ${tvdS.toFixed(3)} · seviye ÷ profil ${(tvdS/Math.max(1e-9,tvd)).toFixed(2)} · eğilim ÷ gürültü (ortanca) ${eg.toFixed(2)}`);
+    console.log(`  Seviye (bilgi; C5): ${dn.profiller[0][0]} ±${String(DELTA).replace('.',',')} → seviye TVD ${tvdS.toFixed(3)} · seviye ÷ profil ${(tvdS/Math.max(1e-9,tvd)).toFixed(2)} · eğilim ÷ gürültü (ortanca, eğilimi olan ${EG.length} seçim) ${eg.toFixed(2)}`);
     ozet.push(`${dn.ad}: TVD ${tvd.toFixed(3)} · seviye ÷ profil ${(tvdS/Math.max(1e-9,tvd)).toFixed(2)} · eğilim ÷ gürültü ${eg.toFixed(2)}`);
   });
   console.log('\n  Özet: '+ozet.join('\n         '));

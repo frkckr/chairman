@@ -10,9 +10,10 @@
    (stoperlerde sürüş 36–45) doğal r gürültüden ibarettir. Bu kipte her takımın her mevki grubundaki iki oyuncuya sürüş, müdahale, sertlik ve
    (T9b-f) şutta, (T8-0) kafada ±0,2 verilir (çift içinde zıt: takım gücü değişmez; özelliklerin işaretleri çiftler arasında bağımsız), profil yeniden türetilir ve
    aynı r tanımı ölçülür: motorun özelliğe duyarlılığı. Kipsiz çalıştırma doğal kadroyla bilgi verir.
-   C2 (2026-10-22): pas, hız ve görüş de ±0,2 (işaretleri profilOzet('duy:<özellik>:<takım>:<grup>') karmasından, bugünkü beşinden bağımsız; hızda tepe
-   hız da: oyuncuTepeHiz ya da 6,4 + 2,4·hız); yeni sayaçlar uzun ileri pas (L ≥ 30, ≥ 15 m ileri), çalımda geçti, ilkel başlatma (plan 'basladi'de
-   K ya da R, ver-kaç koşusu) ve [7b] satırları pas → uzun ileri pas, pas ve görüş → ilkel başlatma, hız → geçti.
+   C2 (2026-10-22): pas, hız ve görüş de ±0,2 (işaretleri grup sırasının bit birleşimlerinden, bugünkü beşiyle bağıntısız; hızda tepe
+   hız da: oyuncuTepeHiz ya da 6,4 + 2,4·hız); yeni sayaçlar uzun ileri pas (L ≥ 30, ≥ 15 m ileri), çalımda geçti, ≥ 15 m taşıma (düz uzaklık),
+   ilkel başlatma (plan 'basladi'de K ya da R, ver-kaç koşusu; aynı oyuncunun 0,5 sn içindeki ikisi bir) ve [7b] satırları pas → uzun ileri pas, pas ve
+   görüş → ilkel başlatma, hız → geçti, hız → ≥ 15 m taşıma.
    Motor dosyaları index.html sırasıyla yüklenir (araclar/motor-yukle.js; mac-deneme.js ile aynı). kararVer ve secenekler yalnız kayıt için
    sarılır: sonuçları değiştirmez, rastlantı çekmez (baskiAltinda saftır). MAC_DENEME_AYAR ve MAC_DENEME_DIZILIS mac-deneme.js'teki gibi
    çalışır. Tek süreçtir. */
@@ -41,40 +42,41 @@ vm.runInContext(`(function(){const _s=secenekler,_k=kararVer;let son=null;const 
    sertlik; işaretler çift sırasının bitlerinden, çiftler arasında bağımsız). Aynı oyuncu her maçta aynı farkı alır (sayaçlar ada göre birikir).
    Kütle ve çeviklik önbelleği sıfırlanır, profil yeniden türetilir (profilKur) */
 const profilKurCtx=vm.runInContext('profilKur',ctx),kirp=x=>Math.min(0.95,Math.max(0.15,x)),DUY=new Map();
-const profilOzetCtx=vm.runInContext('profilOzet',ctx),tepeHizCtx=vm.runInContext(`typeof oyuncuTepeHiz==='function'?oyuncuTepeHiz:(oz,kl)=>6.4+2.4*oz.hiz`,ctx);   /* takım:ad → özelliğin işareti */
+const tepeHizCtx=vm.runInContext(`typeof oyuncuTepeHiz==='function'?oyuncuTepeHiz:(oz,kl)=>6.4+2.4*oz.hiz`,ctx);   /* takım:ad → özelliğin işareti */
 function duyarlilikUygula(m){let k=0;
   for(let t=0;t<2;t++){const G={};for(const p of m.teams[t]){if(p.rol==='GK')continue;const g=p.profil?p.profil.grup:p.rol;(G[g]||(G[g]=[])).push(p);}
-    for(const g of Object.keys(G).sort()){const L=G[g].sort((a,b)=>a.n-b.n),s=[k&1?1:-1,k&2?1:-1,k&4?1:-1,k&8?1:-1,((k>>1)^k)&1?1:-1];k++;   /* T8b: beşinci işaret (kafa) — bit0 ⊕ bit1, öbür dördünden bağımsız */
+    for(const g of Object.keys(G).sort()){const L=G[g].sort((a,b)=>a.n-b.n),s=[k&1?1:-1,k&2?1:-1,k&4?1:-1,k&8?1:-1,((k>>1)^k)&1?1:-1,
+      (k^(k>>2))&1?1:-1,((k>>1)^(k>>2))&1?1:-1,(k^(k>>1)^(k>>2))&1?1:-1];k++;   /* C2: pas, hız, görüş — bit birleşimleri (eski beşiyle bağıntısız; gözden geçirme) */   /* T8b: beşinci işaret (kafa) — bit0 ⊕ bit1, öbür dördünden bağımsız */
       L.forEach((p,j)=>{const w=j%2?-1:1,oz=p.oz;oz.surus=kirp(oz.surus+w*s[0]*DELTA);oz.mudahale=kirp(oz.mudahale+w*s[1]*DELTA);oz.sertlik=kirp(oz.sertlik+w*s[2]*DELTA);
         oz.sut=kirp(oz.sut+w*s[3]*DELTA);   /* T9b-f: şut → isabet */
         oz.kafa=kirp(oz.kafa+w*s[4]*DELTA);   /* T8-0: kafa → kafa şutu (duran top ve orta) */
         /* C2: pas, hız, görüş — işaret grup başına karmadan */
-        const e=a=>profilOzetCtx('duy:'+a+':'+t+':'+g)>=0.5?1:-1,ep=e('pas'),eh=e('hiz'),eg=e('gorus');
+        const ep=s[5],eh=s[6],eg=s[7];
         oz.pas=kirp(oz.pas+w*ep*DELTA);oz.hiz=kirp(oz.hiz+w*eh*DELTA);oz.gorus=kirp(oz.gorus+w*eg*DELTA);p.maxSpd=tepeHizCtx(oz,false);
         DUY.set(t+':'+p.name,{surus:w*s[0],mudahale:w*s[1],sertlik:w*s[2],sut:w*s[3],kafa:w*s[4],pas:w*ep,hiz:w*eh,gorus:w*eg});p._kutle=0;p._cev=null;profilKurCtx(p,m.tohum);});}}}
 /* oyuncu sayaçları (takım + ad) */
 const O={},hyp=Math.hypot;
 const oy=p=>{const k=p.team+':'+p.name;return O[k]||(O[k]={team:p.team,ad:p.name,rol:p.rol,mevki:p.mevki&&p.mevki.ad,oz:p.oz,prof:p.profil?p.profil.rol:null,grup:p.profil?p.profil.grup:p.rol,eg:p.profil?p.profil.egilim:null,form:p.profil?p.profil.form:1,
-  sure:0,mes:0,sprint:0,yuru:0,top:0,pas:0,sut:0,isabet:0,gol:0,kafa:0,kafaSut:0,kafaGol:0,mud:0,faul:0,calim:0,kosu:0,alis:0,tasima:0,uzunIleri:0,gecti:0,ilkel:0});};
+  sure:0,mes:0,sprint:0,yuru:0,top:0,pas:0,sut:0,isabet:0,gol:0,kafa:0,kafaSut:0,kafaGol:0,mud:0,faul:0,calim:0,kosu:0,alis:0,tasima:0,uzunIleri:0,gecti:0,ilkel:0,t15:0});};
 for(let tohum=T0;tohum<T0+N;tohum++){
-  let m=null,sonKafa=null;   /* T8-0: son kafa şutu (gol olayında b.sut silinmiş olur) */
+  let m=null,sonKafa=null;const VK=new Map();   /* C2: ver-kaç koşusunun anı (plan başlangıcıyla tekrar sayılmasın) */   /* T8-0: son kafa şutu (gol olayında b.sut silinmiş olur) */
   const dinle=(ad,v)=>{if(!m)return;
     if(ad==='pass'||ad==='cross'){if(v.p){oy(v.p).pas++;const bp=m.ball.pas;if(ad==='pass'&&bp&&bp.p===v.p&&bp.L>=30&&(bp.hx-bp.x0)*m.dir[v.p.team]>=15)oy(v.p).uzunIleri++;}}   /* C2: uzun ileri pas */
-    else if(ad==='plan'){if(v.olay==='basladi'){if(v.K)oy(v.K).ilkel++;if(v.R&&v.R!==v.K)oy(v.R).ilkel++;}}   /* C2: ilkel başlatma (başlatan ve koşucu) */
+    else if(ad==='plan'){if(v.olay==='basladi')for(const q of v.K===v.R?[v.K]:[v.K,v.R]){if(!q)continue;const tv=VK.get(q);if(tv!=null&&m.t-tv<=0.5){VK.delete(q);continue;}oy(q).ilkel++;}}   /* C2: ilkel başlatma (başlatan ve koşucu; ver-kaçla aynıysa bir) */
     else if(ad==='shot'){if(v.p){oy(v.p).sut++;if(m.ball.sut&&m.ball.sut.cerceve)oy(v.p).isabet++;}}   /* T9b-f: çerçeveye giden şut */
     else if(ad==='header'){if(v.p){oy(v.p).kafa++;if(v.shot){oy(v.p).sut++;oy(v.p).kafaSut++;sonKafa={p:v.p,t:m.t};}}}
     else if(ad==='goal'){if(v.scorer&&!v.own){oy(v.scorer).gol++;if(sonKafa&&sonKafa.p===v.scorer&&m.t-sonKafa.t<3)oy(v.scorer).kafaGol++;}}   /* T9b-f: gol (son dokunan; kendi kalesine sayılmaz) */
     else if(ad==='mudahale'){if(v.p)oy(v.p).mud++;}
     else if((ad==='faul'&&!v.avantajdan)||ad==='avantaj'){if(v.faulYapan)oy(v.faulYapan).faul++;}
     else if(ad==='ilkDokunus'){if(v.p)oy(v.p).alis++;}
-    else if(ad==='kosu'){if(v.p&&!v.verKac)oy(v.p).kosu++;if(v.p&&v.verKac)oy(v.p).ilkel++;}
+    else if(ad==='kosu'){if(v.p&&!v.verKac)oy(v.p).kosu++;if(v.p&&v.verKac){oy(v.p).ilkel++;VK.set(v.p,m.t);}}
     else if(ad==='calim'){if(v.p){oy(v.p).calim++;if(v.sonuc==='gecti')oy(v.p).gecti++;}}};   /* T4: çalım denemesi motorun 'calim' olayından (hazırlığı başlamış deneme; eskiden _calim nesnesi) */
   m=vm.runInContext(`(on,t,D)=>{const K=D?MAC_KADRO.map((k,i)=>Object.assign({},k,{taktik:Object.assign({},k.taktik,{dizilis:D[i]})})):MAC_KADRO;
     return new Match(on,{kadro:K,tohum:t,tunel:{x:0,z:-6}});}`,ctx)(dinle,tohum,DIZILIS);
   if(DUYARLILIK)duyarlilikUygula(m);
-  m.macaGec();let a=0,sahipOnce=null,yol=0;   /* yol: sahipliğin kesintisiz yolu (m); 5 m'den uzunu taşıma sayılır (T3; r-karne ile aynı) */
-  while(m.phase!=='fulltime'&&a<60*60*45){m.step(dt);a++;if(m.phase!=='play'){if(sahipOnce&&yol>5)oy(sahipOnce).tasima++;sahipOnce=null;yol=0;continue;}
-    const sh=m.ball.sahip;if(sh!==sahipOnce){if(sahipOnce&&yol>5)oy(sahipOnce).tasima++;sahipOnce=sh;yol=0;}
+  m.macaGec();let a=0,sahipOnce=null,yol=0,x0=0,z0=0;   /* yol: sahipliğin kesintisiz yolu (m); 5 m'den uzunu taşıma sayılır (T3; r-karne ile aynı) */
+  while(m.phase!=='fulltime'&&a<60*60*45){m.step(dt);a++;if(m.phase!=='play'){if(sahipOnce&&yol>5)oy(sahipOnce).tasima++;if(sahipOnce&&Math.hypot(sahipOnce.x-x0,sahipOnce.z-z0)>=15)oy(sahipOnce).t15++;sahipOnce=null;yol=0;continue;}
+    const sh=m.ball.sahip;if(sh!==sahipOnce){if(sahipOnce&&yol>5)oy(sahipOnce).tasima++;if(sahipOnce&&Math.hypot(sahipOnce.x-x0,sahipOnce.z-z0)>=15)oy(sahipOnce).t15++;sahipOnce=sh;yol=0;if(sh){x0=sh.x;z0=sh.z;}}
     for(const p of m.players){if(!p.oyunda)continue;const P=oy(p),sp=hyp(p.vx,p.vz);P.sure+=dt;P.mes+=sp*dt;if(sp>7)P.sprint+=sp*dt;if(sp<2)P.yuru+=dt;
       if(m.ball.sahip===p){P.top+=dt;yol+=sp*dt;}}}
 }
@@ -136,7 +138,7 @@ if(DUYARLILIK){
   console.log(`\n[7b] Duyarlılık (T3 kabulü): özelliği +${DELTA} olanların sıklığı ÷ −${DELTA} olanlarınki [%95 GA] (n₊ / n₋); hedef oran ≥ 1,25 ve alt uç > 1`);
   for(const [ad,attr,f] of[['sürüş → çalım','surus',o=>o.calim],['sürüş → taşıma (>5 m)','surus',o=>o.tasima],['müdahale → müdahale girişimi','mudahale',o=>o.mud],['sertlik → faul','sertlik',o=>o.faul],
     ['kafa → kafa şutu (T8; bilgi)','kafa',o=>o.kafaSut],['kafa → kafa golü (T8; bilgi)','kafa',o=>o.kafaGol],
-    ['pas → uzun ileri pas (C2)','pas',o=>o.uzunIleri],['pas → ilkel başlatma (C2)','pas',o=>o.ilkel],['görüş → ilkel başlatma (C2)','gorus',o=>o.ilkel],['hız → çalımda geçti (C2)','hiz',o=>o.gecti],
+    ['pas → uzun ileri pas (C2)','pas',o=>o.uzunIleri],['pas → ilkel başlatma (C2)','pas',o=>o.ilkel],['görüş → ilkel başlatma (C2)','gorus',o=>o.ilkel],['hız → çalımda geçti (C2)','hiz',o=>o.gecti],['hız → ≥ 15 m taşıma (C2)','hiz',o=>o.t15],
     ['hız → depar metresi (C2; bilgi)','hiz',o=>Math.round(o.sprint)]]){
     const o=oran(attr,f),ok=o.r>=1.25&&o.lo>1;
     console.log((ok?'  ':'! ')+ad.padEnd(32)+f2(o.r)+'  ['+f2(o.lo)+'–'+f2(o.hi)+']  ('+o.np+' / '+o.nm+')');}

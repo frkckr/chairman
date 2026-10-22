@@ -1,7 +1,7 @@
 /* ============ Chairman — maç motoru: oyuncu profili (gerçekçilik planı T3, profil kapısı; 2026-10-07) ============
    Yalnız veri ve saf işlev; çizim yok, rastlantı çekmez, önbellek yazmaz. Kabiliyet ekonomisinin (kim neyi yapabilir; ileride veritabanıyla)
    tek giriş kapısıdır: kadro verisine özellik EKLENMEZ, her şey mevcut 11 özellikten (js/kadrolar.js), boy, yapı ve ayaktan türetilir.
-   Ağırlıklar ayar değil veridir (aşağıdaki tablolar; MAC_MOTORU_GERCEKCILIK_PLANI.md Ek A ve Ek B); tek ayar egilimGuc ve formSapma.
+   Ağırlıklar ayar değil veridir (aşağıdaki tablolar; MAC_MOTORU_GERCEKCILIK_PLANI.md Ek A ve Ek B); ayarlar egilimGuc, egilimGoreli, uzunEgilim, cikisEgilim (C3) ve formSapma.
    Oyuncuya Match.oyuncuKur ve yedekleriKur içinde bir kez yazılır: p.profil = {alt, rol, egilim, form, grup}.
      alt     türetilmiş alt özellikler 0–1 (Ek A); her birine adın özetinden ±0,08 kişisel sapma (aynı kadro, farklı oyuncu, farklı profil).
              ceviklik hrkCeviklik ile aynıdır (js/mac-hareket.js; hareket değişmez).
@@ -21,7 +21,7 @@ ayarEkle('P',{
   egilimGoreli:1,              // C3 (2026-10-22): eğilim ve rol oyuncunun kendi ortalamasına göre (κ): r = 0,5 + κ·(10 saha özelliğinin ortalaması − 0,5) referans olur;
                                // aynı şeklin güçlüsü ve zayıfı aynı zihniyetle oynar (karar 22), seviye isabet, hız ve kapıdan gelir. 0: mutlak (eski)
   uzunEgilim:1,                // C3: uzunPasAtar eğilimi ileri uzun pasa (L 28–40 m ile artar) pay verir (profilEgilimPuani); 0: eski
-  cikisEgilim:1,               // C3: oynayarakCikar eğilimi kendi yarısından (u < −10) ileri pasa (≥ 10 m) ve ≥ 5 m taşımaya pay verir (oyun kuran stoper); 0: eski
+  cikisEgilim:1,               // C3: oynayarakCikar eğilimi kendi yarısından (u < −10) ileri pasa (≥ 10 m) ve ileri ≥ 5 m taşımaya pay verir (oyun kuran stoper); 0: eski
   formSapma:0.04               // T3: gün formunun ±payı (çarpan 1 ± formSapma)
 });
 /* ---- Ek A: alt özellikler. [ad, {kaynak: ağırlık}, sabit]. Kaynak: oz anahtarı, daha önce türetilmiş alt özellik ya da özel kaynak
@@ -72,9 +72,9 @@ const PRF_ROL_EGILIM={
   firsatci:{tekVurus:0.4,kanallaraKosar:0.3,topuTutar:-0.3,uzaktanVurur:-0.4},
   derineGelen:{derineGelir:0.5,oldurucuPas:0.3,sirtiDonuk:-0.3,uzaktanVurur:0.1}
 };
-/* ---- Ek B: eğilimler. [ad, {kaynak: ağırlık}]; eğilim = clamp(3·Σ w·(değer − 0,5) + rolün varsayılanı, −1, 1).
+/* ---- Ek B: eğilimler. [ad, {kaynak: ağırlık}]; eğilim = clamp(3·Σ w·(değer − ref) + rolün varsayılanı, −1, 1); ref 0,5, egilimGoreli > 0 iken oyuncunun kendi seviyesi (C3).
    Bugün okunanlar: topuTutar, topuSurer, tekVurus, oldurucuPas, yonDegistirir, uzaktanVurur, topuAtipKosar, cizgiyeIner, sirtiDonuk,
-   kayarakGirer, sikiMarkaj, oynayarakCikar. Ötekiler sonraki turların kapısıdır (T7 koşular, T9b vuruş, T10 itiraz) ---- */
+   kayarakGirer, sikiMarkaj, oynayarakCikar; C3'ten beri falsoluPas (mac-topla falsoKatsayi) ve uzunPasAtar (profilEgilimPuani). Ötekiler sonraki turların kapısıdır (T7 koşular, T9b vuruş, T10 itiraz) ---- */
 const PRF_EGILIMLER=[
   ['topuTutar',{surus:0.5,sogukkanlilik:0.3,cabukluk:-0.2}],
   ['topuSurer',{surus:0.6,cabukluk:0.2,pas:-0.2}],
@@ -109,7 +109,7 @@ function profilAdOzeti(ad,i){return (profilOzet(ad+'#'+i)-0.5)*0.16;}
 /* mevki grubu: KL, stoper, bek, merkez, kanat, FV (yedekte mevki yoktur: stoper / merkez sayılır) */
 function profilGrup(p){
   return p.rol==='GK'?'KL':p.rol==='DEF'?(p.mevki&&p.mevki.bek?'bek':'stoper'):p.rol==='FV'?'FV':(p.mevki&&p.mevki.kanat?'kanat':'merkez');}
-/* profile en uygun rol (uyum = Σ w·(değer − 0,5); eşitlikte ilk) */
+/* profile en uygun rol (uyum = Σ w·(değer − ref), ref yoksa 0,5 — C3 egilimGoreli; eşitlikte ilk) */
 function profilRolSec(grup,kaynak,ref){
   let en=null,eu=-1e9;for(const [ad,w] of PRF_ROLLER[grup]||PRF_ROLLER.merkez){let u=0;if(ref)for(const a in w)u+=w[a]*(kaynak(a)-ref(a));else for(const a in w)u+=w[a]*(kaynak(a)-0.5);if(u>eu){eu=u;en=ad;}}return en;}
 /* oyuncunun profili (bir kez; oz değişirse yeniden çağrılır). tohum: gün formu için maçın tohumu */
@@ -126,7 +126,11 @@ function profilKur(p,tohum){
   /* C3 (egilimGoreli κ): referans oyuncunun kendi seviyesi — gövde ve tutarlılık kaynakları 0,5'te, kararTers 1 − r'de kalır */
   const kap=MOTOR_AYAR.egilimGoreli;let ref=null;
   if(kap&&grup!=='KL'){let s=0,c=0;for(const a of OZ_SIRA)if(a!=='kalecilik'){s+=o(a);c++;}const r=0.5+kap*(s/c-0.5);
-    ref=a=>a==='hafiflik'||a==='kutle'||a==='boy'||a==='zayifAyak'||a==='tutarlilik'?0.5:a==='kararTers'?1-r:r;}
+    /* türetilmiş alt özelliklerin referansı: aynı ağırlıklarla, bütün özellikleri r olan (gövde kaynakları 0,5) oyuncunun değeri (gözden geçirme: seviye
+       alt özelliklerden eğilime sızıyordu); zayıf ayak ve tutarlılık 0,5'te kalır (beceri sayılır); çeviklik hrkCeviklik gibi 0,5 sürüş + 0,3 hız + 0,2·0,5 */
+    const b=a=>a==='hafiflik'||a==='kutle'||a==='boy'?0.5:a==='kararTers'?1-r:r,rA={zayifAyak:0.5,tutarlilik:0.5};
+    for(const [ad,w,sabit] of PRF_ALT)if(!(ad in rA)){if(!w){rA[ad]=0.8*r+0.1;continue;}let v=sabit||0;for(const a in w)v+=w[a]*(a in rA?rA[a]:b(a));rA[ad]=v;}
+    ref=a=>a in rA?rA[a]:b(a);}
   const rol=k.rol&&roller.some(r=>r[0]===k.rol)?k.rol:profilRolSec(grup,kaynak,ref);
   const egilim={},ro=PRF_ROL_EGILIM[rol]||{};
   for(const [ad,w] of PRF_EGILIMLER){let v=0;if(ref)for(const a in w)v+=w[a]*(kaynak(a)-ref(a));else for(const a in w)v+=w[a]*(kaynak(a)-0.5);egilim[ad]=clamp(3*v+(ro[ad]||0),-1,1);}
@@ -149,8 +153,9 @@ function profilEgilimPuani(m,p,s){
       if(A.uzunEgilim>0&&il>=0&&s.L!=null)w+=g*A.uzunEgilim*e.uzunPasAtar*clamp((s.L-28)/12,0,1);
       if(A.cikisEgilim>0&&u<-10&&il>=10)w+=g*A.cikisEgilim*0.5*e.oynayarakCikar;
       return w;}
-    case 'tasi':{const v=g*(0.5*e.topuSurer+0.4*e.topuAtipKosar*(s.mesafe>=10?1:0.2));
-      return MOTOR_AYAR.cikisEgilim>0&&m.ball.x*m.dir[p.team]<-10&&s.mesafe>=5?v+g*MOTOR_AYAR.cikisEgilim*0.5*e.oynayarakCikar:v;}
+    case 'tasi':{const v=g*(0.5*e.topuSurer+0.4*e.topuAtipKosar*(s.mesafe>=10?1:0.2)),d=m.dir[p.team];
+      /* C3: topla çıkış yalnız ileri taşımaya (yönü ileriye 45°'den yakın; gözden geçirme: geri ve yan taşıma da pay alıyordu) */
+      return MOTOR_AYAR.cikisEgilim>0&&m.ball.x*d<-10&&s.mesafe>=5&&s.hx!=null&&(s.hx-m.ball.x)*d>=0.7*s.mesafe?v+g*MOTOR_AYAR.cikisEgilim*0.5*e.oynayarakCikar:v;}
     case 'surukle':return g*(0.4*e.topuSurer+0.6*e.topuAtipKosar);   /* T22a: sürükleme — topu atıp koşan ve top süren */
     case 'bekle':return g*(0.8*e.topuTutar-0.4*e.tekVurus);
     case 'koru':return g*(0.5*e.topuTutar+0.5*e.sirtiDonuk);

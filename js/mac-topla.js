@@ -156,8 +156,9 @@ ayarEkle('B',{
   yerdenOrtaKesme:0.5          // T17d: yerden orta ve geri çevirmede alım noktasındaki rakibin kesme payının tavanı (pasAnaliz; eskiden bütün yerden paslarda 0,7) —
                                // T17-0: alıcının 1,5 m'inde rakip varken hücumun ilk teması %50, yokken %76; planlayıcı geri çevirmeyi −14,5, alçak sert ortayı −23,5 puan kötümser tahmin ediyordu
 });
-/* C3 (falsoProfil): pasın eğrisinin pasöre göre katsayısı — pas özelliği (kadroların saha ortalaması 0,62'ye göre) ve falsoluPas eğilimi; 0,5–1,7 (saf) */
-function falsoKatsayi(p){const F=MOTOR_AYAR.falsoProfil,o=p.oz&&p.oz.pas!=null?p.oz.pas:0.62;return clamp(1+F*(1.5*(o-0.62)+0.4*profilEgilim(p,'falsoluPas')),0.5,1.7);}
+/* C3 (falsoProfil): pasın eğrisinin pasöre göre katsayısı — pas özelliği (C4'ten sonra 20 saha oyuncusunun ortalaması 0,65'e göre; gözden geçirme: 0,62
+   C4 öncesinin ortalamasıydı) ve falsoluPas eğilimi; 0,5–1,7 (saf) */
+function falsoKatsayi(p){const F=MOTOR_AYAR.falsoProfil,o=p.oz&&p.oz.pas!=null?p.oz.pas:0.65;return clamp(1+F*(1.5*(o-0.65)+0.4*profilEgilim(p,'falsoluPas')),0.5,1.7);}
 /* ---- T9b (2026-10-10; gerçekçilik planı §4 T9 “Vuruş”): vuruş modeli — saf, rastlantısız. Şut planı (js/mac-karar.js sutPlani), pas analizi
    (pasAnaliz) ve vuruş (sutVur, yerPasVur, havaPasVur) aynı işlevleri okur. Stilin payı: azami hıza göre hız (iç ayak plase en yavaşı, üst sert
    en hızlısı) ve yön hatası çarpanı ---- */

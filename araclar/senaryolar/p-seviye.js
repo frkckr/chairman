@@ -3,7 +3,8 @@
    aynı adlı oyuncunun araç içi dönüşümü, yeni ad ya da kulüp yok; senaryo-ortak profilDegis). Rakipler kadronun kendi değerleriyle. Karar katmanı açık.
    S1 bire bir kanat: ev sahibinin sağ kanadı (5) rakip yarıda (orta çizgiden 18 m, c-1v1 [3] düzeni) topla, 3 m/sn; konuğun stoperi (3) 6 m önünde;
      öbürleri sahada değil (kaleciler kalır). 6 sn. Sınıf: geçti (motorun 'calim' olayı 'gecti' ya da top kanattayken u_kanat > u_bek + 3), kayıp
-     (top rakipte ya da dışarıda), süre. Başarı: geçti.
+     (top rakipte ya da dışarıda), faul (savunmacı faul yaptı), süre. Başarı: geçti. Savunmacı sabit orta seviyede (0,6). Planın kanat yarışı
+     (çizgide, bek önde) denendi: hızlı kanat iki seviyede de %92–95 geçiyordu (tavan), bu yüzden c-1v1 [3] düzeni seçildi.
    S2 uzun paslı 6: iki takım dizilişte, top ev sahibinin yarısında; ev sahibinin 6'sı (6) kaleye 64 m'de topla, yüzü ileri. 8 sn. Sınıf: uzun ileri pas
      ya da yön değiştirme tamamlandı (L ≥ 25 ve ≥ 12 m ileri ya da |Δz| ≥ 25; alıcı arkadaş), uzun pas kaybedildi, kısa pas, tuttu (süre bitti, top 6'da),
      kayıp (pastan önce). Başarı: uzun tamamlandı; ayrıca uzun pasın tamamlanma oranı (uzun ÷ uzun + uzunKayip; seviye isabeti, deneme sıklığı seçimdir).
@@ -15,7 +16,7 @@
 const KAPI=false,DELTA=0.12;
 const SAHNE=[
   {ad:'S1 bire bir kanat',sure:6,profiller:[['hızlı kanat',{hiz:0.92,surus:0.85,pas:0.5,sut:0.55,gorus:0.45,karar:0.45}],['oyun kurucu kanat',{hiz:0.55,surus:0.6,pas:0.88,sut:0.55,gorus:0.9,karar:0.85}]],
-    siniflar:['gecti','kayip','sure'],basari:'gecti'},
+    siniflar:['gecti','kayip','faul','sure'],basari:'gecti'},
   {ad:'S2 uzun paslı 6',sure:8,profiller:[['uzun paslı 6',{pas:0.84,gorus:0.82,karar:0.72,mudahale:0.55,sertlik:0.6,surus:0.6}],['kesici',{mudahale:0.82,sertlik:0.8,pas:0.6,gorus:0.55,karar:0.6,surus:0.55}]],
     siniflar:['uzun','uzunKayip','kisa','tuttu','kayip'],basari:'uzun'}
 ];
@@ -23,14 +24,14 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const O=require('../senaryo-ortak')(ctx,vm),n=N||60,dt=1/60,t0=Date.now();
   const PL=vm.runInContext('PL',ctx),MZ=vm.runInContext('MZ',ctx);
   /* S1 */
-  const s1=(i,pr,dl)=>{let m=null,ol=null;
-    m=O.kur((tohum||1)*1000+i,(ad,v)=>{if(ad==='calim'&&v&&m&&v.p===m.teams[0][5]&&!ol)ol=v.sonuc;});
+  const s1=(i,pr,dl)=>{let m=null,ol=null,fl=false;
+    m=O.kur((tohum||1)*1000+i,(ad,v)=>{if(!m||!v)return;const A=m.teams[0][5];if(ad==='calim'&&v.p===A&&!ol)ol=v.sonuc;else if(ad==='faul'&&v.faulYiyen===A)fl=true;});
     const A=m.teams[0][5],D=m.teams[1][3],b=m.ball,d=m.dir[0],hy=d>0?0:Math.PI;
-    O.bosalt(m,[A,D]);O.profilDegis(m,A,pr,dl);
+    O.bosalt(m,[A,D]);O.profilDegis(m,A,pr,dl);O.profilDegis(m,D,{hiz:0.6,mudahale:0.6,karar:0.6,gorus:0.6,surus:0.6,sertlik:0.6});   /* rakip sabit, orta seviye */
     const ax=d*18,az=MZ+(i%5-2)*3;O.yerlestir(A,ax,az,hy,3);O.yerlestir(D,ax+d*6,az,hy+Math.PI,0);   /* c-1v1 [3] düzeni: savunmacı 6 m önde */
     O.oyunda(m);m._sonSahipTakim=0;m._sahiplikBas=m.t;O.topVer(m,A,hy,3);
-    for(let k=0;k<60*6;k++){m.step(dt);if(m.phase!=='play')return 'kayip';
-      if(ol==='gecti')return 'gecti';if(ol&&ol!=='gecti'&&ol!=='yarim')return 'kayip';
+    for(let k=0;k<60*6;k++){m.step(dt);
+      if(ol==='gecti')return 'gecti';if(fl||ol==='faul')return 'faul';if(m.phase!=='play'||ol&&ol!=='yarim')return 'kayip';
       if(b.sahip&&b.sahip.team===1||b.sonTakim===1)return 'kayip';
       if(b.sahip===A&&(A.x-D.x)*d>3)return 'gecti';}
     return 'sure';};
