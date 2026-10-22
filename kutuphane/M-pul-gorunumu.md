@@ -1,6 +1,6 @@
 # M — 2D maç görünümü ve pullar (P1 denemesi 2026-10-21 akşam; P2 kararı 2026-10-21 gece)
 
-Bu bölüm maçı FM'deki gibi tepeden 2D izleme denemesinin bilgi tabanıdır: neden düşünüldü, araştırma ne dedi, bugün ne uygulandı ve neyin açık karar olduğu. Kural değildir. Yön kararı kullanıcınındır; kullanıcı denemeyi izleyip "2D mi, figür mü, karma mı" diye karar verir. Program ve tur sırası [YOL_HARITASI](../YOL_HARITASI.md), turun sonucu [FUTBOL_KUTUPHANESI §12.17](../FUTBOL_KUTUPHANESI.md#1217-p1--2d-maç-görünümü-denemesi-2026-10-21-akşam-dizüstü-dal-claudemotor-p1).
+Bu bölüm maçı FM'deki gibi tepeden 2D izleme denemesinin bilgi tabanıdır: neden düşünüldü, araştırma ne dedi, bugün ne uygulandı ve neyin açık karar olduğu. Kural değildir. Yön kararı P2 ile kesinleşti (kullanıcı, 2026-10-21 gece): maç 2D, figür antrenman içindir. Program ve tur sırası [YOL_HARITASI](../YOL_HARITASI.md), turların özeti [FUTBOL_KUTUPHANESI §12.4](../FUTBOL_KUTUPHANESI.md#124-tamamlanan-turlar-ve-açık-kalanları) (P1–P2 satırı; ayrıntı `git show tur/p2:FUTBOL_KUTUPHANESI.md` §12.17–§12.18).
 
 ## M.1 Neden
 
@@ -30,13 +30,13 @@ Bu bölüm maçı FM'deki gibi tepeden 2D izleme denemesinin bilgi tabanıdır: 
 - **Stat** bugünkü 3B stattır: tribünler ve kalabalık, meşale dumanı, reklam panoları, tel örgü, projektörler, kale arkaları, çevre (yamaç, evler). Topun projektörlerden dört yöne gölgesi ve havadaki topun altındaki leke aynen.
 - **Motor ve figür çizimi değişmedi:** iskelet ve animasyon arka planda çalışmaya devam eder (kart, bayrak, defter, sprey kemiklere bağlı olduğu için görünür kalır); 2D kapalıyken oyun S1 ile aynıdır.
 
-## M.4 Açık sorular ve sonraki adımlar (karar sonrası planlanır)
+## M.4 Açık sorular ve sonraki adımlar (P1 sırasında yazıldı; kalanlar E turunda)
 
-- **Karar:** 2D mi, figür mü, karma mı (kullanıcı denemeyi izler). 2D seçilirse A10 ve A11'in kaderi, V1'in kapsamı ve Z programının sırası yeniden planlanır.
+- **Karar:** P2'de verildi (maç 2D); A10 ve A11 maç için kapandı, V1 D turuna daraltıldı, program FUTBOL_KUTUPHANESI §12.1 A–F.
 - **Statın tepeden kimliği (kullanıcının "farkımız" dediği yer):** tepeden okunan tribün dokusu ve kalabalık, meşale ve dumanın sahaya sürüklenmesi, pankartlar, reklam panolarının tepeden okunması, zemin ve biçme deseni, hava (yağmur, rüzgâr, gölgeler), deplasman statlarının ayrışması (tarif başına çevre, tribün biçimi, renkler), maç günü ışığı.
 - **Pul dili:** olay işaretleri (kart, sakatlık, değişiklik simgeleri), top taşıyanın ad etiketi, kısa top izi, gol sonrası ve seremoni sahnelerinin tepeden okunuşu, kalabalık kutuda pul boyu.
-- **Locaya giriş ve karar anı:** 2D'de locaya giriş ve rakip başkanla karar anı ayrı tasarlanır (bugün giriş birinci şahıs, sonra tepeye geçilir).
-- **Hız:** pullarda figür animasyonu gereksizdir; kalıcı karar sonrası çizimden çıkarılırsa çizim süresi düşer (bugün çalışmaya devam ediyor).
+- **Locaya giriş ve karar anı:** 2D'de locaya giriş ve rakip başkanla karar anı ayrı tasarlanır (bugün giriş atlanır, karar anı 2D üstünde kart; M.5).
+- **Hız:** pullarda figür animasyonu gereksizdir; pul motor alanlarından beslenince 2D'de figür güncellenmez ve çizim süresi düşer (E turu; bugün figür arka planda çalışmaya devam ediyor).
 
 ## M.5 Bugünkü uygulama (P2, 2026-10-21 gece)
 
@@ -44,9 +44,9 @@ Bu bölüm maçı FM'deki gibi tepeden 2D izleme denemesinin bilgi tabanıdır: 
 - **Pullar:** 1,7 kat (orta seviyede çap ~27 px), numara 32 piksellik dokuda 3 kat, ayaklar çizgi, vuran ayak amber, yatan oyuncu düz ve koyu.
 - **Top:** 2 kat boy, havada büyür; yumuşak gölgesi yükseldikçe sağ-aşağı kayar ve solar; ardında sönen iz (eğri görünür); havadaki topun ineceği yerde halka; projektör top gölgeleri kapalı.
 - **Stat:** kompakt kasaba stadı — üç tarafta uzun, çatısız tribün; doğu kale arkasında kayaya oyulmuş ayakta teraslar ve yamaç; karşıda demo inşaat bölümü. Tarif v2 (mesafe, uzunluk, sıra, bölüm durumu, tip yamac) başka kulüplerin statları ve tribün gelişimi içindir.
-- **Falso:** `pasEgriKat` 1,6 (gece dengesi bekliyor).
+- **Falso:** `pasEgriKat` 1,6 (kullanıcı, P2: “daha çok falsolu pas”). A turunda 40 maç (`araclar/taban/p2.json`): sağlık aralığında; s1'e göre gol 2,88 → 2,40, gerçekleşen ÷ konum xG 1,51 → 1,02 — yön, denge kararı verilmedi. Falsonun oyuncunun pas özelliğine bağlanması C'de, V1c eğri tablosuyla birleşmesi D'de (FUTBOL_KUTUPHANESI §12.1).
 - **Akış:** locaya giriş şimdilik atlanır; rakip başkanın karar anı 2D üstünde kart.
-- Sonuç ve denetimler [FUTBOL_KUTUPHANESI §12.18](../FUTBOL_KUTUPHANESI.md#1218-p2--2d-maç-kesinleşti-kompakt-kasaba-stadı-2d-ölçek-ve-top-ipuçları-falso-akış-2026-10-21-gece-dizüstü-dal-claudemotor-p1).
+- Sonuç ve denetimler [FUTBOL_KUTUPHANESI §12.4](../FUTBOL_KUTUPHANESI.md#124-tamamlanan-turlar-ve-açık-kalanları) (P1–P2 satırı; ayrıntı `git show tur/p2:FUTBOL_KUTUPHANESI.md` §12.18).
 
 ## Kaynaklar — M
 

@@ -16,7 +16,7 @@
 const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 /* bileşenin görünüşü: oda (.oda) ve maç telefonu (.macTelefon) içinde aynı. Renkler STIL.kagit'ten (--k-*), telefonunkiler STIL.kagit.telefon'dan.
    Masaüstü kopyası yalnız js/ klasörünü taşıdığı için stil burada belgeye eklenir.
-   N7 (kullanıcı kararı 2026-10-04; onaylı taslak prototipler/8-telefon.html): tanıdık akıllı telefon düzeni. Cihaz gövdesi, kamera adası, durum
+   N7 (kullanıcı kararı 2026-10-04; onaylı taslak tur/p2'deki prototipler/8-telefon.html): tanıdık akıllı telefon düzeni. Cihaz gövdesi, kamera adası, durum
    çubuğu, büyük saatli ana ekran ve bildirim kartları, altta sabit sırada iki uygulama; konuşmada iki cevap alttaki sabit cevap alanındadır
    (klavyenin yeri). Gerçek marka arayüzü birebir kopyalanmaz; masaüstünde okunur boyut: yazı büyüyünce cihaz da genişler, dar gerçek telefon
    ölçeğine zorlanmaz. Durum çubuğundaki sinyal ve pil süstür, düğme değildir. */

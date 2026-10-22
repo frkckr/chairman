@@ -103,9 +103,6 @@ ayarEkle('B',{
   taramaYan:0.7,               // taramanın yanının bir öncekinin tersi olma olasılığı (eskiden hep ters)
   bakisDonus:0.5,              // gövdenin hedefine bundan (rad) büyük dönüş kaldıkça bakış gövdenin hedefine bakar (gideceği yere bakma)
   /* T22 (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): kanat hızı ve şut kütüphanesi */
-  aliciRahat:0,                // T23a2 (2026-10-18; denendi, kapalı — 0,8 ile 40 maçta pas isabeti −3,8 ± 1,2 (sabit hızlı varış tahminiyle −10,6), toplam ivmelenme aynı
-                               // (alıcınınki −0,2, başka yerde geri geliyor), eşzamanlı +0,18; kod kalır): rakipsiz ayağa yerden pasta (planın rakip payı ≥ bu kadar sn) alıcı en erken noktaya tam eforla fırlamaz: yoldaki
-                               // ilk rahat noktaya (0,6 eforla toptan 0,1 sn önce varır, yolda ve orada rakip ≥ payla geride) efor 0,6, tepe hızın %62'siyle gider; 0: eski
   bakisHerKare:1,              // T23c (2026-10-18): kasıtlı büyük dönüşte (p.don.bt penceresi ya da gövdenin önünde bakisDonus'tan büyük dönüş) bakış her karede
                                // işlenir (boyun adımı geçen kare sayısıyla); öbür zamanlar iki karede bir; 0: hep iki karede bir
   gidisBakis:1.95,             // T23b (2026-10-18): gidiş kipinde (p.don.gm; js/mac-hareket.js hrkGidis) topa bakışın boyun sınırı (rad; eskiden ve öbür durumlarda 1,4)

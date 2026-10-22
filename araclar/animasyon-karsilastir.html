@@ -35,7 +35,7 @@ iframe{width:100%;aspect-ratio:4/3;border:0;background:#000;display:block}
     <option value="sahne">sahnenin önerisi</option><option value="loca">loca (oyundaki bakış)</option>
     <option value="yakin">yakın (yandan, 7 m)</option><option value="orta">orta (yandan, 16 m)</option></select></label>
   <label>Önce <select id="onceSurum">
-    <option value="k1" selected>K1 (S1 öncesi)</option></select></label>
+    <option value="" selected>— kopya yok (dondur.js &lt;ad&gt;)</option></select></label>
   <label>Tohum <input id="tohum" type="number" min="1" value="3"></label>
   <label>Hız <select id="hiz"><option value="1">1×</option><option value="0.5" selected>½×</option><option value="0.25">¼×</option></select></label>
   <button id="oynat" type="button" aria-pressed="false">▶ Oynat</button>
@@ -75,7 +75,7 @@ const SAHNELER=[
   {ad:'A2b Uzun top — savunmacının başı topta (orta)',kamera:'orta',kosul:"mac.phase==='play'&&!!mac.ball.pas&&mac.ball.pas.L>30&&mac.ball.y>1.5&&!!(window.__takip=mac.ball)",en:600},
   {ad:'A2b Kenar — kulübe ve teknik direktör (orta)',kamera:'orta',kosul:"mac.phase==='play'&&mac.t>30&&!!(window.__takip=mac.kenar.find(k=>k.kind==='td'&&k.team===0))"},
   /* T4-V (2026-10-09): vuruş hazırlığı — yerden pas (hizalı; eskiden hazırlıksız), dönerek pas, 22 m'den uzun yerden pas, zayıf ayakla pas. Önce = a2b
-     (2026-10-10'da silindi; geri almak için ARSIV.md §0).
+     (2026-10-10'da silindi; geri almak için YOL_HARITASI "Silinen dosyalar ve geri alma").
      İki çerçeve aynı (yeni) motorla sürer: "önce" çizimi uzayan geri salınımı görür ama motorun bildirdiği kalan süreyi okumaz (yalnız çizim farkı) */
   {ad:'T4-V Pas — hazırlık ve geri salınım (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&mac.t>5&&!!(window.__takip=mac.players.find(p=>{const e=p.eylem;if(!p.oyunda||!e||e.ad!=='vurus'||e.faz!=='hazirlik'||e.t>0.02||!e.sec||e.sec.ilk||e.sec.tur==='sut'||e.sec.tur==='uzaklastir'||(e.sec.tip||'yer')!=='yer')return false;const L=Math.hypot(e.sec.hx-mac.ball.x,e.sec.hz-mac.ball.z),f=Math.atan2(e.sec.hz-mac.ball.z,e.sec.hx-mac.ball.x)-p.yon,a=Math.abs(Math.atan2(Math.sin(f),Math.cos(f)));return a<0.3&&L<=22;}))",en:600},
   {ad:'T4-V Dönerek pas (yakın)',kamera:'yakin',kosul:"mac.phase==='play'&&mac.t>5&&!!(window.__takip=mac.players.find(p=>{const e=p.eylem;if(!p.oyunda||!e||e.ad!=='vurus'||e.faz!=='hazirlik'||e.t>0.02||!e.sec||e.sec.ilk||e.sec.tur==='sut'||e.sec.tur==='uzaklastir'||(e.sec.tip||'yer')!=='yer')return false;const L=Math.hypot(e.sec.hx-mac.ball.x,e.sec.hz-mac.ball.z),f=Math.atan2(e.sec.hz-mac.ball.z,e.sec.hx-mac.ball.x)-p.yon,a=Math.abs(Math.atan2(Math.sin(f),Math.cos(f)));return a>1.0&&L<=22;}))",en:900},
@@ -103,9 +103,9 @@ const SAHNELER=[
 const $=id=>document.getElementById(id),F={once:$('fOnce'),simdi:$('fSimdi')},Y={once:null,simdi:null};
 const UI_CSS='.controls,.gelistirici,.duraklatildi{display:none!important}body{margin:0!important;background:#000!important;overflow:hidden}.wrap{gap:0!important;display:block!important}.screen{width:100vw!important;max-width:none!important;box-shadow:none!important}';
 for(const [i,s] of SAHNELER.entries()){const o=document.createElement('option');o.value=i;o.textContent=s.ad;$('sahne').appendChild(o);}
-/* "önce" sürümleri (araclar/karsilastir/dondur.js <ad>): her tur başında dondurulan çizim; eski kopyalar (once, a2a, a2b, t4v, t4) 2026-10-10'da,
-   t5, t6, t8, t9b, t12, a3, t14, t15 2026-10-16'da (M2) silindi — etiketlerinde dururlar: git show tur/<sonraki tur>:araclar/karsilastir/<ad>/animasyon.js */
-const ONCE_AD={a4:'— A4 animasyonu (dondurulmuş; A6 öncesi)'},ONCE_KAYNAK={};
+/* "önce" sürümleri (araclar/karsilastir/dondur.js <ad>): çizimi değiştiren turun başında dondurulan kopya; seçime <option value="<ad>"> eklenir.
+   2026-10-22'den beri maç 2D'dir, figür çizimi antrenman serisinindir; eski kopyalar etiketlerinde: git show tur/<sonraki tur>:araclar/karsilastir/<ad>/animasyon.js */
+const ONCE_AD={},ONCE_KAYNAK={};
 let TOHUM=3,oynuyor=false,kurulum=0,birikim=0,sonZaman=0;
 const durum=(m,uyari)=>{$('durum').innerHTML=uyari?'<span class="uyari">'+m+'</span>':m;};
 
@@ -144,6 +144,7 @@ async function sahneKur(){
   TOHUM=Math.max(1,parseInt($('tohum').value,10)||3);const S=SAHNELER[+$('sahne').value];
   durum('Sayfalar açılıyor…');Y.once=Y.simdi=null;
   const OS=$('onceSurum').value;$('onceAd').textContent=ONCE_AD[OS]||OS;
+  if(!OS){durum('Önce kopyası yok: node araclar/karsilastir/dondur.js <ad> ile dondurup seçime ekleyin.',true);return;}
   if(!ONCE_KAYNAK[OS]){try{const r=await fetch('karsilastir/'+OS+'/animasyon.js',{cache:'no-store'});if(!r.ok)throw new Error(r.status);ONCE_KAYNAK[OS]=await r.text();}
     catch(e){durum('Dondurulmuş animasyon okunamadı (karsilastir/'+OS+'/animasyon.js; yerel sunucu gerekir: python -m http.server 8765).',true);return;}}
   const adres='../index.html?ekran=mac&pul=0&tohum='+TOHUM+'&k='+Date.now();   /* P2: maç 2D varsayılan; karşılaştırma figürlü loca bakışıyla */

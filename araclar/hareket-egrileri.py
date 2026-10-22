@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""A7-0 (2026-10-17; gerçekçilik planı §4 "A7", §7.9): hareket verisinden adım döngüsü eğrileri → js/hareket-egrileri.js.
+"""A7-0 (2026-10-17; atıf kutuphane/J §J.12 "Kaynaklar — A7"): hareket verisinden adım döngüsü eğrileri → js/hareket-egrileri.js.
 
-Kaynaklar (ham veri depoya girmez; araclar/veri/ Git dışıdır, KAYNAKLAR gerçekçilik planında):
+Kaynaklar (ham veri depoya girmez; araclar/veri/ Git dışıdır; atıf kutuphane/J §J.12 "Kaynaklar — A7"):
   - CMU Graphics Lab Motion Capture Database (mocap.cs.cmu.edu; asf/amc) — "The data used in this project was obtained from mocap.cs.cmu.edu.
     The database was created with funding from NSF EIA-0196217." Koşu, yürüyüş, vuruş denemeleri (seçilmiş dosyalar).
   - Fukuchi, Fukuchi & Duarte (2017), "A public dataset of running biomechanics and the effects of running speed on lower extremity kinematics
@@ -459,7 +459,7 @@ def ana():
             s = ('%.' + str(k) + 'f') % x
             s = s.rstrip('0').rstrip('.') if '.' in s else s
             return '0' if s in ('-0', '') else s
-        sat = ['/* ============ Chairman — hareket eğrileri (A7, 2026-10-17; gerçekçilik planı §4 "A7", §7.9): yalnız sayı tabloları ============',
+        sat = ['/* ============ Chairman — hareket eğrileri (A7, 2026-10-17; atıf kutuphane/J §J.12 "Kaynaklar — A7"): yalnız sayı tabloları ============',
                '   Üreten araclar/hareket-egrileri.py (elle düzenlenmez: `python -I araclar/hareket-egrileri.py araclar/veri`). Ham veri depoda yoktur; burada',
                '   yalnız adım döngüsünün ortalama eklem açısı eğrileri (Fourier katsayıları) ve döngü sayıları durur (kullanıcı kararı 2026-10-16).',
                '   Kaynaklar: CMU Graphics Lab Motion Capture Database (mocap.cs.cmu.edu; "The data used in this project was obtained from mocap.cs.cmu.edu.',

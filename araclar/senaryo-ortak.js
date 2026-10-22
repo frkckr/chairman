@@ -1,7 +1,7 @@
 'use strict';
 /* ============ Senaryoların ortak kurulumu (Z1, 2026-10-19; FUTBOL_KUTUPHANESI §11.2 "örtüşme temizliği") ============
    Senaryolar (araclar/senaryolar/*.js) aynı kalıbı tekrar ediyordu: maçı kur ve santraya geç, sahayı boşalt, oyuncuyu yerleştir, topu birine ver
-   (kutuphane/K-test-rejimi.md §4.3). Bu dosya senaryolar klasörünün DIŞINDADIR (oturum-sonu.js oradaki her .js'i senaryo sayar).
+   (`git show tur/p2:kutuphane/K-test-rejimi.md` §4.3). Bu dosya senaryolar klasörünün DIŞINDADIR (oturum-sonu.js oradaki her .js'i senaryo sayar).
    Kullanım: const O=require('../senaryo-ortak')(ctx,vm);
      O.kur(tohum, olay[, kadro, {hakemYok}])  Match kurar, maç öncesini atlar (macaGec); olay: (ad, v) geri çağrısı; hakemYok: hakemler durur ve
                                        sahadan çekilir (v-sut: hakem şutçunun önüne girmesin)

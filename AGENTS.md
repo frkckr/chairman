@@ -1,11 +1,5 @@
 # Talimatlar
 
-Bu projenin bütün geliştirme araçları için ortak çalışma talimatları [CLAUDE.md](CLAUDE.md) dosyasındadır. Önce onu, sonra [YOL_HARITASI.md](YOL_HARITASI.md) ve [STIL_REHBERI.md](STIL_REHBERI.md) dosyalarını oku.
+Bu projenin bütün geliştirme araçları için ortak çalışma talimatları [CLAUDE.md](CLAUDE.md) dosyasındadır. Önce onu, sonra [YOL_HARITASI.md](YOL_HARITASI.md) (devam notu ve geçerli kararlar) ve [STIL_REHBERI.md](STIL_REHBERI.md) dosyalarını oku. İşe göre okunacak belgeler (oyun tasarımı, teknik plan, olay kütüphanesi, maç motoru belgeleri ve futbol kütüphanesi) CLAUDE.md “Okuma sırası” bölümündedir; değişen dosyaya göre koşulacak denetimler [araclar/KAPILAR.md](araclar/KAPILAR.md)'de.
 
-Oyun davranışı veya içerik çalışmasında [OYUN_TASARIMI.md](OYUN_TASARIMI.md), kod veya mimari çalışmasında ayrıca [TEKNIK_PLAN.md](TEKNIK_PLAN.md) içindeki ilgili bölümleri oku. Mevcut uygulama, onaylı hedef ve açık karar ayrımını koru. Kurallar kullanılan araçtan bağımsızdır.
-
-Ekran veya mekân yenilemesinde STIL_REHBERI'nin onaylı ekran düzenlerini, TEKNIK_PLAN'ın duraklatma ve ortak stat sınırlarını birlikte oku. Sıradaki işi YOL_HARITASI'ndan al; belge güncellemesi yeni ekranın uygulanmış olduğu anlamına gelmez. Ortak talimatları veya iş listesini bu dosyada çoğaltma.
-
-Başlangıç, olay veya karar içeriği çalışmasında ayrıca [OLAY_KUTUPHANESI.md](OLAY_KUTUPHANESI.md) içindeki ilgili paketleri ve durum/bağımlılık tablosunu oku. Katalog geliştirme sırasının yerine geçmez; sıradaki iş YOL_HARITASI'ndadır.
-
-Yeni karar düzeninde içerik geçişini kütüphanenin §7'sinden, kayıt korumasını teknik planın §6'sından al. Kesin çerçeve ile uygulayıcının tasarım alanının ayrımı CLAUDE.md'dedir; örnek senaryoları veya tarihsel uygulama notlarını güncel zorunlu akış sanma.
+Mevcut uygulama, onaylı hedef ve açık karar ayrımını koru. Kurallar kullanılan araçtan bağımsızdır. Sıradaki işi YOL_HARITASI'ndan al; belge güncellemesi bir özelliğin uygulanmış olduğu anlamına gelmez. Ortak talimatları veya iş listesini bu dosyada çoğaltma; örnek senaryoları ya da tarihsel uygulama notlarını güncel zorunlu akış sanma.

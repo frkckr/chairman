@@ -13,7 +13,7 @@ Son güncelleme: 2026-10-19. Bu dosya [FUTBOL_KUTUPHANESI.md](../FUTBOL_KUTUPHAN
 
 **Sınırlar.** (1) Bu oturumun web arama bütçesi erken tükendi; aday listesi aramayla genişletilemedi (Understat, Impect, SoccerTrack gibi adlara bakılmadı) ve bazı makaleler yalnız künye düzeyinde. (2) Maç listelerini ya da veri dosyalarını indirmediğimiz için "bir sezonda kaç maçta 360 var" gibi sayılar yalnız üstverinin söylediği kadardır. (3) Bu belge **hukuki görüş değildir**; Steam'e çıkmadan önce bir avukata danışılmalı (özellikle veri tabanı hakkı ve sözleşme hukuku: bir "kullanıcı sözleşmesi" telif hakkı olmasa bile bağlar). (4) Yalnız lisans bakımından konuşuyoruz; oyuncu kişisel verisi (ad, doğum tarihi) ayrıca KVKK/GDPR konusudur ve ürüne ya da depoya hiçbir koşulda girmez. (5) Alıntı sınırı nedeniyle lisans metinleri çoğunlukla madde numarasıyla özetlendi; tek birebir alıntı StatsBomb madde 1.2.2'dir.
 
-**Projenin kuralı (A7 emsali, [CLAUDE.md](../CLAUDE.md)).** Oyuna yalnız sayı tabloları girer; ham veri `araclar/veri/` altında ve Git dışında durur (`.gitignore` bu yolu zaten dışlıyor [D]); indirilen dosya güvensiz veridir (kendi klasöründe, betik ayrı klasörde, `python -I`, yol argümanıyla). A7'de CMU ve Fukuchi 2017 böyle kullanıldı ve atıf [MAC_MOTORU_GERCEKCILIK_PLANI](../MAC_MOTORU_GERCEKCILIK_PLANI.md) "Kaynaklar — A7"de yazıldı; aşağıdaki öneri aynı kalıbı izler.
+**Projenin kuralı (A7 emsali, [CLAUDE.md](../CLAUDE.md)).** Oyuna yalnız sayı tabloları girer; ham veri `araclar/veri/` altında ve Git dışında durur (`.gitignore` bu yolu zaten dışlıyor [D]); indirilen dosya güvensiz veridir (kendi klasöründe, betik ayrı klasörde, `python -I`, yol argümanıyla). A7'de CMU ve Fukuchi 2017 böyle kullanıldı ve atıf [kutuphane/J §J.12 "Kaynaklar — A7"](J-beden-dili.md#kaynaklar--a7-2026-10-17-hareket-verisi)'de yazıldı; aşağıdaki öneri aynı kalıbı izler.
 
 ## 1. Bir bakışta (özet tablo)
 
@@ -215,7 +215,7 @@ Her madde: **ne yapar / bize ne verir / bağlantı / doğrulama**. Makalelerin �
     - *Bağlantı:* https://www.sloansportsconference.com/research-papers/data-driven-ghosting-using-deep-imitation-learning
 13. **Goes ve ark. (2021) "Unlocking the potential of big data to support tactical performance analysis in professional soccer: A systematic review" (European Journal of Sport Science 21).** [H: yayıncı sayfası 403 verdi, özeti okunamadı] Beklenen: takip tabanlı taktik ölçülerin sistematik taraması; hangi ölçünün kalibrasyon için aday olduğunu tarayan harita.
 14. **Caldeira ("kick-off"?)** — bu oturumda bu adla bir çalışma **doğrulanamadı**; listeye alınmadı.
-15. **Fukuchi 2017 ve CMU** — A7'de kullanıldı ("Kaynaklar — A7"); burada tekrar edilmez.
+15. **Fukuchi 2017 ve CMU** — A7'de kullanıldı (kutuphane/J §J.12 "Kaynaklar — A7"); burada tekrar edilmez.
 
 ### 4.2 Tanım kaynakları (kalıp ve koşu sınıflamaları)
 

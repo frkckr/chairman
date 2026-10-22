@@ -17,7 +17,7 @@ Kullanım:
               --oncesi (--kosul ile: maç öncesini atlamadan bekle; ör. tören ve takım fotoğrafı anları)
               --anm AD (A2, 2026-10-08: çizim dondurulmuş "önce" animasyonuyla; araclar/karsilastir/<AD>/animasyon.js, turun başında
                 araclar/karsilastir/dondur.js AD üretir; seçenekler klasörden okunur). Motor aynıdır, aynı tohumla aynı an; önce/sonra şeridi
-                git stash'siz alınır: --anm a5 --onek once- ile ve onsuz --onek sonra-. Silinen eski kopyalar (once, a2a, a2b, t4v, t4): ARSIV.md §0
+                git stash'siz alınır: --anm a5 --onek once- ile ve onsuz --onek sonra-. Silinen eski kopyalar (once, a2a, a2b, t4v, t4): YOL_HARITASI "Silinen dosyalar ve geri alma"
               --giris (N11, 2026-10-04: stada varışı ve locaya girişi başlatıp film şeridi çeker; karartma ve karar anı gibi sayfa katmanları
                 da görüntüye girer; --sonra S: şeride başlamadan S sn oynat) · --ek "&rakipBaskan=yerinde" (adrese eklenir)
 Çıktı: araclar/anlar/<onek><ad>.png ve .json (topun ekrandaki yeri ve boyu (topPx gerçek, topCizimPx asgari boya büyütülmüş çizim), oyuncuların
@@ -158,7 +158,7 @@ OLCU_JS = """() => {
   for (const a of AKTORLER) { const p = a.kaynak; if (!p || p.tur !== 'oyuncu' || !p.oyunda || !a.m.root.visible) continue;
     const ay = new THREE.Vector3(a.x, 0, a.z).project(camera), bas = new THREE.Vector3(a.x, 1.8 * (p.boy || 1), a.z).project(camera);
     if (Math.abs(ay.x) > 1 || Math.abs(ay.y) > 1) continue; const h = Math.abs(bas.y - ay.y) / 2 * H; boylar.push(h);
-    /* A5 (2026-10-15): oyuncunun ekrandaki dikdörtgeni (ızgara pikseli; titreme ölçüsü araclar/titreme-olc.py okur) */
+    /* A5 (2026-10-15): oyuncunun ekrandaki dikdörtgeni (ızgara pikseli) */
     const cx = (ay.x + 1) / 2 * W, yAlt = (1 - ay.y) / 2 * H, yUst = (1 - bas.y) / 2 * H, g = 0.25 * h;
     kutular.push([Math.round(cx - g), Math.round(Math.min(yUst, yAlt)), Math.round(cx + g), Math.round(Math.max(yUst, yAlt))]); }
   boylar.sort((x, y) => x - y);

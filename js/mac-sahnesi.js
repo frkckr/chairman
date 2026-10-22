@@ -117,8 +117,8 @@ function tabelaGuncelle(dt){
 /* maç olayları: başkanın tepkisi, tribün heyecanı, bakış, para, tabela ve sevinç. Yazılı spiker yoktur (2.8A) */
 function olay(ad,v){
   if(typeof baskanOlay==='function')baskanOlay(ad,v);
-  /* kamera ve animasyon akışlarının olay kancaları (js/kamera.js, js/animasyon.js; Faz 0) */
-  kameraOlay(ad,v);animasyonOlay(ad,v);
+  /* animasyon akışının olay kancası (js/animasyon.js; kamera bakışı aşamalardan ve toptan okur, olay gerekmez) */
+  animasyonOlay(ad,v);
   switch(ad){
     case 'oncesi':if(v.ad==='takim0')heyecanla(0,H.santra*0.7,2);if(v.ad==='takim1')heyecanla(1,H.santra*0.7,2);
       if(v.x!=null){ONCESI_BAKIS.x=v.x;ONCESI_BAKIS.z=v.z-MOTOR_Z;ONCESI_BAKIS.t=zaman;}break;

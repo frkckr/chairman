@@ -61,29 +61,12 @@ ayarEkle('T',{
   /* T23a3 (2026-10-18; gerçekçilik planı §4 T23): eşzamanlı fırlamanın kaynağı eşik kapıları — rol aynı karede bütün uygun oyunculara açılmasın */
   kapatSon:1,        // T23a3: 2. adamın kapatKalici tutma süresi son geçerli (seçildiği) kareden sayılır (eskiden ilk atamadan: kapı kapanınca aynı karede düşüyordu); 0: eski
   kapiFaz:1,         // T23a3: hücumda kutu rolü (orta kapısı) kapı açıldıktan sonra oyuncunun tepki süresi (0,25–0,7 sn) × bu kadar sonra alınır; 0: aynı karede
-  kapiFazSav:0,      // T23a3: savunmada markaj (top 32 m içinde) ve kutu savunması aynı kuralla (çarpan); acil olan beklemez (adamı 6 m içinde kaleye koşan
-                     // markaj, top ceza sahasındayken kutu savunması); 0: aynı karede. Denendi (0,5) ve 0 (T23 kapanışı, 80 maç eşleşmiş): 0,5'te gol
-                     // 2,60 → 3,08 (± 0,50), çerçeveye giden şutta kurtarış %66,3 → 58,3, kalecinin tahmini kurtarışı 67 → 63 (şutlar daha boştan),
-                     // korner 5,25 → 4,0 — markajın gecikmesi kutuda adamı boş bırakıyor (plan riski 4; T13c'deki gibi)
   kovala2Pay:0.5,    // T23a1 (2026-10-18): yüksek topta ikinci adam ve 1. kovalayan rakibin en erken varışından bu kadar sn'den çok geç kalacaksa efor 0,5 (gelir,
                      // düelloya hazırlanır, depar atmaz); varışı ≤ 1 sn, pasın alıcısı ya da dönen top eski kural (efor 1); 0: hep efor 1
   tutEtki:0.5,       // T16b: öndeki takımın hücumdaki temkini (tut niyetinin ilerlet'ten farkı ve koru'nun risk, sakinlik, tempo terimleri; 1: eski — 40 maçta
                      // son dilimde öndeki takımın şutu 0,24 → 0,47 / takım·dk, öndeki ÷ gerideki 0,33 → 0,59; 0'da ek kazanç yok)
-  /* T18a (2026-10-16; gerçekçilik planı §4 T18): görev bağlılığı — kovalayan ve pres el değiştirmesin diye kalıcılık (T13'ün 0,15 sn'lik eşiği her topa
-     uygulanmıştı ve etkisizdi; burada yalnız savunan takımın kovalayanı, pasın alıcısı ve yüksek top hariç) */
-  kovalaKalici:0,    // T18a: savunan takımın (topa son dokunan rakip) o anki kovalayanı, yeni adaydan bu kadar sn geç kalmadıkça kalır; 0: her dokunuşta en erken.
-                     // Denendi (0,25; 40 maç): kovalama her dokunuşta bittiğinden giriş sayısı düşmedi (2,24 → 2,21), ivmelenme aynı; pas isabeti −2, hava topu +2,8 → kapalı
-  presKalici:0,      // T18a: 1. adamın mesafe süzgecinde (R1/R2) önceki 1. adama bu kadar m pay; süzgeçte elenen 1. adamın belleği silinmez; 0: T7d.
-                     // Denendi (2 m; 40 maç, kovalaKalici ile): PPDA 4,4 → 4,0, ivmelenme aynı → kapalı
+  /* T18a (2026-10-16): görev bağlılığı (kovalaKalici ve presKalici denendi, etkisiz; 2026-10-22'de kaldırıldı) */
   kapatKalici:0.5,   // T18a: 2. adam ve bire bir örtüsü bu kadar sn tutulur (geçerliyse: oyunda, kilitsiz, 14 m içinde); karşı pres üçlüsü sahiplik boyunca sabit; 0: her kare
-  /* T18b: pas uçuşunda sahip yok sayılmasın, top kaybında savunma düzenine geçiş tek karede olmasın */
-  gecisKademe:0,     // T18b: pas uçuşunda pasın alıcısı rol düzeni için sanal sahiptir (hücumun topu tutana bağlı rolleri ve 1. adam pas boyunca düşmez; 1. adam alıcıya
-                     // kapatır); kovalayan ve geçiş sayacı gerçek sahiplikle; 0: T13 (pas yolda bütün roller aynı karede düşüp alışta geri geliyordu)
-  gecisDalga:0,      // T18b: top kaybında topa 12 m'den uzak oyuncu savunma düzenine gecis + bu kadar sn'ye yayılmış kişisel gecikmeyle geçer (tepki süresiyle; efor düşmez,
-                     // karşı pres ve kovalayan hemen); 0: herkes gecis (0,7 sn) sonunda aynı karede.
-                     // T18b denendi ve kapatıldı (12 ve 40 maç): gecisKademe 1 görev değişimini 27,5 → 32,5 (yüksek eforlu 8,4 → 11,9), ivmelenmeyi 6,5 → 7,3,
-                     // boşta rakibi 97 → 152 sn/maç yükseltti (pres üçlüsü pas boyunca alıcıya koşup alışta yeniden seçiliyor); gecisDalga 0,5 etkisiz (top kaybında
-                     // aynı karede ≥ 3 hedef sıçraması zaten 0,06/takım·dk — T18-0: toplu sıçramalar bölge güncellemesinde (16,6) ve duruş sonunda (5,4))
   /* T18c: markaj ve kutu savunması eşleşmeleri hücumda silinmez, koşucu takibi histerezisli; derin koşu top kaybında biter */
   markajKalici:1,    // T18c: takım hücuma geçince markaj ve kutu savunması haritası silinmez (top geri gelince eski çiftler 12 m içindeyse sürer); kutu savunmasında önceki
                      // bölge eşleşmesi korunur, yalnız boş bölgeler dağıtılır; koşucu takibinde giriş 4, çıkış 3,2 m/sn; 0: T7 (her hücumda sıfırdan)

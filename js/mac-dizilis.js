@@ -73,23 +73,17 @@ Object.assign(Match.prototype,{
     const b=this.ball;
     const odak=du?{x:du.x,z:du.z,sahip:null,takim:du.takim}:{x:b.x,z:b.z,sahip:b.sahip,takim:b.sahip?b.sahip.team:b.tasiyan&&b.tasiyan.team!=null?b.tasiyan.team:-1};
     const sahipTakim=odak.takim;
-    /* T18b (gecisKademe): pas uçuşunda alıcı rol düzeni için sanal sahip — odak.sahip/takim alıcıdır, sahipTakim (kovalayan, geçiş sayacı) gerçek kalır */
-    if(MOTOR_AYAR.gecisKademe&&!du&&!b.sahip&&!b.tasiyan&&b.hedefOyuncu&&b.hedefOyuncu.oyunda&&b.hedefOyuncu.team!=null&&!(b.hedefOyuncu.eylem&&b.hedefOyuncu.eylem.kilit)){odak.sahip=b.hedefOyuncu;odak.takim=b.hedefOyuncu.team;}
     /* serbest top: her takımdan topa en önce yetişecek oyuncu kovalar (6 karede bir ya da top değişince hesaplanır) */
     let kovalayan=[null,null];
     if(!du&&sahipTakim<0&&!b.tasiyan){
       const K=this._kov;
       if(K&&K.surum===b.surum&&this.kare-K.kare<6)kovalayan=K.liste;
-      else{const t8=this.topTahmin(0.8),sure=[1e9,1e9],yuksek=b.y>2.5||b.vy>4,KK=MOTOR_AYAR.kovalaKalici;
+      else{const t8=this.topTahmin(0.8),sure=[1e9,1e9],yuksek=b.y>2.5||b.vy>4;
         for(let t=0;t<2;t++){let en=null,enT=1e9;
           for(const p of this.teams[t]){if(!p.oyunda||(p.eylem&&p.eylem.kilit))continue;
             /* kaleci kovalayan sayılmaz: serbest topa çıkıp çıkmayacağına kendisi karar verir (kaleciCikis, js/mac-kaleci.js); çıkmazsa topa bir saha oyuncusu gider */
             if(p.rol==='GK')continue;
             const k=this.yakalamaNoktasi(p,p.rol==='GK'?2.4:2.3),ek=b.hedefOyuncu===p?-0.35:0;if(k.t+ek<enT){enT=k.t+ek;en=p;}}
-          /* T18a (kovalaKalici): savunan takımın (topa son dokunan rakip) o anki kovalayanı, yeni adaydan kovalaKalici sn'den az geç kalıyorsa kalır — topun her
-             dokunuşu yeni bir yarış ve yeni bir hızlanma doğurmasın; pasın alıcısı (aşağıda) ve yüksek top hariç */
-          if(KK>0&&K&&K.liste&&!yuksek&&b.sonTakim!=null&&b.sonTakim!==t){const p0=K.liste[t];
-            if(p0&&p0!==en&&p0.oyunda&&p0.rol!=='GK'&&!(p0.eylem&&p0.eylem.kilit)&&b.hedefOyuncu!==en){const k0=this.yakalamaNoktasi(p0,2.3);if(k0.t-enT<=KK){en=p0;enT=k0.t;}}}
           kovalayan[t]=en;sure[t]=enT;}
         /* yüksek top: her takımdan iki oyuncu topun ineceği yere gider (hava mücadelesi) */
         kovalayan[2]=null;kovalayan[3]=null;
@@ -173,15 +167,13 @@ Object.assign(Match.prototype,{
         /* T7d: pres tetiğinde (kötü ilk dokunuş, geri pas, sırtı dönük alıcı, çizgiye sıkışma) 1. adam daha uzaktan ve daha ileride çıkar, 2. adam serbest */
         const yp=MOTOR_AYAR.yorgunPres?1-MOTOR_AYAR.yorgunPres*(NY[t].yorgunPay||0):1;   /* T18d: yorgun takım daha az uzaktan çıkar */
         const tet=this.presTetikVar(t),R1=(tet?MOTOR_AYAR.presTetikMesafe:16)*yp,R2=(tet?11:7)*yp,B0=tet?-20:-8;
-        /* T18a (presKalici): önceki 1. adama süzgeçte pay (çıkış eşiği giriş eşiğinden presKalici m geniş); süzgeçte elenen 1. adamın belleği silinmez */
-        const pk=MOTOR_AYAR.presKalici>0&&pres1===onceki?MOTOR_AYAR.presKalici:0;if(MOTOR_AYAR.presKalici>0&&pres1)P1[t]=pres1;
         const aday1=pres1;   /* Z5a: süzgeçten önceki en iyi aday */
-        if(pres1&&(hyp(pres1.x-s.x,pres1.z-s.z)>R1+pk||(bu>B0+tk.pres*14&&hyp(pres1.x-s.x,pres1.z-s.z)>R2+pk)))pres1=null;
+        if(pres1&&(hyp(pres1.x-s.x,pres1.z-s.z)>R1||(bu>B0+tk.pres*14&&hyp(pres1.x-s.x,pres1.z-s.z)>R2)))pres1=null;
         /* Z5a (surenCik; D4, D9): kalemize doğru süren taşıyan müdahalesiz koşmaz — blok yerini korusa da en iyi aday (16 m içinde) çıkar, geciktirir */
         if(!pres1&&aday1&&MOTOR_AYAR.surenCik>0&&s.surus&&-(s.vx*d)>MOTOR_AYAR.surenCik&&hyp(aday1.x-s.x,aday1.z-s.z)<=R1)pres1=aday1;
         /* T4: üstüne sürülen (çalımın hedefi olan) savunmacı 1. adamdır: ikili mücadeleye girer (bölgesinde kalırsa çalıma tepki vermiyordu) */
         const ch=s.calim&&s.calim.o;if(ch&&ch.team===t&&ch.oyunda&&ch.rol!=='GK'&&!(ch.eylem&&ch.eylem.kilit)&&ch!==pres1){if(pres2===ch)pres2=pres1;pres1=ch;}
-        if(!(MOTOR_AYAR.presKalici>0)||pres1)P1[t]=pres1;
+        P1[t]=pres1;
         const ileriPres=bu>lerp(34,6,tk.pres);
         if(!(bu<-PL+30||ileriPres||tet))pres2=null;
         /* T4 (2): bire bir örtüsü — 1. adam düellodaysa (çalımın hedefi) ya da sürücü ona 4,5 m içinde üstüne geliyorsa, 1. adamın kapatYakin
@@ -246,8 +238,6 @@ Object.assign(Match.prototype,{
         if(p===pres2){const yakin=MOTOR_AYAR.kapatKalici>0?(pres1!=null&&p._kapatK!=null&&this.kare-p._kapatK<=Math.round(60*MOTOR_AYAR.kapatKalici)):p._kapatK===this.kare;this.gorevYaz(p,'pres2');this.eforVer(p,yakin?1:karsi?0.9:0.8);if(yakin&&b.sahip)this.kapatYakin(p,b.sahip,pres1,dt);else this.kapat(p,odak.sahip);continue;}
         if(p===pres3){this.gorevYaz(p,'pres3');this.eforVer(p,0.9);this.yolKapat(p,odak.sahip);continue;}
         let od=odak,hucumP=hucum;const tp0=clamp(0.62-0.22*p.oz.karar-0.12*p.oz.gorus+0.2*p.yorgunluk,0.25,0.7);
-        /* T18b (gecisDalga): top kaybında topa 12 m'den uzak oyuncu savunma düzenine kişisel gecikmeyle geçer (gecis + dalga·tepki payı); efor değişmez */
-        if(MOTOR_AYAR.gecisDalga>0&&!du&&!hucum&&this._kaybeden===t&&sahipTakim===1-t&&gecisSure<MOTOR_AYAR.gecis+MOTOR_AYAR.gecisDalga*(tp0-0.25)/0.45&&hyp(p.x-b.x,p.z-b.z)>12)hucumP=true;
         if(!du&&(!hucumP||MOTOR_AYAR.hucumGecikme&&(MOTOR_AYAR.hucumGecikme>1||p.x*d<b.x*d))){/* kişisel tepki: topun tp sn önceki (yumuşatılmış) yeri */
           const tp=tp0*MOTOR_AYAR.tepkiCarpan,n=Math.min(15,Math.round(tp*20));
           if(G.i>n){const j=(G.i-1-n)&15;OG.x=G.x[j];OG.z=G.z[j];OG.sahip=odak.sahip;OG.takim=odak.takim;od=OG;}}
@@ -355,15 +345,10 @@ Object.assign(Match.prototype,{
     }else{
       /* kendi ceza sahası çevresinde adam markajı */
       markajda=this.markaj(p,t,odak);
-      /* T23a3 (kapiFazSav): top 32 m içine girince açılan markaj kapısında oyuncu rolü tepki süresi × çarpan kadar sonra alır; adamı 6 m içinde kaleye koşuyorsa hemen */
-      if(markajda&&MOTOR_AYAR.kapiFazSav>0){const yk=odak.x*this.dir[t]<=-PL+32,M=this._markaj&&this._markaj[t],o=M&&M.get(p);
-        const acil=!!o&&hyp(o.x-p.x,o.z-p.z)<6&&-o.vx*this.dir[t]>2;if(this.kapiGecik(p,t,'markaj',yk,MOTOR_AYAR.kapiFazSav)&&!acil)markajda=null;}
       if(markajda){u=markajda.u;w=markajda.w;ef=1;g='markaj';}
       /* T7d: orta savunması — markajı olmayan bölgesini tutar (kutuSavunmaAta) */
       else{const KZ=this._kutuSav&&this._kutuSav[t],z=KZ&&KZ.get(p);
-        /* T23a3 (kapiFazSav): kutu savunması kapısı da oyuncuya göre gecikmeli; top ceza sahasındaysa hemen */
-        const kg=!!z&&MOTOR_AYAR.kapiFazSav>0&&this.kapiGecik(p,t,'kutuSav',true,MOTOR_AYAR.kapiFazSav)&&odak.x*this.dir[t]>-PL+16.5;
-        if(z&&!kg){markajda=z;u=z.u;w=z.w;ef=1;g='kutuSav';}}
+        if(z){markajda=z;u=z.u;w=z.w;ef=1;g='kutuSav';}}
       /* T7e: dönen top — şuttan sonra 1,5 sn kaleciye en yakın stoper kale önünü, uzak bek uzak direği tutar */
       const DS=this._donenSav;if(DS&&DS.team===t&&this.t-DS.t<1.5){const z=DS.M.get(p);if(z){markajda=z;u=z.u;w=z.w;ef=1;g='donenSav';}}
     }

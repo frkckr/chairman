@@ -1,4 +1,4 @@
-/* ============ Chairman — hareket eğrileri (A7, 2026-10-17; gerçekçilik planı §4 "A7", §7.9): yalnız sayı tabloları ============
+/* ============ Chairman — hareket eğrileri (A7, 2026-10-17; atıf kutuphane/J §J.12 "Kaynaklar — A7"): yalnız sayı tabloları ============
    Üreten araclar/hareket-egrileri.py (elle düzenlenmez: `python -I araclar/hareket-egrileri.py araclar/veri`). Ham veri depoda yoktur; burada
    yalnız adım döngüsünün ortalama eklem açısı eğrileri (Fourier katsayıları) ve döngü sayıları durur (kullanıcı kararı 2026-10-16).
    Kaynaklar: CMU Graphics Lab Motion Capture Database (mocap.cs.cmu.edu; "The data used in this project was obtained from mocap.cs.cmu.edu.

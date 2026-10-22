@@ -135,9 +135,6 @@ const OB_M={yol:3,boy:0.8,R0:0.35,R1:0.5,t0:0.15};
    Ortanın ilk 3 m'si (en çok 0,5 sn) boyunca top 0,8 m'nin altındayken rakibin (yürüyüşüyle ileri sarılmış) bacak erişimi: duran bacak 0,35 m,
    tepkiye kalan süreyle (0,15 sn'den sonra, 0,2 sn içinde) 0,85 m'ye uzanır. pay = 0: topa en erken değen rakip {o, t, d, R} ya da null;
    pay > 0 (planlayıcı, yön belirsizliği m): her rakibin kesme olasılığı clamp((R + pay − d)/(2·pay)), {acik: Π(1 − P)}. Rastlantı çekmez */
-/* T19d (2026-10-17): ortacının gerilişinde 1. adamın ortaya adım attığı yarıçap (m) — kanatta (son 30 m, kale ortasından ≥ 14 m yanda) kanatKapat ile
-   5,5, değilse 4,5 (presYap ve planlayıcı aynı işlevi okur) */
-function kanatOrtaR(m,takim,ox,oz){return MOTOR_AYAR.kanatKapat&&Math.abs(oz-MZ)>=14&&ox*m.dir[takim]>PL-30?5.5:4.5;}
 function ortaBlokTahmin(m,takim,ox,oz,oy,vx,vz,vy,pay,t0){
   const v=hrkHyp(vx,vz)||1,T3=hrkMin(OB_M.yol/v,0.5),Tg=pay>0&&MOTOR_AYAR.ortaTemas?hrkMin(OT_M.yol/v,OT_M.sure):0;let en=null,acik=1;
   /* T14c: 1. adamın yaklaşması (planlayıcı, t0 = karar anından temasa hazırlık süresi): motorda topa 4,5 m içindeki 1. adam ortacının gerilişinde
@@ -158,7 +155,7 @@ function ortaBlokTahmin(m,takim,ox,oz,oy,vx,vz,vy,pay,t0){
     if(dmin>=9){if(Pg>0)acik*=1-Pg;continue;}
     /* T12b: ortacının gerilişinde yola adım atan savunmacı (presYap, o._ortaBlokT) hamlesine başlamıştır: temasta tam erişim. Planlayıcı (pay > 0)
        topa 4,5 m içindeki savunmacının hamle yapacağını bilir (aynı varsayım; T10a orta kalibrasyonu) */
-    const tam=pay>0?r0<kanatOrtaR(m,takim,ox,oz):m.t-o._ortaBlokT<0.1;
+    const tam=pay>0?r0<4.5:m.t-o._ortaBlokT<0.1;
     const R=OB_M.R0+OB_M.R1*(tam?1:clamp((tmin-OB_M.t0)/0.2,0,1));
     if(pay>0){acik*=1-hrkMax(clamp((R+pay-dmin)/(2*pay),0,1),Pg);continue;}
     if(dmin<=R&&(!en||tmin<en.t))en={o,t:tmin,d:dmin,R};}

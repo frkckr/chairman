@@ -3,7 +3,7 @@
    Çıktı: araclar/karsilastir/<ad>/animasyon.js — js/animasyon.js'in kopyası; dosyanın başına o anki POSE (js/oyuncular.js) ve STIL.animasyon
    (js/stil-99.js) değerleri sabit olarak yazılır, böylece tur içinde bu ikisi değişse de "önce" değişmez. Ad, kopyanın hangi turun çizimi
    olduğudur (ör. t5 = T5 sonundaki çizim); animasyon-olcum.py --once <ad>, an-yakala.py --anm <ad> ve karşılaştırma sayfasının "Önce" listesi
-   bu adla seçer (sayfanın listesine elle eklenir). Eski kopyalar tur kapanışından sonra silinebilir (Git'te kalır; ARSIV.md §0).
+   bu adla seçer (sayfanın listesine elle eklenir). Eski kopyalar tur kapanışından sonra silinebilir (Git'te kalır; YOL_HARITASI "Silinen dosyalar ve geri alma").
    Dosya doğrudan yüklenmez: araclar/karsilastir/once-yukle.js onu bir işlevin içinde çalıştırır (üst düzey adları yerel kalır). */
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm'),cp=require('child_process');

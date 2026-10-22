@@ -1,10 +1,10 @@
 # Chairman — olay kütüphanesi
 
-Son güncelleme: 2026-10-10 (2.8L silmesi başa ve §8'e işlendi; §7'de `?ekran=ajanda`). Onaylı tasarım yönünü destekleyen tarihsel kaynak ve kurgusal içerik kataloğudur. **P01, P03 ve P13'ün dar alt kapsamları uygulandı (yol haritası 2.4A, 2.6, 2.8; TEST içerik); diğer paketler henüz uygulanmadı.** **2.8L (2026-10-02 akşam, kullanıcı kararı) ile bu dar örnekler dahil oyunun bütün içeriği silindi; bugün hiçbir paket kodda yoktur (Git geçmişinde durur), içeriği kullanıcı tek tek yazar.** Bu dar örnekler 2.8H'de yeni iki cevaplı sisteme uyarlandı (§7 sonuç matrisi); eski çok seçenekli biçimleri yalnız eski kayıtlar için durur. Kartlar konu/strateji taslaklarıdır; nihai sahne veya aynı anda sunulacak seçenek listesi değildir. Bütün katalog uygulama öncesi yeni sözleşmeyle incelenir.
+Son güncelleme: 2026-10-22 (§7 kısaldı; tek kart kararı). Onaylı tasarım yönünü destekleyen tarihsel kaynak ve kurgusal içerik kataloğudur; oyunun olayları dünya futbol tarihinin önemli, keyifli, üzücü, heyecan verici ve stresli kulüp olaylarından esinlenir, karıştırılır, kopyalanmaz (kullanıcı, 2026-10-22 yeniden vurguladı). **2.8L (2026-10-02 akşam, kullanıcı kararı) ile oyunun bütün içeriği silindi; bugün hiçbir paket kodda yoktur (Git geçmişinde durur), içeriği kullanıcı tek tek yazar.** İlk içerik başkanlık planında (YOL_HARITASI program F) bu katalogdan seçilir. Kartlar konu/strateji taslaklarıdır; nihai sahne veya aynı anda sunulacak seçenek listesi değildir. Bütün katalog uygulama öncesi yeni sözleşmeyle incelenir.
 
 Katalog 23 tarihsel örnek, 14 olay paketi ve 6 koşula bağlı birleşim içerir. Tarihsel dayanak ile kurgusal seçenek ve sonuçlar ayrıdır. Birleşimler oynanacak altı sabit kampanya değildir. İlk uygulama kapsamı ve iş sırası [YOL_HARITASI](YOL_HARITASI.md), oyun kuralları [OYUN_TASARIMI](OYUN_TASARIMI.md), teknik sözleşme [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi) içindedir.
 
-Eski sabit TEST haftası normal Yeni kariyer yolundan çıkarıldı (2.4A); eski sponsor seçenekleri yalnız eski kayıtları tamamlamak için kodda durur. 2.3–2.4 mesele, zaman ve kayıt temeli korundu.
+Mesele, zaman, kayıt ve iki cevaplı karar sistemleri boş kayıt defterleriyle çalışır (2.3–2.8); yeni içerik onlara eklenir.
 
 ## 1. Kataloğun kullanımı
 
@@ -192,55 +192,9 @@ Uygulamaya alınacak sahne önce karar/haber/sonuç olarak ayrılır. Gerçek ka
 
 ## 7. Mevcut içerikten geçiş
 
-**Durum (2026-10-02 akşam, kullanıcı kararı; 2.8L):** Aşağıdaki geçiş tamamlandıktan sonra kodda kalan bütün içerik de silindi: `js/paket-*.js`, `js/uyum-*.js`, başlangıçlar, kişiler, mesaj/hatıra/gözlem metinleri. Kodda paket yoktur; bu bölüm ve katalogdaki paketler kullanıcının yeni içerik yazarken yararlanabileceği esin kaynağıdır, uygulanmış içerik değildir. Yeni içerik [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi)'daki kayıt defterlerine eklenir; tam bir örnek `araclar/test-icerik.js`'tedir (yalnız denemeler yükler).
+**Durum (2026-10-02 akşam, kullanıcı kararı; 2.8L):** 2.8G–2.8H'deki geçiş tamamlandıktan sonra kodda kalan bütün içerik silindi (`js/paket-*.js`, `js/uyum-*.js`, başlangıçlar, kişiler, mesaj/hatıra/gözlem metinleri). Kodda paket yoktur; katalogdaki paketler kullanıcının yeni içerik yazarken yararlanacağı esin kaynağıdır. Yeni içerik [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi)'daki kayıt defterlerine eklenir; tam bir örnek `araclar/test-icerik.js`'tedir (yalnız denemeler yükler). Kayıt sürümü 6, içerik sürümü 4; eski kayıtlar nedeni söylenerek açılmaz.
 
-**Onaylı iş (2026-10-02; 2.8G–2.8H ile uygulandı, sonuç matrisi aşağıda):** Yeni sistemle uyuşmayan bütün mevcut senaryolar/karar akışları normal oyuncu yolundan çıkarılacak; uygun konu aileleri yeni iki seçenekli düzenle yeniden yazılacak. Bu bölüm kod silindiği veya eski örneklerin uyumlu olduğu anlamına gelmez. Önce 2.8G envanteri, sonra 2.8H geçişi yapılır; ayrıntılı kayıt koruması [TEKNIK_PLAN §6](TEKNIK_PLAN.md#eski-içerikten-geçiş-ve-kayıt-uyumu) içindedir.
-
-| İncelenecek mevcut alan | Yeni oyuncu akışında yapılacak işlem |
-|---|---|
-| Koltuk/aday seçimi (yonetim) | Çok adaylı tek karar ekranını kaldır; kişilerin anlamlı biçimde değerlendirildiği iki cevaplı teklif/görüşme akışını tasarla. Rastgele iki aday tutmak çözüm değildir. |
-| Ödeme sıkışması, ödeme teklifi, anlaşma değerlendirme ve nakit takvimi (paket-odeme) | Çok seçenekli yolları, ayrı ek tavsiye/devir eylemlerini ve karşı teklifleri birlikte yeniden tasarla; koşul, ödeme tarihi ve önleme yolunu koru. Uyumsuz eski akışı yeni kariyerden kaldır. |
-| Hoca talebi/görüşmesi, basın sorusu, destek teklifi | Zaten iki düğmesi olsa da kısa metin, açık bedel, gerçek geçmiş, tekrar ve iki anlamlı cevap bakımından incele. Tek işlem/bilgi haberini sahte ikileme çevirme; uygun biçimde haber/girişim veya gerçek karar olarak yeniden yaz. |
-| Girişimler, tavsiye, kalıcı sorumluluk, söz/gazete/teşekkür | Yeni çalışma ile hazır bilgiyi ayır; gizli üçüncü kararları kaldır. Gerçek komut, söz ve sonuç korunur; sonuçsuz görev veya uydurma mesaj atfı çıkarılır. |
-| Stat/bakım/pano anlatıları ve görünür izler | Çatısız başlangıçla çelişen çatı bakımı/iskelesini yeniden bağla; yapılmamış yatırım varmış gibi anlatılmaz. |
-| Başlangıçlar, paket açılma yolları, eski ajanda/alternatif girişler | Yeni kariyerin hiçbir erişiminden uyumsuz içerik açılmasın. Sakin/önlenmiş durumlar korunsun; sabit zorunlu kriz sırası getirilmesin. |
-| Eski sabit hafta, uyum-sponsor, eski kayıt örnekleri | Yalnız kayıt uyumu veya açık kural testi gerekçesi varsa yalıtılmış biçimde kalır; üretim içeriği olarak geri dönmez. Kullanılmayan metin/yükleme ve referanslar temizlenir. |
-| P01–P14 ve K01–K06 taslakları | Tarihsel kaynaklar ve uyumlu mesele aileleri kalır. Çok yollu eski anlatım hazır senaryo sayılmaz; ilgili aşamada iki cevaplı sahnelere yeniden tasarlanır, uymayan sahne/sonuç önerileri çıkarılır. |
-
-Bu başlangıç envanteri kod taramasının yerine geçmez: bütün karar türleri, üreticiler, seçenekler, girişimler, olay anahtarları ve erişim yolları listelenir. Her kayıtta mevcut kaynak, uyumsuzluk, korunacak kural/gerçek, yeni düzen veya kaldırma kararı, kayıt etkisi ve doğrulama örneği bulunur. Geçiş sonunda belirsiz kalan aktif senaryo olmaz; sonuç matrisi bu bölümde veya bağlantılı teknik kayıtta güncellenir.
-
-Ödenmiş para, kabul edilmiş hak, verilmiş söz ve görülen geçmiş silinmez. Eski bekleyen iş için dönüşüm veya sınırlı uyumluluk kararı gerekçelendirilir. Yeni ve eski senaryo aynı kariyerde iki görev/ödeme üretmez. Maç simülasyonunu kuran mac-senaryo dosyasının adı, onun bu içerik temizliğinde kaldırılacağı anlamına gelmez; oyun motoru korunur.
-
-**İçerik üretim yöntemi:** Önce az sayıda mevcut meselede iki cevap, kısa sonuç, önleme/sorunsuz yol ve gerçek hafıza izi tamamlanır. Birkaç tanınır kişiyle yaklaşık 12–20 karar/tepki metni başlangıç denemesi olabilir; kesin adet, günlük kota veya zorunlu sıra değildir. Önce davranış ve kısa iskelet sınanır, ardından üslup işlenir. [Failbetter'ın küçük bitmiş parçalar ve önce yapı yaklaşımı](https://www.failbettergames.com/news/narrative-snippets-organising-creative-efforts-2) üretim referansıdır. Yeni bağımsız senaryo kataloğu veya tam ilişki motoru bu denemenin önkoşulu değildir.
-
-**Tarihsel kayıt:** 2.4A eski sabit haftayı yeni kariyerden çıkardı; eski sponsor kararlarını kayıt uyumuna ayırdı. 2026-10-02 işi bugünkü aktif örnekleri de kapsayan daha geniş bir revizyondur.
-
-### Sonuç matrisi (2.8G envanteri, 2.8H uygulaması; 2026-10-02)
-
-Kapsam: koddaki bütün karar türleri (`KARAR_TURLERI`), gelişmeler (`GELISMELER`), girişimler (`GIRISIMLER`), ekip görevleri (`EKIP_GOREVLERI`), başlangıç kartları ve ekran girişleri. “İçerik 3” yeni kariyerdir; “içerik ≤2” eski kayıtlar ve kural denemeleridir (`kariyerBaslat({icerik:2})`). Kayıt sürümü 5 kaldı; hiçbir geçiş eski bekleyen işi dönüştürmez, eski kayıt kendi türleriyle biter. Bütün metin, kişi, süre ve tutarlar TEST'tir.
-
-| Mevcut kaynak | Uyumsuzluk | Yeni düzen (içerik 3) | Eski kayıt / doğrulama |
-|---|---|---|---|
-| `koltukSecimi` (sayman, basın; 3 aday tek ekran) | Çok seçenek | `adayGorusmesi`: aday sırası başlangıçta bir kez çekilir (yeni çekilişler eskilerin sonunda). Önce randevu (sayman zorunlu 10:00, basın ertelenebilir), sonra tek aday kartı: [Göreve al] / [Sıradaki adayı dinle +30 dk]; son aday: [Göreve al] / [Koltuğu boş bırak]. Boş koltukta devir ve nakit önerisi yok | `js/uyum-icerik2.js`'te donduruldu; içerik 2 yolları `kariyer-deneme` eski bölümlerinde, yeni yol 2.8H bölümünde ve akış 1. bölümde |
-| `odemeSikismasi` (4 yol + Görüş iste) | Çok seçenek, gizli üçüncü düğme | `odemeYolu`: koşula göre ilk geçerli çift — sayman yetişiyorsa [Kendin görüş 90 dk] / [Sayman görüşsün]; yoksa [Kendin görüş] / [Tribün onarımı taksitini ertelet]; görüşme sonuçsuzsa ikinci kart [Ertelet] / [Maaşları sponsora kadar beklet, söz]. Saymanın görüşü hazır gelir | Donduruldu; `kayit-s5-kriz-iki-cevap` ve akış 1–4 |
-| `odemeTeklifi` (pano/indirim) | Zaten iki cevap | Aynen kalır; metin kısaldı | İki içerikte ortak |
-| `anlasmaDegerlendirme` (3 yol) | “Kabul” baskın cevap değil | `ertelemeTalebi`: [Sayman konuşsun] / [%2 bedeli iste] (sayman yoksa [Kabul] / [Bedel]). Cevapsız kalırsa erteleme bedelsiz kabul edilir (sponsor temsilcisi Selim Çınar sorar) | Donduruldu; `kayit-s5-cevapsiz-son-an` |
-| `nakitTakvimi` (4 yol, “Bekle” = dosyayı kapat) | Sahte seçenek | Saymanın konuşmasında girişim önerisi + randevu; karar `nakitOnerisi`: [Sponsoru bugün ara] / [Tahsilatı kalıcı sayman alsın] (biri kapalıysa bakım ertelemesiyle eşlenir) | Donduruldu |
-| `hocaTalebi` (3 yol + görüş) | Çoğu zaman biri kapalı | `kampTalebi`: kasaya göre [Onayla] / [Bu maç olmaz], [Maaştan sonra öde, söz] / [Olmaz] veya [Lokalde toplansın, masrafsız] / [Olmaz]. Cevapsızlık ret | Donduruldu (eski tür `lokal` görmez) |
-| `hocaGorusmesi` (tek `dinle`) | Tek eylem karar gibi | Katılınan randevu (`KATILIM_ETKILERI.hocaGorusmesi`); girişim Hoca'nın konuşmasında | Donduruldu |
-| `basinSorusu` (3 yol + görüş) | Çok seçenek | `basinCevabi`: [Kendin konuş] / [Sözcü açıklasın] veya sözcü yoksa [Kendin konuş] / [“Yorum yok”]. Cevapsızlık sessiz kalmaktır (muhabir Nalan Ergin sorar) | Donduruldu (eski tür `yorumYok` görmez) |
-| `destekTeklifi` (3 yol + görüş) | Çok seçenek | `destekCevabi`: pano boşsa [Kabul] / [Küçük destek]; pano sözlüyse [Küçük destek] / [Teşekkür et, reddet]. Cevapsızlık ret | Donduruldu |
-| `sponsorGecikmesi`/`sponsorIndirimi`, `sponsorGorusmesi` görevi, `KARIYER_BASLANGIC` | İçerik 0 | Yeni kariyerden erişilmez | `js/uyum-sponsor.js` yalıtılmış kalır; sürüm 1–2 örnekleri |
-| “Görüş iste” (`tavsiye` görevi, `tavsiyeIste`) | Gizli üçüncü karar | Kalktı: `hazirGorus` ilgili koltuğun görüşünü karar gelirken bilgi olarak yazar; yeni çalışma yalnız anlamlıysa iki cevaptan biri | Görev ve ekran düğmesi yalnız içerik ≤2'de |
-| Ekip görevleri `tahsilatGorusmesi`, `basinAciklamasi` | Uyumlu | Korunur (iki cevaptan birinin sonucu olarak) | İki içerikte ortak |
-| Gelişmeler `sponsorErteleme`, `hocaTalebi`, `basinSorusu`, `destekTeklifi` | Eski türü açar | İçerik sürümüne göre eski ya da yeni türü kurar; soran kişi kaydedilir | Ortak |
-| `gazete`, `tesekkur`, sözler | Uyumlu | Korunur; gazete Demirkapı Postası'ndan, teşekkür Remzi Usta'dan gelir; söz listesi ajandadan dosyaya taşındı | Ortak |
-| Hatıra (yeni, `GELISMELER.hatira`) | — | Cuma 12:00 ve Cumartesi 09:00; yalnız gerçek geçmiş varsa, bir kez, cevapsız (2.8K) | Yalnız içerik 3 |
-| Bakım kalemi “Tribün çatısı bakım taksiti” ve çatı iskelesi | Çatısız stat | “Karşı tribün basamak onarımı taksiti”; iskele karşı tribünün basamaklarında; manşetler “tribün onarımı” | Eski kayıtlarda saklanmış açıklama değişmez |
-| Başlangıçlar (`sikisik`, `rahat`, `sakin`) | Eski türleri kurar | Aynı üç başlangıç; aday randevuları, iki dış kişi (kisi-14, kisi-15) ve hatıra gelişmeleri | `?baslangic=` akış 1–4 |
-| Ekran girişleri: oda dosyası, telefon, ajanda, `?ekran=ajanda` (2026-10-10'da kaldırıldı), maç telefonu | Seçenek kesmez | Hepsi aynı `ajandaOnizle` seçeneklerini gösterir; telefon ile dosya aynı komutu bir kez uygular | Akış 9, 13, 16 |
-
-Doğrulama: `kariyer-deneme.js` yeni kariyerin 8.896 yolunda 5.388 karar görünümünün her birinde tam iki geçerli cevap bulur, eski türlerin hiçbiri doğmaz, kasa eksiye düşmez ve her yol maç sınırına varır.
+Geçişin envanteri, sonuç matrisi ve doğrulaması (2.8G–2.8H) tarihseldir: `git show tur/p2:OLAY_KUTUPHANESI.md` §7. Yeni içerikte kural aynıdır: her başkanlık kararı tam iki anlamlı cevaptır (2026-10-22'den beri tek kart sunumuyla, [OYUN_TASARIMI §2](OYUN_TASARIMI.md#başkanlık-kararında-iki-seçenek)); eski çok seçenekli akış yeni kariyerde paralel yaşamaz.
 
 ## 8. Paket durumu ve bağımlılıkları
 

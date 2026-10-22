@@ -56,7 +56,7 @@ const OLCUM_KLASOR=path.join(__dirname,'olcumler');
 const EKLENTILER=fs.existsSync(OLCUM_KLASOR)?fs.readdirSync(OLCUM_KLASOR).filter(f=>f.endsWith('.js')).sort().map(f=>Object.assign({dosya:f},require(path.join(OLCUM_KLASOR,f)))):[];
 
 /* ---- sağlık aralığı: 20 dakikalık maç (Z1, 2026-10-19; FUTBOL_KUTUPHANESI §11.1, kullanıcı onayı) ----
-   Dar kabul bantları (U1'den T23'e "hedef tablosu"; ARSIV ve kutuphane/K-test-rejimi.md §2.1) kalktı: motor "istatistik tutturan" değil zeki ve
+   Dar kabul bantları (U1'den T23'e "hedef tablosu"; `git show tur/p2:kutuphane/K-test-rejimi.md` §2.1; bugün FUTBOL_KUTUPHANESI §11.1) kalktı: motor "istatistik tutturan" değil zeki ve
    keyifli oyun için ölçülür (ilkel görünürlüğü, çeşitlilik, kabiliyet duyarlılığı — araclar/olcumler/z-kalip.js, z-plan.js). Bu tablo yalnız
    oyunun futbol olmaktan çıkmadığını denetler: dışındaki satır "!" basar, çıkış kodu değişmez. 20 dakikalık maçta ~14,5 dakika oyun oynanır
    (gerçeğin ~%26'sı); öne çıkan olaylar (gol, şut, kart) gerçek maç değerine, sık olaylar (pas, faul) gerçeğin yarısı civarına düşer (U1).

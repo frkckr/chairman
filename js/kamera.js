@@ -190,5 +190,3 @@ function kameraUygula(V){
   camera.lookAt(BAKIS);
   if(Math.abs(camera.fov-KAM.fov)>1e-6){camera.fov=KAM.fov;camera.updateProjectionMatrix();}
 }
-/* maç olayları (js/mac-sahnesi.js olay işlevinden): bakış aşamalardan ve toptan okunur, olay gerekmez */
-function kameraOlay(ad,v){}

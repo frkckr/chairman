@@ -1,0 +1,62 @@
+# Kapılar — değişen şeye göre koşulacak denetim
+
+Bu tablo [CLAUDE.md “Kontrol”](../CLAUDE.md#kontrol)'ün üç kademesine eklenir: hızlı kademede değişenin satırı koşar, oturum sonunda çekirdek 10 senaryo zaten koşar, tur kapanışında bütün senaryolar (`node araclar/oturum-sonu.js <taban> --seyrek`). Senaryo `node araclar/mac-deneme.js --senaryo <ad>` ile koşar; çıkış kodu 1 kabul dışıdır. “Satır” maç denemesinin (`node araclar/mac-deneme.js N`) ölçüm eklentisi satırıdır (`araclar/olcumler/`), bilgi verir. Python araçları `python -X utf8` ile (ya da `PYTHONUTF8=1`).
+
+Çekirdek senaryolar (her oturum sonu): `c-1v1`, `c-koru`, `c-temas`, `c-hava`, `c-kanat`, `c-orta`, `b-pas`, `d-sut`, `t-top`, `z-s14`.
+
+## Maç motoru
+
+| Değişen | Koşulacak |
+|---|---|
+| Her motor değişikliği (`js/mac-*.js`, `js/kadrolar.js`) | Hızlı: `node araclar/mac-deneme.js 4` (tekrarlanabilirlik “sonuç aynı”); sonucu değiştirmemesi gerekende `--karsilastir <taban> --ayni` |
+| Yeni betik, üst düzey ad, `Match` yöntemi, oyuncu nesnesine alan | `node araclar/ad-denetimi.js` (aynı ad, ezilen yöntem, çizimin motora yazması, tohumsuz rastlantı, `varlik` 128 sınırı) |
+| İzleme (`js/mac-izleme.js`), maçın uzunluğu ve saati (`macSuresiDk`, `saatCarpani`, `sureOlcek`, `durusSaat`, `saatHizi`), motorda modül düzeyi ortak durum | `node araclar/ikiz-deneme.js` (“Aynılık N/N”; kuşkuda `--esit`) |
+| Hız seçimi, şerit düğmeleri, `MAC_HIZ` | `python -X utf8 araclar/akis-deneme.py 18` |
+| Bire bir, sürüş, savunmacı | `c-1v1` |
+| Top saklama (`koruSecenegi`, `birakOnPuani`, `koru*`), kalkanlı müdahale | `c-koru` |
+| Temas, müdahale, faul, hakem | `c-yariyariya`, `c-donen`, `c-temas`; çarpışma teşhisi `MAC_DENEME_TEMAS=1 node araclar/mac-deneme.js 12` |
+| Profil (`js/mac-profil.js`), kadro özellikleri | `p-tip`; tur kapanışında `node araclar/oyuncu-karnesi.js 80 1 --duyarlilik` |
+| Takım düzeni, kanat rolü ve kutuya geç giriş (`kanatKonumu`, `gecGirisAta`), sürükleme ve kanat hızı (`surukle*`, `sagSolAc`, `tersKanat`, `tersAyakKanat`) | `c-kanat`, `c-orta`, `c-1v1`, `c-hareket`; “Sürükleme / Kanat taşıması” satırları |
+| Orta kararı ve planlayıcısı (`ortaSecenekleri`, `pasAnaliz`'in ortası, `havaDuelloTahmin`, `ortaBlokTahmin`, `ortaTemasP`, `ortaDevam`, `ortaEsik`, `cizgiyeIn`, `yerdenOrtaKesme`) | `c-orta` (geri çevirme ve alçak satırları \|tahmin − gerçek\| ≤ 10), `c-kanat`, `c-1v1`, `c-koru` |
+| Hava topu (`js/mac-hava.js`: sıçrama, kafa teması, düello; kalecinin orta tutuşu; plonjon) | `c-hava` |
+| Sakatlık, tedavi, hakem topu (`js/mac-sakatlik.js`, `zorunluDegisiklik`, `degisiklikTakas`) | `o-sakatlik` |
+| Ofsayt, yan hakem, gol iptali (`ofsaytPasAni`, `ofsaytDokunus`, `golIptalMi`, `ofsayt*`); yorgun hakem (`hakemGeriDon`) | `o-ofsayt` |
+| Gövde dönüşü, bakış ve tarama (`hrkGovdeDon`, `taramaAdim`, `govdeDinamik`, `donus*`, `bakis*`, `tarama*`); yürüyüş yönü (`gidisGovde`, `hrkGidis`, `hrkHatMi`, `gidisBakis`); bakış öncülüğü (`bakisBekle`, `hrkBekle`, `bakisHerKare`); taşıma yönleri (`tasimaSecenekleri`, `tasiInce`, `tasiDevam`) | `c-hareket`, `o-ofsayt`, `c-1v1`, `c-koru`, `c-kanat`; “H:”, “Yürüme:”, “Bakış: öncülük” satırları |
+| Top sürme, alış, vuruşa yaklaşma (`surusIlerle`, `kontrolEt`, `dokunusPlani`, `kontrolYonu`, `vurusIlerle` hazırlığı, `surus*`, `geriTopla`, `vurusYaklas`, `pasAcik`, `pasDogal`, `alis*`, `niyetDonus`, `EYLEM_ADIM.gogus`) | `c-surus`, `c-1v1`, `c-koru`, `c-kanat`, `c-temas`; “Sürüş / Geri geri / Alış → vuruş” satırları |
+| Gelişine oyun (`tekKoni`, `tekVurus`, `tekVurusKarari`) | `b-pas`; “Gelişine” satırları |
+| Santra (`santraTek`, `santraKonumu`) | `m-fotograf`, `m-isinma`; “Santra” satırları |
+| Top fiziği (`topFizikAdim`, `TOP_FIZIK`, `yerHiz`, `yerIlkHiz`, `yerSure`, `yerFalso`) | `t-top` |
+| Pasın eğrisi ve uzun top (`pasFalso`, `pasEgriKat`, `yerEgriSapma`, `uzunKosu`, `acmaDokunus`, `donusBos`, `ortaIkinci`, `ortaErken`) | `b-pas`, `c-orta`, `c-kanat`, `t-top`, `d-duran`; “Eğri / Uzun / Orta” satırları |
+| Vuruş modeli ve şut (`vurusSapma`, `sutPlani`, `sutYeni`, `kaleciEgri`, kötü vuruş, şut stilleri) | `v-sut`, `d-sut`, `d-penalti`; “Şut:” satırları |
+| Şutu kapatma (`sutHamle`, `blokErisim`, `sutHamleYap`, `sutBlokOlasiligi`) | `v-sut`, `c-1v1`, `c-koru`, `c-temas`, `c-yariyariya`, `c-donen`, `d-duran`, `d-sut`; “Blok / şut” satırları |
+| Blok ve sekme fiziği (`yansit`, `sutBlok`, `govdeCarpmasi`, `blokGercek`, `govdeDar`), duran topta markajcı (`markajYan`) | `d-duran`, `c-temas`, `c-yariyariya`, `c-donen`, `d-sut` |
+| Eşik kapıları ve kovalama (`kapiGecik`, `kapiFaz`, `kapatSon`, `duranKosFaz`, `kovalaAtalet`, `kovalaSadik`, `kovala2Pay`); görev kalıcılığı (`kapatKalici`, `markajKalici`, `kosuSil`) | `c-1v1`, `c-koru`, `c-orta`, `c-hava`, `c-donen`, `c-kanat`, `d-duran`; görev tablosu `MAC_DENEME_IVME=1 node araclar/mac-deneme.js 12` (yüksek eforlu görev değişimi ≤ 15 / oyuncu·dk) |
+| Yorgunluğun düzene etkisi (`yorgunBlok`, `yorgunPres`, `yorgunKosu`, `yorgunKip`) | `c-hareket`; “Dilimlere göre hareket” tablosu ve ikinci yarının gol payı (denge sorusunda 80+ maç) |
+| Yarılar, öndeki takımın temkini, kalecinin zaman geçirmesi (`tutEtki`, `niyetDeger`, `macDurumu`, `yariSantra`, `kaleciTut`, `zamanGecirEk`) | `c-kanat`, `d-sut`; “Y:” satırları; saat değişirse `ikiz-deneme` |
+| Cruyff ve sırtla dönme (`cruyff*`, `sirtGovde`) | `c-1v1`, `c-koru`, `c-kanat` |
+| Kaleci (`js/mac-kaleci.js`: tepki, dalış, çelme `kaleciCelPlani`, tutma `kaleciTutmaP`, `kaleciBekle`, `kaleciKontraVar`; penaltı `penaltiDurak`, `penaltiKanma`, `penaltiKose`, `penaltiSapma`, `penaltiPlani`) | `d-sut` (48 tekrar), `d-penalti` (kabul 4 × 1600 atış), `c-donen` |
+| Duran toplar (`js/mac-durantop.js`; `serbestIkili`, `serbestAldatma`, `aldatmaTepki`, `kornerPerde`, `kornerGeri`) ve top toplayıcı (`js/mac-kurallar.js`) | `d-duran` (korner 3200), `d-sut`, `d-penalti`, `d-topcu` |
+| Duran top sahnesi (Z2: `sahneKur`, `sahneHiz`, korner rutinleri, `barajSahne`, `hakemSprey*`, `yatanKaldir`, `tacGorev`, `tacRolAdim`, `tacHedefi`, `uzakDolumMu`; `sahne`, `tempo*`, `korner*`, `yatanBaraj`, `barajYani`, `uzakDolum`, `tacPres`, `tacSayim`) | `d-duran`, `d-topcu`, `d-penalti`, `d-sut`; “Z2:” satırları |
+| Sahne protokolleri (S1: `js/mac-sahne.js`; `protokol`, `seremoni`, `kartAyar`, `penaltiSahne`, `golTempo`, `kRutin`; kancalar `gol`, `stepGoal`, `stepKick`, `santraHazirla` — `js/mac-motoru.js` —, `hakemAI`, `stepDurus` — `js/mac-kurallar.js` —, `duranHazirMi`, `sahneKur`, `sahneHiz` — `js/mac-durantop.js`) | `d-sahne`, `d-duran`, `d-penalti`, `d-topcu`, `o-sakatlik`, `m-isinma`, `m-fotograf`, `ikiz-deneme`; `k-protokol` satırları. Bütünlük: `protokol` 0 ve `pasEgriKat` 1 ile S1 öncesi tabana `--ayni` (`git show tur/s1:araclar/taban/k1.json` geçici bir dosyaya; yerel, depoya alınmaz) |
+| Maç öncesi ve devre arası (`js/mac-oncesi.js`, `js/mac-senaryo.js`) | `m-isinma`, `m-fotograf`. Bu sahneler maç sonucunu parmak izi düzeyinde değiştirebilir (oyuna giren yedeğin önceki durumu): `--ayni` beklenmez, `--karsilastir` istatistiği gürültü içinde kalmalı |
+| Oyun kurma ve tarz (Z3: `kaleVurusuPlani`, `kvKonumu`, `kvPresKur`, `kurmaKonumu`, `tarzTakim`, `tarzUzunEk`, `etkinTaktik`; `kurma`, `kv*`, `tarzEtki`, `tarzUzun`, `tarzYanUzun`, `planTarz`) | “Z3:” satırları; `--tarz konumsal,direkt` takası (iz takımla değil tarzla gitmeli); `d-topcu`, `d-duran` |
+| Tarz kenarı (`tarzArka`, tarz vektörleri) | `node araclar/tarz-kenar.js konumsal direkt 80` (denge sorusu; eşleştirilmiş tohum, %95 aralığı); “Z3:” satırları |
+| İlerletme (Z4: `uzunBakis`, `uzunHaz`, `verKac*`, `bindirme`, `bindirmeDeger`) | `c-kanat`, `c-hareket`, `b-pas`; “Z4:” ve “Z: örüntüler” satırları |
+| Savunma (Z5: `surenCik`, `geriKosu`, `bolgeKonumu`'nun geri koşusu; karşı pres `karsiPresKarar`, `karsiKarar`) | `c-1v1`, `c-koru`, `c-temas`; “Z5:” satırları, duyarlılık karnesinin müdahale satırı, `tarz-kenar.js` |
+| Bitiriş (Z6: `kaleciAcikOran`, `sutKaleci`, `sutEgilim`) | `v-sut`, `d-sut`, `d-penalti`; “Z6:” ve “Gerçekleşen ÷ konum xG” satırları |
+| Plan katmanı (`js/mac-plan.js`, `js/mac-ilkeller.js`, `js/mac-tarz.js`; `plan*`) | `z-s3`, `z-s10`, `z-s14`, `c-kanat`, `c-orta`, `b-pas`; “Z:” satırları (`z-kalip.js` kabul, `z-plan.js` planın sayaçları); `ikiz-deneme` (plan 31 `--esit`, ilk santra için `--oncesi 598`) |
+| Çizgi koruması (`cizgiKoru`, `hrkCizgiYon`) | `c-surus`, `c-koru`, `c-1v1`, `c-kanat`; “Kendi kendine çıkış” satırları |
+
+## Görüntü, ekran ve kariyer
+
+| Değişen | Koşulacak |
+|---|---|
+| Her görüntü ya da ekran değişikliği | `python -X utf8 araclar/kontrol.py` (başsız Chromium, hata ve `araclar/son-kontrol-index.png`); görüntüyü incele. Başka sayfa: `python araclar/kontrol.py prototipler/7-dosya-defter.html` |
+| 2D görünüm, stat ya da akış (`js/pul.js`, `js/kamera.js` `tepeKamera`, `js/okunurluk.js` 2D dalı, `STIL.pul`, `js/loca-giris.js` `TEPE_AN`, `js/ekran-mac-oncesi.js` `ilerle`, `js/stadyum*.js`, `js/stadyum-tarifleri.js`) | `python -I -X utf8 araclar/akis-2d.py`; stat değiştiyse `python araclar/cevre-yakala.py` (ufukta boşluk 0) |
+| Ekranlar (`js/ekran-*.js`, `js/oda.js`, `js/yuruyus.js`, `js/balkon.js`, `js/baskan.js`, `js/arayuz.js`, `js/sunum-durumu.js`, `js/portre.js`, `js/seyirci.js`, `js/karar-ani.js`, `js/kamera.js`), duraklatma, kayıt oturumu, `index.html` yükleme sırası | `python -X utf8 araclar/akis-deneme.py` (tamamı yalnız masaüstünde geçer; `12 16` gibi bölüm numarasıyla kısmi) ve `araclar/son-akis-*.png` |
+| Odadaki yürüyüş (`js/yuruyus.js`, `js/oda.js` yürüyüş, `STIL.yuruyus`) | `python araclar/yuruyus-yakala.py` (film şeridi; gözün ivmesi) |
+| Stadın çevresi (`js/stadyum-cevre.js`, tarifte `cevre`/`kapilar`, `STIL.cevre`) | `python araclar/cevre-yakala.py` (`--onek` ile önce/sonra) |
+| Figür çizimi (antrenman, kişi sahneleri, TEST loca: `js/animasyon.js`, `js/oyuncular.js`, `js/golgeler.js`, `STIL.animasyon`, `STIL.model`, `js/hareket-egrileri.js`) | Turun başında `node araclar/karsilastir/dondur.js <ad>`; `python araclar/animasyon-olcum.py --karsilastir araclar/taban/s1-anm.json` (`?pul=0`; kaleci `--kaleci 96 --karsilastir araclar/taban/a5-anm-kaleci.json`; duran top `--duran 24`, olay `--olay 80`); `python araclar/kontrol.py araclar/poz-galerisi.html`; `python araclar/an-yakala.py` (`--onek` önce/sonra, `--2d` tepeden). Ölçütler kutuphane/J §J.12 (G9) |
+| Kariyer verisi ve kuralları (`js/kariyer*.js`, `js/takvim.js`, `js/maliye.js`, `js/ajanda.js`, `js/mesele.js`, `js/yonetim.js`, `js/olay.js`, `js/soz.js`, `js/mesajlar.js`, `js/gozlem.js`, `js/test-gorunum.js`, `js/baslangic.js`, `js/oyun-oturumu.js`, `js/kayit.js`, `araclar/test-icerik.js`, yeni içerik dosyaları) | `node araclar/kariyer-deneme.js` (`!` satırı ya da sıfır dışı çıkış başarısızlık); başlangıç ya da karar içeriği değiştiyse `akis-deneme.py` de |
+| Tarayıcı deposu ya da kayıt biçimi (`js/depo-tarayici.js`) | `python araclar/kontrol.py araclar/kayit-deneme.html` |
+| Masaüstü katmanı (`masaustu/`, `js/depo-masaustu.js`), `index.html`'in dış bağlantıları | `masaustu`'da `npm install`, `node deneme.js`; paket etkileniyorsa `node paketle.js && node deneme.js --paket`; `masaustu/cikti/deneme*/` görüntüleri |
