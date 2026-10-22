@@ -39,7 +39,7 @@ ayarEkle('T',{
   kosucuTakip:1,     // T7d: top uzaktayken de kalemize koşan rakip savunmacıya eşlenir (0: kapalı)
   hatCik:2,          // T7d: top baskıdaysa ya da sürücünün sırtı dönükse savunma çizgisi öne çıkar (m)
   kutuSavunma:1,     // T7d: top kanatta, kendi üçte birimizdeyken boştaki savunmacılar ön direk, altıpas önü, arka direk, penaltı noktasını tutar
-  kutuKapiAnlik:0,   // B1d (2026-10-22): kutu markajı ve kutu savunmasının kapısı (32 m / 30 m) topun anlık yeri kaleye gecikmeli yerinden yakınsa anlık yerden açılır
+  kutuKapiAnlik:1,   // B1d (2026-10-22): kutu markajı ve kutu savunmasının kapısı (32 m / 30 m) topun anlık yeri kaleye gecikmeli yerinden yakınsa anlık yerden açılır
                      // (js/mac-dizilis.js; T1'in 4 sn yumuşatılmış, 0,45 sn geriden gelen yeri çabuk dikey girişte kutuyu boş bırakıyordu); 0: eski
   kompakt:0.1,       // T7d: savunmada hatlar arası mesafe bu oranda kısalır (takım boyu; T7g: 0,15 → 0,10 — 0,15'te 40 maçta şut 6,2 / gol 1,7, 0,10'da 6,6 / 2,0)
   mdhTahminEtki:1,   // T7d: erken ve yandan müdahale isteği mudahaleTahmin'in kazanma − faul farkıyla ölçeklenir (0: kapalı)

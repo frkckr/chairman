@@ -25,9 +25,10 @@ ayarEkle('Z',{
   tarzArka:1.5,                // Z7a (G2.3 uzun top ↔ yüksek hat): hedefi rakibin çizgisinin arkasındaki ileri uzun topa, rakibin hattı kalesinden 28 m'den uzaksa
                                // uzun topa eğilimli tarz (uzunHedef − 0,3) pay alır (hat 38 m'de tam); 0: eski
   tarzIstah:1,                 // B3 (2026-10-22): tarzın hücum iştahı ve temposu etkin taktiğe girer (js/mac-takim.js etkinTaktik, takimNiyet); 0: eski
-  tarzSabir:0,                 // B1b (2026-10-22): tarzın sabrı — sakinlik hedefi, geri pas kapısının genişliği ve amaçsız zincir bütçesi tarzdan (js/mac-takim.js
+  tarzSabir:1,                 // B1b (2026-10-22): tarzın sabrı — sakinlik hedefi, geri pas kapısının genişliği ve amaçsız zincir bütçesi tarzdan (js/mac-takim.js
                                // etkinTaktik, js/mac-karar.js pasDegeri, js/mac-motoru.js pasSay); 0: B1+B3 (tarzlar pas yönünde ayrışmıyordu)
-  tarzSabirZincir:1,           // B1b: zincir bütçesinin tarzla açılması (N = 2 + tarzSabir · bu · (2·sabir − 1); 0: her tarzda 2 pas)
+  tarzSabirZincir:1,           // B1b: zincir bütçesinin tarzla açılması (N = 2 + tarzSabir · bu · (2·sabir − 1); 0: her tarzda 2 pas). 40 maç direkt–konumsal:
+                               // 1'de konumsal zincir 2,30 ve ileri pas farkı 8,7 puan, 0'da 1,85 ve 6,4 (tarz kimliği seçildi; kullanıcı 2D'de izler)
   tarzSecim:1,                 // B4 (2026-10-22): secenek.tarz 'dagilim' iken (oyun, mac-deneme) iki takımın tarzı tohumdan TARZ_DAGILIM ile; 0: kadronun tarzı
   tarzGecis:40,                // B4b (2026-10-22): maç içi tarz değişikliğinin oturma süresi (motor sn; ~3 ekran dakikası) — eski harmandan yenisine yumuşak geçiş
   tarzTalimat:20,              // B4b: talimat duruşta uygulanır; bu kadar motor sn içinde duruş olmazsa hoca kenardan seslenir (geçiş yine başlar)
