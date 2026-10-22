@@ -54,7 +54,7 @@ Object.assign(Match.prototype,{
     for(let t=0;t<2;t++){const kd=this.kadro&&this.kadro[t];if(!kd)continue;
       (kd.yedekler||[]).forEach((k,i)=>{const s=this.kulubeler[t].koltuklar[i]||{x:t?11.5:-11.5,z:-5.8},oz=ozellikler(k);
         const y=this.varlik('yedek',s.x,s.z,{team:t,rol:k.mevki==='KL'?'GK':(k.mevki||'OS'),name:k.ad,no:k.no,kayit:k,oz,ayak:k.ayak||'sag',boy:k.boy||1,
-          maxSpd:6.4+2.4*oz.hiz,yon:Math.PI/2,oturuyor:true,koltuk:s});
+          maxSpd:oyuncuTepeHiz(oz,k.mevki==='KL'),yon:Math.PI/2,oturuyor:true,koltuk:s});   /* C3: hizAralik */
         profilKur(y,this.tohum);this.yedekler[t].push(y);});}   /* T3: yedeğin profili (mevki yok: stoper / merkez sayılır) */
     /* değişiklik planı: her takım ikinci yarıda 2–4 değişiklik, 55. ile 87. dakika arasında */
     this.degisimPlani=[0,1].map(()=>{const n=2+Math.floor(this.rast()*3),L=[];for(let i=0;i<n;i++)L.push(3300+this.rast()*1920);return L.sort((a,b)=>a-b);});

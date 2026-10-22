@@ -112,6 +112,7 @@ ayarEkle('B',{
   surukleKanat:0.5,            // T22a: kanat oyuncusunun sürüklemesine ek değer (puan; kullanıcı notu: kanadın hızlanıp basıp gitmesi); 0: yok
   sutYeni:1,                   // T22b: şutta isabet–güç ödünleşimi (plase hata çarpanı 0,9 → 0,65, sert 1,0 → 1,15 — 0,55 / 1,3 denendi: sert %59 ama gol +0,6, gerçekleşen ÷ xG 1,35; serbest vuruş hariç) ve 9 m'den (eskiden 14) falso adayı; 0: eski
   /* T21 (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): topun yolu — eğri, uzun top, orta */
+  falsoProfil:0,                // C3 (2026-10-22): pasın eğrisi pasörün pas özelliği ve falsoluPas eğilimiyle (falsoKatsayi; yerden ve uzun havadan pas; orta, korner, uzaklaştırma dokunulmaz); 0: eski
   pasFalso:1,                  // T21b: pasın doğal eğrisi çarpanı — iç ayakla yerden pas 0,01–0,05 (boyla), dış ayakla ters yöne 0,05–0,09, iç ayakla uzun havadan 0,04–0,08; nişan
                                // yerdeki eğriyi telafi eder (yerPasVur). 0: eski (yerden pas ve uzun top dönüşsüz)
   pasEgriKat:1.6,              // P2 (kullanıcı, 2026-10-21 gece: "daha çok falsolu pas olmalı ki izlemesi keyif versin"): eğri büyüklüğü çarpanı — 18 m'den uzun
@@ -155,6 +156,8 @@ ayarEkle('B',{
   yerdenOrtaKesme:0.5          // T17d: yerden orta ve geri çevirmede alım noktasındaki rakibin kesme payının tavanı (pasAnaliz; eskiden bütün yerden paslarda 0,7) —
                                // T17-0: alıcının 1,5 m'inde rakip varken hücumun ilk teması %50, yokken %76; planlayıcı geri çevirmeyi −14,5, alçak sert ortayı −23,5 puan kötümser tahmin ediyordu
 });
+/* C3 (falsoProfil): pasın eğrisinin pasöre göre katsayısı — pas özelliği (kadroların saha ortalaması 0,62'ye göre) ve falsoluPas eğilimi; 0,5–1,7 (saf) */
+function falsoKatsayi(p){const F=MOTOR_AYAR.falsoProfil,o=p.oz&&p.oz.pas!=null?p.oz.pas:0.62;return clamp(1+F*(1.5*(o-0.62)+0.4*profilEgilim(p,'falsoluPas')),0.5,1.7);}
 /* ---- T9b (2026-10-10; gerçekçilik planı §4 T9 “Vuruş”): vuruş modeli — saf, rastlantısız. Şut planı (js/mac-karar.js sutPlani), pas analizi
    (pasAnaliz) ve vuruş (sutVur, yerPasVur, havaPasVur) aynı işlevleri okur. Stilin payı: azami hıza göre hız (iç ayak plase en yavaşı, üst sert
    en hızlısı) ve yön hatası çarpanı ---- */
@@ -535,7 +538,7 @@ Object.assign(Match.prototype,{
     /* T21b (pasFalso): pasın doğal eğrisi — iç ayakla sağ ayak sola, sol ayak sağa kıvırır (orta ve kornerle aynı işaret), dış ayakla ters yöne ve daha çok;
        nişan yerdeki kıvrılmayı telafi eder (topun kopyası L kadar yürütülür, yanal sapma kadar döndürülür) */
     if(MOTOR_AYAR.pasFalso&&!e.kotu&&L>=6&&MOTOR_AYAR.yerFalso){const dis=e.stil==='dis',isr=(e.ayak==='sol'?1:-1)*(dis?-1:1);
-      const eg=isr*MOTOR_AYAR.pasFalso*(dis?0.05+0.04*this.rast():0.01+0.04*clamp(L/30,0,1)*this.rast())*(L>=18?MOTOR_AYAR.pasEgriKat:1);b.egri=eg;
+      let eg=isr*MOTOR_AYAR.pasFalso*(dis?0.05+0.04*this.rast():0.01+0.04*clamp(L/30,0,1)*this.rast())*(L>=18?MOTOR_AYAR.pasEgriKat:1);if(MOTOR_AYAR.falsoProfil>0)eg*=falsoKatsayi(p);b.egri=eg;
       const D=this.yerEgriSapma(bx,bz,b.vx,b.vz,eg,L),ac=-Math.atan2(D,L),c2=Math.cos(ac),s2=Math.sin(ac),vx0=b.vx;b.vx=vx0*c2-b.vz*s2;b.vz=vx0*s2+b.vz*c2;}
     e.guc=clamp(v/29,0,1);if(v>20&&e.stil==='ic')e.stil='ust';
     this.vurusSon(p,e,{hx,hz,L,bx,bz,tip:'yer'});
@@ -555,7 +558,8 @@ Object.assign(Match.prototype,{
     hy=sec.hy!=null?sec.hy:(sec.tur==='orta'||sec.tur==='korner')?1.7:0;
     if(sec.tur==='orta'||sec.tur==='korner')egri=(e.ayak==='sag'?-1:1)*Math.min(0.16,(sec.yay==='kesme'?0.08+this.rast()*0.06:0.05+this.rast()*0.07)*MOTOR_AYAR.pasEgriKat);
     /* T21b (pasFalso): iç ayakla uzun havadan pas ve uzun top kıvrılarak gider (havadanCoz eğriyi bilir, top hedefe iner) */
-    else if(MOTOR_AYAR.pasFalso&&L>=25&&sec.tur!=='uzaklastir'&&sec.tur!=='degaj'&&sec.yay!=='asirtma'&&e.stil!=='dis')egri=(e.ayak==='sag'?-1:1)*(0.04+0.04*this.rast())*MOTOR_AYAR.pasFalso*MOTOR_AYAR.pasEgriKat;
+    else if(MOTOR_AYAR.pasFalso&&L>=25&&sec.tur!=='uzaklastir'&&sec.tur!=='degaj'&&sec.yay!=='asirtma'&&e.stil!=='dis'){egri=(e.ayak==='sag'?-1:1)*(0.04+0.04*this.rast())*MOTOR_AYAR.pasFalso*MOTOR_AYAR.pasEgriKat;
+      if(MOTOR_AYAR.falsoProfil>0)egri*=falsoKatsayi(p);}
     /* havadan pas ve orta kesik dönüşle gider: havada biraz asılı kalır, yerde frenlenir */
     ust=sec.tur==='uzaklastir'||sec.tur==='degaj'?0:sec.yay==='asirtma'?-0.06:-0.04;
     const ah=this.normal()*sd*1.6,ca=Math.cos(ah),sa=Math.sin(ah),rx=hx-bx,rz=hz-bz;

@@ -13,6 +13,10 @@
      O.dizilis(m, t, bu, bw, hucum)    t takımının herkesi dizilişin yerinde (dizilisKonumu; bu, bw hücum çerçevesinde topun yeri)
      O.ayar(nesne) → eski              MOTOR_AYAR'a yazar, eski değerleri döner (geri yüklemek için O.ayar(eski))
      O.ayarVar(ad)                     anahtar MOTOR_AYAR'da bildirilmiş mi
+     O.profilDegis(m, p, oz, δ) → geri  C2 (2026-10-22): oyuncunun özelliklerini sahnede değiştirir — oz ({alan: 0–1}) yazılır, δ verilmişse kalecilik
+                                       dışındaki özellikler ±δ (0,15–0,95; aynı adlı oyuncunun araç içi seviye dönüşümü, yeni ad yok); tepe hız (oyuncuTepeHiz
+                                       varsa onunla, yoksa 6,4 + 2,4·hız), kütle, çeviklik ve hareket önbellekleri tazelenir, profil yeniden kurulur. Döner:
+                                       geri yükleme işlevi (önbellekleri yeniden tazeler)
    Rastlantı çekmez; motorun kendi kurucularını kullanır. */
 module.exports=function(ctx,vm){
   const kur0=vm.runInContext(`(tohum,olay,kadro,hakemYok)=>{const m=new Match(olay,{kadro:kadro||MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();
@@ -31,5 +35,12 @@ module.exports=function(ctx,vm){
   const ayarVar=ad=>vm.runInContext(`Object.prototype.hasOwnProperty.call(MOTOR_AYAR,${JSON.stringify(ad)})`,ctx);
   const ayar=o=>{const eski={};for(const k in o){if(!ayarVar(k))continue;eski[k]=vm.runInContext('MOTOR_AYAR['+JSON.stringify(k)+']',ctx);}
     const yaz={};for(const k in eski)yaz[k]=o[k];vm.runInContext(`Object.assign(MOTOR_AYAR,${JSON.stringify(yaz)})`,ctx);return eski;};
-  return{kur,bosalt,yerlestir,topVer,oyunda,dizilis,ayar,ayarVar};
+  const profilKur=vm.runInContext('profilKur',ctx),tepeHiz=vm.runInContext(`typeof oyuncuTepeHiz==='function'?oyuncuTepeHiz:(oz,kl)=>6.4+2.4*oz.hiz`,ctx);
+  /* maç ortasında hareket önbelleği null'a çekilir (undefined olursa hrkSabit hrkHazirla'yı çağırıp çalım durumunu sıfırlardı); ilk hareketten önceyse dokunulmaz */
+  const tazele=p=>{p.maxSpd=tepeHiz(p.oz,p.rol==='GK');p._kutle=0;p._cev=null;if(p._hk!==undefined)p._hk=null;};
+  const profilDegis=(m,p,oz,delta)=>{const eski={oz:Object.assign({},p.oz),maxSpd:p.maxSpd,profil:p.profil};
+    if(oz)Object.assign(p.oz,oz);if(delta)for(const a in p.oz)if(a!=='kalecilik')p.oz[a]=Math.min(0.95,Math.max(0.15,p.oz[a]+delta));
+    tazele(p);profilKur(p,m.tohum);
+    return()=>{Object.assign(p.oz,eski.oz);tazele(p);p.maxSpd=eski.maxSpd;p.profil=eski.profil;};};
+  return{kur,bosalt,yerlestir,topVer,oyunda,dizilis,ayar,ayarVar,profilDegis};
 };

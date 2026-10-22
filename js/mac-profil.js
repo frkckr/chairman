@@ -17,6 +17,10 @@
 'use strict';
 ayarEkle('P',{
   egilimGuc:0.5,               // T3: eğilimin karar seçeneğine eklediği puan (|eğilim| = 1'de; puan = gol olasılığı × 100). Gumbel sapması 0,15–0,3 puan
+  egilimGoreli:0,              // C3 (2026-10-22): eğilim ve rol oyuncunun kendi ortalamasına göre (κ): r = 0,5 + κ·(10 saha özelliğinin ortalaması − 0,5) referans olur;
+                               // aynı şeklin güçlüsü ve zayıfı aynı zihniyetle oynar (karar 22), seviye isabet, hız ve kapıdan gelir. 0: mutlak (eski)
+  uzunEgilim:0,                // C3: uzunPasAtar eğilimi ileri uzun pasa (L 28–40 m ile artar) pay verir (profilEgilimPuani); 0: eski
+  cikisEgilim:0,               // C3: oynayarakCikar eğilimi kendi yarısından (u < −10) ileri pasa (≥ 10 m) ve ≥ 5 m taşımaya pay verir (oyun kuran stoper); 0: eski
   formSapma:0.04               // T3: gün formunun ±payı (çarpan 1 ± formSapma)
 });
 /* ---- Ek A: alt özellikler. [ad, {kaynak: ağırlık}, sabit]. Kaynak: oz anahtarı, daha önce türetilmiş alt özellik ya da özel kaynak
@@ -90,7 +94,10 @@ const PRF_EGILIMLER=[
   ['sikiMarkaj',{pozisyonAlma:0.4,caliskanlik:0.3,sertlik:0.3}],
   ['oynayarakCikar',{pas:0.4,sogukkanlilik:0.3,surus:0.3}],
   ['zayifAyaktanKacinir',{zayifAyak:-1}],
-  ['hakemeItiraz',{agresiflik:0.6,karar:-0.4}]
+  ['hakemeItiraz',{agresiflik:0.6,karar:-0.4}],
+  /* C3 (2026-10-22): sona eklendi (önceki 20 eğilim ve kişisel sapmalar aynı kalır) — falsoluPas pasın eğrisine (falsoProfil), uzunPasAtar ileri uzun pasa (uzunEgilim) */
+  ['falsoluPas',{pas:0.4,duranTop:0.3,yaraticilik:0.3}],
+  ['uzunPasAtar',{pas:0.4,gorus:0.3,sutGucu:0.3}]
 ];
 /* FNV-1a (32 bit) + son karıştırma (murmur3 fmix: benzer kısa dizgiler de bütün aralığa yayılır) → [0, 1): ad özeti ve gün formu;
    rastlantı değil, aynı girdi aynı sonuç */
@@ -102,8 +109,8 @@ function profilAdOzeti(ad,i){return (profilOzet(ad+'#'+i)-0.5)*0.16;}
 function profilGrup(p){
   return p.rol==='GK'?'KL':p.rol==='DEF'?(p.mevki&&p.mevki.bek?'bek':'stoper'):p.rol==='FV'?'FV':(p.mevki&&p.mevki.kanat?'kanat':'merkez');}
 /* profile en uygun rol (uyum = Σ w·(değer − 0,5); eşitlikte ilk) */
-function profilRolSec(grup,kaynak){
-  let en=null,eu=-1e9;for(const [ad,w] of PRF_ROLLER[grup]||PRF_ROLLER.merkez){let u=0;for(const a in w)u+=w[a]*(kaynak(a)-0.5);if(u>eu){eu=u;en=ad;}}return en;}
+function profilRolSec(grup,kaynak,ref){
+  let en=null,eu=-1e9;for(const [ad,w] of PRF_ROLLER[grup]||PRF_ROLLER.merkez){let u=0;if(ref)for(const a in w)u+=w[a]*(kaynak(a)-ref(a));else for(const a in w)u+=w[a]*(kaynak(a)-0.5);if(u>eu){eu=u;en=ad;}}return en;}
 /* oyuncunun profili (bir kez; oz değişirse yeniden çağrılır). tohum: gün formu için maçın tohumu */
 function profilKur(p,tohum){
   const oz=p.oz||{},k=p.kayit||{},alt={},ad0=(p.name||'')+'#'+(p.no||0);
@@ -115,9 +122,13 @@ function profilKur(p,tohum){
     alt[ad]=clamp(v,0,1);});
   if(p.ayak==='iki')alt.zayifAyak=1;
   const grup=profilGrup(p),roller=PRF_ROLLER[grup]||PRF_ROLLER.merkez;
-  const rol=k.rol&&roller.some(r=>r[0]===k.rol)?k.rol:profilRolSec(grup,kaynak);
+  /* C3 (egilimGoreli κ): referans oyuncunun kendi seviyesi — gövde ve tutarlılık kaynakları 0,5'te, kararTers 1 − r'de kalır */
+  const kap=MOTOR_AYAR.egilimGoreli;let ref=null;
+  if(kap&&grup!=='KL'){let s=0,c=0;for(const a of OZ_SIRA)if(a!=='kalecilik'){s+=o(a);c++;}const r=0.5+kap*(s/c-0.5);
+    ref=a=>a==='hafiflik'||a==='kutle'||a==='boy'||a==='zayifAyak'||a==='tutarlilik'?0.5:a==='kararTers'?1-r:r;}
+  const rol=k.rol&&roller.some(r=>r[0]===k.rol)?k.rol:profilRolSec(grup,kaynak,ref);
   const egilim={},ro=PRF_ROL_EGILIM[rol]||{};
-  for(const [ad,w] of PRF_EGILIMLER){let v=0;for(const a in w)v+=w[a]*(kaynak(a)-0.5);egilim[ad]=clamp(3*v+(ro[ad]||0),-1,1);}
+  for(const [ad,w] of PRF_EGILIMLER){let v=0;if(ref)for(const a in w)v+=w[a]*(kaynak(a)-ref(a));else for(const a in w)v+=w[a]*(kaynak(a)-0.5);egilim[ad]=clamp(3*v+(ro[ad]||0),-1,1);}
   if(k.egilimler)for(const ad in k.egilimler)if(ad in egilim)egilim[ad]=clamp(+k.egilimler[ad]||0,-1,1);
   const form=k.form!=null?clamp(+k.form,0.9,1.1):1+(profilOzet(tohum+':'+p.team+':'+(p.no||p.n))-0.5)*2*MOTOR_AYAR.formSapma;
   /* M1 (2026-10-10): anahtar anahtar kurulan eğilim nesnesi (20 anahtar) V8'de sözlük kipine düşüyor, her okuması yavaşlıyordu; kopyası hızlıdır
@@ -130,8 +141,15 @@ function profilEgilimPuani(m,p,s){
   switch(s.tur){
     case 'sut':{const d=m.dir[p.team],Lk=hyp(d*PL-m.ball.x,MZ-m.ball.z);return g*e.uzaktanVurur*clamp((Lk-14)/8,0,1);}
     case 'ara':return g*e.oldurucuPas;
-    case 'pas':case 'uzun':return s.hz!=null&&Math.abs(s.hz-m.ball.z)>=25?g*e.yonDegistirir:0;
-    case 'tasi':return g*(0.5*e.topuSurer+0.4*e.topuAtipKosar*(s.mesafe>=10?1:0.2));
+    case 'pas':case 'uzun':{const v=s.hz!=null&&Math.abs(s.hz-m.ball.z)>=25?g*e.yonDegistirir:0,A=MOTOR_AYAR;
+      if(!(A.uzunEgilim>0||A.cikisEgilim>0))return v;
+      /* C3: uzun paslı 6 ileri uzun pası, oyun kuran stoper kendi yarısından ileri pası sever */
+      const d=m.dir[p.team],il=(s.hx-m.ball.x)*d,u=m.ball.x*d;let w=v;
+      if(A.uzunEgilim>0&&il>=0&&s.L!=null)w+=g*A.uzunEgilim*e.uzunPasAtar*clamp((s.L-28)/12,0,1);
+      if(A.cikisEgilim>0&&u<-10&&il>=10)w+=g*A.cikisEgilim*0.5*e.oynayarakCikar;
+      return w;}
+    case 'tasi':{const v=g*(0.5*e.topuSurer+0.4*e.topuAtipKosar*(s.mesafe>=10?1:0.2));
+      return MOTOR_AYAR.cikisEgilim>0&&m.ball.x*m.dir[p.team]<-10&&s.mesafe>=5?v+g*MOTOR_AYAR.cikisEgilim*0.5*e.oynayarakCikar:v;}
     case 'surukle':return g*(0.4*e.topuSurer+0.6*e.topuAtipKosar);   /* T22a: sürükleme — topu atıp koşan ve top süren */
     case 'bekle':return g*(0.8*e.topuTutar-0.4*e.tekVurus);
     case 'koru':return g*(0.5*e.topuTutar+0.5*e.sirtiDonuk);

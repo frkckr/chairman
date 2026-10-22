@@ -66,9 +66,9 @@ const MOTOR_AYAR={
                                // oyunda saatCarpani (20 dk'da 4,5). Duruşlar gerçeğin yarısına uzayınca oyunun maç dakikası azalmasın; 0: eski (her evrede saatCarpani)
 
   /* P — js/mac-profil.js */
-  egilimGuc:undefined,formSapma:undefined,
+  egilimGuc:undefined,formSapma:undefined,egilimGoreli:undefined,uzunEgilim:undefined,cikisEgilim:undefined,
   /* C — js/mac-hareket.js */
-  ivme:undefined,ivmeRahat:undefined,frenRahat:undefined,yanRahat:undefined,varisRahat:undefined,sarsinti:undefined,sarsintiAzami:undefined,
+  ivme:undefined,hizAralik:undefined,ivmeRahat:undefined,frenRahat:undefined,yanRahat:undefined,varisRahat:undefined,sarsinti:undefined,sarsintiAzami:undefined,
   kipSure:undefined,kipDur:undefined,donusYerinde:undefined,dinlenUzak:undefined,hedefOlu:undefined,hedefOluAzami:undefined,kovalaPay:undefined,
   yorgunlukHiz:undefined,devreDinlenme:undefined,
   dinlenKos:undefined,tepkiCarpan:undefined,eforUs:undefined,kipKos:undefined,fren:undefined,yanTutus:undefined,enerjiHarca:undefined,
@@ -88,7 +88,7 @@ const MOTOR_AYAR={
   ofsaytAlgi:undefined,kosuIstegi:undefined,aliciPay:undefined,uzaklastirDeger:undefined,hedefDeger:undefined,devamAgirlik:undefined,
   devamHedef:undefined,sabir:undefined,sabirSure:undefined,devamPas:undefined,bekleOran:undefined,koruDeger:undefined,koruSure:undefined,
   koruTempo:undefined,dusunHz:undefined,pasTol:undefined,pasTolHava:undefined,ortaDestek:undefined,ikinciTopHedef:undefined,araKalib:undefined,birebirMenzil:undefined,birebirKayip:undefined,
-  birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,tasiInce:undefined,tasiDevam:undefined,bakisDinamik:undefined,bakisHiz:undefined,taramaAralik:undefined,taramaGenislik:undefined,taramaTut:undefined,taramaYan:undefined,bakisDonus:undefined,surukle:undefined,surukleKanat:undefined,sutYeni:undefined,gidisBakis:undefined,bakisHerKare:undefined,pasFalso:undefined,pasEgriKat:undefined,uzunKosu:undefined,acmaDokunus:undefined,donusBos:undefined,ortaIkinci:undefined,ortaErken:undefined,tersKanat:undefined,vurusYaklas:undefined,pasAcik:undefined,pasDogal:undefined,alisYon:undefined,alisNiyet:undefined,alisCizgi:undefined,tekKoni:undefined,
+  birebirDeger:undefined,devamBirebir:undefined,gucHata:undefined,sutHiz:undefined,kotuVurus:undefined,sutUzak:undefined,sutIkinci:undefined,sutIstekMesafe:undefined,xtKanat:undefined,sutDikey:undefined,duranSapma:undefined,duranUzak:undefined,ortaAyak:undefined,devamOrta:undefined,penaltiDurak:undefined,tasiInce:undefined,tasiDevam:undefined,bakisDinamik:undefined,bakisHiz:undefined,taramaAralik:undefined,taramaGenislik:undefined,taramaTut:undefined,taramaYan:undefined,bakisDonus:undefined,surukle:undefined,surukleKanat:undefined,sutYeni:undefined,gidisBakis:undefined,bakisHerKare:undefined,pasFalso:undefined,falsoProfil:undefined,pasEgriKat:undefined,uzunKosu:undefined,acmaDokunus:undefined,donusBos:undefined,ortaIkinci:undefined,ortaErken:undefined,tersKanat:undefined,vurusYaklas:undefined,pasAcik:undefined,pasDogal:undefined,alisYon:undefined,alisNiyet:undefined,alisCizgi:undefined,tekKoni:undefined,
   /* D — js/mac-kaleci.js */
   kurma:undefined,kvBekle:undefined,kvPres:undefined,kvKurmaU:undefined,
   kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,penaltiOku:undefined,penaltiKanma:undefined,penaltiBakis:undefined,kaleciNiyet:undefined,kaleciNiyetEsik:undefined,kaleciBekle:undefined,kaleciEgri:undefined,
@@ -330,7 +330,7 @@ class Match{
   oyuncuKur(t,n,k,mevki){
     const oz=ozellikler(k),rol=mevki.cizgi==='KL'?'GK':mevki.cizgi;
     const p=this.varlik('oyuncu',0,MZ,{team:t,n,rol,mevki,name:k?k.ad:TEAMS[t].names[n],no:k?k.no:n+1,kaptan:!!(k&&k.kaptan),kayit:k||null,oz,
-      ayak:(k&&k.ayak)||'sag',boy:(k&&k.boy)||1,yon:t?Math.PI:0,maxSpd:6.4+2.4*oz.hiz,oyunda:true});
+      ayak:(k&&k.ayak)||'sag',boy:(k&&k.boy)||1,yon:t?Math.PI:0,maxSpd:oyuncuTepeHiz(oz,rol==='GK'),oyunda:true});   /* C3: hizAralik (js/mac-hareket.js) */
     profilKur(p,this.tohum);   /* T3: alt özellikler, rol, eğilimler ve gün formu (js/mac-profil.js); rastlantı çekmez */
     return p;
   }

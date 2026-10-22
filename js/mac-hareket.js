@@ -18,6 +18,7 @@ const hrkKok=Math.sqrt,hrkUs=Math.pow,hrkMin=Math.min,hrkMax=Math.max,hrkAbs=Mat
 const hrkHyp=(a,b)=>hrkKok(a*a+b*b);
 const hrkAciNorm=a=>a-HRK_2PI*hrkTaban((a+HRK_PI)/HRK_2PI),hrkAciFark=(a,b)=>hrkAciNorm(a-b);
 ayarEkle('C',{
+  hizAralik:[6.4,2.4,10],      // C3 (2026-10-22): saha oyuncusunun tepe hızı a + b·hız (m/sn) ve ivme–hız profilinin S0 tavanı (oyuncuTepeHiz, hrkSabit); kalecide 6,4 + 2,4·hız
   ivme:6.0,                    // T1: ivme–hız profilinin A0 tabanı (m/sn²; hız +1,1, çeviklik +0,7, ivme tipi ±0,45; 6,0–7,8); a(v)=A0·(1−v/S0)
   ivmeRahat:2.3,               // T1: düşük eforda ileri ivme (m/sn²; yer tutma ve destek koşusu 3 m/sn² altında kalsın)
   frenRahat:3.0,               // T1: düşük eforda fren (m/sn²)
@@ -146,9 +147,11 @@ const hrkHazirla=p=>{kutle(p);p._cev=null;hrkCeviklik(p);p._hk=null;p._kacKare=-
   p._algS=null;p._algVx=0;p._algVz=0;p._omuzT=-9;p.calim=null;p._acikBas=0;p._acikKare=-9;p._gecS=null;p._gecT=-9;p._destek=0;p._destekK=null;p._kapatK=-1;p._kapatC=null;p._kapatYan=1;};
 /* oyuncunun hızdan bağımsız hareket sabitleri (bir kez): ivme–hız profili A0 (m/sn²) ve S0 (m/sn), fren B, yanal tutunma tabanı ly, yerinde dönüş w0.
    İvme tipi (T1): kısa, çevik ve hafif oyuncu patlayıcıdır (A0 yüksek, S0 düşük), uzun ve iri olan uzun adımlı (tersi); ötekiler dengeli */
+/* C3: oyuncunun tepe hızı (saf; kurulumda ve yedekte, js/mac-motoru.js oyuncuKur, js/mac-kurallar.js) — kaleci eski eğimle */
+function oyuncuTepeHiz(oz,kl){const h=oz&&oz.hiz!=null?oz.hiz:0.5,A=MOTOR_AYAR.hizAralik;return kl?6.4+2.4*h:A[0]+A[1]*h;}
 const hrkSabit=p=>{const k=p._hk;if(k)return k;if(k===undefined)hrkHazirla(p);const h=p.oz&&p.oz.hiz!=null?p.oz.hiz:0.5,c=hrkCeviklik(p),A=MOTOR_AYAR;
   const tip=clamp((1-(p.boy||1))*6+(c-0.5)*1.2-(((p.kayit&&p.kayit.yapi)||1)-1)*4,-1,1);
-  return p._hk={A0:clamp(A.ivme+1.1*h+0.7*c+0.45*tip,6.0,7.8),S0:clamp(p.maxSpd+1.25-0.3*tip,8.6,10.0),B:A.fren+1.5*h,ly:A.yanTutus+3.5*c,w0:A.donusYerinde+2.5*c};};
+  return p._hk={A0:clamp(A.ivme+1.1*h+0.7*c+0.45*tip,6.0,7.8),S0:clamp(p.maxSpd+1.25-0.3*tip,8.6,A.hizAralik[2]),B:A.fren+1.5*h,ly:A.yanTutus+3.5*c,w0:A.donusYerinde+2.5*c};};
 /* o anki tepe hız: sprint enerjisi ve yorgunluk düşürür */
 const hrkTepe=p=>p.maxSpd*(0.86+0.14*(p.enerji!=null?p.enerji:1))*(1-0.12*(p.yorgunluk||0))*(p.topal?0.75:1);   /* T10c: topallayan %25 yavaş (Ek G4) */
 /* T4-V: vuruş hazırlığındaki gövde dönüş hızı (rad/sn; hızlanınca düşer). moveP ve vurusIlerle'nin kalan süre hesabı aynı değeri okur */

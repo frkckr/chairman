@@ -27,7 +27,7 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const profilKur=vm.runInContext('profilKur',ctx),PL=vm.runInContext('PL',ctx),MZ=vm.runInContext('MZ',ctx);
   const bosalt=(m,kal)=>{for(const p of m.players){if(kal.includes(p)||p.rol==='GK')continue;p.oyunda=false;p.x=p.tx=-300;p.z=p.tz=-300;p.vx=p.vz=0;p.eylem=null;}};
   const yerlestir=(p,x,z,yon,pr)=>{Object.assign(p,{x,z,tx:x,tz:z,vx:0,vz:0,spd:0,yon,eylem:null,kickCd:0,surus:null,kosu:null,oyunda:true,denge:1,zipla:null,yuk:0,boy:pr.boy,_kutle:0});
-    p.oz.kafa=pr.kafa;p.oz.sertlik=pr.sertlik;p.oz.karar=0.6;p.oz.hiz=0.6;p.maxSpd=6.4+2.4*0.6;p._hk=null;p._cev=null;profilKur(p,0);   /* T3: profil özellikten türetilir */
+    p.oz.kafa=pr.kafa;p.oz.sertlik=pr.sertlik;p.oz.karar=0.6;p.oz.hiz=0.6;p.maxSpd=vm.runInContext('oyuncuTepeHiz',ctx)(p.oz,false);p._hk=null;p._cev=null;profilKur(p,0);   /* T3: profil özellikten türetilir */
     p._kutle=72*pr.boy*pr.boy*(0.85+0.3*pr.sertlik);};   /* kütle önbelleği: kadronun yapı farkı kalksın (kutle() formülü, yapı 1) */
   /* durum: [ad, top, X profili, Y profili, X yerleşimi, Y yerleşimi, (Z profili, Z yerleşimi)] — X'in kazanma payı raporlanır */
   const DURUM=[['eşit (orta × orta), ikisi duruyor','A','orta','orta','dur','dur'],['güçlü × orta, ikisi duruyor','A','guclu','orta','dur','dur'],['güçlü × zayıf, ikisi duruyor','A','guclu','zayif','dur','dur'],
