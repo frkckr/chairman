@@ -16,11 +16,12 @@
    Senaryolar oyuncunun oz değerlerini değiştirirse profilKur(p, m.tohum) yeniden çağrılır (araclar/senaryolar/p-tip.js, c-1v1.js …). */
 'use strict';
 ayarEkle('P',{
-  egilimGuc:0.5,               // T3: eğilimin karar seçeneğine eklediği puan (|eğilim| = 1'de; puan = gol olasılığı × 100). Gumbel sapması 0,15–0,3 puan
-  egilimGoreli:0,              // C3 (2026-10-22): eğilim ve rol oyuncunun kendi ortalamasına göre (κ): r = 0,5 + κ·(10 saha özelliğinin ortalaması − 0,5) referans olur;
+  egilimGuc:1.0,               // T3: eğilimin karar seçeneğine eklediği puan (|eğilim| = 1'de; puan = gol olasılığı × 100). Gumbel sapması 0,15–0,3 puan.
+                               // C5 (2026-10-22): 0,5 → 1,0 (p-tip: eğilim kanatta gürültünün üstünde, dört çiftte TVD ≥ 0,15; 1,5'te forvette seviye ÷ profil 0,81)
+  egilimGoreli:1,              // C3 (2026-10-22): eğilim ve rol oyuncunun kendi ortalamasına göre (κ): r = 0,5 + κ·(10 saha özelliğinin ortalaması − 0,5) referans olur;
                                // aynı şeklin güçlüsü ve zayıfı aynı zihniyetle oynar (karar 22), seviye isabet, hız ve kapıdan gelir. 0: mutlak (eski)
-  uzunEgilim:0,                // C3: uzunPasAtar eğilimi ileri uzun pasa (L 28–40 m ile artar) pay verir (profilEgilimPuani); 0: eski
-  cikisEgilim:0,               // C3: oynayarakCikar eğilimi kendi yarısından (u < −10) ileri pasa (≥ 10 m) ve ≥ 5 m taşımaya pay verir (oyun kuran stoper); 0: eski
+  uzunEgilim:1,                // C3: uzunPasAtar eğilimi ileri uzun pasa (L 28–40 m ile artar) pay verir (profilEgilimPuani); 0: eski
+  cikisEgilim:1,               // C3: oynayarakCikar eğilimi kendi yarısından (u < −10) ileri pasa (≥ 10 m) ve ≥ 5 m taşımaya pay verir (oyun kuran stoper); 0: eski
   formSapma:0.04               // T3: gün formunun ±payı (çarpan 1 ± formSapma)
 });
 /* ---- Ek A: alt özellikler. [ad, {kaynak: ağırlık}, sabit]. Kaynak: oz anahtarı, daha önce türetilmiş alt özellik ya da özel kaynak

@@ -112,7 +112,7 @@ ayarEkle('B',{
   surukleKanat:0.5,            // T22a: kanat oyuncusunun sürüklemesine ek değer (puan; kullanıcı notu: kanadın hızlanıp basıp gitmesi); 0: yok
   sutYeni:1,                   // T22b: şutta isabet–güç ödünleşimi (plase hata çarpanı 0,9 → 0,65, sert 1,0 → 1,15 — 0,55 / 1,3 denendi: sert %59 ama gol +0,6, gerçekleşen ÷ xG 1,35; serbest vuruş hariç) ve 9 m'den (eskiden 14) falso adayı; 0: eski
   /* T21 (2026-10-18; gerçekçilik planı §4 “2026-10-18 maç notları”): topun yolu — eğri, uzun top, orta */
-  falsoProfil:0,                // C3 (2026-10-22): pasın eğrisi pasörün pas özelliği ve falsoluPas eğilimiyle (falsoKatsayi; yerden ve uzun havadan pas; orta, korner, uzaklaştırma dokunulmaz); 0: eski
+  falsoProfil:1,                // C3 (2026-10-22): pasın eğrisi pasörün pas özelliği ve falsoluPas eğilimiyle (falsoKatsayi; yerden ve uzun havadan pas; orta, korner, uzaklaştırma dokunulmaz); 0: eski
   pasFalso:1,                  // T21b: pasın doğal eğrisi çarpanı — iç ayakla yerden pas 0,01–0,05 (boyla), dış ayakla ters yöne 0,05–0,09, iç ayakla uzun havadan 0,04–0,08; nişan
                                // yerdeki eğriyi telafi eder (yerPasVur). 0: eski (yerden pas ve uzun top dönüşsüz)
   pasEgriKat:1.6,              // P2 (kullanıcı, 2026-10-21 gece: "daha çok falsolu pas olmalı ki izlemesi keyif versin"): eğri büyüklüğü çarpanı — 18 m'den uzun

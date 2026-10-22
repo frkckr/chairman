@@ -5,8 +5,8 @@
      öbürleri sahada değil (kaleciler kalır). 6 sn. Sınıf: geçti (motorun 'calim' olayı 'gecti' ya da top kanattayken u_kanat > u_bek + 3), kayıp
      (top rakipte ya da dışarıda), süre. Başarı: geçti.
    S2 uzun paslı 6: iki takım dizilişte, top ev sahibinin yarısında; ev sahibinin 6'sı (6) kaleye 64 m'de topla, yüzü ileri. 8 sn. Sınıf: uzun ileri pas
-     ya da yön değiştirme tamamlandı (L ≥ 25 ve ≥ 12 m ileri ya da |Δz| ≥ 25; alıcı arkadaş), kısa pas, tuttu (süre bitti, top 6'da), kayıp.
-     Başarı: uzun tamamlandı.
+     ya da yön değiştirme tamamlandı (L ≥ 25 ve ≥ 12 m ileri ya da |Δz| ≥ 25; alıcı arkadaş), uzun pas kaybedildi, kısa pas, tuttu (süre bitti, top 6'da),
+     kayıp (pastan önce). Başarı: uzun tamamlandı; ayrıca uzun pasın tamamlanma oranı (uzun ÷ uzun + uzunKayip; seviye isabeti, deneme sıklığı seçimdir).
    Profiller: S1 hızlı kanat ↔ oyun kurucu kanat (p-tip ile aynı değerler), S2 uzun paslı 6 ↔ kesici. Kollar profil × seviye, eşli tohum (tohum·1000 + i).
    Ölçü: başarı % (kol başına), güçlü − zayıf (A profili; eşli farkın %95 aralığı), profil sonuç TVD (iki seviyenin havuzu).
    Kabul (C turu kapanışında açılır, KAPI): S1 ve S2'de güçlü − zayıf ≥ 10 puan ve aralığın alt ucu > 0; zayıf ≥ %10, güçlü ≤ %90 (futbolun belirsizliği);
@@ -17,7 +17,7 @@ const SAHNE=[
   {ad:'S1 bire bir kanat',sure:6,profiller:[['hızlı kanat',{hiz:0.92,surus:0.85,pas:0.5,sut:0.55,gorus:0.45,karar:0.45}],['oyun kurucu kanat',{hiz:0.55,surus:0.6,pas:0.88,sut:0.55,gorus:0.9,karar:0.85}]],
     siniflar:['gecti','kayip','sure'],basari:'gecti'},
   {ad:'S2 uzun paslı 6',sure:8,profiller:[['uzun paslı 6',{pas:0.84,gorus:0.82,karar:0.72,mudahale:0.55,sertlik:0.6,surus:0.6}],['kesici',{mudahale:0.82,sertlik:0.8,pas:0.6,gorus:0.55,karar:0.6,surus:0.55}]],
-    siniflar:['uzun','kisa','tuttu','kayip'],basari:'uzun'}
+    siniflar:['uzun','uzunKayip','kisa','tuttu','kayip'],basari:'uzun'}
 ];
 module.exports={calistir({ctx,vm,N,tohum}){
   const O=require('../senaryo-ortak')(ctx,vm),n=N||60,dt=1/60,t0=Date.now();
@@ -43,11 +43,11 @@ module.exports={calistir({ctx,vm,N,tohum}){
     const u0=PL-64;O.dizilis(m,0,u0,MZ-6,true);O.dizilis(m,1,-u0,MZ-6,false);   /* top ev sahibinin yarısında (u −11,5); konuk kendi çerçevesinde +11,5'te savunur */
     O.profilDegis(m,P,pr,dl);O.yerlestir(P,d*u0,MZ-6,hy,0);
     O.oyunda(m);m._sonSahipTakim=0;m._sahiplikBas=m.t;O.topVer(m,P,hy,0);
-    for(let k=0;k<60*8;k++){m.step(dt);if(m.phase!=='play')return pas?(pas.uzun?'kayip':'kisa'):'kayip';
-      if(pas){if(b.sahip&&b.sahip.team===0&&b.sahip!==P)return pas.uzun?'uzun':'kisa';if(b.sahip&&b.sahip.team===1||b.tasiyan&&b.tasiyan.team===1)return pas.uzun?'kayip':'kisa';
-        if(m.t-pas.t>4)return pas.uzun?'kayip':'kisa';}
+    for(let k=0;k<60*8;k++){m.step(dt);if(m.phase!=='play')return pas?(pas.uzun?'uzunKayip':'kisa'):'kayip';
+      if(pas){if(b.sahip&&b.sahip.team===0&&b.sahip!==P)return pas.uzun?'uzun':'kisa';if(b.sahip&&b.sahip.team===1||b.tasiyan&&b.tasiyan.team===1)return pas.uzun?'uzunKayip':'kisa';
+        if(m.t-pas.t>4)return pas.uzun?'uzunKayip':'kisa';}
       else if(b.sahip&&b.sahip.team===1||b.tasiyan&&b.tasiyan.team===1)return 'kayip';}
-    return pas?(pas.uzun?'kayip':'kisa'):b.sahip===P?'tuttu':'kayip';};
+    return pas?(pas.uzun?'uzunKayip':'kisa'):b.sahip===P?'tuttu':'kayip';};
   const FN=[s1,s2],pc=x=>(100*x).toFixed(1).padStart(6)+'%';let cikis=0;
   console.log(`\nC2 · p-seviye · aynı sahne, iki profil × iki seviye (±${String(DELTA).replace('.',',')}) · kol başına ${n} deneme${KAPI?'':' · kapılar C kapanışında açılır (KAPI)'}`);
   SAHNE.forEach((sh,si)=>{
@@ -60,6 +60,8 @@ module.exports={calistir({ctx,vm,N,tohum}){
     const fark=G.map((x,i)=>(x===bs?1:0)-(Z[i]===bs?1:0)),f=fark.reduce((a,c)=>a+c,0)/n,sd=Math.sqrt(fark.reduce((a,c)=>a+(c-f)*(c-f),0)/Math.max(1,n-1)),alt=f-1.96*sd/Math.sqrt(n);
     const havuz=pa=>K[pa+' +'].concat(K[pa+' −']),tvd=sh.siniflar.reduce((s,c)=>s+Math.abs(pay(havuz(A),c)-pay(havuz(B),c))/2,0);
     const gB=pay(G,bs),zB=pay(Z,bs),k1=f>=0.10&&alt>0,k2=zB>=0.10&&gB<=0.90,k3=tvd>=0.15;
+    if(sh.siniflar.includes('uzunKayip')){const to=L=>{const u=pay(L,'uzun'),k=pay(L,'uzunKayip');return u+k?u/(u+k):NaN;};
+      console.log(`    uzun pasın tamamlanma oranı (bilgi): güçlü ${pc(to(G))} · zayıf ${pc(to(Z))} · ${B} + ${pc(to(K[B+' +']))}`);}
     console.log(`  ${KAPI&&!(k1&&k2&&k3)?'!':' '} ${A}: güçlü − zayıf ${(100*f).toFixed(1)} puan [%95 alt uç ${(100*alt).toFixed(1)}] ${k1?'≥ 10, tuttu':'TUTMADI'} · zayıf ${pc(zB)} güçlü ${pc(gB)} ${k2?'(belirsizlik var)':'(UÇTA)'} · profil sonuç TVD ${tvd.toFixed(3)} ${k3?'≥ 0,15':'< 0,15'}`);
     if(KAPI&&!(k1&&k2&&k3))cikis=1;});
   console.log(`  (${((Date.now()-t0)/1000).toFixed(1)} sn)`);
