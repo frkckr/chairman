@@ -1,4 +1,4 @@
-<!-- Durum (2026-10-23 01:00, masaüstü, oto mod): E başladı (dal claude/motor-e). Kullanıcı isteği (2026-10-22 gece): "birkaç tur daha oto modda, main'e commit ve push"; plan Claude'un, kullanıcı uyurken onaysız yürür (oto mod isteği bu turu kapsar), F'de durulur. -->
+<!-- Durum (2026-10-23, masaüstü, oto mod): E KAPANDI (`tur/e`). E0–E3 yapıldı; E4 (deplasman statı) F'nin fikstürüne kaldı (kariyerde yalnız iç saha maçı). Sonuç FUTBOL_KUTUPHANESI §12.4 E. -->
 # E — 2D görüntü ve kopuş: uygulama planı (masaüstü, 2026-10-23; oto mod)
 
 ## Bağlam

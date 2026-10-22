@@ -34,9 +34,9 @@ Bu bölüm maçı FM'deki gibi tepeden 2D izleme denemesinin bilgi tabanıdır: 
 
 - **Karar:** P2'de verildi (maç 2D); A10 ve A11 maç için kapandı, V1 D turuna daraltıldı, program FUTBOL_KUTUPHANESI §12.1 A–F.
 - **Statın tepeden kimliği (kullanıcının "farkımız" dediği yer):** tepeden okunan tribün dokusu ve kalabalık, meşale ve dumanın sahaya sürüklenmesi, pankartlar, reklam panolarının tepeden okunması, zemin ve biçme deseni, hava (yağmur, rüzgâr, gölgeler), deplasman statlarının ayrışması (tarif başına çevre, tribün biçimi, renkler), maç günü ışığı.
-- **Pul dili:** olay işaretleri (kart, sakatlık, değişiklik simgeleri), top taşıyanın ad etiketi, kısa top izi, gol sonrası ve seremoni sahnelerinin tepeden okunuşu, kalabalık kutuda pul boyu.
+- **Pul dili:** olay işaretleri, top taşıyanın ad etiketi ve kalabalık kutuda pul boyu E'de (2026-10-23) yapıldı (M.5); kalanı gol sonrası ve seremoni sahnelerinin tepeden okunuşu.
 - **Locaya giriş ve karar anı:** 2D'de locaya giriş ve rakip başkanla karar anı ayrı tasarlanır (bugün giriş atlanır, karar anı 2D üstünde kart; M.5).
-- **Hız:** pullarda figür animasyonu gereksizdir; pul motor alanlarından beslenince 2D'de figür güncellenmez ve çizim süresi düşer (E turu; bugün figür arka planda çalışmaya devam ediyor).
+- **Hız:** E'de (2026-10-23) yapıldı — 2D'de figür güncellenmez (M.5).
 
 ## M.5 Bugünkü uygulama (P2, 2026-10-21 gece)
 
@@ -46,6 +46,7 @@ Bu bölüm maçı FM'deki gibi tepeden 2D izleme denemesinin bilgi tabanıdır: 
 - **Stat:** kompakt kasaba stadı — üç tarafta uzun, çatısız tribün; doğu kale arkasında kayaya oyulmuş ayakta teraslar ve yamaç; karşıda demo inşaat bölümü. Tarif v2 (mesafe, uzunluk, sıra, bölüm durumu, tip yamac) başka kulüplerin statları ve tribün gelişimi içindir.
 - **Falso:** `pasEgriKat` 1,6 (kullanıcı, P2: “daha çok falsolu pas”). A turunda 40 maç (`araclar/taban/p2.json`): sağlık aralığında; s1'e göre gol 2,88 → 2,40, gerçekleşen ÷ konum xG 1,51 → 1,02 — yön, denge kararı verilmedi. Falsonun oyuncunun pas özelliğine bağlanması C'de, V1c eğri tablosuyla birleşmesi D'de (FUTBOL_KUTUPHANESI §12.1).
 - **Akış:** locaya giriş şimdilik atlanır; rakip başkanın karar anı 2D üstünde kart.
+- **E (2026-10-23, masaüstü, oto mod):** kopuş — 2D'de figür animasyonu ve loca bakışının hedefleri hesaplanmaz; pul motorun alanlarından beslenir (`js/pul.js` `pulAktor`: konum, görünürlük, yön, hızdan adım evresi, motorun düşme eylemlerinden yatış; `STIL.pul.kopus`). Ölçü (`akis-2d.py`, başsız yazılım çizimi): rAF'nin JS süresi ortanca 3,5 → 2,5 ms, aktör güncellemesi 1,11 → 0,08 ms/kare. Olay simgeleri (kart, sakatlık, değişiklik, ofsayt bayrağı; `pulOlay`, `pulSimgeKare`), top taşıyanın adı, pas isteği işareti, kalabalıkta pul boyu (`STIL.pul.simge`, `etiket`, `kalabalik`). Ele bağlı kart, defter, sprey kutusu ve yan hakem bayrağı 2D'de gizli. **Deplasman statı F'ye kaldı:** kariyerde bugün yalnız iç saha maçı var; ikinci tarif ve statın maç gününe bağlanması fikstürle birlikte görünür olur (ilerleme kuralı).
 - Sonuç ve denetimler [FUTBOL_KUTUPHANESI §12.4](../FUTBOL_KUTUPHANESI.md#124-tamamlanan-turlar-ve-açık-kalanları) (P1–P2 satırı; ayrıntı `git show tur/p2:FUTBOL_KUTUPHANESI.md` §12.18).
 
 ## Kaynaklar — M
