@@ -9,7 +9,7 @@
 'use strict';
 const KOD=`(function(tohum){
   const m=new Match(()=>{},{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();
-  const T={tac:{n:0,cocuk:0,hazir:0,teslim:0,teslimN:0,zorla:0},korner:{n:0,cocuk:0,hazir:0,teslim:0,teslimN:0,zorla:0},kaleVurusu:{n:0,cocuk:0,hazir:0,teslim:0,teslimN:0,zorla:0}};
+  const zorlaL=[];const T={tac:{n:0,cocuk:0,hazir:0,teslim:0,teslimN:0,zorla:0},korner:{n:0,cocuk:0,hazir:0,teslim:0,teslimN:0,zorla:0},kaleVurusu:{n:0,cocuk:0,hazir:0,teslim:0,teslimN:0,zorla:0}};
   let du0=null,kayit=null,adim=0,atanDis=0,atanDisN=0,cocukIc=0,topIc=0,nan=0,toplanan=0,onceki=0;const asan=[];
   const dis=p=>Math.max(0,Math.abs(p.x)-PL,-p.z,p.z-PW),ic=p=>Math.abs(p.x)<PL&&p.z>0&&p.z<PW?Math.min(PL-Math.abs(p.x),p.z,PW-p.z):0;
   const bitir=()=>{if(!kayit)return;const R=T[kayit.tur];R.hazir+=kayit.t;if(kayit.teslim!=null){R.teslim+=kayit.teslim;R.teslimN++;}if(kayit.zorla)R.zorla++;
@@ -18,7 +18,7 @@ const KOD=`(function(tohum){
     const du=m.phase==='durus'?m.durus:null,K=m.topcular||[];
     if(du!==du0){bitir();du0=du;if(du&&T[du.tur]){T[du.tur].n++;if(du.topcu)T[du.tur].cocuk++;kayit={tur:du.tur,t:0,teslim:null,zorla:false,dis:0,asama:du.asama,cocuk:!!du.topcu};}}
     if(du&&kayit){kayit.t=du.t;const tk=du.kullanan;
-      if(kayit.teslim==null&&(du.asama==='yerles'||du.asama==='hazir')){kayit.teslim=du.t;if(du.t>(du.zorlaGetir||16))kayit.zorla=true;}
+      if(kayit.teslim==null&&(du.asama==='yerles'||du.asama==='hazir')){kayit.teslim=du.t;if(du.t>(du.zorlaGetir||16)){kayit.zorla=true;zorlaL.push('tohum '+m.tohum+' · '+du.tur+' · x '+du.x.toFixed(1)+' z '+du.z.toFixed(1)+' · '+du.t.toFixed(1)+' sn · çocuk '+!!du.topcu);}}
       /* yalnız top çocuğun elinden çıktıktan (ya da çocuk yoksa baştan) sonra: atan topu almak için ne kadar dışarı gitti */
       if(tk&&kayit.teslim==null&&!(m.ball.tasiyan&&m.ball.tasiyan.tur==='topcu')){const d=dis(tk);if(d>kayit.dis)kayit.dis=d;}}
     for(const k of K){const d=ic(k);if(d>cocukIc)cocukIc=d;if(!(isFinite(k.x)&&isFinite(k.z)))nan++;}
@@ -26,14 +26,14 @@ const KOD=`(function(tohum){
     const b=m.ball;if(!(isFinite(b.x)&&isFinite(b.y)&&isFinite(b.z)))nan++;
     const top=K.filter(k=>k.top).length;if(top>onceki&&adim>1)toplanan+=top-onceki;onceki=top;}
   bitir();
-  return{T,atanDis,atanDisN,asan,cocukIc,topIc,nan,toplanan,cocuk:(m.topcular||[]).length,bitti:m.phase==='fulltime'};})`;
+  return{zorlaL,T,atanDis,atanDisN,asan,cocukIc,topIc,nan,toplanan,cocuk:(m.topcular||[]).length,bitti:m.phase==='fulltime'};})`;
 module.exports={calistir({ctx,vm,N,tohum}){
   const n=N||12,f=vm.runInContext(KOD,ctx),t0=Date.now();let hata=0;
   const S={tac:{n:0,cocuk:0,hazir:0,teslim:0,teslimN:0,zorla:0},korner:{n:0,cocuk:0,hazir:0,teslim:0,teslimN:0,zorla:0},kaleVurusu:{n:0,cocuk:0,hazir:0,teslim:0,teslimN:0,zorla:0}};
   let atanDis=0,atanDisN=0,cocukIc=0,topIc=0,nan=0,toplanan=0,cocuk=0,bitti=0;const asan=[];
   for(let i=0;i<n;i++){const x=f((tohum||1)+i);cocuk=x.cocuk;bitti+=x.bitti;
     for(const a in S)for(const k in S[a])S[a][k]+=x.T[a][k];
-    atanDis=Math.max(atanDis,x.atanDis);atanDisN+=x.atanDisN;asan.push(...x.asan);cocukIc=Math.max(cocukIc,x.cocukIc);topIc+=x.topIc;nan+=x.nan;toplanan+=x.toplanan;}
+    atanDis=Math.max(atanDis,x.atanDis);atanDisN+=x.atanDisN;asan.push(...x.asan);for(const s of x.zorlaL)console.log('  ayrıntı: zorla teslim · '+s);cocukIc=Math.max(cocukIc,x.cocukIc);topIc+=x.topIc;nan+=x.nan;toplanan+=x.toplanan;}
   const top=S.tac.n+S.korner.n+S.kaleVurusu.n,zorla=S.tac.zorla+S.korner.zorla+S.kaleVurusu.zorla;
   const satir=(ad,tamam,deger)=>{if(!tamam)hata++;console.log((tamam?'  ':'! ')+ad.padEnd(62)+deger);};
   console.log(`\nD · top toplayıcılar · ${n} maç (tohum ${tohum||1}…) · ${cocuk} çocuk · ${((Date.now()-t0)/1000).toFixed(1)} sn`);
