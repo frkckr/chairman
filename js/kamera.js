@@ -127,6 +127,8 @@ function kameraHedefleri(dtm){
 }
 /* her kare (durum): hedefler → pencere (oyunda) → yay (maç zamanında, alt adımlı); görüş açısı sabit */
 function kameraAdim(dt){
+  /* E (2026-10-23): 2D kopuşta loca bakışının hedefleri hesaplanmaz (görüntü tepeKamera'dan); loca bakışına dönülünce bakış yeniden oturtulur */
+  if(typeof pulKopus==='function'&&pulKopus()){KAM.ilk=true;return;}
   if(KAM.ilk){KAM.ilk=false;kameraOturt();}
   if(!(dt>0))return;
   const dtm=Math.min(dt,0.05)*MAC_HIZ.deger,H=kameraHedefleri(dtm),A=KAM.a;

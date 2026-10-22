@@ -460,5 +460,13 @@ const STIL={
     ayak:{en:0.12,boy:0.24,yan:0.2,on:0.02,adim:0.1,parlak:'#ffb530'},
     tepe:{yukseklik:110,genislik:[34,46,70],seviye:1,takip:0.35,yakinlik:0.6,kenar:3,yaricapKat:1.7,golgeKay:[-0.14,-0.14]},
     top:{kat:2.0,yukseklik:0.6,tepe:6,golge:{opak:0.45,boy:1.6,kay:[-0.35,-0.35],enCok:4,taban:0.1},
-      iz:{sayi:24,aralik:0.05,sure:0.6,hiz:9,y:0.4,boy:[0.85,0.3],parlak:0.65},inis:{acik:true,yaricap:0.9,opak:0.5}}}
+      iz:{sayi:24,aralik:0.05,sure:0.6,hiz:9,y:0.4,boy:[0.85,0.3],parlak:0.65},inis:{acik:true,yaricap:0.9,opak:0.5}},
+    /* E (2026-10-23): kopuş — 2D'de figür animasyonu çalışmaz, pul motorun alanlarından beslenir (js/pul.js pulAktor); false: P2'nin yolu (figür
+       pozları arka planda hesaplanır). Adım: kadans = hız ÷ (taban + eğim·hız) adım/sn; yatış: motorun yere düşme eylemleriyle, hızı 1/sn */
+    kopus:true,adim2:{taban:0.6,egim:0.12},yatHiz:6,
+    /* E: olay simgeleri ve etiketler — ekrandaki boyları (piksel, 960 genişliğe göre), pulun üstündeki boşluk (pul yarıçapı katı), süreler (sn) */
+    simge:{px:22,bosluk:1.25,kart:3.2,ofsayt:2.2,degisiklik:4,sakat:true,istek:true,istekPx:18},
+    etiket:{acik:true,px:18,golge:'rgba(16,14,12,0.72)',renk:'#f4f2ea',gecis:0.25,bosluk:1.3},
+    /* E3: kalabalıkta pul en çok bu kadar küçülür (komşu pulların merkezleri arası < 2·yarıçap iken) */
+    kalabalik:{acik:true,enKucuk:0.75}}
 };

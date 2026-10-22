@@ -10,6 +10,8 @@ araclar/akis-deneme.py figürlü loca bakışını (?pul=0) sınar; bu araç 2D 
   5. Ayar göçü: P1'in pul anahtarı düşer, 2D açılır; G tuşu loca bakışına geçer ve locaBakisi yazar; yenilemede korunur.
   6. Görüntü (oyunda): görünür pul ≥ 25, figür malzemesi çizilmiyor, insan ve top projektör gölgeleri kapalı, görüş açısı yakınlık
      seviyesinden (2·atan(E/2/H)), pulun ekrandaki çapı ≥ 20 px, topun çizimdeki çapı ≥ 6 px.
+  7. E (2026-10-23): kare süresi (bilgi; rAF geri çağırmasının JS süresi, oyunda 4 sn; kontrol.py'nin ölçüsü) ve aktör güncellemesinin payı;
+     kopuş (2D'de figür animasyonu yerine pulAktor), olay simgesi (kart) cezalının pulunun üstünde ve süresi bitince söner, top taşıyanın adı görünür.
 Başsız yazılım çiziminde kare hızı düşüktür: koşullar zamanla değil durumla beklenir. Çıkış kodu 1: denetim düştü ya da sayfa hatası."""
 import sys, pathlib, json
 from playwright.sync_api import sync_playwright
@@ -35,6 +37,16 @@ GORUNTU = """() => { const T = STIL.pul.tepe, E = T.genislik[PUL.seviye], fov = 
     fov: +camera.fov.toFixed(2), beklenen: +fov.toFixed(2), pulPx: pc.length ? +pc[Math.floor(pc.length / 2)].toFixed(1) : 0, topPx: +tp.toFixed(1)}; }"""
 
 
+# E0 (2026-10-23): kare süresi — kontrol.py'nin rAF sarmalayıcısı; aktör güncellemesinin (figür ya da pul yolu) süresi ayrıca
+KARE_SURE_JS = """(() => { const asil = window.requestAnimationFrame.bind(window), S = window.__kareSure = [];
+  window.requestAnimationFrame = f => asil(t => { const t0 = performance.now(); try { f(t); } finally { S.push(performance.now() - t0); } }); })();"""
+AKTOR_SURE_JS = """() => { window.__akt = []; for (const ad of ['aktorGuncelle', 'pulAktor']) { if (typeof window[ad] !== 'function' || window[ad].__sar) continue;
+  const f = window[ad], g = function () { const t0 = performance.now(); try { return f.apply(this, arguments); } finally { window.__aktT = (window.__aktT || 0) + performance.now() - t0; } };
+  g.__sar = true; window[ad] = g; } window.__aktT = 0; window.__kareSure.length = 0; window.__aktKare = mac.kare; }"""
+KARE_OKU_JS = """() => { const S = window.__kareSure.slice().sort((a, b) => a - b), q = f => S.length ? S[Math.min(S.length - 1, Math.floor(f * S.length))] : 0;
+  return {n: S.length, o: +q(0.5).toFixed(2), p95: +q(0.95).toFixed(2), akt: +((window.__aktT || 0) / Math.max(1, S.length)).toFixed(2)}; }"""
+
+
 def gec(pg):
     pg.wait_for_selector("#onEkran:not([hidden]) #btnBeklemedenGec")
     pg.wait_for_function("!document.getElementById('btnBeklemedenGec').disabled", timeout=20000)
@@ -48,8 +60,10 @@ def bos_tikla(pg):
 with sync_playwright() as p:
     b = p.chromium.launch(args=["--use-gl=swiftshader", "--enable-unsafe-swiftshader"])
 
-    def ac(ek, depo=None):
+    def ac(ek, depo=None, kare=False):
         c = b.new_context(viewport={"width": 1200, "height": 1000})
+        if kare:
+            c.add_init_script(KARE_SURE_JS)
         if depo is not None:
             c.add_init_script("if(!sessionStorage.getItem('akis2d')){sessionStorage.setItem('akis2d','1');localStorage.setItem('chairman:ayarlar', %s);}" % json.dumps(json.dumps(depo)))
         pg = c.new_page()
@@ -97,9 +111,21 @@ with sync_playwright() as p:
     yaz("Yenileme: loca bakışı korunur", not m["pul"], "")
     c.close()
     # 6
-    c, pg = ac("?ekran=mac&tohum=5")
+    c, pg = ac("?ekran=mac&tohum=5", kare=True)
     pg.click("#btnMacaGec"); pg.wait_for_function("mac.phase === 'play' && mac.phaseT > 3", timeout=240000)
     pg.wait_for_timeout(1500); v = pg.evaluate(GORUNTU)
+    pg.evaluate(AKTOR_SURE_JS); pg.wait_for_timeout(4000); ks = pg.evaluate(KARE_OKU_JS)
+    print(f"  Kare süresi (bilgi; 2D oyunda, rAF geri çağırması, ms): ortanca {ks['o']} · p95 {ks['p95']} · {ks['n']} kare · aktör güncellemesi kare başına {ks['akt']} ms")
+    pg.evaluate("""() => { const b = mac.ball, s = b.sahip || mac.teams[0][9], q = mac.teams[1 - s.team].find(x => x.oyunda && x.rol !== 'GK'); pulOlay('kart', {p: q, renk: 'kirmizi'}); }""")
+    pg.wait_for_timeout(800)
+    SIMGE = """() => { const o = PUL_SIMGE.liste.find(o => o.tur === 'kirmizi'), E = o && PUL.liste.find(e => e.a.kaynak === o.p && e.root.visible), s = mac.ball.sahip;
+      return {var: !!o, gor: !!(o && o.s.visible), yakin: o && E ? +Math.hypot(o.s.position.x - E.x, o.s.position.z - E.z).toFixed(2) : null, ust: o && E ? o.s.position.z > E.z : null,
+        et: !!(PUL_SIMGE.etiket && PUL_SIMGE.etiket.visible), etP: PUL_SIMGE.etP ? PUL_SIMGE.etP.name : null, sahip: s ? s.name : null, kopus: pulKopus(), kart3b: KART.visible}; }"""
+    k = pg.evaluate(SIMGE)
+    yaz("E: kopuş açık, kart simgesi cezalının pulunun üstünde (3B kart çizilmiyor), top taşıyanın adı görünür",
+        k["var"] and k["gor"] and k["yakin"] is not None and k["yakin"] < 4 and k["ust"] and k["kopus"] and not k["kart3b"] and (k["sahip"] is None or (k["et"] and k["etP"] == k["sahip"])), str(k))
+    pg.wait_for_function("(() => { const o = PUL_SIMGE.liste.find(o => o.tur === 'kirmizi'); return !o; })()", timeout=120000)
+    yaz("E: kart simgesi süresi bitince söndü", True, "")
     yaz("Görüntü: oyunda pullar görünür, figür çizilmiyor, insan ve top projektör gölgeleri kapalı",
         v["pul"] >= 25 and v["figur"] == 0 and v["insanGolge"] and v["topGolge"], str(v))
     yaz("Görüntü: görüş açısı yakınlık seviyesinden, pul ≥ 20 px, top ≥ 6 px",

@@ -54,14 +54,21 @@ function pulUygula(acik){PUL.acik=!!acik;GOLGE.insanGizli=PUL.acik;GOLGE.topGizl
   for(const a of AKTORLER)for(const m of[a.m,a.esofman])if(m&&m.mesh&&m.mesh.material)m.mesh.material.visible=!PUL.acik;
   if(!PUL.acik)for(const E of PUL.liste){E.root.visible=false;E.golge.visible=false;}}
 /* her kare (js/mac-sahnesi.js macKare; aktörlerin kökleri kesinleştikten sonra) */
-function pulKare(dts){if(!PUL.acik)return;
-  const S=STIL.pul,A=S.ayak,T=S.tepe,cp=camera.position,tf=Math.tan(camera.fov*Math.PI/360),t=mac.t,D=STIL.animasyon.dusus.aci;
+function pulKare(dts){if(!PUL.acik){pulSimgeKare(false,dts);return;}
+  const S=STIL.pul,A=S.ayak,T=S.tepe,cp=camera.position,tf=Math.tan(camera.fov*Math.PI/360),t=mac.t,D=STIL.animasyon.dusus.aci,G=PUL_GOR;G.length=0;
   for(const E of PUL.liste){const a=E.a,m=E.m,p=a.kaynak,gor=m.root.visible&&!!m.root.parent;E.root.visible=gor;E.golge.visible=gor;if(!gor)continue;
-    /* yatan oyuncu: pul yere yatar ve kararır (a.lth: çizimin yatış açısı) */
+    /* yatan oyuncu: pul yere yatar ve kararır (a.lth: çizimin ya da E'den beri pulAktor'un yatış açısı) */
     const yat=m===a.m?clamp(a.lth/D,0,1):0,x=a.x,z=a.z;
     const y=p.oturuyor?S.oturmaY:Math.max(0,m.root.position.y-0.16*yat);
     /* boy: tepeden yaricapKat, uzakta en küçük ekran boyu; pul düz yatar */
-    const d=Math.max(1,Math.hypot(cp.x-x,cp.y-y,cp.z-z)),kat=T.yaricapKat,px=E.r*kat*(RH/2)/(d*tf),s=kat*clamp(PUL.enAz/Math.max(0.01,px),1,S.enCokKat);
+    const d=Math.max(1,Math.hypot(cp.x-x,cp.y-y,cp.z-z)),kat=T.yaricapKat,px=E.r*kat*(RH/2)/(d*tf);
+    E.s=kat*clamp(PUL.enAz/Math.max(0.01,px),1,S.enCokKat);E.x=x;E.y=y;E.z=z;E.yat=yat;G.push(E);}
+  /* E3 (2026-10-23): kalabalıkta (korner, kutu) iç içe geçen pullar yerel olarak küçülür — en çok STIL.pul.kalabalik.enKucuk'e; numara okunur kalır */
+  {const K=S.kalabalik;if(K&&K.acik&&G.length>1){for(const E of G)E.kk=1;
+    for(let i=0;i<G.length;i++){const P=G[i];if(P.y>0.3)continue;for(let j=i+1;j<G.length;j++){const Q=G[j];if(Q.y>0.3)continue;const dx=P.x-Q.x,dz=P.z-Q.z,rr=P.r*P.s+Q.r*Q.s;
+      if(dx*dx+dz*dz<rr*rr){const f=Math.max(K.enKucuk,Math.sqrt(dx*dx+dz*dz)/rr);if(f<P.kk)P.kk=f;if(f<Q.kk)Q.kk=f;}}}
+    for(const E of G)E.s*=E.kk;}}
+  for(const E of G){const a=E.a,m=E.m,p=a.kaynak,x=E.x,y=E.y,z=E.z,s=E.s,yat=E.yat;
     E.root.scale.setScalar(s);E.root.position.set(x,y,z);
     /* numara ekranda dik: dokunun üstü (yerel +x) ekranın üstüne, dünya +z'ye (js/kamera.js tepeKamera: kameranın üstü +z) */
     E.disk.rotation.y=-Math.PI/2;
@@ -78,7 +85,9 @@ function pulKare(dts){if(!PUL.acik)return;
     E.aL.scale.set(A.en*kL,0.03,A.boy*kL);E.aR.scale.set(A.en*kR,0.03,A.boy*kR);
     /* kararma ve yerdeki leke (havadayken yerde kalır: yükseklik ipucu) */
     const dim=1-S.yatDim*yat;E.ustMat.color.setScalar(dim);E.yanMat.color.copy(E.yan0).multiplyScalar(dim);
-    E.golge.position.set(x+T.golgeKay[0]*s,0.025,z+T.golgeKay[1]*s);E.golge.scale.setScalar(E.r*s*1.05);}}
+    E.golge.position.set(x+T.golgeKay[0]*s,0.025,z+T.golgeKay[1]*s);E.golge.scale.setScalar(E.r*s*1.05);}
+  pulSimgeKare(true,dts);}
+const PUL_GOR=[];
 /* ---- P2: 2D'de topun yüksekliği ve yolu (kullanıcı: "topun havada olduğu anlaşılmıyor"; FM27 de topa güçlü gölge verdi) ----
    Boy: top havada STIL.pul.top.yukseklik payı kadar büyür (tepe m'de tam). Gölge: kendi yumuşak diski; yükseldikçe ekranda sağ-aşağı kayar,
    büyür ve solar (projektör gölgeleri 2D'de kapalı: GOLGE.topGizli). İz: hızlı ya da havadaki topun ardında kısa, sönen noktalar (eğri pas
@@ -123,6 +132,72 @@ function pulTopKare(acik){const P=PUL_TOP,T=STIL.pul.top,t=topMesh,b=mac.ball;
        P.inisVar=tt<4;P.inis.position.set(K.x,0.04,K.z-MOTOR_Z);}
      P.inis.visible=P.inisVar;if(P.inisVar){const r=N.yaricap*(1+0.12*Math.sin(zaman*9));P.inis.scale.set(r,r,1);}}
    else P.inis.visible=false;}}
+/* ---- E (2026-10-23; FUTBOL_KUTUPHANESI §12.1 E): kopuş — 2D'de figür animasyonu çalışmaz, pul motorun alanlarından beslenir ----
+   pulAktor, aktorGuncelle'nin (js/animasyon.js) 2D'de yerine geçer (js/mac-sahnesi.js macKare; STIL.pul.kopus): konum (ara değer), görünürlük (tünel,
+   kulübedeki sağlıkçı, yedeğin eşofmanı), gövde yönü (motor yönü, aynı yumuşatma), adım evresi hızdan (kadans = hız ÷ (taban + eğim·hız)), yatış motorun
+   yere düşme eylemlerinden (düşüş, yerde, kayma, kalecinin uçuşu). Kemik, poz ve IK yok; kemiklere bağlı kart, defter, sprey kutusu ve yan hakem
+   bayrağı 2D'de gizlidir (olay simgeleri yerlerini alır). Motor yalnız okunur, rastlantı yok */
+const PUL_YAT={dusus:1,yerde:1,kayma:1,ucus:1};
+function pulAktor(a,al,dts,T){const p=a.kaynak,S=STIL.pul;a.x=lerp(a.px,p.x,al);a.z=lerp(a.pz,p.z,al)-MOTOR_Z;a.al=al;
+  let gor=p.z>T.z-0.8&&(p.tur!=='oyuncu'||p.oyunda||p.cikiyor);
+  if(p.kind==='saglikci'&&p.ev&&Math.hypot(p.x-p.ev.x,p.z-p.ev.z)<STIL.saglikciGizle){gor=false;a.ilkYon=true;}
+  let m=a.m;
+  if(a.esofman){const es=p.tur==='yedek'&&!p.cikti;a.esofman.root.visible=gor&&es;if(es){a.m.root.visible=false;m=a.esofman;}else a.m.root.visible=gor;}
+  else a.m.root.visible=gor;
+  if(a.spK)a.spK.visible=false;if(a.bayrak)a.bayrak.visible=false;
+  if(!gor)return;
+  const yw=Math.atan2(Math.cos(p.yon),Math.sin(p.yon));if(a.ilkYon){a.ilkYon=false;a.yaw=a.yawO=yw;}aciYumusak(a,yw,dts,40,9);
+  const spd=p.oturuyor?0:(p.spd||0),A=S.adim2;if(spd>0.05&&dts>0)a.ph=((a.ph||0)+dts*Math.PI*spd/(A.taban+A.egim*spd))%(2*Math.PI);
+  const e=p.eylem,yat=e&&PUL_YAT[e.ad]?1:0,D=STIL.animasyon.dusus.aci;a.lth=(a.lth||0)+(yat*D-(a.lth||0))*Math.min(1,dts*S.yatHiz);
+  m.root.position.set(a.x,0,a.z);m.root.rotation.set(0,a.yaw,0);}
+/* 2D'de figür yolu kapalı mı (js/mac-sahnesi.js macKare okur) */
+function pulKopus(){return PUL.acik&&!!STIL.pul.kopus;}
+/* ---- E: olay simgeleri (kart, sakatlık, değişiklik, ofsayt bayrağı, pas isteği) ve top taşıyanın adı ----
+   Oyunun piksel diliyle küçük dokular (Nearest), ekranda dik (sprite), pulun üstünde (ekranın üstü dünya +z); boy ekranda sabit (STIL.pul.simge.px; RH
+   satıra göre). Olaylar js/mac-sahnesi.js olay'dan (pulOlay); süreler motor zamanıyla (mac.t). ?pul=0'da çizilmez */
+const PUL_SIMGE={doku:{},liste:[],havuz:[],etiket:null,etDoku:new Map(),etP:null,etW:0,etA:0,istek:[]};
+function pulSimgeCiz(tur){const D=PUL_SIMGE.doku;if(D[tur])return D[tur];
+  const n=tur==='sari'||tur==='kirmizi'?[8,11]:[11,11],cv=mk(n[0],n[1]),g=cv.getContext('2d'),k='#141210',f=(c,x,y,w,h)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  if(tur==='sari'||tur==='kirmizi'){f(k,0,0,8,11);f(tur==='sari'?'#f2d21d':'#d8201e',1,1,6,9);f('rgba(255,255,255,0.35)',1,1,6,2);}
+  else if(tur==='sakat'){f(k,1,1,9,9);f('#f4f2ea',2,2,7,7);f('#d8201e',5,3,1,5);f('#d8201e',3,5,5,1);f('#d8201e',4,4,3,3);}
+  else if(tur==='giren'||tur==='cikan'){const c=tur==='giren'?'#3fbf4f':'#d8201e',yuk=tur==='giren';f(k,1,1,9,9);f('#1e1c18',2,2,7,7);
+    for(let i=0;i<4;i++){const y=yuk?3+i:7-i;f(c,5-i,y,1+2*i,1);}f(c,4,yuk?7:2,3,2);}
+  else if(tur==='ofsayt'){f(k,2,1,2,10);f('#e8e4d8',3,1,1,9);f(k,4,1,6,6);f('#f2c11d',4,2,5,4);f('#d8201e',6,2,3,2);f('#d8201e',4,4,2,2);}
+  else if(tur==='istek'){f(k,2,2,7,9);f('#f4f2ea',3,6,5,4);f('#f4f2ea',3,3,1,3);f('#f4f2ea',5,2,1,4);f('#f4f2ea',7,3,1,3);}
+  return D[tur]=tx(cv,'n');}
+function pulSprite(){const H=PUL_SIMGE.havuz;const s=H.pop()||new THREE.Sprite(new THREE.SpriteMaterial({transparent:true,depthTest:false,depthWrite:false}));
+  s.renderOrder=20;s.visible=false;if(!s.parent)scene.add(s);return s;}
+function pulSimgeEkle(tur,p,sure){const L=PUL_SIMGE.liste;for(const o of L)if(o.p===p&&o.tur===tur){o.t0=mac.t;o.sure=sure;return;}
+  const s=pulSprite();s.material.map=pulSimgeCiz(tur);s.material.needsUpdate=true;L.push({tur,p,t0:mac.t,sure,s});}
+/* js/mac-sahnesi.js olay: olayın simgesi (2D kapalıyken de kaydedilir, çizilmez) */
+function pulOlay(ad,v){if(!v)return;const S=STIL.pul.simge;
+  if(ad==='kart'&&v.p)pulSimgeEkle(v.renk==='sari'?'sari':'kirmizi',v.p,S.kart);
+  else if(ad==='sakatlik'&&v.p&&S.sakat)pulSimgeEkle('sakat',v.p,60);
+  else if(ad==='degisiklik'){if(v.giren)pulSimgeEkle('giren',v.giren,S.degisiklik);if(v.cikan)pulSimgeEkle('cikan',v.cikan,S.degisiklik);}
+  else if(ad==='ofsayt'&&v.p&&mac.refs){const yh=v.p.x>0?mac.refs[1]:mac.refs[2];if(yh)pulSimgeEkle('ofsayt',yh,S.ofsayt);}}
+/* her kare (pulKare'nin sonunda): oyuncunun pulunun üstünde, ekranda sabit boyda; sakatlık simgesi oyuncu yerden kalkınca, sedye ve tedavi bitince söner */
+function pulSimgeKare(acik,dts){const P=PUL_SIMGE,S=STIL.pul.simge,L=P.liste,tf=Math.tan(camera.fov*Math.PI/360),cp=camera.position;
+  const yer=(p)=>{for(const e of PUL.liste)if(e.a.kaynak===p&&e.root.visible&&e.s)return e;return null;};
+  const olcek=(x,y,z,px)=>{const d=Math.max(1,Math.hypot(cp.x-x,cp.y-y,cp.z-z));return px*2*d*tf/RH;};
+  for(let i=L.length-1;i>=0;i--){const o=L[i],a=mac.t-o.t0;let bit=a>o.sure||a<0;
+    if(o.tur==='sakat'&&a>1.5&&!(o.p.eylem&&PUL_YAT[o.p.eylem.ad])&&!(mac.sedye&&mac.sedye.p===o.p)&&!o.p.tedavi)bit=true;
+    if(bit){o.s.visible=false;P.havuz.push(o.s);L.splice(i,1);continue;}
+    const E=acik?yer(o.p):null;if(!E){o.s.visible=false;continue;}
+    const h=olcek(E.x,1,E.z,S.px),w=o.tur==='sari'||o.tur==='kirmizi'?h*8/11:h,sol=a<0.25?a/0.25:o.sure-a<0.5?(o.sure-a)/0.5:1;
+    o.s.visible=true;o.s.scale.set(w,h,1);o.s.material.opacity=clamp(sol,0,1);o.s.position.set(E.x,1.0,E.z+E.r*E.s*S.bosluk+h/2);}
+  /* pas isteği: top takımda, sahibin dışındaki oyuncunun kol kaldırma ya da çağırma jesti süresince (en çok dört) */
+  {const I=P.istek,b=mac.ball,sh=b.sahip;let n=0;
+    if(acik&&S.istek&&sh&&sh.team!=null&&mac.teams[sh.team])for(const p of mac.teams[sh.team]){if(n>=4)break;if(p===sh||!p.oyunda||!p.jest||(p.jest.tur!=='kol'&&p.jest.tur!=='cagir'))continue;
+      const E=yer(p);if(!E)continue;let s=I[n];if(!s){s=I[n]=pulSprite();s.material.map=pulSimgeCiz('istek');s.material.needsUpdate=true;}
+      const h=olcek(E.x,1,E.z,S.istekPx);s.visible=true;s.material.opacity=0.92;s.scale.set(h,h,1);s.position.set(E.x+E.r*E.s*1.1+h*0.4,1.0,E.z+E.r*E.s*0.9+h*0.4);n++;}
+    for(let i=n;i<I.length;i++)I[i].visible=false;}
+  /* top taşıyanın adı (oyunun piksel yazısı, pulun altında); sahip değişince yumuşak geçiş */
+  {const K=STIL.pul.etiket;if(!P.etiket)P.etiket=pulSprite();const s=P.etiket,b=mac.ball,p=acik&&K.acik?(b.sahip||(b.tasiyan&&b.tasiyan.tur==='oyuncu'?b.tasiyan:null)):null;
+    if(p!==P.etP){P.etP=p;P.etA=0;if(p){let t=P.etDoku.get(p);if(!t){const ad=String(p.name||p.no||''),W=textW(ad,1)+4,cv=mk(W,9),g=cv.getContext('2d');
+        g.fillStyle=K.golge;g.fillRect(0,0,W,9);ctxText(g,ad,2,1,K.renk,1);t={tex:tx(cv,'n'),w:W};P.etDoku.set(p,t);}
+      s.material.map=t.tex;s.material.needsUpdate=true;P.etW=t.w;}}
+    const E=p?yer(p):null;if(!E){s.visible=false;}else{P.etA=Math.min(1,P.etA+(dts>0?dts:0.016)/K.gecis);const h=olcek(E.x,1,E.z,K.px);
+      s.visible=true;s.material.opacity=P.etA;s.scale.set(h*P.etW/9,h,1);s.position.set(E.x,1.0,E.z-E.r*E.s*K.bosluk-h/2);}}}
 /* maçta G tuşu (görünüm; TEST — D eski dürbünündü ve akış denemesi §17 onun etkisizliğini sınar): 2D ↔ loca bakışı (OYUN.ayarlar.locaBakisi) (ayara yazılır); Z tuşu: 2D'de yakınlık seviyesi (yakın, orta, bütün stat).
    Yazı alanında, oda açıkken ve değiştirici tuşla çalışmaz */
 addEventListener('keydown',e=>{if((e.code!=='KeyG'&&e.code!=='KeyZ')||e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;

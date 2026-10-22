@@ -132,6 +132,7 @@ function olay(ad,v){
   if(typeof baskanOlay==='function')baskanOlay(ad,v);
   /* animasyon akışının olay kancası (js/animasyon.js; kamera bakışı aşamalardan ve toptan okur, olay gerekmez) */
   animasyonOlay(ad,v);
+  if(typeof pulOlay==='function')pulOlay(ad,v);   /* E: 2D olay simgeleri (js/pul.js) */
   switch(ad){
     case 'tarzGecis':tarzTestYaz();break;   /* B4b: geçiş başladı ya da bitti (panel satırı) */
     case 'oncesi':if(v.ad==='takim0')heyecanla(0,H.santra*0.7,2);if(v.ad==='takim1')heyecanla(1,H.santra*0.7,2);
@@ -190,12 +191,16 @@ function macKare(dt){
   if(n>=240)birikim=0;
   const al=birikim/ADIM,b=mac.ball,bx=lerp(TOP.px,b.x,al),bz=lerp(TOP.pz,b.z,al)-MOTOR_Z,T=mac.tunel;
   /* aktörler: konum, poz ve kök (js/animasyon.js) */
-  for(const a of AKTORLER)aktorGuncelle(a,al,dts,T);
-  anmYardimIK(AKTORLER);   /* A4-3: yerden kaldırma — iki bedenli kol IK'sı (bütün aktörler güncellendikten sonra) */
+  /* E (2026-10-23): 2D'de kopuş — figür animasyonu çalışmaz, pul motorun alanlarından beslenir (js/pul.js pulAktor; STIL.pul.kopus) */
+  const KOP=typeof pulKopus==='function'&&pulKopus();
+  if(KOP)for(const a of AKTORLER)pulAktor(a,al,dts,T);
+  else{for(const a of AKTORLER)aktorGuncelle(a,al,dts,T);
+    anmYardimIK(AKTORLER);}   /* A4-3: yerden kaldırma — iki bedenli kol IK'sı (bütün aktörler güncellendikten sonra) */
   pulKare(dts);   /* P1 (deneme): pul görünümü açıksa her modelin pulu kökünü izler (js/pul.js) */
   /* hakemin kartı (ikinci sarıda önce sarı, sonra kırmızı; A2b) */
-  {const e=mac.refs[0].eylem;KART.visible=!!(e&&e.ad==='kart');if(KART.visible)KART.material.color.setHex(e.renk==='sari'||(e.renk==='ikinciSari'&&e.t<(e.sure||1.7)*0.5)?0xf2d21d:0xd8201e);
-    DEFTER.visible=!!(e&&e.ad==='not'&&STIL.animasyon.s1.kart>0);}   /* S1d: deftere yazma */
+  {const e=mac.refs[0].eylem;KART.visible=!KOP&&!!(e&&e.ad==='kart');if(KART.visible)KART.material.color.setHex(e.renk==='sari'||(e.renk==='ikinciSari'&&e.t<(e.sure||1.7)*0.5)?0xf2d21d:0xd8201e);
+    DEFTER.visible=!KOP&&!!(e&&e.ad==='not'&&STIL.animasyon.s1.kart>0);   /* S1d: deftere yazma */
+    if(!KOP)for(const H of HAKEMLER)if(H.bayrak)H.bayrak.visible=true;}   /* E: 2D'de gizlenen yan hakem bayrağı figür yoluna dönünce görünür */
   if(UZATMA.t>=0){UZATMA.t+=dts;if(UZATMA.t>7)UZATMA.t=-1;}
   /* uzatma tabelası dördüncü hakemin başının üstünde */
   {const w=DORDUNCU.w.tabela||0;UZATMA_TABELA.visible=w>0.5;if(UZATMA_TABELA.visible){UZATMA_TABELA.position.set(DORDUNCU.x,1.95+0.25*w,DORDUNCU.z+0.2);UZATMA_TABELA.rotation.set(0,Math.PI,0);}}
