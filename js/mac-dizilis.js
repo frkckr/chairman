@@ -206,7 +206,9 @@ Object.assign(Match.prototype,{
       /* T5e: dönen top — top bir ceza sahasında sahipsizken iki takımın kovalayanı da tam eforla gider (kimse topu seyretmez; eskiden rakibinden
          0,5 sn'den geç yetişecek kovalayan rahat ivmeyle yaklaşıyordu) */
       const donen=!du&&sahipTakim<0&&!b.tasiyan&&(this.cezaSahasi(0,b.x,b.z)||this.cezaSahasi(1,b.x,b.z));
-      if(!hucum){this.markajAta(t,du?odak:gecikmeli,cizgi);this.kutuSavunmaAta(t,du?odak:gecikmeli);}
+      /* B1d (kutuKapiAnlik): kutunun kapısı top kaleye yaklaşırken anlık yerden (gecikme yalnız bloğun yana kaymasında kalır) */
+      const kr=du?odak:MOTOR_AYAR.kutuKapiAnlik>0&&odak.x*d<gecikmeli.x*d?odak:gecikmeli;
+      if(!hucum){this.markajAta(t,kr,cizgi);this.kutuSavunmaAta(t,kr);}
       else if(!MOTOR_AYAR.markajKalici){if(this._markaj)this._markaj[t]=new Map();if(this._kutuSav)this._kutuSav[t]=new Map();}   /* T18c: markajKalici'de haritalar durur */
       if(!hucum&&MOTOR_AYAR.kosuSil)for(const p of this.teams[t]){const k=p.kosu;if(k&&(k.tur==='arkaya'||k.tur==='genis'||k.tur==='gel'||k.tur==='aldatma'))p.kosu=null;}   /* T18c: derin koşu top kaybında biter */
       /* T19a: rakibin şut hazırlığı (vuruş eylemi, temastan önce; penaltı ve serbest vuruş hariç) — yakındaki savunmacılar hatta atılır (sutHamleYap) */

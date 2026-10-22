@@ -95,7 +95,7 @@ const MOTOR_AYAR={
   /* T — js/mac-takim.js */
   niyetEtki:undefined,macDurumEtki:undefined,niyetYenile:undefined,kontraSure:undefined,kurmaStoperW:undefined,gerideEk:undefined,rakipAlgi:undefined,
   kosuTetik:undefined,kosuRastgele:undefined,kosuEs:undefined,zon14:undefined,govdeAc:undefined,osDestek:undefined,presTetikSure:undefined,
-  presTetikMesafe:undefined,golgePres:undefined,kosucuTakip:undefined,hatCik:undefined,kutuSavunma:undefined,kompakt:undefined,
+  presTetikMesafe:undefined,golgePres:undefined,kosucuTakip:undefined,hatCik:undefined,kutuSavunma:undefined,kutuKapiAnlik:undefined,kompakt:undefined,
   mdhTahminEtki:undefined,takipSayi:undefined,donenUzak:undefined,kapatKalici:undefined,markajKalici:undefined,kosuSil:undefined,yorgunBlok:undefined,yorgunPres:undefined,yorgunKosu:undefined,yorgunKip:undefined,guvenEtki:undefined,guvenRisk:undefined,guvenSure:undefined,evGuven:undefined,
   kanatRol:undefined,kanatBas:undefined,kanatCizgi:undefined,kanatDerin:undefined,kanatOnde:undefined,kanatUzak:undefined,gecGiris:undefined,
   tutEtki:undefined,kovala2Pay:undefined,kapatSon:undefined,kapiFaz:undefined,
