@@ -426,9 +426,14 @@ function pasDegeri(m,p,o,hx,hz,alt,q){
     /* B1 (geriPasAmac; 2026-10-22): topu tutma payı yalnız önü kapalıyken tam — pasörün en iyi ileri seçeneği bulunduğu yerin değerinden geriPasK
        puandan çok fazlaysa (önü açık) pay söner; aynı takım sahipliğinde ardışık geri paslarda yarı yarıya söner (amaçsız dolaşım); planın beklediği
        pas (rakibi çekme, üçüncü adam) muaf. Baskı terimi aynen */
+    /* B1b (tarzSabir): kapının genişliği ve zincir bütçesi tarzın sabrından — konumsal (sabir 0,85) kapı 2,0, bütçe 2,7 pas; direkt (0,15) 0,7 ve 1,3 */
     let fs=1;const e=A.geriPasAmac;
-    if(e>0&&!(m._pln&&m.planAlici(p)===q)){const g=Math.max(0,(o.onIleri!=null?o.onIleri:-9)-xT(u,o.oz)*100),fk=clamp(1-g/A.geriPasK,0,1);
-      const G=m._geriN&&m._geriN[p.team],n=G&&G.bas===m._sahiplikBas?G.n:0;fs=1-e*(1-fk*Math.max(0,1-n/2));}
+    if(e>0&&!(m._pln&&m.planAlici(p)===q)){const V=A.tarzSabir>0?tarzTakim(m,p.team):null,es=V?A.tarzSabir:0;
+      const K=A.geriPasK*(es?Math.max(0.7,1+2.5*es*(V.sabir-0.45)):1);
+      const g=Math.max(0,(o.onIleri!=null?o.onIleri:-9)-xT(u,o.oz)*100),fk=clamp(1-g/K,0,1);
+      const G=m._geriN&&m._geriN[p.team],ayni=G&&G.bas===m._sahiplikBas;
+      const fz=es?Math.max(0,1-(ayni?G.c:0)/(2+es*(2*V.sabir-1))):Math.max(0,1-(ayni?G.n:0)/2);
+      fs=1-e*(1-fk*fz);}
     v+=takim.sakin*A.geriPas*fs+o.baski*0.8;}
   /* Z4c (bindirme&2; B.4): bindiren ya da içten bindiren, ileri koşan beke pas — kanatta ikiye bir */
   if(A.bindirme&2&&(q.gorevAd==='bindirme'||q.gorevAd==='icBindirme')&&(q.vx*d)>3)v+=A.bindirmeDeger;

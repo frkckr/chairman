@@ -8,6 +8,8 @@
    (c) çizim dosyaları motoru yalnız okur: mac.rast/normal ve önbellek yazan yöntemler (topYolu, topTahmin, yakalamaNoktasi, cerceveyeGider)
        çağrılmaz; oyuncu (p.) ve top (mac.ball., b.) alanlarına yazılmaz. Motoru ilerleten tek yer js/mac-sahnesi.js'tir (mac.step, mac.macaGec).
        U1 (2026-10-12): js/mac-izleme.js de bu listededir — ana motora dokunmaz, yalnız kendi ikiz motorunu (aynı tohumla ikinci Match) ilerletir.
+       B4b (2026-10-22): ana motora tek dış yazma js/mac-sahnesi.js tarzTestDegistir içindeki tarzDegistir(mac,…)'tir, her zaman izlemeKomut'la birlikte;
+       başka çizim dosyasında tarzDegistir( ya da tarzGecisAdim( bulgudur. js/arayuz.js de listededir.
    (d) motor dosyalarında (js/mac-*.js) tohumsuz rastlantı yok: Math.random ve rnd( kullanılmaz (varsayılan tohum seçimi hariç).
    (e) MOTOR_AYAR (M1, 2026-10-10): bütün anahtarlar js/mac-motoru.js'te bildirilir ve her birinin değeri tam bir kez atanır (çekirdekte ya da
        akışın ayarEkle'sinde); motor araclar/motor-yukle.js ile yüklenir, bildirilmemiş, iki kez atanan ya da atanmamış anahtar bulgudur.
@@ -92,13 +94,15 @@ const BILINEN_SIZINTI=new Set(['ciz','kapat']);
   for(const [k,L] of Object.entries(yontem))if(L.length>1)bul('aynı Match yöntemi',`${k}: ${L.join(', ')}`);
 }
 /* (c) çizim dosyaları motoru yalnız okur */
-{const CIZIM=['js/mac-sahnesi.js','js/animasyon.js','js/kamera.js','js/okunurluk.js','js/baskan.js','js/mac-izleme.js','js/pul.js'];
+{const CIZIM=['js/mac-sahnesi.js','js/animasyon.js','js/kamera.js','js/okunurluk.js','js/baskan.js','js/mac-izleme.js','js/pul.js','js/arayuz.js'];
   const YASAK_CAGRI=/\bmac\.(rast|normal|topYolu|topTahmin|yakalamaNoktasi|cerceveyeGider|step|macaGec|kararVer)\s*\(/g;
   const IZIN={'js/mac-sahnesi.js':new Set(['step','macaGec'])};
   const YAZMA=[/\bp\.[A-Za-z_$][\w$]*(\.[\w$]+)*\s*(=(?!=)|\+=|-=|\*=|\/=|\+\+|--)/g,/\bmac\.ball\.[\w$.]+\s*(=(?!=)|\+=|-=|\*=)/g,/\bmac\.(players|refs|teams|ball|ist|score|phase|durus)\s*(=(?!=))/g];
   for(const f of CIZIM){const s=temiz[f];if(s==null)continue;let m;
     while((m=YASAK_CAGRI.exec(s))){if(IZIN[f]&&IZIN[f].has(m[1]))continue;bul('çizim motoru ilerletiyor/önbellek yazıyor',`${f}:${satirNo(s,m.index)} mac.${m[1]}(`);}
     for(const re of YAZMA){re.lastIndex=0;while((m=re.exec(s)))bul('çizim motor alanına yazıyor',`${f}:${satirNo(s,m.index)} ${m[0].trim()}`);}
+    /* B4b: maç içi tarz komutu yalnız js/mac-sahnesi.js'ten (izlemeKomut ile ikize aynı karede) */
+    if(f!=='js/mac-sahnesi.js'){const re=/\b(tarzDegistir|tarzGecisAdim)\s*\(/g;while((m=re.exec(s)))bul('çizim tarz komutu veriyor (izlemeKomut dışında)',`${f}:${satirNo(s,m.index)} ${m[1]}(`);}
     /* top: b=mac.ball takma adıyla yazma */
     if(/\bconst\s+b\s*=\s*mac\.ball\b|\bb\s*=\s*mac\.ball\b/.test(s)){const re=/\bb\.(x|y|z|vx|vy|vz|sahip|tasiyan|sut|pas|egri|ust)\s*(=(?!=)|\+=|-=)/g;
       while((m=re.exec(s)))bul('çizim topa yazıyor',`${f}:${satirNo(s,m.index)} ${m[0].trim()}`);}}

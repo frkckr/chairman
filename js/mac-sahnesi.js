@@ -20,7 +20,7 @@ const MAC_HIZ=(()=>{let s=null,oto=null;
 /* ?tohum=123 ile aynı maç yeniden oynatılabilir */
 const MAC_TOHUM=(()=>{try{const v=parseInt(new URLSearchParams(location.search).get('tohum'),10);return Number.isFinite(v)?v:null;}catch(e){return null;}})();
 /* B4: ?tarz=A,B iki takımın tarzı (js/mac-tarz.js arketip adları; geliştirici); yoksa maç iki tarzı tohumdan seçer ('dagilim') */
-const MAC_TARZ=(()=>{try{const v=new URLSearchParams(location.search).get('tarz'),a=v?v.split(','):[];if(a.length===2&&a.every(x=>TARZ_ARKETIP[x]))return a;}catch(e){}
+const MAC_TARZ=(()=>{try{const v=new URLSearchParams(location.search).get('tarz'),a=v?v.split(','):[];if(a.length===2&&a.every(x=>Object.prototype.hasOwnProperty.call(TARZ_ARKETIP,x)))return a;}catch(e){}
   return 'dagilim';})();
 /* DURAKLAT: eski ad; ortak duraklatma yönetimini okur (js/sunum-durumu.js, 2.8B) */
 const olayKuyrugu=[],DURAKLAT={get aktif(){return duraklatmaVar();}};

@@ -268,7 +268,9 @@ Object.assign(Match.prototype,{
        risk iştahlı takımda biraz düşük, ilerlemenin değeri ve topu tutmanın bedeli iştahla ölçeklenir (ilerle, koruK: js/mac-karar.js) */
     const ei=MOTOR_AYAR.tarzIstah;
     if(V&&ei>0){const ist=istahEtkin(V,D);
-      E.tempo=clamp(E.tempo+ei*(V.tempo-B.tempo),0,1);E.sakin=clamp(E.sakin+ei*(0.2+0.6*(1-ist)-B.sakin),0,1);
+      /* B1b (tarzSabir): sakinlik hedefi iştahla birlikte tarzın sabrından (konumsal .69, dengeli .45, direkt .25; B3'te yalnız iştahtan: konumsal = dengeli) */
+      const es=MOTOR_AYAR.tarzSabir>0?MOTOR_AYAR.tarzSabir:0,tg=0.2+0.6*(1-ist),hs=es?tg+es*(0.12+0.6*V.sabir+0.15*(1-ist)-tg):tg;
+      E.tempo=clamp(E.tempo+ei*(V.tempo-B.tempo),0,1);E.sakin=clamp(E.sakin+ei*(hs-B.sakin),0,1);
       E.risk=Math.max(0.3,E.risk*(1+0.4*ei*(0.6-ist)));E.ilerle=1+0.6*ei*(ist-0.5);E.koruK=1+ei*(ist-0.5);}
     else{E.ilerle=1;E.koruK=1;}},
   /* hoca kapısı (plan T7 madde 10): hocanın tabanını değiştirir; diziliş değişirse mevkiler sıradan (n) yeniden okunur, markaj/pres/koşu tabloları

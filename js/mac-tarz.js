@@ -25,6 +25,8 @@ ayarEkle('Z',{
   tarzArka:1.5,                // Z7a (G2.3 uzun top ↔ yüksek hat): hedefi rakibin çizgisinin arkasındaki ileri uzun topa, rakibin hattı kalesinden 28 m'den uzaksa
                                // uzun topa eğilimli tarz (uzunHedef − 0,3) pay alır (hat 38 m'de tam); 0: eski
   tarzIstah:1,                 // B3 (2026-10-22): tarzın hücum iştahı ve temposu etkin taktiğe girer (js/mac-takim.js etkinTaktik, takimNiyet); 0: eski
+  tarzSabir:0,                 // B1b (2026-10-22): tarzın sabrı — sakinlik hedefi, geri pas kapısının genişliği ve amaçsız zincir bütçesi tarzdan (js/mac-takim.js
+                               // etkinTaktik, js/mac-karar.js pasDegeri, js/mac-motoru.js pasSay); 0: B1+B3 (tarzlar pas yönünde ayrışmıyordu)
   tarzSecim:1,                 // B4 (2026-10-22): secenek.tarz 'dagilim' iken (oyun, mac-deneme) iki takımın tarzı tohumdan TARZ_DAGILIM ile; 0: kadronun tarzı
   tarzGecis:40,                // B4b (2026-10-22): maç içi tarz değişikliğinin oturma süresi (motor sn; ~3 ekran dakikası) — eski harmandan yenisine yumuşak geçiş
   tarzTalimat:20,              // B4b: talimat duruşta uygulanır; bu kadar motor sn içinde duruş olmazsa hoca kenardan seslenir (geçiş yine başlar)
@@ -33,23 +35,25 @@ ayarEkle('Z',{
 const TARZ_ARKETIP={
   yok:      {ad:'tarzsız',ilkel:{duvarPasi:1,ucuncuAdam:1,derinKosu:1,geriCevirme:1},baglilik:1,takim:null},   /* B3: eski 'dengeli' (vektörsüz: kadronun taktiği) */
   dengeli:  {ad:'dengeli',ilkel:{duvarPasi:1,ucuncuAdam:1,derinKosu:1,geriCevirme:1},baglilik:1,
-    takim:{kisaPay:0.5,presYuksek:0.5,blokCizgi:0,bekIceri:0.2,kaleciArti:0.4,uzunHedef:0.5,ikinciTop:0.5,karsiSn:3,istah:0.6,tempo:0.5}},
+    takim:{kisaPay:0.5,presYuksek:0.5,blokCizgi:0,bekIceri:0.2,kaleciArti:0.4,uzunHedef:0.5,ikinciTop:0.5,karsiSn:3,istah:0.6,tempo:0.5,sabir:0.45}},
   konumsal: {ad:'konumsal oyun',ilkel:{duvarPasi:1.0,ucuncuAdam:1.8,derinKosu:1.0,geriCevirme:1.8},baglilik:1.6,
-    takim:{kisaPay:0.8,presYuksek:0.8,blokCizgi:5,bekIceri:0.6,kaleciArti:0.8,uzunHedef:0.15,ikinciTop:0.3,karsiSn:5.5,istah:0.6,tempo:0.4}},
+    takim:{kisaPay:0.8,presYuksek:0.8,blokCizgi:5,bekIceri:0.6,kaleciArti:0.8,uzunHedef:0.15,ikinciTop:0.3,karsiSn:5.5,istah:0.6,tempo:0.4,sabir:0.85}},
   iliskisel:{ad:'ilişkisel oyun',ilkel:{duvarPasi:2.0,ucuncuAdam:1.5,derinKosu:0.8,geriCevirme:1.2},baglilik:0.7,
-    takim:{kisaPay:0.6,presYuksek:0.55,blokCizgi:2,bekIceri:0.3,kaleciArti:0.5,uzunHedef:0.25,ikinciTop:0.4,karsiSn:4,istah:0.7,tempo:0.6}},
+    takim:{kisaPay:0.6,presYuksek:0.55,blokCizgi:2,bekIceri:0.3,kaleciArti:0.5,uzunHedef:0.25,ikinciTop:0.4,karsiSn:4,istah:0.7,tempo:0.6,sabir:0.55}},
   dikey:    {ad:'dikey / geçiş',ilkel:{duvarPasi:1.2,ucuncuAdam:1.0,derinKosu:2.0,geriCevirme:1.2},baglilik:0.7,
-    takim:{kisaPay:0.45,presYuksek:0.85,blokCizgi:6,bekIceri:0.2,kaleciArti:0.4,uzunHedef:0.5,ikinciTop:0.7,karsiSn:6,istah:0.9,tempo:0.85}},
+    takim:{kisaPay:0.45,presYuksek:0.85,blokCizgi:6,bekIceri:0.2,kaleciArti:0.4,uzunHedef:0.5,ikinciTop:0.7,karsiSn:6,istah:0.9,tempo:0.85,sabir:0.2}},
   kanatOrta:{ad:'kanat ve orta',ilkel:{duvarPasi:0.8,ucuncuAdam:0.8,derinKosu:1.2,geriCevirme:1.0},baglilik:1.1,
-    takim:{kisaPay:0.35,presYuksek:0.45,blokCizgi:0,bekIceri:0,kaleciArti:0.2,uzunHedef:0.5,ikinciTop:0.6,karsiSn:2.5,istah:0.65,tempo:0.55}},
+    takim:{kisaPay:0.35,presYuksek:0.45,blokCizgi:0,bekIceri:0,kaleciArti:0.2,uzunHedef:0.5,ikinciTop:0.6,karsiSn:2.5,istah:0.65,tempo:0.55,sabir:0.4}},
   /* Z3: uzun atan + orta blok (G1.5 direkt oyun ve ikinci top; Brentford/Burnley tipi): kale vuruşu ve kaleci uzun, hat ve pres orta, uzun topta
      ikinci top düzeni; derin koşu sık, kombinasyon az */
   direkt:   {ad:'direkt ve ikinci top',ilkel:{duvarPasi:0.7,ucuncuAdam:0.7,derinKosu:1.4,geriCevirme:0.9},baglilik:0.8,
-    takim:{kisaPay:0.12,presYuksek:0.3,blokCizgi:-5,bekIceri:0,kaleciArti:0.1,uzunHedef:0.9,ikinciTop:0.9,karsiSn:2,istah:0.75,tempo:0.75}}
+    takim:{kisaPay:0.12,presYuksek:0.3,blokCizgi:-5,bekIceri:0,kaleciArti:0.1,uzunHedef:0.9,ikinciTop:0.9,karsiSn:2,istah:0.75,tempo:0.75,sabir:0.15}}
 };
 /* Z5c: karsiSn — hocanın karşı pres penceresi (sn; E.3 N2, N12: kolektif karşı pres 5–6 sn, tavan 8; Klopp tipi dikey 6, konumsal 5,5, direkt 2 —
    direkt takım kayıpta çoğunlukla geri çekilir; değerler tahmin, js/mac-takim.js karsiPresKarar okur) */
-const TARZ_ALAN=['kisaPay','presYuksek','blokCizgi','bekIceri','kaleciArti','uzunHedef','ikinciTop','karsiSn','istah','tempo'];
+/* B1b: sabir — topu çevirme sabrı (G1.0'ın risk / ileri pas payı ekseninin tersi; iştahtan ayrı: kazanmak için oynamak ≠ ileri acele etmek). Konumsal önü
+   kapalıyken birkaç pas çevirir sonra ileri arar, direkt hemen ileri oynar; harmanda karıştığı için maç içi tarz değişikliğinde pasın sabrı da kademeli değişir */
+const TARZ_ALAN=['kisaPay','presYuksek','blokCizgi','bekIceri','kaleciArti','uzunHedef','ikinciTop','karsiSn','istah','tempo','sabir'];
 /* B3: yükleme denetimi — vektörlü her arketipte bütün alanlar (eksik alan harmanda NaN üretir) */
 for(const a in TARZ_ARKETIP){const T=TARZ_ARKETIP[a].takim;if(T)for(const k of TARZ_ALAN)if(typeof T[k]!=='number')throw new Error('mac-tarz.js: '+a+' arketipinde '+k+' yok');}
 /* B4: maç başına tarz dağılımı (veri; tahmin, atak ağırlıklı — FUTBOL_KUTUPHANESI §12.1 B): oyunda ve mac-deneme'de her maç iki takıma tohumdan
@@ -69,8 +73,9 @@ function tarzKur(m,t){
   return tarzHarmanKur(tarzHarmanOku(k)||{yok:1});}
 /* arketip adı ya da {arketip: pay} → paylar 1'e bölünmüş harman (saf); geçersizse null */
 function tarzHarmanOku(k){
-  if(typeof k==='string')return TARZ_ARKETIP[k]?{[k]:1}:null;
-  if(k&&typeof k==='object'){const h={};let s=0;for(const a in k)if(TARZ_ARKETIP[a]&&k[a]>0){h[a]=+k[a];s+=h[a];}if(s>0){for(const a in h)h[a]/=s;return h;}}
+  const var_=a=>Object.prototype.hasOwnProperty.call(TARZ_ARKETIP,a);   /* 'toString' gibi kalıtılmış adlar arketip sayılmaz */
+  if(typeof k==='string')return var_(k)?{[k]:1}:null;
+  if(k&&typeof k==='object'){const h={};let s=0;for(const a in k)if(var_(a)&&k[a]>0){h[a]=+k[a];s+=h[a];}if(s>0){for(const a in h)h[a]/=s;return h;}}
   return null;}
 /* harmandan tarz nesnesi (saf): ilkel ağırlıkları, bağlılık ve takım vektörü paylarla */
 function tarzHarmanKur(H){

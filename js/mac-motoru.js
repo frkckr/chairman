@@ -100,7 +100,7 @@ const MOTOR_AYAR={
   kanatRol:undefined,kanatBas:undefined,kanatCizgi:undefined,kanatDerin:undefined,kanatOnde:undefined,kanatUzak:undefined,gecGiris:undefined,
   tutEtki:undefined,kovala2Pay:undefined,kapatSon:undefined,kapiFaz:undefined,
   /* Z — js/mac-plan.js (Z1, 2026-10-19: plan katmanı; js/mac-ilkeller.js ilkel tablosu, js/mac-tarz.js tarz iskeleti) */
-  plan:undefined,planDeger:undefined,planTavan:undefined,planTut:undefined,planSabir:undefined,planArka:undefined,planIstek:undefined,planHiz:undefined,planEs:undefined,planTeklif:undefined,planRed:undefined,planTarz:undefined,tarzEtki:undefined,tarzGecis:undefined,tarzIstah:undefined,tarzSecim:undefined,tarzTalimat:undefined,tarzUzun:undefined,tarzYanUzun:undefined,uzunBakis:undefined,uzunHaz:undefined,verKacKalkis:undefined,verKacTarz:undefined,bindirme:undefined,bindirmeDeger:undefined,surenCik:undefined,geriKosu:undefined,karsiKarar:undefined,sutKaleci:undefined,sutEgilim:undefined,tarzArka:undefined,
+  plan:undefined,planDeger:undefined,planTavan:undefined,planTut:undefined,planSabir:undefined,planArka:undefined,planIstek:undefined,planHiz:undefined,planEs:undefined,planTeklif:undefined,planRed:undefined,planTarz:undefined,tarzEtki:undefined,tarzGecis:undefined,tarzIstah:undefined,tarzSabir:undefined,tarzSecim:undefined,tarzTalimat:undefined,tarzUzun:undefined,tarzYanUzun:undefined,uzunBakis:undefined,uzunHaz:undefined,verKacKalkis:undefined,verKacTarz:undefined,bindirme:undefined,bindirmeDeger:undefined,surenCik:undefined,geriKosu:undefined,karsiKarar:undefined,sutKaleci:undefined,sutEgilim:undefined,tarzArka:undefined,
   /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
   hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,hakemGeriDon:undefined,itirazKart:undefined,kartliHosgoru:undefined,evEtki:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
   ofsaytBayrak:undefined,ofsaytBekle:undefined,
@@ -570,8 +570,12 @@ class Match{
     if(a<Math.PI/4)this.ist.pasYon.ileri++;else if(a>Math.PI*3/4)this.ist.pasYon.geri++;else this.ist.pasYon.yan++;
     if(L>=32)this.ist.uzunPas++;
     /* B1: takım sahipliği içinde ardışık geri pas sayısı (ilerleme < −4 m, kararın eşiği; js/mac-karar.js pasDegeri okur) */
-    if(MOTOR_AYAR.geriPasAmac>0){const G=this._geriN||(this._geriN=[{bas:-1,n:0},{bas:-1,n:0}]),g=G[p.team];
-      if(g.bas!==this._sahiplikBas){g.bas=this._sahiplikBas;g.n=0;}if(ileri<-4)g.n++;else g.n=0;}
+    if(MOTOR_AYAR.geriPasAmac>0){const G=this._geriN||(this._geriN=[{bas:-1,n:0,c:0,u1:null},{bas:-1,n:0,c:0,u1:null}]),g=G[p.team];
+      if(g.bas!==this._sahiplikBas){g.bas=this._sahiplikBas;g.n=0;g.c=0;g.u1=null;}if(ileri<-4)g.n++;else g.n=0;
+      /* B1b (tarzSabir): amaçsız zincirin sayacı B0'nun tanımıyla — baskısız (pasöre en yakın rakip ≥ 4,5 m) ileri olmayan pas sayılır; 45° ileri pas,
+         ≥ 5 m ilerleyen pas, baskılı pas ve iki pas arasında ≥ 5 m ileri taşıma sıfırlar */
+      if(MOTOR_AYAR.tarzSabir>0){const u0=b.x*d;if(g.u1!=null&&u0-g.u1>=5)g.c=0;
+        if(a<Math.PI/4||ileri>=5||enYakinRakip(this,b.x,b.z,p.team).d<4.5)g.c=0;else g.c++;g.u1=hx*d;}}
   }
   /* havadan vuruş: top T saniye sonra (hx,hy,hz)'de olsun; hava direnci ve falso ile, düzeltmeli çözüm */
   havadanCoz(x0,y0,z0,hx,hy,hz,T,egri,ust){

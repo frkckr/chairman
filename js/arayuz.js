@@ -19,7 +19,8 @@ const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();btnMacaGe
 /* boşluk ya da P duraklatır (sayfa kaymaz); odaktaki düğmede boşluk düğmeyi çalıştırır. Oda açıkken kısayolu oda ekranı işler (js/ekran-oda.js) */
 addEventListener('keydown',e=>{if((e.code!=='Space'&&e.code!=='KeyP')||e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;
   if(t==='INPUT'||t==='TEXTAREA'||(t==='BUTTON'&&e.code==='Space'))return;if(ON_EKRAN.sayfa==='oda')return;e.preventDefault();duraklatDegistir();});
-/* geliştirici paneli (2.8O, kullanıcı kararı 2026-10-02): yalnız maç hızı ve durdurma. Doluluk, zemin ve baştan başlatma kaldırıldı;
+/* geliştirici paneli (2.8O, kullanıcı kararı 2026-10-02): yalnız maç hızı ve durdurma; B4b (2026-10-22, kullanıcı): maç içi tarz seçimi (TEST, yayından
+   önce kalkar). Doluluk, zemin ve baştan başlatma kaldırıldı;
    doluluk ve zemin stat tarifinden gelir (js/stadyum-tarifleri.js).
    U1 (2026-10-12, kullanıcı kararı): izleme hızı oyuncunundur — üst şeritteki ×1 ×2 ×4 ve 1/2/4 tuşları seçimi ayarlara yazar (OYUN.ayarlar.macHizi;
    Ayarlar > Maç ile aynı). Geliştirici panelinin 1×–8×'i (TEST) aynı seçimi yazar, kaydetmez. Etkin hız js/mac-sahnesi.js izlemeHizi'dir: önemli

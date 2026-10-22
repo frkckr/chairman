@@ -23,7 +23,7 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
      düğme, D, maske tuvali, ayar yok) denetlenir.
  18. İzleme hızı ve önemli anlar (U1, 2026-10-12): Ayarlar > Maç, maç şeridindeki ×1 ×2 ×4 ve 1/2/4 tuşları, kalıcılık; belirlenimli maçta
      ×4'te şut ve golden önce 1×'e iniş (ikiz motor 7 sn önde), maçın sonuna dek ikizin ana motorla aynılığı.
- 11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız ve Durdur, eski ayar kaydı, sessiz maç.
+ 11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız, Durdur ve tarz seçimi (TEST, B4b), eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
 
@@ -1130,9 +1130,9 @@ async def bolum_11(tarayici, site, tum_hatalar):
     await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=20000)
     cerceve = await pg.evaluate("""() => ({ ust: !!document.querySelector('header.top, .rules, .pal, .radyo, #radyoMetin, #radyoSkor'),
       gelistirici: !!document.querySelector('details.gelistirici:not([open]) #hizSeg'), santra: (document.getElementById('btnMacaGec') || {}).textContent,
-      ayarlar: [...document.querySelectorAll('details.gelistirici button, details.gelistirici input')].map(b => b.id || b.dataset.hiz).join(',') })""")
-    denetle("Çerçeve temiz: başlık, kurallar, palet ve radyo satırı yok; deneme ayarlarında yalnız maç hızı ve Durdur (doluluk, zemin, baştan başlat yok); 'Santraya geç'",
-            not cerceve["ust"] and cerceve["gelistirici"] and cerceve["santra"] == "Santraya geç" and cerceve["ayarlar"] == "1,2,4,8,btnDurdur", str(cerceve))
+      ayarlar: [...document.querySelectorAll('details.gelistirici button, details.gelistirici input, details.gelistirici select')].map(b => b.id || b.dataset.hiz).join(',') })""")
+    denetle("Çerçeve temiz: başlık, kurallar, palet ve radyo satırı yok; deneme ayarlarında yalnız maç hızı, Durdur ve tarz seçimi (TEST, B4b; doluluk, zemin, baştan başlat yok); 'Santraya geç'",
+            not cerceve["ust"] and cerceve["gelistirici"] and cerceve["santra"] == "Santraya geç" and cerceve["ayarlar"] == "1,2,4,8,btnDurdur,tarzEv,tarzKonuk", str(cerceve))
     ayar = await pg.evaluate("({ a: OYUN.ayarlar.yazi, t: OYUN.ayarlar.test, kayit: JSON.parse(localStorage.getItem('chairman:ayarlar')) })")
     denetle("Eski ayar kaydı açıldı: yazı büyüklüğü ve test ayarı korundu, ses ve hareket anahtarları düştü",
             ayar["a"] == "buyuk" and ayar["t"] is False and "ses" not in ayar["kayit"] and "sessiz" not in ayar["kayit"] and "hareket" not in ayar["kayit"], str(ayar))
