@@ -52,12 +52,14 @@ function varisAdaylari(L,alt){const v=pasVarisHizi(L);
 /* D1 (2026-10-22; V1c-1, pasAile&1): yerden pasın hız aileleri — adaylar çıkış hızı uzayında (bırakma, itme, sert ayak içi, sürülmüş; v0 = clamp(a + b·L,
    alt, üst), MOTOR_AYAR.pasAileHiz). Sıra: bırakma ya da 7 m'den kısa pasta [bırakma, itme, sert], öbürlerinde [itme, sert, sürülmüş]. Uygunluk: ailenin
    mesafesi, varış hızı (bırakmada ≥ 2,5, öbürlerinde 3,5–18), vurucunun tavanı (pasTavan × şutun azami hızı × (1 − 0,25·baskı); tavan ailenin alt
-   ucunun altındaysa aile yok), gelişinede sürülmüş yalnız 25 m'den uzun. İkiden az aday kalırsa itmenin yumuşak eşi (v0 × 0,8; 8,5'in altında bırakma).
+   ucunun altındaysa aile yok; ortalama vurucu), gelişinede sürülmüş yalnız 25 m'den uzun. İkiden az aday kalırsa itmenin yumuşak eşi (v0 × 0,8; 8,5'in altında bırakma).
    Saf; modül dizileri AA_* her çağrıda baştan yazılır, çağrılar arası durum taşımaz (PA_* kalıbı). Dönüş: aday sayısı (0: eski yol) */
 const AILE_AD=['birak','itme','sert','surulmus'],AA_V0=new Float64Array(3),AA_VA=new Float64Array(3),AA_F=new Uint8Array(3);
 function aileV0(f,L){const h=MOTOR_AYAR.pasAileHiz[f];return clamp(h[0]+h[1]*L,h[2],h[3]);}
 function aileAdaylari(m,p,L,alt,o){
-  const H=MOTOR_AYAR.pasAileHiz,R=m.R,bs=o.baski!=null?o.baski:baskiAltinda(m,p),tv=MOTOR_AYAR.pasTavan*sutHizTavani(p,false)*(1-0.25*bs);
+  /* tavan ortalama vurucunun (şut gücü 0,5) şut azamisinden: oyuncunun kendi gücüne bağlanınca zayıf pasör daha yumuşak ve güç–hata modelinde daha isabetli
+     pas atıyordu (p-seviye S2'de seviye farkı silindi); güç–hata çarpanı oyuncunun tavanına ölçeklenene dek (borç) tavan herkes için aynı */
+  const H=MOTOR_AYAR.pasAileHiz,R=m.R,bs=o.baski!=null?o.baski:baskiAltinda(m,p),SH=MOTOR_AYAR.sutHiz,tv=MOTOR_AYAR.pasTavan*(SH[0]+0.5*SH[1])*(1-0.25*bs);
   const s0=alt==='birak'||L<7?0:1;let K=0;
   for(let f=s0;f<s0+3;f++){const h=H[f];if(L<h[4]||L>h[5]||(f===3&&o.ilk&&L<25)||tv<h[2])continue;
     const v0=Math.min(aileV0(f,L),tv),va=yerHiz(v0,L,R);if(va<(f===0?2.5:3.5)||va>18)continue;
@@ -544,7 +546,7 @@ function pasAdayiTam(m,p,o,c,tip,yay){
   /* ara pası: ölçülen kalibrasyon düzeltmesi (T2, 8 maç: tahmin %77, gerçekleşen %58; başarısızların %57'sini savunmacı kesiyor, ofsayt %3;
      0,75 seçimi fazla daraltıp tahmini karamsar yaptı, 0,85). Kök neden geriye koşan savunmacının varış/uzanma modelindedir (T5); o tura
      kadar çarpanla kapatılır */
-  if(c.alt==='ara')A.P*=MA.araKalib;
+  if(c.alt==='ara')A.P*=A.aile?MA.araKalibAile:MA.araKalib;   /* D2: aileli planlayıcının ara pası kendi kalibrasyonuyla */
   /* ofsayt riski (T2 kalibrasyon): pasör çizgiyi hatasız göremez (secenekler'deki algı hatasıyla aynı ölçek); ilerideki alıcı algılanan çizgiye
      yakınsa gerçekte ofsaytta olabilir: P(ofsayt) = Φ((alıcı − algılanan çizgi) / σ) */
   if(o.ofs!=null){const gu=c.g.x*d,u=o.ox*d;if(gu>u&&gu>0){const sg=Math.max(0.3,MA.ofsaytAlgi*(1.2-p.oz.gorus));A.P*=1-normalDagilim((gu-o.ofs)/sg);}}

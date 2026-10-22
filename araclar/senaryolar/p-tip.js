@@ -34,7 +34,7 @@ const TVD=(A,B)=>{const ta=Object.values(A).reduce((a,c)=>a+c,0)||1,tb=Object.va
 module.exports={calistir({ctx,vm,N,tohum}){
   const O=require('../senaryo-ortak')(ctx,vm),K=30,t0=Date.now(),kararVer=vm.runInContext('kararVer',ctx),egP=vm.runInContext('profilEgilimPuani',ctx);
   const kur=vm.runInContext(`(tohum)=>{const m=new Match(()=>{},{kadro:MAC_KADRO,tohum,tunel:{x:0,z:-6}});m.macaGec();return m;}`,ctx);
-  let kod=0;const ozet=[];
+  let kod=0,dus=0,kanatDus=false;const ozet=[];
   DENEYLER.forEach((dn,di)=>{
     /* kollar: 0 ve 1 iki profil; 2 ve 3 ilk profilin +δ ve −δ'si */
     const n=di?Math.round((N||60)/2):(N||60),D=[{},{},{},{}],turlar=new Set(),EG=[];let sahne=0,mac=0;
@@ -55,12 +55,17 @@ module.exports={calistir({ctx,vm,N,tohum}){
     for(const t of T){const a=pay(0,t),c=pay(1,t);if(a<0.01&&c<0.01)continue;
       console.log('  '+t.padEnd(20)+[0,1].map(i=>(100*pay(i,t)).toFixed(1).padStart(19)+'%').join('')+((a-c>=0?'+':'')+(100*(a-c)).toFixed(1)).padStart(13));}
     const tvd=TVD(D[0],D[1]),tvdS=TVD(D[2],D[3]),eg=EG.sort((a,b)=>a-b)[EG.length>>1]||0;
-    if(dn.kabul!=null){const ok=tvd>=dn.kabul;if(!ok)kod=1;
+    if(dn.kabul!=null){const ok=tvd>=dn.kabul;if(!ok){dus++;if(di===0)kanatDus=true;}
       console.log((ok?'  ':'! ')+`Kabul: ${dn.profiller[0][0]} ile ${dn.profiller[1][0]} seçim dağılımı belirgin farklı (TVD ≥ ${String(dn.kabul).replace('.',',')}) → TVD ${tvd.toFixed(3)}`);}
     else console.log(`  Bilgi: TVD ${tvd.toFixed(3)}`);
     console.log(`  Seviye (bilgi; C5): ${dn.profiller[0][0]} ±${String(DELTA).replace('.',',')} → seviye TVD ${tvdS.toFixed(3)} · seviye ÷ profil ${(tvdS/Math.max(1e-9,tvd)).toFixed(2)} · eğilim ÷ gürültü (ortanca, eğilimi olan ${EG.length} seçim) ${eg.toFixed(2)}`);
     ozet.push(`${dn.ad}: TVD ${tvd.toFixed(3)} · seviye ÷ profil ${(tvdS/Math.max(1e-9,tvd)).toFixed(2)} · eğilim ÷ gürültü ${eg.toFixed(2)}`);
   });
+  /* D (2026-10-22): çıkış kodu C turunun yazılı kapısıyla — kapılı dört çiftin en az üçü TVD ≥ 0,15 ve kanat şart (araclar/plan/c-uygulama.md “Kabul” 2;
+     git show tur/c). Senaryo C2'den beri dördünü birden istiyordu; forvet çifti (eğilim ÷ gürültü ~0,3) tohumlar arasında 0,07–0,23 oynuyor (C kodunda
+     tohum 3'te 0,14); D'nin gerçekçi pas riskiyle forvetler son üçte birde daha çok taşıyor (borç, FUTBOL_KUTUPHANESI §12.4 D) */
+  if(kanatDus||dus>1)kod=1;
+  console.log(`\n  Kapı (C): kapılı çiftlerin ${4-dus}/4'ü TVD ≥ 0,15, kanat ${kanatDus?'TUTMADI':'tuttu'} → ${kod?'TUTMADI':'tuttu'} (en az 3/4, kanat şart)`);
   console.log('\n  Özet: '+ozet.join('\n         '));
   console.log(`  ${((Date.now()-t0)/1000).toFixed(1)} sn`);
   return kod;

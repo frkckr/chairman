@@ -115,10 +115,10 @@ ayarEkle('B',{
   falsoProfil:1,                // C3 (2026-10-22): pasın eğrisi pasörün pas özelliği ve falsoluPas eğilimiyle (falsoKatsayi; yerden ve uzun havadan pas; orta, korner, uzaklaştırma dokunulmaz); 0: eski
   pasFalso:1,                  // T21b: pasın doğal eğrisi çarpanı — iç ayakla yerden pas 0,01–0,05 (boyla), dış ayakla ters yöne 0,05–0,09, iç ayakla uzun havadan 0,04–0,08; nişan
                                // yerdeki eğriyi telafi eder (yerPasVur). 0: eski (yerden pas ve uzun top dönüşsüz)
-  pasEgriKat:1.6,              // P2 (kullanıcı, 2026-10-21 gece: "daha çok falsolu pas olmalı ki izlemesi keyif versin"): eğri büyüklüğü çarpanı — 18 m'den uzun
-                               // yerden pas, uzun havadan pas, orta ve korner (orta/korner |egri| ≤ 0,16). Nişan telafisi aynı eğriyle (top yine hedefe),
-                               // rastlantı çekilmez. 1: eski (s1 ile birebir). Denge gece ölçülür (c-orta, d-duran, b-pas, 80 maç); V1c-2'nin pasEgri tablosu
-                               // gelince dış çarpan olarak kalır ya da tabloya katlanır
+  pasEgriKat:2.0,              // D2 (kullanıcı, 2026-10-22: daha da çok falso; P2'de 1,6 — "daha çok falsolu pas olmalı ki izlemesi keyif versin"): eğri büyüklüğü çarpanı — 18 m'den uzun
+                               // yerden pas ve uzun havadan pas; D2'den beri aile tablosunda (pasEgri) sert iç, plase ve sürülmüş satırına çarpar (itme ve dış
+                               // ayakta 1), orta ve korner kendi çarpanında (ortaEgriKat 1,6). Nişan telafisi aynı eğriyle (top yine hedefe), rastlantı
+                               // çekilmez. 1: eski (s1 ile birebir; orta ve korner için ortaEgriKat 1)
   uzunKosu:1,                  // T21c: koşana savunma arkasına havadan (boşluğa) pas adayı (≥ 15 m; eskiden yasak) ve boşluğa pasta yerden ↔ havadan ikili analiz; 0: eski
   verKacKalkis:0.05,           // Z4b (ver-kaç): koşuya çıkan pasörün vuruş takibi bu kadar (sn) sürer — pas verir vermez kalkar (0: eski 0,26)
   verKacTarz:1,                // Z4b: ver-kaç koşusunun sıklığı takımın tarzıyla (duvar pası ağırlığı; konumsal 1, ilişkisel 2, direkt 0,7; 0: tarzsız)
@@ -157,15 +157,21 @@ ayarEkle('B',{
   vurusDil:1,                  // V1-0a: 1 dil yazılır (bugünkü durumdan; motor okumaz, sonuç değişmez); 0: dil null, çizim bugünkü yoluna düşer
   /* D (2026-10-22; FUTBOL_KUTUPHANESI §12.1 D — V1c daraltılmış, kutuphane/J J.4, J.9): yerden pasın hızı ve yolu. Adaylar çıkış hızı uzayında aile
      başına (js/mac-karar.js aileAdaylari); planlayıcı hızlı topun bedelini bilir (pasif erişim, yanal erişim, aşım). 0: eski (pasVarisHizi ±2,5) */
-  pasAile:17,                  // D bit maskesi: 1 üç hız ailesi (bırakma, itme, sert ayak içi, sürülmüş; sec.aile, stil aileden), 16 planlayıcı gerçekçiliği
+  pasAile:23,                  // D bit maskesi: 1 üç hız ailesi (bırakma, itme, sert ayak içi, sürülmüş; sec.aile, stil aileden), 2 aileye bağlı eğri ve plase,
+                               // 4 sert ve sürülmüş pasta hafif havalanma, 8 alçak havadan kısa pas, 16 planlayıcı gerçekçiliği
                                // (pasif erişim, alıcının yanal erişimiyle tolerans, aşım cezası, Pex'li ve zamanlı seçim; 1 ile birlikte açılır); 0: eski
   pasAileHiz:[[5,0.45,5.5,9,0,12],[7.5,0.45,8,14,3,24],[12,0.3,14,20,8,60],[15,0.22,18,25,18,70]],   // D1: aile başına [a, b, alt, üst, Lmin, Lmax]:
                                // çıkış hızı v0 = clamp(a + b·L, alt, üst) m/sn — bırakma 5,5–9, itme 8–14, sert ayak içi 14–20, sürülmüş 18–25 (J.4)
-  pasTavan:0.9,                // D1: aile adayının tavanı — vurucunun şut azamisinin bu payı × (1 − 0,25·baskı) (hedefli vuruş ~%86, J.1)
-  pasZaman:0.3,                // D1 (bit 16): hızlı pasın zaman değeri τ — U × (1 + τ·min(1,5; en yavaşın süresi − bu adayın süresi)); τ alıcı yavaş pasla
-                               // da boşsa küçülür, takımın temposuyla büyür; bırakmada 0 (prototip τ 0,3: sert %24, isabet 83,9)
+  pasTavan:1.0,                // D1: aile adayının tavanı — ortalama vurucunun şut azamisinin bu payı × (1 − 0,25·baskı). 0,9'da (J.1'in hedefli vuruşu ~%86)
+                               // baskıdaki uzun pas yumuşuyor, bu motorda yumuşak pasın yön hatası herkes için küçüldüğünden seviye farkı eriyordu (p-seviye S2:
+                               // zayıf %90 ↔ güçlü %93; 1,0'da %76 ↔ %93); güç–hata çarpanı oyuncunun tavanına ölçeklenince (borç) yeniden bakılır
+  pasZaman:0.2,                // D1 (bit 16): hızlı pasın zaman değeri τ — U × (1 + τ·min(1,5; en yavaşın süresi − bu adayın süresi)); τ alıcı yavaş pasla
+                               // da boşsa küçülür, takımın temposuyla büyür; bırakmada 0 (prototip τ 0,3: sert %24, isabet 83,9; D2 taraması 40 maç pasTavan 1,0 ile:
+                               // 0,3'te isabet −2,6 puan, 0,2'de −1,4 ve sert + sürülmüş %26)
   pasPasif:[0.6,0.1,0.95],     // D1 (bit 16): pasif erişim — pasın hattında ds uzaklığındaki rakibin teması [2]·σ(([0] − ds)/[1]) (yürütmede erişim pasif;
                                // planlayıcının tepki süresi hızlı topu “geçiriyordu”)
+  araKalibAile:0.90,           // D2: aile adayıyla planlanan ara pasının başarı düzeltmesi (araKalib 0,85 eski planlayıcının iyimserliği içindi; aileli planlayıcıyla
+                               // 40 maçta 0,85'te 6 puan karamsar — tahmin 55,2 ↔ gerçek 61,3 —, 0,94'te 4,6 puan iyimser — 61,2 ↔ 56,6, ara pası 520 → 673)
   pasAsim:6,                   // D1 (bit 16): alıcı geç kalınca aşım cezası 1 − geç·max(3, varış)/pasAsim (≥ 0,1; eskisi 1 − 0,9·geç, topun kaçma hızını bilmiyordu)
   pasEgri:[[0.010,0.020],[0.02,0.02],[0.035,0.03],[0.004,0.008],[0.05,0.04]],   // D2 (bit 2): yerden pasın eğrisi [taban, aralık] — itme/bırakma (bugünkü kısa pas
                                // büyüklüğü: eğrili pas payı kısa paslardan düşmez), sert iç, plase, sürülmüş (az dönüş), dış ayak (ters yöne); × pasFalso ×
@@ -673,8 +679,9 @@ Object.assign(Match.prototype,{
     const ku=e.kotuU||0,ah=this.normal()*sd+(e.kotu==='kenar'?(e.ayak==='sol'?-1:1)*(0.3+0.3*ku):0),ca=Math.cos(ah),sa=Math.sin(ah),rx=hx-bx,rz=hz-bz;
     hx=bx+rx*ca-rz*sa;hz=bz+rx*sa+rz*ca;
     const eL=this.normal()*sd*(1+L/40)-0.035*baski;let v=pasPlani(this,Math.max(0.5,L*(1+eL)),'yer',varis).v0;
-    /* D1: aile taşıyan pasın hızı ailenin bandında kalır ([alt − 1,5; üst + 1,5]; hedef tazelense de teknik kimliği korunur) */
-    const vpA=e.vp&&e.vp.aile;if(vpA){const h=MOTOR_AYAR.pasAileHiz[AILE_AD.indexOf(vpA)];if(h)v=clamp(v,h[2]-1.5,h[3]+1.5);}
+    /* D1: aile taşıyan pasın planlanan hızı ailenin bandında kalır ([alt − 1,5; üst + 1,5]; hedef tazelense de teknik kimliği korunur); uzunluk hatası
+       orana uygulanır — kırpma hatadan sonra yapılınca fazla sert vuruşlar kırpılıyor, zayıf pasörün uzun pası yapay olarak isabetli oluyordu (p-seviye S2) */
+    const vpA=e.vp&&e.vp.aile;if(vpA){const h=MOTOR_AYAR.pasAileHiz[AILE_AD.indexOf(vpA)];if(h){const vP=pasPlani(this,Math.max(0.5,L),'yer',varis).v0;v*=clamp(vP,h[2]-1.5,h[3]+1.5)/vP;}}
     if(e.kotu==='alt')v*=0.8;else if(e.kotu==='ust')v*=0.55;else if(e.kotu==='kenar')v*=0.75;
     /* D2 (pasAile&4): sert ve sürülmüş pasta hafif havalanma — sürülmüşte vy = [3] + [4]·h, sertte [2] olasılıkla [0] + [1]·h (pasKalkis; tavan [5] sekme
        eşiğinin altında: top 2–8 cm yükselir, sekmez, planlayıcının yerden süresi tutar); 10 m'den kısa ve kötü vuruşta yok. Rastlantısız (h2) */
