@@ -35,7 +35,7 @@ Ayrıntılı gerekçeler `tur/p2` etiketindeki §7'dedir.
 
 | # | Konu | Geçerli karar |
 |---|---|---|
-| 1 | Maçın temposu | Amaçlı atak (kullanıcı, 2026-10-04). Dar kabul bantları 2026-10-19'da kalktı; geniş sağlık aralığı [FUTBOL_KUTUPHANESI §11.1](FUTBOL_KUTUPHANESI.md#11-ölçüler-ve-test-rejimi). 2026-10-22: atak zihniyeti, amaçsız geri pas zincirinin ölçülmesi ve azaltılması (B turu). |
+| 1 | Maçın temposu | Amaçlı atak (kullanıcı, 2026-10-04). Dar kabul bantları 2026-10-19'da kalktı; geniş sağlık aralığı [FUTBOL_KUTUPHANESI §11.1](FUTBOL_KUTUPHANESI.md#11-ölçüler-ve-test-rejimi). 2026-10-22: atak zihniyeti, amaçsız geri pas zincirinin ölçülmesi ve azaltılması (B turu): geri pas payı önü açıkken ve zincirde söner, tarzın sabrıyla (konumsal geç, direkt erken; `geriPasAmac`, `tarzSabir`); varsayılanla 40 maç gol 3,70 (önce 2,40), sağlık aralığı içinde. |
 | 2 | Özellikler | Kadro verisine yeni özellik eklenmez; 11 özellikten alt özellik, rol ve eğilim türetilir (Claude, 2026-10-07; Ek A, Ek B). Kabiliyetin tek girişi `js/mac-profil.js`. Kadro profillerini TEST verisi olarak Claude yazar (C turu, 2026-10-22). |
 | 3 | Duran top süresi | Tempo B: duruşlar gerçeğin kabaca yarısı ve bağlama göre değişken, duruşta maç saati 2 kat (kullanıcı, 2026-10-19 gece); penaltı ~40, gol sonrası ~35 sn (S1). |
 | 4 | Sakatlık | Maç başına ~1 kısa duraklama ve ~0,3 oyundan çıkma (kullanıcı, 2026-10-11). |
@@ -45,6 +45,8 @@ Ayrıntılı gerekçeler `tur/p2` etiketindeki §7'dedir.
 | 8 | Hareket verisi | A7'de uygulandı (CMU, Fukuchi 2017 CC BY; `js/hareket-egrileri.js` yalnız sayı tablosu). Yalnız figür çizimi içindir (antrenman); atıf [kutuphane/J §J.12](kutuphane/J-beden-dili.md#j12-figür-çizimi-hareket-dili-ve-kaynaklar-antrenman-serisi-için). |
 | 9 | Vuruş hazırlığı | `vurusSureleri` motor davranışıdır (türüne göre geri salınım ve asgari hazırlık; baskıda acele). Pas hızı aileleri ve amaçlı uzaklaştırma D turunda (V1 daraltılmış). |
 | 10 | Faul | Faul temastan doğar; eşikle zorlanmaz (sağlık aralığı 6–20). |
+| 12 | Tarz (B, Claude, 2026-10-22) | Tarz maç başına seçilir: oyunda ve `mac-deneme`'de tohumdan atak ağırlıklı `TARZ_DAGILIM` (dikey .22, ilişkisel .18, konumsal .17, direkt .15, kanat-orta .15, dengeli .13; konuk evinkini almaz), senaryolarda kadronun tarzı; tarz vektörü iştah, tempo ve sabır taşır. Maç içinde kademeli değişir (`tarzDegistir`: talimat duruşta, en geç 20 sn; 40 sn'lik yumuşak geçiş) — bugün geliştirici panelinin TEST seçimi, ileride hocanın kararı. Tarz kenarı konumsal → direkt +0,34 gol/maç [%95 0,07–0,62] (hedef +0,2–0,3; fark ölçü belirsizliğinin altında, ayar yapılmadı). |
+| 13 | Kutu savunması (B1d, Claude, 2026-10-22) | Kutu markajı ve kutu savunmasının kapısı (32 m / 30 m) top kaleye gecikmeli yerinden yakınsa anlık yerden açılır (`kutuKapiAnlik`); T1'in 4 sn yumuşatılmış, 0,45 sn geriden gelen top yeri çabuk dikey girişte kutuyu boş bırakıyordu (B1'le gerçekleşen ÷ konum xG 1,52). Z5-2'den B'ye alındı (sağlık kabulü); blok takibi ve geri koşu Z5-2'de. |
 | 11 | 2D | Maç tepeden 2D izlenir; figürlü motor antrenman sahneleri içindir (kullanıcı, 2026-10-21 gece; [kutuphane/M](kutuphane/M-pul-gorunumu.md)). |
 
 ---
