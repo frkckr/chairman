@@ -15,7 +15,8 @@ Bu tablo [CLAUDE.md “Kontrol”](../CLAUDE.md#kontrol)'ün üç kademesine ekl
 | Bire bir, sürüş, savunmacı | `c-1v1` |
 | Top saklama (`koruSecenegi`, `birakOnPuani`, `koru*`), kalkanlı müdahale | `c-koru` |
 | Temas, müdahale, faul, hakem | `c-yariyariya`, `c-donen`, `c-temas`; çarpışma teşhisi `MAC_DENEME_TEMAS=1 node araclar/mac-deneme.js 12` |
-| Profil (`js/mac-profil.js`), kadro özellikleri | `p-tip`; tur kapanışında `node araclar/oyuncu-karnesi.js 80 1 --duyarlilik` |
+| Profil (`js/mac-profil.js`; C: `egilimGoreli`, `egilimGuc`, `uzunEgilim`, `cikisEgilim`, yeni eğilimler), kadro özellikleri (`js/kadrolar.js`) | `p-tip` (beş çift, seviye ekseni), `p-seviye`; “C1:” satırları ve profil kapısı (`c-oyuncu.js`); tur kapanışında `node araclar/oyuncu-karnesi.js 80 1 --duyarlilik` (C2'den beri pas, hız, görüş de); kadro verisi değişince bütün senaryolar (aktörler) |
+| Tepe hız (`hizAralik`, `oyuncuTepeHiz`; kurulum, yedek, `hrkSabit` S0 tavanı) | `c-1v1`, `c-kanat`, `c-hareket`, `c-surus`, `c-hava`; profil kapısının tepe hız satırı; bütünlük `hizAralik` [6.4,2.4,10] |
 | Takım düzeni, kanat rolü ve kutuya geç giriş (`kanatKonumu`, `gecGirisAta`), sürükleme ve kanat hızı (`surukle*`, `sagSolAc`, `tersKanat`, `tersAyakKanat`) | `c-kanat`, `c-orta`, `c-1v1`, `c-hareket`; “Sürükleme / Kanat taşıması” satırları |
 | Orta kararı ve planlayıcısı (`ortaSecenekleri`, `pasAnaliz`'in ortası, `havaDuelloTahmin`, `ortaBlokTahmin`, `ortaTemasP`, `ortaDevam`, `ortaEsik`, `cizgiyeIn`, `yerdenOrtaKesme`) | `c-orta` (geri çevirme ve alçak satırları \|tahmin − gerçek\| ≤ 10), `c-kanat`, `c-1v1`, `c-koru` |
 | Hava topu (`js/mac-hava.js`: sıçrama, kafa teması, düello; kalecinin orta tutuşu; plonjon) | `c-hava` |
@@ -27,7 +28,7 @@ Bu tablo [CLAUDE.md “Kontrol”](../CLAUDE.md#kontrol)'ün üç kademesine ekl
 | Gelişine oyun (`tekKoni`, `tekVurus`, `tekVurusKarari`) | `b-pas`; “Gelişine” satırları |
 | Santra (`santraTek`, `santraKonumu`) | `m-fotograf`, `m-isinma`; “Santra” satırları |
 | Top fiziği (`topFizikAdim`, `TOP_FIZIK`, `yerHiz`, `yerIlkHiz`, `yerSure`, `yerFalso`) | `t-top` |
-| Pasın eğrisi ve uzun top (`pasFalso`, `pasEgriKat`, `yerEgriSapma`, `uzunKosu`, `acmaDokunus`, `donusBos`, `ortaIkinci`, `ortaErken`) | `b-pas`, `c-orta`, `c-kanat`, `t-top`, `d-duran`; “Eğri / Uzun / Orta” satırları |
+| Pasın eğrisi ve uzun top (`pasFalso`, `pasEgriKat`, `yerEgriSapma`, `uzunKosu`, `acmaDokunus`, `donusBos`, `ortaIkinci`, `ortaErken`; C: `falsoProfil`, `falsoKatsayi`) | `b-pas`, `c-orta`, `c-kanat`, `t-top`, `d-duran`; “Eğri / Uzun / Orta” satırları; “C1: Genel falso” (önceki tabanın ±%10'u) ve falso endeksi |
 | Vuruş modeli ve şut (`vurusSapma`, `sutPlani`, `sutYeni`, `kaleciEgri`, kötü vuruş, şut stilleri) | `v-sut`, `d-sut`, `d-penalti`; “Şut:” satırları |
 | Şutu kapatma (`sutHamle`, `blokErisim`, `sutHamleYap`, `sutBlokOlasiligi`) | `v-sut`, `c-1v1`, `c-koru`, `c-temas`, `c-yariyariya`, `c-donen`, `d-duran`, `d-sut`; “Blok / şut” satırları |
 | Blok ve sekme fiziği (`yansit`, `sutBlok`, `govdeCarpmasi`, `blokGercek`, `govdeDar`), duran topta markajcı (`markajYan`) | `d-duran`, `c-temas`, `c-yariyariya`, `c-donen`, `d-sut` |

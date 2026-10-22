@@ -1,4 +1,4 @@
-<!-- Durum (taslak, 2026-10-22): C planı, başlamadı. Önkoşul B'nin kapanması: `tur/b` etiketi ve `araclar/taban/b.json` gerekiyor, bugün ikisi de yok. `origin/claude/motor-b` 4 dakika önce yeni bir commit aldı ("B1b tarama anahtarı tarzSabirZincir"), yani dizüstü hâlâ B'de çalışıyor. Bu plan B kapandıktan sonra başlar. -->
+<!-- Durum (2026-10-22, dizüstü): C KAPANDI (`tur/c`; oto mod). C0–C8 uygulandı; C9'un 80 maçlık karnesi ve hızın kesin kabulü masaüstüne kaldı. Profil kapısı 4/5 (uzun paslı 6'nın uzun ileri pası tutmadı); sonuç FUTBOL_KUTUPHANESI §12.4 C, kararlar MAC_MOTORU §3 (2, 14). p̄ C4 verisiyle 0,65 (planda 0,62 yazıyordu). -->
 # Plan: C — Oyuncu farkı (Z9 öne)
 
 ## Bağlam
