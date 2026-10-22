@@ -180,12 +180,13 @@ ayarEkle('B',{
                                // (V1 tasarımı [0,3, 0,3, 0,4]; kullanıcı 2026-10-22: daha çok falso → daha sık)
   pasKalkis:[0.5,0.5,0.4,0.8,0.45,1.1],   // D2 (bit 4): sert pasta [2] olasılıkla vy = [0] + [1]·h, sürülmüşte vy = [3] + [4]·h (m/sn); tavan [5] (V1 tasarımı 1,25 —
                                // y 0,02 m'den sekme eşiği ~1,14'ün üstündeydi: t-top 7)
-  alcakPas:[6,16,3.5,0.6,0.05,0.8,1.4],   // D3 (bit 8): alçak havadan kısa pas — [0]–[1] m, ilk metrelerde rakip bacağı [2] m'den yakın; tepe clamp([3] + [4]·L,
+  alcakPas:[6,16,6,0.6,0.05,0.8,1.4,1.8],   // D3 (bit 8): alçak havadan kısa pas — [0]–[1] m, ilk metrelerde rakip bacağı [7]–[2] m'de; tepe clamp([3] + [4]·L,
                                // [5], [6]) m (2 m'de ~0,6–0,8 m: bacağın üstü; inişte 6–10 m/sn)
   /* D4 (2026-10-22; V1d): amaçlı uzaklaştırma (js/mac-karar.js uzaklastirSecenekleri) */
-  uzakAmac:0,                  // D4 bit maskesi: 1 ayakla uzaklaştırmanın adayları ve yürütmesi (ileri, ters, acil, taç, çizgi, kurtarış topu); 0: eski (rastgele uzağa,
+  uzakAmac:5,                  // D4–D5 bit maskesi: 1 ayakla uzaklaştırmanın adayları ve yürütmesi (ileri, ters, acil, taç, çizgi, kurtarış topu), 2 kaleciye geri pasın
+                               // risk değeri (kapalı: U3'te %0, 40 maçta 0,2/maç — kapı ≥ %20 ve ≥ 0,5; borç), 4 amaçlı kafa ve dikey gürültü sınırı; 0: eski (rastgele uzağa,
                                // kaçma ve çizgi zarları)
-  uzakBlok:0.6,                // D4: blok ya da kapma riskinin tavanı — Pb = clamp((hazırlık + geri − rakibin varışı + 0,1)/0,35) × bu × yön (rakip önde 1, yanda 0,75, arkada 0,5)
+  uzakBlok:0.9,                // D4: blok ya da kapma riskinin tavanı — Pb = clamp((hazırlık + geri − rakibin varışı + 0,1)/0,35) × bu × yön (rakip önde 1, yanda 0,75, arkada 0,5)
   uzakBlokKay:0.5,             // D4: bloklanan ya da kapılan uzaklaştırmada topu rakibin alma payı (kayıp bedeli × bu)
   uzakTac:0.4,                 // D4: rakibin tacının bedeli — o yerdeki açık top kaybının bu payı (savunma yerleşir, ofsayt yok, uzun taç riski)
   uzakKorner:3.5,              // D4: kornere uzaklaştırmanın bedeli (puan ≈ korner başına xG + ikinci faz)
@@ -193,7 +194,9 @@ ayarEkle('B',{
                                // ve rakip < 3 m, ya da dönen top; taç ve çizgi yalnız tehlikede aday
   uzakPay:[0.2,0.3],           // D4: hocanın riskten kaçınma payı (puan; [taban, tehlikede ek]) × (1 + uzakTarz·(0,5 − kisaPay)); tasarımda seçim payı bugünküne eşit
   uzakTarz:1.0,                // D4: uzakPay'ın tarzla ölçeği (kısa kuran tarz daha az uzaklaştırır)
-  uzakIleri:[36,48],           // D4: ileri ve ters kanada uzaklaştırmanın boyları (m)
+  uzakIleri:[26,36,48],        // D4: ileri ve ters kanada uzaklaştırmanın boyları (m; 26 m tek adımla — baskıda hızlı seçenek)
+  uzakBlokPay:[0.45,0.35],     // D4: blok riskinin payı ve eğimi — clamp((hazırlık + geri − rakibin varışı + [0]) / [1]); V1 tasarımı [0,1, 0,35] ve uzakBlok 0,6:
+                               // 40 maçta planlanan %6,9 ↔ gerçekleşen %32; [0,45, 0,35] ve 0,9: %11 ↔ %24, ilk dokunan biz %24 → %31 (rakibin varışı iyimser: borç)
   uzakSerit:[10,12],           // D4: şeritler — kanat kenardan [0] m, yarım alan ortadan [1] m (orta şerit yok: ceza yayına değil)
   uzakAdimL:[20,32,50],        // D4 (V1b'nin yerine; J.3.3): 0 / 1 / 2 adımla menzil (m) × vurucunun gücü (0,85 + 0,3·şut; kalecide × 1,15); ötesi aday değil
   uzakHaz:[0.06,0.22,0.42],    // D4: adım başına asgari hazırlık (sn; zaman varsa en az bir ayar adımı: sıfır hazırlıkla 28+ m havadan top yok)
