@@ -157,7 +157,7 @@ ayarEkle('B',{
   vurusDil:1,                  // V1-0a: 1 dil yazılır (bugünkü durumdan; motor okumaz, sonuç değişmez); 0: dil null, çizim bugünkü yoluna düşer
   /* D (2026-10-22; FUTBOL_KUTUPHANESI §12.1 D — V1c daraltılmış, kutuphane/J J.4, J.9): yerden pasın hızı ve yolu. Adaylar çıkış hızı uzayında aile
      başına (js/mac-karar.js aileAdaylari); planlayıcı hızlı topun bedelini bilir (pasif erişim, yanal erişim, aşım). 0: eski (pasVarisHizi ±2,5) */
-  pasAile:0,                   // D bit maskesi: 1 üç hız ailesi (bırakma, itme, sert ayak içi, sürülmüş; sec.aile, stil aileden), 16 planlayıcı gerçekçiliği
+  pasAile:17,                  // D bit maskesi: 1 üç hız ailesi (bırakma, itme, sert ayak içi, sürülmüş; sec.aile, stil aileden), 16 planlayıcı gerçekçiliği
                                // (pasif erişim, alıcının yanal erişimiyle tolerans, aşım cezası, Pex'li ve zamanlı seçim; 1 ile birlikte açılır); 0: eski
   pasAileHiz:[[5,0.45,5.5,9,0,12],[7.5,0.45,8,14,3,24],[12,0.3,14,20,8,60],[15,0.22,18,25,18,70]],   // D1: aile başına [a, b, alt, üst, Lmin, Lmax]:
                                // çıkış hızı v0 = clamp(a + b·L, alt, üst) m/sn — bırakma 5,5–9, itme 8–14, sert ayak içi 14–20, sürülmüş 18–25 (J.4)

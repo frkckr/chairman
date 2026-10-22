@@ -14,9 +14,11 @@ const PK_DILIM=[
   /* T10a (2026-10-11): orta ve geri çevirme — türü, vuruş yeri (kale çizgisine uzaklık) ve ceza sahasındaki savunmacı (kaleci hariç) */
   ['Orta: kesme','o_kesme'],['Orta: asma','o_asma'],['Orta: alçak','o_alcak'],['Orta: geri çevirme','o_geri'],
   ['Orta: çizgiden (< 8 m)','o_ycizgi'],['Orta: köşeden (8–20 m)','o_ykose'],['Orta: erken (> 20 m)','o_yerken'],
-  ['Orta: kutuda ≤ 3 savunmacı','o_k0'],['Orta: kutuda 4–5','o_k1'],['Orta: kutuda ≥ 6','o_k2']];
+  ['Orta: kutuda ≤ 3 savunmacı','o_k0'],['Orta: kutuda 4–5','o_k1'],['Orta: kutuda ≥ 6','o_k2'],
+  /* D1 (2026-10-22): yerden pasın hız ailesi (sec.aile; pasAile&1) ve alçak havadan kısa pas (D3, yay alcakPas) */
+  ['Aile: bırakma','f_birak'],['Aile: itme','f_itme'],['Aile: sert iç','f_sert'],['Aile: sürülmüş','f_surulmus'],['Alçak havadan kısa pas','f_alcakPas']];
 const pkDilimler=a=>{const L=a.L||0,P=a.P;return['t_'+a.tur,a.alt?'a_'+a.alt:null,a.ilk?'k_tek':null,'y_'+(a.tip||'yer'),L<15?'l_kisa':L<=30?'l_orta':'l_uzun',
-  P<0.5?'p_0':P<0.7?'p_1':P<0.85?'p_2':'p_3'].concat(a.orta?['o_'+a.orta.tur,'o_y'+a.orta.yer,'o_k'+a.orta.k]:[]).filter(Boolean);};
+  P<0.5?'p_0':P<0.7?'p_1':P<0.85?'p_2':'p_3',a.aile?'f_'+a.aile:null,a.yay==='alcakPas'?'f_alcakPas':null].concat(a.orta?['o_'+a.orta.tur,'o_y'+a.orta.yer,'o_k'+a.orta.k]:[]).filter(Boolean);};
 const PK_PL=52.5,PK_MZ=34;
 module.exports={
   bilgi:[['— P: pas kalibrasyonu (tahmin P ↔ gerçekleşen) —',null,0],
@@ -33,7 +35,7 @@ module.exports={
         let orta=null;if(v.tur==='orta'||v.tur==='geriCevir'){const d=m.dir[v.p.team],u=PK_PL-v.x0*d;let k=0;
           for(const q of m.teams[1-v.p.team])if(q.oyunda&&q.rol!=='GK'&&q.x*d>PK_PL-16.5&&Math.abs(q.z-PK_MZ)<20.16)k++;
           const ot=sec.ortaTuru||(v.tur==='geriCevir'?'geri':null);orta={tur:ot==='alcak'||ot==='kesme'||ot==='asma'||ot==='geri'?ot:null,yer:u<8?'cizgi':u<=20?'kose':'erken',k:k<=3?0:k<=5?1:2};}
-        aktif={P:sec.P,tur:v.tur,alt:sec.alt||null,ilk:!!v.ilk,tip:v.tip,L:v.L,bp:m.ball.pas,c0:I.pasTamam[0]+I.pasTamam[1],orta};},
+        aktif={P:sec.P,tur:v.tur,alt:sec.alt||null,ilk:!!v.ilk,tip:v.tip,L:v.L,bp:m.ball.pas,c0:I.pasTamam[0]+I.pasTamam[1],orta,aile:sec.aile||null,yay:sec.yay||null};},
       adim(m){if(!aktif)return;const I=m.ist;
         if(I.pasTamam[0]+I.pasTamam[1]>aktif.c0)bitir(1);else if(m.ball.pas!==aktif.bp)bitir(0);},
       bitir(){if(aktif)bitir(0);const h=S.hepsi||[0,0,0,0],ham={pkKapsam:[pli,tum],pkTahmin:[h[1],h[0]],pkGercek:[h[2],h[0]],pkBrier:[h[3],h[0]]};

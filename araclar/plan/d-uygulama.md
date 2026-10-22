@@ -1,4 +1,4 @@
-<!-- Durum (2026-10-22 22:40, masaüstü, oto mod): D-0 sürüyor; C borçlarından hız bütçesi geçti (tur/b ağacına karşı aynı süreçte ortanca +%4,2 [−1,1 … +11,3], en azların oranı +%1,2, 1000 adım 42,5 ms; kodun payı −%1,7), karne ve akış denemesi sürüyor. -->
+<!-- Durum (2026-10-22 23:00, masaüstü, oto mod): D-0 ve D1 commit edildi; D2 sürüyor. C borçları kapandı: hız tur/b ağacına karşı aynı süreçte ortanca +%4,2 [−1,1 … +11,3], en azların oranı +%1,2, 1000 adım 42,5 ms, kodun payı −%1,7; karne 80 maç müdahale 1,29 [1,20–1,40] (kapı 1,25) ve eski dört kapı geçti; akış denemesi C koduyla 2 düşüş (15b TEST loca bakışında kulübenin 1/15 noktası masanın arkasında — P2 stadından; 18 tohum 3 penceresinde şut yok → pencere 9600). D1: pasAile 17, 40 maçta gol 3,30 → 3,25, pas isabeti −1,9, aile bırakma/itme/sert/sürülmüş %12,8 / 58 / 25 / 3,6, çıkış hızı %10–%90 8,7–20,0 (aralık 11,3, iki tepe), ortanca 13,9 (hedef 14,5: borç; pasZaman 0,35 isabeti −2,1 yaptı, 0,3 kaldı), kalibrasyon aile başına ±3 (sürülmüş +5,7, n 246); hız eski yola göre −%6. -->
 # D — V1 daraltılmış: uygulama planı (masaüstü, 2026-10-22; kullanıcı onaylı)
 
 ## Bağlam
