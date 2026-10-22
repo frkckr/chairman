@@ -20,7 +20,7 @@ Son güncelleme: 2026-10-22 (A — temizlik turu: belgeler sadeleşti, eski taba
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır).
 
-**Makine durumu: boşta (2026-10-22 akşam).** Dizüstü B ve C'yi oto modda bitirdi; iş `main`'de ve push edildi, etiketler `tur/b`, `tur/c`; açık commit edilmemiş iş yok. Yeni makinede yalnız `git fetch --prune --tags` ve `main`'de `git pull --ff-only` (CLAUDE.md “Makine durumu”).
+**Makine durumu: masaüstü çalışıyor (2026-10-22 22:15), dal `claude/motor-d`, adım C borçları → D-0.** D turu (V1 daraltılmış) oto modda; kullanıcı kararları: oto mod, kapanışta `main` ve push; falso daha da çok; kapsam V1c + V1d + V1e. Plan `araclar/plan/d-uygulama.md` (dalda). Dizüstü bu satır “çalışıyor” ve dalın son push'u 2 saatten yeniyken devam etmez (CLAUDE.md “Makine durumu”).
 
 **2026-10-22, dizüstü: B — 2D izlenebilirlik kapandı (`tur/b`; oto mod).** Amaçlı geri pas ve tarzın sabrı (direkt–konumsal 40 maçta konumsal amaçsız zincir 9,0 → 2,3), tarzın hücum iştahı ve temposu, maç başına tarz ve maç içi kademeli tarz kapısı (geliştirici panelinde TEST seçimi), kutu kapısı anlık top yerinden; plan bitleri kapı tutmadı (Z4-2); tarz kenarı +0,34. Sonuç FUTBOL_KUTUPHANESI §12.4 B, kararlar MAC_MOTORU §3 (1, 12, 13); kapanış denetimleri ve borçlar `git show tur/b:YOL_HARITASI.md`.
 
