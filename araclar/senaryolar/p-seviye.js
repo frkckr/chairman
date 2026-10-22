@@ -10,10 +10,11 @@
      kayıp (pastan önce). Başarı: uzun tamamlandı; ayrıca uzun pasın tamamlanma oranı (uzun ÷ uzun + uzunKayip; seviye isabeti, deneme sıklığı seçimdir).
    Profiller: S1 hızlı kanat ↔ oyun kurucu kanat (p-tip ile aynı değerler), S2 uzun paslı 6 ↔ kesici. Kollar profil × seviye, eşli tohum (tohum·1000 + i).
    Ölçü: başarı % (kol başına), güçlü − zayıf (A profili; eşli farkın %95 aralığı), profil sonuç TVD (iki seviyenin havuzu).
-   Kabul (C turu kapanışında açılır, KAPI): S1 ve S2'de güçlü − zayıf ≥ 10 puan ve aralığın alt ucu > 0; zayıf ≥ %10, güçlü ≤ %90 (futbolun belirsizliği);
+   Kabul (KAPI, C kapanışında açıldı): S1'de güçlü − zayıf başarı ≥ 10 puan ve eşli aralığın alt ucu > 0, zayıf ≥ %10, güçlü ≤ %90 (futbolun belirsizliği);
+   S2'de seviyenin ölçüsü uzun pasın tamamlanma oranı (güçlü − zayıf ≥ 10 puan, alt uç > 0, zayıf ≥ %10, güçlü ≤ %99); ikisinde de
    profil sonuç TVD ≥ 0,15. Kullanım: node araclar/mac-deneme.js --senaryo p-seviye [N=60 kol başına] [tohum] */
 'use strict';
-const KAPI=false,DELTA=0.12;
+const KAPI=true,DELTA=0.12;   /* C kapanışında açıldı (2026-10-22) */
 const SAHNE=[
   {ad:'S1 bire bir kanat',sure:6,profiller:[['hızlı kanat',{hiz:0.92,surus:0.85,pas:0.5,sut:0.55,gorus:0.45,karar:0.45}],['oyun kurucu kanat',{hiz:0.55,surus:0.6,pas:0.88,sut:0.55,gorus:0.9,karar:0.85}]],
     siniflar:['gecti','kayip','faul','sure'],basari:'gecti'},
@@ -60,10 +61,14 @@ module.exports={calistir({ctx,vm,N,tohum}){
     const [A,B]=sh.profiller.map(x=>x[0]),G=K[A+' +'],Z=K[A+' −'],bs=sh.basari;
     const fark=G.map((x,i)=>(x===bs?1:0)-(Z[i]===bs?1:0)),f=fark.reduce((a,c)=>a+c,0)/n,sd=Math.sqrt(fark.reduce((a,c)=>a+(c-f)*(c-f),0)/Math.max(1,n-1)),alt=f-1.96*sd/Math.sqrt(n);
     const havuz=pa=>K[pa+' +'].concat(K[pa+' −']),tvd=sh.siniflar.reduce((s,c)=>s+Math.abs(pay(havuz(A),c)-pay(havuz(B),c))/2,0);
-    const gB=pay(G,bs),zB=pay(Z,bs),k1=f>=0.10&&alt>0,k2=zB>=0.10&&gB<=0.90,k3=tvd>=0.15;
-    if(sh.siniflar.includes('uzunKayip')){const to=L=>{const u=pay(L,'uzun'),k=pay(L,'uzunKayip');return u+k?u/(u+k):NaN;};
-      console.log(`    uzun pasın tamamlanma oranı (bilgi): güçlü ${pc(to(G))} · zayıf ${pc(to(Z))} · ${B} + ${pc(to(K[B+' +']))}`);}
-    console.log(`  ${KAPI&&!(k1&&k2&&k3)?'!':' '} ${A}: güçlü − zayıf ${(100*f).toFixed(1)} puan [%95 alt uç ${(100*alt).toFixed(1)}] ${k1?'≥ 10, tuttu':'TUTMADI'} · zayıf ${pc(zB)} güçlü ${pc(gB)} ${k2?'(belirsizlik var)':'(UÇTA)'} · profil sonuç TVD ${tvd.toFixed(3)} ${k3?'≥ 0,15':'< 0,15'}`);
+    let gB=pay(G,bs),zB=pay(Z,bs),k1=f>=0.10&&alt>0,k2=zB>=0.10&&gB<=0.90,k3=tvd>=0.15;
+    /* S2: seviyenin ölçüsü uzun pasın tamamlanma oranıdır (isabet); deneme sıklığı seçimdir, aynı zihniyette seviyeyle değişmemeli (karar 22) — eşi
+       olmayan iki oran farkı, normal yaklaşımla %95 alt uç */
+    if(sh.siniflar.includes('uzunKayip')){const sy=L=>[L.filter(x=>x==='uzun').length,L.filter(x=>x==='uzun'||x==='uzunKayip').length];
+      const [ug,ng]=sy(G),[uz,nz]=sy(Z),pg=ng?ug/ng:NaN,pz=nz?uz/nz:NaN,fo=pg-pz,se=Math.sqrt(pg*(1-pg)/Math.max(1,ng)+pz*(1-pz)/Math.max(1,nz)),ao=fo-1.96*se;
+      console.log(`    uzun pasın tamamlanma oranı (seviye ölçüsü): güçlü ${pc(pg)} (${ug}/${ng}) · zayıf ${pc(pz)} (${uz}/${nz}) · fark ${(100*fo).toFixed(1)} puan [%95 alt uç ${(100*ao).toFixed(1)}] · deneme sıklığı güçlü ${pc(ng/n)} zayıf ${pc(nz/n)} (seçim; bilgi)`);
+      k1=fo>=0.10&&ao>0;gB=pg;zB=pz;k2=zB>=0.10&&gB<=0.99;}
+    console.log(`  ${KAPI&&!(k1&&k2&&k3)?'!':' '} ${A}: başarı güçlü − zayıf ${(100*f).toFixed(1)} puan [%95 alt uç ${(100*alt).toFixed(1)}] · seviye kapısı ${k1?'tuttu':'TUTMADI'} · zayıf ${pc(zB)} güçlü ${pc(gB)} ${k2?'(belirsizlik var)':'(UÇTA)'} · profil sonuç TVD ${tvd.toFixed(3)} ${k3?'≥ 0,15':'< 0,15'}`);
     if(KAPI&&!(k1&&k2&&k3))cikis=1;});
   console.log(`  (${((Date.now()-t0)/1000).toFixed(1)} sn)`);
   return cikis;
