@@ -236,6 +236,8 @@ Satır: bizim tarz; sütun: rakibin tarzı. Değer: ilkel çarpanları toplandı
 | Adam adama | −0,2* | 0 | −0,1 | 0 | −0,2 | 0 | −0,2 | 0 | 0 | 0 |
 | Duran top | 0 | +0,1 | 0 | +0,2 | 0 | 0 | 0 | 0 | 0 | 0 |
 
+**Ölçülen (B, 2026-10-22; `araclar/tarz-kenar.js konumsal direkt 80`):** konumsal → direkt +0,34 gol/maç [%95 0,07–0,62] (Z7: +0,43); B'nin hedefi +0,2–0,3, fark ölçü belirsizliğinin altında olduğu için tablo değiştirilmedi. Matrisin öbür hücreleri tahmin.
+
 \* işaret kalite farkına göre döner (G2.7). \*\* yalnız rakibin kurma kalitesi düşükse (G2.2). Matris simetrik değildir; çapraz 0'dır. Bu değerler motorda doğrudan gol eklemez, ilgili ilkellerin olasılık çarpanlarına dağıtılır ve 80 maçlık benzetimle ölçülüp düzeltilir (G7). Kaynaklı tek matris olmadığı için ilk sürüm "küçük ve sönük" tutulur; kullanıcı gözlemiyle büyütülür.
 
 ### G2.9 Kadro kalitesi farkını ne zaman aşar
