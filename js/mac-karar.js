@@ -432,7 +432,7 @@ function pasDegeri(m,p,o,hx,hz,alt,q){
       const K=A.geriPasK*(es?Math.max(0.7,1+2.5*es*(V.sabir-0.45)):1);
       const g=Math.max(0,(o.onIleri!=null?o.onIleri:-9)-xT(u,o.oz)*100),fk=clamp(1-g/K,0,1);
       const G=m._geriN&&m._geriN[p.team],ayni=G&&G.bas===m._sahiplikBas;
-      const fz=es?Math.max(0,1-(ayni?G.c:0)/(2+es*(2*V.sabir-1))):Math.max(0,1-(ayni?G.n:0)/2);
+      const fz=es?Math.max(0,1-(ayni?G.c:0)/(2+es*A.tarzSabirZincir*(2*V.sabir-1))):Math.max(0,1-(ayni?G.n:0)/2);
       fs=1-e*(1-fk*fz);}
     v+=takim.sakin*A.geriPas*fs+o.baski*0.8;}
   /* Z4c (bindirme&2; B.4): bindiren ya da içten bindiren, ileri koşan beke pas — kanatta ikiye bir */
