@@ -50,6 +50,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .gelistirici input[type=range]{width:180px;accent-color:var(--amber)}
 .gelistirici output{color:var(--text);font-variant-numeric:tabular-nums}
 .gelistirici .bilgi{margin:0;color:var(--muted);font-size:12px}
+.gelistirici select{font:inherit;font-size:12px;letter-spacing:0;text-transform:none;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:3px 6px}
 .nogl{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:24px;text-align:center;color:var(--muted)}
 [hidden]{display:none!important}
 /* ---- ortak .oe- bileşenleri: maç programı (js/ekran-mac-oncesi.js, açık tonlar, STIL.program.renk) ---- */
@@ -348,6 +349,11 @@ html,body{margin:0}
         <div class="seg"><button type="button" id="btnDurdur" aria-pressed="false">Durdur</button></div>
       </div>
     </div>
+    <div class="satir">
+      <label>Ev tarzı (TEST)<select id="tarzEv"><option value="" disabled>—</option></select></label>
+      <label>Konuk tarzı (TEST)<select id="tarzKonuk"><option value="" disabled>—</option></select></label>
+    </div>
+    <p class="bilgi">Tarz (TEST): <span id="tarzTest">—</span><br>Değişiklik bir sonraki duruşta başlar, takım ~3 dakikada yeni tarza oturur.</p>
   </details>
 </div>
 

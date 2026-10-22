@@ -1,4 +1,7 @@
-<!-- Durum (2026-10-22, dizüstü): B0 yapıldı (araclar/olcumler/b0-zincir.js). Görev çalkantısının ölçüsü ayrı kurulmadı: r-karne rIvmeKume (p2: 2,89 / takım·dk). Sıradaki B1. Dal claude/motor-b. -->
+<!-- Durum (2026-10-22, dizüstü): B0 yapıldı (araclar/olcumler/b0-zincir.js; p2.json aynı parmak iziyle B0 satırlarını taşıyor, 40/40). Görev çalkantısının
+ölçüsü ayrı kurulmadı: r-karne rIvmeKume (p2: 2,89 / takım·dk). B1-0 teşhisi: geriPas 0,9'da konumsal zincir 9,0 → 1,5, 0'da 0,3 / maç (kaynak bonus; B1 kapsamı
+aynen). B1, B2a/b/c, B3, B4 kodu yazıldı; bütün yeni anahtarlar eski değerde p2'ye --ayni 4/4. B4'te senaryolar kadronun tarzıyla kalır: tohumdan
+seçim yalnız secenek.tarz 'dagilim' verenlerde (oyun, mac-deneme, ikiz-deneme). Sıradaki: B1/B2 ölçümleri (40 maç: plan 20, geriPasK 1,5, plan 31). Dal claude/motor-b. -->
 # Plan: B — 2D izlenebilirlik (amaçsız geri pas, kapalı ilkeller, hücum iştahı, maç başına tarz)
 
 ## Bağlam

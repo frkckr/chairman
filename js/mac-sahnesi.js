@@ -19,6 +19,9 @@ const MAC_HIZ=(()=>{let s=null,oto=null;
   return{secim:s,oto,deger:s,hedef:s,anda:false};})();
 /* ?tohum=123 ile aynı maç yeniden oynatılabilir */
 const MAC_TOHUM=(()=>{try{const v=parseInt(new URLSearchParams(location.search).get('tohum'),10);return Number.isFinite(v)?v:null;}catch(e){return null;}})();
+/* B4: ?tarz=A,B iki takımın tarzı (js/mac-tarz.js arketip adları; geliştirici); yoksa maç iki tarzı tohumdan seçer ('dagilim') */
+const MAC_TARZ=(()=>{try{const v=new URLSearchParams(location.search).get('tarz'),a=v?v.split(','):[];if(a.length===2&&a.every(x=>TARZ_ARKETIP[x]))return a;}catch(e){}
+  return 'dagilim';})();
 /* DURAKLAT: eski ad; ortak duraklatma yönetimini okur (js/sunum-durumu.js, 2.8B) */
 const olayKuyrugu=[],DURAKLAT={get aktif(){return duraklatmaVar();}};
 /* maç sonunda takımların alkışlayacağı tribünün önü (motor koordinatı): ev taraftarının ve deplasman bölümünün tribünü */
@@ -28,7 +31,7 @@ function tribunOnu(taraftar){
     return{ana:{x:clamp(u,-40,40),z:3.5,nx:0,nz:-1},karsi:{x:clamp(u,-40,40),z:PW-3.5,nx:0,nz:1},kale1:{x:-PL+3.5,z:MZ+clamp(u,-22,22),nx:-1,nz:0},kale2:{x:PL-3.5,z:MZ+clamp(u,-22,22),nx:1,nz:0}}[tr.yer];}
   return null;}
 /* T10e: atmosfer (hakemin ev sahibi eğilimi, deplasmanın güven tabanı) maç günü tarifinin doluluğundan */
-const MAC_SECENEK={kadro:MAC_KADRO,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC_TOHUM,zemin:STAT.zemin,kosullar:{atmosfer:clamp(MAC_GUNU.doluluk,0,1)},
+const MAC_SECENEK={kadro:MAC_KADRO,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC_TOHUM,tarz:MAC_TARZ,zemin:STAT.zemin,kosullar:{atmosfer:clamp(MAC_GUNU.doluluk,0,1)},
   kulubeler:KULUBELER.map(k=>({takim:k.takim,koltuklar:k.koltuklar.map(s=>({x:s.x,z:s.z+MOTOR_Z})),alan:{x:k.alan.x,z:k.alan.z+MOTOR_Z}})),
   taraftarYeri:tribunOnu('ev')||undefined,deplasmanYeri:tribunOnu('deplasman')};
 /* U1: izleme (js/mac-izleme.js) — ana motorun her olayı ikizinkiyle karşılaştırılır; aynı seçenek ve tohumla kurulan ikiz önemli anları önceden
@@ -36,6 +39,16 @@ const MAC_SECENEK={kadro:MAC_KADRO,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC
 let MAC_IZLEME=null;
 const mac=new Match((ad,v)=>{olayKuyrugu.push([ad,v]);if(MAC_IZLEME)izlemeAnaOlay(MAC_IZLEME,ad,v);},MAC_SECENEK);
 MAC_IZLEME=izlemeKur(mac,Match,MAC_SECENEK);
+/* B4: geliştirici panelinde iki takımın tarzı (TEST; oyun ekranına tarz adı yazılmaz — F). Geçişte harmanın payları ve durum */
+function tarzTestYaz(){const e=document.getElementById('tarzTest');if(!e)return;
+  const y=t=>{const g=tarzGecisDurum(mac,t);return tarzAdi(mac,t)+(g==='talimat'?' (talimat: bir sonraki duruşta)':g!=null?' (geçişte)':'');};
+  e.textContent='Ev: '+y(0)+' · Konuk: '+y(1);}
+/* B4b: geliştirici panelinden tarz değişikliği (TEST; başkan maça dokunmaz — aynı kapıyı ileride hocanın maç içi kararı kullanır, F ve Z7-2). Komut iki
+   motora aynı karede verilir (js/mac-izleme.js izlemeKomut): ikiz önden gittiği için talimat ana motorda ~7 sn sonra işler, önemli anları önceden
+   bilmek bozulmaz. Geçişin kendisi js/mac-tarz.js tarzDegistir (duruşta başlar, tarzGecis sn'de oturur) */
+function tarzTestDegistir(t,ad){const k=izlemeKomut(MAC_IZLEME,mac,(Z,k)=>tarzDegistir(Z,t,ad,k));tarzDegistir(mac,t,ad,k);tarzTestYaz();}
+let tarzTestSay=0;
+tarzTestYaz();
 
 /* ---- aktörler: motordaki her oyuncu, hakem ve top toplayıcı için bir model ---- */
 const AKTORLER=[];
@@ -120,6 +133,7 @@ function olay(ad,v){
   /* animasyon akışının olay kancası (js/animasyon.js; kamera bakışı aşamalardan ve toptan okur, olay gerekmez) */
   animasyonOlay(ad,v);
   switch(ad){
+    case 'tarzGecis':tarzTestYaz();break;   /* B4b: geçiş başladı ya da bitti (panel satırı) */
     case 'oncesi':if(v.ad==='takim0')heyecanla(0,H.santra*0.7,2);if(v.ad==='takim1')heyecanla(1,H.santra*0.7,2);
       if(v.x!=null){ONCESI_BAKIS.x=v.x;ONCESI_BAKIS.z=v.z-MOTOR_Z;ONCESI_BAKIS.t=zaman;}break;
     case 'flas':{const F=FLASLAR[flasSira++%FLASLAR.length];F.t=0;F.f.position.set(v.x,v.y,v.z-MOTOR_Z);break;}
@@ -172,6 +186,7 @@ function macKare(dt){
     while(olayKuyrugu.length){const [ad,v]=olayKuyrugu.shift();olay(ad,v);}
     izlemeAdim(MAC_IZLEME);   /* U1: ikiz motor (js/mac-izleme.js) */
   }
+  if((tarzGecisDurum(mac,0)!=null||tarzGecisDurum(mac,1)!=null)&&++tarzTestSay%20===0)tarzTestYaz();   /* B4b: geçişte panel satırı */
   if(n>=240)birikim=0;
   const al=birikim/ADIM,b=mac.ball,bx=lerp(TOP.px,b.x,al),bz=lerp(TOP.pz,b.z,al)-MOTOR_Z,T=mac.tunel;
   /* aktörler: konum, poz ve kök (js/animasyon.js) */

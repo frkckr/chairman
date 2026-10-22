@@ -30,6 +30,7 @@ Kullanıcı A9 kapanışını (`main` 9530cb5) masaüstünde tam maç izledi ve 
 6. **Önce tepeden okunan.** Maç tepeden 2D izlenir (P2, 2026-10-21); ilkelin okunması için zamanlama (koşunun pastan önce başlaması, bekleyiş, işaret), takım şekli ve topun yolu pul düzeyindeki çizim ayrıntısından önce gelir.
 7. **Ölçü sonuçtur.** Gol, şut, korner gibi sayılar geniş sağlık aralığında kalır; asıl ölçüler ilkel sayaçları (görünme sıklığı, tamamlanma, bozulma nedeni), dizi çeşitliliği, tarzın görünürlüğü ve kabiliyet duyarlılığıdır (§11).
 8. **20 dakikalık maç bir kesittir.** Saat 4,5 kat hızlı akar; bir maçta gerçeğin ~%22'si kadar sahiplik vardır. Zengin kütüphanenin her maçta yalnız bir kesiti görünür; bu bilinerek kabul edilir (U1, 2026-10-12).
+9. **Belirsizlik ve okunabilirlik (2026-10-22, kullanıcı).** Her plan tutmayabilir; şans yalnız girdidedir (madde 5); oyuncunun, takımın, hocanın ve başkanın yönetiminin kalitesi ortalamayı kaydırır ama garanti vermez. Maç başkanın bilgi kaynağıdır ([OYUN_TASARIMI §2](OYUN_TASARIMI.md#2-başkanın-rolü-ve-ana-döngü)): tarz ve uyum, oyuncu kalitesi, şans ile beceri farkı tepeden ayırt edilebilmelidir. Motor bu farkları kurar (B tarz, C oyuncu); maçın okunmasına yardım eden araçlar başkanlık planındadır (F).
 
 ## 2. Terimler ve ilkel şablonu
 

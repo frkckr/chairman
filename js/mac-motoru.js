@@ -43,7 +43,7 @@ const MAC_ONCESI=['isinma','giris','toren','selam','yazitura'],DEVRE_ARASI=45;
 /* oyuncu özellikleri (kadrolar.js'te 1–99 arası, aynı sırayla) */
 const OZ_SIRA=['hiz','pas','sut','kafa','surus','mudahale','gorus','karar','kalecilik','dayaniklilik','sertlik'];
 const VARSAYILAN_OZ=[62,58,55,55,56,55,55,56,8,66,50];
-const VARSAYILAN_TAKTIK={dizilis:'4-4-2',sakin:0.5,direkt:0.5,risk:1,pres:0.5,tempo:0.5};
+const VARSAYILAN_TAKTIK={dizilis:'4-4-2',sakin:0.5,direkt:0.5,risk:1,pres:0.5,tempo:0.5,ilerle:1,koruK:1};   /* B3: ilerle, koruK etkin taktikte tarzın iştahından (1: nötr) */
 /* ayar katsayıları: araclar/mac-deneme.js ile hedef tabloya göre ayarlanır. Çekirdekte yalnız takım düzeni ayarlarının değeri vardır; her akış
    kendi dosyasında ayarEkle ile kendi anahtarlarının değerini atar (sahiplik; Faz 0, 2026-10-03).
    M1 (2026-10-10, hız): bütün anahtarlar burada, yüklenme sırasıyla bildirilir (akışlarınki undefined, değeri ayarEkle atar). Sonradan eklenen
@@ -83,7 +83,7 @@ const MOTOR_AYAR={
   sicramaDur:undefined,sicramaKos:undefined,sicramaHazir:undefined,sicramaZaman:undefined,sicramaYatay:undefined,havaIvme:undefined,havaOkuma:undefined,havaEgilme:undefined,havaDuello:undefined,havaKol:undefined,plonjon:undefined,plonjonHiz:undefined,plonjonYerde:undefined,kafaDonus:undefined,
   /* B — js/mac-topla.js */
   kararGecikme:undefined,ilerleme:undefined,risk:undefined,surusKarar:undefined,vurusHizalama:undefined,sutIstegi:undefined,ortaIstegi:undefined,ortaDevam:undefined,ortaKornerDeger:undefined,ortaBlokKorner:undefined,ortaEsik:undefined,cizgiyeIn:undefined,yerdenOrtaKesme:undefined,
-  sutSapma:undefined,uzaklastirCizgi:undefined,pasSapma:undefined,sikisma:undefined,geriPas:undefined,kontrolZorluk:undefined,tekVurus:undefined,verKacIstegi:undefined,
+  sutSapma:undefined,uzaklastirCizgi:undefined,pasSapma:undefined,sikisma:undefined,geriPas:undefined,geriPasAmac:undefined,geriPasK:undefined,kontrolZorluk:undefined,tekVurus:undefined,verKacIstegi:undefined,
   verKacDeger:undefined,boslukDeger:undefined,ikinciTop:undefined,havaDeger:undefined,araDeger:undefined,araDar:undefined,donusDeger:undefined,
   ofsaytAlgi:undefined,kosuIstegi:undefined,aliciPay:undefined,uzaklastirDeger:undefined,hedefDeger:undefined,devamAgirlik:undefined,
   devamHedef:undefined,sabir:undefined,sabirSure:undefined,devamPas:undefined,bekleOran:undefined,koruDeger:undefined,koruSure:undefined,
@@ -100,7 +100,7 @@ const MOTOR_AYAR={
   kanatRol:undefined,kanatBas:undefined,kanatCizgi:undefined,kanatDerin:undefined,kanatOnde:undefined,kanatUzak:undefined,gecGiris:undefined,
   tutEtki:undefined,kovala2Pay:undefined,kapatSon:undefined,kapiFaz:undefined,
   /* Z — js/mac-plan.js (Z1, 2026-10-19: plan katmanı; js/mac-ilkeller.js ilkel tablosu, js/mac-tarz.js tarz iskeleti) */
-  plan:undefined,planDeger:undefined,planTavan:undefined,planTut:undefined,planSabir:undefined,planArka:undefined,planIstek:undefined,planHiz:undefined,planEs:undefined,planTeklif:undefined,planTarz:undefined,tarzEtki:undefined,tarzUzun:undefined,tarzYanUzun:undefined,uzunBakis:undefined,uzunHaz:undefined,verKacKalkis:undefined,verKacTarz:undefined,bindirme:undefined,bindirmeDeger:undefined,surenCik:undefined,geriKosu:undefined,karsiKarar:undefined,sutKaleci:undefined,sutEgilim:undefined,tarzArka:undefined,
+  plan:undefined,planDeger:undefined,planTavan:undefined,planTut:undefined,planSabir:undefined,planArka:undefined,planIstek:undefined,planHiz:undefined,planEs:undefined,planTeklif:undefined,planRed:undefined,planTarz:undefined,tarzEtki:undefined,tarzGecis:undefined,tarzIstah:undefined,tarzSecim:undefined,tarzTalimat:undefined,tarzUzun:undefined,tarzYanUzun:undefined,uzunBakis:undefined,uzunHaz:undefined,verKacKalkis:undefined,verKacTarz:undefined,bindirme:undefined,bindirmeDeger:undefined,surenCik:undefined,geriKosu:undefined,karsiKarar:undefined,sutKaleci:undefined,sutEgilim:undefined,tarzArka:undefined,
   /* Kurallar — js/mac-kurallar.js (T10b: hakem kişiliği) */
   hakemSabit:undefined,hakemFaul:undefined,hakemKart:undefined,hakemYorgun:undefined,hakemGeriDon:undefined,itirazKart:undefined,kartliHosgoru:undefined,evEtki:undefined,ofsaytLag:undefined,ofsaytHata:undefined,ofsaytPay:undefined,
   ofsaytBayrak:undefined,ofsaytBekle:undefined,
@@ -240,6 +240,8 @@ class Match{
     this.R=zeminYuvarlanma(this.zemin,this.kosullar.islak);
     /* T10b: hakem kişiliği (secenek.hakem ya da tohumdan; js/mac-kurallar.js hakemKisilik) */
     this.hakem=hakemKisilik(secenek.hakem,this.tohum);
+    /* B4: maçın tarz seçimi (js/mac-tarz.js tarzKur): [ev, konuk] arketip adı ya da harmanı; 'dagilim' tohumdan seçer (oyun ve mac-deneme); yoksa kadronun tarzı */
+    this.tarzSec=secenek.tarz!=null?secenek.tarz:null;
     this.taraftarYeri=secenek.taraftarYeri||{x:0,z:PW-4,nx:0,nz:1};this.deplasmanYeri=secenek.deplasmanYeri||null;
     this.reset();
   }
@@ -357,6 +359,7 @@ class Match{
   /* ============ ana döngü ============ */
   step(dt){
     this.t+=dt;this.phaseT+=dt;this.kare=(this.kare||0)+1;
+    if(this._tarzG)tarzGecisAdim(this);   /* B4b: maç içi tarz değişikliği (js/mac-tarz.js; yalnız komut varken) */
     /* T16a (2026-10-15): yarının ilk santrası hazırlanırken saat akmaz (ikinci yarıda oyuncular tünelden yürürken yarı 86 maç sn kaybediyordu);
        gol sonrası santrada akar (uzatmaya gol başına 50 sn girer) */
     const saat=this.phase!=='halftime'&&this.phase!=='fulltime'&&!MAC_ONCESI.includes(this.phase)&&!(this.yariSantra&&this.phase==='kickoff');
@@ -566,6 +569,9 @@ class Match{
     this.ist.pas[p.team]++;b.pas={p,takim:p.team,t:this.t,tur,L,x0:b.x,z0:b.z,hx,hz};
     if(a<Math.PI/4)this.ist.pasYon.ileri++;else if(a>Math.PI*3/4)this.ist.pasYon.geri++;else this.ist.pasYon.yan++;
     if(L>=32)this.ist.uzunPas++;
+    /* B1: takım sahipliği içinde ardışık geri pas sayısı (ilerleme < −4 m, kararın eşiği; js/mac-karar.js pasDegeri okur) */
+    if(MOTOR_AYAR.geriPasAmac>0){const G=this._geriN||(this._geriN=[{bas:-1,n:0},{bas:-1,n:0}]),g=G[p.team];
+      if(g.bas!==this._sahiplikBas){g.bas=this._sahiplikBas;g.n=0;}if(ileri<-4)g.n++;else g.n=0;}
   }
   /* havadan vuruş: top T saniye sonra (hx,hy,hz)'de olsun; hava direnci ve falso ile, düzeltmeli çözüm */
   havadanCoz(x0,y0,z0,hx,hy,hz,T,egri,ust){

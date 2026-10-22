@@ -4,14 +4,14 @@
    ve kart, sakatlık, korner ve tehlikeli serbest vuruş (penaltı dahil), ofsayt bayrağı. Taç, kale vuruşu, değişiklik, hakem topu ve zaman
    geçirme yavaşlatmaz; tedavi, sedye, gol sonrası santraya yürüyüş ve duran topun hazırlığı seçilen hızda geçer.
    Önceden bilmek — ikiz motor: motor tohumlu ve belirlenimcidir (rastlantı yalnız this.rast, srast, skRast), ana motora dışarıdan giren tek komut
-   maç öncesindeki macaGec'tir. Aynı seçenek ve tohumla kurulan ikinci Match aynı maçı oynar. İkiz maç öncesinde ana motorla aynı adımda yürür
+   maç öncesindeki macaGec'tir (B4b: geliştirici panelinin tarz değişikliği de TEST komutu olarak girer; izlemeKomut onu iki motora aynı karede verir). Aynı seçenek ve tohumla kurulan ikinci Match aynı maçı oynar. İkiz maç öncesinde ana motorla aynı adımda yürür
    (Santraya geç ikisine birden uygulanır: izlemeMacaGec); ana motor santraya geçince ikiz IZLEME.onde saniye öne çıkar, ürettiği önemli
    olaylardan pencereler kurulur. Ana motorun olayları (ad ve kare) ikizinkilerle sırayla karşılaştırılır; tutmazsa ikiz bırakılır, uyarı yazılır,
    o maçta pencereler ana motorun kendi olayından başlar (önceden yavaşlama yok) ve sapma sayılır. Maç sonunda iki sonuç kaydı da karşılaştırılır.
    Hız eğrisi motor zamanındadır (kare): pencereye rampaIn saniye kala seçilen hızdan 1×'e doğrusal iner, pencere bitince rampaOut saniyede çıkar;
    kare hızından bağımsızdır. Adımlar yine tam 1/60 sn olduğundan maçın sonucu izleme hızından etkilenmez (TEKNIK_PLAN §8).
    Kullananlar: js/mac-sahnesi.js (ana motorun adımı ve MAC_HIZ), araclar/ikiz-deneme.js (Node: iç içe iki motorun aynılığı, pencerelerin süresi).
-     izlemeKur(ana, MatchSinifi, secenek) · izlemeAnaOlay(I, ad, v) · izlemeAdim(I) · izlemeMacaGec(I) · izlemeHedefHiz(I, secim)
+     izlemeKur(ana, MatchSinifi, secenek) · izlemeAnaOlay(I, ad, v) · izlemeAdim(I) · izlemeMacaGec(I) · izlemeKomut(I, ana, uygula) · izlemeHedefHiz(I, secim)
    Ana motor bu dosyada yalnız okunur (kare, phase, tohum, sonucKaydi); ilerletilen ve macaGec verilen yalnız ikizdir (araclar/ad-denetimi.js (c)). */
 'use strict';
 const IZLEME={
@@ -102,6 +102,10 @@ function izlemeAdim(I){
   /* geçmiş pencereler atılır */
   const P=I.pencereler,eski=ak-IZLEME.rampaOut*60;while(P.length&&(P[0].acik?P[0].son:P[0].b)<eski)P.shift();
 }
+/* B4b: dışarıdan bir komut (geliştirici paneli TEST: tarz değişikliği, js/mac-sahnesi.js tarzTestDegistir) iki motora aynı karede — ikisinin de henüz
+   oynamadığı ilk kare (ikiz öndeyse ~IZLEME.onde sn ileride; ana motor oraya sonra varır, talimatın kenardan ulaşması gibi). uygula(ikiz, kare) ikize
+   uygulanır; ana motora çağıran aynı kareyle uygular (bu dosya ana motoru yalnız okur). Döner: kare */
+function izlemeKomut(I,ana,uygula){const k=Math.max(ana.kare||0,I&&I.ikiz?(I.ikiz.kare||0):0)+1;if(I&&I.ikiz)uygula(I.ikiz,k);return k;}
 /* "Santraya geç": ana motor macaGec aldıktan hemen sonra ikize de (aynı karede olmalıdır) */
 function izlemeMacaGec(I){
   if(!I||!I.ikiz)return;

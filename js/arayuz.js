@@ -33,6 +33,12 @@ function izlemeHizSec(v,kaydet){
 for(const b of document.querySelectorAll('#izlemeHiz button[data-izhiz]'))b.onclick=()=>izlemeHizSec(+b.dataset.izhiz,true);
 for(const b of $('hizSeg').querySelectorAll('button[data-hiz]'))b.onclick=()=>izlemeHizSec(+b.dataset.hiz,false);
 izlemeHizSec(MAC_HIZ.secim,false);
+/* B4b: tarz (TEST) — iki takımın tarzı maç içinde değişir (js/mac-sahnesi.js tarzTestDegistir: kademeli, bir sonraki duruşta başlar). 'yok' (vektörsüz,
+   eski davranış) sunulmaz. Seçimden sonra odak bırakılır: maçın kısayolları (boşluk, 1/2/4, Z, G, T) seçim kutusuna gitmesin */
+for(const t of [0,1]){const s=$(t?'tarzKonuk':'tarzEv');if(!s)continue;
+  for(const a in TARZ_ARKETIP)if(a!=='yok'){const o=document.createElement('option');o.value=a;o.textContent=TARZ_ARKETIP[a].ad;s.appendChild(o);}
+  const b=tarzBaskin(mac,t);s.value=b&&b!=='yok'?b:'';
+  s.onchange=()=>{if(s.value)tarzTestDegistir(t,s.value);s.blur();};}
 /* 1, 2, 4 tuşları: maç ekranında (oda, maç öncesi bülteni, karar anı ve açık telefon kendi tuşlarını kullanır) */
 addEventListener('keydown',e=>{const v={Digit1:1,Digit2:2,Digit4:4,Numpad1:1,Numpad2:2,Numpad4:4}[e.code];if(!v||e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;
   const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;

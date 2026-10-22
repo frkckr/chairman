@@ -45,7 +45,7 @@ const ILK_TABLO={
       if(!D)return;const ofs=m._ofs[t];
       for(const B of m.teams[t]){if(B===K||!B.oyunda||B.rol==='GK'||B.eylem&&B.eylem.kilit||m._pln.rol.has(B))continue;
         const bx=B.x-K.x,bz=B.z-K.z,L=hyp(bx,bz);if(L<3||L>12)continue;if(hyp(B.vx,B.vz)>4.5||B.x*d>ofs-0.3&&B.x*d>0)continue;
-        if(!ilkCanli(K,B)||ilkHatKesen(m,t,K.x,K.z,B.x,B.z,0.8,null))continue;
+        if(!ilkCanli(K,B)||ilkHatKesen(m,t,K.x,K.z,B.x,B.z,0.8,null)||m.planReddetti(K,B))continue;   /* B2a: yakın zamanda reddedilen çift yok */
         /* koşunun hedefi: savunmacının 4 m ötesi, B'nin yanına 0,4 yaklaşık; ikinci savunmacı 5 m içinde olmamalı, saha içinde, çizgiye en çok 4 m ötede */
         const nu=Math.min(Math.max(ku+8,D.x*d+4),ofs+4,PL-6),nw=K.z+0.4*(B.z-K.z),nx=nu*d;if(!ilkSahada(nx,nw,2))continue;
         let ikinci=false;for(const o of m.teams[1-t]){if(!o.oyunda||o===D||o.rol==='GK')continue;if(hyp(o.x-nx,o.z-nw)<3.5){ikinci=true;break;}}if(ikinci)continue;
@@ -68,7 +68,7 @@ const ILK_TABLO={
         const bu=B.x*d,ileri=bu-ku;if(ileri<8||ileri>22||bu>ofs-0.3)continue;
         if(Math.cos(aciFark(B.yon,d>0?0:Math.PI))>0)continue;   /* sırtı kaleye */
         let M=null;for(const o of m.teams[1-t]){if(!o.oyunda||o.rol==='GK')continue;if(o.x*d>bu-0.5&&hyp(o.x-B.x,o.z-B.z)<4){M=o;break;}}
-        if(!M||!ilkCanli(K,B)||ilkHatKesen(m,t,K.x,K.z,B.x,B.z,1.2,M))continue;nB++;
+        if(!M||!ilkCanli(K,B)||ilkHatKesen(m,t,K.x,K.z,B.x,B.z,1.2,M)||m.planReddetti(K,B))continue;nB++;
         let nC=0;for(const C of m.teams[t]){if(nC>=2)break;if(C===K||C===B||!C.oyunda||C.rol==='GK'||C.eylem&&C.eylem.kilit||m._pln.rol.has(C)||GR&&GR.has(C))continue;
           const L=hyp(C.x-B.x,C.z-B.z);if(L<6||L>16||C.x*d>ofs-0.3)continue;
           const nu=Math.min(bu+6,ofs+3,PL-8),nw=lerp(C.z,B.z,0.3),nx=nu*d;if(!ilkSahada(nx,nw,2))continue;
@@ -81,7 +81,11 @@ const ILK_TABLO={
     hedef(m,P,p,o){
       const d=m.dir[P.takim];
       if(p===P.B&&P.i===0){const k=P.K,bu=p.x*d,ku=k.x*d,dx=(ku-bu),L=Math.abs(dx)||1;o.u=bu+dx/L*2;o.w=p.z;o.ef=0.6;o.h=0.7;o.g='planUcuncu';return o;}   /* teklif: B 2 m pasa gelir */
+      /* B2b (2026-10-22): C teklifte ön harekete başlar (tırıs, koşu yolunun başına; çizginin gerisinde) — kütüphane B.1: C'nin koşusu B'nin ilk
+         dokunuşuyla başlar, pas B'den çıkarken tam hızdadır; önceden C ancak A'nın pasından sonra ve tepki süresiyle kalkıyordu (Z1: erken %13–26) */
+      if(p===P.C&&P.i===0){const cz=m._pln.cizgi[P.takim];o.u=Math.min(Math.max(p.x*d,P.nu-4),cz-0.3);o.w=lerp(p.z,P.nw,0.5);o.ef=0.55;o.h=0.7;o.g='planUcuncu';return o;}
       if(p===P.C&&P.i===1){if(m.t<P.tKes){o.u=p.x*d;o.w=p.z;o.ef=0.5;o.h=0.6;o.g='planUcuncu';return o;}   /* tepki süresi */
+        if(P.kosuT<0)P.kosuT=m.t;   /* B2b: C'nin koşu başı (planın kendi kaydı; z-plan okur) */
         const cz=m._pln.cizgi[P.takim];o.u=Math.min(P.nu,cz-0.3);o.w=P.nw;o.ef=1;o.h=1;o.g='planUcuncu';return o;}
       return null;}
   },
@@ -120,7 +124,7 @@ const ILK_TABLO={
   geriCevirme:{bit:8,ad:'geri çevirme',roller:['K: çizgiye inen','A: ön direk','B: penaltı noktası (geç gelen)','C: yay'],baglilik:[1.5,4.5],
     kapi:{gorme:['sezgi'],secme:['cezaSahasinaGecGirer','topsuzHareket'],yapma:['orta','pas']},
     aday(m,t,K,out){
-      const d=m.dir[t],ku=K.x*d;if(ku<PL-22||Math.abs(K.z-MZ)<9)return;
+      const d=m.dir[t],ku=K.x*d;if(ku<PL-18||Math.abs(K.z-MZ)<9)return;   /* B2c: PL−22 → PL−18 (ölçünün çıkış geometrisine yakın; çizgiye inme payı js/mac-plan.js planEkle) */
       const ileri=K.vx*d;if(ileri<1&&ku<PL-12)return;   /* çizgiye iniyor (ya da çizgiye 12 m'den yakın) */
       const yan=Math.sign(K.z-MZ)||1,GR=m._geride&&m._geride[t];
       const ADAY=[];for(const q of m.teams[t]){if(q===K||!q.oyunda||q.rol==='GK'||q.rol==='DEF'||q.eylem&&q.eylem.kilit||m._pln.rol.has(q)||GR&&GR.has(q))continue;

@@ -38,6 +38,8 @@ ayarEkle('B',{
   pasSapma:1.0,                // pas yön hatası çarpanı
   sikisma:0.3,                 // pas hedefindeki alıcı sıkışıksa (rakip dibinde) o yerin değerinden düşülen pay
   geriPas:1.8,                 // geri pasın ek değeri (takımın 'sakin' ayarıyla çarpılır): topu tutma isteği (birleştirme 2026-10-03: 1,4 → 1,8)
+  geriPasAmac:1,               // B1 (2026-10-22): geri pas payı amaçla — önü açıkken ve ardışık geri paslarda söner (js/mac-karar.js pasDegeri); 0: eski
+  geriPasK:1.0,                // B1: önü açık sayılmanın ölçeği (puan): pasörün en iyi ileri seçeneğinin bulunduğu yerin değerinden fazlası bu kadarsa pay sıfır
   kontrolZorluk:0.7,           // ilk dokunuş hatası çarpanı (kontrolOlasiligi)
   tekVurus:0.25,               // tek vuruşla pasın, kontrol edip oynamaya göre ek değeri (puan) (MM3; T20c 2026-10-18: 0 → 0,25 — koni açılınca gelişine pas %17 → 24, tarama 0,25 / 0,4: %24 / 29,5, şut −1,9)
   verKacIstegi:0.6,            // kısa pastan sonra pasörün ver-kaç koşusuna çıkma olasılığı (baskıcısı yakınsa tam) (MM3; Z4b: 0,35 → 0,6 — pas ver ve koş)
@@ -582,7 +584,7 @@ Object.assign(Match.prototype,{
       this.pasSay(p,sec.hx,sec.hz,L,tur);this.ofsaytPasAni(p);
       this.on(tur==='orta'?'cross':'pass',{p,q:sec.alici,long:L>=32,tur,L,x0:bx,z0:bz,hx,hz,tip,ilk:!!sec.ilk});
       if(tur==='orta'||tur==='geriCevir')this.ortaBlok(p);
-      if(tur==='pas'&&tip==='yer'&&sec.alici&&L>=5&&L<=22&&p.rol!=='GK'&&!(this._pln&&(MOTOR_AYAR.plan&1)))this.verKacBaslat(p,sec.alici);}   /* Z1 (H4): plan&1'de ver-kaç duvar pası ilkelinin */
+      if(tur==='pas'&&tip==='yer'&&sec.alici&&L>=5&&L<=22&&p.rol!=='GK')this.verKacBaslat(p,sec.alici);}   /* B2a (2026-10-22): ver-kaç her zaman; duvar pası planı başlayınca koşunun hedefini planınkiyle ezer (js/mac-plan.js planPas) */
     else if(tur==='uzaklastir'||tur==='degaj')this.on(tur==='degaj'?'gkkick':'clear',{p});
     else if(tur==='serbest'||tur==='korner'||tur==='kaleVurusu'){this.pasSay(p,sec.hx,sec.hz,L,tur);this.ofsaytPasAni(p);}
   },

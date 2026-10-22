@@ -29,7 +29,8 @@ ayarEkle('Z',{
   planIstek:0.15,              // istek sinyali payı (puan × (0,5 + 0,5·görüş); kimya Z1'de yok — Z7/Z9; plan payıyla toplanmaz, büyüğü alınır)
   planHiz:[1.5,1.0,2.5,1.0],   // ilkel başına taban öneri oranı (1/sn): duvar pası, üçüncü adam, derin koşu, geri çevirme (Z1 ayar turu: FUTBOL_KUTUPHANESI §12.5)
   planEs:2,                    // takım başına en çok açık plan (kutuphane/B "Motor için notlar" 2)
-  planTeklif:[0.6,0.8],        // teklifin geçerliliği (sn): duvar pası, üçüncü adam — taşıyan bu sürede pası vermezse "reddedildi"
+  planTeklif:[0.6,0.8],        // teklifin geçerliliği (sn): duvar pası, üçüncü adam — taşıyan bu sürede pası vermezse "reddedildi" (B2a: taşıyan B'ye vuruş hazırlığındayken teklif açık kalır)
+  planRed:2.5,                 // B2a (2026-10-22): reddedilen teklifin hafızası (sn) — aynı taşıyana aynı duvarla yeniden teklif açılmaz (Z1'de kabul %16: aynı çift 0,2 sn'de bir); 0: hafıza yok
   planTarz:1                   // tarz ağırlıklarının etkisi (js/mac-tarz.js; 0: hepsi 1 — Z1 iskeleti; Z3 (2026-10-19 gece): 1, iki canlı arketip)
 });
 /* plan nesnesi (tek biçim) */
@@ -38,7 +39,9 @@ function planYeni(){return{no:0,tur:'',takim:0,durum:'teklif',i:0,K:null,A:null,
 const PLN_SIRA={duvarPasi:0,ucuncuAdam:1,derinKosu:2,geriCevirme:3};
 Object.assign(Match.prototype,{
   planHazirla(){return this._pln={no:0,T:[[],[]],rol:new Map(),sonPas:null,sonDok:null,sonSurum:-1,kare:-1,cizgi:[0,0],cizgiD:[0,0],
-    hd:{u:0,w:0,ef:0,h:1,g:''},aday:[],istek:new Map(),istekKare:-99};},
+    hd:{u:0,w:0,ef:0,h:1,g:''},aday:[],istek:new Map(),istekKare:-99,red:new Map()};},
+  /* B2a: taşıyan K bu B'yle teklifi yakın zamanda reddetti mi (saf; ilkel adayları okur) */
+  planReddetti(K,B){const R=this._pln&&this._pln.red.get(K);return!!R&&R.B===B&&this.t-R.t<MOTOR_AYAR.planRed;},
   /* gerçek ofsayt çizgisi (sondan ikinci rakip) ve topla birlikte: t takımının çerçevesinde (u). ofsaytCizgisi her karede çağrılmaz (bellek ayırır) */
   planCizgi(t){const S=this._pln,d=this.dir[t];let a=-1e9,c=-1e9;
     for(const o of this.teams[1-t]){if(!o.oyunda)continue;const u=o.x*d;if(u>a){c=a;a=u;}else if(u>c)c=u;}
@@ -87,8 +90,13 @@ Object.assign(Match.prototype,{
       if(!dogru){this.planKapat(P,P.durum==='teklif'?'reddedildi':'bozuldu','vazgecti');continue;}
       P.i++;P.pasT=this.t;P.pas=pas;P.ofs=!!(b.ofsaytta&&b.ofsaytta.liste&&b.ofsaytta.liste.some(e=>e.q===q));
       if(P.durum==='teklif'){P.durum='basladi';P.tBas=this.t;
-        if(P.tur==='duvarPasi'){S.rol.set(P.K,P);P.kosuT=this.t;P.son=this.t+2.5;this.on('kosu',{p:P.K,verKac:true});}
-        else if(P.tur==='ucuncuAdam'){P.tKes=this.t+ILK_TEPKI(P.C,0.5);P.son=this.t+4;}
+        if(P.tur==='duvarPasi'){S.rol.set(P.K,P);P.kosuT=this.t;P.son=this.t+2.5;
+          /* B2a: plan ver-kaçın kaynağıdır — K'nın koşusu ver-kaç kaydıyla sürer (kalkış, dönüş pasının değeri, takip); hedef planın noktası, çizgiyle sınırlı.
+             Ver-kaç zaten başladıysa (aynı pas) olay yeniden yayılmaz */
+          const d=this.dir[t],V=this.bVeri(P.K),vard=!!(V.vk&&V.vk.q===P.B);
+          V.vk={q:P.B,x:Math.min(P.nu,S.cizgi[t]+2,PL-8)*d,z:clamp(P.nw,3,PW-3),son:this.t+2.8};
+          if(!vard)this.on('kosu',{p:P.K,verKac:true});}
+        else if(P.tur==='ucuncuAdam'){P.tKes=this.t+0.5*ILK_TEPKI(P.C,0.5);P.son=this.t+4;}   /* B2b: C teklifi görmüş, ön hareketteydi: tepki yarısı */
         this.planOlay(P,'basladi',null);}
       else if(P.tur==='duvarPasi')P.son=Math.max(P.son,this.t+1.6);
       else if(P.tur==='derinKosu'||P.tur==='geriCevirme')P.son=Math.max(P.son,this.t+2.5);}
@@ -106,6 +114,8 @@ Object.assign(Match.prototype,{
   },
   planDenetle(P){
     if(P.kapandi)return;
+    /* B2a: teklif, taşıyan B'ye vuruş hazırlığındayken açık kalır (pasın hazırlığı 0,38 sn'den uzun; kabul edilen pas 'zaman' sayılmasın) */
+    if(P.durum==='teklif'){const e=P.K.eylem;if(e&&e.ad==='vurus'&&e.sec&&e.sec.alici===P.B)P.son=Math.max(P.son,this.t+0.05);}
     if(this.t>P.son){this.planKapat(P,P.durum==='teklif'?'reddedildi':'bozuldu',P.ofs?'ofsayt':'zaman');return;}
     for(const q of [P.K,P.A,P.B,P.C,P.R])if(q&&(!q.oyunda||q.eylem&&q.eylem.kilit&&(q.eylem.ad==='dusus'||q.eylem.ad==='yerde'||q.eylem.ad==='kalkis'))){this.planKapat(P,'bozuldu','teknik');return;}
     if(P.tur==='derinKosu'&&P.i===1){const R=P.R,d=this.dir[P.takim];
@@ -113,10 +123,14 @@ Object.assign(Match.prototype,{
       const e=P.K&&P.K.eylem,haz=e&&e.ad==='vurus'&&e.sec&&e.sec.alici===R;
       if(!haz&&R.x*d>this._pln.cizgiD[P.takim]+1.5&&R.x*d>this.ball.x*d){this.planKapat(P,'bozuldu','hat');return;}
       if(!R.kosu){this.planKapat(P,'bozuldu','kesildi');return;}}
+    /* B2b: üçüncü adamın C'si de çizginin 1,5 m ötesine geçmez (B'nin C'ye vuruş hazırlığı hariç) */
+    if(P.tur==='ucuncuAdam'&&P.i===1){const C=P.C,d=this.dir[P.takim],e=P.B&&P.B.eylem,haz=e&&e.ad==='vurus'&&e.sec&&e.sec.alici===C;
+      if(!haz&&C.x*d>this._pln.cizgiD[P.takim]+1.5&&C.x*d>this.ball.x*d){this.planKapat(P,'bozuldu','hat');return;}}
   },
   planKapat(P,olay,neden){
     if(P.kapandi)return;P.kapandi=true;
     const S=this._pln,L=S.T[P.takim],i=L.indexOf(P);if(i>=0)L.splice(i,1);
+    if(olay==='reddedildi'&&MOTOR_AYAR.planRed>0)S.red.set(P.K,{B:P.B,t:this.t});   /* B2a: reddedilen çiftin hafızası */
     for(const q of [P.K,P.A,P.B,P.C,P.R])if(q&&S.rol.get(q)===P)S.rol.delete(q);
     /* derin koşu vazgeçildiyse koşucu en çok 1,5 sn aldatma olarak sürer (koşu belirteci; mac-topla.js derinKosu'nun süren koşusu) */
     if(P.tur==='derinKosu'&&P.R&&P.R.kosu&&neden==='vazgecti')P.R.kosu.t=Math.min(P.R.kosu.t,1.5);
@@ -173,12 +187,21 @@ Object.assign(Match.prototype,{
         if(v>pay)pay=v;}
       if(M.plan&16){const j=q.jest;if(j&&(j.tur==='cagir'||j.tur==='isaret')&&j.t<=1.2&&ilkCanli(p,q)){const v=M.planIstek*(0.5+0.5*p.oz.gorus);if(v>pay)pay=v;}}
       if(pay>0)s.deger+=Math.min(M.planTavan,pay);}
+    /* B2c (2026-10-22): geri çevirme açıkken taşıyanın çizgiye inmesi planın adımıdır — taşıma ve sürükleme seçeneğine çizgiye (kaleye 6 m)
+       yaklaştırdığı oranla pay (kontrol sonrası ve gelişine yok: kip 0) */
+    if(kip===0&&M.plan&8)for(const P of T){if(P.tur!=='geriCevirme'||P.i!==1||P.K!==p)continue;const d=this.dir[t],ku=p.x*d,kalan=PL-6-ku;if(kalan<=0.5)break;
+      for(const s of S){if(s.tur!=='tasi'&&s.tur!=='surukle')continue;const g=clamp((s.hx*d-ku)/kalan,0,1);if(g<=0)continue;
+        s.deger+=Math.min(M.planTavan,M.planDeger*0.3*tarzAgirlik(this,t,P.tur)*P.kz*clamp(P.deger,0.5,4)*g*(s.P!=null?s.P:0.7));}
+      break;}
   },
   /* H8: derin koşu gençken taşıyanın bekleme payı (sabır eşiğinin üstüne eklenen) */
   planTut(p,esik){
     const L=this._pln;if(!L)return 0;
     for(const P of L.T[p.team]){if(P.K!==p)continue;
       if(P.i===0&&(P.tur==='duvarPasi'||P.tur==='ucuncuAdam'))return -MOTOR_AYAR.planSabir*esik;   /* teklif: sabır düşer */
+      /* B2c: geri çevirmede taşıyan çizgiye 8 m'den uzak ve baskı düşükken kısa bekleme payı — geç gelen zaman kazanır */
+      if(P.tur==='geriCevirme'&&P.i===1){const d=this.dir[p.team],yas=this.t-P.tBas;
+        if(p.x*d>PL-8||yas>=1.2||baskiAltinda(this,p)>0.5)return 0;return Math.max(0,MOTOR_AYAR.planTut*(1-yas/1.2)-esik);}
       if(P.tur!=='derinKosu'||P.i!==1)continue;const yas=this.t-P.tBas;
       if(yas>=P.tHedef||baskiAltinda(this,p)>0.5)return 0;return Math.max(0,MOTOR_AYAR.planTut*(1-yas/P.tHedef)-esik);}
     return 0;},

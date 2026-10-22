@@ -129,15 +129,18 @@ Object.assign(Match.prototype,{
     const N=this._niyet[t],A=MOTOR_AYAR,D=this.macDurumu(t,N.durum),d=this.dir[t],u=(du?du.x:this.ball.x)*d;
     /* T18d: takım yorgunluğu (sahadaki saha oyuncuları) ve düzen payı */
     {let ys=0,yn=0;for(const p of this.teams[t])if(p.oyunda&&p.rol!=='GK'){ys+=p.yorgunluk||0;yn++;}N.yorgun=yn?ys/yn:0;N.yorgunPay=clamp((N.yorgun-0.1)/0.25,0,1);}
+    /* B3: tarzın etkin hücum iştahı (yoksa −1) — iştahlı takım (≥ 0,8) kazanımda bir savunmacı fazlasına rağmen kontraya çıkar, koşu sıklığı iştahla */
+    const V3=A.tarzIstah>0?tarzTakim(this,t):null,ist=V3?istahEtkin(V3,D):-1;
     let ad;
     if(sahip!==t)ad='savunma';
     else{const yeni=!du&&this._sahiplikBas!=null&&this.t-this._sahiplikBas<A.kontraSure;
-      if(yeni&&(N.ad==='kontra'?this.kontraSayim(t)<=1:this.t-this._sahiplikBas<1&&this.kontraSayim(t)<=0&&u<PL-25))ad='kontra';
+      if(yeni&&(N.ad==='kontra'?this.kontraSayim(t)<=1:this.t-this._sahiplikBas<1&&this.kontraSayim(t)<=(ist>=0.8?1:0)&&u<PL-25))ad='kontra';
       else if(D.koru>0.5&&u<PL-20)ad='tut';
       else ad=u<-15?'kur':u<PL-30?'ilerlet':'sonBolge';}
     if(ad!==N.ad){N.ad=ad;N.t0=this.t;}
     const P=NIYET_PARAM[ad],k=A.niyetEtki;   /* T16b: tut'ta sayısal değerler niyetDeger'den (tutEtki) */
     N.genislik=1+k*(niyetDeger(ad,'genislik')-1);N.derinlik=k*niyetDeger(ad,'derinlik');N.bekIleri=1+k*(niyetDeger(ad,'bekIleri')-1);N.kosu=1+k*(niyetDeger(ad,'kosu')-1);N.bekCik=k?P.bekCik:true;
+    if(ist>=0)N.kosu*=1+A.tarzIstah*(0.6*ist-0.3);   /* B3: koşu sıklığı iştahla (0,6'da ×1,06; dikey 0,9'da ×1,24) */
     /* savunma çizgisi: geride kalan takım öne çıkar, öndeki ve eksik kalan geri çekilir (m) */
     N.blok=k*(4*D.acele-3*D.koru-3*D.eksik)-(A.yorgunBlok||0)*N.yorgunPay;   /* T18d: yorgun takım derinleşir */
     {const V=tarzTakim(this,t);if(V)N.blok+=MOTOR_AYAR.tarzEtki*V.blokCizgi;}   /* Z3: tarzın hat yüksekliği (yüksek pres önde, orta blok geride) */
@@ -251,7 +254,7 @@ Object.assign(Match.prototype,{
   /* etkin taktik = taban + niyet + maç durumu (niyetEtki 0 iken tabanın aynısı) */
   etkinTaktik(t){const B=this.taktikTaban[t],E=this.taktik[t],N=this._niyet[t],D=N.durum,k=MOTOR_AYAR.niyetEtki;
     E.dizilis=B.dizilis;
-    if(!k){E.risk=B.risk;E.sakin=B.sakin;E.tempo=B.tempo;E.direkt=B.direkt;E.pres=B.pres;return;}
+    if(!k){E.risk=B.risk;E.sakin=B.sakin;E.tempo=B.tempo;E.direkt=B.direkt;E.pres=B.pres;E.ilerle=1;E.koruK=1;return;}
     /* T16b: öndeki takımın hücumdaki temkini (tut niyeti ve koru'nun risk, sakinlik, tempo terimleri) tutEtki ile; pres, blok ve zaman geçirme aynen */
     const ad=N.ad,kr=D.koru*MOTOR_AYAR.tutEtki;
     E.risk=Math.max(0.3,B.risk*(1+k*(niyetDeger(ad,'risk')-1))*(1-0.25*k*D.acele)*(1+0.3*k*kr)*(1+0.1*k*D.eksik)*(1-MOTOR_AYAR.guvenRisk*(this.guven?this.guven[t]:0)));   /* T10e: güven */
@@ -260,7 +263,14 @@ Object.assign(Match.prototype,{
     E.direkt=clamp(B.direkt+k*(niyetDeger(ad,'direkt')+0.3*D.acele+(N.uzun?0.4:0)),0,1);
     E.pres=clamp(B.pres+k*(0.25*D.acele-0.1*D.koru-0.15*D.eksik),0,1);
     /* Z3 (tarzEtki): tarzın vektörü tabanı kaydırır — kısa kurma payı direktliği (1 − kisaPay), pres yüksekliği presi belirler */
-    const V=tarzTakim(this,t);if(V){const e=MOTOR_AYAR.tarzEtki;E.direkt=clamp(E.direkt+e*((1-V.kisaPay)-B.direkt),0,1);E.pres=clamp(E.pres+e*(V.presYuksek-B.pres),0,1);}},
+    const V=tarzTakim(this,t);if(V){const e=MOTOR_AYAR.tarzEtki;E.direkt=clamp(E.direkt+e*((1-V.kisaPay)-B.direkt),0,1);E.pres=clamp(E.pres+e*(V.presYuksek-B.pres),0,1);}
+    /* B3 (tarzIstah; 2026-10-22): tarzın hücum iştahı ve temposu — tempo tarzın, sakinlik iştahın tersi (B1'in geri pas payını çift saymaz: 0,2–0,8),
+       risk iştahlı takımda biraz düşük, ilerlemenin değeri ve topu tutmanın bedeli iştahla ölçeklenir (ilerle, koruK: js/mac-karar.js) */
+    const ei=MOTOR_AYAR.tarzIstah;
+    if(V&&ei>0){const ist=istahEtkin(V,D);
+      E.tempo=clamp(E.tempo+ei*(V.tempo-B.tempo),0,1);E.sakin=clamp(E.sakin+ei*(0.2+0.6*(1-ist)-B.sakin),0,1);
+      E.risk=Math.max(0.3,E.risk*(1+0.4*ei*(0.6-ist)));E.ilerle=1+0.6*ei*(ist-0.5);E.koruK=1+ei*(ist-0.5);}
+    else{E.ilerle=1;E.koruK=1;}},
   /* hoca kapısı (plan T7 madde 10): hocanın tabanını değiştirir; diziliş değişirse mevkiler sıradan (n) yeniden okunur, markaj/pres/koşu tabloları
      sıfırlanır; 'taktik' olayı yayılır */
   taktikDegistir(t,yeni,neden){

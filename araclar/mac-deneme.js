@@ -36,8 +36,8 @@ const ARG=process.argv.slice(2);
 function secenek(ad,degerli){const i=ARG.indexOf(ad);if(i<0)return null;if(!degerli){ARG.splice(i,1);return true;}return ARG.splice(i,2)[1];}
 /* seçenek: --dizilis A,B  iki takımın dizilişini kadro verisine dokunmadan değiştirir (ör. 4-3-3,4-2-3-1; MM2) */
 const DIZILIS=secenek('--dizilis',true)||process.env.MAC_DENEME_DIZILIS||'';
-/* seçenek: --tarz A,B  iki takımın tarzını (js/mac-tarz.js arketip adı; 'yok': tarzsız) kadro verisine dokunmadan değiştirir — aynı tohumlarda iki tarz
-   (FUTBOL_KUTUPHANESI §11.1 madde 3, Z3) */
+/* seçenek: --tarz A,B  iki takımın tarzını (js/mac-tarz.js arketip adı; 'yok': tarzsız) maç seçeneğiyle (secenek.tarz) sabitler — aynı tohumlarda iki
+   tarz (FUTBOL_KUTUPHANESI §11.1 madde 3, Z3). Verilmezse oyundaki gibi her maç tohumdan seçer (B4, secenek.tarz 'dagilim'; tarzSecim 0: kadronun tarzı) */
 const TARZ=secenek('--tarz',true)||process.env.MAC_DENEME_TARZ||'';
 const JSON_DOSYA=secenek('--json',true),KARSILASTIR=secenek('--karsilastir',true),AYNI=!!secenek('--ayni',false),SENARYO=secenek('--senaryo',true);
 const ISCI=parseInt(secenek('--isci',true)||process.env.MAC_DENEME_ISCI||'0',10),TAM_TEKRAR=!!secenek('--tam-tekrar',false);
@@ -146,8 +146,7 @@ function macOyna(tohum,sinir){
     const b=m&&m.ball;if(!b)return;const h=Math.sqrt(b.vx*b.vx+b.vy*b.vy+b.vz*b.vz);
     if(ad==='pass'||ad==='cross')pasH.push(h);else if(ad==='shot')sutH.push(h);};
   m=vm.runInContext(`(on,tohum,D,Z)=>{let K=D?MAC_KADRO.map((k,i)=>Object.assign({},k,{taktik:Object.assign({},k.taktik,{dizilis:D[i]})})):MAC_KADRO;
-    if(Z)K=K.map((k,i)=>Object.assign({},k,{taktik:Object.assign({},k.taktik,{tarz:Z[i]==='yok'?undefined:Z[i]})}));
-    return new Match(on,{kadro:K,tohum,tunel:{x:0,z:-6}});}`,ctx)(dinle,tohum,DIZILIS?DIZILIS.split(','):null,TARZ?TARZ.split(','):null);
+    return new Match(on,{kadro:K,tohum,tunel:{x:0,z:-6},tarz:Z||'dagilim'});}`,ctx)(dinle,tohum,DIZILIS?DIZILIS.split(','):null,TARZ?TARZ.split(','):null);
   const PLm=52.5,MZm=34,GW2m=3.66,GHm=2.44,topAdimFn=ctx.topFizikAdim||vm.runInContext('topFizikAdim',ctx);
   /* şutlar: kick anında topun kopyası kale çizgisine kadar ilerletilir (çerçeve ve direğe uzaklık); sonuç top.sut değişince yazılır */
   const sutlar={n:0,cerceve:0,kurtarisCerceve:0,gol:0,tutma:0,kurtaris:0,kutuIsabet:0,direkYakin:0};let aktifSut=null;
@@ -238,6 +237,8 @@ function macOyna(tohum,sinir){
     kurtaris:olay.save,kafa:olay.header,blok:olay.block,sekme:olay.sekme,kapma:olay.steal,pasHiz:ort(pasH),sutHiz:ort(sutH),sutHizMaks:sutH.length?Math.max(...sutH):NaN,
     hizMaks:hizlar.length?hizlar.reduce((a,v)=>v>a?v:a,-Infinity):NaN,   /* U1: uzun maçta dizi yayılımı (Math.max(...)) yığını taşırıyordu */hiz99:yuzdelik(hizlar,0.99),ivme99:yuzdelik(ivmeler,0.99),mesafe:mesafe/22,icindenGecti:gecti,icindenGectiBaska:gectiBaska,
     bosta,cift,karsiPres,kalecisiz,boy:ort(boylar),en:ort(enler)});
+  /* B4: maçın iki tarzı (arketip adları; tarz hiç okunmadıysa null) */
+  s.tarz=[0,1].map(t=>{const T=m.tarz&&m.tarz[t];return T?Object.keys(T.harman).join('+'):null;});
   /* Faz 0 ölçümleri: oranlar toplam üzerinden hesaplanabilsin diye pay/payda ayrı saklanır (ham: [pay, payda]) */
   s.ham={pasKisaOran:[pasK.kisa[1],pasK.kisa[0]],pasOrtaOran:[pasK.orta[1],pasK.orta[0]],pasUzunOran:[pasK.uzun[1],pasK.uzun[0]],
     araPasOran:[pasK.ara[1],pasK.ara[0]],donusPasOran:[pasK.donus[1],pasK.donus[0]],ortaOran:[pasK.cross[1],pasK.cross[0]],tekVurusOran:[pasK.tek[1],pasK.tek[0]],
@@ -334,7 +335,7 @@ else if(process.env.MAC_DENEME_TEKRAR){
     console.log('\n'+(ayni?'  ':'! ')+`Tekrarlanabilirlik: tohum ${ILK_TOHUM} üç kez oynatıldı${tekrarSinir?` (kısa: ilk ${tekrarSinir/3600} dakika, ${tk[0].izler.length} kontrol noktası)`:''}, ${ayni?'sonuç aynı':'SONUÇ FARKLI'}`);
     if(!ayni)process.exitCode=1;
     if(JSON_DOSYA){fs.mkdirSync(path.dirname(path.resolve(JSON_DOSYA)),{recursive:true});
-      fs.writeFileSync(JSON_DOSYA,JSON.stringify({tarih:new Date().toISOString(),dizilis:DIZILIS,ayar:AYAR,ortam:ORTAM,sonuclar},null,0));console.log(`  Sonuçlar yazıldı: ${JSON_DOSYA}`);}
+      fs.writeFileSync(JSON_DOSYA,JSON.stringify({tarih:new Date().toISOString(),dizilis:DIZILIS,tarz:TARZ||'dagilim',ayar:AYAR,ortam:ORTAM,sonuclar},null,0));console.log(`  Sonuçlar yazıldı: ${JSON_DOSYA}`);}
     if(KARSILASTIR){
       const EJ=JSON.parse(fs.readFileSync(KARSILASTIR,'utf8')),eski=EJ.sonuclar,E=new Map(eski.map(s=>[s.tohum,s]));
       const ortak=sonuclar.filter(s=>E.has(s.tohum));

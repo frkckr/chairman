@@ -35,6 +35,8 @@ Başkan teknik direktörü ve yönetimini seçer, bütçe ve öncelikleri belirl
 
 Başkan hocayla oyuncu tercihleri hakkında görüşebilir. Müdahale, hocanın otoritesi ve ilişki üzerinde sonuç doğurur; günlük oyun bir teknik direktör kadro ekranına dönüşmez. Rutin araştırma ve pazarlıklar, bütçe ve yetki sınırlarıyla ekibe bırakılabilir.
 
+**Maç başkanın bilgi kaynağıdır (2026-10-22, kullanıcı).** Başkan maça dokunmaz; maçı izler, okur ve yönetim hamlesi çıkarır: hocanın tarzı kadroya uyuyor mu, kadroda hangi profil eksik, kötü sonuç şanssızlık mı beceri farkı mı, sabır mı değişiklik mi. Bunun için tarz ve uyum, oyuncu kalitesi, şans ile beceri farkı sahada ayırt edilebilir olmalıdır. Futbolun belirsizliği korunur: her plan tutmayabilir, kalite ortalamayı kaydırır ama garanti vermez (motordaki karşılığı [FUTBOL_KUTUPHANESI §1](FUTBOL_KUTUPHANESI.md#1-i̇lkeler) madde 9). Maçın okunmasına yardım eden gözlem notu, ekibin yorumu ve istatistik başkanlık planında (F) tasarlanır.
+
 ### Yaşayan kulüp ve devam eden meseleler
 
 **Onaylı tasarım yaklaşımı (2026-09-30):** Günlük başkanlık, karakterin bulunduğu mekânda ve o an ilgilendiği konuya odaklanarak yaşanır. Başkanın odası, görüşme alanı, antrenman kenarı ve stat farklı durumlara ev sahipliği yapar. Telefon, ajanda, raporlar ve mali bilgiler gerektiğinde açılır; bütün kulüp göstergeleri sürekli aynı ekranda tutulmaz. Ajanda, işleri ve zamanı takip etme görevini sürdürür. Açık renkli sunumun kuralları [stil rehberindedir](STIL_REHBERI.md#7-arayüz-ve-bilgi).

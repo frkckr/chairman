@@ -230,7 +230,7 @@ function ileriPasOnPuani(m,q,x,z,tau){
     const ux=(rx-x)/L,uz=(rz-z)/L,vOrt=10+L*0.25;let kapali=0;
     for(const o of rakipler(m,q.team)){if(!o.oyunda)continue;const ox=o.x-x,oz=o.z-z,boy=ox*ux+oz*uz;if(boy<-1||boy>L+2)continue;
       const yan=Math.abs(ox*uz-oz*ux),ul=o.maxSpd*0.75*Math.max(0,boy)/vOrt+0.8;if(yan<ul)kapali+=1-yan/ul;}
-    const P=Math.exp(-1.2*kapali),U=P*(xT(ru,rz)*100+(ru-u)*A.ilerleme)-(1-P)*pasKaybi(m,q,(x+rx)/2,(z+rz)/2);if(U>en)en=U;}
+    const P=Math.exp(-1.2*kapali),U=P*(xT(ru,rz)*100+(ru-u)*A.ilerleme*m.taktik[q.team].ilerle)-(1-P)*pasKaybi(m,q,(x+rx)/2,(z+rz)/2);if(U>en)en=U;}
   return en;}
 /* devam değeri (puan): q topu t sn sonra (x,z)'de, bakis yönüne dönük alırsa elindeki en iyi işin ucuz tahmini. Taban oranın tehdidi (xT);
    seçenekler şut (xG), önündeki boşluğa taşıma, ileri pas. Baskı ve yön azaltır: sırtı dönük ve sıkışık alıcı topu ancak geri bırakır (ileri
@@ -302,7 +302,7 @@ function tasimaYonu(m,p,S,a,dv0,rakip,vC){
      taşıyıp ileri pas atmak, oradan pas daha çok metre kazandırdığı için, ileri taşımak kadar değerli görünüyordu) */
   let enD=-1e9;
   for(const i of uz){const P=clamp(TS_P[i],0.05,0.98),x=TS_X[i],z=TS_Z[i];
-    const dv=devamDegeri(m,p,x,z,TS_T[i],a),mx=(b.x+x)/2,mz=(b.z+z)/2,ilr=(x-b.x)*d*A.ilerleme;
+    const dv=devamDegeri(m,p,x,z,TS_T[i],a),mx=(b.x+x)/2,mz=(b.z+z)/2,ilr=(x-b.x)*d*A.ilerleme*m.taktik[p.team].ilerle;
     /* T21d (tersKanat): ters ayaklı kanat son 35 m'de içe (kaleye) kesen taşımayı daha değerli bulur (güçlü ayağına alıp içe dönen orta ya da şut) */
     const ic=A.tersKanat&&tersAyakKanat(m,p)&&b.x*d>PL-35&&Math.abs(b.z-MZ)>8?A.tersKanat*Math.max(0,Math.cos(aciFark(a,Math.atan2(MZ-b.z,d*PL-b.x)))):0;
     const deger=P*(dv+ilr+ic)-(1-P)*pasKaybi(m,p,mx,mz)*takim.risk*A.risk-bedel;if(deger>enD)enD=deger;
@@ -334,7 +334,7 @@ function surukleSecenegi(m,p,S){
     for(let i=1;i<=6;i++){const L=5*i,x=b.x+c*L,z=b.z+s*L;if(Math.abs(x)>PL-2||z<2||z>PW-2)break;const tp=0.3+L/vC;let en=0;
       for(const o of rakip){if(!o.oyunda||(o.eylem&&o.eylem.kilit))continue;const rr=sigma((tp+0.1-varisZamani(o,x,z,1.0,0.2))/0.2);if(rr>en)en=rr;}
       P*=1-0.75*en;son=L;
-      if(SR_L.includes(L)){const Pk=clamp(P,0.05,0.97),dv=devamDegeri(m,p,x,z,tp,a),ilr=(x-b.x)*d*A.ilerleme;
+      if(SR_L.includes(L)){const Pk=clamp(P,0.05,0.97),dv=devamDegeri(m,p,x,z,tp,a),ilr=(x-b.x)*d*A.ilerleme*m.taktik[p.team].ilerle;
         const deger=Pk*(dv+ilr+(p.mevki&&p.mevki.kanat?A.surukleKanat:0))-(1-Pk)*pasKaybi(m,p,b.x+c*L/2,b.z+s*L/2)*takim.risk*A.risk;   /* kanadın basıp gitmesi */
         S.push({tur:'surukle',hx:x,hz:z,yon:a,mesafe:L,deger,P:Pk,dv});}}
     if(son<15)continue;}}
@@ -383,7 +383,7 @@ function koruSecenegi(m,p,S){
      de olabilir (destek geldiyse ya da uzaklaşıyorsa, rakip yaklaşıyorsa beklemek değer kaybettirir): o zaman bırakır */
   const g=m.bVeri(p).gur,tutT=g&&g.no===m.sahiplikNo?m.t-g.t0:0,egilim=A.koruDeger*kalkan*Math.max(0,1-tutT/A.koruSure);
   /* tempo bedeli: top tutuldukça atak söner, savunma yerleşir (koruTempo puan/sn; ucuz ön puanlar bunu görmez) */
-  const tempo=A.koruTempo*tutT;
+  const tempo=A.koruTempo*m.taktik[p.team].koruK*tutT;   /* B3: topu tutmanın bedeli iştahla (koruK) */
   let en=null;
   for(const tau of KORU_SURE){
     /* ikinci rakip tutma bitmeden gelirse (t2 < tau) gövde ikisini birden kapatamaz: olasılık 0,55'e dek iner */
@@ -411,7 +411,7 @@ function birebirSecenegi(m,p,S){
     const bb=birebirTahmin(m,p,o,yon,null);if(bb.i<0)continue;
     const H=HRK_HAREKET[bb.i],L=L0,tYak=Math.max(0,L-H.itisL)/Math.max(1,hrkTepe(p)*0.92*H.yakHiz)+H.haz;
     /* devam değeri geçilen savunmacı sayılmadan (başarıda o geride kalmıştır) */
-    const dv=devamDegeri(m,p,bb.cx,bb.cz,tYak+bb.tA,Math.atan2(MZ-bb.cz,d*PL-bb.cx),o),ilr=(bb.cx-b.x)*d*A.ilerleme;
+    const dv=devamDegeri(m,p,bb.cx,bb.cz,tYak+bb.tA,Math.atan2(MZ-bb.cz,d*PL-bb.cx),o),ilr=(bb.cx-b.x)*d*A.ilerleme*m.taktik[p.team].ilerle;
     const deger=bb.P*(dv+ilr+A.birebirDeger)-bb.Pk*pasKaybi(m,p,b.x,b.z)*m.taktik[p.team].risk*A.risk*A.birebirKayip;
     if(deger>enD){enD=deger;en={tur:'gec',yon,o,i:bb.i,hareket:bb.hareket,taraf:bb.taraf,P:bb.P,Pk:bb.Pk,hx:bb.cx,hz:bb.cz,deger,tYak};}}
   if(en)S.push(en);}
@@ -421,8 +421,15 @@ function pasDegeri(m,p,o,hx,hz,alt,q){
   /* alıcı topu aldığı an sıkıştırılacaksa o yerin değeri tam gerçekleşmez (topu tutamaz, geri döner) */
   const qB=enYakinRakip(m,hx,hz,p.team).d,sik=clamp((4-qB)/3,0,1);
   /* ara pasında alıcı savunmanın arkasında topu kaleye taşır: tehdit 5 m ileriden ölçülür (kaleciyle karşı karşıya kalma değeri) */
-  let v=xT(alt==='ara'?Math.min(PL-8,hu+5):hu,hz)*100*(1-A.sikisma*sik)+ilerleme*(A.ilerleme+0.015*takim.direkt)*(ilerleme<0?0.3:1-0.5*sik);
-  if(ilerleme<-4)v+=takim.sakin*A.geriPas+o.baski*0.8;    /* geri pas: topu tutmak, baskıda güvenli çıkış */
+  let v=xT(alt==='ara'?Math.min(PL-8,hu+5):hu,hz)*100*(1-A.sikisma*sik)+ilerleme*(A.ilerleme*takim.ilerle+0.015*takim.direkt)*(ilerleme<0?0.3:1-0.5*sik);
+  if(ilerleme<-4){   /* geri pas: topu tutmak, baskıda güvenli çıkış */
+    /* B1 (geriPasAmac; 2026-10-22): topu tutma payı yalnız önü kapalıyken tam — pasörün en iyi ileri seçeneği bulunduğu yerin değerinden geriPasK
+       puandan çok fazlaysa (önü açık) pay söner; aynı takım sahipliğinde ardışık geri paslarda yarı yarıya söner (amaçsız dolaşım); planın beklediği
+       pas (rakibi çekme, üçüncü adam) muaf. Baskı terimi aynen */
+    let fs=1;const e=A.geriPasAmac;
+    if(e>0&&!(m._pln&&m.planAlici(p)===q)){const g=Math.max(0,(o.onIleri!=null?o.onIleri:-9)-xT(u,o.oz)*100),fk=clamp(1-g/A.geriPasK,0,1);
+      const G=m._geriN&&m._geriN[p.team],n=G&&G.bas===m._sahiplikBas?G.n:0;fs=1-e*(1-fk*Math.max(0,1-n/2));}
+    v+=takim.sakin*A.geriPas*fs+o.baski*0.8;}
   /* Z4c (bindirme&2; B.4): bindiren ya da içten bindiren, ileri koşan beke pas — kanatta ikiye bir */
   if(A.bindirme&2&&(q.gorevAd==='bindirme'||q.gorevAd==='icBindirme')&&(q.vx*d)>3)v+=A.bindirmeDeger;
   if(alt==='ara')v+=A.araDeger*(0.5+takim.direkt);else if(alt==='bosluk')v+=A.boslukDeger;else if(alt==='hedef')v+=A.hedefDeger*(0.4+takim.direkt);
@@ -506,6 +513,7 @@ function pasAdayiTam(m,p,o,c,tip,yay){
 const BOSLUK_KISA=[3,6],BOSLUK_UZUN=[3,6,10];
 function pasSecenekleri(m,p,o){
   const d=m.dir[p.team],u=o.ox*d,C=[];
+  if(MOTOR_AYAR.geriPasAmac>0)o.onIleri=ileriPasOnPuani(m,p,o.ox,o.oz,0);   /* B1: pasörün en iyi ileri seçeneği (geri pas payının "önü kapalı" çarpanı; saf) */
   for(const q of m.teams[p.team]){
     if(q===p||!q.oyunda||(q.eylem&&q.eylem.kilit))continue;
     /* Z3 (kurma&2; A4): kaleci +1 — tarzın kaleciArti ≥ 0,5 iken kurma niyetinde geri pas kaleciye daha erken ve daha az baskıda açılır */
