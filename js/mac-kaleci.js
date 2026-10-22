@@ -9,6 +9,15 @@
    Tepki ve dalış hızındaki küçük sapmalar (tohumlu) kaleciTahmin'in P'sindeki belirsizliği (KL_M.sapma) üretir. */
 'use strict';
 ayarEkle('D',{
+  dagitimKarar:1,              // D7 (2026-10-22): elden dağıtımın bağlamı (kontra, pres, tarz vektörü; kaleciDagitim); 0: eski. 40 maç konumsal–direkt: top takımda
+                               // kaldı 6,45 → 6,83 / 7,4 dağıtım
+  dagitimKontra:0.25,          // D7: kontrada ileri koşan, önü boş (≥ 6 m) arkadaşa elle atış ya da degajın ek değeri
+  dagitimPres:0.3,             // D7: alıcının 4 m'sinde rakip varken kısa dağıtımın (yuvarlama, elle atış) cezası (yakınlıkla)
+  dagitimTarz:1.0,             // D7: tarz vektörünün dağıtımdaki payı (kisaPay ↔ uzunHedef; etkin taktiğin direktliğinden sapma kadar)
+  kvV1:2,                      // D6 (2026-10-22): kale vuruşunda 2 erken plan ve bağlılık (takımın şekli plana göre, presçi gelince plan değişir); 0: eski.
+                               // 40 maç konumsal–direkt: kısa kale vuruşu %96 ↔ %3,4 → %100 ↔ %0,5. Bit 1 (yüzey ve ayak) ve 4 (kvBekle evreleri) V1a/V1e'yle kapandı:
+                               // kvBekle'nin işini Z3a'nın sahneT × (0,85 + 0,35·kisaPay) çarpanı görüyor (anahtar temizlikte kalkar)
+  kvBaglilik:0.35,             // D6: kullanımda planın taze değeri en iyinin bu kadar altına düşerse plan değişir
   kaleciTepki:0.27,            // şuta tepki süresi (sn) ·(1,25 − 0,5·kalecilik); görüş kapalıysa +0,10–0,18, hazır duruşta −0,05. T9b-a (2026-10-10): 0,20 → 0,23 —
                                // kaleci dalıştan önce yana adım atınca (yanAdim) d-sut kapıları (MM4) yeniden tuttu; kalecilik 0,7'de 0,21 sn (Ek G6: ~0,2 sn).
                                // T12a (2026-10-12): 0,23 → 0,27 — d-sut'ta hazır avantajı kayboluyordu (kaleciTavir; gerçekleşen tepki ~0,20 sn), kapılar o kayıpla
@@ -198,15 +207,23 @@ function kaleciHavaTahmin(m,gk,x,z,y,T){
 /* ---- kaleci topu elinde: pas analiziyle (js/mac-karar.js pasAnaliz) yuvarlama, elle atış ya da uzun vuruş. Fayda = başarı olasılığı − 1,2 × kayıp
    olasılığı + kazanılan alan (m başına 0,004) + takımın direktliği (uzun vuruş) ya da sakinliği (kısa): kaleci kısa ve güvenli pası, kısa seçenekler
    kapalıysa uzunu seçer ---- */
+/* D7 (2026-10-22; FUTBOL_KUTUPHANESI §12.1 D — V1e daraltılmış, dagitimKarar): dağıtımın bağlamı — kontrada ileri koşan, önü boş arkadaşa atış ya da
+   degaj (dagitimKontra), alıcının 4 m'sinde rakip varken kısa dağıtıma ceza (dagitimPres), takımın tarz vektörü (kisaPay kısa yuvarlama ve elle
+   atışa, uzunHedef degaja; etkin taktiğin direktliği yerine, dagitimTarz). Aday başına zar aynı yerde (çekiliş sayısı değişmez); 0: eski */
 function kaleciDagitim(m,gk){
   const d=m.dir[gk.team],tk=m.taktik[gk.team],PA=typeof pasAnaliz==='function'?pasAnaliz:null;let en=null,enP=-1e9;
+  const DK=MOTOR_AYAR.dagitimKarar,V=DK?tarzTakim(m,gk.team):null,kontra=DK?kaleciKontraVar(m,gk):false;
   for(const q of m.teams[gk.team]){if(q===gk||!q.oyunda)continue;const L=hyp(q.x-gk.x,q.z-gk.z);if(L<8)continue;
     const hx=clamp(q.x+q.vx*0.5,-PL+1,PL-1),hz=clamp(q.z+q.vz*0.5,1,PW-1);
     for(const tur of['yuvarla','elleAtis','degaj']){
       if(tur==='yuvarla'&&L>24||tur==='elleAtis'&&(L<14||L>40)||tur==='degaj'&&(L<30||q.rol==='DEF'))continue;
       /* degaj pas analizindeki havadan pastan çok daha uzun havada kalır (savunma yetişir): başarısı ~%60'ına indirilir */
       const P=(PA?PA(m,gk,hx,hz,tur==='degaj'?'hava':'yer',q).P:clamp(enYakinRakip(m,hx,hz,gk.team).d/8,0.1,0.9))*(tur==='degaj'?0.6:1);
-      const f=P-1.2*(1-P)+0.004*(hx-gk.x)*d+(tur==='degaj'?0.35*tk.direkt:0.15*(1-tk.direkt))+m.rast()*0.12;
+      let f=P-1.2*(1-P)+0.004*(hx-gk.x)*d+(tur==='degaj'?0.35*tk.direkt:0.15*(1-tk.direkt))+m.rast()*0.12;
+      if(DK){const A=MOTOR_AYAR,bos=enYakinRakip(m,q.x,q.z,gk.team).d;
+        if(V)f+=A.dagitimTarz*(tur==='degaj'?0.35*(V.uzunHedef-tk.direkt):0.15*(V.kisaPay-(1-tk.direkt)));
+        if(kontra&&tur!=='yuvarla'&&(q.x-gk.x)*d>=20&&bos>=6)f+=A.dagitimKontra;
+        if(tur!=='degaj'&&bos<4)f-=A.dagitimPres*(1-bos/4);}
       if(f>enP){enP=f;en={q,tur,hx,hz};}}}
   return en;
 }
@@ -613,7 +630,23 @@ Object.assign(Match.prototype,{
      tarzsız takımda direktlik) tartar. Presi okur: kısa seçeneğin 4 m içinde rakip değeri düşürür; en az iki kısa seçenek presliyse rakip yüksek
      basıyordur, üstüne ve ötesine değer kazanır (presi üstüne çekip arkasına, A2). Kategori (cevrele, icinden, icine, ustune, otesine) ve pres du.kv'ye
      yazılır (ölçü, k-kurma). Seçim aday başına bir Gumbel zarıyla (ölçek 0,3) */
+  /* D6 (2026-10-22; kvV1): plan aday üretimi (kvAdaylar, saf) ve seçim (kvSec, aday başına bir Gumbel) olarak ikiye bölündü — sonuç birebir. kvV1&2: kaleci
+     şekli göstermeden (~2 sn önce) planı kurar (kvPlanla: du.kvPlan; takımın kale vuruşu şekli planı okur — kısa planda stoperler açılır, uzunda takım
+     ikinci topa yükselir); kullanımda taze adaylarda planın değeri en iyinin kvBaglilik altına düşmediyse plan tutulur, düştüyse (presçi kısa seçeneğe
+     indi) yeniden seçilir (du.kvDegisti) */
   kaleVurusuPlani(du,tk){
+    const R=this.kvAdaylar(du,tk);if(!R.S.length)return null;
+    let en=null;const P=(MOTOR_AYAR.kvV1&2)?du.kvPlan:null;
+    if(P){let eU=-1e9,eb=null;for(const x of R.S)if(x.U>eU){eU=x.U;eb=x;}
+      const ay=R.S.find(x=>x.kat===P.kat&&(P.uzun||x.sec.alici===P.q));
+      if(ay&&ay.U>=eU-MOTOR_AYAR.kvBaglilik)en=ay;else{en=this.kvSec(R.S);du.kvDegisti=true;}}
+    else en=this.kvSec(R.S);
+    du.kv={kategori:en.kat,presSayi:R.presSayi,presli:R.presli,kp:R.kp,erken:!!P,degisti:!!du.kvDegisti};
+    return en.sec;
+  },
+  kvSec(S){let en=null,eU=-1e9;for(const x of S){const u=x.U-Math.log(-Math.log(Math.max(1e-9,this.rast())))*0.3;if(u>eU){eU=u;en=x;}}return en;},
+  kvPlanla(du,tk){const R=this.kvAdaylar(du,tk);if(!R.S.length)return;const x=this.kvSec(R.S);du.kvPlan={kat:x.kat,q:x.sec.alici,uzun:x.sec.tip==='hava',hx:x.sec.hx,hz:x.sec.hz};},
+  kvAdaylar(du,tk){
     const t=du.takim,d=this.dir[t],V=tarzTakim(this,t),tkt=this.taktik[t],kp=V?V.kisaPay:1-tkt.direkt,uh=V?V.uzunHedef:tkt.direkt;
     const ox=du.x,oz=du.z,S=[];
     let a=-1e9,c=-1e9;for(const o of this.teams[1-t]){if(!o.oyunda)continue;const u=o.x*d;if(u>a){c=a;a=u;}else if(u>c)c=u;}
@@ -633,10 +666,7 @@ Object.assign(Match.prototype,{
     if(PL-c>=22){let r=null,er=-1e9;for(const q of this.sahadakiler(t)){if(q.rol!=='FV'&&!q.mevki.kanat)continue;if(q.x*d<c-10)continue;const s=q.oz.hiz-Math.abs(q.x*d-c)*0.02;if(s>er){er=s;r=q;}}
       if(r){const hx=d*clamp(c+8,-PL+20,PL-12),hz=clamp(r.z,6,PW-6),L=hyp(hx-ox,hz-oz);
         S.push({kat:'otesine',U:(1-kp)*0.6+0.35*yuksek+0.2*r.oz.hiz-(PL-c<30?0.2:0),sec:{tur:'kaleVurusu',hx,hz,tip:'hava',T:1.6+L/30,alici:r}});}}
-    if(!S.length)return null;
-    let en=null,eU=-1e9;for(const x of S){const u=x.U-Math.log(-Math.log(Math.max(1e-9,this.rast())))*0.3;if(u>eU){eU=u;en=x;}}
-    du.kv={kategori:en.kat,presSayi,presli,kp};
-    return en.sec;
+    return{S,presSayi,presli,kp};
   },
   /* penaltı: kaleci çizgide hazır bekler; tarafı vuruş anında seçer (kaleciPenaltiUcus) */
   penaltiKaleciHazirla(du){

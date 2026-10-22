@@ -517,7 +517,8 @@ Object.assign(Match.prototype,{
       if((du.tur==='tac'||du.tur==='kaleVurusu')&&du.zgEk>1&&!du.sayim&&du.t>=son){du.sayim=true;this.on('sayim',{takim:du.takim,sure:MOTOR_AYAR.tacSayim||5});}
       /* Z3a (kurma&1): kale vuruşundan ~2 sn önce kaleci kolunu kaldırıp şekli gösterir (kısa kuranda stopere, uzun atanda ileriye; jest 'kol', motor okumaz) */
       if(du.tur==='kaleVurusu'&&(MOTOR_AYAR.kurma&1)&&!du.kvIsaret&&du.t>=son-2.2&&tk){du.kvIsaret=true;const d=this.dir[du.takim],V=tarzTakim(this,du.takim),kp=V?V.kisaPay:1-this.taktik[du.takim].direkt;
-        this.jestVer(tk,'kol',0.9,kp>=0.5?{x:du.x+d*8,z:du.z+(du.z<MZ?1:-1)*16}:{x:du.x+d*45,z:MZ});}
+        if(MOTOR_AYAR.kvV1&2)this.kvPlanla(du,tk);   /* D6: erken plan — jest ve takımın şekli plana göre */
+        const PL2=du.kvPlan;this.jestVer(tk,'kol',0.9,PL2?{x:PL2.hx,z:PL2.hz}:kp>=0.5?{x:du.x+d*8,z:du.z+(du.z<MZ?1:-1)*16}:{x:du.x+d*45,z:MZ});}
       if(du.kr){if(!du.kr.hazir)return false;}else if(!du.s1Sure&&du.t<son+(du.zgEk||0))return false;   /* S1 (js/mac-sahne.js): rutinde (du.kr, S1e) hazırı rutin verir; du.s1Sure'de süreyi sahne planı */
       /* Z2c: spreyli barajda hakem barajı dizmeden vuruş yok (güvenlik ağından 2 sn öncesine dek); S1a seremonisinde (du.hk.s1) kapı düdüktür */
       if(du.hk&&!du.hk.s1&&(du.hk.evre!=='cekil'||!du.hakemHazir)&&du.t<du.zorlaHazir-2)return false;}

@@ -92,7 +92,7 @@ const MOTOR_AYAR={
   vurusDil:undefined,
   pasAile:undefined,pasAileHiz:undefined,pasTavan:undefined,pasZaman:undefined,pasPasif:undefined,pasAsim:undefined,araKalibAile:undefined,pasEgri:undefined,pasPlase:undefined,pasKalkis:undefined,ortaEgriKat:undefined,alcakPas:undefined,uzakAmac:undefined,uzakBlok:undefined,uzakBlokKay:undefined,uzakTac:undefined,uzakKorner:undefined,uzakTehlike:undefined,uzakPay:undefined,uzakTarz:undefined,uzakIleri:undefined,uzakSerit:undefined,uzakAdimL:undefined,uzakBlokPay:undefined,uzakHaz:undefined,uzakGeri:undefined,kaleciHata:undefined,kaleciAgiz:undefined,uzakKafaVy:undefined,
   /* D — js/mac-kaleci.js */
-  kurma:undefined,kvBekle:undefined,kvPres:undefined,kvKurmaU:undefined,
+  kurma:undefined,kvBekle:undefined,dagitimKarar:undefined,dagitimKontra:undefined,dagitimPres:undefined,dagitimTarz:undefined,kvV1:undefined,kvBaglilik:undefined,kvPres:undefined,kvKurmaU:undefined,
   kaleciTepki:undefined,kaleciErisim:undefined,kaleciUcus:undefined,kaleciTutma:undefined,kaleciCikis:undefined,penaltiOku:undefined,penaltiKanma:undefined,penaltiBakis:undefined,kaleciNiyet:undefined,kaleciNiyetEsik:undefined,kaleciBekle:undefined,kaleciEgri:undefined,
   /* T — js/mac-takim.js */
   niyetEtki:undefined,macDurumEtki:undefined,niyetYenile:undefined,kontraSure:undefined,kurmaStoperW:undefined,gerideEk:undefined,rakipAlgi:undefined,

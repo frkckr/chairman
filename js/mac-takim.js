@@ -172,7 +172,8 @@ Object.assign(Match.prototype,{
      bekler yüksek ve çizgide (kvKurmaU[3]; bekIceri ≥ 0,5 ise topun uzak yanındaki içeride); uzun atan takım yükselir: stoperler ceza sahasının önünde,
      bekler orta sahaya yakın, orta saha ve forvetler hedefin çevresinde ikinci topa (uzunHedef kadar ileri). k: dizilişteki yeri; null: değişmez */
   kvKonumu(p,t,k,N,bw){
-    const V=tarzTakim(this,t),mv=p.mevki,U=MOTOR_AYAR.kvKurmaU,kp=V?V.kisaPay:1-this.taktik[t].direkt;
+    const V=tarzTakim(this,t),mv=p.mevki,U=MOTOR_AYAR.kvKurmaU,du=this.durus,PL2=(MOTOR_AYAR.kvV1&2)&&du&&du.tur==='kaleVurusu'&&du.takim===t?du.kvPlan:null;
+    const kp=PL2?(PL2.uzun?0:1):V?V.kisaPay:1-this.taktik[t].direkt;   /* D6: erken plan varsa şekil plandan */
     if(kp>=0.5){
       if(p.rol==='DEF'&&!mv.bek)return{u:U[0],w:MZ+(mv.w<MZ?-1:1)*18};
       if(mv.bek){if(V&&V.bekIceri>=0.5&&(mv.w<MZ)===(bw>MZ))return{u:U[3]-2,w:MZ+(mv.w<MZ?-1:1)*12};return{u:U[3],w:mv.w<MZ?3:PW-3};}
