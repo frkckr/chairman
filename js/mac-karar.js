@@ -40,13 +40,33 @@ function varisSuresi(o,x,z,menzil){const t=varisZamani(o,x,z,menzil,0.22);return
 /* ---- ortak pas planı (MM3): karar, hedef tazeleme ve vuruş aynı hızı ve uçuşu kullanır ----
    yerden: istenen varış hızından ilk hız ve süre. Havadan: uçuş süresi yaya göre (düz havadan pas, aşırtma, orta kesme/asma, korner) */
 /* Z2b (sahne&2): kornerHizli — kornerin uçuşu 1,2–2,0 sn (kutuphane/F F.8.1 K5; eski 'korner' 34 m'de 2,3 sn), alcak — alçak sert içe dönen (~1,4 sn) */
-function havaSure(L,yay){return yay==='asirtma'?0.95+L/22:yay==='asma'?1.05+L/30:yay==='kesme'?0.72+L/40:yay==='korner'?1.15+L/30:yay==='kornerHizli'?0.85+L/30:yay==='alcak'?0.55+L/38:0.75+L/28;}
+function havaSure(L,yay){return yay==='asirtma'?0.95+L/22:yay==='asma'?1.05+L/30:yay==='kesme'?0.72+L/40:yay==='korner'?1.15+L/30:yay==='kornerHizli'?0.85+L/30:yay==='alcak'?0.55+L/38:yay==='alcakPas'?alcakPasSure(L):yay==='uzak'?1.3+L/30:yay==='kurtar'?1.0+L/32:yay==='tac'?0.55+L/30:0.75+L/28;}   /* D4: uzaklaştırmanın yayları */
+/* D3 (2026-10-22; V1c-4, pasAile&8): alçak havadan kısa pasın uçuş süresi — tepe clamp(a + b·L, alt, üst) m'ye çıkan yay: T = √(8·tepe/G) (0,9–1,07 sn) */
+function alcakPasSure(L){const A=MOTOR_AYAR.alcakPas;return Math.sqrt(8*clamp(A[3]+A[4]*L,A[5],A[6])/G);}
 function pasPlani(m,L,tip,varis,yay){
   if(tip==='yer'){const v0=Math.min(29,yerIlkHiz(L,varis||pasVarisHizi(L),m.R));return{tip,L,v0,T:yerSure(v0,L,m.R)};}
   return{tip,L,v0:0,T:havaSure(L,yay)};}
 /* yerden pasın varış hızı adayları (yumuşak … sert): ara pası daha sert, kısa bırakma yumuşak, alçak orta çok sert */
 function varisAdaylari(L,alt){const v=pasVarisHizi(L);
   return alt==='ara'?[v,v+2,v+4]:alt==='birak'?[Math.max(4.5,v-3),v-1.2,v+1]:alt==='orta'?[v+3,v+6]:[Math.max(4.5,v-2.5),v,v+2.5];}
+/* D1 (2026-10-22; V1c-1, pasAile&1): yerden pasın hız aileleri — adaylar çıkış hızı uzayında (bırakma, itme, sert ayak içi, sürülmüş; v0 = clamp(a + b·L,
+   alt, üst), MOTOR_AYAR.pasAileHiz). Sıra: bırakma ya da 7 m'den kısa pasta [bırakma, itme, sert], öbürlerinde [itme, sert, sürülmüş]. Uygunluk: ailenin
+   mesafesi, varış hızı (bırakmada ≥ 2,5, öbürlerinde 3,5–18), vurucunun tavanı (pasTavan × şutun azami hızı × (1 − 0,25·baskı); tavan ailenin alt
+   ucunun altındaysa aile yok), gelişinede sürülmüş yalnız 25 m'den uzun. İkiden az aday kalırsa itmenin yumuşak eşi (v0 × 0,8; 8,5'in altında bırakma).
+   Saf; modül dizileri AA_* her çağrıda baştan yazılır, çağrılar arası durum taşımaz (PA_* kalıbı). Dönüş: aday sayısı (0: eski yol) */
+const AILE_AD=['birak','itme','sert','surulmus'],AA_V0=new Float64Array(3),AA_VA=new Float64Array(3),AA_F=new Uint8Array(3);
+function aileV0(f,L){const h=MOTOR_AYAR.pasAileHiz[f];return clamp(h[0]+h[1]*L,h[2],h[3]);}
+function aileAdaylari(m,p,L,alt,o){
+  const H=MOTOR_AYAR.pasAileHiz,R=m.R,bs=o.baski!=null?o.baski:baskiAltinda(m,p),tv=MOTOR_AYAR.pasTavan*sutHizTavani(p,false)*(1-0.25*bs);
+  const s0=alt==='birak'||L<7?0:1;let K=0;
+  for(let f=s0;f<s0+3;f++){const h=H[f];if(L<h[4]||L>h[5]||(f===3&&o.ilk&&L<25)||tv<h[2])continue;
+    const v0=Math.min(aileV0(f,L),tv),va=yerHiz(v0,L,R);if(va<(f===0?2.5:3.5)||va>18)continue;
+    AA_V0[K]=v0;AA_VA[K]=va;AA_F[K]=f;K++;}
+  if(K<2&&L>=3){const v0=0.8*Math.min(aileV0(1,L),tv),va=yerHiz(v0,L,R);
+    if(va>=2.5&&!(K===1&&Math.abs(AA_V0[0]-v0)<0.5)){AA_V0[K]=v0;AA_VA[K]=va;AA_F[K]=v0<8.5?0:1;K++;}}
+  return K;}
+/* D1 (bit 16): alıcının yanal erişimi — topun uçuş süresi T'de yön hatasını karşılayabildiği yan mesafe (m): tepki 0,25 sn, ~4 m/sn² ivme */
+const yanalErisim=T=>0.6+2*Math.max(0,T-0.25)*Math.max(0,T-0.25);
 /* ilk dokunuşun iyi olma olasılığı (saf; kontrolEt ve pas planı aynı modeli kullanır). v: topun hızı (m/sn), y: yüksekliği (m), baski 0–1,
    aci: gelen topun yönüyle dokunuş yönü arası (rad; topu geldiği yöne çevirmek en zoru, yoluna devam ettirmek en kolayı) */
 function kontrolOlasiligi(q,v,y,baski,aci){
@@ -102,10 +122,12 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
   o=o||{};
   const b=m.ball,ox=o.ox!=null?o.ox:b.x,oz=o.oz!=null?o.oz:b.z,t0=o.t0||0,R=m.R,N=PA_N;
   const L=hyp(hx-ox,hz-oz)||0.1,ux=(hx-ox)/L,uz=(hz-oz)/L,rakip=rakipler(m,p.team);
-  const V=tip==='yer'?(o.varislar||varisAdaylari(L,o.alt)):[0],K=V.length,v0=[0,0,0];
+  /* D1 (pasAile&1; o.aile: açık oyunun pas adayları, pasAdayiTam): yerden pasta adaylar hız ailelerinden (aileAdaylari; v0 doğrudan, varış yerHiz'den) */
+  const AF=tip==='yer'&&o.aile&&!o.varislar&&(MOTOR_AYAR.pasAile&1)?aileAdaylari(m,p,L,o.alt,o):0,A16=!!(AF&&(MOTOR_AYAR.pasAile&16));
+  const V=tip==='yer'?(AF?AA_VA:(o.varislar||varisAdaylari(L,o.alt))):[0],K=AF||V.length,v0=[0,0,0];
   for(let i=0;i<N;i++){const f=(i+1)/N;PA_X[i]=ox+(hx-ox)*f;PA_Z[i]=oz+(hz-oz)*f;}
   let T=0;
-  if(tip==='yer'){for(let k=0;k<K;k++){v0[k]=Math.min(29,yerIlkHiz(L,V[k],R));for(let i=0;i<N;i++)PA_TB[k*N+i]=t0+yerSure(v0[k],L*(i+1)/N,R);}}
+  if(tip==='yer'){for(let k=0;k<K;k++){v0[k]=AF?AA_V0[k]:Math.min(29,yerIlkHiz(L,V[k],R));for(let i=0;i<N;i++)PA_TB[k*N+i]=t0+yerSure(v0[k],L*(i+1)/N,R);}}
   else{T=o.T||havaSure(L,o.yay);const hy=o.hy||0;for(let i=0;i<N;i++){const f=(i+1)/N,t=T*f;PA_TB[i]=t0+t;PA_H[i]=hy*f+G/2*t*(T-t);}}
   /* alıcı topu karşılar: yolda topa ondan önce yetişebildiği ilk nokta (havadan pasta yalnız iniş yeri) */
   /* T10a (yalnız açık oyunda havadan orta, o.orta — uzun top ve kornerde maç içi kalibrasyon zaten tutuyordu; genellemesi 40 maçta uzun pası
@@ -132,6 +154,12 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
     for(let k=0;k<K;k++){
       /* alıcının arkasındaki (kale tarafındaki) rakip topa ancak alıcının etrafından dolaşarak gelir */
       const r=ir[k],arkada=alici&&boy>L*(r+1)/N-0.4?0.35:0;let en=yakinP;
+      /* D1 (bit 16): pasif erişim — yolun 1. metresiyle alım noktasının 0,5 m gerisi arasında hattın dibindeki rakip topa ayak uzatır (yürütmede temas
+         pasiftir: tepki süresi hızlı topu kurtarmaz) */
+      if(A16&&ds<0.85&&boy>1&&boy<L*(r+1)/N-0.5){const PP=MOTOR_AYAR.pasPasif,pp=PP[2]*sigma((PP[0]-ds)/PP[1]);if(pp>en)en=pp;}
+      /* D3: alçak havadan pasta top 0,8 m'nin altındaki noktalarda bacağa takılabilir (pasif erişim) */
+      if(tip==='hava'&&o.yay==='alcakPas'&&ds<0.85){const PP=MOTOR_AYAR.pasPasif;for(let i=0;i<r;i++){if(PA_H[i]>=0.8)continue;const dp=hyp(op.x-PA_X[i],op.z-PA_Z[i]);
+        if(dp<0.85){const pp=PP[2]*sigma((PP[0]-dp)/PP[1]);if(pp>en)en=pp;}}}
       for(let i=0;i<=r;i++){
         if(tip==='hava'&&i<r&&PA_H[i]>(PA_KC[i]?2.6:2.3))continue;
         const to=PA_TO[i]+arkada,tb=PA_TB[k*N+i];
@@ -155,16 +183,27 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
       const mg=PA_TO[r]+arkada-sure[k];if(mg<marj[k])marj[k]=mg;}}
   /* hız seçimi: P(kesilmez) × P(kontrol) en iyi olan */
   const oz2=p.oz,baski=o.baski!=null?o.baski:baskiAltinda(m,p),gelA=Math.atan2(uz,ux),hucA=m.dir[p.team]>0?0:Math.PI;
-  let enK=0,enS=-1,Pk=1,bk=0,Pt=0;
+  let enK=0,enS=-1,Pk=1,bk=0,Pt=0;const PtK=[0,0,0],pkK=[0,0,0],bsK=[0,0,0];
   for(let k=0;k<K;k++){
     if(tip==='hava')kalma[k]=(1-Math.min(0.95,enIyiH[k]))*Math.pow(0.95,Math.max(0,kalab[k]-1));
     /* alıcı geç kalırsa top hedefin ötesine yuvarlanır: geciktikçe alma olasılığı düşer */
     /* T6d: havadan pasta alıcı inişte orada olmalı (top seker, sürer; yerden pasta olduğu gibi koşup yetişemez): geç kalma cezası sert */
-    let al=1;if(alici){const gec=tr[k]-PA_TB[k*N+N-1];if(gec>0.05)al=tip==='hava'?clamp(1-gec*2.5,0.02,1):clamp(1-gec*0.9,0.25,1);}
+    /* D1 (bit 16): aile adayında aşım — kaçan topun hızıyla (varış hızı ne kadar büyükse geç kalan alıcı o kadar az yetişir) */
+    let al=1;if(alici){const gec=tr[k]-PA_TB[k*N+N-1];if(gec>0.05)al=tip==='hava'?clamp(1-gec*2.5,0.02,1):A16?clamp(1-gec*Math.max(3,V[k])/MOTOR_AYAR.pasAsim,0.1,1):clamp(1-gec*0.9,0.25,1);}
     if(o.iz&&tip==='hava')Object.assign(o.iz,{kalma:kalma[k],al,kalab:kalab[k],enIyi:enIyiH[k],gec:alici?tr[k]-PA_TB[k*N+N-1]:0});
-    const r=ir[k],va=tip==='yer'?yerHiz(v0[k],L*(r+1)/N,R):hyp(L/T,G*T*0.3),ya=tip==='yer'?0:0.45;
+    const r=ir[k],va=tip==='yer'?yerHiz(v0[k],L*(r+1)/N,R):hyp(L/T,G*T*0.3),ya=tip==='yer'?0:o.yay==='alcakPas'?0.6:0.45;   /* D3: alçak pas inişte seker */
     const bs=clamp((0.8-marj[k])/1.2,0,1),pk=alici&&alici.oz?kontrolOlasiligi(alici,va,ya,bs,Math.abs(aciFark(gelA,hucA))):1;
-    const s=kalma[k]*al*(0.55+0.45*pk);if(s>enS){enS=s;enK=k;Pk=pk;bk=bs;Pt=kalma[k]*al;}}
+    const s=kalma[k]*al*(0.55+0.45*pk);if(s>enS){enS=s;enK=k;Pk=pk;bk=bs;Pt=kalma[k]*al;}PtK[k]=kalma[k]*al;pkK[k]=pk;bsK[k]=bs;}
+  /* D1 (bit 16): aile adayları arasında seçim — kesilmeme × isabet (aday başına yön hatası ve yanal erişimle tolerans) × kontrol, artı zaman değeri:
+     U = Pt·Pex·(0,7 + 0,3·Pk)·(1 + τ·min(1,5; Tmax − T)); τ = pasZaman·(0,3 + 0,7·(1 − açıklık(en yavaşın marjı)))·(0,6 + 0,8·tempo), bırakmada 0 —
+     alıcı yavaş pasla da boşsa yumuşak pas korunur, rakip kapanıyorsa sert pas değer kazanır */
+  if(A16){const PT=MOTOR_AYAR.pasTol,sdT=(0.028+0.075*(1-oz2.pas))*(1+baski*0.9)*(o.ilk?1.35:1)*(o.vole?1.5:1)*(1+0.35*(p.yorgunluk||0))*MOTOR_AYAR.pasSapma,Ts=[0,0,0];
+    let Tmx=-1,ky=0;for(let k=0;k<K;k++){Ts[k]=PA_TB[k*N+N-1]-t0;if(Ts[k]>Tmx){Tmx=Ts[k];ky=k;}}
+    const tp=m.taktik[p.team].tempo,tau=o.alt==='birak'?0:MOTOR_AYAR.pasZaman*(0.3+0.7*(1-clamp((marj[ky]-0.2)/1.6,0,1)))*(0.6+0.8*(tp!=null?tp:0.5));
+    let enU=-1;
+    for(let k=0;k<K;k++){const sd=sdT*gucHataCarpani(pasGucu('yer',v0[k],L,0),VURUS_GUC_REF.pas),tl=Math.min(PT[0]+PT[1]*Math.max(0,marj[k]),yanalErisim(Ts[k]));
+      const px=(2*normalDagilim(tl/Math.max(0.05,sd*L))-1)*(2*normalDagilim(tl/Math.max(0.05,sd*(1+L/40)*L*PT[2]))-1);
+      const U=PtK[k]*px*(0.7+0.3*pkK[k])*(1+tau*Math.min(1.5,Tmx-Ts[k]));if(U>enU){enU=U;enK=k;Pk=pkK[k];bk=bsK[k];Pt=PtK[k];}}}
   const teknik=1-(0.01+L/420*(1.25-oz2.pas)+baski*0.05+(tip==='hava'?0.05:0))*(o.ilk?1.35:1)*(o.vole?1.5:1);
   /* T2 (pas kalibrasyonu): vuruş hatası. Yön ve uzunluk hatası vurusHatasi ölçeğinde (pas becerisi, baskı, gelişine/vole, yorgunluk, mesafe;
      havadan ×1,6); alıcının en yakın rakipten önce varma payı (marj) ne kadar büyükse o kadar sapma affedilir: dar pencereli ara pası ve uzun top
@@ -174,8 +213,9 @@ function pasAnaliz(m,p,hx,hz,tip,alici,o){
     *gucHataCarpani(pasGucu(tip,v0[enK],L,T),VURUS_GUC_REF.pas)*MOTOR_AYAR.pasSapma*(tip==='hava'?1.6:1)*(o.ayakK||1);   /* T14c: ortada zayıf ayağın beklenen payı (vurusAyakK) */
   /* T10a (yalnız ortada, hvO): havadan topta tolerans en az pasTolHava — isabet topun indiği bölgeye göredir (c-orta: hedeften 5 m'ye kadar sapma ilk temas payını
      değiştirmiyor; kalabalıkta marj ~0 iken 1,2 m'lik tolerans ortanın tahminini 5 kat kötümser yapıyordu) */
-  const tol=Math.max(PT[0]+PT[1]*Math.max(0,marj[enK]),hvO?MOTOR_AYAR.pasTolHava:0),Pex=(2*normalDagilim(tol/Math.max(0.05,sd0*L))-1)*(2*normalDagilim(tol/Math.max(0.05,sd0*(tip==='hava'?1.3:1+L/40)*L*PT[2]))-1);
-  return{P:clamp(Pt*teknik*Pex,0.02,0.99),Pk,baskiK:bk,sure:sure[enK],v0:v0[enK],varis:V[enK],T:tip==='yer'?PA_TB[enK*N+N-1]-t0:T,L,marj:marj[enK],Pex,Pt,teknik};}
+  const tol0=Math.max(PT[0]+PT[1]*Math.max(0,marj[enK]),hvO?MOTOR_AYAR.pasTolHava:0),tol=A16?Math.min(tol0,yanalErisim(PA_TB[enK*N+N-1]-t0)):tol0,Pex=(2*normalDagilim(tol/Math.max(0.05,sd0*L))-1)*(2*normalDagilim(tol/Math.max(0.05,sd0*(tip==='hava'?1.3:1+L/40)*L*PT[2]))-1);
+  return{P:clamp(Pt*teknik*Pex,0.02,0.99),Pk,baskiK:bk,sure:sure[enK],v0:v0[enK],varis:V[enK],T:tip==='yer'?PA_TB[enK*N+N-1]-t0:T,L,marj:marj[enK],Pex,Pt,teknik,
+    aile:AF?AILE_AD[AA_F[enK]]:null};}
 function kaleCeza(m,o,x,z){const gx=-m.dir[o.team]*PL;return Math.abs(x-gx)<16.5&&Math.abs(z-MZ)<20.2;}
 
 /* ---- pas adayları (MM3) ---- */
@@ -470,7 +510,9 @@ function pasAdayiEkle(m,p,o,C,q,g,hx,hz,alt,ex,ez,es,ek){
   const P0=alt==='hedef'?Ph:Math.exp(-1.2*(tip==='yer'?r60+rSon:rSon*1.2+(yay==='asirtma'?0:r60*0.15)))*(tip==='hava'?0.85:1);
   const dg=pasDegeri(m,p,o,hx,hz,alt,q)+(ek||0),kay=pasKaybi(m,p,hx,hz);
   const U0=P0*(dg+pasTurDegeri(m,p,tip,yay))-(1-P0)*kay*(alt==='hedef'?1-Pi:tip==='hava'?MOTOR_AYAR.ikinciTop*tarzIkinciK(m,p):1)+tarzUzunEk(m,p,L,(hx-o.ox)*m.dir[p.team],tip,hx*m.dir[p.team]);
-  C.push({q,g,hx,hz,alt,ex,ez,es,tip,yay,dg,kay,U0,Ph,Pi,iki:!o.ilk&&(alt!=='bosluk'||!!MOTOR_AYAR.uzunKosu)&&alt!=='hedef'&&L>=12&&L<=38&&r60>0.3&&r60<1.4});}
+  /* D3 (pasAile&8): alçak havadan kısa pas adayı — yerden pas, 6–16 m, ilk metrelerde rakip bacağı (blok < alcakPas[2]); gelişine ve hedef forvete yok */
+  const AP=MOTOR_AYAR.pasAile&8?MOTOR_AYAR.alcakPas:null,alcak=!!AP&&tip==='yer'&&!o.ilk&&alt!=='hedef'&&L>=AP[0]&&L<=AP[1]&&blok<AP[2];
+  C.push({q,g,hx,hz,alt,ex,ez,es,tip,yay,dg,kay,U0,Ph,Pi,iki:!o.ilk&&(alt!=='bosluk'||!!MOTOR_AYAR.uzunKosu)&&alt!=='hedef'&&L>=12&&L<=38&&r60>0.3&&r60<1.4,alcak});}
 /* hedef forvete uzun top (T2: iki ayrı terim). kazan: forvet topa ilk dokunur (iniş yerinde boşsa yüksek; çekişmeliyse kafa, boy ve gövde
    düellosu); pasın tamamlanmasıdır. ikinci: kaybedilen düelloda dönen topun takımda kalma olasılığı; tamamlanma sayılmaz, kaybın bedelini
    azaltır (eskiden ikisi tek olasılıktı ve tahmin gerçekleşenden 17 puan iyimserdi). Rastlantısız; paylaşılan nesne (HH) döner */
@@ -495,7 +537,7 @@ function tarzIkinciK(m,p){const V=MOTOR_AYAR.tarzEtki>0?tarzTakim(m,p.team):null
    dönük alır, ara pasında ve boşluğa koşarak yüzü koşu yönündedir. Devam değeri oranın tehdidinden (xT) ne kadar farklıysa (devamAgirlik) değer
    o kadar düzelir: sırtı dönük ve markajdaki forvete pas eksi, önü açık ve yüzü oyuna dönük arkadaşa artı */
 function pasAdayiTam(m,p,o,c,tip,yay){
-  const A=pasAnaliz(m,p,c.hx,c.hz,tip,c.g,{ox:o.ox,oz:o.oz,t0:o.t0,alt:c.alt,yay,ilk:o.ilk,baski:o.baski,vole:o.vole}),takim=m.taktik[p.team],MA=MOTOR_AYAR,d=m.dir[p.team];
+  const A=pasAnaliz(m,p,c.hx,c.hz,tip,c.g,{ox:o.ox,oz:o.oz,t0:o.t0,alt:c.alt,yay,ilk:o.ilk,baski:o.baski,vole:o.vole,aile:true}),takim=m.taktik[p.team],MA=MOTOR_AYAR,d=m.dir[p.team];
   const hedef=c.alt==='hedef';
   /* hedef forvete: düello tahmini ile iniş yeri çekişmesinin (pasAnaliz) iyisi; yalnız düello 30 puan karamsardı (T2 ölçümü, 8 maç) */
   if(hedef)A.P=clamp(Math.max(c.Ph*A.Pex,A.P),0.02,0.99);
@@ -510,9 +552,17 @@ function pasAdayiTam(m,p,o,c,tip,yay){
   /* hedef forvete uzun topun değeri çoğunlukla alan ve ikinci toptur, forvetin devamı daha az belirler (devamHedef) */
   const dv=devamDegeri(m,c.q,c.hx,c.hz,A.sure,bakis),dEk=MA.devamAgirlik*(hedef?MA.devamHedef:1)*(dv-xT(c.hx*d,c.hz)*100);
   /* havadan topta kaybedilen hava mücadelesi çoğu zaman ikinci top olur (temiz kayıp değil): kaybın bedeli daha az */
-  const U=A.P*(c.dg+dEk+pasTurDegeri(m,p,tip,yay))*(0.7+0.3*A.Pk)-(1-A.P)*c.kay*(hedef?1-c.Pi:tip==='hava'?MA.ikinciTop*tarzIkinciK(m,p):1)*takim.risk*MA.risk+tarzUzunEk(m,p,A.L,(c.hx-o.ox)*d,tip,c.hx*d);
+  const ap=yay==='alcakPas';   /* D3: alçak havadan kısa pas uzun top değildir — tür değeri yok, kaybı temiz kayıp */
+  let U=A.P*(c.dg+dEk+(ap?0:pasTurDegeri(m,p,tip,yay)))*(0.7+0.3*A.Pk)-(1-A.P)*c.kay*(hedef?1-c.Pi:tip==='hava'&&!ap?MA.ikinciTop*tarzIkinciK(m,p):1)*takim.risk*MA.risk+tarzUzunEk(m,p,A.L,(c.hx-o.ox)*d,tip,c.hx*d);
+  /* D5 (uzakAmac&2): kaleciye geri pasın riski — kesilen geri pas gerçek kayıptır (hattın ortasında), isabetsiz geri pası kaleci çoğunlukla yine alır
+     (kaleciHata); pas doğrultusu direklerin arasından kale çizgisini kesiyor ve kaleci çizgiye 4 m'den yakınsa "kalenin önünden oynama" cezası (kaleciAgiz).
+     Eskiden bütün başarısızlık kale önünde top kaybı sayılıyordu: değer ortanca −7, hiç seçilmiyordu */
+  if((MA.uzakAmac&2)&&c.q.rol==='GK'&&c.q.team===p.team){const gx=-d*PL,mx=(o.ox+c.hx)/2,mz=(o.oz+c.hz)/2;
+    const kay=((1-A.Pt)*pasKaybi(m,p,mx,mz)+A.Pt*(1-A.teknik*A.Pex)*MA.kaleciHata*pasKaybi(m,p,c.hx,c.hz))*takim.risk*MA.risk;
+    let agiz=0;if((c.hx-o.ox)*d<-0.3&&Math.abs(c.q.x-gx)<4){const t=(gx-o.ox)/(c.hx-o.ox),zc=o.oz+(c.hz-o.oz)*t;if(t>0&&Math.abs(zc-MZ)<GW2+0.5)agiz=MA.kaleciAgiz;}
+    U=A.P*(c.dg+dEk)*(0.7+0.3*A.Pk)-kay-agiz;}
   return{tur:c.alt==='ara'?'ara':A.L>34?'uzun':'pas',alici:c.q,hx:c.hx,hz:c.hz,tip,yay,varis:A.varis,T:tip==='hava'?A.T:null,
-    mod:c.alt==='ara'?'ara':c.alt==='bosluk'?'bosluk':'ayak',ex:c.ex,ez:c.ez,es:c.es,deger:U,P:A.P,Pk:A.Pk,sure:A.sure,L:A.L,alt:c.alt,dv,marj:A.marj};}   /* T23a2: marj salt okunur (alıcının rahat noktası) */
+    mod:c.alt==='ara'?'ara':c.alt==='bosluk'?'bosluk':'ayak',ex:c.ex,ez:c.ez,es:c.es,deger:U,P:A.P,Pk:A.Pk,sure:A.sure,L:A.L,alt:c.alt,dv,marj:A.marj,aile:A.aile};}   /* T23a2: marj salt okunur (alıcının rahat noktası); D1: aile (yerden pasın hız ailesi; pasAile 0'da null) */
 /* bütün pas seçenekleri. o: {ox,oz: topun çıkacağı yer, t0: vuruşa kalan süre, ilk: gelişine (tek vuruş), gelA: gelen topun yönü,
    sinirA: hizalanma sınırı, baski: pasörün baskısı, ofs: algılanan ofsayt çizgisi, vole: top havada} */
 const BOSLUK_KISA=[3,6],BOSLUK_UZUN=[3,6,10];
@@ -523,7 +573,9 @@ function pasSecenekleri(m,p,o){
     if(q===p||!q.oyunda||(q.eylem&&q.eylem.kilit))continue;
     /* Z3 (kurma&2; A4): kaleci +1 — tarzın kaleciArti ≥ 0,5 iken kurma niyetinde geri pas kaleciye daha erken ve daha az baskıda açılır */
     {const KA=(MOTOR_AYAR.kurma&2)&&q.rol==='GK'?tarzTakim(m,p.team):null,kaU=!!(KA&&KA.kaleciArti>=0.5&&m._niyet&&m._niyet[p.team]&&m._niyet[p.team].ad==='kur');
-      if(q.rol==='GK'&&(kaU?(u>-15||o.baski<0.12):(u>-10||o.baski<0.3)))continue;}
+      /* D5 (uzakAmac&2): uzaklaştırma bölgesinde (kendi 30 m'si) kaleciye geri pas baskı 0,12'den açık (eskiden 0,3; kurma tarzının kapısı aynı) */
+      const B2=!kaU&&(MOTOR_AYAR.uzakAmac&2)&&u<-PL+30;
+      if(q.rol==='GK'&&(kaU?(u>-15||o.baski<0.12):B2?o.baski<0.12:(u>-10||o.baski<0.3)))continue;}
     const g=algilanan(m,p,q);if(!g)continue;
     const dq=hyp(g.x-o.ox,g.z-o.oz);if(dq<3||dq>64)continue;
     const qu=g.x*d,ofsaytta=qu>o.ofs+0.3&&qu>u&&qu>0;
@@ -555,6 +607,7 @@ function pasSecenekleri(m,p,o){
   if(m._pln&&K>0){const hq=m.planAlici(p);if(hq){let j=-1;for(let i=0;i<C.length;i++)if(C[i].q===hq){j=i;break;}if(j>=K){const c=C[j];C.splice(j,1);C.splice(K-1,0,c);}}}
   for(let i=0;i<K;i++){const c=C[i];let r=pasAdayiTam(m,p,o,c,c.tip,c.yay);
     if(c.iki){const t2=c.tip==='yer'?'hava':'yer',r2=pasAdayiTam(m,p,o,c,t2,t2==='hava'&&hyp(c.hx-o.ox,c.hz-o.oz)<24?'asirtma':null);if(r2.deger>r.deger)r=r2;}
+    if(c.alcak){const r3=pasAdayiTam(m,p,o,c,'hava','alcakPas');if(r3.deger>r.deger)r=r3;}   /* D3: bacağın üstünden alçak havadan */
     S.push(r);}
   return S;}
 
@@ -804,6 +857,87 @@ function sutSecenegi(m,p,x0,z0,baski){
   if(x>=0.017)return{tur:'sut',deger:x*100*q*istek+(1-x)*ik,xg:x,pBlok};
   if(x>=0.008&&(oz.sut>0.5||uv>0.3)&&baski<0.6)return{tur:'sut',deger:x*100*q*(0.5+0.5*istek)+(1-x)*ik,xg:x,pBlok};
   return null;}
+/* ---- D4 (2026-10-22; FUTBOL_KUTUPHANESI §12.1 D — V1d, uzakAmac&1; kutuphane/J J.3.3, J.9 madde 5; D18): amaçlı uzaklaştırma ----
+   Kapı aynı (kendi 30 m'si ∧ (baskı > 0,3 ∨ dönen top)); seçenek bedava sabit değil, "başarı × kazanç − başarısızlık × kayıp" ile değerlenir (pas ölçüsü):
+   ileri ve ters kanada boşluğa (36–48 m, şeritlerde, orta şerit ve kale önünden yatay yok, ikinci top), acil (zaman yokken adımsız 18–20 m saha içine),
+   taç (yalnız gerçek tehlikede, kenara yakın), çizgi (yalnız tehlikede ceza sahasında kaleye dönük ya da rakip dibindeyken), kurtarış topu (öndeki
+   arkadaşa, en çok üç alıcı). Hazırlık ve menzil adımla (uzakAdimL × vurucunun gücü; zaman varsa en az bir ayar adımı), blok riski zamandan
+   (zamanButcesi'nin rakip varışı). Rastlantısız; listeye alıcısız en iyi tek aday ve kurtarışlar girer. uzakPay hocanın riskten kaçınma payıdır */
+function uzakIkinciTop(m,team,x,z,T,haric){let tb=99,tr=99;
+  for(const o of m.teams[team]){if(!o.oyunda||o.rol==='GK'||o===haric)continue;const t=varisSuresi(o,x,z,1.0);if(t<tb)tb=t;}
+  for(const o of rakipler(m,team)){if(!o.oyunda||o.rol==='GK')continue;const t=varisSuresi(o,x,z,1.0);if(t<tr)tr=t;}
+  return tb<T+0.3&&tr<T+0.3?0.5+0.15*clamp(tr-tb,-1,1):sigma((tr-tb)/0.45);}
+function uzaklastirSecenekleri(m,p,baski,dn,S){
+  const A=MOTOR_AYAR,b=m.ball,d=m.dir[p.team],u=b.x*d,uo=u+PL,yan=b.z<MZ?-1:1,kz=Math.min(b.z,PW-b.z),dz0=Math.abs(b.z-MZ);
+  let tR=9,o1=null,rk=99;
+  for(const o of rakipler(m,p.team)){if(!o.oyunda||o.rol==='GK')continue;const t=varisSuresi(o,b.x,b.z,0.9);if(t<tR){tR=t;o1=o;}const dd=hyp(o.x-b.x,o.z-b.z);if(dd<rk)rk=dd;}
+  const sekiyor=b.y>0.25||Math.abs(b.vy)>1.5,kd=Math.cos(p.yon)*d<-0.3,ceza=m.kendiCezaSahasinda(p,b.x,b.z);
+  const tehlike=uo<22&&dz0<26&&(rk<A.uzakTehlike||sekiyor||(kd&&rk<3)||dn);
+  const kayHere=pasKaybi(m,p,b.x,b.z),G0=A.uzakGeri,geri=G0[1]*(1-0.25*baski),guc=(0.85+0.3*p.oz.sut)*(p.rol==='GK'?1.15:1);
+  const tk=m.taktik[p.team],ik=A.ikinciTop*tarzIkinciK(m,p),H=A.uzakHaz,AL=A.uzakAdimL,zamanYok=tR<H[1]+geri;
+  let yonK=1;if(o1){const c=Math.cos(aciFark(Math.atan2(o1.z-p.z,o1.x-p.x),p.yon));yonK=c>0.5?1:c>-0.3?0.75:0.5;}
+  const sdb=(0.028+0.075*(1-p.oz.pas))*(1+0.9*baski)*1.6;
+  /* hazırlık, menzil ve blok: adım sayısı mesafeden (0: ≤ AL[0]·güç, 1: ≤ AL[1]·güç, 2: ≤ AL[2]·güç); zaman varsa en az bir ayar adımı */
+  const plan=(hx,hz,acil)=>{const L=hyp(hx-b.x,hz-b.z),don=Math.max(0,Math.abs(aciFark(Math.atan2(hz-b.z,hx-b.x),p.yon))-(acil?1.0:A.vurusHizalama))/hrkVurusDonus(p);
+    let n=L<=AL[0]*guc?0:L<=AL[1]*guc?1:L<=AL[2]*guc?2:-1;if(n<0||acil&&n>0)return null;
+    if(n===0&&!acil&&tR>=Math.max(H[1],don)+geri-0.05)n=1;
+    const haz=H[n],tq=Math.max(haz,don)+(n===0?G0[0]*(1-0.25*baski):geri);
+    return{L,n,haz,Pb:clamp((tq-tR+0.1)/0.35,0,1)*A.uzakBlok*yonK,sig:sdb*(n===0?1.5:1)*L};};
+  const dg=(x,z)=>xT(x*d,z)*100+(x*d-u)*(A.ilerleme*tk.ilerle+0.015*tk.direkt),blok=pl=>pl.Pb*A.uzakBlokKay*kayHere;
+  /* boşluğa (alıcısız): taca kaçma olasılığı yan sapmadan, inişte ikinci top */
+  const bos=(hx,hz,T,pl)=>{const ke=Math.min(hz,PW-hz),Pout=ke<=0?1:1-normalDagilim(ke/Math.max(0.3,pl.sig)),P2=uzakIkinciTop(m,p.team,hx,hz,T,p);
+    return(1-pl.Pb)*((1-Pout)*(P2*dg(hx,hz)-(1-P2)*pasKaybi(m,p,hx,hz)*ik)-Pout*A.uzakTac*pasKaybi(m,p,hx,hz<MZ?0:PW))-blok(pl);};
+  const C=[],SR=A.uzakSerit;
+  /* (a) ileri ve ters kanat: top tarafı kanat ve yarım alan şeritleri, ters kanat */
+  for(const [hz,uz] of [[yan<0?SR[0]:PW-SR[0],'ileri'],[MZ+yan*SR[1],'ileri'],[yan<0?PW-SR[0]:SR[0],'ters']])for(const L of A.uzakIleri){
+    const dz=hz-b.z;if(Math.abs(dz)>=L)continue;const dx=Math.sqrt(L*L-dz*dz);if(dx<0.5*L||dx<20)continue;
+    const hx=b.x+d*dx;if(hx*d>PL-22)continue;const pl=plan(hx,hz,false);if(!pl)continue;const T=havaSure(L,'uzak');C.push({uz,hx,hz,T,pl,U:bos(hx,hz,T,pl)});}
+  /* (b) acil: zaman yokken, adımsız, gövdenin ±60°'sinde top tarafı kanada çapraz ileri, saha içine */
+  if(zamanYok)for(const th of[0.5,0.8,1.05]){const L=19,hx=b.x+d*Math.cos(th)*L,hz=b.z+yan*Math.sin(th)*L;if(hz<4||hz>PW-4)continue;
+    if(Math.abs(aciFark(Math.atan2(hz-b.z,hx-b.x),p.yon))>Math.PI/3)continue;const pl=plan(hx,hz,true);if(!pl)continue;const T=1.1+L/30;C.push({uz:'acil',hx,hz,T,pl,U:bos(hx,hz,T,pl)});}
+  /* (c) taç: yalnız gerçek tehlikede ve kenara 22 m'den yakın — ileri çapraz, alçak ve sert; kısa kalırsa saha içinde yarı yarıya */
+  if(tehlike&&kz<22){const hx=b.x+d*clamp(0.7*kz+4,4,16),hz=yan<0?-2.5:PW+2.5,pl=plan(hx,hz,false);
+    if(pl){const T=havaSure(pl.L,'tac'),Pin=0.5*(1-normalDagilim(2.5/Math.max(0.3,pl.sig))),zi=yan<0?2:PW-2;
+      C.push({uz:'tac',hx,hz,T,pl,U:(1-pl.Pb)*((1-Pin)*(-A.uzakTac*pasKaybi(m,p,hx,yan<0?0:PW))+Pin*(0.5*dg(hx,zi)-0.5*pasKaybi(m,p,hx,zi)))-blok(pl)});}}
+  /* (d) çizgi (korner): yalnız tehlikede, ceza sahasında, direğin dışında ve kaleye dönükken ya da rakip dibindeyken (T12b'nin rastlantısız hâli) */
+  if(tehlike&&ceza&&dz0>GW2+1&&(kd||rk<1.5)){const gx=-d*PL,uu=Math.max(0.5,Math.abs(b.x-gx)),zc=MZ+yan*(dz0+4),s=1+3/uu,hx=b.x+(gx-b.x)*s,hz=b.z+(zc-b.z)*s,pl=plan(hx,hz,false);
+    if(pl)C.push({uz:'cizgi',hx,hz,T:havaSure(pl.L,'tac'),pl,U:-(1-pl.Pb)*A.uzakKorner-blok(pl)});}
+  /* pay: hocanın riskten kaçınması (kısa kuran tarzda az), öndeyken son dakikalar, dönen top; kurtarışa tehlike payı yok */
+  const V=A.tarzEtki>0?tarzTakim(m,p.team):null,tz=1+A.uzakTarz*(0.5-(V?V.kisaPay:0.5)),ortak=0.3*m.macDurumu(p.team).koru+(dn?A.donenUzak:0)+A.uzaklastirDeger;
+  let en=null;for(const c of C)if(!en||c.U>en.U)en=c;
+  if(en)S.push({tur:'uzaklastir',uz:en.uz,hx:en.hx,hz:en.hz,T:en.T,adim:en.pl.n,haz:en.pl.haz,Pb:en.pl.Pb,deger:en.U+(A.uzakPay[0]+A.uzakPay[1]*(tehlike?1:0))*tz+ortak});
+  else S.push({tur:'uzaklastir',deger:A.uzaklastirDeger+baski*1.1+(u<-PL+18?0.4:0)+(dn?A.donenUzak:0)});   /* aday yoksa eski seçenek */
+  /* (e) kurtarış topu: öndeki forvet, kanat ya da çok ilerideki orta sahaya havadan (en çok üç alıcı; ön puan ilerilik ve boşluk) */
+  const R=[];for(const q of m.teams[p.team]){if(q===p||!q.oyunda||q.rol==='GK'||(q.eylem&&q.eylem.kilit))continue;const qu=q.x*d;
+    if(qu<u+18||!(q.rol==='FV'||(q.mevki&&q.mevki.kanat)||(q.rol==='OS'&&qu>u+30)))continue;R.push([q,(qu-u)*0.05+Math.min(enYakinRakip(m,q.x,q.z,p.team).d,8)*0.3]);}
+  R.sort((x,y)=>y[1]-x[1]||x[0].n-y[0].n);
+  for(let i=0;i<R.length&&i<3;i++){const q=R[i][0],g=algilanan(m,p,q);if(!g)continue;
+    const hx=clamp(g.x+g.vx*1.2+d*2,-PL+2,PL-2),hz=clamp(g.z+g.vz*1.2,2,PW-2),L=hyp(hx-b.x,hz-b.z);if(L<18)continue;const pl=plan(hx,hz,false);if(!pl)continue;
+    const T=havaSure(L,'kurtar'),Ak=pasAnaliz(m,p,hx,hz,'hava',g,{ox:b.x,oz:b.z,t0:0,baski,T});
+    const dEk=A.devamAgirlik*(devamDegeri(m,q,hx,hz,Ak.sure,Math.atan2(b.z-hz,b.x-hx))-xT(hx*d,hz)*100),pd=pasDegeri(m,p,{ox:b.x,oz:b.z,baski},hx,hz,'kurtar',q);
+    const U=(1-pl.Pb)*(Ak.P*(pd+dEk)*(0.7+0.3*Ak.Pk)-(1-Ak.P)*pasKaybi(m,p,hx,hz)*ik*tk.risk*A.risk)-blok(pl);
+    S.push({tur:'uzaklastir',uz:'kurtar',alici:q,hx,hz,T,adim:pl.n,haz:pl.haz,Pb:pl.Pb,P:Ak.P,Pk:Ak.Pk,deger:U+A.uzakPay[0]*tz+ortak});}}
+/* D5 (uzakAmac&4): amaçlı kafa uzaklaştırması — (a) arkadaşa (8–20 m, kaleden uzak yönün ±80°'si; alma olasılığı varış farkından), (b) top tarafı kanada
+   40° kenar-yukarı, (c) yarım alana 15° (iniş orta şeritte ve kendi 30 m'sinde ise aday değil); değer ikinci topla; tek zarla ±2 m yan sapma. Hedef saha
+   içinde — yalnız kendi ceza sahasındaki gerçek tehlikede bugünkü ±3 m dış sınır. Dikey gürültünün kırpılması kafaVur'da (uzakKafaVy) */
+function kafaUzakHedef(m,p){
+  const A=MOTOR_AYAR,b=m.ball,d=m.dir[p.team],u=b.x*d,yan=b.z<MZ?-1:1,tk=m.taktik[p.team],ik=A.ikinciTop*tarzIkinciK(m,p),ceza=m.kendiCezaSahasinda(p,b.x,b.z);
+  let rk=99;for(const o of rakipler(m,p.team)){if(!o.oyunda||o.rol==='GK')continue;const dd=hyp(o.x-b.x,o.z-b.z);if(dd<rk)rk=dd;}
+  const tehlike=ceza&&(rk<A.uzakTehlike||Math.cos(p.yon)*d<-0.3&&rk<3),dg=(x,z)=>xT(x*d,z)*100+(x*d-u)*(A.ilerleme*tk.ilerle+0.015*tk.direkt);
+  const v=10+5*p.oz.kafa,vy=6,T=2*vy/G,Lb=v*T*0.9,ileri=d>0?0:Math.PI;let en=null;
+  for(const q of m.teams[p.team]){if(q===p||!q.oyunda||q.rol==='GK')continue;const g=algilanan(m,p,q);if(!g)continue;
+    const L0=hyp(g.x-b.x,g.z-b.z);if(L0<8||L0>20||Math.abs(aciFark(Math.atan2(g.z-b.z,g.x-b.x),ileri))>1.4)continue;
+    const vq=Math.min(14,0.8*L0+5),Tq=L0/vq,hx=g.x+g.vx*Tq,hz=clamp(g.z+g.vz*Tq,1,PW-1);let tr=99;for(const o of rakipler(m,p.team)){if(!o.oyunda)continue;const t=varisSuresi(o,hx,hz,0.9);if(t<tr)tr=t;}
+    const P=sigma((tr-varisSuresi(g,hx,hz,0.6))/0.4),U=P*dg(hx,hz)-(1-P)*pasKaybi(m,p,hx,hz)*ik;
+    if(!en||U>en.U)en={U,tur:L0<12?'indirme':'pas',alt:'uzakKafa',hx,hz,v:vq,vy:3.2,alici:q};}
+  for(const th of[0.70,0.26]){const hx=b.x+d*Math.cos(th)*Lb,hz0=b.z+yan*Math.sin(th)*Lb,hz=tehlike?clamp(hz0,-3,PW+3):clamp(hz0,3,PW-3);
+    if(th<0.5&&Math.abs(hz-MZ)<8&&hx*d<-PL+30)continue;
+    const P2=uzakIkinciTop(m,p.team,hx,hz,T,p),U=P2*dg(hx,clamp(hz,1,PW-1))-(1-P2)*pasKaybi(m,p,hx,clamp(hz,1,PW-1))*ik;
+    if(!en||U>en.U)en={U,tur:'uzaklastir',hx,hz,v,vy,uzKafa:true};}
+  if(!en)return null;
+  const s=(m.rast()*2-1)*2,ux=en.hx-b.x,uz=en.hz-b.z,LL=hyp(ux,uz)||1;en.hx+=-uz/LL*s;en.hz+=ux/LL*s;
+  if(!tehlike||en.alici)en.hz=clamp(en.hz,en.alici?1:3,en.alici?PW-1:PW-3);
+  return en;}
 /* ---- seçenekler ---- */
 /* bütün değerler aynı ölçüdedir: gol olasılığı × 100 ("puan"). Pas = başarı × hedefin tehdidi − kayıp × rakibin oradaki tehdidi */
 function secenekler(m,p){const e=GOZ.p;GOZ.p=p;try{return secenekler0(m,p);}finally{GOZ.p=e;}}
@@ -831,7 +965,8 @@ function secenekler0(m,p){
      çoğu zaman taça ya da hava mücadelesine gider) */
   /* T7e (plan T7 madde 11): şuttan sonra 3 sn kendi ceza sahamızda dönen topu alan savunmacı için uzaklaştırma daha değerli (baskı yoksa pas yine seçilebilir) */
   const dn=!!m._donenT&&m.t-m._donenT[p.team]<3&&m.kendiCezaSahasinda(p,b.x,b.z);
-  if(u<-PL+30&&(baski>0.3||dn))S.push({tur:'uzaklastir',deger:MOTOR_AYAR.uzaklastirDeger+baski*1.1+(u<-PL+18?0.4:0)+(dn?MOTOR_AYAR.donenUzak:0)});
+  if(u<-PL+30&&(baski>0.3||dn)){if(MOTOR_AYAR.uzakAmac&1)uzaklastirSecenekleri(m,p,baski,dn,S);   /* D4: amaçlı uzaklaştırma */
+    else S.push({tur:'uzaklastir',deger:MOTOR_AYAR.uzaklastirDeger+baski*1.1+(u<-PL+18?0.4:0)+(dn?MOTOR_AYAR.donenUzak:0)});}
   /* T2: bekleme ya da gövdeyle koruma (eskiden yalnız koru: değeri her zaman eksiydi) */
   bekleSecenegi(m,p,S);koruSecenegi(m,p,S);
   if(m._pln)m.planEkle(p,S,0);   /* Z1 (H7): planın adımı ve istek sinyali seçenek değerine (koruSecenegi'nden sonra: koruma payı devralmasın) */
@@ -862,6 +997,8 @@ function kararVer0(m,p){
     const puan=s.deger+g+profilEgilimPuani(m,p,s)+(k==='tut'?esik+pt:0);if(puan>enP){enP=puan;en=s;}}
   /* T7c (Ek H 6): en iyi pasın hedefi — taşırken gövde ona açılır (mac-hareket.js surusIlerle) */
   if(MOTOR_AYAR.govdeAc){let bp=null;for(const s of S)if(s.alici&&(!bp||s.deger>bp.deger))bp=s;v.enPas=bp?{hx:bp.hx,hz:bp.hz,t:m.t}:null;}
+  /* V1-0b (2026-10-20): uzaklaştırmada en iyi diğer seçeneğin değeri — salt okunur (secenekUygula sec'e taşır; ölçü araclar/olcumler/u-uzak.js) */
+  if(en.tur==='uzaklastir'){let d2=-9;for(const s of S)if(s!==en&&s.deger>d2)d2=s.deger;en.enDiger=d2;}
   return en;
 }
 /* ---- gelişine tek vuruş (MM3): top gelirken alıcı tek vuruşla pası (geri, bırakma, ara) kontrol edip oynamakla (+~0,5 sn, daha çok baskı)
@@ -894,7 +1031,7 @@ function tekVurusKarari0(m,p,k,s,yakin){
   const tau=0.12+0.42*(1-p.oz.karar),P1=1/(1+Math.exp((U2-U1-MOTOR_AYAR.tekVurus-0.5*MOTOR_AYAR.egilimGuc*profilEgilim(p,'tekVurus'))/tau));
   if(m.rast()>=P1)return{sec:null,hedef};
   return{sec:{tur:en1.tur,hx:en1.hx,hz:en1.hz,tip:en1.tip,alici:en1.alici,varisHizi:en1.varis,mod:en1.mod,ex:en1.ex,ez:en1.ez,es:en1.es,
-    guncelle:true,ilk:true,tekDokunus:true,P:en1.P,Pk:en1.Pk,alt:en1.alt,marj:en1.marj},hedef};   /* P, Pk, alt salt okunur (ölçüm) */
+    guncelle:true,ilk:true,tekDokunus:true,P:en1.P,Pk:en1.Pk,alt:en1.alt,marj:en1.marj,aile:en1.aile},hedef};   /* P, Pk, alt salt okunur (ölçüm); D1: aile */
 }
 /* ---- kafa: ceza sahasında kaleye, geride uzaklaştırma, ileride arkadaşa indirme ya da koşana uzatma ---- */
 function kafaKarari(m,p){
@@ -919,7 +1056,9 @@ function kafaKarari(m,p){
       return{tur:'sut',hx,hz,v,vy:(hy-b.y+0.5*G*T*T)/T,xg:x,hy};}}
   /* baskı altındaki savunmacının kafası güvenliğe, gerekirse taça gider (birleştirme 2026-10-03). T6c: kendi üçte birimizde ya da savunmacının
      kendi yarısında yalnız rakip yakınken (baskı 0,12 / 0,3 üstü: ~4 / 3,5 m içinde) uzaklaştırır; baskısız kafa arkadaşa gider (indirme) */
-  if((u<-PL+30&&baski>0.12)||(p.rol==='DEF'&&u<5&&baski>0.3)||(baski>0.7&&u<10)){   /* T6e: panik uzaklaştırması rakip yarının derinliğinde yok */const yan=w<MZ?-1:1,ds=baski>0.45,hx=b.x+d*(16+m.rast()*12),hz=clamp(b.z+yan*(4+m.rast()*12),ds?-3:3,ds?PW+3:PW-3);
+  if((u<-PL+30&&baski>0.12)||(p.rol==='DEF'&&u<5&&baski>0.3)||(baski>0.7&&u<10)){   /* T6e: panik uzaklaştırması rakip yarının derinliğinde yok */
+    if(MOTOR_AYAR.uzakAmac&4){const h=kafaUzakHedef(m,p);if(h)return h;}   /* D5: amaçlı kafa */
+    const yan=w<MZ?-1:1,ds=baski>0.45,hx=b.x+d*(16+m.rast()*12),hz=clamp(b.z+yan*(4+m.rast()*12),ds?-3:3,ds?PW+3:PW-3);
     return{tur:'uzaklastir',hx,hz,v:10+p.oz.kafa*5,vy:5+m.rast()*3};}
   let en=null,enP=-1e9;
   for(const q of m.teams[p.team]){if(q===p||!q.oyunda||q.rol==='GK')continue;const L=hyp(q.x-b.x,q.z-b.z);if(L<3||L>17)continue;

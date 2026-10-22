@@ -1090,7 +1090,8 @@ async def bolum_18(tarayici, site, tum_hatalar):
     await pg.evaluate("__kare(2)")
     await pg.click("#btnMacaGec")
     # Z7 (2026-10-20): pencere 2400 → 4800 kare — denetim pencerede en az bir şut ister; Z3–Z7 motoruyla tohum 3'ün ilk 2400 karesinde şut yoktu (sınama penceresi, işlev değil)
-    r = await pg.evaluate(IZLEME_JS, {"secim": 4, "oto": True, "kare": 4800})
+    # D (2026-10-22, masaüstü): 4800 → 9600 — B ve C motoruyla (maç başına tarz) tohum 3'ün ilk 4800 karesinde şut ya da gol yok (C koduyla bölüm 18 bu yüzden düştü)
+    r = await pg.evaluate(IZLEME_JS, {"secim": 4, "oto": True, "kare": 9600})
     H, L = r["H"], r["L"]
     hiz = {k: v for k, v, _, _ in H}
     ana = [x for x in L if x[1] in ("shot", "goal") or (x[1] == "header" and x[2])]

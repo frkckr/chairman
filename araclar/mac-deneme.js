@@ -20,7 +20,8 @@
      Parmak izi: her 30 adımda topun ve oyuncuların durumu (konum, hız, yön) FNV-1a ile özetlenir; 600 adımda bir kontrol noktası.
      Ölçüm rastlantı çekmez ve motorun önbellek yazan yöntemlerini (topYolu, topTahmin, yakalamaNoktasi, cerceveyeGider) çağırmaz;
      şutun kale çizgisini geçeceği yer topun bir kopyası üzerinde topFizikAdim ile bulunur.
-     Eklenti ölçümleri: araclar/olcumler/*.js → module.exports={bilgi:[[ad,anahtar,basamak]], yeni:()=>({dinle(ad,v,m),adim(m),bitir(m)}), ozet?(sonuclar)}.
+     Eklenti ölçümleri: araclar/olcumler/*.js → module.exports={bilgi:[[ad,anahtar,basamak]], yeni:(ctx)=>({dinle(ad,v,m),adim(m),bitir(m)}), ozet?(sonuclar)}
+     (V1-0b: yeni motorun bağlamını alır — saf işlevler için, ör. ctx.topFizikAdim bir top kopyasında).
    - T0 (gerçekçilik planı, 2026-10-03): --json taban dosyasına ortam (Node sürümü, işletim sistemi, git) yazılır; --karsilastir tabanın ortamını
      basar, Node sürümü farklıysa "!" ile uyarır (çıkış kodu değişmez). Eklentinin ozet() tablosu bilgi satırlarından sonra basılır.
    - M0 (2026-10-07, araç ve hız): motor araclar/motor-yukle.js ile sıradan genel nesneli bağlamda yüklenir (sonuç aynı, motor ~belirgin hızlı).
@@ -130,7 +131,7 @@ function macOyna(tohum,sinir){
   const olay={save:0,header:0,block:0,sekme:0,steal:0},pasH=[],sutH=[];let m=null;
   const bu={faulYiyen:new Set(),save:null,catch:false,goal:false,block:false};   /* bu adımın olayları */
   const say={avantaj:0,avantajTutuldu:0,avantajSonuc:0,penalti:0,faulMudahale:0,steal:0,xg:[]},eylemSay={};
-  const eklentiler=EKLENTILER.map(E=>E.yeni?E.yeni():{});
+  const eklentiler=EKLENTILER.map(E=>E.yeni?E.yeni(ctx):{});   /* V1-0b: eklenti motorun saf işlevlerini bağlamdan okuyabilir (topFizikAdim; rastlantı çekmez, önbellek yazmaz) */
   const dinle=(ad,v)=>{if(ad in olay)olay[ad]++;
     for(const e of eklentiler)if(e.dinle)e.dinle(ad,v,m);
     if(ad==='faul'||ad==='avantaj'){if(v.faulYiyen)bu.faulYiyen.add(v.faulYiyen);
