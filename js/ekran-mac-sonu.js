@@ -11,7 +11,7 @@
    Kariyersiz geliştirme adreslerinde (?ekran=mac) kart açılmaz. Yazı büyüklüğü ayarı uygulanır; renkler STIL.kagit, ölçüler STIL.macSonu (TEST).
      macSonuKare(dt)   her karede (js/arayuz.js)
      MAC_SONU          durum: {acik, sonuc, uygulandi, red} (denemeler okur) */
-const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,isliyor:false};
+const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:false};
 {
   const A=STIL.macSonu,K=STIL.kagit,kok=document.getElementById('screen');
   const st=document.createElement('style');st.id='macSonuStili';
@@ -42,6 +42,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,isliyor:false};
 .ms-durum.ms-hata{color:${K.kirmizi}}
 .mac-sonu button.ms-don{flex:none;font:inherit;font-weight:600;color:#1a1203;background:${K.vurguZemin};border:1px solid ${K.vurgu};border-bottom-width:.2em;border-radius:.2em;padding:.4em 1.1em .32em;cursor:pointer}
 .mac-sonu button.ms-don:disabled{opacity:.6;cursor:progress}
+.ms-kart:focus{outline:none}
 .mac-sonu button.ms-don:focus-visible{outline:.14em solid ${K.kulup};outline-offset:.12em}
 `;
   document.head.appendChild(st);
@@ -64,7 +65,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,isliyor:false};
       const I=typeof MAC_IZLEME!=='undefined'?MAC_IZLEME:null,s=I&&I.son;
       test='<p class="ms-test"><b>TEST</b>ikiz motor: '+(!I?'yok':s&&s.atlandi?'atlandı (maç hızlı bitirildi)':s?(s.ayni?'aynı':'farklı'):'bırakıldı')+(I&&I.sapma?' · sapma '+I.sapma:'')+'</p>';
     }
-    return'<div class="ms-kararti"></div><div class="ms-kart">'+
+    return'<div class="ms-kararti"></div><div class="ms-kart" tabindex="-1">'+
       '<p class="ms-ust">Maç sonu'+(B.hafta?' · '+yaz((B.ligAd?B.ligAd+' ':'')+B.hafta+'. hafta'):'')+'</p>'+
       '<div class="ms-skor"><span class="'+(biz===0?'ms-biz':'')+'" title="'+yaz(adi(0))+'">'+yaz(adi(0))+'</span><b>'+S.skor[0]+'–'+S.skor[1]+'</b><span class="'+(biz===1?'ms-biz':'')+'" title="'+yaz(adi(1))+'">'+yaz(adi(1))+'</span></div>'+
       (goller.length+kartlar.length+sakat.length?'':'<p class="ms-yok">Gol, kart ve sakatlık yok.</p>')+
@@ -76,12 +77,15 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,isliyor:false};
     const S=MAC_SONU;S.acik=true;S.sonuc=mac.sonucKaydi();ON_EKRAN.sayfa='macSonu';
     const buyuk=typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.yazi==='buyuk';E.style.setProperty('--ms-boy',(buyuk?A.yazi.buyuk:A.yazi.normal)+'cqw');
     E.innerHTML=msIcerik(S.sonuc);E.hidden=false;
-    const b=E.querySelector('.ms-don');if(b)b.focus({preventScroll:true});
+    /* odak kartta (F2 incelemesi): kart kendiliğinden açılır; odak düğmede olsaydı maç boyu duraklatan Boşluk sonucu uygulayıp sayfadan çıkarırdı.
+       Sekme düğmeye götürür */
+    const kart=E.querySelector('.ms-kart');if(kart)kart.focus({preventScroll:true});
   }
   /* "Odaya dön": sonuç bir kez uygulanır ve kaydedilir; kayıt yazılınca oda açılır */
   function msOdayaDon(){
     const S=MAC_SONU,b=E.querySelector('.ms-don');if(S.isliyor)return;
-    if(S.red){location.href=location.pathname;return;}
+    /* red sonrası düğme yeni anlamıyla ancak kısa bir süre sonra çalışır: çift tıklamanın ikincisi ya da Enter'ın tekrarı hata metnini atlamasın */
+    if(S.red){if(performance.now()-S.redAn<800)return;location.replace(location.pathname);return;}
     S.isliyor=true;if(b)b.disabled=true;
     try{
       if(!S.uygulandi){
@@ -91,10 +95,11 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,isliyor:false};
       }else OYUN.oturum.kaydet();
     }catch(e){
       if(typeof console!=='undefined')console.error('Maç sonucu işlenemedi',e);
-      S.red=true;S.isliyor=false;durumYaz(e.message+' (TEST). Odaya dönülürse kayıt maç gününden öncedir; maç yeniden oynanır.',true);
+      S.red=true;S.redAn=performance.now();S.isliyor=false;durumYaz(e.message+' (TEST). Odaya dönülürse kayıt maç gününden öncedir; maç yeniden oynanır.',true);
       if(b){b.disabled=false;b.textContent='Odaya dön (sonuç yazılmadan) ▸';b.focus({preventScroll:true});}
       return;}
-    if(OYUN.oturum.durum.tamam&&OYUN.depo!=='bellek'){location.href=location.pathname;return;}
+    /* replace: tarayıcının Geri tuşu oynanmış maçın adresine dönmesin (F2 incelemesi) */
+    if(OYUN.oturum.durum.tamam&&OYUN.depo!=='bellek'){location.replace(location.pathname);return;}
     S.isliyor=false;
     durumYaz('Kaydedilemedi: '+(OYUN.depo==='bellek'?'tarayıcı deposu kullanılamıyor':OYUN.oturum.durum.hata)+'. Sayfa kapanırsa maç yeniden oynanır.',true);
     if(b){b.disabled=false;b.textContent='Yeniden dene ▸';b.focus({preventScroll:true});}

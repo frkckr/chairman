@@ -12,18 +12,19 @@
        k.maclar[id] = {skor, tohum, goller:[{id,no,takim,kk,dk}], kartlar:[{id,no,takim,renk,neden,dk}], sakatliklar:[{id,no,takim,tur,bolge,derece,dk,gun}],
                        degisiklikler:[{takim,cikan,giren,dk,sakatlik}], ist, protokol}
          takim motorun sırasıdır (0 ev sahibi). Golde takim golü kazanan takımdır; kendi kalesine golde (kk) atan öbür takımdandır. id: oyuncunun
-         kariyer kimliği (atansız golde null). Ad saklanmaz (kimlik var); degisiklikler motordaki gibi adla.
+         kariyer kimliği (numarasız, atansız golde null). Ad saklanmaz (kimlik var); degisiklikler motordaki gibi adla.
        k.gecmis: {tur:'mac', macId, hafta, ev, konuk, skor, tarih, dakika} (maç anında).
        Oyuncular (kopyala-yaz): gol (kendi kalesine sayılmaz), sarı sayacı, ceza, sakatlık — TEST kuralı (karar 36, 38):
          · iki kulübün cezalıları bu maçı oynamadı: ceza.mac − 1 (0'da null). Öbür kulüplerin cezaları yalnız bizimle oynayınca düşer (F2 TEST sınırı;
            diğer maçlar 3.8'de).
          · kırmızı kart → 1 maç; ikinci sarı → 1 maç ve o maçın sarıları birikime sayılmaz (motor ikinci sarıda iki kayıt yazar: sari + ikinciSari);
            sarı → sarı sayacı + 1, sayaç 4'ün katını geçince 1 maç. Aynı maçta iki ceza toplanır.
-         · sakatlık: derece tedavi ya da çıkış ve gün > 0 → sakat {neden, donus: maç günü + gün}; ağrı ve kramp yazılmaz. Dönüşü gelmiş sakatlık
+         · sakatlık: derece tedavi ya da çıkış ve gün > 0 → sakat {neden, donus: maç günü + gün}; aynı maçta birden çoksa en uzunu; ağrı ve kramp
+           yazılmaz. Dönüşü gelmiş sakatlık
            temizlenir (uygunluk zaten tarihe bakar: js/mac-girdi.js oyuncuUygunMu).
        Zaman maçtan MAC_SONRASI_DK sonrasına (21:00) ilerler; arada bir ajanda işinin anı varsa o anda durulur (kaçırılmaz), yolda karar gerektiren
          gelişme gelirse orada durulur (js/ajanda.js durakSorgusu; İlerle'nin modeli).
-       Sıradaki hafta: kulübün oynanmamış ilk maçının maç günü işi kurulur (js/fikstur.js siradakiMac, macGunuIsiKur); 30. haftadan sonra yok.
+       Sıradaki hafta (yalnız başkanın kulübünün maçından sonra): kulübün oynanmamış ilk maçının maç günü işi kurulur (js/fikstur.js siradakiMac, macGunuIsiKur); 30. haftadan sonra yok.
    kulubunSonMaci(k, kulüp): kulübün son oynanan maçı {f: fikstür kaydı, s: k.maclar kaydı} ya da null (Canlı Skor ve bülten).
    macSonucDogrula: k.maclar girdilerinin iç tutarlılığı (EK_DENETIMLER; js/fikstur.js fiksturDogrula kimlik, hafta ve skoru denetler).
    Kayıt sürümü 7 kalır: eklenen alanlar maclar girdisi ve geçmişte yeni tür (okuyucular bilinmeyen türü atlar). */
@@ -44,7 +45,9 @@ function kulubunSonMaci(k,kulupId){
   for(const f of k.fikstur||[]){const s=(k.maclar||{})[f.id];if(s&&(f.ev===kulupId||f.konuk===kulupId)&&(!en||f.hafta>en.f.hafta))en={f,s};}
   return en;
 }
-/* motor kaydının (takım sırası, forma numarası, ad) kariyer kimliği. zorunlu değilse bulunamayan null olur; ad tutmazsa her zaman hata */
+/* motor kaydının (takım sırası, forma numarası, ad) kariyer kimliği. zorunlu değilse bulunamayan null olur; ad tutmazsa her zaman hata.
+   F2 incelemesi: numarası olan golcü her zaman kadrodadır (motor son dokunanı ve takımını birlikte yazar, js/mac-motoru.js dokunus), bu yüzden
+   yalnız numarasız (atansız) gol null kalır */
 function macSonucKimligi(k,f,takim,no,ad,zorunlu){
   const kulup=takim===0?f.ev:f.konuk,p=no>0?kulupOyunculari(k,kulup).find(x=>x.no===no):null;
   if(p&&(!ad||p.ad===ad))return p.id;
@@ -79,9 +82,9 @@ function macSonucuUygula(k,macId,sonuc,tohum,ek){
   const simdi=simdikiAn(k),an0=macAni(f);
   if(simdi<an0)throw new Error('Maç sonucu işlenemedi: zaman maç anından önce');
   const L=a=>Array.isArray(a)?a:[];
-  /* kimlikler: gol atan bilinmeyebilir (atansız gol null); kart ve sakatlık her zaman bir oyuncunundur */
+  /* kimlikler: gol atan bilinmeyebilir (numarasız, atansız gol null); kart ve sakatlık her zaman bir oyuncunundur */
   const goller=L(sonuc.goller).map(g=>{const kk=!!g.kendiKalesine,t=g.takim===1?1:0;
-    return{id:macSonucKimligi(k,f,kk?1-t:t,g.no|0,g.ad,false),no:g.no|0,takim:t,kk,dk:g.dakika|0};});
+    return{id:macSonucKimligi(k,f,kk?1-t:t,g.no|0,g.ad,(g.no|0)>0),no:g.no|0,takim:t,kk,dk:g.dakika|0};});
   const kartlar=L(sonuc.kartlar).map(c=>({id:macSonucKimligi(k,f,c.takim===1?1:0,c.no|0,c.ad,true),no:c.no|0,takim:c.takim===1?1:0,renk:c.renk,neden:c.neden==null?null:String(c.neden),dk:c.dakika|0}));
   const sakatliklar=L(sonuc.sakatliklar).map(s=>({id:macSonucKimligi(k,f,s.takim===1?1:0,s.no|0,s.ad,true),no:s.no|0,takim:s.takim===1?1:0,tur:s.tur,bolge:s.bolge,derece:s.derece,dk:s.dakika|0,gun:s.gun|0}));
   const degisiklikler=L(sonuc.degisiklikler).map(d=>({takim:d.takim===1?1:0,cikan:String(d.cikan||''),giren:String(d.giren||''),dk:d.dakika|0,sakatlik:!!d.sakatlik}));
@@ -105,8 +108,12 @@ function macSonucuUygula(k,macId,sonuc,tohum,ek){
     q.sari=sari;
     if(mac>0){const onceki=q.ceza&&q.ceza.mac>0?q.ceza:null;q.ceza={mac:Math.min(99,mac+(onceki?onceki.mac:0)),neden:(onceki?[onceki.neden]:[]).concat(neden).join(' · ')};}
   }
-  /* 4) sakatlıklar: tedavi ya da oyundan çıkış ve dönüşü sonraki günlerde */
-  for(const s of sakatliklar)if((s.derece==='tedavi'||s.derece==='cikis')&&s.gun>0&&s.tur!=='kramp'){const q=al(s.id);q.sakat={neden:sakatlikMetni(s.tur,s.bolge),donus:tarihEkle(f.tarih,s.gun)};}
+  /* 4) sakatlıklar: tedavi ya da oyundan çıkış ve dönüşü sonraki günlerde. Tedaviden dönen oyuncu aynı maçta yeniden sakatlanabilir
+     (js/mac-sakatlik.js): maçtaki en uzun dönüş kalır (F2 incelemesi) */
+  const buMac=new Set();
+  for(const s of sakatliklar)if((s.derece==='tedavi'||s.derece==='cikis')&&s.gun>0&&s.tur!=='kramp'){const q=al(s.id),donus=tarihEkle(f.tarih,s.gun);
+    if(buMac.has(s.id)&&q.sakat&&tarihKarsilastir(q.sakat.donus,donus)>=0)continue;
+    q.sakat={neden:sakatlikMetni(s.tur,s.bolge),donus};buMac.add(s.id);}
   k.oyuncular=Object.assign({},k.oyuncular,yeni);
   /* zaman: maçtan sonrasına; arada anı gelen ajanda işinde (randevu, karar) durulur — kaçırılmaz */
   const hedef0=Math.max(simdi,an0+MAC_SONRASI_DK);let hedef=hedef0;
@@ -116,13 +123,14 @@ function macSonucuUygula(k,macId,sonuc,tohum,ek){
   const temiz={};
   for(const c of kulupler)for(const p of kulupOyunculari(k,c))if(p.sakat&&tarihKarsilastir(p.sakat.donus,k.tarih)<=0)temiz[p.id]=Object.assign({},p,{sakat:null});
   if(Object.keys(temiz).length)k.oyuncular=Object.assign({},k.oyuncular,temiz);
-  /* sıradaki haftanın maç günü */
+  /* sıradaki haftanın maç günü: yalnız başkanın kulübünün maçından sonra (3.8'in diğer maçları kendi yoluyla işlenecek; F2 incelemesi) */
   const biz=(k.kisiler[k.baskanId]||{}).kulupId;let siradakiIsId=null;
-  if(k.gorevDurumu==='gorevde'&&biz&&!Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu')){const s=siradakiMac(k,biz);if(s)siradakiIsId=macGunuIsiKur(k,s.id);}
+  if(k.gorevDurumu==='gorevde'&&biz&&(f.ev===biz||f.konuk===biz)&&!Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu')){const s=siradakiMac(k,biz);if(s)siradakiIsId=macGunuIsiKur(k,s.id);}
   return{macId,skor:sonuc.skor.slice(),durdu:r.durdu||hedef<hedef0,siradakiIsId};
 }
 
-/* k.maclar girdilerinin iç tutarlılığı. Dondurulmuş girdinin kendi denetimi bir kez yapılır (değişemez); oyuncu kimliklerinin varlığı her seferinde */
+/* k.maclar girdilerinin iç tutarlılığı. Dondurulmuş girdinin kendi denetimi bir kez yapılır (değişemez); oyuncu kimliklerinin varlığı her seferinde.
+   Oyuncunun bugünkü kulübü denetlenmez: transferden (Aşama 4) sonra eski maçların kaydı geçerli kalmalı; kimlik komutta (macSonucKimligi) eşlenir */
 const MAC_SONUC_DENETLENDI=new WeakSet();
 function macSonucDogrula(k,h){
   const M=k.maclar,F=k.fikstur,O=k.oyuncular||{};
@@ -132,11 +140,8 @@ function macSonucDogrula(k,h){
   for(const [id,s] of Object.entries(M)){
     const ad=`Maç ${id}`,f=fk.get(id);
     if(!f||!duz(s)||!Array.isArray(s.skor))continue;   // fiksturDogrula bildirir
-    /* oyuncunun takımı: kendi kalesine golde golü kazananın rakibi */
-    for(const L of ['goller','kartlar','sakatliklar'])for(const x of Array.isArray(s[L])?s[L]:[]){
-      if(!x||x.id==null)continue;
-      const tk=L==='goller'&&x.kk?1-x.takim:x.takim,kulup=tk===1?f.konuk:f.ev;
-      if(!O[x.id]||O[x.id].kulupId!==kulup)h.push(`${ad}: ${L} kaydındaki oyuncu ${x.id} bu maçın kulübünde değil`);}
+    for(const L of ['goller','kartlar','sakatliklar'])for(const x of Array.isArray(s[L])?s[L]:[])
+      if(x&&x.id!=null&&!O[x.id])h.push(`${ad}: ${L} kaydındaki oyuncu ${x.id} bulunamadı`);
     if(MAC_SONUC_DENETLENDI.has(s))continue;
     const once=h.length;
     if(s.tohum!==macTohumu(k.dunyaTohumu,id))h.push(`${ad}: tohum maçın tohumu değil`);

@@ -186,6 +186,7 @@ function hizliBitirHazir(){
   const H=HIZLI_BITIR;if(!H.bekliyor||MAC_ONCESI.includes(mac.phase))return;
   if((typeof KARAR_ANI!=='undefined'&&KARAR_ANI.acik)||(typeof TEPE_AN!=='undefined'&&TEPE_AN.aktif)||(typeof LOCA_GIRIS!=='undefined'&&LOCA_GIRIS.aktif))return;
   H.bekliyor=false;if(mac.phase==='fulltime')return;H.aktif=true;izlemeKapat(MAC_IZLEME);olayKuyrugu.length=0;
+  MAC_HIZ.anda=false;   /* izlemeHizi hızlı bitirmede çağrılmaz: şeritteki "önemli an" göstergesi yanık kalmasın (F2 incelemesi) */
 }
 /* bu karenin adımları; çizimin dts'ini döndürür */
 function hizliBitirAdim(dt){

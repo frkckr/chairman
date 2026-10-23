@@ -8,7 +8,7 @@
    Not: maç tarayıcıdaki maçla birebir aynı değildir — tarayıcı Match seçeneğine stadın zemin, atmosfer, kulübe ve tribün alanlarını da verir
    (js/mac-sahnesi.js MAC_SECENEK; stat tarifleri motor yükleyicinin dışındadır). Bu araç maliyet ve belirlenim ölçüsüdür, denge ölçüsü değildir
    (denge: araclar/mac-deneme.js).
-   Kullanım:  node araclar/sezon-deneme.js [hafta=3] [tohum=7] [--kaydet] [--tek] [--json DOSYA]
+   Kullanım:  node araclar/sezon-deneme.js [hafta=3] [tohum=7] [--kaydet] [--tek] [--json DOSYA]   (hafta en çok sezonun kalanı: 18)
      --tek   ikinci (belirlenimcilik) koşusunu atlar.   Çıkış kodu: fark ya da doğrulama hatası 1, kullanım hatası 2. */
 'use strict';
 const fs=require('fs'),vm=require('vm');
@@ -16,7 +16,7 @@ const {motorYukle}=require('./motor-yukle');
 const A=process.argv.slice(2),bayrak=a=>A.includes(a),deger=a=>{const i=A.indexOf(a);return i>=0?A[i+1]:null;};
 const sayilar=A.filter((a,i)=>/^\d+$/.test(a)&&A[i-1]!=='--json').map(Number);
 const HAFTA=sayilar[0]||3,TOHUM=sayilar[1]!=null?sayilar[1]:7,KAYDET=bayrak('--kaydet'),TEK=bayrak('--tek'),JSON_DOSYA=deger('--json');
-if(HAFTA<1||HAFTA>30){console.error('hafta 1–30 olmalı');process.exit(2);}
+if(HAFTA<1){console.error('hafta en az 1 olmalı');process.exit(2);}
 const MAKS=60*60*60;   /* güvenlik sınırı: 60 dakikalık adım (20 dakikalık maç ~23 dakikada biter) */
 
 function sezon(){
@@ -25,9 +25,11 @@ function sezon(){
     ['kariyerBaslat','kariyerKomut','duragaIlerle','ajandaIsiYap','macGirdisi','macSonucuUygula','kariyerDogrula','sezonTablosu','kariyerKaydet','kariyerYukle','bellekDeposu','kulupOyunculari','Match'].map(G);
   let k=kariyerBaslat({tohum:TOHUM});
   const biz=k.kisiler[k.baskanId].kulupId,satirlar=[],hatalar=[];
-  for(let h=0;h<HAFTA;h++){
+  /* sezonun oynanacak haftaları (TEST tarifi: 13–30, 18 hafta); fazlası istenirse sezon sonunda durulur (F2 incelemesi) */
+  const kalan=k.sezon.haftaSayisi-k.sezon.ilkHafta+1,N=Math.min(HAFTA,kalan);
+  for(let h=0;h<N;h++){
     const is=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu');
-    if(!is){hatalar.push('maç günü işi yok (sezon bitti?)');break;}
+    if(!is){hatalar.push('maç günü işi yok ama sezon bitmedi');break;}
     k=KK(k,x=>duragaIlerle(x)).kariyer;
     if(!k.isler[is.id]||k.tarih!==is.tarih||k.gunIciDakika!==is.dakika){hatalar.push(`İlerle maç gününe gitmedi (${k.tarih} ${k.gunIciDakika})`);break;}
     const Gi=macGirdisi(k,is.veri.macId);
@@ -46,13 +48,15 @@ function sezon(){
       gol:S.goller.length,kart:S.kartlar.length,sakatlik:S.sakatliklar.length,cezali:O.filter(p=>p.ceza).length,sakat:O.filter(p=>p.sakat).length,
       sira,puan:tb[sira-1].P,an:`${k.tarih} ${String(Math.floor(k.gunIciDakika/60)).padStart(2,'0')}:${String(k.gunIciDakika%60).padStart(2,'0')}`,kayit:JSON.stringify(k).length});
   }
+  if(N===kalan&&!hatalar.length&&Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'))hatalar.push('sezon bitti ama maç günü işi duruyor');
   const h=dogrula(k);if(h.length)hatalar.push('kariyer geçersiz: '+h.slice(0,3).join('; '));
-  return{k,satirlar,hatalar,metin:JSON.stringify(k)};
+  return{k,satirlar,hatalar,kalan,metin:JSON.stringify(k)};
 }
 
 const t0=Date.now();
 console.log(`Chairman sezon denemesi · ${HAFTA} hafta · dünya tohumu ${TOHUM}${KAYDET?' · her hafta kaydet–yükle':''}`);
 const R=sezon();
+if(HAFTA>R.kalan)console.log(`  (sezonun oynanacak haftası ${R.kalan}; ${HAFTA} yerine ${R.kalan} hafta oynandı, sezon sonunda maç günü işi kalmadı)`);
 console.log('  hafta  maç            skor   adım    ms   gol kart sakat · bizde cezalı/sakat · sıra puan · oda an            kayıt');
 for(const s of R.satirlar)console.log(`  ${String(s.hafta).padStart(5)}  ${(s.ev+'–'+s.konuk).padEnd(13)} ${s.skor.padEnd(6)} ${String(s.adim).padStart(6)} ${String(s.ms).padStart(5)}   ${String(s.gol).padStart(3)} ${String(s.kart).padStart(4)} ${String(s.sakatlik).padStart(5)} · ${String(s.cezali).padStart(6)}/${s.sakat}        · ${String(s.sira).padStart(4)} ${String(s.puan).padStart(5)} · ${s.an} ${String(Math.round(s.kayit/1024)).padStart(5)} KB`);
 const ms=R.satirlar.map(s=>s.ms),ort=ms.length?ms.reduce((a,b)=>a+b,0)/ms.length:0,adim=R.satirlar.reduce((a,s)=>a+s.adim,0);

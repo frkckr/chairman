@@ -429,10 +429,11 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
     sakatliklar:[sak(0,'demirkapi',5,'temas','diz','tedavi',5,33),sak(0,'demirkapi',7,'kas','arkaAdale','cikis',12,50),sak(1,'akdeniz',7,'temas','bilek','agri',1,64),sak(0,'demirkapi',10,'kramp','baldir','tedavi',0,88)],
     degisiklikler:[{takim:0,cikan:'Oğuz',giren:'Hakan',dakika:51,sakatlik:true}]});
   const fk12=c1.fikstur.find(f=>f.hafta===12);
-  denetle('Red: fikstürde olmayan maç, devralınan hafta, maç günü işi beklerken, bitmemiş maç, yanlış tohum, bilinmeyen oyuncu',
+  denetle('Red: fikstürde olmayan maç, devralınan hafta, maç günü işi beklerken, bitmemiş maç, yanlış tohum, kadroda olmayan kart sahibi ve golcü',
     /fikstürde/.test(red(()=>KK(c1,x=>uygula(x,'mac-yok',S13,toh13))))&&/devralınan/.test(red(()=>KK(c1,x=>uygula(x,fk12.id,S13,T('macTohumu')(7,fk12.id)))))
     &&/hâlâ bekliyor/.test(red(()=>KK(c0,x=>uygula(x,id13,S13,toh13))))&&/bitmemiş/.test(red(()=>KK(c1,x=>uygula(x,id13,Object.assign({},S13,{bitti:false}),toh13))))
-    &&/tohum/.test(red(()=>KK(c1,x=>uygula(x,id13,S13,toh13^1))))&&/kadrosuyla uyuşmuyor/.test(red(()=>KK(c1,x=>uygula(x,id13,S({kartlar:[{ad:'Kimse',no:77,takim:0,renk:'sari',dakika:5}]}),toh13)))),
+    &&/tohum/.test(red(()=>KK(c1,x=>uygula(x,id13,S13,toh13^1))))&&/kadrosuyla uyuşmuyor/.test(red(()=>KK(c1,x=>uygula(x,id13,S({kartlar:[{ad:'Kimse',no:77,takim:0,renk:'sari',dakika:5}]}),toh13))))
+    &&/kadrosuyla uyuşmuyor/.test(red(()=>KK(c1,x=>uygula(x,id13,S({skor:[1,0],goller:[{ad:'Kimse',no:77,takim:0,kendiKalesine:false,dakika:5}]}),toh13)))),
     red(()=>KK(c0,x=>uygula(x,id13,S13,toh13))));
   {const z=kariyerOlustur(c1);z.gunIciDakika=1080;
    denetle('Red: zaman maç anından önceyse',/maç anından önce/.test(red(()=>uygula(z,id13,S13,toh13))));}
@@ -460,6 +461,10 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
   denetle('İkinci uygulama reddedilir; dondurulmuş sonuca yerinde yazılamaz; kariyer geçerli',/zaten uygulanmış/.test(red(()=>KK(k,x=>uygula(x,id13,S13,toh13))))&&reddeder(()=>{k.maclar[id13].skor[0]=5;})&&!T('kariyerDogrula')(k).length);
   {const d=T('bellekDeposu')();T('kariyerKaydet')(d,'y',k);const y=T('kariyerYukle')(d,'y');
    denetle('Kaydet–yükle: aynı kariyer; yüklenen kariyerde sonuç ikinci kez uygulanamaz',y.tamam&&metin(y.kariyer)===metin(k)&&/zaten uygulanmış/.test(red(()=>KK(y.kariyer,x=>uygula(x,id13,S13,toh13)))));}
+  {const r1=KK(c1,x=>uygula(x,id13,S({sakatliklar:[sak(0,'demirkapi',5,'temas','diz','tedavi',5,20),sak(0,'demirkapi',5,'temas','bilek','tedavi',1,70)]}),toh13)).kariyer;
+   const r2=KK(c1,x=>uygula(x,id13,S({sakatliklar:[sak(0,'demirkapi',5,'temas','bilek','tedavi',1,20),sak(0,'demirkapi',5,'temas','diz','tedavi',5,70)]}),toh13)).kariyer;
+   denetle('Aynı maçta iki sakatlık: sıradan bağımsız en uzun dönüş kalır (F2 incelemesi)',metin(O(r1,'demirkapi',5).sakat)==='{"neden":"Diz","donus":"2026-12-03"}'&&metin(O(r2,'demirkapi',5).sakat)===metin(O(r1,'demirkapi',5).sakat),
+     metin(O(r1,'demirkapi',5).sakat)+' · '+metin(O(r2,'demirkapi',5).sakat));}
   {const z=kariyerOlustur(c1);z.oyuncular[O(c1,'akdeniz',21).id].sakat.donus='2026-11-28';const r=KK(z,x=>uygula(x,id13,S13,toh13)).kariyer;
    denetle('Dönüşü gelmiş sakatlık temizlenir (Volkan bugün dönüyor)',O(r,'akdeniz',21).sakat===null);}
   {const z=kariyerOlustur(c1);T('isEkle')(z,{tur:'hatirlatma',tarih:'2026-11-28',dakika:1200,veri:{metin:'Deneme hatırlatması'}});
@@ -487,16 +492,22 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
   const bozuk=(ad,f,re)=>{const x=kariyerOlustur(k);f(x);const h=T('kariyerDogrula')(x);denetle(ad,h.some(e=>re.test(e)),h.slice(0,2).join(' · ')||'hata yakalanmadı');};
   bozuk('Bozuk sonuç: gol kayıtları skorla tutmuyor',x=>{x.maclar[id13].goller.pop();},/skorla tutmuyor/);
   bozuk('Bozuk sonuç: tohum maçın değil',x=>{x.maclar[id13].tohum=1;},/tohum/);
-  bozuk('Bozuk sonuç: kart başka kulübün oyuncusunda',x=>{x.maclar[id13].kartlar[0].id=O(k,'karaova',9).id;},/kulübünde değil/);
-  /* gerçek motor: kısaltılmış maç (macSuresiDk 6; kural denemesi, denge değil) kariyerden kurulur, sonucu kimlikle işlenir */
+  bozuk('Bozuk sonuç: kart kaydındaki oyuncu yok',x=>{x.maclar[id13].kartlar[0].id='oyuncu-9999';},/bulunamadı/);
+  {const x=kariyerOlustur(k),id=O(k,'demirkapi',4).id;x.oyuncular[id].kulupId='karaova';const D=x.kulupler.demirkapi.kadro;D.yedekler=D.yedekler.filter(y=>y!==id);D.ilk11=D.ilk11.map(y=>y===id?D.yedekler.shift():y);x.kulupler.karaova.kadro.yedekler.push(id);
+   x.oyuncular[id].no=77;const h=kariyerDogrula(x).filter(e=>/^Maç /.test(e));
+   denetle('Transfer edilen oyuncunun eski maç kayıtları geçerli kalır (doğrulama bugünkü kulübe bakmaz)',!h.length,h.slice(0,2).join(' · '));}
+  /* gerçek motor: kısaltılmış maç (macSuresiDk 6; kural denemesi, denge değil) kariyerden kurulur, sonucu kimlikle işlenir. Dünya tohumu 3:
+     kısa maç 1–1 biter, gollerden biri kendi kalesine (F2 incelemesi: tohum 7'nin 0–0'ı gol eşlemesini sınamıyordu) */
   const {motorYukle}=require('./motor-yukle'),MC=motorYukle().ctx,MG=a=>vm.runInContext(a,MC);vm.runInContext('MOTOR_AYAR.macSuresiDk=6',MC);
-  let m0=MG('kariyerBaslat')({tohum:7});m0=MG('kariyerKomut')(m0,x=>MG('duragaIlerle')(x)).kariyer;m0=MG('kariyerKomut')(m0,x=>MG('ajandaIsiYap')(x,'is-1')).kariyer;
+  let m0=MG('kariyerBaslat')({tohum:3});m0=MG('kariyerKomut')(m0,x=>MG('duragaIlerle')(x)).kariyer;m0=MG('kariyerKomut')(m0,x=>MG('ajandaIsiYap')(x,'is-1')).kariyer;
   const Gm=MG('macGirdisi')(m0,id13),mm=new (MG('Match'))(()=>{},{kadro:Gm.kadro,tohum:Gm.tohum,tunel:{x:0,z:-6},tarz:'dagilim'});
   mm.macaGec();for(let i=0;i<60*60*30&&mm.phase!=='fulltime';i++)mm.step(1/60);
   const SK=mm.sonucKaydi(),mk=MG('kariyerKomut')(m0,x=>MG('macSonucuUygula')(x,id13,SK,Gm.tohum)).kariyer,MK=mk.maclar[id13];
-  denetle('Gerçek motor (kısa maç): sonucKaydi kariyere kimlikle işlenir; kart ve sakatlıkların hepsi bir oyuncuya bağlı; kariyer geçerli',
-    SK.bitti&&metin(MK.skor)===metin(SK.skor)&&MK.goller.length===SK.goller.length&&MK.kartlar.length===SK.kartlar.length&&MK.sakatliklar.length===SK.sakatliklar.length
-    &&MK.goller.every(g=>g.id||!g.no)&&!MG('kariyerDogrula')(mk).length,`${SK.skor.join('-')} · ${SK.goller.length} gol, ${SK.kartlar.length} kart, ${SK.sakatliklar.length} sakatlık`);
+  const kul=(g,kk)=>((kk?1-g.takim:g.takim)===1?'akdeniz':'demirkapi'),Om=id=>mk.oyuncular[id],O0=id=>m0.oyuncular[id];
+  denetle('Gerçek motor (kısa maç, dünya tohumu 3): goller (kendi kalesine dahil), kartlar ve sakatlıklar kimlikle işlenir; golcünün sayacı artar, kendi kalesine atanınki artmaz; kariyer geçerli',
+    SK.bitti&&metin(MK.skor)===metin(SK.skor)&&SK.goller.length>=2&&SK.goller.some(g=>g.kendiKalesine)&&MK.goller.length===SK.goller.length&&MK.kartlar.length===SK.kartlar.length&&MK.sakatliklar.length===SK.sakatliklar.length
+    &&MK.goller.every(g=>g.id&&Om(g.id).kulupId===kul(g,g.kk)&&Om(g.id).gol===O0(g.id).gol+(g.kk?0:MK.goller.filter(x=>x.id===g.id&&!x.kk).length))
+    &&MK.kartlar.every(c=>c.id&&Om(c.id).kulupId===kul(c,false))&&!MG('kariyerDogrula')(mk).length,`${SK.skor.join('-')} · ${SK.goller.length} gol, ${SK.kartlar.length} kart, ${SK.sakatliklar.length} sakatlık`);
 }
 
 /* ================= TEST içeriğiyle kural motoru ================= */

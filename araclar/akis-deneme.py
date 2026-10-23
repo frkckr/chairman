@@ -24,7 +24,8 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
  18. İzleme hızı ve önemli anlar (U1, 2026-10-12): Ayarlar > Maç, maç şeridindeki ×1 ×2 ×4 ve 1/2/4 tuşları, kalıcılık; belirlenimli maçta
      ×4'te şut ve golden önce 1×'e iniş (ikiz motor 7 sn önde), maçın sonuna dek ikizin ana motorla aynılığı.
  19. Maç sonucu kariyere (F2, 2026-10-23): oda → Stada git → bülten → "TEST Maçı bitir" (kalan maç görüntüsüz) → Maç bitti kartı →
-     Odaya dön → oda 21:00, sonuç bir kez kayıtta, puan durumu ilerledi, sıradaki iş 14. hafta, Canlı Skor'da son maç; oynanmış maçın adresi odaya düşer.
+     Odaya dön → oda 21:00, sonuç bir kez kayıtta, puan durumu ilerledi, sıradaki iş 14. hafta, Canlı Skor'da son maç; oynanmış maçın adresi odaya düşer;
+     belirlenimli iki sayfada aynı tohumla Maçı bitir ile ×16 izlenen maç birebir aynı sonuç kaydı.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız, Durdur ve tarz seçimi (TEST, B4b), eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
@@ -1261,7 +1262,8 @@ async def bolum_19(tarayici, site, tum_hatalar):
     await pg.keyboard.press("Digit1")
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
     skor = await pg.text_content(".tel")
-    denetle("F2: Canlı Skor'da sıradaki maç ve son maç (13. hafta, skoruyla)", "Sıradaki" in skor and "Son maç" in skor and "13. hafta" in skor, skor[:160])
+    beklenen = k["skor"].replace("–", " – ")   # kartta 3–0, Canlı Skor satırında 3 – 0
+    denetle("F2: Canlı Skor'da sıradaki maç ve son maç (13. hafta, skoruyla)", "Sıradaki" in skor and "Son maç" in skor and "13. hafta" in skor and beklenen in skor, skor[:160])
     await pg.wait_for_timeout(300)
     await pg.screenshot(path=str(ARAC / "son-akis-19-oda.png"))
     await pg.keyboard.press("Escape")
@@ -1271,6 +1273,35 @@ async def bolum_19(tarayici, site, tum_hatalar):
     msj = await pg.text_content(".od-mesaj")
     denetle("F2: oynanmış maçın adresi odaya düşer, neden söylenir; kayıt değişmedi", "bekleyen bir iş değil" in msj and await pg.evaluate(KAYIT_JS) == kayit1, msj)
     await pg.context.close()
+    # F2 incelemesi: "Maçı bitir" ile maçın sonucu izlenen maçla aynı olmalı (adım hep 1/60 sn; atlanan olaylar motora dokunmaz). Belirlenimli iki sayfa
+    # (SAAT_JS, figürlü loca bakışı, aynı tohum, rakip başkan yok): biri ×16 ve ikizle sonuna dek (bölüm 18'in yolu), öbürü Maçı bitir
+    sonuc = {}
+    for ad in ("izle", "bitir"):
+        baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
+        await baglam.add_init_script(SAAT_JS)
+        pg = await baglam.new_page()
+        pg.on("pageerror", lambda e: tum_hatalar.append("Betik hatası: " + str(e)))
+        await pg.goto((site / "index.html").as_uri() + loca("?ekran=mac&tohum=3&rakipBaskan=yok"))
+        await pg.wait_for_selector("#btnMacaGec", timeout=30000)
+        await pg.evaluate("__kare(2)")
+        await pg.click("#btnMacaGec")
+        if ad == "izle":
+            for _ in range(20):
+                son = await pg.evaluate(SONA_JS, 600)
+                if son["faz"] == "fulltime":
+                    break
+        else:
+            await pg.click("#btnHizliBitir")
+            for _ in range(200):
+                son = await pg.evaluate(HIZLI_JS, 20)
+                if son["faz"] == "fulltime":
+                    break
+        sonuc[ad] = await pg.evaluate("() => ({ faz: mac.phase, kayit: JSON.stringify(mac.sonucKaydi()), skor: mac.score.join('-'), ikiz: MAC_IZLEME.son, sapma: MAC_IZLEME.sapma })")
+        await baglam.close()
+    i, b = sonuc["izle"], sonuc["bitir"]
+    denetle("F2: aynı tohumla 'Maçı bitir' izlenen maçla (×16, ikizli) birebir aynı sonuç kaydını verir; ikiz izlenen maçta aynı, hızlıda atlandı",
+            i["faz"] == b["faz"] == "fulltime" and i["kayit"] == b["kayit"] and i["ikiz"] == {"ayni": True} and i["sapma"] == 0 and b["ikiz"].get("atlandi") and b["sapma"] == 0,
+            f"izle {i['skor']} · bitir {b['skor']} · ikiz {i['ikiz']} / {b['ikiz']}")
 
 
 SECIM = set(sys.argv[1:])

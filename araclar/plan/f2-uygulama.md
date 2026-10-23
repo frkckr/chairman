@@ -1,4 +1,4 @@
-<!-- Durum (2026-10-23, dizüstü): F2-a ve F2-b yapıldı. F2-a: js/mac-sonuc.js, kariyer-deneme 3.5; sapma: fiksturDogrula'ya "bekleyen maç günü kulübün sıradaki maçı olmalı" eklenmedi (araçlar haftayı bilerek elle atlıyor). F2-b: Maçı bitir (TEST) şeritte, maç sonu kartı, Canlı Skor son maç; tarayıcıda iki hafta uçtan uca (kayıt hatası yolu dahil), hızlı bitirme ile ×16 normal oynatma aynı tohumda birebir aynı sonuç; hızlı bitirme dizüstünde ~15 sn (motor süresi baskın; planda 6–8 sn tahmini). Sıradaki F2-c. -->
+<!-- Durum (2026-10-23, dizüstü): F2 yapıldı ve kapandı (`tur/f2`; F2-a, F2-b, F2-c ve inceleme düzeltmeleri ayrı commit). Sapmalar: fiksturDogrula'ya "bekleyen maç günü kulübün sıradaki maçı olmalı" eklenmedi (araçlar haftayı bilerek elle atlıyor); hızlı bitirme dizüstünde ~15 sn (tahmin 6–8); aşağıdaki "deep-link tuzağı" riski yanlıştı (maç günü işi bugünün değilse reddediliyor); çok ajanlı incelemenin düzeltmeleri ve "Santraya geç" bulgusu YOL_HARITASI devam notunda. -->
 # F2 — Maç sonucunun kariyere işlenmesi + "Maçı bitir (TEST)" düğmesi
 
 ## Bağlam
@@ -73,7 +73,7 @@ Hoca ve kadro seçimi, beklenen gol ve şut listesi, rapor (F3); tek kart (F4); 
 
 - Global ad çakışması yalnız tarayıcıda görülür → `kontrol.py` her commit'te.
 - `ajandaIsiYap` yolda durursa (`mac-gunu.js:42`) oda açılır, sonuç komutu hiç gelmez — bugünkü davranış, değişmez.
-- Deep-link tuzağı (F1'den): kayıt 13. hafta Cumartesi 21:00'deyken `?mac=<14. hafta>` elle açılırsa `ajandaIsiYap` zamanı bir hafta sıçratır; "zaman maç anından önce" reddi bunu yakalamaz. Oyun yolu (İlerle → Stada git) etkilenmez; devam notuna not (istenirse `mac-gunu.js:38`'e `is.tarih===k.tarih` şartı).
+- (Yanlış çıktı, F2 incelemesi: maç günü işi bugünün değilse `ajandaIsiYap` reddeder, oda açılır.) Deep-link tuzağı (F1'den): kayıt 13. hafta Cumartesi 21:00'deyken `?mac=<14. hafta>` elle açılırsa `ajandaIsiYap` zamanı bir hafta sıçratır; "zaman maç anından önce" reddi bunu yakalamaz. Oyun yolu (İlerle → Stada git) etkilenmez; devam notuna not (istenirse `mac-gunu.js:38`'e `is.tarih===k.tarih` şartı).
 - Hızlı bitirmede ikiz kapatıldığı için `MAC_IZLEME.son.ayni` yok; kartta "ikiz: atlandı". §18 ve `ikiz-deneme` ikizi sınamaya devam eder.
 - Kart kayıt hatasında yeniden yüklemeyi engelleyemez (Geri/adres); kayıt maç gününde kaldığı için maç tekrar oynanır — kartta yazılır.
 - `kariyer-deneme`'deki yapay karar işi için `araclar/test-icerik.js`'in mevcut kalıbı kullanılır; yoksa bölüm yalnız hatırlatma yolunu sınar ve not düşülür.
