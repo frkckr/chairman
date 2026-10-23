@@ -46,5 +46,8 @@ const MAC_GUNU=(()=>{
     return Object.assign(sabit(),statKur(null),{hata:e.message});
   }
 })();
+/* tarayıcının Geri ya da İleri tuşu sayfayı önbellekten (bfcache) geri getirirse kayıttan yeniden açılır: oda ve maç her zaman kayıtlı kariyerle
+   başlar (F1-b incelemesi) */
+try{addEventListener('pageshow',e=>{if(e.persisted)location.reload();});}catch(e){}
 /* bu maçın stat tarifi (yüklemede bir kez; stat, seyirci, tünel ve kulübeler bundan kurulur) */
 const STAT={...MAC_GUNU.statTarifi,zemin:MAC_GUNU.zemin};

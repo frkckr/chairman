@@ -4,8 +4,9 @@
    macKadrosu(k, kulüp, tarih): kulübün o günkü maç kadrosu, js/kadrolar.js biçiminde (motor ve çizim bunu okur):
      {id, ad, kisa, tamAd, forma, kaleciForma, taktik, td, oyuncular[11], yedekler[≤5], eksikler[{ad, no, mevki, durum, neden, donus}]}
      Hoca seçimi F3'te gelir; bugün kadronun ilk 11'i yerinde oynar, sakat ya da cezalı olanın yerine yedeklerden aynı mevkideki ilk uygun
-     oyuncu girer (yoksa ilk uygun saha oyuncusu; kaleci yuvasına önce kaleci). Kulübede en çok MAC_YEDEK_SAYISI uygun oyuncu oturur
-     (varsa kaleci ilk). Kayıtlar kopyadır; motor onları p.kayit olarak tutar, kariyere dokunmaz. Kayıtta oyuncunun kimliği (id) de vardır.
+     oyuncu girer (yoksa ilk uygun saha oyuncusu; kaleci yuvasına önce kaleci). Kulübede en çok MAC_YEDEK_SAYISI uygun oyuncu oturur: önce
+     kaleci ve her hattan (DEF, OS, FV) ilk uygun oyuncu, kalan koltuklar tercih sırasıyla; kulübenin sırası tercih sırasıdır (kaleci ilk).
+     Böylece motorun "aynı mevkiden yedek" ve "geride olan forvet sokar" değişiklikleri her takımda çalışır (F1-b incelemesi). Kayıtlar kopyadır; motor onları p.kayit olarak tutar, kariyere dokunmaz. Kayıtta oyuncunun kimliği (id) de vardır.
    macGirdisi(k, maçKimliği): {kariyer:true, macId, hafta, tarih, dakika, ev, konuk, biz, tohum, kadro:[ev, konuk], bulten}
      tohum macTohumu(dünya tohumu, kimlik): aynı kariyerde aynı maç aynı oynanır. biz: başkanın kulübünün takım sırası (0 ev, 1 konuk).
      bulten: maç öncesi ekranının verisi (lig, hafta, gün, saat, puan durumu, iki tarafın son beş maçı, takım adları). Tarz F3'e dek tohumdan. */
@@ -38,13 +39,16 @@ function macKadrosu(k,kulupId,tarih){
     if(!sec)throw new Error(`Maç kadrosu kurulamadı: ${c.ad} on bir uygun oyuncu çıkaramıyor`);
     ilk[i]=sec;secildi.add(sec);
   }
-  let kalan=yedekler.filter(id=>!secildi.has(id));
-  const kl=kalan.find(id=>O(id).mevki==='KL');if(kl)kalan=[kl,...kalan.filter(id=>id!==kl)];
+  const kalan=yedekler.filter(id=>!secildi.has(id)),kulube=new Set();
+  for(const m of OYUNCU_MEVKILERI){const x=kalan.find(id=>O(id).mevki===m);if(x&&kulube.size<MAC_YEDEK_SAYISI)kulube.add(x);}
+  for(const id of kalan)if(kulube.size<MAC_YEDEK_SAYISI)kulube.add(id);
+  let kulubeSira=kalan.filter(id=>kulube.has(id));
+  const kl=kulubeSira.find(id=>O(id).mevki==='KL');if(kl)kulubeSira=[kl,...kulubeSira.filter(id=>id!==kl)];
   const oyuncular=ilk.map(id=>macKaydi(O(id)));
   if(!oyuncular.some(o=>o.kaptan)){const sira=ilk.map(O).filter(p=>p.mevki!=='KL').sort((a,b)=>a.dogumTarihi<b.dogumTarihi?-1:a.dogumTarihi>b.dogumTarihi?1:0);
     if(sira.length)oyuncular[ilk.indexOf(sira[0].id)].kaptan=true;}
   return{id:kulupId,ad:D.ad,kisa:c.kisa,tamAd:c.ad,forma:D.forma,kaleciForma:D.kaleciForma,taktik:Object.assign({},D.taktik),td:Object.assign({},D.td),
-    oyuncular,yedekler:kalan.slice(0,MAC_YEDEK_SAYISI).map(id=>macKaydi(O(id))),eksikler:D.ilk11.concat(D.yedekler).filter(id=>!uygun(id)).map(id=>eksikSatiri(O(id)))};
+    oyuncular,yedekler:kulubeSira.map(id=>macKaydi(O(id))),eksikler:D.ilk11.concat(D.yedekler).filter(id=>!uygun(id)).map(id=>eksikSatiri(O(id)))};
 }
 function macGirdisi(k,macId){
   const f=k.fikstur.find(x=>x.id===macId);

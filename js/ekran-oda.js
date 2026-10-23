@@ -455,6 +455,18 @@ function odaEkraniKur(kap,oyun,ayarlar){
   function isiYap(id){
     const is=k.isler[id];if(!is)return;
     const baslik=is.veri.baslik,mac=is.veri.eylem==='macGunu',bas=saatYazi(is.dakika),saatsiz=!!is.veri.saatsiz,karar=!!is.veri.karar;
+    /* F1-b: kariyerden açılan maçta maç günü işi odada uygulanmaz, kopyada denenir. Yolda karar gerektiren haber gelirse o ana dek ilerleme normal
+       komutla kaydedilir; gelmezse kariyere dokunulmadan sayfa maçın kimliğiyle açılır (js/mac-gunu.js işi orada, bellekte yapar). Böylece odaya
+       tarayıcının Geri tuşuyla dönülse de bekleyen iş yerindedir */
+    if(mac&&is.veri.macId){
+      let r;try{r=kariyerKomut(k,x=>ajandaIsiYap(x,id,secimler[id])).kariyer;}catch(e){hataGoster(e);return;}
+      onay=null;
+      if(r.isler[id]){try{komut(x=>ajandaIsiYap(x,id,secimler[id]));}catch(e){hataGoster(e);return;}
+        mesaj=baslik+' için yola çıktın; yolda karar gerektiren bir haber geldi. İş bekliyor.';ciz();return;}
+      const engel=oyun.macaGit(is.veri.macId);
+      if(engel){mesaj=engel;ciz();return;}
+      delete secimler[id];acik=null;return;
+    }
     try{komut(x=>ajandaIsiYap(x,id,secimler[id]),mac);}catch(e){hataGoster(e);return;}
     onay=null;
     if(k.isler[id]){
@@ -586,7 +598,14 @@ if(typeof ON_EKRAN!=='undefined'&&typeof OYUN!=='undefined'){
       kayitTamam:()=>OYUN.oturum.durum.tamam,yenidenKaydet:()=>OYUN.oturum.kaydet(),yeniKariyer:oyunYeniKariyer,
       /* maç günü (F1-b, 2026-10-23): maç sınırı sayfa yeniden yüklemesidir. "Stada git" kaydedilmez; sayfa maçın kimliğiyle açılır, js/mac-gunu.js
          kayıtlı kariyerden maç gününü kurar ve bülten açılır (stat, seyirci ve maç o maça göre kurulur). Maç kimliği yoksa (eski davranış) bülten */
-      macaGit:macId=>{if(macId){location.href=location.pathname+'?ekran=bulten&mac='+encodeURIComponent(macId);return;}kap.hidden=true;ON_EKRAN.bulteniAc();},
+      macaGit:macId=>{
+        if(macId){
+          /* maç sayfası kariyeri kayıttan açar: kayıt yazılamıyorsa (yalnız bellek ya da kaydedilmemiş değişiklik ve kayıt hatası) gitmek
+             bellekteki ilerlemeyi atar; o zaman gidilmez, nedeni söylenir (F1-b incelemesi) */
+          const o=OYUN.oturum;
+          if(OYUN.depo==='bellek'||(o.durum.bekleyen&&!o.kaydet().tamam))return'Maç açılamıyor: kayıt yazılamıyor ('+oyunKayitYazi()+'). Kayıt düzelince Stada git yeniden denenebilir.';
+          location.href=location.pathname+'?ekran=bulten&mac='+encodeURIComponent(macId);return null;}
+        kap.hidden=true;ON_EKRAN.bulteniAc();return null;},
       ilkMesaj:OYUN.mesaj,get bozukHata(){return OYUN.bozukHata;},bozuguSaklaVeBasla:oyunBozuguSakla
     },OYUN.ayarlar);
     kap.hidden=false;ekran.ciz('.od-ana');

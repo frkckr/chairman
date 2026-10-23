@@ -397,6 +397,9 @@ bolum('3.4 — maç girdisi: kariyerden maç kadrosu ve Match seçeneği (F1-b)'
   const x3=kopya(x=>{for(const p of Object.values(x.oyuncular))if(p.kulupId==='karaova'&&p.mevki!=='KL')p.sakat={neden:'deneme',donus:'2027-06-01'};});
   denetle('On bir uygun oyuncu çıkaramayan kulübün maç kadrosu kurulmaz (açık hata)',reddeder(()=>macKadrosu(x3,'karaova','2026-11-28'))&&reddeder(()=>macGirdisi(c,'mac-2627-99-a-b')));
   const f14=c.fikstur.find(f=>f.hafta===14&&(f.ev==='demirkapi'||f.konuk==='demirkapi')),G14=macGirdisi(c,f14.id);
+  const hat=K=>[...new Set(K.yedekler.map(y=>y.mevki))].sort().join(',');
+  denetle('Kulübede kaleci ve her hattan (DEF, OS, FV) oyuncu; üretilen bütün kulüplerde ve tohum kadrolarında (F1-b incelemesi)',
+    Object.keys(c.kulupler).every(id=>hat(macKadrosu(c,id,'2026-11-28'))==='DEF,FV,KL,OS'),Object.keys(c.kulupler).slice(0,3).map(id=>id+' '+macKadrosu(c,id,'2026-11-28').yedekler.map(y=>y.mevki).join('-')).join(' · '));
   denetle('14. hafta: biz fikstürdeki tarafımız; üretilen rakip kadro 11 + 5 yedek',G14.biz===(f14.konuk==='demirkapi'?1:0)&&G14.kadro.every(K=>K.oyuncular.length===11&&K.yedekler.length===5)&&G14.kadro[G14.biz].id==='demirkapi',
     `${f14.id} · biz ${G14.biz}`);
   /* motor: kariyerden kurulan 13. hafta maçı, aynı tohumla kariyersiz (MAC_KADRO) maçla birebir aynı (santradan sonra 2400 adım) */
