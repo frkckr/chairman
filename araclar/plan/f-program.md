@@ -1,4 +1,4 @@
-<!-- Durum (2026-10-23, dizüstü): F0 yapıldı (eşitleme, hızlı kademe, belgeler; dal `claude/f1-fikstur`). Sıradaki F1. Program kullanıcı onaylı; F2–F6 kendi başında kısa planla (`araclar/plan/f<N>-uygulama.md`) onaylanır. Geçerli kararlar YOL_HARITASI 31–36. -->
+<!-- Durum (2026-10-23, dizüstü): F0 ve F1 yapıldı (`tur/f1`; F1-a, F1-b, F1-c ayrı commit; ayrıntı YOL_HARITASI devam notu). Uygulamada plandan sapmalar: kadro kuralları `js/kariyer-kadro.js`'te (planda kadro-uret.js); fikstür bütün 30 haftayı tutar (planda 13–30); maç günü işi yalnız `macId` taşır; paylaşılan dondurulmuş alanlar ve kayıt kısayolu eklendi (hız); kulübe her hattan; oda maç günü işini tüketmez. Sıradaki F2, kendi kısa planıyla. Geçerli kararlar YOL_HARITASI 31–37. -->
 # F — Başkanlık programı ve F1 planı (2026-10-23, dizüstü)
 
 ## Bağlam

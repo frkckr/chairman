@@ -365,7 +365,7 @@ Az sayıda anlamlı mekân zaman içinde değişir: kulüp odası, görüşme al
 
 Üç ligin kulüp kimlikleri sabittir; bulundukları kademe yükselme/düşmeyle değişir. Oyuncular, başkanlar, hocalar, hakemler ve medya insanları yenilenir. Üçüncü ligin alt sınırında ne olacağı açık karardır.
 
-Avrupa rakipleri ve yabancı oyuncu kaynakları için yeterli bir dış dünya temsili kurulur. Bütün yabancı liglerin maçlarını ayrıntılı simüle etmek gerekmez. Avrupa deplasmanları görkemli statları ve ortamıyla kariyerin ilerlemesini hissettirir. Kendi stadın da para, zaman ve yatırımlarla gelişir.
+Avrupa rakipleri ve yabancı oyuncu kaynakları için yeterli bir dış dünya temsili kurulur. Bütün yabancı liglerin maçlarını ayrıntılı simüle etmek gerekmez. Avrupa deplasmanları görkemli statları ve ortamıyla kariyerin ilerlemesini hissettirir. Kendi stadın da para, zaman ve yatırımlarla gelişir. **Uygulandı (F1-c, 2026-10-23; TEST):** ligin öbür kulüplerinin statları aynı kompakt kasaba stadı modelinden kulübün kimliğiyle üretilir (her kariyerde aynı); deplasman maçı ev sahibinin statında oynanır, ev ve deplasman taraftarı kendi takımının renklerindedir, pankart ev sahibinin adıyla. Adlar, renkler ve ölçüler kullanıcı kulüp kimliklerini yazana dek TEST'tir.
 
 ### Ortak stat ve maç günü sunumu
 
