@@ -20,7 +20,7 @@ Son güncelleme: 2026-10-23 (F2 — maç sonucu kariyere, maç sonu kartı ve TE
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır).
 
-**Makine durumu: boşta (2026-10-23, dizüstü).** Etkileşimli oturum, oto mod yok. F2 `claude/f2-sonuc` dalında üç commit ve `tur/f2` etiketiyle kapandı; `main`'e alma ve push kullanıcının sözüyle (henüz yapılmadı). Öbür makinede: `git fetch --prune --tags`; dal push edildiyse `git checkout claude/f2-sonuc`, `main`'e alındıysa `main`'de `git pull --ff-only`.
+**Makine durumu: boşta (2026-10-23 akşam, dizüstü).** Kullanıcı çıkarken istedi: F2 bitince her şey `main`'e alınsın ve push edilsin, açıkta iş kalmasın. F2 kapandı (`tur/f2`), `main`'e alındı (ileri sarma) ve push edildi; birleşen `claude/f2-sonuc` ve `claude/f1-fikstur` dalları silindi (etiketler `tur/f1`, `tur/f2` uzakta). Commit edilmemiş ya da push edilmemiş iş yok. Evde: `git fetch --prune --tags`, `main`'de `git pull --ff-only`; önce aşağıdaki “Santraya geç” kararı, sonra F3 `main`'den yeni dalda (`claude/f3-hoca`).
 
 **2026-10-23, dizüstü: F0 ve F1** (ayrıntı `git show tur/f1:YOL_HARITASI.md`): kapı geçti, başkanlık programı F; lig ve 30 haftalık TEST fikstürü, kariyer kadroları, maç kimliği ve tohumu, maç girdisi kariyerden, maç sınırı sayfa yeniden yüklemesi, deplasman statları.
 
