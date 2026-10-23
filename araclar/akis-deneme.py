@@ -23,6 +23,8 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
      düğme, D, maske tuvali, ayar yok) denetlenir.
  18. İzleme hızı ve önemli anlar (U1, 2026-10-12): Ayarlar > Maç, maç şeridindeki ×1 ×2 ×4 ve 1/2/4 tuşları, kalıcılık; belirlenimli maçta
      ×4'te şut ve golden önce 1×'e iniş (ikiz motor 7 sn önde), maçın sonuna dek ikizin ana motorla aynılığı.
+ 19. Maç sonucu kariyere (F2, 2026-10-23): oda → Stada git → bülten → "TEST Maçı bitir" (kalan maç görüntüsüz) → Maç bitti kartı →
+     Odaya dön → oda 21:00, sonuç bir kez kayıtta, puan durumu ilerledi, sıradaki iş 14. hafta, Canlı Skor'da son maç; oynanmış maçın adresi odaya düşer.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız, Durdur ve tarz seçimi (TEST, B4b), eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
@@ -212,7 +214,7 @@ async def bolum_1(tarayici, site, tum_hatalar):
     denetle("F1-b: geçersiz maç adresinde oda açılır, neden söylenir, adres temizlenir; kayıt değişmedi",
             "Maç günü açılamadı" in msj and "mac=" not in pg.url and await pg.evaluate(KAYIT_JS) == kayit0, msj)
     # F1-c (2026-10-23): deplasman maçı. 13. haftanın maç günü elle iptal edilip 14. haftanınki kurulur ve oyuncu gibi İlerle ile maç gününe gelinir
-    # (F2'ye dek oyunda sıradaki hafta yok)
+    # (F2'den beri sıradaki hafta sonuç komutuyla da kurulur: bölüm 19; burada maç oynamadan deplasman statı sınanır)
     id14 = await pg.evaluate("""() => { let id = null; oyunKomut(k => { const is = Object.values(k.isler).find(x => x.veri.eylem === 'macGunu');
       isIptal(k, is.id, 'deneme: 14. hafta'); id = k.fikstur.find(f => f.hafta === 14 && (f.ev === 'demirkapi' || f.konuk === 'demirkapi')).id; macGunuIsiKur(k, id); duragaIlerle(k); }); return id; }""")
     await pg.goto(pg.url.split("?")[0] + "?ekran=bulten&mac=" + id14)
@@ -1206,6 +1208,71 @@ async def bolum_11(tarayici, site, tum_hatalar):
     await baglam.close()
 
 
+# F2 (2026-10-23): "Maçı bitir (TEST)" kalanı görüntüsüz oynatır; başsız tarayıcıda kare hızı düşük olduğundan döngü sayfanın içinden sürülür
+HIZLI_JS = """(n) => { for (let g = 0; g < n && mac.phase !== 'fulltime'; g++) { if (typeof locaGirisKare === 'function') locaGirisKare(1 / 60); macKare(1 / 60); hizliBitirGosterge(); }
+  return { faz: mac.phase, dk: mac.minuteLabel(), H: Object.assign({}, HIZLI_BITIR) }; }"""
+
+
+async def bolum_19(tarayici, site, tum_hatalar):
+    """F2: maç sonucu kariyere — oda → Stada git → bülten → Maçı bitir (TEST) → Maç bitti kartı → Odaya dön → 14. hafta."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await oda_ilerle(pg)
+    kayit0 = await pg.evaluate(KAYIT_JS)
+    id13 = "mac-2627-13-demirkapi-akdeniz"
+    await pg.click(".od-ana")
+    await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=60000)
+    # karar anı bu bölümün konusu değil (14b, akis-2d): rakip başkan yok. Kayıt maç gününden önce olduğu için yeniden yükleme güvenli
+    await pg.goto(pg.url + "&rakipBaskan=yok")
+    await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=60000)
+    await pg.click("#btnBeklemedenGec")   # N3: TEST düğmesi hazırlığı beklemeden maça geçirir
+    await pg.wait_for_function("() => !ON_EKRAN.acik", timeout=30000)
+    d0 = await pg.evaluate("() => ({ gorunur: !document.getElementById('btnHizliBitir').hidden, yazi: document.getElementById('btnHizliBitir').textContent, faz: mac.phase })")
+    await pg.click("#btnHizliBitir")
+    d1 = await pg.evaluate("() => ({ dis: document.getElementById('btnHizliBitir').disabled, H: Object.assign({}, HIZLI_BITIR) })")
+    denetle("F2: maç öncesinde şeritte 'TEST Maçı bitir'; basınca kapanır, santra yolu izlenir",
+            d0["gorunur"] and "TEST" in d0["yazi"] and "Maçı bitir" in d0["yazi"] and d1["dis"] and (d1["H"]["bekliyor"] or d1["H"]["aktif"]), f"{d0} · {d1}")
+    sure, son = 0, None
+    t0 = asyncio.get_event_loop().time()
+    for _ in range(400):
+        son = await pg.evaluate(HIZLI_JS, 40)
+        if son["faz"] == "fulltime":
+            break
+    sure = asyncio.get_event_loop().time() - t0
+    denetle("F2: maç sonuna kadar görüntüsüz oynandı; ikiz temiz bırakıldı (sapma yok)", son and son["faz"] == "fulltime" and son["H"]["bitti"]
+            and await pg.evaluate("() => MAC_IZLEME.sapma === 0 && !!(MAC_IZLEME.son && MAC_IZLEME.son.atlandi)"), f"{sure:.0f} sn · {son}")
+    await pg.wait_for_selector("#macSonu:not([hidden]) [data-eylem='odayaDon']", timeout=30000)
+    k = await pg.evaluate("""() => ({ skor: mac.score.join('–'), kart: document.querySelector('#macSonu .ms-skor').textContent, sayfa: ON_EKRAN.sayfa,
+      dugmeGizli: document.getElementById('btnHizliBitir').hidden, golSatiri: document.querySelectorAll('#macSonu .ms-bolum li').length })""")
+    await pg.keyboard.press("KeyT")
+    tel = await pg.evaluate("() => MAC_TELEFON.acik")
+    denetle("F2: 'Maç bitti' kartı skorla açıldı; düğme gizlendi; kart açıkken telefon açılmaz; kayıt henüz değişmedi",
+            k["skor"] in k["kart"] and k["sayfa"] == "macSonu" and k["dugmeGizli"] and not tel and await pg.evaluate(KAYIT_JS) == kayit0, str(k))
+    await pg.screenshot(path=str(ARAC / "son-akis-19-kart.png"))
+    await pg.click("#macSonu [data-eylem='odayaDon']")
+    await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=60000)
+    o = await pg.evaluate(f"""() => {{ const k = OYUN.kariyer, t = sezonTablosu(k).find(x => x.id === 'demirkapi'), m = k.maclar['{id13}'];
+      const is = Object.values(k.isler).filter(x => x.veri && x.veri.eylem === 'macGunu');
+      return {{ an: k.tarih + ' ' + k.gunIciDakika, mac: m ? m.skor.join('–') : null, macSay: Object.keys(k.maclar).length, O: t.O,
+        is: is.map(x => x.veri.macId.split('-')[2] + ' ' + x.tarih + ' ' + x.dakika), gecmis: k.gecmis.filter(g => g.tur === 'mac').length }}; }}""")
+    denetle("F2: Odaya dön sonucu bir kez kaydetti; oda Cumartesi 21:00; puan durumunda 13 maç; sıradaki iş 14. hafta 5 Aralık 19:00; adres parametresiz",
+            "mac=" not in pg.url and o["an"] == "2026-11-28 1260" and o["mac"] == k["skor"] and o["macSay"] == 1 and o["O"] == 13 and o["is"] == ["14 2026-12-05 1140"]
+            and o["gecmis"] == 1 and await pg.evaluate(KAYIT_JS) != kayit0, str(o))
+    await pg.keyboard.press("Digit1")
+    await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
+    skor = await pg.text_content(".tel")
+    denetle("F2: Canlı Skor'da sıradaki maç ve son maç (13. hafta, skoruyla)", "Sıradaki" in skor and "Son maç" in skor and "13. hafta" in skor, skor[:160])
+    await pg.wait_for_timeout(300)
+    await pg.screenshot(path=str(ARAC / "son-akis-19-oda.png"))
+    await pg.keyboard.press("Escape")
+    kayit1 = await pg.evaluate(KAYIT_JS)
+    await pg.goto(pg.url.split("?")[0] + "?ekran=bulten&mac=" + id13)
+    await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=60000)
+    msj = await pg.text_content(".od-mesaj")
+    denetle("F2: oynanmış maçın adresi odaya düşer, neden söylenir; kayıt değişmedi", "bekleyen bir iş değil" in msj and await pg.evaluate(KAYIT_JS) == kayit1, msj)
+    await pg.context.close()
+
+
 SECIM = set(sys.argv[1:])
 
 
@@ -1261,6 +1328,9 @@ async def ana():
         if sec("18"):
             print("\n18. İzleme hızı ve önemli anlar (U1)")
             await bolum_18(tarayici, site, tum_hatalar)
+        if sec("19"):
+            print("\n19. Maç sonucu kariyere: Maçı bitir (TEST), Maç bitti kartı, Odaya dön (F2)")
+            await bolum_19(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

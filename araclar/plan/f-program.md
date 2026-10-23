@@ -1,4 +1,5 @@
-<!-- Durum (2026-10-23, dizüstü): F0 ve F1 yapıldı (`tur/f1`; F1-a, F1-b, F1-c ayrı commit; ayrıntı YOL_HARITASI devam notu). Uygulamada plandan sapmalar: kadro kuralları `js/kariyer-kadro.js`'te (planda kadro-uret.js); fikstür bütün 30 haftayı tutar (planda 13–30); maç günü işi yalnız `macId` taşır; paylaşılan dondurulmuş alanlar ve kayıt kısayolu eklendi (hız); kulübe her hattan; oda maç günü işini tüketmez. Sıradaki F2, kendi kısa planıyla. Geçerli kararlar YOL_HARITASI 31–37. -->
+<!-- Durum (2026-10-23, dizüstü): F2 yapıldı (`tur/f2`; plan ve sapmalar `araclar/plan/f2-uygulama.md`). Sıradaki F3, kendi planıyla. -->
+<!-- Önceki durum: F0 ve F1 yapıldı (`tur/f1`; F1-a, F1-b, F1-c ayrı commit; ayrıntı YOL_HARITASI devam notu). Uygulamada plandan sapmalar: kadro kuralları `js/kariyer-kadro.js`'te (planda kadro-uret.js); fikstür bütün 30 haftayı tutar (planda 13–30); maç günü işi yalnız `macId` taşır; paylaşılan dondurulmuş alanlar ve kayıt kısayolu eklendi (hız); kulübe her hattan; oda maç günü işini tüketmez. Sıradaki F2, kendi kısa planıyla. Geçerli kararlar YOL_HARITASI 31–37. -->
 # F — Başkanlık programı ve F1 planı (2026-10-23, dizüstü)
 
 ## Bağlam
