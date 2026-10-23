@@ -11,7 +11,8 @@
      biz: başkanın kulübünün takım sırası (0 ev, 1 konuk; motorda takım 0 hep ev sahibidir). kadro: js/mac-girdi.js macKadrosu biçimi (tamAd dahil).
      bulten: maç öncesi ekranının verisi. stat: statın sahibi ('kulup' ya da ev sahibinin kimliği), statTarifi: tarif (F1-c: ev sahibinin statı);
      doluluk ve deplasman payı TEST (2.8O'dan beri sabit).
-   STAT: bu maçın stat tarifi (stat, seyirci, tünel, kulübeler ve maç bundan kurulur; balkon ve oda penceresi her zaman kulübün statıdır).
+   STAT: bu sayfanın stat tarifi (stat, seyirci, tünel, kulübeler ve maç bundan kurulur). Oda sayfasında (mac yok) kulübün statıdır; balkon ve oda
+   penceresi yalnız orada görünür. Maç sayfasında ev sahibinin statıdır (?ev önizlemesinde de; orada balkon görünmez).
    Bu dosya js/stadyum-tarifleri.js'ten (STADYUMLAR) ve kariyer dosyalarından sonra, maç motorundan ve çizimden önce yüklenir; maç motoru
    (araclar/motor-yukle.js) onu yüklemez. */
 const MAC_GUNU=(()=>{

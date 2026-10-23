@@ -231,7 +231,9 @@ function statKur(kok,sec){
      ctxText(c,s,3,2,STIL.pankart.yazi,1);const bw=Math.min(34,L*0.45),b=new THREE.Mesh(new THREE.PlaneGeometry(bw,bw*3.2/34),LAM({map:tx(cv,'m')}));b.position.set(-L*0.12,O.y0+1.6,-1.2);b.rotation.x=-0.25;g.add(b);}
     const FLAG_CV=[(()=>{const cv=mk(24,16),c=cv.getContext('2d');c.fillStyle='#d61e24';c.fillRect(0,0,24,16);c.fillStyle='#fff';
        c.beginPath();c.arc(9,8,4.4,0,6.3);c.fill();c.fillStyle='#d61e24';c.beginPath();c.arc(10.3,8,3.5,0,6.3);c.fill();c.fillStyle='#fff';c.fillRect(14,7,2,2);c.fillRect(15,6,1,4);c.fillRect(14,8,3,1);return cv;})(),
-      (()=>{const cv=mk(24,16),c=cv.getContext('2d');c.fillStyle='#c8281e';c.fillRect(0,0,24,8);c.fillStyle='#efe9dc';c.fillRect(0,8,24,8);return cv;})()];
+      /* kulüp bayrağı ev sahibinin formasından (F1-c); kulübün ev formasında eski renkler */
+      (()=>{const cv=mk(24,16),c=cv.getContext('2d'),F=STIL.formalar,f=F[((typeof MAC_GUNU!=='undefined'&&MAC_GUNU.kadro[0])||{}).forma]||F.ev,ev=f===F.ev;
+        c.fillStyle=ev?'#c8281e':f.shirt;c.fillRect(0,0,24,8);c.fillStyle=ev?'#efe9dc':(f.sash||f.trim);c.fillRect(0,8,24,8);return cv;})()];
     for(const [u,f,k] of[[-0.38,0.35,1],[-0.27,0.62,0],[-0.1,0.28,1],[-0.01,0.5,0],[-0.44,0.7,0],[0.05,0.25,1]]){
       const [x,y,lz]=at(u*L,f),m=new THREE.Mesh(new THREE.PlaneGeometry(2.6,1.7,6,1),LAM({map:tx(FLAG_CV[k],'n'),side:THREE.DoubleSide}));
       m.position.set(x+1.3,y+2.4,lz);g.add(m);box(0.05,2.8,0.05,LAM({color:0x9a9a9a}),x,y+1.6,lz,g);

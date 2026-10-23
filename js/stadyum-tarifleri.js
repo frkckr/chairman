@@ -80,12 +80,14 @@ function statTarifiUret(kulupId,kulupAdi){
   if(karsiTip==='oturma')karsi.koltuk=sec(STAT_KOLTUKLAR);
   if(r()<0.5)karsi.mesale=true;
   const tribunler=[
-    {yer:'ana',tip:'oturma',mesafe:ara(6.2,7.4,1),uzunluk:ara(70,100),sira:anaSira,koltuk:sec(STAT_KOLTUKLAR),taraftar:'karisik',baskanSira:anaSira-4,protokol:1.5,
+    /* ana tribün en az 6,7 m: yedek kulübeleri sabit yerde (js/stadyum.js, z −39,2) ve tribünün ön duvarı onların arkasında kalmalı (F1-c incelemesi) */
+    {yer:'ana',tip:'oturma',mesafe:ara(6.7,7.4,1),uzunluk:ara(70,100),sira:anaSira,koltuk:sec(STAT_KOLTUKLAR),taraftar:'karisik',baskanSira:anaSira-4,protokol:1.5,
       loca:{kat:3.0,geri:6.2,genislik:9,derinlik:4.2}},
     karsi,
     {yer:'kale1',tip:sec(['set','ayakta']),mesafe:ara(5,6.5,1),uzunluk:ara(32,44),sira:ara(3,5),taraftar:'karisik',bolumler:[{from:-15,to:15,taraftar:'deplasman'}]}];
   if(kale2Tip)tribunler.push({yer:'kale2',tip:kale2Tip,mesafe:ara(5,6.5,1),uzunluk:ara(30,44),sira:ara(3,5),taraftar:'ev'});
-  /* tabela karşı tribünün arkasında (sıra derinliği js/stadyum.js SIRA ile aynı) */
+  /* tabela karşı tribünün arkasında (sıra derinliği js/stadyum.js SIRA ile aynı) ve karşı kapılarından birinin ekseninde: seyircinin yolu iki
+     direğin arasından geçer (F1-c incelemesi: ±20 m'deki tabelanın direği bir statta kapı yolunun üstüne düşüyordu) */
   const tabelaZ=34+karsi.mesafe+{oturma:0.8,ayakta:0.55,set:1}[karsiTip]*karsi.sira+3;
   return{ad:ilk+' '+sec(['İlçe Stadı','Şehir Stadı','Stadı']),lig:'3. Lig',pist:'yok',zemin:ara(0.12,0.3,2),
     cevre:{cepheler:[{yer:'karsi',tip:'evler',sira:ara(2,5)},{yer:'kale1',tip:'kapi'},{yer:'ana',tip:'kulupBinasi'}],
@@ -93,7 +95,7 @@ function statTarifiUret(kulupId,kulupAdi){
     kapilar:[{tribun:'ana',u:-0.38},{tribun:'ana',u:0.38},{tribun:'karsi',u:-0.3},{tribun:'karsi',u:0.3},{tribun:'kale1',u:0}].concat(kale2Tip?[{tribun:'kale2',u:0}]:[]),
     projektor:{tip:'direk',yukseklik:ara(14,18),guc:ara(0.6,0.85,2)},
     reklam:ara(0.15,0.45,2),telOrgu:['karsi','kale1'].concat(kale2Tip?['kale2']:[]),
-    tabela:{tip:'elle',konum:[sec([-20,20]),+tabelaZ.toFixed(1)],yukseklik:6.5,genislik:13},
+    tabela:{tip:'elle',konum:[+((r()<0.5?-1:1)*0.3*karsi.uzunluk).toFixed(1),+tabelaZ.toFixed(1)],yukseklik:6.5,genislik:13},
     tunelX:sec([-19,-14,14,19]),kulubeX:7,
     tribunler};
 }
