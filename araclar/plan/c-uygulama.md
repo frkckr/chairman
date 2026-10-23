@@ -310,6 +310,8 @@ Hedef değerler (özellik sırası hız, pas, şut, kafa, sürüş, müdahale, g
 - **Kapanış (C9).** Yukarıdaki liste. Kullanıcı `index.html?ekran=mac` ile 2D'de izler.
 
 ## Kullanıcıya kalan açık sorular
+
+**Durum (2026-10-23, F0):** 1 ve 4 izleme yan hattına (kullanıcı izledikçe); 2 falsonun büyüklüğüyle birlikte izleme notlarına (D'de `pasEgriKat` 2,0 oldu); 3 izlemeye; 5 değişmedi (2 saatlik eşik kaldı); 6 kapandı (C, D ve E `main`'e alındı); 7 F1'de: üretilen kadroların adlarını Claude TEST verisi olarak yazar (YOL_HARITASI karar 33).
 1. Seviye etkisinin maç düzeyindeki büyüklüğü bir denge kararıdır (B'deki tarz kenarı gibi). C yalnız sahnede yönü ölçer; maç düzeyindeki farkı bilgi olarak basar. İstenen bir büyüklük var mı?
 2. Falso oyuncuya bağlanınca genel falso payı %10'dan fazla düşerse `falsoProfil` kapalı kalır. Yine de bağlansın ve `pasEgriKat` mı artırılsın, yoksa kapalı mı kalsın?
 3. Demirkapı'nın profil dağılımı (hızlı kanat Oğuz sağda, uzun paslı 6 Metin, falsolu 10 Erdal, hava 9'u Kadir, oyun kuran stoper Cengiz; adlar ve seviye aynı) uygun mu, yoksa kulübe özel bir tat isteniyor mu?
