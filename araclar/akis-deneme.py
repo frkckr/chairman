@@ -200,6 +200,20 @@ async def bolum_1(tarayici, site, tum_hatalar):
     msj = await pg.text_content(".od-mesaj")
     denetle("F1-b: geçersiz maç adresinde oda açılır, neden söylenir, adres temizlenir; kayıt değişmedi",
             "Maç günü açılamadı" in msj and "mac=" not in pg.url and await pg.evaluate(KAYIT_JS) == kayit0, msj)
+    # F1-c (2026-10-23): deplasman maçı. 13. haftanın maç günü elle iptal edilip 14. haftanınki kurulur ve oyuncu gibi İlerle ile maç gününe gelinir
+    # (F2'ye dek oyunda sıradaki hafta yok)
+    id14 = await pg.evaluate("""() => { let id = null; oyunKomut(k => { const is = Object.values(k.isler).find(x => x.veri.eylem === 'macGunu');
+      isIptal(k, is.id, 'deneme: 14. hafta'); id = k.fikstur.find(f => f.hafta === 14 && (f.ev === 'demirkapi' || f.konuk === 'demirkapi')).id; macGunuIsiKur(k, id); duragaIlerle(k); }); return id; }""")
+    await pg.goto(pg.url.split("?")[0] + "?ekran=bulten&mac=" + id14)
+    await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=60000)
+    bul14 = await pg.text_content("#onEkran")
+    d14 = await pg.evaluate("""() => ({ biz: MAC_GUNU.biz, ev: MAC_GUNU.kadro[0].id, konuk: MAC_GUNU.kadro[1].id, stat: MAC_GUNU.stat, statAd: STAT.ad, kisa: MAC_GUNU.kadro.map(k => k.kisa).join('-'),
+      dep: !!mac.deplasmanYeri, kulup: (document.querySelector('#onEkran .oe-kulup') || {}).textContent || '', yamac: STAT.tribunler.some(t => t.tip === 'yamac'),
+      evForma: MAC_GUNU.kadro[0].forma, bizForma: MAC_GUNU.kadro[MAC_GUNU.biz].forma, rakip: lgRakipKulup() })""")
+    denetle("F1-c: deplasman maçında stat ev sahibinin (üretilen tarif, yamaçsız); biz konuk tarafız; tabela kısaltmaları, bülten ve puan durumunda bizim satır doğru; rakip başkan ev sahibinin",
+            d14["biz"] == 1 and d14["konuk"] == "demirkapi" and d14["stat"] == d14["ev"] and d14["statAd"].split(" ")[0] in bul14 and not d14["yamac"] and d14["dep"]
+            and "14. hafta" in bul14 and "Demirkapı" in d14["kulup"] and d14["kisa"].endswith("-DEM") and d14["bizForma"] == "ev" and d14["rakip"] != "Demirkapı SK", f"{id14} · {d14}")
+    await pg.screenshot(path=str(ARAC / "son-akis-1-deplasman.png"))
     await pg.context.close()
 
 

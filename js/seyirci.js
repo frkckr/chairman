@@ -54,7 +54,8 @@ function bolumOrani(b){
 const SEYIRCILER={otur:[],ayak:[],oturUzak:[],ayakUzak:[]},YP=new THREE.Vector3();
 /* SEYIRCI_KISILER: ikizler dışındaki her seyirci (N9 yolu için): {i: YERLER sırası, yer, kayit, w, h, yerP: yerinin ayakta duruş noktası} */
 const SEYIRCI_KISILER=[];
-{const S=STIL.seyirci,PAL={ev:S.ev,karisik:S.karisik,deplasman:S.deplasman,vip:S.vip},sec=(a,k)=>a[Math.floor(k*a.length)%a.length];
+/* F1-c: ev ve deplasman taraftarı kendi takımının formasının renklerinde (kulübün 'ev' forması → STIL.seyirci.ev, öbürü → deplasman) */
+{const S=STIL.seyirci,kitPal=t=>(MAC_GUNU.kadro[t]||{}).forma==='ev'?S.ev:S.deplasman,PAL={ev:kitPal(0),karisik:S.karisik,deplasman:kitPal(1),vip:S.vip},sec=(a,k)=>a[Math.floor(k*a.length)%a.length];
  YERLER.forEach((y,i)=>{
   const p=clamp(bolumOrani(y.bolum)*(0.8+0.4*(1-Math.abs(y.u))),0,1);
   if(h2(i,911)>=p)return;

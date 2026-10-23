@@ -14,7 +14,8 @@ oyunun kendi çizim yolundan (2× iç çizim, renk ve titreme) geçer. Başkanı
 Kullanım:
   python3 araclar/cevre-yakala.py                # bütün görünümler
   python3 araclar/cevre-yakala.py --onek once    # değişiklikten önce (dosya adlarının başına)
-  Seçenekler: --tohum N (varsayılan 3) · --tekrar N (süre ölçümünde çizim sayısı, varsayılan 20)
+  Seçenekler: --tohum N (varsayılan 3) · --tekrar N (süre ölçümünde çizim sayısı, varsayılan 20) · --ev KULUP (F1-c: maç sahnesi o kulübün
+  üretilen statında; ör. --ev karaova --onek karaova-)
 Çıktı: araclar/cevre/<onek><ad>.png ve araclar/cevre/<onek>olcum.json (depoya eklenmez). Hata bulunursa çıkış kodu 1.
 """
 import argparse
@@ -127,6 +128,7 @@ async def ana():
     ap.add_argument("--onek", default="")
     ap.add_argument("--tohum", type=int, default=3)
     ap.add_argument("--tekrar", type=int, default=20)
+    ap.add_argument("--ev", default="", help="F1-c: maç sahnesini bu kulübün (js/lig.js kimliği) üretilen statında açar; balkon hep kulübün statıdır")
     a = ap.parse_args()
     try:
         from playwright.async_api import async_playwright
@@ -137,7 +139,7 @@ async def ana():
     olcum, hata = {}, []
     async with async_playwright() as p:
         tarayici = await p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
-        for sorgu, bekle, liste, gunduz in ((f"?ekran=mac&tohum={a.tohum}", "#btnMacaGec", GECE, False),
+        for sorgu, bekle, liste, gunduz in ((f"?ekran=mac&tohum={a.tohum}" + (f"&ev={a.ev}" if a.ev else ""), "#btnMacaGec", GECE, False),
                                             ("?dunya=7", "#oda:not([hidden]) .od-ana", GUNDUZ, True)):
             pg, h = await sayfa_ac(tarayici, site, sorgu, bekle, a.tohum)
             if gunduz:

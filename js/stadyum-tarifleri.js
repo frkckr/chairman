@@ -66,5 +66,37 @@ const STADYUMLAR={
   }
 };
 
+/* F1-c (2026-10-23; OYUN_TASARIMI §11: başka kulüplerin statları aynı tarif modelinden): ligin öbür kulüplerinin statı aynı kompakt kasaba
+   stadı modelinden kulübün kimliğiyle üretilir (özet → tohumlu rastlantı); her kariyerde aynı kulübün statı aynıdır. Hep çatısız ve pistsiz;
+   ana tribün koltuklu (başkan bölümü, protokol ve loca — konuk başkan oradadır); karşı tribün ayakta, koltuklu ya da set (ev taraftarı); batı kale
+   arkasında deplasman bölümü (motorun deplasman taraftarı noktası buradan); doğu kale arkası set, ayakta ya da boş. Yamaç Demirkapı'nındır.
+   Ad, koltuk rengi, ölçüler ve çevre TEST değeridir: kulüplerin kimliği kullanıcıdan gelince tarif kulübe özel yazılabilir.
+   statTarifiUret(kulüp kimliği, kulübün adı) → STADYUMLAR.kulup biçiminde tarif */
+const STAT_KOLTUKLAR=['#b8b2a4','#8e3a32','#2f5a8a','#3d6b45','#c9a43a','#6b6f78','#7a4a8a'];
+function statTarifiUret(kulupId,kulupAdi){
+  const r=tohumluRastgele(parseInt(saglamaHesapla('stat:'+kulupId),16)),sec=L=>L[Math.floor(r()*L.length)],ara=(a,b,o)=>+(a+r()*(b-a)).toFixed(o||0);
+  const ilk=String(kulupAdi||kulupId).split(' ')[0],anaSira=ara(7,10),karsiTip=sec(['ayakta','ayakta','oturma','set']),kale2Tip=sec(['set','ayakta',null]);
+  const karsi={yer:'karsi',tip:karsiTip,mesafe:ara(5,6.5,1),uzunluk:ara(70,100),sira:ara(4,8),taraftar:'ev'};
+  if(karsiTip==='oturma')karsi.koltuk=sec(STAT_KOLTUKLAR);
+  if(r()<0.5)karsi.mesale=true;
+  const tribunler=[
+    {yer:'ana',tip:'oturma',mesafe:ara(6.2,7.4,1),uzunluk:ara(70,100),sira:anaSira,koltuk:sec(STAT_KOLTUKLAR),taraftar:'karisik',baskanSira:anaSira-4,protokol:1.5,
+      loca:{kat:3.0,geri:6.2,genislik:9,derinlik:4.2}},
+    karsi,
+    {yer:'kale1',tip:sec(['set','ayakta']),mesafe:ara(5,6.5,1),uzunluk:ara(32,44),sira:ara(3,5),taraftar:'karisik',bolumler:[{from:-15,to:15,taraftar:'deplasman'}]}];
+  if(kale2Tip)tribunler.push({yer:'kale2',tip:kale2Tip,mesafe:ara(5,6.5,1),uzunluk:ara(30,44),sira:ara(3,5),taraftar:'ev'});
+  /* tabela karşı tribünün arkasında (sıra derinliği js/stadyum.js SIRA ile aynı) */
+  const tabelaZ=34+karsi.mesafe+{oturma:0.8,ayakta:0.55,set:1}[karsiTip]*karsi.sira+3;
+  return{ad:ilk+' '+sec(['İlçe Stadı','Şehir Stadı','Stadı']),lig:'3. Lig',pist:'yok',zemin:ara(0.12,0.3,2),
+    cevre:{cepheler:[{yer:'karsi',tip:'evler',sira:ara(2,5)},{yer:'kale1',tip:'kapi'},{yer:'ana',tip:'kulupBinasi'}],
+      ufuk:[{yaricap:205,yukseklik:[ara(6,17),ara(20,36)]},{yaricap:290,yukseklik:[ara(18,34),ara(40,78)]}],duvar:ara(2.2,2.6,1)},
+    kapilar:[{tribun:'ana',u:-0.38},{tribun:'ana',u:0.38},{tribun:'karsi',u:-0.3},{tribun:'karsi',u:0.3},{tribun:'kale1',u:0}].concat(kale2Tip?[{tribun:'kale2',u:0}]:[]),
+    projektor:{tip:'direk',yukseklik:ara(14,18),guc:ara(0.6,0.85,2)},
+    reklam:ara(0.15,0.45,2),telOrgu:['karsi','kale1'].concat(kale2Tip?['kale2']:[]),
+    tabela:{tip:'elle',konum:[sec([-20,20]),+tabelaZ.toFixed(1)],yukseklik:6.5,genislik:13},
+    tunelX:sec([-19,-14,14,19]),kulubeX:7,
+    tribunler};
+}
+
 /* Maç günü (MAC_GUNU) ve bu maçın stat tarifi (STAT) F1-b'den (2026-10-23) beri js/mac-gunu.js'tedir: maç kariyerden kurulur, stat maçın
    ev sahibinden seçilir. Doluluk ve deplasman payı orada (2.8O'dan beri sabit, TEST). */

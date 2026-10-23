@@ -227,7 +227,7 @@ function statKur(kok,sec){
   {const T=STAT.tribunler.map(t=>tribunler[t.yer]).find(T=>T.t.mesale);
    if(mac&&T&&MAC_GUNU.doluluk>0.12){
     const{g,O,t}=T,L=t.uzunluk,at=(u,f)=>[u,O.y0+f*(O.y1-O.y0),-f*O.D];
-    {const s='DEMİRKAPI SENİ SEVİYORUZ',cv=mk(textW(s,1)+6,11),c=cv.getContext('2d');c.fillStyle=STIL.pankart.zemin;c.fillRect(0,0,cv.width,11);c.fillStyle=STIL.pankart.yazi;c.fillRect(0,0,cv.width,1);c.fillRect(0,10,cv.width,1);
+    {const s=upTR((typeof MAC_GUNU!=='undefined'&&MAC_GUNU.kadro[0].ad)||'Demirkapı')+' SENİ SEVİYORUZ',   /* F1-c: ev sahibinin taraftarı */cv=mk(textW(s,1)+6,11),c=cv.getContext('2d');c.fillStyle=STIL.pankart.zemin;c.fillRect(0,0,cv.width,11);c.fillStyle=STIL.pankart.yazi;c.fillRect(0,0,cv.width,1);c.fillRect(0,10,cv.width,1);
      ctxText(c,s,3,2,STIL.pankart.yazi,1);const bw=Math.min(34,L*0.45),b=new THREE.Mesh(new THREE.PlaneGeometry(bw,bw*3.2/34),LAM({map:tx(cv,'m')}));b.position.set(-L*0.12,O.y0+1.6,-1.2);b.rotation.x=-0.25;g.add(b);}
     const FLAG_CV=[(()=>{const cv=mk(24,16),c=cv.getContext('2d');c.fillStyle='#d61e24';c.fillRect(0,0,24,16);c.fillStyle='#fff';
        c.beginPath();c.arc(9,8,4.4,0,6.3);c.fill();c.fillStyle='#d61e24';c.beginPath();c.arc(10.3,8,3.5,0,6.3);c.fill();c.fillStyle='#fff';c.fillRect(14,7,2,2);c.fillRect(15,6,1,4);c.fillRect(14,8,3,1);return cv;})(),
