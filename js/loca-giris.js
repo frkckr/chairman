@@ -150,7 +150,8 @@ function lgKararBitti(secim){
    MAC_PROTOKOL.karar'a yazılır; açıkken ON_EKRAN.sayfa 'loca' (masadaki telefon kapalı). "Santraya geç" karar anı bitene dek bekler.
    Loca bakışında (TEST, ?pul=0) eski giriş aynen çalışır (locaGirisBaslat) */
 const TEPE_AN={aktif:false,bekle:0,acildi:false};
-function lgRakipKulup(){return(typeof LIG!=='undefined'&&(LIG.takimlar.find(t=>t.id===LIG.buMac.konuk)||{}).ad)||'Rakip kulüp';}
+/* F1-b: rakip kulüp bu sayfanın maç gününden (js/mac-gunu.js; deplasmanda ev sahibi) */
+function lgRakipKulup(){const G=typeof MAC_GUNU!=='undefined'?MAC_GUNU:null,K=G&&G.kadro[1-G.biz];return(K&&(K.tamAd||K.ad))||'Rakip kulüp';}
 function tepeAnBaslat(){
   MAC_PROTOKOL.rakipBaskan=MAC_PROTOKOL.rakipBaskan||rakipBaskanDurumu();
   if(MAC_PROTOKOL.rakipBaskan==='yok'||MAC_PROTOKOL.karar||!KARAR_ANLARI.rakipTokalasma)return;

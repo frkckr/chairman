@@ -168,7 +168,10 @@ const telKisaAn=(k,t,dk)=>{if(t===k.tarih)return saatYazi(dk);const f=Math.round
   return f===1?'dün':f>1&&f<7?telGunAdi(t):gunAyYazi(t);};
 /* Canlı Skor satırında kulübün kısa adı (N7, onaylı taslaktaki gibi “Demirkapı – Akdeniz”): lig kaydındaki tam addan kadro adına; kadrosu yoksa tam ad.
    Tam ad satırın başlığında (title) kalır. Yalnız görüntü eşlemesidir; kariyer verisi değişmez */
-const telKisaAd=ad=>{const t=typeof LIG!=='undefined'&&LIG.takimlar.find(x=>x.ad===ad);return t&&typeof KADROLAR!=='undefined'&&KADROLAR[t.id]?KADROLAR[t.id].ad:ad;};
+const telKisaAd=ad=>{
+  /* F1-b: önce kariyerdeki kulüp kadrosunun kısa adı (bütün lig), yoksa geliştirme verisi (js/lig.js, js/kadrolar.js) */
+  const k=typeof OYUN!=='undefined'&&OYUN.kariyer,c=k&&k.kulupler&&Object.values(k.kulupler).find(x=>x.ad===ad);if(c&&c.kadro)return c.kadro.ad;
+  const t=typeof LIG!=='undefined'&&LIG.takimlar.find(x=>x.ad===ad);return t&&typeof KADROLAR!=='undefined'&&KADROLAR[t.id]?KADROLAR[t.id].ad:ad;};
 /* Canlı Skor satırı (N2): tek satır. m: {sol: saat ya da dakika/durum, canli, ev, orta: skor ya da “–”, dep, durum: okunur durum}; nitelik verilirse satır düğmedir */
 function telMacSatiri(m,nitelik){
   const ic='<small'+(m.canli?' class="tel-macCanli"':'')+'>'+yazT(m.sol)+'</small><span class="tel-macEv">'+yazT(telKisaAd(m.ev))+'</span><b>'+yazT(m.orta)+'</b><span class="tel-macDep">'+yazT(telKisaAd(m.dep))+'</span>';
@@ -288,7 +291,9 @@ function telefonCiz(k,T,s={}){
         M.ist.map(r=>'<tr><td>'+yazT(r[1])+'</td><th scope="row">'+yazT(r[0])+'</th><td>'+yazT(r[2])+'</td></tr>').join('')+'</tbody></table>';
     }else if(k){
       const mac=bekleyenIsler(k).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu');
-      if(mac){const [ev,dep]=mac.veri.baslik.replace(/^Maç: /,'').split(' – '),bugun=mac.tarih===k.tarih;
+      /* F1-b: takımlar fikstürden (maç günü işinin maç kimliği); eski kayıtta başlıktan */
+      const f=mac&&k.fikstur&&k.fikstur.find(x=>x.id===mac.veri.macId);
+      if(mac){const [ev,dep]=f?[k.kulupler[f.ev].ad,k.kulupler[f.konuk].ad]:mac.veri.baslik.replace(/^Maç: /,'').split(' – '),bugun=mac.tarih===k.tarih;
         ic+=(bugun?'<h5>Bugün</h5>':'<p class="tel-bos">Bugün maç yok.</p><h5>Sıradaki · '+yazT(telGunAdi(mac.tarih)+' '+gunAyYazi(mac.tarih))+'</h5>')+
           telMacSatiri({sol:saatYazi(mac.dakika),ev,orta:'–',dep:dep||'',durum:'başlamadı'});}
       else ic+='<p class="tel-bos">Yaklaşan maç yok.</p>';

@@ -225,7 +225,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       (h.olayId&&k.olaylar[h.olayId]&&k.meseleler[k.olaylar[h.olayId].meseleId]?'<p class="od-not">Konu: <button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+k.olaylar[h.olayId].meseleId+'">'+yaz(k.meseleler[k.olaylar[h.olayId].meseleId].baslik)+'</button></p>':'')+'</section>').join('');
   }
   function kadroPaneli(){
-    const Q=testKadro(kulupId());
+    const Q=testKadro(kulupId(),k);
     if(!Q)return'<p class="od-not">Kadro verisi yok.</p>';
     return'<p class="od-not">Futbolcuların gizli özellikleri (1–99) '+testKutu('Gelişim sistemi henüz olmadığı için değerler sabittir; yayında gösterilmeyecek.')+'</p>'+
       '<table class="od-kadro"><thead><tr><th>No</th><th>Futbolcu</th>'+Q.ozellikler.map(x=>'<th title="'+yaz(x)+'">'+yaz(x.slice(0,3))+'</th>').join('')+'<th>Ort</th></tr></thead><tbody>'+
@@ -463,7 +463,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       mesaj=baslik+' için yola çıktın; yolda karar gerektiren bir haber geldi. İş bekliyor.';ciz();return;
     }
     delete secimler[id];
-    if(mac){acik=null;oyun.macaGit();return;}
+    if(mac){acik=null;oyun.macaGit(is.veri.macId);return;}
     if(acik==='karar'){acik='ajanda';kararIs=null;}
     /* kararın sonucu aynı dosyada kısa görünür; otomatik sonraki dosyaya geçilmez */
     if(is.veri.meseleId){const g=k.gecmis.slice().reverse().find(x=>x.tur==='is'&&x.isId===id),r=g&&g.sonuc;
@@ -584,8 +584,9 @@ if(typeof ON_EKRAN!=='undefined'&&typeof OYUN!=='undefined'){
     const ekran=odaEkraniKur(kap,{
       get kariyer(){return OYUN.kariyer;},komut:oyunKomut,kayitYazi:oyunKayitYazi,kayitHata:oyunKayitHata,
       kayitTamam:()=>OYUN.oturum.durum.tamam,yenidenKaydet:()=>OYUN.oturum.kaydet(),yeniKariyer:oyunYeniKariyer,
-      /* maç günü: oda kapanır, bülten açılır; stat bir sonraki karede yeniden çizilir (js/arayuz.js) */
-      macaGit:()=>{kap.hidden=true;ON_EKRAN.bulteniAc();},
+      /* maç günü (F1-b, 2026-10-23): maç sınırı sayfa yeniden yüklemesidir. "Stada git" kaydedilmez; sayfa maçın kimliğiyle açılır, js/mac-gunu.js
+         kayıtlı kariyerden maç gününü kurar ve bülten açılır (stat, seyirci ve maç o maça göre kurulur). Maç kimliği yoksa (eski davranış) bülten */
+      macaGit:macId=>{if(macId){location.href=location.pathname+'?ekran=bulten&mac='+encodeURIComponent(macId);return;}kap.hidden=true;ON_EKRAN.bulteniAc();},
       ilkMesaj:OYUN.mesaj,get bozukHata(){return OYUN.bozukHata;},bozuguSaklaVeBasla:oyunBozuguSakla
     },OYUN.ayarlar);
     kap.hidden=false;ekran.ciz('.od-ana');

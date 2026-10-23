@@ -30,8 +30,10 @@ function tribunOnu(taraftar){
     const u=(b.from+b.to)/2;
     return{ana:{x:clamp(u,-40,40),z:3.5,nx:0,nz:-1},karsi:{x:clamp(u,-40,40),z:PW-3.5,nx:0,nz:1},kale1:{x:-PL+3.5,z:MZ+clamp(u,-22,22),nx:-1,nz:0},kale2:{x:PL-3.5,z:MZ+clamp(u,-22,22),nx:1,nz:0}}[tr.yer];}
   return null;}
-/* T10e: atmosfer (hakemin ev sahibi eğilimi, deplasmanın güven tabanı) maç günü tarifinin doluluğundan */
-const MAC_SECENEK={kadro:MAC_KADRO,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC_TOHUM,tarz:MAC_TARZ,zemin:STAT.zemin,kosullar:{atmosfer:clamp(MAC_GUNU.doluluk,0,1)},
+/* T10e: atmosfer (hakemin ev sahibi eğilimi, deplasmanın güven tabanı) maç günü tarifinin doluluğundan.
+   F1-b (2026-10-23): kadrolar ve tohum bu sayfanın maç gününden (js/mac-gunu.js MAC_GUNU): kariyerden açılan maçta kariyerin kadroları ve maçın
+   kimliğinden türeyen tohum (adresteki ?tohum ve ?tarz yok sayılır; tarz F3'e dek tohumdan), geliştirme adreslerinde eskisi gibi */
+const MAC_SECENEK={kadro:MAC_GUNU.kadro,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC_GUNU.kariyer?MAC_GUNU.tohum:MAC_TOHUM,tarz:MAC_GUNU.kariyer?'dagilim':MAC_TARZ,zemin:STAT.zemin,kosullar:{atmosfer:clamp(MAC_GUNU.doluluk,0,1)},
   kulubeler:KULUBELER.map(k=>({takim:k.takim,koltuklar:k.koltuklar.map(s=>({x:s.x,z:s.z+MOTOR_Z})),alan:{x:k.alan.x,z:k.alan.z+MOTOR_Z}})),
   taraftarYeri:tribunOnu('ev')||undefined,deplasmanYeri:tribunOnu('deplasman')};
 /* U1: izleme (js/mac-izleme.js) — ana motorun her olayı ikizinkiyle karşılaştırılır; aynı seçenek ve tohumla kurulan ikiz önemli anları önceden
@@ -52,7 +54,7 @@ tarzTestYaz();
 
 /* ---- aktörler: motordaki her oyuncu, hakem ve top toplayıcı için bir model ---- */
 const AKTORLER=[];
-mac.players.forEach(p=>{const kd=MAC_KADRO[p.team],k=p.kayit||{},forma=p.rol==='GK'?kd.kaleciForma:kd.forma;
+mac.players.forEach(p=>{const kd=MAC_GUNU.kadro[p.team],k=p.kayit||{},forma=p.rol==='GK'?kd.kaleciForma:kd.forma;
   AKTORLER.push(aktorKur(kitKaydi(forma,k,p.no),p,k.boy));});
 const HAKEMLER=mac.refs.map((r,i)=>{const a=aktorKur({...KIT.hakem,num:0,skin:STIL.tenler[[1,4,2][i]],hair:['#8a8680','#3c2616','#241a12'][i],style:i?'short':'bald',mus:i===0,w:i?1:1.06},r);
   /* yan hakemin bayrağı: sol elde başlar; js/animasyon.js işarete ve koşuya göre sahaya yakın ele alır (A2b) */
@@ -64,18 +66,18 @@ const KART=new THREE.Mesh(new THREE.PlaneGeometry(0.08,0.11),LAM({color:0xf2d21d
 const DEFTER=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.12,0.015),LAM({color:STIL.animasyon.s1.defterRenk}));DEFTER.position.set(0,-0.33,0.05);DEFTER.visible=false;HAKEMLER[0].m.eR.add(DEFTER);
 
 /* ---- yedekler: motordaki kulübe oyuncuları. Kulübede eşofmanla oturur, oyuna girince formayla görünür ---- */
-mac.yedekler.forEach((Y,t)=>Y.forEach(y=>{const kd=MAC_KADRO[t],k=y.kayit||{};
+mac.yedekler.forEach((Y,t)=>Y.forEach(y=>{const kd=MAC_GUNU.kadro[t],k=y.kayit||{};
   const a=aktorKur(kitKaydi(y.rol==='GK'?kd.kaleciForma:kd.forma,k,k.no),y,k.boy);
-  const m2=player(kitKaydi(t?'yedekDeplasman':'yedekEv',k,k.no));m2.root.rotation.order='YXZ';scene.add(m2.root);golgeEkle(m2);
+  const m2=player(kitKaydi(kd.forma==='ev'?'yedekEv':'yedekDeplasman',k,k.no));   /* F1-b: eşofman takım sırasından değil formadan */m2.root.rotation.order='YXZ';scene.add(m2.root);golgeEkle(m2);
   a.esofman=m2;AKTORLER.push(a);}));
 /* ---- saha kenarı: teknik direktörler, kaleci antrenörleri, kondisyonerler, dördüncü hakem, fotoğrafçılar (motordaki kenar kişileri) ---- */
 const SACLAR=['#241a12','#141212','#3c2616','#8a8680','#5a4028'];
 const DORDUNCU=(()=>{let d=null;mac.kenar.forEach((p,i)=>{
   const bak={ten:[0,1,2,3,4][(i*3+1)%5],sacRenk:SACLAR[(i*7)%5],sac:['kisa','kel','kivircik','kisa','uzun'][(i*5)%5],biyik:i%3===0,boy:0.95+((i*37)%10)/100,yapi:0.95+((i*53)%14)/100};
   let K;
-  if(p.kind==='td')K=kitKaydi('takimElbise',MAC_KADRO[p.team].td,0);
+  if(p.kind==='td')K=kitKaydi('takimElbise',MAC_GUNU.kadro[p.team].td,0);
   else if(p.kind==='dorduncu')K={...KIT.hakem,num:0,skin:STIL.tenler[0],hair:'#3c2616',style:'short'};
-  else K=kitKaydi(p.kind==='foto'?'foto':p.kind==='saglikci'?'saglikci':p.team?'antrenorDeplasman':'antrenorEv',bak,0);   /* T10f: sağlıkçı */
+  else K=kitKaydi(p.kind==='foto'?'foto':p.kind==='saglikci'?'saglikci':MAC_GUNU.kadro[p.team].forma==='ev'?'antrenorEv':'antrenorDeplasman',bak,0);   /* T10f: sağlıkçı */
   const a=aktorKur(K,p,K.h);AKTORLER.push(a);if(p.kind==='dorduncu')d=a;});return d;})();
 /* ---- top toplayıcılar (N10): sarı yelekli çocuklar; ellerindeki yedek top aşağıda EK_TOPLAR ile çizilir ---- */
 mac.topcular.forEach((k,i)=>AKTORLER.push(aktorKur({...KIT.topcu,num:0,skin:STIL.tenler[(i*3)%5],hair:SACLAR[(i*2)%5],style:i%4?'short':'curly',h:STIL.topcuBoy.h,w:STIL.topcuBoy.w},k,STIL.topcuBoy.h)));
@@ -125,7 +127,7 @@ function tabelaGuncelle(dt){
   const k=mac.score.join('-')+tabelaAlt;if(k===tabelaAnahtar)return;
   const sabit=mac.score.join('-')+(saat?'saat':tabelaAlt);if(sabit===tabelaSabit&&tabelaBekle>0)return;
   tabelaAnahtar=k;tabelaSabit=sabit;tabelaBekle=0.1;TABELA.yazi=tabelaAlt;
-  TABELA.ciz(MAC_KADRO[0].kisa,MAC_KADRO[1].kisa,mac.score,tabelaAlt);
+  TABELA.ciz(MAC_GUNU.kadro[0].kisa,MAC_GUNU.kadro[1].kisa,mac.score,tabelaAlt);
 }
 /* maç olayları: başkanın tepkisi, tribün heyecanı, bakış, para, tabela ve sevinç. Yazılı spiker yoktur (2.8A) */
 function olay(ad,v){

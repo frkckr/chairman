@@ -66,8 +66,5 @@ const STADYUMLAR={
   }
 };
 
-/* Maç günü: tariften ayrı durur. doluluk ve deplasman 0–1 arası. 2.8O (2026-10-02): geliştirici panelindeki doluluk/zemin ayarı ve
-   ?doluluk/?zemin/?deplasman adres parametreleri kaldırıldı; değerler sabittir. İleride oyun ekonomisi ve maçın önemi belirleyecek. */
-const VARSAYILAN_DOLULUK=0.3;
-const MAC_GUNU={stat:'kulup',doluluk:VARSAYILAN_DOLULUK,deplasman:0.08,zemin:STADYUMLAR.kulup.zemin};
-const STAT={...STADYUMLAR[MAC_GUNU.stat],zemin:MAC_GUNU.zemin};
+/* Maç günü (MAC_GUNU) ve bu maçın stat tarifi (STAT) F1-b'den (2026-10-23) beri js/mac-gunu.js'tedir: maç kariyerden kurulur, stat maçın
+   ev sahibinden seçilir. Doluluk ve deplasman payı orada (2.8O'dan beri sabit, TEST). */

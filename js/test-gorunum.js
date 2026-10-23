@@ -6,7 +6,7 @@
      testKosullar(k)                  başlangıç, devralınan gizli koşullar ve olay kayıtları [{ad, deger}]
      testOnizleme(k, isId, secim)     seçeneğin üreteceği sonuç: karar kariyerin KOPYASINDA uygulanır, ekibe verilen iş varsa kopya haber anına
                                       kadar ilerletilir. {satirlar: [metin], hata} döner
-     testKadro(kulupId)               kadrodaki futbolcuların özellikleri (js/kadrolar.js; gelişim sistemi olmadığı için sabittir) */
+     testKadro(kulupId, kariyer?)     kadrodaki futbolcuların özellikleri (F1'den beri kariyerden, yoksa js/kadrolar.js; gelişim sistemi olmadığı için sabittir) */
 const TEST_KATKI_ADLARI={mali:'mali',baglanti:'bağlantı',futbol:'futbol',iletisim:'iletişim'};
 const TEST_SEVIYE_ADLARI={zayif:'zayıf',orta:'orta',guclu:'güçlü'};
 const TEST_OZELLIKLER=['Hız','Pas','Şut','Kafa','Sürme','Müdahale','Görüş','Karar','Kalecilik','Dayanıklılık','Sertlik'];
@@ -43,8 +43,10 @@ function testOnizleme(k,isId,secim){
     return{satirlar,hata:null};
   }catch(e){return{satirlar:[],hata:e.message};}
 }
-function testKadro(kulupId){
-  const K=typeof KADROLAR!=='undefined'?KADROLAR[kulupId]:null;
+function testKadro(kulupId,kariyer){
+  /* F1: kadro kariyerdeyse oradan (ilk 11, sonra yedekler; sakat ve cezalılar dahil), yoksa js/kadrolar.js'ten */
+  const k=kariyer||(typeof OYUN!=='undefined'&&OYUN.kariyer),D=k&&k.kulupler&&k.kulupler[kulupId]&&k.kulupler[kulupId].kadro;
+  const K=D?{oyuncular:D.ilk11.map(id=>k.oyuncular[id]),yedekler:D.yedekler.map(id=>k.oyuncular[id])}:typeof KADROLAR!=='undefined'?KADROLAR[kulupId]:null;
   if(!K)return null;
   const satir=(o,yedek)=>({ad:o.ad,no:o.no,yedek,mevki:o.mevki||'',oz:o.oz.slice(),ortalama:Math.round(o.oz.reduce((t,x,i)=>t+(i===8&&o.no!==1&&o.mevki!=='KL'?0:x),0)/(o.no===1||o.mevki==='KL'?11:10))});
   return{ozellikler:TEST_OZELLIKLER,oyuncular:K.oyuncular.map(o=>satir(o,false)).concat((K.yedekler||[]).map(o=>satir(o,true)))};

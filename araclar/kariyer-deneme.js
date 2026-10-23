@@ -19,7 +19,7 @@
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const KOK=path.join(__dirname,'..');
 const OYUN_DOSYALARI=['js/ortak.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/mesele.js','js/yonetim.js','js/olay.js','js/soz.js','js/mesajlar.js','js/gozlem.js',
-  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
+  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/mac-girdi.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
 const DOSYALAR=OYUN_DOSYALARI.concat(['araclar/test-icerik.js','js/kariyer-ornek.js']);
 /* F1 (2026-10-23): bağlam sıradan bir genel nesnedir (araclar/motor-yukle.js gibi; vm.constants.DONT_CONTEXTIFY). Eski sarılı bağlam her genel ada
    erişimi bir ara katmandan geçirdiği için kariyer 16 kulüp ve 289 oyuncuya büyüyünce araç 1 sn'den 15 sn'ye çıkmıştı */
@@ -367,6 +367,44 @@ bolum('3.1 — sezon, fikstür ve kadrolar (F1; oyunun yüklediği dosyalar)');
   bozuk('Devralınan tablo kendi içinde tutmuyor',q=>{q.sezon.devralinan.tablo.karaova.G++;q.sezon.devralinan.tablo.karaova.B--;},/tutmuyor/);
   bozuk('Devralınan son maç fikstürde yok',q=>{q.sezon.devralinan.sonMaclar.demirkapi[0].rakip='karaova';},/fikstürde yok/);
   bozuk('Sakatlık kaydı bozuk',q=>{const p=Object.values(q.oyuncular).find(o=>o.ad==='Nail');p.sakat={neden:'x',donus:'2026-13-01'};},/sakatlık kaydı/);
+}
+
+/* ================= F1-b — maç girdisi ================= */
+bolum('3.4 — maç girdisi: kariyerden maç kadrosu ve Match seçeneği (F1-b)');
+{
+  const c=oyunAl('kariyerBaslat')({tohum:7}),KD=oyunAl('KADROLAR'),LG=oyunAl('LIG');
+  const [macGirdisi,macKadrosu,macTohumu,sezonTablosu]=['macGirdisi','macKadrosu','macTohumu','sezonTablosu'].map(oyunAl);
+  const id13='mac-2627-13-demirkapi-akdeniz',once=metin(c),G=macGirdisi(c,id13);
+  const ayniKadro=(K,S)=>K.oyuncular.length===11&&K.oyuncular.every((o,i)=>o.ad===S.oyuncular[i].ad&&o.no===S.oyuncular[i].no&&metin(o.oz)===metin(S.oyuncular[i].oz)&&!!o.kaptan===!!S.oyuncular[i].kaptan)
+    &&K.yedekler.length===S.yedekler.length&&K.yedekler.every((o,i)=>o.ad===S.yedekler[i].ad&&o.no===S.yedekler[i].no&&o.mevki===S.yedekler[i].mevki);
+  denetle('13. hafta: tohum maç kimliğinden, biz ev sahibi; iki kadro js/kadrolar.js ile aynı (ilk 11, 5 yedek); kariyer değişmedi',
+    G.tohum===macTohumu(7,id13)&&G.biz===0&&G.ev==='demirkapi'&&G.konuk==='akdeniz'&&ayniKadro(G.kadro[0],KD.demirkapi)&&ayniKadro(G.kadro[1],KD.akdeniz)&&metin(c)===once,
+    G.kadro.map(K=>K.yedekler.map(y=>y.no).join(',')).join(' | '));
+  denetle('Eksikler kadroda değil, bültende: Demirkapı 2 (Nail dönüş günüyle, Yusuf 1 maç), Akdeniz 3',G.kadro[0].eksikler.map(e=>e.ad+' '+e.donus).join(', ')==='Nail 7 Aralık, Yusuf 1 maç'
+    &&G.kadro[1].eksikler.length===3&&G.kadro.every(K=>K.oyuncular.concat(K.yedekler).every(o=>!K.eksikler.some(e=>e.no===o.no))),G.kadro.map(K=>K.eksikler.map(e=>e.ad).join(',')).join(' | '));
+  const B=G.bulten;
+  denetle('Bülten: lig, hafta, gün, saat, puan durumu, iki tarafın son beş maçı ve adlar',B.ligAd===LG.ad&&B.hafta===13&&B.gun==='Cumartesi'&&B.saat==='19:00'&&B.oynanan===12
+    &&metin(B.tablo)===metin(sezonTablosu(c))&&metin(B.son[0])===metin(LG.sonMaclar.demirkapi)&&metin(B.son[1])===metin(LG.sonMaclar.akdeniz)&&B.adlar.karaova==='Karaova Belediyespor');
+  /* hocasız seçim (F3'e dek): sakat ya da cezalının yerine yedeklerden aynı mevkideki ilk uygun oyuncu */
+  const kopya=f=>{const x=kariyerOlustur(c);f(x);return x;},bul=(x,ad)=>Object.values(x.oyuncular).find(p=>p.kulupId==='demirkapi'&&p.ad===ad);
+  const x1=kopya(x=>{bul(x,'Oğuz').sakat={neden:'deneme',donus:'2026-12-20'};}),K1=macKadrosu(x1,'demirkapi','2026-11-28');
+  denetle('Sakat sağ kanadın yerine ilk uygun orta saha yedeği girer; kulübede kalan dört yedek',K1.oyuncular[5].ad==='Hakan'&&K1.yedekler.map(y=>y.ad).join()==='Tamer,Levent,Murat,Sinan'&&K1.eksikler.some(e=>e.ad==='Oğuz'),
+    K1.oyuncular.map(o=>o.no).join(','));
+  const x2=kopya(x=>{bul(x,'Engin').ceza={mac:1,neden:'deneme'};bul(x,'Cengiz').ceza={mac:1,neden:'deneme'};}),K2=macKadrosu(x2,'demirkapi','2026-11-28');
+  denetle('Cezalı kalecinin yerine yedek kaleci; cezalı kaptanın yerine en yaşlı saha oyuncusu kaptan',K2.oyuncular[0].ad==='Tamer'&&K2.oyuncular.filter(o=>o.kaptan).length===1&&!K2.oyuncular.some(o=>o.ad==='Cengiz'),
+    'kaptan '+(K2.oyuncular.find(o=>o.kaptan)||{}).ad);
+  denetle('Sakatlığı bitmiş oyuncu oynar: Nail 7 Aralık\'ta dönüyor (14. hafta 5 Aralık dışarıda, 15. hafta 12 Aralık kadroda)',macKadrosu(c,'demirkapi','2026-12-05').eksikler.some(e=>e.ad==='Nail')&&!macKadrosu(c,'demirkapi','2026-12-12').eksikler.some(e=>e.ad==='Nail'));
+  const x3=kopya(x=>{for(const p of Object.values(x.oyuncular))if(p.kulupId==='karaova'&&p.mevki!=='KL')p.sakat={neden:'deneme',donus:'2027-06-01'};});
+  denetle('On bir uygun oyuncu çıkaramayan kulübün maç kadrosu kurulmaz (açık hata)',reddeder(()=>macKadrosu(x3,'karaova','2026-11-28'))&&reddeder(()=>macGirdisi(c,'mac-2627-99-a-b')));
+  const f14=c.fikstur.find(f=>f.hafta===14&&(f.ev==='demirkapi'||f.konuk==='demirkapi')),G14=macGirdisi(c,f14.id);
+  denetle('14. hafta: biz fikstürdeki tarafımız; üretilen rakip kadro 11 + 5 yedek',G14.biz===(f14.konuk==='demirkapi'?1:0)&&G14.kadro.every(K=>K.oyuncular.length===11&&K.yedekler.length===5)&&G14.kadro[G14.biz].id==='demirkapi',
+    `${f14.id} · biz ${G14.biz}`);
+  /* motor: kariyerden kurulan 13. hafta maçı, aynı tohumla kariyersiz (MAC_KADRO) maçla birebir aynı (santradan sonra 2400 adım) */
+  const {motorYukle}=require('./motor-yukle'),M=motorYukle().ctx,MG=a=>vm.runInContext(a,M),Match=MG('Match'),ONCESI=MG('MAC_ONCESI');
+  const Gm=MG('macGirdisi')(MG('kariyerBaslat')({tohum:7}),id13);
+  const oyna=kadro=>{const m=new Match(()=>{},{kadro,tohum:Gm.tohum,tunel:{x:0,z:-6},tarz:'dagilim'});for(let n=0;n<3000;n++){if(n===600&&ONCESI.includes(m.phase))m.macaGec();m.step(1/60);}
+    return metin({s:m.sonucKaydi(),p:m.players.map(p=>[p.x.toFixed(4),p.z.toFixed(4)]),b:[m.ball.x.toFixed(4),m.ball.z.toFixed(4)]});};
+  denetle('Motor: kariyerden kurulan 13. hafta maçı aynı tohumla kariyersiz maçla birebir aynı oynanır',oyna(Gm.kadro)===oyna(MG('MAC_KADRO')));
 }
 
 /* ================= TEST içeriğiyle kural motoru ================= */

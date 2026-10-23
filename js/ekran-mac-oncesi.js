@@ -1,5 +1,6 @@
 /* ============ Chairman — maç öncesi ekranı (yol haritası 2.8E, 2.8J, 2.8N, 2.8S) ============
-   Görüntü katmanı: veriyi js/lig.js ve js/kadrolar.js'ten okur. Açık kâğıt tonlarında tek ekrandır (2.8J); 2.8S'den beri (kullanıcı kararı
+   Görüntü katmanı: veriyi bu sayfanın maç gününden okur (F1-b, 2026-10-23: js/mac-gunu.js MAC_GUNU — kariyerden açılan maçta fikstür, kariyer
+   kadroları, türetilen puan durumu ve son maçlar; geliştirme adreslerinde js/lig.js ve js/kadrolar.js). Açık kâğıt tonlarında tek ekrandır (2.8J); 2.8S'den beri (kullanıcı kararı
    2026-10-03 ikinci paket) iki sayfası vardır ve STIL.program.sayfaSn (5 sn) etkin sürede bir kendiliğinden döner:
      Üst satır  lig · hafta · gün ve saat · stat; sağda sayfa göstergesi (tıklanınca o sayfa açılır, hazırlık sayacı sıfırlanmaz).
      Sayfa 1    Kadrolar: iki büyük arma ve takım adı (sıra ve puan); her takımın ilk 11'i küçük sahada dizilişe göre forma renkli numaralar ve
@@ -17,17 +18,19 @@
    ?ekran=mac menüleri atlar (null). Eski koyu ajanda (?ekran=ajanda, js/ekran-ajanda.js) 2026-10-10'da kaldırıldı; o adres odayı açar.
    Renkler STIL.program.renk'ten CSS değişkeni (--m-ad) olarak gelir. */
 const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('ekran');}catch(x){}
-  const sayfa=e==='mac'?null:e==='bulten'?'bulten':'oda';return{acik:sayfa!==null,sayfa,cizildi:false};})();
+  /* F1-b: kariyerden açılan maç günü kurulamadıysa (MAC_GUNU.hata; adres temizlendi, mesaj odada) oda açılır */
+  const hata=typeof MAC_GUNU!=='undefined'&&!!MAC_GUNU.hata;
+  const sayfa=hata?'oda':e==='mac'?null:e==='bulten'?'bulten':'oda';return{acik:sayfa!==null,sayfa,cizildi:false};})();
 {
-  const E=$('onEkran'),M=STIL.program.renk,B=LIG.buMac,TABLO=puanDurumu(LIG);
+  const E=$('onEkran'),M=STIL.program.renk,G=MAC_GUNU,B=G.bulten,TABLO=B.tablo;
   for(const k in M)E.style.setProperty('--m-'+k,M[k]);
   const yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
-  const takimAdi=id=>{const t=LIG.takimlar.find(t=>t.id===id);return t?t.ad:id;};
+  const takimAdi=id=>B.adlar[id]||id;
   const sira=id=>TABLO.findIndex(t=>t.id===id)+1;
   const formKutu=r=>'<b class="oe-f oe-'+r+'">'+r+'</b>';
-  /* iki taraf: ev sahibi (bizim kulüp) ve konuk */
-  const TARAF=[B.ev,B.konuk].map((id,i)=>{const kd=KADROLAR[id],f=STIL.formalar[kd.forma];
-    return{id,kd,i,forma:f,kaleci:STIL.formalar[kd.kaleciForma],satir:TABLO.find(t=>t.id===id),son:LIG.sonMaclar[id]||[]};});
+  /* iki taraf: ev sahibi ve konuk (bizim kulüp G.biz; deplasmanda sağda) */
+  const TARAF=G.kadro.map((kd,i)=>{const f=STIL.formalar[kd.forma];
+    return{id:kd.id,kd,i,forma:f,kaleci:STIL.formalar[kd.kaleciForma],satir:TABLO.find(t=>t.id===kd.id),son:B.son[i]||[]};});
   const arma=T=>'<i class="oe-arma" style="--a:'+T.forma.shirt+';--b:'+(T.forma.sash||T.forma.trim)+'"></i>';
 
   /* ---- ilk 11: hocanın dizilişi küçük sahada; takım yukarı hücum eder ---- */
@@ -51,21 +54,21 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
     '<h3>İlk 11 <small>'+yaz(T.kd.taktik.dizilis)+'</small></h3>'+ilk11(T)+'<p class="prg-td">Teknik direktör: <b>'+yaz(T.kd.td.ad)+'</b></p>'+
     '<h3>Sakat ve cezalı</h3>'+eksikler(T)+'</section>';
   /* puan durumu: bölgeler (şampiyon, play-off, küme düşme) sol kenarda; iki takımın satırı kendi renginde */
-  const Z=LIG.bolgeler||{},ara=(r,n)=>!!r&&n>=r[0]&&n<=r[1],bolge=n=>ara(Z.cikma,n)?'cikma':ara(Z.playoff,n)?'playoff':ara(Z.dusme,n)?'dusme':'';
+  const Z=B.bolgeler||{},ara=(r,n)=>!!r&&n>=r[0]&&n<=r[1],bolge=n=>ara(Z.cikma,n)?'cikma':ara(Z.playoff,n)?'playoff':ara(Z.dusme,n)?'dusme':'';
   const tablo='<table class="oe-tablo prg-tablo"><thead><tr><th>#</th><th class="oe-sol">Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>A:Y</th><th>AV</th><th>P</th></tr></thead><tbody>'+
     TABLO.map((t,i)=>{const T=TARAF.findIndex(x=>x.id===t.id);
-      return'<tr class="'+(T===0?'oe-kulup':T===1?'oe-rakip':'')+'"><td class="oe-b-'+bolge(i+1)+'">'+(i+1)+'</td><td class="oe-sol">'+yaz(t.ad)+'</td><td>'+t.O+'</td><td>'+t.G+'</td><td>'+t.B+'</td><td>'+t.M+'</td>'+
+      return'<tr class="'+(T===G.biz?'oe-kulup':T>=0?'oe-rakip':'')+'"><td class="oe-b-'+bolge(i+1)+'">'+(i+1)+'</td><td class="oe-sol">'+yaz(t.ad)+'</td><td>'+t.O+'</td><td>'+t.G+'</td><td>'+t.B+'</td><td>'+t.M+'</td>'+
         '<td>'+t.A+':'+t.Y+'</td><td>'+(t.AV>0?'+':'')+t.AV+'</td><td><b>'+t.P+'</b></td></tr>';}).join('')+'</tbody></table>'+
     '<p class="oe-lejant"><span class="oe-b-cikma">Şampiyon çıkar</span><span class="oe-b-playoff">Play-off</span><span class="oe-b-dusme">Küme düşer</span></p>';
   const sonTaraf=T=>'<section class="prg-taraf"><h3>'+yaz(takimAdi(T.id))+' <small>Son 5 maç</small></h3>'+sonMaclar(T)+'</section>';
   const SAYFA_ADI=['Kadrolar','Lig'];
   E.innerHTML='<div class="prg-kart">'+
-    '<header class="prg-ust"><span>'+yaz(LIG.ad+' · '+B.hafta+'. hafta · '+B.gun+' '+B.saat+' · '+STAT.ad)+'</span>'+
+    '<header class="prg-ust"><span>'+yaz(B.ligAd+' · '+B.hafta+'. hafta · '+B.gun+' '+B.saat+' · '+STAT.ad)+'</span>'+
       '<span class="prg-gosterge" role="tablist" aria-label="Sayfalar">'+SAYFA_ADI.map((a,i)=>'<button type="button" role="tab" data-sayfa="'+i+'" aria-selected="'+(i?'false':'true')+'">'+(i+1)+' · '+a+'</button>').join('')+'</span>'+
       '<b>Maç günü</b></header>'+
     '<div class="prg-yaprak">'+
       '<div class="prg-govde prg-sayfa" data-sayfa="0">'+taraf(TARAF[0])+'<div class="prg-vs"><b>'+yaz(B.saat)+'</b><span>'+yaz(B.gun)+'</span></div>'+taraf(TARAF[1])+'</div>'+
-      '<div class="prg-lig prg-sayfa" data-sayfa="1" aria-hidden="true"><section class="prg-taraf"><h3>Puan durumu <small>'+yaz(LIG.sezon+' · '+(B.hafta-1)+' hafta')+'</small></h3>'+tablo+'</section>'+
+      '<div class="prg-lig prg-sayfa" data-sayfa="1" aria-hidden="true"><section class="prg-taraf"><h3>Puan durumu <small>'+yaz(B.sezonAdi+' · '+B.oynanan+' hafta')+'</small></h3>'+tablo+'</section>'+
         '<div class="prg-sonlar">'+sonTaraf(TARAF[0])+sonTaraf(TARAF[1])+'</div></div>'+
     '</div>'+
     '<footer class="prg-alt"><div class="prg-hazirlik"><span class="prg-etiket">Maç öncesi hazırlık</span><div class="prg-cubuk" role="progressbar" aria-label="Maç öncesi hazırlık" aria-valuemin="0" aria-valuemax="'+STIL.program.hazirlikSn+'" aria-valuenow="0"><i></i></div>'+

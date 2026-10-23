@@ -16,11 +16,11 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
   const btn=$('btnTelefon'),isin=new THREE.Raycaster(),T=MAC_TELEFON.T;
   const durumYazi=()=>{const ph=mac.phase;return MAC_ONCESI.includes(ph)?'başlamadı':ph==='halftime'?'devre arası':ph==='fulltime'?'maç sonu':mac.minuteLabel()+'\'';};
   function macVerisi(){
-    const I=mac.ist,s=I.sahiplik[0]+I.sahiplik[1],y=s>0?Math.round(I.sahiplik[0]/s*100):50,ev=MAC_KADRO[0],dep=MAC_KADRO[1];
+    const I=mac.ist,s=I.sahiplik[0]+I.sahiplik[1],y=s>0?Math.round(I.sahiplik[0]/s*100):50,ev=MAC_GUNU.kadro[0],dep=MAC_GUNU.kadro[1];
     /* N2: satırın sol sütunu kısa durumdur: başlamadıysa başlama saati, oyunda dakika, arada “Devre”, sonunda “Bitti” */
     const ph=mac.phase,once=MAC_ONCESI.includes(ph),canli=!once&&ph!=='halftime'&&ph!=='fulltime';
-    const kisaDurum=once?(typeof LIG!=='undefined'&&LIG.buMac&&LIG.buMac.saat)||'Bugün':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':durumYazi();
-    return{saat:durumYazi(),ev:ev.ad,dep:dep.ad,evKisa:ev.kisa,depKisa:dep.kisa,skor:once?'–':mac.score[0]+' – '+mac.score[1],durum:durumYazi(),kisaDurum,canli,
+    const kisaDurum=once?MAC_GUNU.bulten.saat||'Bugün':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':durumYazi();
+    return{saat:durumYazi(),ev:ev.tamAd||ev.ad,dep:dep.tamAd||dep.ad,evKisa:ev.kisa,depKisa:dep.kisa,skor:once?'–':mac.score[0]+' – '+mac.score[1],durum:durumYazi(),kisaDurum,canli,
       ist:[['Şut',I.sut[0],I.sut[1]],['İsabetli şut',I.isabet[0],I.isabet[1]],['Topa sahip olma',s>0?y+'%':'—',s>0?(100-y)+'%':'—'],['Korner',I.korner[0],I.korner[1]],
         ['Faul',I.faul[0],I.faul[1]],['Sarı kart',I.sari[0],I.sari[1]],['Kırmızı kart',I.kirmizi[0],I.kirmizi[1]],['Ofsayt',I.ofsayt[0],I.ofsayt[1]]]};
   }

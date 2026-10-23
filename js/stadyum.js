@@ -255,7 +255,7 @@ function statKur(kok,sec){
    }else{
     const W=64,HH=32,cv=mk(W,HH),g=cv.getContext('2d'),dk=tx(cv,'n'),Y=STIL.tabela.elleYazi,gen=T.genislik||6,yuk=gen/2,dh=T.yukseklik||3.2;
     /* küçük piksel arma: kulübün forma renkleriyle kalkan ve ortada şerit */
-    const armaRenk=kisa=>{const kd=Object.values(KADROLAR).find(x=>x.kisa===kisa),f=kd&&STIL.formalar[kd.forma];return f?[f.shirt,f.sash||f.trim]:[Y,STIL.tabela.elleZemin];};
+    const armaRenk=kisa=>{const kd=(typeof MAC_GUNU!=='undefined'?MAC_GUNU.kadro:Object.values(KADROLAR)).find(x=>x.kisa===kisa),f=kd&&STIL.formalar[kd.forma];return f?[f.shirt,f.sash||f.trim]:[Y,STIL.tabela.elleZemin];};
     const arma=(x,y,kisa)=>{const [a,b]=armaRenk(kisa);g.fillStyle=Y;g.fillRect(x-1,y-1,9,7);g.fillRect(x,y+6,7,2);g.fillRect(x+2,y+8,3,1);
       g.fillStyle=a;g.fillRect(x,y,7,6);g.fillRect(x+1,y+6,5,1);g.fillRect(x+2,y+7,3,1);g.fillStyle=b;g.fillRect(x+3,y,1,8);};
     ciz=(ev,dep,skor,alt)=>{g.fillStyle=STIL.tabela.elleZemin;g.fillRect(0,0,W,HH);g.fillStyle=Y;g.fillRect(0,0,W,1);g.fillRect(0,HH-1,W,1);g.fillRect(0,0,1,HH);g.fillRect(W-1,0,1,HH);
@@ -279,7 +279,7 @@ function statKur(kok,sec){
      const g=new THREE.Group();g.position.set(cx,0,-39.2);kok.add(g);
      box(6.5,2.1,0.12,duvar,0,1.05,-0.9,g);for(const sx of[-1,1])box(0.06,1.9,1.8,cam,sx*3.25,0.95,0,g);
      const cati=box(6.7,0.06,2.1,cam,0,2.12,-0.05,g);cati.rotation.x=0.08;box(6.5,0.12,0.12,duvar,0,2.14,0.95,g);
-     box(6.2,0.45,0.5,LAM({color:K.bank}),0,0.22,-0.55,g);box(6.2,0.08,0.52,LAM({color:takim?STIL.formalar.deplasman.trim:STIL.formalar.ev.shirt}),0,0.49,-0.55,g);
+     box(6.2,0.45,0.5,LAM({color:K.bank}),0,0.22,-0.55,g);box(6.2,0.08,0.52,LAM({color:(f=>f===STIL.formalar.ev?f.shirt:f.trim)(STIL.formalar[(typeof MAC_GUNU!=='undefined'&&MAC_GUNU.kadro[takim]?MAC_GUNU.kadro[takim].forma:takim?'deplasman':'ev')])}),0,0.49,-0.55,g);   /* F1-b: kulübe şeridi o tarafın formasından */
      if(mac){const koltuklar=[];for(let i=0;i<6;i++)koltuklar.push({x:cx-2.6+i*1.04,y:0.53,z:-39.2-0.55});
        KULUBELER.push({takim,x:cx,z:-39.2,koltuklar,alan:{x:cx,z:-36.4}});}}}
 

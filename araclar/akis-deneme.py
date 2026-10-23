@@ -179,6 +179,27 @@ async def bolum_1(tarayici, site, tum_hatalar):
     await pg.wait_for_timeout(300)  # N7: telefonun açılış geçişi (0,18 sn) bitsin
     await pg.screenshot(path=str(ARAC / "son-akis-1-canli-skor.png"))
     await pg.keyboard.press("Escape")
+    # F1-b (2026-10-23): "Stada git" kaydedilmez; sayfa maçın kimliğiyle yeniden yüklenir (js/mac-gunu.js), bülten fikstürden ve kariyer kadrolarından
+    await pg.keyboard.press("Escape")
+    kayit0 = await pg.evaluate(KAYIT_JS)
+    await pg.click(".od-ana")
+    await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=60000)
+    bul = await pg.text_content("#onEkran")
+    MAC_JS = """() => ({ kariyer: MAC_GUNU.kariyer, mac: MAC_GUNU.macId, biz: MAC_GUNU.biz, tohum: MAC_GUNU.tohum, motor: mac.tohum,
+      bekleyen: Object.values(OYUN.kariyer.isler).filter(x => x.veri.eylem === 'macGunu').length, kadro: MAC_GUNU.kadro.map(k => k.oyuncular.length + '+' + k.yedekler.length).join(' ') })"""
+    m1 = await pg.evaluate(MAC_JS)
+    denetle("F1-b: Stada git sayfayı maçın kimliğiyle açıyor; bülten fikstürden (13. hafta, iki takım), motorun tohumu maçın; bellekte maç günü geçildi, kayıt değişmedi",
+            "mac=mac-2627-13-demirkapi-akdeniz" in pg.url and "13. hafta" in bul and "Demirkapı" in bul and "Akdeniz" in bul and m1["kariyer"] and m1["motor"] == m1["tohum"]
+            and m1["bekleyen"] == 0 and m1["kadro"] == "11+5 11+5" and await pg.evaluate(KAYIT_JS) == kayit0, f"{pg.url.split('?')[-1]} · {m1}")
+    await pg.reload()
+    await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=60000)
+    m2 = await pg.evaluate(MAC_JS)
+    denetle("F1-b: maç sayfası yenilenince aynı maç aynı tohumla kurulur; kayıt yine değişmedi", m2 == m1 and await pg.evaluate(KAYIT_JS) == kayit0, str(m2["tohum"]))
+    await pg.goto(pg.url.split("?")[0] + "?ekran=bulten&mac=mac-yok")
+    await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=60000)
+    msj = await pg.text_content(".od-mesaj")
+    denetle("F1-b: geçersiz maç adresinde oda açılır, neden söylenir, adres temizlenir; kayıt değişmedi",
+            "Maç günü açılamadı" in msj and "mac=" not in pg.url and await pg.evaluate(KAYIT_JS) == kayit0, msj)
     await pg.context.close()
 
 

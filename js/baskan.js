@@ -84,14 +84,16 @@ const BK_EYLEM={
 function baskanEylem(ad,oncelik){
   const e=BASKAN.eylem;if(e&&e.oncelik>=(oncelik||1))return;
   BASKAN.eylem={ad,t:0,oncelik:oncelik||1,...BK_EYLEM[ad]};}
+/* F1-b (2026-10-23): "biz" başkanın kulübünün takım sırasıdır (js/mac-gunu.js MAC_GUNU.biz; deplasmanda 1) */
 function baskanOlay(ad,v){
-  if(ad==='goal')baskanEylem(v.team===0?'golBiz':'golYedik',5);
+  const B=typeof MAC_GUNU!=='undefined'?MAC_GUNU.biz:0;
+  if(ad==='goal')baskanEylem(v.team===B?'golBiz':'golYedik',5);
   else if(ad==='kickoff'&&mac.half===1)baskanEylem('alkis',2);
-  else if(ad==='wood'&&v.p&&v.p.team===0)baskanEylem('yumruk',3);
-  else if(ad==='save'&&v.p&&v.p.team===1&&rnd()<0.45)baskanEylem('yumruk',3);
+  else if(ad==='wood'&&v.p&&v.p.team===B)baskanEylem('yumruk',3);
+  else if(ad==='save'&&v.p&&v.p.team===1-B&&rnd()<0.45)baskanEylem('yumruk',3);
   /* aleyhimize karar (faul, kart, ofsayt): başkan itiraz eder */
-  else if((ad==='faul'||ad==='kart'||ad==='ofsayt')&&v.aleyhe===0)baskanEylem('itiraz',3);
-  else if(ad==='fulltime'){const s=v.score;baskanEylem(s[0]>s[1]?'alkis':s[0]<s[1]?'golYedik':'itiraz',4);}
+  else if((ad==='faul'||ad==='kart'||ad==='ofsayt')&&v.aleyhe===B)baskanEylem('itiraz',3);
+  else if(ad==='fulltime'){const s=v.score,biz=s[B],onlar=s[1-B];baskanEylem(biz>onlar?'alkis':biz<onlar?'golYedik':'itiraz',4);}
 }
 /* ---- her kare ---- */
 const BK_V=new THREE.Vector3();
