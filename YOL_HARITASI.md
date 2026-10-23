@@ -20,7 +20,7 @@ Son güncelleme: 2026-10-23 (F1 — fikstür, maç kimliği, kariyer kadroları 
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır).
 
-**Makine durumu: boşta (2026-10-23, dizüstü).** Etkileşimli oturum, oto mod yok. Dal `claude/f1-fikstur` (F0 + F1, commit'li, `tur/f1` etiketi yerelde); `main`'e alınmadı ve push edilmedi (kullanıcının sözüyle). `main`'deki satır da boştadır.
+**Makine durumu: boşta (2026-10-23, dizüstü).** Etkileşimli oturum, oto mod yok. F0 ve F1 kullanıcının sözüyle `main`'e alındı (ileri sarma) ve push edildi; dal `claude/f1-fikstur` ve `tur/f1` etiketi de uzakta. Açık commit edilmemiş iş yok. Öbür makinede: `git fetch --prune --tags`, `main`'de `git pull --ff-only`; F2 `main`'den yeni dalda.
 
 **2026-10-23, dizüstü: F0 — kapı geçti, başkanlık programı.** Kullanıcı motoru izlemeden “idare eder” kabul etti (FUTBOL_KUTUPHANESI §11.3) ve yönü çizdi: bundan sonra başkanlık ve oyun içi sistemler; kullanıcı arada maç izleyip notlarını yazar, motor altyapısı zamanla gelişir. Kullanıcı kararları: tek kart her yerde, rakip adları Claude'un TEST verisi, beklenen gol Canlı Skor'da sayı, ilk içerik Claude'un TEST taslağı; Claude'un kararları: lig TEST tarifi, kadro kariyerde, maç sınırı sayfa yeniden yüklemesi, maç kimliği ve tohumu (Geçerli kararlar 31–36). F programı ve F1'in ayrıntılı planı [araclar/plan/f-program.md](araclar/plan/f-program.md). Dizüstü eşitlendi (`main` 9 commit ileri sarıldı); hızlı kademe bu makinede geçti: `mac-deneme 4` tekrarlanabilirlik “sonuç aynı”, `d.json`'a 10 maç `--ayni` 10/10 birebir (taban Node v24.15.0, dizüstü v24.21.0).
 
