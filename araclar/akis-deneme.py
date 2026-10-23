@@ -56,7 +56,7 @@ def denetle(ad, tamam, ayrinti=""):
 
 DURUM_JS = """() => { const k = OYUN.kariyer; const c = k.kulupler.demirkapi;
   return { tarih: k.tarih, dakika: k.gunIciDakika, nakit: c.nakit, hareket: k.hareketler.length, gecmis: k.gecmis.length,
-    isler: Object.keys(k.isler).join(','), mesele: Object.values(k.meseleler).map(m => m.tur + ':' + m.durum).join(','),
+    isler: Object.keys(k.isler).join(','), ajanda: Object.values(k.isler).filter(x => x.tur === 'ajanda').map(x => x.id).join(','), mesele: Object.values(k.meseleler).map(m => m.tur + ':' + m.durum).join(','),
     olay: Object.values(k.olaylar).map(o => o.paket + '/' + o.varyant + ':' + o.durum).join(','), baslangic: k.icerik.baslangic, icerik: k.icerik.surum,
     sayman: c.yonetim.sayman, karar: Object.values(k.isler).filter(x => x.veri.saatsiz).map(x => x.id).join(','),
     soz: Object.values(k.sozler).map(s => s.anahtar + ':' + s.durum).join(','), haber: k.haberler.map(h => h.anahtar).join(','),
@@ -117,9 +117,10 @@ async def bolum_1(tarayici, site, tum_hatalar):
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
     d0 = await durum(pg)
-    denetle("Yeni kariyer Pazartesi 08:00; içerik sürümü 4; mesele, olay, söz ve haber yok; takvimde yalnız maç günü",
+    # F1 (2026-10-23): takvimde maç günü ajanda işinin yanında kış transfer döneminin iki hatırlatması da durur
+    denetle("Yeni kariyer Pazartesi 08:00; içerik sürümü 4; mesele, olay, söz ve haber yok; takvimde tek ajanda işi: maç günü",
             d0["tarih"] == "2026-11-23" and d0["dakika"] == 480 and d0["icerik"] == 4 and d0["mesele"] == "" and d0["olay"] == "" and d0["soz"] == ""
-            and d0["haber"] == "" and len(d0["isler"].split(",")) == 1, str(d0))
+            and d0["haber"] == "" and d0["ajanda"] == "is-1" and len(d0["isler"].split(",")) == 3, str(d0))
     await pg.keyboard.press("Digit1")
     tel = await pg.text_content(".od-telefonPanel")
     denetle("Telefon ana ekranla açılıyor; 'Kaldığın yer' özeti yok", "Mesajlar" in tel and "Canlı Skor" in tel and "Kaldığın" not in tel

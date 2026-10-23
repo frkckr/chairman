@@ -8,17 +8,28 @@
    Kişi kimlikleri 'kisi-N' biçimindedir; yenisi kimlikUret() ile alınır, sonrakiNo bu sayacı tutar.
    Emekli, ayrılmış ya da vefat etmiş kişiler silinmez; durum alanı değişir, geçmiş referansları geçerli kalır.
    Para kuruş cinsinden tamsayıdır (850000000 = 8.500.000,00 ₺). Tutarlar TEST değeridir, denge sayısı değildir.
-   isler: takvimde bekleyen işler (js/takvim.js); ödemeler 'odeme' türü iştir (js/maliye.js). gecmis ve hareketler boş başlar. */
+   isler: takvimde bekleyen işler (js/takvim.js); ödemeler 'odeme' türü iştir (js/maliye.js). gecmis ve hareketler boş başlar.
+   Sürüm 7 (F1): iki takımlı küçük bir sezon (2 hafta, ilkHafta 1; fikstür kuralları js/fikstur.js) ve boş oyuncu listesi; kulüplerde kadro
+   yoktur (kadro isteğe bağlıdır, maç girdisi kadrosuz kulübü reddeder). Gerçek kariyerin 16 kulübü ve kadroları kariyerBaslat'ta kurulur. */
 const KARIYER_ORNEK={
-  kayitSurumu:6,
+  kayitSurumu:7,
   dunyaTohumu:20260929,
   icerik:{surum:0,baslangic:null},kosullar:{},rastlanti:{durum:20260929},olaylar:{},sozler:{},haberler:[],gozlem:null,
   tarih:'2026-11-28',gunIciDakika:540,          // 13. hafta maç günü sabahı (LIG.buMac: Cumartesi 19:00)
   baskanId:'kisi-1',
   gorevDurumu:'gorevde',
   final:null,
-  sonrakiNo:{kisi:8,is:4,hareket:1,mesele:1,olay:1,soz:1},
+  sonrakiNo:{kisi:8,is:4,hareket:1,mesele:1,olay:1,soz:1,oyuncu:1},
   meseleler:{},
+  sezon:{id:'2026-27',kod:'2627',ad:'3. Lig',grup:'2. Grup',sezonAdi:'2026–27',etiket:'TEST',ilkHafta:1,haftaSayisi:2,ilkMacTarihi:'2026-11-28',dakika:1140,
+    bolgeler:{},takimlar:['demirkapi','akdeniz'],
+    devralinan:{tablo:{demirkapi:{G:0,B:0,M:0,A:0,Y:0},akdeniz:{G:0,B:0,M:0,A:0,Y:0}},sonMaclar:{}},transfer:[]},
+  fikstur:[
+    {id:'mac-2627-1-demirkapi-akdeniz',hafta:1,tarih:'2026-11-28',dakika:1140,ev:'demirkapi',konuk:'akdeniz'},
+    {id:'mac-2627-2-akdeniz-demirkapi',hafta:2,tarih:'2026-12-05',dakika:1140,ev:'akdeniz',konuk:'demirkapi'}
+  ],
+  maclar:{},
+  oyuncular:{},
   kulupler:{
     demirkapi:{id:'demirkapi',ad:'Demirkapı SK',kisa:'DEM',kademe:3,baskanId:'kisi-1',acilisNakit:850000000,nakit:850000000},
     akdeniz:{id:'akdeniz',ad:'Akdeniz FK',kisa:'AKD',kademe:3,baskanId:'kisi-5',acilisNakit:1200000000,nakit:1200000000}

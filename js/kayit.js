@@ -19,9 +19,12 @@
 const KAYIT_BICIM=1;
 /* sürüm geçişleri: KAYIT_GECISLERI[n] = veri → (n+1) sürümlü veri. Geçişler başka kural dosyasına bağlı olmayan veri dönüşümleridir;
    kararları yeniden oynatmaz, para hareketi üretmez.
-   2.8L (2026-10-02): 1→5 geçişleri kaldırıldı. Sürüm 5 ve öncesinin kayıtları silinen içeriğe bağlıdır; açılmaz (ESKI_KAYIT_SINIRI) */
+   2.8L (2026-10-02): 1→5 geçişleri kaldırıldı. Sürüm 5 ve öncesinin kayıtları silinen içeriğe bağlıdır; açılmaz (ESKI_KAYIT_SINIRI).
+   F1 (2026-10-23): sürüm 6 da açılmaz — lig, fikstür ve kadrolar kariyere geçti; içeriksiz kariyer yeniden başlatılır (YOL_HARITASI karar 36) */
 const KAYIT_GECISLERI={};
-const ESKI_KAYIT_SINIRI=6;                   // bu sürümden eski kayıt dönüştürülmez: içeriği oyundan kaldırıldı
+const ESKI_KAYIT_SINIRI=7;                   // bu sürümden eski kayıt dönüştürülmez
+/* eski sürümün neden açılmadığı (oyuncuya söylenir); listede olmayan eski sürüm 2.8L nedenini alır */
+const ESKI_KAYIT_NEDENI={6:'lig, fikstür ve kadrolar kariyere geçtiği için'};
 
 /* FNV-1a 32 bit: güvenlik için değil, yarım/bozuk yazımı yakalamak için */
 function saglamaHesapla(s){
@@ -51,7 +54,7 @@ function kayitCoz(metin){
   let k=z.veri;const gecisler=[];
   if(!Number.isInteger(k.kayitSurumu))return{tamam:false,hata:'Kayıt sürümü okunamadı'};
   if(k.kayitSurumu>KARIYER_SURUM)return{tamam:false,hata:`Bu kayıt oyunun daha yeni bir sürümüyle yapılmış (kayıt sürümü ${k.kayitSurumu}); bu sürüm açamaz`};
-  if(k.kayitSurumu<ESKI_KAYIT_SINIRI&&!KAYIT_GECISLERI[k.kayitSurumu])return{tamam:false,eski:true,hata:`Bu kayıt oyunun eski bir sürümüne ait (kayıt sürümü ${k.kayitSurumu}); o sürümün içeriği kaldırıldığı için açılamaz`};
+  if(k.kayitSurumu<ESKI_KAYIT_SINIRI&&!KAYIT_GECISLERI[k.kayitSurumu])return{tamam:false,eski:true,hata:`Bu kayıt oyunun eski bir sürümüne ait (kayıt sürümü ${k.kayitSurumu}); ${ESKI_KAYIT_NEDENI[k.kayitSurumu]||'o sürümün içeriği kaldırıldığı için'} açılamaz`};
   while(k.kayitSurumu<KARIYER_SURUM){
     const g=KAYIT_GECISLERI[k.kayitSurumu];
     if(!g)return{tamam:false,hata:`Kayıt sürümü ${k.kayitSurumu} için dönüşüm yok`};
@@ -71,18 +74,20 @@ function yazVeDogrula(depo,ad,metin){
   if(depo.oku(ad)!==metin)throw new Error(`${ad} yazıldı fakat geri okunan içerik farklı`);
 }
 
-/* kariyeri yuvaya kaydeder: {tamam:true} ya da {tamam:false, hata}. Hata durumunda önceki sağlam kayıt yerinde kalır */
-function kariyerKaydet(depo,yuva,k){
+/* kariyeri yuvaya kaydeder: {tamam:true, metin} ya da {tamam:false, hata}. Hata durumunda önceki sağlam kayıt yerinde kalır.
+   saglamMetin (isteğe bağlı): bu yuvaya son başarıyla yazılan metin; ana kayıt hâlâ oysa yeniden çözülmeden .onceki'ye taşınır (F1: kayıt
+   120 KB, çözmek tarayıcıda ~5 ms; gözlem her 15 oyun dakikasında kaydeder) */
+function kariyerKaydet(depo,yuva,k,saglamMetin){
   let metin;
   try{metin=kayitMetni(k);}catch(e){return{tamam:false,hata:e.message};}
   try{
     yazVeDogrula(depo,yuva+'.yeni',metin);
     const eski=depo.oku(yuva);
-    if(eski!==null&&kayitCoz(eski).tamam)yazVeDogrula(depo,yuva+'.onceki',eski);
+    if(eski!==null&&(eski===saglamMetin||kayitCoz(eski).tamam))yazVeDogrula(depo,yuva+'.onceki',eski);
     yazVeDogrula(depo,yuva,metin);
     depo.sil(yuva+'.yeni');
   }catch(e){return{tamam:false,hata:'Kayıt yazılamadı: '+e.message};}
-  return{tamam:true};
+  return{tamam:true,metin};
 }
 
 /* yuvadaki kariyeri yükler: {tamam:true, kariyer, kaynak:'ana'|'yeni'|'onceki', uyarilar, gecisler}
@@ -106,11 +111,13 @@ function kariyerYukle(depo,yuva){
 /* kayıt oturumu: kariyer + yuva. kayitli: verilen kariyer zaten bu yuvadan yüklendi mi.
    durum: {tamam: son yazım başarılı mı, hata, tarih/dakika: son başarılı kaydın oyun içi anı, bekleyen: kaydedilmemiş değişiklik var mı} */
 function kayitOturumu(depo,yuva,kariyer,kayitli){
+  let sonMetin=null;   /* bu oturumun yuvaya son başarıyla yazdığı metin (kariyerKaydet saglamMetin) */
   const o={
     kariyer,
     durum:{tamam:true,hata:null,tarih:kayitli?kariyer.tarih:null,dakika:kayitli?kariyer.gunIciDakika:null,bekleyen:!kayitli},
     kaydet(){
-      const s=kariyerKaydet(depo,yuva,o.kariyer),d=o.durum;
+      const s=kariyerKaydet(depo,yuva,o.kariyer,sonMetin),d=o.durum;
+      if(s.tamam)sonMetin=s.metin;
       if(s.tamam)o.durum={tamam:true,hata:null,tarih:o.kariyer.tarih,dakika:o.kariyer.gunIciDakika,bekleyen:false};
       else o.durum={tamam:false,hata:s.hata,tarih:d.tarih,dakika:d.dakika,bekleyen:true};
       return s;

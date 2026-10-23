@@ -11,22 +11,46 @@
      kulüpte isteğe bağlı sorumluluklar (kalıcı yetki devri, js/yonetim.js). İçerik sürümü 2: tavsiye, hoca, basın ve destek paketleri.
    Sürüm 5 (yol haritası 2.7): gozlem (süren antrenman gözlemi: null ya da {tarih, bas, bitis}; js/gozlem.js).
    Sürüm 6 (yol haritası 2.8L, 2026-10-02): alanlar sürüm 5 ile aynıdır; oyunun bütün içeriği kaldırıldığı için 1–5 sürümlü kayıtlar
-     dönüştürülmez, açılırken nedeni söylenerek reddedilir (js/kayit.js). İçerik sürümü 4 boş içeriktir. */
-const KARIYER_SURUM=6;
+     dönüştürülmez, açılırken nedeni söylenerek reddedilir (js/kayit.js). İçerik sürümü 4 boş içeriktir.
+   Sürüm 7 (F1, 2026-10-23): sezon, fikstur, maclar (js/fikstur.js), oyuncular ve sonrakiNo.oyuncu (js/kariyer-kadro.js); kulüplerde kadro;
+     dünya ligin 16 kulübüdür. Sürüm 6 kayıtları dönüştürülmez (lig ve kadrolar kariyere geçti), nedeni söylenerek reddedilir. */
+const KARIYER_SURUM=7;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */
 const EK_DENETIMLER=[];
 /* kimlikUret'in tanıdığı türler ve kayıtlarının bulunduğu alan (nesne ya da dizi) */
-const KIMLIK_TURLERI={kisi:'kisiler',is:'isler',hareket:'hareketler',mesele:'meseleler',olay:'olaylar',soz:'sozler'};
+const KIMLIK_TURLERI={kisi:'kisiler',is:'isler',hareket:'hareketler',mesele:'meseleler',olay:'olaylar',soz:'sozler',oyuncu:'oyuncular'};
 
 /* başlangıç verisinin bağımsız kopyası: oyun ilerledikçe başlangıç verisi değişmez */
 const kariyerOlustur=baslangic=>JSON.parse(JSON.stringify(baslangic));
 
+/* F1 (2026-10-23): paylaşılan alanlar. Büyük ve seyrek değişen alanlar (16 kulübün 289 oyuncusu, 240 maçlık fikstür, sezon, maç sonuçları)
+   komutlar arasında kopyalanmaz: yeni durum eskisiyle aynı nesneyi paylaşır ve bu nesneler derinlemesine dondurulur. Bu alanları değiştiren
+   komut yeni nesne kurar (kopyala-yaz), yerinde yazmaz: k.oyuncular={...k.oyuncular,[id]:{...p,gol:p.gol+1}}; k.maclar={...k.maclar,[id]:sonuc}.
+   Dondurulmuş nesneye yazmak katı kipteki dosyalarda (js/fikstur.js, js/kariyer-kadro.js) hata verir ve komut reddedilir; öbür dosyalarda
+   sessizce yok sayılır — bu alanlara yalnız o dosyaların yardımcılarıyla dokunulur. Kayıt ve yüklemede bir şey değişmez (JSON).
+   Gerekçe: komut başına kopya + doğrulama 0,14 ms'den 5,6 ms'ye çıkmıştı (tarayıcı; gözlem her oyun dakikasında bir komut çalıştırır). */
+const PAYLASILAN_ALANLAR=['sezon','fikstur','oyuncular','maclar'];
+const DONMUS=new WeakSet();
+/* derin dondurma; bir kez dondurulan alt ağaç yeniden dolaşılmaz */
+function dondur(v){
+  if(v===null||typeof v!=='object'||DONMUS.has(v))return v;
+  for(const a of Object.keys(v))dondur(v[a]);
+  Object.freeze(v);DONMUS.add(v);
+  return v;
+}
+/* komutun çalışacağı kopya: paylaşılan alanlar dondurulup paylaşılır, öbürleri derin kopyalanır */
+function kariyerKopyasi(k){
+  const y={};
+  for(const a of Object.keys(k))y[a]=PAYLASILAN_ALANLAR.includes(a)?dondur(k[a]):k[a]===undefined?undefined:JSON.parse(JSON.stringify(k[a]));
+  return y;
+}
+
 /* güvenli komut: f kariyerin kopyasına uygulanır, kopya doğrulanır; geçerliyse {kariyer: yeni durum, sonuc: f'nin döndürdüğü} döner.
    f hata verirse ya da kopya tutarsız kalırsa hata fırlatılır ve verilen kariyer hiç değişmez. Ajanda, oda ve telefon aynı yolu kullanır */
 function kariyerKomut(k,f){
-  const y=kariyerOlustur(k),sonuc=f(y),h=kariyerDogrula(y);
+  const y=kariyerKopyasi(k),sonuc=f(y),h=kariyerDogrula(y);
   if(h.length)throw new Error('Komut kariyeri tutarsız bıraktı: '+h.slice(0,3).join('; '));
   return{kariyer:y,sonuc};
 }
@@ -53,9 +77,10 @@ function kimlikUret(k,tur){
   k.sonrakiNo[tur]=no+1;
   return id;
 }
-/* kimlik 'tur-N' biçiminde mi ve sayaç onu geçmiş mi; hatayı listeye yazar */
+/* kimlik 'tur-N' biçiminde mi ve sayaç onu geçmiş mi; hatayı listeye yazar. Desen tür başına bir kez kurulur (F1: 289 oyuncu her doğrulamada) */
+const KIMLIK_DESENI={};
 function kimlikDenetle(k,h,ad,id,tur){
-  const m=new RegExp(`^${tur}-(\\d+)$`).exec(id);
+  const m=(KIMLIK_DESENI[tur]||(KIMLIK_DESENI[tur]=new RegExp(`^${tur}-(\\d+)$`))).exec(id);
   if(!m)h.push(`${ad}: kimlik '${tur}-N' biçiminde değil`);
   else if(!(Number(m[1])<(k.sonrakiNo||{})[tur]))h.push(`${ad}: sonrakiNo.${tur} (${(k.sonrakiNo||{})[tur]}) bu kimlikten büyük olmalı; yeni kimlikler çakışır`);
 }
@@ -69,16 +94,39 @@ function tarihGecerliMi(s){
 /* aynı biçimdeki iki tarih metin olarak sıralanabilir: <0 önce, 0 aynı gün, >0 sonra */
 const tarihKarsilastir=(a,b)=>a<b?-1:a>b?1:0;
 
-/* kaydedilebilir mi: yalnız düz veri. Hatalı alanların yolunu hatalar listesine yazar */
+/* kaydedilebilir mi: yalnız düz veri (yol metni kurmadan; F1'den beri kariyer ~10 bin değer taşır, her komutta doğrulanır).
+   Sade bulunan dondurulmuş alt ağaç (paylaşılan alanlar) bir daha dolaşılmaz: değişemez */
+const SADE_DONMUS=new WeakSet();
+function sadeVeriMi(v){
+  if(v===null)return true;
+  const t=typeof v;
+  if(t==='string'||t==='boolean')return true;
+  if(t==='number')return Number.isFinite(v);
+  if(t!=='object')return false;
+  if(SADE_DONMUS.has(v))return true;
+  if(Array.isArray(v)){for(let i=0;i<v.length;i++)if(!(i in v)||!sadeVeriMi(v[i]))return false;}
+  else{
+    const p=Object.getPrototypeOf(v);
+    if(Object.prototype.toString.call(v)!=='[object Object]'||(p!==null&&Object.getPrototypeOf(p)!==null))return false;
+    for(const a of Object.keys(v))if(!sadeVeriMi(v[a]))return false;
+  }
+  if(DONMUS.has(v))SADE_DONMUS.add(v);
+  return true;
+}
+/* kaydedilebilir mi: yalnız düz veri. Hatalı alanların yolunu hatalar listesine yazar (önce hızlı denetim; yalnız hata varsa yollar kurulur) */
 function sadeVeriDenetle(v,yol,hatalar){
+  if(sadeVeriMi(v))return;
+  sadeVeriYollari(v,yol,hatalar);
+}
+function sadeVeriYollari(v,yol,hatalar){
   if(v===null||typeof v==='string'||typeof v==='boolean')return;
   if(typeof v==='number'){if(!Number.isFinite(v))hatalar.push(`${yol}: sonlu sayı değil (${v})`);return;}
-  if(Array.isArray(v)){v.forEach((x,i)=>sadeVeriDenetle(x,`${yol}[${i}]`,hatalar));return;}
+  if(Array.isArray(v)){v.forEach((x,i)=>sadeVeriYollari(x,`${yol}[${i}]`,hatalar));return;}
   if(typeof v==='object'){
     const p=Object.getPrototypeOf(v);
     if(Object.prototype.toString.call(v)!=='[object Object]'||(p!==null&&Object.getPrototypeOf(p)!==null)){
       hatalar.push(`${yol}: düz nesne değil`);return;}
-    for(const a of Object.keys(v))sadeVeriDenetle(v[a],`${yol}.${a}`,hatalar);
+    for(const a of Object.keys(v))sadeVeriYollari(v[a],`${yol}.${a}`,hatalar);
     return;
   }
   hatalar.push(`${yol}: kaydedilemeyen değer (${typeof v})`);

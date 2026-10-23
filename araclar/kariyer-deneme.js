@@ -18,9 +18,13 @@
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const KOK=path.join(__dirname,'..');
-const OYUN_DOSYALARI=['js/ortak.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/mesele.js','js/yonetim.js','js/olay.js','js/soz.js','js/mesajlar.js','js/gozlem.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
+const OYUN_DOSYALARI=['js/ortak.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/mesele.js','js/yonetim.js','js/olay.js','js/soz.js','js/mesajlar.js','js/gozlem.js',
+  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
 const DOSYALAR=OYUN_DOSYALARI.concat(['araclar/test-icerik.js','js/kariyer-ornek.js']);
-const ctx=vm.createContext({console,Math,Date});
+/* F1 (2026-10-23): bağlam sıradan bir genel nesnedir (araclar/motor-yukle.js gibi; vm.constants.DONT_CONTEXTIFY). Eski sarılı bağlam her genel ada
+   erişimi bir ara katmandan geçirdiği için kariyer 16 kulüp ve 289 oyuncuya büyüyünce araç 1 sn'den 15 sn'ye çıkmıştı */
+const baglam=()=>{if(!(vm.constants&&vm.constants.DONT_CONTEXTIFY))return vm.createContext({console,Math,Date});const c=vm.createContext(vm.constants.DONT_CONTEXTIFY);c.console=console;return c;};
+const ctx=baglam();
 for(const f of DOSYALAR)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),ctx,{filename:f});
 const al=ad=>vm.runInContext(ad,ctx);
 const ORNEK=al('KARIYER_ORNEK'),LIG=al('LIG'),KADROLAR=al('KADROLAR');
@@ -208,18 +212,18 @@ bolum('1.4 — sürümlü yerel kayıt ve yükleme (bellek deposu)');
   const ileri=Object.assign({},c,{kayitSurumu:99});depo.yaz('ileri',zarf(ileri));
   const y1=kariyerYukle(depo,'ileri');
   denetle('Daha yeni sürümle yapılmış kayıt açılmaz, nedeni söylenir',!y1.tamam&&/daha yeni/.test(y1.hata),y1.hata);
-  const eski=Object.assign({},c,{kayitSurumu:5});delete eski.hareketler;depo.yaz('eski',zarf(eski));
+  const eski=Object.assign({},c,{kayitSurumu:6});delete eski.maclar;depo.yaz('eski',zarf(eski));
   const y2=kariyerYukle(depo,'eski');
-  KAYIT_GECISLERI[5]=v=>{v.hareketler=[];v.kayitSurumu=6;return v;};
+  KAYIT_GECISLERI[6]=v=>{v.maclar={};v.kayitSurumu=7;return v;};
   const y3=kariyerYukle(depo,'eski');
-  delete KAYIT_GECISLERI[5];
-  denetle('Eski sürüm: geçiş yoksa açıklamalı hata, varsa sırayla dönüştürülür',!y2.tamam&&/eski bir sürüm/.test(y2.hata)&&y3.tamam&&y3.gecisler.join()==='5→6'&&Array.isArray(y3.kariyer.hareketler),`${y2.hata} · deneme geçişiyle: ${y3.gecisler&&y3.gecisler.join()}`);
+  delete KAYIT_GECISLERI[6];
+  denetle('Eski sürüm: geçiş yoksa açıklamalı hata, varsa sırayla dönüştürülür',!y2.tamam&&/eski bir sürüm/.test(y2.hata)&&y3.tamam&&y3.gecisler.join()==='6→7'&&metin(y3.kariyer.maclar)==='{}',`${y2.hata} · deneme geçişiyle: ${y3.gecisler&&y3.gecisler.join()}`);
 }
 denetle('Başlangıç verisi hiçbir denemede değişmedi',metin(ORNEK)===ornekMetni);
 
 /* ================= 2.8L boş oyun: içerik yok, iskelet çalışır ================= */
 bolum('2.8L — içeriksiz yeni kariyer (oyunun yüklediği dosyalar)');
-const oyunCtx=vm.createContext({console,Math,Date});
+const oyunCtx=baglam();
 for(const f of OYUN_DOSYALARI)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),oyunCtx,{filename:f});
 const oyunAl=ad=>vm.runInContext(ad,oyunCtx);
 {
@@ -227,11 +231,13 @@ const oyunAl=ad=>vm.runInContext(ad,oyunCtx);
   const say=ad=>Object.keys(oyunAl(ad)).length;
   denetle('Oyunda paket, gelişme, karar türü, konuya özgü ekip görevi (genel tavsiye hariç), katılım etkisi ve girişim tanımlı değil',
     say('PAKETLER')+say('GELISMELER')+say('KARAR_TURLERI')+Object.keys(oyunAl('EKIP_GOREVLERI')).filter(x=>x!=='tavsiye').length+say('KATILIM_ETKILERI')+say('GIRISIMLER')===0&&oyunAl('GOZLEM_NOTLARI').length===0&&say('SOZ_TARAFLARI')===0);
-  denetle('Yeni kariyer geçerli; içerik sürümü 4, kayıt sürümü 6',!h.length&&c.icerik.surum===4&&c.kayitSurumu===6,h.join('; '));
-  const isler=Object.values(c.isler);
+  denetle('Yeni kariyer geçerli; içerik sürümü 4, kayıt sürümü 7',!h.length&&c.icerik.surum===4&&c.kayitSurumu===7,h.join('; '));
+  const isler=Object.values(c.isler),ajandaIsleri=isler.filter(x=>x.tur==='ajanda');
   denetle('Yalnız başkan var; koltuklar boş; mesele, olay, söz ve haber yok',Object.keys(c.kisiler).join()==='kisi-1'&&metin(c.kulupler.demirkapi.yonetim)==='{"sayman":null,"futbol":null,"basin":null}'
     &&!Object.keys(c.meseleler).length&&!Object.keys(c.olaylar).length&&!Object.keys(c.sozler).length&&!c.haberler.length);
-  denetle('Takvimde tek iş: Cumartesi 19:00 maç günü (LIG.buMac ile aynı an)',isler.length===1&&isler[0].veri.eylem==='macGunu'&&isler[0].tarih==='2026-11-28'&&saatYazi(isler[0].dakika)===LIG.buMac.saat,isler[0]&&isler[0].veri.baslik);
+  denetle('Takvimde tek ajanda işi: Cumartesi 19:00 maç günü (LIG.buMac ile aynı an); yanında yalnız iki transfer hatırlatması',ajandaIsleri.length===1&&ajandaIsleri[0].id==='is-1'&&ajandaIsleri[0].veri.eylem==='macGunu'
+    &&ajandaIsleri[0].tarih==='2026-11-28'&&saatYazi(ajandaIsleri[0].dakika)===LIG.buMac.saat&&ajandaIsleri[0].veri.baslik==='Maç: Demirkapı SK – Akdeniz FK'
+    &&isler.length===3&&isler.filter(x=>x.tur==='hatirlatma').length===2,ajandaIsleri[0]&&ajandaIsleri[0].veri.baslik);
   denetle('Aynı tohum aynı kariyeri kurar',metin(c)===metin(d));
   denetle('Telefonda konuşma yok',oyunAl('konusmaListesi')(c).length===0);
   const o=oyunAl('ilerleOnizle')(c);
@@ -248,6 +254,119 @@ const oyunAl=ad=>vm.runInContext(ad,oyunCtx);
   const depo=oyunAl('bellekDeposu')();depo.yaz('e',dosya);
   const y=oyunAl('kariyerYukle')(depo,'e');
   denetle('İçeriği kaldırılmış eski kayıt (sürüm 5) açılmaz, nedeni söylenir; dosyaya dokunulmaz',!y.tamam&&!y.bos&&/eski bir sürüm/.test(y.hata)&&depo.oku('e')===dosya,y.hata);
+  /* F1: sürüm 6 (2.8L–E içeriksiz kariyeri; araclar/ornekler/kayit-eski-s6.json o kodla üretildi) lig ve kadrolar kariyere geçtiği için açılmaz */
+  const d6=fs.readFileSync(path.join(KOK,'araclar','ornekler','kayit-eski-s6.json'),'utf8');
+  depo.yaz('e6',d6);const y6=oyunAl('kariyerYukle')(depo,'e6');
+  denetle('Sürüm 6 kaydı açılmaz; neden lig, fikstür ve kadroların kariyere geçmesi; dosyaya dokunulmaz',!y6.tamam&&!y6.bos&&/eski bir sürüm/.test(y6.hata)&&/fikstür/.test(y6.hata)&&depo.oku('e6')===d6,y6.hata);
+}
+
+/* ================= F1 — sezon, fikstür ve kadrolar ================= */
+bolum('3.1 — sezon, fikstür ve kadrolar (F1; oyunun yüklediği dosyalar)');
+{
+  const kur=oyunAl('kariyerBaslat'),c=kur({tohum:7}),S=c.sezon,F=c.fikstur,LG=oyunAl('LIG'),KD=oyunAl('KADROLAR'),ADLAR=oyunAl('ADLAR_TEST');
+  const [kulupOyunculari,sezonTablosu,sonBesMac,macTohumu,puanDurumu,siradakiMac]=['kulupOyunculari','sezonTablosu','sonBesMac','macTohumu','puanDurumu','siradakiMac'].map(oyunAl);
+  const ids=Object.keys(c.kulupler),uretilen=ids.filter(id=>!KD[id]);
+  denetle('Ligin 16 kulübü kariyerde; öbür kulüplerin başkanı ve parası yok; kısa adlar tekil',ids.length===16&&ids[0]==='demirkapi'&&LG.takimlar.every(t=>c.kulupler[t.id]&&c.kulupler[t.id].ad===t.ad)
+    &&ids.filter(id=>id!=='demirkapi').every(id=>c.kulupler[id].baskanId===null&&c.kulupler[id].nakit===0&&c.kulupler[id].yonetim===undefined)&&new Set(ids.map(id=>c.kulupler[id].kisa)).size===16,
+    ids.map(id=>c.kulupler[id].kisa).join(' '));
+  const boy=id=>{const D=c.kulupler[id].kadro;return D.ilk11.length+'+'+D.yedekler.length;};
+  denetle('Kadrolar: Demirkapı 11+7 (5 yedek, 2 eksik), Akdeniz 11+8, üretilen 14 kulüp 11+7',boy('demirkapi')==='11+7'&&boy('akdeniz')==='11+8'&&uretilen.length===14&&uretilen.every(id=>boy(id)==='11+7'),
+    `${boy('demirkapi')} · ${boy('akdeniz')} · ${boy(uretilen[0])}`);
+  const ayni=id=>{const D=c.kulupler[id].kadro,K=KD[id];
+    return K.oyuncular.every((o,i)=>{const p=c.oyuncular[D.ilk11[i]];return p.ad===o.ad&&p.no===o.no&&metin(p.oz)===metin(o.oz)&&p.gol===(o.gol||0)&&p.sari===(o.sari||0)&&p.ayak===(o.ayak||'sag')&&p.ten===o.ten&&p.sac===o.sac&&!!p.kaptan===!!o.kaptan;})
+      &&K.yedekler.every((o,i)=>{const p=c.oyuncular[D.yedekler[i]];return p.ad===o.ad&&p.no===o.no&&p.mevki===o.mevki&&metin(p.oz)===metin(o.oz);})
+      &&D.ad===K.ad&&D.forma===K.forma&&metin(D.taktik)===metin(K.taktik)&&D.td.ad===K.td.ad;};
+  denetle('Demirkapı ve Akdeniz kadroları js/kadrolar.js ile aynı (ad, numara, özellik, görünüş, sayaçlar, sıra, taktik, hoca)',ayni('demirkapi')&&ayni('akdeniz'));
+  const bul=(id,ad)=>kulupOyunculari(c,id).find(p=>p.ad===ad)||{};
+  const nail=bul('demirkapi','Nail'),yusuf=bul('demirkapi','Yusuf'),serdar=bul('akdeniz','Serdar'),volkan=bul('akdeniz','Volkan'),tarik=bul('akdeniz','Tarık');
+  denetle('Eksikler oyuncu oldu: sakatlık dönüş günüyle, ceza maç sayısıyla',nail.sakat&&nail.sakat.donus==='2026-12-07'&&!nail.sakat.belirsiz&&yusuf.ceza&&yusuf.ceza.mac===1&&/Kırmızı/.test(yusuf.ceza.neden)
+    &&serdar.sakat&&serdar.sakat.belirsiz===true&&volkan.sakat&&volkan.sakat.donus==='2026-11-30'&&tarik.ceza&&tarik.ceza.mac===1&&nail.oz.length===11,
+    `Nail ${nail.sakat&&nail.sakat.donus} · Yusuf ${yusuf.ceza&&yusuf.ceza.neden} · Serdar belirsiz · Volkan ${volkan.sakat&&volkan.sakat.donus} · Tarık ${tarik.ceza&&tarik.ceza.neden}`);
+  denetle('Oyuncu kimlikleri başkanın kulübünden başlar; sayaç bütün oyuncuları geçer; herkes bir kadroda',c.oyuncular['oyuncu-1'].ad==='Engin'&&c.oyuncular['oyuncu-1'].kulupId==='demirkapi'
+    &&c.sonrakiNo.oyuncu===Object.keys(c.oyuncular).length+1&&ids.reduce((s,id)=>s+kulupOyunculari(c,id).length,0)===Object.keys(c.oyuncular).length,`${Object.keys(c.oyuncular).length} oyuncu`);
+  const U=uretilen.map(id=>({id,P:kulupOyunculari(c,id),D:c.kulupler[id].kadro,t:LG.takimlar.find(t=>t.id===id)}));
+  denetle('Üretilen kadrolar: adlar TEST havuzundan ve kulüp içinde tekil; numaralar tekil; ilk yuva kaleci; gol toplamı devralınan attığı gol; sarı en çok 3',
+    U.every(u=>u.P.every(p=>ADLAR.includes(p.ad))&&new Set(u.P.map(p=>p.ad)).size===u.P.length&&new Set(u.P.map(p=>p.no)).size===u.P.length&&u.P[0].mevki==='KL'
+      &&u.P.reduce((s,p)=>s+p.gol,0)===u.t.A&&u.P.every(p=>p.sari<=3&&!p.sakat&&!p.ceza)&&/ Hoca$/.test(u.D.td.ad)&&u.P.filter(p=>p.kaptan).length===1),
+    U.slice(0,2).map(u=>`${u.D.ad}: ${u.P.slice(0,3).map(p=>p.no+' '+p.ad).join(', ')} … hoca ${u.D.td.ad}`).join(' · '));
+  const ort=(P,j)=>P.reduce((s,p)=>s+p.oz[j],0)/P.length,ozOrt=P=>[0,1,2,3,4,5,6,7,9,10].reduce((s,j)=>s+ort(P.slice(1,11),j),0)/10;
+  const g=U.map(u=>({id:u.id,o:ozOrt(u.P),P:3*u.t.G+u.t.B})).sort((a,b)=>b.P-a.P),dem=ozOrt(kulupOyunculari(c,'demirkapi'));
+  denetle('Üretilen kadroların seviyesi tohum kadrolarıyla aynı aralıkta; tablonun üstü altından güçlü (ilk 11 saha oyuncusu ortalaması)',g.every(x=>Math.abs(x.o-dem)<9)&&g.slice(0,4).reduce((s,x)=>s+x.o,0)>g.slice(-4).reduce((s,x)=>s+x.o,0),
+    `Demirkapı ${dem.toFixed(1)} · üst dört ${(g.slice(0,4).reduce((s,x)=>s+x.o,0)/4).toFixed(1)} · alt dört ${(g.slice(-4).reduce((s,x)=>s+x.o,0)/4).toFixed(1)}`);
+
+  /* fikstür */
+  const n=S.takimlar.length,hafta=h=>F.filter(f=>f.hafta===h);
+  const herHafta=[...Array(S.haftaSayisi).keys()].every(i=>{const E=hafta(i+1),T=E.flatMap(f=>[f.ev,f.konuk]);return E.length===n/2&&new Set(T).size===n;});
+  const ciftler=new Set(F.map(f=>f.ev+'>'+f.konuk));
+  const ayna=[...Array(n-1).keys()].every(i=>hafta(i+1).every(f=>hafta(i+n).some(x=>x.ev===f.konuk&&x.konuk===f.ev)));
+  denetle('Fikstür: 30 hafta × 8 maç; her takım her hafta bir maç; her sıralı çift bir kez; ikinci devre ilk devrenin yer değiştirmiş aynası',
+    S.haftaSayisi===30&&F.length===240&&herHafta&&ciftler.size===240&&ayna);
+  const ilk=F.find(f=>f.hafta===13&&(f.ev==='demirkapi'||f.konuk==='demirkapi'));
+  denetle('13. hafta: Demirkapı – Akdeniz, Cumartesi 2026-11-28 19:00; kimlik mac-2627-13-demirkapi-akdeniz',ilk&&ilk.id==='mac-2627-13-demirkapi-akdeniz'&&ilk.tarih==='2026-11-28'&&ilk.dakika===1140,ilk&&ilk.id);
+  const tutar=id=>LG.sonMaclar[id].every(x=>F.some(f=>f.hafta===x.hafta&&(x.yer==='i'?f.ev===id&&f.konuk===x.rakip:f.konuk===id&&f.ev===x.rakip)));
+  denetle('Devralınan son maçlar fikstürle aynı rakip ve yerde (Demirkapı ve Akdeniz, 8–12. haftalar)',tutar('demirkapi')&&tutar('akdeniz'));
+  const dengesi=k=>{let enUzun=0,evAz=99,evCok=0;
+    for(const t of k.sezon.takimlar){const s=[...Array(k.sezon.haftaSayisi).keys()].map(i=>k.fikstur.find(f=>f.hafta===i+1&&(f.ev===t||f.konuk===t)).ev===t);
+      const ev1=s.slice(0,n-1).filter(Boolean).length;evAz=Math.min(evAz,ev1);evCok=Math.max(evCok,ev1);
+      let L=1;for(let i=1;i<s.length;i++){L=s[i]===s[i-1]?L+1:1;enUzun=Math.max(enUzun,L);}}
+    return{enUzun,evAz,evCok};};
+  const d=dengesi(c);
+  denetle('Ev/deplasman: her takım ilk devrede 7–8 iç saha; arka arkaya aynı yer en çok 3 maç',d.evAz>=7&&d.evCok<=8&&d.enUzun<=3,`iç saha ${d.evAz}–${d.evCok} · en uzun dizi ${d.enUzun}`);
+  const mi=Object.values(c.isler).find(x=>x.veri.eylem==='macGunu');
+  denetle('Maç günü işi fikstürdeki 13. hafta maçına bağlı; sıradaki maç o',mi&&mi.veri.macId===ilk.id&&siradakiMac(c,'demirkapi').id===ilk.id);
+  const H=Object.values(c.isler).filter(x=>x.tur==='hatirlatma').map(x=>`${x.tarih} ${saatYazi(x.dakika)} ${x.veri.metin}`);
+  denetle('Kış transfer dönemi takvimde: 4 Ocak açılış, 31 Ocak kapanış hatırlatması',H.length===2&&/^2027-01-04 08:00 Kış transfer dönemi açıldı/.test(H[0])&&/^2027-01-31 20:00 Kış transfer dönemi kapandı/.test(H[1]),H.join(' · '));
+  const tablo=sezonTablosu(c),eski=puanDurumu(LG);
+  denetle('Puan durumu devralınan tablodan türetilir (js/lig.js puanDurumu ile aynı sıra ve puan)',metin(tablo.map(t=>[t.id,t.P,t.AV,t.O]))===metin(eski.map(t=>[t.id,t.P,t.AV,t.O])),tablo.slice(0,3).map(t=>`${t.ad} ${t.P}`).join(', '));
+  denetle('Son beş maç: Demirkapı ve Akdeniz devralınan listeyle aynı; öbürlerinde devralınan kayıt yok',metin(sonBesMac(c,'demirkapi'))===metin(LG.sonMaclar.demirkapi)&&metin(sonBesMac(c,'akdeniz'))===metin(LG.sonMaclar.akdeniz)&&sonBesMac(c,'karaova').length===0);
+  /* sonuç yazılınca (F2'nin işi; burada elle) tablo ve son maçlar ilerler */
+  const x=kariyerOlustur(c);x.maclar[ilk.id]={skor:[2,1]};oyunAl('isIptal')(x,Object.values(x.isler).find(q=>q.veri.eylem==='macGunu').id,'deneme: maç oynandı');const t2=sezonTablosu(x),dm=t2.find(t=>t.id==='demirkapi'),ak=t2.find(t=>t.id==='akdeniz'),s5=sonBesMac(x,'demirkapi');
+  denetle('Elle yazılan bir sonuçla puan durumu ve son beş maç türetilir; kariyer geçerli kalır',dm.P===24&&dm.O===13&&ak.M===3&&s5.length===5&&s5[4].hafta===13&&s5[4].a===2&&s5[0].hafta===9&&!oyunAl('kariyerDogrula')(x).length,
+    `Demirkapı ${dm.P} puan, ${dm.O} maç · son: ${s5.map(m=>m.a+'-'+m.y).join(' ')}`);
+  const t1=macTohumu(7,ilk.id);
+  denetle('Maç tohumu dünya tohumu ve maç kimliğinden: aynı girdi aynı, başka maç ya da başka dünya farklı',t1===macTohumu(7,ilk.id)&&t1!==macTohumu(8,ilk.id)&&t1!==macTohumu(7,F[0].id)&&Number.isInteger(t1)&&t1>=0&&t1<2**32,String(t1));
+
+  /* farklı dünyalar: fikstür ve kadrolar değişir, kurallar tutar */
+  let gecerli40=0,enUzun=0,evAz=99,evCok=0,fark=0,ms=0;
+  for(let tohum=100;tohum<140;tohum++){
+    const t0=process.hrtime.bigint(),y=kur({tohum});ms+=Number(process.hrtime.bigint()-t0)/1e6;
+    const e=dengesi(y);enUzun=Math.max(enUzun,e.enUzun);evAz=Math.min(evAz,e.evAz);evCok=Math.max(evCok,e.evCok);
+    if(!oyunAl('kariyerDogrula')(y).length&&y.fikstur.find(f=>f.id===ilk.id)&&LG.sonMaclar.demirkapi.every(m=>y.fikstur.some(f=>f.hafta===m.hafta&&(f.ev==='demirkapi'||f.konuk==='demirkapi')&&(f.ev===m.rakip||f.konuk===m.rakip))))gecerli40++;
+    if(metin(y.fikstur)!==metin(c.fikstur))fark++;
+  }
+  denetle('40 dünya tohumunda kariyer geçerli, sabit maçlar tutuyor, fikstür tohuma göre değişiyor; ev/deplasman sınırları tutuyor',gecerli40===40&&fark===40&&enUzun<=3&&evAz>=7&&evCok<=8,
+    `geçerli ${gecerli40}/40 · farklı ${fark}/40 · iç saha ${evAz}–${evCok} · en uzun dizi ${enUzun} · kurulum ortalama ${(ms/40).toFixed(1)} ms`);
+  /* kayıt boyutu ve komut süresi (bilgi; gözlem her oyun dakikasında bir komut çalıştırır) */
+  const depo=oyunAl('bellekDeposu')(),s=oyunAl('kariyerKaydet')(depo,'f1',c),y=oyunAl('kariyerYukle')(depo,'f1');
+  const k0=process.hrtime.bigint();let z=c;for(let i=0;i<50;i++)z=oyunAl('kariyerKomut')(z,q=>oyunAl('zamanIlerlet')(q,1)).kariyer;const kms=Number(process.hrtime.bigint()-k0)/1e6/50;
+  denetle('Kaydet–yükle aynı kariyeri verir',s.tamam&&y.tamam&&metin(y.kariyer)===metin(c),`kayıt ${(depo.oku('f1').length/1024).toFixed(0)} KB · bir komut (kopya + doğrulama) ${kms.toFixed(2)} ms`);
+  /* paylaşılan alanlar (js/kariyer.js PAYLASILAN_ALANLAR): komutlar arasında kopyalanmaz, dondurulur; yerinde yazma reddedilir, kopyala-yaz çalışır */
+  const komut=oyunAl('kariyerKomut'),r1=komut(c,q=>oyunAl('zamanIlerlet')(q,1)).kariyer,r2=komut(r1,q=>oyunAl('zamanIlerlet')(q,1)).kariyer;
+  const paylasilan=['sezon','fikstur','oyuncular','maclar'];
+  denetle('Komut sezon, fikstür, oyuncular ve maç sonuçlarını kopyalamadan paylaşır ve dondurur; kulüpler ve takvim kopyalanır',
+    paylasilan.every(a=>r1[a]===r2[a]&&Object.isFrozen(r2[a]))&&Object.isFrozen(r2.oyuncular['oyuncu-1'])&&Object.isFrozen(r2.fikstur[0])&&r1.kulupler!==r2.kulupler&&r1.isler!==r2.isler&&!Object.isFrozen(r2.kulupler));
+  const yerinde=komut.bind(null,r2),onceMetin=metin(r2);
+  denetle('Dondurulmuş alana yerinde yazan komut reddedilir; kariyer değişmez',reddeder(()=>yerinde(q=>{q.oyuncular['oyuncu-1'].gol=99;}))&&reddeder(()=>yerinde(q=>{q.maclar[ilk.id]={skor:[1,0]};}))
+    &&reddeder(()=>yerinde(q=>{q.fikstur[0].dakika=0;}))&&metin(r2)===onceMetin&&r2.oyuncular['oyuncu-1'].gol===0);
+  const r3=komut(r2,q=>{const p=q.oyuncular['oyuncu-1'];q.oyuncular=Object.assign({},q.oyuncular,{'oyuncu-1':Object.assign({},p,{gol:p.gol+1})});}).kariyer;
+  denetle('Kopyala-yaz: yeni oyuncu kaydı yeni durumda, eski durum aynen; öbür oyuncular paylaşılmaya devam eder',r3.oyuncular['oyuncu-1'].gol===1&&r2.oyuncular['oyuncu-1'].gol===0
+    &&r3.oyuncular['oyuncu-2']===r2.oyuncular['oyuncu-2']&&r3.oyuncular!==r2.oyuncular&&!oyunAl('kariyerDogrula')(r3).length);
+  denetle('Önbellekli doğrulama tam doğrulamayla aynı karar verir: oyuncu kimlik sayacını geri alan komut reddedilir',
+    reddeder(()=>komut(r3,q=>{q.sonrakiNo.oyuncu=5;}))&&oyunAl('kariyerDogrula')(Object.assign(kariyerOlustur(r3),{sonrakiNo:Object.assign({},r3.sonrakiNo,{oyuncu:5})})).length>0);
+
+  /* bozuk kopyalar */
+  const bozuk=(ad,f,beklenen)=>{const q=kariyerOlustur(c);f(q);const hh=oyunAl('kariyerDogrula')(q);denetle(ad,hh.some(e=>beklenen.test(e)),hh.slice(0,2).join(' · ')||'hata yakalanmadı');};
+  bozuk('Oyuncu başka kulübün kadrosunda',q=>{const id=q.kulupler.demirkapi.kadro.yedekler.pop();q.kulupler.akdeniz.kadro.yedekler.push(id);},/bu kulübün oyuncusu değil/);
+  bozuk('Kulübün oyuncusu kadroda yok',q=>{q.kulupler.karaova.kadro.yedekler.pop();},/kadroda yok/);
+  bozuk('Aynı forma numarası iki oyuncuda',q=>{const D=q.kulupler.bozkaya.kadro;q.oyuncular[D.yedekler[0]].no=q.oyuncular[D.ilk11[5]].no;},/numarası iki oyuncuda/);
+  bozuk('İlk 11 on bir kişi değil',q=>{q.kulupler.demirkapi.kadro.yedekler.push(q.kulupler.demirkapi.kadro.ilk11.pop());},/on bir/);
+  bozuk('Bir takım aynı hafta iki maçta',q=>{const f=q.fikstur.find(x=>x.hafta===20);const g=q.fikstur.find(x=>x.hafta===20&&x!==f);g.konuk=f.ev;},/iki maçta/);
+  bozuk('Maç günü fikstür dışı maça bağlı',q=>{Object.values(q.isler).find(x=>x.veri.eylem==='macGunu').veri.macId='mac-2627-99-a-b';},/fikstürdeki bir maça bağlı değil/);
+  bozuk('Maç günü fikstürdeki anında değil',q=>{Object.values(q.isler).find(x=>x.veri.eylem==='macGunu').dakika=1080;},/anında değil/);
+  bozuk('Devralınan haftaya sonuç yazılmış',q=>{q.maclar[q.fikstur.find(x=>x.hafta===5).id]={skor:[1,0]};},/devralınan haftada/);
+  bozuk('Devralınan tablo kendi içinde tutmuyor',q=>{q.sezon.devralinan.tablo.karaova.G++;q.sezon.devralinan.tablo.karaova.B--;},/tutmuyor/);
+  bozuk('Devralınan son maç fikstürde yok',q=>{q.sezon.devralinan.sonMaclar.demirkapi[0].rakip='karaova';},/fikstürde yok/);
+  bozuk('Sakatlık kaydı bozuk',q=>{const p=Object.values(q.oyuncular).find(o=>o.ad==='Nail');p.sakat={neden:'x',donus:'2026-13-01'};},/sakatlık kaydı/);
 }
 
 /* ================= TEST içeriğiyle kural motoru ================= */
