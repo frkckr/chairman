@@ -169,6 +169,37 @@ function olay(ad,v){
 /* ---- "Maça geç": maç öncesini atla ---- */
 function macaGecIste(){if(!MAC_ONCESI.includes(mac.phase))return;mac.macaGec();izlemeMacaGec(MAC_IZLEME);for(const F of FLASLAR)F.t=9;}
 
+/* ---- F2 (2026-10-23, kullanıcı isteği; GEÇİCİ TEST, yayından önce kaldırılır): "Maçı bitir" — kalan maç görüntüsüz oynanır ----
+   Sonuç aynıdır (adım hep 1/60 sn; motor tohumlu). Her karede en çok HIZLI_BITIR.butce ms adım atılır, görüntü akmayı sürdürür (tabela skor
+   ve dakikayı yazar); duraklatma ve telefon kare dt'sini 0 yaptığı için hızlı bitirme de durur. Maç öncesinde basılırsa "Santraya geç" yolu
+   izlenir (rakip başkanın karar anı atlanmaz; js/loca-giris.js), santradan sonra başlar. İkiz motor temiz bırakılır (izlemeKapat). Aradaki
+   olaylar sunuma verilmez (başkan tepkisi, pul simgeleri, flaş yığılmaz); maç sonu olayı verilir. Düğme js/arayuz.js, maç sonu kartı
+   js/ekran-mac-sonu.js (hızlı bitince hemen açılır) */
+const HIZLI_BITIR={aktif:false,bekliyor:false,bitti:false,butce:30};
+function hizliBitirIste(){
+  const H=HIZLI_BITIR;if(H.aktif||H.bekliyor||mac.phase==='fulltime')return;
+  H.bekliyor=true;
+  if(MAC_ONCESI.includes(mac.phase)&&typeof btnMacaGec!=='undefined'&&btnMacaGec.onclick)btnMacaGec.onclick();
+}
+/* santradan sonra ve karar anı ya da loca girişi bitince başlar */
+function hizliBitirHazir(){
+  const H=HIZLI_BITIR;if(!H.bekliyor||MAC_ONCESI.includes(mac.phase))return;
+  if((typeof KARAR_ANI!=='undefined'&&KARAR_ANI.acik)||(typeof TEPE_AN!=='undefined'&&TEPE_AN.aktif)||(typeof LOCA_GIRIS!=='undefined'&&LOCA_GIRIS.aktif))return;
+  H.bekliyor=false;if(mac.phase==='fulltime')return;H.aktif=true;izlemeKapat(MAC_IZLEME);olayKuyrugu.length=0;
+}
+/* bu karenin adımları; çizimin dts'ini döndürür */
+function hizliBitirAdim(dt){
+  const H=HIZLI_BITIR;if(!(dt>0))return 0;
+  const t0=performance.now();let n=0;
+  while(mac.phase!=='fulltime'&&performance.now()-t0<H.butce){mac.step(ADIM);n++;if(mac.phase!=='fulltime')olayKuyrugu.length=0;}
+  const son=olayKuyrugu.filter(o=>o[0]==='fulltime');olayKuyrugu.length=0;
+  for(const a of AKTORLER){a.px=a.kaynak.x;a.pz=a.kaynak.z;}
+  {const b=mac.ball;TOP.px=b.x;TOP.py=b.y;TOP.pz=b.z;}
+  birikim=0;zaman+=n*ADIM;
+  if(mac.phase==='fulltime'){H.aktif=false;H.bitti=true;UZATMA.t=-1;PARA.t=-1;for(const F of FLASLAR)F.t=9;for(const [ad,v] of son)olay(ad,v);}
+  return Math.min(n*ADIM,0.1);
+}
+
 /* U1: bu karenin etkin hızı — oyuncunun seçimi, önemli anlarda 1×'e iner (eğri motor zamanında: izlemeHedefHiz); seçim değişince ya da ikiz
    yokken (pencere olayla başlar) ani sıçrama olmasın diye gerçek zamanda saniyede en çok IZLEME_GECIS kat değişir. Duraklatmada (dt 0) değişmez */
 const IZLEME_GECIS=8;
@@ -179,8 +210,12 @@ function izlemeHizi(dt){
 /* ---- her kare: motoru ilerlet, modelleri yerleştir ---- */
 let birikim=0,zaman=0;
 function macKare(dt){
+  hizliBitirHazir();
+  let dts;
+  if(HIZLI_BITIR.aktif)dts=hizliBitirAdim(dt);   /* F2: "Maçı bitir (TEST)" */
+  else{
   izlemeHizi(dt);
-  const dts=dt*MAC_HIZ.deger;zaman+=dts;birikim+=dts;
+  dts=dt*MAC_HIZ.deger;zaman+=dts;birikim+=dts;
   let n=0;
   while(birikim>=ADIM&&n<240){
     for(const a of AKTORLER){a.px=a.kaynak.x;a.pz=a.kaynak.z;}
@@ -191,6 +226,7 @@ function macKare(dt){
   }
   if((tarzGecisDurum(mac,0)!=null||tarzGecisDurum(mac,1)!=null)&&++tarzTestSay%20===0)tarzTestYaz();   /* B4b: geçişte panel satırı */
   if(n>=240)birikim=0;
+  }
   const al=birikim/ADIM,b=mac.ball,bx=lerp(TOP.px,b.x,al),bz=lerp(TOP.pz,b.z,al)-MOTOR_Z,T=mac.tunel;
   /* aktörler: konum, poz ve kök (js/animasyon.js) */
   /* E (2026-10-23): 2D'de kopuş — figür animasyonu çalışmaz, pul motorun alanlarından beslenir (js/pul.js pulAktor; STIL.pul.kopus) */

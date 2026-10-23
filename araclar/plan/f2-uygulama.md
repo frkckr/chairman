@@ -1,4 +1,4 @@
-<!-- Durum (2026-10-23, dizüstü): F2-a yapıldı (js/mac-sonuc.js, kariyer-deneme 3.5). Plandan sapma: fiksturDogrula'ya "bekleyen maç günü kulübün sıradaki maçı olmalı" eklenmedi — araçlar (akis-deneme §1, kariyer-deneme 3.1) haftayı bilerek elle atlıyor; yarar küçük. Atansız gol dışında kimliksiz kayıt reddedilir; golde bulunamayan numara null kalır. Sıradaki F2-b. -->
+<!-- Durum (2026-10-23, dizüstü): F2-a ve F2-b yapıldı. F2-a: js/mac-sonuc.js, kariyer-deneme 3.5; sapma: fiksturDogrula'ya "bekleyen maç günü kulübün sıradaki maçı olmalı" eklenmedi (araçlar haftayı bilerek elle atlıyor). F2-b: Maçı bitir (TEST) şeritte, maç sonu kartı, Canlı Skor son maç; tarayıcıda iki hafta uçtan uca (kayıt hatası yolu dahil), hızlı bitirme ile ×16 normal oynatma aynı tohumda birebir aynı sonuç; hızlı bitirme dizüstünde ~15 sn (motor süresi baskın; planda 6–8 sn tahmini). Sıradaki F2-c. -->
 # F2 — Maç sonucunun kariyere işlenmesi + "Maçı bitir (TEST)" düğmesi
 
 ## Bağlam

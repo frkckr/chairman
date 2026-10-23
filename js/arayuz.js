@@ -16,6 +16,15 @@ const btnDurdur=$('btnDurdur');btnDurdur.onclick=duraklatDegistir;
 duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';if(duraklatGosterge)duraklatGosterge.hidden=!a;});
 /* maça geç: maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) atlar; santrada düğme kaybolur */
 const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();btnMacaGec.hidden=true;};
+/* F2 (2026-10-23, kullanıcı isteği; GEÇİCİ TEST, yayından önce kaldırılır): "Maçı bitir" — kalan maç görüntüsüz oynanır (js/mac-sahnesi.js
+   hizliBitirIste). Basılınca kapanır ve dakikayı yazar; maç bitince gizlenir. Maç sonu kartı js/ekran-mac-sonu.js */
+const btnHizliBitir=$('btnHizliBitir'),hizliBitirYazi=btnHizliBitir.querySelector('span');
+btnHizliBitir.onclick=()=>{hizliBitirIste();if(HIZLI_BITIR.bekliyor||HIZLI_BITIR.aktif){btnHizliBitir.disabled=true;btnHizliBitir.setAttribute('aria-busy','true');}};
+function hizliBitirGosterge(){
+  if(mac.phase==='fulltime'){if(!btnHizliBitir.hidden)btnHizliBitir.hidden=true;return;}
+  const H=HIZLI_BITIR;if(!H.aktif&&!H.bekliyor)return;
+  const y=H.aktif?'Bitiriliyor… '+mac.minuteLabel()+"'":'Santra bekleniyor…';if(hizliBitirYazi.textContent!==y)hizliBitirYazi.textContent=y;
+}
 /* boşluk ya da P duraklatır (sayfa kaymaz); odaktaki düğmede boşluk düğmeyi çalıştırır. Oda açıkken kısayolu oda ekranı işler (js/ekran-oda.js) */
 addEventListener('keydown',e=>{if((e.code!=='Space'&&e.code!=='KeyP')||e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;
   if(t==='INPUT'||t==='TEXTAREA'||(t==='BUTTON'&&e.code==='Space'))return;if(ON_EKRAN.sayfa==='oda')return;e.preventDefault();duraklatDegistir();});
@@ -58,7 +67,8 @@ function frame(now){
   SEYIRCI_ZAMAN.value=time;
   for(const f of flags){const pa=f.m.geometry.attributes.position,a=pa.array;for(let i=0;i<pa.count;i++){const u=(f.base[i*3]+1.3)/2.6;a[i*3+2]=f.base[i*3+2]+Math.sin(time*5.5-u*4+f.ph)*0.2*u;}pa.needsUpdate=true;}
   fx(dt,time);
-  macKare(dt);baskanZaman(dt);izlemeGosterge();
+  macKare(dt);baskanZaman(dt);izlemeGosterge();hizliBitirGosterge();
+  if(typeof macSonuKare==='function')macSonuKare(dt);   /* F2: maç sonu kartı (js/ekran-mac-sonu.js) */
   if(typeof locaGirisKare==='function')locaGirisKare(dt);   /* js/loca-giris.js (2.8T) */
   if(!btnMacaGec.hidden&&!MAC_ONCESI.includes(mac.phase))btnMacaGec.hidden=true;
   kameraUygula(curView());   /* js/kamera.js */

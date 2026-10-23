@@ -297,6 +297,9 @@ function telefonCiz(k,T,s={}){
         ic+=(bugun?'<h5>Bugün</h5>':'<p class="tel-bos">Bugün maç yok.</p><h5>Sıradaki · '+yazT(telGunAdi(mac.tarih)+' '+gunAyYazi(mac.tarih))+'</h5>')+
           telMacSatiri({sol:saatYazi(mac.dakika),ev,orta:'–',dep:dep||'',durum:'başlamadı'});}
       else ic+='<p class="tel-bos">Yaklaşan maç yok.</p>';
+      /* F2: kulübün son oynanan maçı (js/mac-sonuc.js kulubunSonMaci). Diğer maçlar oynanmaz (3.8) */
+      const son=typeof kulubunSonMaci==='function'&&k.fikstur?kulubunSonMaci(k,(k.kisiler[k.baskanId]||{}).kulupId):null;
+      if(son)ic+='<h5>Son maç · '+yazT(son.f.hafta+'. hafta')+'</h5>'+telMacSatiri({sol:'Bitti',ev:k.kulupler[son.f.ev].ad,orta:son.s.skor[0]+' – '+son.s.skor[1],dep:k.kulupler[son.f.konuk].ad,durum:'bitti'});
     }
     ic+='</div>';
   }

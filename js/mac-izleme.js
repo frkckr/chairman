@@ -12,6 +12,7 @@
    kare hızından bağımsızdır. Adımlar yine tam 1/60 sn olduğundan maçın sonucu izleme hızından etkilenmez (TEKNIK_PLAN §8).
    Kullananlar: js/mac-sahnesi.js (ana motorun adımı ve MAC_HIZ), araclar/ikiz-deneme.js (Node: iç içe iki motorun aynılığı, pencerelerin süresi).
      izlemeKur(ana, MatchSinifi, secenek) · izlemeAnaOlay(I, ad, v) · izlemeAdim(I) · izlemeMacaGec(I) · izlemeKomut(I, ana, uygula) · izlemeHedefHiz(I, secim)
+     izlemeKapat(I) (F2, 2026-10-23: "Maçı bitir (TEST)" kalan maçı görüntüsüz oynatırken ikiz temiz bırakılır — uyarı yok, sapma sayılmaz)
    Ana motor bu dosyada yalnız okunur (kare, phase, tohum, sonucKaydi); ilerletilen ve macaGec verilen yalnız ikizdir (araclar/ad-denetimi.js (c)). */
 'use strict';
 const IZLEME={
@@ -46,7 +47,7 @@ const IZLEME={
 };
 /* durum: ana motor, ikiz, ikizin olay günlüğü, ana motorun karşılaştırılmayı bekleyen olayları, pencereler [{a, b, acik?, son}] (kare) */
 function izlemeKur(ana,MatchSinifi,secenek){
-  const I={ana,ikiz:null,gunluk:[],anaBuf:[],pencereler:[],sapma:0,sapmaYer:null,son:null,ikizSonuc:null,ikizAdim:0,kurulu:false};
+  const I={ana,ikiz:null,gunluk:[],anaBuf:[],pencereler:[],sapma:0,sapmaYer:null,son:null,ikizSonuc:null,ikizAdim:0,kurulu:false,kapali:false};
   /* ikiz kurulamazsa izleme yine çalışır: pencereler ana motorun olayından başlar (önceden yavaşlama yok) */
   try{let ikiz=null;
     ikiz=new MatchSinifi((ad,v)=>{if(I.kurulu)I.gunluk.push({kare:ikiz.kare||0,ad,v});},Object.assign({},secenek,{tohum:ana.tohum}));
@@ -72,7 +73,7 @@ function izlemeOlayPenceresi(I,ad,v,kare,ondenBiliniyor){
 }
 /* ana motorun olayı (js/mac-sahnesi.js on geri çağrısından; ana motorun karesiyle). İkiz yoksa (bozulduysa) pencere buradan kurulur */
 function izlemeAnaOlay(I,ad,v){
-  if(!I)return;const k=I.ana.kare||0;
+  if(!I||I.kapali)return;const k=I.ana.kare||0;
   if(I.ikiz)I.anaBuf.push({kare:k,ad});
   else if(!izlemeOncesi(I.ana))izlemeOlayPenceresi(I,ad,v,k,false);
 }
@@ -102,6 +103,10 @@ function izlemeAdim(I){
   /* geçmiş pencereler atılır */
   const P=I.pencereler,eski=ak-IZLEME.rampaOut*60;while(P.length&&(P[0].acik?P[0].son:P[0].b)<eski)P.shift();
 }
+/* F2 (2026-10-23): "Maçı bitir (TEST)" (js/mac-sahnesi.js hizliBitirIste) kalan maçı görüntüsüz oynatır: önemli anlarda yavaşlamanın anlamı kalmaz,
+   ikizi birlikte adımlamak süreyi ikiye katlar. İkiz ve tamponlar bırakılır, pencere kurulmaz; uyarı yazılmaz, sapma sayılmaz (izlemeBirak'tan farkı).
+   Bir kez atlanıp sonra izlemeAdim çağrılmaz: ikiz ana motora tek karede yetişmeye çalışırdı */
+function izlemeKapat(I){if(!I)return;I.ikiz=null;I.gunluk.length=0;I.anaBuf.length=0;I.pencereler.length=0;I.kapali=true;I.son={ayni:null,atlandi:true};}
 /* B4b: dışarıdan bir komut (geliştirici paneli TEST: tarz değişikliği, js/mac-sahnesi.js tarzTestDegistir) iki motora aynı karede — ikisinin de henüz
    oynamadığı ilk kare (ikiz öndeyse ~IZLEME.onde sn ileride; ana motor oraya sonra varır, talimatın kenardan ulaşması gibi). uygula(ikiz, kare) ikize
    uygulanır; ana motora çağıran aynı kareyle uygular (bu dosya ana motoru yalnız okur). Döner: kare */

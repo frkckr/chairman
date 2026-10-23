@@ -259,6 +259,9 @@ const STIL={
   /* karar anı ekranı (N12, js/ekran-an.js): kenar kararması (0–1), kartların yerine oturma süresi (süre ondan sonra başlar), seçimden sonra
      kartın kalış süresi, son kaç saniyede çubuk amber olur (sn); yazı büyüklüğü (cqw; normal, büyük). TEST değerleri */
   an:{kararma:0.35,giris:0.4,sonra:0.9,amber:1.5,yazi:{normal:1.3,buyuk:1.6}},
+  /* maç sonu kartı (F2, 2026-10-23; js/ekran-mac-sonu.js): kartSn düdükten kartın açılmasına motor saniyesi (sevinç ve çöküş izlenir; "Maçı bitir
+     (TEST)" ile bitince hemen), kenar kararması (0–1), yazı büyüklüğü (cqw; normal, büyük). TEST değerleri */
+  macSonu:{kartSn:8,kararma:0.3,yazi:{normal:1.3,buyuk:1.6}},
   /* onMasa (K1, kullanıcı kararı 2026-10-20; kullanıcının 1. maç notu "masa tüm ekranı kaplamasın, önde kare ayaklı bir masa gözüksün"; N5'in
      2,6 m'lik rafının ve altındaki ön duvarın yerini aldı): başkanın önündeki küçük masa, ön plan kamerasına göre metre. en × derinlik = tabla,
      uzak = tablanın yakın kenarının gözden uzaklığı, y = tablanın üst yüzeyi (gözün altında), kalinlik = tabla, etek = tablanın altındaki

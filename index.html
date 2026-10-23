@@ -37,6 +37,11 @@ body{font-family:var(--mono);font-size:14px;line-height:1.55;padding-inline:16px
 .izAn{color:var(--amber);visibility:hidden}
 .izAn.acik{visibility:visible}
 .seg{display:flex;flex-wrap:wrap;gap:4px}
+/* F2: geçici test düğmesi şeritte (kesikli çerçeve, TEST etiketi; bültendeki "Beklemeden geç" kalıbı); yayından önce kaldırılır */
+.controls button.test-dugme{color:var(--muted);background:transparent;border:1px dashed #5a5446;border-bottom-width:1px}
+.controls button.test-dugme small{font-size:.8em;font-weight:600;letter-spacing:.1em;margin-right:.3em;color:var(--amber)}
+.controls button.test-dugme:hover:not(:disabled){color:var(--text);border-color:var(--text)}
+.controls button.test-dugme:disabled{cursor:progress;color:var(--text);font-variant-numeric:tabular-nums}
 button{font:inherit;font-size:12.5px;color:var(--text);background:#23211e;border:1px solid #3b372f;border-bottom-width:3px;border-radius:4px;padding:6px 11px 5px;cursor:pointer;line-height:1.2}
 button:hover{border-color:#5a5446}
 button[aria-pressed="true"]{color:#1a1203;background:var(--amber);border-color:#b9791a}
@@ -322,6 +327,8 @@ html,body{margin:0}
         <button type="button" id="btnDuraklat" aria-pressed="false" title="Kısayol: boşluk tuşu">Duraklat</button>
         <button type="button" id="btnTelefon" aria-pressed="false" title="Masadaki telefon (T)">Telefon</button>
         <button type="button" id="btnMacaGec" title="Maç öncesini (ısınma, tören, fotoğraf, yazı tura) atla">Santraya geç</button>
+        <!-- F2 (2026-10-23, kullanıcı isteği): GEÇİCİ test düğmesi; kalan maçı görüntüsüz oynatıp sona geçer. Yayından önce kaldırılır -->
+        <button type="button" id="btnHizliBitir" class="test-dugme" title="Test aşaması: kalan maçı görüntüsüz oynatıp maç sonuna geçer (yayından önce kaldırılacak)"><small>TEST</small> <span>Maçı bitir</span></button>
       </div>
     </div>
     <!-- U1 (2026-10-12): izleme hızı; önemli anlarda kendiliğinden normal hıza iner (js/mac-izleme.js), göstergesi etiketin yanında -->
@@ -434,5 +441,6 @@ html,body{margin:0}
 <script src="js/ekran-an.js"></script>
 <script src="js/loca-giris.js"></script>
 <script src="js/ekran-mac-telefon.js"></script>
+<script src="js/ekran-mac-sonu.js"></script>
 </body>
 </html>
