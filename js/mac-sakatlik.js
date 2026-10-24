@@ -21,7 +21,7 @@ ayarEkle('S',{
   sakatTemas:0.45,             // temaslı düşüşte sakatlık olasılığı: × (0,3 + 0,7·şiddet²) × yatkınlık (derece şiddetle: çıkış 0,025 + 0,14·ş, tedavi 0,28 + 0,2·ş, kalanı ağrı)
   sakatKas:0.010,              // deparda (hız ≥ 0,85 × azami) kas sakatlığı tehlikesi (1/sn): × (0,3 + yorgunluk)² × yatkınlık
   sakatKramp:0.0012,
-  sakatCikisPay:1,             // G1 (2026-10-24, kadro yeterliliği): çıkış (oyundan alınma) payının ölçeği; düşen pay ağrıya kalır (tedavi payı aynı). Karar 13 hedefi maç başına ~0,3 çıkış           // 70. dakikadan sonra koşarken kramp tehlikesi (1/sn): × min(1, (yorgunluk − 0,38)/0,12) × yatkınlık (yorgunluk 90. dakikada ortanca ~0,37)
+  sakatCikisPay:0.5,           // G1 (2026-10-24, kadro yeterliliği; karar 43): çıkış (oyundan alınma) payının ölçeği; düşen pay ağrıya kalır (tedavi payı aynı). Karar 13 hedefi maç başına ~0,3 çıkış; 80 maç: 1 → 0,59, 0,5 → 0,21, 0,4 → 0,21 (ölçü sonucu 0,5)           // 70. dakikadan sonra koşarken kramp tehlikesi (1/sn): × min(1, (yorgunluk − 0,38)/0,12) × yatkınlık (yorgunluk 90. dakikada ortanca ~0,37)
   tedaviSure:[5,8],            // sağlıkçıların sahadaki tedavisi (sn; çıkışta 4 sn değerlendirme, sonra sedye)
   tedaviDonus:[6,10]           // tedaviden sonra kenarda bekleyen oyuncunun oyun başladıktan sonra dönüşü (sn; top 12 m'den uzaktayken)
 });

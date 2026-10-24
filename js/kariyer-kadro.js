@@ -15,6 +15,10 @@
      üretilir (gol sayısı takımın devralınan attığı gole eşittir). Rastlantı dünya tohumundan ve kulüp kimliğinden türetilir: aynı tohum aynı
      kadroları kurar, kariyerin kayıtlı rastlantısı (k.rastlanti) çekilmez. Forma bugün bütün üretilen kulüplerde 'deplasman'dır (renkler
      kullanıcıdan gelene dek TEST). Demirkapı ve Akdeniz'in eksikleri (sakat, cezalı) oyuncu kaydına dönüşür; özellikleri ve görünüşleri üretilir.
+   G1-b (2026-10-24, kullanıcı kararı 43: kadro yeterliliği; TEST): her kulübün kadrosu KADRO_HEDEF (22) oyuncuya genç yedeklerle tamamlanır
+     (kadroTamamla): GENC_MEVKI sırasıyla, 18–21 yaş, kulübün gücünden GENC_ZAYIF eksik, numara GENC_NO_BAS'tan ilk boş. Rastlantı ayrı akıştandır
+     (dünya tohumu + '<kulüp>:genc:<ek>'): tohum kadrosu ve üretilen 18 oyuncu aynı kalır, gençlerin kimlikleri bütün kulüplerin ardından gelir.
+     Sonradan (G2: satış, ayrılış) kadro yine 22'ye tamamlanır; ek farklı olduğu için yeni gençler başka adlarla gelir.
    Kurulum: kadrolariKur(k, lig) (js/baslangic.js). Doğrulama: kadroDogrula (EK_DENETIMLER).
    k.oyuncular paylaşılan alandır (js/kariyer.js PAYLASILAN_ALANLAR): komutlar arasında dondurulur, değiştiren yeni nesne kurar. Dosya katı
    kiptedir: dondurulmuş kayda yerinde yazmak hata verir. */
@@ -27,6 +31,11 @@ const KADRO_YUVA_NO=[1,2,4,5,3,7,6,8,11,9,10];                          // 4-4-2
 const KADRO_SOL_YUVA=[4,8];                                             // sol bek ve sol kanat: çoğunlukla sol ayaklı
 const KADRO_STOPER_YUVA=[2,3];                                          // stoperler uzun boylu
 const KADRO_YEDEK=[['KL',12],['DEF',14],['DEF',15],['OS',16],['OS',17],['FV',18],['FV',19]];
+const KADRO_HEDEF=22;                                                   // G1-b: kulübün oyuncu sayısı (genç yedeklerle tamamlanır; TEST)
+const GENC_MEVKI=['DEF','OS','FV','OS'];                                // tamamlamada mevki sırası (döngüsel)
+const GENC_ZAYIF=12;                                                    // gençlerin kulüp gücüne göre eksiği (özellik puanı; TEST)
+const GENC_YAS=[18,21];                                                 // gençlerin yaşı (2026 sezonu)
+const GENC_NO_BAS=20;                                                   // gençlere verilen ilk forma numarası (boş olan)
 /* TEST üretim dağılımları (yalnız veri; kadrolar.js'teki değerlerin aralığında) */
 const KADRO_SAC=[['kisa',45],['kivircik',18],['mullet',14],['uzun',12],['kel',11]];
 const KADRO_SAC_RENK=[['#141212',30],['#241a12',28],['#3c2616',20],['#5a4028',10],['#8a6a3a',5],['#a0522d',4],['#c8a060',3]];
@@ -62,16 +71,16 @@ function kadroSablonu(){
   for(const m of OYUNCU_MEVKILERI)mevki[m]=ort(T.flatMap(kd=>kd.oyuncular.filter((o,i)=>M[i]===m).map(o=>o.oz)));
   return{yuva,mevki};
 }
-/* doğum tarihi (TEST): kaleci 21–34, öbürleri 19–32 yaşında (2026 sezonu) */
-function yasUret(r,mevki){
-  const yas=(mevki==='KL'?21:19)+Math.floor(r()*14),ay=1+Math.floor(r()*12),gun=1+Math.floor(r()*28),iki=n=>String(n).padStart(2,'0');
+/* doğum tarihi (TEST): kaleci 21–34, öbürleri 19–32 yaşında (2026 sezonu); aralik [en az, en çok] verilirse o yaşlarda (G1-b gençler) */
+function yasUret(r,mevki,aralik){
+  const yas=aralik?aralik[0]+Math.floor(r()*(aralik[1]-aralik[0]+1)):(mevki==='KL'?21:19)+Math.floor(r()*14),ay=1+Math.floor(r()*12),gun=1+Math.floor(r()*28),iki=n=>String(n).padStart(2,'0');
   return`${2026-yas}-${iki(ay)}-${iki(gun)}`;
 }
-/* üretilen oyuncu kaydı (kimliksiz). o: {mevki, sablon (11 özellik), guc, yedek, sol, uzun, ad, no} */
+/* üretilen oyuncu kaydı (kimliksiz). o: {mevki, sablon (11 özellik), guc, yedek, sol, uzun, ad, no, yas?: [en az, en çok]} */
 function oyuncuUret(r,o){
   const kl=o.mevki==='KL';
   const oz=o.sablon.map((v,j)=>j===8&&!kl?5:Math.round(clamp(v+o.guc+(r()+r()-1)*14-(o.yedek?3:0),j===8?40:10,95)));
-  const p={ad:o.ad,no:o.no,mevki:o.mevki,dogumTarihi:yasUret(r,o.mevki),ayak:'sag',oz,gol:0,sari:0,ceza:null,sakat:null,
+  const p={ad:o.ad,no:o.no,mevki:o.mevki,dogumTarihi:yasUret(r,o.mevki,o.yas),ayak:'sag',oz,gol:0,sari:0,ceza:null,sakat:null,
     ten:Math.floor(r()*5),sac:agirlikliSec(r,KADRO_SAC),sacRenk:agirlikliSec(r,KADRO_SAC_RENK),
     boy:+((kl||o.uzun)?1+r()*0.09:0.92+r()*0.14).toFixed(2),yapi:+(0.94+r()*0.16).toFixed(2)};
   const a=r();p.ayak=o.sol?(a<0.85?'sol':'sag'):a<0.12?'sol':a<0.15?'iki':'sag';
@@ -126,15 +135,44 @@ function kadroKopyala(k,kulupId,KD,o){
   }
   return{ad:KD.ad,forma:KD.forma,kaleciForma:KD.kaleciForma,taktik:Object.assign({},KD.taktik),td:Object.assign({},KD.td),ilk11,yedekler};
 }
-/* bütün kulüplerin kadrosu: başkanın kulübü önce (kimlikler oyuncu-1'den başlar), sonra kulüp sırasıyla. Kulübün gücü devralınan puandan */
+/* kulübün gücü: devralınan puan tablosundan, lig ortalamasına göre (özellik puanı; js/lig.js tarifi) */
+function kulupGucu(lig,kulupId){
+  const P=lig.takimlar.map(t=>3*t.G+t.B),ort=P.reduce((a,b)=>a+b,0)/P.length,t=lig.takimlar.find(x=>x.id===kulupId)||{G:0,B:0};
+  return(3*t.G+t.B-ort)*0.3;
+}
+/* bütün kulüplerin kadrosu: başkanın kulübü önce (kimlikler oyuncu-1'den başlar), sonra kulüp sırasıyla. Kulübün gücü devralınan puandan.
+   G1-b: bütün kulüpler kurulduktan sonra aynı sırayla genç yedeklerle KADRO_HEDEF'e tamamlanır (önceki oyuncuların kimlikleri değişmez) */
 function kadrolariKur(k,lig){
-  const P=lig.takimlar.map(t=>3*t.G+t.B),ort=P.reduce((a,b)=>a+b,0)/P.length,biz=(k.kisiler[k.baskanId]||{}).kulupId;
-  for(const id of [biz,...Object.keys(k.kulupler).filter(x=>x!==biz)]){
-    if(!k.kulupler[id])continue;
+  const biz=(k.kisiler[k.baskanId]||{}).kulupId,sira=[biz,...Object.keys(k.kulupler).filter(x=>x!==biz)].filter(id=>k.kulupler[id]);
+  for(const id of sira){
     const t=lig.takimlar.find(x=>x.id===id)||{G:0,B:0,M:0,A:0};
-    const o={tohum:k.dunyaTohumu,guc:(3*t.G+t.B-ort)*0.3,golSayisi:t.A,oynanan:t.G+t.B+t.M,tarih:k.tarih};
+    const o={tohum:k.dunyaTohumu,guc:kulupGucu(lig,id),golSayisi:t.A,oynanan:t.G+t.B+t.M,tarih:k.tarih};
     k.kulupler[id].kadro=KADROLAR[id]?kadroKopyala(k,id,KADROLAR[id],o):kadroUret(k,id,o);
   }
+  for(const id of sira)kadroTamamla(k,id,KADRO_HEDEF,'baslangic',kulupGucu(lig,id));
+}
+/* kulübün ilk boş forma numarası (bas'tan yukarı, sonra aşağı; 1–99) */
+function bosNumara(k,kulupId,bas){
+  const N=new Set(kulupOyunculari(k,kulupId).map(p=>p.no));
+  for(let n=bas;n<=99;n++)if(!N.has(n))return n;
+  for(let n=bas-1;n>=1;n--)if(!N.has(n))return n;
+  throw new Error(`Kadro ${kulupId}: boş forma numarası yok`);
+}
+/* G1-b: kulübün kadrosunu hedef sayıya genç yedeklerle tamamlar (komut içinde; k.oyuncular kopyalanır). ek: rastlantı akışının adı (aynı kulüpte
+   her tamamlamada farklı olmalı). guc verilmezse js/lig.js tarifinden. Eklenen kimlikleri döndürür */
+function kadroTamamla(k,kulupId,hedef,ek,guc){
+  const c=k.kulupler[kulupId],D=c&&c.kadro;
+  if(!D)throw new Error(`Kadro ${kulupId}: kadrosu yok`);
+  const eksik=hedef-kulupOyunculari(k,kulupId).length;if(eksik<=0)return[];
+  const r=kadroRastgele(k.dunyaTohumu,kulupId+':genc:'+ek),S=kadroSablonu(),g=(guc===undefined?kulupGucu(LIG,kulupId):guc)-GENC_ZAYIF;
+  const kullanilan=new Set(kulupOyunculari(k,kulupId).map(p=>p.ad)),adlar=karistirR(r,ADLAR_TEST.slice()).filter(a=>!kullanilan.has(a));
+  k.oyuncular=Object.assign({},k.oyuncular);
+  const L=[];
+  for(let i=0;i<eksik;i++){
+    const m=GENC_MEVKI[i%GENC_MEVKI.length],p=oyuncuUret(r,{mevki:m,sablon:S.mevki[m],guc:g,yedek:true,yas:GENC_YAS,ad:adlar[i%adlar.length],no:bosNumara(k,kulupId,GENC_NO_BAS)});
+    const id=oyuncuEkle(k,kulupId,p);L.push(id);D.yedekler=D.yedekler.concat([id]);   /* numara sırası: eklenen bir sonrakinin boş numarasını görür */
+  }
+  return L;
 }
 
 /* oyuncu ve kadro alanlarının doğrulaması (kariyerDogrula EK_DENETIMLER üzerinden çağırır). Kaydın kendi alanlarını geçen dondurulmuş oyuncu

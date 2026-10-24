@@ -278,8 +278,14 @@ bolum('3.1 — sezon, fikstür ve kadrolar (F1; oyunun yüklediği dosyalar)');
     &&ids.filter(id=>id!=='demirkapi').every(id=>c.kulupler[id].baskanId===null&&c.kulupler[id].nakit===0&&c.kulupler[id].yonetim===undefined)&&new Set(ids.map(id=>c.kulupler[id].kisa)).size===16,
     ids.map(id=>c.kulupler[id].kisa).join(' '));
   const boy=id=>{const D=c.kulupler[id].kadro;return D.ilk11.length+'+'+D.yedekler.length;};
-  denetle('Kadrolar: Demirkapı 11+7 (5 yedek, 2 eksik), Akdeniz 11+8, üretilen 14 kulüp 11+7',boy('demirkapi')==='11+7'&&boy('akdeniz')==='11+8'&&uretilen.length===14&&uretilen.every(id=>boy(id)==='11+7'),
+  denetle('Kadrolar 22 (G1-b): Demirkapı 11+7 (5 yedek, 2 eksik) ve Akdeniz 11+8 tohumdan, üretilen 14 kulüp 11+7; hepsi gençlerle 11+11',boy('demirkapi')==='11+11'&&boy('akdeniz')==='11+11'&&uretilen.length===14&&uretilen.every(id=>boy(id)==='11+11'),
     `${boy('demirkapi')} · ${boy('akdeniz')} · ${boy(uretilen[0])}`);
+  {const yas=p=>2026-Number(p.dogumTarihi.slice(0,4)),tum=ids.flatMap(id=>oyunAl('kulupOyunculari')(c,id).map((p,i)=>({p,i,id})));
+   const genc=tum.filter(x=>x.i>=(x.id==='demirkapi'?18:x.id==='akdeniz'?19:18)),idNo=x=>Number(x.p.id.slice(7));
+   const enBuyukEski=Math.max(...tum.filter(x=>!genc.includes(x)).map(idNo));
+   denetle('Gençler (G1-b): 16 kulüpte 63 (14 × 4, Demirkapı 4, Akdeniz 3), 18–21 yaşında, kimlikleri bütün eski oyunculardan sonra; numaralar kulüpte tekil; aynı tohum aynı gençler',
+     genc.length===63&&genc.every(x=>yas(x.p)>=18&&yas(x.p)<=21&&idNo(x)>enBuyukEski&&x.p.gol===0&&x.p.sari===0)&&ids.every(id=>{const N=oyunAl('kulupOyunculari')(c,id).map(p=>p.no);return new Set(N).size===N.length;})
+     &&metin(oyunAl('kariyerBaslat')({tohum:7}).oyuncular)===metin(c.oyuncular),`${genc.length} genç · ${genc.slice(0,4).map(x=>x.p.ad+' '+x.p.no+' '+x.p.mevki).join(', ')}`);}
   const ayni=id=>{const D=c.kulupler[id].kadro,K=KD[id];
     return K.oyuncular.every((o,i)=>{const p=c.oyuncular[D.ilk11[i]];return p.ad===o.ad&&p.no===o.no&&metin(p.oz)===metin(o.oz)&&p.gol===(o.gol||0)&&p.sari===(o.sari||0)&&p.ayak===(o.ayak||'sag')&&p.ten===o.ten&&p.sac===o.sac&&!!p.kaptan===!!o.kaptan;})
       &&K.yedekler.every((o,i)=>{const p=c.oyuncular[D.yedekler[i]];return p.ad===o.ad&&p.no===o.no&&p.mevki===o.mevki&&metin(p.oz)===metin(o.oz);})
@@ -434,7 +440,7 @@ bolum('3.4 — maç girdisi: kariyerden maç kadrosu ve Match seçeneği (F1-b)'
   /* hocasız seçim (F3'e dek): sakat ya da cezalının yerine yedeklerden aynı mevkideki ilk uygun oyuncu */
   const kopya=f=>{const x=kariyerOlustur(c);f(x);return x;},bul=(x,ad)=>Object.values(x.oyuncular).find(p=>p.kulupId==='demirkapi'&&p.ad===ad);
   const x1=kopya(x=>{bul(x,'Oğuz').sakat={neden:'deneme',donus:'2026-12-20'};}),K1=macKadrosu(x1,'demirkapi','2026-11-28');
-  denetle('Sakat sağ kanadın yerine ilk uygun orta saha yedeği girer; kulübede kalan dört yedek',K1.oyuncular[5].ad==='Hakan'&&K1.yedekler.map(y=>y.ad).join()==='Tamer,Levent,Murat,Sinan'&&K1.eksikler.some(e=>e.ad==='Oğuz'),
+  denetle('Sakat sağ kanadın yerine ilk uygun orta saha yedeği girer; kulübede kalan dört yedek ve bir genç (G1-b: kadro 22)',K1.oyuncular[5].ad==='Hakan'&&K1.yedekler.map(y=>y.ad).join()==='Tamer,Levent,Murat,Sinan,Umut'&&K1.eksikler.some(e=>e.ad==='Oğuz'),
     K1.oyuncular.map(o=>o.no).join(','));
   const x2=kopya(x=>{bul(x,'Engin').ceza={mac:1,neden:'deneme'};bul(x,'Cengiz').ceza={mac:1,neden:'deneme'};}),K2=macKadrosu(x2,'demirkapi','2026-11-28');
   denetle('Cezalı kalecinin yerine yedek kaleci; cezalı kaptanın yerine en yaşlı saha oyuncusu kaptan',K2.oyuncular[0].ad==='Tamer'&&K2.oyuncular.filter(o=>o.kaptan).length===1&&!K2.oyuncular.some(o=>o.ad==='Cengiz'),
