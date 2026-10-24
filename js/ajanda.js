@@ -36,6 +36,8 @@ const AJANDA_EN_UZUN=720;                   // bir işin en uzun süresi (dakika
 const SURE_UZATMA=30;                       // meşgulken dolan son cevap anı, işin bitişinden bu kadar dakika sonraya uzar (TEST değeri)
 const ILERLE_SINIRI=30;                     // ajanda işi yokken ilerlemenin bakacağı en uzak gün (TEST değeri)
 const KARAR_TURLERI={};
+/* G1-d: takvimde bekleyen iş kalmayınca İlerle'nin engel metnini veren kural dosyaları: (k) => metin | null (js/fikstur.js: sezon tamamlandı) */
+const ILERLE_ENGEL_EKLERI=[];
 const KATILIM_ETKILERI={};
 /* bu karar cevapsız kalırsa kendiliğinden sonuçlanır mı (yalnız acil olmayan saati serbest karar) */
 const zamanAsimiVar=x=>x.tur==='ajanda'&&!!x.veri.saatsiz&&!!x.veri.bekleyebilir&&!!x.veri.karar&&!!(KARAR_TURLERI[x.veri.karar]||{}).zamanAsimi;
@@ -243,7 +245,7 @@ function ilerleOnizle(k){
     const son=L.filter(x=>x.tur!=='ajanda'&&isSonAn(x)<=simdi+ILERLE_SINIRI*1440).pop();
     if(son){hedef=Math.max(isSonAn(son),simdi+(kacirilacak.length?1:0));neden='sinir';}
     else if(kacirilacak.length){hedef=simdi+1;neden='sinir';}
-    else if(!L.some(x=>x.tur==='ajanda'))engel.push('Takvimde bekleyen bir gelişme yok');
+    else if(!L.some(x=>x.tur==='ajanda'))engel.push(ILERLE_ENGEL_EKLERI.map(f=>f(k)).find(Boolean)||'Takvimde bekleyen bir gelişme yok');
   }
   /* başkanın istediği görüş (veri.durak taşıyan ekip işi) daha önce gelecekse orada durulur: karar beklerken de görüş beklenebilir */
   {const beklenen=L.filter(x=>x.tur==='ekip'&&x.veri.durak).map(isSonAn).sort((a,b)=>a-b)[0];

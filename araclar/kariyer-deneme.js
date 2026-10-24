@@ -670,6 +670,32 @@ bolum('3.9 — kadro yeterliliği: hükmen güvenlik ağı (G1-a; oyunun yükled
    denetle('Hükmen maçında motor sonucu (oynanmış maç) reddedilir',reddeder(()=>KK(c,x=>T('haftaSonuclariUygula')(x,id13,S(),toh(id13),{},digerleri(x)))));}
 }
 
+bolum('5.1a — sezon sonu kaydı (G1-d; yeni sezon yok; oyunun yüklediği dosyalar)');
+{
+  const T=oyunAl,KK=T('kariyerKomut');
+  const macIsi=c=>Object.values(c.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu');
+  const S={skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}};
+  /* haftayı sekiz yapay 0–0 ile oynar (P12 açılırsa kararı cevapsız kalır) */
+  const hafta=c=>{const j=macIsi(c);for(let g=0;g<12&&!(c.tarih===j.tarih&&c.gunIciDakika===j.dakika);g++)c=KK(c,x=>T('duragaIlerle')(x)).kariyer;
+    c=KK(c,x=>T('ajandaIsiYap')(x,j.id)).kariyer;const id=j.veri.macId,D=T('haftaninDigerMaclari')(c,id).map(f=>({macId:f.id,sonuc:S,tohum:T('macTohumu')(7,f.id)}));
+    return KK(c,x=>T('haftaSonuclariUygula')(x,id,S,T('macTohumu')(7,id),{},D)).kariyer;};
+  let k=T('kariyerBaslat')({tohum:7}),n=0;
+  for(;n<20&&macIsi(k);n++){if(n===17)denetle('29. haftadan sonra sezon sonu kaydı yok',!k.sezon.sonuc&&!k.gecmis.some(g=>g.tur==='sezonSonu'));k=hafta(k);}
+  const R=k.sezon.sonuc,tb=T('sezonTablosu')(k),G=k.gecmis.filter(g=>g.tur==='sezonSonu'),hat=Object.values(k.isler).find(x=>x.tur==='hatirlatma'&&/Sezon tamamlandı/.test(x.veri.metin));
+  denetle('18 hafta: son maçın komutunda sezon sonu kaydı bir kez (tablo, şampiyon, bizim sıra ve puan); geçmişte sezonSonu; ertesi gün 10:00 hatırlatma; maç günü işi yok',
+    n===18&&!!R&&R.tablo.length===16&&R.sampiyon===tb[0].id&&metin(R.tablo.map(t=>t.id))===metin(tb.map(t=>t.id))&&R.bizimSira===tb.findIndex(t=>t.id==='demirkapi')+1&&R.bizimPuan===tb.find(t=>t.id==='demirkapi').P
+    &&G.length===1&&G[0].sira===R.bizimSira&&!!hat&&hat.tarih==='2027-03-28'&&hat.dakika===600&&!macIsi(k)&&tb.every(t=>t.O===30),`${n} hafta · şampiyon ${R&&R.sampiyon} · biz ${R&&R.bizimSira}. ${R&&R.bizimPuan} puan · ${hat&&hat.veri.metin}`);
+  {let c=k;for(let g=0;g<6&&!T('ilerleOnizle')(c).engel.length;g++)c=KK(c,x=>T('duragaIlerle')(x)).kariyer;
+   const e=T('ilerleOnizle')(c).engel;
+   denetle('Sezon bitince İlerle hatırlatmaya gider, sonra açık engel: “Sezon tamamlandı; yeni sezon bu sürümde yok (TEST).”',e.length===1&&e[0]===T('SEZON_SONU_METNI')&&c.gecmis.some(g=>g.tur==='is'&&g.sonuc&&/Sezon tamamlandı/.test(g.sonuc.metin||'')),e.join(' · '));}
+  denetle('Sezon sonu kaydı ikinci kez yazılmaz; bitmiş haftanın sonucu ikinci kez uygulanamaz',KK(k,x=>T('sezonSonuYaz')(x)).sonuc===false&&reddeder(()=>KK(k,x=>T('macSonucuUygula')(x,Object.keys(x.maclar).pop(),S,0))));
+  {const d=T('bellekDeposu')();T('kariyerKaydet')(d,'s',k);const y=T('kariyerYukle')(d,'s');
+   denetle('Kaydet–yükle: sezon sonu kaydı aynı, kariyer geçerli',y.tamam&&metin(y.kariyer.sezon)===metin(k.sezon)&&!T('kariyerDogrula')(y.kariyer).length);}
+  {const b=JSON.parse(metin(k));b.sezon.sonuc.sampiyon=b.sezon.sonuc.tablo[1].id;const H=T('kariyerDogrula')(T('kariyerOlustur')(b));
+   const b2=JSON.parse(metin(k));const son=Object.keys(b2.maclar).pop();delete b2.maclar[son];const H2=T('kariyerDogrula')(T('kariyerOlustur')(b2));
+   denetle('Bozuk sezon sonu kaydı (şampiyon tabloyla tutmuyor; oynanmamış maç kalmış) doğrulamada yakalanır',H.some(e=>/sezon sonu kaydı geçersiz/.test(e))&&H2.some(e=>/sezon sonu kaydı var fakat/.test(e)),H.concat(H2).slice(0,2).join(' · '));}
+}
+
 bolum('3.7a — hoca değişimi ve P12 “Hocaya sabır mı, değişim mi?” TEST taslağı (F6-a; oyunun yüklediği dosyalar)');
 {
   const P=oyunAl,KK=P('kariyerKomut'),KAYNAK=['puanDurumu','macRaporlari'];

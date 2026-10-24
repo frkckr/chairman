@@ -169,7 +169,9 @@ function macSonucuUygula(k,macId,sonuc,tohum,ek){
   /* sıradaki haftanın maç günü: yalnız başkanın kulübünün maçından sonra (3.8'in diğer maçları kendi yoluyla işlenecek; F2 incelemesi) */
   const biz=(k.kisiler[k.baskanId]||{}).kulupId;let siradakiIsId=null;
   if(k.gorevDurumu==='gorevde'&&biz&&(f.ev===biz||f.konuk===biz)&&!Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu')){const s=siradakiMac(k,biz);if(s)siradakiIsId=macGunuIsiKur(k,s.id);}
-  return{macId,skor:sonuc.skor.slice(),durdu:r.durdu||hedef<hedef0,siradakiIsId};
+  /* G1-d: haftanın bütün maçları yazıldıysa ve sezonun son maçıysa sezon sonu kaydı (js/fikstur.js sezonSonuYaz; bir kez) */
+  const sezonSonu=sezonSonuYaz(k);
+  return{macId,skor:sonuc.skor.slice(),durdu:r.durdu||hedef<hedef0,siradakiIsId,sezonSonu};
 }
 
 /* k.maclar girdilerinin iç tutarlılığı. Dondurulmuş girdinin kendi denetimi bir kez yapılır (değişemez); oyuncu kimliklerinin varlığı her seferinde.

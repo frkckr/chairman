@@ -71,7 +71,12 @@ function sezon(){
   const h=dogrula(k);if(h.length)hatalar.push('kariyer geçersiz: '+h.slice(0,3).join('; '));
   const p12=Object.values(k.olaylar).filter(o=>o.paket==='hocaDegerlendirme').map(o=>`${o.acilis.tarih} ${o.varyant} (${o.durum})`);
   const degisim=k.gecmis.filter(g=>g.tur==='hocaDegisimi').map(g=>`${g.tarih} ${k.kisiler[g.eskiId].ad} → ${k.kisiler[g.yeniId].ad} (${k.kisiler[g.yeniId].hoca.tarz})`);
-  return{k,satirlar,hatalar,kalan,p12,degisim,hukmen:hukmenToplam,metin:JSON.stringify(k)};
+  /* G1-d: sezon sonu kaydı ve İlerle'nin engel metni */
+  let sezonSonu=null;
+  if(k.sezon.sonuc){const R=k.sezon.sonuc,ad=id=>k.kulupler[id].ad;let c=k;
+    for(let g=0;g<8&&!G('ilerleOnizle')(c).engel.length;g++)c=KK(c,x=>duragaIlerle(x)).kariyer;
+    sezonSonu=`şampiyon ${ad(R.sampiyon)} (${R.tablo[0].P} puan) · biz ${R.bizimSira}. sıra, ${R.bizimPuan} puan · İlerle: ${G('ilerleOnizle')(c).engel.join('; ')}`;}
+  return{k,satirlar,hatalar,kalan,p12,degisim,hukmen:hukmenToplam,sezonSonu,metin:JSON.stringify(k)};
 }
 
 const t0=Date.now();
@@ -83,6 +88,7 @@ for(const s of R.satirlar)console.log(`  ${String(s.hafta).padStart(5)}  ${(s.ev
 const ms=R.satirlar.map(s=>s.ms),ort=ms.length?ms.reduce((a,b)=>a+b,0)/ms.length:0,adim=R.satirlar.reduce((a,s)=>a+s.adim,0),hOrt=R.satirlar.length?R.satirlar.reduce((a,s)=>a+s.msHafta,0)/R.satirlar.length:0;
 console.log(`  Bizim maç ${Math.round(ort)} ms (${R.satirlar.length} hafta; 1000 adım ${adim?(ms.reduce((a,b)=>a+b,0)/adim*1000).toFixed(1):'—'} ms) · haftanın 8 maçı ${(hOrt/1000).toFixed(1)} sn · hafta başına gol ${(R.satirlar.reduce((a,s)=>a+s.haftaGol,0)/Math.max(1,R.satirlar.length)).toFixed(1)}`);
 console.log(`  Hükmen (G1-a): ${R.hukmen} maç`);
+if(R.sezonSonu)console.log(`  Sezon sonu (G1-d): ${R.sezonSonu}`);
 console.log(`  P12 (--p12 ${P12}): ${R.p12.length?R.p12.join(' · '):'açılmadı'}${R.degisim.length?' · hoca değişimi: '+R.degisim.join(' · '):''}`);
 let ayni=null;
 if(!TEK&&!R.hatalar.length){const R2=sezon();ayni=R2.metin===R.metin&&!R2.hatalar.length;

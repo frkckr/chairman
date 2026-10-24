@@ -15,6 +15,11 @@
      yer değiştirmiş aynasıdır. Aynı tohum aynı fikstürü verir; kariyerin kayıtlı rastlantısı çekilmez.
    Maç tohumu macTohumu(dünya tohumu, maç kimliği): aynı kariyerde aynı maç hep aynı oynanır (F1-b; sayfa maç sırasında kapanırsa maç
      aynı tohumla yeniden oynanır). Maç günü işi macGunuIsiKur ile kurulur (ajanda 'macGunu' eylemi, veri.macId).
+   G1-d (2026-10-24, kullanıcı kararı 43: sezon geçişi yok, yalnız sezon sonu kaydı): oynanacak haftaların bütün maçları yazılınca (başkanın son maçının
+     sonuç komutunda, js/mac-sonuc.js) sezonSonuYaz bir kez k.sezon.sonuc = {tarih, tablo:[{id,O,G,B,M,A,Y,P}], sampiyon, bizimSira, bizimPuan} yazar
+     (kopyala-yaz), geçmişe {tur:'sezonSonu', sezonId, sira, puan, sampiyon, tarih, dakika}, ertesi gün 10:00 hatırlatma koyar ve SEZON_SONU_EKLERI'ni
+     çağırır (G2: sözleşme bitişleri). Sonra İlerle "Sezon tamamlandı; yeni sezon bu sürümde yok (TEST)" der (js/ajanda.js ILERLE_ENGEL_EKLERI).
+     Yeni sezon, takvim ve sayaçların sıfırlanması sonraki turda (5.1).
    Doğrulama: fiksturDogrula (EK_DENETIMLER).
    sezon, fikstur ve maclar paylaşılan alandır (js/kariyer.js PAYLASILAN_ALANLAR): komutlar arasında dondurulur; sonucu yazan komut yeni nesne
    kurar (k.maclar={...k.maclar,[id]:sonuç}). Dosya katı kiptedir: dondurulmuş nesneye yerinde yazmak hata verir. */
@@ -181,6 +186,24 @@ function sezonTakvimiKur(k,kulupId){
     isEkle(k,{tur:'hatirlatma',tarih:t.bitis,dakika:1200,veri:{metin:`${t.ad} kapandı.`}});
   }
 }
+/* ---- G1-d: sezon sonu kaydı ---- */
+const SEZON_SONU_EKLERI=[];   // (k) => void; sezon sonu kaydından hemen sonra, aynı komutta
+const SEZON_SONU_METNI='Sezon tamamlandı; yeni sezon bu sürümde yok (TEST).';
+const sezonTamamMi=k=>!!k.sezon&&Array.isArray(k.fikstur)&&k.fikstur.every(f=>f.hafta<k.sezon.ilkHafta||!!(k.maclar||{})[f.id]);
+/* sezon bittiyse bir kez yazar; yazdıysa true */
+function sezonSonuYaz(k){
+  if(!sezonTamamMi(k)||k.sezon.sonuc)return false;
+  const tablo=sezonTablosu(k).map(t=>({id:t.id,O:t.O,G:t.G,B:t.B,M:t.M,A:t.A,Y:t.Y,P:t.P})),biz=(k.kisiler[k.baskanId]||{}).kulupId,i=tablo.findIndex(t=>t.id===biz);
+  const sonuc={tarih:k.tarih,tablo,sampiyon:tablo[0].id,bizimSira:i>=0?i+1:null,bizimPuan:i>=0?tablo[i].P:null};
+  k.sezon=Object.assign({},k.sezon,{sonuc});
+  k.gecmis.push({tur:'sezonSonu',sezonId:k.sezon.id,sira:sonuc.bizimSira,puan:sonuc.bizimPuan,sampiyon:sonuc.sampiyon,tarih:k.tarih,dakika:k.gunIciDakika});
+  const ad=id=>(k.kulupler[id]||{ad:id}).ad;
+  isEkle(k,{tur:'hatirlatma',tarih:tarihEkle(k.tarih,1),dakika:600,veri:{metin:`Sezon tamamlandı: ${k.sezon.ad}${i>=0?` ${i+1}. sıra, ${sonuc.bizimPuan} puan`:''}; şampiyon ${ad(sonuc.sampiyon)}. Yeni sezon bu sürümde yok (TEST).`}});
+  for(const f of SEZON_SONU_EKLERI)f(k);
+  return true;
+}
+ILERLE_ENGEL_EKLERI.push(k=>k.sezon&&k.sezon.sonuc?SEZON_SONU_METNI:null);
+
 /* puan durumu: devralınan tablo + oynanan maçlar; js/lig.js puanDurumu ile sıralanır (O, P, AV eklenir) */
 function sezonTablosu(k){
   const S=k.sezon,T={};
@@ -238,6 +261,10 @@ function fiksturIcDenetim(S,F){
     const c=f.ev+'>'+f.konuk;if(cift.has(c))h.push(`Fikstür: ${f.ev}–${f.konuk} iki kez`);cift.add(c);
   }
   if(cift.size!==n*(n-1))h.push(`Fikstür: çift devre eksik (${cift.size}/${n*(n-1)} maç)`);
+  /* G1-d: sezon sonu kaydı (varsa) */
+  if(S.sonuc!==undefined){const R=S.sonuc,L=duz(R)&&Array.isArray(R.tablo)?R.tablo:null;
+    if(!L||!tarihGecerliMi(R.tarih)||L.length!==n||new Set(L.map(t=>t&&t.id)).size!==n||!L.every(t=>duz(t)&&T.includes(t.id)&&['O','G','B','M','A','Y','P'].every(a=>tam(t[a],0,9999))&&t.P===3*t.G+t.B)
+      ||R.sampiyon!==L[0].id||!(R.bizimSira===null||tam(R.bizimSira,1,n)))h.push('Sezon: sezon sonu kaydı geçersiz');}
   /* devralınan son maçlar fikstürle tutmalı (maç öncesi ekranı ikisini birlikte gösterir) */
   for(const [id,L] of Object.entries(D.sonMaclar)){
     if(!T.includes(id)||!Array.isArray(L)){h.push(`Sezon: ${id} son maçları geçersiz`);continue;}
@@ -267,6 +294,7 @@ function fiksturDogrula(k,h){
     if(f.hafta<ilkHafta)h.push(`Maç ${id}: devralınan haftada sonuç yazılmış`);
     if(!duz(s)||!Array.isArray(s.skor)||s.skor.length!==2||!s.skor.every(x=>tam(x,0,99)))h.push(`Maç ${id}: skor geçersiz`);
   }
+  if(S.sonuc!==undefined&&!sezonTamamMi(k))h.push('Sezon: sezon sonu kaydı var fakat oynanmamış maç kalmış');
   /* maç günü işi: en çok bir bekleyen; fikstürdeki oynanmamış maça, onun anında bağlı */
   const bekleyen=Object.values(k.isler||{}).filter(x=>x&&x.tur==='ajanda'&&x.veri&&x.veri.eylem==='macGunu');
   if(bekleyen.length>1)h.push(`Maç günü: ${bekleyen.length} bekleyen maç günü işi var (en çok bir)`);
