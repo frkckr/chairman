@@ -305,7 +305,12 @@ Object.assign(Match.prototype,{
   },
   stepDurus(dt){
     const du=this.durus,b=this.ball,tk=du.kullanan,d=this.dir[du.takim];du.t+=dt;
-    if(!tk||!tk.oyunda){du.kullanan=this.kullananSec(du);this.duranGorevAta(du);return;}
+    /* F7 (2026-10-24, takılan maç bulgusu): taçı atacak oyuncu topu elindeyken (hazir, kullan) oyundan çıkarsa (ör. zaman geçirmeden ikinci sarı)
+       top elinden düşer; yeni kullanan topu almaya gider — evre getir'e döner, zorlama süreleri o andan sayılır. Eskiden evre hazir'da kalıyor,
+       zorlama yalnız hazir dışındaki evrelerde çalıştığı için duruş hiç bitmiyordu (tohum 13: 40 maçta 1 maç bitmiyordu, d.json'da “bitmedi”) */
+    if(!tk||!tk.oyunda){du.kullanan=this.kullananSec(du);
+      if(du.tur==='tac'&&(du.asama==='hazir'||du.asama==='kullan')){du.asama='getir';if(b.tasiyan===tk)b.tasiyan=null;du.zorlaGetir=du.t+6;du.zorlaHazir=du.t+12;}
+      this.duranGorevAta(du);return;}
     this.taramaAdim(dt);   /* duran topta da etrafa bakılır */
     this.takimAI(dt,du);
     this.durusYerlesim(du,dt);
