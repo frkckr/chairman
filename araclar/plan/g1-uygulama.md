@@ -16,4 +16,9 @@ Durum: 2026-10-24 akşam, masaüstü, oto mod 2 (kullanıcı kararı 43). Dal `c
 
 ## Sapmalar ve notlar
 
-(tur ilerledikçe doldurulur)
+- **Gençlerin gücü −8 yerine −12:** −8 ile 13. haftada Demirkapı'nın kulübesinde elle yazılmış yedek Murat'ın yerine genç forvet Umut geçiyordu (kulübe kuralı "kaleci ve her hattan biri" + değerlendirme). Gençler acil durum derinliğidir; −12 ile ilk haftanın kulübesi tohum kadrosununki.
+- **Sakatlık taraması:** 80 maç; `sakatCikisPay` 1 → çıkış 0,59, 0,5 → 0,21, 0,4 → 0,21 (iki değer aynı ölçüldü; gürültü ±0,05). Hedef ~0,3'e daha yakın ve daha az sapma 0,5. Düşen pay ağrıya kaldığı hâlde tedavi duruşu 1,31 → ~1,65 çıktı (daha az sedye, daha çok oyun süresi); hedef ~1, borç.
+- **`o-sakatlik` kapı 1:** çıkış payı yarıya inince 400 denemede şiddet başına ~5 çıkış kaldı, 3 puanlık tolerans gürültüye yenildi; deneme sayısı 50 × N (2000 denemede tekdüze).
+- **`d-sut`:** oturum sonunda köşe kurtarış satırları kabul dışı; `tur/f6a` motoruyla birebir aynı çıktı (bu turdan değil); bilinen borçlara yazıldı.
+- **"Maçı bitir":** plan ikizi isteğe bağlı ikinci adım sayıyordu; doğrudan uygulandı (kart 0,5 sn). İkiz hazır değilse (sayfa açılışından ~20 sn) bizim kalan maç ana iplikte 250 ms'lik parçalarla biter (masaüstünde birkaç sn). Worker yoksa F7 yolu.
+- **Hız:** `tur/f6a`'ya ortanca +%5,5; `hiz-evre`: kodun payı +%2,1, kalanı evre karışımı (duruş payı 35,2 → 31,3 %).
