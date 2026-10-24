@@ -7,6 +7,7 @@
    Faul: müdahalenin sonucu (ayakta, kayarak, arkadan, hava topunda itme). Oyuncu düşer, hakem düdük çalar ve yön gösterir,
    gerekirse kart; faul yiyen takım iyi durumdaysa avantaj. Ofsayt: pas anında ölçülür, oyuna karışınca yan hakem bayrak kaldırır.
    Hakem çapraz sistemle koşar; yan hakemler sondan ikinci savunmacı (ya da top) hizasında durur. */
+const DURUS_SON_CARE=180;   /* F7 (takılma denetimi): duruşun son çare tavanı (motor sn; stepDurus) */
 /* ============ T10b (2026-10-11): hakem kişiliği (gerçekçilik planı §4 T10 madde 2; isimsiz — isimli hakem içerik işidir, 2.8L) ============
    sertlik (faul ve kart eşiği), avantaj (avantaj verme eğilimi), dikkat (görme), kondisyon (son 15 dakikada görme ve koşu), evEgilim (seyirci
    baskısı, T10e): 0–1, 0,5 ortalama — ortalama hakem eski sabit davranışın aynısıdır, kişilik yalnız hakemden hakeme fark katar (gerçekte maç
@@ -311,6 +312,13 @@ Object.assign(Match.prototype,{
     if(!tk||!tk.oyunda){du.kullanan=this.kullananSec(du);
       if(du.tur==='tac'&&(du.asama==='hazir'||du.asama==='kullan')){du.asama='getir';if(b.tasiyan===tk)b.tasiyan=null;du.zorlaGetir=du.t+6;du.zorlaHazir=du.t+12;}
       this.duranGorevAta(du);return;}
+    /* F7 (takılma denetimi, son çare): sağlıklı maçta duruş 180 motor sn'ye varmaz (en uzunu sedye + değişiklik, ~90 sn). Varırsa bilinmeyen bir
+       bekleyiş vardır: kullanan yerine konur ve duruş kullanılır (taçta top elinde atar; öbürlerinde top noktada, vuruş başlar); 60 sn'de bir yinelenir.
+       Rastlantı çekmez; yalnız eskiden hiç bitmeyen maçlarda devreye girer (olay durusTavan) */
+    if(du.t>(du.tavan||DURUS_SON_CARE)){du.tavan=du.t+60;const nk0=this.durusNoktasi(du);this.on('durusTavan',{tur:du.tur,asama:du.asama});
+      if(du.tur==='tac'){tk.x=nk0.x;tk.z=nk0.z;tk.vx=tk.vz=0;b.tasiyan=tk;this.topDegisti();tk.eylem={ad:'tac',t:0,faz:'tut',ft:0};du.asama='hazir';}
+      else{if(b.tasiyan)b.tasiyan=null;b.x=du.x;b.z=du.z;b.y=0;b.vx=b.vy=b.vz=0;this.topDegisti();du.geriX=tk.x;du.geriZ=tk.z;du.aci=tk.yon;du.asama='hazir';}
+      this.durusKullan(du);return;}
     this.taramaAdim(dt);   /* duran topta da etrafa bakılır */
     this.takimAI(dt,du);
     this.durusYerlesim(du,dt);
@@ -360,6 +368,11 @@ Object.assign(Match.prototype,{
           if(du.yay){const ay=tk.ayak==='iki'?(du.tur==='korner'||du.sinif==='kenar'?this.kornerIceAyak(du):'sag'):tk.ayak,r=a+(ay==='sol'?-1:1)*du.yay;du.geriX=du.x-Math.cos(r)*gm;du.geriZ=du.z-Math.sin(r)*gm;}
           if(!du.hizli&&(du.tur!=='serbest'||this.duranTehlikeli(du))){tk.eylem={ad:'yerlestir',t:0,sure:0.6};du.yerT=du.t;}
           if(this.s1RutinBit(du)===S1_BIT.RUTIN2)this.kRutinKur(du);}}   /* S1e (bit 64): barajlı ve penaltıda vurucunun düdüğe dek rutini (js/mac-sahne.js) */
+    }else if(du.asama==='hazir'&&du.tur==='tac'&&!(b.tasiyan===tk&&tk.eylem&&tk.eylem.ad==='tac')){
+      /* F7 (takılma denetimi): taçta hazir evresinden tek çıkış atıcının elindeki topla tac eylemi. Top elinde değilse ya da eylem silindiyse
+         (kullanan topu taşırken çıktı ve yenisi topsuz çizgiye vardı; kalecisi atılan takımda atıcı kaleye geçti) evre getir'e döner, zorlama
+         süreleri o andan sayılır. Sağlıklı maçta bu koşul hiç doğmaz */
+      if(b.tasiyan&&b.tasiyan!==tk&&b.tasiyan.tur!=='topcu')b.tasiyan=null;du.asama='getir';du.zorlaGetir=du.t+6;du.zorlaHazir=du.t+12;
     }else if(du.asama==='hazir'){
       du.hazirT+=dt;
       if(du.tur!=='tac'&&du.kr&&!du.kisaGeri&&this.kRutinAdim(du,tk,dt)){}   /* S1e: kullananın rutini (js/mac-sahne.js) */

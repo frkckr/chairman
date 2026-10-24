@@ -82,6 +82,7 @@ ayarEkle('S1',{
   ,kRutin:{sure:{bak:[0.8,1.8],oku:[1.0,2.0],okuMax:2.0,geriV:[1.0,1.8],yuru:1.3,pay:0.5},varyant:{duzelt:0.3,el:0.45,tekrar:0.3,iki:0.5,sirt:0.35,kolOku:0.5}}
 });
 const S1_BIT=Object.freeze({SERBEST:1,KART:2,PENALTI:4,GOL:8,ODAK:16,RUTIN:32,RUTIN2:64});
+const GOL_SON_CARE=180;   /* F7: gol evresinin son çare tavanı (motor sn; golSahneAdim) */
 /* S1b: penaltı kalabalığının yuvaları (rad; hakemden kümeye donmuş yönün çevresinde; kaptan 0'da) — fazlası ±0,55'lik adımlarla sürer (penaltiYuvaAci) */
 const PEN_YUVA=Object.freeze([0,0.55,-0.55,1.1,-1.1,1.65,-1.65]);
 /* S1e: rutinin seçmeli evrelerinin süreleri (sn): düzeltme, sırtla dönüş, el işareti, kolun tekrarı */
@@ -767,8 +768,12 @@ Object.assign(Match.prototype,{
     /* jestlerin süresi (oyunda niyetAdim ilerletir; gol evresinde burada) */
     for(const p of this.players){const j=p.jest;if(j){j.t+=dt;if(j.t>=j.sure)p.jest=null;}}
     if(MOTOR_AYAR.protokol&S1_BIT.ODAK)this.golOdak(c,dt);
+    /* F7 (takılma denetimi): gol evresinde değişiklik ilerlemez; süren bir değişiklik sıradaki sakatlığı (ya da değişikliği bekleyen akışı)
+       bekletirse sakatlikBekletir hep doğru kalır ve santra düdüğü hiç çalmazdı. Yalnız bu kilitte değişiklik burada ilerletilir */
+    {const A=this.sakatlikAkis;if(this.degisiklik&&(!A&&this.sakatlikSira.length||A&&A.evre==='degis'))this.degisiklikAdim(dt);}
     this.hareketHepsi(dt);this.topAdim(dt);
-    if(this.golSantraHazirMi(c)||ph>=T.tavan&&!this.sakatlikBekletir())this.golDuduk(c);   /* tavan: tedavi ve sedye sürerken çalmaz */
+    /* son çare (F7): gol evresi 180 sn'yi aşarsa düdük çalar (sağlıklı maçta tavan 55 sn) */
+    if(this.golSantraHazirMi(c)||ph>=T.tavan&&!this.sakatlikBekletir()||ph>=GOL_SON_CARE)this.golDuduk(c);   /* tavan: tedavi ve sedye sürerken çalmaz */
   },
   /* top zinciri: git → (cik → gonder) → yol → (tasi | yeniden gonder) → nokta. Döner: bu karede top makinesinin yönettiği oyuncular */
   golTopAdim(c,dt){
