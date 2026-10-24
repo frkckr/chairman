@@ -211,12 +211,19 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* ---- kasa: kulübün parası ve ödeme takvimi (ajandadan ve mali dosyalardan açılır) ---- */
   function kasaPaneli(){
     const d=kulupDurumu(k,kulupId()),m=d.mali;
-    let ic='<dl class="od-dl"><dt>Kasadaki para</dt><dd><b>'+tlYazi(m.nakit)+'</b></dd><dt>Bekleyen gelir</dt><dd>'+tlYazi(m.bekleyenGelir)+'</dd>'+
+    let ic='<dl class="od-dl"><dt>Kasadaki para</dt><dd class="'+(m.nakit<0?'od-eksi':'')+'"><b>'+tlYazi(m.nakit)+'</b></dd><dt>Bekleyen gelir</dt><dd>'+tlYazi(m.bekleyenGelir)+'</dd>'+
       '<dt>Bekleyen gider</dt><dd class="'+(m.bekleyenGider<0?'od-eksi':'')+'">'+tlYazi(m.bekleyenGider)+'</dd><dt>Ödemelerden sonra</dt><dd>'+tlYazi(m.odemelerSonrasi)+'</dd>'+
       (d.yonetim?'<dt>Sayman</dt><dd class="'+(d.yonetim.sayman?'':'od-eksi')+'">'+(d.yonetim.sayman?yaz(d.yonetim.sayman.ad):'boş')+'</dd>':'')+'</dl>';
     const O=bekleyenIsler(k).filter(x=>x.tur==='odeme'&&!isGizli(x)).slice(0,8);
     ic+='<h4>Ödeme takvimi</h4><ul class="od-liste od-sar" style="--an:10.4em">'+(O.map(x=>'<li class="od-satir"><span class="od-an">'+yaz(tarihKisa(x.tarih))+' '+saatYazi(x.dakika)+'</span><span class="od-ad">'+yaz(x.veri.aciklama)+'</span>'+
       '<span class="'+(x.veri.tutar<0?'od-eksi':'')+'">'+tlYazi(x.veri.tutar)+'</span></li>').join('')||'<li class="od-not">Bekleyen ödeme yok.</li>')+'</ul>';
+    /* G2-b (2026-10-24): önümüzdeki 90 gün — ay başları (maaş, lig payı) kesin; iç saha biletleri belirsiz ve ayrı (js/kulup-mali.js nakitUfku) */
+    if(typeof nakitUfku==='function'){const U=nakitUfku(k,kulupId(),90),am=typeof aylikMaas==='function'?aylikMaas(k,kulupId()):0;
+      ic+='<h4>Önümüzdeki 90 gün</h4><dl class="od-dl"><dt>Aylık maaş yükü</dt><dd class="od-eksi">'+tlYazi(-am)+'</dd><dt>En düşük kesin bakiye</dt><dd class="'+(U.kesin.enDusuk<0?'od-eksi':'')+'">'+
+        tlYazi(U.kesin.enDusuk)+' <small>'+yaz(tarihKisa(U.kesin.enDusukTarih))+'</small></dd><dt>90 gün sonra (kesin)</dt><dd>'+tlYazi(U.kesin.son)+'</dd><dt>Belirsiz gelir (bilet tahmini)</dt><dd>'+tlYazi(U.belirsizGelir)+'</dd></dl>';
+      const H=(k.hareketler||[]).filter(h=>h.kulupId===kulupId()).slice(-6).reverse();
+      if(H.length)ic+='<h4>Son hareketler</h4><ul class="od-liste od-sar" style="--an:10.4em">'+H.map(h=>'<li class="od-satir"><span class="od-an">'+yaz(tarihKisa(h.tarih))+' '+saatYazi(h.dakika)+'</span><span class="od-ad">'+yaz(h.aciklama)+'</span>'+
+        '<span class="'+(h.tutar<0?'od-eksi':'')+'">'+tlYazi(h.tutar)+'</span></li>').join('')+'</ul>';}
     const mali=acikMeseleler().filter(x=>kategori(x)[0]==='Mali');
     if(mali.length)ic+='<p class="od-not">İlgili dosya: '+mali.map(x=>'<button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+x.id+'">'+yaz(x.baslik)+'</button>').join(' · ')+'</p>';
     return ic;
