@@ -20,7 +20,9 @@ Son güncelleme: 2026-10-24 (oto mod: F3 — hoca, kadro seçimi ve maçın okun
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır).
 
-**Makine durumu: boşta (masaüstü, 2026-10-24 akşam; oto mod bitti: F3, F7 ve F6-a kapandı, `main`'e alındı).**
+**Makine durumu: masaüstü çalışıyor, dal `claude/g1-kadro-sezon` (2026-10-24 21:30; oto mod 2: G1 sezon boyu oynanabilirlik → G2 sözleşme, para akışı ve transfer iskeleti; her tur kapanınca `main`'e).** Kullanıcı kararları 2026-10-24 akşam (karar 43'e yazılacak): kadro yeterliliği üçü birlikte (22 kişilik kadro, sakatlık ölçeği 80 maçla, hükmen); sezon geçişi yok, yalnız sezon sonu kaydı; ikinci tur sözleşme + para akışı + transfer iskeleti; “Maçı bitir” doğrudan sonuca. Öbür makinede: bu satır “çalışıyor” ve dalın son push'u 2 saatten yeniyse devam edilmez.
+
+**Önceki oto mod (2026-10-24 gündüz): F3, F7 ve F6-a kapandı, `main`'e alındı.**
 
 **2026-10-23, dizüstü: F0–F2** (ayrıntı `git show tur/f2:YOL_HARITASI.md`): kapı geçti; lig ve 30 haftalık TEST fikstürü, kariyer kadroları, maç kimliği ve tohumu, maç girdisi kariyerden, deplasman statları (F1); maç sonucu kariyere bir kez, Maç bitti kartı ve Odaya dön, TEST Maçı bitir, `sezon-deneme` (F2).
 
