@@ -389,6 +389,8 @@ Yazılı maç spikeri/radyo akışı kaldırılır. Skor ve dakika stat tabelas�
 
 **Maç sonu (F2, 2026-10-23; uygulandı, TEST değerleri).** Maç bitince düdükten birkaç saniye sonra (sevinç ve çöküş izlenir) maçın üstünde açık bir “Maç bitti” kartı açılır: hafta, iki kulüp ve skor, goller, kartlar, sakatlıklar. Arkada maç sonu sürer (tokalaşma, alkış, tünel). Tek eylem “Odaya dön”: sonuç kariyere bir kez işlenir — puan durumu, son maçlar, oyuncunun gol ve sarı sayaçları, ceza (TEST: kırmızı ve iki sarı 1 maç, 4 sarı 1 maç) ve sakatlık (dönüş günüyle) — ve başkan odaya Cumartesi akşamı 21:00'de döner; ajandada sıradaki haftanın maçı durur. Skor hikâye için değiştirilmez. Geliştirme aşamasında maç şeridinde “TEST Maçı bitir” kalan maçı izlemeden oynatıp maç sonuna geçer (sonuç izlenen maçla aynıdır); yayından önce kalkar. Maçın kariyerdeki yeri (atlama, yalnız özet) Aşama 3.7'de ayrıca değerlendirilir.
 
+**Ligin öbür maçları (F7, 2026-10-24; 3.8).** Haftanın öbür yedi maçı bizim maçımızla aynı anda oynanır: maçta Canlı Skor'da canlı skor ve dakikayla görünürler (bizim santramızdan önce “başlamadı”), maç bitince puan durumu 16 kulüpte ilerler, odada Canlı Skor'da haftanın öbür sonuçları vardır. Uydurma skor yoktur: her maç kendi kimliği ve tohumuyla motorda oynanır.
+
 **“Santraya geç” (kullanıcı kararı 2026-10-24; F3-0 ile uygulandı).** Düğme maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) görüntüsüz doğal sonuna dek oynatır, birkaç saniye sürer. Ne zaman basılırsa basılsın, basılmasa da maç aynıdır: sayfayı kapatıp başka bir anda basarak sonuç yeniden çekilemez.
 
 ## 12. Başkanın yaşlanması ve kariyer sonları

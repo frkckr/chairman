@@ -1,4 +1,4 @@
-<!-- Durum (2026-10-24, masaüstü, oto mod): F7 uygulanıyor; dal claude/f7-lig. Kapanınca sonuç birkaç satıra iner. -->
+<!-- Durum (2026-10-24, masaüstü, oto mod): F7 kapandı (`tur/f7`). Sonuç YOL_HARITASI devam notunda ve karar 41'de. -->
 # F7 — Ligin öbür maçları (yol haritası 3.8)
 
 ## Bağlam
@@ -19,6 +19,12 @@ F3 kapandı (`tur/f3`): hoca, kadro seçimi ve maçın okunması. Puan durumu ya
 - `kariyer-deneme` 3.8: sekiz kayıt, 16 kulüp aynı O, geçmişe yalnız bizim maç, kısa kayıt, son on birler; eksik/fazla/yanlış tohum reddi; aynı tohumla birebir; öbür kulübün cezası düşer; kaydet–yükle sonrası 14. hafta.
 - `sezon-deneme 3` (haftanın sekiz maçı, belirlenimci, eşit O, hafta süresi ve kayıt boyu).
 - `akis-deneme` 19 (Canlı Skor sekiz satır, Odaya dön sonrası sekiz kayıt), 16, 18; `kontrol.py`; `ikiz-deneme 4`; `--ayni d.json` (motor değişmedi).
+
+## Kapanış (2026-10-24)
+
+- Önemli bulgu: motorda 40 maçta 1 maç taçta sonsuza dek takılıyordu (`d.json` tohum 13 “bitmedi”, D'den beri). Çok ajanlı takılma denetimi aynı ailede altı biçim daha buldu (hepsi Node'da üretildi ve düzeltildi); son çareler: duruş ve gol evresi 180 sn, maçın bütünü motor zamanı 4500 sn. Sağlıklı maçlar değişmedi; yeni taban `f7.json`.
+- Çok ajanlı F7 incelemesi: kalıcı kilit kaygısı (öbür maç bitmezse) motorun genel son çaresiyle kapandı; öbür maçların duraklatmada ilerlemesi, taçta eski uzun taç kararı, 3.8'in atomiklik denetimi düzeltildi.
+- Denetimler: `kariyer-deneme`, `sezon-deneme 3`, `oturum-sonu f7.json --ayni --seyrek` (40/40, sağlık dışı 0, bilinen senaryo borçları), `ikiz-deneme 4`, hız `tur/f3`'e +%5,6 (en azlar +%0,9), `akis-deneme` tamamı bilinen 15b ile, `akis-2d`, `kontrol.py`.
 
 ## Yapılmayacaklar
 

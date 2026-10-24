@@ -307,8 +307,11 @@ else if(process.env.MAC_DENEME_TEKRAR){
       const o=degerAl(k),dis=!Number.isNaN(o)&&(o<a||o>b),oranli=sonuclar[0]&&sonuclar[0].ham&&k in sonuclar[0].ham;if(dis)disarida++;
       console.log((dis?'! ':'  ')+ad.padEnd(32)+f(o,b<10?2:1).padStart(10)+('  '+(oranli?'':f(sap(k),1))).padEnd(8)+`${a}–${b}`.padStart(16));
     }
-    const bitmeyen=sonuclar.filter(s=>s.bitmedi).length;
-    console.log(`\nOrtalama maç süresi: ${f(ort('sure')/60,1)} dakika (gerçek zaman)${bitmeyen?` · BİTMEYEN MAÇ: ${bitmeyen}`:''}`);
+    /* F7 (2026-10-24): bitmeyen maç kabul dışıdır (sağlık aralığı dışı sayılır; oturum-sonu yakalar). Eskiden yalnız bu satırda yazıyordu:
+       tohum 13 D'den beri bitmiyordu (taçta takılan duruş) ve gözden kaçtı */
+    const bitmeyenler=sonuclar.filter(s=>s.bitmedi).map(s=>s.tohum),bitmeyen=bitmeyenler.length;if(bitmeyen)disarida++;
+    console.log(`\nOrtalama maç süresi: ${f(ort('sure')/60,1)} dakika (gerçek zaman)`);
+    if(bitmeyen)console.log(`! BİTMEYEN MAÇ: ${bitmeyen} (tohum ${bitmeyenler.join(', ')}) — kabul dışı`);
     console.log(`Sağlık aralığı dışında: ${disarida} satır`);
     console.log('\n  Bilgi (hedefsiz; "eski hedef T…" dar bant döneminin — gerçekçilik planı turları — kabulüdür, Z1\'den beri yalnız bilgi)');
     const msAdim=ort('_msAdim');

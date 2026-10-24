@@ -607,8 +607,9 @@ bolum('3.8 — ligin öbür maçları: haftanın sekiz maçı, tek komut (F7)');
     &&!MG('kariyerDogrula')(k1).length,`${ids.length} maç · O ${[...new Set(tb.map(t=>t.O))].join(',')}`);
   denetle('Eksik ya da fazla öbür maç reddedilir, kariyer değişmez; aynı hafta ikinci kez uygulanamaz',
     reddeder(()=>KK(h.k,x=>uy(x,h.O.slice(1))))&&reddeder(()=>KK(h.k,x=>uy(x,h.O.concat([h.O[0]]))))&&reddeder(()=>KK(k1,x=>uy(x)))&&Object.keys(h.k.maclar).length===0);
-  const bozukO=h.O.map((o,i)=>i?o:Object.assign({},o,{tohum:o.tohum+1}));
-  denetle('Öbür maçlardan birinin tohumu yanlışsa hiçbiri yazılmaz',reddeder(()=>KK(h.k,x=>uy(x,bozukO))));
+  /* atomiklik: SONUNCU öbür maçın tohumu yanlış — öncekiler kopyaya yazılmışken komut düşer; verilen kariyer hiç değişmez (inceleme) */
+  const bozukO=h.O.map((o,i)=>i<h.O.length-1?o:Object.assign({},o,{tohum:o.tohum+1})),once3=metin(h.k);
+  denetle('Öbür maçlardan sonuncusunun tohumu yanlışsa komut düşer, öncekiler de yazılmaz (kariyer aynı)',reddeder(()=>KK(h.k,x=>uy(x,bozukO)))&&metin(h.k)===once3&&Object.keys(h.k.maclar).length===0);
   /* belirlenimcilik: aynı tohumla ikinci kariyerde öbür maçların seçenekleri ve sonuçları birebir */
   const h2=hafta(MG('kariyerBaslat')({tohum:7})),k2=KK(h2.k,x=>MG('haftaSonuclariUygula')(x,h2.G.macId,h2.S,h2.G.tohum,{},h2.O)).kariyer;
   denetle('Aynı tohum: öbür maçların seçenekleri (kadro, tarz, tohum) ve haftanın sonuçları birebir',metin(h.D.map(d=>d.sec))===metin(h2.D.map(d=>d.sec))&&metin(k1.maclar)===metin(k2.maclar));

@@ -53,7 +53,7 @@ const LIG_CANLI=MAC_GUNU.kariyer&&Array.isArray(MAC_GUNU.digerleri)?MAC_GUNU.dig
 function ligCanliAdim(n){for(const x of LIG_CANLI)for(let i=0;i<n&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);}
 const ligCanliSuruyor=()=>LIG_CANLI.some(x=>x.m.phase!=='fulltime');
 /* kalan adımlar (güvenlik sınırı maç başına 60 dk'lık adım); dönüşte bitmiş mi */
-function ligCanliBitir(){for(const x of LIG_CANLI)for(let i=0;i<60*60*60&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);return!ligCanliSuruyor();}
+function ligCanliBitir(){for(const x of LIG_CANLI)for(let i=0;i<60*60*80&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);return!ligCanliSuruyor();}   /* motorun son çaresi (MAC_SON_CARE) her maçı bu sınırdan önce bitirir */
 /* B4: geliştirici panelinde iki takımın tarzı (TEST; oyun ekranına tarz adı yazılmaz — F). Geçişte harmanın payları ve durum */
 function tarzTestYaz(){const e=document.getElementById('tarzTest');if(!e)return;
   const y=t=>{const g=tarzGecisDurum(mac,t);return tarzAdi(mac,t)+(g==='talimat'?' (talimat: bir sonraki duruşta)':g!=null?' (geçişte)':'');};
@@ -233,7 +233,7 @@ function hizliBitirAdim(dt){
   return Math.min(n*ADIM,0.1);
 }
 /* F7: hızlı bitirmeden sonra uzatması süren öbür maçlar aynı bütçeyle görüntüsüz biter (kart açıkken de) */
-function ligCanliHizli(){if(!HIZLI_BITIR.bitti||!ligCanliSuruyor())return;const t0=performance.now();while(ligCanliSuruyor()&&performance.now()-t0<HIZLI_BITIR.butce)ligCanliAdim(1);}
+function ligCanliHizli(dt){if(!(dt>0)||!HIZLI_BITIR.bitti||!ligCanliSuruyor())return;   /* duraklatma ve telefon dt'yi 0 yapar (inceleme) */const t0=performance.now();while(ligCanliSuruyor()&&performance.now()-t0<HIZLI_BITIR.butce)ligCanliAdim(1);}
 
 /* U1: bu karenin etkin hızı — oyuncunun seçimi, önemli anlarda 1×'e iner (eğri motor zamanında: izlemeHedefHiz); seçim değişince ya da ikiz
    yokken (pencere olayla başlar) ani sıçrama olmasın diye gerçek zamanda saniyede en çok IZLEME_GECIS kat değişir. Duraklatmada (dt 0) değişmez */
@@ -264,7 +264,7 @@ function macKare(dt){
   }
   if((tarzGecisDurum(mac,0)!=null||tarzGecisDurum(mac,1)!=null)&&++tarzTestSay%20===0)tarzTestYaz();   /* B4b: geçişte panel satırı */
   if(n>=240)birikim=0;
-  ligCanliAdim(nLig);ligCanliHizli();
+  ligCanliAdim(nLig);ligCanliHizli(dt);
   }
   const al=birikim/ADIM,b=mac.ball,bx=lerp(TOP.px,b.x,al),bz=lerp(TOP.pz,b.z,al)-MOTOR_Z,T=mac.tunel;
   /* aktörler: konum, poz ve kök (js/animasyon.js) */

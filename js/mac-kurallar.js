@@ -310,7 +310,7 @@ Object.assign(Match.prototype,{
        top elinden düşer; yeni kullanan topu almaya gider — evre getir'e döner, zorlama süreleri o andan sayılır. Eskiden evre hazir'da kalıyor,
        zorlama yalnız hazir dışındaki evrelerde çalıştığı için duruş hiç bitmiyordu (tohum 13: 40 maçta 1 maç bitmiyordu, d.json'da “bitmedi”) */
     if(!tk||!tk.oyunda){du.kullanan=this.kullananSec(du);
-      if(du.tur==='tac'&&(du.asama==='hazir'||du.asama==='kullan')){du.asama='getir';if(b.tasiyan===tk)b.tasiyan=null;du.zorlaGetir=du.t+6;du.zorlaHazir=du.t+12;}
+      if(du.tur==='tac'&&(du.asama==='hazir'||du.asama==='kullan')){du.asama='getir';if(b.tasiyan===tk)b.tasiyan=null;du.zorlaGetir=du.t+6;du.zorlaHazir=du.t+12;du.tacUzun=null;du.tacGeri=null;du.hazirT=0;}
       this.duranGorevAta(du);return;}
     /* F7 (takılma denetimi, son çare): sağlıklı maçta duruş 180 motor sn'ye varmaz (en uzunu sedye + değişiklik, ~90 sn). Varırsa bilinmeyen bir
        bekleyiş vardır: kullanan yerine konur ve duruş kullanılır (taçta top elinde atar; öbürlerinde top noktada, vuruş başlar); 60 sn'de bir yinelenir.
@@ -372,7 +372,7 @@ Object.assign(Match.prototype,{
       /* F7 (takılma denetimi): taçta hazir evresinden tek çıkış atıcının elindeki topla tac eylemi. Top elinde değilse ya da eylem silindiyse
          (kullanan topu taşırken çıktı ve yenisi topsuz çizgiye vardı; kalecisi atılan takımda atıcı kaleye geçti) evre getir'e döner, zorlama
          süreleri o andan sayılır. Sağlıklı maçta bu koşul hiç doğmaz */
-      if(b.tasiyan&&b.tasiyan!==tk&&b.tasiyan.tur!=='topcu')b.tasiyan=null;du.asama='getir';du.zorlaGetir=du.t+6;du.zorlaHazir=du.t+12;
+      if(b.tasiyan&&b.tasiyan!==tk&&b.tasiyan.tur!=='topcu')b.tasiyan=null;du.asama='getir';du.zorlaGetir=du.t+6;du.zorlaHazir=du.t+12;du.tacUzun=null;du.tacGeri=null;du.hazirT=0;   /* eski atıcının uzun taç kararı da biter */
     }else if(du.asama==='hazir'){
       du.hazirT+=dt;
       if(du.tur!=='tac'&&du.kr&&!du.kisaGeri&&this.kRutinAdim(du,tk,dt)){}   /* S1e: kullananın rutini (js/mac-sahne.js) */

@@ -40,6 +40,7 @@ const topSurukleme=v=>TOP_FIZIK.surukleYavas+(TOP_FIZIK.surukleHizli-TOP_FIZIK.s
 const topKaldirma=S=>TOP_FIZIK.clEnCok*S/(S+TOP_FIZIK.clS0);
 const CEZA_U=16.5,CEZA_W=20.16,ALTIPAS_U=5.5,ALTIPAS_W=9.16,PENALTI_U=11;
 const MAC_ONCESI=['isinma','giris','toren','selam','yazitura'],DEVRE_ARASI=45;
+const MAC_SON_CARE=4500;   /* F7: maçın son çare tavanı (motor sn; step) */
 /* oyuncu özellikleri (kadrolar.js'te 1–99 arası, aynı sırayla) */
 const OZ_SIRA=['hiz','pas','sut','kafa','surus','mudahale','gorus','karar','kalecilik','dayaniklilik','sertlik'];
 const VARSAYILAN_OZ=[62,58,55,55,56,55,55,56,8,66,50];
@@ -361,6 +362,9 @@ class Match{
   /* ============ ana döngü ============ */
   step(dt){
     this.t+=dt;this.phaseT+=dt;this.kare=(this.kare||0)+1;
+    /* F7 (inceleme, son çare): sağlıklı maç motor zamanında ~2000–2400 sn'de biter (maç öncesi dahil). MAC_SON_CARE'yi aşıp hâlâ bitmediyse bilinmeyen
+       bir takılma vardır: maç o anki skorla biter (rastlantı çekmez; olay macTavan). Kariyer haftası böylece hiç kilitlenmez (öbür maçlar dahil) */
+    if(this.t>MAC_SON_CARE&&this.phase!=='fulltime'&&!MAC_ONCESI.includes(this.phase)){this.durus=null;this.celeb=null;this.half=2;this.phase='play';this.on('macTavan',{t:this.t});this.endHalf();return;}
     if(this._tarzG)tarzGecisAdim(this);   /* B4b: maç içi tarz değişikliği (js/mac-tarz.js; yalnız komut varken) */
     /* T16a (2026-10-15): yarının ilk santrası hazırlanırken saat akmaz (ikinci yarıda oyuncular tünelden yürürken yarı 86 maç sn kaybediyordu);
        gol sonrası santrada akar (uzatmaya gol başına 50 sn girer) */
