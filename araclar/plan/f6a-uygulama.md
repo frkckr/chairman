@@ -17,9 +17,16 @@ Durum: 2026-10-24, masaüstü, oto mod (kullanıcı kararı 39: F3 → F7 → F6
 - Karar telefonda soran hocaya değil **dosyaya** bağlı: “değişim” cevabını hocanın kendisine yazmak tuhaftı; hocanın mesajı konuşmada, karar dosyada (konuşmadan bağlantı).
 - `ICERIK_SURUM` 5; kayıt sürümü değişmedi (8). Sürüm 4 ile kurulmuş kariyer açılır, P12 orada kurulmaz.
 
+## İnceleme ve kapanış
+
+- Çok ajanlı inceleme (4 boyut: kural, kayıt, sunum, belirlenim; 11 bulgu, her birine bir çürütücü). Onaylanan ve düzeltilen: telefonda soranı olmayan kararın cevabı konunun ilk göndereni olan eski hocaya yazılmış gibi görünüyordu (`js/mesajlar.js`: giden yalnız soranın konuşmasında); aynı dakikada başkanın cevabı sorudan önce sıralanıyordu (`js/ajanda.js` iş kaydına `olaySira`); şerit başka gündeki son cevabı tarihsiz yazıyordu (`js/ekran-oda.js`). Reddedildiği hâlde düzeltilen: yeni hoca eskisinin son on birine ısrar ediyordu (`hocaKadroSec`: ısrar yalnız kendi on birine); TEST kutusu adayın gizli değerlerini göstermiyordu (seçeneğin `gizli` alanı).
+- Kendi denemede bulunan: hoca değişince açık konu kapanmıyordu (`olayDurumGuncelle`); sabır süresi maç takvimine denk düşmüyordu (3 maç).
+- Gerçek maçlarla sezon: `sezon-deneme 18 7 --p12 degisim` — P12 iki kez açıldı, iki hoca değişimi, sezon tamamlandı. `sezon-deneme 18 3 --p12 sabir` — P12 bir kez (sabır, söz tutuldu); 27. haftada Değirmenaltı 11 uygun oyuncu çıkaramadı ve sezon kilitlendi (F1'den bilinen borç; F6-a ile ilgisiz; sıradaki iş önerisi).
+
 ## Borçlar (F6-b, kullanıcıyla)
 
 - Koşul ve eşiklerin oyun kuralı olarak onayı; baskının kaynağı bugün yalnız sonuç (yönetim, taraftar, basın yok).
 - Hocanın takıma oturma süresi (G3.2) yok: yeni hoca ilk maçta kendi tarzıyla tam oynar.
 - Sabır süresinde sözü bozan oyuncu yolu yok (yalnız başka bir komutla hoca değişirse); tazminat sözleşmeden değil sabit TEST tutarı.
 - Aday kartında dosyanın kişi paneli eski hocayı gösterir (aday kişi değildir; F4 tek kart turunda bakılır).
+- Sezonun son maçından sonra P12 koşulu tutmazsa İlerle'de boş bir durak (gizli gelişme son rutin iş olur; sezon geçişi 5.1 ile kalkar).
