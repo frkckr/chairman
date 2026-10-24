@@ -7,7 +7,8 @@
        32 üstü × yaşlı; SOZLESME_TEST.yuvarla'ya yuvarlanır. Gizli puan kuralı: maaş görünür bir sayıdır, yetenek puanı değildir (OYUN_TASARIMI §9:
        ücret gösterilebilir); ölçek kabadır, oyuncunun gücünü tam ele vermez.
      Bitiş: oyuncu kimliği ve dünya tohumundan, SOZLESME_TEST.bitisPay ile bu sezon sonu, bir ya da iki yıl sonrası.
-   sozlesmeleriTamamla(k): sözleşmesi olmayan her kulüplü oyuncuya ve etkin her hocaya TEST sözleşme (idempotent; yeni kariyerde ve her ay başında).
+   sozlesmeleriTamamla(k): sözleşmesi olmayan her kulüplü oyuncuya ve etkin her hocaya TEST sözleşme (idempotent; yeni kariyerde, her ay başında, transfer
+     gelişmelerinde; sezon sonu kaydından sonra en az bir yıl).
    aylikMaas(k, kulüp, tahmin): kulübün oyuncularının ve hocasının aylık maaşı; sözleşmesi olmayan sayılmaz, tahmin true ise ilk ay başında kurulacak
      TEST maaşıyla sayılır (sürüm 8'den geçen kariyerin nakit ufku; G2 incelemesi). hocaMaasi(h): hocanın TEST maaşı.
    hocaTazminati(k, hocaId): kalan ay × aylık maaş (en az bir ay; js/icerik-p12.js değişim).
@@ -34,7 +35,10 @@ function sozlesmeleriTamamla(k){
   const yeni={};
   for(const p of Object.values(k.oyuncular)){
     if(!p||p.kulupId===null||p.sozlesme)continue;
-    const r=kadroRastgele(k.dunyaTohumu,p.id+':sozlesme'),yil=agirlikliSec(r,SOZLESME_TEST.bitisPay);
+    const r=kadroRastgele(k.dunyaTohumu,p.id+':sozlesme'),y0=agirlikliSec(r,SOZLESME_TEST.bitisPay);
+    /* sezon sonu kaydından sonra kurulan sözleşme bu sezon sonunda bitmez (G2 incelemesi: kartlar geçmişken kurulan sözleşme hiç sorulmazdı — sezon
+       sonunda kadroya giren genç, sürüm 8'den Mart'ta geçen kayıt) */
+    const yil=k.sezon&&k.sezon.sonuc&&y0===0?1:y0;
     yeni[p.id]=Object.assign({},p,{sozlesme:{maas:maasTahmini(p,k.tarih),bitis:sozlesmeBitisi(k,yil)}});
   }
   if(Object.keys(yeni).length)k.oyuncular=Object.assign({},k.oyuncular,yeni);

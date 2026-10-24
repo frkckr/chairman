@@ -88,7 +88,8 @@ MESAJ_METIN['tr.tesekkur']=()=>'Sağ olun başkanım, yeni oyuncu hemen çalış
 /* ---- gelen teklif ---- */
 GELISMELER.gelenTeklif={
   denetle:(k,v)=>k.kulupler[v.kulupId]?[]:['kulüp bulunamadı'],
-  uygula:(k,is)=>{const v=is.veri,olay=paketDene(k,'gelenTeklif','teklif:'+v.anahtar,Object.assign({},v));return olay?{bilgi:'Transfer teklifi geldi.',dur:true}:{bilgi:null};}
+  /* sözleşmeler önce tamamlanır (idempotent; sürüm 8'den Ocak'ta geçen kayıtta ilk ay başı 1 Şubat'tır — kanıt ve bedel sözleşmeden) */
+  uygula:(k,is)=>{sozlesmeleriTamamla(k);const v=is.veri,olay=paketDene(k,'gelenTeklif','teklif:'+v.anahtar,Object.assign({},v));return olay?{bilgi:'Transfer teklifi geldi.',dur:true}:{bilgi:null};}
 };
 PAKETLER.gelenTeklif={
   surum:1,icerik:5,
@@ -135,7 +136,7 @@ KARAR_TURLERI.teklifKarari={
 /* ---- hocanın transfer isteği ve imza ---- */
 GELISMELER.hocaTalebi={
   denetle:(k,v)=>k.kulupler[v.kulupId]?[]:['kulüp bulunamadı'],
-  uygula:(k,is)=>{const v=is.veri,olay=paketDene(k,'hocaTalebi','talep:'+v.anahtar,Object.assign({},v));return olay?{bilgi:'Hoca transfer istedi.',dur:true}:{bilgi:null};}
+  uygula:(k,is)=>{sozlesmeleriTamamla(k);const v=is.veri,olay=paketDene(k,'hocaTalebi','talep:'+v.anahtar,Object.assign({},v));return olay?{bilgi:'Hoca transfer istedi.',dur:true}:{bilgi:null};}   /* maaş tavanı sözleşmelerden */
 };
 /* en zayıf hat: en iyi (DEF 4, OS 4, FV 2) oyuncularının gizli ortalaması ligin aynı hattının ortalamasından en çok geride olan. G2 incelemesi:
    ham ortalamalar mevkiler arasında kıyaslanamaz (savunmacının şut ve dripling özellikleri yapısı gereği düşük; ham kıyas hep DEF seçiyordu) */

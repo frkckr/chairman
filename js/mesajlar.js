@@ -44,6 +44,10 @@ function meseleKonusmasi(k,m){
   const g=k.gecmis.find(x=>x.tur==='is'&&x.sonuc&&x.sonuc.meseleId===m.id&&x.sonuc.soran);
   return g?g.sonuc.soran:null;
 }
+/* G2 incelemesi (oda özeti): bu anda gelen karar işleri ve kararın telefonda olup olmadığı — soranın konuşmasında ya da konusunun telefondaki
+   konuşmasında dosya bağlantısıyla. Soranı ve konuşması olmayan karar (gelen teklif) yalnız masadaki dosyadadır */
+const simdiGelenKararlar=k=>Object.values(k.isler).filter(x=>x.tur==='ajanda'&&x.veri.karar&&x.veri.gelis&&x.veri.gelis.tarih===k.tarih&&x.veri.gelis.dakika===k.gunIciDakika);
+const kararTelefondaMi=(k,is)=>!!((is.veri.soran&&k.kisiler[is.veri.soran])||(is.veri.meseleId&&k.meseleler[is.veri.meseleId]&&meseleKonusmasi(k,k.meseleler[is.veri.meseleId])));
 function konusmaListesi(k){
   const K=new Map(),al=id=>{
     if(!K.has(id)){const p=k.kisiler[id];K.set(id,{anahtar:id,kisi:p,ad:p.ad,rol:kisiRolu(k,p),mesajlar:[],kararlar:[],dosyaKarar:[],meseleler:[],girisimler:[],okunacak:[],okunmamis:0,cevapBekliyor:false,sonAn:0});}

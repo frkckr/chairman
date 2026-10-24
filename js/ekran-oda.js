@@ -448,8 +448,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     }else odaYuru('balkon',()=>ciz('.od-ana'));
     ciz();
   }
-  /* karar gerektiren haberin yeri: telefonda cevap bekleyen konuşma varsa telefon, yoksa masadaki dosya (G2 incelemesi: gelen teklifin telefonda izi yok) */
-  const kararTelefonda=()=>typeof konusmaListesi==='function'&&konusmaListesi(k).some(c=>c.cevapBekliyor);
+  /* karar gerektiren haberin yeri (G2 incelemesi: gelen teklifin telefonda izi yok): bu anda gelen karar soranın konuşmasında ya da konusunun telefondaki
+     konuşmasında dosya bağlantısıyla duruyorsa telefon, yoksa masadaki dosya. Bu anda gelen karar bulunamazsa telefonda cevap bekleyen var mı */
+  const kararTelefonda=()=>{const Y=simdiGelenKararlar(k);return Y.length?Y.some(x=>kararTelefondaMi(k,x)):konusmaListesi(k).some(c=>c.cevapBekliyor);};   /* js/mesajlar.js */
   function gozlemSonucu(r){
     mesaj=r.neden==='karar'?(kararTelefonda()?'Telefon çaldı: karar gerektiren bir haber var.':'Masaya yeni dosya geldi: karar bekleyen bir konu var.')+' Gözlem durdu, '+r.kalan+' dk kaldı.':r.neden==='haber'?'Beklediğin görüş geldi. Gözlem durdu, '+r.kalan+' dk kaldı.'
       :'Antrenmanı izledin.'+(r.not?' '+r.not:'');
