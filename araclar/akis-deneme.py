@@ -122,8 +122,8 @@ async def bolum_1(tarayici, site, tum_hatalar):
     tum_hatalar += hatalar
     d0 = await durum(pg)
     # F1 (2026-10-23): takvimde maç günü ajanda işinin yanında kış transfer döneminin iki hatırlatması da durur
-    denetle("Yeni kariyer Pazartesi 08:00; içerik sürümü 4; mesele, olay, söz ve haber yok; takvimde tek ajanda işi: maç günü",
-            d0["tarih"] == "2026-11-23" and d0["dakika"] == 480 and d0["icerik"] == 4 and d0["mesele"] == "" and d0["olay"] == "" and d0["soz"] == ""
+    denetle("Yeni kariyer Pazartesi 08:00; içerik sürümü 5 (F6-a); mesele, olay, söz ve haber yok; takvimde tek ajanda işi: maç günü",
+            d0["tarih"] == "2026-11-23" and d0["dakika"] == 480 and d0["icerik"] == 5 and d0["mesele"] == "" and d0["olay"] == "" and d0["soz"] == ""
             and d0["haber"] == "" and d0["ajanda"] == "is-1" and len(d0["isler"].split(",")) == 3, str(d0))
     await pg.keyboard.press("Digit1")
     tel = await pg.text_content(".od-telefonPanel")
@@ -249,7 +249,7 @@ async def bolum_2(tarayici, site, tum_hatalar):
     await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=20000)
     d = await durum(pg)
     denetle("Kaydı sakla, yeni kariyer: eski kayıt '.bozuk' olarak saklandı; içeriksiz yeni kariyer kuruldu",
-            await pg.evaluate("localStorage.getItem('chairman:oyun-1.bozuk')") == eski and d["icerik"] == 4 and d["mesele"] == "", str(d))
+            await pg.evaluate("localStorage.getItem('chairman:oyun-1.bozuk')") == eski and d["icerik"] == 5 and d["mesele"] == "", str(d))
     tum_hatalar += hatalar
     await baglam.close()
 

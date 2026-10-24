@@ -15,6 +15,7 @@ const kisiRolu=(k,p)=>{
   if(!p)return'';
   const c=p.kulupId&&k.kulupler[p.kulupId];
   if(c&&c.yonetim)for(const [koltuk,id] of Object.entries(c.yonetim))if(id===p.id&&typeof YONETIM_KOLTUKLARI!=='undefined')return YONETIM_KOLTUKLARI[koltuk].ad;
+  if(p.rol==='teknikDirektor'&&p.durum!=='aktif')return'Eski teknik direktör';      // F6-a: görevden ayrılan hocanın eski mesajları
   return MESAJ_ROL[p.rol]||p.rol;
 };
 /* göndereni parametredeki kişi olan olay için kısa yazım: MESAJ_GONDEREN['x.y']=pKisi('kisiId') */

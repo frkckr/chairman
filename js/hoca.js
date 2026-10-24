@@ -124,6 +124,59 @@ function hocaKadroSec(k,kulupId,tarih,tohum){
   const kl=kulube.find(p=>p.mevki==='KL'),kulubeSira=kl?[kl,...kulube.filter(p=>p!==kl)]:kulube;
   return{ilk11:ilk,kulube:kulubeSira.map(p=>p.id)};
 }
+/* ---- F6-a (2026-10-24): hoca adayları ve hoca değişimi (kural; içerik js/icerik-p12.js) ----
+   hocaAdaylari(k, kulupId, ek) → HOCA_ADAY_SAYISI aday [{ad, tarz, bilgi, israr, dogumTarihi, td}] (saf, belirlenimci: dünya tohumu + kulüp + ek;
+     ek çağıranın konusu, ör. olay kimliği). Adaylar kulübün bugünkü hocasının tarzını taşımaz ve birbirinden farklı tarzdadır; ad, bugün kariyerde
+     olan bir hocanın adı değildir (js/adlar-test.js). td: saha kenarındaki görünüş (js/kariyer-kadro.js kadroUret'in hoca görünüşüyle aynı dağılım).
+     Değerler TEST'tir (Claude); bilgi ve ısrar gösterilmez. Aday kayıtları karar işinin verisinde durur (kayda girer; yüklemeden sonra aynı adaylar).
+   hocaDegistir(k, kulupId, aday) → yeni hocanın kimliği. Eski hoca 'ayrildi' olur (kişi kaydı ve maç kayıtlarındaki izi kalır), yeni hoca kurulur
+     (hocaKur), kadronun saha kenarı görünüşü yeni hocanınki olur, eski hocaya bağlı süre işleri (veri.hocaSuresi = eski hocanın kimliği) iptal edilir
+     (bağlı söz bozulur; js/soz.js), geçmişe {tur:'hocaDegisimi', kulupId, eskiId, yeniId, tarih, dakika} yazılır. Sonraki maç girdisi yeni hocanın
+     tarzı ve seçimiyle kurulur (js/mac-girdi.js). Tazminat ve haber içeriğin işidir. Hocanın takıma oturma süresi (G3.2) yoktur: F6-b borcu. */
+const HOCA_ADAY_SAYISI=2;
+const HOCA_TARZ_ADI={dengeli:'dengeli',konumsal:'konumsal oyun',iliskisel:'ilişkisel oyun',dikey:'dikey / geçiş',kanatOrta:'kanat ve orta',direkt:'direkt ve ikinci top'};
+function hocaAdaylari(k,kulupId,ek){
+  const h=kulupHocasi(k,kulupId);
+  if(!h)throw new Error(`Hoca adayı bulunamadı: ${kulupId} kulübünün hocası yok`);
+  const r=kadroRastgele(k.dunyaTohumu,`${kulupId}:aday:${ek}`),iki=n=>String(n).padStart(2,'0');
+  const kullanilan=new Set(Object.values(k.kisiler).filter(p=>p.rol==='teknikDirektor').map(p=>p.ad));
+  const adlar=karistirR(r,ADLAR_TEST.slice()).map(a=>a+' Hoca').filter(a=>!kullanilan.has(a));
+  const disla=new Set([h.hoca.tarz]),L=[];
+  for(let i=0;i<HOCA_ADAY_SAYISI;i++){
+    const tarz=agirlikliSec(r,HOCA_TARZ_PAYI.filter(([t])=>!disla.has(t)));disla.add(tarz);
+    const yas=40+Math.floor(r()*22),ay=1+Math.floor(r()*12),gun=1+Math.floor(r()*28);
+    const td={ten:Math.floor(r()*5),sac:agirlikliSec(r,KADRO_HOCA_SAC),sacRenk:agirlikliSec(r,KADRO_HOCA_SAC_RENK),boy:+(0.95+r()*0.1).toFixed(2),yapi:+(1+r()*0.12).toFixed(2),biyik:r()<0.5};
+    L.push({ad:adlar[i],tarz,bilgi:+(0.45+r()*0.45).toFixed(2),israr:+(0.2+r()*0.6).toFixed(2),dogumTarihi:`${2026-yas}-${iki(ay)}-${iki(gun)}`,td});
+  }
+  return L;
+}
+/* adayın kaydı geçerli mi (karar işinin denetimi için): hata listesi */
+function hocaAdayiDenetle(a){
+  const h=[],oran=x=>typeof x==='number'&&x>=0&&x<=1;
+  if(!a||typeof a!=='object')return['aday kaydı yok'];
+  if(typeof a.ad!=='string'||!a.ad)h.push('aday adı yok');
+  if(!HOCA_TARZLARI.includes(a.tarz))h.push(`adayın tarzı geçersiz (${a.tarz})`);
+  if(!oran(a.bilgi)||!oran(a.israr))h.push('adayın bilgi ya da ısrarı geçersiz');
+  if(!tarihGecerliMi(a.dogumTarihi))h.push('adayın doğum tarihi geçersiz');
+  if(!a.td||typeof a.td!=='object'||Array.isArray(a.td))h.push('adayın görünüşü yok');
+  return h;
+}
+function hocaDegistir(k,kulupId,aday){
+  const c=k.kulupler[kulupId],eski=kulupHocasi(k,kulupId),h=hocaAdayiDenetle(aday);
+  if(!c||!c.kadro)throw new Error(`Hoca değiştirilemedi: ${kulupId} kulübünün kadrosu yok`);
+  if(!eski)throw new Error(`Hoca değiştirilemedi: ${c.ad} kulübünün hocası yok`);
+  if(h.length)throw new Error('Hoca değiştirilemedi: '+h.join('; '));
+  /* eski hocaya verilen süre (söz) iptal olur: söz bozulur, bağlı konu adımı kalmadıysa kapanır (iş tamamlanmadığı için IS_SONRASI çalışmaz) */
+  const sure=Object.values(k.isler).filter(x=>x.veri&&x.veri.hocaSuresi===eski.id);
+  for(const x of sure)isIptal(k,x.id,`${eski.ad} görevden ayrıldı`);
+  if(sure.length){sozDegerlendir(k,null);meseleDegerlendir(k);olayDurumGuncelle(k);}
+  eski.durum='ayrildi';
+  const id=hocaKur(k,kulupId,{ad:aday.ad,tarz:aday.tarz,bilgi:aday.bilgi,israr:aday.israr,dogumTarihi:aday.dogumTarihi});
+  c.kadro.td=Object.assign({},c.kadro.td,aday.td,{ad:aday.ad});
+  k.gecmis.push({tur:'hocaDegisimi',kulupId,eskiId:eski.id,yeniId:id,tarih:k.tarih,dakika:k.gunIciDakika});
+  return id;
+}
+
 /* doğrulama (EK_DENETIMLER): kadrosu olan her kulübün etkin bir hocası; hoca kaydının alanları */
 function hocaDogrula(k,h){
   const K=k.kulupler||{},P=k.kisiler||{},oran=x=>typeof x==='number'&&x>=0&&x<=1;

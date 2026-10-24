@@ -37,6 +37,9 @@
 'use strict';
 const MAC_SONRASI_DK=120;                       // maç anından odanın açılacağı ana (19:00 → 21:00; TEST)
 const MAC_PENALTI_XG=0.76;                      // penaltının beklenen golü (genel kabul; motorun konum xG'si penaltıyı ayrı tutmaz)
+/* F6-a: başkanın maçının kaydı yazıldıktan hemen sonra (zaman ilerlemeden, aynı komut içinde) çağrılan içerik kancaları: (k, fikstür kaydı) => void.
+   Kanca rastlantı çekmez; takvime iş koyabilir (ör. js/icerik-p12.js maç akşamı gizli gelişme). Öbür maçların kısa kaydı kancayı çağırmaz */
+const MAC_SONUCU_EKLERI=[];
 /* takım başına beklenen gol (2 ondalık): şutların konum xG'si, penaltı MAC_PENALTI_XG */
 const macBeklenenGol=sutlar=>[0,1].map(t=>Math.round(sutlar.filter(s=>s.takim===t).reduce((a,s)=>a+(s.pen?MAC_PENALTI_XG:s.xg),0)*100)/100);
 const MAC_SONUC_KART=['sari','ikinciSari','kirmizi'];
@@ -146,6 +149,7 @@ function macSonucuUygula(k,macId,sonuc,tohum,ek){
   if(!f)throw new Error(`Maç sonucu işlenemedi: fikstürde ${macId} yok`);
   if(Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'&&x.veri.macId===macId))throw new Error('Maç sonucu işlenemedi: maç günü işi hâlâ bekliyor');
   macKaydiYaz(k,f,sonuc,tohum,ek,false);
+  for(const e of MAC_SONUCU_EKLERI)e(k,f);
   const simdi=simdikiAn(k),an0=macAni(f),kulupler=[f.ev,f.konuk];
   /* zaman: maçtan sonrasına; arada anı gelen ajanda işinde (randevu, karar) durulur — kaçırılmaz */
   const hedef0=Math.max(simdi,an0+MAC_SONRASI_DK);let hedef=hedef0;

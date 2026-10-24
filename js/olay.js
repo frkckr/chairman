@@ -15,8 +15,9 @@
    Yoğunluk denetimi yoktur: gerçek vade ve gelişme zamanında işlenir.
    İçerik sıfırlandı (2.8L, kullanıcı kararı 2026-10-02): oyunda paket, gelişme ya da kanıt kaynağı tanımlı değildir; kayıt defterleri boş durur ve
    içerik yazıldıkça kendi dosyasından doldurulur. Kural denemeleri yalnız araclar/test-icerik.js'teki TEST içeriğini yükler. */
-/* içerik sürümü 4 (2.8L): boş içerik. 3 ve öncesinin paketleri kaldırıldı; o kayıtlar kayıt sürümü 6 ile açılmaz (js/kayit.js) */
-const ICERIK_SURUM=4;
+/* içerik sürümü 4 (2.8L): boş içerik. 3 ve öncesinin paketleri kaldırıldı; o kayıtlar kayıt sürümü 6 ile açılmaz (js/kayit.js).
+   İçerik sürümü 5 (F6-a, 2026-10-24): P12 TEST taslağı (js/icerik-p12.js, paket icerik:5). Sürüm 4'te kurulmuş kariyerde P12 açılmaz (kayıt açılır) */
+const ICERIK_SURUM=5;
 const OLAY_DURUMLARI=['acik','kapandi','onlendi'];
 /* kanıt kaynakları: anahtar → okunur ad (ör. {defter:'Muhasebe kayıtları'}); içerik dosyaları ekler. Kişi kimliği de kaynak olabilir */
 const OLAY_KAYNAKLARI={};
@@ -56,10 +57,11 @@ MESELE_OZET_EKLERI.push((k,id,ozet)=>{
   const o=meseleOlayi(k,id);
   if(o)ozet.bilgiler=o.bilgiler.map(b=>({metin:MESELE_OLAYLARI[b.anahtar](k,b.p),kaynak:olayKaynakAdi(k,b.kaynak),tarih:b.tarih}));
 });
-/* meselesi kapanan olay da kapanır */
-IS_SONRASI.push(k=>{
+/* meselesi kapanan olay da kapanır (iş tamamlanınca; iş dışı bir komut meseleyi kapatırsa o da çağırır: js/hoca.js hocaDegistir) */
+function olayDurumGuncelle(k){
   for(const o of Object.values(k.olaylar||{}))if(o.durum==='acik'&&k.meseleler[o.meseleId].durum==='kapandi')o.durum='kapandi';
-});
+}
+IS_SONRASI.push(k=>olayDurumGuncelle(k));
 
 IS_TURLERI.gelisme={
   gizli:true,
