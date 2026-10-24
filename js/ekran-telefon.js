@@ -299,7 +299,13 @@ function telefonCiz(k,T,s={}){
       else ic+='<p class="tel-bos">Yaklaşan maç yok.</p>';
       /* F2: kulübün son oynanan maçı (js/mac-sonuc.js kulubunSonMaci). Diğer maçlar oynanmaz (3.8) */
       const son=typeof kulubunSonMaci==='function'&&k.fikstur?kulubunSonMaci(k,(k.kisiler[k.baskanId]||{}).kulupId):null;
-      if(son)ic+='<h5>Son maç · '+yazT(son.f.hafta+'. hafta')+'</h5>'+telMacSatiri({sol:'Bitti',ev:k.kulupler[son.f.ev].ad,orta:son.s.skor[0]+' – '+son.s.skor[1],dep:k.kulupler[son.f.konuk].ad,durum:'bitti'});
+      /* F3-b: satıra dokununca maçın istatistiği ve beklenen gol (js/mac-okuma.js; kayıttan, gözlenebilir sayılar) */
+      const O=son&&typeof macOkumasi==='function'?macOkumasi(k,son.f.id):null;
+      if(son)ic+='<h5>Son maç · '+yazT(son.f.hafta+'. hafta')+'</h5>'+telMacSatiri({sol:'Bitti',ev:k.kulupler[son.f.ev].ad,orta:son.s.skor[0]+' – '+son.s.skor[1],dep:k.kulupler[son.f.konuk].ad,durum:'bitti'},
+        O?'data-eylem="skorAc" aria-expanded="'+(T.skorAc?'true':'false')+'"':'');
+      if(son&&O&&T.skorAc){const S=macOkumaSatirlari(O),ters=O.t===1,ev=k.kulupler[son.f.ev].kisa||'',dep=k.kulupler[son.f.konuk].kisa||'';
+        ic+='<table class="tel-ist"><thead><tr><th>'+yazT(ev)+'</th><th></th><th>'+yazT(dep)+'</th></tr></thead><tbody>'+
+          S.map(r=>'<tr><td>'+yazT(ters?r[2]:r[1])+'</td><th scope="row">'+yazT(r[0])+'</th><td>'+yazT(ters?r[1]:r[2])+'</td></tr>').join('')+'</tbody></table>';}
     }
     ic+='</div>';
   }

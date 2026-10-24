@@ -270,7 +270,7 @@ class Match{
     this.topcular=this.topculariKur();this.disToplar=[];
     this.yedekleriKur();this.kenarKur();
     /* T10c: maçın kaydı (kariyer Aşama 3'te sonucKaydi ile okur) ve sağlıkçılar (js/mac-sakatlik.js) */
-    this.kayit={goller:[],kartlar:[],sakatliklar:[],degisiklikler:[]};
+    this.kayit={goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],sutlar:[],uzunPas:[0,0]};   /* F3-b: sutlar — maçın şutları {ad, no, takim, dakika, xg (konum xG'si), pen, kafa} (js/mac-topla.js); uzunPas takım başına (pasSay). Salt kayıt; ist'in biçimi değişmez (taban özeti) */
     this.zgUyari=[0,0];   /* T10d: zaman geçirmede hakemin uyarısı (takım başına; js/mac-kurallar.js zamanGecirmeGoruldu) */
     this.guvenHazirla();   /* T10e: takım güveni (js/mac-takim.js) */
     this.ofsaytBekleyen=null;   /* T10d: bayrağı geç kalkacak ofsayt {p, t, x, z, fark, yanlis, g} (js/mac-kurallar.js ofsaytDokunus) */
@@ -279,7 +279,7 @@ class Match{
     this.yariSantra=true;   /* T16a: yarının ilk santrası hazırlanıyor — maç saati düdükle başlar (step; santraHazirla) */
     this._aldatmaT=null;   /* A4-1: barajlı serbest vuruşta aldatma koşusunun topun yanından geçtiği an (js/mac-durantop.js; kaleciTepkiSuresi okur) */
     this.sakatlikHazirla();
-    this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,sonTakim:0,hedefOyuncu:null,sut:null,pas:null,
+    this.ball={x:0,z:MZ,y:0,vx:0,vz:0,vy:0,egri:0,ust:0,sahip:null,tasiyan:null,sonDokunan:null,sonTakim:0,hedefOyuncu:null,sut:null,sonSut:null,pas:null,
       surum:0,agda:false,direk:false,px:0,py:0,pz:0,ortaBlok:null,hakemDegdi:null,
       /* T8-0: duran topun kullanımı {tur, p, t0, x, z, cikti, du}: durusKullan (ve santra) kurar, kullananın ilk dokunuşu 'kullanim' olayını yayar,
          başka oyuncunun dokunuşu siler (dokunus; js/mac-durantop.js) */
@@ -388,12 +388,15 @@ class Match{
   }
 
   /* T10c (2026-10-11; TEKNIK_PLAN §8 “maç sonucu sabit bir kayıt hâline gelir”): kariyere aktarılacak sonuç kaydı — skor, goller, kartlar,
-     sakatlıklar (kaç gün), değişiklikler ve temel istatistik. Salt okunur kopya; kariyer Aşama 3'te maç kimliğiyle bir kez uygular */
+     sakatlıklar (kaç gün), değişiklikler ve temel istatistik. Salt okunur kopya; kariyer maç kimliğiyle bir kez uygular (js/mac-sonuc.js).
+     F3-b (2026-10-24): sutlar (konum xG'siyle), ist'e pas, pasTamam, uzunPas (takım başına) ve ilk11 (girdinin kayıt kimlikleri; kariyersiz
+     kadroda null) — maçın okunması için; maçın akışını değiştirmez */
   sonucKaydi(){const I=this.ist,K=this.kayit,s=I.sahiplik[0]+I.sahiplik[1]||1;
     return{skor:this.score.slice(),bitti:this.phase==='fulltime',goller:K.goller.map(o=>({...o})),kartlar:K.kartlar.map(o=>({...o})),
-      sakatliklar:K.sakatliklar.map(o=>({...o})),degisiklikler:K.degisiklikler.map(o=>({...o})),
+      sakatliklar:K.sakatliklar.map(o=>({...o})),degisiklikler:K.degisiklikler.map(o=>({...o})),sutlar:K.sutlar.map(o=>({...o})),
+      ilk11:[0,1].map(t=>this.kadro&&this.kadro[t]&&Array.isArray(this.kadro[t].oyuncular)?this.kadro[t].oyuncular.slice(0,11).map(o=>o&&o.id!=null?o.id:null):null),
       ist:{sut:I.sut.slice(),isabet:I.isabet.slice(),korner:I.korner.slice(),faul:I.faul.slice(),sari:I.sari.slice(),kirmizi:I.kirmizi.slice(),
-        ofsayt:I.ofsayt.slice(),sahiplik:[I.sahiplik[0]/s,I.sahiplik[1]/s]}};}
+        ofsayt:I.ofsayt.slice(),sahiplik:[I.sahiplik[0]/s,I.sahiplik[1]/s],pas:I.pas.slice(),pasTamam:I.pasTamam.slice(),uzunPas:K.uzunPas.slice()}};}
 
   /* maç öncesi, devre arası ve maç sonu (maç günü akışı) js/mac-oncesi.js'tedir */
 
@@ -570,7 +573,7 @@ class Match{
     const b=this.ball,d=this.dir[p.team],ileri=(hx-b.x)*d,yan=Math.abs(hz-b.z),a=Math.atan2(yan,ileri);
     this.ist.pas[p.team]++;b.pas={p,takim:p.team,t:this.t,tur,L,x0:b.x,z0:b.z,hx,hz};
     if(a<Math.PI/4)this.ist.pasYon.ileri++;else if(a>Math.PI*3/4)this.ist.pasYon.geri++;else this.ist.pasYon.yan++;
-    if(L>=32)this.ist.uzunPas++;
+    if(L>=32){this.ist.uzunPas++;this.kayit.uzunPas[p.team]++;}   /* F3-b: takım başına kayıtta (maçın okunması: tarz izi) */
     /* B1: takım sahipliği içinde ardışık geri pas sayısı (ilerleme < −4 m, kararın eşiği; js/mac-karar.js pasDegeri okur) */
     if(MOTOR_AYAR.geriPasAmac>0){const G=this._geriN||(this._geriN=[{bas:-1,n:0,c:0,u1:null},{bas:-1,n:0,c:0,u1:null}]),g=G[p.team];
       if(g.bas!==this._sahiplikBas){g.bas=this._sahiplikBas;g.n=0;g.c=0;g.u1=null;}if(ileri<-4)g.n++;else g.n=0;
@@ -694,7 +697,13 @@ class Match{
     if(MOTOR_AYAR.protokol&S1_BIT.GOL){this.golSahneKur(c);gv.sevincT=c.sevincT;gv.tur=c.tur;gv.asist=c.asist;}
     this.on('goal',gv);
     this.guvenOlay(att,'golAtti');this.guvenOlay(def,'golYedi');if(own)this.guvenOlay(def,'kendiKale');   /* T10e */
-    this.kayit.goller.push({ad:scorer?scorer.name:'',no:scorer?scorer.no:0,takim:att,kendiKalesine:!!own,dakika:Math.floor(this.gameSec/60)+1});   /* T10c */
+    /* T10c; F3-b (2026-10-24): kayıttaki golcü — çerçeveye giden şut savunmacıya ya da kaleciye değip girerse gol şutu atanındır (istatistik
+       geleneği; eskiden kalecinin dokunduğu şut "kendi kalesine" yazılıyordu: bir maçta kaleciye üç kendi kalesine gol). Kendi kalesine yalnız
+       çerçeve dışına giden topu ya da şut olmayan topu savunmacı sokunca. Başka oyuncunun dokunuşu b.sut'u siler (dokunus); son şut b.sonSut'ta
+       durur (js/mac-topla.js): 4 sn içinde aynı takımın çerçeveye giden şutu ya da kalecinin dokunduğu şut atanındır. Yalnız kayıt: own, güven,
+       sevinç ve isabet sayacı değişmez */
+    const ss=b.sonSut,kAtan=own&&ss&&ss.team===att&&ss.by&&this.t-ss.t<4&&(ss.cerceve||(scorer&&scorer.rol==='GK'))?ss.by:scorer,kOwn=own&&kAtan===scorer;
+    this.kayit.goller.push({ad:kAtan?kAtan.name:'',no:kAtan?kAtan.no:0,takim:att,kendiKalesine:!!kOwn,dakika:Math.floor(this.gameSec/60)+1});
     /* T10b (T10 teşhisi hata 5): avantaj sürerken gol — avantaj tutulmuştur, kart şimdi gösterilir (sevinç sürerken hakem oyuncuya gider) */
     if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:true});if(a.kart&&a.yapan.oyunda){if(c.s1)c.kartBekle=a;else this.kartGoster(a.yapan,a.kart);}}   /* S1c: kart sevinçten sonra */
   }

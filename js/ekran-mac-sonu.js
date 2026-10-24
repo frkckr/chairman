@@ -68,6 +68,8 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
     return'<div class="ms-kararti"></div><div class="ms-kart" tabindex="-1">'+
       '<p class="ms-ust">Maç sonu'+(B.hafta?' · '+yaz((B.ligAd?B.ligAd+' ':'')+B.hafta+'. hafta'):'')+'</p>'+
       '<div class="ms-skor"><span class="'+(biz===0?'ms-biz':'')+'" title="'+yaz(adi(0))+'">'+yaz(adi(0))+'</span><b>'+S.skor[0]+'–'+S.skor[1]+'</b><span class="'+(biz===1?'ms-biz':'')+'" title="'+yaz(adi(1))+'">'+yaz(adi(1))+'</span></div>'+
+      /* F3-b: beklenen gol (motorun şut listesinden; karar 34) */
+      (Array.isArray(S.sutlar)&&typeof macBeklenenGol==='function'?(xg=>'<p class="ms-yok">Beklenen gol '+xg.map(x=>x.toFixed(2).replace('.',',')).join(' – ')+' · şut '+S.ist.sut[0]+' – '+S.ist.sut[1]+'</p>')(macBeklenenGol(S.sutlar.map(x=>({takim:x.takim,xg:x.xg,pen:x.pen})))):'')+
       (goller.length+kartlar.length+sakat.length?'':'<p class="ms-yok">Gol, kart ve sakatlık yok.</p>')+
       bolum('Goller',goller)+bolum('Kartlar',kartlar)+bolum('Sakatlıklar',sakat)+test+
       '<div class="ms-alt"><p class="ms-durum" role="status">'+yaz(kisa(0)+' '+S.skor[0]+' – '+S.skor[1]+' '+kisa(1))+'</p><button type="button" class="ms-don" data-eylem="odayaDon">Odaya dön ▸</button></div></div>';

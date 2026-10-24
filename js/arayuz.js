@@ -14,8 +14,10 @@ btnDuraklat.onclick=duraklatDegistir;
 /* geliştirici panelindeki Durdur/Devam aynı ortak duraklatmayı kullanır (2.8O) */
 const btnDurdur=$('btnDurdur');btnDurdur.onclick=duraklatDegistir;
 duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';if(duraklatGosterge)duraklatGosterge.hidden=!a;});
-/* maça geç: maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) atlar; santrada düğme kaybolur */
-const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();btnMacaGec.hidden=true;};
+/* santraya geç: maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) görüntüsüz bitirir (F3-0: basılan an maçı değiştirmez; birkaç saniye
+   sürer, düğme o sırada "Santraya geçiliyor…" yazar); santrada düğme kaybolur */
+const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();
+  if(SANTRA_HIZLI.aktif){btnMacaGec.disabled=true;btnMacaGec.setAttribute('aria-busy','true');btnMacaGec.textContent='Santraya geçiliyor…';}else btnMacaGec.hidden=true;};
 /* F2 (2026-10-23, kullanıcı isteği; GEÇİCİ TEST, yayından önce kaldırılır): "Maçı bitir" — kalan maç görüntüsüz oynanır (js/mac-sahnesi.js
    hizliBitirIste). Basılınca kapanır ve dakikayı yazar; maç bitince gizlenir. Maç sonu kartı js/ekran-mac-sonu.js */
 const btnHizliBitir=$('btnHizliBitir'),hizliBitirYazi=btnHizliBitir.querySelector('span');

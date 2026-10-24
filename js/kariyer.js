@@ -13,8 +13,10 @@
    Sürüm 6 (yol haritası 2.8L, 2026-10-02): alanlar sürüm 5 ile aynıdır; oyunun bütün içeriği kaldırıldığı için 1–5 sürümlü kayıtlar
      dönüştürülmez, açılırken nedeni söylenerek reddedilir (js/kayit.js). İçerik sürümü 4 boş içeriktir.
    Sürüm 7 (F1, 2026-10-23): sezon, fikstur, maclar (js/fikstur.js), oyuncular ve sonrakiNo.oyuncu (js/kariyer-kadro.js); kulüplerde kadro;
-     dünya ligin 16 kulübüdür. Sürüm 6 kayıtları dönüştürülmez (lig ve kadrolar kariyere geçti), nedeni söylenerek reddedilir. */
-const KARIYER_SURUM=7;
+     dünya ligin 16 kulübüdür. Sürüm 6 kayıtları dönüştürülmez (lig ve kadrolar kariyere geçti), nedeni söylenerek reddedilir.
+   Sürüm 8 (F3, 2026-10-24): kadrosu olan her kulübün hocası (kişi, rol teknikDirektor, hoca {tarz, bilgi, israr}; kulup.hocaId; js/hoca.js);
+     maclar girdisinde sutlar, xg ve ilk11 (js/mac-sonuc.js). Sürüm 7 kayıtları dönüştürülmez (hoca ve maçın okunması kariyere geçti). */
+const KARIYER_SURUM=8;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */

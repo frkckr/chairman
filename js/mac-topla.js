@@ -745,6 +745,8 @@ Object.assign(Match.prototype,{
     b.hedefOyuncu=sec.alici||null;b.pasHedef=sec.alici?{x:hx,z:hz,tur:sec.tur,mod:sec.mod||null,marj:sec.marj!=null?sec.marj:null,tip:tip||null,rahat:null}:null;   /* T23a2: mod, marj, tip salt okunur */
     const tur=sec.tur;
     if(tur==='sut'){b.sut={team:p.team,by:p,gkDone:false,cerceve:this.cerceveyeGider(p.team),xg:sec.xg||0,t:this.t};if(k.sut)Object.assign(b.sut,k.sut);this.ist.sut[p.team]++;
+      b.sonSut={by:p,team:p.team,t:this.t,cerceve:b.sut.cerceve};   /* F3-b: kayıttaki golcü için (js/mac-motoru.js gol; salt kayıt) */
+      if(!MAC_ONCESI.includes(this.phase))this.kayit.sutlar.push({ad:p.name,no:p.no,takim:p.team,dakika:Math.floor(this.gameSec/60)+1,xg:Math.round((b.sut.xgYer||0)*1000)/1000,pen:!!sec.penalti,kafa:false});   /* F3-b: salt kayıt */
       this.ofsaytPasAni(p);this.on('shot',{p,dist:L,xg:sec.xg||0});this.sutTakipAta(p,sec.xg);}   /* T7e: şutu takip ve dönen top (js/mac-takim.js) */
     else if(tur==='pas'||tur==='ara'||tur==='uzun'||tur==='orta'||tur==='geriCevir'||tur==='kisa'){
       this.pasSay(p,sec.hx,sec.hz,L,tur);this.ofsaytPasAni(p);
@@ -990,7 +992,7 @@ Object.assign(Match.prototype,{
     p.sonDokunus={t:this.t,tur:'kafa',ayak:null,yuzey:yz};
     this.dokunus(p,true);b.hedefOyuncu=k.alici||null;
     if(k.tur==='sut'){b.sut={team:p.team,by:p,gkDone:false,cerceve:this.cerceveyeGider(p.team),kafa:true,t:this.t,hedefZ:k.hz,hedefY:k.hy,tur:'kafa',
-      ipucu:{yan:Math.sign(k.hz-MZ)||1,guven:clamp(0.8-0.5*p.oz.kafa,0.2,0.8)}};this.ist.sut[p.team]++;
+      ipucu:{yan:Math.sign(k.hz-MZ)||1,guven:clamp(0.8-0.5*p.oz.kafa,0.2,0.8)}};this.ist.sut[p.team]++;b.sonSut={by:p,team:p.team,t:this.t,cerceve:b.sut.cerceve};   /* F3-b */
       /* T12-0: kalecinin tahmini; salt okunur, sonucu değiştirmez (v-verim). T24-0 (2026-10-18): topun kale çizgisine varışı (süre, yer, yükseklik)
          topun bir kopyasının yolundan — topFizikAdim ile, sürükleme ve sekme dahil (topYolu'nun kopyası gibi; önbelleğe dokunmaz, rastlantı çekmez).
          Eskiden hızdan sürüklemesiz parabol (tg = Δx/vx): kafa top planlanandan alçak ve geç gidiyor, tahmin kafada %53, gerçekleşen %71 (T23, 80
@@ -1001,7 +1003,8 @@ Object.assign(Match.prototype,{
           if((px-gxa)*(s.x-gxa)<=0){const f=(gxa-px)/((s.x-px)||1);tg=(i-1+f)/60;zc=pz+(s.z-pz)*f;yc=py+(s.y-py)*f;break;}
           if(s.vx*d<=0.05)break;}
         b.sut.nisanZ=zc;b.sut.nisanY=yc;b.sut.pKurt=kaleciTahmin(this,gk,zc,Math.max(0.05,yc),tg,0).P;b.sut.gkTepki=kaleciTepkiSuresi(this,gk,b.x,b.z);}
-      b.sut.xgYer=xG(b.x*d,b.z,'kafa',0);}
+      b.sut.xgYer=xG(b.x*d,b.z,'kafa',0);
+      if(!MAC_ONCESI.includes(this.phase))this.kayit.sutlar.push({ad:p.name,no:p.no,takim:p.team,dakika:Math.floor(this.gameSec/60)+1,xg:Math.round(b.sut.xgYer*1000)/1000,pen:false,kafa:true});}   /* F3-b: salt kayıt */
     else if(k.tur==='indirme'||k.tur==='pas'){this.pasSay(p,k.hx,k.hz,L,'kafa');this.ofsaytPasAni(p);}
     this.on('header',{p,shot:k.tur==='sut',tur:k.tur,xg:k.xg||0,yuzey:yz,cek:!!cek});if(k.tur==='sut')this.sutTakipAta(p,k.xg);
   },

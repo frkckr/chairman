@@ -3,9 +3,11 @@
    olaydan birkaç saniye önce yumuşakça yavaşlar, an normal hızda izlenir, sonra seçilen hıza döner. Seçilen anlar: gol ve şut (her zaman), faul
    ve kart, sakatlık, korner ve tehlikeli serbest vuruş (penaltı dahil), ofsayt bayrağı. Taç, kale vuruşu, değişiklik, hakem topu ve zaman
    geçirme yavaşlatmaz; tedavi, sedye, gol sonrası santraya yürüyüş ve duran topun hazırlığı seçilen hızda geçer.
-   Önceden bilmek — ikiz motor: motor tohumlu ve belirlenimcidir (rastlantı yalnız this.rast, srast, skRast), ana motora dışarıdan giren tek komut
-   maç öncesindeki macaGec'tir (B4b: geliştirici panelinin tarz değişikliği de TEST komutu olarak girer; izlemeKomut onu iki motora aynı karede verir). Aynı seçenek ve tohumla kurulan ikinci Match aynı maçı oynar. İkiz maç öncesinde ana motorla aynı adımda yürür
-   (Santraya geç ikisine birden uygulanır: izlemeMacaGec); ana motor santraya geçince ikiz IZLEME.onde saniye öne çıkar, ürettiği önemli
+   Önceden bilmek — ikiz motor: motor tohumlu ve belirlenimcidir (rastlantı yalnız this.rast, srast, skRast). Oyun yolunda ana motora dışarıdan komut
+   girmez: F3-0'dan (2026-10-24) beri “Santraya geç” maç öncesini görüntüsüz doğal sonuna oynatır, macaGec vermez (js/mac-sahnesi.js santraHizliAdim);
+   izlemeMacaGec maç öncesini atlayan araçlar içindir (araclar/ikiz-deneme.js --oncesi). B4b: geliştirici panelinin tarz değişikliği TEST komutu olarak
+   girer; izlemeKomut onu iki motora aynı karede verir. Aynı seçenek ve tohumla kurulan ikinci Match aynı maçı oynar. İkiz maç öncesinde ana motorla
+   aynı adımda yürür; ana motor santraya geçince ikiz IZLEME.onde saniye öne çıkar, ürettiği önemli
    olaylardan pencereler kurulur. Ana motorun olayları (ad ve kare) ikizinkilerle sırayla karşılaştırılır; tutmazsa ikiz bırakılır, uyarı yazılır,
    o maçta pencereler ana motorun kendi olayından başlar (önceden yavaşlama yok) ve sapma sayılır. Maç sonunda iki sonuç kaydı da karşılaştırılır.
    Hız eğrisi motor zamanındadır (kare): pencereye rampaIn saniye kala seçilen hızdan 1×'e doğrusal iner, pencere bitince rampaOut saniyede çıkar;

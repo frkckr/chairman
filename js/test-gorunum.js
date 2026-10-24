@@ -49,5 +49,8 @@ function testKadro(kulupId,kariyer){
   const K=D?{oyuncular:D.ilk11.map(id=>k.oyuncular[id]),yedekler:D.yedekler.map(id=>k.oyuncular[id])}:typeof KADROLAR!=='undefined'?KADROLAR[kulupId]:null;
   if(!K)return null;
   const satir=(o,yedek)=>({ad:o.ad,no:o.no,yedek,mevki:o.mevki||'',oz:o.oz.slice(),ortalama:Math.round(o.oz.reduce((t,x,i)=>t+(i===8&&o.no!==1&&o.mevki!=='KL'?0:x),0)/(o.no===1||o.mevki==='KL'?11:10))});
-  return{ozellikler:TEST_OZELLIKLER,oyuncular:K.oyuncular.map(o=>satir(o,false)).concat((K.yedekler||[]).map(o=>satir(o,true)))};
+  /* F3-a: kulübün hocası (gizli bilgi ve ısrar; js/hoca.js) */
+  const h=D&&typeof kulupHocasi==='function'?kulupHocasi(k,kulupId):null;
+  return{ozellikler:TEST_OZELLIKLER,oyuncular:K.oyuncular.map(o=>satir(o,false)).concat((K.yedekler||[]).map(o=>satir(o,true))),
+    hoca:h?{ad:h.ad,tarz:h.hoca.tarz,bilgi:h.hoca.bilgi,israr:h.hoca.israr}:null};
 }

@@ -20,11 +20,12 @@ const KAYIT_BICIM=1;
 /* sürüm geçişleri: KAYIT_GECISLERI[n] = veri → (n+1) sürümlü veri. Geçişler başka kural dosyasına bağlı olmayan veri dönüşümleridir;
    kararları yeniden oynatmaz, para hareketi üretmez.
    2.8L (2026-10-02): 1→5 geçişleri kaldırıldı. Sürüm 5 ve öncesinin kayıtları silinen içeriğe bağlıdır; açılmaz (ESKI_KAYIT_SINIRI).
-   F1 (2026-10-23): sürüm 6 da açılmaz — lig, fikstür ve kadrolar kariyere geçti; içeriksiz kariyer yeniden başlatılır (YOL_HARITASI karar 36) */
+   F1 (2026-10-23): sürüm 6 da açılmaz — lig, fikstür ve kadrolar kariyere geçti; içeriksiz kariyer yeniden başlatılır (YOL_HARITASI karar 36).
+   F3 (2026-10-24): sürüm 7 de açılmaz — hocalar ve maçın okunması kariyere geçti (oynanmış maçların şut listesi yok); kariyer yeniden başlatılır */
 const KAYIT_GECISLERI={};
-const ESKI_KAYIT_SINIRI=7;                   // bu sürümden eski kayıt dönüştürülmez
+const ESKI_KAYIT_SINIRI=8;                   // bu sürümden eski kayıt dönüştürülmez
 /* eski sürümün neden açılmadığı (oyuncuya söylenir); listede olmayan eski sürüm 2.8L nedenini alır */
-const ESKI_KAYIT_NEDENI={6:'lig, fikstür ve kadrolar kariyere geçtiği için'};
+const ESKI_KAYIT_NEDENI={6:'lig, fikstür ve kadrolar kariyere geçtiği için',7:'hocalar ve maçın okunması kariyere geçtiği için'};
 
 /* FNV-1a 32 bit: güvenlik için değil, yarım/bozuk yazımı yakalamak için */
 function saglamaHesapla(s){

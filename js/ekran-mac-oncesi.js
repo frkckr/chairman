@@ -51,7 +51,7 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
       '<b>'+yaz(o.ad)+' <small>'+yaz(o.mevki)+'</small></b><span class="oe-soluk">'+yaz(o.neden)+'</span><span>'+yaz(o.donus)+'</span></li>').join(''):'<li class="oe-bos">Eksik yok</li>')+'</ul>';};
   const taraf=T=>'<section class="prg-taraf" aria-label="'+yaz(takimAdi(T.id))+'">'+
     '<header class="prg-takim">'+arma(T)+'<div><b class="oe-ad">'+yaz(takimAdi(T.id))+'</b><small>'+sira(T.id)+'. sıra · '+T.satir.P+' puan</small></div></header>'+
-    '<h3>İlk 11 <small>'+yaz(T.kd.taktik.dizilis)+'</small></h3>'+ilk11(T)+'<p class="prg-td">Teknik direktör: <b>'+yaz(T.kd.td.ad)+'</b></p>'+
+    '<h3>İlk 11 <small>'+yaz(T.kd.taktik.dizilis)+'</small></h3>'+ilk11(T)+'<p class="prg-td">Teknik direktör: <b>'+yaz(T.kd.td.ad)+'</b>'+(MAC_GUNU.kariyer&&T.kd.taktik.tarz&&typeof TARZ_ARKETIP!=='undefined'&&TARZ_ARKETIP[T.kd.taktik.tarz]?' · '+yaz(TARZ_ARKETIP[T.kd.taktik.tarz].ad):'')+'</p>'+   /* F3-a: hocanın tarzı */
     '<h3>Sakat ve cezalı</h3>'+eksikler(T)+'</section>';
   /* puan durumu: bölgeler (şampiyon, play-off, küme düşme) sol kenarda; iki takımın satırı kendi renginde */
   const Z=B.bolgeler||{},ara=(r,n)=>!!r&&n>=r[0]&&n<=r[1],bolge=n=>ara(Z.cikma,n)?'cikma':ara(Z.playoff,n)?'playoff':ara(Z.dusme,n)?'dusme':'';

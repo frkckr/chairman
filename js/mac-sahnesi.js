@@ -32,8 +32,9 @@ function tribunOnu(taraftar){
   return null;}
 /* T10e: atmosfer (hakemin ev sahibi eğilimi, deplasmanın güven tabanı) maç günü tarifinin doluluğundan.
    F1-b (2026-10-23): kadrolar ve tohum bu sayfanın maç gününden (js/mac-gunu.js MAC_GUNU): kariyerden açılan maçta kariyerin kadroları ve maçın
-   kimliğinden türeyen tohum (adresteki ?tohum ve ?tarz yok sayılır; tarz F3'e dek tohumdan), geliştirme adreslerinde eskisi gibi */
-const MAC_SECENEK={kadro:MAC_GUNU.kadro,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC_GUNU.kariyer?MAC_GUNU.tohum:MAC_TOHUM,tarz:MAC_GUNU.kariyer?'dagilim':MAC_TARZ,zemin:STAT.zemin,kosullar:{atmosfer:clamp(MAC_GUNU.doluluk,0,1)},
+   kimliğinden türeyen tohum (adresteki ?tohum ve ?tarz yok sayılır), geliştirme adreslerinde eskisi gibi. F3-a (2026-10-24): kariyer maçında
+   iki takımın tarzı hocalarının tarzıdır (MAC_GUNU.tarz; js/hoca.js), F3'ten önce tohumdan çekilirdi ('dagilim') */
+const MAC_SECENEK={kadro:MAC_GUNU.kadro,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC_GUNU.kariyer?MAC_GUNU.tohum:MAC_TOHUM,tarz:MAC_GUNU.kariyer?MAC_GUNU.tarz.slice():MAC_TARZ,zemin:STAT.zemin,kosullar:{atmosfer:clamp(MAC_GUNU.doluluk,0,1)},
   kulubeler:KULUBELER.map(k=>({takim:k.takim,koltuklar:k.koltuklar.map(s=>({x:s.x,z:s.z+MOTOR_Z})),alan:{x:k.alan.x,z:k.alan.z+MOTOR_Z}})),
   taraftarYeri:tribunOnu('ev')||undefined,deplasmanYeri:tribunOnu('deplasman')};
 /* U1: izleme (js/mac-izleme.js) — ana motorun her olayı ikizinkiyle karşılaştırılır; aynı seçenek ve tohumla kurulan ikiz önemli anları önceden
@@ -166,8 +167,27 @@ function olay(ad,v){
 
 
 
-/* ---- "Maça geç": maç öncesini atla ---- */
-function macaGecIste(){if(!MAC_ONCESI.includes(mac.phase))return;mac.macaGec();izlemeMacaGec(MAC_IZLEME);for(const F of FLASLAR)F.t=9;}
+/* ---- "Santraya geç" (F3-0, 2026-10-24, kullanıcı kararı): maç öncesi görüntüsüz doğal sonuna oynatılır ----
+   Eskiden motor basıldığı karede santraya sıçrardı (mac.macaGec): yazı tura ve maçın geri kalanı o anki rastlantı durumundan çekildiği için aynı
+   tohumla basma anına göre farklı maç oynanırdı; sonuç kariyere kalıcı işlendiğinden (F2) sayfa kapatılıp başka anda basılarak sonuç yeniden
+   çekilebilirdi. Şimdi kalan ısınma, tören, tokalaşma, fotoğraf ve yazı tura her karede en çok SANTRA_HIZLI.butce ms görüntüsüz oynanır
+   (HIZLI_BITIR'in kalıbı; duraklatma ve telefon kare dt'sini 0 yaptığı için o da durur). İkiz motor maç öncesinde ana motorla aynı karede yürür,
+   her adımda birlikte ilerler (izlemeAdim; tek karede büyük sıçrama yok). Basılsa da basılmasa da, ne zaman basılsa da maç aynıdır. Aradaki olaylar
+   sunuma verilmez; santraya geçilen adımın olayları verilir. mac.macaGec motorda kalır: araçlar (Node, maç öncesisiz denemeler) ve F7'nin
+   görüntüsüz öbür maçları kullanır; bu sayfanın kendi maçı onu çağırmaz */
+const SANTRA_HIZLI={aktif:false,butce:30};
+function macaGecIste(){if(!MAC_ONCESI.includes(mac.phase)||SANTRA_HIZLI.aktif)return;SANTRA_HIZLI.aktif=true;}
+function santraHizliAdim(dt){
+  const S=SANTRA_HIZLI;if(!(dt>0))return 0;
+  const t0=performance.now();let n=0;
+  while(MAC_ONCESI.includes(mac.phase)&&performance.now()-t0<S.butce){olayKuyrugu.length=0;mac.step(ADIM);n++;izlemeAdim(MAC_IZLEME);}
+  for(const a of AKTORLER){a.px=a.kaynak.x;a.pz=a.kaynak.z;}
+  {const b=mac.ball;TOP.px=b.x;TOP.py=b.y;TOP.pz=b.z;}
+  birikim=0;zaman+=n*ADIM;
+  if(MAC_ONCESI.includes(mac.phase))olayKuyrugu.length=0;
+  else{S.aktif=false;PARA.t=-1;for(const F of FLASLAR)F.t=9;while(olayKuyrugu.length){const [ad,v]=olayKuyrugu.shift();olay(ad,v);}}
+  return Math.min(n*ADIM,0.1);
+}
 
 /* ---- F2 (2026-10-23, kullanıcı isteği; GEÇİCİ TEST, yayından önce kaldırılır): "Maçı bitir" — kalan maç görüntüsüz oynanır ----
    Sonuç aynıdır (adım hep 1/60 sn; motor tohumlu). Her karede en çok HIZLI_BITIR.butce ms adım atılır, görüntü akmayı sürdürür (tabela skor
@@ -214,6 +234,7 @@ function macKare(dt){
   hizliBitirHazir();
   let dts;
   if(HIZLI_BITIR.aktif)dts=hizliBitirAdim(dt);   /* F2: "Maçı bitir (TEST)" */
+  else if(SANTRA_HIZLI.aktif)dts=santraHizliAdim(dt);   /* F3-0: "Santraya geç" maç öncesini görüntüsüz bitirir */
   else{
   izlemeHizi(dt);
   dts=dt*MAC_HIZ.deger;zaman+=dts;birikim+=dts;

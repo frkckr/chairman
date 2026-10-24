@@ -4,7 +4,7 @@
    index.html yüklemez. Kullananlar: araclar/kariyer-deneme.js (vm), araclar/akis-deneme.py (sayfaya enjekte eder),
    prototipler/7-dosya-defter.html (örnek verili görünüm).
    testIcerikKur(k, {sayman?, gelisme?, randevu?}) yeni kariyere kişileri ve takvim işlerini ekler (BASLANGIC_EKLERI ile ya da elle):
-     kisi-2 Ayla Deneme (sayman, mali katkısı güçlü), kisi-3 Berk Deneme (kulüp dışı destekçi), kisi-4 Cem Deneme (kulüp çalışanı).
+     kisi-91 Ayla Deneme (sayman, mali katkısı güçlü), kisi-92 Berk Deneme (kulüp dışı destekçi), kisi-93 Cem Deneme (kulüp çalışanı).
      Pazartesi 11:00 ertelenebilir randevu, 15:00 isteğe bağlı randevu, Salı 12:00 gider ödemesi, Salı 10:30 gizli gelişme.
    Gelişme 'denemeTeklif' → paket 'denemeTeklif' (koşul: k.kosullar.deneme !== 'yok') → acil olmayan iki cevaplı karar 'denemeKarari'
      [kabul et / saymana devret] (sayman yoksa [kabul et / reddet]); cevapsız kalırsa teklif düşer.
@@ -12,10 +12,10 @@
    testDosyasizKarar(k): bugüne konuya bağlı olmayan iki cevaplı karar 'denemeDosyasiz' ekler (2.8Q'nun sağ karar paneli için).
    Metinler yalnız denemedir; oyun içeriği değildir. */
 const TEST_KISILER={
-  'kisi-2':{id:'kisi-2',ad:'Ayla Deneme',rol:'yonetici',dogumTarihi:'1975-05-05',kulupId:'demirkapi',durum:'aktif',
+  'kisi-91':{id:'kisi-91',ad:'Ayla Deneme',rol:'yonetici',dogumTarihi:'1975-05-05',kulupId:'demirkapi',durum:'aktif',
     profil:{meslek:'Deneme saymanı.'},katki:{mali:'guclu',baglanti:'orta',futbol:'zayif',iletisim:'orta'}},
-  'kisi-3':{id:'kisi-3',ad:'Berk Deneme',rol:'destekci',dogumTarihi:'1980-03-03',kulupId:null,durum:'aktif'},
-  'kisi-4':{id:'kisi-4',ad:'Cem Deneme',rol:'personel',dogumTarihi:'1960-01-01',kulupId:'demirkapi',durum:'aktif'}
+  'kisi-92':{id:'kisi-92',ad:'Berk Deneme',rol:'destekci',dogumTarihi:'1980-03-03',kulupId:null,durum:'aktif'},
+  'kisi-93':{id:'kisi-93',ad:'Cem Deneme',rol:'personel',dogumTarihi:'1960-01-01',kulupId:'demirkapi',durum:'aktif'}
 };
 const TEST_TUTAR=40000000;
 Object.assign(OLAY_KAYNAKLARI,{defter:'Deneme defteri',gazete:'Deneme Gazetesi'});
@@ -117,13 +117,13 @@ const testDosyasizKarar=k=>donenKarar(k,{baslik:'Dosyasız deneme kararı',sure:
 function testIcerikKur(k,{sayman=true,gelisme=true,randevu=true}={}){
   const c=k.kulupler.demirkapi,gun=n=>tarihEkle(BASLANGIC_TARIHI,n);
   Object.assign(k.kisiler,kariyerOlustur(TEST_KISILER));
-  k.sonrakiNo.kisi=Math.max(k.sonrakiNo.kisi,5);
-  if(sayman)c.yonetim.sayman='kisi-2';else{k.kisiler['kisi-2'].rol='yoneticiAdayi';}
+  k.sonrakiNo.kisi=Math.max(k.sonrakiNo.kisi,94);   /* F3: kisi-2… hocalardır (js/hoca.js); TEST kişileri 91–93 */
+  if(sayman)c.yonetim.sayman='kisi-91';else{k.kisiler['kisi-91'].rol='yoneticiAdayi';}
   if(randevu){
-    isEkle(k,{tur:'ajanda',tarih:gun(0),dakika:660,veri:{baslik:'Deneme randevusu',zorunluluk:'ertelenebilir',sure:30,sonTarih:gun(1),kisiId:'kisi-4',
+    isEkle(k,{tur:'ajanda',tarih:gun(0),dakika:660,veri:{baslik:'Deneme randevusu',zorunluluk:'ertelenebilir',sure:30,sonTarih:gun(1),kisiId:'kisi-93',
       aciklama:'Kulüp çalışanı stadın anahtarlarını teslim edecek.',bilgi:'Anahtarlar teslim alındı.'}});
     isEkle(k,{tur:'ajanda',tarih:gun(0),dakika:900,veri:{baslik:'İsteğe bağlı deneme',zorunluluk:'istege',sure:60,aciklama:'Gelmezsen kaçırılır.'}});
   }
   odemePlanla(k,{kulupId:'demirkapi',tarih:gun(1),dakika:720,tutar:-4500000,kalem:'isletme',aciklama:'Deneme faturası'});
-  if(gelisme)isEkle(k,{tur:'gelisme',tarih:gun(1),dakika:630,veri:{gelisme:'denemeTeklif',kulupId:'demirkapi',kisiId:'kisi-3',tutar:TEST_TUTAR}});
+  if(gelisme)isEkle(k,{tur:'gelisme',tarih:gun(1),dakika:630,veri:{gelisme:'denemeTeklif',kulupId:'demirkapi',kisiId:'kisi-92',tutar:TEST_TUTAR}});
 }

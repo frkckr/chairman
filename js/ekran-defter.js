@@ -55,6 +55,7 @@ const DEFTER_SAAT={bas:8,bit:22};            // sağ sayfadaki saat çizgileri (
 .dft-cizgi{position:absolute;left:.4em;right:.2em;font-size:.82em;color:${F.murekkep};border-top:1px dashed ${F.murekkep};padding-left:.3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dft-simdi{position:absolute;left:-.3em;right:0;border-top:.14em solid var(--k-kirmizi)}
 .dft-bos{position:absolute;top:35%;left:0;right:0;text-align:center;font-style:italic;color:var(--k-soluk)}
+.dft-macNot{margin:.5em 0 0;font-size:.86em;line-height:1.35;color:var(--k-murekkep,inherit)}.dft-macNot b{display:block;font-size:.9em;color:var(--k-soluk)}
 .dft-ayrinti{display:grid;gap:.4em;padding:.6em .7em;background:${F.kart};border:1px solid ${F.cizgi};box-shadow:.15em .2em 0 rgba(40,30,10,.15)}
 .dft-ayrinti h4{margin:0;display:flex;flex-wrap:wrap;gap:.2em .6em;align-items:baseline;font-size:1em}
 `;
@@ -113,6 +114,9 @@ function defterGorunumu(k,D,Y){
   if(bugunMu)sag+='<span class="dft-simdi" style="top:'+y(k.gunIciDakika).toFixed(2)+'%" title="şimdi"></span>';
   if(!R.length)sag+='<p class="dft-bos">Boş gün.</p>';
   sag+='</div>';
+  /* F3-b: o gün oynanmış maçımızın notu (başkanın gözlemi; js/mac-okuma.js macGozlemNotu, TEST şablon) */
+  {const biz=(k.kisiler[k.baskanId]||{}).kulupId,f=biz&&(k.fikstur||[]).find(x=>x.tarih===D.gun&&(x.ev===biz||x.konuk===biz)&&k.maclar&&k.maclar[x.id]);
+   const not=f&&typeof macGozlemNotu==='function'?macGozlemNotu(k,f.id):null;if(not)sag+='<p class="dft-macNot"><b>Maçtan not</b>'+yaz(not)+'</p>';}
   const s=R.find(r=>r.id===D.secili&&r.tur==='ajanda');
   if(s)sag+=D.ayrinti(s,bugunMu);
   return'<div class="dft" role="dialog" aria-label="Ajanda"><div class="dft-kapak"><div class="dft-sayfalar">'+

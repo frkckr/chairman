@@ -166,6 +166,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     /* bu açılışta yeni gelenler "yeni" diye işaretli kalır */
     yeniIsaret=new Set(c?c.mesajlar.filter(m=>m.yeni).map(m=>m.meseleId+':'+m.sira):[]);
     if(c)for(const id of c.meseleler){const m=k.meseleler[id];if(m&&m.olaylar.length>m.gorulen)try{komut(x=>meseleGoruldu(x,id));}catch(e){mesaj=e.message;}}
+    /* F3-b: hocanın maç yorumu okundu (js/mac-okuma.js) */
+    if(c&&c.okunacak.length&&typeof macOkunduIsaretle==='function')try{komut(x=>{for(const id of c.okunacak)macOkunduIsaretle(x,id);});}catch(e){mesaj=e.message;}
   }
 
   /* ---- ajanda (2.8M): iki sayfalı açık defter (çizim js/ekran-defter.js). Sol sayfa hafta, sağ sayfa seçili günün saatleri; kayda tıklayınca
@@ -227,7 +229,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
   function kadroPaneli(){
     const Q=testKadro(kulupId(),k);
     if(!Q)return'<p class="od-not">Kadro verisi yok.</p>';
-    return'<p class="od-not">Futbolcuların gizli özellikleri (1–99) '+testKutu('Gelişim sistemi henüz olmadığı için değerler sabittir; yayında gösterilmeyecek.')+'</p>'+
+    const H=Q.hoca?'<p class="od-not">Hoca: '+yaz(Q.hoca.ad)+' · tarz '+yaz(typeof TARZ_ARKETIP!=='undefined'&&TARZ_ARKETIP[Q.hoca.tarz]?TARZ_ARKETIP[Q.hoca.tarz].ad:Q.hoca.tarz)+' · bilgi '+Math.round(Q.hoca.bilgi*100)+' · ısrar '+Math.round(Q.hoca.israr*100)+' '+testKutu('Hocanın gizli değerleri (0–100): bilgi oyuncuları ne kadar doğru tanıdığı, ısrar son on bire bağlılığı; yayında gösterilmeyecek.')+'</p>':'';   /* F3-a */
+    return H+'<p class="od-not">Futbolcuların gizli özellikleri (1–99) '+testKutu('Gelişim sistemi henüz olmadığı için değerler sabittir; yayında gösterilmeyecek.')+'</p>'+
       '<table class="od-kadro"><thead><tr><th>No</th><th>Futbolcu</th>'+Q.ozellikler.map(x=>'<th title="'+yaz(x)+'">'+yaz(x.slice(0,3))+'</th>').join('')+'<th>Ort</th></tr></thead><tbody>'+
       Q.oyuncular.map(o=>'<tr'+(o.yedek?' class="od-yedek"':'')+'><td>'+o.no+'</td><td>'+yaz(o.ad)+(o.yedek?' <small>'+yaz(o.mevki)+'</small>':'')+'</td>'+o.oz.map(x=>'<td>'+x+'</td>').join('')+'<td><b>'+o.ortalama+'</b></td></tr>').join('')+'</tbody></table>';
   }

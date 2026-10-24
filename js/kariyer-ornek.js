@@ -12,7 +12,8 @@
    Sürüm 7 (F1): iki takımlı küçük bir sezon (2 hafta, ilkHafta 1; fikstür kuralları js/fikstur.js) ve boş oyuncu listesi; kulüplerde kadro
    yoktur (kadro isteğe bağlıdır, maç girdisi kadrosuz kulübü reddeder). Gerçek kariyerin 16 kulübü ve kadroları kariyerBaslat'ta kurulur. */
 const KARIYER_ORNEK={
-  kayitSurumu:7,
+  kayitSurumu:8,
+  macOkundu:[],   // F3-b: hocanın maç yorumu okunan maçlar (js/mac-okuma.js)
   dunyaTohumu:20260929,
   icerik:{surum:0,baslangic:null},kosullar:{},rastlanti:{durum:20260929},olaylar:{},sozler:{},haberler:[],gozlem:null,
   tarih:'2026-11-28',gunIciDakika:540,          // 13. hafta maç günü sabahı (LIG.buMac: Cumartesi 19:00)

@@ -34,7 +34,7 @@ function sezon(){
     if(!k.isler[is.id]||k.tarih!==is.tarih||k.gunIciDakika!==is.dakika){hatalar.push(`İlerle maç gününe gitmedi (${k.tarih} ${k.gunIciDakika})`);break;}
     const Gi=macGirdisi(k,is.veri.macId);
     k=KK(k,x=>ajandaIsiYap(x,is.id)).kariyer;
-    const m=new Match(()=>{},{kadro:Gi.kadro,tohum:Gi.tohum,tunel:{x:0,z:-6},tarz:'dagilim'});
+    const m=new Match(()=>{},{kadro:Gi.kadro,tohum:Gi.tohum,tunel:{x:0,z:-6},tarz:Gi.tarz.slice()});
     const t0=process.hrtime.bigint();m.macaGec();let n=0;
     while(m.phase!=='fulltime'&&n<MAKS){m.step(1/60);n++;}
     const ms=Number(process.hrtime.bigint()-t0)/1e6;

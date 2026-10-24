@@ -26,6 +26,9 @@ const MESAJ_GONDEREN={'tavsiye.geldi':pKisi('kisiId')};
 const MESAJ_METIN={'tavsiye.geldi':()=>'Görüşümü dosyaya yazdım.'};
 /* telefonda gösterilmeyen kayıt satırları (konunun dosyasında durur) */
 const MESAJ_GIZLI=new Set(['kapandi']);
+/* F3-b: meseleye bağlı olmayan mesaj kaynakları: (k) → [{kisiId, tarih, dakika, metin, yeni, okunacak?}] (ör. hocanın maç yorumu, js/mac-okuma.js).
+   Kayda alan eklemez; okunacak: konuşma açılınca okundu sayılacak maç kimliği (js/ekran-oda.js) */
+const MESAJ_KAYNAKLARI=[];
 /* olayın göndereni (kişi kaydı yoksa null) */
 function mesajGondereni(k,o,m){
   const f=MESAJ_GONDEREN[o.anahtar],id=f?f(k,o.p,m):null;
@@ -41,7 +44,7 @@ function meseleKonusmasi(k,m){
 }
 function konusmaListesi(k){
   const K=new Map(),al=id=>{
-    if(!K.has(id)){const p=k.kisiler[id];K.set(id,{anahtar:id,kisi:p,ad:p.ad,rol:kisiRolu(k,p),mesajlar:[],kararlar:[],dosyaKarar:[],meseleler:[],girisimler:[],okunmamis:0,cevapBekliyor:false,sonAn:0});}
+    if(!K.has(id)){const p=k.kisiler[id];K.set(id,{anahtar:id,kisi:p,ad:p.ad,rol:kisiRolu(k,p),mesajlar:[],kararlar:[],dosyaKarar:[],meseleler:[],girisimler:[],okunacak:[],okunmamis:0,cevapBekliyor:false,sonAn:0});}
     return K.get(id);
   };
   const ekle=(c,m,x)=>{c.mesajlar.push(x);if(!c.meseleler.includes(m))c.meseleler.push(m);};
@@ -70,6 +73,9 @@ function konusmaListesi(k){
     ekle(al(hedef),m.id,r.secimMetni?{tarih:g.tarih,dakika:g.dakika,yon:'giden',metin:r.secimMetni,meseleId:m.id,yeni:false,sira:-1}
       :{tarih:g.tarih,dakika:g.dakika,yon:'not',metin:'Cevap vermedin.',meseleId:m.id,yeni:false,sira:-1});
   }
+  /* F3-b: meseleye bağlı olmayan mesajlar (MESAJ_KAYNAKLARI) */
+  for(const f of MESAJ_KAYNAKLARI)for(const x of f(k))if(k.kisiler[x.kisiId]){const c=al(x.kisiId);
+    c.mesajlar.push({tarih:x.tarih,dakika:x.dakika,yon:'gelen',metin:x.metin,meseleId:null,yeni:!!x.yeni,sira:anDakika(x.tarih,x.dakika)});if(x.okunacak&&x.yeni)c.okunacak.push(x.okunacak);}
   /* başkanın başlatabileceği görüşmeler: ilgili kişinin konuşmasında öneri olarak */
   if(typeof girisimListesi==='function')for(const G of girisimListesi(k)){
     const id=GIRISIMLER[G.id].kisi?GIRISIMLER[G.id].kisi(k):null;
