@@ -1,4 +1,5 @@
-<!-- Durum (2026-10-24, masaüstü, oto mod): F7 yapıldı (`tur/f7`; `araclar/plan/f7-uygulama.md`; motorun bitmeyen maç düzeltmesi ve taban `f7.json` dahil). Sıradaki F6-a. -->
+<!-- Durum (2026-10-24, masaüstü, oto mod): F6-a yapıldı (`tur/f6a`; `araclar/plan/f6a-uygulama.md`: hoca değişimi ve P12 TEST taslağı, içerik sürümü 5). Oto mod bitti; sıradaki tur kullanıcıyla (F4 tek kart ya da F6-b). -->
+<!-- Önceki: F7 yapıldı (`tur/f7`; `araclar/plan/f7-uygulama.md`; motorun bitmeyen maç düzeltmesi ve taban `f7.json` dahil). -->
 <!-- Önceki: F3 yapıldı (`tur/f3`; plan ve sapmalar `araclar/plan/f3-uygulama.md`). Kullanıcı kararı (2026-10-24): sıra F3 → F7 ligin öbür maçları (3.8) → F6-a hoca değişimi ve P12 TEST taslağı; F4 tek kart, F5 antrenman ve F6-b (2.9) sonra — önce oyun mantığı, arayüz ileride değişecek. F7 ve F6-a aşağıda kısa; kendi planları f7-uygulama.md, f6a-uygulama.md. -->
 <!-- Durum (2026-10-23, dizüstü): F2 yapıldı (`tur/f2`; plan ve sapmalar `araclar/plan/f2-uygulama.md`). Sıradaki F3, kendi planıyla. -->
 <!-- Önceki durum: F0 ve F1 yapıldı (`tur/f1`; F1-a, F1-b, F1-c ayrı commit; ayrıntı YOL_HARITASI devam notu). Uygulamada plandan sapmalar: kadro kuralları `js/kariyer-kadro.js`'te (planda kadro-uret.js); fikstür bütün 30 haftayı tutar (planda 13–30); maç günü işi yalnız `macId` taşır; paylaşılan dondurulmuş alanlar ve kayıt kısayolu eklendi (hız); kulübe her hattan; oda maç günü işini tüketmez. Sıradaki F2, kendi kısa planıyla. Geçerli kararlar YOL_HARITASI 31–37. -->
@@ -114,7 +115,7 @@ Global ad çakışması (yalnız tarayıcı yakalar → `kontrol.py` her commit'
 
 ## F6-a — Hoca değişimi ve P12 TEST taslağı (2026-10-24 kullanıcı kararıyla öne; `claude/f6a-hoca-degisimi`)
 
-- `hocaDegistir` komutu (eski hoca ayrılır, TEST tazminat, yeni hocanın tarzı sonraki maçta), `hocaAdaylari`; P12 “Hocaya sabır mı, değişim mi?” kötü sonuç serisinden açılır (gizli gelişme), kanıt maçın okumasından (beklenen gol, tarz izi); iki cevap sabır (söz) / değişim (sıralı aday görüşmesi). Metinler TEST taslağı (karar 35). Ayrıntı `f6a-uygulama.md`.
+- `hocaDegistir` komutu (eski hoca ayrılır, TEST tazminat, yeni hocanın tarzı sonraki maçta), `hocaAdaylari`; P12 “Hocaya sabır mı, değişim mi?” kötü sonuç serisinden açılır (gizli gelişme), kanıt maçın okumasından (beklenen gol, tarz izi); iki cevap sabır (söz) / değişim (sıralı aday görüşmesi). Metinler TEST taslağı (karar 35). Ayrıntı `f6a-uygulama.md`. **Yapıldı 2026-10-24 (`tur/f6a`):** sabır süresi 3 maç (plandaki 3 hafta maç takvimine denk düşmüyordu); karar dosyada. F6'nın P12 maddesi bununla karşılandı; F6-b 2.9 ve kullanıcı metinleri.
 
 ## Yan hat — İzleme notları (kullanıcı istedikçe)
 

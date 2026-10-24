@@ -47,7 +47,7 @@ Object.assign(MESELE_OLAYLARI,{
   'p12.kanit.xg':(k,p)=>`Son ${p.mac} maçın beklenen golü ${okSayi(p.xg[0],2)} – ${okSayi(p.xg[1],2)}; attığımız ${p.gol[0]}, yediğimiz ${p.gol[1]}. `
     +((p.xg[0]-p.xg[1])-(p.gol[0]-p.gol[1])>=1?'Pozisyonlar sonuçtan iyi.':(p.gol[0]-p.gol[1])-(p.xg[0]-p.xg[1])>=1?'Sonuçlar pozisyonlardan bile iyi.':'Sonuçlar oyunu yansıtıyor.'),
   'p12.kanit.tarz':(k,p)=>`Tarzın izi: ${p.mac} maçın ${p.uyumlu} tanesinde takım hocanın ${HOCA_TARZ_ADI[p.tarz]||p.tarz} oyununa uygun oynadı.`,
-  'p12.sabir':(k,p)=>`${kisiAdi(k,p.kisiId)} hocaya `+(p.mac?`${p.mac} maç süre verdin (${gunAyYazi(p.tarih)} maçına kadar).`:`${gunAyYazi(p.tarih)} tarihine kadar süre verdin.`)+' Hedef: puan toplamak.',
+  'p12.sabir':(k,p)=>`Süre verdin: ${kisiAdi(k,p.kisiId)} `+(p.mac?`${p.mac} maç daha görevde (${gunAyYazi(p.tarih)} maçına kadar).`:`${gunAyYazi(p.tarih)} tarihine kadar görevde.`)+' Hedef: puan toplamak.',
   'p12.tesekkur':(k,p)=>`${kisiAdi(k,p.kisiId)} teşekkür etti.`,
   'p12.soz':(k,p)=>`${kisiAdi(k,p.kisiId)} ${gunAyYazi(p.tarih)} akşamına kadar görevde kalacak.`,
   'p12.degisim':(k,p)=>`Değişime karar verdin. ${gunAyYazi(p.tarih)} saat ${saatYazi(p.dakika)} aday hocalarla görüşme var.`,
@@ -143,7 +143,7 @@ KARAR_TURLERI.hocaKarari={
     const v=is.veri;
     if(secim==='sabir'){
       const son=p12SabirSonu(k,v.kulupId);
-      const isId=isEkle(k,{tur:'hatirlatma',tarih:son.tarih,dakika:son.dakika,veri:{metin:`${kisiAdi(k,v.hocaId)} hocaya verilen süre doldu.`,meseleId:v.meseleId,hocaSuresi:v.hocaId}});
+      const isId=isEkle(k,{tur:'hatirlatma',tarih:son.tarih,dakika:son.dakika,veri:{metin:`Hocaya verilen süre bitiyor (${kisiAdi(k,v.hocaId)}).`,meseleId:v.meseleId,hocaSuresi:v.hocaId}});
       sozVer(k,{muhatap:v.hocaId,anahtar:'p12.soz',p:{kisiId:v.hocaId,tarih:son.tarih},isId,olayId:v.olayId});
       const bilgi=meseleOlay(k,v.meseleId,'p12.sabir',{kisiId:v.hocaId,tarih:son.tarih,mac:son.mac});
       meseleOlay(k,v.meseleId,'p12.tesekkur',{kisiId:v.hocaId});

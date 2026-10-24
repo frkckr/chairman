@@ -128,6 +128,8 @@ Her paket bir mesele ailesidir. Bütün seçenekler her durumda görünmez: bir 
 
 **Yollar:** Açık hedef ve makul değerlendirme zamanı; belirli destek ihtiyacını karşılama; piyasayı sessizce araştırma; mevcut kurallarla ayrılık. **Sonuçlar:** Her sabır şampiyonluk, her değişiklik toparlanma getirmez. Yedek plan olmadan ayrılık daha zor olabilir. **Toparlanma:** Teknik yapılanmayı gözden geçirme; gerçek öğrenilen bilgiyi kullanma. **Önleme:** Hoca seçerken kadro uyumu ve beklentileri konuşma. **İz:** Basında verdiğin destek sözü, hoca ve ekiple görüşmenin tonu.
 
+**Bugünkü uygulama (F6-a, 2026-10-24; TEST taslağı, karar 35 ve 42):** `js/icerik-p12.js` oyunda yüklenir. Açılma yalnız sonuçtan (bugünkü hocayla son 3 maçta en çok 1 puan ya da 5 maç galibiyetsiz); kanıt puan durumu ve maç raporları (beklenen gol, tarzın izi), hocanın mesajı. Yollar iki cevaplı: sabır (açık süre: 3 maç, söz) / değişim (ertesi gün sıralı iki aday görüşmesi; göreve al, sıradaki aday ya da mevcut hocayla devam); cevapsız kalırsa hoca görevde kalır. Ayrıntı OYUN_TASARIMI §8; borçlar `araclar/plan/f6a-uygulama.md`. Kartın öbür yolları (destek ihtiyacı, piyasayı sessizce araştırma) ve kanıtları (oyuncuların görüşü, sakatlık ve uyum, maliyet) kullanıcının içeriğiyle gelir.
+
 ### P13 — Küçük söz, kalıcı hatıra
 
 **Dayanak:** S04, S01, S22. **Açılma:** Gerçek başarı, emek veya tutulabilecek küçük taahhüt vardır. **Kanıt:** Katılan kişilerin geçmişi ve tamamlanan iş.
@@ -213,7 +215,7 @@ Geçişin envanteri, sonuç matrisi ve doğrulaması (2.8G–2.8H) tarihseldir: 
 | P09 | Aşama 7–8 yaşam döngüsü ve gerçek kişi geçmişi | Zorunlu ilk sezon dönüşü yoktur; mevcut transfer/rol kuralları gerekir |
 | P10 | Maç sonucu bağlantısı (3.5) ve ayrıca ilgili kupa/fikstür sistemi | Yalnız lig fikstürünün bulunması kupanın hazır olduğu anlamına gelmez; sonuçlar zorlanmaz |
 | P11 | Aşama 5–8 sezon/kademe; Avrupa ölçeği Aşama 9 | Yeni ihtiyacın sportif ve kurumsal dayanağı bulunmalı |
-| P12 | Aşama 3 rapor/hoca/sonuç; Aşama 4 sözleşmeyle genişleme | Başkan günlük kadro/taktik yöneticisine dönüşmez |
+| P12 | Aşama 3 rapor/hoca/sonuç (**TEST taslağı oyunda, F6-a 2026-10-24: `js/icerik-p12.js`**); Aşama 4 sözleşmeyle genişleme | Başkan günlük kadro/taktik yöneticisine dönüşmez |
 | P13 | 2.8 küçük söz, teşekkür ve kalıcı görünür iz (uygulandı, 2.8L'de silindi: söz kaydı, maaş sonrası teşekkür, odadaki izler) | Günlük zorunlu moral toplama veya kutlama sonrası zorunlu kriz yoktur |
 | P14 | Aşama 6 seçim/vaat; Aşama 7 görev geçmişi | Seçmen ve kurul yapısı seçilmeden kesin yönetim modeli kurulmaz |
 
