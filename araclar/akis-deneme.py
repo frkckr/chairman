@@ -124,10 +124,11 @@ async def bolum_1(tarayici, site, tum_hatalar):
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
     d0 = await durum(pg)
-    # F1 (2026-10-23): takvimde maç günü ajanda işinin yanında kış transfer döneminin iki hatırlatması da durur
-    denetle("Yeni kariyer Pazartesi 08:00; içerik sürümü 5 (F6-a); mesele, olay, söz ve haber yok; takvimde tek ajanda işi: maç günü",
+    # F1 (2026-10-23): takvimde maç günü ajanda işinin yanında kış transfer döneminin iki hatırlatması da durur; G2 (2026-10-24): 1 Aralık ay başı ve kış
+    # döneminin dört gizli transfer gelişmesi (8 iş)
+    denetle("Yeni kariyer Pazartesi 08:00; içerik sürümü 5 (F6-a); mesele, olay, söz ve haber yok; takvimde tek ajanda işi: maç günü (yanında 2 hatırlatma, ay başı, 4 transfer gelişmesi)",
             d0["tarih"] == "2026-11-23" and d0["dakika"] == 480 and d0["icerik"] == 5 and d0["mesele"] == "" and d0["olay"] == "" and d0["soz"] == ""
-            and d0["haber"] == "" and d0["ajanda"] == "is-1" and len(d0["isler"].split(",")) == 3, str(d0))
+            and d0["haber"] == "" and d0["ajanda"] == "is-1" and len(d0["isler"].split(",")) == 8, str(d0))
     await pg.keyboard.press("Digit1")
     tel = await pg.text_content(".od-telefonPanel")
     denetle("Telefon ana ekranla açılıyor; 'Kaldığın yer' özeti yok", "Mesajlar" in tel and "Canlı Skor" in tel and "Kaldığın" not in tel
@@ -163,6 +164,13 @@ async def bolum_1(tarayici, site, tum_hatalar):
     await pg.click(".od-perde", position={"x": 5, "y": 300})
     denetle("Perdeye tıklamak defteri kapatıyor", await pg.query_selector(".dft") is None)
     denetle("Dosya masada yok: düğme kapalı", await pg.query_selector('.od-nesne[data-panel="dosya"][disabled]') is not None)
+    # G2 (2026-10-24): kasa masada; maaş yükü ve 90 günlük ufuk, iç saha bileti belirsiz gelir
+    await pg.click('.od-nesne[data-panel="kasa"]')
+    kasa = await pg.text_content(".od-panel") if await pg.query_selector(".od-panel") else ""
+    denetle("Kasa düğmesi paneli açıyor: kasadaki para, aylık maaş yükü, önümüzdeki 90 gün (kesin ve belirsiz ayrı); zaman değişmedi",
+            "Kasadaki para" in kasa and "Önümüzdeki 90 gün" in kasa and "Aylık maaş yükü" in kasa and "Belirsiz gelir" in kasa and await durum(pg) == d0, kasa[:160])
+    await pg.keyboard.press("Digit6")
+    denetle("6 tuşu kasayı kapatıyor", await pg.query_selector('.od-nesne[data-panel="kasa"][aria-pressed="true"]') is None)
     await oda_ilerle(pg)
     d1 = await durum(pg)
     denetle("İlerle doğrudan Cumartesi 19:00 maç sınırına gidiyor; ana düğme 'Stada git'",

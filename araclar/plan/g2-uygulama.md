@@ -14,6 +14,8 @@ Durum: 2026-10-24 gece, masaüstü, oto mod 2 (kullanıcı kararı 43: ikinci tu
 
 ## Sapmalar (plana göre)
 
+- Odaya **Kasa** düğmesi (6 tuşu) eklendi: kasa paneli yalnız mali dosyadan ve saymanın konuşmasından açılıyordu, içeriksiz oyunda G2'nin parası görülemiyordu (planın “tek satır okuma”sının yeri).
+
 - `maliDurum`'a `ufuk`/`eksi` alanı eklenmedi: kasa paneli `nakitUfku`'yu doğrudan okur, eksi kasa panelde kırmızı (kural etkisi yok, plandaki gibi).
 - Ay başı sezon sonu kaydından sonra yeniden kurulmaz (yeni sezon yok; yoksa İlerle maçsız aylarda maaş ödemeye sürerdi ve “Sezon tamamlandı” engeli gelmezdi).
 - Transfer hedefleri yalnız saha oyuncusu (kaleci yuvası güvencesi; TEST).
@@ -25,6 +27,7 @@ Doğrulanan 19 bulgu (yinelenenler birleşince 9 sorun); hepsi düzeltildi ve `k
 - **Orta — hocanın istediği hat hep savunma:** ham özellik ortalaması mevkiler arasında kıyaslanamıyor; artık ligin aynı hattıyla kıyaslanır (5 tohum × 16 kulüpte üç hat da çıkıyor).
 - **Düşük:** transferde kaptan bayrağı oyuncuyla gidiyordu (alan kulüpte iki kaptan); onayla imza arasında hoca değişirse teşekkürü ayrılan hoca ediyordu (artık görevdeki hoca); geçişten sonra ilk ay başına dek kasa paneli maaş yükünü 0 ve ay başlarını “kesin +100 bin” gösteriyordu (artık kurulacak TEST maaşıyla); nakit ufku sezon sonrası hiç gelmeyecek ay başlarını kesin sayıyordu (artık son maçtan sonraki ilk ay başında durur); geçiş ayın 1'i 10:00'dan önceki kayıtta o ayın ay başını atlıyordu; Ocak tarihli sürüm 8 kaydında kış transfer dönemi tamamen kaçıyordu (gelişmeler artık geçişte, transferTakvimiKur planının donmuş kopyasıyla); gelen teklifin telefonda izi yokken oda “Telefon: karar gerektiren bir haber” diyordu (artık yeni karar telefonda değilse “Masada yeni dosya”).
 - **İkinci inceleme** (düzeltme commit'i, üç boyut; 7 bulgu, hepsi doğrulandı, 4 sorun; düzeltildi ve denetim eklendi): oda özeti telefonda önceden bekleyen herhangi bir karara bakıyordu (hocanın isteği beklerken gelen teklif “Telefon” deniyordu; artık bu anda gelen kararın yeri — `js/mesajlar.js` `simdiGelenKararlar`, `kararTelefondaMi`); sürüm 8'den Mart'ta geçen kayıtta ilk ay başı son maçtan sonraya düştüğü için sözleşmeler sezon sonundan sonra kuruluyor, bu sezon biten sözleşmeler hiç sorulmuyordu (artık sezon sonu kaydından sonra kurulan sözleşme en az bir yıl — Bırak'tan sonra gelen gençler için de); Ocak'ta geçen kayıtta hocanın isteğinin maaş tavanı sözleşmesiz hesaplanıyordu (transfer gelişmeleri önce sözleşmeleri tamamlar); geçiş kaydın tam anındaki işi geçmiş sayıyordu (1 Ocak 10:00, 5 Ocak 11:00).
+- **Üçüncü inceleme** (ikinci düzeltmelerin incelemesi; 1 bulgu, doğrulandı): karar açmayan durak (transfer imzası, `dur:true`) oda özetinde “karar gerektiren” diye ve ilgisiz eski kararın yeriyle duyuruluyordu; artık bu anda gelen karar yoksa “Yeni bir gelişme var; dosyada.” ve telefondaki yeni haber (hocanın teşekkürü) duyurulur.
 - **Reddedilen:** maaşın ve hoca maaşının gizli değerleri ele vermesi (maaş gösterilebilir bir sayıdır, ters çevirmek kaynak kodu ister; ama gürültüsüz — kullanıcı ölçeği değiştirirken ün/pazarlık payı eklenebilir, borç); tazminatın içinde bulunulan ayı sayması (tasarım).
 
 ## Borçlar

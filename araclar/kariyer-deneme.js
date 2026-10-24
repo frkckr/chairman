@@ -815,6 +815,9 @@ bolum('4.2 — transfer iskeleti: dönem, gelen teklif, hocanın isteği ve imza
   /* imza: onay → 5 gün sonra */
   let kO=KK(kT,x=>T('ajandaIsiYap')(x,kr.id,'onayla')).kariyer;const imzaIs=Object.values(kO.isler).find(x=>x.tur==='gelisme'&&x.veri.gelisme==='transferImza');
   denetle('Onay: imza işi 5 gün sonra 11:00 (dönem içinde, gizli); konu haber bekliyor',!!imzaIs&&imzaIs.tarih==='2027-01-10'&&T('isGizli')(imzaIs)&&kO.meseleler[OT.meseleId].durum==='haberBekliyor');
+  {let c=kO,r=null;for(let g=0;g<12&&!c.gecmis.some(x=>x.tur==='transfer'&&x.yeni===biz);g++){const j=macIsi(c);if(j&&c.tarih===j.tarih&&c.gunIciDakika===j.dakika)c=hafta(c);else{const R=KK(c,x=>T('duragaIlerle')(x));c=R.kariyer;r=R.sonuc;}}
+   denetle('İmza durağı karar açmaz: oda özeti için bu anda gelen karar yok (“Yeni bir gelişme var”), hocanın teşekkürü telefonda okunmamış haber',
+     !!r&&r.neden==='karar'&&!T('simdiGelenKararlar')(c).length&&T('konusmaListesi')(c).some(x=>x.okunmamis>0&&x.mesajlar.some(m=>/Sağ olun başkanım, yeni oyuncu/.test(m.metin))),r&&`${c.tarih} ${c.gunIciDakika} ${r.neden}`);}
   for(let g=0;g<12&&!kO.gecmis.some(x=>x.tur==='transfer'&&x.yeni===biz);g++)kO=ileri(kO);
   const tr=kO.gecmis.find(x=>x.tur==='transfer'&&x.yeni===biz),yeni=tr&&kO.oyuncular[tr.oyuncuId];
   denetle('İmza: istenen hatta oyuncu kulübe katıldı; sözleşme maaşı tavanı aşmaz, bitiş 2029; satan kulüp 22\'ye tamamlandı; numaralar tekil; kariyer geçerli',

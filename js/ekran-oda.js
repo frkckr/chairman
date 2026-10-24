@@ -34,7 +34,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   const ETIKET={zorunlu:'Zorunlu',ertelenebilir:'Ertelenebilir',istege:'İsteğe bağlı'};
   const DURUM={bekliyor:'',yapildi:'Yapıldı',kacirildi:'Kaçırıldı',ertelendi:'Ertelendi',cevapsiz:'Cevapsız',tamamlandi:''};
   const ROL={baskan:'başkan',teknikDirektor:'teknik direktör',yonetici:'yönetici',eskiBaskan:'eski başkan'};
-  const NESNE={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete'};
+  const NESNE={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',kasa:'Kasa'};
   const testAcik=()=>!!ayarlar.test&&typeof testOnizleme==='function';
   /* test bilgisi: küçük TEST simgesi; üzerine gelince, odakta ya da tıklayınca altında kutu açılır (salt okunur, kariyeri değiştirmez) */
   const testKutu=ic=>'<span class="od-testIpucu"><button type="button" class="od-testSimge" data-eylem="testAc" aria-expanded="false" aria-label="Test bilgisi">TEST</button>'+
@@ -393,6 +393,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
       '<div class="od-tarih" title="Okurken ve düşünürken zaman durur"><b>'+yaz(tarihYazi(k.tarih))+'</b><span>'+saatYazi(k.gunIciDakika)+'</span></div>'+
       '<nav class="od-nesneler" aria-label="Masadakiler">'+dugme('telefon',haber?String(haber):'',karar?'od-rozetAcil':'')+dugme('ajanda',is?String(is):'')+
         dugme('dosya',karar?'karar':'',karar?'od-rozetAcil':'',!dosyaVar)+(gazeteVar?dugme('gazete',iz.yeniHaber?'yeni':''):'')+
+        /* G2 (2026-10-24): kasa masada — maaş, ay başı, bilet ve 90 günlük ufuk her zaman görülebilir (önce yalnız mali dosyadan ve saymanın konuşmasından) */
+        (k.kulupler[kulupId()]?dugme('kasa',k.kulupler[kulupId()].nakit<0?'eksi':'',k.kulupler[kulupId()].nakit<0?'od-rozetAcil':''):'')+
         /* balkona çıkış kapının kendisidir (tıkla ya da 5); klavye için görünmez, odakta beliren düğme. Balkonda dönüş düğmesi görünür */
         (balkonVar?(ODA.yer==='balkon'?'<button type="button" class="od-nesne od-yer" data-eylem="yer">Odaya dön</button>':
           '<button type="button" class="od-nesne od-yer od-gizli" data-eylem="yer">Balkona çık (kapı · 5)</button>'):'')+
@@ -448,11 +450,12 @@ function odaEkraniKur(kap,oyun,ayarlar){
     }else odaYuru('balkon',()=>ciz('.od-ana'));
     ciz();
   }
-  /* karar gerektiren haberin yeri (G2 incelemesi: gelen teklifin telefonda izi yok): bu anda gelen karar soranın konuşmasında ya da konusunun telefondaki
-     konuşmasında dosya bağlantısıyla duruyorsa telefon, yoksa masadaki dosya. Bu anda gelen karar bulunamazsa telefonda cevap bekleyen var mı */
-  const kararTelefonda=()=>{const Y=simdiGelenKararlar(k);return Y.length?Y.some(x=>kararTelefondaMi(k,x)):konusmaListesi(k).some(c=>c.cevapBekliyor);};   /* js/mesajlar.js */
+  /* durdurulan gelişmenin özeti (G2 incelemesi): bu anda gelen karar varsa yeri — soranın konuşmasında ya da konusunun telefondaki konuşmasında dosya
+     bağlantısıyla duruyorsa telefon, yoksa masadaki dosya (gelen teklif); karar açmayan durak (transfer imzası) 'yeni gelişme' (js/mesajlar.js) */
+  const kararYeri=()=>{const Y=simdiGelenKararlar(k);return !Y.length?null:Y.some(x=>kararTelefondaMi(k,x))?'tel':'masa';};
+  const kararMetni=(y,tel,masa,diger)=>y==='tel'?tel:y==='masa'?masa:diger;
   function gozlemSonucu(r){
-    mesaj=r.neden==='karar'?(kararTelefonda()?'Telefon çaldı: karar gerektiren bir haber var.':'Masaya yeni dosya geldi: karar bekleyen bir konu var.')+' Gözlem durdu, '+r.kalan+' dk kaldı.':r.neden==='haber'?'Beklediğin görüş geldi. Gözlem durdu, '+r.kalan+' dk kaldı.'
+    mesaj=r.neden==='karar'?kararMetni(kararYeri(),'Telefon çaldı: karar gerektiren bir haber var.','Masaya yeni dosya geldi: karar bekleyen bir konu var.','Yeni bir gelişme var.')+' Gözlem durdu, '+r.kalan+' dk kaldı.':r.neden==='haber'?'Beklediğin görüş geldi. Gözlem durdu, '+r.kalan+' dk kaldı.'
       :'Antrenmanı izledin.'+(r.not?' '+r.not:'');
     ciz();
   }
@@ -506,8 +509,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
       else if(g.isTuru==='ajanda'&&g.sonuc&&g.sonuc.durum==='cevapsiz')p.push(g.sonuc.baslik+': cevapsız kaldı'+(g.sonuc.bilgi?' — '+g.sonuc.bilgi:''));
       else if(g.isTuru==='hatirlatma'&&g.sonuc)p.push(g.sonuc.metin);
     }
-    const bas=r.neden==='karar'?(kararTelefonda()?'Telefon: karar gerektiren bir haber geldi.':'Masada yeni dosya: karar bekleyen bir konu açıldı.'):r.neden==='haber'?'Beklediğin görüş geldi; dosyada.':r.neden==='sonCevap'?'Son cevap saati geldi; karar bekliyor. Cevap vermeden ilerlersen kartta yazan sonuç işler.':r.neden==='cevapsiz'?'Cevap vermediğin karar kartta yazan sonuçla kapandı.':r.neden==='randevu'?'Sıradaki randevuya gelindi.':r.neden==='cakisma'?'Günün işleri çakışıyor; ajandadan seçim yap.':'Bekleyen rutin işler işlendi.';
-    return bas+(haberSayisi()&&r.neden!=='karar'&&r.neden!=='haber'?' Telefonda yeni haber var.':'')+(izler().yeniHaber?' Masada gazete var.':'')+(p.length?' '+p.join(' · '):'');
+    const y=r.neden==='karar'?kararYeri():null;
+    const bas=r.neden==='karar'?kararMetni(y,'Telefon: karar gerektiren bir haber geldi.','Masada yeni dosya: karar bekleyen bir konu açıldı.','Yeni bir gelişme var; dosyada.'):r.neden==='haber'?'Beklediğin görüş geldi; dosyada.':r.neden==='sonCevap'?'Son cevap saati geldi; karar bekliyor. Cevap vermeden ilerlersen kartta yazan sonuç işler.':r.neden==='cevapsiz'?'Cevap vermediğin karar kartta yazan sonuçla kapandı.':r.neden==='randevu'?'Sıradaki randevuya gelindi.':r.neden==='cakisma'?'Günün işleri çakışıyor; ajandadan seçim yap.':'Bekleyen rutin işler işlendi.';
+    return bas+(haberSayisi()&&!y&&r.neden!=='haber'?' Telefonda yeni haber var.':'')+(izler().yeniHaber?' Masada gazete var.':'')+(p.length?' '+p.join(' · '):'');
   }
   function ilerleEylem(){
     izleme=null;
@@ -585,7 +589,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   addEventListener('keydown',e=>{
     if(kap.hidden||oyun.bozukHata||e.ctrlKey||e.altKey||e.metaKey)return;
     const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;
-    const ad={Digit1:'telefon',Digit2:'ajanda',Digit3:'dosya',Digit4:'gazete'}[e.code];
+    const ad={Digit1:'telefon',Digit2:'ajanda',Digit3:'dosya',Digit4:'gazete',Digit6:'kasa'}[e.code];
     if(ad){e.preventDefault();if(acik===ad)kapat();else panelAc(ad);}
     else if(e.code==='Digit5'&&balkonVar){e.preventDefault();if(!duraklatmaVar())yerDegistir();}
     else if(e.code==='KeyP'||(e.code==='Space'&&t!=='BUTTON'&&!e.repeat)){e.preventDefault();duraklatDegistir();}
