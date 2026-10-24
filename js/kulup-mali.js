@@ -35,8 +35,8 @@ IS_TURLERI.ayBasi={
     return{metin:`${ay} maaşları ödendi (${paraYazi(maas)}); lig payı geldi (${paraYazi(MALI_TEST.ligPayi)}).`};
   }
 };
-/* yeni kariyerin ilk ay başı (js/baslangic.js BASLANGIC_EKLERI) */
-const ayBasiKur=(k,kulupId)=>isEkle(k,{tur:'ayBasi',tarih:sonrakiAyBasi(k.tarih),dakika:MALI_TEST.saat,veri:{kulupId}});
+/* yeni kariyerin ilk ay başı (js/baslangic.js); ayın 1'i ay başı saatinden önceyse o günün */
+const ayBasiKur=(k,kulupId)=>isEkle(k,{tur:'ayBasi',tarih:/-01$/.test(k.tarih)&&k.gunIciDakika<MALI_TEST.saat?k.tarih:sonrakiAyBasi(k.tarih),dakika:MALI_TEST.saat,veri:{kulupId}});
 
 /* maç günü geliri: başkanın kulübünün iç saha maçı (hükmen değil) */
 MAC_SONUCU_EKLERI.push((k,f)=>{
@@ -53,10 +53,13 @@ function nakitUfku(k,kulupId,gun){
     const an=anDakika(is.tarih,is.dakika);if(an>sinir)continue;
     if(is.tur==='odeme'&&is.veri.kulupId===kulupId)A.push({an,tarih:is.tarih,tutar:is.veri.tutar,kesin:true,neden:is.veri.aciklama});
   }
-  /* ay başları: bekleyen ilk ay başı ve ardından gelenler (bugünkü sözleşmelerle; sezon sonu kaydı varsa yeni ay başı yok) */
+  /* ay başları: bekleyen ilk ay başı ve ardından gelenler (bugünkü sözleşmelerle). Zincir ay başı kuralını izler: sezon sonu kaydından sonra yeni ay
+     başı kurulmaz, yani son maçtan sonraki ilk ay başı sonuncudur (G2 incelemesi; yeni sezon 5.1'de gelince bu sınır da değişir) */
   const ab=Object.values(k.isler).filter(x=>x.tur==='ayBasi'&&x.veri.kulupId===kulupId).sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika))[0];
-  if(ab){const net=MALI_TEST.ligPayi-aylikMaas(k,kulupId);let t=ab.tarih;
-    for(let i=0;i<24&&anDakika(t,ab.dakika)<=sinir;i++){A.push({an:anDakika(t,ab.dakika),tarih:t,tutar:net,kesin:true,neden:'ay başı (maaş ve lig payı)'});if(k.sezon&&k.sezon.sonuc)break;t=sonrakiAyBasi(t);}}
+  if(ab){const net=MALI_TEST.ligPayi-aylikMaas(k,kulupId,true);let t=ab.tarih;   /* sözleşmesi henüz kurulmamış oyuncu ilk ay başının TEST maaşıyla */
+    const sonMac=(k.fikstur||[]).reduce((m,f)=>Math.max(m,anDakika(f.tarih,f.dakika)),-Infinity);
+    for(let i=0;i<24&&anDakika(t,ab.dakika)<=sinir;i++){A.push({an:anDakika(t,ab.dakika),tarih:t,tutar:net,kesin:true,neden:'ay başı (maaş ve lig payı)'});
+      if((k.sezon&&k.sezon.sonuc)||anDakika(t,ab.dakika)>sonMac)break;t=sonrakiAyBasi(t);}}
   /* iç saha maçlarının bileti: belirsiz gelir */
   let belirsiz=0;
   for(const f of k.fikstur||[])if(f.ev===kulupId&&!(k.maclar||{})[f.id]&&f.hafta>=k.sezon.ilkHafta){const an=anDakika(f.tarih,f.dakika);

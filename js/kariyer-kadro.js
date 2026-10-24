@@ -164,15 +164,28 @@ function kadroTamamla(k,kulupId,hedef,ek,guc){
   const c=k.kulupler[kulupId],D=c&&c.kadro;
   if(!D)throw new Error(`Kadro ${kulupId}: kadrosu yok`);
   const eksik=hedef-kulupOyunculari(k,kulupId).length;if(eksik<=0)return[];
-  const r=kadroRastgele(k.dunyaTohumu,kulupId+':genc:'+ek),S=kadroSablonu(),g=(guc===undefined?kulupGucu(LIG,kulupId):guc)-GENC_ZAYIF;
+  return gencEkle(k,kulupId,Array.from({length:eksik},(_,i)=>GENC_MEVKI[i%GENC_MEVKI.length]),'genc:'+ek,guc);
+}
+/* genç yedekleri üretip kulübün yedeklerine ekler (kadroTamamla, kaleciGuvence); rastlantı akışı <kulüp>:<akis>. Eklenen kimlikleri döndürür */
+function gencEkle(k,kulupId,mevkiler,akis,guc){
+  const D=k.kulupler[kulupId].kadro;
+  const r=kadroRastgele(k.dunyaTohumu,kulupId+':'+akis),S=kadroSablonu(),g=(guc===undefined?kulupGucu(LIG,kulupId):guc)-GENC_ZAYIF;
   const kullanilan=new Set(kulupOyunculari(k,kulupId).map(p=>p.ad)),adlar=karistirR(r,ADLAR_TEST.slice()).filter(a=>!kullanilan.has(a));
   k.oyuncular=Object.assign({},k.oyuncular);
   const L=[];
-  for(let i=0;i<eksik;i++){
-    const m=GENC_MEVKI[i%GENC_MEVKI.length],p=oyuncuUret(r,{mevki:m,sablon:S.mevki[m],guc:g,yedek:true,yas:GENC_YAS,ad:adlar[i%adlar.length],no:bosNumara(k,kulupId,GENC_NO_BAS)});
+  mevkiler.forEach((m,i)=>{
+    const p=oyuncuUret(r,{mevki:m,sablon:S.mevki[m],guc:g,yedek:true,yas:GENC_YAS,ad:adlar[i%adlar.length],no:bosNumara(k,kulupId,GENC_NO_BAS)});
     const id=oyuncuEkle(k,kulupId,p);L.push(id);D.yedekler=D.yedekler.concat([id]);   /* numara sırası: eklenen bir sonrakinin boş numarasını görür */
-  }
+  });
   return L;
+}
+/* G2 incelemesi (2026-10-24): kadroda en az KADRO_KALECI kaleci kalır. Bir kaleci kadrodan çıkmadan önce çağrılır (js/transfer.js oyuncuTransfer):
+   kalan kaleci sayısı yetmezse genç kaleci yedeklere eklenir (kadro bir süre 22'yi aşabilir). Yoksa iki kalecinin sözleşmesi birlikte bitince
+   ikincisinin ayrılışında ilk 11'in kaleci yuvası boş kalırdı */
+const KADRO_KALECI=2;
+function kaleciGuvence(k,kulupId,cikanId){
+  const n=kulupOyunculari(k,kulupId).filter(p=>p.mevki==='KL'&&p.id!==cikanId).length;
+  return n>=KADRO_KALECI?[]:gencEkle(k,kulupId,Array(KADRO_KALECI-n).fill('KL'),'gencKL:'+cikanId+':'+k.tarih);
 }
 
 /* oyuncu ve kadro alanlarının doğrulaması (kariyerDogrula EK_DENETIMLER üzerinden çağırır). Kaydın kendi alanlarını geçen dondurulmuş oyuncu

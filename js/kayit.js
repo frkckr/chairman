@@ -25,14 +25,20 @@ const KAYIT_BICIM=1;
 const KAYIT_GECISLERI={};
 /* G2 (2026-10-24 gece): 8 → 9 — sözleşme ve para akışı. Oyuncu ve hoca sözleşmeleri boş kalır (alan yok = null); başkanın kulübüne ilk ay başı işi
    eklenir (ayın 1'i 10:00, js/kulup-mali.js): o iş sözleşmeleri TEST ölçekle kurar, kadroları 22'ye tamamlar, transfer takvimini kurar. Sezon sonu
-   kaydı varsa ay başı kurulmaz (yeni sezon yok). Veri dönüşümüdür: kural işlevi çağırmaz, para hareketi üretmez */
+   kaydı varsa ay başı kurulmaz (yeni sezon yok). Veri dönüşümüdür: kural işlevi çağırmaz, para hareketi üretmez. G2 incelemesi: kayıt ayın 1'inde
+   10:00'dan önceyse ilk ay başı o gündür; kış transfer döneminin gizli gelişmeleri (js/transfer.js transferTakvimiKur'un 2026-10-24 planının donmuş
+   kopyası, aynı anahtarlar: sonraki ay başı çift kurmaz) geçişte eklenir — yoksa Ocak tarihli kayıtta ilk ay başı 1 Şubat olur ve dönem kaçardı */
 KAYIT_GECISLERI[8]=v=>{
   v.kayitSurumu=9;
   const biz=v.kisiler&&v.kisiler[v.baskanId]&&v.kisiler[v.baskanId].kulupId;
   if(biz&&v.gorevDurumu==='gorevde'&&!(v.sezon&&v.sezon.sonuc)&&typeof v.tarih==='string'){
-    const [y,a]=v.tarih.split('-').map(Number),Y=a===12?y+1:y,A=a===12?1:a+1,no=v.sonrakiNo.is,id='is-'+no;
-    v.isler=Object.assign({},v.isler,{[id]:{id,tur:'ayBasi',tarih:`${Y}-${String(A).padStart(2,'0')}-01`,dakika:600,veri:{kulupId:biz}}});
-    v.sonrakiNo=Object.assign({},v.sonrakiNo,{is:no+1});
+    const [y,a,g]=v.tarih.split('-').map(Number),dk=v.gunIciDakika|0,bu=g===1&&dk<600,Y=bu||a<12?y:y+1,A=bu?a:a===12?1:a+1;
+    const ekle=(tur,tarih,dakika,veri)=>{const no=v.sonrakiNo.is,id='is-'+no;v.isler=Object.assign({},v.isler,{[id]:{id,tur,tarih,dakika,veri}});v.sonrakiNo=Object.assign({},v.sonrakiNo,{is:no+1});};
+    ekle('ayBasi',`${Y}-${String(A).padStart(2,'0')}-01`,600,{kulupId:biz});
+    if(v.icerik&&v.icerik.surum>=5)for(const d of (v.sezon&&v.sezon.transfer)||[])
+      for(const [gelisme,gun,i] of [['gelenTeklif',3,0],['gelenTeklif',12,1],['gelenTeklif',22,2],['hocaTalebi',1,0]]){
+        const t=tarihEkle(d.bas,gun);if(t>d.bitis||t<v.tarih||(t===v.tarih&&dk>=660))continue;
+        ekle('gelisme',t,660,{gelisme,kulupId:biz,anahtar:`${d.bas}:${gelisme}:${i}`});}
   }
   return v;
 };

@@ -8,7 +8,8 @@
        ücret gösterilebilir); ölçek kabadır, oyuncunun gücünü tam ele vermez.
      Bitiş: oyuncu kimliği ve dünya tohumundan, SOZLESME_TEST.bitisPay ile bu sezon sonu, bir ya da iki yıl sonrası.
    sozlesmeleriTamamla(k): sözleşmesi olmayan her kulüplü oyuncuya ve etkin her hocaya TEST sözleşme (idempotent; yeni kariyerde ve her ay başında).
-   aylikMaas(k, kulüp): kulübün oyuncularının ve hocasının aylık maaşı (sözleşmesi olmayan sayılmaz).
+   aylikMaas(k, kulüp, tahmin): kulübün oyuncularının ve hocasının aylık maaşı; sözleşmesi olmayan sayılmaz, tahmin true ise ilk ay başında kurulacak
+     TEST maaşıyla sayılır (sürüm 8'den geçen kariyerin nakit ufku; G2 incelemesi). hocaMaasi(h): hocanın TEST maaşı.
    hocaTazminati(k, hocaId): kalan ay × aylık maaş (en az bir ay; js/icerik-p12.js değişim).
    Doğrulama sozlesmeDogrula (EK_DENETIMLER). Sezon sonunda biten sözleşmeler: sözleşme kartları (G2-c, bu dosyanın sonu). */
 'use strict';
@@ -38,12 +39,13 @@ function sozlesmeleriTamamla(k){
   }
   if(Object.keys(yeni).length)k.oyuncular=Object.assign({},k.oyuncular,yeni);
   for(const h of Object.values(k.kisiler))if(h&&h.rol==='teknikDirektor'&&h.durum==='aktif'&&h.hoca&&!h.sozlesme)
-    h.sozlesme={maas:Math.round(SOZLESME_TEST.hocaMaas*(0.8+0.4*h.hoca.bilgi)/SOZLESME_TEST.yuvarla)*SOZLESME_TEST.yuvarla,bitis:sozlesmeBitisi(k,1)};
+    h.sozlesme={maas:hocaMaasi(h),bitis:sozlesmeBitisi(k,1)};
   return Object.keys(yeni).length;
 }
-function aylikMaas(k,kulupId){
-  let t=0;for(const p of kulupOyunculari(k,kulupId))if(p.sozlesme)t+=p.sozlesme.maas;
-  const h=kulupHocasi(k,kulupId);if(h&&h.sozlesme)t+=h.sozlesme.maas;
+const hocaMaasi=h=>Math.round(SOZLESME_TEST.hocaMaas*(0.8+0.4*h.hoca.bilgi)/SOZLESME_TEST.yuvarla)*SOZLESME_TEST.yuvarla;
+function aylikMaas(k,kulupId,tahmin){
+  let t=0;for(const p of kulupOyunculari(k,kulupId))if(p.sozlesme)t+=p.sozlesme.maas;else if(tahmin)t+=maasTahmini(p,k.tarih);
+  const h=kulupHocasi(k,kulupId);if(h&&h.sozlesme)t+=h.sozlesme.maas;else if(h&&tahmin)t+=hocaMaasi(h);
   return t;
 }
 /* kalan ay (bugünden bitişe; başlamış ay sayılır) × maaş, en az bir ay */

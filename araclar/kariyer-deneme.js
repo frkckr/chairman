@@ -771,7 +771,19 @@ bolum('1.4b — kayıt geçişi 8 → 9 (G2; araclar/ornekler/kayit-s8-hafta14.j
   denetle('Sürüm 8 kaydı geçişle açılır (8→9): sözleşmeler boş, 1 Aralık 10:00 ay başı işi eklendi; kariyer geçerli',
     y.tamam&&metin(y.gecisler)==='["8→9"]'&&k.kayitSurumu===9&&!!ab&&ab.tarih==='2026-12-01'&&ab.dakika===600&&Object.values(k.oyuncular).every(p=>!p.sozlesme)&&!T('kariyerDogrula')(k).length,
     y.hata||metin(y.gecisler));
+  {const V=JSON.parse(fs.readFileSync(path.join(KOK,'araclar','ornekler','kayit-s8-hafta14.json'),'utf8')).veri,G=T('KAYIT_GECISLERI')[8];
+   const gec=(tarih,dk)=>{const v=JSON.parse(metin(V));v.tarih=tarih;v.gunIciDakika=dk;for(const id of Object.keys(v.isler))if(v.isler[id].tarih<tarih)delete v.isler[id];G(v);
+     return{ab:Object.values(v.isler).filter(x=>x.tur==='ayBasi').map(x=>x.tarih),tr:Object.values(v.isler).filter(x=>x.tur==='gelisme'&&x.veri.anahtar).map(x=>x.tarih+' '+x.veri.gelisme).sort()};};
+   const a=gec('2026-12-01',480),b=gec('2026-12-01',720),c=gec('2027-01-02',1260),d=gec('2027-01-10',1260);
+   denetle('Geçişin tarih durumları: ayın 1\'i 10:00\'dan önceki kayıtta ay başı o gün, sonrasında sonraki ay; Ocak kaydında kış döneminin kalan gelişmeleri geçişte kurulur (dönem kaçmaz)',
+     metin(a.ab)==='["2026-12-01"]'&&metin(b.ab)==='["2027-01-01"]'&&metin(c.ab)==='["2027-02-01"]'&&c.tr.length===4&&c.tr[0]==='2027-01-05 hocaTalebi'
+     &&metin(d.tr)==='["2027-01-16 gelenTeklif","2027-01-26 gelenTeklif"]'&&a.tr.length===4,`${metin(c.tr)} · ${metin(d.tr)}`);}
+  /* G2 incelemesi: ilk ay başına dek sözleşme yok; kasa paneli ve ufuk maaş yükünü kurulacak TEST maaşlarıyla sayar (0 ve +lig payı değil) */
+  const tah=T('aylikMaas')(k,'demirkapi',true),U0=T('nakitUfku')(k,'demirkapi',90),a0=U0.adimlar.find(a=>/ay başı/.test(a.neden));
   let c=k;for(let g=0;g<10&&!c.hareketler.some(h=>h.kalem==='maas');g++)c=KK(c,x=>T('duragaIlerle')(x)).kariyer;
+  {const ger=-c.hareketler.find(h=>h.kalem==='maas').tutar;
+   denetle('Geçişten sonra ilk ay başına dek nakit ufku maaşı tahminle sayar (ay başı eksi), tahmin gerçekleşen maaşa yakın (%5)',T('aylikMaas')(k,'demirkapi')===0&&tah>0&&!!a0&&a0.tutar===T('MALI_TEST').ligPayi-tah&&a0.tutar<0
+     &&Math.abs(ger-tah)<=ger*0.05,`tahmin ${T('paraYazi')(tah)} · gerçekleşen ${T('paraYazi')(ger)}`);}
   denetle('Geçişten sonra ilk ay başında sözleşmeler kurulur, kadrolar en az 22, maaş ödenir, kış transfer gelişmeleri kurulur; kariyer geçerli',
     Object.values(c.oyuncular).filter(p=>p.kulupId).every(p=>p.sozlesme)&&Object.keys(c.kulupler).every(id=>T('kulupOyunculari')(c,id).length>=22)&&c.hareketler.some(h=>h.kalem==='maas')
     &&Object.values(c.isler).filter(x=>x.tur==='gelisme'&&x.veri.anahtar).length===4&&!T('kariyerDogrula')(c).length,`${c.tarih} ${c.gunIciDakika}`);
@@ -809,6 +821,14 @@ bolum('4.2 — transfer iskeleti: dönem, gelen teklif, hocanın isteği ve imza
   {let c=kO;for(let g=0;g<6&&c.meseleler[OT.meseleId].durum!=='kapandi';g++)c=ileri(c);
    denetle('Bonservis ertesi gün kasadan düşer (bedelli imzada), konu kapanır; hoca teşekkür eder',(!tr||tr.bedel===0||c.hareketler.some(h=>h.kalem==='transfer'&&h.tutar===-tr.bedel))&&c.meseleler[OT.meseleId].durum==='kapandi'
      &&T('konusmaListesi')(c).find(x=>x.anahtar===h0).mesajlar.some(x=>/Sağ olun başkanım, yeni oyuncu/.test(x.metin)));}
+  {let c=KK(kT,x=>T('ajandaIsiYap')(x,kr.id,'onayla')).kariyer;const a=T('hocaAdaylari')(c,biz,'deneme')[0];c=KK(c,x=>{T('hocaDegistir')(x,biz,a);}).kariyer;
+   const h1=c.kulupler[biz].hocaId;for(let g=0;g<12&&!c.gecmis.some(x=>x.tur==='transfer'&&x.yeni===biz);g++)c=ileri(c);
+   const ks=T('konusmaListesi')(c),M=x=>(ks.find(y=>y.anahtar===x)||{mesajlar:[]}).mesajlar.some(m=>/Sağ olun başkanım, yeni oyuncu/.test(m.metin));
+   denetle('Bütçe onayıyla imza arasında hoca değişirse imza olur, teşekkürü görevdeki hoca eder (ayrılan hoca yazmaz)',h1!==h0&&c.gecmis.some(x=>x.tur==='transfer'&&x.yeni===biz)&&M(h1)&&!M(h0));}
+  {const say={};for(const t of [1,2,3,4,5]){const c=T('kariyerBaslat')({tohum:t});for(const id of Object.keys(c.kulupler)){const m=T('zayifHat')(c,id);say[m]=(say[m]||0)+1;}}
+   denetle('Hocanın istediği hat ligin aynı hattıyla kıyaslanır: 5 tohum × 16 kulüpte üç hat da çıkar, hiçbiri %70\'i geçmez',Object.keys(say).length===3&&Object.values(say).every(n=>n<=56),metin(say));}
+  {const k0=T('kariyerBaslat')({tohum:7}),kp=T('kulupOyunculari')(k0,biz).find(p=>p.kaptan),c=KK(k0,x=>{T('oyuncuTransfer')(x,kp.id,'akdeniz',{bedel:0,sozlesme:{maas:100000,bitis:'2029-05-31'}});}).kariyer;
+   denetle('Transferde kaptan bayrağı oyuncuyla gitmez: alan kulüpte tek kaptan; kariyer geçerli',!c.oyuncular[kp.id].kaptan&&T('kulupOyunculari')(c,'akdeniz').filter(p=>p.kaptan).length===1&&!T('kariyerDogrula')(c).length,kp.ad);}
   {const c=KK(kT,x=>T('ajandaIsiYap')(x,kr.id,'reddet')).kariyer;denetle('Reddet: imza yok, konu kapanır',!Object.values(c.isler).some(x=>x.veri&&x.veri.gelisme==='transferImza')&&c.meseleler[OT.meseleId].durum==='kapandi');}
   /* gelen teklif (7 Ocak) */
   const kTek=ilerle(kT),OG=Object.values(kTek.olaylar).find(o=>o.paket==='gelenTeklif'),tk=Object.values(kTek.isler).find(x=>x.tur==='ajanda'&&x.veri.karar==='teklifKarari');
@@ -837,7 +857,9 @@ bolum('5.1b — sezon sonunda biten sözleşmeler (G2-c; oyunun yüklediği dosy
   const Z={skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}};
   const hafta=c=>{const j=macIsi(c);for(let g=0;g<20&&!(c.tarih===j.tarih&&c.gunIciDakika===j.dakika);g++)c=ilerle(c);c=KK(c,x=>T('ajandaIsiYap')(x,j.id)).kariyer;const id=j.veri.macId;
     return KK(c,x=>T('haftaSonuclariUygula')(x,id,Z,toh(id),{},T('haftaninDigerMaclari')(x,id).map(g=>({macId:g.id,sonuc:Z,tohum:toh(g.id)})))).kariyer;};
-  let k=T('kariyerBaslat')({tohum:7});while(macIsi(k))k=hafta(k);
+  let k=T('kariyerBaslat')({tohum:7}),ufukSubat=null;while(macIsi(k)){k=hafta(k);if(!ufukSubat&&k.tarih>='2027-02-20')ufukSubat=T('nakitUfku')(k,biz,90);}
+  {const ab=ufukSubat.adimlar.filter(a=>a.kesin&&/ay başı/.test(a.neden)).map(a=>a.tarih);
+   denetle('Nakit ufku ay başı kuralını izler: Şubat sonunda kesin ay başları 1 Mart ve 1 Nisan (son maçtan sonraki ilk ay başı sonuncu; 1 Mayıs gelmeyecek)',metin(ab)==='["2027-03-01","2027-04-01"]',metin(ab));}
   const bitenler=T('kulupOyunculari')(k,biz).filter(p=>p.sozlesme&&p.sozlesme.bitis==='2027-05-31'),M=Object.values(k.meseleler).find(m=>m.tur==='sozlesme');
   const kart=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.karar==='sozlesmeYenile');
   const obur=Object.values(k.oyuncular).filter(p=>p.kulupId&&p.kulupId!==biz);
@@ -851,9 +873,29 @@ bolum('5.1b — sezon sonunda biten sözleşmeler (G2-c; oyunun yüklediği dosy
    denetle('Bırak: oyuncu serbest (kulüpsüz, sözleşmesiz, kadro listelerinde yok); kadro gençle 22; geçmişte ayrılış; kariyer geçerli',q.kulupId===null&&q.sozlesme===null&&T('kulupOyunculari')(c,biz).length===22
      &&!c.kulupler[biz].kadro.ilk11.concat(c.kulupler[biz].kadro.yedekler).includes(p0.id)&&c.gecmis.some(g=>g.tur==='ayrilis'&&g.oyuncuId===p0.id)&&!T('kariyerDogrula')(c).length);}
   {let c=k;for(let g=0;g<80&&Object.values(c.isler).some(x=>x.veri&&x.veri.karar==='sozlesmeYenile');g++)c=ilerle(c);
-   const ayrilan=c.gecmis.filter(g=>g.tur==='ayrilis').length;
+   const ayrilan=c.gecmis.filter(g=>g.tur==='ayrilis').length,maaslar=c.hareketler.filter(h=>h.kalem==='maas').map(h=>h.tarih);
+   denetle('Gerçek akışta ay başları 1 Aralık – 1 Nisan (ufukla aynı); sezon sonrasında bekleyen ay başı yok',metin(maaslar)==='["2026-12-01","2027-01-01","2027-02-01","2027-03-01","2027-04-01"]'
+     &&!Object.values(c.isler).some(x=>x.tur==='ayBasi'),metin(maaslar));
    denetle('Cevapsız kalan kartlar: imza yok, oyuncular ayrılır; zincir sonuna dek; dosya kapanır; sonra İlerle “Sezon tamamlandı”',ayrilan===bitenler.length&&c.meseleler[M.id].durum==='kapandi'
      &&(()=>{let x=c;for(let g=0;g<10&&!T('ilerleOnizle')(x).engel.length;g++)x=ilerle(x);return T('ilerleOnizle')(x).engel[0]===T('SEZON_SONU_METNI');})(),`${ayrilan} ayrılış`);}
+}
+
+bolum('5.1c — iki kalecinin sözleşmesi birlikte biter (G2 incelemesi; tohum 10)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),biz='demirkapi',toh=id=>T('macTohumu')(10,id);
+  const macIsi=c=>Object.values(c.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'),ilerle=c=>KK(c,x=>T('duragaIlerle')(x)).kariyer;
+  const Z={skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}};
+  const hafta=c=>{const j=macIsi(c);for(let g=0;g<40&&!(c.tarih===j.tarih&&c.gunIciDakika===j.dakika);g++)c=ilerle(c);c=KK(c,x=>T('ajandaIsiYap')(x,j.id)).kariyer;const id=j.veri.macId;
+    return KK(c,x=>T('haftaSonuclariUygula')(x,id,Z,toh(id),{},T('haftaninDigerMaclari')(x,id).map(g=>({macId:g.id,sonuc:Z,tohum:toh(g.id)})))).kariyer;};
+  let k=T('kariyerBaslat')({tohum:10});while(macIsi(k))k=hafta(k);
+  const KL=c=>T('kulupOyunculari')(c,biz).filter(p=>p.mevki==='KL'),kart=c=>Object.values(c.isler).find(x=>x.tur==='ajanda'&&x.veri.karar==='sozlesmeYenile');
+  const kalecilerBiter=KL(k).filter(p=>p.sozlesme.bitis==='2027-05-31').length;
+  const kontrol=c=>KL(c).length>=2&&c.oyuncular[c.kulupler[biz].kadro.ilk11[0]].mevki==='KL'&&!T('kariyerDogrula')(c).length;
+  let c=k,hata=null;try{for(let g=0;g<40&&kart(c);g++){const x=kart(c);c=KK(c,y=>T('ajandaIsiYap')(y,x.id,'birak')).kariyer;}}catch(e){hata=e.message;}
+  denetle('Bütün kartlarda Bırak: iki kaleci de ayrılır, komut çökmez; kadroda en az iki kaleci, ilk 11\'in ilk yuvası kaleci; kariyer geçerli',kalecilerBiter===2&&!hata&&!kart(c)&&kontrol(c),
+    hata||`${KL(c).map(p=>p.ad+'#'+p.no).join(', ')}`);
+  let d=k;hata=null;try{for(let g=0;g<120&&kart(d);g++)d=ilerle(d);}catch(e){hata=e.message;}
+  denetle('Kartlar cevapsız: zaman aşımında oyuncular ayrılır, İlerle takılmaz; iki kaleci kalır',!hata&&!kart(d)&&kontrol(d),hata||d.tarih);
 }
 
 bolum('3.7a — hoca değişimi ve P12 “Hocaya sabır mı, değişim mi?” TEST taslağı (F6-a; oyunun yüklediği dosyalar)');

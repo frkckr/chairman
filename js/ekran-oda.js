@@ -218,7 +218,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     ic+='<h4>Ödeme takvimi</h4><ul class="od-liste od-sar" style="--an:10.4em">'+(O.map(x=>'<li class="od-satir"><span class="od-an">'+yaz(tarihKisa(x.tarih))+' '+saatYazi(x.dakika)+'</span><span class="od-ad">'+yaz(x.veri.aciklama)+'</span>'+
       '<span class="'+(x.veri.tutar<0?'od-eksi':'')+'">'+tlYazi(x.veri.tutar)+'</span></li>').join('')||'<li class="od-not">Bekleyen ödeme yok.</li>')+'</ul>';
     /* G2-b (2026-10-24): önümüzdeki 90 gün — ay başları (maaş, lig payı) kesin; iç saha biletleri belirsiz ve ayrı (js/kulup-mali.js nakitUfku) */
-    if(typeof nakitUfku==='function'){const U=nakitUfku(k,kulupId(),90),am=typeof aylikMaas==='function'?aylikMaas(k,kulupId()):0;
+    if(typeof nakitUfku==='function'){const U=nakitUfku(k,kulupId(),90),am=typeof aylikMaas==='function'?aylikMaas(k,kulupId(),true):0;
       ic+='<h4>Önümüzdeki 90 gün</h4><dl class="od-dl"><dt>Aylık maaş yükü</dt><dd class="od-eksi">'+tlYazi(-am)+'</dd><dt>En düşük kesin bakiye</dt><dd class="'+(U.kesin.enDusuk<0?'od-eksi':'')+'">'+
         tlYazi(U.kesin.enDusuk)+' <small>'+yaz(tarihKisa(U.kesin.enDusukTarih))+'</small></dd><dt>90 gün sonra (kesin)</dt><dd>'+tlYazi(U.kesin.son)+'</dd><dt>Belirsiz gelir (bilet tahmini)</dt><dd>'+tlYazi(U.belirsizGelir)+'</dd></dl>';
       const H=(k.hareketler||[]).filter(h=>h.kulupId===kulupId()).slice(-6).reverse();
@@ -448,8 +448,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
     }else odaYuru('balkon',()=>ciz('.od-ana'));
     ciz();
   }
+  /* karar gerektiren haberin yeri: telefonda cevap bekleyen konuşma varsa telefon, yoksa masadaki dosya (G2 incelemesi: gelen teklifin telefonda izi yok) */
+  const kararTelefonda=()=>typeof konusmaListesi==='function'&&konusmaListesi(k).some(c=>c.cevapBekliyor);
   function gozlemSonucu(r){
-    mesaj=r.neden==='karar'?'Telefon çaldı: karar gerektiren bir haber var. Gözlem durdu, '+r.kalan+' dk kaldı.':r.neden==='haber'?'Beklediğin görüş geldi. Gözlem durdu, '+r.kalan+' dk kaldı.'
+    mesaj=r.neden==='karar'?(kararTelefonda()?'Telefon çaldı: karar gerektiren bir haber var.':'Masaya yeni dosya geldi: karar bekleyen bir konu var.')+' Gözlem durdu, '+r.kalan+' dk kaldı.':r.neden==='haber'?'Beklediğin görüş geldi. Gözlem durdu, '+r.kalan+' dk kaldı.'
       :'Antrenmanı izledin.'+(r.not?' '+r.not:'');
     ciz();
   }
@@ -503,7 +505,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       else if(g.isTuru==='ajanda'&&g.sonuc&&g.sonuc.durum==='cevapsiz')p.push(g.sonuc.baslik+': cevapsız kaldı'+(g.sonuc.bilgi?' — '+g.sonuc.bilgi:''));
       else if(g.isTuru==='hatirlatma'&&g.sonuc)p.push(g.sonuc.metin);
     }
-    const bas=r.neden==='karar'?'Telefon: karar gerektiren bir haber geldi.':r.neden==='haber'?'Beklediğin görüş geldi; dosyada.':r.neden==='sonCevap'?'Son cevap saati geldi; karar bekliyor. Cevap vermeden ilerlersen kartta yazan sonuç işler.':r.neden==='cevapsiz'?'Cevap vermediğin karar kartta yazan sonuçla kapandı.':r.neden==='randevu'?'Sıradaki randevuya gelindi.':r.neden==='cakisma'?'Günün işleri çakışıyor; ajandadan seçim yap.':'Bekleyen rutin işler işlendi.';
+    const bas=r.neden==='karar'?(kararTelefonda()?'Telefon: karar gerektiren bir haber geldi.':'Masada yeni dosya: karar bekleyen bir konu açıldı.'):r.neden==='haber'?'Beklediğin görüş geldi; dosyada.':r.neden==='sonCevap'?'Son cevap saati geldi; karar bekliyor. Cevap vermeden ilerlersen kartta yazan sonuç işler.':r.neden==='cevapsiz'?'Cevap vermediğin karar kartta yazan sonuçla kapandı.':r.neden==='randevu'?'Sıradaki randevuya gelindi.':r.neden==='cakisma'?'Günün işleri çakışıyor; ajandadan seçim yap.':'Bekleyen rutin işler işlendi.';
     return bas+(haberSayisi()&&r.neden!=='karar'&&r.neden!=='haber'?' Telefonda yeni haber var.':'')+(izler().yeniHaber?' Masada gazete var.':'')+(p.length?' '+p.join(' · '):'');
   }
   function ilerleEylem(){

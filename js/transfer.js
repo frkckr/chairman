@@ -11,8 +11,9 @@
      kadronun ortalama maaşı × maasTavanKat); hocanın mesajı, iki cevap: Bütçeyi onayla / Reddet; cevapsız → reddet. Onayda imzaGun sonra gizli
      'transferImza': önce o mevkide sözleşmesiz (serbest) oyuncu, yoksa tabloda altımızdaki kulüpten bütçeye uyan en iyi oyuncu (bedel = değer; satan kulüp
      gençle tamamlanır), yoksa kimse (dosyaya yazılır). Sözleşme {maas: min(tahmin, tavan), +2 yıl}; bedel ertesi gün ödenir.
-   oyuncuTransfer(k, oyuncu, kulüp|null, {sozlesme}) kadro listelerini korur: ilk 11'deki yuvaya aynı mevkiden (kalecide kaleci) yedek geçer; numara
-     çakışırsa ilk boş numara; geçmişe {tur:'transfer'|'ayrilis', oyuncuId, eski, yeni, tarih, dakika}. k.oyuncular kopyala-yaz. */
+   oyuncuTransfer(k, oyuncu, kulüp|null, {sozlesme}) kadro listelerini korur: ilk 11'deki yuvaya aynı mevkiden (kalecide kaleci) yedek geçer; giden
+     kaleciyse önce kadroda iki kaleci kalması sağlanır (js/kariyer-kadro.js kaleciGuvence); kaptan bayrağı gitmez; numara çakışırsa ilk boş numara;
+     geçmişe {tur:'transfer'|'ayrilis', oyuncuId, eski, yeni, tarih, dakika}. k.oyuncular kopyala-yaz. */
 'use strict';
 const TRANSFER_TEST={teklifGunleri:[3,12,22],talepGunu:1,saat:660,cevapGun:3,imzaGun:5,bonservis:[40000000,120000000],maasTavanKat:1.3,degerAy:24,kadroAlt:18};
 Object.assign(OLAY_KAYNAKLARI,{sozlesmeKaydi:'Sözleşme kayıtları'});
@@ -52,10 +53,12 @@ function kadrodanCikar(k,kulupId,id){
 function oyuncuTransfer(k,id,yeni,o){
   const p=k.oyuncular[id];if(!p)throw new Error(`Transfer: oyuncu yok (${id})`);
   const eski=p.kulupId;if(eski===yeni)throw new Error('Transfer: aynı kulüp');
-  if(eski)kadrodanCikar(k,eski,id);
+  if(eski){if(p.mevki==='KL')kaleciGuvence(k,eski,id);kadrodanCikar(k,eski,id);}
   let no=p.no;
   if(yeni){if(kulupOyunculari(k,yeni).some(q=>q.no===no))no=bosNumara(k,yeni,no);const D=k.kulupler[yeni].kadro;D.yedekler=D.yedekler.concat([id]);}
-  k.oyuncular=Object.assign({},k.oyuncular,{[id]:Object.assign({},p,{kulupId:yeni,no,sozlesme:yeni?o.sozlesme:null})});
+  /* kaptanlık kulübündedir: giden oyuncu bayrağı götürmez (maç girdisi kaptansız on bire en yaşlıyı kaptan yapar; js/mac-girdi.js) */
+  const q=Object.assign({},p,{kulupId:yeni,no,sozlesme:yeni?o.sozlesme:null});delete q.kaptan;
+  k.oyuncular=Object.assign({},k.oyuncular,{[id]:q});
   k.gecmis.push({tur:yeni?'transfer':'ayrilis',oyuncuId:id,eski,yeni,bedel:o&&o.bedel||0,tarih:k.tarih,dakika:k.gunIciDakika});
 }
 const oyuncuSerbestBirak=(k,id)=>oyuncuTransfer(k,id,null,{});
@@ -134,10 +137,12 @@ GELISMELER.hocaTalebi={
   denetle:(k,v)=>k.kulupler[v.kulupId]?[]:['kulüp bulunamadı'],
   uygula:(k,is)=>{const v=is.veri,olay=paketDene(k,'hocaTalebi','talep:'+v.anahtar,Object.assign({},v));return olay?{bilgi:'Hoca transfer istedi.',dur:true}:{bilgi:null};}
 };
-/* en zayıf hat: en iyi (DEF 4, OS 4, FV 2) oyuncusunun gizli ortalaması en düşük olan */
+/* en zayıf hat: en iyi (DEF 4, OS 4, FV 2) oyuncularının gizli ortalaması ligin aynı hattının ortalamasından en çok geride olan. G2 incelemesi:
+   ham ortalamalar mevkiler arasında kıyaslanamaz (savunmacının şut ve dripling özellikleri yapısı gereği düşük; ham kıyas hep DEF seçiyordu) */
 function zayifHat(k,kulupId){
-  const L=kulupOyunculari(k,kulupId),ort=(m,n)=>{const A=L.filter(p=>p.mevki===m).map(oyuncuOrt).sort((a,b)=>b-a).slice(0,n);return A.length?A.reduce((a,b)=>a+b,0)/A.length:0;};
-  return[['DEF',4],['OS',4],['FV',2]].map(([m,n])=>({m,o:ort(m,n)})).sort((a,b)=>a.o-b.o||(a.m<b.m?-1:1))[0].m;
+  const H=[['DEF',4],['OS',4],['FV',2]],ust=(L,m,n)=>{const A=L.filter(p=>p.mevki===m).map(oyuncuOrt).sort((a,b)=>b-a).slice(0,n);return A.length?A.reduce((a,b)=>a+b,0)/A.length:0;};
+  const K=Object.keys(k.kulupler).filter(c=>k.kulupler[c].kadro).map(c=>kulupOyunculari(k,c)),L=kulupOyunculari(k,kulupId);
+  return H.map(([m,n])=>({m,o:ust(L,m,n)-K.reduce((s,X)=>s+ust(X,m,n),0)/K.length})).sort((a,b)=>a.o-b.o||(a.m<b.m?-1:1))[0].m;
 }
 PAKETLER.hocaTalebi={
   surum:1,icerik:5,
@@ -193,7 +198,8 @@ GELISMELER.transferImza={
     if(H.bedel>0)odemePlanla(k,{kulupId:v.kulupId,tarih:yarin,dakika:600,tutar:-H.bedel,kalem:'transfer',aciklama:`${p.ad} bonservisi`,meseleId:v.meseleId});
     haberEkle(k,{tur:'gazete',anahtar:'tr.haber',p:{oyuncuId:p.id,alici:v.kulupId,kaynak:'yerelGazete'},olayId:v.olayId});
     const bilgi=meseleOlay(k,v.meseleId,'tr.imza',{oyuncuId:p.id,eski,bedel:H.bedel,maas});
-    if(k.kisiler[v.hocaId])meseleOlay(k,v.meseleId,'tr.tesekkur',{kisiId:v.hocaId});
+    /* teşekkür görevdeki hocadan (G2 incelemesi: arada hoca değiştiyse ayrılan hoca yazmaz; kulüp bütçe kararını uygular) */
+    const hc=kulupHocasi(k,v.kulupId);if(hc)meseleOlay(k,v.meseleId,'tr.tesekkur',{kisiId:hc.id});
     return{bilgi,dur:true};
   }
 };

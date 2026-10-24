@@ -81,8 +81,11 @@ function sezon(){
   /* G1-d: sezon sonu kaydı ve İlerle'nin engel metni */
   let sezonSonu=null;
   if(k.sezon.sonuc){const R=k.sezon.sonuc,ad=id=>k.kulupler[id].ad;let c=k;
-    for(let g=0;g<8&&!G('ilerleOnizle')(c).engel.length;g++)c=KK(c,x=>duragaIlerle(x)).kariyer;
-    sezonSonu=`şampiyon ${ad(R.sampiyon)} (${R.tablo[0].P} puan) · biz ${R.bizimSira}. sıra, ${R.bizimPuan} puan · İlerle: ${G('ilerleOnizle')(c).engel.join('; ')}`;}
+    /* G2: sezon sonundaki sözleşme kartları cevapsız geçilir (her biri bir hafta bekleyebilir; zaman aşımında oyuncu ayrılır) */
+    for(let g=0;g<120&&!G('ilerleOnizle')(c).engel.length;g++)c=KK(c,x=>duragaIlerle(x)).kariyer;
+    const ayr=c.gecmis.filter(g=>g.tur==='ayrilis'&&g.tarih>=R.tarih).length,kart=Object.values(c.isler).filter(x=>x.tur==='ajanda'&&x.veri.karar==='sozlesmeYenile').length;
+    const hs=dogrula(c);if(hs.length)hatalar.push('sezon sonundan sonra kariyer geçersiz: '+hs.slice(0,3).join('; '));
+    sezonSonu=`şampiyon ${ad(R.sampiyon)} (${R.tablo[0].P} puan) · biz ${R.bizimSira}. sıra, ${R.bizimPuan} puan · sözleşmesi biten ${ayr} oyuncu cevapsız kartlarla ayrıldı (${c.tarih}; kadro ${c.kulupler[biz].kadro.ilk11.length+c.kulupler[biz].kadro.yedekler.length}) · İlerle: ${G('ilerleOnizle')(c).engel.join('; ')||'(engel yok)'}`;}
   /* G2: sezon boyu para (başkanın kulübü; kalem başına) ve transferler */
   const para={};for(const h of k.hareketler)if(h.kulupId===biz)para[h.kalem]=(para[h.kalem]||0)+h.tutar;
   const transferler=k.gecmis.filter(g=>g.tur==='transfer'||g.tur==='ayrilis').map(g=>`${g.tarih} ${k.oyuncular[g.oyuncuId].ad} ${g.eski||'serbest'} → ${g.yeni||'serbest'}${g.bedel?' '+(g.bedel/100).toLocaleString('tr-TR')+' ₺':''}`);
