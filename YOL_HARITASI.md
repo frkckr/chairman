@@ -20,7 +20,9 @@ Son güncelleme: 2026-10-23 (F2 — maç sonucu kariyere, maç sonu kartı ve TE
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır).
 
-**Makine durumu: boşta (2026-10-23 akşam, dizüstü).** Kullanıcı çıkarken istedi: F2 bitince her şey `main`'e alınsın ve push edilsin, açıkta iş kalmasın. F2 kapandı (`tur/f2`), `main`'e alındı (ileri sarma) ve push edildi; birleşen `claude/f2-sonuc` ve `claude/f1-fikstur` dalları silindi (etiketler `tur/f1`, `tur/f2` uzakta). Commit edilmemiş ya da push edilmemiş iş yok. Evde: `git fetch --prune --tags`, `main`'de `git pull --ff-only`; önce aşağıdaki “Santraya geç” kararı, sonra F3 `main`'den yeni dalda (`claude/f3-hoca`).
+**Makine durumu: masaüstü çalışıyor, dal `claude/f3-hoca` (2026-10-24 öğle; oto mod: F3 → F7 → F6-a, her tur kapanınca `main`'e).** Kullanıcı 7–8 saat dışarıda; plan `araclar/plan/f3-uygulama.md` (F3 dalında). Kullanıcı kararları (2026-10-24): “Santraya geç” düzeltilir (basılan an sonucu değiştirmez); her tur kapanınca `main`'e alınıp push edilir; sıra F3 hoca ve maçın okunması → F7 ligin öbür maçları (3.8) → F6-a hoca değişimi ve P12 TEST taslağı; F4 tek kart ve F5 antrenman ertelenir (arayüz ileride değişecek, önce oyun mantığı). Öbür makinede: bu satır “çalışıyor” ve dalın son push'u 2 saatten yeniyse devam edilmez.
+
+**Önceki makine durumu: boşta (2026-10-23 akşam, dizüstü).** F2 kapandı (`tur/f2`), `main`'e alındı ve push edildi; birleşen `claude/f2-sonuc` ve `claude/f1-fikstur` dalları silindi.
 
 **2026-10-23, dizüstü: F0 ve F1** (ayrıntı `git show tur/f1:YOL_HARITASI.md`): kapı geçti, başkanlık programı F; lig ve 30 haftalık TEST fikstürü, kariyer kadroları, maç kimliği ve tohumu, maç girdisi kariyerden, maç sınırı sayfa yeniden yüklemesi, deplasman statları.
 
