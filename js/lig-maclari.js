@@ -9,11 +9,34 @@
      haftaSonuclariUygula(k, macId, sonuc, tohum, ek, digerleri) — maç sayfasının "Odaya dön" komutu: önce öbür maçlar (macKaydiYaz, kısa kayıt),
        sonra bizim maç (macSonucuUygula: zaman 21:00, sıradaki hafta), en sonda haftanın kulüplerinin dönüşü gelmiş sakatlıkları temizlenir.
        digerleri [{macId, sonuc, tohum}] haftanın bütün öbür maçlarıdır (eksik ya da fazla → red). Biri reddedilirse komut düşer, hiçbiri yazılmaz.
-   Öbür maçların kaydı kısadır (kayıt boyu; sezonda ~210 maç): sutlar null (beklenen gol xg'de), degisiklikler boş. */
+   Öbür maçların kaydı kısadır (kayıt boyu; sezonda ~210 maç): sutlar null (beklenen gol xg'de), degisiklikler boş.
+   G1-a (2026-10-24, kullanıcı kararı 43: kadro yeterliliği; TEST kuralı): maç günü 11 uygun oyuncu (js/mac-girdi.js oyuncuUygunMu) çıkaramayan
+   taraf maçı HUKMEN_SKOR farkla hükmen kaybeder; iki taraf da çıkaramazsa 0–0 (TEST sınırı). Hükmen maçta motor oynamaz:
+     kulupHazirMi(k, kulüp, tarih) · hukmenKarari(k, f) → null | {skor, neden:'ev'|'konuk'|'cift'} (neden: hükmen kaybeden taraf)
+     hukmenSonucu(h) → sonucKaydi biçiminde düz sonuç (atansız goller, boş listeler, varsayılan istatistik; js/mac-sonuc.js macKaydiYaz kabul eder ve
+       kararı yeniden hesaplayıp karşılaştırır)
+     digerMacPlani(k, f) → {macId, ev, konuk, tohum, secenek} ya da {macId, ev, konuk, tohum, hukmen} (tarayıcıdaki LIG_CANLI ve sezon-deneme) */
 'use strict';
 function haftaninDigerMaclari(k,macId){
   const f=(k.fikstur||[]).find(x=>x.id===macId);if(!f)return[];
   return k.fikstur.filter(x=>x.hafta===f.hafta&&x.id!==macId&&!(k.maclar||{})[x.id]);
+}
+const HUKMEN_SKOR=3;
+const kulupHazirMi=(k,kulupId,tarih)=>kulupOyunculari(k,kulupId).filter(p=>oyuncuUygunMu(p,tarih)).length>=11;
+function hukmenKarari(k,f){
+  const e=kulupHazirMi(k,f.ev,f.tarih),c=kulupHazirMi(k,f.konuk,f.tarih);
+  if(e&&c)return null;
+  return!e&&!c?{skor:[0,0],neden:'cift'}:!e?{skor:[0,HUKMEN_SKOR],neden:'ev'}:{skor:[HUKMEN_SKOR,0],neden:'konuk'};
+}
+function hukmenSonucu(h){
+  const goller=[],z=()=>[0,0];
+  for(const t of [0,1])for(let i=0;i<h.skor[t];i++)goller.push({ad:'',no:0,takim:t,kendiKalesine:false,dakika:0});
+  return{skor:h.skor.slice(),bitti:true,goller,kartlar:[],sakatliklar:[],degisiklikler:[],sutlar:[],ilk11:null,hukmen:h.neden,
+    ist:{sut:z(),isabet:z(),korner:z(),faul:z(),sari:z(),kirmizi:z(),ofsayt:z(),sahiplik:[0.5,0.5],pas:z(),pasTamam:z(),uzunPas:z()}};
+}
+function digerMacPlani(k,f){
+  const h=hukmenKarari(k,f),tohum=macTohumu(k.dunyaTohumu,f.id),A={macId:f.id,ev:f.ev,konuk:f.konuk,tohum};
+  return h?Object.assign(A,{hukmen:h}):Object.assign(A,{secenek:digerMacSecenegi(k,f)});
 }
 function digerMacSecenegi(k,f){
   const tohum=macTohumu(k.dunyaTohumu,f.id),kadro=[macKadrosu(k,f.ev,f.tarih,tohum),macKadrosu(k,f.konuk,f.tarih,tohum)];

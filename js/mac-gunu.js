@@ -39,7 +39,7 @@ const MAC_GUNU=(()=>{
     const is=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'&&x.veri.macId===macId);
     if(!is)throw new Error('Bu maçın günü kariyerde bekleyen bir iş değil');
     const girdi=macGirdisi(k,macId),biz=(k.kisiler[k.baskanId]||{}).kulupId;
-    girdi.digerleri=haftaninDigerMaclari(k,macId).map(f=>{const sec=digerMacSecenegi(k,f);return{macId:f.id,ev:f.ev,konuk:f.konuk,tohum:sec.tohum,secenek:sec};});   /* F7 */
+    girdi.digerleri=haftaninDigerMaclari(k,macId).map(f=>digerMacPlani(k,f));   /* F7; G1-a: hükmen maçta secenek yerine hukmen */
     oyunKomut(x=>ajandaIsiYap(x,is.id),true);
     if(OYUN.kariyer.isler[is.id]){OYUN.oturum.kaydet();throw new Error('Stada giderken yolda karar gerektiren bir haber geldi; maç günü bekliyor');}
     return Object.assign(girdi,statKur(girdi.ev,k.kulupler[girdi.ev].ad,biz,girdi.hafta));

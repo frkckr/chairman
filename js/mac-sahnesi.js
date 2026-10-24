@@ -49,11 +49,12 @@ MAC_IZLEME=izlemeKur(mac,Match,MAC_SECENEK);
    dinlenmez; Canlı Skor skorlarını ve dakikalarını okur. Bizim maç bitince bitmeyenler sürer; "Maç bitti" kartının "Odaya dön"ü kalanını
    tamamlar (ligCanliBitir) ve sekiz sonucu tek komutla uygular (js/ekran-mac-sonu.js, js/lig-maclari.js haftaSonuclariUygula). Aynı seçenek ve
    tohumla Node'daki araclar/sezon-deneme.js aynı maçları oynar */
-const LIG_CANLI=MAC_GUNU.kariyer&&Array.isArray(MAC_GUNU.digerleri)?MAC_GUNU.digerleri.map(d=>{const m=new Match(()=>{},d.secenek);m.macaGec();return{d,m};}):[];
-function ligCanliAdim(n){for(const x of LIG_CANLI)for(let i=0;i<n&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);}
-const ligCanliSuruyor=()=>LIG_CANLI.some(x=>x.m.phase!=='fulltime');
+/* G1-a: hükmen öbür maçın motoru yoktur (m null); sonucu hemen bellidir (son) */
+const LIG_CANLI=MAC_GUNU.kariyer&&Array.isArray(MAC_GUNU.digerleri)?MAC_GUNU.digerleri.map(d=>{if(d.hukmen)return{d,m:null,son:hukmenSonucu(d.hukmen)};const m=new Match(()=>{},d.secenek);m.macaGec();return{d,m};}):[];
+function ligCanliAdim(n){for(const x of LIG_CANLI)if(x.m)for(let i=0;i<n&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);}
+const ligCanliSuruyor=()=>LIG_CANLI.some(x=>x.m&&x.m.phase!=='fulltime');
 /* kalan adımlar (güvenlik sınırı maç başına 60 dk'lık adım); dönüşte bitmiş mi */
-function ligCanliBitir(){for(const x of LIG_CANLI)for(let i=0;i<60*60*80&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);return!ligCanliSuruyor();}   /* motorun son çaresi (MAC_SON_CARE) her maçı bu sınırdan önce bitirir */
+function ligCanliBitir(){for(const x of LIG_CANLI)if(x.m)for(let i=0;i<60*60*80&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);return!ligCanliSuruyor();}   /* motorun son çaresi (MAC_SON_CARE) her maçı bu sınırdan önce bitirir */
 /* B4: geliştirici panelinde iki takımın tarzı (TEST; oyun ekranına tarz adı yazılmaz — F). Geçişte harmanın payları ve durum */
 function tarzTestYaz(){const e=document.getElementById('tarzTest');if(!e)return;
   const y=t=>{const g=tarzGecisDurum(mac,t);return tarzAdi(mac,t)+(g==='talimat'?' (talimat: bir sonraki duruşta)':g!=null?' (geçişte)':'');};

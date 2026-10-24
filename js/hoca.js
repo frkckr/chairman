@@ -102,13 +102,15 @@ function hocaDegeri(k,h,p,Y,tohum,yer){
   if(Y.rol==='stoper')v+=((p.boy||1)-1)*20;
   return v;
 }
-function hocaKadroSec(k,kulupId,tarih,tohum){
+function hocaKadroSec(k,kulupId,tarih,tohum,se){
   const c=k.kulupler[kulupId],D=c&&c.kadro,h=kulupHocasi(k,kulupId);
   if(!D)throw new Error(`Maç kadrosu kurulamadı: ${kulupId} kulübünün kadrosu yok`);
   if(!h)throw new Error(`Maç kadrosu kurulamadı: ${c.ad} kulübünün hocası yok`);
   const Y=hocaYuvalari(D.taktik.dizilis);
   if(!Y)throw new Error(`Maç kadrosu kurulamadı: ${c.ad} dizilişi geçersiz`);
-  const uygun=kulupOyunculari(k,kulupId).filter(p=>oyuncuUygunMu(p,tarih));
+  let uygun=kulupOyunculari(k,kulupId).filter(p=>oyuncuUygunMu(p,tarih));
+  /* G1-a: hükmen maçın sayfası motoru yine kurar (çizim; sonucu kullanılmaz): zorla verilirse eksik yer uygun olmayanlarla dolar */
+  if(uygun.length<11&&se&&se.zorla){const u=new Set(uygun.map(p=>p.id));uygun=uygun.concat(kulupOyunculari(k,kulupId).filter(p=>!u.has(p.id)));}
   if(uygun.length<11)throw new Error(`Maç kadrosu kurulamadı: ${c.ad} on bir uygun oyuncu çıkaramıyor`);
   /* oyuncu × yuva değerleri; en yüksek çift sırayla yerleşir (eşitlikte yuva sırası, sonra kimlik) */
   /* ısrar yalnız hocanın kendi son on birine: kulübün son maçını başka hoca yönettiyse (hoca değişimi, F6-a) son on bir bağlamaz. Kariyerin ilk maçında

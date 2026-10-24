@@ -20,7 +20,8 @@
 ayarEkle('S',{
   sakatTemas:0.45,             // temaslı düşüşte sakatlık olasılığı: × (0,3 + 0,7·şiddet²) × yatkınlık (derece şiddetle: çıkış 0,025 + 0,14·ş, tedavi 0,28 + 0,2·ş, kalanı ağrı)
   sakatKas:0.010,              // deparda (hız ≥ 0,85 × azami) kas sakatlığı tehlikesi (1/sn): × (0,3 + yorgunluk)² × yatkınlık
-  sakatKramp:0.0012,           // 70. dakikadan sonra koşarken kramp tehlikesi (1/sn): × min(1, (yorgunluk − 0,38)/0,12) × yatkınlık (yorgunluk 90. dakikada ortanca ~0,37)
+  sakatKramp:0.0012,
+  sakatCikisPay:1,             // G1 (2026-10-24, kadro yeterliliği): çıkış (oyundan alınma) payının ölçeği; düşen pay ağrıya kalır (tedavi payı aynı). Karar 13 hedefi maç başına ~0,3 çıkış           // 70. dakikadan sonra koşarken kramp tehlikesi (1/sn): × min(1, (yorgunluk − 0,38)/0,12) × yatkınlık (yorgunluk 90. dakikada ortanca ~0,37)
   tedaviSure:[5,8],            // sağlıkçıların sahadaki tedavisi (sn; çıkışta 4 sn değerlendirme, sonra sedye)
   tedaviDonus:[6,10]           // tedaviden sonra kenarda bekleyen oyuncunun oyun başladıktan sonra dönüşü (sn; top 12 m'den uzaktayken)
 });
@@ -98,7 +99,7 @@ Object.assign(Match.prototype,{
     if(!kaynak||kaynak.team===p.team||!SK_TEMAS.has(neden)||!p.oyunda||p.sakat)return;
     const s=clamp(siddet||0,0,1);
     if(this.skRast()>=MOTOR_AYAR.sakatTemas*sureOlcek()*(0.3+0.7*s*s)*skYatkinlik(p))return;   /* U1: uzun maçta düşüş çok, maç başına sıklık aynı */
-    const u=this.skRast(),Pc=0.025+0.14*s,Pt=0.28+0.2*s,derece=u<Pc?'cikis':u<Pc+Pt?'tedavi':'agri';
+    const u=this.skRast(),Pc=(0.025+0.14*s)*MOTOR_AYAR.sakatCikisPay,Pt=0.28+0.2*s,derece=u<Pc?'cikis':u<Pc+Pt?'tedavi':'agri';
     const bolge=neden==='hava'?(u<0.5?'kafa':'omuz'):neden==='kayma'||neden==='takilma'?(u<0.6?'bilek':'diz'):u<0.5?'baldir':'diz';
     this.sakatlikBaslat(p,'temas',bolge,derece);
   },
@@ -132,7 +133,7 @@ Object.assign(Match.prototype,{
     const ds=dt*6*sureOlcek(),son=this.half===2&&this.gameSec>4200;   /* U1: tehlike gerçek saniye başına; maç dakikası başına aynı kalsın */
     for(const p of this.players){if(!p.oyunda||p.sakat||p.eylem&&p.eylem.kilit)continue;
       const y=p.yorgunluk||0,yt=skYatkinlik(p);
-      if(p.spd>0.85*p.maxSpd){if(this.skRast()<MOTOR_AYAR.sakatKas*(0.3+y)*(0.3+y)*yt*ds){const u=this.skRast();this.sakatlikBaslat(p,'kas',u<0.6?'arkaAdale':'baldir',u<0.5?'cikis':u<0.9?'tedavi':'agri');}}
+      if(p.spd>0.85*p.maxSpd){if(this.skRast()<MOTOR_AYAR.sakatKas*(0.3+y)*(0.3+y)*yt*ds){const u=this.skRast();const pc=0.5*MOTOR_AYAR.sakatCikisPay;this.sakatlikBaslat(p,'kas',u<0.6?'arkaAdale':'baldir',u<pc?'cikis':u<pc+0.4?'tedavi':'agri');}}
       else if(son&&y>0.38&&p.spd>3){const k=Math.min(1,(y-0.38)/0.12);if(this.skRast()<MOTOR_AYAR.sakatKramp*k*yt*ds)this.sakatlikBaslat(p,'kramp','baldir',this.skRast()<0.7?'tedavi':'agri');}}
   },
   /* akış: bekle (oyun sürer; hakem durdurur) → cagir (sağlıkçılar koşar) → kos → tedavi → kalk ve cik (tedavi: kenara yürür; çizgide akış biter,

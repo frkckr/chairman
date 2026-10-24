@@ -19,7 +19,9 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
   /* F7: öbür maçların satırları (bizim santramızdan önce başlamamış görünürler) */
   function digerVerisi(once){
     const L=typeof LIG_CANLI!=='undefined'?LIG_CANLI:[],ad=id=>(MAC_GUNU.bulten.adlar||{})[id]||id;
-    return L.map(x=>{const m=x.m,ph=m.phase,dk=m.minuteLabel()+"'";
+    return L.map(x=>{const m=x.m;
+      if(!m){const s=x.d.hukmen.skor;return{ev:ad(x.d.ev),dep:ad(x.d.konuk),skor:s[0]+' – '+s[1],durum:'hükmen',kisaDurum:'Hük.',canli:false};}   /* G1-a */
+      const ph=m.phase,dk=m.minuteLabel()+"'";
       const durum=once?'başlamadı':ph==='halftime'?'devre arası':ph==='fulltime'?'maç sonu':dk;
       return{ev:ad(x.d.ev),dep:ad(x.d.konuk),skor:once?'–':m.score[0]+' – '+m.score[1],durum,kisaDurum:once?MAC_GUNU.bulten.saat||'':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':dk,
         canli:!once&&ph!=='halftime'&&ph!=='fulltime'};});

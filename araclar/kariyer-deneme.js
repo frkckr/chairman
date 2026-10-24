@@ -625,6 +625,45 @@ bolum('3.8 — ligin öbür maçları: haftanın sekiz maçı, tek komut (F7)');
   denetle('Kaydet–yükle sonrası 14. hafta: yedi öbür maç, sonra 16 kulüp 14 maç',y.tamam&&h14.D.length===7&&MG('sezonTablosu')(k14).every(t=>t.O===14)&&Object.keys(k14.maclar).length===16&&!MG('kariyerDogrula')(k14).length);
 }
 
+bolum('3.9 — kadro yeterliliği: hükmen güvenlik ağı (G1-a; oyunun yüklediği dosyalar)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),id13='mac-2627-13-demirkapi-akdeniz',toh=id=>T('macTohumu')(7,id);
+  const c1=KK(KK(T('kariyerBaslat')({tohum:7}),x=>T('duragaIlerle')(x)).kariyer,x=>T('ajandaIsiYap')(x,'is-1')).kariyer;
+  const S=o=>Object.assign({skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}},o);
+  const F=T('haftaninDigerMaclari')(c1,id13),f0=F[0];
+  /* kulübün uygun oyuncusunu n'ye indirir (dönüşü uzak sakatlık) */
+  const eksilt=(x,kulup,n)=>{const L=T('kulupOyunculari')(x,kulup),y={};L.slice(0,Math.max(0,L.length-n)).forEach(p=>{y[p.id]=Object.assign({},p,{sakat:{neden:'deneme',donus:'2027-06-01'}});});
+    x.oyuncular=Object.assign({},x.oyuncular,y);};
+  const hafta=(x,D)=>T('haftaSonuclariUygula')(x,id13,S(),toh(id13),{},D);
+  const digerleri=(x,ozel)=>T('haftaninDigerMaclari')(x,id13).map(f=>({macId:f.id,sonuc:ozel&&ozel[f.id]?ozel[f.id]:S(),tohum:toh(f.id)}));
+  {const c=KK(c1,x=>{eksilt(x,f0.ev,10);}).kariyer,P=T('digerMacPlani')(c,f0),h=T('hukmenKarari')(c,f0);
+   denetle('11 uygun oyuncu çıkaramayan ev sahibi: plan hükmen (0–3), motor seçeneği yok; öbür maçların planı seçenekli',
+     !!P.hukmen&&!P.secenek&&h.neden==='ev'&&metin(h.skor)==='[0,3]'&&T('haftaninDigerMaclari')(c,id13).slice(1).every(f=>!!T('digerMacPlani')(c,f).secenek),metin(h));
+   const c2=KK(c,x=>{const p=T('kulupOyunculari')(x,f0.ev).find(q=>!q.sakat);x.oyuncular=Object.assign({},x.oyuncular,{[p.id]:Object.assign({},p,{ceza:{mac:1,neden:'deneme'}})});}).kariyer;
+   const cz=T('kulupOyunculari')(c2,f0.ev).find(q=>q.ceza);
+   const k2=KK(c2,x=>hafta(x,digerleri(x,{[f0.id]:T('hukmenSonucu')(T('hukmenKarari')(x,f0))}))).kariyer,s=k2.maclar[f0.id],tb=T('sezonTablosu')(k2),te=tb.find(t=>t.id===f0.ev),tk=tb.find(t=>t.id===f0.konuk);
+   denetle('Hükmen maç kaydı: 0–3, hukmen ev, on bir yok, atansız goller; tablo yenilgi ve galibiyet sayar; cezalı maçı çekmiş sayılır; 16 kulüp eşit maç; kariyer geçerli',
+     metin(s.skor)==='[0,3]'&&s.hukmen==='ev'&&s.ilk11===null&&s.goller.length===3&&s.goller.every(g=>g.id===null)&&tb.every(t=>t.O===13)
+     &&k2.oyuncular[cz.id].ceza===null&&!T('kariyerDogrula')(k2).length,`${metin(s.skor)} · ${te.ad} ${te.M}M · ${tk.ad} ${tk.G}G`);
+   denetle('Hükmen gereken maça oynanmış sonuç reddedilir; hükmen sonucu hükmen koşulu olmayan maça reddedilir (kariyer aynı)',
+     reddeder(()=>KK(c2,x=>hafta(x,digerleri(x))))&&reddeder(()=>KK(c1,x=>hafta(x,digerleri(x,{[f0.id]:T('hukmenSonucu')({skor:[0,3],neden:'ev'})}))))&&!Object.keys(c2.maclar).length);
+   {const d=T('bellekDeposu')();T('kariyerKaydet')(d,'s',k2);const y=T('kariyerYukle')(d,'s');
+    denetle('Kaydet–yükle: hükmen kaydı aynı',y.tamam&&metin(y.kariyer.maclar[f0.id])===metin(s));}
+   {const b=JSON.parse(metin(k2));b.maclar[f0.id].skor=[1,3];b.maclar[f0.id].goller.unshift({id:null,no:0,takim:0,kk:false,dk:0});
+    const H=T('kariyerDogrula')(T('kariyerOlustur')(b));
+    denetle('Bozuk hükmen kaydı (skor tutmuyor) doğrulamada yakalanır',H.some(e=>/hükmen kaydı skor/.test(e)),H.slice(0,2).join(' · '));}}
+  {const c=KK(c1,x=>{eksilt(x,f0.ev,9);eksilt(x,f0.konuk,10);}).kariyer,h=T('hukmenKarari')(c,f0);
+   const k2=KK(c,x=>hafta(x,digerleri(x,{[f0.id]:T('hukmenSonucu')(h)}))).kariyer;
+   denetle('İki taraf da çıkaramazsa çift hükmen 0–0 (TEST sınırı); tablo beraberlik sayar',h.neden==='cift'&&metin(k2.maclar[f0.id].skor)==='[0,0]'&&T('sezonTablosu')(k2).find(t=>t.id===f0.ev).B>=1,metin(h));}
+  {const c=KK(c1,x=>{eksilt(x,'demirkapi',10);}).kariyer,G=T('macGirdisi')(c,id13);
+   const k2=KK(c,x=>T('haftaSonuclariUygula')(x,id13,T('hukmenSonucu')(G.hukmen),toh(id13),{},digerleri(x))).kariyer;
+   const y=T('macYorumu')(k2,id13),n=T('macGozlemNotu')(k2,id13);
+   denetle('Bizim kulüp 11 çıkaramazsa maç girdisi hükmen ve çizim için iki tarafta 11 (zorla); sonuç 0–3; hocanın yorumu ve başkanın notu hükmeni söyler',
+     !!G.hukmen&&G.hukmen.neden==='ev'&&G.kadro.every(K=>K.oyuncular.length===11)&&metin(k2.maclar[id13].skor)==='[0,3]'&&/hükmen/.test(y.metin)&&/hükmen/.test(n)
+     &&!!Object.values(k2.isler).find(x=>x.veri&&x.veri.eylem==='macGunu'),`${y.metin} | ${n}`);
+   denetle('Hükmen maçında motor sonucu (oynanmış maç) reddedilir',reddeder(()=>KK(c,x=>T('haftaSonuclariUygula')(x,id13,S(),toh(id13),{},digerleri(x)))));}
+}
+
 bolum('3.7a — hoca değişimi ve P12 “Hocaya sabır mı, değişim mi?” TEST taslağı (F6-a; oyunun yüklediği dosyalar)');
 {
   const P=oyunAl,KK=P('kariyerKomut'),KAYNAK=['puanDurumu','macRaporlari'];

@@ -42,7 +42,7 @@ function macOkumasi(k,macId,kulupId){
   let en=null;for(const [id,o] of P){const v=o.g+o.x;if(!en||v>en.v||(v===en.v&&id<en.id))en={id,v,o};}
   const oneCikan=en&&k.oyuncular[en.id]?{id:en.id,ad:k.oyuncular[en.id].ad,neden:en.o.g>0?(en.o.g>1?'goller':'gol'):'firsat',gol:en.o.g}:null;
   const sahiplik=Array.isArray(I.sahiplik)?[I.sahiplik[t],I.sahiplik[r]]:[0.5,0.5];
-  return{macId,hafta:f.hafta,tarih:f.tarih,t,rakipId:t?f.ev:f.konuk,skor,xg,
+  return{macId,hafta:f.hafta,tarih:f.tarih,t,rakipId:t?f.ev:f.konuk,skor,xg,hukmen:s.hukmen?(s.hukmen==='cift'?'cift':(s.hukmen==='ev')===(t===0)?'kayip':'galip'):null,
     ist:{sut:c(I.sut),isabet:c(I.isabet),korner:c(I.korner),faul:c(I.faul),sari:c(I.sari),kirmizi:c(I.kirmizi),ofsayt:c(I.ofsayt),pas,pasTamam:c(I.pasTamam),uzunPas:uzun,sahiplik},
     tarzIzi:{tarz,uzunPay:Math.round(uzunPay*100)/100,beklenen:B,uyum},sans,oneCikan,hoca:hoca?{id:hoca.id,ad:hoca.ad}:null,
     kaynak:{kisiId:hoca?hoca.id:null,tarih:f.tarih,dakika:Math.min(1439,f.dakika+MAC_SONRASI_DK)}};
@@ -58,6 +58,10 @@ const YORUM_METIN={
     if(Math.abs(f)>=2)return f>0?'Pozisyonlar dengeliydi; farkı bitiricilikte biz yaptık.':'Pozisyonlar dengeliydi ama rakip bulduğunu attı, biz atamadık.';
     if(o.skor[0]+o.skor[1]>=4&&o.xg[0]+o.xg[1]<o.skor[0]+o.skor[1]-1.5)return'Az pozisyondan çok gol çıktı; iki taraf da bitiricilikte acımasızdı.';
     return f===0?'Dengeli bir maçtı; iki taraf da az şey yarattı.':f>0?'Sıkı maçtı, küçük farkı biz yaptık.':'Dengeli maçta küçük bir an kaybettirdi.';},
+  /* G1-a: hükmen maç (motor oynamadı; TEST) */
+  hukmenKayip:o=>'On bir uygun oyuncu çıkaramadık; maç hükmen kaybedildi.',
+  hukmenGalip:o=>'Rakip on bir çıkaramadı; maç hükmen bizim.',
+  hukmenCift:o=>'İki takım da on bir çıkaramadı; maç oynanmadı.',
   /* ısrarcı hocanın kötü sonuçta savunması (sayılar ne derse desin) */
   savunma:o=>'Şanssızdık. Planımızın arkasındayım, değiştirmeyeceğim.',
   /* tarz izi: ikinci cümle */
@@ -79,6 +83,7 @@ const GOZLEM_NOTU_METIN={
 /* hocanın yorumu (TEST şablon). Isrardan doğan savunma: ısrarı ≥ 0,6 olan hoca kaybettiği ve şanssız sayılmayacağı maçta şansı suçlar */
 function macYorumu(k,macId){
   const o=macOkumasi(k,macId);if(!o||!o.hoca)return null;
+  if(o.hukmen)return{kisiId:o.hoca.id,metin:YORUM_METIN[o.hukmen==='kayip'?'hukmenKayip':o.hukmen==='galip'?'hukmenGalip':'hukmenCift'](o)};
   const h=k.kisiler[o.hoca.id],israr=h&&h.hoca?h.hoca.israr:0,kayip=o.skor[0]<o.skor[1];
   const L=[(kayip&&o.sans!=='sanssiz'&&israr>=0.6?YORUM_METIN.savunma:YORUM_METIN[o.sans])(o)];
   if(o.tarzIzi.uyum)L.push(YORUM_METIN[o.tarzIzi.uyum](o));
@@ -89,6 +94,7 @@ function macYorumu(k,macId){
 function macGozlemNotu(k,macId){
   const o=macOkumasi(k,macId);if(!o)return null;
   const ad=(k.kulupler[o.rakipId]||{ad:o.rakipId}).ad,I=o.ist;
+  if(o.hukmen)return`${o.hafta}. hafta, ${o.t?'deplasman':'iç saha'} · ${ad}: ${o.skor[0]}–${o.skor[1]} hükmen (oynanmadı).`;
   return`${o.hafta}. hafta, ${o.t?'deplasman':'iç saha'} · ${ad}: ${o.skor[0]}–${o.skor[1]}. Beklenen gol ${okSayi(o.xg[0],2)} – ${okSayi(o.xg[1],2)}; şut ${I.sut[0]}–${I.sut[1]}, `+
     `topa sahip olma %${Math.round(I.sahiplik[0]*100)}. ${GOZLEM_NOTU_METIN[o.sans](o)}`;
 }

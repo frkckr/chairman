@@ -29,10 +29,10 @@ function eksikSatiri(p){
   const s=p.ceza?{durum:'cezali',neden:p.ceza.neden,donus:p.ceza.mac+' maç'}:{durum:'sakat',neden:p.sakat.neden,donus:p.sakat.belirsiz?'Belirsiz':gunAyYazi(p.sakat.donus)};
   return Object.assign({ad:p.ad,no:p.no,mevki:p.mevki},s);
 }
-function macKadrosu(k,kulupId,tarih,tohum){
+function macKadrosu(k,kulupId,tarih,tohum,se){
   const c=k.kulupler[kulupId],D=c&&c.kadro;
   if(!D)throw new Error(`Maç kadrosu kurulamadı: ${kulupId} kulübünün kadrosu yok`);
-  const O=id=>k.oyuncular[id],uygun=id=>oyuncuUygunMu(O(id),tarih),h=kulupHocasi(k,kulupId),S=hocaKadroSec(k,kulupId,tarih,tohum>>>0);
+  const O=id=>k.oyuncular[id],uygun=id=>oyuncuUygunMu(O(id),tarih),h=kulupHocasi(k,kulupId),S=hocaKadroSec(k,kulupId,tarih,tohum>>>0,se);
   const ilk=S.ilk11,oyuncular=ilk.map(id=>macKaydi(O(id)));
   if(!oyuncular.some(o=>o.kaptan)){const sira=ilk.map(O).filter(p=>p.mevki!=='KL').sort((a,b)=>a.dogumTarihi<b.dogumTarihi?-1:a.dogumTarihi>b.dogumTarihi?1:0);
     if(sira.length)oyuncular[ilk.indexOf(sira[0].id)].kaptan=true;}
@@ -44,9 +44,11 @@ function macGirdisi(k,macId){
   if(!f)throw new Error(`Maç girdisi kurulamadı: fikstürde ${macId} yok`);
   if(k.maclar[macId])throw new Error(`Maç girdisi kurulamadı: ${macId} oynanmış`);
   const S=k.sezon,biz=(k.kisiler[k.baskanId]||{}).kulupId,ad=id=>(k.kulupler[id]||{ad:id}).ad,tohum=macTohumu(k.dunyaTohumu,macId);
-  const kadro=[macKadrosu(k,f.ev,f.tarih,tohum),macKadrosu(k,f.konuk,f.tarih,tohum)];
+  /* G1-a: 11 uygun oyuncu çıkaramayan taraf varsa maç hükmendir (girdi.hukmen); kadro yalnız sayfanın çizimi için zorla kurulur */
+  const hukmen=typeof hukmenKarari==='function'?hukmenKarari(k,f):null,se=hukmen?{zorla:true}:undefined;
+  const kadro=[macKadrosu(k,f.ev,f.tarih,tohum,se),macKadrosu(k,f.konuk,f.tarih,tohum,se)];
   const hocalar=[f.ev,f.konuk].map(id=>{const h=kulupHocasi(k,id);return{id:h.id,ad:h.ad,tarz:h.hoca.tarz};});
-  return{kariyer:true,macId,hafta:f.hafta,tarih:f.tarih,dakika:f.dakika,ev:f.ev,konuk:f.konuk,biz:f.konuk===biz?1:0,tohum,tarz:hocalar.map(h=>h.tarz),hocalar,kadro,
+  return{kariyer:true,macId,hafta:f.hafta,tarih:f.tarih,dakika:f.dakika,ev:f.ev,konuk:f.konuk,biz:f.konuk===biz?1:0,tohum,tarz:hocalar.map(h=>h.tarz),hocalar,kadro,hukmen,
     bulten:{ligAd:S.ad,sezonAdi:S.sezonAdi,hafta:f.hafta,gun:macGunAdi(f.tarih),saat:saatYazi(f.dakika),oynanan:f.hafta-1,bolgeler:S.bolgeler,
       tablo:sezonTablosu(k),son:[sonBesMac(k,f.ev),sonBesMac(k,f.konuk)],adlar:Object.fromEntries(S.takimlar.map(id=>[id,ad(id)])),hocalar}};
 }

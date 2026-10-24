@@ -18,6 +18,7 @@
          (macBeklenenGol: penaltı MAC_PENALTI_XG sayılır; 2 ondalık); ilk11 maçın on biri (motorun girdisinden; kariyersiz kayıtta null);
          ist'te pas, pasTamam, uzunPas (takım başına) da vardır.
        Kadro (F3-a): iki kulübün kadro.ilk11'i bu maçın on biri olur (hocanın "son on biri"; js/hoca.js israr), kalanı yedekler.
+       G1-a: hükmen maçta (js/lig-maclari.js hukmenKarari) kayıt hukmen ('ev'|'konuk'|'cift') taşır, ilk11 null; karar burada yeniden hesaplanır.
        k.gecmis: {tur:'mac', macId, hafta, ev, konuk, skor, tarih, dakika} (maç anında).
        Oyuncular (kopyala-yaz): gol (kendi kalesine sayılmaz), sarı sayacı, ceza, sakatlık — TEST kuralı (karar 36, 38):
          · iki kulübün cezalıları bu maçı oynamadı: ceza.mac − 1 (0'da null). Öbür kulüplerin cezaları yalnız bizimle oynayınca düşer (F2 TEST sınırı;
@@ -92,6 +93,11 @@ function macKaydiYaz(k,f,sonuc,tohum,ek,kisa){
   if(!Array.isArray(sonuc.skor)||sonuc.skor.length!==2||!sonuc.skor.every(x=>tam(x,0,99)))throw new Error('Maç sonucu işlenemedi: skor geçersiz');
   if(tohum!==macTohumu(k.dunyaTohumu,macId))throw new Error('Maç sonucu işlenemedi: maç bu kariyerin tohumuyla oynanmamış');
   if(simdikiAn(k)<macAni(f))throw new Error('Maç sonucu işlenemedi: zaman maç anından önce');
+  /* G1-a: hükmen kararı kariyerden yeniden hesaplanır; sonuç onunla tutmalı (oynanmış maç hükmen yerine geçmez, hükmen oynanmış maçın yerine geçmez) */
+  {const h=typeof hukmenKarari==='function'?hukmenKarari(k,f):null,s=sonuc.hukmen||null;
+   if(h&&s!==h.neden)throw new Error(`Maç sonucu işlenemedi: maç hükmen sonuçlanmalı (${h.neden==='cift'?'iki taraf da':(h.neden==='ev'?'ev sahibi':'konuk')} 11 uygun oyuncu çıkaramıyor)`);
+   if(!h&&s)throw new Error('Maç sonucu işlenemedi: hükmen koşulu yok');
+   if(h&&(sonuc.skor[0]!==h.skor[0]||sonuc.skor[1]!==h.skor[1]))throw new Error('Maç sonucu işlenemedi: hükmen skoru tutmuyor');}
   const L=a=>Array.isArray(a)?a:[];
   /* kimlikler: gol atan bilinmeyebilir (numarasız, atansız gol null); kart ve sakatlık her zaman bir oyuncunundur */
   const goller=L(sonuc.goller).map(g=>{const kk=!!g.kendiKalesine,t=g.takim===1?1:0;
@@ -116,6 +122,7 @@ function macKaydiYaz(k,f,sonuc,tohum,ek,kisa){
   const hocalar=[f.ev,f.konuk].map(id=>k.kulupler[id].hocaId||null),tarz=hocalar.map(id=>id&&k.kisiler[id]&&k.kisiler[id].hoca?k.kisiler[id].hoca.tarz:null);
   const kayit={skor:sonuc.skor.slice(),tohum,goller,kartlar,sakatliklar,degisiklikler:kisa?[]:degisiklikler,sutlar:kisa?null:sutlar,xg:macBeklenenGol(sutlar),ilk11,hocalar,tarz,ist,
     protokol:ek.protokol?JSON.parse(JSON.stringify(ek.protokol)):null};
+  if(sonuc.hukmen)kayit.hukmen=sonuc.hukmen;   /* G1-a: 'ev' | 'konuk' | 'cift' (hükmen kaybeden); oynanmış maçta alan yoktur */
   k.maclar=Object.assign({},k.maclar,{[macId]:kayit});
   /* F3-a: hocanın "son on biri" — iki kulübün kadro.ilk11'i bu maçın on biri olur, kalanı (önceki sırasıyla) yedekler. Kaleci yuvası kaleci değilse
      (bütün kaleciler eksikken) eski on bir kalır: kadronun ilk yuvası kalecidir (js/kariyer-kadro.js kadroDogrula) */
@@ -191,6 +198,8 @@ function macSonucDogrula(k,h){
     if(!Array.isArray(s.hocalar)||s.hocalar.length!==2||!Array.isArray(s.tarz)||s.tarz.length!==2)h.push(`${ad}: hocalar ve tarz iki takımın olmalı`);
     if(s.ilk11!==null&&!(Array.isArray(s.ilk11)&&s.ilk11.length===2&&s.ilk11.every(x=>Array.isArray(x)&&x.length===11&&x.every(id=>typeof id==='string'))))h.push(`${ad}: on bir null ya da iki takımın 11 kimliği olmalı`);
     if(s.protokol!==null&&!duz(s.protokol))h.push(`${ad}: protokol null ya da nesne olmalı`);
+    if(s.hukmen!==undefined){const S={ev:[0,3],konuk:[3,0],cift:[0,0]}[s.hukmen];
+      if(!S)h.push(`${ad}: bilinmeyen hükmen (${s.hukmen})`);else if(s.skor[0]!==S[0]||s.skor[1]!==S[1]||s.ilk11!==null)h.push(`${ad}: hükmen kaydı skor ya da on birle tutmuyor`);}
     const G=Array.isArray(s.goller)?s.goller:[];
     for(const t of [0,1])if(G.filter(g=>g&&g.takim===t).length!==s.skor[t])h.push(`${ad}: gol kayıtları skorla tutmuyor (${t?'konuk':'ev'})`);
     for(const g of G)if(!g||![0,1].includes(g.takim)||typeof g.kk!=='boolean'||!tam(g.dk,0,130))h.push(`${ad}: gol kaydı geçersiz`);

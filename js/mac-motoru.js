@@ -115,7 +115,7 @@ const MOTOR_AYAR={
   sahne:undefined,tempo:undefined,tempoBaglam:undefined,tempoSapma:undefined,duranYay:undefined,kornerIce:undefined,kornerRutin:undefined,kornerOncelik:undefined,
   yatanBaraj:undefined,barajYani:undefined,uzakDolum:undefined,tacPres:undefined,tacSayim:undefined,
   /* S — js/mac-sakatlik.js (T10c) */
-  sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,tedaviSure:undefined,tedaviDonus:undefined,
+  sakatTemas:undefined,sakatKas:undefined,sakatKramp:undefined,sakatCikisPay:undefined,tedaviSure:undefined,tedaviDonus:undefined,
   /* S1 — js/mac-sahne.js (S1, 2026-10-20: sahne protokolleri; bit maskesi S1_BIT, parametre anahtarları kendi alt adımında) */
   protokol:undefined,seremoni:undefined,kartAyar:undefined,penaltiSahne:undefined,golTempo:undefined,kRutin:undefined
 };
