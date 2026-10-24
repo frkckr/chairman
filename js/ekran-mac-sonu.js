@@ -11,7 +11,7 @@
    Kariyersiz geliştirme adreslerinde (?ekran=mac) kart açılmaz. Yazı büyüklüğü ayarı uygulanır; renkler STIL.kagit, ölçüler STIL.macSonu (TEST).
      macSonuKare(dt)   her karede (js/arayuz.js)
      MAC_SONU          durum: {acik, sonuc, uygulandi, red} (denemeler okur) */
-const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:false};
+const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:false,bekliyor:null};
 {
   const A=STIL.macSonu,K=STIL.kagit,kok=document.getElementById('screen');
   const st=document.createElement('style');st.id='macSonuStili';
@@ -64,7 +64,9 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
     let test='';
     if(typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.test){
       const I=typeof MAC_IZLEME!=='undefined'?MAC_IZLEME:null,s=I&&I.son;
-      test='<p class="ms-test"><b>TEST</b>ikiz motor: '+(!I?'yok':s&&s.atlandi?'atlandı (maç hızlı bitirildi)':s?(s.ayni?'aynı':'farklı'):'bırakıldı')+(I&&I.sapma?' · sapma '+I.sapma:'')+'</p>';
+      const Ar=MAC_ARKA;
+      test='<p class="ms-test"><b>TEST</b>ikiz motor: '+(!I?'yok':s&&s.atlandi?'atlandı (maç hızlı bitirildi)':s?(s.ayni?'aynı':'farklı'):'bırakıldı')+(I&&I.sapma?' · sapma '+I.sapma:'')+
+        ' · arka: '+(Ar.kip==='isci'?'işçi':'ana iplik'+(Ar.hata?' ('+yaz(Ar.hata)+')':''))+' · sonuç ikizi: '+(HIZLI_BITIR.anlik?'kullanıldı':Ar.ikizAyni===null?'—':Ar.ikizAyni?'aynı':'farklı')+'</p>';
     }
     return'<div class="ms-kararti"></div><div class="ms-kart" tabindex="-1">'+
       '<p class="ms-ust">Maç sonu'+(B.hafta?' · '+yaz((B.ligAd?B.ligAd+' ':'')+B.hafta+'. hafta'):'')+'</p>'+
@@ -77,7 +79,9 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   }
   const durumYaz=(m,hata)=>{const p=E.querySelector('.ms-durum');if(p){p.textContent=m;p.classList.toggle('ms-hata',!!hata);}};
   function msAc(){
-    const S=MAC_SONU;S.acik=true;S.sonuc=G.hukmen?hukmenSonucu(G.hukmen):mac.sonucKaydi();ON_EKRAN.sayfa='macSonu';   /* G1-a: bizim maç hükmense motor sonucu kullanılmaz */
+    const S=MAC_SONU;S.acik=true;ON_EKRAN.sayfa='macSonu';
+    /* G1-a: bizim maç hükmense motor sonucu kullanılmaz. G1-e: "Maçı bitir" sonuç ikiziyle bittiyse ikizin sonucu (js/mac-arka.js) */
+    S.sonuc=G.hukmen?hukmenSonucu(G.hukmen):HIZLI_BITIR.anlik?JSON.parse(JSON.stringify(MAC_ARKA.ikiz.son)):mac.sonucKaydi();
     const buyuk=typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.yazi==='buyuk';E.style.setProperty('--ms-boy',(buyuk?A.yazi.buyuk:A.yazi.normal)+'cqw');
     E.innerHTML=msIcerik(S.sonuc);E.hidden=false;
     /* odak kartta (F2 incelemesi): kart kendiliğinden açılır; odak düğmede olsaydı maç boyu duraklatan Boşluk sonucu uygulayıp sayfadan çıkarırdı.
@@ -95,6 +99,8 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
         const P=typeof MAC_PROTOKOL!=='undefined'&&MAC_PROTOKOL.karar?{id:MAC_PROTOKOL.karar.id,secim:MAC_PROTOKOL.karar.secim,an:MAC_PROTOKOL.karar.an==null?null:MAC_PROTOKOL.karar.an}:null;
         /* F7: haftanın öbür maçları — kalanı tamamlanır, sekiz sonuç tek komutla (biri reddedilirse hiçbiri yazılmaz) */
         const L=typeof LIG_CANLI!=='undefined'?LIG_CANLI:[];
+        /* G1-e: işçi kipinde öbür maçlar arkada bitiyorsa kısa bekleme (en çok 20 sn; sonra kalanlar ana iplikte) */
+        if(L.length&&MAC_ARKA.kip==='isci'&&ligCanliSuruyor()&&S.bekliyor!==0){S.bekliyor=performance.now();S.isliyor=false;durumYaz('Öbür maçlar tamamlanıyor…');return;}
         if(L.length&&!ligCanliBitir())throw new Error('Haftanın öbür maçları bitmedi');
         const D=L.map(x=>({macId:x.d.macId,sonuc:x.m?x.m.sonucKaydi():x.son,tohum:x.d.tohum}));   /* G1-a: hükmen öbür maç */
         oyunKomut(k=>D.length?haftaSonuclariUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P},D):macSonucuUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P}));
@@ -114,9 +120,11 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   E.addEventListener('click',e=>{const b=e.target.closest('button[data-eylem="odayaDon"]');if(b&&!b.disabled)msOdayaDon();});
   var macSonuKare=function(){
     const S=MAC_SONU;
-    if(S.acik||!G.kariyer)return;
+    if(!G.kariyer||S.acik&&!S.bekliyor)return;
     /* G1-a: bizim maç hükmense kart bülten kapanınca hemen açılır (maç oynanmaz) */
-    if(!G.hukmen&&(mac.phase!=='fulltime'||!(mac.phaseT>=A.kartSn||(typeof HIZLI_BITIR!=='undefined'&&HIZLI_BITIR.bitti))))return;
+    if(S.bekliyor){if(!ligCanliSuruyor()||performance.now()-S.bekliyor>20000){S.bekliyor=0;msOdayaDon();}return;}   /* G1-e: öbür maçlar işçide bitiyor */
+    if(S.acik)return;
+    if(!G.hukmen&&!HIZLI_BITIR.anlik&&(mac.phase!=='fulltime'||!(mac.phaseT>=A.kartSn||HIZLI_BITIR.bitti)))return;
     if(ON_EKRAN.sayfa!==null||(typeof MAC_TELEFON!=='undefined'&&MAC_TELEFON.acik))return;
     msAc();
   };

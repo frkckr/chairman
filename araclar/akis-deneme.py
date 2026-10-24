@@ -27,6 +27,9 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
      Odaya dön → oda 21:00, sonuç bir kez kayıtta, puan durumu ilerledi, sıradaki iş 14. hafta, Canlı Skor'da son maç; oynanmış maçın adresi odaya düşer;
      belirlenimli iki sayfada aynı tohumla Maçı bitir ile ×16 izlenen maç birebir aynı sonuç kaydı; F3-0 (2026-10-24): üçüncü sayfada Santraya geç
      maç öncesinin başka bir anında basılır, sonuç kaydı yine birebir aynı (basılan an maçı değiştirmez).
+ 20. Maçı bitir anında (G1-e, 2026-10-24): oyun yerel http sunucusundan açılır (Web Worker file:// altında açılmaz): öbür maçlar ve bizim maçın
+     sonuç ikizi işçide maç öncesinde biter (ana iplikteki hesapla birebir), Canlı Skor öbür maçları örneklerden okur, “Maçı bitir” kartı hemen
+     ikizin sonucuyla açar, Odaya dön sekiz sonucu yazar; sonuna dek oynanan canlı maç ikizle birebir.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız, Durdur ve tarz seçimi (TEST, B4b), eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
@@ -1350,6 +1353,89 @@ async def bolum_19(tarayici, site, tum_hatalar):
             g["faz"] == "fulltime" and g["kayit"] == b["kayit"] and g["sapma"] == 0, f"gec {g['skor']} · bitir {b['skor']}")
 
 
+
+async def bolum_20(tarayici, site, tum_hatalar):
+    """G1-e: “Maçı bitir” anında — oyun http'den açılır (Web Worker): öbür maçlar ve bizim maçın sonuç ikizi işçide; kart hemen; Odaya dön sekiz sonuç."""
+    import socket
+    import subprocess
+    import time
+    three = kontrol.yerel_three()
+    shutil.copy(three, site / "three-yerel.js")
+    (site / "index-http.html").write_text((site / "index.html").read_text(encoding="utf-8").replace(three.as_uri(), "three-yerel.js"), encoding="utf-8")
+    port = 8766
+    sunucu = subprocess.Popen([sys.executable, "-m", "http.server", str(port), "--bind", "127.0.0.1", "--directory", str(site)],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        for _ in range(100):
+            try:
+                socket.create_connection(("127.0.0.1", port), 0.2).close()
+                break
+            except OSError:
+                await asyncio.sleep(0.1)
+        kok = f"http://127.0.0.1:{port}/index-http.html"
+
+        async def mac_sayfasi():
+            baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
+            pg = await baglam.new_page()
+            pg.on("pageerror", lambda e: tum_hatalar.append("Betik hatası (20): " + str(e)))
+            pg.on("console", lambda m: tum_hatalar.append("Konsol (20): " + m.text)
+                  if m.type == "error" and "Failed to load resource" not in m.text else None)
+            await pg.goto(kok + "?dunya=7")
+            await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=30000)
+            await oda_ilerle(pg)
+            await pg.click(".od-ana")
+            await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=60000)
+            await pg.goto(pg.url + "&rakipBaskan=yok")
+            await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=60000)
+            t0 = time.time()
+            await pg.wait_for_function("() => MAC_ARKA.kip !== 'isci' || (MAC_ARKA.ikiz && MAC_ARKA.ikiz.son && LIG_CANLI.every(x => x.son))", timeout=120000)
+            return baglam, pg, time.time() - t0
+
+        baglam, pg, hazir = await mac_sayfasi()
+        e = await pg.evaluate("""() => { const x = LIG_CANLI[0], R = arkaMacOynat(Match, x.d.secenek, {}), Z = arkaMacOynat(Match, Object.assign({}, MAC_SECENEK, { tohum: mac.tohum }), { oncesi: true });
+          return { kip: MAC_ARKA.kip, hata: MAC_ARKA.hata, n: MAC_ARKA.havuz.length, son: LIG_CANLI.filter(y => y.son).length, motorYok: LIG_CANLI.every(y => !y.m),
+            obur: JSON.stringify(R.son) === JSON.stringify(x.son) && JSON.stringify(R.ornekler) === JSON.stringify(x.ornekler), ikiz: JSON.stringify(Z.son) === JSON.stringify(MAC_ARKA.ikiz.son),
+            skorlar: LIG_CANLI.map(y => [y.d.macId, y.son.skor.join('-')]) }; }""")
+        denetle("G1-e: http'de işçi kipi; öbür yedi maç ve bizim maçın sonuç ikizi işçide, maç öncesinde bitti; sayfada öbür maç motoru yok; işçinin sonucu ve örnekleri ana iplikteki aynı hesapla birebir",
+                e["kip"] == "isci" and e["n"] >= 1 and e["son"] == 7 and e["motorYok"] and e["obur"] and e["ikiz"], f"{hazir:.1f} sn · {e['n']} işçi · {e['hata']}")
+        await pg.click("#btnBeklemedenGec")
+        await pg.wait_for_function("() => !ON_EKRAN.acik", timeout=30000)
+        await pg.evaluate("document.getElementById('btnMacaGec').click()")
+        await pg.wait_for_function("() => !MAC_ONCESI.includes(mac.phase) && MAC_ARKA.T0 !== null", timeout=60000)
+        await pg.wait_for_timeout(2500)
+        await pg.evaluate("() => MAC_TELEFON.ac()")
+        await pg.evaluate("() => document.querySelector('#macTelefon [data-eylem=telUyg][data-uyg=skor]').click()")
+        satirlar = await pg.evaluate("() => [...document.querySelectorAll('#macTelefon .tel-mac')].map(e => e.textContent)")
+        await pg.evaluate("() => MAC_TELEFON.kapat()")
+        dakikali = [s for s in satirlar[1:] if re.search(r"\d+'", s)]
+        denetle("G1-e: santradan sonra Canlı Skor'da öbür yedi maç işçinin örneklerinden dakikasıyla", len(satirlar) == 8 and len(dakikali) == 7, " | ".join(satirlar[:3]))
+        t1 = time.time()
+        await pg.click("#btnHizliBitir")
+        await pg.wait_for_selector("#macSonu:not([hidden]) [data-eylem='odayaDon']", timeout=60000)
+        sure = time.time() - t1
+        k = await pg.evaluate("""() => ({ anlik: HIZLI_BITIR.anlik, kart: document.querySelector('#macSonu .ms-skor').textContent, skor: MAC_ARKA.ikiz.son.skor.join('–'),
+          ayni: JSON.stringify(MAC_SONU.sonuc) === JSON.stringify(MAC_ARKA.ikiz.son), tabela: TABELA.yazi, dugme: document.getElementById('btnHizliBitir').hidden,
+          test: (document.querySelector('#macSonu .ms-test') || {}).textContent || '' })""")
+        denetle("G1-e: 'Maçı bitir' kartı hemen açtı (sonuç ikizinin kaydı); tabela maç sonu; düğme gizli",
+                k["anlik"] and k["skor"] in k["kart"] and k["ayni"] and k["tabela"] == "MAÇ SONU" and k["dugme"] and sure <= 5, f"{sure:.1f} sn · {k['kart'].strip()} · {k['test'][:80]}")
+        await pg.screenshot(path=str(ARAC / "son-akis-20-kart.png"))
+        await pg.click("#macSonu [data-eylem='odayaDon']")
+        await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=90000)
+        o = await pg.evaluate("""() => { const k = OYUN.kariyer; return { n: Object.keys(k.maclar).length, biz: k.maclar['mac-2627-13-demirkapi-akdeniz'].skor.join('–'),
+          skorlar: Object.entries(k.maclar).map(([id, s]) => [id, s.skor.join('-')]), O: sezonTablosu(k).every(t => t.O === 13) }; }""")
+        obur = dict(o["skorlar"])
+        denetle("G1-e: Odaya dön sekiz sonucu yazdı: bizim maç kartın skoru, öbürleri işçinin sonuçları; 16 kulüp 13 maç",
+                o["n"] == 8 and o["biz"] == k["skor"] and all(obur.get(i) == s for i, s in e["skorlar"]) and o["O"], f"{o['biz']} · {o['n']} maç")
+        await baglam.close()
+        # doğal biten maç: canlı motorun sonucu sonuç ikizininkiyle aynı (izlenen maç)
+        baglam, pg, _ = await mac_sayfasi()
+        d = await pg.evaluate("() => { for (let i = 0; i < 60 * 60 * 90 && mac.phase !== 'fulltime'; i++) mac.step(1 / 60); arkaIkizKarsilastir(mac); return { ayni: MAC_ARKA.ikizAyni, skor: mac.score.join('-') }; }")
+        denetle("G1-e: sonuna dek oynanan canlı maçın sonuç kaydı işçideki sonuç ikiziyle birebir", d["ayni"] is True, str(d))
+        await baglam.close()
+    finally:
+        sunucu.terminate()
+
+
 SECIM = set(sys.argv[1:])
 
 
@@ -1408,6 +1494,9 @@ async def ana():
         if sec("19"):
             print("\n19. Maç sonucu kariyere: Maçı bitir (TEST), Maç bitti kartı, Odaya dön (F2)")
             await bolum_19(tarayici, site, tum_hatalar)
+        if sec("20"):
+            print("\n20. Maçı bitir anında: http'de işçiler, sonuç ikizi (G1-e)")
+            await bolum_20(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

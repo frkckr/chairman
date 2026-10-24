@@ -49,12 +49,21 @@ MAC_IZLEME=izlemeKur(mac,Match,MAC_SECENEK);
    dinlenmez; Canlı Skor skorlarını ve dakikalarını okur. Bizim maç bitince bitmeyenler sürer; "Maç bitti" kartının "Odaya dön"ü kalanını
    tamamlar (ligCanliBitir) ve sekiz sonucu tek komutla uygular (js/ekran-mac-sonu.js, js/lig-maclari.js haftaSonuclariUygula). Aynı seçenek ve
    tohumla Node'daki araclar/sezon-deneme.js aynı maçları oynar */
-/* G1-a: hükmen öbür maçın motoru yoktur (m null); sonucu hemen bellidir (son) */
-const LIG_CANLI=MAC_GUNU.kariyer&&Array.isArray(MAC_GUNU.digerleri)?MAC_GUNU.digerleri.map(d=>{if(d.hukmen)return{d,m:null,son:hukmenSonucu(d.hukmen)};const m=new Match(()=>{},d.secenek);m.macaGec();return{d,m};}):[];
+/* G1-a: hükmen öbür maçın motoru yoktur; sonucu hemen bellidir (son). G1-e: işçi kipinde (js/mac-arka.js) öbür maçlar ve bizim maçın sonuç ikizi
+   Web Worker'da oynanır (m null; son ve ornekler işçiden gelir); işçi yoksa ya da bozulursa ana iplikte kilit adımlı motorlar (ligCanliKur) */
+const LIG_CANLI=MAC_GUNU.kariyer&&Array.isArray(MAC_GUNU.digerleri)?MAC_GUNU.digerleri.map(d=>({d,m:null,son:d.hukmen?hukmenSonucu(d.hukmen):null,ornekler:null})):[];
+/* ana iplik kipi: motorları kurar ve bizim santramızdan beri geçen adım kadar ilerletir (işçi sonradan bozulursa) */
+function ligCanliKur(adim){for(const x of LIG_CANLI)if(!x.son&&!x.m){x.m=new Match(()=>{},x.d.secenek);x.m.macaGec();for(let i=0;i<adim&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);}}
+MAC_ARKA.dusus=()=>ligCanliKur(MAC_ARKA.T0===null?0:Math.max(0,(mac.kare||0)-MAC_ARKA.T0));
+if(!arkaBaslat(LIG_CANLI,MAC_GUNU.hukmen?null:Object.assign({},MAC_SECENEK,{tohum:mac.tohum})))ligCanliKur(0);
 function ligCanliAdim(n){for(const x of LIG_CANLI)if(x.m)for(let i=0;i<n&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);}
-const ligCanliSuruyor=()=>LIG_CANLI.some(x=>x.m&&x.m.phase!=='fulltime');
+const ligCanliSuruyor=()=>LIG_CANLI.some(x=>x.m?x.m.phase!=='fulltime':!x.son);
 /* kalan adımlar (güvenlik sınırı maç başına 60 dk'lık adım); dönüşte bitmiş mi */
-function ligCanliBitir(){for(const x of LIG_CANLI)if(x.m)for(let i=0;i<60*60*80&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);return!ligCanliSuruyor();}   /* motorun son çaresi (MAC_SON_CARE) her maçı bu sınırdan önce bitirir */
+function ligCanliBitir(){
+  for(const x of LIG_CANLI){
+    if(x.m){for(let i=0;i<60*60*80&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);}
+    else if(!x.son){const R=arkaMacOynat(Match,x.d.secenek,{});if(R.bitti){x.son=R.son;x.ornekler=R.ornekler;}}}   /* G1-e: işçiden gelmeyen (son çare) */
+  return!ligCanliSuruyor();}   /* motorun son çaresi (MAC_SON_CARE) her maçı bu sınırdan önce bitirir */
 /* B4: geliştirici panelinde iki takımın tarzı (TEST; oyun ekranına tarz adı yazılmaz — F). Geçişte harmanın payları ve durum */
 function tarzTestYaz(){const e=document.getElementById('tarzTest');if(!e)return;
   const y=t=>{const g=tarzGecisDurum(mac,t);return tarzAdi(mac,t)+(g==='talimat'?' (talimat: bir sonraki duruşta)':g!=null?' (geçişte)':'');};
@@ -62,7 +71,7 @@ function tarzTestYaz(){const e=document.getElementById('tarzTest');if(!e)return;
 /* B4b: geliştirici panelinden tarz değişikliği (TEST; başkan maça dokunmaz — aynı kapıyı ileride hocanın maç içi kararı kullanır, F ve Z7-2). Komut iki
    motora aynı karede verilir (js/mac-izleme.js izlemeKomut): ikiz önden gittiği için talimat ana motorda ~7 sn sonra işler, önemli anları önceden
    bilmek bozulmaz. Geçişin kendisi js/mac-tarz.js tarzDegistir (duruşta başlar, tarzGecis sn'de oturur) */
-function tarzTestDegistir(t,ad){const k=izlemeKomut(MAC_IZLEME,mac,(Z,k)=>tarzDegistir(Z,t,ad,k));tarzDegistir(mac,t,ad,k);tarzTestYaz();}
+function tarzTestDegistir(t,ad){const k=izlemeKomut(MAC_IZLEME,mac,(Z,k)=>tarzDegistir(Z,t,ad,k));tarzDegistir(mac,t,ad,k);arkaIkizKomut({t,hedef:ad,kare:k});tarzTestYaz();}
 let tarzTestSay=0;
 tarzTestYaz();
 
@@ -135,13 +144,14 @@ let tabelaAnahtar='',tabelaSabit='',tabelaBekle=0;
    tuval yüklemesi her kareye binmez; skor ve durum hemen yazılır). dt gerçek süredir, duraklatmada 0. TABELA.yazi denemeler içindir */
 function tabelaSaati(){const s=Math.max(0,Math.floor(mac.gameSec));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
 function tabelaGuncelle(dt){
-  const ph=mac.phase,saat=!MAC_ONCESI.includes(ph)&&ph!=='halftime'&&ph!=='fulltime',alt=MAC_ONCESI.includes(ph)?'MAÇ ÖNCESİ':ph==='halftime'?'DEVRE ARASI':ph==='fulltime'?'MAÇ SONU':tabelaSaati();
+  const anlik=HIZLI_BITIR.anlik&&MAC_ARKA.ikiz&&MAC_ARKA.ikiz.son,skor=anlik?MAC_ARKA.ikiz.son.skor:mac.score;   /* G1-e: ikizle bitince sonuç */
+  const ph=anlik?'fulltime':mac.phase,saat=!MAC_ONCESI.includes(ph)&&ph!=='halftime'&&ph!=='fulltime',alt=MAC_ONCESI.includes(ph)?'MAÇ ÖNCESİ':ph==='halftime'?'DEVRE ARASI':ph==='fulltime'?'MAÇ SONU':tabelaSaati();
   const kalan=Math.round(cizgiDegeri(MAC_SENARYOSU.kalan,mac.sen.t)),tabelaAlt=ph==='isinma'?(kalan>0&&Math.floor(zaman/6)%2?'MAÇA '+kalan+' DK':'HOŞ GELDİNİZ'):alt;
   tabelaBekle-=dt||0;
-  const k=mac.score.join('-')+tabelaAlt;if(k===tabelaAnahtar)return;
-  const sabit=mac.score.join('-')+(saat?'saat':tabelaAlt);if(sabit===tabelaSabit&&tabelaBekle>0)return;
+  const k=skor.join('-')+tabelaAlt;if(k===tabelaAnahtar)return;
+  const sabit=skor.join('-')+(saat?'saat':tabelaAlt);if(sabit===tabelaSabit&&tabelaBekle>0)return;
   tabelaAnahtar=k;tabelaSabit=sabit;tabelaBekle=0.1;TABELA.yazi=tabelaAlt;
-  TABELA.ciz(MAC_GUNU.kadro[0].kisa,MAC_GUNU.kadro[1].kisa,mac.score,tabelaAlt);
+  TABELA.ciz(MAC_GUNU.kadro[0].kisa,MAC_GUNU.kadro[1].kisa,skor,tabelaAlt);
 }
 /* maç olayları: başkanın tepkisi, tribün heyecanı, bakış, para, tabela ve sevinç. Yazılı spiker yoktur (2.8A) */
 function olay(ad,v){
@@ -208,9 +218,9 @@ function santraHizliAdim(dt){
    izlenir (rakip başkanın karar anı atlanmaz; js/loca-giris.js), santradan sonra başlar. İkiz motor temiz bırakılır (izlemeKapat). Aradaki
    olaylar sunuma verilmez (başkan tepkisi, pul simgeleri, flaş yığılmaz); maç sonu olayı verilir. Düğme js/arayuz.js, maç sonu kartı
    js/ekran-mac-sonu.js (hızlı bitince hemen açılır) */
-const HIZLI_BITIR={aktif:false,bekliyor:false,bitti:false,butce:30};
+const HIZLI_BITIR={aktif:false,bekliyor:false,bitti:false,anlik:false,butce:30,isciButce:250};
 function hizliBitirIste(){
-  const H=HIZLI_BITIR;if(H.aktif||H.bekliyor||mac.phase==='fulltime')return;
+  const H=HIZLI_BITIR;if(H.aktif||H.bekliyor||H.anlik||mac.phase==='fulltime')return;
   H.bekliyor=true;
   if(MAC_ONCESI.includes(mac.phase)&&typeof btnMacaGec!=='undefined'&&btnMacaGec.onclick)btnMacaGec.onclick();
 }
@@ -218,14 +228,19 @@ function hizliBitirIste(){
 function hizliBitirHazir(){
   const H=HIZLI_BITIR;if(!H.bekliyor||MAC_ONCESI.includes(mac.phase))return;
   if((typeof KARAR_ANI!=='undefined'&&KARAR_ANI.acik)||(typeof TEPE_AN!=='undefined'&&TEPE_AN.aktif)||(typeof LOCA_GIRIS!=='undefined'&&LOCA_GIRIS.aktif))return;
-  H.bekliyor=false;if(mac.phase==='fulltime')return;H.aktif=true;izlemeKapat(MAC_IZLEME);olayKuyrugu.length=0;
+  H.bekliyor=false;if(mac.phase==='fulltime')return;
+  /* G1-e: sonuç ikizi hazırsa (js/mac-arka.js) kart hemen ikizin sonucuyla açılır; canlı motor durur, tabela sonucu yazar */
+  const anlik=arkaIkizHazir();
+  izlemeKapat(MAC_IZLEME);olayKuyrugu.length=0;
   MAC_HIZ.anda=false;   /* izlemeHizi hızlı bitirmede çağrılmaz: şeritteki "önemli an" göstergesi yanık kalmasın (F2 incelemesi) */
+  if(anlik){H.anlik=true;H.bitti=true;UZATMA.t=-1;PARA.t=-1;for(const F of FLASLAR)F.t=9;return;}
+  H.aktif=true;
 }
 /* bu karenin adımları; çizimin dts'ini döndürür */
 function hizliBitirAdim(dt){
   const H=HIZLI_BITIR;if(!(dt>0))return 0;
-  const t0=performance.now();let n=0;
-  while(mac.phase!=='fulltime'&&performance.now()-t0<H.butce){mac.step(ADIM);n++;ligCanliAdim(1);if(mac.phase!=='fulltime')olayKuyrugu.length=0;}   /* F7: öbür maçlar da */
+  const t0=performance.now(),butce=MAC_ARKA.kip==='isci'?H.isciButce:H.butce;let n=0;   /* G1-e: işçi kipinde öbür maçlar arkada; yalnız bizim maç */
+  while(mac.phase!=='fulltime'&&performance.now()-t0<butce){mac.step(ADIM);n++;ligCanliAdim(1);if(mac.phase!=='fulltime')olayKuyrugu.length=0;}   /* F7: öbür maçlar da */
   const son=olayKuyrugu.filter(o=>o[0]==='fulltime');olayKuyrugu.length=0;
   for(const a of AKTORLER){a.px=a.kaynak.x;a.pz=a.kaynak.z;}
   {const b=mac.ball;TOP.px=b.x;TOP.py=b.y;TOP.pz=b.z;}
@@ -247,8 +262,10 @@ function izlemeHizi(dt){
 let birikim=0,zaman=0;
 function macKare(dt){
   hizliBitirHazir();
+  if(MAC_ARKA.T0===null&&!MAC_ONCESI.includes(mac.phase))MAC_ARKA.T0=mac.kare||0;   /* G1-e: Canlı Skor'un öbür maç saati bizim santramızdan */
   let dts;
-  if(HIZLI_BITIR.aktif)dts=hizliBitirAdim(dt);   /* F2: "Maçı bitir (TEST)" */
+  if(HIZLI_BITIR.anlik)dts=0;   /* G1-e: sonuç ikizle bitti; canlı motor durur */
+  else if(HIZLI_BITIR.aktif)dts=hizliBitirAdim(dt);   /* F2: "Maçı bitir (TEST)" */
   else if(SANTRA_HIZLI.aktif)dts=santraHizliAdim(dt);   /* F3-0: "Santraya geç" maç öncesini görüntüsüz bitirir */
   else{
   izlemeHizi(dt);
@@ -267,6 +284,7 @@ function macKare(dt){
   if(n>=240)birikim=0;
   ligCanliAdim(nLig);ligCanliHizli(dt);
   }
+  arkaIkizKarsilastir(mac);   /* G1-e: doğal biten maçta ikizin sonucu aynı mı (bir kez) */
   const al=birikim/ADIM,b=mac.ball,bx=lerp(TOP.px,b.x,al),bz=lerp(TOP.pz,b.z,al)-MOTOR_Z,T=mac.tunel;
   /* aktörler: konum, poz ve kök (js/animasyon.js) */
   /* E (2026-10-23): 2D'de kopuş — figür animasyonu çalışmaz, pul motorun alanlarından beslenir (js/pul.js pulAktor; STIL.pul.kopus) */

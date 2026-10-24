@@ -15,7 +15,15 @@
      kulupHazirMi(k, kulüp, tarih) · hukmenKarari(k, f) → null | {skor, neden:'ev'|'konuk'|'cift'} (neden: hükmen kaybeden taraf)
      hukmenSonucu(h) → sonucKaydi biçiminde düz sonuç (atansız goller, boş listeler, varsayılan istatistik; js/mac-sonuc.js macKaydiYaz kabul eder ve
        kararı yeniden hesaplayıp karşılaştırır)
-     digerMacPlani(k, f) → {macId, ev, konuk, tohum, secenek} ya da {macId, ev, konuk, tohum, hukmen} (tarayıcıdaki LIG_CANLI ve sezon-deneme) */
+     digerMacPlani(k, f) → {macId, ev, konuk, tohum, secenek} ya da {macId, ev, konuk, tohum, hukmen} (tarayıcıdaki LIG_CANLI ve sezon-deneme)
+   G1-e (2026-10-24, kullanıcı isteği: "Maçı bitir" doğrudan sonuca): maçı arkada (Web Worker, js/mac-isci.js; tarayıcı düzeni js/mac-arka.js)
+   baştan sonuna oynatan saf parçalar. Motorun sonucu yalnız seçenek, tohum ve dışarıdan verilen tarz komutlarıyla belirlenir; sunum motora yazmaz:
+     arkaMacOynat(Match, secenek, {oncesi, komutlar}) → {son: sonucKaydi, ornekler, adim}. oncesi false: santrayı ilk adımda alır (macaGec; öbür
+       maçlar, kilit adımla aynı); true: maç öncesi doğal adımlanır (bizim maçın sonuç ikizi; canlı motor da macaGec almaz). komutlar
+       [{t, hedef, kare}]: js/mac-tarz.js tarzDegistir baştan kurulur (komut kendi karesinde devreye girer; öncesinde motoru değiştirmez).
+     ornekler: ARKA_ORNEK_KARE'de bir {kare, skor, dk, faz} ve son durum (Canlı Skor; arkaMacDurum ile karesine göre okunur).
+     arkaDosyalari(betik listesi) → worker'ın yükleyeceği dosyalar: ortak, kadrolar ve lig + index.html'de js/mac-motoru.js'ten js/goruntu.js'e
+       kadarki motor dosyaları + bu dosya. Node'da (araclar/kariyer-deneme.js 3.8) yalnız bu listeyle kurulan bağlamın sonucu tam bağlamınkiyle aynıdır. */
 'use strict';
 function haftaninDigerMaclari(k,macId){
   const f=(k.fikstur||[]).find(x=>x.id===macId);if(!f)return[];
@@ -41,6 +49,28 @@ function digerMacPlani(k,f){
 function digerMacSecenegi(k,f){
   const tohum=macTohumu(k.dunyaTohumu,f.id),kadro=[macKadrosu(k,f.ev,f.tarih,tohum),macKadrosu(k,f.konuk,f.tarih,tohum)];
   return{kadro,tohum,tunel:{x:0,z:-6},tarz:[f.ev,f.konuk].map(id=>kulupHocasi(k,id).hoca.tarz)};
+}
+const ARKA_ORNEK_KARE=300;   // Canlı Skor örneği: 5 motor sn'de bir
+const macOrnek=m=>({kare:m.kare||0,skor:m.score.slice(),dk:m.minuteLabel(),faz:m.phase});
+function arkaMacOynat(MatchSinifi,secenek,o){
+  o=o||{};const m=new MatchSinifi(()=>{},secenek);
+  if(!o.oncesi)m.macaGec();
+  for(const c of o.komutlar||[])tarzDegistir(m,c.t,c.hedef,c.kare);
+  const ornekler=[macOrnek(m)],sinir=o.sinir||60*60*90;let n=0;
+  while(m.phase!=='fulltime'&&n<sinir){m.step(1/60);n++;if((m.kare||0)%ARKA_ORNEK_KARE===0)ornekler.push(macOrnek(m));}
+  ornekler.push(macOrnek(m));
+  return{son:m.sonucKaydi(),ornekler,adim:n,bitti:m.phase==='fulltime'};
+}
+/* örneklerden karenin durumu (o kareye kadarki son örnek) ya da null */
+function arkaMacDurum(ornekler,kare){
+  let a=0,b=(ornekler||[]).length-1,r=null;
+  while(a<=b){const c=(a+b)>>1;if(ornekler[c].kare<=kare){r=ornekler[c];a=c+1;}else b=c-1;}
+  return r;
+}
+function arkaDosyalari(liste){
+  const L=liste.map(s=>String(s).replace(/^.*?(js\/[^?#]+).*$/,'$1')),i=L.indexOf('js/mac-motoru.js'),j=L.indexOf('js/goruntu.js');
+  if(i<0||j<i)throw new Error('Arka dosyalar: motor dosyaları bulunamadı');
+  return['js/ortak.js','js/kadrolar.js','js/lig.js'].concat(L.slice(i,j),['js/lig-maclari.js']);
 }
 function haftaSonuclariUygula(k,macId,sonuc,tohum,ek,digerleri){
   const f=(k.fikstur||[]).find(x=>x.id===macId);

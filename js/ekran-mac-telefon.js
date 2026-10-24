@@ -20,10 +20,13 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
   function digerVerisi(once){
     const L=typeof LIG_CANLI!=='undefined'?LIG_CANLI:[],ad=id=>(MAC_GUNU.bulten.adlar||{})[id]||id;
     return L.map(x=>{const m=x.m;
-      if(!m){const s=x.d.hukmen.skor;return{ev:ad(x.d.ev),dep:ad(x.d.konuk),skor:s[0]+' – '+s[1],durum:'hükmen',kisaDurum:'Hük.',canli:false};}   /* G1-a */
-      const ph=m.phase,dk=m.minuteLabel()+"'";
+      if(!m&&x.d.hukmen){const s=x.d.hukmen.skor;return{ev:ad(x.d.ev),dep:ad(x.d.konuk),skor:s[0]+' – '+s[1],durum:'hükmen',kisaDurum:'Hük.',canli:false};}   /* G1-a */
+      /* G1-e: işçi kipinde örneklerden, bizim santramızdan beri geçen kareye göre (js/mac-arka.js) */
+      const o=m?null:(once||MAC_ARKA.T0===null?null:arkaMacDurum(x.ornekler,(mac.kare||0)-MAC_ARKA.T0));
+      if(!m&&!o)return{ev:ad(x.d.ev),dep:ad(x.d.konuk),skor:'–',durum:'başlamadı',kisaDurum:MAC_GUNU.bulten.saat||'',canli:false};
+      const ph=m?m.phase:o.faz,dk=(m?m.minuteLabel():o.dk)+"'",sk=m?m.score:o.skor;
       const durum=once?'başlamadı':ph==='halftime'?'devre arası':ph==='fulltime'?'maç sonu':dk;
-      return{ev:ad(x.d.ev),dep:ad(x.d.konuk),skor:once?'–':m.score[0]+' – '+m.score[1],durum,kisaDurum:once?MAC_GUNU.bulten.saat||'':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':dk,
+      return{ev:ad(x.d.ev),dep:ad(x.d.konuk),skor:once?'–':sk[0]+' – '+sk[1],durum,kisaDurum:once?MAC_GUNU.bulten.saat||'':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':dk,
         canli:!once&&ph!=='halftime'&&ph!=='fulltime'};});
   }
   function macVerisi(){

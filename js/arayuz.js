@@ -23,7 +23,7 @@ const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();
 const btnHizliBitir=$('btnHizliBitir'),hizliBitirYazi=btnHizliBitir.querySelector('span');
 btnHizliBitir.onclick=()=>{hizliBitirIste();if(HIZLI_BITIR.bekliyor||HIZLI_BITIR.aktif){btnHizliBitir.disabled=true;btnHizliBitir.setAttribute('aria-busy','true');}};
 function hizliBitirGosterge(){
-  if(mac.phase==='fulltime'){if(!btnHizliBitir.hidden)btnHizliBitir.hidden=true;return;}
+  if(mac.phase==='fulltime'||HIZLI_BITIR.anlik){if(!btnHizliBitir.hidden)btnHizliBitir.hidden=true;return;}   /* G1-e: sonuç ikiziyle anında */
   const H=HIZLI_BITIR;if(!H.aktif&&!H.bekliyor)return;
   const y=H.aktif?'Bitiriliyor… '+mac.minuteLabel()+"'":'Santra bekleniyor…';if(hizliBitirYazi.textContent!==y)hizliBitirYazi.textContent=y;
 }

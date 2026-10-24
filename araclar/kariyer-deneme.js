@@ -631,6 +631,35 @@ bolum('3.8 — ligin öbür maçları: haftanın sekiz maçı, tek komut (F7)');
   denetle('Kaydet–yükle sonrası 14. hafta: yedi öbür maç, sonra 16 kulüp 14 maç',y.tamam&&h14.D.length===7&&MG('sezonTablosu')(k14).every(t=>t.O===14)&&Object.keys(k14.maclar).length===16&&!MG('kariyerDogrula')(k14).length);
 }
 
+bolum('3.8b — maç arkada (G1-e: işçinin saf parçası; Node eşitliği)');
+{
+  const {motorYukle}=require('./motor-yukle'),MC=motorYukle().ctx,MG=a=>vm.runInContext(a,MC);vm.runInContext('MOTOR_AYAR.macSuresiDk=6',MC);
+  const KK=MG('kariyerKomut'),Match=MG('Match'),oyna=MG('arkaMacOynat');
+  const k=KK(MG('kariyerBaslat')({tohum:7}),x=>MG('duragaIlerle')(x)).kariyer,id13='mac-2627-13-demirkapi-akdeniz';
+  const D=MG('haftaninDigerMaclari')(k,id13).slice(0,2).map(f=>MG('digerMacSecenegi')(k,f)),G=MG('macGirdisi')(k,id13);
+  const kilit=sec=>{const m=new Match(()=>{},sec);m.macaGec();for(let i=0;i<60*60*30&&m.phase!=='fulltime';i++)m.step(1/60);return m;};
+  denetle('Öbür maç: arkaMacOynat (santra ilk adımda) ≡ kilit adımlı motorun sonucu',D.every(sec=>metin(oyna(Match,sec).son)===metin(kilit(sec).sonucKaydi())));
+  const bizSec={kadro:G.kadro,tohum:G.tohum,tunel:{x:0,z:-6},tarz:G.tarz.slice()};
+  const dogal=(sec,K)=>{const m=new Match(()=>{},sec);for(let i=0;i<60*60*40&&m.phase!=='fulltime';i++){for(const c of K||[])if((m.kare||0)===c.kare-1)MG('tarzDegistir')(m,c.t,c.hedef,c.kare);m.step(1/60);}return m;};
+  const R=oyna(Match,bizSec,{oncesi:true});
+  denetle('Sonuç ikizi: maç öncesi doğal adımlanır (macaGec yok) ve doğal oynanan maçla aynı; macaGec\'li oynatma farklı (santra anı sonucu değiştirir)',
+    R.bitti&&metin(R.son)===metin(dogal(bizSec).sonucKaydi())&&metin(oyna(Match,bizSec).son)!==metin(R.son),`${metin(R.son.skor)} · ${R.adim} adım`);
+  const K=[{t:0,hedef:'konumsal',kare:30000},{t:1,hedef:'direkt',kare:42000}],RK=oyna(Match,bizSec,{oncesi:true,komutlar:K});
+  denetle('Tarz komutları (TEST paneli): baştan kurulan komut, canlı motorda karesinden önce verilen komutla aynı sonucu verir; komutsuzdan farklı',
+    metin(RK.son)===metin(dogal(bizSec,K).sonucKaydi())&&metin(RK.son)!==metin(R.son),metin(RK.son.skor));
+  {const m=new Match(()=>{},bizSec);let ok=true,say=0;
+   for(let i=0;i<60*60*40&&m.phase!=='fulltime';i++){m.step(1/60);if((m.kare||0)%997===0){const o=MG('arkaMacDurum')(R.ornekler,m.kare);
+     if(o&&o.kare<=m.kare&&m.kare-o.kare<MG('ARKA_ORNEK_KARE')){say++;const m2=dogal;}
+     if(!o||o.kare>m.kare)ok=false;}}
+   const son=R.ornekler[R.ornekler.length-1],d=MG('arkaMacDurum')(R.ornekler,1e9);
+   denetle('Örnekler: 5 motor sn\'de bir (kare sırasıyla), son örnek maç sonu; arkaMacDurum karesine kadarki son örneği verir',ok&&say>0&&R.ornekler.every((o,i)=>i===0||o.kare>=R.ornekler[i-1].kare)&&son.faz==='fulltime'&&d===son&&MG('arkaMacDurum')(R.ornekler,-1)===null,`${R.ornekler.length} örnek`);}
+  {const html=fs.readFileSync(path.join(KOK,'index.html'),'utf8'),L=[...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m=>m[1]),F=MG('arkaDosyalari')(L);
+   const I=vm.createContext({console});for(const f of F)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),I,{filename:f});vm.runInContext('MOTOR_AYAR.macSuresiDk=6',I);
+   const IG=a=>vm.runInContext(a,I),RI=IG('arkaMacOynat')(IG('Match'),JSON.parse(metin(D[0]))),RB=IG('arkaMacOynat')(IG('Match'),JSON.parse(metin(bizSec)),{oncesi:true,komutlar:K});
+   denetle('İşçinin dosya listesi (arkaDosyalari: ortak, kadrolar, lig, motor dosyaları, lig-maclari) yeter: yalnız onlarla kurulan bağlamda sonuçlar tam bağlamla aynı',
+     !F.includes('js/kariyer.js')&&!F.includes('js/mac-arka.js')&&F[F.length-1]==='js/lig-maclari.js'&&metin(RI.son)===metin(oyna(Match,D[0]).son)&&metin(RB.son)===metin(RK.son),`${F.length} dosya`);}
+}
+
 bolum('3.9 — kadro yeterliliği: hükmen güvenlik ağı (G1-a; oyunun yüklediği dosyalar)');
 {
   const T=oyunAl,KK=T('kariyerKomut'),id13='mac-2627-13-demirkapi-akdeniz',toh=id=>T('macTohumu')(7,id);
