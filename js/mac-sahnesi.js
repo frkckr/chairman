@@ -42,6 +42,18 @@ const MAC_SECENEK={kadro:MAC_GUNU.kadro,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohu
 let MAC_IZLEME=null;
 const mac=new Match((ad,v)=>{olayKuyrugu.push([ad,v]);if(MAC_IZLEME)izlemeAnaOlay(MAC_IZLEME,ad,v);},MAC_SECENEK);
 MAC_IZLEME=izlemeKur(mac,Match,MAC_SECENEK);
+/* ---- F7 (2026-10-24; yol haritası 3.8): haftanın öbür maçları — görüntüsüz, kilit adımlı ----
+   Kariyer maçında haftanın öbür yedi maçı (MAC_GUNU.digerleri; seçenekleri js/lig-maclari.js digerMacSecenegi) bu sayfada görüntüsüz oynanır:
+   santrayı ilk adımda alırlar (maç öncesi yok), bizim santramızdan sonra bizim motorun attığı her adımda birer adım atarlar — hepsi 19:00'da
+   başlayan maçlar gibi; duraklatma ve telefon onları da durdurur, izleme hızı ve hızlı bitirme onları da hızlandırır (ligCanliAdim). Olayları
+   dinlenmez; Canlı Skor skorlarını ve dakikalarını okur. Bizim maç bitince bitmeyenler sürer; "Maç bitti" kartının "Odaya dön"ü kalanını
+   tamamlar (ligCanliBitir) ve sekiz sonucu tek komutla uygular (js/ekran-mac-sonu.js, js/lig-maclari.js haftaSonuclariUygula). Aynı seçenek ve
+   tohumla Node'daki araclar/sezon-deneme.js aynı maçları oynar */
+const LIG_CANLI=MAC_GUNU.kariyer&&Array.isArray(MAC_GUNU.digerleri)?MAC_GUNU.digerleri.map(d=>{const m=new Match(()=>{},d.secenek);m.macaGec();return{d,m};}):[];
+function ligCanliAdim(n){for(const x of LIG_CANLI)for(let i=0;i<n&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);}
+const ligCanliSuruyor=()=>LIG_CANLI.some(x=>x.m.phase!=='fulltime');
+/* kalan adımlar (güvenlik sınırı maç başına 60 dk'lık adım); dönüşte bitmiş mi */
+function ligCanliBitir(){for(const x of LIG_CANLI)for(let i=0;i<60*60*60&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);return!ligCanliSuruyor();}
 /* B4: geliştirici panelinde iki takımın tarzı (TEST; oyun ekranına tarz adı yazılmaz — F). Geçişte harmanın payları ve durum */
 function tarzTestYaz(){const e=document.getElementById('tarzTest');if(!e)return;
   const y=t=>{const g=tarzGecisDurum(mac,t);return tarzAdi(mac,t)+(g==='talimat'?' (talimat: bir sonraki duruşta)':g!=null?' (geçişte)':'');};
@@ -212,7 +224,7 @@ function hizliBitirHazir(){
 function hizliBitirAdim(dt){
   const H=HIZLI_BITIR;if(!(dt>0))return 0;
   const t0=performance.now();let n=0;
-  while(mac.phase!=='fulltime'&&performance.now()-t0<H.butce){mac.step(ADIM);n++;if(mac.phase!=='fulltime')olayKuyrugu.length=0;}
+  while(mac.phase!=='fulltime'&&performance.now()-t0<H.butce){mac.step(ADIM);n++;ligCanliAdim(1);if(mac.phase!=='fulltime')olayKuyrugu.length=0;}   /* F7: öbür maçlar da */
   const son=olayKuyrugu.filter(o=>o[0]==='fulltime');olayKuyrugu.length=0;
   for(const a of AKTORLER){a.px=a.kaynak.x;a.pz=a.kaynak.z;}
   {const b=mac.ball;TOP.px=b.x;TOP.py=b.y;TOP.pz=b.z;}
@@ -220,6 +232,8 @@ function hizliBitirAdim(dt){
   if(mac.phase==='fulltime'){H.aktif=false;H.bitti=true;UZATMA.t=-1;PARA.t=-1;for(const F of FLASLAR)F.t=9;for(const [ad,v] of son)olay(ad,v);}
   return Math.min(n*ADIM,0.1);
 }
+/* F7: hızlı bitirmeden sonra uzatması süren öbür maçlar aynı bütçeyle görüntüsüz biter (kart açıkken de) */
+function ligCanliHizli(){if(!HIZLI_BITIR.bitti||!ligCanliSuruyor())return;const t0=performance.now();while(ligCanliSuruyor()&&performance.now()-t0<HIZLI_BITIR.butce)ligCanliAdim(1);}
 
 /* U1: bu karenin etkin hızı — oyuncunun seçimi, önemli anlarda 1×'e iner (eğri motor zamanında: izlemeHedefHiz); seçim değişince ya da ikiz
    yokken (pencere olayla başlar) ani sıçrama olmasın diye gerçek zamanda saniyede en çok IZLEME_GECIS kat değişir. Duraklatmada (dt 0) değişmez */
@@ -239,15 +253,18 @@ function macKare(dt){
   izlemeHizi(dt);
   dts=dt*MAC_HIZ.deger;zaman+=dts;birikim+=dts;
   let n=0;
+  let nLig=0;
   while(birikim>=ADIM&&n<240){
     for(const a of AKTORLER){a.px=a.kaynak.x;a.pz=a.kaynak.z;}
     const b=mac.ball;TOP.px=b.x;TOP.py=b.y;TOP.pz=b.z;
+    if(!MAC_ONCESI.includes(mac.phase))nLig++;   /* F7: öbür maçlar bizim santramızdan sonra adım adım */
     mac.step(ADIM);birikim-=ADIM;n++;
     while(olayKuyrugu.length){const [ad,v]=olayKuyrugu.shift();olay(ad,v);}
     izlemeAdim(MAC_IZLEME);   /* U1: ikiz motor (js/mac-izleme.js) */
   }
   if((tarzGecisDurum(mac,0)!=null||tarzGecisDurum(mac,1)!=null)&&++tarzTestSay%20===0)tarzTestYaz();   /* B4b: geçişte panel satırı */
   if(n>=240)birikim=0;
+  ligCanliAdim(nLig);ligCanliHizli();
   }
   const al=birikim/ADIM,b=mac.ball,bx=lerp(TOP.px,b.x,al),bz=lerp(TOP.pz,b.z,al)-MOTOR_Z,T=mac.tunel;
   /* aktörler: konum, poz ve kök (js/animasyon.js) */

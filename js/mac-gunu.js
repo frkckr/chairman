@@ -7,7 +7,8 @@
    MAC_KADRO, LIG tablosu ve son maçlar; tohum ve tarz js/mac-sahnesi.js'teki adres parametrelerinden (?tohum, ?tarz).
    Kariyer yolu kurulamazsa (bekleyen maç günü işi yok, yolda karar gerektiren haber, kadro eksik) MAC_GUNU.hata yazılır, adres temizlenir ve
    oda açılır (js/ekran-mac-oncesi.js ON_EKRAN).
-   MAC_GUNU: {kariyer, macId, biz, tohum, kadro:[ev, konuk], bulten, stat, doluluk, deplasman, zemin, hata?}
+   MAC_GUNU: {kariyer, macId, biz, tohum, kadro:[ev, konuk], bulten, stat, doluluk, deplasman, zemin, hata?, digerleri?}
+     digerleri (F7): haftanın öbür maçları [{macId, ev, konuk, tohum, secenek}] (js/lig-maclari.js; js/mac-sahnesi.js LIG_CANLI oynatır).
      biz: başkanın kulübünün takım sırası (0 ev, 1 konuk; motorda takım 0 hep ev sahibidir). kadro: js/mac-girdi.js macKadrosu biçimi (tamAd dahil).
      bulten: maç öncesi ekranının verisi. stat: statın sahibi ('kulup' ya da ev sahibinin kimliği), statTarifi: tarif (F1-c: ev sahibinin statı);
      doluluk ve deplasman payı TEST (2.8O'dan beri sabit).
@@ -38,6 +39,7 @@ const MAC_GUNU=(()=>{
     const is=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'&&x.veri.macId===macId);
     if(!is)throw new Error('Bu maçın günü kariyerde bekleyen bir iş değil');
     const girdi=macGirdisi(k,macId),biz=(k.kisiler[k.baskanId]||{}).kulupId;
+    girdi.digerleri=haftaninDigerMaclari(k,macId).map(f=>{const sec=digerMacSecenegi(k,f);return{macId:f.id,ev:f.ev,konuk:f.konuk,tohum:sec.tohum,secenek:sec};});   /* F7 */
     oyunKomut(x=>ajandaIsiYap(x,is.id),true);
     if(OYUN.kariyer.isler[is.id]){OYUN.oturum.kaydet();throw new Error('Stada giderken yolda karar gerektiren bir haber geldi; maç günü bekliyor');}
     return Object.assign(girdi,statKur(girdi.ev,k.kulupler[girdi.ev].ad,biz,girdi.hafta));

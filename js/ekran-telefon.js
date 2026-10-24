@@ -11,7 +11,7 @@
      kartı kalktı), altta sabit sırada iki uygulama (Mesajlar, Canlı Skor). Mesajlar: kişi listesi → tek konuşma (konuşma yoksa boş liste, yazı
      yok). Canlı Skor: günün maçları → ayrıntı. acilis: ekran yeni açıldı
      (kısa büyüyerek belirme; aynı ekran yeniden çizilirken verilmez).
-     Maçta görünüm aynıdır; cevap verilmez (maç içi kariyer cevabı Aşama 3'te). Diğer maçların verisi 3.8'e kadar bağlı değildir;
+     Maçta görünüm aynıdır; cevap verilmez (maç içi kariyer cevabı Aşama 3'te). Diğer maçlar F7'den beri bağlıdır (canlı skor ve sonuçlar);
      bağlanınca aynı tek satır kalıbıyla listeye gelirler, eksikleri için uyarı yazılmaz (N2, kullanıcı kararı 2026-10-04). */
 const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 /* bileşenin görünüşü: oda (.oda) ve maç telefonu (.macTelefon) içinde aynı. Renkler STIL.kagit'ten (--k-*), telefonunkiler STIL.kagit.telefon'dan.
@@ -289,6 +289,8 @@ function telefonCiz(k,T,s={}){
       ic+='<h5>Bugün</h5>'+telMacSatiri({sol:M.kisaDurum||M.durum,canli:!!M.canli,ev:M.ev,orta:M.skor,dep:M.dep,durum:M.durum},'data-eylem="skorAc" aria-expanded="'+(T.skorAc?'true':'false')+'"');
       if(T.skorAc&&M.ist)ic+='<table class="tel-ist"><thead><tr><th>'+yazT(M.evKisa)+'</th><th></th><th>'+yazT(M.depKisa)+'</th></tr></thead><tbody>'+
         M.ist.map(r=>'<tr><td>'+yazT(r[1])+'</td><th scope="row">'+yazT(r[0])+'</th><td>'+yazT(r[2])+'</td></tr>').join('')+'</tbody></table>';
+      /* F7: haftanın öbür maçları, canlı */
+      if(M.digerleri&&M.digerleri.length)ic+=M.digerleri.map(d=>telMacSatiri({sol:d.kisaDurum,canli:d.canli,ev:d.ev,orta:d.skor,dep:d.dep,durum:d.durum})).join('');
     }else if(k){
       const mac=bekleyenIsler(k).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu');
       /* F1-b: takımlar fikstürden (maç günü işinin maç kimliği); eski kayıtta başlıktan */
@@ -297,7 +299,7 @@ function telefonCiz(k,T,s={}){
         ic+=(bugun?'<h5>Bugün</h5>':'<p class="tel-bos">Bugün maç yok.</p><h5>Sıradaki · '+yazT(telGunAdi(mac.tarih)+' '+gunAyYazi(mac.tarih))+'</h5>')+
           telMacSatiri({sol:saatYazi(mac.dakika),ev,orta:'–',dep:dep||'',durum:'başlamadı'});}
       else ic+='<p class="tel-bos">Yaklaşan maç yok.</p>';
-      /* F2: kulübün son oynanan maçı (js/mac-sonuc.js kulubunSonMaci). Diğer maçlar oynanmaz (3.8) */
+      /* F2: kulübün son oynanan maçı (js/mac-sonuc.js kulubunSonMaci); F7'den beri haftanın öbür sonuçları da */
       const son=typeof kulubunSonMaci==='function'&&k.fikstur?kulubunSonMaci(k,(k.kisiler[k.baskanId]||{}).kulupId):null;
       /* F3-b: satıra dokununca maçın istatistiği ve beklenen gol (js/mac-okuma.js; kayıttan, gözlenebilir sayılar) */
       const O=son&&typeof macOkumasi==='function'?macOkumasi(k,son.f.id):null;
@@ -306,6 +308,9 @@ function telefonCiz(k,T,s={}){
       if(son&&O&&T.skorAc){const S=macOkumaSatirlari(O),ters=O.t===1,ev=k.kulupler[son.f.ev].kisa||'',dep=k.kulupler[son.f.konuk].kisa||'';
         ic+='<table class="tel-ist"><thead><tr><th>'+yazT(ev)+'</th><th></th><th>'+yazT(dep)+'</th></tr></thead><tbody>'+
           S.map(r=>'<tr><td>'+yazT(ters?r[2]:r[1])+'</td><th scope="row">'+yazT(r[0])+'</th><td>'+yazT(ters?r[1]:r[2])+'</td></tr>').join('')+'</tbody></table>';}
+      /* F7: o haftanın öbür sonuçları (ligin bütün maçları oynanır) */
+      if(son){const D=k.fikstur.filter(x=>x.hafta===son.f.hafta&&x.id!==son.f.id&&k.maclar[x.id]);
+        if(D.length)ic+='<h5>'+yazT(son.f.hafta+'. haftanın öbür sonuçları')+'</h5>'+D.map(x=>{const s=k.maclar[x.id];return telMacSatiri({sol:'Bitti',ev:k.kulupler[x.ev].ad,orta:s.skor[0]+' – '+s.skor[1],dep:k.kulupler[x.konuk].ad,durum:'bitti'});}).join('');}
     }
     ic+='</div>';
   }

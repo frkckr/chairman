@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /* ============ Chairman — sezon denemesi: görüntüsüz haftalar, maç sonucu kariyere (F2, 2026-10-23; yol haritası 3.6) ============
    Yeni kariyer kurulur; her hafta oyuncunun yolu izlenir: İlerle (duragaIlerle) → maç günü işi (ajandaIsiYap) → maç girdisi (macGirdisi) →
-   görüntüsüz maç (Match, macaGec, 1/60 sn adımlarla sonuna dek) → sonuç komutu (macSonucuUygula). Ölçülenler: maç başına süre ve adım,
-   haftanın 8 maçının tahmini süresi (3.8 "diğer maçlar" kararı için veri), sayaçlar (gol, kart, sakatlık, cezalı ve sakat), puan durumundaki
-   yerimiz ve kayıt boyu. Aynı tohumla ikinci koşu birebir aynı kariyeri vermelidir (belirlenimcilik); --kaydet her haftadan sonra kariyeri
+   görüntüsüz maç (Match, macaGec, 1/60 sn adımlarla sonuna dek) → sonuç komutu. F7 (2026-10-24): haftanın öbür yedi maçı da oynanır
+   (js/lig-maclari.js digerMacSecenegi — tarayıcıdaki LIG_CANLI ile aynı seçenek) ve sekiz sonuç tek komutla uygulanır (haftaSonuclariUygula).
+   Ölçülenler: bizim maçın ve haftanın sekiz maçının süresi, sayaçlar (gol, kart, sakatlık, cezalı ve sakat), puan durumundaki yerimiz,
+   bütün kulüplerin oynadığı maç sayısının eşitliği ve kayıt boyu. Aynı tohumla ikinci koşu birebir aynı kariyeri vermelidir (belirlenimcilik); --kaydet her haftadan sonra kariyeri
    bellek deposuna yazıp geri yükler ve yüklenenle sürer.
    Not: maç tarayıcıdaki maçla birebir aynı değildir — tarayıcı Match seçeneğine stadın zemin, atmosfer, kulübe ve tribün alanlarını da verir
    (js/mac-sahnesi.js MAC_SECENEK; stat tarifleri motor yükleyicinin dışındadır). Bu araç maliyet ve belirlenim ölçüsüdür, denge ölçüsü değildir
@@ -21,8 +22,9 @@ const MAKS=60*60*60;   /* güvenlik sınırı: 60 dakikalık adım (20 dakikalı
 
 function sezon(){
   const {ctx}=motorYukle(),G=a=>vm.runInContext(a,ctx);
-  const [kariyerBaslat,KK,duragaIlerle,ajandaIsiYap,macGirdisi,uygula,dogrula,sezonTablosu,kariyerKaydet,kariyerYukle,bellekDeposu,kulupOyunculari,Match]=
-    ['kariyerBaslat','kariyerKomut','duragaIlerle','ajandaIsiYap','macGirdisi','macSonucuUygula','kariyerDogrula','sezonTablosu','kariyerKaydet','kariyerYukle','bellekDeposu','kulupOyunculari','Match'].map(G);
+  const [kariyerBaslat,KK,duragaIlerle,ajandaIsiYap,macGirdisi,dogrula,sezonTablosu,kariyerKaydet,kariyerYukle,bellekDeposu,kulupOyunculari,Match,haftaninDigerMaclari,digerMacSecenegi,haftaUygula]=
+    ['kariyerBaslat','kariyerKomut','duragaIlerle','ajandaIsiYap','macGirdisi','kariyerDogrula','sezonTablosu','kariyerKaydet','kariyerYukle','bellekDeposu','kulupOyunculari','Match','haftaninDigerMaclari','digerMacSecenegi','haftaSonuclariUygula'].map(G);
+  const oyna=sec=>{const m=new Match(()=>{},sec);m.macaGec();let n=0;while(m.phase!=='fulltime'&&n<MAKS){m.step(1/60);n++;}return{m,n};};
   let k=kariyerBaslat({tohum:TOHUM});
   const biz=k.kisiler[k.baskanId].kulupId,satirlar=[],hatalar=[];
   /* sezonun oynanacak haftaları (TEST tarifi: 13–30, 18 hafta); fazlası istenirse sezon sonunda durulur (F2 incelemesi) */
@@ -32,20 +34,21 @@ function sezon(){
     if(!is){hatalar.push('maç günü işi yok ama sezon bitmedi');break;}
     k=KK(k,x=>duragaIlerle(x)).kariyer;
     if(!k.isler[is.id]||k.tarih!==is.tarih||k.gunIciDakika!==is.dakika){hatalar.push(`İlerle maç gününe gitmedi (${k.tarih} ${k.gunIciDakika})`);break;}
-    const Gi=macGirdisi(k,is.veri.macId);
+    const Gi=macGirdisi(k,is.veri.macId),D=haftaninDigerMaclari(k,Gi.macId).map(f=>({f,sec:digerMacSecenegi(k,f)}));
     k=KK(k,x=>ajandaIsiYap(x,is.id)).kariyer;
-    const m=new Match(()=>{},{kadro:Gi.kadro,tohum:Gi.tohum,tunel:{x:0,z:-6},tarz:Gi.tarz.slice()});
-    const t0=process.hrtime.bigint();m.macaGec();let n=0;
-    while(m.phase!=='fulltime'&&n<MAKS){m.step(1/60);n++;}
+    const t0=process.hrtime.bigint(),{m,n}=oyna({kadro:Gi.kadro,tohum:Gi.tohum,tunel:{x:0,z:-6},tarz:Gi.tarz.slice()});
     const ms=Number(process.hrtime.bigint()-t0)/1e6;
-    if(m.phase!=='fulltime'){hatalar.push(`${Gi.macId}: maç ${MAKS} adımda bitmedi`);break;}
+    const O=D.map(d=>Object.assign(d,oyna(d.sec))),msHafta=Number(process.hrtime.bigint()-t0)/1e6;
+    if(m.phase!=='fulltime'||O.some(o=>o.m.phase!=='fulltime')){hatalar.push(`${Gi.macId}: haftanın bir maçı ${MAKS} adımda bitmedi`);break;}
     const S=m.sonucKaydi();
-    k=KK(k,x=>uygula(x,Gi.macId,S,Gi.tohum)).kariyer;
+    k=KK(k,x=>haftaUygula(x,Gi.macId,S,Gi.tohum,{},O.map(o=>({macId:o.f.id,sonuc:o.m.sonucKaydi(),tohum:o.sec.tohum})))).kariyer;
     if(KAYDET){const d=bellekDeposu();kariyerKaydet(d,'s',k);const y=kariyerYukle(d,'s');
       if(!y.tamam||JSON.stringify(y.kariyer)!==JSON.stringify(k)){hatalar.push(`${Gi.macId}: kaydet–yükle farklı`);break;}k=y.kariyer;}
-    const tb=sezonTablosu(k),sira=tb.findIndex(t=>t.id===biz)+1,O=kulupOyunculari(k,biz);
-    satirlar.push({hafta:Gi.hafta,mac:Gi.macId,ev:k.kulupler[Gi.ev].kisa,konuk:k.kulupler[Gi.konuk].kisa,skor:S.skor.join('-'),adim:n,ms:Math.round(ms),
-      gol:S.goller.length,kart:S.kartlar.length,sakatlik:S.sakatliklar.length,cezali:O.filter(p=>p.ceza).length,sakat:O.filter(p=>p.sakat).length,
+    const tb=sezonTablosu(k),sira=tb.findIndex(t=>t.id===biz)+1,Op=kulupOyunculari(k,biz);
+    if(new Set(tb.map(t=>t.O)).size!==1){hatalar.push(`${Gi.hafta}. hafta: kulüplerin oynadığı maç sayısı eşit değil`);break;}
+    satirlar.push({hafta:Gi.hafta,mac:Gi.macId,ev:k.kulupler[Gi.ev].kisa,konuk:k.kulupler[Gi.konuk].kisa,skor:S.skor.join('-'),adim:n,ms:Math.round(ms),msHafta:Math.round(msHafta),
+      haftaGol:S.goller.length+O.reduce((a,o)=>a+o.m.score[0]+o.m.score[1],0),
+      gol:S.goller.length,kart:S.kartlar.length,sakatlik:S.sakatliklar.length,cezali:Op.filter(p=>p.ceza).length,sakat:Op.filter(p=>p.sakat).length,
       sira,puan:tb[sira-1].P,an:`${k.tarih} ${String(Math.floor(k.gunIciDakika/60)).padStart(2,'0')}:${String(k.gunIciDakika%60).padStart(2,'0')}`,kayit:JSON.stringify(k).length});
   }
   if(N===kalan&&!hatalar.length&&Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'))hatalar.push('sezon bitti ama maç günü işi duruyor');
@@ -57,14 +60,14 @@ const t0=Date.now();
 console.log(`Chairman sezon denemesi · ${HAFTA} hafta · dünya tohumu ${TOHUM}${KAYDET?' · her hafta kaydet–yükle':''}`);
 const R=sezon();
 if(HAFTA>R.kalan)console.log(`  (sezonun oynanacak haftası ${R.kalan}; ${HAFTA} yerine ${R.kalan} hafta oynandı, sezon sonunda maç günü işi kalmadı)`);
-console.log('  hafta  maç            skor   adım    ms   gol kart sakat · bizde cezalı/sakat · sıra puan · oda an            kayıt');
-for(const s of R.satirlar)console.log(`  ${String(s.hafta).padStart(5)}  ${(s.ev+'–'+s.konuk).padEnd(13)} ${s.skor.padEnd(6)} ${String(s.adim).padStart(6)} ${String(s.ms).padStart(5)}   ${String(s.gol).padStart(3)} ${String(s.kart).padStart(4)} ${String(s.sakatlik).padStart(5)} · ${String(s.cezali).padStart(6)}/${s.sakat}        · ${String(s.sira).padStart(4)} ${String(s.puan).padStart(5)} · ${s.an} ${String(Math.round(s.kayit/1024)).padStart(5)} KB`);
-const ms=R.satirlar.map(s=>s.ms),ort=ms.length?ms.reduce((a,b)=>a+b,0)/ms.length:0,adim=R.satirlar.reduce((a,s)=>a+s.adim,0);
-console.log(`  Maç başına ${Math.round(ort)} ms (${R.satirlar.length} maç; 1000 adım ${adim?(ms.reduce((a,b)=>a+b,0)/adim*1000).toFixed(1):'—'} ms) · haftanın 8 maçı art arda ~${(8*ort/1000).toFixed(1)} sn (3.8 için bilgi)`);
+console.log('  hafta  maç            skor   adım    ms  hafta ms  hafta gol  gol kart sakat · bizde cezalı/sakat · sıra puan · oda an            kayıt');
+for(const s of R.satirlar)console.log(`  ${String(s.hafta).padStart(5)}  ${(s.ev+'–'+s.konuk).padEnd(13)} ${s.skor.padEnd(6)} ${String(s.adim).padStart(6)} ${String(s.ms).padStart(5)} ${String(s.msHafta).padStart(8)} ${String(s.haftaGol).padStart(9)}  ${String(s.gol).padStart(3)} ${String(s.kart).padStart(4)} ${String(s.sakatlik).padStart(5)} · ${String(s.cezali).padStart(6)}/${s.sakat}        · ${String(s.sira).padStart(4)} ${String(s.puan).padStart(5)} · ${s.an} ${String(Math.round(s.kayit/1024)).padStart(5)} KB`);
+const ms=R.satirlar.map(s=>s.ms),ort=ms.length?ms.reduce((a,b)=>a+b,0)/ms.length:0,adim=R.satirlar.reduce((a,s)=>a+s.adim,0),hOrt=R.satirlar.length?R.satirlar.reduce((a,s)=>a+s.msHafta,0)/R.satirlar.length:0;
+console.log(`  Bizim maç ${Math.round(ort)} ms (${R.satirlar.length} hafta; 1000 adım ${adim?(ms.reduce((a,b)=>a+b,0)/adim*1000).toFixed(1):'—'} ms) · haftanın 8 maçı ${(hOrt/1000).toFixed(1)} sn · hafta başına gol ${(R.satirlar.reduce((a,s)=>a+s.haftaGol,0)/Math.max(1,R.satirlar.length)).toFixed(1)}`);
 let ayni=null;
 if(!TEK&&!R.hatalar.length){const R2=sezon();ayni=R2.metin===R.metin&&!R2.hatalar.length;
   console.log(ayni?'  Belirlenimcilik: aynı tohumla ikinci koşu birebir aynı kariyer':'! Belirlenimcilik: ikinci koşu farklı'+(R2.hatalar.length?' ('+R2.hatalar.join('; ')+')':''));}
 for(const h of R.hatalar)console.log('! '+h);
-if(JSON_DOSYA)fs.writeFileSync(JSON_DOSYA,JSON.stringify({hafta:HAFTA,tohum:TOHUM,kaydet:KAYDET,satirlar:R.satirlar,ortMs:Math.round(ort),ayni,hatalar:R.hatalar},null,1));
+if(JSON_DOSYA)fs.writeFileSync(JSON_DOSYA,JSON.stringify({hafta:HAFTA,tohum:TOHUM,kaydet:KAYDET,satirlar:R.satirlar,ortMs:Math.round(ort),haftaMs:Math.round(hOrt),ayni,hatalar:R.hatalar},null,1));
 console.log(`  Süre ${((Date.now()-t0)/1000).toFixed(1)} sn`);
 process.exit(R.hatalar.length||ayni===false?1:0);

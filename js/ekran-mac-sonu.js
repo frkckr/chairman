@@ -92,7 +92,11 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
     try{
       if(!S.uygulandi){
         const P=typeof MAC_PROTOKOL!=='undefined'&&MAC_PROTOKOL.karar?{id:MAC_PROTOKOL.karar.id,secim:MAC_PROTOKOL.karar.secim,an:MAC_PROTOKOL.karar.an==null?null:MAC_PROTOKOL.karar.an}:null;
-        oyunKomut(k=>macSonucuUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P}));
+        /* F7: haftanın öbür maçları — kalanı tamamlanır, sekiz sonuç tek komutla (biri reddedilirse hiçbiri yazılmaz) */
+        const L=typeof LIG_CANLI!=='undefined'?LIG_CANLI:[];
+        if(L.length&&!ligCanliBitir())throw new Error('Haftanın öbür maçları bitmedi');
+        const D=L.map(x=>({macId:x.d.macId,sonuc:x.m.sonucKaydi(),tohum:x.d.tohum}));
+        oyunKomut(k=>D.length?haftaSonuclariUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P},D):macSonucuUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P}));
         S.uygulandi=true;
       }else OYUN.oturum.kaydet();
     }catch(e){

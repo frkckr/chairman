@@ -32,7 +32,8 @@
        Sıradaki hafta (yalnız başkanın kulübünün maçından sonra): kulübün oynanmamış ilk maçının maç günü işi kurulur (js/fikstur.js siradakiMac, macGunuIsiKur); 30. haftadan sonra yok.
    kulubunSonMaci(k, kulüp): kulübün son oynanan maçı {f: fikstür kaydı, s: k.maclar kaydı} ya da null (Canlı Skor ve bülten).
    macSonucDogrula: k.maclar girdilerinin iç tutarlılığı (EK_DENETIMLER; js/fikstur.js fiksturDogrula kimlik, hafta ve skoru denetler).
-   Kayıt sürümü 8 (F3): maclar girdisinde sutlar, xg ve ilk11 zorunludur; hoca kişileri (js/hoca.js). */
+   Kayıt sürümü 8 (F3): maclar girdisinde sutlar, xg ve ilk11 zorunludur; hoca kişileri (js/hoca.js). F7: öbür maçların kısa kaydında sutlar null
+   (macKaydiYaz kisa; js/lig-maclari.js). */
 'use strict';
 const MAC_SONRASI_DK=120;                       // maç anından odanın açılacağı ana (19:00 → 21:00; TEST)
 const MAC_PENALTI_XG=0.76;                      // penaltının beklenen golü (genel kabul; motorun konum xG'si penaltıyı ayrı tutmaz)
@@ -76,19 +77,18 @@ function kartCezalari(kartlar){
   return S;
 }
 
-function macSonucuUygula(k,macId,sonuc,tohum,ek){
-  ek=ek||{};
-  const f=(k.fikstur||[]).find(x=>x.id===macId);
-  if(!f)throw new Error(`Maç sonucu işlenemedi: fikstürde ${macId} yok`);
+/* F7 (2026-10-24): bir maçın kaydı — doğrulama, k.maclar, iki kulübün son on biri, oyuncu sayaçları (ceza, gol, kart, sakatlık). Bizim maç ve haftanın
+   öbür maçları (js/lig-maclari.js haftaSonuclariUygula) aynı kuralla yazılır. kisa: öbür maçların kısa kaydı — sutlar null (beklenen gol xg'de
+   durur), degisiklikler boş, geçmişe yazılmaz (kayıt boyu; sezonda ~210 maç). Maç günü işi ve zaman bizim maça özgüdür (macSonucuUygula) */
+function macKaydiYaz(k,f,sonuc,tohum,ek,kisa){
+  ek=ek||{};const macId=f.id;
   if(k.maclar[macId])throw new Error(`Maç sonucu işlenemedi: ${macId} zaten uygulanmış`);
   if(f.hafta<k.sezon.ilkHafta)throw new Error(`Maç sonucu işlenemedi: ${f.hafta}. hafta devralınan geçmişte`);
   const tam=(x,a,b)=>Number.isInteger(x)&&x>=a&&x<=b;
   if(!sonuc||sonuc.bitti!==true)throw new Error('Maç sonucu işlenemedi: maç bitmemiş');
   if(!Array.isArray(sonuc.skor)||sonuc.skor.length!==2||!sonuc.skor.every(x=>tam(x,0,99)))throw new Error('Maç sonucu işlenemedi: skor geçersiz');
   if(tohum!==macTohumu(k.dunyaTohumu,macId))throw new Error('Maç sonucu işlenemedi: maç bu kariyerin tohumuyla oynanmamış');
-  if(Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'&&x.veri.macId===macId))throw new Error('Maç sonucu işlenemedi: maç günü işi hâlâ bekliyor');
-  const simdi=simdikiAn(k),an0=macAni(f);
-  if(simdi<an0)throw new Error('Maç sonucu işlenemedi: zaman maç anından önce');
+  if(simdikiAn(k)<macAni(f))throw new Error('Maç sonucu işlenemedi: zaman maç anından önce');
   const L=a=>Array.isArray(a)?a:[];
   /* kimlikler: gol atan bilinmeyebilir (numarasız, atansız gol null); kart ve sakatlık her zaman bir oyuncunundur */
   const goller=L(sonuc.goller).map(g=>{const kk=!!g.kendiKalesine,t=g.takim===1?1:0;
@@ -111,14 +111,14 @@ function macSonucuUygula(k,macId,sonuc,tohum,ek){
     pas:iki(I.pas),pasTamam:iki(I.pasTamam),uzunPas:iki(I.uzunPas)};
   /* maçın hocaları ve tarzları (uygulama anında; hoca sonra değişse de maçın okuması o maçın hocasıyla yapılır, js/mac-okuma.js) */
   const hocalar=[f.ev,f.konuk].map(id=>k.kulupler[id].hocaId||null),tarz=hocalar.map(id=>id&&k.kisiler[id]&&k.kisiler[id].hoca?k.kisiler[id].hoca.tarz:null);
-  const kayit={skor:sonuc.skor.slice(),tohum,goller,kartlar,sakatliklar,degisiklikler,sutlar,xg:macBeklenenGol(sutlar),ilk11,hocalar,tarz,ist,
+  const kayit={skor:sonuc.skor.slice(),tohum,goller,kartlar,sakatliklar,degisiklikler:kisa?[]:degisiklikler,sutlar:kisa?null:sutlar,xg:macBeklenenGol(sutlar),ilk11,hocalar,tarz,ist,
     protokol:ek.protokol?JSON.parse(JSON.stringify(ek.protokol)):null};
   k.maclar=Object.assign({},k.maclar,{[macId]:kayit});
   /* F3-a: hocanın "son on biri" — iki kulübün kadro.ilk11'i bu maçın on biri olur, kalanı (önceki sırasıyla) yedekler. Kaleci yuvası kaleci değilse
      (bütün kaleciler eksikken) eski on bir kalır: kadronun ilk yuvası kalecidir (js/kariyer-kadro.js kadroDogrula) */
   if(ilk11)ilk11.forEach((x,t)=>{const D=k.kulupler[t===0?f.ev:f.konuk].kadro;if(!D||k.oyuncular[x[0]].mevki!=='KL')return;
     const hepsi=D.ilk11.concat(D.yedekler);D.ilk11=x.slice();D.yedekler=hepsi.filter(id=>!x.includes(id));});
-  k.gecmis.push({tur:'mac',macId,hafta:f.hafta,ev:f.ev,konuk:f.konuk,skor:sonuc.skor.slice(),tarih:k.tarih,dakika:k.gunIciDakika});
+  if(!kisa)k.gecmis.push({tur:'mac',macId,hafta:f.hafta,ev:f.ev,konuk:f.konuk,skor:sonuc.skor.slice(),tarih:k.tarih,dakika:k.gunIciDakika});
   /* oyuncular: her değişen oyuncu için tek yeni kayıt */
   const yeni={},al=id=>yeni[id]||(yeni[id]=Object.assign({},k.oyuncular[id]));
   const kulupler=[f.ev,f.konuk];
@@ -140,6 +140,13 @@ function macSonucuUygula(k,macId,sonuc,tohum,ek){
     if(buMac.has(s.id)&&q.sakat&&tarihKarsilastir(q.sakat.donus,donus)>=0)continue;
     q.sakat={neden:sakatlikMetni(s.tur,s.bolge),donus};buMac.add(s.id);}
   k.oyuncular=Object.assign({},k.oyuncular,yeni);
+}
+function macSonucuUygula(k,macId,sonuc,tohum,ek){
+  const f=(k.fikstur||[]).find(x=>x.id===macId);
+  if(!f)throw new Error(`Maç sonucu işlenemedi: fikstürde ${macId} yok`);
+  if(Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'&&x.veri.macId===macId))throw new Error('Maç sonucu işlenemedi: maç günü işi hâlâ bekliyor');
+  macKaydiYaz(k,f,sonuc,tohum,ek,false);
+  const simdi=simdikiAn(k),an0=macAni(f),kulupler=[f.ev,f.konuk];
   /* zaman: maçtan sonrasına; arada anı gelen ajanda işinde (randevu, karar) durulur — kaçırılmaz */
   const hedef0=Math.max(simdi,an0+MAC_SONRASI_DK);let hedef=hedef0;
   for(const x of bekleyenIsler(k))if(x.tur==='ajanda'&&isAn(x)<hedef)hedef=Math.max(simdi,isAn(x));
@@ -171,10 +178,11 @@ function macSonucDogrula(k,h){
     if(MAC_SONUC_DENETLENDI.has(s))continue;
     const once=h.length;
     if(s.tohum!==macTohumu(k.dunyaTohumu,id))h.push(`${ad}: tohum maçın tohumu değil`);
-    for(const L of ['goller','kartlar','sakatliklar','degisiklikler','sutlar'])if(!Array.isArray(s[L]))h.push(`${ad}: ${L} liste değil`);
+    for(const L of ['goller','kartlar','sakatliklar','degisiklikler'])if(!Array.isArray(s[L]))h.push(`${ad}: ${L} liste değil`);
     if(!duz(s.ist))h.push(`${ad}: istatistik yok`);
     if(!Array.isArray(s.xg)||s.xg.length!==2||!s.xg.every(x=>typeof x==='number'&&x>=0&&x<100))h.push(`${ad}: beklenen gol geçersiz`);
     else if(Array.isArray(s.sutlar)&&macBeklenenGol(s.sutlar).some((x,t)=>Math.abs(x-s.xg[t])>0.006))h.push(`${ad}: beklenen gol şut listesiyle tutmuyor`);
+    if(s.sutlar!==null&&!Array.isArray(s.sutlar))h.push(`${ad}: şut listesi null ya da liste olmalı`);
     for(const x of Array.isArray(s.sutlar)?s.sutlar:[])if(!x||![0,1].includes(x.takim)||typeof x.xg!=='number'||!(x.xg>=0&&x.xg<=1)||!tam(x.dk,0,130)||typeof x.id!=='string')h.push(`${ad}: şut kaydı geçersiz`);
     if(!Array.isArray(s.hocalar)||s.hocalar.length!==2||!Array.isArray(s.tarz)||s.tarz.length!==2)h.push(`${ad}: hocalar ve tarz iki takımın olmalı`);
     if(s.ilk11!==null&&!(Array.isArray(s.ilk11)&&s.ilk11.length===2&&s.ilk11.every(x=>Array.isArray(x)&&x.length===11&&x.every(id=>typeof id==='string'))))h.push(`${ad}: on bir null ya da iki takımın 11 kimliği olmalı`);

@@ -6,7 +6,8 @@
                 bağlantısıyla açılır). Okumak maçta "yeni" işaretini de değiştirmez: maç sınırında kariyer değişmez. Kariyer yoksa boş durum.
      Canlı Skor o maç gününün karşılaşmaları: kendi maçın motorun anlık skoru/dakikası/durumu; tıklanınca motorun ürettiği istatistikler
                 (şut, isabet, topa sahip olma, korner, faul, kart, ofsayt). Her karşılaşma tek satırdır (N2, kullanıcı kararı 2026-10-04).
-                Diğer maçlar henüz simüle edilmez (3.8); bağlandıklarında listeye gelirler, eksikleri için uyarı yazılmaz.
+                F7 (2026-10-24): haftanın öbür maçları (js/mac-sahnesi.js LIG_CANLI) kendi maçın altında canlı skor ve dakikayla; bizim santramızdan
+                önce 'başlamadı'. Dokunulmazlar (istatistikleri yalnız kendi maçında).
    Telefon açıkken ortak duraklatmaya 'telefon' nedeni eklenir (js/sunum-durumu.js): maç ve çevresi durur; kapanınca yalnız bu neden kalkar,
    elle duraklatma varsa maç durmaya devam eder. Gösterilen skor ve istatistik donmuş motor anına aittir. */
 const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
@@ -15,6 +16,14 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
   for(const a in K)if(typeof K[a]==='string')E.style.setProperty('--k-'+a,K[a]);
   const btn=$('btnTelefon'),isin=new THREE.Raycaster(),T=MAC_TELEFON.T;
   const durumYazi=()=>{const ph=mac.phase;return MAC_ONCESI.includes(ph)?'başlamadı':ph==='halftime'?'devre arası':ph==='fulltime'?'maç sonu':mac.minuteLabel()+'\'';};
+  /* F7: öbür maçların satırları (bizim santramızdan önce başlamamış görünürler) */
+  function digerVerisi(once){
+    const L=typeof LIG_CANLI!=='undefined'?LIG_CANLI:[],ad=id=>(MAC_GUNU.bulten.adlar||{})[id]||id;
+    return L.map(x=>{const m=x.m,ph=m.phase,dk=m.minuteLabel()+"'";
+      const durum=once?'başlamadı':ph==='halftime'?'devre arası':ph==='fulltime'?'maç sonu':dk;
+      return{ev:ad(x.d.ev),dep:ad(x.d.konuk),skor:once?'–':m.score[0]+' – '+m.score[1],durum,kisaDurum:once?MAC_GUNU.bulten.saat||'':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':dk,
+        canli:!once&&ph!=='halftime'&&ph!=='fulltime'};});
+  }
   function macVerisi(){
     const I=mac.ist,s=I.sahiplik[0]+I.sahiplik[1],y=s>0?Math.round(I.sahiplik[0]/s*100):50,ev=MAC_GUNU.kadro[0],dep=MAC_GUNU.kadro[1];
     /* N2: satırın sol sütunu kısa durumdur: başlamadıysa başlama saati, oyunda dakika, arada “Devre”, sonunda “Bitti” */
@@ -22,7 +31,8 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
     const kisaDurum=once?MAC_GUNU.bulten.saat||'Bugün':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':durumYazi();
     return{saat:durumYazi(),ev:ev.tamAd||ev.ad,dep:dep.tamAd||dep.ad,evKisa:ev.kisa,depKisa:dep.kisa,skor:once?'–':mac.score[0]+' – '+mac.score[1],durum:durumYazi(),kisaDurum,canli,
       ist:[['Şut',I.sut[0],I.sut[1]],['İsabetli şut',I.isabet[0],I.isabet[1]],['Topa sahip olma',s>0?y+'%':'—',s>0?(100-y)+'%':'—'],['Korner',I.korner[0],I.korner[1]],
-        ['Faul',I.faul[0],I.faul[1]],['Sarı kart',I.sari[0],I.sari[1]],['Kırmızı kart',I.kirmizi[0],I.kirmizi[1]],['Ofsayt',I.ofsayt[0],I.ofsayt[1]]]};
+        ['Faul',I.faul[0],I.faul[1]],['Sarı kart',I.sari[0],I.sari[1]],['Kırmızı kart',I.kirmizi[0],I.kirmizi[1]],['Ofsayt',I.ofsayt[0],I.ofsayt[1]]],
+      digerleri:digerVerisi(once)};
   }
   /* gecis: telefonda ekran değişti (kısa açılış geçişi yalnız o çizimde; N7). Maçın durumu telefonun durum çubuğunda ve ana ekranındadır */
   function ciz(odak,gecis){
