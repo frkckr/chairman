@@ -6,7 +6,7 @@
        F3'ten önce kariyer maçı tarzı tohumdan çekiyordu ('dagilim'). Maç içi tarz değişikliği (m.hoca kapısı, tarzDegistir) Z7-2'ye kalır.
      bilgi (0–1): oyuncularını ne kadar doğru tanıdığı. Düşükse değerlendirmesi kalıcı yanılgılar taşır (aynı hoca aynı oyuncu hakkında her maç
        aynı yanılgıda; yeni hoca başka gözle bakar).
-     israr (0–1): son maçın on birine bağlılığı.
+     israr (0–1): son maçın on birine bağlılığı — yalnız o maçı kendisi yönettiyse (F6-a: yeni hoca eskisinin on birine bağlı değildir).
    Gizli puan kuralı (OYUN_TASARIMI §9): bilgi ve israr gösterilmez (TEST bilgileri ayarı hariç); ekranda hocanın adı ve tarzının adı vardır.
    TEST değerleri (Claude, 2026-10-24): Demirkapı ve Akdeniz'in hocası js/kadrolar.js'teki td.ad ve taktik.tarz'dan (bilgi, israr HOCA_TEST'ten);
      öbür 14 kulübünkü dünya tohumundan (ad kadro üretiminin td.ad'ı, js/adlar-test.js; tarz HOCA_TARZ_PAYI ile — motorun TARZ_DAGILIM'ının payları,
@@ -111,7 +111,11 @@ function hocaKadroSec(k,kulupId,tarih,tohum){
   const uygun=kulupOyunculari(k,kulupId).filter(p=>oyuncuUygunMu(p,tarih));
   if(uygun.length<11)throw new Error(`Maç kadrosu kurulamadı: ${c.ad} on bir uygun oyuncu çıkaramıyor`);
   /* oyuncu × yuva değerleri; en yüksek çift sırayla yerleşir (eşitlikte yuva sırası, sonra kimlik) */
-  const yer=(p,i)=>D.ilk11[i]===p.id?1:D.ilk11.includes(p.id)?0.5:0,C=[];
+  /* ısrar yalnız hocanın kendi son on birine: kulübün son maçını başka hoca yönettiyse (hoca değişimi, F6-a) son on bir bağlamaz. Kariyerin ilk maçında
+     son maç yoktur: tohum kadrosunun on biri hocanınkidir */
+  const son=typeof kulubunSonMaci==='function'?kulubunSonMaci(k,kulupId):null;
+  const kendi=!son||!Array.isArray(son.s.hocalar)||son.s.hocalar[son.f.konuk===kulupId?1:0]===h.id;
+  const yer=(p,i)=>!kendi?0:D.ilk11[i]===p.id?1:D.ilk11.includes(p.id)?0.5:0,C=[];
   for(let i=0;i<Y.length;i++)for(const p of uygun)C.push({i,p,v:hocaDegeri(k,h,p,Y[i],tohum,yer(p,i))});
   C.sort((a,b)=>b.v-a.v||a.i-b.i||(a.p.id<b.p.id?-1:1));
   const ilk=Array(Y.length).fill(null),secildi=new Set();

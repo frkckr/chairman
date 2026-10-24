@@ -96,6 +96,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     let ic='';
     const kid=s.kisiId||s.id,kt=k.kisiler[kid]?testKisi(k,kid):null;
     if(kt)ic+='katkı: '+kt.map(x=>yaz(x.alan+' '+x.seviye)).join(' · ')+'<br>';
+    /* F6-a: kişi kaydı olmayan seçeneğin gizli verisi (ör. hoca adayının bilgi ve ısrarı; s.gizli, yalnız bu kutuda) */
+    if(s.gizli&&typeof s.gizli==='object')ic+='gizli: '+Object.entries(s.gizli).map(([a,x])=>yaz(a+' '+x)).join(' · ')+'<br>';
     if(!s.engel){const t=testOnizleme(k,isId,s.id);ic+=t.hata?yaz('önizleme yok: '+t.hata):'sonuç: '+t.satirlar.map(yaz).join(' → ');}
     return ic?testKutu(ic):'';
   }
@@ -308,7 +310,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(v.karar){
       /* dosyalı karar dosyada, dosyasız karar sağdaki karar panelinde verilir */
       const dosyada=r.meseleId&&k.meseleler[r.meseleId];
-      return{durum:yaz(v.baslik)+' · cevabın bekleniyor'+(r.saatsiz&&r.sonCevap?' · en geç '+saatYazi(r.sonCevap.dakika):''),
+      return{durum:yaz(v.baslik)+' · cevabın bekleniyor'+(r.saatsiz&&r.sonCevap?' · en geç '+(r.sonCevap.tarih===k.tarih?'':yaz(tarihKisa(r.sonCevap.tarih))+' ')+saatYazi(r.sonCevap.dakika):''),
         dugme:ert+'<button type="button" class="od-ana" data-eylem="'+(dosyada?'dosyaAc':'kararAc')+'" data-is="'+id+'"'+(dosyada?' data-mesele="'+r.meseleId+'" data-donus="ajanda"':'')+'>Karar ver ▸</button>'};
     }
     const o=ajandaOnizle(k,id,secimler[id]),mac=v.eylem==='macGunu',p=[];

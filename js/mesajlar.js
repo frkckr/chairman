@@ -3,7 +3,8 @@
    Gönderen: MESAJ_GONDEREN[olay anahtarı](k, p, mesele) → kişi kimliği ya da null. Listede olmayan olay anahtarı başkanın konudaki kısa
      notudur ("not"): bütün olay günlüğü bir kişiye atfedilmez, konunun ana konuşmasında küçük satır olarak görünür.
    Konunun ana konuşması: konuya ilk mesaj gönderen kişi; yoksa konuyu soran ya da konudaki ilk kişi; o da yoksa konu yalnız dosyadadır.
-   Giden mesaj: verilmiş kararın seçilen cevabı (geçmişteki iş kaydı; sonuc.meseleId/soran 2.8I'dan beri yazılır, eski kayıtta giden görünmez).
+   Giden mesaj: verilmiş kararın seçilen cevabı (geçmişteki iş kaydı; sonuc.meseleId/soran 2.8I'dan beri yazılır, eski kayıtta giden görünmez);
+     yalnız soranın konuşmasında (soranı olmayan kararın cevabı dosyadadır; F6-a).
    Cevap: bekleyen karar veri.soran taşıyorsa o kişinin konuşmasında iki cevabıyla görünür (ortak komut: ajandaIsiYap). Soran yoksa
      konuşmada yalnız "dosyada karar bekliyor" bağlantısı vardır (ör. yüz yüze aday görüşmesi, saymansız kriz).
    Okundu: mesele.gorulen sayacı (meseleGoruldu). Okumak cevaplamak değildir; cevap bekleyen ayrı işaretlenir.
@@ -64,15 +65,19 @@ function konusmaListesi(k){
       else if(ana){const c=al(ana);if(!c.dosyaKarar.includes(m.id))c.dosyaKarar.push(m.id);if(simdi)c.cevapBekliyor=true;}
     }
   }
-  /* giden: verilmiş kararların seçilen cevabı (2.8I'dan beri iş kaydında konu ve soran yazılır) */
+  /* giden: verilmiş kararların seçilen cevabı (2.8I'dan beri iş kaydında konu ve soran yazılır). Yalnız soranın konuşmasında: soranı olmayan
+     kararın cevabı dosyadadır (F6-a incelemesi: P12'nin dosyadaki kararı, konunun ilk göndereni olan eski hocaya yazılmış gibi görünüyordu).
+     Sıra: cevap verildiği anda konunun kaç olayı vardıysa onlardan sonra, cevabın doğurduğu olaylardan önce (sonuc.olaySira, F6-a; eski kayıtta yok:
+     aynı dakikada önce gelir) */
   for(const g of k.gecmis){
     const r=g.tur==='is'&&g.isTuru==='ajanda'&&g.sonuc;
     if(!r||!r.meseleId||!(r.secimMetni||r.durum==='cevapsiz'))continue;
     const m=k.meseleler[r.meseleId];if(!m)continue;
-    const hedef=r.soran&&k.kisiler[r.soran]?r.soran:meseleKonusmasi(k,m);
+    const hedef=r.soran&&k.kisiler[r.soran]?r.soran:null;
     if(!hedef)continue;
-    ekle(al(hedef),m.id,r.secimMetni?{tarih:g.tarih,dakika:g.dakika,yon:'giden',metin:r.secimMetni,meseleId:m.id,yeni:false,sira:-1}
-      :{tarih:g.tarih,dakika:g.dakika,yon:'not',metin:'Cevap vermedin.',meseleId:m.id,yeni:false,sira:-1});
+    const sira=Number.isInteger(r.olaySira)?r.olaySira-0.5:-1;
+    ekle(al(hedef),m.id,r.secimMetni?{tarih:g.tarih,dakika:g.dakika,yon:'giden',metin:r.secimMetni,meseleId:m.id,yeni:false,sira}
+      :{tarih:g.tarih,dakika:g.dakika,yon:'not',metin:'Cevap vermedin.',meseleId:m.id,yeni:false,sira});
   }
   /* F3-b: meseleye bağlı olmayan mesajlar (MESAJ_KAYNAKLARI) */
   for(const f of MESAJ_KAYNAKLARI)for(const x of f(k))if(k.kisiler[x.kisiId]){const c=al(x.kisiId);
@@ -84,8 +89,8 @@ function konusmaListesi(k){
   }
   const L=[...K.values()];
   for(const c of L){
-    /* aynı an: giden önce (cevap), sonra gelişme */
-    c.mesajlar.sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika)||(a.yon==='giden'?-1:0)-(b.yon==='giden'?-1:0)||a.sira-b.sira);
+    /* aynı an: konunun olay sırası; cevap (giden) sorusundan sonra, doğurduğu olaylardan önce (eski kayıtta sira -1: önce) */
+    c.mesajlar.sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika)||a.sira-b.sira);
     c.okunmamis=c.mesajlar.filter(x=>x.yeni&&x.yon==='gelen').length;
     const s=c.mesajlar[c.mesajlar.length-1];c.sonAn=s?anDakika(s.tarih,s.dakika):0;
   }

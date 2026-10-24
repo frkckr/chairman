@@ -703,7 +703,16 @@ bolum('3.7a — hoca değişimi ve P12 “Hocaya sabır mı, değişim mi?” TE
     &&ky.gecmis.some(g=>g.tur==='hocaDegisimi'&&g.eskiId===h0&&g.yeniId===hy)&&!!od&&od.veri.tutar===-P('P12_TAZMINAT')&&od.veri.kalem==='tazminat'&&od.tarih===P('tarihEkle')(ky.tarih,1)
     &&ky.haberler.some(h=>h.anahtar==='p12.haber'&&h.p.kisiId===hy),`${yh.ad} · ${yh.hoca.tarz} · ${od&&od.tarih}`);
   {const j=macIsi(ky),G=P('macGirdisi')(ky,j.veri.macId);
-   denetle('Sonraki maç girdisi yeni hocayla: tarz, hoca adı, saha kenarı adı',G.tarz[G.biz]===A[1].tarz&&G.hocalar[G.biz].id===hy&&G.kadro[G.biz].td.ad===A[1].ad,`${G.tarz[G.biz]} · ${G.kadro[G.biz].td.ad}`);}
+   denetle('Sonraki maç girdisi yeni hocayla: tarz, hoca adı, saha kenarı adı',G.tarz[G.biz]===A[1].tarz&&G.hocalar[G.biz].id===hy&&G.kadro[G.biz].td.ad===A[1].ad,`${G.tarz[G.biz]} · ${G.kadro[G.biz].td.ad}`);
+   const on=x=>{const H=P('macGirdisi')(x,j.veri.macId);return metin(H.kadro[H.biz].oyuncular.map(o=>o.id));};
+   denetle('Yeni hoca eskisinin on birine bağlı değildir: ısrarı 0 olsa da aynı on bir (ısrar yalnız kendi son on birine; inceleme bulgusu)',
+     on(ky)===on(KK(ky,x=>{x.kisiler[hy].hoca.israr=0;}).kariyer)&&ky.kisiler[hy].hoca.israr>0);}
+  {const K=P('konusmaListesi')(ky).find(x=>x.anahtar===h0);
+   denetle('Telefonda eski hocanın konuşmasında başkanın değişim ve aday cevapları yok (karar dosyada; inceleme bulgusu); rolü eski teknik direktör',
+     !!K&&!K.mesajlar.some(x=>x.yon==='giden')&&!K.cevapBekliyor&&K.rol==='Eski teknik direktör',K&&K.mesajlar.map(x=>x.yon+':'+x.metin.slice(0,20)).join(' | '));}
+  {const s=P('kararSecenekleri')(kg,c1).find(x=>x.id==='al');
+   denetle('Göreve al seçeneği adayın gizli değerlerini yalnız TEST kutusu için taşır (gizli alanı); metinlerde yok',!!s&&s.gizli&&s.gizli.bilgi===A[0].bilgi&&s.gizli['ısrar']===A[0].israr
+     &&![s.metin].concat(s.aciklama).some(x=>x.includes(String(A[0].bilgi).replace('.',','))||x.includes(String(A[0].bilgi))));}
   let kt=ilerle(ky);for(let g=0;g<4&&kt.meseleler[O.meseleId].durum!=='kapandi';g++)kt=ilerle(kt);
   denetle('Tazminat ödenince kasadan düşer; konu ve olay kapanır; eski hocanın mesajları telefonda kalır; kariyer geçerli, kaydet–yükle aynı',
     kt.hareketler.some(h=>h.kalem==='tazminat'&&h.tutar===-P('P12_TAZMINAT'))&&kt.meseleler[O.meseleId].durum==='kapandi'&&p12(kt)[0].durum==='kapandi'
@@ -805,6 +814,8 @@ bolum('2.2 — koşula bağlı olay, iki cevaplı karar ve telefon (TEST içeri�
   denetle('Kabul: tahsilat yarın sabah, pano sözü açık, mesele haber bekliyor; karar ikinci kez uygulanamaz',m.durum==='haberBekliyor'&&s&&s.durum==='acik'&&odaIzleri(c).panoNotu&&reddeder(()=>ajandaIsiYap(c,b.id,'kabul')));
   const K=konusmaListesi(c)[0];
   denetle('Telefonda seçilen cevap giden mesaj olarak görünür',K.mesajlar.some(x=>x.yon==='giden'&&x.metin==='Kabul et')&&!K.cevapBekliyor);
+  {const S=K.mesajlar,i=S.findIndex(x=>x.yon==='giden'),j=S.findIndex(x=>/destek vermek istiyor/.test(x.metin)),n=S.findIndex(x=>/Teklifi kabul ettin/.test(x.metin));
+   denetle('Aynı dakikada cevap: telefonda teklifin ardından, doğurduğu sonucun önünde (F6-a: cevabın konudaki yeri)',j>=0&&j<i&&i<n,S.map(x=>x.yon+':'+x.metin.slice(0,18)).join(' | '));}
   const sonra=oyna(kariyerOlustur(c),'kabul');
   denetle('Tahsilat yapılınca söz tutulur, mesele ve olay kapanır; para bir kez girer',Object.values(sonra.sozler)[0].durum==='tutuldu'&&Object.values(sonra.meseleler)[0].durum==='kapandi'&&Object.values(sonra.olaylar)[0].durum==='kapandi'
     &&sonra.hareketler.filter(h=>h.kalem==='destek').length===1&&!odaIzleri(sonra).panoNotu&&gecerli(sonra)[0],gecerli(sonra)[1]);

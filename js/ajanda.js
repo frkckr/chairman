@@ -162,6 +162,8 @@ function ajandaIsiYap(k,id,secim){
     /* seçenek, zaman başlangıca geldikten sonra yeniden doğrulanır */
     const s=kararSecenekleri(k,o.is).find(x=>x.id===secim);
     if(!s||s.engel)throw new Error('Seçenek artık geçerli değil: '+(s?s.engel:secim));
+    /* F6-a: cevabın konudaki yeri (telefonda sorudan sonra, doğurduğu olaylardan önce görünsün; js/mesajlar.js) */
+    {const m0=o.is.veri.meseleId&&k.meseleler[o.is.veri.meseleId];if(m0)sonuc.olaySira=m0.olaylar.length;}
     const r=KARAR_TURLERI[o.is.veri.karar].uygula(k,o.is,secim)||{};
     sonuc.secim=secim;sonuc.secimMetni=s.metin;
     if(r.bilgi!==undefined)sonuc.bilgi=r.bilgi;

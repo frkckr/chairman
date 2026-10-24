@@ -45,7 +45,10 @@ function sezon(){
       k=KK(k,x=>duragaIlerle(x)).kariyer;
     }
     if(!k.isler[is.id]||k.tarih!==is.tarih||k.gunIciDakika!==is.dakika){hatalar.push(`İlerle maç gününe gitmedi (${k.tarih} ${k.gunIciDakika})`);break;}
-    const Gi=macGirdisi(k,is.veri.macId),D=haftaninDigerMaclari(k,Gi.macId).map(f=>({f,sec:digerMacSecenegi(k,f)}));
+    /* maç girdileri: bir kulüp 11 uygun oyuncu çıkaramazsa hafta kurulamaz (bilinen borç: hükmen kuralı yok) — çökmeden raporlanır */
+    let Gi,D;
+    try{Gi=macGirdisi(k,is.veri.macId);D=haftaninDigerMaclari(k,Gi.macId).map(f=>({f,sec:digerMacSecenegi(k,f)}));}
+    catch(e){hatalar.push(`${k.tarih}: hafta kurulamadı — ${e.message}`);break;}
     k=KK(k,x=>ajandaIsiYap(x,is.id)).kariyer;
     const t0=process.hrtime.bigint(),{m,n}=oyna({kadro:Gi.kadro,tohum:Gi.tohum,tunel:{x:0,z:-6},tarz:Gi.tarz.slice()});
     const ms=Number(process.hrtime.bigint()-t0)/1e6;

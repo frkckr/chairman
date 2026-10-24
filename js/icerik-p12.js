@@ -180,7 +180,7 @@ KATILIM_ETKILERI.hocaAdayGorusmesi={
 KARAR_TURLERI.hocaAdayi={
   denetle:(k,v)=>{const h=p12AdaylarDenetle(k,v);if(!Number.isInteger(v.sira)||v.sira<0||v.sira>=HOCA_ADAY_SAYISI)h.push(`aday sırası geçersiz (${v.sira})`);return h;},
   secenekler:(k,is)=>{const v=is.veri,a=v.adaylar[v.sira],eski=kisiAdi(k,v.hocaId),son=v.sira===v.adaylar.length-1;
-    return[{id:'al',metin:'Göreve al',sure:30,aciklama:[`${a.ad} takımın hocası olur; tarzı ${HOCA_TARZ_ADI[a.tarz]}.`,`${eski} ile yollar ayrılır; tazminat ${paraYazi(P12_TAZMINAT)}.`,
+    return[{id:'al',metin:'Göreve al',sure:30,gizli:{bilgi:a.bilgi,'ısrar':a.israr},aciklama:[`${a.ad} takımın hocası olur; tarzı ${HOCA_TARZ_ADI[a.tarz]}.`,`${eski} ile yollar ayrılır; tazminat ${paraYazi(P12_TAZMINAT)}.`,
         'Kadroyu ve tarzı sonraki maçtan başlayarak yeni hoca belirler.']},
       son?{id:'devam',metin:'Mevcut hocayla devam',sure:0,aciklama:[`${eski} görevde kalır.`]}
         :{id:'sonraki',metin:'Sıradaki adayı dinle',sure:60,aciklama:[`${v.adaylar[v.sira+1].ad} ile görüşürsün; ${a.ad} ile anlaşma olmaz.`]}];},
