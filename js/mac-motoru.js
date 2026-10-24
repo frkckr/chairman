@@ -270,7 +270,7 @@ class Match{
     this.topcular=this.topculariKur();this.disToplar=[];
     this.yedekleriKur();this.kenarKur();
     /* T10c: maçın kaydı (kariyer Aşama 3'te sonucKaydi ile okur) ve sağlıkçılar (js/mac-sakatlik.js) */
-    this.kayit={goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],sutlar:[],uzunPas:[0,0]};   /* F3-b: sutlar — maçın şutları {ad, no, takim, dakika, xg (konum xG'si), pen, kafa} (js/mac-topla.js); uzunPas takım başına (pasSay). Salt kayıt; ist'in biçimi değişmez (taban özeti) */
+    this.kayit={goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],sutlar:[],uzunPas:[0,0],isabetEk:[0,0]};   /* F3-b: sutlar — maçın şutları {ad, no, takim, dakika, xg (konum xG'si), pen, kafa} (js/mac-topla.js); uzunPas takım başına (pasSay). Salt kayıt; ist'in biçimi değişmez (taban özeti) */
     this.zgUyari=[0,0];   /* T10d: zaman geçirmede hakemin uyarısı (takım başına; js/mac-kurallar.js zamanGecirmeGoruldu) */
     this.guvenHazirla();   /* T10e: takım güveni (js/mac-takim.js) */
     this.ofsaytBekleyen=null;   /* T10d: bayrağı geç kalkacak ofsayt {p, t, x, z, fark, yanlis, g} (js/mac-kurallar.js ofsaytDokunus) */
@@ -395,7 +395,7 @@ class Match{
     return{skor:this.score.slice(),bitti:this.phase==='fulltime',goller:K.goller.map(o=>({...o})),kartlar:K.kartlar.map(o=>({...o})),
       sakatliklar:K.sakatliklar.map(o=>({...o})),degisiklikler:K.degisiklikler.map(o=>({...o})),sutlar:K.sutlar.map(o=>({...o})),
       ilk11:[0,1].map(t=>this.kadro&&this.kadro[t]&&Array.isArray(this.kadro[t].oyuncular)?this.kadro[t].oyuncular.slice(0,11).map(o=>o&&o.id!=null?o.id:null):null),
-      ist:{sut:I.sut.slice(),isabet:I.isabet.slice(),korner:I.korner.slice(),faul:I.faul.slice(),sari:I.sari.slice(),kirmizi:I.kirmizi.slice(),
+      ist:{sut:I.sut.slice(),isabet:[I.isabet[0]+K.isabetEk[0],I.isabet[1]+K.isabetEk[1]],korner:I.korner.slice(),faul:I.faul.slice(),sari:I.sari.slice(),kirmizi:I.kirmizi.slice(),
         ofsayt:I.ofsayt.slice(),sahiplik:[I.sahiplik[0]/s,I.sahiplik[1]/s],pas:I.pas.slice(),pasTamam:I.pasTamam.slice(),uzunPas:K.uzunPas.slice()}};}
 
   /* maç öncesi, devre arası ve maç sonu (maç günü akışı) js/mac-oncesi.js'tedir */
@@ -554,6 +554,9 @@ class Match{
     if(b.endirekt&&p!==b.endirekt.p)b.endirekt=null;if(b.tac&&p!==b.tac.p)b.tac=null;
     if(b.pas&&p!==b.pas.p){if(p.team===b.pas.takim){this.ist.pasTamam[p.team]++;const A=this._asist||(this._asist={p:null,q:null,t:0});A.p=b.pas.p;A.q=p;A.t=this.t;}b.pas=null;}   /* S1c: asist kaydı (yalnız kayıt) */
     if(b.sut&&p!==b.sut.by)b.sut=null;
+    /* F3-b (inceleme): kayıttaki golcünün son şutu — şutu atan takım ya da kasıtlı oynayan savunmacı dokununca biter; kalecinin ve savunmacının
+       istemsiz değmesi (kurtarış, blok, sekme) zinciri sürdürür, kalecinin dokunuşu işaretlenir (isabet orada sayılmıştır). Yalnız kayıt */
+    {const S=b.sonSut;if(S){if(p.team===S.team||kasitli)b.sonSut=null;else if(p.rol==='GK')S.kaleci=true;}}
     this.ofsaytDokunus(p,kasitli);
     this.topDegisti();
   }
@@ -700,9 +703,12 @@ class Match{
     /* T10c; F3-b (2026-10-24): kayıttaki golcü — çerçeveye giden şut savunmacıya ya da kaleciye değip girerse gol şutu atanındır (istatistik
        geleneği; eskiden kalecinin dokunduğu şut "kendi kalesine" yazılıyordu: bir maçta kaleciye üç kendi kalesine gol). Kendi kalesine yalnız
        çerçeve dışına giden topu ya da şut olmayan topu savunmacı sokunca. Başka oyuncunun dokunuşu b.sut'u siler (dokunus); son şut b.sonSut'ta
-       durur (js/mac-topla.js): 4 sn içinde aynı takımın çerçeveye giden şutu ya da kalecinin dokunduğu şut atanındır. Yalnız kayıt: own, güven,
-       sevinç ve isabet sayacı değişmez */
-    const ss=b.sonSut,kAtan=own&&ss&&ss.team===att&&ss.by&&this.t-ss.t<4&&(ss.cerceve||(scorer&&scorer.rol==='GK'))?ss.by:scorer,kOwn=own&&kAtan===scorer;
+       durur (js/mac-topla.js): 4 sn içinde aynı takımın çerçeveye giden şutu ya da kalecinin dokunduğu şut atanındır; arada şutu atan takım ya da
+       kasıtlı oynayan savunmacı dokunduysa son şut bitmiştir (dokunus; inceleme bulgusu: bloklanıp hücumcuya dönen top savunmacıdan girince gol
+       şutçuya yazılıyordu). Kaleciye değmeden savunmacıdan sekip giren çerçeve şutu kayıtta isabetli şut da sayılır (sonucKaydi; isabetEk).
+       Yalnız kayıt: motorun own'u, güven, sevinç ve ist değişmez */
+    const ss=b.sonSut,kAtan=own&&ss&&ss.team===att&&ss.by&&this.t-ss.t<4&&(ss.cerceve||ss.kaleci)?ss.by:scorer,kOwn=own&&kAtan===scorer;
+    if(own&&!kOwn&&!ss.kaleci)this.kayit.isabetEk[att]++;   /* savunmacıdan sekip giren çerçeve şutu kayıtta isabetlidir (motorun ist'i değişmez) */
     this.kayit.goller.push({ad:kAtan?kAtan.name:'',no:kAtan?kAtan.no:0,takim:att,kendiKalesine:!!kOwn,dakika:Math.floor(this.gameSec/60)+1});
     /* T10b (T10 teşhisi hata 5): avantaj sürerken gol — avantaj tutulmuştur, kart şimdi gösterilir (sevinç sürerken hakem oyuncuya gider) */
     if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:true});if(a.kart&&a.yapan.oyunda){if(c.s1)c.kartBekle=a;else this.kartGoster(a.yapan,a.kart);}}   /* S1c: kart sevinçten sonra */

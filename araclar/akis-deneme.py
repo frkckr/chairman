@@ -734,7 +734,8 @@ async def bolum_14b(tarayici, site, tum_hatalar):
     await pg.screenshot(path=str(ARAC / "son-akis-14b-sonra.png"))
     await pg.keyboard.press("ArrowRight")
     await pg.wait_for_function("!LOCA_GIRIS.aktif", timeout=60000)
-    await pg.wait_for_timeout(300)
+    # F3-0: ertelenen Santraya geç maç öncesini görüntüsüz bitirir (birkaç kare); hiç tetiklenmezse bekleme zaman aşımına düşer
+    await pg.wait_for_function("!MAC_ONCESI.includes(mac.phase) && !SANTRA_HIZLI.aktif", timeout=60000)
     s2 = await pg.evaluate(AN_JS)
     denetle("→ tuşu 'Ses çıkarma'yı seçti; karşılama bitince ertelenen atlama yapıldı (maç öncesi geçti)", s2["karar"] == "sus" and s2["faz"] != "isinma", str(s2))
     await pg.context.close()

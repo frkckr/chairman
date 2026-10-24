@@ -45,7 +45,7 @@ function macOkumasi(k,macId,kulupId){
   return{macId,hafta:f.hafta,tarih:f.tarih,t,rakipId:t?f.ev:f.konuk,skor,xg,
     ist:{sut:c(I.sut),isabet:c(I.isabet),korner:c(I.korner),faul:c(I.faul),sari:c(I.sari),kirmizi:c(I.kirmizi),ofsayt:c(I.ofsayt),pas,pasTamam:c(I.pasTamam),uzunPas:uzun,sahiplik},
     tarzIzi:{tarz,uzunPay:Math.round(uzunPay*100)/100,beklenen:B,uyum},sans,oneCikan,hoca:hoca?{id:hoca.id,ad:hoca.ad}:null,
-    kaynak:{kisiId:hoca?hoca.id:null,tarih:f.tarih,dakika:f.dakika+MAC_SONRASI_DK}};
+    kaynak:{kisiId:hoca?hoca.id:null,tarih:f.tarih,dakika:Math.min(1439,f.dakika+MAC_SONRASI_DK)}};
 }
 
 /* ---- TEST şablonları (kullanıcı değiştirir). o: macOkumasi çıktısı; ad: rakibin adı ---- */
@@ -54,7 +54,10 @@ const YORUM_METIN={
   sanssiz:o=>o.skor[0]<o.skor[1]?'Pozisyonları biz bulduk, top girmedi. Bu oyunla puanlar gelir.':'Daha fazlasını hak ettik; fırsatları değerlendiremedik.',
   sansli:o=>o.skor[0]>o.skor[1]?'Kazandık ama dürüst olayım, rakip bizden çok pozisyona girdi.':'Bu puanı zor aldık; rakip daha tehlikeliydi.',
   hakli:o=>o.skor[0]>o.skor[1]?'Sonuç sahada olanı yansıtıyor; iyi oynadık.':'Rakip bugün bizden iyiydi, bahanem yok.',
-  dengeli:o=>o.skor[0]+o.skor[1]>=4&&o.xg[0]+o.xg[1]<o.skor[0]+o.skor[1]-1.5?'Az pozisyondan çok gol çıktı; iki taraf da bitiricilikte acımasızdı.':o.skor[0]===o.skor[1]?'Dengeli bir maçtı; iki taraf da az şey yarattı.':o.skor[0]>o.skor[1]?'Sıkı maçtı, küçük farkı biz yaptık.':'Dengeli maçta küçük bir an kaybettirdi.',
+  dengeli:o=>{const f=o.skor[0]-o.skor[1];
+    if(Math.abs(f)>=2)return f>0?'Pozisyonlar dengeliydi; farkı bitiricilikte biz yaptık.':'Pozisyonlar dengeliydi ama rakip bulduğunu attı, biz atamadık.';
+    if(o.skor[0]+o.skor[1]>=4&&o.xg[0]+o.xg[1]<o.skor[0]+o.skor[1]-1.5)return'Az pozisyondan çok gol çıktı; iki taraf da bitiricilikte acımasızdı.';
+    return f===0?'Dengeli bir maçtı; iki taraf da az şey yarattı.':f>0?'Sıkı maçtı, küçük farkı biz yaptık.':'Dengeli maçta küçük bir an kaybettirdi.';},
   /* ısrarcı hocanın kötü sonuçta savunması (sayılar ne derse desin) */
   savunma:o=>'Şanssızdık. Planımızın arkasındayım, değiştirmeyeceğim.',
   /* tarz izi: ikinci cümle */
@@ -62,7 +65,7 @@ const YORUM_METIN={
   kisa:o=>o.tarzIzi.tarz==='direkt'?'Uzun topu az kullandık, kendi oyunumuzu oynayamadık.':'Topu fazla ayakta tuttuk; ileriye daha çabuk gitmeliydik.',
   uzun:o=>o.tarzIzi.tarz==='konumsal'||o.tarzIzi.tarz==='iliskisel'?'Topu yerde tutamadık, fazla uzun oynadık.':'Gereğinden çok uzun top attık.',
   /* öne çıkan oyuncu: üçüncü cümle */
-  gol:o=>o.skor[0]>o.skor[1]?'Farkı yaratan golü '+o.oneCikan.ad+' attı.':o.skor[0]===o.skor[1]?'Golümüzü '+o.oneCikan.ad+' attı, puanı o getirdi.':'Golümüzü '+o.oneCikan.ad+' attı; yetmedi.',
+  gol:o=>o.skor[0]-o.skor[1]===1?'Farkı yaratan golü '+o.oneCikan.ad+' attı.':o.skor[0]>o.skor[1]?o.oneCikan.ad+' golüyle öne çıktı.':o.skor[0]===o.skor[1]?'Golümüzü '+o.oneCikan.ad+' attı, puanı o getirdi.':'Golümüzü '+o.oneCikan.ad+' attı; yetmedi.',
   goller:o=>o.skor[0]>=o.skor[1]?o.oneCikan.ad+' attığı gollerle maçın adamıydı.':o.oneCikan.ad+' gol attı ama yetmedi.',
   firsat:o=>'En çok pozisyona giren oyuncumuz '+o.oneCikan.ad+' oldu.'
 };
@@ -106,8 +109,8 @@ MESAJ_KAYNAKLARI.push(k=>{
   const biz=(k.kisiler[k.baskanId]||{}).kulupId,L=[];if(!biz||!k.fikstur)return L;
   const simdi=simdikiAn(k),oku=new Set(k.macOkundu||[]);
   for(const f of k.fikstur){if(!k.maclar[f.id]||(f.ev!==biz&&f.konuk!==biz))continue;
-    const y=macYorumu(k,f.id),an=anDakika(f.tarih,f.dakika+MAC_SONRASI_DK);
-    if(y&&an<=simdi)L.push({kisiId:y.kisiId,tarih:f.tarih,dakika:f.dakika+MAC_SONRASI_DK,metin:y.metin,yeni:!oku.has(f.id),okunacak:f.id});}
+    const dk=Math.min(1439,f.dakika+MAC_SONRASI_DK),y=macYorumu(k,f.id),an=anDakika(f.tarih,dk);   /* gün sınırı: geç saatteki maçta 23:59 */
+    if(y&&an<=simdi)L.push({kisiId:y.kisiId,tarih:f.tarih,dakika:dk,metin:y.metin,yeni:!oku.has(f.id),okunacak:f.id});}
   return L.slice(-MAC_OKUNDU_EN_COK);
 });
 /* doğrulama (EK_DENETIMLER): okundu listesi oynanmış maç kimlikleri */

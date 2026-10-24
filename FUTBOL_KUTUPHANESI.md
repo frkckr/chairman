@@ -183,6 +183,8 @@ Kaynak: 2026-10-19'da A9 kapanışı (`main` 9530cb5) üzerinde yapılan salt ok
 
 **Durum (2026-10-22):** satır 2, 4, 5 ve 7 kısmen (Z1, Z4); satır 8 ve 14 B ve C turlarında (tarzın hücum iştahı ve tempo ekseni, hoca kapısı, kadro profilleri ve seviye ölçeği); satır 12 Z6-2; satır 15 2D ile kapandı (loca bakışı TEST). Program §12.1. **B (2026-10-22, `tur/b`):** satır 4'te geri pas payı amaca ve tarzın sabrına bağlandı (önü açıkken ve zincirde söner, konumsalda daha geç); satır 8'de tarz katmanı hücum iştahı, tempo ve sabır taşır, maç başına seçilir ve maç içinde kademeli değişir (hocanın kapısı `tarzDegistir`); satır 9'da kutu markajının kapısı topun anlık yerinden açılır. **C (2026-10-22, `tur/c`):** satır 14'te kadro profilleri (TEST), eğilimin oyuncunun kendi seviyesine göre ve gürültünün yarısından üstünde ölçülmesi, geniş hız aralığı, falso ve uzun topun oyuncuya bağlanması; hoca, moral ve yardımcılar F'de.
 
+**F3 (2026-10-24, `tur/f3`):** satır 8 ve 14'te kariyerin hocası maça girer: tarz hocanın tarzıdır (`secenek.tarz`; kariyerde tohumdan seçim kalktı), on biri ve kulübeyi hoca seçer (`js/hoca.js`: yuva rolü, tarz tercihi, gizli bilgi ve ısrar). `m.hoca` kapısı hâlâ işlev almaz (maç içi kararlar Z7-2). Tarz izi ölçüsü: tam maçta uzun pas payı konumsal 0,085 · ilişkisel 0,117 · dengeli 0,153 · dikey 0,174 · kanat ve orta 0,194 · direkt 0,262 (36 maç; maçın okunmasında tarzın bandı, `js/mac-okuma.js` `TARZ_UZUN_PAY`).
+
 ## 11. Ölçüler ve test rejimi
 
 Test kademelerinin kuralı [CLAUDE.md “Kontrol”](CLAUDE.md#kontrol)'dedir; değişen dosya ya da anahtar → koşulacak senaryo eşlemesi [araclar/KAPILAR.md](araclar/KAPILAR.md)'de. Bu bölüm ölçülerin ne olduğunu ve motorun “idare eder” kapısını tanımlar.

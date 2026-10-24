@@ -84,10 +84,11 @@ function hocalariKur(k){
 }
 /* [-1, 1] aralığında, ortası sık iki zarlık sayı (tohum + ek metinden) */
 const hocaZar=(tohum,ek)=>{const r=kadroRastgele(tohum,ek);return r()+r()-1;};
-/* dizilişin yuvaları [{rol, taraf}] — HOCA_YUVALAR'da olmayan dizilişte hatlardan genel roller (dizilisMevkileri) */
+/* dizilişin yuvaları [{rol, taraf}]. HOCA_YUVALAR'da olmayan geçerli dizilişte motor 4-4-2'ye düşer (js/mac-motoru.js DIZILISLER yoksa): hoca da
+   4-4-2'nin yuvalarıyla seçer (inceleme bulgusu: 3-5-2'de üç stoper seçip motorun sol bek yuvasına orta saha koyuyordu). Geçersizse null */
 function hocaYuvalari(dizilis){
-  const Y=HOCA_YUVALAR[dizilis];if(Y)return Y.map(s=>{const [rol,taraf]=s.split(':');return{rol,taraf:taraf||null};});
-  const M=dizilisMevkileri(dizilis);return M?M.map(m=>({rol:HOCA_HAT_ROLU[m],taraf:null})):null;
+  if(!dizilisMevkileri(dizilis))return null;
+  return(HOCA_YUVALAR[dizilis]||HOCA_YUVALAR['4-4-2']).map(s=>{const [rol,taraf]=s.split(':');return{rol,taraf:taraf||null};});
 }
 /* hocanın oyuncuyu bir yuvada değerlendirmesi (saf). Y: {rol, taraf}; yer: oyuncu son on birde bu yuvadaysa 1, başka yuvadaysa 0,5, değilse 0 */
 function hocaDegeri(k,h,p,Y,tohum,yer){

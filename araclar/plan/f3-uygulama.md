@@ -29,9 +29,11 @@ F2 kapandı (`tur/f2`): hafta → maç → sonuç → sonraki hafta döngüsü k
 - `mac-deneme 4` sonuç aynı; `--ayni d.json` 10/10; ad denetimi temiz (78 betik); `ikiz-deneme 4` 4/4; `sezon-deneme 2` belirlenimci.
 - Tarayıcı: aynı tohumla “Santraya geç”e farklı anlarda basmak aynı sonuç kaydı (elle ve `akis-deneme` §19 üçüncü sayfa).
 
-## Kalan (kapanışa dek)
+## Kapanış (2026-10-24)
 
-- `TARZ_UZUN_PAY` bandının ölçüyle doğrulanması; `akis-deneme` tamamı, `kontrol.py`, `akis-2d.py`; `oturum-sonu d.json --ayni --seyrek`; hız bütçesi (`tur/f2`'ye); belgeler; kısa inceleme.
+- `TARZ_UZUN_PAY` ölçüyle yazıldı (36 tam maç, `MAC_KADRO`, tarz başına 12 takım-maç; %10–%90 bandı). Ölçü betiği makineye bağlı (scratchpad); yeniden ölçmek için: her tarz için iki kadroyla tam maç, takım başına `sonucKaydi().ist.uzunPas[t] / ist.pas[t]`.
+- Kayıttaki golcü düzeltmesi (inceleme sırasında kartta görüldü: kaleciye üç kendi kalesine gol): 12 maçta motorun `own` saydığı 5 golün 5'i kayıtta şutu atana geçti.
+- `oturum-sonu d.json --ayni --seyrek`: 40/40 birebir, sağlık dışı 0; senaryolarda F2'deki bilinen borçlar. Hız `tur/f2`'ye +%2,2 (34,6 ms). `akis-deneme`, `akis-2d`, `kontrol.py`: devam notunda.
 
 ## Yapılmayacaklar
 

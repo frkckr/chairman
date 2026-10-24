@@ -86,7 +86,9 @@ with sync_playwright() as p:
     c, pg = ac("?ekran=bulten&tohum=4&rakipBaskan=yerinde")
     gec(pg); pg.wait_for_timeout(300)
     pg.click("#btnMacaGec"); pg.wait_for_function("KARAR_ANI.acik", timeout=180000); e1 = pg.evaluate(DURUM)
-    bos_tikla(pg); pg.keyboard.press("Digit2"); pg.wait_for_function("!TEPE_AN.aktif", timeout=180000); pg.wait_for_timeout(1500); e2 = pg.evaluate(DURUM)
+    bos_tikla(pg); pg.keyboard.press("Digit2"); pg.wait_for_function("!TEPE_AN.aktif", timeout=180000)
+    # F3-0: ertelenen Santraya geç maç öncesini görüntüsüz bitirir (başsızda birkaç sn); hiç tetiklenmezse zaman aşımı
+    pg.wait_for_function("!MAC_ONCESI.includes(mac.phase) && !SANTRA_HIZLI.aktif", timeout=120000); e2 = pg.evaluate(DURUM)
     yaz("2D: Santraya geç karar anını bekletti, seçimden sonra ısınma bitti", e1["karar"] and bool(e2["secim"]) and e2["faz"] != "isinma",
         str({"once": e1["faz"], "sonra": e2["faz"], "secim": e2["secim"]}))
     c.close()
