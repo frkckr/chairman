@@ -21,13 +21,16 @@ module.exports={calistir({ctx,vm,N,tohum}){
   const yz=(a,c)=>c?(100*a/c).toFixed(1)+'%':'—';
   console.log(`\nT10 · o-sakatlik (sakatlık ve tedavi)`);
   /* [1] şiddet → derece */
+  /* G1-c (2026-10-24): çıkış payı yarıya indi (sakatCikisPay 0,5); 10 × N denemede şiddet başına ~5 çıkış kaldı ve 3 puanlık tolerans gürültüye
+     yenildi (400 denemede 1,0 şiddette %6,4 < 0,8'de %10,5; 2000 denemede tekdüze) → deneme sayısı 50 × N */
+  const Z1=50;
   {const S=[0.2,0.5,0.8,1.0],R=[];
     for(const s of S){let sak=0,cik=0,ted=0;
-      for(let i=0;i<n*10;i++){const m=kur((tohum||1)*100000+i*7+Math.round(s*10),()=>{});const p=m.teams[0][7],k=m.teams[1][6];
+      for(let i=0;i<n*Z1;i++){const m=kur((tohum||1)*100000+i*7+Math.round(s*10),()=>{});const p=m.teams[0][7],k=m.teams[1][6];
         const L=m.kayit.sakatliklar.length;m.sakatlikTemas(p,s,'faul',k);const yeni=m.kayit.sakatliklar.slice(L);
         if(yeni.length){sak++;if(yeni[0].derece==='cikis')cik++;else if(yeni[0].derece==='tedavi')ted++;}}
-      R.push({s,P:sak/(n*10),C:sak?cik/sak:0,T:sak?ted/sak:0});
-      console.log(`  [1] şiddet ${s.toFixed(1)}: sakatlık ${yz(sak,n*10)} · çıkış payı ${yz(cik,sak)} · tedavi payı ${yz(ted,sak)}`);}
+      R.push({s,P:sak/(n*Z1),C:sak?cik/sak:0,T:sak?ted/sak:0});
+      console.log(`  [1] şiddet ${s.toFixed(1)}: sakatlık ${yz(sak,n*Z1)} · çıkış payı ${yz(cik,sak)} · tedavi payı ${yz(ted,sak)}`);}
     let mono=true;for(let i=1;i<R.length;i++)if(R[i].P<R[i-1].P||R[i].C<R[i-1].C-0.03)mono=false;
     kapi(mono,'[1] sakatlık olasılığı ve çıkış payı şiddetle artar');}
   /* [2] kramp yalnız yorgunlukta */
