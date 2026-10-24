@@ -15,7 +15,8 @@
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const KOK=process.env.MOTOR_KOK?path.resolve(process.env.MOTOR_KOK):path.join(__dirname,'..');
 /* F1-b (2026-10-23): js/mac-gunu.js sayfanın maç günü oturumudur (adres, kayıtlı kariyer, stat tarifi); motor ona bağlı değildir */
-const DISARIDA=new Set(['js/stil-99.js','js/sunum-durumu.js','js/stadyum-tarifleri.js','js/mac-gunu.js']);
+/* G2-b (2026-10-24): stat tarifi kural dosyalarına girdi (kapasite, maç günü geliri; DOM yok) */
+const DISARIDA=new Set(['js/stil-99.js','js/sunum-durumu.js','js/mac-gunu.js']);
 function mantikDosyalari(kok){
   const html=fs.readFileSync(path.join(kok||KOK,'index.html'),'utf8');
   const sira=[...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m=>m[1]);

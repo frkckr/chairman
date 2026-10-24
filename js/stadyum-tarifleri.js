@@ -102,3 +102,11 @@ function statTarifiUret(kulupId,kulupAdi){
 
 /* Maç günü (MAC_GUNU) ve bu maçın stat tarifi (STAT) F1-b'den (2026-10-23) beri js/mac-gunu.js'tedir: maç kariyerden kurulur, stat maçın
    ev sahibinden seçilir. Doluluk ve deplasman payı orada (2.8O'dan beri sabit, TEST). */
+
+/* G2-b (2026-10-24): stat kapasitesi (kişi; saf, Node'da da yüklenir). Tribünde bir kişinin kapladığı metre tipine göre (js/stadyum.js çizimi aynı
+   sayıyı kullanır); kapalı ve inşaattaki bölümler düşer. Maç günü geliri bunu okur (js/kulup-mali.js) */
+const TRIBUN_KISI={oturma:0.5,ayakta:0.45,set:0.6,yamac:0.45};
+function statKapasitesi(T){
+  return T.tribunler.reduce((s,t)=>{const kapali=(t.bolumler||[]).reduce((a,b)=>a+(b.durum==='insaat'||b.durum==='kapali'?Math.max(0,b.to-b.from):0),0);
+    return s+Math.floor(Math.max(0,t.uzunluk-kapali)/TRIBUN_KISI[t.tip])*t.sira;},0);
+}

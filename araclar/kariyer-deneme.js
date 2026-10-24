@@ -18,8 +18,8 @@
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const KOK=path.join(__dirname,'..');
-const OYUN_DOSYALARI=['js/ortak.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/mesele.js','js/yonetim.js','js/olay.js','js/soz.js','js/mesajlar.js','js/gozlem.js',
-  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/hoca.js','js/mac-girdi.js','js/mac-sonuc.js','js/mac-okuma.js','js/lig-maclari.js','js/icerik-p12.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
+const OYUN_DOSYALARI=['js/ortak.js','js/stadyum-tarifleri.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/mesele.js','js/yonetim.js','js/olay.js','js/soz.js','js/mesajlar.js','js/gozlem.js',
+  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/hoca.js','js/mac-girdi.js','js/mac-sonuc.js','js/mac-okuma.js','js/lig-maclari.js','js/sozlesme.js','js/kulup-mali.js','js/transfer.js','js/icerik-p12.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
 const DOSYALAR=OYUN_DOSYALARI.concat(['araclar/test-icerik.js','js/kariyer-ornek.js']);
 /* F1 (2026-10-23): bağlam sıradan bir genel nesnedir (araclar/motor-yukle.js gibi; vm.constants.DONT_CONTEXTIFY). Eski sarılı bağlam her genel ada
    erişimi bir ara katmandan geçirdiği için kariyer 16 kulüp ve 289 oyuncuya büyüyünce araç 1 sn'den 15 sn'ye çıkmıştı */
@@ -217,7 +217,7 @@ bolum('1.4 — sürümlü yerel kayıt ve yükleme (bellek deposu)');
   KAYIT_GECISLERI[7]=v=>{v.maclar={};v.kayitSurumu=8;return v;};
   const y3=kariyerYukle(depo,'eski');
   delete KAYIT_GECISLERI[7];
-  denetle('Eski sürüm: geçiş yoksa açıklamalı hata, varsa sırayla dönüştürülür',!y2.tamam&&/eski bir sürüm/.test(y2.hata)&&y3.tamam&&y3.gecisler.join()==='7→8'&&metin(y3.kariyer.maclar)==='{}',`${y2.hata} · deneme geçişiyle: ${y3.gecisler&&y3.gecisler.join()}`);
+  denetle('Eski sürüm: geçiş yoksa açıklamalı hata, varsa sırayla dönüştürülür',!y2.tamam&&/eski bir sürüm/.test(y2.hata)&&y3.tamam&&y3.gecisler.join()==='7→8,8→9'&&metin(y3.kariyer.maclar)==='{}',`${y2.hata} · deneme geçişiyle: ${y3.gecisler&&y3.gecisler.join()}`);
 }
 denetle('Başlangıç verisi hiçbir denemede değişmedi',metin(ORNEK)===ornekMetni);
 
@@ -230,18 +230,21 @@ const oyunAl=ad=>vm.runInContext(ad,oyunCtx);
   const kur=oyunAl('kariyerBaslat'),c=kur({tohum:7}),d=kur({tohum:7}),h=oyunAl('kariyerDogrula')(c);
   const say=ad=>Object.keys(oyunAl(ad)).length;
   const adlar=ad=>Object.keys(oyunAl(ad)).sort().join(',');
-  denetle('Oyunda yalnız P12 TEST taslağı tanımlı (F6-a, karar 42): bir paket, bir gelişme, iki karar türü, bir katılım etkisi; konuya özgü ekip görevi (genel tavsiye hariç), girişim, gözlem notu ve söz tarafı yok',
-    adlar('PAKETLER')==='hocaDegerlendirme'&&adlar('GELISMELER')==='hocaBaskisi'&&adlar('KARAR_TURLERI')==='hocaAdayi,hocaKarari'&&adlar('KATILIM_ETKILERI')==='hocaAdayGorusmesi'
+  denetle('Oyunda yalnız P12 TEST taslağı (F6-a) ve G2 iskeleti (transfer teklifi, hocanın isteği, imza, sözleşme yenileme) tanımlı; konuya özgü ekip görevi (genel tavsiye hariç), girişim, gözlem notu ve söz tarafı yok',
+    adlar('PAKETLER')==='gelenTeklif,hocaDegerlendirme,hocaTalebi'&&adlar('GELISMELER')==='gelenTeklif,hocaBaskisi,hocaTalebi,transferImza'
+    &&adlar('KARAR_TURLERI')==='hocaAdayi,hocaKarari,sozlesmeYenile,teklifKarari,transferButcesi'&&adlar('KATILIM_ETKILERI')==='hocaAdayGorusmesi'
     &&Object.keys(oyunAl('EKIP_GOREVLERI')).filter(x=>x!=='tavsiye').length+say('GIRISIMLER')===0&&oyunAl('GOZLEM_NOTLARI').length===0&&say('SOZ_TARAFLARI')===0,
     [adlar('PAKETLER'),adlar('GELISMELER'),adlar('KARAR_TURLERI'),adlar('KATILIM_ETKILERI')].join(' · '));
-  denetle('Yeni kariyer geçerli; içerik sürümü 5 (F6-a), kayıt sürümü 8',!h.length&&c.icerik.surum===5&&c.kayitSurumu===8,h.join('; '));
+  denetle('Yeni kariyer geçerli; içerik sürümü 5 (F6-a), kayıt sürümü 9 (G2)',!h.length&&c.icerik.surum===5&&c.kayitSurumu===9,h.join('; '));
   const isler=Object.values(c.isler),ajandaIsleri=isler.filter(x=>x.tur==='ajanda');
   const kisiler=Object.values(c.kisiler),hocalar=kisiler.filter(p=>p.rol==='teknikDirektor');
   denetle('Kişiler yalnız başkan ve 16 kulübün hocası (F3); koltuklar boş; mesele, olay, söz ve haber yok',kisiler.length===17&&c.kisiler['kisi-1'].rol==='baskan'&&hocalar.length===16&&hocalar.every(h=>c.kulupler[h.kulupId].hocaId===h.id)&&metin(c.kulupler.demirkapi.yonetim)==='{"sayman":null,"futbol":null,"basin":null}'
     &&!Object.keys(c.meseleler).length&&!Object.keys(c.olaylar).length&&!Object.keys(c.sozler).length&&!c.haberler.length);
-  denetle('Takvimde tek ajanda işi: Cumartesi 19:00 maç günü (LIG.buMac ile aynı an); yanında yalnız iki transfer hatırlatması',ajandaIsleri.length===1&&ajandaIsleri[0].id==='is-1'&&ajandaIsleri[0].veri.eylem==='macGunu'
+  const gel=isler.filter(x=>x.tur==='gelisme');
+  denetle('Takvimde tek ajanda işi: Cumartesi 19:00 maç günü (LIG.buMac ile aynı an); yanında iki transfer hatırlatması, 1 Aralık ay başı (G2) ve kış döneminin dört gizli transfer gelişmesi',ajandaIsleri.length===1&&ajandaIsleri[0].id==='is-1'&&ajandaIsleri[0].veri.eylem==='macGunu'
     &&ajandaIsleri[0].tarih==='2026-11-28'&&saatYazi(ajandaIsleri[0].dakika)===LIG.buMac.saat&&ajandaIsleri[0].veri.baslik==='Maç: Demirkapı SK – Akdeniz FK'
-    &&isler.length===3&&isler.filter(x=>x.tur==='hatirlatma').length===2,ajandaIsleri[0]&&ajandaIsleri[0].veri.baslik);
+    &&isler.length===8&&isler.filter(x=>x.tur==='hatirlatma').length===2&&isler.filter(x=>x.tur==='ayBasi'&&x.tarih==='2026-12-01').length===1
+    &&gel.length===4&&gel.every(x=>x.tarih>='2027-01-04'&&x.tarih<='2027-01-31')&&metin(gel.map(x=>x.veri.gelisme).sort())==='["gelenTeklif","gelenTeklif","gelenTeklif","hocaTalebi"]',ajandaIsleri[0]&&ajandaIsleri[0].veri.baslik);
   denetle('Aynı tohum aynı kariyeri kurar',metin(c)===metin(d));
   denetle('Telefonda konuşma yok',oyunAl('konusmaListesi')(c).length===0);
   const o=oyunAl('ilerleOnizle')(c);
@@ -714,7 +717,7 @@ bolum('5.1a — sezon sonu kaydı (G1-d; yeni sezon yok; oyunun yüklediği dosy
   denetle('18 hafta: son maçın komutunda sezon sonu kaydı bir kez (tablo, şampiyon, bizim sıra ve puan); geçmişte sezonSonu; ertesi gün 10:00 hatırlatma; maç günü işi yok',
     n===18&&!!R&&R.tablo.length===16&&R.sampiyon===tb[0].id&&metin(R.tablo.map(t=>t.id))===metin(tb.map(t=>t.id))&&R.bizimSira===tb.findIndex(t=>t.id==='demirkapi')+1&&R.bizimPuan===tb.find(t=>t.id==='demirkapi').P
     &&G.length===1&&G[0].sira===R.bizimSira&&!!hat&&hat.tarih==='2027-03-28'&&hat.dakika===600&&!macIsi(k)&&tb.every(t=>t.O===30),`${n} hafta · şampiyon ${R&&R.sampiyon} · biz ${R&&R.bizimSira}. ${R&&R.bizimPuan} puan · ${hat&&hat.veri.metin}`);
-  {let c=k;for(let g=0;g<6&&!T('ilerleOnizle')(c).engel.length;g++)c=KK(c,x=>T('duragaIlerle')(x)).kariyer;
+  {let c=k;for(let g=0;g<60&&!T('ilerleOnizle')(c).engel.length;g++)c=KK(c,x=>T('duragaIlerle')(x)).kariyer;   /* G2: sözleşme kartları (cevapsız) ve son ay başı da geçer */
    const e=T('ilerleOnizle')(c).engel;
    denetle('Sezon bitince İlerle hatırlatmaya gider, sonra açık engel: “Sezon tamamlandı; yeni sezon bu sürümde yok (TEST).”',e.length===1&&e[0]===T('SEZON_SONU_METNI')&&c.gecmis.some(g=>g.tur==='is'&&g.sonuc&&/Sezon tamamlandı/.test(g.sonuc.metin||'')),e.join(' · '));}
   denetle('Sezon sonu kaydı ikinci kez yazılmaz; bitmiş haftanın sonucu ikinci kez uygulanamaz',KK(k,x=>T('sezonSonuYaz')(x)).sonuc===false&&reddeder(()=>KK(k,x=>T('macSonucuUygula')(x,Object.keys(x.maclar).pop(),S,0))));
@@ -797,10 +800,10 @@ bolum('3.7a — hoca değişimi ve P12 “Hocaya sabır mı, değişim mi?” TE
   denetle('Sıradaki aday: 2. adayın kartı [Göreve al / Mevcut hocayla devam]',!!c2&&c2.veri.sira===1&&metin(P('kararSecenekleri')(kg2,c2).map(s=>s.id))==='["al","devam"]');
   {const c=yap(kg2,c2.id,'devam');
    denetle('Mevcut hocayla devam: hoca aynı, konu kapanır, tazminat yok',c.kulupler.demirkapi.hocaId===h0&&c.meseleler[O.meseleId].durum==='kapandi'&&!Object.values(c.isler).some(x=>x.tur==='odeme'));}
-  const ky=yap(kg2,c2.id,'al'),hy=ky.kulupler.demirkapi.hocaId,yh=ky.kisiler[hy],od=Object.values(ky.isler).find(x=>x.tur==='odeme'&&x.veri.meseleId===O.meseleId);
+  const tzB=P('hocaTazminati')(kg2,h0),ky=yap(kg2,c2.id,'al'),hy=ky.kulupler.demirkapi.hocaId,yh=ky.kisiler[hy],od=Object.values(ky.isler).find(x=>x.tur==='odeme'&&x.veri.meseleId===O.meseleId);   /* G2: tazminat sözleşmeden */
   denetle('Göreve al: yeni hoca kişisi (2. adayın tarzı), eski hoca ayrıldı, saha kenarı görünüşü ve adı yeni, geçmişte hoca değişimi; ertesi gün tazminat; gazetede haber',
     hy!==h0&&yh.ad===A[1].ad&&yh.hoca.tarz===A[1].tarz&&ky.kisiler[h0].durum==='ayrildi'&&ky.kulupler.demirkapi.kadro.td.ad===A[1].ad&&ky.kulupler.demirkapi.kadro.td.sac===A[1].td.sac
-    &&ky.gecmis.some(g=>g.tur==='hocaDegisimi'&&g.eskiId===h0&&g.yeniId===hy)&&!!od&&od.veri.tutar===-P('P12_TAZMINAT')&&od.veri.kalem==='tazminat'&&od.tarih===P('tarihEkle')(ky.tarih,1)
+    &&ky.gecmis.some(g=>g.tur==='hocaDegisimi'&&g.eskiId===h0&&g.yeniId===hy)&&!!od&&tzB>0&&od.veri.tutar===-tzB&&od.veri.kalem==='tazminat'&&!!yh.sozlesme&&od.tarih===P('tarihEkle')(ky.tarih,1)
     &&ky.haberler.some(h=>h.anahtar==='p12.haber'&&h.p.kisiId===hy),`${yh.ad} · ${yh.hoca.tarz} · ${od&&od.tarih}`);
   {const j=macIsi(ky),G=P('macGirdisi')(ky,j.veri.macId);
    denetle('Sonraki maç girdisi yeni hocayla: tarz, hoca adı, saha kenarı adı',G.tarz[G.biz]===A[1].tarz&&G.hocalar[G.biz].id===hy&&G.kadro[G.biz].td.ad===A[1].ad,`${G.tarz[G.biz]} · ${G.kadro[G.biz].td.ad}`);
@@ -815,7 +818,7 @@ bolum('3.7a — hoca değişimi ve P12 “Hocaya sabır mı, değişim mi?” TE
      &&![s.metin].concat(s.aciklama).some(x=>x.includes(String(A[0].bilgi).replace('.',','))||x.includes(String(A[0].bilgi))));}
   let kt=ilerle(ky);for(let g=0;g<4&&kt.meseleler[O.meseleId].durum!=='kapandi';g++)kt=ilerle(kt);
   denetle('Tazminat ödenince kasadan düşer; konu ve olay kapanır; eski hocanın mesajları telefonda kalır; kariyer geçerli, kaydet–yükle aynı',
-    kt.hareketler.some(h=>h.kalem==='tazminat'&&h.tutar===-P('P12_TAZMINAT'))&&kt.meseleler[O.meseleId].durum==='kapandi'&&p12(kt)[0].durum==='kapandi'
+    kt.hareketler.some(h=>h.kalem==='tazminat'&&h.tutar===-tzB)&&kt.meseleler[O.meseleId].durum==='kapandi'&&p12(kt)[0].durum==='kapandi'
     &&P('konusmaListesi')(kt).some(x=>x.anahtar===h0)&&!P('kariyerDogrula')(kt).length&&!!kayitTur(kt),an(kt));
   {const c=yap(kg,c1.id,'al');denetle('1. adayı göreve almak da çalışır (1. adayın tarzı)',c.kisiler[c.kulupler.demirkapi.hocaId].hoca.tarz===A[0].tarz&&c.kisiler[h0].durum==='ayrildi');}
   {const c=ilerle(seri(ky,['M','M']));
@@ -834,7 +837,7 @@ bolum('3.7a — hoca değişimi ve P12 “Hocaya sabır mı, değişim mi?” TE
    denetle('Beş beraberlik: üçte 3 puan konu açmaz; beşinci maçta galibiyetsiz varyantla açılır',yok&&p12(c).length===1&&p12(c)[0].varyant==='galibiyetsiz',p12(c).map(o=>o.varyant).join());}
   {const c=ilerle(seri(k0,['M','M','G']));denetle('Son maç galibiyetse konu açılmaz (3 puan)',!p12(c).length);}
   {const c=KK(k0,x=>{x.icerik.surum=4;}).kariyer,d=seri(c,['M','M','M']);
-   denetle('İçerik sürümü 4 ile kurulmuş kariyerde P12 gelişmesi kurulmaz (eski kariyerde sonradan eklenen paket açılmaz)',!Object.values(d.isler).some(x=>x.tur==='gelisme')&&!p12(ilerle(d)).length);}
+   denetle('İçerik sürümü 4 ile kurulmuş kariyerde P12 gelişmesi kurulmaz (eski kariyerde sonradan eklenen paket açılmaz)',!Object.values(d.isler).some(x=>x.tur==='gelisme'&&x.veri.gelisme==='hocaBaskisi')&&!p12(ilerle(d)).length);}
   {const B=P('hocaAdayiDenetle'),a=P('hocaAdaylari')(k0,'demirkapi','x')[0];
    denetle('Bozuk aday reddedilir (tarz, bilgi); hocası olmayan kulüpte değişim reddedilir',B(Object.assign({},a,{tarz:'yok'})).length>0&&B(Object.assign({},a,{bilgi:2})).length>0
      &&reddeder(()=>KK(k0,x=>P('hocaDegistir')(x,'demirkapi',Object.assign({},a,{tarz:'yok'}))))&&reddeder(()=>KK(k0,x=>{x.kulupler.demirkapi.hocaId=null;P('hocaDegistir')(x,'demirkapi',a);})));}

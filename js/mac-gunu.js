@@ -25,9 +25,9 @@ const MAC_GUNU=(()=>{
   /* stat: ev sahibinin statı (F1-c). Başkanın kulübü evdeyse kulübün statı (js/stadyum-tarifleri.js STADYUMLAR.kulup), değilse ev sahibinin
      tarifi (statTarifiUret). doluluk (2.8O'dan beri sabit, TEST): kulüpte 0,3; öbür statlarda 0,22–0,35 (kulüp ve haftadan); deplasman payı 0,08 */
   const statKur=(ev,evAd,biz,hafta)=>{
-    if(!ev||ev===biz)return{stat:'kulup',statTarifi:STADYUMLAR.kulup,doluluk:0.3,deplasman:0.08,zemin:STADYUMLAR.kulup.zemin};
+    if(!ev||ev===biz)return{stat:'kulup',statTarifi:STADYUMLAR.kulup,doluluk:dolulukTest(biz,biz,hafta),deplasman:0.08,zemin:STADYUMLAR.kulup.zemin};
     const T=statTarifiUret(ev,evAd);
-    return{stat:ev,statTarifi:T,doluluk:+(0.22+0.13*h2(hafta|0,parseInt(saglamaHesapla('doluluk:'+ev),16)|0)).toFixed(2),deplasman:0.08,zemin:T.zemin};
+    return{stat:ev,statTarifi:T,doluluk:dolulukTest(ev,biz,hafta),deplasman:0.08,zemin:T.zemin};   /* G2-b: js/kulup-mali.js (maç günü geliri aynı formül) */
   };
   let macId=null,evOn=null;try{const q=new URLSearchParams(location.search);macId=q.get('mac');evOn=q.get('ev');}catch(e){}
   /* geliştirme: ?ev=<kulüp> kariyersiz maçı o kulübün statında açar (tarif önizlemesi; kadrolar ve taraflar aynı) */

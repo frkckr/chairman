@@ -14,9 +14,12 @@
      dönüştürülmez, açılırken nedeni söylenerek reddedilir (js/kayit.js). İçerik sürümü 4 boş içeriktir.
    Sürüm 7 (F1, 2026-10-23): sezon, fikstur, maclar (js/fikstur.js), oyuncular ve sonrakiNo.oyuncu (js/kariyer-kadro.js); kulüplerde kadro;
      dünya ligin 16 kulübüdür. Sürüm 6 kayıtları dönüştürülmez (lig ve kadrolar kariyere geçti), nedeni söylenerek reddedilir.
+   Sürüm 9 (G2, 2026-10-24 gece): oyuncu ve hoca sözleşmesi (sozlesme {maas, bitis} ya da null; js/sozlesme.js), takvimde 'ayBasi' işi (maaş, lig payı;
+     js/kulup-mali.js), transfer olayları (js/transfer.js). Sürüm 8 kaydı geçişle açılır (js/kayit.js KAYIT_GECISLERI[8]: ilk ay başı işi eklenir;
+     sözleşmeler o ay başında TEST ölçekle kurulur, kadrolar 22'ye tamamlanır).
    Sürüm 8 (F3, 2026-10-24): kadrosu olan her kulübün hocası (kişi, rol teknikDirektor, hoca {tarz, bilgi, israr}; kulup.hocaId; js/hoca.js);
      maclar girdisinde sutlar, xg ve ilk11 (js/mac-sonuc.js). Sürüm 7 kayıtları dönüştürülmez (hoca ve maçın okunması kariyere geçti). */
-const KARIYER_SURUM=8;
+const KARIYER_SURUM=9;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */

@@ -23,6 +23,19 @@ const KAYIT_BICIM=1;
    F1 (2026-10-23): sürüm 6 da açılmaz — lig, fikstür ve kadrolar kariyere geçti; içeriksiz kariyer yeniden başlatılır (YOL_HARITASI karar 36).
    F3 (2026-10-24): sürüm 7 de açılmaz — hocalar ve maçın okunması kariyere geçti (oynanmış maçların şut listesi yok); kariyer yeniden başlatılır */
 const KAYIT_GECISLERI={};
+/* G2 (2026-10-24 gece): 8 → 9 — sözleşme ve para akışı. Oyuncu ve hoca sözleşmeleri boş kalır (alan yok = null); başkanın kulübüne ilk ay başı işi
+   eklenir (ayın 1'i 10:00, js/kulup-mali.js): o iş sözleşmeleri TEST ölçekle kurar, kadroları 22'ye tamamlar, transfer takvimini kurar. Sezon sonu
+   kaydı varsa ay başı kurulmaz (yeni sezon yok). Veri dönüşümüdür: kural işlevi çağırmaz, para hareketi üretmez */
+KAYIT_GECISLERI[8]=v=>{
+  v.kayitSurumu=9;
+  const biz=v.kisiler&&v.kisiler[v.baskanId]&&v.kisiler[v.baskanId].kulupId;
+  if(biz&&v.gorevDurumu==='gorevde'&&!(v.sezon&&v.sezon.sonuc)&&typeof v.tarih==='string'){
+    const [y,a]=v.tarih.split('-').map(Number),Y=a===12?y+1:y,A=a===12?1:a+1,no=v.sonrakiNo.is,id='is-'+no;
+    v.isler=Object.assign({},v.isler,{[id]:{id,tur:'ayBasi',tarih:`${Y}-${String(A).padStart(2,'0')}-01`,dakika:600,veri:{kulupId:biz}}});
+    v.sonrakiNo=Object.assign({},v.sonrakiNo,{is:no+1});
+  }
+  return v;
+};
 const ESKI_KAYIT_SINIRI=8;                   // bu sürümden eski kayıt dönüştürülmez
 /* eski sürümün neden açılmadığı (oyuncuya söylenir); listede olmayan eski sürüm 2.8L nedenini alır */
 const ESKI_KAYIT_NEDENI={6:'lig, fikstür ve kadrolar kariyere geçtiği için',7:'hocalar ve maçın okunması kariyere geçtiği için'};

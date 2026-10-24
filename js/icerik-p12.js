@@ -15,7 +15,7 @@
             Hoca bu sürede değişirse iş iptal olur ve söz bozulur (js/hoca.js hocaDegistir). Süre içinde baskı yeniden açılmaz (konu açık).
           değişim — ertesi gün 11:00 zorunlu görüşme (katılım etkisi 'hocaAdayGorusmesi'; adaylar js/hoca.js hocaAdaylari, işin verisinde):
             ilk adayın kartı [Göreve al / Sıradaki adayı dinle], ikinci adayın kartı [Göreve al / Mevcut hocayla devam]. Göreve almak: hocaDegistir,
-            ertesi gün 10:00 tazminat ödemesi (P12_TAZMINAT, kalem 'tazminat'), yerel gazetede haber. Sonraki maçın kadrosunu ve tarzını yeni hoca seçer.
+            ertesi gün 10:00 tazminat ödemesi (G2'den beri sözleşmeden: kalan ay × maaş; sözleşmesizde P12_TAZMINAT; kalem 'tazminat'), yerel gazetede haber. Sonraki maçın kadrosunu ve tarzını yeni hoca seçer.
         Cevapsız kalırsa hoca görevde kalır, söz verilmez (fiilen sabır; koşul sürerse konu P12_ARA_GUN sonra yeniden açılabilir).
    Kayda metin yazılmaz: olay anahtarları ve parametreler (MESELE_OLAYLARI). Hocanın bilgisi ve ısrarı hiçbir metinde yoktur (gizli puan kuralı).
    Borçlar (F6-b, kullanıcıyla): koşulun ve eşiklerin oyun kuralı olarak onayı; yönetim/taraftar baskısının kaynağı (bugün yalnız sonuç); hocanın
@@ -26,7 +26,8 @@ const P12_PENCERE=3,P12_PUAN=1;         // son 3 maçta en çok 1 puan
 const P12_GALIBIYETSIZ=5;               // ya da son 5 maçta galibiyet yok
 const P12_ARA_GUN=14;                   // iki P12 konusunun açılışı arasında en az gün
 const P12_SABIR_MAC=3;                  // sabırda verilen süre (maç; sezonda kalan maç azsa sonuncusuna dek)
-const P12_TAZMINAT=30000000;            // 300.000,00 ₺ (kuruş)
+const P12_TAZMINAT=30000000;            // 300.000,00 ₺ (kuruş): sözleşmesiz hocada (G2'den önceki kariyer); sözleşmeli hocada kalan ay × maaş (js/sozlesme.js)
+const p12Tazminat=(k,id)=>typeof hocaTazminati==='function'&&k.kisiler[id]&&k.kisiler[id].sozlesme?hocaTazminati(k,id):P12_TAZMINAT;
 /* adayın görüşmede tarzını anlatan cümlesi (tarz adına göre; TEST) */
 const P12_TARZ_SOZU={
   dengeli:'Önce denge; fırsat gelince vururuz.',
@@ -180,7 +181,7 @@ KATILIM_ETKILERI.hocaAdayGorusmesi={
 KARAR_TURLERI.hocaAdayi={
   denetle:(k,v)=>{const h=p12AdaylarDenetle(k,v);if(!Number.isInteger(v.sira)||v.sira<0||v.sira>=HOCA_ADAY_SAYISI)h.push(`aday sırası geçersiz (${v.sira})`);return h;},
   secenekler:(k,is)=>{const v=is.veri,a=v.adaylar[v.sira],eski=kisiAdi(k,v.hocaId),son=v.sira===v.adaylar.length-1;
-    return[{id:'al',metin:'Göreve al',sure:30,gizli:{bilgi:a.bilgi,'ısrar':a.israr},aciklama:[`${a.ad} takımın hocası olur; tarzı ${HOCA_TARZ_ADI[a.tarz]}.`,`${eski} ile yollar ayrılır; tazminat ${paraYazi(P12_TAZMINAT)}.`,
+    return[{id:'al',metin:'Göreve al',sure:30,gizli:{bilgi:a.bilgi,'ısrar':a.israr},aciklama:[`${a.ad} takımın hocası olur; tarzı ${HOCA_TARZ_ADI[a.tarz]}.`,`${eski} ile yollar ayrılır; tazminat ${paraYazi(p12Tazminat(k,v.hocaId))}.`,
         'Kadroyu ve tarzı sonraki maçtan başlayarak yeni hoca belirler.']},
       son?{id:'devam',metin:'Mevcut hocayla devam',sure:0,aciklama:[`${eski} görevde kalır.`]}
         :{id:'sonraki',metin:'Sıradaki adayı dinle',sure:60,aciklama:[`${v.adaylar[v.sira+1].ad} ile görüşürsün; ${a.ad} ile anlaşma olmaz.`]}];},
@@ -188,10 +189,10 @@ KARAR_TURLERI.hocaAdayi={
     const v=is.veri,a=v.adaylar[v.sira];
     if(secim==='sonraki'){meseleOlay(k,v.meseleId,'p12.adayGec',{ad:a.ad});return{bilgi:p12AdayKarti(k,v,v.sira+1)};}
     if(secim==='devam'){meseleOlay(k,v.meseleId,'p12.adayGec',{ad:a.ad});return{bilgi:meseleOlay(k,v.meseleId,'p12.devam',{kisiId:v.hocaId})};}
-    const yeni=hocaDegistir(k,v.kulupId,a),yarin=tarihEkle(k.tarih,1),m=k.meseleler[v.meseleId];
-    odemePlanla(k,{kulupId:v.kulupId,tarih:yarin,dakika:600,tutar:-P12_TAZMINAT,kalem:'tazminat',aciklama:`${kisiAdi(k,v.hocaId)} tazminatı`,meseleId:v.meseleId});
+    const tz=p12Tazminat(k,v.hocaId),yeni=hocaDegistir(k,v.kulupId,a),yarin=tarihEkle(k.tarih,1),m=k.meseleler[v.meseleId];   /* G2: tazminat sözleşmeden, değişimden önce */
+    odemePlanla(k,{kulupId:v.kulupId,tarih:yarin,dakika:600,tutar:-tz,kalem:'tazminat',aciklama:`${kisiAdi(k,v.hocaId)} tazminatı`,meseleId:v.meseleId});
     if(!m.kisiler.includes(yeni))m.kisiler.push(yeni);
     haberEkle(k,{tur:'gazete',anahtar:'p12.haber',p:{kulupId:v.kulupId,kisiId:yeni,eskiId:v.hocaId,kaynak:'yerelGazete'},olayId:v.olayId});
-    return{bilgi:meseleOlay(k,v.meseleId,'p12.yeniHoca',{kisiId:yeni,eskiId:v.hocaId,tutar:P12_TAZMINAT,tarih:yarin})};
+    return{bilgi:meseleOlay(k,v.meseleId,'p12.yeniHoca',{kisiId:yeni,eskiId:v.hocaId,tutar:tz,tarih:yarin})};
   }
 };

@@ -37,6 +37,8 @@ function kariyerBaslat({tohum}={}){
   const biz=k.kisiler[k.baskanId].kulupId;
   sezonKur(k,LIG,biz);
   sezonTakvimiKur(k,biz);
+  /* G2 (2026-10-24 gece): sözleşmeler, ilk ay başı ve transfer dönemi gelişmeleri (js/sozlesme.js, js/kulup-mali.js, js/transfer.js) */
+  sozlesmeleriTamamla(k);ayBasiKur(k,biz);transferTakvimiKur(k);
   for(const f of BASLANGIC_EKLERI)f(k);
   const h=kariyerDogrula(k);
   if(h.length)throw new Error('Başlangıç tutarsız kuruldu: '+h.slice(0,3).join('; '));

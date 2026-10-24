@@ -179,6 +179,7 @@ function hocaDegistir(k,kulupId,aday){
   eski.durum='ayrildi';
   const id=hocaKur(k,kulupId,{ad:aday.ad,tarz:aday.tarz,bilgi:aday.bilgi,israr:aday.israr,dogumTarihi:aday.dogumTarihi});
   c.kadro.td=Object.assign({},c.kadro.td,aday.td,{ad:aday.ad});
+  if(typeof sozlesmeleriTamamla==='function'&&eski.sozlesme)sozlesmeleriTamamla(k);   /* G2: yeni hocaya TEST sözleşme (sözleşmeli kariyerde) */
   k.gecmis.push({tur:'hocaDegisimi',kulupId,eskiId:eski.id,yeniId:id,tarih:k.tarih,dakika:k.gunIciDakika});
   return id;
 }

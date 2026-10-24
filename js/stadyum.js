@@ -12,7 +12,7 @@
    Motorun okuduğu tünel, kulübe ve taraftar noktaları değişmez (TEKNIK_PLAN §8). */
 const SK=STIL.stadyum;
 const PISTLI=STAT.pist!=='yok';
-const SIRA={oturma:{derinlik:0.8,egim:0.5,kisi:0.5},ayakta:{derinlik:0.55,egim:0.28,kisi:0.45},set:{derinlik:1,egim:0.4,kisi:0.6},yamac:{derinlik:1.8,egim:1.1,kisi:0.45}};
+const SIRA={oturma:{derinlik:0.8,egim:0.5,kisi:TRIBUN_KISI.oturma},ayakta:{derinlik:0.55,egim:0.28,kisi:TRIBUN_KISI.ayakta},set:{derinlik:1,egim:0.4,kisi:TRIBUN_KISI.set},yamac:{derinlik:1.8,egim:1.1,kisi:TRIBUN_KISI.yamac}};   /* G2-b: kişi başına metre js/stadyum-tarifleri.js'te (kapasite ve gelir aynı sayıdan) */
 
 /* ---- saha: zemin kalitesi düştükçe çim sararır, kel ve çamurlu alanlar çoğalır, çizgiler solar ---- */
 const RGB=h=>{const n=parseInt(h.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255];},mixRGB=(a,b,t)=>'rgb('+a.map((v,i)=>Math.round(v*(1-t)+b[i]*t)).join(',')+')';
