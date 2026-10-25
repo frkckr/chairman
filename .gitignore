@@ -14,3 +14,4 @@ araclar/cevre/
 # A7 hareket verisinin ham dosyaları (CMU, RBDS; depoya girmez, araclar/hareket-egrileri.py okur)
 araclar/veri/
 araclar/son-egri.txt
+prototipler/stat-konsept/cikti/
