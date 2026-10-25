@@ -6,19 +6,22 @@
      kararKarti(k, isId, s) → html. s: {onizle:'sol'|'sag'|null, gorus, ozetsiz, kapali, dosyaBaglanti, dosyada, testSecenek}
        DOM: div.kk-alan > section.kk-kart[data-is][data-yuz=notr|sol|sag][data-sol=<id>][data-sag=<id>] (tabindex=0, role=group, aria-label “Karar”;
        kilitliyken aria-disabled="true", önizlenen yüzün engeli varken data-engel) > .kk-yuz (nötr: konu, hazır görüş, son cevap, cevapsız sonucu;
-       önizlemede: cevabın metni, süresi, bilinen sonuçları, engel, kaçırılacak ve cevapsız kalacak işler, TEST kutusu), .kk-kenarlar (iki
-       button.kk-kenar[data-yon][data-secim][data-eylem="kartOnizle"]; engelli cevabın kenarı aria-disabled ve nedeni kısa), .kk-not (dosya bağlantısı).
+       önizlemede: cevabın metni, süresi, bilinen sonuçları, engel, kaçırılacak ve cevapsız kalacak işler, TEST kutusu; canlı bölge değildir,
+       önizlenen yüz kalıcı #kartDuyuru'dan duyurulur: kartDuyur), .kk-kenarlar (iki button.kk-kenar[data-yon][data-secim][data-eylem="kartOnizle"];
+       engelli cevabın kenarı aria-disabled ve nedeni kısa), .kk-not (dosya bağlantısı).
        Önizlenen yüzün uyarıları o cevabın süresiyle hesaplanır (ajandaOnizle o seçeneğin kimliğiyle çağrılır). İki cevaplı olmayan kararda kart kurulmaz.
        kapali: kart kilitli, nedeni yüzde (maç telefonu); duraklatmada da kilitli (“Duraklatıldı: devam edince cevaplanır.”).
      kartEtkilesimKur(kok, {uygula(isId, secim, yon), onizle(isId, yon|null), kilitli(), kart, kenar})  kök başına bir kez; delege olaylar.
        Sürükleme: kart yatay kayar (translateX ve en çok STIL.kagit.kart.egim derece eğim); kayma kart genişliğinin onizle katını geçince yüz o yönün
-       cevabına döner (onizle), bırakınca kayma esik katını geçmişse ve cevap engelsiz, kart kilitsiz ise uygula; aksi hâlde kart sure içinde yerine
-       yaylanır ve yüz nötre döner. Dikey hareket sayfayı kaydırır (touch-action: pan-y). Klavye (kart odaktayken): ←/→ önizler (kart kayma kadar
-       kayar), Enter önizlenen cevabı uygular, Esc yalnız önizleme varken onu bırakır (olay yutulur; yoksa ev sahibinin Esc'i çalışır). Kenar etiketine
+       cevabına döner (onizle), bırakınca kayma esik katını geçmişse, yüz hâlâ o yöndeyse (sürüklerken klavyeyle çevrilmemiş ya da bırakılmamış)
+       ve cevap engelsiz, kart kilitsiz ise uygula; aksi hâlde kart sure içinde yerine yaylanır ve yüz nötre döner. Dikey hareket sayfayı kaydırır
+       (touch-action: pan-y). Klavye (kart odaktayken): ←/→ önizler (kart kayma kadar kayar), Enter önizlenen cevabı uygular, Esc yalnız önizleme varken onu bırakır (olay yutulur; yoksa ev sahibinin Esc'i çalışır). Kenar etiketine
        tıklamak önizler (aynı kenara ikinci tıklama önizlemeyi bırakır; tıklama hiçbir zaman uygulamaz); kart gövdesine tıklamak hiçbir şey yapmaz.
        Sürüklemeden sonraki tıklama yutulur. Ev sahibi önizlemede yeniden çizebilir: kart data-is ile yeniden bulunur, duruşu ve işaretçi yakalaması
        yeni karta taşınır. secim: kartın data-sol/data-sag değeri (yoksa yön). kart/kenar: seçiciler (varsayılan .kk-kart, .kk-kenar; karar anı kendi
-       sınıflarını verebilir). Ayrıntı TEKNIK_PLAN §10, STIL_REHBERI §7. */
+       sınıflarını verebilir). Ayrıntı TEKNIK_PLAN §10, STIL_REHBERI §7.
+     kartDuyur(kart)  yüzün metnini kalıcı canlı bölgeye (#kartDuyuru) yazar; kartEtkilesimKur yeniden çizilen önizlemede, maç telefonu kendi
+       kenar tıklamasında çağırır. */
 const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 /* stil masaüstü kopyası yalnız js/ klasörünü taşıdığı için buradan belgeye eklenir */
 (function kartStili(){
@@ -61,6 +64,7 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .kk-kart .kk-kenar[aria-pressed="true"] small,.kk-kart .kk-kenar[aria-pressed="true"] .kk-ok{color:#3a2a08}
 .kk-kart .kk-kenar[aria-disabled="true"]{opacity:.6;border-style:dashed}
 .kk-kart .kk-kenar[aria-disabled="true"] small{color:var(--k-kirmizi)}
+#kartDuyuru{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 `;
   document.head.appendChild(st);
 })();
@@ -110,10 +114,19 @@ function kararKarti(k,isId,s={}){
   };
   let ic='<div class="kk-alan"><section class="kk-kart" data-is="'+yazT(isId)+'" data-yuz="'+(yon||'notr')+'" data-sol="'+yazT(S[0].id)+'" data-sag="'+yazT(S[1].id)+'" tabindex="0" role="group" aria-label="Karar"'+
     (kilit?' aria-disabled="true"':'')+(xs&&engel.length?' data-engel="1"':'')+'>'+
-    '<div class="kk-yuz" aria-live="polite">'+yuz+'</div><div class="kk-kenarlar">'+kenar(0)+kenar(1)+'</div>';
+    '<div class="kk-yuz">'+yuz+'</div><div class="kk-kenarlar">'+kenar(0)+kenar(1)+'</div>';
   if(s.dosyaBaglanti&&v.meseleId)ic+='<p class="kk-not"><button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+v.meseleId+'" data-donus="telefon">Dosyayı aç ▸</button></p>';
   return ic+'</section></div>';
 }
+
+/* ---- duyuru: ev sahipleri önizlemede kartı baştan kurar (innerHTML); kartın içinde yeni eklenen canlı bölge ekran okuyucuya duyurulmaz. Yüzün
+   metni belgede kalıcı tek canlı bölgeye (#kartDuyuru, görünmez) yazılır; aynı metin yeniden duyurulsun diye önce boşaltılır (inceleme 2026-10-26) ---- */
+const kartDuyur=(()=>{let z=null;return c=>{
+  const y=c&&c.querySelector('.kk-yuz');if(!y||!document.body)return;
+  let d=document.getElementById('kartDuyuru');
+  if(!d){d=document.createElement('div');d.id='kartDuyuru';d.setAttribute('role','status');d.setAttribute('aria-live','polite');d.setAttribute('aria-atomic','true');document.body.appendChild(d);}
+  const t=(y.innerText||y.textContent||'').replace(/\s+/g,' ').trim();
+  d.textContent='';clearTimeout(z);z=setTimeout(()=>{d.textContent=t;},50);};})();
 
 /* ---- etkileşim: sürükleme, kenar etiketi ve klavye; kök başına bir kez kurulur ---- */
 function kartEtkilesimKur(kok,o){
@@ -134,6 +147,8 @@ function kartEtkilesimKur(kok,o){
     if(o.onizle)o.onizle(id,y);
     const yeni=bul(id);
     if(yeni&&yeni!==eski&&tr&&tr!=='none'){yeni.style.transition='none';yeni.style.transform=tr;void yeni.offsetWidth;yeni.style.transition='';yeni.style.transform='';}
+    /* yeniden çizen ev sahibinde yüz kalıcı canlı bölgeden duyurulur (aynı düğümü güncelleyen karar anı kendi .ka-yuz'unu kullanır) */
+    if(yeni&&yeni!==eski)kartDuyur(yeni);
     return yeni;
   }
   /* sürükleme */
@@ -151,7 +166,9 @@ function kartEtkilesimKur(kok,o){
     /* sürüklemenin sonundaki tıklama (kart gövdesi, kenar ya da oda) yutulur */
     bastir=true;setTimeout(()=>{bastir=false;},0);
     let c=bul(d.id);if(!c)return;
-    if(!iptal&&Math.abs(d.dx)>=A.esik*d.g&&d.yon&&uygulanir(c,d.yon)){
+    /* yüz bırakıldığı anda da sürüklenen yöndeyse uygulanır: sürüklerken klavyeyle (←/→, Esc; karar anının yakalayıcısı dahil) çevrilen ya da
+       bırakılan önizlemede yüzde görünmeyen cevap uygulanmaz, kart yerine yaylanır (inceleme 2026-10-26) */
+    if(!iptal&&Math.abs(d.dx)>=A.esik*d.g&&d.yon&&yonu(c)===d.yon&&uygulanir(c,d.yon)){
       uygula(c,d.yon);
       c=bul(d.id);if(c&&c.classList.contains('kk-surukle')){c.classList.remove('kk-surukle');c.style.transform='';}
       return;

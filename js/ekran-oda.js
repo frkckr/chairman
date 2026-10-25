@@ -613,8 +613,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
     uygula:(id,secim)=>isiYap(id,secim),
     onizle:(id,y)=>{if(y)onizleler[id]=y;else delete onizleler[id];ciz('.kk-kart[data-is="'+id+'"]');},
     kilitli:()=>duraklatmaVar()});
-  /* duraklatma değişince düğmeler yeniden çizilir; izlerken o ana kadarki gözlem kaydedilir */
-  duraklatmaDinle(a=>{if(kap.hidden||oyun.bozukHata)return;if(a&&izleme)izlemeKaydet();ciz();});
+  /* duraklatma değişince düğmeler yeniden çizilir; izlerken o ana kadarki gözlem kaydedilir. Odak kartta (ya da kenar etiketinde) ya da Duraklat
+     düğmesindeyse yeniden çizimden sonra aynı yere döner: Boşluk/P ile duraklatıp devam eden klavye kullanıcısı ←/→/Enter'ı kaybetmez (inceleme 2026-10-26) */
+  const odakSecici=()=>{const ae=document.activeElement,ic=ae&&ae!==kap&&kap.contains(ae)?ae:null,c=ic&&ic.closest('.kk-kart');
+    return c?'.kk-kart[data-is="'+c.dataset.is+'"]'+(ic.classList.contains('kk-kenar')?' .kk-kenar[data-yon="'+ic.dataset.yon+'"]':''):ic&&ic.dataset.eylem==='duraklat'?'.od-duraklat':undefined;};
+  duraklatmaDinle(a=>{if(kap.hidden||oyun.bozukHata)return;if(a&&izleme)izlemeKaydet();ciz(odakSecici());});
   addEventListener('pagehide',()=>{if(izleme)izlemeKaydet();});
   /* kayıttan dönüşte süren bir gözlem varsa başkan balkondadır */
   if(gozlemVar&&k&&gozlemAcik(k))odaYerAyarla('balkon');

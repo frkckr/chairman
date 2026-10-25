@@ -6,8 +6,8 @@
    altında yerine yaylanır; iki kenar etiketi cevapların adıdır ve yalnız önizler. Klavye: ←/→ önizler, Enter önizleneni seçer, Esc önizlemeyi bırakır;
    1/2 doğrudan seçer. Tıklama seçmez. Sol yüz cevaplar[0], sağ yüz cevaplar[1]; sol ve sağ doğru/yanlış ya da renkle kodlanmaz.
    Süre kart yerine oturduktan sonra başlar; ortadan kenarlara eriyen ince çubuk, son saniyelerde amber; rakam yoktur. Seçilen cevap kartın yüzünde
-   kısa süre kalır (amber), sonra kart silinir. Süre dolarsa cevapsız sonucu işler. Duraklat süreyi ve kartın hareketini dondurur (zaman karenin
-   dt'siyle ilerler; duraklatmada seçim yapılmaz, önizleme açıktır). Yazı büyüklüğü ayarı uygulanır (OYUN.ayarlar.yazi). Ölçüler ve süreler STIL.an
+   kısa süre kalır (amber), sonra kart silinir. Süre dolarsa cevapsız sonucu işler (önizleme açıksa yüz nötre döner). Duraklat süreyi ve kartın
+   hareketini dondurur (zaman karenin dt'siyle ilerler; duraklatmada seçim yapılmaz, önizleme açıktır). Yazı büyüklüğü ayarı uygulanır (OYUN.ayarlar.yazi). Ölçüler ve süreler STIL.an
    (TEST), kartın kayma ve eşik ölçüleri STIL.kagit.kart.
      kararAniAc(kayit, {kim, bitince(secim)})   açar (kayit: KARAR_ANLARI, js/karar-ani.js)
      kararAniKare(dt)                          ilerletir (js/loca-giris.js locaGirisKare)
@@ -100,7 +100,8 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
        dönüşümü (sürükleme, önizleme kayması) ortak bileşenindir */
     const g=yumusak(S.t/A.giris);kararti.style.opacity=g;kim.style.opacity=g;
     S.kalan=S.secim===null?Math.max(0,S.sure-Math.max(0,S.t-A.giris)):S.kalan;
-    if(S.secim===null&&S.kalan<=0){S.secim=S.kayit.cevapsiz;S.secilen=-1;S.bitisT=S.t;}
+    /* süre doldu: sonuç cevapsızdır; önizlenen cevap yüzden ve kenardan kalkar, kart nötr yüzle söner (inceleme 2026-10-26) */
+    if(S.secim===null&&S.kalan<=0){S.secim=S.kayit.cevapsiz;S.secilen=-1;S.bitisT=S.t;S.onizle=null;yuzYaz();}
     const sonra=S.bitisT===null?0:yumusak((S.t-S.bitisT)/A.sonra),secildi=S.secilen!==null&&S.secilen>=0;
     if(S.kart[0])S.kart[0].classList.toggle('ka-secildi',secildi);
     kartlar.style.transform='translateY('+((1-g)*60).toFixed(1)+'%)';

@@ -59,7 +59,9 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false},onizleler:{
     if(ey==='kartOnizle'){const c=b.closest('.kk-kart');if(!c)return;const O=MAC_TELEFON.onizleler,id=c.dataset.is,y=b.dataset.yon;
       const yer=['.tel-govde','.tel-cevap'].map(s=>{const x=E.querySelector(s);return x?x.scrollTop:0;});
       if(O[id]===y)delete O[id];else O[id]=y;ciz('.kk-kart[data-is="'+id+'"]');
-      ['.tel-govde','.tel-cevap'].forEach((s,i)=>{const x=E.querySelector(s);if(x)x.scrollTop=yer[i];});}
+      ['.tel-govde','.tel-cevap'].forEach((s,i)=>{const x=E.querySelector(s);if(x)x.scrollTop=yer[i];});
+      /* yeniden kurulan kartın yüzü kalıcı canlı bölgeden duyurulur (js/ekran-kart.js kartDuyur; inceleme 2026-10-26) */
+      const yeni=E.querySelector('.kk-kart[data-is="'+id+'"]');if(yeni&&typeof kartDuyur==='function')kartDuyur(yeni);}
     else if(ey==='telUyg'){T.ekran=b.dataset.uyg;T.skorAc=false;ciz('.tel-geri',true);}
     else if(ey==='telEv'){T.ekran='ana';T.kisi=null;ciz('.tel-uygMesaj',true);}
     else if(ey==='telKisi'){T.ekran='konusma';T.kisi=b.dataset.kisi;ciz('.tel-geri',true);const g=E.querySelector('.tel-govde');if(g)g.scrollTop=g.scrollHeight;}

@@ -317,23 +317,57 @@ YUZ_IZLE_JS = """(kok) => { window.__yuzler = []; if (window.__yuzIzle) window._
   window.__yuzIzle = new MutationObserver(() => { const c = document.querySelector(kok + ' .kk-kart'), y = c && c.dataset.yuz; if (y && window.__yuzler[window.__yuzler.length - 1] !== y) window.__yuzler.push(y); });
   window.__yuzIzle.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-yuz'] }); }"""
 YUZ_IZ_BITIR_JS = "() => { if (window.__yuzIzle) window.__yuzIzle.disconnect(); window.__yuzIzle = null; return window.__yuzler || []; }"
+# inceleme (2026-10-26): önizlenen yüzün kalıcı canlı bölgesi (#kartDuyuru): odanın dışında, yeniden çizimde aynı düğüm; kartın yüzü canlı bölge değil
+DUYURU_JS = """() => { const d = document.getElementById('kartDuyuru'); if (!d) return null; const ayni = window.__duyuru ? window.__duyuru === d : null; window.__duyuru = d;
+  return { metin: d.textContent, canli: d.getAttribute('aria-live'), rol: d.getAttribute('role'), disarda: !document.getElementById('oda').contains(d),
+    ayni, yuzCanli: document.querySelectorAll('.kk-yuz[aria-live]').length }; }"""
+# kartı yüzünden tutma noktası ve kartın genişliği
+KART_TUT_JS = """(kok) => { const c = document.querySelector(kok + ' .kk-kart'), r = c.getBoundingClientRect(), y = c.querySelector('.kk-yuz').getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: y.top + Math.min(y.height / 2, 18), g: c.offsetWidth }; }"""
+
+
+async def duyuru(pg):
+    """inceleme (2026-10-26): kartDuyur metni kısa bir gecikmeyle yazar (önce boşaltır); dolana dek beklenir, sonra DUYURU_JS."""
+    try:
+        await pg.wait_for_function("() => { const d = document.getElementById('kartDuyuru'); return !!d && d.textContent.length > 0; }", timeout=3000)
+    except Exception:
+        pass
+    return await pg.evaluate(DUYURU_JS)
 
 
 async def kart_surukle(pg, kok, oran):
     """H1: kabın kartını yüzünden tutup kart genişliğinin oran katı kadar yatay sürükler ve bırakır (eksi: sola). Kartın genişliğini döndürür."""
     await pg.locator(kok + " .kk-kart").scroll_into_view_if_needed()
-    r = await pg.evaluate("""(kok) => { const c = document.querySelector(kok + ' .kk-kart'), r = c.getBoundingClientRect(), y = c.querySelector('.kk-yuz').getBoundingClientRect();
-      return { x: r.left + r.width / 2, y: y.top + Math.min(y.height / 2, 18), g: c.offsetWidth }; }""", kok)
+    r = await pg.evaluate(KART_TUT_JS, kok)
     await surukle(pg, r["x"], r["y"], r["x"] + oran * r["g"], r["y"], 16)
     await pg.wait_for_timeout(350)  # yaylanma (STIL.kagit.kart.sure 0,2 sn) bitsin
     return r["g"]
+
+
+async def kart_surukle_tus(pg, kok, oran, tus):
+    """inceleme (2026-10-26): kartı oran katı kadar sürükler, düğme basılıyken tuşa basar, sonra bırakır. Sürüklemede, tuştan sonra ve bırakınca
+    kartın yüzünü döndürür (sürükleme kartı odaklar; ev sahibi önizlemede yeniden çizip odağı yeni karta verir)."""
+    await pg.locator(kok + " .kk-kart").scroll_into_view_if_needed()
+    r = await pg.evaluate(KART_TUT_JS, kok)
+    await pg.mouse.move(r["x"], r["y"])
+    await pg.mouse.down()
+    await pg.mouse.move(r["x"] + oran * r["g"], r["y"], steps=16)
+    y0 = await pg.evaluate(YUZ_JS, kok)
+    await pg.keyboard.press(tus)
+    y1 = await pg.evaluate(YUZ_JS, kok)
+    await pg.mouse.up()
+    await pg.wait_for_timeout(350)  # yaylanma (STIL.kagit.kart.sure 0,2 sn) bitsin
+    y2 = await pg.evaluate(YUZ_JS, kok)
+    return [y and y["yuz"] for y in (y0, y1, y2)]
 
 
 async def bolum_3(tarayici, site, tum_hatalar):
     """TEST içeriğiyle defter, telefon ve masada açık dosya (2.8M). H1 (F4, 2026-10-26): karar tek kart (js/ekran-kart.js): (a) dosyada tek kart,
     kenarlar Kabul et / Saymana devret, eski düğmeler yok; (b) %25 sürükleyip bırakmak uygulamaz; (c) %55 sürükleyip bırakmak bir kez uygular; (d) karar
     panelinde ←/→ önizler, Esc bırakır, → + Enter uygular; (e) Duraklat'ta kart kilitli (Enter ve sürükleme uygulamaz); (f) telefonda cevap alanındaki
-    kart 13 ölçümde taşmasız ve kaydırmasız; (g) yenilemede karar bir kez; 15 dk'lık cevabın yüzünde kaçırılacak iş uyarısı."""
+    kart 13 ölçümde taşmasız ve kaydırmasız; (g) yenilemede karar bir kez; 15 dk'lık cevabın yüzünde kaçırılacak iş uyarısı. İnceleme (2026-10-26):
+    önizlenen yüz kalıcı #kartDuyuru'dan duyurulur; Boşluk/P duraklatmasında odak kartta kalır; sürüklerken klavyeyle çevrilen ya da bırakılan
+    önizlemede bırakmak uygulamaz."""
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7", "index-test.html")
     tum_hatalar += hatalar
     await pg.keyboard.press("Digit2")
@@ -458,9 +492,11 @@ async def bolum_3(tarayici, site, tum_hatalar):
     denetle("Dosyayı kapatıp açmak ve geçmişi okumak zamanı ve kararı değiştirmiyor", await durum(pg) == once)
     await pg.click('.dsy .kk-kenar[data-yon="sag"]')
     y1 = await pg.evaluate(YUZ_JS, ".dsy")
+    du1 = await duyuru(pg)
     await pg.screenshot(path=str(ARAC / "son-akis-3-dosya-onizleme.png"))
     await pg.click('.dsy .kk-kenar[data-yon="sol"]')
     y2 = await pg.evaluate(YUZ_JS, ".dsy")
+    du2 = await duyuru(pg)
     await pg.click('.dsy .kk-kenar[data-yon="sol"]')
     y3 = await pg.evaluate(YUZ_JS, ".dsy")
     denetle("(g) Kenar etiketi yalnız önizler: 'Saymana devret' yüzünde cevabın metni, 15 dk ve 'kaçırılacak' uyarısı (10 dk sonraki isteğe bağlı iş); 'Kabul et' yüzünde "
@@ -468,6 +504,11 @@ async def bolum_3(tarayici, site, tum_hatalar):
             y1 and y1["yuz"] == "sag" and "Saymana devret" in y1["metin"] and "15 dk" in y1["metin"] and "kaçırılacak: İsteğe bağlı deneme (çakışma)" in y1["metin"]
             and y2 and y2["yuz"] == "sol" and "Kabul et" in y2["metin"] and "zaman almaz" in y2["metin"] and "kaçırılacak" not in y2["metin"]
             and y3 and y3["yuz"] == "notr" and await durum(pg) == once, f"{y1} · {y2} · {y3}")
+    denetle("İnceleme (2026-10-26): önizlenen yüz kalıcı canlı bölgeden duyuruluyor (#kartDuyuru role=status, odanın dışında, iki önizlemede aynı düğüm; kartın yüzünde "
+            "aria-live yok): önce 'Saymana devret' 15 dk ve kaçırılacak uyarısıyla, sonra 'Kabul et' zaman almaz, uyarısız",
+            du1 and du1["canli"] == "polite" and du1["rol"] == "status" and du1["disarda"] and du1["yuzCanli"] == 0 and "Saymana devret" in du1["metin"]
+            and "15 dk" in du1["metin"] and "kaçırılacak: İsteğe bağlı deneme (çakışma)" in du1["metin"] and du2 and du2["ayni"] is True and du2["disarda"]
+            and "Kabul et" in du2["metin"] and "zaman almaz" in du2["metin"] and "kaçırılacak" not in du2["metin"], f"{du1} · {du2}")
     await pg.evaluate("() => oyunKomut(k => isIptal(k, window.__ekIs, 'deneme: çakışma denetimi bitti'))")
     await pg.keyboard.press("Escape")
     await pg.keyboard.press("Digit3")
@@ -562,6 +603,29 @@ async def bolum_3(tarayici, site, tum_hatalar):
             k0 and k0["kilit"] == "true" and "Duraklatıldı" in k0["metin"] and k1 and k1["yuz"] == "sag" and e1 == [] and "sag" in iz and k2 and k2["yuz"] == "notr"
             and e2 == [] and await pg.query_selector(KP) is not None and await durum(pg) == once, f"{k0} · {k1 and k1['yuz']} · yüzler {iz} · {e1}{e2}")
     await pg.keyboard.press("KeyP")
+    # inceleme (2026-10-26): kart odaktayken Boşluk duraklatır, P devam ettirir; iki yeniden çizimde odak kartta kalır, ardından → yine önizler
+    ODAK_JS = "(kp) => ({ odak: !!document.activeElement && document.activeElement.matches(kp + ' .kk-kart'), dur: duraklatmaVar('elle') })"
+    await pg.focus(KP + " .kk-kart")
+    od1 = await pg.evaluate(ODAK_JS, KP)
+    await pg.keyboard.press("Space")
+    od2 = await pg.evaluate(ODAK_JS, KP)
+    await pg.keyboard.press("KeyP")
+    od3 = await pg.evaluate(ODAK_JS, KP)
+    await pg.keyboard.press("ArrowRight")
+    od4 = await pg.evaluate(YUZ_JS, KP)
+    await pg.keyboard.press("Escape")
+    od5 = await pg.evaluate(YUZ_JS, KP)
+    denetle("İnceleme (2026-10-26): kart odaktayken Boşluk duraklattı, P devam ettirdi; iki yeniden çizimde de odak kartta kaldı; → yine önizledi ('Hayır'), Esc bıraktı, panel açık; zaman ve karar aynı",
+            od1["odak"] and not od1["dur"] and od2["odak"] and od2["dur"] and od3["odak"] and not od3["dur"] and od4 and od4["yuz"] == "sag" and od5 and od5["yuz"] == "notr"
+            and await pg.query_selector(KP) is not None and await durum(pg) == once and await pg.evaluate(KEZ_JS, "denemeDosyasiz") == [],
+            f"{od1} · {od2} · {od3} · {od4 and od4['yuz']} · {od5 and od5['yuz']}")
+    # inceleme (2026-10-26): %55 sola sürüklerken (yüz 'Evet') → yüzü 'Hayır'a çevirir ya da Esc önizlemeyi bırakır; bırakmak yüzde görünmeyen 'Evet'i
+    # uygulamaz, kart nötre yaylanır
+    st1 = await kart_surukle_tus(pg, KP, -0.55, "ArrowRight")
+    st2 = await kart_surukle_tus(pg, KP, -0.55, "Escape")
+    denetle("İnceleme (2026-10-26): sürüklerken klavyeyle çevrilen (→) ya da bırakılan (Esc) önizlemede bırakmak uygulamadı; kart nötre yaylandı, panel açık; zaman ve karar aynı",
+            st1 == ["sol", "sag", "notr"] and st2 == ["sol", "notr", "notr"] and await pg.query_selector(KP) is not None and await durum(pg) == once
+            and await pg.evaluate(KEZ_JS, "denemeDosyasiz") == [], f"→ {st1} · Esc {st2}")
     # (d) → + Enter: 'Hayır' bir kez uygulandı, deftere dönüldü
     await pg.focus(KP + " .kk-kart")
     k3 = await pg.evaluate(YUZ_JS, KP)
@@ -792,7 +856,7 @@ async def bolum_14(tarayici, site, tum_hatalar):
 async def bolum_14b(tarayici, site, tum_hatalar):
     """N12 (kullanıcı kararı 2026-10-04): rakip başkan yerinde / sonra / yok ve tokalaşmada beş saniyelik karar anı (TEST kaydı: Selam ver / Ses çıkarma).
     H1 (F4, 2026-10-26): karar anı da tek kart (js/ekran-an.js, js/ekran-kart.js kartEtkilesimKur): tek .ka-kart, iki .ka-kenar (cevapların adı);
-    ←/→ önizler, Enter önizleneni seçer, 1/2 doğrudan seçer; tıklama seçmez."""
+    ←/→ önizler, Enter önizleneni seçer, 1/2 doğrudan seçer; tıklama seçmez. İnceleme (2026-10-26): önizleme açıkken süre dolunca yüz nötre döner."""
     AN_JS = """() => ({ acik: KARAR_ANI.acik, t: +KARAR_ANI.t.toFixed(3), kalan: +KARAR_ANI.kalan.toFixed(3), sure: KARAR_ANI.sure, evre: LOCA_GIRIS.evre, mod: LOCA_GIRIS.mod,
       aktif: LOCA_GIRIS.aktif, rakip: LOCA_GIRIS.rk.evre, karar: MAC_PROTOKOL.karar && MAC_PROTOKOL.karar.secim, faz: mac.phase, onizle: KARAR_ANI.onizle,
       n: document.querySelectorAll('#kararAni .ka-kart').length, yuz: (document.querySelector('#kararAni .ka-kart') || { dataset: {} }).dataset.yuz,
@@ -827,6 +891,16 @@ async def bolum_14b(tarayici, site, tum_hatalar):
             p1["acik"] and p2["acik"] and p1["kalan"] == p2["kalan"] < 5 and p1["evre"] == "el" and pk["onizle"] == "sol" and pk["yuz"] == "sol" and "Selam ver" in pk["yuzMetin"]
             and pk["karar"] is None and pe["onizle"] is None and pe["yuz"] == "notr" and pe["acik"], f"{p1['kalan']} → {p2['kalan']} · {pk['onizle']}/{pk['karar']} · {pe['onizle']}")
     await pg.screenshot(path=str(ARAC / "son-akis-14b-karar.png"))
+    # inceleme (2026-10-26): ← ile önizlenirken süre dolarsa sonuç cevapsızdır; önizlenen cevap yüzde ve kenarda kalmaz (kart nötr yüzle söner)
+    await pg.keyboard.press("ArrowLeft")
+    pc0 = await pg.evaluate(AN_JS)
+    await pg.wait_for_function("KARAR_ANI.secim !== null", timeout=30000)
+    pc = await pg.evaluate("""() => ({ cevapsiz: KARAR_ANI.secim === KARAR_ANI.kayit.cevapsiz, onizle: KARAR_ANI.onizle,
+      yuz: (document.querySelector('#kararAni .ka-kart') || { dataset: {} }).dataset.yuz, basili: document.querySelectorAll('#kararAni .ka-kenar[aria-pressed="true"]').length,
+      secildi: !!document.querySelector('#kararAni .ka-kart.ka-secildi'), yuzMetin: (document.querySelector('#kararAni .ka-yuz') || {}).textContent || '' })""")
+    denetle("İnceleme (2026-10-26): ← ile 'Selam ver' önizlenirken süre doldu: sonuç cevapsız; yüz nötre döndü, önizlenen cevap yüzde ve kenarda kalmadı, kart amber değil",
+            pc0["onizle"] == "sol" and pc0["yuz"] == "sol" and pc0["karar"] is None and pc["cevapsiz"] and pc["onizle"] is None and pc["yuz"] == "notr"
+            and pc["basili"] == 0 and not pc["secildi"] and "Selam ver" not in pc["yuzMetin"], f"{pc0['onizle']}/{pc0['yuz']} · {pc}")
     await pg.wait_for_function("MAC_PROTOKOL.karar", timeout=30000)
     c = await pg.evaluate(AN_JS)
     await pg.wait_for_function("!LOCA_GIRIS.aktif", timeout=60000)
