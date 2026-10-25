@@ -7,6 +7,8 @@
    Gelen teklif (PAKETLER.gelenTeklif; dönem açık, açık teklif yok, kadro ≥ kadroAlt): değeri en yüksek altı saha oyuncumuzdan biri, tabloda üstümüzdeki
      bir kulüpten (yoksa herhangi), bedel değer × (0,9–1,2); hepsi dünya tohumu ve konudan. Dosya “Transfer”, kanıtlar (sözleşme, sezon sayaçları, hocanın
      görüşü), iki cevap: Sat (bedel ertesi gün kasaya, oyuncu gider, kadro gençle 22'ye) / Reddet; cevapsız → teklif geri çekilir.
+     H1 (G2 borcu, 2026-10-25): hocanın görüşü telefona da düşer (mesele olayı 'tr.hocaGorus', gönderen hoca; metin dosyadaki kanıtın birinci tekil eşi,
+     TEST): konunun konuşması hocanınkidir, orada “karar dosyada” bağlantısı durur. Karar dosyada kalır (soran yok, giden yazılmaz); kayıt alanı yok.
    Hocanın isteği (PAKETLER.hocaTalebi): en zayıf hat (DEF, OS, FV; en iyi oyuncularının ortalaması), bütçe (bonservis TEST aralıkta, maaş tavanı
      kadronun ortalama maaşı × maasTavanKat); hocanın mesajı, iki cevap: Bütçeyi onayla / Reddet; cevapsız → reddet. Onayda imzaGun sonra gizli
      'transferImza': önce o mevkide sözleşmesiz (serbest) oyuncu, yoksa tabloda altımızdaki kulüpten bütçeye uyan en iyi oyuncu (bedel = değer; satan kulüp
@@ -84,6 +86,11 @@ const kisiOyuncuAdi=(k,id)=>(k.oyuncular[id]||{}).ad||'—';
 MESAJ_GONDEREN['tr.talep']=pKisi('kisiId');MESAJ_GONDEREN['tr.tesekkur']=pKisi('kisiId');
 MESAJ_METIN['tr.talep']=(k,p)=>`Başkanım, ${MEVKI_ADI[p.mevki]} hattına bir oyuncu lazım. Bonservis en çok ${paraYazi(p.bonservis)}, maaşı ayda en çok ${paraYazi(p.tavan)} olsun.`;
 MESAJ_METIN['tr.tesekkur']=()=>'Sağ olun başkanım, yeni oyuncu hemen çalışmalara katılıyor.';
+/* H1 (G2 borcu): gelen teklifte hocanın görüşü telefonda. Dosyada konunun günlüğünde kanıttaki cümleyle, telefonda hocanın ağzından (birinci tekil eşi;
+   yeni bilgi yok; TEST metin, kullanıcı değiştirir) */
+MESELE_OLAYLARI['tr.hocaGorus']=MESELE_OLAYLARI['tr.kanit.hoca'];
+MESAJ_GONDEREN['tr.hocaGorus']=pKisi('kisiId');
+MESAJ_METIN['tr.hocaGorus']=(k,p)=>p.ilk11?`${kisiOyuncuAdi(k,p.oyuncuId)} takımın önemli parçası; gitmesini istemem.`:`${kisiOyuncuAdi(k,p.oyuncuId)} gidebilir, yerini doldururuz.`;
 
 /* ---- gelen teklif ---- */
 GELISMELER.gelenTeklif={
@@ -109,6 +116,7 @@ PAKETLER.gelenTeklif={
     if(p.sozlesme)olayBilgi(k,olay.id,'tr.kanit.sozlesme',{oyuncuId:p.id,maas:p.sozlesme.maas,bitis:p.sozlesme.bitis},'sozlesmeKaydi');
     olayBilgi(k,olay.id,'tr.kanit.sezon',{oyuncuId:p.id,gol:p.gol,ilk11:ilk},'macRaporlari');
     if(h)olayBilgi(k,olay.id,'tr.kanit.hoca',{oyuncuId:p.id,ilk11:ilk},h.id);
+    if(h)meseleOlay(k,id,'tr.hocaGorus',{kisiId:h.id,oyuncuId:p.id,ilk11:ilk});   /* H1: telefondaki izi (konunun konuşması hocanın) */
     isEkle(k,{tur:'ajanda',tarih:tarihEkle(k.tarih,TRANSFER_TEST.cevapGun),dakika:1080,veri:{baslik:`Teklif: ${p.ad}`,zorunluluk:'zorunlu',sure:0,saatsiz:true,bekleyebilir:true,
       gelis:{tarih:k.tarih,dakika:k.gunIciDakika},karar:'teklifKarari',meseleId:id,olayId:olay.id,kulupId:b.kulupId,oyuncuId:p.id,alici:b.alici,bedel:b.bedel,
       aciklama:`${(k.kulupler[b.alici]||{ad:''}).ad} ${p.ad} için ${paraYazi(b.bedel)} öneriyor.`}});

@@ -13,6 +13,9 @@
      --p12 cevapsiz (varsayılan; karar cevapsız kalır) | sabir | degisim (adaylarla görüşülür, ilk aday göreve alınır): oyuncunun cevabı.
    G2 (2026-10-24 gece): ay başı maaşları, iç saha bilet geliri, transfer dönemi. --teklif cevapsiz (varsayılan) | sat | reddet: gelen teklife cevap;
      --talep cevapsiz (varsayılan) | onayla | reddet: hocanın transfer isteğine cevap. Tabloda haftanın sonundaki kasa; sonda sezon boyu para özeti.
+   H1 (F1 borcu, 2026-10-25): başta diziliş tutarlılığı — motorun her dizilişinde (js/mac-dizilis.js DIZILISLER) kariyerin yuva mevkileri
+     (js/kariyer-kadro.js dizilisMevkileri), motorun yuva hattı (mevkiler[i].cizgi) ve hocanın yuva rolünün hattı (js/hoca.js HOCA_YUVALAR, HOCA_ROL)
+     aynı olmalı; DIZILIS_YUVA_MEVKI motorda olmayan diziliş taşımamalı. Tutmazsa “!” satırı ve çıkış 1 (motor tablosu değişince kırar: istenen).
    Kullanım:  node araclar/sezon-deneme.js [hafta=3] [tohum=7] [--kaydet] [--tek] [--p12 cevapsiz|sabir|degisim] [--teklif …] [--talep …] [--json DOSYA]   (hafta en çok sezonun kalanı: 18)
      --tek   ikinci (belirlenimcilik) koşusunu atlar.   Çıkış kodu: fark ya da doğrulama hatası 1, kullanım hatası 2. */
 'use strict';
@@ -26,6 +29,19 @@ if(!['cevapsiz','sat','reddet'].includes(TEKLIF)||!['cevapsiz','onayla','reddet'
 const HAFTA=sayilar[0]||3,TOHUM=sayilar[1]!=null?sayilar[1]:7,KAYDET=bayrak('--kaydet'),TEK=bayrak('--tek'),JSON_DOSYA=deger('--json');
 if(HAFTA<1){console.error('hafta en az 1 olmalı');process.exit(2);}
 const MAKS=60*60*60;   /* güvenlik sınırı: 60 dakikalık adım (20 dakikalık maç ~23 dakikada biter) */
+
+/* H1: diziliş tutarlılığı (kariyer yuva mevkisi = motorun yuva hattı = hocanın yuva rolünün hattı) */
+function dizilisTutarliligi(){
+  const {ctx}=motorYukle(),G=a=>vm.runInContext(a,ctx),D=G('DIZILISLER'),dm=G('dizilisMevkileri'),HY=G('HOCA_YUVALAR'),HR=G('HOCA_ROL'),T=G('DIZILIS_YUVA_MEVKI');
+  const fark=[];
+  for(const d of Object.keys(D)){
+    const a=JSON.stringify(dm(d)),m=JSON.stringify(D[d].mevkiler.map(x=>x.cizgi));
+    const h=HY[d]?JSON.stringify(HY[d].map(s=>(HR[s.split(':')[0]]||{cizgi:'?'}).cizgi)):'(HOCA_YUVALAR\'da yok)';
+    if(a!==m||a!==h)fark.push(`${d}: kariyer ${a} · motor ${m} · hoca ${h}`);
+  }
+  for(const d of Object.keys(T))if(!D[d])fark.push(`${d}: DIZILIS_YUVA_MEVKI'de var, motorda (DIZILISLER) yok`);
+  return{dizilisler:Object.keys(D),fark};
+}
 
 function sezon(){
   const {ctx}=motorYukle(),G=a=>vm.runInContext(a,ctx);
@@ -94,6 +110,9 @@ function sezon(){
 
 const t0=Date.now();
 console.log(`Chairman sezon denemesi · ${HAFTA} hafta · dünya tohumu ${TOHUM}${KAYDET?' · her hafta kaydet–yükle':''}`);
+const DZ=dizilisTutarliligi();
+if(DZ.fark.length)for(const f of DZ.fark)console.log(`! Diziliş tutarlılığı (H1): ${f}`);
+else console.log(`  Diziliş tutarlılığı (H1): ${DZ.dizilisler.join(', ')} — kariyerin yuva mevkileri = motorun yuva hattı = hocanın yuva rolü`);
 const R=sezon();
 if(HAFTA>R.kalan)console.log(`  (sezonun oynanacak haftası ${R.kalan}; ${HAFTA} yerine ${R.kalan} hafta oynandı, sezon sonunda maç günü işi kalmadı)`);
 console.log('  hafta  maç            skor   adım    ms  hafta ms  hafta gol  gol kart sakat · bizde cezalı/sakat · sıra puan · oda an            kayıt     kasa ₺');
@@ -110,6 +129,6 @@ let ayni=null;
 if(!TEK&&!R.hatalar.length){const R2=sezon();ayni=R2.metin===R.metin&&!R2.hatalar.length;
   console.log(ayni?'  Belirlenimcilik: aynı tohumla ikinci koşu birebir aynı kariyer':'! Belirlenimcilik: ikinci koşu farklı'+(R2.hatalar.length?' ('+R2.hatalar.join('; ')+')':''));}
 for(const h of R.hatalar)console.log('! '+h);
-if(JSON_DOSYA)fs.writeFileSync(JSON_DOSYA,JSON.stringify({hafta:HAFTA,tohum:TOHUM,kaydet:KAYDET,satirlar:R.satirlar,ortMs:Math.round(ort),haftaMs:Math.round(hOrt),ayni,hatalar:R.hatalar},null,1));
+if(JSON_DOSYA)fs.writeFileSync(JSON_DOSYA,JSON.stringify({hafta:HAFTA,tohum:TOHUM,kaydet:KAYDET,satirlar:R.satirlar,ortMs:Math.round(ort),haftaMs:Math.round(hOrt),ayni,hatalar:R.hatalar,dizilis:DZ.fark},null,1));
 console.log(`  Süre ${((Date.now()-t0)/1000).toFixed(1)} sn`);
-process.exit(R.hatalar.length||ayni===false?1:0);
+process.exit(R.hatalar.length||ayni===false||DZ.fark.length?1:0);

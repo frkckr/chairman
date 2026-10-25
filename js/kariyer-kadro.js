@@ -46,10 +46,20 @@ const KADRO_GOL_YUVA=[0,0.5,0.7,0.7,0.5,2.2,1.4,1.4,2.2,5,5];
 const KADRO_GOL_YEDEK={KL:0,DEF:0.2,OS:0.6,FV:1.6};
 const KADRO_SARI={KL:0.015,DEF:0.12,OS:0.1,FV:0.06};
 
-/* dizilişin 11 yuvasının mevkisi: '4-4-2' → KL, 4 DEF, 4 OS, 2 FV (ilk sayı defans, son sayı forvet, aradakiler orta saha). Geçersizse null */
+/* H1 (F1 borcu, 2026-10-25): motorun dizilişlerinde yuvaların mevkisi motorun yuva sırasıyla (js/mac-dizilis.js DIZILISLER[d].mevkiler[i].cizgi,
+   js/hoca.js HOCA_YUVALAR ve HOCA_ROL[rol].cizgi ile aynı; araclar/sezon-deneme.js başında denetlenir). Aritmetik kural 4-2-3-1'de forveti (dizin 9)
+   orta saha, 10 numarayı (OOS, dizin 10) forvet sayıyordu; 4-4-2 ve 4-3-3'te (üç forvet dizin 8–10) kuralla aynıdır. Bugün bütün kadrolar 4-4-2 */
+const DIZILIS_YUVA_MEVKI=Object.freeze({
+  '4-4-2':  ['KL','DEF','DEF','DEF','DEF','OS','OS','OS','OS','FV','FV'],
+  '4-2-3-1':['KL','DEF','DEF','DEF','DEF','OS','OS','OS','OS','FV','OS'],
+  '4-3-3':  ['KL','DEF','DEF','DEF','DEF','OS','OS','OS','FV','FV','FV']
+});
+/* dizilişin 11 yuvasının mevkisi, yuva sırasıyla. Tablodaki dizilişte tablodan (kopya); tabloda olmayan geçerli dizilişte aritmetik kural: '4-4-2' → KL,
+   4 DEF, 4 OS, 2 FV (ilk sayı defans, son sayı forvet, aradakiler orta saha). Geçersizse null */
 function dizilisMevkileri(dizilis){
   const S=String(dizilis||'').split('-').map(Number);
   if(S.length<2||S.some(n=>!Number.isInteger(n)||n<1)||S.reduce((a,b)=>a+b,0)!==10)return null;
+  const T=DIZILIS_YUVA_MEVKI[String(dizilis)];if(T)return T.slice();
   const os=S.slice(1,-1).reduce((a,b)=>a+b,0);
   return['KL',...Array(S[0]).fill('DEF'),...Array(os).fill('OS'),...Array(S[S.length-1]).fill('FV')];
 }

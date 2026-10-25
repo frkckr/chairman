@@ -456,7 +456,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     ciz();
   }
   /* durdurulan gelişmenin özeti (G2 incelemesi): bu anda gelen karar varsa yeri — soranın konuşmasında ya da konusunun telefondaki konuşmasında dosya
-     bağlantısıyla duruyorsa telefon, yoksa masadaki dosya (gelen teklif); karar açmayan durak (transfer imzası) 'yeni gelişme' (js/mesajlar.js) */
+     bağlantısıyla duruyorsa telefon (H1'den beri gelen teklif de: hocanın konuşması), yoksa masadaki dosya; karar açmayan durak (transfer imzası)
+     'yeni gelişme' (js/mesajlar.js) */
   const kararYeri=()=>{const Y=simdiGelenKararlar(k);return !Y.length?null:Y.some(x=>kararTelefondaMi(k,x))?'tel':'masa';};
   const kararMetni=(y,tel,masa,diger)=>y==='tel'?tel:y==='masa'?masa:diger;
   function gozlemSonucu(r){
