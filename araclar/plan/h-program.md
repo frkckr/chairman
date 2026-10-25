@@ -1,5 +1,7 @@
 # H — Oto mod 3 programı (2026-10-25 gece, masaüstü)
 
+> **Durum (2026-10-26, kullanıcı kararı):** H1 yapıldı (`tur/h1`). Kullanıcı oto modu H1'den sonra durdurdu, oyunu inceledi ve sırayı değiştirdi: görsel iş en sona (YOL_HARITASI 49); araya **H2 kullanıcı istekleri** girdi (karar 50; plan `h2-uygulama.md`). Bu belgedeki eski H2 (yeni sezon) artık **H3** (`h3-uygulama.md`), eski H3 (transfer dalları) **H4**'tür (`h4-uygulama.md`); iki dosyada numaralar buna göre değişti. Aşağıdaki metin 2026-10-25 planının kaydıdır; sınırları ve doğrulama kuralları H2–H4 için de geçerlidir.
+
 Durum: planlandı (Fable); uygulama Opus 5.5 ile oto modda, turlar sırayla. Üç planın (omurga, derinlik, sağlamlık) yargıç sentezidir: omurga temel alındı, yargıçların aşıları eklendi, ihlal sayılan maddeler düzeltildi (aşağıda “Sentezde değişenler”). Tur planları `h1-uygulama.md`, `h2-uygulama.md`, `h3-uygulama.md`.
 
 ## Bağlam

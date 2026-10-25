@@ -98,6 +98,8 @@ artınca). **Alınmayanlar:** sürekli yan menü, "Görevler" listesi, çok seç
 
 ## 4. Açık kararlar (kullanıcı)
 
+> **2026-10-26:** görsel tarz ve dış varlık (7) görsel tura kadar ertelendi (YOL_HARITASI 49). Kullanıcı istekleriyle kapananlar (karar 50, H2'de uygulanır): 2'nin mali yarısı — Kasa düğmesi kalkar, mali bilgi mali işler müdürünün raporuyla dosyaya gelir (Kadro sekmesi açık); 3 — kişiye (hoca, yardımcı, müdür) soru ve görüşme isteği zaman bedelli girişim. Öbürleri açık.
+
 1. Bilgisayar nesnesi yok (öneri: yok).
 2. Kadro ve Mali dosyada; Kasa düğmesi Mali sekmesine taşınır.
 3. Kişiye soru sormak serbest ama zaman bedelli girişim (konu seçmek karar değil).
