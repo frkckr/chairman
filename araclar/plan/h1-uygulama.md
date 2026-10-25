@@ -1,6 +1,6 @@
 # H1 — F4 tek kart her yerde (uygulama planı)
 
-Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüstü. Dal `claude/h1-tek-kart` (taban `main` 31a8ff9 + H0 belge commit'i), etiket `tur/h1`. Kullanıcı kararları 23 ve 32 (tek kart; dosya, karar paneli, telefon konuşması, karar anı); davranış tarifi `araclar/plan/f-program.md` “Tek kart davranışı” ve OYUN_TASARIMI §2. Program `araclar/plan/h-program.md`.
+Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüstü. Dal `claude/h1-tek-kart` (taban `main` 31a8ff9 + H0 belge commit'i), etiket `tur/h1-kart`. Kullanıcı kararları 23 ve 32 (tek kart; dosya, karar paneli, telefon konuşması, karar anı); davranış tarifi `araclar/plan/f-program.md` “Tek kart davranışı” ve OYUN_TASARIMI §2. Program `araclar/plan/h-program.md`.
 
 ## Kapsam
 
@@ -59,7 +59,7 @@ Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüs
 - `python -X utf8 araclar/akis-deneme.py 2 16 19` ve sonra tamamı (masaüstü): bilinen tek düşüş 15b dışında BAŞARISIZ 0; “Sayfa ve betik hatası yok”.
 - `python -X utf8 araclar/kontrol.py` ve `python -X utf8 araclar/kontrol.py "index.html?ekran=mac&tohum=4&rakipBaskan=yerinde"` hatasız; `araclar/son-akis-3-dosya.png`, `-3-telefon.png`, `-3-telefon-buyuk.png`, `-3-karar-panel.png`, `-14b-karar.png`, `-14b-karar-buyuk.png` incelenir (yüz metni, kenar etiketleri ve uyarılar okunur; sol/sağ renkle kodlanmamış).
 - `python -X utf8 araclar/akis-2d.py` (masaüstü) geçer: karar anı 2D üstünde açılır, seçim `MAC_PROTOKOL.karar`'a yazılır, kapanır.
-- Belgeler: `git diff --check` temiz; yerel bağlantılar; `tur/h1` etiketi; `main` ileri sarıldı ve push edildi.
+- Belgeler: `git diff --check` temiz; yerel bağlantılar; `tur/h1-kart` etiketi; `main` ileri sarıldı ve push edildi.
 
 ## Riskler
 
@@ -90,7 +90,7 @@ Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüs
 - OYUN_TASARIMI §2: “Davranış (Claude'un önerisi; F4'te uygulanır)” → “Bugünkü uygulama (H1, 2026-10-26)”; §8 transfer notuna telefon izi.
 - TEKNIK_PLAN §6 (karar türü `kisi` kancası, `tr.hocaGorus`), §10 (kart bileşeni ve `kartEtkilesimKur` sözleşmesi).
 - `araclar/plan/f-program.md` F4 “yapıldı (H1)”; `araclar/plan/h1-uygulama.md` sapmalar; `araclar/plan/OKU.md`; `araclar/KAPILAR.md` tek kart satırı.
-- YOL_HARITASI: karar 48 “H1 kararları (Claude)”, devam notu, makine durumu, Tamamlanan turlar `tur/h1`, Bilinen borçlar (F6-a aday kartı, G2 teklif izi, F1 `dizilisMevkileri` kapandı).
+- YOL_HARITASI: karar 48 “H1 kararları (Claude)”, devam notu, makine durumu, Tamamlanan turlar `tur/h1-kart`, Bilinen borçlar (F6-a aday kartı, G2 teklif izi, F1 `dizilisMevkileri` kapandı).
 - CLAUDE.md “Kararlar” (tek kart uygulandı) ve “Bugün çalışan”.
 
 ## Sapmalar

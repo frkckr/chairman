@@ -1,6 +1,6 @@
 # H3 — Yeni sezon ve sezon geçişi, kayıpsız sezon arşivi (uygulama planı)
 
-Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüstü. Dal `claude/h3-yeni-sezon` (taban `tur/h2` (H2 kullanıcı istekleri sonrası)), etiket `tur/h3`. YOL_HARITASI 5.1 (sezon geçişi; TEST tarifiyle, kesin lig formatı açık — karar 36, OYUN_TASARIMI §13), 5.2'nin başlangıcı (sezon arşivi ve kayıt bileşimi ölçümü), borçlar `macOkundu`, `yasUret` 2026 sabiti, ay başı zincirinin sezon sonunda kesilmesi, `ILERLE_SINIRI` tuzağı. Program `araclar/plan/h-program.md`.
+Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüstü. Dal `claude/h3-yeni-sezon` (taban `tur/h2-istekler` (H2 kullanıcı istekleri sonrası)), etiket `tur/h3-sezon`. YOL_HARITASI 5.1 (sezon geçişi; TEST tarifiyle, kesin lig formatı açık — karar 36, OYUN_TASARIMI §13), 5.2'nin başlangıcı (sezon arşivi ve kayıt bileşimi ölçümü), borçlar `macOkundu`, `yasUret` 2026 sabiti, ay başı zincirinin sezon sonunda kesilmesi, `ILERLE_SINIRI` tuzağı. Program `araclar/plan/h-program.md`.
 
 ## Kapsam
 
@@ -67,7 +67,7 @@ Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüs
 - `python -X utf8 araclar/akis-deneme.py 1 2 19 21` geçer; ardından tamamı masaüstünde (bilinen düşüş 15b).
 - `python -X utf8 araclar/kontrol.py` hatasız; `python -X utf8 araclar/kontrol.py araclar/kayit-deneme.html` (kayıt sürümü değişti); `python -X utf8 araclar/akis-2d.py` bilgi.
 - Geçiş düz veri: `KAYIT_GECISLERI[9]` kural işlevi çağırmaz (kod incelemesi), 1.4c'de hareket sayısı değişmez.
-- Belgeler: TEKNIK_PLAN §3/§5/§9/§11, OYUN_TASARIMI §13 satırı (“kesin format açık” kalır); `git diff --check`; `tur/h3` etiketi; `main` ileri sarıldı ve push edildi.
+- Belgeler: TEKNIK_PLAN §3/§5/§9/§11, OYUN_TASARIMI §13 satırı (“kesin format açık” kalır); `git diff --check`; `tur/h3-sezon` etiketi; `main` ileri sarıldı ve push edildi.
 
 ## Riskler
 
@@ -98,7 +98,7 @@ Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüs
 
 - TEKNIK_PLAN §3 (sürüm 10 tablosu: `sezonlar`, `yeniSezon` işi, geçmişte `yeniSezon`; `sezonTarifi`), §5 (geçiş 9→10 ve örnekler), §9 (sezon geçişi TEST tarifiyle uygulandı; kesin format açık; arşiv kayıpsız, saklama düzeyi açık), §11 (sezon-deneme çok sezon, bileşim, tempo).
 - OYUN_TASARIMI §13 tablosu (TEST tarifine geçiş günü ve yaz dönemi; “tam sezon için Aşama 5 öncesi kesinleşmeli” kalır), §6 (maçsız aylarda İlerle ay başlarına ve geçişe; `ILERLE_SINIRI` TEST), §7 ve §8 “Bugünkü uygulama (H3)” (yaz maaşları, yaz dönemi).
-- YOL_HARITASI: 5.1 kısmi (sezon geçişi TEST tarifiyle; format açık), 5.2 kısmi (arşiv, bileşim ölçümü), karar 49 “H3 kararları (Claude)”, devam notu (borçlar: `macOkundu`, `yasUret`, “yeni sezon yok” kapandı; kalan: yükselme/düşme, emeklilik, AI transfer, sıkıştırma; bileşim ve tempo sayıları; kullanıcı soruları), Tamamlanan turlar `tur/h3`.
+- YOL_HARITASI: 5.1 kısmi (sezon geçişi TEST tarifiyle; format açık), 5.2 kısmi (arşiv, bileşim ölçümü), karar 49 “H3 kararları (Claude)”, devam notu (borçlar: `macOkundu`, `yasUret`, “yeni sezon yok” kapandı; kalan: yükselme/düşme, emeklilik, AI transfer, sıkıştırma; bileşim ve tempo sayıları; kullanıcı soruları), Tamamlanan turlar `tur/h3-sezon`.
 - CLAUDE.md “Bugün çalışan” (kayıt sürümü 10, sezon geçişi), “Program”.
 - `araclar/KAPILAR.md` sezon geçişi satırı; `araclar/plan/h3-uygulama.md` sapmalar; `araclar/plan/f-program.md` durum satırı; `araclar/plan/OKU.md`.
 

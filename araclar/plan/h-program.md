@@ -1,6 +1,6 @@
 # H — Oto mod 3 programı (2026-10-25 gece, masaüstü)
 
-> **Durum (2026-10-26, kullanıcı kararı):** H1 yapıldı (`tur/h1`). Kullanıcı oto modu H1'den sonra durdurdu, oyunu inceledi ve sırayı değiştirdi: görsel iş en sona (YOL_HARITASI 49); araya **H2 kullanıcı istekleri** girdi (karar 50; plan `h2-uygulama.md`). Bu belgedeki eski H2 (yeni sezon) artık **H3** (`h3-uygulama.md`), eski H3 (transfer dalları) **H4**'tür (`h4-uygulama.md`); iki dosyada numaralar buna göre değişti. Aşağıdaki metin 2026-10-25 planının kaydıdır; sınırları ve doğrulama kuralları H2–H4 için de geçerlidir.
+> **Durum (2026-10-26, kullanıcı kararı):** H1 yapıldı (`tur/h1-kart`; `tur/h1` 2026-10-15'teki motor turu H1'in etiketidir, bu yüzden H serisinin etiketleri ekli: `tur/h1-kart`, `tur/h2-istekler`, `tur/h3-sezon`, `tur/h4-transfer`). Kullanıcı oto modu H1'den sonra durdurdu, oyunu inceledi ve sırayı değiştirdi: görsel iş en sona (YOL_HARITASI 49); araya **H2 kullanıcı istekleri** girdi (karar 50; plan `h2-uygulama.md`). Bu belgedeki eski H2 (yeni sezon) artık **H3** (`h3-uygulama.md`), eski H3 (transfer dalları) **H4**'tür (`h4-uygulama.md`); iki dosyada numaralar buna göre değişti. Aşağıdaki metin 2026-10-25 planının kaydıdır; sınırları ve doğrulama kuralları H2–H4 için de geçerlidir.
 
 Durum: planlandı (Fable); uygulama Opus 5.5 ile oto modda, turlar sırayla. Üç planın (omurga, derinlik, sağlamlık) yargıç sentezidir: omurga temel alındı, yargıçların aşıları eklendi, ihlal sayılan maddeler düzeltildi (aşağıda “Sentezde değişenler”). Tur planları `h1-uygulama.md`, `h2-uygulama.md`, `h3-uygulama.md`.
 
@@ -48,8 +48,8 @@ Planlamayı Fable yapar; planı Opus 5.5 oto modda sırasıyla uygular. Her tur 
 | Tur | Dal | Konu | Kayıt sürümü | Süre |
 |---|---|---|---|---|
 | H1 | `claude/h1-tek-kart` (taban `main` 31a8ff9 + H0 belge commit'i) | F4 tek kart her yerde (dosya, karar paneli, telefon konuşması, karar anı); borçlar: aday kartında kişi bölümü (F6-a), gelen teklifin telefon izi (G2), `dizilisMevkileri` 4-2-3-1 (F1) | 9 (değişmez) | 4–5 sa |
-| H2 | `claude/h2-yeni-sezon` (taban `tur/h1`) | 5.1 yeni sezon ve sezon geçişi (TEST tarifi, aynı 16 kulüp), kayıpsız sezon arşivi, kayıt bileşimi ölçümü (5.2 başlangıcı), `macOkundu`/`yasUret`/ay başı zinciri borçları | 10; `KAYIT_GECISLERI[9]` düz veri; s9 örnekleri önce | 6–8 sa |
-| H3 | `claude/h3-transfer-dallari` (taban `tur/h2`; koşullu) | 4.2 kalan / 4.3 kişisiz dallar: ikinci teklif (yükselt / başka kulüp), kaçan transfer ve alternatif kararı, tekrar sınırı | 10 (değişmez) | 3–4 sa |
+| H2 | `claude/h2-yeni-sezon` (taban `tur/h1-kart`) | 5.1 yeni sezon ve sezon geçişi (TEST tarifi, aynı 16 kulüp), kayıpsız sezon arşivi, kayıt bileşimi ölçümü (5.2 başlangıcı), `macOkundu`/`yasUret`/ay başı zinciri borçları | 10; `KAYIT_GECISLERI[9]` düz veri; s9 örnekleri önce | 6–8 sa |
+| H3 | `claude/h3-transfer-dallari` (taban `tur/h2-istekler`; koşullu) | 4.2 kalan / 4.3 kişisiz dallar: ikinci teklif (yükselt / başka kulüp), kaçan transfer ve alternatif kararı, tekrar sınırı | 10 (değişmez) | 3–4 sa |
 
 Kesilme kuralı: bir tur kabul koşullarını geçmeden kapanmış sayılmaz ve `main`'e alınmaz. H2 uzarsa H3 açılmaz (ya da yalnız ikinci teklifle daraltılır); yapılmayan devam notuna “H3 planlandı, yapılmadı” diye yazılır. Gece kesilirse yarım dal push edilmiş kalır, `main` değişmez.
 

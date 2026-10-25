@@ -1,6 +1,6 @@
 # H4 — Transferin kişisiz dalları: ikinci teklif, kaçan transfer ve alternatif (uygulama planı; koşullu)
 
-Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüstü — yalnız H3 kapanmış ve gece bütçesi kalmışsa. Dal `claude/h4-transfer-dallari` (taban `tur/h3`), etiket `tur/h4`. YOL_HARITASI 4.2'nin kalanı (karşı teklif gerçek koşulla, kaçan transfer sonrası alternatif) ve 4.3'ün kişisiz dalları (rakip teklif, tekrar sınırı). Menajer ve sızıntı dışarıda (kişi ve gazete kararı). Program `araclar/plan/h-program.md`. Daraltma sırası: önce ikinci teklif, sonra kaçan transfer/alternatif; sığmazsa yapılmayan devam notuna yazılır.
+Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüstü — yalnız H3 kapanmış ve gece bütçesi kalmışsa. Dal `claude/h4-transfer-dallari` (taban `tur/h3-sezon`), etiket `tur/h4-transfer`. YOL_HARITASI 4.2'nin kalanı (karşı teklif gerçek koşulla, kaçan transfer sonrası alternatif) ve 4.3'ün kişisiz dalları (rakip teklif, tekrar sınırı). Menajer ve sızıntı dışarıda (kişi ve gazete kararı). Program `araclar/plan/h-program.md`. Daraltma sırası: önce ikinci teklif, sonra kaçan transfer/alternatif; sığmazsa yapılmayan devam notuna yazılır.
 
 ## Kapsam
 
@@ -45,7 +45,7 @@ Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüs
 - `node araclar/mac-deneme.js 4` “sonuç aynı”; `node araclar/oturum-sonu.js araclar/taban/g1.json --ayni` 40/40; `node araclar/ad-denetimi.js` temiz.
 - `python -X utf8 araclar/akis-deneme.py 3 19 21` geçer (kart ve oda değişmedi; bilgi); `python -X utf8 araclar/kontrol.py` hatasız.
 - Her yeni kartın cevapsız sonucu kartın yüzünde önceden yazar (`zamanAsimi.metin`) ve zamanında bir kez işler.
-- Belgeler; `git diff --check`; `tur/h4`; `main` ileri sarıldı ve push edildi.
+- Belgeler; `git diff --check`; `tur/h4-transfer`; `main` ileri sarıldı ve push edildi.
 
 ## Riskler
 
@@ -68,7 +68,7 @@ Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüs
 
 - OYUN_TASARIMI §8 “Bugünkü uygulama (H4)” (hangi dallar var: ikinci teklif, kaçan transfer ve alternatif; hangileri yok: menajer, sızıntı, pazarlık menüsü, iki teklif arasında seçim).
 - TEKNIK_PLAN §6 (karşı teklif yalnız gerçek koşulla — uygulandı), §3 (yeni karar türü `transferAlternatif`, gelişme `ikinciTeklif`, isteğe bağlı alanlar `asama`, `ikinci`, `hedefId`).
-- YOL_HARITASI 4.2 ve 4.3 kısmi işaretleri (kalan: menajer talebi, sızıntı — kişi ve gazete kararına bağlı; iki teklif arasında seçim kullanıcıya), karar 50 “H4 kararları (Claude)”, devam notu, Tamamlanan turlar `tur/h4`.
+- YOL_HARITASI 4.2 ve 4.3 kısmi işaretleri (kalan: menajer talebi, sızıntı — kişi ve gazete kararına bağlı; iki teklif arasında seçim kullanıcıya), karar 50 “H4 kararları (Claude)”, devam notu, Tamamlanan turlar `tur/h4-transfer`.
 - CLAUDE.md “Bugün çalışan”; `araclar/KAPILAR.md` G2 satırına H4 ekleri ve `sezon-deneme` seçenekleri; `araclar/plan/h4-uygulama.md` sapmalar; `araclar/plan/OKU.md`.
 
 ## Sapmalar
