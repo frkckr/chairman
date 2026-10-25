@@ -1,0 +1,98 @@
+# H1 — F4 tek kart her yerde (uygulama planı)
+
+Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüstü. Dal `claude/h1-tek-kart` (taban `main` 31a8ff9 + H0 belge commit'i), etiket `tur/h1`. Kullanıcı kararları 23 ve 32 (tek kart; dosya, karar paneli, telefon konuşması, karar anı); davranış tarifi `araclar/plan/f-program.md` “Tek kart davranışı” ve OYUN_TASARIMI §2. Program `araclar/plan/h-program.md`.
+
+## Kapsam
+
+### H0 — dal ve belge tabanı (ilk commit)
+- `git checkout -b claude/h1-tek-kart main`; `git checkout claude/stat-gorsel -- CLAUDE.md OYUN_TASARIMI.md STIL_REHBERI.md YOL_HARITASI.md araclar/plan/OKU.md araclar/plan/ui-mimari-ve-gorsel-yon.md .gitignore` (kararlar 45–47 ve tartışma kaydı; `prototipler/stat-konsept/` ALINMAZ, `claude/stat-gorsel` silinmez).
+- YOL_HARITASI devam notuna “Makine durumu: masaüstü çalışıyor, dal claude/h1-tek-kart” ve H programına bağlantı; `araclar/plan/h-program.md`, `h1-uygulama.md`, `h2-uygulama.md`, `h3-uygulama.md` eklenir; OKU.md satırı.
+- Commit; `git fetch`; `main` bu commit'e `--ff-only` alınır ve push edilir (uzak `main` 31a8ff9'dan ilerlemişse durulur, not yazılır).
+
+### H1-a — kart bileşeni (`js/ekran-kart.js`, yeni; `index.html`'de `js/portre.js`'ten sonra, `js/ekran-telefon.js`'ten önce)
+- `kararKarti(k,isId,s)` `js/ekran-telefon.js`'ten buraya taşınır ve tek karta döner. `s: {onizle:'sol'|'sag'|null, gorus, ozetsiz, kapali, dosyaBaglanti, dosyada, testSecenek}`. Veri yine `ajandaOnizle(k,isId,secim)`'den: nötr yüz için `secim` verilmez; önizlenen yüz için o seçeneğin kimliğiyle ÇAĞRILIR (uyarılar o cevabın süresiyle hesaplanır — iki seçenek farklı süre taşıyabilir).
+- DOM sözleşmesi: `section.kk-kart[data-is][data-yuz=notr|sol|sag][data-sol=<id>][data-sag=<id>]` (`tabindex=0`, `role=group`, `aria-label="Karar"`); içinde `.kk-yuz` (nötr: `v.aciklama` — `ozetsiz` iken yazılmaz —, `kararGorusu` hazır görüş `s.gorus` ile, “Son cevap” ve `zamanAsimiMetni`; önizlemede: cevabın `metin`i, süresi — `x.sure`/`v.sure` → “N dk” ya da “zaman almaz” —, `aciklama` satırları, varsa `x.engel` kırmızı, `o.atlanacak` “Bu karar zaman alır; kaçırılacak: …”, `o.cevapsiz` “Bu arada cevapsız kalacak: …”, `s.testSecenek(isId,x)` TEST kutusu); iki kenar etiketi `.kk-kenar[data-secim][data-eylem="kartOnizle"]` (seçeneklerin `metin`i; engelli cevabın kenarı kapalı görünür ve nedeni kısa yazar); `.kk-not` altta. `.kk-cevap`, `.kk-gonder`, `.kk-onay`, `data-eylem="sec"`, `kk-iki` kalkar. `S.length!==2` ise kart kurulmaz, `.kk-uyari` “Bu karar iki cevaplı değil” yazar (bugün tek canlı yol iki seçenektir; `KARAR_TURLERI` sözleşmesi zaten tam iki).
+- Sol yüz `secenekler[0]`, sağ yüz `secenekler[1]`; sol/sağ doğru/yanlış ya da yeşil/kırmızı kodlanmaz (ikisi aynı renk dili).
+- `s.kapali` (maç telefonu) ve ev sahibinin `kilitli()`'si: kart `aria-disabled="true"`, nedeni yüzde (`s.kapali` metni ya da “Duraklatıldı: devam edince cevaplanır”); önizleme açık, uygulama kapalı.
+- Stiller bu dosyada (`.kk-kart`, `.kk-yuz`, `.kk-kenar`, hareket: `transform: translateX(...) rotate(...)`, `transition` `STIL.kagit.kart.sure`); dosya ve telefon ölçüleri kendi dosyalarında (`.dsy .kk-kart`, `.tel .kk-kart`).
+- `kartEtkilesimKur(kok,{uygula(isId,secim), onizle(isId,yon|null), kilitli()})` (aynı dosya): kök üstünde delege `pointerdown` (+`setPointerCapture`), `pointermove`, `pointerup`/`pointercancel`: kart yatay sürüklenir (`translateX` + en çok `STIL.kagit.kart.egim` derece eğim); |dx| kart genişliğinin `onizle` katını (0,08) geçince yüz o yönün cevabına döner (`onizle`); bırakınca |dx| ≥ `esik` (0,40) × genişlik ve cevap engelsiz ve `!kilitli()` ise `uygula`, aksi hâlde `sure` (0,2 sn) ile yerine yaylanır ve yüz nötre döner. Klavye (kart odaktayken): `ArrowLeft`/`ArrowRight` önizler (kart `kayma` 0,12 kadar kayar), `Enter` önizlenen cevabı uygular, `Escape` yalnız önizleme varken onu bırakır ve `stopPropagation` (önizleme yoksa oda kısayolu paneli kapatır). Kenar etiketine tıklamak önizler (uygulamaz); kart gövdesine tıklamak hiçbir şey yapmaz (kaza önleme). Dokunmatik aynı pointer yolu.
+
+### H1-b — ev sahipleri
+- `js/ekran-oda.js`: karar kartı için `secimler`/`onay` yerine `onizleler={}` (karar başına `'sol'|'sag'|null`; yeniden çizimde korunur). `isBolumu(id)` karar dalı: `kararKarti(k,id,{onizle:onizleler[id],gorus:true,testSecenek,dosyada:acik==='dosya'})+tavsiyeBolumu(id)+` (ertelenebilirse) `ertelemeDugmesi(is)` — kartın dışında, aynen. `kartEtkilesimKur(kap,{uygula:(id,secim)=>isiYap(id,secim), onizle:(id,y)=>{onizleler[id]=y;ciz('.kk-kart[data-is="'+id+'"]');}, kilitli:()=>duraklatmaVar()})` bir kez kurulur. `isiYap(id,secim)` imzası seçim alır (`komut(x=>ajandaIsiYap(x,id,secim))`); bir kez uygulanma, `dosyaSonuc` ve “iş bekliyor” yolu aynen. Tıklama yolunda `sec` kalkar; `yapSor`/`yap`/`vazgec`/`ilerleSor`/`ilerle` ve `onay==='yap:'+id`, `onay==='ilerle'` YALNIZ Katıl/Stada git/İlerle için kalır (karar değildir). `kartOnizle` tıklaması: `onizleler[id]=b.dataset.secim===is.veri... ` (sol/sağ, `data-sol`/`data-sag` ile eşlenir) ve yeniden çizim. `DURAKLATMADA_KAPALI` değişmez (kart uygulaması `kilitli()` ile kapanır); `telefonPaneli()` → `telefonCiz(k,tel,{onizleler,testSecenek,kasa,yeniler,acilis})`; `kararPaneli()` aynı kart. `ciz(odak)` kart odağını `.kk-kart[data-is=…]` seçicisiyle geri verir.
+- `js/ekran-telefon.js`: `.kk*` stilleri `js/ekran-kart.js`'e taşınır; telefona özel `.tel .tel-cevap .kk-kart` ölçüleri (dar %41 panel; `STIL.kagit.kart.telefon`) burada kalır. `telefonCiz` konuşma ekranında `.tel-cevap` içine `kararKarti(k,id,{onizle:(s.onizleler||{})[id],ozetsiz:true,kapali:s.kapali||null,dosyaBaglanti:!s.macta,testSecenek:s.testSecenek})`; `s.secimler`/`s.onay` kalkar; `.tel-kararOzet` (konu ve hazır görüş akışta) aynen.
+- `js/ekran-dosya.js`: sağ sayfa `D.karar(isId)` aynı kart; `.dsy .kk button.kk-cevap` kuralları kalkar, `.dsy .kk-kart` büyük yüz. **F6-a borcu:** kişi bölümü (satır 96 `kis.soran||kis.kisiId||o.kisiler[0]`) önce karar türünün isteğe bağlı `KARAR_TURLERI[kis.karar].kisi(k,is) → {ad, rol}` kancasına bakar: varsa `portreHtml(null,'od-portre','TD')` boş portre + ad + rol; yoksa bugünkü kural. `js/icerik-p12.js` `KARAR_TURLERI.hocaAdayi.kisi=(k,is)=>({ad:is.veri.adaylar[is.veri.sira].ad,rol:'Teknik direktör adayı'})` (TEST metin). TEKNIK_PLAN §6 karar türü sözleşmesine kanca eklenir.
+- `js/ekran-an.js` karar anı: `.ka-kartlar` içinde iki `button.ka-kart` yerine tek `.ka-kart[data-yuz]` (`.ka-yuz` + iki `.ka-kenar`), aynı `kartEtkilesimKur(E,{uygula:(_,secim)=>sec(secim==='sol'?0:1), onizle:(_,y)=>{KARAR_ANI.onizle=y;yuzYaz();}, kilitli:()=>duraklatmaVar()||KARAR_ANI.t<A.giris})`; `kartlar` tıklama dinleyicisi kalkar (tıklama uygulamaz); klavye: `ArrowLeft`/`ArrowRight` önizler, `Enter` önizleneni uygular, `Digit1`/`Numpad1`/`Digit2`/`Numpad2` doğrudan uygular. `KARAR_ANI {acik,t,secim,secilen,sure,kalan,kayit,bitince,bitisT}` alanları ve `kararAniAc(kayit,{kim,bitince})`, `kararAniKare(dt)`, `sec(i)` korunur (`onizle` alanı eklenir); `S.kart` tek eleman; seçilen cevap `ka-secildi` ile `A.sonra` kadar kalır; süre çubuğu, giriş/sonra eğrileri, amber ve duraklatma aynen; büyük yazı (`--an-boy`) aynen. `js/karar-ani.js` kayıt biçimi ve `js/loca-giris.js` (`lgKararAni`, `tepeAnKare`, `TEPE_AN`, `MAC_PROTOKOL.karar`) değişmez.
+- `js/ekran-mac-telefon.js`: çağrı değişmez (`kapali:'Maç sürerken cevap verilmez…'`) → kart `aria-disabled`, sürüklenmez.
+- `js/stil-99.js` `STIL.kagit.kart` (yeni, TEST): `{esik:0.4, onizle:0.08, kayma:0.12, egim:4, sure:0.2, yuz:{normal:1.05, buyuk:1.15}, telefon:{yukseklik:'14em'}}` — yalnız ölçü; renk yok. `js/test-gorunum.js` değişmez (`testSecenek(isId,s)` imzası aynı; kutu önizlenen yüzde).
+
+### H1-c — borçlar
+- **G2 — gelen teklifin telefonda izi (`js/transfer.js`):** `PAKETLER.gelenTeklif.ac` içinde `if(h)meseleOlay(k,id,'tr.hocaGorus',{kisiId:h.id,oyuncuId:p.id,ilk11:ilk})` (dosyadaki `tr.kanit.hoca` olay bilgisi aynen kalır); `MESELE_OLAYLARI['tr.hocaGorus']` = `tr.kanit.hoca` ile aynı cümle; `MESAJ_GONDEREN['tr.hocaGorus']=pKisi('kisiId')`; `MESAJ_METIN['tr.hocaGorus']=(k,p)=>p.ilk11?`${ad} takımın önemli parçası; gitmesini istemem.`:`${ad} gidebilir, yerini doldururuz.`` (mevcut cümlenin birinci tekil eşi; yeni bilgi yok). Sonuç: `meseleKonusmasi` hocayı bulur → konuşmada “Bu konuda karar dosyada bekliyor · Dosyayı aç ▸”, `cevapBekliyor` true, `kararTelefondaMi` true → oda özeti “Telefon: karar gerektiren bir haber geldi.”; karar dosyada kalır (soran eklenmez, giden yazılmaz), kayıt alanı eklenmez. `kariyer-deneme` 4.2'deki “7 Ocak teklifi … telefonda değil (masadaki dosya)” satırı yeni duruma çevrilir.
+- **F1 — `dizilisMevkileri` (`js/kariyer-kadro.js`):** tablo `DIZILIS_YUVA_MEVKI={'4-4-2':['KL','DEF','DEF','DEF','DEF','OS','OS','OS','OS','FV','FV'],'4-2-3-1':['KL','DEF','DEF','DEF','DEF','OS','OS','OS','OS','FV','OS'],'4-3-3':['KL','DEF','DEF','DEF','DEF','OS','OS','OS','FV','FV','FV']}` (`js/mac-dizilis.js` `DIZILISLER[d].mevkiler[i].cizgi` ve `js/hoca.js` `HOCA_YUVALAR`/`HOCA_ROL[rol].cizgi` ile aynı); `dizilisMevkileri` önce tabloya bakar, tabloda olmayan geçerli dizilişte bugünkü aritmetik kural. `kadroDogrula`, `kadroSablonu`, `kadroKopyala`, `kadroUret`, `hocaYuvalari` aynı işlevi okur; bugün bütün kadrolar 4-4-2 olduğu için davranış değişmez. `araclar/sezon-deneme.js` başına tutarlılık denetimi: her `DIZILISLER` dizilişi için `dizilisMevkileri(d)` = `DIZILISLER[d].mevkiler.map(m=>m.cizgi)` = `HOCA_YUVALAR[d].map(s=>HOCA_ROL[s.split(':')[0]].cizgi)`; tutmazsa `!` satırı ve çıkış 1.
+
+### H1-d — araçlar
+- `araclar/akis-deneme.py` §3 yeniden yazılır (kabul a–g); `TEL_YERLESIM_JS`: `cevapGorunur` = `.tel-cevap .kk-kart` ve iki `.kk-kenar` cevap alanında ve ekranda kaydırmasız görünür; `surukle(pg,x0,y0,x1,y1)` yardımcısı (var) kart sürüklemesi için kullanılır. §14b güncellenir (tek `.ka-kart`, `.ka-kenar` metinleri, ← / → + Enter, 1 doğrudan). §16 değişmez (kariyersiz maç telefonunda kart yok); kilitli kartın `aria-disabled` yolu §3'te Duraklat ile sınanır (maç telefonu aynı yolu kullanır), maç telefonunda `kapali` metni kod incelemesiyle.
+- `araclar/kariyer-deneme.js`: 2.2 aynen; 4.2'ye `tr.hocaGorus` denetimi; 3.1'e `dizilisMevkileri('4-2-3-1')` ve `'4-3-3'` satırı; 3.7a'ya `KARAR_TURLERI.hocaAdayi.kisi` adayı döndürür.
+- `araclar/KAPILAR.md`: “Tek kart bileşeni (`js/ekran-kart.js`, `STIL.kagit.kart`, karar anı) → `akis-deneme.py 3 14b`, `kontrol.py`, `akis-2d.py`”.
+
+## Yapılmayacaklar
+
+- Yeni görsel dil, renk, yazı tipi, piksel süzgeci, dış varlık (karar 46): kart bugünkü kâğıt dilinde, `STIL.kagit` renkleriyle.
+- Karar 47'nin yedi noktası: Kadro/Mali sekmesi, Kasa düğmesinin yeri, Kişiler, kişiye soru, kapı sahnesi, haftalık rapor, gazete yeri.
+- Kural katmanı: `ajandaIsiYap`, `ajandaOnizle`, `KARAR_TURLERI`, `zamanAsimi`, `IS_TURLERI`; seçenek sayısı ve kimlikleri; görünüm seçenek kesmez ya da seçmez.
+- Katıl / Stada git / İlerle'nin `yapSor`/`ilerleSor` “Onayla ▸ / Vazgeç” adımı (karar değil; OYUN_TASARIMI §6 kaçırılacak işin onayı).
+- “Görüş iste” (`tavsiyeBolumu`, `tavsiyeIste`) ve girişim listesi (karar 47/3'e komşu; içeriksiz oyunda görünmez).
+- Kenar etiketine ikinci dokunuşla uygulama (seç-onayla kalıbını geri getirir); tıklama uygulamaz.
+- Rakip başkan karar anının kariyere etkisi (`MAC_PROTOKOL.karar` aynen); `js/loca-giris.js`.
+- Motor dosyası, taban, 80/160 maç, kayıt sürümü ve geçiş, ses, yetenek puanı; yeni içerik (tek metin `tr.hocaGorus`, mevcut cümlenin eşi).
+
+## Kayıt sürümü
+
+9 kalır. Kayıt biçimi değişmez; `tr.hocaGorus` yalnız yeni açılan tekliflerde yazılır (eski sürüm 9 kayıttaki açık teklifte mesaj görünmez: kabul). `KAYIT_GECISLERI` dokunulmaz.
+
+## Kabul
+
+- `node araclar/kariyer-deneme.js` çıkış 0: 2.2 aynen; 4.2'de gelen teklif açılınca `konusmaListesi` hocanın konuşmasında `tr.hocaGorus` gelen mesajı, `dosyaKarar` meseleyi içeriyor, `cevapBekliyor` true, `kararTelefondaMi(k,is)` true, cevap verilince hocanın konuşmasında giden YOK; 3.1'de `dizilisMevkileri('4-2-3-1')[9]==='FV'`, `[10]==='OS'`, `'4-3-3'`te yuva 8–10 `FV`, `kariyerBaslat({tohum:7}).oyuncular` metni değişmedi; 3.7a'da aday kartında `kisi` kancası adayı döndürür.
+- `node araclar/ad-denetimi.js` temiz (yeni üst düzey adlar: `kararKarti` taşındı, `kartEtkilesimKur`, `DIZILIS_YUVA_MEVKI`; blok içi `function` sızıntısı yok).
+- `node araclar/mac-deneme.js 4` “sonuç aynı”; `node araclar/oturum-sonu.js araclar/taban/g1.json --ayni` 40/40 ve çekirdek senaryolar (bilinen kabul dışı satırlar dışında yeni `!` yok); `node araclar/sezon-deneme.js 3 7` başındaki diziliş tutarlılık satırı geçer, kayıt metni H0 koduyla aynı.
+- `python -X utf8 araclar/akis-deneme.py 3`: (a) dosyada `.dsy .kk-kart` tek kart, kenar etiketleri “Kabul et” / “Saymana devret”, `.kk-gonder` ve `.kk-cevap` yok; (b) `surukle` ile genişliğin %25'i kadar sürükleyip bırakmak uygulamaz (`durum` aynı, geçmişte `denemeKarari` 0, `data-yuz` nötre döner); (c) %55 sürükleyip bırakmak “Kabul et”i bir kez uygular (`gecmis` sayacı 1, `.dsy-sonuc` görünür, sekmenin noktası kalktı); (d) karar panelinde klavye: `ArrowLeft` → `.kk-yuz` “Hayır” cevabının metnini ve “zaman almaz”ı gösterir, zaman değişmez; `Escape` önizlemeyi bırakır ve panel açık kalır; `ArrowLeft`+`Enter` → bir kez uygulandı, deftere dönüldü; (e) Duraklat (`KeyP`) açıkken kart `aria-disabled`, `Enter` ve sürükleme uygulamaz; (f) telefonda konuşmada `.tel-cevap .kk-kart`, normal ve büyük yazıda 1180 ve 800 px'te 13 ölçümde yatay taşma ≤ 1 ve `cevapGorunur` (kart ve iki kenar kaydırmasız); (g) yenileme sonrası karar geçmişte bir kez; kayıt dönüşü ve kapanış denetimleri eskisi gibi. TEST içeriğin 15:00 isteğe bağlı işiyle çakışan 15 dk'lık cevapta (“Saymana devret”) uyarı metni önizlenen yüzde yazar.
+- `python -X utf8 araclar/akis-deneme.py 14b`: tek `#kararAni .ka-kart` (kenarlar “Selam ver” / “Ses çıkarma”), süre kart yerine oturmadan başlamaz, tıklama ve Esc atlatmaz, Duraklat'ta `kalan` sabit, 5 sn'de `cevapsiz`; büyük yazıda kart karede ve taşmasız, `Digit1` doğrudan `selam`; “sonra” yolunda `ArrowRight` tek başına karar vermez (`MAC_PROTOKOL.karar` null), `ArrowRight`+`Enter` `sus`, ertelenen Santraya geç sonra yapılır; “yok” yolunda karar anı açılmaz.
+- `python -X utf8 araclar/akis-deneme.py 2 16 19` ve sonra tamamı (masaüstü): bilinen tek düşüş 15b dışında BAŞARISIZ 0; “Sayfa ve betik hatası yok”.
+- `python -X utf8 araclar/kontrol.py` ve `python -X utf8 araclar/kontrol.py "index.html?ekran=mac&tohum=4&rakipBaskan=yerinde"` hatasız; `araclar/son-akis-3-dosya.png`, `-3-telefon.png`, `-3-telefon-buyuk.png`, `-3-karar-panel.png`, `-14b-karar.png`, `-14b-karar-buyuk.png` incelenir (yüz metni, kenar etiketleri ve uyarılar okunur; sol/sağ renkle kodlanmamış).
+- `python -X utf8 araclar/akis-2d.py` (masaüstü) geçer: karar anı 2D üstünde açılır, seçim `MAC_PROTOKOL.karar`'a yazılır, kapanır.
+- Belgeler: `git diff --check` temiz; yerel bağlantılar; `tur/h1` etiketi; `main` ileri sarıldı ve push edildi.
+
+## Riskler
+
+- Playwright'ta sürükleme ve %40 eşiği kırılgan (işaretçi yakalama, swiftshader kare hızı) → klavye yolu asıl güvence; sürükleme iki uç değerle (%25, %55) sınanır.
+- `yapSor` adımı karar kartında kalktığı için “kaçırılacak iş önceden gösterilir” kuralı yüzdeki uyarılara bağlı → `ajandaOnizle` iki seçenek için ayrı çağrılır, uyarı o cevabın yüzünde; §3 (g) denetler.
+- Esc çakışması (kart ↔ oda kısayolu) ve yeniden çizimde odak kaybı → yalnız önizleme varken yutulur; `ciz(odak)` `.kk-kart[data-is=…]`.
+- Telefon paneli dar (%41): büyük yazıda yüz ve kenarlar → `STIL.kagit.kart.telefon`, 13 ölçüm kapı.
+- Blok içi `function` sızıntısı ve yeni global adlar yalnız tarayıcıda yakalanır → her commit'te `ad-denetimi` + `kontrol.py`.
+- `kararAniAc`/`KARAR_ANI` arayüzü değişirse `js/loca-giris.js` ve `akis-2d.py` bozulur → arayüz korunur, yalnız iç çizim değişir.
+- `tr.hocaGorus` içerik kuralının sınırında → mevcut cümlenin eşi, TEST etiketli, belgeye yazılır.
+- Kullanıcı 2026-10-24'te “arayüz ileride değişecek” dedi → tek kart bir etkileşim modelidir; ölçüler `STIL.kagit.kart`'ta, görsel iddia yok, nihai görsel onay kullanıcının (kabul sahnesi üretilmez).
+
+## Claude kararları (belgeye görünür yazılır)
+
+- Kart bileşeni ayrı betikte (`js/ekran-kart.js`); dosya, karar paneli, telefon ve karar anı aynı kodu ve aynı `kartEtkilesimKur` sözleşmesini kullanır; görünüm katmanı seçenek kesmez, uygulama yine `ajandaIsiYap(k,id,secim)` tek komutu.
+- Eşik kart genişliğinin %40'ı, yüz dönüşü %8, önizleme kayması %12, eğim ≤ 4°, yaylanma 0,2 sn (TEST, `STIL.kagit.kart`). Sol yüz `secenekler[0]`, sağ yüz `secenekler[1]`; renkle kodlanmaz.
+- Tıklama uygulamaz; kenar etiketi yalnız önizler; sürükleyip bırakmak ya da ←/→ + Enter uygular; Esc yalnız önizlemeyi bırakır. Karar anında 1/2 doğrudan uygular.
+- Engelli cevap yüzünde engel metni; o yöne bırakmak yaylanır. Duraklatmada ve maç telefonunda kart kilitli (`aria-disabled`, nedeni yüzde); maçta cevap yolu açılmaz.
+- “Onayla/Vazgeç” yalnız karar kartından kalkar; randevu ve İlerle onayı sürer.
+- Karar türü sözleşmesine isteğe bağlı `kisi(k,is) → {ad, rol}` kancası; aday boş portreyle (kişi kaydı yok; görünüşü kişi sahneleriyle).
+- Gelen teklifte hocanın görüşü telefon kanalına da düşer (`tr.hocaGorus`, mevcut cümlenin birinci tekil eşi); karar dosyada kalır; kayıt alanı eklenmez.
+- `dizilisMevkileri` motorun yuva sırasını tablodan izler; `sezon-deneme` başındaki denetim motor tablosu değişince kırar (istenen).
+- Kayıt sürümü 9 kalır.
+
+## Belgeler
+
+- STIL_REHBERI §7: “Bugünkü uygulama (H1, F4): tek kart” paragrafı; N12 ve 2.8I paragraflarına tek kart notu.
+- OYUN_TASARIMI §2: “Davranış (Claude'un önerisi; F4'te uygulanır)” → “Bugünkü uygulama (H1, 2026-10-26)”; §8 transfer notuna telefon izi.
+- TEKNIK_PLAN §6 (karar türü `kisi` kancası, `tr.hocaGorus`), §10 (kart bileşeni ve `kartEtkilesimKur` sözleşmesi).
+- `araclar/plan/f-program.md` F4 “yapıldı (H1)”; `araclar/plan/h1-uygulama.md` sapmalar; `araclar/plan/OKU.md`; `araclar/KAPILAR.md` tek kart satırı.
+- YOL_HARITASI: karar 48 “H1 kararları (Claude)”, devam notu, makine durumu, Tamamlanan turlar `tur/h1`, Bilinen borçlar (F6-a aday kartı, G2 teklif izi, F1 `dizilisMevkileri` kapandı).
+- CLAUDE.md “Kararlar” (tek kart uygulandı) ve “Bugün çalışan”.
+
+## Sapmalar
+
+(boş — uygulama sırasında doldurulur)

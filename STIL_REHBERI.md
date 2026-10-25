@@ -39,7 +39,7 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 ## 3. Kodla üretilen görseller
 
 - Geometri az poligonludur. İnsanlar değişken kesitli halkalardan kurulu, insan başına tek kemikli modelle (tek çizim, 11 kemik, 64×64 atlas; A5, kullanıcı onayı 2026-10-15), top 20 yüzlü geometriyle çizilir. Çevrede 8 dilim, Gouraud gölgeleme; eklemde (kalça–gövde, dirsek, diz) yüzey iki kemiğe ağırlıkla bükülür; saç başın üstünde ayrı bir kaptır. Ek eşyalar (fotoğraf makinesi, çanta) kutu kalır. *Önce (2026-10-14'e dek):* kutu temelli kemikli modeller.
-- Oyun görselleri kodla üretilir. Harici model, fotoğraf gerçekliğinde doku, gerçek marka ve logo kullanılmaz.
+- Oyun görselleri kodla üretilir. Harici model, fotoğraf gerçekliğinde doku, gerçek marka ve logo kullanılmaz. *Açık karar (2026-10-25, YOL_HARITASI 46):* kullanıcı dış varlık (yapay zekâ üretimi, hazır paket, sanatçı) kullanmaya açık; tarz ve kapsam seçilene dek bu madde geçerli, gerçek marka ve logo yasağı her durumda kalır.
 - Oyuncu atlası 64×64'tür. Küçük desenler düşük çözünürlüklüdür; saha ve pano gibi üretilen yüzeyler için bütün dokulara tek bir 64 piksel üst sınırı konmaz.
 - Oyuncu ve bayrak dokularında keskin piksel görünümü korunur. Seyirci, reklam panosu ve çimde uzak titreşmesini azaltan mipmap kullanılabilir.
 - Yeni sahneler aynı malzeme, insan modeli ve tarif yaklaşımını yeniden kullanır. Her olay için ayrı bir mekân üretmek gerekmez.
@@ -68,6 +68,7 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 ## 5. Stat ve tribün
 
+- *2026-10-25:* tepeden stat ve çevre için dört kodla üretilmiş konsept ve gerçekçi tek sahne denemesi (`prototipler/stat-konsept/`) kullanıcı tarafından seçilmedi; tribün gelişimi için ortak tarif genişlemesi (sıra, üst kat, çatı payı, köşe kamaları, pano katmanı) tarz seçilince taşınır (YOL_HARITASI 45).
 - Statlar `js/stadyum-tarifleri.js` içindeki tariflerden kurulur. Bugün yalnız kulübün kendi stadı vardır (`kulup`; 2.8D öncesindeki ayrı şehir stadı kaldırıldı); Avrupa arenası gelecekte yapılacaktır.
 - **2.8D uygulaması (tarihsel):** Ayrı şehir stadı kalktı; ana tribün çatısız, karşı tribün kısmen çatılıydı ve iskele izi oradaydı. Oda penceresi, balkon ve ev sahibi maçı aynı tariften kurulur. Gündüz boş tribün ile gece dolu tribün aynı yapının farklı hâlleridir. Etaplı gelişim ileride bu ortak yapıya uygulanır (8.3); lig değişimi otomatik stat değiştirmez.
 - **Onaylı yenileme (2026-10-02; 2.8J ile uygulandı):** Başlangıç çatısız, küçük ve yıpranmış kasaba/ilçe stadıdır: kısa beton tribünler, az koltuk, alçak kale arkası/set, seyrek reklam ve sade çevre. Çatı, koltuk ve diğer kapsamlı iyileştirmeler yatırımla gelir. Başkanın yüksek konumu ve altında görünen sıralar, küçültülen tribünle birlikte çözülür; saha okunabilir kalır. Mevcut bakım iskelesi olmayan çatıya bağlanmaz, gerçek bakımın uygun yapısal izine dönüşür.
