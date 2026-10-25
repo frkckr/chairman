@@ -98,3 +98,12 @@ görmek için işe yarar.
 
 Seçimden sonra Claude: görsel sözleşmeyi yazar (ızgara, palet, yazı tipi, oda bakışı, varlık boru hattı, lisans defteri), `araclar/referans/`
 klasörünü Git dışına alır ve dikey dilimi (oda + kart + telefon) oyunun içinde kurar.
+
+## Tarz C — 3B sahne, piksel çıktı (ChatGPT değil, oyunun kendi sahnesi)
+
+Üçüncü aday: sahne bugünkü gibi kodla kurulan 3B kalır, ama düşük ızgarada (480×360 ya da 320×240), sabit ve az renkli paletle ve ince dış
+çizgiyle çizilip büyütülür. Görünüş piksel sanatına yaklaşır, üretim dioramanın kolaylığında kalır (varyant, ışık, büyüme kodla). ChatGPT bunu
+taklit edemediği için kareler oyunun kendisinden üretilir: `python -X utf8 araclar/piksel-kare.py` → `araclar/referans/`:
+`s1-oda-bugun.png` (bugünkü görünüm), `s1-oda-3bpiksel-480-32-dis.png`, `-320-24-dis.png`, `-480-32-isikli.png` (pencereden güneş ve gölge
+denemesi), ayrıca daha zayıf iki varyant (`-480-32-ic`, `-480-db32`). Oyun kodu değişmez; sahne bugünkü ilkel geometridir, yani bu kareler
+yöntemi gösterir, nihai sanat yönünü değil (dış eşyalar, ışık ve renk düzeni sonra eklenir).
