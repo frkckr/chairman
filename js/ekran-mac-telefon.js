@@ -15,7 +15,9 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false},onizleler:{
   const E=$('macTelefon'),K=STIL.kagit,yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   for(const a in K)if(typeof K[a]==='string')E.style.setProperty('--k-'+a,K[a]);
   const btn=$('btnTelefon'),isin=new THREE.Raycaster(),T=MAC_TELEFON.T;
-  const durumYazi=()=>{const ph=mac.phase;return MAC_ONCESI.includes(ph)?'başlamadı':ph==='halftime'?'devre arası':ph==='fulltime'?'maç sonu':mac.minuteLabel()+'\'';};
+  /* H2-a: sonuç ikiziyle anında bittiyse (HIZLI_BITIR.anlik) skor, durum ve sayılar ikizin sonucunun kopyasından (HIZLI_BITIR.sonuc) */
+  const anlik=()=>HIZLI_BITIR.anlik&&HIZLI_BITIR.sonuc?HIZLI_BITIR.sonuc:null;
+  const durumYazi=()=>{const ph=anlik()?'fulltime':mac.phase;return MAC_ONCESI.includes(ph)?'başlamadı':ph==='halftime'?'devre arası':ph==='fulltime'?'maç sonu':mac.minuteLabel()+'\'';};
   /* F7: öbür maçların satırları (bizim santramızdan önce başlamamış görünürler) */
   function digerVerisi(once){
     const L=typeof LIG_CANLI!=='undefined'?LIG_CANLI:[],ad=id=>(MAC_GUNU.bulten.adlar||{})[id]||id;
@@ -30,11 +32,11 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false},onizleler:{
         canli:!once&&ph!=='halftime'&&ph!=='fulltime'};});
   }
   function macVerisi(){
-    const I=mac.ist,s=I.sahiplik[0]+I.sahiplik[1],y=s>0?Math.round(I.sahiplik[0]/s*100):50,ev=MAC_GUNU.kadro[0],dep=MAC_GUNU.kadro[1];
+    const A=anlik(),I=A?A.ist:mac.ist,s=I.sahiplik[0]+I.sahiplik[1],y=s>0?Math.round(I.sahiplik[0]/s*100):50,ev=MAC_GUNU.kadro[0],dep=MAC_GUNU.kadro[1];
     /* N2: satırın sol sütunu kısa durumdur: başlamadıysa başlama saati, oyunda dakika, arada “Devre”, sonunda “Bitti” */
-    const ph=mac.phase,once=MAC_ONCESI.includes(ph),canli=!once&&ph!=='halftime'&&ph!=='fulltime';
+    const ph=A?'fulltime':mac.phase,once=MAC_ONCESI.includes(ph),canli=!once&&ph!=='halftime'&&ph!=='fulltime',sk=A?A.skor:mac.score;
     const kisaDurum=once?MAC_GUNU.bulten.saat||'Bugün':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':durumYazi();
-    return{saat:durumYazi(),ev:ev.tamAd||ev.ad,dep:dep.tamAd||dep.ad,evKisa:ev.kisa,depKisa:dep.kisa,skor:once?'–':mac.score[0]+' – '+mac.score[1],durum:durumYazi(),kisaDurum,canli,
+    return{saat:durumYazi(),ev:ev.tamAd||ev.ad,dep:dep.tamAd||dep.ad,evKisa:ev.kisa,depKisa:dep.kisa,skor:once?'–':sk[0]+' – '+sk[1],durum:durumYazi(),kisaDurum,canli,
       ist:[['Şut',I.sut[0],I.sut[1]],['İsabetli şut',I.isabet[0],I.isabet[1]],['Topa sahip olma',s>0?y+'%':'—',s>0?(100-y)+'%':'—'],['Korner',I.korner[0],I.korner[1]],
         ['Faul',I.faul[0],I.faul[1]],['Sarı kart',I.sari[0],I.sari[1]],['Kırmızı kart',I.kirmizi[0],I.kirmizi[1]],['Ofsayt',I.ofsayt[0],I.ofsayt[1]]],
       digerleri:digerVerisi(once)};
@@ -46,7 +48,8 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false},onizleler:{
       telefonCiz(k,T,{macta:true,mac:macVerisi(),acilis:!!gecis,onizleler:MAC_TELEFON.onizleler,kapali:'Maç sürerken cevap verilmez; maçtan sonra odadan cevaplayabilirsin.'})+'</div>';
     const f=odak&&E.querySelector(odak);if(f)f.focus({preventScroll:true});
   }
-  function ac(){if(MAC_TELEFON.acik||ON_EKRAN.sayfa!==null)return;MAC_TELEFON.acik=true;duraklatmaEkle('telefon');E.hidden=false;btn.setAttribute('aria-pressed','true');ciz('[data-mt="kapat"]');}
+  /* H2-a: "Maçı bitir" perdesi açıkken telefon açılmaz ("kart açıkken telefon açılmaz" kuralının eşi) */
+  function ac(){if(MAC_TELEFON.acik||ON_EKRAN.sayfa!==null||HIZLI_BITIR.perde)return;MAC_TELEFON.acik=true;duraklatmaEkle('telefon');E.hidden=false;btn.setAttribute('aria-pressed','true');ciz('[data-mt="kapat"]');}
   function kapat(){if(!MAC_TELEFON.acik)return;MAC_TELEFON.acik=false;E.hidden=true;btn.setAttribute('aria-pressed','false');duraklatmaKaldir('telefon');}
   MAC_TELEFON.ac=ac;MAC_TELEFON.kapat=kapat;
   btn.onclick=()=>MAC_TELEFON.acik?kapat():ac();

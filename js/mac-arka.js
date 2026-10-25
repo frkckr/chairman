@@ -5,9 +5,11 @@
      · Sonuç ikizi: bizim maç aynı seçenek ve tohumla, maç öncesi doğal adımlanarak (canlı motor gibi) ve geliştirici panelinin TEST tarz komutları
        karesiyle (komut gelince ikiz yeniden oynanır). "Maçı bitir" basılınca ikiz hazırsa ve izleme ikizi sapmamışsa kart hemen ikizin sonucuyla
        açılır, canlı motor durur (HIZLI_BITIR.anlik; js/mac-sahnesi.js); hazır değilse bizim kalan maç ana iplikte parça parça bitirilir.
+       H2-a: perde açıkken ana iplik ile ikiz yarışır — her karenin başında ikize bakılır (maç öncesinde de), hangisi önce biterse.
      · Doğal biten maçta ikizin sonucu canlı motorunkiyle karşılaştırılır (MAC_ARKA.ikizAyni; kartın TEST satırı, akis-deneme).
    Worker kurulamazsa (tarayıcıda file:// adresi; ?arka=0) ya da hata verirse kip 'anaIs': öbür maçlar F7'deki gibi kilit adımlı motorlarla ana
-   iplikte oynanır (MAC_ARKA.dusus, js/mac-sahnesi.js ligCanliKur). Node araçları bu dosyayı yüklemez (js/goruntu.js'ten sonra; motor-yukle).
+   iplikte oynanır (MAC_ARKA.dusus, js/mac-sahnesi.js ligCanliKur; H2-a: bizim maç bittiyse ya da perde açıksa sıfır adımla kurulur, kalanı
+   ligCanliHizli bütçeyle bitirir). Node araçları bu dosyayı yüklemez (js/goruntu.js'ten sonra; motor-yukle).
      arkaBaslat(liste, ikizSecenegi) → kip 'isci' kurulduysa true · arkaIkizKomut({t, hedef, kare}) · arkaIkizHazir() · arkaIkizKarsilastir(mac) */
 const MAC_ARKA={kip:'anaIs',hata:null,havuz:[],kuyruk:[],liste:[],ikiz:null,T0:null,ikizAyni:null,dusus:null,bekleme:null};
 const ARKA_ISCI_EN_COK=8;

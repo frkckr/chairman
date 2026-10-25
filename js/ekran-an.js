@@ -11,7 +11,9 @@
    (TEST), kartın kayma ve eşik ölçüleri STIL.kagit.kart.
      kararAniAc(kayit, {kim, bitince(secim)})   açar (kayit: KARAR_ANLARI, js/karar-ani.js)
      kararAniKare(dt)                          ilerletir (js/loca-giris.js locaGirisKare)
-     KARAR_ANI                                 durum: {acik, t, secim, sure, kalan, onizle} (denemeler okur) */
+     KARAR_ANI                                 durum: {acik, t, secim, sure, kalan, onizle} (denemeler okur)
+   H2-a (2026-10-26): kariyer maçında rakip başkanın karar anı kapalıdır (js/mac-gunu.js protokol); bu ekran ?rakipBaskan= TEST parametresiyle ve
+   kariyersiz adreste açılır. “Maçı bitir” perdesi açıkken karar anı açılırsa perdenin örtüsü gizlenir (js/ekran-mac-sonu.js). */
 const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:null,bitisT:null,kart:[],onizle:null};
 {
   const A=STIL.an,K=STIL.kagit,KA=K.kart,kok=document.getElementById('screen');

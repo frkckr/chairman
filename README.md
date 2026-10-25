@@ -4,7 +4,9 @@ Geliştirme aşamasındaki futbol kulübü başkanlığı oyunu: Türkiye'de ge�
 
 ## Açmak
 
-- Tarayıcı: depo kökündeki `index.html` dosyasını açın (Three.js ve yazı tipleri internetten yüklenir). Adres seçenekleri: `?ekran=mac` doğrudan maç, `?ekran=bulten` maç öncesi ekranı, `?pul=0` geliştirme için figürlü loca bakışı (TEST; maçta G tuşu).
+- Tarayıcı, http üzerinden (birincil yol): GitHub Pages'teki yayın (`main`'in yayını) ya da depo kökünde `python -m http.server` çalıştırıp `http://127.0.0.1:8000/` adresi (Three.js ve yazı tipleri internetten yüklenir). Haftanın öbür maçları ve bizim maçın sonuç ikizi yalnız http'de arka planda (Web Worker) hesaplanır: işçiler bittikten sonra (maç sayfası açıldıktan ~20 sn sonra) “Maçı bitir” sonucu hemen gösterir; daha önce basılırsa ya da TEST “Maçı izleme” ile sonuç ~17 sn'de gelir.
+- Dosyadan açmak (`index.html`'e çift tıklamak) ikinci yoldur: tarayıcı dosyadan açılan sayfada Web Worker çalıştırmaz, maçlar sayfanın içinde hesaplanır. “Maçı bitir” ya da “Maçı izleme” sonucu ~10–12 sn'de gelir; “Odaya dön” öbür yedi maçı ~40–45 sn bekler (sayfa donmaz). Kayıt adrese bağlıdır: tarayıcı deposu adres başına ayrıdır, dosyadan açılan oyunun kaydı http adresinde görünmez (tersi de).
+- Süreler bu masaüstünde başsız Chromium'da ölçüldü (H2-a, 2026-10-26; `araclar/akis-deneme.py` 19, 19b, 20); başka makinede ve gerçek tarayıcıda farklı olabilir. Adres seçenekleri: `?ekran=mac` doğrudan maç, `?ekran=bulten` maç öncesi ekranı, `?pul=0` geliştirme için figürlü loca bakışı (TEST; maçta G tuşu).
 - Windows çevrimdışı denemesi (Electron) ve geliştirme kontrolleri [teknik planda](TEKNIK_PLAN.md#10-sunum-metin-ve-masaüstü) ve [çalışma talimatında](CLAUDE.md#kontrol) anlatılır.
 
 ## Bugün

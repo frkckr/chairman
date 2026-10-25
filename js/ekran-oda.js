@@ -11,7 +11,7 @@
    Paneli açmak, kapamak ve nesneler arasında geçmek zamanı ilerletmez; yalnız "yeni" işaretini kaldırır.
    Önemli haber paneli kendiliğinden açmaz: telefon yanar, alt şeritte yazılır. Aynı anda tek panel açıktır.
    odaEkraniKur(kap, oyun, ayarlar):
-     oyun    {kariyer, komut(f, kaydetme), kayitYazi(), kayitHata(), kayitTamam(), yenidenKaydet(), yeniKariyer() → mesaj, macaGit(),
+     oyun    {kariyer, komut(f, kaydetme), kayitYazi(), kayitHata(), kayitTamam(), yenidenKaydet(), yeniKariyer() → mesaj, macaGit(macId, {izle}?),
               ilkMesaj, bozukHata, bozuguSaklaVeBasla() → mesaj}
      ayarlar {yazi:'normal'|'buyuk', test, kaydet()}
    Balkon (2.7, 2.8D; js/balkon.js ve js/gozlem.js yüklüyse): kapıya tıklayınca (ya da 5) odadan balkona yürünür; paneller balkondan da açılır. Antrenman sürerken
@@ -331,8 +331,12 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(o.gerceklesecek.length)p.push('Bu arada: '+o.gerceklesecek.map(x=>yaz(isAdi(x))).join(' · '));
     const sor=(o.atlanacak.length||o.cevapsiz.length)&&onay!=='yap:'+id,dosya=r.meseleId&&k.meseleler[r.meseleId]?
       '<button type="button" class="od-ikinci" data-eylem="dosyaAc" data-mesele="'+r.meseleId+'" data-donus="ajanda">İlgili dosya ▸</button>':'';
+    /* H2-a (TEST, yayından önce kalkar): maç gününde "Stada git"in yanında "Maçı izleme" — maç izlenmeden hesaplanır, sonuç kartı açılır
+       (js/ekran-mac-sonu.js). Yalnız engel ve kaçırılacak iş onayı yokken; onaylı akış Stada git'te kalır */
+    const izlemesiz=mac&&v.macId&&!o.engel.length&&!o.secimGerekli&&!o.atlanacak.length&&!o.cevapsiz.length&&onay!=='yap:'+id?
+      '<button type="button" class="od-ikinci" data-eylem="yapIzlemesiz" data-is="'+id+'" title="Test aşaması: maç izlenmeden hesaplanır, sonuç kartı açılır (yayından önce kaldırılacak)"><small>TEST</small> Maçı izleme</button>':'';
     const dugme=onay==='yap:'+id?'<button type="button" class="od-ikinci" data-eylem="vazgec">Vazgeç</button><button type="button" class="od-ana" data-eylem="yap" data-is="'+id+'">Onayla ▸</button>'
-      :dosya+ert+'<button type="button" class="od-ana" data-eylem="'+(sor?'yapSor':'yap')+'" data-is="'+id+'"'+(o.engel.length||o.secimGerekli?' disabled':'')+'>'+(mac?'Stada git ▸':'Katıl ▸')+'</button>';
+      :dosya+ert+izlemesiz+'<button type="button" class="od-ana" data-eylem="'+(sor?'yapSor':'yap')+'" data-is="'+id+'"'+(o.engel.length||o.secimGerekli?' disabled':'')+'>'+(mac?'Stada git ▸':'Katıl ▸')+'</button>';
     return{durum:p.join(' · '),dugme,uyari:o.atlanacak.length||o.cevapsiz.length||o.engel.length};
   }
   function altSerit(){
@@ -369,7 +373,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     odaOdak(acik in NESNE?acik:null);
   }
   /* duraklatmada süre tüketen ya da dünyayı değiştiren komutlar kapalıdır; okuma ve gezinti açıktır (2.8B) */
-  const DURAKLATMADA_KAPALI=new Set(['yap','yapSor','ertele','ilerle','ilerleSor','tavsiye','girisim','gozlem','gozlemSurdur','gozlemBirak','yer','yeniSor','yeniEvet','bozukYeni']);
+  const DURAKLATMADA_KAPALI=new Set(['yap','yapSor','yapIzlemesiz','ertele','ilerle','ilerleSor','tavsiye','girisim','gozlem','gozlemSurdur','gozlemBirak','yer','yeniSor','yeniEvet','bozukYeni']);
   const duraklatDegistir=()=>{if(duraklatmaVar('elle'))duraklatmaKaldir('elle');else duraklatmaEkle('elle');};
   let cizilenPanel=null;
   function ciz(odak){
@@ -477,8 +481,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     ciz('[data-eylem="goruntu"]');
   }
   /* secim: kararın seçenek kimliği (tek karttan; kartEtkilesimKur), randevu ve maç gününde yok. Komut aynı tek komuttur (ajandaIsiYap); karar bir kez
-     uygulanır (iş kapanır), yolda karar gerektiren haber gelirse iş yerinde bekler */
-  function isiYap(id,secim){
+     uygulanır (iş kapanır), yolda karar gerektiren haber gelirse iş yerinde bekler. git: maç gününde macaGit'e (H2-a TEST: {izle:false}) */
+  function isiYap(id,secim,git){
     const is=k.isler[id];if(!is)return;
     const baslik=is.veri.baslik,mac=is.veri.eylem==='macGunu',bas=saatYazi(is.dakika),saatsiz=!!is.veri.saatsiz,karar=!!is.veri.karar;
     /* F1-b: kariyerden açılan maçta maç günü işi odada uygulanmaz, kopyada denenir. Yolda karar gerektiren haber gelirse o ana dek ilerleme normal
@@ -489,7 +493,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       onay=null;
       if(r.isler[id]){try{komut(x=>ajandaIsiYap(x,id,secim));}catch(e){hataGoster(e);return;}
         mesaj=baslik+' için yola çıktın; yolda karar gerektiren bir haber geldi. İş bekliyor.';ciz();return;}
-      const engel=oyun.macaGit(is.veri.macId);
+      const engel=oyun.macaGit(is.veri.macId,git);
       if(engel){mesaj=engel;ciz();return;}
       delete onizleler[id];acik=null;return;
     }
@@ -563,6 +567,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='kapat')kapat();
     else if(ey==='yap')isiYap(id);
     else if(ey==='yapSor'){onay='yap:'+id;ciz('[data-eylem="yap"]');}
+    else if(ey==='yapIzlemesiz')isiYap(id,undefined,{izle:false});   /* H2-a TEST: Maçı izleme */
     else if(ey==='ertele'){try{const t=komut(x=>ajandaErtele(x,id));mesaj=k.gecmis[k.gecmis.length-1].baslik+' '+tarihYazi(t)+' gününe ertelendi.';secili=null;onay=null;ciz();}catch(x){hataGoster(x);}}
     else if(ey==='ilerleSor'){onay='ilerle';ciz('[data-eylem="ilerle"]');}
     else if(ey==='ilerle')ilerleEylem();
@@ -634,13 +639,15 @@ if(typeof ON_EKRAN!=='undefined'&&typeof OYUN!=='undefined'){
       kayitTamam:()=>OYUN.oturum.durum.tamam,yenidenKaydet:()=>OYUN.oturum.kaydet(),yeniKariyer:oyunYeniKariyer,
       /* maç günü (F1-b, 2026-10-23): maç sınırı sayfa yeniden yüklemesidir. "Stada git" kaydedilmez; sayfa maçın kimliğiyle açılır, js/mac-gunu.js
          kayıtlı kariyerden maç gününü kurar ve bülten açılır (stat, seyirci ve maç o maça göre kurulur). Maç kimliği yoksa (eski davranış) bülten */
-      macaGit:macId=>{
+      /* H2-a (TEST "Maçı izleme"): {izle:false} ile adres ?ekran=mac&izle=0&mac=<kimlik> — bülten açılmaz, maç perdenin arkasında hesaplanır.
+         Kayıt koşulu Stada git'inkiyle aynı; F1-b gereği kaydedilmez */
+      macaGit:(macId,git)=>{
         if(macId){
           /* maç sayfası kariyeri kayıttan açar: kayıt yazılamıyorsa (yalnız bellek ya da kaydedilmemiş değişiklik ve kayıt hatası) gitmek
              bellekteki ilerlemeyi atar; o zaman gidilmez, nedeni söylenir (F1-b incelemesi) */
           const o=OYUN.oturum;
           if(OYUN.depo==='bellek'||(o.durum.bekleyen&&!o.kaydet().tamam))return'Maç açılamıyor: kayıt yazılamıyor ('+oyunKayitYazi()+'). Kayıt düzelince Stada git yeniden denenebilir.';
-          location.href=location.pathname+'?ekran=bulten&mac='+encodeURIComponent(macId);return null;}
+          location.href=location.pathname+(git&&git.izle===false?'?ekran=mac&izle=0':'?ekran=bulten')+'&mac='+encodeURIComponent(macId);return null;}
         kap.hidden=true;ON_EKRAN.bulteniAc();return null;},
       ilkMesaj:OYUN.mesaj,get bozukHata(){return OYUN.bozukHata;},bozuguSaklaVeBasla:oyunBozuguSakla
     },OYUN.ayarlar);

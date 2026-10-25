@@ -5,8 +5,9 @@
    projektör ışığı → loca kapısı açılır, aydınlık saha → kalabalık loca: önde iki yönetici ve rakip başkanın koltuğu, arkada basamakta konuklar
    (adsız ve sözsüz; içerik değildir); başkan ön sıranın önünden geçer, oturur; masa ve eller oturunca gelir.
    Rakip başkan (N12): maç gününün protokol kaydı MAC_PROTOKOL.rakipBaskan: 'yerinde' | 'sonra' | 'yok'. Kaynak sırası: ?rakipBaskan= (deneme),
-   yazılmış içerik (bugün yok), TEST olarak maç tohumundan (h2; motor rastlantısı çekilmez) yerinde ya da sonra. 'yok' yalnız parametreden ya
-   da içerikten gelir. Yerinde: koltuğunda oturur, başkan yaklaşınca kalkar ve döner; eller buluşur → karar anı → tepki → ikisi de oturur.
+   maç gününün protokolü (MAC_GUNU.protokol; H2-a, kullanıcı 2026-10-26 “şimdilik”: kariyer maçında 'yok' — karar anı kariyerde açılmaz,
+   js/mac-gunu.js), TEST olarak maç tohumundan (h2; motor rastlantısı çekilmez) yerinde ya da sonra (kariyersiz ?ekran=mac). 'yok' yalnız
+   parametreden ya da protokolden gelir. Kod, ?rakipBaskan= ve karar anı kaydı (js/karar-ani.js, js/ekran-an.js) yerinde kalır. Yerinde: koltuğunda oturur, başkan yaklaşınca kalkar ve döner; eller buluşur → karar anı → tepki → ikisi de oturur.
    Sonra: başkan oturduktan 8–20 sn sonra (takımlar ısınmaya çıkmadan) kapıdan gelir; başkan kalkıp ona döner → karar anı → oturulur.
    Yok: koltuk boş kalır. Karar anı js/ekran-an.js ile, kaydı js/karar-ani.js'ten (rakipTokalasma); seçim yalnız maç oturumunda tutulur
    (MAC_PROTOKOL.karar), kariyere ve ilişkiye etkisi yoktur (3.5, 5.4).

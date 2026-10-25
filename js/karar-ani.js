@@ -6,7 +6,9 @@
            tepki: {cevapKimliği: sahnedeki karşılık}} — tepkiler pozla oynanır: karsilik (gülümseyip karşılık, baş selamı), soguk (kısa soğuk
            baş selamı, yüzünü çevirir), basSelami (el bırakılır, kısa baş selamı).
    Seçimin kariyere ve ilişkiye etkisi yoktur: maç günü henüz kariyere bağlı değildir (3.5, 5.4); seçim yalnız maç oturumunda tutulur
-   (MAC_PROTOKOL.karar). Etkisi varmış gibi sunulmaz. */
+   (MAC_PROTOKOL.karar). Etkisi varmış gibi sunulmaz.
+   H2-a (kullanıcı 2026-10-26, “şimdilik”): kariyer maçında rakip başkan yoktur (js/mac-gunu.js protokol), bu kayıt orada açılmaz; ?rakipBaskan=
+   TEST parametresiyle ve kariyersiz ?ekran=mac adresinde açılır. */
 const KARAR_ANLARI={};
 /* TEST kaydı: kullanıcının örneği (2026-10-04, N12 notu). Nihai cümleler kullanıcının; durum satırı yazılmaz */
 KARAR_ANLARI.rakipTokalasma={

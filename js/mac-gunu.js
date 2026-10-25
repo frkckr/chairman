@@ -7,8 +7,12 @@
    MAC_KADRO, LIG tablosu ve son maçlar; tohum ve tarz js/mac-sahnesi.js'teki adres parametrelerinden (?tohum, ?tarz).
    Kariyer yolu kurulamazsa (bekleyen maç günü işi yok, yolda karar gerektiren haber, kadro eksik) MAC_GUNU.hata yazılır, adres temizlenir ve
    oda açılır (js/ekran-mac-oncesi.js ON_EKRAN).
-   MAC_GUNU: {kariyer, macId, biz, tohum, kadro:[ev, konuk], bulten, stat, doluluk, deplasman, zemin, hata?, digerleri?}
+   MAC_GUNU: {kariyer, macId, biz, tohum, kadro:[ev, konuk], bulten, stat, doluluk, deplasman, zemin, hata?, digerleri?, protokol?, izlemesiz}
      digerleri (F7): haftanın öbür maçları [{macId, ev, konuk, tohum, secenek}] (js/lig-maclari.js; js/mac-sahnesi.js LIG_CANLI oynatır).
+     protokol (H2-a, kullanıcı 2026-10-26, “şimdilik”): kariyer maçında {rakipBaskan:'yok'} — rakip başkanın karar anı kariyerde açılmaz
+       (js/loca-giris.js rakipBaskanDurumu önce ?rakipBaskan= TEST parametresine, sonra buraya bakar; geri açmak bu satırdır). Kariyersiz adreslerde yok.
+     izlemesiz (H2-a; TEST, yayından önce kalkar): odadaki “Maçı izleme” adresi ?ekran=mac&izle=0&mac=<kimlik>; maç perdenin arkasında görüntüsüz
+       hesaplanır, kart açılır (js/ekran-mac-sonu.js sonundaki başlatma). Sabit ve hata yolunda false.
      biz: başkanın kulübünün takım sırası (0 ev, 1 konuk; motorda takım 0 hep ev sahibidir). kadro: js/mac-girdi.js macKadrosu biçimi (tamAd dahil).
      bulten: maç öncesi ekranının verisi. stat: statın sahibi ('kulup' ya da ev sahibinin kimliği), statTarifi: tarif (F1-c: ev sahibinin statı);
      doluluk ve deplasman payı TEST (2.8O'dan beri sabit).
@@ -18,7 +22,7 @@
    (araclar/motor-yukle.js) onu yüklemez. */
 const MAC_GUNU=(()=>{
   const B=LIG.buMac,tablo=puanDurumu(LIG),ad=id=>(LIG.takimlar.find(t=>t.id===id)||{ad:id}).ad;
-  const sabit=()=>({kariyer:false,macId:null,biz:0,tohum:null,
+  const sabit=()=>({kariyer:false,macId:null,biz:0,tohum:null,izlemesiz:false,
     kadro:[B.ev,B.konuk].map((id,i)=>Object.assign({},MAC_KADRO[i],{id,tamAd:ad(id)})),
     bulten:{ligAd:LIG.ad,sezonAdi:LIG.sezon,hafta:B.hafta,gun:B.gun,saat:B.saat,oynanan:B.hafta-1,bolgeler:LIG.bolgeler,tablo,
       son:[LIG.sonMaclar[B.ev]||[],LIG.sonMaclar[B.konuk]||[]],adlar:Object.fromEntries(LIG.takimlar.map(t=>[t.id,t.ad]))}});
@@ -29,7 +33,7 @@ const MAC_GUNU=(()=>{
     const T=statTarifiUret(ev,evAd);
     return{stat:ev,statTarifi:T,doluluk:dolulukTest(ev,biz,hafta),deplasman:0.08,zemin:T.zemin};   /* G2-b: js/kulup-mali.js (maç günü geliri aynı formül) */
   };
-  let macId=null,evOn=null;try{const q=new URLSearchParams(location.search);macId=q.get('mac');evOn=q.get('ev');}catch(e){}
+  let macId=null,evOn=null,izle=null;try{const q=new URLSearchParams(location.search);macId=q.get('mac');evOn=q.get('ev');izle=q.get('izle');}catch(e){}
   /* geliştirme: ?ev=<kulüp> kariyersiz maçı o kulübün statında açar (tarif önizlemesi; kadrolar ve taraflar aynı) */
   if(!macId){const ev=evOn&&LIG.takimlar.some(t=>t.id===evOn)?evOn:null;return Object.assign(sabit(),statKur(ev,ad(ev),'demirkapi',B.hafta));}
   try{
@@ -42,7 +46,7 @@ const MAC_GUNU=(()=>{
     girdi.digerleri=haftaninDigerMaclari(k,macId).map(f=>digerMacPlani(k,f));   /* F7; G1-a: hükmen maçta secenek yerine hukmen */
     oyunKomut(x=>ajandaIsiYap(x,is.id),true);
     if(OYUN.kariyer.isler[is.id]){OYUN.oturum.kaydet();throw new Error('Stada giderken yolda karar gerektiren bir haber geldi; maç günü bekliyor');}
-    return Object.assign(girdi,statKur(girdi.ev,k.kulupler[girdi.ev].ad,biz,girdi.hafta));
+    return Object.assign(girdi,statKur(girdi.ev,k.kulupler[girdi.ev].ad,biz,girdi.hafta),{protokol:{rakipBaskan:'yok'},izlemesiz:izle==='0'});   /* H2-a */
   }catch(e){
     try{history.replaceState(null,'',location.pathname);}catch(x){}
     if(typeof OYUN!=='undefined')OYUN.mesaj='Maç günü açılamadı: '+e.message;

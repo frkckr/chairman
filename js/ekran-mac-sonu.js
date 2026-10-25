@@ -9,9 +9,14 @@
    uygulanmaz); sayfa kapanırsa kayıt maç günündedir ve maç aynı tohumla yeniden oynanır. Komut reddedilirse (belirlenimci; yeniden denemek
    işe yaramaz) neden yazılır, düğme "Odaya dön (sonuç yazılmadan)" olur.
    Kariyersiz geliştirme adreslerinde (?ekran=mac) kart açılmaz. Yazı büyüklüğü ayarı uygulanır; renkler STIL.kagit, ölçüler STIL.macSonu (TEST).
+   H2-a (2026-10-26): "Maçı bitir" perdesi (js/mac-sahnesi.js HIZLI_BITIR.perde) açıkken kartın kâğıt dilinde "Maç hesaplanıyor…" örtüsü (#macHesap):
+   işçisiz yolda yanında maçın dakikası, duraklatmada "Duraklatıldı"; kart, karar anı ya da tepe anı açıkken gizli. "Odaya dön" iki kipte de öbür
+   maçlar sürdükçe sayfayı dondurmadan bekler ("Öbür maçlar tamamlanıyor… n/7"; kalanı ligCanliHizli bitirir). İşçi yolunda bekleme
+   MAC_SONU.isciBekle'yi (TEST, duraklatma sayılmaz) aşarsa işçi bırakılır (arkaDus), kalanı ana iplik bitirir; eşzamanlı ligCanliBitir yalnız son
+   çaredir. Dosyanın sonunda TEST "Maçı izleme" başlatması (js/mac-gunu.js MAC_GUNU.izlemesiz): şerit gizlenir, perde ilk kareden açılır.
      macSonuKare(dt)   her karede (js/arayuz.js)
-     MAC_SONU          durum: {acik, sonuc, uygulandi, red} (denemeler okur) */
-const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:false,bekliyor:null};
+     MAC_SONU          durum: {acik, sonuc, uygulandi, red, bekliyor, isciBekle} (denemeler okur) */
+const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:false,bekliyor:null,isciBekle:60000,bekleGecen:0,bekleSon:0};
 {
   const A=STIL.macSonu,K=STIL.kagit,kok=document.getElementById('screen');
   const st=document.createElement('style');st.id='macSonuStili';
@@ -44,10 +49,26 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
 .mac-sonu button.ms-don:disabled{opacity:.6;cursor:progress}
 .ms-kart:focus{outline:none}
 .mac-sonu button.ms-don:focus-visible{outline:.14em solid ${K.kulup};outline-offset:.12em}
+.mac-sonu .ms-hesap{width:min(46%,26em);justify-items:center;text-align:center;gap:.35em}
+.ms-hesap p{margin:0}
+.ms-hesap b{font-family:var(--display);font-weight:400;font-size:1.9em;line-height:1;letter-spacing:.03em}
 `;
   document.head.appendChild(st);
   const E=document.createElement('section');E.className='mac-sonu';E.id='macSonu';E.hidden=true;E.setAttribute('role','dialog');E.setAttribute('aria-label','Maç sonu');
   kok.appendChild(E);
+  /* H2-a: perdenin örtüsü (kartın kâğıt dilinde; yeni görsel dil yok) */
+  const O=document.createElement('section');O.className='mac-sonu';O.id='macHesap';O.hidden=true;O.setAttribute('aria-label','Maç hesaplanıyor');
+  O.innerHTML='<div class="ms-kararti"></div><div class="ms-kart ms-hesap"><p class="ms-ust">'+(MAC_GUNU.bulten&&MAC_GUNU.bulten.hafta?String(MAC_GUNU.bulten.hafta).replace(/[&<>"]/g,'')+'. hafta':'Maç')+'</p>'+
+    '<p role="status"><b>Maç hesaplanıyor…</b></p><p class="ms-yok ms-hesapAlt"></p></div>';
+  kok.appendChild(O);
+  const hesapAlt=O.querySelector('.ms-hesapAlt');let hesapYazi=null;
+  const hesapKare=()=>{
+    const H=HIZLI_BITIR,g=H.perde&&!MAC_SONU.acik&&!KARAR_ANI.acik&&!TEPE_AN.aktif;
+    if(O.hidden===g){O.hidden=!g;if(g){const buyuk=typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.yazi==='buyuk';O.style.setProperty('--ms-boy',(buyuk?A.yazi.buyuk:A.yazi.normal)+'cqw');}}
+    if(!g)return;
+    const dk=MAC_ARKA.kip!=='isci'&&!H.anlik?mac.minuteLabel():'',y=duraklatmaVar()?'Duraklatıldı':dk?(/^\d/.test(dk)?dk+'\'':dk):'';
+    if(y!==hesapYazi){hesapYazi=y;hesapAlt.textContent=y;}
+  };
   const yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   const G=MAC_GUNU,adi=t=>(G.kadro[t].tamAd||G.kadro[t].ad),kisa=t=>G.kadro[t].kisa||G.kadro[t].ad;
   const KART_RENK={sari:'#f2d21d',ikinciSari:'#d8201e',kirmizi:'#d8201e'};
@@ -80,8 +101,9 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   const durumYaz=(m,hata)=>{const p=E.querySelector('.ms-durum');if(p){p.textContent=m;p.classList.toggle('ms-hata',!!hata);}};
   function msAc(){
     const S=MAC_SONU;S.acik=true;ON_EKRAN.sayfa='macSonu';
-    /* G1-a: bizim maç hükmense motor sonucu kullanılmaz. G1-e: "Maçı bitir" sonuç ikiziyle bittiyse ikizin sonucu (js/mac-arka.js) */
-    S.sonuc=G.hukmen?hukmenSonucu(G.hukmen):HIZLI_BITIR.anlik?JSON.parse(JSON.stringify(MAC_ARKA.ikiz.son)):mac.sonucKaydi();
+    /* G1-a: bizim maç hükmense motor sonucu kullanılmaz. G1-e: "Maçı bitir" sonuç ikiziyle bittiyse ikizin sonucu (H2-a: anlık dalın aldığı kopya,
+       js/mac-sahnesi.js HIZLI_BITIR.sonuc; sonradan işçi düşse de) */
+    S.sonuc=G.hukmen?hukmenSonucu(G.hukmen):HIZLI_BITIR.anlik?JSON.parse(JSON.stringify(HIZLI_BITIR.sonuc)):mac.sonucKaydi();
     const buyuk=typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.yazi==='buyuk';E.style.setProperty('--ms-boy',(buyuk?A.yazi.buyuk:A.yazi.normal)+'cqw');
     E.innerHTML=msIcerik(S.sonuc);E.hidden=false;
     /* odak kartta (F2 incelemesi): kart kendiliğinden açılır; odak düğmede olsaydı maç boyu duraklatan Boşluk sonucu uygulayıp sayfadan çıkarırdı.
@@ -99,9 +121,10 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
         const P=typeof MAC_PROTOKOL!=='undefined'&&MAC_PROTOKOL.karar?{id:MAC_PROTOKOL.karar.id,secim:MAC_PROTOKOL.karar.secim,an:MAC_PROTOKOL.karar.an==null?null:MAC_PROTOKOL.karar.an}:null;
         /* F7: haftanın öbür maçları — kalanı tamamlanır, sekiz sonuç tek komutla (biri reddedilirse hiçbiri yazılmaz) */
         const L=typeof LIG_CANLI!=='undefined'?LIG_CANLI:[];
-        /* G1-e: işçi kipinde öbür maçlar arkada bitiyorsa kısa bekleme (en çok 20 sn; sonra kalanlar ana iplikte) */
-        if(L.length&&MAC_ARKA.kip==='isci'&&ligCanliSuruyor()&&S.bekliyor!==0){S.bekliyor=performance.now();S.isliyor=false;durumYaz('Öbür maçlar tamamlanıyor…');return;}
-        if(L.length&&!ligCanliBitir())throw new Error('Haftanın öbür maçları bitmedi');
+        /* G1-e, H2-a: öbür maçlar sürüyorsa (işçide ya da ana iplikte) sayfa dondurulmadan beklenir; kalanı ligCanliHizli bitirir (macSonuKare) */
+        if(L.length&&ligCanliSuruyor()&&S.bekliyor===null){S.bekliyor=performance.now();S.bekleGecen=0;S.bekleSon=S.bekliyor;S.isliyor=false;bekleYaz();return;}
+        /* son çare: bekleme bittiği hâlde motoru ve sonucu olmayan maç kaldıysa eşzamanlı tamamlanır */
+        if(L.length&&ligCanliSuruyor()&&!ligCanliBitir())throw new Error('Haftanın öbür maçları bitmedi');
         const D=L.map(x=>({macId:x.d.macId,sonuc:x.m?x.m.sonucKaydi():x.son,tohum:x.d.tohum}));   /* G1-a: hükmen öbür maç */
         oyunKomut(k=>D.length?haftaSonuclariUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P},D):macSonucuUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P}));
         S.uygulandi=true;
@@ -118,14 +141,28 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
     if(b){b.disabled=false;b.textContent='Yeniden dene ▸';b.focus({preventScroll:true});}
   }
   E.addEventListener('click',e=>{const b=e.target.closest('button[data-eylem="odayaDon"]');if(b&&!b.disabled)msOdayaDon();});
+  /* H2-a: Odaya dön beklemesinin durum satırı: biten öbür maç sayısı */
+  const bekleYaz=()=>{const L=LIG_CANLI,n=L.filter(x=>x.m?x.m.phase==='fulltime':!!x.son).length;durumYaz('Öbür maçlar tamamlanıyor… '+n+'/'+L.length);};
   var macSonuKare=function(){
     const S=MAC_SONU;
+    hesapKare();   /* H2-a: perdenin örtüsü (kariyersiz adreste de) */
     if(!G.kariyer||S.acik&&!S.bekliyor)return;
     /* G1-a: bizim maç hükmense kart bülten kapanınca hemen açılır (maç oynanmaz) */
-    if(S.bekliyor){if(!ligCanliSuruyor()||performance.now()-S.bekliyor>20000){S.bekliyor=0;msOdayaDon();}return;}   /* G1-e: öbür maçlar işçide bitiyor */
+    if(S.bekliyor){
+      /* G1-e, H2-a: öbür maçlar işçide ya da kartın arkasında (ligCanliHizli) bitiyor. Bekleme süresi duraklatmada sayılmaz */
+      const simdi=performance.now();if(!duraklatmaVar())S.bekleGecen+=simdi-S.bekleSon;S.bekleSon=simdi;
+      const canliMotor=LIG_CANLI.some(x=>x.m&&x.m.phase!=='fulltime');
+      if(!ligCanliSuruyor()||(MAC_ARKA.kip!=='isci'&&!canliMotor)){S.bekliyor=0;msOdayaDon();return;}
+      if(MAC_ARKA.kip==='isci'&&S.bekleGecen>S.isciBekle)arkaDus('zaman aşımı');   /* işçi bırakılır; kalanı ana iplikte bütçeyle (MAC_ARKA.dusus) */
+      bekleYaz();return;}
     if(S.acik)return;
     if(!G.hukmen&&!HIZLI_BITIR.anlik&&(mac.phase!=='fulltime'||!(mac.phaseT>=A.kartSn||HIZLI_BITIR.bitti)))return;
     if(ON_EKRAN.sayfa!==null||(typeof MAC_TELEFON!=='undefined'&&MAC_TELEFON.acik))return;
     msAc();
   };
 }
+/* H2-a (TEST "Maçı izleme"; yayından önce kalkar): odadan ?ekran=mac&izle=0&mac=<kimlik> ile açılan maç izlenmez — şerit gizlenir, perde ilk
+   kareden açılır (js/mac-sahnesi.js hizliBitirIste): santra doğal maç öncesiyle gelir, sonuç ikizi hazırsa anında (yarış), değilse ana iplikte;
+   sonra kart. Sahne ve stat kurulur ama çizilmez (MAC_SECENEK stat tarifine bağlı; sahnesiz kurulum sonucu değiştirirdi). Bizim maç hükmense bir
+   şey yapılmaz (kart ilk karede açılır). Bu dosya son yüklenen betiktir: btnMacaGec'in sarmalayıcısı (js/loca-giris.js) kurulmuştur */
+if(MAC_GUNU.izlemesiz&&!MAC_GUNU.hata){document.getElementById('baskanDugmeleri').hidden=true;if(!MAC_GUNU.hukmen)hizliBitirIste();}

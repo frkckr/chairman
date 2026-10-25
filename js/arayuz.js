@@ -19,7 +19,8 @@ duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDurakl
 const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();
   if(SANTRA_HIZLI.aktif){btnMacaGec.disabled=true;btnMacaGec.setAttribute('aria-busy','true');btnMacaGec.textContent='Santraya geçiliyor…';}else btnMacaGec.hidden=true;};
 /* F2 (2026-10-23, kullanıcı isteği; GEÇİCİ TEST, yayından önce kaldırılır): "Maçı bitir" — kalan maç görüntüsüz oynanır (js/mac-sahnesi.js
-   hizliBitirIste). Basılınca kapanır ve dakikayı yazar; maç bitince gizlenir. Maç sonu kartı js/ekran-mac-sonu.js */
+   hizliBitirIste). Basılınca kapanır ve dakikayı yazar; maç bitince gizlenir. Maç sonu kartı js/ekran-mac-sonu.js. H2-a: basılınca perde açılır,
+   çizim durur (frame) */
 const btnHizliBitir=$('btnHizliBitir'),hizliBitirYazi=btnHizliBitir.querySelector('span');
 btnHizliBitir.onclick=()=>{hizliBitirIste();if(HIZLI_BITIR.bekliyor||HIZLI_BITIR.aktif){btnHizliBitir.disabled=true;btnHizliBitir.setAttribute('aria-busy','true');}};
 function hizliBitirGosterge(){
@@ -72,14 +73,18 @@ function frame(now){
   macKare(dt);baskanZaman(dt);izlemeGosterge();hizliBitirGosterge();
   if(typeof macSonuKare==='function')macSonuKare(dt);   /* F2: maç sonu kartı (js/ekran-mac-sonu.js) */
   if(typeof locaGirisKare==='function')locaGirisKare(dt);   /* js/loca-giris.js (2.8T) */
-  if(!btnMacaGec.hidden&&!MAC_ONCESI.includes(mac.phase))btnMacaGec.hidden=true;
-  kameraUygula(curView());   /* js/kamera.js */
-  okunurlukKare();           /* js/okunurluk.js: topun asgari boyu, havadaki topun lekesi */
-  camera.updateMatrixWorld();baskanKare(dt,camera);
-  /* ornekleme katında, oda ve balkonla aynı hedefe (js/goruntu.js) */
-  renderer.setRenderTarget(rt);renderer.setClearColor(STIL.ekran.arkaPlan,1);renderer.clear();renderer.render(scene,camera);
-  if(!(typeof pulTepe==='function'&&pulTepe()))baskanCiz();   /* P1 (deneme): 2D maç görünümünde başkanın ön planı (masa, eller) çizilmez */
-  renderer.setRenderTarget(null);renderer.clear();renderer.render(post,postCam);
+  if(!btnMacaGec.hidden&&(!MAC_ONCESI.includes(mac.phase)||HIZLI_BITIR.anlik))btnMacaGec.hidden=true;
+  /* H2-a: "Maçı bitir" perdesi açıkken çizilmez (bakış, okunurluk, başkanın ön planı ve çizim atlanır); son kare donuk kalır, üstünde
+     "Maç hesaplanıyor…" örtüsü ya da maç sonu kartı. Maç, kart, karar anı ve düğme göstergesi yukarıda sürer */
+  if(!HIZLI_BITIR.perde){
+    kameraUygula(curView());   /* js/kamera.js */
+    okunurlukKare();           /* js/okunurluk.js: topun asgari boyu, havadaki topun lekesi */
+    camera.updateMatrixWorld();baskanKare(dt,camera);
+    /* ornekleme katında, oda ve balkonla aynı hedefe (js/goruntu.js) */
+    renderer.setRenderTarget(rt);renderer.setClearColor(STIL.ekran.arkaPlan,1);renderer.clear();renderer.render(scene,camera);
+    if(!(typeof pulTepe==='function'&&pulTepe()))baskanCiz();   /* P1 (deneme): 2D maç görünümünde başkanın ön planı (masa, eller) çizilmez */
+    renderer.setRenderTarget(null);renderer.clear();renderer.render(post,postCam);
+  }
   onEkranCizildi=ON_EKRAN.acik;if(ON_EKRAN.acik)ON_EKRAN.cizildi=true;
   requestAnimationFrame(frame);
 }
