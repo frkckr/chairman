@@ -114,7 +114,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const is=k.isler[id];if(!is||is.tur!=='ajanda')return'';
     const v=is.veri,r=bugun().find(x=>x.id===id&&x.durum==='bekliyor');
     if(!r)return'<p class="od-not">Bu iş '+yaz(tarihKisa(is.tarih))+' günü ajandada.</p>';
-    /* karar: iki büyük cevaplı ortak kart (js/ekran-telefon.js); eski kayıtların çok seçenekli kararları da aynı kartta, eski "Görüş iste" altında */
+    /* karar: tek kart (js/ekran-kart.js; H1); "Görüş iste" ve erteleme kartın dışında, altında */
     if(v.karar)return kararKarti(k,id,{secim:secimler[id],onay:onay==='yap:'+id,testSecenek,dosyada:acik==='dosya'})+tavsiyeBolumu(id)+
       (v.zorunluluk==='ertelenebilir'?'<div class="od-dugmeler">'+ertelemeDugmesi(is)+'</div>':'');
     const secim=secimler[id],o=ajandaOnizle(k,id,secim);
@@ -554,7 +554,6 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='goruntu')goruntuKaydet();
     else if(ey==='kapat')kapat();
     else if(ey==='yap')isiYap(id);
-    else if(ey==='sec'){secimler[id]=b.dataset.secim;onay=null;ciz('[data-eylem="sec"][data-secim="'+b.dataset.secim+'"]');}
     else if(ey==='yapSor'){onay='yap:'+id;ciz('[data-eylem="yap"]');}
     else if(ey==='ertele'){try{const t=komut(x=>ajandaErtele(x,id));mesaj=k.gecmis[k.gecmis.length-1].baslik+' '+tarihYazi(t)+' gününe ertelendi.';secili=null;onay=null;ciz();}catch(x){hataGoster(x);}}
     else if(ey==='ilerleSor'){onay='ilerle';ciz('[data-eylem="ilerle"]');}
@@ -599,6 +598,13 @@ function odaEkraniKur(kap,oyun,ayarlar){
       const S=acikSira(),n=S.length,i=S.indexOf(seciliMesele);if(!n||(n<2&&i>=0))return;
       e.preventDefault();donusYeri=null;panelAc('dosya',S[i<0?0:(i+(e.code==='BracketLeft'?-1:1)+n)%n]);}
   });
+  /* tek kart (js/ekran-kart.js; dosya, karar paneli ve telefon aynı kökte). H1-a GEÇİCİ köprü: kartın önizlemesi bugünkü secimler'e yazılır,
+     bırakınca ya da Enter'la isiYap aynı yoldan uygular; duraklatmada kart kilitli. H1-b'de onizleler ve isiYap(id,secim) ile değişir */
+  if(typeof kartEtkilesimKur==='function')kartEtkilesimKur(kap,{
+    uygula:(id,secim)=>{secimler[id]=secim;onay=null;isiYap(id);},
+    onizle:(id,y)=>{const c=[...kap.querySelectorAll('.kk-kart')].find(x=>x.dataset.is===id);if(y&&c)secimler[id]=c.dataset[y];else delete secimler[id];
+      ciz('.kk-kart[data-is="'+id+'"]');},
+    kilitli:()=>duraklatmaVar()});
   /* duraklatma değişince düğmeler yeniden çizilir; izlerken o ana kadarki gözlem kaydedilir */
   duraklatmaDinle(a=>{if(kap.hidden||oyun.bozukHata)return;if(a&&izleme)izlemeKaydet();ciz();});
   addEventListener('pagehide',()=>{if(izleme)izlemeKaydet();});

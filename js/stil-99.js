@@ -394,7 +394,11 @@ const STIL={
     /* dosya (2.8M, js/ekran-dosya.js): masada açılan kırmızı karton dosya; perde odayı hafif karartır */
     dosya:{perde:'rgba(24,16,8,.42)',kapak:'#a8291f',kapakKoyu:'#7a1c15',sekme:'#e9dcc0',sayfa:'#fbf6e8',cizgi:'#d8c9a6',not:'#fffdf6',atas:'#8a8f98',mavi:'#22347a'},
     /* ajanda (2.8M, js/ekran-defter.js): iki sayfalı spiral defter; kayıtlar mürekkep renginde */
-    defter:{kapak:'#2c3442',sayfa:'#fbf8ef',cizgi:'#e3d9c2',spiral:'#5a5d62',kurdele:'#b4241c',murekkep:'#22347a',kayit:'#eef1fa',kayitCizgi:'#c4cbe0',secili:'#fff1c4',kart:'#fffdf6'}},
+    defter:{kapak:'#2c3442',sayfa:'#fbf8ef',cizgi:'#e3d9c2',spiral:'#5a5d62',kurdele:'#b4241c',murekkep:'#22347a',kayit:'#eef1fa',kayitCizgi:'#c4cbe0',secili:'#fff1c4',kart:'#fffdf6'},
+    /* tek kart (H1, F4; js/ekran-kart.js): yalnız ölçü ve hareket, renk yok (kâğıt dilinin renkleri). TEST. esik: bırakınca uygulayan kayma (kart
+       genişliğine oran), onizle: yüzün o yönün cevabına döndüğü kayma, kayma: klavye ya da kenar önizlemesinde kartın kayması, egim: en çok eğim
+       (derece), sure: yaylanma (sn), yuz: yüz yazısı (em; normal kart ve dosyanın büyük yüzü), telefon: konuşmanın cevap alanındaki kart */
+    kart:{esik:0.4,onizle:0.08,kayma:0.12,egim:4,sure:0.2,yuz:{normal:1.05,buyuk:1.15},telefon:{yukseklik:'14em'}}},
 
   /* Kişi portreleri (js/portre.js, 2.8I): 16×16 piksel, kodla çizilir. Tanınır kişilerin görünüşü burada sabittir; listede olmayan kişi
      kimliğinden belirlenimli görünüş alır. ten 0–2, sac: renk adı, tip: 'kisa'|'seyrek'|'kel'|'uzun'|'topuz'|'dalgali', biyik: 0 yok, 1 ince, 2 gür,

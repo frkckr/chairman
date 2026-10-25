@@ -3,8 +3,8 @@
      Üst kenar   açık konuların sekmeleri (kategori simgesi ve kısa başlık; cevap bekleyen sekmede kırmızı nokta) ve ayrı Arşiv sekmesi.
      Sol sayfa   kategori, büyük başlık, durum damgası, yürüten ve son tarih; ataşlı küçük kâğıtlar hâlinde "Bilinenler" (kaynağıyla), sözler,
                  açılır "Geçmiş".
-     Sağ sayfa   ilgili kişinin portresi ve görevi; karar varsa konu alıntısı ve iki büyük cevap (js/ekran-telefon.js kararKarti; "Onayla" ikinci
-                 adımdır); karar yoksa ne olduğu ve beklenen adım. Karardan sonra kısa sonuç aynı sayfada görünür.
+     Sağ sayfa   ilgili kişinin portresi ve görevi; karar varsa tek kart (js/ekran-kart.js kararKarti; H1: kaydırınca yüzü o cevaba döner,
+                 bırakınca uygulanır); karar yoksa ne olduğu ve beklenen adım. Karardan sonra kısa sonuç aynı sayfada görünür.
    Kural içermez: veri js/mesele.js (meseleOzeti) ve js/ajanda.js okuma işlevlerinden gelir; düğmeler js/ekran-oda.js'in data-eylem yoluna gider.
    dosyaGorunumu(k, D, Y) → html
      D: {secili, sira:[açık mesele kimlikleri], arsiv, sonuc, donus, karar(isId) → html}
@@ -50,10 +50,7 @@
 .dsy-kisi .od-portre{width:3.6em;height:3.6em;box-shadow:.12em .15em 0 rgba(60,40,10,.2)}
 .dsy-kisi b{display:block;font-size:1.15em}
 .dsy-kisi small{color:var(--k-soluk)}
-.dsy .kk{background:transparent;border:0;padding:0;gap:.7em}
 .dsy .kk-konu{font-size:1.12em;line-height:1.4;padding:.2em 0 .2em .8em;border-left:.22em solid ${D.cizgi};font-style:italic}
-.dsy .kk button.kk-cevap{min-height:4.6em;padding:.6em .8em .5em;border-radius:.35em}
-.dsy .kk button.kk-cevap b{font-size:1.2em}
 .dsy-sonuc{padding:.5em .7em;background:${D.not};border-left:.25em solid var(--k-yesil)}
 .dsy-bos{color:var(--k-soluk);font-style:italic}
 .dsy-arsiv{list-style:none;margin:0;padding:0;display:grid}

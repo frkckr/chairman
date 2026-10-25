@@ -1,11 +1,8 @@
 /* ============ Chairman — telefon ve karar kartı: oda, balkon ve maçta ortak çizim (görüntü katmanı; yol haritası 2.8I, N7) ============
    Kural içermez: içerik js/mesajlar.js (konusmaListesi), js/ajanda.js (ajandaOnizle) ve js/mesele.js okuma işlevlerinden gelir.
    Düğmeler data-eylem taşır; ev sahibi ekran (js/ekran-oda.js, js/ekran-mac-telefon.js) tıklamayı ortak kariyer komutuna çevirir.
-   kararKarti(k, isId, s)   iki büyük cevaplı kart (dosya ve konuşma aynı kartı kullanır). s: {secim, onay, gorus, ozetsiz, kapali, dosyaBaglanti, dosyada, testSecenek}
-     Cevaba basmak seçer; "Onayla" kararı verir (aynı karar telefonda ve dosyada bir kez uygulanır: ajandaIsiYap işi kapatır).
-     Bilinen bedel (tutar, tarih, taahhüt, belirsizlik) seçenek açıklamasında, cevapsız kalırsa olacak olan kartın altında yazar.
-     ozetsiz: konu ve hazır görüş kartta yazılmaz (telefonda konuşmanın akışında durur, kart alttaki cevap alanındadır; N7).
-     İkiden fazla seçenek yalnız eski kayıtların kararlarında görülür (js/uyum-icerik2.js); aynı kart onları sırayla dizer.
+   Karar kartı H1'den (F4) beri js/ekran-kart.js'tedir (kararKarti, kararGorusu, yazT; tek kart). Konuşmada kart alttaki cevap alanındadır ve özetsizdir:
+     konu ve hazır görüş konuşmanın akışında durur (N7). Aynı karar telefonda ve dosyada bir kez uygulanır (ajandaIsiYap işi kapatır).
    telefonCiz(k, T, s)      T: {ekran:'ana'|'mesajlar'|'konusma'|'skor', kisi, skorAc}. s: {macta, mac, secimler, onay, kapali, kasa, acilis}
      Ana ekran: tarih, büyük saat, bildirim kartları (yalnız okunmamış ya da cevap bekleyen konuşmalar; N14, 2026-10-18: maç gününün Canlı Skor
      kartı kalktı), altta sabit sırada iki uygulama (Mesajlar, Canlı Skor). Mesajlar: kişi listesi → tek konuşma (konuşma yoksa boş liste, yazı
@@ -13,7 +10,6 @@
      (kısa büyüyerek belirme; aynı ekran yeniden çizilirken verilmez).
      Maçta görünüm aynıdır; cevap verilmez (maç içi kariyer cevabı Aşama 3'te). Diğer maçlar F7'den beri bağlıdır (canlı skor ve sonuçlar);
      bağlanınca aynı tek satır kalıbıyla listeye gelirler, eksikleri için uyarı yazılmaz (N2, kullanıcı kararı 2026-10-04). */
-const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 /* bileşenin görünüşü: oda (.oda) ve maç telefonu (.macTelefon) içinde aynı. Renkler STIL.kagit'ten (--k-*), telefonunkiler STIL.kagit.telefon'dan.
    Masaüstü kopyası yalnız js/ klasörünü taşıdığı için stil burada belgeye eklenir.
    N7 (kullanıcı kararı 2026-10-04; onaylı taslak tur/p2'deki prototipler/8-telefon.html): tanıdık akıllı telefon düzeni. Cihaz gövdesi, kamera adası, durum
@@ -24,25 +20,6 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
   if(typeof document==='undefined'||document.getElementById('telefonStili'))return;
   const T=STIL.kagit.telefon,st=document.createElement('style');st.id='telefonStili';
   st.textContent=`
-.kk{display:grid;gap:.5em;padding:.6em .7em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-kirmizi)}
-.kk p{margin:0}
-.kk-konu{font-size:1.05em;line-height:1.35}
-.kk-gorus{padding:.2em .5em;border-left:.2em solid var(--k-vurguZemin);font-size:.92em}
-.kk-gorus b{margin-right:.3em}
-.kk-cevaplar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5em}
-.kk-sutun{display:grid;gap:.15em;align-content:start;min-width:0}
-.kk-sutun small{color:var(--k-soluk);font-size:.86em;line-height:1.25}
-.kk button.kk-cevap{display:grid;gap:.12em;min-height:3.3em;width:100%;text-align:left;padding:.45em .65em .4em;background:var(--k-zemin);border:1px solid var(--k-cizgi);border-bottom-width:.22em;border-radius:.3em;color:var(--k-yazi)}
-.kk button.kk-cevap b{font-size:1.08em;line-height:1.15;font-weight:600}
-.kk button.kk-cevap small{font-weight:400;color:var(--k-soluk)}
-.kk button.kk-cevap[aria-pressed="true"]{background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:#1a1203}
-.kk button.kk-cevap[aria-pressed="true"] small{color:#3a2a08}
-.kk button.kk-cevap:disabled{opacity:.5;cursor:not-allowed}
-.kk-not{color:var(--k-soluk);font-size:.9em}
-.kk .kk-uyari,.kk-sutun small.kk-uyari{color:var(--k-kirmizi)}
-.kk-onay{display:flex;flex-wrap:wrap;align-items:center;gap:.4em .6em;padding-top:.35em;border-top:1px dashed var(--k-cizgi)}
-.kk-onay span{flex:1 1 12em}
-.kk button.kk-gonder{background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:#1a1203;font-weight:600}
 .od-kisiSatir{display:flex;gap:.6em;align-items:center}
 .od-portre,.tel-portre{image-rendering:pixelated;image-rendering:crisp-edges;border-radius:.25em;flex:none}
 .od-portre{width:2.9em;height:2.9em}
@@ -135,12 +112,10 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .tel-bos{color:var(--k-soluk);text-align:center;padding:1em 0}
 .tel-cevap{display:grid;gap:.45em;max-height:55cqh;overflow-y:auto;padding:.5em .65em .2em;background:var(--k-serit);border-top:1px solid var(--k-cizgi)}
 .tel-cevapBas{font-size:.8em;color:var(--k-soluk)}
-.tel-cevap .kk{padding:0;gap:.4em;background:transparent;border:0}
-.tel-cevap .kk+.tel-cevapBas{padding-top:.4em;border-top:1px dashed var(--k-cizgi)}
-.tel .tel-cevap .kk-cevaplar{grid-template-columns:1fr 1fr;gap:.5em}
-.tel .kk button.kk-cevap{background:#fff;border-radius:.8em;border-bottom-width:.2em}
-.tel .kk button.kk-cevap[aria-pressed="true"]{background:var(--k-vurguZemin)}
-.tel-cevap .kk-not:last-child{text-align:center}
+.tel-cevap .kk-kart{gap:.4em;padding:.45em .55em;background:#fff;border-radius:.8em}
+.tel-cevap .kk-alan+.tel-cevapBas{padding-top:.4em;border-top:1px dashed var(--k-cizgi)}
+.tel .tel-cevap .kk-kenar{border-radius:.8em}
+.tel-cevap .kk-kart>.kk-not:last-child{text-align:center}
 /* ---- Canlı Skor ---- */
 .tel-skor{display:grid;gap:.45em}
 .tel-skor h5{margin:.3em 0 0;font-size:.76em;letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu);font-weight:600}
@@ -156,7 +131,6 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .tel-ist thead th{background:var(--k-zemin);font-size:.88em}
 .tel-ist tbody tr:last-child>*{border-bottom:0}
 .tel-ist tbody th{font-weight:400;color:var(--k-soluk)}
-.tel .kk{border-left-width:.25em;border-radius:.4em}
 `;
   document.head.appendChild(st);
 })();
@@ -177,48 +151,6 @@ function telMacSatiri(m,nitelik){
   const ic='<small'+(m.canli?' class="tel-macCanli"':'')+'>'+yazT(m.sol)+'</small><span class="tel-macEv">'+yazT(telKisaAd(m.ev))+'</span><b>'+yazT(m.orta)+'</b><span class="tel-macDep">'+yazT(telKisaAd(m.dep))+'</span>';
   const baslik=' title="'+yazT(m.ev+' – '+m.dep+' · '+m.durum)+'"';
   return nitelik?'<button type="button" class="tel-mac" '+nitelik+baslik+'>'+ic+'</button>':'<div class="tel-mac"'+baslik+'>'+ic+'</div>';
-}
-
-/* ---- karar kartı ---- */
-/* hazır görüş: kararı soranın ya da ilgili yöneticinin görüşü (konuşmada gösterilir; dosyada "Bilinenler"dedir) */
-function kararGorusu(k,v){
-  if(typeof meseleOlayi!=='function'||!v.meseleId)return'';
-  const ol=meseleOlayi(k,v.meseleId),G=ol?ol.bilgiler.filter(b=>k.kisiler[b.kaynak]&&b.kaynak!==k.baskanId&&/\.tavsiye\./.test(b.anahtar)):[];
-  return G.slice(-1).map(b=>'<p class="kk-gorus"><b>'+yazT(k.kisiler[b.kaynak].ad)+'</b> '+yazT(MESELE_OLAYLARI[b.anahtar](k,b.p))+'</p>').join('');
-}
-function kararKarti(k,isId,s={}){
-  const is=k.isler[isId];
-  if(!is||is.tur!=='ajanda'||!is.veri.karar)return'';
-  const v=is.veri,o=ajandaOnizle(k,isId,s.secim),S=o.secenekler,iki=S.length===2;
-  let ic='<section class="kk'+(iki?' kk-iki':'')+'" aria-label="Karar">';
-  if(!s.ozetsiz){
-    ic+='<p class="kk-konu">'+yazT(v.aciklama)+'</p>';
-    if(s.gorus)ic+=kararGorusu(k,v);
-  }
-  ic+='<div class="kk-cevaplar">'+S.map(x=>{
-    const sec=x.id===s.secim,kapali=!!x.engel||!!s.kapali,ac=(x.aciklama||[]).filter(Boolean),sure=x.sure!==undefined?x.sure:v.sure;
-    return'<div class="kk-sutun"><button type="button" class="kk-cevap" data-eylem="sec" data-is="'+isId+'" data-secim="'+yazT(x.id)+'" aria-pressed="'+(sec?'true':'false')+'"'+(kapali?' disabled':'')+'>'+
-      '<b>'+yazT(x.metin)+'</b><small>'+(sure?sure+' dk':'zaman almaz')+'</small></button>'+
-      (x.engel?'<small class="kk-uyari">'+yazT(x.engel)+'</small>':'')+ac.map(a=>'<small>'+yazT(a)+'</small>').join('')+(s.testSecenek?s.testSecenek(isId,x):'')+'</div>';
-  }).join('')+'</div>';
-  const alt=[];
-  if(is.veri.saatsiz&&!s.dosyada)alt.push('Son cevap: '+(is.tarih===k.tarih?'bugün ':gunAyYazi(is.tarih)+' ')+saatYazi(is.dakika));
-  if(zamanAsimiVar(is))alt.push(zamanAsimiMetni(k,is));
-  if(alt.length)ic+='<p class="kk-not">'+alt.map(yazT).join(' · ')+'</p>';
-  if(s.kapali)ic+='<p class="kk-not">'+yazT(s.kapali)+'</p>';
-  else{
-    for(const e of o.engel.filter(e=>!/Bir seçenek/.test(e)))ic+='<p class="kk-uyari">'+yazT(e)+'</p>';
-    if(o.atlanacak.length)ic+='<p class="kk-uyari">Bu karar zaman alır; kaçırılacak: '+o.atlanacak.map(x=>yazT(x.veri.baslik+' ('+saatYazi(x.dakika)+')')).join(', ')+'</p>';
-    if(o.cevapsiz.length)ic+='<p class="kk-uyari">Bu arada cevapsız kalacak: '+o.cevapsiz.map(x=>yazT(x.veri.baslik)).join(', ')+'</p>';
-    if(s.secim&&o.secenek){
-      const uyar=(o.atlanacak.length||o.cevapsiz.length)&&!s.onay;
-      ic+='<div class="kk-onay"><span>Kararın: <b>'+yazT(o.secenek.metin)+'</b></span>'+
-        '<button type="button" class="kk-gonder" data-eylem="'+(uyar?'yapSor':'yap')+'" data-is="'+isId+'"'+(o.engel.length?' disabled':'')+'>'+(uyar?'Yine de onayla ▸':'Onayla ▸')+'</button>'+
-        '<button type="button" data-eylem="vazgec">Vazgeç</button></div>';
-    }
-  }
-  if(s.dosyaBaglanti&&v.meseleId)ic+='<p class="kk-not"><button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+v.meseleId+'" data-donus="telefon">Dosyayı aç ▸</button></p>';
-  return ic+'</section>';
 }
 
 /* ---- telefon ---- */
