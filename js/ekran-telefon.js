@@ -3,7 +3,8 @@
    Düğmeler data-eylem taşır; ev sahibi ekran (js/ekran-oda.js, js/ekran-mac-telefon.js) tıklamayı ortak kariyer komutuna çevirir.
    Karar kartı H1'den (F4) beri js/ekran-kart.js'tedir (kararKarti, kararGorusu, yazT; tek kart). Konuşmada kart alttaki cevap alanındadır ve özetsizdir:
      konu ve hazır görüş konuşmanın akışında durur (N7). Aynı karar telefonda ve dosyada bir kez uygulanır (ajandaIsiYap işi kapatır).
-   telefonCiz(k, T, s)      T: {ekran:'ana'|'mesajlar'|'konusma'|'skor', kisi, skorAc}. s: {macta, mac, secimler, onay, kapali, kasa, acilis}
+   telefonCiz(k, T, s)      T: {ekran:'ana'|'mesajlar'|'konusma'|'skor', kisi, skorAc}. s: {macta, mac, onizleler, kapali, kasa, acilis, yeniler, testSecenek}
+     onizleler: karar başına kartta önizlenen yön ('sol'|'sag'; ev sahibinin görünüm durumu, js/ekran-oda.js). kapali: kart kilitli, nedeni yüzde (maçta)
      Ana ekran: tarih, büyük saat, bildirim kartları (yalnız okunmamış ya da cevap bekleyen konuşmalar; N14, 2026-10-18: maç gününün Canlı Skor
      kartı kalktı), altta sabit sırada iki uygulama (Mesajlar, Canlı Skor). Mesajlar: kişi listesi → tek konuşma (konuşma yoksa boş liste, yazı
      yok). Canlı Skor: günün maçları → ayrıntı. acilis: ekran yeni açıldı
@@ -18,7 +19,9 @@
    ölçeğine zorlanmaz. Durum çubuğundaki sinyal ve pil süstür, düğme değildir. */
 (function telefonStili(){
   if(typeof document==='undefined'||document.getElementById('telefonStili'))return;
-  const T=STIL.kagit.telefon,st=document.createElement('style');st.id='telefonStili';
+  const T=STIL.kagit.telefon,KT=STIL.kagit.kart,st=document.createElement('style');st.id='telefonStili';
+  /* H1-b: dar cevap alanında (panelin %41'i) önizleme kayması küçüktür; alanın yan boşluğu ve kartın eğimi ona göre (js/ekran-kart.js kalıbı) */
+  const telYan=(KT.telefon.kayma/(1+2*KT.telefon.kayma)*100).toFixed(2),telEgim=(KT.egim*KT.telefon.kayma/KT.esik).toFixed(2);
   st.textContent=`
 .od-kisiSatir{display:flex;gap:.6em;align-items:center}
 .od-portre,.tel-portre{image-rendering:pixelated;image-rendering:crisp-edges;border-radius:.25em;flex:none}
@@ -112,7 +115,11 @@
 .tel-bos{color:var(--k-soluk);text-align:center;padding:1em 0}
 .tel-cevap{display:grid;gap:.45em;max-height:55cqh;overflow-y:auto;padding:.5em .65em .2em;background:var(--k-serit);border-top:1px solid var(--k-cizgi)}
 .tel-cevapBas{font-size:.8em;color:var(--k-soluk)}
-.tel-cevap .kk-kart{gap:.4em;padding:.45em .55em;background:#fff;border-radius:.8em}
+/* tek kart (H1): en az yükseklik (yüz dönünce kenarlar yerinde; yüz üstte, kenarlar altta), küçük önizleme kayması */
+.tel .tel-cevap .kk-alan{padding:0 ${telYan}%}
+.tel .tel-cevap .kk-kart{gap:.4em;padding:.45em .55em;background:#fff;border-radius:.8em;min-height:min(${KT.telefon.yukseklik},40cqh);grid-template-rows:minmax(0,1fr);grid-auto-rows:auto}
+.tel .tel-cevap .kk-kart[data-yuz="sol"]{transform:translateX(-${KT.telefon.kayma*100}%) rotate(-${telEgim}deg)}
+.tel .tel-cevap .kk-kart[data-yuz="sag"]{transform:translateX(${KT.telefon.kayma*100}%) rotate(${telEgim}deg)}
 .tel-cevap .kk-alan+.tel-cevapBas{padding-top:.4em;border-top:1px dashed var(--k-cizgi)}
 .tel .tel-cevap .kk-kenar{border-radius:.8em}
 .tel-cevap .kk-kart>.kk-not:last-child{text-align:center}
@@ -214,7 +221,7 @@ function telefonCiz(k,T,s={}){
     ic+='</div>';
     const K=c.kararlar.filter(id=>k.isler[id]);
     if(K.length)alt='<div class="tel-cevap" aria-label="Cevap">'+K.map(id=>'<p class="tel-cevapBas">'+yazT(k.isler[id].veri.baslik||'Karar')+'</p>'+
-      kararKarti(k,id,{secim:(s.secimler||{})[id],onay:s.onay==='yap:'+id,ozetsiz:true,kapali:s.kapali||null,dosyaBaglanti:!s.macta,testSecenek:s.testSecenek})).join('')+'</div>';
+      kararKarti(k,id,{onizle:(s.onizleler||{})[id]||null,ozetsiz:true,kapali:s.kapali||null,dosyaBaglanti:!s.macta,testSecenek:s.testSecenek})).join('')+'</div>';
   }else if(ekran==='skor'){
     ic='<header class="tel-nav">'+geri('telEv','','Ana ekran')+'</header><h4 class="tel-buyukBaslik">Canlı Skor</h4><div class="tel-skor">';
     if(M){

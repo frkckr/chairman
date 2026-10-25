@@ -1,16 +1,21 @@
 /* ============ Chairman — karar anı ekranı (yol haritası N12; ortak sunum bileşeni, kural içermez) ============
-   Kullanıcı kararı 2026-10-04: tokalaşma gibi anlarda iki büyük cevaplı, yaklaşık beş saniyelik karar anı açılır (STIL_REHBERI §7/§8,
-   OYUN_TASARIMI §10 “Süreli cevaplar”). Sahne durmaz; karenin kenarları hafifçe kararır, üstte kim olduğu yazar, altta iki büyük kâğıt kart
-   durur. Sol ve sağ doğru/yanlış diye kodlanmaz. Süre kartlar yerine oturduktan sonra başlar; ortadan kenarlara eriyen ince çubuk, son
-   saniyelerde amber; rakam yoktur. Fare, ←/→ ya da 1/2 ile seçilir. Seçilen kart kısa süre kalır, öbürü silinir. Süre dolarsa cevapsız
-   sonucu işler. Duraklat süreyi ve kartların hareketini dondurur (zaman karenin dt'siyle ilerler; duraklatmada seçim yapılmaz).
-   Yazı büyüklüğü ayarı uygulanır (OYUN.ayarlar.yazi). Ölçüler ve süreler STIL.an (TEST).
+   Kullanıcı kararı 2026-10-04: tokalaşma gibi anlarda iki cevaplı, yaklaşık beş saniyelik karar anı açılır (STIL_REHBERI §7/§8,
+   OYUN_TASARIMI §10 “Süreli cevaplar”). Sahne durmaz; karenin kenarları hafifçe kararır, üstte kim olduğu yazar, altta kâğıt kart durur.
+   H1 (F4; kullanıcı kararları 2026-10-22 ve 2026-10-23, OYUN_TASARIMI §2 “Tek kart”): iki kart yerine dosyadaki, panel ve telefondaki tek kart
+   (js/ekran-kart.js kartEtkilesimKur sözleşmesi): kart sola ya da sağa kaydırıldıkça yüzü o cevaba döner, eşiği geçip bırakınca o cevap seçilir,
+   altında yerine yaylanır; iki kenar etiketi cevapların adıdır ve yalnız önizler. Klavye: ←/→ önizler, Enter önizleneni seçer, Esc önizlemeyi bırakır;
+   1/2 doğrudan seçer. Tıklama seçmez. Sol yüz cevaplar[0], sağ yüz cevaplar[1]; sol ve sağ doğru/yanlış ya da renkle kodlanmaz.
+   Süre kart yerine oturduktan sonra başlar; ortadan kenarlara eriyen ince çubuk, son saniyelerde amber; rakam yoktur. Seçilen cevap kartın yüzünde
+   kısa süre kalır (amber), sonra kart silinir. Süre dolarsa cevapsız sonucu işler. Duraklat süreyi ve kartın hareketini dondurur (zaman karenin
+   dt'siyle ilerler; duraklatmada seçim yapılmaz, önizleme açıktır). Yazı büyüklüğü ayarı uygulanır (OYUN.ayarlar.yazi). Ölçüler ve süreler STIL.an
+   (TEST), kartın kayma ve eşik ölçüleri STIL.kagit.kart.
      kararAniAc(kayit, {kim, bitince(secim)})   açar (kayit: KARAR_ANLARI, js/karar-ani.js)
      kararAniKare(dt)                          ilerletir (js/loca-giris.js locaGirisKare)
-     KARAR_ANI                                 durum: {acik, t, secim, sure, kalan} (denemeler okur) */
-const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:null,bitisT:null,kart:[]};
+     KARAR_ANI                                 durum: {acik, t, secim, sure, kalan, onizle} (denemeler okur) */
+const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:null,bitisT:null,kart:[],onizle:null};
 {
-  const A=STIL.an,K=STIL.kagit,kok=document.getElementById('screen');
+  const A=STIL.an,K=STIL.kagit,KA=K.kart,kok=document.getElementById('screen');
+  const egimKayma=(KA.egim*KA.kayma/KA.esik).toFixed(2);
   const st=document.createElement('style');st.id='kararAniStili';
   st.textContent=`
 .karar-ani{position:absolute;inset:0;z-index:5;pointer-events:none;font-family:var(--mono);font-size:var(--an-boy,1.3cqw);line-height:1.3;color:${K.yazi}}
@@ -18,18 +23,34 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
 .ka-kararti{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,rgba(0,0,0,0) 46%,rgba(0,0,0,${A.kararma}) 100%)}
 .ka-kim{position:absolute;top:6%;left:50%;transform:translateX(-50%);margin:0;padding:.3em 1em .25em;background:${K.zemin};border:1px solid ${K.cizgi};box-shadow:.2em .3em 0 rgba(0,0,0,.3);
   font-family:var(--display);font-size:1.6em;line-height:1;letter-spacing:.04em;white-space:nowrap;color:${K.kulup}}
-.ka-alt{position:absolute;left:6%;right:6%;bottom:6%;height:34%;display:grid;grid-template-rows:auto 1fr;gap:.6em}
+.ka-alt{position:absolute;left:6%;right:6%;bottom:6%;height:34%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:.6em}
 .ka-sure{position:relative;height:.32em;margin:0 18%}
 .ka-sure i{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;background:${K.serit};border-radius:1em;box-shadow:0 0 0 .08em rgba(0,0,0,.45)}
 .ka-sure.ka-amber i{background:${K.vurguZemin};opacity:1}
-.ka-kartlar{display:grid;grid-template-columns:1fr 1fr;gap:4%;align-items:stretch}
-.karar-ani button.ka-kart{pointer-events:auto;display:grid;align-content:center;gap:.3em;min-width:0;padding:.7em 1em;text-align:center;cursor:pointer;
-  font:inherit;color:${K.yazi};background:${K.serit};border:1px solid ${K.cizgi};border-bottom-width:.28em;border-radius:.5em;box-shadow:.25em .35em 0 rgba(0,0,0,.35)}
-.karar-ani button.ka-kart b{font-family:var(--display);font-weight:400;font-size:2.4em;line-height:1;letter-spacing:.02em}
-.karar-ani button.ka-kart small{color:${K.soluk};font-size:.95em}
-.karar-ani button.ka-kart:hover{border-color:${K.vurgu}}
-.karar-ani button.ka-kart:focus-visible{outline:.14em solid ${K.kulup};outline-offset:.12em}
-.karar-ani button.ka-kart.ka-secildi{background:${K.vurguZemin};border-color:${K.vurgu};color:#1a1203}
+.ka-kartlar{display:grid;justify-items:center;align-items:stretch;min-height:0}
+.karar-ani .ka-kart{pointer-events:auto;box-sizing:border-box;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.5em;width:min(100%,34em);min-width:0;min-height:0;
+  padding:.6em .8em .7em;color:${K.yazi};background:${K.serit};border:1px solid ${K.cizgi};border-bottom-width:.28em;border-radius:.5em;box-shadow:.25em .35em 0 rgba(0,0,0,.35);
+  touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;transform-origin:50% 100%;transition:transform ${KA.sure}s ease-out}
+.karar-ani .ka-kart.kk-surukle{transition:none;cursor:grabbing}
+.karar-ani .ka-kart[data-yuz="sol"]{transform:translateX(-${KA.kayma*100}%) rotate(-${egimKayma}deg)}
+.karar-ani .ka-kart[data-yuz="sag"]{transform:translateX(${KA.kayma*100}%) rotate(${egimKayma}deg)}
+.karar-ani .ka-kart:focus{outline:none}
+.karar-ani .ka-kart:focus-visible{outline:.14em solid ${K.kulup};outline-offset:.12em}
+.karar-ani .ka-kart.ka-secildi{background:${K.vurguZemin};border-color:${K.vurgu};color:#1a1203}
+.ka-yuz{display:grid;align-content:center;justify-items:center;gap:.25em;min-height:0;text-align:center}
+.ka-yuz p{margin:0}
+.ka-yuz b{font-family:var(--display);font-weight:400;font-size:2.4em;line-height:1;letter-spacing:.02em}
+.ka-yuz small{color:${K.soluk};font-size:.95em}
+.karar-ani .ka-kart.ka-secildi .ka-yuz small{color:#3a2a08}
+.ka-kenarlar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6em}
+.karar-ani button.ka-kenar{display:flex;align-items:center;gap:.45em;min-width:0;padding:.35em .65em .3em;font:inherit;text-align:left;color:${K.yazi};
+  background:${K.zemin};border:1px solid ${K.cizgi};border-bottom-width:.18em;border-radius:.4em;cursor:pointer}
+.karar-ani button.ka-kenar[data-yon="sag"]{justify-content:flex-end;text-align:right}
+.ka-kenar b{font-family:var(--display);font-weight:400;font-size:1.45em;line-height:1.05;letter-spacing:.02em;overflow-wrap:anywhere}
+.ka-kenar i{flex:none;font-style:normal;color:${K.soluk}}
+.karar-ani button.ka-kenar:hover{border-color:${K.vurgu}}
+.karar-ani button.ka-kenar[aria-pressed="true"]{background:${K.vurguZemin};border-color:${K.vurgu};color:#1a1203}
+.karar-ani button.ka-kenar[aria-pressed="true"] i{color:#3a2a08}
 `;
   document.head.appendChild(st);
   const E=document.createElement('section');E.className='karar-ani';E.id='kararAni';E.hidden=true;E.setAttribute('role','dialog');E.setAttribute('aria-label','Karar anı');
@@ -37,25 +58,53 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
   kok.appendChild(E);
   const kararti=E.querySelector('.ka-kararti'),kim=E.querySelector('.ka-kim'),cubuk=E.querySelector('.ka-sure'),dolum=cubuk.firstChild,kartlar=E.querySelector('.ka-kartlar');
   const yumusak=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x);};
-  function sec(i){const S=KARAR_ANI;if(!S.acik||S.secim!==null||S.t<A.giris||duraklatmaVar())return;S.secim=S.kayit.cevaplar[i].id;S.secilen=i;S.bitisT=S.t;}
-  kartlar.addEventListener('click',e=>{const b=e.target.closest('.ka-kart');if(b)sec(+b.dataset.i);});
-  addEventListener('keydown',e=>{if(!KARAR_ANI.acik)return;const i={ArrowLeft:0,Digit1:0,Numpad1:0,ArrowRight:1,Digit2:1,Numpad2:1}[e.code];
-    if(i!==undefined){e.preventDefault();e.stopImmediatePropagation();sec(i);}},true);
+  const yazA=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[m]);
+  /* kartın yüzü: nötrde kısa yol gösterme (arayüz yazısı), önizlemede ve seçimde o cevap; kenar etiketinin basılı görünüşü yöne göre */
+  const yuzYaz=()=>{
+    const S=KARAR_ANI,c=S.kart[0];if(!c||!S.kayit)return;
+    const y=S.onizle==='sol'||S.onizle==='sag'?S.onizle:null,x=y?S.kayit.cevaplar[y==='sol'?0:1]:null;
+    c.dataset.yuz=y||'notr';
+    c.querySelector('.ka-yuz').innerHTML=x?'<p><b>'+yazA(x.metin)+'</b></p>'+(x.alt?'<p><small>'+yazA(x.alt)+'</small></p>':'')
+      :'<p><small>Kaydır ya da ←/→ ile bak, Enter ile cevapla</small></p>';
+    for(const b of c.querySelectorAll('.ka-kenar'))b.setAttribute('aria-pressed',b.dataset.yon===y?'true':'false');
+  };
+  const onizle=y=>{const S=KARAR_ANI;if(!S.acik||S.secim!==null)return;S.onizle=y==='sol'||y==='sag'?y:null;yuzYaz();};
+  /* seçim: süre kart yerine oturduktan sonra ve duraklatma yokken; seçilen cevap yüzde kalır */
+  function sec(i){const S=KARAR_ANI;if(!S.acik||S.secim!==null||S.t<A.giris||duraklatmaVar())return;S.secim=S.kayit.cevaplar[i].id;S.secilen=i;S.bitisT=S.t;S.onizle=i?'sag':'sol';yuzYaz();}
+  /* sürükleme ve kenar etiketi ortak bileşenden (js/ekran-kart.js); kartta data-sol/data-sag yok: secim yönün kendisidir. Klavye aşağıdaki
+     yakalayıcıdadır (karar anı odak beklemez) */
+  if(typeof kartEtkilesimKur==='function')kartEtkilesimKur(E,{kart:'.ka-kart',kenar:'.ka-kenar',
+    uygula:(_,secim)=>sec(secim==='sol'?0:1),
+    onizle:(_,y)=>onizle(y),
+    kilitli:()=>duraklatmaVar()||KARAR_ANI.t<A.giris||KARAR_ANI.secim!==null});
+  addEventListener('keydown',e=>{
+    const S=KARAR_ANI;if(!S.acik||e.ctrlKey||e.altKey||e.metaKey)return;
+    const c=e.code,i={Digit1:0,Numpad1:0,Digit2:1,Numpad2:1}[c];
+    const yut=()=>{e.preventDefault();e.stopImmediatePropagation();};
+    if(c==='ArrowLeft'||c==='ArrowRight'){yut();onizle(c==='ArrowLeft'?'sol':'sag');}
+    else if(c==='Enter'||c==='NumpadEnter'){yut();if(S.onizle)sec(S.onizle==='sol'?0:1);}
+    else if(c==='Escape'&&S.onizle&&S.secim===null){yut();onizle(null);}
+    else if(i!==undefined){yut();sec(i);}},true);
   var kararAniAc=function(kayit,o){
-    const S=KARAR_ANI;Object.assign(S,{acik:true,t:0,secim:null,secilen:null,sure:kayit.sure,kalan:kayit.sure,kayit,bitince:o.bitince,bitisT:null});
+    const S=KARAR_ANI;Object.assign(S,{acik:true,t:0,secim:null,secilen:null,sure:kayit.sure,kalan:kayit.sure,kayit,bitince:o.bitince,bitisT:null,onizle:null});
     const buyuk=typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.yazi==='buyuk';E.style.setProperty('--an-boy',(buyuk?A.yazi.buyuk:A.yazi.normal)+'cqw');
     kim.textContent=o.kim||'';
-    kartlar.innerHTML=kayit.cevaplar.map((c,i)=>'<button type="button" class="ka-kart" data-i="'+i+'"><b>'+c.metin.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m])+'</b>'+(c.alt?'<small>'+c.alt+'</small>':'')+'</button>').join('');
-    S.kart=[...kartlar.children];E.hidden=false;kararAniKare(0);};
+    const kenar=(c,i)=>'<button type="button" class="ka-kenar" data-yon="'+(i?'sag':'sol')+'" data-secim="'+yazA(c.id)+'" aria-pressed="false">'+(i?'':'<i aria-hidden="true">◂</i>')+
+      '<b>'+yazA(c.metin)+'</b>'+(i?'<i aria-hidden="true">▸</i>':'')+'</button>';
+    kartlar.innerHTML='<section class="ka-kart" data-is="an" data-yuz="notr" tabindex="0" role="group" aria-label="Karar"><div class="ka-yuz" aria-live="polite"></div>'+
+      '<div class="ka-kenarlar">'+kayit.cevaplar.slice(0,2).map(kenar).join('')+'</div></section>';
+    S.kart=[kartlar.querySelector('.ka-kart')];yuzYaz();E.hidden=false;kararAniKare(0);};
   var kararAniKare=function(dt){
     const S=KARAR_ANI;if(!S.acik)return;S.t+=dt;
-    /* giriş: kenarlar kararır, kartlar aşağıdan yerine oturur; süre ancak sonra başlar */
+    /* giriş: kenarlar kararır, kart aşağıdan yerine oturur; süre ancak sonra başlar. Giriş kaydırması kartın kabındadır: kartın kendi
+       dönüşümü (sürükleme, önizleme kayması) ortak bileşenindir */
     const g=yumusak(S.t/A.giris);kararti.style.opacity=g;kim.style.opacity=g;
     S.kalan=S.secim===null?Math.max(0,S.sure-Math.max(0,S.t-A.giris)):S.kalan;
     if(S.secim===null&&S.kalan<=0){S.secim=S.kayit.cevapsiz;S.secilen=-1;S.bitisT=S.t;}
-    const sonra=S.bitisT===null?0:yumusak((S.t-S.bitisT)/A.sonra);
-    S.kart.forEach((b,i)=>{const kalan=S.secilen===i;b.classList.toggle('ka-secildi',kalan);
-      b.style.transform='translateY('+((1-g)*60).toFixed(1)+'%)';b.style.opacity=S.bitisT===null?g:kalan?1-yumusak((S.t-S.bitisT-A.sonra*0.7)/(A.sonra*0.3)):1-sonra;});
+    const sonra=S.bitisT===null?0:yumusak((S.t-S.bitisT)/A.sonra),secildi=S.secilen!==null&&S.secilen>=0;
+    if(S.kart[0])S.kart[0].classList.toggle('ka-secildi',secildi);
+    kartlar.style.transform='translateY('+((1-g)*60).toFixed(1)+'%)';
+    kartlar.style.opacity=S.bitisT===null?g:secildi?1-yumusak((S.t-S.bitisT-A.sonra*0.7)/(A.sonra*0.3)):1-sonra;
     dolum.style.width=(100*S.kalan/S.sure).toFixed(2)+'%';cubuk.classList.toggle('ka-amber',S.kalan<=A.amber&&S.secim===null);
     cubuk.style.opacity=S.bitisT===null?g:1-sonra;
     if(S.bitisT!==null&&S.t-S.bitisT>=A.sonra){const f=S.bitince,s=S.secim;S.acik=false;E.hidden=true;S.bitince=null;if(f)f(s);}};

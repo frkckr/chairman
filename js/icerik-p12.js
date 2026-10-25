@@ -194,5 +194,8 @@ KARAR_TURLERI.hocaAdayi={
     if(!m.kisiler.includes(yeni))m.kisiler.push(yeni);
     haberEkle(k,{tur:'gazete',anahtar:'p12.haber',p:{kulupId:v.kulupId,kisiId:yeni,eskiId:v.hocaId,kaynak:'yerelGazete'},olayId:v.olayId});
     return{bilgi:meseleOlay(k,v.meseleId,'p12.yeniHoca',{kisiId:yeni,eskiId:v.hocaId,tutar:tz,tarih:yarin})};
-  }
+  },
+  /* H1 (F6-a borcu): dosyanın sağ sayfasındaki kişi bu kartta adaydır (karar türünün isteğe bağlı görünüm kancası; js/ekran-dosya.js). Adayın kişi
+     kaydı yok: boş portre, ad ve görev; görünüşü kişi sahneleriyle gelir. Rol metni TEST */
+  kisi:(k,is)=>({ad:is.veri.adaylar[is.veri.sira].ad,rol:'Teknik direktör adayı'})
 };

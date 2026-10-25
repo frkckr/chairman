@@ -10,7 +10,7 @@
                 önce 'başlamadı'. Dokunulmazlar (istatistikleri yalnız kendi maçında).
    Telefon açıkken ortak duraklatmaya 'telefon' nedeni eklenir (js/sunum-durumu.js): maç ve çevresi durur; kapanınca yalnız bu neden kalkar,
    elle duraklatma varsa maç durmaya devam eder. Gösterilen skor ve istatistik donmuş motor anına aittir. */
-const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
+const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false},onizleler:{}};
 {
   const E=$('macTelefon'),K=STIL.kagit,yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   for(const a in K)if(typeof K[a]==='string')E.style.setProperty('--k-'+a,K[a]);
@@ -43,19 +43,24 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:false}};
   function ciz(odak,gecis){
     const k=typeof OYUN!=='undefined'?OYUN.kariyer:null;
     E.innerHTML='<div class="mt-cihaz"><header class="mt-ust"><b>Telefon</b><button type="button" data-mt="kapat" title="Kapat (Esc)">Kapat ×</button></header>'+
-      telefonCiz(k,T,{macta:true,mac:macVerisi(),acilis:!!gecis,kapali:'Maç sürerken cevap verilmez; maçtan sonra odadan cevaplayabilirsin.'})+'</div>';
+      telefonCiz(k,T,{macta:true,mac:macVerisi(),acilis:!!gecis,onizleler:MAC_TELEFON.onizleler,kapali:'Maç sürerken cevap verilmez; maçtan sonra odadan cevaplayabilirsin.'})+'</div>';
     const f=odak&&E.querySelector(odak);if(f)f.focus({preventScroll:true});
   }
   function ac(){if(MAC_TELEFON.acik||ON_EKRAN.sayfa!==null)return;MAC_TELEFON.acik=true;duraklatmaEkle('telefon');E.hidden=false;btn.setAttribute('aria-pressed','true');ciz('[data-mt="kapat"]');}
   function kapat(){if(!MAC_TELEFON.acik)return;MAC_TELEFON.acik=false;E.hidden=true;btn.setAttribute('aria-pressed','false');duraklatmaKaldir('telefon');}
   MAC_TELEFON.ac=ac;MAC_TELEFON.kapat=kapat;
   btn.onclick=()=>MAC_TELEFON.acik?kapat():ac();
-  /* gezinti yalnız görünüm durumunu değiştirir; cevap, girişim ve dosya bağlantıları maçta çizilmez */
+  /* gezinti yalnız görünüm durumunu değiştirir; cevap, girişim ve dosya bağlantıları maçta çizilmez. H1 (tek kart): kart kilitlidir (kapali →
+     aria-disabled, nedeni yüzde); sürüklenmez, uygulanmaz. Kenar etiketi yalnız okumak için o cevabın yüzünü açar (aynı kenar kapatır) */
   E.addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b||b.disabled)return;
     if(b.dataset.mt==='kapat'){kapat();return;}
     const ey=b.dataset.eylem;
-    if(ey==='telUyg'){T.ekran=b.dataset.uyg;T.skorAc=false;ciz('.tel-geri',true);}
+    if(ey==='kartOnizle'){const c=b.closest('.kk-kart');if(!c)return;const O=MAC_TELEFON.onizleler,id=c.dataset.is,y=b.dataset.yon;
+      const yer=['.tel-govde','.tel-cevap'].map(s=>{const x=E.querySelector(s);return x?x.scrollTop:0;});
+      if(O[id]===y)delete O[id];else O[id]=y;ciz('.kk-kart[data-is="'+id+'"]');
+      ['.tel-govde','.tel-cevap'].forEach((s,i)=>{const x=E.querySelector(s);if(x)x.scrollTop=yer[i];});}
+    else if(ey==='telUyg'){T.ekran=b.dataset.uyg;T.skorAc=false;ciz('.tel-geri',true);}
     else if(ey==='telEv'){T.ekran='ana';T.kisi=null;ciz('.tel-uygMesaj',true);}
     else if(ey==='telKisi'){T.ekran='konusma';T.kisi=b.dataset.kisi;ciz('.tel-geri',true);const g=E.querySelector('.tel-govde');if(g)g.scrollTop=g.scrollHeight;}
     else if(ey==='skorAc'){T.skorAc=!T.skorAc;ciz('[data-eylem="skorAc"]');}

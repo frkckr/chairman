@@ -79,9 +79,7 @@ function kararKarti(k,isId,s={}){
   const v=is.veri,o0=ajandaOnizle(k,isId),S=o0.secenekler;
   /* bugün tek canlı yol iki seçenektir (KARAR_TURLERI sözleşmesi); başka sayıda seçenek kart kurmaz, karar da uygulanmaz */
   if(S.length!==2)return'<p class="kk-uyari">Bu karar iki cevaplı değil.</p>';
-  /* H1-a geçici uyumluluk: önizleme vermeyen eski ev sahibinin seçimi (s.secim) önizlenen yüze çevrilir; H1-b'den sonra ev sahipleri s.onizle verir */
-  let yon=s.onizle!==undefined?s.onizle:s.secim===S[0].id?'sol':s.secim===S[1].id?'sag':null;
-  if(yon!=='sol'&&yon!=='sag')yon=null;
+  const yon=s.onizle==='sol'||s.onizle==='sag'?s.onizle:null;
   const x=yon?S[yon==='sol'?0:1]:null,o=x?ajandaOnizle(k,isId,x.id):o0,xs=x?(o.secenek||x):null;
   const kilit=s.kapali||(typeof duraklatmaVar==='function'&&duraklatmaVar()?'Duraklatıldı: devam edince cevaplanır.':null);
   const engel=o.engel.filter(e=>!/Bir seçenek/.test(e));
@@ -169,7 +167,10 @@ function kartEtkilesimKur(kok,o){
   kok.addEventListener('pointerdown',e=>{
     if(D||e.button!==0)return;
     const c=e.target.closest(KART);if(!c||!kok.contains(c))return;
-    const g=c.offsetWidth||1,y=yonu(c),ofs=(y==='sol'?-1:y==='sag'?1:0)*A.kayma*g;
+    /* önizlenen kart kaymış durur: sürükleme kartın bulunduğu yerden başlar (ev sahibi kaymayı kendi ölçüsüyle verebilir; telefon) */
+    const g=c.offsetWidth||1,y=yonu(c);
+    let ofs=(y==='sol'?-1:y==='sag'?1:0)*A.kayma*g;
+    if(y)try{const m=getComputedStyle(c).transform;if(m&&m!=='none')ofs=new DOMMatrixReadOnly(m).m41;}catch(_){}
     D={id:c.dataset.is,pid:e.pointerId,x0:e.clientX,y0:e.clientY,g,ofs,dx:ofs,yon:y,tasindi:false};
   });
   addEventListener('pointermove',e=>{

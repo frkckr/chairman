@@ -2,7 +2,7 @@
    Görüntü katmanı. Oda (js/oda.js) görünür kalır; gündem masadaki nesnelerden ya da aynı adlı düğmelerden açılır. Aynı anda tek nesne açıktır:
      Telefon  sağ panelde cihaz: kişi konuşmaları ve Canlı Skor (js/ekran-telefon.js; "Kaldığın yer" 2.8L'de kaldırıldı).
      Ajanda   odanın ortasında iki sayfalı açık defter (2.8M, js/ekran-defter.js): hafta, günün saatleri, tek kaydın kartı.
-     Dosya    odanın ortasında açık karton dosya (2.8M, js/ekran-dosya.js): konu sekmeleri, kanıtlar, kişi ve iki büyük cevap. Mesele yoksa masada dosya yoktur.
+     Dosya    odanın ortasında açık karton dosya (2.8M, js/ekran-dosya.js): konu sekmeleri, kanıtlar, kişi ve tek karar kartı (H1). Mesele yoksa masada dosya yoktur.
      Gazete   yalnız çıkmış bir haber varken masadadır: manşet ve gelen teşekkür (js/soz.js).
    Ajandada ayrıca başkanın başlatabileceği girişimler ve verdiği sözler listelenir (js/yonetim.js, js/soz.js).
    Test bilgileri (ayarlar.test; GEÇİCİ, js/test-gorunum.js): katkı seviyeleri, gizli koşullar, seçenek sonuç önizlemesi ve kadro özellikleri
@@ -40,7 +40,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
   const testKutu=ic=>'<span class="od-testIpucu"><button type="button" class="od-testSimge" data-eylem="testAc" aria-expanded="false" aria-label="Test bilgisi">TEST</button>'+
     '<span class="od-test" role="tooltip">'+ic+'</span></span>';
 
-  let k=oyun.kariyer,acik=null,secili=null,seciliMesele=null,onay=null,mesaj=oyun.ilkMesaj||'',yeniOnay=false,secimler={},yeniIsaret=new Set();
+  /* onizleler: karar kartında önizlenen yön, karar başına ('sol'|'sag'|null; H1, tek kart). Yalnız görünümdür; yeniden çizimde, panel ve konuşma
+     değişince korunur (aynı karar telefonda ve dosyada aynı yüzle görünür). onay yalnız Katıl / Stada git / İlerle'nin onay adımıdır (karar değil) */
+  let k=oyun.kariyer,acik=null,secili=null,seciliMesele=null,onay=null,mesaj=oyun.ilkMesaj||'',yeniOnay=false,onizleler={},yeniIsaret=new Set();
   function komut(f,kaydetme){const s=oyun.komut(f,kaydetme);k=oyun.kariyer;return s;}
   const kulupId=()=>k.kisiler[k.baskanId].kulupId;
   const kisiYazi=id=>{const p=k.kisiler[id];return p?p.ad+' ('+(ROL[p.rol]||p.rol)+')':'';};
@@ -114,10 +116,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const is=k.isler[id];if(!is||is.tur!=='ajanda')return'';
     const v=is.veri,r=bugun().find(x=>x.id===id&&x.durum==='bekliyor');
     if(!r)return'<p class="od-not">Bu iş '+yaz(tarihKisa(is.tarih))+' günü ajandada.</p>';
-    /* karar: tek kart (js/ekran-kart.js; H1); "Görüş iste" ve erteleme kartın dışında, altında */
-    if(v.karar)return kararKarti(k,id,{secim:secimler[id],onay:onay==='yap:'+id,testSecenek,dosyada:acik==='dosya'})+tavsiyeBolumu(id)+
+    /* karar: tek kart (js/ekran-kart.js; H1). Kaydırıp bırakınca ya da ←/→ + Enter ile uygulanır (kartEtkilesimKur, aşağıda); onay adımı yoktur.
+       "Görüş iste" ve erteleme kartın dışında, altında */
+    if(v.karar)return kararKarti(k,id,{onizle:onizleler[id]||null,gorus:true,testSecenek,dosyada:acik==='dosya'})+tavsiyeBolumu(id)+
       (v.zorunluluk==='ertelenebilir'?'<div class="od-dugmeler">'+ertelemeDugmesi(is)+'</div>':'');
-    const secim=secimler[id],o=ajandaOnizle(k,id,secim);
+    const o=ajandaOnizle(k,id);
     let ic='';
     for(const e of o.engel)ic+='<p class="od-uyari">'+yaz(e)+'</p>';
     if(o.atlanacak.length)ic+='<p class="od-uyari">Bu işe gidersen kaçırılacak: '+o.atlanacak.map(x=>yaz(x.veri.baslik+' ('+saatYazi(x.dakika)+')')).join(', ')+'</p>';
@@ -157,7 +160,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   let telAlta=false,telGecis=false;
   function telefonPaneli(){
     const s=saymanVar(),acilis=telGecis;telGecis=false;
-    return telefonCiz(k,tel,{secimler,onay,testSecenek,kasa:s?s.id:null,yeniler:yeniIsaret,acilis});
+    return telefonCiz(k,tel,{onizleler,testSecenek,kasa:s?s.id:null,yeniler:yeniIsaret,acilis});
   }
   const saymanVar=()=>{const c=k.kulupler[kulupId()],id=c.yonetim&&c.yonetim.sayman;return id?k.kisiler[id]:null;};
   function telAnaEkran(){tel.ekran='ana';tel.kisi=null;onay=null;telGecis=true;ciz('.tel-uygMesaj');}
@@ -320,7 +323,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       return{durum:yaz(v.baslik)+' · cevabın bekleniyor'+(r.saatsiz&&r.sonCevap?' · en geç '+(r.sonCevap.tarih===k.tarih?'':yaz(tarihKisa(r.sonCevap.tarih))+' ')+saatYazi(r.sonCevap.dakika):''),
         dugme:ert+'<button type="button" class="od-ana" data-eylem="'+(dosyada?'dosyaAc':'kararAc')+'" data-is="'+id+'"'+(dosyada?' data-mesele="'+r.meseleId+'" data-donus="ajanda"':'')+'>Karar ver ▸</button>'};
     }
-    const o=ajandaOnizle(k,id,secimler[id]),mac=v.eylem==='macGunu',p=[];
+    const o=ajandaOnizle(k,id),mac=v.eylem==='macGunu',p=[];
     if(o.engel.length)p.push('<span class="od-uyari">'+o.engel.map(yaz).join(' · ')+'</span>');
     else p.push(mac?'Maç '+saatYazi(r.saat)+'\'da. Stada gidince maç günü başlar.':yaz(v.baslik)+' · '+saatYazi(r.saat)+(o.sure?'–'+saatYazi((r.saat+o.sure)%1440):''));
     if(o.atlanacak.length)p.push('<span class="od-uyari">Kaçırılacak: '+o.atlanacak.map(x=>yaz(x.veri.baslik+' ('+saatYazi(x.dakika)+')')).join(', ')+'</span>');
@@ -353,7 +356,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     return'<footer class="od-alt"><div class="od-altYazi"><p class="od-mesaj" aria-live="polite">'+yaz(mesaj)+'</p><p class="od-durak'+(uyari?' od-durakUyari':'')+'">'+durum+'</p></div>'+
       '<div class="od-altDugmeler">'+dugme+'</div></footer>';
   }
-  /* dosyasız karar (2.8Q): sağdaki karar panelinde iki cevaplı kart; cevaptan sonra ajandaya dönülür */
+  /* dosyasız karar (2.8Q): sağdaki karar panelinde aynı tek kart (H1); cevaptan sonra ajandaya dönülür */
   let kararIs=null;
   function kararPaneli(){return kararIs&&k.isler[kararIs]?isBolumu(kararIs):'<p class="od-not">Bu karar artık beklemiyor.</p>';}
 
@@ -375,6 +378,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const eski=kap.querySelector('.od-icerik'),kaydirma=eski&&cizilenPanel===acik?eski.scrollTop:0;
     const sayfaKaydirma=cizilenPanel===acik?[...kap.querySelectorAll('.dsy-sayfa,.dft-sayfa')].map(x=>x.scrollTop):[];
     const eskiTel=kap.querySelector('.tel-govde'),telKaydirma=eskiTel&&cizilenPanel==='telefon'&&acik==='telefon'&&eskiTel.parentNode.dataset.ekran===tel.ekran?eskiTel.scrollTop:null;
+    /* H1: kartın önizlemesi yeniden çizdiğinde telefonun cevap alanının okuma yeri de korunur */
+    const eskiCevap=telKaydirma!==null?kap.querySelector('.tel-cevap'):null,cevapKaydirma=eskiCevap?eskiCevap.scrollTop:0;
     kap.style.setProperty('--k-yaziBoyu',K.yaziBoyu[ayarlar.yazi==='buyuk'?'buyuk':'normal']+'cqw');
     if(oyun.bozukHata){
       kap.innerHTML='<div class="od-panel od-bozuk"><header><h3>Kayıt açılamadı</h3></header><div class="od-icerik"><p>Kayıtlı kariyer açılamadı. Kayıt dosyasına dokunulmadı.</p><p class="od-not">'+yaz(oyun.bozukHata)+'</p>'+
@@ -409,7 +414,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     kap.querySelectorAll('.dsy-sayfa,.dft-sayfa').forEach((x,i)=>{if(sayfaKaydirma[i])x.scrollTop=sayfaKaydirma[i];});
     /* telefonda konuşma açılınca son mesaj ve cevap kartı görünür; aynı konuşma yeniden çizilirken okuma yeri korunur */
     const tg=kap.querySelector('.tel-govde');
-    if(tg){if(telAlta){tg.scrollTop=tg.scrollHeight;telAlta=false;}else if(telKaydirma!==null)tg.scrollTop=telKaydirma;}
+    if(tg){if(telAlta){tg.scrollTop=tg.scrollHeight;telAlta=false;}else if(telKaydirma!==null){tg.scrollTop=telKaydirma;const tc=kap.querySelector('.tel-cevap');if(tc&&cevapKaydirma)tc.scrollTop=cevapKaydirma;}}
     cizilenPanel=acik;
     const f=odak&&kap.querySelector(odak);if(f&&!f.disabled)f.focus({preventScroll:true});
   }
@@ -470,29 +475,31 @@ function odaEkraniKur(kap,oyun,ayarlar){
     }catch(e){mesaj='Görüntü kaydedilemedi: '+e.message;}
     ciz('[data-eylem="goruntu"]');
   }
-  function isiYap(id){
+  /* secim: kararın seçenek kimliği (tek karttan; kartEtkilesimKur), randevu ve maç gününde yok. Komut aynı tek komuttur (ajandaIsiYap); karar bir kez
+     uygulanır (iş kapanır), yolda karar gerektiren haber gelirse iş yerinde bekler */
+  function isiYap(id,secim){
     const is=k.isler[id];if(!is)return;
     const baslik=is.veri.baslik,mac=is.veri.eylem==='macGunu',bas=saatYazi(is.dakika),saatsiz=!!is.veri.saatsiz,karar=!!is.veri.karar;
     /* F1-b: kariyerden açılan maçta maç günü işi odada uygulanmaz, kopyada denenir. Yolda karar gerektiren haber gelirse o ana dek ilerleme normal
        komutla kaydedilir; gelmezse kariyere dokunulmadan sayfa maçın kimliğiyle açılır (js/mac-gunu.js işi orada, bellekte yapar). Böylece odaya
        tarayıcının Geri tuşuyla dönülse de bekleyen iş yerindedir */
     if(mac&&is.veri.macId){
-      let r;try{r=kariyerKomut(k,x=>ajandaIsiYap(x,id,secimler[id])).kariyer;}catch(e){hataGoster(e);return;}
+      let r;try{r=kariyerKomut(k,x=>ajandaIsiYap(x,id,secim)).kariyer;}catch(e){hataGoster(e);return;}
       onay=null;
-      if(r.isler[id]){try{komut(x=>ajandaIsiYap(x,id,secimler[id]));}catch(e){hataGoster(e);return;}
+      if(r.isler[id]){try{komut(x=>ajandaIsiYap(x,id,secim));}catch(e){hataGoster(e);return;}
         mesaj=baslik+' için yola çıktın; yolda karar gerektiren bir haber geldi. İş bekliyor.';ciz();return;}
       const engel=oyun.macaGit(is.veri.macId);
       if(engel){mesaj=engel;ciz();return;}
-      delete secimler[id];acik=null;return;
+      delete onizleler[id];acik=null;return;
     }
-    try{komut(x=>ajandaIsiYap(x,id,secimler[id]),mac);}catch(e){hataGoster(e);return;}
+    try{komut(x=>ajandaIsiYap(x,id,secim),mac);}catch(e){hataGoster(e);return;}
     onay=null;
     if(k.isler[id]){
       /* yolda karar gerektiren bir haber geldi: iş yerinde bekliyor, o ana kadarki ilerleme geçerli */
       if(mac)oyun.yenidenKaydet();
       mesaj=baslik+' için yola çıktın; yolda karar gerektiren bir haber geldi. İş bekliyor.';ciz();return;
     }
-    delete secimler[id];
+    delete onizleler[id];
     if(mac){acik=null;oyun.macaGit(is.veri.macId);return;}
     if(acik==='karar'){acik='ajanda';kararIs=null;}
     /* kararın sonucu aynı dosyada kısa görünür; otomatik sonraki dosyaya geçilmez */
@@ -574,7 +581,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='otoYavas'){ayarlar.otoYavas=ayarlar.otoYavas===false;ayarlar.kaydet();if(typeof MAC_HIZ!=='undefined')MAC_HIZ.oto=ayarlar.otoYavas;ciz('[data-eylem="otoYavas"]');}
     else if(ey==='yeniSor'){yeniOnay=true;ciz('[data-eylem="yeniHayir"]');}
     else if(ey==='yeniHayir'){yeniOnay=false;ciz();}
-    else if(ey==='yeniEvet'){yeniOnay=false;mesaj=oyun.yeniKariyer();k=oyun.kariyer;acik=null;secili=null;seciliMesele=null;secimler={};
+    else if(ey==='yeniEvet'){yeniOnay=false;mesaj=oyun.yeniKariyer();k=oyun.kariyer;acik=null;secili=null;seciliMesele=null;onizleler={};
       dosyaSira=[];dosyaArsiv=false;dosyaSonuc=null;donusYeri=null;ajandaGun=null;ajandaHafta=0;tel.ekran='ana';tel.kisi=null;yeniIsaret=new Set();ciz('.od-ana');}
     else if(ey==='bozukYeni'){mesaj=oyun.bozuguSaklaVeBasla();k=oyun.kariyer;ciz('.od-ana');}
   });
@@ -598,12 +605,12 @@ function odaEkraniKur(kap,oyun,ayarlar){
       const S=acikSira(),n=S.length,i=S.indexOf(seciliMesele);if(!n||(n<2&&i>=0))return;
       e.preventDefault();donusYeri=null;panelAc('dosya',S[i<0?0:(i+(e.code==='BracketLeft'?-1:1)+n)%n]);}
   });
-  /* tek kart (js/ekran-kart.js; dosya, karar paneli ve telefon aynı kökte). H1-a GEÇİCİ köprü: kartın önizlemesi bugünkü secimler'e yazılır,
-     bırakınca ya da Enter'la isiYap aynı yoldan uygular; duraklatmada kart kilitli. H1-b'de onizleler ve isiYap(id,secim) ile değişir */
+  /* tek kart (H1, F4; js/ekran-kart.js): dosya, karar paneli ve telefon konuşması aynı kökte, aynı sözleşmeyle. Kaydırıp bırakmak ya da ←/→ + Enter
+     uygular (isiYap, seçenek kimliğiyle); kenar etiketi ve ←/→ yalnız önizler; Esc önizleme varken onu bırakır, yoksa paneli kapatır. Önizleme
+     yeniden çizer ve odak kartta kalır. Duraklatmada kart kilitli: önizlenir, uygulanmaz (kart nedenini yüzünde yazar) */
   if(typeof kartEtkilesimKur==='function')kartEtkilesimKur(kap,{
-    uygula:(id,secim)=>{secimler[id]=secim;onay=null;isiYap(id);},
-    onizle:(id,y)=>{const c=[...kap.querySelectorAll('.kk-kart')].find(x=>x.dataset.is===id);if(y&&c)secimler[id]=c.dataset[y];else delete secimler[id];
-      ciz('.kk-kart[data-is="'+id+'"]');},
+    uygula:(id,secim)=>isiYap(id,secim),
+    onizle:(id,y)=>{if(y)onizleler[id]=y;else delete onizleler[id];ciz('.kk-kart[data-is="'+id+'"]');},
     kilitli:()=>duraklatmaVar()});
   /* duraklatma değişince düğmeler yeniden çizilir; izlerken o ana kadarki gözlem kaydedilir */
   duraklatmaDinle(a=>{if(kap.hidden||oyun.bozukHata)return;if(a&&izleme)izlemeKaydet();ciz();});

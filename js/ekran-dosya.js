@@ -50,7 +50,12 @@
 .dsy-kisi .od-portre{width:3.6em;height:3.6em;box-shadow:.12em .15em 0 rgba(60,40,10,.2)}
 .dsy-kisi b{display:block;font-size:1.15em}
 .dsy-kisi small{color:var(--k-soluk)}
-.dsy .kk-konu{font-size:1.12em;line-height:1.4;padding:.2em 0 .2em .8em;border-left:.22em solid ${D.cizgi};font-style:italic}
+/* tek kart (H1): dosyanın sağ sayfasında büyük yüz (STIL.kagit.kart.yuz.buyuk); konu alıntı biçiminde */
+.dsy .kk-yuz{font-size:${STIL.kagit.kart.yuz.buyuk}em}
+/* sürüklenen kart sayfanın içinde serbest kayar, yalnız sayfanın kenarında kırpılır (sayfa yatay kaymaz) */
+.dsy .dsy-sag{overflow-x:hidden}
+.dsy .kk-alan{overflow-x:visible}
+.dsy .kk-konu{font-size:1em;line-height:1.4;padding:.2em 0 .2em .8em;border-left:.22em solid ${D.cizgi};font-style:italic}
 .dsy-sonuc{padding:.5em .7em;background:${D.not};border-left:.25em solid var(--k-yesil)}
 .dsy-bos{color:var(--k-soluk);font-style:italic}
 .dsy-arsiv{list-style:none;margin:0;padding:0;display:grid}
@@ -89,9 +94,13 @@ function dosyaGorunumu(k,D,Y){
     sol+=Y.sozler(o);
     if(Y.kasaBaglantisi(m))sol+='<p class="od-not">Para durumu: <button type="button" class="od-baglanti" data-eylem="ac" data-panel="kasa">Kasa ▸</button></p>';
     sol+='<details class="dsy-gecmis"><summary>Geçmiş ve belgeler ('+o.olaylar.length+')</summary><ul>'+o.olaylar.slice().reverse().map(x=>'<li><span>'+yaz(Y.tarihKisa(x.tarih).split(' ').slice(0,2).join(' ')+' '+saatYazi(x.dakika))+'</span><span>'+yaz(x.metin)+'</span></li>').join('')+'</ul></details>';
-    /* sağ sayfa: kişi, sonuç, karar ya da beklenen adım */
-    const kis=o.karar&&k.isler[o.karar.isId]?k.isler[o.karar.isId].veri:null,yuz=k.kisiler[(kis&&(kis.soran||kis.kisiId))||(o.kisiler[0]&&o.kisiler[0].id)];
-    if(yuz)sag+='<div class="dsy-kisi">'+portreHtml(yuz,'od-portre')+'<p><b>'+yaz(yuz.ad)+'</b><small>'+yaz(kisiRolu(k,yuz))+'</small></p></div>';
+    /* sağ sayfa: kişi, sonuç, karar ya da beklenen adım. H1 (F6-a borcu): karar türü isteğe bağlı kisi(k,is) → {ad, rol} kancasıyla kendi kişisini
+       verebilir (ör. hoca adayı: kişi kaydı yok, boş portre); yoksa soran, ilgili kişi ya da konunun ilk kişisi */
+    const kis=o.karar&&k.isler[o.karar.isId]?k.isler[o.karar.isId].veri:null,tur=kis&&typeof KARAR_TURLERI!=='undefined'?KARAR_TURLERI[kis.karar]:null;
+    const kanca=tur&&typeof tur.kisi==='function'?tur.kisi(k,k.isler[o.karar.isId]):null;
+    const yuz=kanca?null:k.kisiler[(kis&&(kis.soran||kis.kisiId))||(o.kisiler[0]&&o.kisiler[0].id)];
+    if(kanca)sag+='<div class="dsy-kisi">'+portreHtml(null,'od-portre','TD')+'<p><b>'+yaz(kanca.ad)+'</b><small>'+yaz(kanca.rol)+'</small></p></div>';
+    else if(yuz)sag+='<div class="dsy-kisi">'+portreHtml(yuz,'od-portre')+'<p><b>'+yaz(yuz.ad)+'</b><small>'+yaz(kisiRolu(k,yuz))+'</small></p></div>';
     if(D.sonuc&&D.sonuc.meseleId===m.id)sag+='<section class="dsy-sonuc"><p><b>Sonuç</b> '+yaz(D.sonuc.metin)+'</p>'+(o.adimlar.length&&!o.karar?'<p class="od-not">Beklenen: '+yaz(o.adimlar[0].metin)+' ('+yaz(Y.anYazi(o.adimlar[0].tarih,o.adimlar[0].dakika,o.adimlar[0].saatsiz))+')</p>':'')+'</section>';
     if(o.karar)sag+=D.karar(o.karar.isId);
     else{

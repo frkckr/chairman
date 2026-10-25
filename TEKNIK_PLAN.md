@@ -378,6 +378,7 @@ Mali değerlendirme, aynı defter ve gelecek ödeme işlerinden üretilir; belir
 - `denetle`: verinin geçerliliği.
 - `secenekler(k, is)`: görünür metin, açıklama satırları, isteğe bağlı süre ve engel.
 - `uygula(k, is, secim)`: etkiler ve sonuç bilgisi.
+- İsteğe bağlı `kisi(k, is) → {ad, rol}` (H1): dosyanın sağ sayfasında kararın kişisi, kişi kaydı olmayan muhatap için (P12 hoca adayı: boş portre, ad ve görev; `js/icerik-p12.js`). Yoksa soran, ilgili kişi ya da konunun ilk kişisi. Yalnız görünüm kancasıdır; seçenekleri ve uygulamayı değiştirmez.
 
 Seçim önizlemede, sonra zaman işin başlangıcına geldiğinde yeniden doğrulanır. Etki bir kez uygulanır ve işin geçmiş kaydına `secim`, `secimMetni` ve `bilgi` olarak yazılır; iş kapandığı için ikinci kez uygulanamaz.
 
