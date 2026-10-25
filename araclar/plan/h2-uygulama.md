@@ -471,3 +471,9 @@ Alt adımların sırası: önce düşük riskli akış işi (H2-a), sonra Canlı
 ## Sapmalar
 
 (Uygulama sırasında alt adım başlıklarıyla yazılır.)
+
+### H2-0
+
+- **`oturum-sonu` tabanı `main` yerine dalda koşuldu** (yürütücünün adım talimatı). Gerekçe: dalın `main`'den farkı yalnız bu plan ve `araclar/sezon-deneme.js`; oyun ve motor kodu aynı, `oturum-sonu` sezon denemesini koşmaz. Sonuç: 40/40 tohum birebir, sağlık aralığı dışı 0; kabul dışı satırlar bilinen listeyle aynı (`c-1v1` eğim 14,0, `c-orta` “erken · 3–3”, `d-sut` üst köşe ≥18 m `NaN%` ve alt köşe 16 m %92,9); öbür `!` satırları `mac-deneme`'nin ilkel ve örüntü bilgi satırları (9). `!` satırları scratch'te `h2-oturum-taban.txt`'de.
+- **`--kayit-yaz` ekrana iki bilgi daha basar:** sezon sonucunun varlığı ve İlerle engeli (plan yalnız anı ve açık karar türlerini istiyordu; sezon sonu örneğinin kabulünü aynı satırdan okumak için). İstenen an oynanmadıysa (`@hafta=N` sezonun haftalarında değil ya da 18 hafta oynanmadan `@sezonSonu`) “!” satırı ve çıkış 1; kayıt metni yazılamazsa (doğrulama hatası) da öyle. Yazım yalnız ilk koşudan (belirlenimcilik koşusu yazmaz).
+- **Bilgi:** sezon sonu örneği 452 KB (hafta14 176 KB, ocak 271 KB; G2'nin s8 örneği 145 KB) — kayıt 18 hafta boyunca ~16 KB/hafta büyüyor (`k.maclar` ve geçmiş). Örneğin anı 2027-04-24 18:01: `@sezonSonu` sözleşme kartlarının cevapsız geçildiği döngüden sonradır.
