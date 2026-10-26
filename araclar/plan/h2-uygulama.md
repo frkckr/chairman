@@ -487,3 +487,5 @@ Alt adımların sırası: önce düşük riskli akış işi (H2-a), sonra Canlı
 ## Durum (2026-10-26 akşam, kullanıcı “bitirelim, yarın devam”)
 
 H2-0 ve H2-a dalda commit'li (`claude/h2-istekler`), dal push edildi; `main`'e alınmadı. Kalan: H2-b Canlı Skor ayrıntısı, H2-c kişiler ve yazışma (kayıt sürümü 10), H2-d mali rapor ve Kasa'nın kalkması, H2-e belgeler, inceleme ve kapanış kapıları. Yarın: `git fetch --prune --tags`, `git checkout claude/h2-istekler`, `git pull --ff-only`, H2-b'den sürülür (tabanlar scratch'teydi; gerekirse H2-0'daki komutlarla yeniden üretilir).
+
+**2026-10-26 gece (Y0, dizüstü):** dal `main`'i aldı (`tur/y0-omurga`: yönetim omurgası belgeleri, YOL_HARITASI kararları 51–52). Bu turun kapsamı değişmedi; Kadro sekmesi, kapı sahnesi ve şablonlar Y turlarındadır. Sıra (H2 → H3 → Y1–Y5) ve kayıt sürümü zinciri (H2 10, H3 11, Y1 12) `y-program.md`'de. H2-0'ın scratch tabanları dizüstünde yok; H2-b başında H2-0'daki komutlarla bu makinede yeniden üretilir.
