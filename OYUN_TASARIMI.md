@@ -1,6 +1,6 @@
 # Chairman — oyun tasarımı
 
-Son güncelleme: 2026-10-24 gece (G2: §7 maaş, ay başı, bilet ve nakit ufku; §8 sözleşme yenileme, gelen teklif ve hocanın transfer isteği — TEST iskelet; G1: §11 hükmen ve sezon sonu). Önceki: 2026-10-24 (F3 ve F6-a: §2 maçın okunması, §8 hoca, hoca değişimi ve P12 TEST taslağı). Önceki: 2026-10-19 gece (Z2, tempo B: duran topların sahnesi ve duruşta 2 kat maç saati — §11). Önceki: 2026-10-12 (U1: maç 20 dakika, izleme hızı ve önemli anlarda normal hız — §1, §6, §11, §13). Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md). **2026-10-02 iki seçenekli karar ve sade ekran yenilemesi 2.8G–2.8K ile uygulandı (TEST içerik; ilgili bölümlerdeki “Bugünkü uygulama” notları).**
+Son güncelleme: 2026-10-26 gece (Y0: yönetim omurgası — §2 beş katman, pazarlık kuralı ve dosya şablonları, §4 personel ve genel kurul, §6 gün ve hafta ritmi, §9 kaynak güvenilirliği ve Kadro sekmesi, §10 kişi modeli ve kapı, §11 maç olayından dosyaya, §13; kaynak kullanıcının sistem tasarım taslağı, YOL_HARITASI kararları 51–52; hepsi hedef, bugünkü uygulama değişmedi). Önceki: 2026-10-24 gece (G2: §7 maaş, ay başı, bilet ve nakit ufku; §8 sözleşme yenileme, gelen teklif ve hocanın transfer isteği — TEST iskelet; G1: §11 hükmen ve sezon sonu). Önceki: 2026-10-24 (F3 ve F6-a: §2 maçın okunması, §8 hoca, hoca değişimi ve P12 TEST taslağı). Önceki: 2026-10-19 gece (Z2, tempo B: duran topların sahnesi ve duruşta 2 kat maç saati — §11). Önceki: 2026-10-12 (U1: maç 20 dakika, izleme hızı ve önemli anlarda normal hız — §1, §6, §11, §13). Bu belge hedef oyunu tanımlar; burada anlatılan sistemlerin çoğu henüz uygulanmamıştır. Çalışan özellikler ve geliştirme sırası [yol haritasındadır](YOL_HARITASI.md). Uygulama yaklaşımı [teknik plandadır](TEKNIK_PLAN.md). **2026-10-02 iki seçenekli karar ve sade ekran yenilemesi 2.8G–2.8K ile uygulandı (TEST içerik; ilgili bölümlerdeki “Bugünkü uygulama” notları).**
 
 ## 1. Amaç ve kararların durumu
 
@@ -98,11 +98,59 @@ Reigns'ten kısa konuşma, iki açık cevap ve koşula bağlı devam alınır; d
 
 **Tek kart (kullanıcı kararı, 2026-10-22; sunum başkanlık planında, YOL_HARITASI program F):** başkanlık kararı tek bir karttır. Kart sağa ya da sola kaydırıldıkça üstündeki metin o yönün cevabına döner; bırakınca o cevap uygulanır. Reigns'in iki ayrı kartlı selamlaşma sahnesi örnek alınmaz; bütün senaryolarda aynı tek kart dili kullanılır. Mali konularda da iki seçenek vardır (ör. ekibin önerisini kabul et / yeniden çalıştır; ya da iki teklif arasında seçim). Bilinen bedel, süre ve risk kart açılmadan görünür kalır (yukarıdaki kurallar). **Ekranlar (kullanıcı kararı, 2026-10-23):** tek kart her yerdedir — dosya, karar paneli, telefon konuşması ve maç günü karar anı (F4). **Bugünkü uygulama (H1, 2026-10-26; davranış Claude'un önerisidir, kullanıcı görür):** dosya, karar paneli, telefon konuşması ve karar anı aynı kartı kullanır. Kartın nötr yüzünde konu, hazır görüş, son cevap ve cevapsız kalırsa olacak olan durur; altında iki kenar etiketi cevapların adını ve süresini yazar (sol `secenekler[0]`, sağ `secenekler[1]`). Sürüklerken yüz o yönün cevabına döner: metin, süre, bilinen sonuç, varsa engel, o cevabın süresiyle kaçırılacak randevular ve bu arada cevapsız kalacak işler. Kart genişliğinin %40'ını geçip bırakmak uygular, altında kart yerine yaylanır; engelli cevaba bırakmak da yaylanır. Klavyede ←/→ önizler, Enter uygular, Esc önizlemeyi bırakır (önizleme yoksa paneli kapatır). Kenar etiketine dokunmak yalnız önizler, tıklama uygulamaz (kaza önleme; seç-onayla kalıbı geri gelmez). Ayrı “Onayla” adımı karar kartından kalktı; randevu, Stada git ve İlerle'nin onayı karar olmadığı için sürer (§6). Duraklatmada ve maç telefonunda kart kilitlidir: önizlenir, uygulanmaz, nedeni kartın yüzünde yazar. Karar anında aynı kart süre çubuğuyla gelir; ←/→ ve Enter'a ek olarak 1/2 doğrudan seçer (süreli an; TEST alışkanlık); süre dolarsa kayıttaki cevapsız sonuç işler. Sol ve sağ doğru/yanlış diye kodlanmaz; hareket sakin ve kısadır (0,2 sn). Görünüm seçenek kesmez ya da seçmez: seçenekler ve uygulama aynı kuraldan gelir (`KARAR_TURLERI`, `ajandaIsiYap`). Eşik ve ölçüler TEST'tir (`STIL.kagit.kart`); sunum [STIL_REHBERI §7](STIL_REHBERI.md#7-arayüz-ve-bilgi) “Bugünkü uygulama (H1)”.
 
+**Pazarlık (kullanıcı kararı, 2026-10-26; hedef, Y1):** rakam çarkı yoktur, başkan rakam girmez. Pazarlıkta ekip (konuya göre sportif direktör, hoca ya da mali işler müdürü; o görevde kimse yoksa başkanın kendi tahmini) iki rakam önerir; kartın sol ve sağ yüzü bu iki tekliftir, yüzde kimin önerdiği ve bilinen bedel yazar. Karşı tarafın kabul etmeyeceği gizli bir alt sınırı (rezervasyon fiyatı) ve her zayıf teklifle azalan gizli sabrı vardır; ikisi de gösterilmez. Cevap sonraki kartta gelir: kabul, karşı teklif (yeni iki rakamla yeni kart), teklif dışı hamle (taksit, sonraki satıştan pay, ek oyuncu; kabul / ret kartı) ya da kopma. Sabır bitince pazarlık kopar, dosya kayba gider ve karşı taraf bunu hatırlar. İpuçları kişilerden gelir (“kulübün borcu var, satmak zorundalar”; “başka kulüp de arıyor”). Önerilen iki rakamın isabeti önerenin gizli yeteneğine bağlıdır: iyi ekip daha iyi iki rakam getirir. Yarıda bırakılan pazarlıkta karşı tarafın sabrı düşer ([kart sınıfları](#dosya-şablonları)).
+
 **Bugünkü uygulama (2.8H, 2026-10-02; TEST içerik):** Yeni kariyerin bütün kararları iki cevaplıdır; hangi ikilinin geleceği o anki koşuldan çıkar (ör. sayman yetişiyorsa “Kendin görüş / Sayman görüşsün”, yetişmiyorsa “Kendin görüş / Tribün onarımını ertelet”). Aday seçimi **sıralı görüşmedir** (kullanıcı kararı): adaylar tek tek dinlenir, [Göreve al] / [Sıradaki adayı dinle (+30 dk)]; son adayda [Göreve al] / [Koltuğu boş bırak]. Geri çevrilen aday kulüp üyesi olarak kalır. İlgili koltuktaki kişinin görüşü karar gelirken hazır bilgi olarak dosyaya düşer; “Görüş iste” düğmesi yoktur, saymanın konuşması gibi yeni çalışma yalnız anlamlı olduğu kararda iki cevaptan biridir. Hocayla görüşme karar değil, katılınan randevudur. Eski çok seçenekli konular yalnız eski kayıtlarda kendi biçimleriyle sürer.
 
 **İçerik sıfırlama (kullanıcı kararı, 2026-10-02; 2.8L ile uygulandı):** Oyundaki bütün senaryolar, kişiler (başkan dışında), mesajlar, olaylar, başlangıç seçenekleri ve ajanda içeriği silindi. Ajanda, telefon, dosya, kasa, yönetim koltukları, söz/haber ve gözlem sistem olarak çalışır; içeriği kullanıcı tek tek yazar. Yukarıdaki iki cevap kuralı, koşula bağlı olay sözleşmesi ve kalıcı hafıza ilkeleri yeni içerik için de geçerlidir. Aşağıdaki “Bugünkü uygulama (2.8H)” ve “İçerik geçişi” tarihsel kayıttır. Eski kayıtlar açılmaz.
 
 **İçerik geçişi:** Yeni düzene uymayan bütün mevcut oyuncu senaryoları, seçenek akışları ve sonuçsuz görevler envantere alınarak yeniden yazılır veya yeni kariyer yolundan kaldırılır. Üzerine yalnız iki düğmelik görünüm kaplamak yeterli değildir. Uyumlu konu ailesi/oyun kuralı korunabilir; eski çok seçenekli senaryo normal yeni oyunda paralel yaşamaz. Katalogdaki henüz uygulanmamış çok yollu taslaklar da hazır senaryo kabul edilmez. Kapsam [OLAY_KUTUPHANESI §7](OLAY_KUTUPHANESI.md#7-mevcut-içerikten-geçiş), kayıt koruması [TEKNIK_PLAN §6](TEKNIK_PLAN.md#eski-içerikten-geçiş-ve-kayıt-uyumu) içindedir.
+
+### Yönetim omurgası: beş katman
+
+**Hedef (2026-10-26; kullanıcının sistem tasarım taslağından, YOL_HARITASI karar 51):** başkanlığın bütün işleri beş katmandan geçer. Oyuncu yalnız kart katmanına dokunur; üstteki üç katman kartları üretir, sonuç dünyayı değiştirip yeni kartlar doğurur.
+
+| Katman | Görevi | Bugünkü karşılığı |
+|---|---|---|
+| 1. Dünya | Lig, kulüpler, oyuncular, rakip başkanlar ve takvim; zaman akar, rakipler de hamle yapar; gazete, telefon ve maç bu katmandan haber taşır | Fikstür, öbür maçlar, gizli gelişmeler, olay paketleri |
+| 2. Kişiler | Her kişinin gündemi, hafızası ve gizli tutumu; gündemler çatışır ([§10 “Kişi modeli”](#kişi-modeli)) | Kişi kaydı, hocanın tarzı ve gizli değerleri, söz kaydı |
+| 3. Dosyalar | Her iş bir şablonun aşamalarından geçer (aşağıda); kişinin gündeminden ya da başkanın girişiminden açılır | Mesele |
+| 4. Kartlar | Dosyanın o anki aşaması tek kart olarak gelir; her kartta iki cevap (yukarıda) | Karar türleri ve tek kart |
+| 5. Sonuç | Dosya ilerler ya da kapanır, kişilerin tavrı değişir, para ve geçmiş yazılır, dünya güncellenir | Geçmiş, söz, para hareketleri |
+
+Bu ayrım içerik yazmayı kolaylaştırır: yeni bir olay, bir şablonun aşamalarına koşul ve metin yazmaktır ([OLAY_KUTUPHANESI §1](OLAY_KUTUPHANESI.md#1-kataloğun-kullanımı)). Genel amaçlı hikâye motoru kurulmaz ([TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi)).
+
+Başkanın beş fiili vardır: **ara** (telefonda kısa konuşma; bilgi ister ya da dosya başlatır), **çağır** (kişi odaya gelir; yüz yüze, daha uzun, daha etkili, daha pahalı), **görevlendir** (dosyanın sahibi değişir, sonuç kartı döner), **teklif et** (pazarlık kartı) ve **bekle** (kartı bırakıp başka işe geçmek; kartın ömrü işler). Başkan oyuncu listesinden doğrudan transfer başlatmaz; bir kişiye iş verir (“bana sol bek bul”), böylece personelin kalitesi hep devrededir. Kişi seçmek ve konu seçmek menüdür, karar sayılmaz (yukarıdaki kural). Başkanın tepki verdiği işle kendi başlattığı iş arasındaki denge gözlenir: tamamen tepkisel oyun itfaiyeciliğe, tamamen girişimci oyun gösterge paneline döner; transfer dönemlerinde girişim, kriz haftalarında tepki artar.
+
+### Dosya şablonları
+
+**Hedef (2026-10-26; Y1–Y3):** her dosya sıralı aşamalardan geçen bir durum makinesidir. Aşama üç türlüdür: **kart** (başkana karar düşer), **bekleme** (dosya bekler, sonuç haber ya da kart olarak gelir) ve **devir** (aşamayı görevlendirilen kişi yürütür). Her aşamadan **kayıp** çıkışı mümkündür: rakip kulüp kaptı, oyuncu reddetti, süre doldu, pazarlık koptu, sağlık raporu kötü. Ortak alanlar: şablon, aşama, sahip (başkan ya da görevlendirilen kişi), karşı taraf, son tarih ve geçmiş (gelen kartlar, verilen kararlar). İlk set altı şablondur:
+
+| Şablon | Tetikleyici | Tipik süre | Kritik kart |
+|---|---|---|---|
+| Transfer alımı | Hocanın isteği, gözlemci raporu, haber, başkanın girişimi | 1–4 hafta | Pazarlık zinciri |
+| Transfer satışı | Gelen teklif, mali baskı | 1–2 hafta | “Hocaya nasıl söylerim?” |
+| Sözleşme yenileme | Bitişe altı ay kala, oyuncunun talebi | 1–3 hafta | Maaş pazarlığı |
+| Personel | İstifa, görevden alma, kurul baskısı | 1–2 hafta | Aday görüşmesi |
+| Kriz (soyunma odası, basın, taraftar) | Maç sonucu, ertelenmiş sorun, dedikodu | 2–7 gün | Yüz yüze görüşme |
+| Kurumsal (sponsor, federasyon, stat, genel kurul) | Takvim, dış teklif | 2–8 hafta | Yönetim kurulu oylaması |
+
+Transfer alımının aşamaları: ihtiyaç (kart) → araştırma (bekleme, 2–5 gün) → aday seçimi (kart; iki aday, kaynaklı ve çoğu zaman çelişen görüşlerle) → temas (bekleme, 1–3 gün) → kulüp pazarlığı (kart zinciri) → oyuncu pazarlığı (kart; maaş, menajer, süre) → sağlık kontrolü (bekleme, 1 gün) → imza. Bugünkü sorunsuz yol ([§8](#transfer-ve-sponsor-görüşmeleri), G2) bu şablonun en kısa yoludur; ikinci teklif, kaçan transfer ve alternatif arayışı onun doğal çıkışlarıdır. Süreler ve aşama sayıları TEST'tir; her dosya her aşamada kriz üretmez.
+
+**Bekleme pasif değildir.** Dosya beklerken dünya çalışır: rakip kulüp aynı oyuncuya teklif yapar, haber çıkar, menajer başka kulüpten aldığı teklifle fiyatı yükseltir. Bekleme dolunca sonuç kart ya da haber olarak gelir (“Gözlemci raporu hazır”, “Kulüp görüşmeye açık”, “Sağlık raporu: menisküs”).
+
+**Yetki devri ve üç kalite.** Devredilebilir aşamada kart “Kendim ilgilenirim / X'e bırak” iki cevabıdır. Devredilen aşamalar kişinin o konudaki gizli yeteneğine göre çözülür ve başkana yalnız sonuç, onay kartı olarak döner: **iyi** (“Anlaştım, imzaya hazır”), **vasat** (anlaşma olur; birkaç gün sonra rakibin aynı profili daha ucuza aldığı duyulur, başkan “daha iyisi olabilirdi” sezgisini kendisi kurar) ya da **kötü** (menajer görüşmeyi keser, dosya kaybolur; o kişiye sonraki işte daha az güvenilir). Bir kişi transferde iyi, sponsor pazarlığında vasat olabilir. İyi personel daha az kart ve daha iyi sonuç demektir; iş yükünü yönetmenin ana aracıdır. Kişisel katılımın bazı görüşmelerde özel ağırlığı ([§7](#7-ekonomi-yetki-devri-ve-kişisel-katkı)) korunur.
+
+**Kart sınıfları ve bekleme.** Erteleme üçüncü düğme değildir: başkan kartı bırakıp başka işe geçer, kartın ömrü işler. Ne olacağı kartın sınıfına bağlıdır:
+
+| Sınıf | Örnek | Beklerse | Cevapsız kalırsa |
+|---|---|---|---|
+| Fırsat | Transfer teklifi, sponsor, boştaki hoca | Ömrü işler | Sessizce kaybolur; sonra haber olarak duyulur (“X, Y kulübüne gitti”) |
+| Sorun | Oyuncu huzursuzluğu, basına sızıntı, bütçe uyarısı | Büyür | Bir hafta içinde daha ağır bir kart olarak döner |
+| Rutin | İmza, onay, küçük cevap | Birikir | Yazılı varsayılan sonucu işler; birikince asistan uyarır, kurul “başkan işleri takip etmiyor” demeye başlar |
+| Pazarlık | Zincirin ortasında bırakılan teklif | Karşı tarafın sabrı düşer | “Hâlâ bekliyorum” kartı, sonra kopma |
+
+Bu tablo [§6](#ajanda-ve-son-tarihler)'nın cevapsız kalma kuralının sınıf bazında tamamlanmış hâlidir: cevapsız sonuç yine kartın yüzünde önceden yazar, zorunlu kriz kararları (maaş günü gibi) karar verilmeden geçilmez. Beklemek bazen doğru hamledir: transfer döneminin son günlerinde fiyat düşer; bir krize hemen cevap vermek yerine önce kaptandan bilgi almak daha iyi sonuç verebilir; bir kurul üyesinin “kendi adamı” önerisini sessizce bekletmek reddetmekten daha az düşman yaratır. Oyuncu hangi kartın beklemeyi kaldırdığını zamanla öğrenir. Masanın boşalması bir uyarı değildir; iyi yönetim sakin dönem üretebilir ([§10](#koşula-bağlı-olaylar-ve-adil-belirsizlik)).
 
 ## 3. Kulübün geçmişi ve başlangıç hikâyesi
 
@@ -151,6 +199,23 @@ Tek bir özellik bütün bir problemi çözmez. Paralı üyenin desteğinin mikt
 
 Hoca sportif ihtiyacı, sayman ödeme gücünü, futbol şube sorumlusu görüşmenin yapılabilirliğini, basın sözcüsü kamuoyuna anlatımını değerlendirebilir. Tavsiyenin kaynağı ve belirsizliği anlaşılır olur; bütün ekip aynı bilgiye ve aynı görüşe sahip sayılmaz. Tavsiye ile işi üstlenme arasındaki fark [§7'de](#7-ekonomi-yetki-devri-ve-kişisel-katkı) tanımlıdır.
 
+### Personel ve çekirdek kişiler
+
+**Hedef (2026-10-26; Y1–Y2):** üç yönetim koltuğu (seçilmiş kurul; yukarıdaki kesin karar) ile kulübün **personeli** (çalışanlar) ayrıdır. Kulübün 3. Lig'deki çekirdek kişileri: teknik direktör; yardımcı antrenör ve mali işler müdürü (H2); takım kaptanı (kadrodaki bir oyuncu, soyunma odasının sesi); asistan ya da genel sekreter (sabah brifingi, biriken işler, federasyon yazışması; hiçbir şey istemez, başkanın düzenini korur); koltuklardan birinde oturan, kendi gündemi olan bir yönetim kurulu üyesi. Dışarıdan kişiler (menajer, rakip başkan, gazeteci, federasyon yetkilisi) aynı kişi modelini daha kısa hafızayla kullanır ([§10](#kişi-modeli)).
+
+| Rol | Gündemi | Başkana getirdiği | Başkandan istediği |
+|---|---|---|---|
+| Teknik direktör | Sonuç, kadro kalitesi, otorite | Oyuncu değerlendirmesi, transfer isteği, soyunma odası sinyali | Transfer, maaş kararı, destek |
+| Sportif direktör (üst ligde) | Transfer piyasası, gözlemci ağı | Aday listesi, piyasa bilgisi, menajer teması | Bütçe, yetki, hızlı karar |
+| Mali işler müdürü | Nakit akışı, kurallara uyum | Mali rapor, bütçe uyarısı, sponsor teklifi | Harcama freni, sözleşme onayı |
+| Takım kaptanı | Soyunma odası, kendi sözleşmesi | Oyuncu huzursuzluğu, hoca hakkında görüş | Sözleşme, saygı, sözün tutulması |
+| Asistan / genel sekreter | Düzen, takvim | Sabah brifingi, biriken iş uyarısı, federasyon yazışması | — |
+| Yönetim kurulu üyesi | Kendi nüfuzu, bazen kendi adamı | Siyasi baskı, “benim tanıdığım biri var” | Taviz, görünürlük |
+
+**Personel slotları.** Her lig kademesi bazı görevleri “beklenen” yapar: 3. Lig'de gözlemci yoktur, hoca oyuncuya kendisi bakar (bugünkü hocanın transfer isteği); 1. Lig'de gözlemci ağı, basın birimi, altyapı koordinatörü ve hukuk müşaviri beklenir. Başkan bir görevi liginden önce açabilir; maaşı kasadan çıkar, bu bir yatırım kararıdır (erken gözlemci daha iyi transfer, daha dar bütçe). Beklenen görev boş kalırsa işler başkana ya da yanlış kişiye düşer: basın birimi yoksa basın kartlarını başkan cevaplar, hukukçu yoksa federasyon dosyası mali müdürün elinde sürünür. Her personel aynı kişi modelini, gizli yeteneklerini, kendi sözleşmesini ve ayrılma riskini taşır (“Personel” şablonu, [§2](#dosya-şablonları)). Kulübün büyümesi yeni sistem değil, slot açılmasıdır (Aşama 8). Geliştirmede kişiler, adları ve metinleri Claude'un TEST taslağıdır, kullanıcı değiştirir (kullanıcı kararı, 2026-10-26).
+
+**Gündem çatışması** başkanın asıl işidir: hoca tecrübeli bir forvet ister, sportif direktör genç adayı önerir, mali müdür ikisine de “bütçe yok” der, kaptan “asıl sol bek lazım” diye yazar. Her biri ayrı kart olarak gelir; başkan kimi dinleyeceğine karar verir, dinlemedikleri bunu hatırlar.
+
 ### Kampanya
 
 - Ekip ile vaatler ve öncelikler hazırlanır; bütçeyle ve birbirleriyle ilişkileri bulunur.
@@ -160,7 +225,20 @@ Hoca sportif ihtiyacı, sayman ödeme gücünü, futbol şube sorumlusu görüş
 - Sonuç; adayın inandırıcılığı, ekibi, ilişkileri, vaatleri ve rakiplerden oluşur. Belirsizlik bulunur, fakat tek bir açıklanamayan zar bütün hazırlığı değersizleştirmez.
 - Sonraki seçimler gerçek görev geçmişini ve rakiplerin alternatiflerini değerlendirir. İyi yönetmek destek sağlar; otomatik yeniden seçilme garantisi vermez.
 
-Oy kullanacak grubun yapısı, ilk üç koltuğun ötesindeki yönetim yapısı, dönem süresi ve erken seçim/görevden alınma koşulları uygulanmadan önce kararlaştırılacaktır.
+Oy kullanacak grubun yapısı, ilk üç koltuğun ötesindeki yönetim yapısı ve dönem süresi uygulanmadan önce kararlaştırılacaktır. Erken seçimin yolu genel kuruldur (aşağıda; karar 2026-10-26).
+
+### Genel kurul ve güven oyu
+
+**Hedef (2026-10-26; Y5; seçim sahnesi Aşama 6):** her sezon sonunda olağan genel kurul toplanır ve yönetime güven oylaması yapar; ağır bir krizde olağanüstü genel kurul toplanabilir. Güven oyu kaybedilirse erken seçime gidilir; seçmen yapısı ve seçim sahnesi Aşama 6'dadır, dört–beş yıllık olağan seçim (§1) sürer. Oylamanın havası dört grubun durumundan çıkar:
+
+| Grup | Neyi anlatır | Odada nasıl hissedilir | Dibe vurursa |
+|---|---|---|---|
+| Kasa | Nakit, borç, bütçeye uyum | Mali müdürün tonu, sponsorların ilgisi, gazetede “mali kriz” | Transfer yasağı, federasyon dosyası, olağanüstü genel kurul |
+| Taraftar | Tribün desteği, kamuoyu | Pencereden gelen ses, gazete manşeti | Protesto, boş tribün, panikleyen kurul |
+| Soyunma odası | Oyuncu ve hoca huzuru | Kaptanın mesajları, antrenmandaki tartışmalar, hocanın kapıyı çalma sıklığı | Hoca istifası, oyuncu isyanı, sonuçların çökmesi |
+| Yönetim kurulu | Kurul üyelerinin desteği | Davet sıklığı, “kendi adamı” baskısı, asistanın “kurul sizi görmek istiyor” notu | Olağanüstü genel kurul, güvensizlik oyu |
+
+Dört grup ayrı ana veri ya da çubuk değildir: kişilerin ve grupların tutumundan ve kulübün kayıtlarından türetilen gizli bir özettir, hiçbir yerde sayı olarak görünmez (Reigns'in dört göstergesi alınmaz, §2). Başkan bir grubun ne durumda olduğunu merak ederse ilgili kişiye sorar; cevap o kişinin dürüstlüğüne ve tutumuna bağlıdır. Sportif başarı doğrudan bir grup değildir, dördünü dolaylı etkiler: şampiyon olup kasayı batıran başkan düşebilir, küme düşüp kulübü mali olarak kurtaran başkan kalabilir. Genel kurul bir ara sınavdır; başkanın uzun vadeli hedefleri (Avrupa'ya çıkmak, borcu sıfırlamak, altyapıdan oyuncu yetiştirmek, statı bitirmek) orada “miras” olarak okunur. Başarı finali (§1) ve seçim kaybının kariyeri bitirmemesi (§5) değişmez.
 
 ## 5. Görev dışında geçen dönem
 
@@ -239,6 +317,18 @@ Antrenman, boş stat veya kulüp odası gibi isteğe bağlı alanlarda vakit ge�
 
 Transfer gibi uzun olaylar farklı günlere yayılır: hazırlık, görüşme, haber bekleme, karşı teklif ve sonuç. İçerik temposu gerçek oynama süresi ölçülerek ayarlanır. Yoğun günleri kısaltmak için otomatik bir hedef konmaz; tekrarlar ve amaçsız bekleme azaltılır.
 
+### Gün ve hafta ritmi
+
+**Hedef (2026-10-26; Y3; saatler TEST):** gün 08:00'de masadaki gazete (Pazartesi) ve asistanın brifingiyle (“bugün üç konu var”) ve gece gelen mesajlarla açılır. 10:00–12:00 antrenmandır, balkon isteğe bağlıdır. 12:00–14:00 kapı en çok bu saatlerde çalar, yüz yüze görüşmeler olur. 14:00–18:00 telefon, pazarlık ve dosya işleridir. Akşam ara sıra davet vardır (sponsor yemeği, rakip başkanla görüşme, taraftar derneği), kart zinciri olarak oynanır. Gün 20:00'de biter, transfer dönemlerinde 23:00'e kayar; gece dünya katmanı çalışır, sabah yeni kartlar düşer. Günü bitirmek ayrı bir düğme değildir: İlerle durakları ve yukarıdaki kesin kurallar sürer (zorunlu iş yapılmadan gün bitmez).
+
+Hafta: Pazartesi maç sonrasıdır, oda sonuca göre şekillenir (yoğun); Salı–Perşembe antrenman ve asıl iş günleridir; Cuma maç öncesi basın toplantısı kartı ve hocanın kadro notu gelir; Cumartesi maç günüdür (az iş, yüksek duygu); Pazar boştur. Transfer dönemlerinde (yaz, kış) yapı sıkışır: iş çoğalır, gece mesajları artar; zorluk takvimden gelir, ayardan değil. **Gazete haftalıktır ve Pazartesi sabahı masaya gelir** (2026-10-26; bugünkü Cuma gazetesinin yeri değişir).
+
+**Aciliyet kanaldan anlaşılır:** gazete (haftalık, acil değil) → telefon mesajı (bugün) → telefon araması (şimdi) → kapı (şimdi ve yüz yüze). Odanın hâli de bilgi taşır: kötü sonuçtan sonra iş çoktur, telefon yanar; iyi sonuçtan sonra masa sakindir. Boş gün sakin gösterilir; iş yükü kotası yoktur (§10).
+
+**Balkon:** antrenman izlenirken gelen kartlar zaman harcamaz, çünkü antrenmanın süresi zaten geçer; bu balkonun ödülüdür. Her kart balkonda açılabilir; ağır kartların (pazarlık, yüz yüze görüşme) dikkat bedeli vardır: kişi yanına gelir, antrenmandaki sinyaller (topallayan oyuncu, parlayan genç, hocayla tartışan kaptan) o sırada kaçar. Bir sinyale dokunmak küçük bir kart düşürür (“Doktora sorayım mı?”). Bugünkü kural (kısa iş gözlemin içinde geçer, uzun iş için gözlemden ayrılınır) bunun ilk hâlidir; ekranın yarısında antrenmanın görünüşü görsel turdadır.
+
+**Anlık kart:** gerçek zamanda kısa cevap isteyen kart (çalan telefon, canlı yayın sorusu, antrenmanda kavga) yalnız doğal yerinde ve nadiren gelir; günlük kota yoktur. Süre dolunca sonuç nötr değil, kartta yazılı varsayılandır (“başkana ulaşılamadı”). [§10 “Süreli cevaplar”](#süreli-cevaplar) kuralları geçerlidir; süre göstergesinin görünüşü görsel turda, sesi Aşama 10'dadır.
+
 ### İlk tempo ölçümleri ve oturum devamlılığı
 
 **Onaylı ölçüm yaklaşımı (2026-09-30):** Aşağıdaki aralıklar ilk oynanış denemelerinin hedefleridir; ölçülmüş sonuç, zorunlu süre veya kesin denge değildir. Yoğun günlerin yaklaşık bir saat veya daha uzun yaşanabilmesi korunur.
@@ -248,11 +338,12 @@ Transfer gibi uzun olaylar farklı günlere yayılır: hazırlık, görüşme, h
 | Sakin gün | 1–5 dakika veya boş günleri birlikte ilerleme |
 | Olağan yönetim günü | 5–15 dakika |
 | Yoğun gün | 30–60 dakika; gerektiğinde daha uzun |
+| Hafta (2026-10-26) | Sakin hafta 5–10 dakika, olağan hafta 15–25 dakika, yoğun ya da transfer haftası 40–60 dakika; olay yoğunluğundan çıkar |
 | Maç | Mevcut 10–15 dakika hedefi (U1, 2026-10-12: motorun maçı 20 dk; ×2 ile ~13, ×4 ile ~8,5 dk izlenir — önemli anlar normal hızda) |
 | Toplam maç günü | Yaklaşık 20–35 dakika; tören ve çevresindeki içerik ayrıca ölçülür |
 | Normal sezon | Yaklaşık 20–35 saat; fikstür, yetki devri ve katılım tercihleriyle birlikte sınanır |
 
-İçerik, bir süre kotasını doldurmak için üretilmez. Kariyerin uzunluğu anlamlı sezonlardan, sonuçlardan ve gelişimden gelir; boş bekleme veya gerçek dünyada bekleme şartı konmaz. Her günü bir saate uzatmak hedeflenmez. Kesin maç sayısı ve kariyer uzunluğu bu tablodan çıkarılmaz. Tablo zorunlu süre değil ölçüm hedefidir: gerçek sezon süresi tekrarlar, karar yoğunluğu ve oyuncunun sıkıldığı noktalarla birlikte ölçülür; uzun kariyerin toplam süresi ayrıca değerlendirilir.
+İçerik, bir süre kotasını doldurmak için üretilmez. Kariyerin uzunluğu anlamlı sezonlardan, sonuçlardan ve gelişimden gelir; boş bekleme veya gerçek dünyada bekleme şartı konmaz. Her günü bir saate uzatmak hedeflenmez. Kesin maç sayısı ve kariyer uzunluğu bu tablodan çıkarılmaz. Tablo zorunlu süre değil ölçüm hedefidir: gerçek sezon süresi tekrarlar, karar yoğunluğu ve oyuncunun sıkıldığı noktalarla birlikte ölçülür; uzun kariyerin toplam süresi ayrıca değerlendirilir. **Kullanıcı kararı (2026-10-26):** sezon süresi kısılmaz; sistem tasarım taslağındaki “sezon yaklaşık 10 saat” hedefi alınmadı. Süre eğlenceden ve olaylardan çıkar, 10 saati geçebilir; tablo alt ya da üst sınır değildir, dengeyi Y4'teki ölçüm kurar.
 
 Kısa bir oturumda bir mesele ilerletilebilmeli; yoğun bir gün birkaç oturuma bölünebilmelidir. İlk hedef, tamamlanan kararların ve güvenli sahne geçişlerinin gün içinde kaydıdır. Dönüşte son karar, beklenen haberler ve yaklaşan önemli tarih kısa biçimde hatırlatılır. Maç veya görüşmenin tam ortasından devamın kapsamı [teknik planda](TEKNIK_PLAN.md#5-kayıt-ve-yükleme) ayrı tutulur. Bugünkü uygulama her tamamlanan kararın ardından kaydeder (2.4); maç sınırında kayıt yapılmaz. **Kullanıcı kararı (2026-10-02):** telefondaki “Kaldığın yer” dönüş özeti kaldırıldı (2.8L); dönüşte oyun kaldığı yerden, odada sakin açılır.
 
@@ -272,7 +363,7 @@ Yetki devrinde kişi, iş, bütçe tavanı, süre ve başkana dönülecek duruml
 
 **Onaylı tasarım yaklaşımı (2026-09-30):** Tavsiye istemek karar sorumluluğunu başkanda bırakır; yetki devri, kişinin tanımlı sınırlar içinde işi yürütmesini sağlar. Tek iş yanında kalıcı sorumluluklar da tanımlanabilir. Ekibin kapasitesi ve bekleyen işi anlaşılır olmalı; yetkili olduğu rutin adımlar için tekrar tekrar onay istenmemelidir.
 
-İşe uygun yönetici uzmanlığı veya ilişkileri sayesinde bazı işleri başkandan daha iyi çözebilir. Başkanın şahsen katılması da bazı görüşmelerde özel ağırlık taşıyabilir. Bütün işlerde en iyi sonucu kişisel katılıma bağlamak oyuncuyu her işi yapmaya yöneltir; denge testleri bunu özellikle kontrol eder. Bugünkü sponsor denemesinin sonuçları bu dengeyi kanıtlamaz.
+İşe uygun yönetici uzmanlığı veya ilişkileri sayesinde bazı işleri başkandan daha iyi çözebilir. Başkanın şahsen katılması da bazı görüşmelerde özel ağırlık taşıyabilir. Bütün işlerde en iyi sonucu kişisel katılıma bağlamak oyuncuyu her işi yapmaya yöneltir; denge testleri bunu özellikle kontrol eder. Bugünkü sponsor denemesinin sonuçları bu dengeyi kanıtlamaz. Devredilen işin üç kalitede dönüşü ve personelin konu başına yeteneği [§2 “Dosya şablonları”](#dosya-şablonları) içindedir (hedef, 2026-10-26).
 
 **Bugünkü uygulama (G2, 2026-10-24 gece; TEST tutarlar, kullanıcı değiştirir; YOL_HARITASI karar 44):** her oyuncunun ve hocanın sözleşmesi vardır (aylık maaş ve bitiş: bu sezonun, bir ya da iki yıl sonrasının 31 Mayıs'ı). Maaş oyuncunun gizli kabiliyetinden gelir (genç ×0,6, 32 yaş üstü ×0,85); Demirkapı'nın 22 oyuncusu ve hocası ayda ~490 bin ₺. **Ay başı** (her ayın 1'i 10:00, takvimde görünen rutin iş): maaşlar ödenir, lig yayın payı (100 bin ₺) gelir. **Maç günü geliri:** iç saha maçından sonra bilet (stat kapasitesi × doluluk × 150 ₺; Demirkapı'da ~1.150 seyirci, ~172 bin ₺); deplasmanda ve hükmende yok. Kasa yavaş erir: sürekli kriz de bedava para da yok; kasa eksiye düşebilir ve kırmızı görünür (kriz içeriği kullanıcının, P01). **Kasa paneli** (odada Kasa düğmesi ya da 6 tuşu; eksi kasada kırmızı rozet) önümüzdeki 90 günü ayırır: aylık maaş yükü, kesin ödemelerle en düşük bakiye ve tarihi, 90 gün sonraki kesin bakiye; bilet tahmini “belirsiz gelir” olarak ayrı satırdadır ve kesin para sayılmaz; altında son hareketler. Öbür kulüplerin sözleşmeleri vardır, kasaları yoktur. Sponsor, prim, taksitli transfer ve sayman değerlendirmesi sonraki işlerdir (4.1, 4.4, 5.5).
 
@@ -311,6 +402,10 @@ Yetenek ve potansiyel için sayısal puan, yıldız, güç çubuğu veya bunlar�
 
 Rapor; belirgin özellik, gözlem tarihi, gözlem kaynağı ve belirsizliği anlatır. Örnek: “Hava toplarında etkili; dar alanda dönüşü ağır. İki maç izlendiği için baskı altındaki kararları hakkında yeterli bilgi yok.”
 
+**Kaynak güvenilirliği ve oyuncu dosyası (hedef, 2026-10-26; Y1–Y2).** Bilgi iki türlüdür. **Sert veri** dosyadadır ve kesindir: yaş, mevki, uyruk, maç, gol, asist, dakika, sözleşme bitişi, maaş, serbest kalma bedeli, sakatlık geçmişi, menajerin adı. **Yumuşak veri** insanlardan gelir ve belirsizdir: ne kadar iyi olduğu, karakteri ve soyunma odasına uyumu, gerçek piyasa değeri, gelecek potansiyeli, kulübünün onu satmaya ne kadar istekli olduğu. Oyunun stratejik derinliği bu ikisi arasındaki boşluktan doğar. Her kişinin her konuda farklı, gizli bir isabeti vardır: gözlemci gençlerde iyi, tecrübelilerde kötü olabilir; hoca kendi istediği oyuncuyu abartır; menajer hep abartır. İsabet gösterilmez; başkan birkaç transferden sonra kime güveneceğini kendisi öğrenir. Çelişen görüşler kuraldır, uyum istisnadır. Bilgi almanın bedeli vardır: gözlemci göndermek gün ve para ister, hocaya sormak beklenti yaratır (“madem sordun, al”), rakip başkanla yemek bilgi verir ama sızar.
+
+**Kadro sekmesi** Dosya'dadır (karar, 2026-10-26). Oyuncu dosyası sert veriyi ve kartlardan biriken tarihli, kaynaklı notları taşır (ör. “[Gözlemci, 14 Ağustos] Ofansif katkısı iyi, bire bir savunmada zayıf.” / “[Hoca, 3 Eylül] Bana tam uyar.”); dosya zamanla kalınlaşır ve başkanın kendi arşivi olur. Oyuncu satırında yalnız gözlenebilir sayılar durur; “form” gibi türetilmiş değer, çubuk ya da yıldız yoktur. Oyuncu dosyasından o kişiyle ilgili girişim açılabilir (menajeri ara, hocaya sor, gözlemci gönder).
+
 Gelişim; teknik, fiziksel ve zihinsel alanlarda farklı ilerler. Yaş, oynama süresi, antrenör, tesis, çalışma alışkanlığı, sakatlık ve uyum etkilidir. Form, yorgunluk ve moral ile kalıcı yetenek değişimi birbirine karıştırılmaz. Altyapı yatırımı yıldız çıkma ihtimalini ve gelişim ortamını iyileştirir; garanti yıldız üretmez.
 
 ## 10. İlişkiler, medya ve olayların hafızası
@@ -334,6 +429,22 @@ Verilen sözün sahibi, muhatabı, konusu, şartı, son tarihi ve kimler tarafı
 Medya ve TV katılımları, taraftar talepleri, hakem atamaları ve tartışmalı kararlara tepkiler kulübün görünürlüğüyle değişir. Resmî itiraz, kamuoyu açıklaması, temsilci gönderme veya sessiz kalmanın farklı sonuçları olabilir. Kanıtlanmış olay, yorum ve söylenti birbirinden ayrılır; sistem başkanı gizlice cezalandıran bir kurguya dönüşmez.
 
 Olay kaynakları: kararların sonuçları, dünyadaki gelişmeler ve sınırlı sürprizler. Olay sıklığı, tekrar aralığı ve aynı anda açık kalan konular denetlenir. İyi yönetimin rahat dönemler üretmesine izin verilir. Başarı, teşekkür, geçmişten gelen dostluk ve kulübe aidiyet sahneleri de içeriktir.
+
+### Kişi modeli
+
+**Hedef (2026-10-26; Y1–Y2):** dosyalar kişilerin gündeminden doğar; başkanın işi çatışan gündemler arasında hakemlik yapmaktır. Her kişinin üç bileşeni vardır:
+
+1. **Gündem:** ne istediği. Hoca forvet ister, mali müdür maaş bütçesini kısmak ister, kaptan sözleşme yenilemesi bekler. Gündem sezon boyunca değişir: hoca üç maç kaybedince savunma ister.
+2. **Hafıza:** başkanın kendisiyle ilgili son kararları ve verdiği sözler. “Forvet alacağım” deyip almazsan hoca hatırlar. Hafıza ayrı bir defter değildir; geçmiş kaydından ve söz kaydından okunur.
+3. **Tutum:** hafızadan türetilen gizli değer. Kayda ayrıca yazılmaz, hiçbir yerde sayı ya da çubuk olarak görünmez. Mesajın üslubunda, kapıyı çalma sıklığında ve getirdiği bilginin kalitesinde kendini belli eder: küskün sportif direktör daha az rapor getirir.
+
+Kişinin bir de konu başına gizli **güvenilirliği** vardır ([§9](#9-puan-göstermeyen-oyuncu-sistemi)). Dışarıdan kişiler (menajer, rakip başkan, gazeteci, federasyon yetkilisi) aynı modeli daha kısa hafızayla kullanır; bir pazarlıkta yaşanan sonrakine taşınır. İlk sürüm az sayıda kişiyle kurulur ([§4](#personel-ve-çekirdek-kişiler)); tam ilişki simülasyonu başlangıç şartı değildir ve tek bir genel popülerlik değeri kurulmaz (yukarıda). Geliştirmede kaptan, asistan, kurul üyesi, gazeteci ve menajer gibi kişiler, adları ve metinleri Claude'un TEST taslağıdır; kullanıcı değiştirir (kullanıcı kararı, 2026-10-26; kulüp adları yine kullanıcınındır).
+
+**Rehber.** Telefonda “ara” yalnız rehberdeki kişiler için açıktır. Rehber tanışıldıkça büyür: pazarlık yapılan menajerin numarası kalır, yemekte tanışılan rakip başkan eklenir. Rehber başkanın ilişki ağıdır; H2'nin kişi listesi (hoca, yardımcı antrenör, mali işler müdürü) ilk hâlidir.
+
+**Kapı ve ziyaretçi (karar, 2026-10-26).** Yüz yüze görüşme odada olur; ayrı görüşme mekânı yoktur. Ziyaretçi randevuyla (ajandadan; telefonda kabul edilen görüşme isteği) ya da kendiliğinden gelir; kendiliğinden gelen en yüksek aciliyettir ve “sonra gelsin” de bir cevaptır. Başkan birini çağırabilir: görüşme daha uzun, daha etkili ve daha pahalıdır (TEST, 60 dakika civarı). Kapıdaki konular açık meselelerle sınırlıdır, serbest soru telefondan sorulur (Claude'un kararı; kullanıcı genişletebilir). Görüşme kart zinciridir; görsel düzeni görsel turdadır.
+
+**Televizyon ve ev modu (havuz).** Akşam evde telefon ve televizyon, kulübü konuşan programa canlı bağlanmak, gece telefonu ve hafif tonlu sahneler temel oda ve kart döngüsü oturduktan sonra ayrıca tasarlanır ([§13](#13-kapsam-ve-açık-kararlar)).
 
 ### Koşula bağlı olaylar ve adil belirsizlik
 
@@ -400,6 +511,8 @@ Yazılı maç spikeri/radyo akışı kaldırılır. Skor ve dakika stat tabelas�
 
 **“Santraya geç” (kullanıcı kararı 2026-10-24; F3-0 ile uygulandı).** Düğme maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) görüntüsüz doğal sonuna dek oynatır, birkaç saniye sürer. Ne zaman basılırsa basılsın, basılmasa da maç aynıdır: sayfayı kapatıp başka bir anda basarak sonuç yeniden çekilemez.
 
+**Maç olaylarından dosyaya (hedef, 2026-10-26; Y1–Y3).** Maç motoru yönetimi bilmez; maçın kaydını (dakika, tür, oyuncu, ayrıntı) verir. Yönetim bir eşleme tablosuyla olayları dosyaya ya da karta çevirir: sakatlık → kriz dosyası (doktor raporu, bir gün bekleme); kırmızı kart → disiplin dosyası (kurumsal şablon); üst üste yenilgiler → hoca krizi (bugün P12); gencin ilk golü → menajeri arar (sözleşme yenileme). Böylece motor değişse de yönetim değişmez. Bugünkü maç sonucu kancası (P12) bu tablonun tek satırıdır ([TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi)). Maç gününün loca kartları (sponsor, rakip başkan, menajer mesajı) içerikle gelir.
+
 ## 12. Başkanın yaşlanması ve kariyer sonları
 
 Başkanın dayanma gücü, uyumu ve bazı becerileri yaşla gerileyebilir; tecrübesi, insan tanıması ve kulüpteki ağırlığı artabilir. Değişim herkes için tek bir yaş çizelgesine indirgenmez. Yeni adaylar ve değişen beklentiler baskı oluşturur.
@@ -422,14 +535,14 @@ Başarı finali kutlama, şehre dönüş, insanlarla veda ve bırakmayla tamamla
 |---|---|
 | İki cevaplı sahnelerin nihai metni, kişi üslubu, teklif adımları, görsel kompozisyon ve denge | 2026-10-02 çerçevesi içinde uygulayıcı tasarlar; iki cevap ve sade sunum kesin, örnekler/12–20 metin önerisi kota değildir |
 | Kulübün nihai adı, şehir, kuruluş ve geçmiş kişiler | Temel kişiler erken hazırlanabilir; kapsamlı hikâye için Aşama 6 öncesi |
-| Seçmen yapısı, dört/beş yıl, erken seçim (ilk üç koltuk seçildi, §4) | Seçim kuralları için Aşama 6 öncesi |
+| Seçmen yapısı, dört/beş yıl (ilk üç koltuk seçildi, §4) | Seçim kuralları için Aşama 6 öncesi. **Erken seçim (karar, 2026-10-26):** yolu genel kuruldur; güven oyu kaybedilirse erken seçim ([§4](#genel-kurul-ve-güven-oyu)) |
 | Yönetim adaylarının katkılarının gösterimi | **Karar verildi (2026-09-30):** nihai üründe profil metni görünür, katkı seviyeleri gizlidir. Geliştirme aşamasında seviyeler, gizli koşullar ve futbolcu özellikleri “Test bilgileri” ayarıyla görünür; yayından önce kaldırılır |
 | Kişisel katkı biçimi, sınırları ve mali kurallar | Aşama 4 öncesi |
 | Takım sayıları, sezon ve transfer takvimi, alt lig sınırı | Aşama 3 temeli için seçilmeli veya açık TEST tarifi kullanılmalı; tam sezon için Aşama 5 öncesi kesinleşmeli; yükselme/düşme ayrıntısı Aşama 8 öncesi. **Aşama 3 TEST tarifi (2026-10-23, Claude; YOL_HARITASI karar 36):** 16 takım, çift devreli 30 hafta, her hafta Cumartesi 19:00, oyun 13. haftada başlar (1–12 devralınan geçmiş), kış transfer dönemi 4–31 Ocak yalnız takvim işareti |
 | Üretilen kadroların oyuncu ve hoca adları | **Karar verildi (2026-10-23, kullanıcı):** Claude TEST verisi olarak yazar (`js/adlar-test.js`, F1), kullanıcı sonra değiştirebilir; kulüp adları kullanıcınındır, uydurulmaz |
 | Başkanın başlangıç yaşı, becerileri, kupasız final koşulları | Veri alanları Aşama 1; davranış kararı Aşama 7 öncesi |
 | Avrupa kupalarının sayısı, formatı ve katılım kuralları | Aşama 9 öncesi |
-| Kesin günlük/sezonluk tempo, maç günü toplam süresi, geçiş/atlama seçenekleri, olay yoğunluğu | §6'daki başlangıç aralıklarıyla Aşama 2–3'ten itibaren, tam sezonda Aşama 5'te ölçülür |
+| Kesin günlük/sezonluk tempo, maç günü toplam süresi, geçiş/atlama seçenekleri, olay yoğunluğu | §6'daki başlangıç aralıklarıyla Aşama 2–3'ten itibaren, tam sezonda Aşama 5'te ölçülür. **2026-10-26 (kullanıcı):** sezon süresi kısılmaz, 10 saatlik hedef alınmadı; hafta aralıkları §6'da, ölçüm Y4'te |
 | Kesin para tutarları, yaş etkileri, seçim/transfer olasılıkları | İlgili sistemin oynanış testleri; önceden kesin denge sayılmaz |
 | Değişken başlangıç alanları, uyumluluk sınırları ve zorluk dengesi | 2.4A'da dar TEST örnekleri; tam devralma koşulları ve giriş için Aşama 6 öncesi |
 | Olay paketlerinin ayrıntılı seçenekleri, katkı/hak koşulları ve tekrar aralıkları | İlgili yol haritası adımında; katalog uygulama veya kesin denge sayılmaz. P03'ün ilk örneği hisse/yatırımcı sistemi kurmaz |
@@ -437,6 +550,10 @@ Başarı finali kutlama, şehre dönüş, insanlarla veda ve bırakmayla tamamla
 | Yağmur ve rüzgârın maçta gösterilmesi ([maç motoru §3 madde 7](MAC_MOTORU_GERCEKCILIK_PLANI.md#3-geçerli-kararlar)) | **Karar verildi (2026-10-11, T10 başı):** şimdilik gösterilmez; motor kapısı (T9a) kalır, maç kuru ve rüzgârsız; görünüm stadın gündüz/ışık/gölge işiyle birlikte |
 | Maçın gerçek uzunluğu ve izleme hızı | **Karar verildi (2026-10-12, U1):** motorun maçı 20 dakika; ×1, ×2, ×4 izleme ve önemli anlarda (gol, şut, faul ve kart, sakatlık, korner ve tehlikeli serbest vuruş, ofsayt) kendiliğinden normal hız ([§11](#11-maçlar-mekânlar-ve-kulübün-büyümesi)); maç atlama ya da yalnız özet seçenekleri Aşama 3.7'de |
 | Görsel üretim: yalnız kodla mı, dış varlıkla mı (yapay zekâ 2B/3B, paket, sanatçı); tarz (piksel/bitmap, izometrik diorama, melez) | **Ertelendi (2026-10-26, kullanıcı; YOL_HARITASI 49):** önce oyun mantığı ve içerik, görsel tur en sonda; o zamana dek bugünkü görseller yer tutucu. Kayıt: kodla üretilmiş stat konseptleri beğenilmedi (45), kullanıcı dış varlığa açık (46), istem paketi ve piksel çıktı denemesi `araclar/plan/gorsel-istem-paketi.md`, `araclar/piksel-kare.py` |
-| Bilgi mimarisi ve ekran envanteri: bilgisayar nesnesi, Kadro ve Mali sekmeleri, Kişiler, kapı sahnesi, haftalık ritim, oyuncu satırının sayıları | **Tartışmada (2026-10-25; YOL_HARITASI 47):** Claude'un önerisi ve yedi açık karar `araclar/plan/ui-mimari-ve-gorsel-yon.md` §3–§4; F4 tek kart kararı (§2) etkilenmez |
+| Bilgi mimarisi ve ekran envanteri: bilgisayar nesnesi, Kadro ve Mali sekmeleri, Kişiler, kapı sahnesi, haftalık ritim, oyuncu satırının sayıları | **Karar verildi (2026-10-25/26; YOL_HARITASI 47, 50, 51):** bilgisayar nesnesi yok; mali bilgi mali işler müdürünün raporuyla dosyada ve kişiye soru zaman bedelli girişim (H2); Dosya'da Kadro sekmesi ve oyuncu dosyası, satırda yalnız gözlenebilir sayılar ([§9](#9-puan-göstermeyen-oyuncu-sistemi)); ziyaretçi odaya gelir, kapıda konular açık meselelerle sınırlı ([§10](#kişi-modeli)); gün ve hafta ritmi, gazete Pazartesi ([§6](#gün-ve-hafta-ritmi)). Görsel düzenleri görsel turda |
+| Pazarlık ve bilginin gizli değerleri: rezervasyon fiyatı, sabır, yetki devrinin kalitesi, konu başına güvenilirlik | TEST değerlerle Y1–Y2; oynanış testiyle ayarlanır, önceden kesin denge sayılmaz |
+| Personel slotlarının lig kademesine göre listesi, açma ücretleri ve maaş ölçeği | TEST tarifle Y1; kesin tablo lig atlama tasarımıyla Aşama 8 öncesi |
+| Genel kurulun eşikleri, dört grubun türetilme kuralı, olağanüstü kurul koşulu | TEST kurallarla Y5; seçim kurallarıyla birlikte Aşama 6 öncesi |
+| Televizyon, ev modu (akşam telefonu, canlı yayına bağlanma), uyku ve yorgunluk | Havuzda; temel oda ve kart döngüsü oturduktan sonra (Y4'ten sonra) |
 
 Geliştirme aşamaları ve açık işlerin tek takip yeri [YOL_HARITASI.md](YOL_HARITASI.md) dosyasıdır.

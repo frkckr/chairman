@@ -1,6 +1,6 @@
 # Arayüz mimarisi ve görsel yön — tartışma kaydı (2026-10-25, masaüstü; dal `claude/stat-gorsel`)
 
-Durum: **tartışma sürüyor, karar yok.** Bu dosya oturumun bütün bulgularını ve Claude'un önerisini tutar; kullanıcı açık kararları verince
+Durum: **bilgi mimarisi kararları verildi (2026-10-26, YOL_HARITASI 50–51); görsel yön (§2, karar 46) görsel tura kadar açık.** Bu dosya oturumun bütün bulgularını ve Claude'un önerisini tutar; kullanıcı açık kararları verince
 ilgili ana belgelere (OYUN_TASARIMI §2 ve §13, STIL_REHBERI §3, §5, §7, CLAUDE.md) işlenir, program sırası YOL_HARITASI'na yazılır.
 Kullanıcının sözü (2026-10-25): önce oyun mantığı ve ekran akışı planlanır, görsel düzenleme sonra; "önce şunu düşünelim: menüler hep odadan
 mı yürüyecek, ara ekranlar neler, başkan puan görmez ama istatistik görebilir; nasıl görür; görevler telefonda mı, birine mi paslanır".
@@ -99,6 +99,8 @@ artınca). **Alınmayanlar:** sürekli yan menü, "Görevler" listesi, çok seç
 ## 4. Açık kararlar (kullanıcı)
 
 > **2026-10-26:** görsel tarz ve dış varlık (7) görsel tura kadar ertelendi (YOL_HARITASI 49). Kullanıcı istekleriyle kapananlar (karar 50, H2'de uygulanır): 2'nin mali yarısı — Kasa düğmesi kalkar, mali bilgi mali işler müdürünün raporuyla dosyaya gelir (Kadro sekmesi açık); 3 — kişiye (hoca, yardımcı, müdür) soru ve görüşme isteği zaman bedelli girişim. Öbürleri açık.
+
+> **2026-10-26 gece (Y0, karar 51):** kalan noktalar kapandı — 1 bilgisayar nesnesi yok; 2'nin kalanı Kadro sekmesi Dosya'da (oyuncu dosyası: sert veri ve kartlardan biriken notlar); 4 ziyaretçi odaya gelir, kapıda konular açık meselelerle sınırlı; 5 oyuncu satırında yalnız gözlenebilir sayılar; 6 haftalık ritim OYUN_TASARIMI §6'da, gazete Pazartesi sabahı masada. Yalnız 7 (görsel) açık.
 
 1. Bilgisayar nesnesi yok (öneri: yok).
 2. Kadro ve Mali dosyada; Kasa düğmesi Mali sekmesine taşınır.

@@ -1,6 +1,6 @@
 # Chairman — teknik plan
 
-Son güncelleme: 2026-10-23 (F0: §8'e kariyer–maç bağlantısının planı, §9'a lig TEST tarifi; önceki: 2026-10-22 A temizliği — `git show tur/p2:TEKNIK_PLAN.md`). Bu belge mevcut prototipten hedef kariyer oyununa geçiş planıdır. “Hedef” bölümleri uygulanmış özellik anlamına gelmez. Oyun kuralları [OYUN_TASARIMI.md](OYUN_TASARIMI.md), iş sırası [YOL_HARITASI.md](YOL_HARITASI.md) içindedir. 2026-10-02 karar/içerik/sunum geçişi 2.8G–2.8K ile uygulandı (o gün içerik sürümü 3, kayıt sürümü 5; bugün kayıt sürümü 6, içerik sürümü 4; F1'de kayıt 7); ayrıntı §5, §6 ve §10'daki “Uygulanan (2.8G–2.8K)” notlarındadır.
+Son güncelleme: 2026-10-26 gece (Y0: §3 kayıt sürümü zinciri ve yönetim omurgasının hedef alanları, §6 beş katmanın kayıt defterlerine eşlemesi, dosya şablonu sözleşmesi, pazarlık kartı, kişi modelinin veri kuralı, maç olayından dosyaya, §9 genel kurul; hepsi hedef, YOL_HARITASI 51–52). Önceki: 2026-10-23 (F0: §8'e kariyer–maç bağlantısının planı, §9'a lig TEST tarifi; önceki: 2026-10-22 A temizliği — `git show tur/p2:TEKNIK_PLAN.md`). Bu belge mevcut prototipten hedef kariyer oyununa geçiş planıdır. “Hedef” bölümleri uygulanmış özellik anlamına gelmez. Oyun kuralları [OYUN_TASARIMI.md](OYUN_TASARIMI.md), iş sırası [YOL_HARITASI.md](YOL_HARITASI.md) içindedir. 2026-10-02 karar/içerik/sunum geçişi 2.8G–2.8K ile uygulandı (o gün içerik sürümü 3, kayıt sürümü 5; bugün kayıt sürümü 6, içerik sürümü 4; F1'de kayıt 7); ayrıntı §5, §6 ve §10'daki “Uygulanan (2.8G–2.8K)” notlarındadır.
 
 ## 1. Bugünkü yapı
 
@@ -153,6 +153,24 @@ Nakit ufku (`nakitUfku(k, kulüp, gün)`) saklanmaz: bekleyen ödeme işleri ve 
 **Paylaşılan alanlar (F1).** `sezon`, `fikstur`, `oyuncular`, `maclar` komutlar arasında kopyalanmaz: `kariyerKomut` (`kariyerKopyasi`) onları derinlemesine dondurup yeni durumla paylaşır, öbür alanları derin kopyalar. Bu alanları değiştiren komut yeni nesne kurar (kopyala-yaz: `k.oyuncular={...k.oyuncular,[id]:{...p,gol:p.gol+1}}`); dondurulmuş nesneye yazmak katı kipteki dosyalarda (`js/fikstur.js`, `js/kariyer-kadro.js`) hata verir ve komut reddedilir, öbür dosyalarda sessizce yok sayılır — bu alanlara o dosyaların yardımcılarıyla dokunulur. Doğrulama dondurulmuş parçaların kendi denetimini önbelleğe alır (sade veri, oyuncu kaydının kendi alanları, fikstürün iç denetimi); kariyerin öbür alanlarına bağlı denetimler (kimlik sayacı, tarih, kulüp ve kadro bağları, maç günü işi) her seferinde yapılır, bellekteki doğrulama yüklemedekiyle aynı kararı verir. Ölçü: komut başına kopya + doğrulama tarayıcıda 5,6 → 0,9–1,1 ms (F1 öncesi 0,14 ms; kayıt 120 KB). Gözlem her oyun dakikasında bir komut çalıştırdığı için önemlidir.
 
 Gelecekteki ödeme ayrı bir liste değil, takvimdeki `odeme` türü iştir; zamanı gelince bir kez para hareketine dönüşür. Böylece mevcut nakit ile henüz ödenmemiş taahhütler ayrı durur (`maliDurum`). Hareket listesi uzun kariyerde büyür; dönem özetlerine sıkıştırma kayıt boyutu ölçüldüğünde ele alınır.
+
+### Hedef: yönetim omurgasının verisi (Y0, 2026-10-26)
+
+**Kayıt sürümü zinciri:** H2 10 (kişiler ve yazışma), H3 11 (sezon arşivi), Y1 12 (omurga). Her biri düz veri geçişidir (`KAYIT_GECISLERI`, §5); önceki sürümün örnek kayıtları kural dosyasına dokunmadan önce bugünkü kodla üretilir (G2 ve H2-0 emsali); `ESKI_KAYIT_SINIRI` 8 kalır. Kuralların ürün tarafı [OYUN_TASARIMI §2, §4, §10](OYUN_TASARIMI.md#yönetim-omurgası-beş-katman); program `araclar/plan/y-program.md`.
+
+Hedef alanlar (anlamlar bağlayıcı, adlar Y1'de kod incelenerek seçilir):
+
+| Bilgi | Kayıttaki karşılığı |
+|---|---|
+| Kişinin gündemi | Kişide liste: tür, hedef (kişi, oyuncu ya da konu kimliği), şiddet, açılış tarihi; sezon içinde değişir; metin yazılmaz |
+| Kişinin gizli yetenekleri | Konu başına isabet ve işi yürütme yeteneği (`hoca.bilgi` bunun özel hâlidir); TEST kutusu dışında görünmez |
+| Hafıza | Yeni alan yok: `gecmis` kayıtları ve söz kaydı kişi kimliğiyle saf işlevle okunur |
+| Tutum | Saklanmaz: hafızadan ve gündemden türeyen saf işlev; sayısı kayda ve ekrana girmez (§7 kipi) |
+| Personel slotu | Kulüpte rol → kişi kimliği; lig kademesine göre beklenen roller TEST tablosu; personelin sözleşmesi G2 biçiminde (`{maas, bitis}`); yönetim koltukları ayrı kalır |
+| Kaptan | Oyuncu kaydındaki kaptan bayrağı; oyuncu kişi kaydına dönüşmez, mesajı kaptan rolüyle yazılır |
+| Mesele (dosya) | `sablon`, `asama`, `sahip` (başkan ya da kişi), `karsiTaraf`, `sonTarih`; aşama geçmişi `gecmis` ve mesele olaylarından |
+| Pazarlık | Karşı tarafın rezervasyon fiyatı ve sabrı mesele verisinde gizli; ekibin iki önerisi kart verisinde; kayıtlı rastlantı yeniden çekilmez |
+| Rehber | Kişide tanışma kaydı (tarih, nasıl); “ara” yalnız tanışılmış kişiye açılır |
 
 ### Hedef: meseleler ve sahneler arası devamlılık
 
@@ -396,6 +414,32 @@ Sonuçlar ödeme işlerini iptal eder, taşır ya da yeni ödeme planlar; olası
 
 Sözler için muhatap, şart, son tarih, bilinirlik ve durum tutulur. İlişkiler tek bir herkesin paylaştığı popülerlik sayısı değildir; gerektiği kadar kişiye/gruba özgü tutulur.
 
+### Hedef: dosya şablonu, pazarlık ve kişi modeli (Y0, 2026-10-26; Y1–Y3)
+
+Beş katman ([OYUN_TASARIMI §2](OYUN_TASARIMI.md#yönetim-omurgası-beş-katman)) yeni bir motor değildir; bugünkü kayıt defterlerine oturur:
+
+| Katman | Kayıt defterleri |
+|---|---|
+| Dünya | `PAKETLER`, `GELISMELER` (`js/olay.js`), `OLAY_KAYNAKLARI`, takvim işleri, fikstür ve öbür maçlar |
+| Kişiler | `k.kisiler`, `MESAJ_GONDEREN`/`MESAJ_METIN`/`MESAJ_ROL`/`MESAJ_KAYNAKLARI` (`js/mesajlar.js`), söz (`js/soz.js`) |
+| Dosyalar | `js/mesele.js` (`MESELE_OLAYLARI`, `MESELE_KATEGORILERI`) ve şablon kayıt defteri (yeni, Y1) |
+| Kartlar | `KARAR_TURLERI`, `KATILIM_ETKILERI` (`js/ajanda.js`), tek kart (`js/ekran-kart.js`) |
+| Sonuç | `gecmis`, para hareketleri, `IS_SONRASI`, `MAC_SONUCU_EKLERI`, `SEZON_SONU_EKLERI` |
+
+**Dosya şablonu sözleşmesi.** Şablon, aşamaların sıralı listesidir; aşama türü üçtür:
+
+- **Kart:** bir `KARAR_TURLERI` türüne bağlanır; iki cevap, engel ve cevapsız sonuç o türün kendi kuralındadır. Kart sınıfı (fırsat, sorun, rutin, pazarlık) cevapsız kalmanın davranışını seçer; sonuç yine kartın yüzünde önceden yazar (`zamanAsimi`).
+- **Bekleme:** gizli `gelisme` işidir; süresi ve beklerken çalışan dünya kancası (rakip ilgisi, fiyat değişimi, haber) belirlenimcidir (`kadroRastgele(dunyaTohumu, anahtar)` kalıbı, G2).
+- **Devir:** `EKIP_GOREVLERI` işidir; sonucu kişinin o konudaki gizli yeteneğinden iyi, vasat ya da kötü çıkar ve onay kartıyla döner.
+
+Her aşamanın kayıp çıkışları ve kapanışı veridir; etkiler mevcut komutlardır (`isEkle`, `meseleOlay`, ödeme, söz, kadro yardımcıları). Şablon mekanik iskelettir; olay paketi (açılma koşulu, kişi seçimi, metin anahtarları) içeriktir ve aynı şablonu birçok paket kullanır ([OLAY_KUTUPHANESI §1](OLAY_KUTUPHANESI.md#1-kataloğun-kullanımı)). Yeni bir hikâye dili, ikinci ekonomi motoru ya da genel betik yorumlayıcısı kurulmaz (yukarıdaki sınır). Bir kez uygulama, kayıtta durumun yeniden üretilmemesi ve paylaşılan alanlarda kopyala-yaz sürer.
+
+**Pazarlık kartı.** Kartın iki seçeneği ekibin iki önerisidir; önerinin isabeti önerenin konu yeteneğinden gelir (karşı tarafın gizli sınırına uzaklık). Karşı tarafın cevabı yeni karttır (kabul, karşı teklif, teklif dışı hamle, kopma); zayıf teklif sabrı düşürür; kopma dosyayı kayıp çıkışına götürür ve karşı tarafın hafızasına yazılır. Teklif dışı hamle (taksit, sonraki satıştan pay) kendi iki cevaplı kartıdır. Serbest rakam girişi yoktur (kullanıcı kararı, 2026-10-26).
+
+**Kişi modeli.** Gündem kayıtta, hafıza geçmişten, tutum türetilir (yukarıdaki §3 hedef tablosu). Mesaj üslubunun seçimi metin şablonunda tutumdan okunur; kapıyı çalma sıklığı ve getirilen bilginin kalitesi kural katmanında okunur. Metin kayda yazılmaz (§7).
+
+**Maç olayından dosyaya.** Maç kaydının olaylarından (gol, kart, sakatlık, sonuç dizisi) koşulla dosya açan bir eşleme kayıt defteri kurulur; bugünkü `MAC_SONUCU_EKLERI` kancası (P12) onun tek satırıdır. Motor dosyalarına dokunulmaz; motor yalnız maç kaydını verir ([OYUN_TASARIMI §11](OYUN_TASARIMI.md#11-maçlar-mekânlar-ve-kulübün-büyümesi)).
+
 ## 7. Gerçek özellik ile bilgi arasındaki sınır
 
 Gizli futbolcu/teknik direktör değerleri motor ve değerlendirme mantığında kullanılabilir. Sunum katmanı rapor üretimi üzerinden bilgi alır; gizli toplam puan doğrudan arayüze taşınmaz.
@@ -501,6 +545,8 @@ Avrupa rakipleri ve dış transfer havuzu gereken ölçüde temsil edilir. Ayrı
 Tam uzun kariyer içeriğinden önce küçük geliştirici örnekleriyle kişi ayrılması/emekliliği, yerine yeni kişi gelmesi ve sezon/kademe geçişinde kimliklerin korunması sınanır (5.7). Bu denemeler Aşama 7–8 sistemlerinin tamamlandığı anlamına gelmez. Geçmiş kişiler, sözler ve sözleşmeler yeni sezona geçerken referanslarını korur.
 
 Başkanın durumları: taraftar, aday, görevde, görev dışında, yeniden aday ve kariyer sonu. Geçişler yetkileri değiştirir; ekran değiştirmek yetki kazandırmaz. Yeni yönetim görev dışındaki yıllarda da kulübün işlerini yürütür.
+
+**Hedef (Y5, 2026-10-26): genel kurul.** Sezon sonu kancası (`SEZON_SONU_EKLERI`) olağan genel kurulun takvim işini kurar. Dört grubun özeti (kasa, taraftar, soyunma odası, yönetim kurulu) kayda yazılmaz; kişi tutumlarından, mali kayıttan ve sonuçlardan saf işlevle türetilir. Güven oyunun sonucu geçmişe yazılır; kaybedilirse başkanın durum geçişi (görevde → erken seçim) Aşama 6'nın seçim sistemine bağlanır, o zamana dek TEST kaydıdır. Olağanüstü kurulun koşulu aynı özetten okunur ([OYUN_TASARIMI §4](OYUN_TASARIMI.md#genel-kurul-ve-güven-oyu)).
 
 Final kontrolü; başkanın kariyer durumu ve tanımlı en büyük Avrupa kupasının sonuç kaydını kullanır. Küçük kupa, rakibin başarısı veya eski başkanın yalnız taraftar olarak izlediği kulüp başarısı kendiliğinden başkanlık zaferi sayılmaz. Ayrıntılı özel durumlar final aşamasında kararlaştırılır. Başarı finali ile kupasız sonun aynı anda tetiklenmesi önlenir.
 
