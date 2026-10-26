@@ -29,11 +29,12 @@ function kariyerBaslat({tohum}={}){
   const k=kariyerOlustur({kayitSurumu:KARIYER_SURUM,dunyaTohumu:tohum,icerik:{surum:ICERIK_SURUM,baslangic:'bos'},kosullar:{},rastlanti:rastlantiBaslat(tohum),
     olaylar:{},sozler:{},haberler:[],gozlem:null,tarih:BASLANGIC_TARIHI,gunIciDakika:GUN_BASLANGICI,baskanId:D.baskanId,gorevDurumu:'gorevde',final:null,
     sonrakiNo:{kisi:2,is:1,hareket:1,mesele:1,olay:1,soz:1,oyuncu:1},meseleler:{},kulupler:D.kulupler,isler:{},gecmis:[],hareketler:[],kisiler:D.kisiler,
-    sezon:null,fikstur:[],maclar:{},oyuncular:{},macOkundu:[]});
+    sezon:null,fikstur:[],maclar:{},oyuncular:{}});
   /* ligin öbür kulüpleri: kimlik, ad, kısa ad (TEST: adın ilk üç harfi), kademe; başkan ve para yok */
   for(const t of LIG.takimlar)if(!k.kulupler[t.id])k.kulupler[t.id]={id:t.id,ad:t.ad,kisa:kulupKisaAd(t.ad),kademe:3,baskanId:null,acilisNakit:0,nakit:0};
   kadrolariKur(k,LIG);
   hocalariKur(k);   /* F3-a: her kulübün hocası (js/hoca.js) */
+  personelKur(k);   /* H2-c: yardımcı antrenör ve mali işler müdürü (TEST; js/yazisma.js) */
   const biz=k.kisiler[k.baskanId].kulupId;
   sezonKur(k,LIG,biz);
   sezonTakvimiKur(k,biz);

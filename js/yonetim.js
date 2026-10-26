@@ -116,7 +116,10 @@ EKIP_GOREVLERI.tavsiye={
    Başlatılan girişim geçmişe {tur:'girisim', id, tarih, dakika} yazılır; aynı girişim GIRISIM_ARALIGI gün içinde yeniden açılmaz ---- */
 const GIRISIMLER={};
 const GIRISIM_ARALIGI=7;                    // aynı girişimin yeniden açılabilmesi için geçmesi gereken gün (TEST değeri)
-const girisimYapildi=(k,id)=>k.gecmis.some(g=>g.tur==='girisim'&&g.id===id&&tarihKarsilastir(tarihEkle(g.tarih,GIRISIM_ARALIGI),k.tarih)>0);
+/* H2-c: girişim kendi aralığını taşıyabilir (yazışma konuları: 0 ya da 1 gün); yoksa GIRISIM_ARALIGI. Kişiye bağlı girişimde aralık o kişiyle sayılır
+   (hoca değişince yeni hocaya aynı gün sorulabilir) */
+const girisimYapildi=(k,id)=>{const G=GIRISIMLER[id],a=G&&G.aralik!==undefined?G.aralik:GIRISIM_ARALIGI,kid=G&&G.kisi?G.kisi(k):null;
+  return k.gecmis.some(g=>g.tur==='girisim'&&g.id===id&&(!kid||!g.kisiId||g.kisiId===kid)&&tarihKarsilastir(tarihEkle(g.tarih,a),k.tarih)>0);};
 function girisimListesi(k){
   const L=[];
   for(const [id,G] of Object.entries(GIRISIMLER)){const u=k.icerik.surum>=2&&!girisimYapildi(k,id)?G.uygun(k):false;if(u!==false)L.push({id,ad:G.ad,aciklama:G.aciklama(k),engel:u===true?null:u});}
@@ -126,9 +129,11 @@ function girisimBaslat(k,id){
   const g=girisimListesi(k).find(x=>x.id===id);
   if(!g)throw new Error(`Girişim şu an açılamaz: ${id}`);
   if(g.engel)throw new Error('Girişim başlatılamadı: '+g.engel);
-  const bilgi=GIRISIMLER[id].baslat(k);
-  k.gecmis.push({tur:'girisim',id,tarih:k.tarih,dakika:k.gunIciDakika});
-  return bilgi;
+  /* H2-c: baslat düz metin ya da {bilgi, kayit} döndürür; kayit ({kisiId, konu, isId, macId?}) girişimin geçmiş kaydına eklenir */
+  const r=GIRISIMLER[id].baslat(k),kayit={tur:'girisim',id,tarih:k.tarih,dakika:k.gunIciDakika},nesne=r&&typeof r==='object';
+  if(nesne&&r.kayit)Object.assign(kayit,r.kayit);
+  k.gecmis.push(kayit);
+  return nesne?r.bilgi:r;
 }
 
 /* yönetim alanlarının doğrulaması (kariyerDogrula EK_DENETIMLER üzerinden çağırır) */

@@ -141,10 +141,13 @@ async def bolum_1(tarayici, site, tum_hatalar):
     denetle("Telefon ana ekranla açılıyor; 'Kaldığın yer' özeti yok", "Mesajlar" in tel and "Canlı Skor" in tel and "Kaldığın" not in tel
             and await pg.query_selector('[data-eylem="devam"]') is None, tel[:80])
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
-    # N14 (kullanıcı kararı 2026-10-18): konuşma yoksa liste boş, boş durum yazısı yok (eskiden "Mesaj yok. Telefon sessiz.")
+    # N14 (kullanıcı kararı 2026-10-18): konuşma yoksa boş durum yazısı yok. H2-c: hoca ve yardımcı antrenör konu önerileriyle her zaman listede (mesajsız;
+    # önizlemede konunun açıklaması), bildirim yok
     msj = await pg.text_content(".tel-govde")
-    denetle("N14: Mesajlar boş: kişi yok, boş durum yazısı yok", await pg.query_selector(".tel-kisi") is None and await pg.query_selector(".tel-govde .tel-bos") is None
-            and "Mesaj yok" not in msj and "sessiz" not in msj, msj[:80])
+    kisiler = await pg.eval_on_selector_all(".tel-kisi", "L => L.map(b => b.textContent)")
+    denetle("N14, H2-c: Mesajlar'da hoca ve yardımcı (mesajsız, önizlemede konu açıklaması, okunmamış yok); boş durum yazısı yok",
+            len(kisiler) == 2 and any("Şükrü Hoca" in x for x in kisiler) and any("Tahsin" in x for x in kisiler) and all("Kadronun durumunu sorarsın" in x for x in kisiler)
+            and await pg.query_selector(".tel-kisi .tel-rozet") is None and await pg.query_selector(".tel-govde .tel-bos") is None and "Mesaj yok" not in msj and "sessiz" not in msj, " | ".join(kisiler)[:160])
     await pg.click('.tel [data-eylem="telEv"]')
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
     sk, skor = await pg.evaluate(TEK_SATIR_JS, ".od-telefonPanel"), await pg.text_content(".tel")
@@ -1586,14 +1589,21 @@ async def bolum_19(tarayici, site, tum_hatalar):
     await pg.wait_for_timeout(300)
     await pg.screenshot(path=str(ARAC / "son-akis-19-oda.png"))
     await pg.keyboard.press("Escape")
+    # H2-c (kullanıcı isteği 3): hocanın yorumu kendiliğinden gelmez; başkan sorar ("Maçı nasıl gördün?"), cevap birkaç saat sonra telefonda
     hid = await pg.evaluate("() => OYUN.kariyer.kulupler.demirkapi.hocaId")
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
     liste = await pg.text_content(".tel")
     await pg.click(f'.tel [data-eylem="telKisi"][data-kisi="{hid}"]')
     konusma = await pg.text_content(".tel")
-    okundu = await pg.evaluate(f"() => OYUN.kariyer.macOkundu.includes('{id13}')")
     yorum = await pg.evaluate(f"() => macYorumu(OYUN.kariyer, '{id13}').metin")
-    denetle("F3-b: telefonda hocanın maç yorumu (Şükrü Hoca'nın konuşmasında); konuşma açılınca okundu kaydı", "Şükrü Hoca" in liste and yorum in konusma and okundu, yorum)
+    oneri = await pg.query_selector('.tel [data-eylem="girisim"][data-girisim="yaz.teknikDirektor.mac"]')
+    denetle("H2-c: maçtan sonra hocanın konuşmasında kendiliğinden yorum yok; “Maçı nasıl gördün?” önerisi duruyor; listede hoca ve yardımcı",
+            "Şükrü Hoca" in liste and "Tahsin" in liste and yorum not in konusma and oneri is not None, konusma[:120])
+    await pg.click('.tel [data-eylem="girisim"][data-girisim="yaz.teknikDirektor.mac"]')
+    gonder = await pg.evaluate("""() => ({ giden: [...document.querySelectorAll('.tel .tel-giden')].map(e => e.textContent).join(' | '), mesaj: (document.querySelector('.od-mesaj') || {}).textContent || '',
+      kapali: [...document.querySelectorAll('.tel .tel-oneri button')].every(b => b.disabled), oneri: document.querySelectorAll('.tel .tel-oneri button').length })""")
+    denetle("H2-c: soru gitti — giden balon, şeritte “Mesaj gitti”; cevap gelene dek hocanın öbür konuları kapalı",
+            "Maçı nasıl gördün?" in gonder["giden"] and "Mesaj gitti" in gonder["mesaj"] and gonder["kapali"] and gonder["oneri"] > 0, str(gonder))
     await pg.keyboard.press("Escape")
     await pg.keyboard.press("Escape")
     await pg.click('.od-nesne[data-panel="ajanda"]')
@@ -1620,6 +1630,19 @@ async def bolum_19(tarayici, site, tum_hatalar):
         await pg.keyboard.press("Escape")
         await pg.keyboard.press("Escape")
     await pg.set_viewport_size({"width": 1180, "height": 1000})
+    # H2-c: İlerle beklenen cevapta durur (Pazar 09:30); cevap hocanın konuşmasında, metni maçın okumasıyla aynı; konuşma açılınca görüldü
+    await oda_ilerle(pg)
+    await pg.wait_for_function("() => OYUN.kariyer.tarih === '2026-11-29'", timeout=60000)
+    ozet = await pg.text_content(".od-mesaj")
+    await pg.keyboard.press("Digit1")
+    await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
+    await pg.click(f'.tel [data-eylem="telKisi"][data-kisi="{hid}"]')
+    kon2 = await pg.text_content(".tel")
+    c2 = await pg.evaluate(f"() => ({{ an: OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika, okunan: OYUN.kariyer.kisiler['{hid}'].okunan === simdikiAn(OYUN.kariyer) }})")
+    denetle("H2-c: İlerle cevapta durdu (Pazar 09:30, “Cevap geldi; telefonda.”); cevap hocanın konuşmasında, metni maçın okumasıyla aynı (macYorumu); konuşma açılınca görüldü",
+            "Cevap geldi" in ozet and c2["an"] == "2026-11-29 570" and yorum in kon2 and c2["okunan"], f"{c2} · {ozet[:90]}")
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("Escape")
     denetle("H2-b: büyük yazıda ve 800×600'de Son maç ve öbür maçın ayrıntısında yatay taşma ≤ 1 piksel (.tel-skor, .tel-ist, telefon gövdesi; olay satırı kutusunu aşmaz)",
             len(tasma) == 6 and all(t["ayrinti"] for _, t in tasma) and all(t["en"] <= 1 for _, t in tasma),
             " · ".join(f"{a}: {t['en']} ({t['n']} ölçüm)" for a, t in tasma))
@@ -1657,7 +1680,11 @@ async def bolum_19(tarayici, site, tum_hatalar):
       const T = [...A.querySelectorAll('.tel-ist tbody tr')].map(r => [...r.children].map(c => c.textContent)), B = macIstSatirlari(S.ist, macBeklenenGol(S.sutlar)).map(r => [String(r[1]), r[0], String(r[2])]);
       return {{ gol: A.querySelectorAll('.tel-olaylar[data-tur="gol"] .tel-olay').length, satir: b, skor: S.skor, tablo: JSON.stringify(T) === JSON.stringify(B),
         adlar: S.goller.concat(S.kartlar).every(g => A.textContent.includes(g.ad)), dk: mac.minuteLabel(), n: T.length }}; }}""")
+    # H2-c: maç telefonunda kişinin konuşması okunur ama konu önerileri (yazmak) gizli
+    await pg.evaluate("() => { MAC_TELEFON.T.ekran = 'konusma'; MAC_TELEFON.T.kisi = OYUN.kariyer.kulupler.demirkapi.hocaId; MAC_TELEFON.kapat(); MAC_TELEFON.ac(); }")
+    mt_oneri = await pg.evaluate("() => ({ konusma: !!document.querySelector('#macTelefon .tel-kisiBas'), oneri: document.querySelectorAll('#macTelefon .tel-oneri').length })")
     await pg.evaluate("() => MAC_TELEFON.kapat()")
+    denetle("H2-c: maç telefonunda hocanın konuşması açılır, konu önerileri (yazmak) gizli", mt_oneri["konusma"] and mt_oneri["oneri"] == 0, str(mt_oneri))
     denetle("H2-b (file://, kilit adım): santradan sonra maç telefonunda öbür maçın satırı dokunulur; ayrıntı canlı motordan: gol satırı satırdaki skor toplamı kadar, adlar ve 10 satırlık tablo x.m.sonucKaydi() ile aynı",
             bool(oid) and len(satir_id) == 8 and ca["gol"] == sum(ca["satir"]) == sum(ca["skor"]) and ca["tablo"] and ca["adlar"] and ca["n"] == 10,
             f"{oid} · bizim {ca['dk']}' · satır {ca['satir']} · {ca['gol']} gol satırı")
@@ -1810,6 +1837,95 @@ async def bolum_19b(tarayici, site, tum_hatalar):
       serit: document.getElementById('baskanDugmeleri').hidden, ortu: !document.getElementById('macHesap').hidden })""")
     denetle("H2-a: hükmen: 'Maçı izleme' kartı hemen hükmen 0–3 ile açtı (perde ve örtü yok, şerit gizli)",
             h["hukmen"] and h["skor"] == "0–3" and not h["perde"] and not h["ortu"] and h["serit"] and "hükmen" in h["kart"], f"{sure3:.1f} sn · {h['skor']}")
+    await pg.context.close()
+
+
+async def bolum_21(tarayici, site, tum_hatalar):
+    """H2-c: kişiye yazmak ve görüşme isteği — Görüşelim → İlerle (karar) → telefonda tek kart (Kabul et / Başka gün iste) → defterde randevu →
+    İlerle randevuda durur → Katıl → Öğrendiklerin; Başka gün iste; Duraklat'ta öneriler kapalı."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    hid = await pg.evaluate("() => OYUN.kariyer.kulupler.demirkapi.hocaId")
+    async def konusma_ac():
+        await pg.keyboard.press("Digit1")
+        await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
+        await pg.click(f'.tel [data-eylem="telKisi"][data-kisi="{hid}"]')
+    # Duraklat'ta öneriler kapalı
+    await pg.click(".od-duraklat")
+    await konusma_ac()
+    dur = await pg.evaluate("() => [...document.querySelectorAll('.tel .tel-oneri button')].map(b => b.disabled)")
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("Escape")
+    await pg.click(".od-duraklat")
+    denetle("H2-c: Duraklat açıkken konu önerileri kapalı", len(dur) > 0 and all(dur), str(dur))
+    await konusma_ac()
+    await pg.click('.tel [data-eylem="girisim"][data-girisim="yaz.teknikDirektor.gorusme"]')
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("Escape")
+    await oda_ilerle(pg)
+    await pg.wait_for_function("() => Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.karar === 'gorusmeOnerisi')", timeout=60000)
+    ozet = await pg.text_content(".od-mesaj")
+    kart = await pg.evaluate("() => { const x = Object.values(OYUN.kariyer.isler).find(y => y.veri && y.veri.karar === 'gorusmeOnerisi'); return { id: x.id, tarih: x.veri.oneri.tarih, dakika: x.veri.oneri.dakika }; }")
+    await konusma_ac()
+    kenar = await pg.eval_on_selector_all(".tel-cevap .kk-kenar", "L => L.map(b => b.textContent)")
+    denetle("H2-c: Görüşelim → İlerle cevapta karar diye durdu; telefonda tek kart, kenarlar “Kabul et” / “Başka gün iste”",
+            "karar" in ozet and len(kenar) == 2 and "Kabul et" in kenar[0] and "Başka gün iste" in kenar[1], f"{ozet[:70]} · {kenar} · {kart}")
+    await pg.screenshot(path=str(ARAC / "son-akis-21-kart.png"))
+    await pg.focus('.tel-cevap .kk-kart')
+    await pg.keyboard.press("ArrowLeft")
+    await pg.keyboard.press("Enter")
+    await pg.wait_for_function("() => Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.etki === 'ekipGorusmesi')", timeout=10000)
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("Escape")
+    await pg.click('.od-nesne[data-panel="ajanda"]')
+    await pg.wait_for_selector(".dft", timeout=10000)
+    await pg.click(f'[data-eylem="gun"][data-tarih="{kart["tarih"]}"]')
+    dft = await pg.text_content(".dft")
+    await pg.keyboard.press("Escape")
+    denetle("H2-c: kartı sola bırakmak (←, Enter) kabul eder: defterde öneri gününde “Görüşme: Şükrü Hoca”", "Görüşme: Şükrü Hoca" in dft, dft[dft.find("Görüşme"):][:60] if "Görüşme" in dft else dft[:80])
+    for _ in range(6):
+        if await pg.evaluate(f"() => OYUN.kariyer.tarih === '{kart['tarih']}' && OYUN.kariyer.gunIciDakika === {kart['dakika']}"):
+            break
+        await oda_ilerle(pg)
+    # randevuya katıl: defterde işe dokunmak onu seçer, alt şeritte "Katıl ▸" (onay adımı varsa "Onayla ▸")
+    rv = await pg.evaluate("() => Object.values(OYUN.kariyer.isler).find(x => x.veri && x.veri.etki === 'ekipGorusmesi').id")
+    await pg.click('.od-nesne[data-panel="ajanda"]')
+    await pg.wait_for_selector(".dft", timeout=10000)
+    await pg.click(f'.dft [data-is="{rv}"]:not([data-eylem])')
+    katil = await pg.text_content(".od-ana")
+    await pg.click(".od-ana")
+    if await pg.query_selector('.od-ana[data-eylem="yap"]:has-text("Onayla")'):
+        await pg.click(".od-ana")
+    await pg.keyboard.press("Escape")
+    try:
+        await pg.wait_for_function("() => OYUN.kariyer.gecmis.some(g => g.tur === 'is' && g.sonuc && g.sonuc.durum === 'yapildi' && /ile görüştün/.test(g.sonuc.bilgi || ''))", timeout=20000)
+    except Exception:
+        print("  (tanı) " + str(await pg.evaluate("""() => ({ an: OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika, ana: (document.querySelector('.od-ana') || {}).textContent,
+          mesaj: (document.querySelector('.od-mesaj') || {}).textContent, isler: Object.values(OYUN.kariyer.isler).filter(x => x.tur === 'ajanda').map(x => x.id + ' ' + x.tarih + ' ' + x.dakika + ' ' + x.veri.baslik),
+          son: OYUN.kariyer.gecmis.slice(-3).map(g => g.tur + ' ' + (g.isTuru || '') + ' ' + JSON.stringify(g.sonuc || {}).slice(0, 120)) })""")) + f" · katıl düğmesi: {katil}")
+    await pg.click('.od-nesne[data-panel="ajanda"]')
+    await pg.wait_for_selector(".dft", timeout=10000)
+    await pg.click(f'.dft [data-is="{rv}"]:not([data-eylem])')   # geçmiş kayda dokununca ayrıntı: "Öğrendiklerin"
+    dft2 = await pg.text_content(".dft")
+    await pg.keyboard.press("Escape")
+    denetle("H2-c: İlerle randevuda durdu (alt şeritte Katıl), Katıl → defterde öğrendiklerin (“… ile görüştün”)", "Katıl" in katil and "ile görüştün" in dft2, dft2[dft2.find("görüştün") - 40:][:100] if "görüştün" in dft2 else dft2[:80])
+    await pg.context.close()
+    # Başka gün iste: kart sağa (→, Enter) — yeni cevap beklenir, kart kalkar
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await konusma_ac()
+    await pg.click('.tel [data-eylem="girisim"][data-girisim="yaz.teknikDirektor.gorusme"]')
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("Escape")
+    await oda_ilerle(pg)
+    await pg.wait_for_function("() => Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.karar === 'gorusmeOnerisi')", timeout=60000)
+    await konusma_ac()
+    await pg.focus('.tel-cevap .kk-kart')
+    await pg.keyboard.press("ArrowRight")
+    await pg.keyboard.press("Enter")
+    await pg.wait_for_function("() => !Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.karar === 'gorusmeOnerisi')", timeout=10000)
+    b = await pg.evaluate("() => ({ cevap: Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.gelisme === 'yazismaCevap' && x.veri.deneme === 1), giden: [...document.querySelectorAll('.tel .tel-giden')].map(e => e.textContent).join(' | ') })")
+    denetle("H2-c: kartı sağa bırakmak “Başka gün iste”: kart kalkar, yeni cevap beklenir (deneme 1); konuşmada giden cevap", b["cevap"] and "Başka gün iste" in b["giden"], str(b))
     await pg.context.close()
 
 
@@ -2025,6 +2141,9 @@ async def ana():
         if sec("20"):
             print("\n20. Maçı bitir anında: http'de işçiler, sonuç ikizi (G1-e)")
             await bolum_20(tarayici, site, tum_hatalar)
+        if sec("21"):
+            print("\n21. Kişiye yazmak ve görüşme isteği (H2-c)")
+            await bolum_21(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

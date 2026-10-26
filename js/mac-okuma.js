@@ -13,8 +13,7 @@
      H2-b (2026-10-26): macIstSatirlari(ist, xg) ve macAyrintisi(sonuç, adBul) — Canlı Skor'un ayrıntısı (goller, kartlar, sakatlıklar, 10 satırlık
        tablo); bizim maç ve öbür maçlar, canlı ve kayıttan aynı okuma (js/ekran-telefon.js telMacAyrinti).
    Gizli puan kuralı (OYUN_TASARIMI §9): yetenek puanı, hocanın bilgisi ya da ısrarı yazılmaz; gözlenebilir sayılar ve beklenen gol yazılır (karar 34).
-   Telefon: hocanın yorumu maç günü MAC_SONRASI_DK sonra, hocanın konuşmasında "gelen" mesajdır (MESAJ_KAYNAKLARI, js/mesajlar.js); okundu bilgisi
-     k.macOkundu (maç kimlikleri; macOkunduIsaretle komutu, oda ve balkonda konuşma açılınca; maçta değişmez).
+   Telefon (H2-c'den beri): hocanın yorumu başkan sorunca gelir (js/yazisma.js); kendiliğinden mesaj ve okundu listesi yok.
    METİNLER TEST TASLAĞIDIR (kullanıcı kararı 2026-10-23, karar 35): Claude yazdı, kullanıcı YORUM_METIN ve GOZLEM_NOTU_METIN'i istediği gibi değiştirir. */
 'use strict';
 const MAC_SANS_ESIK=0.5;            // beklenen gol farkı: bunun altında "dengeli"
@@ -22,7 +21,6 @@ const MAC_SANS_ESIK=0.5;            // beklenen gol farkı: bunun altında "deng
    12 takım-maç; ortalamalar konumsal 0,085 · ilişkisel 0,117 · dengeli 0,153 · dikey 0,174 · kanat ve orta 0,194 · direkt 0,262). Motor ya da
    kadrolar değişince yeniden ölçülür (araclar/plan/f3-uygulama.md) */
 const TARZ_UZUN_PAY={konumsal:[0.05,0.13],iliskisel:[0.09,0.15],dengeli:[0.09,0.22],dikey:[0.13,0.22],kanatOrta:[0.14,0.27],direkt:[0.20,0.33]};
-const MAC_OKUNDU_EN_COK=40;         // k.macOkundu'da tutulan son maç sayısı
 /* sayının Türkçe yazımı (1,25) */
 const okSayi=(x,n=1)=>(+x).toFixed(n).replace('.',',');
 
@@ -38,11 +36,11 @@ function macOkumasi(k,macId,kulupId){
   const skor=[s.skor[t],s.skor[r]],xg=Array.isArray(s.xg)?[s.xg[t],s.xg[r]]:[0,0],dg=skor[0]-skor[1],dx=xg[0]-xg[1];
   const sans=Math.abs(dx)<MAC_SANS_ESIK?'dengeli':dx>0?(dg>0?'hakli':'sanssiz'):(dg<0?'hakli':'sansli');
   /* öne çıkan: kulübün oyuncusu — gol (kendi kalesine sayılmaz) + şutlarının beklenen golü; şutsuz maçta yok */
-  const P=new Map(),ekle=(id,g,x)=>{if(!id)return;const o=P.get(id)||{g:0,x:0};o.g+=g;o.x+=x;P.set(id,o);};
-  for(const g of s.goller||[])if(g.takim===t&&!g.kk)ekle(g.id,1,0);
-  for(const x of s.sutlar||[])if(x.takim===t)ekle(x.id,0,x.pen?MAC_PENALTI_XG:x.xg);
+  const P=new Map(),ekle=(id,g,x,n)=>{if(!id)return;const o=P.get(id)||{g:0,x:0,n:0};o.g+=g;o.x+=x;o.n+=n;P.set(id,o);};
+  for(const g of s.goller||[])if(g.takim===t&&!g.kk)ekle(g.id,1,0,0);
+  for(const x of s.sutlar||[])if(x.takim===t)ekle(x.id,0,x.pen?MAC_PENALTI_XG:x.xg,1);
   let en=null;for(const [id,o] of P){const v=o.g+o.x;if(!en||v>en.v||(v===en.v&&id<en.id))en={id,v,o};}
-  const oneCikan=en&&k.oyuncular[en.id]?{id:en.id,ad:k.oyuncular[en.id].ad,neden:en.o.g>0?(en.o.g>1?'goller':'gol'):'firsat',gol:en.o.g}:null;
+  const oneCikan=en&&k.oyuncular[en.id]?{id:en.id,ad:k.oyuncular[en.id].ad,neden:en.o.g>0?(en.o.g>1?'goller':'gol'):'firsat',gol:en.o.g,sut:en.o.n,xg:Math.round(en.o.x*100)/100}:null;   /* H2-c: sut ve xg yardımcının rakamları için */
   const sahiplik=Array.isArray(I.sahiplik)?[I.sahiplik[t],I.sahiplik[r]]:[0.5,0.5];
   return{macId,hafta:f.hafta,tarih:f.tarih,t,rakipId:t?f.ev:f.konuk,skor,xg,hukmen:s.hukmen?(s.hukmen==='cift'?'cift':(s.hukmen==='ev')===(t===0)?'kayip':'galip'):null,
     ist:{sut:c(I.sut),isabet:c(I.isabet),korner:c(I.korner),faul:c(I.faul),sari:c(I.sari),kirmizi:c(I.kirmizi),ofsayt:c(I.ofsayt),pas,pasTamam:c(I.pasTamam),uzunPas:uzun,sahiplik},
@@ -126,24 +124,5 @@ function macAyrintisi(s,adBul){
     sakat:L(s.sakatliklar).filter(x=>x.derece!=='agri').map(x=>({t:t(x),dk:dk(x),ad:ad(x),derece:x.derece,gun:x.gun|0})),
     satirlar:macIstSatirlari(s.ist,xg)};
 }
-/* okundu: hocanın maç yorumu görüldü (oda ve balkonda konuşma açılınca). Yalnız oynanmış maç; liste son MAC_OKUNDU_EN_COK maçla sınırlı */
-function macOkunduIsaretle(k,macId){
-  if(!k.maclar[macId]||k.macOkundu.includes(macId))return;
-  k.macOkundu=k.macOkundu.concat([macId]).slice(-MAC_OKUNDU_EN_COK);
-}
-/* telefon: hocanın yorumu, maç akşamı hocanın konuşmasında (başkanın kulübünün son MAC_OKUNDU_EN_COK maçı) */
-MESAJ_KAYNAKLARI.push(k=>{
-  const biz=(k.kisiler[k.baskanId]||{}).kulupId,L=[];if(!biz||!k.fikstur)return L;
-  const simdi=simdikiAn(k),oku=new Set(k.macOkundu||[]);
-  for(const f of k.fikstur){if(!k.maclar[f.id]||(f.ev!==biz&&f.konuk!==biz))continue;
-    const dk=Math.min(1439,f.dakika+MAC_SONRASI_DK),y=macYorumu(k,f.id),an=anDakika(f.tarih,dk);   /* gün sınırı: geç saatteki maçta 23:59 */
-    if(y&&an<=simdi)L.push({kisiId:y.kisiId,tarih:f.tarih,dakika:dk,metin:y.metin,yeni:!oku.has(f.id),okunacak:f.id});}
-  return L.slice(-MAC_OKUNDU_EN_COK);
-});
-/* doğrulama (EK_DENETIMLER): okundu listesi oynanmış maç kimlikleri */
-function macOkumaDogrula(k,h){
-  if(!Array.isArray(k.macOkundu)){h.push('Okunan maç listesi (macOkundu) yok');return;}
-  if(k.macOkundu.length>MAC_OKUNDU_EN_COK||new Set(k.macOkundu).size!==k.macOkundu.length)h.push('Okunan maç listesi uzun ya da tekrarlı');
-  for(const id of k.macOkundu)if(!(k.maclar||{})[id])h.push(`Okunan maç ${id} oynanmamış`);
-}
-EK_DENETIMLER.push(macOkumaDogrula);
+/* H2-c (2026-10-26, kullanıcı isteği 3): hocanın maç akşamı kendiliğinden gelen yorumu (MESAJ_KAYNAKLARI) ve okundu listesi (k.macOkundu) kalktı. Yorumu
+   başkan sorunca hoca yazar (js/yazisma.js 'Maçı nasıl gördün?'); macYorumu aynı şablondur. P12'nin kötü gidiş mesajları değişmez */

@@ -33,7 +33,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   const tlYazi=kurus=>paraYazi(kurus).replace(/,\d\d ₺$/,' ₺');
   const ETIKET={zorunlu:'Zorunlu',ertelenebilir:'Ertelenebilir',istege:'İsteğe bağlı'};
   const DURUM={bekliyor:'',yapildi:'Yapıldı',kacirildi:'Kaçırıldı',ertelendi:'Ertelendi',cevapsiz:'Cevapsız',tamamlandi:''};
-  const ROL={baskan:'başkan',teknikDirektor:'teknik direktör',yonetici:'yönetici',eskiBaskan:'eski başkan'};
+  const ROL={baskan:'başkan',teknikDirektor:'teknik direktör',yardimciAntrenor:'yardımcı antrenör',maliMudur:'mali işler müdürü',yonetici:'yönetici',eskiBaskan:'eski başkan'};
   const NESNE={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',kasa:'Kasa'};
   const testAcik=()=>!!ayarlar.test&&typeof testOnizleme==='function';
   /* test bilgisi: küçük TEST simgesi; üzerine gelince, odakta ya da tıklayınca altında kutu açılır (salt okunur, kariyeri değiştirmez) */
@@ -171,8 +171,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     /* bu açılışta yeni gelenler "yeni" diye işaretli kalır */
     yeniIsaret=new Set(c?c.mesajlar.filter(m=>m.yeni).map(m=>m.meseleId+':'+m.sira):[]);
     if(c)for(const id of c.meseleler){const m=k.meseleler[id];if(m&&m.olaylar.length>m.gorulen)try{komut(x=>meseleGoruldu(x,id));}catch(e){mesaj=e.message;}}
-    /* F3-b: hocanın maç yorumu okundu (js/mac-okuma.js) */
-    if(c&&c.okunacak.length&&typeof macOkunduIsaretle==='function')try{komut(x=>{for(const id of c.okunacak)macOkunduIsaretle(x,id);});}catch(e){mesaj=e.message;}
+    /* H2-c: yazışmanın yeni cevabı görüldü (kişinin okunan anı; js/yazisma.js) */
+    if(c&&c.mesajlar.some(m=>m.yeni&&m.meseleId===null)&&typeof yazismaGoruldu==='function')try{komut(x=>yazismaGoruldu(x,anahtar));}catch(e){mesaj=e.message;}
   }
 
   /* ---- ajanda (2.8M): iki sayfalı açık defter (çizim js/ekran-defter.js). Sol sayfa hafta, sağ sayfa seçili günün saatleri; kayda tıklayınca
@@ -310,7 +310,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* sıradaki durak ve alt şerit */
   function durakYazi(o){
     const t=anTarih(o.hedef),an=tarihKisa(t.tarih)+' '+saatYazi(t.dakika);
-    return an+(o.neden==='sonCevap'?' · son cevap saati: '+o.durak.veri.baslik:o.neden==='haber'?' · beklediğin görüş gelecek':o.neden==='cevapsiz'?' · cevap vermediğin karar kapanır':o.durak?' · '+o.durak.veri.baslik:o.neden==='cakisma'?' · günün işleri çakışıyor, seçim gerekecek':' · bekleyen rutin işler');
+    return an+(o.neden==='sonCevap'?' · son cevap saati: '+o.durak.veri.baslik:o.neden==='haber'?(o.haberIsi&&o.haberIsi.tur==='gelisme'?' · beklediğin cevap gelecek':' · beklediğin görüş gelecek'):o.neden==='cevapsiz'?' · cevap vermediğin karar kapanır':o.durak?' · '+o.durak.veri.baslik:o.neden==='cakisma'?' · günün işleri çakışıyor, seçim gerekecek':' · bekleyen rutin işler');
   }
   /* 2.8Q: defterde seçili, bugün bekleyen randevu ya da karar; eylemleri alt şeritte */
   const seciliIs=()=>acik==='ajanda'&&secili&&ajandaGun===k.tarih?bugun().find(r=>r.id===secili&&r.tur==='ajanda'&&r.durum==='bekliyor')||null:null;
@@ -522,7 +522,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       else if(g.isTuru==='hatirlatma'&&g.sonuc)p.push(g.sonuc.metin);
     }
     const y=r.neden==='karar'?kararYeri():null;
-    const bas=r.neden==='karar'?kararMetni(y,'Telefon: karar gerektiren bir haber geldi.','Masada yeni dosya: karar bekleyen bir konu açıldı.','Yeni bir gelişme var; dosyada.'):r.neden==='haber'?'Beklediğin görüş geldi; dosyada.':r.neden==='sonCevap'?'Son cevap saati geldi; karar bekliyor. Cevap vermeden ilerlersen kartta yazan sonuç işler.':r.neden==='cevapsiz'?'Cevap vermediğin karar kartta yazan sonuçla kapandı.':r.neden==='randevu'?'Sıradaki randevuya gelindi.':r.neden==='cakisma'?'Günün işleri çakışıyor; ajandadan seçim yap.':'Bekleyen rutin işler işlendi.';
+    const bas=r.neden==='karar'?kararMetni(y,'Telefon: karar gerektiren bir haber geldi.','Masada yeni dosya: karar bekleyen bir konu açıldı.','Yeni bir gelişme var; dosyada.'):r.neden==='haber'?(r.biten.some(g=>g.sonuc&&g.sonuc.yazisma)?'Cevap geldi; telefonda.':'Beklediğin görüş geldi; dosyada.'):r.neden==='sonCevap'?'Son cevap saati geldi; karar bekliyor. Cevap vermeden ilerlersen kartta yazan sonuç işler.':r.neden==='cevapsiz'?'Cevap vermediğin karar kartta yazan sonuçla kapandı.':r.neden==='randevu'?'Sıradaki randevuya gelindi.':r.neden==='cakisma'?'Günün işleri çakışıyor; ajandadan seçim yap.':'Bekleyen rutin işler işlendi.';
     return bas+(haberSayisi()&&!y&&r.neden!=='haber'?' Telefonda yeni haber var.':'')+(izler().yeniHaber?' Masada gazete var.':'')+(p.length?' '+p.join(' · '):'');
   }
   function ilerleEylem(){
@@ -578,7 +578,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='gozlemSurdur'){if(gozlemAcik(k)){acik=null;mesaj='Gözleme devam ediyorsun.';izlemeBaslat();ciz();}}
     else if(ey==='gozlemBirak'){izleme=null;try{const n=komut(x=>gozlemBitir(x));mesaj='Gözlemi bıraktın.'+(n?' '+n:'');ciz();}catch(x){hataGoster(x);}}
     else if(ey==='tavsiye'){try{mesaj=komut(x=>tavsiyeIste(x,id));ciz();}catch(x){hataGoster(x);}}
-    else if(ey==='girisim'){try{mesaj=komut(x=>girisimBaslat(x,b.dataset.girisim));secili=null;ajandaGun=k.tarih;ajandaHafta=0;ciz();}catch(x){hataGoster(x);}}
+    else if(ey==='girisim'){try{mesaj=komut(x=>girisimBaslat(x,b.dataset.girisim));secili=null;ajandaGun=k.tarih;ajandaHafta=0;telAlta=true;ciz();}catch(x){hataGoster(x);}}   /* H2-c: gönderince konuşma alta kayar */
     else if(ey==='test'){ayarlar.test=!ayarlar.test;ayarlar.kaydet();ciz('[data-eylem="test"]');}
     else if(ey==='yazi'){ayarlar.yazi=b.dataset.yazi;ayarlar.kaydet();ciz('[data-eylem="yazi"][data-yazi="'+ayarlar.yazi+'"]');}
     /* U1: maç hızı ve önemli anlarda normal hız (js/arayuz.js izlemeHizSec ve MAC_HIZ aynı seçimi okur) */

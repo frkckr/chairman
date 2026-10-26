@@ -173,8 +173,11 @@ function hocaDegistir(k,kulupId,aday){
   if(!eski)throw new Error(`Hoca değiştirilemedi: ${c.ad} kulübünün hocası yok`);
   if(h.length)throw new Error('Hoca değiştirilemedi: '+h.join('; '));
   /* eski hocaya verilen süre (söz) iptal olur: söz bozulur, bağlı konu adımı kalmadıysa kapanır (iş tamamlanmadığı için IS_SONRASI çalışmaz) */
-  const sure=Object.values(k.isler).filter(x=>x.veri&&x.veri.hocaSuresi===eski.id);
-  for(const x of sure)isIptal(k,x.id,`${eski.ad} görevden ayrıldı`);
+  /* H2-c: eski hocaya bekleyen soru, görüşme önerisi ve randevu (muhatap) ile soranı ayrılan hoca olan karar da düşer (OYUN_TASARIMI §2: şartları
+     değişmiş karar güncel koşula geçirilir; bugün hocanın transfer isteği). Onaylanmış istekten doğan imza sürer (soranı yok) */
+  const sure=Object.values(k.isler).filter(x=>x.veri&&(x.veri.hocaSuresi===eski.id||x.veri.muhatap===eski.id||x.veri.soran===eski.id));
+  for(const x of sure){const v=x.veri,b=v.baslik;isIptal(k,x.id,`${eski.ad} görevden ayrıldı`);
+    if(x.tur==='ajanda'&&v.karar&&v.meseleId&&k.meseleler[v.meseleId])meseleOlay(k,v.meseleId,'kisiAyrildi',{kisiId:eski.id,baslik:b});}
   if(sure.length){sozDegerlendir(k,null);meseleDegerlendir(k);olayDurumGuncelle(k);}
   eski.durum='ayrildi';
   const id=hocaKur(k,kulupId,{ad:aday.ad,tarz:aday.tarz,bilgi:aday.bilgi,israr:aday.israr,dogumTarihi:aday.dogumTarihi});

@@ -29,7 +29,8 @@ const MESELE_OLAYLARI={
   odeme:(k,p)=>`${p.aciklama}: ${paraYazi(p.tutar)} ${p.tutar<0?'ödendi':'kasaya girdi'}.`,
   kapandi:()=>'Konu kapandı; bekleyen adım kalmadı.',
   sureUzadi:(k,p)=>`Başka bir işteydin; “${p.baslik}” için son cevap saati ${saatYazi(p.dakika)} oldu.`,
-  ekipAyrildi:(k,p)=>`${kisiAdi(k,p.kisiId)} görevden ayrıldığı için iş sana döndü.`
+  ekipAyrildi:(k,p)=>`${kisiAdi(k,p.kisiId)} görevden ayrıldığı için iş sana döndü.`,
+  kisiAyrildi:(k,p)=>`${kisiAdi(k,p.kisiId)} görevden ayrıldı; “${p.baslik}” düştü.`   /* H2-c: soranı ayrılan karar (js/hoca.js hocaDegistir) */
 };
 /* dosyada konunun kategorisi: mesele türü → [ad, simge harfi]; içerik dosyaları ekler. Tanımsız tür 'Kulüp' sayılır */
 const MESELE_KATEGORILERI={};

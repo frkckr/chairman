@@ -19,7 +19,10 @@
      sözleşmeler o ay başında TEST ölçekle kurulur, kadrolar 22'ye tamamlanır).
    Sürüm 8 (F3, 2026-10-24): kadrosu olan her kulübün hocası (kişi, rol teknikDirektor, hoca {tarz, bilgi, israr}; kulup.hocaId; js/hoca.js);
      maclar girdisinde sutlar, xg ve ilk11 (js/mac-sonuc.js). Sürüm 7 kayıtları dönüştürülmez (hoca ve maçın okunması kariyere geçti). */
-const KARIYER_SURUM=9;
+/* Sürüm 10 (H2-c, 2026-10-26): başkanın kulübünde TEST yardımcı antrenör ve mali işler müdürü (rol yardimciAntrenor, maliMudur; js/yazisma.js), kişide
+   isteğe bağlı okunan (an; konuşmanın en son açıldığı an); macOkundu kalktı (hocanın otomatik maç yorumu kalktı). Sürüm 9 kaydı geçişle açılır
+   (js/kayit.js KAYIT_GECISLERI[9]). */
+const KARIYER_SURUM=10;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */

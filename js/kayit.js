@@ -42,6 +42,21 @@ KAYIT_GECISLERI[8]=v=>{
   }
   return v;
 };
+/* H2-c (2026-10-26): 9 → 10 — kişiler ve yazışma (YOL_HARITASI karar 50). macOkundu kalkar (hocanın otomatik maç yorumu kalktı); başkan görevdeyse ve
+   kulübünde o rolde aktif kişi yoksa yardımcı antrenör ve mali işler müdürü eklenir (ad ve doğum tarihi js/yazisma.js PERSONEL_TEST'in donmuş kopyası).
+   Açık kararlar değişmez. Veri dönüşümüdür: kural işlevi çağırmaz, para hareketi üretmez */
+const KAYIT_PERSONEL_9={yardimciAntrenor:{ad:'Tahsin',dogumTarihi:'1979-03-14'},maliMudur:{ad:'Nusret Bey',dogumTarihi:'1968-09-22'}};
+KAYIT_GECISLERI[9]=v=>{
+  v.kayitSurumu=10;delete v.macOkundu;
+  const biz=v.kisiler&&v.kisiler[v.baskanId]&&v.kisiler[v.baskanId].kulupId;
+  if(biz&&v.gorevDurumu==='gorevde')for(const [rol,T] of Object.entries(KAYIT_PERSONEL_9)){
+    if(Object.values(v.kisiler).some(p=>p&&p.rol===rol&&p.kulupId===biz&&p.durum==='aktif'))continue;
+    const no=v.sonrakiNo.kisi,id='kisi-'+no;
+    v.kisiler=Object.assign({},v.kisiler,{[id]:{id,ad:T.ad,rol,dogumTarihi:T.dogumTarihi,kulupId:biz,durum:'aktif'}});
+    v.sonrakiNo=Object.assign({},v.sonrakiNo,{kisi:no+1});
+  }
+  return v;
+};
 const ESKI_KAYIT_SINIRI=8;                   // bu sürümden eski kayıt dönüştürülmez
 /* eski sürümün neden açılmadığı (oyuncuya söylenir); listede olmayan eski sürüm 2.8L nedenini alır */
 const ESKI_KAYIT_NEDENI={6:'lig, fikstür ve kadrolar kariyere geçtiği için',7:'hocalar ve maçın okunması kariyere geçtiği için'};

@@ -233,7 +233,7 @@ function ilerleOnizle(k){
       if(ertelemeTarihi(x)){tasinacak.push(x);anlar.set(x.id,isAn(x)+1440);}else engel.push(`Bugün son günü: ${ad}`);
     }else kacirilacak.push(x);
   }
-  let durak=null,hedef=null,neden='randevu';
+  let durak=null,hedef=null,neden='randevu',haberIsi=null;
   for(const x of saatli)if(anlar.has(x.id)&&(hedef===null||anlar.get(x.id)<hedef)){durak=x;hedef=anlar.get(x.id);}
   if(durak){
     /* durağın günü bugünden sonraysa ve o günün işleri çakışıyorsa gün başında durulur: seçim gerekir */
@@ -247,9 +247,10 @@ function ilerleOnizle(k){
     else if(kacirilacak.length){hedef=simdi+1;neden='sinir';}
     else if(!L.some(x=>x.tur==='ajanda'))engel.push(ILERLE_ENGEL_EKLERI.map(f=>f(k)).find(Boolean)||'Takvimde bekleyen bir gelişme yok');
   }
-  /* başkanın istediği görüş (veri.durak taşıyan ekip işi) daha önce gelecekse orada durulur: karar beklerken de görüş beklenebilir */
-  {const beklenen=L.filter(x=>x.tur==='ekip'&&x.veri.durak).map(isSonAn).sort((a,b)=>a-b)[0];
-   if(beklenen!==undefined&&(hedef===null||beklenen<hedef)){hedef=Math.max(beklenen,simdi);durak=null;neden='haber';}}
+  /* başkanın beklediği haber (veri.durak taşıyan iş: istenen görüş, H2-c'den beri yazışmanın cevabı) daha önce gelecekse orada durulur: karar beklerken
+     de beklenebilir. Beklenen iş haberIsi'ndedir (durak null kalır) */
+  {const B=L.filter(x=>x.veri&&x.veri.durak).sort((a,b)=>isSonAn(a)-isSonAn(b)||isNo(a.id)-isNo(b.id))[0],beklenen=B?isSonAn(B):undefined;
+   if(beklenen!==undefined&&(hedef===null||beklenen<hedef)){hedef=Math.max(beklenen,simdi);durak=null;neden='haber';haberIsi=B;}}
   /* son cevap anı geçilemez: bekleyen karar ilerlemeyi ancak bu an aşılacaksa engeller */
   /* acil olmayan karar (veri.bekleyebilir) beklerken ilerlenebilir: ilerleme en geç onun son cevap anında durur */
   for(const x of L)if(x.tur==='ajanda'&&x.veri.saatsiz&&x.veri.bekleyebilir&&isAn(x)>simdi&&(hedef===null||isAn(x)<hedef)){hedef=isAn(x);durak=x;neden='sonCevap';}
@@ -260,7 +261,7 @@ function ilerleOnizle(k){
     engel.push(`Önce karar ver: ${x.veri.baslik} (son cevap ${sonCevapYazi(k,x)})`);
   const cevapsiz=hedef===null?[]:dolan.filter(x=>isSonAn(x)<=hedef);
   const gerceklesecek=hedef===null?[]:L.filter(x=>x.tur!=='ajanda'&&!isGizli(x)&&isSonAn(x)<=hedef);
-  return{engel,hedef,neden,durak,tasinacak,kacirilacak,cevapsiz,gerceklesecek};
+  return{engel,hedef,neden,durak,haberIsi,tasinacak,kacirilacak,cevapsiz,gerceklesecek};
 }
 /* sıradaki durma noktasına ilerler. {biten: geçmiş kayıtları, neden: 'karar' (yolda karar gerektiren gelişme) ya da önizlemedeki neden,
    durak: başlangıcına gelinen iş ya da null} döndürür */
