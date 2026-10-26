@@ -21,7 +21,8 @@
      arkaMacOynat(Match, secenek, {oncesi, komutlar}) → {son: sonucKaydi, ornekler, adim}. oncesi false: santrayı ilk adımda alır (macaGec; öbür
        maçlar, kilit adımla aynı); true: maç öncesi doğal adımlanır (bizim maçın sonuç ikizi; canlı motor da macaGec almaz). komutlar
        [{t, hedef, kare}]: js/mac-tarz.js tarzDegistir baştan kurulur (komut kendi karesinde devreye girer; öncesinde motoru değiştirmez).
-     ornekler: ARKA_ORNEK_KARE'de bir {kare, skor, dk, faz} ve son durum (Canlı Skor; arkaMacDurum ile karesine göre okunur).
+     ornekler: ARKA_ORNEK_KARE'de bir {kare, skor, dk, faz, n, ist} ve son durum (Canlı Skor; arkaMacDurum ile karesine göre okunur; H2-b:
+       arkaMacAnlik(son, örnek) o anın olaylarını ve istatistiğini verir).
      arkaDosyalari(betik listesi) → worker'ın yükleyeceği dosyalar: ortak, kadrolar ve lig + index.html'de js/mac-motoru.js'ten js/goruntu.js'e
        kadarki motor dosyaları + bu dosya. Node'da (araclar/kariyer-deneme.js 3.8) yalnız bu listeyle kurulan bağlamın sonucu tam bağlamınkiyle aynıdır. */
 'use strict';
@@ -51,7 +52,16 @@ function digerMacSecenegi(k,f){
   return{kadro,tohum,tunel:{x:0,z:-6},tarz:[f.ev,f.konuk].map(id=>kulupHocasi(k,id).hoca.tarz)};
 }
 const ARKA_ORNEK_KARE=300;   // Canlı Skor örneği: 5 motor sn'de bir
-const macOrnek=m=>({kare:m.kare||0,skor:m.score.slice(),dk:m.minuteLabel(),faz:m.phase});
+/* H2-b (2026-10-26): örnek tek sonucKaydi() çağrısıyla genişler — n: [goller, kartlar, sutlar, sakatliklar] uzunlukları, ist: o anın istatistiği.
+   Motorun kayıt listeleri yalnız eklenir (araclar/kariyer-deneme.js 3.8b bunu kilitler): örneğin anındaki olaylar bitmiş kaydın önekidir */
+const macOrnek=m=>{const S=m.sonucKaydi();return{kare:m.kare||0,skor:S.skor,dk:m.minuteLabel(),faz:m.phase,n:[S.goller.length,S.kartlar.length,S.sutlar.length,S.sakatliklar.length],ist:S.ist};};
+/* H2-b: işçinin bitmiş kaydının (son) o örneğe kadarki hâli, sonucKaydi biçiminde (Canlı Skor'un ayrıntısı; saf). Dakikayla süzülmez: ilk yarı
+   uzatmasındaki gol ile ikinci yarının başı aynı 46. dakikayı taşır. Beklenen gol ana iplikte önekten (macBeklenenGol işçide yüklü değil) */
+function arkaMacAnlik(son,o){
+  if(!son||!o)return null;const n=o.n||[0,0,0,0];
+  return{skor:o.skor.slice(),bitti:o.faz==='fulltime',goller:son.goller.slice(0,n[0]),kartlar:son.kartlar.slice(0,n[1]),sutlar:son.sutlar.slice(0,n[2]),
+    sakatliklar:son.sakatliklar.slice(0,n[3]),ist:o.ist};
+}
 function arkaMacOynat(MatchSinifi,secenek,o){
   o=o||{};const m=new MatchSinifi(()=>{},secenek);
   if(!o.oncesi)m.macaGec();

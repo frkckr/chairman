@@ -71,7 +71,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   };
   const yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   const G=MAC_GUNU,adi=t=>(G.kadro[t].tamAd||G.kadro[t].ad),kisa=t=>G.kadro[t].kisa||G.kadro[t].ad;
-  const KART_RENK={sari:'#f2d21d',ikinciSari:'#d8201e',kirmizi:'#d8201e'};
+  const KART_RENK=STIL.kagit.kartRenk;   /* H2-b: Canlı Skor'un ayrıntısıyla ortak */
   const DERECE={tedavi:'tedavi gördü',cikis:'oyundan çıktı'};
   /* satır: takımın sütununda (ev solda, konuk sağda; iki ayrı liste, satırlar kaymaz) */
   const satir=(t,ic)=>({t,ic:'<li>'+ic+'</li>'});

@@ -155,7 +155,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* ---- telefon (2.8I): ana ekran → Mesajlar (kişi listesi → tek konuşma, iki cevap) / Canlı Skor; çizim js/ekran-telefon.js ----
      Telefon durumu (tel) oturumda kalır: dosyadan "◂ Mesaja dön" aynı konuşmaya döner. Konuşmayı açmak o konuların "yeni" işaretini kaldırır;
      cevap vermek ayrı bir eylemdir. Yeni haber açık konuşmayı değiştirmez */
-  const tel={ekran:'ana',kisi:null,skorAc:false};
+  const tel={ekran:'ana',kisi:null,skorAc:null};   /* H2-b: skorAc açık Canlı Skor satırının maç kimliği */
   /* telGecis: telefonda ekran değişti (kısa açılış geçişi yalnız o çizimde; N7) */
   let telAlta=false,telGecis=false;
   function telefonPaneli(){
@@ -554,11 +554,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='donus'){const d=donusYeri;donusYeri=null;if(d)panelAc(d.panel,null,null,true);}
     else if(ey==='arsiv'){dosyaArsiv=!dosyaArsiv;ciz('[data-eylem="arsiv"]');}
     /* telefon gezintisi: zaman ve kariyer değişmez (konuşmayı açmak yalnız "yeni" işaretini kaldırır) */
-    else if(ey==='telUyg'){tel.ekran=b.dataset.uyg;tel.skorAc=false;onay=null;telGecis=true;ciz('.tel-geri');}
+    else if(ey==='telUyg'){tel.ekran=b.dataset.uyg;tel.skorAc=null;onay=null;telGecis=true;ciz('.tel-geri');}
     else if(ey==='telEv'){telAnaEkran();}
     else if(ey==='telKisi'){onay=null;konusmaAc(b.dataset.kisi);telGecis=true;ciz('.tel-geri');}
     else if(ey==='telKisiler'){tel.ekran='mesajlar';panelAc('telefon',null,null,true);}
-    else if(ey==='skorAc'){tel.skorAc=!tel.skorAc;ciz('[data-eylem="skorAc"]');}
+    else if(ey==='skorAc'){const id=b.dataset.mac||null;tel.skorAc=tel.skorAc===id?null:id;ciz('[data-eylem="skorAc"][data-mac="'+id+'"]');}
     else if(ey==='gun'){ajandaGun=b.dataset.tarih;secili=null;onay=null;ciz('[data-eylem="gun"][data-tarih="'+ajandaGun+'"]');}
     else if(ey==='hafta'){ajandaHafta=Math.max(0,Math.min(2,Number(b.dataset.hafta)));ajandaGun=ajandaHafta?tarihEkle(k.tarih,7*ajandaHafta-((new Date(k.tarih+'T00:00:00Z').getUTCDay()+6)%7)):k.tarih;
       secili=null;onay=null;ciz('[data-eylem="hafta"][data-hafta="'+(ajandaHafta+(Number(b.dataset.hafta)>=ajandaHafta?1:-1))+'"]');}

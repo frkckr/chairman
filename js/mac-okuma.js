@@ -10,6 +10,8 @@
      macYorumu(k, macId) → {kisiId, metin} — hocanın maç akşamı telefondaki kısa değerlendirmesi. Hoca kendi sesiyle yazar: ısrarcı hoca kötü sonucu
        şansa bağlayabilir (sayılar ne derse desin); başkan bunu beklenen golle karşılaştırır. YORUM_METIN şablonları.
      macGozlemNotu(k, macId) → metin — başkanın deftere düşen notu: gözlenebilir sayılar (skor, beklenen gol, şut, sahiplik) ve bir cümle. GOZLEM_NOTU_METIN.
+     H2-b (2026-10-26): macIstSatirlari(ist, xg) ve macAyrintisi(sonuç, adBul) — Canlı Skor'un ayrıntısı (goller, kartlar, sakatlıklar, 10 satırlık
+       tablo); bizim maç ve öbür maçlar, canlı ve kayıttan aynı okuma (js/ekran-telefon.js telMacAyrinti).
    Gizli puan kuralı (OYUN_TASARIMI §9): yetenek puanı, hocanın bilgisi ya da ısrarı yazılmaz; gözlenebilir sayılar ve beklenen gol yazılır (karar 34).
    Telefon: hocanın yorumu maç günü MAC_SONRASI_DK sonra, hocanın konuşmasında "gelen" mesajdır (MESAJ_KAYNAKLARI, js/mesajlar.js); okundu bilgisi
      k.macOkundu (maç kimlikleri; macOkunduIsaretle komutu, oda ve balkonda konuşma açılınca; maçta değişmez).
@@ -98,12 +100,31 @@ function macGozlemNotu(k,macId){
   return`${o.hafta}. hafta, ${o.t?'deplasman':'iç saha'} · ${ad}: ${o.skor[0]}–${o.skor[1]}. Beklenen gol ${okSayi(o.xg[0],2)} – ${okSayi(o.xg[1],2)}; şut ${I.sut[0]}–${I.sut[1]}, `+
     `topa sahip olma %${Math.round(I.sahiplik[0]*100)}. ${GOZLEM_NOTU_METIN[o.sans](o)}`;
 }
-/* oda ve balkonun Canlı Skor'unda son maçın satırları [ad, biz, rakip] (gözlenebilir sayılar ve beklenen gol) */
-function macOkumaSatirlari(o){
-  const I=o.ist,y=a=>Math.round(a*100),pi=x=>I.pas[x]>0?y(I.pasTamam[x]/I.pas[x])+'%':'—';
-  return[['Şut',I.sut[0],I.sut[1]],['İsabetli şut',I.isabet[0],I.isabet[1]],['Beklenen gol',okSayi(o.xg[0],2),okSayi(o.xg[1],2)],
-    ['Topa sahip olma',y(I.sahiplik[0])+'%',y(I.sahiplik[1])+'%'],['Pas isabeti',pi(0),pi(1)],['Korner',I.korner[0],I.korner[1]],
-    ['Faul',I.faul[0],I.faul[1]],['Sarı kart',I.sari[0],I.sari[1]],['Kırmızı kart',I.kirmizi[0],I.kirmizi[1]],['Ofsayt',I.ofsayt[0],I.ofsayt[1]]];
+/* H2-b (2026-10-26): Canlı Skor'un istatistik tablosu, 10 satır [ad, ev, konuk] — oda, balkon ve maç telefonu aynı tabloyu kullanır (eskiden
+   macOkumaSatirlari, biz/rakip sırasıyla). ist: motorun sonucKaydi().ist ya da k.maclar[id].ist (ev, konuk); xg: [ev, konuk]. Santradan önce (sahiplik
+   toplamı 0) topa sahip olma, pas yokken pas isabeti '—' */
+function macIstSatirlari(ist,xg){
+  const I=ist||{},c=a=>Array.isArray(a)?[a[0]|0,a[1]|0]:[0,0],y=a=>Math.round(a*100),X=Array.isArray(xg)?xg:[0,0];
+  const sh=Array.isArray(I.sahiplik)?I.sahiplik:[0,0],ss=(+sh[0]||0)+(+sh[1]||0),so=ss>0?y((+sh[0]||0)/ss):null;
+  const pas=c(I.pas),pt=c(I.pasTamam),pi=x=>pas[x]>0?y(pt[x]/pas[x])+'%':'—';
+  return[['Şut',...c(I.sut)],['İsabetli şut',...c(I.isabet)],['Beklenen gol',okSayi(X[0],2),okSayi(X[1],2)],
+    ['Topa sahip olma',so==null?'—':so+'%',so==null?'—':(100-so)+'%'],['Pas isabeti',pi(0),pi(1)],['Korner',...c(I.korner)],
+    ['Faul',...c(I.faul)],['Sarı kart',...c(I.sari)],['Kırmızı kart',...c(I.kirmizi)],['Ofsayt',...c(I.ofsayt)]];
+}
+/* H2-b: bir maçın ayrıntısı (Canlı Skor; saf). s iki biçimden biri: motorun sonucKaydi() biçimi (olaylarda ad, dakika, kendiKalesine) ya da
+   k.maclar[id] biçimi (id, dk, kk; ad saklanmaz, adBul(id) çözer). Döner {hukmen, skor, xg, goller:[{t,dk,ad,kk}], kartlar:[{t,dk,ad,renk}],
+   sakat:[{t,dk,ad,derece,gun}], satirlar}. t takımın sütunudur (0 ev): golde golü kazanan takım (kendi kalesine golde atan öbür takımdandır, "k.k.");
+   ikinci sarı motorun yazdığı gibi iki kayıttır (maç sonu kartıyla aynı); ağrı yazılmaz. xg: şut listesi varsa macBeklenenGol, yoksa kayıttaki xg
+   (öbür maçların kısa kaydı). Hükmende listeler ve tablo boş, yalnız hukmen ('ev' | 'konuk' | 'cift': hükmen kaybeden). Ad yoksa '—' */
+function macAyrintisi(s,adBul){
+  const L=a=>Array.isArray(a)?a:[],ad=x=>x.ad||(x.id!=null&&adBul?adBul(x.id):'')||'—',dk=x=>(x.dakika!=null?x.dakika:x.dk)|0,t=x=>x.takim===1?1:0;
+  if(s.hukmen)return{hukmen:s.hukmen,skor:s.skor.slice(),xg:null,goller:[],kartlar:[],sakat:[],satirlar:[]};
+  const xg=Array.isArray(s.sutlar)?macBeklenenGol(s.sutlar):Array.isArray(s.xg)?s.xg.slice():[0,0];
+  return{hukmen:null,skor:s.skor.slice(),xg,
+    goller:L(s.goller).map(g=>({t:t(g),dk:dk(g),ad:ad(g),kk:!!(g.kendiKalesine!=null?g.kendiKalesine:g.kk)})),
+    kartlar:L(s.kartlar).map(c=>({t:t(c),dk:dk(c),ad:ad(c),renk:c.renk})),
+    sakat:L(s.sakatliklar).filter(x=>x.derece!=='agri').map(x=>({t:t(x),dk:dk(x),ad:ad(x),derece:x.derece,gun:x.gun|0})),
+    satirlar:macIstSatirlari(s.ist,xg)};
 }
 /* okundu: hocanın maç yorumu görüldü (oda ve balkonda konuşma açılınca). Yalnız oynanmış maç; liste son MAC_OKUNDU_EN_COK maçla sınırlı */
 function macOkunduIsaretle(k,macId){

@@ -278,6 +278,12 @@ async def bolum_2(tarayici, site, tum_hatalar):
 
 
 TASMA_JS = "() => [...document.querySelectorAll('.dsy-sayfa, .dft-sayfa, .dsy-sekmeler')].map(e => e.scrollWidth - e.clientWidth)"
+# H2-b: Canlı Skor ayrıntısının yatay taşması — .tel-skor, .tel-ist ve telefon gövdesi (scrollWidth − clientWidth); olay satırı (kesilen ad) kendi kutusunun sağını aşmaz
+TEL_TASMA_JS = """() => { const R = [], g = document.querySelector('.tel .tel-govde');
+  for (const e of document.querySelectorAll('.tel .tel-skor, .tel .tel-ist')) R.push(e.scrollWidth - e.clientWidth);
+  if (g) R.push(g.scrollWidth - g.clientWidth);
+  for (const e of document.querySelectorAll('.tel .tel-olay')) { const k = e.closest('.tel-olaylar').getBoundingClientRect(), r = e.getBoundingClientRect(); R.push(Math.round(r.right - k.right)); }
+  return { n: R.length, en: R.length ? Math.max(...R) : 0, olay: document.querySelectorAll('.tel .tel-olay').length, ayrinti: !!document.querySelector('.tel .tel-ayrinti') }; }"""
 # N7: telefonun yerleşimi: içerideki yatay taşma (piksel), cihazın panele sığması, konuşmada iki cevabın cevap alanında kaydırmadan görünmesi
 # N9: seyircinin sürekliliği (js/seyirci.js seyirciDurumlari): 0–300 sn arası 0,25 sn'de bir; seyirci saati çıkıştan sonra maç zamanıyla, atlamada sıçrar
 SEYIRCI_JS = """() => {
@@ -1199,7 +1205,9 @@ async def bolum_16(tarayici, site, tum_hatalar):
     pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&hiz=8&tohum=5", "#btnMacaGec")
     tum_hatalar += hatalar
     await pg.click("#btnMacaGec")
-    await pg.wait_for_function("!MAC_ONCESI.includes(mac.phase) && !SANTRA_HIZLI.aktif", timeout=60000)   # F3-0: maç öncesi görüntüsüz biter
+    # F3-0: maç öncesi görüntüsüz biter. H2-b (2026-10-26): sınır 60 → 240 sn — dizüstünde (yazılım WebGL) görüntüsüz maç öncesi 60 sn'ye sığmıyor
+    # (main'de de aynı yerde düşüyordu); bu bir bekleme sınırıdır, hız ölçümü değil
+    await pg.wait_for_function("!MAC_ONCESI.includes(mac.phase) && !SANTRA_HIZLI.aktif", timeout=240000)
     await pg.wait_for_timeout(4000)
     sk = await pg.evaluate("""({ yazi: TABELA.yazi, sn: mac.gameSec, d: (k => k && [k.ev.x, k.ev.z])(mac.kenarBul('dorduncu')),
       foto: mac.kenar.filter(p => p.kind === 'foto').length, telBak: typeof telefonYaz === 'undefined' && !('telefon' in BK_EYLEM) })""")
@@ -1223,12 +1231,15 @@ async def bolum_16(tarayici, site, tum_hatalar):
     await pg.click('#macTelefon [data-eylem="telUyg"][data-uyg="skor"]')
     await pg.click('#macTelefon [data-eylem="skorAc"]')
     yazi = await pg.text_content("#macTelefon")
-    ist = await pg.evaluate("({ sut: mac.ist.sut, isabet: mac.ist.isabet, korner: mac.ist.korner, faul: mac.ist.faul, dk: mac.minuteLabel(), skor: mac.score })")
+    # H2-b: sayılar tek kaynaktan (motorun sonuç kaydı): isabetli şut isabetEk'li, beklenen gol şut listesinden (Türkçe, 2 ondalık)
+    ist = await pg.evaluate("""({ sut: mac.ist.sut, korner: mac.ist.korner, faul: mac.ist.faul, dk: mac.minuteLabel(), skor: mac.score,
+      isabet: mac.sonucKaydi().ist.isabet, xg: macBeklenenGol(mac.sonucKaydi().sutlar).map(x => x.toFixed(2).replace('.', ',')) })""")
     satirlar = await pg.eval_on_selector_all(".tel-ist tbody tr", "L => L.map(r => [...r.children].map(c => c.textContent))")
     tablo = {s[1]: (s[0], s[2]) for s in satirlar}
     sk = await pg.evaluate(TEK_SATIR_JS, "#macTelefon")
-    denetle("Canlı Skor: kendi maçın skoru ve dakikası tek satırda (N2); istatistikler motorun aynı anına ait; 'veri bağlı değil' ve xG notu yok",
-            tablo.get("Şut") == (str(ist["sut"][0]), str(ist["sut"][1])) and tablo.get("Faul") == (str(ist["faul"][0]), str(ist["faul"][1])) and tablo.get("Korner") == (str(ist["korner"][0]), str(ist["korner"][1]))
+    denetle("Canlı Skor: kendi maçın skoru ve dakikası tek satırda (N2); istatistikler motorun aynı anına ait; H2-b: tablo 10 satır, 'Beklenen gol' şut listesinden, 'İsabetli şut' maç sonu kaydıyla aynı; 'veri bağlı değil' ve xG yazısı yok",
+            len(satirlar) == 10 and tablo.get("Beklenen gol") == tuple(ist["xg"]) and tablo.get("İsabetli şut") == (str(ist["isabet"][0]), str(ist["isabet"][1]))
+            and tablo.get("Şut") == (str(ist["sut"][0]), str(ist["sut"][1])) and tablo.get("Faul") == (str(ist["faul"][0]), str(ist["faul"][1])) and tablo.get("Korner") == (str(ist["korner"][0]), str(ist["korner"][1]))
             and f"{ist['skor'][0]} – {ist['skor'][1]}" in yazi and ist["dk"] in yazi and "bağlı değil" not in yazi and "xG" not in yazi
             and sk and sk["satir"] <= 2.8 and sk["yayilim"] <= 4 and sk["tasma"] <= 0, f"{sk} · {tablo}")
     await pg.wait_for_timeout(300)  # N7: telefonun açılış geçişi (0,18 sn) bitsin
@@ -1555,11 +1566,23 @@ async def bolum_19(tarayici, site, tum_hatalar):
     obur = await pg.evaluate("() => [...document.querySelectorAll('.tel .tel-mac')].length")
     denetle("F7: Canlı Skor'da haftanın öbür sonuçları (yedi satır; sıradaki ve son maçla dokuz)", "haftanın öbür sonuçları" in skor and obur == 9, f"{obur} satır")
     # F3-b: son maçın satırına dokununca istatistik (beklenen gol, pas isabeti; kayıttan); telefonda hocanın yorumu; defterde maç notu
-    await pg.click('.tel [data-eylem="skorAc"]')
+    await pg.click(f'.tel [data-eylem="skorAc"][data-mac="{id13}"]')
     ist = await pg.text_content(".tel-ist")
     xg = await pg.evaluate(f"() => OYUN.kariyer.maclar['{id13}'].xg.map(x => x.toFixed(2).replace('.', ',')).join(' ')")
     denetle("F3-b: Canlı Skor'da son maç dokununca istatistik: şut, beklenen gol (kayıttaki değer), topa sahip olma, pas isabeti", "Beklenen gol" in ist and "Pas isabeti" in ist
             and all(x in ist for x in xg.split(" ")), f"{xg} · {ist[:120]}")
+    # H2-b: odada 13. haftanın sekiz satırı dokunulur; öbür bir sonucun ayrıntısı kayıttan (adlar kariyerin oyuncularından, kısa kayıtta kayıttaki beklenen gol)
+    dokunur = await pg.evaluate("() => [...document.querySelectorAll('.tel [data-eylem=\"skorAc\"]')].map(b => b.dataset.mac)")
+    obur_id = next((m for m in dokunur if m != id13), None)
+    if obur_id:
+        await pg.click(f'.tel [data-eylem="skorAc"][data-mac="{obur_id}"]')
+    oa = await pg.evaluate(f"""() => {{ const k = OYUN.kariyer, s = k.maclar['{obur_id}'], A = document.querySelector('.tel .tel-ayrinti'), ad = id => (k.oyuncular[id] || {{}}).ad;
+      if (!s || !A) return {{ gol: -1, toplam: 0, adlar: false, xg: [], metin: '' }};
+      return {{ gol: A.querySelectorAll('.tel-olaylar[data-tur="gol"] .tel-olay').length, toplam: s.skor[0] + s.skor[1],
+        adlar: s.goller.concat(s.kartlar).every(x => A.textContent.includes(ad(x.id))), xg: s.xg.map(x => x.toFixed(2).replace('.', ',')), metin: A.textContent }}; }}""")
+    denetle("H2-b: odada 13. haftanın sekiz satırı dokunulur; öbür bir sonucun ayrıntısı kayıttan: gol satırı skor toplamı kadar, golcü ve kart adları kariyerin oyuncularından, kayıttaki beklenen gol tabloda",
+            len(dokunur) == 8 and id13 in dokunur and oa["gol"] == oa["toplam"] and oa["adlar"] and all(x in oa["metin"] for x in oa["xg"]),
+            f"{len(dokunur)} satır · {obur_id}: {oa['gol']} gol satırı · xg {oa['xg']}")
     await pg.wait_for_timeout(300)
     await pg.screenshot(path=str(ARAC / "son-akis-19-oda.png"))
     await pg.keyboard.press("Escape")
@@ -1578,6 +1601,28 @@ async def bolum_19(tarayici, site, tum_hatalar):
     dft = await pg.text_content(".dft")
     denetle("F3-b: defterde maç gününde 'Maçtan not' (beklenen gol ve şutla)", "Maçtan not" in dft and "Beklenen gol" in dft, dft[dft.find("Maçtan"):][:140])
     await pg.keyboard.press("Escape")
+    # H2-b: büyük yazıda ve 800×600'de “Son maç” ve bir öbür maçın ayrıntısı açıkken yatay taşma yok (.tel-skor, .tel-ist, gövde; olay satırı kendi kutusunda)
+    tasma = []
+    for yazi_boy, boyut in (("buyuk", (1180, 1000)), ("buyuk", (800, 600)), ("normal", (800, 600))):
+        await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
+        await pg.click('.od-nesne[data-panel="ayar"]')
+        await pg.click(f'[data-eylem="yazi"][data-yazi="{yazi_boy}"]')
+        await pg.keyboard.press("Escape")
+        await pg.keyboard.press("Digit1")
+        await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
+        for mid in (id13, obur_id):
+            await pg.click(f'.tel [data-eylem="skorAc"][data-mac="{mid}"]')
+            t = await pg.evaluate(TEL_TASMA_JS)
+            tasma.append((f"{yazi_boy}-{boyut[0]}-{'son' if mid == id13 else 'obur'}", t))
+        if yazi_boy == "buyuk" and boyut[0] == 800:
+            await pg.wait_for_timeout(300)
+            await pg.screenshot(path=str(ARAC / "son-akis-19-ayrinti-dar.png"))
+        await pg.keyboard.press("Escape")
+        await pg.keyboard.press("Escape")
+    await pg.set_viewport_size({"width": 1180, "height": 1000})
+    denetle("H2-b: büyük yazıda ve 800×600'de Son maç ve öbür maçın ayrıntısında yatay taşma ≤ 1 piksel (.tel-skor, .tel-ist, telefon gövdesi; olay satırı kutusunu aşmaz)",
+            len(tasma) == 6 and all(t["ayrinti"] for _, t in tasma) and all(t["en"] <= 1 for _, t in tasma),
+            " · ".join(f"{a}: {t['en']} ({t['n']} ölçüm)" for a, t in tasma))
     kayit1 = await pg.evaluate(KAYIT_JS)
     await pg.goto(pg.url.split("?")[0] + "?ekran=bulten&mac=" + id13)
     await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=60000)
@@ -1595,6 +1640,27 @@ async def bolum_19(tarayici, site, tum_hatalar):
     await pg.click("#btnBeklemedenGec")
     await pg.wait_for_function("() => !ON_EKRAN.acik", timeout=30000)
     await pg.evaluate("document.getElementById('btnMacaGec').click()")
+    # H2-b (file://, kilit adım): santradan sonra maç telefonunda öbür maçın satırı dokunulur; ayrıntı canlı motorun kaydından (x.m.sonucKaydi())
+    for _ in range(120):
+        await pg.evaluate(SONA_JS, 60)
+        if await pg.evaluate("() => !MAC_ONCESI.includes(mac.phase) && mac.gameSec >= 900"):
+            break
+    await pg.evaluate("() => MAC_TELEFON.ac()")
+    await pg.evaluate("() => document.querySelector('#macTelefon [data-eylem=telUyg][data-uyg=skor]').click()")
+    satir_id = await pg.evaluate("() => [...document.querySelectorAll('#macTelefon [data-eylem=\"skorAc\"]')].map(b => b.dataset.mac)")
+    oid = next((m for m in satir_id if m != id13), None)
+    if oid:
+        await pg.evaluate(f"() => document.querySelector('#macTelefon [data-eylem=\"skorAc\"][data-mac=\"{oid}\"]').click()")
+    ca = await pg.evaluate(f"""() => {{ const x = LIG_CANLI.find(y => y.d.macId === '{oid}'), A = document.querySelector('#macTelefon .tel-ayrinti');
+      if (!x || !x.m || !A) return {{ gol: -1, satir: [0], skor: [0, 0], tablo: false, adlar: false, dk: mac.minuteLabel(), n: 0 }};
+      const S = x.m.sonucKaydi(), b = document.querySelector('#macTelefon [data-eylem="skorAc"][data-mac="{oid}"] b').textContent.split('–').map(s => +s.trim());
+      const T = [...A.querySelectorAll('.tel-ist tbody tr')].map(r => [...r.children].map(c => c.textContent)), B = macIstSatirlari(S.ist, macBeklenenGol(S.sutlar)).map(r => [String(r[1]), r[0], String(r[2])]);
+      return {{ gol: A.querySelectorAll('.tel-olaylar[data-tur="gol"] .tel-olay').length, satir: b, skor: S.skor, tablo: JSON.stringify(T) === JSON.stringify(B),
+        adlar: S.goller.concat(S.kartlar).every(g => A.textContent.includes(g.ad)), dk: mac.minuteLabel(), n: T.length }}; }}""")
+    await pg.evaluate("() => MAC_TELEFON.kapat()")
+    denetle("H2-b (file://, kilit adım): santradan sonra maç telefonunda öbür maçın satırı dokunulur; ayrıntı canlı motordan: gol satırı satırdaki skor toplamı kadar, adlar ve 10 satırlık tablo x.m.sonucKaydi() ile aynı",
+            bool(oid) and len(satir_id) == 8 and ca["gol"] == sum(ca["satir"]) == sum(ca["skor"]) and ca["tablo"] and ca["adlar"] and ca["n"] == 10,
+            f"{oid} · bizim {ca['dk']}' · satır {ca['satir']} · {ca['gol']} gol satırı")
     son = None
     for _ in range(60):
         son = await pg.evaluate(SONA_JS, 600)
@@ -1637,7 +1703,8 @@ async def bolum_19(tarayici, site, tum_hatalar):
                 if son["faz"] == "fulltime":
                     break
         else:
-            await pg.click("#btnHizliBitir")
+            # elle saatli sayfada Playwright'ın tıklaması öğenin kararlılığını bekler (rAF elle akar); "gec" gibi sayfa içinden (dizüstünde zaman aşımı, H2-b)
+            await pg.evaluate("document.getElementById('btnHizliBitir').click()")
             for _ in range(200):
                 son = await pg.evaluate(HIZLI_JS, 20)
                 if son["faz"] == "fulltime":
@@ -1800,14 +1867,25 @@ async def bolum_20(tarayici, site, tum_hatalar):
         await pg.click("#btnBeklemedenGec")
         await pg.wait_for_function("() => !ON_EKRAN.acik", timeout=30000)
         await pg.evaluate("document.getElementById('btnMacaGec').click()")
-        await pg.wait_for_function("() => !MAC_ONCESI.includes(mac.phase) && MAC_ARKA.T0 !== null", timeout=60000)
+        # H2-b: sınır 60 → 240 sn (dizüstünde doğal maç öncesi 60 sn'de santraya varmıyor; bekleme sınırı, hız ölçümü değil)
+        await pg.wait_for_function("() => !MAC_ONCESI.includes(mac.phase) && MAC_ARKA.T0 !== null", timeout=240000)
         await pg.wait_for_timeout(2500)
         await pg.evaluate("() => MAC_TELEFON.ac()")
         await pg.evaluate("() => document.querySelector('#macTelefon [data-eylem=telUyg][data-uyg=skor]').click()")
         satirlar = await pg.evaluate("() => [...document.querySelectorAll('#macTelefon .tel-mac')].map(e => e.textContent)")
+        # H2-b (http, işçi): öbür maçın ayrıntısı işçinin bitmiş kaydının o örneğe kadarki önekinden (arkaMacAnlik + arkaMacDurum)
+        await pg.evaluate("() => { const b = [...document.querySelectorAll('#macTelefon [data-eylem=\"skorAc\"]')].find(x => x.dataset.mac !== MAC_GUNU.macId); if (b) b.click(); }")
+        ia = await pg.evaluate("""() => { const b = document.querySelector('#macTelefon [data-eylem="skorAc"][aria-expanded="true"]'), A = document.querySelector('#macTelefon .tel-ayrinti');
+          const x = b && LIG_CANLI.find(y => y.d.macId === b.dataset.mac); if (!x || !A || !x.son) return { esit: false, beklenen: false, id: b && b.dataset.mac };
+          const S = arkaMacAnlik(x.son, arkaMacDurum(x.ornekler, (mac.kare || 0) - MAC_ARKA.T0)), T = [...A.querySelectorAll('.tel-ist tbody tr')].map(r => [...r.children].map(c => c.textContent));
+          const B = macIstSatirlari(S.ist, macBeklenenGol(S.sutlar)).map(r => [String(r[1]), r[0], String(r[2])]);
+          return { esit: JSON.stringify(T) === JSON.stringify(B) && A.querySelectorAll('.tel-olaylar[data-tur="gol"] .tel-olay').length === S.goller.length,
+            beklenen: T.some(r => r[1] === 'Beklenen gol'), id: x.d.macId, skor: S.skor.join('-'), gol: S.goller.length }; }""")
         await pg.evaluate("() => MAC_TELEFON.kapat()")
         dakikali = [s for s in satirlar[1:] if re.search(r"\d+'", s)]
         denetle("G1-e: santradan sonra Canlı Skor'da öbür yedi maç işçinin örneklerinden dakikasıyla", len(satirlar) == 8 and len(dakikali) == 7, " | ".join(satirlar[:3]))
+        denetle("H2-b (http, işçi): santradan ~2,5 sn sonra öbür maçın ayrıntısı arkaMacAnlik(x.son, arkaMacDurum(…)) ile aynı (gol satırları ve 10 satırlık tablo); tabloda 'Beklenen gol'",
+                ia["esit"] and ia["beklenen"], str(ia))
         t1 = time.time()
         await pg.click("#btnHizliBitir")
         await pg.wait_for_selector("#macSonu:not([hidden]) [data-eylem='odayaDon']", timeout=60000)

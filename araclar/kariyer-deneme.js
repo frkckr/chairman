@@ -626,6 +626,14 @@ bolum('3.8 — ligin öbür maçları: haftanın sekiz maçı, tek komut (F7)');
     ids.length===8&&tb.every(t=>t.O===13)&&k1.gecmis.filter(g=>g.tur==='mac').length===1&&ids.filter(id=>id!==h.G.macId).every(id=>k1.maclar[id].sutlar===null&&k1.maclar[id].xg.length===2&&k1.maclar[id].degisiklikler.length===0)
     &&Array.isArray(k1.maclar[h.G.macId].sutlar)&&ids.every(id=>{const f=k1.fikstur.find(x=>x.id===id);return [f.ev,f.konuk].every((c,t)=>metin(k1.kulupler[c].kadro.ilk11)===metin(k1.maclar[id].ilk11[t]));})
     &&!MG('kariyerDogrula')(k1).length,`${ids.length} maç · O ${[...new Set(tb.map(t=>t.O))].join(',')}`);
+  /* H2-b: Canlı Skor'un ayrıntısı kayıttan (macAyrintisi; adlar kariyerin oyuncularından, kısa kayıtta beklenen gol kayıttaki değer) */
+  {const AY=MG('macAyrintisi'),adBul=id=>(k1.oyuncular[id]||{}).ad,A=ids.filter(id=>id!==h.G.macId).map(id=>[id,AY(k1.maclar[id],adBul)]);
+   const tamam=A.every(([id,a])=>{const s=k1.maclar[id];return a.goller.length===s.skor[0]+s.skor[1]&&a.goller.concat(a.kartlar,a.sakat).every(x=>x.ad!=='—')
+     &&metin(a.xg)===metin(s.xg)&&a.satirlar.length===10&&a.satirlar[2][0]==='Beklenen gol';});
+   const MK=k1.maclar[h.G.macId],B=AY(MK,adBul);
+   denetle('H2-b: öbür maçların kısa kaydından ayrıntı — gol satırı skor toplamı kadar, bütün adlar kariyerin oyuncularından, beklenen gol kayıttaki, tablo 10 satır; bizim tam kayıtta şut listesinin beklenen golü kayıttakiyle aynı',
+     tamam&&metin(B.xg)===metin(MK.xg)&&metin(MG('macBeklenenGol')(MK.sutlar))===metin(MK.xg)&&B.satirlar.length===10,
+     A.slice(0,3).map(([id,a])=>`${a.skor.join('–')}: ${a.goller.length} gol, ${a.kartlar.length} kart`).join(' · '));}
   denetle('Eksik ya da fazla öbür maç reddedilir, kariyer değişmez; aynı hafta ikinci kez uygulanamaz',
     reddeder(()=>KK(h.k,x=>uy(x,h.O.slice(1))))&&reddeder(()=>KK(h.k,x=>uy(x,h.O.concat([h.O[0]]))))&&reddeder(()=>KK(k1,x=>uy(x)))&&Object.keys(h.k.maclar).length===0);
   /* atomiklik: SONUNCU öbür maçın tohumu yanlış — öncekiler kopyaya yazılmışken komut düşer; verilen kariyer hiç değişmez (inceleme) */
@@ -665,11 +673,22 @@ bolum('3.8b — maç arkada (G1-e: işçinin saf parçası; Node eşitliği)');
      if(!o||o.kare>m.kare)ok=false;}}
    const son=R.ornekler[R.ornekler.length-1],d=MG('arkaMacDurum')(R.ornekler,1e9);
    denetle('Örnekler: 5 motor sn\'de bir (kare sırasıyla), son örnek maç sonu; arkaMacDurum karesine kadarki son örneği verir',ok&&say>0&&R.ornekler.every((o,i)=>i===0||o.kare>=R.ornekler[i-1].kare)&&son.faz==='fulltime'&&d===son&&MG('arkaMacDurum')(R.ornekler,-1)===null,`${R.ornekler.length} örnek`);}
+  /* H2-b: örneğin anındaki olaylar ve istatistik — bitmiş kaydın öneki, aynı kareye kilit adımla getirilen motorla birebir (motorun listeleri yalnız eklenir) */
+  {const anlik=MG('arkaMacAnlik'),proj=S=>metin({skor:S.skor,goller:S.goller,kartlar:S.kartlar,sakatliklar:S.sakatliklar,sutlar:S.sutlar,ist:S.ist});
+   const bicim=R.ornekler.every(o=>Array.isArray(o.n)&&o.n.length===4&&o.ist&&Array.isArray(o.ist.sut));let esit=0,toplam=0;const not=[];
+   for(const sec of D){const RR=oyna(Match,sec),O=RR.ornekler,uc=[O.length>>2,O.length>>1,(O.length*3)>>2].map(i=>O[i]);
+     const m=new Match(()=>{},sec);m.macaGec();
+     for(const o of uc){while((m.kare||0)<o.kare&&m.phase!=='fulltime')m.step(1/60);toplam++;if((m.kare||0)===o.kare&&proj(anlik(RR.son,o))===proj(m.sonucKaydi()))esit++;}
+     const s=O[O.length-1];toplam++;if(proj(anlik(RR.son,s))===proj(RR.son))esit++;
+     not.push(uc.map(o=>`${o.dk}' ${o.n.join('/')}`).join(', '));}
+   denetle('H2-b: örneklerde olay sayıları (n) ve istatistik (ist); iki öbür maçta üç örnek karesinde arkaMacAnlik ≡ aynı kareye kilit adımla getirilen motorun kaydı (skor, goller, kartlar, sakatlıklar, şutlar, ist); son örnekte önek bitmiş kayıtla aynı',
+     bicim&&esit===toplam,`${esit}/${toplam} · ${not.join(' | ')}`);}
   {const html=fs.readFileSync(path.join(KOK,'index.html'),'utf8'),L=[...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m=>m[1]),F=MG('arkaDosyalari')(L);
    const I=vm.createContext({console});for(const f of F)vm.runInContext(fs.readFileSync(path.join(KOK,f),'utf8'),I,{filename:f});vm.runInContext('MOTOR_AYAR.macSuresiDk=6',I);
    const IG=a=>vm.runInContext(a,I),RI=IG('arkaMacOynat')(IG('Match'),JSON.parse(metin(D[0]))),RB=IG('arkaMacOynat')(IG('Match'),JSON.parse(metin(bizSec)),{oncesi:true,komutlar:K});
-   denetle('İşçinin dosya listesi (arkaDosyalari: ortak, kadrolar, lig, motor dosyaları, lig-maclari) yeter: yalnız onlarla kurulan bağlamda sonuçlar tam bağlamla aynı',
-     !F.includes('js/kariyer.js')&&!F.includes('js/mac-arka.js')&&F[F.length-1]==='js/lig-maclari.js'&&metin(RI.son)===metin(oyna(Match,D[0]).son)&&metin(RB.son)===metin(RK.son),`${F.length} dosya`);}
+   const RD=oyna(Match,D[0]);
+   denetle('İşçinin dosya listesi (arkaDosyalari: ortak, kadrolar, lig, motor dosyaları, lig-maclari) yeter: yalnız onlarla kurulan bağlamda sonuçlar ve örnekler (H2-b biçimi: n, ist) tam bağlamla aynı',
+     !F.includes('js/kariyer.js')&&!F.includes('js/mac-arka.js')&&F[F.length-1]==='js/lig-maclari.js'&&metin(RI.son)===metin(RD.son)&&metin(RI.ornekler)===metin(RD.ornekler)&&metin(RB.son)===metin(RK.son),`${F.length} dosya`);}
 }
 
 bolum('3.9 — kadro yeterliliği: hükmen güvenlik ağı (G1-a; oyunun yüklediği dosyalar)');
@@ -692,6 +711,9 @@ bolum('3.9 — kadro yeterliliği: hükmen güvenlik ağı (G1-a; oyunun yükled
    denetle('Hükmen maç kaydı: 0–3, hukmen ev, on bir yok, atansız goller; tablo yenilgi ve galibiyet sayar; cezalı maçı çekmiş sayılır; 16 kulüp eşit maç; kariyer geçerli',
      metin(s.skor)==='[0,3]'&&s.hukmen==='ev'&&s.ilk11===null&&s.goller.length===3&&s.goller.every(g=>g.id===null)&&tb.every(t=>t.O===13)
      &&k2.oyuncular[cz.id].ceza===null&&!T('kariyerDogrula')(k2).length,`${metin(s.skor)} · ${te.ad} ${te.M}M · ${tk.ad} ${tk.G}G`);
+   {const A=T('macAyrintisi')(s,id=>(k2.oyuncular[id]||{}).ad);
+    denetle('H2-b: hükmen kaydın Canlı Skor ayrıntısı yalnız hükmen notudur (listeler ve tablo boş, beklenen gol yok)',
+      A.hukmen==='ev'&&!A.goller.length&&!A.kartlar.length&&!A.sakat.length&&!A.satirlar.length&&A.xg===null&&metin(A.skor)==='[0,3]');}
    denetle('Hükmen gereken maça oynanmış sonuç reddedilir; hükmen sonucu hükmen koşulu olmayan maça reddedilir (kariyer aynı)',
      reddeder(()=>KK(c2,x=>hafta(x,digerleri(x))))&&reddeder(()=>KK(c1,x=>hafta(x,digerleri(x,{[f0.id]:T('hukmenSonucu')({skor:[0,3],neden:'ev'})}))))&&!Object.keys(c2.maclar).length);
    {const d=T('bellekDeposu')();T('kariyerKaydet')(d,'s',k2);const y=T('kariyerYukle')(d,'s');

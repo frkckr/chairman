@@ -399,7 +399,9 @@ const STIL={
        genişliğine oran), onizle: yüzün o yönün cevabına döndüğü kayma, kayma: klavye ya da kenar önizlemesinde kartın kayması, egim: en çok eğim
        (derece), sure: yaylanma (sn), yuz: yüz yazısı (em; normal kart ve dosyanın büyük yüzü), telefon: konuşmanın cevap alanındaki kart (H1-b:
        yukseklik kartın en az yüksekliği — yüz dönünce kenar etiketleri yerinde kalır; telefonun boyunun %40'ını geçmez —, kayma dar alanda önizleme kayması) */
-    kart:{esik:0.4,onizle:0.08,kayma:0.12,egim:4,sure:0.2,yuz:{normal:1.05,buyuk:1.15},telefon:{yukseklik:'14em',kayma:0.05}}},
+    kart:{esik:0.4,onizle:0.08,kayma:0.12,egim:4,sure:0.2,yuz:{normal:1.05,buyuk:1.15},telefon:{yukseklik:'14em',kayma:0.05}},
+    /* H2-b: maçtaki kart kutucuğunun rengi (maç sonu kartı ve Canlı Skor'un ayrıntısı; eskiden js/ekran-mac-sonu.js'te). Motorun kart türleri */
+    kartRenk:{sari:'#f2d21d',ikinciSari:'#d8201e',kirmizi:'#d8201e'}},
 
   /* Kişi portreleri (js/portre.js, 2.8I): 16×16 piksel, kodla çizilir. Tanınır kişilerin görünüşü burada sabittir; listede olmayan kişi
      kimliğinden belirlenimli görünüş alır. ten 0–2, sac: renk adı, tip: 'kisa'|'seyrek'|'kel'|'uzun'|'topuz'|'dalgali', biyik: 0 yok, 1 ince, 2 gür,
