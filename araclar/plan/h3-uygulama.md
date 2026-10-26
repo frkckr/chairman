@@ -1,5 +1,7 @@
 # H3 — Yeni sezon ve sezon geçişi, kayıpsız sezon arşivi (uygulama planı)
 
+> **Not (2026-10-26 gece, Y0; YOL_HARITASI karar 52):** H2-c kayıt sürümünü 10 yaptığı için bu turun sürümü **11**'dir: aşağıdaki “10”, `KAYIT_GECISLERI[9]` ve “9→10” bir kayar (`KAYIT_GECISLERI[10]`, sürüm 10 sigorta örnekleri H2 koduyla). H3'ten sonra sıra Y1'dir (`y-program.md`). Plan tur başında bu notla yeniden gözden geçirilir ve onaylanır.
+
 Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüstü. Dal `claude/h3-yeni-sezon` (taban `tur/h2-istekler` (H2 kullanıcı istekleri sonrası)), etiket `tur/h3-sezon`. YOL_HARITASI 5.1 (sezon geçişi; TEST tarifiyle, kesin lig formatı açık — karar 36, OYUN_TASARIMI §13), 5.2'nin başlangıcı (sezon arşivi ve kayıt bileşimi ölçümü), borçlar `macOkundu`, `yasUret` 2026 sabiti, ay başı zincirinin sezon sonunda kesilmesi, `ILERLE_SINIRI` tuzağı. Program `araclar/plan/h-program.md`.
 
 ## Kapsam
