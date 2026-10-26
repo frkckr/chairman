@@ -489,3 +489,31 @@ Alt adımların sırası: önce düşük riskli akış işi (H2-a), sonra Canlı
 H2-0 ve H2-a dalda commit'li (`claude/h2-istekler`), dal push edildi; `main`'e alınmadı. Kalan: H2-b Canlı Skor ayrıntısı, H2-c kişiler ve yazışma (kayıt sürümü 10), H2-d mali rapor ve Kasa'nın kalkması, H2-e belgeler, inceleme ve kapanış kapıları. Yarın: `git fetch --prune --tags`, `git checkout claude/h2-istekler`, `git pull --ff-only`, H2-b'den sürülür (tabanlar scratch'teydi; gerekirse H2-0'daki komutlarla yeniden üretilir).
 
 **2026-10-26 gece (Y0, dizüstü):** dal `main`'i aldı (`tur/y0-omurga`: yönetim omurgası belgeleri, YOL_HARITASI kararları 51–52). Bu turun kapsamı değişmedi; Kadro sekmesi, kapı sahnesi ve şablonlar Y turlarındadır. Sıra (H2 → H3 → Y1–Y5) ve kayıt sürümü zinciri (H2 10, H3 11, Y1 12) `y-program.md`'de. H2-0'ın scratch tabanları dizüstünde yok; H2-b başında H2-0'daki komutlarla bu makinede yeniden üretilir.
+
+## Oto mod 4 planı (2026-10-26 gece, dizüstü; H2'nin kalanı)
+
+Durum: **onaylandı (kullanıcı, 2026-10-26 gece: “H2-b'den başla, beni bekleme; kapanış denetimlerini geçerse etiketi at, main'e al ve push et”).** Plan Fable 5.1'in, uygulama Opus 5.5. Kullanıcı en az beş saat uzakta; “birkaç adım için plan çıkar, onaylarsam oto modda beni beklemeden devam et.” Bu bölüm o oto modun kapsamı, dizüstü uyarlamaları ve durma kurallarıdır; alt adımların içeriği ve kabul koşulları yukarıdaki plandır, değişmez. Uygulama Opus 5.5 (kullanıcı modeli değiştirdi); ajanlar dosya düzenler, denetimleri tek yürütücü sırayla koşar (“Çalışma biçimi”).
+
+**Kapsam ve sıra (yalnız H2):** H2-b Canlı Skor ayrıntısı → H2-c kişiler, yazışma ve görüşme isteği (kayıt sürümü 10) → H2-d mali rapor ve Kasa'nın kalkması → H2-e belgeler, inceleme ve kapanış denetimleri. Her alt adım kendi “Kabul” listesini geçmeden commit edilmez; geçince commit edilir, `git fetch` yapılır, uzak dal ilerlememişse push edilir (ilerlemişse push yok, durulur, devam notuna yazılır; zorla push yok). Tahmin (dizüstü, denetimler masaüstünden yavaş): H2-b 2,5 sa, H2-c 4 sa, H2-d 3 sa, H2-e 2 sa; beş saatte H2-b ve H2-c beklenir, H2-d başlayabilir. **Yeni tur açılmaz:** H2 kapanırsa durulur; H3 ve Y1 kullanıcı dönünce kendi planlarıyla.
+
+**Makine durumu (CLAUDE.md kuralı):**
+1. Başta `main`'in devam notuna (öbür ağaç `../chairman-main`) “Makine durumu: dizüstü çalışıyor, dal `claude/h2-istekler` (oto mod 4, 2026-10-26 gece; H2-b'den)” satırı; commit, fetch, push (`main`'e yalnız bu satır; Pages'e belge gider). Aynı satır H2 dalının devam notunda da tutulur ve her alt adım commit'inde güncellenir (“H2-b bitti, H2-c sürüyor” gibi).
+2. Bitişte (H2 kapanır ya da süre biter): dalın devam notu “Sıradaki” ve yarım iş satırıyla güncellenir, push; `main`'deki satır “boşta (dizüstü, <tarih saat>)” olur — H2 `main`'e alındıysa birleştirmeyle, alınmadıysa yalnız o satırı değiştiren küçük bir commit'le.
+3. Yarım kalan alt adımın işi dalda commit'siz kalmaz: oto mod bir alt adımın ortasında kesilmez; kullanıcı dönüp durdurursa o anki alt adımın denetimi tamamlanır ya da değişiklik “WIP (H2-x, denetimsiz)” etiketli ayrı commit olarak push edilir ve devam notuna yazılır.
+
+**Dizüstü uyarlamaları (bu makinede; masaüstü kuralları değişmez):**
+- Tabanlar scratch'te yeniden üretilir, `main`'in kodu olan `../chairman-main` ağacında: `node araclar/oturum-sonu.js araclar/taban/g1.json --ayni --mac 24` → `!` satırları `h2-oturum-taban.txt`; `sezon-deneme 18 7 --tek --teklif sat --talep onayla --p12 degisim --json`, aynısı `--p12 sabir`, `sezon-deneme 3 7 --json` → `h2-sezon-*.json`. Oturum sonu her commit öncesi `--mac 24 --ayni` ile (24/24 birebir); tur kapanışında `--seyrek` ile aynı 24 maç (40 maç masaüstünde, kapanış notuna yazılır).
+- `akis-deneme.py` bölümleri ayrı ayrı koşulur (bellek notu: §11, §12, §14, §14b, §15, §15b gerçek saatli beklemelerde bu makinede düşer, §16 titreyebilir). Kural: bir bölüm burada düşüyorsa aynı bölüm `../chairman-main`'de (main'in kodu) de koşulur; orada da aynı yerde düşüyorsa makine düşüşüdür, gerileme değildir ve devam notuna yazılır; orada geçiyorsa gerilemedir, düzeltilir. Tur kapanışındaki “tamamı masaüstünde” koşusu kalır: H2 bu dizüstünde kapanırsa devam notuna “akis-deneme tamamı masaüstünde bir kez daha” borcu yazılır, `main`'e alma bunu beklemez (önceki emsal: A2a, T4h, U1).
+- `akis-2d.py` ve `kontrol.py` burada `-X utf8` ile, `-I` olmadan ya da olsun fark etmez (Playwright sistem paketlerinde, Chromium yüklü); tarayıcı denetimleri birbiriyle ve ağır Node denetimleriyle aynı anda koşmaz (8 iş parçacığı; akis 20 sabit 8766 portu).
+- Hız ölçümü yok (motor dosyası değişmez; `git diff --exit-code main -- <motor listesi>` her commit öncesi boş).
+- `file://` ve http süreleri bu makinede ölçülür ve “dizüstü” etiketiyle yazılır; README'deki masaüstü süreleri silinmez.
+
+**Durma ve karar kuralları:**
+- Kabul listesinde olmayan bir düşüş ya da plandan sapma gerektiren bir durum çıkarsa kural: düzeltme küçük ve plan metnine uygunsa yapılır ve “Sapmalar”a yazılır; kapsamı genişletecek ya da OYUN_TASARIMI kuralını değiştirecekse yapılmaz, alt adım orada durur, soru devam notuna yazılır ve sıradaki bağımsız alt adıma geçilir (H2-d H2-c'ye bağlı değildir; H2-e hepsine bağlıdır).
+- Yeni oyun içeriği yazılmaz (karar 7); eklenen her metin TEST yer tutucudur; yeni kişi yalnız yardımcı antrenör ve mali işler müdürü (karar 50). Yönetim omurgası (Y) bu turda uygulanmaz: Kadro sekmesi, kapı sahnesi, şablonlar, gündem ve tutum Y1–Y3'tedir.
+- Kayıt sürümü 10 H2-c'de açılır; H2-0'ın üç sürüm 9 örneği zaten depodadır.
+- `main`'e alma: **kullanıcının sözüyle** (aşağıdaki soru). İzin verilirse kapanış denetimleri geçince `tur/h2-istekler` etiketi, `main` ileri sarılır (`../chairman-main`), `main` ve etiket push edilir, dal silinir; izin yoksa etiket yerel kalır, dal push'lu bekler, kullanıcı dönünce bakar.
+
+**Kullanıcı dönünce bulacakları:** YOL_HARITASI devam notunda alt adım alt adım ne bitti, ne yarım, hangi düşüş makine düşüşü sayıldı, ölçülen süreler; bu dosyanın “Sapmalar” ve “Durum” bölümleri; oyunda bakmak için `git checkout claude/h2-istekler` (ya da `main`'e alındıysa `main`), http'den açılış (README).
+
+**Cevap (kullanıcı):** kapanış denetimlerini geçerse etiket atılır, `main`'e alınır ve push edilir.

@@ -20,7 +20,7 @@ Son güncelleme: 2026-10-26 gece (Y0: yönetim omurgası programı — kullanıc
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır).
 
-**Makine durumu: boşta (dizüstü, 2026-10-26 gece).** Öbür makinede: bu satır “çalışıyor” ve dalın son push'u 2 saatten yeniyse devam edilmez.
+**Makine durumu: dizüstü çalışıyor, dal `claude/h2-istekler` (oto mod 4, 2026-10-26 gece; H2-b'den).** Öbür makinede: bu satır “çalışıyor” ve dalın son push'u 2 saatten yeniyse devam edilmez.
 
 **2026-10-26 gece, dizüstü — Y0: yönetim omurgası programı (`tur/y0-omurga`; plan `araclar/plan/y-program.md`; yalnız belgeler, oyun kodu değişmedi).** Kullanıcı “Kulüp Başkanlığı Oyunu – Sistem Tasarım Taslağı” PDF'ini getirdi (Papers, Please ve Reigns referanslı; beş katman, dosya şablonları, kişi modeli, kart sınıfları, gün ritmi, genel kurul). İnceleme: beş ilkesi kesin kararlarla örtüşüyor; omurga, şablon ve kişi modeli alındı, çelişenler kullanıcıya soruldu (kararlar 51–52).
 - **Kullanıcının cevapları:** pazarlıkta çark yok, ekip iki rakam önerir, kartın iki yüzü bu rakamlar; PDF'teki gibi TEST kişileri Claude yaratır; sezon süresi kısılmaz (10 saat hedefi alınmadı, dengeyi Claude kurar); yardımcı antrenör kalır.
