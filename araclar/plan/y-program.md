@@ -1,6 +1,6 @@
 # Y — Yönetim omurgası programı (2026-10-26 gece, dizüstü)
 
-Durum: **planlandı (Fable), kullanıcı onayı bekliyor.** Kaynak: kullanıcının “Kulüp Başkanlığı Oyunu – Sistem Tasarım Taslağı” PDF'i (26 Ekim 2026, 24 sayfa) ve aynı gün sohbette verdiği kararlar. Bu dosya programın kaydıdır: Y0 belge turunun adımları (bu tur), Y1–Y5 kod turlarının kapsamı (her biri kendi başında ayrıca planlanır ve onaylanır), git sırası ve temizlik. Onaylı kararlar YOL_HARITASI “Geçerli kararlar” 51–52'ye, kurallar ilgili ana belgelere Y0 ile işlenir; bu dosya belge değildir (araclar/plan/OKU.md).
+Durum: **onaylandı (kullanıcı, 2026-10-26 gece: “Y0'a bu planla başla”); Y0 uygulandı (dal `claude/y0-omurga`, etiket `tur/y0-omurga`; §8), `main`'e alma kullanıcının sözüyle.** Kaynak: kullanıcının “Kulüp Başkanlığı Oyunu – Sistem Tasarım Taslağı” PDF'i (26 Ekim 2026, 24 sayfa) ve aynı gün sohbette verdiği kararlar. Bu dosya programın kaydıdır: Y0 belge turunun adımları (bu tur), Y1–Y5 kod turlarının kapsamı (her biri kendi başında ayrıca planlanır ve onaylanır), git sırası ve temizlik. Onaylı kararlar YOL_HARITASI “Geçerli kararlar” 51–52'ye, kurallar ilgili ana belgelere Y0 ile işlenir; bu dosya belge değildir (araclar/plan/OKU.md).
 
 ## 1. Bağlam
 
@@ -60,7 +60,7 @@ Durum: **planlandı (Fable), kullanıcı onayı bekliyor.** Kaynak: kullanıcın
 2. Bu plan dosyası bugün `claude/h2-istekler` ağacında izlenmiyor; `git checkout -b claude/y0-omurga main` (izlenmeyen dosya dalı izler). İlk commit: `araclar/plan/y-program.md` + `araclar/plan/OKU.md` satırı.
 3. Belge commit'leri (4.2–4.3; dosya başına ya da birkaç dosya birlikte, her commit tek konu).
 4. Kontrol (4.5). Etiket `git tag -a tur/y0-omurga` (açıklamalı: PDF incelemesi, kararlar 51–52, Y programı).
-5. **Kullanıcının sözüyle:** `git checkout main && git merge --ff-only claude/y0-omurga`, `git push origin main tur/y0-omurga`; dal silinir. `../chairman-main` ağacı `git -C ../chairman-main pull --ff-only`.
+5. **Kullanıcının sözüyle:** `main` `../chairman-main` ağacında açık olduğu için ileri sarma orada yapılır: `git -C ../chairman-main merge --ff-only claude/y0-omurga`; ardından `git push origin main tur/y0-omurga`; dal silinir (`git branch -d claude/y0-omurga`).
 6. `git checkout claude/h2-istekler && git merge main` (çakışma yalnız YOL_HARITASI devam notunda beklenir: Y0 paragrafı üstte, H2 yarım satırı altta kalır); `h2-uygulama.md` “Durum”a bir satır: Y0 geçti, sıra ve kayıt sürümü zinciri y-program'da; push. H2-b'den sürülür.
 
 ### 4.2 Belge değişiklikleri (dosya dosya)
@@ -95,7 +95,7 @@ Durum: **planlandı (Fable), kullanıcı onayı bekliyor.** Kaynak: kullanıcın
 
 ### 4.4 Temizlik
 
-- `git worktree prune`; `../chairman-main` ağacı `main`'e ileri sarılır (4.1 adım 5).
+- `../chairman-main` ağacı `main`'in kendisidir; 4.1 adım 5'te ileri sarılır. `git worktree list` iki geçerli ağaç gösteriyor, budanacak kayıt yok.
 - Uzak dallar: `claude/h2-istekler` sürer; `claude/stat-gorsel` kalır (h-program sorusu 1'in cevabı: prototipler `main`'e alınmaz, görsel tura kadar dalda).
 - Scratch: H2-0'ın tabanları (`h2-oturum-taban.txt`, `h2-sezon-*.json`) makineye bağlıdır; H2-b başında H2-0'daki komutlarla bu makinede yeniden üretilir.
 - `araclar/plan/` dosya sayısı artıyor; kapanmış turların planları silinmez (OKU.md kuralı: silmek serbest, git'te kalır) — bu turda dokunulmaz.
@@ -103,7 +103,7 @@ Durum: **planlandı (Fable), kullanıcı onayı bekliyor.** Kaynak: kullanıcın
 
 ### 4.5 Kontrol ve kapanış (yalnız belge değişikliği)
 
-- Yerel bağlantılar: değişen belgelerdeki `](…md#…)` hedefleri ve plan dosyası yolları (küçük grep betiği scratch'te).
+- Yerel bağlantılar: değişen belgelerdeki dosya bağlantıları ve başlık çapaları (küçük denetim betiği scratch'te).
 - Mevcut durum ile hedef ayrımı: yeni bölümlerde “hedef / bugünkü uygulama” etiketi; H2'nin yarım işleri “bugün çalışan” sayılmaz.
 - Belgeler arası tutarlılık: karar numaraları 51–52, tarihler, Y1–Y5 adları, kayıt sürümü zinciri aynı.
 - `git diff --check`. Tarayıcı ve maç denemesi gerekmez (kod değişmedi).
@@ -175,3 +175,10 @@ Kesilme kuralı h-program'daki gibi: kabul koşullarını geçmeyen tur `main`'e
 - Personel maliyet ölçeği ve slot ücretleri: Y1'de TEST tutarlar.
 - Kapı sahnesinde konu listesi: açık meselelerle sınırlı (Claude kararı); kullanıcı serbest bırakabilir.
 - `tur/y0-omurga` `main`'e alınıp push edilsin mi (yalnız belgeler Pages'e gider).
+
+## 8. Uygulama kaydı (Y0, 2026-10-26 gece, dizüstü)
+
+- **Commit'ler** (`claude/y0-omurga`, taban `main` d31ea81): plan ve OKU.md satırı; OYUN_TASARIMI; TEKNIK_PLAN; YOL_HARITASI; CLAUDE.md, OLAY_KUTUPHANESI ve STIL_REHBERI; plan dizininin durum notları; bu kayıt. Oyun kodu, araçlar ve tabanlar değişmedi.
+- **Denetim:** değişen 13 belgedeki dosya bağlantıları ve başlık çapaları tutuyor (yeni bölüm çapaları dahil: `#yönetim-omurgası-beş-katman`, `#dosya-şablonları`, `#personel-ve-çekirdek-kişiler`, `#genel-kurul-ve-güven-oyu`, `#gün-ve-hafta-ritmi`, `#kişi-modeli`); `git diff --check main` temiz. Tarayıcı ve maç denemesi gerekmedi (CLAUDE.md “Yalnız belge değişikliği”).
+- **Sapmalar:** (1) H2'nin yarım durumu `main`'in devam notuna da yazıldı (planda yalnız H2 dalına bir satırdı): H2 dalı `main`'i alırken devam notundaki çakışma `main`'in sürümüyle çözülebilsin. (2) Y eşlemesi YOL_HARITASI'nda F eşlemesinin hemen altında (Aşama 3 başında) durur; bütün aşamaları kapsar. (3) `h2-uygulama.md` yalnız H2 dalında olduğu için Y0 ona dokunmadı (planla aynı). (4) `main` öbür ağaçta açık olduğu için 4.1 adım 5'in ileri sarma komutu düzeltildi.
+- **Kalan (kullanıcının sözüyle):** `main`'e alma ve push (4.1 adım 5), H2 dalının `main`'i alması (adım 6), sonra H2-b.
