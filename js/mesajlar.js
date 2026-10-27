@@ -86,13 +86,14 @@ function konusmaListesi(k){
     const m=r.meseleId?k.meseleler[r.meseleId]:null;if(r.meseleId&&!m)continue;
     const hedef=r.soran&&k.kisiler[r.soran]?r.soran:null;
     if(!hedef)continue;
-    const sira=!m?anDakika(g.tarih,g.dakika):Number.isInteger(r.olaySira)?r.olaySira-0.5:-1,mid=m?m.id:null;
+    /* inceleme (H2-e): mesele açmayan kararın cevabı aynı dakikadaki kaynak mesajından (öneri) sonra gelsin: +0,5 */
+    const sira=!m?anDakika(g.tarih,g.dakika)+0.5:Number.isInteger(r.olaySira)?r.olaySira-0.5:-1,mid=m?m.id:null;
     ekle(al(hedef),mid,r.secimMetni?{tarih:g.tarih,dakika:g.dakika,yon:'giden',metin:r.secimMetni,meseleId:mid,yeni:false,sira}
       :{tarih:g.tarih,dakika:g.dakika,yon:'not',metin:'Cevap vermedin.',meseleId:mid,yeni:false,sira});
   }
   /* F3-b: meseleye bağlı olmayan mesajlar (MESAJ_KAYNAKLARI). H2-c: öğe yönünü kendisi taşır (yazışmada giden soru ve “Cevap gelmedi.” notu; js/yazisma.js) */
   for(const f of MESAJ_KAYNAKLARI)for(const x of f(k))if(k.kisiler[x.kisiId]){const c=al(x.kisiId);
-    c.mesajlar.push({tarih:x.tarih,dakika:x.dakika,yon:x.yon||'gelen',metin:x.metin,meseleId:null,yeni:!!x.yeni,sira:anDakika(x.tarih,x.dakika)});}
+    c.mesajlar.push({tarih:x.tarih,dakika:x.dakika,yon:x.yon||'gelen',metin:x.metin,meseleId:null,yeni:!!x.yeni,sira:anDakika(x.tarih,x.dakika)+(+x.siraEk||0)});}   /* H2-e: aynı dakikada sıra eki */
   /* başkanın başlatabileceği görüşmeler: ilgili kişinin konuşmasında öneri olarak */
   if(typeof girisimListesi==='function')for(const G of girisimListesi(k)){
     const id=GIRISIMLER[G.id].kisi?GIRISIMLER[G.id].kisi(k):null;

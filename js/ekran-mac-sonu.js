@@ -142,7 +142,9 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   }
   E.addEventListener('click',e=>{const b=e.target.closest('button[data-eylem="odayaDon"]');if(b&&!b.disabled)msOdayaDon();});
   /* H2-a: Odaya dön beklemesinin durum satırı: biten öbür maç sayısı */
-  const bekleYaz=()=>{const L=LIG_CANLI,n=L.filter(x=>x.m?x.m.phase==='fulltime':!!x.son).length;durumYaz('Öbür maçlar tamamlanıyor… '+n+'/'+L.length);};
+  /* inceleme (H2-e): canlı bölge her karede yeniden yazılmaz (yalnız değişince); duraklatmada bekleme durur ve bunu söyler */
+  const bekleYaz=()=>{const L=LIG_CANLI,n=L.filter(x=>x.m?x.m.phase==='fulltime':!!x.son).length,p=E.querySelector('.ms-durum');
+    const t=(duraklatmaVar()?'Duraklatıldı · öbür maçlar ':'Öbür maçlar tamamlanıyor… ')+n+'/'+L.length;if(!p||p.textContent!==t)durumYaz(t);};
   var macSonuKare=function(){
     const S=MAC_SONU;
     hesapKare();   /* H2-a: perdenin örtüsü (kariyersiz adreste de) */

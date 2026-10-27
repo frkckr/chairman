@@ -1954,10 +1954,27 @@ async def bolum_21(tarayici, site, tum_hatalar):
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
     mid = await pg.evaluate("() => personelKisisi(OYUN.kariyer, 'maliMudur').id")
+    # inceleme (H2-e): biriken raporlarda “yeni” yalnız en yenisidir; dosya onu açar ve birikenler görüldü sayılır, rozet söner
+    await pg.evaluate("() => oyunKomut(k => { maliRaporBirak(k, 'demirkapi', 'haftalik'); maliRaporBirak(k, 'demirkapi', 'aylik'); })")
+    await pg.keyboard.press("Digit2")
+    await pg.keyboard.press("Escape")
+    await pg.wait_for_timeout(200)
+    r1 = await pg.evaluate("() => { const b = document.querySelector('.od-nesne[data-panel=\"dosya\"] .od-rozet'); return b ? b.textContent : ''; }")
+    await pg.keyboard.press("Digit3")
+    await pg.wait_for_selector(".dsy", timeout=10000)
+    r2 = await pg.evaluate("() => ({ baslik: [...document.querySelectorAll('.dsy .dsy-baslik')].map(x => x.textContent).join(' | '), gorulmedi: maliRaporlari(OYUN.kariyer).filter(x => !x.h.gorulen).length })")
+    await pg.keyboard.press("Escape")
+    r3 = await pg.evaluate("() => { const b = document.querySelector('.od-nesne[data-panel=\"dosya\"] .od-rozet'); return b ? b.textContent : ''; }")
+    denetle("İnceleme (H2-e): üç görülmemiş raporda dosya “yeni”; 3 en yeni raporu (aylık) açar, birikenler görüldü sayılır, kapatınca rozet söner",
+            r1 == "yeni" and "Aylık mali rapor" in r2["baslik"] and r2["gorulmedi"] == 0 and r3 == "", f"{r1} · {r2} · {r3!r}")
     await pg.keyboard.press("Digit1")
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
     await pg.click(f'.tel [data-eylem="telKisi"][data-kisi="{mid}"]')
     await pg.click('.tel [data-eylem="girisim"][data-girisim="yaz.maliMudur.kasa"]')
+    odak = await pg.evaluate("() => { const a = document.activeElement; return { tel: !!(a && a.closest('.tel')), ad: a ? (a.className || a.tagName) : '', duyuru: (document.getElementById('kartDuyuru') || {}).textContent || '' }; }")
+    await pg.wait_for_timeout(150)
+    duy = await pg.evaluate("() => (document.getElementById('kartDuyuru') || {}).textContent || ''")
+    denetle("İnceleme (H2-e): kişiye yazınca odak telefonda kalır ve gönderildiği duyurulur", odak["tel"] and "Mesaj gitti" in duy, f"{odak} · {duy}")
     await pg.keyboard.press("Escape")
     await pg.keyboard.press("Escape")
     await oda_ilerle(pg)
@@ -1981,11 +1998,60 @@ async def bolum_21(tarayici, site, tum_hatalar):
         secenek: t ? kararSecenekleri(k, t).map(s => s.id).join(',') : '', rapor: Object.values(k.isler).some(x => x.tur === 'maliRapor') }; }""")
     denetle("H2-d: sürüm 9 Ocak kaydı geçişle açılır: oda hatasız, kayıt sürümü 10; telefonda hoca, yardımcı ve müdür; gelen teklif kartı iki cevapla yerinde; mali rapor işi kaydın anında",
             s9["surum"] == 10 and not s9["bozuk"] and "maliMudur" in s9["roller"] and "yardimciAntrenor" in s9["roller"] and "teknikDirektor" in s9["roller"] and s9["teklif"] and s9["secenek"] == "sat,reddet" and s9["rapor"], str(s9))
+    # inceleme (H2-e): masadan açılışta cevap bekleyen konu, seçili açık konunun önündedir
+    SECILI_JS = "() => { const b = document.querySelector('.dsy-sekme[aria-selected=\"true\"][data-mesele]'); const m = b && OYUN.kariyer.meseleler[b.dataset.mesele]; return m ? m.id + ':' + m.durum : ''; }"
+    await pg.keyboard.press("Digit3")
+    await pg.wait_for_selector(".dsy", timeout=10000)
+    s1 = await pg.evaluate(SECILI_JS)
+    obur = await pg.evaluate("() => { const b = [...document.querySelectorAll('.dsy-sekme[data-mesele]')].find(x => x.getAttribute('aria-selected') !== 'true'); return b ? b.dataset.mesele : null; }")
+    s2 = ""
+    if obur:
+        await pg.click(f'.dsy-sekme[data-mesele="{obur}"]')
+        await pg.keyboard.press("Escape")
+        await pg.keyboard.press("Digit3")
+        await pg.wait_for_selector(".dsy", timeout=10000)
+        s2 = await pg.evaluate(SECILI_JS)
+    await pg.keyboard.press("Escape")
+    denetle("İnceleme (H2-e): Ocak kaydında dosya karar bekleyen konuyla açılır; öbür açık konu seçilip kapatılınca masadan yine karar bekleyen konu açılır",
+            s1.endswith(":kararBekliyor") and (obur is None or s2 == s1), f"{s1} · öbür {obur} · {s2}")
     await oda_ilerle(pg)
     await pg.keyboard.press("Digit3")
     await pg.wait_for_selector(".dsy", timeout=10000)
     rs = await pg.text_content(".dsy-sekmeler")
     denetle("H2-d: ilk İlerle'den sonra dosyada “Raporlar (1)”", "Raporlar (1)" in rs, rs[:120])
+    # inceleme (H2-e): büyük yazıda, 800 px'te iki açık konu, Raporlar, Arşiv ve Kapat: sekmeler birbirinin üstüne binmez, sayaçlı sekmenin yazısı kutusunda
+    await pg.keyboard.press("Escape")
+    await pg.set_viewport_size({"width": 800, "height": 600})
+    await pg.click('.od-nesne[data-panel="ayar"]')
+    await pg.click('[data-eylem="yazi"][data-yazi="buyuk"]')
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("Digit3")
+    await pg.wait_for_selector(".dsy", timeout=10000)
+    sk = await pg.evaluate("""() => { const B = [...document.querySelectorAll('.dsy-sekmeler > button')], r = B.map(b => b.getBoundingClientRect());
+      return { n: B.length, binme: r.slice(1).map((x, i) => Math.round(r[i].right - x.left)).filter(v => v > 1),
+        tasan: B.filter(b => b.matches('.dsy-raporSekme, .dsy-arsivSekme, .od-kapat') && b.scrollWidth > b.clientWidth + 1).map(b => b.textContent) }; }""")
+    await pg.screenshot(path=str(ARAC / "son-akis-21-sekmeler-dar.png"))
+    denetle("İnceleme (H2-e): büyük yazı ve 800 px'te dosya şeridinde sekmeler üst üste binmez, Raporlar ve Arşiv yazısı kutusunda (konu başlıkları kısalır)",
+            sk["n"] >= 5 and not sk["binme"] and not sk["tasan"], str(sk))
+    # inceleme (H2-e): hocaya sabır verilince o konu açık ama karar beklemiyor; o seçiliyken dosya kapatılıp masadan açılınca karar bekleyen teklif önde
+    await pg.keyboard.press("Escape")
+    sb = await pg.evaluate("""() => { const k = OYUN.kariyer, is = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.karar && /sabır/i.test((k.meseleler[x.veri.meseleId] || {}).baslik || ''));
+      if (!is) return null; const s = kararSecenekleri(k, is).find(x => /sab/i.test(x.id + ' ' + x.metin)); if (!s) return null;
+      oyunKomut(x => ajandaIsiYap(x, is.id, s.id)); const k2 = OYUN.kariyer; return { p12: is.veri.meseleId, durum: k2.meseleler[is.veri.meseleId].durum }; }""")
+    await pg.keyboard.press("Digit2")
+    await pg.keyboard.press("Escape")
+    s3 = s4 = ""
+    if sb:
+        await pg.keyboard.press("Digit3")
+        await pg.wait_for_selector(".dsy", timeout=10000)
+        await pg.click(f'.dsy-sekme[data-mesele="{sb["p12"]}"]')
+        s3 = await pg.evaluate(SECILI_JS)
+        await pg.keyboard.press("Escape")
+        await pg.keyboard.press("Digit3")
+        await pg.wait_for_selector(".dsy", timeout=10000)
+        s4 = await pg.evaluate(SECILI_JS)
+    denetle("İnceleme (H2-e): sabırdan sonra açık hoca konusu seçiliyken dosya kapatılıp masadan açılınca karar bekleyen teklif açılır (Claude kararı 17: karar öndedir)",
+            bool(sb) and sb["durum"] != "kararBekliyor" and s3.startswith(sb["p12"] + ":") and s4.endswith(":kararBekliyor") and not s4.startswith(sb["p12"] + ":"), f"{sb} · {s3} → {s4}")
     await baglam.close()
 
 
@@ -2098,7 +2164,8 @@ async def bolum_20(tarayici, site, tum_hatalar):
           kip: MAC_ARKA.kip, skor: MAC_SONU.sonuc.skor.join('–'), cizim: renderer.info.render.frame, serit: document.getElementById('baskanDugmeleri').hidden })""")
         denetle("H2-a: http'de 'Maçı izleme': kart açıldı; MAC_SONU.sonuc, işçinin sonuç ikizi ve aynı tohumla doğal oynanan canlı maçın kaydı birebir; sayfa hiç çizilmedi, şerit gizli",
                 z["kip"] == "isci" and z["sonuc"] == z["ikiz"] == d["kayit"] and z["cizim"] == 0 and z["serit"],
-                f"Maçı izleme → kart {sure2:.1f} sn (http) · kazanan yol: {'sonuç ikizi (anlık)' if z['anlik'] else 'ana iplik'} · {z['skor']}")
+                f"Maçı izleme → kart {sure2:.1f} sn (http) · kazanan yol: {'sonuç ikizi (anlık)' if z['anlik'] else 'ana iplik'} · {z['skor']} · kip {z['kip']} · ikiz {'var' if z['ikiz'] else 'yok'}"
+                f" · sonuç=ikiz {z['sonuc'] == z['ikiz']} · sonuç=canlı {z['sonuc'] == d['kayit']} · çizim {z['cizim']} · şerit gizli {z['serit']}")
         await baglam.close()
         # H2-a: sayfa açılışından hemen sonra (işçiler bitmeden) basılan Maçı bitir: örtü görünür, kart yarışı kazanan yolun sonucuyla; sonra işçi düşer
         baglam, pg, _ = await mac_sayfasi(bekle=False)

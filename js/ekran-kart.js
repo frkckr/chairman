@@ -121,12 +121,13 @@ function kararKarti(k,isId,s={}){
 
 /* ---- duyuru: ev sahipleri önizlemede kartı baştan kurar (innerHTML); kartın içinde yeni eklenen canlı bölge ekran okuyucuya duyurulmaz. Yüzün
    metni belgede kalıcı tek canlı bölgeye (#kartDuyuru, görünmez) yazılır; aynı metin yeniden duyurulsun diye önce boşaltılır (inceleme 2026-10-26) ---- */
-const kartDuyur=(()=>{let z=null;return c=>{
-  const y=c&&c.querySelector('.kk-yuz');if(!y||!document.body)return;
+/* metinDuyur(metin): aynı kalıcı bölgeye düz metin (H2-e: kişiye yazınca şeridin metni; oda her eylemde yeniden çizildiği için .od-mesaj duyurulmaz) */
+const metinDuyur=(()=>{let z=null;return t=>{
+  if(!t||typeof document==='undefined'||!document.body)return;
   let d=document.getElementById('kartDuyuru');
   if(!d){d=document.createElement('div');d.id='kartDuyuru';d.setAttribute('role','status');d.setAttribute('aria-live','polite');d.setAttribute('aria-atomic','true');document.body.appendChild(d);}
-  const t=(y.innerText||y.textContent||'').replace(/\s+/g,' ').trim();
-  d.textContent='';clearTimeout(z);z=setTimeout(()=>{d.textContent=t;},50);};})();
+  d.textContent='';clearTimeout(z);z=setTimeout(()=>{d.textContent=String(t);},50);};})();
+const kartDuyur=c=>{const y=c&&c.querySelector('.kk-yuz');if(!y)return;metinDuyur((y.innerText||y.textContent||'').replace(/\s+/g,' ').trim());};
 
 /* ---- etkileşim: sürükleme, kenar etiketi ve klavye; kök başına bir kez kurulur ---- */
 function kartEtkilesimKur(kok,o){

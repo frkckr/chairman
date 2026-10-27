@@ -87,6 +87,7 @@ function isIptal(k,id,neden){
   const v=is.veri||{},baslik=v.baslik||v.aciklama||v.metin||is.tur;
   delete k.isler[id];
   const kayit={tur:'iptal',isId:id,isTuru:is.tur,tarih:k.tarih,dakika:k.gunIciDakika,baslik:String(baslik),neden:String(neden||'')};
+  if(v.muhatap)kayit.muhatap=String(v.muhatap);   /* H2-e: iptal edilen yazışma cevabının kişisi (konuşmada “Cevap gelmedi.”; js/yazisma.js) */
   k.gecmis.push(kayit);
   return kayit;
 }

@@ -78,10 +78,11 @@ function maliRaporOkumasi(k,h){
     S.push({ad:'90 gün içinde en düşük',tutar:p.enDusuk,tarih:p.enDusukTarih},{ad:'90 gün sonra (kesin)',tutar:p.son90},{ad:'Belirsiz gelir (bilet tahmini)',tutar:p.belirsiz});
     if(tur==='aylik')S.push({ad:'Aylık maaş yükü',tutar:-p.maasYuku},{ad:'Bekleyen gelir',tutar:p.bekleyenGelir},{ad:'Bekleyen gider',tutar:p.bekleyenGider});
   }
-  /* aylık raporun hareketleri: önceki ayın 1'i ay başı saatinden raporun anına (o ayın maaşı ve lig payı dahil) */
+  /* aylık raporun hareketleri: önceki ay başından sonra (o ay başının kendi maaş ve lig payı önceki raporda; inceleme H2-e) raporun anına dek (bu ayın
+     maaşı ve lig payı dahil) */
   let hareketler=[];
   if(tur==='aylik'){const [y,a]=h.tarih.split('-').map(Number),O=a===1?`${y-1}-12-01`:`${y}-${String(a-1).padStart(2,'0')}-01`,bas=anDakika(O,MALI_TEST.saat),son=anDakika(h.tarih,h.dakika);
-    hareketler=(k.hareketler||[]).filter(x=>x.kulupId===p.kulupId&&anDakika(x.tarih,x.dakika)>=bas&&anDakika(x.tarih,x.dakika)<=son).map(x=>({tarih:x.tarih,dakika:x.dakika,aciklama:x.aciklama,tutar:x.tutar}));}
+    hareketler=(k.hareketler||[]).filter(x=>x.kulupId===p.kulupId&&anDakika(x.tarih,x.dakika)>bas&&anDakika(x.tarih,x.dakika)<=son).map(x=>({tarih:x.tarih,dakika:x.dakika,aciklama:x.aciklama,tutar:x.tutar}));}
   const uyari=tur==='uyari'||p.nakit<0?'Kasa eksiye düştü.':p.enDusuk<0?`Kasa ${gunAyYazi(p.enDusukTarih)} eksiye düşüyor.`:null;
   return{baslik:RAPOR_BASLIK[tur]||'Rapor',kaynakAd:kisiAdi(k,p.kaynak),tarih:h.tarih,dakika:h.dakika,satirlar:S,odemeler:p.odemeler||[],hareketler,uyari};
 }

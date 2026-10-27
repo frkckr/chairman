@@ -23,6 +23,9 @@
 .oda .dsy button.dsy-sekme{display:flex;align-items:center;gap:.4em;max-width:16em;min-width:0;padding:.35em .8em .3em;border:1px solid ${D.kapakKoyu};border-bottom:0;
   border-radius:.5em .5em 0 0;background:${D.sekme};color:var(--k-yazi);font-size:.9em;white-space:nowrap}
 .dsy-sekme span{overflow:hidden;text-overflow:ellipsis}
+/* inceleme (H2-e): sayaçlı sekmeler ve Kapat daralmaz (yazısı yandakinin üstüne binmesin); konu sekmelerinin başlığı kısalır */
+.oda .dsy button.dsy-raporSekme,.oda .dsy button.dsy-arsivSekme,.dsy-sekmeler .od-kapat{flex:none}
+.dsy-gizli{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .oda .dsy button.dsy-sekme[aria-selected="true"]{background:${D.sayfa};font-weight:600;padding-bottom:.45em;position:relative;top:1px}
 .oda .dsy button.dsy-sekme.dsy-arsivSekme{margin-left:auto;background:${D.kapakKoyu};color:${D.sayfa};border-color:${D.kapakKoyu}}
 .oda .dsy button.dsy-sekme.dsy-arsivSekme[aria-selected="true"]{background:${D.sayfa};color:var(--k-yazi)}
@@ -93,15 +96,15 @@ function dosyaGorunumu(k,D,Y){
       '<i class="od-kSimge" aria-hidden="true">'+yaz(s)+'</i><span>'+yaz(m.baslik)+'</span>'+(m.durum==='kararBekliyor'?'<i class="dsy-nokta" aria-label="cevap bekliyor"></i>':'')+'</button>';};
   let ic='<nav class="dsy-sekmeler" role="tablist" aria-label="Açık dosyalar">'+sekmeKimlik.map(sekme).join('')+
     (R.length?'<button type="button" class="dsy-sekme dsy-raporSekme" role="tab" data-eylem="raporlar" aria-selected="'+(raporGor?'true':'false')+'">Raporlar ('+R.length+')'+
-      (R.some(x=>!x.h.gorulen)?'<i class="dsy-yeniRapor" aria-label="yeni rapor"></i>':'')+'</button>':'')+
+      (R.some(x=>!x.h.gorulen)?'<i class="dsy-yeniRapor" aria-hidden="true"></i><span class="dsy-gizli"> (yeni rapor)</span>':'')+'</button>':'')+
     '<button type="button" class="dsy-sekme dsy-arsivSekme" role="tab" data-eylem="arsiv" aria-selected="'+(D.arsiv&&!raporGor?'true':'false')+'"'+(arsivL.length||D.arsiv?'':' disabled')+'>Arşiv ('+arsivL.length+')</button>'+
     '<button type="button" class="od-kapat" data-eylem="kapat" title="Kapat (Esc)">Kapat ×</button></nav>';
   let sol='',sag='';
   if(raporGor){
     const sec=R.some(x=>x.i===D.seciliRapor)?D.seciliRapor:R[0].i,O=maliRaporOkumasi(k,k.haberler[sec]),eksi=t=>t<0?' class="od-eksi"':'',tl=t=>yaz(paraYazi(t));
     sol='<p class="dsy-kat">Raporlar</p><h3 class="dsy-baslik">Mali işler</h3><ul class="dsy-arsiv">'+R.map(x=>{const B=maliRaporOkumasi(k,x.h);
-      return'<li><span>'+yaz(Y.tarihKisa(x.h.tarih))+'</span><span><button type="button" class="od-baglanti" data-eylem="raporAc" data-rapor="'+x.i+'"'+(x.i===sec?' aria-current="true"':'')+'>'+yaz(B.baslik)+'</button>'+
-        (x.h.gorulen?'':' <i class="dsy-yeniRapor" aria-label="yeni"></i>')+'</span></li>';}).join('')+'</ul>';
+      return'<li><span>'+yaz(Y.tarihKisa(x.h.tarih))+'</span><span><button type="button" class="od-baglanti" data-eylem="raporAc" data-rapor="'+x.i+'"'+(x.i===sec?' aria-current="true"':'')+'>'+yaz(B.baslik)+(x.h.gorulen?'':'<span class="dsy-gizli"> (yeni)</span>')+'</button>'+
+        (x.h.gorulen?'':' <i class="dsy-yeniRapor" aria-hidden="true"></i>')+'</span></li>';}).join('')+'</ul>';
     sag='<p class="dsy-kat">'+yaz(O.kaynakAd)+' · '+yaz(Y.tarihKisa(O.tarih))+' '+saatYazi(O.dakika)+'</p><h3 class="dsy-baslik">'+yaz(O.baslik)+'</h3>'+(O.uyari?'<p class="od-uyari">'+yaz(O.uyari)+'</p>':'')+
       '<dl class="od-dl dsy-rapor">'+O.satirlar.map((s,j)=>'<dt>'+yaz(s.ad)+'</dt><dd'+eksi(s.tutar)+'><span class="dsy-tutar">'+(j?tl(s.tutar):'<b>'+tl(s.tutar)+'</b>')+'</span>'+(s.tarih?'<small>'+yaz(Y.tarihKisa(s.tarih))+'</small>':'')+'</dd>').join('')+'</dl>'+
       (O.odemeler.length?'<h4>Ödeme takvimi</h4><ul class="od-liste od-sar dsy-raporListe" style="--an:7.5em">'+O.odemeler.map(x=>'<li class="od-satir"><span class="od-an">'+yaz(Y.tarihKisa(x.tarih))+'</span><span class="od-ad">'+yaz(x.kalem)+'</span><span'+eksi(x.tutar)+'>'+tl(x.tutar)+'</span></li>').join('')+'</ul>':'')+

@@ -193,7 +193,7 @@ KATILIM_ETKILERI.ekipGorusmesi={
 
 /* ---- telefonda gösterim (js/mesajlar.js MESAJ_KAYNAKLARI): giden soru, gelen cevap, cevapsız soru. Geçmiş tek geçişte taranır ---- */
 MESAJ_KAYNAKLARI.push(k=>{
-  const L=[],iptal=new Map(),cevap=new Map();
+  const L=[],iptal=new Map(),cevap=new Map(),bagli=new Set();
   for(const g of k.gecmis){
     if(g.tur==='iptal'&&g.isTuru==='gelisme')iptal.set(g.isId,g);
     else if(g.tur==='is'&&g.isTuru==='gelisme'&&g.sonuc&&g.sonuc.yazisma)cevap.set(g.isId,g);
@@ -201,7 +201,7 @@ MESAJ_KAYNAKLARI.push(k=>{
   for(const g of k.gecmis){
     if(g.tur==='girisim'&&g.kisiId&&YAZISMA_KONULARI[g.konu]){
       L.push({kisiId:g.kisiId,tarih:g.tarih,dakika:g.dakika,yon:'giden',metin:YAZISMA_KONULARI[g.konu].ad,yeni:false});
-      {const x=iptal.get(g.isId);if(x)L.push({kisiId:g.kisiId,tarih:x.tarih,dakika:x.dakika,yon:'not',metin:'Cevap gelmedi.',yeni:false});}
+      bagli.add(g.isId);{const x=iptal.get(g.isId);if(x)L.push({kisiId:g.kisiId,tarih:x.tarih,dakika:x.dakika,yon:'not',metin:'Cevap gelmedi.',yeni:false});}
     }else if(g.tur==='is'&&cevap.get(g.isId)===g){
       const y=g.sonuc.yazisma,p=k.kisiler[y.kisiId],K=YAZISMA_KONULARI[y.konu];if(!p||!K)continue;
       if(y.cevapYok){L.push({kisiId:y.kisiId,tarih:g.tarih,dakika:g.dakika,yon:'not',metin:'Cevap gelmedi.',yeni:false});continue;}
@@ -209,6 +209,8 @@ MESAJ_KAYNAKLARI.push(k=>{
       L.push({kisiId:y.kisiId,tarih:g.tarih,dakika:g.dakika,yon:'gelen',metin:f(k,y),yeni:anDakika(g.tarih,g.dakika)>(p.okunan|0)});
     }
   }
+  /* inceleme (H2-e): girişim kaydı olmayan cevap (“Başka gün iste”nin yenisi) iptal edilince de not: iptal kaydının muhatabından */
+  for(const x of iptal.values())if(x.muhatap&&!bagli.has(x.isId)&&k.kisiler[x.muhatap])L.push({kisiId:x.muhatap,tarih:x.tarih,dakika:x.dakika,yon:'not',metin:'Cevap gelmedi.',yeni:false,siraEk:0.75});   /* aynı dakikadaki cevaptan (+0,5) sonra */
   return L;
 });
 

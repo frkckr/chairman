@@ -86,7 +86,7 @@ ziyaretçi odaya girer; İlerle → durak: karar (dosya/telefon açılır), rand
 |---|---|---|---|
 | Maç sonucu | Canlı Skor, maç sonu kartı, hoca yorumu, defter notu | Maç akşamı sabır/değişim dosyası | Hoca |
 | Kadro | Dosya/Kadro, hocaya soru, antrenman gözlemi | Hocanın isteği (telefon kartı), gelen teklif (dosya kartı), sezon sonu yenileme | Hoca, sportif direktör |
-| Para | Dosya/Mali (saymanın özeti, 90 gün), ay başı özeti | Mali teklif kartları | Sayman |
+| Para | Dosya/Raporlar (H2-d: mali işler müdürünün haftalık özeti ve ay başı raporu, 90 gün; Kasa düğmesi kalktı) | Mali teklif kartları | Mali işler müdürü (TEST), sayman |
 | Stat ve tesis | Pencere, stat, Dosya/Mali yatırım teklifi | Yatırım kartı | Ekip |
 | Basın ve taraftar | Telefon, Cuma gazetesi, kapıda temsilci | Röportaj kartı, süreli karar anı | Başkan |
 | Yönetim kurulu | Kapı görüşmesi | Kart; seçim sahnesi | Başkan |
@@ -98,7 +98,7 @@ artınca). **Alınmayanlar:** sürekli yan menü, "Görevler" listesi, çok seç
 
 ## 4. Açık kararlar (kullanıcı)
 
-> **2026-10-26:** görsel tarz ve dış varlık (7) görsel tura kadar ertelendi (YOL_HARITASI 49). Kullanıcı istekleriyle kapananlar (karar 50, H2'de uygulanır): 2'nin mali yarısı — Kasa düğmesi kalkar, mali bilgi mali işler müdürünün raporuyla dosyaya gelir (Kadro sekmesi açık); 3 — kişiye (hoca, yardımcı, müdür) soru ve görüşme isteği zaman bedelli girişim. Öbürleri açık.
+> **2026-10-26:** görsel tarz ve dış varlık (7) görsel tura kadar ertelendi (YOL_HARITASI 49). Kullanıcı istekleriyle kapananlar (karar 50, H2'de uygulandı — `tur/h2-istekler`): 2'nin mali yarısı — Kasa düğmesi kalkar, mali bilgi mali işler müdürünün raporuyla dosyaya gelir (Kadro sekmesi açık); 3 — kişiye (hoca, yardımcı, müdür) soru ve görüşme isteği zaman bedelli girişim. Öbürleri açık.
 
 > **2026-10-26 gece (Y0, karar 51):** kalan noktalar kapandı — 1 bilgisayar nesnesi yok; 2'nin kalanı Kadro sekmesi Dosya'da (oyuncu dosyası: sert veri ve kartlardan biriken notlar); 4 ziyaretçi odaya gelir, kapıda konular açık meselelerle sınırlı; 5 oyuncu satırında yalnız gözlenebilir sayılar; 6 haftalık ritim OYUN_TASARIMI §6'da, gazete Pazartesi sabahı masada. Yalnız 7 (görsel) açık.
 

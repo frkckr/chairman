@@ -22,7 +22,8 @@ const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();
    hizliBitirIste). Basılınca kapanır ve dakikayı yazar; maç bitince gizlenir. Maç sonu kartı js/ekran-mac-sonu.js. H2-a: basılınca perde açılır,
    çizim durur (frame) */
 const btnHizliBitir=$('btnHizliBitir'),hizliBitirYazi=btnHizliBitir.querySelector('span');
-btnHizliBitir.onclick=()=>{hizliBitirIste();if(HIZLI_BITIR.bekliyor||HIZLI_BITIR.aktif){btnHizliBitir.disabled=true;btnHizliBitir.setAttribute('aria-busy','true');}};
+btnHizliBitir.onclick=()=>{if(typeof MAC_TELEFON!=='undefined'&&MAC_TELEFON.acik)MAC_TELEFON.kapat();   /* inceleme (H2-e): perde telefonun altında kalmasın */
+  hizliBitirIste();if(HIZLI_BITIR.bekliyor||HIZLI_BITIR.aktif){btnHizliBitir.disabled=true;btnHizliBitir.setAttribute('aria-busy','true');}};
 function hizliBitirGosterge(){
   if(mac.phase==='fulltime'||HIZLI_BITIR.anlik){if(!btnHizliBitir.hidden)btnHizliBitir.hidden=true;return;}   /* G1-e: sonuç ikiziyle anında */
   const H=HIZLI_BITIR;if(!H.aktif&&!H.bekliyor)return;
@@ -75,8 +76,9 @@ function frame(now){
   if(typeof locaGirisKare==='function')locaGirisKare(dt);   /* js/loca-giris.js (2.8T) */
   if(!btnMacaGec.hidden&&(!MAC_ONCESI.includes(mac.phase)||HIZLI_BITIR.anlik))btnMacaGec.hidden=true;
   /* H2-a: "Maçı bitir" perdesi açıkken çizilmez (bakış, okunurluk, başkanın ön planı ve çizim atlanır); son kare donuk kalır, üstünde
-     "Maç hesaplanıyor…" örtüsü ya da maç sonu kartı. Maç, kart, karar anı ve düğme göstergesi yukarıda sürer */
-  if(!HIZLI_BITIR.perde){
+     "Maç hesaplanıyor…" örtüsü ya da maç sonu kartı. Maç, kart, karar anı ve düğme göstergesi yukarıda sürer. H2-e: TEST “Maçı izleme”de ilk kareden
+     çizilmez (çizim döngüsü bu betikte başlar, izlemesiz başlatma son betikte; aradaki karelerde sayfa çizilmesin) */
+  if(!HIZLI_BITIR.perde&&!(MAC_GUNU.izlemesiz&&!MAC_GUNU.hata)){
     kameraUygula(curView());   /* js/kamera.js */
     okunurlukKare();           /* js/okunurluk.js: topun asgari boyu, havadaki topun lekesi */
     camera.updateMatrixWorld();baskanKare(dt,camera);

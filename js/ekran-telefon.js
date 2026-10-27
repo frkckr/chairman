@@ -108,6 +108,7 @@
 .tel-gelen{justify-self:start;background:${T.gelen};border:1px solid var(--k-cizgi);border-bottom-left-radius:.35em}
 .tel-giden{justify-self:end;background:${T.giden};border:1px solid ${T.gidenCizgi};border-bottom-right-radius:.35em}
 .tel-yeni{box-shadow:0 0 0 .14em var(--k-vurguZemin)}
+.tel-gizli{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .tel-dosya{font-style:normal}
 .tel-kararOzet{display:grid;gap:.3em;padding:.45em .6em;border:1px dashed var(--k-cizgi);border-radius:.8em;font-size:.92em}
 .tel-oneri{display:grid;gap:.15em;justify-items:start;padding:.3em .5em;border:1px dashed var(--k-cizgi);border-radius:.5em}
@@ -184,7 +185,8 @@ function telMacAyrinti(A,evKisa,depKisa){
     [0,1].map(t=>'<ul>'+L.filter(x=>x.t===t).map(x=>'<li class="tel-olay">'+dk(x)+f(x)+'</li>').join('')+'</ul>').join('')+'</div>':'<p class="tel-olayYok">'+yok+'</p>')+'</div>';
   return'<div class="tel-ayrinti">'+
     blok('gol','Goller',A.goller,'Gol yok.',g=>yazT(g.ad)+(g.kk?' <small>(k.k.)</small>':''))+
-    blok('kart','Kartlar',A.kartlar,'Kart yok.',c=>'<i class="tel-kartRenk" style="background:'+(R[c.renk]||R.sari)+'" title="'+(c.renk==='sari'?'Sarı kart':c.renk==='ikinciSari'?'İkinci sarıdan kırmızı':'Kırmızı kart')+'"></i>'+yazT(c.ad))+
+    blok('kart','Kartlar',A.kartlar,'Kart yok.',c=>{const ad=c.renk==='sari'?'Sarı kart':c.renk==='ikinciSari'?'İkinci sarıdan kırmızı':'Kırmızı kart';
+      return'<i class="tel-kartRenk" style="background:'+(R[c.renk]||R.sari)+'" title="'+ad+'" aria-hidden="true"></i><span class="tel-gizli">'+ad+': </span>'+yazT(c.ad);})+
     blok('sakat','Sakatlıklar',A.sakat,'Sakatlık yok.',x=>yazT(x.ad)+' <small>'+(TEL_SAKAT_DERECE[x.derece]||'')+(x.gun>0?' · ~'+x.gun+' gün':'')+'</small>')+
     '<table class="tel-ist"><thead><tr><th>'+yazT(evKisa||'')+'</th><th></th><th>'+yazT(depKisa||'')+'</th></tr></thead><tbody>'+
       A.satirlar.map(r=>'<tr><td>'+yazT(r[1])+'</td><th scope="row">'+yazT(r[0])+'</th><td>'+yazT(r[2])+'</td></tr>').join('')+'</tbody></table></div>';
@@ -199,7 +201,7 @@ const TEL_SIMGE={
 };
 const telSimge=(ad,ek)=>'<span class="tel-simge tel-simge'+(ad==='mesajlar'?'Mesaj':'Skor')+'">'+TEL_SIMGE[ad]+(ek||'')+'</span>';
 /* konuşmanın önizleme satırı: son mesaj (giden “Sen: ” ile); yazışma yoksa ilk öneri */
-const telOnizle=c=>{const son=c.mesajlar[c.mesajlar.length-1];return son?(son.yon==='giden'?'Sen: ':'')+son.metin:c.girisimler.length?c.girisimler[0].aciklama:'';};
+const telOnizle=(c,macta)=>{const son=c.mesajlar[c.mesajlar.length-1];return son?(son.yon==='giden'?'Sen: ':'')+son.metin:!macta&&c.girisimler.length?c.girisimler[0].aciklama:'';};   /* H2-e: maçta öneri yok */
 function telefonCiz(k,T,s={}){
   const ekran=T.ekran||'ana',M=s.mac||null;
   /* maçta saat yerine maçın kısa durumu (başlama saati, dakika, Devre, Bitti) */
@@ -213,7 +215,7 @@ function telefonCiz(k,T,s={}){
     const B=L.filter(c=>c.okunmamis>0||c.cevapBekliyor).slice(0,4).map(c=>{
       const son=c.mesajlar[c.mesajlar.length-1];
       return'<button type="button" class="tel-bildirim" data-eylem="telKisi" data-kisi="'+yazT(c.anahtar)+'">'+telSimge('mesajlar')+'<b>'+yazT(c.ad)+'</b><time>'+(son?yazT(telKisaAn(k,son.tarih,son.dakika)):'')+'</time>'+
-        '<span>'+(c.cevapBekliyor?'<span class="tel-bekliyor">Cevap bekliyor</span> · ':'')+yazT(telOnizle(c))+'</span></button>';
+        '<span>'+(c.cevapBekliyor?'<span class="tel-bekliyor">Cevap bekliyor</span> · ':'')+yazT(telOnizle(c,s.macta))+'</span></button>';
     });
     const rozet=cevap?'<i class="tel-rozet">'+cevap+'</i>':okunmamis?'<i class="tel-rozet">'+okunmamis+'</i>':'';
     ic='<div class="tel-saatBlok"><p class="tel-tarih">'+(k?yazT(telGunAdi(k.tarih)+', '+gunAyYazi(k.tarih)):'Maç günü')+'</p><p class="tel-saat">'+yazT(saat)+'</p></div>'+
@@ -228,7 +230,7 @@ function telefonCiz(k,T,s={}){
       const son=c.mesajlar[c.mesajlar.length-1];
       return'<li><button type="button" class="tel-kisi" data-eylem="telKisi" data-kisi="'+yazT(c.anahtar)+'"><i class="tel-nokta'+(c.okunmamis?' tel-okunmamis':'')+'" aria-hidden="true"></i>'+portreHtml(c.kisi,'tel-portre')+
         '<b>'+yazT(c.ad)+'</b><time>'+(son?yazT(telKisaAn(k,son.tarih,son.dakika)):'')+'</time>'+
-        '<span class="tel-onizle"><span>'+yazT(telOnizle(c))+'</span>'+(!c.cevapBekliyor&&c.okunmamis?'<i class="tel-rozet">'+c.okunmamis+'</i>':'')+'</span>'+
+        '<span class="tel-onizle"><span>'+yazT(telOnizle(c,s.macta))+'</span>'+(!c.cevapBekliyor&&c.okunmamis?'<i class="tel-rozet">'+c.okunmamis+'</i>':'')+'</span>'+
         (c.cevapBekliyor?'<i class="tel-etiket">Cevap bekliyor</i>':'')+'</button></li>';
     }).join('')+'</ul>';
   }else if(ekran==='konusma'){

@@ -77,7 +77,8 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null},onizleler:{}
     else if(ey==='telEv'){T.ekran='ana';T.kisi=null;ciz('.tel-uygMesaj',true);}
     else if(ey==='telKisi'){T.ekran='konusma';T.kisi=b.dataset.kisi;ciz('.tel-geri',true);const g=E.querySelector('.tel-govde');if(g)g.scrollTop=g.scrollHeight;}
     /* H2-b: satır kendi maç kimliğiyle açılır, aynı satır kapatır; odak aynı satırda kalır */
-    else if(ey==='skorAc'){const id=b.dataset.mac||null;T.skorAc=T.skorAc===id?null:id;ciz('[data-eylem="skorAc"][data-mac="'+id+'"]');}
+    else if(ey==='skorAc'){const id=b.dataset.mac||null,g0=E.querySelector('.tel-govde'),y0=g0?g0.scrollTop:0;T.skorAc=T.skorAc===id?null:id;ciz('[data-eylem="skorAc"][data-mac="'+id+'"]');
+      const g=E.querySelector('.tel-govde');if(g)g.scrollTop=y0;}   /* inceleme (H2-e): okuma yeri korunur (odadaki gibi) */
   });
   /* masadaki telefon: ön plan kamerasıyla isabet; üzerindeyken el imleci */
   const telefonUstunde=e=>{

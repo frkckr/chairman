@@ -654,6 +654,8 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
     denetle('Kabul et: deftere isteğe bağlı 45 dk randevu (öneri anında); konuşmada giden cevap; “Görüşelim” randevu varken kapalı',
       !!rv&&rv.tarih===gKart.veri.oneri.tarih&&rv.dakika===gKart.veri.oneri.dakika&&rv.veri.zorunluluk==='istege'&&rv.veri.sure===45&&kon(kb,hId).mesajlar.some(m=>m.yon==='giden'&&m.metin==='Kabul et')
       &&/Görüşme ayarlandı/.test((kon(kb,hId).girisimler.find(g=>g.id==='yaz.teknikDirektor.gorusme')||{}).engel||''),rv&&`${rv.tarih} ${MG('saatYazi')(rv.dakika)}`);
+    {const M=kon(kb,hId).mesajlar,io=M.findIndex(m=>m.yon==='gelen'&&/uygun mu/.test(m.metin)),ic=M.findIndex(m=>m.yon==='giden'&&m.metin==='Kabul et');
+     denetle('İnceleme (H2-e): aynı dakikada verilen cevap konuşmada önerinin altında (öneri, sonra “Kabul et”)',io>=0&&ic>io&&M[io].dakika===M[ic].dakika,`${io} · ${ic}`);}
     if(rv){let kc=kb;for(let g=0;g<8&&!(kc.tarih===rv.tarih&&kc.gunIciDakika===rv.dakika);g++)kc=ilerle3(kc).kariyer;
       const kat=KK3(kc,x=>MG('ajandaIsiYap')(x,rv.id)).kariyer,gr=kat.gecmis.find(g=>g.tur==='is'&&g.isId===rv.id);
       denetle('Randevuya katılınca kısa TEST özeti (“… ile görüştün”) öğrendiklerin olarak kalır',!!gr&&gr.sonuc.durum==='yapildi'&&/ile görüştün/.test(gr.sonuc.bilgi||''),gr&&gr.sonuc.bilgi);}
@@ -661,6 +663,10 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
     const ms=gelen(kd,hId);
     denetle('Başka gün iste: her ret yeni bir gün önerir; üçüncü retten sonra kart kurulmaz, “Uygun olduğunuzda yazın başkanım.”',
       !Object.values(kd.isler).some(x=>x.veri&&x.veri.karar==='gorusmeOnerisi')&&!!ms&&ms.metin==='Uygun olduğunuzda yazın başkanım.'&&!!son&&son.veri.deneme===2&&son.veri.oneri.tarih>gKart.veri.oneri.tarih,ms&&ms.metin);
+    {const kb2=KK3(gk,x=>MG('ajandaIsiYap')(x,gKart.id,'baska')).kariyer,ad=MG('hocaAdaylari')(kb2,'demirkapi','deneme')[0];
+     const kh=KK3(kb2,x=>MG('hocaDegistir')(x,'demirkapi',ad)).kariyer,M=kon(kh,hId).mesajlar,son=M[M.length-1];
+     denetle('İnceleme (H2-e): “Başka gün iste”den sonra hoca değişirse bekleyen yeni cevap düşer ve eski hocanın konuşması “Cevap gelmedi.” ile biter',
+       !Object.values(kh.isler).some(x=>x.veri&&x.veri.gelisme==='yazismaCevap'&&x.veri.muhatap===hId)&&!!son&&son.yon==='not'&&son.metin==='Cevap gelmedi.'&&!MG('kariyerDogrula')(kh).length,son&&son.metin);}
     let kz=gk;for(let g=0;g<6&&kz.isler[gKart.id];g++)kz=ilerle3(kz).kariyer;
     const gc=kz.gecmis.find(g=>g.tur==='is'&&g.isId===gKart.id);
     denetle('Cevapsız kalırsa (son cevap öneriden bir saat önce) görüşme olmaz; randevu yok; konuşmada “Cevap vermedin.”',
@@ -886,6 +892,10 @@ bolum('4.1c — mali işler müdürünün raporu (H2-d; js/mali-rapor.js; oyunun
    denetle('Okuma: haftalık kısa (kasa, 90 günün en düşüğü, 90 gün sonrası, belirsiz gelir; hareket yok); aylık ayrıntılı (maaş yükü, bekleyen gelir ve gider, ödeme takvimi, Aralık maaşı ve lig payı hareketleri); kaynak müdür',
      Oh.satirlar.length===4&&!Oh.hareketler.length&&ad.includes('Aylık maaş yükü')&&ad.includes('Bekleyen gider')&&Array.isArray(O.odemeler)&&O.hareketler.some(h=>/Aralık maaşları/.test(h.aciklama))
      &&O.hareketler.some(h=>/Aralık lig yayın payı/.test(h.aciklama))&&O.kaynakAd===k1.kisiler[mid].ad&&O.baslik==='Aylık mali rapor',`${ad.join(', ')} · ${O.hareketler.length} hareket`);}
+  {/* inceleme (H2-e): 1 Ocak raporunun hareketlerinde Aralık ay başı yinelenmez (o satırlar 1 Aralık raporunda) */
+   const ko=KK(k1,x=>{T('zamanIlerlet')(x,T('anDakika')('2027-01-01',660)-T('simdikiAn')(x));}).kariyer,ocak=ko.haberler.find(h=>h.anahtar==='mali.aylik'&&h.tarih==='2027-01-01');
+   const H=ocak?T('maliRaporOkumasi')(ko,ocak).hareketler.map(h=>h.aciklama):[];
+   denetle('İnceleme (H2-e): 1 Ocak aylık raporunda Ocak maaşı ve lig payı var, Aralık ay başının satırları yok',!!ocak&&H.some(a=>/Ocak maaşları/.test(a))&&H.some(a=>/Ocak lig/.test(a))&&!H.some(a=>/Aralık maaşları|Aralık lig/.test(a)),H.join(' | '));}
   {const i=T('maliRaporlari')(k1)[0].i,kg=KK(k1,x=>T('raporGoruldu')(x,i)).kariyer;
    denetle('raporGoruldu yalnız o raporu görüldü işaretler; gazete okumak raporu işaretlemez',kg.haberler[i].gorulen&&kg.haberler.filter(h=>h.tur==='rapor'&&!h.gorulen).length===k1.haberler.filter(h=>h.tur==='rapor'&&!h.gorulen).length-1
      &&KK(k1,x=>T('haberlerGoruldu')(x)).kariyer.haberler.filter(h=>h.tur==='rapor'&&!h.gorulen).length===k1.haberler.filter(h=>h.tur==='rapor'&&!h.gorulen).length);}
