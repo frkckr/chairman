@@ -966,6 +966,12 @@ Bu adım saf okumadır; kayda alan eklemez ve odaya düğme koymaz.
 - **İlk ölçüm (6 hafta, tohum 3; bilgi):** maç anı ilk 11 kondisyonu ort 96,9, en düşük 65; dinlenen kulüp-maç başına 0,47 (anahtar kapalıyken eski ısrar kuralıyla 0,39); art arda dışarıda en çok 2; gelişim farkı ≤21 +0,22, 22–29 +0,06, 30+ −0,11; form sd 15,5; sakatlık 162 (kapalı 190); hükmen 0. 18 haftalık kalibrasyon arka planda koşar; bant dışı çıkarsa ayrı küçük commit.
 - **Sapma:** kulübe kilidi görülmedi (dinlenen düzenli oyuncu en çok 2 maç art arda dışarıda), “0,5 yer payı” eklenmedi. 3.10 (c)'nin tarz satırı dikey 71 · dengeli 74 (dikey daha az toparlar).
 
+### S-b
+
+- **Uygulandı:** `js/gozlem.js` sinyal defteri (`GOZLEM_SINYALLERI`, günde en çok 3, 7 gün tekrar yok, dakika tarihten tohumlu), açılışta dondurulan `k.gozlem.sinyaller`, kapanışta gözlem kaydına `sinyaller`, `gozlemKaydiMetni`, `gozlemNotlari`, doğrulama; çekirdek türler (dönüş, yorgun, parlayan, form düşük) ve TEST metinleri `js/oyuncu-hafta.js`'te; balkon şeridinde günün türü (TEST), “Gördüklerin”, TEST adayları, izlerken görülen sinyal şeritte.
+- **Denetimler:** `kariyer-deneme` geçti (yeni 2.7b; 2.7 ve 2.8L aynen); `ad-denetimi` temiz; `mac-deneme 4` “sonuç aynı”; motor dosyaları aynı → `oturum-sonu g1.json --ayni --mac 24` 24/24 birebir, kabul dışı yalnız bilinen borçlar (`c-1v1` eğim 14,0; `d-sut` iki satır; `c-orta` “erken · 3–3”); `akis-deneme` 23, 1, 3 geçti.
+- **Sapmalar:** planın “örnek kariyerde hafta içi hafif” satırı tutmadı — örnek kariyerin iki maçlık fikstürü var (24 Kasım yoğun); denetim fikstürsüz kopyayla yapıldı. “Günde en çok üç” satırının beklentisi düzeltildi: en yorgun iki oyuncu kondisyonu en düşük olanlardır (55 ve 56). Şeritteki gün türü değişkeni `gunTuru` (odadaki `gunAdi` işlevini gölgelemesin).
+
 ## Tasarım panelinin puanları
 
 Ölçütler 1–10. Risk sütununda yüksek puan düşük risk demektir.

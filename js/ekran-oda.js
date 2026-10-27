@@ -80,6 +80,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
         if(!gozlemAcik(k)){izleme=null;izlemeKaydet();ciz();return;}
         let r;try{r=komut(x=>gozlemAdim(x,1),true);}catch(e){izleme=null;izlemeKaydet();hataGoster(e);return;}
         if(r.neden!=='devam'){izleme=null;izlemeKaydet();gozlemSonucu(r);return;}
+        if(r.yeni&&r.yeni.length){mesaj=r.yeni.map(s=>gozlemSinyalMetni(k,s)).filter(Boolean).join(' ');ciz();}   /* S-b: görülen sinyal şeritte */
         if(k.gunIciDakika-I.kayitDk>=GOZLEM_KAYIT_DK)izlemeKaydet();
       }
       if(adim)izlemeGoster();
@@ -287,19 +288,23 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(!gozlemVar||ODA.yer!=='balkon')return'';
     const d=antrenmanDurumu(k);
     let ic;
+    /* S-b: günün türü ve gördüklerin (dondurulmuş sinyallerden geçilmiş olanlar); TEST bilgileri açıkken günün adayları */
+    const P=typeof antrenmanProgrami==='function'?antrenmanProgrami(k,kulupId(),k.tarih):null,gunTuru={toparlanma:'toparlanma',yogun:'yoğun',hafif:'hafif'}[P&&P.tur]||'';
+    const gS=k.gozlem&&gozlemAcik(k)?(k.gozlem.sinyaller||[]).filter(s=>s.dk<k.gunIciDakika):[],gorduk=gS.length?'<ul class="od-liste od-gorduklerin" aria-label="Gördüklerin">'+gS.map(s=>'<li>'+yaz(gozlemSinyalMetni(k,s)||'')+'</li>').join('')+'</ul>':'';
+    const testAday=testAcik()&&typeof antrenmanSinyalleri==='function'?testKutu('Günün adayları: '+(antrenmanSinyalleri(k,k.tarih).map(s=>s.tur+'@'+saatYazi(s.dk)+' '+((k.oyuncular[s.oyuncuId]||{}).ad||'')).join(', ')||'yok')):'';
     if(izleme)ic='<p><b>İzliyorsun</b> <span class="od-not">kalan '+gozlemKalan(k)+' dk'+(duraklatmaVar()?' · duraklatıldı':acik?' · panel açıkken gözlem bekler':'')+'</span></p>'+
-      '<div class="od-dugmeler"><button type="button" data-eylem="gozlemBirak">Gözlemi bırak</button></div>';
+      '<div class="od-dugmeler"><button type="button" data-eylem="gozlemBirak">Gözlemi bırak</button></div>'+gorduk;
     else if(gozlemAcik(k))ic='<p><b>Gözlem durdu</b> <span class="od-not">kalan '+gozlemKalan(k)+' dk · karar verirken zaman durur</span></p><div class="od-dugmeler">'+
       (()=>{const e=ilerleOnizle(k).engel.filter(x=>/Önce karar ver/.test(x));return'<button type="button" class="od-birincil" data-eylem="gozlemSurdur"'+(e.length?' disabled':'')+'>Gözleme devam et ▸</button>'+(e.length?'<small class="od-uyari">'+yaz(e[0])+'</small>':'');})()+
-      '<button type="button" data-eylem="gozlemBirak">Gözlemi bırak</button></div>';
+      '<button type="button" data-eylem="gozlemBirak">Gözlemi bırak</button></div>'+gorduk;
     else if(d.suruyor){
       const S=[[15,'15 dk'],[30,'30 dk'],[d.kalan,'Sonuna kadar']].filter((x,i,L)=>x[0]<=d.kalan&&L.findIndex(y=>y[0]===x[0])===i);
       const O=S.map(x=>({dk:x[0],ad:x[1],o:gozlemOnizle(k,x[0])})),engel=O.length&&O.every(x=>x.o.engel.length)?O[0].o.engel[0]:null,kisa=O.find(x=>!x.o.engel.length&&x.o.kisaldi&&x.o.sure<x.dk);
-      ic='<p><b>Antrenman sürüyor</b> <span class="od-not">'+saatYazi(d.pencere.bit)+'\'ye kadar · izlemek isteğe bağlı</span></p><div class="od-dugmeler">'+
+      ic='<p><b>Antrenman sürüyor</b>'+(gunTuru?' · '+gunTuru+' gün <small>(TEST)</small>':'')+' <span class="od-not">'+saatYazi(d.pencere.bit)+'\'ye kadar · izlemek isteğe bağlı</span></p><div class="od-dugmeler">'+
         O.map(x=>'<button type="button" data-eylem="gozlem" data-dk="'+x.dk+'"'+(x.o.engel.length?' disabled':'')+'>İzle: '+x.ad+'</button>').join('')+'</div>'+
         (engel?'<small class="od-uyari">'+yaz(engel)+'</small>':kisa?'<small class="od-not">'+yaz(kisa.o.kisaldi)+'; gözlem o zaman biter.</small>':'');
     }else ic='<p><b>Saha boş</b> <span class="od-not">'+(d.pencere?(k.gunIciDakika<d.pencere.bas?'Antrenman '+saatYazi(d.pencere.bas)+'\'te':'Bugünkü antrenman bitti'):'Bugün antrenman yok')+'</span></p>';
-    return'<section class="od-gozlem" aria-label="Antrenman">'+ic+'</section>';
+    return'<section class="od-gozlem" aria-label="Antrenman">'+ic+testAday+'</section>';
   }
   /* sıradaki durak ve alt şerit */
   function durakYazi(o){

@@ -168,6 +168,23 @@ function oyuncuHaftasiYaz(k,f,x){
 }
 MAC_KAYDI_EKLERI.push(oyuncuHaftasiYaz);
 
+/* ---- S-b: balkon sinyallerinin çekirdek türleri (js/gozlem.js GOZLEM_SINYALLERI; eşikler TEST) ---- */
+const ohSakatMi=(p,t)=>!!(p.sakat&&tarihKarsilastir(t,p.sakat.donus)<0);
+Object.assign(GOZLEM_SINYALLERI,{
+  donus:{oncelik:4,sec:(k,p,t)=>{if(!p.sakat)return null;const f=gunNo(p.sakat.donus)-gunNo(t);if(Math.abs(f)>3)return null;return f<=0?{siddet:1}:{siddet:1,alt:'ayri'};}},
+  yorgun:{oncelik:3,gunler:['toparlanma','yogun'],sec:(k,p,t)=>{if(ohSakatMi(p,t))return null;const v=oyuncuKondisyonu(k,p,t);return v<80?{siddet:80-v}:null;}},
+  parlayan:{oncelik:2,sec:(k,p,t)=>{if(ohSakatMi(p,t)||!p.hal||oyuncuYasi(p,t)>21||gelisimOrt(p)>=p.hal.tav)return null;return p.hal.form>=20||p.hal.gel>=50?{siddet:Math.max(p.hal.form,p.hal.gel)}:null;}},
+  formDusuk:{oncelik:1,sec:(k,p,t)=>{if(ohSakatMi(p,t)||!p.hal||p.hal.form>-20)return null;const D=(k.kulupler[p.kulupId]||{}).kadro;return D&&D.ilk11.includes(p.id)?{siddet:-p.hal.form}:null;}}
+});
+const ohAd=(k,p)=>(k.oyuncular[p.oyuncuId]||{}).ad||'—';
+Object.assign(MESELE_OLAYLARI,{
+  'gozlem.donus':(k,p)=>`TEST: ${ohAd(k,p)} sakatlıktan sonra takımla çalıştı.`,
+  'gozlem.donusAyri':(k,p)=>`TEST: ${ohAd(k,p)} takımdan ayrı çalıştı.`,
+  'gozlem.yorgun':(k,p)=>`TEST: ${ohAd(k,p)} koşularda geride kaldı.`,
+  'gozlem.parlayan':(k,p)=>`TEST: ${ohAd(k,p)} çalışmada göze battı.`,
+  'gozlem.formDusuk':(k,p)=>`TEST: ${ohAd(k,p)} durgun görünüyor.`
+});
+
 /* ---- doğrulama (EK_DENETIMLER): hal ve tarihe bağlı alan; kayda ait denetim dondurulmuş oyuncu başına bir kez ---- */
 const OH_DENETLENDI=new WeakSet();
 function oyuncuHaftaDogrula(k,h){

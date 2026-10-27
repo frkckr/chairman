@@ -1551,6 +1551,63 @@ bolum('2.7 / 2.8B — antrenman gözlemi (TEST içeriği)');
   denetle('Gözlem bırakılınca aralık kapanır',birak.gozlem===null&&gk(birak).length===1&&gecerli(birak)[0]);
 }
 
+bolum('2.7b — antrenman programı ve balkon sinyalleri (S-b; js/gozlem.js, js/oyuncu-hafta.js; oyunun yüklediği dosyalar)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),biz='demirkapi',AP=T('antrenmanProgrami'),AS=T('antrenmanSinyalleri');
+  const k0=T('kariyerBaslat')({tohum:7}),gun=['2026-11-23','2026-11-24','2026-11-25','2026-11-26','2026-11-27','2026-11-28','2026-11-29'];
+  const prog=gun.map(t=>AP(k0,biz,t).tur).join(),yuk=AP(k0,biz,'2026-11-24').yuk;
+  const tz=t=>{const c=JSON.parse(metin(k0));c.kisiler[c.kulupler[biz].hocaId].hoca.tarz=t;return AP(T('kariyerOlustur')(c),biz,'2026-11-24').yuk;};
+  denetle('Program: 23–29 Kasım toparlanma, yoğun, yoğun, yoğun, hafif, maç, dinlenme; Demirkapı (direkt) yoğun gün yükü 1,1; tarz değişince yük değişir; fikstürsüz kopyada hafta içi hafif',
+    prog==='toparlanma,yogun,yogun,yogun,hafif,mac,dinlenme'&&Math.abs(yuk-1.1)<1e-9&&Math.abs(tz('dikey')-1.15)<1e-9&&AP(Object.assign({},k0,{fikstur:[]}),biz,'2026-11-24').tur==='hafif',`${prog} · ${yuk}`);
+  denetle('Açılışta sinyal yok: hal yok, Nail\'in dönüşü iki hafta sonra (2.7 ve 2.8L\'nin “gözlem içeriksiz not bırakmaz” satırı sürer)',
+    gun.slice(0,5).every(t=>AS(k0,t).length===0));
+  /* kopya: bir on bir oyuncusu yorgun (kondisyon 60), beş oyuncu daha yorgun, Nail'in dönüşü Perşembe */
+  const K=k0.kulupler[biz].kadro,nail=Object.values(k0.oyuncular).find(p=>p.kulupId===biz&&p.ad==='Nail');
+  const kur=(n)=>{const c=JSON.parse(metin(k0));K.ilk11.slice(1,1+n).forEach((id,i)=>{c.oyuncular[id].hal={kon:60-i,gun:'2026-11-23',form:0,gel:0,tav:60};});
+    if(nail)c.oyuncular[nail.id].sakat=Object.assign({},c.oyuncular[nail.id].sakat,{donus:'2026-11-26'});return T('kariyerOlustur')(c);};
+  const k1=kur(1),s24=AS(k1,'2026-11-24'),s26=AS(k1,'2026-11-26'),y=K.ilk11[1];
+  denetle('Kondisyonu 60 yapılan oyuncu Salı “yorgun”; dönüşü üç gün içinde olan sakat Salı “ayrı”, dönüş günü “takımla”; dakikalar 15:05–16:55 arasında',
+    s24.some(s=>s.oyuncuId===y&&s.tur==='yorgun')&&!!nail&&s24.some(s=>s.oyuncuId===nail.id&&s.tur==='donus'&&s.alt==='ayri')&&s26.some(s=>s.oyuncuId===nail.id&&s.tur==='donus'&&!s.alt)
+    &&s24.concat(s26).every(s=>s.dk>=905&&s.dk<1015),metin(s24));
+  const k6=kur(6),s6=AS(k6,'2026-11-24');
+  denetle('Günde en çok üç sinyal, öncelik sırasıyla (dönüş, sonra en yorgunlar); oyuncu başına bir',s6.length===3&&s6.some(s=>s.tur==='donus')&&new Set(s6.map(s=>s.oyuncuId)).size===3
+    &&s6.filter(s=>s.tur==='yorgun').every(s=>K.ilk11.slice(5,7).includes(s.oyuncuId)),metin(s6.map(s=>s.tur+':'+s.oyuncuId)));
+  const salı=c=>KK(c,x=>{T('zamanIlerlet')(x,T('anDakika')('2026-11-24',900)-T('simdikiAn')(x));}).kariyer;
+  const tek=KK(salı(k1),x=>T('gozlemBaslat')(x,120)).kariyer,g1=tek.gecmis.filter(g=>g.tur==='gozlem').pop();
+  denetle('Tam gözlem günün sinyallerini geçmişteki gözlem kaydına yazar (metin yok); ertesi gün aynı oyuncu ve tür 7 gün tekrar etmez',
+    !!g1&&metin(g1.sinyaller)===metin(s24)&&!/TEST:/.test(metin(tek))&&!AS(tek,'2026-11-25').some(s=>s.oyuncuId===y&&s.tur==='yorgun'),metin(g1&&g1.sinyaller));
+  let dort=salı(k1);for(let i=0;i<4;i++)dort=KK(dort,x=>T('gozlemBaslat')(x,30)).kariyer;
+  const bir=(()=>{let c=KK(salı(k1),x=>T('gozlemAc')(x,120)).kariyer,r={neden:'devam'},n=0;
+    while(r.neden==='devam'&&n<200){const s=KK(c,x=>T('gozlemAdim')(x,1));c=s.kariyer;r=s.sonuc;n++;
+      if(n%17===0&&r.neden==='devam'){const d=T('bellekDeposu')();T('kariyerKaydet')(d,'g',c);c=T('kariyerYukle')(d,'g').kariyer;}}return c;})();
+  const birlesim=c=>metin(c.gecmis.filter(g=>g.tur==='gozlem').flatMap(g=>g.sinyaller||[]).sort((a,b)=>a.dk-b.dk));
+  denetle('Parçalama: tek parça ≡ 4 × 30 dk (sinyallerin birleşimi aynı) ≡ 1 dakikalık adımlar ve araya kaydet–yükle (bütün kariyer aynı)',
+    birlesim(dort)===birlesim(tek)&&metin(bir)===metin(tek));
+  const ilk=s24[0],k15=KK(KK(k1,x=>{T('zamanIlerlet')(x,T('anDakika')('2026-11-24',ilk.dk-5)-T('simdikiAn')(x));}).kariyer,x=>T('gozlemBaslat')(x,15)).kariyer;
+  const g15=k15.gecmis.filter(g=>g.tur==='gozlem').pop(),pen=g15?(g15.sinyaller||[]):[];
+  const sat=(()=>{let c=KK(salı(k1),x=>T('gozlemAc')(x,120)).kariyer;const x=JSON.parse(metin(c));x.oyuncular[y].kulupId='akdeniz';
+    const kk=T('kariyerOlustur')(x);T('gozlemBitir')(kk);return kk.gecmis.filter(g=>g.tur==='gozlem').pop();})();
+  denetle('Kenar durumlar: 15 dakikalık gözlem yalnız kendi aralığındaki sinyali yazar; başka kulübe geçen oyuncunun sinyali kayda düşmez',
+    pen.length>=1&&pen.every(s=>s.dk>=ilk.dk-5&&s.dk<ilk.dk+10)&&!(sat.sinyaller||[]).some(s=>s.oyuncuId===y),metin(pen));
+  const once=salı(k1);
+  denetle('Yan etki yok: sinyal iş, mesele, söz ya da haber açmaz; kayıtlı rastlantı aynı; antrenmanda sakatlık yok',
+    Object.keys(tek.isler).length===Object.keys(once.isler).length&&metin(tek.meseleler)===metin(once.meseleler)&&metin(tek.sozler)===metin(once.sozler)
+    &&tek.haberler.length===once.haberler.length&&metin(tek.rastlanti)===metin(once.rastlanti)&&metin(tek.oyuncular)===metin(once.oyuncular));
+  /* izleyen ve izlemeyen kariyer: maç anında oyuncular, maçlar ve girdi aynı */
+  const haftaSonuna=(c,izle)=>{for(const t of gun.slice(0,5)){
+      c=KK(c,x=>{T('zamanIlerlet')(x,Math.max(0,T('anDakika')(t,900)-T('simdikiAn')(x)));}).kariyer;
+      if(izle)c=KK(c,x=>T('gozlemBaslat')(x,120)).kariyer;}
+    return KK(c,x=>{T('zamanIlerlet')(x,T('anDakika')('2026-11-28',1140)-T('simdikiAn')(x));}).kariyer;};
+  const A=haftaSonuna(k1,true),B=haftaSonuna(k1,false),mid=Object.values(A.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu');
+  denetle('İzlemeyen kaybetmez: her gün izleyen ve hiç izlemeyen kariyerde maç anında oyuncular, maçlar ve maç girdisi birebir aynı',
+    !!mid&&metin(A.oyuncular)===metin(B.oyuncular)&&metin(A.maclar)===metin(B.maclar)&&metin(T('macGirdisi')(A,mid.veri.macId))===metin(T('macGirdisi')(B,mid.veri.macId)));
+  const bz=JSON.parse(metin(tek)),gi=bz.gecmis.findIndex(g=>g.tur==='gozlem'&&g.sinyaller);bz.gecmis[gi].sinyaller[0].tur='yok';
+  const ac=KK(salı(k0),x=>T('gozlemAc')(x,60)).kariyer;
+  denetle('Kayıt: bozuk sinyal listesi doğrulamada yakalanır; sinyalsiz (eski) açık gözlem sinyalsiz kapanır',
+    T('kariyerDogrula')(T('kariyerOlustur')(bz)).some(e=>/sinyal/.test(e))&&!T('kariyerDogrula')(tek).length&&ac.gozlem.sinyaller===undefined
+    &&!KK(ac,x=>{T('gozlemBitir')(x);}).kariyer.gecmis.filter(g=>g.tur==='gozlem').pop().sinyaller);
+}
+
 bolum('Bozuk kopyalar doğrulamada yakalanır');
 {
   const c=deneme({randevu:false});duragaIlerle(c);ajandaIsiYap(c,kararIsi(c).id,'kabul');

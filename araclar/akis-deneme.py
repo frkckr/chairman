@@ -2211,6 +2211,31 @@ def sec(n):
     return not SECIM or n in SECIM
 
 
+async def bolum_23(tarayici, site, tum_hatalar):
+    """S-b: balkon sinyalleri (yürüyüşsüz, gerçek zaman beklemesiz): düşük kondisyonlu oyuncu, Salı 15:00, gözlem sayfa içinden açılır ve ilerletilir;
+    yenilemede oda balkonda açılır, şeritteki "Gördüklerin" sayfa içinde hesaplanan sinyallerle aynı; bırakınca geçmiş kaydında sinyaller var"""
+    print("\n23. Balkon sinyalleri (S-b)")
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.evaluate("""() => oyunKomut(k => { const D = k.kulupler.demirkapi.kadro, x = Object.assign({}, k.oyuncular);
+      for (const id of D.ilk11.slice(1, 3)) x[id] = Object.assign({}, x[id], { hal: { kon: 58, gun: '2026-11-23', form: 0, gel: 0, tav: 60 } });
+      k.oyuncular = x; zamanIlerlet(k, anDakika('2026-11-24', 900) - simdikiAn(k)); gozlemAc(k, 120); gozlemAdim(k, 60); })""")
+    await oda_yenile(pg)
+    await pg.wait_for_timeout(500)
+    b = await pg.evaluate("""() => { const k = OYUN.kariyer, S = (k.gozlem && k.gozlem.sinyaller || []).filter(s => s.dk < k.gunIciDakika).map(s => gozlemSinyalMetni(k, s));
+      return { yer: ODA.yer, acik: gozlemAcik(k), beklenen: S, sayfa: [...document.querySelectorAll('.od-gorduklerin li')].map(x => x.textContent),
+        serit: (document.querySelector('.od-gozlem') || {}).textContent || '' }; }""")
+    denetle("S-b: gözlem açıkken yenileme odayı balkonda açar; şeritteki “Gördüklerin” sayfa içinde hesaplanan sinyallerle aynı (en az bir yorgun)",
+            b["yer"] == "balkon" and b["acik"] and len(b["beklenen"]) >= 1 and b["sayfa"] == b["beklenen"] and any("koşularda geride kaldı" in s for s in b["sayfa"]), str(b)[:300])
+    await pg.click('[data-eylem="gozlemBirak"]')
+    await pg.wait_for_timeout(300)
+    g = await pg.evaluate("() => { const g = OYUN.kariyer.gecmis.filter(x => x.tur === 'gozlem').pop(); return g ? g.sinyaller || [] : null; }")
+    m = await pg.text_content(".od-mesaj") if await pg.query_selector(".od-mesaj") else ""
+    denetle("S-b: Gözlemi bırak → geçmişteki gözlem kaydında izlenen kısmın sinyalleri; şerit metni sinyalden ve dosyaya düşen nottan söz eder",
+            g is not None and len(g) == len(b["beklenen"]) and "dosya" in m, f"{g} · {m[:120]}")
+    await pg.context.close()
+
+
 async def ana():
     try:
         from playwright.async_api import async_playwright
@@ -2271,6 +2296,8 @@ async def ana():
         if sec("21"):
             print("\n21. Kişiye yazmak ve görüşme isteği (H2-c)")
             await bolum_21(tarayici, site, tum_hatalar)
+        if sec("23"):
+            await bolum_23(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)
