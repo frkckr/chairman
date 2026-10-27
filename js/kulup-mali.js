@@ -11,6 +11,8 @@
      payı: kesin), iç saha maçlarının bilet geliri (belirsiz, ayrı). maliDurum'a 'ufuk' ve 'eksi' (kasa eksiye düştü; yalnız işaret) eklenir. */
 'use strict';
 const MALI_TEST={saat:600,ligPayi:10000000,bilet:15000,ufukGun:90,evDoluluk:0.3};
+/* H2-d: ay başının sonuna eklenen kurallar: (k, iş) → metin | null (js/mali-rapor.js aylık rapor; sonraki ayın işi kurulduktan sonra çağrılır) */
+const AY_BASI_EKLERI=[];
 const AY_ADLARI=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const sonrakiAyBasi=tarih=>{const [y,a]=tarih.split('-').map(Number),Y=a===12?y+1:y,A=a===12?1:a+1;return`${Y}-${String(A).padStart(2,'0')}-01`;};
 /* maçın doluluğu (TEST; js/mac-gunu.js statKur da bunu kullanır: çizilen seyirci = ödeyen seyirci): başkanın kulübünün statında sabit, öbür statlarda
@@ -32,7 +34,8 @@ IS_TURLERI.ayBasi={
     paraHareketi(k,{kulupId:id,tutar:MALI_TEST.ligPayi,kalem:'ligPayi',aciklama:`${ay} lig yayın payı`});
     if(typeof transferTakvimiKur==='function')transferTakvimiKur(k);
     if(!(k.sezon&&k.sezon.sonuc))isEkle(k,{tur:'ayBasi',tarih:sonrakiAyBasi(is.tarih),dakika:MALI_TEST.saat,veri:{kulupId:id}});
-    return{metin:`${ay} maaşları ödendi (${paraYazi(maas)}); lig payı geldi (${paraYazi(MALI_TEST.ligPayi)}).`};
+    let ek='';for(const f of AY_BASI_EKLERI){const m=f(k,is);if(m)ek+=' '+m;}
+    return{metin:`${ay} maaşları ödendi (${paraYazi(maas)}); lig payı geldi (${paraYazi(MALI_TEST.ligPayi)}).`+ek};
   }
 };
 /* yeni kariyerin ilk ay başı (js/baslangic.js); ayın 1'i ay başı saatinden önceyse o günün */
@@ -46,7 +49,8 @@ MAC_SONUCU_EKLERI.push((k,f)=>{
   paraHareketi(k,{kulupId:biz,tutar:B.tutar,kalem:'bilet',aciklama:`${rakip} maçı bilet geliri (${B.seyirci.toLocaleString('tr-TR')} seyirci)`});
 });
 
-function nakitUfku(k,kulupId,gun){
+/* H2-d: haricIsId — ay başı zincirinin başını seçerken dışarıda bırakılan iş (ay başının içinde o ay başı yeniden sayılmasın; js/mali-rapor.js) */
+function nakitUfku(k,kulupId,gun,haricIsId){
   gun=gun||MALI_TEST.ufukGun;
   const simdi=simdikiAn(k),sinir=simdi+gun*1440,A=[];
   for(const is of Object.values(k.isler)){
@@ -55,7 +59,7 @@ function nakitUfku(k,kulupId,gun){
   }
   /* ay başları: bekleyen ilk ay başı ve ardından gelenler (bugünkü sözleşmelerle). Zincir ay başı kuralını izler: sezon sonu kaydından sonra yeni ay
      başı kurulmaz, yani son maçtan sonraki ilk ay başı sonuncudur (G2 incelemesi; yeni sezon 5.1'de gelince bu sınır da değişir) */
-  const ab=Object.values(k.isler).filter(x=>x.tur==='ayBasi'&&x.veri.kulupId===kulupId).sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika))[0];
+  const ab=Object.values(k.isler).filter(x=>x.tur==='ayBasi'&&x.veri.kulupId===kulupId&&x.id!==haricIsId).sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika))[0];
   if(ab){const net=MALI_TEST.ligPayi-aylikMaas(k,kulupId,true);let t=ab.tarih;   /* sözleşmesi henüz kurulmamış oyuncu ilk ay başının TEST maaşıyla */
     const sonMac=(k.fikstur||[]).reduce((m,f)=>Math.max(m,anDakika(f.tarih,f.dakika)),-Infinity);
     for(let i=0;i<24&&anDakika(t,ab.dakika)<=sinir;i++){A.push({an:anDakika(t,ab.dakika),tarih:t,tutar:net,kesin:true,neden:'ay başı (maaş ve lig payı)'});

@@ -7,8 +7,10 @@
                  bırakınca uygulanır); karar yoksa ne olduğu ve beklenen adım. Karardan sonra kısa sonuç aynı sayfada görünür.
    Kural içermez: veri js/mesele.js (meseleOzeti) ve js/ajanda.js okuma işlevlerinden gelir; düğmeler js/ekran-oda.js'in data-eylem yoluna gider.
    dosyaGorunumu(k, D, Y) → html
-     D: {secili, sira:[açık mesele kimlikleri], arsiv, sonuc, donus, karar(isId) → html}
-     Y: {yaz, kategoriYazi, tarihKisa, anYazi, sonTarih(ozet), neOldu(ozet), sozler(ozet) → html, testKutu?, kasaBaglantisi(mesele) → bool}
+     D: {secili, sira:[açık mesele kimlikleri], arsiv, rapor, seciliRapor, sonuc, donus, karar(isId) → html}
+     Y: {yaz, kategoriYazi, tarihKisa, anYazi, sonTarih(ozet), neOldu(ozet), sozler(ozet) → html, testKutu?, maliBaglantisi(mesele) → bool}
+   H2-d (2026-10-26): Arşiv'in yanında “Raporlar (n)” sekmesi — mali işler müdürünün raporları (js/mali-rapor.js maliRaporlari, maliRaporOkumasi): solda tarih ve
+     başlıkla liste (görülmemişte nokta), sağda seçili rapor (bugünkü kâğıt dili; eksi tutar kırmızı). Mali konudaki “Son mali özet ▸” oraya götürür.
    Renk ve ölçüler STIL.kagit.dosya'dadır. Stil, masaüstü kopyasında da gelsin diye belgeye buradan eklenir. */
 (function dosyaStili(){
   if(typeof document==='undefined'||document.getElementById('dosyaStili'))return;
@@ -24,6 +26,19 @@
 .oda .dsy button.dsy-sekme[aria-selected="true"]{background:${D.sayfa};font-weight:600;padding-bottom:.45em;position:relative;top:1px}
 .oda .dsy button.dsy-sekme.dsy-arsivSekme{margin-left:auto;background:${D.kapakKoyu};color:${D.sayfa};border-color:${D.kapakKoyu}}
 .oda .dsy button.dsy-sekme.dsy-arsivSekme[aria-selected="true"]{background:${D.sayfa};color:var(--k-yazi)}
+/* H2-d: Raporlar sekmesi Arşiv'in solunda; görülmemiş raporda ayrı işaret (konu sekmelerinin noktasıyla karışmaz) */
+.oda .dsy button.dsy-sekme.dsy-raporSekme{margin-left:auto}
+.oda .dsy button.dsy-raporSekme+button.dsy-arsivSekme{margin-left:0}
+.dsy-yeniRapor{display:inline-block;width:.55em;height:.55em;border-radius:50%;background:var(--k-kirmizi);flex:none}
+/* raporda tutar tek satır (₺ alta düşmez) ve tam genişlikte; dar sayfada ad kayar. En düşük bakiyenin tarihi tutarın altında.
+   Ödeme ve hareket satırı: üstte tarih ve tutar, altta tam genişlikte açıklama (büyük yazıda da okunur) */
+.dsy-tutar,.dsy-raporListe .od-satir>span:last-child{white-space:nowrap}
+.od-dl.dsy-rapor{grid-template-columns:minmax(0,1fr) auto}
+.dsy-rapor small{display:block;color:var(--k-soluk)}
+.dsy-raporListe .od-satir{grid-template-columns:minmax(0,1fr) auto;row-gap:0}
+.dsy-raporListe .od-satir>.od-an{grid-column:1;grid-row:1}
+.dsy-raporListe .od-satir>.od-ad{grid-column:1/-1;grid-row:2}
+.dsy-raporListe .od-satir>span:last-child{grid-column:2;grid-row:1}
 .dsy-nokta{width:.55em;height:.55em;border-radius:50%;background:var(--k-kirmizi);flex:none}
 .dsy-kapak{min-height:0;display:grid;padding:.7em;background:${D.kapak};border-radius:.4em;box-shadow:.4em .55em 0 var(--k-golge),inset 0 0 0 .2em ${D.kapakKoyu}}
 .dsy-ic{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);background:${D.sayfa};border-radius:.2em;box-shadow:0 .15em .3em rgba(0,0,0,.25)}
@@ -72,14 +87,26 @@ function dosyaGorunumu(k,D,Y){
   /* sekmeler: açık konular sırayla; seçili konu kapandıysa (arşivden açıldıysa) kendi sekmesiyle görünür */
   const sekmeKimlik=D.sira.slice();
   if(!D.arsiv&&D.secili&&k.meseleler[D.secili]&&!sekmeKimlik.includes(D.secili))sekmeKimlik.push(D.secili);
-  const sekme=id=>{const m=k.meseleler[id],[ad,s]=meseleKategorisi(m),sec=!D.arsiv&&id===D.secili;
+  const R=typeof maliRaporlari==='function'&&typeof maliRaporOkumasi==='function'?maliRaporlari(k):[],raporGor=!!D.rapor&&R.length>0;
+  const sekme=id=>{const m=k.meseleler[id],[ad,s]=meseleKategorisi(m),sec=!D.arsiv&&!raporGor&&id===D.secili;
     return'<button type="button" class="dsy-sekme" role="tab" data-eylem="dosyaAc" data-mesele="'+id+'" data-gezinti="1" aria-selected="'+(sec?'true':'false')+'" title="'+yaz(m.baslik)+'">'+
       '<i class="od-kSimge" aria-hidden="true">'+yaz(s)+'</i><span>'+yaz(m.baslik)+'</span>'+(m.durum==='kararBekliyor'?'<i class="dsy-nokta" aria-label="cevap bekliyor"></i>':'')+'</button>';};
   let ic='<nav class="dsy-sekmeler" role="tablist" aria-label="Açık dosyalar">'+sekmeKimlik.map(sekme).join('')+
-    '<button type="button" class="dsy-sekme dsy-arsivSekme" role="tab" data-eylem="arsiv" aria-selected="'+(D.arsiv?'true':'false')+'"'+(arsivL.length||D.arsiv?'':' disabled')+'>Arşiv ('+arsivL.length+')</button>'+
+    (R.length?'<button type="button" class="dsy-sekme dsy-raporSekme" role="tab" data-eylem="raporlar" aria-selected="'+(raporGor?'true':'false')+'">Raporlar ('+R.length+')'+
+      (R.some(x=>!x.h.gorulen)?'<i class="dsy-yeniRapor" aria-label="yeni rapor"></i>':'')+'</button>':'')+
+    '<button type="button" class="dsy-sekme dsy-arsivSekme" role="tab" data-eylem="arsiv" aria-selected="'+(D.arsiv&&!raporGor?'true':'false')+'"'+(arsivL.length||D.arsiv?'':' disabled')+'>Arşiv ('+arsivL.length+')</button>'+
     '<button type="button" class="od-kapat" data-eylem="kapat" title="Kapat (Esc)">Kapat ×</button></nav>';
   let sol='',sag='';
-  if(D.arsiv||!D.secili||!k.meseleler[D.secili]){
+  if(raporGor){
+    const sec=R.some(x=>x.i===D.seciliRapor)?D.seciliRapor:R[0].i,O=maliRaporOkumasi(k,k.haberler[sec]),eksi=t=>t<0?' class="od-eksi"':'',tl=t=>yaz(paraYazi(t));
+    sol='<p class="dsy-kat">Raporlar</p><h3 class="dsy-baslik">Mali işler</h3><ul class="dsy-arsiv">'+R.map(x=>{const B=maliRaporOkumasi(k,x.h);
+      return'<li><span>'+yaz(Y.tarihKisa(x.h.tarih))+'</span><span><button type="button" class="od-baglanti" data-eylem="raporAc" data-rapor="'+x.i+'"'+(x.i===sec?' aria-current="true"':'')+'>'+yaz(B.baslik)+'</button>'+
+        (x.h.gorulen?'':' <i class="dsy-yeniRapor" aria-label="yeni"></i>')+'</span></li>';}).join('')+'</ul>';
+    sag='<p class="dsy-kat">'+yaz(O.kaynakAd)+' · '+yaz(Y.tarihKisa(O.tarih))+' '+saatYazi(O.dakika)+'</p><h3 class="dsy-baslik">'+yaz(O.baslik)+'</h3>'+(O.uyari?'<p class="od-uyari">'+yaz(O.uyari)+'</p>':'')+
+      '<dl class="od-dl dsy-rapor">'+O.satirlar.map((s,j)=>'<dt>'+yaz(s.ad)+'</dt><dd'+eksi(s.tutar)+'><span class="dsy-tutar">'+(j?tl(s.tutar):'<b>'+tl(s.tutar)+'</b>')+'</span>'+(s.tarih?'<small>'+yaz(Y.tarihKisa(s.tarih))+'</small>':'')+'</dd>').join('')+'</dl>'+
+      (O.odemeler.length?'<h4>Ödeme takvimi</h4><ul class="od-liste od-sar dsy-raporListe" style="--an:7.5em">'+O.odemeler.map(x=>'<li class="od-satir"><span class="od-an">'+yaz(Y.tarihKisa(x.tarih))+'</span><span class="od-ad">'+yaz(x.kalem)+'</span><span'+eksi(x.tutar)+'>'+tl(x.tutar)+'</span></li>').join('')+'</ul>':'')+
+      (O.hareketler.length?'<h4>Hareketler</h4><ul class="od-liste od-sar dsy-raporListe" style="--an:10.4em">'+O.hareketler.map(x=>'<li class="od-satir"><span class="od-an">'+yaz(Y.tarihKisa(x.tarih))+' '+saatYazi(x.dakika)+'</span><span class="od-ad">'+yaz(x.aciklama)+'</span><span'+eksi(x.tutar)+'>'+tl(x.tutar)+'</span></li>').join('')+'</ul>':'');
+  }else if(D.arsiv||!D.secili||!k.meseleler[D.secili]){
     sol='<p class="dsy-kat">Arşiv</p><h3 class="dsy-baslik">Kapanan konular</h3>'+(arsivL.length?'<ul class="dsy-arsiv">'+arsivL.map(m=>'<li><span>'+(m.kapanis?yaz(Y.tarihKisa(m.kapanis.tarih)):'')+'</span><span>'+
       Y.kategoriYazi(m)+' <button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+m.id+'">'+yaz(m.baslik)+'</button></span></li>').join('')+'</ul>':'<p class="dsy-bos">Henüz kapanan konu yok.</p>');
     sag='<p class="dsy-bos">'+(sekmeKimlik.length?'Açık bir konu seçmek için üstteki sekmelere bak.':'Açık dosya yok.')+'</p>';
@@ -92,7 +119,7 @@ function dosyaGorunumu(k,D,Y){
       '<dl class="dsy-kunye"><dt>Yürüten</dt><dd>'+(o.sorumlu?yaz(o.sorumlu.ad):'—')+'</dd>'+(st?'<dt>'+yaz(st.split(': ')[0])+'</dt><dd><b>'+yaz(st.split(': ').slice(1).join(': '))+'</b></dd>':'')+'</dl>';
     if(o.bilgiler.length)sol+='<h4>Bilinenler</h4><ul class="dsy-notlar">'+o.bilgiler.slice(-4).map(x=>'<li class="dsy-not">'+yaz(x.metin)+'<small>— '+yaz(x.kaynak)+'</small></li>').join('')+'</ul>';
     sol+=Y.sozler(o);
-    if(Y.kasaBaglantisi(m))sol+='<p class="od-not">Para durumu: <button type="button" class="od-baglanti" data-eylem="ac" data-panel="kasa">Kasa ▸</button></p>';
+    if(Y.maliBaglantisi&&Y.maliBaglantisi(m)&&R.length)sol+='<p class="od-not">Para durumu: <button type="button" class="od-baglanti" data-eylem="raporlar">Son mali özet ▸</button></p>';
     sol+='<details class="dsy-gecmis"><summary>Geçmiş ve belgeler ('+o.olaylar.length+')</summary><ul>'+o.olaylar.slice().reverse().map(x=>'<li><span>'+yaz(Y.tarihKisa(x.tarih).split(' ').slice(0,2).join(' ')+' '+saatYazi(x.dakika))+'</span><span>'+yaz(x.metin)+'</span></li>').join('')+'</ul></details>';
     /* sağ sayfa: kişi, sonuç, karar ya da beklenen adım. H1 (F6-a borcu): karar türü isteğe bağlı kisi(k,is) → {ad, rol} kancasıyla kendi kişisini
        verebilir (ör. hoca adayı: kişi kaydı yok, boş portre); yoksa soran, ilgili kişi ya da konunun ilk kişisi */

@@ -55,6 +55,10 @@ KAYIT_GECISLERI[9]=v=>{
     v.kisiler=Object.assign({},v.kisiler,{[id]:{id,ad:T.ad,rol,dogumTarihi:T.dogumTarihi,kulupId:biz,durum:'aktif'}});
     v.sonrakiNo=Object.assign({},v.sonrakiNo,{kisi:no+1});
   }
+  /* H2-d: başkan görevdeyse ve sezon sonu kaydı yoksa kaydın anına haftalık mali rapor işi (ilk ilerlemede ilk rapor gelir, zincir başlar; geçmiş haftalar için
+     rapor uydurulmaz) */
+  if(biz&&v.gorevDurumu==='gorevde'&&!(v.sezon&&v.sezon.sonuc)&&typeof v.tarih==='string'&&!Object.values(v.isler||{}).some(x=>x&&x.tur==='maliRapor')){
+    const no=v.sonrakiNo.is,id='is-'+no;v.isler=Object.assign({},v.isler,{[id]:{id,tur:'maliRapor',tarih:v.tarih,dakika:v.gunIciDakika|0,veri:{kulupId:biz}}});v.sonrakiNo=Object.assign({},v.sonrakiNo,{is:no+1});}
   return v;
 };
 const ESKI_KAYIT_SINIRI=8;                   // bu sürümden eski kayıt dönüştürülmez

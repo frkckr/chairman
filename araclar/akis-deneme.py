@@ -133,9 +133,9 @@ async def bolum_1(tarayici, site, tum_hatalar):
     d0 = await durum(pg)
     # F1 (2026-10-23): takvimde maç günü ajanda işinin yanında kış transfer döneminin iki hatırlatması da durur; G2 (2026-10-24): 1 Aralık ay başı ve kış
     # döneminin dört gizli transfer gelişmesi (8 iş)
-    denetle("Yeni kariyer Pazartesi 08:00; içerik sürümü 5 (F6-a); mesele, olay, söz ve haber yok; takvimde tek ajanda işi: maç günü (yanında 2 hatırlatma, ay başı, 4 transfer gelişmesi)",
+    denetle("Yeni kariyer Pazartesi 08:00; içerik sürümü 5 (F6-a); mesele, olay ve söz yok; tek haber mali işler müdürünün açılış özeti (H2-d); takvimde tek ajanda işi: maç günü (yanında 2 hatırlatma, ay başı, haftalık mali özet, 4 transfer gelişmesi)",
             d0["tarih"] == "2026-11-23" and d0["dakika"] == 480 and d0["icerik"] == 5 and d0["mesele"] == "" and d0["olay"] == "" and d0["soz"] == ""
-            and d0["haber"] == "" and d0["ajanda"] == "is-1" and len(d0["isler"].split(",")) == 8, str(d0))
+            and d0["haber"] == "mali.haftalik" and d0["ajanda"] == "is-1" and len(d0["isler"].split(",")) == 9, str(d0))
     await pg.keyboard.press("Digit1")
     tel = await pg.text_content(".od-telefonPanel")
     denetle("Telefon ana ekranla açılıyor; 'Kaldığın yer' özeti yok", "Mesajlar" in tel and "Canlı Skor" in tel and "Kaldığın" not in tel
@@ -145,8 +145,9 @@ async def bolum_1(tarayici, site, tum_hatalar):
     # önizlemede konunun açıklaması), bildirim yok
     msj = await pg.text_content(".tel-govde")
     kisiler = await pg.eval_on_selector_all(".tel-kisi", "L => L.map(b => b.textContent)")
-    denetle("N14, H2-c: Mesajlar'da hoca ve yardımcı (mesajsız, önizlemede konu açıklaması, okunmamış yok); boş durum yazısı yok",
-            len(kisiler) == 2 and any("Şükrü Hoca" in x for x in kisiler) and any("Tahsin" in x for x in kisiler) and all("Kadronun durumunu sorarsın" in x for x in kisiler)
+    denetle("N14, H2-c, H2-d: Mesajlar'da hoca, yardımcı ve mali işler müdürü (mesajsız, önizlemede konu açıklaması, okunmamış yok); boş durum yazısı yok",
+            len(kisiler) == 3 and any("Şükrü Hoca" in x for x in kisiler) and any("Tahsin" in x for x in kisiler) and any("Nusret Bey" in x and "Kasayı sorarsın" in x for x in kisiler)
+            and all("Kadronun durumunu sorarsın" in x for x in kisiler if "Nusret Bey" not in x)
             and await pg.query_selector(".tel-kisi .tel-rozet") is None and await pg.query_selector(".tel-govde .tel-bos") is None and "Mesaj yok" not in msj and "sessiz" not in msj, " | ".join(kisiler)[:160])
     await pg.click('.tel [data-eylem="telEv"]')
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
@@ -173,14 +174,22 @@ async def bolum_1(tarayici, site, tum_hatalar):
             g2[0] == "2026-11-30" and await durum(pg) == d0 and await pg.query_selector('[data-eylem="hafta"][data-hafta="3"]:not([disabled])') is None, str(g2[:2]))
     await pg.click(".od-perde", position={"x": 5, "y": 300})
     denetle("Perdeye tıklamak defteri kapatıyor", await pg.query_selector(".dft") is None)
-    denetle("Dosya masada yok: düğme kapalı", await pg.query_selector('.od-nesne[data-panel="dosya"][disabled]') is not None)
-    # G2 (2026-10-24): kasa masada; maaş yükü ve 90 günlük ufuk, iç saha bileti belirsiz gelir
-    await pg.click('.od-nesne[data-panel="kasa"]')
-    kasa = await pg.text_content(".od-panel") if await pg.query_selector(".od-panel") else ""
-    denetle("Kasa düğmesi paneli açıyor: kasadaki para, aylık maaş yükü, önümüzdeki 90 gün (kesin ve belirsiz ayrı); zaman değişmedi",
-            "Kasadaki para" in kasa and "Önümüzdeki 90 gün" in kasa and "Aylık maaş yükü" in kasa and "Belirsiz gelir" in kasa and await durum(pg) == d0, kasa[:160])
+    # H2-d (kullanıcı istekleri 1–2): Kasa düğmesi kalktı; mali bilgi müdürün raporuyla dosyada. Dosya masada (rapor var), düğme açık ve “yeni” rozetli
+    dd = await pg.evaluate("() => { const b = document.querySelector('.od-nesne[data-panel=\"dosya\"]'); return { var: !!b, kapali: !!(b && b.disabled), rozet: b && b.querySelector('.od-rozet') ? b.querySelector('.od-rozet').textContent : '' }; }")
+    denetle("H2-d: Kasa düğmesi yok; dosya masada, düğme açık ve “yeni” rozetli", await pg.query_selector('.od-nesne[data-panel="kasa"]') is None and dd["var"] and not dd["kapali"] and dd["rozet"] == "yeni", str(dd))
     await pg.keyboard.press("Digit6")
-    denetle("6 tuşu kasayı kapatıyor", await pg.query_selector('.od-nesne[data-panel="kasa"][aria-pressed="true"]') is None)
+    denetle("H2-d: 6 tuşu artık panel açmıyor", await pg.query_selector(".od-panel") is None and await pg.query_selector(".dsy") is None)
+    await pg.keyboard.press("Digit3")
+    await pg.wait_for_selector(".dsy", timeout=10000)
+    rap = await pg.text_content(".dsy")
+    secili = await pg.evaluate("() => (document.querySelector('.dsy-raporSekme') || {}).getAttribute ? document.querySelector('.dsy-raporSekme').getAttribute('aria-selected') : null")
+    await pg.wait_for_timeout(300)
+    await pg.screenshot(path=str(ARAC / "son-akis-1-dosya-rapor.png"))
+    denetle("H2-d: 3 tuşu dosyayı Raporlar ile açar (kasadaki para, 90 gün içinde en düşük, 90 gün sonrası, belirsiz gelir; kaynak mali işler müdürü); zaman değişmedi",
+            secili == "true" and "Kasadaki para" in rap and "90 gün içinde en düşük" in rap and "90 gün sonra" in rap and "Belirsiz gelir" in rap and "Nusret Bey" in rap and await durum(pg) == d0, rap[:160])
+    await pg.keyboard.press("Escape")
+    r2 = await pg.evaluate("() => { const b = document.querySelector('.od-nesne[data-panel=\"dosya\"]'); return b && b.querySelector('.od-rozet') ? b.querySelector('.od-rozet').textContent : ''; }")
+    denetle("H2-d: rapor okununca dosyanın rozeti kalkar", r2 == "", r2)
     await oda_ilerle(pg)
     d1 = await durum(pg)
     denetle("İlerle doğrudan Cumartesi 19:00 maç sınırına gidiyor; ana düğme 'Stada git'",
@@ -492,7 +501,7 @@ async def bolum_3(tarayici, site, tum_hatalar):
       veri: { baslik: 'İsteğe bağlı deneme (çakışma)', zorunluluk: 'istege', sure: 60, aciklama: 'Gelmezsen kaçırılır.' } }); })""")
     KEZ_JS = "(karar) => OYUN.kariyer.gecmis.filter(g => g.tur === 'is' && g.sonuc && g.sonuc.karar === karar).map(g => g.sonuc.secim)"
     await pg.keyboard.press("Digit3")
-    dsy = await pg.evaluate("""() => ({ sekme: document.querySelectorAll('.dsy-sekme[role="tab"]:not(.dsy-arsivSekme)').length, nokta: !!document.querySelector('.dsy-sekme .dsy-nokta'),
+    dsy = await pg.evaluate("""() => ({ sekme: document.querySelectorAll('.dsy-sekme[role="tab"]:not(.dsy-arsivSekme):not(.dsy-raporSekme)').length, nokta: !!document.querySelector('.dsy-sekme:not(.dsy-raporSekme) .dsy-nokta'),
       damga: (document.querySelector('.dsy-damga') || {}).textContent, notlar: [...document.querySelectorAll('.dsy-not small')].map(x => x.textContent.trim()),
       kart: document.querySelectorAll('.dsy .kk-kart').length, eski: document.querySelectorAll('.dsy .kk-cevap, .dsy .kk-gonder, .dsy .kk-onay, .dsy [data-eylem="sec"]').length,
       kenar: [...document.querySelectorAll('.dsy .kk-kart .kk-kenar')].map(b => b.querySelector('b').textContent).join(' / '),
@@ -503,6 +512,13 @@ async def bolum_3(tarayici, site, tum_hatalar):
             dsy["perde"] and dsy["sekme"] == 1 and dsy["nokta"] and "bekliyor" in (dsy["damga"] or "").lower() and dsy["notlar"] == ["— Deneme defteri", "— Ayla Deneme"]
             and dsy["kart"] == 1 and dsy["eski"] == 0 and dsy["kenar"] == "Kabul et / Saymana devret" and dsy["yuz"] == "notr" and dsy["kisi"] == "Berk Deneme" and dsy["arsiv"], str(dsy))
     await pg.screenshot(path=str(ARAC / "son-akis-3-dosya.png"))
+    # H2-d: açılış raporu Raporlar sekmesinden bir kez okunur (görüldü), sonra konuya dönülür; konu kapanınca dosya yine son konuyu açar
+    await pg.click(".dsy-raporSekme")
+    rap = await pg.text_content(".dsy")
+    await pg.click('.dsy-sekme[role="tab"]:not(.dsy-arsivSekme):not(.dsy-raporSekme)')
+    denetle("H2-d: Raporlar sekmesi açılış özetini gösterir (müdür, kasadaki para); konu sekmesine dönülür, konunun kartı yerinde",
+            "Haftalık mali özet" in rap and "Kasadaki para" in rap and await pg.query_selector(".dsy .kk-kart") is not None
+            and await pg.evaluate("() => maliRaporlari(OYUN.kariyer).every(x => x.h.gorulen)"), rap[:100])
     once = await durum(pg)
     await pg.click(".dsy-gecmis summary")
     await pg.keyboard.press("Escape")
@@ -556,6 +572,13 @@ async def bolum_3(tarayici, site, tum_hatalar):
             break
         await oda_ilerle(pg)
     d3 = await durum(pg)
+    # H2-d: bu arada yeni haftalık rapor geldiyse dosya önce onu açar (okunmamış rapor kapalı konudan önce); okunup kapatılır
+    yeni_rapor = await pg.evaluate("() => maliRaporlari(OYUN.kariyer).some(x => !x.h.gorulen)")
+    if yeni_rapor:
+        await pg.keyboard.press("Digit3")
+        ilk = await pg.evaluate("() => (document.querySelector('.dsy-raporSekme') || {}).getAttribute ? document.querySelector('.dsy-raporSekme').getAttribute('aria-selected') : null")
+        denetle("H2-d: konu kapalıyken yeni rapor varsa dosya Raporlar ile açılır", ilk == "true", str(ilk))
+        await pg.keyboard.press("Escape")
     await pg.keyboard.press("Digit3")
     arsiv = await pg.text_content(".dsy")
     damga = await pg.text_content(".dsy-damga") if await pg.query_selector(".dsy-damga") else ""
@@ -563,7 +586,7 @@ async def bolum_3(tarayici, site, tum_hatalar):
     liste = await pg.text_content(".dsy")
     denetle("Tahsilat yapılınca söz tutuldu, konu kapandı; dosya son konuyu 'Kapandı' damgasıyla açıyor, Arşiv sekmesinde listede",
             d3["soz"] == "deneme.soz:tutuldu" and d3["mesele"] == "deneme:kapandi" and "Kapandı" in damga and "Arşiv (1)" in arsiv
-            and "Kapanan konular" in liste and "Deneme: destek teklifi" in liste, f"{damga} · {d3['mesele']}")
+            and "Kapanan konular" in liste and "Deneme: destek teklifi" in liste, f"{damga} · {d3['mesele']} · {arsiv[:140]}")
     await pg.keyboard.press("Escape")
     await pg.click('.od-nesne[data-panel="ayar"]')
     await pg.click('[data-eylem="yazi"][data-yazi="buyuk"]')
@@ -1927,6 +1950,43 @@ async def bolum_21(tarayici, site, tum_hatalar):
     b = await pg.evaluate("() => ({ cevap: Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.gelisme === 'yazismaCevap' && x.veri.deneme === 1), giden: [...document.querySelectorAll('.tel .tel-giden')].map(e => e.textContent).join(' | ') })")
     denetle("H2-c: kartı sağa bırakmak “Başka gün iste”: kart kalkar, yeni cevap beklenir (deneme 1); konuşmada giden cevap", b["cevap"] and "Başka gün iste" in b["giden"], str(b))
     await pg.context.close()
+    # H2-d: müdüre “Kasa ne durumda?” → cevap telefonda
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    mid = await pg.evaluate("() => personelKisisi(OYUN.kariyer, 'maliMudur').id")
+    await pg.keyboard.press("Digit1")
+    await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
+    await pg.click(f'.tel [data-eylem="telKisi"][data-kisi="{mid}"]')
+    await pg.click('.tel [data-eylem="girisim"][data-girisim="yaz.maliMudur.kasa"]')
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("Escape")
+    await oda_ilerle(pg)
+    await pg.wait_for_function("() => OYUN.kariyer.gecmis.some(g => g.sonuc && g.sonuc.yazisma && g.sonuc.yazisma.konu === 'kasa')", timeout=60000)
+    await pg.keyboard.press("Digit1")
+    await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
+    await pg.click(f'.tel [data-eylem="telKisi"][data-kisi="{mid}"]')
+    kmet = await pg.text_content(".tel")
+    denetle("H2-d: müdüre “Kasa ne durumda?” → cevap telefonda (kasadaki para, 90 günün en düşüğü, maaş yükü)", "Kasada" in kmet and "Aylık maaş yükü" in kmet and "Pazartesi özetinde" in kmet, kmet[kmet.find("Kasada"):][:120] if "Kasada" in kmet else kmet[:100])
+    await pg.context.close()
+    # H2-d: sürüm 9 kaydı (Ocak, açık gelen teklifle) tarayıcıda geçişle açılır
+    ocak = (ARAC / "ornekler" / "kayit-s9-ocak.json").read_text(encoding="utf-8")
+    baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
+    await baglam.add_init_script("""(m => { if (!sessionStorage.getItem('__s9')) { sessionStorage.setItem('__s9', '1'); localStorage.setItem('chairman:oyun-1', m); } })(""" + json.dumps(ocak) + ")")
+    pg = await baglam.new_page()
+    pg.on("pageerror", lambda e: tum_hatalar.append("Betik hatası: " + str(e)))
+    await pg.goto((site / "index.html").as_uri() + loca(""))
+    await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=30000)
+    s9 = await pg.evaluate("""() => { const k = OYUN.kariyer, t = Object.values(k.isler).find(x => x.veri && x.veri.karar === 'teklifKarari');
+      return { surum: k.kayitSurumu, bozuk: !!document.querySelector('.od-bozuk'), roller: konusmaListesi(k).map(c => c.kisi.rol).sort().join(','), teklif: !!t,
+        secenek: t ? kararSecenekleri(k, t).map(s => s.id).join(',') : '', rapor: Object.values(k.isler).some(x => x.tur === 'maliRapor') }; }""")
+    denetle("H2-d: sürüm 9 Ocak kaydı geçişle açılır: oda hatasız, kayıt sürümü 10; telefonda hoca, yardımcı ve müdür; gelen teklif kartı iki cevapla yerinde; mali rapor işi kaydın anında",
+            s9["surum"] == 10 and not s9["bozuk"] and "maliMudur" in s9["roller"] and "yardimciAntrenor" in s9["roller"] and "teknikDirektor" in s9["roller"] and s9["teklif"] and s9["secenek"] == "sat,reddet" and s9["rapor"], str(s9))
+    await oda_ilerle(pg)
+    await pg.keyboard.press("Digit3")
+    await pg.wait_for_selector(".dsy", timeout=10000)
+    rs = await pg.text_content(".dsy-sekmeler")
+    denetle("H2-d: ilk İlerle'den sonra dosyada “Raporlar (1)”", "Raporlar (1)" in rs, rs[:120])
+    await baglam.close()
 
 
 async def bolum_20(tarayici, site, tum_hatalar):

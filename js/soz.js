@@ -12,7 +12,7 @@ const SOZ_DURUMLARI=['acik','tutuldu','bozuldu'];
 /* kişi olmayan muhataplar: anahtar → ad (ör. {personel:'Personel ve oyuncular'}); içerik dosyaları ekler */
 const SOZ_TARAFLARI={};
 /* haber türleri ve başlıkları */
-const HABER_TURLERI={gazete:'Gazete',tesekkur:'Not'};
+const HABER_TURLERI={gazete:'Gazete',tesekkur:'Not',rapor:'Rapor'};   /* H2-d: rapor dosyadadır (js/mali-rapor.js); gazetenin ışığını yakmaz */
 /* açıkken duvardaki panoya not olarak düşen söz konuları (anahtar listesi); içerik dosyaları ekler */
 const ODA_NOTU_SOZLERI=[];
 const sozMuhatapAdi=(k,m)=>SOZ_TARAFLARI[m]||kisiAdi(k,m);
@@ -56,7 +56,7 @@ function haberEkle(k,{tur,anahtar,p={},olayId=null}){
 }
 const haberMetni=(k,h)=>MESELE_OLAYLARI[h.anahtar](k,h.p);
 const haberBasligi=(k,h)=>h.p&&h.p.kaynak?(OLAY_KAYNAKLARI[h.p.kaynak]||kisiAdi(k,h.p.kaynak)):HABER_TURLERI[h.tur];
-function haberlerGoruldu(k){for(const h of k.haberler)h.gorulen=true;}
+function haberlerGoruldu(k){for(const h of k.haberler)if(h.tur!=='rapor')h.gorulen=true;}
 
 /* odada görünen izler (kariyeri değiştirmez) */
 function odaIzleri(k){
@@ -64,7 +64,7 @@ function odaIzleri(k){
   return{
     gazete:gazete.length?gazete[gazete.length-1]:null,
     kart:kart.length?kart[kart.length-1]:null,
-    yeniHaber:H.filter(h=>!h.gorulen).length,
+    yeniHaber:H.filter(h=>!h.gorulen&&h.tur!=='rapor').length,
     iskele:k.hareketler.some(h=>h.kalem==='bakim'),          // stat bakımına ödeme yapıldıysa karşı tribünde onarım izi
     panoNotu:ODA_NOTU_SOZLERI.some(a=>!!acikSoz(k,a))
   };
