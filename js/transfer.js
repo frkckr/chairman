@@ -32,8 +32,9 @@ function oyuncuKulubuTarihte(k,oyuncuId,an){
 }
 /* S-e: gazetede transfer haberi (önem 70; TEST) — geçmişteki transfer kaydından, başkanın kulübüne gelen ya da giden oyuncu (eskiden haber kaydıydı) */
 GAZETE_KAYNAKLARI.push({ad:'transfer',haberler:(k,P)=>(k.gecmis||[]).filter(g=>g.tur==='transfer'&&(g.eski===P.biz||g.yeni===P.biz)).map(g=>{
-  const m=Object.values(k.meseleler||{}).find(x=>x.tur==='transfer'&&x.olaylar.some(o=>(o.anahtar==='tr.sat'||o.anahtar==='tr.imza')&&o.p&&o.p.oyuncuId===g.oyuncuId));
-  return{onem:70,an:anDakika(g.tarih,g.dakika),anahtar:'tr.haber',p:{oyuncuId:g.oyuncuId,alici:g.yeni},meseleId:m?m.id:undefined};})});
+  const an=anDakika(g.tarih,g.dakika),ana=g.yeni===P.biz?'tr.imza':'tr.sat';   /* inceleme: dosya transferin yönüne ve anına göre */
+  const m=Object.values(k.meseleler||{}).find(x=>x.tur==='transfer'&&x.olaylar.some(o=>o.anahtar===ana&&o.p&&o.p.oyuncuId===g.oyuncuId&&anDakika(o.tarih,o.dakika)===an));
+  return{onem:70,an,anahtar:'tr.haber',p:{oyuncuId:g.oyuncuId,alici:g.yeni},meseleId:m?m.id:undefined};})});
 const transferDonemi=(k,tarih)=>((k.sezon&&k.sezon.transfer)||[]).find(t=>tarih>=t.bas&&tarih<=t.bitis)||null;
 function oyuncuDegeri(p,tarih){
   const m=p.sozlesme?p.sozlesme.maas:maasTahmini(p,tarih),y=oyuncuYasi(p,tarih);

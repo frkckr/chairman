@@ -106,7 +106,7 @@ function takimGoruntusu(k){
     /* S-a: o günkü kondisyonu 80'in altındaki en yorgun üç oyuncu ve formu 25 ve üstündeki en formda üç oyuncu (yalnız kimlik; sayı kayda ve metne girmez) */
     ...(typeof oyuncuHaftasiAcik==='function'&&oyuncuHaftasiAcik()?{
       yorgun:L.filter(p=>!(p.sakat&&tarihKarsilastir(p.sakat.donus,k.tarih)>0)).map(p=>({id:p.id,v:oyuncuKondisyonu(k,p,k.tarih)})).filter(x=>x.v<80).sort((a,b)=>a.v-b.v||(a.id<b.id?-1:1)).slice(0,3).map(x=>x.id),
-      formda:L.map(p=>({id:p.id,v:oyuncuFormu(p)})).filter(x=>x.v>=25).sort((a,b)=>b.v-a.v||(a.id<b.id?-1:1)).slice(0,3).map(x=>x.id)}:{})};
+      formda:L.filter(p=>!(p.sakat&&tarihKarsilastir(p.sakat.donus,k.tarih)>0)).map(p=>({id:p.id,v:oyuncuFormu(p)})).filter(x=>x.v>=25).sort((a,b)=>b.v-a.v||(a.id<b.id?-1:1)).slice(0,3).map(x=>x.id)}:{})};
 }
 const yzOyuncu=(k,id)=>(k.oyuncular[id]||{}).ad||'—';
 const yzRakip=(k,macId)=>{const f=(k.fikstur||[]).find(x=>x.id===macId),biz=bizimKulup(k);if(!f)return null;const r=f.ev===biz?f.konuk:f.ev;return{ad:(k.kulupler[r]||{ad:r}).ad,tarih:f.tarih};};

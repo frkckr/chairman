@@ -81,7 +81,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
         if(!gozlemAcik(k)){izleme=null;izlemeKaydet();ciz();return;}
         let r;try{r=komut(x=>gozlemAdim(x,1),true);}catch(e){izleme=null;izlemeKaydet();hataGoster(e);return;}
         if(r.neden!=='devam'){izleme=null;izlemeKaydet();gozlemSonucu(r);return;}
-        if(r.yeni&&r.yeni.length){mesaj=r.yeni.map(s=>gozlemSinyalMetni(k,s)).filter(Boolean).join(' ');ciz();}   /* S-b: görülen sinyal şeritte */
+        if(r.yeni&&r.yeni.length){mesaj=r.yeni.map(s=>gozlemSinyalMetni(k,s)).filter(Boolean).join(' ');ciz();   /* S-b: görülen sinyal şeritte */
+          if(typeof metinDuyur==='function')metinDuyur(mesaj);}   /* inceleme: oda yeniden çizildiği için .od-mesaj duyurulmaz (js/ekran-kart.js) */
         if(k.gunIciDakika-I.kayitDk>=GOZLEM_KAYIT_DK)izlemeKaydet();
       }
       if(adim)izlemeGoster();
@@ -176,7 +177,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
   const telLigSifirla=()=>{tel.skorSekme='maclar';tel.hafta=null;tel.kulup=null;};
   /* telefonun görünüm anahtarı: aynı görünüm yeniden çizilirken okuma yeri korunur (S-d: Canlı Skor'da sekme ve hafta, kulüp ekranında kulüp) */
   const telAnahtar=()=>tel.ekran+(tel.ekran==='skor'?':'+(tel.skorSekme||'maclar')+':'+(tel.hafta||''):tel.ekran==='kulup'?':'+tel.kulup:'');
-  let cizilenTel=null;
+  let cizilenTel=null,telSkorYeri=0;   /* inceleme: kulüp ekranına geçerken Canlı Skor'un okuma yeri */
+  const telSkorYeriGeri=id=>{const g=kap.querySelector('.tel-govde');if(!g)return;g.scrollTop=telSkorYeri;const f=g.querySelector('[data-eylem="kulupAc"][data-kulup="'+id+'"]');
+    if(f){const a=g.getBoundingClientRect(),b=f.getBoundingClientRect();if(b.top<a.top)g.scrollTop-=a.top-b.top;else if(b.bottom>a.bottom)g.scrollTop+=b.bottom-a.bottom;}};
   /* telGecis: telefonda ekran değişti (kısa açılış geçişi yalnız o çizimde; N7) */
   let telAlta=false,telGecis=false;
   function telefonPaneli(){
@@ -236,6 +239,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
      not (teşekkür kartı) ve eski kayıtların haber kayıtları. gazeteGun: açık sayının tarihi (null: son sayı) */
   let gazeteGun=null;
   const gazeteGosterilen=()=>{const son=izler().sayi;return son?(gazeteGun&&gazeteGun<son?gazeteGun:son):null;};
+  /* inceleme: sayı değişince odak aynı yöndeki gezinti düğmesinde kalır; uca gelindiyse öbürüne geçer */
+  const gazeteOdak=geri=>{const t=gazeteGosterilen(),g=!!t&&!!gazeteSayisi(k,tarihEkle(t,-1)),i=!!t&&tarihEkle(t,1)<=izler().sayi;
+    return'.gz-gezinti [data-yon="'+(geri?(g?'geri':'ileri'):(i?'ileri':'geri'))+'"]';};
   function gazetePaneli(){
     const t=gazeteGosterilen(),G=t&&typeof gazeteSayisi==='function'?gazeteSayisi(k,t):null;
     const konu=m=>m&&k.meseleler[m]?'<p class="od-not">Konu: <button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+m+'">'+yaz(k.meseleler[m].baslik)+'</button></p>':'';
@@ -245,8 +251,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
         '<p class="od-manset gz-manset">'+yaz(G.manset.metin)+'</p>'+konu(G.manset.meseleId)+
         D.map(h=>'<p class="gz-haber">'+yaz(h.metin)+'</p>'+konu(h.meseleId)).join('')+
         Kt.map(h=>'<p class="od-not gz-kutu">'+yaz(h.metin)+'</p>').join('')+
-        '<div class="od-dugmeler gz-gezinti"><button type="button" data-eylem="gazeteSayi" data-tarih="'+once+'"'+(gazeteSayisi(k,once)?'':' disabled')+'>◂ Önceki sayı</button>'+
-        '<button type="button" data-eylem="gazeteSayi" data-tarih="'+sonra+'"'+(son&&sonra<=son?'':' disabled')+'>Sonraki sayı ▸</button></div></article>';}
+        '<div class="od-dugmeler gz-gezinti"><button type="button" data-eylem="gazeteSayi" data-yon="geri" data-tarih="'+once+'"'+(gazeteSayisi(k,once)?'':' disabled')+'>◂ Önceki sayı</button>'+
+        '<button type="button" data-eylem="gazeteSayi" data-yon="ileri" data-tarih="'+sonra+'"'+(son&&sonra<=son?'':' disabled')+'>Sonraki sayı ▸</button></div></article>';}
     const H=(k.haberler||[]).filter(h=>h.tur!=='rapor'&&(h.tur!=='gazete'||!G)).slice().reverse();   /* H2-d: rapor dosyadadır; S-e: gazete kayıtları sayının içinde (eskileri geçmişten kurulur) */
     if(!G&&!H.length)return'<p class="od-not">Masada gazete yok.</p>';
     return ic+(H.length?(G?'<h4>Masadaki notlar</h4>':'')+
@@ -313,7 +319,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     let ic;
     /* S-b: günün türü ve gördüklerin (dondurulmuş sinyallerden geçilmiş olanlar); TEST bilgileri açıkken günün adayları */
     const P=typeof antrenmanProgrami==='function'?antrenmanProgrami(k,kulupId(),k.tarih):null,gunTuru={toparlanma:'toparlanma',yogun:'yoğun',hafif:'hafif'}[P&&P.tur]||'';
-    const gS=k.gozlem&&gozlemAcik(k)?(k.gozlem.sinyaller||[]).filter(s=>s.dk<k.gunIciDakika):[],gorduk=gS.length?'<ul class="od-liste od-gorduklerin" aria-label="Gördüklerin">'+gS.map(s=>'<li>'+yaz(gozlemSinyalMetni(k,s)||'')+'</li>').join('')+'</ul>':'';
+    const gS=k.gozlem&&gozlemAcik(k)?(k.gozlem.sinyaller||[]).filter(s=>s.dk<k.gunIciDakika):[],gorduk=gS.length?'<ul class="od-liste od-gorduklerin" aria-label="Gördüklerin"><li>'+yaz(gozlemSinyalMetni(k,gS[gS.length-1])||'')+'</li></ul>'+
+      (gS.length>1?'<small class="od-not">'+gS.length+' not oyuncuların dosyasına düştü.</small>':''):'';   /* inceleme: yalnız son görülen (büyük yazıda şerit masa düğmelerine uzanmasın) */
     const testAday=testAcik()&&typeof antrenmanSinyalleri==='function'?testKutu('Günün adayları: '+(antrenmanSinyalleri(k,k.tarih).map(s=>s.tur+'@'+saatYazi(s.dk)+' '+((k.oyuncular[s.oyuncuId]||{}).ad||'')).join(', ')||'yok')):'';
     if(izleme)ic='<p><b>İzliyorsun</b> <span class="od-not">kalan '+gozlemKalan(k)+' dk'+(duraklatmaVar()?' · duraklatıldı':acik?' · panel açıkken gözlem bekler':'')+'</span></p>'+
       '<div class="od-dugmeler"><button type="button" data-eylem="gozlemBirak">Gözlemi bırak</button></div>'+gorduk;
@@ -484,7 +491,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
   }
   /* S-c: dosya Kadro görünümünde mi (seçili ya da konu ve rapor yokken tek görünüm); oyuncu dosyasından listeye dönüş, odak o oyuncunun adında */
   const kadroGorunur=()=>kadroAcilir()&&(dosyaKadro||!meseleler().length&&!raporlar().length);
-  function kadroDon(){const o=seciliOyuncu;seciliOyuncu=null;ciz(o?'[data-eylem="oyuncuAc"][data-oyuncu="'+o+'"]':'[data-eylem="kadroSekme"]');}
+  let kadroYeri=0;   /* inceleme: oyuncu dosyası açılırken listenin okuma yeri; dönünce geri gelir, o oyuncunun satırı görünür */
+  const gorunurYap=(kutu,f)=>{if(!kutu||!f)return;const a=kutu.getBoundingClientRect(),b=f.getBoundingClientRect();if(b.top<a.top)kutu.scrollTop-=a.top-b.top;else if(b.bottom>a.bottom)kutu.scrollTop+=b.bottom-a.bottom;};
+  function kadroDon(){const o=seciliOyuncu;seciliOyuncu=null;ciz(o?'[data-eylem="oyuncuAc"][data-oyuncu="'+o+'"]':'[data-eylem="kadroSekme"]');
+    const g=kap.querySelector('.dsy-genis');if(g){g.scrollTop=kadroYeri;gorunurYap(g,o&&g.querySelector('[data-oyuncu="'+o+'"]'));}}
   /* karar panelinden kapatınca ajandaya (aynı güne, aynı kayda) dönülür */
   function kapat(){if(acik==='karar'){kararIs=null;panelAc('ajanda',null,null,true);return;}acik=null;onay=null;yeniOnay=false;ciz('.od-ana');}
   /* balkon ↔ oda: yürüyüş yalnız sunumdur; odaya dönerken açık gözlem kapanır */
@@ -592,7 +602,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='dosyaAc'){if(b.dataset.gezinti)donusYeri=null;dosyaRapor=false;panelAc('dosya',ms,b.dataset.donus);}
     /* S-c: Kadro sekmesi, oyuncu dosyası ve listeye dönüş (okuma; Duraklat'ta da açık) */
     else if(ey==='kadroSekme'){dosyaKadro=true;seciliOyuncu=null;dosyaArsiv=false;dosyaRapor=false;ciz('[data-eylem="kadroSekme"]');}
-    else if(ey==='oyuncuAc'){dosyaKadro=true;seciliOyuncu=b.dataset.oyuncu;ciz('[data-eylem="kadroDon"]');}
+    else if(ey==='oyuncuAc'){const g=kap.querySelector('.dsy-genis');if(g)kadroYeri=g.scrollTop;dosyaKadro=true;seciliOyuncu=b.dataset.oyuncu;ciz('[data-eylem="kadroDon"]');}
     else if(ey==='kadroDon')kadroDon();
     else if(ey==='kararAc'){kararIs=id;panelAc('karar');}
     else if(ey==='donus'){const d=donusYeri;donusYeri=null;if(d)panelAc(d.panel,null,null,true);}
@@ -606,7 +616,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     /* telefon gezintisi: zaman ve kariyer değişmez (konuşmayı açmak yalnız "yeni" işaretini kaldırır) */
     else if(ey==='telUyg'){tel.ekran=b.dataset.uyg;tel.skorAc=null;telLigSifirla();onay=null;telGecis=true;ciz('.tel-geri');}
     /* S-d: Canlı Skor'un lig gezintisi (sekme, fikstür haftası, kulüp ekranı; js/ekran-telefon.js telGezinti; okuma) */
-    else if(ey==='skorSekme'||ey==='fiksturHafta'||ey==='kulupAc'||ey==='skorGeri'){const o=telGezinti(tel,b);telGecis=ey==='kulupAc'||ey==='skorGeri';ciz(o);}
+    else if(ey==='skorSekme'||ey==='fiksturHafta'||ey==='kulupAc'||ey==='skorGeri'){if(ey==='kulupAc'){const g=kap.querySelector('.tel-govde');telSkorYeri=g?g.scrollTop:0;}
+      const id=tel.kulup,o=telGezinti(tel,b);telGecis=ey==='kulupAc'||ey==='skorGeri';ciz(o);if(ey==='skorGeri')telSkorYeriGeri(id);}
     else if(ey==='telEv'){telAnaEkran();}
     else if(ey==='telKisi'){onay=null;konusmaAc(b.dataset.kisi);telGecis=true;ciz('.tel-geri');}
     else if(ey==='telKisiler'){tel.ekran='mesajlar';panelAc('telefon',null,null,true);}
@@ -614,7 +625,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='gun'){ajandaGun=b.dataset.tarih;secili=null;onay=null;ciz('[data-eylem="gun"][data-tarih="'+ajandaGun+'"]');}
     else if(ey==='hafta'){ajandaHafta=Math.max(0,Math.min(2,Number(b.dataset.hafta)));ajandaGun=ajandaHafta?tarihEkle(k.tarih,7*ajandaHafta-((new Date(k.tarih+'T00:00:00Z').getUTCDay()+6)%7)):k.tarih;
       secili=null;onay=null;ciz('[data-eylem="hafta"][data-hafta="'+(ajandaHafta+(Number(b.dataset.hafta)>=ajandaHafta?1:-1))+'"]');}
-    else if(ey==='gazeteSayi'){gazeteGun=b.dataset.tarih;ciz('[data-eylem="gazeteSayi"][data-tarih="'+tarihEkle(gazeteGun,b.textContent.indexOf('Önceki')>=0?-1:1)+'"]:not([disabled])');}   /* S-e: sayılar arasında (okuma) */
+    else if(ey==='gazeteSayi'){gazeteGun=b.dataset.tarih;ciz(gazeteOdak(b.dataset.yon==='geri'));}   /* S-e: sayılar arasında (okuma) */
     else if(ey==='ayarBolum'){ayarBolum=b.dataset.bolum;yeniOnay=false;ciz('[data-eylem="ayarBolum"][data-bolum="'+ayarBolum+'"]');}
     else if(ey==='goruntu')goruntuKaydet();
     else if(ey==='kapat')kapat();
@@ -662,11 +673,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(e.code==='Digit5'&&balkonVar){e.preventDefault();if(!duraklatmaVar())yerDegistir();}
     else if(e.code==='KeyP'||(e.code==='Space'&&t!=='BUTTON'&&!e.repeat)){e.preventDefault();duraklatDegistir();}
     /* Esc: telefonda bir uygulama açıksa önce ana ekrana döner, ana ekrandaysa telefonu kapatır (N7) */
-    else if(e.code==='Escape'&&acik){e.preventDefault();if(acik==='telefon'&&tel.ekran==='kulup'){const id=tel.kulup;tel.ekran='skor';tel.kulup=null;telGecis=true;ciz('[data-eylem="kulupAc"][data-kulup="'+id+'"]');}else if(acik==='telefon'&&tel.ekran!=='ana')telAnaEkran();else if(acik==='dosya'&&kadroGorunur()&&seciliOyuncu)kadroDon();else kapat();}
+    else if(e.code==='Escape'&&acik){e.preventDefault();if(acik==='telefon'&&tel.ekran==='kulup'){const id=tel.kulup;tel.ekran='skor';tel.kulup=null;telGecis=true;ciz('[data-eylem="kulupAc"][data-kulup="'+id+'"]');telSkorYeriGeri(id);}else if(acik==='telefon'&&tel.ekran!=='ana')telAnaEkran();else if(acik==='dosya'&&kadroGorunur()&&seciliOyuncu)kadroDon();else kapat();}
     /* S-c: oyuncu dosyasında [ ve ] önceki ve sonraki oyuncu (kadro listesinin sırası); kadro listesinde bir şey yapmaz */
     /* S-e: gazetede [ ve ] önceki ve sonraki sayı */
     else if((e.code==='BracketLeft'||e.code==='BracketRight')&&acik==='gazete'){const t=gazeteGosterilen();if(!t)return;const y=tarihEkle(t,e.code==='BracketLeft'?-1:1);
-      if(typeof gazeteSayisi==='function'&&gazeteSayisi(k,y)){e.preventDefault();gazeteGun=y;ciz();}}
+      if(typeof gazeteSayisi==='function'&&gazeteSayisi(k,y)){e.preventDefault();gazeteGun=y;ciz(gazeteOdak(e.code==='BracketLeft'));}}
     else if((e.code==='BracketLeft'||e.code==='BracketRight')&&acik==='dosya'&&kadroGorunur()){
       if(!seciliOyuncu)return;const S=kadroSatirlari(k,kulupId()).map(x=>x.id),n=S.length,i=S.indexOf(seciliOyuncu);if(n<2)return;
       e.preventDefault();seciliOyuncu=S[i<0?0:(i+(e.code==='BracketLeft'?-1:1)+n)%n];ciz('[data-eylem="kadroDon"]');}

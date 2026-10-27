@@ -1177,6 +1177,21 @@ bolum('3.11 — kadro ve oyuncu dosyası: gözlenebilir sayılar ve tarihli notl
   denetle('Notlar yeniden eskiye; kaynaklar hoca, antrenman ve maç (on birde yoktu); antrenman ve hoca notlarında rakam yok',
     yeniden&&ana(hocaAd).length>=1&&ana('Antrenman (balkon)').length===1&&ana('Maç').some(n=>/on birde yoktu/.test(n.metin))
     &&N[0].kaynak===hocaAd&&N[N.length-1].kaynak==='Maç'&&N.filter(n=>n.kaynak!=='Maç').every(n=>!/\d/.test(n.metin)),metin(N.map(n=>n.kaynak+': '+n.metin)).slice(0,260));
+  /* inceleme (2026-10-27): yardımcının cevabı yalnız onun söylediği listelerden ve onun sözüyle not düşürür; sakat oyuncu “formda” listesine girmez;
+     transfer haberi yönüne ve anına göre dosyasına bağlanır (önce alınıp sonra satılan oyuncu) */
+  {let k3=KK(k2,x=>T('girisimBaslat')(x,'yaz.yardimciAntrenor.takim')).kariyer;
+   const yard=g=>g.sonuc&&g.sonuc.yazisma&&g.sonuc.yazisma.konu==='takim'&&(k3.kisiler[g.sonuc.yazisma.kisiId]||{}).rol==='yardimciAntrenor';
+   for(let i=0;i<8&&!k3.gecmis.some(yard);i++)k3=KK(k3,x=>T('duragaIlerle')(x)).kariyer;
+   const yAd=Object.values(k3.kisiler).find(p=>p.rol==='yardimciAntrenor'&&p.kulupId===biz).ad,YN=T('kulupOyunculari')(k3,biz).flatMap(p=>ON(k3,p.id)).filter(n=>n.kaynak===yAd);
+   const sc=JSON.parse(metin(k2)),sp=T('kulupOyunculari')(k2,biz).find(p=>!p.sakat&&p.id!==cik);
+   sc.oyuncular[sp.id].hal=Object.assign({},sc.oyuncular[sp.id].hal,{form:80});sc.oyuncular[sp.id].sakat={neden:'deneme',donus:'2027-01-20'};
+   const SG=T('takimGoruntusu')(T('kariyerOlustur')(sc)),tq=T('GAZETE_KAYNAKLARI').find(q=>q.ad==='transfer'),tk=JSON.parse(metin(k2));
+   tk.meseleler={m1:{id:'m1',tur:'transfer',olaylar:[{tarih:'2026-12-01',dakika:600,anahtar:'tr.imza',p:{oyuncuId:cik}}]},m2:{id:'m2',tur:'transfer',olaylar:[{tarih:'2026-12-10',dakika:600,anahtar:'tr.sat',p:{oyuncuId:cik}}]}};
+   tk.gecmis=[{tur:'transfer',oyuncuId:cik,eski:'akdeniz',yeni:biz,bedel:0,tarih:'2026-12-01',dakika:600},{tur:'transfer',oyuncuId:cik,eski:biz,yeni:'akdeniz',bedel:0,tarih:'2026-12-10',dakika:600}];
+   const TH=tq.haberler(tk,{tarih:'2026-12-11',bas:0,son:9e9,biz});
+   denetle('İnceleme: yardımcının notları yalnız onun sözü (koşu verisi; “iyi günlerinde” ve hocanın cümlesi yok); sakat oyuncu formda listesinde değil; transfer haberi alımda alım, satışta satış dosyasına bağlı',
+     YN.length>=1&&YN.every(n=>!/İyi günlerinde|dinlendiririm/.test(n.metin))&&YN.some(n=>/Koşu verilerinde düşüş/.test(n.metin))
+     &&SG.sakat.some(x=>x.id===sp.id)&&!SG.formda.includes(sp.id)&&TH.length===2&&TH[0].meseleId==='m1'&&TH[1].meseleId==='m2',metin(YN.map(n=>n.metin)).slice(0,160));}
   const Nk=ON(k2,kirmizi),tc=JSON.parse(metin(k2));tc.oyuncular[kirmizi].kulupId='akdeniz';
   denetle('Maç notunda rakip maçtaki tarafından: kırmızı kart notu var; oyuncu başka kulübe geçse de eski maç notları aynı',
     Nk.some(n=>n.kaynak==='Maç'&&/kırmızı/.test(n.metin))&&metin(ON(tc,kirmizi))===metin(Nk),metin(Nk.map(n=>n.metin)).slice(0,160));

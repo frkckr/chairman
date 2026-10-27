@@ -2231,8 +2231,21 @@ async def bolum_23(tarayici, site, tum_hatalar):
     b = await pg.evaluate("""() => { const k = OYUN.kariyer, S = (k.gozlem && k.gozlem.sinyaller || []).filter(s => s.dk < k.gunIciDakika).map(s => gozlemSinyalMetni(k, s));
       return { yer: ODA.yer, acik: gozlemAcik(k), beklenen: S, sayfa: [...document.querySelectorAll('.od-gorduklerin li')].map(x => x.textContent),
         serit: (document.querySelector('.od-gozlem') || {}).textContent || '' }; }""")
-    denetle("S-b: gözlem açıkken yenileme odayı balkonda açar; şeritteki “Gördüklerin” sayfa içinde hesaplanan sinyallerle aynı (en az bir yorgun)",
-            b["yer"] == "balkon" and b["acik"] and len(b["beklenen"]) >= 1 and b["sayfa"] == b["beklenen"] and any("koşularda geride kaldı" in s for s in b["sayfa"]), str(b)[:300])
+    denetle("S-b: gözlem açıkken yenileme odayı balkonda açar; şeritteki “Gördüklerin” sayfa içinde hesaplanan son sinyal (inceleme: yalnız son görülen ve sayı; en az bir yorgun)",
+            b["yer"] == "balkon" and b["acik"] and len(b["beklenen"]) >= 1 and b["sayfa"] == b["beklenen"][-1:] and any("koşularda geride kaldı" in s for s in b["beklenen"]), str(b)[:300])
+    kes = {}
+    for boyut in ((1180, 1000), (800, 600)):
+        await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
+        await pg.click('.od-nesne[data-panel="ayar"]')
+        await pg.click('[data-eylem="yazi"][data-yazi="buyuk"]')
+        await pg.keyboard.press("Escape")
+        kes[boyut[0]] = await pg.evaluate("""() => { const g = document.querySelector('.od-gozlem'); if (!g) return null; const a = g.getBoundingClientRect();
+          return [...document.querySelectorAll('.od-nesneler button')].filter(b => { const r = b.getBoundingClientRect(); return r.width > 1 && r.left < a.right && r.right > a.left && r.top < a.bottom && r.bottom > a.top; }).map(b => b.textContent); }""")
+    await pg.set_viewport_size({"width": 1180, "height": 1000})
+    await pg.click('.od-nesne[data-panel="ayar"]')
+    await pg.click('[data-eylem="yazi"][data-yazi="normal"]')
+    await pg.keyboard.press("Escape")
+    denetle("İnceleme: büyük yazıda (1180 ve 800 px) balkon şeridi masadaki düğmelerle kesişmez", all(v == [] for v in kes.values()), str(kes))
     await pg.click('[data-eylem="gozlemBirak"]')
     await pg.wait_for_timeout(300)
     g = await pg.evaluate("() => { const g = OYUN.kariyer.gecmis.filter(x => x.tur === 'gozlem').pop(); return g ? g.sinyaller || [] : null; }")
@@ -2284,6 +2297,18 @@ async def bolum_22(tarayici, site, tum_hatalar):
     e2 = await pg.query_selector(".dsy") is None
     denetle("S-c: Esc oyuncu dosyasından önce listeye döner (odak o oyuncuda), sonra dosyayı kapatır", e1["liste"] and e1["odak"] == ilk and e2, f"{e1} · {e2}")
     await pg.click(".od-duraklat")
+    await pg.set_viewport_size({"width": 800, "height": 600})
+    await kadro_ac()
+    y0 = await pg.evaluate("() => { const g = document.querySelector('.dsy-genis'); g.scrollTop = g.scrollHeight; return g.scrollTop; }")
+    sonid = await pg.evaluate("() => [...document.querySelectorAll('.dsy-kadro [data-eylem=\"oyuncuAc\"]')].pop().dataset.oyuncu")
+    await pg.click(f'.dsy-kadro [data-eylem="oyuncuAc"][data-oyuncu="{sonid}"]')
+    await pg.keyboard.press("Escape")
+    yd = await pg.evaluate("""(id) => { const g = document.querySelector('.dsy-genis'), f = document.activeElement, a = g.getBoundingClientRect(), r = f.getBoundingClientRect();
+      return { y: g.scrollTop, odak: f.dataset ? f.dataset.oyuncu : null, gorunur: r.top >= a.top - 1 && r.bottom <= a.bottom + 1 }; }""", sonid)
+    await pg.keyboard.press("Escape")
+    await pg.set_viewport_size({"width": 1180, "height": 1000})
+    denetle("İnceleme: oyuncu dosyasından listeye dönünce okuma yeri geri gelir, odak o oyuncunun satırında ve görünür (800 px)",
+            y0 > 0 and abs(yd["y"] - y0) <= 2 and yd["odak"] == sonid and yd["gorunur"], f"{y0} → {yd}")
     tasma = {}
     for yazi, boyut in (("normal", (1180, 1000)), ("buyuk", (1180, 1000)), ("normal", (800, 600)), ("buyuk", (800, 600))):
         await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
@@ -2381,8 +2406,27 @@ async def bolum_24(tarayici, site, tum_hatalar):
     tas3 = await pg.evaluate(TEL_TASMA_JS)
     await pg.click('.tel-haftaOk[data-yon="geri"]')
     f3 = await hafta()
+    await pg.focus('.tel-haftaOk[data-yon="ileri"]')
+    await pg.keyboard.press("Enter")
+    await pg.keyboard.press("Enter")
+    fk = await pg.evaluate("() => ({ h: document.querySelector('.tel-haftaNav b').textContent, yon: document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.yon : null })")
+    denetle("İnceleme: fikstürde › klavyeyle iki kez: odak ileri okta kalır (15. hafta)", fk == {"h": "15. hafta", "yon": "ileri"}, str(fk))
     denetle("S-d: Fikstür odada bekleyen maç gününün haftasıyla açılır (13, ‹ kapalı); › 14. hafta, ‹ 13; her hafta 8 maç; taşma ≤ 1; zaman değişmedi",
             f1 == {"h": "13. hafta", "n": 8, "geri": True} and f2["h"] == "14. hafta" and f2["n"] == 8 and f3["h"] == "13. hafta" and tas3["en"] <= 1 and await durum(pg) == d0, f"{f1} · {f2} · {f3}")
+    await pg.set_viewport_size({"width": 800, "height": 600})
+    await pg.evaluate("() => { OYUN.ayarlar.yazi = 'buyuk'; }")   # büyük yazıda tablo telefonda taşar (okuma yeri anlamlı)
+    await pg.click('.tel [data-eylem="skorSekme"][data-sekme="tablo"]')
+    t0 = await pg.evaluate("() => { const g = document.querySelector('.tel .tel-govde'); g.scrollTop = g.scrollHeight; return g.scrollTop; }")
+    skid = await pg.evaluate("() => [...document.querySelectorAll('.tel [data-eylem=\"kulupAc\"]')].pop().dataset.kulup")
+    await pg.click(f'.tel [data-eylem="kulupAc"][data-kulup="{skid}"]')
+    await pg.keyboard.press("Escape")
+    td = await pg.evaluate("""() => { const g = document.querySelector('.tel .tel-govde'), f = document.activeElement, a = g.getBoundingClientRect(), r = f.getBoundingClientRect();
+      return { y: g.scrollTop, odak: f.dataset ? f.dataset.kulup : null, gorunur: r.top >= a.top - 1 && r.bottom <= a.bottom + 1 }; }""")
+    await pg.evaluate("() => { OYUN.ayarlar.yazi = 'normal'; }")
+    ke = await pg.evaluate("(id) => { const k = OYUN.kariyer, h = telKulupEkrani(kulupOzeti(k, id), { canli: true, ad: x => x }); return { once: (h.match(/önceki haftalar/g) || []).length, bugun: h.includes('<dt>Bugün</dt>'), canli: h.includes('Goller <small>(canlı)') }; }", skid)
+    await pg.set_viewport_size({"width": 1180, "height": 1000})
+    denetle("İnceleme: kulüp ekranından Puan durumuna dönünce okuma yeri geri gelir, odak o kulübün satırında ve görünür (800 px); maçta kulüp ekranı maç öncesi verileri etiketler (golcüler ve son beş önceki haftalar, “Bugün”, goller canlı)",
+            t0 > 0 and abs(td["y"] - t0) <= 2 and td["odak"] == skid and td["gorunur"] and ke == {"once": 2, "bugun": True, "canli": True}, f"{t0} → {td} · {ke}")
     await pg.context.close()
     # kariyersiz maç: yalnız Maçlar ve Puan durumu; tablo dokunulmaz
     pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=yok", "#btnMacaGec")
@@ -2440,6 +2484,15 @@ async def bolum_25(tarayici, site, tum_hatalar):
     b = await oku()
     await pg.keyboard.press("BracketRight")
     c = await oku()
+    for _ in range(9):
+        await pg.keyboard.press("BracketLeft")
+    go = await pg.evaluate("() => ({ no: (document.querySelector('.gz-kunye small').textContent.match(/Sayı (\\d+)/) || [])[1], yon: document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.yon : null, gez: !!(document.activeElement && document.activeElement.closest('.gz-gezinti')) })")
+    await pg.keyboard.press("BracketRight")
+    g2 = await pg.evaluate("() => ({ yon: document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.yon : null })")
+    denetle("İnceleme: gazetede [ ile ilk sayıya (Sayı 1) gelinir, odak gezinti düğmesinde kalır (uçta ileri düğmesi); ] ile odak ileri düğmesinde",
+            go == {"no": "1", "yon": "ileri", "gez": True} and g2["yon"] == "ileri", f"{go} · {g2}")
+    for _ in range(9):
+        await pg.keyboard.press("BracketRight")
     denetle("S-e: ◂ Önceki sayı 28 Kasım'ı açar (maç günü: manşet yaklaşan maç; metinler gazeteSayisi ile aynı); ] yeniden son sayıya döner",
             b["tarih"] == "2026-11-28" and b["ayni"] and not b["kalin"] and b["anahtar"] == "gz.yaklasan" and c["tarih"] == "2026-11-29" and b["tasma"] <= 1, f"{b} · {c['tarih']}")
     await pg.context.close()

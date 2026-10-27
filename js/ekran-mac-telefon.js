@@ -70,6 +70,10 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null,skorSekme:'ma
   function ac(){if(MAC_TELEFON.acik||ON_EKRAN.sayfa!==null||HIZLI_BITIR.perde)return;MAC_TELEFON.acik=true;duraklatmaEkle('telefon');E.hidden=false;btn.setAttribute('aria-pressed','true');ciz('[data-mt="kapat"]');}
   function kapat(){if(!MAC_TELEFON.acik)return;MAC_TELEFON.acik=false;E.hidden=true;btn.setAttribute('aria-pressed','false');duraklatmaKaldir('telefon');}
   MAC_TELEFON.ac=ac;MAC_TELEFON.kapat=kapat;
+  /* inceleme: kulüp ekranına geçerken Canlı Skor'un okuma yeri; dönünce geri gelir, o kulübün satırı görünür */
+  let skorYeri=0;
+  const skorYeriGeri=id=>{const g=E.querySelector('.tel-govde');if(!g)return;g.scrollTop=skorYeri;const f=g.querySelector('[data-eylem="kulupAc"][data-kulup="'+id+'"]');
+    if(f){const a=g.getBoundingClientRect(),b=f.getBoundingClientRect();if(b.top<a.top)g.scrollTop-=a.top-b.top;else if(b.bottom>a.bottom)g.scrollTop+=b.bottom-a.bottom;}};
   btn.onclick=()=>MAC_TELEFON.acik?kapat():ac();
   /* gezinti yalnız görünüm durumunu değiştirir; cevap, girişim ve dosya bağlantıları maçta çizilmez. H1 (tek kart): kart kilitlidir (kapali →
      aria-disabled, nedeni yüzde); sürüklenmez, uygulanmaz. Kenar etiketi yalnız okumak için o cevabın yüzünü açar (aynı kenar kapatır) */
@@ -78,7 +82,8 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null,skorSekme:'ma
     if(b.dataset.mt==='kapat'){kapat();return;}
     const ey=b.dataset.eylem;
     /* S-d: lig gezintisi (sekme, fikstür haftası, kulüp ekranı) — js/ekran-telefon.js telGezinti, odadakiyle aynı */
-    {const o=telGezinti(T,b);if(o!==undefined){ciz(o,ey==='kulupAc'||ey==='skorGeri');return;}}
+    {if(ey==='kulupAc'){const g=E.querySelector('.tel-govde');skorYeri=g?g.scrollTop:0;}
+     const id=T.kulup,o=telGezinti(T,b);if(o!==undefined){ciz(o,ey==='kulupAc'||ey==='skorGeri');if(ey==='skorGeri')skorYeriGeri(id);return;}}
     if(ey==='kartOnizle'){const c=b.closest('.kk-kart');if(!c)return;const O=MAC_TELEFON.onizleler,id=c.dataset.is,y=b.dataset.yon;
       const yer=['.tel-govde','.tel-cevap'].map(s=>{const x=E.querySelector(s);return x?x.scrollTop:0;});
       if(O[id]===y)delete O[id];else O[id]=y;ciz('.kk-kart[data-is="'+id+'"]');
@@ -104,7 +109,7 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null,skorSekme:'ma
     if(ON_EKRAN.sayfa!==null||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;
     if(e.code==='KeyT'){e.preventDefault();MAC_TELEFON.acik?kapat():ac();}
     /* Esc: bir uygulama açıksa önce ana ekrana döner, ana ekrandaysa telefonu kapatır (N7) */
-    else if(e.code==='Escape'&&MAC_TELEFON.acik){e.preventDefault();if(T.ekran==='kulup'){const id=T.kulup;T.ekran='skor';T.kulup=null;ciz('[data-eylem="kulupAc"][data-kulup="'+id+'"]',true);}
+    else if(e.code==='Escape'&&MAC_TELEFON.acik){e.preventDefault();if(T.ekran==='kulup'){const id=T.kulup;T.ekran='skor';T.kulup=null;ciz('[data-eylem="kulupAc"][data-kulup="'+id+'"]',true);skorYeriGeri(id);}
       else if(T.ekran!=='ana'){T.ekran='ana';T.kisi=null;T.skorSekme='maclar';T.hafta=null;T.kulup=null;ciz('.tel-uygMesaj',true);}else kapat();}});
   /* açıkken skor/dakika satırı motorun donmuş anını gösterir; elle duraklatma kalkıp telefon tek neden kalınca da değişmez */
   duraklatmaDinle(()=>{if(MAC_TELEFON.acik)ciz();});

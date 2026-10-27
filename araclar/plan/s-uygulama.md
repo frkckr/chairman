@@ -996,6 +996,20 @@ Bu adım saf okumadır; kayda alan eklemez ve odaya düğme koymaz.
 - **Tarama (soru başına iki değer, iki tohum; `SEZON_DENEME_AYAR` ile `OYUNCU_HAFTA_TEST.toparlanma`):** ×1,25 → en düşük kondisyon 56 / 70, art arda en çok 4 / 4, dinlenen kulüp-maç başına 0,45 / 0,53, gelişim ≤21 +0,70 / +0,71 ve 30+ −0,53 / −0,52, form sd 15,3 / 15,7, sakatlık −%9 / +%19, hükmen 0; ×1,5 → bantta ama ortalama kondisyon ~99,5 (kondisyon neredeyse etkisiz). **Karar (Claude, TEST):** günlük toparlanma değerleri ×1,25 (`{mac 3,75, dinlenme 7,5, toparlanma 5,75, hafif 5,25, yoğun 7,5}`).
 - **Testler:** iki beklenti değerden bağımsız yazıldı — 2.7b'nin “günde en çok üç” satırı en yorgun ikiyi o günkü kondisyondan bulur; 3.11'in hoca notu için kopyadaki kondisyon 60 yerine 50. `kariyer-deneme` geçti.
 
+### İnceleme (S-f)
+
+İki bağımsız inceleme (kural, veri ve kayıt; ekran, akış ve erişilebilirlik) 10 bulgu getirdi; her birini ayrı bir doğrulayıcı çürütmeye çalıştı, 10'u da gerçek bulundu (2 orta, 8 düşük; hiçbiri kaydı ya da maç sonucunu bozmuyor). Hepsi düzeltildi, dokuzuna denetim eklendi:
+1. **(orta)** Yardımcının “Takım ne durumda?” cevabı oyuncu dosyasına onun söylemediği “İyi günlerinde.” ve hocanın cümlesini düşürüyordu → not kaynağı kişinin rolüne bakar; yardımcı yalnız sakat, cezalı ve yorgun listesinden, kendi sözüyle (“Koşu verilerinde düşüş.”) not bırakır (3.11).
+2. Sakat oyuncu hocanın “formda” listesine girebiliyordu → yorgun listesindeki sakatlık süzgeci formda listesinde de (3.11).
+3. Önce alınıp sonra satılan oyuncunun gazetedeki satış haberi alım dosyasını açıyordu → dosya transferin yönüne ve anına göre bulunur (3.11).
+4. **(orta)** Fikstürde › ile ilerleyince odak ‹ okuna atlıyordu → odak aynı yöndeki okta kalır, sezonun ucunda öbür oka geçer (§24).
+5. Büyük yazıda balkon şeridi “Gördüklerin” listesiyle uzayıp masadaki düğmelerin altına giriyordu → listede yalnız son görülen sinyal ve kaç not düştüğü (§23: 1180 ve 800 px'te kesişme yok).
+6. Oyuncu dosyasından listeye dönünce liste başa sarıyordu → okuma yeri geri gelir, odaktaki satır görünür (§22).
+7. Kulüp ekranından Puan durumuna dönünce tablo başa sarıyordu (oda ve maç telefonu) → okuma yeri geri gelir (§24, büyük yazıda 84 → 84).
+8. Gazetede sayı değişince odak kayboluyordu → odak gezinti düğmesinde kalır, uçta öbür düğmeye geçer (§25).
+9. Maç telefonunun kulüp ekranında canlı ve maç öncesi veriler karışıktı → golcüler “(önceki haftalar)”, goller “(canlı)”, “Sıradaki” yerine “Bugün” (§24, saf çizimle).
+10. İzlerken görülen balkon sinyali ekran okuyucuya duyurulmuyordu → `metinDuyur` (H2-e kalıbı; denetimsiz — gerçek zamanlı izleme bu dizüstünde kararlı denenemiyor).
+
 ## Tasarım panelinin puanları
 
 Ölçütler 1–10. Risk sütununda yüksek puan düşük risk demektir.

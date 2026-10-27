@@ -57,12 +57,14 @@ const OYUNCU_NOT_KAYNAKLARI=[
       L.push({tarih:g.tarih,dakika:g.dakika,anahtar:'not.disarida',p:{rakip:notRakip(k,f,f.konuk===biz?1:0)}});
     }
     return L;}},
-  /* hocanın ya da yardımcının “Takım ne durumda?” cevabı: oyuncu cevap anındaki listede (sakat, cezalı, yorgun, formda); kaynak kişinin adı */
+  /* hocanın ya da yardımcının “Takım ne durumda?” cevabı: oyuncu cevap anındaki listede; kaynak kişinin adı. Yalnız o kişinin cevabında söylenen
+     listeler, onun sözüyle (js/yazisma.js YAZISMA_METIN; inceleme 2026-10-27): yardımcı formdan söz etmez, yorgunluğu koşu verisiyle söyler */
   {ad:'hoca',kaynakAd:'Hoca',notlar:(k,id)=>{
     const L=[],icinde=X=>Array.isArray(X)&&X.some(x=>(x&&typeof x==='object'?x.id:x)===id);
     for(const g of k.gecmis||[]){const y=g.tur==='is'&&g.isTuru==='gelisme'&&g.sonuc&&g.sonuc.yazisma;if(!y||y.konu!=='takim'||y.cevapYok||!y.p)continue;
-      const kisi=(k.kisiler[y.kisiId]||{}).ad||'—';
-      for(const tur of ['sakat','cezali','yorgun','formda'])if(icinde(y.p[tur]))L.push({tarih:g.tarih,dakika:g.dakika,anahtar:'not.hoca.'+tur,p:{},kaynak:kisi});}
+      const kisi=k.kisiler[y.kisiId]||{},yard=kisi.rol==='yardimciAntrenor';
+      for(const tur of yard?['sakat','cezali','yorgun']:['sakat','cezali','yorgun','formda'])
+        if(icinde(y.p[tur]))L.push({tarih:g.tarih,dakika:g.dakika,anahtar:(yard?'not.yardimci.':'not.hoca.')+tur,p:{},kaynak:kisi.ad||'—'});}
     return L;}}
 ];
 /* TEST metinleri (kullanıcı değiştirir) */
@@ -77,7 +79,10 @@ Object.assign(MESELE_OLAYLARI,{
   'not.hoca.sakat':()=>'TEST: “Sakat.”',
   'not.hoca.cezali':()=>'TEST: “Cezalı.”',
   'not.hoca.yorgun':()=>'TEST: “Biraz yorgun; gerekirse dinlendiririm.”',
-  'not.hoca.formda':()=>'TEST: “İyi günlerinde.”'
+  'not.hoca.formda':()=>'TEST: “İyi günlerinde.”',
+  'not.yardimci.sakat':()=>'TEST: Sakatlar listesinde.',
+  'not.yardimci.cezali':()=>'TEST: Cezalılar listesinde.',
+  'not.yardimci.yorgun':()=>'TEST: “Koşu verilerinde düşüş.”'
 });
 function oyuncuNotlari(k,id){
   const L=[];let n=0;
