@@ -10,8 +10,10 @@
                 önce 'başlamadı'. H2-b (2026-10-26, kullanıcı isteği 6): santramızdan sonra öbür maçların satırları da dokunulur; her maçın ayrıntısı
                 (goller, kartlar, sakatlıklar, beklenen golü olan 10 satırlık tablo) aynı görünümdür (js/ekran-telefon.js telMacAyrinti).
    Telefon açıkken ortak duraklatmaya 'telefon' nedeni eklenir (js/sunum-durumu.js): maç ve çevresi durur; kapanınca yalnız bu neden kalkar,
-   elle duraklatma varsa maç durmaya devam eder. Gösterilen skor ve istatistik donmuş motor anına aittir. */
-const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null},onizleler:{}};
+   elle duraklatma varsa maç durmaya devam eder. Gösterilen skor ve istatistik donmuş motor anına aittir.
+   S-d (2026-10-27): Canlı Skor'un Puan durumu sekmesi canlı tablodur: bültenin tablosu + satırların o anki skoru (js/fikstur.js canliTablo; santradan
+   önce skor yok). Kariyerde takıma dokununca kulüp ekranı (sıra ve puan canlı, son beş önceki haftalar) ve Fikstür sekmesi; kariyersiz adreste yalnız tablo. */
+const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null,skorSekme:'maclar',hafta:null,kulup:null},onizleler:{}};
 {
   const E=$('macTelefon'),K=STIL.kagit,yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   for(const a in K)if(typeof K[a]==='string')E.style.setProperty('--k-'+a,K[a]);
@@ -28,8 +30,8 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null},onizleler:{}
      satır için — hükmende x.son, kilit adımda x.m.sonucKaydi(), işçi yolunda arkaMacAnlik(x.son, o anın örneği); anlık bittiyse ya da T0 yoksa son örnek */
   function digerVerisi(once){
     const L=typeof LIG_CANLI!=='undefined'?LIG_CANLI:[],ad=id=>(MAC_GUNU.bulten.adlar||{})[id]||id;
-    return L.map(x=>{const m=x.m,id=x.d.macId,ac=T.skorAc===id,Y={macId:id,ev:ad(x.d.ev),dep:ad(x.d.konuk),evKisa:kisaAd(x.d.ev,ad(x.d.ev)),depKisa:kisaAd(x.d.konuk,ad(x.d.konuk))};
-      if(!m&&x.d.hukmen){const s=x.d.hukmen.skor;return Object.assign(Y,{skor:s[0]+' – '+s[1],durum:'hükmen',kisaDurum:'Hük.',canli:false,dokunur:!once,
+    return L.map(x=>{const m=x.m,id=x.d.macId,ac=T.skorAc===id,Y={macId:id,evId:x.d.ev,depId:x.d.konuk,sk:null,ev:ad(x.d.ev),dep:ad(x.d.konuk),evKisa:kisaAd(x.d.ev,ad(x.d.ev)),depKisa:kisaAd(x.d.konuk,ad(x.d.konuk))};
+      if(!m&&x.d.hukmen){const s=x.d.hukmen.skor;return Object.assign(Y,{sk:s.slice(),skor:s[0]+' – '+s[1],durum:'hükmen',kisaDurum:'Hük.',canli:false,dokunur:!once,
         ayrinti:ac&&!once&&x.son?macAyrintisi(x.son):null});}   /* G1-a */
       /* G1-e: işçi kipinde örneklerden, bizim santramızdan beri geçen kareye göre (js/mac-arka.js) */
       const sonOrnek=x.ornekler&&x.ornekler.length?x.ornekler[x.ornekler.length-1]:null;
@@ -37,7 +39,7 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null},onizleler:{}
       if(!m&&!o)return Object.assign(Y,{skor:'–',durum:'başlamadı',kisaDurum:MAC_GUNU.bulten.saat||'',canli:false,dokunur:false,ayrinti:null});
       const ph=m?m.phase:o.faz,dk=(m?m.minuteLabel():o.dk)+"'",sk=m?m.score:o.skor;
       const durum=once?'başlamadı':ph==='halftime'?'devre arası':ph==='fulltime'?'maç sonu':dk;
-      return Object.assign(Y,{skor:once?'–':sk[0]+' – '+sk[1],durum,kisaDurum:once?MAC_GUNU.bulten.saat||'':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':dk,
+      return Object.assign(Y,{sk:once?null:sk.slice(),skor:once?'–':sk[0]+' – '+sk[1],durum,kisaDurum:once?MAC_GUNU.bulten.saat||'':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':dk,
         canli:!once&&ph!=='halftime'&&ph!=='fulltime',dokunur:!once,ayrinti:ac&&!once?macAyrintisi(m?m.sonucKaydi():arkaMacAnlik(x.son,o)):null});});
   }
   function macVerisi(){
@@ -46,14 +48,22 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null},onizleler:{}
     const ph=A?'fulltime':mac.phase,once=MAC_ONCESI.includes(ph),canli=!once&&ph!=='halftime'&&ph!=='fulltime',sk=A?A.skor:mac.score;
     const kisaDurum=once?MAC_GUNU.bulten.saat||'Bugün':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':durumYazi();
     /* H2-b: ayrıntı (goller, kartlar, sakatlıklar, 10 satırlık tablo; beklenen gol canlı, isabetli şut maç sonu kaydıyla aynı) bizimkiyle öbür maçlarda aynı görünüm */
-    return{id,saat:durumYazi(),ev:ev.tamAd||ev.ad,dep:dep.tamAd||dep.ad,evKisa:ev.kisa,depKisa:dep.kisa,skor:once?'–':sk[0]+' – '+sk[1],durum:durumYazi(),kisaDurum,canli,
+    return{id,evId:MAC_GUNU.ev||ev.id,depId:MAC_GUNU.konuk||dep.id,sk:once?null:sk.slice(),saat:durumYazi(),ev:ev.tamAd||ev.ad,dep:dep.tamAd||dep.ad,evKisa:ev.kisa,depKisa:dep.kisa,skor:once?'–':sk[0]+' – '+sk[1],durum:durumYazi(),kisaDurum,canli,
       ayrinti:T.skorAc===id?macAyrintisi(bizKayit()):null,digerleri:digerVerisi(once)};
+  }
+  /* S-d: Canlı Skor'un lig verisi — canlı tablo (bülten + o anki skorlar); kariyerde kulüp ekranı ve fikstür (kariyer maç anındadır: bu hafta oynanmadı) */
+  function ligVerisi(M){
+    const B=MAC_GUNU.bulten;if(!B||!Array.isArray(B.tablo))return null;
+    const k=typeof OYUN!=='undefined'?OYUN.kariyer:null,kar=!!MAC_GUNU.kariyer&&!!k&&!!k.sezon,R=[M].concat(M.digerleri||[]);
+    const tablo=canliTablo(B.tablo,R.map(x=>({ev:x.evId,konuk:x.depId,skor:x.sk})));
+    return{tablo,bolgeler:B.bolgeler,biz:kar?(k.kisiler[k.baskanId]||{}).kulupId:null,dokunur:kar,fikstur:kar,hafta:B.hafta,
+      canli:R.some(x=>x.sk)&&!R.every(x=>x.durum==='maç sonu'||x.durum==='hükmen'),ozet:kar?id=>kulupOzeti(k,id,tablo):null,ad:id=>(B.adlar||{})[id]||id};
   }
   /* gecis: telefonda ekran değişti (kısa açılış geçişi yalnız o çizimde; N7). Maçın durumu telefonun durum çubuğunda ve ana ekranındadır */
   function ciz(odak,gecis){
     const k=typeof OYUN!=='undefined'?OYUN.kariyer:null;
     E.innerHTML='<div class="mt-cihaz"><header class="mt-ust"><b>Telefon</b><button type="button" data-mt="kapat" title="Kapat (Esc)">Kapat ×</button></header>'+
-      telefonCiz(k,T,{macta:true,mac:macVerisi(),acilis:!!gecis,onizleler:MAC_TELEFON.onizleler,kapali:'Maç sürerken cevap verilmez; maçtan sonra odadan cevaplayabilirsin.'})+'</div>';
+      (()=>{const M=macVerisi();return telefonCiz(k,T,{macta:true,mac:M,lig:ligVerisi(M),acilis:!!gecis,onizleler:MAC_TELEFON.onizleler,kapali:'Maç sürerken cevap verilmez; maçtan sonra odadan cevaplayabilirsin.'});})()+'</div>';
     const f=odak&&E.querySelector(odak);if(f)f.focus({preventScroll:true});
   }
   /* H2-a: "Maçı bitir" perdesi açıkken telefon açılmaz ("kart açıkken telefon açılmaz" kuralının eşi) */
@@ -67,14 +77,16 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null},onizleler:{}
     const b=e.target.closest('button');if(!b||b.disabled)return;
     if(b.dataset.mt==='kapat'){kapat();return;}
     const ey=b.dataset.eylem;
+    /* S-d: lig gezintisi (sekme, fikstür haftası, kulüp ekranı) — js/ekran-telefon.js telGezinti, odadakiyle aynı */
+    {const o=telGezinti(T,b);if(o!==undefined){ciz(o,ey==='kulupAc'||ey==='skorGeri');return;}}
     if(ey==='kartOnizle'){const c=b.closest('.kk-kart');if(!c)return;const O=MAC_TELEFON.onizleler,id=c.dataset.is,y=b.dataset.yon;
       const yer=['.tel-govde','.tel-cevap'].map(s=>{const x=E.querySelector(s);return x?x.scrollTop:0;});
       if(O[id]===y)delete O[id];else O[id]=y;ciz('.kk-kart[data-is="'+id+'"]');
       ['.tel-govde','.tel-cevap'].forEach((s,i)=>{const x=E.querySelector(s);if(x)x.scrollTop=yer[i];});
       /* yeniden kurulan kartın yüzü kalıcı canlı bölgeden duyurulur (js/ekran-kart.js kartDuyur; inceleme 2026-10-26) */
       const yeni=E.querySelector('.kk-kart[data-is="'+id+'"]');if(yeni&&typeof kartDuyur==='function')kartDuyur(yeni);}
-    else if(ey==='telUyg'){T.ekran=b.dataset.uyg;T.skorAc=null;ciz('.tel-geri',true);}
-    else if(ey==='telEv'){T.ekran='ana';T.kisi=null;ciz('.tel-uygMesaj',true);}
+    else if(ey==='telUyg'){T.ekran=b.dataset.uyg;T.skorAc=null;T.skorSekme='maclar';T.hafta=null;T.kulup=null;ciz('.tel-geri',true);}
+    else if(ey==='telEv'){T.ekran='ana';T.kisi=null;T.skorSekme='maclar';T.hafta=null;T.kulup=null;ciz('.tel-uygMesaj',true);}
     else if(ey==='telKisi'){T.ekran='konusma';T.kisi=b.dataset.kisi;ciz('.tel-geri',true);const g=E.querySelector('.tel-govde');if(g)g.scrollTop=g.scrollHeight;}
     /* H2-b: satır kendi maç kimliğiyle açılır, aynı satır kapatır; odak aynı satırda kalır */
     else if(ey==='skorAc'){const id=b.dataset.mac||null,g0=E.querySelector('.tel-govde'),y0=g0?g0.scrollTop:0;T.skorAc=T.skorAc===id?null:id;ciz('[data-eylem="skorAc"][data-mac="'+id+'"]');
@@ -92,7 +104,8 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null},onizleler:{}
     if(ON_EKRAN.sayfa!==null||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;
     if(e.code==='KeyT'){e.preventDefault();MAC_TELEFON.acik?kapat():ac();}
     /* Esc: bir uygulama açıksa önce ana ekrana döner, ana ekrandaysa telefonu kapatır (N7) */
-    else if(e.code==='Escape'&&MAC_TELEFON.acik){e.preventDefault();if(T.ekran!=='ana'){T.ekran='ana';T.kisi=null;ciz('.tel-uygMesaj',true);}else kapat();}});
+    else if(e.code==='Escape'&&MAC_TELEFON.acik){e.preventDefault();if(T.ekran==='kulup'){const id=T.kulup;T.ekran='skor';T.kulup=null;ciz('[data-eylem="kulupAc"][data-kulup="'+id+'"]',true);}
+      else if(T.ekran!=='ana'){T.ekran='ana';T.kisi=null;T.skorSekme='maclar';T.hafta=null;T.kulup=null;ciz('.tel-uygMesaj',true);}else kapat();}});
   /* açıkken skor/dakika satırı motorun donmuş anını gösterir; elle duraklatma kalkıp telefon tek neden kalınca da değişmez */
   duraklatmaDinle(()=>{if(MAC_TELEFON.acik)ciz();});
 }

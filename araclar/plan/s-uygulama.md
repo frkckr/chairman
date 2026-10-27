@@ -978,6 +978,12 @@ Bu adım saf okumadır; kayda alan eklemez ve odaya düğme koymaz.
 - **Denetimler:** `kariyer-deneme` geçti (yeni 3.11); `ad-denetimi` temiz (90 betik); `mac-deneme 4` “sonuç aynı”; `oturum-sonu g1.json --ayni --mac 24` 24/24 birebir, kabul dışı yalnız bilinen borçlar; `akis-deneme` 22, 1, 3, 21 geçti (§3 ve §21'in sekme seçicileri Kadro sekmesini konu sekmesi saymaz, dar şerit denetimi Kadro'yu da kapsar); `kontrol.py` hatasız; `prototipler/7-dosya-defter.html` tek hata (`hocalariKur is not defined`) `main`'de de aynı.
 - **Sapmalar:** listede sözleşme bitişi yalnız yıl (hepsi 31 Mayıs; tam tarih oyuncu dosyasında), dönüş günü kısa ayla — ilk ekran görüntüsünde “May 20…” ve “7 Ara…” kesiliyordu. Test bilgileri geliştirmede varsayılan açık olduğundan §22 önce açıkken künyede TEST kutusunu, kapatınca yokluğunu denetler. `kadroVar` görev durumuna da bakar (`gorevDurumu==='gorevde'`).
 
+### S-d
+
+- **Uygulandı:** `js/fikstur.js` saf okumalar (`sezonTablosu(k, sonAn)`, `canliTablo`, `haftaFiksturu`, `ligBolgesi`, `golSiralamasi`, `kulupOzeti`; ortak `tabloMacIsle`), `js/kulup-mali.js` `kulupStatTarifi`, `js/transfer.js` `oyuncuKulubuTarihte`; telefonda Canlı Skor'un üç sekmesi (Maçlar eski içerik · Puan durumu · Fikstür), takıma dokununca kulüp ekranı (Esc → Canlı Skor → ana ekran), maç telefonunda canlı tablo (kariyersiz adreste yalnız tablo, dokunulmaz); odaya düğme ve kayda alan eklenmedi.
+- **Denetimler:** `kariyer-deneme` geçti (yeni 3.8c; 3.8, 3.8b, 3.9 aynen); `ad-denetimi` temiz; `oturum-sonu g1.json --ayni --mac 24` 24/24 birebir (S-e kopyasında, S-d'yi de içerir), kabul dışı yalnız bilinen borçlar; `akis-deneme` 24 ve 19 geçti; 20 sessiz makinede geçti (maç bitince telefondaki canlı tablo odadaki tabloyla birebir); 16'da yalnız bu dizüstünün bilinen iki zamanlama satırı düştü.
+- **Sapmalar:** ilk ekran görüntüsünde “Puan durumu” sekmesi kesiliyordu; sekme yazısı küçüldü ve §24'e “sekme yazıları kesilmez” denetimi eklendi. §20'de kart ve “Maçı bitir” perdesi açıkken maç telefonu açılmadığından denetim iki kilidi bir anlığına kaldırıp tabloyu okur. Kulüp ekranında devralınan son maçı olmayan TEST kulüplerinin “Son 5”i boş (“—”; uydurulmaz).
+
 ## Tasarım panelinin puanları
 
 Ölçütler 1–10. Risk sütununda yüksek puan düşük risk demektir.

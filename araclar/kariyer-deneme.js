@@ -782,6 +782,39 @@ bolum('3.8b — maç arkada (G1-e: işçinin saf parçası; Node eşitliği)');
      !F.includes('js/kariyer.js')&&!F.includes('js/mac-arka.js')&&F[F.length-1]==='js/lig-maclari.js'&&metin(RI.son)===metin(RD.son)&&metin(RI.ornekler)===metin(RD.ornekler)&&metin(RB.son)===metin(RK.son),`${F.length} dosya`);}
 }
 
+bolum('3.8c — Canlı Skor\'da lig: canlı tablo, gol sıralaması, kulüp özeti ve fikstür (S-d; js/fikstur.js, js/kulup-mali.js, js/transfer.js; oyunun yüklediği dosyalar)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),ST=T('sezonTablosu'),CT=T('canliTablo'),GS=T('golSiralamasi'),KO=T('kulupOzeti'),LB=T('ligBolgesi'),biz='demirkapi';
+  const k0=T('kariyerBaslat')({tohum:7});
+  /* yapay hafta: her maçta ev sahibinin dokuzuncu yuvası 30'da gol atar (1–0) */
+  const R=yapayHafta(T,k0,{duzelt:(s,id)=>{const p=k0.oyuncular[s.ilk11[0][8]];s.skor=[1,0];s.goller=[{takim:0,no:p.no,ad:p.ad,dakika:30}];return s;}});
+  const once=ST(R.once),sonra=ST(R.k),F=R.k.fikstur.filter(f=>f.hafta===13),an=T('anDakika')(F[0].tarih,F[0].dakika);
+  const canli=CT(once,F.map(f=>({ev:f.ev,konuk:f.konuk,skor:R.k.maclar[f.id].skor})));
+  denetle('canliTablo: maçtan önceki tablo + haftanın sekiz skoru = Odaya dön\'den sonraki sezonTablosu (birebir); sezonTablosu(k, maç anı) maçtan önceki tablo; skorsuz satır sayılmaz; yerinde yazmaz',
+    metin(canli)===metin(sonra)&&metin(ST(R.k,an))===metin(once)&&metin(CT(once,F.map(f=>({ev:f.ev,konuk:f.konuk,skor:null}))))===metin(once)&&metin(ST(R.once))===metin(once));
+  const Z=R.k.sezon.bolgeler,bz=[...Array(16)].map((_,i)=>LB(Z,i+1));
+  denetle('ligBolgesi bültenin kuralıyla: 1 şampiyon, 2–5 play-off, 14–16 küme düşme, arası boş',
+    bz[0]==='cikma'&&bz.slice(1,5).every(x=>x==='playoff')&&bz.slice(5,13).every(x=>x==='')&&bz.slice(13).every(x=>x==='dusme'),bz.join(','));
+  const elle=k=>Object.values(k.oyuncular).filter(p=>p.kulupId&&p.gol>0).map(p=>[p.id,p.gol]).sort((a,b)=>b[1]-a[1]||(k.oyuncular[a[0]].ad.localeCompare(k.oyuncular[b[0]].ad,'tr'))||(a[0]<b[0]?-1:1));
+  const g1=GS(R.k),g0=GS(R.k,{sonAn:an}),atan=k0.oyuncular[R.k.maclar[F[0].id].goller[0].id];
+  const tr=JSON.parse(metin(R.k)),eski=tr.oyuncular[atan.id].kulupId,yeniK=eski==='akdeniz'?'karaova':'akdeniz';
+  tr.oyuncular[atan.id].kulupId=yeniK;tr.gecmis.push({tur:'transfer',oyuncuId:atan.id,eski,yeni:yeniK,bedel:0,tarih:'2026-12-01',dakika:600});
+  const once1=T('anDakika')('2026-12-01',600);
+  denetle('golSiralamasi elle sayımla aynı; sonAn ile o haftanın golleri düşülür (maçtan önceki sayaçlar); transferden sonra kulüp o anki kulüp, öncesinde eskisi',
+    metin(g1.map(x=>[x.id,x.gol]))===metin(elle(R.k))&&metin(g0.map(x=>[x.id,x.gol]))===metin(elle(R.once))&&g1.length>g0.length-1
+    &&GS(tr).find(x=>x.id===atan.id).kulupId===yeniK&&GS(tr,{sonAn:once1}).find(x=>x.id===atan.id).kulupId===eski&&GS(tr,{kulupId:yeniK}).some(x=>x.id===atan.id),
+    `${g1.slice(0,3).map(x=>x.ad+' '+x.gol).join(', ')} · ${atan.ad}: ${eski} → ${yeniK}`);
+  const O=KO(R.k,biz),t=sonra.find(x=>x.id===biz),h=T('kulupHocasi')(R.k,biz);
+  const aday=T('hocaAdaylari')(R.k,biz)[0],kh=KK(R.k,x=>T('hocaDegistir')(x,biz,aday)).kariyer,Oh=KO(kh,biz),yh=T('kulupHocasi')(kh,biz);
+  denetle('kulupOzeti: sıra, puan, atılan ve yenilen tabloyla; son beş sonBesMac ile aynı; hoca ve tarz (hoca değişince yeni hoca); stat Demirkapı İlçe Stadı 3823 = kulupKapasitesi; bilgi, ısrar, özellik yok',
+    O.sira===sonra.findIndex(x=>x.id===biz)+1&&O.P===t.P&&O.A===t.A&&O.Y===t.Y&&O.AV===t.AV&&metin(O.son)===metin(T('sonBesMac')(R.k,biz))&&O.hoca.ad===h.ad&&O.hoca.tarz===h.hoca.tarz
+    &&Oh.hoca.ad===yh.ad&&yh.id!==h.id&&O.stat.ad==='Demirkapı İlçe Stadı'&&O.stat.kapasite===T('kulupKapasitesi')(R.k,biz)&&O.stat.kapasite===3823&&!/"(bilgi|israr|oz|hal)"/.test(metin(O))
+    &&KO(R.k,'akdeniz').stat.kapasite===T('kulupKapasitesi')(R.k,'akdeniz')&&!!O.siradaki&&O.siradaki.hafta===14,`${O.sira}. ${O.P} puan · ${O.hoca.ad} (${O.hoca.tarzAdi}) → ${Oh.hoca.ad} · ${O.stat.ad} ${O.stat.kapasite}`);
+  const HF=T('haftaFiksturu');
+  denetle('haftaFiksturu: 13. hafta 8 oynanmış maç, 14. hafta 8 oynanmamış; okuma kariyeri değiştirmez',
+    HF(R.k,13).length===8&&HF(R.k,13).every(x=>x.s)&&HF(R.k,14).length===8&&HF(R.k,14).every(x=>!x.s));
+}
+
 bolum('3.9 — kadro yeterliliği: hükmen güvenlik ağı (G1-a; oyunun yüklediği dosyalar)');
 {
   const T=oyunAl,KK=T('kariyerKomut'),id13='mac-2627-13-demirkapi-akdeniz',toh=id=>T('macTohumu')(7,id);

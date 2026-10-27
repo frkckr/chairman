@@ -204,13 +204,48 @@ function sezonSonuYaz(k){
 }
 ILERLE_ENGEL_EKLERI.push(k=>k.sezon&&k.sezon.sonuc?SEZON_SONU_METNI:null);
 
-/* puan durumu: devralınan tablo + oynanan maçlar; js/lig.js puanDurumu ile sıralanır (O, P, AV eklenir) */
-function sezonTablosu(k){
+/* puan durumu: devralınan tablo + oynanan maçlar; js/lig.js puanDurumu ile sıralanır (O, P, AV eklenir).
+   S-d: sonAn verilirse yalnız başlama anı ondan önce olan maçlar sayılır (maç anındaki tablo); verilmezse bütün oynananlar */
+const tabloMacIsle=(T,ev,konuk,skor)=>{const isle=(t,a,y)=>{if(!t)return;t.A+=a;t.Y+=y;if(a>y)t.G++;else if(a<y)t.M++;else t.B++;};isle(T[ev],skor[0],skor[1]);isle(T[konuk],skor[1],skor[0]);};
+function sezonTablosu(k,sonAn){
   const S=k.sezon,T={};
   for(const id of S.takimlar){const d=S.devralinan.tablo[id]||{G:0,B:0,M:0,A:0,Y:0};T[id]={id,ad:(k.kulupler[id]||{ad:id}).ad,G:d.G,B:d.B,M:d.M,A:d.A,Y:d.Y};}
-  const isle=(t,a,y)=>{if(!t)return;t.A+=a;t.Y+=y;if(a>y)t.G++;else if(a<y)t.M++;else t.B++;};
-  for(const f of k.fikstur){const s=k.maclar[f.id];if(!s)continue;isle(T[f.ev],s.skor[0],s.skor[1]);isle(T[f.konuk],s.skor[1],s.skor[0]);}
+  for(const f of k.fikstur){const s=k.maclar[f.id];if(!s||(sonAn!==undefined&&anDakika(f.tarih,f.dakika)>=sonAn))continue;tabloMacIsle(T,f.ev,f.konuk,s.skor);}
   return puanDurumu({takimlar:Object.values(T)});
+}
+/* S-d: canlı tablo — puan durumu (sezonTablosu ya da bülten tablosu) + [{ev, konuk, skor:[a, y]|null}] (skorsuz satır sayılmaz); yerinde yazmaz */
+function canliTablo(tablo,sonuclar){
+  const T={};for(const t of tablo)T[t.id]={id:t.id,ad:t.ad,G:t.G,B:t.B,M:t.M,A:t.A,Y:t.Y};
+  for(const s of sonuclar||[])if(s&&Array.isArray(s.skor))tabloMacIsle(T,s.ev,s.konuk,s.skor);
+  return puanDurumu({takimlar:Object.values(T)});
+}
+/* S-d: haftanın maçları [{f, s|null}] (fikstür sırasıyla) */
+const haftaFiksturu=(k,hafta)=>(k.fikstur||[]).filter(f=>f.hafta===hafta).map(f=>({f,s:(k.maclar||{})[f.id]||null}));
+/* S-d: sıranın bölgesi (bültenin kuralı: js/ekran-mac-oncesi.js): 'cikma' | 'playoff' | 'dusme' | '' */
+const ligBolgesi=(Z,n)=>{const ara=r=>!!r&&n>=r[0]&&n<=r[1];Z=Z||{};return ara(Z.cikma)?'cikma':ara(Z.playoff)?'playoff':ara(Z.dusme)?'dusme':'';};
+/* S-d: gol sıralaması [{id, ad, kulupId, gol}] çoktan aza (eşitlikte ad). o: {kulupId, sonAn, enCok}. Gol sayacı devralınan haftaları da taşır;
+   sonAn verilirse o andan (dahil) sonra başlayan maçların golleri düşülür (kendi kalesine sayılmaz) ve kulüp o ana göre bulunur (js/transfer.js) */
+function golSiralamasi(k,o){
+  o=o||{};const dus=new Map(),tarihli=o.sonAn!==undefined;
+  if(tarihli)for(const f of k.fikstur||[]){const s=(k.maclar||{})[f.id];if(!s||anDakika(f.tarih,f.dakika)<o.sonAn)continue;
+    for(const g of s.goller||[])if(g.id&&!g.kk)dus.set(g.id,(dus.get(g.id)||0)+1);}
+  const L=[];
+  for(const p of Object.values(k.oyuncular||{})){const gol=(p.gol|0)-(dus.get(p.id)||0);if(gol<=0)continue;
+    const kulupId=tarihli&&typeof oyuncuKulubuTarihte==='function'?oyuncuKulubuTarihte(k,p.id,o.sonAn):p.kulupId||null;
+    if(!kulupId||(o.kulupId&&kulupId!==o.kulupId))continue;L.push({id:p.id,ad:p.ad,kulupId,gol});}
+  L.sort((a,b)=>b.gol-a.gol||a.ad.localeCompare(b.ad,'tr')||(a.id<b.id?-1:1));
+  return o.enCok?L.slice(0,o.enCok):L;
+}
+/* S-d: kulüp ekranının verisi (saf). tablo verilirse sıra ve puan ondan (maçta canlı tablo), yoksa sezonTablosu. Son beş sonBesMac'tır (boşsa []);
+   hocanın bilgi ve ısrarı, oyuncu özellikleri yoktur. siradaki: {id, hafta, tarih, dakika, rakip, yer:'i'|'d'} | null */
+function kulupOzeti(k,kulupId,tablo){
+  const c=k.kulupler[kulupId];if(!c)return null;
+  const T=tablo||sezonTablosu(k),i=T.findIndex(t=>t.id===kulupId),t=i>=0?T[i]:{P:0,O:0,G:0,B:0,M:0,A:0,Y:0,AV:0};
+  const h=typeof kulupHocasi==='function'?kulupHocasi(k,kulupId):null,st=kulupStatTarifi(k,kulupId),sr=siradakiMac(k,kulupId);
+  const tarzAdi=h&&typeof TARZ_ARKETIP!=='undefined'&&TARZ_ARKETIP[h.hoca.tarz]?TARZ_ARKETIP[h.hoca.tarz].ad:h?h.hoca.tarz:null;
+  return{id:kulupId,ad:c.ad,kisa:c.kisa||kulupKisaAd(c.ad),sira:i+1,P:t.P,O:t.O,G:t.G,B:t.B,M:t.M,A:t.A,Y:t.Y,AV:t.AV,son:sonBesMac(k,kulupId),
+    golculer:golSiralamasi(k,{kulupId,enCok:3}),hoca:h?{ad:h.ad,tarz:h.hoca.tarz,tarzAdi}:null,stat:{ad:st.ad,kapasite:statKapasitesi(st)},
+    siradaki:sr?{id:sr.id,hafta:sr.hafta,tarih:sr.tarih,dakika:sr.dakika,rakip:sr.ev===kulupId?sr.konuk:sr.ev,yer:sr.ev===kulupId?'i':'d'}:null};
 }
 /* kulübün son beş maçı (eskiden yeniye): devralınan son maçlar + oynanan maçlar; js/lig.js sonMaclar biçimi */
 function sonBesMac(k,kulupId){

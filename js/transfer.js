@@ -23,6 +23,13 @@ if(!OLAY_KAYNAKLARI.yerelGazete)OLAY_KAYNAKLARI.yerelGazete='Yerel gazete';
 if(!OLAY_KAYNAKLARI.macRaporlari)OLAY_KAYNAKLARI.macRaporlari='Maç raporları';
 MESELE_KATEGORILERI.transfer=['Transfer','T'];
 const MEVKI_ADI={DEF:'savunma',OS:'orta saha',FV:'forvet',KL:'kaleci'};
+/* S-d: oyuncunun o andaki kulübü (an: anDakika). Geçmişteki transfer/ayrılış kayıtları sondan geriye sarılır: andan (dahil) sonraki her kayıt geri alınır */
+function oyuncuKulubuTarihte(k,oyuncuId,an){
+  const p=(k.oyuncular||{})[oyuncuId];if(!p)return null;let c=p.kulupId||null;
+  for(let i=(k.gecmis||[]).length-1;i>=0;i--){const g=k.gecmis[i];if(!g||(g.tur!=='transfer'&&g.tur!=='ayrilis')||g.oyuncuId!==oyuncuId)continue;
+    if(anDakika(g.tarih,g.dakika)<an)break;c=g.eski||null;}
+  return c;
+}
 const transferDonemi=(k,tarih)=>((k.sezon&&k.sezon.transfer)||[]).find(t=>tarih>=t.bas&&tarih<=t.bitis)||null;
 function oyuncuDegeri(p,tarih){
   const m=p.sozlesme?p.sozlesme.maas:maasTahmini(p,tarih),y=oyuncuYasi(p,tarih);

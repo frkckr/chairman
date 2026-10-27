@@ -19,6 +19,8 @@ const sonrakiAyBasi=tarih=>{const [y,a]=tarih.split('-').map(Number),Y=a===12?y+
    kulüp ve haftadan */
 const dolulukTest=(ev,biz,hafta)=>ev===biz?MALI_TEST.evDoluluk:+(0.22+0.13*h2(hafta|0,parseInt(saglamaHesapla('doluluk:'+ev),16)|0)).toFixed(2);
 const macDolulugu=(k,f)=>dolulukTest(f.ev,(k.kisiler[k.baskanId]||{}).kulupId,f.hafta);
+/* S-d: kulübün stat tarifi (başkanın kulübünde kulübün statı, öbürlerinde ev sahibi tarifi; js/fikstur.js kulupOzeti). kulupKapasitesi aynı kuralı okur */
+const kulupStatTarifi=(k,kulupId)=>kulupId===(k.kisiler[k.baskanId]||{}).kulupId?STADYUMLAR.kulup:statTarifiUret(kulupId,k.kulupler[kulupId].ad);
 const kulupKapasitesi=(k,kulupId)=>statKapasitesi(kulupId===(k.kisiler[k.baskanId]||{}).kulupId?STADYUMLAR.kulup:statTarifiUret(kulupId,k.kulupler[kulupId].ad));
 function macBiletGeliri(k,f){const seyirci=Math.round(kulupKapasitesi(k,f.ev)*macDolulugu(k,f));return{seyirci,tutar:seyirci*MALI_TEST.bilet};}
 
