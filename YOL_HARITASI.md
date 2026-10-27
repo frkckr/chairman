@@ -20,7 +20,7 @@ Son güncelleme: 2026-10-26 gece (Y0: yönetim omurgası programı — kullanıc
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır).
 
-**Makine durumu: boşta (dizüstü, 2026-10-27 öğle); H2 kapandı, `main`'e alındı (`tur/h2-istekler`).** Öbür makinede: “evdeyim / devam”da önce bu satır okunur.
+**Makine durumu: dizüstü çalışıyor, dal `claude/s-sezon-ici` (oto mod 5, 2026-10-27; S — sezonun içi: oyuncunun haftası, antrenman ve balkon, Kadro sekmesi, Canlı Skor'da lig, günlük gazete).** Öbür makinede: bu satır “çalışıyor” ve dalın son push'u 2 saatten yeniyse devam edilmez.
 
 **2026-10-27, dizüstü — H2 kullanıcı istekleri kapandı (`tur/h2-istekler`; oto mod 4, Opus 5.5; plan, sapmalar ve inceleme `araclar/plan/h2-uygulama.md`).** Kararlar 50 ve 53.
 - **Oyunda:** maç öncesi rakip başkan kartı kariyerde kapalı; “Maçı bitir” izletmeden sonuca gider (perde), odada TEST “Maçı izleme”; Canlı Skor'da her maçın satırına dokunulur (goller, kartlar, sakatlıklar, 10 satırlık istatistik; maçta beklenen gol canlı). Telefonda hocaya, TEST yardımcı antrenör Tahsin'e ve TEST mali işler müdürü Nusret Bey'e hazır konulardan yazılır: cevap saatler sonra gelir, İlerle onda durur; “Görüşelim” tek kartla gün önerir, kabul deftere 45 dk randevu yazar; hocanın maç yorumu artık sorulunca gelir. Kasa düğmesi kalktı: müdür her Pazartesi kısa özet, ayın 1'inde ayrıntılı rapor bırakır (dosyada “Raporlar”), kasa eksiye düşünce uyarır, telefonda “Kasa ne durumda?”. Dosya masadan açılınca karar bekleyen konu önde. Kayıt sürümü 10 (sürüm 9 ve 8 geçişle açılır).
