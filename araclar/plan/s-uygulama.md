@@ -959,6 +959,13 @@ Bu adım saf okumadır; kayda alan eklemez ve odaya düğme koymaz.
 - **Denetimler:** örnekler — hafta14 2026-11-28 21:00, ocak 2027-01-09 21:00 açık `teklifKarari` (son cevap 10 Ocak 18:00), sezonsonu `sezon.sonuc` var ve İlerle engeli “Sezon tamamlandı”; tabanlar 18 satır, her satırda `iz`, `hatalar` boş, raporlar 16 haftalık · 4 aylık (H2 kapanışıyla aynı); t7'de satış, hocanın isteği ve imza, P12 değişimi (2027-01-10 Şükrü Hoca → Suat Hoca); t3'te her hafta kaydet–yükle. Öz denetim (S-0 ağacında): 2 hafta t7'ye `--ayni` çıkış 0; bozuk `iz` çıkış 1 (“! fark: hafta 14 iz”); `SEZON_DENEME_AYAR='{"YOK_BOYLE":{}}'` çıkış 2. Oyun kodu değişmedi.
 - **Sapma:** tabanlar birlikte (paralel) üretildi; t7 ve t3 birer koşu ~52 dk sürdü (dizüstü, yük altında).
 
+### S-a
+
+- **Uygulandı:** `js/oyuncu-hafta.js` (antrenman programı ve yükü, kondisyon, form, gelişim ve tavan, maç girdisi çarpanı, maç dakikaları; `MAC_KAYDI_EKLERI` kancası `js/mac-sonuc.js`'te); hocanın seçimi kondisyonu ve formu tartar (`js/hoca.js`); `mac`/`dk` sayaçları ve devralınan haftaların TEST üretimi (`js/kariyer-kadro.js`); geçmiş maç kaydında `disarida`; hocanın ve yardımcının “Takım ne durumda?” cevabında yorgun ve formda listeleri (rakamsız); TEST panelinde Kon ve Frm; kayıt sürümü 11 (10 → 11 düz geçiş).
+- **Denetimler:** `kariyer-deneme` geçti (yeni 1.4d, 3.10 (a)–(m), 3.3b; beklenen kırılmalar 1.4, 2.8L, 1.4b, 1.4c güncellendi; 3.3 ve 3.4 aynen); `ad-denetimi` temiz (89 betik); motor dosyaları `main` ile aynı; `mac-deneme 4` “sonuç aynı”; `oturum-sonu g1.json --ayni --mac 24` 24/24, kabul dışı yalnız bilinen borçlar. Bütünlük: anahtar kapalıyken `6 7 … --karsilastir sezon-h2-t7.json --ayni` ve `6 3 --tek --kaydet --karsilastir sezon-h2-t3.json --ayni` çıkış 0 (6 ortak hafta birebir); anahtar açık `6 3 --kaydet` belirlenimci. `akis-deneme` 1, 2, 3, 19, 21 geçti; `kontrol.py` hatasız. “Odaya dön” bilgi: işçisiz dosya adresinde 14,0 sn (doğal bitiş); “öbür maçlar tamamlanıyor” beklemeli yolda 136,9 sn (H2'deki gibi bu makinenin işçisiz yolu).
+- **İlk ölçüm (6 hafta, tohum 3; bilgi):** maç anı ilk 11 kondisyonu ort 96,9, en düşük 65; dinlenen kulüp-maç başına 0,47 (anahtar kapalıyken eski ısrar kuralıyla 0,39); art arda dışarıda en çok 2; gelişim farkı ≤21 +0,22, 22–29 +0,06, 30+ −0,11; form sd 15,5; sakatlık 162 (kapalı 190); hükmen 0. 18 haftalık kalibrasyon arka planda koşar; bant dışı çıkarsa ayrı küçük commit.
+- **Sapma:** kulübe kilidi görülmedi (dinlenen düzenli oyuncu en çok 2 maç art arda dışarıda), “0,5 yer payı” eklenmedi. 3.10 (c)'nin tarz satırı dikey 71 · dengeli 74 (dikey daha az toparlar).
+
 ## Tasarım panelinin puanları
 
 Ölçütler 1–10. Risk sütununda yüksek puan düşük risk demektir.

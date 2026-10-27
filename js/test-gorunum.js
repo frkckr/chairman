@@ -6,7 +6,8 @@
      testKosullar(k)                  başlangıç, devralınan gizli koşullar ve olay kayıtları [{ad, deger}]
      testOnizleme(k, isId, secim)     seçeneğin üreteceği sonuç: karar kariyerin KOPYASINDA uygulanır, ekibe verilen iş varsa kopya haber anına
                                       kadar ilerletilir. {satirlar: [metin], hata} döner
-     testKadro(kulupId, kariyer?)     kadrodaki futbolcuların özellikleri (F1'den beri kariyerden, yoksa js/kadrolar.js; gelişim sistemi olmadığı için sabittir) */
+     testKadro(kulupId, kariyer?)     kadrodaki futbolcuların özellikleri (F1'den beri kariyerden, yoksa js/kadrolar.js); S-a'dan beri bugünkü kondisyon,
+                                      kayıtlı form, gizli tavan, gelişim birikimi ve günün antrenman programı (js/oyuncu-hafta.js) */
 const TEST_KATKI_ADLARI={mali:'mali',baglanti:'bağlantı',futbol:'futbol',iletisim:'iletişim'};
 const TEST_SEVIYE_ADLARI={zayif:'zayıf',orta:'orta',guclu:'güçlü'};
 const TEST_OZELLIKLER=['Hız','Pas','Şut','Kafa','Sürme','Müdahale','Görüş','Karar','Kalecilik','Dayanıklılık','Sertlik'];
@@ -48,9 +49,11 @@ function testKadro(kulupId,kariyer){
   const k=kariyer||(typeof OYUN!=='undefined'&&OYUN.kariyer),D=k&&k.kulupler&&k.kulupler[kulupId]&&k.kulupler[kulupId].kadro;
   const K=D?{oyuncular:D.ilk11.map(id=>k.oyuncular[id]),yedekler:D.yedekler.map(id=>k.oyuncular[id])}:typeof KADROLAR!=='undefined'?KADROLAR[kulupId]:null;
   if(!K)return null;
-  const satir=(o,yedek)=>({ad:o.ad,no:o.no,yedek,mevki:o.mevki||'',oz:o.oz.slice(),ortalama:Math.round(o.oz.reduce((t,x,i)=>t+(i===8&&o.no!==1&&o.mevki!=='KL'?0:x),0)/(o.no===1||o.mevki==='KL'?11:10))});
+  const hafta=D&&typeof oyuncuKondisyonu==='function';
+  const satir=(o,yedek)=>({ad:o.ad,no:o.no,yedek,mevki:o.mevki||'',oz:o.oz.slice(),ortalama:Math.round(o.oz.reduce((t,x,i)=>t+(i===8&&o.no!==1&&o.mevki!=='KL'?0:x),0)/(o.no===1||o.mevki==='KL'?11:10)),
+    kon:hafta?oyuncuKondisyonu(k,o,k.tarih):null,form:hafta?oyuncuFormu(o):null,tav:o.hal?o.hal.tav:null,gel:o.hal?o.hal.gel:null});
   /* F3-a: kulübün hocası (gizli bilgi ve ısrar; js/hoca.js) */
   const h=D&&typeof kulupHocasi==='function'?kulupHocasi(k,kulupId):null;
   return{ozellikler:TEST_OZELLIKLER,oyuncular:K.oyuncular.map(o=>satir(o,false)).concat((K.yedekler||[]).map(o=>satir(o,true))),
-    hoca:h?{ad:h.ad,tarz:h.hoca.tarz,bilgi:h.hoca.bilgi,israr:h.hoca.israr}:null};
+    hoca:h?{ad:h.ad,tarz:h.hoca.tarz,bilgi:h.hoca.bilgi,israr:h.hoca.israr}:null,program:hafta&&typeof antrenmanProgrami==='function'?antrenmanProgrami(k,kulupId,k.tarih):null};
 }

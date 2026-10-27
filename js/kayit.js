@@ -46,6 +46,9 @@ KAYIT_GECISLERI[8]=v=>{
    kulübünde o rolde aktif kişi yoksa yardımcı antrenör ve mali işler müdürü eklenir (ad ve doğum tarihi js/yazisma.js PERSONEL_TEST'in donmuş kopyası).
    Açık kararlar değişmez. Veri dönüşümüdür: kural işlevi çağırmaz, para hareketi üretmez */
 const KAYIT_PERSONEL_9={yardimciAntrenor:{ad:'Tahsin',dogumTarihi:'1979-03-14'},maliMudur:{ad:'Nusret Bey',dogumTarihi:'1968-09-22'}};
+/* S-a (2026-10-27): sürüm 10 → 11 düz veri dönüşümüdür: yalnız sürüm artar. Yeni alanlar (oyuncu hal, mac/dk; gözlem sinyalleri; disarida; gazeteOkunan)
+   yoksa anlamları vardır (tam kondisyon, nötr form, sayaç bilinmiyor, sinyalsiz, notsuz, okunmamış); kural işlevi çağrılmaz, para, iş ya da haber üretilmez */
+KAYIT_GECISLERI[10]=v=>{v.kayitSurumu=11;return v;};
 KAYIT_GECISLERI[9]=v=>{
   v.kayitSurumu=10;delete v.macOkundu;
   const biz=v.kisiler&&v.kisiler[v.baskanId]&&v.kisiler[v.baskanId].kulupId;

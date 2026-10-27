@@ -17,9 +17,10 @@ const MAC_GUN_ADLARI=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma
 const macGunAdi=t=>{const [y,a,g]=t.split('-').map(Number);return MAC_GUN_ADLARI[new Date(Date.UTC(y,a-1,g)).getUTCDay()];};
 /* oyuncu o gün oynayabilir mi: cezası yok ve sakatlığı (dönüş günü) bitmiş */
 const oyuncuUygunMu=(p,tarih)=>!(p.ceza&&p.ceza.mac>0)&&!(p.sakat&&tarihKarsilastir(p.sakat.donus,tarih)>0);
-/* motorun ve çizimin okuduğu kayıt (kadrolar.js biçimi) + kimlik */
-function macKaydi(p){
-  const r={id:p.id,ad:p.ad,no:p.no,mevki:p.mevki,ayak:p.ayak,oz:p.oz.slice(),gol:p.gol,sari:p.sari};
+/* motorun ve çizimin okuduğu kayıt (kadrolar.js biçimi) + kimlik. S-a: k ve tarih verilirse oz kondisyon ve form çarpanıyla (js/oyuncu-hafta.js macOzu;
+   nötr durumda birebir kopya; kariyerin oz'una yazılmaz) */
+function macKaydi(p,k,tarih){
+  const r={id:p.id,ad:p.ad,no:p.no,mevki:p.mevki,ayak:p.ayak,oz:k&&tarih&&typeof macOzu==='function'?macOzu(k,p,tarih):p.oz.slice(),gol:p.gol,sari:p.sari};
   for(const a of OYUNCU_GORUNUS)if(p[a]!==undefined)r[a]=p[a];
   for(const a of OYUNCU_BAYRAK)if(p[a])r[a]=true;
   return r;
@@ -33,11 +34,11 @@ function macKadrosu(k,kulupId,tarih,tohum,se){
   const c=k.kulupler[kulupId],D=c&&c.kadro;
   if(!D)throw new Error(`Maç kadrosu kurulamadı: ${kulupId} kulübünün kadrosu yok`);
   const O=id=>k.oyuncular[id],uygun=id=>oyuncuUygunMu(O(id),tarih),h=kulupHocasi(k,kulupId),S=hocaKadroSec(k,kulupId,tarih,tohum>>>0,se);
-  const ilk=S.ilk11,oyuncular=ilk.map(id=>macKaydi(O(id)));
+  const ilk=S.ilk11,oyuncular=ilk.map(id=>macKaydi(O(id),k,tarih));
   if(!oyuncular.some(o=>o.kaptan)){const sira=ilk.map(O).filter(p=>p.mevki!=='KL').sort((a,b)=>a.dogumTarihi<b.dogumTarihi?-1:a.dogumTarihi>b.dogumTarihi?1:0);
     if(sira.length)oyuncular[ilk.indexOf(sira[0].id)].kaptan=true;}
   return{id:kulupId,ad:D.ad,kisa:c.kisa,tamAd:c.ad,forma:D.forma,kaleciForma:D.kaleciForma,taktik:Object.assign({},D.taktik,{tarz:h.hoca.tarz}),td:Object.assign({},D.td,{ad:h.ad}),
-    oyuncular,yedekler:S.kulube.map(id=>macKaydi(O(id))),eksikler:D.ilk11.concat(D.yedekler).filter(id=>!uygun(id)).map(id=>eksikSatiri(O(id)))};
+    oyuncular,yedekler:S.kulube.map(id=>macKaydi(O(id),k,tarih)),eksikler:D.ilk11.concat(D.yedekler).filter(id=>!uygun(id)).map(id=>eksikSatiri(O(id)))};
 }
 function macGirdisi(k,macId){
   const f=k.fikstur.find(x=>x.id===macId);

@@ -22,7 +22,10 @@
 /* Sürüm 10 (H2-c, 2026-10-26): başkanın kulübünde TEST yardımcı antrenör ve mali işler müdürü (rol yardimciAntrenor, maliMudur; js/yazisma.js), kişide
    isteğe bağlı okunan (an; konuşmanın en son açıldığı an); macOkundu kalktı (hocanın otomatik maç yorumu kalktı). Sürüm 9 kaydı geçişle açılır
    (js/kayit.js KAYIT_GECISLERI[9]). */
-const KARIYER_SURUM=10;
+/* Sürüm 11 (S-a, 2026-10-27): oyuncuda isteğe bağlı hal {kon, gun, form, gel, tav} ve mac/dk sayaçları (js/oyuncu-hafta.js); sonraki S adımlarında
+   gözlem kaydında sinyaller, geçmiş maç kaydında disarida, kariyerde gazeteOkunan. Sürüm 10 kaydı geçişle açılır (js/kayit.js KAYIT_GECISLERI[10]:
+   yalnız sürüm; alan yoksa tam kondisyon, nötr form, sayaç bilinmiyor). */
+const KARIYER_SURUM=11;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */

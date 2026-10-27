@@ -57,6 +57,9 @@ const HOCA_TARZ_AGIRLIK={
 };
 const HOCA_YANILGI=12;      // bilgi 0'daki kalıcı yanılgının ölçeği (özellik puanı; bilgi 1'de yanılgı yok)
 const HOCA_FORM=1.5;        // maç başına küçük fark (hocanın o hafta antrenmanda gördüğü; maç tohumundan)
+/* S-a (TEST): oyuncunun haftası açıkken maç başı form zarı yerine kayıtlı form (±HOCA_FORM_PAYI) ve yorgunluk bedeli
+   (HOCA_YORGUN × (HOCA_YORGUN_ESIK − kondisyon)); hoca kondisyonu doğru görür, formu tartar (js/oyuncu-hafta.js). Kapalıyken HOCA_FORM zarı */
+const HOCA_FORM_PAYI=3,HOCA_YORGUN=0.5,HOCA_YORGUN_ESIK=85;
 const HOCA_ISRAR=6;         // son on birde olmanın en büyük payı (israr 1)
 const HOCA_MEVKI_DISI=15;   // asıl mevkisi dışında oynatmanın bedeli
 const HOCA_KALECI_DISI=60;  // kaleciyi sahaya ya da saha oyuncusunu kaleye koymanın bedeli
@@ -91,11 +94,12 @@ function hocaYuvalari(dizilis){
   return(HOCA_YUVALAR[dizilis]||HOCA_YUVALAR['4-4-2']).map(s=>{const [rol,taraf]=s.split(':');return{rol,taraf:taraf||null};});
 }
 /* hocanın oyuncuyu bir yuvada değerlendirmesi (saf). Y: {rol, taraf}; yer: oyuncu son on birde bu yuvadaysa 1, başka yuvadaysa 0,5, değilse 0 */
-function hocaDegeri(k,h,p,Y,tohum,yer){
+function hocaDegeri(k,h,p,Y,tohum,yer,durum){
   const H=h.hoca,R=HOCA_ROL[Y.rol],w=R.w,ek=R.cizgi==='KL'?null:HOCA_TARZ_AGIRLIK[H.tarz];
   let v=0;for(let j=0;j<11;j++)v+=(w[j]+(ek&&ek[j]||0))*p.oz[j];
   v+=(1-H.bilgi)*HOCA_YANILGI*hocaZar(k.dunyaTohumu,`${h.id}:${p.id}:yanilgi`);
-  v+=HOCA_FORM*hocaZar(tohum,`${p.id}:form`);
+  if(durum)v+=HOCA_FORM_PAYI*clamp(durum.form/50,-1,1)-HOCA_YORGUN*Math.max(0,HOCA_YORGUN_ESIK-durum.kon);
+  else v+=HOCA_FORM*hocaZar(tohum,`${p.id}:form`);
   v+=yer*H.israr*HOCA_ISRAR;
   if(p.mevki!==R.cizgi)v-=(p.mevki==='KL')!==(R.cizgi==='KL')?HOCA_KALECI_DISI:HOCA_MEVKI_DISI;
   if(Y.taraf){const uyar=Y.taraf==='sol'?p.ayak!=='sag':p.ayak!=='sol';v+=(uyar?1:-1)*(Y.rol==='bek'?HOCA_AYAK:HOCA_AYAK/2);}
@@ -118,12 +122,14 @@ function hocaKadroSec(k,kulupId,tarih,tohum,se){
   const son=typeof kulubunSonMaci==='function'?kulubunSonMaci(k,kulupId):null;
   const kendi=!son||!Array.isArray(son.s.hocalar)||son.s.hocalar[son.f.konuk===kulupId?1:0]===h.id;
   const yer=(p,i)=>!kendi?0:D.ilk11[i]===p.id?1:D.ilk11.includes(p.id)?0.5:0,C=[];
-  for(let i=0;i<Y.length;i++)for(const p of uygun)C.push({i,p,v:hocaDegeri(k,h,p,Y[i],tohum,yer(p,i))});
+  /* S-a: oyuncunun haftası açıkken o günkü kondisyon ve kayıtlı form (bir kez; on bir ve kulübe aynı durumu kullanır) */
+  const DR=typeof oyuncuHaftasiAcik==='function'&&oyuncuHaftasiAcik()?new Map(uygun.map(p=>[p.id,{kon:oyuncuKondisyonu(k,p,tarih),form:oyuncuFormu(p)}])):null;
+  for(let i=0;i<Y.length;i++)for(const p of uygun)C.push({i,p,v:hocaDegeri(k,h,p,Y[i],tohum,yer(p,i),DR&&DR.get(p.id))});
   C.sort((a,b)=>b.v-a.v||a.i-b.i||(a.p.id<b.p.id?-1:1));
   const ilk=Array(Y.length).fill(null),secildi=new Set();
   for(const x of C){if(ilk[x.i]||secildi.has(x.p.id))continue;ilk[x.i]=x.p.id;secildi.add(x.p.id);}
   /* kulübe: kaleci ve her hattan biri (en iyi değerlendirilen), kalan koltuklar değerlendirmeyle; kaleci başta */
-  const kalan=uygun.filter(p=>!secildi.has(p.id)),dk=p=>hocaDegeri(k,h,p,{rol:HOCA_HAT_ROLU[p.mevki],taraf:null},tohum,0);
+  const kalan=uygun.filter(p=>!secildi.has(p.id)),dk=p=>hocaDegeri(k,h,p,{rol:HOCA_HAT_ROLU[p.mevki],taraf:null},tohum,0,DR&&DR.get(p.id));
   const sirali=kalan.map(p=>({p,v:dk(p)})).sort((a,b)=>b.v-a.v||(a.p.id<b.p.id?-1:1)).map(x=>x.p),kulube=[];
   for(const m of OYUNCU_MEVKILERI){const x=sirali.find(p=>p.mevki===m);if(x&&kulube.length<MAC_YEDEK_SAYISI)kulube.push(x);}
   for(const p of sirali)if(kulube.length<MAC_YEDEK_SAYISI&&!kulube.includes(p))kulube.push(p);

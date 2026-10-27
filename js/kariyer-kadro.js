@@ -90,7 +90,7 @@ function yasUret(r,mevki,aralik){
 function oyuncuUret(r,o){
   const kl=o.mevki==='KL';
   const oz=o.sablon.map((v,j)=>j===8&&!kl?5:Math.round(clamp(v+o.guc+(r()+r()-1)*14-(o.yedek?3:0),j===8?40:10,95)));
-  const p={ad:o.ad,no:o.no,mevki:o.mevki,dogumTarihi:yasUret(r,o.mevki,o.yas),ayak:'sag',oz,gol:0,sari:0,ceza:null,sakat:null,
+  const p={ad:o.ad,no:o.no,mevki:o.mevki,dogumTarihi:yasUret(r,o.mevki,o.yas),ayak:'sag',oz,gol:0,sari:0,mac:0,dk:0,ceza:null,sakat:null,
     ten:Math.floor(r()*5),sac:agirlikliSec(r,KADRO_SAC),sacRenk:agirlikliSec(r,KADRO_SAC_RENK),
     boy:+((kl||o.uzun)?1+r()*0.09:0.92+r()*0.14).toFixed(2),yapi:+(0.94+r()*0.16).toFixed(2)};
   const a=r();p.ayak=o.sol?(a<0.85?'sol':'sag'):a<0.12?'sol':a<0.15?'iki':'sag';
@@ -99,7 +99,7 @@ function oyuncuUret(r,o){
 }
 /* kadrolar.js biçimindeki oyuncudan kariyer kaydı (kimliksiz) */
 function oyuncuKaydi(x,mevki,dogumTarihi){
-  const p={ad:x.ad,no:x.no,mevki,dogumTarihi,ayak:x.ayak||'sag',oz:x.oz.slice(),gol:x.gol||0,sari:x.sari||0,ceza:null,sakat:null};
+  const p={ad:x.ad,no:x.no,mevki,dogumTarihi,ayak:x.ayak||'sag',oz:x.oz.slice(),gol:x.gol||0,sari:x.sari||0,mac:0,dk:0,ceza:null,sakat:null};
   for(const a of OYUNCU_GORUNUS)if(x[a]!==undefined)p[a]=x[a];
   for(const a of OYUNCU_BAYRAK)if(x[a])p[a]=true;
   return p;
@@ -158,8 +158,23 @@ function kadrolariKur(k,lig){
     const t=lig.takimlar.find(x=>x.id===id)||{G:0,B:0,M:0,A:0};
     const o={tohum:k.dunyaTohumu,guc:kulupGucu(lig,id),golSayisi:t.A,oynanan:t.G+t.B+t.M,tarih:k.tarih};
     k.kulupler[id].kadro=KADROLAR[id]?kadroKopyala(k,id,KADROLAR[id],o):kadroUret(k,id,o);
+    devralinanSayaclar(k,id,o.oynanan);
   }
   for(const id of sira)kadroTamamla(k,id,KADRO_HEDEF,'baslangic',kulupGucu(lig,id));
+}
+/* S-a (TEST üretimi; gol ve sarı gibi): devralınan haftaların maç ve dakika sayaçları. Ayrı rastlantı akışı (<kulüp>:sayac): öbür üretimler aynı kalır.
+   Kaleci yuvası her maç 90 dk; öbür on bir oynanan − (0–2), devralınan sakatsa 2 daha az, maç başına 78–90 dk; yedekler 0–5 maç, maç başına 10–35 dk.
+   Her oyuncuda maç ≥ sarı, gol > 0 ise maç ≥ 1, dk ≤ 90 × maç */
+function devralinanSayaclar(k,kulupId,oynanan){
+  const D=k.kulupler[kulupId].kadro,r=kadroRastgele(k.dunyaTohumu,`${kulupId}:sayac`);
+  D.ilk11.concat(D.yedekler).forEach((id,i)=>{
+    const p=k.oyuncular[id];let mac,dkm;
+    if(i===0){mac=oynanan;dkm=90;}
+    else if(i<11){mac=Math.max(0,oynanan-Math.floor(r()*3)-(p.sakat?2:0));dkm=78+r()*12;}
+    else{mac=Math.floor(r()*6);dkm=10+r()*25;}
+    mac=Math.min(99,Math.max(mac,p.sari,p.gol>0?1:0));
+    p.mac=mac;p.dk=Math.min(90*mac,Math.round(mac*dkm));
+  });
 }
 /* kulübün ilk boş forma numarası (bas'tan yukarı, sonra aşağı; 1–99) */
 function bosNumara(k,kulupId,bas){
@@ -220,6 +235,7 @@ function kadroDogrula(k,h){
     if(!OYUNCU_AYAKLAR.includes(p.ayak))h.push(`${ad}: bilinmeyen ayak (${p.ayak})`);
     if(!Array.isArray(p.oz)||p.oz.length!==11||!p.oz.every(x=>tam(x,1,99)))h.push(`${ad}: özellikler 11 tane 1–99 tamsayı değil`);
     if(!tam(p.gol,0,999)||!tam(p.sari,0,99))h.push(`${ad}: gol ya da sarı kart sayacı geçersiz`);
+    if((p.mac!==undefined||p.dk!==undefined)&&!(tam(p.mac,0,99)&&tam(p.dk,0,9999)&&p.dk<=90*p.mac))h.push(`${ad}: maç ya da dakika sayacı geçersiz`);
     if(!tarihGecerliMi(p.dogumTarihi))h.push(`${ad}: geçersiz doğum tarihi (${p.dogumTarihi})`);
     if(p.ceza!==null&&!(duz(p.ceza)&&tam(p.ceza.mac,1,99)&&typeof p.ceza.neden==='string'))h.push(`${ad}: ceza kaydı geçersiz`);
     if(p.sakat!==null&&!(duz(p.sakat)&&typeof p.sakat.neden==='string'&&tarihGecerliMi(p.sakat.donus)&&(p.sakat.belirsiz===undefined||p.sakat.belirsiz===true)))

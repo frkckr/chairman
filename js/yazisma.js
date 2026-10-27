@@ -102,7 +102,11 @@ function takimGoruntusu(k){
   const biz=bizimKulup(k),tb=sezonTablosu(k),i=tb.findIndex(t=>t.id===biz),L=kulupOyunculari(k,biz),s=siradakiMac(k,biz);
   return{sira:i+1,puan:i>=0?tb[i].P:0,son5:sonBesMac(k,biz).map(x=>x.a>x.y?'G':x.a<x.y?'M':'B'),
     sakat:L.filter(p=>p.sakat&&tarihKarsilastir(p.sakat.donus,k.tarih)>0).map(p=>({id:p.id,donus:p.sakat.donus})),
-    cezali:L.filter(p=>p.ceza&&p.ceza.mac>0).map(p=>({id:p.id,mac:p.ceza.mac})),sonrakiMacId:s?s.id:null};
+    cezali:L.filter(p=>p.ceza&&p.ceza.mac>0).map(p=>({id:p.id,mac:p.ceza.mac})),sonrakiMacId:s?s.id:null,
+    /* S-a: o günkü kondisyonu 80'in altındaki en yorgun üç oyuncu ve formu 25 ve üstündeki en formda üç oyuncu (yalnız kimlik; sayı kayda ve metne girmez) */
+    ...(typeof oyuncuHaftasiAcik==='function'&&oyuncuHaftasiAcik()?{
+      yorgun:L.filter(p=>!(p.sakat&&tarihKarsilastir(p.sakat.donus,k.tarih)>0)).map(p=>({id:p.id,v:oyuncuKondisyonu(k,p,k.tarih)})).filter(x=>x.v<80).sort((a,b)=>a.v-b.v||(a.id<b.id?-1:1)).slice(0,3).map(x=>x.id),
+      formda:L.map(p=>({id:p.id,v:oyuncuFormu(p)})).filter(x=>x.v>=25).sort((a,b)=>b.v-a.v||(a.id<b.id?-1:1)).slice(0,3).map(x=>x.id)}:{})};
 }
 const yzOyuncu=(k,id)=>(k.oyuncular[id]||{}).ad||'—';
 const yzRakip=(k,macId)=>{const f=(k.fikstur||[]).find(x=>x.id===macId),biz=bizimKulup(k);if(!f)return null;const r=f.ev===biz?f.konuk:f.ev;return{ad:(k.kulupler[r]||{ad:r}).ad,tarih:f.tarih};};
@@ -113,11 +117,14 @@ const YAZISMA_METIN={
     return[g>=3?'Takım iyi gidiyor başkanım.':m>=3?'Kötü bir seriden geçiyoruz; toparlanmamız lazım.':'İnişli çıkışlı gidiyoruz.',
       T.sakat.length?T.sakat.map(x=>yzOyuncu(k,x.id)).join(', ')+' sakat.':'Sakatımız yok.',
       T.cezali.length?T.cezali.map(x=>yzOyuncu(k,x.id)).join(', ')+' cezalı.':'',
+      T.yorgun&&T.yorgun.length?T.yorgun.map(id=>yzOyuncu(k,id)).join(', ')+' biraz yorgun; gerekirse dinlendiririm.':'',
+      T.formda&&T.formda.length?T.formda.map(id=>yzOyuncu(k,id)).join(', ')+' iyi günlerinde.':'',
       r?`Sıradaki maç ${r.ad} ile; hazırlanıyoruz.`:'Önümüzde maç yok.'].filter(Boolean).join(' ');},
   yardimciTakim:(k,T)=>{const r=yzRakip(k,T.sonrakiMacId);
     return[`Sıramız ${T.sira}., ${T.puan} puan. Son ${T.son5.length} maç: ${T.son5.join(' ')||'—'}.`,
       T.sakat.length?'Sakatlar: '+T.sakat.map(x=>`${yzOyuncu(k,x.id)} (dönüş ${gunAyYazi(x.donus)})`).join(', ')+'.':'Sakat yok.',
       T.cezali.length?'Cezalı: '+T.cezali.map(x=>`${yzOyuncu(k,x.id)} (${x.mac} maç)`).join(', ')+'.':'',
+      T.yorgun&&T.yorgun.length?'Koşu verilerinde düşüş: '+T.yorgun.map(id=>yzOyuncu(k,id)).join(', ')+'.':'',
       r?`Sıradaki: ${r.ad} (${gunAyYazi(r.tarih)}).`:''].filter(Boolean).join(' ');},
   yardimciMac:(k,id)=>{const o=macOkumasi(k,id);if(!o)return'Rakamlar henüz elimde değil.';
     if(o.hukmen)return`Maç oynanmadı; hükmen ${o.skor[0]}–${o.skor[1]}.`;

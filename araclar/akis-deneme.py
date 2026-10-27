@@ -1997,7 +1997,7 @@ async def bolum_21(tarayici, site, tum_hatalar):
       return { surum: k.kayitSurumu, bozuk: !!document.querySelector('.od-bozuk'), roller: konusmaListesi(k).map(c => c.kisi.rol).sort().join(','), teklif: !!t,
         secenek: t ? kararSecenekleri(k, t).map(s => s.id).join(',') : '', rapor: Object.values(k.isler).some(x => x.tur === 'maliRapor') }; }""")
     denetle("H2-d: sürüm 9 Ocak kaydı geçişle açılır: oda hatasız, kayıt sürümü 10; telefonda hoca, yardımcı ve müdür; gelen teklif kartı iki cevapla yerinde; mali rapor işi kaydın anında",
-            s9["surum"] == 10 and not s9["bozuk"] and "maliMudur" in s9["roller"] and "yardimciAntrenor" in s9["roller"] and "teknikDirektor" in s9["roller"] and s9["teklif"] and s9["secenek"] == "sat,reddet" and s9["rapor"], str(s9))
+            s9["surum"] == 11 and not s9["bozuk"] and "maliMudur" in s9["roller"] and "yardimciAntrenor" in s9["roller"] and "teknikDirektor" in s9["roller"] and s9["teklif"] and s9["secenek"] == "sat,reddet" and s9["rapor"], str(s9))
     # inceleme (H2-e): masadan açılışta cevap bekleyen konu, seçili açık konunun önündedir
     SECILI_JS = "() => { const b = document.querySelector('.dsy-sekme[aria-selected=\"true\"][data-mesele]'); const m = b && OYUN.kariyer.meseleler[b.dataset.mesele]; return m ? m.id + ':' + m.durum : ''; }"
     await pg.keyboard.press("Digit3")

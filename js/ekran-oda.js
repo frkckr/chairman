@@ -235,9 +235,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const Q=testKadro(kulupId(),k);
     if(!Q)return'<p class="od-not">Kadro verisi yok.</p>';
     const H=Q.hoca?'<p class="od-not">Hoca: '+yaz(Q.hoca.ad)+' · tarz '+yaz(typeof TARZ_ARKETIP!=='undefined'&&TARZ_ARKETIP[Q.hoca.tarz]?TARZ_ARKETIP[Q.hoca.tarz].ad:Q.hoca.tarz)+' · bilgi '+Math.round(Q.hoca.bilgi*100)+' · ısrar '+Math.round(Q.hoca.israr*100)+' '+testKutu('Hocanın gizli değerleri (0–100): bilgi oyuncuları ne kadar doğru tanıdığı, ısrar son on bire bağlılığı; yayında gösterilmeyecek.')+'</p>':'';   /* F3-a */
-    return H+'<p class="od-not">Futbolcuların gizli özellikleri (1–99) '+testKutu('Gelişim sistemi henüz olmadığı için değerler sabittir; yayında gösterilmeyecek.')+'</p>'+
-      '<table class="od-kadro"><thead><tr><th>No</th><th>Futbolcu</th>'+Q.ozellikler.map(x=>'<th title="'+yaz(x)+'">'+yaz(x.slice(0,3))+'</th>').join('')+'<th>Ort</th></tr></thead><tbody>'+
-      Q.oyuncular.map(o=>'<tr'+(o.yedek?' class="od-yedek"':'')+'><td>'+o.no+'</td><td>'+yaz(o.ad)+(o.yedek?' <small>'+yaz(o.mevki)+'</small>':'')+'</td>'+o.oz.map(x=>'<td>'+x+'</td>').join('')+'<td><b>'+o.ortalama+'</b></td></tr>').join('')+'</tbody></table>';
+    return H+'<p class="od-not">Futbolcuların gizli özellikleri (1–99) '+testKutu('S-a: gelişim haftalık işler; kondisyon (Kon) ve form gizlidir, yayında gösterilmeyecek.'+(Q.program?' Bugün: '+Q.program.tur+'.':''))+'</p>'+
+      '<table class="od-kadro"><thead><tr><th>No</th><th>Futbolcu</th>'+Q.ozellikler.map(x=>'<th title="'+yaz(x)+'">'+yaz(x.slice(0,3))+'</th>').join('')+'<th>Ort</th><th title="Kondisyon (gizli)">Kon</th><th title="Form (gizli)">Frm</th></tr></thead><tbody>'+
+      Q.oyuncular.map(o=>'<tr'+(o.yedek?' class="od-yedek"':'')+'><td>'+o.no+'</td><td>'+yaz(o.ad)+(o.yedek?' <small>'+yaz(o.mevki)+'</small>':'')+'</td>'+o.oz.map(x=>'<td>'+x+'</td>').join('')+'<td><b>'+o.ortalama+'</b></td><td>'+(o.kon==null?'—':o.kon)+'</td><td>'+(o.form==null?'—':o.form)+'</td></tr>').join('')+'</tbody></table>';
   }
 
   /* ---- dosya (2.8M): masada açık karton dosya (çizim js/ekran-dosya.js). Üstte açık konuların sekmeleri ve arşiv; [ ve ] ile gezilir ---- */
