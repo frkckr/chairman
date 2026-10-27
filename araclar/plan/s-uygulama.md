@@ -953,7 +953,11 @@ Bu adım saf okumadır; kayda alan eklemez ve odaya düğme koymaz.
 
 ## Sapmalar
 
-(Uygulamada doldurulur.)
+### S-0
+
+- **Uygulandı (oto mod 5, dizüstü, Opus 5.5).** Üç sürüm 10 sigorta örneği (459ebfe; üç ayrı koşu, H2-0 tarifi); plan dosyası (5fc1dc1; altı okuyucunun haritası, üç tasarım, yargıç); `sezon-deneme` parmak izi, `ozet`, `ayar`, `--karsilastir [--ayni]` ve `SEZON_DENEME_AYAR` (0e8eb36); iki taban `araclar/taban/sezon-h2-t7.json` ve `sezon-h2-t3.json` H2 oyun koduyla.
+- **Denetimler:** örnekler — hafta14 2026-11-28 21:00, ocak 2027-01-09 21:00 açık `teklifKarari` (son cevap 10 Ocak 18:00), sezonsonu `sezon.sonuc` var ve İlerle engeli “Sezon tamamlandı”; tabanlar 18 satır, her satırda `iz`, `hatalar` boş, raporlar 16 haftalık · 4 aylık (H2 kapanışıyla aynı); t7'de satış, hocanın isteği ve imza, P12 değişimi (2027-01-10 Şükrü Hoca → Suat Hoca); t3'te her hafta kaydet–yükle. Öz denetim (S-0 ağacında): 2 hafta t7'ye `--ayni` çıkış 0; bozuk `iz` çıkış 1 (“! fark: hafta 14 iz”); `SEZON_DENEME_AYAR='{"YOK_BOYLE":{}}'` çıkış 2. Oyun kodu değişmedi.
+- **Sapma:** tabanlar birlikte (paralel) üretildi; t7 ve t3 birer koşu ~52 dk sürdü (dizüstü, yük altında).
 
 ## Tasarım panelinin puanları
 
