@@ -20,13 +20,18 @@
      (örnek kayıtlar araclar/ornekler/kayit-s9-*.json). @hafta=N: N. fikstür haftasının sonuç komutundan sonra (o Cumartesi 21:00);
      @sezonSonu: sezon sonu döngüsünden sonra (sözleşme kartları cevapsız geçildi, İlerle engelde). Yazılan an ve açık karar türleri
      (veri.karar taşıyan bekleyen işler, son cevap anıyla) ekrana basılır; an oynanmadıysa “!” satırı ve çıkış 1.
-   Kullanım:  node araclar/sezon-deneme.js [hafta=3] [tohum=7] [--kaydet] [--tek] [--p12 cevapsiz|sabir|degisim] [--teklif …] [--talep …] [--json DOSYA] [--kayit-yaz DOSYA@hafta=N|DOSYA@sezonSonu]   (hafta en çok sezonun kalanı: 18)
+   S-0 (2026-10-27): her satırda haftanın parmak izi `iz` (haftanın sekiz maçının fikstür sırasıyla [kimlik, skor, goller, kartlar, sakatlıklar, ilk 11]
+     kaydından saglamaHesapla; oyuncu ve kayıt alanları ize girmez); JSON'a `ozet` (p12, degisim, transferler, para, hukmen, sezonSonu, raporlar) ve
+     `ayar`. --karsilastir DOSYA [--ayni]: ortak haftaların skor, adim, haftaGol, gol, kart, sakatlik, cezali, sakat, sira, puan, kasa, an, iz alanları
+     (hafta sayısı eşitse ozet de) tabanla karşılaştırılır; farklar “! fark: …” satırı, --ayni ile fark çıkış 1. Ortam değişkeni SEZON_DENEME_AYAR
+     ('{"GLOBAL_AD":{alan:değer}}'): her sezon() başında motorYukle'den hemen sonra Object.assign(GLOBAL_AD, değer); tanımsız ad kullanım hatası (2).
+   Kullanım:  node araclar/sezon-deneme.js [hafta=3] [tohum=7] [--kaydet] [--tek] [--p12 cevapsiz|sabir|degisim] [--teklif …] [--talep …] [--json DOSYA] [--kayit-yaz DOSYA@hafta=N|DOSYA@sezonSonu] [--karsilastir DOSYA [--ayni]]   (hafta en çok sezonun kalanı: 18)
      --tek   ikinci (belirlenimcilik) koşusunu atlar.   Çıkış kodu: fark ya da doğrulama hatası 1, kullanım hatası 2. */
 'use strict';
 const fs=require('fs'),vm=require('vm');
 const {motorYukle}=require('./motor-yukle');
 const A=process.argv.slice(2),bayrak=a=>A.includes(a),deger=a=>{const i=A.indexOf(a);return i>=0?A[i+1]:null;};
-const sayilar=A.filter((a,i)=>/^\d+$/.test(a)&&A[i-1]!=='--json').map(Number),P12=deger('--p12')||'cevapsiz';
+const sayilar=A.filter((a,i)=>/^\d+$/.test(a)&&!['--json','--karsilastir','--kayit-yaz'].includes(A[i-1])).map(Number),P12=deger('--p12')||'cevapsiz';
 if(!['cevapsiz','sabir','degisim'].includes(P12)){console.error('--p12 cevapsiz | sabir | degisim olmalı');process.exit(2);}
 const TEKLIF=deger('--teklif')||'cevapsiz',TALEP=deger('--talep')||'cevapsiz';
 if(!['cevapsiz','sat','reddet'].includes(TEKLIF)||!['cevapsiz','onayla','reddet'].includes(TALEP)){console.error('--teklif cevapsiz|sat|reddet, --talep cevapsiz|onayla|reddet');process.exit(2);}
@@ -37,6 +42,16 @@ const KAYIT_YAZ=(()=>{const v=deger('--kayit-yaz');if(v===null)return null;
   const i=v?v.lastIndexOf('@'):-1,dosya=i>0?v.slice(0,i):'',an=i>0?v.slice(i+1):'',m=/^hafta=(\d+)$/.exec(an);
   if(!dosya||!(m||an==='sezonSonu')){console.error('--kayit-yaz DOSYA@hafta=N | DOSYA@sezonSonu olmalı');process.exit(2);}
   return{dosya,hafta:m?Number(m[1]):null,sezonSonu:an==='sezonSonu',ad:an};})();
+/* S-0: --karsilastir DOSYA [--ayni] ve SEZON_DENEME_AYAR */
+const KARSI=deger('--karsilastir'),AYNI=bayrak('--ayni');
+if(bayrak('--karsilastir')&&!KARSI){console.error('--karsilastir DOSYA olmalı');process.exit(2);}
+const AYAR=(()=>{const v=process.env.SEZON_DENEME_AYAR;if(!v)return null;let o;
+  try{o=JSON.parse(v);}catch(e){console.error('SEZON_DENEME_AYAR JSON değil: '+e.message);process.exit(2);}
+  if(!o||typeof o!=='object'||Array.isArray(o)||Object.values(o).some(x=>!x||typeof x!=='object'||Array.isArray(x))){console.error('SEZON_DENEME_AYAR biçimi {"GLOBAL_AD":{alan:değer}} olmalı');process.exit(2);}
+  return o;})();
+const ayarUygulaSezon=G=>{if(!AYAR)return;for(const [ad,d] of Object.entries(AYAR)){
+  if(!/^[A-Za-z_$][\w$]*$/.test(ad)||G(`typeof ${ad}`)!=='object'){console.error(`SEZON_DENEME_AYAR: ${ad} tanımlı bir nesne değil`);process.exit(2);}
+  Object.assign(G(ad),d);}};
 const MAKS=60*60*60;   /* güvenlik sınırı: 60 dakikalık adım (20 dakikalık maç ~23 dakikada biter) */
 
 /* H1: diziliş tutarlılığı (kariyer yuva mevkisi = motorun yuva hattı = hocanın yuva rolünün hattı) */
@@ -54,6 +69,7 @@ function dizilisTutarliligi(){
 
 function sezon(){
   const {ctx}=motorYukle(),G=a=>vm.runInContext(a,ctx);
+  ayarUygulaSezon(G);
   const [kariyerBaslat,KK,duragaIlerle,ajandaIsiYap,macGirdisi,dogrula,sezonTablosu,kariyerKaydet,kariyerYukle,bellekDeposu,kulupOyunculari,Match,haftaninDigerMaclari,digerMacPlani,haftaUygula,hukmenSonucu]=
     ['kariyerBaslat','kariyerKomut','duragaIlerle','ajandaIsiYap','macGirdisi','kariyerDogrula','sezonTablosu','kariyerKaydet','kariyerYukle','bellekDeposu','kulupOyunculari','Match','haftaninDigerMaclari','digerMacPlani','haftaSonuclariUygula','hukmenSonucu'].map(G);
   const oyna=sec=>{const m=new Match(()=>{},sec);m.macaGec();let n=0;while(m.phase!=='fulltime'&&n<MAKS){m.step(1/60);n++;}return{m,n};};
@@ -100,12 +116,15 @@ function sezon(){
     if(KAYDET){const d=bellekDeposu();kariyerKaydet(d,'s',k);const y=kariyerYukle(d,'s');
       if(!y.tamam||JSON.stringify(y.kariyer)!==JSON.stringify(k)){hatalar.push(`${Gi.macId}: kaydet–yükle farklı`);break;}k=y.kariyer;}
     if(KAYIT_YAZ&&KAYIT_YAZ.hafta===Gi.hafta)kayitAni=kayitAl(k);
+    /* S-0: haftanın parmak izi (yalnız maç kayıtlarından; oyuncu ve kayıt alanları girmez) */
+    const iz=G('saglamaHesapla')(JSON.stringify(k.fikstur.filter(f=>f.hafta===Gi.hafta).map(f=>{const s=k.maclar[f.id]||{};
+      return[f.id,s.skor||null,(s.goller||[]).map(g=>[g.id,g.dk,!!g.kk]),(s.kartlar||[]).map(c=>[c.id,c.renk,c.dk]),(s.sakatliklar||[]).map(x=>[x.id,x.derece,x.gun]),s.ilk11||null];})));
     const tb=sezonTablosu(k),sira=tb.findIndex(t=>t.id===biz)+1,Op=kulupOyunculari(k,biz);
     if(new Set(tb.map(t=>t.O)).size!==1){hatalar.push(`${Gi.hafta}. hafta: kulüplerin oynadığı maç sayısı eşit değil`);break;}
     satirlar.push({hafta:Gi.hafta,mac:Gi.macId,ev:k.kulupler[Gi.ev].kisa,konuk:k.kulupler[Gi.konuk].kisa,skor:S.skor.join('-'),adim:n,ms:Math.round(ms),msHafta:Math.round(msHafta),
       haftaGol:S.goller.length+O.reduce((a,o)=>a+o.sonuc.skor[0]+o.sonuc.skor[1],0),
       gol:S.goller.length,kart:S.kartlar.length,sakatlik:S.sakatliklar.length,cezali:Op.filter(p=>p.ceza).length,sakat:Op.filter(p=>p.sakat).length,
-      sira,puan:tb[sira-1].P,kasa:k.kulupler[biz].nakit,an:`${k.tarih} ${String(Math.floor(k.gunIciDakika/60)).padStart(2,'0')}:${String(k.gunIciDakika%60).padStart(2,'0')}`,kayit:JSON.stringify(k).length});
+      sira,puan:tb[sira-1].P,kasa:k.kulupler[biz].nakit,an:`${k.tarih} ${String(Math.floor(k.gunIciDakika/60)).padStart(2,'0')}:${String(k.gunIciDakika%60).padStart(2,'0')}`,kayit:JSON.stringify(k).length,iz});
   }
   if(N===kalan&&!hatalar.length&&Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'))hatalar.push('sezon bitti ama maç günü işi duruyor');
   const h=dogrula(k);if(h.length)hatalar.push('kariyer geçersiz: '+h.slice(0,3).join('; '));
@@ -153,6 +172,20 @@ let ayni=null;
 if(!TEK&&!R.hatalar.length){const R2=sezon();ayni=R2.metin===R.metin&&!R2.hatalar.length;
   console.log(ayni?'  Belirlenimcilik: aynı tohumla ikinci koşu birebir aynı kariyer':'! Belirlenimcilik: ikinci koşu farklı'+(R2.hatalar.length?' ('+R2.hatalar.join('; ')+')':''));}
 for(const h of R.hatalar)console.log('! '+h);
-if(JSON_DOSYA)fs.writeFileSync(JSON_DOSYA,JSON.stringify({hafta:HAFTA,tohum:TOHUM,kaydet:KAYDET,satirlar:R.satirlar,ortMs:Math.round(ort),haftaMs:Math.round(hOrt),ayni,hatalar:R.hatalar,dizilis:DZ.fark,raporlar:R.raporlar},null,1));
+const OZET={p12:R.p12,degisim:R.degisim,transferler:R.transferler,para:R.para,hukmen:R.hukmen,sezonSonu:R.sezonSonu,raporlar:R.raporlar};
+if(JSON_DOSYA)fs.writeFileSync(JSON_DOSYA,JSON.stringify({hafta:HAFTA,tohum:TOHUM,kaydet:KAYDET,satirlar:R.satirlar,ortMs:Math.round(ort),haftaMs:Math.round(hOrt),ayni,hatalar:R.hatalar,dizilis:DZ.fark,raporlar:R.raporlar,ozet:OZET,ayar:AYAR},null,1));
+/* S-0: tabanla karşılaştırma (ms, msHafta ve kayıt bilgi; tabanda olmayan alan atlanır) */
+let farkSay=0;
+if(KARSI){let T;try{T=JSON.parse(fs.readFileSync(KARSI,'utf8'));}catch(e){console.error(`--karsilastir ${KARSI}: okunamadı — ${e.message}`);process.exit(2);}
+  const ALAN=['skor','adim','haftaGol','gol','kart','sakatlik','cezali','sakat','sira','puan','kasa','an','iz'],fark=[];
+  const th=new Map((T.satirlar||[]).map(s=>[s.hafta,s]));let ortak=0;
+  for(const s of R.satirlar){const t=th.get(s.hafta);if(!t)continue;ortak++;
+    for(const a of ALAN)if(a in t&&JSON.stringify(t[a])!==JSON.stringify(s[a]))fark.push(`hafta ${s.hafta} ${a}: ${JSON.stringify(t[a])} → ${JSON.stringify(s[a])}`);}
+  if(T.ozet&&(T.satirlar||[]).length===R.satirlar.length)for(const [a,v] of Object.entries(T.ozet))if(JSON.stringify(v)!==JSON.stringify(OZET[a]))fark.push(`özet ${a}: ${JSON.stringify(v).slice(0,120)} → ${JSON.stringify(OZET[a]).slice(0,120)}`);
+  farkSay=fark.length;
+  for(const f of fark.slice(0,10))console.log('! fark: '+f);
+  console.log(fark.length?`${AYNI?'!':' '} Karşılaştırma (${KARSI}): ${ortak} ortak hafta, ${fark.length} fark${fark.length>10?' (ilk 10 yazıldı)':''}`:`  Karşılaştırma (${KARSI}): ${ortak} ortak hafta birebir aynı`);
+  if(!ortak&&AYNI){console.log('! Karşılaştırma: ortak hafta yok');farkSay=1;}}
+if(AYAR)console.log(`  SEZON_DENEME_AYAR: ${JSON.stringify(AYAR)}`);
 console.log(`  Süre ${((Date.now()-t0)/1000).toFixed(1)} sn`);
-process.exit(R.hatalar.length||ayni===false||DZ.fark.length?1:0);
+process.exit(R.hatalar.length||ayni===false||DZ.fark.length||(AYNI&&farkSay)?1:0);
