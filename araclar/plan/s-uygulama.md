@@ -1010,6 +1010,15 @@ Bu adım saf okumadır; kayda alan eklemez ve odaya düğme koymaz.
 9. Maç telefonunun kulüp ekranında canlı ve maç öncesi veriler karışıktı → golcüler “(önceki haftalar)”, goller “(canlı)”, “Sıradaki” yerine “Bugün” (§24, saf çizimle).
 10. İzlerken görülen balkon sinyali ekran okuyucuya duyurulmuyordu → `metinDuyur` (H2-e kalıbı; denetimsiz — gerçek zamanlı izleme bu dizüstünde kararlı denenemiyor).
 
+### Kapanış (2026-10-27 gece, dizüstü; son kod `92fee94`)
+
+- **Bütünlük:** `OYUNCU_HAFTA_TEST.kapali` ile 18 hafta, tohum 7 (`--teklif sat --talep onayla --p12 degisim`) ve tohum 3 (`--tek --kaydet`) → `sezon-h2-t7.json` ve `sezon-h2-t3.json` ile 18 ortak hafta birebir; S-b…S-e ve inceleme düzeltmeleri anahtar kapalıyken sonucu değiştirmedi.
+- **Yeni sezon tabanları (anahtar açık):** `araclar/taban/sezon-s-t7.json` — kasa 5.746.450 ₺, şampiyon Karaova Belediyespor, biz 2. sıra 54 puan, P12 değişimi 13 Aralık (Şükrü Hoca → Hilmi Hoca), raporlar 16 haftalık · 4 aylık; `sezon-s-t3.json` — belirlenimci (aynı tohumla ikinci koşu birebir), şampiyon Yıldıztepe SK, biz 3. sıra 56 puan. Oyuncunun haftası iki tohumda bantta (en düşük kondisyon 56 / 70, art arda dışarıda en çok 4 / 4, dinlenen kulüp-maç başına 0,45 / 0,53, form sd 15,3 / 15,7).
+- **Motor:** dosyaları `main` ile aynı; `oturum-sonu g1.json --ayni --seyrek` 40/40 birebir, sağlık aralığı dışı 0, kabul dışı yalnız bilinen borçlar (`c-1v1` eğim 14,0; `d-sut` iki satır; `c-orta` “erken · 3–3”; `d-topcu` 254/255). `ad-denetimi` temiz (91 betik); `kariyer-deneme` geçti.
+- **Tarayıcı (son kodla, bölüm bölüm):** 1, 2, 3, 17, 18, 19, 19b, 20, 21, 22, 23, 24, 25 geçti. 16'nın iki zamanlama satırı (S-d kopyasında denendi) ile 11, 12, 14, 14b, 15, 15b bu dizüstünün bilinen düşüşleri; koşulmadı, masaüstü borcu. `kontrol.py` hatasız; `akis-2d.py` geçti; `prototipler/7-dosya-defter.html`'in tek hatası `main`'de de var.
+- **Bilgi:** “Odaya dön” işçisiz dosya adresinde 13,4 sn (doğal bitiş), “öbür maçlar tamamlanıyor” beklemeli yolda 130,5 sn; hız bütçesi plan gereği ölçülmedi.
+- **Kullanıcı (2026-10-27 akşam):** “oto modda devam edip işin bitince push, main'e alma vs yapar mısın” — denetimler geçtiği için etiket `tur/s-sezon-ici`, `main`'e alma ve push yapıldı.
+
 ## Tasarım panelinin puanları
 
 Ölçütler 1–10. Risk sütununda yüksek puan düşük risk demektir.
