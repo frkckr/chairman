@@ -7,7 +7,9 @@
    Haber (k.haberler): {tur, tarih, dakika, anahtar, p, olayId, gorulen} — yaşanmış olaydan üretilen kalıcı kayıt; yeni sorun icat etmez.
      tur: HABER_TURLERI anahtarı ('gazete' masadaki gazete, 'tesekkur' masadaki kart). p.kaynak verilirse başlıkta yayın/kişi adı olarak görünür.
    odaIzleri(k): odada gösterilecek izler; yalnız kayıtlı olaya dayanır, yüklemeden sonra aynıdır.
-   2.8L (2026-10-02): söz konuları, teşekkür ve hatıra içerikleri kaldırıldı; SOZ_TARAFLARI ve ODA_NOTU_SOZLERI içerik yazıldıkça doldurulur. */
+   2.8L (2026-10-02): söz konuları, teşekkür ve hatıra içerikleri kaldırıldı; SOZ_TARAFLARI ve ODA_NOTU_SOZLERI içerik yazıldıkça doldurulur.
+   S-e (2026-10-27): günlük gazetenin kaynak defteri GAZETE_KAYNAKLARI (sayıyı js/gazete.js kurar). odaIzleri'ne sayi (son sayının tarihi) ve
+   gazeteYeni (son sayı okunmadı) eklendi; eski alanlar aynen durur. */
 const SOZ_DURUMLARI=['acik','tutuldu','bozuldu'];
 /* kişi olmayan muhataplar: anahtar → ad (ör. {personel:'Personel ve oyuncular'}); içerik dosyaları ekler */
 const SOZ_TARAFLARI={};
@@ -15,6 +17,9 @@ const SOZ_TARAFLARI={};
 const HABER_TURLERI={gazete:'Gazete',tesekkur:'Not',rapor:'Rapor'};   /* H2-d: rapor dosyadadır (js/mali-rapor.js); gazetenin ışığını yakmaz */
 /* açıkken duvardaki panoya not olarak düşen söz konuları (anahtar listesi); içerik dosyaları ekler */
 const ODA_NOTU_SOZLERI=[];
+/* S-e: gazetenin kaynakları: {ad, haberler(k, P) → [{onem, an, anahtar, p, kutu?, meseleId?}]}; P {tarih, bas, son, biz}; an pencerede olmalı
+   ([bas, son)). Çekirdek kaynaklar js/gazete.js'te, içerik paketleri kendi dosyalarında ekler */
+const GAZETE_KAYNAKLARI=[];
 const sozMuhatapAdi=(k,m)=>SOZ_TARAFLARI[m]||kisiAdi(k,m);
 const sozMetni=(k,s)=>MESELE_OLAYLARI[s.anahtar](k,s.p);
 
@@ -61,7 +66,9 @@ function haberlerGoruldu(k){for(const h of k.haberler)if(h.tur!=='rapor')h.gorul
 /* odada görünen izler (kariyeri değiştirmez) */
 function odaIzleri(k){
   const H=k.haberler||[],gazete=H.filter(h=>h.tur==='gazete'),kart=H.filter(h=>h.tur==='tesekkur');
+  const sayi=typeof gazeteSonTarihi==='function'?gazeteSonTarihi(k):null;
   return{
+    sayi,gazeteYeni:!!sayi&&sayi>(k.gazeteOkunan||''),
     gazete:gazete.length?gazete[gazete.length-1]:null,
     kart:kart.length?kart[kart.length-1]:null,
     yeniHaber:H.filter(h=>!h.gorulen&&h.tur!=='rapor').length,

@@ -984,6 +984,12 @@ Bu adım saf okumadır; kayda alan eklemez ve odaya düğme koymaz.
 - **Denetimler:** `kariyer-deneme` geçti (yeni 3.8c; 3.8, 3.8b, 3.9 aynen); `ad-denetimi` temiz; `oturum-sonu g1.json --ayni --mac 24` 24/24 birebir (S-e kopyasında, S-d'yi de içerir), kabul dışı yalnız bilinen borçlar; `akis-deneme` 24 ve 19 geçti; 20 sessiz makinede geçti (maç bitince telefondaki canlı tablo odadaki tabloyla birebir); 16'da yalnız bu dizüstünün bilinen iki zamanlama satırı düştü.
 - **Sapmalar:** ilk ekran görüntüsünde “Puan durumu” sekmesi kesiliyordu; sekme yazısı küçüldü ve §24'e “sekme yazıları kesilmez” denetimi eklendi. §20'de kart ve “Maçı bitir” perdesi açıkken maç telefonu açılmadığından denetim iki kilidi bir anlığına kaldırıp tabloyu okur. Kulüp ekranında devralınan son maçı olmayan TEST kulüplerinin “Son 5”i boş (“—”; uydurulmaz).
 
+### S-e
+
+- **Uygulandı:** `js/gazete.js` (sayı penceresi [dün 08:00, bugün 08:00), `haberAkisi`, `gazeteSayisi`, `gazeteOkundu`, `gazeteDogrula`, çekirdek kaynaklar ve TEST metinleri `gz.*`); `js/soz.js` `GAZETE_KAYNAKLARI`, `odaIzleri`'nde `sayi` ve `gazeteYeni`; P12 hoca değişimi (`js/icerik-p12.js`) ve transfer (`js/transfer.js`) haber kaydı açmaz, geçmişten kurulan kaynaktır; odada gazete her sabah masada, panelde künye, manşet, haberler, kutular, sayılar arası gezinti ve `[`/`]`; İlerle özeti yalnız sayı değişince “Masada yeni gazete var” der.
+- **Denetimler:** `kariyer-deneme` geçti (yeni 5.2; 4.2 ve 3.7a'nın haber satırı gazetenin kaynağına bakar; 4.1c ve 2.2 aynen); `ad-denetimi` temiz (91 betik); `mac-deneme 4` “sonuç aynı”; `oturum-sonu g1.json --ayni --mac 24` 24/24 birebir, kabul dışı yalnız bilinen borçlar; `akis-deneme` 25, 1, 3 geçti; `kontrol.py` hatasız (masada gazete “yeni”).
+- **Sapmalar:** tarayıcı denemesi bir arşiv hatası yakaladı — maç günü sayısı (“Bugün …”) maç oynandıktan sonra geriye bakınca boş çıkıyordu, çünkü yaklaşan maç kaynağı “oynanmamış” maça bakıyordu; kaynak artık sayının anından sonra başlayan ilk maçı alır ve 5.2 ile §25 bunu denetler. Masadaki notlar listesi gazete kayıtlarını tekrar göstermez (sayının içindedirler).
+
 ## Tasarım panelinin puanları
 
 Ölçütler 1–10. Risk sütununda yüksek puan düşük risk demektir.

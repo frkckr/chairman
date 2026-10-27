@@ -30,6 +30,10 @@ function oyuncuKulubuTarihte(k,oyuncuId,an){
     if(anDakika(g.tarih,g.dakika)<an)break;c=g.eski||null;}
   return c;
 }
+/* S-e: gazetede transfer haberi (önem 70; TEST) — geçmişteki transfer kaydından, başkanın kulübüne gelen ya da giden oyuncu (eskiden haber kaydıydı) */
+GAZETE_KAYNAKLARI.push({ad:'transfer',haberler:(k,P)=>(k.gecmis||[]).filter(g=>g.tur==='transfer'&&(g.eski===P.biz||g.yeni===P.biz)).map(g=>{
+  const m=Object.values(k.meseleler||{}).find(x=>x.tur==='transfer'&&x.olaylar.some(o=>(o.anahtar==='tr.sat'||o.anahtar==='tr.imza')&&o.p&&o.p.oyuncuId===g.oyuncuId));
+  return{onem:70,an:anDakika(g.tarih,g.dakika),anahtar:'tr.haber',p:{oyuncuId:g.oyuncuId,alici:g.yeni},meseleId:m?m.id:undefined};})});
 const transferDonemi=(k,tarih)=>((k.sezon&&k.sezon.transfer)||[]).find(t=>tarih>=t.bas&&tarih<=t.bitis)||null;
 function oyuncuDegeri(p,tarih){
   const m=p.sozlesme?p.sozlesme.maas:maasTahmini(p,tarih),y=oyuncuYasi(p,tarih);
@@ -141,7 +145,6 @@ KARAR_TURLERI.teklifKarari={
     const p=k.oyuncular[v.oyuncuId],yarin=tarihEkle(k.tarih,1),A=k.kulupler[v.alici];
     oyuncuTransfer(k,v.oyuncuId,v.alici,{bedel:v.bedel,sozlesme:{maas:Math.round(maasTahmini(p,k.tarih)*1.1/SOZLESME_TEST.yuvarla)*SOZLESME_TEST.yuvarla,bitis:sozlesmeBitisi(k,2)}});
     odemePlanla(k,{kulupId:v.kulupId,tarih:yarin,dakika:600,tutar:v.bedel,kalem:'transfer',aciklama:`${p.ad} bonservisi (${A.ad})`,meseleId:v.meseleId});
-    haberEkle(k,{tur:'gazete',anahtar:'tr.haber',p:{oyuncuId:v.oyuncuId,alici:v.alici,kaynak:'yerelGazete'},olayId:v.olayId});
     kadroTamamla(k,v.kulupId,KADRO_HEDEF,'satis:'+v.oyuncuId);sozlesmeleriTamamla(k);
     return{bilgi:meseleOlay(k,v.meseleId,'tr.sat',{oyuncuId:v.oyuncuId,bedel:v.bedel,tarih:yarin})};
   },
@@ -212,7 +215,6 @@ GELISMELER.transferImza={
     if(eski)kadroTamamla(k,eski,KADRO_HEDEF,'satis:'+p.id);
     sozlesmeleriTamamla(k);
     if(H.bedel>0)odemePlanla(k,{kulupId:v.kulupId,tarih:yarin,dakika:600,tutar:-H.bedel,kalem:'transfer',aciklama:`${p.ad} bonservisi`,meseleId:v.meseleId});
-    haberEkle(k,{tur:'gazete',anahtar:'tr.haber',p:{oyuncuId:p.id,alici:v.kulupId,kaynak:'yerelGazete'},olayId:v.olayId});
     const bilgi=meseleOlay(k,v.meseleId,'tr.imza',{oyuncuId:p.id,eski,bedel:H.bedel,maas});
     /* teşekkür görevdeki hocadan (G2 incelemesi: arada hoca değiştiyse ayrılan hoca yazmaz; kulüp bütçe kararını uygular) */
     const hc=kulupHocasi(k,v.kulupId);if(hc)meseleOlay(k,v.meseleId,'tr.tesekkur',{kisiId:hc.id});

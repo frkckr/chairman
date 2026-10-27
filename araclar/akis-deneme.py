@@ -2397,6 +2397,54 @@ async def bolum_24(tarayici, site, tum_hatalar):
     await pg.context.close()
 
 
+async def bolum_25(tarayici, site, tum_hatalar):
+    """S-e: günlük gazete — açılışta masada ve “yeni”; 4 açar, rozet söner; sürüm 10 kaydında 29 Kasım 08:00'e geçilince manşet 13. haftanın bizim maçı;
+    önceki sayıya gezinti; sayfadaki metin sayfa içinde hesaplanan gazeteSayisi ile aynı; taşma ≤ 1"""
+    print("\n25. Günlük gazete (S-e)")
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    d0 = await durum(pg)
+    r0 = await pg.evaluate("() => { const b = document.querySelector('.od-nesne[data-panel=\"gazete\"]'); return b ? { var: true, rozet: (b.querySelector('.od-rozet') || {}).textContent || '' } : { var: false }; }")
+    await pg.keyboard.press("Digit4")
+    await pg.wait_for_selector(".gz-sayi", timeout=10000)
+    g0 = await pg.evaluate("""() => { const k = OYUN.kariyer, G = gazeteSayisi(k, '2026-11-23');
+      return { sayfa: document.querySelector('.gz-manset').textContent, beklenen: G.manset.metin, okunan: k.gazeteOkunan || null }; }""")
+    await pg.keyboard.press("Escape")
+    r1 = await pg.evaluate("() => { const b = document.querySelector('.od-nesne[data-panel=\"gazete\"]'); return b && b.querySelector('.od-rozet') ? b.querySelector('.od-rozet').textContent : ''; }")
+    denetle("S-e: açılışta gazete masada ve “yeni”; 4 son sayıyı açar (manşet gazeteSayisi ile aynı), okundu yazılır, rozet söner; zaman değişmedi",
+            r0.get("var") and r0.get("rozet") == "yeni" and g0["sayfa"] == g0["beklenen"] and g0["okunan"] == "2026-11-23" and r1 == "" and await durum(pg) == d0, f"{r0} · {g0} · {r1!r}")
+    await pg.context.close()
+    s10 = (ARAC / "ornekler" / "kayit-s10-hafta14.json").read_text(encoding="utf-8")
+    baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
+    await baglam.add_init_script("""(m => { if (!sessionStorage.getItem('__s10g')) { sessionStorage.setItem('__s10g', '1'); localStorage.setItem('chairman:oyun-1', m); } })(""" + json.dumps(s10) + ")")
+    pg = await baglam.new_page()
+    pg.on("pageerror", lambda e: tum_hatalar.append("Betik hatası: " + str(e)))
+    await pg.goto((site / "index.html").as_uri() + loca(""))
+    await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=30000)
+    await pg.evaluate("() => oyunKomut(k => { zamanIlerlet(k, anDakika('2026-11-29', 480) - simdikiAn(k)); })")
+    await oda_yenile(pg)
+    await pg.keyboard.press("Digit4")
+    await pg.wait_for_selector(".gz-sayi", timeout=10000)
+    async def oku():
+        return await pg.evaluate("""() => { const k = OYUN.kariyer, t = document.querySelector('.gz-kunye small').textContent, no = Number((t.match(/Sayı (\\d+)/) || [])[1]);
+          const tarih = tarihEkle('2026-11-23', no - 1), G = gazeteSayisi(k, tarih), P = document.querySelector('.gz-sayi');
+          const sayfa = [P.querySelector('.gz-manset').textContent].concat([...P.querySelectorAll('.gz-haber, .gz-kutu')].map(x => x.textContent));
+          const H = G.haberler.slice(1), bek = [G.manset.metin].concat(H.filter(h => !h.kutu).map(h => h.metin), H.filter(h => h.kutu).map(h => h.metin));
+          return { tarih, kalin: P.classList.contains('gz-kalin'), anahtar: G.manset.anahtar, ayni: JSON.stringify(sayfa) === JSON.stringify(bek), n: sayfa.length,
+            hafta: G.manset.p && G.manset.p.macId ? k.fikstur.find(f => f.id === G.manset.p.macId).hafta : null, tasma: document.querySelector('.od-icerik').scrollWidth - document.querySelector('.od-icerik').clientWidth }; }""")
+    a = await oku()
+    await pg.screenshot(path=str(ARAC / "son-akis-25-gazete.png"))
+    denetle("S-e: sürüm 10 kaydında 29 Kasım 08:00'de son sayı kalın, manşet 13. haftanın bizim maçı; sayfadaki metinler gazeteSayisi ile aynı; taşma ≤ 1",
+            a["tarih"] == "2026-11-29" and a["kalin"] and a["anahtar"] == "gz.mac" and a["hafta"] == 13 and a["ayni"] and a["n"] >= 4 and a["tasma"] <= 1, str(a))
+    await pg.click('[data-eylem="gazeteSayi"]:has-text("Önceki")')
+    b = await oku()
+    await pg.keyboard.press("BracketRight")
+    c = await oku()
+    denetle("S-e: ◂ Önceki sayı 28 Kasım'ı açar (maç günü: manşet yaklaşan maç; metinler gazeteSayisi ile aynı); ] yeniden son sayıya döner",
+            b["tarih"] == "2026-11-28" and b["ayni"] and not b["kalin"] and b["anahtar"] == "gz.yaklasan" and c["tarih"] == "2026-11-29" and b["tasma"] <= 1, f"{b} · {c['tarih']}")
+    await pg.context.close()
+
+
 async def ana():
     try:
         from playwright.async_api import async_playwright
@@ -2463,6 +2511,8 @@ async def ana():
             await bolum_22(tarayici, site, tum_hatalar)
         if sec("24"):
             await bolum_24(tarayici, site, tum_hatalar)
+        if sec("25"):
+            await bolum_25(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

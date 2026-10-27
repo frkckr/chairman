@@ -59,6 +59,10 @@ Object.assign(MESELE_OLAYLARI,{
   'p12.cevapsiz':(k,p)=>`Cevap vermedin; ${kisiAdi(k,p.kisiId)} göreve devam ediyor. Süre sözü verilmedi.`,
   'p12.haber':(k,p)=>`${(k.kulupler[p.kulupId]||{ad:''}).ad} yeni teknik direktörünü açıkladı: ${kisiAdi(k,p.kisiId)}. ${kisiAdi(k,p.eskiId)} ile yollar ayrıldı.`
 });
+/* S-e: gazetede hoca değişimi (önem 90; TEST) — geçmişteki hocaDegisimi kaydından, ertesi sabahın sayısında (eskiden haber kaydıydı) */
+GAZETE_KAYNAKLARI.push({ad:'p12',haberler:(k,P)=>(k.gecmis||[]).filter(g=>g.tur==='hocaDegisimi'&&g.kulupId===P.biz).map(g=>{
+  const m=Object.values(k.meseleler||{}).find(x=>x.tur==='hoca'&&x.olaylar.some(o=>o.anahtar==='p12.yeniHoca'&&o.p&&o.p.kisiId===g.yeniId));
+  return{onem:90,an:anDakika(g.tarih,g.dakika),anahtar:'p12.haber',p:{kulupId:g.kulupId,kisiId:g.yeniId,eskiId:g.eskiId},meseleId:m?m.id:undefined};})});
 MESAJ_GONDEREN['p12.hoca']=pKisi('kisiId');
 MESAJ_GONDEREN['p12.tesekkur']=pKisi('kisiId');
 MESAJ_METIN['p12.hoca']=()=>'Başkanım, sonuçların farkındayım. Planım belli, oyuncular da inanıyor. Biraz zaman isterim.';
@@ -192,7 +196,6 @@ KARAR_TURLERI.hocaAdayi={
     const tz=p12Tazminat(k,v.hocaId),yeni=hocaDegistir(k,v.kulupId,a),yarin=tarihEkle(k.tarih,1),m=k.meseleler[v.meseleId];   /* G2: tazminat sözleşmeden, değişimden önce */
     odemePlanla(k,{kulupId:v.kulupId,tarih:yarin,dakika:600,tutar:-tz,kalem:'tazminat',aciklama:`${kisiAdi(k,v.hocaId)} tazminatı`,meseleId:v.meseleId});
     if(!m.kisiler.includes(yeni))m.kisiler.push(yeni);
-    haberEkle(k,{tur:'gazete',anahtar:'p12.haber',p:{kulupId:v.kulupId,kisiId:yeni,eskiId:v.hocaId,kaynak:'yerelGazete'},olayId:v.olayId});
     return{bilgi:meseleOlay(k,v.meseleId,'p12.yeniHoca',{kisiId:yeni,eskiId:v.hocaId,tutar:tz,tarih:yarin})};
   },
   /* H1 (F6-a borcu): dosyanın sağ sayfasındaki kişi bu kartta adaydır (karar türünün isteğe bağlı görünüm kancası; js/ekran-dosya.js). Adayın kişi
