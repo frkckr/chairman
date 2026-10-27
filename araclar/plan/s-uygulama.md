@@ -990,6 +990,12 @@ Bu adım saf okumadır; kayda alan eklemez ve odaya düğme koymaz.
 - **Denetimler:** `kariyer-deneme` geçti (yeni 5.2; 4.2 ve 3.7a'nın haber satırı gazetenin kaynağına bakar; 4.1c ve 2.2 aynen); `ad-denetimi` temiz (91 betik); `mac-deneme 4` “sonuç aynı”; `oturum-sonu g1.json --ayni --mac 24` 24/24 birebir, kabul dışı yalnız bilinen borçlar; `akis-deneme` 25, 1, 3 geçti; `kontrol.py` hatasız (masada gazete “yeni”).
 - **Sapmalar:** tarayıcı denemesi bir arşiv hatası yakaladı — maç günü sayısı (“Bugün …”) maç oynandıktan sonra geriye bakınca boş çıkıyordu, çünkü yaklaşan maç kaynağı “oynanmamış” maça bakıyordu; kaynak artık sayının anından sonra başlayan ilk maçı alır ve 5.2 ile §25 bunu denetler. Masadaki notlar listesi gazete kayıtlarını tekrar göstermez (sayının içindedirler).
 
+### S-a kalibrasyonu
+
+- **Ölçüm (18 hafta, tohum 7 ve 3, anahtar açık):** tohum 7'de iki ölçü bant dışıydı — maç anı ilk 11'in en düşük kondisyonu 33 (bant ≥ 50) ve dinlendirilen düzenli oyuncunun art arda dışarıda kalması 6 maç (bant ≤ 4); tohum 3'te hepsi bantta. Sakatlık tabana göre −%18 / −%13, hükmen 0.
+- **Tarama (soru başına iki değer, iki tohum; `SEZON_DENEME_AYAR` ile `OYUNCU_HAFTA_TEST.toparlanma`):** ×1,25 → en düşük kondisyon 56 / 70, art arda en çok 4 / 4, dinlenen kulüp-maç başına 0,45 / 0,53, gelişim ≤21 +0,70 / +0,71 ve 30+ −0,53 / −0,52, form sd 15,3 / 15,7, sakatlık −%9 / +%19, hükmen 0; ×1,5 → bantta ama ortalama kondisyon ~99,5 (kondisyon neredeyse etkisiz). **Karar (Claude, TEST):** günlük toparlanma değerleri ×1,25 (`{mac 3,75, dinlenme 7,5, toparlanma 5,75, hafif 5,25, yoğun 7,5}`).
+- **Testler:** iki beklenti değerden bağımsız yazıldı — 2.7b'nin “günde en çok üç” satırı en yorgun ikiyi o günkü kondisyondan bulur; 3.11'in hoca notu için kopyadaki kondisyon 60 yerine 50. `kariyer-deneme` geçti.
+
 ## Tasarım panelinin puanları
 
 Ölçütler 1–10. Risk sütununda yüksek puan düşük risk demektir.

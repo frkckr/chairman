@@ -1166,7 +1166,7 @@ bolum('3.11 — kadro ve oyuncu dosyası: gözlenebilir sayılar ve tarihli notl
   denetle('Sözleşmesiz oyuncuda bitiş ve maaş null; sürüm 10 kaydında (geçişle açılır) M ve Dk null, gol ve sarı yerinde',
     Ss.bitis===null&&Ss.maas===null&&S10.length>=22&&S10.every(x=>x.mac===null&&x.dk===null)&&S10.some(x=>x.gol>0),`${metin(Ss).slice(0,80)}`);
   /* notlar: maç (kırmızı; on birde yoktu), antrenman (Salı balkonda yorgun) ve hocanın “Takım ne durumda?” cevabı (yorgun) */
-  const yc=JSON.parse(metin(k1));yc.oyuncular[cik].hal=Object.assign({},yc.oyuncular[cik].hal,{kon:60});
+  const yc=JSON.parse(metin(k1));yc.oyuncular[cik].hal=Object.assign({},yc.oyuncular[cik].hal,{kon:50});
   let k2=T('kariyerOlustur')(yc);
   k2=KK(k2,x=>{T('zamanIlerlet')(x,T('anDakika')('2026-12-01',900)-T('simdikiAn')(x));}).kariyer;
   k2=KK(k2,x=>T('gozlemBaslat')(x,120)).kariyer;
@@ -1695,7 +1695,8 @@ bolum('2.7b — antrenman programı ve balkon sinyalleri (S-b; js/gozlem.js, js/
     &&s24.concat(s26).every(s=>s.dk>=905&&s.dk<1015),metin(s24));
   const k6=kur(6),s6=AS(k6,'2026-11-24');
   denetle('Günde en çok üç sinyal, öncelik sırasıyla (dönüş, sonra en yorgunlar); oyuncu başına bir',s6.length===3&&s6.some(s=>s.tur==='donus')&&new Set(s6.map(s=>s.oyuncuId)).size===3
-    &&s6.filter(s=>s.tur==='yorgun').every(s=>K.ilk11.slice(5,7).includes(s.oyuncuId)),metin(s6.map(s=>s.tur+':'+s.oyuncuId)));
+    &&(()=>{const KON=id=>T('oyuncuKondisyonu')(k6,k6.oyuncular[id],'2026-11-24'),en=K.ilk11.slice(1,7).sort((a,b)=>KON(a)-KON(b)).slice(0,2);
+      return s6.filter(s=>s.tur==='yorgun').every(s=>en.includes(s.oyuncuId));})(),metin(s6.map(s=>s.tur+':'+s.oyuncuId)));
   const salı=c=>KK(c,x=>{T('zamanIlerlet')(x,T('anDakika')('2026-11-24',900)-T('simdikiAn')(x));}).kariyer;
   const tek=KK(salı(k1),x=>T('gozlemBaslat')(x,120)).kariyer,g1=tek.gecmis.filter(g=>g.tur==='gozlem').pop();
   denetle('Tam gözlem günün sinyallerini geçmişteki gözlem kaydına yazar (metin yok); ertesi gün aynı oyuncu ve tür 7 gün tekrar etmez',
