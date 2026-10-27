@@ -972,6 +972,12 @@ Bu adım saf okumadır; kayda alan eklemez ve odaya düğme koymaz.
 - **Denetimler:** `kariyer-deneme` geçti (yeni 2.7b; 2.7 ve 2.8L aynen); `ad-denetimi` temiz; `mac-deneme 4` “sonuç aynı”; motor dosyaları aynı → `oturum-sonu g1.json --ayni --mac 24` 24/24 birebir, kabul dışı yalnız bilinen borçlar (`c-1v1` eğim 14,0; `d-sut` iki satır; `c-orta` “erken · 3–3”); `akis-deneme` 23, 1, 3 geçti.
 - **Sapmalar:** planın “örnek kariyerde hafta içi hafif” satırı tutmadı — örnek kariyerin iki maçlık fikstürü var (24 Kasım yoğun); denetim fikstürsüz kopyayla yapıldı. “Günde en çok üç” satırının beklentisi düzeltildi: en yorgun iki oyuncu kondisyonu en düşük olanlardır (55 ve 56). Şeritteki gün türü değişkeni `gunTuru` (odadaki `gunAdi` işlevini gölgelemesin).
 
+### S-c
+
+- **Uygulandı:** `js/kadro-dosyasi.js` (`kadroVar`, `kadroSatirlari`, `oyuncuDosyasi`, `oyuncuNotlari`, `OYUNCU_NOT_KAYNAKLARI`: antrenman, maç, hoca; TEST metinleri `not.*`); dosyada Raporlar'ın solunda “Kadro” sekmesi, tek geniş sayfada liste, ada dokununca iki sayfalı oyuncu dosyası; konu ve rapor yokken dosya Kadro ile açılır (masada dosya hep var); Esc önce listeye, `[`/`]` oyuncular arasında; sayfaların okuma yeri görünüm anahtarıyla korunur (konu ↔ rapor kayması da kalktı).
+- **Denetimler:** `kariyer-deneme` geçti (yeni 3.11); `ad-denetimi` temiz (90 betik); `mac-deneme 4` “sonuç aynı”; `oturum-sonu g1.json --ayni --mac 24` 24/24 birebir, kabul dışı yalnız bilinen borçlar; `akis-deneme` 22, 1, 3, 21 geçti (§3 ve §21'in sekme seçicileri Kadro sekmesini konu sekmesi saymaz, dar şerit denetimi Kadro'yu da kapsar); `kontrol.py` hatasız; `prototipler/7-dosya-defter.html` tek hata (`hocalariKur is not defined`) `main`'de de aynı.
+- **Sapmalar:** listede sözleşme bitişi yalnız yıl (hepsi 31 Mayıs; tam tarih oyuncu dosyasında), dönüş günü kısa ayla — ilk ekran görüntüsünde “May 20…” ve “7 Ara…” kesiliyordu. Test bilgileri geliştirmede varsayılan açık olduğundan §22 önce açıkken künyede TEST kutusunu, kapatınca yokluğunu denetler. `kadroVar` görev durumuna da bakar (`gorevDurumu==='gorevde'`).
+
 ## Tasarım panelinin puanları
 
 Ölçütler 1–10. Risk sütununda yüksek puan düşük risk demektir.

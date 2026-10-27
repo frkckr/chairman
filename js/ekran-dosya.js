@@ -11,6 +11,9 @@
      Y: {yaz, kategoriYazi, tarihKisa, anYazi, sonTarih(ozet), neOldu(ozet), sozler(ozet) → html, testKutu?, maliBaglantisi(mesele) → bool}
    H2-d (2026-10-26): Arşiv'in yanında “Raporlar (n)” sekmesi — mali işler müdürünün raporları (js/mali-rapor.js maliRaporlari, maliRaporOkumasi): solda tarih ve
      başlıkla liste (görülmemişte nokta), sağda seçili rapor (bugünkü kâğıt dili; eksi tutar kırmızı). Mali konudaki “Son mali özet ▸” oraya götürür.
+   S-c (2026-10-27): Raporlar'ın solunda “Kadro” sekmesi (js/kadro-dosyasi.js): tek geniş sayfada kadro listesi (yalnız gözlenebilir sayılar);
+     ada dokununca iki sayfalı oyuncu dosyası (solda künye, bu sezon, durum ve sözleşme; sağda tarihli notlar). D.kadro, D.seciliOyuncu;
+     Y.tlYazi, Y.oyuncuTest(id) → html (Test bilgileri açıkken). Konu yokken ve rapor yokken dosya Kadro ile açılır.
    Renk ve ölçüler STIL.kagit.dosya'dadır. Stil, masaüstü kopyasında da gelsin diye belgeye buradan eklenir. */
 (function dosyaStili(){
   if(typeof document==='undefined'||document.getElementById('dosyaStili'))return;
@@ -24,7 +27,7 @@
   border-radius:.5em .5em 0 0;background:${D.sekme};color:var(--k-yazi);font-size:.9em;white-space:nowrap}
 .dsy-sekme span{overflow:hidden;text-overflow:ellipsis}
 /* inceleme (H2-e): sayaçlı sekmeler ve Kapat daralmaz (yazısı yandakinin üstüne binmesin); konu sekmelerinin başlığı kısalır */
-.oda .dsy button.dsy-raporSekme,.oda .dsy button.dsy-arsivSekme,.dsy-sekmeler .od-kapat{flex:none}
+.oda .dsy button.dsy-raporSekme,.oda .dsy button.dsy-arsivSekme,.oda .dsy button.dsy-kadroSekme,.dsy-sekmeler .od-kapat{flex:none}
 .dsy-gizli{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .oda .dsy button.dsy-sekme[aria-selected="true"]{background:${D.sayfa};font-weight:600;padding-bottom:.45em;position:relative;top:1px}
 .oda .dsy button.dsy-sekme.dsy-arsivSekme{margin-left:auto;background:${D.kapakKoyu};color:${D.sayfa};border-color:${D.kapakKoyu}}
@@ -32,6 +35,18 @@
 /* H2-d: Raporlar sekmesi Arşiv'in solunda; görülmemiş raporda ayrı işaret (konu sekmelerinin noktasıyla karışmaz) */
 .oda .dsy button.dsy-sekme.dsy-raporSekme{margin-left:auto}
 .oda .dsy button.dsy-raporSekme+button.dsy-arsivSekme{margin-left:0}
+/* S-c: Kadro sekmesi sağ grubun başıdır (Kadro · Raporlar · Arşiv) */
+.oda .dsy button.dsy-sekme.dsy-kadroSekme{margin-left:auto}
+.oda .dsy button.dsy-kadroSekme+button.dsy-raporSekme,.oda .dsy button.dsy-kadroSekme+button.dsy-arsivSekme{margin-left:0}
+/* S-c: kadro listesi tek geniş sayfa; tablo sabit düzenli, ad üç noktayla kısalır, tutar tek satır */
+.dsy-ic.dsy-icGenis{grid-template-columns:minmax(0,1fr)}
+.dsy-kadro{width:100%;table-layout:fixed;border-collapse:collapse;font-size:.88em}
+.dsy-kadro th{font-weight:600;color:var(--k-soluk);text-align:left;padding:.15em .3em;border-bottom:1px solid ${D.cizgi}}
+.dsy-kadro td{padding:.16em .3em;border-bottom:1px solid ${D.cizgi};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsy-kadro abbr{text-decoration:none;cursor:help}
+.dsy-kadro .dsy-s{text-align:right}
+.oda .dsy-kadro td button.od-baglanti{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.dsy-kadro tr.dsy-kadroEksik td{color:var(--k-soluk)}
 .dsy-yeniRapor{display:inline-block;width:.55em;height:.55em;border-radius:50%;background:var(--k-kirmizi);flex:none}
 /* raporda tutar tek satır (₺ alta düşmez) ve tam genişlikte; dar sayfada ad kayar. En düşük bakiyenin tarihi tutarın altında.
    Ödeme ve hareket satırı: üstte tarih ve tutar, altta tam genişlikte açıklama (büyük yazıda da okunur) */
@@ -90,17 +105,45 @@ function dosyaGorunumu(k,D,Y){
   /* sekmeler: açık konular sırayla; seçili konu kapandıysa (arşivden açıldıysa) kendi sekmesiyle görünür */
   const sekmeKimlik=D.sira.slice();
   if(!D.arsiv&&D.secili&&k.meseleler[D.secili]&&!sekmeKimlik.includes(D.secili))sekmeKimlik.push(D.secili);
-  const R=typeof maliRaporlari==='function'&&typeof maliRaporOkumasi==='function'?maliRaporlari(k):[],raporGor=!!D.rapor&&R.length>0;
-  const sekme=id=>{const m=k.meseleler[id],[ad,s]=meseleKategorisi(m),sec=!D.arsiv&&!raporGor&&id===D.secili;
+  /* S-c: Kadro görünümü öbürlerinin önündedir (seçiliyse rapor, arşiv ve konu sekmeleri seçili görünmez) */
+  const kadroGor=typeof kadroSatirlari==='function'&&kadroVar(k),kadroAcik=kadroGor&&!!D.kadro;
+  const R=typeof maliRaporlari==='function'&&typeof maliRaporOkumasi==='function'?maliRaporlari(k):[],raporGor=!kadroAcik&&!!D.rapor&&R.length>0;
+  const sekme=id=>{const m=k.meseleler[id],[ad,s]=meseleKategorisi(m),sec=!kadroAcik&&!D.arsiv&&!raporGor&&id===D.secili;
     return'<button type="button" class="dsy-sekme" role="tab" data-eylem="dosyaAc" data-mesele="'+id+'" data-gezinti="1" aria-selected="'+(sec?'true':'false')+'" title="'+yaz(m.baslik)+'">'+
       '<i class="od-kSimge" aria-hidden="true">'+yaz(s)+'</i><span>'+yaz(m.baslik)+'</span>'+(m.durum==='kararBekliyor'?'<i class="dsy-nokta" aria-label="cevap bekliyor"></i>':'')+'</button>';};
   let ic='<nav class="dsy-sekmeler" role="tablist" aria-label="Açık dosyalar">'+sekmeKimlik.map(sekme).join('')+
+    (kadroGor?'<button type="button" class="dsy-sekme dsy-kadroSekme" role="tab" data-eylem="kadroSekme" aria-selected="'+(kadroAcik?'true':'false')+'">Kadro</button>':'')+
     (R.length?'<button type="button" class="dsy-sekme dsy-raporSekme" role="tab" data-eylem="raporlar" aria-selected="'+(raporGor?'true':'false')+'">Raporlar ('+R.length+')'+
       (R.some(x=>!x.h.gorulen)?'<i class="dsy-yeniRapor" aria-hidden="true"></i><span class="dsy-gizli"> (yeni rapor)</span>':'')+'</button>':'')+
-    '<button type="button" class="dsy-sekme dsy-arsivSekme" role="tab" data-eylem="arsiv" aria-selected="'+(D.arsiv&&!raporGor?'true':'false')+'"'+(arsivL.length||D.arsiv?'':' disabled')+'>Arşiv ('+arsivL.length+')</button>'+
+    '<button type="button" class="dsy-sekme dsy-arsivSekme" role="tab" data-eylem="arsiv" aria-selected="'+(D.arsiv&&!raporGor&&!kadroAcik?'true':'false')+'"'+(arsivL.length||D.arsiv?'':' disabled')+'>Arşiv ('+arsivL.length+')</button>'+
     '<button type="button" class="od-kapat" data-eylem="kapat" title="Kapat (Esc)">Kapat ×</button></nav>';
-  let sol='',sag='';
-  if(raporGor){
+  let sol='',sag='',genis=null;
+  if(kadroAcik){
+    const biz=k.kisiler[k.baskanId].kulupId,Sat=kadroSatirlari(k,biz),O=D.seciliOyuncu&&Sat.some(x=>x.id===D.seciliOyuncu)?oyuncuDosyasi(k,D.seciliOyuncu):null;
+    const tl=Y.tlYazi||(t=>paraYazi(t).replace(/,\d\d ₺$/,' ₺')),sy=v=>v===null?'—':String(v);
+    /* listede sözleşme bitişi yılıyla (hepsi 31 Mayıs), dönüş günü kısa ayla; tam yazı oyuncu dosyasında */
+    const kisaGun=t=>{const [,a,g]=t.split('-').map(Number);return g+' '+TR_AYLAR[a-1].slice(0,3);},bitis=t=>t?t.slice(0,4):'—';
+    const durum=(s,c,kisa)=>s?'Sakat'+(s.belirsiz?' (belirsiz)':' · '+(kisa?kisaGun(s.donus):gunAyYazi(s.donus))):c?'Cezalı · '+c.mac+' maç':'—';
+    const MV={KL:'Kaleci',DEF:'Savunma',OS:'Orta saha',FV:'Forvet'},AY={sag:'Sağ',sol:'Sol',iki:'İki ayak'},ab=(a,t)=>'<abbr title="'+t+'">'+a+'</abbr>';
+    if(!O){
+      genis='<p class="dsy-kat">Kadro</p><h3 class="dsy-baslik">'+yaz(k.kulupler[biz].ad)+'</h3>'+
+        '<table class="dsy-kadro"><colgroup>'+['2.4em','auto','3em','2.7em','2.4em','3.4em','2.3em','3.3em','10.7em','4em','8.4em'].map(w=>'<col'+(w==='auto'?'':' style="width:'+w+'"')+'>').join('')+'</colgroup>'+
+        '<thead><tr><th>'+ab('No','Forma numarası')+'</th><th>Futbolcu</th><th>'+ab('Mvk','Mevki')+'</th><th class="dsy-s">Yaş</th><th class="dsy-s">'+ab('M','Bu sezon maç')+'</th><th class="dsy-s">'+ab('Dk','Bu sezon dakika')+'</th><th class="dsy-s">'+ab('G','Gol')+'</th><th class="dsy-s">'+ab('Kart','Sarı / kırmızı')+'</th><th>Durum</th><th>'+ab('Bitiş','Sözleşme bitişi')+'</th><th class="dsy-s">'+ab('Maaş','Aylık maaş')+'</th></tr></thead><tbody>'+
+        Sat.map(x=>'<tr'+(x.sakat||x.ceza?' class="dsy-kadroEksik"':'')+'><td>'+x.no+'</td><td><button type="button" class="od-baglanti" data-eylem="oyuncuAc" data-oyuncu="'+x.id+'" title="'+yaz(x.ad)+'">'+yaz(x.ad)+'</button></td><td>'+x.mevki+'</td><td class="dsy-s">'+x.yas+'</td>'+
+          '<td class="dsy-s">'+sy(x.mac)+'</td><td class="dsy-s">'+sy(x.dk)+'</td><td class="dsy-s">'+x.gol+'</td><td class="dsy-s">'+x.sari+'/'+x.kirmizi+'</td><td title="'+yaz(x.sakat?x.sakat.neden:x.ceza?x.ceza.neden:'')+'">'+yaz(durum(x.sakat,x.ceza,true))+'</td>'+
+          '<td>'+yaz(bitis(x.bitis))+'</td><td class="dsy-s dsy-tutar">'+(x.maas===null?'—':yaz(tl(x.maas)))+'</td></tr>').join('')+'</tbody></table>'+
+        '<p class="od-not">M ve Dk bu sezonun; devralınan haftalar TEST üretimi; eski kayıtta —.</p>';
+    }else{
+      const U=O.kunye,Z=O.sezon,Sz=O.sozlesme;
+      sol='<p><button type="button" class="od-baglanti" data-eylem="kadroDon">◂ Kadro</button></p><p class="dsy-kat">Oyuncu dosyası'+(Y.oyuncuTest?Y.oyuncuTest(D.seciliOyuncu):'')+'</p>'+
+        '<h3 class="dsy-baslik">'+yaz(U.ad)+'</h3><dl class="dsy-kunye"><dt>Forma</dt><dd>'+U.no+'</dd><dt>Mevki</dt><dd>'+yaz(MV[U.mevki]||U.mevki)+'</dd>'+
+        '<dt>Yaş</dt><dd>'+U.yas+(U.dogumTarihi?' <small>('+yaz(gunAyYazi(U.dogumTarihi)+' '+U.dogumTarihi.slice(0,4))+')</small>':'')+'</dd><dt>Ayak</dt><dd>'+yaz(AY[U.ayak]||'—')+'</dd><dt>Kulüp</dt><dd>'+yaz(U.kulupAd)+'</dd></dl>'+
+        '<h4>Bu sezon</h4><dl class="od-dl"><dt>Maç</dt><dd>'+sy(Z.mac)+'</dd><dt>Dakika</dt><dd>'+sy(Z.dk)+'</dd><dt>Gol</dt><dd>'+Z.gol+'</dd><dt>Sarı kart</dt><dd>'+Z.sari+'</dd><dt>Kırmızı kart</dt><dd>'+Z.kirmizi+'</dd></dl>'+
+        '<h4>Durum</h4><p>'+yaz(O.durum.sakat?durum(O.durum.sakat,null)+(O.durum.sakat.neden?' — '+O.durum.sakat.neden:''):O.durum.ceza?durum(null,O.durum.ceza)+(O.durum.ceza.neden?' — '+O.durum.ceza.neden:''):'Oynayabilir.')+'</p>'+
+        '<h4>Sözleşme</h4><p>'+(Sz?'Bitiş '+yaz(gunAyYazi(Sz.bitis)+' '+Sz.bitis.slice(0,4))+' · aylık <span class="dsy-tutar">'+yaz(tl(Sz.maas))+'</span>':'Sözleşme kaydı yok.')+'</p>';
+      sag='<h4>Notlar</h4>'+(O.notlar.length?'<ul class="dsy-notlar">'+O.notlar.map(n=>'<li class="dsy-not">'+yaz(n.metin)+'<small>— '+yaz(n.kaynak)+' · '+yaz(Y.tarihKisa(n.tarih))+'</small></li>').join('')+'</ul>':'<p class="dsy-bos">Henüz not yok.</p>');
+    }
+  }else if(raporGor){
     const sec=R.some(x=>x.i===D.seciliRapor)?D.seciliRapor:R[0].i,O=maliRaporOkumasi(k,k.haberler[sec]),eksi=t=>t<0?' class="od-eksi"':'',tl=t=>yaz(paraYazi(t));
     sol='<p class="dsy-kat">Raporlar</p><h3 class="dsy-baslik">Mali işler</h3><ul class="dsy-arsiv">'+R.map(x=>{const B=maliRaporOkumasi(k,x.h);
       return'<li><span>'+yaz(Y.tarihKisa(x.h.tarih))+'</span><span><button type="button" class="od-baglanti" data-eylem="raporAc" data-rapor="'+x.i+'"'+(x.i===sec?' aria-current="true"':'')+'>'+yaz(B.baslik)+(x.h.gorulen?'':'<span class="dsy-gizli"> (yeni)</span>')+'</button>'+
@@ -142,5 +185,6 @@ function dosyaGorunumu(k,D,Y){
       }
     }
   }
+  if(genis!==null)return'<div class="dsy" role="dialog" aria-label="Dosya">'+ic+'<div class="dsy-kapak"><div class="dsy-ic dsy-icGenis"><article class="dsy-sayfa dsy-genis">'+genis+'</article></div></div></div>';
   return'<div class="dsy" role="dialog" aria-label="Dosya">'+ic+'<div class="dsy-kapak"><div class="dsy-ic"><article class="dsy-sayfa dsy-sol">'+sol+'</article><article class="dsy-sayfa dsy-sag">'+sag+'</article></div></div></div>';
 }

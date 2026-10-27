@@ -501,7 +501,7 @@ async def bolum_3(tarayici, site, tum_hatalar):
       veri: { baslik: 'İsteğe bağlı deneme (çakışma)', zorunluluk: 'istege', sure: 60, aciklama: 'Gelmezsen kaçırılır.' } }); })""")
     KEZ_JS = "(karar) => OYUN.kariyer.gecmis.filter(g => g.tur === 'is' && g.sonuc && g.sonuc.karar === karar).map(g => g.sonuc.secim)"
     await pg.keyboard.press("Digit3")
-    dsy = await pg.evaluate("""() => ({ sekme: document.querySelectorAll('.dsy-sekme[role="tab"]:not(.dsy-arsivSekme):not(.dsy-raporSekme)').length, nokta: !!document.querySelector('.dsy-sekme:not(.dsy-raporSekme) .dsy-nokta'),
+    dsy = await pg.evaluate("""() => ({ sekme: document.querySelectorAll('.dsy-sekme[role="tab"]:not(.dsy-arsivSekme):not(.dsy-raporSekme):not(.dsy-kadroSekme)').length, nokta: !!document.querySelector('.dsy-sekme:not(.dsy-raporSekme) .dsy-nokta'),
       damga: (document.querySelector('.dsy-damga') || {}).textContent, notlar: [...document.querySelectorAll('.dsy-not small')].map(x => x.textContent.trim()),
       kart: document.querySelectorAll('.dsy .kk-kart').length, eski: document.querySelectorAll('.dsy .kk-cevap, .dsy .kk-gonder, .dsy .kk-onay, .dsy [data-eylem="sec"]').length,
       kenar: [...document.querySelectorAll('.dsy .kk-kart .kk-kenar')].map(b => b.querySelector('b').textContent).join(' / '),
@@ -515,7 +515,7 @@ async def bolum_3(tarayici, site, tum_hatalar):
     # H2-d: açılış raporu Raporlar sekmesinden bir kez okunur (görüldü), sonra konuya dönülür; konu kapanınca dosya yine son konuyu açar
     await pg.click(".dsy-raporSekme")
     rap = await pg.text_content(".dsy")
-    await pg.click('.dsy-sekme[role="tab"]:not(.dsy-arsivSekme):not(.dsy-raporSekme)')
+    await pg.click('.dsy-sekme[role="tab"]:not(.dsy-arsivSekme):not(.dsy-raporSekme):not(.dsy-kadroSekme)')
     denetle("H2-d: Raporlar sekmesi açılış özetini gösterir (müdür, kasadaki para); konu sekmesine dönülür, konunun kartı yerinde",
             "Haftalık mali özet" in rap and "Kasadaki para" in rap and await pg.query_selector(".dsy .kk-kart") is not None
             and await pg.evaluate("() => maliRaporlari(OYUN.kariyer).every(x => x.h.gorulen)"), rap[:100])
@@ -2029,7 +2029,7 @@ async def bolum_21(tarayici, site, tum_hatalar):
     await pg.wait_for_selector(".dsy", timeout=10000)
     sk = await pg.evaluate("""() => { const B = [...document.querySelectorAll('.dsy-sekmeler > button')], r = B.map(b => b.getBoundingClientRect());
       return { n: B.length, binme: r.slice(1).map((x, i) => Math.round(r[i].right - x.left)).filter(v => v > 1),
-        tasan: B.filter(b => b.matches('.dsy-raporSekme, .dsy-arsivSekme, .od-kapat') && b.scrollWidth > b.clientWidth + 1).map(b => b.textContent) }; }""")
+        tasan: B.filter(b => b.matches('.dsy-kadroSekme, .dsy-raporSekme, .dsy-arsivSekme, .od-kapat') && b.scrollWidth > b.clientWidth + 1).map(b => b.textContent) }; }""")
     await pg.screenshot(path=str(ARAC / "son-akis-21-sekmeler-dar.png"))
     denetle("İnceleme (H2-e): büyük yazı ve 800 px'te dosya şeridinde sekmeler üst üste binmez, Raporlar ve Arşiv yazısı kutusunda (konu başlıkları kısalır)",
             sk["n"] >= 5 and not sk["binme"] and not sk["tasan"], str(sk))
@@ -2236,6 +2236,101 @@ async def bolum_23(tarayici, site, tum_hatalar):
     await pg.context.close()
 
 
+async def bolum_22(tarayici, site, tum_hatalar):
+    """S-c: Dosya'da Kadro sekmesi ve oyuncu dosyası — Duraklat'ta açılır; 22 satır, gizli değer yok; taşma yok (normal ve büyük yazı, 1180 ve 800 px);
+    ada dokununca oyuncu dosyası; [ ve ] gezinir; Esc önce listeye, sonra kapatır; TEST kutusu yalnız Test bilgileri açıkken; sürüm 10 kaydında M/Dk —"""
+    print("\n22. Kadro sekmesi (S-c)")
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    d0 = await durum(pg)
+    async def kadro_ac():
+        await pg.keyboard.press("Digit3")
+        await pg.wait_for_selector(".dsy", timeout=10000)
+        await pg.click(".dsy-kadroSekme")
+        await pg.wait_for_selector(".dsy-kadro", timeout=10000)
+    await pg.click(".od-duraklat")
+    await kadro_ac()
+    L = await pg.evaluate("""() => { const k = OYUN.kariyer, S = kadroSatirlari(k, k.kisiler[k.baskanId].kulupId);
+      return { satir: document.querySelectorAll('.dsy-kadro tbody tr').length, beklenen: S.length,
+        adlar: [...document.querySelectorAll('.dsy-kadro tbody button[data-eylem="oyuncuAc"]')].map(b => b.textContent).join('|') === S.map(x => x.ad).join('|'),
+        kadro: document.querySelector('.dsy-kadroSekme').getAttribute('aria-selected'), rapor: document.querySelector('.dsy-raporSekme').getAttribute('aria-selected'),
+        test: !!document.querySelector('.dsy .od-testIpucu'), yazi: document.querySelector('.dsy-genis').textContent }; }""")
+    gizli = [w for w in ("Kondisyon", "Kon ", "Frm", "Tavan", "Ort", "bilgi", "ısrar") if w in L["yazi"]]
+    denetle("S-c: Duraklat'ta Dosya açılır; Kadro sekmesi 22 satırlık listeyi kadroSatirlari sırasıyla gösterir; Raporlar seçili değil; gizli değer ve TEST kutusu yok; zaman değişmedi",
+            L["satir"] == 22 == L["beklenen"] and L["adlar"] and L["kadro"] == "true" and L["rapor"] == "false" and not L["test"] and not gizli and await durum(pg) == d0,
+            str({a: L[a] for a in ("satir", "adlar", "kadro", "rapor", "test")}) + f" · {gizli}")
+    await pg.screenshot(path=str(ARAC / "son-akis-22-kadro.png"))
+    ilk = await pg.evaluate("() => document.querySelector('.dsy-kadro tbody button[data-eylem=\"oyuncuAc\"]').dataset.oyuncu")
+    await pg.click(f'.dsy-kadro [data-eylem="oyuncuAc"][data-oyuncu="{ilk}"]')
+    O = await pg.evaluate("""() => ({ ad: (document.querySelector('.dsy-baslik') || {}).textContent, kunye: !!document.querySelector('.dsy-kunye'), notlar: !!document.querySelector('.dsy-sag h4'),
+      don: !!document.querySelector('[data-eylem="kadroDon"]'), beklenen: OYUN.kariyer.oyuncular[%s].ad })""" % json.dumps(ilk))
+    denetle("S-c: ada dokununca oyuncu dosyası açılır (künye, Bu sezon, Notlar, “◂ Kadro”)", O["ad"] == O["beklenen"] and O["kunye"] and O["notlar"] and O["don"], str(O))
+    await pg.screenshot(path=str(ARAC / "son-akis-22-oyuncu.png"))
+    await pg.keyboard.press("BracketRight")
+    a2 = await pg.text_content(".dsy-baslik")
+    await pg.keyboard.press("BracketLeft")
+    a3 = await pg.text_content(".dsy-baslik")
+    S = await pg.evaluate("() => { const k = OYUN.kariyer; return kadroSatirlari(k, k.kisiler[k.baskanId].kulupId).map(x => x.ad); }")
+    denetle("S-c: oyuncu dosyasında ] sonraki, [ önceki oyuncu (liste sırası)", a2 == S[1] and a3 == S[0], f"{a2} · {a3}")
+    await pg.keyboard.press("Escape")
+    e1 = await pg.evaluate("() => ({ liste: !!document.querySelector('.dsy-kadro'), odak: document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.oyuncu || null : null })")
+    await pg.keyboard.press("Escape")
+    e2 = await pg.query_selector(".dsy") is None
+    denetle("S-c: Esc oyuncu dosyasından önce listeye döner (odak o oyuncuda), sonra dosyayı kapatır", e1["liste"] and e1["odak"] == ilk and e2, f"{e1} · {e2}")
+    await pg.click(".od-duraklat")
+    tasma = {}
+    for yazi, boyut in (("normal", (1180, 1000)), ("buyuk", (1180, 1000)), ("normal", (800, 600)), ("buyuk", (800, 600))):
+        await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
+        await pg.click('.od-nesne[data-panel="ayar"]')
+        await pg.click(f'[data-eylem="yazi"][data-yazi="{yazi}"]')
+        await pg.keyboard.press("Escape")
+        await kadro_ac()
+        liste = await pg.evaluate(TASMA_JS)
+        ad = await pg.evaluate("() => { const b = [...document.querySelectorAll('.dsy-kadro tbody tr td:nth-child(2)')]; return b.filter(x => x.scrollWidth > x.clientWidth + 1).length; }")
+        await pg.click('.dsy-kadro [data-eylem="oyuncuAc"]')
+        oy = await pg.evaluate(TASMA_JS)
+        tasma[f"{yazi}-{boyut[0]}"] = (liste, oy, ad)
+        await pg.keyboard.press("Escape")
+        await pg.keyboard.press("Escape")
+    denetle("S-c: Kadro listesi ve oyuncu dosyasında yatay taşma yok (normal ve büyük yazı, 1180 ve 800 px; uzun ad hücresinde kısalır)",
+            all(max(l) <= 0 and max(o) <= 0 for l, o, _ in tasma.values()), str(tasma))
+    await pg.set_viewport_size({"width": 1180, "height": 1000})
+    await pg.click('.od-nesne[data-panel="ayar"]')
+    await pg.click('[data-eylem="yazi"][data-yazi="normal"]')
+    await pg.keyboard.press("Escape")
+    # Test bilgileri geliştirmede varsayılan açıktır (js/oyun-oturumu.js): açıkken künyede TEST kutusu, kapatınca yok; listede hiç yok
+    test0 = await pg.evaluate("() => !!OYUN.ayarlar.test")
+    await kadro_ac()
+    tl = await pg.query_selector(".dsy .od-testIpucu") is None
+    await pg.click('.dsy-kadro [data-eylem="oyuncuAc"]')
+    tk = await pg.evaluate("() => { const t = document.querySelector('.dsy-sol .od-testIpucu'); return t ? t.textContent : null; }")
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("Escape")
+    await pg.click('.od-nesne[data-panel="ayar"]')
+    await pg.click('[data-eylem="ayarBolum"][data-bolum="gelistirici"]')
+    await pg.click('[data-eylem="test"]')
+    await pg.keyboard.press("Escape")
+    test1 = await pg.evaluate("() => !!OYUN.ayarlar.test")
+    await kadro_ac()
+    await pg.click('.dsy-kadro [data-eylem="oyuncuAc"]')
+    tk2 = await pg.query_selector(".dsy .od-testIpucu")
+    denetle("S-c: Test bilgileri açıkken oyuncu dosyasının künyesinde TEST kutusu (gizli değerler orada), kapatınca yok; listede hiç yok",
+            test0 and not test1 and tl and tk is not None and "kondisyon" in tk and tk2 is None, f"{test0}→{test1} · {str(tk)[:100]} · {tk2 is None}")
+    await pg.context.close()
+    # sürüm 10 kaydı (hafta 14) geçişle açılır: M ve Dk “—”
+    s10 = (ARAC / "ornekler" / "kayit-s10-hafta14.json").read_text(encoding="utf-8")
+    baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
+    await baglam.add_init_script("""(m => { if (!sessionStorage.getItem('__s10')) { sessionStorage.setItem('__s10', '1'); localStorage.setItem('chairman:oyun-1', m); } })(""" + json.dumps(s10) + ")")
+    pg = await baglam.new_page()
+    pg.on("pageerror", lambda e: tum_hatalar.append("Betik hatası: " + str(e)))
+    await pg.goto((site / "index.html").as_uri() + loca(""))
+    await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=30000)
+    await kadro_ac()
+    md = await pg.evaluate("() => [...document.querySelectorAll('.dsy-kadro tbody tr')].map(r => r.children[4].textContent + '/' + r.children[5].textContent)")
+    denetle("S-c: sürüm 10 kaydı geçişle açılır; Kadro'da M ve Dk “—”", len(md) >= 22 and all(x == "—/—" for x in md), str(md[:3]))
+    await pg.context.close()
+
+
 async def ana():
     try:
         from playwright.async_api import async_playwright
@@ -2298,6 +2393,8 @@ async def ana():
             await bolum_21(tarayici, site, tum_hatalar)
         if sec("23"):
             await bolum_23(tarayici, site, tum_hatalar)
+        if sec("22"):
+            await bolum_22(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

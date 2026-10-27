@@ -19,7 +19,7 @@
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const KOK=path.join(__dirname,'..');
 const OYUN_DOSYALARI=['js/ortak.js','js/stadyum-tarifleri.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/mesele.js','js/yonetim.js','js/olay.js','js/soz.js','js/mesajlar.js','js/gozlem.js',
-  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/hoca.js','js/mac-girdi.js','js/mac-sonuc.js','js/mac-okuma.js','js/lig-maclari.js','js/oyuncu-hafta.js','js/sozlesme.js','js/kulup-mali.js','js/transfer.js','js/icerik-p12.js','js/yazisma.js','js/mali-rapor.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
+  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/hoca.js','js/mac-girdi.js','js/mac-sonuc.js','js/mac-okuma.js','js/lig-maclari.js','js/oyuncu-hafta.js','js/sozlesme.js','js/kulup-mali.js','js/transfer.js','js/icerik-p12.js','js/yazisma.js','js/mali-rapor.js','js/kadro-dosyasi.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
 const DOSYALAR=OYUN_DOSYALARI.concat(['araclar/test-icerik.js','js/kariyer-ornek.js']);
 /* F1 (2026-10-23): bağlam sıradan bir genel nesnedir (araclar/motor-yukle.js gibi; vm.constants.DONT_CONTEXTIFY). Eski sarılı bağlam her genel ada
    erişimi bir ara katmandan geçirdiği için kariyer 16 kulüp ve 289 oyuncuya büyüyünce araç 1 sn'den 15 sn'ye çıkmıştı */
@@ -1105,6 +1105,52 @@ bolum('3.3b — rotasyon: hoca yorgun oyuncuyu dinlendirir, formu tartar (S-a; j
     Math.abs(hv({kon:100,form:50})-hv({kon:100,form:0})-T('HOCA_FORM_PAYI'))<1e-9&&Math.abs(hv({kon:100,form:0})-hv({kon:55,form:0})-T('HOCA_YORGUN')*30)<1e-9);
   OH.kapali=true;let Sk,S0k;try{Sk=T('hocaKadroSec')(k55,biz,tarih,tohum);S0k=T('hocaKadroSec')(k0,biz,tarih,tohum);}finally{OH.kapali=false;}
   denetle('Anahtar kapalıyken hoca kondisyonu ve formu görmez (eski zar): yorgun kopyada seçim eski seçimle aynı',metin(Sk)===metin(S0k));
+}
+
+bolum('3.11 — kadro ve oyuncu dosyası: gözlenebilir sayılar ve tarihli notlar (S-c; js/kadro-dosyasi.js; oyunun yüklediği dosyalar)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),biz='demirkapi',KS=T('kadroSatirlari'),ON=T('oyuncuNotlari'),OD=T('oyuncuDosyasi'),MS={KL:0,DEF:1,OS:2,FV:3};
+  const k0=T('kariyerBaslat')({tohum:7}),S0=KS(k0,biz),ANAHTAR='id,no,ad,mevki,yas,mac,dk,gol,sari,kirmizi,sakat,ceza,bitis,maas';
+  const sirali=S0.every((x,i)=>!i||MS[S0[i-1].mevki]<MS[x.mevki]||(S0[i-1].mevki===x.mevki&&S0[i-1].no<x.no));
+  denetle('Satır: anahtar kümesi tam liste (özellik, kondisyon, form, tavan, bilgi, ısrar yok); 22 satır, mevki sonra forma sırasıyla',
+    S0.length===22&&S0.every(x=>Object.keys(x).join()===ANAHTAR)&&sirali,`${S0.length} · ${Object.keys(S0[0]).join()}`);
+  const nail=S0.find(x=>x.ad==='Nail'),yusuf=S0.find(x=>x.ad==='Yusuf');
+  denetle('Devralınan M/Dk gol ve sarıyla tutarlı (gol > 0 → M ≥ 1; M ≥ sarı; Dk ≤ 90 × M); Nail sakat (dönüş tarihiyle), Yusuf cezalı; açılışta kırmızı yok',
+    S0.every(x=>Number.isInteger(x.mac)&&Number.isInteger(x.dk)&&x.dk<=90*x.mac&&x.mac>=x.sari&&(x.gol===0||x.mac>=1)&&x.kirmizi===0)
+    &&!!nail&&!!nail.sakat&&!!nail.sakat.donus&&!nail.ceza&&!!yusuf&&!!yusuf.ceza&&yusuf.ceza.mac>0,`${metin(nail&&nail.sakat)} · ${metin(yusuf&&yusuf.ceza)}`);
+  /* yapay hafta: bizim on birden bir oyuncu (cik) dışarıda bırakılır, yerine yedek girer; her takımda 60'ta değişiklik, 70'te kırmızı */
+  const f0=k0.fikstur.find(x=>x.hafta===13&&(x.ev===biz||x.konuk===biz)),bT=f0.ev===biz?0:1;
+  const R0=yapayHafta(T,k0),K=R0.Gi.kadro[bT],cik=K.oyuncular.slice(1,9).map(p=>p.id).find(id=>k0.kulupler[biz].kadro.ilk11.includes(id)),yer=K.yedekler[2].id;
+  const R=yapayHafta(T,k0,{duzelt:(s,id)=>{if(id===R0.Gi.macId)s.ilk11[bT]=s.ilk11[bT].map(x=>x===cik?yer:x);return s;}}),k1=R.k,S1=KS(k1,biz);
+  const once1=id=>S0.find(x=>x.id===id),sonra1=id=>S1.find(x=>x.id===id),fark=(id,m,d)=>sonra1(id).mac===once1(id).mac+m&&sonra1(id).dk===once1(id).dk+d;
+  const kl=K.oyuncular[0].id,giren=K.yedekler[1].id,kirmizi=K.oyuncular[9].id,cikan60=K.oyuncular[10].id;
+  denetle('Yapay haftadan sonra: 90 dk oynayan +1/+90, 60\'ta çıkan +1/+60, giren +1/+30, kırmızılı +1/+70 ve kırmızı 1; dışarıda bırakılan +0',
+    fark(kl,1,90)&&fark(cikan60,1,60)&&fark(giren,1,30)&&fark(kirmizi,1,70)&&sonra1(kirmizi).kirmizi===1&&fark(cik,0,0)&&sonra1(kirmizi).ceza&&sonra1(kirmizi).ceza.mac>0,
+    `${metin(once1(giren))} → ${metin(sonra1(giren))}`.slice(0,200));
+  const ss=JSON.parse(metin(k0));delete ss.oyuncular[S0[3].id].sozlesme;const Ss=KS(T('kariyerOlustur')(ss),biz).find(x=>x.id===S0[3].id);
+  const s10=(()=>{const d=T('bellekDeposu')();d.yaz('oyun-1',fs.readFileSync(path.join(KOK,'araclar','ornekler','kayit-s10-hafta14.json'),'utf8'));return T('kariyerYukle')(d,'oyun-1').kariyer;})();
+  const S10=KS(s10,biz);
+  denetle('Sözleşmesiz oyuncuda bitiş ve maaş null; sürüm 10 kaydında (geçişle açılır) M ve Dk null, gol ve sarı yerinde',
+    Ss.bitis===null&&Ss.maas===null&&S10.length>=22&&S10.every(x=>x.mac===null&&x.dk===null)&&S10.some(x=>x.gol>0),`${metin(Ss).slice(0,80)}`);
+  /* notlar: maç (kırmızı; on birde yoktu), antrenman (Salı balkonda yorgun) ve hocanın “Takım ne durumda?” cevabı (yorgun) */
+  const yc=JSON.parse(metin(k1));yc.oyuncular[cik].hal=Object.assign({},yc.oyuncular[cik].hal,{kon:60});
+  let k2=T('kariyerOlustur')(yc);
+  k2=KK(k2,x=>{T('zamanIlerlet')(x,T('anDakika')('2026-12-01',900)-T('simdikiAn')(x));}).kariyer;
+  k2=KK(k2,x=>T('gozlemBaslat')(x,120)).kariyer;
+  k2=KK(k2,x=>T('girisimBaslat')(x,'yaz.teknikDirektor.takim')).kariyer;
+  for(let i=0;i<8&&!k2.gecmis.some(g=>g.sonuc&&g.sonuc.yazisma&&g.sonuc.yazisma.konu==='takim');i++)k2=KK(k2,x=>T('duragaIlerle')(x)).kariyer;
+  const N=ON(k2,cik),hocaAd=k2.kisiler[k2.kulupler[biz].hocaId].ad,ana=Q=>N.filter(n=>n.kaynak===Q);
+  const yeniden=N.every((n,i)=>!i||T('anDakika')(N[i-1].tarih,N[i-1].dakika)>=T('anDakika')(n.tarih,n.dakika));
+  denetle('Notlar yeniden eskiye; kaynaklar hoca, antrenman ve maç (on birde yoktu); antrenman ve hoca notlarında rakam yok',
+    yeniden&&ana(hocaAd).length>=1&&ana('Antrenman (balkon)').length===1&&ana('Maç').some(n=>/on birde yoktu/.test(n.metin))
+    &&N[0].kaynak===hocaAd&&N[N.length-1].kaynak==='Maç'&&N.filter(n=>n.kaynak!=='Maç').every(n=>!/\d/.test(n.metin)),metin(N.map(n=>n.kaynak+': '+n.metin)).slice(0,260));
+  const Nk=ON(k2,kirmizi),tc=JSON.parse(metin(k2));tc.oyuncular[kirmizi].kulupId='akdeniz';
+  denetle('Maç notunda rakip maçtaki tarafından: kırmızı kart notu var; oyuncu başka kulübe geçse de eski maç notları aynı',
+    Nk.some(n=>n.kaynak==='Maç'&&/kırmızı/.test(n.metin))&&metin(ON(tc,kirmizi))===metin(Nk),metin(Nk.map(n=>n.metin)).slice(0,160));
+  const once2=metin(k2),O=OD(k2,cik),bos=JSON.parse(metin(k2));bos.gorevDurumu='kaybetti';
+  denetle('Oyuncu dosyası saf: okumak kariyeri değiştirmez; künye, bu sezon, durum ve sözleşme; gizli değer yok; görev dışında kadro yok',
+    metin(k2)===once2&&!!O&&O.kunye.ad===k2.oyuncular[cik].ad&&O.sezon.mac===sonra1(cik).mac&&!!O.sozlesme&&metin(O.notlar)===metin(N)
+    &&!/"(oz|hal|kon|form|tav|gel|bilgi|israr)"/.test(metin(O))&&!T('kadroVar')(bos)&&T('kadroVar')(k2)&&KS(k2,'yok_boyle').length===0,Object.keys(O||{}).join());
 }
 
 bolum('4.2 — transfer iskeleti: dönem, gelen teklif, hocanın isteği ve imza (G2-d/e; oyunun yüklediği dosyalar)');
