@@ -138,7 +138,20 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 ## 7. Arayüz ve bilgi
 
-### Bugünkü uygulama
+### Bugünkü uygulama (U, 2026-10-28)
+
+Kullanıcı kararı (2026-10-28): “O anda ne yapıyorsam yalnız onunla ilgileneyim” — odak modeli ve dokuz tercih ([araclar/plan/u-arastirma.md](araclar/plan/u-arastirma.md) §7). Uygulama ayrıntısı, sapmalar ve denetimler [araclar/plan/u-arayuz.md](araclar/plan/u-arayuz.md) “Durum”da; aşağıdaki eski notlar U'nun değiştirmediği yerler için geçerlidir, değiştirdiği yerlerde tarihseldir.
+
+- **Yazı ve renk (U0):** tek ölçek `STIL.kagit.yaziBoyu` (normal 1,5, büyük 1,8 cqw; bülten, maç telefonu, karar anı, maç sonu dahil). Gövde IBM Plex Sans, tablolar IBM Plex Mono, Jersey 10 yalnız büyük başlık ve sayıda. Amber yalnız ana eylem ve seçili; rozet dili: sayı mürekkep, karar kırmızı, “yeni” mavi nokta.
+- **Odak kabı (U1):** telefon, dosya, defter, gazete, ayarlar, karar paneli ve kadro (TEST) aynı kapta açılır: oda 7 px bulanık ve %33 karartılmış (bulanıklık yoksa %50 karartma), başlıkta ‹ Geri · başlık · Kapat ×, iş ortada büyük; belirme nesnenin yerinden 220 ms. Esc tek zincir: önizleme → onay → göz atma → işin iç adımı → kaynak → masaya bırak; ‹ Geri aynı yeri gösterir; Kapat ve perde masaya bırakır. Odakta İlerle yoktur; 3B oda donar. Balkonda yarım odak: perde yok, iş sağ yarıda (U6).
+- **Tek kart (U2):** üç yüz aynı hücrede (kenarlar kıpırdamaz); sürüklerken kart kabından çıkmaz (yumuşak sınır, eşik parmakta); üstte işin adı, sürüklerken cevabın adı, eşikte amber; bırakınca kartın yerinde damga (cevabın adı, mürekkep). Dar kapta boşluklar sıkışır, kenarlar yan yana kalır. Metin tavanı ve en çok iki kişinin görüşü.
+- **Telefon (U2):** Geri gideceği yerin adını yazar (‹ Mesajlar); konuşma başlığı iki satır; maç telefonunda yalnız Kapat ×, durum çubuğunda “Durdu · dk”, Esc bir adım geri; telefon açıkken “Duraklatıldı” etiketi görünmez.
+- **Bağlam ve göz atma (U3):** kartın yüzünde tek satırlık bağlam: görüşmede o günün defter şeridi (08–20; dolu saatler, antrenman taralı, önerilen an amber, çakışma kırmızı), bütçede kasa ve 90 günün en düşüğü, teklif ve sözleşmede künye. Bağlantıyla göz atma: iş solda, sağda yalnız okunan kâğıt. Masada “Sonra” yığını (cevap bekleyen kararlar, en çok üç). Konuşmada “Cevap ~3 saat sonra”, dosyada “Ayla'da · Perşembe'ye kadar”.
+- **Zaman ve geçişler (U4):** İlerle'de saat kolları döner, olanlar sırayla belirir (en çok 2,5 sn, atlanabilir), durak özeti kartıyla biter (kapaklar üstte). Stada git'te bilet, Odaya dön'de maç sonu kartı sayfanın ilk boyamasında; maç sonu kartı belirerek açılır; “Maç hesaplanıyor” öbür maçların sayısını yazar; basılan düğme iner; yeni gazete masaya iner.
+- **Gazete, bülten, maç (U5):** gazete sayfası künye, manşet, iki sütun, yan kutular; kutu manşet olmaz; eski sayı sararır; “Sayı n / N”. Bülten sekmeli (kendiliğinden dönmez), başlıkta iki takım. Maç şeridi kâğıt düğme dilinde. 2D maçta sol üstte köşe skoru (kısa adlar, skor, dakika).
+- **Oda kabuğu (U6):** masadaki nesneler sol sütun değil, masanın altında ince şerit; defterde “bugün” kurdelesi ve taze mürekkep; 3B defterde iş kadar ayraç, dosyada konu kadar kâğıt; kâğıtlarda hafif doku; ayarlar küçük kart.
+
+### Bugünkü uygulama (U'dan önce; tarihsel notlar)
 
 **Ajanda yalnız gösterir (2.8Q, kullanıcı kararı 2026-10-03 ikinci paket):** Açık defterde eylem düğmesi yoktur (yalnız hafta okları, günler, kayıt seçimi ve Kapat). Defterde bugünün bekleyen bir kaydı seçiliyken eylemleri alt şerittedir: randevuda “Katıl ▸” (ana düğme) ve “Ertele → gün”, konuya bağlıysa “İlgili dosya ▸”; kaçırılacak ya da cevapsız kalacak işler şeritte kırmızı yazılır ve onay istenir; dosyalı kararda “Karar ver ▸” dosyayı açar; konuya bağlı olmayan kararda “Karar ver ▸” sağda iki cevaplı karar panelini açar, cevaptan ya da Kapat'tan sonra deftere dönülür; maç kaydında “Stada git ▸”. Seçili kayıt yoksa şerit eskisi gibidir (maç günü Stada git, yoksa İlerle). Kartta yalnız bilgi ve “alttaki şerit” ipucu kalır.
 

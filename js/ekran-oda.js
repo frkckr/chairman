@@ -248,15 +248,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
     return'.gz-gezinti [data-yon="'+(geri?(g?'geri':'ileri'):(i?'ileri':'geri'))+'"]';};
   function gazetePaneli(){
     const t=gazeteGosterilen(),G=t&&typeof gazeteSayisi==='function'?gazeteSayisi(k,t):null;
-    const konu=m=>m&&k.meseleler[m]?'<p class="od-not">Konu: <button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+m+'">'+yaz(k.meseleler[m].baslik)+'</button></p>':'';
+    const konu=m=>m&&k.meseleler[m]?'<p class="od-not gz-konu">Konu: <button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+m+'">'+yaz(k.meseleler[m].baslik)+'</button></p>':'';
     let ic='';
-    if(G){const H=G.haberler.slice(1),Kt=H.filter(h=>h.kutu),D=H.filter(h=>!h.kutu),once=tarihEkle(G.tarih,-1),sonra=tarihEkle(G.tarih,1),son=izler().sayi;
-      ic='<article class="od-kutu od-gazete gz-sayi'+(G.kalin?' gz-kalin':G.bos?' gz-bos':' gz-ince')+'" aria-label="Gazete"><h4 class="gz-kunye">'+yaz(GAZETE_TEST.ad)+' <small>Sayı '+G.no+' · '+yaz(tarihYazi(G.tarih))+'</small></h4>'+
-        '<p class="od-manset gz-manset">'+yaz(G.manset.metin)+'</p>'+konu(G.manset.meseleId)+
-        D.map(h=>'<p class="gz-haber">'+yaz(h.metin)+'</p>'+konu(h.meseleId)).join('')+
-        Kt.map(h=>'<p class="od-not gz-kutu">'+yaz(h.metin)+'</p>').join('')+
-        '<div class="od-dugmeler gz-gezinti"><button type="button" data-eylem="gazeteSayi" data-yon="geri" data-tarih="'+once+'"'+(gazeteSayisi(k,once)?'':' disabled')+'>◂ Önceki sayı</button>'+
-        '<button type="button" data-eylem="gazeteSayi" data-yon="ileri" data-tarih="'+sonra+'"'+(son&&sonra<=son?'':' disabled')+'>Sonraki sayı ▸</button></div></article>';}
+    /* U5: gazete sayfası (js/ekran-gazete.js): künye, manşet, sütunlar, yan kutular, eski sayıda sararma, “Sayı n / N” */
+    if(G){const son=izler().sayi,sonG=son?gazeteSayisi(k,son):null;
+      ic=gazeteGorunumu(k,G,{yaz,tarihYazi,konu,son,sonNo:sonG?sonG.no:null,onceVar:!!gazeteSayisi(k,tarihEkle(G.tarih,-1)),sonraVar:!!son&&tarihEkle(G.tarih,1)<=son});}
     const H=(k.haberler||[]).filter(h=>h.tur!=='rapor'&&(h.tur!=='gazete'||!G)).slice().reverse();   /* H2-d: rapor dosyadadır; S-e: gazete kayıtları sayının içinde (eskileri geçmişten kurulur) */
     if(!G&&!H.length)return'<p class="od-not">Masada gazete yok.</p>';
     return ic+(H.length?(G?'<h4>Masadaki notlar</h4>':'')+
@@ -453,7 +449,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const [,a,g]=parca(k.tarih);
     const iz=izler(),dk=k.gunIciDakika;
     if(balkonVar){const p=typeof antrenmanPenceresi==='function'?antrenmanPenceresi(k,k.tarih):null;balkonDurum({antrenman:!!p&&dk>=p.bas&&dk<p.bit,dakika:dk});}
-    odaDurum({haber:haberSayisi(),dosya:acikMeseleler().length>0||raporlar().length>0||kadroAcilir(),gun:String(g),ay:AYLAR[a-1].slice(0,3),gunAdi:gunAdi(k.tarih).slice(0,3),dakika:dk,
+    kap.dataset.yer=balkonVar?ODA.yer:'masa';   /* U6: balkonda yarım odak (CSS) */
+    odaDurum({haber:haberSayisi(),isler:bekleyenIsSayisi(),dosyaSayi:acikMeseleler().length,dosya:acikMeseleler().length>0||raporlar().length>0||kadroAcilir(),gun:String(g),ay:AYLAR[a-1].slice(0,3),gunAdi:gunAdi(k.tarih).slice(0,3),dakika:dk,
       gazete:!!iz.sayi||!!iz.gazete||!!iz.kart,gazeteYeni:iz.gazeteYeni||iz.yeniHaber>0,kart:!!iz.kart,iskele:iz.iskele,panoNotu:iz.panoNotu});
     odaOdak(acik in NESNE?acik:null);
     if(typeof odaPanel==='function')odaPanel(!!acik);   /* U1: odak açıkken 3B oda kamera yerleşince donar (js/oda.js odaDondur) */

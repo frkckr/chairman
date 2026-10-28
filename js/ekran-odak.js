@@ -64,20 +64,7 @@
 @keyframes odkPerde{from{opacity:0}to{opacity:1}}
 @keyframes odkPerdeKapan{from{opacity:1}to{opacity:0}}
 @media (prefers-reduced-motion:reduce){
-  /* U3 göz atma: iş solda daralır, sağda okunan kâğıt */
-.oda section.odk[data-goz]{left:${O.goz.kenar}%}
-.oda section.odk[data-goz]:not([data-boy="cihaz"]){--odk-en:${O.goz.is}%}
-.oda aside.odk-goz{position:absolute;z-index:2;top:2.5em;bottom:5.3em;right:${O.goz.kenar}%;width:${O.goz.yan}%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:.35em;
-}
-.oda aside.odk-goz.odk-gozBelir{animation:odkGoz ${O.sure.belir}ms cubic-bezier(.2,.7,.3,1) both}
-.oda aside.odk-goz[data-boy="cihaz"]{width:calc(100% - ${O.boy.cihaz}% - ${3*O.goz.kenar}%)}
-.oda .odk-gozUst{display:flex;align-items:baseline;justify-content:space-between;gap:.6em;min-height:2.1em;color:var(--k-serit);text-shadow:0 .08em .3em rgba(0,0,0,.45)}
-.oda .odk-gozUst h4{margin:0;font-weight:600;font-size:1.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.oda .odk-gozUst small{flex:none;font-size:.85em;opacity:.9}
-.oda .odk-gozIcerik{min-height:0;align-self:start;max-height:100%;overflow-y:auto;padding:.6em .8em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-mavi);box-shadow:.35em .45em 0 var(--k-golge)}
-@keyframes odkGoz{from{opacity:0;transform:translateX(1.5em)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.oda aside.odk-goz.odk-gozBelir{animation:odkPerde ${O.sure.azalt}ms linear both}}
-.oda .odk.odk-belir{animation:odkPerde ${O.sure.azalt}ms linear both}
+  .oda .odk.odk-belir{animation:odkPerde ${O.sure.azalt}ms linear both}
   .oda .odk.odk-cikis{animation:odkPerdeKapan ${O.sure.azalt}ms linear both}}
 `;
   document.head.appendChild(st);

@@ -924,13 +924,17 @@ async def bolum_14(tarayici, site, tum_hatalar):
     denetle("3 sn sonra: Maça geç kapalı, çubuk kısmen dolu (etkin süre), maç ve tören ilerlemedi",
             a["kapali"] and 2 < a["gecen"] < 9 and 2 <= a["cubuk"] <= 8 and 15 < a["en"] < 90 and a["faz"] == "isinma" and a["t"] == 0, str(a))
     await pg.wait_for_function("ON_EKRAN.programDurumu().gecen >= 5.3", timeout=20000)
+    s1 = await pg.evaluate(SAYFA_JS)
+    ust = await pg.text_content("#onEkran .prg-ustAd b")
+    denetle("U5: bülten kendiliğinden dönmez (5 sn sonra Kadrolar açık); başlıkta iki takım", s1 == [True, False] and ust == "Demirkapı SK – Akdeniz FK", f"{s1} · {ust}")
+    await pg.click('.prg-gosterge [data-sayfa="1"]')
     s2 = await pg.evaluate(SAYFA_JS)
     await pg.screenshot(path=str(ARAC / "son-akis-14-program-lig.png"))
     await pg.keyboard.press("KeyP")
     p1 = await pg.evaluate(PROGRAM_JS)
     await pg.wait_for_timeout(2500)
     p2 = await pg.evaluate(PROGRAM_JS)
-    denetle("5 sn etkin süreden sonra sayfa 2 (Lig) açıldı; Duraklat hazırlık çubuğunu ve sayfa dönüşünü dondurdu; düğme kapalı ve 'Duraklatıldı' yazıyor",
+    denetle("Lig sekmesi sayfa 2'yi açtı (U5: sekmeyle); Duraklat hazırlık çubuğunu dondurdu, sayfa yerinde; düğme kapalı ve 'Duraklatıldı' yazıyor",
             s2 == [False, True] and await pg.evaluate(SAYFA_JS) == [False, True] and p2["sayfa"] == 1
             and abs(p2["gecen"] - p1["gecen"]) < 0.06 and abs(p2["en"] - p1["en"]) < 1 and p2["kapali"] and "Duraklatıldı" in await pg.text_content(".prg-durum"), f"{p1['gecen']:.2f} → {p2['gecen']:.2f}")
     await pg.click('.prg-gosterge [data-sayfa="0"]')

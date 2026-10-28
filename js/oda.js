@@ -155,7 +155,9 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
   {const N=nesne('dosya',0.6,-0.72,-0.22,0.34,0.06,0.42);
    const kapak=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.022,0.38),oLAM({color:OD.dosya}));kapak.position.y=0.011;N.g.add(kapak);
    const kagit=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.008,0.36),oLAM({color:OD.kagit}));kagit.position.set(0.012,0.006,0.006);N.g.add(kagit);
-   const etiket=new THREE.Mesh(new THREE.PlaneGeometry(0.17,0.07),oLAM({color:OD.dosyaEtiket}));etiket.rotation.x=-Math.PI/2;etiket.position.set(0,0.0225,-0.08);N.g.add(etiket);}
+   const etiket=new THREE.Mesh(new THREE.PlaneGeometry(0.17,0.07),oLAM({color:OD.dosyaEtiket}));etiket.rotation.x=-Math.PI/2;etiket.position.set(0,0.0225,-0.08);N.g.add(etiket);
+   /* U6 (envanter 16): açık konu arttıkça dosyanın altında taşan kâğıtlar (en çok üç; yalnız sayı, mevcut veriden) */
+   N.yigin=[0,1,2].map(i=>{const y=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.006,0.36),oLAM({color:OD.kagit}));y.position.set(0.02+i*0.012,-0.002-i*0.006,0.015+i*0.01);y.rotation.y=(i%2?-1:1)*0.05;y.visible=false;N.g.add(y);return y;});}
   /* gazete: yalnız çıkmış bir haber ya da gelen bir teşekkür varken masadadır; yeni haberde amber ışık */
   {const N=nesne('gazete',-0.6,-1.0,0.18,0.36,0.06,0.28),cv=mk(32,24),g=cv.getContext('2d');
    g.fillStyle=OD.gazete;g.fillRect(0,0,32,24);g.fillStyle=OD.defterYazi;g.fillRect(2,2,28,3);g.fillRect(2,7,18,2);for(let y=11;y<22;y+=2){g.fillRect(2,y,13,1);g.fillRect(17,y,13,1);}g.fillStyle=OD.defterSerit;g.fillRect(22,7,8,2);
@@ -206,7 +208,11 @@ function odaDurum(d){
   {const g=N.ajanda.cv.getContext('2d');g.fillStyle=OD.defter;g.fillRect(0,0,96,64);g.fillStyle=OD.defterCizgi;g.fillRect(47,0,2,64);
    for(let y=14;y<60;y+=8){g.fillRect(54,y,36,1);}g.fillStyle=OD.defterSerit;g.fillRect(4,4,39,15);
    ctxText(g,D.ay||'',(47-textW(D.ay||'',2))>>1,5,'#f2ede2',2);ctxText(g,D.gun||'',(47-textW(D.gun||'',4))>>1,22,OD.defterYazi,4);
-   ctxText(g,D.gunAdi||'',(47-textW(D.gunAdi||'',2))>>1,49,OD.defterYazi,2);N.ajanda.doku.needsUpdate=true;}
+   ctxText(g,D.gunAdi||'',(47-textW(D.gunAdi||'',2))>>1,49,OD.defterYazi,2);
+   /* U6 (envanter 16): bugünün bekleyen işi kadar ayraç (en çok dört) sağ sayfanın üstünde */
+   for(let i=0;i<Math.min(4,D.isler|0);i++){g.fillStyle=i%2?'#d79a2a':OD.defterSerit;g.fillRect(56+i*9,0,6,7);}
+   N.ajanda.doku.needsUpdate=true;}
+  if(N.dosya.yigin)N.dosya.yigin.forEach((y,i)=>{y.visible=i<Math.min(3,(D.dosyaSayi|0)-1);});
   const dk=D.dakika||0,I=odaGunIsigi(dk);
   ODA.akrep.rotation.z=-((dk/60)%12)/12*Math.PI*2;ODA.yelkovan.rotation.z=-(dk%60)/60*Math.PI*2;
   ODA.isik.gunes.intensity=I.guc;ODA.isik.gunes.color.copy(I.renk);ODA.isik.ortam.intensity=OD.ortam.guc*(0.55+0.6*I.guc);

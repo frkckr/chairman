@@ -114,8 +114,12 @@ with sync_playwright() as p:
     c.close()
     # 6
     c, pg = ac("?ekran=mac&tohum=5", kare=True)
+    s0 = pg.evaluate("() => { const E = document.getElementById('macSkor'); return E ? E.hidden : null; }")
     pg.click("#btnMacaGec"); pg.wait_for_function("mac.phase === 'play' && mac.phaseT > 3", timeout=240000)
     pg.wait_for_timeout(1500); v = pg.evaluate(GORUNTU)
+    sk = pg.evaluate("() => { const E = document.getElementById('macSkor'); return E ? { gizli: E.hidden, metin: E.textContent, skor: mac.score.join('–') } : null; }")
+    yaz("U5: 2D maçta sol üst köşede skor etiketi (kısa adlar, skor, dakika); maç öncesinde gizli",
+        s0 is True and bool(sk) and not sk["gizli"] and sk["skor"] in sk["metin"] and "'" in sk["metin"], f"{s0} · {sk}")
     pg.evaluate(AKTOR_SURE_JS); pg.wait_for_timeout(4000); ks = pg.evaluate(KARE_OKU_JS)
     print(f"  Kare süresi (bilgi; 2D oyunda, rAF geri çağırması, ms): ortanca {ks['o']} · p95 {ks['p95']} · {ks['n']} kare · aktör güncellemesi kare başına {ks['akt']} ms")
     pg.evaluate("""() => { const b = mac.ball, s = b.sahip || mac.teams[0][9], q = mac.teams[1 - s.team].find(x => x.oyunda && x.rol !== 'GK'); pulOlay('kart', {p: q, renk: 'kirmizi'}); }""")

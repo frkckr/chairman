@@ -1517,16 +1517,17 @@ bolum('5.2 — günlük gazete: her sabah 08:00, kayıttan kurulan sayı (S-e; j
   const hafta=k=>{cur=k;return yapayHafta(T,k,{duzelt:(s,id)=>{const p=cur.oyuncular[s.ilk11[0][8]];s.skor=[1,0];s.goller=[{takim:0,no:p.no,ad:p.ad,dakika:30}];return s;}}).k;};
   const k0=T('kariyerBaslat')({tohum:7}),G0=GS(k0,'2026-11-23');
   const k759=ileri(k0,'2026-11-24',479),k800=ileri(k759,'2026-11-24',480);
-  denetle('Sayının saati: açılış sayısı (23 Kasım) ince ve yeni; 24 Kasım 07:59\'da son sayı dünün, 08:00\'de bugünün; arşiv başından önce ve gelecekte sayı yok',
-    GT(k0)==='2026-11-23'&&!!G0&&G0.ince&&!G0.kalin&&G0.no===1&&IZ(k0).gazeteYeni&&IZ(k0).sayi==='2026-11-23'&&GT(k759)==='2026-11-23'&&GT(k800)==='2026-11-24'
+  denetle('Sayının saati: açılış sayısı (23 Kasım; U5: yalnız Pazartesi tablosu, kısa) yeni; 24 Kasım 07:59\'da son sayı dünün, 08:00\'de bugünün; arşiv başından önce ve gelecekte sayı yok',
+    GT(k0)==='2026-11-23'&&!!G0&&G0.kisa&&G0.manset.anahtar==='gz.kisa'&&!G0.kalin&&G0.no===1&&IZ(k0).gazeteYeni&&IZ(k0).sayi==='2026-11-23'&&GT(k759)==='2026-11-23'&&GT(k800)==='2026-11-24'
     &&GS(k0,'2026-11-22')===null&&GS(k0,'2026-11-24')===null,`${an(G0)} · ${GT(k759)} → ${GT(k800)}`);
   const k28=hafta(k0),k29=ileri(k28,'2026-11-29',480),k5=ileri(k29,'2026-12-05',480);
   const G28a=GS(ileri(k0,'2026-11-28',480),'2026-11-28'),G28=GS(k5,'2026-11-28');
   denetle('Maç günü sayısı (28 Kasım, manşet “Bugün …”) maç oynandıktan sonra arşivde aynı',/^TEST: Bugün /.test(G28a.manset.metin)&&metin(G28)===metin(G28a),G28.manset.metin);
   const G29=GS(k5,'2026-11-29'),G30=GS(k5,'2026-11-30'),G1=GS(k5,'2026-12-01'),Gy=['2026-12-02','2026-12-03','2026-12-04'].map(t=>GS(k5,t)),G5=GS(k5,'2026-12-05');
-  denetle('Takvim: 29 Kasım kalın (manşet bizim maç; öbür sonuçlar, tablo, golcüler); 30 Kasım ince (Pazartesi tablosu); 1 Aralık boş (“TEST: bugün haber yok”); 2–4 Aralık yaklaşan maç; 5 Aralık manşeti “Bugün …”',
+  denetle('Takvim: 29 Kasım kalın (manşet bizim maç; öbür sonuçlar, tablo, golcüler; kutular sonda); 30 Kasım kısa (U5: Pazartesi tablosu kutu, manşet olmaz); 1 Aralık boş (“TEST: bugün haber yok”); 2–4 Aralık yaklaşan maç; 5 Aralık manşeti “Bugün …”',
     G29.kalin&&G29.manset.anahtar==='gz.mac'&&['gz.sonuclar','gz.tablo','gz.golcu'].every(a=>an(G29).includes(a))&&G29.haberler.length<=8
-    &&G30.ince&&an(G30).includes('gz.tablo')&&G1.bos&&G1.haberler.length===1&&/bugün haber yok/.test(G1.manset.metin)
+    &&G29.haberler.findIndex(h=>h.kutu)>=G29.haberler.filter(h=>!h.kutu).length&&G29.haberler.every(h=>typeof h.etiket==='string')&&G29.haberler[0].etiket==='Maç'
+    &&G30.kisa&&!G30.ince&&G30.manset.anahtar==='gz.kisa'&&an(G30).includes('gz.tablo')&&G1.bos&&G1.haberler.length===1&&/bugün haber yok/.test(G1.manset.metin)
     &&Gy.every(G=>G&&an(G).includes('gz.yaklasan'))&&/^TEST: Bugün /.test(G5.manset.metin)&&!G5.kalin,
     `${an(G29).join(',')} · ${an(G30)} · ${G1.manset.metin} · ${G5.manset.metin}`);
   /* içerik paketleri: hoca değişimi ve transfer ertesi sabahın sayısında (geçmişten; haber kaydı yok) */

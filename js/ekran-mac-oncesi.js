@@ -1,7 +1,9 @@
 /* ============ Chairman — maç öncesi ekranı (yol haritası 2.8E, 2.8J, 2.8N, 2.8S) ============
    Görüntü katmanı: veriyi bu sayfanın maç gününden okur (F1-b, 2026-10-23: js/mac-gunu.js MAC_GUNU — kariyerden açılan maçta fikstür, kariyer
    kadroları, türetilen puan durumu ve son maçlar; geliştirme adreslerinde js/lig.js ve js/kadrolar.js). Açık kâğıt tonlarında tek ekrandır (2.8J); 2.8S'den beri (kullanıcı kararı
-   2026-10-03 ikinci paket) iki sayfası vardır ve STIL.program.sayfaSn (5 sn) etkin sürede bir kendiliğinden döner:
+   2026-10-03 ikinci paket) iki sayfası vardır. U5 (kullanıcı onayı 2026-10-28, u-arayuz §4.3): sayfalar kendiliğinden dönmez; Kadrolar açılışta,
+   Lig sekmeyle (okurken tablo kaybolmaz). Üstte iki takımın adı, altında lig · hafta · gün ve saat · stat; ortada beklenti yuvası boş
+   (Y'de asistanın maç beklentisi gelir). Renkler kâğıt dilinden (--k-*, STIL.kagit; --m-* aynı değerlerle kalır):
      Üst satır  lig · hafta · gün ve saat · stat; sağda sayfa göstergesi (tıklanınca o sayfa açılır, hazırlık sayacı sıfırlanmaz).
      Sayfa 1    Kadrolar: iki büyük arma ve takım adı (sıra ve puan); her takımın ilk 11'i küçük sahada dizilişe göre forma renkli numaralar ve
                 adlar (kaptan işaretli), teknik direktörün adı (diziliş hocanındır), altında sakatlar ve cezalılar (neden, dönüş). 2.8N'deki
@@ -24,6 +26,7 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
 {
   const E=$('onEkran'),M=STIL.program.renk,G=MAC_GUNU,B=G.bulten,TABLO=B.tablo;
   for(const k in M)E.style.setProperty('--m-'+k,M[k]);
+  for(const k in STIL.kagit)if(typeof STIL.kagit[k]==='string')E.style.setProperty('--k-'+k,STIL.kagit[k]);   /* U5: ortak kâğıt dili */
   const yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   const takimAdi=id=>B.adlar[id]||id;
   const sira=id=>TABLO.findIndex(t=>t.id===id)+1;
@@ -63,11 +66,11 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
   const sonTaraf=T=>'<section class="prg-taraf"><h3>'+yaz(takimAdi(T.id))+' <small>Son 5 maç</small></h3>'+sonMaclar(T)+'</section>';
   const SAYFA_ADI=['Kadrolar','Lig'];
   E.innerHTML='<div class="prg-kart">'+
-    '<header class="prg-ust"><span>'+yaz(B.ligAd+' · '+B.hafta+'. hafta · '+B.gun+' '+B.saat+' · '+STAT.ad)+'</span>'+
+    '<header class="prg-ust"><span class="prg-ustAd"><b>'+yaz(takimAdi(TARAF[0].id)+' – '+takimAdi(TARAF[1].id))+'</b><small>'+yaz(B.ligAd+' · '+B.hafta+'. hafta · '+B.gun+' '+B.saat+' · '+STAT.ad)+'</small></span>'+
       '<span class="prg-gosterge" role="tablist" aria-label="Sayfalar">'+SAYFA_ADI.map((a,i)=>'<button type="button" role="tab" data-sayfa="'+i+'" aria-selected="'+(i?'false':'true')+'">'+(i+1)+' · '+a+'</button>').join('')+'</span>'+
       '<b>Maç günü</b></header>'+
     '<div class="prg-yaprak">'+
-      '<div class="prg-govde prg-sayfa" data-sayfa="0">'+taraf(TARAF[0])+'<div class="prg-vs"><b>'+yaz(B.saat)+'</b><span>'+yaz(B.gun)+'</span></div>'+taraf(TARAF[1])+'</div>'+
+      '<div class="prg-govde prg-sayfa" data-sayfa="0">'+taraf(TARAF[0])+'<div class="prg-vs"><b>'+yaz(B.saat)+'</b><span>'+yaz(B.gun)+'</span><div class="prg-beklenti" data-yuva="beklenti" hidden></div></div>'+taraf(TARAF[1])+'</div>'+
       '<div class="prg-lig prg-sayfa" data-sayfa="1" aria-hidden="true"><section class="prg-taraf"><h3>Puan durumu <small>'+yaz(B.sezonAdi+' · '+B.oynanan+' hafta')+'</small></h3>'+tablo+'</section>'+
         '<div class="prg-sonlar">'+sonTaraf(TARAF[0])+sonTaraf(TARAF[1])+'</div></div>'+
     '</div>'+
@@ -80,13 +83,13 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
   /* hazırlık: en az hazirlikSn etkin süre + gerçek kaynak hazırlığı; ikisi de olmadan geçiş yok */
   const baskanDugmeleri=$('baskanDugmeleri'),btnIlerle=$('btnIlerle'),btnAtla=$('btnBeklemedenGec'),durumP=E.querySelector('.prg-durum'),cubuk=E.querySelector('.prg-cubuk'),dolgu=cubuk.firstChild;
   const P={acik:false,gecen:0,son:0,yazi:'',kaydir:0,sayfa:-1,atla:false,fontlar:!(document.fonts&&document.fonts.ready)};
-  /* gösterilen sayfa: hazırlık sayacından (etkin süre); göstergeye tıklamak yalnız kaydırmayı değiştirir */
+  /* gösterilen sayfa: U5'ten beri yalnız sekmeyle (kendiliğinden dönmez); P.kaydir seçili sekmedir */
   const sayfalar=[...E.querySelectorAll('.prg-sayfa')],gosterge=[...E.querySelectorAll('.prg-gosterge button')];
-  const sayfaNo=()=>(Math.floor(P.gecen/STIL.program.sayfaSn)+P.kaydir)%2;
+  const sayfaNo=()=>P.kaydir%2;
   function sayfaYaz(){const n=sayfaNo();if(n===P.sayfa)return;P.sayfa=n;
     sayfalar.forEach((s,i)=>{s.classList.toggle('prg-gizli',i!==n);s.setAttribute('aria-hidden',i===n?'false':'true');});
     gosterge.forEach((b,i)=>b.setAttribute('aria-selected',i===n?'true':'false'));}
-  for(const b of gosterge)b.onclick=()=>{P.kaydir=((Number(b.dataset.sayfa)-Math.floor(P.gecen/STIL.program.sayfaSn))%2+2)%2;sayfaYaz();};
+  for(const b of gosterge)b.onclick=()=>{P.kaydir=Number(b.dataset.sayfa)||0;sayfaYaz();};
   if(!P.fontlar)document.fonts.ready.then(()=>{P.fontlar=true;},()=>{P.fontlar=true;});
   const kaynakHazir=()=>P.fontlar&&ON_EKRAN.cizildi;
   const kaynakHatasi=()=>typeof renderer!=='undefined'&&!renderer?'Maç sahnesi çizilemedi: bu tarayıcıda WebGL açılamadı.':null;

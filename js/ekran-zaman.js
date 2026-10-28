@@ -15,7 +15,7 @@ const ZAMAN_SAHNE={acik:false,evre:null,o:null,t0:0,sure:0,gorunen:-1,saatDk:nul
   if(typeof document==='undefined'||document.getElementById('zamanStili'))return;
   const st=document.createElement('style');st.id='zamanStili';
   st.textContent=`
-.oda .zm-sahne{position:absolute;z-index:4;left:50%;bottom:5.7em;transform:translateX(-50%);width:min(46%,30em);max-height:62%;overflow:hidden;display:grid;gap:.35em;
+.oda .zm-sahne{position:absolute;z-index:4;left:50%;bottom:8.6em;transform:translateX(-50%);width:min(46%,30em);max-height:62%;overflow:hidden;display:grid;gap:.35em;
   padding:.55em .85em .5em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-top:.25em solid var(--k-mavi);box-shadow:.25em .35em 0 var(--k-golge);color:var(--k-yazi)}
 .oda .zm-sahne p,.oda .zm-sahne h4,.oda .zm-sahne ol,.oda .zm-sahne ul{margin:0}
 .zm-saat{display:flex;align-items:baseline;justify-content:space-between;gap:.6em}

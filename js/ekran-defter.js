@@ -12,6 +12,8 @@
      Y: {yaz, tarihYazi, tarihKisa}
    Renk ve ölçüler STIL.kagit.defter'dedir; stil belgeye buradan eklenir. */
 const DEFTER_SAAT={bas:8,bit:22};            // sağ sayfadaki saat çizgileri (TEST değeri)
+/* U6 (envanter 32): bu oturumda ilk kez görülen kayıt mürekkebi kururken yazılır (ıslak koyu maviden mürekkebe, bir kez); ilk açılışta hepsi kuru */
+const DEFTER_GORULEN={ilk:true,set:new Set()};
 (function defterStili(){
   if(typeof document==='undefined'||document.getElementById('defterStili'))return;
   const F=STIL.kagit.defter,st=document.createElement('style');st.id='defterStili';
@@ -53,6 +55,11 @@ const DEFTER_SAAT={bas:8,bit:22};            // sağ sayfadaki saat çizgileri (
 .oda .dft button.dft-kayit.dft-bitti{text-decoration:line-through;opacity:.6}
 .oda .dft button.dft-kayit[aria-pressed="true"]{background:var(--k-vurguZemin);color:var(--k-vurguYazi);border-color:var(--k-vurgu)}
 .dft-cizgi{position:absolute;left:.4em;right:.2em;font-size:.82em;color:${F.murekkep};border-top:1px dashed ${F.murekkep};padding-left:.3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* U6 (envanter 24): sağ sayfada bugün kurdele etiketiyle; taze kayıt mürekkep kururken */
+.dft-ust small.dft-bugunEtiket{padding:.1em .5em .05em;background:${F.kurdele};color:#fbf7ec;letter-spacing:.1em;border-radius:.1em}
+.oda .dft button.dft-kayit.dft-taze{animation:dftKuru 1.4s ease-out both}
+@keyframes dftKuru{from{color:#0b1640;filter:blur(.03em);box-shadow:0 0 0 .1em rgba(34,52,122,.35)}to{filter:none;box-shadow:none}}
+@media (prefers-reduced-motion:reduce){.oda .dft button.dft-kayit.dft-taze{animation:none}}
 .dft-simdi{position:absolute;left:-.3em;right:0;border-top:.14em solid var(--k-kirmizi)}
 .dft-bos{position:absolute;top:35%;left:0;right:0;text-align:center;font-style:italic;color:var(--k-soluk)}
 .dft-macNot{margin:.5em 0 0;font-size:.86em;line-height:1.35;color:var(--k-murekkep,inherit)}.dft-macNot b{display:block;font-size:.9em;color:var(--k-soluk)}
@@ -93,7 +100,11 @@ function defterGorunumu(k,D,Y){
   /* sağ sayfa yalnız takvim kayıtlarını yazar: gelen haberler (gelişmeler) telefonda ve dosyadadır */
   const bugunMu=D.gun===k.tarih,R=satirlar(D.gun).filter(r=>r.tur!=='gelisme'),toplam=(DEFTER_SAAT.bit-DEFTER_SAAT.bas)*60;
   const y=dk=>Math.max(0,Math.min(toplam,dk-DEFTER_SAAT.bas*60))/toplam*100;
-  let sag='<header class="dft-ust"><span><b>'+yaz(Y.tarihYazi(D.gun))+'</b>'+(bugunMu?' <small>bugün</small>':'')+'</span></header><div class="dft-saatler">';
+  let sag='<header class="dft-ust"><span><b>'+yaz(Y.tarihYazi(D.gun))+'</b>'+(bugunMu?' <small class="dft-bugunEtiket">bugün</small>':'')+'</span></header><div class="dft-saatler">';
+  /* taze: bu oturumda ilk kez görülen kayıt (ilk açılışta hiçbiri) */
+  const G=DEFTER_GORULEN;
+  if(G.ilk){for(const id of Object.keys(k.isler))G.set.add(id);for(const g of k.gecmis)if(g.isId)G.set.add(g.isId);G.ilk=false;}
+  const taze=id=>{const t=!G.set.has(id);G.set.add(id);return t?' dft-taze':'';};
   for(let s=DEFTER_SAAT.bas;s<=DEFTER_SAAT.bit;s++)sag+='<i class="dft-saatCizgi" style="top:'+y(s*60).toFixed(2)+'%"></i>'+(s%2===0?'<span class="dft-saat" style="top:'+y(s*60).toFixed(2)+'%">'+String(s).padStart(2,'0')+':00</span>':'');
   /* bloklar: süreli ajanda kayıtları; çakışanlar yan yana sütunlara ayrılır */
   const bloklar=R.filter(r=>r.tur==='ajanda'&&r.sure>0).map(r=>({r,b:r.saat,s:r.saat+r.sure})).sort((a,b)=>a.b-b.b);
@@ -101,13 +112,13 @@ function defterGorunumu(k,D,Y){
   for(const c of kume){const sut=[];for(const x of c.L){let i=sut.findIndex(e=>e<=x.b);if(i<0){i=sut.length;sut.push(0);}sut[i]=x.s;x.sutun=i;}c.n=sut.length;}
   for(const c of kume)for(const x of c.L){
     const r=x.r,bitti=r.durum!=='bekliyor',sec=r.id===D.secili;
-    sag+='<button type="button" class="dft-kayit'+(r.zorunluluk==='zorunlu'?' dft-zorunlu':'')+(bitti?' dft-bitti':'')+'" data-is="'+r.id+'" aria-pressed="'+(sec?'true':'false')+'" style="top:'+y(x.b).toFixed(2)+'%;height:'+Math.max(3.5,y(x.s)-y(x.b)).toFixed(2)+'%;--sutun:'+x.sutun+';--gen:'+(100/c.n).toFixed(2)+'%">'+
+    sag+='<button type="button" class="dft-kayit'+(r.zorunluluk==='zorunlu'?' dft-zorunlu':'')+(bitti?' dft-bitti':'')+taze(r.id)+'" data-is="'+r.id+'" aria-pressed="'+(sec?'true':'false')+'" style="top:'+y(x.b).toFixed(2)+'%;height:'+Math.max(3.5,y(x.s)-y(x.b)).toFixed(2)+'%;--sutun:'+x.sutun+';--gen:'+(100/c.n).toFixed(2)+'%">'+
       saatYazi(r.saat)+' '+yaz(r.baslik)+'</button>';
   }
   /* süresiz kayıtlar (maç, ödeme, saati serbest karar, tamamlanan rutin) ince çizgidir; ajanda kaydıysa seçilebilir */
   for(const r of R.filter(r=>!(r.tur==='ajanda'&&r.sure>0))){
     const ad=(r.eylem==='macGunu'?'':r.tur==='odeme'?'₺ ':r.karar?'? ':'')+r.baslik+(r.tutar!==undefined?' '+paraYazi(r.tutar).replace(/,\d\d ₺$/,' ₺'):'');
-    if(r.tur==='ajanda')sag+='<button type="button" class="dft-kayit'+(r.zorunluluk==='zorunlu'?' dft-zorunlu':'')+(r.durum!=='bekliyor'?' dft-bitti':'')+'" data-is="'+r.id+'" aria-pressed="'+(r.id===D.secili?'true':'false')+
+    if(r.tur==='ajanda')sag+='<button type="button" class="dft-kayit'+(r.zorunluluk==='zorunlu'?' dft-zorunlu':'')+(r.durum!=='bekliyor'?' dft-bitti':'')+taze(r.id)+'" data-is="'+r.id+'" aria-pressed="'+(r.id===D.secili?'true':'false')+
       '" style="top:'+y(r.saat).toFixed(2)+'%;height:3.5%">'+(r.saatsiz?'şimdi':saatYazi(r.saat))+' '+yaz(ad)+'</button>';
     else sag+='<span class="dft-cizgi" style="top:'+y(r.saat).toFixed(2)+'%">'+saatYazi(r.saat)+' '+yaz(ad)+'</span>';
   }

@@ -7,9 +7,11 @@
      gazetePenceresi(tarih)     → {bas, son}: [dün 08:00, bugün 08:00) (anDakika)
      gazeteSonTarihi(k)         son sayının tarihi: 08:00 geçtiyse bugün, geçmediyse dün; arşivin başından (BASLANGIC_TARIHI) önce null
      haberAkisi(k, bas, son, tarih) kaynakların haberleri: önem ↓, an ↑, kaynak sırası, kaynak içi sıra; her haberde metin (okurken)
-     gazeteSayisi(k, tarih)     → {tarih, no, gunAdi, manset, haberler, kalin, ince, bos} ya da null (arşiv dışı). Manşet ilk haberdir; en çok
-                                  GAZETE_TEST.enCok haber (kalın sayıda kalinEnCok). kalin: pencerede başkanın kulübünün oynanmış maçı var;
-                                  bos: haber yok (tek satır gz.bos); ince: öbürleri
+     gazeteSayisi(k, tarih)     → {tarih, no, gunAdi, manset, haberler, kutular, kalin, ince, kisa, bos} ya da null (arşiv dışı). En çok
+                                  GAZETE_TEST.enCok haber (kalın sayıda kalinEnCok). U5 (kullanıcı onayı, u-arayuz §3.2): kutular (puan durumu, gol
+                                  sıralaması) manşet olmaz; haberler önce kutusuzlar (önem sırası, manşet ilki), sonra kutular. kalin: pencerede başkanın
+                                  kulübünün oynanmış maçı var; bos: haber yok (tek satır gz.bos); kisa: yalnız kutu var (manşet gz.kisa, kutular içeride);
+                                  ince: öbürleri. Her haberde etiket (türün adı: GAZETE_ETIKET; kutularda kutunun başlığı)
      gazeteOkundu(k, tarih)     yalnız son sayı için k.gazeteOkunan = tarih (komut)
      gazeteDogrula              gazeteOkunan yok, null ya da k.tarih'ten ileri olmayan geçerli tarih (EK_DENETIMLER)
    Önemler ve eşikler TEST'tir (s-uygulama.md S-e tablosu). */
@@ -17,6 +19,9 @@
 const GAZETE_TEST={ad:'Yerel Gazete (TEST)',enCok:6,kalinEnCok:8,yaklasan:3,sakatBiz:7,sakatObur:14,golcu:3,tablo:3};
 /* eski kayıtlarda haber kaydı olarak duran, bugün geçmişten kurulan haberler (gazetede iki kez çıkmasın) */
 const GAZETE_ESKI_ANAHTAR=['p12.haber','tr.haber'];
+/* U5: haberin türü (gazetede başlığın üstündeki küçük etiket; kutuda kutunun başlığı). TEST; listede yoksa 'Kulüp' */
+const GAZETE_ETIKET={'gz.mac':'Maç','gz.sonuclar':'Lig','gz.tablo':'Puan durumu','gz.golcu':'Gol krallığı','gz.sakat':'Sakatlık','gz.yaklasan':'Maç günü',
+  'gz.sezonSonu':'Sezon','gz.bos':'','gz.kisa':'','p12.haber':'Kulüp','tr.haber':'Transfer'};
 const gazeteBasi=()=>typeof BASLANGIC_TARIHI!=='undefined'?BASLANGIC_TARIHI:null;
 const gazetePenceresi=tarih=>({bas:anDakika(tarihEkle(tarih,-1),GUN_BASLANGICI),son:anDakika(tarih,GUN_BASLANGICI)});
 function gazeteSonTarihi(k){
@@ -35,10 +40,12 @@ function gazeteSayisi(k,tarih){
   if(!son||!tarihGecerliMi(tarih)||tarihKarsilastir(tarih,b)<0||tarihKarsilastir(tarih,son)>0)return null;
   const W=gazetePenceresi(tarih),biz=(k.kisiler[k.baskanId]||{}).kulupId;
   const kalin=(k.fikstur||[]).some(f=>(f.ev===biz||f.konuk===biz)&&(k.maclar||{})[f.id]&&anDakika(f.tarih,f.dakika)>=W.bas&&anDakika(f.tarih,f.dakika)<W.son);
-  let H=haberAkisi(k,W.bas,W.son,tarih).slice(0,kalin?GAZETE_TEST.kalinEnCok:GAZETE_TEST.enCok);
-  const bos=!H.length;
-  if(bos)H=[{onem:0,an:W.bas,anahtar:'gz.bos',p:{},metin:MESELE_OLAYLARI['gz.bos'](k,{})}];
-  return{tarih,no:gunNo(tarih)-gunNo(b)+1,gunAdi:macGunAdi(tarih),manset:H[0],haberler:H,kalin,ince:!kalin&&!bos,bos};
+  const A=haberAkisi(k,W.bas,W.son,tarih).slice(0,kalin?GAZETE_TEST.kalinEnCok:GAZETE_TEST.enCok)
+    .map(h=>Object.assign(h,{etiket:GAZETE_ETIKET[h.anahtar]!==undefined?GAZETE_ETIKET[h.anahtar]:'Kulüp'}));
+  const D=A.filter(h=>!h.kutu),K=A.filter(h=>h.kutu),bos=!A.length,kisa=!bos&&!D.length;
+  const ozel=a=>({onem:0,an:W.bas,anahtar:a,p:{},etiket:'',metin:MESELE_OLAYLARI[a](k,{})});
+  const H=bos?[ozel('gz.bos')]:kisa?[ozel('gz.kisa')].concat(K):D.concat(K);
+  return{tarih,no:gunNo(tarih)-gunNo(b)+1,gunAdi:macGunAdi(tarih),manset:H[0],haberler:H,kutular:K,kalin,ince:!kalin&&!bos&&!kisa,kisa,bos};
 }
 function gazeteOkundu(k,tarih){if(tarih&&tarih===gazeteSonTarihi(k))k.gazeteOkunan=tarih;}
 function gazeteDogrula(k,h){
@@ -91,6 +98,7 @@ GAZETE_KAYNAKLARI.push(
 /* TEST metinleri (kullanıcı değiştirir) */
 Object.assign(MESELE_OLAYLARI,{
   'gz.bos':()=>'TEST: bugün haber yok.',
+  'gz.kisa':()=>'TEST: sakin bir gün; tablolar içeride.',
   'gz.mac':(k,p)=>{const f=(k.fikstur||[]).find(x=>x.id===p.macId),s=f&&k.maclar[f.id];return f&&s?`TEST: ${f.hafta}. hafta: ${gzSkor(k,f)}.`:'TEST: maç sonucu.';},
   'gz.sonuclar':(k,p)=>'TEST: Haftanın öbür sonuçları: '+(p.macIdler||[]).map(id=>{const f=(k.fikstur||[]).find(x=>x.id===id);return f&&k.maclar[id]?gzSkor(k,f):null;}).filter(Boolean).join(' · ')+'.',
   'gz.tablo':(k,p)=>'TEST: Puan durumunda ilk '+p.ilk.length+': '+p.ilk.map(([a,P])=>`${a} ${P}`).join(', ')+'.'+(p.biz?` ${p.biz[0]} ${p.biz[1]}. sırada (${p.biz[2]} puan).`:''),
