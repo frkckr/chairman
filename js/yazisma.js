@@ -1,7 +1,8 @@
 /* ============ Chairman — kişiler ve kişiye yazmak: teknik direktör, yardımcı antrenör, mali işler müdürü (çizim yok; H2-c, 2026-10-26) ============
    Kullanıcı isteği 3 (YOL_HARITASI karar 50): maç sonrası otomatik hoca mesajı kalkar; başkan telefonda teknik direktöre ve yardımcısına hazır
    konulardan yazar (soru, görüşme isteği), cevap birkaç saat sonra gelir. Hoca görüşüyle (rakamsız), yardımcı rakamlarla konuşur. Görüşme isteğinde
-   karşı taraf gün ve saat önerir; tek kart [Kabul et / Başka gün iste], kabul deftere randevu yazar. Bilgi mimarisinde “kişiye soru zaman bedelli
+   karşı taraf gün ve saat önerir; tek kart [Kabul et / Şu gün olsun: <an>] (U3, kullanıcı tercihi 2026-10-28: “biz önerelim”; bizim anımız yoksa
+   eski [Kabul et / Başka gün iste]), kabul deftere randevu yazar. Bilgi mimarisinde “kişiye soru zaman bedelli
    girişimdir” kararı (ui-mimari §4): soru başkanın zamanını harcamaz (0 dk); bedeli cevabı beklemektir.
    Konu seçmek karar değil, menüdür (OYUN_TASARIMI §2): konular kişinin konuşmasında girişim önerisi olarak durur (GIRISIMLER 'yaz.<rol>.<konu>').
    Saf kural dosyasıdır: üst düzeyde DOM yok, Node'da da yüklenir (araclar/kariyer-deneme.js, sezon-deneme ve motor yükleyici).
@@ -16,6 +17,7 @@
                          İlerle cevap anında durur — js/ajanda.js ilerleOnizle 'haber')
      yazismaGoruldu(k, kisiId)  kişinin konuşması açıldı: kisi.okunan = şimdiki an (yeni mesaj işareti; js/ekran-oda.js konusmaAc)
      gorusmeAniBul(k, kisiId, enErkenGün) → {tarih, dakika} | null   belirlenimci: maç gününü atlar, 11:00 ya da 15:00, en çok 14 gün
+     bizimGorusmeAni(k, is) → {tarih, dakika} | null   U3 “Şu gün olsun”un anı (belirlenimci; aşağıda)
    Cevabın metni kayda yazılmaz (TEKNIK_PLAN §7): kayda cevap anının sayıları (p) ve kimlikler girer, metin okuma anında şablondan üretilir.
    METİNLER TEST TASLAĞIDIR (karar 35 kipi): Claude yazdı, kullanıcı YAZISMA_KONULARI metinlerini değiştirir. Gizli bilgi, ısrar ve oyuncu
    özellikleri hiçbir metinde sayı olarak geçmez. */
@@ -23,7 +25,7 @@
 const PERSONEL_TEST={yardimciAntrenor:{ad:'Tahsin',dogumTarihi:'1979-03-14'},maliMudur:{ad:'Nusret Bey',dogumTarihi:'1968-09-22'}};
 /* cevap gecikmesi (dakika) ve mesai: cevap 09:00–18:30 dışına düşerse sonraki 09:30'a kayar (maç akşamına düşmez). Görüşme önerisinin sınırı. TEST */
 const YAZISMA_TEST={gecikme:{teknikDirektor:180,yardimciAntrenor:120,maliMudur:90},mesai:{bas:540,son:1110,ilk:570},
-  gorusme:{saatler:[660,900],sure:45,enCokGun:14,enCokOneri:3,sonCevapOnce:60}};
+  gorusme:{saatler:[660,900],sure:45,enCokGun:14,enCokOneri:3,sonCevapOnce:60,bizEnErken:60,bizAdim:30}};
 const YAZISMA_KONULARI={};
 const kisiAktif=(k,id)=>!!(k.kisiler[id]&&k.kisiler[id].durum==='aktif');
 const bizimKulup=k=>(k.kisiler[k.baskanId]||{}).kulupId||null;
@@ -171,24 +173,50 @@ function gorusmeAniBul(k,kisiId,enErkenGun){
   }
   return null;
 }
+/* U3 (kullanıcı tercihi 2026-10-28, u-arayuz §3): “Şu gün olsun” — başkanın önerdiği an. Şimdiden en az bizEnErken dk sonra, bizAdim dk adımla,
+   mesai içinde (görüşme mesai bitmeden biter), maç günü ve hafta içi antrenman saati dışında, saatli işlerle çakışmadan; hocanın önerisinden ÖNCEKİ ilk
+   boş an (hocanın önerisi zaten defterdeki ilk boş 11:00/15:00'tür: “ilk boş an” olduğu gibi alınsa iki cevap aynı ana düşerdi). Öneri kabul
+   edilemiyorsa (o saatte iş var) enCokGun gün içindeki ilk boş an. Yoksa null: kart eski [Kabul et / Başka gün iste]'dir. Karşı taraf anında kabul eder
+   (TEST; kişinin kendi ajandası Y2 ile gelir). Belirlenimci: rastlantı yok, yalnız kariyerin o anki hâli */
+function bizimGorusmeAni(k,is){
+  const G=YAZISMA_TEST.gorusme,M=YAZISMA_TEST.mesai,o=is.veri.oneri,biz=bizimKulup(k);
+  const macGunu=new Set((k.fikstur||[]).filter(f=>f.ev===biz||f.konuk===biz).map(f=>f.tarih));
+  const sinir=!gorusmeCakisma(k,o,is.id)?anDakika(o.tarih,o.dakika):anDakika(k.tarih,0)+G.enCokGun*1440;
+  for(let a=Math.ceil((simdikiAn(k)+G.bizEnErken)/G.bizAdim)*G.bizAdim;a<sinir;a+=G.bizAdim){
+    const t=anTarih(a);
+    if(macGunu.has(t.tarih)||t.dakika<M.bas||t.dakika+G.sure>M.son)continue;
+    const p=typeof antrenmanPenceresi==='function'?antrenmanPenceresi(k,t.tarih):null;
+    if(p&&t.dakika<p.bit&&t.dakika+G.sure>p.bas)continue;
+    if(!gorusmeCakisma(k,t,is.id))return{tarih:t.tarih,dakika:t.dakika};
+  }
+  return null;
+}
+const gorusmeAnYazi=o=>`${gunAyYazi(o.tarih)} ${saatYazi(o.dakika)}`;
 KARAR_TURLERI.gorusmeOnerisi={
   denetle:(k,v)=>{const h=[];if(!(k.kisiler||{})[v.kisiId])h.push('kişi bulunamadı');
     if(!v.oneri||!tarihGecerliMi(v.oneri.tarih)||!Number.isInteger(v.oneri.dakika))h.push('öneri anı yok');return h;},
-  secenekler:(k,is)=>{const v=is.veri,o=v.oneri,son=(v.deneme|0)+1>=YAZISMA_TEST.gorusme.enCokOneri,cak=gorusmeCakisma(k,o,is.id);
-    return[{id:'kabul',metin:'Kabul et',sure:0,engel:cak?'O saatte başka bir işin var':null,aciklama:[`${gunAyYazi(o.tarih)} ${saatYazi(o.dakika)}: ${YAZISMA_TEST.gorusme.sure} dakikalık görüşme deftere yazılır.`]},
-      {id:'baska',metin:'Başka gün iste',sure:0,aciklama:[son?'Bir daha gün önermez; görüşmek istersen sen yazarsın.':'Başka bir gün önerir; cevap birkaç saat içinde gelir.']}];},
+  secenekler:(k,is)=>{const v=is.veri,o=v.oneri,G=YAZISMA_TEST.gorusme,son=(v.deneme|0)+1>=G.enCokOneri,cak=gorusmeCakisma(k,o,is.id),b=bizimGorusmeAni(k,is);
+    const kabul={id:'kabul',metin:'Kabul et',sure:0,engel:cak?'O saatte başka bir işin var':null,aciklama:[`${gorusmeAnYazi(o)}: ${G.sure} dakikalık görüşme deftere yazılır.`]};
+    /* etiket/etiketAlt: kartın kenarındaki kısa ad ve altı (dar telefonda dört satıra sarılmasın); metin konuşmada giden cevaptır */
+    if(b)return[kabul,{id:'biz',metin:`Şu gün olsun: ${gorusmeAnYazi(b)}`,etiket:'Şu gün olsun',etiketAlt:`${gunAyYazi(b.tarih).replace(/^(\d+ \S{3})\S*/,'$1')} ${saatYazi(b.dakika)}`,sure:0,
+      aciklama:[`${G.sure} dakikalık görüşme deftere yazılır; ${kisiAdi(k,v.kisiId)} kabul eder (TEST).`]}];
+    return[kabul,{id:'baska',metin:'Başka gün iste',sure:0,aciklama:[son?'Bir daha gün önermez; görüşmek istersen sen yazarsın.':'Başka bir gün önerir; cevap birkaç saat içinde gelir.']}];},
   uygula:(k,is,secim)=>{
     const v=is.veri,ad=kisiAdi(k,v.kisiId),G=YAZISMA_TEST.gorusme;
-    if(secim==='kabul'){
-      isEkle(k,{tur:'ajanda',tarih:v.oneri.tarih,dakika:v.oneri.dakika,veri:{baslik:`Görüşme: ${ad}`,aciklama:`${G.sure} dk görüşme (TEST)`,zorunluluk:'istege',sure:G.sure,
+    if(secim==='kabul'||secim==='biz'){
+      const o=secim==='biz'?bizimGorusmeAni(k,is):v.oneri;
+      if(!o)throw new Error('Görüşme için boş an kalmadı');
+      isEkle(k,{tur:'ajanda',tarih:o.tarih,dakika:o.dakika,veri:{baslik:`Görüşme: ${ad}`,aciklama:`${G.sure} dk görüşme (TEST)`,zorunluluk:'istege',sure:G.sure,
         kisiId:v.kisiId,muhatap:v.kisiId,etki:'ekipGorusmesi'}});
-      return{bilgi:`Görüşme deftere yazıldı: ${ad}, ${gunAyYazi(v.oneri.tarih)} ${saatYazi(v.oneri.dakika)}.`};
+      return{bilgi:`Görüşme deftere yazıldı: ${ad}, ${gorusmeAnYazi(o)}${secim==='biz'?' (senin önerin)':''}.`};
     }
     const p=k.kisiler[v.kisiId];
     if(p&&kisiAktif(k,p.id))yazismaCevapKur(k,p,'gorusme',{deneme:(v.deneme|0)+1,enErken:tarihEkle(v.oneri.tarih,1)});
     return{bilgi:`${ad} başka bir gün önerecek.`};
   },
-  zamanAsimi:{metin:()=>'Cevap vermezsen görüşme olmaz.',uygula:()=>({bilgi:'Görüşme ayarlanmadı.'})}
+  zamanAsimi:{metin:()=>'Cevap vermezsen görüşme olmaz.',uygula:()=>({bilgi:'Görüşme ayarlanmadı.'})},
+  /* U3 bağlam: önerilen (ya da bizim) anın günü, defter şeridinde işaretli */
+  baglam:(k,is,secim)=>{const o=secim==='biz'?bizimGorusmeAni(k,is):is.veri.oneri;return o?{tur:'gun',tarih:o.tarih,isaret:{dakika:o.dakika,sure:YAZISMA_TEST.gorusme.sure,ad:secim==='biz'?'Senin önerdiğin görüşme':`${kisiAdi(k,is.veri.kisiId)} ile görüşme (önerisi)`},haricId:is.id}:null;}
 };
 /* görüşmeye katılınca kısa TEST özeti (kişinin takım görüntüsü); ayrıntılı görüşme sahnesi (kapı) sonra gelir (karar 47, Y2) */
 KATILIM_ETKILERI.ekipGorusmesi={
@@ -216,6 +244,9 @@ MESAJ_KAYNAKLARI.push(k=>{
       L.push({kisiId:y.kisiId,tarih:g.tarih,dakika:g.dakika,yon:'gelen',metin:f(k,y),yeni:anDakika(g.tarih,g.dakika)>(p.okunan|0)});
     }
   }
+  /* U3: “Şu gün olsun”a karşı tarafın anında kabulü (TEST metni); kararın giden cevabından (+0,5) sonra, okunmuş sayılır (o an konuşmadasın) */
+  for(const g of k.gecmis){const r=g.tur==='is'&&g.isTuru==='ajanda'&&g.sonuc;
+    if(r&&r.karar==='gorusmeOnerisi'&&r.secim==='biz'&&r.soran)L.push({kisiId:r.soran,tarih:g.tarih,dakika:g.dakika,yon:'gelen',metin:'Olur başkanım, görüşelim.',yeni:false,siraEk:0.6});}
   /* inceleme (H2-e): girişim kaydı olmayan cevap (“Başka gün iste”nin yenisi) iptal edilince de not: iptal kaydının muhatabından */
   for(const x of iptal.values())if(x.muhatap&&!bagli.has(x.isId)&&k.kisiler[x.muhatap])L.push({kisiId:x.muhatap,tarih:x.tarih,dakika:x.dakika,yon:'not',metin:'Cevap gelmedi.',yeni:false,siraEk:0.75});   /* aynı dakikadaki cevaptan (+0,5) sonra */
   return L;

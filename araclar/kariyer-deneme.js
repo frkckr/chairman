@@ -663,10 +663,29 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
      R.sonuc.neden==='bitti'&&!!hm&&hm.tarih==='2026-11-30'&&hm.dakika===990&&!/\d/.test(hm.metin)&&gz.gecmis.some(g=>g.sonuc&&g.sonuc.yazisma&&g.sonuc.yazisma.konu==='takim'&&g.sonuc.yazisma.kisiId===hId),`${R.sonuc.neden} · ${hm&&hm.metin}`);}
   const g1=sor(t1,'yaz.teknikDirektor.gorusme'),RG=ilerle3(g1),gk=RG.kariyer,gKart=Object.values(gk.isler).find(x=>x.tur==='ajanda'&&x.veri.karar==='gorusmeOnerisi');
   {const macGun=new Set(gk.fikstur.filter(f=>f.ev==='demirkapi'||f.konuk==='demirkapi').map(f=>f.tarih));
-   denetle('“Görüşelim”: cevap bir saat önerisidir — maç gününü atlar, 11:00 ya da 15:00; tek kart (Kabul et / Başka gün iste) soranın konuşmasında; İlerle cevapta karar diye durur',
-     !!gKart&&RG.sonuc.neden==='karar'&&!macGun.has(gKart.veri.oneri.tarih)&&[660,900].includes(gKart.veri.oneri.dakika)&&metin(MG('kararSecenekleri')(gk,gKart).map(s=>s.id))==='["kabul","baska"]'
+   denetle('“Görüşelim”: cevap bir saat önerisidir — maç gününü atlar, 11:00 ya da 15:00; tek kart (Kabul et / Şu gün olsun, U3) soranın konuşmasında; İlerle cevapta karar diye durur',
+     !!gKart&&RG.sonuc.neden==='karar'&&!macGun.has(gKart.veri.oneri.tarih)&&[660,900].includes(gKart.veri.oneri.dakika)&&metin(MG('kararSecenekleri')(gk,gKart).map(s=>s.id))==='["kabul","biz"]'
      &&kon(gk,hId).kararlar.includes(gKart.id)&&kon(gk,hId).cevapBekliyor&&MG('kararTelefondaMi')(gk,gKart),gKart&&`${gKart.veri.oneri.tarih} ${MG('saatYazi')(gKart.veri.oneri.dakika)}`);}
   if(gKart){
+    {/* U3 “biz önerelim”: bizim an — şimdiden ≥ 60 dk, 30 dk adım, mesai içinde, maç günü ve hafta içi antrenman dışında, hocanın önerisinden önce;
+        uygulanınca o ana 45 dk randevu, konuşmada giden “Şu gün olsun: …” ve hemen altında “Olur başkanım, görüşelim.” */
+     const b=MG('bizimGorusmeAni')(gk,gKart),s=MG('kararSecenekleri')(gk,gKart)[1],bA=b&&MG('anDakika')(b.tarih,b.dakika),simdi=MG('simdikiAn')(gk);
+     const ant=b&&MG('antrenmanPenceresi')(gk,b.tarih),macGun=new Set(gk.fikstur.filter(f=>f.ev==='demirkapi'||f.konuk==='demirkapi').map(f=>f.tarih));
+     const kbz=b?KK3(gk,x=>MG('ajandaIsiYap')(x,gKart.id,'biz')).kariyer:gk,rz=Object.values(kbz.isler).find(x=>x.tur==='ajanda'&&x.veri.etki==='ekipGorusmesi');
+     const M=kon(kbz,hId).mesajlar,ig=M.findIndex(m=>m.yon==='giden'&&/^Şu gün olsun: /.test(m.metin)),io=M.findIndex(m=>m.yon==='gelen'&&m.metin==='Olur başkanım, görüşelim.');
+     denetle('U3 “Şu gün olsun”: an öneriden önce, şimdiden ≥ 60 dk, 30 dk adım, mesai içinde, maç günü ve antrenman dışında; kartın sağ yüzü o anı yazar; uygulanınca o ana 45 dk randevu, giden cevap ve hemen kabul (okunmuş)',
+       !!b&&bA>=simdi+60&&bA%30===0&&bA<MG('anDakika')(gKart.veri.oneri.tarih,gKart.veri.oneri.dakika)&&b.dakika>=540&&b.dakika+45<=1110&&!macGun.has(b.tarih)
+       &&!(ant&&b.dakika<ant.bit&&b.dakika+45>ant.bas)&&s.id==='biz'&&s.metin==='Şu gün olsun: '+MG('gunAyYazi')(b.tarih)+' '+MG('saatYazi')(b.dakika)
+       &&!!rz&&rz.tarih===b.tarih&&rz.dakika===b.dakika&&rz.veri.sure===45&&ig>=0&&io===ig+1&&!M[io].yeni&&!kbz.isler[gKart.id]&&!MG('kariyerDogrula')(kbz).length,
+       b&&`${s.metin} · öneri ${gKart.veri.oneri.tarih} ${MG('saatYazi')(gKart.veri.oneri.dakika)}`);
+     /* öneri kabul edilemiyorsa (o saatte iş) bizim an öneriden sonra da olabilir (14 gün içinde ilk boş) */
+     const kc=KK3(gk,x=>{MG('isEkle')(x,{tur:'ajanda',tarih:gKart.veri.oneri.tarih,dakika:gKart.veri.oneri.dakika,veri:{baslik:'Deneme engeli',aciklama:'Deneme (U3).',zorunluluk:'istege',sure:30}});}).kariyer;
+     const S2=MG('kararSecenekleri')(kc,kc.isler[gKart.id]),b2=MG('bizimGorusmeAni')(kc,kc.isler[gKart.id]);
+     denetle('U3: önerinin saatinde iş varsa Kabul et engelli, “Şu gün olsun” yine bir an önerir (çakışmasız)',
+       !!S2[0].engel&&S2[1].id==='biz'&&!!b2&&!MG('gorusmeCakisma')(kc,b2,gKart.id),b2&&S2[1].metin);}
+    /* U3: bizim an yokken kart eski hâlindedir (Başka gün iste); aşağıdaki ret zinciri bunu sınar: en erken sınır uzağa alınır, sonda geri döner */
+    const bizEski=MG('YAZISMA_TEST.gorusme.bizEnErken');vm.runInContext('YAZISMA_TEST.gorusme.bizEnErken=1e7',MC);
+    denetle('U3: bizim an yoksa (TEST: en erken sınır uzakta) kart Kabul et / Başka gün iste',metin(MG('kararSecenekleri')(gk,gKart).map(s=>s.id))==='["kabul","baska"]');
     const kb=KK3(gk,x=>MG('ajandaIsiYap')(x,gKart.id,'kabul')).kariyer,rv=Object.values(kb.isler).find(x=>x.tur==='ajanda'&&x.veri.etki==='ekipGorusmesi');
     denetle('Kabul et: deftere isteğe bağlı 45 dk randevu (öneri anında); konuşmada giden cevap; “Görüşelim” randevu varken kapalı',
       !!rv&&rv.tarih===gKart.veri.oneri.tarih&&rv.dakika===gKart.veri.oneri.dakika&&rv.veri.zorunluluk==='istege'&&rv.veri.sure===45&&kon(kb,hId).mesajlar.some(m=>m.yon==='giden'&&m.metin==='Kabul et')
@@ -688,6 +707,7 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
     const gc=kz.gecmis.find(g=>g.tur==='is'&&g.isId===gKart.id);
     denetle('Cevapsız kalırsa (son cevap öneriden bir saat önce) görüşme olmaz; randevu yok; konuşmada “Cevap vermedin.”',
       !!gc&&gc.sonuc.durum==='cevapsiz'&&!Object.values(kz.isler).some(x=>x.veri&&x.veri.etki==='ekipGorusmesi')&&kon(kz,hId).mesajlar.some(m=>m.metin==='Cevap vermedin.'),gc&&gc.sonuc.durum);
+    vm.runInContext('YAZISMA_TEST.gorusme.bizEnErken='+bizEski,MC);
   }
   {/* H2-d: müdüre “Kasa ne durumda?”: cevap 90 dk sonra müdürün konuşmasında, sayılar cevap anındaki maliOzet; aynı gün ikinci soru yok */
    const mId=(Object.values(k4.kisiler).find(p=>p.rol==='maliMudur')||{}).id,kk=ilerle3(sor(k4,'yaz.maliMudur.kasa')).kariyer,mg=gelen(kk,mId);

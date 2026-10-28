@@ -114,3 +114,5 @@ KARAR_TURLERI.sozlesmeYenile={
     uygula:(k,is)=>{const v=is.veri,p=k.oyuncular[v.oyuncuId];if(p&&p.kulupId===v.kulupId)sozlesmeAyril(k,v);const bilgi=meseleOlay(k,v.meseleId,'sz.cevapsiz',{oyuncuId:v.oyuncuId});
       sozlesmeKartiKur(k,v);return{bilgi};}}
 };
+/* U3 bağlam (okuma): sözleşme kararında oyuncunun künyesi */
+if(KARAR_TURLERI.sozlesmeYenile)KARAR_TURLERI.sozlesmeYenile.baglam=(k,is)=>({tur:'oyuncu',oyuncuId:is.veri.oyuncuId});

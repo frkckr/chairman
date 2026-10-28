@@ -9,7 +9,9 @@
    sure.kapan ms'de söner; "hareketi azalt" tercihinde yalnız opaklık (sure.azalt). Her ekran aynı dili kullanır (ekran başına ayrı animasyon yok).
    Kural içermez; durum ve Esc zinciri js/ekran-oda.js'tedir. Eski seçiciler takma ad olarak yaşar (.od-panel, .od-telefonPanel, .od-icerik, .od-perde).
      odakKabi(s) → html. s: {ad, boy:'genis'|'orta'|'kucuk'|'cihaz', etiket (aria-label), sinif (ek sınıflar), baslik, geri:{etiket, eylem, veri}|null,
-       kagit (true: paneller .od-icerik kâğıdında; false: dosya, defter), govde (html), belir (bu çizimde belirme geçişi)}
+       kagit (true: paneller .od-icerik kâğıdında; false: dosya, defter), govde (html), belir (bu çizimde belirme geçişi), yan:{baslik, govde}|null}
+       yan (U3 göz atma): iş sola kayıp daralır (STIL.kagit.odak.goz.is %; telefon kendi enini korur), sağda ikinci kâğıt (goz.yan %) açılır; içi inert
+       (göz atmanın içinden yeni iş açılmaz, eylem yok). Kapatmak ‹ Geri ve Esc'tir (js/ekran-oda.js odakGeriHedef).
      odakCikis(kap)  kapanmadan önce çağrılır: açık kabın görünür kopyası (etkileşimsiz) kapanma geçişiyle söner
      odakKokYerlestir(kap, nokta)  belirme geçişinin kökü: nesnenin karedeki yeri ({x,y} 0–1), yoksa kabın ortası */
 (function odakStili(){
@@ -39,6 +41,19 @@
 .oda .odk[data-boy="cihaz"]>header.odk-ust h3{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .oda .odk[data-boy="cihaz"] .odk-kagit{align-self:stretch;height:100%;background:none;border:0;box-shadow:none}
 .oda .odk[data-boy="cihaz"] .od-icerik{display:block;padding:0;overflow:hidden;height:100%}
+/* U3 göz atma: iş solda daralır, sağda okunan kâğıt */
+.oda section.odk[data-goz]{left:${O.goz.kenar}%}
+.oda section.odk[data-goz]:not([data-boy="cihaz"]){--odk-en:${O.goz.is}%}
+.oda aside.odk-goz{position:absolute;z-index:2;top:2.5em;bottom:5.3em;right:${O.goz.kenar}%;width:${O.goz.yan}%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:.35em;
+}
+.oda aside.odk-goz.odk-gozBelir{animation:odkGoz ${O.sure.belir}ms cubic-bezier(.2,.7,.3,1) both}
+.oda aside.odk-goz[data-boy="cihaz"]{width:calc(100% - ${O.boy.cihaz}% - ${3*O.goz.kenar}%)}
+.oda .odk-gozUst{display:flex;align-items:baseline;justify-content:space-between;gap:.6em;min-height:2.1em;color:var(--k-serit);text-shadow:0 .08em .3em rgba(0,0,0,.45)}
+.oda .odk-gozUst h4{margin:0;font-weight:600;font-size:1.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oda .odk-gozUst small{flex:none;font-size:.85em;opacity:.9}
+.oda .odk-gozIcerik{min-height:0;align-self:start;max-height:100%;overflow-y:auto;padding:.6em .8em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-mavi);box-shadow:.35em .45em 0 var(--k-golge)}
+@keyframes odkGoz{from{opacity:0;transform:translateX(1.5em)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.oda aside.odk-goz.odk-gozBelir{animation:odkPerde ${O.sure.azalt}ms linear both}}
 .oda .odk.odk-belir{animation:odkBelir ${O.sure.belir}ms cubic-bezier(.2,.7,.3,1) both}
 .oda .odk-perde.odk-belir{animation:odkPerde ${O.sure.perde}ms ease-out both}
 .oda .odk-cikis{pointer-events:none}
@@ -49,7 +64,20 @@
 @keyframes odkPerde{from{opacity:0}to{opacity:1}}
 @keyframes odkPerdeKapan{from{opacity:1}to{opacity:0}}
 @media (prefers-reduced-motion:reduce){
-  .oda .odk.odk-belir{animation:odkPerde ${O.sure.azalt}ms linear both}
+  /* U3 göz atma: iş solda daralır, sağda okunan kâğıt */
+.oda section.odk[data-goz]{left:${O.goz.kenar}%}
+.oda section.odk[data-goz]:not([data-boy="cihaz"]){--odk-en:${O.goz.is}%}
+.oda aside.odk-goz{position:absolute;z-index:2;top:2.5em;bottom:5.3em;right:${O.goz.kenar}%;width:${O.goz.yan}%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:.35em;
+}
+.oda aside.odk-goz.odk-gozBelir{animation:odkGoz ${O.sure.belir}ms cubic-bezier(.2,.7,.3,1) both}
+.oda aside.odk-goz[data-boy="cihaz"]{width:calc(100% - ${O.boy.cihaz}% - ${3*O.goz.kenar}%)}
+.oda .odk-gozUst{display:flex;align-items:baseline;justify-content:space-between;gap:.6em;min-height:2.1em;color:var(--k-serit);text-shadow:0 .08em .3em rgba(0,0,0,.45)}
+.oda .odk-gozUst h4{margin:0;font-weight:600;font-size:1.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oda .odk-gozUst small{flex:none;font-size:.85em;opacity:.9}
+.oda .odk-gozIcerik{min-height:0;align-self:start;max-height:100%;overflow-y:auto;padding:.6em .8em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-mavi);box-shadow:.35em .45em 0 var(--k-golge)}
+@keyframes odkGoz{from{opacity:0;transform:translateX(1.5em)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.oda aside.odk-goz.odk-gozBelir{animation:odkPerde ${O.sure.azalt}ms linear both}}
+.oda .odk.odk-belir{animation:odkPerde ${O.sure.azalt}ms linear both}
   .oda .odk.odk-cikis{animation:odkPerdeKapan ${O.sure.azalt}ms linear both}}
 `;
   document.head.appendChild(st);
@@ -61,8 +89,10 @@ function odakKabi(s){
     ' title="Geri (Esc)">‹ '+yazOdk(s.geri.etiket)+'</button>':'';
   const ust='<header class="odk-ust"><span class="odk-sol">'+g+'</span><h3>'+yazOdk(s.baslik)+'</h3><span class="odk-sag"><button type="button" class="od-kapat" data-eylem="kapat" title="Masaya bırak (Esc)">Kapat ×</button></span></header>';
   const govde=s.kagit?'<div class="odk-kagit"><div class="od-icerik">'+s.govde+'</div></div>':'<div class="odk-govde">'+s.govde+'</div>';
+  const yan=s.yan?'<aside class="odk-goz'+(s.yan.belir?' odk-gozBelir':'')+'" data-boy="'+(s.boy||'genis')+'" aria-label="Göz at: '+yazOdk(s.yan.baslik)+'"><header class="odk-gozUst"><h4>'+yazOdk(s.yan.baslik)+'</h4><small>yalnız okuma</small></header>'+
+    '<div class="odk-gozIcerik" inert>'+s.yan.govde+'</div></aside>':'';
   return'<div class="odk-perde od-perde'+(s.belir?' odk-belir':'')+'" data-perde="1"></div>'+
-    '<section class="odk'+(s.sinif?' '+s.sinif:'')+(s.belir?' odk-belir':'')+'" data-odak="'+yazOdk(s.ad)+'" data-boy="'+(s.boy||'genis')+'"'+(s.kagit?' role="dialog" aria-label="'+yazOdk(s.etiket)+'"':'')+'>'+ust+govde+'</section>';
+    '<section class="odk'+(s.sinif?' '+s.sinif:'')+(s.belir?' odk-belir':'')+'" data-odak="'+yazOdk(s.ad)+'" data-boy="'+(s.boy||'genis')+'"'+(s.yan?' data-goz="1"':'')+(s.kagit?' role="dialog" aria-label="'+yazOdk(s.etiket)+'"':'')+'>'+ust+govde+'</section>'+yan;
 }
 /* kapanma: açık kabın kopyası etkileşimsiz, ekran okuyucudan gizli; karta ait kimlik ve sınıflar silinir (kart bileşeni kopyayı bulmasın) */
 function odakCikis(kap){

@@ -2001,8 +2001,8 @@ async def bolum_19b(tarayici, site, tum_hatalar):
 
 
 async def bolum_21(tarayici, site, tum_hatalar):
-    """H2-c: kişiye yazmak ve görüşme isteği — Görüşelim → İlerle (karar) → telefonda tek kart (Kabul et / Başka gün iste) → defterde randevu →
-    İlerle randevuda durur → Katıl → Öğrendiklerin; Başka gün iste; Duraklat'ta öneriler kapalı."""
+    """H2-c: kişiye yazmak ve görüşme isteği — Görüşelim → İlerle (karar) → telefonda tek kart (Kabul et / Şu gün olsun, U3) → defterde randevu →
+    İlerle randevuda durur → Katıl → Öğrendiklerin; Şu gün olsun; Duraklat'ta öneriler kapalı. U3: bekleme notu, bağlam şeridi, göz atma, Sonra yığını."""
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
     hid = await pg.evaluate("() => OYUN.kariyer.kulupler.demirkapi.hocaId")
@@ -2019,16 +2019,41 @@ async def bolum_21(tarayici, site, tum_hatalar):
     denetle("H2-c: Duraklat açıkken konu önerileri kapalı", len(dur) > 0 and all(dur), str(dur))
     await konusma_ac()
     await pg.click('.tel [data-eylem="girisim"][data-girisim="yaz.teknikDirektor.gorusme"]')
+    bekle = await pg.evaluate("() => (document.querySelector('.tel .tel-bekleme') || {}).textContent || ''")
+    denetle("U3: soru gidince konuşmada beklenen cevabın zamanı (“Cevap ~3 saat sonra”)", bekle == "Cevap ~3 saat sonra", bekle)
     await masaya_don(pg)
     await oda_ilerle(pg)
     await pg.wait_for_function("() => Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.karar === 'gorusmeOnerisi')", timeout=60000)
     ozet = await pg.text_content(".od-mesaj")
+    # U3: Sonra yığını — masada cevap bekleyen karar kâğıdı; dokununca kararın yeri (soranın konuşması) açılır
+    sonra = await pg.evaluate("() => [...document.querySelectorAll('.od-sonra .od-sonraKagit')].map(b => b.textContent)")
+    await pg.click(".od-sonra .od-sonraKagit")
+    syer = await pg.evaluate("() => ({ ekran: (document.querySelector('.tel-ekran') || { dataset: {} }).dataset.ekran, kart: !!document.querySelector('.tel-cevap .kk-kart') })")
+    await masaya_don(pg)
+    denetle("U3: masada “Sonra” yığınında görüşme kâğıdı (son cevap ve yeri: telefonda); dokununca telefonda o konuşma ve kartı açıldı",
+            len(sonra) == 1 and "Görüşme: Şükrü Hoca" in sonra[0] and "telefonda" in sonra[0] and syer == {"ekran": "konusma", "kart": True}, f"{sonra} · {syer}")
     kart = await pg.evaluate("() => { const x = Object.values(OYUN.kariyer.isler).find(y => y.veri && y.veri.karar === 'gorusmeOnerisi'); return { id: x.id, tarih: x.veri.oneri.tarih, dakika: x.veri.oneri.dakika }; }")
     await konusma_ac()
     kenar = await pg.eval_on_selector_all(".tel-cevap .kk-kenar", "L => L.map(b => b.textContent)")
-    denetle("H2-c: Görüşelim → İlerle cevapta karar diye durdu; telefonda tek kart, kenarlar “Kabul et” / “Başka gün iste”",
-            "karar" in ozet and len(kenar) == 2 and "Kabul et" in kenar[0] and "Başka gün iste" in kenar[1], f"{ozet[:70]} · {kenar} · {kart}")
+    denetle("H2-c: Görüşelim → İlerle cevapta karar diye durdu; telefonda tek kart, kenarlar “Kabul et” / “Şu gün olsun” (U3; altında bizim saat)",
+            "karar" in ozet and len(kenar) == 2 and "Kabul et" in kenar[0] and "Şu gün olsun" in kenar[1], f"{ozet[:70]} · {kenar} · {kart}")
     await pg.screenshot(path=str(ARAC / "son-akis-21-kart.png"))
+    # U3: kartın yüzünde o günün defter şeridi (öneri işaretli); Defter ▸ göz atma: telefon solda, sağda o gün (yalnız okuma); Esc döner, yüz yerinde
+    sr = await pg.evaluate("() => { const s = document.querySelector('.tel-cevap .kk-yuz .kk-serit'); return s ? s.getAttribute('aria-label') : ''; }")
+    await pg.focus('.tel-cevap .kk-kart')
+    await pg.keyboard.press("ArrowRight")
+    await pg.click('.tel-cevap .kk-yuz [data-eylem="gozAt"]')
+    gz = await pg.evaluate("""() => { const a = document.querySelector('aside.odk-goz'), s = document.querySelector('section.odk'), t = document.querySelector('.tel-cevap .kk-kart');
+      return { goz: !!a, baslik: a ? a.querySelector('h4').textContent : '', isaret: (document.querySelector('.od-gozIsaret') || {}).textContent || '', inert: !!a && a.querySelector('.odk-gozIcerik').inert,
+        geri: (document.querySelector('.odk-geri') || {}).textContent || '', sol: s ? s.getBoundingClientRect().right <= a.getBoundingClientRect().left + 1 : false, yuz: t ? t.dataset.yuz : null }; }""")
+    await pg.screenshot(path=str(ARAC / "son-akis-21-gozat.png"))
+    await pg.keyboard.press("Escape")
+    gd = await pg.evaluate("() => ({ goz: !!document.querySelector('aside.odk-goz'), ekran: document.querySelector('.tel-ekran').dataset.ekran, yuz: document.querySelector('.tel-cevap .kk-kart').dataset.yuz })")
+    await pg.focus('.tel-cevap .kk-kart')
+    await pg.keyboard.press("Escape")
+    denetle("U3: kartta o günün şeridi (öneri anı işaretli); Defter ▸ yanında o günü açar (iş solda, içi yalnız okuma, ‹ Konuşma), işaretli satır bizim önerimiz; Esc göz atmayı kapatır, konuşma ve önizlenen yüz yerinde",
+            "işaretli" in sr and gz["goz"] and gz["inert"] and gz["sol"] and gz["geri"] == "‹ Konuşma" and gz["baslik"].startswith("Defter · ") and "Senin önerdiğin görüşme" in gz["isaret"]
+            and gz["yuz"] == "sag" and gd == {"goz": False, "ekran": "konusma", "yuz": "sag"}, f"{sr} · {gz} · {gd}")
     await pg.focus('.tel-cevap .kk-kart')
     await pg.keyboard.press("ArrowLeft")
     await pg.keyboard.press("Enter")
@@ -2067,7 +2092,7 @@ async def bolum_21(tarayici, site, tum_hatalar):
     await pg.keyboard.press("Escape")
     denetle("H2-c: İlerle randevuda durdu (alt şeritte Katıl), Katıl → defterde öğrendiklerin (“… ile görüştün”)", "Katıl" in katil and "ile görüştün" in dft2, dft2[dft2.find("görüştün") - 40:][:100] if "görüştün" in dft2 else dft2[:80])
     await pg.context.close()
-    # Başka gün iste: kart sağa (→, Enter) — yeni cevap beklenir, kart kalkar
+    # U3 Şu gün olsun: kart sağa (→, Enter) — bizim saatimize randevu, karşı taraf hemen kabul eder
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
     await konusma_ac()
@@ -2076,12 +2101,16 @@ async def bolum_21(tarayici, site, tum_hatalar):
     await oda_ilerle(pg)
     await pg.wait_for_function("() => Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.karar === 'gorusmeOnerisi')", timeout=60000)
     await konusma_ac()
+    oneri2 = await pg.evaluate("() => { const x = Object.values(OYUN.kariyer.isler).find(y => y.veri && y.veri.karar === 'gorusmeOnerisi'); return anDakika(x.veri.oneri.tarih, x.veri.oneri.dakika); }")
     await pg.focus('.tel-cevap .kk-kart')
     await pg.keyboard.press("ArrowRight")
     await pg.keyboard.press("Enter")
     await pg.wait_for_function("() => !Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.karar === 'gorusmeOnerisi')", timeout=10000)
-    b = await pg.evaluate("() => ({ cevap: Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.gelisme === 'yazismaCevap' && x.veri.deneme === 1), giden: [...document.querySelectorAll('.tel .tel-giden')].map(e => e.textContent).join(' | ') })")
-    denetle("H2-c: kartı sağa bırakmak “Başka gün iste”: kart kalkar, yeni cevap beklenir (deneme 1); konuşmada giden cevap", b["cevap"] and "Başka gün iste" in b["giden"], str(b))
+    b = await pg.evaluate("""() => { const r = Object.values(OYUN.kariyer.isler).find(x => x.veri && x.veri.etki === 'ekipGorusmesi');
+      return { randevu: r ? anDakika(r.tarih, r.dakika) : null, giden: [...document.querySelectorAll('.tel .tel-giden')].map(e => e.textContent).join(' | '),
+        gelen: [...document.querySelectorAll('.tel .tel-gelen')].map(e => e.textContent).pop() || '' }; }""")
+    denetle("U3: kartı sağa bırakmak “Şu gün olsun”: kart kalkar, bizim saatimize randevu (önerisinden önce), konuşmada giden cevap ve “Olur başkanım, görüşelim.”",
+            bool(b["randevu"]) and b["randevu"] < oneri2 and "Şu gün olsun: " in b["giden"] and "Olur başkanım, görüşelim." in b["gelen"], f"{b} · öneri {oneri2}")
     await pg.context.close()
     # H2-d: müdüre “Kasa ne durumda?” → cevap telefonda
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")

@@ -95,6 +95,13 @@ function ajandaSonucu(is,durum,sure){
   return s;
 }
 /* karar işinin seçenekleri (karar işi değilse boş liste) */
+/* U3 bağlam kancası (okuma; kural değil, u-arayuz envanter 4): KARAR_TURLERI[tur].baglam?(k, is, secimId|null) → kartın yüzünde tek satırlık bağlam ya da
+   null. Tanımlar: {tur:'gun', tarih, isaret:{dakika, sure, ad?}, haricId?} (o günün defter şeridi, işaretli an ve adı; kararın kendisi hariç), {tur:'kasa', kulupId} (kasa ve 90 günün en düşüğü),
+   {tur:'oyuncu', oyuncuId} (künye). Çizim js/ekran-kart.js, ayrıntısı göz atmada (js/ekran-oda.js) */
+const kararBaglami=(k,is,secim)=>{const t=is&&is.tur==='ajanda'&&is.veri.karar?KARAR_TURLERI[is.veri.karar]:null;return t&&typeof t.baglam==='function'?t.baglam(k,is,secim||null)||null:null;};
+/* U3: o günün saatli ajanda satırları (okuma; bağlam şeridi ve göz atma): [{id, dakika, sure, baslik, durum, eylem?}] saat sırasıyla, haricId hariç */
+const gunDolulugu=(k,tarih,haricId)=>ajandaGunu(k,tarih).filter(r=>r.tur==='ajanda'&&!r.saatsiz&&r.id!==haricId&&r.durum!=='ertelendi')
+  .map(r=>Object.assign({id:r.id,dakika:r.saat,sure:r.sure||0,baslik:r.baslik,durum:r.durum},r.eylem?{eylem:r.eylem}:{})).sort((a,b)=>a.dakika-b.dakika);
 const kararSecenekleri=(k,is)=>is&&is.tur==='ajanda'&&is.veri.karar!==undefined?KARAR_TURLERI[is.veri.karar].secenekler(k,is):[];
 
 const isAn=is=>anDakika(is.tarih,is.dakika);

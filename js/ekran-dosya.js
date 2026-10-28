@@ -63,6 +63,7 @@
 .dsy-sol{border-right:1px solid ${D.cizgi};box-shadow:inset -.6em 0 .8em -.7em rgba(60,40,10,.25)}
 .dsy-kat{display:flex;align-items:center;gap:.5em;font-size:.82em;letter-spacing:.12em;text-transform:uppercase;color:var(--k-soluk)}
 .dsy-baslik{margin:0;font-family:var(--display);font-weight:400;font-size:2.1em;line-height:.95;letter-spacing:.02em;color:var(--k-yazi)}
+.dsy-devir{justify-self:start;color:${D.mavi};font-weight:600}
 .dsy-damga{justify-self:start;padding:.15em .55em .05em;border:.16em solid currentColor;border-radius:.2em;font-family:var(--display);font-size:1.25em;letter-spacing:.08em;
   text-transform:uppercase;transform:rotate(-4deg);opacity:.85}
 .dsy-d-kararBekliyor{color:var(--k-kirmizi)}.dsy-d-ekipte,.dsy-d-haberBekliyor{color:${D.mavi}}.dsy-d-kapandi{color:var(--k-soluk)}
@@ -160,6 +161,8 @@ function dosyaGorunumu(k,D,Y){
     /* U1: '◂ Mesaja dön' / '◂ Ajandaya dön' odak kabının başlığındaki ‹ Geri'dir (js/ekran-oda.js odakGeriHedef) */
     sol+='<p class="dsy-kat"><i class="od-kSimge" aria-hidden="true">'+yaz(katS)+'</i>'+yaz(katAd)+(Y.testKutu?Y.testKutu():'')+'</p>'+
       '<h3 class="dsy-baslik">'+yaz(m.baslik)+'</h3><span class="dsy-damga dsy-d-'+m.durum+'">'+yaz(DAMGA[m.durum]||o.durumAdi)+'</span>'+
+      /* U3 (envanter 15): devredilen iş kimde ve ne zamana kadar (“Ayla'da · Perşembe'ye kadar”) */
+      (()=>{const e=m.durum==='ekipte'&&o.sorumlu&&typeof devirEtiketi==='function'?o.adimlar.find(a=>a.tur==='ekip'):null,t=e&&devirEtiketi(k,o.sorumlu.id,e.tarih);return t?'<span class="dsy-devir">'+yaz(t)+'</span>':'';})()+
       '<dl class="dsy-kunye"><dt>Yürüten</dt><dd>'+(o.sorumlu?yaz(o.sorumlu.ad):'—')+'</dd>'+(st?'<dt>'+yaz(st.split(': ')[0])+'</dt><dd><b>'+yaz(st.split(': ').slice(1).join(': '))+'</b></dd>':'')+'</dl>';
     if(o.bilgiler.length)sol+='<h4>Bilinenler</h4><ul class="dsy-notlar">'+o.bilgiler.slice(-4).map(x=>'<li class="dsy-not">'+yaz(x.metin)+'<small>— '+yaz(x.kaynak)+'</small></li>').join('')+'</ul>';
     sol+=Y.sozler(o);

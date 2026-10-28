@@ -121,6 +121,7 @@
 .tel-oneri{display:grid;gap:.15em;justify-items:start;padding:.3em .5em;border:1px dashed var(--k-cizgi);border-radius:.5em}
 .tel-oneri small{color:var(--k-soluk);font-size:.84em}
 .tel-bos{color:var(--k-soluk);text-align:center;padding:1em 0}
+.tel-bekleme{font-style:italic}
 .tel-cevap{display:grid;gap:.45em;max-height:55cqh;overflow-y:auto;padding:.5em .65em .45em;background:var(--k-serit);border-top:1px solid var(--k-cizgi)}
 /* tek kart (H1, U2): kartın adı üst etikette (işin başlığı); üç yüz aynı hücrede olduğu için en az yükseklik yok; dar alanda küçük önizleme kayması;
    boşlukların sıkışması ortak bileşenin dar kap kuralıyla (js/ekran-kart.js) */
@@ -340,6 +341,8 @@ function telefonCiz(k,T,s={}){
         :'<div class="tel-balon tel-'+m.yon+(yeni?' tel-yeni':'')+'"><p>'+yazT(m.metin)+'</p><small>'+saatYazi(m.dakika)+(yeni?' · yeni':'')+'</small></div>';
     }
     if(!c.mesajlar.length)ic+='<p class="tel-bos">Henüz yazışma yok.</p>';
+    /* U3 (envanter 15): beklenen cevabın yaklaşık zamanı */
+    if(c.bekleyenCevap!==null&&c.bekleyenCevap!==undefined&&typeof cevapBeklemeYazi==='function')ic+='<p class="tel-not tel-bekleme">Cevap '+yazT(cevapBeklemeYazi(k,c.bekleyenCevap))+'</p>';
     /* bekleyen kararın konusu ve hazır görüş akışın sonunda; iki cevap alttaki sabit alanda (klavyenin yeri) */
     for(const id of c.kararlar){const is=k.isler[id];if(is&&is.veri&&is.veri.karar)ic+='<div class="tel-kararOzet"><p class="kk-konu">'+yazT(is.veri.aciklama)+'</p>'+kararGorusu(k,is.veri)+'</div>';}
     for(const mid of c.dosyaKarar)ic+='<p class="tel-not tel-dosya">Bu konuda karar dosyada bekliyor. '+(s.macta?'':'<button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+mid+'" data-donus="telefon">Dosyayı aç ▸</button>')+'</p>';
@@ -350,7 +353,7 @@ function telefonCiz(k,T,s={}){
     const K=c.kararlar.filter(id=>k.isler[id]);
     /* U2: kartın başlığı kartın üst etiketindedir (işin adı; js/ekran-kart.js), alanın üstünde ayrı satır yok */
     if(K.length)alt='<div class="tel-cevap" aria-label="Cevap">'+K.map(id=>
-      kararKarti(k,id,{onizle:(s.onizleler||{})[id]||null,ozetsiz:true,kapali:s.kapali||null,dosyaBaglanti:!s.macta,testSecenek:s.testSecenek})).join('')+'</div>';
+      kararKarti(k,id,{onizle:(s.onizleler||{})[id]||null,ozetsiz:true,kapali:s.kapali||null,dosyaBaglanti:!s.macta,testSecenek:s.testSecenek,gozAt:!s.macta&&!!s.gozAt})).join('')+'</div>';
   }else if(ekran==='kulup'){
     const Lg=s.lig||telLigVerisi(k);
     ic='<header class="tel-nav">'+geri('skorGeri','','Canlı Skor')+'</header>'+telKulupEkrani(Lg&&Lg.ozet&&T.kulup?Lg.ozet(T.kulup):null,{canli:!!(Lg&&Lg.canli),ad:Lg&&Lg.ad});

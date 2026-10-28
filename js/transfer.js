@@ -182,6 +182,8 @@ PAKETLER.hocaTalebi={
       mevki:b.mevki,bonservis:b.bonservis,tavan:b.tavan,aciklama:`${MEVKI_ADI[b.mevki]} hattı için bütçe isteği.`}});
   }
 };
+/* U3 bağlam (okuma): teklifte oyuncunun künyesi, bütçede kasa */
+KARAR_TURLERI.teklifKarari.baglam=(k,is)=>({tur:'oyuncu',oyuncuId:is.veri.oyuncuId});
 KARAR_TURLERI.transferButcesi={
   denetle:(k,v)=>{const h=[];if(!(k.kisiler||{})[v.hocaId])h.push('hoca bulunamadı');if(!['DEF','OS','FV'].includes(v.mevki))h.push('mevki geçersiz');
     if(!Number.isInteger(v.bonservis)||v.bonservis<0||!Number.isInteger(v.tavan)||v.tavan<=0)h.push('bütçe geçersiz');if(typeof v.meseleId!=='string')h.push('mesele yok');return h;},
@@ -222,3 +224,5 @@ GELISMELER.transferImza={
     return{bilgi,dur:true};
   }
 };
+/* U3 bağlam (okuma): bütçe kararında kasanın durumu */
+if(KARAR_TURLERI.transferButcesi)KARAR_TURLERI.transferButcesi.baglam=k=>({tur:'kasa',kulupId:(k.kisiler[k.baskanId]||{}).kulupId});

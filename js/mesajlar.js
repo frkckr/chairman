@@ -31,6 +31,29 @@ const MESAJ_GIZLI=new Set(['kapandi']);
 /* F3-b: meseleye bağlı olmayan mesaj kaynakları: (k) → [{kisiId, tarih, dakika, metin, yeni, yon?}]. Kayda alan eklemez. H2-c (2026-10-26): hocanın
    otomatik maç yorumu kalktı; tek kaynak yazışmadır (js/yazisma.js: giden soru, gelen cevap, “Cevap gelmedi.”; yeni = kişinin okunan anından sonra) */
 const MESAJ_KAYNAKLARI=[];
+/* ---- U3 (envanter 15): bekleme ve devir etiketleri (saf okuma). Türkçe ekler ünlü uyumuyla: bulunma (-da/-de/-ta/-te), yönelme (-a/-e/-ya/-ye) ---- */
+const tkSonUnlu=s=>{const m=String(s).toLocaleLowerCase('tr-TR').match(/[aeıioöuü](?=[^aeıioöuü]*$)/);return m?m[0]:'e';};
+const tkKalin=s=>'aıou'.includes(tkSonUnlu(s));
+const bulunmaEki=s=>{const t=String(s).trim(),son=t.slice(-1).toLocaleLowerCase('tr-TR');return t+'\''+('çfhkpsşt'.includes(son)?'t':'d')+(tkKalin(t)?'a':'e');};
+const yonelmeEki=s=>{const t=String(s).trim(),son=t.slice(-1).toLocaleLowerCase('tr-TR');return t+'\''+('aeıioöuü'.includes(son)?'y':'')+(tkKalin(t)?'a':'e');};
+const MESAJ_GUNLER=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+/* “Perşembe'ye kadar”: bugün, yarın, bir hafta içinde gün adı, sonrası gün ve ay */
+function kadarYazi(k,tarih){
+  if(tarih===k.tarih)return'bugün';
+  if(tarih===tarihEkle(k.tarih,1))return'yarına kadar';
+  const fark=(anDakika(tarih,0)-anDakika(k.tarih,0))/1440;
+  if(fark>0&&fark<7){const [y,a,g]=tarih.split('-').map(Number);return yonelmeEki(MESAJ_GUNLER[new Date(Date.UTC(y,a-1,g)).getUTCDay()])+' kadar';}
+  return yonelmeEki(gunAyYazi(tarih))+' kadar';
+}
+/* devredilen iş: “Ayla'da · Perşembe'ye kadar” (kişi ve işin sonuçlanacağı gün) */
+const devirEtiketi=(k,kisiId,tarih)=>{const p=k.kisiler[kisiId];return p?bulunmaEki(p.ad)+' · '+kadarYazi(k,tarih):null;};
+/* beklenen cevabın yaklaşık zamanı: “~3 saat sonra”, “~40 dk sonra”, başka günse “yarın 09:30 gibi” / “25 Kasım 09:30 gibi” */
+function cevapBeklemeYazi(k,an){
+  const fark=an-simdikiAn(k),t=anTarih(an);
+  if(t.tarih!==k.tarih)return(t.tarih===tarihEkle(k.tarih,1)?'yarın':gunAyYazi(t.tarih))+' '+saatYazi(t.dakika)+' gibi';
+  if(fark<60)return'~'+Math.max(5,Math.round(fark/5)*5)+' dk sonra';
+  return'~'+Math.round(fark/60)+' saat sonra';
+}
 /* olayın göndereni (kişi kaydı yoksa null) */
 function mesajGondereni(k,o,m){
   const f=MESAJ_GONDEREN[o.anahtar],id=f?f(k,o.p,m):null;
@@ -104,6 +127,9 @@ function konusmaListesi(k){
     /* aynı an: konunun olay sırası; cevap (giden) sorusundan sonra, doğurduğu olaylardan önce (eski kayıtta sira -1: önce) */
     c.mesajlar.sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika)||a.sira-b.sira);
     c.okunmamis=c.mesajlar.filter(x=>x.yeni&&x.yon==='gelen').length;
+    /* U3: bu kişiden beklenen yazışma cevabının anı (js/yazisma.js gizli gelişmesi); konuşmada “Cevap ~3 saat sonra” */
+    const b=Object.values(k.isler).filter(x=>x.tur==='gelisme'&&x.veri.gelisme==='yazismaCevap'&&x.veri.muhatap===c.anahtar).sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika))[0];
+    c.bekleyenCevap=b?anDakika(b.tarih,b.dakika):null;
     const s=c.mesajlar[c.mesajlar.length-1];c.sonAn=s?anDakika(s.tarih,s.dakika):0;
   }
   return L.sort((a,b)=>(b.cevapBekliyor-a.cevapBekliyor)||(b.sonAn-a.sonAn)||(a.ad<b.ad?-1:1));
