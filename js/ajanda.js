@@ -100,7 +100,8 @@ function ajandaSonucu(is,durum,sure){
    {tur:'oyuncu', oyuncuId} (künye). Çizim js/ekran-kart.js, ayrıntısı göz atmada (js/ekran-oda.js) */
 const kararBaglami=(k,is,secim)=>{const t=is&&is.tur==='ajanda'&&is.veri.karar?KARAR_TURLERI[is.veri.karar]:null;return t&&typeof t.baglam==='function'?t.baglam(k,is,secim||null)||null:null;};
 /* U3: o günün saatli ajanda satırları (okuma; bağlam şeridi ve göz atma): [{id, dakika, sure, baslik, durum, eylem?}] saat sırasıyla, haricId hariç */
-const gunDolulugu=(k,tarih,haricId)=>ajandaGunu(k,tarih).filter(r=>r.tur==='ajanda'&&!r.saatsiz&&r.id!==haricId&&r.durum!=='ertelendi')
+/* cevaplanmış ya da cevapsız kalmış karar (saatsiz işin geçmiş satırı; saati cevap anıdır) blok sayılmaz (U7 incelemesi) */
+const gunDolulugu=(k,tarih,haricId)=>ajandaGunu(k,tarih).filter(r=>r.tur==='ajanda'&&!r.saatsiz&&r.id!==haricId&&r.durum!=='ertelendi'&&r.secimMetni===undefined&&r.durum!=='cevapsiz')
   .map(r=>Object.assign({id:r.id,dakika:r.saat,sure:r.sure||0,baslik:r.baslik,durum:r.durum},r.eylem?{eylem:r.eylem}:{})).sort((a,b)=>a.dakika-b.dakika);
 const kararSecenekleri=(k,is)=>is&&is.tur==='ajanda'&&is.veri.karar!==undefined?KARAR_TURLERI[is.veri.karar].secenekler(k,is):[];
 

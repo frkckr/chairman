@@ -15,7 +15,7 @@
 .mac-skor small{color:${K.soluk};font-size:.9em}
 `;
     document.head.appendChild(st);
-    const E=document.createElement('div');E.className='mac-skor';E.id='macSkor';E.hidden=true;E.setAttribute('role','status');E.setAttribute('aria-label','Skor');
+    const E=document.createElement('div');E.className='mac-skor';E.id='macSkor';E.hidden=true;E.setAttribute('aria-hidden','true');   /* U7 incelemesi: canlı bölge değil (her dakika konuşmasın); skor tabelada ve maç telefonunda okunur */
     ekran.appendChild(E);
     const kisa=t=>{const d=MAC_GUNU.kadro&&MAC_GUNU.kadro[t];return d?(d.kisa||String(d.ad||'').slice(0,3).toLocaleUpperCase('tr-TR')):(t?'DEP':'EV');};
     const renk=t=>{const d=MAC_GUNU.kadro&&MAC_GUNU.kadro[t],f=d&&STIL.formalar&&STIL.formalar[d.forma];return f?f.shirt:K.cizgi;};
@@ -27,8 +27,7 @@
       if(gorunur){
         const s=mac.score||[0,0],d=mac.phase==='halftime'?'Devre':mac.phase==='fulltime'?'Bitti':mac.minuteLabel()+'\'';
         const y=kisa(0)+'|'+s[0]+'|'+s[1]+'|'+kisa(1)+'|'+d;
-        if(y!==son){son=y;E.innerHTML='<i style="background:'+renk(0)+'"></i>'+kisa(0)+' <b>'+s[0]+'–'+s[1]+'</b> '+kisa(1)+'<i style="background:'+renk(1)+'"></i><small>'+d+'</small>';
-          E.setAttribute('aria-label','Skor '+kisa(0)+' '+s[0]+', '+kisa(1)+' '+s[1]+', '+d);}
+        if(y!==son){son=y;E.innerHTML='<i style="background:'+renk(0)+'"></i>'+kisa(0)+' <b>'+s[0]+'–'+s[1]+'</b> '+kisa(1)+'<i style="background:'+renk(1)+'"></i><small>'+d+'</small>';}
       }
       requestAnimationFrame(kare);
     };

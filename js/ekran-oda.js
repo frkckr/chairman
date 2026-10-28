@@ -399,7 +399,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   const GOZ_IS={telefon:'Konuşma',dosya:'Dosya',karar:'Karar'};
   let cizilenGoz=null;
   const gozAnahtar=()=>gozVar()?[goz.tur,goz.tarih,goz.dakika,goz.oyuncu].join('|'):null;   /* göz atma kâğıdı yalnız açılışta belirir */
-  const gozVar=()=>!!goz&&!!GOZ_IS[acik];
+  const gozVar=()=>!!goz&&!!GOZ_IS[acik]&&(!goz.isId||!!k.isler[goz.isId]);
   function gozBaslik(){return goz.tur==='gun'?'Defter · '+tarihYazi(goz.tarih):goz.tur==='kasa'?'Kasa':((k.oyuncular||{})[goz.oyuncu]||{ad:'Oyuncu'}).ad;}
   function gozIcerik(){
     if(goz.tur==='gun'){
@@ -676,7 +676,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(typeof zamanSahnesiBaslat==='function'&&typeof zamanOzeti==='function'){
       const o=ilerleOnizle(k);
       zamanSahnesiBaslat({ozet:zamanOzeti(k,once,r),baslik:tarihYazi(k.tarih)+' · '+saatYazi(k.gunIciDakika),durak:ilerleBas(r),
-        sonraki:o.engel.length?null:durakYazi(o),gunYazi:t=>tarihKisa(t),saat:dk=>{if(typeof odaSaatGoster==='function')odaSaatGoster(dk);},cizim:()=>ciz()});
+        sonraki:o.engel.length?null:durakYazi(o),gunYazi:t=>tarihKisa(t),saat:dk=>{if(typeof odaSaatGoster==='function')odaSaatGoster(dk);},
+        /* U7 incelemesi: sahne bitince odak İlerle'de ya da Duraklat'ta kalır */
+        cizim:()=>{const ae=document.activeElement,s=ae&&kap.contains(ae)?(ae.classList.contains('od-ana')?'.od-alt .od-ana':ae.dataset&&ae.dataset.eylem==='duraklat'?'.od-duraklat':undefined):undefined;ciz(s);}});
     }
     ciz('.od-ana');
   }
@@ -694,7 +696,6 @@ function odaEkraniKur(kap,oyun,ayarlar){
   addEventListener('keydown',e=>{
     const Z=typeof ZAMAN_SAHNE!=='undefined'?ZAMAN_SAHNE:null;if(!Z||!Z.acik||kap.hidden||e.ctrlKey||e.altKey||e.metaKey)return;
     if(['Enter','NumpadEnter','Escape'].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();if(Z.evre==='akis')zamanSahnesiAtla();else{zamanSahnesiKapat();ciz('.od-ana');}return;}
-    if(Z.evre==='ozet'&&e.code!=='Space'&&e.code!=='KeyP')zamanSahnesiKapat();
   },true);
   kap.addEventListener('click',e=>{
     const b=e.target.closest('button');
@@ -706,6 +707,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     }
     if(b.disabled)return;
     const id=b.dataset.is,ey=b.dataset.eylem,ms=b.dataset.mesele;
+    /* U7 incelemesi: işin içinde başka yere gidilince (telefonda geri, dosyada sekme…) göz atma kapanır */
+    if(goz&&!['gozAt','odakGeri','kapat','duraklat','kartOnizle','testAc'].includes(ey))goz=null;
     if(ey==='duraklat'){duraklatDegistir();return;}
     if(duraklatmaVar()&&DURAKLATMADA_KAPALI.has(ey))return;
     if(ey==='testAc'){const u=b.parentNode,a=!u.classList.contains('acik');u.classList.toggle('acik',a);b.setAttribute('aria-expanded',a?'true':'false');return;}
@@ -816,7 +819,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
      düğmesindeyse yeniden çizimden sonra aynı yere döner: Boşluk/P ile duraklatıp devam eden klavye kullanıcısı ←/→/Enter'ı kaybetmez (inceleme 2026-10-26) */
   const odakSecici=()=>{const ae=document.activeElement,ic=ae&&ae!==kap&&kap.contains(ae)?ae:null,c=ic&&ic.closest('.kk-kart');
     return c?'.kk-kart[data-is="'+c.dataset.is+'"]'+(ic.classList.contains('kk-kenar')?' .kk-kenar[data-yon="'+ic.dataset.yon+'"]':''):ic&&ic.dataset.eylem==='duraklat'?'.od-duraklat':undefined;};
-  duraklatmaDinle(a=>{if(kap.hidden||oyun.bozukHata)return;if(a&&izleme)izlemeKaydet();if(a&&typeof zamanSahnesiAtla==='function')zamanSahnesiAtla();ciz(odakSecici());});   /* U4: Duraklat akışı özete atlatır */
+  duraklatmaDinle(a=>{if(kap.hidden||oyun.bozukHata)return;if(a&&izleme)izlemeKaydet();const s=odakSecici();if(a&&typeof zamanSahnesiAtla==='function')zamanSahnesiAtla();ciz(s);});   /* U4: Duraklat akışı özete atlatır */
   addEventListener('pagehide',()=>{if(izleme)izlemeKaydet();});
   /* kayıttan dönüşte süren bir gözlem varsa başkan balkondadır */
   if(gozlemVar&&k&&gozlemAcik(k))odaYerAyarla('balkon');

@@ -10,8 +10,8 @@
    Kural içermez; durum ve Esc zinciri js/ekran-oda.js'tedir. Eski seçiciler takma ad olarak yaşar (.od-panel, .od-telefonPanel, .od-icerik, .od-perde).
      odakKabi(s) → html. s: {ad, boy:'genis'|'orta'|'kucuk'|'cihaz', etiket (aria-label), sinif (ek sınıflar), baslik, geri:{etiket, eylem, veri}|null,
        kagit (true: paneller .od-icerik kâğıdında; false: dosya, defter), govde (html), belir (bu çizimde belirme geçişi), yan:{baslik, govde}|null}
-       yan (U3 göz atma): iş sola kayıp daralır (STIL.kagit.odak.goz.is %; telefon kendi enini korur), sağda ikinci kâğıt (goz.yan %) açılır; içi inert
-       (göz atmanın içinden yeni iş açılmaz, eylem yok). Kapatmak ‹ Geri ve Esc'tir (js/ekran-oda.js odakGeriHedef).
+       yan (U3 göz atma): iş sola kayıp daralır (STIL.kagit.odak.goz.is %; telefon kendi enini korur), sağda ikinci kâğıt (goz.yan %) açılır; içinde
+       düğme yoktur (göz atmanın içinden yeni iş açılmaz); ekran okuyucu okur (U7 incelemesi: inert kalktı). Kapatmak ‹ Geri ve Esc'tir (js/ekran-oda.js odakGeriHedef).
      odakCikis(kap)  kapanmadan önce çağrılır: açık kabın görünür kopyası (etkileşimsiz) kapanma geçişiyle söner
      odakKokYerlestir(kap, nokta)  belirme geçişinin kökü: nesnenin karedeki yeri ({x,y} 0–1), yoksa kabın ortası */
 (function odakStili(){
@@ -77,7 +77,7 @@ function odakKabi(s){
   const ust='<header class="odk-ust"><span class="odk-sol">'+g+'</span><h3>'+yazOdk(s.baslik)+'</h3><span class="odk-sag"><button type="button" class="od-kapat" data-eylem="kapat" title="Masaya bırak (Esc)">Kapat ×</button></span></header>';
   const govde=s.kagit?'<div class="odk-kagit"><div class="od-icerik">'+s.govde+'</div></div>':'<div class="odk-govde">'+s.govde+'</div>';
   const yan=s.yan?'<aside class="odk-goz'+(s.yan.belir?' odk-gozBelir':'')+'" data-boy="'+(s.boy||'genis')+'" aria-label="Göz at: '+yazOdk(s.yan.baslik)+'"><header class="odk-gozUst"><h4>'+yazOdk(s.yan.baslik)+'</h4><small>yalnız okuma</small></header>'+
-    '<div class="odk-gozIcerik" inert>'+s.yan.govde+'</div></aside>':'';
+    '<div class="odk-gozIcerik">'+s.yan.govde+'</div></aside>':'';
   return'<div class="odk-perde od-perde'+(s.belir?' odk-belir':'')+'" data-perde="1"></div>'+
     '<section class="odk'+(s.sinif?' '+s.sinif:'')+(s.belir?' odk-belir':'')+'" data-odak="'+yazOdk(s.ad)+'" data-boy="'+(s.boy||'genis')+'"'+(s.yan?' data-goz="1"':'')+(s.kagit?' role="dialog" aria-label="'+yazOdk(s.etiket)+'"':'')+'>'+ust+govde+'</section>'+yan;
 }

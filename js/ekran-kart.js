@@ -357,6 +357,8 @@ function kartEtkilesimKur(kok,o){
     for(const f of K){const ac=f.dataset.yuz===ad;f.classList.toggle('kk-yuz',ac);if(ac)eng=f.hasAttribute('data-engel');}
     c.toggleAttribute('data-engel',eng);
     for(const b of c.querySelectorAll(KENAR))b.setAttribute('aria-pressed',b.dataset.yon===y?'true':'false');
+    /* U7 incelemesi: odak gizlenen yüzdeki bir düğmedeyse karta döner */
+    const ae=document.activeElement;if(ae&&c.contains(ae)&&ae.closest('.kk-yuzKat')&&!ae.closest('.kk-yuz'))c.focus({preventScroll:true});
     return true;
   }
   /* önizleme: yüz yerinde döner, ev sahibi durumunu kaydeder; ev sahibi yeniden çizdiyse eski kartın duruşu yeni karta taşınır ve CSS geçişi oradan sürer */

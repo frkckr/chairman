@@ -678,7 +678,7 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
        &&!(ant&&b.dakika<ant.bit&&b.dakika+45>ant.bas)&&s.id==='biz'&&s.metin==='Şu gün olsun: '+MG('gunAyYazi')(b.tarih)+' '+MG('saatYazi')(b.dakika)
        &&!!rz&&rz.tarih===b.tarih&&rz.dakika===b.dakika&&rz.veri.sure===45&&ig>=0&&io===ig+1&&!M[io].yeni&&!kbz.isler[gKart.id]&&!MG('kariyerDogrula')(kbz).length,
        b&&`${s.metin} · öneri ${gKart.veri.oneri.tarih} ${MG('saatYazi')(gKart.veri.oneri.dakika)}`);
-     /* öneri kabul edilemiyorsa (o saatte iş) bizim an öneriden sonra da olabilir (14 gün içinde ilk boş) */
+     /* öneri kabul edilemiyorsa (o saatte iş) sınır 14 güne çıkar; bugün öneriden önce yer olduğu için an yine önce düşer (öneriden sonrası denetlenmez) */
      const kc=KK3(gk,x=>{MG('isEkle')(x,{tur:'ajanda',tarih:gKart.veri.oneri.tarih,dakika:gKart.veri.oneri.dakika,veri:{baslik:'Deneme engeli',aciklama:'Deneme (U3).',zorunluluk:'istege',sure:30}});}).kariyer;
      const S2=MG('kararSecenekleri')(kc,kc.isler[gKart.id]),b2=MG('bizimGorusmeAni')(kc,kc.isler[gKart.id]);
      denetle('U3: önerinin saatinde iş varsa Kabul et engelli, “Şu gün olsun” yine bir an önerir (çakışmasız)',

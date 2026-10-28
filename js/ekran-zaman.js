@@ -4,7 +4,7 @@
    ay başı, transfer dönemi ve sezon sonu kartın üstünde kapak olarak. Kural içermez, kariyeri değiştirmez: İlerle'nin komutu sahneden ÖNCE
    uygulanmıştır (kayıt, alt şerit ve denemeler son durumu okur); sahne yalnız sunumdur.
    Geçiş: tıklamak ya da Enter/Boşluk/Esc akışı atlar (özete geçer); özette herhangi bir tıklama ya da tuş kartı kaldırır ve tıklama işini yapar
-   (masadaki nesne açılır, İlerle yeniden ilerler). Akış sırasında İlerle'ye basmak sahneyi bırakıp yeniden ilerler (beklettirmez). Duraklat akışı
+   (masadaki nesne açılır, İlerle yeniden ilerler); tuşlardan yalnız Enter ve Esc özeti kaldırır (Sekme, oklar dokunmaz). Akış sırasında İlerle'ye basmak sahneyi bırakıp yeniden ilerler (beklettirmez). Duraklat akışı
    özete atlatır (sahne hareketi durur). "Hareketi azalt" tercihinde akış yoktur, özet hemen gelir.
      zamanSahnesiBaslat(o)  o: {ozet (zamanOzeti), baslik (yeni anın yazısı), durak (şimdiki durak cümlesi), sonraki (sıradaki durak), gunYazi(tarih),
                             saat(dk) (odanın saat kolları), cizim() (oda yeniden çizer; sahne bitince İlerle düğmesi eski yazısına döner)}
@@ -88,6 +88,8 @@ function zamanBitir(){
   const S=ZAMAN_SAHNE;if(!S.acik)return;S.evre='ozet';
   if(S.o.saat)S.o.saat(S.o.ozet.son%1440);
   if(S.o.cizim)S.o.cizim();
+  /* U7 incelemesi: özet kalıcı canlı bölgeden duyurulur (kart yeniden kurulduğu için kendisi duyurulmaz) */
+  const E=document.querySelector('.oda .zm-sahne');if(E&&typeof metinDuyur==='function')metinDuyur((E.innerText||E.textContent||'').replace(/\s+/g,' ').trim());
 }
 function zamanSahnesiAtla(){if(ZAMAN_SAHNE.acik&&ZAMAN_SAHNE.evre==='akis')zamanBitir();}
 function zamanSahnesiKapat(){const S=ZAMAN_SAHNE;if(!S.acik)return;S.acik=false;S.evre=null;const E=document.querySelector('.oda .zm-sahne');if(E)E.remove();}

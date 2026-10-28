@@ -33,13 +33,16 @@ const MESAJ_GIZLI=new Set(['kapandi']);
 const MESAJ_KAYNAKLARI=[];
 /* ---- U3 (envanter 15): bekleme ve devir etiketleri (saf okuma). Türkçe ekler ünlü uyumuyla: bulunma (-da/-de/-ta/-te), yönelme (-a/-e/-ya/-ye) ---- */
 const tkSonUnlu=s=>{const m=String(s).toLocaleLowerCase('tr-TR').match(/[aeıioöuü](?=[^aeıioöuü]*$)/);return m?m[0]:'e';};
-const tkKalin=s=>'aıou'.includes(tkSonUnlu(s));
+/* son hecesi kalın ünlülü olduğu hâlde ince ek alan adlar ve sözcükler (Kemal'de, Celal'e, saat'te) */
+const TK_INCE_ISTISNA=new Set(['kemal','celal','cemal','hilal','kemâl','saat','alkol','gol','meral']);
+const tkKalin=s=>{const t=String(s).trim().toLocaleLowerCase('tr-TR'),son=t.split(/\s+/).pop();return!TK_INCE_ISTISNA.has(son)&&'aıou'.includes(tkSonUnlu(t));};
 const bulunmaEki=s=>{const t=String(s).trim(),son=t.slice(-1).toLocaleLowerCase('tr-TR');return t+'\''+('çfhkpsşt'.includes(son)?'t':'d')+(tkKalin(t)?'a':'e');};
 const yonelmeEki=s=>{const t=String(s).trim(),son=t.slice(-1).toLocaleLowerCase('tr-TR');return t+'\''+('aeıioöuü'.includes(son)?'y':'')+(tkKalin(t)?'a':'e');};
 const MESAJ_GUNLER=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
 /* “Perşembe'ye kadar”: bugün, yarın, bir hafta içinde gün adı, sonrası gün ve ay */
 function kadarYazi(k,tarih){
-  if(tarih===k.tarih)return'bugün';
+  if(tarih===k.tarih)return'bugün içinde';
+  if(tarih<k.tarih)return'gecikti';
   if(tarih===tarihEkle(k.tarih,1))return'yarına kadar';
   const fark=(anDakika(tarih,0)-anDakika(k.tarih,0))/1440;
   if(fark>0&&fark<7){const [y,a,g]=tarih.split('-').map(Number);return yonelmeEki(MESAJ_GUNLER[new Date(Date.UTC(y,a-1,g)).getUTCDay()])+' kadar';}
@@ -50,6 +53,7 @@ const devirEtiketi=(k,kisiId,tarih)=>{const p=k.kisiler[kisiId];return p?bulunma
 /* beklenen cevabın yaklaşık zamanı: “~3 saat sonra”, “~40 dk sonra”, başka günse “yarın 09:30 gibi” / “25 Kasım 09:30 gibi” */
 function cevapBeklemeYazi(k,an){
   const fark=an-simdikiAn(k),t=anTarih(an);
+  if(fark<=0)return'birazdan';
   if(t.tarih!==k.tarih)return(t.tarih===tarihEkle(k.tarih,1)?'yarın':gunAyYazi(t.tarih))+' '+saatYazi(t.dakika)+' gibi';
   if(fark<60)return'~'+Math.max(5,Math.round(fark/5)*5)+' dk sonra';
   return'~'+Math.round(fark/60)+' saat sonra';

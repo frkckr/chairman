@@ -2066,7 +2066,7 @@ async def bolum_21(tarayici, site, tum_hatalar):
     await pg.keyboard.press("ArrowRight")
     await pg.click('.tel-cevap .kk-yuz [data-eylem="gozAt"]')
     gz = await pg.evaluate("""() => { const a = document.querySelector('aside.odk-goz'), s = document.querySelector('section.odk'), t = document.querySelector('.tel-cevap .kk-kart');
-      return { goz: !!a, baslik: a ? a.querySelector('h4').textContent : '', isaret: (document.querySelector('.od-gozIsaret') || {}).textContent || '', inert: !!a && a.querySelector('.odk-gozIcerik').inert,
+      return { goz: !!a, baslik: a ? a.querySelector('h4').textContent : '', isaret: (document.querySelector('.od-gozIsaret') || {}).textContent || '', inert: !!a && !a.querySelector('.odk-gozIcerik button, .odk-gozIcerik a, .odk-gozIcerik [tabindex]'),
         geri: (document.querySelector('.odk-geri') || {}).textContent || '', sol: s ? s.getBoundingClientRect().right <= a.getBoundingClientRect().left + 1 : false, yuz: t ? t.dataset.yuz : null }; }""")
     await pg.screenshot(path=str(ARAC / "son-akis-21-gozat.png"))
     await pg.keyboard.press("Escape")

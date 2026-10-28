@@ -11,7 +11,7 @@
    METİNLER TEST TASLAĞIDIR (karar 35 kipi). */
 'use strict';
 const ZAMAN_KAPAK={ayBasi:'Ay başı',transfer:'Transfer dönemi',sezonSonu:'Sezon sonu'};
-const ZAMAN_GAZETE_SAAT=480;
+const ZAMAN_GAZETE_SAAT=typeof GUN_BASLANGICI!=='undefined'?GUN_BASLANGICI:480;   /* gazetenin çıktığı an (js/gazete.js penceresiyle aynı) */
 function sureYazi(dk){
   dk=Math.max(0,Math.round(dk));
   const g=Math.floor(dk/1440),s=Math.floor(dk%1440/60),d=dk%60,P=[];
@@ -26,7 +26,10 @@ function zamanOzeti(k,once,r){
     if(t==='odeme'){const h=(k.hareketler||[]).find(x=>x.id===s.hareketId);if(h)ekle(g.tarih,g.dakika,h.aciklama+' · '+paraYazi(h.tutar),t);}
     else if(t==='ajanda'&&s.durum==='kacirildi')ekle(g.tarih,g.dakika,s.baslik+' kaçırıldı',t);
     else if(t==='ajanda'&&s.durum==='cevapsiz')ekle(g.tarih,g.dakika,s.baslik+': cevapsız kaldı'+(s.bilgi?' — '+s.bilgi:''),t);
-    else if(t==='hatirlatma'&&s.metin){ekle(g.tarih,g.dakika,s.metin,t);if(s.kapak&&ZAMAN_KAPAK[s.kapak])K.push({tur:s.kapak,tarih:g.tarih,baslik:ZAMAN_KAPAK[s.kapak],metin:s.metin});}
+    else if(t==='hatirlatma'&&s.metin){ekle(g.tarih,g.dakika,s.metin,t);
+      /* eski kayıtların hatırlatmasında kapak yoktur: transfer dönemi ve sezon sonu metinden tanınır (U7 incelemesi) */
+      const kp=s.kapak||(/transfer dönemi (açıldı|kapandı)/i.test(s.metin)?'transfer':/^Sezon tamamlandı/.test(s.metin)?'sezonSonu':null);
+      if(kp&&ZAMAN_KAPAK[kp])K.push({tur:kp,tarih:g.tarih,baslik:ZAMAN_KAPAK[kp],metin:s.metin});}
     else if((t==='ayBasi'||t==='maliRapor')&&s.metin){ekle(g.tarih,g.dakika,s.metin,t);if(t==='ayBasi')K.push({tur:'ayBasi',tarih:g.tarih,baslik:ZAMAN_KAPAK.ayBasi,metin:s.metin});}
     else if(t==='gelisme'&&s.yazisma){const p=k.kisiler[s.yazisma.kisiId];ekle(g.tarih,g.dakika,(p?p.ad:'Biri')+(s.yazisma.cevapYok?': cevap gelmedi':' yazdı'),t);}
     else if(t==='gelisme'&&s.haber)ekle(g.tarih,g.dakika,'Beklediğin görüş geldi',t);
