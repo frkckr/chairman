@@ -13,7 +13,8 @@ function duraklatDegistir(){if(duraklatmaVar('elle'))duraklatmaKaldir('elle');el
 btnDuraklat.onclick=duraklatDegistir;
 /* geliştirici panelindeki Durdur/Devam aynı ortak duraklatmayı kullanır (2.8O) */
 const btnDurdur=$('btnDurdur');btnDurdur.onclick=duraklatDegistir;
-duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';if(duraklatGosterge)duraklatGosterge.hidden=!a;});
+duraklatmaDinle(a=>{const e=duraklatmaVar('elle');press(btnDuraklat,e);btnDuraklat.textContent=e?'Devam':'Duraklat';press(btnDurdur,e);btnDurdur.textContent=e?'Devam':'Durdur';if(duraklatGosterge)duraklatGosterge.hidden=!(a&&[...SUNUM.nedenler].some(n=>n!=='telefon'));});
+/* U2: maç telefonu açıkken (yalnız 'telefon' nedeni) “Duraklatıldı” etiketi görünmez; telefonun durum çubuğu “Durdu · dk” der */
 /* santraya geç: maç öncesini (ısınma, tören, tokalaşma, fotoğraf, yazı tura) görüntüsüz bitirir (F3-0: basılan an maçı değiştirmez; birkaç saniye
    sürer, düğme o sırada "Santraya geçiliyor…" yazar); santrada düğme kaybolur */
 const btnMacaGec=$('btnMacaGec');btnMacaGec.onclick=()=>{macaGecIste();

@@ -404,11 +404,14 @@ const STIL={
     dosya:{perde:'rgba(24,16,8,.42)',kapak:'#a8291f',kapakKoyu:'#7a1c15',sekme:'#e9dcc0',sayfa:'#fbf6e8',cizgi:'#d8c9a6',not:'#fffdf6',atas:'#8a8f98',mavi:'#22347a'},
     /* ajanda (2.8M, js/ekran-defter.js): iki sayfalı spiral defter; kayıtlar mürekkep renginde */
     defter:{kapak:'#2c3442',sayfa:'#fbf8ef',cizgi:'#e3d9c2',spiral:'#5a5d62',kurdele:'#b4241c',murekkep:'#22347a',kayit:'#eef1fa',kayitCizgi:'#c4cbe0',secili:'#fff1c4',kart:'#fffdf6'},
-    /* tek kart (H1, F4; js/ekran-kart.js): yalnız ölçü ve hareket, renk yok (kâğıt dilinin renkleri). TEST. esik: bırakınca uygulayan kayma (kart
-       genişliğine oran), onizle: yüzün o yönün cevabına döndüğü kayma, kayma: klavye ya da kenar önizlemesinde kartın kayması, egim: en çok eğim
-       (derece), sure: yaylanma (sn), yuz: yüz yazısı (em; normal kart ve dosyanın büyük yüzü), telefon: konuşmanın cevap alanındaki kart (H1-b:
-       yukseklik kartın en az yüksekliği — yüz dönünce kenar etiketleri yerinde kalır; telefonun boyunun %40'ını geçmez —, kayma dar alanda önizleme kayması) */
-    kart:{esik:0.4,onizle:0.08,kayma:0.12,egim:4,sure:0.2,yuz:{normal:1.05,buyuk:1.15},telefon:{yukseklik:'14em',kayma:0.05}},
+    /* tek kart (H1, F4, U2; js/ekran-kart.js): yalnız ölçü ve hareket, renk yok (kâğıt dilinin renkleri). TEST. esik: bırakınca uygulayan kayma
+       (işaretçinin kayması, kart genişliğine oran), onizle: yüzün o yönün cevabına döndüğü kayma, kayma: klavye ya da kenar önizlemesinde kartın kayması,
+       egim: en çok eğim (derece; sürüklemede kabın izin verdiği kadar), sure: yaylanma (sn), yuz: yüz yazısı (em; normal kart ve dosyanın büyük yüzü),
+       telefon: konuşmanın cevap alanındaki kart (kayma dar alanda önizleme kayması; U2'den beri üç yüz aynı hücrede, en az yükseklik gerekmez),
+       dar: dar kap sorgusunun eşiği (kartın alanı bundan darsa boşluklar sıkışır), damga: uygulanınca basılan damga (bas: basma, bekle: durma,
+       gir: aşağı oturarak sönme, sn; egim derece), tavan: metin tavanı (konu harf, cevap adı harf, cevabın bilinen sonuç satırı; aşan kart konsola yazar) */
+    kart:{esik:0.4,onizle:0.08,kayma:0.12,egim:4,sure:0.2,yuz:{normal:1.05,buyuk:1.15},telefon:{kayma:0.05},dar:'24em',
+      damga:{bas:0.18,bekle:0.25,gir:0.3,egim:-6},tavan:{konu:320,cevap:32,satir:3}},
     /* H2-b: maçtaki kart kutucuğunun rengi (maç sonu kartı ve Canlı Skor'un ayrıntısı; eskiden js/ekran-mac-sonu.js'te). Motorun kart türleri */
     kartRenk:{sari:'#f2d21d',ikinciSari:'#d8201e',kirmizi:'#d8201e'}},
 

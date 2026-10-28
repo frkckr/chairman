@@ -3,6 +3,8 @@
    Düğmeler data-eylem taşır; ev sahibi ekran (js/ekran-oda.js, js/ekran-mac-telefon.js) tıklamayı ortak kariyer komutuna çevirir.
    Karar kartı H1'den (F4) beri js/ekran-kart.js'tedir (kararKarti, kararGorusu, yazT; tek kart). Konuşmada kart alttaki cevap alanındadır ve özetsizdir:
      konu ve hazır görüş konuşmanın akışında durur (N7). Aynı karar telefonda ve dosyada bir kez uygulanır (ajandaIsiYap işi kapatır).
+   U2 (2026-10-28): Geri'nin yazısı gideceği yerin adıdır (‹ Mesajlar, ‹ Ana ekran, ‹ Canlı Skor); konuşmanın başlığı iki satırdır (başlık çubuğu,
+     altında kişi); cevap alanında kartın adı kartın üst etiketindedir. Maçta durum çubuğu ev sahibinin M.durumCubugu'nu yazar (“Durdu · 34'”).
    telefonCiz(k, T, s)      T: {ekran:'ana'|'mesajlar'|'konusma'|'skor', kisi, skorAc (H2-b: açık Canlı Skor satırının maç kimliği ya da null)}. s: {macta, mac, onizleler, kapali, acilis, yeniler, testSecenek} (H2-d: kasa bağlantısı kalktı)
      onizleler: karar başına kartta önizlenen yön ('sol'|'sag'; ev sahibinin görünüm durumu, js/ekran-oda.js). kapali: kart kilitli, nedeni yüzde (maçta)
      Ana ekran: tarih, büyük saat, bildirim kartları (yalnız okunmamış ya da cevap bekleyen konuşmalar; N14, 2026-10-18: maç gününün Canlı Skor
@@ -98,9 +100,13 @@
 .tel-etiket{grid-column:3/-1;font-style:normal;font-size:.76em;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--k-kirmizi);white-space:nowrap}
 /* ---- konuşma: üstte kişi, baloncuklar; altta sabit cevap alanı ---- */
 .tel-ekran[data-ekran="konusma"] .tel-govde{display:flex;flex-direction:column;gap:0;padding-top:0}
-.tel-kisiBas{position:sticky;top:0;z-index:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin:0 -.7em;padding:0 .6em .35em;background:${T.ekran};border-bottom:1px solid var(--k-cizgi)}
-.tel-kisiBas>div{display:grid;justify-items:center;gap:.05em;font-size:.86em;font-weight:600;text-align:center;line-height:1.2}
-.tel-kisiBas small{font-weight:400;color:var(--k-soluk)}
+/* U2: iki satır — üstte uygulamanın başlık çubuğu (‹ Mesajlar), altında kişi (portre, ad, görev); uzun Geri yazısı kişinin adıyla çakışmaz */
+.tel-kisiBas{position:sticky;top:0;z-index:1;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:0 .55em;margin:0 -.7em;padding:0 .9em .4em;background:${T.ekran};border-bottom:1px solid var(--k-cizgi)}
+.tel-kisiBas>.tel-geri{grid-column:1/-1;justify-self:start;min-height:1.9em}
+.tel-kisiBas>.tel-portre{width:2.3em;height:2.3em}
+.tel-kisiBas>div{display:grid;gap:.05em;min-width:0;font-weight:600;line-height:1.2}
+.tel-kisiBas>div>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tel-kisiBas small{font-weight:400;color:var(--k-soluk);font-size:.86em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tel-konusma{margin-top:auto;display:grid;gap:.4em;align-content:end;padding-top:.6em}
 .tel-gun{justify-self:center;font-size:.76em;letter-spacing:.04em;color:var(--k-soluk)}
 .tel-not{justify-self:center;max-width:94%;text-align:center;font-size:.84em;color:var(--k-soluk)}
@@ -115,14 +121,14 @@
 .tel-oneri{display:grid;gap:.15em;justify-items:start;padding:.3em .5em;border:1px dashed var(--k-cizgi);border-radius:.5em}
 .tel-oneri small{color:var(--k-soluk);font-size:.84em}
 .tel-bos{color:var(--k-soluk);text-align:center;padding:1em 0}
-.tel-cevap{display:grid;gap:.45em;max-height:55cqh;overflow-y:auto;padding:.5em .65em .2em;background:var(--k-serit);border-top:1px solid var(--k-cizgi)}
-.tel-cevapBas{font-size:.8em;color:var(--k-soluk)}
-/* tek kart (H1): en az yükseklik (yüz dönünce kenarlar yerinde; yüz üstte, kenarlar altta), küçük önizleme kayması */
+.tel-cevap{display:grid;gap:.45em;max-height:55cqh;overflow-y:auto;padding:.5em .65em .45em;background:var(--k-serit);border-top:1px solid var(--k-cizgi)}
+/* tek kart (H1, U2): kartın adı üst etikette (işin başlığı); üç yüz aynı hücrede olduğu için en az yükseklik yok; dar alanda küçük önizleme kayması;
+   boşlukların sıkışması ortak bileşenin dar kap kuralıyla (js/ekran-kart.js) */
 .tel .tel-cevap .kk-alan{padding:0 ${telYan}%}
-.tel .tel-cevap .kk-kart{gap:.4em;padding:.45em .55em;background:#fff;border-radius:.8em;min-height:min(${KT.telefon.yukseklik},40cqh);grid-template-rows:minmax(0,1fr);grid-auto-rows:auto}
+.tel .tel-cevap .kk-kart{background:#fff;border-radius:.8em}
 .tel .tel-cevap .kk-kart[data-yuz="sol"]{transform:translateX(-${KT.telefon.kayma*100}%) rotate(-${telEgim}deg)}
 .tel .tel-cevap .kk-kart[data-yuz="sag"]{transform:translateX(${KT.telefon.kayma*100}%) rotate(${telEgim}deg)}
-.tel-cevap .kk-alan+.tel-cevapBas{padding-top:.4em;border-top:1px dashed var(--k-cizgi)}
+.tel-cevap .kk-alan+.kk-alan{padding-top:.45em;border-top:1px dashed var(--k-cizgi)}
 .tel .tel-cevap .kk-kenar{border-radius:.8em}
 .tel-cevap .kk-kart>.kk-not:last-child{text-align:center}
 /* ---- Canlı Skor ---- */
@@ -292,8 +298,11 @@ function telefonCiz(k,T,s={}){
   const ekran=T.ekran||'ana',M=s.mac||null;
   /* maçta saat yerine maçın kısa durumu (başlama saati, dakika, Devre, Bitti) */
   const saat=M?M.kisaDurum||M.saat||'':k?saatYazi(k.gunIciDakika):'';
+  /* U2: maçta durum çubuğu telefon açıkken maçın durduğunu söyler (“Durdu · 34'”; ev sahibi M.durumCubugu) */
+  const cubuk=M&&M.durumCubugu||saat;
   const L=k?konusmaListesi(k):[],okunmamis=L.reduce((t,c)=>t+c.okunmamis,0),cevap=L.filter(c=>c.cevapBekliyor).length;
-  const geri=(ey,ek,etiket)=>'<button type="button" class="tel-geri" data-eylem="'+ey+'"'+(ek||'')+' aria-label="'+etiket+'">Geri</button>';
+  /* U2: Geri'nin yazısı gideceği yerin adıdır (‹ Mesajlar, ‹ Ana ekran, ‹ Canlı Skor); ekran okuyucuya “Geri: …” */
+  const geri=(ey,ek,etiket)=>'<button type="button" class="tel-geri" data-eylem="'+ey+'"'+(ek||'')+' aria-label="Geri: '+etiket+'">'+etiket+'</button>';
   let ic='',alt='';
   if(ekran==='ana'){
     /* bildirimler: yalnız okunmamış ya da cevap bekleyen konuşmalar (en çok dört). N14 (kullanıcı kararı 2026-10-18): maç gününün Canlı Skor kartı
@@ -322,7 +331,7 @@ function telefonCiz(k,T,s={}){
   }else if(ekran==='konusma'){
     const c=L.find(x=>x.anahtar===T.kisi);
     if(!c)return telefonCiz(k,Object.assign(T,{ekran:'mesajlar'}),s);
-    ic='<header class="tel-kisiBas">'+geri('telUyg',' data-uyg="mesajlar"','Mesajlar')+'<div>'+portreHtml(c.kisi,'tel-portre')+yazT(c.ad)+'<small>'+yazT(c.rol)+'</small></div><span></span></header><div class="tel-konusma">';
+    ic='<header class="tel-kisiBas">'+geri('telUyg',' data-uyg="mesajlar"','Mesajlar')+portreHtml(c.kisi,'tel-portre')+'<div><span>'+yazT(c.ad)+'</span><small>'+yazT(c.rol)+'</small></div></header><div class="tel-konusma">';
     let gun=null;
     for(const m of c.mesajlar){
       if(m.tarih!==gun){gun=m.tarih;ic+='<p class="tel-gun">'+yazT(telTarih(k,gun))+'</p>';}
@@ -339,7 +348,8 @@ function telefonCiz(k,T,s={}){
     }
     ic+='</div>';
     const K=c.kararlar.filter(id=>k.isler[id]);
-    if(K.length)alt='<div class="tel-cevap" aria-label="Cevap">'+K.map(id=>'<p class="tel-cevapBas">'+yazT(k.isler[id].veri.baslik||'Karar')+'</p>'+
+    /* U2: kartın başlığı kartın üst etiketindedir (işin adı; js/ekran-kart.js), alanın üstünde ayrı satır yok */
+    if(K.length)alt='<div class="tel-cevap" aria-label="Cevap">'+K.map(id=>
       kararKarti(k,id,{onizle:(s.onizleler||{})[id]||null,ozetsiz:true,kapali:s.kapali||null,dosyaBaglanti:!s.macta,testSecenek:s.testSecenek})).join('')+'</div>';
   }else if(ekran==='kulup'){
     const Lg=s.lig||telLigVerisi(k);
@@ -380,7 +390,7 @@ function telefonCiz(k,T,s={}){
     ic+='</div>';
   }
   return'<div class="tel-yer"><div class="tel" data-ekran="'+ekran+'"><div class="tel-ekran" data-ekran="'+ekran+'"'+(ekran==='skor'?' data-sekme="'+yazT(T.skorSekme||'maclar')+'"':'')+'><i class="tel-ada" aria-hidden="true"></i>'+
-    '<div class="tel-durum"><b>'+yazT(saat)+'</b><span aria-hidden="true"><span class="tel-sinyal"><i></i><i></i><i></i><i></i></span><span class="tel-pil"><i></i></span></span></div>'+
+    '<div class="tel-durum"><b>'+yazT(cubuk)+'</b><span aria-hidden="true"><span class="tel-sinyal"><i></i><i></i><i></i><i></i></span><span class="tel-pil"><i></i></span></span></div>'+
     '<div class="tel-govde'+(s.acilis?' tel-acilis':'')+'">'+ic+'</div>'+alt+
     '<div class="tel-alt"><button type="button" class="tel-ev" data-eylem="telEv" aria-label="Ana ekran" title="Ana ekran (Esc)"></button></div></div></div></div>';
 }

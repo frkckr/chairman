@@ -6,7 +6,9 @@
    altında yerine yaylanır; iki kenar etiketi cevapların adıdır ve yalnız önizler. Klavye: ←/→ önizler, Enter önizleneni seçer, Esc önizlemeyi bırakır;
    1/2 doğrudan seçer. Tıklama seçmez. Sol yüz cevaplar[0], sağ yüz cevaplar[1]; sol ve sağ doğru/yanlış ya da renkle kodlanmaz.
    Süre kart yerine oturduktan sonra başlar; ortadan kenarlara eriyen ince çubuk, son saniyelerde amber; rakam yoktur. Seçilen cevap kartın yüzünde
-   kısa süre kalır (amber), sonra kart silinir. Süre dolarsa cevapsız sonucu işler (önizleme açıksa yüz nötre döner). Duraklat süreyi ve kartın
+   kısa süre kalır (amber) ve üstüne damga basılır (U2, js/ekran-kart.js kartDamga.bas), sonra kart silinir. Süre dolarsa cevapsız sonucu işler
+   (önizleme açıksa yüz nötre döner; damga yok). U2: kartın üstünde dosyadaki kartın üst etiketi (sürüklerken o yönün cevabı belirir, bırakınca
+   seçilecekse amber); sürüklemenin kayması kabın içinde sınırlı (ortak bileşen). Duraklat süreyi ve kartın
    hareketini dondurur (zaman karenin dt'siyle ilerler; duraklatmada seçim yapılmaz, önizleme açıktır). Yazı büyüklüğü ayarı uygulanır (OYUN.ayarlar.yazi). Ölçüler ve süreler STIL.an
    (TEST), kartın kayma ve eşik ölçüleri STIL.kagit.kart.
      kararAniAc(kayit, {kim, bitince(secim)})   açar (kayit: KARAR_ANLARI, js/karar-ani.js)
@@ -30,7 +32,7 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
 .ka-sure i{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;background:${K.serit};border-radius:1em;box-shadow:0 0 0 .08em rgba(0,0,0,.45)}
 .ka-sure.ka-amber i{background:${K.vurguZemin};opacity:1}
 .ka-kartlar{display:grid;justify-items:center;align-items:stretch;min-height:0}
-.karar-ani .ka-kart{pointer-events:auto;box-sizing:border-box;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.5em;width:min(100%,34em);min-width:0;min-height:0;
+.karar-ani .ka-kart{position:relative;pointer-events:auto;box-sizing:border-box;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:.4em;width:min(100%,34em);min-width:0;min-height:0;
   padding:.6em .8em .7em;color:${K.yazi};background:${K.serit};border:1px solid ${K.cizgi};border-bottom-width:.28em;border-radius:.5em;box-shadow:.25em .35em 0 rgba(0,0,0,.35);
   touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;transform-origin:50% 100%;transition:transform ${KA.sure}s ease-out}
 .karar-ani .ka-kart.kk-surukle{transition:none;cursor:grabbing}
@@ -66,16 +68,20 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
     const S=KARAR_ANI,c=S.kart[0];if(!c||!S.kayit)return;
     const y=S.onizle==='sol'||S.onizle==='sag'?S.onizle:null,x=y?S.kayit.cevaplar[y==='sol'?0:1]:null;
     c.dataset.yuz=y||'notr';
-    c.querySelector('.ka-yuz').innerHTML=x?'<p><b>'+yazA(x.metin)+'</b></p>'+(x.alt?'<p><small>'+yazA(x.alt)+'</small></p>':'')
+    /* U2: seçilen cevabın adı damgadadır (sec → kartDamga.bas); yüz yalnız ekran okuyucuya “Seçildi: …” der, büyük yazı damganın altında kalmaz */
+    const secili=S.secilen!==null&&S.secilen!==undefined&&S.secilen>=0;
+    c.querySelector('.ka-yuz').innerHTML=secili&&x?'<p style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">Seçildi: '+yazA(x.metin)+'</p>'
+      :x?'<p><b>'+yazA(x.metin)+'</b></p>'+(x.alt?'<p><small>'+yazA(x.alt)+'</small></p>':'')
       :'<p><small>Kaydır ya da ←/→ ile bak, Enter ile cevapla</small></p>';
     for(const b of c.querySelectorAll('.ka-kenar'))b.setAttribute('aria-pressed',b.dataset.yon===y?'true':'false');
   };
   const onizle=y=>{const S=KARAR_ANI;if(!S.acik||S.secim!==null)return;S.onizle=y==='sol'||y==='sag'?y:null;yuzYaz();};
   /* seçim: süre kart yerine oturduktan sonra ve duraklatma yokken; seçilen cevap yüzde kalır */
-  function sec(i){const S=KARAR_ANI;if(!S.acik||S.secim!==null||S.t<A.giris||duraklatmaVar())return;S.secim=S.kayit.cevaplar[i].id;S.secilen=i;S.bitisT=S.t;S.onizle=i?'sag':'sol';yuzYaz();}
+  function sec(i){const S=KARAR_ANI;if(!S.acik||S.secim!==null||S.t<A.giris||duraklatmaVar())return;S.secim=S.kayit.cevaplar[i].id;S.secilen=i;S.bitisT=S.t;S.onizle=i?'sag':'sol';yuzYaz();
+    if(typeof kartDamga!=='undefined'&&S.kart[0]){kartUstEsle(S.kart[0]);kartDamga.bas(S.kart[0],S.kayit.cevaplar[i].metin);}}   /* U2: seçilen cevabın damgası */
   /* sürükleme ve kenar etiketi ortak bileşenden (js/ekran-kart.js); kartta data-sol/data-sag yok: secim yönün kendisidir. Klavye aşağıdaki
-     yakalayıcıdadır (karar anı odak beklemez) */
-  if(typeof kartEtkilesimKur==='function')kartEtkilesimKur(E,{kart:'.ka-kart',kenar:'.ka-kenar',
+     yakalayıcıdadır (karar anı odak beklemez). Kart seçimden sonra da ekranda kaldığı için damgayı sec() kendi kartına basar (damga:false) */
+  if(typeof kartEtkilesimKur==='function')kartEtkilesimKur(E,{kart:'.ka-kart',kenar:'.ka-kenar',damga:false,
     uygula:(_,secim)=>sec(secim==='sol'?0:1),
     onizle:(_,y)=>onizle(y),
     kilitli:()=>duraklatmaVar()||KARAR_ANI.t<A.giris||KARAR_ANI.secim!==null});
@@ -93,7 +99,10 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
     kim.textContent=o.kim||'';
     const kenar=(c,i)=>'<button type="button" class="ka-kenar" data-yon="'+(i?'sag':'sol')+'" data-secim="'+yazA(c.id)+'" aria-pressed="false">'+(i?'':'<i aria-hidden="true">◂</i>')+
       '<b>'+yazA(c.metin)+'</b>'+(i?'<i aria-hidden="true">▸</i>':'')+'</button>';
-    kartlar.innerHTML='<section class="ka-kart" data-is="an" data-yuz="notr" tabindex="0" role="group" aria-label="Karar"><div class="ka-yuz" aria-live="polite"></div>'+
+    const C=kayit.cevaplar;
+    kartlar.innerHTML='<section class="ka-kart" data-is="an" data-yuz="notr" tabindex="0" role="group" aria-label="Karar">'+
+      '<div class="kk-ust" aria-hidden="true"><span class="kk-ustNotr"></span><span data-yon="sol">◂ '+yazA(C[0].metin)+'</span><span data-yon="sag">'+yazA(C[1].metin)+' ▸</span></div>'+
+      '<div class="ka-yuz" aria-live="polite"></div>'+
       '<div class="ka-kenarlar">'+kayit.cevaplar.slice(0,2).map(kenar).join('')+'</div></section>';
     S.kart=[kartlar.querySelector('.ka-kart')];yuzYaz();E.hidden=false;kararAniKare(0);};
   var kararAniKare=function(dt){

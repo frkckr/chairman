@@ -252,8 +252,8 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 /* ---- maç telefonu (js/ekran-mac-telefon.js, 2.8F): sağda okunur boyutta cihaz; açık tonlar STIL.kagit ---- */
 .macTelefon{position:absolute;z-index:5;top:4%;bottom:4%;right:3%;width:36%;font-family:var(--govde);font-size:var(--k-yaziBoyu,1.5cqw);line-height:1.35;font-variant-numeric:tabular-nums;color:var(--k-yazi)}
 .mt-cihaz{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:.35em}
-.mt-ust{display:flex;justify-content:space-between;align-items:center;gap:.6em;padding:.2em .3em .2em .8em;color:var(--k-soluk);font-size:.9em;background:var(--k-zemin);border:1px solid var(--k-cizgi);border-radius:.7em;box-shadow:.2em .3em 0 rgba(0,0,0,.3)}
-.mt-ust b{font-family:var(--govde);font-weight:600;font-size:1.1em;color:var(--k-kulup)}
+/* U2: üstte yalnız Kapat × (odak kabının başlığındaki gibi sağda); “Telefon” başlık şeridi kalktı */
+.mt-ust{display:flex;justify-content:flex-end;align-items:center;font-size:.9em}
 .macTelefon button{font:inherit;color:var(--k-yazi);background:var(--k-serit);border:1px solid var(--k-cizgi);border-bottom-width:.16em;border-radius:.2em;padding:.25em .6em .2em;cursor:pointer}
 .macTelefon button:focus-visible{outline:.14em solid var(--k-kulup);outline-offset:.1em}
 .od-kayit{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

@@ -717,11 +717,12 @@ function odaEkraniKur(kap,oyun,ayarlar){
       e.preventDefault();donusYeri=null;panelAc('dosya',S[i<0?0:(i+(e.code==='BracketLeft'?-1:1)+n)%n]);}
   });
   /* tek kart (H1, F4; js/ekran-kart.js): dosya, karar paneli ve telefon konuşması aynı kökte, aynı sözleşmeyle. Kaydırıp bırakmak ya da ←/→ + Enter
-     uygular (isiYap, seçenek kimliğiyle); kenar etiketi ve ←/→ yalnız önizler; Esc önizleme varken onu bırakır, yoksa paneli kapatır. Önizleme
-     yeniden çizer ve odak kartta kalır. Duraklatmada kart kilitli: önizlenir, uygulanmaz (kart nedenini yüzünde yazar) */
+     uygular (isiYap, seçenek kimliğiyle; uygulanınca kartın kopyası damgalanır); kenar etiketi ve ←/→ yalnız önizler; Esc önizleme varken onu bırakır,
+     yoksa odak zincirinde bir adım geri. U2: yüz kartın içinde döner, oda yeniden çizmez (önizleme yalnız kaydedilir; sonraki çizimler aynı yüzü
+     kurar), odak kartta kalır. Duraklatmada kart kilitli: önizlenir, uygulanmaz (kart nedenini yüzünde yazar) */
   if(typeof kartEtkilesimKur==='function')kartEtkilesimKur(kap,{
     uygula:(id,secim)=>isiYap(id,secim),
-    onizle:(id,y)=>{if(y)onizleler[id]=y;else delete onizleler[id];ciz('.kk-kart[data-is="'+id+'"]');},
+    onizle:(id,y)=>{if(y)onizleler[id]=y;else delete onizleler[id];},
     kilitli:()=>duraklatmaVar()});
   /* duraklatma değişince düğmeler yeniden çizilir; izlerken o ana kadarki gözlem kaydedilir. Odak kartta (ya da kenar etiketinde) ya da Duraklat
      düğmesindeyse yeniden çizimden sonra aynı yere döner: Boşluk/P ile duraklatıp devam eden klavye kullanıcısı ←/→/Enter'ı kaybetmez (inceleme 2026-10-26) */

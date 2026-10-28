@@ -1,6 +1,8 @@
 /* ============ Chairman — maç telefonu (yol haritası 2.8F, 2.8I) ============
    Görüntü katmanı; kural içermez, kariyeri değiştirmez. Maçta masadaki telefona (js/baskan.js BK_TEL; ön plan kamerası BASKAN.kamera ile
-   isabet denetimi) tıklanınca, “Telefon” düğmesiyle ya da T tuşuyla açılır; T ile kapanır. Esc bir uygulamadan ana ekrana döner, ana ekranda kapatır (N7).
+   isabet denetimi) tıklanınca, “Telefon” düğmesiyle ya da T tuşuyla açılır; T ile kapanır. Esc bir adım geri (U2, odadaki zincir; N7'nin “ana ekrana
+   döner”i değişti): konuşma → Mesajlar → ana ekran, kulüp → Canlı Skor → ana ekran; ana ekranda kapatır. Üstte yalnız Kapat × (U2: “Telefon” başlığı
+   kalktı); telefonun durum çubuğu maç sürüyorsa “Durdu · dk” der (telefon açıkken maç durur; ekranın “Duraklatıldı” etiketi yalnız elle duraklatmada).
    Oda ve balkondakiyle aynı telefondur (js/ekran-telefon.js telefonCiz): ana ekran → Mesajlar (kişi listesi → konuşma) / Canlı Skor.
      Mesajlar   kariyerdeki konuşmalar okunur; karar kartı görünür ama cevap maçta verilmez (maç içi kariyer cevabı Aşama 3'te zaman
                 bağlantısıyla açılır). Okumak maçta "yeni" işaretini de değiştirmez: maç sınırında kariyer değişmez. Kariyer yoksa boş durum.
@@ -50,6 +52,7 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null,skorSekme:'ma
     const kisaDurum=once?MAC_GUNU.bulten.saat||'Bugün':ph==='halftime'?'Devre':ph==='fulltime'?'Bitti':durumYazi();
     /* H2-b: ayrıntı (goller, kartlar, sakatlıklar, 10 satırlık tablo; beklenen gol canlı, isabetli şut maç sonu kaydıyla aynı) bizimkiyle öbür maçlarda aynı görünüm */
     return{id,evId:MAC_GUNU.ev||ev.id,depId:MAC_GUNU.konuk||dep.id,sk:once?null:sk.slice(),saat:durumYazi(),ev:ev.tamAd||ev.ad,dep:dep.tamAd||dep.ad,evKisa:ev.kisa,depKisa:dep.kisa,skor:once?'–':sk[0]+' – '+sk[1],durum:durumYazi(),kisaDurum,canli,
+      durumCubugu:canli?'Durdu · '+kisaDurum:kisaDurum,
       ayrinti:T.skorAc===id?macAyrintisi(bizKayit()):null,digerleri:digerVerisi(once)};
   }
   /* S-d: Canlı Skor'un lig verisi — canlı tablo (bülten + o anki skorlar); kariyerde kulüp ekranı ve fikstür (kariyer maç anındadır: bu hafta oynanmadı) */
@@ -63,7 +66,7 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null,skorSekme:'ma
   /* gecis: telefonda ekran değişti (kısa açılış geçişi yalnız o çizimde; N7). Maçın durumu telefonun durum çubuğunda ve ana ekranındadır */
   function ciz(odak,gecis){
     const k=typeof OYUN!=='undefined'?OYUN.kariyer:null;
-    E.innerHTML='<div class="mt-cihaz"><header class="mt-ust"><b>Telefon</b><button type="button" data-mt="kapat" title="Kapat (Esc)">Kapat ×</button></header>'+
+    E.innerHTML='<div class="mt-cihaz"><header class="mt-ust"><button type="button" data-mt="kapat" title="Kapat (T)">Kapat ×</button></header>'+
       (()=>{const M=macVerisi();return telefonCiz(k,T,{macta:true,mac:M,lig:ligVerisi(M),acilis:!!gecis,onizleler:MAC_TELEFON.onizleler,kapali:'Maç sürerken cevap verilmez; maçtan sonra odadan cevaplayabilirsin.'});})()+'</div>';
     const f=odak&&E.querySelector(odak);if(f)f.focus({preventScroll:true});
   }
@@ -109,8 +112,11 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null,skorSekme:'ma
   addEventListener('keydown',e=>{
     if(ON_EKRAN.sayfa!==null||e.ctrlKey||e.altKey||e.metaKey)return;const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;
     if(e.code==='KeyT'){e.preventDefault();MAC_TELEFON.acik?kapat():ac();}
-    /* Esc: bir uygulama açıksa önce ana ekrana döner, ana ekrandaysa telefonu kapatır (N7) */
+    /* Esc bir adım geri (U2; telefondaki ‹ Geri ile aynı yer): konuşma → Mesajlar (o kişinin satırı odakta), kulüp → Canlı Skor, öbür uygulama → ana
+       ekran; ana ekrandaysa telefonu kapatır */
     else if(e.code==='Escape'&&MAC_TELEFON.acik){e.preventDefault();if(T.ekran==='kulup'){const id=T.kulup;T.ekran='skor';T.kulup=null;ciz('[data-eylem="kulupAc"][data-kulup="'+id+'"]',true);skorYeriGeri(id);}
+      else if(T.ekran==='konusma'){const kisi=T.kisi;T.ekran='mesajlar';T.kisi=null;ciz(null,true);
+        const f=[...E.querySelectorAll('[data-eylem="telKisi"]')].find(b=>b.dataset.kisi===kisi);if(f)f.focus({preventScroll:true});}
       else if(T.ekran!=='ana'){T.ekran='ana';T.kisi=null;T.skorSekme='maclar';T.hafta=null;T.kulup=null;ciz('.tel-uygMesaj',true);}else kapat();}});
   /* açıkken skor/dakika satırı motorun donmuş anını gösterir; elle duraklatma kalkıp telefon tek neden kalınca da değişmez */
   duraklatmaDinle(()=>{if(MAC_TELEFON.acik)ciz();});

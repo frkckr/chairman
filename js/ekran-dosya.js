@@ -82,11 +82,10 @@
 .dsy-kisi .od-portre{width:3.6em;height:3.6em;box-shadow:.12em .15em 0 rgba(60,40,10,.2)}
 .dsy-kisi b{display:block;font-size:1.15em}
 .dsy-kisi small{color:var(--k-soluk)}
-/* tek kart (H1): dosyanın sağ sayfasında büyük yüz (STIL.kagit.kart.yuz.buyuk); konu alıntı biçiminde */
-.dsy .kk-yuz{font-size:${STIL.kagit.kart.yuz.buyuk}em}
-/* sürüklenen kart sayfanın içinde serbest kayar, yalnız sayfanın kenarında kırpılır (sayfa yatay kaymaz) */
+/* tek kart (H1): dosyanın sağ sayfasında büyük yüz (STIL.kagit.kart.yuz.buyuk; U2: üç yüzün hepsi, kart en uzun yüz kadar); konu alıntı biçiminde */
+.dsy .kk-yuzKat{font-size:${STIL.kagit.kart.yuz.buyuk}em}
+/* sayfa yatay kaymaz; sürüklenen kartın kayması sayfanın iç kutusuyla sınırlı (U2, js/ekran-kart.js) */
 .dsy .dsy-sag{overflow-x:hidden}
-.dsy .kk-alan{overflow-x:visible}
 .dsy .kk-konu{font-size:1em;line-height:1.4;padding:.2em 0 .2em .8em;border-left:.22em solid ${D.cizgi};font-style:italic}
 .dsy-sonuc{padding:.5em .7em;background:${D.not};border-left:.25em solid var(--k-yesil)}
 .dsy-bos{color:var(--k-soluk);font-style:italic}
