@@ -93,7 +93,7 @@ function defterGorunumu(k,D,Y){
   /* sağ sayfa yalnız takvim kayıtlarını yazar: gelen haberler (gelişmeler) telefonda ve dosyadadır */
   const bugunMu=D.gun===k.tarih,R=satirlar(D.gun).filter(r=>r.tur!=='gelisme'),toplam=(DEFTER_SAAT.bit-DEFTER_SAAT.bas)*60;
   const y=dk=>Math.max(0,Math.min(toplam,dk-DEFTER_SAAT.bas*60))/toplam*100;
-  let sag='<header class="dft-ust"><span><b>'+yaz(Y.tarihYazi(D.gun))+'</b>'+(bugunMu?' <small>bugün</small>':'')+'</span><button type="button" class="od-kapat" data-eylem="kapat" title="Kapat (Esc)">Kapat ×</button></header><div class="dft-saatler">';
+  let sag='<header class="dft-ust"><span><b>'+yaz(Y.tarihYazi(D.gun))+'</b>'+(bugunMu?' <small>bugün</small>':'')+'</span></header><div class="dft-saatler">';
   for(let s=DEFTER_SAAT.bas;s<=DEFTER_SAAT.bit;s++)sag+='<i class="dft-saatCizgi" style="top:'+y(s*60).toFixed(2)+'%"></i>'+(s%2===0?'<span class="dft-saat" style="top:'+y(s*60).toFixed(2)+'%">'+String(s).padStart(2,'0')+':00</span>':'');
   /* bloklar: süreli ajanda kayıtları; çakışanlar yan yana sütunlara ayrılır */
   const bloklar=R.filter(r=>r.tur==='ajanda'&&r.sure>0).map(r=>({r,b:r.saat,s:r.saat+r.sure})).sort((a,b)=>a.b-b.b);

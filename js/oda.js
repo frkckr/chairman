@@ -320,6 +320,14 @@ function odaIsaret(x,y){
   ODA.uzerinde=ad;return ad;
 }
 function odaOdak(ad){ODA.odak=ad&&ODA.nesneler[ad]&&(ODA.yer==='masa'||(ODA.yer==='balkon'&&ad==='telefon'))?ad:null;}
+/* U1 (2026-10-28): odak kabı açıkken oda bulanık perdenin arkasındadır; masada kamera yerine oturunca 3B çizim durur (js/arayuz.js), kapanınca sürer.
+   Balkonda antrenman canlı kalır (yarım odak U6). odaNesneEkrani(ad): nesnenin karedeki yeri {x,y} (0–1), belirme geçişinin kökü */
+function odaPanel(a){ODA.panel=!!a;}
+function odaDondur(){return !!ODA.panel&&ODA.yer==='masa'&&!ODA.yol&&!!ODA.yerlesik;}
+function odaNesneEkrani(ad){
+  const n=ODA.nesneler[ad];if(!n||!n.g.visible||ODA.yer==='yolda')return null;
+  const v=n.merkez.clone().project(ODA.kamera);return{x:(v.x+1)/2,y:(1-v.y)/2};
+}
 function odaKare(dt){
   ODA.zaman+=dt;
   const t=ODA.zaman,N=ODA.nesneler;
@@ -348,6 +356,7 @@ function odaKare(dt){
   ODA.kamera.lookAt(ODA.bakis);
   const aci=balkonda?(ODA.odak?STIL.balkon.odakAci:STIL.balkon.aci):ODA.odak?OD.odakAci:OD.aci;
   if(Math.abs(ODA.kamera.fov-aci)>0.05){ODA.kamera.fov+=(aci-ODA.kamera.fov)*k;ODA.kamera.updateProjectionMatrix();}
+  ODA.yerlesik=Math.abs(ODA.kamera.fov-aci)<=0.05&&ODA.bakis.distanceToSquared(hedef)<1e-6;
   for(const ad in N)N[ad].cerceve.visible=N[ad].g.visible&&(ad===ODA.uzerinde||ad===ODA.odak);
   if(ODA.kapiHedef)ODA.kapiHedef.cerceve.visible=ODA.uzerinde==='kapi';
   /* yeni haber: sabit ışık (yanıp sönme yok) */

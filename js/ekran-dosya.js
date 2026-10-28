@@ -19,8 +19,7 @@
   if(typeof document==='undefined'||document.getElementById('dosyaStili'))return;
   const D=STIL.kagit.dosya,st=document.createElement('style');st.id='dosyaStili';
   st.textContent=`
-.od-perde{position:absolute;inset:0;z-index:0;background:${D.perde}}
-.oda .od-ust,.oda .od-nesneler,.oda .od-alt{z-index:2}
+/* U1: perde, şeritlerin katmanı ve dosyanın yeri odak kabındadır (js/ekran-odak.js); dosya kabı doldurur */
 .dsy{position:absolute;z-index:1;left:17%;right:2.2%;top:2.9em;bottom:5.4em;display:grid;grid-template-rows:auto minmax(0,1fr)}
 .dsy-sekmeler{display:flex;align-items:flex-end;gap:.25em;padding:0 1.2em;min-width:0;overflow:hidden}
 .oda .dsy button.dsy-sekme{display:flex;align-items:center;gap:.4em;max-width:16em;min-width:0;padding:.35em .8em .3em;border:1px solid ${D.kapakKoyu};border-bottom:0;
@@ -116,7 +115,7 @@ function dosyaGorunumu(k,D,Y){
     (R.length?'<button type="button" class="dsy-sekme dsy-raporSekme" role="tab" data-eylem="raporlar" aria-selected="'+(raporGor?'true':'false')+'">Raporlar ('+R.length+')'+
       (R.some(x=>!x.h.gorulen)?'<i class="dsy-yeniRapor" aria-hidden="true"></i><span class="dsy-gizli"> (yeni rapor)</span>':'')+'</button>':'')+
     '<button type="button" class="dsy-sekme dsy-arsivSekme" role="tab" data-eylem="arsiv" aria-selected="'+(D.arsiv&&!raporGor&&!kadroAcik?'true':'false')+'"'+(arsivL.length||D.arsiv?'':' disabled')+'>Arşiv ('+arsivL.length+')</button>'+
-    '<button type="button" class="od-kapat" data-eylem="kapat" title="Kapat (Esc)">Kapat ×</button></nav>';
+    '</nav>';
   let sol='',sag='',genis=null;
   if(kadroAcik){
     const biz=k.kisiler[k.baskanId].kulupId,Sat=kadroSatirlari(k,biz),O=D.seciliOyuncu&&Sat.some(x=>x.id===D.seciliOyuncu)?oyuncuDosyasi(k,D.seciliOyuncu):null;
@@ -135,7 +134,7 @@ function dosyaGorunumu(k,D,Y){
         '<p class="od-not">M ve Dk bu sezonun; devralınan haftalar TEST üretimi; eski kayıtta —.</p>';
     }else{
       const U=O.kunye,Z=O.sezon,Sz=O.sozlesme;
-      sol='<p><button type="button" class="od-baglanti" data-eylem="kadroDon">◂ Kadro</button></p><p class="dsy-kat">Oyuncu dosyası'+(Y.oyuncuTest?Y.oyuncuTest(D.seciliOyuncu):'')+'</p>'+
+      sol='<p class="dsy-kat">Oyuncu dosyası'+(Y.oyuncuTest?Y.oyuncuTest(D.seciliOyuncu):'')+'</p>'+
         '<h3 class="dsy-baslik">'+yaz(U.ad)+'</h3><dl class="dsy-kunye"><dt>Forma</dt><dd>'+U.no+'</dd><dt>Mevki</dt><dd>'+yaz(MV[U.mevki]||U.mevki)+'</dd>'+
         '<dt>Yaş</dt><dd>'+U.yas+(U.dogumTarihi?' <small>('+yaz(gunAyYazi(U.dogumTarihi)+' '+U.dogumTarihi.slice(0,4))+')</small>':'')+'</dd><dt>Ayak</dt><dd>'+yaz(AY[U.ayak]||'—')+'</dd><dt>Kulüp</dt><dd>'+yaz(U.kulupAd)+'</dd></dl>'+
         '<h4>Bu sezon</h4><dl class="od-dl"><dt>Maç</dt><dd>'+sy(Z.mac)+'</dd><dt>Dakika</dt><dd>'+sy(Z.dk)+'</dd><dt>Gol</dt><dd>'+Z.gol+'</dd><dt>Sarı kart</dt><dd>'+Z.sari+'</dd><dt>Kırmızı kart</dt><dd>'+Z.kirmizi+'</dd></dl>'+
@@ -159,7 +158,7 @@ function dosyaGorunumu(k,D,Y){
   }else{
     const o=meseleOzeti(k,D.secili),m=o.mesele,[katAd,katS]=meseleKategorisi(m);
     const st=m.durum!=='kapandi'?Y.sonTarih(o):'';
-    if(D.donus)sol+='<p><button type="button" class="od-baglanti" data-eylem="donus">◂ '+(D.donus==='telefon'?'Mesaja dön':'Ajandaya dön')+'</button></p>';
+    /* U1: '◂ Mesaja dön' / '◂ Ajandaya dön' odak kabının başlığındaki ‹ Geri'dir (js/ekran-oda.js odakGeriHedef) */
     sol+='<p class="dsy-kat"><i class="od-kSimge" aria-hidden="true">'+yaz(katS)+'</i>'+yaz(katAd)+(Y.testKutu?Y.testKutu():'')+'</p>'+
       '<h3 class="dsy-baslik">'+yaz(m.baslik)+'</h3><span class="dsy-damga dsy-d-'+m.durum+'">'+yaz(DAMGA[m.durum]||o.durumAdi)+'</span>'+
       '<dl class="dsy-kunye"><dt>Yürüten</dt><dd>'+(o.sorumlu?yaz(o.sorumlu.ad):'—')+'</dd>'+(st?'<dt>'+yaz(st.split(': ')[0])+'</dt><dd><b>'+yaz(st.split(': ').slice(1).join(': '))+'</b></dd>':'')+'</dl>';

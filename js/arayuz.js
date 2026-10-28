@@ -63,7 +63,8 @@ function izlemeGosterge(){const a=!!MAC_HIZ.anda;if(a===izlemeAndaSon)return;izl
 let last=0,time=0,onEkranCizildi=false;
 function frame(now){
   /* başkan odası: stat yerine oda sahnesi çizilir; maç zamanı ilerlemez (js/oda.js). Odadan çıkınca stat yeniden çizilir */
-  if(ON_EKRAN.sayfa==='oda'){odaKare(duraklatmaVar()?0:Math.min(0.05,Math.max(0,(now-last)/1000)));last=now;odaCiz();onEkranCizildi=false;requestAnimationFrame(frame);return;}
+  /* U1: odak kabı açıkken masada kamera yerleşince oda çizilmez (bulanık perdenin arkasında donuk kare; js/oda.js odaDondur) */
+  if(ON_EKRAN.sayfa==='oda'){odaKare(duraklatmaVar()?0:Math.min(0.05,Math.max(0,(now-last)/1000)));last=now;if(!(typeof odaDondur==='function'&&odaDondur()))odaCiz();onEkranCizildi=false;requestAnimationFrame(frame);return;}
   /* maç öncesi ekranı açıkken maç günü başlamaz: stat bir kez çizilir, menünün arkasında donuk durur */
   if(ON_EKRAN.acik&&onEkranCizildi){last=now;requestAnimationFrame(frame);return;}
   const gercekDt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;

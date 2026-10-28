@@ -327,10 +327,11 @@ const STIL={
 
   /* Başkan odası (js/oda.js): aydınlık, gün ışığı alan oda; başkanın masasından bakış. Ölçüler metre.
      goz/bakis: kameranın yeri ve dinlenirken baktığı nokta; odakAci: bir nesneye odaklanınca görüş açısı;
-     odakKayma: panel sağda açıkken nesne solda görünsün diye bakışın sağa kayması (metre).
+     odakKayma: panel sağda açıkken nesne solda görünsün diye bakışın sağa kayması (metre). U1 (2026-10-28): iş ortada açıldığı için 0;
+     odakAci 52 → 48 (nesneye yaklaşma hissi kameradan, netlik perdeden).
      gunIsigi: saate göre [saat, güç, renk] — sabah, öğle ve akşam odada hissedilsin diye. vurguCizgi: üzerine gelinen nesnenin amber
      çerçevesinin kalınlığı (ızgara pikseli; js/goruntu.js kalinCizgi). TEST değerleri. */
-  oda:{aci:56,odakAci:52,odakKayma:0.5,goz:[0,1.28,0.62],bakis:[0,0.95,-1.4],arkaPlan:0xd8e4ea,
+  oda:{aci:56,odakAci:48,odakKayma:0,goz:[0,1.28,0.62],bakis:[0,0.95,-1.4],arkaPlan:0xd8e4ea,
     duvar:0xece4d2,lambri:0xcdbb98,supurgelik:0x8a6a44,tavan:0xf6f1e6,zemin:'#b08252',zeminKoyu:'#966a3e',zeminAcik:'#c0935f',hali:0x8e2f28,haliKenar:0xd8c08a,
     cerceve:0xf4f1e8,gokUst:'#9fd0ee',gokAlt:'#e8f4f8',cim:'#3a8c33',tribun:'#8a8c90',direk:'#5a5d62',
     dolap:0x7a5634,dolapKoyu:0x5e4026,koltuk:0x7a2420,koltukAyak:0x3a2a1c,lamba:0x2e5a46,lambaIc:0xfff2c8,
@@ -390,6 +391,11 @@ const STIL={
   kagit:{zemin:'#f4eedf',zeminKoyu:'#e9e0cb',serit:'#fbf7ec',cizgi:'#c9b994',yazi:'#26221c',soluk:'#6d6353',vurgu:'#a5620a',vurguZemin:'#ffb530',
     kulup:'#b4241c',kirmizi:'#b4241c',yesil:'#2c6f28',golge:'rgba(40,28,12,.28)',vurguYazi:'#1a1203',vurguYaziSoluk:'#3a2a08',mavi:'#22347a',murekkep:'#22347a',
     yaziBoyu:{normal:1.5,buyuk:1.8},
+    /* U1 (2026-10-28) odak kabı (js/ekran-odak.js): perde bulanıklığı (px; canlandırılmaz) ve karartması, bulanıklık yokken yalnız karartma,
+       kabın genişliği (karenin %'si; genis dosya/defter/gazete/kadro, orta karar, kucuk ayarlar, cihaz telefon), belirme ölçeği ve süreler (ms).
+       Araştırma: statik 6–8 px ve %30–35 karartma; açılış 200–300, kapanış 150–200 ms (u-arastirma §6.3). TEST değerleri */
+    odak:{bulanik:7,karartma:'rgba(24,16,8,.33)',yalnizKarartma:'rgba(24,16,8,.5)',boy:{genis:80,orta:60,kucuk:52,cihaz:44},olcek:0.96,
+      sure:{belir:220,kapan:160,perde:150,perdeKapan:120,azalt:150}},
     /* telefon (2.8I): açık tonlu cihaz; gelen/giden baloncuk ve ana ekran simgeleri. N7 (2026-10-04): cihaz çerçevesi ve kamera adası, ana ekranın
        dikey zemini (üst, orta, alt), alttaki sabit sıranın zemini, geri/okunmamış mavisi, satır ayracı */
     telefon:{kasa:'#1d1e22',cerceve:'#34363c',ada:'#0c0c0e',ekran:'#f7f2e6',anaZemin:['#efe6d0','#f7f2e6','#f1e8d4'],sabit:'rgba(201,185,148,.42)',
