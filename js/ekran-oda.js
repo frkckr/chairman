@@ -101,7 +101,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   function rozetYaz(){
     const karar=kararBekleyen().length,haber=haberSayisi(),is=bekleyenIsSayisi();
     const yaz1=(ad,rozet,sinif)=>{const d=kap.querySelector('.od-nesne[data-panel="'+ad+'"]');if(!d)return;let i=d.querySelector('.od-rozet');
-      if(!rozet){if(i)i.remove();return;}if(!i){i=document.createElement('i');d.appendChild(i);}i.className='od-rozet'+(sinif?' '+sinif:'');if(i.textContent!==rozet)i.textContent=rozet;};
+      if(!rozet){if(i)i.remove();return;}if(!i){i=document.createElement('i');d.appendChild(i);}i.className='od-rozet'+(sinif?' '+sinif:'');i.dataset.rozet=rozet==='yeni'||rozet==='karar'?rozet:'sayi';if(i.textContent!==rozet)i.textContent=rozet;};
     yaz1('telefon',haber?String(haber):'',karar?'od-rozetAcil':'');yaz1('ajanda',is?String(is):'');
     yaz1('dosya',karar?'karar':yeniRapor()?'yeni':'',karar?'od-rozetAcil':'');
     const d=kap.querySelector('.od-nesne[data-panel="dosya"]');if(d)d.disabled=!(meseleler().length>0||raporlar().length>0||kadroAcilir());
@@ -413,15 +413,17 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const eskiTel=kap.querySelector('.tel-govde'),telKaydirma=eskiTel&&cizilenPanel==='telefon'&&acik==='telefon'&&cizilenTel===telAnahtar()?eskiTel.scrollTop:null;
     /* H1: kartın önizlemesi yeniden çizdiğinde telefonun cevap alanının okuma yeri de korunur */
     const eskiCevap=telKaydirma!==null?kap.querySelector('.tel-cevap'):null,cevapKaydirma=eskiCevap?eskiCevap.scrollTop:0;
-    kap.style.setProperty('--k-yaziBoyu',K.yaziBoyu[ayarlar.yazi==='buyuk'?'buyuk':'normal']+'cqw');
+    yaziBoyuUygula();   /* U0: tek ölçek, oyun karesine yazılır */
     if(oyun.bozukHata){
       kap.innerHTML='<div class="od-panel od-bozuk"><header><h3>Kayıt açılamadı</h3></header><div class="od-icerik"><p>Kayıtlı kariyer açılamadı. Kayıt dosyasına dokunulmadı.</p><p class="od-not">'+yaz(oyun.bozukHata)+'</p>'+
         '<p>Yeni kariyer başlatırsan açılamayan kayıt “.bozuk” uzantısıyla ayrıca saklanır.</p><div class="od-dugmeler"><button type="button" class="od-birincil" data-eylem="bozukYeni">Kaydı sakla, yeni kariyer başlat</button></div></div></div>';
       return;
     }
     const b=k.kisiler[k.baskanId],haber=haberSayisi(),karar=kararBekleyen().length,is=bekleyenIsSayisi(),dosyaVar=meseleler().length>0||raporlar().length>0||kadroAcilir();
+    /* U0 rozet dili: data-rozet sayı, karar ya da yeni (görünüş index.html .od-rozet) */
+    const rozetTuru=r=>r==='yeni'||r==='karar'?r:'sayi';
     const dugme=(ad,rozet,sinif,kapali)=>'<button type="button" class="od-nesne" data-eylem="ac" data-panel="'+ad+'" aria-pressed="'+(acik===ad?'true':'false')+'"'+(kapali?' disabled':'')+'>'+
-      NESNE[ad]+(rozet?'<i class="od-rozet'+(sinif?' '+sinif:'')+'">'+rozet+'</i>':'')+'</button>';
+      NESNE[ad]+(rozet?'<i class="od-rozet'+(sinif?' '+sinif:'')+'" data-rozet="'+rozetTuru(rozet)+'">'+rozet+'</i>':'')+'</button>';
     const iz=izler(),gazeteVar=!!iz.sayi||!!iz.gazete||!!iz.kart;   /* S-e: son sayı her sabah masada */
     const baslik={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',ayar:'Ayarlar',kadro:'Kadro (TEST)',karar:'Karar'}[acik];
     const icerik=acik==='telefon'?telefonPaneli():acik==='ajanda'?ajandaPaneli():acik==='dosya'?dosyaPaneli():acik==='gazete'?gazetePaneli():acik==='ayar'?ayarPaneli():acik==='kadro'?kadroPaneli():acik==='karar'?kararPaneli():'';

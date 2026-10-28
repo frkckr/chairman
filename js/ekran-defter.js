@@ -40,7 +40,7 @@ const DEFTER_SAAT={bas:8,bit:22};            // sağ sayfadaki saat çizgileri (
 .dft-gecmis .dft-gunAd,.dft-gecmis .dft-gunNo{opacity:.55}
 .dft-isaret{display:flex;gap:.45em;align-items:center;justify-content:flex-end;font-size:.88em;color:${F.murekkep}}
 .dft-isaret .dft-son{color:var(--k-kirmizi);font-weight:600}
-.dft-mac{font-style:normal;font-size:.8em;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--k-kirmizi);padding:.05em .4em;border-radius:.2em}
+.dft-mac{font-style:normal;font-size:.86em;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--k-kirmizi);padding:.05em .4em;border-radius:.2em}
 .dft-hatir{display:grid;gap:.15em;font-size:.86em;color:var(--k-soluk)}
 .dft-hatir b{color:var(--k-kirmizi);font-weight:600}
 .dft-saatler{position:relative;height:calc(${DEFTER_SAAT.bit-DEFTER_SAAT.bas} * 1.35em);margin:.5em 0 .3em 2.9em;border-left:1px solid ${F.kurdele}}
@@ -51,7 +51,7 @@ const DEFTER_SAAT={bas:8,bit:22};            // sağ sayfadaki saat çizgileri (
   background:${F.kayit};border:1px solid ${F.kayitCizgi};border-left:.25em solid ${F.murekkep};border-radius:.15em}
 .oda .dft button.dft-kayit.dft-zorunlu{border-left-color:var(--k-kirmizi)}
 .oda .dft button.dft-kayit.dft-bitti{text-decoration:line-through;opacity:.6}
-.oda .dft button.dft-kayit[aria-pressed="true"]{background:var(--k-vurguZemin);color:#1a1203;border-color:var(--k-vurgu)}
+.oda .dft button.dft-kayit[aria-pressed="true"]{background:var(--k-vurguZemin);color:var(--k-vurguYazi);border-color:var(--k-vurgu)}
 .dft-cizgi{position:absolute;left:.4em;right:.2em;font-size:.82em;color:${F.murekkep};border-top:1px dashed ${F.murekkep};padding-left:.3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dft-simdi{position:absolute;left:-.3em;right:0;border-top:.14em solid var(--k-kirmizi)}
 .dft-bos{position:absolute;top:35%;left:0;right:0;text-align:center;font-style:italic;color:var(--k-soluk)}

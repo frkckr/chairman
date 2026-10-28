@@ -27,13 +27,10 @@
   /* H1-b: dar cevap alanında (panelin %41'i) önizleme kayması küçüktür; alanın yan boşluğu ve kartın eğimi ona göre (js/ekran-kart.js kalıbı) */
   const telYan=(KT.telefon.kayma/(1+2*KT.telefon.kayma)*100).toFixed(2),telEgim=(KT.egim*KT.telefon.kayma/KT.esik).toFixed(2);
   st.textContent=`
-.od-kisiSatir{display:flex;gap:.6em;align-items:center}
 .od-portre,.tel-portre{image-rendering:pixelated;image-rendering:crisp-edges;border-radius:.25em;flex:none}
 .od-portre{width:2.9em;height:2.9em}
 .portre-bos{display:inline-grid;place-items:center;width:2.4em;height:2.4em;background:var(--k-zeminKoyu);color:var(--k-soluk);font-weight:600}
-.od-ajSimge{font-style:normal;display:inline-block;width:1.3em;color:var(--k-vurgu);font-weight:600}
 .oda .od-panel.od-telefonPanel{width:41%;background:transparent;border:0;box-shadow:none}
-.oda .od-panel.od-dosyaPanel{width:61%}
 /* telefon paneli: kâğıt panel yerine cihazın kendisi; başlık yalnız ekran okuyucu için, sağ üstte “Kapat” */
 .od-telefonPanel>header{justify-content:flex-end;padding:0 0 .3em;background:transparent;border:0}
 .od-telefonPanel>header h3{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
@@ -111,7 +108,7 @@
 .tel-balon small{font-size:.74em;color:var(--k-soluk)}
 .tel-gelen{justify-self:start;background:${T.gelen};border:1px solid var(--k-cizgi);border-bottom-left-radius:.35em}
 .tel-giden{justify-self:end;background:${T.giden};border:1px solid ${T.gidenCizgi};border-bottom-right-radius:.35em}
-.tel-yeni{box-shadow:0 0 0 .14em var(--k-vurguZemin)}
+.tel-yeni{box-shadow:0 0 0 .14em var(--k-mavi)}
 .tel-gizli{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .tel-dosya{font-style:normal}
 .tel-kararOzet{display:grid;gap:.3em;padding:.45em .6em;border:1px dashed var(--k-cizgi);border-radius:.8em;font-size:.92em}
@@ -135,7 +132,7 @@
 .tel .tel-mac{display:grid;grid-template-columns:3.4em minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.5em;width:100%;padding:.55em .6em;white-space:nowrap;line-height:1.2;background:var(--k-serit);border:1px solid var(--k-cizgi);border-radius:.8em}
 .tel-mac span{overflow:hidden;text-overflow:ellipsis}
 .tel-mac .tel-macEv{text-align:right}.tel-mac .tel-macDep{text-align:left}
-.tel-mac b{font-family:var(--display);font-weight:400;font-size:1.3em;line-height:1}
+.tel-mac b{font-family:var(--govde);font-weight:600;font-size:1.1em;line-height:1}
 .tel-mac small{color:var(--k-soluk);text-align:left;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
 .tel-mac small.tel-macCanli{color:var(--k-kirmizi);font-weight:600}
 .tel-ist{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums;background:#fff;border:1px solid var(--k-cizgi);border-radius:.8em;overflow:hidden}

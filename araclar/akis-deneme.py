@@ -37,6 +37,8 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
      sonuç ikizi işçide maç öncesinde biter (ana iplikteki hesapla birebir), Canlı Skor öbür maçları örneklerden okur, “Maçı bitir” kartı hemen
      ikizin sonucuyla açar, Odaya dön sekiz sonucu yazar; sonuna dek oynanan canlı maç ikizle birebir. H2-a: http'de Maçı izleme (yarış),
      işçiler bitmeden basılan Maçı bitir, kart açıldıktan sonra işçi düşüşü (donma yok).
+ 26. Tek yazı ölçeği (U0, 2026-10-28): oda, bülten ve maç telefonu aynı --k-yaziBoyu'yu okur (normal 1,5, büyük 1,8 cqw); gövde IBM Plex Sans;
+     800 px'ten geniş karede gövde ≥ 12 px.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız, Durdur ve tarz seçimi (TEST, B4b), eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
@@ -118,6 +120,44 @@ async def oda_ilerle(pg):
     await pg.click(".od-ana")
     if await pg.query_selector('.od-ana[data-eylem="ilerle"]:has-text("Onayla")'):
         await pg.click(".od-ana")
+
+# ---- U0 (2026-10-28): ortak yardımcılar. Odak modelinde (U1–U6) kap, Esc ve masa şeridi değişince yalnız bunlar güncellenir ----
+async def ayar_yazi(pg, yazi):
+    """Ayarlar > Okuma > yazı büyüklüğü ("normal" ya da "buyuk"); panel kapanır."""
+    await pg.click('.od-nesne[data-panel="ayar"]')
+    await pg.click(f'[data-eylem="yazi"][data-yazi="{yazi}"]')
+    await pg.keyboard.press("Escape")
+
+
+ODAK_ACIK_JS = "() => !!document.querySelector('#oda .od-panel, #oda .dsy, #oda .dft')"
+
+
+async def masaya_don(pg, en_cok=4):
+    """Odak kapanana dek Esc'e basar; kaç basış gerektiğini döndürür (en_cok basışta kapanmazsa -1)."""
+    for n in range(en_cok + 1):
+        if not await pg.evaluate(ODAK_ACIK_JS):
+            return n
+        if n < en_cok:
+            await pg.keyboard.press("Escape")
+    return -1
+
+
+async def odak_ac(pg, ad):
+    """Masadaki nesneyi açar; zaten açıksa dokunmaz (1–4 ve nesne düğmesi aç/kapa çalışır)."""
+    acik = await pg.evaluate("(ad) => { const b = document.querySelector('.od-nesne[data-panel=\"' + ad + '\"]'); return !!b && b.getAttribute('aria-pressed') === 'true'; }", ad)
+    if not acik:
+        await pg.click(f'.od-nesne[data-panel="{ad}"]')
+
+
+async def gecis_bitir(pg, sn=2):
+    """Süren CSS geçişleri ve animasyonlar bitene dek (en çok sn saniye) bekler; sabit beklemelerin yerine."""
+    await pg.evaluate("(ms) => Promise.race([Promise.all(document.getAnimations().map(a => a.finished.catch(() => null))), new Promise(r => setTimeout(r, ms))])", int(sn * 1000))
+
+
+async def yazi_bekle(pg):
+    """Yazı tipleri yüklenene dek bekler (ölçümler ve görüntüler yedek yazıyla alınmasın)."""
+    await pg.evaluate("() => document.fonts.ready.then(() => true)")
+
 
 
 # Canlı Skor satırı (N2): satır yüksekliği (yazı boyuna oran), parçaların dikey ortalarının yayılımı (piksel) ve yatay taşma
@@ -470,9 +510,7 @@ async def bolum_3(tarayici, site, tum_hatalar):
     denetle("N7: Esc konuşmadan ana ekrana döndü (telefon açık); ana ekranda Esc telefonu kapattı", esc1 == {"panel": True, "ekran": "ana"} and esc2, f"{esc1} · {esc2}")
     for yazi, boyut in (("buyuk", (1180, 1000)), ("normal", (800, 600)), ("buyuk", (800, 600))):
         await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
-        await pg.click('.od-nesne[data-panel="ayar"]')
-        await pg.click(f'[data-eylem="yazi"][data-yazi="{yazi}"]')
-        await pg.keyboard.press("Escape")
+        await ayar_yazi(pg, yazi)
         await pg.keyboard.press("Digit1")
         etiket = f"{yazi}-{boyut[0]}"
         await tel_yerlesim(etiket + "-ana")
@@ -489,9 +527,7 @@ async def bolum_3(tarayici, site, tum_hatalar):
         await pg.keyboard.press("Escape")
         await pg.keyboard.press("Escape")
     await pg.set_viewport_size({"width": 1180, "height": 1000})
-    await pg.click('.od-nesne[data-panel="ayar"]')
-    await pg.click('[data-eylem="yazi"][data-yazi="normal"]')
-    await pg.keyboard.press("Escape")
+    await ayar_yazi(pg, "normal")
     kotu = {a: o for a, o in olcumler.items() if o["tasma"] > 1 or not o["sigiyor"] or (a.endswith("konusma") and not o["cevapGorunur"])}
     denetle("(f) N7: normal ve büyük yazıda, 1180 ve 800 piksel genişlikte dört ekranda yatay taşma yok, cihaz panele sığıyor; konuşmada tek kart ve iki kenarı kaydırmadan görünüyor",
             len(olcumler) == 13 and not kotu, str(kotu or {a: (o["tasma"], o["genislik"], o["kart"]) for a, o in olcumler.items()}))
@@ -588,9 +624,7 @@ async def bolum_3(tarayici, site, tum_hatalar):
             d3["soz"] == "deneme.soz:tutuldu" and d3["mesele"] == "deneme:kapandi" and "Kapandı" in damga and "Arşiv (1)" in arsiv
             and "Kapanan konular" in liste and "Deneme: destek teklifi" in liste, f"{damga} · {d3['mesele']} · {arsiv[:140]}")
     await pg.keyboard.press("Escape")
-    await pg.click('.od-nesne[data-panel="ayar"]')
-    await pg.click('[data-eylem="yazi"][data-yazi="buyuk"]')
-    await pg.keyboard.press("Escape")
+    await ayar_yazi(pg, "buyuk")
     await pg.keyboard.press("Digit3")
     t1 = await pg.evaluate(TASMA_JS)
     await pg.keyboard.press("Digit2")
@@ -968,7 +1002,7 @@ async def bolum_14b(tarayici, site, tum_hatalar):
     await pg.wait_for_function("MAC_PROTOKOL.karar", timeout=5000)
     k1 = await pg.evaluate(AN_JS)
     denetle("Büyük yazıda tek kart ve iki kenarı karede, taşma yok; 1 tuşu önizlemesiz 'Selam ver'i doğrudan seçti (kart kısa süre kalıyor)",
-            yer["n"] == 1 and yer["icinde"] and yer["tasma"] <= 1 and "1.6" in yer["boy"] and k1["karar"] == "selam", f"{yer} · {k1['karar']}")
+            yer["n"] == 1 and yer["icinde"] and yer["tasma"] <= 1 and "1.8" in yer["boy"] and k1["karar"] == "selam", f"{yer} · {k1['karar']}")
     await pg.context.close()
     # sonra: başkan oturur; Santraya geç ertelenir, rakip başkan o an kapıdan gelir; → 'Ses çıkarma'yı önizler (tek başına karar vermez), Enter seçer;
     # karar anından sonra atlama yapılır
@@ -1638,9 +1672,7 @@ async def bolum_19(tarayici, site, tum_hatalar):
     tasma = []
     for yazi_boy, boyut in (("buyuk", (1180, 1000)), ("buyuk", (800, 600)), ("normal", (800, 600))):
         await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
-        await pg.click('.od-nesne[data-panel="ayar"]')
-        await pg.click(f'[data-eylem="yazi"][data-yazi="{yazi_boy}"]')
-        await pg.keyboard.press("Escape")
+        await ayar_yazi(pg, yazi_boy)
         await pg.keyboard.press("Digit1")
         await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
         for mid in (id13, obur_id):
@@ -2022,9 +2054,7 @@ async def bolum_21(tarayici, site, tum_hatalar):
     # inceleme (H2-e): büyük yazıda, 800 px'te iki açık konu, Raporlar, Arşiv ve Kapat: sekmeler birbirinin üstüne binmez, sayaçlı sekmenin yazısı kutusunda
     await pg.keyboard.press("Escape")
     await pg.set_viewport_size({"width": 800, "height": 600})
-    await pg.click('.od-nesne[data-panel="ayar"]')
-    await pg.click('[data-eylem="yazi"][data-yazi="buyuk"]')
-    await pg.keyboard.press("Escape")
+    await ayar_yazi(pg, "buyuk")
     await pg.keyboard.press("Digit3")
     await pg.wait_for_selector(".dsy", timeout=10000)
     sk = await pg.evaluate("""() => { const B = [...document.querySelectorAll('.dsy-sekmeler > button')], r = B.map(b => b.getBoundingClientRect());
@@ -2236,15 +2266,11 @@ async def bolum_23(tarayici, site, tum_hatalar):
     kes = {}
     for boyut in ((1180, 1000), (800, 600)):
         await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
-        await pg.click('.od-nesne[data-panel="ayar"]')
-        await pg.click('[data-eylem="yazi"][data-yazi="buyuk"]')
-        await pg.keyboard.press("Escape")
+        await ayar_yazi(pg, "buyuk")
         kes[boyut[0]] = await pg.evaluate("""() => { const g = document.querySelector('.od-gozlem'); if (!g) return null; const a = g.getBoundingClientRect();
           return [...document.querySelectorAll('.od-nesneler button')].filter(b => { const r = b.getBoundingClientRect(); return r.width > 1 && r.left < a.right && r.right > a.left && r.top < a.bottom && r.bottom > a.top; }).map(b => b.textContent); }""")
     await pg.set_viewport_size({"width": 1180, "height": 1000})
-    await pg.click('.od-nesne[data-panel="ayar"]')
-    await pg.click('[data-eylem="yazi"][data-yazi="normal"]')
-    await pg.keyboard.press("Escape")
+    await ayar_yazi(pg, "normal")
     denetle("İnceleme: büyük yazıda (1180 ve 800 px) balkon şeridi masadaki düğmelerle kesişmez", all(v == [] for v in kes.values()), str(kes))
     await pg.click('[data-eylem="gozlemBirak"]')
     await pg.wait_for_timeout(300)
@@ -2312,9 +2338,7 @@ async def bolum_22(tarayici, site, tum_hatalar):
     tasma = {}
     for yazi, boyut in (("normal", (1180, 1000)), ("buyuk", (1180, 1000)), ("normal", (800, 600)), ("buyuk", (800, 600))):
         await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
-        await pg.click('.od-nesne[data-panel="ayar"]')
-        await pg.click(f'[data-eylem="yazi"][data-yazi="{yazi}"]')
-        await pg.keyboard.press("Escape")
+        await ayar_yazi(pg, yazi)
         await kadro_ac()
         liste = await pg.evaluate(TASMA_JS)
         ad = await pg.evaluate("() => { const b = [...document.querySelectorAll('.dsy-kadro tbody tr td:nth-child(2)')]; return b.filter(x => x.scrollWidth > x.clientWidth + 1).length; }")
@@ -2326,9 +2350,7 @@ async def bolum_22(tarayici, site, tum_hatalar):
     denetle("S-c: Kadro listesi ve oyuncu dosyasında yatay taşma yok (normal ve büyük yazı, 1180 ve 800 px; uzun ad hücresinde kısalır)",
             all(max(l) <= 0 and max(o) <= 0 for l, o, _ in tasma.values()), str(tasma))
     await pg.set_viewport_size({"width": 1180, "height": 1000})
-    await pg.click('.od-nesne[data-panel="ayar"]')
-    await pg.click('[data-eylem="yazi"][data-yazi="normal"]')
-    await pg.keyboard.press("Escape")
+    await ayar_yazi(pg, "normal")
     # Test bilgileri geliştirmede varsayılan açıktır (js/oyun-oturumu.js): açıkken künyede TEST kutusu, kapatınca yok; listede hiç yok
     test0 = await pg.evaluate("() => !!OYUN.ayarlar.test")
     await kadro_ac()
@@ -2497,6 +2519,71 @@ async def bolum_25(tarayici, site, tum_hatalar):
             b["tarih"] == "2026-11-28" and b["ayni"] and not b["kalin"] and b["anahtar"] == "gz.yaklasan" and c["tarih"] == "2026-11-29" and b["tasma"] <= 1, f"{b} · {c['tarih']}")
     await pg.context.close()
 
+# U0 (2026-10-28): tek yazı ölçeği ve yazı tipleri. Görünür metin düğümlerinin hesaplanmış yazı boyu; TEST kutuları ve gizli metin hariç
+YAZI_OLCU_JS = """(kok) => { const R = document.querySelector(kok); if (!R) return null; const S = document.getElementById('screen');
+  const boy = [...R.querySelectorAll('*')].filter(e => { if (!e.childNodes.length || ![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return false;
+      if (e.closest('.od-test,[aria-hidden="true"],.od-testSimge,.dsy-damga,[data-rozet="yeni"]')) return false;
+      const r = e.getBoundingClientRect(), c = getComputedStyle(e); return r.width > 0 && r.height > 0 && c.visibility !== 'hidden' && c.display !== 'none'; })
+    .map(e => parseFloat(getComputedStyle(e).fontSize));
+  return { ekran: S.clientWidth, govde: parseFloat(getComputedStyle(R).fontSize), enKucuk: boy.length ? Math.min(...boy) : null,
+    degisken: getComputedStyle(S).getPropertyValue('--k-yaziBoyu').trim(), aile: getComputedStyle(R).fontFamily.split(',')[0].replace(/"/g, '') }; }"""
+
+
+async def bolum_26(tarayici, site, tum_hatalar):
+    """U0: bütün HTML katmanları tek ölçekte (STIL.kagit.yaziBoyu: normal 1,5 cqw, büyük 1,8 cqw) ve orantılı gövde yazısında; büyük yazı bültende ve
+    maç telefonunda da geçerli; 800 px'lik karede gövde ≥ 12 px; masaüstü kopyasının aradığı üç yazı tipinden IBM Plex Sans yüklü."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7", "index-test.html")
+    tum_hatalar += hatalar
+    await yazi_bekle(pg)
+    yt = await pg.evaluate("() => [...new Set([...document.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/\"/g, '')))]")
+    denetle("U0: IBM Plex Sans yüklü (gövde yazısı); Jersey 10 başlıkta", "IBM Plex Sans" in yt and "Jersey 10" in yt, str(yt))
+    olc = {}
+    for yazi, boyut in (("normal", (1100, 810)), ("buyuk", (1100, 810)), ("normal", (800, 600)), ("buyuk", (800, 600))):
+        await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
+        await ayar_yazi(pg, yazi)
+        for ad in ("dosya", "ajanda", "telefon"):
+            await odak_ac(pg, ad)
+            if ad == "telefon":
+                await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
+            olc[f"{yazi}-{boyut[0]}-{ad}"] = await pg.evaluate(YAZI_OLCU_JS, "#oda")
+            await masaya_don(pg)
+    bilgi = {a: (o["govde"], o["enKucuk"]) for a, o in olc.items() if o}
+    print(f"  bilgi: gövde ve en küçük metin (px) {bilgi}")
+    oran = {a: round(o["govde"] / o["ekran"] * 100, 2) for a, o in olc.items() if o}
+    denetle("U0: odada yazı ölçeği tek değişkenden (--k-yaziBoyu; normal 1,5 cqw, büyük 1,8 cqw); gövde orantılı yazı (IBM Plex Sans)",
+            all(o and o["aile"] == "IBM Plex Sans" for o in olc.values())
+            and all(abs(v - (1.8 if a.startswith("buyuk") else 1.5)) < 0.03 for a, v in oran.items()), f"{oran}")
+    genis = [o for a, o in olc.items() if a.endswith(("-1100-dosya", "-1100-ajanda", "-1100-telefon"))]
+    denetle("U0: 800 px'ten geniş karede gövde yazısı ≥ 12 px, en küçük metin ≥ 9 px (normal yazı)",
+            all(o["ekran"] >= 800 and o["govde"] >= 12 for o in genis)
+            and all(olc[k]["enKucuk"] >= 9 for k in olc if k.startswith("normal-1100")), str({a: (o["ekran"], o["govde"], o["enKucuk"]) for a, o in olc.items()}))
+    await pg.context.close()
+    # bülten ve maç telefonu aynı ölçeği ve büyük yazıyı alır (eskiden sabit 1,3 cqw)
+    for yazi in ("normal", "buyuk"):
+        pg, hatalar = await sayfa(tarayici, site, "?ekran=bulten&tohum=4&rakipBaskan=yok", "#onEkran:not([hidden]) #btnIlerle")
+        tum_hatalar += hatalar
+        await pg.evaluate("(y) => { OYUN.ayarlar.yazi = y; OYUN.ayarlar.kaydet(); }", yazi)
+        await pg.reload()
+        await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=20000)
+        await yazi_bekle(pg)
+        b = await pg.evaluate(YAZI_OLCU_JS, "#onEkran")
+        kart = await pg.evaluate("() => { const k = document.querySelector('.prg-kart'), E = document.getElementById('onEkran').getBoundingClientRect(), r = k.getBoundingClientRect(); return { icinde: r.top >= E.top - 1 && r.bottom <= E.bottom + 1 }; }")
+        hedef = 1.8 if yazi == "buyuk" else 1.5
+        denetle(f"U0: bültende yazı ortak ölçekte ({hedef} cqw, {yazi}), orantılı gövde; kart karenin içinde",
+                b and abs(b["govde"] / b["ekran"] * 100 - hedef) < 0.03 and b["aile"] == "IBM Plex Sans" and kart["icinde"], f"{b} · {kart}")
+        await pg.context.close()
+    pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=yok", "#btnMacaGec")
+    tum_hatalar += hatalar
+    await pg.evaluate("() => { OYUN.ayarlar.yazi = 'buyuk'; OYUN.ayarlar.kaydet(); }")
+    await pg.reload()
+    await pg.wait_for_selector("#btnMacaGec", timeout=20000)
+    await pg.keyboard.press("KeyT")
+    await pg.wait_for_selector("#macTelefon:not([hidden])", timeout=5000)
+    m = await pg.evaluate(YAZI_OLCU_JS, "#macTelefon")
+    denetle("U0: maç telefonu büyük yazıyı alır (1,8 cqw), orantılı gövde", m and abs(m["govde"] / m["ekran"] * 100 - 1.8) < 0.03 and m["aile"] == "IBM Plex Sans", str(m))
+    await pg.evaluate("() => { OYUN.ayarlar.yazi = 'normal'; OYUN.ayarlar.kaydet(); }")
+    await pg.context.close()
+
 
 async def ana():
     try:
@@ -2566,6 +2653,9 @@ async def ana():
             await bolum_24(tarayici, site, tum_hatalar)
         if sec("25"):
             await bolum_25(tarayici, site, tum_hatalar)
+        if sec("26"):
+            print("\n26. Tek yazı ölçeği ve yazı tipleri (U0)")
+            await bolum_26(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

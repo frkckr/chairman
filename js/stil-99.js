@@ -257,11 +257,11 @@ const STIL={
     sonra:[8,20],sinir:44,
     renk:{cerceve:0xd8d2c4,kapi:0x6a4a2c,ic:0x8a8274,lamba:0xfff0d0,pencere:0x0e1420,koltuk:0x4a1e18,basamak:0x5a5b60}},
   /* karar anı ekranı (N12, js/ekran-an.js): kenar kararması (0–1), kartların yerine oturma süresi (süre ondan sonra başlar), seçimden sonra
-     kartın kalış süresi, son kaç saniyede çubuk amber olur (sn); yazı büyüklüğü (cqw; normal, büyük). TEST değerleri */
-  an:{kararma:0.35,giris:0.4,sonra:0.9,amber:1.5,yazi:{normal:1.3,buyuk:1.6}},
+     kartın kalış süresi, son kaç saniyede çubuk amber olur (sn). TEST değerleri. Yazı büyüklüğü U0'dan beri ortak: STIL.kagit.yaziBoyu */
+  an:{kararma:0.35,giris:0.4,sonra:0.9,amber:1.5},
   /* maç sonu kartı (F2, 2026-10-23; js/ekran-mac-sonu.js): kartSn düdükten kartın açılmasına motor saniyesi (sevinç ve çöküş izlenir; "Maçı bitir
-     (TEST)" ile bitince hemen), kenar kararması (0–1), yazı büyüklüğü (cqw; normal, büyük). TEST değerleri */
-  macSonu:{kartSn:8,kararma:0.3,yazi:{normal:1.3,buyuk:1.6}},
+     (TEST)" ile bitince hemen), kenar kararması (0–1). TEST değerleri. Yazı büyüklüğü U0'dan beri ortak: STIL.kagit.yaziBoyu */
+  macSonu:{kartSn:8,kararma:0.3},
   /* onMasa (K1, kullanıcı kararı 2026-10-20; kullanıcının 1. maç notu "masa tüm ekranı kaplamasın, önde kare ayaklı bir masa gözüksün"; N5'in
      2,6 m'lik rafının ve altındaki ön duvarın yerini aldı): başkanın önündeki küçük masa, ön plan kamerasına göre metre. en × derinlik = tabla,
      uzak = tablanın yakın kenarının gözden uzaklığı, y = tablanın üst yüzeyi (gözün altında), kalinlik = tabla, etek = tablanın altındaki
@@ -384,9 +384,12 @@ const STIL={
     telefonMasa:[-0.72,-5.48],duvar:0xc9bfae,iskele:0x8a8f96,iskeleBranda:0x3d6a8a,iskeleTorba:0xc9b98f,iskeleSerit:0xd8402a},
 
   /* Açık renkli yönetim arayüzü (js/ekran-oda.js): kâğıt zemin, koyu okunur metin, ahşap çizgi, ölçülü kulüp rengi.
-     Ekran bu renkleri CSS değişkeni (--k-ad) olarak yazar. yaziBoyu: karenin genişliğine oranla yazı (cqw). TEST değerleri. */
+     Ekran bu renkleri CSS değişkeni (--k-ad) olarak yazar. yaziBoyu: karenin genişliğine oranla yazı (cqw); U0'dan (2026-10-28) beri bütün HTML katmanlarının
+     tek ölçeği (oda, bülten, maç telefonu, karar anı, maç sonu; js/sunum-durumu.js yaziBoyuUygula). vurguYazi/vurguYaziSoluk: amber zemin üstündeki yazı;
+     mavi: mürekkep ("yeni" noktası, play-off, bağlantı); amber (vurguZemin) yalnız ana eylem ve seçili durum (U0 amber diyeti). TEST değerleri. */
   kagit:{zemin:'#f4eedf',zeminKoyu:'#e9e0cb',serit:'#fbf7ec',cizgi:'#c9b994',yazi:'#26221c',soluk:'#6d6353',vurgu:'#a5620a',vurguZemin:'#ffb530',
-    kulup:'#b4241c',kirmizi:'#b4241c',yesil:'#2c6f28',golge:'rgba(40,28,12,.28)',yaziBoyu:{normal:1.42,buyuk:1.72},
+    kulup:'#b4241c',kirmizi:'#b4241c',yesil:'#2c6f28',golge:'rgba(40,28,12,.28)',vurguYazi:'#1a1203',vurguYaziSoluk:'#3a2a08',mavi:'#22347a',murekkep:'#22347a',
+    yaziBoyu:{normal:1.5,buyuk:1.8},
     /* telefon (2.8I): açık tonlu cihaz; gelen/giden baloncuk ve ana ekran simgeleri. N7 (2026-10-04): cihaz çerçevesi ve kamera adası, ana ekranın
        dikey zemini (üst, orta, alt), alttaki sabit sıranın zemini, geri/okunmamış mavisi, satır ayracı */
     telefon:{kasa:'#1d1e22',cerceve:'#34363c',ada:'#0c0c0e',ekran:'#f7f2e6',anaZemin:['#efe6d0','#f7f2e6','#f1e8d4'],sabit:'rgba(201,185,148,.42)',

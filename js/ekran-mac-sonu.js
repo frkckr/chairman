@@ -21,7 +21,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   const A=STIL.macSonu,K=STIL.kagit,kok=document.getElementById('screen');
   const st=document.createElement('style');st.id='macSonuStili';
   st.textContent=`
-.mac-sonu{position:absolute;inset:0;z-index:5;display:grid;place-items:center;pointer-events:none;font-family:var(--mono);font-size:var(--ms-boy,1.3cqw);line-height:1.35;color:${K.yazi}}
+.mac-sonu{position:absolute;inset:0;z-index:5;display:grid;place-items:center;pointer-events:none;font-family:var(--govde);font-size:var(--ms-boy,var(--k-yaziBoyu,1.5cqw));line-height:1.35;color:${K.yazi}}
 .mac-sonu[hidden]{display:none}
 .ms-kararti{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 40%,rgba(0,0,0,${A.kararma}) 100%)}
 .ms-kart{position:relative;pointer-events:auto;width:min(62%,44em);max-height:88%;overflow:auto;display:grid;gap:.7em;padding:.9em 1.3em 1em;background:${K.zemin};border:1px solid ${K.cizgi};box-shadow:.35em .45em 0 ${K.golge}}
@@ -45,7 +45,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
 .ms-alt{display:flex;align-items:center;justify-content:space-between;gap:1em;padding-top:.6em;border-top:.18em solid ${K.cizgi}}
 .ms-durum{margin:0;min-width:0;color:${K.soluk}}
 .ms-durum.ms-hata{color:${K.kirmizi}}
-.mac-sonu button.ms-don{flex:none;font:inherit;font-weight:600;color:#1a1203;background:${K.vurguZemin};border:1px solid ${K.vurgu};border-bottom-width:.2em;border-radius:.2em;padding:.4em 1.1em .32em;cursor:pointer}
+.mac-sonu button.ms-don{flex:none;font:inherit;font-weight:600;color:${K.vurguYazi};background:${K.vurguZemin};border:1px solid ${K.vurgu};border-bottom-width:.2em;border-radius:.2em;padding:.4em 1.1em .32em;cursor:pointer}
 .mac-sonu button.ms-don:disabled{opacity:.6;cursor:progress}
 .ms-kart:focus{outline:none}
 .mac-sonu button.ms-don:focus-visible{outline:.14em solid ${K.kulup};outline-offset:.12em}
@@ -64,7 +64,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   const hesapAlt=O.querySelector('.ms-hesapAlt');let hesapYazi=null;
   const hesapKare=()=>{
     const H=HIZLI_BITIR,g=H.perde&&!MAC_SONU.acik&&!KARAR_ANI.acik&&!TEPE_AN.aktif;
-    if(O.hidden===g){O.hidden=!g;if(g){const buyuk=typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.yazi==='buyuk';O.style.setProperty('--ms-boy',(buyuk?A.yazi.buyuk:A.yazi.normal)+'cqw');}}
+    if(O.hidden===g){O.hidden=!g;if(g)O.style.setProperty('--ms-boy',yaziBoyuDegeri());}
     if(!g)return;
     const dk=MAC_ARKA.kip!=='isci'&&!H.anlik?mac.minuteLabel():'',y=duraklatmaVar()?'Duraklatıldı':dk?(/^\d/.test(dk)?dk+'\'':dk):'';
     if(y!==hesapYazi){hesapYazi=y;hesapAlt.textContent=y;}
@@ -104,7 +104,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
     /* G1-a: bizim maç hükmense motor sonucu kullanılmaz. G1-e: "Maçı bitir" sonuç ikiziyle bittiyse ikizin sonucu (H2-a: anlık dalın aldığı kopya,
        js/mac-sahnesi.js HIZLI_BITIR.sonuc; sonradan işçi düşse de) */
     S.sonuc=G.hukmen?hukmenSonucu(G.hukmen):HIZLI_BITIR.anlik?JSON.parse(JSON.stringify(HIZLI_BITIR.sonuc)):mac.sonucKaydi();
-    const buyuk=typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.yazi==='buyuk';E.style.setProperty('--ms-boy',(buyuk?A.yazi.buyuk:A.yazi.normal)+'cqw');
+    E.style.setProperty('--ms-boy',yaziBoyuDegeri());   /* U0: ortak ölçek */
     E.innerHTML=msIcerik(S.sonuc);E.hidden=false;
     /* odak kartta (F2 incelemesi): kart kendiliğinden açılır; odak düğmede olsaydı maç boyu duraklatan Boşluk sonucu uygulayıp sayfadan çıkarırdı.
        Sekme düğmeye götürür */

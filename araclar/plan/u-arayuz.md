@@ -4,6 +4,10 @@ Durum: **tur planı; kullanıcı onayı bekliyor.** Kod değişmedi. Çerçeve k
 
 Dal `claude/u-arayuz`, kapanışta etiket `tur/u-arayuz`; `main`'e alma ve push kullanıcının sözüyle. Onaylanınca YOL_HARITASI'na karar 55 olarak yazılır (karar 49'un arayüz yapısı yarısı öne alınır; 3B oda, stat ve tarz kararı 46 kapalı kalır).
 
+## Durum
+
+- **U0 Zemin — tamam (2026-10-28, dizüstü).** Tek ölçek `STIL.kagit.yaziBoyu` 1,5/1,8 cqw, oyun karesine yazılır (`js/sunum-durumu.js` `yaziBoyuUygula`); bülten, maç telefonu, karar anı ve maç sonu da büyük yazıyı alır. Gövde IBM Plex Sans (masaüstü kopyasına yerel), tablolar Plex Mono, küçük Jersey başlıklar gövde yazısına geçti. Renk değişkenleri `vurguYazi`, `vurguYaziSoluk`, `mavi`, `murekkep`; rozet dili (sayı mürekkep, karar kırmızı, "yeni" mavi nokta, `data-rozet`); hazır görüş ve yeni balon amber değil. 50 ölü CSS kuralı ve çift `.od-panel` silindi. Deneme yardımcıları (`ayar_yazi`, `masaya_don`, `odak_ac`, `gecis_bitir`, `yazi_bekle`) ve §26. **Sapmalar:** sol sütun 10,2 em'den 8,6 em'e çıktı (büyük yazıda balkon şeridi Ayarlar'a biniyordu); defterde "MAÇ" etiketi ,8 → ,86 em; bülten kartı taşarsa kendi içinde kayar (640 px'te büyük yazıda dibe değiyor; U5'te sadeleşir). Kabul ölçütü "800 px'ten geniş karede gövde ≥ 12 px": 827 px karede 12,4 px; 640 px'lik en küçük karede gövde 9,6 px (bugün 9,1) — mobil ölçek ayrı iş.
+
 ## 1. Odak modeli: uygulama sözleşmesi
 
 - **Üç katman.** Masa (oda) → İş (tek iş ortada büyük) → Göz atma (işin yanında okuma). En çok iki derinlik; göz atmanın içinden yeni iş açılmaz, içinde eylem yoktur.

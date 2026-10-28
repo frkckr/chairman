@@ -20,7 +20,7 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
   const egimKayma=(KA.egim*KA.kayma/KA.esik).toFixed(2);
   const st=document.createElement('style');st.id='kararAniStili';
   st.textContent=`
-.karar-ani{position:absolute;inset:0;z-index:5;pointer-events:none;font-family:var(--mono);font-size:var(--an-boy,1.3cqw);line-height:1.3;color:${K.yazi}}
+.karar-ani{position:absolute;inset:0;z-index:5;pointer-events:none;font-family:var(--govde);font-size:var(--an-boy,var(--k-yaziBoyu,1.5cqw));line-height:1.3;color:${K.yazi}}
 .karar-ani[hidden]{display:none}
 .ka-kararti{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,rgba(0,0,0,0) 46%,rgba(0,0,0,${A.kararma}) 100%)}
 .ka-kim{position:absolute;top:6%;left:50%;transform:translateX(-50%);margin:0;padding:.3em 1em .25em;background:${K.zemin};border:1px solid ${K.cizgi};box-shadow:.2em .3em 0 rgba(0,0,0,.3);
@@ -38,21 +38,21 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
 .karar-ani .ka-kart[data-yuz="sag"]{transform:translateX(${KA.kayma*100}%) rotate(${egimKayma}deg)}
 .karar-ani .ka-kart:focus{outline:none}
 .karar-ani .ka-kart:focus-visible{outline:.14em solid ${K.kulup};outline-offset:.12em}
-.karar-ani .ka-kart.ka-secildi{background:${K.vurguZemin};border-color:${K.vurgu};color:#1a1203}
+.karar-ani .ka-kart.ka-secildi{background:${K.vurguZemin};border-color:${K.vurgu};color:${K.vurguYazi}}
 .ka-yuz{display:grid;align-content:center;justify-items:center;gap:.25em;min-height:0;text-align:center}
 .ka-yuz p{margin:0}
 .ka-yuz b{font-family:var(--display);font-weight:400;font-size:2.4em;line-height:1;letter-spacing:.02em}
 .ka-yuz small{color:${K.soluk};font-size:.95em}
-.karar-ani .ka-kart.ka-secildi .ka-yuz small{color:#3a2a08}
+.karar-ani .ka-kart.ka-secildi .ka-yuz small{color:${K.vurguYaziSoluk}}
 .ka-kenarlar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6em}
 .karar-ani button.ka-kenar{display:flex;align-items:center;gap:.45em;min-width:0;padding:.35em .65em .3em;font:inherit;text-align:left;color:${K.yazi};
   background:${K.zemin};border:1px solid ${K.cizgi};border-bottom-width:.18em;border-radius:.4em;cursor:pointer}
 .karar-ani button.ka-kenar[data-yon="sag"]{justify-content:flex-end;text-align:right}
-.ka-kenar b{font-family:var(--display);font-weight:400;font-size:1.45em;line-height:1.05;letter-spacing:.02em;overflow-wrap:anywhere}
+.ka-kenar b{font-family:var(--govde);font-weight:600;font-size:1.15em;line-height:1.15;overflow-wrap:anywhere}
 .ka-kenar i{flex:none;font-style:normal;color:${K.soluk}}
 .karar-ani button.ka-kenar:hover{border-color:${K.vurgu}}
-.karar-ani button.ka-kenar[aria-pressed="true"]{background:${K.vurguZemin};border-color:${K.vurgu};color:#1a1203}
-.karar-ani button.ka-kenar[aria-pressed="true"] i{color:#3a2a08}
+.karar-ani button.ka-kenar[aria-pressed="true"]{background:${K.vurguZemin};border-color:${K.vurgu};color:${K.vurguYazi}}
+.karar-ani button.ka-kenar[aria-pressed="true"] i{color:${K.vurguYaziSoluk}}
 `;
   document.head.appendChild(st);
   const E=document.createElement('section');E.className='karar-ani';E.id='kararAni';E.hidden=true;E.setAttribute('role','dialog');E.setAttribute('aria-label','Karar anı');
@@ -89,7 +89,7 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
     else if(i!==undefined){yut();sec(i);}},true);
   var kararAniAc=function(kayit,o){
     const S=KARAR_ANI;Object.assign(S,{acik:true,t:0,secim:null,secilen:null,sure:kayit.sure,kalan:kayit.sure,kayit,bitince:o.bitince,bitisT:null,onizle:null});
-    const buyuk=typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.yazi==='buyuk';E.style.setProperty('--an-boy',(buyuk?A.yazi.buyuk:A.yazi.normal)+'cqw');
+    E.style.setProperty('--an-boy',yaziBoyuDegeri());   /* U0: ortak ölçek (STIL.kagit.yaziBoyu) */
     kim.textContent=o.kim||'';
     const kenar=(c,i)=>'<button type="button" class="ka-kenar" data-yon="'+(i?'sag':'sol')+'" data-secim="'+yazA(c.id)+'" aria-pressed="false">'+(i?'':'<i aria-hidden="true">◂</i>')+
       '<b>'+yazA(c.metin)+'</b>'+(i?'<i aria-hidden="true">▸</i>':'')+'</button>';

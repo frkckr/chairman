@@ -17,6 +17,7 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null,skorSekme:'ma
 {
   const E=$('macTelefon'),K=STIL.kagit,yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   for(const a in K)if(typeof K[a]==='string')E.style.setProperty('--k-'+a,K[a]);
+  yaziBoyuUygula();   /* U0: maç telefonu da ortak ölçeği ve büyük yazıyı alır */
   const btn=$('btnTelefon'),isin=new THREE.Raycaster(),T=MAC_TELEFON.T;
   /* H2-a: sonuç ikiziyle anında bittiyse (HIZLI_BITIR.anlik) skor, durum ve sayılar ikizin sonucunun kopyasından (HIZLI_BITIR.sonuc) */
   const anlik=()=>HIZLI_BITIR.anlik&&HIZLI_BITIR.sonuc?HIZLI_BITIR.sonuc:null;

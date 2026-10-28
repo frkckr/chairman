@@ -3,7 +3,7 @@
    Kullanım:  node masaustu/hazirla.js   (önce masaustu içinde npm install)
    Depodaki oyun dosyaları değişmez. masaustu/oyun/ klasörüne bir kopya kurulur:
    - index.html ve js/ kopyalanır; Three.js CDN adresi ve Google Fonts bağlantısı yerel dosyalarla değiştirilir.
-   - Three.js r128 (MIT) ve IBM Plex Mono, Jersey 10 yazı tipleri (OFL-1.1) npm paketlerinden kutuphane/ altına alınır.
+   - Three.js r128 (MIT) ve IBM Plex Sans, IBM Plex Mono, Jersey 10 yazı tipleri (OFL-1.1) npm paketlerinden kutuphane/ altına alınır.
      Türkçe harfler (ş, ğ, İ...) yazı tiplerinin latin-ext dosyalarındadır; tüm alt kümeler kopyalanır.
    - Lisans metinleri ve sürümler kutuphane/lisanslar/ ve kutuphane/SURUMLER.txt içine yazılır.
    - Geliştirici kayıt denemesi sayfası (araclar/kayit-deneme.html) da kopyalanır; yayın paketinden ayrıca çıkarılacak.
@@ -28,7 +28,7 @@ fs.copyFileSync(path.join(NM,'three','build','three.min.js'),path.join(kutu,'thr
 fs.copyFileSync(path.join(NM,'three','LICENSE'),path.join(lisans,'three-LICENSE.txt'));
 
 /* yazı tipleri: fontsource CSS'leri birleştirilir, dosya yolları yeni konuma çevrilir */
-const FONTLAR=[['ibm-plex-mono',['400','500','600']],['jersey-10',['400']]];
+const FONTLAR=[['ibm-plex-sans',['400','500','600']],['ibm-plex-mono',['400','500','600']],['jersey-10',['400']]];
 let css='/* Chairman — yerel yazı tipleri (masaustu/hazirla.js üretir) */\n';
 for(const [ad,kalinliklar] of FONTLAR){
   const kaynak=path.join(NM,'@fontsource',ad);
@@ -62,6 +62,7 @@ if(dis.length)throw new Error('Kopyada dış adres kaldı:\n  '+dis.join('\n  ')
 const surumler=[
   'Chairman masaüstü kopyasındaki dış kaynaklar',
   `three.js ${paketSurumu('three')} (r128) · MIT · kutuphane/three.min.js`,
+  `IBM Plex Sans · @fontsource/ibm-plex-sans ${paketSurumu('@fontsource/ibm-plex-sans')} · OFL-1.1`,
   `IBM Plex Mono · @fontsource/ibm-plex-mono ${paketSurumu('@fontsource/ibm-plex-mono')} · OFL-1.1`,
   `Jersey 10 · @fontsource/jersey-10 ${paketSurumu('@fontsource/jersey-10')} · OFL-1.1`,
   `Electron ${paketSurumu('electron')} · MIT (paketleyici ekler)`

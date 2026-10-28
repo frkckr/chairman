@@ -122,7 +122,7 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
   /* N3: süre koşulunu tamamlanmış sayar; kaynak hazırlığı ve Duraklat yine beklenir (hazirlikYaz geçirir) */
   btnAtla.onclick=()=>{if(ON_EKRAN.sayfa!=='bulten'||btnAtla.disabled)return;P.atla=true;P.gecen=Math.max(P.gecen,STIL.program.hazirlikSn);hazirlikYaz();};
   /* programı aç: açılışta (?ekran=bulten) ya da odada/ajandada maç saati gelince. Hazırlık her açılışta baştan sayılır */
-  ON_EKRAN.bulteniAc=()=>{ON_EKRAN.acik=true;ON_EKRAN.sayfa='bulten';E.hidden=false;baskanDugmeleri.hidden=true;
+  ON_EKRAN.bulteniAc=()=>{yaziBoyuUygula();ON_EKRAN.acik=true;ON_EKRAN.sayfa='bulten';E.hidden=false;baskanDugmeleri.hidden=true;
     ON_EKRAN.cizildi=false;P.gecen=0;P.son=0;P.yazi='';P.kaydir=0;P.sayfa=-1;P.atla=false;P.acik=true;hazirlikYaz();requestAnimationFrame(hazirlikKare);
     btnIlerle.focus({preventScroll:true});};
   if(ON_EKRAN.sayfa==='bulten')ON_EKRAN.bulteniAc();

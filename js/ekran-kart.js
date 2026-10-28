@@ -44,7 +44,7 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .kk-kart p{margin:0}
 .kk-yuz{display:grid;gap:.35em;align-content:start;min-width:0;font-size:${A.yuz.normal}em}
 .kk-konu{font-size:1.05em;line-height:1.35}
-.kk-gorus{padding:.2em .5em;border-left:.2em solid var(--k-vurguZemin);font-size:.92em}
+.kk-gorus{padding:.2em .5em;border-left:.2em solid var(--k-mavi,#22347a);font-size:.92em}
 .kk-gorus b{margin-right:.3em}
 .kk-secenek{display:flex;flex-wrap:wrap;align-items:baseline;gap:.2em .6em}
 .kk-secenek b{font-size:1.15em;line-height:1.2;font-weight:600}
@@ -60,8 +60,8 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .kk-kenar b{font-weight:600;line-height:1.15;overflow-wrap:anywhere}
 .kk-kenar small{color:var(--k-soluk);font-size:.84em;line-height:1.2;overflow-wrap:anywhere}
 .kk-kenar .kk-ok{flex:none;font-style:normal;color:var(--k-soluk)}
-.kk-kart .kk-kenar[aria-pressed="true"]{background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:#1a1203}
-.kk-kart .kk-kenar[aria-pressed="true"] small,.kk-kart .kk-kenar[aria-pressed="true"] .kk-ok{color:#3a2a08}
+.kk-kart .kk-kenar[aria-pressed="true"]{background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:var(--k-vurguYazi,#1a1203)}
+.kk-kart .kk-kenar[aria-pressed="true"] small,.kk-kart .kk-kenar[aria-pressed="true"] .kk-ok{color:var(--k-vurguYaziSoluk,#3a2a08)}
 .kk-kart .kk-kenar[aria-disabled="true"]{opacity:.6;border-style:dashed}
 .kk-kart .kk-kenar[aria-disabled="true"] small{color:var(--k-kirmizi)}
 #kartDuyuru{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

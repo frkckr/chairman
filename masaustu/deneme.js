@@ -45,7 +45,7 @@ if(s1){
   const o=s1.oyun||{};
   denetle('Three.js yerel kopyadan yüklendi',o.three==='128',`REVISION ${o.three}`);
   const yt=o.yaziTipleri||[];
-  denetle('Yazı tipleri yerel kopyadan yüklendi',yt.some(x=>/IBM Plex Mono/.test(x))&&yt.some(x=>/Jersey 10/.test(x)),yt.join(', '));
+  denetle('Yazı tipleri yerel kopyadan yüklendi',yt.some(x=>/IBM Plex Sans/.test(x))&&yt.some(x=>/IBM Plex Mono/.test(x))&&yt.some(x=>/Jersey 10/.test(x)),yt.join(', '));
   const aj=s1.acilis||{};
   denetle('Açılışta başkan odası görünüyor, oyun masaüstü kayıt deposunu kullanıyor',aj.gorunur===true&&aj.depo==='masaustu'&&aj.tarih==='2026-11-23',`depo ${aj.depo} · ${aj.tarih} · görüntü: oyun.png`);
   denetle('Bülten açılıp İlerle ile 3B maç gününe geçildi, WebGL çalışıyor',s1.ilerle===true&&s1.webgl===true,'görüntü: mac-gunu.png');
