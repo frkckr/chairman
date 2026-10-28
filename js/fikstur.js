@@ -182,8 +182,8 @@ function sezonTakvimiKur(k,kulupId){
   const f=siradakiMac(k,kulupId);
   if(f)macGunuIsiKur(k,f.id);
   for(const t of k.sezon.transfer){
-    isEkle(k,{tur:'hatirlatma',tarih:t.bas,dakika:GUN_BASLANGICI,veri:{metin:`${t.ad} açıldı; ${gunAyYazi(t.bitis)} akşamı kapanır.`}});
-    isEkle(k,{tur:'hatirlatma',tarih:t.bitis,dakika:1200,veri:{metin:`${t.ad} kapandı.`}});
+    isEkle(k,{tur:'hatirlatma',tarih:t.bas,dakika:GUN_BASLANGICI,veri:{metin:`${t.ad} açıldı; ${gunAyYazi(t.bitis)} akşamı kapanır.`,kapak:'transfer'}});
+    isEkle(k,{tur:'hatirlatma',tarih:t.bitis,dakika:1200,veri:{metin:`${t.ad} kapandı.`,kapak:'transfer'}});
   }
 }
 /* ---- G1-d: sezon sonu kaydı ---- */
@@ -198,7 +198,7 @@ function sezonSonuYaz(k){
   k.sezon=Object.assign({},k.sezon,{sonuc});
   k.gecmis.push({tur:'sezonSonu',sezonId:k.sezon.id,sira:sonuc.bizimSira,puan:sonuc.bizimPuan,sampiyon:sonuc.sampiyon,tarih:k.tarih,dakika:k.gunIciDakika});
   const ad=id=>(k.kulupler[id]||{ad:id}).ad;
-  isEkle(k,{tur:'hatirlatma',tarih:tarihEkle(k.tarih,1),dakika:600,veri:{metin:`Sezon tamamlandı: ${k.sezon.ad}${i>=0?` ${i+1}. sıra, ${sonuc.bizimPuan} puan`:''}; şampiyon ${ad(sonuc.sampiyon)}. Yeni sezon bu sürümde yok (TEST).`}});
+  isEkle(k,{tur:'hatirlatma',tarih:tarihEkle(k.tarih,1),dakika:600,veri:{metin:`Sezon tamamlandı: ${k.sezon.ad}${i>=0?` ${i+1}. sıra, ${sonuc.bizimPuan} puan`:''}; şampiyon ${ad(sonuc.sampiyon)}. Yeni sezon bu sürümde yok (TEST).`,kapak:'sezonSonu'}});
   for(const f of SEZON_SONU_EKLERI)f(k);
   return true;
 }

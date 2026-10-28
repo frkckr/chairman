@@ -1666,11 +1666,22 @@ async def bolum_19(tarayici, site, tum_hatalar):
     import time
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
+    # U4: her sayfa yüklemesinde geçiş kartı (bilet / maç sonu) ilk boyamada var mı: DOMContentLoaded'da kaydedilir
+    await pg.add_init_script("document.addEventListener('DOMContentLoaded', () => { const g = document.getElementById('gecisKarti'); window.__gecisIlk = g ? g.innerText.replace(/\\s+/g, ' ') : null; });")
     await oda_ilerle(pg)
+    zs = await pg.evaluate("() => ({ acik: ZAMAN_SAHNE.acik, evre: ZAMAN_SAHNE.evre, an: OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika, ilerle: (document.querySelector('.od-alt .od-ana') || {}).textContent })")
+    await pg.wait_for_function("() => ZAMAN_SAHNE.evre === 'ozet'", timeout=15000)
+    zo = await pg.evaluate("() => (document.querySelector('.zm-sahne[data-evre=\"ozet\"]') || {}).innerText || ''")
+    denetle("U4: İlerle komutu hemen uygulandı (an Cumartesi 19:00) ve “zaman geçiyor” sahnesi açıldı; sonunda durak özeti: yeni an, geçen süre (5 gün 11 saat), gazete satırları, durak cümlesi",
+            zs["acik"] and zs["an"] == "2026-11-28 1140" and "28 Kasım Cumartesi · 19:00" in zo and "5 gün 11 saat geçti" in zo and "Gazete:" in zo and "Sıradaki randevuya gelindi." in zo, f"{zs} · {zo[:160]}")
     kayit0 = await pg.evaluate(KAYIT_JS)
     id13 = "mac-2627-13-demirkapi-akdeniz"
     await pg.click(".od-ana")
     await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=60000)
+    gi = await pg.evaluate("() => window.__gecisIlk")
+    await pg.wait_for_function("() => !document.getElementById('gecisKarti')", timeout=20000)
+    denetle("U4: Stada git'te bilet kartı yeni sayfanın ilk boyamasında (hafta, iki kulüp, gün ve saat, stat); stat çizilince söndü, bülten görünür",
+            bool(gi) and "BİLET" in gi and "13. hafta" in gi.lower().replace("13. hafta", "13. hafta") and "Demirkapı SK – Akdeniz FK" in gi and "Cumartesi 28 Kasım · 19:00" in gi and "Demirkapı İlçe Stadı" in gi, str(gi))
     bul = await pg.text_content("#onEkran")
     denetle("F3-a: bültende iki takımın hocası ve tarzı (Şükrü Hoca · direkt ve ikinci top, Nuri Hoca · konumsal oyun); maç hocaların tarzıyla kuruldu",
             "Şükrü Hoca · direkt ve ikinci top" in bul and "Nuri Hoca · konumsal oyun" in bul and await pg.evaluate("() => [0, 1].map(t => tarzBaskin(mac, t)).join() === 'direkt,konumsal'"),
@@ -1696,8 +1707,9 @@ async def bolum_19(tarayici, site, tum_hatalar):
     r1 = await pg.evaluate(PERDE_JS)
     await pg.wait_for_timeout(1000)
     r2 = await pg.evaluate(PERDE_JS)
-    denetle("H2-a: perde: 'Maç hesaplanıyor…' örtüsü görünür; çizim durdu (iki yoklama arasında renderer.info.render.frame aynı), maç arkada hesaplanıyor",
-            r1["ortu"] and "Maç hesaplanıyor" in r1["yazi"] and r1["perde"] and r2["cizim"] == r1["cizim"] and (r2["kare"] > r1["kare"] or r2["kart"]), f"{r1} → {r2}")
+    denetle("H2-a: perde: 'Maç hesaplanıyor…' örtüsü görünür; çizim durdu (iki yoklama arasında renderer.info.render.frame aynı), maç arkada hesaplanıyor; U4: örtüde öbür maçlardan biten sayısı (n/7)",
+            r1["ortu"] and "Maç hesaplanıyor" in r1["yazi"] and r1["perde"] and r2["cizim"] == r1["cizim"] and (r2["kare"] > r1["kare"] or r2["kart"])
+            and (r2["kart"] or re.search(r"öbür maçlar [0-7]/7", r2["yazi"] or r1["yazi"]) is not None), f"{r1} → {r2}")
     await pg.wait_for_selector("#macSonu:not([hidden]) [data-eylem='odayaDon']", timeout=240000)
     sure = time.time() - t0
     k = await pg.evaluate("""() => ({ skor: mac.score.join('–'), kart: document.querySelector('#macSonu .ms-skor').textContent, sayfa: ON_EKRAN.sayfa, kare: mac.kare,
@@ -1709,6 +1721,8 @@ async def bolum_19(tarayici, site, tum_hatalar):
     denetle("F2, H2-a: 'Maç bitti' kartı skorla açıldı (file://, işçisiz: önce bizim maç); örtü kalktı, çizim yine durgun; düğme gizlendi; kart açıkken telefon açılmaz; karar anı hiç açılmadı; kayıt henüz değişmedi; F3-b: kartta beklenen gol ve şut",
             k["skor"] in k["kart"] and k["sayfa"] == "macSonu" and not k["ortu"] and k["cizim"] == r1["cizim"] and k["dugmeGizli"] and not tel and not k["ka"] and k["xg"]
             and k["kip"] == "anaIs" and await pg.evaluate(KAYIT_JS) == kayit0, f"{sure:.1f} sn · {k['kare'] - d1['kare']} kare (basıştan karta) · öbür maçlardan biten {k['obur']}/7 · {k['skor']}")
+    belir = await pg.evaluate("() => document.getElementById('macSonu').classList.contains('ms-belir')")
+    denetle("U4: maç sonu kartı belirme geçişiyle açıldı (ms-belir)", belir)
     await pg.evaluate(BITIR_CASUS_JS)
     t1 = time.time()
     await pg.click("#macSonu [data-eylem='odayaDon']")
@@ -1722,6 +1736,8 @@ async def bolum_19(tarayici, site, tum_hatalar):
         is: is.map(x => x.veri.macId.split('-')[2] + ' ' + x.tarih + ' ' + x.dakika), gecmis: k.gecmis.filter(g => g.tur === 'mac').length,
         hepsi13: T.every(x => x.O === 13), kisa: Object.entries(k.maclar).filter(([id]) => id !== '{id13}').every(([, s]) => s.sutlar === null) }}; }}""")
     casus = await pg.evaluate("() => sessionStorage.getItem('h2aBitir')")
+    gd = await pg.evaluate("() => window.__gecisIlk")
+    denetle("U4: Odaya dön'de maç sonu kartı odanın ilk boyamasında (skor, “Odaya dönülüyor…”)", bool(gd) and "MAÇ SONU" in gd and k["skor"].replace("–", " – ") in gd and "Odaya dönülüyor" in gd, str(gd))
     denetle("F2/F7, H2-a: Odaya dön 'Öbür maçlar tamamlanıyor' diye bekledi, haftanın sekiz sonucunu bir kez kaydetti (öbürleri kısa kayıt; ligCanliBitir çağrılmadı; bizim maçın protokolü null); oda Cumartesi 21:00; 16 kulüp 13 maç; sıradaki iş 14. hafta 5 Aralık 19:00; adres parametresiz",
             "tamamlanıyor" in bekle and casus is None and o["protokol"] is None
             and "mac=" not in pg.url and o["an"] == "2026-11-28 1260" and o["mac"] == k["skor"] and o["macSay"] == 8 and o["hepsi13"] and o["kisa"] and o["O"] == 13 and o["is"] == ["14 2026-12-05 1140"]
@@ -1954,6 +1970,8 @@ async def bolum_19b(tarayici, site, tum_hatalar):
             s["skor"] in s["kart"] and not s["ka"] and not s["ortu"] and s["cizim"] == 0 and s["kip"] == "anaIs",
             f"Maçı izleme → kart {sure:.1f} sn (file://, duraklatma ~1 sn dahil) · kart açılırken biten öbür maç {s['obur']}/7 · {s['skor']}")
     await pg.screenshot(path=str(ARAC / "son-akis-19b-kart.png"))
+    belir = await pg.evaluate("() => document.getElementById('macSonu').classList.contains('ms-belir')")
+    denetle("U4: maç sonu kartı belirme geçişiyle açıldı (ms-belir)", belir)
     await pg.evaluate(BITIR_CASUS_JS)
     t1 = time.time()
     await pg.click("#macSonu [data-eylem='odayaDon']")

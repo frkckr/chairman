@@ -394,6 +394,8 @@ const STIL={
     /* U1 (2026-10-28) odak kabı (js/ekran-odak.js): perde bulanıklığı (px; canlandırılmaz) ve karartması, bulanıklık yokken yalnız karartma,
        kabın genişliği (karenin %'si; genis dosya/defter/gazete/kadro, orta karar, kucuk ayarlar, cihaz telefon), belirme ölçeği ve süreler (ms).
        Araştırma: statik 6–8 px ve %30–35 karartma; açılış 200–300, kapanış 150–200 ms (u-arastirma §6.3). TEST değerleri */
+    /* U4 zaman geçiyor sahnesi (js/ekran-zaman.js): taban + satır başı sn, en çok enCok sn. TEST */
+    zaman:{taban:0.8,satir:0.35,enCok:2.5},
     odak:{goz:{is:55,yan:40,kenar:2},bulanik:7,karartma:'rgba(24,16,8,.33)',yalnizKarartma:'rgba(24,16,8,.5)',boy:{genis:80,orta:60,kucuk:52,cihaz:44},olcek:0.96,
       sure:{belir:220,kapan:160,perde:150,perdeKapan:120,azalt:150}},
     /* telefon (2.8I): açık tonlu cihaz; gelen/giden baloncuk ve ana ekran simgeleri. N7 (2026-10-04): cihaz çerçevesi ve kamera adası, ana ekranın

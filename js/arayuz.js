@@ -90,6 +90,7 @@ function frame(now){
     renderer.setRenderTarget(null);renderer.clear();renderer.render(post,postCam);
   }
   onEkranCizildi=ON_EKRAN.acik;if(ON_EKRAN.acik)ON_EKRAN.cizildi=true;
+  if(typeof gecisKartiKaldir==='function')gecisKartiKaldir();   /* U4: ilk kare çizildi; geçiş kartı (bilet, maç sonu) söner */
   requestAnimationFrame(frame);
 }
 for(let i=0;i<90;i++){time+=0.12;fx(0.12,time);}

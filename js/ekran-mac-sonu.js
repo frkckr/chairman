@@ -50,6 +50,12 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
 .ms-kart:focus{outline:none}
 .mac-sonu button.ms-don:focus-visible{outline:.14em solid ${K.kulup};outline-offset:.12em}
 .mac-sonu .ms-hesap{width:min(46%,26em);justify-items:center;text-align:center;gap:.35em}
+/* U4 (envanter 22): kart belirir — kenarlar kararır, kâğıt aşağıdan yerine oturur; "hareketi azalt"ta yalnız opaklık */
+.mac-sonu.ms-belir .ms-kararti{animation:msGel .35s ease-out both}
+.mac-sonu.ms-belir .ms-kart{animation:msKart .32s cubic-bezier(.2,.7,.3,1) both}
+@keyframes msGel{from{opacity:0}to{opacity:1}}
+@keyframes msKart{from{opacity:0;transform:translateY(1.2em) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.mac-sonu.ms-belir .ms-kart{animation:msGel .15s linear both}}
 .ms-hesap p{margin:0}
 .ms-hesap b{font-family:var(--display);font-weight:400;font-size:1.9em;line-height:1;letter-spacing:.03em}
 `;
@@ -66,7 +72,10 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
     const H=HIZLI_BITIR,g=H.perde&&!MAC_SONU.acik&&!KARAR_ANI.acik&&!TEPE_AN.aktif;
     if(O.hidden===g){O.hidden=!g;if(g)O.style.setProperty('--ms-boy',yaziBoyuDegeri());}
     if(!g)return;
-    const dk=MAC_ARKA.kip!=='isci'&&!H.anlik?mac.minuteLabel():'',y=duraklatmaVar()?'Duraklatıldı':dk?(/^\d/.test(dk)?dk+'\'':dk):'';
+    const dk=MAC_ARKA.kip!=='isci'&&!H.anlik?mac.minuteLabel():'',d=duraklatmaVar()?'Duraklatıldı':dk?(/^\d/.test(dk)?dk+'\'':dk):'';
+    /* U4 (envanter 30): haftanın öbür maçlarından biten sayısı (n/7); bekleme bilgi taşısın */
+    const L=typeof LIG_CANLI!=='undefined'?LIG_CANLI:[],n=L.filter(x=>x.m?x.m.phase==='fulltime':!!x.son).length;
+    const y=[d,L.length?'öbür maçlar '+n+'/'+L.length:''].filter(Boolean).join(' · ');
     if(y!==hesapYazi){hesapYazi=y;hesapAlt.textContent=y;}
   };
   const yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
@@ -105,7 +114,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
        js/mac-sahnesi.js HIZLI_BITIR.sonuc; sonradan işçi düşse de) */
     S.sonuc=G.hukmen?hukmenSonucu(G.hukmen):HIZLI_BITIR.anlik?JSON.parse(JSON.stringify(HIZLI_BITIR.sonuc)):mac.sonucKaydi();
     E.style.setProperty('--ms-boy',yaziBoyuDegeri());   /* U0: ortak ölçek */
-    E.innerHTML=msIcerik(S.sonuc);E.hidden=false;
+    E.innerHTML=msIcerik(S.sonuc);E.classList.add('ms-belir');E.hidden=false;
     /* odak kartta (F2 incelemesi): kart kendiliğinden açılır; odak düğmede olsaydı maç boyu duraklatan Boşluk sonucu uygulayıp sayfadan çıkarırdı.
        Sekme düğmeye götürür */
     const kart=E.querySelector('.ms-kart');if(kart)kart.focus({preventScroll:true});
@@ -135,7 +144,11 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
       if(b){b.disabled=false;b.textContent='Odaya dön (sonuç yazılmadan) ▸';b.focus({preventScroll:true});}
       return;}
     /* replace: tarayıcının Geri tuşu oynanmış maçın adresine dönmesin (F2 incelemesi) */
-    if(OYUN.oturum.durum.tamam&&OYUN.depo!=='bellek'){location.replace(location.pathname);return;}
+    if(OYUN.oturum.durum.tamam&&OYUN.depo!=='bellek'){
+      /* U4: dönüş kartı — maç sonu skoru odanın ilk boyamasına taşınır (js/gecis-karti.js) */
+      if(typeof gecisKartiGoster==='function'){const o={tur:'donus',ust:'Maç sonu'+(G.bulten&&G.bulten.hafta?' · '+G.bulten.hafta+'. hafta':''),baslik:adi(0)+' '+S.sonuc.skor[0]+' – '+S.sonuc.skor[1]+' '+adi(1),alt:'Odaya dönülüyor…'};
+        gecisKartiKaydet(o);gecisKartiGoster(o,true);}
+      location.replace(location.pathname);return;}
     S.isliyor=false;
     durumYaz('Kaydedilemedi: '+(OYUN.depo==='bellek'?'tarayıcı deposu kullanılamıyor':OYUN.oturum.durum.hata)+'. Sayfa kapanırsa maç yeniden oynanır.',true);
     if(b){b.disabled=false;b.textContent='Yeniden dene ▸';b.focus({preventScroll:true});}

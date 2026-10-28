@@ -19,7 +19,7 @@
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const KOK=path.join(__dirname,'..');
 const OYUN_DOSYALARI=['js/ortak.js','js/stadyum-tarifleri.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/mesele.js','js/yonetim.js','js/olay.js','js/soz.js','js/mesajlar.js','js/gozlem.js',
-  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/hoca.js','js/mac-girdi.js','js/mac-sonuc.js','js/mac-okuma.js','js/lig-maclari.js','js/oyuncu-hafta.js','js/sozlesme.js','js/kulup-mali.js','js/transfer.js','js/icerik-p12.js','js/yazisma.js','js/mali-rapor.js','js/kadro-dosyasi.js','js/gazete.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
+  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/hoca.js','js/mac-girdi.js','js/mac-sonuc.js','js/mac-okuma.js','js/lig-maclari.js','js/oyuncu-hafta.js','js/sozlesme.js','js/kulup-mali.js','js/transfer.js','js/icerik-p12.js','js/yazisma.js','js/mali-rapor.js','js/kadro-dosyasi.js','js/gazete.js','js/zaman-ozeti.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
 const DOSYALAR=OYUN_DOSYALARI.concat(['araclar/test-icerik.js','js/kariyer-ornek.js']);
 /* F1 (2026-10-23): bağlam sıradan bir genel nesnedir (araclar/motor-yukle.js gibi; vm.constants.DONT_CONTEXTIFY). Eski sarılı bağlam her genel ada
    erişimi bir ara katmandan geçirdiği için kariyer 16 kulüp ve 289 oyuncuya büyüyünce araç 1 sn'den 15 sn'ye çıkmıştı */
@@ -1766,6 +1766,26 @@ bolum('2.7b — antrenman programı ve balkon sinyalleri (S-b; js/gozlem.js, js/
   denetle('Kayıt: bozuk sinyal listesi doğrulamada yakalanır; sinyalsiz (eski) açık gözlem sinyalsiz kapanır',
     T('kariyerDogrula')(T('kariyerOlustur')(bz)).some(e=>/sinyal/.test(e))&&!T('kariyerDogrula')(tek).length&&ac.gozlem.sinyaller===undefined
     &&!KK(ac,x=>{T('gozlemBitir')(x);}).kariyer.gecmis.filter(g=>g.tur==='gozlem').pop().sinyaller);
+}
+
+bolum('U4 — zaman özeti (js/zaman-ozeti.js; saf okuma)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),ZO=T('zamanOzeti'),SY=T('sureYazi');
+  const k0=T('kariyerBaslat')({tohum:7}),once={tarih:k0.tarih,dakika:k0.gunIciDakika},R=KK(k0,x=>T('duragaIlerle')(x)),k1=R.kariyer,once1=metin(k1),O=ZO(k1,once,R.sonuc);
+  const gz=O.satirlar.filter(s=>s.tur==='gazete');
+  denetle('İlerle özeti: geçen süre iki anın farkı; satırlar aralıkta ve zaman sırasında; her sabahın dolu gazetesi manşetiyle (08:00); özet kariyeri değiştirmez',
+    O.gecen===T('simdikiAn')(k1)-T('anDakika')(once.tarih,once.dakika)&&O.gecen>0&&O.satirlar.every((s,i,L)=>s.an>O.bas&&s.an<=O.son&&(!i||L[i-1].an<=s.an))
+    &&gz.every(s=>s.dakika===480&&/^Gazete: /.test(s.metin))&&metin(k1)===once1,`${SY(O.gecen)} · ${O.satirlar.length} satır (${gz.length} gazete) · ${R.sonuc.neden}`);
+  const hat=Object.values(k0.isler).filter(x=>x.tur==='hatirlatma');
+  denetle('Transfer dönemi hatırlatmaları kapak taşır (veri.kapak transfer); hatırlatmanın sonucu kapağı geçirir',
+    hat.length>0&&hat.every(x=>x.veri.kapak==='transfer')&&metin(T('IS_TURLERI').hatirlatma.uygula(k0,hat[0]))===metin({metin:hat[0].veri.metin,kapak:'transfer'}));
+  const sahte={biten:[{tur:'is',isTuru:'ayBasi',tarih:k1.tarih,dakika:k1.gunIciDakika,sonuc:{metin:'Aralık maaşları ödendi.'}},
+    {tur:'is',isTuru:'hatirlatma',tarih:k1.tarih,dakika:k1.gunIciDakika,sonuc:{metin:'Kış transfer dönemi açıldı.',kapak:'transfer'}},
+    {tur:'is',isTuru:'hatirlatma',tarih:k1.tarih,dakika:k1.gunIciDakika,sonuc:{metin:'Saha raporu geldi.'}}]};
+  const O2=ZO(k1,once,sahte);
+  denetle('Kapaklar: ay başı ve transfer dönemi kapak olur, sıradan hatırlatma yalnız satırdır; süre yazısı',
+    metin(O2.kapaklar.map(x=>x.tur+':'+x.baslik))===metin(['ayBasi:Ay başı','transfer:Transfer dönemi'])&&O2.satirlar.some(s=>s.metin==='Saha raporu geldi.')
+    &&SY(150)==='2 saat 30 dk'&&SY(1620)==='1 gün 3 saat'&&SY(0)==='0 dk',metin(O2.kapaklar));
 }
 
 bolum('Bozuk kopyalar doğrulamada yakalanır');

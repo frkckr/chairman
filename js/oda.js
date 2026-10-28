@@ -192,9 +192,13 @@ function odaGunIsigi(dakika){
   const t=a===b?0:(s-a[0])/(b[0]-a[0]),r=new THREE.Color(a[2]).lerp(new THREE.Color(b[2]),t);
   return{guc:a[1]+(b[1]-a[1])*t,renk:r};
 }
+/* U4: "zaman geçiyor" sahnesinde yalnız saat kolları (dakika); odaDurum gerçek anı yeniden yazar */
+function odaSaatGoster(dk){if(!ODA.akrep)return;ODA.akrep.rotation.z=-((dk/60)%12)/12*Math.PI*2;ODA.yelkovan.rotation.z=-(dk%60)/60*Math.PI*2;}
 function odaDurum(d){
   const D=Object.assign(ODA.durum,d),N=ODA.nesneler;
   N.dosya.g.visible=!!D.dosya;N.gazete.g.visible=!!D.gazete;ODA.kart.visible=!!D.kart;ODA.panoNotu.visible=!!D.panoNotu;
+  /* U4: oturum içinde yeni sayı gelince gazete masaya iner (sayfa açılışında inmez; "hareketi azalt"ta inmez) */
+  {const y=!!D.gazete&&!!D.gazeteYeni;if(ODA.gazeteYeniOnce===false&&y&&!(typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches))ODA.gazeteDus=OD.gazeteDus||0.6;ODA.gazeteYeniOnce=y;}
   if(ODA.iskele!==!!D.iskele){ODA.iskele=!!D.iskele;if(ODA.disHep&&typeof balkonIskele==='function')balkonIskele(ODA.iskele);else ODA.pencereCiz(ODA.iskele);}
   {const g=N.telefon.cv.getContext('2d');g.fillStyle=D.haber?OD.telefonHaber:OD.telefonEkran;g.fillRect(0,0,16,32);
    if(D.haber){const s=String(Math.min(9,D.haber));ctxText(g,s,5,9,'#1a1203',2);}else{g.fillStyle='#1c3a52';g.fillRect(0,0,16,5);}
@@ -362,6 +366,8 @@ function odaKare(dt){
   /* yeni haber: sabit ışık (yanıp sönme yok) */
   N.telefon.isik.material.opacity=ODA.durum.haber?0.42:0;
   N.gazete.isik.material.opacity=ODA.durum.gazete&&ODA.durum.gazeteYeni?0.36:0;
+  if(ODA.gazeteDus>0){const S=OD.gazeteDus||0.6;ODA.gazeteDus=Math.max(0,ODA.gazeteDus-dt);const t=1-ODA.gazeteDus/S,e=1-(1-t)*(1-t);
+    N.gazete.g.position.y=ODA.masaUstu+(1-e)*0.22;N.gazete.g.rotation.z=(1-e)*0.25;}
 }
 function odaCiz(){
   renderer.setRenderTarget(rt);renderer.setClearColor(OD.arkaPlan,1);renderer.clear();renderer.render(ODA.sahne,ODA.kamera);

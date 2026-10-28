@@ -22,7 +22,8 @@ const IS_TURLERI={
   hatirlatma:{
     denetle:(k,v)=>v&&typeof v.metin==='string'&&v.metin?[]:['hatırlatma metni yok'],
     baslik:(k,is)=>is.veri.metin,
-    uygula:(k,is)=>({metin:is.veri.metin})
+    /* U4: veri.kapak ('transfer', 'sezonSonu') İlerle'nin özetinde kapak olur (js/zaman-ozeti.js); sonuç kaydına geçer */
+    uygula:(k,is)=>Object.assign({metin:is.veri.metin},is.veri.kapak?{kapak:is.veri.kapak}:{})
   }
 };
 const isBasligi=(k,is)=>{const t=IS_TURLERI[is.tur];return t&&t.baslik?t.baslik(k,is):is.tur;};

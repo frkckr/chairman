@@ -277,6 +277,8 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .macTelefon button:focus-visible{outline:.14em solid var(--k-kulup);outline-offset:.1em}
 .od-kayit{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .oda button.od-duraklat{font-size:1em;letter-spacing:.1em;text-transform:uppercase;padding:.1em .6em .05em;border-bottom-width:1px}
+/* U4 (envanter 21): basılan kâğıt düğme bir an aşağı iner (gölgesi kalkar); sürüklenen kart ve devre dışı düğme etkilenmez */
+.oda button:not(:disabled):active,.onEkran button:not(:disabled):active,.macTelefon button:not(:disabled):active,.mac-sonu button:not(:disabled):active,.karar-ani button:not(:disabled):active{transform:translateY(.1em);box-shadow:none;filter:brightness(.96)}
 /* genel duraklatma göstergesi (2.8B): ekranı karartmaz, yalnız küçük etiket; tıklamaları engellemez */
 .duraklatildi{position:absolute;z-index:6;top:2.6%;left:50%;transform:translateX(-50%);margin:0;padding:.25em .9em .2em;pointer-events:none;
   font-family:var(--govde);font-size:max(11px,1.25cqw);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#1a1203;background:var(--amber);border:1px solid #b9791a;box-shadow:0 .2em .6em rgba(0,0,0,.25)}
@@ -293,6 +295,8 @@ html,body{margin:0}
     <p class="duraklatildi" id="duraklatildi" role="status" hidden>Duraklatıldı</p>
     <section class="macTelefon" id="macTelefon" role="dialog" aria-label="Telefon" hidden></section>
   </div>
+  <!-- U4: sayfa geçiş kartı (bilet / maç sonu) ilk boyamada, ağır betiklerden önce -->
+  <script src="js/gecis-karti.js"></script>
 
   <div class="controls" id="baskanDugmeleri">
     <div class="grp"><span class="lbl">Başkan</span>
@@ -371,6 +375,7 @@ html,body{margin:0}
 <script src="js/mali-rapor.js"></script>
 <script src="js/kadro-dosyasi.js"></script>
 <script src="js/gazete.js"></script>
+<script src="js/zaman-ozeti.js"></script>
 <script src="js/test-gorunum.js"></script>
 <script src="js/kayit.js"></script>
 <script src="js/depo-tarayici.js"></script>
@@ -423,6 +428,7 @@ html,body{margin:0}
 <script src="js/ekran-dosya.js"></script>
 <script src="js/ekran-defter.js"></script>
 <script src="js/ekran-odak.js"></script>
+<script src="js/ekran-zaman.js"></script>
 <script src="js/ekran-oda.js"></script>
 <script src="js/arayuz.js"></script>
 <script src="js/karar-ani.js"></script>
