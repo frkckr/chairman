@@ -2,8 +2,8 @@
 /* ============ Chairman — oturum sonu kontrolü (CLAUDE.md "Kontrol", orta kademe; çekirdek listesi 2026-10-22) ============
    Yerel commit'ten önce tek komutla: ad ve sınır denetimi, N maç tabanla karşılaştırma (sağlık aralığı, ilkel ve örüntü satırları) ve çekirdek
    senaryolar. Arka planda çalıştırılabilir. Tam rapor araclar/son-oturum.txt'ye yazılır (Git dışında), ekrana özet basılır.
-   Kullanım: node araclar/oturum-sonu.js [taban, varsayılan araclar/taban/p2.json] [--mac N, varsayılan 40; dizüstünde 24] [--seyrek] [--senaryo a,b,…] [--ayni]
-     taban      turun tabanı (YOL_HARITASI devam notu yazar); varsayılan her tur kapanışında güncellenir
+   Kullanım: node araclar/oturum-sonu.js [taban, varsayılan araclar/taban/GUNCEL.json'ın motor alanı] [--mac N, varsayılan 40; dizüstünde 24] [--seyrek] [--senaryo a,b,…] [--ayni]
+     taban      turun tabanı; verilmezse araclar/taban/GUNCEL.json'daki güncel motor tabanı (R1-c, 2026-10-29: eskiden p2.json sabiti, dosya silinmişti)
      --seyrek   bütün senaryoları koşar (tur kapanışında); çekirdek dışındakiler yalnız sahibi dosya değişince (araclar/KAPILAR.md) ya da --senaryo ile
      --senaryo  yalnız bu senaryolar
      --ayni     karşılaştırma tohum başına parmak iziyle (sonucu değiştirmemesi gereken düzenlemede)
@@ -16,7 +16,7 @@ const KOK=path.join(__dirname,'..');
 const ARG=process.argv.slice(2);
 function secenek(ad,degerli){const i=ARG.indexOf(ad);if(i<0)return null;if(!degerli){ARG.splice(i,1);return true;}return ARG.splice(i,2)[1];}
 const MAC=parseInt(secenek('--mac',true)||'40',10),SECILI=secenek('--senaryo',true),AYNI=!!secenek('--ayni',false),SEYREKLER=!!secenek('--seyrek',false);
-const TABAN=ARG[0]||path.join('araclar','taban','p2.json');   /* tur kapanışında güncel tura çevrilir (taban dosyası yoksa araç durur) */
+const TABAN=ARG[0]||path.join('araclar','taban',JSON.parse(fs.readFileSync(path.join(__dirname,'taban','GUNCEL.json'),'utf8')).motor);   /* taban dosyası yoksa araç durur */
 const RAPOR=path.join(__dirname,'son-oturum.txt');
 /* çekirdek senaryolar (2026-10-22; CLAUDE.md "Kontrol"): her oturum sonunda koşar; kalanlar --seyrek, --senaryo ya da sahibi değişince (araclar/KAPILAR.md) */
 const CEKIRDEK=['c-1v1','c-koru','c-temas','c-hava','c-kanat','c-orta','b-pas','d-sut','t-top','z-s14'];
