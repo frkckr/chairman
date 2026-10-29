@@ -1,12 +1,12 @@
 # Kapılar — değişen şeye göre koşulacak denetim
 
-Bu tablo [CLAUDE.md “Kontrol”](../CLAUDE.md#kontrol)'ün üç kademesine eklenir: hızlı kademede değişenin satırı koşar, oturum sonunda çekirdek 10 senaryo zaten koşar, tur kapanışında bütün senaryolar (`node araclar/oturum-sonu.js <taban> --seyrek`). Senaryo `node araclar/mac-deneme.js --senaryo <ad>` ile koşar; çıkış kodu 1 kabul dışıdır. “Satır” maç denemesinin (`node araclar/mac-deneme.js N`) ölçüm eklentisi satırıdır (`araclar/olcumler/`), bilgi verir. Python araçları `python -X utf8` ile (ya da `PYTHONUTF8=1`).
+Bu tablo [CLAUDE.md “Kontrol”](../CLAUDE.md#kontrol)'ün kademelerine eklenir (karar 63, 2026-10-29): hızlı kademede ve her tur kapanışında değişenin satırı koşar; motor değiştiyse oturum sonunda çekirdek 10 senaryo, tur kapanışında bütün senaryolar (`node araclar/oturum-sonu.js <taban> --seyrek`); `main`'e almadan önceki büyük kapıda bir kez akışın tamamı, iki sezon tabanı, oturum sonu, `kontrol.py`, `akis-2d.py` ve `okunurluk.py` (turlar 2–3'ü birlikte alınır). Senaryo `node araclar/mac-deneme.js --senaryo <ad>` ile koşar; çıkış kodu 1 kabul dışıdır. “Satır” maç denemesinin (`node araclar/mac-deneme.js N`) ölçüm eklentisi satırıdır (`araclar/olcumler/`), bilgi verir. Python araçları `python -X utf8` ile (ya da `PYTHONUTF8=1`).
 
 **R1 (2026-10-29):** hızlı kademenin tek komutu `node araclar/hizli.js` (değişen dosyaya göre ad denetimi, `mac-deneme 4` ve `kariyer-deneme`'yi paralel koşar, ekran değiştiyse tarayıcı denetimini yazar; gruplar `araclar/dosya-gruplari.js`). Güncel tabanlar `araclar/taban/GUNCEL.json`'da; bilinen kabul dışı satırlar, zaman aşımları ve ertelenen işler `araclar/BORCLAR.md`'de (oturum sonu ve akış denemesi yalnız defterde olmayan satırla başarısız olur).
 
 Tarayıcı denetimleri (`akis-deneme.py`, `kontrol.py`, `akis-2d.py`) tek yürütücüyle sırayla koşar: aynı anda iki tarayıcı denemesi bekleme sınırlarını aşar ve akis 20'nin yerel sunucusu çakışır (H2, 2026-10-26).
 
-Çekirdek senaryolar (her oturum sonu): `c-1v1`, `c-koru`, `c-temas`, `c-hava`, `c-kanat`, `c-orta`, `b-pas`, `d-sut`, `t-top`, `z-s14`.
+Çekirdek senaryolar (motor değişen her oturum sonu ve büyük kapı): `c-1v1`, `c-koru`, `c-temas`, `c-hava`, `c-kanat`, `c-orta`, `b-pas`, `d-sut`, `t-top`, `z-s14`.
 
 ## Maç motoru
 
