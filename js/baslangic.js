@@ -11,6 +11,7 @@
    kariyerBaslat({tohum}): aynı tohum aynı kariyeri kurar (dünya tohumu kayıtlı rastlantının başlangıcıdır; fikstür ve üretilen kadrolar
    tohumdan türetilir, kayıtlı rastlantıyı çekmez). Hafta 23 Kasım Pazartesi 08:00'de başlar, Cumartesi 19:00 maç sınırında biter.
    Tutar ve adlar TEST değeridir. */
+'use strict';
 const BASLANGIC_TARIHI='2026-11-23';
 const ACILIS_NAKDI=520000000;               // 5.200.000,00 ₺ (TEST değeri)
 const DUNYA={

@@ -8,6 +8,7 @@
                                       kadar ilerletilir. {satirlar: [metin], hata} döner
      testKadro(kulupId, kariyer?)     kadrodaki futbolcuların özellikleri (F1'den beri kariyerden, yoksa js/kadrolar.js); S-a'dan beri bugünkü kondisyon,
                                       kayıtlı form, gizli tavan, gelişim birikimi ve günün antrenman programı (js/oyuncu-hafta.js) */
+'use strict';
 const TEST_KATKI_ADLARI={mali:'mali',baglanti:'bağlantı',futbol:'futbol',iletisim:'iletişim'};
 const TEST_SEVIYE_ADLARI={zayif:'zayıf',orta:'orta',guclu:'güçlü'};
 const TEST_OZELLIKLER=['Hız','Pas','Şut','Kafa','Sürme','Müdahale','Görüş','Karar','Kalecilik','Dayanıklılık','Sertlik'];

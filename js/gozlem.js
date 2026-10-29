@@ -17,6 +17,7 @@
      sinyallerini dondurur (k.gozlem.sinyaller), gozlemBitir izlenen kısmını geçmişteki gözlem kaydına yazar (sinyaller: [{oyuncuId, tur, alt?, dk}]);
      metin kayda girmez (MESELE_OLAYLARI['gozlem.'+tür]). gozlemNotlari(k, oyuncu) oyuncunun dosyasına tarihli notları verir (js/kadro-dosyasi.js).
    Saatler ve eşikler TEST değeridir. */
+'use strict';
 const ANTRENMAN_SAATI={bas:900,bit:1020};  // hafta içi 15:00–17:00 (TEST değeri)
 const KISA_IS=15;                          // gözlemin içine sığan işin en uzun süresi, dakika (TEST değeri)
 const GOZLEM_NOT_ESIGI=30;                 // bundan kısa gözlem not bırakmaz (TEST değeri)

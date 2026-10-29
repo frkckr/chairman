@@ -1671,6 +1671,59 @@ bolum('2.4 — güvenli komut ve kayıt oturumu');
   denetle('"Stada git" kaydedilmez: bellekte maç sınırı geçilir, kayıt öncekinde kalır',!m.kariyer.isler[mac.id]&&m.durum.bekleyen&&onceki==='2026-11-28 19:00');
 }
 
+bolum('1.6 — iki oturum: karşılaştırarak yazma, kayıt çakışması (R1-a)');
+{
+  const randevu=c=>Object.values(c.isler).find(x=>x.veri.baslik==='Deneme randevusu');
+  const d=bellekDeposu(),c=deneme();kayitOturumu(d,'oyun-1',c).kaydet();
+  const bildirim=[];
+  const A=kayitOturumu(d,'oyun-1',kariyerYukle(d,'oyun-1').kariyer,true,{cakismada:()=>bildirim.push('A')});
+  const B=kayitOturumu(d,'oyun-1',kariyerYukle(d,'oyun-1').kariyer,true,{cakismada:()=>bildirim.push('B')});
+  A.uygula(x=>ajandaIsiYap(x,randevu(x).id));
+  const anaA=d.oku('oyun-1'),oncekiA=d.oku('oyun-1.onceki'),Bonce=metin(B.kariyer);
+  let h=null;try{B.uygula(x=>duragaIlerle(x));}catch(e){h=e;}
+  denetle('Geride kalan oturumun komutu uygulanmaz: çakışma hatası, bellekteki kariyer ilerlemez',!!h&&h.cakisma===true&&metin(B.kariyer)===Bonce,h&&h.message);
+  denetle('… kayıt öndeki oturumun yazdığında kalır, .onceki bozulmaz',d.oku('oyun-1')===anaA&&d.oku('oyun-1.onceki')===oncekiA);
+  const kc=B.durum.cakisma&&B.durum.cakisma.kayittaki;
+  denetle('… durum çakışmayı kayıttaki anla taşır; dinleyici bir kez çağrılır',!B.durum.tamam&&!!kc&&kc.tarih===A.kariyer.tarih&&kc.dakika===A.kariyer.gunIciDakika&&bildirim.join()==='B',JSON.stringify(B.durum.cakisma)+' · '+bildirim.join());
+  const s=B.kaydet();
+  denetle('Yeniden kaydetmek de yazmaz (çakışma kalıcı)',!s.tamam&&s.cakisma===true&&d.oku('oyun-1')===anaA&&bildirim.join()==='B');
+  A.uygula(x=>duragaIlerle(x));
+  denetle('Öndeki oturum yazmayı sürdürür',A.durum.tamam&&!A.durum.cakisma&&d.oku('oyun-1')!==anaA);
+  /* kaydetmeden uygulanan komut (maç sınırı) depoyu okumaz; sonraki kayıt yine karşılaştırır */
+  const C=kayitOturumu(d,'oyun-1',kariyerYukle(d,'oyun-1').kariyer,true);
+  A.uygula(x=>duragaIlerle(x));const anaA2=d.oku('oyun-1');
+  C.uygula(x=>duragaIlerle(x),true);const sC=C.kaydet();
+  denetle('Kaydetmeden uygulanan komuttan sonraki kayıt da çakışmayı yakalar',!sC.tamam&&sC.cakisma===true&&d.oku('oyun-1')===anaA2);
+  const D=kayitOturumu(d,'oyun-1',kariyerYukle(d,'oyun-1').kariyer,true);
+  const dOnce=D.cakismaDenetle();A.uygula(x=>duragaIlerle(x));
+  denetle('cakismaDenetle (storage olayı) başka oturumun yazımını komut beklemeden görür',dOnce===false&&D.cakismaDenetle()===true&&!!D.durum.cakisma);
+  const d2=bellekDeposu();d2.yaz('oyun-1','{bozuk');const N=kayitOturumu(d2,'oyun-1',deneme(),false),sN=N.kaydet();
+  denetle('Bozuk kaydın yerine yeni kariyer çakışma sayılmaz',sN.tamam&&!N.durum.cakisma&&kariyerYukle(d2,'oyun-1').tamam);
+  const d3=bellekDeposu(),o3=kayitOturumu(d3,'oyun-1',deneme(),false);o3.kaydet();o3.uygula(x=>ajandaIsiYap(x,randevu(x).id));
+  d3.yaz('oyun-1','{bozuk');const y3=kariyerYukle(d3,'oyun-1'),P=kayitOturumu(d3,'oyun-1',y3.kariyer,false);P.uygula(x=>duragaIlerle(x));
+  denetle('Önceki sağlam kayıttan açılan oturum yazabilir (beklenen bozuk ana metindir)',y3.kaynak==='onceki'&&P.durum.tamam&&!P.durum.cakisma&&kariyerYukle(d3,'oyun-1').kaynak==='ana');
+  denetle('Eski çağrı biçimi (beklenen verilmeden kariyerKaydet) karşılaştırmaz',kariyerKaydet(d3,'oyun-1',P.kariyer).tamam);
+}
+
+bolum('1.8 — katı kip: dondurulmuş veriye yazım sessizce yutulmaz (R1-e)');
+{
+  /* kural dosyalarının üst düzey işlevleri çalışma anında katı mı: katı işlevin caller alanına erişmek TypeError'dır, gevşek işlevde null döner */
+  const katiIslev=f=>{try{void f.caller;return false;}catch(e){return e instanceof TypeError||e.name==='TypeError';}};
+  const gevsek=[];let sayilan=0;
+  for(const f of DOSYALAR.filter(x=>x.startsWith('js/')&&!require('./dosya-gruplari').GEVSEK_IZINLI[x])){
+    const adlar=[...fs.readFileSync(path.join(KOK,f),'utf8').matchAll(/^function ([A-Za-z_$][\w$]*)\s*\(/gm)].map(m=>m[1]);
+    for(const a of adlar){const fn=vm.runInContext(`typeof ${a}==='function'?${a}:null`,ctx);if(!fn)continue;sayilan++;if(!katiIslev(fn))gevsek.push(`${f}:${a}`);}
+  }
+  denetle('Kural dosyalarının üst düzey işlevleri katı kipte (araclar/dosya-gruplari.js izin listesi dışı)',sayilan>100&&!gevsek.length,`${sayilan} işlev; gevşek: ${gevsek.slice(0,5).join(', ')}`);
+  const c=deneme(),once=metin(c),yaz=vm.runInContext("'use strict';(x=>{x.sezon.ad='bozuk';})",ctx);
+  let hata=null;try{kariyerKomut(c,yaz);}catch(e){hata=e;}
+  denetle('Dondurulmuş alana (sezon) yazan katı komut hata verir; kariyer değişmez',hata instanceof vm.runInContext('TypeError',ctx)||(hata&&hata.name==='TypeError'),hata&&hata.message);
+  denetle('… ve kariyerin kendisi aynı kalır',metin(c)===once);
+  const d=bellekDeposu(),o=kayitOturumu(d,'oyun-1',c);o.kaydet();const kayit=d.oku('oyun-1');
+  let h2=null;try{o.uygula(yaz);}catch(e){h2=e;}
+  denetle('Kayıt oturumunda da: komut düşer, oturumun kariyeri ve depo değişmez',!!h2&&metin(o.kariyer)===once&&d.oku('oyun-1')===kayit,h2&&h2.message);
+}
+
 bolum('2.7 / 2.8B — antrenman gözlemi (TEST içeriği)');
 {
   const [antrenmanPenceresi,gozlemOnizle,gozlemBaslat,gozlemSurdur,gozlemBitir,gozlemAcik,gozlemKalan,gozlemAc,gozlemAdim]=

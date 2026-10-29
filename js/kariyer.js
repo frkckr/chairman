@@ -25,6 +25,7 @@
 /* Sürüm 11 (S-a, 2026-10-27): oyuncuda isteğe bağlı hal {kon, gun, form, gel, tav} ve mac/dk sayaçları (js/oyuncu-hafta.js); sonraki S adımlarında
    gözlem kaydında sinyaller, geçmiş maç kaydında disarida, kariyerde gazeteOkunan. Sürüm 10 kaydı geçişle açılır (js/kayit.js KAYIT_GECISLERI[10]:
    yalnız sürüm; alan yoksa tam kondisyon, nötr form, sayaç bilinmiyor). */
+'use strict';
 const KARIYER_SURUM=11;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];

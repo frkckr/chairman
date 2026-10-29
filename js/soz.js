@@ -10,6 +10,7 @@
    2.8L (2026-10-02): söz konuları, teşekkür ve hatıra içerikleri kaldırıldı; SOZ_TARAFLARI ve ODA_NOTU_SOZLERI içerik yazıldıkça doldurulur.
    S-e (2026-10-27): günlük gazetenin kaynak defteri GAZETE_KAYNAKLARI (sayıyı js/gazete.js kurar). odaIzleri'ne sayi (son sayının tarihi) ve
    gazeteYeni (son sayı okunmadı) eklendi; eski alanlar aynen durur. */
+'use strict';
 const SOZ_DURUMLARI=['acik','tutuldu','bozuldu'];
 /* kişi olmayan muhataplar: anahtar → ad (ör. {personel:'Personel ve oyuncular'}); içerik dosyaları ekler */
 const SOZ_TARAFLARI={};

@@ -14,6 +14,7 @@
      Sonuç 'dur:true' taşıyorsa ilerleme o anda durur (js/ajanda.js).
      EKIP_GOREVLERI[gorev] = {denetle(k,veri) → hatalar, bekleme(k,is) → beklenen haberin metni, uygula(k,is) → sonuç, geriDon(k,is) → sonuç}
    Konuya özgü olay anahtarları, ekip görevleri ve kategoriler içerik dosyalarındadır (2.8L'den beri oyunda içerik yoktur). */
+'use strict';
 const MESELE_DURUMLARI=['kararBekliyor','ekipte','haberBekliyor','kapandi'];
 const MESELE_DURUM_ADI={kararBekliyor:'Karar sende',ekipte:'Ekipte',haberBekliyor:'Haber bekleniyor',kapandi:'Kapandı'};
 const EKIP_GOREVLERI={};

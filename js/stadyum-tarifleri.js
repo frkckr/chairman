@@ -41,6 +41,7 @@
      ufuk: stadı çevreleyen tepe sıraları {yaricap, yukseklik: [en az, en çok]} (yakından uzağa). duvar: çevre duvarının yüksekliği.
    kapilar (N8; seyircinin girişi N9): {tribun, u: tribün boyunca −0.5…0.5}. Oturma ve ayakta tribünde arka duvarda giriş ağzı, setin girişi
      çevredeki kapıdan; her girişin karşısında çevre duvarında (ya da tel örgüde) kapı vardır. */
+'use strict';
 const STADYUMLAR={
   kulup:{
     ad:'Demirkapı İlçe Stadı',lig:'3. Lig',

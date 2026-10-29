@@ -4,6 +4,7 @@
    Kulüp adları kullanıcınındır (js/lig.js) ve burada yoktur. Demirkapı ve Akdeniz'in kadroları js/kadrolar.js'tedir, bu listeden üretilmez.
    Adlar tek sözcüktür (kadrolar.js'teki gibi); oyunun 3×5 piksel yazısında olmayan harf (â, î, û) kullanılmaz. Hoca adı "<ad> Hoca" olur.
    Kullanan: js/kariyer-kadro.js (kadroUret). */
+'use strict';
 const ADLAR_TEST=[
   'Ali','Mehmet','Mustafa','Hasan','İbrahim','İsmail','Osman','Ömer','Ramazan','Recep','Süleyman','Yakup','Salih','Kemal','Erol',
   'Erkan','Ercan','Erhan','Ertan','Ersin','Ertuğrul','Gökhan','Gürkan','Harun','Hayati','İlhan','Kamil','Kenan','Mahmut','Necati',

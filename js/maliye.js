@@ -7,6 +7,7 @@
      Mevcut para (nakit) ile henüz ödenmemiş taahhütler bu yüzden ayrı durur; maliDurum ikisini birlikte özetler. */
 
 /* hareket bilgilerinin denetimi (kimlik ve tarih hariç): hata listesi */
+'use strict';
 function hareketDenetle(k,v){
   const h=[];
   if(!v||typeof v!=='object')return['ödeme bilgisi yok'];

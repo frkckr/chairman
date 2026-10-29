@@ -11,6 +11,7 @@
    konusmaListesi(k) → [{anahtar, kisi, ad, rol, mesajlar:[{tarih,dakika,yon,metin,meseleId,yeni}], kararlar:[isId], dosyaKarar:[meseleId],
      meseleler:[id], girisimler:[{id,ad,aciklama,engel}], okunmamis, cevapBekliyor, sonAn}] */
 /* rolün telefonda görünen adı; koltuktaki yönetici koltuğunun adıyla görünür. İçerik yeni rol ekleyebilir */
+'use strict';
 const MESAJ_ROL={baskan:'Başkan',teknikDirektor:'Teknik direktör',yardimciAntrenor:'Yardımcı antrenör',maliMudur:'Mali işler müdürü',yonetici:'Yönetim',yoneticiAdayi:'Kulüp üyesi',personel:'Kulüp çalışanı',eskiBaskan:'Eski başkan'};
 const kisiRolu=(k,p)=>{
   if(!p)return'';

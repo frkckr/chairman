@@ -8,6 +8,7 @@
    Ortak yardımcılar: ikiSecenek (her karar tam iki cevap), hazirGorus (koltuktaki kişinin görüşü kanıt olur), donenKarar (yetkiyi aşan konu
      başkana döner), tavsiye, kapasite (kişi başına tek iş), kalıcı sorumluluk (kulüp.sorumluluklar = {alan: {kisiId}}) ve girişim.
    2.8L (2026-10-02): sıralı aday görüşmesi ve bütün konuya özgü kararlar içerikle birlikte kaldırıldı; içerik yazıldıkça kendi dosyasında eklenir. */
+'use strict';
 const YONETIM_KOLTUKLARI={
   sayman:{ad:'Sayman',alan:'Mali işler: ödemeler, alacaklar ve bütçe takibi.',
     yetki:'Ödeme takvimi ve taksit üzerinde anlaşabilir. İndirim, yeni harcama ve sözleşme başkana döner.'},

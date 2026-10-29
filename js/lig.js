@@ -5,6 +5,7 @@
      Puan, oynanan maç ve averaj elle yazılmaz, puanDurumu() hesaplar. id, js/kadrolar.js'teki kulüp anahtarıyla aynıdır.
    sonMaclar: takımın son beş maçı, eskiden yeniye: rakip (takım id), yer (i = iç saha, d = deplasman), a/y (atılan/yenilen).
    buMac: oynanacak maçın bilgileri; ev/konuk js/kadrolar.js'teki kulüp anahtarlarıdır. aradaki: iki takımın aralarındaki son maçlar, yeniden eskiye. */
+'use strict';
 const LIG={
   ad:'3. Lig',grup:'2. Grup',sezon:'2026–27',
   /* puan durumundaki bölgeler (sıra aralıkları): şampiyon doğrudan çıkar, 2–5 play-off oynar, son üç küme düşer */

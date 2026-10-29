@@ -12,6 +12,7 @@
      tohum macTohumu(dünya tohumu, kimlik): aynı kariyerde aynı maç aynı oynanır. biz: başkanın kulübünün takım sırası (0 ev, 1 konuk).
      tarz: iki hocanın tarzı (Match secenek.tarz; F3'ten önce tohumdan 'dagilim'). bulten: maç öncesi ekranının verisi (lig, hafta, gün, saat,
      puan durumu, iki tarafın son beş maçı, takım adları, hocalar). */
+'use strict';
 const MAC_YEDEK_SAYISI=5;                      // kulübedeki yedek (tohum kadrolarındaki gibi; kulübede 6 koltuk)
 const MAC_GUN_ADLARI=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
 const macGunAdi=t=>{const [y,a,g]=t.split('-').map(Number);return MAC_GUN_ADLARI[new Date(Date.UTC(y,a-1,g)).getUTCDay()];};

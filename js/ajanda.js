@@ -30,6 +30,7 @@
    Cevapsız kalma (2.8H, kullanıcı kararı 2026-10-02): acil olmayan saati serbest karar (veri.bekleyebilir) türü zamanAsimi {metin(k,is), uygula(k,is) → {bilgi?}}
      tanımlarsa son cevap anı geçince kendiliğinden o sonuçla kapanır (durum 'cevapsiz'). Sonuç kartta önceden yazar; ilerleme son cevap anında bir kez
      durur (neden 'sonCevap'), sonraki ilerleme ve uzun iş önizlemesi onu 'cevapsiz' listesinde bildirir. Zorunlu krizin böyle bir sonucu yoktur: engeller. */
+'use strict';
 const AJANDA_ZORUNLULUK=['zorunlu','ertelenebilir','istege'];
 const AJANDA_EYLEMLER=['macGunu'];
 const AJANDA_EN_UZUN=720;                   // bir işin en uzun süresi (dakika)

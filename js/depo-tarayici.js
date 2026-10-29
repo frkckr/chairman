@@ -3,6 +3,7 @@
    Kayıtlar yalnız bu tarayıcıda ve bu adreste durur; tarayıcı verisi silinirse kaybolur.
    Depo kullanılamıyorsa (gizli pencere, kapalı site verisi) null döner; çağıran bellekDeposu()'na geçip durumu bildirmelidir.
    Masaüstü sürümü aynı arayüzle dosya tabanlı ayrı bir depo kullanacak (yol haritası 1.5). */
+'use strict';
 function tarayiciDeposu(onek){
   onek=onek||'chairman:';
   let ls;

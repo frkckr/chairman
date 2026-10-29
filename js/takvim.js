@@ -10,6 +10,7 @@
    Bekleyen iş taşınabilir (isTasi) ya da yapılmadan iptal edilebilir (isIptal → geçmişte {tur:'iptal'}); iptal edilen iş tamamlanamaz.
    zamanIlerletAna aynı döngünün durabilen biçimidir: her tamamlanan işten sonra dur(kayit) sorulur; true ise zaman o işin anında kalır.
    IS_SONRASI: iş bütün etkileriyle tamamlandıktan sonra çağrılan dinleyiciler (js/mesele.js mesele durumunu burada değerlendirir). */
+'use strict';
 const GUN_BASLANGICI=480;                  // yeni gün 08:00'de başlar (TEST değeri)
 const IS_SONRASI=[];                       // (k, is, geçmiş kaydı) => void
 const ZAMAN_SONRASI=[];                    // (k) => void; zaman ilerletmesi bittiğinde ya da durduğunda (js/gozlem.js aralığı burada kapatır)

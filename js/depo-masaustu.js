@@ -3,6 +3,7 @@
    (masaustu/ana.js); sayfa yalnız masaustu/onyukleme.js'in açtığı window.chairmanMasaustu köprüsünü görür.
    Kayıtlar kullanıcı veri klasöründe durur (Windows: %APPDATA%\Chairman\kayitlar\<ad>.json).
    Masaüstü dışında (tarayıcı, GitHub Pages) null döner; çağıran tarayiciDeposu()'na geçer. */
+'use strict';
 function masaustuDeposu(){
   const m=typeof window!=='undefined'&&window.chairmanMasaustu;
   if(!m||!m.depo)return null;

@@ -2881,6 +2881,75 @@ async def bolum_27(tarayici, site, tum_hatalar):
     await pg.context.close()
 
 
+CAKISMA_JS = """() => { const o = document.querySelector('.ckm-ortu'), b = o && o.querySelector('.ckm-ac');
+  return { ortu: !!o, metin: o ? o.innerText : '', odak: !!b && document.activeElement === b, rol: o ? o.getAttribute('role') : null,
+    cakisma: !!(OYUN.oturum && OYUN.oturum.durum.cakisma), durdu: typeof duraklatmaVar === 'function' && duraklatmaVar('cakisma'),
+    inert: [...document.getElementById('screen').children].filter(c => c !== o).every(c => c.inert),
+    an: OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika, kayit: localStorage.getItem('chairman:oyun-1') }; }"""
+
+
+async def yokla(pg, js, sure=30):
+    """Koşul doğru olana dek js'i 250 ms arayla değerlendirir (iki sayfalı bağlamda Playwright'ın kare tabanlı beklemesi arka plandaki sayfada
+    çözülmüyor; R1-a). Sayfa gezinirken değerlendirme düşerse yeniden dener. Süre dolarsa False."""
+    son = asyncio.get_event_loop().time() + sure
+    while asyncio.get_event_loop().time() < son:
+        try:
+            if await pg.evaluate(js):
+                return True
+        except Exception:
+            pass
+        await asyncio.sleep(0.25)
+    return False
+
+
+ODA_HAZIR_JS = "() => typeof OYUN !== 'undefined' && !!OYUN.kariyer && !!document.querySelector('#oda:not([hidden]) .od-ana')"
+ORTU_JS = "() => !!document.querySelector('.ckm-ortu')"
+
+
+async def bolum_28(tarayici, site, tum_hatalar):
+    """R1-a (2026-10-29): aynı kariyer iki pencerede. Öndeki pencere yazınca geride kalan pencerede örtü kendiliğinden belirir (storage olayı);
+    komut uygulanmaz, kayıt değişmez; klavye alttaki oyuna gitmez; “Kayıttan yeniden aç” öndeki pencerenin anında odayı açar."""
+    baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
+    sayfalar = []
+    for _ in range(2):
+        pg = await baglam.new_page()
+        pg.on("pageerror", lambda e: tum_hatalar.append("Betik hatası: " + str(e)))
+        # TEST içerikli sayfa: İlerle'nin maç gününden önce durakları var (öndeki pencere iki kez yazabilsin); maç günündeki Stada git kayıt yazmaz
+        await pg.goto((site / "index-test.html").as_uri() + "?dunya=7&pul=0")
+        await yokla(pg, ODA_HAZIR_JS)
+        sayfalar.append(pg)
+    p1, p2 = sayfalar
+    a1, a2 = await p1.evaluate(CAKISMA_JS), await p2.evaluate(CAKISMA_JS)
+    denetle("R1-a: iki pencere aynı kaydı açar; çakışma yok", a1["an"] == a2["an"] and a1["kayit"] == a2["kayit"] and not a1["ortu"] and not a2["ortu"],
+            f"{a1['an']} · {a2['an']}")
+    await oda_ilerle(p1)
+    await yokla(p2, ORTU_JS, 10)
+    b1, b2 = await p1.evaluate(CAKISMA_JS), await p2.evaluate(CAKISMA_JS)
+    denetle("R1-a: öndeki pencere İlerle'yle yazınca geride kalanda örtü kendiliğinden belirir; düğmede odak, sahne duraklatılmış, alttaki her şey etkileşimsiz",
+            b1["an"] != a1["an"] and not b1["ortu"] and b2["ortu"] and b2["odak"] and b2["rol"] == "alertdialog" and b2["cakisma"] and b2["durdu"] and b2["inert"]
+            and "Kayıtta:" in b2["metin"] and "Bu pencerede:" in b2["metin"], f"{b1['an']} · {b2['metin'][:120]!r}")
+    deneme = await p2.evaluate("() => { try { oyunKomut(k => duragaIlerle(k)); return 'uygulandı'; } catch (e) { return e.cakisma ? 'çakışma' : e.message; } }")
+    # odak örtünün dışına alınır (boşluğa tıklama); nesne tuşları yine alttaki oyuna gitmemeli ve odak düğmeye döner
+    await p2.click(".ckm-ortu", position={"x": 8, "y": 8})
+    await p2.keyboard.press("Digit1")
+    await p2.keyboard.press("Digit3")
+    c2 = await p2.evaluate(CAKISMA_JS)
+    telefon = await p2.evaluate("() => !!document.querySelector('#oda section.odk:not(.odk-cikis)')")
+    denetle("R1-a: geride kalan pencerede komut uygulanmaz, kayıt öndekinde kalır; tuşlar alttaki oyuna gitmez",
+            deneme == "çakışma" and c2["kayit"] == b1["kayit"] and c2["an"] == a2["an"] and not telefon and c2["odak"], f"{deneme} · odak açık: {telefon}")
+    await p2.screenshot(path=str(ARAC / "son-akis-28-cakisma.png"))
+    async with p2.expect_navigation(wait_until="commit", timeout=30000):
+        await p2.click(".ckm-ac")
+    await yokla(p2, ODA_HAZIR_JS)
+    d2 = await p2.evaluate(CAKISMA_JS)
+    denetle("R1-a: “Kayıttan yeniden aç” öndeki pencerenin anında odayı açar; örtü yok", d2["an"] == b1["an"] and not d2["ortu"] and not d2["cakisma"], d2["an"])
+    await oda_ilerle(p2)
+    await yokla(p1, ORTU_JS, 10)
+    e1 = await p1.evaluate(CAKISMA_JS)
+    denetle("R1-a: ters yönde de: yenilenen pencere ilerleyince eski öndeki pencerede örtü belirir", e1["ortu"] and e1["cakisma"] and d2["an"] != (await p2.evaluate(CAKISMA_JS))["an"], e1["an"])
+    await baglam.close()
+
+
 async def ana():
     try:
         from playwright.async_api import async_playwright
@@ -2955,6 +3024,9 @@ async def ana():
         if sec("27"):
             print("\n27. Odak kabı ve Esc zinciri (U1)")
             await bolum_27(tarayici, site, tum_hatalar)
+        if sec("28"):
+            print("\n28. İki pencere: kayıt çakışması (R1-a)")
+            await bolum_28(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

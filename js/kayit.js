@@ -15,7 +15,16 @@
    Kayıt oturumu (kayitOturumu, yol haritası 2.4): oyunun bütün değişiklikleri oturum.uygula(f) ile yapılır. Komut kariyerin kopyasına
      uygulanır (kariyerKomut); kabul edilince kaydedilir. Yazılamazsa kariyer yine yeni durumdadır, oturum.durum bunu söyler
      (tamam:false, bekleyen:true); oturum.kaydet() yalnız mevcut durumu yazar, komutu ikinci kez uygulamaz.
-     uygula(f, true) kaydetmeden uygular (maç sınırı gibi bilinçli istisnalar): kayıt bir önceki komutta kalır. */
+     uygula(f, true) kaydetmeden uygular (maç sınırı gibi bilinçli istisnalar): kayıt bir önceki komutta kalır.
+   R1-a (2026-10-29) karşılaştırarak yazma: aynı kariyer iki pencerede açıksa geride kalan pencere öbürünün ilerlemesinin üstüne yazmasın. Oturum,
+     yuvanın ana metnini “beklenen” olarak tutar (açılışta depodaki ana metin — yoksa null, bozuksa bozuk metin —, her başarılı yazımdan sonra
+     yazdığı metin). kariyerKaydet beklenen verilince yazmadan önce ana metni okur; farklıysa yazmaz: {tamam:false, cakisma:true, kayittaki}.
+     uygula(f) komutu uygulamadan önce aynı denetimi yapar ve çakışmada hata fırlatır (e.cakisma === true): komut uygulanmaz, bellekteki
+     kariyer de ilerlemez. uygula(f, true) depoyu okumaz (gözlem gibi sık çağrılır); kalıcı çakışma bayrağına bakar, sonraki kayıt yine karşılaştırır.
+     cakismaDenetle() dışarıdan (tarayıcının storage olayı) çağrılır. Çakışma kalıcıdır: oturum bir daha yazmaz; çıkış sayfayı kayıttan
+     yeniden açmaktır. secenek.cakismada(durum) çakışma ilk görüldüğünde bir kez çağrılır. durum.cakisma = {kayittaki:{tarih,dakika}|null}.
+     Bilinçli üstüne yazma yolları (bozuk kaydın yerine yeni kariyer: yeni oturum zaten bozuk metni bekler; içe aktarma: kayitIceAktar) ayrıdır. */
+'use strict';
 const KAYIT_BICIM=1;
 /* sürüm geçişleri: KAYIT_GECISLERI[n] = veri → (n+1) sürümlü veri. Geçişler başka kural dosyasına bağlı olmayan veri dönüşümleridir;
    kararları yeniden oynatmaz, para hareketi üretmez.
@@ -110,6 +119,14 @@ function kayitCoz(metin){
   return{tamam:true,kariyer:k,gecisler};
 }
 
+const KAYIT_CAKISMA_METNI='Bu kariyer başka bir pencerede ilerledi; bu pencerenin değişikliği kaydedilmedi';
+/* kayıt zarfının ozet alanından tarih ve dakika (zarfı çözmeden; ozet veri'den önce yazılır). Okunamazsa null */
+function kayitOzeti(metin){
+  if(typeof metin!=='string')return null;
+  const m=/"ozet":(\{[^{}]*\})/.exec(metin.slice(0,4000));
+  try{const o=m&&JSON.parse(m[1]);return o&&typeof o.tarih==='string'?{tarih:o.tarih,dakika:o.dakika|0}:null;}catch(e){return null;}
+}
+function cakismaHatasi(){const e=new Error(KAYIT_CAKISMA_METNI);e.cakisma=true;return e;}
 /* depoya güvenli yazım: yazılanı geri okuyup karşılaştırır */
 function yazVeDogrula(depo,ad,metin){
   depo.yaz(ad,metin);
@@ -118,13 +135,16 @@ function yazVeDogrula(depo,ad,metin){
 
 /* kariyeri yuvaya kaydeder: {tamam:true, metin} ya da {tamam:false, hata}. Hata durumunda önceki sağlam kayıt yerinde kalır.
    saglamMetin (isteğe bağlı): bu yuvaya son başarıyla yazılan metin; ana kayıt hâlâ oysa yeniden çözülmeden .onceki'ye taşınır (F1: kayıt
-   120 KB, çözmek tarayıcıda ~5 ms; gözlem her 15 oyun dakikasında kaydeder) */
-function kariyerKaydet(depo,yuva,k,saglamMetin){
+   120 KB, çözmek tarayıcıda ~5 ms; gözlem her 15 oyun dakikasında kaydeder).
+   beklenen (isteğe bağlı, R1-a): verilirse ana metin yazmadan önce buna eşit olmalı; değilse {tamam:false, cakisma:true, hata, kayittaki} ve depo
+   değişmez. Verilmezse karşılaştırılmaz (araçlar, kayıt deneme sayfası) */
+function kariyerKaydet(depo,yuva,k,saglamMetin,beklenen){
   let metin;
   try{metin=kayitMetni(k);}catch(e){return{tamam:false,hata:e.message};}
   try{
-    yazVeDogrula(depo,yuva+'.yeni',metin);
     const eski=depo.oku(yuva);
+    if(beklenen!==undefined&&eski!==beklenen)return{tamam:false,cakisma:true,hata:KAYIT_CAKISMA_METNI,kayittaki:kayitOzeti(eski)};
+    yazVeDogrula(depo,yuva+'.yeni',metin);
     if(eski!==null&&(eski===saglamMetin||kayitCoz(eski).tamam))yazVeDogrula(depo,yuva+'.onceki',eski);
     yazVeDogrula(depo,yuva,metin);
     depo.sil(yuva+'.yeni');
@@ -152,19 +172,37 @@ function kariyerYukle(depo,yuva){
 
 /* kayıt oturumu: kariyer + yuva. kayitli: verilen kariyer zaten bu yuvadan yüklendi mi.
    durum: {tamam: son yazım başarılı mı, hata, tarih/dakika: son başarılı kaydın oyun içi anı, bekleyen: kaydedilmemiş değişiklik var mı} */
-function kayitOturumu(depo,yuva,kariyer,kayitli){
+function kayitOturumu(depo,yuva,kariyer,kayitli,secenek){
   let sonMetin=null;   /* bu oturumun yuvaya son başarıyla yazdığı metin (kariyerKaydet saglamMetin) */
+  let beklenen=null;   /* R1-a: yuvanın ana metninin bu oturumun bildiği hâli */
+  try{beklenen=depo.oku(yuva);}catch(e){beklenen=null;}
+  const cakismada=secenek&&typeof secenek.cakismada==='function'?secenek.cakismada:null;
+  const cakismaKur=kayittaki=>{
+    if(o.durum.cakisma)return;
+    o.durum=Object.assign({},o.durum,{tamam:false,hata:KAYIT_CAKISMA_METNI,bekleyen:true,cakisma:{kayittaki:kayittaki||null}});
+    if(cakismada)try{cakismada(o.durum);}catch(e){}
+  };
   const o={
     kariyer,
     durum:{tamam:true,hata:null,tarih:kayitli?kariyer.tarih:null,dakika:kayitli?kariyer.gunIciDakika:null,bekleyen:!kayitli},
+    /* yuvanın ana metni beklenenden farklı mı (başka pencere yazdı); farklıysa çakışmayı kurar */
+    cakismaDenetle(){
+      if(o.durum.cakisma)return true;
+      let m;try{m=depo.oku(yuva);}catch(e){return false;}
+      if(m!==beklenen){cakismaKur(kayitOzeti(m));return true;}
+      return false;
+    },
     kaydet(){
-      const s=kariyerKaydet(depo,yuva,o.kariyer,sonMetin),d=o.durum;
-      if(s.tamam)sonMetin=s.metin;
+      if(o.durum.cakisma)return{tamam:false,cakisma:true,hata:KAYIT_CAKISMA_METNI,kayittaki:o.durum.cakisma.kayittaki};
+      const s=kariyerKaydet(depo,yuva,o.kariyer,sonMetin,beklenen),d=o.durum;
+      if(s.tamam){sonMetin=s.metin;beklenen=s.metin;}
       if(s.tamam)o.durum={tamam:true,hata:null,tarih:o.kariyer.tarih,dakika:o.kariyer.gunIciDakika,bekleyen:false};
+      else if(s.cakisma)cakismaKur(s.kayittaki);
       else o.durum={tamam:false,hata:s.hata,tarih:d.tarih,dakika:d.dakika,bekleyen:true};
       return s;
     },
     uygula(f,kaydetme){
+      if(o.durum.cakisma||(!kaydetme&&o.cakismaDenetle()))throw cakismaHatasi();
       const r=kariyerKomut(o.kariyer,f);
       o.kariyer=r.kariyer;
       if(kaydetme)o.durum.bekleyen=true;else o.kaydet();

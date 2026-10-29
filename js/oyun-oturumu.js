@@ -13,7 +13,10 @@
    U1 (2026-10-12): macHizi maçın izleme hızı (1, 2, 4; varsayılan 1), otoYavas önemli anlarda normal hıza inme (varsayılan açık; js/mac-izleme.js).
    test: geliştirme aşamasında gizli değerleri gösteren geçici anahtar (js/test-gorunum.js); varsayılan açık, yayından önce kaldırılacak.
    locaBakisi (P2, 2026-10-21 gece; TEST): maç 2D izlenir (js/pul.js; kullanıcı kararı); true iken maç eski figürlü loca bakışıyla açılır (geliştirme
-   ve araçlar). P1'in deneme anahtarı pul okunmaz; açılışta yeniden yazılarak düşer. */
+   ve araçlar). P1'in deneme anahtarı pul okunmaz; açılışta yeniden yazılarak düşer.
+   R1-a (2026-10-29) kayıt çakışması: oturum karşılaştırarak yazar (js/kayit.js). Çakışma ilk görüldüğünde oyunCakismaDinle ile kaydolan
+     dinleyiciler çağrılır (örtü js/ekran-cakisma.js). Tarayıcıda başka pencerenin ana yuvaya yazımı storage olayıyla gelir; oturum hemen denetler. */
+'use strict';
 const OYUN_YUVA='oyun-1';
 const OYUN={depo:null,kariyer:null,oturum:null,mesaj:'',bozukHata:null,basladi:false,
   ayarlar:{yazi:'normal',test:true,macHizi:1,otoYavas:true,locaBakisi:false,
@@ -35,6 +38,12 @@ let OYUN_DEPO=null;
     }
   }catch(e){}
 }
+const OYUN_CAKISMA_DINLEYICI=[];
+function oyunCakismaDinle(f){OYUN_CAKISMA_DINLEYICI.push(f);if(OYUN.oturum&&OYUN.oturum.durum.cakisma)f(OYUN.oturum.durum);}
+function oyunCakismaBildir(d){for(const f of OYUN_CAKISMA_DINLEYICI)try{f(d);}catch(e){console.error(e);}}
+const oyunOturumuKur=(kariyer,kayitli)=>kayitOturumu(OYUN_DEPO,OYUN_YUVA,kariyer,kayitli,{cakismada:oyunCakismaBildir});
+if(OYUN.depo==='tarayici'&&typeof addEventListener==='function')
+  addEventListener('storage',e=>{if(e.key==='chairman:'+OYUN_YUVA&&OYUN.oturum)OYUN.oturum.cakismaDenetle();});
 function oyunYerlestir(o){OYUN.oturum=o;OYUN.kariyer=o.kariyer;}
 function oyunKomut(f,kaydetme){const s=OYUN.oturum.uygula(f,kaydetme);OYUN.kariyer=OYUN.oturum.kariyer;return s;}
 const oyunKayitHata=()=>!OYUN.oturum.durum.tamam||OYUN.depo==='bellek';
@@ -42,6 +51,7 @@ function oyunKayitYazi(){
   const AY=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'],GUN=['Paz','Paz','Sal','Çar','Per','Cum','Cum'];
   const d=OYUN.oturum.durum;let son=null;
   if(d.tarih){const [y,a,g]=d.tarih.split('-').map(Number);son=g+' '+AY[a-1]+' '+GUN[new Date(Date.UTC(y,a-1,g)).getUTCDay()]+' '+saatYazi(d.dakika);}
+  if(d.cakisma)return'Kaydedilmedi: kariyer başka bir pencerede ilerledi';
   if(!d.tamam)return'Kaydedilemedi: '+d.hata+' · karar uygulandı, kayıt bekliyor'+(son?' · son kayıt '+son:'');
   if(OYUN.depo==='bellek')return'Kayıt yalnız bu oturumda: tarayıcı deposu kullanılamıyor';
   return son?(d.bekleyen?'Son kayıt · ':'Kaydedildi · ')+son:'Kayıt bekliyor';
@@ -52,7 +62,7 @@ function oyunYeniKariyer(){
   try{q=new URLSearchParams(location.search);}catch(e){}
   const al=ad=>(q&&q.get(ad))||undefined,dunya=parseInt(al('dunya'),10);
   yeni=kariyerBaslat({tohum:Number.isFinite(dunya)?dunya:rastgele()});
-  oyunYerlestir(kayitOturumu(OYUN_DEPO,OYUN_YUVA,yeni,false));OYUN.oturum.kaydet();
+  oyunYerlestir(oyunOturumuKur(yeni,false));OYUN.oturum.kaydet();
   return OYUN.mesaj='Yeni kariyer başladı.';
 }
 function oyunBaslat(){
@@ -61,7 +71,7 @@ function oyunBaslat(){
   let y;
   try{y=kariyerYukle(OYUN_DEPO,OYUN_YUVA);}catch(e){y={tamam:false,bos:false,hata:e.message};}
   if(y.tamam){
-    oyunYerlestir(kayitOturumu(OYUN_DEPO,OYUN_YUVA,y.kariyer,y.kaynak==='ana'&&!y.gecisler.length));
+    oyunYerlestir(oyunOturumuKur(y.kariyer,y.kaynak==='ana'&&!y.gecisler.length));
     if(y.kaynak!=='ana')OYUN.mesaj='Son kayıt açılamadı; '+(y.kaynak==='onceki'?'bir önceki sağlam kayıttan':'yarım kalan yazımın tamamlanmış kopyasından')+' devam ediliyor. '+y.uyarilar.join(' · ');
     else if(y.gecisler.length){OYUN.oturum.kaydet();OYUN.mesaj='Eski kayıt yeni biçime dönüştürüldü ('+y.gecisler.join(', ')+'); önceki kayıt yedek olarak saklandı.';}
   }else if(y.bos)oyunYeniKariyer();

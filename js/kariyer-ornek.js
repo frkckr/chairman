@@ -11,6 +11,7 @@
    isler: takvimde bekleyen işler (js/takvim.js); ödemeler 'odeme' türü iştir (js/maliye.js). gecmis ve hareketler boş başlar.
    Sürüm 7 (F1): iki takımlı küçük bir sezon (2 hafta, ilkHafta 1; fikstür kuralları js/fikstur.js) ve boş oyuncu listesi; kulüplerde kadro
    yoktur (kadro isteğe bağlıdır, maç girdisi kadrosuz kulübü reddeder). Gerçek kariyerin 16 kulübü ve kadroları kariyerBaslat'ta kurulur. */
+'use strict';
 const KARIYER_ORNEK={
   kayitSurumu:11,
   dunyaTohumu:20260929,

@@ -17,6 +17,12 @@
        kurucusu (`varlik`, js/mac-motoru.js) 128 alanda sınırdadır: bir alan daha eklenince hakem ve kenar nesneleri sözlük kipine düştü, moveP
        bütün insanlara aynı kodla eriştiği için motor 2,4 kat yavaşladı (1000 adım 91 → 218 ms). Yeni alan eklemeden önce bu satır okunur;
        gerekirse seyrek alanlar alt nesneye toplanır. Alt süreçte `node --allow-natives-syntax` ile 20 sn oynanır, %HasFastProperties sorulur.
+   (g) katı kip (R1-e, 2026-10-29): js/ altındaki her dosya 'use strict' ile başlar (dondurulmuş kariyer verisine yazım gevşek kipte sessizce yutulur,
+       komut başarılı görünür). İstisna yalnız araclar/dosya-gruplari.js GEVSEK_IZINLI'deki gerekçeli liste; listede olup katılaşan dosya da bulgudur
+       (liste gerçeği söylesin). Yeni dosya varsayılan olarak katıdır.
+   (h) kayda yazan tek yol (R1-a, 2026-10-29): kariyer kaydı yalnız kayitOturumu üstünden yazılır (karşılaştırarak yazma; yanlış çakışma da
+       kaçırılan çakışma da başka bir yazım yolundan doğar). kariyerKaydet( yalnız js/kayit.js'te, localStorage yalnız js/depo-tarayici.js'te çağrılır;
+       OYUN_DEPO.yaz( yalnız 'ayarlar' ve saklama kopyalarına (.bozuk, .ice-oncesi) yazar.
    Kullanım: node araclar/ad-denetimi.js   (bulgu varsa çıkış kodu 1) */
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm');
@@ -127,6 +133,27 @@ for(const f of dosyalar.filter(f=>/^js\/mac-/.test(f)&&f!=='js/mac-sahnesi.js'))
   const c=require('child_process').spawnSync(process.execPath,['--allow-natives-syntax','-e',kod],{cwd:KOK,env:process.env,encoding:'utf8'});
   if(c.status!==0)bul('V8 hızlı kip','alt süreç çalışmadı: '+String(c.stderr||'').split('\n').filter(Boolean).slice(-1)[0]);
   else{const L=JSON.parse(String(c.stdout).trim().split('\n').pop()||'[]');for(const x of L)bul('V8 sözlük kipi',x+' — varlik kurucusu 128 alan sınırında (başlıktaki (f))');}}
+
+/* (h) kayda yazan tek yol (temiz metinde ara: yorum ve dizgiler boş; konumlar ham metinle aynı) */
+for(const f of dosyalar){const t=temiz[f];
+  if(f!=='js/kayit.js')for(const m of t.matchAll(/\bkariyerKaydet\s*\(/g))bul('kayıt yolu',`${f}:${satirNo(t,m.index)} kariyerKaydet doğrudan çağrılıyor; kayda yazan tek yol kayitOturumu (R1-a karşılaştırarak yazma)`);
+  if(f!=='js/depo-tarayici.js')for(const m of t.matchAll(/\blocalStorage\b/g))bul('kayıt yolu',`${f}:${satirNo(t,m.index)} localStorage doğrudan kullanılıyor; depo arayüzü js/depo-tarayici.js`);
+  for(const m of t.matchAll(/\bOYUN_DEPO\s*\.\s*yaz\s*\(/g)){const arg=kaynak[f].slice(m.index+m[0].length).split(',')[0].trim();
+    if(!/^'ayarlar'$|\.bozuk'|\.ice-oncesi'/.test(arg))bul('kayıt yolu',`${f}:${satirNo(t,m.index)} OYUN_DEPO.yaz(${arg},…): ana yuvaya yalnız kayitOturumu yazar`);}}
+
+/* (g) katı kip: yorumlardan sonraki ilk deyim 'use strict' */
+{const {GEVSEK_IZINLI}=require('./dosya-gruplari');
+  /* doğrusal tarama: baştaki boşluk ve yorumlar atlanır (düzenli ifadeyle yazılan sürüm yorum bloklarında üstel geri izlemeye düşüyordu) */
+  const katiMi=s=>{let i=0;const n=s.length;
+    for(;;){while(i<n&&/\s/.test(s[i]))i++;
+      if(s.startsWith('/*',i)){const j=s.indexOf('*/',i+2);if(j<0)return false;i=j+2;continue;}
+      if(s.startsWith('//',i)){const j=s.indexOf('\n',i);if(j<0)return false;i=j+1;continue;}
+      break;}
+    return/^(['"])use strict\1/.test(s.slice(i,i+14));};
+  for(const f of fs.readdirSync(path.join(KOK,'js')).filter(x=>x.endsWith('.js')).map(x=>'js/'+x)){
+    const k=katiMi(kaynak[f]||fs.readFileSync(path.join(KOK,f),'utf8'));
+    if(!k&&!GEVSEK_IZINLI[f])bul('katı kip',`${f} 'use strict' ile başlamıyor (gevşek kipte dondurulmuş veriye yazım sessizce yutulur); istisnaysa araclar/dosya-gruplari.js GEVSEK_IZINLI'ye gerekçesiyle`);
+    if(k&&GEVSEK_IZINLI[f])bul('katı kip',`${f} katı ama GEVSEK_IZINLI listesinde: listeden çıkar`);}}
 
 if(bulgular.length){console.log(`Ad ve sınır denetimi: ${bulgular.length} bulgu`);for(const b of bulgular)console.log('  ! '+b);process.exitCode=1;}
 else console.log(`Ad ve sınır denetimi: ${dosyalar.length} betik, bulgu yok`+(bilinen.length?` (bilinen zararsız blok içi işlev adları: ${bilinen.length})`:''));
