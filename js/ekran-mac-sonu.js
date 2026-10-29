@@ -26,9 +26,11 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
 .ms-kararti{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 40%,rgba(0,0,0,${A.kararma}) 100%)}
 .ms-kart{position:relative;pointer-events:auto;width:min(62%,44em);max-height:88%;overflow:auto;display:grid;gap:.7em;padding:.9em 1.3em 1em;background:${K.zemin};border:1px solid ${K.cizgi};box-shadow:.35em .45em 0 ${K.golge}}
 .ms-ust{margin:0;padding-bottom:.3em;border-bottom:.18em solid ${K.kulup};color:${K.soluk};font-size:max(var(--k-enKucuk,12px),.9em);letter-spacing:.12em;text-transform:uppercase}
-.ms-skor{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.8em}
-.ms-skor span{min-width:0;font-family:var(--display);font-size:1.9em;line-height:1;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ms-skor{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto minmax(0,1fr);align-items:center;gap:.6em}
+.ms-skor .arma{font-size:.9em}
+.ms-skor span:not(.ms-arma){min-width:0;font-family:var(--display);font-size:1.9em;line-height:1;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ms-skor span:first-child{text-align:right}
+.ms-skor .ms-arma{display:grid;place-items:center}
 .ms-skor span.ms-biz{color:${K.kulup}}
 .ms-skor b{font-family:var(--display);font-weight:400;font-size:3.2em;line-height:.85;font-variant-numeric:tabular-nums}
 .ms-bolum{display:grid;gap:.15em}
@@ -83,6 +85,8 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   };
   const yaz=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   const G=MAC_GUNU,adi=t=>(G.kadro[t].tamAd||G.kadro[t].ad),kisa=t=>G.kadro[t].kisa||G.kadro[t].ad;
+  /* R3: başlıkta skorun iki yanında kulübün arması (js/arma.js, büyük; çizim yoksa boş hücre) */
+  const arma=t=>'<span class="ms-arma">'+(typeof armaSvg==='function'&&G.kadro[t].id?armaSvg(G.kadro[t].id,'buyuk',G.kadro[t].kisa||null):'')+'</span>';
   const KART_RENK=STIL.kagit.kartRenk;   /* H2-b: Canlı Skor'un ayrıntısıyla ortak */
   const DERECE={tedavi:'tedavi gördü',cikis:'oyundan çıktı'};
   /* satır: takımın sütununda (ev solda, konuk sağda; iki ayrı liste, satırlar kaymaz) */
@@ -103,7 +107,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
     }
     return'<div class="ms-kararti"></div><div class="ms-kart" tabindex="-1">'+
       '<p class="ms-ust">Maç sonu'+(B.hafta?' · '+yaz((B.ligAd?B.ligAd+' ':'')+B.hafta+'. hafta'):'')+'</p>'+
-      '<div class="ms-skor"><span class="'+(biz===0?'ms-biz':'')+'" title="'+yaz(adi(0))+'">'+yaz(adi(0))+'</span><b>'+S.skor[0]+'–'+S.skor[1]+'</b><span class="'+(biz===1?'ms-biz':'')+'" title="'+yaz(adi(1))+'">'+yaz(adi(1))+'</span></div>'+
+      '<div class="ms-skor"><span class="'+(biz===0?'ms-biz':'')+'" title="'+yaz(adi(0))+'">'+yaz(adi(0))+'</span>'+arma(0)+'<b>'+S.skor[0]+'–'+S.skor[1]+'</b>'+arma(1)+'<span class="'+(biz===1?'ms-biz':'')+'" title="'+yaz(adi(1))+'">'+yaz(adi(1))+'</span></div>'+
       /* F3-b: beklenen gol (motorun şut listesinden; karar 34) */
       (hk?'<p class="ms-yok">'+yaz(hk)+'</p>':'')+(!hk&&Array.isArray(S.sutlar)&&typeof macBeklenenGol==='function'?(xg=>'<p class="ms-yok">Beklenen gol '+xg.map(x=>x.toFixed(2).replace('.',',')).join(' – ')+' · şut '+S.ist.sut[0]+' – '+S.ist.sut[1]+'</p>')(macBeklenenGol(S.sutlar.map(x=>({takim:x.takim,xg:x.xg,pen:x.pen})))):'')+
       (hk||goller.length+kartlar.length+sakat.length?'':'<p class="ms-yok">Gol, kart ve sakatlık yok.</p>')+

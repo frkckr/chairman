@@ -66,6 +66,8 @@
 .dsy-kat{display:flex;align-items:center;gap:.5em;font-size:max(var(--k-enKucuk,12px),.82em);letter-spacing:.12em;text-transform:uppercase;color:var(--k-soluk)}
 .dsy-baslik{margin:0;font-family:var(--display);font-weight:400;font-size:2.1em;line-height:.95;letter-spacing:.02em;color:var(--k-yazi)}
 .dsy-devir{justify-self:start;color:${D.mavi};font-weight:600}
+.dsy-asama{margin:0;justify-self:start;padding:.1em .5em;border-left:.25em solid var(--k-vurgu);background:var(--k-serit);font-size:max(var(--k-enKucuk,12px),.92em)}
+.dsy-asama.dsy-asamaSon{border-left-color:var(--k-cizgi);color:var(--k-soluk)}
 .dsy-damga{justify-self:start;padding:.15em .55em .05em;border:.16em solid currentColor;border-radius:.2em;font-family:var(--display);font-size:1.25em;letter-spacing:.08em;
   text-transform:uppercase;transform:rotate(-4deg);opacity:.85}
 .dsy-d-kararBekliyor{color:var(--k-kirmizi)}.dsy-d-ekipte,.dsy-d-haberBekliyor{color:${D.mavi}}.dsy-d-kapandi{color:var(--k-soluk)}
@@ -168,6 +170,8 @@ function dosyaGorunumu(k,D,Y){
     /* U1: '◂ Mesaja dön' / '◂ Ajandaya dön' odak kabının başlığındaki ‹ Geri'dir (js/ekran-oda.js odakGeriHedef) */
     sol+='<p class="dsy-kat"><i class="od-kSimge" aria-hidden="true">'+yaz(katS)+'</i>'+yaz(katAd)+(Y.testKutu?Y.testKutu():'')+'</p>'+
       '<h3 class="dsy-baslik">'+yaz(m.baslik)+'</h3><span class="dsy-damga dsy-d-'+m.durum+'">'+yaz(DAMGA[m.durum]||o.durumAdi)+'</span>'+
+      /* R4-k: şablonlu konuda tek satır aşama (kapanınca sonuç; js/sablon.js sablonAsamaSatiri) */
+      (()=>{const a=typeof sablonAsamaSatiri==='function'?sablonAsamaSatiri(k,m):null;return a?'<p class="dsy-asama'+(a.son?' dsy-asamaSon':'')+'">'+yaz(a.son?'Sonuç: '+a.metin:a.metin)+'</p>':'';})()+
       /* U3 (envanter 15): devredilen iş kimde ve ne zamana kadar (“Ayla'da · Perşembe'ye kadar”) */
       (()=>{const e=m.durum==='ekipte'&&o.sorumlu&&typeof devirEtiketi==='function'?o.adimlar.find(a=>a.tur==='ekip'):null,t=e&&devirEtiketi(k,o.sorumlu.id,e.tarih);return t?'<span class="dsy-devir">'+yaz(t)+'</span>':'';})()+
       '<dl class="dsy-kunye"><dt>Yürüten</dt><dd>'+(o.sorumlu?yaz(o.sorumlu.ad):'—')+'</dd>'+(st?'<dt>'+yaz(st.split(': ')[0])+'</dt><dd><b>'+yaz(st.split(': ').slice(1).join(': '))+'</b></dd>':'')+'</dl>';

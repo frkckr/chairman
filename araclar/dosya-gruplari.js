@@ -8,7 +8,7 @@
    GEVSEK_IZINLI  'use strict' olmadan kalabilen dosyalar ve gerekçesi; yeni dosya varsayılan olarak katıdır (borç defteri araclar/BORCLAR.md) */
 'use strict';
 const OYUN_DOSYALARI=['js/ortak.js','js/stadyum-tarifleri.js','js/kadrolar.js','js/lig.js','js/kariyer.js','js/takvim.js','js/maliye.js','js/ajanda.js','js/mesele.js','js/yonetim.js','js/olay.js','js/soz.js','js/mesajlar.js','js/gozlem.js',
-  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/hoca.js','js/mac-girdi.js','js/mac-sonuc.js','js/mac-okuma.js','js/lig-maclari.js','js/oyuncu-hafta.js','js/sozlesme.js','js/kulup-mali.js','js/transfer.js','js/icerik-p12.js','js/yazisma.js','js/mali-rapor.js','js/kadro-dosyasi.js','js/gazete.js','js/zaman-ozeti.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
+  'js/adlar-test.js','js/kariyer-kadro.js','js/fikstur.js','js/hoca.js','js/mac-girdi.js','js/mac-sonuc.js','js/mac-okuma.js','js/lig-maclari.js','js/oyuncu-hafta.js','js/sozlesme.js','js/kulup-mali.js','js/sablon.js','js/pazarlik.js','js/transfer.js','js/icerik-p12.js','js/yazisma.js','js/mekan.js','js/piyasa.js','js/transfer-alim.js','js/mali-rapor.js','js/kadro-dosyasi.js','js/canli-skor.js','js/gazete.js','js/zaman-ozeti.js','js/test-gorunum.js','js/kayit.js','js/baslangic.js'];
 /* kural katmanına sayılan, Node'da kariyer-deneme'nin yüklemediği dosyalar: örnek kariyer ve oturum ile depolar (tarayıcıda sınanır) */
 const KURAL_EK=['js/kariyer-ornek.js','js/oyun-oturumu.js','js/depo-tarayici.js','js/depo-masaustu.js'];
 function motorDosyalari(kok){

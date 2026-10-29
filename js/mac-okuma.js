@@ -10,8 +10,8 @@
      macYorumu(k, macId) → {kisiId, metin} — hocanın maç akşamı telefondaki kısa değerlendirmesi. Hoca kendi sesiyle yazar: ısrarcı hoca kötü sonucu
        şansa bağlayabilir (sayılar ne derse desin); başkan bunu beklenen golle karşılaştırır. YORUM_METIN şablonları.
      macGozlemNotu(k, macId) → metin — başkanın deftere düşen notu: gözlenebilir sayılar (skor, beklenen gol, şut, sahiplik) ve bir cümle. GOZLEM_NOTU_METIN.
-     H2-b (2026-10-26): macIstSatirlari(ist, xg) ve macAyrintisi(sonuç, adBul) — Canlı Skor'un ayrıntısı (goller, kartlar, sakatlıklar, 10 satırlık
-       tablo); bizim maç ve öbür maçlar, canlı ve kayıttan aynı okuma (js/ekran-telefon.js telMacAyrinti).
+     H2-b (2026-10-26): macIstSatirlari(ist, xg) — Canlı Skor'un 10 satırlık istatistik tablosu; bizim maç ve öbür maçlar, canlı ve kayıttan
+       aynı okuma. R3 (2026-10-29): maçın ayrıntısı Canlı Skor'un maç sayfasıdır (js/canli-skor.js macSayfasi); macAyrintisi kalktı.
    Gizli puan kuralı (OYUN_TASARIMI §9): yetenek puanı, hocanın bilgisi ya da ısrarı yazılmaz; gözlenebilir sayılar ve beklenen gol yazılır (karar 34).
    Telefon (H2-c'den beri): hocanın yorumu başkan sorunca gelir (js/yazisma.js); kendiliğinden mesaj ve okundu listesi yok.
    METİNLER TEST TASLAĞIDIR (kullanıcı kararı 2026-10-23, karar 35): Claude yazdı, kullanıcı YORUM_METIN ve GOZLEM_NOTU_METIN'i istediği gibi değiştirir. */
@@ -108,21 +108,6 @@ function macIstSatirlari(ist,xg){
   return[['Şut',...c(I.sut)],['İsabetli şut',...c(I.isabet)],['Beklenen gol',okSayi(X[0],2),okSayi(X[1],2)],
     ['Topa sahip olma',so==null?'—':so+'%',so==null?'—':(100-so)+'%'],['Pas isabeti',pi(0),pi(1)],['Korner',...c(I.korner)],
     ['Faul',...c(I.faul)],['Sarı kart',...c(I.sari)],['Kırmızı kart',...c(I.kirmizi)],['Ofsayt',...c(I.ofsayt)]];
-}
-/* H2-b: bir maçın ayrıntısı (Canlı Skor; saf). s iki biçimden biri: motorun sonucKaydi() biçimi (olaylarda ad, dakika, kendiKalesine) ya da
-   k.maclar[id] biçimi (id, dk, kk; ad saklanmaz, adBul(id) çözer). Döner {hukmen, skor, xg, goller:[{t,dk,ad,kk}], kartlar:[{t,dk,ad,renk}],
-   sakat:[{t,dk,ad,derece,gun}], satirlar}. t takımın sütunudur (0 ev): golde golü kazanan takım (kendi kalesine golde atan öbür takımdandır, "k.k.");
-   ikinci sarı motorun yazdığı gibi iki kayıttır (maç sonu kartıyla aynı); ağrı yazılmaz. xg: şut listesi varsa macBeklenenGol, yoksa kayıttaki xg
-   (öbür maçların kısa kaydı). Hükmende listeler ve tablo boş, yalnız hukmen ('ev' | 'konuk' | 'cift': hükmen kaybeden). Ad yoksa '—' */
-function macAyrintisi(s,adBul){
-  const L=a=>Array.isArray(a)?a:[],ad=x=>x.ad||(x.id!=null&&adBul?adBul(x.id):'')||'—',dk=x=>(x.dakika!=null?x.dakika:x.dk)|0,t=x=>x.takim===1?1:0;
-  if(s.hukmen)return{hukmen:s.hukmen,skor:s.skor.slice(),xg:null,goller:[],kartlar:[],sakat:[],satirlar:[]};
-  const xg=Array.isArray(s.sutlar)?macBeklenenGol(s.sutlar):Array.isArray(s.xg)?s.xg.slice():[0,0];
-  return{hukmen:null,skor:s.skor.slice(),xg,
-    goller:L(s.goller).map(g=>({t:t(g),dk:dk(g),ad:ad(g),kk:!!(g.kendiKalesine!=null?g.kendiKalesine:g.kk)})),
-    kartlar:L(s.kartlar).map(c=>({t:t(c),dk:dk(c),ad:ad(c),renk:c.renk})),
-    sakat:L(s.sakatliklar).filter(x=>x.derece!=='agri').map(x=>({t:t(x),dk:dk(x),ad:ad(x),derece:x.derece,gun:x.gun|0})),
-    satirlar:macIstSatirlari(s.ist,xg)};
 }
 /* H2-c (2026-10-26, kullanıcı isteği 3): hocanın maç akşamı kendiliğinden gelen yorumu (MESAJ_KAYNAKLARI) ve okundu listesi (k.macOkundu) kalktı. Yorumu
    başkan sorunca hoca yazar (js/yazisma.js 'Maçı nasıl gördün?'); macYorumu aynı şablondur. P12'nin kötü gidiş mesajları değişmez */

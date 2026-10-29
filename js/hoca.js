@@ -190,8 +190,11 @@ function hocaDegistir(k,kulupId,aday){
   c.kadro.td=Object.assign({},c.kadro.td,aday.td,{ad:aday.ad});
   if(typeof sozlesmeleriTamamla==='function'&&eski.sozlesme)sozlesmeleriTamamla(k);   /* G2: yeni hocaya TEST sözleşme (sözleşmeli kariyerde) */
   k.gecmis.push({tur:'hocaDegisimi',kulupId,eskiId:eski.id,yeniId:id,tarih:k.tarih,dakika:k.gunIciDakika});
+  for(const f of HOCA_DEGISTI)f(k,kulupId,eski.id,id);
   return id;
 }
+/* R4: hoca değişince süren işler yeni hocaya geçer (ör. transfer dosyasının bekleyen araştırması); kural dosyaları ekler: f(k, kulupId, eskiId, yeniId) */
+const HOCA_DEGISTI=[];
 
 /* doğrulama (EK_DENETIMLER): kadrosu olan her kulübün etkin bir hocası; hoca kaydının alanları */
 function hocaDogrula(k,h){

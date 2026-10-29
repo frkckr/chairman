@@ -399,6 +399,8 @@ class Match{
     return{skor:this.score.slice(),bitti:this.phase==='fulltime',goller:K.goller.map(o=>({...o})),kartlar:K.kartlar.map(o=>({...o})),
       sakatliklar:K.sakatliklar.map(o=>({...o})),degisiklikler:K.degisiklikler.map(o=>({...o})),sutlar:K.sutlar.map(o=>({...o})),
       ilk11:[0,1].map(t=>this.kadro&&this.kadro[t]&&Array.isArray(this.kadro[t].oyuncular)?this.kadro[t].oyuncular.slice(0,11).map(o=>o&&o.id!=null?o.id:null):null),
+      /* R3-a: kulübedeki yedeklerin kayıt kimlikleri (Canlı Skor'un kadro bölümü; salt kayıt) */
+      yedek:[0,1].map(t=>this.kadro&&this.kadro[t]&&Array.isArray(this.kadro[t].yedekler)?this.kadro[t].yedekler.map(o=>o&&o.id!=null?o.id:null).filter(x=>x!=null):null),
       ist:{sut:I.sut.slice(),isabet:[I.isabet[0]+K.isabetEk[0],I.isabet[1]+K.isabetEk[1]],korner:I.korner.slice(),faul:I.faul.slice(),sari:I.sari.slice(),kirmizi:I.kirmizi.slice(),
         ofsayt:I.ofsayt.slice(),sahiplik:[I.sahiplik[0]/s,I.sahiplik[1]/s],pas:I.pas.slice(),pasTamam:I.pasTamam.slice(),uzunPas:K.uzunPas.slice()}};}
 
@@ -713,7 +715,7 @@ class Match{
        Yalnız kayıt: motorun own'u, güven, sevinç ve ist değişmez */
     const ss=b.sonSut,kAtan=own&&ss&&ss.team===att&&ss.by&&this.t-ss.t<4&&(ss.cerceve||ss.kaleci)?ss.by:scorer,kOwn=own&&kAtan===scorer;
     if(own&&!kOwn&&!ss.kaleci)this.kayit.isabetEk[att]++;   /* savunmacıdan sekip giren çerçeve şutu kayıtta isabetlidir (motorun ist'i değişmez) */
-    this.kayit.goller.push({ad:kAtan?kAtan.name:'',no:kAtan?kAtan.no:0,takim:att,kendiKalesine:!!kOwn,dakika:Math.floor(this.gameSec/60)+1});
+    this.kayit.goller.push({ad:kAtan?kAtan.name:'',no:kAtan?kAtan.no:0,takim:att,kendiKalesine:!!kOwn,dakika:Math.floor(this.gameSec/60)+1,yari:this.half});   /* R3-a: devre (salt kayıt) */
     /* T10b (T10 teşhisi hata 5): avantaj sürerken gol — avantaj tutulmuştur, kart şimdi gösterilir (sevinç sürerken hakem oyuncuya gider) */
     if(this.avantaj){const a=this.avantaj;this.avantaj=null;this.on('avantajSonuc',{tutuldu:true});if(a.kart&&a.yapan.oyunda){if(c.s1)c.kartBekle=a;else this.kartGoster(a.yapan,a.kart);}}   /* S1c: kart sevinçten sonra */
   }

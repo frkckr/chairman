@@ -17,7 +17,8 @@ const MAC_YEDEK_SAYISI=5;                      // kulübedeki yedek (tohum kadro
 const MAC_GUN_ADLARI=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
 const macGunAdi=t=>{const [y,a,g]=t.split('-').map(Number);return MAC_GUN_ADLARI[new Date(Date.UTC(y,a-1,g)).getUTCDay()];};
 /* oyuncu o gün oynayabilir mi: cezası yok ve sakatlığı (dönüş günü) bitmiş */
-const oyuncuUygunMu=(p,tarih)=>!(p.ceza&&p.ceza.mac>0)&&!(p.sakat&&tarihKarsilastir(p.sakat.donus,tarih)>0);
+/* R4-i: tescili gecikmiş oyuncu (p.tescil.tarih) o tarihe dek oynayamaz */
+const oyuncuUygunMu=(p,tarih)=>!(p.ceza&&p.ceza.mac>0)&&!(p.sakat&&tarihKarsilastir(p.sakat.donus,tarih)>0)&&!(p.tescil&&tarihKarsilastir(p.tescil.tarih,tarih)>0);
 /* motorun ve çizimin okuduğu kayıt (kadrolar.js biçimi) + kimlik. S-a: k ve tarih verilirse oz kondisyon ve form çarpanıyla (js/oyuncu-hafta.js macOzu;
    nötr durumda birebir kopya; kariyerin oz'una yazılmaz) */
 function macKaydi(p,k,tarih){

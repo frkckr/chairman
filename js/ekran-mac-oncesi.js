@@ -34,7 +34,8 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
   /* iki taraf: ev sahibi ve konuk (bizim kulüp G.biz; deplasmanda sağda) */
   const TARAF=G.kadro.map((kd,i)=>{const f=STIL.formalar[kd.forma];
     return{id:kd.id,kd,i,forma:f,kaleci:STIL.formalar[kd.kaleciForma],satir:TABLO.find(t=>t.id===kd.id),son:B.son[i]||[]};});
-  const arma=T=>'<i class="oe-arma" style="--a:'+T.forma.shirt+';--b:'+(T.forma.sash||T.forma.trim)+'"></i>';
+  /* R3: kulübün arması (js/arma.js, büyük); arma çizimi yoksa eski forma renkli yer tutucu */
+  const arma=T=>typeof armaSvg==='function'?armaSvg(T.id,'buyuk',T.kd.kisa||null):'<i class="oe-arma" style="--a:'+T.forma.shirt+';--b:'+(T.forma.sash||T.forma.trim)+'"></i>';
 
   /* ---- ilk 11: hocanın dizilişi küçük sahada; takım yukarı hücum eder ---- */
   const HAT={KL:88,DEF:68,OS:44,FV:20};
