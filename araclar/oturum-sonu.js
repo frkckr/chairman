@@ -7,11 +7,15 @@
      --seyrek   bütün senaryoları koşar (tur kapanışında); çekirdek dışındakiler yalnız sahibi dosya değişince (araclar/KAPILAR.md) ya da --senaryo ile
      --senaryo  yalnız bu senaryolar
      --ayni     karşılaştırma tohum başına parmak iziyle (sonucu değiştirmemesi gereken düzenlemede)
-   Çıkış kodu: herhangi bir adım sıfır dışı döndüyse 1. Senaryoların "!" satırları kapı (kabul dışı) satırlarıdır ve çıkış kodunu 1 yapar; bilgi satırları
-   "!" basmaz. Maç adımının "!" satırları sağlık aralığı dışı ya da Node sürüm uyarısıdır (çıkış kodu değişmez; parmak izi farkı --ayni'de çıkış 1).
+   Çıkış kodu: herhangi bir adım sıfır dışı döndüyse 1. Senaryoların "!" satırları kapı (kabul dışı) satırlarıdır; bilgi satırları "!" basmaz.
+   Maç adımının "!" satırları sağlık aralığı dışı ya da Node sürüm uyarısıdır (çıkış kodu değişmez; parmak izi farkı --ayni'de çıkış 1).
+   R1-d (2026-10-29): kabul dışı satırlar borç defteriyle (araclar/BORCLAR.md, okuyucu araclar/borclar.js) eşlenir. Bütün "!" satırları defterdeki açık
+   bir borca uyan senaryo adımı "bilinen" sayılır ve çıkış kodunu değiştirmez; defterde olmayan satır "YENİ"dir ve çıkış 1 yapar. Satırı olmadan sıfır
+   dışı dönen adım (çöken senaryo, ad denetimi, --ayni farkı) her zaman başarısızdır. Bilinen satırın bugünkü metni defterdeki son değerin yanında okunur.
    Bu kademe denge onayı değildir. */
 'use strict';
 const fs=require('fs'),path=require('path'),os=require('os'),{spawn}=require('child_process');
+const {bilinenBorc}=require('./borclar');
 const KOK=path.join(__dirname,'..');
 const ARG=process.argv.slice(2);
 function secenek(ad,degerli){const i=ARG.indexOf(ad);if(i<0)return null;if(!degerli){ARG.splice(i,1);return true;}return ARG.splice(i,2)[1];}
@@ -43,18 +47,27 @@ async function havuz(isler,n){const sonuc=[];let i=0;
   const hepsi=[ad,mac,...sen];
   /* özet: her adımın süresi, çıkış kodu ve "!" satırları */
   const unlem=r=>r.cikti.split('\n').filter(L=>/^\s*!/.test(L)).map(L=>L.trim());
-  const ozet=[];let hata=0;
+  const adimAdi=r=>r===mac?'mac':r.ad.startsWith('senaryo ')?r.ad.slice(8):r.ad;
+  const borc=(r,L)=>bilinenBorc('oturum',`${adimAdi(r)}: ${L}`);
+  const ozet=[];let hata=0,bilinenN=0,yeniN=0;
   ozet.push(`Oturum sonu kontrolü · ${new Date().toISOString()} · toplam ${((Date.now()-t0)/1000).toFixed(0)} sn`);
-  for(const r of hepsi){const U=unlem(r);if(r.k!==0)hata++;
-    ozet.push(`${r.k===0?'  ':'! '}${r.ad.padEnd(26)} ${String(r.k).padStart(2)}  ${r.sure.toFixed(0).padStart(4)} sn  ${U.length?U.length+(r===mac?' "!" satırı (sağlık aralığı dışı ya da uyarı)':' kabul dışı satır'):''}`);}
+  for(const r of hepsi){const U=unlem(r),yeni=U.filter(L=>!borc(r,L));
+    const senaryo=r.ad.startsWith('senaryo ');
+    /* senaryo adımı yalnız defterdeki satırlarla düştüyse bilinendir */
+    const bilinen=senaryo&&r.k!==0&&U.length>0&&yeni.length===0;
+    if(senaryo){bilinenN+=U.length-yeni.length;yeniN+=yeni.length;}
+    if(r.k!==0&&!bilinen)hata++;
+    ozet.push(`${r.k===0?'  ':bilinen?'~ ':'! '}${r.ad.padEnd(26)} ${String(r.k).padStart(2)}  ${r.sure.toFixed(0).padStart(4)} sn  ${U.length?U.length+(r===mac?' "!" satırı (sağlık aralığı dışı ya da uyarı)':' kabul dışı satır'+(yeni.length?`, ${yeni.length} YENİ`:', hepsi borç defterinde')):''}`);}
   const satir=(re)=>{const L=mac.cikti.split('\n').find(x=>re.test(x));return L?L.trim():'—';};
   ozet.push('',`Maç: ${satir(/Sağlık aralığı dışında:/)} · ${satir(/Tekrarlanabilirlik:/)}${AYNI?' · '+satir(/Birebir aynılık:/):''}`);
   ozet.push(`Ad denetimi: ${ad.cikti.trim().split('\n')[0]}`);
   const senU=sen.filter(r=>unlem(r).length);
-  if(senU.length){ozet.push('','Senaryolarda kabul dışı satırlar:');for(const r of senU)for(const L of unlem(r))ozet.push(`  ${r.ad.slice(8)}: ${L}`);}
+  if(senU.length){ozet.push('','Senaryolarda kabul dışı satırlar (köşeli ayraçta borç defterinin satırı):');
+    for(const r of senU)for(const L of unlem(r)){const b=borc(r,L);ozet.push(`  ${b?'['+b.no+']':'[YENİ]'} ${r.ad.slice(8)}: ${L}`);}}
+  ozet.push('',`Borç defteri: bilinen ${bilinenN} satır · yeni kabul dışı ${yeniN} satır (araclar/BORCLAR.md)`);
   const metin=ozet.join('\n');
   fs.writeFileSync(RAPOR,metin+'\n\n'+hepsi.map(r=>`==================== ${r.ad} (çıkış ${r.k}, ${r.sure.toFixed(1)} sn) ====================\n${r.cikti}`).join('\n'));
   console.log(metin);
-  console.log(`\n${hata?'! '+hata+' adım başarısız':'Bütün adımlar çıkış kodu 0'} · tam rapor: ${path.relative(KOK,RAPOR)}`);
+  console.log(`\n${hata?'! '+hata+' adım başarısız':'Başarısız adım yok'+(bilinenN?' (bilinen borçlar dışında)':'')} · tam rapor: ${path.relative(KOK,RAPOR)}`);
   process.exitCode=hata?1:0;
 })().catch(e=>{console.error(e.stack||e.message);process.exit(1);});

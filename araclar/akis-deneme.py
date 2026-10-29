@@ -63,13 +63,31 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 KOK, ARAC = kontrol.KOK, kontrol.ARAC
 basarisiz = 0
+dusenler = []   # R1-d: düşen denetimlerin adları; sonunda borç defteriyle (araclar/BORCLAR.md) eşlenir
 
 
 def denetle(ad, tamam, ayrinti=""):
     global basarisiz
     if not tamam:
         basarisiz += 1
+        dusenler.append(ad)
     print(("  " if tamam else "! ") + ad + (f" — {ayrinti}" if ayrinti else ""))
+
+
+def borc_defteri():
+    """R1-d (2026-10-29): araclar/BORCLAR.md'nin açık ve kapsamı `akis` olan satırları: [(no, konu, [kalıp])]. Okuyucunun Node eşi araclar/borclar.js."""
+    yol = ARAC / "BORCLAR.md"
+    if not yol.exists():
+        return []
+    sonuc = []
+    for s in yol.read_text(encoding="utf-8").splitlines():
+        if not re.match(r"^\|\s*B\d+\s*\|", s):
+            continue
+        h = [x.strip() for x in s.split("|")[1:-1]]
+        parca = re.findall(r"`([^`]+)`", h[-1])
+        if len(h) > 3 and h[3].lower().startswith("açık") and parca and parca[0] == "akis" and len(parca) > 1:
+            sonuc.append((h[0], h[1], [re.compile(k) for k in parca[1:]]))
+    return sonuc
 
 
 DURUM_JS = """() => { const k = OYUN.kariyer; const c = k.kulupler.demirkapi;
@@ -2177,10 +2195,10 @@ async def bolum_21(tarayici, site, tum_hatalar):
     await pg.goto((site / "index.html").as_uri() + loca(""))
     await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=30000)
     s9 = await pg.evaluate("""() => { const k = OYUN.kariyer, t = Object.values(k.isler).find(x => x.veri && x.veri.karar === 'teklifKarari');
-      return { surum: k.kayitSurumu, bozuk: !!document.querySelector('.od-bozuk'), roller: konusmaListesi(k).map(c => c.kisi.rol).sort().join(','), teklif: !!t,
+      return { surum: k.kayitSurumu, guncel: KARIYER_SURUM, bozuk: !!document.querySelector('.od-bozuk'), roller: konusmaListesi(k).map(c => c.kisi.rol).sort().join(','), teklif: !!t,
         secenek: t ? kararSecenekleri(k, t).map(s => s.id).join(',') : '', rapor: Object.values(k.isler).some(x => x.tur === 'maliRapor') }; }""")
-    denetle("H2-d: sürüm 9 Ocak kaydı geçişle açılır: oda hatasız, kayıt sürümü 10; telefonda hoca, yardımcı ve müdür; gelen teklif kartı iki cevapla yerinde; mali rapor işi kaydın anında",
-            s9["surum"] == 11 and not s9["bozuk"] and "maliMudur" in s9["roller"] and "yardimciAntrenor" in s9["roller"] and "teknikDirektor" in s9["roller"] and s9["teklif"] and s9["secenek"] == "sat,reddet" and s9["rapor"], str(s9))
+    denetle("H2-d: sürüm 9 Ocak kaydı geçişle açılır: oda hatasız, kayıt sürümü güncel (KARIYER_SURUM); telefonda hoca, yardımcı ve müdür; gelen teklif kartı iki cevapla yerinde; mali rapor işi kaydın anında",
+            s9["surum"] == s9["guncel"] and not s9["bozuk"] and "maliMudur" in s9["roller"] and "yardimciAntrenor" in s9["roller"] and "teknikDirektor" in s9["roller"] and s9["teklif"] and s9["secenek"] == "sat,reddet" and s9["rapor"], str(s9))
     # inceleme (H2-e): masadan açılışta cevap bekleyen konu, seçili açık konunun önündedir
     SECILI_JS = "() => { const b = document.querySelector('.dsy-sekme[aria-selected=\"true\"][data-mesele]'); const m = b && OYUN.kariyer.meseleler[b.dataset.mesele]; return m ? m.id + ':' + m.durum : ''; }"
     await pg.keyboard.press("Digit3")
@@ -2945,8 +2963,21 @@ async def ana():
     shutil.rmtree(site.parent, ignore_errors=True)
     denetle("Sayfa ve betik hatası yok", not tum_hatalar, "; ".join(tum_hatalar[:3]))
     print("\nEkran görüntüleri: araclar/son-akis-*.png")
-    print(f"BAŞARISIZ: {basarisiz} denetim" if basarisiz else "Tüm denetimler geçti")
-    sys.exit(1 if basarisiz else 0)
+    # R1-d: düşen denetim borç defterindeki açık bir satıra uyuyorsa bilinendir; çıkış kodunu yalnız yeni düşüş belirler
+    defter = borc_defteri()
+    bilinen, yeni = [], []
+    for ad in dusenler:
+        b = next((x for x in defter if all(k.search(ad) for k in x[2])), None)
+        (bilinen if b else yeni).append((b[0] if b else "YENİ", ad))
+    for no, ad in bilinen + yeni:
+        print(f"  [{no}] {ad[:150]}")
+    if yeni:
+        print(f"BAŞARISIZ: {len(yeni)} yeni denetim" + (f" (+{len(bilinen)} bilinen, araclar/BORCLAR.md)" if bilinen else ""))
+    elif bilinen:
+        print(f"Tüm denetimler geçti; yalnız bilinen {len(bilinen)} düşüş (araclar/BORCLAR.md)")
+    else:
+        print("Tüm denetimler geçti")
+    sys.exit(1 if yeni else 0)
 
 
 if __name__ == "__main__":
