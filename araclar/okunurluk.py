@@ -6,6 +6,7 @@ Ekranlar: oda (masa), defter, telefonun ana ekranı, konuşma (R2: iki sütun, t
 oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu kartı. R3: Canlı Skor sayfaları sürüm 11 örnek kaydından
 (araclar/ornekler/kayit-s11-hafta14.json): hafta görünümü, maç sayfası (Özet, İstatistikler, Kadrolar), oyuncu sayfası, takım sayfası (Genel, Kadro).
 R4: Transfer masası (Pano, Piyasa, oyuncu kâğıdı) ve transfer zincirinin aday ve pazarlık kartı (yapay haftalarla 5 Ocak'a, oyunun komut yoluyla).
+R5: balkon (antrenman kâğıdı: günün türü, gözlem, Gördüklerin) ve balkonda sağ yarıda açılan oyuncu dosyası.
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
 kalan metin (kaydırılabilir alanda kaydırınca okunur; kesen alanda bilerek gizlenmiştir: ekran okuyucu metni), TEST öğeleri (yayından önce kalkar). Kırpılan metin: en yakın taşmayı kesen atası overflow hidden/clip olan ve kutusunun dışına taşan metin
@@ -204,6 +205,22 @@ async def sahneler_transfer(pg, olc):
         await akis.masaya_don(pg)
 
 
+BALKON_SAHNELER = {"balkon", "balkon-dosya"}
+
+
+async def sahneler_balkon(pg, olc):
+    """R5: Salı 15:00 yoğun gün, iki yorgun oyuncu, gözlem bir saat sürmüş (akış §23 kalıbı); sinyalin adından oyuncu dosyası (sağ yarı)."""
+    await pg.evaluate("""() => oyunKomut(k => { const D = k.kulupler.demirkapi.kadro, x = Object.assign({}, k.oyuncular);
+      for (const id of D.ilk11.slice(1, 3)) x[id] = Object.assign({}, x[id], { hal: { kon: 58, gun: '2026-11-23', form: 0, gel: 0, tav: 60 } });
+      k.oyuncular = x; zamanIlerlet(k, anDakika('2026-11-24', 900) - simdikiAn(k)); gozlemAc(k, 120); gozlemAdim(k, 60); })""")
+    await akis.oda_yenile(pg)
+    await akis.yokla(pg, "() => ODA.yer === 'balkon'", 60)
+    await olc("balkon")
+    await tikla(pg, '#oda .od-gorduklerin [data-eylem="gozlemOyuncu"]')
+    await pg.wait_for_selector("#oda .dsy-baslik", timeout=10000)
+    await olc("balkon-dosya")
+
+
 async def sahneler_mac(pg, olc):
     """Boş kariyer: İlerle maç gününe; Stada git → bülten. Ayrı sayfada TEST 'Maçı izleme' → maç sonu kartı."""
     await akis.oda_ilerle(pg)
@@ -273,6 +290,10 @@ async def ana():
             if not secili or secili & TRANSFER_SAHNELER:
                 pg = await ac("index.html", "?dunya=7&pul=0")
                 await sahneler_transfer(pg, await olc_kur(pg))
+                await pg.context.close()
+            if not secili or secili & BALKON_SAHNELER:
+                pg = await ac("index.html", "?dunya=7&pul=0")
+                await sahneler_balkon(pg, await olc_kur(pg))
                 await pg.context.close()
             if not secili or "bulten" in secili:
                 pg = await ac("index.html", "?dunya=7&pul=0")

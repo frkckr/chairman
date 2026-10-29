@@ -4,15 +4,19 @@
    (ve protokol locasının) hemen arkasında ve üstündedir; konumu tariften hesaplanır (BLK_STAT). Pencerede çatısız karşı tribün, tabela,
    projektörler ve çevre (karşıda evler, doğuda kaya yamaç, ufukta tepeler; js/stadyum-cevre.js) görünür; tribün onarımının taksiti ödendiyse basamaklarda iskele durur (balkonIskele, 2.8J).
    Oyun kuralı içermez: antrenmanın sürüp sürmediğini ve saati sunum katmanı balkonDurum ile bildirir (kurallar js/gozlem.js).
-   Antrenman sunum amaçlı bir canlandırmadır, maç motoru değildir: üç grup tekrarlayan basit bir düzenle çalışır (ısınma koşusu, pas çemberi,
-   kaleye şut); kenarda teknik direktör ve antrenörler durur. Oyuncular kadrodaki görünüşleriyle kurulur (js/kadrolar.js, js/oyuncular.js).
+   Antrenman sunum amaçlı bir canlandırmadır, maç motoru değildir: gruplar tekrarlayan basit düzenlerle çalışır (ısınma koşusu, pas çemberi,
+   kaleye şut, esneme, sakatlıktan dönenin ayrı koşusu); kenarda teknik direktör, antrenörler ve fizyoterapist durur.
+   R5 (2026-10-29): sahadakiler kariyerin bugünkü kadrosudur — gruplar js/gozlem.js antrenmanDuzeni'nden (hocanın programı: yoğun, toparlanma,
+   hafif), oyuncular kayıttaki görünüşleriyle; figür havuzu oyuncu kimliğiyle bir kez kurulur, düzen değişince yeniden dağıtılır.
    Takvim dururken de saha hareket eder; saat ve karar durumu bununla karıştırılmaz (STIL_REHBERI §8).
-     balkonDurum({antrenman, dakika})  takım sahada mı; gökyüzünün gün ışığı
+     balkonDurum({antrenman, dakika, duzen})  takım sahada mı; gökyüzünün gün ışığı; duzen: {tur, kosu, rondo, sut, esneme, ayri, kaleciler, kenar,
+                                       oyuncular: {id → {ten, sac, sacRenk, boy, yapi, krampon, no}}} (R5; aynı anahtarla yeniden kurulmaz)
      balkonKare(dt)                    canlandırma (js/oda.js grup görünürken çağırır)
      balkonIskele(var)                 tribün basamaklarındaki onarım iskelesi (yaşanmış olaydan; js/soz.js odaIzleri)
    Renkler ve ölçüler STIL.balkon'dadır. */
 const BLK=STIL.balkon;
-const BALKON={antrenman:false,zaman:0,aktorler:[],kosu:[],rondo:[],sut:[],kaleci:null,ekip:[],top:{},grup:new THREE.Group()};
+const BALKON={antrenman:false,zaman:0,aktorler:[],kosu:[],rondo:[],sut:[],esneme:[],ayri:[],kenar:[],kaleci:null,ekip:[],top:{},grup:new THREE.Group(),
+  havuz:new Map(),tur:'yogun',duzenAnahtar:null};
 /* stadın balkona göre yeri (tariften): ana tribünün arka duvarı balkon korkuluğunun hemen önünde, tepesi (protokol locası dahil) balkon döşemesinin altında.
    Stat grubu 180° döndürülür: ana tribün balkon tarafında kalır. [CX, PY, CZ] sahanın ortası; bakış sahanın ortasına */
 const BLK_STAT=(()=>{
@@ -69,14 +73,11 @@ BLK.bakis=[0,BLK_STAT.PY+1,BLK_STAT.CZ+6];
     const g=new THREE.Mesh(golgeGeo,golgeM);g.rotation.x=-Math.PI/2;g.scale.set(1.3,0.75,1);G.add(g);
     const a={m,g,x,z,yaw:0,faz:h2(BALKON.aktorler.length,3)*6,ev:{x,z}};BALKON.aktorler.push(a);return a;
   }
-  const KD=KADROLAR.demirkapi,hepsi=KD.oyuncular.concat(KD.yedekler||[]),saha=hepsi.slice(1);
-  BALKON.kaleci=aktor(kitKaydi(KD.kaleciForma,hepsi[0],hepsi[0].no),51.2,0);
-  saha.forEach((o,i)=>{
-    const yelekli=i===6,K=kitKaydi('yedekEv',o,o.no);
-    const a=aktor(yelekli?Object.assign({},K,{shirt:BLK.yelek,trim:'#1c1c20'}):K,0,0);
-    (i<6?BALKON.kosu:i<12?BALKON.rondo:BALKON.sut).push(a);
-  });
-  BALKON.ekip=[aktor(kitKaydi('antrenorEv',KD.td,0),6,29),aktor(kitKaydi('antrenorEv',{ten:2,sac:'kisa',sacRenk:'#241a12',boy:1,yapi:1.04},0),33,-11),aktor(kitKaydi('antrenorEv',{ten:0,sac:'kel',sacRenk:'#8a8680',boy:0.98,yapi:1.08,biyik:true},0),15,23)];
+  const KD=KADROLAR.demirkapi;
+  /* R5: oyuncu figürleri kimlikle havuzdan (balkonDuzenKur); kaleci kaleci formasıyla, öbürleri antrenman formasıyla */
+  BALKON.oyuncuAktor=(id,o,kaleci)=>{let a=BALKON.havuz.get(id);if(!a){a=aktor(kitKaydi(kaleci?KD.kaleciForma:'yedekEv',o,o.no|0),0,0);BALKON.havuz.set(id,a);}return a;};
+  BALKON.ekip=[aktor(kitKaydi('antrenorEv',KD.td,0),6,29),aktor(kitKaydi('antrenorEv',{ten:2,sac:'kisa',sacRenk:'#241a12',boy:1,yapi:1.04},0),33,-11),aktor(kitKaydi('antrenorEv',{ten:0,sac:'kel',sacRenk:'#8a8680',boy:0.98,yapi:1.08,biyik:true},0),15,23),
+    aktor(kitKaydi('antrenorEv',{ten:1,sac:'kisa',sacRenk:'#3a2a1a',boy:0.97,yapi:0.98},0),-20,-29)];   /* R5: dördüncüsü fizyoterapist (ayrı koşu) */
   /* toplar ve koniler */
   const topGeo=new THREE.SphereGeometry(0.14,8,6),topM=oLAM({color:0xf4f4ee});
   const top=()=>{const t=new THREE.Mesh(topGeo,topM);G.add(t);return t;};
@@ -89,6 +90,18 @@ BLK.bakis=[0,BLK_STAT.PY+1,BLK_STAT.CZ+6];
   BALKON.topKoy=(t,x,y,z)=>t.position.set(CX+x,PY+0.14+y,CZ+z);
 }
 
+/* R5: düzeni figürlere dağıtır (aynı anahtarla yeniden kurmaz); düzende olmayan figürler gizlenir */
+function balkonDuzenKur(D){
+  const B=BALKON,O=D.oyuncular||{},al=(id,kl)=>B.oyuncuAktor(id,O[id]||{},kl);
+  for(const a of B.havuz.values()){a.m.root.visible=false;a.g.visible=false;}
+  const L=ad=>(D[ad]||[]).filter(id=>O[id]).map(id=>{const a=al(id,false);a.m.root.visible=true;a.g.visible=true;return a;});
+  B.tur=D.tur||'yogun';B.kosu=L('kosu');B.rondo=L('rondo');B.sut=L('sut');B.esneme=L('esneme');B.ayri=L('ayri');
+  const KL=(D.kaleciler||[]).filter(id=>O[id]).map(id=>{const a=al(id,true);a.m.root.visible=true;a.g.visible=true;return a;});
+  B.kaleci=KL[0]||null;
+  B.kenar=(D.kenar||[]).filter(id=>O[id]).map(id=>{const a=al(id,true);a.m.root.visible=true;a.g.visible=true;return a;});
+  B.ekip[3].m.root.visible=B.ekip[3].g.visible=B.ayri.length>0;
+  B.top.rondo.visible=B.rondo.length>2;B.top.sut.visible=B.sut.length>0;
+}
 /* iki pozun ağırlıklı karışımı; g: hareketin genliği (0 = düz duruş) */
 const BLK_EKLEM=['lean','dy','hx','lL','kL','lR','kR','aL','aR','aLz','aRz','eL','eR'];
 function balkonPoz(m,A,B,w,g){const P={};for(const e of BLK_EKLEM)P[e]=((A[e]||0)*(1-w)+((B&&B[e])||0)*w)*g;pose(m,P);}
@@ -104,17 +117,29 @@ function balkonGit(a,hx,hz,hiz,dt){
 function balkonBak(a,hx,hz){a.yaw=Math.atan2(hx-a.x,hz-a.z);}
 
 const BLK_KOSU_YOLU=[[-45,-26],[-8,-26],[-8,26],[-45,26]],BLK_RONDO={x:22,z:14,r:5.5,sure:1.05},BLK_SUT={sure:4.4,bas:[[30,-6],[30,-3.5],[30,-1]],vurus:[38.2,0]};
+/* R5: esneme (iki poz arasında yavaş), ayrı koşu (çizgi boyunca, fizyoterapistle), toparlanmada yavaş koşu */
+const BLK_ESNEME={A:{lean:0.55,kL:0.25,kR:0.25,aL:-0.5,aR:-0.5,eL:-0.2,eR:-0.2},B:{lean:0.15,lL:-0.7,kL:1.1,lR:0.35,aL:-0.2,aR:-0.2,aLz:-0.25,aRz:0.25},yer:{x:-30,z:-12,ara:2.6},sure:5.5},
+  BLK_AYRI={z:-29,x:[-40,0],hiz:1.6};
 function balkonKare(dt){
   if(!BALKON.antrenman)return;
   const B=BALKON,t=(B.zaman+=dt);
-  /* 1. ısınma koşusu: altı oyuncu yarı sahanın çevresinde sıra hâlinde */
-  {const Y=BLK_KOSU_YOLU,uz=Y.map((p,i)=>Math.hypot(Y[(i+1)%4][0]-p[0],Y[(i+1)%4][1]-p[1])),top=uz.reduce((a,b)=>a+b,0);
+  /* 1. ısınma koşusu: yarı sahanın çevresinde sıra hâlinde (toparlanmada yavaş) */
+  {const Y=BLK_KOSU_YOLU,uz=Y.map((p,i)=>Math.hypot(Y[(i+1)%4][0]-p[0],Y[(i+1)%4][1]-p[1])),top=uz.reduce((a,b)=>a+b,0),yavas=B.tur==='toparlanma';
    B.kosu.forEach((a,i)=>{
-     let s=((t*3.1-i*2.6)%top+top)%top,k=0;while(s>uz[k]){s-=uz[k];k++;}
+     let s=((t*(yavas?1.7:3.1)-i*2.6)%top+top)%top,k=0;while(s>uz[k]){s-=uz[k];k++;}
      const p=Y[k],q=Y[(k+1)%4],o=s/uz[k];a.x=p[0]+(q[0]-p[0])*o;a.z=p[1]+(q[1]-p[1])*o;a.yaw=Math.atan2(q[0]-p[0],q[1]-p[1]);
-     a.faz+=dt*7.1;balkonPoz(a.m,POSE.runA,POSE.runB,(Math.sin(a.faz)+1)/2,0.85);B.yerlestir(a);});}
+     a.faz+=dt*(yavas?4.6:7.1);balkonPoz(a.m,POSE.runA,POSE.runB,(Math.sin(a.faz)+1)/2,yavas?0.5:0.85);B.yerlestir(a);});}
+  /* R5: esneme — sıra hâlinde, iki poz arasında yavaş */
+  {const E=BLK_ESNEME;B.esneme.forEach((a,i)=>{a.x=E.yer.x+(i%5)*E.yer.ara;a.z=E.yer.z+Math.floor(i/5)*E.yer.ara;a.yaw=Math.PI/2;
+     balkonPoz(a.m,E.A,E.B,(Math.sin(t*2*Math.PI/E.sure+i*0.7)+1)/2,1);B.yerlestir(a);});}
+  /* R5: ayrı koşu — dönüşe yakın sakat oyuncu çizgi boyunca yavaş koşar, fizyoterapist yanında */
+  {const R=BLK_AYRI,uz=R.x[1]-R.x[0];B.ayri.forEach((a,i)=>{const s=((t*R.hiz+i*3)%(2*uz)),ileri=s<uz;a.x=R.x[0]+(ileri?s:2*uz-s);a.z=R.z+i*1.2;a.yaw=ileri?Math.PI/2:-Math.PI/2;
+     a.faz+=dt*4.2;balkonPoz(a.m,POSE.runA,POSE.runB,(Math.sin(a.faz)+1)/2,0.45);B.yerlestir(a);});
+   const f=B.ekip[3];if(B.ayri.length){const a=B.ayri[0];f.x=a.x-1.5;f.z=R.z-2;balkonBak(f,a.x,a.z);balkonPoz(f.m,BLK_DURUS,null,0,1);B.yerlestir(f);}}
+  /* R5: kenardaki kaleci kaleci antrenörüyle hazırda */
+  B.kenar.forEach((a,i)=>{a.x=44+i*1.5;a.z=9;balkonBak(a,44,0);balkonPoz(a.m,POSE.ready,null,0,0.8+0.2*Math.sin(t*2+i));B.yerlestir(a);});
   /* 2. pas çemberi: beş oyuncu çemberde paslaşır, yelekli oyuncu ortada topu kovalar */
-  {const R=BLK_RONDO,cember=B.rondo.filter((a,i)=>i!==0),orta=B.rondo[0],n=cember.length,tur=Math.floor(t/R.sure),o=(t/R.sure)%1;
+  if(B.rondo.length>2){const R=BLK_RONDO,cember=B.rondo.filter((a,i)=>i!==0),orta=B.rondo[0],n=cember.length,tur=Math.floor(t/R.sure),o=(t/R.sure)%1;
    const kim=j=>((j*2)%n+n)%n,veren=cember[kim(tur)],alan=cember[kim(tur+1)];
    cember.forEach((a,j)=>{const ac=j*2*Math.PI/n;a.x=R.x+Math.cos(ac)*R.r;a.z=R.z+Math.sin(ac)*R.r;});
    const u=Math.min(1,o/0.45),bx=veren.x+(alan.x-veren.x)*u,bz=veren.z+(alan.z-veren.z)*u;
@@ -127,9 +152,9 @@ function balkonKare(dt){
    balkonGit(orta,hx,hz,3.4,dt);B.yerlestir(orta);
    B.topKoy(B.top.rondo,bx,0,bz);}
   /* 3. şut çalışması: sırayla koş, vur; kaleci uzanır */
-  {const S=BLK_SUT,tur=Math.floor(t/S.sure),p=t%S.sure,n=B.sut.length,vuran=B.sut[tur%n],taraf=tur%2?1:-1,hz=taraf*2.6,K=B.kaleci;
+  if(B.sut.length){const S=BLK_SUT,tur=Math.floor(t/S.sure),p=t%S.sure,n=B.sut.length,vuran=B.sut[tur%n],taraf=tur%2?1:-1,hz=taraf*2.6,K=B.kaleci;
    B.sut.forEach((a,i)=>{
-     const yer=S.bas[((i-tur)%n+n)%n];
+     const j=((i-tur)%n+n)%n,yer=S.bas[j]||[30-(j-2)*1.1,-1-(j-2)*0.4];   /* R5: sıra uzunsa arkaya dizilir */
      if(a===vuran){
        if(p<1.5)balkonGit(a,S.vurus[0]-0.7,S.vurus[1],5,dt);
        else if(p<2.1){balkonBak(a,52.5,hz);balkonPoz(a.m,POSE.vurusGeri,POSE.vurusTakip,clamp((p-1.5)/0.25,0,1),1);}
@@ -141,13 +166,16 @@ function balkonKare(dt){
    B.topKoy(B.top.sut,S.vurus[0]+(52.9-S.vurus[0])*u,Math.sin(u*Math.PI)*1.4+u*0.5,S.vurus[1]+(hz-S.vurus[1])*u);
    /* kaleci: hazır bekler, şutta topun tarafına uzanır, sonra yerine döner */
    const d=clamp((p-1.75)/0.4,0,1)*(p<3.1?1:clamp((3.6-p)/0.5,0,1));
-   K.x=51.2;K.z=hz*0.75*d;K.yaw=-Math.PI/2;
-   balkonPoz(K.m,POSE.ready,POSE.dive,d,1);B.yerlestir(K);K.m.root.rotation.z=-taraf*1.1*d;K.m.root.position.y+=0.55*d;}
+   if(K){K.x=51.2;K.z=hz*0.75*d;K.yaw=-Math.PI/2;
+     balkonPoz(K.m,POSE.ready,POSE.dive,d,1);B.yerlestir(K);K.m.root.rotation.z=-taraf*1.1*d;K.m.root.position.y+=0.55*d;}}
   /* teknik ekip: hoca kenarda, ara sıra işaret eder */
-  B.ekip.forEach((a,i)=>{balkonBak(a,i===1?44:20,i===1?0:8);balkonPoz(a.m,i===0&&Math.sin(t*0.7)>0.75?POSE.isaret:BLK_DURUS,null,0,1);B.yerlestir(a);});
+  B.ekip.forEach((a,i)=>{if(i===3)return;balkonBak(a,i===1?44:20,i===1?0:8);balkonPoz(a.m,i===0&&Math.sin(t*0.7)>0.75?POSE.isaret:BLK_DURUS,null,0,1);B.yerlestir(a);});
 }
 function balkonIskele(v){if(BALKON.iskele)BALKON.iskele.visible=!!v;}
 function balkonDurum(d){
+  /* R5: düzen değişince (gün, kadro, program) figürler yeniden dağıtılır */
+  if(d.duzen){const a=JSON.stringify([d.duzen.tur,d.duzen.kosu,d.duzen.rondo,d.duzen.sut,d.duzen.esneme,d.duzen.ayri,d.duzen.kaleciler,d.duzen.kenar]);
+    if(a!==BALKON.duzenAnahtar){BALKON.duzenAnahtar=a;balkonDuzenKur(d.duzen);if(BALKON.antrenman)balkonKare(0.001);}}
   if(d.antrenman!==undefined&&d.antrenman!==BALKON.antrenman){BALKON.antrenman=!!d.antrenman;BALKON.grup.visible=BALKON.antrenman;if(BALKON.antrenman)balkonKare(0.001);}
   if(d.dakika!==undefined){const I=odaGunIsigi(d.dakika);BALKON.gok.color.copy(I.renk).lerp(new THREE.Color(0xffffff),0.5).multiplyScalar(0.3+0.9*I.guc);}
 }

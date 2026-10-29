@@ -2057,6 +2057,45 @@ bolum('R4 — transfer: şablon motoru, pazarlık, alım zinciri, serbest havuz,
     !!T('KARAR_TURLERI').sablonKarti&&!!T('GELISMELER').sablonAdim&&!!T('KATILIM_ETKILERI').izleme&&['DEF','OS','FV'].every(h=>T('GIRISIMLER')['yaz.teknikDirektor.transfer'+h]));
 }
 
+bolum('R5 — balkon: antrenmanın düzeni kadronun kendisinden, hocanın programına göre (js/gozlem.js antrenmanDuzeni)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),biz='demirkapi',AD=T('antrenmanDuzeni'),toh=id=>T('macTohumu')(7,id);
+  const macIsi=c=>Object.values(c.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu');
+  const ilerle=c=>KK(c,x=>T('duragaIlerle')(x)).kariyer;
+  /* hafta: yapay 0–0, ilk on birler kadrodan (dakika sayacı için) */
+  const hafta=c=>{const j=macIsi(c);for(let g=0;g<12&&!(c.tarih===j.tarih&&c.gunIciDakika===j.dakika);g++)c=ilerle(c);c=KK(c,x=>T('ajandaIsiYap')(x,j.id)).kariyer;
+    const id=j.veri.macId,G=T('macGirdisi')(c,id),S=kad=>({skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{},ilk11:kad.map(K=>K.oyuncular.map(p=>p.id))});
+    const D=T('haftaninDigerMaclari')(c,id).map(f=>T('digerMacPlani')(c,f));
+    return KK(c,x=>T('haftaSonuclariUygula')(x,id,S(G.kadro),toh(id),{},D.map(d=>({macId:d.macId,sonuc:d.hukmen?T('hukmenSonucu')(d.hukmen):S(d.secenek.kadro),tohum:d.tohum})))).kariyer;};
+  const k0=T('kariyerBaslat')({tohum:7}),k1=hafta(k0),once=metin(k1);
+  const gunler=[0,1,2,3,4,5,6].map(i=>T('tarihEkle')(k1.tarih,i+1));
+  const hepsi=D=>[].concat(D.kosu,D.rondo,D.sut,D.esneme,D.ayri,D.kaleciler,D.kenar);
+  const L=gunler.map(t=>({t,D:AD(k1,t),Z:AD(k1,t,true),P:T('antrenmanProgrami')(k1,biz,t)}));
+  denetle('Düzen saf ve belirlenimci: okumak kariyeri değiştirmez, aynı gün aynı düzen',metin(k1)===once&&gunler.every(t=>metin(AD(k1,t))===metin(AD(k1,t))));
+  denetle('Dinlenme ve maç günü saha boş (null); TEST görüntü anahtarıyla (zorla) o günler yoğun düzen; antrenman günlerinde düzenin türü hocanın programı',
+    L.every(x=>(x.P.tur==='dinlenme'||x.P.tur==='mac')?x.D===null&&x.Z&&x.Z.tur==='yogun':x.D&&x.D.tur===x.P.tur),L.map(x=>x.t.slice(5)+':'+x.P.tur+'/'+(x.D?x.D.tur:'-')).join(' '));
+  {const ok=L.filter(x=>x.D).every(x=>{const H=hepsi(x.D),K=T('kulupOyunculari')(k1,biz).filter(p=>!(p.sakat&&T('tarihKarsilastir')(p.sakat.donus,x.t)>0));
+     return new Set(H).size===H.length&&K.every(p=>H.includes(p.id))&&H.every(id=>k1.oyuncular[id].kulupId===biz);});
+   denetle('Kadronun her sağlam oyuncusu tam bir grupta (tekrarsız), kaleciler kalede ya da kenarda; başka kulübün oyuncusu yok',ok);}
+  {const t=L.find(x=>x.P.tur==='toparlanma'),M=t&&t.D?new Set(t.D.esneme.concat(t.D.kosu)):new Set();
+   const ilk=t?Object.entries(k1.maclar).map(([id,s])=>({f:k1.fikstur.find(f=>f.id===id),s})).filter(x=>x.f&&(x.f.ev===biz||x.f.konuk===biz)).map(x=>x.s.ilk11[x.f.ev===biz?0:1].filter(id=>k1.oyuncular[id].mevki!=='KL'))[0]:[];
+   denetle('Toparlanma günü (maç ertesi): maçta 60 dakikadan çok oynayan saha oyuncuları esneme ya da yavaş koşuda, öbürleri pas çemberi ve şutta',
+     !!t&&!!t.D&&ilk.length===10&&ilk.every(id=>M.has(id))&&t.D.rondo.every(id=>!ilk.includes(id)),t&&t.t);}
+  {const t=L.find(x=>x.P.tur==='yogun'),y=L.find(x=>x.P.tur==='hafif');
+   denetle('Yoğun günde ısınma koşusu, pas çemberi ve şut; hafif günde (maç arifesi) koşu yok',!!t&&t.D.kosu.length===6&&t.D.rondo.length>2&&t.D.sut.length>0&&(!y||y.D.kosu.length===0),
+     t&&`yoğun ${t.D.kosu.length}/${t.D.rondo.length}/${t.D.sut.length}`);}
+  /* sakat: sahada yok; dönüşüne üç gün kala ayrı koşu */
+  {const g=L.find(x=>x.P.tur==='yogun'),p=T('kulupOyunculari')(k1,biz).find(q=>q.mevki==='OS');
+   const sk=(gun)=>{const c=JSON.parse(metin(k1));c.oyuncular[p.id].sakat={neden:'arka adale',donus:T('tarihEkle')(g.t,gun)};return AD(c,g.t);};
+   const uzak=sk(10),yakin=sk(2);
+   denetle('Sakat oyuncu sahada yok; dönüşüne üç gün ya da daha az kalan sakat ayrı koşuda (fizyoterapistle)',!hepsi(uzak).includes(p.id)&&yakin.ayri.includes(p.id)&&!yakin.rondo.includes(p.id),p.ad);}
+  /* transferle gelen oyuncu ertesi antrenmanda düzende */
+  {const g=L.find(x=>x.P.tur==='yogun'),s=Object.values(k1.oyuncular).find(q=>q.kulupId===null&&q.mevki==='DEF');
+   const c=KK(k1,x=>{T('oyuncuTransfer')(x,s.id,biz,{bedel:0,sozlesme:{maas:100000,bitis:'2029-05-31'}});}).kariyer;
+   denetle('Transferle gelen oyuncu düzende (kadronun kendisi)',hepsi(AD(c,g.t)).includes(s.id)&&!hepsi(AD(k1,g.t)).includes(s.id),s.ad);}
+  denetle('Kayıt defteri: düzen sayıları TEST tek yerde',!!T('ANTRENMAN_DUZEN_TEST')&&T('ANTRENMAN_DUZEN_TEST').donusGun===3);
+}
+
 bolum('Bozuk kopyalar doğrulamada yakalanır');
 {
   const c=deneme({randevu:false});duragaIlerle(c);ajandaIsiYap(c,kararIsi(c).id,'kabul');

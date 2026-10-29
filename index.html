@@ -276,6 +276,12 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .od-gozKasa dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
 .od-gozlem{position:absolute;left:.9em;bottom:8.6em;max-width:36%;display:grid;gap:.35em;padding:.45em .7em;background:var(--k-zemin);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-yesil);box-shadow:.2em .25em 0 var(--k-golge)}
 .od-gozlem small{display:block}
+/* R5: balkonda antrenman kâğıdı sağ üstte (iş açılınca sağ yarıdaki kabın arkasında kalır); günün türü üstte; gördüklerin ada dokunulur */
+.oda[data-yer="balkon"] .od-gozlem{left:auto;right:.9em;top:3.4em;bottom:auto;max-width:min(42%,30em);max-height:calc(100% - 13em);overflow-y:auto}
+@container (max-width:820px){.oda[data-yer="balkon"] .od-gozlem{max-width:62%}}
+.od-gozlemGun{margin:0;font-weight:600}
+.oda .od-gozlem h5.od-gozlemBas,.od-gozlemBas{margin:.2em 0 0;font-size:max(var(--k-enKucuk,12px),.8em);letter-spacing:.08em;text-transform:uppercase;color:var(--k-soluk)}
+.od-gorduklerin button.od-baglanti{text-align:left}
 .oda .od-yer{font-weight:600;border-color:var(--k-yesil)}
 /* görünmez ama klavyeyle odaklanınca beliren düğme (balkon kapısı, 2.8D) */
 .oda .od-gizli:not(:focus):not(:focus-visible){position:absolute;width:1px;height:1px;min-width:0;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0;white-space:nowrap}
