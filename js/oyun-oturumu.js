@@ -19,8 +19,8 @@
 'use strict';
 const OYUN_YUVA='oyun-1';
 const OYUN={depo:null,kariyer:null,oturum:null,mesaj:'',bozukHata:null,basladi:false,
-  ayarlar:{yazi:'normal',test:true,macHizi:1,otoYavas:true,locaBakisi:false,
-    kaydet(){try{OYUN_DEPO.yaz('ayarlar',JSON.stringify({yazi:this.yazi,test:this.test,macHizi:this.macHizi,otoYavas:this.otoYavas,locaBakisi:this.locaBakisi}));}catch(e){}}}};
+  ayarlar:{yazi:'normal',test:true,macHizi:1,otoYavas:true,locaBakisi:false,herSaat:false,
+    kaydet(){try{OYUN_DEPO.yaz('ayarlar',JSON.stringify({yazi:this.yazi,test:this.test,macHizi:this.macHizi,otoYavas:this.otoYavas,locaBakisi:this.locaBakisi,herSaat:this.herSaat}));}catch(e){}}}};
 let OYUN_DEPO=null;
 {
   try{OYUN_DEPO=masaustuDeposu();if(OYUN_DEPO)OYUN.depo='masaustu';}catch(e){OYUN_DEPO=null;}
@@ -33,6 +33,7 @@ let OYUN_DEPO=null;
       if(a.test===false)OYUN.ayarlar.test=false;
       if([1,2,4].includes(a.macHizi))OYUN.ayarlar.macHizi=a.macHizi;if(a.otoYavas===false)OYUN.ayarlar.otoYavas=false;   /* U1 */
       if(a.locaBakisi===true)OYUN.ayarlar.locaBakisi=true;   /* P2: maçta loca bakışı (TEST); 2D varsayılan */
+      if(a.herSaat===true)OYUN.ayarlar.herSaat=true;   /* R5 (TEST): balkonda her saat antrenman, yalnız görüntü */
       /* kaldırılan ayarlar (ses 2.8A, hareket azaltma 2.8J) okunmaz; açılışta yeniden yazılarak düşer */
       if('ses' in a||'sessiz' in a||'hareket' in a||'pul' in a)OYUN.ayarlar.kaydet();
     }

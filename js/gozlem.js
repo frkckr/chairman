@@ -165,3 +165,37 @@ function gozlemSinyalleriGecerli(k,S,bas,bit){
 /* S-b: geçmişteki gözlem kayıtlarının sinyalleri */
 function gozlemGecmisDogrula(k,h){for(const [i,g] of (k.gecmis||[]).entries())if(g&&g.tur==='gozlem'&&g.sinyaller!==undefined&&!gozlemSinyalleriGecerli(k,g.sinyaller,g.bas,g.bitis+1))h.push(`Geçmiş [${i}]: gözlem sinyalleri geçersiz`);}
 EK_DENETIMLER.push(gozlemDogrula,gozlemGecmisDogrula);
+/* ---- R5 (2026-10-29): antrenmanın sahadaki düzeni (saf okuma; çizim js/balkon.js; kayda yazmaz, rastlantı akışı çekmez) ----
+   antrenmanDuzeni(k, tarih, zorla?) → null | {tur, kosu:[id], rondo:[id], sut:[id], esneme:[id], ayri:[id], kaleciler:[id], kenar:[id]}
+     Başkanın kulübünün o günkü kadrosu hocanın programına göre (js/oyuncu-hafta.js antrenmanProgrami) gruplara ayrılır. Dinlenme ve maç günü
+     null (saha boş); zorla (TEST görüntü anahtarı) bu günlerde de yoğun düzeni verir. Sakat oyuncu sahada yoktur; dönüşüne
+     ANTRENMAN_DUZEN_TEST.donusGun gün kalan sakat ayrı koşudadır (fizyoterapistle). Toparlanma gününde son maçta toparlanmaDk dakikadan çok
+     oynayanlar esneme ve yavaş koşudadır, öbürleri pas çemberi ve şut. Hafif günde koşu yok: pas çemberi ve şut (duran top).
+     Kaleciler: ilki kalede, öbürü kenarda (kaleci antrenörüyle). Sıra tarihten tohumlu (kimlik ve tarih karması), aynı gün aynı düzen. Sayılar TEST. */
+const ANTRENMAN_DUZEN_TEST={donusGun:3,toparlanmaDk:60,rondoEnCok:7,sutEnCok:6};
+const adKarma=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
+function antrenmanDuzeni(k,tarih,zorla){
+  const biz=bizimKulup(k),T=ANTRENMAN_DUZEN_TEST;if(!biz||!k.kulupler[biz]||!k.kulupler[biz].kadro)return null;
+  const P=typeof antrenmanProgrami==='function'?antrenmanProgrami(k,biz,tarih):{tur:'yogun'};
+  let tur=P.tur;if(tur==='mac'||tur==='dinlenme'){if(!zorla)return null;tur='yogun';}
+  const L=kulupOyunculari(k,biz).slice().sort((a,b)=>adKarma(a.id+tarih)-adKarma(b.id+tarih)||(a.id<b.id?-1:1));
+  const sakat=p=>!!(p.sakat&&tarihKarsilastir(p.sakat.donus,tarih)>0);
+  const D={tur,kosu:[],rondo:[],sut:[],esneme:[],ayri:[],kaleciler:[],kenar:[]};
+  for(const p of L)if(sakat(p)&&gunFarki(tarih,p.sakat.donus)<=T.donusGun)D.ayri.push(p.id);
+  const uygun=L.filter(p=>!sakat(p)),KL=uygun.filter(p=>p.mevki==='KL'),saha=uygun.filter(p=>p.mevki!=='KL');
+  D.kaleciler=KL.slice(0,1).map(p=>p.id);D.kenar=KL.slice(1).map(p=>p.id);
+  /* son maçta çok oynayanlar (toparlanma) */
+  let cok=new Set();
+  if(tur==='toparlanma'&&typeof macDakikalari==='function'){
+    const F=(k.fikstur||[]).filter(f=>(f.ev===biz||f.konuk===biz)&&f.tarih<tarih&&(k.maclar||{})[f.id]).sort((a,b)=>a.tarih<b.tarih?1:-1)[0];
+    if(F){const M=macDakikalari(k,F,k.maclar[F.id]);cok=new Set([...M].filter(([,dk])=>dk>T.toparlanmaDk).map(([id])=>id));}
+  }
+  for(const p of saha){
+    if(tur==='toparlanma'&&cok.has(p.id))(D.esneme.length<=D.kosu.length?D.esneme:D.kosu).push(p.id);
+    else if(tur==='yogun'&&D.kosu.length<6)D.kosu.push(p.id);
+    else if(D.rondo.length<T.rondoEnCok)D.rondo.push(p.id);
+    else if(D.sut.length<T.sutEnCok)D.sut.push(p.id);
+    else D.esneme.push(p.id);
+  }
+  return D;
+}
