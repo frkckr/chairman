@@ -34,7 +34,7 @@ function serbestHavuzKur(k){
     if(yildiz){const geri=3+Math.floor(r()*5),yer=r()<0.5?'ust':r()<0.5?'yurtdisi':takimlar[Math.floor(r()*takimlar.length)];
       p.un={yil:Number(k.tarih.slice(0,4))-geri,mac:24+Math.floor(r()*12),gol:m==='FV'?10+Math.floor(r()*12):m==='OS'?4+Math.floor(r()*7):1+Math.floor(r()*3),yer};}
     const id=oyuncuEkle(k,null,p);
-    k.oyuncular[id].hal={kon:100,gun:k.tarih,form:Math.max(T.formEn,-T.formAy*ay),gel:0,tav:tavanKur(k,k.oyuncular[id],k.tarih)};
+    if(oyuncuHaftasiAcik())k.oyuncular[id].hal={kon:100,gun:k.tarih,form:Math.max(T.formEn,-T.formAy*ay),gel:0,tav:tavanKur(k,k.oyuncular[id],k.tarih)};
     L.push(k.oyuncular[id]);
   });
   kariyerTransfer(k).havuz=true;

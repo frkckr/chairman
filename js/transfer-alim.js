@@ -70,7 +70,7 @@ function taUygun(k,V,p){
   if(maasTahmini(p,k.tarih)>V.tavan)return false;
   return p.kulupId===null||oyuncuDegeri(p,k.tarih)<=V.bonservis*TA.butceKat;
 }
-const taHedefteMi=(k,id,haricMesele)=>Object.values(k.meseleler||{}).some(m=>m.id!==haricMesele&&m.durum!=='kapandi'&&m.sablon&&m.sablon.ad==='transferAlim'&&(m.sablon.veri.hedef===id||(m.sablon.veri.adaylar||[]).includes(id)));
+const taHedefteMi=(k,id,haricMesele)=>Object.values(k.meseleler||{}).some(m=>m.id!==haricMesele&&m.durum!=='kapandi'&&m.sablon&&m.sablon.ad==='transferAlim'&&(m.sablon.veri.hedef===id||m.sablon.veri.istenen===id||(m.sablon.veri.adaylar||[]).includes(id)));
 function taAdaylar(k,m){
   const V=m.sablon.veri;
   if(V.istenen){const p=k.oyuncular[V.istenen];return p&&p.kulupId!==bizimKulup(k)&&!(V.kapali||[]).includes(p.kulupId)?[p]:[];}
@@ -78,6 +78,9 @@ function taAdaylar(k,m){
     .map(p=>({p,v:taHocaGozu(k,p)})).sort((a,b)=>b.v-a.v||(a.p.id<b.p.id?-1:1)).slice(0,2).map(x=>x.p);
 }
 const taAcikDosyalar=k=>Object.values(k.meseleler||{}).filter(m=>m.durum!=='kapandi'&&m.sablon&&m.sablon.ad==='transferAlim');
+/* hoca değişince açık dosyalar yeni hocayla sürer (bekleyen araştırma ve görüş onun adıyla döner; soranı eski hoca olan kart zaten düştü) */
+HOCA_DEGISTI.push((k,kulupId,eskiId,yeniId)=>{if(kulupId!==bizimKulup(k))return;
+  for(const m of taAcikDosyalar(k))if(m.sablon.veri.hocaId===eskiId)m.sablon.veri=Object.assign({},m.sablon.veri,{hocaId:yeniId});});
 function taDonemDosyaSayisi(k){
   const d=transferDonemi(k,k.tarih)||taSiradakiDonem(k);if(!d)return 0;
   const bas=tarihEkle(d.bas,-60);
@@ -93,7 +96,7 @@ function taAcilisEngeli(k,mevki){
   return null;
 }
 function taVeri(o){return Object.assign({mevki:null,bonservis:0,tavan:0,hocaId:null,adaylar:[],kanaat:{},hedef:null,alternatif:null,alternatifKullanildi:false,
-  satan:null,kapali:[],pazarlik:{},bekliyor:false,bedel:null,maas:null,istek:null,yuzYuze:false,fark:null,sakatGun:null,sakatNeden:null,kayip:null,istenen:null},o);}
+  satan:null,rakip:null,kapali:[],pazarlik:{},bekliyor:false,bedel:null,maas:null,istek:null,yuzYuze:false,fark:null,sakatGun:null,sakatNeden:null,kayip:null,istenen:null},o);}
 function taAc(k,o){
   const id=sablonAc(k,'transferAlim',{baslik:o.baslik,kaynak:o.kaynak,kisiler:o.hocaId?[o.hocaId]:[],asama:o.asama,veri:taVeri(o.veri)});
   return id;
@@ -190,6 +193,8 @@ Object.assign(MESELE_OLAYLARI,{
   'ta.rakipOyuncu':(k,p)=>`${taKulupAdi(k,p.kulupId)} rakibine oyuncu vermeye gönülsüz; pazarlık sert geçecek.`,
   'ta.izleme':(k,p)=>`${kisiOyuncuAdi(k,p.oyuncuId)} yerinde izlendi (${(MEKANLAR[p.mekan]||{ad:''}).ad}). Hoca: “${TA_KANAAT_METIN[p.kanaat]}”`
 });
+MESAJ_GONDEREN['ta.ihtiyac']=(k,p)=>p.kaynak==='hoca'?p.kisiId||null:null;   /* başkanın girişiminde hocanın cevabı yazışmadan gelir */
+MESAJ_METIN['ta.ihtiyac']=(k,p)=>`Başkanım, ${TA.hatlar[p.mevki].toLocaleLowerCase('tr-TR')} hattına bir oyuncu lazım. Bonservis en çok ${taPara(p.bonservis)}, maaşı ayda en çok ${taPara(p.tavan)} olsun.`;
 MESAJ_GONDEREN['ta.adaylar']=pKisi('kisiId');MESAJ_GONDEREN['ta.devirSonuc']=pKisi('kisiId');MESAJ_GONDEREN['ta.devirKotu']=pKisi('kisiId');MESAJ_GONDEREN['ta.itiraz']=pKisi('kisiId');
 MESAJ_METIN['ta.adaylar']=(k,p)=>`Başkanım, araştırma bitti: ${p.adaylar.map(id=>kisiOyuncuAdi(k,id)).join(' ve ')}. Ayrıntılar dosyada.`;
 MESAJ_METIN['ta.devirSonuc']=(k,p)=>`Başkanım, ${taPara(p.tutar)} bedelde anlaştık. Onayınızı bekliyorum; dosyada.`;
@@ -279,19 +284,19 @@ SABLONLAR.transferAlim={meseleTuru:'transfer',baslangic:'ihtiyac',asamalar:{
     uygula:taDonemli((k,m,s,is)=>{const t=is.veri.rakamlar[s==='guclu'?1:0];pazarlikTeklif(m,'bonservis',t);
       return{asama:'kulupCevap',bilgi:meseleOlay(k,m.id,'ta.teklif',{kulupId:m.sablon.veri.satan,tutar:t})};}),
     cevapsiz:{metin:()=>'Cevap vermezsen karşı tarafın sabrı azalır; sonra görüşmeyi keser.',
-      uygula:taDonemli((k,m)=>{const V=m.sablon.veri;if(pazarlikBekledi(k,m,'bonservis')==='kopma'){V.kapali=V.kapali.concat([V.satan]);return taKayip(k,m,'kopma','ta.kopma',{kulupId:V.satan});}
+      uygula:taDonemli((k,m)=>{const V=m.sablon.veri;if(pazarlikBekledi(k,m,'bonservis')==='kopma')return taKopma(k,m);
         V.bekliyor=true;return{asama:'kulupPazarlik',bilgi:meseleOlay(k,m.id,'ta.bekliyor',{kulupId:V.satan})};})},
     baglam:k=>({tur:'kasa',kulupId:bizimKulup(k)})}),
   kulupCevap:{tur:'bekleme',an:(k,m)=>taBekleAn(k,m,TA.cevapGun),
     bitince:taDonemli((k,m)=>{const V=m.sablon.veri,P=pazarlikDurumu(m,'bonservis'),r=pazarlikCevap(k,m,'bonservis');
       if(r==='kabul'){V.bedel=P.son;return{asama:'temas',bilgi:meseleOlay(k,m.id,'ta.kulupKabul',{kulupId:V.satan,tutar:P.son}),dur:true};}
       if(r==='karsi')return{asama:'kulupPazarlik',bilgi:meseleOlay(k,m.id,'ta.karsiTeklif',{kulupId:V.satan,tutar:P.karsi}),dur:true};
-      V.kapali=V.kapali.concat([V.satan]);return Object.assign(taKayip(k,m,'kopma','ta.kopma',{kulupId:V.satan}),{dur:true});})},
+      return Object.assign(taKopma(k,m),{dur:true});})},
   devir:{tur:'devir',konu:'pazarlik',kisi:k=>taMudur(k).id,an:(k,m)=>taBekleAn(k,m,taGun(k,m,'devir',TA.devirGun)),
     bitince:taDonemli((k,m,kalite)=>{const V=m.sablon.veri,md=m.sablon.sahip;
       if(!V.pazarlik.bonservis)pazarlikKur(k,m,'bonservis',{deger:taSatisDegeri(k,m),oneren:md,konu:'pazarlik'});
       const P=pazarlikDurumu(m,'bonservis');
-      if(kalite==='kotu'){V.kapali=V.kapali.concat([V.satan]);return Object.assign(taKayip(k,m,'kopma','ta.devirKotu',{kisiId:md}),{dur:true});}
+      if(kalite==='kotu')return Object.assign(taKopma(k,m,'ta.devirKotu',{kisiId:md}),{dur:true});
       const [a,b]=TA.devirKat[kalite],r=taCekilis(k,m,'devirBedel');V.bedel=pazarlikYuvarla(P.alt*(a+(b-a)*r),P.yuvarla);V.devirKalite=kalite;
       return{asama:'devirOnay',bilgi:meseleOlay(k,m.id,'ta.devirSonuc',{kisiId:md,tutar:V.bedel}),dur:true};})},
   devirOnay:taKart('firsat',{
@@ -395,8 +400,8 @@ SABLON_KIVRIMLARI.transferAlim=[
     kosul:(k,m)=>!!taRakipKulup(k,m),olasilik:()=>TA.rakipIlgi,
     uygula:(k,m)=>{const V=m.sablon.veri,R=taRakipKulup(k,m),md=taMudur(k)||kulupHocasi(k,bizimKulup(k));
       meseleOlay(k,m.id,'ta.rakip',{kisiId:md.id,kulupId:R,oyuncuId:V.hedef});
-      const P=pazarlikSertles(m,'bonservis',1.1,1);
-      if(P&&P.sabir<=0){const id=V.hedef;dunyaTransferi(k,id,R);V.kapali=V.kapali.concat([V.satan]);return Object.assign(taKayip(k,m,'rakibe','ta.rakibeGitti',{oyuncuId:id,kulupId:R}),{dur:true});}
+      const P=pazarlikSertles(m,'bonservis',1.1,1);V.rakip=R;
+      if(P&&P.sabir<=0)return Object.assign(taKopma(k,m),{dur:true});
       return null;}},
   /* satan son anda bedeli artırır (kasası dar: tablonun alt yarısı) */
   {ad:'bedelArtti',asamalar:['temas'],an:'giris',
@@ -429,6 +434,12 @@ SABLON_KIVRIMLARI.transferAlim=[
       meseleOlay(k,m.id,'ta.tescil',{oyuncuId:p.id,tarih:t});return null;}}
 ];
 /* rakip kulüp: tabloda üstümüzde, satan değil, o mevkide en az iki oyuncusu olan ilk kulüp (belirlenimci) */
+/* kulüple pazarlık koptu: satan kapanır; rakip araya girdiyse (kıvrım) oyuncu o kulübe gider — dünyada dar transfer, dosyada “anlaştı” */
+function taKopma(k,m,anahtar,p){
+  const V=m.sablon.veri,id=V.hedef,o=id&&k.oyuncular[id];V.kapali=V.kapali.concat([V.satan]);
+  if(V.rakip&&o&&o.kulupId===V.satan&&k.kulupler[V.rakip]){dunyaTransferi(k,id,V.rakip);return taKayip(k,m,'rakibe','ta.rakibeGitti',{oyuncuId:id,kulupId:V.rakip});}
+  return taKayip(k,m,'kopma',anahtar||'ta.kopma',p||{kulupId:V.satan});
+}
 function taRakipKulup(k,m){
   const V=m.sablon.veri,biz=bizimKulup(k),tb=sezonTablosu(k),i=tb.findIndex(t=>t.id===biz);
   const L=tb.slice(0,Math.max(0,i)).map(t=>t.id).filter(id=>id!==V.satan&&!(V.kapali||[]).includes(id));

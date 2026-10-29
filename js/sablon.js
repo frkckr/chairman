@@ -158,7 +158,9 @@ function sablonDogrula(k,h){
     if(s.sonuc!==null&&(typeof s.sonuc!=='string'||!s.sonuc))h.push(`${ad}: sonuç geçersiz`);
     if(!Array.isArray(s.kivrim)||!s.kivrim.every(x=>typeof x==='string'))h.push(`${ad}: kıvrım listesi geçersiz`);
     const A=S.asamalar[s.asama];
-    if(A&&(A.tur==='son')!==(s.sonuc!==null))h.push(`${ad}: sonuç ile aşama tutmuyor (${s.asama}, ${s.sonuc})`);
+    /* 'dustu': son aşamaya varmadan işsiz kalıp kapanan dosya (js/mesele.js meseleDegerlendir; kararın soranı ayrıldı) */
+    if(s.sonuc==='dustu'){if(m.durum!=='kapandi')h.push(`${ad}: düşen dosya açık`);}
+    else if(A&&(A.tur==='son')!==(s.sonuc!==null))h.push(`${ad}: sonuç ile aşama tutmuyor (${s.asama}, ${s.sonuc})`);
     if(m.durum==='kapandi'&&s.sonuc===null)h.push(`${ad}: dosya kapanmış fakat sonucu yok`);
     for(const x of Object.values(k.isler||{}))if(x.veri&&x.veri.meseleId===m.id&&x.veri.adim!==undefined&&x.veri.adim!==s.adim)h.push(`${ad}: iş ${x.id} eski adımda (${x.veri.adim} ≠ ${s.adim})`);
   }

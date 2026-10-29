@@ -63,7 +63,9 @@ function meseleDegerlendir(k){
   for(const m of Object.values(k.meseleler||{})){
     if(m.durum==='kapandi')continue;
     const isler=meseleIsleri(k,m.id),durum=meseleTuretilenDurum(isler);
-    if(!durum){m.durum='kapandi';m.kapanis={tarih:k.tarih,dakika:k.gunIciDakika};meseleOlay(k,m.id,'kapandi');continue;}
+    if(!durum){m.durum='kapandi';m.kapanis={tarih:k.tarih,dakika:k.gunIciDakika};meseleOlay(k,m.id,'kapandi');
+      if(m.sablon&&m.sablon.sonuc===null)m.sablon.sonuc='dustu';   /* R4: şablonlu dosya son aşamaya varmadan işsiz kaldı (kararın soranı ayrıldı) */
+      continue;}
     m.durum=durum;
     if(durum==='kararBekliyor')m.sorumluId=k.baskanId;
     else if(durum==='ekipte')m.sorumluId=isler.find(x=>x.tur==='ekip').veri.kisiId;
