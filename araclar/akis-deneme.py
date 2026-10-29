@@ -2950,6 +2950,58 @@ async def bolum_28(tarayici, site, tum_hatalar):
     await baglam.close()
 
 
+ANA_JS = "() => localStorage.getItem('chairman:oyun-1')"
+
+
+async def ayar_kayit_ac(pg):
+    await masaya_don(pg)
+    await pg.click('.od-nesne[data-panel="ayar"]')
+    await pg.click('[data-eylem="ayarBolum"][data-bolum="kayit"]')
+
+
+async def bolum_29(tarayici, site, tum_hatalar):
+    """R1-b (2026-10-29): Ayarlar › Kayıt'ta kaydı dışa aktarma (dosya ana kayıt metninin kendisi) ve kayıt dosyası yükleme (önce doğrulama ve onay,
+    sonra yazım; şimdiki kayıt .ice-oncesi'nde; oyun dosyadaki kariyerle yeniden açılır); bozuk dosya reddedilir, kayıt değişmez."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await ayar_kayit_ac(pg)
+    async with pg.expect_download() as bilgi:
+        await pg.click('[data-eylem="kayitDisa"]')
+    indirilen = await bilgi.value
+    metin = pathlib.Path(await indirilen.path()).read_text(encoding="utf-8")
+    ana = await pg.evaluate(ANA_JS)
+    denetle("R1-b: dışa aktarılan dosya kaydın kendisi (ana metinle birebir); ad kulübü ve oyun anını taşır",
+            metin == ana and indirilen.suggested_filename == "chairman-demirkapi-2026-11-23-0800.json", indirilen.suggested_filename)
+    ornek = ARAC / "ornekler" / "kayit-s10-hafta14.json"
+    veri = json.loads(ornek.read_text(encoding="utf-8"))["veri"]
+    async with pg.expect_file_chooser() as secici:
+        await pg.click('[data-eylem="kayitIce"]')
+    await (await secici.value).set_files(str(ornek))
+    await yokla(pg, "() => !!document.querySelector('.od-iceOnay')", 10)
+    onay = await pg.evaluate("() => { const o = document.querySelector('.od-iceOnay'); return o ? o.innerText : ''; }")
+    denetle("R1-b: seçilen dosya önce doğrulanır; onay dosyadaki ve şimdiki kariyeri yan yana gösterir, eski sürümü söyler; kayıt henüz değişmedi",
+            "Dosyadaki kariyer" in onay and "Şimdiki kariyer" in onay and "10→11" in onay and await pg.evaluate(ANA_JS) == ana, onay[:200])
+    await pg.screenshot(path=str(ARAC / "son-akis-29-ice.png"))
+    async with pg.expect_navigation(wait_until="commit", timeout=30000):
+        await pg.click('[data-eylem="kayitIceYukle"]')
+    await yokla(pg, ODA_HAZIR_JS)
+    s = await pg.evaluate("() => ({ an: OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika, surum: OYUN.kariyer.kayitSurumu, guncel: KARIYER_SURUM,"
+                          " yedek: localStorage.getItem('chairman:oyun-1.ice-oncesi'), bozuk: !!document.querySelector('.od-bozuk') })")
+    denetle("R1-b: “Yükle”den sonra oda dosyadaki kariyerle açılır (sürüm güncel); önceki kayıt yedekte",
+            s["an"] == f"{veri['tarih']} {veri['gunIciDakika']}" and s["surum"] == s["guncel"] and s["yedek"] == ana and not s["bozuk"], f"{s['an']} · sürüm {s['surum']}")
+    ana2 = await pg.evaluate(ANA_JS)
+    bozuk = site.parent / "bozuk-kayit.json"
+    bozuk.write_text('{"oyun":"chairman","bicim":1,"saglama":"00000000","ozet":{},"veri":{"kayitSurumu":11}}', encoding="utf-8")
+    await ayar_kayit_ac(pg)
+    async with pg.expect_file_chooser() as secici:
+        await pg.click('[data-eylem="kayitIce"]')
+    await (await secici.value).set_files(str(bozuk))
+    await yokla(pg, "() => document.body.innerText.includes('Kayıt dosyası açılamadı')", 10)
+    r = await pg.evaluate("() => ({ onay: !!document.querySelector('.od-iceOnay'), metin: document.body.innerText.includes('sağlama tutmuyor') })")
+    denetle("R1-b: bozuk dosya reddedilir, nedeni yazılır; onay açılmaz, kayıt değişmez", not r["onay"] and r["metin"] and await pg.evaluate(ANA_JS) == ana2, str(r))
+    await pg.context.close()
+
+
 async def ana():
     try:
         from playwright.async_api import async_playwright
@@ -3027,6 +3079,9 @@ async def ana():
         if sec("28"):
             print("\n28. İki pencere: kayıt çakışması (R1-a)")
             await bolum_28(tarayici, site, tum_hatalar)
+        if sec("29"):
+            print("\n29. Kaydı dışa ve içe aktarma (R1-b)")
+            await bolum_29(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

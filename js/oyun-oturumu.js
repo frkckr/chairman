@@ -77,6 +77,16 @@ function oyunBaslat(){
   }else if(y.bos)oyunYeniKariyer();
   else OYUN.bozukHata=y.hata;
 }
+/* R1-b: dışa aktarılacak metin ve dosya adı (ana yuvanın metni; kaydedilmemiş değişiklik varsa önce kaydedilir). Kayıt yoksa null */
+function oyunKayitDisa(){
+  const o=OYUN.oturum;if(o&&o.durum.bekleyen&&!o.durum.cakisma)o.kaydet();
+  let metin=null;try{metin=OYUN_DEPO.oku(OYUN_YUVA);}catch(e){metin=null;}
+  if(!metin)return null;
+  const k=OYUN.kariyer,biz=(k&&(k.kisiler[k.baskanId]||{}).kulupId)||'kariyer',z=kayitOzeti(metin)||{tarih:k.tarih,dakika:k.gunIciDakika};
+  return{metin,ad:`chairman-${biz}-${z.tarih}-${saatYazi(z.dakika).replace(':','')}.json`};
+}
+/* R1-b: dosyadaki kariyeri yükler (şimdiki kayıt .ice-oncesi'ye saklanır); çağıran sayfayı kayıttan yeniden açar */
+const oyunKayitIce=metin=>kayitIceAktar(OYUN_DEPO,OYUN_YUVA,metin);
 /* bozuk kayıt: üzerine yazmadan önce kopyasını saklar */
 function oyunBozuguSakla(){
   for(const ad of [OYUN_YUVA,OYUN_YUVA+'.yeni',OYUN_YUVA+'.onceki']){const m=OYUN_DEPO.oku(ad);if(m!==null)OYUN_DEPO.yaz(ad+'.bozuk',m);}

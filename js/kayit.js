@@ -152,6 +152,27 @@ function kariyerKaydet(depo,yuva,k,saglamMetin,beklenen){
   return{tamam:true,metin};
 }
 
+/* R1-b (2026-10-29) kaydı dışa ve içe aktarma. Dışa aktarılan dosya yuvanın ana metnidir (kayıt zarfı, sağlamalı; ayrı biçim yok).
+   kayitIceOnizle(metin) → {tamam:true, kariyer, gecisler, ozet:{tarih,dakika,baskan,kulup}} | {tamam:false, hata}; depoya dokunmaz. Dosya yalnız
+     JSON olarak çözülür (kayitCoz: sağlama, biçim, sürüm, eski sürüm geçişi, kariyerDogrula); en çok KAYIT_ICE_AZAMI karakter.
+   kayitIceAktar(depo, yuva, metin) → önce önizleme; geçerliyse şimdiki ana kayıt yuva+'.ice-oncesi'ye saklanır, dosyanın kariyeri kariyerKaydet ile
+     yazılır (eski sürüm bugünkü sürüme geçmiş olarak). Karşılaştırma bilinçli olarak atlanır: oyuncunun açık seçimidir; öbür pencere storage
+     olayıyla çakışma örtüsüne düşer. Geçersiz dosyada depo değişmez. */
+const KAYIT_ICE_AZAMI=20*1024*1024;
+function kayitIceOnizle(metin){
+  if(typeof metin!=='string'||!metin)return{tamam:false,hata:'Dosya boş'};
+  if(metin.length>KAYIT_ICE_AZAMI)return{tamam:false,hata:'Dosya çok büyük (en çok 20 MB)'};
+  const s=kayitCoz(metin);if(!s.tamam)return{tamam:false,hata:s.hata};
+  const k=s.kariyer,b=k.kisiler[k.baskanId]||{},c=k.kulupler[b.kulupId]||{};
+  return{tamam:true,kariyer:k,gecisler:s.gecisler,ozet:{tarih:k.tarih,dakika:k.gunIciDakika,baskan:b.ad||null,kulup:c.ad||null}};
+}
+function kayitIceAktar(depo,yuva,metin){
+  const o=kayitIceOnizle(metin);if(!o.tamam)return o;
+  try{const eski=depo.oku(yuva);if(eski!==null)yazVeDogrula(depo,yuva+'.ice-oncesi',eski);}catch(e){return{tamam:false,hata:'Şimdiki kayıt saklanamadı: '+e.message};}
+  const s=kariyerKaydet(depo,yuva,o.kariyer);
+  return s.tamam?{tamam:true,ozet:o.ozet,gecisler:o.gecisler}:{tamam:false,hata:s.hata};
+}
+
 /* yuvadaki kariyeri yükler: {tamam:true, kariyer, kaynak:'ana'|'yeni'|'onceki', uyarilar, gecisler}
    ya da {tamam:false, bos, hata}. bos: yuvada hiç kayıt yok */
 function kariyerYukle(depo,yuva){

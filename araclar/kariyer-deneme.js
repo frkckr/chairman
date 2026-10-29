@@ -1705,6 +1705,30 @@ bolum('1.6 — iki oturum: karşılaştırarak yazma, kayıt çakışması (R1-a
   denetle('Eski çağrı biçimi (beklenen verilmeden kariyerKaydet) karşılaştırmaz',kariyerKaydet(d3,'oyun-1',P.kariyer).tamam);
 }
 
+bolum('1.7 — kaydı dışa ve içe aktarma (R1-b; oyunun yüklediği dosyalar)');
+{
+  const T=oyunAl,Onizle=T('kayitIceOnizle'),Aktar=T('kayitIceAktar'),Depo=T('bellekDeposu'),Yukle=T('kariyerYukle'),Oturum=T('kayitOturumu'),Kur=T('kariyerBaslat'),Sag=T('saglamaHesapla');
+  const kaydedilmis=(tohum,yuva)=>{const d=Depo();Oturum(d,yuva||'oyun-1',Kur({tohum})).kaydet();return d;};
+  const d=kaydedilmis(11),ana=d.oku('oyun-1'),dosya=kaydedilmis(12,'x').oku('x'),c12=Yukle(kaydedilmis(12,'x'),'x').kariyer;
+  const on=Onizle(dosya);
+  denetle('Önizleme dosyanın kariyerini söyler, depoya dokunmaz',on.tamam&&on.ozet.tarih===c12.tarih&&!!on.ozet.kulup&&!!on.ozet.baskan&&d.oku('oyun-1')===ana&&d.oku('oyun-1.ice-oncesi')===null,JSON.stringify(on.ozet));
+  const s=Aktar(d,'oyun-1',dosya),y=Yukle(d,'oyun-1');
+  denetle('Geçerli dosya yazılır; şimdiki ana kayıt .ice-oncesi\'nde saklanır',s.tamam&&y.tamam&&y.kaynak==='ana'&&metin(y.kariyer)===metin(c12)&&d.oku('oyun-1.ice-oncesi')===ana);
+  const zarf=(degistir)=>{const z=JSON.parse(dosya);degistir(z);z.saglama=Sag(JSON.stringify(z.veri));return JSON.stringify(z);};
+  const d2=kaydedilmis(11),ana2=d2.oku('oyun-1'),adlar2=d2.adlar().sort().join();
+  const red=[['bozuk JSON','{bozuk'],['bozuk sağlama',dosya.replace(/"saglama":"[0-9a-f]+"/,'"saglama":"00000000"')],['başka oyun',zarf(z=>{z.oyun='baska';})],
+    ['yeni sürüm',zarf(z=>{z.veri.kayitSurumu=99;})],['tutarsız kariyer',zarf(z=>{const c=Object.values(z.veri.kulupler).find(x=>x.nakit!==undefined);c.nakit=1.5;})],
+    ['20 MB üstü',' '.repeat(20*1024*1024+1)],['boş','']].map(([ad,m])=>[ad,Aktar(d2,'oyun-1',m)]);
+  denetle('Geçersiz dosyalar reddedilir, nedeni yazılır, depo değişmez',red.every(([,r])=>!r.tamam&&!!r.hata)&&d2.oku('oyun-1')===ana2&&d2.adlar().sort().join()===adlar2,
+    red.map(([a,r])=>a+': '+(r.hata||'KABUL EDİLDİ').slice(0,60)).join(' · '));
+  const s10=fs.readFileSync(path.join(KOK,'araclar','ornekler','kayit-s10-hafta14.json'),'utf8'),d3=Depo(),r10=Aktar(d3,'oyun-1',s10),y10=Yukle(d3,'oyun-1');
+  denetle('Sürüm 10 dosyası geçişle yüklenir, kayıt bugünkü sürümle yazılır',r10.tamam&&r10.gecisler.join()==='10→11'&&y10.tamam&&y10.kariyer.kayitSurumu===T('KARIYER_SURUM')&&!y10.gecisler.length&&d3.oku('oyun-1.ice-oncesi')===null,
+    r10.hata||(r10.gecisler||[]).join());
+  const d4=kaydedilmis(11),A=Oturum(d4,'oyun-1',Yukle(d4,'oyun-1').kariyer,true);Aktar(d4,'oyun-1',dosya);
+  let h=null;try{A.uygula(x=>T('duragaIlerle')(x));}catch(e){h=e;}
+  denetle('İçe aktarmadan sonra eski pencerenin oturumu çakışmaya düşer, yazmaz',!!h&&h.cakisma===true&&Yukle(d4,'oyun-1').kariyer.dunyaTohumu===c12.dunyaTohumu);
+}
+
 bolum('1.8 — katı kip: dondurulmuş veriye yazım sessizce yutulmaz (R1-e)');
 {
   /* kural dosyalarının üst düzey işlevleri çalışma anında katı mı: katı işlevin caller alanına erişmek TypeError'dır, gevşek işlevde null döner */

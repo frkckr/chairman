@@ -44,6 +44,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* onizleler: karar kartında önizlenen yön, karar başına ('sol'|'sag'|null; H1, tek kart). Yalnız görünümdür; yeniden çizimde, panel ve konuşma
      değişince korunur (aynı karar telefonda ve dosyada aynı yüzle görünür). onay yalnız Katıl / Stada git / İlerle'nin onay adımıdır (karar değil) */
   let k=oyun.kariyer,acik=null,secili=null,seciliMesele=null,onay=null,mesaj=oyun.ilkMesaj||'',yeniOnay=false,onizleler={},yeniIsaret=new Set();
+  let iceOnay=null;   /* R1-b: seçilen kayıt dosyası onay bekliyor: {metin, ozet, gecisler} */
   /* U3 göz atma: odaktaki işi bırakmadan yanında okunan ikinci kâğıt ({tur:'gun'|'kasa'|'oyuncu', tarih, dakika, sure, oyuncu, isId} ya da null).
      Kartın bağlam satırındaki bağlantıyla açılır (js/ekran-kart.js), içinde eylem yoktur (inert); Esc ve ‹ Geri önce onu kapatır, iş yerinde kalır */
   let goz=null;
@@ -285,6 +286,35 @@ function odaEkraniKur(kap,oyun,ayarlar){
 
   /* ---- ayarlar: Okuma, Maç, Kayıt, Geliştirici (2.8J: sakin hareket bütün oyunun standardıdır; hareket ayarı yoktur). U1 (2026-10-12): Maç —
      izleme hızı (maçtaki üst şeritle aynı seçim) ve önemli anlarda normal hız ---- */
+  /* R1-b: kaydı dışa ve içe aktarma (Ayarlar › Kayıt). Dosya seçici panelde gizli durur; seçilen dosya önce doğrulanır, onaydan sonra yazılır */
+  const tasimaAnYazi=z=>z&&z.tarih?gunAyYazi(z.tarih)+' '+saatYazi(z.dakika|0):'—';
+  function kayitTasimaHtml(){
+    const b=k.kisiler[k.baskanId]||{},c=k.kulupler[b.kulupId]||{};
+    let ic='<div class="od-ayarSatir"><span>Kaydı taşı</span><span class="od-dugmeler"><button type="button" data-eylem="kayitDisa">Kaydı dışa aktar</button>'+
+      '<button type="button" data-eylem="kayitIce">Kayıt dosyası yükle…</button></span></div>'+
+      '<input type="file" class="od-iceDosya" accept=".json,application/json" hidden tabindex="-1" aria-hidden="true">';
+    if(iceOnay){const z=iceOnay.ozet;
+      ic+='<div class="od-iceOnay" role="group" aria-label="Kayıt dosyasını yükle">'+
+        '<p>Dosyadaki kariyer: <b>'+yaz((z.kulup||'—')+' · '+(z.baskan||'—'))+'</b>, '+yaz(tasimaAnYazi(z))+(iceOnay.gecisler.length?' (eski sürüm: '+yaz(iceOnay.gecisler.join(', '))+')':'')+'</p>'+
+        '<p>Şimdiki kariyer: '+yaz((c.ad||'—')+' · '+(b.ad||'—'))+', '+yaz(tasimaAnYazi({tarih:k.tarih,dakika:k.gunIciDakika}))+'</p>'+
+        '<p class="od-not">Yüklenince şimdiki kayıt yedek olarak saklanır ve oyun dosyadaki kariyerle yeniden açılır.</p>'+
+        '<span class="od-dugmeler"><button type="button" class="od-tehlike" data-eylem="kayitIceYukle">Yükle</button><button type="button" data-eylem="kayitIceVazgec">Vazgeç</button></span></div>';}
+    return ic+'<p class="od-not">Dışa aktarılan dosya kaydın kendisidir; başka bir bilgisayarda ya da tarayıcıda “Kayıt dosyası yükle” ile açılır.</p>';
+  }
+  function kayitDisaAktar(){
+    const d=oyun.kayitDisa();if(!d){mesaj='Dışa aktarılacak kayıt yok.';return;}
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d.metin],{type:'application/json'}));a.download=d.ad;a.hidden=true;
+    document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
+    mesaj='Kayıt dosyası indirildi: '+d.ad;
+  }
+  async function kayitDosyasiSecildi(g){
+    const f=g.files&&g.files[0];g.value='';if(!f)return;
+    if(f.size>KAYIT_ICE_AZAMI){mesaj='Kayıt dosyası açılamadı: dosya çok büyük (en çok 20 MB).';iceOnay=null;ciz();return;}
+    let metin;try{metin=await f.text();}catch(e){mesaj='Kayıt dosyası okunamadı: '+e.message;ciz();return;}
+    const o=oyun.kayitIceOnizle(metin);
+    if(!o.tamam){mesaj='Kayıt dosyası açılamadı: '+o.hata;iceOnay=null;ciz();return;}
+    iceOnay={metin,ozet:o.ozet,gecisler:o.gecisler};mesaj='';ciz('[data-eylem="kayitIceVazgec"]');
+  }
   function ayarPaneli(){
     const B=[['okuma','Okuma'],['mac','Maç'],['kayit','Kayıt'],['gelistirici','Geliştirici']];
     if(!B.some(b=>b[0]===ayarBolum))ayarBolum='okuma';
@@ -300,7 +330,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
       '<p class="od-not">Oyun her tamamlanan karardan sonra kendiliğinden kaydeder. Maçın ortasından kayıt yoktur.</p>'+
       '<div class="od-dugmeler"><button type="button" data-eylem="kayitDene">Şimdi yeniden kaydet</button></div>'+
       '<div class="od-ayarSatir"><span>Yeni kariyer</span><span class="od-dugmeler">'+(yeniOnay?'<button type="button" class="od-tehlike" data-eylem="yeniEvet">Evet, bu kariyeri bırak ve yenisini başlat</button><button type="button" data-eylem="yeniHayir">Vazgeç</button>'
-        :'<button type="button" data-eylem="yeniSor">Yeni kariyer…</button>')+'</span></div>';
+        :'<button type="button" data-eylem="yeniSor">Yeni kariyer…</button>')+'</span></div>'+
+      (oyun.kayitDisa?kayitTasimaHtml():'');
     else ic+='<p class="od-not">Geliştirme aşamasının araçları; yayından önce kaldırılacak.</p>'+
       '<div class="od-ayarSatir"><span>Test bilgileri</span>'+ac('test',!!ayarlar.test)+'</div>'+
       '<div class="od-ayarSatir"><span>Maçta loca bakışı (TEST)</span>'+ac('locaBakisi',!!ayarlar.locaBakisi)+'</div>'+
@@ -562,7 +593,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   function kadroDon(){const o=seciliOyuncu;seciliOyuncu=null;ciz(o?'[data-eylem="oyuncuAc"][data-oyuncu="'+o+'"]':'[data-eylem="kadroSekme"]');
     const g=kap.querySelector('.dsy-genis');if(g){g.scrollTop=kadroYeri;gorunurYap(g,o&&g.querySelector('[data-oyuncu="'+o+'"]'));}}
   /* U1: Kapat × ve perde işi masaya bırakır (karar paneli de; ajandaya dönüş başlıktaki ‹ Ajanda ve Esc'tir). Odak masadaki nesneye döner */
-  function kapat(){acik=null;onay=null;yeniOnay=false;kararIs=null;goz=null;ciz('.od-ana');}
+  function kapat(){acik=null;onay=null;yeniOnay=false;iceOnay=null;kararIs=null;goz=null;ciz('.od-ana');}
   /* U1 tek geri zinciri: işin iç geri adımı, sonra kaynağı (dosyayı açan konuşma ya da defter; karar panelinin defteri; kadronun ayarları).
      Başlıktaki ‹ Geri bunun etiketini taşır; Esc önce onay adımını bırakır, sonra bu adımı atar, adım yoksa masaya bırakır. Telefonun geri düğmesi
      cihazın içindedir (aynı zincir) */
@@ -579,7 +610,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(acik==='kadro')return{etiket:'Ayarlar',f:()=>{ayarBolum='gelistirici';panelAc('ayar');}};
     return null;
   }
-  function odakEsc(){if(onay||yeniOnay){onay=null;yeniOnay=false;ciz();return;}const h=odakGeriHedef();if(h)h.f();else kapat();}
+  function odakEsc(){if(onay||yeniOnay||iceOnay){onay=null;yeniOnay=false;iceOnay=null;ciz();return;}const h=odakGeriHedef();if(h)h.f();else kapat();}
   /* balkon ↔ oda: yürüyüş yalnız sunumdur; odaya dönerken açık gözlem kapanır */
   function yerDegistir(){
     if(!balkonVar||ODA.yer==='yolda')return;
@@ -745,7 +776,12 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='hafta'){ajandaHafta=Math.max(0,Math.min(2,Number(b.dataset.hafta)));ajandaGun=ajandaHafta?tarihEkle(k.tarih,7*ajandaHafta-((new Date(k.tarih+'T00:00:00Z').getUTCDay()+6)%7)):k.tarih;
       secili=null;onay=null;ciz('[data-eylem="hafta"][data-hafta="'+(ajandaHafta+(Number(b.dataset.hafta)>=ajandaHafta?1:-1))+'"]');}
     else if(ey==='gazeteSayi'){gazeteGun=b.dataset.tarih;ciz(gazeteOdak(b.dataset.yon==='geri'));}   /* S-e: sayılar arasında (okuma) */
-    else if(ey==='ayarBolum'){ayarBolum=b.dataset.bolum;yeniOnay=false;ciz('[data-eylem="ayarBolum"][data-bolum="'+ayarBolum+'"]');}
+    else if(ey==='kayitDisa'){kayitDisaAktar();ciz('[data-eylem="kayitDisa"]');}
+    else if(ey==='kayitIce'){const g=kap.querySelector('.od-iceDosya');if(g)g.click();}
+    else if(ey==='kayitIceVazgec'){iceOnay=null;ciz('[data-eylem="kayitIce"]');}
+    else if(ey==='kayitIceYukle'){const s=iceOnay?oyun.kayitIce(iceOnay.metin):{tamam:false,hata:'dosya seçilmedi'};iceOnay=null;
+      if(s.tamam)location.href=location.pathname;else{mesaj='Kayıt yüklenemedi: '+s.hata;ciz();}}
+    else if(ey==='ayarBolum'){ayarBolum=b.dataset.bolum;yeniOnay=false;iceOnay=null;ciz('[data-eylem="ayarBolum"][data-bolum="'+ayarBolum+'"]');}
     else if(ey==='goruntu')goruntuKaydet();
     else if(ey==='kapat')kapat();
     else if(ey==='odakGeri'){const h=odakGeriHedef();if(h)h.f();}
@@ -779,6 +815,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='bozukYeni'){mesaj=oyun.bozuguSaklaVeBasla();k=oyun.kariyer;ciz('.od-ana');}
   });
   /* imleç odadaki nesnenin üzerindeyken çerçevesi yanar ve el imleci görünür */
+  kap.addEventListener('change',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('od-iceDosya'))kayitDosyasiSecildi(e.target);});
   kap.addEventListener('pointermove',e=>{
     if(e.target!==kap){if(ODA.uzerinde){odaIsaret(null);kap.style.cursor='';}return;}
     const r=kap.getBoundingClientRect(),ad=odaIsaret((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));
@@ -833,7 +870,7 @@ if(typeof ON_EKRAN!=='undefined'&&typeof OYUN!=='undefined'){
     oyunBaslat();
     const ekran=odaEkraniKur(kap,{
       get kariyer(){return OYUN.kariyer;},komut:oyunKomut,kayitYazi:oyunKayitYazi,kayitHata:oyunKayitHata,
-      kayitTamam:()=>OYUN.oturum.durum.tamam,kayitCakisma:()=>!!OYUN.oturum.durum.cakisma,yenidenKaydet:()=>OYUN.oturum.kaydet(),yeniKariyer:oyunYeniKariyer,
+      kayitTamam:()=>OYUN.oturum.durum.tamam,kayitCakisma:()=>!!OYUN.oturum.durum.cakisma,kayitDisa:oyunKayitDisa,kayitIceOnizle:kayitIceOnizle,kayitIce:oyunKayitIce,yenidenKaydet:()=>OYUN.oturum.kaydet(),yeniKariyer:oyunYeniKariyer,
       /* maç günü (F1-b, 2026-10-23): maç sınırı sayfa yeniden yüklemesidir. "Stada git" kaydedilmez; sayfa maçın kimliğiyle açılır, js/mac-gunu.js
          kayıtlı kariyerden maç gününü kurar ve bülten açılır (stat, seyirci ve maç o maça göre kurulur). Maç kimliği yoksa (eski davranış) bülten */
       /* H2-a (TEST "Maçı izleme"): {izle:false} ile adres ?ekran=mac&izle=0&mac=<kimlik> — bülten açılmaz, maç perdenin arkasında hesaplanır.

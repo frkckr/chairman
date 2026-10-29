@@ -41,7 +41,7 @@ R1-d (2026-10-29) ile açıldı. Tutmayan her kabul satırının ve ertelenen he
 | No | Konu | Tür | Durum | İlk | Son değer (tur) | Gerekçe ve kapanış koşulu | Eşleşme |
 |---|---|---|---|---|---|---|---|
 | B30 | `sezon-deneme`'nin maçı tarayıcıdakiyle birebir değil: stat alanları Node'da yok, santra anı farklı (Node ilk adımda, tarayıcı maç öncesi sonunda); öbür maçlar stat alanı olmadan oynar (zemin kuru, atmosfer yok) | ertelenen iş | açık | F3, F7 | — | Ortak, çizimden bağımsız maç girdisi sözleşmesi (kullanıcının inceleme raporu, madde 7). Motor tabanını değiştirir; tek sezon hedefinden sonra | — |
-| B31 | Electron'da Web Worker denenmedi | ertelenen iş | açık | G1 | — | Masaüstü denemesinde | — |
+| B31 | Electron'da denenmeyenler: Web Worker (G1); kaydı dışa aktarmada indirme ve dosya seçici (R1-b; tarayıcıda denendi, akış 29) | ertelenen iş | açık | G1, R1 | — | Masaüstü denemesinde (`node masaustu/deneme.js`; bu makinede `masaustu/node_modules` yok, Electron indirilmesi kullanıcı onayıyla). İndirme kaydetme penceresi açmazsa `ana.js`'e tek IPC köprüsü | — |
 | B32 | “Maçı bitir” işçiler bitmeden basılırsa sonuç ana iplikte ~17 sn; `file://` açılışında önden hesap yok (dosyadan ~10–12 sn, Odaya dön ~40–45 sn) | kabul edilmiş borç | açık | H2-a | ~17 sn | Seçenek: bülten ve maç öncesi boyunca dilimli ikiz | — |
 | B33 | Hızlı bitirme sekiz maçla ~8 kat uzun | kabul edilmiş borç | açık | F7 | ~8× | İşçili yolda görünmez | — |
 
