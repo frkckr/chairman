@@ -1,6 +1,6 @@
 # R6 — Zincirler (ilk dilim): maaşın gizli yetenekten kopması, rakiplerin gündemi gazetede, ikinci teklif, sponsor zinciri (uygulama planı)
 
-Durum: **oto modda planlandı ve uygulanıyor (kullanıcı, 2026-10-29 gece: “… sonra r6 planla, sonra uygula, main'e al, push yap; sabaha kadar oto modda sırasıyla kendin yap”).** Kullanıcı uyurken verilen toplu izin R6'nın planını ve uygulamasını kapsar; plan turun başında yazılır (karar 12), sabah incelemeye açıktır. Uygulama Opus 5.5, masaüstü. Dal `claude/r6-zincirler` (taban R5'in `main`'e alındığı commit), etiket `tur/r6-zincirler`.
+Durum: **uygulandı ve kapandı (2026-10-30, `tur/r6-zincirler`); oto modda planlandı ve uygulandı (kullanıcı, 2026-10-29 gece: “… sonra r6 planla, sonra uygula, main'e al, push yap; sabaha kadar oto modda sırasıyla kendin yap”).** Kullanıcı uyurken verilen toplu izin R6'nın planını ve uygulamasını kapsar; plan turun başında yazılır (karar 12), sabah incelemeye açıktır. Uygulama Opus 5.5, masaüstü. Dal `claude/r6-zincirler` (taban R5'in `main`'e alındığı commit), etiket `tur/r6-zincirler`.
 
 Kaynaklar: R programı (YOL_HARITASI karar 56): “R6 — sözleşme, kriz, kurumsal (sponsor) zincirleri; Y1'in kalanı (kişi modeli, personel slotu); maaşın gizli kabiliyetten kopması; rakip gündemi gazetede; aralarda oynama”; R4'ün “Yapılmayacaklar”ı (satış şablonu, söylenti kanalı, taksit ve pay R6'ya); R1 borç listesi (“maaşın gizli kabiliyetten türemesi (R6)”); [OYUN_TASARIMI §1](../../OYUN_TASARIMI.md#başkanlık-deneyiminin-temel-ilkeleri) (gündelik doku gerçek veriden okuyan sistemlerden; başarı büyümeye açılır).
 
@@ -67,4 +67,12 @@ R6'nın program satırı bir gecelik tura sığmaz: kişi modeli ve personel slo
 
 ## Sapmalar
 
-(boş — uygulama sırasında doldurulur)
+1. **Algı sapması ±8** (planın ilk taslağı ±10): yaştan arınmış sıra korelasyonu ±6'da 0,82, ±8'de 0,75, ±10'da 0,68 (üç tohum); hedef aralığın ortası seçildi.
+2. **Gazetede dünya transferi** düşük önemlidir; o gün başka haber yoksa manşet olur (planda “manşet olmaz” yazıyordu; sakin günde tek haberin manşet olması gazetenin genel kuralı).
+3. **Söylenti metni satan kulübü olaydan okur** (`ta.rakip` olayı artık `satan` taşır): dosya alternatif adaya geçse de eski sayı aynı kurulur.
+4. **Sponsor ödemeleri dosyaya bağlanmaz:** bağlı ödemeler dosyayı aylarca “haber bekliyor” gösteriyordu; dosya imzayla kapanır, ödemeler kasada ve mali raporda.
+5. **Sponsor tutarları** ilk taslaktan büyütüldü (aylık 15–35 bin ₺ → 50–120 bin ₺; üst yarıda ×1,3): bilet gelirinin yanında hissedilsin (TEST).
+6. **İkinci teklif akışta değil** kariyer denemesinde denetlenir (ocak teklifine ekranda ulaşmak uzun; kural ve kartın biçimi aynı tek kart).
+7. **Akış §35** zamanı oyunun komut yoluyla ilerletir (`zamanIlerlet`), kartları ekranda klavyeyle cevaplar.
+
+**Denetim sonuçları:** `kariyer-deneme` (R6 bölümü) geçti; `akis-deneme` tamamı geçti (yalnız bilinen B40; §35 yeni); `okunurluk.py` bütün sahneler eşikte (sponsor pazarlık kartı yeni); `kontrol.py` geçti; sezon tabanları yeni: `sezon-r6-t3` (18 haftanın farkı yalnız kasa — maaş; maç sonuçları birebir; belirlenimci) ve `sezon-r6-t7` (kasa 14. haftadan, maçlar 20. haftaya dek aynı; transfer ve sponsor zincirleri imzayla bitti). Motor ve 2D dosyası değişmedi: oturum-sonu, hız ve akis-2d R4 kapısındaki kodla aynı.
