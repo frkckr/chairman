@@ -80,7 +80,9 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorAc:null,skorSekme:'ma
     if(f){const a=g.getBoundingClientRect(),b=f.getBoundingClientRect();if(b.top<a.top)g.scrollTop-=a.top-b.top;else if(b.bottom>a.bottom)g.scrollTop+=b.bottom-a.bottom;}};
   btn.onclick=()=>MAC_TELEFON.acik?kapat():ac();
   /* gezinti yalnız görünüm durumunu değiştirir; cevap, girişim ve dosya bağlantıları maçta çizilmez. H1 (tek kart): kart kilitlidir (kapali →
-     aria-disabled, nedeni yüzde); sürüklenmez, uygulanmaz. Kenar etiketi yalnız okumak için o cevabın yüzünü açar (aynı kenar kapatır) */
+     aria-disabled, nedeni yüzde); uygulanmaz. R2 eki: cevaplar gizli, kenar etiketi yok; kart yalnız okumak için kaydırılır ya da ←/→ ile önizlenir
+     (ortak bileşen; kilitli kart eşikte de uygulanmaz, yerine yaylanır) */
+  if(typeof kartEtkilesimKur==='function')kartEtkilesimKur(E,{kilitli:()=>true,onizle:(id,y)=>{const O=MAC_TELEFON.onizleler;if(y)O[id]=y;else delete O[id];}});
   E.addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b||b.disabled)return;
     if(b.dataset.mt==='kapat'){kapat();return;}

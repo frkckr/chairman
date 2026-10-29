@@ -12,7 +12,7 @@
      personelKisisi(k, rol)   teknikDirektor → kulübün hocası; öbür roller → başkanın kulübünün o roldeki aktif kişisi; yoksa null
      YAZISMA_KONULARI[konu] = {ad, roller, aralik (gün), aciklama, uygun?(k, kişi) → true | engel metni | false, veri?(k) → soru verisi,
                          goruntu?(k, veri) → cevap anının sayıları (kayda girer), cevapla?(k, iş) → cevaba ek alanlar, metin:{[rol]: (k, yazışma) → metin}}
-     yazismaKonusuEkle(konu, tanım)   konuyu kaydeder, her rol için GIRISIMLER['yaz.<rol>.<konu>'] kurar (js/mali-rapor.js 'kasa'yı ekler)
+     yazismaKonusuEkle(konu, tanım)   (R2 eki: isteğe bağlı tanım.kategori — telefonun konu menüsündeki başlık: mac, takim, gorusme, kasa) konuyu kaydeder, her rol için GIRISIMLER['yaz.<rol>.<konu>'] kurar (js/mali-rapor.js 'kasa'yı ekler)
      yazismaSor(k, rol, konu)  → {bilgi, kayit:{kisiId, konu, isId, macId?}}: cevap gizli gelişme olarak takvime (GELISMELER.yazismaCevap; veri.durak:
                          İlerle cevap anında durur — js/ajanda.js ilerleOnizle 'haber')
      yazismaGoruldu(k, kisiId)  kişinin konuşması açıldı: kisi.okunan = şimdiki an (yeni mesaj işareti; js/ekran-oda.js konusmaAc)
@@ -57,7 +57,7 @@ const yazismaSoruldu=(k,id,konu,macId)=>k.gecmis.some(g=>g.tur==='girisim'&&g.ki
 
 function yazismaKonusuEkle(konu,tanim){
   YAZISMA_KONULARI[konu]=tanim;
-  for(const rol of tanim.roller)GIRISIMLER[`yaz.${rol}.${konu}`]={ad:tanim.ad,aciklama:()=>tanim.aciklama,aralik:tanim.aralik,
+  for(const rol of tanim.roller)GIRISIMLER[`yaz.${rol}.${konu}`]={ad:tanim.ad,aciklama:()=>tanim.aciklama,aralik:tanim.aralik,kategori:tanim.kategori||null,
     kisi:k=>{const p=personelKisisi(k,rol);return p?p.id:null;},argumanli:!!tanim.argumanli,
     uygun:k=>{
       const p=personelKisisi(k,rol);if(!p)return false;
@@ -181,17 +181,17 @@ const YAZISMA_METIN={
 };
 
 /* ---- bu turun konuları (H2-c). 'kasa' js/mali-rapor.js'te (H2-d) ---- */
-yazismaKonusuEkle('mac',{ad:'Maçı nasıl gördün?',roller:['teknikDirektor','yardimciAntrenor'],aralik:0,aciklama:'Son maçı sorarsın; cevap birkaç saat içinde gelir.',
+yazismaKonusuEkle('mac',{kategori:'mac',ad:'Maçı nasıl gördün?',roller:['teknikDirektor','yardimciAntrenor'],aralik:0,aciklama:'Son maçı sorarsın; cevap birkaç saat içinde gelir.',
   /* oynanmış son maç yoksa, hoca o maçı yönetmediyse ya da bu kişiye bu maç sorulduysa listede yok */
   uygun:(k,p)=>{const son=kulubunSonMaci(k,bizimKulup(k));if(!son)return false;
     if(p.rol==='teknikDirektor'){const t=son.f.konuk===bizimKulup(k)?1:0;if(!son.s.hocalar||son.s.hocalar[t]!==p.id)return false;}
     return yazismaSoruldu(k,p.id,'mac',son.f.id)?false:true;},
   veri:k=>({macId:kulubunSonMaci(k,bizimKulup(k)).f.id}),
   metin:{teknikDirektor:(k,y)=>{const Y=macYorumu(k,y.macId);return Y?Y.metin:'Maçı konuşalım başkanım.';},yardimciAntrenor:(k,y)=>YAZISMA_METIN.yardimciMac(k,y.macId)}});
-yazismaKonusuEkle('takim',{ad:'Takım ne durumda?',roller:['teknikDirektor','yardimciAntrenor'],aralik:1,aciklama:'Kadronun durumunu sorarsın; günde bir kez.',
+yazismaKonusuEkle('takim',{kategori:'takim',ad:'Takım ne durumda?',roller:['teknikDirektor','yardimciAntrenor'],aralik:1,aciklama:'Kadronun durumunu sorarsın; günde bir kez.',
   goruntu:k=>takimGoruntusu(k),
   metin:{teknikDirektor:(k,y)=>YAZISMA_METIN.hocaTakim(k,y.p),yardimciAntrenor:(k,y)=>YAZISMA_METIN.yardimciTakim(k,y.p)}});
-yazismaKonusuEkle('gorusme',{ad:'Görüşelim',roller:['teknikDirektor','yardimciAntrenor'],aralik:0,aciklama:'Yüz yüze görüşme istersin; gün ve saat önerir.',
+yazismaKonusuEkle('gorusme',{kategori:'gorusme',ad:'Görüşelim',roller:['teknikDirektor','yardimciAntrenor'],aralik:0,aciklama:'Yüz yüze görüşme istersin; gün ve saat önerir.',
   /* cevap bir saat önerisidir: yer varsa telefonda tek kart (gorusmeOnerisi), yoksa ya da üçüncü retten sonra yalnız mesaj */
   cevapla:(k,is)=>{const v=is.veri,G=YAZISMA_TEST.gorusme,deneme=v.deneme|0;
     if(deneme>=G.enCokOneri)return{oneri:null,deneme};
@@ -204,7 +204,7 @@ yazismaKonusuEkle('gorusme',{ad:'Görüşelim',roller:['teknikDirektor','yardimc
   metin:{teknikDirektor:(k,y)=>YAZISMA_METIN.gorusme(k,y),yardimciAntrenor:(k,y)=>YAZISMA_METIN.gorusme(k,y)}});
 
 /* R2-e: oyuncu hakkında soru (karar 60: sakin günde merak bilgi verir). Argüman başkanın kulübünün oyuncusu; cevap anının görüntüsü kayda girer */
-yazismaKonusuEkle('oyuncu',{ad:'Oyuncu hakkında sor',roller:['teknikDirektor','yardimciAntrenor'],aralik:0,argumanli:true,
+yazismaKonusuEkle('oyuncu',{kategori:'takim',ad:'Oyuncu hakkında sor',roller:['teknikDirektor','yardimciAntrenor'],aralik:0,argumanli:true,
   aciklama:'Bir oyuncuyu sorarsın; cevap birkaç saat içinde gelir ve oyuncunun dosyasına not düşer.',
   arg:(k,id)=>{const p=k.oyuncular[id];return!p?`oyuncu bulunamadı (${id})`:p.kulupId!==bizimKulup(k)?`${p.ad} kulübün oyuncusu değil`:null;},
   veri:(k,id)=>({oyuncuId:id}),

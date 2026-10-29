@@ -90,5 +90,5 @@ function raporGoruldu(k,i){const h=(k.haberler||[])[i];if(h&&h.tur==='rapor')h.g
 
 /* telefon: müdüre “Kasa ne durumda?” (günde bir; cevap anındaki sayılar kayda girer, dosyaya ayrı rapor bırakmaz) */
 const kasaCevapMetni=(k,p)=>`Kasada ${paraYazi(p.nakit)}. 90 gün içinde en düşük ${paraYazi(p.enDusuk)} (${gunAyYazi(p.enDusukTarih)}). Aylık maaş yükü ${paraYazi(p.maasYuku)}. Ayrıntısı Pazartesi özetinde.`;
-yazismaKonusuEkle('kasa',{ad:'Kasa ne durumda?',roller:['maliMudur'],aralik:1,aciklama:'Kasayı sorarsın; günde bir kez.',
+yazismaKonusuEkle('kasa',{kategori:'kasa',ad:'Kasa ne durumda?',roller:['maliMudur'],aralik:1,aciklama:'Kasayı sorarsın; günde bir kez.',
   goruntu:k=>maliOzet(k,(k.kisiler[k.baskanId]||{}).kulupId),metin:{maliMudur:(k,y)=>kasaCevapMetni(k,y.p)}});

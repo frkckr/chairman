@@ -1,6 +1,6 @@
 # R2 eki — Reigns gibi kart, tek işli panel, “Yeni konu aç” (uygulama planı)
 
-Durum: **onaylandı (kullanıcı, 2026-10-29: “Onayla, başla”); uygulama Opus 5.5, masaüstü.** Dal `claude/r2-ek` (taban `claude/r2-telefon`, `tur/r2-telefon`; R2 henüz `main`'de değil), etiket `tur/r2-ek`. `main`'e alma ve push kullanıcının sözüyle; R2 ve R2 eki birlikte alınır.
+Durum: **kapandı (2026-10-29, masaüstü; onay: kullanıcı, “Onayla, başla”; uygulama Opus 5.5). Sonuç ve sapmalar en sonda.** Dal `claude/r2-ek` (taban `claude/r2-telefon`, `tur/r2-telefon`; R2 henüz `main`'de değil), etiket `tur/r2-ek`. `main`'e alma ve push kullanıcının sözüyle; R2 ve R2 eki birlikte alınır.
 
 Kaynak: kullanıcının 2026-10-29'da gönderdiği beş görsel (gelen mesaj, sola kaydır, sağa kaydır, eski mesaj, yeni mesaj) ve kararı: **“cevaplar sağda ve solda görünmesin, kaydırınca çıksın, Reigns gibi.”** Claude'un değerlendirmesi sohbette; alınanlar ve alınmayanlar aşağıda.
 
@@ -97,4 +97,17 @@ Kartta cevaplar görünmez: ne kenarda ne üst etikette. Oyuncu kartı sağa ya 
 
 ## Sapmalar
 
-(boş — uygulama sırasında doldurulur)
+**R2E-0 başlangıç ölçüsü (kod değişmeden):** `akis-deneme 3 14b 21 27 30` geçti; `okunurluk` ve `kariyer-deneme` R2 kapanışındaki gibi.
+
+1. **Kişi satırı:** planda portre ortada, ad ve görev altındaydı. 800 px pencerede büyük yazıyla kart panelden 2 px taştı (B47'nin ölçüsü); portre solda, ad ve görev yanında oldu, kart kısaldı.
+2. **Kartın eni:** telefonun iş panelinde kart en çok 25 em, ortada (dik kart; görsellerdeki gibi). Dosyada ve karar panelinde kabın eni.
+3. **Konu menüsü:** başlıklı tek liste (plandaki gibi); bütün konular kapalıyken menü açılmaz, “Yeni konu aç” da kapalıdır (neden panelde: bekleme satırı ya da kart). Karar yokken boş durum “<Ad>'e yazmak için “Yeni konu aç”.”
+4. **İpucu yazıları:** dinlenirken “Cevabı görmek için kartı kaydır (←/→).”, sürüklerken “Eşiğe kadar kaydır: <cevap>”, eşikte “Bırak: <cevap>” (R2-d'nin üst etiketteki “Bırak:” yazısı ipucuna indi); kilitli kartta önizlemede “Şimdi cevaplanamaz”.
+5. **Maç telefonu:** kenar tıklaması kalktığı için kart orada da ortak bileşenle kaydırılır ve ←/→ ile önizlenir (kilitli: uygulanmaz).
+6. **Simgeler:** TEST içeriğin “Saymana devret” cevabı için “devir” simgesi eklendi; kategori başlıkları için top ve takım simgeleri.
+7. **Denetimler:** `akis-deneme` §3 (kenar yerine ←/→; nötr yüzde cevap adı yok, kenarlar gizli; üst etiket künye; dosyada “Cevaplardan biri zaman alır.”), §14b (1/2 önizler, Enter seçer; kenarlar gizli), §19 ve §21 (konular menüden: `konu_sec`, `konu_menu_ac`; bağlam cevabın yüzünde), §30 (iki yeni satır: menü ve Esc, karar varken tek kart; eşik yazıları). `kariyer-deneme`: kategori satırı. `okunurluk.py`: yeni sahne “telefon-konu-menusu” (14 ekran).
+
+## Sonuç (2026-10-29, masaüstü)
+
+- **Oyunda:** kartta cevaplar görünmüyor; kaydırınca ya da ←/→ ile yüz cevaba dönüyor (simge, ad, süre, sonuç, bağlam). Nötr yüzde soru, portre, ad ve görev. Telefonun iş paneli tek iş: karar varsa yalnız kart; yoksa bekleme satırı ya da “Yeni konu aç” menüsü. Karar anında 1/2 önizliyor. Kayıt sürümü 11, motor değişmedi.
+- **Denetimler:** `hizli --hepsi` geçti (`kariyer-deneme` yeni kategori satırıyla); `ad-denetimi` temiz; `oturum-sonu --ayni --seyrek` 40/40 birebir, yeni kabul dışı 0; sezon tabanları (KAPILAR komutuyla) `sezon-s-t7` ve `sezon-s-t3` (kaydet–yükleli) 18/18 hafta birebir; hız `tur/r2-telefon`'a göre ortanca +%0,9; `akis-deneme` tamamı geçti, düşen yalnız defterdeki B40; `okunurluk.py` 14 ekran üç genişlikte eşikte; `kontrol.py` hatasız; `akis-2d.py` geçti.

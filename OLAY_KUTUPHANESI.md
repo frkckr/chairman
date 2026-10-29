@@ -364,7 +364,7 @@ Bir tesis yeni başkan döneminde tamamlanabilir; eski çalışan yeni yönetimd
 | R3 Canlı Skor | Takım ve maç durumunun okunabilir zemini; bu verilere bağlı senaryolar ayrıca yazılır. |
 | R4 küçültülmüş Y1 | İlk kısa transfer zinciri, bekleme/devir ve pazarlık zemini. Normal ilerleyen yol ve bir kararın sonraki aşamaları atlatmaması ilk oynama denemesinde incelenebilir. |
 | R5 balkon | Kulüp hayatını izlerken iş yürütme. Gözlem, bütün senaryolar için zorunlu gelişme açma işlemi yapılmaz. |
-| R6 zincirler ve kişiler | Kişi gündemi/hafıza, diğer dosya zincirleri ve görüşmeler için temel. §11'deki sessiz devam, ortak gündem ve bağlantı ihtiyaçları tur planlanırken mevcut kapsamla karşılaştırılır; tamamı otomatik olarak bu tura atanmaz. |
+| R6 zincirler ve kişiler | Kişi gündemi/hafıza, diğer dosya zincirleri ve görüşmeler için temel. §11'deki sessiz devam, ortak gündem ve bağlantı ihtiyaçları tur planlanırken mevcut kapsamla karşılaştırılır; tamamı otomatik olarak bu tura atanmaz. Kullanıcının telefon görsellerindeki “alıntıla ve hatırlat” (kişinin eski sözünü alıntılayıp hatırlatmak; R2 eki notu, 2026-10-29) kişi hafızasıyla birlikte burada değerlendirilir. |
 | R7 genel kurul | Sezon sonu güven değerlendirmesi. Tam seçim, istifa ve görev dışı hayatın uygulanmış olduğu anlamına gelmez. |
 | H3 ve Aşama 5–7 | Yeni sezon/arşiv; medya/TV ve sezon ölçeği; adaylık/seçim; görev kaybında yetkiler, dışarıdan takip ve yeniden hazırlanma. Ayrıntı [YOL_HARITASI](YOL_HARITASI.md) Aşama 5, 6 ve 7. |
 

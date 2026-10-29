@@ -123,7 +123,7 @@ const girisimYapildi=(k,id)=>{const G=GIRISIMLER[id],a=G&&G.aralik!==undefined?G
   return k.gecmis.some(g=>g.tur==='girisim'&&g.id===id&&(!kid||!g.kisiId||g.kisiId===kid)&&tarihKarsilastir(tarihEkle(g.tarih,a),k.tarih)>0);};
 function girisimListesi(k){
   const L=[];
-  for(const [id,G] of Object.entries(GIRISIMLER)){const u=k.icerik.surum>=2&&!girisimYapildi(k,id)?G.uygun(k):false;if(u!==false)L.push({id,ad:G.ad,aciklama:G.aciklama(k),engel:u===true?null:u,argumanli:!!G.argumanli});}
+  for(const [id,G] of Object.entries(GIRISIMLER)){const u=k.icerik.surum>=2&&!girisimYapildi(k,id)?G.uygun(k):false;if(u!==false)L.push({id,ad:G.ad,aciklama:G.aciklama(k),engel:u===true?null:u,argumanli:!!G.argumanli,kategori:G.kategori||null});}
   return L;
 }
 /* R2-e: arg isteğe bağlı (argümanlı girişim: GIRISIMLER[id].argumanli; yazışmada oyuncu kimliği); doğrulaması girişimin kendi baslat'ındadır */

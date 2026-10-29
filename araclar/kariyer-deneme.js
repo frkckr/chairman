@@ -728,6 +728,9 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
      &&/seçim yapılmadı/.test(hata(x=>GB(x,'yaz.teknikDirektor.oyuncu')))&&/bulunamadı/.test(hata(x=>GB(x,'yaz.teknikDirektor.oyuncu','oyuncu-yok')))
      &&/kulübün oyuncusu değil/.test(hata(x=>GB(x,'yaz.teknikDirektor.oyuncu',yab.id)))&&/argüman almaz/.test(hata(x=>GB(x,'yaz.teknikDirektor.takim',p1.id))),
      [hata(x=>GB(x,'yaz.teknikDirektor.oyuncu')),hata(x=>GB(x,'yaz.teknikDirektor.oyuncu',yab.id))].join(' · '));
+   const GK=MG('girisimListesi')(k4);
+   denetle('R2 eki: her yazışma konusunun kategorisi var (telefonun konu menüsündeki başlık: mac, takim, gorusme, kasa); oyuncu sorusu Takım başlığında',
+     GK.length>=7&&GK.every(g=>['mac','takim','gorusme','kasa'].includes(g.kategori))&&GK.filter(g=>/\.oyuncu$/.test(g.id)).every(g=>g.kategori==='takim'),GK.map(g=>g.id+':'+g.kategori).join(', '));
    const a1=sorA(k4,'yaz.teknikDirektor.oyuncu',p1.id),a2=sorA(a1,'yaz.yardimciAntrenor.oyuncu',p1.id),ad=MG('yzOyuncu')(a1,p1.id);
    const ikinci=(()=>{try{sorA(a1,'yaz.teknikDirektor.oyuncu',p2.id);return'';}catch(e){return e.message;}})(),gid=kon(a1,hId).mesajlar.filter(m=>m.yon==='giden').pop();
    const R1=ilerle3(a2);let b=R1.kariyer;for(let i=0;i<6&&bekler(b);i++)b=ilerle3(b).kariyer;

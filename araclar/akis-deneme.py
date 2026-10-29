@@ -401,8 +401,9 @@ TEL_YERLESIM_JS = """() => { const T = document.querySelector('.tel'), P = docum
   const tasma = Math.max(0, ...[...T.querySelectorAll('.tel-govde, .tel-bildirimler, .tel-liste, .tel-skor, .tel-mac'), ...(I ? [I] : [])].map(x => x.scrollWidth - x.clientWidth));
   /* R2 (2026-10-29): odada iki sütun — iş paneli telefonun sağında, kabın içinde; konuşmada panelin tek kartı ve iki kenar etiketi (nötr yüz) panelin içinde,
      kaydırmadan görünür (açılışta panel kartı görünür kılar) */
-  const K = I && I.querySelector('.kk-kart'), B = K ? [K, ...K.querySelectorAll('.kk-kenar')] : [];
-  const cevapGorunur = !!K && B.length === 3 && K.dataset.yuz === 'notr' && B.every(b => { const r = b.getBoundingClientRect(); return r.width > 0 && r.left >= i.left - 1 && r.right <= i.right + 1
+  /* R2 eki: kenar etiketleri gizli (cevaplar kaydırınca görünür); kaydırmadan görünmesi gereken kartın kendisi */
+  const K = I && I.querySelector('.kk-kart'), B = K ? [K] : [];
+  const cevapGorunur = !!K && B.length === 1 && K.dataset.yuz === 'notr' && B.every(b => { const r = b.getBoundingClientRect(); return r.width > 0 && r.left >= i.left - 1 && r.right <= i.right + 1
     && r.top >= i.top - 1 && r.bottom <= i.bottom + 1; });
   const yan = !!i && i.left >= t.right - 1 && i.right <= p.right + 1 && i.top >= p.top - 1 && i.bottom <= p.bottom + 1;
   return { tasma, sigiyor: t.left >= p.left - 1 && t.right <= p.right + 1 && t.top >= p.top - 1 && t.bottom <= p.bottom + 1 && yan, cevapGorunur, genislik: Math.round(t.width),
@@ -465,8 +466,9 @@ KART_KAP_JS = """([kok, kart]) => { const c = document.querySelector(kok + ' ' +
   let a = c.parentElement; while (a && a !== document.documentElement) { const s = getComputedStyle(a); if (s.overflowX !== 'visible' || s.overflowY !== 'visible') break; a = a.parentElement; }
   const pen = !a || a === document.documentElement, k = pen ? { left: 0, top: 0 } : a.getBoundingClientRect();
   const L = k.left + (pen ? 0 : a.clientLeft), T = k.top + (pen ? 0 : a.clientTop), W = pen ? innerWidth : a.clientWidth, H = pen ? innerHeight : a.clientHeight;
-  const u = [...c.querySelectorAll(':scope>.kk-ust>[data-yon]')].find(s => +getComputedStyle(s).opacity > 0.5);
-  return { yuz: c.dataset.yuz, hazir: c.hasAttribute('data-hazir'), ust: u ? u.dataset.yon : null, kap: pen ? 'pencere' : a.className.split(' ')[0],
+  /* R2 eki: cevabın adı üst etikette değil, kartın görünen yüzündedir: “ust” görünen yüzün yönü (karar anında kartın yüzü) */
+  const u = c.querySelector('.kk-yuzKat.kk-yuz') || c;
+  return { yuz: c.dataset.yuz, hazir: c.hasAttribute('data-hazir'), ust: u.dataset.yuz === 'sol' || u.dataset.yuz === 'sag' ? u.dataset.yuz : null, kap: pen ? 'pencere' : a.className.split(' ')[0],
     sol: +(r.left - L).toFixed(1), sag: +(L + W - r.right).toFixed(1), ustPay: +(r.top - T).toFixed(1), alt: +(T + H - r.bottom).toFixed(1) }; }"""
 KART_TUT2_JS = """([kok, kart]) => { const c = document.querySelector(kok + ' ' + kart), r = c.getBoundingClientRect();
   return { x: r.left + r.width / 2, y: r.top + Math.min(r.height / 2, 40), g: c.offsetWidth }; }"""
@@ -495,6 +497,19 @@ async def kart_kap(pg, kok, oranlar=(0.1, 0.25, 0.55, 1.2), kart=".kk-kart"):
 def kap_disi(olc, pay=1):
     """U2: kabından (pay pikselden çok) taşan duraklar; kart sınırlı kaydığı için boş olmalı."""
     return [m for m in olc if min(m["sol"], m["sag"], m["ustPay"], m["alt"]) < -pay]
+
+
+async def konu_sec(pg, girisim):
+    """R2 eki: telefonun iş panelinde konu “Yeni konu aç” menüsündedir: menü kapalıysa açılır, sonra konuya basılır."""
+    if not await pg.query_selector(f'.tlf-menu [data-girisim="{girisim}"]'):
+        await pg.click('.tel-yeniKonu button')
+    await pg.click(f'.tlf-menu [data-girisim="{girisim}"]')
+
+
+async def konu_menu_ac(pg):
+    """R2 eki: “Yeni konu aç” menüsünü açar (açıksa dokunmaz)."""
+    if not await pg.query_selector('.tlf-menu'):
+        await pg.click('.tel-yeniKonu button')
 
 
 def kap_yonler(olc, hazir=True):
@@ -555,32 +570,37 @@ async def bolum_3(tarayici, site, tum_hatalar):
     await pg.click('.tel-kisi:has-text("Berk Deneme")')
     konusma = await pg.text_content(".tel")
     tk = await pg.evaluate("""() => ({ kart: document.querySelectorAll('.tlf-is .kk-kart').length, eski: document.querySelectorAll('.tel .kk-cevap, .tel .kk-gonder, .tel .kk-onay').length,
+      gizli: [...document.querySelectorAll('.tlf-is .kk-kenarlar')].every(e => e.hidden && !e.offsetParent), gorunen: (document.querySelector('.tlf-is .kk-alan') || { innerText: '' }).innerText,
       kenar: [...document.querySelectorAll('.tlf-is .kk-kenar')].map(b => b.dataset.yon + ':' + b.dataset.secim + ':' + b.querySelector('b').textContent).join(','),
       yuz: (document.querySelector('.tlf-is .kk-kart') || { dataset: {} }).dataset.yuz })""")
-    denetle("Telefon: kişi listesinde Berk Deneme cevap bekliyor; konuşmada kendi sesiyle mesaj; sağdaki iş panelinde tek kart (nötr yüz; R2), kenarlar Kabul et (sol) / Saymana devret (sağ); eski cevap düğmeleri yok",
+    denetle("Telefon: kişi listesinde Berk Deneme cevap bekliyor; konuşmada kendi sesiyle mesaj; sağdaki iş panelinde tek kart (nötr yüz; R2); R2 eki: cevaplar görünmüyor "
+            "(kenarlar gizli, kartın görünen yazısında 'Kabul et' ve 'Saymana devret' yok; soru ve kişi var), cevaplar sol Kabul et / sağ Saymana devret; eski cevap düğmeleri yok",
             "cevap bekl" in liste.replace("İ", "i").lower() and "firmamız" in konusma and tk["kart"] == 1 and tk["eski"] == 0 and tk["yuz"] == "notr"
-            and tk["kenar"] == "sol:kabul:Kabul et,sag:devret:Saymana devret", str(tk))
+            and tk["kenar"] == "sol:kabul:Kabul et,sag:devret:Saymana devret" and tk["gizli"] and "Kabul et" not in tk["gorunen"] and "Saymana devret" not in tk["gorunen"]
+            and "400.000" in tk["gorunen"] and "Berk Deneme" in tk["gorunen"], str({x: tk[x] for x in tk if x != "gorunen"}) + " · " + tk["gorunen"][:120].replace(chr(10), " | "))
     await pg.wait_for_timeout(300)  # N7: telefonun açılış geçişi (0,18 sn) bitsin
     await pg.screenshot(path=str(ARAC / "son-akis-3-telefon.png"))
-    # H1: telefonda kenar etiketi yalnız önizler (yüz o cevaba döner), aynı kenara ikinci dokunuş nötre döndürür; zaman ve karar değişmez
+    # R2 eki: cevap ancak önizleyince görünür: → yüzü o cevaba çevirir (simge, ad, süre), Esc nötre döndürür; zaman ve karar değişmez
     t0 = await durum(pg)
-    await pg.click('.tlf-is .kk-kenar[data-yon="sag"]')
+    await pg.focus('.tlf-is .kk-kart')
+    await pg.keyboard.press("ArrowRight")
     ty1 = await pg.evaluate(YUZ_JS, ".tlf-is")
+    sim1 = await pg.evaluate("() => (document.querySelector('.tlf-is .kk-yuz .kk-simge') || { dataset: {} }).dataset.simge || null")
     await pg.wait_for_timeout(300)
     await pg.screenshot(path=str(ARAC / "son-akis-3-telefon-onizleme.png"))
-    await pg.click('.tlf-is .kk-kenar[data-yon="sag"]')
+    await pg.keyboard.press("Escape")
     ty2 = await pg.evaluate(YUZ_JS, ".tlf-is")
-    denetle("H1: telefonda kenar etiketi önizler ('Saymana devret' yüzü, 15 dk), ikinci dokunuş nötre döndürür; zaman ve karar değişmedi",
-            ty1 and ty1["yuz"] == "sag" and "Saymana devret" in ty1["metin"] and "15 dk" in ty1["metin"] and ty1["basili"] == "false,true"
-            and ty2 and ty2["yuz"] == "notr" and await durum(pg) == t0, f"{ty1} · {ty2}")
-    # U2: kart sürüklenirken kabından taşmaz (R2'den beri telefonun sağındaki iş paneli); üst etiket cevabın adı, eşikte hazır; bırakınca uygulanmaz
+    denetle("R2 eki: → önizler ('Saymana devret' yüzü: devir simgesi, ad, 15 dk), Esc nötre döndürür; zaman ve karar değişmedi",
+            ty1 and ty1["yuz"] == "sag" and "Saymana devret" in ty1["metin"] and "15 dk" in ty1["metin"] and ty1["basili"] == "false,true" and sim1 == "devir"
+            and ty2 and ty2["yuz"] == "notr" and await durum(pg) == t0, f"{ty1} · {sim1} · {ty2}")
+    # U2: kart sürüklenirken kabından taşmaz (R2'den beri telefonun sağındaki iş paneli); R2 eki: yüz o cevaba döner, eşikte hazır; üst etiket yalnız künye
     kap_tel = await kart_kap(pg, ".tlf-is")
     tyk = await pg.evaluate(YUZ_JS, ".tlf-is")
     ust_tel = await pg.evaluate("() => { const u = document.querySelector('.tlf-is .kk-ust'); return u ? [...u.children].map(s => s.textContent).join(' | ') : null; }")
-    denetle("U2, R2: iş panelinde kart %10/%25/%55/%120 sürüklenirken (iki yöne) panelin içinde kalıyor; yüz o yöne döndü, %55'ten sonra üst etikette o cevap ve hazır; "
-            "bırakınca uygulanmadı, yüz nötr; üst etiket işin adı ve iki cevap (alanın üstünde ayrı başlık satırı yok)",
+    denetle("U2, R2: iş panelinde kart %10/%25/%55/%120 sürüklenirken (iki yöne) panelin içinde kalıyor; yüz o yöne döndü, %55'ten sonra hazır; "
+            "bırakınca uygulanmadı, yüz nötr; R2 eki: üst etiket yalnız künye (soranın adı ve görevi; cevap adı yok)",
             not kap_disi(kap_tel) and kap_yonler(kap_tel) and tyk and tyk["yuz"] == "notr" and await durum(pg) == t0
-            and ust_tel == "Deneme teklifi | ◂ Kabul et | Saymana devret ▸" and await pg.query_selector(".tel-cevapBas") is None,
+            and (ust_tel or "").startswith("Berk Deneme") and "Kabul et" not in ust_tel and await pg.query_selector(".tel-cevapBas") is None,
             f"{kap_disi(kap_tel) or [(m['oran'], m['yuz'], m['ust'], m['hazir'], m['sol'], m['sag']) for m in kap_tel]} · {ust_tel}")
     geri_tel = await pg.evaluate("() => { const b = document.querySelector('.tel-kisiBas .tel-geri'); return b ? [b.textContent, b.getAttribute('aria-label')] : null; }")
     denetle("U2: konuşmanın başlığında Geri gideceği yerin adını taşıyor ('Mesajlar', ekran okuyucuya 'Geri: Mesajlar'); kişi ikinci satırda",
@@ -654,20 +674,23 @@ async def bolum_3(tarayici, site, tum_hatalar):
     await pg.keyboard.press("Escape")
     await pg.keyboard.press("Digit3")
     denetle("Dosyayı kapatıp açmak ve geçmişi okumak zamanı ve kararı değiştirmiyor", await durum(pg) == once)
-    await pg.click('.dsy .kk-kenar[data-yon="sag"]')
+    y0 = await pg.evaluate(YUZ_JS, ".dsy")
+    await pg.focus('.dsy .kk-kart')
+    await pg.keyboard.press("ArrowRight")
     y1 = await pg.evaluate(YUZ_JS, ".dsy")
     du1 = await duyuru(pg)
     await pg.screenshot(path=str(ARAC / "son-akis-3-dosya-onizleme.png"))
-    await pg.click('.dsy .kk-kenar[data-yon="sol"]')
+    await pg.keyboard.press("ArrowLeft")
     y2 = await pg.evaluate(YUZ_JS, ".dsy")
     du2 = await duyuru(pg)
-    await pg.click('.dsy .kk-kenar[data-yon="sol"]')
+    await pg.keyboard.press("Escape")
     y3 = await pg.evaluate(YUZ_JS, ".dsy")
-    denetle("(g) Kenar etiketi yalnız önizler: 'Saymana devret' yüzünde cevabın metni, 15 dk ve 'kaçırılacak' uyarısı (10 dk sonraki isteğe bağlı iş); 'Kabul et' yüzünde "
-            "'zaman almaz', uyarı yok; aynı kenara ikinci tıklama nötre döndürür; zaman ve karar değişmedi",
-            y1 and y1["yuz"] == "sag" and "Saymana devret" in y1["metin"] and "15 dk" in y1["metin"] and "kaçırılacak: İsteğe bağlı deneme (çakışma)" in y1["metin"]
+    denetle("(g) R2 eki: nötr yüzde cevap yok, yalnız 'Cevaplardan biri zaman alır.'; → 'Saymana devret' yüzünde cevabın metni, 15 dk ve 'kaçırılacak' uyarısı (10 dk sonraki "
+            "isteğe bağlı iş); ← 'Kabul et' yüzünde 'zaman almaz', uyarı yok; Esc nötre döndürür; zaman ve karar değişmedi",
+            y0 and y0["yuz"] == "notr" and "Cevaplardan biri zaman alır." in y0["metin"] and "Saymana devret" not in y0["metin"] and "Kabul et" not in y0["metin"]
+            and y1 and y1["yuz"] == "sag" and "Saymana devret" in y1["metin"] and "15 dk" in y1["metin"] and "kaçırılacak: İsteğe bağlı deneme (çakışma)" in y1["metin"]
             and y2 and y2["yuz"] == "sol" and "Kabul et" in y2["metin"] and "zaman almaz" in y2["metin"] and "kaçırılacak" not in y2["metin"]
-            and y3 and y3["yuz"] == "notr" and await durum(pg) == once, f"{y1} · {y2} · {y3}")
+            and y3 and y3["yuz"] == "notr" and await durum(pg) == once, f"{y0} · {y1} · {y2} · {y3}")
     denetle("İnceleme (2026-10-26): önizlenen yüz kalıcı canlı bölgeden duyuruluyor (#kartDuyuru role=status, odanın dışında, iki önizlemede aynı düğüm; kartın yüzünde "
             "aria-live yok): önce 'Saymana devret' 15 dk ve kaçırılacak uyarısıyla, sonra 'Kabul et' zaman almaz, uyarısız",
             du1 and du1["canli"] == "polite" and du1["rol"] == "status" and du1["disarda"] and du1["yuzCanli"] == 0 and "Saymana devret" in du1["metin"]
@@ -683,7 +706,7 @@ async def bolum_3(tarayici, site, tum_hatalar):
     boylar = await pg.evaluate("""async () => { const c = document.querySelector('.dsy .kk-kart'), B = [];
       for (const y of ['sag', 'sol']) { c.querySelector('.kk-kenar[data-yon="' + y + '"]').click(); B.push(document.querySelector('.dsy .kk-kart').offsetHeight); }
       document.querySelector('.dsy .kk-kenar[data-yon="sol"]').click(); return B; }""")
-    denetle("U2: dosyada kart %10/%25/%55/%120 sürüklenirken (iki yöne) sayfanın içinde; yüz o yöne döndü, %55'ten sonra üst etikette o cevap ve hazır; uygulanmadı; "
+    denetle("U2: dosyada kart %10/%25/%55/%120 sürüklenirken (iki yöne) sayfanın içinde; yüz o yöne döndü, %55'ten sonra o cevabın yüzü ve hazır; uygulanmadı; "
             "yüz dönünce kartın boyu aynı (kenarlar yerinde)",
             not kap_disi(kap_dsy) and kap_yonler(kap_dsy) and await durum(pg) == once and boylar == [boy0, boy0]
             and (await pg.evaluate(YUZ_JS, ".dsy"))["yuz"] == "notr",
@@ -1050,12 +1073,14 @@ async def bolum_14(tarayici, site, tum_hatalar):
 async def bolum_14b(tarayici, site, tum_hatalar):
     """N12 (kullanıcı kararı 2026-10-04): rakip başkan yerinde / sonra / yok ve tokalaşmada beş saniyelik karar anı (TEST kaydı: Selam ver / Ses çıkarma).
     H1 (F4, 2026-10-26): karar anı da tek kart (js/ekran-an.js, js/ekran-kart.js kartEtkilesimKur): tek .ka-kart, iki .ka-kenar (cevapların adı);
-    ←/→ önizler, Enter önizleneni seçer, 1/2 doğrudan seçer; tıklama seçmez. İnceleme (2026-10-26): önizleme açıkken süre dolunca yüz nötre döner."""
+    ←/→ önizler, Enter önizleneni seçer; tıklama seçmez. R2 eki: kenarlar gizli (cevaplar kaydırınca), 1/2 önizler, Enter seçer.
+    İnceleme (2026-10-26): önizleme açıkken süre dolunca yüz nötre döner."""
     AN_JS = """() => ({ acik: KARAR_ANI.acik, t: +KARAR_ANI.t.toFixed(3), kalan: +KARAR_ANI.kalan.toFixed(3), sure: KARAR_ANI.sure, evre: LOCA_GIRIS.evre, mod: LOCA_GIRIS.mod,
       aktif: LOCA_GIRIS.aktif, rakip: LOCA_GIRIS.rk.evre, karar: MAC_PROTOKOL.karar && MAC_PROTOKOL.karar.secim, faz: mac.phase, onizle: KARAR_ANI.onizle,
       n: document.querySelectorAll('#kararAni .ka-kart').length, yuz: (document.querySelector('#kararAni .ka-kart') || { dataset: {} }).dataset.yuz,
       yuzMetin: (document.querySelector('#kararAni .ka-yuz') || {}).textContent || '',
-      kart: [...document.querySelectorAll('#kararAni .ka-kenar b')].map(b => b.textContent), kim: (document.querySelector('#kararAni .ka-kim') || {}).textContent })"""
+      kart: [...document.querySelectorAll('#kararAni .ka-kenar b')].map(b => b.textContent), kim: (document.querySelector('#kararAni .ka-kim') || {}).textContent,
+      gizli: [...document.querySelectorAll('#kararAni .ka-kenarlar')].every(e => e.hidden), gorunen: (document.querySelector('#kararAni .ka-kart') || { innerText: '' }).innerText })"""
     # yerinde: girişi atlamak tokalaşma anına götürür; süre kartlar yerine oturmadan başlamaz; tıklama atlatmaz; duraklatmada süre durur; 5 sn'de cevapsız
     pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=yerinde", "#btnMacaGec")
     tum_hatalar += hatalar
@@ -1066,13 +1091,14 @@ async def bolum_14b(tarayici, site, tum_hatalar):
     a0 = await pg.evaluate(AN_JS)
     denetle("N12 yerinde: atlama tokalaşma anına götürdü; karar anı açık (üstte 'Akdeniz FK Başkanı'; H1: tek kart, nötr yüz, kenarlar Selam ver / Ses çıkarma); süre kart yerine oturmadan başlamıyor",
             a0["acik"] and a0["evre"] == "el" and a0["n"] == 1 and a0["yuz"] == "notr" and a0["kart"] == ["Selam ver", "Ses çıkarma"] and "Akdeniz FK Başkanı" in (a0["kim"] or "")
+            and a0["gizli"] and "Selam ver" not in a0["gorunen"] and "Ses çıkarma" not in a0["gorunen"]
             and (a0["kalan"] == a0["sure"] == 5 or a0["t"] >= 0.4), str(a0))
     await pg.wait_for_function("KARAR_ANI.t > 0.9", timeout=15000)
     r = await pg.evaluate("document.getElementById('view').getBoundingClientRect().toJSON()")
     await pg.mouse.click(r["x"] + r["width"] * 0.5, r["y"] + r["height"] * 0.25)
     await pg.keyboard.press("Escape")
-    # H1: kenar etiketine tıklamak yalnız önizler (yüz o cevaba döner, karar verilmez); Esc önizlemeyi bırakır
-    await pg.click('#kararAni .ka-kenar[data-yon="sol"]')
+    # R2 eki: kenar etiketi yok; ← yalnız önizler (yüz o cevaba döner, karar verilmez); Esc önizlemeyi bırakır
+    await pg.keyboard.press("ArrowLeft")
     pk = await pg.evaluate(AN_JS)
     await pg.keyboard.press("Escape")
     pe = await pg.evaluate(AN_JS)
@@ -1081,7 +1107,7 @@ async def bolum_14b(tarayici, site, tum_hatalar):
     await pg.wait_for_timeout(1200)
     p2 = await pg.evaluate(AN_JS)
     await pg.keyboard.press("KeyP")
-    denetle("Karar anında tıklama ve Esc atlatmıyor; kenar etiketi yalnız önizliyor ('Selam ver' yüzü, karar yok), Esc önizlemeyi bırakıyor; süre işliyor ve Duraklat'ta donuyor",
+    denetle("Karar anında tıklama ve Esc atlatmıyor; ← yalnız önizliyor ('Selam ver' yüzü, karar yok), Esc önizlemeyi bırakıyor; süre işliyor ve Duraklat'ta donuyor",
             p1["acik"] and p2["acik"] and p1["kalan"] == p2["kalan"] < 5 and p1["evre"] == "el" and pk["onizle"] == "sol" and pk["yuz"] == "sol" and "Selam ver" in pk["yuzMetin"]
             and pk["karar"] is None and pe["onizle"] is None and pe["yuz"] == "notr" and pe["acik"], f"{p1['kalan']} → {p2['kalan']} · {pk['onizle']}/{pk['karar']} · {pe['onizle']}")
     await pg.screenshot(path=str(ARAC / "son-akis-14b-karar.png"))
@@ -1115,22 +1141,25 @@ async def bolum_14b(tarayici, site, tum_hatalar):
     await pg.wait_for_function("KARAR_ANI.acik && KARAR_ANI.t > 0.6", timeout=30000)
     # H1: tek kart ve iki kenarı karede (karar anının içinde), kartta ve kenarlarda yatay taşma yok
     yer = await pg.evaluate("""() => { const E = document.getElementById('kararAni').getBoundingClientRect(), K = [...document.querySelectorAll('#kararAni .ka-kart')],
-        P = K.length ? [K[0], ...K[0].querySelectorAll('.ka-kenar')] : [];
-      return { n: K.length, icinde: P.length === 3 && P.every(k => { const r = k.getBoundingClientRect(); return r.left >= E.left - 1 && r.right <= E.right + 1 && r.bottom <= E.bottom + 1 && r.top >= E.top; }),
+        P = K.length ? [K[0]] : [];
+      return { n: K.length, icinde: P.length === 1 && P.every(k => { const r = k.getBoundingClientRect(); return r.left >= E.left - 1 && r.right <= E.right + 1 && r.bottom <= E.bottom + 1 && r.top >= E.top; }),
         tasma: Math.max(...P.map(k => k.scrollWidth - k.clientWidth)), boy: getComputedStyle(document.getElementById('kararAni')).getPropertyValue('--an-boy') }; }""")
     await pg.screenshot(path=str(ARAC / "son-akis-14b-karar-buyuk.png"))
     # U2: süre uzatılır (ölçüm süresi dolmasın), kart sürüklenirken karenin içinde; seçince damga
     await pg.evaluate("() => { KARAR_ANI.sure = 999; }")
     kap_an = await kart_kap(pg, "#kararAni", kart=".ka-kart")
     await pg.keyboard.press("Digit1")
+    on_an = await pg.evaluate(AN_JS)
+    await pg.keyboard.press("Enter")
     dmg_an = await pg.evaluate("() => { const d = document.querySelector('#kararAni .ka-kart .kk-damga'); return { damga: d ? d.textContent : null, yuz: (document.querySelector('#kararAni .ka-yuz') || {}).textContent }; }")
     await pg.wait_for_function("MAC_PROTOKOL.karar", timeout=5000)
     k1 = await pg.evaluate(AN_JS)
-    denetle("U2: karar anında kart %10/%25/%55/%120 sürüklenirken (iki yöne) karenin içinde, üst etikette o cevap ve hazır; seçince kartta 'SELAM VER' damgası, yüzde büyük yazı yok",
+    denetle("U2: karar anında kart %10/%25/%55/%120 sürüklenirken (iki yöne) karenin içinde, o cevabın yüzü ve hazır; seçince kartta 'SELAM VER' damgası, yüzde büyük yazı yok",
             not kap_disi(kap_an) and kap_yonler(kap_an) and dmg_an["damga"] == "SELAM VER" and "Seçildi: Selam ver" in (dmg_an["yuz"] or ""),
             f"{kap_disi(kap_an) or [(m['oran'], m['yuz'], m['ust'], m['hazir'], m['sol'], m['sag'], m['kap']) for m in kap_an]} · {dmg_an}")
-    denetle("Büyük yazıda tek kart ve iki kenarı karede, taşma yok; 1 tuşu önizlemesiz 'Selam ver'i doğrudan seçti (kart kısa süre kalıyor)",
-            yer["n"] == 1 and yer["icinde"] and yer["tasma"] <= 1 and "1.8" in yer["boy"] and k1["karar"] == "selam", f"{yer} · {k1['karar']}")
+    denetle("Büyük yazıda tek kart karede, taşma yok; R2 eki: 1 tuşu yalnız 'Selam ver'i önizledi (karar yok), Enter seçti (kart kısa süre kalıyor)",
+            yer["n"] == 1 and yer["icinde"] and yer["tasma"] <= 1 and "1.8" in yer["boy"] and on_an["onizle"] == "sol" and on_an["karar"] is None
+            and "Selam ver" in on_an["yuzMetin"] and k1["karar"] == "selam", f"{yer} · {on_an['onizle']}/{on_an['karar']} · {k1['karar']}")
     await pg.context.close()
     # sonra: başkan oturur; Santraya geç ertelenir, rakip başkan o an kapıdan gelir; → 'Ses çıkarma'yı önizler (tek başına karar vermez), Enter seçer;
     # karar anından sonra atlama yapılır
@@ -1183,6 +1212,7 @@ async def bolum_14b(tarayici, site, tum_hatalar):
     await pg.wait_for_function("KARAR_ANI.acik && KARAR_ANI.t > 0.5", timeout=60000)
     h0 = await pg.evaluate(ORTU_JS)
     await pg.keyboard.press("Digit1")
+    await pg.keyboard.press("Enter")   # R2 eki: 1 önizler, Enter seçer
     await pg.wait_for_function("!KARAR_ANI.acik && !document.getElementById('macHesap').hidden", timeout=60000)
     h1 = await pg.evaluate(ORTU_JS)
     await pg.wait_for_function("mac.phase === 'fulltime'", timeout=240000)
@@ -1802,14 +1832,15 @@ async def bolum_19(tarayici, site, tum_hatalar):
     await pg.click(f'.tel [data-eylem="telKisi"][data-kisi="{hid}"]')
     konusma = await pg.text_content(".tel")
     yorum = await pg.evaluate(f"() => macYorumu(OYUN.kariyer, '{id13}').metin")
-    oneri = await pg.query_selector('.tlf-is [data-eylem="girisim"][data-girisim="yaz.teknikDirektor.mac"]')
+    await konu_menu_ac(pg)
+    oneri = await pg.query_selector('.tlf-menu [data-eylem="girisim"][data-girisim="yaz.teknikDirektor.mac"]')
     denetle("H2-c: maçtan sonra hocanın konuşmasında kendiliğinden yorum yok; “Maçı nasıl gördün?” önerisi duruyor; listede hoca ve yardımcı",
             "Şükrü Hoca" in liste and "Tahsin" in liste and yorum not in konusma and oneri is not None, konusma[:120])
-    await pg.click('.tlf-is [data-eylem="girisim"][data-girisim="yaz.teknikDirektor.mac"]')
+    await konu_sec(pg, "yaz.teknikDirektor.mac")
     gonder = await pg.evaluate("""() => ({ giden: [...document.querySelectorAll('.tel .tel-giden')].map(e => e.textContent).join(' | '), mesaj: (document.querySelector('.od-mesaj') || {}).textContent || '',
-      kapali: [...document.querySelectorAll('.tlf-is .tlf-konu')].every(b => b.disabled), oneri: document.querySelectorAll('.tlf-is .tlf-konu').length })""")
-    denetle("H2-c: soru gitti — giden balon, şeritte “Mesaj gitti”; cevap gelene dek hocanın öbür konuları kapalı",
-            "Maçı nasıl gördün?" in gonder["giden"] and "Mesaj gitti" in gonder["mesaj"] and gonder["kapali"] and gonder["oneri"] > 0, str(gonder))
+      kapali: !!(document.querySelector('.tel-yeniKonu button') || {}).disabled, menu: !!document.querySelector('.tlf-menu') })""")
+    denetle("H2-c: soru gitti — giden balon, şeritte “Mesaj gitti”; cevap gelene dek hocanın öbür konuları kapalı (R2 eki: “Yeni konu aç” kapalı, menü kapandı)",
+            "Maçı nasıl gördün?" in gonder["giden"] and "Mesaj gitti" in gonder["mesaj"] and gonder["kapali"] and not gonder["menu"], str(gonder))
     await masaya_don(pg)
     await odak_ac(pg, "ajanda")
     await pg.wait_for_selector(".dft", timeout=10000)
@@ -2056,17 +2087,18 @@ async def bolum_21(tarayici, site, tum_hatalar):
     # Duraklat'ta öneriler kapalı
     await pg.click(".od-duraklat")
     await konusma_ac()
+    await konu_menu_ac(pg)
     dur = await pg.evaluate("() => [...document.querySelectorAll('.tlf-is .tlf-konu')].map(b => b.disabled)")
     await masaya_don(pg)
     await pg.click(".od-duraklat")
     denetle("H2-c: Duraklat açıkken konu önerileri kapalı", len(dur) > 0 and all(dur), str(dur))
     await konusma_ac()
-    await pg.click('.tlf-is [data-eylem="girisim"][data-girisim="yaz.teknikDirektor.gorusme"]')
+    await konu_sec(pg, "yaz.teknikDirektor.gorusme")
     bekle = await pg.evaluate("""() => ({ satir: [...document.querySelectorAll('.tlf-is .tlf-bekleme')].map(x => x.textContent), tel: document.querySelectorAll('.tel .tel-bekleme').length,
-      konu: [...document.querySelectorAll('.tlf-is .tlf-konu')].map(b => b.disabled + ':' + b.querySelector('small').textContent) })""")
-    denetle("R2-c: soru gidince iş panelinin üstünde bir kez “Şükrü Hoca'dan cevap bekleniyor.” ve yaklaşık anı; telefonda ayrıca not yok; konular kapalı, altlarında açıklama (engel tekrarlanmaz)",
+      yeni: !!(document.querySelector('.tel-yeniKonu button') || {}).disabled, panel: (document.querySelector('.tlf-is') || {}).innerText || '' })""")
+    denetle("R2-c: soru gidince iş panelinin üstünde bir kez “Şükrü Hoca'dan cevap bekleniyor.” ve yaklaşık anı; telefonda ayrıca not yok; R2 eki: “Yeni konu aç” kapalı, engel yazısı tekrarlanmıyor",
             len(bekle["satir"]) == 1 and bekle["satir"][0].startswith("Şükrü Hoca'dan cevap bekleniyor.") and bekle["satir"][0].endswith("civarı.") and bekle["tel"] == 0
-            and len(bekle["konu"]) >= 3 and all(x.startswith("true:") and "cevabını bekliyorsun" not in x for x in bekle["konu"]), str(bekle))
+            and bekle["yeni"] and "cevabını bekliyorsun" not in bekle["panel"], str(bekle))
     await masaya_don(pg)
     await oda_ilerle(pg)
     await pg.wait_for_function("() => Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.karar === 'gorusmeOnerisi')", timeout=60000)
@@ -2084,10 +2116,10 @@ async def bolum_21(tarayici, site, tum_hatalar):
     denetle("H2-c: Görüşelim → İlerle cevapta karar diye durdu; telefonda tek kart, kenarlar “Kabul et” / “Şu gün olsun” (U3; altında bizim saat)",
             "karar" in ozet and len(kenar) == 2 and "Kabul et" in kenar[0] and "Şu gün olsun" in kenar[1], f"{ozet[:70]} · {kenar} · {kart}")
     await pg.screenshot(path=str(ARAC / "son-akis-21-kart.png"))
-    # R2-d: bağlam kartın yanında, tıklamasız: o günün defteri (öneri işaretli); → ile önizleyince bizim saatimizin günü; telefonda göz atma kâğıdı ve kartın
-    # yüzünde şerit yok (bağlam yanda tam); Esc önizlemeyi bırakır, bağlam önerinin gününe döner, konuşma yerinde
-    BAGLAM_JS = """() => { const a = document.querySelector('.tlf-is .tlf-baglam'), t = document.querySelector('.tlf-is .kk-kart');
-      return { var: !!a && !a.hidden, baslik: a && a.querySelector('h5') ? a.querySelector('h5').textContent : '', isaret: a ? ((a.querySelector('.od-gozIsaret, .od-gozCakis') || {}).textContent || '') : '',
+    # R2 eki: bağlam cevabın yüzünde: nötr yüzde şerit ve cevap yok; → ile önizleyince bizim saatimizin günü (işaretli şerit) ve ipucunda Enter'ın cevabı;
+    # telefonda göz atma kâğıdı yok; Esc önizlemeyi bırakır, konuşma yerinde
+    BAGLAM_JS = """() => { const t = document.querySelector('.tlf-is .kk-kart'), y = t && t.querySelector('.kk-yuz'), sr = y && y.querySelector('.kk-serit');
+      return { var: !!sr, baslik: sr ? sr.getAttribute('aria-label') : '', isaret: y ? y.textContent : '',
         yuz: t ? t.dataset.yuz : null, ipucu: (document.querySelector('.tlf-is .kk-ipucu p') || {}).textContent || '', goz: !!document.querySelector('aside.odk-goz'),
         gozAt: document.querySelectorAll('.tlf-is [data-eylem="gozAt"]').length, serit: document.querySelectorAll('.tlf-is .kk-serit').length,
         ekran: (document.querySelector('.tel-ekran') || { dataset: {} }).dataset.ekran }; }"""
@@ -2098,10 +2130,10 @@ async def bolum_21(tarayici, site, tum_hatalar):
     await pg.screenshot(path=str(ARAC / "son-akis-21-baglam.png"))
     await pg.keyboard.press("Escape")
     bg2 = await pg.evaluate(BAGLAM_JS)
-    denetle("R2-d: bağlam kartın yanında kendiliğinden (Defter · gün; öneri işaretli); → önizlemesinde bizim önerimizin günü ve ipucunda Enter'ın cevabı; göz atma kâğıdı ve yüz şeridi yok; Esc önizlemeyi bırakır, konuşma yerinde",
-            bg0["var"] and bg0["baslik"].startswith("Defter · ") and "(önerisi)" in bg0["isaret"] and bg0["yuz"] == "notr" and bg0["gozAt"] == 0 and bg0["serit"] == 0
-            and bg1["yuz"] == "sag" and "Senin önerdiğin görüşme" in bg1["isaret"] and bg1["ipucu"].startswith("Enter: Şu gün olsun") and not bg1["goz"]
-            and bg2["yuz"] == "notr" and "(önerisi)" in bg2["isaret"] and bg2["ekran"] == "konusma", f"{bg0} · {bg1} · {bg2}")
+    denetle("R2 eki: nötr yüzde bağlam ve cevap yok; → önizlemesinde 'Şu gün olsun' yüzü ve o günün işaretli şeridi, ipucunda Enter'ın cevabı; göz atma kâğıdı yok; Esc önizlemeyi bırakır, konuşma yerinde",
+            not bg0["var"] and bg0["yuz"] == "notr" and bg0["gozAt"] == 0 and "Şu gün olsun" not in bg0["isaret"] and "Kabul et" not in bg0["isaret"]
+            and bg1["var"] and bg1["yuz"] == "sag" and "işaretli" in bg1["baslik"] and "Şu gün olsun" in bg1["isaret"] and bg1["ipucu"].startswith("Enter: Şu gün olsun") and not bg1["goz"]
+            and bg2["yuz"] == "notr" and not bg2["var"] and bg2["ekran"] == "konusma", f"{bg0} · {bg1} · {bg2}")
     await pg.focus('.tlf-is .kk-kart')
     await pg.keyboard.press("ArrowLeft")
     await pg.keyboard.press("Enter")
@@ -2144,7 +2176,7 @@ async def bolum_21(tarayici, site, tum_hatalar):
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
     await konusma_ac()
-    await pg.click('.tlf-is [data-eylem="girisim"][data-girisim="yaz.teknikDirektor.gorusme"]')
+    await konu_sec(pg, "yaz.teknikDirektor.gorusme")
     await masaya_don(pg)
     await oda_ilerle(pg)
     await pg.wait_for_function("() => Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.karar === 'gorusmeOnerisi')", timeout=60000)
@@ -2180,7 +2212,7 @@ async def bolum_21(tarayici, site, tum_hatalar):
     await pg.keyboard.press("Digit1")
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
     await pg.click(f'.tel [data-eylem="telKisi"][data-kisi="{mid}"]')
-    await pg.click('.tlf-is [data-eylem="girisim"][data-girisim="yaz.maliMudur.kasa"]')
+    await konu_sec(pg, "yaz.maliMudur.kasa")
     odak = await pg.evaluate("() => { const a = document.activeElement; return { tel: !!(a && a.closest('.tel')), ad: a ? (a.className || a.tagName) : '', duyuru: (document.getElementById('kartDuyuru') || {}).textContent || '' }; }")
     await pg.wait_for_timeout(150)
     duy = await pg.evaluate("() => (document.getElementById('kartDuyuru') || {}).textContent || ''")
@@ -3016,14 +3048,20 @@ YENI_GOVDE_JS = """() => { const g = document.querySelector('.tel-govde'), y = g
   const r = y ? y.getBoundingClientRect() : null;
   return { st: Math.round(g.scrollTop), alt: g.scrollTop + g.clientHeight >= g.scrollHeight - 8, kayar: g.scrollHeight > g.clientHeight + 8,
     yeni: r ? { ust: Math.round(r.top - a.top), gorunur: r.top >= a.top - 1 && r.top <= a.bottom - 20 } : null }; }"""
+MENU_JS = """() => { const b = document.querySelector('.tel-yeniKonu button'), a = document.activeElement;
+  return { bos: (document.querySelector('.tlf-is .tlf-bos') || {}).textContent || '', dugme: b ? b.getAttribute('aria-expanded') : null, kapali: b ? b.disabled : null,
+    menu: !!document.querySelector('.tlf-menu'), basliklar: [...document.querySelectorAll('.tlf-menu .tlf-kategori span')].map(x => x.textContent),
+    simge: document.querySelectorAll('.tlf-menu .tlf-kSimge').length, tek: !!document.querySelector('.tlf-is.tlf-tekKart'), kart: document.querySelectorAll('.tlf-is .kk-kart').length,
+    odak: a && a.closest && a.closest('.tel-yeniKonu') ? 'yeni' : a ? a.className : '', ekran: (document.querySelector('.tel-ekran') || { dataset: {} }).dataset.ekran }; }"""
 ESIK_JS = """() => { const i = document.querySelector('.tlf-is .kk-ipucu'), e = i && i.querySelector('.kk-esik'), c = document.querySelector('.tlf-is .kk-kart');
-  const u = c ? [...c.querySelectorAll(':scope>.kk-ust>[data-yon]')].find(s => +getComputedStyle(s).opacity > 0.5) : null;
+  const u = c && c.querySelector(':scope>.kk-ust');
   return i ? { yon: e.dataset.yon || null, oran: +(e.style.getPropertyValue('--kk-oran') || 0), hazir: i.hasAttribute('data-hazir'), yazi: i.querySelector('p').textContent,
-    ust: u ? u.textContent : null } : null; }"""
+    ust: u ? u.textContent : null, kartHazir: !!c && c.hasAttribute('data-hazir'), yuz: c ? c.dataset.yuz : null } : null; }"""
 
 
 async def bolum_30(tarayici, site, tum_hatalar):
-    """R2 (2026-10-29): odada iki sütunlu telefon — solda cihaz, sağda iş paneli. Oyuncu sorusu uçtan uca (seçim panelde, Esc seçimi kapatır, giden
+    """R2 (2026-10-29): odada iki sütunlu telefon — solda cihaz, sağda iş paneli. R2 eki: panel tek iş (karar varsa yalnız kart), konular “Yeni konu aç”
+    menüsünde (başlıklı), cevaplar kartta gizli. Oyuncu sorusu uçtan uca (seçim panelde, Esc seçimi kapatır, giden
     mesaj, İlerle, cevap, oyuncunun dosyasında not; dosyadan “Hocaya sor ▸”), Bekleyenler (üç ayrı işaret, satırdan konuşma), okuma yeri (yeni mesajda
     ilk yeni, yoksa bırakılan yer), kartın eşik ipucu (sürüklerken çubuk dolar, eşikte “Bırak:”), balkonda tek telefon."""
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
@@ -3040,7 +3078,18 @@ async def bolum_30(tarayici, site, tum_hatalar):
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
     await pg.click(f'.tel [data-eylem="telKisi"][data-kisi="{hid}"]')
     t0 = await durum(pg)
-    await pg.click('.tlf-is .tlf-konu[data-girisim="yaz.teknikDirektor.oyuncu"]')
+    # R2 eki: panel tek iş gösterir; karar ve bekleme yokken sakin, konular “Yeni konu aç” menüsünde (başlıklı, simgeli); Esc önce menüyü kapatır
+    m0 = await pg.evaluate(MENU_JS)
+    await konu_menu_ac(pg)
+    m1 = await pg.evaluate(MENU_JS)
+    await pg.keyboard.press("Escape")
+    m2 = await pg.evaluate(MENU_JS)
+    denetle("R2 eki: konuşmada panel sakin (“Şükrü Hoca'ya yazmak için “Yeni konu aç”.”), telefonun altında “Yeni konu aç”; basınca panelde başlıklı konu menüsü (Takım, Görüşme; simgeli), "
+            "odak ilk konuda; Esc menüyü kapatır, odak düğmede, konuşma yerinde",
+            m0["bos"].startswith("Şükrü Hoca'ya yazmak için") and m0["dugme"] == "false" and not m0["menu"] and m1["menu"] and m1["basliklar"] == ["Takım", "Görüşme"]
+            and m1["simge"] == 2 and m1["dugme"] == "true" and m1["odak"] == "tlf-konu" and not m2["menu"] and m2["dugme"] == "false" and m2["odak"] == "yeni"
+            and m2["ekran"] == "konusma" and await durum(pg) == t0, f"{m0} · {m1} · {m2}")
+    await konu_sec(pg, "yaz.teknikDirektor.oyuncu")
     sec1 = await pg.evaluate("""() => ({ n: document.querySelectorAll('.tlf-oyuncular [data-arg]').length, kadro: kulupOyunculari(OYUN.kariyer, 'demirkapi').length,
       mevki: [...document.querySelectorAll('.tlf-oyuncular h6')].map(h => h.textContent).join(','),
       acik: document.querySelector('.tlf-konu[data-girisim="yaz.teknikDirektor.oyuncu"]').getAttribute('aria-expanded'), odak: !!(document.activeElement && document.activeElement.dataset.arg) })""")
@@ -3052,7 +3101,7 @@ async def bolum_30(tarayici, site, tum_hatalar):
             and sec2 == {"n": 0, "ekran": "konusma", "odak": "yaz.teknikDirektor.oyuncu"} and await durum(pg) == t0, f"{sec1} · {sec2}")
     oy = await pg.evaluate("""() => { const k = OYUN.kariyer, D = k.kulupler.demirkapi.kadro, p = D.ilk11.map(id => k.oyuncular[id]).find(p => !p.sakat && !(p.ceza && p.ceza.mac > 0));
       return { id: p.id, ad: yzOyuncu(k, p.id) }; }""")
-    await pg.click('.tlf-is .tlf-konu[data-girisim="yaz.teknikDirektor.oyuncu"]')
+    await konu_sec(pg, "yaz.teknikDirektor.oyuncu")
     await pg.click(f'.tlf-oyuncular [data-arg="{oy["id"]}"]')
     gid = await pg.evaluate("""() => ({ giden: [...document.querySelectorAll('.tel .tel-giden')].map(e => e.textContent).pop() || '', secim: document.querySelectorAll('.tlf-oyuncular').length,
       bekle: [...document.querySelectorAll('.tlf-is .tlf-bekleme')].map(x => x.textContent) })""")
@@ -3062,7 +3111,7 @@ async def bolum_30(tarayici, site, tum_hatalar):
     # yardımcıdan görüşme iste (karar doğuracak); Bekleyenler'de iki beklenen cevap
     await pg.click('.tel-kisiBas .tel-geri')
     await pg.click(f'.tel [data-eylem="telKisi"][data-kisi="{yid}"]')
-    await pg.click('.tlf-is .tlf-konu[data-girisim="yaz.yardimciAntrenor.gorusme"]')
+    await konu_sec(pg, "yaz.yardimciAntrenor.gorusme")
     await pg.click('.tel-kisiBas .tel-geri')
     await pg.click('.tel [data-eylem="telEv"]')
     bk1 = await pg.evaluate("() => [...document.querySelectorAll('.tlf-bekleyenler .tlf-satir')].map(b => b.querySelector('i').className + ':' + b.dataset.kisi)")
@@ -3120,6 +3169,9 @@ async def bolum_30(tarayici, site, tum_hatalar):
     # kartın eşik ipucu: yardımcının görüşme kartı panelde; sürüklerken çubuk o yöne dolar, eşikte “Bırak: <cevap>” (üst etiket) ve hazır; geri bırakınca uygulanmaz
     await pg.keyboard.press("Digit1")
     await pg.click(f'.tlf-bekleyenler .tlf-satir[data-kisi="{yid}"].tlf-satir:has(.tlf-iKarar)')
+    tk = await pg.evaluate(MENU_JS)
+    denetle("R2 eki: karar varken panelde yalnız kart (tek kart düzeni; menü ve boş durum yok), “Yeni konu aç” kapalı",
+            tk["tek"] and tk["kart"] == 1 and not tk["menu"] and not tk["bos"] and tk["kapali"], str(tk))
     e0 = await pg.evaluate(ESIK_JS)
     await pg.locator(".tlf-is .kk-kart").scroll_into_view_if_needed()
     r = await pg.evaluate(KART_TUT2_JS, [".tlf-is", ".kk-kart"])
@@ -3135,10 +3187,12 @@ async def bolum_30(tarayici, site, tum_hatalar):
     await pg.mouse.up()
     await pg.wait_for_timeout(350)
     e3 = await pg.evaluate(ESIK_JS)
-    denetle("R2-d: kartın altında ipucu; sürüklerken çubuk o yöne dolar (“…: eşiğe kadar sürükle”), eşikte hazır, üst etikette “Bırak: <cevap>”, ipucu “Bırakınca uygulanır.”; geri bırakınca uygulanmadı, ipucu dinlenmeye döndü",
-            e0 and e0["yazi"].startswith("Kartı sürükleyip bırak") and e1["yon"] == "sag" and 0 < e1["oran"] < 1 and e1["yazi"].endswith("eşiğe kadar sürükle") and not e1["hazir"]
-            and e2["hazir"] and e2["oran"] == 1 and e2["ust"].startswith("Bırak: ") and e2["yazi"] == "Bırakınca uygulanır."
-            and e3["yon"] is None and e3["yazi"] == e0["yazi"] and e3["ust"] is None and await durum(pg) == t1, f"{e0} · {e1} · {e2} · {e3}")
+    denetle("R2-d, R2 eki: kartın altında ipucu (“Cevabı görmek için kartı kaydır”); sürüklerken yüz o cevaba döner, çubuk dolar (“Eşiğe kadar kaydır: …”), eşikte kart ve çubuk hazır, ipucu “Bırak: <cevap>”; "
+            "üst etiket hep künye; geri bırakınca uygulanmadı, ipucu dinlenmeye döndü",
+            e0 and e0["yazi"].startswith("Cevabı görmek için kartı kaydır") and e0["yuz"] == "notr" and e1["yon"] == "sag" and e1["yuz"] == "sag" and 0 < e1["oran"] < 1
+            and e1["yazi"].startswith("Eşiğe kadar kaydır: ") and not e1["hazir"] and e2["hazir"] and e2["kartHazir"] and e2["oran"] == 1 and e2["yazi"].startswith("Bırak: Şu gün olsun")
+            and e3["yon"] is None and e3["yazi"] == e0["yazi"] and e0["ust"] == e1["ust"] == e2["ust"] == e3["ust"] and e0["ust"].startswith("Tahsin")
+            and not e3["kartHazir"] and await durum(pg) == t1, f"{e0} · {e1} · {e2} · {e3}")
     await masaya_don(pg)
     # balkonda tek telefon (iş sağ yarıda; R5'te yeniden düzenlenir)
     await pg.keyboard.press("Digit5")

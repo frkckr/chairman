@@ -2,7 +2,7 @@
 """Chairman — okunurluk ölçüsü (R1-f, 2026-10-29).
 
 Oyun karesi üç genişlikte (640, 800, 1186 px) açılır; her ekranda görünen her metnin hesaplanan yazı boyu ve kırpılıp kırpılmadığı ölçülür.
-Ekranlar: oda (masa), defter, telefonun ana ekranı, konuşma (R2: iki sütun, tek kart iş panelinde), mesaj listesi, Canlı Skor, dosya (tek kartla), Kadro sekmesi,
+Ekranlar: oda (masa), defter, telefonun ana ekranı, konuşma (R2: iki sütun, tek kart iş panelinde), konu menüsü (R2 eki), mesaj listesi, Canlı Skor, dosya (tek kartla), Kadro sekmesi,
 oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu kartı.
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
@@ -102,6 +102,13 @@ async def sahneler_oda(pg, olc):
     await olc("telefon-konusma")
     await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
     await olc("telefon-mesajlar")
+    # R2 eki: konu menüsü (hocanın konuşmasında “Yeni konu aç”)
+    hid = await pg.evaluate("() => OYUN.kariyer.kulupler[OYUN.kariyer.kisiler[OYUN.kariyer.baskanId].kulupId].hocaId")
+    await tikla(pg, f'.tel [data-eylem="telKisi"][data-kisi="{hid}"]')
+    await tikla(pg, '.tel-yeniKonu button')
+    await pg.wait_for_selector(".tlf-menu", timeout=10000)
+    await olc("telefon-konu-menusu")
+    await tikla(pg, '.tel-kisiBas .tel-geri')
     await tikla(pg, '.tel [data-eylem="telEv"]')
     await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="skor"]')
     await olc("canli-skor")

@@ -4,7 +4,7 @@
    H1 (F4; kullanıcı kararları 2026-10-22 ve 2026-10-23, OYUN_TASARIMI §2 “Tek kart”): iki kart yerine dosyadaki, panel ve telefondaki tek kart
    (js/ekran-kart.js kartEtkilesimKur sözleşmesi): kart sola ya da sağa kaydırıldıkça yüzü o cevaba döner, eşiği geçip bırakınca o cevap seçilir,
    altında yerine yaylanır; iki kenar etiketi cevapların adıdır ve yalnız önizler. Klavye: ←/→ önizler, Enter önizleneni seçer, Esc önizlemeyi bırakır;
-   1/2 doğrudan seçer. Tıklama seçmez. Sol yüz cevaplar[0], sağ yüz cevaplar[1]; sol ve sağ doğru/yanlış ya da renkle kodlanmaz.
+   1/2 doğrudan seçer (R2 eki'nden beri önizler; aşağıda). Tıklama seçmez. Sol yüz cevaplar[0], sağ yüz cevaplar[1]; sol ve sağ doğru/yanlış ya da renkle kodlanmaz.
    Süre kart yerine oturduktan sonra başlar; ortadan kenarlara eriyen ince çubuk, son saniyelerde amber; rakam yoktur. Seçilen cevap kartın yüzünde
    kısa süre kalır (amber) ve üstüne damga basılır (U2, js/ekran-kart.js kartDamga.bas), sonra kart silinir. Süre dolarsa cevapsız sonucu işler
    (önizleme açıksa yüz nötre döner; damga yok). U2: kartın üstünde dosyadaki kartın üst etiketi (sürüklerken o yönün cevabı belirir, bırakınca
@@ -15,7 +15,10 @@
      kararAniKare(dt)                          ilerletir (js/loca-giris.js locaGirisKare)
      KARAR_ANI                                 durum: {acik, t, secim, sure, kalan, onizle} (denemeler okur)
    H2-a (2026-10-26): kariyer maçında rakip başkanın karar anı kapalıdır (js/mac-gunu.js protokol); bu ekran ?rakipBaskan= TEST parametresiyle ve
-   kariyersiz adreste açılır. “Maçı bitir” perdesi açıkken karar anı açılırsa perdenin örtüsü gizlenir (js/ekran-mac-sonu.js). */
+   kariyersiz adreste açılır. “Maçı bitir” perdesi açıkken karar anı açılırsa perdenin örtüsü gizlenir (js/ekran-mac-sonu.js).
+   R2 eki (2026-10-29; kullanıcı kararı, YOL_HARITASI karar 62): Reigns gibi — cevaplar kartta görünmez; kenar etiketleri gizli, üst etiket boş.
+   Kaydırınca ya da ←/→ ile yüz o cevaba döner (simge ve adı). 1/2 artık doğrudan seçmez, o cevabı önizler; Enter uygular (gizli cevap körlemesine
+   seçilmesin). */
 const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:null,bitisT:null,kart:[],onizle:null};
 {
   const A=STIL.an,K=STIL.kagit,KA=K.kart,kok=document.getElementById('screen');
@@ -47,6 +50,8 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
 .ka-yuz small{color:${K.soluk};font-size:max(var(--k-enKucuk,12px),.95em)}
 .karar-ani .ka-kart.ka-secildi .ka-yuz small{color:${K.vurguYaziSoluk}}
 .ka-kenarlar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6em}
+.ka-kenarlar[hidden]{display:none}
+.ka-yuz .kk-simge{font-size:.9em}
 .karar-ani button.ka-kenar{display:flex;align-items:center;gap:.45em;min-width:0;padding:.35em .65em .3em;font:inherit;text-align:left;color:${K.yazi};
   background:${K.zemin};border:1px solid ${K.cizgi};border-bottom-width:.18em;border-radius:.4em;cursor:pointer}
 .karar-ani button.ka-kenar[data-yon="sag"]{justify-content:flex-end;text-align:right}
@@ -71,8 +76,8 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
     /* U2: seçilen cevabın adı damgadadır (sec → kartDamga.bas); yüz yalnız ekran okuyucuya “Seçildi: …” der, büyük yazı damganın altında kalmaz */
     const secili=S.secilen!==null&&S.secilen!==undefined&&S.secilen>=0;
     c.querySelector('.ka-yuz').innerHTML=secili&&x?'<p style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">Seçildi: '+yazA(x.metin)+'</p>'
-      :x?'<p><b>'+yazA(x.metin)+'</b></p>'+(x.alt?'<p><small>'+yazA(x.alt)+'</small></p>':'')
-      :'<p><small>Kaydır ya da ←/→ ile bak, Enter ile cevapla</small></p>';
+      :x?(typeof kartSimge==='function'?kartSimge(x.id):'')+'<p><b>'+yazA(x.metin)+'</b></p>'+(x.alt?'<p><small>'+yazA(x.alt)+'</small></p>':'')
+      :'<p><small>Cevabı görmek için kaydır ya da ←/→ (1/2) ile bak, Enter ile cevapla</small></p>';
     for(const b of c.querySelectorAll('.ka-kenar'))b.setAttribute('aria-pressed',b.dataset.yon===y?'true':'false');
   };
   const onizle=y=>{const S=KARAR_ANI;if(!S.acik||S.secim!==null)return;S.onizle=y==='sol'||y==='sag'?y:null;yuzYaz();};
@@ -92,7 +97,7 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
     if(c==='ArrowLeft'||c==='ArrowRight'){yut();onizle(c==='ArrowLeft'?'sol':'sag');}
     else if(c==='Enter'||c==='NumpadEnter'){yut();if(S.onizle)sec(S.onizle==='sol'?0:1);}
     else if(c==='Escape'&&S.onizle&&S.secim===null){yut();onizle(null);}
-    else if(i!==undefined){yut();sec(i);}},true);
+    else if(i!==undefined){yut();onizle(i?'sag':'sol');}   /* R2 eki: 1/2 önizler, Enter seçer */},true);
   var kararAniAc=function(kayit,o){
     const S=KARAR_ANI;Object.assign(S,{acik:true,t:0,secim:null,secilen:null,sure:kayit.sure,kalan:kayit.sure,kayit,bitince:o.bitince,bitisT:null,onizle:null});
     E.style.setProperty('--an-boy',yaziBoyuDegeri());   /* U0: ortak ölçek (STIL.kagit.yaziBoyu) */
@@ -101,9 +106,9 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
       '<b>'+yazA(c.metin)+'</b>'+(i?'<i aria-hidden="true">▸</i>':'')+'</button>';
     const C=kayit.cevaplar;
     kartlar.innerHTML='<section class="ka-kart" data-is="an" data-yuz="notr" tabindex="0" role="group" aria-label="Karar">'+
-      '<div class="kk-ust" aria-hidden="true"><span class="kk-ustNotr"></span><span data-yon="sol">◂ '+yazA(C[0].metin)+'</span><span data-yon="sag">'+yazA(C[1].metin)+' ▸</span></div>'+
+      '<div class="kk-ust" aria-hidden="true"><span class="kk-ustNotr"></span></div>'+
       '<div class="ka-yuz" aria-live="polite"></div>'+
-      '<div class="ka-kenarlar">'+kayit.cevaplar.slice(0,2).map(kenar).join('')+'</div></section>';
+      '<div class="ka-kenarlar" hidden>'+kayit.cevaplar.slice(0,2).map(kenar).join('')+'</div></section>';
     S.kart=[kartlar.querySelector('.ka-kart')];yuzYaz();E.hidden=false;kararAniKare(0);};
   var kararAniKare=function(dt){
     const S=KARAR_ANI;if(!S.acik)return;S.t+=dt;
