@@ -3,7 +3,7 @@
      maas: aylık brüt maaş (kuruş, tamsayı); bitis: sözleşmenin son günü (sezon sonu 31 Mayıs). null: sözleşmesi henüz kurulmamış (kayıt sürümü 8'den
      geçen kariyer ilk ay başına dek; serbest oyuncu). Hocanın sözleşmesi kişi kaydında: kisi.sozlesme {maas, bitis} (rol teknikDirektor).
    TEST ölçeği (Claude, karar 44; kullanıcı değiştirir — kesin para tutarları oynanış testi ister, OYUN_TASARIMI §13):
-     maasTahmini(p, tarih): oyuncunun gizli özellik ortalamasından (kalecide kalecilik ağırlıklı) SOZLESME_TEST.taban × kat (0,4–3), 21 yaş altı × genç,
+     maasTahmini(p, tarih): oyuncunun piyasadaki algısından (R6-a: gizli özellik ortalaması — kalecide kalecilik ağırlıklı — + kalıcı algı sapması + ün) SOZLESME_TEST.taban × kat (0,4–3), 21 yaş altı × genç,
        32 üstü × yaşlı; SOZLESME_TEST.yuvarla'ya yuvarlanır. Gizli puan kuralı: maaş görünür bir sayıdır, yetenek puanı değildir (OYUN_TASARIMI §9:
        ücret gösterilebilir); ölçek kabadır, oyuncunun gücünü tam ele vermez.
      Bitiş: oyuncu kimliği ve dünya tohumundan, SOZLESME_TEST.bitisPay ile bu sezon sonu, bir ya da iki yıl sonrası.
@@ -14,7 +14,12 @@
    hocaTazminati(k, hocaId): kalan ay × aylık maaş (en az bir ay; js/icerik-p12.js değişim).
    Doğrulama sozlesmeDogrula (EK_DENETIMLER). Sezon sonunda biten sözleşmeler: sözleşme kartları (G2-c, bu dosyanın sonu). */
 'use strict';
-const SOZLESME_TEST={taban:1600000,yuvarla:50000,genc:0.6,yasli:0.85,hocaMaas:6000000,bitisPay:[[0,25],[1,40],[2,35]]};
+const SOZLESME_TEST={taban:1600000,yuvarla:50000,genc:0.6,yasli:0.85,hocaMaas:6000000,bitisPay:[[0,25],[1,40],[2,35]],algi:8,un:6};
+/* R6-a (2026-10-30): maaş piyasanın ALGISINDAN türer — gizli ortalama + oyuncuya özgü kalıcı algı sapması (kimlik karmasından, ±SOZLESME_TEST.algi puan;
+   rastlantı akışı çekmez) + ün (eski yıldız +SOZLESME_TEST.un). Maaş yeteneğin kaba göstergesidir, sırası değildir (“pahalı ama vasat”, “ucuz ama iyi”);
+   gerçek yetenek gözlemle, izlemeyle ve hocanın görüşüyle ayrılır. Kayıtlı sözleşmeler değişmez */
+function maasAlgiSapmasi(p){let h=2166136261;const s=String(p.id)+':maas';for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}
+  return((h>>>0)/4294967295*2-1)*SOZLESME_TEST.algi;}
 const SOZLESME_AY_GUN='-05-31';
 /* tarihteki yaş (tam yıl) */
 function oyuncuYasi(p,tarih){
@@ -22,7 +27,8 @@ function oyuncuYasi(p,tarih){
   return Y-y-((A<a||(A===a&&G<g))?1:0);
 }
 function maasTahmini(p,tarih){
-  const o=p.oz,saha=o.filter((_,j)=>j!==8),ort=p.mevki==='KL'?o[8]*0.6+saha.reduce((a,b)=>a+b,0)/saha.length*0.4:saha.reduce((a,b)=>a+b,0)/saha.length;
+  const o=p.oz,saha=o.filter((_,j)=>j!==8),gercek=p.mevki==='KL'?o[8]*0.6+saha.reduce((a,b)=>a+b,0)/saha.length*0.4:saha.reduce((a,b)=>a+b,0)/saha.length;
+  const ort=gercek+maasAlgiSapmasi(p)+(p.un?SOZLESME_TEST.un:0);   /* R6-a: algı */
   const T=SOZLESME_TEST,yas=oyuncuYasi(p,tarih);
   let m=T.taban*clamp(0.4+(ort-35)/25,0.4,3);
   if(yas<21)m*=T.genc;else if(yas>32)m*=T.yasli;

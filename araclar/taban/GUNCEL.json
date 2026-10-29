@@ -1,6 +1,6 @@
 {
   "motor": "g1.json",
-  "sezon": {"t7": "sezon-r4-t7.json", "t3": "sezon-s-t3.json"},
+  "sezon": {"t7": "sezon-r6-t7.json", "t3": "sezon-r6-t3.json"},
   "cizim": ["s1-anm.json", "a5-anm-kaleci.json"],
   "not": "R1-c (2026-10-29): bugünkü tabanların tek kaydı. Tur kapanışında yalnız bu dosya değişir; araclar/oturum-sonu.js varsayılanı motor alanından okur. Eski tabanlar etiketlerindedir (git show tur/<ad>:araclar/taban/<ad>.json)."
 }

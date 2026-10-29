@@ -10,13 +10,17 @@
                                              son teklifle karşı rakam arasında (%35 ve %75); tavan varsa aşmaz
    pazarlikCevap(k, m, kalem) → 'kabul' | 'karsi' | 'kopma'   son ≥ alt kabul; değilse sabır −1 (son < alt × 0,75 ise −2), sabır kaldıysa karşı rakam alt × 1,1
    pazarlikBekledi(k, m, kalem) → 'bekliyor' | 'kopma'       cevapsız kart: sabır −1; aynı rakamlar yeniden (“Hâlâ bekliyorum”)
+   R6-d (2026-10-30): yon 'tahsil' (biz alırız: sponsor bedeli) — alt alanı karşı tarafın gizli ÜST sınırıdır (değer × ustSinir); isteğimiz bu sınırın
+   ALTINDAYSA kabul; değilse sabır −1 (istek > sınır ÷ 0,75 ise −2), karşı rakam sınır × 0,9; ilk turun iki rakamı tahmin × 0,90 (makul) ve × 1,05
+   (iddialı), karşı tekliften sonra karşı rakamla son isteğimiz arasında (%25 ve %65).
    Bütün çekilişler belirlenimci (kadroRastgele(dünyaTohumu, 'pazarlik:<mesele>:<kalem>:…')). Sayılar TEST. */
 'use strict';
-const PAZARLIK_TEST={altSinir:[0.85,1.25],sabir:[2,3],sapma:{iyi:0.05,zayif:0.25},kat:{temkinli:0.90,guclu:1.05},ara:[0.35,0.75],karsiKat:1.1,sertEsik:0.75,yuvarla:1000000};
+const PAZARLIK_TEST={altSinir:[0.85,1.25],ustSinir:[1.0,1.4],sabir:[2,3],sapma:{iyi:0.05,zayif:0.25},kat:{temkinli:0.90,guclu:1.05},ara:[0.35,0.75],araTahsil:[0.25,0.65],
+  karsiKat:1.1,karsiKatTahsil:0.9,sertEsik:0.75,yuvarla:1000000};
 const pazarlikYuvarla=(x,y)=>Math.max(y,Math.round(x/y)*y);
 function pazarlikKur(k,m,kalem,o){
-  const T=PAZARLIK_TEST,r=kadroRastgele(k.dunyaTohumu,'pazarlik:'+m.id+':'+kalem+':kur'),y=o.yuvarla||T.yuvarla;
-  const P={alt:pazarlikYuvarla(o.deger*(T.altSinir[0]+(T.altSinir[1]-T.altSinir[0])*r()),y),sabir:T.sabir[0]+Math.floor(r()*(T.sabir[1]-T.sabir[0]+1)),
+  const T=PAZARLIK_TEST,r=kadroRastgele(k.dunyaTohumu,'pazarlik:'+m.id+':'+kalem+':kur'),y=o.yuvarla||T.yuvarla,yon=o.yon==='tahsil'?'tahsil':'odeme',S=yon==='tahsil'?T.ustSinir:T.altSinir;
+  const P={yon,alt:pazarlikYuvarla(o.deger*(S[0]+(S[1]-S[0])*r()),y),sabir:T.sabir[0]+Math.floor(r()*(T.sabir[1]-T.sabir[0]+1)),
     tur:0,son:null,karsi:null,rakamlar:null,oneren:o.oneren||null,konu:o.konu||kalem,yuvarla:y,tavan:o.tavan||null};
   const V=m.sablon.veri;V.pazarlik=Object.assign({},V.pazarlik||{},{[kalem]:P});
   return P;
@@ -25,7 +29,8 @@ const pazarlikDurumu=(m,kalem)=>((m.sablon.veri.pazarlik||{})[kalem])||null;
 function pazarlikRakamlari(k,m,kalem){
   const T=PAZARLIK_TEST,P=pazarlikDurumu(m,kalem),y=P.yuvarla,kap=x=>P.tavan?Math.min(x,P.tavan):x;
   let a,b;
-  if(P.karsi!==null&&P.son!==null){a=P.son+(P.karsi-P.son)*T.ara[0];b=P.son+(P.karsi-P.son)*T.ara[1];}
+  if(P.karsi!==null&&P.son!==null&&P.yon==='tahsil'){a=P.karsi+(P.son-P.karsi)*T.araTahsil[0];b=P.karsi+(P.son-P.karsi)*T.araTahsil[1];}
+  else if(P.karsi!==null&&P.son!==null){a=P.son+(P.karsi-P.son)*T.ara[0];b=P.son+(P.karsi-P.son)*T.ara[1];}
   else{
     const yet=P.oneren?kisiYetenegi(k,P.oneren,P.konu):0.2,sapma=T.sapma.zayif-(T.sapma.zayif-T.sapma.iyi)*yet;
     const e=(kadroRastgele(k.dunyaTohumu,'pazarlik:'+m.id+':'+kalem+':tahmin')()*2-1)*sapma,t=P.alt*(1+e);
@@ -38,6 +43,10 @@ function pazarlikRakamlari(k,m,kalem){
 function pazarlikTeklif(m,kalem,tutar){const P=pazarlikDurumu(m,kalem);P.son=tutar;P.tur++;return P;}
 function pazarlikCevap(k,m,kalem){
   const T=PAZARLIK_TEST,P=pazarlikDurumu(m,kalem);
+  if(P.yon==='tahsil'){   /* R6-d: biz alırız — istek sınırın altındaysa kabul */
+    if(P.son<=P.alt)return'kabul';
+    P.sabir-=P.son>P.alt/T.sertEsik?2:1;if(P.sabir<=0)return'kopma';
+    P.karsi=pazarlikYuvarla(P.alt*T.karsiKatTahsil,P.yuvarla);return'karsi';}
   if(P.son>=P.alt)return'kabul';
   P.sabir-=P.son<P.alt*T.sertEsik?2:1;
   if(P.sabir<=0)return'kopma';
