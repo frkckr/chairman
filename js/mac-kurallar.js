@@ -114,7 +114,7 @@ Object.assign(Match.prototype,{
     const Y=this.yedekler[t];Y.splice(Y.indexOf(giren),1,cikan);
     if(this.ball.sahip===cikan)this.ball.sahip=null;
     this.ist.degisiklik[t]++;dg.girdi=true;dg.t1=this.t;
-    this.kayit.degisiklikler.push({takim:t,cikan:cikan.name,giren:giren.name,dakika:Math.floor(this.gameSec/60)+1,sakatlik:!!dg.sakatlik});
+    this.kayit.degisiklikler.push({takim:t,cikan:cikan.name,giren:giren.name,cikanNo:cikan.no,girenNo:giren.no,dakika:Math.floor(this.gameSec/60)+1,yari:this.half,sakatlik:!!dg.sakatlik});   /* R3-a: numara ve devre (salt kayıt) */
     this.on('oyuncuGirdi',{takim:t,cikan,giren,isindi});
   },
   /* T10c: sakatlıkta zorunlu değişiklik — hak varsa (en çok 5) sakatın yerine aynı mevkiden yedek (kalecide yedek kaleci) girer; plandaki
@@ -480,7 +480,7 @@ Object.assign(Match.prototype,{
        kırmızı gören oyuncu oyundan çıkarılmayabiliyordu. Hakem sıradakini gösterir; r.kartSira gösterilen karttır (çizim okur) */
     const k={p,renk,t:0};if(this.s1Kart())this.kartKur(k,neden);   /* S1d: sırası, gerekçesi ve duruşta seremoni (js/mac-sahne.js) */
     (r.kartKuyruk||(r.kartKuyruk=[])).push(k);if(!r.kartSira)r.kartSira=k;
-    this.kayit.kartlar.push({ad:p.name,no:p.no,takim:p.team,renk,neden:neden||null,dakika:Math.floor(this.gameSec/60)+1});   /* T10c: maçın kaydı */
+    this.kayit.kartlar.push({ad:p.name,no:p.no,takim:p.team,renk,neden:neden||null,dakika:Math.floor(this.gameSec/60)+1,yari:this.half});   /* T10c: maçın kaydı */
     this.on('kart',{p,renk,aleyhe:p.team,takim:p.team,neden:neden||null,sahne:this.s1Kart()});   /* T10b: neden (itiraz …; faul kartının gerekçesi faul olayındadır); S1d: sahne (motor okumaz) */
   },
   /* T10d: zaman geçirme — öndeki takım son dakikalarda (niyetin zamanGecir'i, maç durumunun koru'su 0–1): duran topu geç kullanır (durusBaslat

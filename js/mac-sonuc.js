@@ -34,7 +34,12 @@
    kulubunSonMaci(k, kulüp): kulübün son oynanan maçı {f: fikstür kaydı, s: k.maclar kaydı} ya da null (Canlı Skor ve bülten).
    macSonucDogrula: k.maclar girdilerinin iç tutarlılığı (EK_DENETIMLER; js/fikstur.js fiksturDogrula kimlik, hafta ve skoru denetler).
    Kayıt sürümü 8 (F3): maclar girdisinde sutlar, xg ve ilk11 zorunludur; hoca kişileri (js/hoca.js). F7: öbür maçların kısa kaydında sutlar null
-   (macKaydiYaz kisa; js/lig-maclari.js). */
+   (macKaydiYaz kisa; js/lig-maclari.js).
+   R3-a (2026-10-29; Canlı Skor, karar 64): kayıtta eşitlik — isteğe bağlı alanlar (kayıt sürümü 11 kalır; eski kayıtta yoktur, okumalar yokluğu taşır):
+     olaylarda yari (1 | 2; motorun devresi: ilk yarının uzatmasıyla ikinci yarının başı aynı dakikayı alır), degisiklikler kimlikle (cikanId, girenId;
+     motorun forma numarası ve adıyla, çözülemezse null) ve kısa kayıtta da, dizilis [ev, konuk] (o maçın hocalarının dizilişi; kadronun taktiği) ve
+     eksik [[{id, tur: 'sakat' | 'cezali'}] × 2] (maç anında oynayamayanlar; bu maçın sonuçları yazılmadan önce), yedek [[kimlik] × 2] (kulübe, oyuna
+     girenler dahil; motorun sonucKaydi().yedek). Öbür maçlarda şut listesi yine yok. */
 'use strict';
 const MAC_SONRASI_DK=120;                       // maç anından odanın açılacağı ana (19:00 → 21:00; TEST)
 const MAC_PENALTI_XG=0.76;                      // penaltının beklenen golü (genel kabul; motorun konum xG'si penaltıyı ayrı tutmaz)
@@ -88,7 +93,7 @@ function kartCezalari(kartlar){
 
 /* F7 (2026-10-24): bir maçın kaydı — doğrulama, k.maclar, iki kulübün son on biri, oyuncu sayaçları (ceza, gol, kart, sakatlık). Bizim maç ve haftanın
    öbür maçları (js/lig-maclari.js haftaSonuclariUygula) aynı kuralla yazılır. kisa: öbür maçların kısa kaydı — sutlar null (beklenen gol xg'de
-   durur), degisiklikler boş, geçmişe yazılmaz (kayıt boyu; sezonda ~210 maç). Maç günü işi ve zaman bizim maça özgüdür (macSonucuUygula) */
+   durur), geçmişe yazılmaz (kayıt boyu; sezonda ~210 maç). R3-a: değişiklikler kısa kayıtta da saklanır. Maç günü işi ve zaman bizim maça özgüdür (macSonucuUygula) */
 function macKaydiYaz(k,f,sonuc,tohum,ek,kisa){
   ek=ek||{};const macId=f.id;
   if(k.maclar[macId])throw new Error(`Maç sonucu işlenemedi: ${macId} zaten uygulanmış`);
@@ -104,14 +109,23 @@ function macKaydiYaz(k,f,sonuc,tohum,ek,kisa){
    if(!h&&s)throw new Error('Maç sonucu işlenemedi: hükmen koşulu yok');
    if(h&&(sonuc.skor[0]!==h.skor[0]||sonuc.skor[1]!==h.skor[1]))throw new Error('Maç sonucu işlenemedi: hükmen skoru tutmuyor');}
   const L=a=>Array.isArray(a)?a:[];
+  /* R3-a: olayın devresi (motor yazdıysa) */
+  const Y=x=>x&&(x.yari===1||x.yari===2)?{yari:x.yari}:{};
+  /* R3-a: maç anında oynayamayanlar (bu maçın cezaları ve sakatlıkları yazılmadan önce) */
+  const eksik=[f.ev,f.konuk].map(c=>kulupOyunculari(k,c).filter(p=>!oyuncuUygunMu(p,f.tarih)).map(p=>({id:p.id,tur:p.ceza&&p.ceza.mac>0?'cezali':'sakat'})));
+  const dizilis=[f.ev,f.konuk].map(c=>{const D=(k.kulupler[c]||{}).kadro;return D&&D.taktik&&typeof D.taktik.dizilis==='string'?D.taktik.dizilis:null;});
   /* kimlikler: gol atan bilinmeyebilir (numarasız, atansız gol null); kart ve sakatlık her zaman bir oyuncunundur */
   const goller=L(sonuc.goller).map(g=>{const kk=!!g.kendiKalesine,t=g.takim===1?1:0;
-    return{id:macSonucKimligi(k,f,kk?1-t:t,g.no|0,g.ad,(g.no|0)>0),no:g.no|0,takim:t,kk,dk:g.dakika|0};});
-  const kartlar=L(sonuc.kartlar).map(c=>({id:macSonucKimligi(k,f,c.takim===1?1:0,c.no|0,c.ad,true),no:c.no|0,takim:c.takim===1?1:0,renk:c.renk,neden:c.neden==null?null:String(c.neden),dk:c.dakika|0}));
-  const sakatliklar=L(sonuc.sakatliklar).map(s=>({id:macSonucKimligi(k,f,s.takim===1?1:0,s.no|0,s.ad,true),no:s.no|0,takim:s.takim===1?1:0,tur:s.tur,bolge:s.bolge,derece:s.derece,dk:s.dakika|0,gun:s.gun|0}));
-  const degisiklikler=L(sonuc.degisiklikler).map(d=>({takim:d.takim===1?1:0,cikan:String(d.cikan||''),giren:String(d.giren||''),dk:d.dakika|0,sakatlik:!!d.sakatlik}));
+    return Object.assign({id:macSonucKimligi(k,f,kk?1-t:t,g.no|0,g.ad,(g.no|0)>0),no:g.no|0,takim:t,kk,dk:g.dakika|0},Y(g));});
+  const kartlar=L(sonuc.kartlar).map(c=>Object.assign({id:macSonucKimligi(k,f,c.takim===1?1:0,c.no|0,c.ad,true),no:c.no|0,takim:c.takim===1?1:0,renk:c.renk,neden:c.neden==null?null:String(c.neden),dk:c.dakika|0},Y(c)));
+  const sakatliklar=L(sonuc.sakatliklar).map(s=>Object.assign({id:macSonucKimligi(k,f,s.takim===1?1:0,s.no|0,s.ad,true),no:s.no|0,takim:s.takim===1?1:0,tur:s.tur,bolge:s.bolge,derece:s.derece,dk:s.dakika|0,gun:s.gun|0},Y(s)));
+  /* R3-a: değişikliğin oyuncuları kimlikle (motorun numarası ve adı; eski motor kaydında numara yoksa null) */
+  const dgKimlik=(t,no,ad)=>{if(!(no>0))return null;try{return macSonucKimligi(k,f,t,no,ad,false);}catch(e){return null;}};
+  const degisiklikler=L(sonuc.degisiklikler).map(d=>{const t=d.takim===1?1:0;
+    return Object.assign({takim:t,cikan:String(d.cikan||''),giren:String(d.giren||''),dk:d.dakika|0,sakatlik:!!d.sakatlik},Y(d),
+      {cikanId:dgKimlik(t,d.cikanNo|0,String(d.cikan||'')),girenId:dgKimlik(t,d.girenNo|0,String(d.giren||''))});});
   const sutlar=L(sonuc.sutlar).map(s=>{const t=s.takim===1?1:0;
-    return{id:macSonucKimligi(k,f,t,s.no|0,s.ad,true),no:s.no|0,takim:t,dk:s.dakika|0,xg:Math.round(Math.max(0,+s.xg||0)*1000)/1000,pen:!!s.pen,kafa:!!s.kafa};});
+    return Object.assign({id:macSonucKimligi(k,f,t,s.no|0,s.ad,true),no:s.no|0,takim:t,dk:s.dakika|0,xg:Math.round(Math.max(0,+s.xg||0)*1000)/1000,pen:!!s.pen,kafa:!!s.kafa},Y(s));});
   /* maçın on biri (motorun girdisinden): iki takımda da 11 kimlik ve hepsi o kulübün oyuncusu olmalı; kariyersiz kadroda (kimliksiz) yok sayılır */
   let ilk11=null;
   if(Array.isArray(sonuc.ilk11)&&sonuc.ilk11.every(x=>Array.isArray(x)&&x.length===11&&x.every(id=>typeof id==='string'))){
@@ -119,14 +133,20 @@ function macKaydiYaz(k,f,sonuc,tohum,ek,kisa){
       if(new Set(x).size!==11||!x.every(id=>k.oyuncular[id]&&k.oyuncular[id].kulupId===kulup))throw new Error(`Maç sonucu bu kariyerin kadrosuyla uyuşmuyor: ${(k.kulupler[kulup]||{ad:kulup}).ad} on biri`);});
     ilk11=sonuc.ilk11.map(x=>x.slice());
   }
+  /* R3-a: maçın yedekleri (kulübe; motorun girdisinden, oyuna girenler dahil, o kulübün oyuncusu); kariyersiz ya da hükmen kayıtta null */
+  let yedek=null;
+  if(ilk11&&Array.isArray(sonuc.yedek)&&sonuc.yedek.length===2)yedek=[0,1].map(t=>{const kulup=t===0?f.ev:f.konuk,
+    L=(Array.isArray(sonuc.yedek[t])?sonuc.yedek[t]:[]).filter(id=>typeof id==='string'&&k.oyuncular[id]&&k.oyuncular[id].kulupId===kulup&&!ilk11[t].includes(id));
+    for(const x of degisiklikler)if(x.takim===t&&x.girenId&&!L.includes(x.girenId)&&!ilk11[t].includes(x.girenId))L.push(x.girenId);
+    return L;});
   const I=sonuc.ist||{},iki=a=>Array.isArray(a)&&a.length===2?a.map(x=>x|0):[0,0];
   const ist={sut:iki(I.sut),isabet:iki(I.isabet),korner:iki(I.korner),faul:iki(I.faul),sari:iki(I.sari),kirmizi:iki(I.kirmizi),ofsayt:iki(I.ofsayt),
     sahiplik:Array.isArray(I.sahiplik)&&I.sahiplik.length===2?I.sahiplik.map(x=>Math.round((+x||0)*1000)/1000):[0.5,0.5],
     pas:iki(I.pas),pasTamam:iki(I.pasTamam),uzunPas:iki(I.uzunPas)};
   /* maçın hocaları ve tarzları (uygulama anında; hoca sonra değişse de maçın okuması o maçın hocasıyla yapılır, js/mac-okuma.js) */
   const hocalar=[f.ev,f.konuk].map(id=>k.kulupler[id].hocaId||null),tarz=hocalar.map(id=>id&&k.kisiler[id]&&k.kisiler[id].hoca?k.kisiler[id].hoca.tarz:null);
-  const kayit={skor:sonuc.skor.slice(),tohum,goller,kartlar,sakatliklar,degisiklikler:kisa?[]:degisiklikler,sutlar:kisa?null:sutlar,xg:macBeklenenGol(sutlar),ilk11,hocalar,tarz,ist,
-    protokol:ek.protokol?JSON.parse(JSON.stringify(ek.protokol)):null};
+  const kayit={skor:sonuc.skor.slice(),tohum,goller,kartlar,sakatliklar,degisiklikler,sutlar:kisa?null:sutlar,xg:macBeklenenGol(sutlar),ilk11,hocalar,tarz,ist,
+    protokol:ek.protokol?JSON.parse(JSON.stringify(ek.protokol)):null,dizilis,eksik,yedek};   /* R3-a: değişiklikler kısa kayıtta da; diziliş, eksikler ve yedekler */
   if(sonuc.hukmen)kayit.hukmen=sonuc.hukmen;   /* G1-a: 'ev' | 'konuk' | 'cift' (hükmen kaybeden); oynanmış maçta alan yoktur */
   k.maclar=Object.assign({},k.maclar,{[macId]:kayit});
   /* F3-a: hocanın "son on biri" — iki kulübün kadro.ilk11'i bu maçın on biri olur, kalanı (önceki sırasıyla) yedekler. Kaleci yuvası kaleci değilse
@@ -200,6 +220,10 @@ function macSonucDogrula(k,h){
     for(const L of ['goller','kartlar','sakatliklar','sutlar'])for(const x of Array.isArray(s[L])?s[L]:[])
       if(x&&x.id!=null&&!O[x.id])h.push(`${ad}: ${L} kaydındaki oyuncu ${x.id} bulunamadı`);
     if(Array.isArray(s.ilk11))for(const x of s.ilk11)for(const id of Array.isArray(x)?x:[])if(!O[id])h.push(`${ad}: on birdeki oyuncu ${id} bulunamadı`);
+    /* R3-a: değişikliklerin ve eksiklerin kimlikleri */
+    for(const x of Array.isArray(s.degisiklikler)?s.degisiklikler:[])for(const a of ['cikanId','girenId'])if(x&&x[a]!=null&&!O[x[a]])h.push(`${ad}: değişiklikteki oyuncu ${x[a]} bulunamadı`);
+    if(Array.isArray(s.eksik))for(const L of s.eksik)for(const x of Array.isArray(L)?L:[])if(x&&x.id!=null&&!O[x.id])h.push(`${ad}: eksikteki oyuncu ${x.id} bulunamadı`);
+    if(Array.isArray(s.yedek))for(const L of s.yedek)for(const id of Array.isArray(L)?L:[])if(!O[id])h.push(`${ad}: yedekteki oyuncu ${id} bulunamadı`);
     if(MAC_SONUC_DENETLENDI.has(s))continue;
     const once=h.length;
     if(s.tohum!==macTohumu(k.dunyaTohumu,id))h.push(`${ad}: tohum maçın tohumu değil`);
@@ -219,6 +243,12 @@ function macSonucDogrula(k,h){
     for(const g of G)if(!g||![0,1].includes(g.takim)||typeof g.kk!=='boolean'||!tam(g.dk,0,130))h.push(`${ad}: gol kaydı geçersiz`);
     for(const c of Array.isArray(s.kartlar)?s.kartlar:[])if(!c||![0,1].includes(c.takim)||!MAC_SONUC_KART.includes(c.renk)||!tam(c.dk,0,130)||typeof c.id!=='string')h.push(`${ad}: kart kaydı geçersiz`);
     for(const x of Array.isArray(s.sakatliklar)?s.sakatliklar:[])if(!x||![0,1].includes(x.takim)||!MAC_SONUC_DERECE.includes(x.derece)||!tam(x.gun,0,999)||!tam(x.dk,0,130)||typeof x.id!=='string')h.push(`${ad}: sakatlık kaydı geçersiz`);
+    /* R3-a (isteğe bağlı alanlar): devre, değişikliğin kimlikleri, diziliş, eksikler */
+    for(const L of ['goller','kartlar','sakatliklar','degisiklikler','sutlar'])for(const x of Array.isArray(s[L])?s[L]:[])if(x&&x.yari!==undefined&&x.yari!==1&&x.yari!==2)h.push(`${ad}: ${L} kaydında devre geçersiz`);
+    for(const x of Array.isArray(s.degisiklikler)?s.degisiklikler:[])if(!x||![0,1].includes(x.takim)||!tam(x.dk,0,130)||['cikanId','girenId'].some(a=>x[a]!==undefined&&x[a]!==null&&typeof x[a]!=='string'))h.push(`${ad}: değişiklik kaydı geçersiz`);
+    if(s.dizilis!==undefined&&!(Array.isArray(s.dizilis)&&s.dizilis.length===2&&s.dizilis.every(x=>x===null||typeof x==='string')))h.push(`${ad}: diziliş iki takımın olmalı`);
+    if(s.yedek!==undefined&&s.yedek!==null&&!(Array.isArray(s.yedek)&&s.yedek.length===2&&s.yedek.every(L=>Array.isArray(L)&&L.every(id=>typeof id==='string'))))h.push(`${ad}: yedekler iki takımın olmalı`);
+    if(s.eksik!==undefined&&!(Array.isArray(s.eksik)&&s.eksik.length===2&&s.eksik.every(L=>Array.isArray(L)&&L.every(x=>x&&typeof x.id==='string'&&(x.tur==='sakat'||x.tur==='cezali')))))h.push(`${ad}: eksikler geçersiz`);
     if(h.length===once&&DONMUS.has(s))MAC_SONUC_DENETLENDI.add(s);
   }
 }

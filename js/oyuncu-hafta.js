@@ -107,7 +107,9 @@ function macDakikalari(k,f,x){
     olaylar.sort((a,b)=>a.dk-b.dk);
     for(const o of olaylar){
       if(o.tur==='k'){if(o.id&&saha.has(o.id)){saha.delete(o.id);cikis.set(o.id,o.dk);}continue;}
-      const cikan=[...saha].filter(id=>(k.oyuncular[id]||{}).ad===o.d.cikan),giren=kadro.filter(p=>p.ad===o.d.giren&&!girdi.has(p.id));
+      /* R3-a: kayıt kimlik taşıyorsa kimlikle (aynı adlı iki oyuncuda da doğru), yoksa adla (eski kayıt ve maç anındaki sonuç) */
+      const cikan=o.d.cikanId&&saha.has(o.d.cikanId)?[o.d.cikanId]:[...saha].filter(id=>(k.oyuncular[id]||{}).ad===o.d.cikan),
+        giren=o.d.girenId&&k.oyuncular[o.d.girenId]&&!girdi.has(o.d.girenId)?[k.oyuncular[o.d.girenId]]:kadro.filter(p=>p.ad===o.d.giren&&!girdi.has(p.id));
       if(cikan.length!==1||giren.length!==1)continue;
       saha.delete(cikan[0]);cikis.set(cikan[0],o.dk);saha.add(giren[0].id);girdi.add(giren[0].id);giris.set(giren[0].id,o.dk);
     }

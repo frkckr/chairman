@@ -106,7 +106,7 @@ Object.assign(Match.prototype,{
   /* sakatlık başlar: kayıt ve olay; ağrıda yerde biraz kalır ve topallar, tedavi ve çıkışta yerde kalır ve sıraya girer */
   sakatlikBaslat(p,tur,bolge,derece){
     const dakika=Math.floor(this.gameSec/60)+1,gun=this.sakatlikGun(tur,derece);
-    this.kayit.sakatliklar.push({ad:p.name,no:p.no,takim:p.team,tur,bolge,derece,dakika,gun});
+    this.kayit.sakatliklar.push({ad:p.name,no:p.no,takim:p.team,tur,bolge,derece,dakika,gun,yari:this.half});
     this.on('sakatlik',{p,tur,bolge,derece,dakika,gun});
     const e=p.eylem;
     if(derece==='agri'){

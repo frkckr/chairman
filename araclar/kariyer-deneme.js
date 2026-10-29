@@ -773,10 +773,29 @@ bolum('3.8 — ligin öbür maçları: haftanın sekiz maçı, tek komut (F7)');
     return{k,G,D,S:m.sonucKaydi(),O};};
   const h=hafta(MG('kariyerBaslat')({tohum:7})),uy=(x,O)=>MG('haftaSonuclariUygula')(x,h.G.macId,h.S,h.G.tohum,{},O||h.O);
   const k1=KK(h.k,x=>uy(x)).kariyer,tb=MG('sezonTablosu')(k1),ids=Object.keys(k1.maclar);
-  denetle('Haftanın sekiz maçı tek komutla: sekiz kayıt, 16 kulüp 13 maç, geçmişe yalnız bizim maç, öbürleri kısa kayıt (şut listesi yok, beklenen gol var), 16 kulübün son on biri yazıldı',
-    ids.length===8&&tb.every(t=>t.O===13)&&k1.gecmis.filter(g=>g.tur==='mac').length===1&&ids.filter(id=>id!==h.G.macId).every(id=>k1.maclar[id].sutlar===null&&k1.maclar[id].xg.length===2&&k1.maclar[id].degisiklikler.length===0)
+  denetle('Haftanın sekiz maçı tek komutla: sekiz kayıt, 16 kulüp 13 maç, geçmişe yalnız bizim maç, öbürleri kısa kayıt (şut listesi yok, beklenen gol var; R3-a: değişiklikler var), 16 kulübün son on biri yazıldı',
+    ids.length===8&&tb.every(t=>t.O===13)&&k1.gecmis.filter(g=>g.tur==='mac').length===1&&ids.filter(id=>id!==h.G.macId).every(id=>k1.maclar[id].sutlar===null&&k1.maclar[id].xg.length===2&&Array.isArray(k1.maclar[id].degisiklikler))
     &&Array.isArray(k1.maclar[h.G.macId].sutlar)&&ids.every(id=>{const f=k1.fikstur.find(x=>x.id===id);return [f.ev,f.konuk].every((c,t)=>metin(k1.kulupler[c].kadro.ilk11)===metin(k1.maclar[id].ilk11[t]));})
     &&!MG('kariyerDogrula')(k1).length,`${ids.length} maç · O ${[...new Set(tb.map(t=>t.O))].join(',')}`);
+  /* R3-a (2026-10-29): kayıtta eşitlik — her maçta (kısa dahil) devre, kimlikli değişiklikler, diziliş ve maç anındaki eksikler */
+  {const M=Object.entries(k1.maclar),olay=x=>[...x.goller,...x.kartlar,...x.sakatliklar,...x.degisiklikler],fk=id=>k1.fikstur.find(x=>x.id===id);
+   const devre=M.every(([,x])=>olay(x).every(o=>o.yari===1||o.yari===2));
+   const dg=M.flatMap(([id,x])=>x.degisiklikler.map(d=>({id,d})));
+   const kim=dg.every(({id,d})=>{const f=fk(id),c=d.takim?f.konuk:f.ev;return typeof d.cikanId==='string'&&typeof d.girenId==='string'&&k1.oyuncular[d.cikanId].ad===d.cikan
+     &&k1.oyuncular[d.girenId].ad===d.giren&&[d.cikanId,d.girenId].every(o=>k1.oyuncular[o].kulupId===c);});
+   const diz=M.every(([,x])=>Array.isArray(x.dizilis)&&x.dizilis.length===2&&x.dizilis.every(o=>typeof o==='string'));
+   const eks=M.every(([,x])=>Array.isArray(x.eksik)&&x.eksik.every((L,t)=>L.every(o=>!x.ilk11[t].includes(o.id)&&(o.tur==='sakat'||o.tur==='cezali'))));
+   const nEks=M.reduce((a,[,x])=>a+x.eksik[0].length+x.eksik[1].length,0);
+   const yed=M.every(([,x])=>Array.isArray(x.yedek)&&x.yedek.every((L,t)=>L.length>=1&&L.length<=7&&L.every(o=>!x.ilk11[t].includes(o)))&&x.degisiklikler.every(d=>x.yedek[d.takim].includes(d.girenId)));
+   denetle('R3-a: her maçın kaydında (kısa dahil) olaylar devreyi taşır (1 ya da 2), değişiklikler kimlikle (giren ve çıkan o kulübün oyuncusu, adlar tutar), iki takımın dizilişi, kulübedeki yedekler (oyuna girenler dahil) ve maç anındaki eksikler (on birde değil)',
+     devre&&dg.length>0&&kim&&diz&&eks&&nEks>0&&yed&&!MG('kariyerDogrula')(k1).length,`${dg.length} değişiklik · ${nEks} eksik · diziliş ${[...new Set(M.flatMap(([,x])=>x.dizilis))].join(',')}`);
+   const eski=JSON.parse(JSON.stringify(k1));
+   for(const x of Object.values(eski.maclar)){delete x.dizilis;delete x.eksik;delete x.yedek;for(const L of ['goller','kartlar','sakatliklar','degisiklikler','sutlar'])for(const o of x[L]||[]){delete o.yari;delete o.cikanId;delete o.girenId;}}
+   const bozuk=JSON.parse(JSON.stringify(k1)),b0=Object.values(bozuk.maclar).find(x=>x.goller.length)||Object.values(bozuk.maclar)[0];
+   if(b0.goller[0])b0.goller[0].yari=3;b0.eksik=[[{id:'oyuncu-yok',tur:'sakat'}],[]];
+   const hb=MG('kariyerDogrula')(bozuk);
+   denetle('R3-a: eski kayıt (yeni alanlar yok) geçerli; bozuk devre ve bilinmeyen eksik doğrulamada yakalanır',
+     !MG('kariyerDogrula')(eski).length&&hb.some(x=>/eksikteki oyuncu/.test(x))&&(!b0.goller[0]||hb.some(x=>/devre geçersiz/.test(x))),hb.slice(0,2).join(' · '));}
   /* H2-b: Canlı Skor'un ayrıntısı kayıttan (macAyrintisi; adlar kariyerin oyuncularından, kısa kayıtta beklenen gol kayıttaki değer) */
   {const AY=MG('macAyrintisi'),adBul=id=>(k1.oyuncular[id]||{}).ad,A=ids.filter(id=>id!==h.G.macId).map(id=>[id,AY(k1.maclar[id],adBul)]);
    const tamam=A.every(([id,a])=>{const s=k1.maclar[id];return a.goller.length===s.skor[0]+s.skor[1]&&a.goller.concat(a.kartlar,a.sakat).every(x=>x.ad!=='—')
