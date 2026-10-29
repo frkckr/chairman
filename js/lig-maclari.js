@@ -54,13 +54,13 @@ function digerMacSecenegi(k,f){
 const ARKA_ORNEK_KARE=300;   // Canlı Skor örneği: 5 motor sn'de bir
 /* H2-b (2026-10-26): örnek tek sonucKaydi() çağrısıyla genişler — n: [goller, kartlar, sutlar, sakatliklar] uzunlukları, ist: o anın istatistiği.
    Motorun kayıt listeleri yalnız eklenir (araclar/kariyer-deneme.js 3.8b bunu kilitler): örneğin anındaki olaylar bitmiş kaydın önekidir */
-const macOrnek=m=>{const S=m.sonucKaydi();return{kare:m.kare||0,skor:S.skor,dk:m.minuteLabel(),faz:m.phase,n:[S.goller.length,S.kartlar.length,S.sutlar.length,S.sakatliklar.length],ist:S.ist};};
+const macOrnek=m=>{const S=m.sonucKaydi();return{kare:m.kare||0,skor:S.skor,dk:m.minuteLabel(),faz:m.phase,yari:m.half,n:[S.goller.length,S.kartlar.length,S.sutlar.length,S.sakatliklar.length,S.degisiklikler.length],ist:S.ist};};   /* R3: devre ve değişiklik sayısı */
 /* H2-b: işçinin bitmiş kaydının (son) o örneğe kadarki hâli, sonucKaydi biçiminde (Canlı Skor'un ayrıntısı; saf). Dakikayla süzülmez: ilk yarı
    uzatmasındaki gol ile ikinci yarının başı aynı 46. dakikayı taşır. Beklenen gol ana iplikte önekten (macBeklenenGol işçide yüklü değil) */
 function arkaMacAnlik(son,o){
   if(!son||!o)return null;const n=o.n||[0,0,0,0];
   return{skor:o.skor.slice(),bitti:o.faz==='fulltime',goller:son.goller.slice(0,n[0]),kartlar:son.kartlar.slice(0,n[1]),sutlar:son.sutlar.slice(0,n[2]),
-    sakatliklar:son.sakatliklar.slice(0,n[3]),ist:o.ist};
+    sakatliklar:son.sakatliklar.slice(0,n[3]),degisiklikler:(son.degisiklikler||[]).slice(0,n[4]||0),ilk11:son.ilk11,yedek:son.yedek,ist:o.ist};   /* R3: canlı maç sayfasının kadrosu */
 }
 function arkaMacOynat(MatchSinifi,secenek,o){
   o=o||{};const m=new MatchSinifi(()=>{},secenek);

@@ -4,9 +4,10 @@
    geçmiş yazılmaz (kulübün geçmişi içeriktir). Renkler yalnız armadadır; formalar bugünkü iki ortak formadır (STIL.formalar ev, deplasman).
      ARMA_TARIFLERI[kulüpKimliği] = {bicim, renk:[zemin, motif, kenar], motif}
        bicim: 'kalkan' | 'eskutcon' | 'daire' | 'rozet' | 'sancak'; motif: ARMA_MOTIF anahtarı (kulübün adından esinli)
-     armaSvg(kulüpKimliği, boy, kısaAd) → html   boy 'kucuk' (satır, köşe skoru: biçim, renk ve baş harf; motif çizilmez) | 'orta' | 'buyuk'
-       (motif ve kısa ad şeridi). Tarifi olmayan kulüpte biçim ve renk kimlikten türetilir (belirlenimci), motif yerine baş harf. Arma süstür:
-       aria-hidden; kulübün adı her yerde yanında yazılıdır. Boyu çağıranın CSS'i verir (.arma sınıfı 1em × 1.125em). */
+     armaSvg(kulüpKimliği, boy, kısaAd) → html   boy 'kucuk' (satır, tablo, köşe skoru: düz HTML/CSS; biçim, renk ve baş harf) | 'orta' | 'buyuk'
+       (SVG: biçim, motif ve kısa ad şeridi; büyükte şeritte kısa ad). Harfler CSS ::after'dadır: sayfa metnine (textContent) karışmaz. Tarifi
+       olmayan kulüpte biçim ve renk kimlikten türetilir (belirlenimci), motif yerine baş harf. Arma süstür: aria-hidden; kulübün adı her yerde
+       yanında yazılıdır. */
 'use strict';
 const ARMA_TARIFLERI={
   demirkapi:{bicim:'kalkan',renk:['#c8281e','#f2ede2','#6e140e'],motif:'kapi'},
@@ -63,17 +64,38 @@ function armaTarifi(id){
 }
 const armaHarf=(id,kisa)=>String(kisa||id||'?').replace(/\s+/g,'').toLocaleUpperCase('tr-TR');
 function armaSvg(id,boy,kisa){
-  const T=armaTarifi(id),[z,m,kn]=T.renk,yol=ARMA_BICIM[T.bicim]||ARMA_BICIM.kalkan,H=armaHarf(id,kisa),kucuk=boy==='kucuk';
-  const kab='<path d="'+yol+'" fill="'+z+'" stroke="'+kn+'" stroke-width="3" stroke-linejoin="round"/>';
-  const ic=kucuk||!ARMA_MOTIF[T.motif]
-    ?'<text x="32" y="'+(T.bicim==='sancak'?40:44)+'" text-anchor="middle" font-size="'+(kucuk?30:26)+'" font-weight="700" font-family="var(--govde,sans-serif)" fill="'+m+'">'+H.slice(0,1)+'</text>'
-    :'<path d="M12 14h40v10H12z" fill="'+m+'"/><text x="32" y="22.2" text-anchor="middle" font-size="8.2" font-weight="700" letter-spacing=".6" font-family="var(--govde,sans-serif)" fill="'+z+'">'+H.slice(0,3)+'</text>'+ARMA_MOTIF[T.motif](m);
-  return'<svg class="arma arma-'+(boy||'orta')+'" viewBox="0 0 64 72" aria-hidden="true" focusable="false" data-kulup="'+String(id).replace(/[^a-z0-9_-]/gi,'')+'">'+kab+ic+'</svg>';
+  const T=armaTarifi(id),[z,m,kn]=T.renk,yol=ARMA_BICIM[T.bicim]||ARMA_BICIM.kalkan,H=armaHarf(id,kisa),kid=String(id).replace(/[^a-z0-9_-]/gi,'');
+  const harf=v=>String(v).replace(/[&<>"]/g,'');
+  /* küçük (satır, tablo, köşe skoru): düz HTML ve CSS — biçim, renk, baş harf; harf ::after'dadır (sayfa metnine karışmaz) */
+  if(boy==='kucuk')return'<i class="arma arma-kucuk" data-kulup="'+kid+'" data-bicim="'+T.bicim+'" data-harf="'+harf(H.slice(0,1))+'" style="--arma-z:'+z+';--arma-m:'+m+';--arma-k:'+kn+'" aria-hidden="true"></i>';
+  /* orta ve büyük: SVG (biçim, kısa ad şeridi, motif); harfler yine ::after'da (büyükte şeritte, motifsiz kulüpte ortada) */
+  const motif=ARMA_MOTIF[T.motif];
+  const ic=motif?'<path d="M12 14h40v10H12z" fill="'+m+'"/>'+motif(m):'';
+  const yazi=motif?(boy==='buyuk'?H.slice(0,3):''):H.slice(0,1);
+  return'<i class="arma arma-'+(boy==='buyuk'?'buyuk':'orta')+(motif?'':' arma-harfOrta')+'" data-kulup="'+kid+'"'+(yazi?' data-harf="'+harf(yazi)+'"':'')+' style="--arma-z:'+z+';--arma-m:'+m+'" aria-hidden="true">'+
+    '<svg viewBox="0 0 64 72" focusable="false"><path d="'+yol+'" fill="'+z+'" stroke="'+kn+'" stroke-width="3" stroke-linejoin="round"/>'+ic+'</svg></i>';
 }
-/* ortak boy: satır içi, yazının boyuna göre (çağıran sınıfla büyütür) */
+/* ortak boy: satır içi, yazının boyuna göre; küçük biçimler clip-path ile */
 (function armaStili(){
   if(typeof document==='undefined'||document.getElementById('armaStili'))return;
   const st=document.createElement('style');st.id='armaStili';
-  st.textContent='.arma{display:inline-block;flex:none;width:1em;height:1.125em;vertical-align:-.2em;overflow:visible}.arma-orta{width:1.6em;height:1.8em}.arma-buyuk{width:3.2em;height:3.6em}';
+  st.textContent=`
+.arma{position:relative;display:inline-block;flex:none;vertical-align:-.2em;font-style:normal;line-height:1}
+.arma>svg{display:block;width:100%;height:100%;overflow:visible}
+.arma::after{content:attr(data-harf);position:absolute;left:0;right:0;text-align:center;font-family:var(--govde,sans-serif);font-weight:700;pointer-events:none}
+.arma-kucuk{width:1em;height:1.1em;background:var(--arma-z);box-shadow:inset 0 0 0 .07em var(--arma-k)}
+.arma-kucuk::after{top:50%;transform:translateY(-55%);font-size:.62em;color:var(--arma-m)}
+.arma-kucuk[data-bicim="kalkan"]{clip-path:polygon(0 0,100% 0,100% 52%,50% 100%,0 52%)}
+.arma-kucuk[data-bicim="eskutcon"]{clip-path:polygon(0 8%,50% 0,100% 8%,100% 52%,50% 100%,0 52%)}
+.arma-kucuk[data-bicim="daire"]{height:1em;border-radius:50%}
+.arma-kucuk[data-bicim="rozet"]{clip-path:polygon(28% 0,72% 0,100% 24%,100% 76%,72% 100%,28% 100%,0 76%,0 24%)}
+.arma-kucuk[data-bicim="sancak"]{clip-path:polygon(0 0,100% 0,100% 68%,50% 100%,0 68%)}
+.arma-kucuk[data-bicim="kalkan"]::after,.arma-kucuk[data-bicim="eskutcon"]::after,.arma-kucuk[data-bicim="sancak"]::after{transform:translateY(-70%)}
+.arma-orta{width:1.6em;height:1.8em}
+.arma-buyuk{width:3.2em;height:3.6em}
+.arma-buyuk::after{top:19.5%;font-size:.42em;letter-spacing:.04em;color:var(--arma-z)}
+.arma-harfOrta::after{top:50%;transform:translateY(-55%);font-size:.9em;color:var(--arma-m)}
+.arma-orta.arma-harfOrta::after{font-size:.75em}
+`;
   document.head.appendChild(st);
 })();

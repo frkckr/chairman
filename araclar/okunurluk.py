@@ -3,7 +3,8 @@
 
 Oyun karesi üç genişlikte (640, 800, 1186 px) açılır; her ekranda görünen her metnin hesaplanan yazı boyu ve kırpılıp kırpılmadığı ölçülür.
 Ekranlar: oda (masa), defter, telefonun ana ekranı, konuşma (R2: iki sütun, tek kart iş panelinde), konu menüsü (R2 eki), mesaj listesi, Canlı Skor, dosya (tek kartla), Kadro sekmesi,
-oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu kartı.
+oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu kartı. R3: Canlı Skor sayfaları sürüm 11 örnek kaydından
+(araclar/ornekler/kayit-s11-hafta14.json): hafta görünümü, maç sayfası (Özet, İstatistikler, Kadrolar), oyuncu sayfası, takım sayfası (Genel, Kadro).
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
 kalan metin (kaydırılabilir alanda kaydırınca okunur; kesen alanda bilerek gizlenmiştir: ekran okuyucu metni), TEST öğeleri (yayından önce kalkar). Kırpılan metin: en yakın taşmayı kesen atası overflow hidden/clip olan ve kutusunun dışına taşan metin
@@ -130,6 +131,31 @@ async def sahneler_oda(pg, olc):
     await olc("ayarlar-kayit")
 
 
+async def sahneler_canli(pg, olc):
+    """R3: sürüm 11 örnek kaydı (14. hafta sonu, oynanmış iki hafta): hafta görünümü, maç sayfası, oyuncu ve takım sayfası (geniş karede sağ
+    panelde, dar karede telefonun içinde)."""
+    await pg.keyboard.press("Digit1")
+    await pg.wait_for_selector(".tel-ekran", timeout=10000)
+    await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="skor"]')
+    await olc("canli-hafta")
+    mid = await pg.evaluate("() => OYUN.kariyer.fikstur.find(f => f.hafta === 14 && (f.ev === 'demirkapi' || f.konuk === 'demirkapi')).id")
+    await tikla(pg, f'.tel [data-eylem="csAc"][data-tur="mac"][data-id="{mid}"]')
+    await olc("canli-mac-ozet")
+    await tikla(pg, '.cs-sayfa [data-eylem="csBolum"][data-bolum="ist"]')
+    await olc("canli-mac-ist")
+    await tikla(pg, '.cs-sayfa [data-eylem="csBolum"][data-bolum="kadro"]')
+    await olc("canli-mac-kadro")
+    await tikla(pg, '.cs-sayfa .cs-kadro [data-eylem="csAc"][data-tur="oyuncu"]')
+    await olc("canli-oyuncu")
+    await tikla(pg, '.cs-sayfa [data-eylem="csAc"][data-tur="kulup"]')
+    await olc("canli-kulup")
+    await tikla(pg, '.cs-sayfa [data-eylem="csBolum"][data-bolum="kadro"]')
+    await olc("canli-kulup-kadro")
+
+
+CANLI_SAHNELER = {"canli-hafta", "canli-mac-ozet", "canli-mac-ist", "canli-mac-kadro", "canli-oyuncu", "canli-kulup", "canli-kulup-kadro"}
+
+
 async def sahneler_mac(pg, olc):
     """Boş kariyer: İlerle maç gününe; Stada git → bülten. Ayrı sayfada TEST 'Maçı izleme' → maç sonu kartı."""
     await akis.oda_ilerle(pg)
@@ -164,13 +190,16 @@ async def ana():
     ek = '<script src="js/baslangic.js"></script>\n<script src="araclar/test-icerik.js"></script>\n<script>BASLANGIC_EKLERI.push(k => testIcerikKur(k));</script>'
     (site / "index-test.html").write_text(idx.replace('<script src="js/baslangic.js"></script>', ek), encoding="utf-8")
     sonuc, hatalar = {}, []
+    ornek = (ARAC / "ornekler" / "kayit-s11-hafta14.json").read_text(encoding="utf-8")
     async with async_playwright() as p:
         t = await p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
         for g in genislikler:
             pencere = GENISLIKLER[g]
 
-            async def ac(ad, sorgu):
+            async def ac(ad, sorgu, kayit=None):
                 b = await t.new_context(viewport={"width": pencere[0], "height": pencere[1]})
+                if kayit:   # R3: örnek kayıt ilk açılışta depoya yazılır (akış §31 kalıbı)
+                    await b.add_init_script("""(m => { if (!sessionStorage.getItem('__ok')) { sessionStorage.setItem('__ok', '1'); localStorage.setItem('chairman:oyun-1', m); } })(""" + json.dumps(kayit) + ")")
                 pg = await b.new_page()
                 pg.on("pageerror", lambda e: hatalar.append(f"{g}: {e}"))
                 await pg.goto((site / ad).as_uri() + sorgu)
@@ -189,6 +218,10 @@ async def ana():
             pg = await ac("index-test.html", "?dunya=7&pul=0")
             await sahneler_oda(pg, await olc_kur(pg))
             await pg.context.close()
+            if not secili or secili & CANLI_SAHNELER:
+                pg = await ac("index.html", "?pul=0", ornek)
+                await sahneler_canli(pg, await olc_kur(pg))
+                await pg.context.close()
             if not secili or "bulten" in secili:
                 pg = await ac("index.html", "?dunya=7&pul=0")
                 await sahneler_mac(pg, await olc_kur(pg))

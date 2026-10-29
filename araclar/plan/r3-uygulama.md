@@ -125,4 +125,17 @@ Kaynaklar: kullanıcının isteği (2026-10-29: “takım logoları da uyduralı
 
 ## Sapmalar
 
-(boş — uygulama sırasında doldurulur)
+- **Motora birden çok alan (R3-a “yalnız bir alan” yerine):** `yari` olaylara; ayrıca oyuncu değişikliğine `cikanNo`, `girenNo` ve `sonucKaydi()`'na `yedek` (kulübe kimlikleri). Değişikliğin kimliği adla değil motorun forma numarasıyla çözülür (aynı adlı iki oyuncu riski kalkar); kulübe kayıtta adla eşlenmez, motorun kadrosundan gelir. Davranış değişmedi (`--ayni`).
+- **Yedekler kayda girdi** (planda yalnız diziliş ve eksikler vardı): Kadrolar'ın “Yedekler” bölümü için `yedek` alanı.
+- **Arka maç örneği:** `n` dört sayaçtan beşe (değişiklik sayısı), örnekte `yari`; `arkaMacAnlik` değişikliklerin önekini, ilk on biri ve kulübeyi verir (canlı maç sayfasının Kadrolar'ı ve devre ayracı için).
+- **Kadrolar dar alanda alt alta** (planda “üstte takım seçimi”): iki takım alt alta, geniş panelde (≥ 30 em) yan yana; seçim düğmesi gerekmedi, okunurluk ölçüsü eşikte.
+- **Armaların harfleri CSS ile:** SVG `<text>` sayfa metnine (ve ekran okuyucuya, metin denetimlerine) karışıyordu; harfler `::after` ile çizilir. Küçük boy SVG değil düz HTML ve CSS.
+- **Satırda armalar skor hücresinde:** armalar adların yanında ayrı hücredeyken adlar fazla kesiliyordu; N2'nin tek satır kuralı korunarak skorla tek hücreye alındı, saat sütunu daraldı.
+- **Hafta sınırı düzeltmesi:** `haftaSayisi` sezonun son haftasının numarasıdır; eski Fikstür sekmesi 31–42 gibi boş haftalara gidebiliyordu (`canliHafta` sınırlar).
+- **Takım ve oyuncu sayfasında “13. haftadan beri”:** devralınan 1–12. haftaların maç kaydı yoktur; takımın maç listesi ve oyuncunun maç maç dökümü kayıtlı haftalardır, sezon sayaçları (maç, dakika, gol) bütün sezondur — iki yerde de başlıkta yazar. Eski kayıtta maç ve dakika sayacı yoksa “—”; kırmızı kart oyuncu kaydında tutulmaz, maç kayıtlarından sayılır (Kadro sekmesiyle aynı).
+- **`macAyrintisi` kalktı:** yerine `macSayfasi`; H2-b'nin kariyer denetimleri ona taşındı. Ayrıntı görünümünün ölü CSS'i silindi.
+- **Kariyersiz TEST maçında satırlar dokunulmaz:** maç sayfası kariyerden okunur (fikstür, kulüpler); eski ayrıntı orada da açılıyordu. Canlı sayfanın denetimi kariyerli maçta (§19 kilit adım, §20 işçi).
+- **Maç telefonunda takım ve oyuncu sayfası notu:** kariyer maç bitince işlendiği için sayfa maç öncesini gösterir ve “Bugünkü maçlar, maç bitince işlenir.” der (S-d'nin kulüp ekranındaki “(canlı)”, “(önceki haftalar)” etiketlerinin yerine).
+- **Dakikada düz kesme işareti** (“45+2'”): oyunun öbür yerleriyle (satır, maç sonu kartı, köşe skoru) aynı.
+- **B44:** maç telefonunda okuma yeri (H2-e düzeltmesi R3'ün yeniden yazımında kaybolmuştu; sayfa başına geri geldi), telefon açıkken Maçı bitir ve maçta Mesajlar önizlemesi denetime alındı; kalan tek madde gözlemde rozet (R5).
+- **Örnek kayıt:** `araclar/ornekler/kayit-s11-hafta14.json` (R3 koduyla, tohum 7, 14. hafta sonu; `sezon-deneme --kayit-yaz`); akış §31 ve okunurluğun Canlı Skor sahneleri bunu açar.
