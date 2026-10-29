@@ -1091,6 +1091,8 @@ Olağan içerik, açık vade ve krizleri gizlemez; her yeni gün kesinti üretme
 
 ### 16.2 Sonraki yazımın somut işi
 
+**Pilot aileler (2026-10-29, kullanıcı onayı; karar 60):** ilk tam yazım P01 (ödeme takvimi), P12 (hocaya sabır) ve P07 (yetiştirilen oyuncuya teklif) ile başlar; üçü de bugünkü sistemlere en yakın ailelerdir ve R4–R6 geldiğinde hazır olur. Metinleri kullanıcı yazar; gündelik doku bu ailelerle değil gerçek veriden okuyan sistemlerle kurulur ([OYUN_TASARIMI §1 — İlkelerin uygulama yönü](OYUN_TASARIMI.md#i̇lkelerin-uygulama-yönü)).
+
 Önce §15'ten seçilecek birkaç odak, §6'nın tam biçimine indirilir: kaynak ayrımı, kişilerin amaçları, doğal ilk temas, günler arasındaki gerçek işler, normal görüşmelere katılan cümleler, her kararın iki cevabı, farklı koşullardaki yollar ve kapanıştan sonra hatırlanacak izler. İlgili kod sistemi hazır değilse bağımlılık görünür tutulur. Bir erken önleme yolu, bir sorunsuz/olumlu yol ve uygun adayda zor ama sürdürülebilir toparlanma birlikte yazılır; bunlar her sahneyi sırayla oynatma kotası değildir.
 
 Bu araştırma R programının sırasını değiştirmez, mevcut kod turuna yeni özellik eklemez ve 50 ayrı sistemi peşinen kurmayı gerektirmez. Yeni kaynak eklemekle yeni oyun ailesi açmak ayrı değerlendirilir; tarihsel çekirdeği benzer örnekler aynı aileyi zenginleştirebilir.
