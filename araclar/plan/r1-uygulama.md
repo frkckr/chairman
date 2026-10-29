@@ -1,6 +1,6 @@
 # R1 — Güvence: kayıt çakışması, kayıt taşıma, araç girişleri, borç defteri, katı kip, okunurluk tabanı (uygulama planı)
 
-Durum: **onaylandı (kullanıcı, 2026-10-29: “Onayla, başla”); uygulama Opus 5.5, masaüstü.** Dal `claude/r1-guvence` (taban `main` 86e3d66), etiket `tur/r1-guvence`. `main`'e alma ve push kullanıcının sözüyle.
+Durum: **onaylandı (kullanıcı, 2026-10-29: “Onayla, başla”); uygulama Opus 5.5, masaüstü.** Dal `claude/r1-guvence` (taban `main` 86e3d66), etiket `tur/r1-guvence`. `main`'e alındı ve push edildi (kullanıcı, 2026-10-29: “bu turla birlikte hepsini gite alalım”), Codex'le yazılan kararlar 58–59'un belgeleriyle birlikte.
 
 Kaynak: kullanıcının ChatGPT ile hazırladığı inceleme raporu (2026-10-29, sohbette), Claude'un madde madde değerlendirmesi ve kullanıcının “T1 planına geç” cevabı. Değerlendirmede önerilen yedi turluk sıra bu turun ilk commit'inde belgeye yazılır (§0). Tur harfi **R**'dir (revizyon programı): T harfi motor turlarındadır (`tur/t0-t1` … `tur/t23`), sohbetteki “T1” bu planın R1'idir.
 
@@ -148,7 +148,7 @@ Sonra: H3 yeni sezon ve kayıt büyümesi (arşiv, IndexedDB ölçümü), görse
 
 ## Kapanış (2026-10-29, masaüstü)
 
-Kabulün hepsi geçti, iki istisnayla: Electron denemesi yapılmadı (Electron kurulu değil; B31) ve 640 px karede telefonun cevap kartı telefona sığmıyor, kayar (B47, B48; R2'nin işi). Sayılar YOL_HARITASI devam notunda. Commit'ler `b4cf0d8` (R0), `9aa4cb7` (R1-c), `cdd8dfa` (R1-d), `911765e` (R1-e, R1-a), `7269794` (R1-b) ve R1-f ile belgeler. Etiket `tur/r1-guvence`; `main`'e alma ve push kullanıcının sözüyle.
+Kabulün hepsi geçti, iki istisnayla: Electron denemesi yapılmadı (Electron kurulu değil; B31) ve 640 px karede telefonun cevap kartı telefona sığmıyor, kayar (B47, B48; R2'nin işi). Sayılar YOL_HARITASI devam notunda. Commit'ler `b4cf0d8` (R0), `9aa4cb7` (R1-c), `cdd8dfa` (R1-d), `911765e` (R1-e, R1-a), `7269794` (R1-b) ve R1-f ile belgeler. Etiket `tur/r1-guvence`; `main`'e alındı ve push edildi.
 
 ## Sapmalar
 
