@@ -420,7 +420,7 @@ function tlfOyuncuSecici(k,Gid){
     '<div><button type="button" class="od-baglanti" data-eylem="oyuncuSecKapat">Vazgeç</button></div></div>';
 }
 /* R2 eki: konu menüsünün başlıkları (yazışma konusunun isteğe bağlı kategori alanı, js/yazisma.js) → başlık ve simge; bilinmeyen kategori “Diğer” */
-const TLF_KATEGORI={mac:['Maç','top'],takim:['Takım','takim'],gorusme:['Görüşme','takvim'],kasa:['Kasa','para']};
+const TLF_KATEGORI={mac:['Maç','top'],takim:['Takım','takim'],gorusme:['Görüşme','takvim'],kasa:['Kasa','para'],transfer:['Transfer','devir']};   /* R4: hocaya hat için oyuncu iste */
 function tlfKonuMenusu(k,T,c){
   const G=new Map();for(const x of c.girisimler){const kt=TLF_KATEGORI[x.kategori]?x.kategori:'diger';if(!G.has(kt))G.set(kt,[]);G.get(kt).push(x);}
   const konu=x=>{const ac=x.argumanli&&T.oyuncuSec===x.id&&!x.engel;

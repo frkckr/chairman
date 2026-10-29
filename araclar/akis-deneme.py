@@ -43,6 +43,9 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
      oyuncu dosyası, Kadro TEST, karar paneli, defter); Kapat ve perde masaya; odakta İlerle yok; 3B donar.
  31. Canlı Skor sayfaları (R3, 2026-10-29): sürüm 11 örnek kaydında hafta görünümü (tarafsız, armalı), maç sayfası (Özet, İstatistikler,
      Kadrolar, Puan durumu), oyuncu ve takım sayfası, kamuya açık bilgi sınırı, sağ panelde Esc zinciri ve okuma yeri, balkonda tek telefon.
+ 32. Transfer masası (R4-k, 2026-10-29): masada Transfer (6); Pano (dönem sayacı, kasa, açık işler), Piyasa, oyuncu kâğıdı (bildiklerimiz, eylemler),
+     takip (zaman almaz), Hocaya araştırt (dosya açılır; dosyada aşama satırı, ‹ Transfer), Geçmiş, Duraklat'ta eylemler kapalı, Esc zinciri.
+ 33. Transfer zinciri (R4): yapay haftalarla 5 Ocak; hocanın isteği telefonda; aday, yürütme, pazarlık kartının iki yüzü, Yanına git, imza ya da kayıp.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız, Durdur ve tarz seçimi (TEST, B4b), eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
@@ -3436,6 +3439,201 @@ async def bolum_31(tarayici, site, tum_hatalar):
     await pg.context.close()
 
 
+
+# ---- R4 (§32, §33): Transfer masası ve transfer zinciri ----
+TM_JS = """() => { const m = document.querySelector('#oda .tm-masa'); if (!m) return null;
+  return { bolum: m.dataset.bolum, sekme: [...m.querySelectorAll('.tm-sekmeler [data-bolum]')].map(b => b.dataset.bolum + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(','),
+    donem: (m.querySelector('.tm-donem') || {}).textContent || '', sonGun: !!m.querySelector('.tm-donem.tm-sonGun'),
+    oyuncu: m.querySelectorAll('.tm-oyuncu').length, dosya: m.querySelectorAll('.tm-dosya').length,
+    kagit: (m.querySelector('.tm-kagit') || {dataset: {}}).dataset.oyuncu || null,
+    eylem: [...m.querySelectorAll('.tm-eylemler [data-eylem]')].map(b => b.dataset.eylem + (b.disabled ? '-' : '')).join(','), metin: m.textContent } }"""
+
+# maç gününde bir yapay hafta (0–0; oyunun komut yoluyla)
+HAFTA_YAPAY_JS = """() => { const k = OYUN.kariyer, Z = {skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], ist: {}};
+  const j = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.eylem === 'macGunu'), id = j.veri.macId;
+  oyunKomut(x => ajandaIsiYap(x, j.id));
+  oyunKomut(x => haftaSonuclariUygula(x, id, Z, macTohumu(7, id), {}, haftaninDigerMaclari(x, id).map(g => ({macId: g.id, sonuc: Z, tohum: macTohumu(7, g.id)})))); }"""
+# yapay haftalarla (0–0) verilen ana dek sürer; zincir dışındaki kararlarda reddet ya da ilk cevap (oyunun kendi komut yolu, oyunKomut)
+SUR_JS = """async (bitis) => {
+  const Z = {skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], ist: {}};
+  for (let i = 0; i < 500; i++) {
+    const k = OYUN.kariyer;
+    if (k.tarih >= bitis && Object.values(k.isler).some(x => x.tur === 'ajanda' && x.veri.karar === 'sablonKarti')) return k.tarih + ' ' + k.gunIciDakika;
+    const kr = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.karar && x.veri.karar !== 'sablonKarti');
+    if (kr) { const S = ajandaOnizle(k, kr.id).secenekler; oyunKomut(x => ajandaIsiYap(x, kr.id, (S.find(s => s.id === 'reddet') || S[0]).id)); continue; }
+    const j = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.eylem === 'macGunu');
+    if (j && j.tarih === k.tarih && j.dakika === k.gunIciDakika) { const id = j.veri.macId;
+      oyunKomut(x => ajandaIsiYap(x, j.id));
+      oyunKomut(x => haftaSonuclariUygula(x, id, Z, macTohumu(7, id), {}, haftaninDigerMaclari(x, id).map(g => ({macId: g.id, sonuc: Z, tohum: macTohumu(7, g.id)}))));
+      continue; }
+    oyunKomut(x => duragaIlerle(x));
+  }
+  return 'bitmedi ' + OYUN.kariyer.tarih; }"""
+
+
+async def bolum_32(tarayici, site, tum_hatalar):
+    """R4-k: Transfer masası — masada Transfer (6) odak kabında; Pano (dönem sayacı, kasa, açık işler, takip), Piyasa (serbestler, forma bulamayanlar,
+    sözleşmesi bitecekler; gizli değer ve maaş yok), oyuncu kâğıdı (künye, bildiklerimiz, eylemler; ‹ Geri bölüme), takibe al (zaman almaz) ve Takip,
+    Hocaya araştırt (dosya açılır, Pano'da aşamasıyla; dosyada aşama satırı; ‹ Transfer), Geçmiş, Duraklat'ta eylemler kapalı, Esc zinciri."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.set_viewport_size({"width": 1100, "height": 810})
+    nesne = await pg.evaluate("() => [...document.querySelectorAll('.od-nesneler .od-nesne[data-panel]')].map(b => b.dataset.panel).join(',')")
+    await pg.keyboard.press("Digit6")
+    t = await pg.evaluate(TM_JS)
+    o = await odak(pg)
+    denetle("R4-k: masada Transfer (6) odak kabında (geniş, başlık Transfer); Pano · Takip · Piyasa · Geçmiş; dönem kapalıyken açılışa kalan gün ve tarih; kasa; açık iş yok",
+            "transfer" in nesne and o["ad"] == "transfer" and o["boy"] == "genis" and o["baslik"] == "Transfer" and bool(t) and t["bolum"] == "pano"
+            and t["sekme"] == "pano*,takip,piyasa,gecmis" and "açılışa" in t["donem"] and "4 Ocak" in t["donem"] and not t["sonGun"] and "Kasa" in t["metin"] and t["dosya"] == 0,
+            f"{nesne} · {o.get('ad')} · {t and t['donem']}")
+    await pg.screenshot(path=str(ARAC / "son-akis-32-pano.png"))
+    await pg.click('.tm-sekmeler [data-bolum="piyasa"]')
+    t = await pg.evaluate(TM_JS)
+    denetle("R4-k Piyasa: serbestler (ne zamandır boşta, eski yıldız), forma bulamayanlar, sözleşmesi bitecekler; maaş, yetenek ve puan yazmaz",
+            t["bolum"] == "piyasa" and t["oyuncu"] >= 24 and "boşta" in t["metin"] and "Eski yıldız" in t["metin"] and "Sözleşmesi bitecekler" in t["metin"]
+            and not re.search(r"maaş|yetenek|puan", t["metin"], re.I), str(t["oyuncu"]))
+    await pg.screenshot(path=str(ARAC / "son-akis-32-piyasa.png"))
+    ilk = await pg.get_attribute(".tm-oyuncu", "data-oyuncu")
+    an0 = await pg.evaluate("() => OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika")
+    await pg.click(".tm-oyuncu")
+    t = await pg.evaluate(TM_JS)
+    o = await odak(pg)
+    denetle("R4-k oyuncu kâğıdı: künye, bu sezon, kaynaklı bildiklerimiz; Takibe al, Hocaya araştırt, İzlemeye git; başlıkta ‹ Piyasa",
+            t["bolum"] == "oyuncu" and t["kagit"] == ilk and t["eylem"] == "tmTakip,tmArastirt,tmIzle" and "Bu sezon" in t["metin"] and "boşta" in t["metin"]
+            and (o["geri"] or "").strip().endswith("Piyasa"), f"{t['eylem']} · geri {o.get('geri')}")
+    await pg.click('.tm-eylemler [data-eylem="tmTakip"]')
+    t = await pg.evaluate(TM_JS)
+    an1 = await pg.evaluate("() => OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika")
+    denetle("R4-k Takibe al: zaman almaz; düğme “Takipten çıkar” olur; Takip sekmesinde (1)",
+            an0 == an1 and "tmTakipBirak" in t["eylem"] and "takip*" not in t["sekme"] and "Takip (1)" in t["metin"], f"{an0} → {an1} · {t['eylem']}")
+    await pg.keyboard.press("Escape")
+    t = await pg.evaluate(TM_JS)
+    denetle("R4-k Esc: oyuncu kâğıdından Piyasa listesine", bool(t) and t["bolum"] == "piyasa", str(t and t["bolum"]))
+    await pg.click('.tm-sekmeler [data-bolum="takip"]')
+    t = await pg.evaluate(TM_JS)
+    denetle("R4-k Takip: takibe alınan oyuncu tarih ve kaynağıyla", t["bolum"] == "takip" and t["oyuncu"] == 1 and "senin notun" in t["metin"], t["metin"][:200])
+    await pg.click(".tm-oyuncu")
+    await pg.click('.tm-eylemler [data-eylem="tmArastirt"]')
+    t = await pg.evaluate(TM_JS)
+    m = await pg.evaluate("() => Object.values(OYUN.kariyer.meseleler).filter(m => m.sablon && m.sablon.ad === 'transferAlim').map(m => m.id + ':' + m.sablon.asama + ':' + m.sablon.kaynak)")
+    denetle("R4-k Hocaya araştırt: dosya açılır (kaynak başkan, hoca bakıyor); kâğıtta “Dosyası açık”, araştır düğmesi kalkar",
+            len(m) == 1 and m[0].endswith(":hocaGorus:baskan") and "tmArastirt" not in t["eylem"] and "Dosyası açık" in t["metin"], f"{m} · {t['eylem']}")
+    await pg.click('.tm-kagit [data-eylem="dosyaAc"]')
+    await gecis_bitir(pg)
+    o = await odak(pg)
+    a = await pg.evaluate("() => (document.querySelector('#oda .dsy-asama') || {}).textContent || null")
+    denetle("R4-k dosyada şablonlu konunun aşama satırı (“Hoca oyuncuya bakıyor”); başlıkta ‹ Transfer", o["ad"] == "dosya" and a == "Hoca oyuncuya bakıyor"
+            and (o["geri"] or "").strip().endswith("Transfer"), f"{a} · {o.get('geri')}")
+    await pg.keyboard.press("Escape")
+    o = await odak(pg)
+    t = await pg.evaluate(TM_JS)
+    denetle("R4-k Esc dosyadan Transfer masasına döner; Pano'da açık iş aşamasıyla", o["ad"] == "transfer" and bool(t) and (t["dosya"] >= 1 or t["bolum"] == "oyuncu"), f"{o['ad']} · {t and t['bolum']}")
+    await pg.click('.tm-sekmeler [data-bolum="pano"]')
+    t = await pg.evaluate(TM_JS)
+    denetle("R4-k Pano: açık transfer dosyası tek satır ve aşamasıyla", t["dosya"] == 1 and "Hoca oyuncuya bakıyor" in t["metin"], t["metin"][:200])
+    await pg.click('.tm-sekmeler [data-bolum="gecmis"]')
+    t = await pg.evaluate(TM_JS)
+    denetle("R4-k Geçmiş: gelen, giden, kaçan (boşken sakin metin)", t["bolum"] == "gecmis" and "Gelenler" in t["metin"] and "Kaçanlar" in t["metin"], t["metin"][:160])
+    # Duraklat: okuma açık, iş veren eylemler kapalı
+    await pg.click('.tm-sekmeler [data-bolum="piyasa"]')
+    await pg.click(".tm-oyuncu >> nth=1")
+    await pg.keyboard.press("KeyP")
+    t = await pg.evaluate(TM_JS)
+    await pg.keyboard.press("KeyP")
+    denetle("R4-k Duraklat'ta oyuncu kâğıdı okunur; takip, araştırma ve izleme kapalı", bool(t) and t["bolum"] == "oyuncu" and all(x.endswith("-") for x in t["eylem"].split(",")), t and t["eylem"])
+    await pg.keyboard.press("Escape")
+    await pg.keyboard.press("Escape")
+    o = await odak(pg)
+    denetle("R4-k Esc zinciri: oyuncu → Piyasa → masa", o["n"] == 0, str(o["ad"]))
+    await pg.close()
+
+
+async def bolum_33(tarayici, site, tum_hatalar):
+    """R4: transfer zinciri ekranda — yapay haftalarla 5 Ocak'a (hocanın isteği), telefonda ihtiyaç kartı (soran hoca), aday kartı, pazarlığı kim
+    yürütecek, pazarlık kartının iki yüzü (iki rakam, künyede Pazarlık), karşı teklif varsa yeni rakamlar, oyuncuyla görüşme (Yanına git: zaman
+    geçer, yol masrafı), maaş pazarlığı, sağlık, imza ya da kayıp; her adımda dosyada aşama satırı; sonda dosya kapalı, sonuç yazılı."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.set_viewport_size({"width": 1100, "height": 810})
+    an = await pg.evaluate(SUR_JS, "2027-01-05")
+    await oda_yenile(pg)
+    POL = {"ihtiyac": "onayla", "aday": "adayA", "gorus": "gorus", "yurutme": "kendim", "kulupPazarlik": "guclu", "devirOnay": "imza", "bedelArtti": "farkiOde",
+           "temas": "git", "oyuncuPazarlik": "guclu", "saglikKarari": "risk", "alternatif": "obur"}
+    gorulen, yuzler, asamalar, telefonda, git_once = [], {}, set(), None, None
+    for _ in range(60):
+        d = await pg.evaluate("""() => { const k = OYUN.kariyer, M = Object.values(k.meseleler).filter(m => m.sablon && m.sablon.ad === 'transferAlim');
+          const kr = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.karar === 'sablonKarti');
+          return { acik: M.filter(m => m.durum !== 'kapandi').length, sonuc: M.map(m => m.sablon.sonuc), kart: kr ? kr.id : null,
+            asama: kr ? k.meseleler[kr.veri.meseleId].sablon.asama : null, mesele: kr ? kr.veri.meseleId : null, an: k.tarih + ' ' + k.gunIciDakika,
+            nakit: k.kulupler.demirkapi.nakit, yol: k.hareketler.filter(h => h.kalem === 'yol').length,
+            diger: Object.values(k.isler).filter(x => x.tur === 'ajanda' && x.veri.karar && x.veri.karar !== 'sablonKarti').map(x => x.id),
+            mac: Object.values(k.isler).some(x => x.tur === 'ajanda' && x.veri.eylem === 'macGunu' && x.tarih === k.tarih && x.dakika === k.gunIciDakika) }; }""")
+        if not d["acik"] and gorulen:
+            break
+        await masaya_don(pg)
+        if d["diger"]:
+            await pg.evaluate("(id) => { const S = ajandaOnizle(OYUN.kariyer, id).secenekler; oyunKomut(x => ajandaIsiYap(x, id, (S.find(s => s.id === 'reddet') || S[0]).id)); }", d["diger"][0])
+            await oda_yenile(pg)
+            continue
+        if not d["kart"] and d["mac"]:   # maç günü: yapay hafta (oyunun komut yoluyla; maça gidilmez)
+            await pg.evaluate(HAFTA_YAPAY_JS)
+            await oda_yenile(pg)
+            continue
+        if not d["kart"]:   # İlerle (ana düğme maç gününde “Stada git” olur: o zaman oyunun komut yoluyla durağa)
+            if ((await pg.get_attribute(".od-ana", "data-eylem")) or "").startswith("ilerle"):
+                await oda_ilerle(pg)
+            else:
+                await pg.evaluate("() => oyunKomut(x => duragaIlerle(x))")
+                await oda_yenile(pg)
+            continue
+        # kart kendi yerinde (Sonra yığınından): soranı hoca ya da müdürse telefonda, değilse dosyada
+        await pg.click(f'.od-sonraKagit[data-is="{d["kart"]}"]')
+        kart = f'.kk-kart[data-is="{d["kart"]}"]'
+        await pg.wait_for_selector(kart, timeout=10000)
+        o = await odak(pg)
+        if d["asama"] == "ihtiyac":
+            telefonda = o["ad"]
+        sol, sag = await pg.get_attribute(kart, "data-sol"), await pg.get_attribute(kart, "data-sag")
+        if d["asama"] == "kulupPazarlik" and "kulupPazarlik" not in yuzler:
+            await pg.focus(kart)
+            await pg.keyboard.press("ArrowLeft")
+            y1 = await pg.evaluate(f"() => document.querySelector('{kart} .kk-yuz').textContent")
+            await pg.keyboard.press("ArrowRight")
+            y2 = await pg.evaluate(f"() => document.querySelector('{kart} .kk-yuz').textContent")
+            ust = await pg.evaluate(f"() => document.querySelector('{kart} .kk-ustNotr').textContent")
+            yuzler["kulupPazarlik"] = (y1, y2, ust)
+            await pg.keyboard.press("Escape")
+        hedef = POL.get(d["asama"])
+        yon = "ArrowLeft" if hedef == sol else "ArrowRight" if hedef == sag else "ArrowLeft"
+        if d["asama"] == "temas" and hedef in (sol, sag):
+            git_once = (d["an"], d["yol"])
+        await pg.focus(kart)
+        await pg.keyboard.press(yon)
+        await pg.keyboard.press("Enter")
+        gorulen.append(f"{d['asama']}:{sol if yon == 'ArrowLeft' else sag}")
+        asamalar.add(d["asama"])
+        await pg.wait_for_timeout(150)
+        if d["mesele"]:
+            a = await pg.evaluate("(id) => { const m = OYUN.kariyer.meseleler[id]; return sablonAsamaSatiri(OYUN.kariyer, m).metin; }", d["mesele"])
+            asamalar.add("satir:" + a)
+    son = await pg.evaluate("""() => { const k = OYUN.kariyer, M = Object.values(k.meseleler).filter(m => m.sablon && m.sablon.ad === 'transferAlim');
+      return { sonuc: M.map(m => m.sablon.sonuc), acik: M.filter(m => m.durum !== 'kapandi').length, an: k.tarih + ' ' + k.gunIciDakika, hata: kariyerDogrula(k),
+        yol: k.hareketler.filter(h => h.kalem === 'yol').length, imza: k.gecmis.filter(g => g.tur === 'transfer' && g.yeni === 'demirkapi').length }; }""")
+    denetle("R4 §33: yapay haftalarla 5 Ocak'a; hocanın isteği telefonda (ihtiyaç kartı, soran hoca)", an.startswith("2027-01-05") and telefonda == "telefon", f"{an} · {telefonda}")
+    denetle("R4 §33: zincir ekranda kartlarla yürür (ihtiyaç → aday → yürütme → kulüple pazarlık …); her adımda dosyada aşama satırı",
+            {"ihtiyac", "aday", "yurutme", "kulupPazarlik"} <= asamalar and any(x.startswith("satir:") for x in asamalar), " → ".join(gorulen))
+    if "kulupPazarlik" in yuzler:
+        y1, y2, ust = yuzler["kulupPazarlik"]
+        denetle("R4 §33 pazarlık kartı: iki yüz iki rakam (temkinli, güçlü; ₺), künyede Pazarlık; rakam alt sınırı söylemez",
+                "temkinli" in y1 and "güçlü" in y2 and "₺" in y1 and "₺" in y2 and "Pazarlık" in ust, f"{ust} · {y1[:80]} · {y2[:80]}")
+    if git_once:
+        denetle("R4 §33 Yanına git: görüşme zaman alır ve yol masrafı kasadan düşer", son["yol"] > git_once[1], f"{git_once} → {son['yol']}")
+    denetle("R4 §33: sonda transfer dosyası kapalı ve sonucu yazılı (imza ya da kayıp); kariyer geçerli",
+            son["acik"] == 0 and all(son["sonuc"]) and not son["hata"], str(son))
+    await pg.screenshot(path=str(ARAC / "son-akis-33-son.png"))
+    await pg.close()
+
+
 async def ana():
     try:
         from playwright.async_api import async_playwright
@@ -3522,6 +3720,12 @@ async def ana():
         if sec("31"):
             print("\n31. Canlı Skor sayfaları (R3)")
             await bolum_31(tarayici, site, tum_hatalar)
+        if sec("32"):
+            print("\n32. Transfer masası (R4-k)")
+            await bolum_32(tarayici, site, tum_hatalar)
+        if sec("33"):
+            print("\n33. Transfer zinciri (R4)")
+            await bolum_33(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

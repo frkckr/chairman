@@ -25,6 +25,10 @@
      `ayar`. --karsilastir DOSYA [--ayni]: ortak haftaların skor, adim, haftaGol, gol, kart, sakatlik, cezali, sakat, sira, puan, kasa, an, iz alanları
      (hafta sayısı eşitse ozet de) tabanla karşılaştırılır; farklar “! fark: …” satırı, --ayni ile fark çıkış 1. Ortam değişkeni SEZON_DENEME_AYAR
      ('{"GLOBAL_AD":{alan:değer}}'): her sezon() başında motorYukle'den hemen sonra Object.assign(GLOBAL_AD, değer); tanımsız ad kullanım hatası (2).
+   R4 (2026-10-29): hocanın isteği transfer dosyasını açar (js/transfer-alim.js); --talep onayla zinciri politikalarla yürütür, cevapsızda kart düşer:
+     --aday 1|2 (varsayılan 1) · --pazarlik temkinli|guclu|devir (guclu; devir: mali işler müdürüne bırak, sonucu onayla) · --oyuncu telefon|git
+     (telefon) · --saglik al|vazgec (al). --girisim TARİH[:HAT] o günden sonraki ilk durakta hocaya “<hat> hattına oyuncu bulalım” (HAT DEF|OS|FV,
+     varsayılan OS); --serbest TARİH o günden sonraki ilk durakta piyasanın ilk serbest oyuncusunu hocaya araştırtır. Haftada durak sınırı 60.
    Kullanım:  node araclar/sezon-deneme.js [hafta=3] [tohum=7] [--kaydet] [--tek] [--p12 cevapsiz|sabir|degisim] [--teklif …] [--talep …] [--json DOSYA] [--kayit-yaz DOSYA@hafta=N|DOSYA@sezonSonu] [--karsilastir DOSYA [--ayni]]   (hafta en çok sezonun kalanı: 18)
      --tek   ikinci (belirlenimcilik) koşusunu atlar.   Çıkış kodu: fark ya da doğrulama hatası 1, kullanım hatası 2. */
 'use strict';
@@ -35,6 +39,14 @@ const sayilar=A.filter((a,i)=>/^\d+$/.test(a)&&!['--json','--karsilastir','--kay
 if(!['cevapsiz','sabir','degisim'].includes(P12)){console.error('--p12 cevapsiz | sabir | degisim olmalı');process.exit(2);}
 const TEKLIF=deger('--teklif')||'cevapsiz',TALEP=deger('--talep')||'cevapsiz';
 if(!['cevapsiz','sat','reddet'].includes(TEKLIF)||!['cevapsiz','onayla','reddet'].includes(TALEP)){console.error('--teklif cevapsiz|sat|reddet, --talep cevapsiz|onayla|reddet');process.exit(2);}
+/* R4: transfer zincirinin politikaları (şablon kartının aşamasına göre) */
+const ADAY=deger('--aday')||'1',PAZ=deger('--pazarlik')||'guclu',OYU=deger('--oyuncu')||'telefon',SAG=deger('--saglik')||'al';
+const GIRISIM=deger('--girisim'),SERBEST=deger('--serbest');
+if(!['1','2'].includes(ADAY)||!['temkinli','guclu','devir'].includes(PAZ)||!['telefon','git'].includes(OYU)||!['al','vazgec'].includes(SAG)
+  ||GIRISIM&&!/^\d{4}-\d\d-\d\d(:(DEF|OS|FV))?$/.test(GIRISIM)||SERBEST&&!/^\d{4}-\d\d-\d\d$/.test(SERBEST)){
+  console.error('--aday 1|2, --pazarlik temkinli|guclu|devir, --oyuncu telefon|git, --saglik al|vazgec, --girisim TARİH[:DEF|OS|FV], --serbest TARİH');process.exit(2);}
+const ZINCIR={ihtiyac:TALEP,aday:ADAY==='2'?'adayB':'adayA',gorus:'gorus',yurutme:PAZ==='devir'?'devret':'kendim',kulupPazarlik:PAZ==='temkinli'?'temkinli':'guclu',
+  devirOnay:'imza',bedelArtti:'farkiOde',temas:OYU,oyuncuPazarlik:'guclu',saglikKarari:SAG==='al'?'risk':'vazgec',alternatif:'obur'};
 const HAFTA=sayilar[0]||3,TOHUM=sayilar[1]!=null?sayilar[1]:7,KAYDET=bayrak('--kaydet'),TEK=bayrak('--tek'),JSON_DOSYA=deger('--json');
 if(HAFTA<1){console.error('hafta en az 1 olmalı');process.exit(2);}
 /* H2-0: --kayit-yaz DOSYA@hafta=N | DOSYA@sezonSonu */
@@ -81,7 +93,7 @@ function sezon(){
       sonuc:!!x.sezon.sonuc,engel:G('ilerleOnizle')(x).engel};}
     catch(e){hatalar.push(`--kayit-yaz ${KAYIT_YAZ.ad}: kayıt metni yazılamadı — ${e.message}`);return null;}};
   let k=kariyerBaslat({tohum:TOHUM});
-  const biz=k.kisiler[k.baskanId].kulupId,satirlar=[],hatalar=[];let hukmenToplam=0;
+  const biz=k.kisiler[k.baskanId].kulupId,satirlar=[],hatalar=[];let hukmenToplam=0,girisimYapildi=false,serbestYapildi=false;
   /* S-a: oyuncunun haftası ölçüleri (gizli, TEST): maç anında ilk 11'in kondisyonu, dinlenen (önceki on birde, maç günü uygun, on birde değil),
      art arda dışarıda kalma, yaş grubuna göre gelişim ölçüsü farkı, form dağılımı, haftanın sakatlıkları */
   const OKon=G('oyuncuKondisyonu'),OGel=G('gelisimOrt'),OYas=G('oyuncuYasi'),OUyg=G('oyuncuUygunMu'),OH={kon:[],dinlenen:0,kulupMac:0,seri:new Map(),rekor:0,sakat:0};
@@ -97,7 +109,7 @@ function sezon(){
     const is=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu');
     if(!is){hatalar.push('maç günü işi yok ama sezon bitmedi');break;}
     /* maç gününe dek İlerle; P12 kararı, aday görüşmesi ve aday kartı --p12'ye göre cevaplanır (F6-a) */
-    for(let g=0;g<20&&!(k.tarih===is.tarih&&k.gunIciDakika===is.dakika);g++){
+    for(let g=0;g<60&&!(k.tarih===is.tarih&&k.gunIciDakika===is.dakika);g++){
       olcuGor(h);
       const B=t=>Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.karar===t),ad=B('hocaAdayi'),kr=B('hocaKarari');
       const rd=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.etki==='hocaAdayGorusmesi'&&x.tarih===k.tarih&&x.dakika===k.gunIciDakika);
@@ -107,6 +119,15 @@ function sezon(){
       const tk=B('teklifKarari'),tb=B('transferButcesi');   /* G2: transfer kararları */
       if(tk&&TEKLIF!=='cevapsiz'){k=KK(k,x=>ajandaIsiYap(x,tk.id,TEKLIF)).kariyer;continue;}
       if(tb&&TALEP!=='cevapsiz'){k=KK(k,x=>ajandaIsiYap(x,tb.id,TALEP)).kariyer;continue;}
+      /* R4: şablon kartı (transfer zinciri) aşamasına göre; --talep cevapsizde kart düşer. Başkanın girişimi bir kez, verilen günden sonraki ilk durakta */
+      if(TALEP!=='cevapsiz'){const sk=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.karar==='sablonKarti');
+        if(sk){const a=k.meseleler[sk.veri.meseleId].sablon.asama,S=G('ajandaOnizle')(k,sk.id).secenekler;let s=ZINCIR[a];
+          if(!S.some(o=>o.id===s&&!o.engel))s=(S.find(o=>!o.engel)||S[0]).id;
+          k=KK(k,x=>ajandaIsiYap(x,sk.id,s)).kariyer;continue;}}
+      if(GIRISIM&&!girisimYapildi&&k.tarih>=GIRISIM.slice(0,10)){girisimYapildi=true;const g='yaz.teknikDirektor.transfer'+(GIRISIM.slice(11)||'OS'),u=G('GIRISIMLER')[g].uygun(k);
+        if(u===true){k=KK(k,x=>G('girisimBaslat')(x,g)).kariyer;continue;}hatalar.push(`--girisim ${GIRISIM}: başlatılamadı (${u})`);}
+      if(SERBEST&&!serbestYapildi&&k.tarih>=SERBEST){serbestYapildi=true;const p=G('piyasaListesi')(k).serbest[0];
+        try{k=KK(k,x=>G('transferArastirt')(x,p.id)).kariyer;continue;}catch(e){hatalar.push(`--serbest ${SERBEST}: ${e.message}`);}}
       k=KK(k,x=>duragaIlerle(x)).kariyer;
     }
     if(!k.isler[is.id]||k.tarih!==is.tarih||k.gunIciDakika!==is.dakika){hatalar.push(`İlerle maç gününe gitmedi (${k.tarih} ${k.gunIciDakika})`);break;}
@@ -157,6 +178,10 @@ function sezon(){
     const hs=dogrula(c);if(hs.length)hatalar.push('sezon sonundan sonra kariyer geçersiz: '+hs.slice(0,3).join('; '));
     if(KAYIT_YAZ&&KAYIT_YAZ.sezonSonu)kayitAni=kayitAl(c);
     sezonSonu=`şampiyon ${ad(R.sampiyon)} (${R.tablo[0].P} puan) · biz ${R.bizimSira}. sıra, ${R.bizimPuan} puan · sözleşmesi biten ${ayr} oyuncu cevapsız kartlarla ayrıldı (${c.tarih}; kadro ${c.kulupler[biz].kadro.ilk11.length+c.kulupler[biz].kadro.yedekler.length}) · İlerle: ${G('ilerleOnizle')(c).engel.join('; ')||'(engel yok)'}`;}
+  /* R4: dönem kapanınca kulüplü oyuncu için açık transfer dosyası kalmaz (serbest oyuncunun dosyası dönem dışında da sürebilir) */
+  if(k.tarih>'2027-02-01'){const A=Object.values(k.meseleler||{}).filter(m=>m.durum!=='kapandi'&&m.sablon&&m.sablon.ad==='transferAlim');
+    const kulup=A.filter(m=>{const id=m.sablon.veri.hedef||m.sablon.veri.istenen;return!id||(k.oyuncular[id]||{}).kulupId;});
+    if(kulup.length)hatalar.push('dönemden sonra açık transfer dosyası: '+kulup.map(m=>m.id+' '+m.sablon.asama).join(', '));}
   /* G2: sezon boyu para (başkanın kulübü; kalem başına) ve transferler */
   const para={};for(const h of k.hareketler)if(h.kulupId===biz)para[h.kalem]=(para[h.kalem]||0)+h.tutar;
   const transferler=k.gecmis.filter(g=>g.tur==='transfer'||g.tur==='ayrilis').map(g=>`${g.tarih} ${k.oyuncular[g.oyuncuId].ad} ${g.eski||'serbest'} → ${g.yeni||'serbest'}${g.bedel?' '+(g.bedel/100).toLocaleString('tr-TR')+' ₺':''}`);

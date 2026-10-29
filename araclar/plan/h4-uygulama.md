@@ -1,5 +1,7 @@
 # H4 — Transferin kişisiz dalları: ikinci teklif, kaçan transfer ve alternatif (uygulama planı; koşullu)
 
+> **R4 (2026-10-29; YOL_HARITASI karar 65):** ikinci teklif (karşı teklif turu), kaçan transfer (rakibe giden, kopma, anlaşamama), alternatif aday ve tekrar sınırı transfer alımı şablonunda uygulandı (`js/transfer-alim.js`); bu dosya tarihseldir.
+
 > **Durum (2026-10-26 gece, Y0; YOL_HARITASI karar 52):** ayrı tur olarak uygulanmaz. İkinci teklif, kaçan transfer, alternatif ve tekrar sınırı Y1'in transfer alımı ve satışı şablonlarının doğal çıkışlarıdır; bu dosya Y1 planlanırken kaynak olarak okunur (`y-program.md` §5). Aşağıdaki kayıt sürümü (10) eskidir: zincir H2 10, H3 11, Y1 12. H2'den sonra bugünkü sürüm 10'dur; H3 11 yapar. *2026-10-27: S araya girdi (`s-uygulama.md`, YOL_HARITASI karar 54); zincir H2 10 → S 11 → H3 12 → Y1 13 (`y-program.md` §3).*
 
 Durum: planlandı 2026-10-25 gece (Fable); uygulama Opus 5.5, oto mod 3, masaüstü — yalnız H3 kapanmış ve gece bütçesi kalmışsa. Dal `claude/h4-transfer-dallari` (taban `tur/h3-sezon`), etiket `tur/h4-transfer`. YOL_HARITASI 4.2'nin kalanı (karşı teklif gerçek koşulla, kaçan transfer sonrası alternatif) ve 4.3'ün kişisiz dalları (rakip teklif, tekrar sınırı). Menajer ve sızıntı dışarıda (kişi ve gazete kararı). Program `araclar/plan/h-program.md`. Daraltma sırası: önce ikinci teklif, sonra kaçan transfer/alternatif; sığmazsa yapılmayan devam notuna yazılır.

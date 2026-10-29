@@ -213,7 +213,9 @@ const kartTavanDenetle=(()=>{const U=new Set();return(isId,v,S)=>{
 
 /* ---- R2 eki: cevabın simgesi (kodla çizilir; cevabın türünü gösterir, iyi ya da kötü değil). Seçeneğin kimliği → tür; bilinmeyen kimlik nokta ---- */
 const KART_SIMGE_TUR={kabul:'onay',onayla:'onay',al:'onay',yenile:'onay',devam:'onay',sabir:'onay',biz:'takvim',baska:'takvim',sonraki:'takvim',
-  sat:'para',reddet:'carpi',birak:'carpi',degisim:'degis',devret:'devir'};
+  sat:'para',reddet:'carpi',birak:'carpi',degisim:'degis',devret:'devir',
+  /* R4 transfer zinciri: teklif rakamları, adaylar, görüşme yolu */
+  temkinli:'para',guclu:'para',farkiOde:'para',adayA:'takim',adayB:'takim',gorus:'takim',obur:'takim',kendim:'onay',imza:'onay',risk:'onay',telefon:'telefon',git:'yol',vazgec:'carpi',kapat:'carpi'};
 const KART_SIMGE_CIZ={
   onay:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   takvim:'<rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/>',
@@ -223,11 +225,15 @@ const KART_SIMGE_CIZ={
   devir:'<path d="M4 12h11M11 7l5 5-5 5M20 5v14"/>',
   top:'<circle cx="12" cy="12" r="8"/><path d="M12 8l3 2.2-1.2 3.6h-3.6L9 10.2z"/>',
   takim:'<circle cx="9" cy="9" r="3"/><circle cx="16.5" cy="10" r="2.5"/><path d="M3.5 19c.5-3 2.8-5 5.5-5s5 2 5.5 5M14 14.5c2.8-.6 5.3 1 6 4"/>',
+  telefon:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 17.5h2"/>',
+  yol:'<path d="M12 21s-6-5.6-6-10.2a6 6 0 0112 0C18 15.4 12 21 12 21z"/><circle cx="12" cy="10.8" r="2.2"/>',
   nokta:'<circle cx="12" cy="12" r="2.5"/>'};
 /* simge (tür adıyla; telefonun konu menüsü de kullanır) ve cevabın simgesi (seçeneğin kimliğiyle) */
 const kartSimgeHtml=(tur,sinif)=>'<i class="'+sinif+'" data-simge="'+tur+'" aria-hidden="true"><svg viewBox="0 0 24 24">'+(KART_SIMGE_CIZ[tur]||KART_SIMGE_CIZ.nokta)+'</svg></i>';
 const kartSimge=id=>kartSimgeHtml(KART_SIMGE_TUR[id]||'nokta','kk-simge');
 
+/* fırsat kartının kalan süresi (künye): bugün, yarın ya da n gün */
+const kartKalanYazi=(k,is)=>{const g=Math.round((anDakika(is.tarih,0)-anDakika(k.tarih,0))/1440);return g<=0?'bugün':g===1?'yarın':g+' gün';};
 /* ---- tek kart ---- */
 function kararKarti(k,isId,s={}){
   const is=k.isler[isId];
@@ -242,7 +248,9 @@ function kararKarti(k,isId,s={}){
   const sureYazi=c=>{const d=c.sure!==undefined?c.sure:v.sure;return d?d+' dk':'zaman almaz';};
   /* R2 eki: kartın kişisi (soran ya da muhatap): künye, portre, ad ve görev; kişisiz kararda üst etiket işin adıdır */
   const kisi=(k.kisiler||{})[v.soran||v.kisiId]||null,rol=kisi&&typeof kisiRolu==='function'?kisiRolu(k,kisi):'';
-  const kunye=kisi?kisi.ad+(rol?' · '+rol:''):s.ustNotr||v.baslik||'Karar';
+  const sinif=v.sinif&&typeof KART_SINIFLARI!=='undefined'&&KART_SINIFLARI[v.sinif]&&v.sinif!=='rutin'?KART_SINIFLARI[v.sinif]+(v.sinif==='firsat'&&v.saatsiz?' · '+kartKalanYazi(k,is):''):'';
+  /* R4-k: kart sınıfı künyede (rutin yazılmaz); sınıf varken rol künyeye girmez (yüzde kişinin altında yazar), dar kartta sınıf kesilmesin */
+  const kunye=(kisi?kisi.ad+(rol&&!sinif?' · '+rol:''):s.ustNotr||v.baslik||'Karar')+(sinif?' · '+sinif:'');
   /* cevabın yüzü: o seçeneğin kimliğiyle önizleme (süre, kaçırılacak ve cevapsız kalacak işler o cevaba göre); başta simge, cevabın adı ve süresi,
      sonunda o cevabın bağlam şeridi (görüşmede o günün defteri, bütçede kasa, teklifte künye) */
   const cevap=i=>{

@@ -5,6 +5,7 @@ Oyun karesi üç genişlikte (640, 800, 1186 px) açılır; her ekranda görüne
 Ekranlar: oda (masa), defter, telefonun ana ekranı, konuşma (R2: iki sütun, tek kart iş panelinde), konu menüsü (R2 eki), mesaj listesi, Canlı Skor, dosya (tek kartla), Kadro sekmesi,
 oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu kartı. R3: Canlı Skor sayfaları sürüm 11 örnek kaydından
 (araclar/ornekler/kayit-s11-hafta14.json): hafta görünümü, maç sayfası (Özet, İstatistikler, Kadrolar), oyuncu sayfası, takım sayfası (Genel, Kadro).
+R4: Transfer masası (Pano, Piyasa, oyuncu kâğıdı) ve transfer zincirinin aday ve pazarlık kartı (yapay haftalarla 5 Ocak'a, oyunun komut yoluyla).
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
 kalan metin (kaydırılabilir alanda kaydırınca okunur; kesen alanda bilerek gizlenmiştir: ekran okuyucu metni), TEST öğeleri (yayından önce kalkar). Kırpılan metin: en yakın taşmayı kesen atası overflow hidden/clip olan ve kutusunun dışına taşan metin
@@ -156,6 +157,53 @@ async def sahneler_canli(pg, olc):
 CANLI_SAHNELER = {"canli-hafta", "canli-mac-ozet", "canli-mac-ist", "canli-mac-kadro", "canli-oyuncu", "canli-kulup", "canli-kulup-kadro"}
 
 
+TRANSFER_SAHNELER = {"transfer-pano", "transfer-piyasa", "transfer-oyuncu", "transfer-aday-karti", "transfer-pazarlik-karti"}
+# R4: şablon kartlarını politikayla cevaplayarak hedef aşamanın kartına dek sürer (öbür kararlar reddet ya da ilk; maç günü yapay 0–0)
+ZINCIR_JS = """async ([hedef, pol]) => {
+  const Z = {skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], ist: {}};
+  for (let i = 0; i < 300; i++) {
+    const k = OYUN.kariyer, kr = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.karar === 'sablonKarti');
+    if (kr) { const a = k.meseleler[kr.veri.meseleId].sablon.asama; if (a === hedef) return kr.id;
+      const S = ajandaOnizle(k, kr.id).secenekler; let s = pol[a]; if (!S.some(o => o.id === s && !o.engel)) s = (S.find(o => !o.engel) || S[0]).id;
+      oyunKomut(x => ajandaIsiYap(x, kr.id, s)); continue; }
+    const kd = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.karar);
+    if (kd) { const S = ajandaOnizle(k, kd.id).secenekler; oyunKomut(x => ajandaIsiYap(x, kd.id, (S.find(s => s.id === 'reddet') || S[0]).id)); continue; }
+    const j = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.eylem === 'macGunu');
+    if (j && j.tarih === k.tarih && j.dakika === k.gunIciDakika) { const id = j.veri.macId;
+      oyunKomut(x => ajandaIsiYap(x, j.id));
+      oyunKomut(x => haftaSonuclariUygula(x, id, Z, macTohumu(7, id), {}, haftaninDigerMaclari(x, id).map(g => ({macId: g.id, sonuc: Z, tohum: macTohumu(7, g.id)}))));
+      continue; }
+    oyunKomut(x => duragaIlerle(x));
+  }
+  return null; }"""
+ZINCIR_POL = {"ihtiyac": "onayla", "aday": "adayA", "gorus": "gorus", "yurutme": "kendim", "kulupPazarlik": "guclu"}
+
+
+async def sahneler_transfer(pg, olc):
+    """R4: Transfer masası (yeni kariyer) ve zincirin aday ve pazarlık kartı (kart kendi yerinde, Sonra yığınından)."""
+    await pg.keyboard.press("Digit6")
+    await pg.wait_for_selector(".tm-masa", timeout=10000)
+    await olc("transfer-pano")
+    await tikla(pg, '.tm-sekmeler [data-bolum="piyasa"]')
+    await olc("transfer-piyasa")
+    await tikla(pg, ".tm-oyuncu")
+    await olc("transfer-oyuncu")
+    await akis.masaya_don(pg)
+    if not (set(TRANSFER_SAHNELER) & {"transfer-aday-karti", "transfer-pazarlik-karti"}):
+        return
+    for sahne, hedef in (("transfer-aday-karti", "aday"), ("transfer-pazarlik-karti", "kulupPazarlik")):
+        await pg.evaluate(akis.SUR_JS, "2027-01-05")
+        kid = await pg.evaluate(ZINCIR_JS, [hedef, ZINCIR_POL])
+        if not kid:
+            continue
+        await akis.oda_yenile(pg)
+        await akis.masaya_don(pg)
+        await tikla(pg, f'.od-sonraKagit[data-is="{kid}"]')
+        await pg.wait_for_selector(f'.kk-kart[data-is="{kid}"]', timeout=10000)
+        await olc(sahne)
+        await akis.masaya_don(pg)
+
+
 async def sahneler_mac(pg, olc):
     """Boş kariyer: İlerle maç gününe; Stada git → bülten. Ayrı sayfada TEST 'Maçı izleme' → maç sonu kartı."""
     await akis.oda_ilerle(pg)
@@ -221,6 +269,10 @@ async def ana():
             if not secili or secili & CANLI_SAHNELER:
                 pg = await ac("index.html", "?pul=0", ornek)
                 await sahneler_canli(pg, await olc_kur(pg))
+                await pg.context.close()
+            if not secili or secili & TRANSFER_SAHNELER:
+                pg = await ac("index.html", "?dunya=7&pul=0")
+                await sahneler_transfer(pg, await olc_kur(pg))
                 await pg.context.close()
             if not secili or "bulten" in secili:
                 pg = await ac("index.html", "?dunya=7&pul=0")

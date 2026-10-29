@@ -504,3 +504,54 @@ KATILIM_ETKILERI.izleme={
     if(!takipte(k,p.id))takibeAl(k,p.id,'izleme');
     return{bilgi:MESELE_OLAYLARI['ta.izleme'](k,{oyuncuId:p.id,mekan:v.mekan,kanaat:kn})};}
 };
+/* ---- dosyadaki aşama satırı ve sonuç metinleri (R4-k; js/sablon.js sablonAsamaSatiri okur; TEST yer tutucu) ---- */
+SABLONLAR.transferAlim.asamaMetni={ihtiyac:'Bütçe onayı bekleniyor',hocaGorus:'Hoca oyuncuya bakıyor',arastirma:'Hoca aday araştırıyor',bekle:'Transfer dönemini bekliyor',
+  donemYok:'Dönem kapalı',aday:'Aday seçimi',yurutme:'Pazarlığı kim yürütecek',kulupPazarlik:'Kulüple pazarlık',kulupCevap:'Kulübün cevabı bekleniyor',
+  devir:'Mali işler müdürü pazarlıkta',devirOnay:'Anlaşma onayı',bedelArtti:'Bedel arttı',temas:'Oyuncuyla görüşme',oyuncuPazarlik:'Maaş pazarlığı',
+  oyuncuCevap:'Oyuncunun cevabı bekleniyor',saglik:'Sağlık kontrolü',saglikKarari:'Sağlık raporu',alternatif:'Alternatif aday',imza:'İmza',kapandi:'Kapandı'};
+SABLONLAR.transferAlim.sonucMetni={imza:'İmzalandı',reddedildi:'İstek reddedildi',cevapsiz:'Cevapsız kaldı',bulunamadi:'Aday bulunamadı',donem:'Dönem kapandı',
+  kacti:'Fırsat kaçtı',vazgecti:'Vazgeçildi',anlasamama:'Oyuncuyla anlaşılamadı',istek:'Oyuncunun isteği karşılanmadı',kopma:'Kulüple pazarlık koptu',
+  rakibe:'Oyuncu başka kulübe gitti',saglik:'Sağlık raporu yüzünden vazgeçildi',dustu:'Dosya düştü',kapandi:'Kapandı'};
+/* ---- Transfer masası (R4-k; okuma, saf; çizim js/ekran-transfer.js) ----
+   transferMasasi(k) → {donem, kasa, dosyalar, teklifler, takip, piyasa, gecmis}
+     donem: {acik, bas, bitis, kalanGun, sonGun} (açık dönem ya da sıradaki; yoksa null)
+     dosyalar: açık transfer dosyaları {id, baslik, satir, oyuncuId, karar, kaynak}; teklifler: cevap bekleyen gelen teklifler {isId, meseleId, oyuncuId, alici, bedel}
+     takip: {oyuncuId, tarih, kaynak, kanaat|null, dosya|null}; piyasa: piyasaListesi'nin kimlikleri; gecmis: {gelen, giden, kacan} (yeniden eskiye)
+   transferOyuncu(k, id) → masadaki oyuncu kâğıdı: kimlik (Canlı Skor oyuncu sayfası), bildiklerimiz (kaynaklı satırlar), takipte, dosya, engeller */
+function transferMasasi(k){
+  const biz=bizimKulup(k),T=k.transfer||{takip:[],izlenen:[]},D=(k.sezon&&k.sezon.transfer)||[];
+  const ac=transferDonemi(k,k.tarih),son=ac||D.find(t=>t.bas>k.tarih)||null;
+  const donem=son?{acik:!!ac,bas:son.bas,bitis:son.bitis,kalanGun:ac?gunFarki(k.tarih,ac.bitis):gunFarki(k.tarih,son.bas),sonGun:!!ac&&k.tarih===ac.bitis}:null;
+  const kart=m=>Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.karar&&x.veri.meseleId===m.id);
+  const dosyalar=taAcikDosyalar(k).map(m=>({id:m.id,baslik:m.baslik,satir:sablonAsamaSatiri(k,m).metin,oyuncuId:m.sablon.veri.hedef||m.sablon.veri.istenen||null,karar:kart(m),kaynak:m.sablon.kaynak}));
+  const teklifler=Object.values(k.isler).filter(x=>x.tur==='ajanda'&&x.veri.karar==='teklifKarari').map(x=>({isId:x.id,meseleId:x.veri.meseleId||null,oyuncuId:x.veri.oyuncuId,alici:x.veri.alici,bedel:x.veri.bedel}));
+  const dosyasi=id=>{const m=taAcikDosyalar(k).find(m=>m.sablon.veri.hedef===id||m.sablon.veri.istenen===id);return m?m.id:null;};
+  const takip=T.takip.slice().reverse().map(x=>{const iz=izlemeKaydi(k,x.oyuncuId);return{oyuncuId:x.oyuncuId,tarih:x.tarih,kaynak:x.kaynak,kanaat:iz?iz.kanaat:null,dosya:dosyasi(x.oyuncuId)};});
+  const P=piyasaListesi(k),ids=L=>L.map(p=>p.id);
+  const G=(k.gecmis||[]).filter(g=>g.tur==='transfer'),gelen=[],giden=[];
+  for(let i=G.length-1;i>=0;i--){const g=G[i];if(g.yeni===biz)gelen.push({oyuncuId:g.oyuncuId,tarih:g.tarih,eski:g.eski||null,bedel:g.bedel||0});
+    else if(g.eski===biz)giden.push({oyuncuId:g.oyuncuId,tarih:g.tarih,yeni:g.yeni||null,bedel:g.bedel||0});}
+  const KACAN=['rakibe','kopma','anlasamama','istek','kacti','saglik'];
+  const kacan=Object.values(k.meseleler||{}).filter(m=>m.durum==='kapandi'&&m.sablon&&m.sablon.ad==='transferAlim'&&KACAN.includes(m.sablon.sonuc)&&m.sablon.veri.hedef)
+    .sort((a,b)=>(b.kapanis?anDakika(b.kapanis.tarih,b.kapanis.dakika):0)-(a.kapanis?anDakika(a.kapanis.tarih,a.kapanis.dakika):0))
+    .map(m=>{const p=k.oyuncular[m.sablon.veri.hedef];return{meseleId:m.id,oyuncuId:p?p.id:null,sonuc:SABLONLAR.transferAlim.sonucMetni[m.sablon.sonuc],tarih:m.kapanis?m.kapanis.tarih:null,
+      simdi:p?p.kulupId:null,mac:p&&Number.isInteger(p.mac)?p.mac:null,gol:p?p.gol|0:0};}).filter(x=>x.oyuncuId);
+  return{donem,kasa:k.kulupler[biz].nakit,dosyalar,teklifler,takip,piyasa:{serbest:ids(P.serbest),satilik:ids(P.satilik),bitiyor:ids(P.bitiyor)},gecmis:{gelen,giden,kacan}};
+}
+function transferOyuncu(k,id){
+  const p=k.oyuncular[id];if(!p)return null;
+  const biz=bizimKulup(k),S=oyuncuSayfasi(k,id),B=[],iz=izlemeKaydi(k,id),tk=(k.transfer?k.transfer.takip:[]).find(x=>x.oyuncuId===id)||null;
+  const gun=serbestSuresi(k,p);
+  if(p.kulupId===null)B.push({metin:gun!==null?`Sözleşmesi yok; ${gun<60?gun+' gündür':Math.round(gun/30)+' aydır'} boşta.`:'Sözleşmesi yok.',kaynak:'Piyasa'});
+  const un=unMetni(k,p);if(un)B.push({metin:un,kaynak:'Basın arşivi'});
+  const sat=satilikSinyali(k,p);if(sat)B.push({metin:sat,kaynak:'Kulislerden'});
+  if(sozlesmeBitiyor(k,p))B.push({metin:'Sözleşmesi bu sezonun sonunda bitiyor.',kaynak:'Kulislerden'});
+  if(iz)B.push({metin:TA_KANAAT_METIN[iz.kanaat],kaynak:`İzleme (${gunAyYazi(iz.tarih)})`});
+  const m=taAcikDosyalar(k).find(m=>m.sablon.veri.hedef===id||m.sablon.veri.istenen===id)||null;
+  const bizim=p.kulupId===biz,h=kulupHocasi(k,biz);
+  let arastirt=null;if(bizim)arastirt='Bizim oyuncumuz.';else if(m)arastirt='Bu oyuncu için dosya açık.';else if(!h)arastirt='Kulübün hocası yok.';else arastirt=taAcilisEngeli(k,null);
+  const izle=bizim?'Bizim oyuncumuz.':Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.etki==='izleme'&&x.veri.oyuncuId===id)?'İzleme planlandı.':null;
+  const izlemeIsi=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.etki==='izleme'&&x.veri.oyuncuId===id)||null;
+  return{kimlik:S,bildiklerimiz:B,takipte:!!tk,takipTarih:tk?tk.tarih:null,dosya:m?m.id:null,izleme:izlemeIsi?{tarih:izlemeIsi.tarih,dakika:izlemeIsi.dakika}:null,
+    engel:{takip:bizim?'Bizim oyuncumuz.':null,arastirt,izle}};
+}

@@ -180,3 +180,11 @@ function sablonTanimDenetle(ad){
   }
   return h;
 }
+/* ---- aşama satırı (R4-k; okuma, saf): şablon asamaMetni / sonucMetni tanımlar (yoksa aşamanın adı) ---- */
+/* sablonAsamaSatiri(k, m) → {metin, son} | null — şablonlu konunun üstündeki tek satır (aşama ya da sonuç; sayı ve gizli değer yok) */
+function sablonAsamaSatiri(k,m){
+  if(!m||!m.sablon||!SABLONLAR[m.sablon.ad])return null;
+  const S=SABLONLAR[m.sablon.ad],s=m.sablon;
+  if(s.sonuc!==null)return{metin:(S.sonucMetni||{})[s.sonuc]||s.sonuc,son:true};
+  return{metin:(S.asamaMetni||{})[s.asama]||s.asama,son:false};
+}
