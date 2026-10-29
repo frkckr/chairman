@@ -399,7 +399,7 @@ SABLON_KIVRIMLARI.transferAlim=[
   {ad:'rakipAraya',asamalar:['kulupCevap'],an:'bitis',
     kosul:(k,m)=>!!taRakipKulup(k,m),olasilik:()=>TA.rakipIlgi,
     uygula:(k,m)=>{const V=m.sablon.veri,R=taRakipKulup(k,m),md=taMudur(k)||kulupHocasi(k,bizimKulup(k));
-      meseleOlay(k,m.id,'ta.rakip',{kisiId:md.id,kulupId:R,oyuncuId:V.hedef});
+      meseleOlay(k,m.id,'ta.rakip',{kisiId:md.id,kulupId:R,oyuncuId:V.hedef,satan:V.satan});   /* R6-b: satan kulüp gazetedeki söylenti için kalıcı */
       const P=pazarlikSertles(m,'bonservis',1.1,1);V.rakip=R;
       if(P&&P.sabir<=0)return Object.assign(taKopma(k,m),{dur:true});
       return null;}},
@@ -555,3 +555,15 @@ function transferOyuncu(k,id){
   return{kimlik:S,bildiklerimiz:B,takipte:!!tk,takipTarih:tk?tk.tarih:null,dosya:m?m.id:null,izleme:izlemeIsi?{tarih:izlemeIsi.tarih,dakika:izlemeIsi.dakika}:null,
     engel:{takip:bizim?'Bizim oyuncumuz.':null,arastirt,izle}};
 }
+/* ---- R6-b (2026-10-30): rakiplerin gündemi gazetede (TEST metin ve önem) — geçmişten her sabah aynı kurulur, kayda yazılmaz ----
+   başka kulüpler arasındaki transfer (dünyada dar transfer; önem 40) ve dosyamızdaki rakip ilgisi kıvrımından kulis söylentisi (önem 35, ertesi sabahın sayısı).
+   Bizim transferlerimiz 'transfer' kaynağındadır (js/transfer.js); öbür kulüplerin uzun sakatlıkları zaten 'sakat' kaynağında (js/gazete.js) */
+Object.assign(MESELE_OLAYLARI,{
+  'tr.dunya':(k,p)=>`${kisiOyuncuAdi(k,p.oyuncuId)}, ${taKulupAdi(k,p.eski)} formasını ${taKulupAdi(k,p.yeni)} ile değiştirdi.`,
+  'tr.soylenti':(k,p)=>`Kulis: ${taKulupAdi(k,p.kulupId)}, ${taKulupAdi(k,p.satan)} forması giyen ${kisiOyuncuAdi(k,p.oyuncuId)} için harekete geçti.`});
+GAZETE_KAYNAKLARI.push({ad:'dunya',haberler:(k,P)=>{
+  const H=[];
+  for(const g of k.gecmis||[])if(g.tur==='transfer'&&g.eski&&g.yeni&&g.eski!==P.biz&&g.yeni!==P.biz)H.push({onem:40,an:anDakika(g.tarih,g.dakika),anahtar:'tr.dunya',p:{oyuncuId:g.oyuncuId,eski:g.eski,yeni:g.yeni}});
+  for(const m of Object.values(k.meseleler||{}))if(m.sablon&&m.sablon.ad==='transferAlim')
+    for(const o of m.olaylar)if(o.anahtar==='ta.rakip'&&o.p)H.push({onem:35,an:anDakika(o.tarih,o.dakika),anahtar:'tr.soylenti',p:{oyuncuId:o.p.oyuncuId,kulupId:o.p.kulupId,satan:o.p.satan||m.sablon.veri.satan}});   /* satan olayda kalıcı: eski sayı aynı kurulur */
+  return H;}});

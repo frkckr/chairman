@@ -249,7 +249,7 @@ const oyunAl=ad=>vm.runInContext(ad,oyunCtx);
   const adlar=ad=>Object.keys(oyunAl(ad)).sort().join(',');
   const G=Object.keys(oyunAl('GIRISIMLER'));
   denetle('Oyunda yalnız P12 TEST taslağı (F6-a), G2 iskeleti (transfer teklifi, hocanın isteği, imza, sözleşme yenileme) ve H2-c yazışması (cevap, görüşme önerisi, görüşme; girişimler yalnız yaz.*) tanımlı; konuya özgü ekip görevi (genel tavsiye hariç), gözlem notu ve söz tarafı yok',
-    adlar('PAKETLER')==='gelenTeklif,hocaDegerlendirme,hocaTalebi'&&adlar('GELISMELER')==='gelenTeklif,hocaBaskisi,hocaTalebi,sablonAdim,transferImza,yazismaCevap'
+    adlar('PAKETLER')==='gelenTeklif,hocaDegerlendirme,hocaTalebi'&&adlar('GELISMELER')==='gelenTeklif,hocaBaskisi,hocaTalebi,ikinciTeklif,sablonAdim,transferImza,yazismaCevap'
     &&adlar('KARAR_TURLERI')==='gorusmeOnerisi,hocaAdayi,hocaKarari,sablonKarti,sozlesmeYenile,teklifKarari,transferButcesi'&&adlar('KATILIM_ETKILERI')==='ekipGorusmesi,hocaAdayGorusmesi,izleme'
     &&G.length===12&&G.every(x=>/^yaz\./.test(x))&&Object.keys(oyunAl('EKIP_GOREVLERI')).filter(x=>x!=='tavsiye').length===0&&oyunAl('GOZLEM_NOTLARI').length===0&&say('SOZ_TARAFLARI')===0,
     [adlar('PAKETLER'),adlar('GELISMELER'),adlar('KARAR_TURLERI'),adlar('KATILIM_ETKILERI'),G.join(',')].join(' · '));
@@ -2094,6 +2094,80 @@ bolum('R5 — balkon: antrenmanın düzeni kadronun kendisinden, hocanın progra
    const c=KK(k1,x=>{T('oyuncuTransfer')(x,s.id,biz,{bedel:0,sozlesme:{maas:100000,bitis:'2029-05-31'}});}).kariyer;
    denetle('Transferle gelen oyuncu düzende (kadronun kendisi)',hepsi(AD(c,g.t)).includes(s.id)&&!hepsi(AD(k1,g.t)).includes(s.id),s.ad);}
   denetle('Kayıt defteri: düzen sayıları TEST tek yerde',!!T('ANTRENMAN_DUZEN_TEST')&&T('ANTRENMAN_DUZEN_TEST').donusGun===3);
+}
+
+bolum('R6 — zincirler (ilk dilim): maaş algısı, rakiplerin gündemi gazetede, ikinci teklif, sponsor zinciri ve tahsil pazarlığı');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),dog=T('kariyerDogrula'),biz='demirkapi',toh=id=>T('macTohumu')(7,id);
+  const ilerle=c=>KK(c,x=>T('duragaIlerle')(x)).kariyer,zaman=(c,t,dk)=>KK(c,x=>{T('zamanIlerlet')(x,T('anDakika')(t,dk)-T('simdikiAn')(x));}).kariyer;
+  const macIsi=c=>Object.values(c.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu');
+  const Z={skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}};
+  const hafta=c=>{const j=macIsi(c);for(let g=0;g<20&&!(c.tarih===j.tarih&&c.gunIciDakika===j.dakika);g++){const kr=Object.values(c.isler).find(x=>x.tur==='ajanda'&&x.veri.karar);
+      if(kr){const S=T('ajandaOnizle')(c,kr.id).secenekler;c=KK(c,x=>T('ajandaIsiYap')(x,kr.id,(S.find(s=>s.id==='reddet')||S[0]).id)).kariyer;continue;}c=ilerle(c);}
+    c=KK(c,x=>T('ajandaIsiYap')(x,j.id)).kariyer;const id=j.veri.macId;
+    return KK(c,x=>T('haftaSonuclariUygula')(x,id,Z,toh(id),{},T('haftaninDigerMaclari')(x,id).map(g=>({macId:g.id,sonuc:Z,tohum:toh(g.id)})))).kariyer;};
+  /* R6-a: maaş algısı */
+  {const sp=(a,b)=>{const r=v=>{const s=v.map((x,i)=>[x,i]).sort((p,q)=>p[0]-q[0]),R=[];s.forEach((x,j)=>R[x[1]]=j);return R;},ra=r(a),rb=r(b),n=a.length;let d=0;for(let i=0;i<n;i++)d+=(ra[i]-rb[i])**2;return 1-6*d/(n*(n*n-1));};
+   const Zs=T('SOZLESME_TEST'),G=p=>{const o=p.oz,sa=o.filter((_,j)=>j!==8),m=sa.reduce((a,b)=>a+b,0)/sa.length;return p.mevki==='KL'?o[8]*0.6+m*0.4:m;};
+   let top=0;for(const t of [3,7,11]){const c=T('kariyerBaslat')({tohum:t}),yk=p=>{const y=T('oyuncuYasi')(p,c.tarih);return y<21?Zs.genc:y>32?Zs.yasli:1;};
+     const L=Object.values(c.oyuncular).filter(p=>p.kulupId&&p.sozlesme);top+=sp(L.map(G),L.map(p=>p.sozlesme.maas/yk(p)));}
+   const p=Object.values(T('kariyerBaslat')({tohum:7}).oyuncular)[5],s1=T('maasAlgiSapmasi')(p),s2=T('maasAlgiSapmasi')(p);
+   denetle('R6-a: maaş piyasanın algısından — oyuncuya özgü kalıcı sapma (±8, belirlenimci); gizli yetenekle yaştan arınmış sıra korelasyonu 0,6–0,85 (önce 0,997)',
+     s1===s2&&Math.abs(s1)<=Zs.algi&&top/3>=0.6&&top/3<=0.85,`spearman ${(top/3).toFixed(3)}`);}
+  /* R6-b: gazetede rakiplerin gündemi (kayıt değişmez) */
+  {const k0=T('kariyerBaslat')({tohum:7}),p=Object.values(k0.oyuncular).find(q=>q.kulupId==='karaova'&&q.mevki==='OS');
+   let c=KK(k0,x=>{T('dunyaTransferi')(x,p.id,'akdeniz');}).kariyer;c=zaman(c,'2026-11-24',540);
+   const once=metin(c),G=T('gazeteSayisi')(c,'2026-11-24'),H=G?G.haberler:[];
+   const sy=JSON.parse(metin(c)),hid=sy.kulupler[biz].hocaId,o=Object.values(sy.oyuncular).find(q=>q.kulupId==='kocadere'&&q.mevki==='FV');
+   sy.meseleler['mesele-990']={id:'mesele-990',tur:'transfer',baslik:'Transfer: deneme',durum:'kapandi',olaylar:[{tarih:'2026-11-23',dakika:900,anahtar:'ta.rakip',p:{kisiId:hid,kulupId:'akdeniz',oyuncuId:o.id,satan:'kocadere'}}],sablon:{ad:'transferAlim',veri:{satan:'kocadere'}}};
+   const S=T('gazeteSayisi')(sy,'2026-11-24').haberler.find(h=>h.anahtar==='tr.soylenti');
+   const SH=T('gazeteSayisi')(sy,'2026-11-24').haberler;
+   denetle('R6-b: başka kulüpler arasındaki transfer ertesi sabahın gazetesinde (etiket Transfer; önem düşük, başka haber yoksa manşet); dosyamızdaki rakip ilgisi kulis söylentisi olarak; okumak kaydı değiştirmez',
+     H.some(h=>h.anahtar==='tr.dunya'&&h.etiket==='Transfer'&&/Akdeniz/.test(h.metin))&&!!S&&S.etiket==='Kulis'&&metin(c)===once,
+     H.map(h=>h.anahtar+':'+h.metin).join(' | ')+' // '+SH.map(h=>h.anahtar+':'+(h.metin||'').slice(0,60)).join(' | '));}
+  /* R6-c: ikinci teklif */
+  {let k=T('kariyerBaslat')({tohum:7});for(let i=0;i<6;i++)k=hafta(k);
+   for(let g=0;g<12&&!Object.values(k.isler).some(x=>x.veri&&x.veri.karar==='teklifKarari');g++){const kr=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.karar&&x.veri.karar!=='teklifKarari');
+     if(kr){const S=T('ajandaOnizle')(k,kr.id).secenekler;k=KK(k,x=>T('ajandaIsiYap')(x,kr.id,(S.find(s=>s.id==='reddet')||S[0]).id)).kariyer;}else k=ilerle(k);}
+   const tk=Object.values(k.isler).find(x=>x.veri&&x.veri.karar==='teklifKarari'),IT=T('IKINCI_TEKLIF_TEST'),eski=IT.olasilik;
+   let kr2,kr3,ik,ik2;
+   try{IT.olasilik=1;const c=KK(k,x=>T('ajandaIsiYap')(x,tk.id,'reddet')).kariyer;ik=Object.values(c.isler).find(x=>x.veri&&x.veri.gelisme==='ikinciTeklif');
+     let d=c;for(let g=0;g<6&&!Object.values(d.isler).some(x=>x.veri&&x.veri.karar==='teklifKarari');g++)d=ilerle(d);
+     kr2=Object.values(d.isler).find(x=>x.veri&&x.veri.karar==='teklifKarari');
+     const e=kr2?KK(d,x=>T('ajandaIsiYap')(x,kr2.id,'reddet')).kariyer:d;ik2=Object.values(e.isler).find(x=>x.veri&&x.veri.gelisme==='ikinciTeklif');
+     const f=KK(k,x=>{const is=x.isler[tk.id];T('ajandaIsiYap')(x,tk.id,'sat');}).kariyer;kr3=Object.values(f.isler).find(x=>x.veri&&x.veri.gelisme==='ikinciTeklif');
+     denetle('R6-c: reddedilen teklifte alıcı 2–3 gün sonra 11:00\'de bedeli artırarak döner (gizli gelişme; ×1,12–1,25); ikinci teklif yeni dosyada, iki cevap, künyede Pazarlık; ikinci ret son söz; satışta ikinci teklif yok; kariyer geçerli',
+       !!tk&&!!ik&&T('isGizli')(ik)&&ik.dakika===660&&!!kr2&&kr2.veri.tur===1&&kr2.veri.sinif==='pazarlik'&&kr2.veri.bedel>=Math.round(tk.veri.bedel*1.12/1000000)*1000000-1000000&&kr2.veri.bedel<=tk.veri.bedel*1.25+1000000
+       &&kr2.veri.meseleId!==tk.veri.meseleId&&T('kararSecenekleri')(d,kr2).length===2&&!ik2&&!kr3&&!dog(e).length,kr2&&`${T('paraYazi')(tk.veri.bedel)} → ${T('paraYazi')(kr2.veri.bedel)}`);}
+   finally{IT.olasilik=eski;}}
+  /* R6-d: tahsil pazarlığı (yapay dosya) */
+  {const k=T('kariyerBaslat')({tohum:7}),m={id:'mesele-998',sablon:{veri:{}}},P=T('pazarlikKur')(k,m,'aylik',{deger:8000000,oneren:null,konu:'pazarlik',yon:'tahsil',yuvarla:100000});
+   const ust=P.alt,s0=P.sabir;T('pazarlikTeklif')(m,'aylik',ust);const r1=T('pazarlikCevap')(k,m,'aylik');
+   P.son=null;P.sabir=s0;const R0=T('pazarlikRakamlari')(k,m,'aylik');T('pazarlikTeklif')(m,'aylik',Math.round(ust*1.1));const r2=T('pazarlikCevap')(k,m,'aylik'),karsi=P.karsi,R=T('pazarlikRakamlari')(k,m,'aylik');
+   denetle('R6-d: tahsil pazarlığı — gizli üst sınıra eşit istek kabul; üstünde karşı teklif (sınır × 0,9) ve yeni iki rakam karşı teklifle son isteğimiz arasında; ilk turun rakamları makul < iddialı',
+     P.yon==='tahsil'&&ust>=8000000&&r1==='kabul'&&r2==='karsi'&&karsi===Math.round(ust*0.9/100000)*100000&&R[0]>karsi&&R[1]<Math.round(ust*1.1)&&R[0]<R[1]&&R0[0]<R0[1],
+     `${r1} · ${r2} karşı ${karsi} [${R}]`);}
+  /* R6-d: sponsor zinciri */
+  {const k0=T('kariyerBaslat')({tohum:7}),k1=zaman(k0,'2027-02-01',720),M=Object.values(k1.meseleler).filter(m=>m.sablon&&m.sablon.ad==='sponsor'),m=M[0];
+   const kr=Object.values(k1.isler).find(x=>x.veri&&x.veri.karar==='sablonKarti'&&x.veri.meseleId===(m||{}).id);
+   denetle('R6-d: 1 Şubat ay başında sponsor dosyası (şablon sponsor, kurumsal; marka stattaki TEST tabelalardan); teklif kartı fırsat, soran mali işler müdürü, iki cevap; şablon tanımı eksiksiz',
+     M.length===1&&m.tur==='kurumsal'&&T('SPONSOR_TEST').markalar.includes(m.sablon.veri.marka)&&!!kr&&kr.veri.sinif==='firsat'&&kr.veri.soran===T('personelKisisi')(k1,'maliMudur').id
+     &&metin(T('kararSecenekleri')(k1,kr).map(s=>s.id))==='["gorus","reddet"]'&&metin(T('sablonTanimDenetle')('sponsor'))==='[]',m&&m.baslik);
+   /* politikayla sür: görüş, hep makul istek */
+   let c=KK(k1,x=>T('ajandaIsiYap')(x,kr.id,'gorus')).kariyer,turlar=0;
+   for(let g=0;g<40&&c.meseleler[m.id].durum!=='kapandi';g++){const q=Object.values(c.isler).find(x=>x.veri&&x.veri.karar==='sablonKarti'&&x.veri.meseleId===m.id);
+     if(q){turlar++;c=KK(c,x=>T('ajandaIsiYap')(x,q.id,'temkinli')).kariyer;}else c=ilerle(c);}
+   const ms=c.meseleler[m.id],od=Object.values(c.isler).filter(x=>x.tur==='odeme'&&x.veri.kalem==='sponsor'),od2=c.hareketler.filter(h=>h.kalem==='sponsor');
+   denetle('R6-d: makul istekle pazarlık imzayla biter; sezon sonuna dek her ayın 1\'inde kasaya aylık bedel (ödemeler dosyaya bağlı değil, dosya kapalı, sonuç imza); kariyer geçerli',
+     ms.durum==='kapandi'&&ms.sablon.sonuc==='imza'&&od.length+od2.length===3&&od.every(x=>x.veri.tutar===ms.sablon.veri.aylik&&x.tarih.slice(8)==='01'&&x.tarih<='2027-05-31'&&!x.veri.meseleId)
+     &&od2.every(h=>h.tutar===ms.sablon.veri.aylik)&&!dog(c).length,
+     `${ms.sablon.sonuc} · ${turlar} kart · bekleyen ${od.map(x=>x.tarih).join(',')} · ödenen ${od2.length}`);
+   const r=KK(k1,x=>T('ajandaIsiYap')(x,kr.id,'reddet')).kariyer;
+   let cv=k1;for(let g=0;g<10&&cv.meseleler[m.id].durum!=='kapandi';g++)cv=ilerle(cv);
+   const k3=zaman(c,'2027-03-01',720);
+   denetle('R6-d: İlgilenmiyoruz dosyayı kapatır (sonuç reddedildi); cevapsız teklifte marka gider (sonuç cevapsız); sezonda tek sponsor dosyası (Mart ay başında yenisi açılmaz)',
+     r.meseleler[m.id].sablon.sonuc==='reddedildi'&&cv.meseleler[m.id].sablon.sonuc==='cevapsiz'&&Object.values(k3.meseleler).filter(x=>x.sablon&&x.sablon.ad==='sponsor').length===1,
+     `${cv.meseleler[m.id].sablon.sonuc}`);}
 }
 
 bolum('Bozuk kopyalar doğrulamada yakalanır');

@@ -48,6 +48,7 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
  33. Transfer zinciri (R4): yapay haftalarla 5 Ocak; hocanın isteği telefonda; aday, yürütme, pazarlık kartının iki yüzü, Yanına git, imza ya da kayıp.
  34. Balkon (R5): antrenman kâğıdı sağ üstte (günün türü, Gördüklerin, sinyalden oyuncu dosyası), sahadakiler kariyerin kadrosu ve programa göre
      gruplar, iş sağ yarıda, TEST “her saat antrenman” yalnız görüntü, gözlemde telefon rozeti (B44).
+ 35. Zincirler (R6): gazetede başka kulüpler arasındaki transfer; sponsor teklifi telefonda (Fırsat), pazarlık kartının iki aylık rakamı, dosyada aşama.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız, Durdur ve tarz seçimi (TEST, B4b), eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
@@ -3712,6 +3713,66 @@ async def bolum_34(tarayici, site, tum_hatalar):
     await pg.context.close()
 
 
+
+async def bolum_35(tarayici, site, tum_hatalar):
+    """R6: gazetede rakiplerin gündemi (başka kulüpler arasındaki transfer ertesi sabahın sayısında); sponsor zinciri ekranda — 1 Şubat ay başında
+    teklif kartı (Fırsat, mali işler müdürü telefonda), Görüşelim → pazarlık kartının iki yüzü (aylık iki rakam, künyede Pazarlık), dosyada aşama satırı."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.set_viewport_size({"width": 1180, "height": 1000})
+    # gazete: dünyada dar transfer (kural komutuyla), ertesi sabah 09:00
+    await pg.evaluate("""() => oyunKomut(k => { const p = Object.values(k.oyuncular).find(q => q.kulupId === 'karaova' && q.mevki === 'OS');
+      dunyaTransferi(k, p.id, 'akdeniz'); zamanIlerlet(k, anDakika('2026-11-24', 540) - simdikiAn(k)); })""")
+    await oda_yenile(pg)
+    await masaya_don(pg)
+    await pg.keyboard.press("Digit4")
+    await pg.wait_for_selector("#oda .gz-sayi", timeout=10000)
+    gz = await pg.text_content("#oda .gz-sayi")
+    denetle("R6-b: başka kulüpler arasındaki transfer ertesi sabahın gazetesinde (“… formasını … ile değiştirdi”)", "formasını" in gz and "Akdeniz" in gz, gz[:200])
+    await masaya_don(pg)
+    # sponsor: 1 Şubat 12:00
+    await pg.evaluate("() => oyunKomut(k => zamanIlerlet(k, anDakika('2027-02-01', 720) - simdikiAn(k)))")
+    await oda_yenile(pg)
+    await masaya_don(pg)
+    kid = await pg.evaluate("() => { const x = Object.values(OYUN.kariyer.isler).find(i => i.veri && i.veri.karar === 'sablonKarti' && OYUN.kariyer.meseleler[i.veri.meseleId].sablon.ad === 'sponsor'); return x ? x.id : null; }")
+    await pg.click(f'.od-sonraKagit[data-is="{kid}"]')
+    kart = f'.kk-kart[data-is="{kid}"]'
+    await pg.wait_for_selector(kart, timeout=10000)
+    o = await odak(pg)
+    ust = await pg.text_content(f"{kart} .kk-ustNotr")
+    yuz = await pg.text_content(f"{kart} .kk-yuz")
+    denetle("R6-d: 1 Şubat'ta sponsor teklifi; kart telefonda (soran mali işler müdürü), künyede Fırsat; nötr yüzde markanın teklifi",
+            kid is not None and o["ad"] == "telefon" and "Fırsat" in ust and "forma göğüs" in yuz, f"{o['ad']} · {ust} · {yuz[:120]}")
+    await pg.focus(kart)
+    await pg.keyboard.press("ArrowLeft")
+    await pg.keyboard.press("Enter")
+    await pg.wait_for_timeout(300)
+    await masaya_don(pg)
+    kid2 = await pg.evaluate("() => { const x = Object.values(OYUN.kariyer.isler).find(i => i.veri && i.veri.karar === 'sablonKarti' && OYUN.kariyer.meseleler[i.veri.meseleId].sablon.ad === 'sponsor'); return x ? x.id : null; }")
+    await pg.click(f'.od-sonraKagit[data-is="{kid2}"]')
+    kart2 = f'.kk-kart[data-is="{kid2}"]'
+    await pg.wait_for_selector(kart2, timeout=10000)
+    await pg.focus(kart2)
+    await pg.keyboard.press("ArrowLeft")
+    y1 = await pg.text_content(f"{kart2} .kk-yuz")
+    await pg.keyboard.press("ArrowRight")
+    y2 = await pg.text_content(f"{kart2} .kk-yuz")
+    ust2 = await pg.text_content(f"{kart2} .kk-ustNotr")
+    denetle("R6-d: Görüşelim → pazarlık kartı; iki yüz iki aylık rakam (makul, iddialı; “/ ay”), künyede Pazarlık", kid2 not in (None, kid) and "/ ay" in y1 and "/ ay" in y2
+            and "makul" in y1 and "iddialı" in y2 and "Pazarlık" in ust2, f"{ust2} · {y1[:80]} · {y2[:80]}")
+    await pg.keyboard.press("ArrowLeft")
+    await pg.keyboard.press("Enter")
+    await pg.wait_for_timeout(300)
+    mid = await pg.evaluate("() => Object.values(OYUN.kariyer.meseleler).find(m => m.sablon && m.sablon.ad === 'sponsor').id")
+    await masaya_don(pg)
+    await pg.keyboard.press("Digit3")
+    await pg.click(f'#oda .dsy-sekme[data-mesele="{mid}"]')
+    a = await pg.evaluate("() => (document.querySelector('#oda .dsy-asama') || {}).textContent || null")
+    await pg.screenshot(path=str(ARAC / "son-akis-35-sponsor.png"))
+    denetle("R6-d: dosyada aşama satırı (“Markanın cevabı bekleniyor”), kategori Kurumsal", a == "Markanın cevabı bekleniyor" and "Kurumsal" in (await pg.text_content("#oda .dsy-kat")), str(a))
+    await pg.context.close()
+
+
 async def ana():
     try:
         from playwright.async_api import async_playwright
@@ -3807,6 +3868,9 @@ async def ana():
         if sec("34"):
             print("\n34. Balkon (R5)")
             await bolum_34(tarayici, site, tum_hatalar)
+        if sec("35"):
+            print("\n35. Zincirler: gazetede rakipler ve sponsor (R6)")
+            await bolum_35(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

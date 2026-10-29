@@ -143,7 +143,7 @@ KARAR_TURLERI.teklifKarari={
       {id:'reddet',metin:'Reddet',sure:0,aciklama:[`${p?p.ad:''} kalır.`]}];},
   uygula:(k,is,secim)=>{
     const v=is.veri;
-    if(secim==='reddet')return{bilgi:meseleOlay(k,v.meseleId,'tr.reddet',{oyuncuId:v.oyuncuId})};
+    if(secim==='reddet'){ikinciTeklifPlanla(k,v);return{bilgi:meseleOlay(k,v.meseleId,'tr.reddet',{oyuncuId:v.oyuncuId})};}
     const p=k.oyuncular[v.oyuncuId],yarin=tarihEkle(k.tarih,1),A=k.kulupler[v.alici];
     oyuncuTransfer(k,v.oyuncuId,v.alici,{bedel:v.bedel,sozlesme:{maas:Math.round(maasTahmini(p,k.tarih)*1.1/SOZLESME_TEST.yuvarla)*SOZLESME_TEST.yuvarla,bitis:sozlesmeBitisi(k,2)}});
     odemePlanla(k,{kulupId:v.kulupId,tarih:yarin,dakika:600,tutar:v.bedel,kalem:'transfer',aciklama:`${p.ad} bonservisi (${A.ad})`,meseleId:v.meseleId});
@@ -152,6 +152,36 @@ KARAR_TURLERI.teklifKarari={
   },
   zamanAsimi:{metin:()=>'Cevap vermezsen teklif geri çekilir.',uygula:(k,is)=>({bilgi:meseleOlay(k,is.veri.meseleId,'tr.cevapsiz',{})})}
 };
+
+/* ---- R6-c (2026-10-30): ikinci teklif — reddetmek sert pazarlık hamlesidir (TEST olasılık ve katlar) ----
+   Reddedilen ilk teklifte alıcı, belirlenimci bir çekilişle (oyuncunun değeri bedelin üstündeyse daha olası) 2–3 gün sonra 11:00'de bedeli artırarak
+   yeniden gelir (gizli gelişme; dosya ret ile kapanır, ikinci teklif yeni dosyadır). Dönem kapanmışsa ya da oyuncu artık kulüpte değilse gelmez;
+   ikinci teklifin reddi son sözdür, cevapsız teklif geri çekilir (yeniden gelmez). */
+const IKINCI_TEKLIF_TEST={olasilik:0.45,ucuzEk:0.3,kat:[1.12,1.25],gun:[2,3],saat:660};
+function ikinciTeklifPlanla(k,v){
+  if(v.tur)return null;
+  const T=IKINCI_TEKLIF_TEST,r=kadroRastgele(k.dunyaTohumu,'ikinciTeklif:'+v.meseleId),p=k.oyuncular[v.oyuncuId];
+  const ol=T.olasilik+(p&&oyuncuDegeri(p,k.tarih)>v.bedel?T.ucuzEk:0);if(r()>=ol)return null;
+  const gun=T.gun[0]+Math.floor(r()*(T.gun[1]-T.gun[0]+1)),tarih=tarihEkle(k.tarih,gun),d=transferDonemi(k,k.tarih);
+  if(!d||tarih>d.bitis)return null;
+  const bedel=Math.round(v.bedel*(T.kat[0]+(T.kat[1]-T.kat[0])*r())/1000000)*1000000;
+  return isEkle(k,{tur:'gelisme',tarih,dakika:T.saat,veri:{gelisme:'ikinciTeklif',kulupId:v.kulupId,oyuncuId:v.oyuncuId,alici:v.alici,bedel,onceki:v.bedel}});
+}
+GELISMELER.ikinciTeklif={
+  denetle:(k,v)=>{const h=[];if(!(k.kulupler||{})[v.kulupId]||!(k.kulupler||{})[v.alici])h.push('kulüp bulunamadı');if(!(k.oyuncular||{})[v.oyuncuId])h.push('oyuncu bulunamadı');
+    if(!Number.isInteger(v.bedel)||v.bedel<=0)h.push('bedel geçersiz');return h;},
+  uygula:(k,is)=>{
+    const v=is.veri,p=k.oyuncular[v.oyuncuId];
+    if(!p||p.kulupId!==v.kulupId||!transferDonemi(k,k.tarih))return{bilgi:null};
+    const h=kulupHocasi(k,v.kulupId),id=meseleAc(k,{tur:'transfer',baslik:`İkinci teklif: ${p.ad}`,sorumluId:k.baskanId,kisiler:h?[h.id]:[]});
+    meseleOlay(k,id,'tr.ikinciTeklif',{kulupId:v.alici,oyuncuId:p.id,bedel:v.bedel,onceki:v.onceki});
+    isEkle(k,{tur:'ajanda',tarih:tarihEkle(k.tarih,TRANSFER_TEST.cevapGun),dakika:1080,veri:{baslik:`İkinci teklif: ${p.ad}`,zorunluluk:'zorunlu',sure:0,saatsiz:true,bekleyebilir:true,
+      gelis:{tarih:k.tarih,dakika:k.gunIciDakika},karar:'teklifKarari',meseleId:id,kulupId:v.kulupId,oyuncuId:p.id,alici:v.alici,bedel:v.bedel,tur:1,sinif:'pazarlik',
+      aciklama:`${(k.kulupler[v.alici]||{ad:''}).ad} ${p.ad} için teklifini ${paraYazi(v.bedel)}'ye yükseltti.`}});
+    return{bilgi:'İkinci teklif geldi.',dur:true};
+  }
+};
+MESELE_OLAYLARI['tr.ikinciTeklif']=(k,p)=>`${(k.kulupler[p.kulupId]||{ad:''}).ad} geri döndü: ${kisiOyuncuAdi(k,p.oyuncuId)} için ${paraYazi(p.onceki)} yerine ${paraYazi(p.bedel)} öneriyor.`;
 
 /* ---- hocanın transfer isteği ve imza ---- */
 GELISMELER.hocaTalebi={

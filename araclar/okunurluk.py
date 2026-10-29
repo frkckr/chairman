@@ -7,6 +7,7 @@ oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu 
 (araclar/ornekler/kayit-s11-hafta14.json): hafta görünümü, maç sayfası (Özet, İstatistikler, Kadrolar), oyuncu sayfası, takım sayfası (Genel, Kadro).
 R4: Transfer masası (Pano, Piyasa, oyuncu kâğıdı) ve transfer zincirinin aday ve pazarlık kartı (yapay haftalarla 5 Ocak'a, oyunun komut yoluyla).
 R5: balkon (antrenman kâğıdı: günün türü, gözlem, Gördüklerin) ve balkonda sağ yarıda açılan oyuncu dosyası.
+R6: sponsor pazarlık kartı (1 Şubat ay başı, Görüşelim'den sonra; oyunun komut yoluyla).
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
 kalan metin (kaydırılabilir alanda kaydırınca okunur; kesen alanda bilerek gizlenmiştir: ekran okuyucu metni), TEST öğeleri (yayından önce kalkar). Kırpılan metin: en yakın taşmayı kesen atası overflow hidden/clip olan ve kutusunun dışına taşan metin
@@ -221,6 +222,21 @@ async def sahneler_balkon(pg, olc):
     await olc("balkon-dosya")
 
 
+SPONSOR_SAHNELER = {"sponsor-pazarlik-karti"}
+
+
+async def sahneler_sponsor(pg, olc):
+    """R6: 1 Şubat 12:00'ye ilerlenir, teklif kartı Görüşelim ile cevaplanır; pazarlık kartı kendi yerinde (Sonra yığınından)."""
+    kid = await pg.evaluate("""() => { oyunKomut(k => zamanIlerlet(k, anDakika('2027-02-01', 720) - simdikiAn(k)));
+      const B = () => Object.values(OYUN.kariyer.isler).find(i => i.veri && i.veri.karar === 'sablonKarti' && OYUN.kariyer.meseleler[i.veri.meseleId].sablon.ad === 'sponsor');
+      const a = B(); oyunKomut(k => ajandaIsiYap(k, a.id, 'gorus')); const b = B(); return b ? b.id : null; }""")
+    await akis.oda_yenile(pg)
+    await akis.masaya_don(pg)
+    await tikla(pg, f'.od-sonraKagit[data-is="{kid}"]')
+    await pg.wait_for_selector(f'.kk-kart[data-is="{kid}"]', timeout=10000)
+    await olc("sponsor-pazarlik-karti")
+
+
 async def sahneler_mac(pg, olc):
     """Boş kariyer: İlerle maç gününe; Stada git → bülten. Ayrı sayfada TEST 'Maçı izleme' → maç sonu kartı."""
     await akis.oda_ilerle(pg)
@@ -294,6 +310,10 @@ async def ana():
             if not secili or secili & BALKON_SAHNELER:
                 pg = await ac("index.html", "?dunya=7&pul=0")
                 await sahneler_balkon(pg, await olc_kur(pg))
+                await pg.context.close()
+            if not secili or secili & SPONSOR_SAHNELER:
+                pg = await ac("index.html", "?dunya=7&pul=0")
+                await sahneler_sponsor(pg, await olc_kur(pg))
                 await pg.context.close()
             if not secili or "bulten" in secili:
                 pg = await ac("index.html", "?dunya=7&pul=0")
