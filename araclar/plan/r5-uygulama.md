@@ -94,4 +94,4 @@ Kaynaklar: R programı (YOL_HARITASI karar 56): “R5 balkon — sağ çalışma
 6. **Akış §34'te** cevabın anı test kurgusuyla gözlemin içine alındı: hocanın cevabı mesai gecikmesiyle çoğu zaman gözlemin bitişinden sonraya düşüyor; kural (cevap gözlemi kesmez) aynı.
 7. Kare süresi (`kontrol.py`, odada) ortanca 1,4 ms; balkonda figür sayısı 20 + kaleciler + 4 ekip.
 
-**Denetim sonuçları:** `kariyer-deneme` R5 bölümüyle geçti; sezon t3 ve t7 18/18 birebir (`--ayni`); `akis-deneme` 7, 12, 16, 23, 27, 30, 34 geçti; `okunurluk.py` balkon ve balkon-dosya üç genişlikte eşikte; `kontrol.py` geçti; motor dosyası değişmedi.
+**Denetim sonuçları:** `kariyer-deneme` R5 bölümüyle geçti; sezon t3 ve t7 18/18 birebir (`--ayni`); `akis-deneme` 7, 12, 16, 23, 27, 30, 34 geçti; `okunurluk.py` balkon ve balkon-dosya üç genişlikte eşikte; `kontrol.py` geçti; büyük kapıda tam akış geçti (yalnız bilinen B40); motor dosyası değişmedi (oturum-sonu ve hız R4 kapısındaki kodla aynı).
