@@ -50,11 +50,13 @@ R1-d (2026-10-29) ile açıldı. Tutmayan her kabul satırının ve ertelenen he
 | No | Konu | Tür | Durum | İlk | Son değer (tur) | Gerekçe ve kapanış koşulu | Eşleşme |
 |---|---|---|---|---|---|---|---|
 | B40 | 15b: TEST loca bakışında kulübenin 1/15 noktası masanın arkasında (K1i) | kabul edilmiş borç | açık | K1 | 1/15 (U) | Loca bakışı TEST'tir; F5 antrenman ve figür turunda | `akis` `K1i: kulübenin önündeki 15 noktanın` |
-| B41 | 15b tam koşuda “Maça geç”ten sonra santrayı 60 sn bekleyemiyor | zaman aşımı | açık | H1 | düştü (U, masaüstü) | Tek başına koşunca geçiyor; yükten | — |
+| B41 | 15b tam koşuda “Maça geç”ten sonra santrayı 60 sn bekleyemiyor | zaman aşımı | açık | H1 | R1 tam koşusunda geçti (masaüstü); U'da düşmüştü | Tek başına koşunca geçiyor; yükten | — |
 | B42 | Dizüstünde 11, 12, 14, 14b, 15, 15b ve 16'nın gerçek zaman beklemeleri | zaman aşımı | açık | T5 | düştü (U, dizüstü) | i7-8565U yavaş; tam akış denemesi masaüstünde (bellek: iki makine) | — |
 | B43 | 21. bölümde “kayıt sürümü 10” yazıyordu, ölçülen 11 (devam notunda 19b denmişti) | metni eskimiş | kapandı (R1) | S | — | Denetim artık `KARIYER_SURUM`'u okur | — |
 | B44 | H2-e incelemesinin altı küçük ekran düzeltmesi otomatik denetimsiz: gözlemde rozet, maç telefonunda kaydırma, bekleme satırı, telefon açıkken Maçı bitir, maçta önizleme, görünmez metinler | ertelenen iş | açık | H2 | — | `h2-uygulama.md` H2-e; telefona dokunan R2'de denetim eklenir | — |
 | B45 | Ekran ve çizim dosyalarının katı kibi | ertelenen iş | açık | R1 | gevşek | Kariyere yazmazlar; tarayıcı denetimiyle ayrı iş (`araclar/dosya-gruplari.js` izin listesi) | — |
+| B47 | 800 px pencerede (640 px kare) telefonda konuşmanın cevap kartı ve iki kenarı kaydırmadan görünmüyor (kart 252 px, büyük yazıda 301 px; cevap alanı kayar) | kabul edilmiş borç | açık | R1 | kart altı 68 px dışarıda, büyük yazıda 128 px (R1) | R1-f yazı tabanının bilinen bedeli; telefonun dar karedeki düzeni R2'nin işi (kart telefondan çıkıp sağdaki geniş alana geçer). R2 kapanışında kapanır | `akis` `^R1-f dar telefon: 800 px pencerede konuşmanın cevap kartı` |
+| B48 | 800 px pencerede kart sürüklenirken cevap alanının alt sınırını aşıyor (yatay sınır tutuyor) | kabul edilmiş borç | açık | R1 | alt −68 / −128 px (R1) | B47 ile aynı kök; R2 | `akis` `^R1-f dar telefon: 800 px pencerede kart sürüklenirken` |
 | B46 | Akış 19 kariyer maçında koşar, orada H2-a'dan beri rakip başkan yok; karar anlı yol 14b ve `akis-2d`'de TEST adresiyle | kabul edilmiş borç | açık | H2-a | — | Rakip başkan içerikle döner | — |
 
 ## Kariyer, ekonomi ve kayıt

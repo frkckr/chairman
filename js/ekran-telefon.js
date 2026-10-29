@@ -45,7 +45,7 @@
 .tel-ekran{position:relative;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;border-radius:2.1em;overflow:hidden;background:${T.ekran}}
 .tel-ekran[data-ekran="ana"]{background:linear-gradient(180deg,${T.anaZemin[0]} 0%,${T.anaZemin[1]} 38%,${T.anaZemin[2]} 100%)}
 .tel-ada{position:absolute;top:.6em;left:50%;transform:translateX(-50%);width:6em;height:1.75em;border-radius:1em;background:${T.ada};z-index:3}
-.tel-durum{display:flex;justify-content:space-between;align-items:center;gap:.5em;min-height:2.95em;padding:.75em 1.55em .25em;font-weight:600;font-size:.92em;font-variant-numeric:tabular-nums}
+.tel-durum{display:flex;justify-content:space-between;align-items:center;gap:.5em;min-height:2.95em;padding:.75em 1.55em .25em;font-weight:600;font-size:max(var(--k-enKucuk,12px),.92em);font-variant-numeric:tabular-nums}
 .tel-durum>span{display:flex;gap:.35em;align-items:center}
 .tel-sinyal{display:flex;gap:.14em;align-items:flex-end;height:.8em}.tel-sinyal i{width:.22em;background:var(--k-yazi);border-radius:.06em}
 .tel-sinyal i:nth-child(1){height:30%}.tel-sinyal i:nth-child(2){height:50%}.tel-sinyal i:nth-child(3){height:75%}.tel-sinyal i:nth-child(4){height:100%}
@@ -68,17 +68,17 @@
   background:rgba(251,247,236,.92);border:1px solid var(--k-cizgi);border-radius:1.1em;box-shadow:0 .15em .4em rgba(40,28,12,.12)}
 .tel-bildirim .tel-simge{grid-row:span 2;width:2.3em;height:2.3em;border-radius:.6em}
 .tel-bildirim b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tel-bildirim time{color:var(--k-soluk);font-size:.82em;white-space:nowrap}
-.tel-bildirim>span:last-child{grid-column:2/-1;color:var(--k-soluk);font-size:.9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tel-bildirim time{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.82em);white-space:nowrap}
+.tel-bildirim>span:last-child{grid-column:2/-1;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tel-bekliyor{color:var(--k-kirmizi);font-weight:600}
 .tel-sabit{display:flex;justify-content:center;gap:1.8em;margin-top:.6em;padding:.65em 1em;border-radius:1.8em;background:${T.sabit}}
-.tel button.tel-uyg{display:grid;justify-items:center;gap:.3em;padding:.1em;background:transparent;border:0;font-size:.8em;font-weight:500}
+.tel button.tel-uyg{display:grid;justify-items:center;gap:.3em;padding:.1em;background:transparent;border:0;font-size:max(var(--k-enKucuk,12px),.8em);font-weight:500}
 .tel-uyg .tel-simge{width:4.3em;height:4.3em;border-radius:1.1em}
 .tel-simge{position:relative;display:grid;place-items:center;color:#fff;box-shadow:inset 0 -.2em 0 rgba(0,0,0,.18)}
 .tel-simge svg{width:58%;height:58%}
 .tel-simgeMesaj{background:${T.mesajSimge}}.tel-simgeSkor{background:${T.skorSimge}}
-.tel-rozet{font-style:normal;display:inline-grid;place-items:center;min-width:1.55em;height:1.55em;padding:0 .35em;border-radius:1em;background:var(--k-kirmizi);color:#fff;font-size:.74em;font-weight:600}
-.tel-simge .tel-rozet{position:absolute;top:-.35em;right:-.45em;border:.14em solid ${T.ekran};font-size:.95em}
+.tel-rozet{font-style:normal;display:inline-grid;place-items:center;min-width:1.55em;height:1.55em;padding:0 .35em;border-radius:1em;background:var(--k-kirmizi);color:#fff;font-size:max(var(--k-enKucuk,12px),.74em);font-weight:600}
+.tel-simge .tel-rozet{position:absolute;top:-.35em;right:-.45em;border:.14em solid ${T.ekran};font-size:max(var(--k-enKucuk,12px),.95em)}
 /* ---- uygulama başlığı: küçük geri, büyük başlık ---- */
 .tel-nav{display:flex;align-items:center;min-height:1.9em}
 .tel button.tel-geri{display:inline-flex;align-items:center;gap:.15em;padding:.15em .1em;background:transparent;border:0;color:${T.baglanti};font-weight:500}
@@ -93,11 +93,11 @@
 .tel-nokta{grid-row:1/span 3;width:.6em;height:.6em;border-radius:50%}.tel-nokta.tel-okunmamis{background:${T.baglanti}}
 .tel-kisi .tel-portre{grid-row:1/span 3;width:2.9em;height:2.9em}
 .tel-kisi b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tel-kisi time{color:var(--k-soluk);font-size:.82em;white-space:nowrap}
-.tel-onizle{grid-column:3/-1;display:flex;gap:.5em;align-items:baseline;min-width:0;color:var(--k-soluk);font-size:.9em}
+.tel-kisi time{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.82em);white-space:nowrap}
+.tel-onizle{grid-column:3/-1;display:flex;gap:.5em;align-items:baseline;min-width:0;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
 .tel-onizle span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tel-kisi .tel-rozet{flex:none}
-.tel-etiket{grid-column:3/-1;font-style:normal;font-size:.76em;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--k-kirmizi);white-space:nowrap}
+.tel-etiket{grid-column:3/-1;font-style:normal;font-size:max(var(--k-enKucuk,12px),.76em);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--k-kirmizi);white-space:nowrap}
 /* ---- konuşma: üstte kişi, baloncuklar; altta sabit cevap alanı ---- */
 .tel-ekran[data-ekran="konusma"] .tel-govde{display:flex;flex-direction:column;gap:0;padding-top:0}
 /* U2: iki satır — üstte uygulamanın başlık çubuğu (‹ Mesajlar), altında kişi (portre, ad, görev); uzun Geri yazısı kişinin adıyla çakışmaz */
@@ -106,20 +106,20 @@
 .tel-kisiBas>.tel-portre{width:2.3em;height:2.3em}
 .tel-kisiBas>div{display:grid;gap:.05em;min-width:0;font-weight:600;line-height:1.2}
 .tel-kisiBas>div>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tel-kisiBas small{font-weight:400;color:var(--k-soluk);font-size:.86em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tel-kisiBas small{font-weight:400;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.86em);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tel-konusma{margin-top:auto;display:grid;gap:.4em;align-content:end;padding-top:.6em}
-.tel-gun{justify-self:center;font-size:.76em;letter-spacing:.04em;color:var(--k-soluk)}
-.tel-not{justify-self:center;max-width:94%;text-align:center;font-size:.84em;color:var(--k-soluk)}
+.tel-gun{justify-self:center;font-size:max(var(--k-enKucuk,12px),.76em);letter-spacing:.04em;color:var(--k-soluk)}
+.tel-not{justify-self:center;max-width:94%;text-align:center;font-size:max(var(--k-enKucuk,12px),.84em);color:var(--k-soluk)}
 .tel-balon{max-width:84%;display:grid;gap:.1em;padding:.45em .75em;border-radius:1.1em;line-height:1.35}
-.tel-balon small{font-size:.74em;color:var(--k-soluk)}
+.tel-balon small{font-size:max(var(--k-enKucuk,12px),.74em);color:var(--k-soluk)}
 .tel-gelen{justify-self:start;background:${T.gelen};border:1px solid var(--k-cizgi);border-bottom-left-radius:.35em}
 .tel-giden{justify-self:end;background:${T.giden};border:1px solid ${T.gidenCizgi};border-bottom-right-radius:.35em}
 .tel-yeni{box-shadow:0 0 0 .14em var(--k-mavi)}
 .tel-gizli{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .tel-dosya{font-style:normal}
-.tel-kararOzet{display:grid;gap:.3em;padding:.45em .6em;border:1px dashed var(--k-cizgi);border-radius:.8em;font-size:.92em}
+.tel-kararOzet{display:grid;gap:.3em;padding:.45em .6em;border:1px dashed var(--k-cizgi);border-radius:.8em;font-size:max(var(--k-enKucuk,12px),.92em)}
 .tel-oneri{display:grid;gap:.15em;justify-items:start;padding:.3em .5em;border:1px dashed var(--k-cizgi);border-radius:.5em}
-.tel-oneri small{color:var(--k-soluk);font-size:.84em}
+.tel-oneri small{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.84em)}
 .tel-bos{color:var(--k-soluk);text-align:center;padding:1em 0}
 .tel-bekleme{font-style:italic}
 .tel-cevap{display:grid;gap:.45em;max-height:55cqh;overflow-y:auto;padding:.5em .65em .45em;background:var(--k-serit);border-top:1px solid var(--k-cizgi)}
@@ -134,7 +134,7 @@
 .tel-cevap .kk-kart>.kk-not:last-child{text-align:center}
 /* ---- Canlı Skor ---- */
 .tel-skor{display:grid;gap:.45em}
-.tel-skor h5{margin:.3em 0 0;font-size:.76em;letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu);font-weight:600}
+.tel-skor h5{margin:.3em 0 0;font-size:max(var(--k-enKucuk,12px),.76em);letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu);font-weight:600}
 /* N2 (2026-10-04): her karşılaşma tek satır: saat ya da dakika/durum · ev sahibi · skor · deplasman; sığmayan ad kesilir, satır kaymaz */
 .tel .tel-mac{display:grid;grid-template-columns:3.4em minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.5em;width:100%;padding:.55em .6em;white-space:nowrap;line-height:1.2;background:var(--k-serit);border:1px solid var(--k-cizgi);border-radius:.8em}
 .tel-mac span{overflow:hidden;text-overflow:ellipsis}
@@ -144,25 +144,25 @@
 .tel-mac small.tel-macCanli{color:var(--k-kirmizi);font-weight:600}
 .tel-ist{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums;background:#fff;border:1px solid var(--k-cizgi);border-radius:.8em;overflow:hidden}
 .tel-ist th,.tel-ist td{padding:.3em .5em;border-bottom:1px solid ${T.ayrac};text-align:center}
-.tel-ist thead th{background:var(--k-zemin);font-size:.88em}
+.tel-ist thead th{background:var(--k-zemin);font-size:max(var(--k-enKucuk,12px),.88em)}
 .tel-ist tbody tr:last-child>*{border-bottom:0}
 .tel-ist tbody th{font-weight:400;color:var(--k-soluk)}
 /* H2-b: maçın ayrıntısı — goller, kartlar, sakatlıklar iki sütunda (ev solda), altında tablo; uzun satır kesilir, yatay taşma yok */
 .tel-ayrinti{display:grid;gap:.4em;min-width:0}
 .tel-olaylar{display:grid;gap:.1em;min-width:0;padding:.35em .55em;background:#fff;border:1px solid var(--k-cizgi);border-radius:.8em}
-.tel h6{margin:0;font-size:.72em;letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu);font-weight:600}
+.tel h6{margin:0;font-size:max(var(--k-enKucuk,12px),.72em);letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu);font-weight:600}
 .tel-olayIki{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 .8em;min-width:0}
 .tel-olayIki ul{margin:0;padding:0;list-style:none;display:grid;align-content:start;gap:.05em;min-width:0}
-.tel-olay{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9em}
+.tel-olay{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:max(var(--k-enKucuk,12px),.9em)}
 .tel-olay small{color:var(--k-soluk)}
 .tel-dk{display:inline-block;min-width:2.3em;color:var(--k-soluk);font-variant-numeric:tabular-nums}
 .tel-kartRenk{display:inline-block;width:.55em;height:.8em;margin-right:.35em;vertical-align:-.08em;border:1px solid rgba(0,0,0,.35);border-radius:.08em}
-.tel-olayYok{margin:0;color:var(--k-soluk);font-size:.9em}
+.tel-olayYok{margin:0;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
 /* S-d: Canlı Skor sekmeleri, puan tablosu, fikstür gezintisi ve kulüp ekranı (--k-* değişkenleri) */
 .tel-sekmeler{display:flex;gap:.25em;margin:0 0 .5em;border-bottom:1px solid var(--k-cizgi)}
-.tel .tel-sekme{flex:1 1 0;min-width:0;padding:.3em .1em;border:0;border-bottom:.18em solid transparent;background:transparent;color:var(--k-soluk);font:inherit;font-size:.78em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.tel .tel-sekme{flex:1 1 0;min-width:0;padding:.3em .1em;border:0;border-bottom:.18em solid transparent;background:transparent;color:var(--k-soluk);font:inherit;font-size:max(var(--k-enKucuk,12px),.78em);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .tel .tel-sekme[aria-selected="true"]{color:var(--k-yazi);font-weight:600;border-bottom-color:var(--k-vurgu)}
-.tel-tablo{width:100%;table-layout:fixed;border-collapse:collapse;font-size:.86em;font-variant-numeric:tabular-nums}
+.tel-tablo{width:100%;table-layout:fixed;border-collapse:collapse;font-size:max(var(--k-enKucuk,12px),.86em);font-variant-numeric:tabular-nums}
 .tel-tablo th{font-weight:600;color:var(--k-soluk);text-align:right;padding:.15em .25em}
 .tel-tablo th:nth-child(2),.tel-tablo td:nth-child(2){text-align:left}
 .tel-tablo td{padding:.16em .25em;text-align:right;border-top:1px solid var(--k-cizgi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -170,14 +170,14 @@
 .tel-tablo td.tel-b-cikma{border-left-color:var(--k-yesil)}.tel-tablo td.tel-b-playoff{border-left-color:var(--k-mavi,var(--k-vurgu))}.tel-tablo td.tel-b-dusme{border-left-color:var(--k-kirmizi)}
 .tel-tablo tr.tel-biz td{background:var(--k-zeminKoyu);font-weight:600}
 .tel .tel-kulupAd{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
-.tel-lejant{display:flex;flex-wrap:wrap;gap:.2em .8em;margin:.4em 0 0;font-size:.78em;color:var(--k-soluk)}
+.tel-lejant{display:flex;flex-wrap:wrap;gap:.2em .8em;margin:.4em 0 0;font-size:max(var(--k-enKucuk,12px),.78em);color:var(--k-soluk)}
 .tel-lejant span{padding-left:.4em;border-left:.22em solid transparent}
 .tel-lejant .tel-b-cikma{border-left-color:var(--k-yesil)}.tel-lejant .tel-b-playoff{border-left-color:var(--k-mavi,var(--k-vurgu))}.tel-lejant .tel-b-dusme{border-left-color:var(--k-kirmizi)}
 .tel-haftaNav{display:grid;grid-template-columns:2.2em minmax(0,1fr) 2.2em;align-items:center;text-align:center;margin:0 0 .3em}
 .tel .tel-haftaOk{padding:.1em 0;border:1px solid var(--k-cizgi);border-radius:.4em;background:transparent;color:var(--k-yazi);font:inherit;cursor:pointer}
 .tel .tel-haftaOk:disabled{opacity:.35;cursor:default}
 .tel-canliNot{margin:0 0 .3em}
-.tel-kulupDl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.25em .7em;margin:.2em 0 0;font-size:.9em}
+.tel-kulupDl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.25em .7em;margin:.2em 0 0;font-size:max(var(--k-enKucuk,12px),.9em)}
 .tel-kulupDl dt{color:var(--k-soluk)}.tel-kulupDl dd{margin:0;overflow-wrap:anywhere}
 .tel-sonuc{display:inline-block;width:1.35em;margin-right:.15em;text-align:center;font-style:normal;font-weight:600;border-radius:.2em;color:#fff}
 .tel-sG{background:var(--k-yesil)}.tel-sB{background:var(--k-soluk)}.tel-sM{background:var(--k-kirmizi)}

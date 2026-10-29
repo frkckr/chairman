@@ -21,18 +21,18 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   const A=STIL.macSonu,K=STIL.kagit,kok=document.getElementById('screen');
   const st=document.createElement('style');st.id='macSonuStili';
   st.textContent=`
-.mac-sonu{position:absolute;inset:0;z-index:5;display:grid;place-items:center;pointer-events:none;font-family:var(--govde);font-size:var(--ms-boy,var(--k-yaziBoyu,1.5cqw));line-height:1.35;color:${K.yazi}}
+.mac-sonu{position:absolute;inset:0;z-index:5;display:grid;place-items:center;pointer-events:none;font-family:var(--govde);font-size:var(--ms-boy,var(--k-yaziBoyu,max(14px,1.5cqw)));line-height:1.35;color:${K.yazi}}
 .mac-sonu[hidden]{display:none}
 .ms-kararti{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 40%,rgba(0,0,0,${A.kararma}) 100%)}
 .ms-kart{position:relative;pointer-events:auto;width:min(62%,44em);max-height:88%;overflow:auto;display:grid;gap:.7em;padding:.9em 1.3em 1em;background:${K.zemin};border:1px solid ${K.cizgi};box-shadow:.35em .45em 0 ${K.golge}}
-.ms-ust{margin:0;padding-bottom:.3em;border-bottom:.18em solid ${K.kulup};color:${K.soluk};font-size:.9em;letter-spacing:.12em;text-transform:uppercase}
+.ms-ust{margin:0;padding-bottom:.3em;border-bottom:.18em solid ${K.kulup};color:${K.soluk};font-size:max(var(--k-enKucuk,12px),.9em);letter-spacing:.12em;text-transform:uppercase}
 .ms-skor{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.8em}
 .ms-skor span{min-width:0;font-family:var(--display);font-size:1.9em;line-height:1;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ms-skor span:first-child{text-align:right}
 .ms-skor span.ms-biz{color:${K.kulup}}
 .ms-skor b{font-family:var(--display);font-weight:400;font-size:3.2em;line-height:.85;font-variant-numeric:tabular-nums}
 .ms-bolum{display:grid;gap:.15em}
-.ms-bolum h4{margin:0;color:${K.vurgu};font-size:.78em;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.ms-bolum h4{margin:0;color:${K.vurgu};font-size:max(var(--k-enKucuk,12px),.78em);font-weight:600;letter-spacing:.12em;text-transform:uppercase}
 .ms-iki{display:grid;grid-template-columns:1fr 1fr;gap:0 1.4em}
 .ms-bolum ul{margin:0;padding:0;list-style:none;display:grid;align-content:start;gap:.1em;min-width:0}
 .ms-bolum li{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -40,9 +40,12 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
 .ms-dk{display:inline-block;min-width:2.6em;color:${K.soluk};font-variant-numeric:tabular-nums}
 .ms-kartRenk{display:inline-block;width:.6em;height:.85em;margin-right:.4em;vertical-align:-.1em;border:1px solid rgba(0,0,0,.35);border-radius:.08em}
 .ms-yok{margin:0;color:${K.soluk}}
-.ms-test{margin:0;padding:.25em .6em;border:1px dashed ${K.cizgi};color:${K.soluk};font-size:.85em}
-.ms-test b{color:${K.vurgu};font-size:.85em;letter-spacing:.1em;margin-right:.4em}
-.ms-alt{display:flex;align-items:center;justify-content:space-between;gap:1em;padding-top:.6em;border-top:.18em solid ${K.cizgi}}
+.ms-test{margin:0;padding:.25em .6em;border:1px dashed ${K.cizgi};color:${K.soluk};font-size:max(var(--k-enKucuk,12px),.85em)}
+.ms-test b{color:${K.vurgu};font-size:max(var(--k-enKucuk,12px),.85em);letter-spacing:.1em;margin-right:.4em}
+.ms-alt{display:flex;align-items:center;justify-content:space-between;gap:1em;padding-top:.6em;border-top:.18em solid ${K.cizgi};
+  position:sticky;bottom:-1em;margin-bottom:-1em;padding-bottom:1em;background:${K.zemin}}   /* R1-f: kart kayarken Odaya dön hep görünür */
+/* R1-f: dar karede (yazı tabanında) kart genişler */
+@container (max-width:820px){.ms-kart{width:94%;max-height:94%}}
 .ms-durum{margin:0;min-width:0;color:${K.soluk}}
 .ms-durum.ms-hata{color:${K.kirmizi}}
 .mac-sonu button.ms-don{flex:none;font:inherit;font-weight:600;color:${K.vurguYazi};background:${K.vurguZemin};border:1px solid ${K.vurgu};border-bottom-width:.2em;border-radius:.2em;padding:.4em 1.1em .32em;cursor:pointer}

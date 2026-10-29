@@ -7,12 +7,12 @@
   if(ekran&&typeof mac!=='undefined'&&typeof MAC_GUNU!=='undefined'){
     const K=STIL.kagit,st=document.createElement('style');st.id='macSkorStili';
     st.textContent=`
-.mac-skor{position:absolute;z-index:4;top:2.2%;left:1.6%;display:flex;align-items:center;gap:.45em;padding:.2em .6em .15em;font-family:var(--govde);font-size:var(--k-yaziBoyu,1.5cqw);
+.mac-skor{position:absolute;z-index:4;top:2.2%;left:1.6%;display:flex;align-items:center;gap:.45em;padding:.2em .6em .15em;font-family:var(--govde);font-size:var(--k-yaziBoyu,max(14px,1.5cqw));
   font-weight:600;font-variant-numeric:tabular-nums;color:${K.yazi};background:${K.serit};border:1px solid ${K.cizgi};border-left:.25em solid ${K.kulup};box-shadow:.15em .2em 0 rgba(0,0,0,.35);pointer-events:none}
 .mac-skor[hidden]{display:none}
 .mac-skor i{display:inline-block;width:.55em;height:.85em;border:1px solid rgba(0,0,0,.35);border-radius:.1em}
 .mac-skor b{font-family:var(--display);font-weight:400;font-size:1.35em;line-height:1}
-.mac-skor small{color:${K.soluk};font-size:.9em}
+.mac-skor small{color:${K.soluk};font-size:max(var(--k-enKucuk,12px),.9em)}
 `;
     document.head.appendChild(st);
     const E=document.createElement('div');E.className='mac-skor';E.id='macSkor';E.hidden=true;E.setAttribute('aria-hidden','true');   /* U7 incelemesi: canlı bölge değil (her dakika konuşmasın); skor tabelada ve maç telefonunda okunur */

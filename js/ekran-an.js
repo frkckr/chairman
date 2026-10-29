@@ -22,7 +22,7 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
   const egimKayma=(KA.egim*KA.kayma/KA.esik).toFixed(2);
   const st=document.createElement('style');st.id='kararAniStili';
   st.textContent=`
-.karar-ani{position:absolute;inset:0;z-index:5;pointer-events:none;font-family:var(--govde);font-size:var(--an-boy,var(--k-yaziBoyu,1.5cqw));line-height:1.3;color:${K.yazi}}
+.karar-ani{position:absolute;inset:0;z-index:5;pointer-events:none;font-family:var(--govde);font-size:var(--an-boy,var(--k-yaziBoyu,max(14px,1.5cqw)));line-height:1.3;color:${K.yazi}}
 .karar-ani[hidden]{display:none}
 .ka-kararti{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,rgba(0,0,0,0) 46%,rgba(0,0,0,${A.kararma}) 100%)}
 .ka-kim{position:absolute;top:6%;left:50%;transform:translateX(-50%);margin:0;padding:.3em 1em .25em;background:${K.zemin};border:1px solid ${K.cizgi};box-shadow:.2em .3em 0 rgba(0,0,0,.3);
@@ -44,7 +44,7 @@ const KARAR_ANI={acik:false,t:0,secim:null,sure:0,kalan:0,kayit:null,bitince:nul
 .ka-yuz{display:grid;align-content:center;justify-items:center;gap:.25em;min-height:0;text-align:center}
 .ka-yuz p{margin:0}
 .ka-yuz b{font-family:var(--display);font-weight:400;font-size:2.4em;line-height:1;letter-spacing:.02em}
-.ka-yuz small{color:${K.soluk};font-size:.95em}
+.ka-yuz small{color:${K.soluk};font-size:max(var(--k-enKucuk,12px),.95em)}
 .karar-ani .ka-kart.ka-secildi .ka-yuz small{color:${K.vurguYaziSoluk}}
 .ka-kenarlar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6em}
 .karar-ani button.ka-kenar{display:flex;align-items:center;gap:.45em;min-width:0;padding:.35em .65em .3em;font:inherit;text-align:left;color:${K.yazi};

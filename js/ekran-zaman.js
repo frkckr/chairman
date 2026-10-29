@@ -21,16 +21,16 @@ const ZAMAN_SAHNE={acik:false,evre:null,o:null,t0:0,sure:0,gorunen:-1,saatDk:nul
 .zm-saat{display:flex;align-items:baseline;justify-content:space-between;gap:.6em}
 .zm-saat b{font-weight:600}
 .zm-saat span{font-family:var(--display);font-size:1.6em;line-height:1;font-variant-numeric:tabular-nums;color:var(--k-kulup)}
-.zm-satirlar{list-style:none;padding:0;display:grid;gap:.15em;font-size:.92em}
+.zm-satirlar{list-style:none;padding:0;display:grid;gap:.15em;font-size:max(var(--k-enKucuk,12px),.92em)}
 .zm-satirlar li{display:grid;grid-template-columns:5.2em minmax(0,1fr);gap:.5em;animation:zmSatir .25s ease-out both}
 .zm-satirlar li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .zm-satirlar time{color:var(--k-soluk);font-variant-numeric:tabular-nums}
-.zm-ipucu{color:var(--k-soluk);font-size:.8em;text-align:right}
+.zm-ipucu{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.8em);text-align:right}
 .zm-kapak{display:grid;gap:.1em;padding:.35em .55em;margin:0 -.3em .1em;background:var(--k-zemin);border-left:.3em solid var(--k-kirmizi)}
-.zm-kapak small{color:var(--k-soluk);font-size:.82em;letter-spacing:.06em;text-transform:uppercase}
+.zm-kapak small{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.82em);letter-spacing:.06em;text-transform:uppercase}
 .zm-kapak b{font-family:var(--display);font-weight:400;font-size:1.5em;line-height:1.05;color:var(--k-kulup)}
 .zm-sahne h4{font-weight:600;font-size:1.05em}
-.zm-gecen{color:var(--k-soluk);font-size:.9em}
+.zm-gecen{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
 .zm-durak{padding-top:.3em;border-top:1px dashed var(--k-cizgi)}
 .zm-durak b{font-weight:600}
 .zm-sahne[data-evre="ozet"]{animation:zmOzet .22s ease-out both}

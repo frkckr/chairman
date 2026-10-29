@@ -616,12 +616,19 @@ async def bolum_3(tarayici, site, tum_hatalar):
         await masaya_don(pg)
     await pg.set_viewport_size({"width": 1180, "height": 1000})
     await ayar_yazi(pg, "normal")
-    kotu = {a: o for a, o in olcumler.items() if o["tasma"] > 1 or not o["sigiyor"] or (a.endswith("konusma") and not o["cevapGorunur"])}
-    denetle("(f) N7: normal ve büyük yazıda, 1180 ve 800 piksel genişlikte dört ekranda yatay taşma yok, cihaz panele sığıyor; konuşmada tek kart ve iki kenarı kaydırmadan görünüyor",
+    # R1-f (2026-10-29): yazı tabanında 800 px pencerede (640 px kare) cevap kartı telefona sığmaz, cevap alanı kayar; kart telefondan R2'de çıkar.
+    # Bu yüzden 800 px konuşmanın “kaydırmadan görünür” ve kartın dikey sınırı ayrı denetimdir (borç defteri B47, B48); geri kalanı kesin
+    dar_kart = lambda a: a.endswith("-800-konusma")
+    kotu = {a: o for a, o in olcumler.items() if o["tasma"] > 1 or not o["sigiyor"] or (a.endswith("konusma") and not o["cevapGorunur"] and not dar_kart(a))}
+    denetle("(f) N7: normal ve büyük yazıda, 1180 ve 800 piksel genişlikte dört ekranda yatay taşma yok, cihaz panele sığıyor; 1180 px konuşmada tek kart ve iki kenarı kaydırmadan görünüyor",
             len(olcumler) == 13 and not kotu, str(kotu or {a: (o["tasma"], o["genislik"], o["kart"]) for a, o in olcumler.items()}))
-    kap_kotu = {a: kap_disi(o) for a, o in kaplar.items() if kap_disi(o) or not kap_yonler(o)}
-    denetle("U2: büyük yazıda 1180 px, normal ve büyük yazıda 800 px telefonda kart %25 ve %120 sürüklenirken cevap alanının içinde; %120'de üst etikette o cevap ve hazır",
+    dar = {a: o["kart"] for a, o in olcumler.items() if dar_kart(a) and not o["cevapGorunur"]}
+    denetle("R1-f dar telefon: 800 px pencerede konuşmanın cevap kartı ve iki kenarı kaydırmadan görünüyor (R2: kart telefondan çıkar)", not dar, str(dar))
+    kap_kotu = {a: kap_disi(o) for a, o in kaplar.items() if (kap_disi(o) and a.endswith("-1180")) or not kap_yonler(o)}
+    denetle("U2: büyük yazıda 1180 px, normal ve büyük yazıda 800 px telefonda %120'de üst etikette o cevap ve hazır; 1180 px'te kart %25 ve %120 sürüklenirken cevap alanının içinde",
             len(kaplar) == 3 and not kap_kotu, str(kap_kotu or {a: [(m["oran"], m["sol"], m["sag"]) for m in o] for a, o in kaplar.items()}))
+    dar_kap = {a: kap_disi(o) for a, o in kaplar.items() if a.endswith("-800") and kap_disi(o)}
+    denetle("R1-f dar telefon: 800 px pencerede kart sürüklenirken cevap alanının içinde (R2: kart telefondan çıkar)", not dar_kap, str(dar_kap))
     # (g) 15 dk'lık cevabın ("Saymana devret") önizlenen yüzünde kaçırılacak iş uyarısı. TEST içeriğinin 15:00 isteğe bağlı işi Pazartesidir, karar Salı
     # 10:30'da gelir; aynı çakışma için sayfada 10 dk sonraya isteğe bağlı bir iş eklenir (yalnız bu deneme), denetimden sonra iptal edilir
     await pg.evaluate("""() => oyunKomut(k => { window.__ekIs = isEkle(k, { tur: 'ajanda', tarih: k.tarih, dakika: k.gunIciDakika + 10,
@@ -2515,8 +2522,10 @@ async def bolum_22(tarayici, site, tum_hatalar):
         oy = await pg.evaluate(TASMA_JS)
         tasma[f"{yazi}-{boyut[0]}"] = (liste, oy, ad)
         await masaya_don(pg)
-    denetle("S-c: Kadro listesi ve oyuncu dosyasında yatay taşma yok (normal ve büyük yazı, 1180 ve 800 px; uzun ad hücresinde kısalır)",
-            all(max(l) <= 0 and max(o) <= 0 for l, o, _ in tasma.values()), str(tasma))
+    # R1-f (2026-10-29): yazı tabanında dar karede (800 px pencere = 640 px kare) kadro listesi sayfasıyla yatay kayar; oyuncu dosyası taşmaz
+    denetle("S-c/R1-f: 1180 px'te kadro listesi ve oyuncu dosyasında yatay taşma yok (normal ve büyük yazı); 800 px'te oyuncu dosyası taşmaz, liste yalnız kendi sayfasında yatay kayar; uzun ad hücresinde kısalır",
+            all(max(o) <= 0 for _, o, _ in tasma.values()) and all(max(l) <= 0 for a, (l, _, _) in tasma.items() if a.endswith("-1180"))
+            and all(l[0] <= 0 for a, (l, _, _) in tasma.items() if a.endswith("-800")), str(tasma))   # l: [sekme satırı, sayfa]
     await pg.set_viewport_size({"width": 1180, "height": 1000})
     await ayar_yazi(pg, "normal")
     # Test bilgileri geliştirmede varsayılan açıktır (js/oyun-oturumu.js): açıkken künyede TEST kutusu, kapatınca yok; listede hiç yok
@@ -2716,14 +2725,14 @@ async def bolum_26(tarayici, site, tum_hatalar):
             await masaya_don(pg)
     bilgi = {a: (o["govde"], o["enKucuk"]) for a, o in olc.items() if o}
     print(f"  bilgi: gövde ve en küçük metin (px) {bilgi}")
-    oran = {a: round(o["govde"] / o["ekran"] * 100, 2) for a, o in olc.items() if o}
-    denetle("U0: odada yazı ölçeği tek değişkenden (--k-yaziBoyu; normal 1,5 cqw, büyük 1,8 cqw); gövde orantılı yazı (IBM Plex Sans)",
+    # R1-f (2026-10-29): ölçek piksel tabanlı — max(14 px, 1,5 cqw), büyük yazıda max(16 px, 1,8 cqw)
+    beklenen = lambda a, ekran: max(16 if a.startswith("buyuk") else 14, (1.8 if a.startswith("buyuk") else 1.5) * ekran / 100)
+    denetle("U0/R1-f: odada yazı ölçeği tek değişkenden (--k-yaziBoyu; normal max(14 px, 1,5 cqw), büyük max(16 px, 1,8 cqw)); gövde orantılı yazı (IBM Plex Sans)",
             all(o and o["aile"] == "IBM Plex Sans" for o in olc.values())
-            and all(abs(v - (1.8 if a.startswith("buyuk") else 1.5)) < 0.03 for a, v in oran.items()), f"{oran}")
-    genis = [o for a, o in olc.items() if a.endswith(("-1100-dosya", "-1100-ajanda", "-1100-telefon"))]
-    denetle("U0: 800 px'ten geniş karede gövde yazısı ≥ 12 px, en küçük metin ≥ 9 px (normal yazı)",
-            all(o["ekran"] >= 800 and o["govde"] >= 12 for o in genis)
-            and all(olc[k]["enKucuk"] >= 9 for k in olc if k.startswith("normal-1100")), str({a: (o["ekran"], o["govde"], o["enKucuk"]) for a, o in olc.items()}))
+            and all(abs(o["govde"] - beklenen(a, o["ekran"])) < 0.15 for a, o in olc.items()), str({a: (o["ekran"], o["govde"]) for a, o in olc.items()}))
+    denetle("R1-f: her genişlikte gövde ≥ 14 px, normal yazıda en küçük metin ≥ 12 px (ayrıntılı ölçü: araclar/okunurluk.py)",
+            all(o["govde"] >= 14 for o in olc.values()) and all(olc[k]["enKucuk"] >= 12 for k in olc if k.startswith("normal")),
+            str({a: (o["ekran"], o["govde"], o["enKucuk"]) for a, o in olc.items()}))
     await pg.context.close()
     # bülten ve maç telefonu aynı ölçeği ve büyük yazıyı alır (eskiden sabit 1,3 cqw)
     for yazi in ("normal", "buyuk"):
@@ -2736,8 +2745,8 @@ async def bolum_26(tarayici, site, tum_hatalar):
         b = await pg.evaluate(YAZI_OLCU_JS, "#onEkran")
         kart = await pg.evaluate("() => { const k = document.querySelector('.prg-kart'), E = document.getElementById('onEkran').getBoundingClientRect(), r = k.getBoundingClientRect(); return { icinde: r.top >= E.top - 1 && r.bottom <= E.bottom + 1 }; }")
         hedef = 1.8 if yazi == "buyuk" else 1.5
-        denetle(f"U0: bültende yazı ortak ölçekte ({hedef} cqw, {yazi}), orantılı gövde; kart karenin içinde",
-                b and abs(b["govde"] / b["ekran"] * 100 - hedef) < 0.03 and b["aile"] == "IBM Plex Sans" and kart["icinde"], f"{b} · {kart}")
+        denetle(f"U0/R1-f: bültende yazı ortak ölçekte (max(taban, {hedef} cqw), {yazi}), orantılı gövde; kart karenin içinde",
+                b and abs(b["govde"] - max(16 if yazi == "buyuk" else 14, hedef * b["ekran"] / 100)) < 0.15 and b["aile"] == "IBM Plex Sans" and kart["icinde"], f"{b} · {kart}")
         await pg.context.close()
     pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=yok", "#btnMacaGec")
     tum_hatalar += hatalar
@@ -2747,7 +2756,7 @@ async def bolum_26(tarayici, site, tum_hatalar):
     await pg.keyboard.press("KeyT")
     await pg.wait_for_selector("#macTelefon:not([hidden])", timeout=5000)
     m = await pg.evaluate(YAZI_OLCU_JS, "#macTelefon")
-    denetle("U0: maç telefonu büyük yazıyı alır (1,8 cqw), orantılı gövde", m and abs(m["govde"] / m["ekran"] * 100 - 1.8) < 0.03 and m["aile"] == "IBM Plex Sans", str(m))
+    denetle("U0/R1-f: maç telefonu büyük yazıyı alır (max(16 px, 1,8 cqw)), orantılı gövde", m and abs(m["govde"] - max(16, 1.8 * m["ekran"] / 100)) < 0.15 and m["aile"] == "IBM Plex Sans", str(m))
     await pg.evaluate("() => { OYUN.ayarlar.yazi = 'normal'; OYUN.ayarlar.kaydet(); }")
     await pg.context.close()
 

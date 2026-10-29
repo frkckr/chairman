@@ -63,7 +63,7 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .kk-kart[aria-disabled="true"]{cursor:default}
 .kk-kart p{margin:0}
 /* üst etiket: dinlenirken işin adı, önizlemede ve sürüklerken o yönün cevabı; bırakınca uygulanacaksa amber (seçili dili) */
-.kk-ust{display:grid;min-width:0;font-size:.78em;line-height:1.5;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--k-soluk)}
+.kk-ust{display:grid;min-width:0;font-size:max(var(--k-enKucuk,12px),.78em);line-height:1.5;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--k-soluk)}
 .kk-ust>span{grid-area:1/1;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:opacity .12s ease-out}
 .kk-ust>[data-yon]{opacity:0;padding:0 .45em;border-radius:.25em;color:var(--k-yazi);background:var(--k-zeminKoyu,${K.zeminKoyu})}
 .kk-ust>[data-yon="sol"]{justify-self:start}
@@ -78,13 +78,13 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .kk-yuzKat.kk-yuz{visibility:visible}
 .kk-konu{font-size:1.05em;line-height:1.35}
 .kk-gorusler{display:grid;gap:.2em}
-.kk-gorus{padding:.2em .5em;border-left:.2em solid var(--k-mavi,${K.mavi});font-size:.92em}
+.kk-gorus{padding:.2em .5em;border-left:.2em solid var(--k-mavi,${K.mavi});font-size:max(var(--k-enKucuk,12px),.92em)}
 .kk-gorus b{margin-right:.3em}
 .kk-secenek{display:flex;flex-wrap:wrap;align-items:baseline;gap:.2em .6em}
 .kk-secenek b{font-size:1.15em;line-height:1.2;font-weight:600}
-.kk-sure{color:var(--k-soluk);font-size:.9em}
-.kk-bilgi{color:var(--k-soluk);font-size:.92em;line-height:1.3}
-.kk-not{color:var(--k-soluk);font-size:.9em}
+.kk-sure{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
+.kk-bilgi{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.92em);line-height:1.3}
+.kk-not{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
 .kk-uyari,.kk-kart .kk-uyari{color:var(--k-kirmizi)}
 .kk-kenarlar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5em}
 .kk-kart .kk-kenar{display:flex;align-items:center;gap:.4em;min-width:0;width:100%;padding:.35em .55em .3em;font:inherit;text-align:left;color:var(--k-yazi);
@@ -92,14 +92,14 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .kk-kart .kk-kenar[data-yon="sag"]{justify-content:flex-end;text-align:right}
 .kk-kenar>span{display:grid;gap:.05em;min-width:0}
 .kk-kenar b{font-weight:600;line-height:1.15;overflow-wrap:anywhere}
-.kk-kenar small{color:var(--k-soluk);font-size:.84em;line-height:1.2;overflow-wrap:anywhere}
+.kk-kenar small{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.84em);line-height:1.2;overflow-wrap:anywhere}
 .kk-kenar .kk-ok{flex:none;font-style:normal;color:var(--k-soluk)}
 .kk-kart .kk-kenar[aria-pressed="true"]{background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:var(--k-vurguYazi,${K.vurguYazi})}
 .kk-kart .kk-kenar[aria-pressed="true"] small,.kk-kart .kk-kenar[aria-pressed="true"] .kk-ok{color:var(--k-vurguYaziSoluk,${K.vurguYaziSoluk})}
 .kk-kart .kk-kenar[aria-disabled="true"]{opacity:.6;border-style:dashed}
 .kk-kart .kk-kenar[aria-disabled="true"] small{color:var(--k-kirmizi)}
 /* U3 bağlam satırı: gün şeridi (08–20), kasa, künye */
-.kk-baglam{margin:0;font-size:.86em;line-height:1.35;color:var(--k-soluk)}
+.kk-baglam{margin:0;font-size:max(var(--k-enKucuk,12px),.86em);line-height:1.35;color:var(--k-soluk)}
 .kk-baglam b{color:var(--k-yazi);font-weight:600}
 .kk-baglam b.kk-eksi{color:var(--k-kirmizi)}
 .kk-kart .kk-baglam .kk-gozAt{margin-left:.4em;font-size:1em;white-space:nowrap}
@@ -115,14 +115,14 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .kk-serit .kk-ant{background:repeating-linear-gradient(135deg,var(--k-yesil) 0 .14em,transparent .14em .4em);opacity:.5}
 .kk-serit .kk-isaret{background:var(--k-vurguZemin);box-shadow:inset 0 0 0 .12em var(--k-vurgu)}
 .kk-serit .kk-cakis{background:var(--k-kirmizi);box-shadow:none;opacity:.85}
-.kk-saatler{display:flex;justify-content:space-between;font-size:.78em;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--k-soluk)}
+.kk-saatler{display:flex;justify-content:space-between;font-size:max(var(--k-enKucuk,12px),.78em);line-height:1.1;font-variant-numeric:tabular-nums;color:var(--k-soluk)}
 /* dar kap (U2, envanter 3): telefonun cevap alanı gibi dar yerde boşluklar sıkışır; kenar etiketleri yan yana kalır (sol ve sağ kaydırmanın eşi) */
 @container kk (max-width:${A.dar}){
 .kk-kart{gap:.35em;padding:.4em .5em .5em}
 .kk-kenarlar{gap:.35em}
 .kk-kart .kk-kenar{gap:.25em;padding:.3em .4em .25em}
-.kk-kenar small{font-size:.78em}
-.kk-ust{font-size:.74em}
+.kk-kenar small{font-size:max(var(--k-enKucuk,12px),.78em)}
+.kk-ust{font-size:max(var(--k-enKucuk,12px),.74em)}
 .kk-gun{grid-template-areas:"ad serit goz";align-items:center;padding:.2em .4em}
 .kk-gun>.kk-gunOzet,.kk-gun>.kk-saatler{display:none}
 }

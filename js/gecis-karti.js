@@ -13,7 +13,7 @@ function gecisKartiGoster(o,kal){
   if(!document.getElementById('gecisStili')){
     const st=document.createElement('style');st.id='gecisStili';
     st.textContent=`
-.gecis{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(14,11,8,.9);font-family:var(--govde,system-ui);font-size:var(--k-yaziBoyu,1.5cqw);
+.gecis{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(14,11,8,.9);font-family:var(--govde,system-ui);font-size:var(--k-yaziBoyu,max(14px,1.5cqw));
   animation:gecisGel .3s ease-out both;pointer-events:none}
 .gecis.gecis-son{animation:gecisGit .25s ease-in both}
 .gecis-kart{display:grid;grid-template-columns:auto minmax(0,1fr);min-width:min(60%,30em);max-width:80%;background:#fbf7ec;color:#26221c;border:1px solid #c9b994;box-shadow:.35em .45em 0 rgba(0,0,0,.45)}
@@ -21,7 +21,7 @@ function gecisKartiGoster(o,kal){
   font-family:var(--display,inherit);font-size:1.2em;letter-spacing:.2em}
 .gecis-ic{display:grid;gap:.25em;padding:.8em 1.1em .9em}
 .gecis-ic p{margin:0}
-.gecis-ust{color:#6d6353;font-size:.85em;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.gecis-ust{color:#6d6353;font-size:max(var(--k-enKucuk,12px),.85em);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
 .gecis-baslik{font-family:var(--display,inherit);font-size:2em;line-height:1.05;color:#b4241c}
 .gecis-alt{font-size:1.05em}
 .gecis-not{color:#6d6353}

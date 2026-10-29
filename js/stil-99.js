@@ -387,10 +387,13 @@ const STIL={
   /* Açık renkli yönetim arayüzü (js/ekran-oda.js): kâğıt zemin, koyu okunur metin, ahşap çizgi, ölçülü kulüp rengi.
      Ekran bu renkleri CSS değişkeni (--k-ad) olarak yazar. yaziBoyu: karenin genişliğine oranla yazı (cqw); U0'dan (2026-10-28) beri bütün HTML katmanlarının
      tek ölçeği (oda, bülten, maç telefonu, karar anı, maç sonu; js/sunum-durumu.js yaziBoyuUygula). vurguYazi/vurguYaziSoluk: amber zemin üstündeki yazı;
-     mavi: mürekkep ("yeni" noktası, play-off, bağlantı); amber (vurguZemin) yalnız ana eylem ve seçili durum (U0 amber diyeti). TEST değerleri. */
+     mavi: mürekkep ("yeni" noktası, play-off, bağlantı); amber (vurguZemin) yalnız ana eylem ve seçili durum (U0 amber diyeti). TEST değerleri.
+     R1-f (2026-10-29) okunurluk tabanı: yaziTaban gövdenin piksel tabanıdır (--k-yaziBoyu = max(taban px, oran cqw)); geniş karede oran, dar karede taban
+     geçerlidir: yazı küçülmez, yerleşim değişir. enKucukYazi bütün küçük göreli boyların tabanıdır (--k-enKucuk; 1em'den küçük her yazı boyu
+     max(var(--k-enKucuk), …em)). Eşikler araclar/okunurluk.py'de sınanır (gövde ≥ 14, metin ≥ 12 px). */
   kagit:{zemin:'#f4eedf',zeminKoyu:'#e9e0cb',serit:'#fbf7ec',cizgi:'#c9b994',yazi:'#26221c',soluk:'#6d6353',vurgu:'#a5620a',vurguZemin:'#ffb530',
     kulup:'#b4241c',kirmizi:'#b4241c',yesil:'#2c6f28',golge:'rgba(40,28,12,.28)',vurguYazi:'#1a1203',vurguYaziSoluk:'#3a2a08',mavi:'#22347a',murekkep:'#22347a',
-    yaziBoyu:{normal:1.5,buyuk:1.8},
+    yaziBoyu:{normal:1.5,buyuk:1.8},yaziTaban:{normal:14,buyuk:16},enKucukYazi:12,
     /* U1 (2026-10-28) odak kabı (js/ekran-odak.js): perde bulanıklığı (px; canlandırılmaz) ve karartması, bulanıklık yokken yalnız karartma,
        kabın genişliği (karenin %'si; genis dosya/defter/gazete/kadro, orta karar, kucuk ayarlar, cihaz telefon), belirme ölçeği ve süreler (ms).
        Araştırma: statik 6–8 px ve %30–35 karartma; açılış 200–300, kapanış 150–200 ms (u-arastirma §6.3). TEST değerleri */

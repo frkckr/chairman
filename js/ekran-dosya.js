@@ -23,7 +23,7 @@
 .dsy{position:absolute;z-index:1;left:17%;right:2.2%;top:2.9em;bottom:5.4em;display:grid;grid-template-rows:auto minmax(0,1fr)}
 .dsy-sekmeler{display:flex;align-items:flex-end;gap:.25em;padding:0 1.2em;min-width:0;overflow:hidden}
 .oda .dsy button.dsy-sekme{display:flex;align-items:center;gap:.4em;max-width:16em;min-width:0;padding:.35em .8em .3em;border:1px solid ${D.kapakKoyu};border-bottom:0;
-  border-radius:.5em .5em 0 0;background:${D.sekme};color:var(--k-yazi);font-size:.9em;white-space:nowrap}
+  border-radius:.5em .5em 0 0;background:${D.sekme};color:var(--k-yazi);font-size:max(var(--k-enKucuk,12px),.9em);white-space:nowrap}
 .dsy-sekme span{overflow:hidden;text-overflow:ellipsis}
 /* inceleme (H2-e): sayaçlı sekmeler ve Kapat daralmaz (yazısı yandakinin üstüne binmesin); konu sekmelerinin başlığı kısalır */
 .oda .dsy button.dsy-raporSekme,.oda .dsy button.dsy-arsivSekme,.oda .dsy button.dsy-kadroSekme,.dsy-sekmeler .od-kapat{flex:none}
@@ -39,8 +39,10 @@
 .oda .dsy button.dsy-kadroSekme+button.dsy-raporSekme,.oda .dsy button.dsy-kadroSekme+button.dsy-arsivSekme{margin-left:0}
 /* S-c: kadro listesi tek geniş sayfa; tablo sabit düzenli, ad üç noktayla kısalır, tutar tek satır */
 .dsy-ic.dsy-icGenis{grid-template-columns:minmax(0,1fr)}
-.dsy-kadro{width:100%;table-layout:fixed;border-collapse:collapse;font-size:.88em}
-.dsy-kadro th{font-weight:600;color:var(--k-soluk);text-align:left;padding:.15em .3em;border-bottom:1px solid ${D.cizgi}}
+/* R1-f: dar karede tablo küçülmez (Futbolcu sütunu en az ~3,4 em; sabit sütunlar 42,6 em); geniş sayfa dikeyde olduğu gibi yatayda da kayar */
+.dsy-sayfa.dsy-genis{overflow-x:auto}
+.dsy-kadro{width:100%;min-width:46em;table-layout:fixed;border-collapse:collapse;font-size:max(var(--k-enKucuk,12px),.88em)}
+.dsy-kadro th{font-weight:600;color:var(--k-soluk);text-align:left;padding:.15em .3em;border-bottom:1px solid ${D.cizgi};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dsy-kadro td{padding:.16em .3em;border-bottom:1px solid ${D.cizgi};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dsy-kadro abbr{text-decoration:none;cursor:help}
 .dsy-kadro .dsy-s{text-align:right}
@@ -61,22 +63,22 @@
 .dsy-ic{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);background:${D.sayfa};border-radius:.2em;box-shadow:0 .15em .3em rgba(0,0,0,.25)}
 .dsy-sayfa{min-height:0;overflow-y:auto;padding:.9em 1.1em 1em;display:grid;gap:.6em;align-content:start;position:relative}
 .dsy-sol{border-right:1px solid ${D.cizgi};box-shadow:inset -.6em 0 .8em -.7em rgba(60,40,10,.25)}
-.dsy-kat{display:flex;align-items:center;gap:.5em;font-size:.82em;letter-spacing:.12em;text-transform:uppercase;color:var(--k-soluk)}
+.dsy-kat{display:flex;align-items:center;gap:.5em;font-size:max(var(--k-enKucuk,12px),.82em);letter-spacing:.12em;text-transform:uppercase;color:var(--k-soluk)}
 .dsy-baslik{margin:0;font-family:var(--display);font-weight:400;font-size:2.1em;line-height:.95;letter-spacing:.02em;color:var(--k-yazi)}
 .dsy-devir{justify-self:start;color:${D.mavi};font-weight:600}
 .dsy-damga{justify-self:start;padding:.15em .55em .05em;border:.16em solid currentColor;border-radius:.2em;font-family:var(--display);font-size:1.25em;letter-spacing:.08em;
   text-transform:uppercase;transform:rotate(-4deg);opacity:.85}
 .dsy-d-kararBekliyor{color:var(--k-kirmizi)}.dsy-d-ekipte,.dsy-d-haberBekliyor{color:${D.mavi}}.dsy-d-kapandi{color:var(--k-soluk)}
-.dsy-kunye{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.15em .8em;margin:0;font-size:.92em}
+.dsy-kunye{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.15em .8em;margin:0;font-size:max(var(--k-enKucuk,12px),.92em)}
 .dsy-kunye dt{color:var(--k-soluk)}.dsy-kunye dd{margin:0}
-.dsy-sayfa h4{margin:.3em 0 0;font-size:.8em;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--k-vurgu)}
+.dsy-sayfa h4{margin:.3em 0 0;font-size:max(var(--k-enKucuk,12px),.8em);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--k-vurgu)}
 .dsy-notlar{list-style:none;margin:0;padding:0;display:grid;gap:.55em}
 .dsy-not{position:relative;padding:.55em .7em .45em;background:${D.not};border:1px solid ${D.cizgi};box-shadow:.12em .18em 0 rgba(60,40,10,.15);transform:rotate(-.6deg)}
 .dsy-not:nth-child(even){transform:rotate(.5deg)}
 .dsy-not::before{content:"";position:absolute;top:-.55em;left:1.1em;width:.55em;height:1.5em;border:.16em solid ${D.atas};border-radius:.4em;background:transparent}
-.dsy-not small{display:block;margin-top:.2em;color:var(--k-soluk);font-size:.84em}
-.dsy-gecmis summary{cursor:pointer;color:var(--k-soluk);font-size:.9em}
-.dsy-gecmis ul{list-style:none;margin:.3em 0 0;padding:0;display:grid;gap:.2em;font-size:.9em}
+.dsy-not small{display:block;margin-top:.2em;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.84em)}
+.dsy-gecmis summary{cursor:pointer;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
+.dsy-gecmis ul{list-style:none;margin:.3em 0 0;padding:0;display:grid;gap:.2em;font-size:max(var(--k-enKucuk,12px),.9em)}
 .dsy-gecmis li{display:grid;grid-template-columns:7.2em minmax(0,1fr);gap:.5em}
 .dsy-gecmis li span:first-child{color:var(--k-soluk)}
 .dsy-kisi{display:flex;gap:.7em;align-items:center;padding-bottom:.5em;border-bottom:1px dashed ${D.cizgi}}
@@ -93,7 +95,7 @@
 .dsy-arsiv{list-style:none;margin:0;padding:0;display:grid}
 .dsy-arsiv li{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:.6em;padding:.3em 0;border-bottom:1px solid ${D.cizgi}}
 .dsy-arsiv li span:first-child{color:var(--k-soluk)}
-.oda .dsy-sekmeler .od-kapat{align-self:center;margin:0 0 .3em .5em;font-size:.9em;flex:none}
+.oda .dsy-sekmeler .od-kapat{align-self:center;margin:0 0 .3em .5em;font-size:max(var(--k-enKucuk,12px),.9em);flex:none}
 `;
   document.head.appendChild(st);
 })();

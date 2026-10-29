@@ -20,24 +20,24 @@ const GAZETE_SARARMA=10;
 .gz-sayi p{margin:0}
 .gz-ust{display:grid;justify-items:center;gap:.2em}
 .oda .gz-sayi h4.gz-kunye,.gz-kunye{margin:0;display:grid;justify-items:center;gap:.25em;width:100%;font-family:var(--display);font-weight:400;font-size:2.4em;line-height:1;letter-spacing:.06em;text-transform:uppercase;color:${Z.murekkep}}
-.oda .gz-sayi h4.gz-kunye small,.gz-kunye small{display:block;width:100%;padding:.25em 0 .2em;border-top:.12em solid ${Z.murekkep};border-bottom:1px solid ${Z.murekkep};font-family:var(--govde);font-size:.34em;
+.oda .gz-sayi h4.gz-kunye small,.gz-kunye small{display:block;width:100%;padding:.25em 0 .2em;border-top:.12em solid ${Z.murekkep};border-bottom:1px solid ${Z.murekkep};font-family:var(--govde);font-size:max(var(--k-enKucuk,12px),.34em);
   letter-spacing:.08em;text-align:center;color:${Z.soluk}}
 .gz-govde{display:grid;grid-template-columns:minmax(0,1fr);gap:.8em}
 .gz-govde.gz-yanli{grid-template-columns:minmax(0,1fr) minmax(0,32%)}
 .gz-ana{display:grid;gap:.6em;align-content:start;min-width:0}
-.gz-etiket{display:block;font-size:.74em;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:${Z.kirmizi}}
+.gz-etiket{display:block;font-size:max(var(--k-enKucuk,12px),.74em);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:${Z.kirmizi}}
 .gz-manset{font-family:var(--govde);font-weight:700;font-size:1.7em;line-height:1.15;letter-spacing:-.005em}
 .gz-sutunlar{column-count:2;column-gap:1.2em;column-rule:1px solid ${Z.cizgi};padding-top:.5em;border-top:1px solid ${Z.cizgi}}
 .gz-yazi{break-inside:avoid;margin:0 0 .7em}
-.gz-haber{font-size:.98em;line-height:1.4}
+.gz-haber{font-size:max(var(--k-enKucuk,12px),.98em);line-height:1.4}
 .gz-yan{display:grid;gap:.6em;align-content:start;min-width:0}
 .gz-kutuKap{padding:.45em .6em;border:.12em solid ${Z.murekkep};background:rgba(255,255,255,.35)}
-.oda .gz-sayi .gz-kutuKap h5,.gz-kutuKap h5{margin:0 0 .25em;font-size:.78em;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
-.gz-kutu{font-size:.9em;line-height:1.35;font-variant-numeric:tabular-nums}
+.oda .gz-sayi .gz-kutuKap h5,.gz-kutuKap h5{margin:0 0 .25em;font-size:max(var(--k-enKucuk,12px),.78em);font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.gz-kutu{font-size:max(var(--k-enKucuk,12px),.9em);line-height:1.35;font-variant-numeric:tabular-nums}
 .gz-kisa .gz-manset,.gz-bos .gz-manset{font-size:1.25em;font-weight:600;font-style:italic;color:${Z.soluk}}
 .gz-gezinti{display:flex;align-items:center;justify-content:space-between;gap:.6em;padding-top:.4em;border-top:1px solid ${Z.cizgi}}
-.gz-gezinti span{color:${Z.soluk};font-size:.9em;font-variant-numeric:tabular-nums}
-.gz-konu{font-size:.88em;color:${Z.soluk}}
+.gz-gezinti span{color:${Z.soluk};font-size:max(var(--k-enKucuk,12px),.9em);font-variant-numeric:tabular-nums}
+.gz-konu{font-size:max(var(--k-enKucuk,12px),.88em);color:${Z.soluk}}
 `;
   document.head.appendChild(st);
 })();

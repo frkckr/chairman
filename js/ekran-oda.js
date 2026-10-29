@@ -289,14 +289,14 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* R1-b: kaydı dışa ve içe aktarma (Ayarlar › Kayıt). Dosya seçici panelde gizli durur; seçilen dosya önce doğrulanır, onaydan sonra yazılır */
   const tasimaAnYazi=z=>z&&z.tarih?gunAyYazi(z.tarih)+' '+saatYazi(z.dakika|0):'—';
   function kayitTasimaHtml(){
-    const b=k.kisiler[k.baskanId]||{},c=k.kulupler[b.kulupId]||{};
+    const b=(k&&k.kisiler[k.baskanId])||{},c=(k&&k.kulupler[b.kulupId])||{};
     let ic='<div class="od-ayarSatir"><span>Kaydı taşı</span><span class="od-dugmeler"><button type="button" data-eylem="kayitDisa">Kaydı dışa aktar</button>'+
       '<button type="button" data-eylem="kayitIce">Kayıt dosyası yükle…</button></span></div>'+
       '<input type="file" class="od-iceDosya" accept=".json,application/json" hidden tabindex="-1" aria-hidden="true">';
     if(iceOnay){const z=iceOnay.ozet;
       ic+='<div class="od-iceOnay" role="group" aria-label="Kayıt dosyasını yükle">'+
         '<p>Dosyadaki kariyer: <b>'+yaz((z.kulup||'—')+' · '+(z.baskan||'—'))+'</b>, '+yaz(tasimaAnYazi(z))+(iceOnay.gecisler.length?' (eski sürüm: '+yaz(iceOnay.gecisler.join(', '))+')':'')+'</p>'+
-        '<p>Şimdiki kariyer: '+yaz((c.ad||'—')+' · '+(b.ad||'—'))+', '+yaz(tasimaAnYazi({tarih:k.tarih,dakika:k.gunIciDakika}))+'</p>'+
+        '<p>Şimdiki kariyer: '+yaz((c.ad||'—')+' · '+(b.ad||'—'))+', '+yaz(tasimaAnYazi(k&&{tarih:k.tarih,dakika:k.gunIciDakika}))+'</p>'+
         '<p class="od-not">Yüklenince şimdiki kayıt yedek olarak saklanır ve oyun dosyadaki kariyerle yeniden açılır.</p>'+
         '<span class="od-dugmeler"><button type="button" class="od-tehlike" data-eylem="kayitIceYukle">Yükle</button><button type="button" data-eylem="kayitIceVazgec">Vazgeç</button></span></div>';}
     return ic+'<p class="od-not">Dışa aktarılan dosya kaydın kendisidir; başka bir bilgisayarda ya da tarayıcıda “Kayıt dosyası yükle” ile açılır.</p>';

@@ -27,34 +27,35 @@ const DEFTER_GORULEN={ilk:true,set:new Set()};
 .dft-spiral{background:${F.sayfa};background-image:radial-gradient(circle at 50% 50%,${F.spiral} 0 .28em,transparent .3em),linear-gradient(90deg,rgba(40,30,10,.25),transparent 30%,transparent 70%,rgba(40,30,10,.25));
   background-size:100% 1.4em,100% 100%}
 .dft-ust{display:flex;align-items:baseline;justify-content:space-between;gap:.6em;padding-bottom:.2em;border-bottom:.14em solid ${F.kurdele}}
-.oda .dft-ust .od-kapat{font-size:.85em;align-self:center}
+.oda .dft-ust .od-kapat{font-size:max(var(--k-enKucuk,12px),.85em);align-self:center}
 .dft-ust b{font-family:var(--display);font-weight:400;font-size:1.9em;line-height:1;letter-spacing:.04em;color:var(--k-yazi)}
-.dft-ust small{color:var(--k-soluk);letter-spacing:.08em;text-transform:uppercase;font-size:.82em}
+.dft-ust small{color:var(--k-soluk);letter-spacing:.08em;text-transform:uppercase;font-size:max(var(--k-enKucuk,12px),.82em)}
 .dft-oklar{display:flex;gap:.25em}
-.oda .dft-oklar button{padding:.05em .45em;font-size:.9em}
+.oda .dft-oklar button{padding:.05em .45em;font-size:max(var(--k-enKucuk,12px),.9em)}
 .dft-gunler{list-style:none;margin:0;padding:0;display:grid}
 .oda .dft button.dft-gun{display:grid;grid-template-columns:2.6em 2.1em minmax(0,1fr);align-items:center;gap:.4em;width:100%;min-height:2.6em;padding:.2em .3em;text-align:left;
   background:transparent;border:0;border-bottom:1px solid ${F.cizgi};border-radius:0;color:var(--k-yazi)}
 .oda .dft button.dft-gun[aria-pressed="true"]{background:${F.secili}}
-.dft-gunAd{color:var(--k-soluk);text-transform:uppercase;font-size:.86em;letter-spacing:.06em}
+.dft-gunAd{color:var(--k-soluk);text-transform:uppercase;font-size:max(var(--k-enKucuk,12px),.86em);letter-spacing:.06em}
 .dft-gunNo{font-family:var(--display);font-size:1.55em;line-height:1;justify-self:center;display:grid;place-items:center;width:1.6em;height:1.6em}
 .dft-bugun .dft-gunNo{border:.13em solid ${F.kurdele};border-radius:50% 45% 50% 40%;color:${F.kurdele};transform:rotate(-6deg)}
 .dft-gecmis .dft-gunAd,.dft-gecmis .dft-gunNo{opacity:.55}
-.dft-isaret{display:flex;gap:.45em;align-items:center;justify-content:flex-end;font-size:.88em;color:${F.murekkep}}
+.dft-isaret{display:flex;gap:.45em;align-items:center;justify-content:flex-end;font-size:max(var(--k-enKucuk,12px),.88em);color:${F.murekkep}}
 .dft-isaret .dft-son{color:var(--k-kirmizi);font-weight:600}
-.dft-mac{font-style:normal;font-size:.86em;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--k-kirmizi);padding:.05em .4em;border-radius:.2em}
-.dft-hatir{display:grid;gap:.15em;font-size:.86em;color:var(--k-soluk)}
+.dft-mac{font-style:normal;font-size:max(var(--k-enKucuk,12px),.86em);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--k-kirmizi);padding:.05em .4em;border-radius:.2em}
+.dft-hatir{display:grid;gap:.15em;font-size:max(var(--k-enKucuk,12px),.86em);color:var(--k-soluk)}
 .dft-hatir b{color:var(--k-kirmizi);font-weight:600}
 .dft-saatler{position:relative;height:calc(${DEFTER_SAAT.bit-DEFTER_SAAT.bas} * 1.35em);margin:.5em 0 .3em 2.9em;border-left:1px solid ${F.kurdele}}
 .dft-saatCizgi{position:absolute;left:-.4em;right:0;border-top:1px solid ${F.cizgi}}
-.dft-saat{position:absolute;left:-2.9em;width:2.4em;text-align:right;font-size:.8em;color:var(--k-soluk);transform:translateY(-.55em)}
+.dft-saat{position:absolute;left:-2.9em;width:2.4em;text-align:right;font-size:max(var(--k-enKucuk,12px),.8em);color:var(--k-soluk);transform:translateY(-.55em)}
 .oda .dft button.dft-kayit{position:absolute;left:calc(.4em + var(--sutun,0) * var(--gen,100%));width:calc(var(--gen,100%) - .6em);min-height:1.3em;overflow:hidden;
-  display:block;padding:.05em .45em;text-align:left;font-style:italic;font-size:.94em;line-height:1.25;color:${F.murekkep};
+  white-space:nowrap;text-overflow:ellipsis;   /* R1-f: sığmayan başlık sessizce kesilmesin; ayrıntı kayda dokununca */
+  display:block;padding:.05em .45em;text-align:left;font-style:italic;font-size:max(var(--k-enKucuk,12px),.94em);line-height:1.25;color:${F.murekkep};
   background:${F.kayit};border:1px solid ${F.kayitCizgi};border-left:.25em solid ${F.murekkep};border-radius:.15em}
 .oda .dft button.dft-kayit.dft-zorunlu{border-left-color:var(--k-kirmizi)}
 .oda .dft button.dft-kayit.dft-bitti{text-decoration:line-through;opacity:.6}
 .oda .dft button.dft-kayit[aria-pressed="true"]{background:var(--k-vurguZemin);color:var(--k-vurguYazi);border-color:var(--k-vurgu)}
-.dft-cizgi{position:absolute;left:.4em;right:.2em;font-size:.82em;color:${F.murekkep};border-top:1px dashed ${F.murekkep};padding-left:.3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dft-cizgi{position:absolute;left:.4em;right:.2em;font-size:max(var(--k-enKucuk,12px),.82em);color:${F.murekkep};border-top:1px dashed ${F.murekkep};padding-left:.3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* U6 (envanter 24): sağ sayfada bugün kurdele etiketiyle; taze kayıt mürekkep kururken */
 .dft-ust small.dft-bugunEtiket{padding:.1em .5em .05em;background:${F.kurdele};color:#fbf7ec;letter-spacing:.1em;border-radius:.1em}
 .oda .dft button.dft-kayit.dft-taze{animation:dftKuru 1.4s ease-out both}
@@ -62,7 +63,7 @@ const DEFTER_GORULEN={ilk:true,set:new Set()};
 @media (prefers-reduced-motion:reduce){.oda .dft button.dft-kayit.dft-taze{animation:none}}
 .dft-simdi{position:absolute;left:-.3em;right:0;border-top:.14em solid var(--k-kirmizi)}
 .dft-bos{position:absolute;top:35%;left:0;right:0;text-align:center;font-style:italic;color:var(--k-soluk)}
-.dft-macNot{margin:.5em 0 0;font-size:.86em;line-height:1.35;color:var(--k-murekkep,inherit)}.dft-macNot b{display:block;font-size:.9em;color:var(--k-soluk)}
+.dft-macNot{margin:.5em 0 0;font-size:max(var(--k-enKucuk,12px),.86em);line-height:1.35;color:var(--k-murekkep,inherit)}.dft-macNot b{display:block;font-size:max(var(--k-enKucuk,12px),.9em);color:var(--k-soluk)}
 .dft-ayrinti{display:grid;gap:.4em;padding:.6em .7em;background:${F.kart};border:1px solid ${F.cizgi};box-shadow:.15em .2em 0 rgba(40,30,10,.15)}
 .dft-ayrinti h4{margin:0;display:flex;flex-wrap:wrap;gap:.2em .6em;align-items:baseline;font-size:1em}
 `;

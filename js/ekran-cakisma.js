@@ -12,7 +12,7 @@
   const K=STIL.kagit,st=document.createElement('style');st.id='cakismaStili';
   st.textContent=`
 .ckm-ortu{position:absolute;inset:0;z-index:40;display:grid;place-items:center;padding:1em;background:rgba(18,14,10,.72);
-  font-family:var(--govde);font-size:var(--k-yaziBoyu,1.5cqw);line-height:1.4;color:${K.yazi}}
+  font-family:var(--govde);font-size:var(--k-yaziBoyu,max(14px,1.5cqw));line-height:1.4;color:${K.yazi}}
 .ckm-kart{max-width:min(34em,92%);display:grid;gap:.7em;padding:1.2em 1.4em;background:${K.zemin};border:1px solid ${K.cizgi};box-shadow:.35em .45em 0 ${K.golge}}
 .ckm-kart h3{margin:0;font-size:1.25em;line-height:1.25}
 .ckm-kart p{margin:0}

@@ -59,7 +59,7 @@ Sonra: H3 yeni sezon ve kayıt büyümesi (arşiv, IndexedDB ölçümü), görse
   - motor dosyası (`js/mac-*.js` motor listesi, `js/kadrolar.js`) → `mac-deneme 4`; “sonuç aynı” satırı yoksa çıkış 1 (~20 sn);
   - kural dosyası (`kariyer-deneme`'nin yüklediği liste) → `kariyer-deneme` (~85 sn);
   - ekran ya da çizim dosyası → koşmaz, ilgili tarayıcı denetimini yazar (KAPILAR'daki bölüm numaralarıyla).
-  
+
   İşler paralel koşar; sonunda tek tablo. `--hepsi` üçünü birden koşar. CLAUDE.md “Hızlı” satırı bu komuta iner.
 
 ### R1-d — borç defteri
@@ -146,6 +146,19 @@ Sonra: H3 yeni sezon ve kayıt büyümesi (arşiv, IndexedDB ölçümü), görse
 
 8–12 saat. Sıra: §0 belge → R1-c ve R1-d (araçlar önce, sonraki denetimler onlarla koşar) → R1-e → R1-a → R1-b → R1-f → kapanış.
 
+## Kapanış (2026-10-29, masaüstü)
+
+Kabulün hepsi geçti, iki istisnayla: Electron denemesi yapılmadı (Electron kurulu değil; B31) ve 640 px karede telefonun cevap kartı telefona sığmıyor, kayar (B47, B48; R2'nin işi). Sayılar YOL_HARITASI devam notunda. Commit'ler `b4cf0d8` (R0), `9aa4cb7` (R1-c), `cdd8dfa` (R1-d), `911765e` (R1-e, R1-a), `7269794` (R1-b) ve R1-f ile belgeler. Etiket `tur/r1-guvence`; `main`'e alma ve push kullanıcının sözüyle.
+
 ## Sapmalar
 
-(boş — uygulama sırasında doldurulur)
+1. **Katı kip listesi (R1-e):** planda 20 dosya; `js/baskan.js` çizim dosyası çıktı (başkanın masası ve elleri), listeden düştü. `js/test-gorunum.js` ve `js/stadyum-tarifleri.js` kural katmanında (kariyer-deneme yükler), eklendi: 21 dosya. Dosya grupları `araclar/dosya-gruplari.js`'te tek kaynak oldu (planda yoktu): hızlı komut, ad denetimi ve kariyer denemesi aynı listeyi okur.
+2. **Gizli sessiz yazım çıkmadı (R1-e):** 242 kural işlevi katı; kariyer denemesi, iki sezon tabanı (`sezon-s-t7`, `sezon-s-t3`; 18/18 hafta birebir) ve 4 maç “sonuç aynı”. Planın “açığa çıkan her yazım ayrı commit” maddesi boş kaldı.
+3. **Ad denetimi (h) eklendi (R1-a):** planın risk maddesindeki “oturum dışından yazan yol” kuralı genişletildi: `kariyerKaydet` yalnız `js/kayit.js`'te, `localStorage` yalnız tarayıcı deposunda, `OYUN_DEPO.yaz` yalnız ayarlar ve saklama kopyalarına. Kasıtlı ihlalli kopyada dördü de yakalandı.
+4. **Ad denetiminin ilk katı kip kalıbı (R1-e):** düzenli ifade yorum bloklarında üstel geri izlemeye düşüp denetimi kilitledi; doğrusal taramayla değiştirildi (1 sn).
+5. **Çakışmada “Yeniden kaydet” düğmesi (R1-a):** odanın üst şeridindeki kayıt hatası düğmesi çakışmada gizlenir (yanlış çıkış önermesin). Plan dışı küçük ek.
+6. **Akış 28'in kurulumu (R1-a):** iki sayfalı bağlamda Playwright'ın kare tabanlı beklemesi arka plandaki sayfada çözülmedi; bölüm düz aralıklı yoklamayla (`yokla`) bekler. Ters yön denetimi TEST içerikli sayfada koşar: boş kariyerde ilk İlerle maç gününe gider ve “Stada git” kayıt yazmaz (doğru davranış; ilk sürüm onu çakışma sanıyordu).
+7. **Electron denemesi yapılmadı (R1-b):** bu makinede `masaustu/node_modules` yok; Electron'u indirmek kullanıcı onayı ister. Borç defteri B31.
+8. **Okunurluk yöntemi (R1-f):** planda küçük göreli boylar tek basamağa toplanacaktı; yerine her 1em altı boya `max(var(--k-enKucuk,12px), …em)` tabanı kondu (105 yer): ~1100 px'ten geniş karede tasarım birebir kalır, iç içe küçülen yazılar da yakalanır. `STIL.kagit.yaziBasamak` yerine `yaziTaban` ve `enKucukYazi`.
+9. **Dar karede ek düzeltmeler (R1-f; görüntü incelemesinden, ölçü yakalamadı):** kadro tablosu başlıkları üst üste biniyordu, tablo sayfasıyla yatay kayar (ara kap denemesi notu tablonun üstüne bindirdi, geri alındı); bültenin küçük sahasında adlar çakışıyordu, saha kendi kabı oldu ve adlar %17 genişlikte kısalır; bülten ve maç sonu kartında ana düğme 640 px'te karenin dışındaydı, düğme satırı yapışkan; defter kaydı 1186 px'te de iki satıra taşıp kesiliyordu, tek satır üç nokta. Masa şeridi 640 px'te tek satıra sığdı; “iki satıra iner” maddesi gerekmedi.
+10. **Akış 26 (R1-f):** U0'ın “yazı karenin tam %1,5'i” beklentisi “oran ya da taban, hangisi büyükse”ye ve “en küçük ≥ 12 px”ye güncellendi. 21. bölümün eskimiş sürüm metni `KARIYER_SURUM`'u okur (B43).

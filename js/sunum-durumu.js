@@ -13,9 +13,11 @@ function duraklatmaKaldir(neden){if(!SUNUM.nedenler.has(neden))return;SUNUM.nede
 function duraklatmaDinle(f){SUNUM.dinleyiciler.push(f);}
 /* U0 (2026-10-28): tek yazı ölçeği ve kâğıt paleti. Bütün HTML katmanları (oda, bülten, maç telefonu, karar anı, maç sonu) aynı --k-yaziBoyu'yu
    ve --k-* renklerini okur; ikisi de oyun karesine (#screen) yazılır. Değer STIL.kagit.yaziBoyu ile OYUN.ayarlar.yazi'dan; ayar değişince yeniden çağrılır */
-function yaziBoyuDegeri(){const b=typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.yazi==='buyuk';return STIL.kagit.yaziBoyu[b?'buyuk':'normal']+'cqw';}
+/* R1-f (2026-10-29): piksel tabanlı; geniş karede bugünkü oran, dar karede taban (STIL.kagit.yaziTaban) */
+function yaziBoyuDegeri(){const b=typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.yazi==='buyuk',a=b?'buyuk':'normal';
+  return`max(${STIL.kagit.yaziTaban[a]}px, ${STIL.kagit.yaziBoyu[a]}cqw)`;}
 function yaziBoyuUygula(){
   if(typeof document==='undefined')return;const s=document.getElementById('screen');if(!s)return;
   for(const a in STIL.kagit)if(typeof STIL.kagit[a]==='string')s.style.setProperty('--k-'+a,STIL.kagit[a]);
-  s.style.setProperty('--k-yaziBoyu',yaziBoyuDegeri());
+  s.style.setProperty('--k-yaziBoyu',yaziBoyuDegeri());s.style.setProperty('--k-enKucuk',STIL.kagit.enKucukYazi+'px');
 }

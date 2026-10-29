@@ -50,9 +50,15 @@
 .oda aside.odk-goz[data-boy="cihaz"]{width:calc(100% - ${O.boy.cihaz}% - ${3*O.goz.kenar}%)}
 .oda .odk-gozUst{display:flex;align-items:baseline;justify-content:space-between;gap:.6em;min-height:2.1em;color:var(--k-serit);text-shadow:0 .08em .3em rgba(0,0,0,.45)}
 .oda .odk-gozUst h4{margin:0;font-weight:600;font-size:1.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.oda .odk-gozUst small{flex:none;font-size:.85em;opacity:.9}
+.oda .odk-gozUst small{flex:none;font-size:max(var(--k-enKucuk,12px),.85em);opacity:.9}
 .oda .odk-gozIcerik{min-height:0;align-self:start;max-height:100%;overflow-y:auto;padding:.6em .8em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-mavi);box-shadow:.35em .45em 0 var(--k-golge)}
 @keyframes odkGoz{from{opacity:0;transform:translateX(1.5em)}to{opacity:1;transform:none}}
+/* R1-f (2026-10-29) dar kare (< 820 px): yazı tabanında küçülmez, yerleşim değişir — odak kabı neredeyse tam genişlik; göz atmada yan kâğıt işin
+   yanına sığmaz, işin üstüne açılır (‹ Geri ve Esc aynı) */
+@container (max-width:820px){
+  .oda section.odk:not([data-boy="cihaz"]):not([data-boy="kucuk"]),.oda section.odk[data-goz]:not([data-boy="cihaz"]){--odk-en:96%;left:2%}
+  .oda aside.odk-goz,.oda aside.odk-goz[data-boy="cihaz"]{left:2%;right:2%;width:auto;z-index:3}
+}
 @media (prefers-reduced-motion:reduce){.oda aside.odk-goz.odk-gozBelir{animation:odkPerde ${O.sure.azalt}ms linear both}}
 .oda .odk.odk-belir{animation:odkBelir ${O.sure.belir}ms cubic-bezier(.2,.7,.3,1) both}
 .oda .odk-perde.odk-belir{animation:odkPerde ${O.sure.perde}ms ease-out both}
