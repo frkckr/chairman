@@ -1,6 +1,6 @@
 # R4 — Transfer: çekirdek, masa, çeşitler ve ilk oynama denemesi (uygulama planı)
 
-Durum: **onaylandı (kullanıcı, 2026-10-29: “Onayla, başla”); uygulama Opus 5.5, masaüstü.** Dal `claude/r4-transfer` (taban `claude/r3-canli-skor` 9cba63a; karar 63: sonraki tur önceki turun dalından), etiket `tur/r4-transfer`. `main`'e R3 ile birlikte, büyük kapıdan sonra ve kullanıcının sözüyle.
+Durum: **uygulandı ve kapandı (2026-10-29 gece, `tur/r4-transfer`); onaylandı (kullanıcı, 2026-10-29: “Onayla, başla”); uygulama Opus 5.5, masaüstü.** Dal `claude/r4-transfer` (taban `claude/r3-canli-skor` 9cba63a; karar 63: sonraki tur önceki turun dalından), etiket `tur/r4-transfer`. `main`'e R3 ile birlikte, büyük kapıdan sonra ve kullanıcının sözüyle.
 
 Kaynaklar: R programı (karar 56; [r1-uygulama.md](r1-uygulama.md) §0); ilkelerin uygulama yönü (karar 60); kullanıcının isteği (2026-10-29): transfer oyunun en temel özelliklerinden biri, sıradan dosya değil, ayrı alan, çok çeşitli olay, kademelere göre mekânlar, senaryolara elverişli altyapı. Tasarım önerisi [transfer-tasarim.md](transfer-tasarim.md) (bu planın dayanağı). Kullanıcının cevapları (2026-10-29): odadaki karşılığı **duvarda mantar pano**; R4 **tek büyük tur**; transfer ilerlerken **oyuncu gerçekten rakibe gidebilir** (yalnız kıvrımla); **görüşmeye gitmek oyun zamanı alır**, başkan ofisten uzak kalır. Onaylı hedefler [OYUN_TASARIMI §2](../../OYUN_TASARIMI.md#dosya-şablonları), [TEKNIK_PLAN §6](../../TEKNIK_PLAN.md#hedef-dosya-şablonu-pazarlık-ve-kişi-modeli-y0-2026-10-26-y1y3); kullanıcı kararları (2026-10-26): pazarlıkta çark yok, ekip iki rakam önerir; Y1'in gövdesi ([y-program.md](y-program.md) §5), H4'ün dalları ([h4-uygulama.md](h4-uygulama.md)).
 
@@ -172,4 +172,19 @@ Olasılıklar TEST ve tek yerde; kıvrım kotası yok, çoğu transfer sorunsuz 
 
 ## Sapmalar
 
-(boş — uygulama sırasında doldurulur)
+**R4-0 başlangıç ölçüsü (R4 kodundan önce):** sezon t7 ve t3 18/18 birebir; oynama ölçüsü t7: karar/hafta ort 0,39, en çok 2, kararsız hafta 13/18 (türler hocaKarari 1, hocaAdayi 1, transferButcesi 1, teklifKarari 3, sozlesmeYenile 1); t3: ort 0,28, kararsız 14/18.
+
+1. **Rakip araya girer → oyuncu rakibe gider:** planda oyuncu, kıvrımın kendisinde satanın sabrı biterse rakibe gidiyordu; sabır 2–3 ve kıvrım −1 olduğundan bu yol hiç tetiklenmiyordu. Uygulanan: kıvrım satanı sertleştirir ve rakibi dosyaya yazar; **kulüple pazarlık sonradan koparsa** (karşı teklif reddi, cevapsız kart, devrin kötü sonucu) oyuncu o rakibe gider (`taKopma`). Olasılık 1 iken kariyer denemesi bu yolu bulur.
+2. **Rakibin oyuncusu kıvrımı sabrı düşürmez** (yalnız alt sınır ×1,15): ilk teklif hemen koparmasın. Sert teklif eşiği 0,75 (plan 0,8). Ekibin iki rakamı kıvrımlardan sonra, kart kurulurken hesaplanır (karşı tarafın sertleştiği bilinir).
+3. **Hoca değişince:** soranı ayrılan hoca olan kart düşer (H2-c kuralı); kartsız kalan dosya kapanır ve sonucu `dustu` olur (`js/mesele.js`; `sablonDogrula` buna izin verir). Bekleyen araştırma ve görüş yeni hocayla sürer (`js/hoca.js` `HOCA_DEGISTI` kancası; planda yoktu).
+4. **Serbest havuzun gizli hali** yalnız oyuncunun haftası açıkken yazılır (anahtar kapalı denemesi “hal yazılmaz” kuralıyla tutarlı).
+5. **Piyasa'da sözleşme bitişi tarih değil sinyaldir** (“Sözleşmesi bu sezonun sonunda bitiyor”, kaynak “Kulislerden”); tutar ve tarih yok (kamuya açık bilgi sınırı, karar 64).
+6. **Transfer masası dört bölüm** (Pano, Takip, Piyasa, Geçmiş); tasarım belgesindeki “Kadromuz” Dosya › Kadro'da kalır.
+7. **Kart künyesinde sınıf varken rol yazılmaz** (dar kartta sınıf kesiliyordu; rol yüzde kişinin altında yazar).
+8. **Oynama ölçüsü** depo arayüzüyle (`tarayiciDeposu('chairman.olcu:')`, ad denetiminin kayıt yolu kuralı); süre iki çizim arası en çok 2 dk sayılır.
+9. **`sezon-deneme` haftada durak sınırı 20 → 60** (transfer zinciri haftaya çok durak ekler); `--girisim`, `--serbest` günü geçen ilk durakta bir kez.
+10. **Akış §33** zinciri ekranda kartlarla yürütür; maç günleri ve ana düğmenin “Stada git” olduğu duraklar oyunun komut yoluyla (oyunKomut) geçilir. Rakibe giden oyuncu ve alternatif aday akışta değil, kariyer denemesinde denetlenir.
+11. **Mekân sahneleri, 2. ve 1. Lig mekânları** yalnız tasarımda (planla aynı).
+12. **Ölçü:** zincirin sonuç dağılımı (12 tohum, yapay haftalar, telefon ve güçlü teklif): 21 dosyada imza 14, oyuncunun isteği 3, anlaşamama 3, rakibe 1. Gerçek maçlı 10 haftalık denemede (`--talep onayla --girisim 2026-12-01:FV --serbest 2026-12-10`) transfer haftası 16 karar — OYUN_TASARIMI §6'nın 3–8 aralığının üstünde; pazarlık turları ayrı kartlar. Oynama denemesinde yorucu gelirse sınır ve süreler TEST'tir.
+
+**Denetim sonuçları:** `kariyer-deneme` geçti; sezon t3 18/18 birebir, t7 yeni taban `sezon-r4-t7.json` (13–19. haftalar birebir, 20'den sonra bilinçli fark: 12 Ocak'ta zincir imzayla bitti); `oturum-sonu --ayni --seyrek` 40/40 birebir, yeni kabul dışı 0; hız ortanca +%1,9 (R2 eki koduna karşı, aynı süreçte); `akis-deneme` 32, 33 ve tamamı (büyük kapı, aşağıda devam notunda); `okunurluk.py` bütün sahneler eşikte; `kontrol.py`, `akis-2d.py` geçti.
