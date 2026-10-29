@@ -45,6 +45,7 @@ const oyuncuOrt=p=>{const o=p.oz.filter((_,j)=>j!==8);return o.reduce((a,b)=>a+b
 
 function transferTakvimiKur(k){
   const biz=(k.kisiler[k.baskanId]||{}).kulupId;if(!biz||!k.sezon||k.icerik.surum<5)return 0;
+  if(typeof serbestHavuzKur==='function')serbestHavuzKur(k);   /* R4-f: serbest oyuncu havuzu (bir kez; eski kayıtta ilk ay başında) */
   const T=TRANSFER_TEST,simdi=simdikiAn(k),var_=new Set(Object.values(k.isler).filter(x=>x.tur==='gelisme'&&x.veri.anahtar).map(x=>x.veri.anahtar));let n=0;
   for(const d of k.sezon.transfer){
     const plan=T.teklifGunleri.map((g,i)=>({gelisme:'gelenTeklif',gun:g,i})).concat([{gelisme:'hocaTalebi',gun:T.talepGunu,i:0}]);
