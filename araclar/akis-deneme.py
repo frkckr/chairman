@@ -254,7 +254,9 @@ async def bolum_1(tarayici, site, tum_hatalar):
     dd = await pg.evaluate("() => { const b = document.querySelector('.od-nesne[data-panel=\"dosya\"]'); return { var: !!b, kapali: !!(b && b.disabled), rozet: b && b.querySelector('.od-rozet') ? b.querySelector('.od-rozet').textContent : '' }; }")
     denetle("H2-d: Kasa düğmesi yok; dosya masada, düğme açık ve “yeni” rozetli", await pg.query_selector('.od-nesne[data-panel="kasa"]') is None and dd["var"] and not dd["kapali"] and dd["rozet"] == "yeni", str(dd))
     await pg.keyboard.press("Digit6")
-    denetle("H2-d: 6 tuşu artık panel açmıyor", await pg.query_selector(".od-panel") is None and await pg.query_selector(".dsy") is None)
+    denetle("H2-d, R4: 6 tuşu kasa açmaz; R4'ten beri Transfer masasını açar (dosya açılmaz)",
+            await pg.query_selector('.od-nesne[data-panel="kasa"]') is None and await pg.query_selector("#oda .tm-masa") is not None and await pg.query_selector(".dsy") is None)
+    await pg.keyboard.press("Escape")
     await pg.keyboard.press("Digit3")
     await pg.wait_for_selector(".dsy", timeout=10000)
     rap = await pg.text_content(".dsy")
@@ -3215,10 +3217,10 @@ async def bolum_30(tarayici, site, tum_hatalar):
     m1 = await pg.evaluate(MENU_JS)
     await pg.keyboard.press("Escape")
     m2 = await pg.evaluate(MENU_JS)
-    denetle("R2 eki: konuşmada panel sakin (“Şükrü Hoca'ya yazmak için “Yeni konu aç”.”), telefonun altında “Yeni konu aç”; basınca panelde başlıklı konu menüsü (Takım, Görüşme; simgeli), "
+    denetle("R2 eki: konuşmada panel sakin (“Şükrü Hoca'ya yazmak için “Yeni konu aç”.”), telefonun altında “Yeni konu aç”; basınca panelde başlıklı konu menüsü (Takım, Görüşme, R4: Transfer; simgeli), "
             "odak ilk konuda; Esc menüyü kapatır, odak düğmede, konuşma yerinde",
-            m0["bos"].startswith("Şükrü Hoca'ya yazmak için") and m0["dugme"] == "false" and not m0["menu"] and m1["menu"] and m1["basliklar"] == ["Takım", "Görüşme"]
-            and m1["simge"] == 2 and m1["dugme"] == "true" and m1["odak"] == "tlf-konu" and not m2["menu"] and m2["dugme"] == "false" and m2["odak"] == "yeni"
+            m0["bos"].startswith("Şükrü Hoca'ya yazmak için") and m0["dugme"] == "false" and not m0["menu"] and m1["menu"] and m1["basliklar"] == ["Takım", "Görüşme", "Transfer"]
+            and m1["simge"] == 3 and m1["dugme"] == "true" and m1["odak"] == "tlf-konu" and not m2["menu"] and m2["dugme"] == "false" and m2["odak"] == "yeni"
             and m2["ekran"] == "konusma" and await durum(pg) == t0, f"{m0} · {m1} · {m2}")
     await konu_sec(pg, "yaz.teknikDirektor.oyuncu")
     sec1 = await pg.evaluate("""() => ({ n: document.querySelectorAll('.tlf-oyuncular [data-arg]').length, kadro: kulupOyunculari(OYUN.kariyer, 'demirkapi').length,
