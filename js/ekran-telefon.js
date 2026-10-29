@@ -16,7 +16,15 @@
      ekran 'kulup' (kulüp ekranı; geri Canlı Skor'a). s.lig verilirse (maç telefonu: canlı tablo) o, yoksa kariyerden: {tablo, bolgeler, biz, dokunur,
      fikstur, canli, hafta, ozet(id), ad(id)}. telGezinti(T, b) iki ev sahibinin ortak geçişidir.
      Maçta görünüm aynıdır; cevap verilmez (maç içi kariyer cevabı Aşama 3'te). Diğer maçlar F7'den beri bağlıdır (canlı skor ve sonuçlar);
-     bağlanınca aynı tek satır kalıbıyla listeye gelirler, eksikleri için uyarı yazılmaz (N2, kullanıcı kararı 2026-10-04). */
+     bağlanınca aynı tek satır kalıbıyla listeye gelirler, eksikleri için uyarı yazılmaz (N2, kullanıcı kararı 2026-10-04).
+   R2 (2026-10-29; araclar/plan/r2-uygulama.md): odada iki sütun. s.ikiSutun ile telefon yalnız konuşmanın kendisini taşır (başlık, gün ayraçları, gelen ve
+     giden mesajlar, notlar); o kişiyle yapılabilecekler ve kararlar sağdaki iş panelindedir:
+     telefonIsPaneli(k, T, s) → html   konuşmada: kişinin başlığı, tek bekleme satırı (“Şükrü Hoca'dan cevap bekleniyor. Yarın 09:30 civarı.”),
+       kararlar (konu, hazır görüş, geniş tek kart ipucuyla, yanında bağlam: o günün defteri, kasa ya da künye), dosyada bekleyen karar, konular
+       (“Yazabileceklerin”; argümanlı konuda oyuncu seçimi: T.oyuncuSec). Öbür telefon ekranlarında Bekleyenler: cevap bekleyen kararlar, dosyada
+       bekleyen kararlar, beklenen cevaplar ve yeni mesajlar, üç ayrı işaretle. s: {onizleler, testSecenek, kulupId}
+     Balkonda (iş sağ yarıda, R5) ve maç telefonunda tek telefon sürer. Ortak bekleme engeli (YAZISMA_BEKLEME_ENGELI) iki kipte de konuların altında
+     tekrarlanmaz: konular açıklamalarıyla kapalı görünür, bekleme bir kez yazılır. */
 /* bileşenin görünüşü: oda (.oda) ve maç telefonu (.macTelefon) içinde aynı. Renkler STIL.kagit'ten (--k-*), telefonunkiler STIL.kagit.telefon'dan.
    Masaüstü kopyası yalnız js/ klasörünü taşıdığı için stil burada belgeye eklenir.
    N7 (kullanıcı kararı 2026-10-04; onaylı taslak tur/p2'deki prototipler/8-telefon.html): tanıdık akıllı telefon düzeni. Cihaz gövdesi, kamera adası, durum
@@ -181,6 +189,44 @@
 .tel-kulupDl dt{color:var(--k-soluk)}.tel-kulupDl dd{margin:0;overflow-wrap:anywhere}
 .tel-sonuc{display:inline-block;width:1.35em;margin-right:.15em;text-align:center;font-style:normal;font-weight:600;border-radius:.2em;color:#fff}
 .tel-sG{background:var(--k-yesil)}.tel-sB{background:var(--k-soluk)}.tel-sM{background:var(--k-kirmizi)}
+/* ---- R2: odada iki sütun — solda telefon, sağda iş paneli (kâğıt). Telefon sütunu en az 17 em; telefon sütunun sağına yaslanır ---- */
+.oda section.odk[data-boy="telefon"]{width:var(--odk-en)}
+.oda .tlf{height:100%;min-height:0;display:grid;grid-template-columns:minmax(17em,42fr) minmax(0,56fr);gap:2%}
+.oda .tlf-sol{min-width:0;min-height:0}
+.oda .tlf-sol .tel-yer{place-items:center end}
+.tlf-is{min-height:0;max-height:100%;align-self:start;overflow-y:auto;display:grid;align-content:start;gap:.75em;padding:.85em 1em 1em;color:var(--k-yazi);
+  background:var(--k-zemin);border:1px solid var(--k-cizgi);box-shadow:.35em .45em 0 var(--k-golge);container:tlf / inline-size}
+.tlf-is p{margin:0}
+.tlf-is h4{margin:0;font-family:var(--display);font-weight:400;font-size:1.6em;line-height:1;letter-spacing:.02em}
+.tlf-is h5{margin:.15em 0 0;font-size:max(var(--k-enKucuk,12px),.8em);letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu);font-weight:600}
+.tlf-is .tlf-kisiBas{font-size:max(var(--k-enKucuk,12px),.8em);letter-spacing:.1em;text-transform:uppercase;color:var(--k-soluk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlf-kisiBas b{color:var(--k-vurgu);font-weight:600}
+.tlf-bekleme{display:grid;gap:.1em;padding:.55em .75em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-mavi)}
+.tlf-bekleme b{font-weight:600}
+.tlf-not{color:var(--k-soluk)}
+.tlf-karar{display:grid;gap:.55em;padding-bottom:.6em;border-bottom:1px dashed var(--k-cizgi)}
+.tlf-karar .kk-konu{font-size:1.05em;line-height:1.35}
+.tlf-baglam{display:grid;gap:.35em;align-content:start;padding:.5em .6em;background:var(--k-serit);border:1px dashed var(--k-cizgi)}
+.tlf-baglam .od-gozGun,.tlf-baglam .od-gozKasa{margin:0}
+.tlf-baglam[hidden]{display:none}
+@container tlf (min-width:36em){.tlf-kararGovde{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:.7em;align-items:start}}
+.tlf-kararGovde{display:grid;gap:.55em}
+.tlf-konular,.tlf-satirlar{list-style:none;margin:0;padding:0;display:grid;gap:.35em}
+.tlf-is .tlf-konu,.tlf-is .tlf-satir{display:grid;gap:.1em;width:100%;text-align:left;padding:.45em .7em;font:inherit;color:var(--k-yazi);background:var(--k-serit);
+  border:1px solid var(--k-cizgi);border-radius:.3em;cursor:pointer}
+.tlf-is .tlf-konu small,.tlf-is .tlf-satir small{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.88em);line-height:1.3}
+.tlf-is .tlf-konu:disabled{opacity:.55;cursor:default}
+.tlf-is .tlf-konu[aria-expanded="true"]{border-color:var(--k-vurgu)}
+.tlf-satir{grid-template-columns:auto minmax(0,1fr)!important;column-gap:.6em!important;align-items:center}
+.tlf-satir>i{grid-row:1/span 2;width:.75em;height:.75em;border-radius:50%;font-style:normal}
+.tlf-satir>span,.tlf-satir>small{grid-column:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tlf-iKarar{background:var(--k-kirmizi)}.tlf-iCevap{box-shadow:inset 0 0 0 .16em var(--k-mavi)}.tlf-iYeni{background:var(--k-mavi)}
+.tlf-oyuncular{display:grid;gap:.4em;padding:.5em .6em;background:var(--k-serit);border:1px solid var(--k-vurgu)}
+.tlf-oyuncular h6{margin:.2em 0 0;font-size:max(var(--k-enKucuk,12px),.8em);color:var(--k-soluk);font-weight:600}
+.tlf-oyuncuDiz{display:flex;flex-wrap:wrap;gap:.3em}
+.tlf-is .tlf-oyuncuDiz button{padding:.25em .55em;font:inherit;color:var(--k-yazi);background:var(--k-zemin);border:1px solid var(--k-cizgi);border-radius:.3em;cursor:pointer}
+.tlf-is .tlf-oyuncuDiz button small{color:var(--k-soluk)}
+.tlf-bos{color:var(--k-soluk)}
 `;
   document.head.appendChild(st);
 })();
@@ -287,7 +333,9 @@ function telLigVerisi(k){
     ozet:id=>kulupOzeti(k,id),ad:id=>(k.kulupler[id]||{ad:id}).ad};
 }
 
-/* ---- telefon ---- *//* ---- telefon ---- */
+/* R2-c: konunun altındaki satır: konuya özgü engel varsa o; ortak bekleme engelinde açıklama (bekleme bir kez, başka yerde söylenir) */
+const telKonuAlti=G=>G.engel&&!(typeof YAZISMA_BEKLEME_ENGELI!=='undefined'&&G.engel===YAZISMA_BEKLEME_ENGELI)?G.engel:G.aciklama;
+/* ---- telefon ---- */
 const TEL_SIMGE={
   mesajlar:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg>',
   skor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5l4 3-1.5 4.5h-5L8 10.5z" fill="currentColor" stroke="none"/></svg>'
@@ -341,16 +389,18 @@ function telefonCiz(k,T,s={}){
         :'<div class="tel-balon tel-'+m.yon+(yeni?' tel-yeni':'')+'"><p>'+yazT(m.metin)+'</p><small>'+saatYazi(m.dakika)+(yeni?' · yeni':'')+'</small></div>';
     }
     if(!c.mesajlar.length)ic+='<p class="tel-bos">Henüz yazışma yok.</p>';
-    /* U3 (envanter 15): beklenen cevabın yaklaşık zamanı */
-    if(c.bekleyenCevap!==null&&c.bekleyenCevap!==undefined&&typeof cevapBeklemeYazi==='function')ic+='<p class="tel-not tel-bekleme">Cevap '+yazT(cevapBeklemeYazi(k,c.bekleyenCevap))+'</p>';
-    /* bekleyen kararın konusu ve hazır görüş akışın sonunda; iki cevap alttaki sabit alanda (klavyenin yeri) */
-    for(const id of c.kararlar){const is=k.isler[id];if(is&&is.veri&&is.veri.karar)ic+='<div class="tel-kararOzet"><p class="kk-konu">'+yazT(is.veri.aciklama)+'</p>'+kararGorusu(k,is.veri)+'</div>';}
-    for(const mid of c.dosyaKarar)ic+='<p class="tel-not tel-dosya">Bu konuda karar dosyada bekliyor. '+(s.macta?'':'<button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+mid+'" data-donus="telefon">Dosyayı aç ▸</button>')+'</p>';
-    if(!s.macta){
-      for(const G of c.girisimler)ic+='<div class="tel-oneri"><button type="button" data-eylem="girisim" data-girisim="'+G.id+'"'+(G.engel?' disabled':'')+'>'+yazT(G.ad)+' ▸</button><small>'+yazT(G.engel||G.aciklama)+'</small></div>';
+    /* R2: iki sütunda bekleme, kararlar, dosya bağlantısı ve konular sağdaki iş panelindedir (telefonIsPaneli); telefon yalnız konuşmayı taşır */
+    if(!s.ikiSutun){
+      /* U3 (envanter 15): beklenen cevabın yaklaşık zamanı */
+      if(c.bekleyenCevap!==null&&c.bekleyenCevap!==undefined&&typeof cevapBeklemeYazi==='function')ic+='<p class="tel-not tel-bekleme">Cevap '+yazT(cevapBeklemeYazi(k,c.bekleyenCevap))+'</p>';
+      /* bekleyen kararın konusu ve hazır görüş akışın sonunda; iki cevap alttaki sabit alanda (klavyenin yeri) */
+      for(const id of c.kararlar){const is=k.isler[id];if(is&&is.veri&&is.veri.karar)ic+='<div class="tel-kararOzet"><p class="kk-konu">'+yazT(is.veri.aciklama)+'</p>'+kararGorusu(k,is.veri)+'</div>';}
+      for(const mid of c.dosyaKarar)ic+='<p class="tel-not tel-dosya">Bu konuda karar dosyada bekliyor. '+(s.macta?'':'<button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+mid+'" data-donus="telefon">Dosyayı aç ▸</button>')+'</p>';
+      /* R2-c: ortak bekleme engeli konuların altında tekrarlanmaz (yukarıdaki tek not söyler); konuya özgü engel kalır. Argümanlı konu (oyuncu) yalnız iki sütunda */
+      if(!s.macta)for(const G of c.girisimler.filter(x=>!x.argumanli))ic+='<div class="tel-oneri"><button type="button" data-eylem="girisim" data-girisim="'+G.id+'"'+(G.engel?' disabled':'')+'>'+yazT(G.ad)+' ▸</button><small>'+yazT(telKonuAlti(G))+'</small></div>';
     }
     ic+='</div>';
-    const K=c.kararlar.filter(id=>k.isler[id]);
+    const K=s.ikiSutun?[]:c.kararlar.filter(id=>k.isler[id]);
     /* U2: kartın başlığı kartın üst etiketindedir (işin adı; js/ekran-kart.js), alanın üstünde ayrı satır yok */
     if(K.length)alt='<div class="tel-cevap" aria-label="Cevap">'+K.map(id=>
       kararKarti(k,id,{onizle:(s.onizleler||{})[id]||null,ozetsiz:true,kapali:s.kapali||null,dosyaBaglanti:!s.macta,testSecenek:s.testSecenek,gozAt:!s.macta&&!!s.gozAt})).join('')+'</div>';
@@ -396,4 +446,66 @@ function telefonCiz(k,T,s={}){
     '<div class="tel-durum"><b>'+yazT(cubuk)+'</b><span aria-hidden="true"><span class="tel-sinyal"><i></i><i></i><i></i><i></i></span><span class="tel-pil"><i></i></span></span></div>'+
     '<div class="tel-govde'+(s.acilis?' tel-acilis':'')+'">'+ic+'</div>'+alt+
     '<div class="tel-alt"><button type="button" class="tel-ev" data-eylem="telEv" aria-label="Ana ekran" title="Ana ekran (Esc)"></button></div></div></div></div>';
+}
+
+/* ---- R2: iş paneli (odada telefonun sağı) ---- */
+const TLF_MEVKI={KL:'Kaleci',DEF:'Savunma',OS:'Orta saha',FV:'Forvet'};
+const tlfSimdi=(k,is)=>!!is&&(!!is.veri.saatsiz||is.tarih===k.tarih);
+/* kartın yanında bağlamın tam hâli (js/ekran-kart.js baglamIcerik); önizlenen cevabınki, yoksa nötr. Kart önizlemede yerinde döner (yeniden çizilmez):
+   ev sahibi tlfBaglamEsle ile yalnız bu kutuyu yeniler. Bağlamı olmayan kararda kutu gizli durur (yer tutucu) */
+function tlfBaglam(k,is,yon){
+  const S=is&&typeof kararSecenekleri==='function'?kararSecenekleri(k,is):[],secim=yon==='sol'&&S[0]?S[0].id:yon==='sag'&&S[1]?S[1].id:null;
+  const b=is&&typeof kararBaglami==='function'&&typeof baglamIcerik==='function'?kararBaglami(k,is,secim):null,ic=b?baglamIcerik(k,b):'';
+  const bas=!ic?'':b.tur==='gun'?'Defter · '+gunAyYazi(b.tarih)+' '+telGunAdi(b.tarih):b.tur==='kasa'?'Kasa':'Oyuncu';
+  return'<aside class="tlf-baglam" data-is="'+yazT(is?is.id:'')+'"'+(ic?' aria-label="'+yazT(bas)+'"><h5>'+yazT(bas)+'</h5>'+ic:' hidden>')+'</aside>';
+}
+function tlfBaglamEsle(kok,k,id,yon){
+  if(!kok)return;for(const a of kok.querySelectorAll('.tlf-baglam'))if(a.dataset.is===id)a.outerHTML=tlfBaglam(k,k.isler[id],yon);
+}
+/* argümanlı konunun oyuncu seçimi: başkanın kulübünün oyuncuları mevkiye göre (yalnız forma, ad, mevki) */
+function tlfOyuncuSecici(k,Gid){
+  const biz=(k.kisiler[k.baskanId]||{}).kulupId,L=typeof kulupOyunculari==='function'?kulupOyunculari(k,biz):[];
+  const sira=['KL','DEF','OS','FV'];
+  return'<div class="tlf-oyuncular" role="group" aria-label="Oyuncu seç"><p class="tlf-not">Hangi oyuncuyu soruyorsun?</p>'+sira.map(m=>{const M=L.filter(p=>p.mevki===m).sort((a,b)=>(a.no|0)-(b.no|0));
+    return M.length?'<h6>'+TLF_MEVKI[m]+'</h6><div class="tlf-oyuncuDiz">'+M.map(p=>'<button type="button" data-eylem="girisim" data-girisim="'+yazT(Gid)+'" data-arg="'+yazT(p.id)+'">'+
+      '<small>'+(p.no|0)+'</small> '+yazT(p.ad)+'</button>').join('')+'</div>':'';}).join('')+
+    '<div><button type="button" class="od-baglanti" data-eylem="oyuncuSecKapat">Vazgeç</button></div></div>';
+}
+function telefonIsPaneli(k,T,s={}){
+  const L=k?konusmaListesi(k):[],c=T.ekran==='konusma'?L.find(x=>x.anahtar===T.kisi):null;
+  if(!c)return telBekleyenler(k,L);
+  /* kişinin adı ve portresi telefonun başlığında; panelde tek satırlık künye (dar karede kart yukarıda kalsın) */
+  let ic='<p class="tlf-kisiBas"><b>'+yazT(c.ad)+'</b> · '+yazT(c.rol)+'</p>';
+  /* R2-c: tek bekleme satırı (kişiden cevap beklenirken) */
+  if(c.bekleyenCevap!==null&&c.bekleyenCevap!==undefined&&typeof cevapBeklemeCumlesi==='function'){const B=cevapBeklemeCumlesi(k,c.ad,c.bekleyenCevap);
+    ic+='<p class="tlf-bekleme" role="status"><b>'+yazT(B.baslik)+'</b><span>'+yazT(B.an)+'</span></p>';}
+  /* kararlar: konu ve hazır görüş, geniş tek kart (ipucuyla), yanında bağlam */
+  for(const id of c.kararlar){const is=k.isler[id];if(!is||!is.veri||!is.veri.karar)continue;const yon=(s.onizleler||{})[id]||null;
+    ic+='<section class="tlf-karar" aria-label="Karar"><p class="kk-konu">'+yazT(is.veri.aciklama)+'</p>'+kararGorusu(k,is.veri)+
+      '<div class="tlf-kararGovde">'+kararKarti(k,id,{onizle:yon,ozetsiz:true,dosyaBaglanti:true,testSecenek:s.testSecenek,ipucu:true,baglamsiz:true})+tlfBaglam(k,is,yon)+'</div></section>';}
+  for(const mid of c.dosyaKarar)ic+='<p class="tlf-not">Bu konuda karar dosyada bekliyor. <button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+mid+'" data-donus="telefon">Dosyayı aç ▸</button></p>';
+  /* konular: kısa ve anlaşılır; konu seçmek karar değil menüdür. Ortak bekleme engeli tekrarlanmaz; bekleyen karar varken bir kez not */
+  const ortak=c.girisimler.some(G=>G.engel&&typeof YAZISMA_BEKLEME_ENGELI!=='undefined'&&G.engel===YAZISMA_BEKLEME_ENGELI);
+  if(c.girisimler.length){
+    ic+='<h5>Yazabileceklerin</h5>'+(ortak&&(c.bekleyenCevap===null||c.bekleyenCevap===undefined)?'<p class="tlf-not">Önündeki karar cevaplanınca yazabilirsin.</p>':'')+
+      '<ul class="tlf-konular">'+c.girisimler.map(G=>{const ac=G.argumanli&&T.oyuncuSec===G.id&&!G.engel;
+        return'<li><button type="button" class="tlf-konu" data-eylem="'+(G.argumanli?'oyuncuSec':'girisim')+'" data-girisim="'+yazT(G.id)+'"'+(G.engel?' disabled':'')+(G.argumanli?' aria-expanded="'+(ac?'true':'false')+'"':'')+'>'+
+          '<b>'+yazT(G.ad)+(G.argumanli?' …':' ▸')+'</b><small>'+yazT(telKonuAlti(G))+'</small></button>'+(ac?tlfOyuncuSecici(k,G.id):'')+'</li>';}).join('')+'</ul>';
+  }
+  return'<section class="tlf-is" aria-label="'+yazT(c.ad)+' ile işler">'+ic+'</section>';
+}
+/* Bekleyenler: konuşma dışındaki telefon ekranlarında. Cevap bekleyen karar (kırmızı), beklenen cevap (mavi halka), yeni mesaj (mavi nokta) */
+function telBekleyenler(k,L){
+  const satir=(isaret,et,kisi,baslik,alt,ek)=>'<li><button type="button" class="tlf-satir" '+(ek||'data-eylem="telKisi" data-kisi="'+yazT(kisi)+'"')+'><i class="'+isaret+'" aria-hidden="true"></i>'+
+    '<span><span class="tel-gizli">'+yazT(et)+': </span><b>'+yazT(baslik)+'</b></span><small>'+yazT(alt)+'</small></button></li>';
+  const K=[],C=[],Y=[];
+  for(const c of L){
+    for(const id of c.kararlar){const is=k.isler[id];if(tlfSimdi(k,is))K.push(satir('tlf-iKarar','Cevabın bekleniyor',c.anahtar,c.ad+' · '+(is.veri.baslik||'Karar'),'Cevabın bekleniyor · en geç '+(is.tarih===k.tarih?'bugün ':gunAyYazi(is.tarih)+' ')+saatYazi(is.dakika)));}
+    for(const mid of c.dosyaKarar){const m=k.meseleler[mid];if(m)K.push(satir('tlf-iKarar','Cevabın bekleniyor',null,m.baslik,'Karar dosyada bekliyor','data-eylem="dosyaAc" data-mesele="'+yazT(mid)+'" data-donus="telefon"'));}
+    if(c.bekleyenCevap!==null&&c.bekleyenCevap!==undefined&&typeof cevapBeklemeCumlesi==='function'){const B=cevapBeklemeCumlesi(k,c.ad,c.bekleyenCevap);C.push(satir('tlf-iCevap','Cevap bekleniyor',c.anahtar,c.ad,'Cevap bekleniyor · '+B.an));}
+    if(c.okunmamis>0)Y.push(satir('tlf-iYeni','Yeni mesaj',c.anahtar,c.ad,c.okunmamis+' yeni mesaj'));
+  }
+  const blok=(bas,X)=>X.length?'<h5>'+bas+'</h5><ul class="tlf-satirlar">'+X.join('')+'</ul>':'';
+  return'<section class="tlf-is tlf-bekleyenler" aria-label="Bekleyenler"><h4>Bekleyenler</h4>'+
+    (K.length||C.length||Y.length?blok('Cevabın bekleniyor',K)+blok('Gelecek cevaplar',C)+blok('Yeni mesajlar',Y):'<p class="tlf-bos">Bekleyen bir şey yok.</p>')+'</section>';
 }

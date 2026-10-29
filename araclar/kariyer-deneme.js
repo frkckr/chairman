@@ -250,7 +250,7 @@ const oyunAl=ad=>vm.runInContext(ad,oyunCtx);
   denetle('Oyunda yalnız P12 TEST taslağı (F6-a), G2 iskeleti (transfer teklifi, hocanın isteği, imza, sözleşme yenileme) ve H2-c yazışması (cevap, görüşme önerisi, görüşme; girişimler yalnız yaz.*) tanımlı; konuya özgü ekip görevi (genel tavsiye hariç), gözlem notu ve söz tarafı yok',
     adlar('PAKETLER')==='gelenTeklif,hocaDegerlendirme,hocaTalebi'&&adlar('GELISMELER')==='gelenTeklif,hocaBaskisi,hocaTalebi,transferImza,yazismaCevap'
     &&adlar('KARAR_TURLERI')==='gorusmeOnerisi,hocaAdayi,hocaKarari,sozlesmeYenile,teklifKarari,transferButcesi'&&adlar('KATILIM_ETKILERI')==='ekipGorusmesi,hocaAdayGorusmesi'
-    &&G.length===7&&G.every(x=>/^yaz\./.test(x))&&Object.keys(oyunAl('EKIP_GOREVLERI')).filter(x=>x!=='tavsiye').length===0&&oyunAl('GOZLEM_NOTLARI').length===0&&say('SOZ_TARAFLARI')===0,
+    &&G.length===9&&G.every(x=>/^yaz\./.test(x))&&Object.keys(oyunAl('EKIP_GOREVLERI')).filter(x=>x!=='tavsiye').length===0&&oyunAl('GOZLEM_NOTLARI').length===0&&say('SOZ_TARAFLARI')===0,
     [adlar('PAKETLER'),adlar('GELISMELER'),adlar('KARAR_TURLERI'),adlar('KATILIM_ETKILERI'),G.join(',')].join(' · '));
   denetle('Yeni kariyer geçerli; içerik sürümü 5 (F6-a), kayıt sürümü 11 (S-a)',!h.length&&c.icerik.surum===5&&c.kayitSurumu===11&&c.macOkundu===undefined,h.join('; '));
   const isler=Object.values(c.isler),ajandaIsleri=isler.filter(x=>x.tur==='ajanda');
@@ -267,9 +267,9 @@ const oyunAl=ad=>vm.runInContext(ad,oyunCtx);
     &&gel.length===4&&gel.every(x=>x.tarih>='2027-01-04'&&x.tarih<='2027-01-31')&&metin(gel.map(x=>x.veri.gelisme).sort())==='["gelenTeklif","gelenTeklif","gelenTeklif","hocaTalebi"]',ajandaIsleri[0]&&ajandaIsleri[0].veri.baslik);
   denetle('Aynı tohum aynı kariyeri kurar',metin(c)===metin(d));
   {const L=oyunAl('konusmaListesi')(c);
-   denetle('H2-c/H2-d: Mesajlar listesinde hoca ve yardımcı (Takım ne durumda?, Görüşelim; maç oynanmadığı için maç sorusu yok) ve mali işler müdürü (Kasa ne durumda?); mesaj yok, okunmamış 0, cevap bekleyen yok',
+   denetle('H2-c/H2-d: Mesajlar listesinde hoca ve yardımcı (Takım ne durumda?, Görüşelim, Oyuncu hakkında sor; maç oynanmadığı için maç sorusu yok) ve mali işler müdürü (Kasa ne durumda?); mesaj yok, okunmamış 0, cevap bekleyen yok',
      L.length===3&&metin(L.map(x=>x.kisi.rol).sort())==='["maliMudur","teknikDirektor","yardimciAntrenor"]'&&L.every(x=>!x.mesajlar.length&&!x.okunmamis&&!x.cevapBekliyor
-       &&metin(x.girisimler.map(g=>g.ad))===(x.kisi.rol==='maliMudur'?'["Kasa ne durumda?"]':'["Takım ne durumda?","Görüşelim"]')),
+       &&metin(x.girisimler.map(g=>g.ad))===(x.kisi.rol==='maliMudur'?'["Kasa ne durumda?"]':'["Takım ne durumda?","Görüşelim","Oyuncu hakkında sor"]')),
      L.map(x=>x.ad+': '+x.girisimler.map(g=>g.ad).join('/')).join(' · '));}
   const o=oyunAl('ilerleOnizle')(c);
   denetle('İlerle doğrudan maç gününe gider (engel yok)',!o.engel.length&&o.durak&&o.durak.veri.eylem==='macGunu',`${o.neden}`);
@@ -621,8 +621,8 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
   const kon=(k,id)=>KL(k).find(c=>c.anahtar===id)||{mesajlar:[],girisimler:[],kararlar:[],okunmamis:0,cevapBekliyor:false,yok:true};
   const sor=(k,g)=>KK3(k,x=>MG('girisimBaslat')(x,g)).kariyer,ilerle3=k=>KK3(k,x=>MG('duragaIlerle')(x)),gelen=(k,id)=>kon(k,id).mesajlar.filter(m=>m.yon==='gelen').pop();
   {const h=kon(mk,hId);
-   denetle('H2-c: maçtan sonra hocanın konuşmasında kendiliğinden mesaj yok; konular öneri olarak duruyor (Maçı nasıl gördün?, Takım ne durumda?, Görüşelim)',
-     !h.yok&&h.mesajlar.length===0&&h.okunmamis===0&&metin(h.girisimler.map(g=>g.ad))==='["Maçı nasıl gördün?","Takım ne durumda?","Görüşelim"]'&&!!yId,h.girisimler.map(g=>g.ad).join(', '));}
+   denetle('H2-c: maçtan sonra hocanın konuşmasında kendiliğinden mesaj yok; konular öneri olarak duruyor (Maçı nasıl gördün?, Takım ne durumda?, Görüşelim, Oyuncu hakkında sor)',
+     !h.yok&&h.mesajlar.length===0&&h.okunmamis===0&&metin(h.girisimler.map(g=>g.ad))==='["Maçı nasıl gördün?","Takım ne durumda?","Görüşelim","Oyuncu hakkında sor"]'&&!!yId,h.girisimler.map(g=>g.ad).join(', '));}
   const k1=sor(mk,'yaz.teknikDirektor.mac'),o1=MG('ilerleOnizle')(k1),cv=Object.values(k1.isler).find(x=>x.tur==='gelisme'&&x.veri.gelisme==='yazismaCevap');
   denetle('“Maçı nasıl gördün?” (Cumartesi 21:00): İlerle beklenen cevapta durur (neden haber, beklenen iş cevap), cevap mesai dışından ertesi gün 09:30; o kişinin bütün konuları cevap gelene dek kapalı, yardımcınınki açık',
     !!cv&&o1.neden==='haber'&&!!o1.haberIsi&&o1.haberIsi.id===cv.id&&`${cv.tarih} ${cv.dakika}`==='2026-11-29 570'&&kon(k1,hId).girisimler.length>0&&kon(k1,hId).girisimler.every(g=>g.engel==='Önceki mesajının cevabını bekliyorsun.')
@@ -662,8 +662,8 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
      R.sonuc.neden==='bitti'&&!!hm&&hm.tarih==='2026-11-30'&&hm.dakika===990&&!/\d/.test(hm.metin)&&gz.gecmis.some(g=>g.sonuc&&g.sonuc.yazisma&&g.sonuc.yazisma.konu==='takim'&&g.sonuc.yazisma.kisiId===hId),`${R.sonuc.neden} · ${hm&&hm.metin}`);}
   const g1=sor(t1,'yaz.teknikDirektor.gorusme'),RG=ilerle3(g1),gk=RG.kariyer,gKart=Object.values(gk.isler).find(x=>x.tur==='ajanda'&&x.veri.karar==='gorusmeOnerisi');
   {const macGun=new Set(gk.fikstur.filter(f=>f.ev==='demirkapi'||f.konuk==='demirkapi').map(f=>f.tarih));
-   denetle('“Görüşelim”: cevap bir saat önerisidir — maç gününü atlar, 11:00 ya da 15:00; tek kart (Kabul et / Şu gün olsun, U3) soranın konuşmasında; İlerle cevapta karar diye durur',
-     !!gKart&&RG.sonuc.neden==='karar'&&!macGun.has(gKart.veri.oneri.tarih)&&[660,900].includes(gKart.veri.oneri.dakika)&&metin(MG('kararSecenekleri')(gk,gKart).map(s=>s.id))==='["kabul","biz"]'
+   denetle('“Görüşelim”: cevap bir saat önerisidir — maç gününü atlar, 11:00 ya da 17:30 (R2-f, B52: antrenmanla çakışmaz); tek kart (Kabul et / Şu gün olsun, U3) soranın konuşmasında; İlerle cevapta karar diye durur',
+     !!gKart&&RG.sonuc.neden==='karar'&&!macGun.has(gKart.veri.oneri.tarih)&&[660,1050].includes(gKart.veri.oneri.dakika)&&metin(MG('kararSecenekleri')(gk,gKart).map(s=>s.id))==='["kabul","biz"]'
      &&kon(gk,hId).kararlar.includes(gKart.id)&&kon(gk,hId).cevapBekliyor&&MG('kararTelefondaMi')(gk,gKart),gKart&&`${gKart.veri.oneri.tarih} ${MG('saatYazi')(gKart.veri.oneri.dakika)}`);}
   if(gKart){
     {/* U3 “biz önerelim”: bizim an — şimdiden ≥ 60 dk, 30 dk adım, mesai içinde, maç günü ve hafta içi antrenman dışında, hocanın önerisinden önce;
@@ -715,8 +715,46 @@ bolum('3.5 — maç sonucunun kariyere bir kez işlenmesi (F2)');
   {const kq=sor(k4,'yaz.teknikDirektor.takim'),aday=MG('hocaAdaylari')(kq,'demirkapi')[0],kh=KK3(kq,x=>MG('hocaDegistir')(x,'demirkapi',aday)).kariyer,yeniId=kh.kulupler.demirkapi.hocaId,eski=kon(kh,hId);
    denetle('3.7a eki: hoca değişince eski hocaya bekleyen soru iptal (geçmişte iptal), konuşmasında “Cevap gelmedi.” ve konu yok; yardımcı aynı kişi; yeni hocanın konuları listede',
      !Object.values(kh.isler).some(x=>x.veri&&x.veri.muhatap===hId)&&kh.gecmis.some(g=>g.tur==='iptal'&&g.isTuru==='gelisme')&&eski.mesajlar.some(m=>m.metin==='Cevap gelmedi.')&&!eski.girisimler.length
-     &&yeniId!==hId&&metin(kon(kh,yeniId).girisimler.map(g=>g.ad))==='["Takım ne durumda?","Görüşelim"]'&&MG('personelKisisi')(kh,'yardimciAntrenor').id===yId&&!MG('kariyerDogrula')(kh).length,
+     &&yeniId!==hId&&metin(kon(kh,yeniId).girisimler.map(g=>g.ad))==='["Takım ne durumda?","Görüşelim","Oyuncu hakkında sor"]'&&MG('personelKisisi')(kh,'yardimciAntrenor').id===yId&&!MG('kariyerDogrula')(kh).length,
      `yeni hoca ${kh.kisiler[yeniId].ad}: ${kon(kh,yeniId).girisimler.map(g=>g.ad).join('/')}`);}
+  {/* R2-e (2026-10-29): “Oyuncu hakkında sor” — argümanlı konu; hoca kendi gözüyle (kalıcı görüş, seçtiği on birle tutarlı), yardımcı rakamla; cevap oyuncunun dosyasına not */
+   const biz='demirkapi',GB=MG('girisimBaslat'),sorA=(k,g,a)=>KK3(k,x=>GB(x,g,a)).kariyer,L=MG('kulupOyunculari')(k4,biz),ilk=k4.kulupler[biz].kadro.ilk11;
+   const hazir=p=>!(p.sakat&&MG('tarihKarsilastir')(p.sakat.donus,k4.tarih)>0)&&!(p.ceza&&p.ceza.mac>0);
+   const p1=L.find(p=>ilk.includes(p.id)&&hazir(p)),p2=L.find(p=>!ilk.includes(p.id)&&hazir(p)),yab=Object.values(k4.oyuncular).find(p=>p.kulupId!==biz);
+   const hata=f=>{try{KK3(k4,f);return'';}catch(e){return e.message;}},bekler=k=>Object.values(k.isler).some(x=>x.tur==='gelisme'&&x.veri.gelisme==='yazismaCevap');
+   const G=MG('girisimListesi')(k4).filter(g=>/\.oyuncu$/.test(g.id));
+   denetle('R2-e: konu hocada ve yardımcıda argümanlı; argümansız, bilinmeyen ve başka kulübün oyuncusu reddedilir; argümansız konuya argüman verilmez',
+     metin(G.map(g=>g.id+':'+g.argumanli).sort())==='["yaz.teknikDirektor.oyuncu:true","yaz.yardimciAntrenor.oyuncu:true"]'
+     &&/seçim yapılmadı/.test(hata(x=>GB(x,'yaz.teknikDirektor.oyuncu')))&&/bulunamadı/.test(hata(x=>GB(x,'yaz.teknikDirektor.oyuncu','oyuncu-yok')))
+     &&/kulübün oyuncusu değil/.test(hata(x=>GB(x,'yaz.teknikDirektor.oyuncu',yab.id)))&&/argüman almaz/.test(hata(x=>GB(x,'yaz.teknikDirektor.takim',p1.id))),
+     [hata(x=>GB(x,'yaz.teknikDirektor.oyuncu')),hata(x=>GB(x,'yaz.teknikDirektor.oyuncu',yab.id))].join(' · '));
+   const a1=sorA(k4,'yaz.teknikDirektor.oyuncu',p1.id),a2=sorA(a1,'yaz.yardimciAntrenor.oyuncu',p1.id),ad=MG('yzOyuncu')(a1,p1.id);
+   const ikinci=(()=>{try{sorA(a1,'yaz.teknikDirektor.oyuncu',p2.id);return'';}catch(e){return e.message;}})(),gid=kon(a1,hId).mesajlar.filter(m=>m.yon==='giden').pop();
+   const R1=ilerle3(a2);let b=R1.kariyer;for(let i=0;i<6&&bekler(b);i++)b=ilerle3(b).kariyer;
+   denetle('R2-e: soru telefonda giden mesaj; cevap beklenirken o kişiye ikinci soru yok (başka oyuncu için de); geçmiş kaydında oyuncu; İlerle cevapta durur',
+     !!gid&&gid.metin===`${ad} hakkında ne düşünüyorsun?`&&/cevabını bekliyorsun/.test(ikinci)&&a1.gecmis.some(g=>g.tur==='girisim'&&g.oyuncuId===p1.id&&g.konu==='oyuncu')
+     &&R1.sonuc.neden==='haber'&&!bekler(b),`${gid&&gid.metin} · ${ikinci} · ${R1.sonuc.neden}`);
+   const hm=gelen(b,hId),ym=gelen(b,yId),q=b.oyuncular[p1.id];
+   denetle('R2-e: hoca kendi gözüyle — on birindeki oyuncu “ilk tercihlerimden”, metinde rakam yok; yardımcı bu sezonun gözlenebilir sayılarıyla',
+     !!hm&&hm.metin.startsWith(`${ad} ilk tercihlerimden`)&&!/\d/.test(hm.metin)&&!!ym&&ym.metin.startsWith(`${ad}: bu sezon ${q.mac|0} maç, ${q.dk|0} dakika, ${q.gol|0} gol.`),
+     `${hm&&hm.metin} | ${ym&&ym.metin}`);
+   const GO=MG('oyuncuGoruntusu'),ilkB=b.kulupler[biz].kadro.ilk11,K=MG('kulupOyunculari')(b,biz).map(p=>GO(b,p.id,hId));
+   denetle('R2-e: hocanın görüşü seçimiyle tutarlı: sakat ve cezalı dışında “ilk” yalnız ve her zaman seçtiği on birdekiler',
+     K.every(g=>g.kat==='sakat'||g.kat==='cezali'||(g.kat==='ilk')===ilkB.includes(g.oyuncuId))&&K.filter(g=>g.kat==='ilk').length>=8&&K.some(g=>g.kat==='rotasyon'||g.kat==='disari'),
+     ['ilk','rotasyon','disari','sakat','cezali'].map(t=>t+' '+K.filter(g=>g.kat===t).length).join(' · '));
+   const N=MG('oyuncuNotlari')(b,p1.id),nh=hm&&N.find(n=>n.metin===`“${hm.metin}”`),ny=ym&&N.find(n=>n.metin===`“${ym.metin}”`);
+   denetle('R2-e: iki cevap oyuncunun dosyasına tarihli not (kaynak kişinin adı); başka oyuncunun dosyasında yok',
+     !!nh&&!!ny&&nh.tarih===hm.tarih&&nh.kaynak===b.kisiler[hId].ad&&ny.kaynak===b.kisiler[yId].ad&&!MG('oyuncuNotlari')(b,p2.id).some(n=>n.metin===nh.metin||n.metin===ny.metin),
+     N.slice(0,2).map(n=>n.kaynak+': '+n.metin).join(' | '));
+   const d=MG('bellekDeposu')();MG('kariyerKaydet')(d,'s',a2);const y=MG('kariyerYukle')(d,'s');let c=y.tamam?y.kariyer:null;
+   if(c)for(let i=0;i<7&&(i===0||bekler(c));i++)c=ilerle3(c).kariyer;
+   const tek=(()=>{let x=sorA(sorA(k4,'yaz.teknikDirektor.oyuncu',p1.id),'yaz.yardimciAntrenor.oyuncu',p1.id);for(let i=0;i<7&&(i===0||bekler(x));i++)x=ilerle3(x).kariyer;return x;})();
+   denetle('R2-e: belirlenimli (aynı sıra aynı kariyer) ve kaydet–yükle cevabı değiştirmez; kariyer geçerli',
+     !!c&&metin(c)===metin(tek)&&metin(tek)===metin(b)&&!MG('kariyerDogrula')(b).length&&!MG('kariyerDogrula')(a2).length);
+   const aday=MG('hocaAdaylari')(a1,biz)[0],kh=KK3(a1,x=>MG('hocaDegistir')(x,biz,aday)).kariyer;
+   denetle('R2-e: hoca değişince bekleyen oyuncu sorusu düşer (“Cevap gelmedi.”); yeni hocaya aynı oyuncu sorulabilir',
+     !Object.values(kh.isler).some(x=>x.veri&&x.veri.muhatap===hId)&&kon(kh,hId).mesajlar.some(m=>m.metin==='Cevap gelmedi.')&&!MG('kariyerDogrula')(kh).length
+     &&!!sorA(kh,'yaz.teknikDirektor.oyuncu',p1.id));}
 }
 
 /* ================= F7 — ligin öbür maçları ================= */

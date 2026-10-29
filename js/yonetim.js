@@ -123,15 +123,17 @@ const girisimYapildi=(k,id)=>{const G=GIRISIMLER[id],a=G&&G.aralik!==undefined?G
   return k.gecmis.some(g=>g.tur==='girisim'&&g.id===id&&(!kid||!g.kisiId||g.kisiId===kid)&&tarihKarsilastir(tarihEkle(g.tarih,a),k.tarih)>0);};
 function girisimListesi(k){
   const L=[];
-  for(const [id,G] of Object.entries(GIRISIMLER)){const u=k.icerik.surum>=2&&!girisimYapildi(k,id)?G.uygun(k):false;if(u!==false)L.push({id,ad:G.ad,aciklama:G.aciklama(k),engel:u===true?null:u});}
+  for(const [id,G] of Object.entries(GIRISIMLER)){const u=k.icerik.surum>=2&&!girisimYapildi(k,id)?G.uygun(k):false;if(u!==false)L.push({id,ad:G.ad,aciklama:G.aciklama(k),engel:u===true?null:u,argumanli:!!G.argumanli});}
   return L;
 }
-function girisimBaslat(k,id){
+/* R2-e: arg isteğe bağlı (argümanlı girişim: GIRISIMLER[id].argumanli; yazışmada oyuncu kimliği); doğrulaması girişimin kendi baslat'ındadır */
+function girisimBaslat(k,id,arg){
   const g=girisimListesi(k).find(x=>x.id===id);
   if(!g)throw new Error(`Girişim şu an açılamaz: ${id}`);
   if(g.engel)throw new Error('Girişim başlatılamadı: '+g.engel);
   /* H2-c: baslat düz metin ya da {bilgi, kayit} döndürür; kayit ({kisiId, konu, isId, macId?}) girişimin geçmiş kaydına eklenir */
-  const r=GIRISIMLER[id].baslat(k),kayit={tur:'girisim',id,tarih:k.tarih,dakika:k.gunIciDakika},nesne=r&&typeof r==='object';
+  if(GIRISIMLER[id].argumanli&&(arg===undefined||arg===null))throw new Error('Girişim başlatılamadı: seçim yapılmadı');
+  const r=GIRISIMLER[id].baslat(k,arg),kayit={tur:'girisim',id,tarih:k.tarih,dakika:k.gunIciDakika},nesne=r&&typeof r==='object';
   if(nesne&&r.kayit)Object.assign(kayit,r.kayit);
   k.gecmis.push(kayit);
   return nesne?r.bilgi:r;

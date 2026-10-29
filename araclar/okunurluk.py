@@ -2,7 +2,7 @@
 """Chairman — okunurluk ölçüsü (R1-f, 2026-10-29).
 
 Oyun karesi üç genişlikte (640, 800, 1186 px) açılır; her ekranda görünen her metnin hesaplanan yazı boyu ve kırpılıp kırpılmadığı ölçülür.
-Ekranlar: oda (masa), defter, telefonun ana ekranı, konuşma (tek kartla), mesaj listesi, Canlı Skor, dosya (tek kartla), Kadro sekmesi,
+Ekranlar: oda (masa), defter, telefonun ana ekranı, konuşma (R2: iki sütun, tek kart iş panelinde), mesaj listesi, Canlı Skor, dosya (tek kartla), Kadro sekmesi,
 oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu kartı.
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
@@ -98,7 +98,7 @@ async def sahneler_oda(pg, olc):
     await pg.wait_for_selector(".tel-ekran", timeout=10000)
     await olc("telefon-ana")
     await tikla(pg, ".tel-bildirim[data-kisi]")
-    await pg.wait_for_selector(".tel .tel-cevap .kk-kart", timeout=10000)
+    await pg.wait_for_selector(".tlf-is .kk-kart", timeout=10000)   # R2: kart telefonun sağındaki iş panelinde
     await olc("telefon-konusma")
     await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
     await olc("telefon-mesajlar")

@@ -1,6 +1,6 @@
 # R2 — Telefon: iki sütunlu konuşma, geniş tek kart, tek bekleme satırı, oyuncu sorusu (uygulama planı)
 
-Durum: **onaylandı (kullanıcı, 2026-10-29: “Onayla, başla”); uygulama Opus 5.5, masaüstü.** Dal `claude/r2-telefon` (taban `main` 3cbecc4; ilk commit karar 60 belgesi), etiket `tur/r2-telefon`. `main`'e alma ve push kullanıcının sözüyle.
+Durum: **kapandı (2026-10-29, masaüstü; onay: kullanıcı, “Onayla, başla”; uygulama Opus 5.5). Sonuç ve sapmalar en sonda.** Dal `claude/r2-telefon` (taban `main` 3cbecc4; ilk commit karar 60 belgesi), etiket `tur/r2-telefon`. `main`'e alma ve push kullanıcının sözüyle.
 
 Kaynaklar: kullanıcının inceleme raporunun 2. maddesi (telefon ve mesajlaşma) ve 6. maddesinin bildirim satırı; R programı (karar 56, `r1-uygulama.md` §0); ilkelerin uygulama yönü (karar 60: sakin günün karşılığı bilgi ve ilişki); olay kütüphanesi §13'ün R2 satırı; borç defteri B44, B47, B48, B52.
 
@@ -117,4 +117,21 @@ Akış denemesinin telefon bölümleri (3, 16, 21, 24, 27), `okunurluk.py` ve `k
 
 ## Sapmalar
 
-(boş — uygulama sırasında doldurulur)
+**R2-0 başlangıç ölçüsü (kod değişmeden):** `akis-deneme 3 16 21 24 27` geçti, düşen yalnız defterdeki B47 ve B48 (800 px telefon kartı); `okunurluk` 13 ekran üç genişlikte eşikte; `kariyer-deneme` geçti.
+
+1. **Eşik ipucu tek çubuk:** planın “iki yanda eşik çizgisi” yerine kartın altında, kartla kaymayan ince bir çubuk: ortadan sürüklenen yöne dolar, eşikte amber. Üst etikette “Bırak: <cevap>”, ipucu yazısında “Bırakınca uygulanır.” İpucu ilk denemede kartın içindeydi; kartı uzatıyor (800 px büyük yazıda kart panelden taşıyordu) ve yüz dönünce kartın boyunu oynatıyordu (akış §3'ün “yüz dönünce kartın boyu aynı” denetimi düştü). Kartın kardeşi yapıldı: kartın boyu yazıdan bağımsız, çubuk yerinde durur. Maç telefonunun dar cevap alanında ve karar anında ipucu yok.
+2. **Önizleme yerinde döner:** kart bileşeni önizlemede yeniden çizmez (U2). Yanındaki bağlam ve ipucu bu yüzden ayrıca güncellenir: oda `onizle` kancasında `tlfBaglamEsle` yalnız bağlam kutusunu, `kartIpucuYaz` ipucunu yazar.
+3. **Panelin başlığı tek satır:** kişinin portresi ve adı telefonun başlığında zaten var; panelde tek satırlık künye (“ŞÜKRÜ HOCA · TEKNİK DİREKTÖR”). Dar karede (640 px) iki satırlık başlık kartı aşağı itiyordu. Konuşma açılınca panel ilk kartı (kenarları ve ipucuyla) görünür kılar; kartın üstü panelin üstünden çıkmaz.
+4. **Bağlam yanda ya da altta:** panel 36 em'den genişse bağlam kartın yanında, darsa altında (bugünkü üç genişlikte altta). Bağlamı olmayan kararda kutu gizli durur.
+5. **Bekleyenler:** cevabını bekleyen kararlar (yalnız bugünün ya da saatsiz olanlar) ve dosyada bekleyen kararlar kırmızı nokta; gelecek cevaplar mavi halka; yeni mesajlar mavi nokta. Satır kişinin konuşmasını, dosya satırı dosyayı açar.
+6. **Önündeki karar:** kişinin cevap bekleyen bir kararı varken konular ortak engelle kapalıdır; bekleme satırı yoksa panel bir kez “Önündeki karar cevaplanınca yazabilirsin.” der (konuların altında engel tekrarlanmaz).
+7. **Oyuncu sorusu:** konunun adı “Oyuncu hakkında sor”, giden mesaj “<ad> hakkında ne düşünüyorsun?”. Hocanın katı: on birindeyse (son maçı kendisi yönettiyse) “ilk”, mevkisindeki kalıcı sırası on birdeki o mevki sayısının bir fazlasına kadarsa “rotasyon”, değilse “dışarı”; sakat ve cezalı önce. Yardımcının “koşu verisinde düşüş”ü yorgunluk eşiğidir (TEST). Eşikler `YAZISMA_OYUNCU_TEST`.
+8. **Göz atma kodu:** odanın göz atma kâğıdı (`gozIcerik`) kendi kodunu korudu; telefon paneli yeni `baglamIcerik`'i kullanır. İkisinin birleşmesi küçük bir temizlik olarak kalır (davranış aynı).
+9. **Denetimler:** `kariyer-deneme` 2.8L'deki konu listeleri ve “Görüşelim” saatleri yeni duruma göre; 3.7a ekine yedi R2-e satırı. `akis-deneme` §3 ve §21 iş paneline göre (davranış denetimleri gevşetilmedi; 800 px istisnaları kalktı); §21'in göz atma denetimi yandaki bağlamın denetimine dönüştü; yeni §30 (dokuz satır). `okunurluk.py` konuşma sahnesi iş panelinin kartını bekler.
+10. **Sezon tabanının komutu:** yukarıdaki Kabul satırı t7'yi ek seçeneksiz yazıyordu; taban S'de hoca değişimi ve transferlerle üretilmişti (KAPILAR: `--tek --teklif sat --talep onayla --p12 degisim`; t3 `--kaydet`). Eksik komutla koşu 16. haftadan sonra yanlış bir fark verdi; değişmemiş kod (`HEAD`, `tur/u-arayuz`, tabanı üreten S-f commit'i) da aynı farkı verdi, yani fark komuttandı. Doğru komutla iki taban birebir; ayrıca varsayılan seçeneklerle `HEAD` ve R2 18 haftada birebir aynı.
+
+## Sonuç (2026-10-29, masaüstü)
+
+- **Oyunda:** odada telefon iki sütun (solda konuşma, sağda iş paneli; konuşma dışında Bekleyenler); tek bekleme satırı; kararın geniş tek kartı ve yanında bağlamı; kartın altında eşik ipucu (dosya ve karar panelinde de); konuşma başına okuma yeri; “Oyuncu hakkında sor” (hoca ve yardımcı; oyuncu dosyasında “Hocaya sor ▸”, cevap dosyaya not); görüşme önerisi 11:00 ya da 17:30. Balkonda ve maçta tek telefon. Kayıt sürümü 11, içerik sürümü 5 kaldı.
+- **Denetimler:** `kariyer-deneme` geçti (3.7a ekine yedi R2-e satırı); `ad-denetimi` temiz (98 betik); `mac-deneme 4` “sonuç aynı”; motor dosyaları değişmedi → `oturum-sonu --ayni --seyrek` 40/40 birebir, sağlık dışı 0, bilinen 5 satır defterde, yeni 0; sezon tabanları KAPILAR komutuyla `sezon-s-t7` ve `sezon-s-t3` (kaydet–yükleli) 18/18 hafta birebir; hız `tur/r1-guvence`'ye göre ortanca −%1,7 (aynı süreçte 8 tur; 1000 adım ~46 ms); `akis-deneme` tamamı geçti, düşen yalnız defterdeki B40 (yeni §30 dokuz satır; §3'ün 800 px denetimleri kesin, B47 ve B48 kapandı); `okunurluk.py` 13 ekran 640, 800 ve 1186 px'te eşikte; `kontrol.py` hatasız; `akis-2d.py` geçti.
+- **Borç defteri:** B47, B48, B52 kapandı; B44'ün bekleme satırı denetimli, kalan dördü R3 ve R5'e.

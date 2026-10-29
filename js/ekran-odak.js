@@ -27,6 +27,8 @@
 .oda section.odk[data-boy="orta"]{--odk-en:${O.boy.orta}%}
 .oda section.odk[data-boy="kucuk"]{--odk-en:${O.boy.kucuk}%}
 .oda section.odk[data-boy="cihaz"]{--odk-en:${O.boy.cihaz}%}
+/* R2 (2026-10-29): odada iki sütunlu telefon — solda telefon, sağda iş paneli (js/ekran-telefon.js .tlf); kâğıt yok, kabın kendisi taşır */
+.oda section.odk[data-boy="telefon"]{--odk-en:${O.boy.telefon}%}
 .oda .odk>header.odk-ust{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.6em;min-height:2.1em;padding:0;background:none;border:0}
 .oda .odk-ust h3{grid-column:2;margin:0;font-family:var(--display);font-weight:400;font-size:1.75em;line-height:1;letter-spacing:.04em;color:var(--k-serit);
   text-shadow:0 .08em .3em rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -38,9 +40,9 @@
 .oda .odk-kagit>.od-icerik{min-height:0}
 .oda .odk-govde{min-height:0;display:grid}
 .oda .odk .dsy,.oda .odk .dft{position:relative;inset:auto;left:auto;right:auto;top:auto;bottom:auto;min-height:0;height:100%;z-index:auto}
-.oda .odk[data-boy="cihaz"]>header.odk-ust h3{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.oda .odk[data-boy="cihaz"] .odk-kagit{align-self:stretch;height:100%;background:none;border:0;box-shadow:none}
-.oda .odk[data-boy="cihaz"] .od-icerik{display:block;padding:0;overflow:hidden;height:100%}
+.oda .odk:is([data-boy="cihaz"],[data-boy="telefon"])>header.odk-ust h3{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.oda .odk:is([data-boy="cihaz"],[data-boy="telefon"]) .odk-kagit{align-self:stretch;height:100%;background:none;border:0;box-shadow:none}
+.oda .odk:is([data-boy="cihaz"],[data-boy="telefon"]) .od-icerik{display:block;padding:0;overflow:hidden;height:100%}
 /* U3 göz atma: iş solda daralır, sağda okunan kâğıt */
 .oda section.odk[data-goz]{left:${O.goz.kenar}%}
 .oda section.odk[data-goz]:not([data-boy="cihaz"]){--odk-en:${O.goz.is}%}

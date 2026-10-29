@@ -39,6 +39,8 @@ const TK_INCE_ISTISNA=new Set(['kemal','celal','cemal','hilal','kemâl','saat','
 const tkKalin=s=>{const t=String(s).trim().toLocaleLowerCase('tr-TR'),son=t.split(/\s+/).pop();return!TK_INCE_ISTISNA.has(son)&&'aıou'.includes(tkSonUnlu(t));};
 const bulunmaEki=s=>{const t=String(s).trim(),son=t.slice(-1).toLocaleLowerCase('tr-TR');return t+'\''+('çfhkpsşt'.includes(son)?'t':'d')+(tkKalin(t)?'a':'e');};
 const yonelmeEki=s=>{const t=String(s).trim(),son=t.slice(-1).toLocaleLowerCase('tr-TR');return t+'\''+('aeıioöuü'.includes(son)?'y':'')+(tkKalin(t)?'a':'e');};
+/* R2-c: ayrılma (-dan/-den/-tan/-ten): “Şükrü Hoca'dan”, “Tahsin'den”, “Nusret Bey'den” */
+const ayrilmaEki=s=>{const t=String(s).trim(),son=t.slice(-1).toLocaleLowerCase('tr-TR');return t+'\''+('çfhkpsşt'.includes(son)?'t':'d')+(tkKalin(t)?'an':'en');};
 const MESAJ_GUNLER=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
 /* “Perşembe'ye kadar”: bugün, yarın, bir hafta içinde gün adı, sonrası gün ve ay */
 function kadarYazi(k,tarih){
@@ -58,6 +60,12 @@ function cevapBeklemeYazi(k,an){
   if(t.tarih!==k.tarih)return(t.tarih===tarihEkle(k.tarih,1)?'yarın':gunAyYazi(t.tarih))+' '+saatYazi(t.dakika)+' gibi';
   if(fark<60)return'~'+Math.max(5,Math.round(fark/5)*5)+' dk sonra';
   return'~'+Math.round(fark/60)+' saat sonra';
+}
+/* R2-c: telefonun iş panelindeki tek bekleme satırı: “Şükrü Hoca'dan cevap bekleniyor.” ve anı “Yarın 09:30 civarı.” (cevabın anı belirlidir; “civarı”
+   oyuncu için yaklaşık söyleyiştir). {baslik, an} döner */
+function cevapBeklemeCumlesi(k,ad,an){
+  const t=anTarih(an),gun=t.tarih===k.tarih?'Bugün':t.tarih===tarihEkle(k.tarih,1)?'Yarın':gunAyYazi(t.tarih);
+  return{baslik:ayrilmaEki(ad)+' cevap bekleniyor.',an:an<=simdikiAn(k)?'Birazdan.':gun+' '+saatYazi(t.dakika)+' civarı.'};
 }
 /* olayın göndereni (kişi kaydı yoksa null) */
 function mesajGondereni(k,o,m){

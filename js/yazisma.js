@@ -16,7 +16,11 @@
      yazismaSor(k, rol, konu)  → {bilgi, kayit:{kisiId, konu, isId, macId?}}: cevap gizli gelişme olarak takvime (GELISMELER.yazismaCevap; veri.durak:
                          İlerle cevap anında durur — js/ajanda.js ilerleOnizle 'haber')
      yazismaGoruldu(k, kisiId)  kişinin konuşması açıldı: kisi.okunan = şimdiki an (yeni mesaj işareti; js/ekran-oda.js konusmaAc)
-     gorusmeAniBul(k, kisiId, enErkenGün) → {tarih, dakika} | null   belirlenimci: maç gününü atlar, 11:00 ya da 15:00, en çok 14 gün
+     gorusmeAniBul(k, kisiId, enErkenGün) → {tarih, dakika} | null   belirlenimci: maç gününü atlar, 11:00 ya da 17:30 (R2-f: antrenman 15:00–17:00
+                         ile çakışmasın, borç defteri B52), en çok 14 gün
+     R2-e (2026-10-29) argümanlı konu: tanımda argumanli:true ise girişim bir argüman alır (girisimBaslat(k, id, arg); oyuncu kimliği). arg(k, arg, kişi)
+                         → hata metni | null doğrular; veri(k, arg) soruya yazılır; giden(k, kayıt) giden mesajın metnidir; denetle(k, veri) gelişmeyi sınar.
+     YAZISMA_BEKLEME_ENGELI  kişiden cevap beklenirken bütün konuların ortak engeli; telefonun iş paneli onu bir kez, belirgin söyler (R2-c)
      bizimGorusmeAni(k, is) → {tarih, dakika} | null   U3 “Şu gün olsun”un anı (belirlenimci; aşağıda)
    Cevabın metni kayda yazılmaz (TEKNIK_PLAN §7): kayda cevap anının sayıları (p) ve kimlikler girer, metin okuma anında şablondan üretilir.
    METİNLER TEST TASLAĞIDIR (karar 35 kipi): Claude yazdı, kullanıcı YAZISMA_KONULARI metinlerini değiştirir. Gizli bilgi, ısrar ve oyuncu
@@ -25,7 +29,8 @@
 const PERSONEL_TEST={yardimciAntrenor:{ad:'Tahsin',dogumTarihi:'1979-03-14'},maliMudur:{ad:'Nusret Bey',dogumTarihi:'1968-09-22'}};
 /* cevap gecikmesi (dakika) ve mesai: cevap 09:00–18:30 dışına düşerse sonraki 09:30'a kayar (maç akşamına düşmez). Görüşme önerisinin sınırı. TEST */
 const YAZISMA_TEST={gecikme:{teknikDirektor:180,yardimciAntrenor:120,maliMudur:90},mesai:{bas:540,son:1110,ilk:570},
-  gorusme:{saatler:[660,900],sure:45,enCokGun:14,enCokOneri:3,sonCevapOnce:60,bizEnErken:60,bizAdim:30}};
+  gorusme:{saatler:[660,1050],sure:45,enCokGun:14,enCokOneri:3,sonCevapOnce:60,bizEnErken:60,bizAdim:30}};
+const YAZISMA_BEKLEME_ENGELI='Önceki mesajının cevabını bekliyorsun.';
 const YAZISMA_KONULARI={};
 const kisiAktif=(k,id)=>!!(k.kisiler[id]&&k.kisiler[id].durum==='aktif');
 const bizimKulup=k=>(k.kisiler[k.baskanId]||{}).kulupId||null;
@@ -53,14 +58,14 @@ const yazismaSoruldu=(k,id,konu,macId)=>k.gecmis.some(g=>g.tur==='girisim'&&g.ki
 function yazismaKonusuEkle(konu,tanim){
   YAZISMA_KONULARI[konu]=tanim;
   for(const rol of tanim.roller)GIRISIMLER[`yaz.${rol}.${konu}`]={ad:tanim.ad,aciklama:()=>tanim.aciklama,aralik:tanim.aralik,
-    kisi:k=>{const p=personelKisisi(k,rol);return p?p.id:null;},
+    kisi:k=>{const p=personelKisisi(k,rol);return p?p.id:null;},argumanli:!!tanim.argumanli,
     uygun:k=>{
       const p=personelKisisi(k,rol);if(!p)return false;
       const u=tanim.uygun?tanim.uygun(k,p):true;if(u===false)return false;
-      if(yazismaBekleyen(k,p.id))return'Önceki mesajının cevabını bekliyorsun.';
+      if(yazismaBekleyen(k,p.id))return YAZISMA_BEKLEME_ENGELI;
       if(konu==='gorusme'){const r=yazismaRandevu(k,p.id);if(r)return`Görüşme ayarlandı: ${gunAyYazi(r.tarih)} ${saatYazi(r.dakika)}.`;}
       return u;},
-    baslat:k=>yazismaSor(k,rol,konu)};
+    baslat:(k,arg)=>yazismaSor(k,rol,konu,arg)};
 }
 /* cevabın anı: şimdi + kişinin gecikmesi; mesai dışına düşerse sonraki 09:30 (belirlenimci, rastlantı çekmez) */
 function yazismaCevapAni(k,rol){
@@ -70,16 +75,20 @@ function yazismaCevapAni(k,rol){
   return t;
 }
 /* cevabı gizli gelişme olarak takvime koyar (komut içinde). ek: veriye eklenecek alanlar (görüşmede deneme, en erken gün) */
-function yazismaCevapKur(k,p,konu,ek){
+function yazismaCevapKur(k,p,konu,ek,arg){
   const t=yazismaCevapAni(k,p.rol),K=YAZISMA_KONULARI[konu];
-  const veri=Object.assign({gelisme:'yazismaCevap',muhatap:p.id,konu,soru:{tarih:k.tarih,dakika:k.gunIciDakika},durak:true},K.veri?K.veri(k):{},ek||{});
+  const veri=Object.assign({gelisme:'yazismaCevap',muhatap:p.id,konu,soru:{tarih:k.tarih,dakika:k.gunIciDakika},durak:true},K.veri?K.veri(k,arg):{},ek||{});
   return isEkle(k,{tur:'gelisme',tarih:t.tarih,dakika:t.dakika,veri});
 }
-function yazismaSor(k,rol,konu){
+function yazismaSor(k,rol,konu,arg){
   const p=personelKisisi(k,rol),K=YAZISMA_KONULARI[konu];
   if(!p||!K||!K.roller.includes(rol))throw new Error(`Yazışma başlatılamadı: ${rol} · ${konu}`);
-  const isId=yazismaCevapKur(k,p,konu),v=k.isler[isId].veri,kayit={kisiId:p.id,konu,isId};
+  /* R2-e: argümanlı konu argümansız başlatılmaz; argümansız konuya argüman verilmez */
+  if(K.argumanli){const h=arg===undefined||arg===null?'argüman yok':K.arg?K.arg(k,arg,p):null;if(h)throw new Error(`Yazışma başlatılamadı: ${h}`);}
+  else if(arg!==undefined&&arg!==null)throw new Error(`Yazışma başlatılamadı: ${konu} argüman almaz`);
+  const isId=yazismaCevapKur(k,p,konu,null,arg),v=k.isler[isId].veri,kayit={kisiId:p.id,konu,isId};
   if(v.macId)kayit.macId=v.macId;
+  if(v.oyuncuId)kayit.oyuncuId=v.oyuncuId;
   return{bilgi:`Mesaj gitti: ${p.ad}. Cevap birkaç saat içinde gelir.`,kayit};
 }
 function yazismaGoruldu(k,kisiId){const p=k.kisiler[kisiId];if(p)p.okunan=simdikiAn(k);}
@@ -87,7 +96,8 @@ function yazismaGoruldu(k,kisiId){const p=k.kisiler[kisiId];if(p)p.okunan=simdik
 GELISMELER.yazismaCevap={
   denetle:(k,v)=>{const h=[];if(!(k.kisiler||{})[v.muhatap])h.push('kişi bulunamadı');if(!YAZISMA_KONULARI[v.konu])h.push(`bilinmeyen konu (${v.konu})`);
     if(!v.soru||!tarihGecerliMi(v.soru.tarih)||!Number.isInteger(v.soru.dakika))h.push('soru anı yok');
-    if(v.macId!==undefined&&!(k.fikstur||[]).some(f=>f.id===v.macId))h.push(`maç fikstürde yok (${v.macId})`);return h;},
+    if(v.macId!==undefined&&!(k.fikstur||[]).some(f=>f.id===v.macId))h.push(`maç fikstürde yok (${v.macId})`);
+    if(YAZISMA_KONULARI[v.konu]&&YAZISMA_KONULARI[v.konu].denetle)h.push(...YAZISMA_KONULARI[v.konu].denetle(k,v));return h;},
   /* bilgi yok (defterde satır kalmaz): cevap telefondadır. Görüşme cevabı yeni ajanda kararı doğurduğu için İlerle onda durur (durakSorgusu) */
   uygula:(k,is)=>{
     const v=is.veri,K=YAZISMA_KONULARI[v.konu],y={kisiId:v.muhatap,konu:v.konu,soru:{tarih:v.soru.tarih,dakika:v.soru.dakika}};
@@ -111,6 +121,30 @@ function takimGoruntusu(k){
       formda:L.filter(p=>!(p.sakat&&tarihKarsilastir(p.sakat.donus,k.tarih)>0)).map(p=>({id:p.id,v:oyuncuFormu(p)})).filter(x=>x.v>=25).sort((a,b)=>b.v-a.v||(a.id<b.id?-1:1)).slice(0,3).map(x=>x.id)}:{})};
 }
 const yzOyuncu=(k,id)=>(k.oyuncular[id]||{}).ad||'—';
+/* ---- R2-e: bir oyuncunun cevap anındaki görüntüsü (kayda yalnız bu sayılar ve kategori girer; metin okunurken kurulur). Hoca kendi gözüyle bakar:
+   kalıcı değerlendirmesi (js/hoca.js hocaDegeri; bilgisine bağlı kalıcı yanılgı dahil, günlük fark ve form zarı hariç) ve gerçek seçimi. Kategori seçimle
+   tutarlıdır: kulübün son on birinde (hocanın kendi on biri) ise 'ilk'; değilse hocanın gözündeki mevki sırası ilk on birdeki o mevki sayısı + 1 içindeyse
+   'rotasyon', değilse 'disari'. Sakat ve cezalı önce gelir. Gizli değerler kayda da metne de sayı olarak girmez ---- */
+const YAZISMA_OYUNCU_TEST={sonMac:5,gencYas:21,yorgunKon:80,formdaForm:25};
+function oyuncuGoruntusu(k,oyuncuId,kisiId){
+  const p=k.oyuncular[oyuncuId],biz=bizimKulup(k),c=k.kulupler[biz],D=c&&c.kadro,T=YAZISMA_OYUNCU_TEST;
+  if(!p||!D)return null;
+  const L=kulupOyunculari(k,biz),ilk11=Array.isArray(D.ilk11)?D.ilk11:[],h=kulupHocasi(k,biz),son=typeof kulubunSonMaci==='function'?kulubunSonMaci(k,biz):null;
+  const kendi=!!h&&(!son||!Array.isArray(son.s.hocalar)||son.s.hocalar[son.f.konuk===biz?1:0]===h.id);
+  const v=x=>h?hocaDegeri(k,h,x,{rol:HOCA_HAT_ROLU[x.mevki],taraf:null},0,0,{form:0,kon:100}):0;
+  const ayni=L.filter(x=>x.mevki===p.mevki).map(x=>({id:x.id,v:v(x)})).sort((a,b)=>b.v-a.v||(a.id<b.id?-1:1));
+  const sira=ayni.findIndex(x=>x.id===p.id)+1,yer=Math.max(1,ilk11.filter(id=>(k.oyuncular[id]||{}).mevki===p.mevki).length);
+  const sakat=!!(p.sakat&&tarihKarsilastir(p.sakat.donus,k.tarih)>0),cezali=!!(p.ceza&&p.ceza.mac>0);
+  const kat=sakat?'sakat':cezali?'cezali':kendi&&ilk11.includes(p.id)?'ilk':sira<=yer+1?'rotasyon':'disari';
+  /* son maçlar: kulübün oynanmış son T.sonMac maçında oyuncunun dakikası (dakika sayacı yoksa 0) */
+  const oynanan=(k.fikstur||[]).filter(f=>(f.ev===biz||f.konuk===biz)&&(k.maclar||{})[f.id]).slice(-T.sonMac);
+  let sonDk=0,sonMac=0;for(const f of oynanan){const d=typeof macDakikalari==='function'?(macDakikalari(k,f,k.maclar[f.id]).get(p.id)||0):0;if(d>0){sonDk+=d;sonMac++;}}
+  const acik=typeof oyuncuHaftasiAcik==='function'&&oyuncuHaftasiAcik();
+  return{oyuncuId,kat,enIyi:sira===1&&ayni.length>1,
+    yorgun:!!(acik&&!sakat&&oyuncuKondisyonu(k,p,k.tarih)<T.yorgunKon),formda:!!(acik&&!sakat&&oyuncuFormu(p)>=T.formdaForm),
+    genc:oyuncuYasi(p,k.tarih)<=T.gencYas,donus:sakat?p.sakat.donus:null,ceza:cezali?p.ceza.mac:0,
+    mac:p.mac|0,dk:p.dk|0,gol:p.gol|0,sonMacSayisi:oynanan.length,sonMac,sonDk};
+}
 const yzRakip=(k,macId)=>{const f=(k.fikstur||[]).find(x=>x.id===macId),biz=bizimKulup(k);if(!f)return null;const r=f.ev===biz?f.konuk:f.ev;return{ad:(k.kulupler[r]||{ad:r}).ad,tarih:f.tarih};};
 
 /* ---- TEST metinleri (kullanıcı değiştirir) ---- */
@@ -133,7 +167,17 @@ const YAZISMA_METIN={
     const I=o.ist,c=o.oneCikan;
     return`Şut ${I.sut[0]}–${I.sut[1]}, isabetli ${I.isabet[0]}–${I.isabet[1]}. Beklenen gol ${okSayi(o.xg[0],2)} – ${okSayi(o.xg[1],2)}; topa sahip olma %${Math.round(I.sahiplik[0]*100)}.`+
       (c?` ${c.ad}: ${c.sut} şut, beklenen gol ${okSayi(c.xg,2)}${c.gol?`, ${c.gol} gol`:''}.`:'');},
-  gorusme:(k,y)=>y.oneri?`${gunAyYazi(y.oneri.tarih)} ${saatYazi(y.oneri.dakika)} uygun mu başkanım? ${YAZISMA_TEST.gorusme.sure} dakika yeter.`:'Uygun olduğunuzda yazın başkanım.'
+  gorusme:(k,y)=>y.oneri?`${gunAyYazi(y.oneri.tarih)} ${saatYazi(y.oneri.dakika)} uygun mu başkanım? ${YAZISMA_TEST.gorusme.sure} dakika yeter.`:'Uygun olduğunuzda yazın başkanım.',
+  /* R2-e: oyuncu hakkında — hoca kendi gözüyle (kategori ve izlenim), yardımcı rakamla */
+  hocaOyuncu:(k,P)=>{if(!P)return'Onu sonra konuşalım başkanım.';const ad=yzOyuncu(k,P.oyuncuId);
+    const ana={ilk:`${ad} ilk tercihlerimden; sahada ona güveniyorum.`,rotasyon:`${ad} rotasyonda; fırsat bulacak, çalışmasını görüyorum.`,
+      disari:`${ad} şimdilik planımda değil; önündekiler daha hazır.`,sakat:`${ad} sakat; ${P.donus?gunAyYazi(P.donus)+' gibi döner, ':''}sonra bakacağız.`,
+      cezali:`${ad} cezalı; dönünce düşüneceğim.`}[P.kat];
+    return[ana,P.enIyi&&(P.kat==='ilk'||P.kat==='rotasyon')?'Bu mevkide en çok güvendiğim oyuncu.':'',P.yorgun?'Son günlerde biraz yorgun görünüyor.':'',
+      P.formda?'İyi günlerinde.':'',P.genc?'Genç, gelişiyor.':''].filter(Boolean).join(' ');},
+  yardimciOyuncu:(k,P)=>{if(!P)return'Elimde rakam yok.';const ad=yzOyuncu(k,P.oyuncuId);
+    return[`${ad}: bu sezon ${P.mac} maç, ${P.dk} dakika, ${P.gol} gol.`,P.sonMacSayisi?`Son ${P.sonMacSayisi} maçın ${P.sonMac} tanesinde oynadı, toplam ${P.sonDk} dakika.`:'',
+      P.donus?`Sakat; dönüş ${gunAyYazi(P.donus)}.`:'',P.ceza?`${P.ceza} maç cezalı.`:'',P.yorgun?'Koşu verilerinde düşüş var.':''].filter(Boolean).join(' ');}
 };
 
 /* ---- bu turun konuları (H2-c). 'kasa' js/mali-rapor.js'te (H2-d) ---- */
@@ -158,6 +202,16 @@ yazismaKonusuEkle('gorusme',{ad:'Görüşelim',roller:['teknikDirektor','yardimc
       kisiId:v.muhatap,oneri:o,deneme}});
     return{oneri:o,deneme};},
   metin:{teknikDirektor:(k,y)=>YAZISMA_METIN.gorusme(k,y),yardimciAntrenor:(k,y)=>YAZISMA_METIN.gorusme(k,y)}});
+
+/* R2-e: oyuncu hakkında soru (karar 60: sakin günde merak bilgi verir). Argüman başkanın kulübünün oyuncusu; cevap anının görüntüsü kayda girer */
+yazismaKonusuEkle('oyuncu',{ad:'Oyuncu hakkında sor',roller:['teknikDirektor','yardimciAntrenor'],aralik:0,argumanli:true,
+  aciklama:'Bir oyuncuyu sorarsın; cevap birkaç saat içinde gelir ve oyuncunun dosyasına not düşer.',
+  arg:(k,id)=>{const p=k.oyuncular[id];return!p?`oyuncu bulunamadı (${id})`:p.kulupId!==bizimKulup(k)?`${p.ad} kulübün oyuncusu değil`:null;},
+  veri:(k,id)=>({oyuncuId:id}),
+  denetle:(k,v)=>!v.oyuncuId||!(k.oyuncular||{})[v.oyuncuId]?[`oyuncu bulunamadı (${v.oyuncuId})`]:[],
+  giden:(k,g)=>`${yzOyuncu(k,g.oyuncuId)} hakkında ne düşünüyorsun?`,
+  goruntu:(k,v)=>oyuncuGoruntusu(k,v.oyuncuId,v.muhatap),
+  metin:{teknikDirektor:(k,y)=>YAZISMA_METIN.hocaOyuncu(k,y.p),yardimciAntrenor:(k,y)=>YAZISMA_METIN.yardimciOyuncu(k,y.p)}});
 
 /* ---- görüşme önerisi: belirlenimci saat, tek kart, randevu ---- */
 /* o anda (45 dk) başka saatli ajanda işi var mı (haricId hariç) */
@@ -235,7 +289,7 @@ MESAJ_KAYNAKLARI.push(k=>{
   }
   for(const g of k.gecmis){
     if(g.tur==='girisim'&&g.kisiId&&YAZISMA_KONULARI[g.konu]){
-      L.push({kisiId:g.kisiId,tarih:g.tarih,dakika:g.dakika,yon:'giden',metin:YAZISMA_KONULARI[g.konu].ad,yeni:false});
+      L.push({kisiId:g.kisiId,tarih:g.tarih,dakika:g.dakika,yon:'giden',metin:YAZISMA_KONULARI[g.konu].giden?YAZISMA_KONULARI[g.konu].giden(k,g):YAZISMA_KONULARI[g.konu].ad,yeni:false});
       bagli.add(g.isId);{const x=iptal.get(g.isId);if(x)L.push({kisiId:g.kisiId,tarih:x.tarih,dakika:x.dakika,yon:'not',metin:'Cevap gelmedi.',yeni:false});}
     }else if(g.tur==='is'&&cevap.get(g.isId)===g){
       const y=g.sonuc.yazisma,p=k.kisiler[y.kisiId],K=YAZISMA_KONULARI[y.konu];if(!p||!K)continue;

@@ -139,7 +139,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(!r)return'<p class="od-not">Bu iş '+yaz(tarihKisa(is.tarih))+' günü ajandada.</p>';
     /* karar: tek kart (js/ekran-kart.js; H1). Kaydırıp bırakınca ya da ←/→ + Enter ile uygulanır (kartEtkilesimKur, aşağıda); onay adımı yoktur.
        "Görüş iste" ve erteleme kartın dışında, altında */
-    if(v.karar)return kararKarti(k,id,{onizle:onizleler[id]||null,gorus:true,testSecenek,dosyada:acik==='dosya',gozAt:true})+tavsiyeBolumu(id)+
+    if(v.karar)return kararKarti(k,id,{onizle:onizleler[id]||null,gorus:true,testSecenek,dosyada:acik==='dosya',gozAt:true,ipucu:true})+tavsiyeBolumu(id)+
       (v.zorunluluk==='ertelenebilir'?'<div class="od-dugmeler">'+ertelemeDugmesi(is)+'</div>':'');
     const o=ajandaOnizle(k,id);
     let ic='';
@@ -178,10 +178,15 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* ---- telefon (2.8I): ana ekran → Mesajlar (kişi listesi → tek konuşma, iki cevap) / Canlı Skor; çizim js/ekran-telefon.js ----
      Telefon durumu (tel) oturumda kalır: dosyadan "◂ Mesaja dön" aynı konuşmaya döner. Konuşmayı açmak o konuların "yeni" işaretini kaldırır;
      cevap vermek ayrı bir eylemdir. Yeni haber açık konuşmayı değiştirmez */
-  const tel={ekran:'ana',kisi:null,skorAc:null,skorSekme:'maclar',hafta:null,kulup:null};   /* H2-b: skorAc açık Canlı Skor satırının maç kimliği; S-d: lig sekmesi, fikstür haftası, kulüp ekranı */
+  const tel={ekran:'ana',kisi:null,skorAc:null,skorSekme:'maclar',hafta:null,kulup:null,oyuncuSec:null};   /* H2-b: skorAc açık Canlı Skor satırının maç kimliği; S-d: lig sekmesi, fikstür haftası, kulüp ekranı; R2-e: oyuncu seçimi açık konu */
   const telLigSifirla=()=>{tel.skorSekme='maclar';tel.hafta=null;tel.kulup=null;};
   /* telefonun görünüm anahtarı: aynı görünüm yeniden çizilirken okuma yeri korunur (S-d: Canlı Skor'da sekme ve hafta, kulüp ekranında kulüp) */
-  const telAnahtar=()=>tel.ekran+(tel.ekran==='skor'?':'+(tel.skorSekme||'maclar')+':'+(tel.hafta||''):tel.ekran==='kulup'?':'+tel.kulup:'');
+  const telAnahtar=()=>tel.ekran+(tel.ekran==='skor'?':'+(tel.skorSekme||'maclar')+':'+(tel.hafta||''):tel.ekran==='kulup'?':'+tel.kulup:tel.ekran==='konusma'?':'+tel.kisi:'');
+  /* R2 (2026-10-29): odada iki sütun (solda telefon, sağda iş paneli); balkonda tek telefon (iş sağ yarıda, R5) */
+  const telIkiSutun=()=>!(balkonVar&&ODA.yer==='balkon');
+  /* R2-b: konuşma başına okuma yeri (oturumda): {y, alt}. Konuşma yeniden açılınca yer geri gelir; arada yeni mesaj geldiyse ilk yeni mesaja kayar.
+     telAcYeri: bu çizimde uygulanacak açılış kuralı {kisi, yeni} (konusmaAc kurar) */
+  const telOkuma=new Map();let telAcYeri=null;
   let cizilenTel=null,telSkorYeri=0;   /* inceleme: kulüp ekranına geçerken Canlı Skor'un okuma yeri */
   const telSkorYeriGeri=id=>{const g=kap.querySelector('.tel-govde');if(!g)return;g.scrollTop=telSkorYeri;const f=g.querySelector('[data-eylem="kulupAc"][data-kulup="'+id+'"]');
     if(f){const a=g.getBoundingClientRect(),b=f.getBoundingClientRect();if(b.top<a.top)g.scrollTop-=a.top-b.top;else if(b.bottom>a.bottom)g.scrollTop+=b.bottom-a.bottom;}};
@@ -189,15 +194,19 @@ function odaEkraniKur(kap,oyun,ayarlar){
   let telAlta=false,telGecis=false;
   function telefonPaneli(){
     const acilis=telGecis;telGecis=false;
-    return telefonCiz(k,tel,{onizleler,testSecenek,yeniler:yeniIsaret,acilis,gozAt:true});
+    if(!telIkiSutun())return telefonCiz(k,tel,{onizleler,testSecenek,yeniler:yeniIsaret,acilis,gozAt:true});
+    /* R2-a: telefon yalnız konuşmayı taşır; kararlar, bekleme ve konular sağdaki iş panelinde (konuşma dışında Bekleyenler). Sekme sırası telefon, sonra panel */
+    return'<div class="tlf"><div class="tlf-sol">'+telefonCiz(k,tel,{onizleler,testSecenek,yeniler:yeniIsaret,acilis,ikiSutun:true})+'</div>'+telefonIsPaneli(k,tel,{onizleler,testSecenek})+'</div>';
   }
-  function telAnaEkran(){tel.ekran='ana';tel.kisi=null;telLigSifirla();onay=null;telGecis=true;ciz('.tel-uygMesaj');}
+  function telAnaEkran(){tel.ekran='ana';tel.kisi=null;tel.oyuncuSec=null;telLigSifirla();onay=null;telGecis=true;ciz('.tel-uygMesaj');}
   /* konuşmayı açınca: o kişinin konularındaki yeni mesajlar görüldü (zamanı ve geçmişi değiştirmez) */
   function konusmaAc(anahtar){
-    tel.ekran='konusma';tel.kisi=anahtar;telAlta=true;
+    if(tel.kisi!==anahtar)tel.oyuncuSec=null;
+    tel.ekran='konusma';tel.kisi=anahtar;
     const c=konusmaListesi(k).find(x=>x.anahtar===anahtar);
     /* bu açılışta yeni gelenler "yeni" diye işaretli kalır */
     yeniIsaret=new Set(c?c.mesajlar.filter(m=>m.yeni).map(m=>m.meseleId+':'+m.sira):[]);
+    telAcYeri={kisi:anahtar,yeni:yeniIsaret.size>0};   /* R2-b: yeni mesaj varsa ilk yenisine, yoksa son okunan yere (ilk açılışta en alta) */
     if(c)for(const id of c.meseleler){const m=k.meseleler[id];if(m&&m.olaylar.length>m.gorulen)try{komut(x=>meseleGoruldu(x,id));}catch(e){mesaj=e.message;}}
     /* H2-c: yazışmanın yeni cevabı görüldü (kişinin okunan anı; js/yazisma.js) */
     if(c&&c.mesajlar.some(m=>m.yeni&&m.meseleId===null)&&typeof yazismaGoruldu==='function')try{komut(x=>yazismaGoruldu(x,anahtar));}catch(e){mesaj=e.message;}
@@ -487,7 +496,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(typeof odaPanel==='function')odaPanel(!!acik);   /* U1: odak açıkken 3B oda kamera yerleşince donar (js/oda.js odaDondur) */
   }
   /* duraklatmada süre tüketen ya da dünyayı değiştiren komutlar kapalıdır; okuma ve gezinti açıktır (2.8B) */
-  const DURAKLATMADA_KAPALI=new Set(['yap','yapSor','yapIzlemesiz','ertele','ilerle','ilerleSor','tavsiye','girisim','gozlem','gozlemSurdur','gozlemBirak','yer','yeniSor','yeniEvet','bozukYeni']);
+  const DURAKLATMADA_KAPALI=new Set(['yap','yapSor','yapIzlemesiz','ertele','ilerle','ilerleSor','tavsiye','girisim','oyuncuSec','gozlem','gozlemSurdur','gozlemBirak','yer','yeniSor','yeniEvet','bozukYeni']);
   const duraklatDegistir=()=>{if(duraklatmaVar('elle'))duraklatmaKaldir('elle');else duraklatmaEkle('elle');};
   let cizilenPanel=null,cizilenGorunum=null;
   const gorunumAnahtari=()=>acik!=='dosya'?acik:dosyaKadro||!meseleler().length&&!raporlar().length?'kadro:'+(seciliOyuncu||''):dosyaRapor?'rapor:'+seciliRapor:dosyaArsiv?'arsiv':'konu:'+seciliMesele;
@@ -498,6 +507,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const eskiTel=kap.querySelector('.tel-govde'),telKaydirma=eskiTel&&cizilenPanel==='telefon'&&acik==='telefon'&&cizilenTel===telAnahtar()?eskiTel.scrollTop:null;
     /* H1: kartın önizlemesi yeniden çizdiğinde telefonun cevap alanının okuma yeri de korunur */
     const eskiCevap=telKaydirma!==null?kap.querySelector('.tel-cevap'):null,cevapKaydirma=eskiCevap?eskiCevap.scrollTop:0;
+    /* R2: iş panelinin okuma yeri aynı telefon görünümünde korunur; R2-b: konuşmadan çıkarken (ya da yeniden çizerken) o konuşmanın yeri saklanır */
+    const eskiIs=telKaydirma!==null?kap.querySelector('.tlf-is'):null,isKaydirma=eskiIs?eskiIs.scrollTop:0;
+    if(eskiTel&&cizilenPanel==='telefon'&&cizilenTel&&cizilenTel.startsWith('konusma:'))
+      telOkuma.set(cizilenTel.slice(8),{y:eskiTel.scrollTop,alt:eskiTel.scrollTop+eskiTel.clientHeight>=eskiTel.scrollHeight-8});
     yaziBoyuUygula();   /* U0: tek ölçek, oyun karesine yazılır */
     if(oyun.bozukHata){
       kap.innerHTML='<div class="od-panel od-bozuk"><header><h3>Kayıt açılamadı</h3></header><div class="od-icerik"><p>Kayıtlı kariyer açılamadı. Kayıt dosyasına dokunulmadı.</p><p class="od-not">'+yaz(oyun.bozukHata)+'</p>'+
@@ -529,7 +542,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
           '<button type="button" class="od-nesne od-yer od-gizli" data-eylem="yer">Balkona çık (kapı · 5)</button>'):'')+
         '<button type="button" class="od-nesne od-kucuk" data-eylem="ac" data-panel="ayar" aria-pressed="'+(acik==='ayar'?'true':'false')+'">Ayarlar</button></nav>'+gozlemSeridi()+
       /* U1: her iş aynı odak kabında: oda bulanır, iş ortada; başlıkta ‹ Geri · başlık · Kapat (dosya ve defter kendi nesneleriyle kabı doldurur) */
-      (acik?odakKabi({ad:acik,boy:ODAK_BOY[acik]||'genis',etiket:baslik,baslik,belir,kagit:acik!=='dosya'&&acik!=='ajanda',
+      (acik?odakKabi({ad:acik,boy:acik==='telefon'&&telIkiSutun()?'telefon':ODAK_BOY[acik]||'genis',etiket:baslik,baslik,belir,kagit:acik!=='dosya'&&acik!=='ajanda',
         sinif:acik==='dosya'||acik==='ajanda'?'':'od-panel'+(acik==='kadro'?' od-genis':acik==='telefon'?' od-telefonPanel':''),
         geri:acik==='telefon'&&!gozVar()?null:(h=>h&&{etiket:h.etiket,eylem:h.eylem||'odakGeri'})(odakGeriHedef()),govde:icerik,
         yan:gozVar()?{baslik:gozBaslik(),govde:gozIcerik(),belir:gozAnahtar()!==cizilenGoz}:null}):'')+
@@ -544,7 +557,16 @@ function odaEkraniKur(kap,oyun,ayarlar){
     kap.querySelectorAll('.dsy-sayfa,.dft-sayfa').forEach((x,i)=>{if(sayfaKaydirma[i])x.scrollTop=sayfaKaydirma[i];});
     /* telefonda konuşma açılınca son mesaj ve cevap kartı görünür; aynı konuşma yeniden çizilirken okuma yeri korunur */
     const tg=kap.querySelector('.tel-govde');
-    if(tg){if(telAlta){tg.scrollTop=tg.scrollHeight;telAlta=false;}else if(telKaydirma!==null){tg.scrollTop=telKaydirma;const tc=kap.querySelector('.tel-cevap');if(tc&&cevapKaydirma)tc.scrollTop=cevapKaydirma;}}
+    /* R2-b: konuşma açılışı: yeni mesaj varsa ilk yenisi üstte, yoksa son okunan yer (en alttaysa en alt). Gönderince (telAlta) en alt */
+    const ay=telAcYeri;telAcYeri=null;
+    if(tg){if(telAlta){tg.scrollTop=tg.scrollHeight;telAlta=false;}
+      else if(ay&&acik==='telefon'&&tel.ekran==='konusma'&&ay.kisi===tel.kisi){const y=ay.yeni&&tg.querySelector('.tel-yeni'),o=telOkuma.get(ay.kisi);
+        if(y){const g=y.previousElementSibling&&y.previousElementSibling.classList.contains('tel-gun')?y.previousElementSibling:y;tg.scrollTop+=g.getBoundingClientRect().top-tg.getBoundingClientRect().top-6;}
+        else if(o&&!o.alt)tg.scrollTop=o.y;else tg.scrollTop=tg.scrollHeight;}
+      else if(telKaydirma!==null){tg.scrollTop=telKaydirma;const tc=kap.querySelector('.tel-cevap');if(tc&&cevapKaydirma)tc.scrollTop=cevapKaydirma;}}
+    const ti=kap.querySelector('.tlf-is');if(ti&&isKaydirma)ti.scrollTop=isKaydirma;
+    /* R2-d: konuşma açılınca iş panelindeki ilk kart (kenarları ve ipucuyla) kaydırmadan görünür; kartın üstü panelin üstünden yukarı çıkmaz */
+    else if(ti&&ay){const c=ti.querySelector('.kk-alan');if(c){const a=ti.getBoundingClientRect(),b=c.getBoundingClientRect(),fazla=b.bottom-a.bottom+4;if(fazla>0)ti.scrollTop+=Math.min(fazla,b.top-a.top-4);}}
     cizilenPanel=acik;cizilenGorunum=gorunum;cizilenTel=telAnahtar();cizilenGoz=gozAnahtar();
     const f=odak&&kap.querySelector(odak);if(f&&!f.disabled)f.focus({preventScroll:true});
   }
@@ -570,7 +592,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
         if(!seciliMesele&&R.length){dosyaRapor=true;seciliRapor=R[0].i;}}}
     if(ad==='ajanda'&&!koru&&acik!=='ajanda'){ajandaHafta=0;ajandaGun=k.tarih;secili=null;}
     if(ad==='telefon'&&!koru&&acik!=='telefon'){tel.ekran='ana';tel.kisi=null;telLigSifirla();yeniIsaret=new Set();}
-    if(ad==='telefon'&&koru&&tel.ekran==='konusma')telAlta=true;
+    /* R2-b: dosyadan “‹ Mesajlar” ile dönüş de açılış kuralını kullanır (yeni gelen varsa ona, yoksa okunan yere) */
+    if(ad==='telefon'&&koru&&tel.ekran==='konusma')konusmaAc(tel.kisi);
     acik=ad;onay=null;goz=null;
     if(typeof zamanSahnesiKapat==='function')zamanSahnesiKapat();   /* U4: iş açılınca durak özeti masada kalmaz */
     if(mesele)seciliMesele=mesele;
@@ -601,7 +624,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(gozVar())return{etiket:GOZ_IS[acik],f:()=>{goz=null;ciz('.kk-yuz [data-eylem="gozAt"]');}};
     if(acik==='telefon'){
       if(tel.ekran==='kulup')return{etiket:'Canlı Skor',f:()=>{const id=tel.kulup;tel.ekran='skor';tel.kulup=null;telGecis=true;ciz('[data-eylem="kulupAc"][data-kulup="'+id+'"]');telSkorYeriGeri(id);}};
-      if(tel.ekran==='konusma')return{etiket:'Mesajlar',f:()=>{const ki=tel.kisi;tel.ekran='mesajlar';tel.kisi=null;onay=null;telGecis=true;ciz('[data-eylem="telKisi"][data-kisi="'+ki+'"]');}};
+      if(tel.ekran==='konusma')return{etiket:'Mesajlar',f:()=>{const ki=tel.kisi;tel.ekran='mesajlar';tel.kisi=null;tel.oyuncuSec=null;onay=null;telGecis=true;ciz('.tel [data-eylem="telKisi"][data-kisi="'+ki+'"]');}};
       if(tel.ekran!=='ana')return{etiket:'Ana ekran',f:telAnaEkran};
       return null;}
     if(acik==='dosya'&&kadroGorunur()&&seciliOyuncu)return{etiket:'Kadro',eylem:'kadroDon',f:kadroDon};
@@ -610,7 +633,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(acik==='kadro')return{etiket:'Ayarlar',f:()=>{ayarBolum='gelistirici';panelAc('ayar');}};
     return null;
   }
-  function odakEsc(){if(onay||yeniOnay||iceOnay){onay=null;yeniOnay=false;iceOnay=null;ciz();return;}const h=odakGeriHedef();if(h)h.f();else kapat();}
+  function odakEsc(){if(onay||yeniOnay||iceOnay){onay=null;yeniOnay=false;iceOnay=null;ciz();return;}
+    /* R2-e: açık oyuncu seçimi önce kapanır (odak konusuna döner) */
+    if(acik==='telefon'&&tel.oyuncuSec){const g=tel.oyuncuSec;tel.oyuncuSec=null;ciz('.tlf-konu[data-girisim="'+g+'"]');return;}
+    const h=odakGeriHedef();if(h)h.f();else kapat();}
   /* balkon ↔ oda: yürüyüş yalnız sunumdur; odaya dönerken açık gözlem kapanır */
   function yerDegistir(){
     if(!balkonVar||ODA.yer==='yolda')return;
@@ -798,9 +824,12 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='gozlemSurdur'){if(gozlemAcik(k)){acik=null;mesaj='Gözleme devam ediyorsun.';izlemeBaslat();ciz();}}
     else if(ey==='gozlemBirak'){izleme=null;try{const n=komut(x=>gozlemBitir(x));mesaj='Gözlemi bıraktın.'+(n?' '+n:'');ciz();}catch(x){hataGoster(x);}}
     else if(ey==='tavsiye'){try{mesaj=komut(x=>tavsiyeIste(x,id));ciz();}catch(x){hataGoster(x);}}
-    else if(ey==='girisim'){try{mesaj=komut(x=>girisimBaslat(x,b.dataset.girisim));secili=null;ajandaGun=k.tarih;ajandaHafta=0;telAlta=true;ciz();
-      /* H2-c: gönderince konuşma alta kayar. İnceleme (H2-e): odak konuşmada kalır (sıradaki açık konu, yoksa geri), şerit metni duyurulur */
-      const f=kap.querySelector('.tel [data-eylem="girisim"]:not([disabled])')||kap.querySelector('.tel .tel-geri');if(f)f.focus({preventScroll:true});
+    /* R2-e: argümanlı konu (oyuncu sorusu): önce seçim açılır (aynı konuya yeniden basınca kapanır); seçim girişimi data-arg ile başlatır */
+    else if(ey==='oyuncuSec'){const g=b.dataset.girisim;tel.oyuncuSec=tel.oyuncuSec===g?null:g;ciz(tel.oyuncuSec?'.tlf-oyuncular [data-arg]':'.tlf-konu[data-girisim="'+g+'"]');}
+    else if(ey==='oyuncuSecKapat'){const g=tel.oyuncuSec;tel.oyuncuSec=null;ciz('.tlf-konu[data-girisim="'+g+'"]');}
+    else if(ey==='girisim'){try{mesaj=komut(x=>girisimBaslat(x,b.dataset.girisim,b.dataset.arg||undefined));tel.oyuncuSec=null;secili=null;ajandaGun=k.tarih;ajandaHafta=0;telAlta=true;ciz();
+      /* H2-c: gönderince konuşma alta kayar. İnceleme (H2-e): odak konuşmada kalır (sıradaki açık konu, yoksa geri), şerit metni duyurulur. R2: konular iş panelinde */
+      const f=acik!=='telefon'?null:kap.querySelector('.tlf-is .tlf-konu:not([disabled])')||kap.querySelector('.tel [data-eylem="girisim"]:not([disabled])')||kap.querySelector('.tel .tel-geri');if(f)f.focus({preventScroll:true});
       if(typeof metinDuyur==='function')metinDuyur(mesaj);}catch(x){hataGoster(x);}}
     else if(ey==='test'){ayarlar.test=!ayarlar.test;ayarlar.kaydet();ciz('[data-eylem="test"]');}
     else if(ey==='yazi'){ayarlar.yazi=b.dataset.yazi;ayarlar.kaydet();ciz('[data-eylem="yazi"][data-yazi="'+ayarlar.yazi+'"]');}
@@ -850,7 +879,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
      kurar), odak kartta kalır. Duraklatmada kart kilitli: önizlenir, uygulanmaz (kart nedenini yüzünde yazar) */
   if(typeof kartEtkilesimKur==='function')kartEtkilesimKur(kap,{
     uygula:(id,secim)=>isiYap(id,secim),
-    onizle:(id,y)=>{if(y)onizleler[id]=y;else delete onizleler[id];},
+    /* R2-d: kart yerinde döner; telefonun iş panelinde yanındaki bağlam önizlenen cevaba göre yenilenir */
+    onizle:(id,y)=>{if(y)onizleler[id]=y;else delete onizleler[id];if(typeof tlfBaglamEsle==='function')tlfBaglamEsle(kap,k,id,y||null);},
     kilitli:()=>duraklatmaVar()});
   /* duraklatma değişince düğmeler yeniden çizilir; izlerken o ana kadarki gözlem kaydedilir. Odak kartta (ya da kenar etiketinde) ya da Duraklat
      düğmesindeyse yeniden çizimden sonra aynı yere döner: Boşluk/P ile duraklatıp devam eden klavye kullanıcısı ←/→/Enter'ı kaybetmez (inceleme 2026-10-26) */

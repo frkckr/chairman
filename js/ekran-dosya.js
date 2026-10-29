@@ -73,6 +73,8 @@
 .dsy-kunye dt{color:var(--k-soluk)}.dsy-kunye dd{margin:0}
 .dsy-sayfa h4{margin:.3em 0 0;font-size:max(var(--k-enKucuk,12px),.8em);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--k-vurgu)}
 .dsy-notlar{list-style:none;margin:0;padding:0;display:grid;gap:.55em}
+.dsy-sor{display:grid;gap:.15em;margin:0 0 .8em;padding:.45em .6em;border:1px dashed var(--k-cizgi)}
+.dsy-sor small{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.85em)}
 .dsy-not{position:relative;padding:.55em .7em .45em;background:${D.not};border:1px solid ${D.cizgi};box-shadow:.12em .18em 0 rgba(60,40,10,.15);transform:rotate(-.6deg)}
 .dsy-not:nth-child(even){transform:rotate(.5deg)}
 .dsy-not::before{content:"";position:absolute;top:-.55em;left:1.1em;width:.55em;height:1.5em;border:.16em solid ${D.atas};border-radius:.4em;background:transparent}
@@ -142,7 +144,10 @@ function dosyaGorunumu(k,D,Y){
         '<h4>Bu sezon</h4><dl class="od-dl"><dt>Maç</dt><dd>'+sy(Z.mac)+'</dd><dt>Dakika</dt><dd>'+sy(Z.dk)+'</dd><dt>Gol</dt><dd>'+Z.gol+'</dd><dt>Sarı kart</dt><dd>'+Z.sari+'</dd><dt>Kırmızı kart</dt><dd>'+Z.kirmizi+'</dd></dl>'+
         '<h4>Durum</h4><p>'+yaz(O.durum.sakat?durum(O.durum.sakat,null)+(O.durum.sakat.neden?' — '+O.durum.sakat.neden:''):O.durum.ceza?durum(null,O.durum.ceza)+(O.durum.ceza.neden?' — '+O.durum.ceza.neden:''):'Oynayabilir.')+'</p>'+
         '<h4>Sözleşme</h4><p>'+(Sz?'Bitiş '+yaz(gunAyYazi(Sz.bitis)+' '+Sz.bitis.slice(0,4))+' · aylık <span class="dsy-tutar">'+yaz(tl(Sz.maas))+'</span>':'Sözleşme kaydı yok.')+'</p>';
-      sag='<h4>Notlar</h4>'+(O.notlar.length?'<ul class="dsy-notlar">'+O.notlar.map(n=>'<li class="dsy-not">'+yaz(n.metin)+'<small>— '+yaz(n.kaynak)+' · '+yaz(Y.tarihKisa(n.tarih))+'</small></li>').join('')+'</ul>':'<p class="dsy-bos">Henüz not yok.</p>');
+      /* R2-e: “Hocaya sor ▸” oyuncu sorusunu doğrudan gönderir (telefondaki konu; cevap birkaç saat sonra gelir ve buraya not düşer) */
+      const G=typeof girisimListesi==='function'?girisimListesi(k).find(x=>x.id==='yaz.teknikDirektor.oyuncu'):null;
+      sag=(G?'<p class="dsy-sor"><button type="button" class="od-baglanti" data-eylem="girisim" data-girisim="'+yaz(G.id)+'" data-arg="'+yaz(D.seciliOyuncu)+'"'+(G.engel?' disabled':'')+'>Hocaya sor ▸</button>'+
+        '<small>'+yaz(G.engel||'Cevap birkaç saat içinde gelir; buraya not düşer.')+'</small></p>':'')+'<h4>Notlar</h4>'+(O.notlar.length?'<ul class="dsy-notlar">'+O.notlar.map(n=>'<li class="dsy-not">'+yaz(n.metin)+'<small>— '+yaz(n.kaynak)+' · '+yaz(Y.tarihKisa(n.tarih))+'</small></li>').join('')+'</ul>':'<p class="dsy-bos">Henüz not yok.</p>');
     }
   }else if(raporGor){
     const sec=R.some(x=>x.i===D.seciliRapor)?D.seciliRapor:R[0].i,O=maliRaporOkumasi(k,k.haberler[sec]),eksi=t=>t<0?' class="od-eksi"':'',tl=t=>yaz(paraYazi(t));

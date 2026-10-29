@@ -3,7 +3,12 @@
    yönün cevabına döner; bırakınca o cevap uygulanır. Sol yüz secenekler[0], sağ yüz secenekler[1]; sol ve sağ doğru/yanlış ya da renkle kodlanmaz.
    Kural içermez: içerik js/ajanda.js ajandaOnizle'den gelir; uygulama ev sahibinin tek komutudur (ajandaIsiYap(k,id,secim)). Görünüm seçenek kesmez,
    seçmez. Renkler bugünkü kâğıt dilinden (STIL.kagit, --k-*); ölçü ve hareket STIL.kagit.kart (TEST). Dosya ve telefon ölçüleri kendi dosyalarında.
-     kararKarti(k, isId, s) → html. s: {onizle:'sol'|'sag'|null, gorus, ozetsiz, kapali, dosyaBaglanti, dosyada, testSecenek, ustNotr, gozAt}
+     kararKarti(k, isId, s) → html. s: {onizle:'sol'|'sag'|null, gorus, ozetsiz, kapali, dosyaBaglanti, dosyada, testSecenek, ustNotr, gozAt, ipucu, baglamsiz}
+       R2-d (2026-10-29): s.ipucu kartın altında kullanım ipucu ve eşik çubuğu (dinlenirken nasıl cevaplanır; önizlemede Enter ile ne uygulanır;
+       sürüklerken çubuk o yöne dolar, eşikte “Bırak: <cevap>”). s.baglamsiz: yüzdeki tek satırlık bağlam çizilmez (telefonun iş paneli bağlamı
+       kartın yanında tam gösterir: baglamIcerik).
+     baglamIcerik(k, b) → html   bağlamın tam hâli (yalnız okuma): b kararBaglami çıktısı {tur:'gun'|'kasa'|'oyuncu', tarih, haricId, isaret, kulupId,
+       oyuncuId}; o günün defteri, kasa özeti ya da künye. Telefonun iş paneli kartın yanında, oda ekranının göz atma kâğıdı aynı içeriği kullanır.
        U3 bağlam (envanter 4): her yüzde tek satırlık bağlam (js/ajanda.js kararBaglami; nötr yüzde seçimsiz, cevap yüzünde o cevabın): o günün defter
        şeridi (08–20, dolu saatler, hafta içi antrenman, işaretli an amber, çakışırsa kırmızı), kasa ve 90 günün en düşüğü, oyuncunun künyesi.
        s.gozAt: bağlamın yanında göz atma bağlantısı (Defter ▸, Kasa ▸, Oyuncu ▸; data-eylem="gozAt", ev sahibi açar; maç telefonunda yok).
@@ -126,6 +131,16 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .kk-gun{grid-template-areas:"ad serit goz";align-items:center;padding:.2em .4em}
 .kk-gun>.kk-gunOzet,.kk-gun>.kk-saatler{display:none}
 }
+/* R2-d: kullanım ipucu ve eşik çubuğu (yalnız s.ipucu ile): dinlenirken nasıl cevaplanır, sürüklerken o yöne dolar, eşikte amber ve “Bırak: <cevap>” */
+.kk-ipucu{display:grid;gap:.25em;margin-top:.45em}
+.kk-esik{position:relative;height:.3em;border-radius:.2em;background:var(--k-zeminKoyu,${K.zeminKoyu});overflow:hidden}
+.kk-esik>i{position:absolute;top:0;bottom:0;left:50%;width:0;background:var(--k-soluk)}
+.kk-esik[data-yon="sol"]>i{left:auto;right:50%;width:calc(var(--kk-oran,0) * 50%)}
+.kk-esik[data-yon="sag"]>i{width:calc(var(--kk-oran,0) * 50%)}
+.kk-esik::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--k-cizgi)}
+.kk-ipucu[data-hazir] .kk-esik>i{background:var(--k-vurgu)}
+.kk-ipucu>p{margin:0;min-height:2.6em;text-align:center;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.84em);line-height:1.3}
+.kk-ipucu[data-hazir]>p{color:var(--k-yazi);font-weight:600}
 #kartDuyuru{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 `;
   document.head.appendChild(st);
@@ -198,7 +213,7 @@ function kararKarti(k,isId,s={}){
   const notr=()=>{
     let y='';
     if(!s.ozetsiz){y+='<p class="kk-konu">'+yazT(v.aciklama)+'</p>';if(s.gorus)y+=kararGorusu(k,v);}
-    y+=kartBaglam(k,is,null,s);
+    if(!s.baglamsiz)y+=kartBaglam(k,is,null,s);
     const alt=[];
     if(v.saatsiz&&!s.dosyada)alt.push('Son cevap: '+(is.tarih===k.tarih?'bugün ':gunAyYazi(is.tarih)+' ')+saatYazi(is.dakika));
     if(zamanAsimiVar(is))alt.push(zamanAsimiMetni(k,is));
@@ -209,7 +224,7 @@ function kararKarti(k,isId,s={}){
   /* cevabın yüzü: o seçeneğin kimliğiyle önizleme (süre, kaçırılacak ve cevapsız kalacak işler o cevaba göre) */
   const cevap=i=>{
     const x=S[i],o=ajandaOnizle(k,isId,x.id),xs=o.secenek||x,engel=engelleri(o);
-    let y='<p class="kk-secenek"><b>'+yazT(xs.metin)+'</b><span class="kk-sure">'+yazT(sureYazi(xs))+'</span></p>'+kartBaglam(k,is,x.id,s);
+    let y='<p class="kk-secenek"><b>'+yazT(xs.metin)+'</b><span class="kk-sure">'+yazT(sureYazi(xs))+'</span></p>'+(s.baglamsiz?'':kartBaglam(k,is,x.id,s));
     for(const a of (xs.aciklama||[]).filter(Boolean))y+='<p class="kk-bilgi">'+yazT(a)+'</p>';
     for(const e of engel)y+='<p class="kk-uyari">'+yazT(e)+'</p>';
     if(!s.kapali){
@@ -228,11 +243,15 @@ function kararKarti(k,isId,s={}){
   };
   const ust='<div class="kk-ust" aria-hidden="true"><span class="kk-ustNotr">'+yazT(s.ustNotr||v.baslik||'Karar')+'</span><span data-yon="sol">◂ '+yazT(S[0].metin)+'</span>'+
     '<span data-yon="sag">'+yazT(S[1].metin)+' ▸</span></div>';
-  let ic='<div class="kk-alan"><section class="kk-kart" data-is="'+yazT(isId)+'" data-yuz="'+gor+'" data-sol="'+yazT(S[0].id)+'" data-sag="'+yazT(S[1].id)+'" tabindex="0" role="group" aria-label="Karar"'+
+  /* R2-d: ipucu (kilitli kartta yok): dinlenirken kullanım, önizlemede Enter'ın uygulayacağı cevap; sürüklerken kartUstEsle yazar */
+  const dinlen=kartIpucuMetni(yon?S[yon==='sol'?0:1].metin:null);
+  const ipucu=s.ipucu&&!kilit?'<div class="kk-ipucu" data-dinlen="'+yazT(dinlen)+'"><div class="kk-esik" aria-hidden="true"><i></i></div><p>'+yazT(dinlen)+'</p></div>':'';
+  let ic='<div class="kk-alan"><section class="kk-kart" data-is="'+yazT(isId)+'" data-yuz="'+gor+'" data-sol="'+yazT(S[0].id)+'" data-sag="'+yazT(S[1].id)+'" data-sol-ad="'+yazT(S[0].metin)+'" data-sag-ad="'+yazT(S[1].metin)+'" tabindex="0" role="group" aria-label="Karar"'+
     (kilit?' aria-disabled="true"':'')+(F[gor].engel?' data-engel="1"':'')+'>'+ust+
     '<div class="kk-yuzler">'+kat('notr')+kat('sol')+kat('sag')+'</div><div class="kk-kenarlar">'+kenar(0)+kenar(1)+'</div>';
   if(s.dosyaBaglanti&&v.meseleId)ic+='<p class="kk-not"><button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+v.meseleId+'" data-donus="telefon">Dosyayı aç ▸</button></p>';
-  return ic+'</section></div>';
+  /* R2-d: ipucu kartın altında, kartla kaymaz (eşik çubuğu yerinde dolar; kartın boyu ipucunun yazısıyla değişmez) */
+  return ic+'</section>'+ipucu+'</div>';
 }
 
 /* ---- duyuru: kartın içinde değişen metin ekran okuyucuya duyurulmaz. Görünen yüzün metni belgede kalıcı tek canlı bölgeye (#kartDuyuru, görünmez)
@@ -249,8 +268,48 @@ const kartDuyur=c=>{const y=c&&c.querySelector('.kk-yuz');if(!y)return;metinDuyu
 function kartUstEsle(c,yon,oran,hazir){
   const U=c&&c.querySelector(':scope>.kk-ust');if(!U)return;
   const o=Math.max(0,Math.min(1,oran||0));
-  for(const s of U.children)s.style.opacity=!yon?'':s.dataset.yon===yon?Math.min(1,.25+o).toFixed(2):s.dataset.yon?'0':Math.max(0,1-2*o).toFixed(2);
+  for(const s of U.children){s.style.opacity=!yon?'':s.dataset.yon===yon?Math.min(1,.25+o).toFixed(2):s.dataset.yon?'0':Math.max(0,1-2*o).toFixed(2);
+    /* R2-d: eşik geçilince üst etikette “Bırak: <cevap>” (ok yönde kalır); öbür durumda ilk yazı */
+    if(!s.dataset.yon)continue;if(s.dataset.ilk===undefined)s.dataset.ilk=s.textContent;
+    const t=yon===s.dataset.yon&&hazir?(s.dataset.yon==='sol'?s.dataset.ilk.replace(/^◂ /,'◂ Bırak: '):'Bırak: '+s.dataset.ilk):s.dataset.ilk;if(s.textContent!==t)s.textContent=t;}
   c.toggleAttribute('data-hazir',!!(yon&&hazir));
+  /* R2-d: eşik çubuğu ve ipucu yazısı (sürüklerken; yon yoksa dinlenme hâline döner). İpucu kartın kardeşidir (.kk-alan içinde) */
+  const I=kartIpucu(c);if(!I)return;
+  I.toggleAttribute('data-hazir',!!(yon&&hazir));
+  const E=I.querySelector('.kk-esik'),P=I.querySelector('p');
+  if(E){if(yon)E.dataset.yon=yon;else delete E.dataset.yon;E.style.setProperty('--kk-oran',yon?o.toFixed(3):'0');}
+  if(P){const ad=yon?c.dataset[yon+'Ad']||'':'';P.textContent=!yon?(I.dataset.dinlen||''):hazir?'Bırakınca uygulanır.':ad+': eşiğe kadar sürükle';}
+}
+/* ---- R2-d: dinlenen kartın ipucu: önizlenen cevap varsa Enter'ın ne uygulayacağı, yoksa kullanım. kartIpucuYaz önizleme yerinde dönünce yazar ---- */
+const kartIpucuMetni=ad=>ad!==null&&ad!==undefined?'Enter: '+ad+' uygulanır · Esc: vazgeç':'Kartı sürükleyip bırak ya da ←/→ ile seç, Enter ile uygula.';
+const kartIpucu=c=>c&&c.parentElement?c.parentElement.querySelector(':scope>.kk-ipucu'):null;
+function kartIpucuYaz(c){
+  const I=kartIpucu(c);if(!I)return;
+  const y=c.dataset.yuz==='sol'||c.dataset.yuz==='sag'?c.dataset.yuz:null;I.dataset.dinlen=kartIpucuMetni(y?c.dataset[y+'Ad']||'':null);
+  const E=I.querySelector('.kk-esik'),P=I.querySelector('p');if(P&&!(E&&E.dataset.yon))P.textContent=I.dataset.dinlen;
+}
+/* ---- R2-d: bağlamın tam hâli (yalnız okuma). b: kararBaglami çıktısı ya da göz atma durumu {tur, tarih, haricId, isaret:{dakika,sure,ad}, kulupId, oyuncuId} ---- */
+function baglamIcerik(k,b){
+  if(!b)return'';
+  if(b.tur==='gun'){
+    const D=typeof gunDolulugu==='function'?gunDolulugu(k,b.tarih,b.haricId):[],ant=typeof antrenmanPenceresi==='function'?antrenmanPenceresi(k,b.tarih):null,i=b.isaret&&b.isaret.dakika>=0&&b.isaret.sure?b.isaret:null;
+    const S=D.map(x=>({a:x.dakika,b:x.dakika+x.sure,ad:x.baslik,s:x.durum!=='bekliyor'?'od-gozBitti':x.eylem==='macGunu'?'od-gozMac':''}));
+    if(ant)S.push({a:ant.bas,b:ant.bit,ad:'Antrenman',s:'od-gozAnt'});
+    const cak=i&&D.some(x=>x.durum==='bekliyor'&&x.dakika<i.dakika+i.sure&&x.dakika+Math.max(x.sure,1)>i.dakika);
+    if(i)S.push({a:i.dakika,b:i.dakika+i.sure,ad:(i.ad||'İşaretli an')+(cak?' (çakışıyor)':''),s:cak?'od-gozCakis':'od-gozIsaret'});
+    S.sort((x,y)=>x.a-y.a||(x.s==='od-gozIsaret'?1:-1));
+    return S.length?'<ul class="od-gozGun">'+S.map(x=>'<li class="'+x.s+'"><time>'+saatYazi(x.a)+(x.b>x.a?'–'+saatYazi(x.b%1440):'')+'</time><span>'+yazT(x.ad)+'</span></li>').join('')+'</ul>':'<p class="od-not">Bu gün defter boş.</p>';
+  }
+  if(b.tur==='kasa'&&b.kulupId&&typeof maliOzet==='function'){const M=maliOzet(k,b.kulupId),tl=x=>yazT(paraYazi(x).replace(/,\d\d ₺$/,' ₺'));
+    return'<dl class="od-gozKasa"><dt>Kasadaki para</dt><dd>'+tl(M.nakit)+'</dd><dt>Bekleyen gelir</dt><dd>'+tl(M.bekleyenGelir)+'</dd><dt>Bekleyen gider</dt><dd>'+tl(M.bekleyenGider)+'</dd>'+
+      '<dt>90 gün içinde en düşük</dt><dd'+(M.enDusuk<0?' class="od-uyari"':'')+'>'+tl(M.enDusuk)+(M.enDusukTarih?' <small>'+yazT(gunAyYazi(M.enDusukTarih))+'</small>':'')+'</dd>'+
+      '<dt>90 gün sonra</dt><dd>'+tl(M.son90)+'</dd><dt>Aylık maaş yükü</dt><dd>'+tl(M.maasYuku)+'</dd></dl>';}
+  if(b.tur==='oyuncu'&&typeof kadroSatirlari==='function'){const p=(k.oyuncular||{})[b.oyuncuId],r=p&&kadroSatirlari(k,p.kulupId).find(x=>x.id===p.id);
+    if(!r)return'<p class="od-not">Oyuncu bulunamadı.</p>';
+    const durum=r.sakat?'Sakat · dönüş '+gunAyYazi(r.sakat.donus):r.ceza?'Cezalı':'Hazır',tl=x=>paraYazi(x).replace(/,\d\d ₺$/,' ₺');
+    return'<dl class="od-gozKasa"><dt>Oyuncu</dt><dd>'+yazT(r.ad)+'</dd><dt>Forma</dt><dd>'+r.no+'</dd><dt>Mevki</dt><dd>'+yazT(r.mevki)+'</dd><dt>Yaş</dt><dd>'+r.yas+'</dd><dt>Bu sezon</dt><dd>'+yazT(r.mac+' maç · '+r.dk+' dk · '+r.gol+' gol')+'</dd>'+
+      '<dt>Durum</dt><dd>'+yazT(durum)+'</dd><dt>Sözleşme</dt><dd>'+(r.bitis?yazT(gunAyYazi(r.bitis))+(r.maas?' · '+yazT(tl(r.maas))+'/ay':''):'—')+'</dd></dl>';}
+  return'';
 }
 
 /* ---- damga: uygulanan kartın donmuş kopyası kartın yerinde damgalanır, kısa durur, aşağı oturarak söner (U2). Kopya kapalı gölge ağacındadır ---- */
@@ -357,6 +416,7 @@ function kartEtkilesimKur(kok,o){
     for(const f of K){const ac=f.dataset.yuz===ad;f.classList.toggle('kk-yuz',ac);if(ac)eng=f.hasAttribute('data-engel');}
     c.toggleAttribute('data-engel',eng);
     for(const b of c.querySelectorAll(KENAR))b.setAttribute('aria-pressed',b.dataset.yon===y?'true':'false');
+    kartIpucuYaz(c);   /* R2-d */
     /* U7 incelemesi: odak gizlenen yüzdeki bir düğmedeyse karta döner */
     const ae=document.activeElement;if(ae&&c.contains(ae)&&ae.closest('.kk-yuzKat')&&!ae.closest('.kk-yuz'))c.focus({preventScroll:true});
     return true;
