@@ -1,6 +1,6 @@
 # RB — Balkonda antrenmanı izlemek (uygulama planı)
 
-Durum: **onaylandı (kullanıcı, 2026-10-30: “Onayla, başla”; önerilen iki seçimle: geniş düzen yalnız balkonda, düz yakınlaşma — dürbün yok).** Dal `claude/rb-balkon` (taban `main` 1315ae5, RN dahil). Uygulama masaüstünde, Opus 5.5. Sapmalar ve denetim sonuçları en sonda.
+Durum: **onaylandı (kullanıcı, 2026-10-30: “Onayla, başla”; önerilen iki seçimle: geniş düzen yalnız balkonda, düz yakınlaşma — dürbün yok); uygulandı ve kapandı (2026-10-30 gece, masaüstü; `tur/rb-balkon`, `main`'e alınmadı).** Dal `claude/rb-balkon` (taban `main` 1315ae5, RN dahil). Uygulama masaüstünde, Opus 5.5. Sapmalar ve denetim sonuçları en sonda.
 
 Kaynak: kullanıcının 2026-10-30 notu 1 (“balkonda antrenman izlenemiyor; bir gruba, oyuncuya ya da bölgeye bakmak, yakınlaşmak”), RN planının §0 eşlemesi ([rn-uygulama.md](rn-uygulama.md)) ve YOL_HARITASI karar 68.
 
@@ -52,3 +52,23 @@ Yalnız görüntü ve sunum. **Kural, kayıt ve motor değişmez**: bakış kayd
 ## TEST değerleri
 
 Yakınlık açıları (46 / 20 / 9), geçiş hızı, bant en az ve en çok genişliği, tıklama yakınlık eşikleri. Kullanıcı deneyince ayarlanır.
+
+## Sapmalar (uygulama, 2026-10-30)
+
+- **“Sahada” iş açıkken gizli** (plan: iş açıkken de kullanılabilir). İş açıkken kâğıt perdenin arkasında ve etkileşimsizdir (U1); listeyle uzayan kâğıt solda sahayı örtüyordu. İş açıkken kâğıt kısa kalır (gün, gözlem); bakış sahaya tıklamakla değil, iş kapanınca değişir.
+- **Kayma iki yönlü:** plan yalnız işin sağı örtmesini düşünmüştü. 4:3 pencerede kalıcı olarak solda duran kâğıt da grubu örtüyordu; bakılan yer (grup, oyuncu, yer) solda kâğıdın, sağda işin arasındaki görünen bölümün ortasına gelir (`ODA.bakisKayma`, −1…1). Geniş saha kaymaz; görünen bölüm karenin beşte birinden darsa da.
+- **Masa şeridi bantlı düzende karenin ortasında** (ilk denemede şeridin sağ ucu bandın altında kalıyordu; okunurluk ölçüsü kırpılan saymadı, görüntüde görüldü).
+- **Tıklamada nokta yeniden ölçülür:** sahada figürler kayar; imleç hareketinin son ölçüsü yerine tıklanan an kullanılır (otomatik tıklamada imleç hareketi gelmeyebilir).
+- **Ad etiketi tam piksele yuvarlanır;** koşan oyuncuyla kayar (akış denetimi etikete öğeden tıklar).
+- **Tuval yükseklikten 4:3** (`.screen>canvas#view`): bant açılırken kap kayarak genişler, kare büyümez; kapanırken de yükseklik sabit (`data-bant-gecis`).
+- Yakın bakışta esneme ve koşu pozlarının kusurları (öne devrilir gibi esneme) görünür hâle geldi: antrenman canlandırması R6b-2 ve görsel turun işi; RB'de poz değişmedi.
+- Akış §34'ün “kâğıt sağ üstte” beklentisi “4:3 pencerede solda” oldu (RB-b'nin kendisi).
+
+## Sonuç ve denetimler (2026-10-30 gece, masaüstü)
+
+- `node araclar/hizli.js`: geçti (ad denetimi, `mac-deneme 4` sonuç aynı, `kariyer-deneme`).
+- `akis-deneme.py` 7, 12, 16, 23, 27, 30, 34: geçti; yeni §36 (bant, Sahada, grup ve oyuncu takibi, ad etiketinden dosya, iş açıkken kayma, Esc ve Z, sahaya tıklama, bakış kayda girmez, odaya dönüşte bant kapanır, 4:3'te kâğıt solda): geçti.
+- `okunurluk.py` tamamı (beş genişlik, yeni `balkon-sahada` dahil): bütün ekranlar eşikte; 1366 ve 1536 pencerede balkon bantlı, gövde yazısı 14,0 ve 14,2 px (bantla büyümedi).
+- `kontrol.py`: geçti. `akis-2d.py`: geçti (`.screen>canvas#view` maçta da aynı ölçü). Not: bu makinede `python -I` kullanıcı paket klasörünü kapattığı için Playwright bulunamıyor; `akis-2d.py` `-I`'sız koşuldu.
+- `yuruyus-yakala.py`: RN ile aynı (her yön 8,49 sn, ivme ≤ 5,98 m/sn², yürürken açı değişimi 0°, bitiş balkon ve masa).
+- Motor ve kural dosyası değişmedi: sezon tabanları, oturum sonu ve hız ölçümü gerekmiyor; büyük kapıda `--ayni` ile koşulur.

@@ -394,8 +394,62 @@ function odaEkraniKur(kap,oyun,ayarlar){
         O.map(x=>'<button type="button" data-eylem="gozlem" data-dk="'+x.dk+'"'+(x.o.engel.length?' disabled':'')+'>İzle: '+x.ad+'</button>').join('')+'</div>'+
         (engel?'<small class="od-uyari">'+yaz(engel)+'</small>':kisa?'<small class="od-not">'+yaz(kisa.o.kisaldi)+'; gözlem o zaman biter.</small>':'');
     }else ic='<p><b>Saha boş</b> <span class="od-not">'+(d.pencere?(k.gunIciDakika<d.pencere.bas?'Antrenman '+saatYazi(d.pencere.bas)+'\'te':'Bugünkü antrenman bitti'):'Bugün antrenman yok')+'</span></p>';
-    return'<section class="od-gozlem" aria-label="Antrenman"'+(acik?' inert':'')+'>'+(gunYazi?'<p class="od-gozlemGun">'+yaz(gunYazi)+'</p>':'')+ic+gorduk+herSaat+testAday+'</section>';   /* U1: odakta perdenin arkasında, etkileşimsiz */
+    return'<section class="od-gozlem" aria-label="Antrenman"'+(acik?' inert':'')+'>'+(gunYazi?'<p class="od-gozlemGun">'+yaz(gunYazi)+'</p>':'')+ic+sahadaBolumu()+gorduk+herSaat+testAday+'</section>';   /* U1: odakta perdenin arkasında, etkileşimsiz */
   }
+  /* RB (2026-10-30): “Sahada” — sahadaki gruplar ve oyuncular; dokununca bakış oraya (yalnız görüntü, js/balkon.js balkonBakis). Seçili grubun ya da
+     takip edilen oyuncunun grubunun oyuncuları açılır; takip edilende “Dosyası ▸” */
+  const sahaBakisVar=()=>balkonVar&&typeof balkonBakis==='function';
+  const grupAdi=g=>({kosu:BALKON.tur==='toparlanma'?'Yavaş koşu':'Isınma koşusu',rondo:'Pas çemberi',sut:'Şut çalışması',esneme:'Esneme',ayri:'Ayrı koşu',kaleciler:'Kaleciler',ekip:'Teknik ekip'})[g]||g;
+  const oyuncuEtiketi=id=>{const p=k.oyuncular[id];return p?(p.no?p.no+' · ':'')+p.ad:'';};
+  function sahadaBolumu(){
+    if(!sahaBakisVar()||ODA.yer!=='balkon'||acik)return'';   /* iş açıkken kâğıt etkileşimsiz ve kısa: liste yok (sahayı örtmesin) */
+    const G=balkonGruplari();if(!G.length)return'';
+    const b=balkonBakis(),acikGrup=b.tur==='grup'||b.tur==='oyuncu'?b.grup:null,bas=(on,s)=>' aria-pressed="'+(on?'true':'false')+'"'+(s||'');
+    return'<h5 class="od-gozlemBas">Sahada</h5><ul class="od-liste od-sahada" aria-label="Sahada">'+
+      '<li><button type="button" class="od-baglanti" data-eylem="bakSaha"'+bas(b.tur==='saha')+'>Bütün saha</button></li>'+
+      G.map(x=>'<li><button type="button" class="od-baglanti" data-eylem="bakGrup" data-grup="'+x.grup+'"'+bas(b.tur==='grup'&&b.grup===x.grup)+'>'+yaz(grupAdi(x.grup))+(x.ids.length?' · '+x.ids.length:'')+'</button>'+
+        (x.grup===acikGrup&&x.ids.length?'<ul class="od-sahadaOyuncular">'+x.ids.map(id=>'<li><button type="button" class="od-baglanti" data-eylem="bakOyuncu" data-oyuncu="'+id+'"'+bas(b.tur==='oyuncu'&&b.id===id)+'>'+yaz(oyuncuEtiketi(id))+'</button>'+
+          (b.tur==='oyuncu'&&b.id===id?' <button type="button" class="od-baglanti od-sahadaDosya" data-eylem="gozlemOyuncu" data-oyuncu="'+id+'">Dosyası ▸</button>':'')+'</li>').join('')+'</ul>':'')+'</li>').join('')+
+      '</ul><small class="od-not">Sahaya tıkla ya da tekerlekle yaklaş · Z: yakınlık · Esc: geri</small>';
+  }
+  /* bakış değişince yalnız antrenman kâğıdı ve takip etiketi yenilenir; odak aynı düğmeye döner */
+  function sahadaGuncelle(odakSec){
+    sahaBakisSon=balkonBakis();
+    const g=kap.querySelector('.od-gozlem');if(!g)return;
+    const ae=document.activeElement,s=odakSec||(ae&&g.contains(ae)&&ae.dataset.eylem?'[data-eylem="'+ae.dataset.eylem+'"]'+(ae.dataset.grup?'[data-grup="'+ae.dataset.grup+'"]':'')+(ae.dataset.oyuncu?'[data-oyuncu="'+ae.dataset.oyuncu+'"]':''):null);
+    g.outerHTML=gozlemSeridi();
+    if(s){const f=kap.querySelector('.od-gozlem '+s);if(f)f.focus({preventScroll:true});}
+  }
+  function sahaBak(h,odakSec){
+    if(!sahaBakisVar())return;
+    const b=balkonBakis();if(h.tur==='yer'&&h.kademe===undefined&&b.kademe>0)h=Object.assign({},h,{kademe:b.kademe});
+    balkonBakis(h);sahadaGuncelle(odakSec);
+  }
+  /* takip edilen oyuncunun başının üstünde ad etiketi (dokununca dosyası) ve işin örttüğü yere göre bakışın kayması; her karede */
+  let sahaBakisSon=null;
+  function sahaKare(){
+    requestAnimationFrame(sahaKare);
+    if(!sahaBakisVar()||kap.hidden)return;
+    const balkonda=ODA.yer==='balkon',cv=document.getElementById('view');
+    let et=kap.querySelector('.od-takip');
+    const kr=kap.getBoundingClientRect(),cr=cv?cv.getBoundingClientRect():kr;
+    /* RB: solda antrenman kâğıdı, sağda iş karenin bir yanını örtüyorsa grup, oyuncu ya da yer görünen bölümün ortasına gelir (geniş saha kaymaz;
+       görünen bölüm karenin beşte birinden darsa da kaymaz: dar karede iş tam genişlikte) */
+    const b=balkonda?balkonBakis():null;
+    let a=0,z=1;
+    if(b&&b.tur!=='saha'){
+      const g=kap.querySelector('.od-gozlem');if(g&&g.offsetWidth){const r=g.getBoundingClientRect();if(r.left<cr.left+cr.width/2)a=Math.max(a,(r.right-cr.left)/cr.width);}
+      const o=acik&&kap.querySelector('section.odk:not(.odk-cikis)');if(o){const r=o.getBoundingClientRect();z=Math.min(z,(r.left-cr.left)/cr.width);}
+      a=clamp(a,0,1);z=clamp(z,0,1);}
+    ODA.bakisKayma=z-a>=0.2&&(a>0.02||z<0.98)?a+z-1:0;
+    if(b&&b!==sahaBakisSon&&!acik)sahadaGuncelle();   /* bakış kendiliğinden değiştiyse (takip edilen sahadan çıktı) */
+    const p=b&&b.tur==='oyuncu'&&!acik?balkonTakipEkrani():null;
+    if(!p){if(et)et.hidden=true;return;}
+    if(!et){et=document.createElement('button');et.type='button';et.className='od-takip od-baglanti';et.dataset.eylem='gozlemOyuncu';kap.appendChild(et);}
+    if(et.dataset.oyuncu!==b.id){et.dataset.oyuncu=b.id;et.textContent=oyuncuEtiketi(b.id)+' ▸';et.title='Oyuncunun dosyası';}
+    et.hidden=false;et.style.left=Math.round(cr.left-kr.left+p.x*cr.width)+'px';et.style.top=Math.round(cr.top-kr.top+p.y*cr.height)+'px';
+  }
+  if(typeof requestAnimationFrame==='function')requestAnimationFrame(sahaKare);
   /* sıradaki durak ve alt şerit */
   function durakYazi(o){
     const t=anTarih(o.hedef),an=tarihKisa(t.tarih)+' '+saatYazi(t.dakika);
@@ -515,6 +569,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
         if(q)D.oyuncular[id]={ten:q.ten,sac:q.sac,sacRenk:q.sacRenk,boy:q.boy,yapi:q.yapi,krampon:q.krampon,biyik:q.biyik,sakal:q.sakal,no:q.no};}}
       balkonDurum({antrenman:!!D&&(her||!!p&&dk>=p.bas&&dk<p.bit),dakika:dk,duzen:D||undefined});}
     kap.dataset.yer=balkonVar?ODA.yer:'masa';   /* U6: balkonda yarım odak (CSS) */
+    /* RB: geniş pencerede balkonun kâğıt bandı; balkona yürürken açılır, odaya yürürken kapanır (js/sunum-durumu.js) */
+    if(typeof ekranBantIste==='function')ekranBantIste(balkonVar&&(ODA.yer==='balkon'||ODA.yer==='yolda'&&!!ODA.yol&&ODA.yol.hedef==='balkon'));
     odaDurum({haber:haberSayisi(),isler:bekleyenIsSayisi(),dosyaSayi:acikMeseleler().length,dosya:acikMeseleler().length>0||raporlar().length>0||kadroAcilir(),gun:String(g),ay:AYLAR[a-1].slice(0,3),gunAdi:gunAdi(k.tarih).slice(0,3),dakika:dk,
       gazete:!!iz.sayi||!!iz.gazete||!!iz.kart,gazeteYeni:iz.gazeteYeni||iz.yeniHaber>0,kart:!!iz.kart,iskele:iz.iskele,panoNotu:iz.panoNotu});
     odaOdak(acik in NESNE?acik:null);
@@ -825,7 +881,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(!b){
       /* odaya tıklama: imlecin altındaki nesne açılır; boş yere tıklamak paneli kapatır; yürürken tıklamak yürüyüşü bitirir */
       if(e.target.dataset&&e.target.dataset.perde){kapat();return;}
-      if(e.target===kap){if(balkonVar&&ODA.yer==='yolda'){if(!duraklatmaVar())odaYuruAtla();return;}const ad=ODA.uzerinde;if(ad==='kapi'){if(!duraklatmaVar())yerDegistir();}else if(ad)panelAc(ad);else if(acik)kapat();else ciz();}
+      if(e.target===kap){if(balkonVar&&ODA.yer==='yolda'){if(!duraklatmaVar())odaYuruAtla();return;}
+        if(ODA.yer==='balkon'){const n=kareNoktasi(e);odaIsaret(n?n.x:null,n?n.y:null);}   /* RB: sahada figürler kayar; tıklanan an ölçülür */
+        const ad=ODA.uzerinde;if(ad==='kapi'){if(!duraklatmaVar())yerDegistir();}else if(ad==='saha'){if(ODA.sahaIsaret)sahaBak(ODA.sahaIsaret);}else if(ad)panelAc(ad);else if(acik)kapat();else ciz();}
       return;
     }
     if(b.disabled)return;
@@ -896,6 +954,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='gozlemSurdur'){if(gozlemAcik(k)){acik=null;mesaj='Gözleme devam ediyorsun.';izlemeBaslat();ciz();}}
     /* R5: gördüğün sinyalden oyuncunun dosyası (Kadro sekmesinde oyuncu; okuma) */
     else if(ey==='gozlemOyuncu'){const o=b.dataset.oyuncu;panelAc('dosya');if(acik==='dosya'){dosyaKadro=true;dosyaRapor=false;dosyaArsiv=false;seciliOyuncu=o;ciz('[data-eylem="kadroDon"]');}}
+    /* RB: “Sahada” listesinden bakış (yalnız görüntü; Duraklat'ta da) */
+    else if(ey==='bakSaha')sahaBak({tur:'saha'});
+    else if(ey==='bakGrup')sahaBak({tur:'grup',grup:b.dataset.grup});
+    else if(ey==='bakOyuncu')sahaBak({tur:'oyuncu',id:b.dataset.oyuncu},'[data-eylem="bakOyuncu"][data-oyuncu="'+b.dataset.oyuncu+'"]');
     else if(ey==='gozlemBirak'){izleme=null;try{const n=komut(x=>gozlemBitir(x));mesaj='Gözlemi bıraktın.'+(n?' '+n:'');ciz();}catch(x){hataGoster(x);}}
     else if(ey==='tavsiye'){try{mesaj=komut(x=>tavsiyeIste(x,id));ciz();}catch(x){hataGoster(x);}}
     /* R2-e: argümanlı konu (oyuncu sorusu): önce seçim açılır (aynı konuya yeniden basınca kapanır); seçim girişimi data-arg ile başlatır */
@@ -920,14 +982,29 @@ function odaEkraniKur(kap,oyun,ayarlar){
       dosyaSira=[];dosyaArsiv=false;dosyaSonuc=null;donusYeri=null;dosyaKadro=false;seciliOyuncu=null;ajandaGun=null;ajandaHafta=0;tel.ekran='ana';tel.kisi=null;telLigSifirla();yeniIsaret=new Set();ciz('.od-ana');}
     else if(ey==='bozukYeni'){mesaj=oyun.bozuguSaklaVeBasla();k=oyun.kariyer;ciz('.od-ana');}
   });
-  /* imleç odadaki nesnenin üzerindeyken çerçevesi yanar ve el imleci görünür */
+  /* imleç odadaki nesnenin üzerindeyken çerçevesi yanar ve el imleci görünür. RB: koordinat 3B karenin kendisinden (bantlı düzende kare kabın solundadır); karenin dışı null */
+  const kareNoktasi=e=>{const c=document.getElementById('view'),r=(c||kap).getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+    return x<0||x>1||y<0||y>1?null:{x:x*2-1,y:-(y*2-1)};};
   kap.addEventListener('change',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('od-iceDosya'))kayitDosyasiSecildi(e.target);});
   kap.addEventListener('pointermove',e=>{
     if(e.target!==kap){if(ODA.uzerinde){odaIsaret(null);kap.style.cursor='';}return;}
-    const r=kap.getBoundingClientRect(),ad=odaIsaret((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));
-    kap.style.cursor=ad?'pointer':'';kap.title=ad==='kapi'?'Balkona çık (5)':ad?NESNE[ad]:'';
+    const n=kareNoktasi(e),ad=n?odaIsaret(n.x,n.y):odaIsaret(null);
+    /* RB: sahada grup ve oyuncu el imleci ve adıyla, boş zemin büyüteçle */
+    const h=ad==='saha'?ODA.sahaIsaret:null;
+    kap.style.cursor=h&&h.tur==='yer'?'zoom-in':ad?'pointer':'';
+    kap.title=ad==='kapi'?'Balkona çık (5)':h?(h.tur==='oyuncu'?oyuncuEtiketi(h.id):h.tur==='grup'?grupAdi(h.grup):'Buraya bak'):ad?NESNE[ad]:'';
   });
   kap.addEventListener('pointerleave',()=>{odaIsaret(null);kap.style.cursor='';});
+  /* RB: balkonda tekerlek bir kademe yaklaşır ya da uzaklaşır (genişten imlecin altındaki yere); dokunmatik yüzeyin art arda olayları tek adım sayılır */
+  let tekerSon=0;
+  kap.addEventListener('wheel',e=>{
+    if(!sahaBakisVar()||ODA.yer!=='balkon'||acik||e.target!==kap||!e.deltaY)return;
+    e.preventDefault();const t=performance.now();if(t-tekerSon<220)return;tekerSon=t;
+    const n=kareNoktasi(e),yon=e.deltaY<0?1:-1;if(!n)return;
+    if(yon>0&&balkonBakis().tur==='saha'){const h=balkonIsaret(n.x,n.y);
+      if(h){sahaBak(h.tur==='yer'?Object.assign({kademe:1},h):h);return;}}
+    balkonYakinlik(yon);sahadaGuncelle();
+  },{passive:false});
   addEventListener('keydown',e=>{
     if(kap.hidden||oyun.bozukHata||e.ctrlKey||e.altKey||e.metaKey)return;
     const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;
@@ -939,6 +1016,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
        Masada bekleyen İlerle onayını da bırakır */
     else if(e.code==='Escape'&&acik){e.preventDefault();odakEsc();}
     else if(e.code==='Escape'&&onay){e.preventDefault();onay=null;ciz('.od-ana');}
+    /* RB: balkonda Esc bakışı bir adım genişletir (oyuncu → grubu → saha), Z yakınlık kademesini döndürür */
+    else if(e.code==='Escape'&&sahaBakisVar()&&ODA.yer==='balkon'&&balkonBakisGeri()){e.preventDefault();sahadaGuncelle();}
+    else if(e.code==='KeyZ'&&sahaBakisVar()&&ODA.yer==='balkon'&&!acik&&!e.repeat){e.preventDefault();balkonYakinlik(0);sahadaGuncelle();}
     /* S-c: oyuncu dosyasında [ ve ] önceki ve sonraki oyuncu (kadro listesinin sırası); kadro listesinde bir şey yapmaz */
     /* S-e: gazetede [ ve ] önceki ve sonraki sayı */
     else if((e.code==='BracketLeft'||e.code==='BracketRight')&&acik==='gazete'){const t=gazeteGosterilen();if(!t)return;const y=tarihEkle(t,e.code==='BracketLeft'?-1:1);

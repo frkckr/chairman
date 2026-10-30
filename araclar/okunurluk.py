@@ -6,7 +6,8 @@ Ekranlar: oda (masa), defter, telefonun ana ekranı, konuşma (R2: iki sütun, t
 oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu kartı. R3: Canlı Skor sayfaları sürüm 11 örnek kaydından
 (araclar/ornekler/kayit-s11-hafta14.json): hafta görünümü, maç sayfası (Özet, İstatistikler, Kadrolar), oyuncu sayfası, takım sayfası (Genel, Kadro).
 R4: Transfer masası (Pano, Piyasa, oyuncu kâğıdı) ve transfer zincirinin aday ve pazarlık kartı (yapay haftalarla 5 Ocak'a, oyunun komut yoluyla).
-R5: balkon (antrenman kâğıdı: günün türü, gözlem, Gördüklerin) ve balkonda sağ yarıda açılan oyuncu dosyası.
+R5: balkon (antrenman kâğıdı: günün türü, gözlem, Gördüklerin) ve balkonda sağ yarıda açılan oyuncu dosyası. RB: “Sahada” listesi ve takip edilen
+oyuncunun ad etiketi (balkon-sahada); 1366 ve 1536 pencerede balkon kâğıt bandıyla.
 R6: sponsor pazarlık kartı (1 Şubat ay başı, Görüşelim'den sonra; oyunun komut yoluyla).
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
@@ -208,7 +209,7 @@ async def sahneler_transfer(pg, olc):
         await akis.masaya_don(pg)
 
 
-BALKON_SAHNELER = {"balkon", "balkon-dosya"}
+BALKON_SAHNELER = {"balkon", "balkon-sahada", "balkon-dosya"}
 
 
 async def sahneler_balkon(pg, olc):
@@ -219,6 +220,11 @@ async def sahneler_balkon(pg, olc):
     await akis.oda_yenile(pg)
     await akis.yokla(pg, "() => ODA.yer === 'balkon'", 60)
     await olc("balkon")
+    # RB: “Sahada” — pas çemberine bakış, ilk oyuncunun takibi (liste açık, ad etiketi sahada); geniş pencerede kâğıt bantta
+    await tikla(pg, '#oda [data-eylem="bakGrup"][data-grup="rondo"]')
+    await tikla(pg, '#oda [data-eylem="bakOyuncu"]')
+    await pg.wait_for_timeout(1200)
+    await olc("balkon-sahada")
     await tikla(pg, '#oda .od-gorduklerin [data-eylem="gozlemOyuncu"]')
     await pg.wait_for_selector("#oda .dsy-baslik", timeout=10000)
     await olc("balkon-dosya")

@@ -392,7 +392,12 @@ const STIL={
     /* 2.8D: saha konumu (saha) ve bakış tariften hesaplanır (js/balkon.js BLK_STAT); korkulukZ balkonun ön kenarı */
     korkulukZ:-5.7,
     /* balkon masası [x, z] (2.8R): telefon üstündedir */
-    telefonMasa:[-0.72,-5.48],duvar:0xc9bfae,iskele:0x8a8f96,iskeleBranda:0x3d6a8a,iskeleTorba:0xc9b98f,iskeleSerit:0xd8402a},
+    telefonMasa:[-0.72,-5.48],
+    /* RB (2026-10-30): balkondan bakış (js/balkon.js balkonBakis). yakinlik: kademelerin görüş açısı (geniş = aci, grup, yakın); bakisHiz: üstel
+       yaklaşma (1/sn; ~0,6 sn'de yerine oturur); basHiz: başın en çok dönüşü (°/sn, RN-b ile aynı); isaret: tıklamada figürün üstü ve grubun
+       yakını (karenin yarı yüksekliği biriminde, en az); bant: geniş pencerede karenin yanındaki kâğıt bandı (px en az; karenin en çok payı). TEST */
+    yakinlik:[46,20,9],bakisHiz:5,basHiz:140,isaret:{figur:0.035,grup:0.12},bant:{enAz:300,enCok:0.55},
+    duvar:0xc9bfae,iskele:0x8a8f96,iskeleBranda:0x3d6a8a,iskeleTorba:0xc9b98f,iskeleSerit:0xd8402a},
 
   /* Açık renkli yönetim arayüzü (js/ekran-oda.js): kâğıt zemin, koyu okunur metin, ahşap çizgi, ölçülü kulüp rengi.
      Ekran bu renkleri CSS değişkeni (--k-ad) olarak yazar. yaziBoyu: karenin genişliğine oranla yazı (cqw); U0'dan (2026-10-28) beri bütün HTML katmanlarının
