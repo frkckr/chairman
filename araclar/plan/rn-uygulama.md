@@ -1,6 +1,6 @@
 # RN — Kullanıcı notları: telefon, yürüyüş, ekran ölçüsü (uygulama planı)
 
-Durum: **onaylandı (kullanıcı, 2026-10-30: “A ile başla”; yürüyüş seçenek A); uygulanıyor.** Dal `claude/rn-notlar` (taban `main` a7a3489), etiket `tur/rn-notlar`. Uygulama Opus 5.5. Sohbette “R-not” diye anıldı.
+Durum: **onaylandı (kullanıcı, 2026-10-30: “A ile başla”; yürüyüş seçenek A); uygulandı ve kapandı (2026-10-30, dizüstü; `tur/rn-notlar`).** Sapmalar ve denetim sonuçları en sonda. `main`'e RB ile birlikte, masaüstündeki büyük kapıdan sonra. Dal `claude/rn-notlar` (taban `main` a7a3489), etiket `tur/rn-notlar`. Uygulama Opus 5.5. Sohbette “R-not” diye anıldı.
 
 Kaynak: kullanıcının 2026-10-30 notları (yedi madde; oyunu açıp Ayarlar › Geliştirici'de “Balkonda her saat antrenman (TEST)” ile balkona baktıktan sonra), Claude'un kodla ve tarayıcıda (1366×650, 1366×768, 1536×740, 1536×864 ve geniş pencere) doğruladığı inceleme ve kullanıcının sıra onayı (“Onayla, planla”; YOL_HARITASI karar 68). Antrenman araştırması ayrı kayıttadır: [antrenman-arastirma.md](antrenman-arastirma.md).
 
@@ -108,4 +108,21 @@ RN-a 2–3 sa, RN-b 3–4 sa, RN-c 1–2 sa, belgeler ve denetim 1–2 sa; topla
 
 ## Sapmalar
 
-(Uygulamada yazılır.)
+1. **Yürüyüşte konumlar ağırlıkla karıştırılmadı, üst üste eklendi.** İlk sürüm örtüşen evreleri ağırlıkla karıştırıyordu; geçişte gözün ivmesi 8 m/sn²'ye çıktı (eşik 6). Kalkış, yürüyüş ve oturma artık yolun uçlarına göre öteleme olarak toplanır: her biri kendi hız profiliyle, toplam hız ve ivme sürekli (5,9 m/sn²).
+2. **Dönüşte son metrede bakış masaya değil yolun ilerisine.** Masanın yanından geçerken ona bakmak başı 175°/sn döndürüyordu; masaya dönüş oturmanın içinde, yumuşak (en çok ~142°/sn). Baş dönüşü telefona uzanmayla başlar, kalkışın sonunda biter.
+3. **Süre 8,49 sn** (planda 7–8,5; eskiden 12,34): yol 7 m ve iki keskin dönüş; beş ayar seti denendi, daha kısası ivme eşiğini aştı. Yürüme hızı 1,5 → 1,6 m/sn, dönüşte yavaşlama 0,35 → 0,2, ivme 1,1 → 1,3; kapı eşiğinde en çok 1,05 m/sn.
+4. **Telefon geçişine güvenlik süresi.** Tarayıcı kare işleyemediğinde (başsız deneme, gizli pencere, yavaş makine) CSS geçişi “bekliyor” kalıp telefon ötelenmiş, panel saydam duruyordu; süre dolunca (0,36 sn) geçiş kesilir. Başsız Chromium'da geçişin kendisi gözlenemedi; akış 30 başlangıçtaki ötelemeyi ve sondaki yeri denetler.
+5. **Ekran ölçüleri** planın tahmininden biraz büyük (pay 32 px): 1366×650 → 825×618, 1536×740 → 944×708, 1920×950 → 1225×918; maçta 1536×740 → 852×639. Bülten için şeridin varsayılan boyu ölçülen 52 px (“Maça geç”te sıçrama yok).
+6. **Akış denemesinin pencereleri:** dar kare (640 px) denetimleri 800×600 yerine 672×600'de (yeni payla 800×600 penceresi 757 px kare verir); 1180×700 (680 px kare) → 1180×540. 3. bölümün yerleşim ölçümü panelsiz ekranda telefonun ortada olmasını bekler ve kayma geçişinin bitmesini bekler. 30 ve 34'te balkona yürüyüş tıklayarak atlanır (`balkona_atla`; yürüyüşün kendisi §15'te — dizüstünde gerçek zaman beklemesi B42).
+7. **Okunurluk aracı** pencere tablosu yeni formüle göre (kareler 640, 800, 1186 aynı) ve iki dizüstü penceresi (1366×650, 1536×740) eklendi; **yürüyüş ölçüm aracı** örtüşen pencereleri okur, bakışın açısal hızını, yürürken eğimi ve görüş açısını, elin görünme süresini ölçer.
+
+**Denetim sonuçları (dizüstü, 2026-10-30):**
+
+| Denetim | Sonuç |
+|---|---|
+| `hizli.js` | geçti (ad denetimi; motor ve kural dosyası değişmedi) |
+| `yuruyus-yakala.py` | gidiş ve dönüş 8,49 sn (önce 12,34); ivme 5,88 / 5,98 m/sn² (önce 3,6); hız sıçraması 0,088 m/sn; 11 adım; baş dönüşü 37 / 142°/sn; yürürken eğim −12,9° / −10,6°; görüş açısı yürürken sabit; el her uçta 0,55 sn |
+| `akis-deneme.py` 1, 3, 19, 21, 23, 26, 27, 30, 34 | geçti |
+| `akis-deneme.py` 15, 12 (yürüyüş, gerçek zaman) | dizüstünde koşmaz (B42); masaüstünde büyük kapıda |
+| `okunurluk.py` | beş pencerede bütün sahneler eşikte |
+| `kontrol.py` | geçti (sayfa ve betik hatası yok; görüntü incelendi) |

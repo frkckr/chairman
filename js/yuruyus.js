@@ -14,6 +14,9 @@
      yrYolKur(noktalar, ayar)         noktalardan geçen yuvarlatılmış yolun zaman çizelgesi. ayar: {hiz, viraj, ivme, merdiven: [[bas, son], …]
                                       (yol metresi), merdivenHiz, basamak: {derinlik, yukseklik}}. Döner: {egri, Q, L, D, VZ, FZ, DTS, yuru (sn)}.
                                       Merdivende hız düşer, adım basamaktır (her adımda bir basamak).
+                                      RN-b (2026-10-30; isteğe bağlı, verilmezse davranış aynı): yavas: [{p: [x, y, z], r, v}] — p'ye yatayda r metreden
+                                      yakın yerde hız en çok v (kapı eşiği); adimOyna, adimDalga: adım boyu yol boyunca ±adimOyna oranında, adimDalga
+                                      metrelik dalgayla değişir (adımlar birebir eşit olmaz; belirlenimci).
      yrAra(D, x)                      sıralı dizide x'in aralığı ve kesri
      yrYolda(Y, d, P, yon)            yolda d metredeki nokta ve yön
      yrIleri(Y, d, cikis, ileri)      yürürken bakış: yolun ileri metre (varsayılan 2,5) ilerisine, biraz aşağı
@@ -52,6 +55,8 @@ function yrElYolu(s,bas,hedef,out){
 /* ---- yol planlayıcısı (N11'de js/oda.js'ten ortaklaştı; sayısal davranış aynı) ---- */
 function yrAra(D,x){let a=0,b=D.length-1;if(x<=D[0])return[1,0];if(x>=D[b])return[b,1];while(b-a>1){const m=(a+b)>>1;if(D[m]<=x)a=m;else b=m;}return[b,(x-D[a])/Math.max(1e-9,D[b]-D[a])];}
 const yrMerdivende=(A,d)=>!!A.merdiven&&A.merdiven.some(([a,b])=>d>=a&&d<=b);
+/* RN-b: noktaya yakın yerde hız sınırı (kapı eşiği); yoksa sınırsız */
+const yrYavas=(A,q)=>{let v=Infinity;if(A.yavas)for(const Y of A.yavas){if(Math.hypot(q.x-Y.p[0],q.z-Y.p[2])<=Y.r)v=Math.min(v,Y.v);}return v;};
 function yrYolKur(W,A){
   /* eğri: konum ve yön doğrudan eğriden okunur (köşesiz); Q sık örneklenir (hız ve zaman çizelgesi için; kare başına birden çok nokta) */
   const egri=new THREE.CatmullRomCurve3(W,false,'centripetal');egri.arcLengthDivisions=1200;
@@ -61,7 +66,7 @@ function yrYolKur(W,A){
   /* hız: dönüşün keskinliğiyle (yön değişimi / metre) azalır; merdivende daha yavaş */
   for(let i=0;i<n;i++){const a=Q[Math.max(0,i-K)],b=Q[i],c=Q[Math.min(n-1,i+K)],u1=b.clone().sub(a),u2=c.clone().sub(b);
     const e=u1.lengthSq()>1e-8&&u2.lengthSq()>1e-8?u1.angleTo(u2)/Math.max(0.05,L[Math.min(n-1,i+K)]-L[Math.max(0,i-K)]):0;
-    V.push(Math.min(A.hiz/(1+A.viraj*e),yrMerdivende(A,L[i])?A.merdivenHiz:Infinity));}
+    V.push(Math.min(A.hiz/(1+A.viraj*e),yrMerdivende(A,L[i])?A.merdivenHiz:Infinity,yrYavas(A,b)));}
   /* ivme sınırı: durmadan başlar, durarak biter; dönüşe girerken önceden yavaşlar, çıkarken yeniden hızlanır (ileri ve geri geçiş) */
   V[0]=V[n-1]=0.04;
   for(let i=1;i<n;i++)V[i]=Math.min(V[i],Math.sqrt(V[i-1]*V[i-1]+2*A.ivme*(L[i]-L[i-1])));
@@ -71,7 +76,8 @@ function yrYolKur(W,A){
   const DTS=1/240,D=[0],VZ=[0],FZ=[0],B=A.basamak,mAdim=B?Math.hypot(B.derinlik,B.yukseklik):0;let d=0,v=0;
   while(d<top-1e-7&&D.length<240*40){const [i,s]=yrAra(L,d),vt=V[i-1]+(V[i]-V[i-1])*s;
     v=Math.max(0.03,v+Math.max(-1.6*A.ivme*DTS,Math.min(A.ivme*DTS,vt-v)));d=Math.min(top,d+v*DTS);
-    D.push(d);VZ.push(v);FZ.push(FZ[FZ.length-1]+v*DTS/(B&&yrMerdivende(A,d)?mAdim:yrAdimBoyu(v)));}
+    const oyna=A.adimOyna?1+A.adimOyna*Math.sin(2*Math.PI*d/(A.adimDalga||3.7)):1;   /* RN-b: adım boyu yol boyunca hafifçe değişir */
+    D.push(d);VZ.push(v);FZ.push(FZ[FZ.length-1]+v*DTS/(B&&yrMerdivende(A,d)?mAdim:yrAdimBoyu(v)*oyna));}
   return{egri,Q,L,D,VZ,FZ,DTS,yuru:(D.length-1)*DTS};
 }
 function yrYolda(Y,d,P,yon){const u=Math.min(1,Math.max(0,d/Y.L[Y.L.length-1]));Y.egri.getPointAt(u,P);Y.egri.getTangentAt(u,yon);}

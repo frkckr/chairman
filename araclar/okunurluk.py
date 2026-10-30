@@ -35,8 +35,10 @@ _spec.loader.exec_module(akis)
 sys.argv = _argv
 
 GOVDE_EN_AZ, METIN_EN_AZ = 14.0, 12.0
-# kare genişliği → pencere (index.html: kare = min(pencere − 32, max(640, (yükseklik − 190) · 4/3)))
-GENISLIKLER = {640: (800, 620), 800: (832, 800), 1186: (1218, 1080)}
+# kare genişliği → pencere (index.html: kare = min(pencere − 32, max(640, (yükseklik − pay) · 4/3)); RN-c (2026-10-30): pay ölçülür, odada 32 px
+# (js/sunum-durumu.js ekranPayGuncelle; eskiden sabit 190). Üç kare eskisiyle aynı genişlikte kalır (karşılaştırma bozulmaz); iki dizüstü penceresi eklendi:
+# 1366×650 (1366×768 ekran, tarayıcı ve görev çubuğu düşülmüş) → kare 825, 1536×740 (1920×1080 %125) → kare 944
+GENISLIKLER = {640: (672, 560), 800: (832, 700), 825: (1366, 650), 944: (1536, 740), 1186: (1218, 1000)}
 
 OLC_JS = r"""() => {
   const E = document.getElementById('screen'), R = E.getBoundingClientRect();

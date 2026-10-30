@@ -186,6 +186,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   const telAnahtar=()=>tel.ekran+(tel.ekran==='skor'?':'+(tel.skorSekme||'maclar')+':'+(tel.hafta||'')+(telIkiSutun()?'':telSayfaAnahtar()):tel.ekran==='konusma'?':'+tel.kisi:'');
   /* R2 (2026-10-29): odada iki sütun (solda telefon, sağda iş paneli); balkonda tek telefon (iş sağ yarıda, R5) */
   const telIkiSutun=()=>!(balkonVar&&ODA.yer==='balkon');
+  const TLF_KAYMA_SN=0.28;   /* RN-a: telefonun ortadan sola (ya da geri) kayması (sn; TEST) */
   /* R2-b: konuşma başına okuma yeri (oturumda): {y, alt}. Konuşma yeniden açılınca yer geri gelir; arada yeni mesaj geldiyse ilk yeni mesaja kayar.
      telAcYeri: bu çizimde uygulanacak açılış kuralı {kisi, yeni} (konusmaAc kurar) */
   const telOkuma=new Map();let telAcYeri=null;
@@ -197,8 +198,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
   function telefonPaneli(){
     const acilis=telGecis;telGecis=false;
     if(!telIkiSutun())return telefonCiz(k,tel,{onizleler,testSecenek,yeniler:yeniIsaret,acilis,gozAt:true});
-    /* R2-a: telefon yalnız konuşmayı taşır; kararlar, bekleme ve konular sağdaki iş panelinde (konuşma dışında Bekleyenler). Sekme sırası telefon, sonra panel */
-    return'<div class="tlf"><div class="tlf-sol">'+telefonCiz(k,tel,{onizleler,testSecenek,yeniler:yeniIsaret,acilis,ikiSutun:true})+'</div>'+telefonIsPaneli(k,tel,{onizleler,testSecenek})+'</div>';
+    /* R2-a: telefon yalnız konuşmayı taşır; kararlar, bekleme ve konular sağdaki iş panelinde. Sekme sırası telefon, sonra panel.
+       RN-a (2026-10-30): panel yalnız iş varken; yoksa telefon kabın ortasında (.tlf-yalniz). Geçiş ciz()'de (telefon kayar, panel belirir) */
+    const panel=telefonIsPaneli(k,tel,{onizleler,testSecenek});
+    return'<div class="tlf'+(panel?'':' tlf-yalniz')+'"><div class="tlf-sol">'+telefonCiz(k,tel,{onizleler,testSecenek,yeniler:yeniIsaret,acilis,ikiSutun:true})+'</div>'+panel+'</div>';
   }
   function telAnaEkran(){tel.ekran='ana';tel.kisi=null;tel.oyuncuSec=null;tel.konuMenu=false;telLigSifirla();onay=null;telGecis=true;ciz('.tel-uygMesaj');}
   /* konuşmayı açınca: o kişinin konularındaki yeni mesajlar görüldü (zamanı ve geçmişi değiştirmez) */
@@ -548,6 +551,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const eskiCevap=telKaydirma!==null?kap.querySelector('.tel-cevap'):null,cevapKaydirma=eskiCevap?eskiCevap.scrollTop:0;
     /* R2: iş panelinin okuma yeri aynı telefon görünümünde korunur; R2-b: konuşmadan çıkarken (ya da yeniden çizerken) o konuşmanın yeri saklanır */
     const eskiIs=telKaydirma!==null&&cizilenSayfa===telSayfaAnahtar()?kap.querySelector('.tlf-is'):null,isKaydirma=eskiIs?eskiIs.scrollTop:0;
+    /* RN-a: telefonun çizimden önceki yeri ve panelin varlığı (aynı telefon kabı yeniden çizilirken; ilk açılışta odak belirmesi yeter) */
+    const eskiCihaz=cizilenPanel==='telefon'&&acik==='telefon'?kap.querySelector('.tlf-sol .tel'):null,eskiCihazX=eskiCihaz?eskiCihaz.getBoundingClientRect().left:null,
+      eskiPanelVar=!!kap.querySelector('.tlf .tlf-is');
     if(eskiTel&&cizilenPanel==='telefon'&&cizilenTel&&cizilenTel.startsWith('skor')){const ei=kap.querySelector('.tlf-is');
       telSkorYerleri.set(cizilenTel,eskiTel.scrollTop);if(ei&&cizilenSayfa)telSkorYerleri.set('panel'+cizilenSayfa,ei.scrollTop);}
     if(eskiTel&&cizilenPanel==='telefon'&&cizilenTel&&cizilenTel.startsWith('konusma:'))
@@ -608,6 +614,15 @@ function odaEkraniKur(kap,oyun,ayarlar){
         else if(o&&!o.alt)tg.scrollTop=o.y;else tg.scrollTop=tg.scrollHeight;}
       else if(telKaydirma!==null){tg.scrollTop=telKaydirma;const tc=kap.querySelector('.tel-cevap');if(tc&&cevapKaydirma)tc.scrollTop=cevapKaydirma;}
       else if(acik==='telefon'&&tel.ekran==='skor'&&telSkorYerleri.has(telAnahtar()))tg.scrollTop=telSkorYerleri.get(telAnahtar());}
+    /* RN-a: panel açılınca ya da kapanınca telefon eski yerinden yenisine kayar (çizimden önceki ve sonraki yer farkı, ters dönüşümle başlar);
+       panel ilk görünüşünde belirir. Geçiş yalnız görüntüdür: tıklama ve klavye hemen çalışır, Duraklat etkilemez */
+    if(eskiCihazX!==null){const t=kap.querySelector('.tlf-sol .tel');
+      if(t){const dx=eskiCihazX-t.getBoundingClientRect().left;
+        if(Math.abs(dx)>2){t.style.transition='none';t.style.transform='translateX('+dx.toFixed(1)+'px)';void t.offsetWidth;
+          t.style.transition='transform '+TLF_KAYMA_SN+'s cubic-bezier(.2,.7,.2,1)';t.style.transform='';
+          /* tarayıcı kare işleyemezse (yavaş makine) geçiş başlamadan bekler ve telefon ötelenmiş kalırdı: süre dolunca geçiş kesilir, telefon yerinde */
+          setTimeout(()=>{t.style.transition='none';},TLF_KAYMA_SN*1000+80);}}
+      const p=kap.querySelector('.tlf .tlf-is');if(p&&!eskiPanelVar){p.classList.add('tlf-isBelir');setTimeout(()=>p.classList.remove('tlf-isBelir'),TLF_KAYMA_SN*1000+80);}}
     const ti=kap.querySelector('.tlf-is');if(ti&&isKaydirma)ti.scrollTop=isKaydirma;
     else if(ti&&acik==='telefon'&&tel.ekran==='skor'&&telSayfaAnahtar()!==cizilenSayfa&&telSkorYerleri.has('panel'+telSayfaAnahtar()))ti.scrollTop=telSkorYerleri.get('panel'+telSayfaAnahtar());
     /* R2-d: konuşma açılınca iş panelindeki ilk kart (kenarları ve ipucuyla) kaydırmadan görünür; kartın üstü panelin üstünden yukarı çıkmaz */

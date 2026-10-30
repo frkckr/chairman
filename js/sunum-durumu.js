@@ -21,3 +21,20 @@ function yaziBoyuUygula(){
   for(const a in STIL.kagit)if(typeof STIL.kagit[a]==='string')s.style.setProperty('--k-'+a,STIL.kagit[a]);
   s.style.setProperty('--k-yaziBoyu',yaziBoyuDegeri());s.style.setProperty('--k-enKucuk',STIL.kagit.enKucukYazi+'px');
 }
+/* RN-c (2026-10-30): oyun alanının payı ölçülür. Oyun alanı pencereye sığan en büyük 4:3 karedir (STIL_REHBERI §1); pencerenin yüksekliğinden
+   yalnız sayfa kenarı ve maç sayfasında alt şerit (#baskanDugmeleri) düşülür. Bülten açıkken şerit gizlidir ama yeri ayrılır: “Maça geç”te alan
+   sıçramaz. Geliştirici alanı payın dışındadır (aşağıda, kaydırınca). Eskiden sabit 190 px (dizüstünde alan 640–733 px'e iniyordu).
+     ekranPayGuncelle()  --ekran-pay (px) belge köküne; pencere ve şerit boyu değişince kendiliğinden çağrılır */
+const EKRAN_PAY={kenar:32,ara:18,serit:52};
+function ekranPayGuncelle(){
+  if(typeof document==='undefined')return;
+  const d=document.getElementById('baskanDugmeleri'),odada=typeof ON_EKRAN!=='undefined'&&ON_EKRAN.sayfa==='oda';
+  if(d&&!d.hidden&&d.offsetHeight>0)EKRAN_PAY.serit=d.offsetHeight;
+  const pay=EKRAN_PAY.kenar+(odada?0:EKRAN_PAY.ara+EKRAN_PAY.serit);
+  document.documentElement.style.setProperty('--ekran-pay',pay+'px');
+}
+if(typeof window!=='undefined'){
+  addEventListener('resize',ekranPayGuncelle);
+  addEventListener('DOMContentLoaded',()=>{ekranPayGuncelle();const d=document.getElementById('baskanDugmeleri');
+    if(d&&typeof ResizeObserver!=='undefined')new ResizeObserver(ekranPayGuncelle).observe(d);});
+}

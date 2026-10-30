@@ -5,6 +5,8 @@ Başkan odasını başsız Chromium'da elle ilerleyen kare saatiyle açar, odada
   - film şeridi: yürüyüşün evrelerinden 12 kare tek PNG'de (araclar/anlar/<onek>yuruyus-<hedef>.png)
   - ölçüm: gözün her karedeki konumundan hız ve ivme; en büyük ivme ve kareler arası en büyük hız sıçraması (ani hareket yok mu?),
     kalkış ve oturma süreleri, adım sayısı, adımdaki dikey ve yanal salınım (araclar/anlar/<onek>yuruyus-<hedef>.json)
+  - RN-b (2026-10-30): evreler örtüşen pencerelerse (ODA.yol.an) şerit ve ölçü onlara göre; bakışın açısal hızı (°/sn), yürürken bakışın en düşük
+    eğimi (°; yere bakmıyor mu?), yürürken görüş açısının değişimi (°), elin her uçta görünür kaldığı süre (sn)
 
 Kullanım:
   python araclar/yuruyus-yakala.py                 # balkona gidiş ve masaya dönüş
@@ -31,22 +33,23 @@ SAAT_JS = """(() => { let kuyruk = [], an = 1000; window.requestAnimationFrame =
 OYNAT_JS = """(hedef) => {
   if (hedef === 'masa') { odaYerAyarla('balkon'); __kare(3); }
   odaYuru(hedef); const Y = ODA.yol, toplam = Y.toplam, N = Math.ceil(toplam * 60) + 2, iz = [];
-  const E = Y.E || { yonel: OD.adim.yonel, kalk: OD.adim.kalk, yuru: Y.yuru, otur: OD.adim.otur };
-  /* evre sınırları (sn) ve şerit anları */
-  const sira = ['al', 'yonel', 'kalk', 'yuru', 'otur', 'koy'].filter(a => E[a] != null), bas = {}; let t0 = 0; for (const a of sira) { bas[a] = t0; t0 += E[a]; }
+  const E = Object.assign({}, Y.E || { yonel: OD.adim.yonel, kalk: OD.adim.kalk, yuru: Y.yuru, otur: OD.adim.otur });
+  /* evre sınırları (sn) ve şerit anları; RN-b: örtüşen pencereler (Y.an) varsa onlardan */
+  const sira = ['al', 'yonel', 'kalk', 'yuru', 'otur', 'koy'].filter(a => Y.an ? !!Y.an[a] : E[a] != null), bas = {}; let t0 = 0;
+  for (const a of sira) { if (Y.an) { bas[a] = Y.an[a][0]; E[a] = Y.an[a][1] - Y.an[a][0]; } else { bas[a] = t0; t0 += E[a]; } }
   const an = (a, u) => bas[a] != null ? bas[a] + E[a] * u : null;
   const anlar = [an('al', 0.45), an('al', 0.8), an('kalk', 0.3), an('kalk', 0.7), an('yuru', 0.1), an('yuru', 0.4), an('yuru', 0.75), an('otur', 0.2), an('otur', 0.55), an('otur', 0.9), an('koy', 0.45), an('koy', 0.85)]
     .map((t, i) => t == null ? toplam * (i + 0.5) / 12 : t).sort((a, b) => a - b);
   const view = document.getElementById('view'), W = 480, H = 360, cv = document.createElement('canvas'); cv.width = W * 4; cv.height = H * 3; const g = cv.getContext('2d');
   let k = 0, bitti = null;
   for (let i = 0; i < N; i++) {
-    __kare(1); const p = ODA.kamera.position, t = ODA.yol ? ODA.yol.t : toplam;
-    iz.push([t, p.x, p.y, p.z, ODA.yer]);
+    __kare(1); const p = ODA.kamera.position, t = ODA.yol ? ODA.yol.t : toplam, b = ODA.bakis, dx = b.x - p.x, dy = b.y - p.y, dz = b.z - p.z;
+    iz.push([t, p.x, p.y, p.z, ODA.yer, Math.atan2(dx, -dz), Math.atan2(dy, Math.hypot(dx, dz)), ODA.kamera.fov, ODA.el ? ODA.el.g.visible : false]);
     while (k < anlar.length && t >= anlar[k] - 1e-6) { const x = (k % 4) * W, y = Math.floor(k / 4) * H; g.drawImage(view, x, y, W, H);
       g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(x, y, 96, 22); g.fillStyle = '#fff'; g.font = '14px monospace'; g.fillText(t.toFixed(2) + ' sn', x + 6, y + 16); k++; }
     if (!ODA.yol && bitti == null) { bitti = i; break; }
   }
-  return { png: cv.toDataURL('image/png'), iz, toplam, E, sira, yer: ODA.yer, telefon: ODA.nesneler.telefon.g.visible, el: ODA.el ? ODA.el.g.visible : null };
+  return { png: cv.toDataURL('image/png'), iz, toplam, E, sira, bas, yer: ODA.yer, telefon: ODA.nesneler.telefon.g.visible, el: ODA.el ? ODA.el.g.visible : null };
 }"""
 
 
@@ -57,12 +60,18 @@ def olc(v):
     hiz = [((iz[i][1] - iz[i - 1][1]) ** 2 + (iz[i][2] - iz[i - 1][2]) ** 2 + (iz[i][3] - iz[i - 1][3]) ** 2) ** 0.5 / dt for i in range(1, len(iz))]
     vek = [[(iz[i][j] - iz[i - 1][j]) / dt for j in (1, 2, 3)] for i in range(1, len(iz))]
     ivme = [sum((vek[i][j] - vek[i - 1][j]) ** 2 for j in range(3)) ** 0.5 / dt for i in range(1, len(vek))]
-    E, sira = v["E"], v["sira"]
-    bas, t0 = {}, 0
-    for a in sira:
-        bas[a] = t0
-        t0 += E[a]
+    E, sira, bas = v["E"], v["sira"], v["bas"]
     yuru = [r for r in iz if bas["yuru"] + 0.4 <= r[0] <= bas["yuru"] + E["yuru"] - 0.4]
+    # RN-b: bakışın açısal hızı (°/sn; sapma en kısa yoldan), yürürken bakışın en düşük eğimi ve görüş açısının değişimi, elin uçlarda görünür süresi
+    import math
+    aci_hiz = []
+    for i in range(1, len(iz)):
+        ds = math.atan2(math.sin(iz[i][5] - iz[i - 1][5]), math.cos(iz[i][5] - iz[i - 1][5]))
+        aci_hiz.append(math.degrees(math.hypot(ds * math.cos(iz[i][6]), iz[i][6] - iz[i - 1][6])) / dt)
+    # yalnız yürüme: kalkış bittikten oturma başlayana dek
+    yuru_ic = [r for r in iz if r[0] >= bas.get("kalk", 0) + E.get("kalk", 0) and r[0] >= bas["yuru"] and r[0] <= bas.get("otur", bas["yuru"] + E["yuru"])]
+    el_bas = sum(dt for r in iz if r[8] and r[0] <= toplam_yari(v)) if iz and len(iz[0]) > 8 else None
+    el_son = sum(dt for r in iz if r[8] and r[0] > toplam_yari(v)) if iz and len(iz[0]) > 8 else None
     ys = [r[2] for r in yuru]
     # adım sayısı: yürürken dikey konumun yerel en yüksek noktaları
     tepe = sum(1 for i in range(1, len(ys) - 1) if ys[i] > ys[i - 1] and ys[i] >= ys[i + 1] and ys[i] - min(ys) > 0.25 * (max(ys) - min(ys)))
@@ -74,7 +83,15 @@ def olc(v):
             "enBuyukIvme": round(max(ivme), 2), "ivme99": round(sorted(ivme)[int(len(ivme) * 0.99)], 2),
             "enBuyukHizSicramasi": round(max(abs(hiz[i] - hiz[i - 1]) for i in range(1, len(hiz))), 3),
             "adimSayisi": tepe, "adimDikeyCm": round((max(ys) - min(ys)) * 100, 1) if ys else 0,
-            "bitisYeri": v["yer"], "telefonGorunur": v["telefon"], "elGorunur": v["el"]}
+            "bitisYeri": v["yer"], "telefonGorunur": v["telefon"], "elGorunur": v["el"],
+            "bakisAcisalHiz": round(max(aci_hiz), 1) if aci_hiz else None, "bakisAcisalHiz99": round(sorted(aci_hiz)[int(len(aci_hiz) * 0.99)], 1) if aci_hiz else None,
+            "yururkenEnDusukEgim": round(math.degrees(min(r[6] for r in yuru_ic)), 1) if yuru_ic else None,
+            "yururkenAciDegisimi": round(max(r[7] for r in yuru_ic) - min(r[7] for r in yuru_ic), 2) if yuru_ic else None,
+            "elGorunurSn": [round(el_bas, 2), round(el_son, 2)] if el_bas is not None else None}
+
+
+def toplam_yari(v):
+    return v["toplam"] / 2
 
 
 async def ana():
@@ -109,6 +126,8 @@ async def ana():
             (CIKTI / f"{a.onek}yuruyus-{hedef}.json").write_text(json.dumps(o, ensure_ascii=False, indent=1), encoding="utf-8")
             print(f"{hedef}: {yol.relative_to(KOK)} · {o['toplamSn']} sn · evreler {o['evreler']} · en hızlı {o['enHizliMsn']} m/sn · en büyük ivme {o['enBuyukIvme']} m/sn² ({o['enBuyukIvmeAni'][1]} evresi, {o['enBuyukIvmeAni'][0]}. sn; %99: {o['ivme99']})"
                   f" · kareler arası en büyük hız sıçraması {o['enBuyukHizSicramasi']} m/sn · {o['adimSayisi']} adım, dikey {o['adimDikeyCm']} cm · bitiş {o['bitisYeri']}"
+                  f" · bakışın açısal hızı en çok {o['bakisAcisalHiz']}°/sn (%99: {o['bakisAcisalHiz99']}) · yürürken en düşük eğim {o['yururkenEnDusukEgim']}°"
+                  f" · yürürken açı değişimi {o['yururkenAciDegisimi']}° · el görünür {o['elGorunurSn']} sn"
                   + (f" · {len(hatalar)} hata" if hatalar else ""))
             for x in hatalar:
                 print("  - " + x)

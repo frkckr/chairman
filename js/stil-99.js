@@ -348,7 +348,17 @@ const STIL={
        dönüşte hız 1/(1+viraj) katına iner), hızlanma/yavaşlama ivmesi (m/sn²). Kalkış, oturma, adım ve el ayarları ortak STIL.yuruyus'tadır
        (N6, kullanıcı kararı 2026-10-04). TEST değerleri */
     yol:[[0.58,1.62,0.58],[1.42,1.62,0.18],[1.36,1.62,-2.7],[1.3,1.62,-4.15],[-0.3,1.62,-4.6]],
-    adim:{hiz:1.5,viraj:0.35,ivme:1.1},
+    adim:{hiz:1.6,viraj:0.2,ivme:1.3},
+    /* RN-b (2026-10-30, kullanıcı: “çok robotik”; seçenek A — kısa ve insani): evreler örtüşür, telefon ritüeli kısalır, bakış ilgi noktalarına gider,
+       görüş açısı yürürken sabittir. el: telefonu alma ve koyma süresi (sn) ve bakışın ele dönme payı (eskiden 0,85 sn ve %55; elin yolu STIL.yuruyus.el).
+       kalkBas: telefona uzanma başladıktan sonra kalkışın başladığı an (sn); kalk, otur: süreler (sn; eskiden 1,6 ve 2,2; biçimleri STIL.yuruyus).
+       ortusme: kalkışın sonuyla ilk adımın ve son adımlarla oturmanın üst üste bindiği süre (sn). koyPay: oturmanın hangi payında telefon bırakılmaya
+       başlar. aciYol: yürürken görüş açısı (°; oda 56, balkon 46 — açı farkı kalkışın ve oturmanın içinde kapanır). bakis: ilgi noktaları — önce kapı;
+       kapıya kapidanOnce metre kala kapıdan öteye (balkona giderken saha, odaya dönerken arka duvardaki pano), son sonOnce metrede oturulacak yerin bakışına
+       geçer; her geçiş gecis metrede tamamlanır. esik: kapı eşiğinde hız sınırı (p merkez, r yarıçap m, v m/sn). adimOyna/adimDalga: adım boyunun yol
+       boyunca oynaması (oran, dalga boyu m). TEST değerleri */
+    yuru:{el:{sure:0.55,bak:0.08},kalkBas:0.25,kalk:1.25,otur:1.5,ortusme:{kalkYuru:0.25,yuruOtur:0.4},koyPay:0.45,aciYol:51,
+      bakis:{kapi:[1.325,1.4,-3.45],pano:[-0.7,1.7,2.3],kapidanOnce:1.6,sonOnce:1.6,gecis:1.4},esik:{p:[1.33,1.62,-3.45],r:0.45,v:1.05},adimOyna:0.04,adimDalga:3.7},
     /* arka duvar (2.8R): başkanın koltuğunun arkası (z). Masadan bakınca görünmez; kalkınca ve odaya dönerken görünür.
        koltuk: yüksek arkalıklı başkan koltuğu (deri, ayak); kalkarken geriye itilir (itme, m). pano: kulübün arması ve adı (ahşap çerçeve).
        bayrak: köşedeki direkte kulüp bayrağı. TEST değerleri */

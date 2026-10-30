@@ -24,9 +24,9 @@
        kararlar (konu, hazır görüş, geniş tek kart ipucuyla, yanında bağlam: o günün defteri, kasa ya da künye), dosyada bekleyen karar, konular
        (“Yazabileceklerin”; argümanlı konuda oyuncu seçimi: T.oyuncuSec). R2 eki (2026-10-29, karar 62): panel tek iş gösterir — karar varsa yalnız kart
        (cevaplar gizli, kaydırınca yüzünde; bağlam cevabın yüzünde, yandaki tam bağlam kalktı), karar yoksa bekleme satırı ya da T.konuMenu açıkken başlıklı
-       konu menüsü (tlfKonuMenusu; kategori yazışma konusunun alanı), ikisi de yoksa boş durum; telefonun altında “Yeni konu aç” (data-eylem="konuMenu").
-       Öbür telefon ekranlarında Bekleyenler: cevap bekleyen kararlar, dosyada
-       bekleyen kararlar, beklenen cevaplar ve yeni mesajlar, üç ayrı işaretle. s: {onizleler, testSecenek, kulupId}
+       konu menüsü (tlfKonuMenusu; kategori yazışma konusunun alanı); telefonun altında “Yeni konu aç” (data-eylem="konuMenu"). s: {onizleler, testSecenek, kulupId}
+       RN-a (2026-10-30, kullanıcı): panel yalnız iş varken açılır; iş yoksa (ana ekran, Mesajlar, Canlı Skor listesi, işsiz konuşma) boş döner ve telefon
+       odak kabının ortasında tek cihazdır (.tlf-yalniz); iş çıkınca telefon sola kayar (js/ekran-oda.js). Bekleyenler kalktı.
      Balkonda (iş sağ yarıda, R5) ve maç telefonunda tek telefon sürer. Ortak bekleme engeli (YAZISMA_BEKLEME_ENGELI) iki kipte de konuların altında
      tekrarlanmaz: konular açıklamalarıyla kapalı görünür, bekleme bir kez yazılır. */
 /* bileşenin görünüşü: oda (.oda) ve maç telefonu (.macTelefon) içinde aynı. Renkler STIL.kagit'ten (--k-*), telefonunkiler STIL.kagit.telefon'dan.
@@ -184,6 +184,11 @@
 .oda .tlf{height:100%;min-height:0;display:grid;grid-template-columns:minmax(17em,42fr) minmax(0,56fr);gap:2%}
 .oda .tlf-sol{min-width:0;min-height:0}
 .oda .tlf-sol .tel-yer{place-items:center end}
+/* RN-a (2026-10-30, kullanıcı): iş yokken telefon kabın ortasında tek cihaz (panel yok); iş çıkınca sola kayar (js/ekran-oda.js ciz), panel belirir */
+.oda .tlf.tlf-yalniz{grid-template-columns:minmax(0,1fr)}
+.oda .tlf.tlf-yalniz .tlf-sol .tel-yer{place-items:center}
+@keyframes tlfIsBelir{from{opacity:0;transform:translateX(1.2em)}to{opacity:1;transform:none}}
+.tlf-is.tlf-isBelir{animation:tlfIsBelir .22s ease-out .06s both}
 .tlf-is{min-height:0;max-height:100%;align-self:start;overflow-y:auto;display:grid;align-content:start;gap:.75em;padding:.85em 1em 1em;color:var(--k-yazi);
   background:var(--k-zemin);border:1px solid var(--k-cizgi);box-shadow:.35em .45em 0 var(--k-golge);container:tlf / inline-size}
 .tlf-is p{margin:0}
@@ -203,7 +208,6 @@
 .tlf-satir{grid-template-columns:auto minmax(0,1fr)!important;column-gap:.6em!important;align-items:center}
 .tlf-satir>i{grid-row:1/span 2;width:.75em;height:.75em;border-radius:50%;font-style:normal}
 .tlf-satir>span,.tlf-satir>small{grid-column:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tlf-iKarar{background:var(--k-kirmizi)}.tlf-iCevap{box-shadow:inset 0 0 0 .16em var(--k-mavi)}.tlf-iYeni{background:var(--k-mavi)}
 .tlf-oyuncular{display:grid;gap:.4em;padding:.5em .6em;background:var(--k-serit);border:1px solid var(--k-vurgu)}
 .tlf-oyuncular h6{margin:.2em 0 0;font-size:max(var(--k-enKucuk,12px),.8em);color:var(--k-soluk);font-weight:600}
 .tlf-oyuncuDiz{display:flex;flex-wrap:wrap;gap:.3em}
@@ -431,12 +435,12 @@ function tlfKonuMenusu(k,T,c){
     '<p><button type="button" class="od-baglanti" data-eylem="konuMenu">Kapat</button></p></section>';
 }
 /* R2 eki: panel tek iş gösterir — karar varsa yalnız kart (hazır görüş üstünde, dosya bağlantısı altında; bağlam cevabın yüzünde); karar yoksa
-   bekleme satırı, açıksa konu menüsü, ikisi de yoksa kısa bir boş durum */
+   bekleme satırı ya da açıksa konu menüsü. RN-a: hiçbiri yoksa panel yok (boş döner) */
 function telefonIsPaneli(k,T,s={}){
   /* R3: Canlı Skor'da açık sayfa (maç, takım, oyuncu) sağdaki panelde; telefon listeyi tutar */
   if(T.ekran==='skor'&&k&&(T.sayfalar||[]).length&&typeof csSayfaHtml==='function')return'<section class="tlf-is cs-panel" aria-label="Canlı Skor">'+csSayfaHtml(k,T,{panel:true})+'</section>';
   const L=k?konusmaListesi(k):[],c=T.ekran==='konusma'?L.find(x=>x.anahtar===T.kisi):null;
-  if(!c)return telBekleyenler(k,L);
+  if(!c)return'';   /* RN-a: konuşma dışında panel yok (Bekleyenler kalktı; aynı bilgi ana ekranın bildirimlerinde, listedeki etiketlerde ve Sonra yığınında) */
   let ic='';
   const bekliyor=c.bekleyenCevap!==null&&c.bekleyenCevap!==undefined;
   /* R2-c: tek bekleme satırı (kişiden cevap beklenirken) */
@@ -447,22 +451,7 @@ function telefonIsPaneli(k,T,s={}){
     ic+='<section class="tlf-karar" aria-label="Karar">'+kararGorusu(k,is.veri)+kararKarti(k,id,{onizle:(s.onizleler||{})[id]||null,ozetsiz:true,dosyaBaglanti:true,testSecenek:s.testSecenek})+'</section>';}
   for(const mid of c.dosyaKarar)ic+='<p class="tlf-not">Bu konuda karar dosyada bekliyor. <button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+mid+'" data-donus="telefon">Dosyayı aç ▸</button></p>';
   if(!K.length&&T.konuMenu&&c.girisimler.length&&!c.girisimler.every(G=>G.engel))ic+=tlfKonuMenusu(k,T,c);
-  else if(!K.length&&!c.dosyaKarar.length&&!bekliyor)
-    ic+='<p class="tlf-bos">'+(c.girisimler.length?yazT(yonelmeEki(c.ad))+' yazmak için “Yeni konu aç”.':yazT(c.ad)+' ile açık bir iş yok.')+'</p>';
+  /* RN-a: iş yoksa panel yok — telefon ortada; “Yeni konu aç” telefonun altında, basınca menü panelde açılır */
+  if(!ic)return'';
   return'<section class="tlf-is'+(K.length?' tlf-tekKart':'')+'" aria-label="'+yazT(c.ad)+' ile işler">'+ic+'</section>';
-}
-/* Bekleyenler: konuşma dışındaki telefon ekranlarında. Cevap bekleyen karar (kırmızı), beklenen cevap (mavi halka), yeni mesaj (mavi nokta) */
-function telBekleyenler(k,L){
-  const satir=(isaret,et,kisi,baslik,alt,ek)=>'<li><button type="button" class="tlf-satir" '+(ek||'data-eylem="telKisi" data-kisi="'+yazT(kisi)+'"')+'><i class="'+isaret+'" aria-hidden="true"></i>'+
-    '<span><span class="tel-gizli">'+yazT(et)+': </span><b>'+yazT(baslik)+'</b></span><small>'+yazT(alt)+'</small></button></li>';
-  const K=[],C=[],Y=[];
-  for(const c of L){
-    for(const id of c.kararlar){const is=k.isler[id];if(tlfSimdi(k,is))K.push(satir('tlf-iKarar','Cevabın bekleniyor',c.anahtar,c.ad+' · '+(is.veri.baslik||'Karar'),'Cevabın bekleniyor · en geç '+(is.tarih===k.tarih?'bugün ':gunAyYazi(is.tarih)+' ')+saatYazi(is.dakika)));}
-    for(const mid of c.dosyaKarar){const m=k.meseleler[mid];if(m)K.push(satir('tlf-iKarar','Cevabın bekleniyor',null,m.baslik,'Karar dosyada bekliyor','data-eylem="dosyaAc" data-mesele="'+yazT(mid)+'" data-donus="telefon"'));}
-    if(c.bekleyenCevap!==null&&c.bekleyenCevap!==undefined&&typeof cevapBeklemeCumlesi==='function'){const B=cevapBeklemeCumlesi(k,c.ad,c.bekleyenCevap);C.push(satir('tlf-iCevap','Cevap bekleniyor',c.anahtar,c.ad,'Cevap bekleniyor · '+B.an));}
-    if(c.okunmamis>0)Y.push(satir('tlf-iYeni','Yeni mesaj',c.anahtar,c.ad,c.okunmamis+' yeni mesaj'));
-  }
-  const blok=(bas,X)=>X.length?'<h5>'+bas+'</h5><ul class="tlf-satirlar">'+X.join('')+'</ul>':'';
-  return'<section class="tlf-is tlf-bekleyenler" aria-label="Bekleyenler"><h4>Bekleyenler</h4>'+
-    (K.length||C.length||Y.length?blok('Cevabın bekleniyor',K)+blok('Gelecek cevaplar',C)+blok('Yeni mesajlar',Y):'<p class="tlf-bos">Bekleyen bir şey yok.</p>')+'</section>';
 }

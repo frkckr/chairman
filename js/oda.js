@@ -228,60 +228,89 @@ function odaPencereAc(){
   if(typeof balkonIskele==='function')balkonIskele(ODA.iskele);
 }
 /* ---- balkona yürüyüş (2.8D, 2.8R; N6, kullanıcı kararı 2026-10-04: insan gibi, js/yuruyus.js) ----
-   Evreler: telefonu al (el telefona uzanır, alır, cebe koyar) → yönel (otururken baş yola döner) → kalk (öne eğil, it, doğrul; başkan koltuğu
-   geri itilir) → yürü (yuvarlatılmış yolda adım adım: yavaş başlar, düzlükte hızlanır, dönüşte ve varışta yavaşlar) → otur (yerine geç, öne
-   eğilerek alçal, yaslan) → telefonu koy (el telefonu oturulan yerin masasına bırakır). Tıklayınca atlanır; Duraklat her evreyi dondurur */
+   RN-b (2026-10-30, kullanıcı: “çok robotik”; seçenek A — kısa ve insani): evreler arka arkaya değil, örtüşen zaman pencereleridir. Telefona uzanılırken
+   kalkış başlar (bakış ele dönmez), kalkarken baş kapıya döner, kalkışın sonunda ilk adım atılır; yürürken bakış ilgi noktalarındadır (kapı, kapıdan öte:
+   saha ya da arka duvardaki pano, son metrelerde oturulacak yerin bakışı); kapı eşiğinde adım yavaşlar; son adımlarda oturmaya geçilir, oturmanın içinde
+   telefon masaya bırakılır. Görüş açısı yürürken sabittir; oda ile balkon arasındaki açı farkı kalkışın ve oturmanın içinde kapanır. Ayarlar STIL.oda.yuru.
+   Tıklayınca atlanır; Duraklat her anı dondurur; durum tutmaz (her an Y.t'den hesaplanır) */
 const ODA_YOL=OD.yol.map(d=>new THREE.Vector3(...d));
 const odaYumusak=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x);};
 /* telefonun durduğu yer (sahne koordinatı ve dönüşü): odadaki masada ya da balkon masasında */
 function odaTelefonYeri(yer){const B=ODA.balkonTelefon;
   return yer==='balkon'&&B?{p:new THREE.Vector3(B.x,B.y,B.z),donus:B.donus}:{p:new THREE.Vector3(-0.56,ODA.masaUstu,-0.7),donus:0.32};}
-/* yürüyüşün zaman çizelgesi: oturulan yer (göz, bakış), yuvarlatılmış yol (eşit aralıklı noktalar Q, birikmiş uzunluk L, izin verilen hız V),
-   zamana göre yol/hız/adım fazı (D, VZ, FZ) ve evre süreleri E */
+/* yürüyüşün zaman çizelgesi: oturulan yer (göz, bakış), yuvarlatılmış yol (Q, L, D, VZ, FZ; js/yuruyus.js yrYolKur) ve evrelerin zaman pencereleri
+   an: {al, kalk, yuru, otur, koy} → [baş, son] (sn). dKapi: yolun kapıdan geçtiği metre; kapi, ote: bakışın ilgi noktaları. E: evrelerin süreleri
+   (eski araçlar için; evreler artık örtüşür, toplam an'dan okunur) */
 function odaYolKur(hedef){
-  const A=OD.adim,masa={p:new THREE.Vector3(...OD.goz),b:new THREE.Vector3(...OD.bakis)},balkon={p:new THREE.Vector3(...STIL.balkon.goz),b:new THREE.Vector3(...STIL.balkon.bakis)};
+  const A=OD.adim,U=OD.yuru,masa={p:new THREE.Vector3(...OD.goz),b:new THREE.Vector3(...OD.bakis)},balkon={p:new THREE.Vector3(...STIL.balkon.goz),b:new THREE.Vector3(...STIL.balkon.bakis)};
   const W=ODA_YOL.map(v=>v.clone());if(hedef==='masa')W.reverse();
-  /* yol, hız profili ve zaman çizelgesi ortak planlayıcıdan (js/yuruyus.js yrYolKur; N11'de ortaklaştı, sayısal davranış aynı) */
-  const Z=yrYolKur(W,A),{egri:egriYol,Q,L,D,VZ,FZ,DTS}=Z;
-  const E={al:YR.el.sure,yonel:YR.yonel,kalk:YR.kalk.sure,yuru:Z.yuru,otur:YR.otur.sure,koy:YR.el.sure};
+  const Z=yrYolKur(W,{hiz:A.hiz,viraj:A.viraj,ivme:A.ivme,yavas:[U.esik],adimOyna:U.adimOyna,adimDalga:U.adimDalga}),{egri:egriYol,Q,L,D,VZ,FZ,DTS}=Z;
   const bas=hedef==='balkon'?masa:balkon,son=hedef==='balkon'?balkon:masa;
   const yatay=o=>{const v=new THREE.Vector3(o.b.x-o.p.x,0,o.b.z-o.p.z);return v.lengthSq()>1e-8?v.normalize():v.set(0,0,-1);};
-  return{t:0,hedef,bas,son,W,Q,L,D,VZ,FZ,DTS,E,egri:egriYol,yuru:E.yuru,toplam:E.al+E.yonel+E.kalk+E.yuru+E.otur+E.koy,koltuk:hedef==='balkon'?0:1,
-    basIleri:yatay(bas),sonIleri:yatay(son),telBas:odaTelefonYeri(hedef==='balkon'?'masa':'balkon'),telSon:odaTelefonYeri(hedef),el:null};
+  const kalk=[U.kalkBas,U.kalkBas+U.kalk],yb=kalk[1]-U.ortusme.kalkYuru,yuru=[yb,yb+Z.yuru],ob=yuru[1]-U.ortusme.yuruOtur,otur=[ob,ob+U.otur];
+  const kb=ob+U.otur*U.koyPay,an={al:[0,U.el.sure],kalk,yuru,otur,koy:[kb,Math.min(otur[1],kb+U.el.sure)]};
+  let ik=0;for(let i=1;i<Q.length;i++)if(Math.abs(Q[i].z-U.bakis.kapi[2])<Math.abs(Q[ik].z-U.bakis.kapi[2]))ik=i;
+  return{t:0,hedef,bas,son,W,Q,L,D,VZ,FZ,DTS,egri:egriYol,yuru:Z.yuru,an,toplam:otur[1],
+    E:{al:U.el.sure,yonel:0,kalk:U.kalk,yuru:Z.yuru,otur:U.otur,koy:U.el.sure},
+    dKapi:L[ik],kapi:new THREE.Vector3(...U.bakis.kapi),ote:hedef==='balkon'?son.b.clone():new THREE.Vector3(...U.bakis.pano),
+    aciBas:hedef==='balkon'?OD.aci:STIL.balkon.aci,aciSon:hedef==='balkon'?STIL.balkon.aci:OD.aci,aci:hedef==='balkon'?OD.aci:STIL.balkon.aci,
+    koltuk:hedef==='balkon'?0:1,basIleri:yatay(bas),sonIleri:yatay(son),telBas:odaTelefonYeri(hedef==='balkon'?'masa':'balkon'),telSon:odaTelefonYeri(hedef),el:null};
 }
-/* yol yardımcıları: js/yuruyus.js (yrAra, yrYolda, yrIleri) */
-const odaIleri=(Y,d,cikis)=>yrIleri(Y,d,cikis);
-const ODA_SIFIR=new THREE.Vector3();
-/* t anındaki kamera konumu ve bakışı; ilerleme 0–1 (görüş açısı ve kapı için). Y.koltuk: başkan koltuğunun itilme payı (0–1);
-   Y.el: el işi sürüyorsa {mod: 'al' | 'koy', s: 0–1} */
+/* bakış açıyla karışır (RN-b): P'den T'ye yön [sapma, eğim] (sapma 0: -z); iki yön en kısa yoldan karışır; yön yeniden bakış noktasına çevrilir.
+   Noktaları doğrusal karıştırmak dönüşte bakışı kameraya yaklaştırıp savuruyordu */
+function odaYon(P,T){const dx=T.x-P.x,dy=T.y-P.y,dz=T.z-P.z;return[Math.atan2(dx,-dz),Math.atan2(dy,Math.hypot(dx,dz))];}
+function odaYonKaris(a,b,w){const d=Math.atan2(Math.sin(b[0]-a[0]),Math.cos(b[0]-a[0]));return[a[0]+d*w,a[1]+(b[1]-a[1])*w];}
+function odaYonNokta(P,y,out){const c=Math.cos(y[1]);return out.set(P.x+Math.sin(y[0])*c*10,P.y+Math.sin(y[1])*10,P.z-Math.cos(y[0])*c*10);}
+/* yürürken bakış (yol metresine göre): kapı → kapıdan öte (kapıya kapidanOnce kala başlar) → son sonOnce metrede balkona giderken oturulacak yerin
+   bakışı (saha, uzak), odaya dönerken yolun ilerisi (masa yakın; yanından geçerken ona bakmak başı savuruyordu — masaya dönüş oturmanın içinde) */
+const ODA_ILERI=new THREE.Vector3();
+function odaYolBakis(Y,d,P){
+  const U=OD.yuru.bakis,top=Y.L[Y.L.length-1];
+  const y=odaYonKaris(odaYon(P,Y.kapi),odaYon(P,Y.ote),yrYumusak((d-(Y.dKapi-U.kapidanOnce))/U.gecis));
+  const son=Y.hedef==='balkon'?odaYon(P,Y.son.b):odaYon(P,yrIleri(Y,Math.min(d,top),ODA_ILERI));
+  return odaYonKaris(y,son,yrYumusak((d-(top-U.sonOnce))/U.gecis));
+}
+const ODA_YA={k:new THREE.Vector3(),w:new THREE.Vector3(),o:new THREE.Vector3(),e:new THREE.Vector3()},ODA_SIFIR=new THREE.Vector3(),ODA_SIFIR2=new THREE.Vector3();
+const odaPay=(t,a)=>Math.min(1,Math.max(0,(t-a[0])/Math.max(1e-6,a[1]-a[0])));
+/* t anındaki kamera konumu (P) ve bakışı (B); Y.aci görüş açısı, Y.koltuk başkan koltuğunun itilme payı (0–1), Y.el el işi {mod: 'al' | 'koy', s: 0–1}.
+   Döner: yolda ilerleme (0–1; balkona doğru) */
 function odaYolAni(Y,P,B){
-  const E=Y.E,toplam=Y.L[Y.L.length-1],ileri=new THREE.Vector3();let t=Y.t,ilerleme=0;Y.el=null;
-  if(t<E.al){/* telefonu al: göz yerinde; bakış ele eşlik edip telefona kayar ve geri döner */
-    const s=t/E.al;P.copy(Y.bas.p);Y.el={mod:'al',s};B.lerpVectors(Y.bas.b,Y.telBas.p,YR.el.bak*yrElYolu(s,ODA_SIFIR,ODA_SIFIR,ileri));}
-  else if((t-=E.al)<E.yonel){/* yönelme: otururken önce baş yola döner */
-    P.copy(Y.bas.p);B.lerpVectors(Y.bas.b,odaIleri(Y,0,ileri),yrYumusak(t/E.yonel));}
-  else if((t-=E.yonel)<E.kalk){/* kalkış: öne eğilir, iter, doğrulur ve yolun başına adım atar; koltuk geri itilir; bakış yolda */
-    const s=t/E.kalk;yrKalk(s,Y.bas.p,Y.Q[0],Y.basIleri,P);B.copy(odaIleri(Y,0,ileri));
-    if(Y.hedef==='balkon')Y.koltuk=yrYumusak((s-0.35)/0.65);}
-  else if((t-=E.kalk)<E.yuru){/* adımlar: zaman çizelgesinden; her adımda küçük iniş-çıkış, ağırlık aktarımı ve ilerlemenin hafif nabzı */
-    const d=yrYuruAn(Y,t,P,B);ilerleme=d/toplam;}
-  else if((t-=E.yuru)<E.otur){/* oturma: yerine geçer, öne eğilerek alçalır, yaslanır; bakış oturulan yerin bakışına döner; koltuk yerine çekilir */
-    const s=t/E.otur;yrOtur(s,Y.Q[Y.Q.length-1],Y.son.p,Y.sonIleri,P);B.lerpVectors(odaIleri(Y,toplam,ileri),Y.son.b,yrYumusak(s/0.7));
-    if(Y.hedef==='masa')Y.koltuk=1-yrYumusak((s-0.1)/0.5);ilerleme=1;}
-  else{/* telefonu koy: göz yerinde; bakış ele eşlik eder */
-    const s=Math.min(1,(t-E.otur)/E.koy);P.copy(Y.son.p);Y.el={mod:'koy',s};B.lerpVectors(Y.son.b,Y.telSon.p,YR.el.bak*yrElYolu(s,ODA_SIFIR,ODA_SIFIR,ileri));ilerleme=1;}
-  return Y.hedef==='balkon'?ilerleme:1-ilerleme;
+  const an=Y.an,U=OD.yuru,t=Y.t,top=Y.L[Y.L.length-1];
+  const sk=odaPay(t,an.kalk),so=odaPay(t,an.otur),tw=Math.min(Y.yuru,Math.max(0,t-an.yuru[0]));
+  /* konum: kalkış, yürüyüş ve oturma üst üste eklenir — her biri kendi hız profiliyle yolun ucuna göre öteleme; örtüşmede hızlar toplanır, göz konumu,
+     hızı ve ivmesi sürekli kalır (ağırlıkla karıştırmak geçişte ivme sıçraması yapıyordu) */
+  yrKalk(sk,Y.bas.p,Y.Q[0],Y.basIleri,ODA_YA.k);
+  const d=yrYuruAn(Y,tw,ODA_YA.w,null);
+  yrOtur(so,Y.Q[Y.Q.length-1],Y.son.p,Y.sonIleri,ODA_YA.o);
+  P.copy(ODA_YA.w).add(ODA_YA.k).sub(Y.Q[0]).add(ODA_YA.o).sub(Y.Q[Y.Q.length-1]);
+  const w1=yrYumusak((t-an.yuru[0])/(an.kalk[1]-an.yuru[0])),w2=yrYumusak((t-an.otur[0])/(an.yuru[1]-an.otur[0]));
+  /* bakış: oturuşun bakışından kapıya — baş dönüşü telefona uzanmayla başlar, kalkışın sonunda biter (yumuşak, tepe hızı düşük); yürürken ilgi
+     noktaları; otururken oturulan yerin bakışı */
+  const hb=(1-Math.cos(Math.PI*Math.min(1,Math.max(0,t/an.kalk[1]))))/2;
+  let y=odaYonKaris(odaYon(P,Y.bas.b),odaYolBakis(Y,0,P),hb);
+  y=odaYonKaris(y,odaYolBakis(Y,d,P),w1);
+  y=odaYonKaris(y,odaYonKaris(odaYolBakis(Y,top,P),odaYon(P,Y.son.b),(1-Math.cos(Math.PI*so))/2),w2);
+  /* telefon: uzanırken ve bırakırken bakış ele çok az döner (U.el.bak) */
+  Y.el=null;
+  if(t<an.al[1]){const s=odaPay(t,an.al);Y.el={mod:'al',s};y=odaYonKaris(y,odaYon(P,Y.telBas.p),U.el.bak*yrElYolu(s,ODA_SIFIR,ODA_SIFIR2,ODA_YA.e));}
+  else if(t>=an.koy[0]&&t<an.koy[1]+1e-6){const s=odaPay(t,an.koy);Y.el={mod:'koy',s};y=odaYonKaris(y,odaYon(P,Y.telSon.p),U.el.bak*yrElYolu(s,ODA_SIFIR,ODA_SIFIR2,ODA_YA.e));}
+  odaYonNokta(P,y,B);
+  /* görüş açısı: kalkarken oturuşun açısından yürüyüşün açısına, otururken oturulacak yerin açısına */
+  Y.aci=so>0?U.aciYol+(Y.aciSon-U.aciYol)*yrYumusak(so):Y.aciBas+(U.aciYol-Y.aciBas)*yrYumusak(sk);
+  if(Y.hedef==='balkon')Y.koltuk=yrYumusak((sk-0.35)/0.65);else Y.koltuk=1-yrYumusak((so-0.1)/0.5);
+  return Y.hedef==='balkon'?d/top:1-d/top;
 }
-/* el ve telefon (N6). al: el telefona uzanır, tutunca telefon elle gelir, görüşten çıkınca cebe girer. Yürürken telefon ceptedir (görünmez).
-   koy: telefon elle gelir, yerine bırakılır, el çekilir. Elin çıktığı yer gözün altındadır (YR.el.bas); telefon hangi yandaysa o el kullanılır */
+/* el ve telefon (N6; RN-b: elin çıktığı yer o anki göze ve bakışa göre — kalkarken el bedenle gelir). al: el telefona uzanır, tutunca telefon elle gelir,
+   görüşten çıkınca cebe girer. Yürürken telefon ceptedir (görünmez). koy: telefon elle gelir, yerine bırakılır, el çekilir. Telefon hangi yandaysa o el */
 const ODA_EL={bas:new THREE.Vector3(),hedef:new THREE.Vector3(),p:new THREE.Vector3(),sag:new THREE.Vector3(),on:new THREE.Vector3()};
 function odaElKare(Y){
   const N=ODA.nesneler.telefon,H=ODA.el,e=Y.el,W=ODA_EL;
   if(!e){H.g.visible=false;N.g.visible=false;return;}
-  const yer=e.mod==='al'?Y.telBas:Y.telSon,goz=e.mod==='al'?Y.bas.p:Y.son.p,on=e.mod==='al'?Y.basIleri:Y.sonIleri,C=YR.el.bas;
-  W.sag.set(-on.z,0,on.x);
+  const yer=e.mod==='al'?Y.telBas:Y.telSon,goz=ODA.kamera.position,C=YR.el.bas;
+  W.on.set(ODA.bakis.x-goz.x,0,ODA.bakis.z-goz.z);if(W.on.lengthSq()<1e-8)W.on.set(0,0,-1);W.on.normalize();
+  W.sag.set(-W.on.z,0,W.on.x);
   const taraf=(yer.p.x-goz.x)*W.sag.x+(yer.p.z-goz.z)*W.sag.z<-0.15?-1:1;
-  W.bas.copy(goz).addScaledVector(W.sag,C[0]*taraf).addScaledVector(on,C[2]);W.bas.y+=C[1];
+  W.bas.copy(goz).addScaledVector(W.sag,C[0]*taraf).addScaledVector(W.on,C[2]);W.bas.y+=C[1];
   /* bilek telefonun biraz gerisinde ve üstünde durur: parmaklar telefonun üstüne gelir */
   W.on.set(yer.p.x-W.bas.x,0,yer.p.z-W.bas.z).normalize();
   W.hedef.copy(yer.p).addScaledVector(W.on,-0.1);W.hedef.y+=0.045;
@@ -345,11 +374,11 @@ function odaKare(dt){
   if(ODA.yol){
     /* yürüyüş: telefonu alma, yönelme, kalkış, adımlar, oturma, telefonu koyma (odaYolAni); kapı yaklaşınca açılır, geçince kapanır */
     const Y=ODA.yol;Y.t=Math.min(Y.toplam,Y.t+dt);
-    const P=new THREE.Vector3(),u=odaYolAni(Y,P,ODA.bakis);
+    const P=new THREE.Vector3();odaYolAni(Y,P,ODA.bakis);
     ODA.kamera.position.copy(P);ODA.kamera.lookAt(ODA.bakis);
     odaKoltuk(Y.koltuk);odaElKare(Y);
     ODA.kapi.rotation.y=1.75*odaYumusak((-P.z-1.4)/1.6);
-    const aciY=OD.aci+(STIL.balkon.aci-OD.aci)*u;
+    const aciY=Y.aci;   /* RN-b: yürürken sabit; değişim kalkışın ve oturmanın içinde (odaYolAni) */
     if(Math.abs(ODA.kamera.fov-aciY)>0.01){ODA.kamera.fov=aciY;ODA.kamera.updateProjectionMatrix();}
     for(const ad in N)N[ad].cerceve.visible=false;
     if(ODA.kapiHedef)ODA.kapiHedef.cerceve.visible=false;
