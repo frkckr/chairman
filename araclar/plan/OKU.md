@@ -4,3 +4,4 @@ Tur planlarının çalışma kopyaları (alt adımlar, durum, ham tasarım çık
 
 **Antrenman araştırması** (2026-10-30, kullanıcının notlarından: “araştır ve yerleştir”): `antrenman-arastirma.md` — gerçek dünya çalışma kataloğu, haftalık mikrodöngü, yük ve sakatlık, antrenman ekibi, tesis ve oyuna uyarlama; karar değil, R6b-2 antrenman kuralı turunun ve antrenman canlandırma serisinin girdisi.
 **RN kullanıcı notları** (2026-10-30, karar 68): telefon (Bekleyenler kalkar, önce ortada), yürüyüş, ekran ölçüsü ve balkon kâğıdı — `rn-uygulama.md` (§0 notların turlara eşlemesi ve sıra RN → RB → R6b-1 → R6b-2 → R6b-3 → R7).
+**RB balkonda antrenmanı izlemek** (2026-10-30, karar 68'in ikinci turu): bakış ve yakınlık, “Sahada”, geniş pencere bandı — `rb-uygulama.md`.
