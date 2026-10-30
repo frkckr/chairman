@@ -2794,9 +2794,13 @@ async def bolum_24(tarayici, site, tum_hatalar):
     await pg.set_viewport_size({"width": 672, "height": 600})
     await pg.evaluate("() => { OYUN.ayarlar.yazi = 'buyuk'; }")   # büyük yazıda tablo telefonda taşar (okuma yeri anlamlı)
     await pg.click('.tel [data-eylem="skorSekme"][data-sekme="tablo"]')
-    t0 = await pg.evaluate("() => { const g = document.querySelector('.tel .tel-govde'); g.scrollTop = g.scrollHeight; return g.scrollTop; }")
+    await pg.evaluate("() => { const g = document.querySelector('.tel .tel-govde'); g.scrollTop = g.scrollHeight; }")
     skid = await pg.evaluate("() => [...document.querySelectorAll('.tel [data-eylem=csAc][data-tur=kulup]')].pop().dataset.id")
-    await cs_ac(pg, "kulup", skid)
+    # RN (2026-10-30): Playwright fareyi satıra götürmeden önce listeyi kendisi kaydırabilir (gerçek tıklama kaydırmaz); okuma yeri tıklama anındaki yerdir
+    satir = pg.locator(f'.tel [data-eylem="csAc"][data-tur="kulup"][data-id="{skid}"]')
+    await satir.hover()
+    t0 = await pg.evaluate("() => document.querySelector('.tel .tel-govde').scrollTop")
+    await satir.click()
     await pg.keyboard.press("Escape")
     td = await pg.evaluate("""() => { const g = document.querySelector('.tel .tel-govde'), f = document.activeElement, a = g.getBoundingClientRect(), r = f.getBoundingClientRect();
       return { y: g.scrollTop, odak: f.dataset ? f.dataset.id : null, gorunur: r.top >= a.top - 1 && r.bottom <= a.bottom + 1 }; }""")
@@ -3469,9 +3473,8 @@ async def bolum_31(tarayici, site, tum_hatalar):
             y0["y"] > 0 and y1["y"] == 0 and abs(y2["y"] - y0["y"]) <= 2 and y2["tur"] == "kulup", f"{y0} → {y1} → {y2}")
     await pg.set_viewport_size({"width": 1180, "height": 1000})
     await masaya_don(pg)
-    # balkonda tek telefon: sayfa telefonun içinde, telefonun ‹ Geri'siyle
-    await pg.keyboard.press("Digit5")
-    await pg.wait_for_function("ODA.yer === 'balkon'", timeout=YURUYUS_BEKLE)
+    # balkonda tek telefon: sayfa telefonun içinde, telefonun ‹ Geri'siyle (RN: yürüyüş tıklayarak atlanır; yürüyüş §15'te)
+    await balkona_atla(pg)
     await pg.keyboard.press("Digit1")
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
     await cs_ac(pg, "mac", mid)

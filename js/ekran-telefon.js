@@ -184,8 +184,11 @@
 .oda .tlf{height:100%;min-height:0;display:grid;grid-template-columns:minmax(17em,42fr) minmax(0,56fr);gap:2%}
 .oda .tlf-sol{min-width:0;min-height:0}
 .oda .tlf-sol .tel-yer{place-items:center end}
-/* RN-a (2026-10-30, kullanıcı): iş yokken telefon kabın ortasında tek cihaz (panel yok); iş çıkınca sola kayar (js/ekran-oda.js ciz), panel belirir */
-.oda .tlf.tlf-yalniz{grid-template-columns:minmax(0,1fr)}
+/* RN-a (2026-10-30, kullanıcı): iş yokken telefon kabın ortasında tek cihaz (panel yok); iş çıkınca sola kayar (js/ekran-oda.js ciz), panel belirir.
+   Ortadaki sütun iki sütundaki telefon sütunuyla aynı genişlikte (en az 17 em, %42): telefon iki düzende aynı boyda kalır — kayarken boyu sıçramaz,
+   okuma yeri boyu değişen gövdede kısalmaz */
+.oda .tlf.tlf-yalniz{grid-template-columns:minmax(0,1fr) minmax(17em,42%) minmax(0,1fr);gap:0}
+.oda .tlf.tlf-yalniz>.tlf-sol{grid-column:2}
 .oda .tlf.tlf-yalniz .tlf-sol .tel-yer{place-items:center}
 @keyframes tlfIsBelir{from{opacity:0;transform:translateX(1.2em)}to{opacity:1;transform:none}}
 .tlf-is.tlf-isBelir{animation:tlfIsBelir .22s ease-out .06s both}
