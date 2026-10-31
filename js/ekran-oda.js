@@ -339,6 +339,12 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(o.kacirilacak.length&&tvOnay!==id){tvOnay=id;mesaj='İzlersen kaçırılır: '+o.kacirilacak.map(x=>x.veri.baslik).join(', ')+'. Yine de izlemek için İzle ▸.';ciz('[data-eylem="tvIzle"][data-mac="'+id+'"]');return;}
     tvOnay=null;const h=oyun.tvGit(id);if(h){mesaj=h;ciz();}
   }
+  /* RK8-a (TEST, yayından önce kalkar): sıradaki öbür lig maçının 20. dakikası (bizim maç gününden önce) ya da null */
+  function canliTestHedef(){
+    const an=simdikiAn(k),mg=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'),sinir=mg?isAn(mg):Infinity;
+    const L=Object.values(k.isler).filter(x=>x.tur==='ligMaci'&&isAn(x)+20>an&&isAn(x)+20<sinir).sort((a,b)=>isAn(a)-isAn(b));
+    return L.length?isAn(L[0])+20:null;
+  }
   function kadroPaneli(){
     const Q=testKadro(kulupId(),k);
     if(!Q)return'<p class="od-not">Kadro verisi yok.</p>';
@@ -420,7 +426,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
       '<p class="od-not">Açıkken ilgili satırlarda küçük TEST simgesi belirir: yönetici katkıları, gizli koşullar, seçeneklerin sonucu ve futbolcu özellikleri.</p>'+
       '<div class="od-dugmeler">'+(testAcik()?'<button type="button" data-eylem="ac" data-panel="kadro">Kadro (TEST) ▸</button>':'')+
         '<button type="button" data-eylem="goruntu">Görüntüyü kaydet</button>'+
-        (ziyaretSahnesi()&&balkonVar?'<button type="button" data-eylem="ziyaretTest">Ziyaret sahnesini oynat (TEST)</button>':'')+'</div>'+
+        (ziyaretSahnesi()&&balkonVar?'<button type="button" data-eylem="ziyaretTest">Ziyaret sahnesini oynat (TEST)</button>':'')+
+        (canliTestHedef()!==null?'<button type="button" data-eylem="canliTest">Canlı maça ilerle (TEST)</button>':'')+'</div>'+
+      (canliTestHedef()!==null?'<p class="od-not">Canlı maça ilerle (TEST) zamanı sıradaki öbür lig maçının 20. dakikasına getirir (yoldaki işler zamanında işlenir; maçımızı geçmez) ve TV\'nin Skorlar sayfasını açar: “İzle ▸” ile TV\'de maç denenir.</p>':'')+
       (ziyaretSahnesi()&&balkonVar?'<p class="od-not">Ziyaret sahnesi yalnız görüntüdür: hoca kapıyı çalar, girer, oturur, birkaç saniye sonra kalkıp çıkar; kayda ve deftere girmez.</p>':'')+
       '<p class="od-not">Görüntüyü kaydet o anki 3B sahneyi PNG olarak indirir (paneller dahil değildir); kariyeri ve kaydı değiştirmez.</p>'+
       /* R4-j: oynama ölçüsü (TEST); metin seçilip kopyalanır */
@@ -1145,6 +1153,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     /* RK6 (TEST): ziyaret sahnesi yalnız görüntü — masada, kapıda ya da karşıda kimse yokken; kart açılmaz, kayıt ve defter değişmez */
     else if(ey==='ziyaretTest'){if(!ziyaretSahnesi()||ODA.ziyaret||ziyaretKapi()||ziyaretGor())return;const h=Object.values(k.kisiler).find(p=>p.rol==='teknikDirektor'&&p.durum==='aktif');if(!h)return;
       acik=null;ciz();if(ODA.yer!=='masa')return;odaZiyaretKapi(h,h.rol);ODA.ziyaret.test=true;setTimeout(()=>{if(ODA.ziyaret&&ODA.ziyaret.evre==='kapi')odaZiyaretGir(()=>setTimeout(()=>{if(ODA.ziyaret&&!ziyaretGor())odaZiyaretCik();},3000));},1200);}
+    else if(ey==='canliTest'){const h=canliTestHedef();if(h===null||(typeof ligHesapSuruyor==='function'&&ligHesapSuruyor()))return;const f=x=>{zamanIlerlet(x,h-simdikiAn(x));};
+      ligOnce(f,()=>{try{komut(f);}catch(e){mesaj=e.message;ciz();return;}acik=null;panelAc('tv');tvSayfa='skor';ciz('[data-eylem="tvSayfa"][data-tv="skor"]');});}   /* RK8-a (TEST) */
     else if(ey==='herSaat'){ayarlar.herSaat=!ayarlar.herSaat;ayarlar.kaydet();ciz('[data-eylem="herSaat"]');}   /* R5 (TEST): balkonda her saat antrenman, yalnız görüntü */
     else if(ey==='locaBakisi'){ayarlar.locaBakisi=!ayarlar.locaBakisi;ayarlar.kaydet();if(typeof pulUygula==='function')pulUygula(!ayarlar.locaBakisi);ciz('[data-eylem="locaBakisi"]');}   /* P2 (TEST) */
     else if(ey==='otoYavas'){ayarlar.otoYavas=ayarlar.otoYavas===false;ayarlar.kaydet();if(typeof MAC_HIZ!=='undefined')MAC_HIZ.oto=ayarlar.otoYavas;ciz('[data-eylem="otoYavas"]');}

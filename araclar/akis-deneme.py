@@ -4105,6 +4105,15 @@ async def bolum_39(tarayici, site, tum_hatalar):
     son = await pg.evaluate(f"() => {{ const k = OYUN.kariyer; return {{ a: k.maclar['{pz[0]}'] && k.maclar['{pz[0]}'].skor, b: !!k.maclar['{pz[1]}'], an: k.tarih + ' ' + saatYazi(k.gunIciDakika) }}; }}")
     denetle("RK8 TV'de maç → Odaya dön: izlenen sonuç (kartınki) ve aynı saatteki maç kayıtta, oda maçın sonunda (18:45)",
             kart["ust"].startswith("TV · Maç sonu") and son["a"] == kart["skor"] and son["b"] and son["an"].endswith("18:45"), f"{kart} · {son}")
+    # Ayarlar › Geliştirici › Canlı maça ilerle (TEST): sıradaki öbür maçın 20. dakikası (Pazar 20:20), TV Skorlar'da İzle ▸
+    await pg.click('.od-nesne[data-panel="ayar"]')
+    await pg.click('[data-eylem="ayarBolum"][data-bolum="gelistirici"]')
+    await pg.click('[data-eylem="canliTest"]')
+    await lig_hesap_bekle(pg)
+    await pg.wait_for_selector(".tv-sayfa[data-sayfa='skor']", timeout=10000)
+    ct = await pg.evaluate("() => ({ an: OYUN.kariyer.tarih + ' ' + saatYazi(OYUN.kariyer.gunIciDakika), izle: [...document.querySelectorAll('.tv-izle')].length, mg: Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.eylem === 'macGunu') })")
+    denetle("RK8 TEST “Canlı maça ilerle”: sıradaki öbür lig maçının 20. dakikası (Pazar 20:20), TV Skorlar açık ve “İzle ▸” var",
+            ct["an"].endswith("20:20") and ct["izle"] >= 1, str(ct))
     await pg.context.close()
 
 
