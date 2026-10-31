@@ -284,6 +284,9 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .od-gozKasa dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
 /* RK1 (2026-10-31; kullanıcı: “antrenman kâğıdına gerek yok”): balkonda tarih kutusunun altında tek küçük künye — günün çalışması ve saati, durum,
    Gördüklerin bağlantısı. Kâğıt ve “Sahada” listesi kalktı; gruplar ve oyuncular sahada seçilir. Odak açıkken etkileşimsiz; dar karede odak süresince gizli */
+/* RK6: ziyaret — yarım odağın başında durum satırı; alt şeritte bırakılan kartı geri açan düğme */
+.od-zyDurum{margin:0 0 .5em;font-weight:600}
+.od-alt .od-zyDugme{white-space:nowrap}
 .od-antrenman{position:absolute;left:.9em;top:7.9em;max-width:min(36%,22em);display:grid;gap:.1em;padding:.3em .65em .35em;background:var(--k-zemin);border:1px solid var(--k-cizgi);
   border-left:.3em solid var(--k-yesil);box-shadow:.2em .25em 0 var(--k-golge)}
 .od-antrenman p{margin:0}
@@ -445,6 +448,7 @@ html,body{margin:0}
 <script src="js/transfer.js"></script>
 <script src="js/icerik-p12.js"></script>
 <script src="js/yazisma.js"></script>
+<script src="js/ziyaret.js"></script>
 <script src="js/mekan.js"></script>
 <script src="js/piyasa.js"></script>
 <script src="js/transfer-alim.js"></script>
@@ -499,6 +503,7 @@ html,body{margin:0}
 <script src="js/yuruyus.js"></script>
 <script src="js/oda.js"></script>
 <script src="js/balkon.js"></script>
+<script src="js/oda-ziyaret.js"></script>
 <script src="js/arma.js"></script>
 <script src="js/ekran-mac-oncesi.js"></script>
 <script src="js/portre.js"></script>

@@ -65,6 +65,11 @@ const OYUNCU_NOT_KAYNAKLARI=[
       const kisi=k.kisiler[y.kisiId]||{},yard=kisi.rol==='yardimciAntrenor';
       for(const tur of yard?['sakat','cezali','yorgun']:['sakat','cezali','yorgun','formda'])
         if(icinde(y.p[tur]))L.push({tarih:g.tarih,dakika:g.dakika,anahtar:(yard?'not.yardimci.':'not.hoca.')+tur,p:{},kaynak:kisi.ad||'—'});}
+    /* RK6: odadaki görüşme (js/ziyaret.js geçmiş satırı {tur:'ziyaret', p}): aynı listeler, görüşme anının görüntüsünden */
+    for(const g of k.gecmis||[]){if(g.tur!=='ziyaret'||g.konu!=='takim'||!g.p)continue;
+      const kisi=k.kisiler[g.kisiId]||{},yard=kisi.rol==='yardimciAntrenor';
+      for(const tur of yard?['sakat','cezali','yorgun']:['sakat','cezali','yorgun','formda'])
+        if(icinde(g.p[tur]))L.push({tarih:g.tarih,dakika:g.dakika,anahtar:(yard?'not.yardimci.':'not.hoca.')+tur,p:{},kaynak:kisi.ad||'—'});}
     return L;}},
   /* R2-e: “Oyuncu hakkında sor” cevabı (js/yazisma.js konu 'oyuncu'): o oyuncunun dosyasına kişinin kendi sözüyle, cevap anının görüntüsünden */
   {ad:'gorus',kaynakAd:'Hoca',notlar:(k,id)=>{

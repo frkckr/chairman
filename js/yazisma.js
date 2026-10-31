@@ -51,7 +51,8 @@ function personelKisisi(k,rol){
 /* bu kişiden bekleyen cevap ya da bekleyen görüşme önerisi */
 const yazismaBekleyen=(k,id)=>Object.values(k.isler).some(x=>(x.tur==='gelisme'&&x.veri.gelisme==='yazismaCevap'&&x.veri.muhatap===id)||(x.tur==='ajanda'&&x.veri.karar==='gorusmeOnerisi'&&x.veri.kisiId===id));
 /* bu kişiyle gelecekteki görüşme randevusu */
-const yazismaRandevu=(k,id)=>Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.etki==='ekipGorusmesi'&&x.veri.kisiId===id)||null;
+/* RK6: kabul edilen görüşme kapı kararıdır (js/ziyaret.js: ziyaret, ziyaretGorusme); eski kayıttaki düz randevu (etki ekipGorusmesi) da sayılır */
+const yazismaRandevu=(k,id)=>Object.values(k.isler).find(x=>x.tur==='ajanda'&&(x.veri.etki==='ekipGorusmesi'||x.veri.karar==='ziyaret'||x.veri.karar==='ziyaretGorusme')&&x.veri.kisiId===id)||null;
 /* bu kişiye bu konu (ve maç) daha önce soruldu mu (girişim kaydı) */
 const yazismaSoruldu=(k,id,konu,macId)=>k.gecmis.some(g=>g.tur==='girisim'&&g.kisiId===id&&g.konu===konu&&(macId===undefined||g.macId===macId));
 
@@ -260,8 +261,9 @@ KARAR_TURLERI.gorusmeOnerisi={
     if(secim==='kabul'||secim==='biz'){
       const o=secim==='biz'?bizimGorusmeAni(k,is):v.oneri;
       if(!o)throw new Error('Görüşme için boş an kalmadı');
-      isEkle(k,{tur:'ajanda',tarih:o.tarih,dakika:o.dakika,veri:{baslik:`Görüşme: ${ad}`,aciklama:`${G.sure} dk görüşme (TEST)`,zorunluluk:'istege',sure:G.sure,
-        kisiId:v.kisiId,muhatap:v.kisiId,etki:'ekipGorusmesi'}});
+      /* RK6: randevu kapı kararıdır (js/ziyaret.js); saati gelince kişi kapıya gelir. ziyaret.js yüklenmemişse (eski sayfa) düz randevu */
+      isEkle(k,{tur:'ajanda',tarih:o.tarih,dakika:o.dakika,veri:typeof ziyaretRandevuVeri==='function'?ziyaretRandevuVeri(k,v.kisiId,0):
+        {baslik:`Görüşme: ${ad}`,aciklama:`${G.sure} dk görüşme (TEST)`,zorunluluk:'istege',sure:G.sure,kisiId:v.kisiId,muhatap:v.kisiId,etki:'ekipGorusmesi'}});
       return{bilgi:`Görüşme deftere yazıldı: ${ad}, ${gorusmeAnYazi(o)}${secim==='biz'?' (senin önerin)':''}.`};
     }
     const p=k.kisiler[v.kisiId];
@@ -272,7 +274,7 @@ KARAR_TURLERI.gorusmeOnerisi={
   /* U3 bağlam: önerilen (ya da bizim) anın günü, defter şeridinde işaretli */
   baglam:(k,is,secim)=>{const o=secim==='biz'?bizimGorusmeAni(k,is):is.veri.oneri;return o?{tur:'gun',tarih:o.tarih,isaret:{dakika:o.dakika,sure:YAZISMA_TEST.gorusme.sure,ad:secim==='biz'?'Senin önerdiğin görüşme':`${kisiAdi(k,is.veri.kisiId)} ile görüşme (önerisi)`},haricId:is.id}:null;}
 };
-/* görüşmeye katılınca kısa TEST özeti (kişinin takım görüntüsü); ayrıntılı görüşme sahnesi (kapı) sonra gelir (karar 47, Y2) */
+/* görüşmeye katılınca kısa TEST özeti (kişinin takım görüntüsü). RK6'dan beri yeni randevular kapıya gelir (js/ziyaret.js); bu yol eski kayıttaki düz randevular içindir */
 KATILIM_ETKILERI.ekipGorusmesi={
   denetle:(k,v)=>(k.kisiler||{})[v.kisiId]?[]:['görüşülecek kişi bulunamadı'],
   uygula:(k,is)=>{const p=k.kisiler[is.veri.kisiId];if(!kisiAktif(k,p.id))return{bilgi:`${p.ad} gelmedi.`};

@@ -49,6 +49,8 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
  34. Balkon (R5): antrenman kâğıdı sağ üstte (günün türü, Gördüklerin, sinyalden oyuncu dosyası), sahadakiler kariyerin kadrosu ve programa göre
      gruplar, iş sağ yarıda, TEST “her saat antrenman” yalnız görüntü, gözlemde telefon rozeti (B44).
  35. Zincirler (R6): gazetede başka kulüpler arasındaki transfer; sponsor teklifi telefonda (Fırsat), pazarlık kartının iki aylık rakamı, dosyada aşama.
+ 37. Oda (RK6, 2026-10-31): TV dolabın üstünde (tvOzeti, Canlı Skor'la aynı); kapı kartı (Sonra gelsin, Esc ve “Kapıda: …”, İlerle kaçırır), Buyursun, Duraklat,
+     odaya tıklama atlatır, yenilemede oturan kişi, “Karşında: …”, balkon engeli; balkonda kapı kartı bantta, önce odaya dönülür. Telefonla uçtan uca §21'de.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız, Durdur ve tarz seçimi (TEST, B4b), eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
@@ -2307,7 +2309,7 @@ async def bolum_21(tarayici, site, tum_hatalar):
     await pg.focus('.tlf-is .kk-kart')
     await pg.keyboard.press("ArrowLeft")
     await pg.keyboard.press("Enter")
-    await pg.wait_for_function("() => Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.etki === 'ekipGorusmesi')", timeout=10000)
+    await pg.wait_for_function("() => Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.karar === 'ziyaret')", timeout=10000)
     await masaya_don(pg)
     await odak_ac(pg, "ajanda")
     await pg.wait_for_selector(".dft", timeout=10000)
@@ -2315,32 +2317,43 @@ async def bolum_21(tarayici, site, tum_hatalar):
     dft = await pg.text_content(".dft")
     await pg.keyboard.press("Escape")
     denetle("H2-c: kartı sola bırakmak (←, Enter) kabul eder: defterde öneri gününde “Görüşme: Şükrü Hoca”", "Görüşme: Şükrü Hoca" in dft, dft[dft.find("Görüşme"):][:60] if "Görüşme" in dft else dft[:80])
+    # RK6 (js/ziyaret.js): İlerle randevunun saatinde durur; kişi kapıdadır — kapı kartı yarım odakta kendiliğinden açılır, bakış kapıya döner
     for _ in range(6):
         if await pg.evaluate(f"() => OYUN.kariyer.tarih === '{kart['tarih']}' && OYUN.kariyer.gunIciDakika === {kart['dakika']}"):
             break
         await oda_ilerle(pg)
-    # randevuya katıl: defterde işe dokunmak onu seçer, alt şeritte "Katıl ▸" (onay adımı varsa "Onayla ▸")
-    rv = await pg.evaluate("() => Object.values(OYUN.kariyer.isler).find(x => x.veri && x.veri.etki === 'ekipGorusmesi').id")
+    await zaman_ozeti_kaldir(pg)
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=10000)
+    await pg.wait_for_timeout(700)
+    kp = await pg.evaluate(ZIYARET_JS)
+    denetle("RK6: İlerle randevunun saatinde durdu; kapı kartı yarım odakta kendiliğinden açıldı (perde yok, oda donmaz), odak kartta; bakış kapıya döndü, kişi henüz görünmez",
+            kp["odak"] == "ziyaret/yarim" and not kp["perde"] and kp["evre"] == "kapi" and kp["kartOdakta"] and kp["bakisX"] > 1.5 and "Kapı çalınıyor: Şükrü Hoca" in kp["metin"] and not kp["dondu"], str(kp))
+    await pg.keyboard.press("ArrowLeft")
+    await pg.keyboard.press("Enter")
+    await pg.wait_for_function("() => ODA.ziyaret && ODA.ziyaret.evre === 'giris' && ODA.ziyaret.t > 0.6", timeout=10000)
+    g1 = await pg.evaluate(ZIYARET_JS)
+    await pg.wait_for_function("() => ODA.ziyaret && ODA.ziyaret.evre === 'oturuyor'", timeout=30000)
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=5000)
+    await pg.wait_for_timeout(300)
+    g2 = await pg.evaluate(ZIYARET_JS)
+    denetle("RK6 Buyursun: zaman almaz; kanat açılır, kişi içeri yürür ve karşıdaki koltuğa oturur (en çok 8 sn); görüşme kartı kişinin sözüyle açılır, odak kartta",
+            g1["saat"] == kp["saat"] and g1["kapi"] < -0.3 and "içeri giriyor" in g1["metin"] and g2["evre"] == "oturuyor" and g2["kartOdakta"] and "karşında oturuyor" in g2["metin"]
+            and bool(g2["olcu"]) and g2["olcu"].get("giris", 99) <= 8.0, f"{g1} · {g2}")
+    await pg.keyboard.press("ArrowLeft")
+    await pg.keyboard.press("Enter")
+    await pg.wait_for_function("() => OYUN.kariyer.gecmis.some(g => g.tur === 'ziyaret')", timeout=10000)
+    c1 = await pg.evaluate(ZIYARET_JS)
+    await pg.wait_for_function("() => !ODA.ziyaret", timeout=30000)
+    c2 = await pg.evaluate(ZIYARET_JS)
+    zs = await pg.evaluate("() => { const g = OYUN.kariyer.gecmis.filter(x => x.tur === 'ziyaret').pop(); return { isId: g.isId, cevap: g.cevap, kisi: (OYUN.kariyer.kisiler[g.kisiId] || {}).ad, p: !!g.p }; }")
     await odak_ac(pg, "ajanda")
     await pg.wait_for_selector(".dft", timeout=10000)
-    await pg.click(f'.dft [data-is="{rv}"]:not([data-eylem])')
-    katil = await pg.text_content(".od-ana")
-    await pg.click(".od-ana")
-    if await pg.query_selector('.od-ana[data-eylem="yap"]:has-text("Onayla")'):
-        await pg.click(".od-ana")
-    await pg.keyboard.press("Escape")
-    try:
-        await pg.wait_for_function("() => OYUN.kariyer.gecmis.some(g => g.tur === 'is' && g.sonuc && g.sonuc.durum === 'yapildi' && /ile görüştün/.test(g.sonuc.bilgi || ''))", timeout=20000)
-    except Exception:
-        print("  (tanı) " + str(await pg.evaluate("""() => ({ an: OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika, ana: (document.querySelector('.od-ana') || {}).textContent,
-          mesaj: (document.querySelector('.od-mesaj') || {}).textContent, isler: Object.values(OYUN.kariyer.isler).filter(x => x.tur === 'ajanda').map(x => x.id + ' ' + x.tarih + ' ' + x.dakika + ' ' + x.veri.baslik),
-          son: OYUN.kariyer.gecmis.slice(-3).map(g => g.tur + ' ' + (g.isTuru || '') + ' ' + JSON.stringify(g.sonuc || {}).slice(0, 120)) })""")) + f" · katıl düğmesi: {katil}")
-    await odak_ac(pg, "ajanda")
-    await pg.wait_for_selector(".dft", timeout=10000)
-    await pg.click(f'.dft [data-is="{rv}"]:not([data-eylem])')   # geçmiş kayda dokununca ayrıntı: "Öğrendiklerin"
+    await pg.click(f'.dft [data-is="{zs["isId"]}"]:not([data-eylem])')   # geçmiş kayda dokununca ayrıntı: "Öğrendiklerin"
     dft2 = await pg.text_content(".dft")
     await pg.keyboard.press("Escape")
-    denetle("H2-c: İlerle randevuda durdu (alt şeritte Katıl), Katıl → defterde öğrendiklerin (“… ile görüştün”)", "Katıl" in katil and "ile görüştün" in dft2, dft2[dft2.find("görüştün") - 40:][:100] if "görüştün" in dft2 else dft2[:80])
+    denetle("RK6 görüşmenin cevabı (←, Enter): 45 dk geçer, kart kapanır, kişi kalkıp kapıdan çıkar (en çok 5 sn), kanat kapanır; geçmişte ziyaret satırı; defterde öğrendiklerin (“… ile görüştün”)",
+            c1["odak"] is None and c1["evre"] == "cikis" and c2["kapi"] == 0 and (c2["olcu"] or {}).get("cikis", 99) <= 5.0 and zs["cevap"] == "tesekkur" and zs["kisi"] == "Şükrü Hoca" and zs["p"]
+            and "ile görüştün" in dft2, f"{c1} · {c2} · {zs} · " + (dft2[dft2.find("görüştün") - 40:][:100] if "görüştün" in dft2 else dft2[:80]))
     await pg.context.close()
     # U3 Şu gün olsun: kart sağa (→, Enter) — bizim saatimize randevu, karşı taraf hemen kabul eder
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
@@ -2356,7 +2369,7 @@ async def bolum_21(tarayici, site, tum_hatalar):
     await pg.keyboard.press("ArrowRight")
     await pg.keyboard.press("Enter")
     await pg.wait_for_function("() => !Object.values(OYUN.kariyer.isler).some(x => x.veri && x.veri.karar === 'gorusmeOnerisi')", timeout=10000)
-    b = await pg.evaluate("""() => { const r = Object.values(OYUN.kariyer.isler).find(x => x.veri && x.veri.etki === 'ekipGorusmesi');
+    b = await pg.evaluate("""() => { const r = Object.values(OYUN.kariyer.isler).find(x => x.veri && x.veri.karar === 'ziyaret');
       return { randevu: r ? anDakika(r.tarih, r.dakika) : null, giden: [...document.querySelectorAll('.tel .tel-giden')].map(e => e.textContent).join(' | '),
         gelen: [...document.querySelectorAll('.tel .tel-gelen')].map(e => e.textContent).pop() || '' }; }""")
     denetle("U3: kartı sağa bırakmak “Şu gün olsun”: kart kalkar, bizim saatimize randevu (önerisinden önce), konuşmada giden cevap ve “Olur başkanım, görüşelim.”",
@@ -3824,6 +3837,171 @@ FIGUR_JS = """(id) => { const [CX, PY, CZ] = STIL.balkon.saha, r = document.getE
   if (!a) return null; const v = new THREE.Vector3(CX + a.x, PY + 0.9, CZ + a.z).project(ODA.kamera); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; }"""
 
 
+# ---- RK6: ziyaret (kural js/ziyaret.js, sahne js/oda-ziyaret.js) ----
+ZIYARET_JS = r"""() => { const Z = ODA.ziyaret, s = document.querySelector('#oda section.odk:not(.odk-cikis)'), ae = document.activeElement;
+  return { evre: Z ? Z.evre : null, odak: s ? s.dataset.odak + '/' + s.dataset.boy : null, perde: !!document.querySelector('#oda .odk-perde:not(.odk-cikis)'),
+    metin: s ? s.innerText.replace(/\s+/g, ' ').slice(0, 220) : '', kapi: ODA.giris ? +ODA.giris.rotation.y.toFixed(2) : null,
+    saat: OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika, kartOdakta: !!(ae && ae.classList && ae.classList.contains('kk-kart')),
+    bakisX: +ODA.bakis.x.toFixed(2), olcu: ODA.ziyaretOlcu || null, dugme: (document.querySelector('.od-zyDugme') || {}).textContent || '',
+    mesaj: (document.querySelector('.od-mesaj') || {}).textContent || '', durak: (document.querySelector('.od-durak') || {}).textContent || '', yer: ODA.yer,
+    dondu: typeof odaDondur === 'function' ? odaDondur() : null, t: Z ? +Z.t.toFixed(3) : null } }"""
+
+
+async def zaman_ozeti_kaldir(pg):
+    """İlerle'den sonra zaman sahnesi açıksa Esc ile kaldırır (U4); kapalıysa dokunmaz (Esc açık bir kartı bırakırdı)."""
+    for _ in range(30):   # akış sürerken ilk Esc özete atlatır, ikincisi kaldırır
+        if await pg.evaluate("() => typeof ZAMAN_SAHNE !== 'undefined' && ZAMAN_SAHNE.acik"):
+            await pg.keyboard.press("Escape")
+            await pg.wait_for_timeout(80)
+            continue
+        if await pg.query_selector('#oda section.odk[data-odak="ziyaret"]'):
+            return
+        await pg.wait_for_timeout(100)
+
+
+async def ziyaret_kur(pg, dk=30):
+    """RK6: teknik direktörle dk dakika sonrasına kapı randevusu (kuralın yolu js/ziyaret.js ziyaretRandevuVeri; telefonla kabul §21'de)."""
+    await pg.evaluate("""(dk) => { const h = Object.values(OYUN.kariyer.kisiler).find(p => p.rol === 'teknikDirektor' && p.durum === 'aktif');
+      oyunKomut(k => { isEkle(k, { tur: 'ajanda', tarih: k.tarih, dakika: k.gunIciDakika + dk, veri: ziyaretRandevuVeri(k, h.id, 0) }); }); }""", dk)
+
+
+async def ziyaret_kapiya(pg):
+    """İlerle (randevuda durur), zaman sahnesinin özeti kalkar, kapı kartı açılana dek beklenir."""
+    await oda_ilerle(pg)
+    await zaman_ozeti_kaldir(pg)
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=10000)
+    await pg.wait_for_timeout(300)
+
+
+async def oda_bos_tikla(pg, x=0.78, y=0.55):
+    """Odanın boş bir yerine (kabın kendisine) tıklar: yürüyüşü ya da ziyaret sahnesini atlatır."""
+    kb = await pg.evaluate("([x, y]) => { const r = document.getElementById('oda').getBoundingClientRect(); return [r.left + r.width * x, r.top + r.height * y]; }", [x, y])
+    await pg.mouse.click(kb[0], kb[1])
+
+
+TV_KARE_JS = r"""() => { const v = new THREE.Vector3(), T = STIL.oda.tv, g = ODA.tv.g; g.updateMatrixWorld(true);
+  const P = [[-T.en / 2 - 0.02, 0.09], [T.en / 2 + 0.02, 0.09], [-T.en / 2 - 0.02, 0.13 + T.boy], [T.en / 2 + 0.02, 0.13 + T.boy]].map(([x, y]) => {
+    v.set(x, y, 0.03).applyMatrix4(g.matrixWorld).project(ODA.kamera); return [(v.x + 1) / 2 * 960, (1 - v.y) / 2 * 720]; });
+  const xs = P.map(p => p[0]), ys = P.map(p => p[1]); return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; }"""
+
+
+async def bolum_37(tarayici, site, tum_hatalar):
+    """RK6: oda — giriş kapısı, ziyaret ve TV. TV dolabın üstünde, karede tam ve en az 40×40 px; ekranı tvOzeti'nden (Canlı Skor'un okumasıyla aynı).
+    Sonra gelsin: kart kapanır, kapı açılmaz, ertesi uygun günün aynı saatine yeni kapı. Esc kapı kartını bırakır (kişi kapıda bekler, bakış döner), alt şeritteki
+    “Kapıda: …” düğmesi geri açar; İlerle onay ister ve görüşmeyi kaçırır. Buyursun sonrası Duraklat ziyaretçiyi dondurur, odaya tıklamak atlatır; sayfa
+    yenilenince kişi oturur hâlde, kart açık; Esc'ten sonra “Karşında: …” düğmesi; karşıda biri varken balkona çıkılmaz. Balkonda kapı kartı bantta; Buyursun
+    önce odaya yürütür, varınca kişi girer. Uçtan uca telefon akışı (kabul, kapı, giriş, görüşme, çıkış) §21'de."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.set_viewport_size({"width": 1280, "height": 960})
+    await pg.wait_for_timeout(500)
+    tv = await pg.evaluate("""() => { const k = OYUN.kariyer, v = tvOzeti(k), T = sezonTablosu(k), H = canliHafta(k, canliVarsayilanHafta(k)), biz = k.kisiler[k.baskanId].kulupId, ks = id => k.kulupler[id].kisa;
+      const bizim = H.maclar.find(m => m.ev === biz || m.konuk === biz);
+      return { ayni: ODA.tv.anahtar === JSON.stringify(v), v, ilk: '1 ' + ks(T[0].id) + ' ' + T[0].P, mac: bizim ? ks(bizim.ev) + ' - ' + ks(bizim.konuk) : null }; }""")
+    kare = await pg.evaluate(TV_KARE_JS)
+    denetle("RK6 TV: dolabın üstünde, karede tam ve en az 40×40 px (960×720 ızgarada); ekran tvOzeti'nden: kanal (TEST), saat, sıradaki haftanın bizim maçı önce, puan durumunun ilki — Canlı Skor'un okumasıyla aynı",
+            tv["ayni"] and tv["v"]["kanal"] == "TEST SPOR" and len(tv["v"]["satirlar"]) <= 5 and any(s.startswith(tv["ilk"]) for s in tv["v"]["satirlar"]) and tv["v"]["satirlar"][1] == tv["mac"]
+            and kare["x0"] >= 0 and kare["x1"] <= 960 and kare["y0"] >= 0 and kare["x1"] - kare["x0"] >= 40 and kare["y1"] - kare["y0"] >= 40, f"{tv['v']} · {kare}")
+    await pg.screenshot(path=str(ARAC / "son-akis-37-oda.png"))
+    # Esc, alt şeritteki düğme ve İlerle (onay, kaçırılır)
+    await ziyaret_kur(pg, 20)
+    await ziyaret_kapiya(pg)
+    await pg.keyboard.press("Escape")
+    await pg.wait_for_timeout(300)
+    e1 = await pg.evaluate(ZIYARET_JS)
+    await pg.click(".od-zyDugme")
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=5000)
+    e2 = await pg.evaluate(ZIYARET_JS)
+    await pg.keyboard.press("Escape")
+    await pg.wait_for_timeout(200)
+    e3 = await pg.evaluate(ZIYARET_JS)
+    denetle("RK6 Esc kapı kartını bırakır: kişi kapıda bekler (sahne kalkar, bakış masaya döner), alt şeritte “Kapıda: Şükrü Hoca ▸” ve “Kaçırılacak”; düğme kartı geri açar (bakış yine kapıda)",
+            e1["odak"] is None and e1["evre"] is None and "Kapıda: Şükrü Hoca" in e1["dugme"] and "Kaçırılacak: Görüşme: Şükrü Hoca" in e1["durak"]
+            and e2["odak"] == "ziyaret/yarim" and e2["evre"] == "kapi" and e3["odak"] is None, f"{e1} · {e2}")
+    # İlerle kapıdan sonra yakında dursun (yoksa maç gününe dek gider): bir saat sonrasına isteğe bağlı deneme durağı
+    await pg.evaluate("() => oyunKomut(k => { isEkle(k, { tur: 'ajanda', tarih: k.tarih, dakika: k.gunIciDakika + 60, veri: { baslik: 'Deneme durağı', aciklama: 'Deneme (RK6).', zorunluluk: 'istege', sure: 0 } }); })")
+    kid = await pg.evaluate("() => ziyaretKapida(OYUN.kariyer).id")
+    await oda_ilerle(pg)
+    await zaman_ozeti_kaldir(pg)
+    await pg.wait_for_timeout(300)
+    i1 = await pg.evaluate("(kid) => { const g = OYUN.kariyer.gecmis.find(x => x.tur === 'is' && x.isId === kid); return { durum: g && g.sonuc.durum, dugme: !!document.querySelector('.od-zyDugme'), odak: !!document.querySelector('#oda section.odk[data-odak=\"ziyaret\"]') }; }", kid)
+    denetle("RK6: kapıda biri varken İlerle onay ister; onaylanınca görüşme kaçırılır (kilitlemez), düğme ve kart kalkar", i1["durum"] == "kacirildi" and not i1["dugme"] and not i1["odak"], str(i1))
+    # Buyursun, Duraklat, odaya tıklama, yenileme, Esc ve “Karşında”, balkon engeli, cevap
+    await ziyaret_kur(pg, 20)
+    await ziyaret_kapiya(pg)
+    await pg.keyboard.press("ArrowLeft")
+    await pg.keyboard.press("Enter")
+    await pg.wait_for_function("() => ODA.ziyaret && ODA.ziyaret.evre === 'giris' && ODA.ziyaret.t > 0.8", timeout=10000)
+    await pg.keyboard.press("KeyP")
+    await pg.wait_for_timeout(150)
+    d0 = await pg.evaluate(ZIYARET_JS)
+    await pg.wait_for_timeout(600)
+    d1 = await pg.evaluate(ZIYARET_JS)
+    await pg.keyboard.press("KeyP")
+    await pg.wait_for_timeout(150)
+    denetle("RK6: Duraklat ziyaretçiyi olduğu yerde dondurur (sahnenin zamanı ilerlemez)", d0["evre"] == "giris" and d0["t"] == d1["t"], f"{d0['t']} → {d1['t']}")
+    await oda_bos_tikla(pg)
+    await pg.wait_for_function("() => ODA.ziyaret && ODA.ziyaret.evre === 'oturuyor'", timeout=5000)
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=5000)
+    a1 = await pg.evaluate(ZIYARET_JS)
+    denetle("RK6: yürürken odaya tıklamak sahneyi atlatır: kişi hemen oturur, görüşme kartı açılır", a1["evre"] == "oturuyor" and "karşında oturuyor" in a1["metin"], str(a1))
+    await pg.screenshot(path=str(ARAC / "son-akis-37-gorusme.png"))
+    await pg.reload()   # oda_yenile İlerle'yi bekler; burada açılışta görüşme kartı açık olduğundan İlerle yoktur
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=20000)
+    y1 = await pg.evaluate(ZIYARET_JS)
+    await pg.keyboard.press("Escape")
+    await pg.wait_for_timeout(200)
+    y2 = await pg.evaluate(ZIYARET_JS)
+    await pg.keyboard.press("Digit5")
+    await pg.wait_for_timeout(300)
+    y3 = await pg.evaluate(ZIYARET_JS)
+    denetle("RK6: sayfa yenilenince kişi oturur hâlde, görüşme kartı açık; Esc kartı bırakır, kişi oturmaya devam eder, alt şeritte “Karşında: Şükrü Hoca ▸”; karşıda biri varken balkona çıkılmaz",
+            y1["evre"] == "oturuyor" and y1["odak"] == "ziyaret/yarim" and y2["odak"] is None and y2["evre"] == "oturuyor" and "Karşında: Şükrü Hoca" in y2["dugme"]
+            and y3["yer"] == "masa" and "önce görüşmeyi bitir" in y3["mesaj"], f"{y1} · {y2} · {y3}")
+    await pg.click(".od-zyDugme")
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=5000)
+    await pg.keyboard.press("ArrowRight")
+    await pg.keyboard.press("Enter")
+    await pg.wait_for_function("() => OYUN.kariyer.gecmis.some(g => g.tur === 'ziyaret' && g.cevap === 'baski')", timeout=10000)
+    await pg.wait_for_function("() => ODA.ziyaret && ODA.ziyaret.evre === 'cikis'", timeout=5000)
+    await oda_bos_tikla(pg)
+    await pg.wait_for_function("() => !ODA.ziyaret", timeout=10000)
+    denetle("RK6: görüşmenin öbür cevabı (→, Enter) geçmişe yazılır; çıkış tıklamayla atlanır, kanat kapalı, alt şeritte düğme yok",
+            await pg.evaluate("() => ODA.giris.rotation.y === 0 && !document.querySelector('.od-zyDugme')"))
+    # Sonra gelsin
+    await ziyaret_kur(pg)
+    await ziyaret_kapiya(pg)
+    await pg.keyboard.press("ArrowRight")
+    await pg.keyboard.press("Enter")
+    await pg.wait_for_function("() => !document.querySelector('#oda section.odk[data-odak=\"ziyaret\"]:not(.odk-cikis)')", timeout=5000)
+    s = await pg.evaluate("""() => ({ yeni: Object.values(OYUN.kariyer.isler).filter(x => x.veri && x.veri.karar === 'ziyaret').map(x => [x.tarih, x.dakika, x.veri.erteleme]),
+      bugun: OYUN.kariyer.tarih, dk: OYUN.kariyer.gunIciDakika, evre: ODA.ziyaret ? ODA.ziyaret.evre : null, kapi: ODA.giris.rotation.y, mesaj: document.querySelector('.od-mesaj').textContent })""")
+    denetle("RK6 Sonra gelsin (→, Enter): kart kapanır, kanat açılmaz; ertesi uygun günün aynı saatine yeni kapı (erteleme 1); alt şeritte ne zaman geleceği",
+            len(s["yeni"]) == 1 and s["yeni"][0][0] > s["bugun"] and s["yeni"][0][1] == s["dk"] and s["yeni"][0][2] == 1 and s["evre"] is None and s["kapi"] == 0 and "yeniden gelecek" in s["mesaj"], str(s))
+    await pg.context.close()
+    # balkonda kapı
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.set_viewport_size({"width": 1600, "height": 900})
+    await balkona_atla(pg)
+    await ziyaret_kur(pg, 20)
+    await ziyaret_kapiya(pg)
+    b1 = await pg.evaluate(ZIYARET_JS)
+    await pg.keyboard.press("ArrowLeft")
+    await pg.keyboard.press("Enter")
+    await pg.wait_for_function("ODA.yer === 'yolda'", timeout=10000)
+    b2 = await pg.evaluate(ZIYARET_JS)
+    await oda_bos_tikla(pg, 0.3, 0.5)
+    await pg.wait_for_function("ODA.yer === 'masa'", timeout=YURUYUS_BEKLE)
+    await pg.wait_for_function("() => ODA.ziyaret && ODA.ziyaret.evre === 'oturuyor'", timeout=30000)
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=5000)
+    b3 = await pg.evaluate(ZIYARET_JS)
+    denetle("RK6 balkonda: kapı kartı bantta (orta boy, “odanın kapısında bekliyor”); Buyursun önce odaya yürütür (kart açık, “odaya dönüyorsun”), varınca kişi kapıdan girer, oturur, görüşme kartı açılır",
+            b1["yer"] == "balkon" and b1["odak"] == "ziyaret/orta" and "kapısında bekliyor" in b1["metin"] and b2["odak"] == "ziyaret/orta" and "odaya dönüyorsun" in b2["metin"]
+            and b3["yer"] == "masa" and b3["evre"] == "oturuyor" and b3["odak"] == "ziyaret/yarim", f"{b1} · {b2} · {b3}")
+    await pg.context.close()
+
+
 async def bolum_36(tarayici, site, tum_hatalar):
     """RB, RK1: balkondan bakış ve geniş pencere bandı — kâğıt ve “Sahada” listesi yok; 16:9 pencerede iş yokken bant yok (saha tam kare), telefon ya da
     oyuncu dosyası açılınca bant açılır, iş kapanınca kapanır (kare aynı boy, yazı bantla büyümez); ←/→ gruplar arasında (görüş açısı grup kademesine iner),
@@ -4120,6 +4298,9 @@ async def ana():
         if sec("36"):
             print("\n36. Balkondan bakış ve kâğıt bandı (RB)")
             await bolum_36(tarayici, site, tum_hatalar)
+        if sec("37"):
+            print("\n37. Oda: giriş kapısı, ziyaret ve TV (RK6)")
+            await bolum_37(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

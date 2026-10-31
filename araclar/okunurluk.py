@@ -8,6 +8,7 @@ oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu 
 R4: Transfer masası (Pano, Piyasa, oyuncu kâğıdı) ve transfer zincirinin aday ve pazarlık kartı (yapay haftalarla 5 Ocak'a, oyunun komut yoluyla).
 R5: balkon ve balkonda sağ yarıda açılan oyuncu dosyası. RB: takip edilen oyuncunun ad etiketi (balkon-sahada). RK1: kâğıt yerine künye ve şeritte
 İzle (balkon), Gördüklerin odak kabında (balkon-gorduklerin); 1366 ve 1536 pencerede bant yalnız iş açıkken.
+RK6: TV'li oda (oda-tv), kapı kartı yarım odakta (ziyaret-kapi-karti), karşıda oturanın görüşme kartı (ziyaret-kart).
 R6: sponsor pazarlık kartı (1 Şubat ay başı, Görüşelim'den sonra; oyunun komut yoluyla).
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
@@ -233,6 +234,24 @@ async def sahneler_balkon(pg, olc):
     await olc("balkon-dosya")
 
 
+ZIYARET_SAHNELER = {"oda-tv", "ziyaret-kapi-karti", "ziyaret-kart"}
+
+
+async def sahneler_ziyaret(pg, olc):
+    """RK6: TV'li oda (oda-tv); teknik direktörle randevu, İlerle kapıda durur: kapı kartı yarım odakta (ziyaret-kapi-karti); Buyursun, odaya tıklayınca
+    kişi oturur: görüşme kartı (ziyaret-kart; kişinin sözü kartın sorusu)."""
+    await olc("oda-tv")
+    await akis.ziyaret_kur(pg, 20)
+    await akis.ziyaret_kapiya(pg)
+    await olc("ziyaret-kapi-karti")
+    await pg.keyboard.press("ArrowLeft")
+    await pg.keyboard.press("Enter")
+    await akis.yokla(pg, "() => ODA.ziyaret && ODA.ziyaret.evre === 'giris'", 20)
+    await akis.oda_bos_tikla(pg)
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=10000)
+    await olc("ziyaret-kart")
+
+
 SPONSOR_SAHNELER = {"sponsor-pazarlik-karti"}
 
 
@@ -321,6 +340,10 @@ async def ana():
             if not secili or secili & BALKON_SAHNELER:
                 pg = await ac("index.html", "?dunya=7&pul=0")
                 await sahneler_balkon(pg, await olc_kur(pg))
+                await pg.context.close()
+            if not secili or secili & ZIYARET_SAHNELER:
+                pg = await ac("index.html", "?dunya=7&pul=0")
+                await sahneler_ziyaret(pg, await olc_kur(pg))
                 await pg.context.close()
             if not secili or secili & SPONSOR_SAHNELER:
                 pg = await ac("index.html", "?dunya=7&pul=0")

@@ -26,6 +26,8 @@
   display:grid;grid-template-rows:auto minmax(0,1fr);gap:.35em;background:none;border:0;box-shadow:none}
 .oda section.odk[data-boy="orta"]{--odk-en:${O.boy.orta}%}
 .oda section.odk[data-boy="kucuk"]{--odk-en:${O.boy.kucuk}%}
+/* RK6: yarım odak (ziyaret) — perde yok, oda bulanmaz; iş sol yarıda, kapı ve karşıdaki koltuk görünür */
+.oda section.odk[data-boy="yarim"]{--odk-en:${O.boy.yarim||42}%;left:3%;top:8.4em}
 .oda section.odk[data-boy="cihaz"]{--odk-en:${O.boy.cihaz}%}
 /* R2 (2026-10-29): odada iki sütunlu telefon — solda telefon, sağda iş paneli (js/ekran-telefon.js .tlf); kâğıt yok, kabın kendisi taşır */
 .oda section.odk[data-boy="telefon"]{--odk-en:${O.boy.telefon}%}
@@ -86,7 +88,7 @@ function odakKabi(s){
   const govde=s.kagit?'<div class="odk-kagit"><div class="od-icerik">'+s.govde+'</div></div>':'<div class="odk-govde">'+s.govde+'</div>';
   const yan=s.yan?'<aside class="odk-goz'+(s.yan.belir?' odk-gozBelir':'')+'" data-boy="'+(s.boy||'genis')+'" aria-label="Göz at: '+yazOdk(s.yan.baslik)+'"><header class="odk-gozUst"><h4>'+yazOdk(s.yan.baslik)+'</h4><small>yalnız okuma</small></header>'+
     '<div class="odk-gozIcerik">'+s.yan.govde+'</div></aside>':'';
-  return'<div class="odk-perde od-perde'+(s.belir?' odk-belir':'')+'" data-perde="1"></div>'+
+  return(s.boy==='yarim'?'':'<div class="odk-perde od-perde'+(s.belir?' odk-belir':'')+'" data-perde="1"></div>')+
     '<section class="odk'+(s.sinif?' '+s.sinif:'')+(s.belir?' odk-belir':'')+'" data-odak="'+yazOdk(s.ad)+'" data-boy="'+(s.boy||'genis')+'"'+(s.yan?' data-goz="1"':'')+(s.kagit?' role="dialog" aria-label="'+yazOdk(s.etiket)+'"':'')+'>'+ust+govde+'</section>'+yan;
 }
 /* kapanma: açık kabın kopyası etkileşimsiz, ekran okuyucudan gizli; karta ait kimlik ve sınıflar silinir (kart bileşeni kopyayı bulmasın) */

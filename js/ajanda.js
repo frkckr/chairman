@@ -304,6 +304,7 @@ function ajandaGunu(k,tarih){
     const r=g.sonuc||{};
     if(g.isTuru==='ajanda'){
       if(r.gun!==tarih)continue;
+      if(r.karar==='ziyaret'&&r.secim==='buyursun')continue;   /* RK6: içeri alınan ziyaretin kapı satırı (0 dk) görüşmenin satırına katılır (js/ziyaret.js) */
       const satir={id:g.isId,tur:'ajanda',saat:r.saat,durum:r.durum,baslik:r.baslik,zorunluluk:r.zorunluluk,sure:r.sure};
       if(r.bilgi!==undefined)satir.bilgi=r.bilgi;
       if(r.eylem!==undefined)satir.eylem=r.eylem;

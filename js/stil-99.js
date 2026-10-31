@@ -375,7 +375,16 @@ const STIL={
     arkaDuvarZ:2.3,
     baskanKoltugu:{z:0.86,deri:0x4a1e18,dikis:0x6a2c22,ayak:0x2a2c33,itme:0.32},
     pano:{x:-0.7,y:1.78,en:1.25,boy:0.95,cerceve:0x6a4a2c,zemin:'#f2ede2'},
-    bayrak:{x:1.7,z:2.0,direk:0xb89a4a}},
+    bayrak:{x:1.7,z:2.0,direk:0xb89a4a},
+    /* RK6 (2026-10-31; kullanıcı: “kapının yerini sen belirle, karşımda otursun”): giriş kapısı sağ yan duvarda (uzak duvar dış duvardır: pencere ve balkon),
+       koridora açılır; kapı çalınınca bakış kapıya döner (masadan dinlenirken görünmez). z0–z1 kapı boşluğu, h yüksekliği; kanat menteşesi z0'da, içeri açılır.
+       koridor: kapının arkasındaki kısa geçit (renkler). tv: dosya dolabının üstünde ayaklı küçük ekran (ayağın yeri x, y, z; masaya dönüş rad; en, boy m; ekran dokusu
+       96×56 piksel, js/canli-skor.js tvOzeti). ziyaret: ziyaretçinin yolu (x, z; koridordan sağ koltuğun önüne), koltuk (x, z, yön), hız (m/sn), süreler (sn),
+       bakış (kapı noktası; oturanın başına bakışın payı). TEST değerleri */
+    giris:{z0:-2.6,z1:-1.8,h:2.1,renk:0x5e4026,panel:0x7a5634,cerceve:0xf4f1e8,kol:0xb89a4a,koridor:{duvar:0xd6ccb6,zemin:0x8a7a66,tavan:0xf2ede2}},
+    tv:{x:2.06,y:1.35,z:-3.15,donus:-0.5,en:0.56,boy:0.33,kasa:0x1c1d22,zemin:'#13202b',serit:'#c8281e',yazi:'#f2ede2',soluk:'#9fb4c4'},
+    ziyaret:{yol:[[4.2,-2.2],[3.0,-2.2],[1.4,-1.72],[0.66,-1.78]],koltuk:[0.72,-2.15,-0.25],hiz:1.3,kapiAc:0.6,kapiKapan:0.6,don:0.45,otur:1.1,kalk:0.9,
+      bakisKapi:[3.12,1.32,-2.2],oturanPay:0.42}},
 
   /* Başkanın beden hareketi (N6, kullanıcı kararı 2026-10-04; js/yuruyus.js): odada, balkonda ve locaya girişte ortak.
      yonel: otururken başın yola dönmesi (sn). kalk: sure (sn), egilPay = öne eğilmenin bittiği an (0–1), adimPay = yerine adım atmanın başladığı an,
@@ -428,7 +437,7 @@ const STIL={
     gazete:{kagit:'#f6f2e7',sari:'#e6d6a8',murekkep:'#1d1a16',soluk:'#5f574b',cizgi:'#b9ae96',kirmizi:'#a3241b'},
     /* U4 zaman geçiyor sahnesi (js/ekran-zaman.js): taban + satır başı sn, en çok enCok sn. TEST */
     zaman:{taban:0.8,satir:0.35,enCok:2.5},
-    odak:{goz:{is:55,yan:40,kenar:2},bulanik:7,karartma:'rgba(24,16,8,.33)',yalnizKarartma:'rgba(24,16,8,.5)',boy:{genis:80,orta:60,kucuk:44,cihaz:44,telefon:92},olcek:0.96,
+    odak:{goz:{is:55,yan:40,kenar:2},bulanik:7,karartma:'rgba(24,16,8,.33)',yalnizKarartma:'rgba(24,16,8,.5)',boy:{genis:80,orta:60,kucuk:44,cihaz:44,telefon:92,yarim:42},olcek:0.96,
       sure:{belir:220,kapan:160,perde:150,perdeKapan:120,azalt:150}},
     /* telefon (2.8I): açık tonlu cihaz; gelen/giden baloncuk ve ana ekran simgeleri. N7 (2026-10-04): cihaz çerçevesi ve kamera adası, ana ekranın
        dikey zemini (üst, orta, alt), alttaki sabit sıranın zemini, geri/okunmamış mavisi, satır ayracı */

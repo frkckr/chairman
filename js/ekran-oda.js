@@ -36,7 +36,52 @@ function odaEkraniKur(kap,oyun,ayarlar){
   const DURUM={bekliyor:'',yapildi:'Yapıldı',kacirildi:'Kaçırıldı',ertelendi:'Ertelendi',cevapsiz:'Cevapsız',tamamlandi:''};
   const ROL={baskan:'başkan',teknikDirektor:'teknik direktör',yardimciAntrenor:'yardımcı antrenör',maliMudur:'mali işler müdürü',yonetici:'yönetici',eskiBaskan:'eski başkan'};
   const NESNE={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',transfer:'Transfer'};   /* H2-d: Kasa kalktı (kullanıcı isteği 1–2); R4-k: Transfer masası (duvardaki pano) */
-  const ODAK_BOY={telefon:'cihaz',ajanda:'genis',dosya:'genis',gazete:'genis',transfer:'genis',kadro:'genis',karar:'orta',ayar:'kucuk',gorduklerin:'kucuk'};   /* U1: odak kabının genişliği (STIL.kagit.odak.boy); RK1: balkonda Gördüklerin */
+  const ODAK_BOY={telefon:'cihaz',ajanda:'genis',dosya:'genis',gazete:'genis',transfer:'genis',kadro:'genis',karar:'orta',ayar:'kucuk',gorduklerin:'kucuk',ziyaret:'yarim'};   /* U1: odak kabının genişliği (STIL.kagit.odak.boy); RK1: balkonda Gördüklerin; RK6: ziyaret yarım odakta (oda bulanmaz) */
+  /* ---- RK6 ziyaret (kural js/ziyaret.js, sahne js/oda-ziyaret.js): kabul edilen görüşmenin saati gelince kişi kapıdadır. Kapı kartı yarım odakta kendiliğinden
+     açılır (oda bulanmaz, donmaz; bakış kapıya döner). Buyursun: kişi kapıdan girer, karşıdaki koltuğa oturur, görüşme kartı açılır; cevaplanınca kalkar ve çıkar.
+     Sonra gelsin: kapı kapalı kalır. Esc kartı bırakır (kişi kapıda bekler; kapıya ya da alttaki “Kapıda: …” düğmesine tıklamak geri açar); İlerle onay ister ve
+     görüşmeyi kaçırır. Balkondaysan kart bantta açılır; Buyursun önce odaya yürütür. Yürürken tıklamak sahneyi atlatır ---- */
+  const ziyaretSahnesi=()=>typeof odaZiyaretKare==='function'&&typeof ODA!=='undefined';
+  const ziyaretKapi=()=>typeof ziyaretKapida==='function'?ziyaretKapida(k):null;
+  const ziyaretGor=()=>typeof ziyaretGorusmede==='function'?ziyaretGorusmede(k):null;
+  const ziyaretBirakilan=new Set();let ziyaretGirecek=null;
+  /* görüşme kartı kişi oturunca açılır (sahne yoksa hemen) */
+  const ziyaretOturdu=()=>!ziyaretSahnesi()||(ODA.ziyaret&&ODA.ziyaret.evre==='oturuyor');
+  function ziyaretAcilir(){
+    const x=ziyaretKapi()||ziyaretGor();
+    return!!x&&!ziyaretBirakilan.has(x.id)&&!(typeof ZAMAN_SAHNE!=='undefined'&&ZAMAN_SAHNE.acik)&&!(ziyaretSahnesi()&&(ODA.yol||ODA.yer==='yolda'));
+  }
+  /* sahneyi kuralın anına eşler: kapıda biri varsa kapı evresi (bırakılmadıysa), görüşme varsa içeri girer ya da oturur, ikisi de yoksa çıkar */
+  function ziyaretEsle(){
+    if(!ziyaretSahnesi())return;
+    const kp=ziyaretKapi(),gr=ziyaretGor(),Z=ODA.ziyaret;
+    ODA.girisTiklanir=!!kp&&ODA.yer==='masa';
+    if(ODA.yol||ODA.yer==='yolda'||(Z&&Z.test))return;   /* TEST sahnesi (Ayarlar › Geliştirici) kendi akışıyla biter */
+    if(kp){if(ODA.yer==='masa'&&!ziyaretBirakilan.has(kp.id)){const p=k.kisiler[kp.veri.kisiId];odaZiyaretKapi(p,p.rol);}else if(Z&&Z.evre==='kapi')odaZiyaretKaldir();return;}
+    if(gr){if(ODA.yer!=='masa')return;const p=k.kisiler[gr.veri.kisiId];
+      const oturdu=()=>{mesaj=p.ad+' karşına oturdu.';ciz();};
+      if(Z&&Z.kisiId===p.id&&Z.evre==='kapi')odaZiyaretGir(oturdu);
+      else if(!Z||Z.kisiId!==p.id){if(ziyaretGirecek===p.id){odaZiyaretKapi(p,p.rol);odaZiyaretGir(oturdu);}else odaZiyaretOturt(p,p.rol);}
+      ziyaretGirecek=null;return;}
+    if(Z&&(Z.evre==='oturuyor'||Z.evre==='giris'))odaZiyaretCik();else if(Z&&Z.evre==='kapi')odaZiyaretKaldir();
+  }
+  function ziyaretPaneli(){
+    const kp=ziyaretKapi(),gr=ziyaretGor(),balkonda=ziyaretSahnesi()&&ODA.yer!=='masa';
+    if(kp){const p=k.kisiler[kp.veri.kisiId];
+      return'<p class="od-zyDurum">Kapı çalınıyor: '+yaz(p.ad)+(balkonda?' odanın kapısında bekliyor.':'.')+'</p>'+kararKarti(k,kp.id,{onizle:onizleler[kp.id]||null,ipucu:true,baglamsiz:true});}
+    if(gr){const p=k.kisiler[gr.veri.kisiId];
+      if(!ziyaretOturdu())return'<p class="od-zyDurum">'+yaz(p.ad)+(balkonda||ODA.yol?' seni bekliyor; odaya dönüyorsun.':' içeri giriyor…')+'</p><p class="od-not">Odaya tıklarsan beklemeden oturur.</p>';
+      return'<p class="od-zyDurum">'+yaz(p.ad)+' karşında oturuyor.</p>'+kararKarti(k,gr.id,{onizle:onizleler[gr.id]||null,ipucu:true,baglamsiz:true});}
+    return'<p class="od-not">Kapıda kimse yok.</p>';
+  }
+  const ziyaretBaslik=()=>ziyaretGor()?'Görüşme':'Kapı';
+  /* Buyursun balkonda verildiyse: gözlem biter, başkan odaya yürür (kart açık kalır); varınca kişi içeri girer */
+  function ziyaretOdayaDon(){
+    if(!ziyaretSahnesi()||ODA.yer!=='balkon')return;
+    izlemeDurdur();
+    if(gozlemVar&&gozlemAcik(k))try{const n=komut(x=>gozlemBitir(x));mesaj='Gözlemi bıraktın.'+(n?' '+n:'');}catch(e){mesaj=e.message;}
+    odaYuru('masa',()=>ciz());
+  }
   const testAcik=()=>!!ayarlar.test&&typeof testOnizleme==='function';
   /* test bilgisi: küçük TEST simgesi; üzerine gelince, odakta ya da tıklayınca altında kutu açılır (salt okunur, kariyeri değiştirmez) */
   const testKutu=ic=>'<span class="od-testIpucu"><button type="button" class="od-testSimge" data-eylem="testAc" aria-expanded="false" aria-label="Test bilgisi">TEST</button>'+
@@ -140,6 +185,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(!r)return'<p class="od-not">Bu iş '+yaz(tarihKisa(is.tarih))+' günü ajandada.</p>';
     /* karar: tek kart (js/ekran-kart.js; H1). Kaydırıp bırakınca ya da ←/→ + Enter ile uygulanır (kartEtkilesimKur, aşağıda); onay adımı yoktur.
        "Görüş iste" ve erteleme kartın dışında, altında */
+    /* RK6: kapı kararı saatinden önce kart değildir (kararı kapıda verirsin) */
+    if(v.karar==='ziyaret'&&typeof ziyaretSaatinde==='function'&&!ziyaretSaatinde(k,is))return'<p class="od-not">'+yaz(kisiAdi(k,v.kisiId))+' '+(typeof saatBulunma==='function'?saatBulunma(is.dakika):saatYazi(is.dakika))+' kapıya gelir; kararı orada verirsin.</p>';
     if(v.karar)return kararKarti(k,id,{onizle:onizleler[id]||null,gorus:true,testSecenek,dosyada:acik==='dosya',gozAt:true,ipucu:true})+tavsiyeBolumu(id)+
       (v.zorunluluk==='ertelenebilir'?'<div class="od-dugmeler">'+ertelemeDugmesi(is)+'</div>':'');
     const o=ajandaOnizle(k,id);
@@ -359,7 +406,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
       '<p class="od-not">Maç tepeden 2D izlenir. Açıkken maç eski figürlü loca bakışıyla açılır (geliştirme için); maçta G tuşu da değiştirir.</p>'+
       '<p class="od-not">Açıkken ilgili satırlarda küçük TEST simgesi belirir: yönetici katkıları, gizli koşullar, seçeneklerin sonucu ve futbolcu özellikleri.</p>'+
       '<div class="od-dugmeler">'+(testAcik()?'<button type="button" data-eylem="ac" data-panel="kadro">Kadro (TEST) ▸</button>':'')+
-        '<button type="button" data-eylem="goruntu">Görüntüyü kaydet</button></div>'+
+        '<button type="button" data-eylem="goruntu">Görüntüyü kaydet</button>'+
+        (ziyaretSahnesi()&&balkonVar?'<button type="button" data-eylem="ziyaretTest">Ziyaret sahnesini oynat (TEST)</button>':'')+'</div>'+
+      (ziyaretSahnesi()&&balkonVar?'<p class="od-not">Ziyaret sahnesi yalnız görüntüdür: hoca kapıyı çalar, girer, oturur, birkaç saniye sonra kalkıp çıkar; kayda ve deftere girmez.</p>':'')+
       '<p class="od-not">Görüntüyü kaydet o anki 3B sahneyi PNG olarak indirir (paneller dahil değildir); kariyeri ve kaydı değiştirmez.</p>'+
       /* R4-j: oynama ölçüsü (TEST); metin seçilip kopyalanır */
       '<h4>Oynama ölçüsü (TEST)</h4><pre class="od-olcu" tabindex="0">'+yaz(olcuMetni())+'</pre>'+
@@ -527,6 +576,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
       :dosya+ert+izlemesiz+'<button type="button" class="od-ana" data-eylem="'+(sor?'yapSor':'yap')+'" data-is="'+id+'"'+(o.engel.length||o.secimGerekli?' disabled':'')+'>'+(mac?'Stada git ▸':'Katıl ▸')+'</button>';
     return{durum:p.join(' · '),dugme,uyari:o.atlanacak.length||o.cevapsiz.length||o.engel.length};
   }
+  /* RK6: bırakılan ziyaret kartını geri açan düğme (kapıda ya da karşıda biri varken) */
+  function ziyaretDugmesi(){
+    const kp=ziyaretKapi(),gr=ziyaretGor(),x=kp||gr;if(!x)return'';
+    return'<button type="button" class="od-ikinci od-zyDugme" data-eylem="ac" data-panel="ziyaret">'+(kp?'Kapıda: ':'Karşında: ')+yaz(kisiAdi(k,x.veri.kisiId))+' ▸</button>';
+  }
   function altSerit(){
     const r=seciliIs()||(!acik||acik==='ajanda'?macIsi():null);
     let durum,dugme,uyari=false;
@@ -547,7 +601,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       durum=yaz(p.join(' · '));
       const sor=(o.kacirilacak.length||o.cevapsiz.length)&&onay!=='ilerle';
       dugme=onay==='ilerle'?'<button type="button" class="od-ikinci" data-eylem="vazgec">Vazgeç</button><button type="button" class="od-ana" data-eylem="ilerle">Onayla ▸</button>'
-        :(g?g.dugme:'')+'<button type="button" class="od-ana" data-eylem="'+(sor?'ilerleSor':'ilerle')+'"'+(o.engel.length?' disabled':'')+'>İlerle ▸</button>';
+        :(g?g.dugme:'')+ziyaretDugmesi()+'<button type="button" class="od-ana" data-eylem="'+(sor?'ilerleSor':'ilerle')+'"'+(o.engel.length?' disabled':'')+'>İlerle ▸</button>';
     }
     return'<footer class="od-alt"><div class="od-altYazi"><p class="od-mesaj" aria-live="polite">'+yaz(mesaj)+'</p><p class="od-durak'+(uyari?' od-durakUyari':'')+'">'+durum+'</p></div>'+
       '<div class="od-altDugmeler">'+dugme+'</div></footer>';
@@ -619,10 +673,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
     kap.dataset.yer=balkonVar?ODA.yer:'masa';   /* U6: balkonda yarım odak (CSS) */
     /* RK1: geniş pencerede balkonun bandı yalnız iş açıkken (js/sunum-durumu.js); yürürken ve iş yokken saha tam kare */
     if(typeof ekranBantIste==='function')ekranBantIste(balkonVar&&ODA.yer==='balkon'&&!!acik);
-    odaDurum({haber:haberSayisi(),isler:bekleyenIsSayisi(),dosyaSayi:acikMeseleler().length,dosya:acikMeseleler().length>0||raporlar().length>0||kadroAcilir(),gun:String(g),ay:AYLAR[a-1].slice(0,3),gunAdi:gunAdi(k.tarih).slice(0,3),dakika:dk,
+    odaDurum({tv:typeof tvOzeti==='function'?tvOzeti(k):null,haber:haberSayisi(),isler:bekleyenIsSayisi(),dosyaSayi:acikMeseleler().length,dosya:acikMeseleler().length>0||raporlar().length>0||kadroAcilir(),gun:String(g),ay:AYLAR[a-1].slice(0,3),gunAdi:gunAdi(k.tarih).slice(0,3),dakika:dk,
       gazete:!!iz.sayi||!!iz.gazete||!!iz.kart,gazeteYeni:iz.gazeteYeni||iz.yeniHaber>0,kart:!!iz.kart,iskele:iz.iskele,panoNotu:iz.panoNotu});
     odaOdak(acik in NESNE?acik:null);
-    if(typeof odaPanel==='function')odaPanel(!!acik);   /* U1: odak açıkken 3B oda kamera yerleşince donar (js/oda.js odaDondur) */
+    if(typeof odaPanel==='function')odaPanel(!!acik&&acik!=='ziyaret');   /* U1: odak açıkken 3B oda kamera yerleşince donar (js/oda.js odaDondur); RK6: ziyarette oda canlı */
   }
   /* duraklatmada süre tüketen ya da dünyayı değiştiren komutlar kapalıdır; okuma ve gezinti açıktır (2.8B) */
   const DURAKLATMADA_KAPALI=new Set(['yap','yapSor','yapIzlemesiz','ertele','ilerle','ilerleSor','tavsiye','girisim','oyuncuSec','gozlem','gozlemSurdur','gozlemBirak','yer','yeniSor','yeniEvet','bozukYeni',
@@ -648,6 +702,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
   function ciz(odak){
     k=oyun.kariyer;
     olcuSay();
+    ziyaretEsle();   /* RK6: ziyaretçi sahnesi kuralın anına eşlenir (çizimden önce: panel sahnenin evresini okur) */
+    /* RK6: kapıda ya da karşıda biri varsa yarım odak kendiliğinden açılır (bırakılmadıysa); kimse kalmadıysa kapanır */
+    if(!acik&&ziyaretAcilir()){acik='ziyaret';onay=null;}
+    else if(acik==='ziyaret'&&!ziyaretKapi()&&!ziyaretGor())acik=null;
     /* aynı panel yeniden çizilirken okuma yeri korunur */
     const eski=kap.querySelector('.od-icerik'),kaydirma=eski&&cizilenPanel===acik&&(acik!=='transfer'||cizilenGorunum===gorunumAnahtari())?eski.scrollTop:0;   /* R4-k: masada sekme ya da oyuncu değişince başa */
     const eskiTel=kap.querySelector('.tel-govde'),telKaydirma=eskiTel&&cizilenPanel==='telefon'&&acik==='telefon'&&cizilenTel===telAnahtar()?eskiTel.scrollTop:null;
@@ -676,8 +734,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const dugme=(ad,rozet,sinif,kapali)=>'<button type="button" class="od-nesne" data-eylem="ac" data-panel="'+ad+'" aria-pressed="'+(acik===ad?'true':'false')+'"'+(kapali?' disabled':'')+'>'+
       NESNE[ad]+(rozet?'<i class="od-rozet'+(sinif?' '+sinif:'')+'" data-rozet="'+rozetTuru(rozet)+'">'+rozet+'</i>':'')+'</button>';
     const iz=izler(),gazeteVar=!!iz.sayi||!!iz.gazete||!!iz.kart;   /* S-e: son sayı her sabah masada */
-    const baslik={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',transfer:'Transfer',ayar:'Ayarlar',kadro:'Kadro (TEST)',karar:'Karar',gorduklerin:'Gördüklerin'}[acik];
-    const icerik=acik==='telefon'?telefonPaneli():acik==='ajanda'?ajandaPaneli():acik==='dosya'?dosyaPaneli():acik==='gazete'?gazetePaneli():acik==='transfer'?transferPaneli():acik==='ayar'?ayarPaneli():acik==='kadro'?kadroPaneli():acik==='karar'?kararPaneli():acik==='gorduklerin'?gorduklerinPaneli():'';
+    const baslik={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',transfer:'Transfer',ayar:'Ayarlar',kadro:'Kadro (TEST)',karar:'Karar',gorduklerin:'Gördüklerin',ziyaret:ziyaretBaslik()}[acik];
+    const icerik=acik==='telefon'?telefonPaneli():acik==='ajanda'?ajandaPaneli():acik==='dosya'?dosyaPaneli():acik==='gazete'?gazetePaneli():acik==='transfer'?transferPaneli():acik==='ayar'?ayarPaneli():acik==='kadro'?kadroPaneli():acik==='karar'?kararPaneli():acik==='gorduklerin'?gorduklerinPaneli():acik==='ziyaret'?ziyaretPaneli():'';
     /* aynı görünüm yeniden çizilirken sayfaların okuma yeri korunur; dosyada görünüm konu, rapor, arşiv, kadro ya da oyuncudur (S-c; konu ↔ rapor kayması da kalktı) */
     const gorunum=gorunumAnahtari(),sayfaKaydirma=cizilenPanel===acik&&cizilenGorunum===gorunum?[...kap.querySelectorAll('.dsy-sayfa,.dft-sayfa')].map(x=>x.scrollTop):[];
     /* U1 odak kabı (js/ekran-odak.js): iş açılınca belirme geçişi yalnız ilk çizimde; masaya dönerken açık kabın kopyası söner */
@@ -697,7 +755,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
           '<button type="button" class="od-nesne od-yer od-gizli" data-eylem="yer">Balkona çık (kapı · 5)</button>'):'')+
         '<button type="button" class="od-nesne od-kucuk" data-eylem="ac" data-panel="ayar" aria-pressed="'+(acik==='ayar'?'true':'false')+'">Ayarlar</button></nav>'+gozlemSeridi()+
       /* U1: her iş aynı odak kabında: oda bulanır, iş ortada; başlıkta ‹ Geri · başlık · Kapat (dosya ve defter kendi nesneleriyle kabı doldurur) */
-      (acik?odakKabi({ad:acik,boy:acik==='telefon'&&telIkiSutun()?'telefon':ODAK_BOY[acik]||'genis',etiket:baslik,baslik,belir,kagit:acik!=='dosya'&&acik!=='ajanda',
+      (acik?odakKabi({ad:acik,boy:acik==='telefon'&&telIkiSutun()?'telefon':acik==='ziyaret'&&ziyaretSahnesi()&&ODA.yer!=='masa'?'orta':ODAK_BOY[acik]||'genis',etiket:baslik,baslik,belir,kagit:acik!=='dosya'&&acik!=='ajanda',
         sinif:acik==='dosya'||acik==='ajanda'?'':'od-panel'+(acik==='kadro'?' od-genis':acik==='telefon'?' od-telefonPanel':''),
         geri:acik==='telefon'&&!gozVar()?null:(h=>h&&{etiket:h.etiket,eylem:h.eylem||'odakGeri'})(odakGeriHedef()),govde:icerik,
         yan:gozVar()?{baslik:gozBaslik(),govde:gozIcerik(),belir:gozAnahtar()!==cizilenGoz}:null}):'')+
@@ -735,6 +793,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ti&&ay){const c=ti.querySelector('.kk-alan');if(c){const a=ti.getBoundingClientRect(),b=c.getBoundingClientRect(),fazla=b.bottom-a.bottom+4;if(fazla>0)ti.scrollTop+=Math.min(fazla,b.top-a.top-4);}}
     cizilenPanel=acik;cizilenGorunum=gorunum;cizilenTel=telAnahtar();cizilenSayfa=acik==='telefon'&&tel.ekran==='skor'?telSayfaAnahtar():'';cizilenGoz=gozAnahtar();
     const f=odak&&kap.querySelector(odak);if(f&&!f.disabled)f.focus({preventScroll:true});
+    /* RK6: ziyaret kartı açıkken odak kartta (←/→ ve Enter hemen çalışır) */
+    else if(acik==='ziyaret'){const ae=document.activeElement,c=kap.querySelector('section.odk .kk-kart');if(c&&!(ae&&ae.closest&&ae.closest('section.odk')))c.focus({preventScroll:true});}
   }
 
   /* ---- eylemler ---- */
@@ -761,6 +821,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(ad==='telefon'&&!koru&&acik!=='telefon'){tel.ekran='ana';tel.kisi=null;telLigSifirla();yeniIsaret=new Set();}
     /* R2-b: dosyadan “‹ Mesajlar” ile dönüş de açılış kuralını kullanır (yeni gelen varsa ona, yoksa okunan yere) */
     if(ad==='telefon'&&koru&&tel.ekran==='konusma')konusmaAc(tel.kisi);
+    if(ad==='ziyaret'){const x=ziyaretKapi()||ziyaretGor();if(!x)return;ziyaretBirakilan.delete(x.id);}
     acik=ad;onay=null;goz=null;
     if(typeof zamanSahnesiKapat==='function')zamanSahnesiKapat();   /* U4: iş açılınca durak özeti masada kalmaz */
     if(mesele)seciliMesele=mesele;
@@ -774,7 +835,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(ad==='gazete'){const iz=izler();   /* S-e: son sayıyı açmak okundu yazar (yalnız gazeteOkunan; zaman ve geçmiş değişmez) */
       if(iz.gazeteYeni)try{komut(x=>gazeteOkundu(x,iz.sayi));}catch(e){mesaj=e.message;}
       if(izler().yeniHaber)try{komut(x=>haberlerGoruldu(x));}catch(e){mesaj=e.message;}}
-    ciz('.od-kapat');
+    ciz(ad==='ziyaret'?'section.odk .kk-kart':'.od-kapat');   /* RK6: ziyaret kartı açılınca odak kartta (←/→, Enter) */
   }
   /* S-c: dosya Kadro görünümünde mi (seçili ya da konu ve rapor yokken tek görünüm); oyuncu dosyasından listeye dönüş, odak o oyuncunun adında */
   const kadroGorunur=()=>kadroAcilir()&&(dosyaKadro||!meseleler().length&&!raporlar().length);
@@ -783,7 +844,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
   function kadroDon(){const o=seciliOyuncu;seciliOyuncu=null;ciz(o?'[data-eylem="oyuncuAc"][data-oyuncu="'+o+'"]':'[data-eylem="kadroSekme"]');
     const g=kap.querySelector('.dsy-genis');if(g){g.scrollTop=kadroYeri;gorunurYap(g,o&&g.querySelector('[data-oyuncu="'+o+'"]'));}}
   /* U1: Kapat × ve perde işi masaya bırakır (karar paneli de; ajandaya dönüş başlıktaki ‹ Ajanda ve Esc'tir). Odak masadaki nesneye döner */
-  function kapat(){acik=null;onay=null;yeniOnay=false;iceOnay=null;kararIs=null;goz=null;ciz('.od-ana');}
+  function kapat(){
+    /* RK6: ziyaret kartını bırakmak: kişi kapıda bekler (bakış masaya döner) ya da karşıda oturmaya devam eder; yeniden açılış kapıdan ya da alttaki düğmeden */
+    if(acik==='ziyaret'){const x=ziyaretKapi()||ziyaretGor();if(x)ziyaretBirakilan.add(x.id);if(ziyaretSahnesi()&&ODA.ziyaret&&ODA.ziyaret.evre==='kapi')odaZiyaretKaldir();}
+    acik=null;onay=null;yeniOnay=false;iceOnay=null;kararIs=null;goz=null;ciz('.od-ana');}
   /* U1 tek geri zinciri: işin iç geri adımı, sonra kaynağı (dosyayı açan konuşma ya da defter; karar panelinin defteri; kadronun ayarları).
      Başlıktaki ‹ Geri bunun etiketini taşır; Esc önce onay adımını bırakır, sonra bu adımı atar, adım yoksa masaya bırakır. Telefonun geri düğmesi
      cihazın içindedir (aynı zincir) */
@@ -814,6 +878,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* balkon ↔ oda: yürüyüş yalnız sunumdur; odaya dönerken açık gözlem kapanır */
   function yerDegistir(){
     if(!balkonVar||ODA.yer==='yolda')return;
+    if(ODA.ziyaret&&ODA.ziyaret.evre!=='kapi'){mesaj='Karşında biri oturuyor; önce görüşmeyi bitir.';ciz();return;}   /* RK6 */
     acik=null;onay=null;izlemeDurdur();
     if(ODA.yer==='balkon'){
       if(gozlemVar&&gozlemAcik(k))try{const n=komut(x=>gozlemBitir(x));mesaj='Gözlemi bıraktın.'+(n?' '+n:'');}catch(e){mesaj=e.message;}
@@ -861,6 +926,13 @@ function odaEkraniKur(kap,oyun,ayarlar){
     }
     try{komut(x=>ajandaIsiYap(x,id,secim),mac);}catch(e){hataGoster(e);return;}
     onay=null;if(karar)olcuSay('karar');
+    /* RK6: kapı kararı ve görüşme: sonucun kısa yazısı; Buyursun balkonda verildiyse önce odaya dönülür, kişi varınca girer */
+    if((is.veri.karar==='ziyaret'||is.veri.karar==='ziyaretGorusme')&&!k.isler[id]){
+      const g=k.gecmis.slice().reverse().find(x=>x.tur==='is'&&x.isId===id),r=g&&g.sonuc;delete onizleler[id];
+      if(is.veri.karar==='ziyaret'&&secim==='buyursun'){ziyaretGirecek=is.veri.kisiId;mesaj=kisiAdi(k,is.veri.kisiId)+' içeri giriyor.';ziyaretOdayaDon();}
+      else mesaj=is.veri.karar==='ziyaret'?(r&&r.bilgi)||'Görüşme olmadı.':'Görüşme bitti; söyledikleri defterde ve oyuncu dosyalarında.';
+      ciz();return;
+    }
     if(k.isler[id]){
       /* yolda karar gerektiren bir haber geldi: iş yerinde bekliyor, o ana kadarki ilerleme geçerli */
       if(mac)oyun.yenidenKaydet();
@@ -890,6 +962,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   }
   /* İlerle'nin durduğu yerin cümlesi (alt şerit ve U4 durak özeti) */
   function ilerleBas(r,y){
+    {const kp=ziyaretKapi();if(kp)return'Kapı çalındı: '+kisiAdi(k,kp.veri.kisiId)+' geldi.';}   /* RK6 */
     if(y===undefined)y=r.neden==='karar'?kararYeri():null;
     return r.neden==='karar'?kararMetni(y,'Telefon: karar gerektiren bir haber geldi.','Masada yeni dosya: karar bekleyen bir konu açıldı.','Yeni bir gelişme var; dosyada.'):r.neden==='haber'?(r.biten.some(g=>g.sonuc&&g.sonuc.yazisma)?'Cevap geldi; telefonda.':'Beklediğin görüş geldi; dosyada.'):r.neden==='sonCevap'?'Son cevap saati geldi; karar bekliyor. Cevap vermeden ilerlersen kartta yazan sonuç işler.':r.neden==='cevapsiz'?'Cevap vermediğin karar kartta yazan sonuçla kapandı.':r.neden==='randevu'?'Sıradaki randevuya gelindi.':r.neden==='cakisma'?'Günün işleri çakışıyor; ajandadan seçim yap.':'Bekleyen rutin işler işlendi.';
   }
@@ -934,8 +1007,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
       /* odaya tıklama: imlecin altındaki nesne açılır; boş yere tıklamak paneli kapatır; yürürken tıklamak yürüyüşü bitirir */
       if(e.target.dataset&&e.target.dataset.perde){kapat();return;}
       if(e.target===kap){if(balkonVar&&ODA.yer==='yolda'){if(!duraklatmaVar())odaYuruAtla();return;}
+        /* RK6: ziyaretçi yürürken tıklamak sahneyi atlatır (girerken oturur, çıkarken gider) */
+        if(ziyaretSahnesi()&&ODA.ziyaret&&(ODA.ziyaret.evre==='giris'||ODA.ziyaret.evre==='cikis')){if(!duraklatmaVar()){odaZiyaretAtla();ciz();}return;}
         if(ODA.yer==='balkon'){const n=kareNoktasi(e);odaIsaret(n?n.x:null,n?n.y:null);}   /* RB: sahada figürler kayar; tıklanan an ölçülür */
-        const ad=ODA.uzerinde;if(ad==='kapi'){if(!duraklatmaVar())yerDegistir();}else if(ad==='saha'){if(ODA.sahaIsaret)sahaBak(ODA.sahaIsaret);}else if(ad)panelAc(ad);else if(acik)kapat();else ciz();}
+        const ad=ODA.uzerinde;if(ad==='giris'){panelAc('ziyaret');return;}if(ad==='kapi'){if(!duraklatmaVar())yerDegistir();}else if(ad==='saha'){if(ODA.sahaIsaret)sahaBak(ODA.sahaIsaret);}else if(ad)panelAc(ad);else if(acik)kapat();else ciz();}
       return;
     }
     if(b.disabled)return;
@@ -1021,6 +1096,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='yazi'){ayarlar.yazi=b.dataset.yazi;ayarlar.kaydet();ciz('[data-eylem="yazi"][data-yazi="'+ayarlar.yazi+'"]');}
     /* U1: maç hızı ve önemli anlarda normal hız (js/arayuz.js izlemeHizSec ve MAC_HIZ aynı seçimi okur) */
     else if(ey==='macHizi'){ayarlar.macHizi=Number(b.dataset.hiz);ayarlar.kaydet();if(typeof izlemeHizSec==='function')izlemeHizSec(ayarlar.macHizi,false);ciz('[data-eylem="macHizi"][data-hiz="'+ayarlar.macHizi+'"]');}
+    /* RK6 (TEST): ziyaret sahnesi yalnız görüntü — masada, kapıda ya da karşıda kimse yokken; kart açılmaz, kayıt ve defter değişmez */
+    else if(ey==='ziyaretTest'){if(!ziyaretSahnesi()||ODA.ziyaret||ziyaretKapi()||ziyaretGor())return;const h=Object.values(k.kisiler).find(p=>p.rol==='teknikDirektor'&&p.durum==='aktif');if(!h)return;
+      acik=null;ciz();if(ODA.yer!=='masa')return;odaZiyaretKapi(h,h.rol);ODA.ziyaret.test=true;setTimeout(()=>{if(ODA.ziyaret&&ODA.ziyaret.evre==='kapi')odaZiyaretGir(()=>setTimeout(()=>{if(ODA.ziyaret&&!ziyaretGor())odaZiyaretCik();},3000));},1200);}
     else if(ey==='herSaat'){ayarlar.herSaat=!ayarlar.herSaat;ayarlar.kaydet();ciz('[data-eylem="herSaat"]');}   /* R5 (TEST): balkonda her saat antrenman, yalnız görüntü */
     else if(ey==='locaBakisi'){ayarlar.locaBakisi=!ayarlar.locaBakisi;ayarlar.kaydet();if(typeof pulUygula==='function')pulUygula(!ayarlar.locaBakisi);ciz('[data-eylem="locaBakisi"]');}   /* P2 (TEST) */
     else if(ey==='otoYavas'){ayarlar.otoYavas=ayarlar.otoYavas===false;ayarlar.kaydet();if(typeof MAC_HIZ!=='undefined')MAC_HIZ.oto=ayarlar.otoYavas;ciz('[data-eylem="otoYavas"]');}
