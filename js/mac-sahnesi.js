@@ -34,7 +34,8 @@ function tribunOnu(taraftar){
    F1-b (2026-10-23): kadrolar ve tohum bu sayfanın maç gününden (js/mac-gunu.js MAC_GUNU): kariyerden açılan maçta kariyerin kadroları ve maçın
    kimliğinden türeyen tohum (adresteki ?tohum ve ?tarz yok sayılır), geliştirme adreslerinde eskisi gibi. F3-a (2026-10-24): kariyer maçında
    iki takımın tarzı hocalarının tarzıdır (MAC_GUNU.tarz; js/hoca.js), F3'ten önce tohumdan çekilirdi ('dagilim') */
-const MAC_SECENEK={kadro:MAC_GUNU.kadro,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC_GUNU.kariyer?MAC_GUNU.tohum:MAC_TOHUM,tarz:MAC_GUNU.kariyer?MAC_GUNU.tarz.slice():MAC_TARZ,zemin:STAT.zemin,kosullar:{atmosfer:clamp(MAC_GUNU.doluluk,0,1)},
+/* RK8-a: TV'de maç (MAC_GUNU.tv) öbür maçların seçeneğiyle birebir oynanır (stat alanı yok; görüntü ev sahibinin statı) */
+const MAC_SECENEK=MAC_GUNU.tv?MAC_GUNU.tvSecenek:{kadro:MAC_GUNU.kadro,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohum:MAC_GUNU.kariyer?MAC_GUNU.tohum:MAC_TOHUM,tarz:MAC_GUNU.kariyer?MAC_GUNU.tarz.slice():MAC_TARZ,zemin:STAT.zemin,kosullar:{atmosfer:clamp(MAC_GUNU.doluluk,0,1)},
   kulubeler:KULUBELER.map(k=>({takim:k.takim,koltuklar:k.koltuklar.map(s=>({x:s.x,z:s.z+MOTOR_Z})),alan:{x:k.alan.x,z:k.alan.z+MOTOR_Z}})),
   taraftarYeri:tribunOnu('ev')||undefined,deplasmanYeri:tribunOnu('deplasman')};
 /* U1: izleme (js/mac-izleme.js) — ana motorun her olayı ikizinkiyle karşılaştırılır; aynı seçenek ve tohumla kurulan ikiz önemli anları önceden
@@ -42,6 +43,8 @@ const MAC_SECENEK={kadro:MAC_GUNU.kadro,tunel:{x:TUNEL.x,z:TUNEL.z+MOTOR_Z},tohu
 let MAC_IZLEME=null;
 const mac=new Match((ad,v)=>{olayKuyrugu.push([ad,v]);if(MAC_IZLEME)izlemeAnaOlay(MAC_IZLEME,ad,v);},MAC_SECENEK);
 MAC_IZLEME=izlemeKur(mac,Match,MAC_SECENEK);
+/* RK8-a: TV'de maç santrayı ilk karede alır (öbür maçlar gibi; maç öncesi yok) — sonuç arkada ve Node'da oynananla aynı (araclar/ikiz-deneme.js --kariyer) */
+if(MAC_GUNU.tv){mac.macaGec();if(MAC_IZLEME)izlemeMacaGec(MAC_IZLEME);}
 /* ---- F7 (2026-10-24; yol haritası 3.8): haftanın öbür maçları — görüntüsüz, kilit adımlı ----
    Kariyer maçında haftanın öbür yedi maçı (MAC_GUNU.digerleri; seçenekleri js/lig-maclari.js digerMacSecenegi) bu sayfada görüntüsüz oynanır:
    santrayı ilk adımda alırlar (maç öncesi yok), bizim santramızdan sonra bizim motorun attığı her adımda birer adım atarlar — hepsi 19:00'da
@@ -59,7 +62,7 @@ function ligCanliKur(adim){for(const x of LIG_CANLI)if(!x.son&&!x.m){x.m=new Mat
 /* H2-a: işçi düşünce donma yok — bizim maç bittiyse ya da perdenin arkasında hesaplanıyorsa motorlar sıfır adımla kurulur, kalanı ligCanliHizli
    bütçeyle bitirir (kartın arkasında ya da Odaya dön beklerken). Maç izlenirken düşerse bugünkü kısa yetişme (kilit adım) kalır */
 MAC_ARKA.dusus=()=>ligCanliKur(HIZLI_BITIR.bitti||HIZLI_BITIR.anlik||HIZLI_BITIR.perde||mac.phase==='fulltime'||MAC_ARKA.T0===null?0:Math.max(0,(mac.kare||0)-MAC_ARKA.T0));
-if(!arkaBaslat(LIG_CANLI,MAC_GUNU.hukmen?null:Object.assign({},MAC_SECENEK,{tohum:mac.tohum})))ligCanliKur(0);
+if(!arkaBaslat(LIG_CANLI,MAC_GUNU.hukmen?null:Object.assign({},MAC_SECENEK,{tohum:mac.tohum}),MAC_GUNU.tv?{oncesi:false}:null))ligCanliKur(0);   /* RK8-a: TV'de sonuç ikizi de maç öncesisiz */
 function ligCanliAdim(n){for(const x of LIG_CANLI)if(x.m)for(let i=0;i<n&&x.m.phase!=='fulltime';i++)x.m.step(ADIM);}
 const ligCanliSuruyor=()=>LIG_CANLI.some(x=>x.m?x.m.phase!=='fulltime':!x.son);
 /* kalan adımlar (güvenlik sınırı maç başına 60 dk'lık adım); dönüşte bitmiş mi */

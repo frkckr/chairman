@@ -93,7 +93,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   const satir=(t,ic)=>({t,ic:'<li>'+ic+'</li>'});
   const bolum=(baslik,L)=>L.length?'<div class="ms-bolum"><h4>'+baslik+'</h4><div class="ms-iki">'+[0,1].map(t=>'<ul>'+L.filter(x=>x.t===t).map(x=>x.ic).join('')+'</ul>').join('')+'</div></div>':'';
   function msIcerik(S){
-    const B=G.bulten||{},biz=G.biz;
+    const B=G.bulten||{},biz=G.tv?-1:G.biz;   /* RK8-a: TV'de vurgu yok */
     const hk=S.hukmen?(S.hukmen==='cift'?'İki takım da on bir uygun oyuncu çıkaramadı; maç oynanmadı.':adi(S.hukmen==='ev'?0:1)+' on bir uygun oyuncu çıkaramadı; maç hükmen.')+' (TEST)':'';
     const goller=hk?[]:S.goller.map(g=>satir(g.takim,'<span class="ms-dk">'+g.dakika+'\'</span>'+yaz(g.ad||'—')+(g.kendiKalesine?' <small>(k.k.)</small>':'')));
     const kartlar=S.kartlar.map(c=>satir(c.takim,'<span class="ms-dk">'+c.dakika+'\'</span><i class="ms-kartRenk" style="background:'+KART_RENK[c.renk]+'" title="'+(c.renk==='sari'?'Sarı kart':c.renk==='ikinciSari'?'İkinci sarıdan kırmızı':'Kırmızı kart')+'"></i>'+yaz(c.ad)));
@@ -106,7 +106,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
         ' · arka: '+(Ar.kip==='isci'?'işçi':'ana iplik'+(Ar.hata?' ('+yaz(Ar.hata)+')':''))+' · sonuç ikizi: '+(HIZLI_BITIR.anlik?'kullanıldı':Ar.ikizAyni===null?'—':Ar.ikizAyni?'aynı':'farklı')+'</p>';
     }
     return'<div class="ms-kararti"></div><div class="ms-kart" tabindex="-1">'+
-      '<p class="ms-ust">Maç sonu'+(B.hafta?' · '+yaz((B.ligAd?B.ligAd+' ':'')+B.hafta+'. hafta'):'')+'</p>'+
+      '<p class="ms-ust">'+(G.tv?'TV · ':'')+'Maç sonu'+(B.hafta?' · '+yaz((B.ligAd?B.ligAd+' ':'')+B.hafta+'. hafta'):'')+'</p>'+
       '<div class="ms-skor"><span class="'+(biz===0?'ms-biz':'')+'" title="'+yaz(adi(0))+'">'+yaz(adi(0))+'</span>'+arma(0)+'<b>'+S.skor[0]+'–'+S.skor[1]+'</b>'+arma(1)+'<span class="'+(biz===1?'ms-biz':'')+'" title="'+yaz(adi(1))+'">'+yaz(adi(1))+'</span></div>'+
       /* F3-b: beklenen gol (motorun şut listesinden; karar 34) */
       (hk?'<p class="ms-yok">'+yaz(hk)+'</p>':'')+(!hk&&Array.isArray(S.sutlar)&&typeof macBeklenenGol==='function'?(xg=>'<p class="ms-yok">Beklenen gol '+xg.map(x=>x.toFixed(2).replace('.',',')).join(' – ')+' · şut '+S.ist.sut[0]+' – '+S.ist.sut[1]+'</p>')(macBeklenenGol(S.sutlar.map(x=>({takim:x.takim,xg:x.xg,pen:x.pen})))):'')+
@@ -142,7 +142,8 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
         /* son çare: bekleme bittiği hâlde motoru ve sonucu olmayan maç kaldıysa eşzamanlı tamamlanır */
         if(L.length&&ligCanliSuruyor()&&!ligCanliBitir())throw new Error('Haftanın öbür maçları bitmedi');
         const D=L.map(x=>({macId:x.d.macId,sonuc:x.m?x.m.sonucKaydi():x.son,tohum:x.d.tohum}));   /* G1-a: hükmen öbür maç */
-        oyunKomut(k=>D.length?haftaSonuclariUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P},D):macSonucuUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P}));
+        /* RK8-a: TV'de maç — izlenen ve aynı saatteki sonuçlar lig maçı işleriyle, saat maçın sonuna (js/lig-takvimi.js tvMacSonucuUygula) */
+        oyunKomut(k=>G.tv?tvMacSonucuUygula(k,G.macId,S.sonuc,D):D.length?haftaSonuclariUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P},D):macSonucuUygula(k,G.macId,S.sonuc,G.tohum,{protokol:P}));
         S.uygulandi=true;
       }else OYUN.oturum.kaydet();
     }catch(e){

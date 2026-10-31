@@ -9,6 +9,7 @@ R4: Transfer masası (Pano, Piyasa, oyuncu kâğıdı) ve transfer zincirinin ad
 R5: balkon ve balkonda sağ yarıda açılan oyuncu dosyası. RB: takip edilen oyuncunun ad etiketi (balkon-sahada). RK1: kâğıt yerine künye ve şeritte
 İzle (balkon), Gördüklerin odak kabında (balkon-gorduklerin); 1366 ve 1536 pencerede bant yalnız iş açıkken.
 RK6: TV'li oda (oda-tv), kapı kartı yarım odakta (ziyaret-kapi-karti), karşıda oturanın görüşme kartı (ziyaret-kart).
+RK8-a: TV sayfasının üç sayfası (tv-haberler, tv-skorlar, tv-program) ve Canlı Skor'un Takip sekmesi (canli-takip).
 R6: sponsor pazarlık kartı (1 Şubat ay başı, Görüşelim'den sonra; oyunun komut yoluyla).
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
@@ -252,6 +253,32 @@ async def sahneler_ziyaret(pg, olc):
     await olc("ziyaret-kart")
 
 
+TV_SAHNELER = {"tv-haberler", "tv-skorlar", "tv-program", "canli-takip"}
+
+
+async def sahneler_tv(pg, olc):
+    """RK8-a: 13. hafta yapay sonuçla, 14. haftanın Cumartesi 17:00 maçları sahte sonuçla (20:00); TV sayfası 100, 200, 300 (tv-haberler, tv-skorlar, tv-program);
+    bir kulüp takipte, Canlı Skor'un Takip sekmesi (canli-takip)."""
+    await pg.evaluate(akis.HAFTA_BITIR_JS)
+    await pg.evaluate("""() => { LIG_MAC_SAGLAYICI = (k, p) => ({skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], sutlar: [], ist: {}, ilk11: p.secenek.kadro.map(K => K.oyuncular.map(o => o.id))});
+      const k = OYUN.kariyer, f = k.fikstur.filter(x => x.hafta === 14 && x.dakika === 1020).sort((a, b) => anDakika(a.tarih, a.dakika) - anDakika(b.tarih, b.dakika))[0];
+      oyunKomut(x => { zamanIlerlet(x, anDakika(f.tarih, 1200) - simdikiAn(x)); takipEt(x, 'kulup', f.ev); }); LIG_MAC_SAGLAYICI = null; }""")
+    await akis.oda_yenile(pg)
+    await pg.keyboard.press("Digit7")
+    await pg.wait_for_selector(".tv-sayfa", timeout=10000)
+    await olc("tv-haberler")
+    await tikla(pg, '[data-eylem="tvSayfa"][data-tv="skor"]')
+    await olc("tv-skorlar")
+    await tikla(pg, '[data-eylem="tvSayfa"][data-tv="program"]')
+    await olc("tv-program")
+    await akis.masaya_don(pg)
+    await pg.keyboard.press("Digit1")
+    await pg.wait_for_selector(".tel-ekran", timeout=10000)
+    await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="skor"]')
+    await tikla(pg, '[data-eylem="skorSekme"][data-sekme="takip"]')
+    await olc("canli-takip")
+
+
 SPONSOR_SAHNELER = {"sponsor-pazarlik-karti"}
 
 
@@ -344,6 +371,10 @@ async def ana():
             if not secili or secili & ZIYARET_SAHNELER:
                 pg = await ac("index.html", "?dunya=7&pul=0")
                 await sahneler_ziyaret(pg, await olc_kur(pg))
+                await pg.context.close()
+            if not secili or secili & TV_SAHNELER:
+                pg = await ac("index.html", "?dunya=7&pul=0")
+                await sahneler_tv(pg, await olc_kur(pg))
                 await pg.context.close()
             if not secili or secili & SPONSOR_SAHNELER:
                 pg = await ac("index.html", "?dunya=7&pul=0")

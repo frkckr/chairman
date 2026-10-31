@@ -23,7 +23,9 @@
      programAcikla(k, hafta, sessiz) · macErtele(k, f, neden) · yeniTarihVer(k) · macGunuEsle(k)
      saatiAciklandi(k, f)       maçın gün ve saati açıklandı mı (ertelenmiş ve tarih bekleyen maçta false)
      ligMacSonucu(k, plan)      → sonucKaydi (havuz, sağlayıcı ya da motor)
-     yaklasanLigMaclari(k, hedefAn) → hedef ana dek sonucu yazılacak lig maçı işleri (ekran İlerle'de örtüyü açar) */
+     yaklasanLigMaclari(k, hedefAn) → hedef ana dek sonucu yazılacak lig maçı işleri (ekran İlerle'de örtüyü açar)
+     oynananLigMaclari(k)       → oda saatinde oynanan öbür maçlar [{f, dk}] (RK8-a: TV ve “İzle ▸”)
+     tvMacSonucuUygula(k, macId, sonuc, digerleri)  TV'de izlenen maçın ve aynı saattekilerin sonucu; saat maçın sonuna (komut) */
 'use strict';
 const LIG_TAKVIM_TEST={
   sablon:[{gun:-1,dakika:1200},{gun:0,dakika:1020},{gun:0,dakika:1020},{gun:0,dakika:1200},{gun:1,dakika:1020},{gun:1,dakika:1020},{gun:1,dakika:1200},{gun:2,dakika:1200}],
@@ -201,6 +203,45 @@ Object.assign(MESELE_OLAYLARI,{
   'gz.erteleme':(k,p)=>{const f=(k.fikstur||[]).find(x=>x.id===p.macId);return f?`TEST: ${ligGzAd(k,f.ev)} – ${ligGzAd(k,f.konuk)} maçı ${LIG_ERTELEME_NEDEN[p.neden]||p.neden} nedeniyle ertelendi.`:'TEST: bir maç ertelendi.';},
   'gz.yeniTarih':(k,p)=>{const f=(k.fikstur||[]).find(x=>x.id===p.macId);return f?`TEST: Ertelenen ${ligGzAd(k,f.ev)} – ${ligGzAd(k,f.konuk)} maçı ${gunAyYazi(p.tarih)} ${macGunAdi(p.tarih)} ${typeof saatBulunma==='function'?saatBulunma(p.dakika):saatYazi(p.dakika)} oynanacak.`:'TEST: ertelenen maçın yeni tarihi açıklandı.';}
 });
+/* RK8-a: oda saatinde oynanan lig maçları (başlamış, maç süresi dolmamış, sonucu yazılmamış; başkanın kulübününki dahil değil: o maç maç günüyle
+   izlenir) ve oyun dakikası (ilk yarı 1–45, devre arası “İY”, ikinci yarı 46–90; TEST: 105 dakikalık maçın 15'i devre arası). Saf */
+function oynananLigMaclari(k){
+  const an=simdikiAn(k),S=LIG_TAKVIM_TEST.macSure,biz=ligBizimKulup(k),L=[];
+  for(const f of k.fikstur||[]){if((k.maclar||{})[f.id]||f.tarihBekliyor||f.ev===biz||f.konuk===biz||!saatiAciklandi(k,f))continue;const g=an-anDakika(f.tarih,f.dakika);if(g<0||g>=S)continue;
+    L.push({f,dk:g<45?`${g+1}'`:g<60?'İY':`${Math.min(90,g-14)}'`});}
+  return L.sort((a,b)=>anDakika(a.f.tarih,a.f.dakika)-anDakika(b.f.tarih,b.f.dakika)||(a.f.id<b.f.id?-1:1));
+}
+/* RK8-a: TV'de izlemeden önce (ekranın onayı): maçın sonuna dek yolda kalan işler. engel: zorunlu iş, bekleyen karar ya da İlerle'nin engeli; kacirilacak:
+   isteğe bağlı ya da ertelenebilir işler (zamanında işlenir, katılınmaz). Saf */
+function tvIzleOnizle(k,macId){
+  const f=(k.fikstur||[]).find(x=>x.id===macId);
+  if(!f||!oynananLigMaclari(k).some(x=>x.f.id===macId))return{engel:['Bu maç şu an oynanmıyor.'],kacirilacak:[],son:null};
+  const son=anDakika(f.tarih,f.dakika)+LIG_TAKVIM_TEST.macSure,simdi=simdikiAn(k),o=ilerleOnizle(k),engel=o.engel.slice(),kac=o.kacirilacak.slice();
+  for(const x of Object.values(k.isler)){if(x.tur!=='ajanda')continue;const v=x.veri,a=isAn(x);
+    if(v.saatsiz){if(!zamanAsimiVar(x)&&a<=son&&!engel.some(e=>e.includes(v.baslik)))engel.push(`Önce karar ver: ${v.baslik}`);continue;}
+    if(v.eylem==='macGunu'){if(a<=son)engel.push('Önce maçımız var: Stada git.');continue;}
+    if(a<=simdi||a>son)continue;
+    if(v.zorunluluk==='zorunlu')engel.push(`Önce zorunlu işe katıl: ${v.baslik} (${saatYazi(x.dakika)})`);else kac.push(x);}
+  return{engel,kacirilacak:kac,son};
+}
+/* RK8-a: TV'de izlenen maçın sonucu (komut; js/ekran-mac-sonu.js “Odaya dön”). Maç oda saatinde oynanıyor olmalı; aynı saatte başlayan öbür lig
+   maçlarının sonuçları da verilmeli (sayfada arkada oynandı). Sonuçlar o anki planların anahtarıyla havuza konur ve saat maçın sonuna ilerletilir:
+   lig maçı işleri sonuçları havuzdan yazar (seçenek ve tohum değişmediyse; değiştiyse kural kendisi hesaplar ve izlenen skorla tutmazsa komut düşer).
+   Yolda kalan işler zamanında işlenir (İlerle'nin onayı ekranda, gitmeden önce) */
+function tvMacSonucuUygula(k,macId,sonuc,digerleri){
+  const f=(k.fikstur||[]).find(x=>x.id===macId);
+  if(!f||!oynananLigMaclari(k).some(x=>x.f.id===macId))throw new Error(`TV'de maç: ${macId} şu an oynanmıyor`);
+  const ayni=k.fikstur.filter(x=>x.id!==macId&&x.tarih===f.tarih&&x.dakika===f.dakika&&!(k.maclar||{})[x.id]&&!x.tarihBekliyor&&x.ev!==ligBizimKulup(k)&&x.konuk!==ligBizimKulup(k));
+  const D=new Map((digerleri||[]).map(d=>[d.macId,d.sonuc]));
+  if(ayni.some(x=>!D.has(x.id))||D.size!==ayni.length)throw new Error(`TV'de maç: aynı saatteki maçların sonucu eksik ya da fazla (${D.size}/${ayni.length})`);
+  for(const [x,s] of [[f,sonuc]].concat(ayni.map(x=>[x,D.get(x.id)]))){
+    if(!s||!Array.isArray(s.skor))throw new Error(`TV'de maç: ${x.id} sonucu yok`);
+    const P=digerMacPlani(k,x);if(!P.hukmen)LIG_MAC_HAVUZU.set(ligMacAnahtari(P),s);}
+  zamanIlerlet(k,anDakika(f.tarih,f.dakika)+LIG_TAKVIM_TEST.macSure-simdikiAn(k));
+  const m=(k.maclar||{})[macId];
+  if(!m||m.skor[0]!==sonuc.skor[0]||m.skor[1]!==sonuc.skor[1])throw new Error(`TV'de maç: izlenen sonuç kayda geçmedi (${macId})`);
+  return{macId,skor:m.skor.slice()};
+}
 /* doğrulama: program haftası ve lig maçı işleri */
 function ligTakvimiDogrula(k,h){
   const S=k.sezon;if(!S||S.programAciklanan===undefined)return;

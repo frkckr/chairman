@@ -10,21 +10,25 @@
    (3) B4b --tarz-komut: maçın ortasında dışarıdan tarz komutları (geliştirici panelindeki gibi: js/mac-izleme.js izlemeKomut ile iki motora aynı karede;
        santradan 150 sn sonra ev, 400 ve 405 sn sonra konuk — ikincisi ilkinin yerini alır). Önce ikizli oynatılır; tek başına oynatma aynı kareli
        komutları alır. Hocanın maç içi kararı kapıya bağlanınca da ikizin aynılığı bununla sınanır.
-   Kullanım: node araclar/ikiz-deneme.js [maç, varsayılan 4] [ilk tohum, varsayılan 1] [--oncesi ADIM, varsayılan 600] [--esit] [--tarz-komut]
+   (4) RK8-a --kariyer: TV'de izlenen maç (js/mac-gunu.js tv, js/mac-sahnesi.js) öbür maçların seçeneğiyle santrayı ilk karede alır; seçenekler yeni kariyerin
+       (tohum 7) 14. haftasının öbür maçlarından (digerMacPlani), --oncesi 0. Ayrıca ikizli oynatmanın kaydı arkaMacOynat'ınkiyle (işçi ve lig maçı işi) birebir mi.
+   Kullanım: node araclar/ikiz-deneme.js [maç, varsayılan 4] [ilk tohum, varsayılan 1] [--oncesi ADIM, varsayılan 600] [--esit] [--tarz-komut] [--kariyer]
    MAC_DENEME_AYAR mac-deneme.js'teki gibi (ör. '{"macSuresiDk":20}'). Çıkış kodu: aynılık bozulursa 1. Tek süreçte, sırayla oynatır. */
 'use strict';
 const {motorYukle,ayarUygula}=require('./motor-yukle');
 const vm=require('vm');
 const ARG=process.argv.slice(2);
 function secenek(ad,degerli){const i=ARG.indexOf(ad);if(i<0)return null;if(!degerli){ARG.splice(i,1);return true;}return ARG.splice(i,2)[1];}
-const ONCESI=Math.max(0,parseInt(secenek('--oncesi',true)||'600',10)),ESIT=!!secenek('--esit',false),TK=!!secenek('--tarz-komut',false);
+const KARIYER=!!secenek('--kariyer',false),ONCESI=KARIYER?0:Math.max(0,parseInt(secenek('--oncesi',true)||'600',10)),ESIT=!!secenek('--esit',false),TK=!!secenek('--tarz-komut',false);
 const N=Math.max(1,parseInt(ARG[0]||'4',10)),T0=parseInt(ARG[1]||'1',10);
 const {ctx,kip}=motorYukle();
 const AYAR=ayarUygula(ctx,process.env.MAC_DENEME_AYAR);
 const G=ad=>vm.runInContext(ad,ctx);
 const Match=G('Match'),KADRO=G('MAC_KADRO'),IZLEME=G('IZLEME'),MAC_ONCESI=G('MAC_ONCESI'),MOTOR_AYAR=G('MOTOR_AYAR');
 if(ESIT)IZLEME.onde=0;
-const secenekler=tohum=>({kadro:KADRO,tohum,tunel:{x:0,z:-6},tarz:'dagilim'});   /* B4: oyundaki gibi tarz tohumdan */
+/* RK8-a --kariyer: yeni kariyerin 14. haftasındaki öbür maçların planları (tohum sırası maç sırasıdır) */
+const KPLAN=KARIYER?(()=>{const c=G('kariyerBaslat')({tohum:7}),F=c.fikstur.filter(f=>f.hafta===14&&f.ev!=='demirkapi'&&f.konuk!=='demirkapi');return F.map(f=>G('digerMacPlani')(c,f)).filter(P=>!P.hukmen);})():null;
+const secenekler=tohum=>KPLAN?JSON.parse(JSON.stringify(KPLAN[(tohum-1)%KPLAN.length].secenek)):({kadro:KADRO,tohum,tunel:{x:0,z:-6},tarz:'dagilim'});   /* B4: oyundaki gibi tarz tohumdan */
 const dt=1/60,MAKS=60*60*60;
 
 /* parmak izi (araclar/mac-deneme.js ile aynı ölçü): topun ve oyuncuların durumu her 30 adımda FNV-1a; 600 adımda bir kontrol noktası */
@@ -65,10 +69,11 @@ let bozuk=0;const T={oyun:0,s1:0,s2:0,s4:0,anda:0,ana:0,ikiz:0},SAY={};
 for(let t=T0;t<T0+N;t++){
   let a,b;if(TK){b=oyna(t,true);a=oyna(t,false,b.komutKare);}else{a=oyna(t,false);b=oyna(t,true);}
   const iz=a.kontrol.length===b.kontrol.length&&a.kontrol.every((x,i)=>x===b.kontrol[i]),ayni=iz&&a.olay===b.olay&&a.kayit===b.kayit&&a.adim===b.adim;
-  const tamam=ayni&&b.sapma===0&&b.sonAyni===true;if(!tamam)bozuk++;
+  const arka=KPLAN?JSON.stringify(ctx.arkaMacOynat(Match,secenekler(t),{oncesi:false}).son):null,arkaAyni=arka===null||arka===b.kayit;   /* RK8-a: işçi ve lig maçı işinin yolu */
+  const tamam=ayni&&b.sapma===0&&b.sonAyni===true&&arkaAyni;if(!tamam)bozuk++;
   let ilk=-1;if(!iz)for(let i=0;i<Math.min(a.kontrol.length,b.kontrol.length);i++)if(a.kontrol[i]!==b.kontrol[i]){ilk=i;break;}
   console.log(`${tamam?'  ':'! '}tohum ${String(t).padStart(3)} · ${a.skor} · tek başına ↔ ikizli: ${ayni?'aynı':'FARKLI'+(ilk>=0?' (ilk ayrılan kontrol noktası '+(ilk+1)*10+'. sn)':'')}`+
-    ` · sapma ${b.sapma}${b.sapmaYer?' ('+b.sapmaYer+')':''} · maç sonu kaydı ${b.sonAyni?'aynı':'FARKLI'}`+
+    ` · sapma ${b.sapma}${b.sapmaYer?' ('+b.sapmaYer+')':''} · maç sonu kaydı ${b.sonAyni?'aynı':'FARKLI'}`+(KPLAN?` · arkaMacOynat ${arkaAyni?'aynı':'FARKLI'}`:'')+
     ` · izleme ${dk(b.sure[1])} / ${dk(b.sure[2])} / ${dk(b.sure[4])} dk (1×/2×/4×) · anda %${f1(100*b.anda/b.sure[1])}`);
   T.oyun+=b.sure[1];T.s1+=b.sure[1];T.s2+=b.sure[2];T.s4+=b.sure[4];T.anda+=b.anda;T.ana+=b.ms.ana;T.ikiz+=b.ms.ikiz;
   for(const k in a.say)SAY[k]=(SAY[k]||0)+a.say[k];

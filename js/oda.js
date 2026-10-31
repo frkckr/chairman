@@ -137,11 +137,14 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
    for(let i=0;i<3;i++){box(0.95,0.02,0.02,k,2.35,0.3+i*0.42,-2.89,S);box(0.16,0.03,0.03,p,2.35,0.5+i*0.42,-2.88,S);}
    box(0.24,0.3,0.2,oLAM({color:OD.dosya}),2.74,1.5,-3.2,S);}
   /* ---- RK6: TV (STIL.oda.tv): dosya dolabının üstünde ayaklı küçük ekran, masaya dönük; dokusu oyun dakikasında bir ve yalnız içerik değişince yenilenir
-     (odaDurum({tv}); içerik js/canli-skor.js tvOzeti). Tıklanmaz (TV sayfası RK8) ---- */
+     (odaDurum({tv}); içerik js/canli-skor.js tvOzeti). RK8-a: masadan tıklanır (odaIsaret 'tv'; TV sayfası js/ekran-tv.js), altta şerit ---- */
   {const T=OD.tv,cv=mk(96,56),g=new THREE.Group(),ks=oLAM({color:T.kasa});g.position.set(T.x,T.y,T.z);g.rotation.y=T.donus;S.add(g);
    box(0.2,0.025,0.14,ks,0,0.0125,0,g);box(0.05,0.07,0.03,ks,0,0.06,0,g);box(T.en+0.04,T.boy+0.04,0.05,ks,0,0.09+T.boy/2+0.02,0,g);
    const ekran=new THREE.Mesh(new THREE.PlaneGeometry(T.en-0.02,T.boy-0.02),BAS({map:tx(cv,'n'),fog:false}));ekran.position.set(0,0.09+T.boy/2+0.02,0.027);g.add(ekran);
-   ODA.tv={cv,doku:ekran.material.map,anahtar:null,g};}
+   ODA.tv={cv,doku:ekran.material.map,anahtar:null,g};
+   const geo=new THREE.BoxGeometry(T.en+0.1,T.boy+0.14,0.12),kutu=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({visible:false}));kutu.position.set(0,0.09+T.boy/2+0.02,0.02);kutu.userData.nesne='tv';g.add(kutu);
+   const cerceve=kalinCizgi(new THREE.EdgesGeometry(geo),OD.vurgu,OD.vurguCizgi);cerceve.position.copy(kutu.position);cerceve.visible=false;g.add(cerceve);
+   g.updateMatrixWorld(true);ODA.tvHedef={g:kutu,kutu,cerceve,merkez:kutu.getWorldPosition(new THREE.Vector3())};}
   for(const sx of[-1,1]){const g=new THREE.Group(),m=oLAM({color:OD.koltuk}),a=oLAM({color:OD.koltukAyak});
     box(0.56,0.1,0.52,m,0,0.45,0,g);box(0.56,0.55,0.1,m,0,0.78,-0.24,g);for(const x of[-0.24,0.24])for(const z of[-0.22,0.22])box(0.05,0.42,0.05,a,x,0.21,z,g);
     for(const x of[-0.3,0.3])box(0.05,0.05,0.5,a,x,0.66,0,g);
@@ -246,13 +249,15 @@ function odaDurum(d){
   ODA.kapiCam.color.set(OD.kapi.cam).multiply(ODA.cam.material.color);
   if(ODA.tv)odaTvCiz(D.tv||null);
 }
-/* RK6: TV ekranı — üstte kanal şeridi ve saat, altında satırlar (ilki soluk). Aynı içerik yeniden çizilmez */
+/* RK6: TV ekranı — üstte kanal şeridi ve saat, altında satırlar (ilki soluk). Aynı içerik yeniden çizilmez. RK8-a: altta kırmızı şerit (canlı maç ya da
+   günün bir başlığı; v.serit), şerit varken dört satır */
 function odaTvCiz(v){
   const T=OD.tv,a=v?JSON.stringify(v):'';if(ODA.tv.anahtar===a)return;ODA.tv.anahtar=a;
   const g=ODA.tv.cv.getContext('2d');g.fillStyle=T.zemin;g.fillRect(0,0,96,56);
   g.fillStyle=T.serit;g.fillRect(0,0,96,9);
   if(v){ctxText(g,v.kanal||'',2,1,T.yazi,1);if(v.saat)ctxText(g,v.saat,94-textW(v.saat,1),1,T.yazi,1);
-    (v.satirlar||[]).slice(0,5).forEach((s,i)=>ctxText(g,String(s).slice(0,23),2,11+i*9,i?T.yazi:T.soluk,1));}
+    (v.satirlar||[]).slice(0,v.serit?4:5).forEach((s,i)=>ctxText(g,String(s).slice(0,23),2,11+i*9,i?T.yazi:T.soluk,1));
+    if(v.serit){g.fillStyle=T.serit;g.fillRect(0,47,96,9);ctxText(g,String(v.serit).slice(0,23),2,48,T.yazi,1);}}
   ODA.tv.doku.needsUpdate=true;
 }
 
@@ -451,7 +456,7 @@ function odaIsaret(x,y){
   let ad=null;
   if(x!==null){ODA_ISIN.setFromCamera({x,y},ODA.kamera);
     /* masada bütün nesneler ve balkon kapısı (balkon kuruluysa), balkonda yalnız yanındaki telefon seçilebilir; yolda hiçbiri */
-    const L=ODA.yer==='masa'?Object.values(ODA.nesneler).concat(ODA.kapiHedef&&typeof balkonKare==='function'?[ODA.kapiHedef]:[],ODA.girisHedef&&ODA.girisTiklanir?[ODA.girisHedef]:[]):ODA.yer==='balkon'?[ODA.nesneler.telefon]:[];
+    const L=ODA.yer==='masa'?Object.values(ODA.nesneler).concat(ODA.kapiHedef&&typeof balkonKare==='function'?[ODA.kapiHedef]:[],ODA.girisHedef&&ODA.girisTiklanir?[ODA.girisHedef]:[],ODA.tvHedef?[ODA.tvHedef]:[]):ODA.yer==='balkon'?[ODA.nesneler.telefon]:[];
     const v=ODA_ISIN.intersectObjects(L.filter(n=>n.g.visible).map(n=>n.kutu));ad=v.length?v[0].object.userData.nesne:null;
     /* RB: balkonda telefonun dışı saha: imlecin altındaki grup, oyuncu ya da yer (ODA.sahaIsaret; js/balkon.js balkonIsaret) */
     ODA.sahaIsaret=!ad&&ODA.yer==='balkon'&&typeof balkonIsaret==='function'?balkonIsaret(x,y):null;if(ODA.sahaIsaret)ad='saha';}
@@ -517,6 +522,7 @@ function odaKare(dt){
   for(const ad in N)N[ad].cerceve.visible=N[ad].g.visible&&(ad===ODA.uzerinde||ad===ODA.odak);
   if(ODA.kapiHedef)ODA.kapiHedef.cerceve.visible=ODA.uzerinde==='kapi';
   if(ODA.girisHedef)ODA.girisHedef.cerceve.visible=ODA.uzerinde==='giris';
+  if(ODA.tvHedef)ODA.tvHedef.cerceve.visible=ODA.uzerinde==='tv';
   /* yeni haber: sabit ışık (yanıp sönme yok) */
   N.telefon.isik.material.opacity=ODA.durum.haber?0.42:0;
   N.gazete.isik.material.opacity=ODA.durum.gazete&&ODA.durum.gazeteYeni?0.36:0;

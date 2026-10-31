@@ -435,6 +435,8 @@ const STIL={
        Araştırma: statik 6–8 px ve %30–35 karartma; açılış 200–300, kapanış 150–200 ms (u-arastirma §6.3). TEST değerleri */
     /* U5 gazete kâğıdı (js/ekran-gazete.js): kâğıt, eskidikçe yaklaştığı sarı, mürekkep, soluk, çizgi, etiket kırmızısı. TEST */
     gazete:{kagit:'#f6f2e7',sari:'#e6d6a8',murekkep:'#1d1a16',soluk:'#5f574b',cizgi:'#b9ae96',kirmizi:'#a3241b'},
+    /* RK8-a TV sayfası (js/ekran-tv.js): teletext — koyu ekran, kasa, kanal şeridi, yazı, soluk, sarı (saat ve skor), camgöbeği (başlık), canlı kırmızısı. TEST */
+    tv:{zemin:'#0f1923',kasa:'#2a2e35',serit:'#c8281e',seritYazi:'#fff7ee',yazi:'#eef2f6',soluk:'#a8b7c5',sari:'#ffd75a',camgobegi:'#86dcec',kirmizi:'#ff7a6b',cizgi:'#3c4c5c',vurgu:'rgba(255,215,90,.14)'},
     /* U4 zaman geçiyor sahnesi (js/ekran-zaman.js): taban + satır başı sn, en çok enCok sn. TEST */
     zaman:{taban:0.8,satir:0.35,enCok:2.5},
     odak:{goz:{is:55,yan:40,kenar:2},bulanik:7,karartma:'rgba(24,16,8,.33)',yalnizKarartma:'rgba(24,16,8,.5)',boy:{genis:80,orta:60,kucuk:44,cihaz:44,telefon:92,yarim:42},olcek:0.96,

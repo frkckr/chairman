@@ -58,7 +58,12 @@ function tvOzeti(k){
   const T=sezonTablosu(k),i=T.findIndex(t=>t.id===biz),U=T.slice(0,3).map((t,j)=>(j+1)+' '+kisa(t.id)+' '+t.P);
   S.push(U.slice(0,2).join(' · '));
   if(U[2])S.push(U[2]+(i>=3?' · '+(i+1)+' '+kisa(biz)+' '+T[i].P:''));
-  return{kanal:'TEST SPOR',saat:saatYazi(k.gunIciDakika|0),satirlar:S.slice(0,5)};
+  /* RK8-a: şerit — oda saatinde oynanan maç (dakikası saatten; skor arkadaki hesapta, burada yok) ya da günün haber başlıklarından biri */
+  let serit=null;const C=typeof oynananLigMaclari==='function'?oynananLigMaclari(k):[],dk=k.gunIciDakika|0;
+  if(C.length){const c=C[dk%C.length];serit='CANLI '+kisa(c.f.ev)+'-'+kisa(c.f.konuk)+' '+c.dk;}
+  else if(typeof tvHaberleri==='function'){const H=tvHaberleri(k);if(H.length)serit=String(H[dk%H.length].metin).replace(/^TEST: /,'').toLocaleUpperCase('tr-TR');}
+  if(serit&&S.length>4)S.splice(2,1);   /* şerit varken dört satır: ikinci skor satırı düşer (kulübün sırası kalır) */
+  return Object.assign({kanal:'TEST SPOR',saat:saatYazi(k.gunIciDakika|0),satirlar:S.slice(0,serit?4:5)},serit?{serit}:{});
 }
 function macSayfasi(k,macId,canli){
   const f=(k.fikstur||[]).find(x=>x.id===macId);if(!f)return null;

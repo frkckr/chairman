@@ -4007,6 +4007,107 @@ async def bolum_38(tarayici, site, tum_hatalar):
     await pg.context.close()
 
 
+TV_JS = """() => { const s = document.querySelector('.tv-sayfa'); return s ? { sayfa: s.dataset.sayfa, sekme: [...s.querySelectorAll('.tv-sekme')].map(b => b.textContent + (b.getAttribute('aria-selected') === 'true' ? '*' : '')),
+  satir: s.querySelectorAll('.tv-satir').length, mac: s.querySelectorAll('.tv-mac').length, izle: [...s.querySelectorAll('.tv-izle')].map(b => b.dataset.mac), canli: s.querySelectorAll('.tv-canli').length,
+  baslik: [...s.querySelectorAll('h5')].map(h => h.textContent), metin: s.innerText.slice(0, 400), odak: (document.querySelector('#oda section.odk:not(.odk-cikis)') || {dataset: {}}).dataset.odak } : null; }"""
+
+
+async def bolum_39(tarayici, site, tum_hatalar):
+    """RK8-a: TV, haber akışı ve takip. Odada TV'ye tıklamak ya da 7 TV sayfasını odak kabında açar (100 Haberler, 200 Skorlar, 300 Puan durumu · Program; düğme ve
+    [ ]); haber satırı Canlı Skor'un sayfasını telefonda açar; TV kart açmaz, zamanı değiştirmez; Esc masaya. TV ekranının şeridi (canlı maç ya da başlık). Canlı
+    Skor'da kulüp sayfasında “Takip et ▸”, Takip sekmesi ve Canlı Skor simgesinde rozet; sekme açılınca rozet söner, takibi bırakınca liste boşalır.
+    Oda saati iki 17:00 maçının ortasındayken (Pazar 17:30) Skorlar'da iki canlı satır ve “İzle ▸”: TV kipinde maç (köşe skorunda kanal, bülten yok, santra ilk
+    karede); TEST “Maçı bitir” → kart (TV · Maç sonu) → Odaya dön: iki maçın sonucu kayıtta, izlenen skor kartınkiyle aynı, oda 18:45'te."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.set_viewport_size({"width": 1280, "height": 960})
+    # 13. hafta yapay sonuçla; 14. haftanın Cumartesi 17:00 maçları lig maçı işleriyle (oda sayfasının kuralı, sahte sağlayıcı yok: motor) — süre için sahte sonuç
+    await pg.evaluate(HAFTA_BITIR_JS)
+    await pg.evaluate("""() => { LIG_MAC_SAGLAYICI = (k, p) => ({skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], sutlar: [], ist: {}, ilk11: p.secenek.kadro.map(K => K.oyuncular.map(o => o.id))});
+      const k = OYUN.kariyer, f = k.fikstur.filter(x => x.hafta === 14 && x.dakika === 1020).sort((a, b) => anDakika(a.tarih, a.dakika) - anDakika(b.tarih, b.dakika))[0];
+      oyunKomut(x => { zamanIlerlet(x, anDakika(f.tarih, 1200) - simdikiAn(x)); }); LIG_MAC_SAGLAYICI = null; }""")
+    await oda_yenile(pg)
+    await pg.keyboard.press("Digit7")
+    await pg.wait_for_selector(".tv-sayfa", timeout=5000)
+    a0 = await pg.evaluate("() => simdikiAn(OYUN.kariyer)")
+    h = await pg.evaluate(TV_JS)
+    denetle("RK8 TV sayfası: 7 odak kabında açar (TV), 100 Haberler seçili; bugünün sonuçları satır satır (Cumartesi 17:00 maçları), üç sayfa düğmesi",
+            h is not None and h["odak"] == "tv" and h["sayfa"] == "haber" and len(h["sekme"]) == 3 and h["sekme"][0].endswith("*") and h["satir"] >= 2, str(h)[:300])
+    await pg.keyboard.press("BracketRight")
+    h2 = await pg.evaluate(TV_JS)
+    await pg.click('[data-eylem="tvSayfa"][data-tv="program"]')
+    h3 = await pg.evaluate(TV_JS)
+    denetle("RK8 TV: ] Skorlar'a geçer (bugünün maçları, haftanın kalanı), 300'de puan durumu ve açıklanmış haftaların programı",
+            h2["sayfa"] == "skor" and h2["mac"] >= 4 and "Bugün" in h2["baslik"] and h3["sayfa"] == "program" and "Puan durumu" in h3["baslik"] and any(b.endswith(". hafta") for b in h3["baslik"]),
+            f"{h2['baslik']} · {h3['baslik'][:5]}")
+    await pg.screenshot(path=str(ARAC / "son-akis-39-tv.png"))
+    await pg.click('[data-eylem="tvSayfa"][data-tv="haber"]')
+    await pg.click(".tv-satir[data-eylem='tvAc']")
+    await pg.wait_for_timeout(300)
+    t1 = await pg.evaluate("() => ({ odak: (document.querySelector('#oda section.odk:not(.odk-cikis)') || {dataset: {}}).dataset.odak, sayfa: (document.querySelector('.cs-sayfa') || {dataset: {}}).dataset.tur, an: simdikiAn(OYUN.kariyer) })")
+    denetle("RK8 TV: haber satırı Canlı Skor'un sayfasını telefonda açar; TV zamanı değiştirmedi", t1["odak"] == "telefon" and t1["sayfa"] in ("mac", "kulup", "oyuncu") and t1["an"] == a0, str(t1))
+    n = await masaya_don(pg)
+    # TV'ye tıklama (3B): kamera masaya oturana dek beklenir (odaktan dönüş)
+    await gecis_bitir(pg)
+    await yokla(pg, "() => ODA.yerlesik", 10)
+    xy = await pg.evaluate("""() => { const v = ODA.tvHedef.merkez.clone().project(ODA.kamera), r = document.getElementById('view').getBoundingClientRect(); return {x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height}; }""")
+    await pg.mouse.move(xy["x"], xy["y"])
+    await pg.wait_for_timeout(100)
+    await pg.mouse.click(xy["x"], xy["y"])
+    await pg.wait_for_timeout(300)
+    t2 = await pg.evaluate("() => (document.querySelector('#oda section.odk:not(.odk-cikis)') || {dataset: {}}).dataset.odak")
+    await pg.keyboard.press("Escape")
+    t3 = await pg.evaluate(ODAK_ACIK_JS)
+    tv = await pg.evaluate("() => ({ v: tvOzeti(OYUN.kariyer), ayni: ODA.tv.anahtar === JSON.stringify(tvOzeti(OYUN.kariyer)) })")
+    denetle("RK8 TV: odadaki TV'ye tıklamak TV sayfasını açar, Esc masaya döner; TV ekranında alt şerit (canlı maç ya da günün başlıklarından biri), ekran tvOzeti'nden",
+            t2 == "tv" and not t3 and tv["ayni"] and bool(tv["v"].get("serit")), f"{t2} · {tv['v']}")
+    # takip: kulüp sayfasında Takip et, rozet, Takip sekmesi
+    kid = await pg.evaluate("() => OYUN.kariyer.fikstur.filter(x => x.hafta === 14 && x.dakika === 1020 && OYUN.kariyer.maclar[x.id])[0].ev")
+    await odak_ac(pg, "telefon")
+    await pg.click('[data-eylem="telUyg"][data-uyg="skor"]')
+    await pg.click('[data-eylem="skorSekme"][data-sekme="tablo"]')
+    await cs_ac(pg, "kulup", kid)
+    await pg.click(f'.cs-takip[data-id="{kid}"]')
+    await pg.wait_for_timeout(200)
+    k1 = await pg.evaluate(f"() => ({{ takip: OYUN.kariyer.takip, dug: (document.querySelector('.cs-takip[data-id=\"{kid}\"]') || {{}}).textContent || '', yeni: takipYeniSayisi(OYUN.kariyer) }})")
+    await masaya_don(pg)
+    await odak_ac(pg, "telefon")
+    roz = await pg.evaluate("() => (document.querySelector('.tel-uygSkor .tel-rozet') || {}).textContent || ''")
+    await pg.click('[data-eylem="telUyg"][data-uyg="skor"]')
+    await pg.click('[data-eylem="skorSekme"][data-sekme="takip"]')
+    await pg.wait_for_timeout(200)
+    k2 = await pg.evaluate("() => ({ satir: document.querySelectorAll('.tel-takipSatir').length, yeni: takipYeniSayisi(OYUN.kariyer), okunan: OYUN.kariyer.takipOkunan === simdikiAn(OYUN.kariyer) })")
+    denetle("RK8 Takip: kulüp sayfasında “Takip et ▸” → “Takibi bırak”, kayıtta; Canlı Skor simgesinde rozet (yeni takip haberi); Takip sekmesi haberleri listeler, açılınca rozet söner",
+            k1["takip"] and kid in k1["takip"]["kulupler"] and "Takibi bırak" in k1["dug"] and k1["yeni"] > 0 and roz == str(k1["yeni"]) and k2["satir"] == k1["yeni"] and k2["yeni"] == 0 and k2["okunan"],
+            f"{k1} · rozet {roz!r} · {k2}")
+    await masaya_don(pg)
+    # TV'de maç: Pazar 17:30 (iki 17:00 maçı canlı)
+    pz = await pg.evaluate("""() => { const k = OYUN.kariyer, F = k.fikstur.filter(x => x.hafta === 14 && x.dakika === 1020 && macGunAdi(x.tarih) === 'Pazar');
+      LIG_MAC_SAGLAYICI = (kk, p) => ({skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], sutlar: [], ist: {}, ilk11: p.secenek.kadro.map(K => K.oyuncular.map(o => o.id))});
+      oyunKomut(x => { zamanIlerlet(x, anDakika(F[0].tarih, 1050) - simdikiAn(x)); }); LIG_MAC_SAGLAYICI = null; OYUN.oturum.kaydet(); return F.map(f => f.id); }""")
+    await oda_yenile(pg)
+    await pg.keyboard.press("Digit7")
+    await pg.click('[data-eylem="tvSayfa"][data-tv="skor"]')
+    h4 = await pg.evaluate(TV_JS)
+    denetle("RK8 TV Skorlar: oda saatinde oynanan iki maç canlı (kırmızı dakika) ve “İzle ▸”", sorted(h4["izle"]) == sorted(pz) and h4["canli"] == 2, str(h4)[:240])
+    await pg.click(f'.tv-izle[data-mac="{pz[0]}"]')
+    await pg.wait_for_url("**tv=1**", timeout=15000)
+    await pg.wait_for_function("() => typeof mac !== 'undefined' && typeof MAC_GUNU !== 'undefined' && !MAC_ONCESI.includes(mac.phase)", timeout=30000)
+    m1 = await pg.evaluate("() => ({ tv: !!MAC_GUNU.tv, id: MAC_GUNU.macId, faz: mac.phase, bulten: !!(typeof ON_EKRAN !== 'undefined' && ON_EKRAN.acik), digerleri: (MAC_GUNU.digerleri || []).map(d => d.macId), kanal: (document.querySelector('#macSkor .mk-kanal') || {}).textContent || '' })")
+    denetle("RK8 TV'de maç: TV kipinde açıldı (bülten yok, santra ilk karede), aynı saatteki öbür maç arkada", m1["tv"] and m1["id"] == pz[0] and not m1["bulten"] and m1["digerleri"] == [pz[1]], str(m1))
+    await pg.wait_for_timeout(1500)
+    await pg.screenshot(path=str(ARAC / "son-akis-39-tvmac.png"))
+    await pg.click("#btnHizliBitir")
+    await pg.wait_for_selector("#macSonu:not([hidden]) [data-eylem='odayaDon']", timeout=180000)
+    kart = await pg.evaluate("() => ({ ust: (document.querySelector('.ms-ust') || {}).textContent || '', skor: MAC_SONU.sonuc.skor })")
+    await pg.click("[data-eylem='odayaDon']")
+    await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=240000)
+    son = await pg.evaluate(f"() => {{ const k = OYUN.kariyer; return {{ a: k.maclar['{pz[0]}'] && k.maclar['{pz[0]}'].skor, b: !!k.maclar['{pz[1]}'], an: k.tarih + ' ' + saatYazi(k.gunIciDakika) }}; }}")
+    denetle("RK8 TV'de maç → Odaya dön: izlenen sonuç (kartınki) ve aynı saatteki maç kayıtta, oda maçın sonunda (18:45)",
+            kart["ust"].startswith("TV · Maç sonu") and son["a"] == kart["skor"] and son["b"] and son["an"].endswith("18:45"), f"{kart} · {son}")
+    await pg.context.close()
+
+
 async def bolum_37(tarayici, site, tum_hatalar):
     """RK6: oda — giriş kapısı, ziyaret ve TV. TV dolabın üstünde, karede tam ve en az 40×40 px; ekranı tvOzeti'nden (Canlı Skor'un okumasıyla aynı).
     Sonra gelsin: kart kapanır, kapı açılmaz, ertesi uygun günün aynı saatine yeni kapı. Esc kapı kartını bırakır (kişi kapıda bekler, bakış döner), alt şeritteki
@@ -4426,6 +4527,9 @@ async def ana():
         if sec("38"):
             print("\n38. Lig takvimi: hafta görünümü, öbür maçlar kendi saatinde, erteleme (RK7)")
             await bolum_38(tarayici, site, tum_hatalar)
+        if sec("39"):
+            print("\n39. TV, haber akışı, takip ve TV'de maç (RK8-a)")
+            await bolum_39(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

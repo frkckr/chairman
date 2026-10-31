@@ -14,7 +14,7 @@
 const MAC_ARKA={kip:'anaIs',hata:null,havuz:[],kuyruk:[],liste:[],ikiz:null,T0:null,ikizAyni:null,dusus:null,bekleme:null};
 const ARKA_ISCI_EN_COK=8;
 function arkaKapali(){try{return/(^|[?&])arka=0(&|$)/.test(location.search.slice(1));}catch(e){return false;}}
-function arkaBaslat(liste,ikizSecenegi){
+function arkaBaslat(liste,ikizSecenegi,ikizAyar){
   const A=MAC_ARKA;A.liste=liste;
   if(!MAC_GUNU.kariyer||typeof Worker==='undefined'||arkaKapali())return false;
   let dosyalar;
@@ -28,7 +28,7 @@ function arkaBaslat(liste,ikizSecenegi){
       w.postMessage({tur:'kur',dosyalar});A.havuz.push(I);}}
   catch(e){for(const I of A.havuz)try{I.w.terminate();}catch(x){}A.havuz.length=0;A.hata=String(e&&e.message||e);return false;}
   A.kip='isci';
-  if(ikizSecenegi){A.ikiz={secenek:ikizSecenegi,komutlar:[],surum:0,son:null};arkaIsEkle('ikiz');}
+  if(ikizSecenegi){A.ikiz={secenek:ikizSecenegi,komutlar:[],surum:0,son:null,oncesi:!(ikizAyar&&ikizAyar.oncesi===false)};arkaIsEkle('ikiz');}   /* RK8-a: TV'de maç öncesisiz */
   for(const x of liste)if(!x.son)arkaIsEkle(x.d.macId);
   return true;
 }
@@ -39,7 +39,7 @@ function arkaDagit(){
     if(!I.hazir||I.is||!A.kuyruk.length)continue;
     const anahtar=A.kuyruk.shift();
     if(anahtar==='ikiz'){const Z=A.ikiz;if(!Z)continue;I.is={anahtar,surum:Z.surum};
-      I.w.postMessage({tur:'oyna',anahtar,surum:Z.surum,secenek:Z.secenek,oncesi:true,komutlar:Z.komutlar});}
+      I.w.postMessage({tur:'oyna',anahtar,surum:Z.surum,secenek:Z.secenek,oncesi:Z.oncesi!==false,komutlar:Z.komutlar});}
     else{const x=A.liste.find(y=>y.d.macId===anahtar);if(!x||x.son)continue;I.is={anahtar,surum:0};
       I.w.postMessage({tur:'oyna',anahtar,surum:0,secenek:x.d.secenek,oncesi:false,komutlar:[]});}
   }

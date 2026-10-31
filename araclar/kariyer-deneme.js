@@ -2313,6 +2313,62 @@ bolum('3.12 — lig takvimi: maç saatleri, TFF programı, erteleme, öbür maç
      y.tamam&&y.gecisler.join()==='11→12'&&k.sezon.programAciklanan===H0+2&&P.length===1&&P[0].veri.hafta===H0+3&&!Object.values(k.isler).some(x=>x.tur==='ligMaci')
      &&k.fikstur.every(f=>f.dakika===1140)&&!dog(k).length,`${y.gecisler} · ${k.sezon.programAciklanan} · ${P.map(x=>x.veri.hafta+'@'+x.tarih)}`);}
 }
+bolum('RK8-a — haber akışı ve takip: TV\'nin bugünü, takip haberleri ve rozet, TV\'de izlenen maçın sonucu');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),dog=T('kariyerDogrula'),biz='demirkapi',AD=T('anDakika'),metin=x=>JSON.stringify(x);
+  const dene=(c,f)=>{try{return{kariyer:KK(c,f).kariyer,hata:null};}catch(e){return{kariyer:c,hata:e.message};}};
+  /* 13. hafta ve 14. haftanın bizim maçı yapay sonuçlarla; Cumartesi 20:00 ye ilerlenir (17:00 maçları lig maçı işleriyle, sahte sağlayıcı 0–0) */
+  let k=yapayHafta(T,yapayHafta(T,T('kariyerBaslat')({tohum:7})).k).k;   /* 13. hafta ve 14. haftanın bizim maçı (Cuma) */
+  const f14=k.fikstur.filter(f=>f.hafta===14&&f.ev!==biz&&f.konuk!==biz).sort((a,b)=>AD(a.tarih,a.dakika)-AD(b.tarih,b.dakika));
+  const cmt=f14.find(f=>f.dakika===1020&&T('macGunAdi')(f.tarih)==='Cumartesi');
+  k=KK(k,x=>{T('zamanIlerlet')(x,AD(cmt.tarih,1200)-T('simdikiAn')(x));}).kariyer;   /* Cumartesi 20:00: 17:00 maçları bitti */
+  const H=T('tvHaberleri')(k),H2=T('tvHaberleri')(k);
+  const sonuc=H.filter(h=>h.anahtar==='hb.sonuc');
+  denetle('TV haberleri: bugünün penceresinde (08:00 → şimdi), belirlenimci (iki kez aynı), önem sırasında; 17:00 maçlarının her biri ayrı “Maç sonucu” haberi (bitiş anında); gazetenin toplu satırı ve kutular yok',
+    metin(H)===metin(H2)&&sonuc.length===f14.filter(f=>f.tarih===cmt.tarih&&f.dakika===1020).length&&H.every((h,i)=>!i||H[i-1].onem>=h.onem)
+    &&!H.some(h=>h.anahtar==='gz.sonuclar'||h.anahtar==='gz.mac'||h.kutu)&&sonuc.every(h=>h.an===AD(cmt.tarih,1020)+105&&h.konu.maclar.length===1&&h.konu.kulupler.length===2),
+    `${H.length} haber · sonuç ${sonuc.length} · ${H.slice(0,3).map(h=>h.anahtar+h.onem).join(',')}`);
+  const G=T('gazeteSayisi');
+  denetle('Gazete değişmedi: haber akışı yalnız TV kaynaklarını ekler (gazetenin kaynak defteri aynı uzunlukta)',T('GAZETE_KAYNAKLARI').every(q=>q.ad!=='sonuc'&&q.ad!=='kirmizi'));
+  /* takip */
+  const c1=cmt.ev;
+  let t=KK(k,x=>T('takipEt')(x,'kulup',c1)).kariyer;
+  const TH=T('takipHaberleri')(t);
+  denetle('Takip et (kulüp): takip haberleri yalnız o kulübe değenler, yeniden eskiye; rozet okunmamış sayısı; kariyer geçerli',
+    TH.length>0&&TH.every(h=>h.konu.kulupler.includes(c1))&&TH.every((h,i)=>!i||TH[i-1].an>=h.an)&&T('takipYeniSayisi')(t)===TH.length&&!dog(t).length,
+    `${TH.length} · rozet ${T('takipYeniSayisi')(t)}`);
+  const t2=KK(t,x=>T('takipOkundu')(x)).kariyer;
+  denetle('Takip sekmesi açılınca okundu: rozet 0; liste aynı kalır',T('takipYeniSayisi')(t2)===0&&T('takipHaberleri')(t2).length===TH.length&&t2.takipOkunan===T('simdikiAn')(t2));
+  const t3=KK(t2,x=>T('takibiBirak')(x,'kulup',c1)).kariyer;
+  denetle('Takibi bırak: takip haberi kalmaz (kalıcı susturma), kariyer geçerli',!T('takipHaberleri')(t3).length&&!T('takipEdiliyor')(t3,'kulup',c1)&&!dog(t3).length);
+  const r=dene(t,x=>T('takipEt')(x,'kulup','yok-boyle-kulup'));
+  denetle('Takip: olmayan kulüp reddedilir (komut düşer)',!!r.hata,r.hata);
+  const d=T('bellekDeposu')();T('kariyerKaydet')(d,'s',t2);const y=T('kariyerYukle')(d,'s');
+  denetle('Kaydet–yükle: takip listesi ve okunma anı aynı',y.tamam&&metin(y.kariyer)===metin(t2));
+  const bz=JSON.parse(metin(t2));bz.takip.oyuncular=['yok'];
+  denetle('Bozuk: olmayan oyuncu takipte doğrulamada yakalanır',dog(T('kariyerOlustur')(bz)).some(e=>/takip edilen oyuncu yok/.test(e)));
+  /* oyuncu takibi: kırmızı kart haberi */
+  const kr=KK(k,x=>{const f=x.fikstur.find(y=>y.id===cmt.id),s=x.maclar[f.id],o=T('kulupOyunculari')(x,f.ev)[0];
+    x.maclar=Object.assign({},x.maclar,{[f.id]:Object.assign({},s,{kartlar:[{id:o.id,no:o.no|0,takim:0,renk:'kirmizi',neden:null,dk:30}]})});}).kariyer;
+  const o0=T('kulupOyunculari')(kr,cmt.ev)[0],kt=KK(kr,x=>T('takipEt')(x,'oyuncu',o0.id)).kariyer,KH=T('takipHaberleri')(kt);
+  denetle('Oyuncu takibi: kırmızı kart haberi (maçın 30. dakikasında) takip listesinde',KH.some(h=>h.anahtar==='hb.kirmizi'&&h.konu.oyuncular.includes(o0.id)&&h.an===AD(cmt.tarih,1020)+30),KH.map(h=>h.anahtar).join(','));
+  /* TV'de izlenen maçın sonucu: oda saati maçın ortasında; tvMacSonucuUygula izlenen sonucu ve aynı saatteki öbür maçı yazar, saati maçın sonuna getirir */
+  const pz=f14.filter(f=>T('macGunAdi')(f.tarih)==='Pazar'&&f.dakika===1020);
+  let c=KK(k,x=>{T('zamanIlerlet')(x,AD(pz[0].tarih,1050)-T('simdikiAn')(x));}).kariyer;
+  const canli=T('oynananLigMaclari')(c).map(x=>x.f.id).sort();
+  const S1={skor:[3,1],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],sutlar:[],ist:{},ilk11:null},S2={skor:[2,2],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],sutlar:[],ist:{},ilk11:null};
+  const ilk=x=>{const P=T('digerMacPlani')(x,x.fikstur.find(f=>f.id===pz[0].id));return P.secenek.kadro.map(K=>K.oyuncular.map(o=>o.id));};
+  S1.ilk11=ilk(c);S2.ilk11=(x=>{const P=T('digerMacPlani')(x,x.fikstur.find(f=>f.id===pz[1].id));return P.secenek.kadro.map(K=>K.oyuncular.map(o=>o.id));})(c);
+  {const P=T('digerMacPlani')(c,c.fikstur.find(f=>f.id===pz[0].id)),o=P.secenek.kadro[0].oyuncular[9];S1.skor=[1,0];S1.goller=[{ad:o.ad,no:o.no,takim:0,dakika:10,kendiKalesine:false,yari:1}];S2.skor=[0,0];}   /* gol kaydı skorla tutarlı */
+  const u=dene(c,x=>T('tvMacSonucuUygula')(x,pz[0].id,S1,[{macId:pz[1].id,sonuc:S2}])),cu=u.kariyer;
+  denetle('TV\'de maç: oda saatinde oynanan maçlar (Pazar 17:30: iki 17:00 maçı); izlenen sonuç ve aynı saatteki öbür maç yazılır, saat maçın sonunda (18:45), kariyer geçerli',
+    !u.hata&&metin(canli)===metin(pz.map(f=>f.id).sort())&&metin(cu.maclar[pz[0].id].skor)==='[1,0]'&&metin(cu.maclar[pz[1].id].skor)==='[0,0]'&&cu.maclar[pz[0].id].goller.length===1&&T('simdikiAn')(cu)===AD(pz[0].tarih,1020)+105&&!dog(cu).length,
+    `${canli.length} canlı · ${u.hata||''} · ${T('simdikiAn')(cu)-AD(pz[0].tarih,1020)}`);
+  const u2=dene(c,x=>T('tvMacSonucuUygula')(x,pz[0].id,S1,[]));
+  denetle('TV\'de maç: aynı saatteki öbür maçın sonucu eksikse komut düşer (kariyer aynı)',!!u2.hata,u2.hata);
+  const u3=dene(k,x=>T('tvMacSonucuUygula')(x,pz[0].id,S1,[{macId:pz[1].id,sonuc:S2}]));
+  denetle('TV\'de maç: maç oda saatinde oynanmıyorsa komut düşer',!!u3.hata,u3.hata);
+}
 {/* motorlu yol: sağlayıcı yokken lig maçı işi motorla (arkaMacOynat, macaGec) oynar; havuzdaki aynı plan aynı sonucu verir */
   const {motorYukle}=require('./motor-yukle'),MC=motorYukle().ctx,MG=a=>vm.runInContext(a,MC);vm.runInContext('MOTOR_AYAR.macSuresiDk=6',MC);
   const KK=MG('kariyerKomut'),AD=MG('anDakika');

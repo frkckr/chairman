@@ -32,6 +32,7 @@ function oyuncuKarti(k,id,baglam,ek){
       '<div><dt><abbr title="Gol">G</abbr></dt><dd>'+(Z.gol|0)+'</dd></div><div><dt>Kart</dt><dd>'+(Z.sari|0)+'/'+(Z.kirmizi|0)+'</dd></div></dl>'+
       (son.length?'<p class="ok-sonBes" aria-label="Son maçları">'+son.map(kutu).join('')+'</p>':'')+'</section>'+
     '<p class="ok-durum" data-durum="'+okYaz(S?S.durum||'hazir':'hazir')+'">'+okYaz(durum)+'</p>'+
+    (ek.alt||'')+   /* RK8-a: kartın altında ek (Canlı Skor'da Takip et) */
     (Sz?'<p class="ok-sozlesme">Sözleşme '+okYaz(typeof gunAyYazi==='function'?gunAyYazi(Sz.bitis)+' '+Sz.bitis.slice(0,4):Sz.bitis)+' · aylık <span class="dsy-tutar">'+okYaz(tl(Sz.maas))+'</span></p>':'')+
     '</article>';
 }
