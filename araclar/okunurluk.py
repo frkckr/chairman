@@ -284,7 +284,9 @@ SPONSOR_SAHNELER = {"sponsor-pazarlik-karti"}
 
 async def sahneler_sponsor(pg, olc):
     """R6: 1 Şubat 12:00'ye ilerlenir, teklif kartı Görüşelim ile cevaplanır; pazarlık kartı kendi yerinde (Sonra yığınından)."""
-    kid = await pg.evaluate("""() => { oyunKomut(k => zamanIlerlet(k, anDakika('2027-02-01', 720) - simdikiAn(k)));
+    # RK7: ham atlama yoldaki lig maçlarını sayfada hesaplardı (aylarca maç); atlama süresince sahte 0–0 sağlayıcı
+    kid = await pg.evaluate("""() => { LIG_MAC_SAGLAYICI = (k, p) => ({skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], sutlar: [], ist: {}, ilk11: p.secenek.kadro.map(K => K.oyuncular.map(o => o.id))});
+      oyunKomut(k => zamanIlerlet(k, anDakika('2027-02-01', 720) - simdikiAn(k))); LIG_MAC_SAGLAYICI = null;
       const B = () => Object.values(OYUN.kariyer.isler).find(i => i.veri && i.veri.karar === 'sablonKarti' && OYUN.kariyer.meseleler[i.veri.meseleId].sablon.ad === 'sponsor');
       const a = B(); oyunKomut(k => ajandaIsiYap(k, a.id, 'gorus')); const b = B(); return b ? b.id : null; }""")
     await akis.oda_yenile(pg)

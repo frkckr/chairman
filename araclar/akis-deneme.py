@@ -2821,8 +2821,8 @@ async def bolum_24(tarayici, site, tum_hatalar):
     await pg.keyboard.press("Digit1")
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
     a = await pg.evaluate("() => ({ sekme: [...document.querySelectorAll('.tel .tel-sekme')].map(b => b.dataset.sekme + ':' + b.getAttribute('aria-selected')).join(','), mac: document.querySelectorAll('.tel .tel-mac').length, tablo: !!document.querySelector('.tel-tablo'), kesik: [...document.querySelectorAll('.tel .tel-sekme')].filter(b => b.scrollWidth > b.clientWidth + 1).map(b => b.textContent) })")
-    denetle("S-d, R3: Duraklat'ta Canlı Skor açılır, Maçlar seçili (Maçlar · Puan durumu; Fikstür hafta görünümüne katıldı; sekme yazıları kesilmez); haftanın 8 satırı, tablo çizilmedi",
-            a["sekme"] == "maclar:true,tablo:false" and a["mac"] == 8 and not a["tablo"] and not a["kesik"], str(a))
+    denetle("S-d, R3: Duraklat'ta Canlı Skor açılır, Maçlar seçili (Maçlar · Puan durumu · Takip — RK8-a; Fikstür hafta görünümüne katıldı; sekme yazıları kesilmez); haftanın 8 satırı, tablo çizilmedi",
+            a["sekme"] == "maclar:true,tablo:false,takip:false" and a["mac"] == 8 and not a["tablo"] and not a["kesik"], str(a))
     await pg.click('.tel [data-eylem="skorSekme"][data-sekme="tablo"]')
     t = await pg.evaluate(TABLO_JS)
     tas1 = await pg.evaluate(TEL_TASMA_JS)
