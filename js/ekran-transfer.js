@@ -97,9 +97,10 @@ function transferOyuncuKagidi(k,id,y){
   const sez=S.sezon,sayi=v=>v===null?'—':v;
   const dugme=(ey,ad,engel)=>'<button type="button" data-eylem="'+ey+'" data-oyuncu="'+yaz(id)+'"'+(engel?' disabled title="'+yaz(engel)+'"':'')+'>'+yaz(ad)+'</button>';
   const E=B.engel,notlar=[E.arastirt&&!B.dosya?'Araştırma: '+E.arastirt:null,B.izleme?'İzleme: '+y.tarihYazi(B.izleme.tarih)+' '+saatYazi(B.izleme.dakika)+'.':E.izle?'İzleme: '+E.izle:null].filter(Boolean);
-  return'<article class="tm-kagit" data-oyuncu="'+yaz(id)+'"><h4>'+yaz(S.ad)+'</h4>'+
+  /* RK4-a: başta ortak oyuncu kartı (transfer bağlamı: kamu bilgisi ve kulüp); kart yoksa eski künye */
+  return'<article class="tm-kagit" data-oyuncu="'+yaz(id)+'">'+(typeof oyuncuKarti==='function'&&(k.oyuncular||{})[id]?oyuncuKarti(k,id,'transfer'):'<h4>'+yaz(S.ad)+'</h4>'+
     '<p class="tm-kunye">'+yaz(MV[S.mevki]||S.mevki)+' · '+S.yas+' yaş · '+yaz(S.kulup||'Serbest')+(S.durum==='sakat'?' · sakat':S.durum==='cezali'?' · cezalı':'')+'</p>'+
-    '<p>Bu sezon: '+sayi(sez.mac)+' maç, '+sayi(sez.dk)+' dakika, '+sez.gol+' gol, '+sez.sari+' sarı'+(sez.kirmizi?', '+sez.kirmizi+' kırmızı':'')+'.</p>'+
+    '<p>Bu sezon: '+sayi(sez.mac)+' maç, '+sayi(sez.dk)+' dakika, '+sez.gol+' gol, '+sez.sari+' sarı'+(sez.kirmizi?', '+sez.kirmizi+' kırmızı':'')+'.</p>')+
     (B.bildiklerimiz.length?'<ul class="tm-bilgi">'+B.bildiklerimiz.map(b=>'<li><span>'+yaz(b.metin)+'</span><small>'+yaz(b.kaynak)+'</small></li>').join('')+'</ul>':'<p class="tm-not">Hakkında bildiğimiz bir şey yok.</p>')+
     (B.dosya?'<p><button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+yaz(B.dosya)+'" data-donus="transfer">Dosyası açık ▸</button></p>':'')+
     '<div class="tm-eylemler">'+(B.takipte?dugme('tmTakipBirak','Takipten çıkar',E.takip):dugme('tmTakip','Takibe al',E.takip))+

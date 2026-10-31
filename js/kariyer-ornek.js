@@ -13,7 +13,7 @@
    yoktur (kadro isteğe bağlıdır, maç girdisi kadrosuz kulübü reddeder). Gerçek kariyerin 16 kulübü ve kadroları kariyerBaslat'ta kurulur. */
 'use strict';
 const KARIYER_ORNEK={
-  kayitSurumu:11,
+  kayitSurumu:12,
   dunyaTohumu:20260929,
   icerik:{surum:0,baslangic:null},kosullar:{},rastlanti:{durum:20260929},olaylar:{},sozler:{},haberler:[],gozlem:null,
   tarih:'2026-11-28',gunIciDakika:540,          // 13. hafta maç günü sabahı (LIG.buMac: Cumartesi 19:00)
@@ -22,7 +22,7 @@ const KARIYER_ORNEK={
   final:null,
   sonrakiNo:{kisi:8,is:4,hareket:1,mesele:1,olay:1,soz:1,oyuncu:1},
   meseleler:{},
-  sezon:{id:'2026-27',kod:'2627',ad:'3. Lig',grup:'2. Grup',sezonAdi:'2026–27',etiket:'TEST',ilkHafta:1,haftaSayisi:2,ilkMacTarihi:'2026-11-28',dakika:1140,
+  sezon:{id:'2026-27',kod:'2627',ad:'3. Lig',grup:'2. Grup',sezonAdi:'2026–27',etiket:'TEST',ilkHafta:1,haftaSayisi:2,ilkMacTarihi:'2026-11-28',dakika:1140,programAciklanan:2,
     bolgeler:{},takimlar:['demirkapi','akdeniz'],
     devralinan:{tablo:{demirkapi:{G:0,B:0,M:0,A:0,Y:0},akdeniz:{G:0,B:0,M:0,A:0,Y:0}},sonMaclar:{}},transfer:[]},
   fikstur:[

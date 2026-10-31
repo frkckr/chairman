@@ -7,6 +7,7 @@ Başkan odasını başsız Chromium'da elle ilerleyen kare saatiyle açar, odada
     kalkış ve oturma süreleri, adım sayısı, adımdaki dikey ve yanal salınım (araclar/anlar/<onek>yuruyus-<hedef>.json)
   - RN-b (2026-10-30): evreler örtüşen pencerelerse (ODA.yol.an) şerit ve ölçü onlara göre; bakışın açısal hızı (°/sn), yürürken bakışın en düşük
     eğimi (°; yere bakmıyor mu?), yürürken görüş açısının değişimi (°), elin her uçta görünür kaldığı süre (sn)
+  - RK2 (2026-10-31): telefon ritüelinin evreleri (bak, al, ekran, cep; varışta cikar, ekran2, koy, cek) şeritte ve evrelerde
 
 Kullanım:
   python araclar/yuruyus-yakala.py                 # balkona gidiş ve masaya dönüş
@@ -35,10 +36,11 @@ OYNAT_JS = """(hedef) => {
   odaYuru(hedef); const Y = ODA.yol, toplam = Y.toplam, N = Math.ceil(toplam * 60) + 2, iz = [];
   const E = Object.assign({}, Y.E || { yonel: OD.adim.yonel, kalk: OD.adim.kalk, yuru: Y.yuru, otur: OD.adim.otur });
   /* evre sınırları (sn) ve şerit anları; RN-b: örtüşen pencereler (Y.an) varsa onlardan */
-  const sira = ['al', 'yonel', 'kalk', 'yuru', 'otur', 'koy'].filter(a => Y.an ? !!Y.an[a] : E[a] != null), bas = {}; let t0 = 0;
+  const sira = ['bak', 'al', 'ekran', 'cep', 'yonel', 'kalk', 'yuru', 'otur', 'cikar', 'ekran2', 'koy', 'cek'].filter(a => Y.an ? !!Y.an[a] : E[a] != null), bas = {}; let t0 = 0;
   for (const a of sira) { if (Y.an) { bas[a] = Y.an[a][0]; E[a] = Y.an[a][1] - Y.an[a][0]; } else { bas[a] = t0; t0 += E[a]; } }
   const an = (a, u) => bas[a] != null ? bas[a] + E[a] * u : null;
-  const anlar = [an('al', 0.45), an('al', 0.8), an('kalk', 0.3), an('kalk', 0.7), an('yuru', 0.1), an('yuru', 0.4), an('yuru', 0.75), an('otur', 0.2), an('otur', 0.55), an('otur', 0.9), an('koy', 0.45), an('koy', 0.85)]
+  /* RK2: ritüelin anları (uzanma, kavrama, ekran, cep; çıkarma, ekran, bırakma) ve yürüyüşün üç anı */
+  const anlar = [an('al', 0.3), an('al', 0.5), an('ekran', 0.5), an('cep', 0.6), an('kalk', 0.6), an('yuru', 0.15), an('yuru', 0.5), an('yuru', 0.85), an('cikar', 0.8), an('ekran2', 0.5), an('koy', 0.6), an('cek', 0.4)]
     .map((t, i) => t == null ? toplam * (i + 0.5) / 12 : t).sort((a, b) => a - b);
   const view = document.getElementById('view'), W = 480, H = 360, cv = document.createElement('canvas'); cv.width = W * 4; cv.height = H * 3; const g = cv.getContext('2d');
   let k = 0, bitti = null;

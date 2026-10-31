@@ -21,7 +21,7 @@ const GAZETE_TEST={ad:'Yerel Gazete (TEST)',enCok:6,kalinEnCok:8,yaklasan:3,saka
 const GAZETE_ESKI_ANAHTAR=['p12.haber','tr.haber'];
 /* U5: haberin türü (gazetede başlığın üstündeki küçük etiket; kutuda kutunun başlığı). TEST; listede yoksa 'Kulüp' */
 const GAZETE_ETIKET={'gz.mac':'Maç','gz.sonuclar':'Lig','gz.tablo':'Puan durumu','gz.golcu':'Gol krallığı','gz.sakat':'Sakatlık','gz.yaklasan':'Maç günü',
-  'gz.sezonSonu':'Sezon','gz.bos':'','gz.kisa':'','p12.haber':'Kulüp','tr.haber':'Transfer','tr.dunya':'Transfer','tr.soylenti':'Kulis'};
+  'gz.sezonSonu':'Sezon','gz.bos':'','gz.kisa':'','gz.program':'Program','gz.erteleme':'Lig','gz.yeniTarih':'Lig','p12.haber':'Kulüp','tr.haber':'Transfer','tr.dunya':'Transfer','tr.soylenti':'Kulis'};
 const gazeteBasi=()=>typeof BASLANGIC_TARIHI!=='undefined'?BASLANGIC_TARIHI:null;
 const gazetePenceresi=tarih=>({bas:anDakika(tarihEkle(tarih,-1),GUN_BASLANGICI),son:anDakika(tarih,GUN_BASLANGICI)});
 function gazeteSonTarihi(k){

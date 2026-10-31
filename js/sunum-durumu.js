@@ -26,9 +26,10 @@ function yaziBoyuUygula(){
    yalnız sayfa kenarı ve maç sayfasında alt şerit (#baskanDugmeleri) düşülür. Bülten açıkken şerit gizlidir ama yeri ayrılır: “Maça geç”te alan
    sıçramaz. Geliştirici alanı payın dışındadır (aşağıda, kaydırınca). Eskiden sabit 190 px (dizüstünde alan 640–733 px'e iniyordu).
      ekranPayGuncelle()  --ekran-pay (px) belge köküne; pencere ve şerit boyu değişince kendiliğinden çağrılır
-   RB (2026-10-30): balkonda geniş pencere bandı. Oda sayfasında başkan balkondaysa (ya da oraya yürüyorsa) ve 4:3 karenin yanına en az
+   RB (2026-10-30): balkonda geniş pencere bandı. RK1 (2026-10-31; kullanıcı: “boş siyah ekran hemen açılmasın; telefona ya da oyuncuya
+   tıklayınca açılsın, iş bitince kapansın”): oda sayfasında başkan balkondayken bir iş açıksa ve 4:3 karenin yanına en az
    STIL.balkon.bant.enAz px sığıyorsa #screen[data-bant] açılır: kare aynı boyda solda, sağında bant (en çok karenin bant.enCok payı).
-     ekranBantIste(var)  ekran (js/ekran-oda.js) başkanın yerine göre ister; açılış ve kapanış kayarak (data-bant-gecis) */
+     ekranBantIste(var)  ekran (js/ekran-oda.js) iş açılıp kapanınca ister (kap çizilmeden önce); açılış ve kapanış kayarak (data-bant-gecis) */
 const EKRAN_PAY={kenar:32,ara:18,serit:52},EKRAN_BANT={istek:false,zaman:0};
 function ekranBantIste(v){v=!!v;if(EKRAN_BANT.istek===v)return;EKRAN_BANT.istek=v;ekranPayGuncelle();}
 function ekranPayGuncelle(){

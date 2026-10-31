@@ -18,18 +18,21 @@ const camera=new THREE.PerspectiveCamera(30,4/3,0.3,1200);
 
 /* ---- son işlem: 15 bit renk + 4x4 düzenli titreme (dönemin ekran kartları gibi) ----
    Tuval, ekrandaki boyunu karşılayan tam sayı katında (uK) çizilir: her iç piksel uK×uK düzgün bloktur; tarayıcı bunu ekrana yumuşak
-   küçültür (keskin-çift doğrusal): pikseller eşit görünür, tam katta birebir. uDis: oyuncuların çevresinde koyu çizgi denemesi (okunurluk) */
+   küçültür (keskin-çift doğrusal): pikseller eşit görünür, tam katta birebir. uDis: oyuncuların çevresinde koyu çizgi denemesi (okunurluk).
+   RK2 (2026-10-31): uMaske ızgarada bir dikdörtgen [x0, y0, x1, y1] (alttan), içinde titreme uMaskeK ile çarpılır (odadan pencere: uzaktaki küçük
+   figürler titremenin deseninde kıpırdamasın; js/oda.js odaCiz yazar, maç sayfasında boş kalır) */
 const post=new THREE.Scene(),postCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 const postMat=new THREE.ShaderMaterial({uniforms:{tD:{value:rt.texture},uDither:{value:STIL.ekran.titreme?STIL.ekran.titremeGucu:0},uLv:{value:Math.pow(2,STIL.ekran.renkBiti)-1},
-  uK:{value:1},uR:{value:new THREE.Vector2(RW,RH)},uDis:{value:0}},depthTest:false,depthWrite:false,
+  uK:{value:1},uR:{value:new THREE.Vector2(RW,RH)},uDis:{value:0},uMaske:{value:new THREE.Vector4(0,0,-1,-1)},uMaskeK:{value:1}},depthTest:false,depthWrite:false,
   vertexShader:'void main(){gl_Position=vec4(position.xy,0.0,1.0);}',
-  fragmentShader:`uniform sampler2D tD;uniform float uDither,uLv,uK,uDis;uniform vec2 uR;
+  fragmentShader:`uniform sampler2D tD;uniform float uDither,uLv,uK,uDis,uMaskeK;uniform vec2 uR;uniform vec4 uMaske;
   float b2(vec2 a){a=floor(a);return fract(dot(a,vec2(0.5,a.y*0.75)));}
   float b4(vec2 a){return b2(0.5*a)*0.25+b2(a);}
   void main(){vec2 q=floor(gl_FragCoord.xy/uK)+0.5,uv=q/uR;vec4 t=texture2D(tD,uv);vec3 c=t.rgb;
     if(uDis>0.5&&t.a>0.9){vec2 e=vec2(1.0/uR.x,0.0),f=vec2(0.0,1.0/uR.y);
       float m=min(min(texture2D(tD,uv+e).a,texture2D(tD,uv-e).a),min(texture2D(tD,uv+f).a,texture2D(tD,uv-f).a));if(m<0.9)c*=0.32;}
-    float d=(b4(q)-0.47)*uDither;c=floor(c*uLv+0.5+d)/uLv;gl_FragColor=vec4(c,1.0);}`});
+    float d=(b4(q)-0.47)*uDither;d*=mix(1.0,uMaskeK,step(uMaske.x,q.x)*step(q.x,uMaske.z)*step(uMaske.y,q.y)*step(q.y,uMaske.w));
+    c=floor(c*uLv+0.5+d)/uLv;gl_FragColor=vec4(c,1.0);}`});
 post.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),postMat));
 /* tuvalin çizim katı: ekrandaki genişlik × aygıt piksel oranı / ızgara genişliği, yukarı yuvarlanır (1–4) */
 let EKRAN_KAT=1;

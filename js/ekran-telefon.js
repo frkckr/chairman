@@ -147,6 +147,14 @@
 /* ---- Canlı Skor ---- */
 .tel-skor{display:grid;gap:.45em}
 .tel-skor h5{margin:.3em 0 0;font-size:max(var(--k-enKucuk,12px),.76em);letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu);font-weight:600}
+/* RK8-a: Takip sekmesi — haber satırları (zaman, etiket, metin); son bakıştan beri gelen soldan amber çizgili */
+.tel-takip{list-style:none;margin:0;padding:0;display:grid;gap:.3em}
+.tel-takipSatir{appearance:none;display:grid;grid-template-columns:auto minmax(0,1fr);gap:.1em .5em;width:100%;padding:.35em .5em;border:1px solid var(--k-cizgi);border-left:.25em solid transparent;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.tel-takipSatir.tel-takipYeni{border-left-color:var(--k-vurgu)}
+.tel-takipSatir time{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.85em);font-variant-numeric:tabular-nums}
+.tel-takipSatir small{color:var(--k-vurgu);font-size:max(var(--k-enKucuk,12px),.8em);letter-spacing:.08em;text-transform:uppercase;font-weight:600;justify-self:end}
+.tel-takipSatir span{grid-column:1/-1;min-width:0}
+.tel-takipSatir:hover,.tel-takipSatir:focus-visible{border-color:var(--k-vurgu)}
 /* N2 (2026-10-04): her karşılaşma tek satır: saat ya da dakika/durum · ev sahibi · skor · deplasman; sığmayan ad kesilir, satır kaymaz */
 .tel .tel-mac{display:grid;grid-template-columns:2.6em minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.4em;width:100%;padding:.55em .6em;white-space:nowrap;line-height:1.2;background:var(--k-serit);border:1px solid var(--k-cizgi);border-radius:.8em}
 .tel-mac span{overflow:hidden;text-overflow:ellipsis}
@@ -258,9 +266,21 @@ function telMacSatiri(m,nitelik){
 
 /* ---- S-d: Canlı Skor'un lig görünümleri ---- */
 const TEL_LIG_SEKME=[['maclar','Maçlar'],['tablo','Puan durumu']];   /* R3: Fikstür hafta görünümüne katıldı */
-function telLigSekmeleri(T,L){
-  const S=TEL_LIG_SEKME,sec=S.some(x=>x[0]===T.skorSekme)?T.skorSekme:'maclar';
+const TEL_TAKIP_SEKME=['takip','Takip'];   /* RK8-a: takip edilen kulüp ve oyuncuların haberleri (js/haber.js); maç telefonunda yok */
+function telLigSekmeleri(T,L,takip){
+  const S=takip?TEL_LIG_SEKME.concat([TEL_TAKIP_SEKME]):TEL_LIG_SEKME,sec=S.some(x=>x[0]===T.skorSekme)?T.skorSekme:'maclar';
   return'<nav class="tel-sekmeler" role="tablist" aria-label="Canlı Skor">'+S.map(([id,ad])=>'<button type="button" class="tel-sekme" role="tab" data-eylem="skorSekme" data-sekme="'+id+'" aria-selected="'+(sec===id?'true':'false')+'">'+ad+'</button>').join('')+'</nav>';
+}
+/* RK8-a: Takip sekmesi — takip haberleri yeniden eskiye; satıra dokununca konusunun sayfası (maç, oyuncu, kulüp). Boşken sakin metin */
+function telTakip(k){
+  if(!k||typeof takipHaberleri!=='function')return'<p class="tel-bos">Takip yok.</p>';
+  const T=k.takip||{},n=(T.kulupler||[]).length+(T.oyuncular||[]).length,H=takipHaberleri(k),o=Number.isInteger(k.takipOkunan)?k.takipOkunan:-Infinity;
+  if(!n)return'<p class="tel-bos">Takip ettiğin kulüp ya da oyuncu yok. Kulüp ve oyuncu sayfasında “Takip et ▸”.</p>';
+  if(!H.length)return'<p class="tel-bos">Son iki haftada takip ettiklerinle ilgili haber yok.</p>';
+  const hedef=h=>h.konu.oyuncular.length?['oyuncu',h.konu.oyuncular[0]]:h.konu.maclar.length?['mac',h.konu.maclar[0]]:['kulup',h.konu.kulupler[0]];
+  return'<ul class="tel-takip">'+H.map(h=>{const t=anTarih(h.an),[tur,id]=hedef(h);
+    return'<li><button type="button" class="tel-takipSatir'+(h.an>o?' tel-takipYeni':'')+'" data-eylem="csAc" data-tur="'+tur+'" data-id="'+yazT(id)+'"><time>'+yazT(telKisaAn(k,t.tarih,t.dakika))+'</time>'+
+      '<small>'+yazT(h.etiket)+'</small><span>'+yazT(String(h.metin).replace(/^TEST: /,''))+'</span></button></li>';}).join('')+'</ul>';
 }
 function telPuanTablosu(L){
   /* R3: tarafsız (Demirkapı vurgusu yok), armalı; kulübe dokununca takım sayfası (js/ekran-canli.js) */
@@ -288,12 +308,14 @@ function telHafta(k,T,L,M){
   const H=canliHafta(k,T.hafta||(L&&L.hafta)||canliVarsayilanHafta(k)),C=new Map();
   if(M&&L&&H.hafta===L.hafta)for(const x of [M].concat(M.digerleri||[]))C.set(x.id||x.macId,x);
   const ok=(n,et,yon)=>'<button type="button" class="tel-haftaOk" data-eylem="skorHafta" data-hafta="'+n+'" data-yon="'+yon+'" data-ilk="'+H.ilk+'" data-son="'+H.son+'" aria-label="'+et+'"'+(n<H.ilk||n>H.son?' disabled':'')+'>'+(yon==='geri'?'‹':'›')+'</button>';
+  /* RK7: gün başlıklarıyla (Cuma–Pazartesi; ertelenen maç yeni gününde); saati açıklanmamış haftada tek başlık, tarih bekleyen ertelenmişler sonda */
+  let bas=null;const baslik=m=>{const b=m.ertelendi&&m.ertelendi.bekliyor?'Ertelendi · yeni tarih açıklanacak':!m.aciklandi?'Program açıklanmadı':telGunAdi(m.tarih)+' '+gunAyYazi(m.tarih);
+    if(b===bas)return'';bas=b;return'<h5>'+yazT(b)+'</h5>';};
   return'<div class="tel-haftaNav">'+ok(H.hafta-1,'Önceki hafta','geri')+'<b>'+H.hafta+'. hafta</b>'+ok(H.hafta+1,'Sonraki hafta','ileri')+'</div>'+
-    (H.tarih?'<h5>'+yazT(telGunAdi(H.tarih)+' '+gunAyYazi(H.tarih))+'</h5>':'')+
-    H.maclar.map(m=>{const x=C.get(m.id);
-      const r=x?canliSatir(x):{evId:m.ev,depId:m.konuk,sol:m.durum==='baslamadi'?saatYazi(m.dakika):m.durum==='hukmen'?'Hük.':'Bitti',canli:false,ev:ad(m.ev),dep:ad(m.konuk),
-        orta:m.skor?m.skor[0]+' – '+m.skor[1]:'–',durum:m.durum==='baslamadi'?'başlamadı':m.durum==='hukmen'?'hükmen':'bitti'};
-      return telMacSatiri(Object.assign(r,{evArma:arma(r.evId),depArma:arma(r.depId)}),'data-eylem="csAc" data-tur="mac" data-id="'+yazT(m.id)+'"');}).join('');
+    H.maclar.map(m=>{const x=C.get(m.id),ert=m.ertelendi&&m.durum!=='bitti'&&m.durum!=='hukmen';
+      const r=x?canliSatir(x):{evId:m.ev,depId:m.konuk,sol:ert&&m.ertelendi.bekliyor?'Ert.':m.durum==='baslamadi'?(m.aciklandi?saatYazi(m.dakika):'—'):m.durum==='hukmen'?'Hük.':'Bitti',canli:false,ev:ad(m.ev),dep:ad(m.konuk),
+        orta:m.skor?m.skor[0]+' – '+m.skor[1]:'–',durum:ert&&m.ertelendi.bekliyor?'ertelendi':ert?'ertelendi, yeni tarihinde':m.durum==='baslamadi'?(m.aciklandi?'başlamadı':'saati açıklanmadı'):m.durum==='hukmen'?'hükmen':'bitti'};
+      return baslik(m)+telMacSatiri(Object.assign(r,{evArma:arma(r.evId),depArma:arma(r.depId)}),'data-eylem="csAc" data-tur="mac" data-id="'+yazT(m.id)+'"');}).join('');
 }
 /* iki ev sahibinin ortak lig gezintisi: T'yi değiştirir ve odaklanacak seçiciyi döndürür; eylem bunlardan değilse undefined.
    R3: sayfa yığını T.sayfalar (csAc açar; aynı sayfa üst üste açılmaz; en çok 12), csBolum bölüm seçer, csGeri bir geri; skorHafta hafta değiştirir */
@@ -353,7 +375,8 @@ function telefonCiz(k,T,s={}){
       '<div class="tel-bildirimler" aria-label="Bildirimler">'+B.join('')+'</div>'+
       '<div class="tel-sabit">'+
         '<button type="button" class="tel-uyg tel-uygMesaj" data-eylem="telUyg" data-uyg="mesajlar" aria-label="Mesajlar'+(cevap?', cevap bekleyen '+cevap:okunmamis?', okunmamış '+okunmamis:'')+'">'+telSimge('mesajlar',rozet)+'Mesajlar</button>'+
-        '<button type="button" class="tel-uyg tel-uygSkor" data-eylem="telUyg" data-uyg="skor">'+telSimge('skor')+'Canlı Skor</button></div>';
+        (()=>{const n=!s.macta&&k&&typeof takipYeniSayisi==='function'?takipYeniSayisi(k):0;   /* RK8-a: son bakıştan beri takip haberi */
+          return'<button type="button" class="tel-uyg tel-uygSkor" data-eylem="telUyg" data-uyg="skor" aria-label="Canlı Skor'+(n?', '+n+' yeni takip haberi':'')+'">'+telSimge('skor',n?'<i class="tel-rozet">'+n+'</i>':'')+'Canlı Skor</button></div>';})();
   }else if(ekran==='mesajlar'){
     ic='<header class="tel-nav">'+geri('telEv','','Ana ekran')+'</header><h4 class="tel-buyukBaslik">Mesajlar</h4>';
     /* N14 (kullanıcı kararı 2026-10-18): konuşma yoksa liste boş kalır, boş durum yazısı yok (eskiden “Mesaj yok. Telefon sessiz.”) */
@@ -403,9 +426,9 @@ function telefonCiz(k,T,s={}){
     if(!s.ikiSutun&&Y.length&&k&&typeof csSayfaHtml==='function'){
       ic='<header class="tel-nav">'+geri('csGeri','',csSayfaBasligi(k,Y[Y.length-2]))+'</header><div class="tel-skor">'+csSayfaHtml(k,T,{canliKayit:s.canliKayit})+'</div>';
     }else{
-      const sek=Lg&&T.skorSekme==='tablo'?'tablo':'maclar';
-      ic='<header class="tel-nav">'+geri('telEv','','Ana ekran')+'</header><h4 class="tel-buyukBaslik">Canlı Skor</h4>'+(Lg?telLigSekmeleri(T,Lg):'')+'<div class="tel-skor">'+
-        (sek==='tablo'?telPuanTablosu(Lg):telHafta(k,T,Lg,M))+'</div>';
+      const takip=!s.macta&&!!k,sek=Lg&&T.skorSekme==='tablo'?'tablo':takip&&T.skorSekme==='takip'?'takip':'maclar';
+      ic='<header class="tel-nav">'+geri('telEv','','Ana ekran')+'</header><h4 class="tel-buyukBaslik">Canlı Skor</h4>'+(Lg?telLigSekmeleri(T,Lg,takip):'')+'<div class="tel-skor">'+
+        (sek==='tablo'?telPuanTablosu(Lg):sek==='takip'?telTakip(k):telHafta(k,T,Lg,M))+'</div>';
     }
   }
   return'<div class="tel-yer"><div class="tel" data-ekran="'+ekran+'"><div class="tel-ekran" data-ekran="'+ekran+'"'+(ekran==='skor'?' data-sekme="'+yazT(T.skorSekme||'maclar')+'"':'')+'><i class="tel-ada" aria-hidden="true"></i>'+

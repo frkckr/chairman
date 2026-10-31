@@ -13,6 +13,10 @@
        (js/loca-giris.js rakipBaskanDurumu önce ?rakipBaskan= TEST parametresine, sonra buraya bakar; geri açmak bu satırdır). Kariyersiz adreslerde yok.
      izlemesiz (H2-a; TEST, yayından önce kalkar): odadaki “Maçı izleme” adresi ?ekran=mac&izle=0&mac=<kimlik>; maç perdenin arkasında görüntüsüz
        hesaplanır, kart açılır (js/ekran-mac-sonu.js sonundaki başlatma). Sabit ve hata yolunda false.
+     tv (RK8-a, 2026-11-01): ?ekran=mac&tv=1&mac=<kimlik> — oda saatinde oynanan öbür maç TV'de (js/ekran-tv.js “İzle ▸”). Maç günü işi yoktur, kariyer
+       bellekte değişmez; motor seçeneği öbür maçlarınkiyle birebir (tvSecenek = digerMacPlani(k, f).secenek; stat alanı yok, ev sahibinin statı yalnız
+       çizime gider), santra ilk karede (maç öncesi yok; js/mac-sahnesi.js), digerleri aynı saatte başlayan öbür maçlar; sonucu “Odaya dön”
+       js/lig-takvimi.js tvMacSonucuUygula ile yazar. biz 0 (vurgu yok: tv). Maç oynanmıyorsa (saati geçti, hükmen) hata ve oda.
      biz: başkanın kulübünün takım sırası (0 ev, 1 konuk; motorda takım 0 hep ev sahibidir). kadro: js/mac-girdi.js macKadrosu biçimi (tamAd dahil).
      bulten: maç öncesi ekranının verisi. stat: statın sahibi ('kulup' ya da ev sahibinin kimliği), statTarifi: tarif (F1-c: ev sahibinin statı);
      doluluk ve deplasman payı TEST (2.8O'dan beri sabit).
@@ -33,13 +37,23 @@ const MAC_GUNU=(()=>{
     const T=statTarifiUret(ev,evAd);
     return{stat:ev,statTarifi:T,doluluk:dolulukTest(ev,biz,hafta),deplasman:0.08,zemin:T.zemin};   /* G2-b: js/kulup-mali.js (maç günü geliri aynı formül) */
   };
-  let macId=null,evOn=null,izle=null;try{const q=new URLSearchParams(location.search);macId=q.get('mac');evOn=q.get('ev');izle=q.get('izle');}catch(e){}
+  let macId=null,evOn=null,izle=null,tv=null;try{const q=new URLSearchParams(location.search);macId=q.get('mac');evOn=q.get('ev');izle=q.get('izle');tv=q.get('tv');}catch(e){}
   /* geliştirme: ?ev=<kulüp> kariyersiz maçı o kulübün statında açar (tarif önizlemesi; kadrolar ve taraflar aynı) */
   if(!macId){const ev=evOn&&LIG.takimlar.some(t=>t.id===evOn)?evOn:null;return Object.assign(sabit(),statKur(ev,ad(ev),'demirkapi',B.hafta));}
   try{
     oyunBaslat();
     const k=OYUN.kariyer;
     if(!k)throw new Error(OYUN.bozukHata||'Kayıtlı kariyer açılamadı');
+    if(tv==='1'){   /* RK8-a: TV'de maç */
+      const f=k.fikstur.find(x=>x.id===macId),bz=(k.kisiler[k.baskanId]||{}).kulupId;
+      if(!f||typeof oynananLigMaclari!=='function'||!oynananLigMaclari(k).some(x=>x.f.id===macId))throw new Error('Bu maç şu an TV\'de değil');
+      const P=digerMacPlani(k,f);if(P.hukmen)throw new Error('Bu maç oynanmıyor (hükmen)');
+      const g=macGirdisi(k,macId);
+      /* üretilen kulüplerin forması aynı (TEST; kulüp formaları görsel turda): çizimde ev sahibi ev formasıyla. Motor seçeneği (tvSecenek) değişmez */
+      if(g.kadro[0].forma===g.kadro[1].forma)g.kadro=[Object.assign({},g.kadro[0],{forma:'ev',kaleciForma:'evKaleci'}),g.kadro[1]];
+      g.digerleri=k.fikstur.filter(x=>x.id!==macId&&x.tarih===f.tarih&&x.dakika===f.dakika&&!k.maclar[x.id]&&!x.tarihBekliyor&&x.ev!==bz&&x.konuk!==bz).map(x=>digerMacPlani(k,x));
+      return Object.assign(g,statKur(f.ev,k.kulupler[f.ev].ad,bz,f.hafta),{tv:true,biz:0,tohum:P.tohum,tvSecenek:P.secenek,protokol:{rakipBaskan:'yok'},izlemesiz:false});
+    }
     const is=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'&&x.veri.macId===macId);
     if(!is)throw new Error('Bu maçın günü kariyerde bekleyen bir iş değil');
     const girdi=macGirdisi(k,macId),biz=(k.kisiler[k.baskanId]||{}).kulupId;

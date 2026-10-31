@@ -6,8 +6,10 @@ Ekranlar: oda (masa), defter, telefonun ana ekranı, konuşma (R2: iki sütun, t
 oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu kartı. R3: Canlı Skor sayfaları sürüm 11 örnek kaydından
 (araclar/ornekler/kayit-s11-hafta14.json): hafta görünümü, maç sayfası (Özet, İstatistikler, Kadrolar), oyuncu sayfası, takım sayfası (Genel, Kadro).
 R4: Transfer masası (Pano, Piyasa, oyuncu kâğıdı) ve transfer zincirinin aday ve pazarlık kartı (yapay haftalarla 5 Ocak'a, oyunun komut yoluyla).
-R5: balkon (antrenman kâğıdı: günün türü, gözlem, Gördüklerin) ve balkonda sağ yarıda açılan oyuncu dosyası. RB: “Sahada” listesi ve takip edilen
-oyuncunun ad etiketi (balkon-sahada); 1366 ve 1536 pencerede balkon kâğıt bandıyla.
+R5: balkon ve balkonda sağ yarıda açılan oyuncu dosyası. RB: takip edilen oyuncunun ad etiketi (balkon-sahada). RK1: kâğıt yerine künye ve şeritte
+İzle (balkon), Gördüklerin odak kabında (balkon-gorduklerin); 1366 ve 1536 pencerede bant yalnız iş açıkken.
+RK6: TV'li oda (oda-tv), kapı kartı yarım odakta (ziyaret-kapi-karti), karşıda oturanın görüşme kartı (ziyaret-kart).
+RK8-a: TV sayfasının üç sayfası (tv-haberler, tv-skorlar, tv-program) ve Canlı Skor'un Takip sekmesi (canli-takip).
 R6: sponsor pazarlık kartı (1 Şubat ay başı, Görüşelim'den sonra; oyunun komut yoluyla).
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
@@ -209,25 +211,72 @@ async def sahneler_transfer(pg, olc):
         await akis.masaya_don(pg)
 
 
-BALKON_SAHNELER = {"balkon", "balkon-sahada", "balkon-dosya"}
+BALKON_SAHNELER = {"balkon", "balkon-sahada", "balkon-gorduklerin", "balkon-dosya"}
 
 
 async def sahneler_balkon(pg, olc):
-    """R5: Salı 15:00 yoğun gün, iki yorgun oyuncu, gözlem bir saat sürmüş (akış §23 kalıbı); sinyalin adından oyuncu dosyası (sağ yarı)."""
+    """R5, RK1: Salı 15:00 yoğun gün, iki yorgun oyuncu, gözlem bir saat sürmüş (akış §23 kalıbı): künye ve şerit (balkon); pas çemberinin ilk
+    oyuncusunun takibi, ad etiketi (balkon-sahada); Gördüklerin odak kabında (balkon-gorduklerin, geniş pencerede bantta); sinyalin adından oyuncu dosyası."""
     await pg.evaluate("""() => oyunKomut(k => { const D = k.kulupler.demirkapi.kadro, x = Object.assign({}, k.oyuncular);
       for (const id of D.ilk11.slice(1, 3)) x[id] = Object.assign({}, x[id], { hal: { kon: 58, gun: '2026-11-23', form: 0, gel: 0, tav: 60 } });
       k.oyuncular = x; zamanIlerlet(k, anDakika('2026-11-24', 900) - simdikiAn(k)); gozlemAc(k, 120); gozlemAdim(k, 60); })""")
     await akis.oda_yenile(pg)
     await akis.yokla(pg, "() => ODA.yer === 'balkon'", 60)
     await olc("balkon")
-    # RB: “Sahada” — pas çemberine bakış, ilk oyuncunun takibi (liste açık, ad etiketi sahada); geniş pencerede kâğıt bantta
-    await tikla(pg, '#oda [data-eylem="bakGrup"][data-grup="rondo"]')
-    await tikla(pg, '#oda [data-eylem="bakOyuncu"]')
+    # RK1: pas çemberinin ilk oyuncusunun takibi (ad etiketi sahada; klavyedeki Enter'in yaptığı)
+    await pg.evaluate("() => { const G = balkonGruplari().find(x => x.grup === 'rondo'); if (G && G.ids.length) balkonBakis({ tur: 'oyuncu', id: G.ids[0] }); }")
     await pg.wait_for_timeout(1200)
     await olc("balkon-sahada")
-    await tikla(pg, '#oda .od-gorduklerin [data-eylem="gozlemOyuncu"]')
+    await tikla(pg, '#oda .od-antGor')
+    await pg.wait_for_selector("#oda section.odk .od-gorduklerin", timeout=10000)
+    await olc("balkon-gorduklerin")
+    await tikla(pg, '#oda section.odk .od-gorduklerin [data-eylem="gozlemOyuncu"]')
     await pg.wait_for_selector("#oda .dsy-baslik", timeout=10000)
     await olc("balkon-dosya")
+
+
+ZIYARET_SAHNELER = {"oda-tv", "ziyaret-kapi-karti", "ziyaret-kart"}
+
+
+async def sahneler_ziyaret(pg, olc):
+    """RK6: TV'li oda (oda-tv); teknik direktörle randevu, İlerle kapıda durur: kapı kartı yarım odakta (ziyaret-kapi-karti); Buyursun, odaya tıklayınca
+    kişi oturur: görüşme kartı (ziyaret-kart; kişinin sözü kartın sorusu)."""
+    await olc("oda-tv")
+    await akis.ziyaret_kur(pg, 20)
+    await akis.ziyaret_kapiya(pg)
+    await olc("ziyaret-kapi-karti")
+    await pg.keyboard.press("ArrowLeft")
+    await pg.keyboard.press("Enter")
+    await akis.yokla(pg, "() => ODA.ziyaret && ODA.ziyaret.evre === 'giris'", 20)
+    await akis.oda_bos_tikla(pg)
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=10000)
+    await olc("ziyaret-kart")
+
+
+TV_SAHNELER = {"tv-haberler", "tv-skorlar", "tv-program", "canli-takip"}
+
+
+async def sahneler_tv(pg, olc):
+    """RK8-a: 13. hafta yapay sonuçla, 14. haftanın Cumartesi 17:00 maçları sahte sonuçla (20:00); TV sayfası 100, 200, 300 (tv-haberler, tv-skorlar, tv-program);
+    bir kulüp takipte, Canlı Skor'un Takip sekmesi (canli-takip)."""
+    await pg.evaluate(akis.HAFTA_BITIR_JS)
+    await pg.evaluate("""() => { LIG_MAC_SAGLAYICI = (k, p) => ({skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], sutlar: [], ist: {}, ilk11: p.secenek.kadro.map(K => K.oyuncular.map(o => o.id))});
+      const k = OYUN.kariyer, f = k.fikstur.filter(x => x.hafta === 14 && x.dakika === 1020).sort((a, b) => anDakika(a.tarih, a.dakika) - anDakika(b.tarih, b.dakika))[0];
+      oyunKomut(x => { zamanIlerlet(x, anDakika(f.tarih, 1200) - simdikiAn(x)); takipEt(x, 'kulup', f.ev); }); LIG_MAC_SAGLAYICI = null; }""")
+    await akis.oda_yenile(pg)
+    await pg.keyboard.press("Digit7")
+    await pg.wait_for_selector(".tv-sayfa", timeout=10000)
+    await olc("tv-haberler")
+    await tikla(pg, '[data-eylem="tvSayfa"][data-tv="skor"]')
+    await olc("tv-skorlar")
+    await tikla(pg, '[data-eylem="tvSayfa"][data-tv="program"]')
+    await olc("tv-program")
+    await akis.masaya_don(pg)
+    await pg.keyboard.press("Digit1")
+    await pg.wait_for_selector(".tel-ekran", timeout=10000)
+    await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="skor"]')
+    await tikla(pg, '[data-eylem="skorSekme"][data-sekme="takip"]')
+    await olc("canli-takip")
 
 
 SPONSOR_SAHNELER = {"sponsor-pazarlik-karti"}
@@ -235,7 +284,9 @@ SPONSOR_SAHNELER = {"sponsor-pazarlik-karti"}
 
 async def sahneler_sponsor(pg, olc):
     """R6: 1 Şubat 12:00'ye ilerlenir, teklif kartı Görüşelim ile cevaplanır; pazarlık kartı kendi yerinde (Sonra yığınından)."""
-    kid = await pg.evaluate("""() => { oyunKomut(k => zamanIlerlet(k, anDakika('2027-02-01', 720) - simdikiAn(k)));
+    # RK7: ham atlama yoldaki lig maçlarını sayfada hesaplardı (aylarca maç); atlama süresince sahte 0–0 sağlayıcı
+    kid = await pg.evaluate("""() => { LIG_MAC_SAGLAYICI = (k, p) => ({skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], sutlar: [], ist: {}, ilk11: p.secenek.kadro.map(K => K.oyuncular.map(o => o.id))});
+      oyunKomut(k => zamanIlerlet(k, anDakika('2027-02-01', 720) - simdikiAn(k))); LIG_MAC_SAGLAYICI = null;
       const B = () => Object.values(OYUN.kariyer.isler).find(i => i.veri && i.veri.karar === 'sablonKarti' && OYUN.kariyer.meseleler[i.veri.meseleId].sablon.ad === 'sponsor');
       const a = B(); oyunKomut(k => ajandaIsiYap(k, a.id, 'gorus')); const b = B(); return b ? b.id : null; }""")
     await akis.oda_yenile(pg)
@@ -318,6 +369,14 @@ async def ana():
             if not secili or secili & BALKON_SAHNELER:
                 pg = await ac("index.html", "?dunya=7&pul=0")
                 await sahneler_balkon(pg, await olc_kur(pg))
+                await pg.context.close()
+            if not secili or secili & ZIYARET_SAHNELER:
+                pg = await ac("index.html", "?dunya=7&pul=0")
+                await sahneler_ziyaret(pg, await olc_kur(pg))
+                await pg.context.close()
+            if not secili or secili & TV_SAHNELER:
+                pg = await ac("index.html", "?dunya=7&pul=0")
+                await sahneler_tv(pg, await olc_kur(pg))
                 await pg.context.close()
             if not secili or secili & SPONSOR_SAHNELER:
                 pg = await ac("index.html", "?dunya=7&pul=0")

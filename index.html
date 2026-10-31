@@ -282,30 +282,39 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .od-gozKasa{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.3em 1em;margin:0 0 .6em}
 .od-gozKasa dt{color:var(--k-soluk)}
 .od-gozKasa dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
-.od-gozlem{position:absolute;left:.9em;bottom:8.6em;max-width:36%;display:grid;gap:.35em;padding:.45em .7em;background:var(--k-zemin);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-yesil);box-shadow:.2em .25em 0 var(--k-golge)}
-.od-gozlem small{display:block}
-/* R5: balkonda antrenman kâğıdı; günün türü üstte; gördüklerin ada dokunulur. RB (2026-10-30): bantsız düzende kalıcı olarak solda, tarih kutusunun
-   altında (iş sağ yarıda açılır, kâğıtla çakışmaz; RN-c'nin geçici kuralı kalıcı); odak açıkken etkileşimsiz (inert) ve kısalır; dar karede
-   iş tam genişlikte olduğundan odak süresince gizlenir */
-.oda[data-yer="balkon"] .od-gozlem{left:.9em;right:auto;top:7.9em;bottom:auto;max-width:min(38%,26em);max-height:calc(100% - 17.5em);overflow-y:auto}
-@container (max-width:820px){.oda[data-yer="balkon"] .od-gozlem{max-width:62%}}
-.oda[data-yer="balkon"] .od-gozlem[inert]{max-width:min(36%,24em);max-height:42%;overflow:hidden}
-@container (max-width:820px){.oda[data-yer="balkon"] .od-gozlem[inert]{display:none}}
-/* RB: bantlı düzende kâğıt bandın üstünde; iş açıkken karenin solunda (bantsız düzendeki gibi) */
-.screen[data-bant] .oda[data-yer="balkon"] .od-gozlem:not([inert]){left:calc(var(--kare-en) + .7em);right:.7em;top:3.4em;max-width:none;max-height:calc(100% - 9em)}
-/* RB: “Sahada” — gruplar ve seçili grubun oyuncuları; seçili olan kalın */
-.od-sahada,.od-sahadaOyuncular{margin:0;padding:0;list-style:none;display:grid;gap:.1em}
-.od-sahadaOyuncular{margin:.15em 0 .3em .9em;padding-left:.5em;border-left:1px solid var(--k-cizgi)}
-.od-sahada button.od-baglanti{text-align:left}
-.od-sahada button[aria-pressed="true"]{font-weight:700;text-decoration:none}
-.od-sahada button[aria-pressed="true"]::before{content:'▸ '}
+/* RK1 (2026-10-31; kullanıcı: “antrenman kâğıdına gerek yok”): balkonda tarih kutusunun altında tek küçük künye — günün çalışması ve saati, durum,
+   Gördüklerin bağlantısı. Kâğıt ve “Sahada” listesi kalktı; gruplar ve oyuncular sahada seçilir. Odak açıkken etkileşimsiz; dar karede odak süresince gizli */
+/* RK6: ziyaret — yarım odağın başında durum satırı; alt şeritte bırakılan kartı geri açan düğme */
+.od-zyDurum{margin:0 0 .5em;font-weight:600}
+.od-alt .od-zyDugme{white-space:nowrap}
+/* RK7: İlerle'den önce öbür maçların arkada hesabı (js/lig-hesap.js) */
+.od-ligHesap{position:absolute;left:50%;bottom:6.2em;transform:translateX(-50%);z-index:6;padding:.45em 1em;background:var(--k-zemin);border:1px solid var(--k-cizgi);
+  box-shadow:.2em .25em 0 var(--k-golge);font-weight:600;white-space:nowrap}
+.od-antrenman{position:absolute;left:.9em;top:7.9em;max-width:min(36%,22em);display:grid;gap:.1em;padding:.3em .65em .35em;background:var(--k-zemin);border:1px solid var(--k-cizgi);
+  border-left:.3em solid var(--k-yesil);box-shadow:.2em .25em 0 var(--k-golge)}
+.od-antrenman p{margin:0}
+.od-antDurum{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
+.od-antrenman .od-antGor{justify-self:start;text-align:left;font-size:max(var(--k-enKucuk,12px),.9em);font-weight:600;margin-top:.1em}
+@container (max-width:820px){.oda[data-yer="balkon"] .od-antrenman[inert]{display:none}}
+/* RK1: alt şeritte “İzle” süreleri (İlerle'nin yanında; kâğıt düğme dili) */
+.od-izle{display:inline-flex;align-items:center;gap:.3em;margin-right:.3em}
+.od-izleAd{font-size:max(var(--k-enKucuk,12px),.82em);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--k-soluk)}
+/* RK1: “Gördüklerin” odak kabında: saat ve metin; ada dokununca oyuncunun dosyası */
+.od-gorduklerin{margin:0 0 .5em;padding:0;list-style:none;display:grid;gap:.35em}
+.od-gorduklerin li{display:grid;grid-template-columns:3.4em minmax(0,1fr);gap:.4em;align-items:baseline}
+.od-gorduklerin time{font-family:var(--mono);color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
+.od-gorduklerin button.od-baglanti{text-align:left}
+/* RK1: imlecin altındaki oyuncunun ya da grubun adı (yalnız görüntü; tıklama sahaya geçer) ve izlerken görülen sinyalin kelimesi (başının üstünde, söner) */
+.oda .od-isaret,.oda .od-sinyal{position:absolute;z-index:2;pointer-events:none;transform:translate(-50%,-115%);white-space:nowrap;font-size:max(var(--k-enKucuk,12px),.82em);
+  padding:.05em .4em;border:1px solid var(--k-cizgi);box-shadow:.1em .15em 0 var(--k-golge)}
+.oda .od-isaret{color:var(--k-yazi);background:var(--k-zemin);opacity:.94}
+.oda .od-sinyal{transform:translate(-50%,-240%);font-weight:600;font-style:italic;color:var(--k-serit);background:var(--k-yesil);border-color:var(--k-yesil)}
+.oda .od-sinyal.od-sinyalTakip{transform:translate(-50%,-260%)}
+.oda .od-isaret[hidden],.oda .od-sinyal[hidden]{display:none}
 /* RB: takip edilen oyuncunun ad etiketi (başının üstünde; dokununca dosyası) */
 .oda button.od-takip{position:absolute;z-index:2;transform:translate(-50%,-115%);padding:.1em .45em;font-size:max(var(--k-enKucuk,12px),.85em);font-weight:600;white-space:nowrap;
   text-decoration:none;color:var(--k-yazi);background:var(--k-serit);border:1px solid var(--k-cizgi);border-bottom-width:1px;box-shadow:.1em .15em 0 var(--k-golge)}
 .oda button.od-takip[hidden]{display:none}
-.od-gozlemGun{margin:0;font-weight:600}
-.oda .od-gozlem h5.od-gozlemBas,.od-gozlemBas{margin:.2em 0 0;font-size:max(var(--k-enKucuk,12px),.8em);letter-spacing:.08em;text-transform:uppercase;color:var(--k-soluk)}
-.od-gorduklerin button.od-baglanti{text-align:left}
 .oda .od-yer{font-weight:600;border-color:var(--k-yesil)}
 /* görünmez ama klavyeyle odaklanınca beliren düğme (balkon kapısı, 2.8D) */
 .oda .od-gizli:not(:focus):not(:focus-visible){position:absolute;width:1px;height:1px;min-width:0;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0;white-space:nowrap}
@@ -337,8 +346,9 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .oda[data-yer="balkon"] section.odk{left:auto;right:2%}
 .oda[data-yer="balkon"] section.odk:not([data-boy="cihaz"]){--odk-en:50%}
 /* RB: bantlı düzende iş bandın içinde; bant dar kalırsa (dosya ve defterin iki sayfası) sağdan sola genişler ve karenin sağını örter (bakış görünen sola kayar) */
-.screen[data-bant] .oda[data-yer="balkon"] section.odk{right:.7em;--odk-en:max(calc(var(--bant-en) - 1.4em),min(calc(100% - 1.4em),var(--odk-enAz,46em)))}
-.screen[data-bant] .oda[data-yer="balkon"] section.odk[data-boy="cihaz"]{--odk-enAz:24em}
+.screen[data-bant] .oda[data-yer="balkon"] section.odk{right:.7em;width:var(--odk-en);--odk-en:max(calc(var(--bant-en) - 1.4em),min(calc(100% - 1.4em),var(--odk-enAz,46em)))}
+/* RK1: telefon (cihaz, 21em) bandın içinde kalır — genişliği telefon panelinin %41 kuralından değil banttan alır */
+.screen[data-bant] .oda[data-yer="balkon"] section.odk[data-boy="cihaz"]{--odk-enAz:22em}
 .screen[data-bant] .oda[data-yer="balkon"] section.odk[data-boy="kucuk"]{--odk-enAz:30em}
 .screen[data-bant] .oda[data-yer="balkon"] section.odk[data-boy="orta"]{--odk-enAz:36em}
 .screen[data-bant] .oda[data-yer="balkon"] .odk-perde{background:linear-gradient(90deg,transparent calc(var(--kare-en) - 6em),rgba(24,16,8,.32) var(--kare-en))}
@@ -433,6 +443,7 @@ html,body{margin:0}
 <script src="js/mac-sonuc.js"></script>
 <script src="js/mac-okuma.js"></script>
 <script src="js/lig-maclari.js"></script>
+<script src="js/lig-takvimi.js"></script>
 <script src="js/oyuncu-hafta.js"></script>
 <script src="js/sozlesme.js"></script>
 <script src="js/kulup-mali.js"></script>
@@ -441,6 +452,7 @@ html,body{margin:0}
 <script src="js/transfer.js"></script>
 <script src="js/icerik-p12.js"></script>
 <script src="js/yazisma.js"></script>
+<script src="js/ziyaret.js"></script>
 <script src="js/mekan.js"></script>
 <script src="js/piyasa.js"></script>
 <script src="js/transfer-alim.js"></script>
@@ -449,6 +461,7 @@ html,body{margin:0}
 <script src="js/kadro-dosyasi.js"></script>
 <script src="js/canli-skor.js"></script>
 <script src="js/gazete.js"></script>
+<script src="js/haber.js"></script>
 <script src="js/zaman-ozeti.js"></script>
 <script src="js/test-gorunum.js"></script>
 <script src="js/kayit.js"></script>
@@ -487,6 +500,7 @@ html,body{margin:0}
 <script src="js/hareket-egrileri.js"></script>
 <script src="js/animasyon.js"></script>
 <script src="js/mac-arka.js"></script>
+<script src="js/lig-hesap.js"></script>
 <script src="js/mac-sahnesi.js"></script>
 <script src="js/pul.js"></script>
 <script src="js/kamera.js"></script>
@@ -495,15 +509,18 @@ html,body{margin:0}
 <script src="js/yuruyus.js"></script>
 <script src="js/oda.js"></script>
 <script src="js/balkon.js"></script>
+<script src="js/oda-ziyaret.js"></script>
 <script src="js/arma.js"></script>
 <script src="js/ekran-mac-oncesi.js"></script>
 <script src="js/portre.js"></script>
+<script src="js/oyuncu-karti.js"></script>
 <script src="js/ekran-kart.js"></script>
 <script src="js/ekran-canli.js"></script>
 <script src="js/ekran-telefon.js"></script>
 <script src="js/ekran-dosya.js"></script>
 <script src="js/ekran-defter.js"></script>
 <script src="js/ekran-gazete.js"></script>
+<script src="js/ekran-tv.js"></script>
 <script src="js/ekran-transfer.js"></script>
 <script src="js/ekran-odak.js"></script>
 <script src="js/ekran-zaman.js"></script>

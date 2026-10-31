@@ -26,9 +26,11 @@
      arkaDosyalari(betik listesi) → worker'ın yükleyeceği dosyalar: ortak, kadrolar ve lig + index.html'de js/mac-motoru.js'ten js/goruntu.js'e
        kadarki motor dosyaları + bu dosya. Node'da (araclar/kariyer-deneme.js 3.8) yalnız bu listeyle kurulan bağlamın sonucu tam bağlamınkiyle aynıdır. */
 'use strict';
+/* RK7 (2026-11-01): bizim maçla aynı anda (aynı gün ve saat) başlayan, oynanmamış öbür maçlar — maç sayfasında canlı oynananlar. Haftanın öbür
+   saatlerdeki maçları kendi saatinde lig maçı işi oynar (js/lig-takvimi.js). İlk hafta (bütün maçlar Cumartesi 19:00) eskisi gibi yedi maçtır */
 function haftaninDigerMaclari(k,macId){
   const f=(k.fikstur||[]).find(x=>x.id===macId);if(!f)return[];
-  return k.fikstur.filter(x=>x.hafta===f.hafta&&x.id!==macId&&!(k.maclar||{})[x.id]);
+  return k.fikstur.filter(x=>x.id!==macId&&x.tarih===f.tarih&&x.dakika===f.dakika&&!x.tarihBekliyor&&!(k.maclar||{})[x.id]);
 }
 const HUKMEN_SKOR=3;
 const kulupHazirMi=(k,kulupId,tarih)=>kulupOyunculari(k,kulupId).filter(p=>oyuncuUygunMu(p,tarih)).length>=11;
@@ -89,8 +91,8 @@ function haftaSonuclariUygula(k,macId,sonuc,tohum,ek,digerleri){
   if(JSON.stringify(beklenen)!==JSON.stringify(gelen))throw new Error(`Haftanın sonuçları işlenemedi: öbür maçlar eksik ya da fazla (${gelen.length}/${beklenen.length})`);
   for(const d of digerleri)macKaydiYaz(k,k.fikstur.find(x=>x.id===d.macId),d.sonuc,d.tohum,{},true);
   const r=macSonucuUygula(k,macId,sonuc,tohum,ek);
-  const temiz={};
-  for(const x of k.fikstur)if(x.hafta===f.hafta)for(const c of [x.ev,x.konuk])for(const p of kulupOyunculari(k,c))if(p.sakat&&tarihKarsilastir(p.sakat.donus,k.tarih)<=0)temiz[p.id]=Object.assign({},p,{sakat:null});
+  const temiz={},ayni=new Set([macId,...digerleri.map(d=>d.macId)]);   /* RK7: aynı saatte oynanan maçların kulüpleri */
+  for(const x of k.fikstur)if(ayni.has(x.id))for(const c of [x.ev,x.konuk])for(const p of kulupOyunculari(k,c))if(p.sakat&&tarihKarsilastir(p.sakat.donus,k.tarih)<=0)temiz[p.id]=Object.assign({},p,{sakat:null});
   if(Object.keys(temiz).length)k.oyuncular=Object.assign({},k.oyuncular,temiz);
   return Object.assign(r,{digerleri:digerleri.length});
 }

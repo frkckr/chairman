@@ -162,10 +162,13 @@ function sezonKur(k,lig,pivot){
   haftalar.forEach((E,i)=>{const hafta=i+1,tarih=haftaTarihi(k.sezon,hafta);
     for(const x of E)k.fikstur.push({id:macKimligi(k.sezon,hafta,x.ev,x.konuk),hafta,tarih,dakika:k.sezon.dakika,ev:x.ev,konuk:x.konuk});});
 }
-/* kulübün oynanmamış ilk maçı (ilkHafta ve sonrası); yoksa null */
+/* kulübün oynanmamış ilk maçı (ilkHafta ve sonrası; RK7: zamana göre, ertelenip tarih bekleyen maç sayılmaz); yoksa null */
 function siradakiMac(k,kulupId){
-  let en=null;
-  for(const f of k.fikstur)if(f.hafta>=k.sezon.ilkHafta&&(f.ev===kulupId||f.konuk===kulupId)&&!k.maclar[f.id]&&(!en||f.hafta<en.hafta))en=f;
+  let en=null,enAn=0;
+  for(const f of k.fikstur){
+    if(f.hafta<k.sezon.ilkHafta||(f.ev!==kulupId&&f.konuk!==kulupId)||k.maclar[f.id]||f.tarihBekliyor)continue;
+    const a=anDakika(f.tarih,f.dakika);if(!en||a<enAn||(a===enAn&&f.hafta<en.hafta)){en=f;enAn=a;}
+  }
   return en;
 }
 /* maç günü ajanda işi (zorunlu, süresi 0; "Stada git" bunu yapar). Kimliğini döndürür */
@@ -185,6 +188,8 @@ function sezonTakvimiKur(k,kulupId){
     isEkle(k,{tur:'hatirlatma',tarih:t.bas,dakika:GUN_BASLANGICI,veri:{metin:`${t.ad} açıldı; ${gunAyYazi(t.bitis)} akşamı kapanır.`,kapak:'transfer'}});
     isEkle(k,{tur:'hatirlatma',tarih:t.bitis,dakika:1200,veri:{metin:`${t.ad} kapandı.`,kapak:'transfer'}});
   }
+  /* RK7: ilk üç haftanın programı, öbür maçların işleri ve sıradaki TFF programı (js/lig-takvimi.js) */
+  if(typeof ligTakvimiKur==='function')ligTakvimiKur(k);
 }
 /* ---- G1-d: sezon sonu kaydı ---- */
 const SEZON_SONU_EKLERI=[];   // (k) => void; sezon sonu kaydından hemen sonra, aynı komutta
@@ -291,7 +296,14 @@ function fiksturIcDenetim(S,F){
     if(!tam(f.hafta,1,S.haftaSayisi)||!T.includes(f.ev)||!T.includes(f.konuk)||f.ev===f.konuk){h.push(`${ad}: hafta ya da takımlar geçersiz`);continue;}
     if(f.id!==macKimligi(S,f.hafta,f.ev,f.konuk))h.push(`${ad}: kimlik ${f.id} biçime uymuyor`);
     if(kimlik.has(f.id))h.push(`${ad}: ${f.id} iki kez`);kimlik.set(f.id,f);
-    if(f.tarih!==(tarihler[f.hafta]||(tarihler[f.hafta]=haftaTarihi(S,f.hafta)))||!tam(f.dakika,0,1439))h.push(`${ad}: ${f.hafta}. haftanın tarihi ya da saati tutmuyor`);
+    /* RK7: maç haftasının Cuma–Pazartesi aralığında; ertelenen maçın eski tarihi aralıkta, yeni tarihi ondan sonra (tarih bekliyorsa eskisinde kalır) */
+    {const cmt=tarihler[f.hafta]||(tarihler[f.hafta]=haftaTarihi(S,f.hafta)),fark=t=>tarihGecerliMi(t)?Math.round((Date.UTC(...t.split('-').map((x,i)=>i===1?x-1:+x))-Date.UTC(...cmt.split('-').map((x,i)=>i===1?x-1:+x)))/86400000):NaN;
+     const E=f.ertelendi,araliktaMi=t=>{const d=fark(t);return d>=-1&&d<=2;};
+     if(!tam(f.dakika,0,1439)||!tarihGecerliMi(f.tarih))h.push(`${ad}: ${f.hafta}. haftanın tarihi ya da saati tutmuyor`);
+     else if(E===undefined){if(!araliktaMi(f.tarih)||f.tarihBekliyor!==undefined)h.push(`${ad}: ${f.hafta}. haftanın tarihi ya da saati tutmuyor`);}
+     else if(!duz(E)||!araliktaMi(E.tarih)||!tam(E.dakika,0,1439)||typeof E.neden!=='string')h.push(`${ad}: erteleme kaydı geçersiz`);
+     else if(f.tarihBekliyor===true){if(f.tarih!==E.tarih||f.dakika!==E.dakika)h.push(`${ad}: tarih bekleyen ertelenmiş maçın tarihi değişmiş`);}
+     else if(f.tarihBekliyor!==undefined||!(f.tarih>E.tarih))h.push(`${ad}: ertelenmiş maçın yeni tarihi eskisinden sonra değil`);}
     for(const t of [f.ev,f.konuk]){const a=f.hafta+':'+t;if(haftaTakim.has(a))h.push(`Fikstür: ${t} ${f.hafta}. haftada iki maçta`);haftaTakim.add(a);}
     const c=f.ev+'>'+f.konuk;if(cift.has(c))h.push(`Fikstür: ${f.ev}–${f.konuk} iki kez`);cift.add(c);
   }

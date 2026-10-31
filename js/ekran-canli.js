@@ -61,11 +61,14 @@ function csKadro(k,K,kulupId){
 }
 function csMac(k,P,bolum){
   const ev=P.ev,ko=P.konuk,oyn=P.durum!=='baslamadi';
-  const durum=!oyn?'Başlama '+saatYazi(P.dakika):P.durum==='hukmen'?'Hükmen':P.canli&&P.durum!=='bitti'?(P.dk||'Canlı'):'Maç sonu';
+  /* RK7: ertelenen maç (yeni tarihi bekliyorsa “Ertelendi”), saati açıklanmamış maç */
+  const E=P.ertelendi,bekliyor=!oyn&&E&&E.bekliyor,NEDEN={kar:'kar',firtina:'fırtına',olaganustu:'olağanüstü olay'};
+  const durum=bekliyor?'Ertelendi':!oyn?(P.aciklandi===false?'Saati açıklanmadı':'Başlama '+saatYazi(P.dakika)):P.durum==='hukmen'?'Hükmen':P.canli&&P.durum!=='bitti'?(P.dk||'Canlı'):'Maç sonu';
+  const zaman=bekliyor?'ertelendi ('+(NEDEN[E.neden]||E.neden)+'), yeni tarih açıklanacak':P.aciklandi===false?csGun(P.tarih)+' haftası · saati açıklanmadı':csGun(P.tarih)+' '+saatYazi(P.dakika)+(E?' · ertelenmişti ('+(NEDEN[E.neden]||E.neden)+')':'');
   let h='<header class="cs-macBas">'+csKulupDug(k,ev,csArma(k,ev,'buyuk')+'<span>'+csYaz(csKulup(k,ev).ad)+'</span>','cs-takim')+
     '<div class="cs-skor"><b>'+(P.skor?P.skor.join(' – '):'–')+'</b>'+(P.iy?'<small>İY '+P.iy.join('–')+'</small>':'')+'<small'+(P.canli&&P.durum!=='bitti'?' class="cs-canli"':'')+'>'+csYaz(durum)+'</small></div>'+
     csKulupDug(k,ko,csArma(k,ko,'buyuk')+'<span>'+csYaz(csKulup(k,ko).ad)+'</span>','cs-takim')+'</header>'+
-    '<p class="cs-kunye">'+P.hafta+'. hafta · '+csYaz(csGun(P.tarih))+' '+saatYazi(P.dakika)+(P.stat?' · '+csYaz(P.stat):'')+'</p>';
+    '<p class="cs-kunye">'+P.hafta+'. hafta · '+csYaz(zaman)+(P.stat?' · '+csYaz(P.stat):'')+'</p>';
   const b=CS_BOLUM.mac.some(x=>x[0]===bolum)?bolum:'ozet';h+=csSekmeler('mac',b);
   if(b==='tablo')return h+csTablo(k,P.tablo,[ev,ko],k.sezon&&k.sezon.bolgeler);
   if(!oyn){
@@ -82,9 +85,12 @@ function csMac(k,P,bolum){
   return h+(P.kadro?'<div class="cs-kadrolar">'+csKadro(k,P.kadro[0],ev)+csKadro(k,P.kadro[1],ko)+'</div>':'<p class="cs-yok">Bu maçın kadro kaydı yok.</p>');
 }
 /* ---- takım sayfası ---- */
-function csKulupSayfa(k,P,bolum){
+/* RK8-a: takip düğmesi (kural js/haber.js takipEt/takibiBirak; eylem js/ekran-oda.js) */
+const csTakipDug=(k,tur,id)=>{if(typeof takipEdiliyor!=='function')return'';const a=takipEdiliyor(k,tur,id);
+  return'<button type="button" class="cs-takip" data-eylem="takip" data-tur="'+tur+'" data-id="'+csYaz(id)+'" data-ac="'+(a?'0':'1')+'" aria-pressed="'+(a?'true':'false')+'">'+(a?'Takibi bırak':'Takip et ▸')+'</button>';};
+function csKulupSayfa(k,P,bolum,s){
   const g=P.genel,a=v=>(v>0?'+':'')+v;
-  let h='<header class="cs-kulupBas">'+csArma(k,g.id,'buyuk')+'<div><h4>'+csYaz(g.ad)+'</h4><small>'+(g.sira>0?g.sira+'. sıra · ':'')+g.P+' puan</small></div></header>';
+  let h='<header class="cs-kulupBas">'+csArma(k,g.id,'buyuk')+'<div><h4>'+csYaz(g.ad)+'</h4><small>'+(g.sira>0?g.sira+'. sıra · ':'')+g.P+' puan</small></div>'+(s&&s.takip?csTakipDug(k,'kulup',g.id):'')+'</header>';
   const b=CS_BOLUM.kulup.some(x=>x[0]===bolum)?bolum:'genel';h+=csSekmeler('kulup',b);
   if(b==='genel'){const sr=g.siradaki;
     return h+'<dl class="cs-dl"><dt>G-B-M</dt><dd>'+g.G+'-'+g.B+'-'+g.M+'</dd><dt>Goller</dt><dd>'+g.A+' attı, '+g.Y+' yedi · AV '+a(g.AV)+'</dd>'+
@@ -104,12 +110,12 @@ function csKulupSayfa(k,P,bolum){
     '<dt>Golcüler</dt><dd>'+(I.golculer.length?I.golculer.map(x=>csOyuncuDug(x.id,x.ad)+' '+x.gol).join(', '):'—')+'</dd></dl>';
 }
 /* ---- oyuncu sayfası ---- */
-function csOyuncuSayfa(k,P){
-  let h='<header class="cs-oyuncuBas"><span class="cs-forma">'+P.no+'</span><div><h4>'+csYaz(P.ad)+'</h4><small>'+csYaz(P.mevki)+' · '+P.yas+' yaş'+(P.ayak&&CS_AYAK[P.ayak]?' · '+CS_AYAK[P.ayak]:'')+'</small>'+
-    csKulupDug(k,P.kulupId,csArma(k,P.kulupId,'kucuk')+'<span>'+csYaz(P.kulup)+'</span>','cs-oyuncuKulup')+'</div></header>';
-  h+='<p class="cs-durum">'+(P.durum==='sakat'?'Sakat':P.durum==='cezali'?'Cezalı':'Oynayabilir')+'</p>';
-  const S=P.sezon;
-  h+='<h5>Bu sezon</h5><dl class="cs-dl"><dt>Maç</dt><dd>'+(S.mac==null?'—':S.mac)+'</dd><dt>Dakika</dt><dd>'+(S.dk==null?'—':S.dk)+'</dd><dt>Gol</dt><dd>'+S.gol+'</dd><dt>Kart</dt><dd>'+S.sari+' sarı, '+S.kirmizi+' kırmızı</dd></dl>';
+function csOyuncuSayfa(k,P,s){
+  const kulup=csKulupDug(k,P.kulupId,csArma(k,P.kulupId,'kucuk')+'<span>'+csYaz(P.kulup)+'</span>','cs-oyuncuKulup');
+  /* RK4-a: başta ortak oyuncu kartı (kamu bağlamı: durum yalnız oynayabilir, sakat, cezalı; sözleşme, dönüş ve doğum yok); kart yoksa eski künye */
+  let h=typeof oyuncuKarti==='function'?oyuncuKarti(k,P.id,'kamu',{kulup,alt:s&&s.takip?'<p class="cs-takipKap">'+csTakipDug(k,'oyuncu',P.id)+'</p>':''}):
+    '<header class="cs-oyuncuBas"><span class="cs-forma">'+P.no+'</span><div><h4>'+csYaz(P.ad)+'</h4><small>'+csYaz(P.mevki)+' · '+P.yas+' yaş</small>'+kulup+'</div></header>'+
+    '<p class="cs-durum">'+(P.durum==='sakat'?'Sakat':P.durum==='cezali'?'Cezalı':'Oynayabilir')+'</p>';
   h+='<h5>Maçları <small>'+csIlkHafta(k)+'. haftadan beri</small></h5>'+(P.maclar.length?'<ul class="cs-maclar">'+P.maclar.slice().reverse().map(m=>'<li>'+csMacDug(m.id,'<span class="cs-hafta">'+m.hafta+'.</span><span class="cs-rakip">'+(m.yer==='d'?'@ ':'')+
     csArma(k,m.rakip,'kucuk')+' '+csYaz(csKulup(k,m.rakip).ad)+'</span><b>'+m.a+'–'+m.y+'</b><small>'+m.dk+' dk'+(m.gol?' · '+m.gol+' gol':'')+(m.kartlar.length?' · '+m.kartlar.map(r=>CS_KART[r]).join(', '):'')+'</small>')+'</li>').join('')+'</ul>'
     :'<p class="cs-yok">'+csIlkHafta(k)+'. haftadan beri oynadığı maç yok.</p>');
@@ -122,8 +128,8 @@ function csSayfaHtml(k,T,s){
   let ic='';
   if(P.tur==='mac'){const c=s.canliKayit?s.canliKayit(P.id):null,D=typeof macSayfasi==='function'?macSayfasi(k,P.id,c||undefined):null;
     if(D&&c)D.dk=c.dk||null;ic=D?csMac(k,D,P.bolum):'<p class="cs-yok">Maç bulunamadı.</p>';}
-  else if(P.tur==='kulup'){const D=typeof takimSayfasi==='function'?takimSayfasi(k,P.id):null;ic=D?csKulupSayfa(k,D,P.bolum):'<p class="cs-yok">Kulüp bulunamadı.</p>';}
-  else{const D=typeof oyuncuSayfasi==='function'?oyuncuSayfasi(k,P.id):null;ic=D?csOyuncuSayfa(k,D):'<p class="cs-yok">Oyuncu bulunamadı.</p>';}
+  else if(P.tur==='kulup'){const D=typeof takimSayfasi==='function'?takimSayfasi(k,P.id):null;ic=D?csKulupSayfa(k,D,P.bolum,{takip:!s.canliKayit}):'<p class="cs-yok">Kulüp bulunamadı.</p>';}
+  else{const D=typeof oyuncuSayfasi==='function'?oyuncuSayfasi(k,P.id):null;ic=D?csOyuncuSayfa(k,D,{takip:!s.canliKayit}):'<p class="cs-yok">Oyuncu bulunamadı.</p>';}
   /* maç telefonunda takım ve oyuncu sayfası kariyerden (maç öncesi) okunur: bugünkü maçlar Odaya dön'de işlenir; sayfa bunu söyler (S-d'nin kulüp ekranı gibi) */
   if(s.canliKayit&&P.tur!=='mac')ic='<p class="cs-not">Bugünkü maçlar, maç bitince işlenir.</p>'+ic;
   /* sağ panelde kendi geri çubuğu (telefonun içinde telefonun ‹ Geri'si) */
@@ -196,6 +202,11 @@ function csSayfaHtml(k,T,s){
 .cs-tablo tr.cs-ilgili td{background:var(--k-zeminKoyu,#00000010);font-weight:600}
 .cs-tabloAd{max-width:100%;overflow:hidden}.cs-tabloAd span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cs-kulupBas,.cs-oyuncuBas{display:flex;align-items:center;gap:.6em}
+.cs-kulupBas .cs-takip{margin-left:auto}
+.cs-takip{appearance:none;flex:none;border:1px solid var(--k-cizgi);background:var(--k-serit);color:var(--k-yazi);font:inherit;font-size:max(var(--k-enKucuk,12px),.88em);padding:.2em .6em;cursor:pointer}
+.cs-takip[aria-pressed="true"]{background:transparent;color:var(--k-soluk)}
+.cs-takip:hover,.cs-takip:focus-visible{border-color:var(--k-vurgu)}
+.cs-takipKap{margin:0;display:flex;justify-content:flex-end}
 .cs-kulupBas h4,.cs-oyuncuBas h4{font-family:var(--display);font-weight:400;font-size:1.6em;line-height:1}
 .cs-kulupBas small,.cs-oyuncuBas small{color:var(--k-soluk)}
 .cs-oyuncuBas div{display:grid;gap:.15em;justify-items:start}

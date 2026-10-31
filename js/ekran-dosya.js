@@ -80,6 +80,8 @@
 .dsy-not{position:relative;padding:.55em .7em .45em;background:${D.not};border:1px solid ${D.cizgi};box-shadow:.12em .18em 0 rgba(60,40,10,.15);transform:rotate(-.6deg)}
 .dsy-not:nth-child(even){transform:rotate(.5deg)}
 .dsy-not::before{content:"";position:absolute;top:-.55em;left:1.1em;width:.55em;height:1.5em;border:.16em solid ${D.atas};border-radius:.4em;background:transparent}
+/* RK4-a: notun kaynağı solda renkli şerit (antrenman yeşil, maç kulüp kırmızısı, hoca mavi) */
+.dsy-not[data-tur=antrenman]{border-left:.3em solid var(--k-yesil)}.dsy-not[data-tur=mac]{border-left:.3em solid var(--k-kulup)}.dsy-not[data-tur=hoca],.dsy-not[data-tur=gorus]{border-left:.3em solid var(--k-mavi)}
 .dsy-not small{display:block;margin-top:.2em;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.84em)}
 .dsy-gecmis summary{cursor:pointer;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
 .dsy-gecmis ul{list-style:none;margin:.3em 0 0;padding:0;display:grid;gap:.2em;font-size:max(var(--k-enKucuk,12px),.9em)}
@@ -134,22 +136,23 @@ function dosyaGorunumu(k,D,Y){
       genis='<p class="dsy-kat">Kadro</p><h3 class="dsy-baslik">'+yaz(k.kulupler[biz].ad)+'</h3>'+
         '<table class="dsy-kadro"><colgroup>'+['2.4em','auto','3em','2.7em','2.4em','3.4em','2.3em','3.3em','10.7em','4em','8.4em'].map(w=>'<col'+(w==='auto'?'':' style="width:'+w+'"')+'>').join('')+'</colgroup>'+
         '<thead><tr><th>'+ab('No','Forma numarası')+'</th><th>Futbolcu</th><th>'+ab('Mvk','Mevki')+'</th><th class="dsy-s">Yaş</th><th class="dsy-s">'+ab('M','Bu sezon maç')+'</th><th class="dsy-s">'+ab('Dk','Bu sezon dakika')+'</th><th class="dsy-s">'+ab('G','Gol')+'</th><th class="dsy-s">'+ab('Kart','Sarı / kırmızı')+'</th><th>Durum</th><th>'+ab('Bitiş','Sözleşme bitişi')+'</th><th class="dsy-s">'+ab('Maaş','Aylık maaş')+'</th></tr></thead><tbody>'+
-        Sat.map(x=>'<tr'+(x.sakat||x.ceza?' class="dsy-kadroEksik"':'')+'><td>'+x.no+'</td><td><button type="button" class="od-baglanti" data-eylem="oyuncuAc" data-oyuncu="'+x.id+'" title="'+yaz(x.ad)+'">'+yaz(x.ad)+'</button></td><td>'+x.mevki+'</td><td class="dsy-s">'+x.yas+'</td>'+
+        Sat.map(x=>'<tr'+(x.sakat||x.ceza?' class="dsy-kadroEksik"':'')+'><td>'+x.no+'</td><td><button type="button" class="od-baglanti dsy-kadroAd" data-eylem="oyuncuAc" data-oyuncu="'+x.id+'" title="'+yaz(x.ad)+'">'+
+          (typeof oyuncuPortreHtml==='function'?oyuncuPortreHtml(k.oyuncular[x.id],'dsy-kadroYuz',1):'')+yaz(x.ad)+'</button></td><td>'+x.mevki+'</td><td class="dsy-s">'+x.yas+'</td>'+
           '<td class="dsy-s">'+sy(x.mac)+'</td><td class="dsy-s">'+sy(x.dk)+'</td><td class="dsy-s">'+x.gol+'</td><td class="dsy-s">'+x.sari+'/'+x.kirmizi+'</td><td title="'+yaz(x.sakat?x.sakat.neden:x.ceza?x.ceza.neden:'')+'">'+yaz(durum(x.sakat,x.ceza,true))+'</td>'+
           '<td>'+yaz(bitis(x.bitis))+'</td><td class="dsy-s dsy-tutar">'+(x.maas===null?'—':yaz(tl(x.maas)))+'</td></tr>').join('')+'</tbody></table>'+
         '<p class="od-not">M ve Dk bu sezonun; devralınan haftalar TEST üretimi; eski kayıtta —.</p>';
     }else{
       const U=O.kunye,Z=O.sezon,Sz=O.sozlesme;
+      /* RK4-a: sol sayfa ortak oyuncu kartı (js/oyuncu-karti.js; kulüp bağlamı: durumun ayrıntısı ve sözleşme). Kart yüklenmediyse eski künye */
+      const dm=O.durum.sakat?durum(O.durum.sakat,null)+(O.durum.sakat.neden?' — '+O.durum.sakat.neden:''):O.durum.ceza?durum(null,O.durum.ceza)+(O.durum.ceza.neden?' — '+O.durum.ceza.neden:''):'Oynayabilir';
       sol='<p class="dsy-kat">Oyuncu dosyası'+(Y.oyuncuTest?Y.oyuncuTest(D.seciliOyuncu):'')+'</p>'+
-        '<h3 class="dsy-baslik">'+yaz(U.ad)+'</h3><dl class="dsy-kunye"><dt>Forma</dt><dd>'+U.no+'</dd><dt>Mevki</dt><dd>'+yaz(MV[U.mevki]||U.mevki)+'</dd>'+
-        '<dt>Yaş</dt><dd>'+U.yas+(U.dogumTarihi?' <small>('+yaz(gunAyYazi(U.dogumTarihi)+' '+U.dogumTarihi.slice(0,4))+')</small>':'')+'</dd><dt>Ayak</dt><dd>'+yaz(AY[U.ayak]||'—')+'</dd><dt>Kulüp</dt><dd>'+yaz(U.kulupAd)+'</dd></dl>'+
-        '<h4>Bu sezon</h4><dl class="od-dl"><dt>Maç</dt><dd>'+sy(Z.mac)+'</dd><dt>Dakika</dt><dd>'+sy(Z.dk)+'</dd><dt>Gol</dt><dd>'+Z.gol+'</dd><dt>Sarı kart</dt><dd>'+Z.sari+'</dd><dt>Kırmızı kart</dt><dd>'+Z.kirmizi+'</dd></dl>'+
-        '<h4>Durum</h4><p>'+yaz(O.durum.sakat?durum(O.durum.sakat,null)+(O.durum.sakat.neden?' — '+O.durum.sakat.neden:''):O.durum.ceza?durum(null,O.durum.ceza)+(O.durum.ceza.neden?' — '+O.durum.ceza.neden:''):'Oynayabilir.')+'</p>'+
-        '<h4>Sözleşme</h4><p>'+(Sz?'Bitiş '+yaz(gunAyYazi(Sz.bitis)+' '+Sz.bitis.slice(0,4))+' · aylık <span class="dsy-tutar">'+yaz(tl(Sz.maas))+'</span>':'Sözleşme kaydı yok.')+'</p>';
+        (typeof oyuncuKarti==='function'?oyuncuKarti(k,D.seciliOyuncu,'kulup',{sozlesme:Sz,durum:{metin:dm},tl}):
+        '<h3 class="dsy-baslik">'+yaz(U.ad)+'</h3><dl class="dsy-kunye"><dt>Forma</dt><dd>'+U.no+'</dd><dt>Mevki</dt><dd>'+yaz(MV[U.mevki]||U.mevki)+'</dd><dt>Yaş</dt><dd>'+U.yas+'</dd></dl>'+
+        '<h4>Bu sezon</h4><dl class="od-dl"><dt>Maç</dt><dd>'+sy(Z.mac)+'</dd><dt>Dakika</dt><dd>'+sy(Z.dk)+'</dd><dt>Gol</dt><dd>'+Z.gol+'</dd></dl><p>'+yaz(dm)+'</p>');
       /* R2-e: “Hocaya sor ▸” oyuncu sorusunu doğrudan gönderir (telefondaki konu; cevap birkaç saat sonra gelir ve buraya not düşer) */
       const G=typeof girisimListesi==='function'?girisimListesi(k).find(x=>x.id==='yaz.teknikDirektor.oyuncu'):null;
       sag=(G?'<p class="dsy-sor"><button type="button" class="od-baglanti" data-eylem="girisim" data-girisim="'+yaz(G.id)+'" data-arg="'+yaz(D.seciliOyuncu)+'"'+(G.engel?' disabled':'')+'>Hocaya sor ▸</button>'+
-        '<small>'+yaz(G.engel||'Cevap birkaç saat içinde gelir; buraya not düşer.')+'</small></p>':'')+'<h4>Notlar</h4>'+(O.notlar.length?'<ul class="dsy-notlar">'+O.notlar.map(n=>'<li class="dsy-not">'+yaz(n.metin)+'<small>— '+yaz(n.kaynak)+' · '+yaz(Y.tarihKisa(n.tarih))+'</small></li>').join('')+'</ul>':'<p class="dsy-bos">Henüz not yok.</p>');
+        '<small>'+yaz(G.engel||'Cevap birkaç saat içinde gelir; buraya not düşer.')+'</small></p>':'')+'<h4>Notlar</h4>'+(O.notlar.length?'<ul class="dsy-notlar">'+O.notlar.map(n=>'<li class="dsy-not" data-tur="'+yaz(n.tur||'')+'">'+yaz(n.metin)+'<small>— '+yaz(n.kaynak)+' · '+yaz(Y.tarihKisa(n.tarih))+'</small></li>').join('')+'</ul>':'<p class="dsy-bos">Henüz not yok.</p>');
     }
   }else if(raporGor){
     const sec=R.some(x=>x.i===D.seciliRapor)?D.seciliRapor:R[0].i,O=maliRaporOkumasi(k,k.haberler[sec]),eksi=t=>t<0?' class="od-eksi"':'',tl=t=>yaz(paraYazi(t));
