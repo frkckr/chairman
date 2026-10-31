@@ -824,6 +824,12 @@ bolum('3.8 — ligin öbür maçları: haftanın sekiz maçı, tek komut (F7)');
    const hb=MG('kariyerDogrula')(bozuk);
    denetle('R3-a: eski kayıt (yeni alanlar yok) geçerli; bozuk devre ve bilinmeyen eksik doğrulamada yakalanır',
      !MG('kariyerDogrula')(eski).length&&hb.some(x=>/eksikteki oyuncu/.test(x))&&(!b0.goller[0]||hb.some(x=>/devre geçersiz/.test(x))),hb.slice(0,2).join(' · '));}
+  /* RK6: odadaki TV'nin ekranı (js/canli-skor.js tvOzeti; saf): son oynanan haftanın skorları kulübün maçı önce, puan durumunun ilk üçü ve kulübün sırası — Canlı Skor'un okumasıyla aynı */
+  {const V=MG('tvOzeti')(k1),T=MG('sezonTablosu')(k1),ks=id=>k1.kulupler[id].kisa,hs=[...new Set(k1.fikstur.filter(f=>k1.maclar[f.id]).map(f=>f.hafta))].sort((a,b)=>a-b),hh=hs[hs.length-1];
+   const H=MG('canliHafta')(k1,hh),bizim=H.maclar.find(m=>m.skor&&(m.ev==='demirkapi'||m.konuk==='demirkapi')),i=T.findIndex(x=>x.id==='demirkapi');
+   denetle('RK6 TV: kanal (TEST), saat; son oynanan hafta ve kulübün maçı ilk skor satırı; puan durumunun ilk üçü ve (ilk üçte değilse) kulübün sırası — Canlı Skor ve puan durumuyla aynı; en çok beş satır',
+     V.kanal==='TEST SPOR'&&V.saat===MG('saatYazi')(k1.gunIciDakika)&&V.satirlar[0]===hh+'. HAFTA'&&!!bizim&&V.satirlar[1]===ks(bizim.ev)+' '+bizim.skor[0]+'-'+bizim.skor[1]+' '+ks(bizim.konuk)
+     &&V.satirlar.some(s=>s.startsWith('1 '+ks(T[0].id)+' '+T[0].P))&&(i<3||V.satirlar.some(s=>s.endsWith((i+1)+' DEM '+T[i].P)))&&V.satirlar.length<=5,V.satirlar.join(' | '));}
   /* R3 (2026-10-29): Canlı Skor'un okumaları (js/canli-skor.js; saf) — tarafsız hafta, maç sayfası, takım ve oyuncu sayfası; kamuya açık bilgi sınırı */
   {const H=MG('canliHafta')(k1,13),biz=h.G.macId,obur=Object.keys(k1.maclar).find(id=>id!==biz);
    const MS=MG('macSayfasi')(k1,biz),MO=MG('macSayfasi')(k1,obur),gel=k1.fikstur.find(f=>!k1.maclar[f.id]),MG2=MG('macSayfasi')(k1,gel.id);
