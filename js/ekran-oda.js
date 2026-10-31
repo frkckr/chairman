@@ -702,10 +702,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
   function ciz(odak){
     k=oyun.kariyer;
     olcuSay();
-    ziyaretEsle();   /* RK6: ziyaretçi sahnesi kuralın anına eşlenir (çizimden önce: panel sahnenin evresini okur) */
-    /* RK6: kapıda ya da karşıda biri varsa yarım odak kendiliğinden açılır (bırakılmadıysa); kimse kalmadıysa kapanır */
-    if(!acik&&ziyaretAcilir()){acik='ziyaret';onay=null;}
-    else if(acik==='ziyaret'&&!ziyaretKapi()&&!ziyaretGor())acik=null;
+    /* RK6: ziyaretçi sahnesi kuralın anına eşlenir (çizimden önce: panel sahnenin evresini okur); kapıda ya da karşıda biri varsa yarım odak kendiliğinden
+       açılır (bırakılmadıysa), kimse kalmadıysa kapanır. Kayıt açılamadıysa kariyer yoktur (aşağıda “Kayıt açılamadı”) */
+    if(k){ziyaretEsle();
+      if(!acik&&ziyaretAcilir()){acik='ziyaret';onay=null;}
+      else if(acik==='ziyaret'&&!ziyaretKapi()&&!ziyaretGor())acik=null;}
     /* aynı panel yeniden çizilirken okuma yeri korunur */
     const eski=kap.querySelector('.od-icerik'),kaydirma=eski&&cizilenPanel===acik&&(acik!=='transfer'||cizilenGorunum===gorunumAnahtari())?eski.scrollTop:0;   /* R4-k: masada sekme ya da oyuncu değişince başa */
     const eskiTel=kap.querySelector('.tel-govde'),telKaydirma=eskiTel&&cizilenPanel==='telefon'&&acik==='telefon'&&cizilenTel===telAnahtar()?eskiTel.scrollTop:null;

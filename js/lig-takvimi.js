@@ -11,7 +11,7 @@
    Erteleme (IS_TURLERI.hava, gizli): Aralık–Şubat haftalarında Perşembe 10:00'da haftanın maçları denetlenir: maç başına olasılık LIG_TAKVIM_TEST.erteleme
      (stat tarifinde kaya yamaca yaslanan kulüplerde katlanır); neden kar ya da fırtına, çok nadir olağanüstü olay. Ertelenen maç f.ertelendi = {tarih,
      dakika, neden} ve f.tarihBekliyor; sonraki programda iki ile beş hafta sonraki ilk boş Çarşamba 20:00'ye konur (iki takımın da önceki ve sonraki gün
-     maçı olmayan). Başkanın kulübünün maçı ertelenirse maç günü işi kalkar, hatırlatma yazılır ve İlerle durur.
+     maçı olmayan). Başkanın kulübünün maçı ertelenirse maç günü işi kalkar ve İlerle durur (haber sonucun metninde: durağın özeti).
    Öbür maçlar (IS_TURLERI.ligMaci, gizli; pay LIG_TAKVIM_TEST.macSure dk): başlama saatinde kurulur, maç bitince (başlama + macSure) sonucu yazar
      (macKaydiYaz, kısa kayıt) — havuzdaki sonuç (LIG_MAC_HAVUZU: aynı seçenek ve tohumla daha önce hesaplanmış) ya da sağlayıcı (LIG_MAC_SAGLAYICI;
      araçlar değiştirebilir) ya da motor (Match, js/lig-maclari.js arkaMacOynat; tarayıcıda maç sayfasındaki öbür maçlarla birebir). Sonucu zaten yazılmış

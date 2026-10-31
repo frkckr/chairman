@@ -49,7 +49,8 @@ MAC_IZLEME=izlemeKur(mac,Match,MAC_SECENEK);
    Skor skorlarını ve dakikalarını okur. H2-a: "Maçı bitir" perdesinin arkasında önce bizim maç hesaplanır, öbür maçlar o sırada adım atmaz;
    bizim maç bitince, kart açıkken ve "Odaya dön" beklerken kalanı bütçeli sürücü bitirir (ligCanliHizli). "Odaya dön" sayfayı dondurmadan
    bekler, sekiz sonucu tek komutla uygular (js/ekran-mac-sonu.js, js/lig-maclari.js haftaSonuclariUygula); eşzamanlı ligCanliBitir yalnız son
-   çaredir. Aynı seçenek ve tohumla Node'daki araclar/sezon-deneme.js aynı maçları oynar */
+   çaredir. Aynı seçenek ve tohumla aynı motor (aynı tarayıcının işçisi ve ana ipliği) aynı maçı oynar. Node'daki araclar/sezon-deneme.js aynı seçeneği kurar ama
+   V8 sürümlerinin Math işlevleri bit düzeyinde farklı olabildiğinden (RK7 ölçüsü: Chromium 153 ↔ Node 24'te sin, log, atan2 …) skorlar Node'da başka çıkabilir */
 /* G1-a: hükmen öbür maçın motoru yoktur; sonucu hemen bellidir (son). G1-e: işçi kipinde (js/mac-arka.js) öbür maçlar ve bizim maçın sonuç ikizi
    Web Worker'da oynanır (m null; son ve ornekler işçiden gelir); işçi yoksa ya da bozulursa ana iplikte kilit adımlı motorlar (ligCanliKur) */
 const LIG_CANLI=MAC_GUNU.kariyer&&Array.isArray(MAC_GUNU.digerleri)?MAC_GUNU.digerleri.map(d=>({d,m:null,son:d.hukmen?hukmenSonucu(d.hukmen):null,ornekler:null})):[];

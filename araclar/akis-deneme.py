@@ -65,6 +65,7 @@ import pathlib
 import re
 import shutil
 import sys
+import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import kontrol  # noqa: E402
@@ -106,7 +107,9 @@ DURUM_JS = """() => { const k = OYUN.kariyer; const c = k.kulupler.demirkapi;
     olay: Object.values(k.olaylar).map(o => o.paket + '/' + o.varyant + ':' + o.durum).join(','), baslangic: k.icerik.baslangic, icerik: k.icerik.surum,
     sayman: c.yonetim.sayman, karar: Object.values(k.isler).filter(x => x.veri.saatsiz).map(x => x.id).join(','),
     soz: Object.values(k.sozler).map(s => s.anahtar + ':' + s.durum).join(','), haber: k.haberler.map(h => h.anahtar).join(','),
-    gozlem: k.gozlem ? k.gozlem.bas + '-' + k.gozlem.bitis : '' }; }"""
+    gozlem: k.gozlem ? k.gozlem.bas + '-' + k.gozlem.bitis : '',
+    ligIsleri: ['ligMaci', 'program', 'hava'].map(t => Object.values(k.isler).filter(x => x.tur === t).length).join(','),
+    takvimDisi: Object.values(k.isler).filter(x => !['ligMaci', 'program', 'hava'].includes(x.tur)).length }; }"""
 KAYIT_JS = "localStorage.getItem('chairman:oyun-1')"
 # yürüyüş oyun içinde ~6 sn; başsız yazılım çiziminde kare hızı düşük olduğundan bekleme sınırı geniştir
 YURUYUS_BEKLE = 45000
@@ -145,11 +148,20 @@ async def oda_yenile(pg):
     await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=20000)
 
 
+async def lig_hesap_bekle(pg, sn=240):
+    """RK7: İlerle yolda öbür maçları geçecekse önce onlar hesaplanır (örtü “Öbür maçlar oynanıyor…”; file:// adreste işçi yok, ana iplikte maç başına
+    birkaç saniye); örtü kalkana dek bekler."""
+    if await pg.query_selector(".od-ligHesap"):
+        await pg.wait_for_selector(".od-ligHesap", state="detached", timeout=sn * 1000)
+
+
 async def oda_ilerle(pg):
-    """İlerle'ye basar; kaçırılacak ya da cevapsız kalacak iş için onay isterse onaylar."""
+    """İlerle'ye basar; kaçırılacak ya da cevapsız kalacak iş için onay isterse onaylar. RK7: öbür maçların hesabı bitene dek bekler."""
     await pg.click(".od-ana")
+    await lig_hesap_bekle(pg)
     if await pg.query_selector('.od-ana[data-eylem="ilerle"]:has-text("Onayla")'):
         await pg.click(".od-ana")
+        await lig_hesap_bekle(pg)
 
 # ---- U0 (2026-10-28): ortak yardımcılar. Odak modelinde (U1–U6) kap, Esc ve masa şeridi değişince yalnız bunlar güncellenir ----
 async def ayar_yazi(pg, yazi):
@@ -212,10 +224,11 @@ async def bolum_1(tarayici, site, tum_hatalar):
     tum_hatalar += hatalar
     d0 = await durum(pg)
     # F1 (2026-10-23): takvimde maç günü ajanda işinin yanında kış transfer döneminin iki hatırlatması da durur; G2 (2026-10-24): 1 Aralık ay başı ve kış
-    # döneminin dört gizli transfer gelişmesi (8 iş)
-    denetle("Yeni kariyer Pazartesi 08:00; içerik sürümü 5 (F6-a); mesele, olay ve söz yok; tek haber mali işler müdürünün açılış özeti (H2-d); takvimde tek ajanda işi: maç günü (yanında 2 hatırlatma, ay başı, haftalık mali özet, 4 transfer gelişmesi)",
+    # döneminin dört gizli transfer gelişmesi (8 iş); RK7 (2026-11-01): ayrıca lig takviminin gizli işleri (ilk üç haftanın öbür 21 maçı, sıradaki program, Aralık haftalarının hava denetimi)
+    denetle("Yeni kariyer Pazartesi 08:00; içerik sürümü 5 (F6-a); mesele, olay ve söz yok; tek haber mali işler müdürünün açılış özeti (H2-d); takvimde tek ajanda işi: maç günü (yanında 2 hatırlatma, ay başı, haftalık mali özet, 4 transfer gelişmesi; RK7: 21 lig maçı işi, program, hava denetimleri)",
             d0["tarih"] == "2026-11-23" and d0["dakika"] == 480 and d0["icerik"] == 5 and d0["mesele"] == "" and d0["olay"] == "" and d0["soz"] == ""
-            and d0["haber"] == "mali.haftalik" and d0["ajanda"] == "is-1" and len(d0["isler"].split(",")) == 9, str(d0))
+            and d0["haber"] == "mali.haftalik" and d0["ajanda"] == "is-1" and d0["takvimDisi"] == 9
+            and d0["ligIsleri"].split(",")[:2] == ["21", "1"], f"{d0['tarih']} {d0['dakika']} · {d0['takvimDisi']} · lig {d0['ligIsleri']} · {d0['haber']}")
     await pg.keyboard.press("Digit1")
     tel = await pg.text_content(".od-telefonPanel")
     denetle("Telefon ana ekranla açılıyor; 'Kaldığın yer' özeti yok", "Mesajlar" in tel and "Canlı Skor" in tel and "Kaldığın" not in tel
@@ -1940,9 +1953,9 @@ async def bolum_19(tarayici, site, tum_hatalar):
     casus = await pg.evaluate("() => sessionStorage.getItem('h2aBitir')")
     gd = await pg.evaluate("() => window.__gecisIlk")
     denetle("U4: Odaya dön'de maç sonu kartı odanın ilk boyamasında (skor, “Odaya dönülüyor…”)", bool(gd) and "MAÇ SONU" in gd and k["skor"].replace("–", " – ") in gd and "Odaya dönülüyor" in gd, str(gd))
-    denetle("F2/F7, H2-a: Odaya dön 'Öbür maçlar tamamlanıyor' diye bekledi, haftanın sekiz sonucunu bir kez kaydetti (öbürleri kısa kayıt; ligCanliBitir çağrılmadı; bizim maçın protokolü null); oda Cumartesi 21:00; 16 kulüp 13 maç; sıradaki iş 14. hafta 5 Aralık 19:00; adres parametresiz",
+    denetle("F2/F7, H2-a: Odaya dön 'Öbür maçlar tamamlanıyor' diye bekledi, haftanın sekiz sonucunu bir kez kaydetti (öbürleri kısa kayıt; ligCanliBitir çağrılmadı; bizim maçın protokolü null); oda Cumartesi 21:00; 16 kulüp 13 maç; sıradaki iş 14. hafta 4 Aralık Cuma 20:00 (RK7: haftaya yayılan program); adres parametresiz",
             "tamamlanıyor" in bekle and casus is None and o["protokol"] is None
-            and "mac=" not in pg.url and o["an"] == "2026-11-28 1260" and o["mac"] == k["skor"] and o["macSay"] == 8 and o["hepsi13"] and o["kisa"] and o["O"] == 13 and o["is"] == ["14 2026-12-05 1140"]
+            and "mac=" not in pg.url and o["an"] == "2026-11-28 1260" and o["mac"] == k["skor"] and o["macSay"] == 8 and o["hepsi13"] and o["kisa"] and o["O"] == 13 and o["is"] == ["14 2026-12-04 1200"]
             and o["gecmis"] == 1 and await pg.evaluate(KAYIT_JS) != kayit0, f"bekleme {sure2:.1f} sn ('{bekle.strip()}') · {o}")
     await pg.keyboard.press("Digit1")
     await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
@@ -3889,6 +3902,111 @@ TV_KARE_JS = r"""() => { const v = new THREE.Vector3(), T = STIL.oda.tv, g = ODA
   const xs = P.map(p => p[0]), ys = P.map(p => p[1]); return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; }"""
 
 
+HAFTA_BITIR_JS = """() => { const Z = {skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}};
+  const is = Object.values(OYUN.kariyer.isler).find(x => x.veri && x.veri.eylem === 'macGunu'), id = is.veri.macId;
+  oyunKomut(x => { zamanIlerlet(x, anDakika(is.tarih, is.dakika) - simdikiAn(x)); ajandaIsiYap(x, is.id); });
+  oyunKomut(x => haftaSonuclariUygula(x, id, Z, macTohumu(7, id), {}, haftaninDigerMaclari(x, id).map(g => ({macId: g.id, sonuc: Z, tohum: macTohumu(7, g.id)}))));
+  return id; }"""
+CS_HAFTA_JS = """() => ({ hafta: (document.querySelector('.tel-haftaNav b') || {}).textContent || '',
+  basliklar: [...document.querySelectorAll('.tel-govde h5')].map(h => h.textContent),
+  satirlar: [...document.querySelectorAll('.tel-govde .tel-mac')].map(s => s.querySelector('small').textContent + ' ' + s.title) })"""
+
+
+async def cs_hafta_git(pg, hafta):
+    """Canlı Skor'un hafta görünümünde ‹ › ile istenen haftaya gider (en çok 30 adım)."""
+    for _ in range(30):
+        h = int(((await pg.evaluate("() => (document.querySelector('.tel-haftaNav b') || {}).textContent || '0'")).split(".")[0]) or 0)
+        if h == hafta:
+            return True
+        await pg.click('.tel-haftaOk[data-yon="' + ("ileri" if h < hafta else "geri") + '"]')
+        await pg.wait_for_timeout(120)
+    return False
+
+
+async def bolum_38(tarayici, site, tum_hatalar):
+    """RK7: lig takvimi. 13. hafta (ilk hafta bütün maçlar bizimle aynı saatte) yapay sonuçla biter; Canlı Skor'un hafta görünümü gün başlıklarıyla
+    (14. hafta Cuma–Pazartesi, saatler), açıklanmamış hafta “Program açıklanmadı” ve “—”. 14. haftanın maç gününe İlerle ile gelinir, bizim maç yapay
+    sonuçla biter; sonraki İlerle hafta sonunun öbür maçlarını geçer: örtü “Öbür maçlar oynanıyor… n/t” (file:// adreste işçi yok, ana iplikte), maçlar
+    kendi saatinde kayda girer, zaman sahnesinde maç satırları; havuzdaki ilk maçın sonucu sayfada aynı seçenekle doğrudan oynatılanla birebir (skor, goller).
+    Ertelenen maç: Canlı Skor'da “Ertelendi · yeni tarih açıklanacak” başlığı ve “Ert.”; bizim maç ertelenince maç günü işi sıradaki maça geçer."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.set_viewport_size({"width": 1280, "height": 960})
+    await pg.evaluate(HAFTA_BITIR_JS)
+    await oda_yenile(pg)
+    await odak_ac(pg, "telefon")
+    await pg.click('[data-eylem="telUyg"][data-uyg="skor"]')
+    await pg.wait_for_selector(".tel-haftaNav", timeout=5000)
+    await cs_hafta_git(pg, 14)
+    h14 = await pg.evaluate(CS_HAFTA_JS)
+    gunler = [b.split(" ")[0] for b in h14["basliklar"]]
+    denetle("RK7 Canlı Skor hafta görünümü: 14. hafta gün başlıklarıyla (Cuma, Cumartesi, Pazar, Pazartesi; sırayla), sekiz maç, her satırda saat (17:00 ya da 20:00)",
+            h14["hafta"] == "14. hafta" and gunler == ["Cuma", "Cumartesi", "Pazar", "Pazartesi"] and len(h14["satirlar"]) == 8
+            and all(s[:5] in ("17:00", "20:00") for s in h14["satirlar"]), f"{h14['basliklar']} · {[s[:5] for s in h14['satirlar']]}")
+    await cs_hafta_git(pg, 17)
+    h17 = await pg.evaluate(CS_HAFTA_JS)
+    denetle("RK7: programı açıklanmamış hafta (17.) tek başlık “Program açıklanmadı”, satırlarda saat yerine “—”, durum “saati açıklanmadı”",
+            h17["basliklar"] == ["Program açıklanmadı"] and len(h17["satirlar"]) == 8 and all(s.startswith("— ") and "saati açıklanmadı" in s for s in h17["satirlar"]),
+            f"{h17['basliklar']} · {h17['satirlar'][:1]}")
+    await pg.screenshot(path=str(ARAC / "son-akis-38-hafta.png"))
+    await masaya_don(pg)
+    # 14. haftanın maç gününe İlerle ile
+    for _ in range(8):
+        if await pg.evaluate("() => { const k = OYUN.kariyer, is = Object.values(k.isler).find(x => x.veri && x.veri.eylem === 'macGunu'); return !!is && is.tarih === k.tarih && is.dakika === k.gunIciDakika; }"):
+            break
+        await oda_ilerle(pg)
+        await zaman_ozeti_kaldir(pg)
+        await masaya_don(pg)
+    await pg.evaluate(HAFTA_BITIR_JS)
+    await oda_yenile(pg)
+    plan = await pg.evaluate("() => { const ih = ligDene(OYUN.kariyer, x => duragaIlerle(x)); return ih ? { a: ligMacAnahtari(ih.plan), id: ih.plan.macId, secenek: JSON.stringify(ih.plan.secenek) } : null; }")
+    once = await pg.evaluate("() => Object.keys(OYUN.kariyer.maclar).length")
+    t0 = time.time()
+    await pg.click(".od-ana")
+    if await pg.query_selector('.od-ana[data-eylem="ilerle"]:has-text("Onayla")'):
+        await pg.click(".od-ana")
+    ortu = await pg.evaluate("() => (document.querySelector('.od-ligHesap') || {}).textContent || ''")
+    await lig_hesap_bekle(pg)
+    sure = time.time() - t0
+    await pg.wait_for_timeout(300)
+    if await pg.evaluate("() => typeof ZAMAN_SAHNE !== 'undefined' && ZAMAN_SAHNE.acik"):
+        await pg.keyboard.press("Escape")   # akış özete atlar
+        await pg.wait_for_timeout(200)
+    zm = await pg.evaluate("() => (document.querySelector('.zm-sahne') || {}).innerText || ''")
+    sonra = await pg.evaluate("""(p) => { const k = OYUN.kariyer, h = p && LIG_MAC_HAVUZU.get(p.a), m = p && k.maclar[p.id];
+      return { n: Object.keys(k.maclar).length, an: k.tarih + ' ' + saatYazi(k.gunIciDakika), havuz: h ? JSON.stringify({skor: h.skor, goller: h.goller}) : null,
+        kayit: m ? JSON.stringify(m.skor) : null, gunluk: LIG_HESAP.gunluk.filter(x => x.olay === 'mac').length }; }""", plan)
+    await zaman_ozeti_kaldir(pg)
+    satir = re.search(r"\b[A-ZÇĞİÖŞÜ]{3} \d+–\d+ [A-ZÇĞİÖŞÜ]{3}\b", zm)
+    denetle("RK7 İlerle hafta sonunu geçer: önce öbür maçlar hesaplanır (örtü “Öbür maçlar oynanıyor… n/t”), sonra komut; maçlar kendi saatinde kayda girdi, zaman sahnesinde maç satırı (“KIS 1–0 KIS”)",
+            plan is not None and ortu.startswith("Öbür maçlar oynanıyor") and sonra["n"] > once and sonra["kayit"] is not None and sonra["havuz"] is not None and satir is not None,
+            f"{plan and plan['id']} · örtü {ortu!r} · maç {once}→{sonra['n']} · {sonra['an']} · {sure:.1f} sn · hesaplanan {sonra['gunluk']} · {satir and satir.group(0)}")
+    # aynı tarayıcıda iki yol: havuzdaki (İlerle'nin ön hesabı) ile aynı seçenekle doğrudan oynatılan. Node ile karşılaştırılmaz: V8 sürümlerinin Math
+    # işlevleri (sin, log, atan2 …) bit düzeyinde farklıdır, aynı tohum Node'da başka maç oynar (RK7 Durum)
+    dogrudan = await pg.evaluate("(s) => { const r = arkaMacOynat(Match, JSON.parse(s), {oncesi: false}).son; return JSON.stringify({skor: r.skor, goller: r.goller}); }", plan["secenek"]) if plan else None
+    denetle("RK7 aynı motorda iki yol: havuzdaki ilk lig maçının sonucu (skor, goller) aynı seçenekle sayfada doğrudan oynatılanla birebir; kayıttaki skor aynı",
+            dogrudan is not None and sonra["havuz"] == dogrudan and json.loads(dogrudan)["skor"] == json.loads(sonra["kayit"] or "null"),
+            f"{(sonra['havuz'] or '')[:80]} · {(dogrudan or '')[:80]}")
+    # ertelenen maç: öbür maç ve bizim maç (kural kariyer-deneme 3.12'de; burada görünüm)
+    e = await pg.evaluate("""() => { let r = null; oyunKomut(k => { const biz = k.kisiler[k.baskanId].kulupId, s = siradakiMac(k, biz), H = s.hafta;
+        const o = k.fikstur.find(f => f.hafta === H && f.ev !== biz && f.konuk !== biz && !k.maclar[f.id]);
+        macErtele(k, o, 'kar'); macErtele(k, s, 'firtina'); macGunuEsle(k);
+        const is = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.eylem === 'macGunu');
+        r = { hafta: H, oId: o.id, sId: s.id, yeni: is && is.veri.macId, sira: siradakiMac(k, biz).id }; }); return r; }""")
+    await oda_yenile(pg)
+    await odak_ac(pg, "telefon")
+    await pg.click('[data-eylem="telUyg"][data-uyg="skor"]')
+    await pg.wait_for_selector(".tel-haftaNav", timeout=5000)
+    await cs_hafta_git(pg, e["hafta"])
+    he = await pg.evaluate(CS_HAFTA_JS)
+    ert = [s for s in he["satirlar"] if s.startswith("Ert. ")]
+    denetle("RK7 ertelenen maç: Canlı Skor'da haftanın sonunda “Ertelendi · yeni tarih açıklanacak” başlığı, satırda “Ert.” (iki maç); bizim maçın maç günü işi sıradaki maça geçti",
+            he["basliklar"][-1:] == ["Ertelendi · yeni tarih açıklanacak"] and len(ert) == 2 and all("ertelendi" in s for s in ert)
+            and e["yeni"] == e["sira"] and e["yeni"] != e["sId"], f"{he['basliklar']} · {ert} · {e}")
+    await pg.screenshot(path=str(ARAC / "son-akis-38-ertelenen.png"))
+    await pg.context.close()
+
+
 async def bolum_37(tarayici, site, tum_hatalar):
     """RK6: oda — giriş kapısı, ziyaret ve TV. TV dolabın üstünde, karede tam ve en az 40×40 px; ekranı tvOzeti'nden (Canlı Skor'un okumasıyla aynı).
     Sonra gelsin: kart kapanır, kapı açılmaz, ertesi uygun günün aynı saatine yeni kapı. Esc kapı kartını bırakır (kişi kapıda bekler, bakış döner), alt şeritteki
@@ -4305,6 +4423,9 @@ async def ana():
         if sec("37"):
             print("\n37. Oda: giriş kapısı, ziyaret ve TV (RK6)")
             await bolum_37(tarayici, site, tum_hatalar)
+        if sec("38"):
+            print("\n38. Lig takvimi: hafta görünümü, öbür maçlar kendi saatinde, erteleme (RK7)")
+            await bolum_38(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)
