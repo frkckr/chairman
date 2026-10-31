@@ -21,7 +21,8 @@
    Borçlar (F6-b, kullanıcıyla): koşulun ve eşiklerin oyun kuralı olarak onayı; yönetim/taraftar baskısının kaynağı (bugün yalnız sonuç); hocanın
    takıma oturma süresi; süre içinde sözün bozulabileceği yol; tazminatın sözleşmeden gelmesi. */
 'use strict';
-const P12_SAAT=1290;                    // maç günü 21:30: gelişmenin anı (oda 21:00'de açılır; İlerle'de durur)
+const P12_SAAT=1290;                    // maç günü 21:30: 19:00 maçında gelişmenin anı (oda 21:00'de açılır; İlerle'de durur)
+const P12_SONRA=30;                     // RK7: maçlar 17:00–20:00 arasında; gelişme odanın açılışından (maç + MAC_SONRASI_DK) bu kadar dk sonra
 const P12_PENCERE=3,P12_PUAN=1;         // son 3 maçta en çok 1 puan
 const P12_GALIBIYETSIZ=5;               // ya da son 5 maçta galibiyet yok
 const P12_ARA_GUN=14;                   // iki P12 konusunun açılışı arasında en az gün
@@ -83,7 +84,8 @@ function p12Gidisat(k,kulupId,hocaId){
 const p12Olaylari=k=>Object.values(k.olaylar||{}).filter(o=>o.paket==='hocaDegerlendirme');
 /* sabır süresinin sonu: kulübün oynanmamış maçlarından P12_SABIR_MAC'ıncısının (azsa sonuncusunun) akşamı, oda açıldığı an; maç yoksa 21 gün sonra */
 function p12SabirSonu(k,kulupId){
-  const L=(k.fikstur||[]).filter(f=>(f.ev===kulupId||f.konuk===kulupId)&&!(k.maclar||{})[f.id]&&anDakika(f.tarih,f.dakika)>=simdikiAn(k)).sort((a,b)=>a.hafta-b.hafta);
+  /* RK7: zamana göre; ertelenip tarih bekleyen maç sayılmaz */
+  const L=(k.fikstur||[]).filter(f=>(f.ev===kulupId||f.konuk===kulupId)&&!(k.maclar||{})[f.id]&&!f.tarihBekliyor&&anDakika(f.tarih,f.dakika)>=simdikiAn(k)).sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika)||a.hafta-b.hafta);
   const f=L[Math.min(P12_SABIR_MAC,L.length)-1];
   return f?{tarih:f.tarih,dakika:Math.min(1439,f.dakika+MAC_SONRASI_DK),mac:Math.min(P12_SABIR_MAC,L.length)}:{tarih:tarihEkle(k.tarih,21),dakika:600,mac:0};
 }
@@ -92,7 +94,7 @@ MAC_SONUCU_EKLERI.push((k,f)=>{
   if(k.icerik.surum<PAKETLER.hocaDegerlendirme.icerik||k.gorevDurumu!=='gorevde')return;
   const biz=(k.kisiler[k.baskanId]||{}).kulupId,h=biz?kulupHocasi(k,biz):null;
   if(!h||(f.ev!==biz&&f.konuk!==biz))return;
-  const t=anTarih(Math.max(anDakika(f.tarih,P12_SAAT),simdikiAn(k)));
+  const t=anTarih(Math.max(macAni(f)+MAC_SONRASI_DK+P12_SONRA,simdikiAn(k)));   /* RK7: maçın saatine göre (19:00 maçında 21:30) */
   isEkle(k,{tur:'gelisme',tarih:t.tarih,dakika:t.dakika,veri:{gelisme:'hocaBaskisi',kulupId:biz,hocaId:h.id,macId:f.id}});
 });
 

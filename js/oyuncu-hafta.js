@@ -35,7 +35,7 @@ const ohHaftaGunu=t=>(gunNo(t)+4)%7;   // 0 = Pazar (js/gozlem.js gunNo)
 function kulupMacGunleri(k,kulupId){
   const F=k.fikstur;if(!Array.isArray(F)||!kulupId)return[];
   let M=OH_FIKSTUR_GUNLERI.get(F);
-  if(!M){M=new Map();for(const f of F)for(const id of [f.ev,f.konuk]){if(!M.has(id))M.set(id,[]);M.get(id).push(f.tarih);}
+  if(!M){M=new Map();for(const f of F){if(f.tarihBekliyor)continue;for(const id of [f.ev,f.konuk]){if(!M.has(id))M.set(id,[]);M.get(id).push(f.tarih);}}   /* RK7: tarih bekleyen ertelenmiş maç gün tutmaz */
     for(const L of M.values())L.sort();OH_FIKSTUR_GUNLERI.set(F,M);}
   return M.get(kulupId)||[];
 }

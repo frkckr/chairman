@@ -58,6 +58,26 @@ const KAYIT_PERSONEL_9={yardimciAntrenor:{ad:'Tahsin',dogumTarihi:'1979-03-14'},
 /* S-a (2026-10-27): sürüm 10 → 11 düz veri dönüşümüdür: yalnız sürüm artar. Yeni alanlar (oyuncu hal, mac/dk; gözlem sinyalleri; disarida; gazeteOkunan)
    yoksa anlamları vardır (tam kondisyon, nötr form, sayaç bilinmiyor, sinyalsiz, notsuz, okunmamış); kural işlevi çağrılmaz, para, iş ya da haber üretilmez */
 KAYIT_GECISLERI[10]=v=>{v.kayitSurumu=11;return v;};
+/* RK7 (2026-11-01): 11 → 12 — lig takvimi (js/lig-takvimi.js). Eski kayıtta bütün maçlar Cumartesi 19:00'dadır; oynanmamış ilk haftayla sonraki iki hafta
+   bu saatle açıklanmış sayılır (aynı saatte oldukları için başkanın maç sayfasında birlikte oynanır; lig maçı işi gerekmez), sonraki hafta için TFF
+   programı işi kurulur (açıklanacak haftadan üç hafta önceki Pazartesi 10:00; geçtiyse kaydın anı). Sezon sonu kaydı varsa program bitmiş sayılır.
+   Veri dönüşümüdür: kural işlevi çağırmaz, maç, para ya da haber üretmez */
+KAYIT_GECISLERI[11]=v=>{
+  v.kayitSurumu=12;
+  const S=v.sezon;
+  if(!S||!Array.isArray(v.fikstur)||S.programAciklanan!==undefined)return v;
+  const oynanmamis=v.fikstur.filter(f=>f.hafta>=S.ilkHafta&&!(v.maclar||{})[f.id]).map(f=>f.hafta);
+  if(S.sonuc||!oynanmamis.length){v.sezon=Object.assign({},S,{programAciklanan:S.haftaSayisi});return v;}
+  const pa=Math.min(S.haftaSayisi,Math.min(...oynanmamis)+2);
+  v.sezon=Object.assign({},S,{programAciklanan:pa});
+  if(pa<S.haftaSayisi&&typeof v.tarih==='string'){
+    const h=pa+1,t=tarihEkle(tarihEkle(S.ilkMacTarihi,(h-3-S.ilkHafta)*7),-5),dk=600,simdi=anDakika(v.tarih,v.gunIciDakika|0),gec=anDakika(t,dk)<simdi;
+    const no=v.sonrakiNo.is,id='is-'+no;
+    v.isler=Object.assign({},v.isler,{[id]:{id,tur:'program',tarih:gec?v.tarih:t,dakika:gec?(v.gunIciDakika|0):dk,veri:{hafta:h}}});
+    v.sonrakiNo=Object.assign({},v.sonrakiNo,{is:no+1});
+  }
+  return v;
+};
 KAYIT_GECISLERI[9]=v=>{
   v.kayitSurumu=10;delete v.macOkundu;
   const biz=v.kisiler&&v.kisiler[v.baskanId]&&v.kisiler[v.baskanId].kulupId;

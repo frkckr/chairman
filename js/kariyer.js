@@ -25,8 +25,11 @@
 /* Sürüm 11 (S-a, 2026-10-27): oyuncuda isteğe bağlı hal {kon, gun, form, gel, tav} ve mac/dk sayaçları (js/oyuncu-hafta.js); sonraki S adımlarında
    gözlem kaydında sinyaller, geçmiş maç kaydında disarida, kariyerde gazeteOkunan. Sürüm 10 kaydı geçişle açılır (js/kayit.js KAYIT_GECISLERI[10]:
    yalnız sürüm; alan yoksa tam kondisyon, nötr form, sayaç bilinmiyor). */
+/* Sürüm 12 (RK7, 2026-11-01): lig takvimi — fikstürde maçın günü ve saati haftanın şablonundan (Cuma–Pazartesi), ertelenen maçta ertelendi {tarih,
+   dakika, neden} ve tarihBekliyor; sezonda programAciklanan (açıklanan son hafta); işlerde program, hava ve ligMaci (js/lig-takvimi.js). Sürüm 11 kaydı
+   geçişle açılır (js/kayit.js KAYIT_GECISLERI[11]: eski maçlar Cumartesi 19:00'da kalır, sonraki program işi kurulur). */
 'use strict';
-const KARIYER_SURUM=11;
+const KARIYER_SURUM=12;
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */
