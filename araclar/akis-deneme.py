@@ -1031,7 +1031,7 @@ async def bolum_12(tarayici, site, tum_hatalar):
     await oda_yenile(pg)
     await pg.keyboard.press("Escape")
     denetle("Yenileme: aynı saatte, açık gözlemle balkonda; gözlem kendiliğinden akmıyor",
-            await durum(pg) == g1 and await pg.evaluate("ODA.yer") == "balkon" and "Gözlem durdu" in await pg.text_content(".od-gozlem"))
+            await durum(pg) == g1 and await pg.evaluate("ODA.yer") == "balkon" and "Gözlem durdu" in await pg.text_content(".od-antrenman"))
     await pg.click('[data-eylem="gozlemSurdur"]')
     await pg.wait_for_function("OYUN.kariyer.gozlem === null", timeout=30000)
     g3 = await durum(pg)
@@ -2605,9 +2605,10 @@ def sec(n):
 
 
 async def bolum_23(tarayici, site, tum_hatalar):
-    """S-b: balkon sinyalleri (yürüyüşsüz, gerçek zaman beklemesiz): düşük kondisyonlu oyuncu, Salı 15:00, gözlem sayfa içinden açılır ve ilerletilir;
-    yenilemede oda balkonda açılır, şeritteki "Gördüklerin" sayfa içinde hesaplanan sinyallerle aynı; bırakınca geçmiş kaydında sinyaller var"""
-    print("\n23. Balkon sinyalleri (S-b)")
+    """S-b, RK1: balkon sinyalleri (yürüyüşsüz): düşük kondisyonlu iki oyuncu, Salı 15:00, gözlem sayfa içinden açılır ve bir saat ilerletilir;
+    yenilemede oda balkonda açılır, künyedeki “Gördüklerin · n” odak kabında sayfa içinde hesaplanan sinyallerle aynı listeyi açar (izlenmeyen aday yok);
+    devam edince görülen sinyalin kelimesi oyuncunun başının üstünde belirir; bırakınca geçmiş kaydında izlenen kısmın sinyalleri var"""
+    print("\n23. Balkon sinyalleri (S-b, RK1)")
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
     await pg.evaluate("""() => oyunKomut(k => { const D = k.kulupler.demirkapi.kadro, x = Object.assign({}, k.oyuncular);
@@ -2615,26 +2616,40 @@ async def bolum_23(tarayici, site, tum_hatalar):
       k.oyuncular = x; zamanIlerlet(k, anDakika('2026-11-24', 900) - simdikiAn(k)); gozlemAc(k, 120); gozlemAdim(k, 60); })""")
     await oda_yenile(pg)
     await pg.wait_for_timeout(500)
-    b = await pg.evaluate("""() => { const k = OYUN.kariyer, S = (k.gozlem && k.gozlem.sinyaller || []).filter(s => s.dk < k.gunIciDakika).map(s => gozlemSinyalMetni(k, s));
-      return { yer: ODA.yer, acik: gozlemAcik(k), beklenen: S, sayfa: [...document.querySelectorAll('.od-gorduklerin li')].map(x => x.textContent),
-        serit: (document.querySelector('.od-gozlem') || {}).textContent || '' }; }""")
-    denetle("S-b, R5: gözlem açıkken yenileme odayı balkonda açar; antrenman kâğıdındaki “Gördüklerin” sayfa içinde hesaplanan bütün sinyaller (R5: yalnız sonuncusu değil; en az bir yorgun)",
-            b["yer"] == "balkon" and b["acik"] and len(b["beklenen"]) >= 1 and b["sayfa"] == b["beklenen"] and any("koşularda geride kaldı" in s for s in b["beklenen"]), str(b)[:300])
+    b = await pg.evaluate("""() => { const k = OYUN.kariyer, T = k.gozlem && k.gozlem.sinyaller || [], S = T.filter(s => s.dk < k.gunIciDakika).map(s => gozlemSinyalMetni(k, s));
+      const g = document.querySelector('#oda .od-antGor');
+      return { yer: ODA.yer, acik: gozlemAcik(k), beklenen: S, kalan: T.filter(s => s.dk >= k.gunIciDakika).map(s => s.tur), dugme: g ? g.textContent : null,
+        kagit: !!document.querySelector('#oda .od-gozlem'), adaylar: antrenmanSinyalleri(k, k.tarih).length }; }""")
+    await pg.click('#oda .od-antGor')
+    await gecis_bitir(pg)
+    b["sayfa"] = await pg.evaluate("() => [...document.querySelectorAll('#oda section.odk .od-gorduklerin li button')].map(x => x.textContent)")
+    denetle("S-b, RK1: gözlem açıkken yenileme odayı balkonda açar; kâğıt yok; künyede “Gördüklerin · n”, dokununca odak kabında sayfa içinde hesaplanan bütün geçilmiş sinyaller (en az bir yorgun)",
+            b["yer"] == "balkon" and b["acik"] and not b["kagit"] and len(b["beklenen"]) >= 1 and b["dugme"] == f"Gördüklerin · {len(b['beklenen'])} ▸"
+            and b["sayfa"] == b["beklenen"] and any("koşularda geride kaldı" in s for s in b["beklenen"]), str(b)[:300])
+    await masaya_don(pg)
     kes = {}
     for boyut in ((1180, 1000), (672, 600)):
         await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
         await ayar_yazi(pg, "buyuk")
-        kes[boyut[0]] = await pg.evaluate("""() => { const g = document.querySelector('.od-gozlem'); if (!g) return null; const a = g.getBoundingClientRect();
-          return [...document.querySelectorAll('.od-nesneler button')].filter(b => { const r = b.getBoundingClientRect(); return r.width > 1 && r.left < a.right && r.right > a.left && r.top < a.bottom && r.bottom > a.top; }).map(b => b.textContent); }""")
+        kes[boyut[0]] = await pg.evaluate("""() => { const g = document.querySelector('.od-antrenman'); if (!g) return null; const a = g.getBoundingClientRect();
+          return [...document.querySelectorAll('.od-nesneler button, .od-alt button')].filter(b => { const r = b.getBoundingClientRect(); return r.width > 1 && r.left < a.right && r.right > a.left && r.top < a.bottom && r.bottom > a.top; }).map(b => b.textContent); }""")
     await pg.set_viewport_size({"width": 1180, "height": 1000})
     await ayar_yazi(pg, "normal")
-    denetle("İnceleme: büyük yazıda (1180 ve 672 px) balkon şeridi masadaki düğmelerle kesişmez", all(v == [] for v in kes.values()), str(kes))
-    await pg.click('[data-eylem="gozlemBirak"]')
+    denetle("İnceleme: büyük yazıda (1180 ve 672 px) balkon künyesi masadaki ve şeritteki düğmelerle kesişmez", all(v == [] for v in kes.values()), str(kes))
+    # RK1: devam → görülen sinyalin kelimesi başının üstünde (gerçek zamanda birkaç saniye, sonra söner); ilk kelimeden sonra bırakılır
+    await pg.click('[data-eylem="gozlemSurdur"]')
+    kelimeler = await pg.evaluate("""() => new Promise(r => { const g = new Set(), t0 = performance.now(); const f = () => {
+        for (const e of document.querySelectorAll('#oda .od-sinyal')) if (!e.hidden) g.add(e.textContent);
+        if (g.size || !gozlemAcik(OYUN.kariyer) || performance.now() - t0 > 9000) r([...g]); else requestAnimationFrame(f); }; f(); })""")
+    if await pg.query_selector('[data-eylem="gozlemBirak"]'):
+        await pg.click('[data-eylem="gozlemBirak"]')
     await pg.wait_for_timeout(300)
-    g = await pg.evaluate("() => { const g = OYUN.kariyer.gecmis.filter(x => x.tur === 'gozlem').pop(); return g ? g.sinyaller || [] : null; }")
+    denetle("RK1: devam edince izlenen aralıkta görülen sinyal oyuncunun başının üstünde kısa bir kelimeyle belirir (yorgun → “geride”)",
+            (not b["kalan"]) or "geride" in kelimeler or any(w in kelimeler for w in ("parlıyor", "durgun", "takımla çalışıyor", "ayrı çalışıyor")), f"kalan {b['kalan']} · {kelimeler}")
+    g = await pg.evaluate("() => { const g = OYUN.kariyer.gecmis.filter(x => x.tur === 'gozlem').pop(); return g ? { s: g.sinyaller || [], bitis: g.bitis } : null; }")
     m = await pg.text_content(".od-mesaj") if await pg.query_selector(".od-mesaj") else ""
-    denetle("S-b: Gözlemi bırak → geçmişteki gözlem kaydında izlenen kısmın sinyalleri; şerit metni sinyalden ve dosyaya düşen nottan söz eder",
-            g is not None and len(g) == len(b["beklenen"]) and "dosya" in m, f"{g} · {m[:120]}")
+    denetle("S-b: Gözlemi bırak (ya da bitiş) → geçmişteki gözlem kaydında izlenen kısmın sinyalleri (önceki bir saatinkiler dahil); şerit metni dosyaya düşen nottan söz eder",
+            g is not None and len(g["s"]) >= len(b["beklenen"]) and all(s["dk"] < g["bitis"] for s in g["s"]) and "dosya" in m, f"{g} · {m[:120]}")
     await pg.context.close()
 
 
@@ -3686,17 +3701,19 @@ async def bolum_33(tarayici, site, tum_hatalar):
 
 
 
-BALKON_JS = """() => { const g = document.querySelector('#oda .od-gozlem'), r = g ? g.getBoundingClientRect() : null, oda = document.querySelector('#oda').getBoundingClientRect();
+BALKON_JS = """() => { const g = document.querySelector('#oda .od-antrenman'), r = g ? g.getBoundingClientRect() : null, oda = document.querySelector('#oda').getBoundingClientRect();
   const B = typeof BALKON !== 'undefined' ? BALKON : null, gor = a => a && a.m.root.visible;
   return { yer: ODA.yer, metin: g ? g.textContent : '', sag: r ? r.left > oda.left + oda.width * 0.45 : null, sol: r ? r.right < oda.left + oda.width * 0.5 : null, antrenman: B ? B.antrenman : null, tur: B ? B.tur : null,
     sahada: B ? [...B.havuz.values()].filter(gor).length : 0, gruplar: B ? [B.kosu.length, B.rondo.length, B.sut.length, B.esneme.length, B.ayri.length] : null,
-    gozlemDugme: !!document.querySelector('#oda [data-eylem="gozlem"]'), linkler: [...document.querySelectorAll('#oda .od-gorduklerin [data-eylem="gozlemOyuncu"]')].map(b => b.dataset.oyuncu) }; }"""
+    gozlemDugme: !!document.querySelector('#oda [data-eylem="gozlem"]'), gorduklerin: !!document.querySelector('#oda .od-antGor'), kagit: !!document.querySelector('#oda .od-gozlem'),
+    linkler: [...document.querySelectorAll('#oda section.odk .od-gorduklerin [data-eylem="gozlemOyuncu"]')].map(b => b.dataset.oyuncu) }; }"""
 
 
 async def bolum_34(tarayici, site, tum_hatalar):
-    """R5: balkon — antrenman kâğıdı sağ üstte (günün türü hocanın programından, Gördüklerin bütün sinyaller, ada dokununca oyuncunun dosyası);
-    sahadakiler kariyerin kadrosu (gruplar programa göre; sakat sahada yok); iş sağ yarıda, saha solda; TEST “her saat antrenman” yalnız görüntü
-    (saha dolu, gözlem düğmesi yok); gözlem sürerken gelen cevapta telefonun rozeti (B44)."""
+    """R5, RK1: balkon — kâğıt yok; tarih kutusunun altında küçük künye (günün çalışması hocanın programından, saat, durum, “Gördüklerin · n”);
+    Gördüklerin odak kabında bütün sinyaller, ada dokununca oyuncunun dosyası, ‹ Geri listeye; sahadakiler kariyerin kadrosu (gruplar programa göre;
+    sakat sahada yok); iş sağ yarıda, saha solda; TEST “her saat antrenman” yalnız görüntü (saha dolu, gözlem düğmesi yok); gözlem sürerken gelen
+    cevapta telefonun rozeti (B44)."""
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
     await pg.set_viewport_size({"width": 1180, "height": 1000})
@@ -3711,14 +3728,17 @@ async def bolum_34(tarayici, site, tum_hatalar):
     b = await pg.evaluate(BALKON_JS)
     kad = await pg.evaluate("() => kulupOyunculari(OYUN.kariyer, 'demirkapi').filter(p => !(p.sakat && tarihKarsilastir(p.sakat.donus, OYUN.kariyer.tarih) > 0)).length")
     gor_sakat = await pg.evaluate("(id) => { const a = BALKON.havuz.get(id); return !!(a && a.m.root.visible); }", sakat)
-    denetle("R5-a, RB-b: balkonda antrenman kâğıdı (4:3 pencerede solda, tarih kutusunun altında); günün türü düz yazı (“Bugün yoğun çalışma”); Gördüklerin bütün sinyaller, adları dokunulur",
-            b["yer"] == "balkon" and b["sol"] and "Bugün yoğun çalışma" in b["metin"] and "(TEST)" not in b["metin"].split("TEST")[0] and len(b["linkler"]) >= 1, str(b)[:300])
+    await pg.click('#oda .od-antGor')
+    await gecis_bitir(pg)
+    b["linkler"] = (await pg.evaluate(BALKON_JS))["linkler"]
+    denetle("R5-a, RK1: balkonda kâğıt yok; künye solda, tarih kutusunun altında: günün çalışması düz yazı (“Yoğun çalışma · 15:00–17:00”); “Gördüklerin” odak kabında bütün sinyaller, adları dokunulur",
+            b["yer"] == "balkon" and b["sol"] and not b["kagit"] and "Yoğun çalışma · 15:00–17:00" in b["metin"] and b["gorduklerin"] and len(b["linkler"]) >= 1, str(b)[:300])
     denetle("R5-b, c: sahadakiler kariyerin kadrosu — sağlam oyuncuların hepsi sahada (yoğun: koşu, pas çemberi, şut), uzun sakat sahada yok",
             b["antrenman"] and b["tur"] == "yogun" and b["sahada"] == kad and b["gruplar"][0] == 6 and b["gruplar"][1] > 2 and b["gruplar"][2] > 0 and not gor_sakat,
             f"{b['sahada']}/{kad} · {b['gruplar']} · sakat görünür {gor_sakat}")
     await pg.screenshot(path=str(ARAC / "son-akis-34-balkon.png"))
     oid = b["linkler"][0]
-    await pg.click(f'#oda .od-gorduklerin [data-oyuncu="{oid}"]')
+    await pg.click(f'#oda section.odk .od-gorduklerin [data-oyuncu="{oid}"]')
     await gecis_bitir(pg)
     o = await odak(pg)
     sec_oyuncu = await pg.evaluate("() => (document.querySelector('#oda .dsy-baslik') || {}).textContent || null")
@@ -3726,6 +3746,11 @@ async def bolum_34(tarayici, site, tum_hatalar):
     sag = await pg.evaluate("() => { const s = document.querySelector('#oda section.odk:not(.odk-cikis)'), o = document.querySelector('#oda').getBoundingClientRect(); const r = s.getBoundingClientRect(); return r.left > o.left + o.width * 0.4; }")
     denetle("R5-a: sinyalin adına dokununca oyuncunun dosyası açılır; iş sağ yarıda, saha solda görünür", o["ad"] == "dosya" and sec_oyuncu == ad and sag, f"{o['ad']} · {sec_oyuncu} / {ad} · sağ {sag}")
     await pg.screenshot(path=str(ARAC / "son-akis-34-balkon-dosya.png"))
+    geri = await pg.evaluate("() => { const g = document.querySelector('#oda .odk-geri'); return g ? g.textContent : null; }")
+    await pg.keyboard.press("Escape")
+    await gecis_bitir(pg)
+    o2 = await odak(pg)
+    denetle("RK1: Gördüklerin'den açılan oyuncu dosyasında ‹ Geri “Gördüklerin”; Esc listeye döner", geri is not None and "Gördüklerin" in geri and o2["ad"] == "gorduklerin", f"{geri} · {o2['ad']}")
     await masaya_don(pg)
     # B44: gözlem sürerken hocaya “Takım ne durumda?”; cevabın anı gözlemin içine alınır (kurgu), Gözleme devam et — cevap gözlemi kesmez, telefonda rozet
     await pg.evaluate("""() => oyunKomut(k => { girisimBaslat(k, 'yaz.teknikDirektor.takim'); const c = Object.values(k.isler).find(x => x.veri && x.veri.gelisme === 'yazismaCevap');
@@ -3746,7 +3771,7 @@ async def bolum_34(tarayici, site, tum_hatalar):
     await balkona_atla(pg)
     await pg.wait_for_timeout(500)
     t = await pg.evaluate(BALKON_JS)
-    denetle("R5-d: TEST “her saat antrenman” açıkken maç günü sabahı saha dolu (yoğun düzen), gözlem düğmesi yok, kâğıtta TEST notu",
+    denetle("R5-d: TEST “her saat antrenman” açıkken maç günü sabahı saha dolu (yoğun düzen), gözlem düğmesi yok, künyede TEST notu",
             t["yer"] == "balkon" and t["antrenman"] and t["tur"] == "yogun" and not t["gozlemDugme"] and "yalnız görüntü" in t["metin"], str(t)[:300])
     await pg.click('#oda [data-panel="ayar"]')
     await pg.click('[data-eylem="ayarBolum"][data-bolum="gelistirici"]')
@@ -3754,26 +3779,34 @@ async def bolum_34(tarayici, site, tum_hatalar):
     await masaya_don(pg)
     await pg.wait_for_timeout(400)
     t2 = await pg.evaluate(BALKON_JS)
-    denetle("R5-d: anahtar kapalıyken maç günü saha boş", t2["antrenman"] is False and "Bugün maç günü" in t2["metin"], str(t2)[:200])
+    denetle("R5-d: anahtar kapalıyken maç günü saha boş", t2["antrenman"] is False and "Maç günü" in t2["metin"], str(t2)[:200])
     await pg.context.close()
 
 
 
-RB_JS = """() => { const s = document.getElementById('screen'), v = document.getElementById('view').getBoundingClientRect(), g = document.querySelector('#oda .od-gozlem'),
-  gr = g ? g.getBoundingClientRect() : null, t = document.querySelector('#oda .od-takip'), tr = t && !t.hidden ? t.getBoundingClientRect() : null;
+RB_JS = """() => { const s = document.getElementById('screen'), v = document.getElementById('view').getBoundingClientRect(), g = document.querySelector('#oda .od-antrenman'),
+  gr = g ? g.getBoundingClientRect() : null, t = document.querySelector('#oda .od-takip'), tr = t && !t.hidden ? t.getBoundingClientRect() : null,
+  i = document.querySelector('#oda .od-isaret'), ir = i && !i.hidden ? i.getBoundingClientRect() : null;
   return { yer: ODA.yer, bant: s.hasAttribute('data-bant'), ekran: s.getBoundingClientRect().width, kare: v.width, kareSol: v.left, fs: parseFloat(getComputedStyle(document.getElementById('oda')).fontSize),
-    kagitSol: gr ? gr.left : null, kagitSag: gr ? gr.right : null, bakis: Object.assign({}, BALKON.bakis), fov: ODA.kamera.fov, kayma: ODA.bakisKayma,
-    gorunen: (() => { const o = document.querySelector('#oda section.odk:not(.odk-cikis)'), a = gr && gr.left < v.left + v.width / 2 ? Math.max(0, (gr.right - v.left) / v.width) : 0,
-      z = o ? Math.min(1, (o.getBoundingClientRect().left - v.left) / v.width) : 1; return a + z - 1; })(),
-    gruplar: [...document.querySelectorAll('#oda [data-eylem="bakGrup"]')].map(b => b.dataset.grup), oyuncular: [...document.querySelectorAll('#oda [data-eylem="bakOyuncu"]')].map(b => b.dataset.oyuncu),
-    takip: tr ? { x: tr.left + tr.width / 2, metin: t.textContent, oyuncu: t.dataset.oyuncu } : null }; }"""
+    kunyeSol: gr ? gr.left : null, kunyeSag: gr ? gr.right : null, kagit: !!document.querySelector('#oda .od-gozlem'), sahadaListe: !!document.querySelector('#oda [data-eylem="bakGrup"]'),
+    bakis: Object.assign({}, BALKON.bakis), fov: ODA.kamera.fov, kayma: ODA.bakisKayma,
+    gorunen: (() => { const o = document.querySelector('#oda section.odk:not(.odk-cikis)'), z = o ? Math.min(1, Math.max(0, (o.getBoundingClientRect().left - v.left) / v.width)) : 1;
+      return z >= 0.2 && z < 0.98 ? z - 1 : 0; })(),
+    odakSol: (() => { const o = document.querySelector('#oda section.odk:not(.odk-cikis)'); return o ? o.getBoundingClientRect().left : null; })(),
+    telSol: (() => { const o = document.querySelector('#oda section.odk:not(.odk-cikis) .tel'); return o ? o.getBoundingClientRect().left : null; })(),
+    takip: tr ? { x: tr.left + tr.width / 2, metin: t.textContent, oyuncu: t.dataset.oyuncu } : null, isaret: ir ? { x: ir.left + ir.width / 2, y: ir.bottom, metin: i.textContent } : null }; }"""
+
+# RK1: sahadaki bir figürün karedeki yeri (yakın bakışta imleç ve tıklama denemeleri için)
+FIGUR_JS = """(id) => { const [CX, PY, CZ] = STIL.balkon.saha, r = document.getElementById('view').getBoundingClientRect(), a = BLK_GRUP_SIRA.flatMap(g => blkGrupAktorleri(g)).find(x => x.id === id);
+  if (!a) return null; const v = new THREE.Vector3(CX + a.x, PY + 0.9, CZ + a.z).project(ODA.kamera); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; }"""
 
 
 async def bolum_36(tarayici, site, tum_hatalar):
-    """RB: balkondan bakış ve geniş pencere bandı — 16:9 pencerede kare aynı boyda solda, sağında kâğıt bandı (yazı bantla büyümez); “Sahada” listesinden
-    gruba bakış (görüş açısı grup kademesine iner) ve oyuncu takibi (ad etiketi başının üstünde, dokununca dosyası); Esc oyuncu → grup → saha; Z kademeyi
-    döndürür; sahada figüre tıklamak gruba bakar; iş açıkken bakış sahada kalır ve görünen bölüme kayar; odaya dönünce bant kapanır; 4:3 pencerede
-    bant yok, kâğıt solda. Bakış kayda girmez (kayıt metni değişmez)."""
+    """RB, RK1: balkondan bakış ve geniş pencere bandı — kâğıt ve “Sahada” listesi yok; 16:9 pencerede iş yokken bant yok (saha tam kare), telefon ya da
+    oyuncu dosyası açılınca bant açılır, iş kapanınca kapanır (kare aynı boy, yazı bantla büyümez); ←/→ gruplar arasında (görüş açısı grup kademesine iner),
+    Enter grubun ilk oyuncusunu takip eder (ad etiketi başının üstünde, dokununca dosyası), takipte ←/→ grubun oyuncuları; yakında imleç oyuncunun adını
+    gösterir; Esc oyuncu → grup → saha; Z kademeyi döndürür; sahada figüre tıklamak gruba bakar; iş açıkken bakış sahada kalır; odaya dönünce bant yok;
+    4:3 pencerede bant yok, künye solda. Bakış kayda girmez (kayıt metni değişmez)."""
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
     await pg.set_viewport_size({"width": 1600, "height": 900})
@@ -3785,38 +3818,72 @@ async def bolum_36(tarayici, site, tum_hatalar):
     await gecis_bitir(pg)
     await pg.wait_for_timeout(700)
     a = await pg.evaluate(RB_JS)
-    denetle("RB-b: 16:9 pencerede balkonda kâğıt bandı — kare odadaki boyunda solda, kâğıt karenin sağında (bantta), yazı karenin genişliğinden",
-            a["bant"] and abs(a["kare"] - olc0["kare"]) < 1.5 and a["ekran"] > a["kare"] + 250 and a["kagitSol"] is not None and a["kagitSol"] >= a["kareSol"] + a["kare"] - 1
-            and abs(a["fs"] - olc0["fs"]) < 0.6, f"kare {olc0['kare']:.0f}→{a['kare']:.0f} · ekran {a['ekran']:.0f} · kâğıt {a['kagitSol']} · yazı {olc0['fs']:.1f}→{a['fs']:.1f}")
-    beklenen = await pg.evaluate("() => balkonGruplari().map(x => x.grup)")
-    denetle("RB-a2: “Sahada” sahadaki bütün grupları listeler (kişi sayısıyla), başta Bütün saha seçili", a["gruplar"] == beklenen and len(beklenen) >= 4 and a["bakis"]["tur"] == "saha",
-            f"{a['gruplar']} / {beklenen}")
+    denetle("RK1: 16:9 pencerede balkonda iş yokken bant yok (boş siyah alan açılmaz), kare odadaki boyunda; kâğıt ve “Sahada” listesi yok, künye karenin solunda",
+            not a["bant"] and abs(a["kare"] - olc0["kare"]) < 1.5 and not a["kagit"] and not a["sahadaListe"] and a["kunyeSag"] is not None and a["kunyeSag"] < a["kareSol"] + a["kare"] / 2
+            and a["bakis"]["tur"] == "saha", f"bant {a['bant']} · kare {olc0['kare']:.0f}→{a['kare']:.0f} · künye {a['kunyeSol']}–{a['kunyeSag']}")
+    await pg.screenshot(path=str(ARAC / "son-akis-36-balkon.png"))
+    await pg.keyboard.press("Digit1")
+    await gecis_bitir(pg)
+    await pg.wait_for_timeout(300)
+    t1 = await pg.evaluate(RB_JS)
     await pg.screenshot(path=str(ARAC / "son-akis-36-bant.png"))
-    await pg.click('#oda [data-eylem="bakGrup"][data-grup="rondo"]')
+    await masaya_don(pg)
+    await gecis_bitir(pg)
+    await pg.wait_for_timeout(300)
+    t2 = await pg.evaluate(RB_JS)
+    denetle("RK1: telefon açılınca bant açılır, telefon bantta (karenin sağında); kare aynı boy, yazı bantla büyümez; kapanınca bant kapanır",
+            t1["bant"] and t1["ekran"] > t1["kare"] + 250 and abs(t1["kare"] - olc0["kare"]) < 1.5 and t1["telSol"] is not None and t1["telSol"] >= t1["kareSol"] + t1["kare"] - 2
+            and abs(t1["fs"] - olc0["fs"]) < 0.6 and not t2["bant"], f"bant {t1['bant']}/{t2['bant']} · ekran {t1['ekran']:.0f} · telefon {t1['telSol']} · kare {t1['kareSol']:.0f}+{t1['kare']:.0f} · yazı {olc0['fs']:.1f}→{t1['fs']:.1f}")
+    gruplar = await pg.evaluate("() => balkonGruplari().map(x => x.grup)")
+    for _ in range(gruplar.index("rondo") + 1):
+        await pg.keyboard.press("ArrowRight")
     await pg.wait_for_timeout(1500)
     b = await pg.evaluate(RB_JS)
-    denetle("RB-a: gruba dokununca bakış o gruba, görüş açısı grup kademesine iner (~20°); grubun oyuncuları listede açılır",
-            b["bakis"]["tur"] == "grup" and b["bakis"]["grup"] == "rondo" and abs(b["fov"] - 20) < 1.5 and len(b["oyuncular"]) >= 3, f"{b['bakis']} · {b['fov']:.1f}° · {len(b['oyuncular'])} oyuncu")
-    oid = b["oyuncular"][0]
-    await pg.click(f'#oda [data-eylem="bakOyuncu"][data-oyuncu="{oid}"]')
+    denetle("RK1: →'yla gruplar arasında (sıra balkonGruplari); pas çemberine gelince bakış o gruba, görüş açısı grup kademesine iner (~20°)",
+            len(gruplar) >= 4 and b["bakis"]["tur"] == "grup" and b["bakis"]["grup"] == "rondo" and abs(b["fov"] - 20) < 1.5, f"{gruplar} · {b['bakis']} · {b['fov']:.1f}°")
+    await pg.keyboard.press("Enter")
     await pg.wait_for_timeout(1500)
     c = await pg.evaluate(RB_JS)
-    ad = await pg.evaluate("(id) => OYUN.kariyer.oyuncular[id].ad", oid)
+    oid = c["bakis"].get("id")
+    ilk = await pg.evaluate("() => (balkonGruplari().find(x => x.grup === 'rondo') || { ids: [] }).ids[0]")
+    ad = await pg.evaluate("(id) => OYUN.kariyer.oyuncular[id].ad", oid) if oid else None
     orta = c["kareSol"] + c["kare"] / 2
-    denetle("RB-a: oyuncuya dokununca takip — yakın kademe (~9°), başının üstünde ad etiketi karenin ortasında",
-            c["bakis"]["tur"] == "oyuncu" and c["bakis"]["id"] == oid and abs(c["fov"] - 9) < 1 and c["takip"] and ad in c["takip"]["metin"] and abs(c["takip"]["x"] - orta) < c["kare"] * 0.12,
+    denetle("RK1, RB-a: Enter grubun ilk oyuncusunu takip eder — yakın kademe (~9°), başının üstünde ad etiketi karenin ortasında",
+            c["bakis"]["tur"] == "oyuncu" and oid == ilk and abs(c["fov"] - 9) < 1 and c["takip"] and ad in c["takip"]["metin"] and abs(c["takip"]["x"] - orta) < c["kare"] * 0.12,
             f"{c['bakis']} · {c['fov']:.1f}° · {c['takip']} · orta {orta:.0f}")
     await pg.screenshot(path=str(ARAC / "son-akis-36-takip.png"))
+    await pg.keyboard.press("ArrowRight")
+    await pg.wait_for_timeout(300)
+    c2 = await pg.evaluate(RB_JS)
+    ids = await pg.evaluate("() => (balkonGruplari().find(x => x.grup === 'rondo') || { ids: [] }).ids")
+    denetle("RK1: takipte → grubun sıradaki oyuncusu", c2["bakis"]["tur"] == "oyuncu" and len(ids) > 1 and c2["bakis"]["id"] == ids[1], f"{c2['bakis']} · {ids[:3]}")
+    # RK1: yakın bakışta imleç bir oyuncunun üstündeyken adı (takip edilenin değil, yanındakinin)
+    hedef, en = None, 1e9
+    for x in ids:
+        q = await pg.evaluate(FIGUR_JS, x) if x != c2["bakis"]["id"] else None
+        if q and c2["kareSol"] + 20 < q[0] < c2["kareSol"] + c2["kare"] - 20 and abs(q[0] - orta) < en:
+            hedef, en = x, abs(q[0] - orta)
+    # imleç olayı figürün o anki yerine sayfa içinden gönderilir (yakın bakışta figürler hızla kayar; Playwright'ın fare adımı arada kaçırır)
+    nk = await pg.evaluate("""async (id) => { const p = (%s)(id); if (!p) return null; const kap = document.getElementById('oda');
+      kap.dispatchEvent(new PointerEvent('pointermove', { clientX: p[0], clientY: p[1], bubbles: true }));
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); return p; }""" % FIGUR_JS, hedef) if hedef else None
+    d0 = await pg.evaluate(RB_JS)
+    ad2 = await pg.evaluate("(id) => { const p = OYUN.kariyer.oyuncular[id]; return (p.no ? p.no + ' · ' : '') + p.ad; }", hedef) if hedef else None
+    denetle("RK1: yakın bakışta imleç bir oyuncunun üstündeyken başının üstünde adı (forma ve ad)", nk is not None and d0["isaret"] is not None and d0["isaret"]["metin"] == ad2,
+            f"{nk} · {d0['isaret']} / {ad2}")
+    await pg.mouse.move(5, 5)
     await pg.evaluate("() => document.querySelector('#oda .od-takip').click()")   # etiket koşan oyuncuyla kayar (Playwright durağan bekler)
     await gecis_bitir(pg)
     o = await odak(pg)
     baslik = await pg.evaluate("() => (document.querySelector('#oda .dsy-baslik') || {}).textContent || null")
+    ad3 = await pg.evaluate("(id) => OYUN.kariyer.oyuncular[id].ad", c2["bakis"]["id"])
     await pg.wait_for_timeout(800)
     d = await pg.evaluate(RB_JS)
-    denetle("RB-a: ad etiketine dokununca oyuncunun dosyası; iş açıkken bakış oyuncuda kalır (telefona dönmez), solda kâğıt ile sağda iş arasındaki görünen bölümün ortasına kayar, etiket gizli",
-            o["ad"] == "dosya" and baslik == ad and d["bakis"]["tur"] == "oyuncu" and abs(d["fov"] - 9) < 1 and abs(d["kayma"] - d["gorunen"]) < 0.02 and d["takip"] is None,
-            f"{o['ad']} · {baslik} / {ad} · {d['bakis']['tur']} · {d['fov']:.1f}° · kayma {d['kayma']:.2f} / {d['gorunen']:.2f}")
+    denetle("RB-a, RK1: ad etiketine dokununca oyuncunun dosyası; bant açılır; iş açıkken bakış oyuncuda kalır (telefona dönmez), iş bantta olduğundan kayma yok, etiket gizli",
+            o["ad"] == "dosya" and baslik == ad3 and d["bant"] and d["bakis"]["tur"] == "oyuncu" and abs(d["fov"] - 9) < 1 and abs(d["kayma"] - d["gorunen"]) < 0.02 and d["takip"] is None,
+            f"{o['ad']} · {baslik} / {ad3} · bant {d['bant']} · {d['bakis']['tur']} · {d['fov']:.1f}° · kayma {d['kayma']:.2f} / {d['gorunen']:.2f}")
     await masaya_don(pg)
+    await gecis_bitir(pg)
     kayit0 = await pg.evaluate("() => (() => { const m = localStorage.getItem('chairman:oyun-1'); return m ? JSON.stringify(JSON.parse(m).veri) : null; })()")
     await pg.keyboard.press("Escape")
     e1 = await pg.evaluate("() => Object.assign({}, BALKON.bakis)")
@@ -3828,8 +3895,8 @@ async def bolum_36(tarayici, site, tum_hatalar):
     z2 = await pg.evaluate("() => BALKON.bakis.kademe")
     await pg.keyboard.press("KeyZ")
     z3 = await pg.evaluate("() => BALKON.bakis.tur")
-    denetle("RB-a: Esc bakışı genişletir (oyuncu → grubu → saha); Z yakınlığı döndürür (grup → yakın → geniş saha)",
-            e1["tur"] == "grup" and e1["grup"] == "rondo" and e2["tur"] == "saha" and z1 == 1 and z2 == 2 and z3 == "saha", f"{e1} · {e2} · {z1} {z2} {z3}")
+    denetle("RB-a: Esc bakışı genişletir (oyuncu → grubu → saha); Z yakınlığı döndürür (grup → yakın → geniş saha); iş kapanınca bant kapandı",
+            e1["tur"] == "grup" and e1["grup"] == "rondo" and e2["tur"] == "saha" and z1 == 1 and z2 == 2 and z3 == "saha" and not (await pg.evaluate(RB_JS))["bant"], f"{e1} · {e2} · {z1} {z2} {z3}")
     await pg.wait_for_timeout(1200)
     # karenin ortasına en yakın oyuncu figürü (geniş bakışta pas çemberi karenin kenarında kalabilir)
     nokta = await pg.evaluate("""() => { const [CX, PY, CZ] = STIL.balkon.saha, r = document.getElementById('view').getBoundingClientRect();
@@ -3837,9 +3904,13 @@ async def bolum_36(tarayici, site, tum_hatalar):
         .sort((p, q) => Math.hypot(p.v.x, p.v.y) - Math.hypot(q.v.x, q.v.y)), { a, v } = L[0], x = r.left + (v.x + 1) / 2 * r.width, y = r.top + (1 - v.y) / 2 * r.height, e = document.elementFromPoint(x, y);
       return [x, y, a.kume, e ? e.id || e.className : null, ODA.kamera.fov]; }""")
     await pg.mouse.move(nokta[0], nokta[1])
+    await pg.wait_for_timeout(400)
+    gi = (await pg.evaluate(RB_JS))["isaret"]
     await pg.mouse.click(nokta[0], nokta[1])
     f = await pg.evaluate("() => Object.assign({}, BALKON.bakis)")
-    denetle("RB-a: geniş bakışta sahadaki bir figüre tıklamak onun grubuna bakar", f["tur"] == "grup" and f["grup"] == nokta[2], f"{f} · {nokta}")
+    gad = await pg.evaluate("(g) => ({kosu: 'koşu', rondo: 'Pas çemberi', sut: 'Şut çalışması', esneme: 'Esneme', ayri: 'Ayrı koşu', kaleciler: 'Kaleciler'})[g]", nokta[2])
+    denetle("RB-a, RK1: geniş bakışta imleç bir figürün üstündeyken grubun adı görünür; tıklamak o gruba bakar",
+            f["tur"] == "grup" and f["grup"] == nokta[2] and gi is not None and gad.lower() in gi["metin"].lower(), f"{f} · {nokta} · {gi}")
     kayit1 = await pg.evaluate("() => (() => { const m = localStorage.getItem('chairman:oyun-1'); return m ? JSON.stringify(JSON.parse(m).veri) : null; })()")
     denetle("RB: bakış kayda girmez (Esc, Z ve sahaya tıklamak kayıt metnini değiştirmez)", kayit0 == kayit1, f"{len(kayit0 or '')} / {len(kayit1 or '')}")
     await pg.click('#oda [data-eylem="yer"]')
@@ -3850,13 +3921,17 @@ async def bolum_36(tarayici, site, tum_hatalar):
     await pg.wait_for_function("ODA.yer === 'masa'", timeout=YURUYUS_BEKLE)
     await gecis_bitir(pg)
     h = await pg.evaluate(RB_JS)
-    denetle("RB-b: odaya yürürken bant kapanır; odada kare aynı boy", not g and not h["bant"] and abs(h["kare"] - olc0["kare"]) < 1.5, f"yolda bant {g} · {h['bant']} · {h['kare']:.0f}")
+    denetle("RB-b: odaya yürürken bant yok; odada kare aynı boy", not g and not h["bant"] and abs(h["kare"] - olc0["kare"]) < 1.5, f"yolda bant {g} · {h['bant']} · {h['kare']:.0f}")
     await pg.set_viewport_size({"width": 1180, "height": 1000})
     await balkona_atla(pg)
     await gecis_bitir(pg)
     i = await pg.evaluate(RB_JS)
-    denetle("RB-b: 4:3 pencerede bant yok; antrenman kâğıdı karenin solunda", not i["bant"] and i["kagitSag"] is not None and i["kagitSag"] < i["kareSol"] + i["kare"] / 2,
-            f"bant {i['bant']} · kâğıt {i['kagitSol']}–{i['kagitSag']} · kare {i['kare']:.0f}")
+    await pg.keyboard.press("Digit1")
+    await gecis_bitir(pg)
+    i2 = await pg.evaluate(RB_JS)
+    denetle("RB-b, RK1: 4:3 pencerede bant yok (iş açıkken de); künye karenin solunda", not i["bant"] and not i2["bant"] and i["kunyeSag"] is not None and i["kunyeSag"] < i["kareSol"] + i["kare"] / 2,
+            f"bant {i['bant']}/{i2['bant']} · künye {i['kunyeSol']}–{i['kunyeSag']} · kare {i['kare']:.0f}")
+    await masaya_don(pg)
     await pg.screenshot(path=str(ARAC / "son-akis-36-43.png"))
     await pg.evaluate("() => { OYUN.ayarlar.herSaat = false; OYUN.ayarlar.kaydet(); }")
     await pg.context.close()

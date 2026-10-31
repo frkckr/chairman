@@ -6,8 +6,8 @@ Ekranlar: oda (masa), defter, telefonun ana ekranı, konuşma (R2: iki sütun, t
 oyuncu dosyası, gazete, Ayarlar › Kayıt, maç öncesi bülteni ve maç sonu kartı. R3: Canlı Skor sayfaları sürüm 11 örnek kaydından
 (araclar/ornekler/kayit-s11-hafta14.json): hafta görünümü, maç sayfası (Özet, İstatistikler, Kadrolar), oyuncu sayfası, takım sayfası (Genel, Kadro).
 R4: Transfer masası (Pano, Piyasa, oyuncu kâğıdı) ve transfer zincirinin aday ve pazarlık kartı (yapay haftalarla 5 Ocak'a, oyunun komut yoluyla).
-R5: balkon (antrenman kâğıdı: günün türü, gözlem, Gördüklerin) ve balkonda sağ yarıda açılan oyuncu dosyası. RB: “Sahada” listesi ve takip edilen
-oyuncunun ad etiketi (balkon-sahada); 1366 ve 1536 pencerede balkon kâğıt bandıyla.
+R5: balkon ve balkonda sağ yarıda açılan oyuncu dosyası. RB: takip edilen oyuncunun ad etiketi (balkon-sahada). RK1: kâğıt yerine künye ve şeritte
+İzle (balkon), Gördüklerin odak kabında (balkon-gorduklerin); 1366 ve 1536 pencerede bant yalnız iş açıkken.
 R6: sponsor pazarlık kartı (1 Şubat ay başı, Görüşelim'den sonra; oyunun komut yoluyla).
 
 Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulanık kalan oda) alt ağaçlar, görünmeyen öğeler, kutusunun tamamen dışında
@@ -209,23 +209,26 @@ async def sahneler_transfer(pg, olc):
         await akis.masaya_don(pg)
 
 
-BALKON_SAHNELER = {"balkon", "balkon-sahada", "balkon-dosya"}
+BALKON_SAHNELER = {"balkon", "balkon-sahada", "balkon-gorduklerin", "balkon-dosya"}
 
 
 async def sahneler_balkon(pg, olc):
-    """R5: Salı 15:00 yoğun gün, iki yorgun oyuncu, gözlem bir saat sürmüş (akış §23 kalıbı); sinyalin adından oyuncu dosyası (sağ yarı)."""
+    """R5, RK1: Salı 15:00 yoğun gün, iki yorgun oyuncu, gözlem bir saat sürmüş (akış §23 kalıbı): künye ve şerit (balkon); pas çemberinin ilk
+    oyuncusunun takibi, ad etiketi (balkon-sahada); Gördüklerin odak kabında (balkon-gorduklerin, geniş pencerede bantta); sinyalin adından oyuncu dosyası."""
     await pg.evaluate("""() => oyunKomut(k => { const D = k.kulupler.demirkapi.kadro, x = Object.assign({}, k.oyuncular);
       for (const id of D.ilk11.slice(1, 3)) x[id] = Object.assign({}, x[id], { hal: { kon: 58, gun: '2026-11-23', form: 0, gel: 0, tav: 60 } });
       k.oyuncular = x; zamanIlerlet(k, anDakika('2026-11-24', 900) - simdikiAn(k)); gozlemAc(k, 120); gozlemAdim(k, 60); })""")
     await akis.oda_yenile(pg)
     await akis.yokla(pg, "() => ODA.yer === 'balkon'", 60)
     await olc("balkon")
-    # RB: “Sahada” — pas çemberine bakış, ilk oyuncunun takibi (liste açık, ad etiketi sahada); geniş pencerede kâğıt bantta
-    await tikla(pg, '#oda [data-eylem="bakGrup"][data-grup="rondo"]')
-    await tikla(pg, '#oda [data-eylem="bakOyuncu"]')
+    # RK1: pas çemberinin ilk oyuncusunun takibi (ad etiketi sahada; klavyedeki Enter'in yaptığı)
+    await pg.evaluate("() => { const G = balkonGruplari().find(x => x.grup === 'rondo'); if (G && G.ids.length) balkonBakis({ tur: 'oyuncu', id: G.ids[0] }); }")
     await pg.wait_for_timeout(1200)
     await olc("balkon-sahada")
-    await tikla(pg, '#oda .od-gorduklerin [data-eylem="gozlemOyuncu"]')
+    await tikla(pg, '#oda .od-antGor')
+    await pg.wait_for_selector("#oda section.odk .od-gorduklerin", timeout=10000)
+    await olc("balkon-gorduklerin")
+    await tikla(pg, '#oda section.odk .od-gorduklerin [data-eylem="gozlemOyuncu"]')
     await pg.wait_for_selector("#oda .dsy-baslik", timeout=10000)
     await olc("balkon-dosya")
 

@@ -19,8 +19,12 @@
      balkonYakinlik(yon)      +1 yaklaş, −1 uzaklaş, 0 sıradaki kademe (Z; yakından genişe döner); genişe inince saha
      balkonBakisGeri()        oyuncu → grubu → saha; yer ve grup → saha. Değiştiyse true
      balkonBakisHedefi()      {nokta: Vector3, aci} — oda kamerasının balkondaki hedefi; takip edilen sahadan çıktıysa saha
-     balkonIsaret(x, y)       imlecin (−1…1) altındaki: geniş bakışta {tur:'grup', grup}; yakında {tur:'oyuncu', id, grup}; boş zeminde {tur:'yer', x, z}; yoksa null
+     balkonIsaret(x, y)       imlecin (−1…1) altındaki: geniş bakışta {tur:'grup', grup, fx, fz} (fx, fz: imlecin altındaki figürün yeri); yakında {tur:'oyuncu', id, grup};
+                              boş zeminde {tur:'yer', x, z}; yoksa null
      balkonTakipEkrani()      takip edilen oyuncunun başının karedeki yeri {x, y} (0–1) ya da null
+     balkonAktorEkrani(id)    RK1: o oyuncunun başının karedeki yeri {x, y} (0–1) ya da null (imleç etiketi ve sinyal kelimesi)
+     balkonGrupEkrani(grup)   RK1: grubun bakılan noktasının üstü {x, y} (0–1) ya da null
+     balkonIsaretEkrani(h)    RK1: imleç etiketinin yeri — oyuncunun ya da imlecin altındaki figürün başının üstü {x, y} (0–1) ya da null
      balkonGruplari()         sahadaki gruplar [{grup, ids}] (BLK_GRUP_SIRA; boş grup yok; teknik ekipte ids boş)
    Renkler ve ölçüler STIL.balkon'dadır. */
 const BLK=STIL.balkon;
@@ -251,7 +255,7 @@ function balkonIsaret(x,y){
     const d=Math.hypot((BLK_V.x-x)*asp,BLK_V.y-y),h=1.8/(u*tY);
     if(d<enD){en=a;enD=d;enH=h;}}
   const I=BLK.isaret;
-  if(en&&genis&&enD<Math.max(I.grup,1.5*enH))return{tur:'grup',grup:en.kume};
+  if(en&&genis&&enD<Math.max(I.grup,1.5*enH))return{tur:'grup',grup:en.kume,fx:en.x,fz:en.z};
   if(en&&!genis&&enD<Math.max(I.figur,0.6*enH))return en.id?{tur:'oyuncu',id:en.id,grup:en.kume}:{tur:'grup',grup:en.kume};
   BLK_ISIN.setFromCamera({x,y},K);BLK_ZEMIN.constant=-PY;
   if(!BLK_ISIN.ray.intersectPlane(BLK_ZEMIN,BLK_V))return null;
@@ -260,7 +264,24 @@ function balkonIsaret(x,y){
 }
 function balkonTakipEkrani(){
   const b=BALKON.bakis;if(b.tur!=='oyuncu')return null;
-  const a=blkTakipAktor(b.id);if(!a)return null;
-  const [CX,PY,CZ]=BLK.saha;BLK_V.set(CX+a.x,PY+2.15,CZ+a.z).project(ODA.kamera);
-  return BLK_V.z>1?null:{x:(BLK_V.x+1)/2,y:(1-BLK_V.y)/2};
+  return balkonAktorEkrani(b.id);
+}
+/* RK1: karedeki yer (0–1); kameranın arkasında ya da karenin dışındaysa null */
+function blkEkranda(x,y,z){const [CX,PY,CZ]=BLK.saha;BLK_V.set(CX+x,PY+y,CZ+z).project(ODA.kamera);
+  return BLK_V.z>1||Math.abs(BLK_V.x)>1.05||Math.abs(BLK_V.y)>1.05?null:{x:(BLK_V.x+1)/2,y:(1-BLK_V.y)/2};}
+function balkonAktorEkrani(id){const a=blkTakipAktor(id);return a?blkEkranda(a.x,2.15,a.z):null;}
+function balkonIsaretEkrani(h){
+  if(!h)return null;
+  if(h.tur==='oyuncu')return balkonAktorEkrani(h.id);
+  if(h.tur==='grup')return h.fx!==undefined?blkEkranda(h.fx,2.15,h.fz):balkonGrupEkrani(h.grup);
+  return null;
+}
+function balkonGrupEkrani(g){
+  const A=blkGrupAktorleri(g);if(!A.length)return null;
+  let x,z;
+  if(g==='kosu'){const a=A[Math.floor((A.length-1)/2)];x=a.x;z=a.z;}
+  else if(g==='ekip'){x=A[0].x;z=A[0].z;}
+  else if(BLK_GRUP_YER[g])[x,z]=BLK_GRUP_YER[g];
+  else{x=A.reduce((t,a)=>t+a.x,0)/A.length;z=A.reduce((t,a)=>t+a.z,0)/A.length;}
+  return blkEkranda(x,2.6,z);
 }
