@@ -85,7 +85,7 @@ BLK.bakis=[0,BLK_STAT.PY+1,BLK_STAT.CZ+6];
   function aktor(K,x,z){
     const m=player(K);m.root.rotation.order='YXZ';G.add(m.root);
     const g=new THREE.Mesh(golgeGeo,golgeM);g.rotation.x=-Math.PI/2;g.scale.set(1.3,0.75,1);G.add(g);
-    const a={m,g,x,z,yaw:0,faz:h2(BALKON.aktorler.length,3)*6,ev:{x,z}};BALKON.aktorler.push(a);return a;
+    const a={m,g,x,z,yaw:0,faz:h2(BALKON.aktorler.length,3)*6,ev:{x,z},renk:K.shirt||'#3a3a3a'};BALKON.aktorler.push(a);if(BALKON.uzak)blkUzakUygula(a);return a;
   }
   const KD=KADROLAR.demirkapi;
   /* R5: oyuncu figürleri kimlikle havuzdan (balkonDuzenKur); kaleci kaleci formasıyla, öbürleri antrenman formasıyla */
@@ -452,6 +452,17 @@ function balkonKare(dt){
   blkEkip(dt);
 }
 function balkonIskele(v){if(BALKON.iskele)BALKON.iskele.visible=!!v;}
+/* RK2 (2026-10-31; TEST): masadan pencerede uzak figürler iki üç pikseldir ve titremenin deseninde kıpırdar: masadayken forma renginde düz (gölgesiz)
+   siluet ve isteğe bağlı büyütme (STIL.oda.pencere.siluet, olcek). js/oda.js odaYerAyarla ve odaYuru çağırır */
+const BLK_SILUET=new Map();
+function blkSiluetMat(renk){let m=BLK_SILUET.get(renk);if(!m){m=new THREE.MeshBasicMaterial({color:new THREE.Color(renk).multiplyScalar(0.62),skinning:true,fog:false});BLK_SILUET.set(renk,m);}return m;}
+function blkUzakUygula(a){
+  const u=!!BALKON.uzak,M=a.m.mesh;
+  if(u){if(!a.matAsil)a.matAsil=M.material;M.material=blkSiluetMat(a.renk);}else if(a.matAsil)M.material=a.matAsil;
+  const k=u?STIL.oda.pencere.olcek||1:1,o=a.olcek||1;if(k!==o){a.m.root.scale.multiplyScalar(k/o);a.g.scale.multiplyScalar(k/o);a.olcek=k;}
+}
+function balkonUzak(acik){const v=!!acik&&!!STIL.oda.pencere.siluet;if(!!BALKON.uzak===v)return;BALKON.uzak=v;for(const a of BALKON.aktorler)blkUzakUygula(a);}
+if(typeof ODA!=='undefined'&&ODA.yer==='masa')balkonUzak(true);
 function balkonDurum(d){
   /* R5: düzen değişince (gün, kadro, program) figürler yeniden dağıtılır */
   if(d.duzen){const a=JSON.stringify([d.duzen.tur,d.duzen.kosu,d.duzen.rondo,d.duzen.sut,d.duzen.esneme,d.duzen.ayri,d.duzen.kaleciler,d.duzen.kenar]);

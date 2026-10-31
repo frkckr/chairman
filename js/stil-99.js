@@ -342,22 +342,32 @@ const STIL={
     gunIsigi:[[6,0.25,0xffc890],[9,0.62,0xfff0cf],[13,0.78,0xfffaf0],[17,0.6,0xffe0b0],[19.5,0.28,0xff9a5a],[22,0.1,0x6a78a8]],
     /* balkon kapısı (uzak duvarda, x0–x1 arası, h yüksekliğinde; tıklanır, üstünde levha) ve pencere boşluğu (pencere; balkon kuruluysa dışarı
        gerçekten görünür). kapiCam: kapının camı */
-    kapi:{x0:0.9,x1:1.75,h:2.1,renk:0xf4f1e8,cam:0xbfe0f2,kol:0xb89a4a},pencere:{x0:-2.2,x1:-0.3,y0:0.6,y1:2.245},levha:'#2a2c30',levhaYazi:'#f2ede2',
+    kapi:{x0:0.9,x1:1.75,h:2.1,renk:0xf4f1e8,cam:0xbfe0f2,kol:0xb89a4a},pencere:{x0:-2.2,x1:-0.3,y0:0.6,y1:2.245,
+      /* RK2 (2026-10-31; TEST, kullanıcı doğrulayınca ayarlanır): masadan pencerede antrenman figürleri iki üç piksel ve titremenin deseninde kıpırdıyor.
+         titremesiz: pencere dikdörtgeninde titreme titremeK ile çarpılır (0: yok); siluet: uzak figürler forma renginde düz (gölgesiz); olcek: büyütme (1: yok).
+         Ölçü (araclar/kare-farki.py): ikisi açıkken pencerede değişen piksel yalnız ~%7 azalıyor (değişimin çoğu figürlerin kendi hareketi), maske gökyüzünde
+         bant izi bırakıyor: varsayılan kapalı */
+      titremesiz:false,titremeK:0,siluet:false,olcek:1},levha:'#2a2c30',levhaYazi:'#f2ede2',
     /* yürüyüş (2.8D, 2.8R, N6): yol = ayakta göz hizasında yürüme noktaları (koltuğun yanından masanın ucuna, kapıya, balkon sandalyesinin yanına);
        noktalar köşeleri yuvarlatılmış bir eğriyle (Catmull-Rom) birleşir. adim: düzlükteki yürüme hızı (m/sn), dönüşte yavaşlama (viraj: 1 rad/m'lik
        dönüşte hız 1/(1+viraj) katına iner), hızlanma/yavaşlama ivmesi (m/sn²). Kalkış, oturma, adım ve el ayarları ortak STIL.yuruyus'tadır
        (N6, kullanıcı kararı 2026-10-04). TEST değerleri */
     yol:[[0.58,1.62,0.58],[1.42,1.62,0.18],[1.36,1.62,-2.7],[1.3,1.62,-4.15],[-0.3,1.62,-4.6]],
     adim:{hiz:1.6,viraj:0.2,ivme:1.3},
-    /* RN-b (2026-10-30, kullanıcı: “çok robotik”; seçenek A — kısa ve insani): evreler örtüşür, telefon ritüeli kısalır, bakış ilgi noktalarına gider,
-       görüş açısı yürürken sabittir. el: telefonu alma ve koyma süresi (sn) ve bakışın ele dönme payı (eskiden 0,85 sn ve %55; elin yolu STIL.yuruyus.el).
-       kalkBas: telefona uzanma başladıktan sonra kalkışın başladığı an (sn); kalk, otur: süreler (sn; eskiden 1,6 ve 2,2; biçimleri STIL.yuruyus).
-       ortusme: kalkışın sonuyla ilk adımın ve son adımlarla oturmanın üst üste bindiği süre (sn). koyPay: oturmanın hangi payında telefon bırakılmaya
-       başlar. aciYol: yürürken görüş açısı (°; oda 56, balkon 46 — açı farkı kalkışın ve oturmanın içinde kapanır). bakis: ilgi noktaları — önce kapı;
+    /* RN-b (2026-10-30, kullanıcı: “çok robotik”; seçenek A — kısa ve insani): evreler örtüşür, bakış ilgi noktalarına gider, görüş açısı yürürken
+       sabittir. RK2 (2026-10-31, kullanıcı: “telefonu masadan alma ve bırakma çok robotik, çok hızlı”; karar 69'un kısa ritüel parçasının yerine):
+       rituel — bak: başın telefona eğildiği süre (sn); alBas: uzanmanın bakın hangi payında başladığı; al: uzanma, kavrama ve kaldırma (sn); tut, kavra:
+       al içinde elin telefona vardığı pay ve kavrama payı; ekran, ekran2: telefona bakılan süre (gidişte, varışta); cep: cebe koyma; kalkOrtusme:
+       kalkışın cebe koymayla örtüşmesi; cikar: varışta cepten yüzün önüne; koy: masaya indirme ve bırakma (birak: bırakmanın koy içindeki payı); cek:
+       elin çekilmesi; koyOrtusme: varış ritüelinin oturmanın sonuyla örtüşmesi (sn); bakAgirlik, elBak, koyBak: bakışın telefona dönme payı (masadaki,
+       eldeki, varışta); ekranUzak, ekranAlt: telefonun yüzün önündeki yeri (gözden ileri ve aşağı, m). kalk, otur: süreler (sn; biçimleri STIL.yuruyus).
+       ortusme: kalkışın sonuyla ilk adımın ve son adımlarla oturmanın üst üste bindiği süre (sn). aciYol: yürürken görüş açısı (°; oda 56, balkon 46 — açı farkı kalkışın ve oturmanın içinde kapanır). bakis: ilgi noktaları — önce kapı;
        kapıya kapidanOnce metre kala kapıdan öteye (balkona giderken saha, odaya dönerken arka duvardaki pano), son sonOnce metrede oturulacak yerin bakışına
        geçer; her geçiş gecis metrede tamamlanır. esik: kapı eşiğinde hız sınırı (p merkez, r yarıçap m, v m/sn). adimOyna/adimDalga: adım boyunun yol
        boyunca oynaması (oran, dalga boyu m). TEST değerleri */
-    yuru:{el:{sure:0.55,bak:0.08},kalkBas:0.25,kalk:1.25,otur:1.5,ortusme:{kalkYuru:0.25,yuruOtur:0.4},koyPay:0.45,aciYol:51,
+    yuru:{rituel:{bak:0.4,alBas:0.5,al:0.9,tut:0.42,kavra:0.12,ekran:0.32,cep:0.32,kalkOrtusme:0.3,cikar:0.35,ekran2:0.2,koy:0.65,birak:0.7,cek:0.3,koyOrtusme:0.72,
+        bakAgirlik:0.55,elBak:0.75,koyBak:0.55,ekranUzak:0.4,ekranAlt:0.1},
+      kalk:1.25,otur:1.5,ortusme:{kalkYuru:0.25,yuruOtur:0.4},aciYol:51,
       bakis:{kapi:[1.325,1.4,-3.45],pano:[-0.7,1.7,2.3],kapidanOnce:1.6,sonOnce:1.6,gecis:1.4},esik:{p:[1.33,1.62,-3.45],r:0.45,v:1.05},adimOyna:0.04,adimDalga:3.7},
     /* arka duvar (2.8R): başkanın koltuğunun arkası (z). Masadan bakınca görünmez; kalkınca ve odaya dönerken görünür.
        koltuk: yüksek arkalıklı başkan koltuğu (deri, ayak); kalkarken geriye itilir (itme, m). pano: kulübün arması ve adı (ahşap çerçeve).

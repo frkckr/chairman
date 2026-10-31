@@ -1376,7 +1376,7 @@ async def bolum_15(tarayici, site, tum_hatalar):
     await pg.wait_for_timeout(150)
     y1 = await pg.evaluate("({ yer: ODA.yer, t: ODA.yol && ODA.yol.t, y: ODA.kamera.position.y, toplam: ODA.yol && ODA.yol.toplam })")
     denetle("Kapının üzerine gelince amber çerçeve ve 'Balkona çık' ipucu; tıklayınca yürüyüş başlıyor",
-            uzerinde[0] == "kapi" and uzerinde[1] and "Balkona" in uzerinde[2] and y1["yer"] == "yolda" and 6.5 < y1["toplam"] < 9.5, f"{uzerinde} · {y1}")
+            uzerinde[0] == "kapi" and uzerinde[1] and "Balkona" in uzerinde[2] and y1["yer"] == "yolda" and 6.5 < y1["toplam"] <= 10.5, f"{uzerinde} · {y1}")
     # RN-b: evreler örtüşen pencereler (ODA.yol.an): ayakta yürüyüş kalkışın bitişinden oturmanın başına dek
     ornek, A = [], await pg.evaluate("(() => { const a = ODA.yol.an; return { bas: a.kalk[1], son: a.otur[0], al: a.al[1] }; })()")
     for _ in range(160):
@@ -1406,10 +1406,31 @@ async def bolum_15(tarayici, site, tum_hatalar):
       R[hedef] = { ivme: +ivme.toFixed(2), sicrama: +sicrama.toFixed(3), adim: +Y.FZ[Y.FZ.length - 1].toFixed(1), kalk: Y.E.kalk, otur: Y.E.otur, toplam: +Y.toplam.toFixed(2),
         aciHiz: +aciHiz.toFixed(1), egim: +(Math.min(...yuru.map(r => r[2])) * 180 / Math.PI).toFixed(1), aci: +(Math.max(...yuru.map(r => r[3])) - Math.min(...yuru.map(r => r[3]))).toFixed(3) }; }
       return R; }""")
-    denetle("N6, RN-b: insan gibi hareket: gözün ivmesi ≤ 6 m/sn², kareler arası hız sıçraması ≤ 0,1 m/sn; kalkış ≥ 1 sn, oturma ≥ 1,2 sn; 8–12 adım; toplam 6,5–9,5 sn "
-            "(eskiden 12,3); bakışın açısal hızı ≤ 150°/sn; yürürken bakış yere değil (eğim ≥ −15°) ve görüş açısı sabit",
-            all(h["ivme"] <= 6 and h["sicrama"] <= 0.1 and h["kalk"] >= 1.0 and h["otur"] >= 1.2 and 8 <= h["adim"] <= 12 and 6.5 <= h["toplam"] <= 9.5
+    denetle("N6, RN-b, RK2: insan gibi hareket: gözün ivmesi ≤ 6 m/sn², kareler arası hız sıçraması ≤ 0,1 m/sn; kalkış ≥ 1 sn, oturma ≥ 1,2 sn; 8–12 adım; toplam 6,5–10,5 sn "
+            "(RK2 telefon ritüeliyle; RN-b'de ~8,5, eskiden 12,3); bakışın açısal hızı ≤ 150°/sn; yürürken bakış yere değil (eğim ≥ −15°) ve görüş açısı sabit",
+            all(h["ivme"] <= 6 and h["sicrama"] <= 0.1 and h["kalk"] >= 1.0 and h["otur"] >= 1.2 and 8 <= h["adim"] <= 12 and 6.5 <= h["toplam"] <= 10.5
                 and h["aciHiz"] <= 150 and h["egim"] >= -15 and h["aci"] <= 0.01 for h in hk.values()), str(hk))
+    # RK2: telefon ritüeli (saf adımlama; kamera ve bakış o anın değeri, el ve telefon odaElKare'yle): her uçta el 1,4–2,4 sn görünür, telefon elde
+    # ≥ 0,8 sn, kalkış cebe koyma başladıktan sonra, yürürken el ve telefon görünmez; ritüelin ortasında atlamak telefonu yerine koyar, eli gizler
+    rt = await pg.evaluate("""() => { const R = {}, sakla = ODA.yer;
+      for (const hedef of ['balkon', 'masa']) { const Y = odaYolKur(hedef), P = new THREE.Vector3(), B = new THREE.Vector3(), N = ODA.nesneler.telefon.g, yari = Y.toplam / 2;
+        let el = [0, 0], tel = 0, gizli = true; ODA.sahne.add(N);
+        for (let t = 0; t <= Y.toplam; t += 1 / 60) { Y.t = t; odaYolAni(Y, P, B); ODA.kamera.position.copy(P); ODA.bakis.copy(B); odaElKare(Y);
+          const h = ODA.el.g.visible, n = N.visible, elde = n && N.position.distanceTo(t < yari ? Y.telBas.p : Y.telSon.p) > 0.05;
+          if (h) el[t < yari ? 0 : 1] += 1 / 60; if (elde && t < yari) tel += 1 / 60;
+          if (t > Y.an.kalk[1] && t < Y.an.otur[0] && (h || n)) gizli = false; }
+        R[hedef] = { el: el.map(x => +x.toFixed(2)), tel: +tel.toFixed(2), kalkCep: Y.an.kalk[0] >= Y.an.cep[0] - 1e-6, gizli }; }
+      odaYerAyarla(sakla);
+      const atla = [];
+      for (let i = 0; i < 2; i++) { const y = ODA.yer === 'balkon' ? 'masa' : 'balkon'; odaYuru(y); ODA.yol.t = 0.9; odaKare(0); odaYuruAtla();
+        const T = odaTelefonYeri(y), w = new THREE.Vector3(); ODA.nesneler.telefon.g.getWorldPosition(w);
+        atla.push({ hedef: y, yer: ODA.yer, el: ODA.el.g.visible, tel: ODA.nesneler.telefon.g.visible, mesafe: +w.distanceTo(T.p).toFixed(3) }); }
+      R.atla = atla; return R; }""")
+    denetle("RK2: telefon ritüeli — her uçta el 1,4–2,4 sn görünür, telefon elde ≥ 0,8 sn, kalkış cebe koyma başladıktan sonra, yürürken el ve telefon görünmez; "
+            "ritüelin ortasında atlamak telefonu varılan yere koyar, eli gizler",
+            all(1.4 <= x <= 2.4 for h in ("balkon", "masa") for x in rt[h]["el"]) and all(rt[h]["tel"] >= 0.8 and rt[h]["kalkCep"] and rt[h]["gizli"] for h in ("balkon", "masa"))
+            and all(a["yer"] == a["hedef"] and not a["el"] and a["tel"] and a["mesafe"] < 0.02 for a in rt["atla"]), str(rt))
+    await pg.wait_for_timeout(600)   # atlamadan sonra kamera yerine otursun (sakin kamera denetimi aşağıda)
     b1 = await pg.evaluate("ODA.kamera.position.toArray().map(v => +v.toFixed(5)).join(',')")
     await pg.wait_for_timeout(1500)
     b2 = await pg.evaluate("ODA.kamera.position.toArray().map(v => +v.toFixed(5)).join(',')")
