@@ -24,7 +24,7 @@ Son güncelleme: 2026-10-31 (masaüstü: RB balkonda antrenmanı izlemek kapand�
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır: `git show tur/<ad>:YOL_HARITASI.md`).
 
-**Makine durumu: boşta (2026-10-31 gece; masaüstündeki oto mod paketi bitti).** Öbür makinede: “evdeyim / devam”da önce bu satır ve dalın son push zamanı okunur (CLAUDE.md “Makine durumu”).
+**Makine durumu: masaüstü çalışıyor (2026-11-01, oto mod paketi 2; dal `claude/rk7-fikstur`, sonra `claude/rk8-tv`; plan [araclar/plan/rk-program.md](araclar/plan/rk-program.md) §11, son dalda).** Öbür makinede: “evdeyim / devam”da önce bu satır ve dalın son push zamanı okunur (CLAUDE.md “Makine durumu”).
 
 **2026-10-31 gece — RK oto mod paketi bitti, `main`'e alınmadı.** RK1 balkon, RK2 telefon ritüeli, RK4-a yüzler ve oyuncu kartı, RK6 oda (giriş kapısı, ziyaret, TV); kararlar 72–75. Dallar zincirde: `claude/rk1-balkon` → `claude/rk2-telefon` → `claude/rk4a-yuz` → `claude/rk6-oda` (son dal hepsini taşır); etiketler `tur/rk1-balkon`, `tur/rk2-telefon`, `tur/rk4a-yuz`, `tur/rk6-oda`. Asıl devam notu, ölçüler, kullanıcıya bakılacaklar ve açık kalanlar son dalda: `git show origin/claude/rk6-oda:YOL_HARITASI.md`. Büyük kapı ve `main`'e alma kullanıcının sözüyle.
 
