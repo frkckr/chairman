@@ -72,3 +72,4 @@ Yakınlık açıları (46 / 20 / 9), geçiş hızı, bant en az ve en çok geni�
 - `kontrol.py`: geçti. `akis-2d.py`: geçti (`.screen>canvas#view` maçta da aynı ölçü). Not: bu makinede `python -I` kullanıcı paket klasörünü kapattığı için Playwright bulunamıyor; `akis-2d.py` `-I`'sız koşuldu.
 - `yuruyus-yakala.py`: RN ile aynı (her yön 8,49 sn, ivme ≤ 5,98 m/sn², yürürken açı değişimi 0°, bitiş balkon ve masa).
 - Motor ve kural dosyası değişmedi: sezon tabanları, oturum sonu ve hız ölçümü gerekmiyor; büyük kapıda `--ayni` ile koşulur.
+- **Büyük kapı (2026-10-31, RN ile birlikte):** `akis-deneme.py` tamamı geçti (yalnız bilinen B40); sezon t3 ve t7 18/18 birebir; `oturum-sonu --ayni --seyrek` 40/40 birebir, yeni kabul dışı 0. `main`'e alındı.
