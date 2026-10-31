@@ -613,7 +613,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(balkonVar){const p=typeof antrenmanPenceresi==='function'?antrenmanPenceresi(k,k.tarih):null,her=!!ayarlar.herSaat;
       const D=typeof antrenmanDuzeni==='function'?antrenmanDuzeni(k,k.tarih,her):null;
       if(D){D.oyuncular={};for(const id of [].concat(D.kosu,D.rondo,D.sut,D.esneme,D.ayri,D.kaleciler,D.kenar)){const q=k.oyuncular[id];
-        if(q)D.oyuncular[id]={ten:q.ten,sac:q.sac,sacRenk:q.sacRenk,boy:q.boy,yapi:q.yapi,krampon:q.krampon,biyik:q.biyik,sakal:q.sakal,no:q.no};}}
+        if(q)D.oyuncular[id]={ten:q.ten,sac:q.sac,sacRenk:q.sacRenk,boy:q.boy,yapi:q.yapi,krampon:q.krampon,biyik:q.biyik,sakal:q.sakal,no:q.no,
+          ad:q.ad,ayak:q.ayak,oz:Array.isArray(q.oz)?q.oz.slice():undefined};}}   /* RK1: ad (biçim karması), ayak (vuruşun ayağı), özellikler (koşu, şut, kalecilik); görüntü okur */
       balkonDurum({antrenman:!!D&&(her||!!p&&dk>=p.bas&&dk<p.bit),dakika:dk,duzen:D||undefined});}
     kap.dataset.yer=balkonVar?ODA.yer:'masa';   /* U6: balkonda yarım odak (CSS) */
     /* RK1: geniş pencerede balkonun bandı yalnız iş açıkken (js/sunum-durumu.js); yürürken ve iş yokken saha tam kare */
