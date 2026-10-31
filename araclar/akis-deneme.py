@@ -333,10 +333,14 @@ async def bolum_1(tarayici, site, tum_hatalar):
     msj = await pg.text_content(".od-mesaj")
     denetle("F1-b: geçersiz maç adresinde oda açılır, neden söylenir, adres temizlenir; kayıt değişmedi",
             "Maç günü açılamadı" in msj and "mac=" not in pg.url and await pg.evaluate(KAYIT_JS) == kayit0, msj)
-    # F1-c (2026-10-23): deplasman maçı. 13. haftanın maç günü elle iptal edilip 14. haftanınki kurulur ve oyuncu gibi İlerle ile maç gününe gelinir
-    # (F2'den beri sıradaki hafta sonuç komutuyla da kurulur: bölüm 19; burada maç oynamadan deplasman statı sınanır)
-    id14 = await pg.evaluate("""() => { let id = null; oyunKomut(k => { const is = Object.values(k.isler).find(x => x.veri.eylem === 'macGunu');
-      isIptal(k, is.id, 'deneme: 14. hafta'); id = k.fikstur.find(f => f.hafta === 14 && (f.ev === 'demirkapi' || f.konuk === 'demirkapi')).id; macGunuIsiKur(k, id); duragaIlerle(k); }); return id; }""")
+    # F1-c (2026-10-23): deplasman maçı. RK7: 13. hafta yapay 0–0 sonuçlarla biter (maç günü işi zamana göre sıradaki maçla eşlendiği için elle 14. haftaya
+    # kurulamaz), oyuncu gibi İlerle ile 14. haftanın maç gününe gelinir (F2'den beri sıradaki hafta sonuç komutuyla kurulur: bölüm 19)
+    id14 = await pg.evaluate("""() => { let id = null; const Z = {skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}};
+      oyunKomut(k => { const is = Object.values(k.isler).find(x => x.veri.eylem === 'macGunu'), m = is.veri.macId;
+        zamanIlerlet(k, anDakika(is.tarih, is.dakika) - simdikiAn(k)); ajandaIsiYap(k, is.id);
+        haftaSonuclariUygula(k, m, Z, macTohumu(7, m), {}, haftaninDigerMaclari(k, m).map(g => ({macId: g.id, sonuc: Z, tohum: macTohumu(7, g.id)})));
+        const j = Object.values(k.isler).find(x => x.veri.eylem === 'macGunu'); id = j.veri.macId;
+        for (let g = 0; g < 10 && !(k.tarih === j.tarih && k.gunIciDakika === j.dakika); g++) duragaIlerle(k); }); return id; }""")
     await pg.goto(pg.url.split("?")[0] + "?ekran=bulten&mac=" + id14)
     await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=60000)
     bul14 = await pg.text_content("#onEkran")

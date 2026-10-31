@@ -20,16 +20,22 @@ const CANLI_MEVKI_SIRA={KL:0,DEF:1,OS:2,FV:3};
 
 function canliVarsayilanHafta(k){
   if(!k||!k.sezon||!Array.isArray(k.fikstur)||!k.fikstur.length)return null;
-  const H=[...new Set(k.fikstur.map(f=>f.hafta))].sort((a,b)=>a-b),gun=h=>k.fikstur.find(f=>f.hafta===h).tarih;
-  for(const h of H){const t=gun(h);if(tarihKarsilastir(k.tarih,t)>=0&&tarihKarsilastir(k.tarih,tarihEkle(t,2))<=0)return h;}
+  /* RK7: haftanın ilk maç günü (Cuma–Pazartesi şablonu; ertelenen maçlar sayılmaz) ile son maç gününden iki gün sonrası arası o hafta */
+  const H=[...new Set(k.fikstur.map(f=>f.hafta))].sort((a,b)=>a-b),G=h=>k.fikstur.filter(f=>f.hafta===h&&!f.ertelendi).map(f=>f.tarih).sort(),
+    gun=h=>G(h)[0]||haftaTarihi(k.sezon,h),sonGun=h=>{const L=G(h);return L[L.length-1]||gun(h);};
+  for(const h of H){if(tarihKarsilastir(k.tarih,gun(h))>=0&&tarihKarsilastir(k.tarih,tarihEkle(sonGun(h),2))<=0)return h;}
   const s=H.find(h=>tarihKarsilastir(gun(h),k.tarih)>0);
   return s!==undefined?s:H[H.length-1];
 }
 function canliHafta(k,hafta){
   /* haftaSayisi sezonun son haftasının numarasıdır (13–30); eski Fikstür sekmesi ilk + haftaSayisi − 1'e kadar boş haftalara gidebiliyordu */
-  const S=k.sezon,ilk=S.ilkHafta,son=S.haftaSayisi,h=Math.max(ilk,Math.min(son,hafta|0||ilk)),F=haftaFiksturu(k,h);
-  return{hafta:h,ilk,son,tarih:F.length?F[0].f.tarih:null,
-    maclar:F.map(({f,s})=>({id:f.id,ev:f.ev,konuk:f.konuk,tarih:f.tarih,dakika:f.dakika,durum:s?(s.hukmen?'hukmen':'bitti'):'baslamadi',skor:s?s.skor.slice():null}))};
+  /* RK7: maçlar gün ve saate göre (tarih bekleyen ertelenmiş maç sonda); açıklandı: gün ve saati TFF programında; ertelendi: {neden, bekliyor} */
+  const S=k.sezon,ilk=S.ilkHafta,son=S.haftaSayisi,h=Math.max(ilk,Math.min(son,hafta|0||ilk)),sira=new Map(),acik=f=>typeof saatiAciklandi==='function'?saatiAciklandi(k,f):true;
+  const F=haftaFiksturu(k,h).map((x,i)=>(sira.set(x.f.id,i),x)).sort((a,b)=>(a.f.tarihBekliyor?1:0)-(b.f.tarihBekliyor?1:0)||anDakika(a.f.tarih,a.f.dakika)-anDakika(b.f.tarih,b.f.dakika)||sira.get(a.f.id)-sira.get(b.f.id));
+  const T=F.filter(x=>!x.f.tarihBekliyor);
+  return{hafta:h,ilk,son,tarih:T.length?T[0].f.tarih:F.length?F[0].f.tarih:null,
+    maclar:F.map(({f,s})=>Object.assign({id:f.id,ev:f.ev,konuk:f.konuk,tarih:f.tarih,dakika:f.dakika,durum:s?(s.hukmen?'hukmen':'bitti'):f.tarihBekliyor?'ertelendi':'baslamadi',skor:s?s.skor.slice():null,
+      aciklandi:acik(f)},f.ertelendi?{ertelendi:{neden:f.ertelendi.neden,bekliyor:!!f.tarihBekliyor,eskiTarih:f.ertelendi.tarih}}:{}))};
 }
 /* sezon sayaçları kadro dosyasıyla aynı okunur (js/kadro-dosyasi.js): maç ve dakika sayacı eski kayıtta yoksa null (“—”); kırmızı kart oyuncu
    kaydında tutulmaz, maç kayıtlarından sayılır */
@@ -58,6 +64,7 @@ function macSayfasi(k,macId,canli){
   const f=(k.fikstur||[]).find(x=>x.id===macId);if(!f)return null;
   const s=canli?canli.s:(k.maclar||{})[macId]||null,st=typeof kulupStatTarifi==='function'?kulupStatTarifi(k,f.ev):null;
   const R={id:f.id,hafta:f.hafta,tarih:f.tarih,dakika:f.dakika,ev:f.ev,konuk:f.konuk,stat:st?st.ad:null,canli:!!canli,
+    aciklandi:typeof saatiAciklandi==='function'?saatiAciklandi(k,f):true,ertelendi:f.ertelendi?{neden:f.ertelendi.neden,bekliyor:!!f.tarihBekliyor,eskiTarih:f.ertelendi.tarih,eskiDakika:f.ertelendi.dakika}:null,   /* RK7 */
     durum:canli?canli.durum||'canli':s?(s.hukmen?'hukmen':'bitti'):'baslamadi',skor:s?s.skor.slice():null,hukmen:s&&s.hukmen||null,
     iy:null,akis:[],satirlar:[],kadro:null,tablo:null,onizleme:null};
   const sonAn=anDakika(tarihEkle(f.tarih,1),0);

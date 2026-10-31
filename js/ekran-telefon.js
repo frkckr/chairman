@@ -288,12 +288,14 @@ function telHafta(k,T,L,M){
   const H=canliHafta(k,T.hafta||(L&&L.hafta)||canliVarsayilanHafta(k)),C=new Map();
   if(M&&L&&H.hafta===L.hafta)for(const x of [M].concat(M.digerleri||[]))C.set(x.id||x.macId,x);
   const ok=(n,et,yon)=>'<button type="button" class="tel-haftaOk" data-eylem="skorHafta" data-hafta="'+n+'" data-yon="'+yon+'" data-ilk="'+H.ilk+'" data-son="'+H.son+'" aria-label="'+et+'"'+(n<H.ilk||n>H.son?' disabled':'')+'>'+(yon==='geri'?'‹':'›')+'</button>';
+  /* RK7: gün başlıklarıyla (Cuma–Pazartesi; ertelenen maç yeni gününde); saati açıklanmamış haftada tek başlık, tarih bekleyen ertelenmişler sonda */
+  let bas=null;const baslik=m=>{const b=m.ertelendi&&m.ertelendi.bekliyor?'Ertelendi · yeni tarih açıklanacak':!m.aciklandi?'Program açıklanmadı':telGunAdi(m.tarih)+' '+gunAyYazi(m.tarih);
+    if(b===bas)return'';bas=b;return'<h5>'+yazT(b)+'</h5>';};
   return'<div class="tel-haftaNav">'+ok(H.hafta-1,'Önceki hafta','geri')+'<b>'+H.hafta+'. hafta</b>'+ok(H.hafta+1,'Sonraki hafta','ileri')+'</div>'+
-    (H.tarih?'<h5>'+yazT(telGunAdi(H.tarih)+' '+gunAyYazi(H.tarih))+'</h5>':'')+
-    H.maclar.map(m=>{const x=C.get(m.id);
-      const r=x?canliSatir(x):{evId:m.ev,depId:m.konuk,sol:m.durum==='baslamadi'?saatYazi(m.dakika):m.durum==='hukmen'?'Hük.':'Bitti',canli:false,ev:ad(m.ev),dep:ad(m.konuk),
-        orta:m.skor?m.skor[0]+' – '+m.skor[1]:'–',durum:m.durum==='baslamadi'?'başlamadı':m.durum==='hukmen'?'hükmen':'bitti'};
-      return telMacSatiri(Object.assign(r,{evArma:arma(r.evId),depArma:arma(r.depId)}),'data-eylem="csAc" data-tur="mac" data-id="'+yazT(m.id)+'"');}).join('');
+    H.maclar.map(m=>{const x=C.get(m.id),ert=m.ertelendi&&m.durum!=='bitti'&&m.durum!=='hukmen';
+      const r=x?canliSatir(x):{evId:m.ev,depId:m.konuk,sol:ert&&m.ertelendi.bekliyor?'Ert.':m.durum==='baslamadi'?(m.aciklandi?saatYazi(m.dakika):'—'):m.durum==='hukmen'?'Hük.':'Bitti',canli:false,ev:ad(m.ev),dep:ad(m.konuk),
+        orta:m.skor?m.skor[0]+' – '+m.skor[1]:'–',durum:ert&&m.ertelendi.bekliyor?'ertelendi':ert?'ertelendi, yeni tarihinde':m.durum==='baslamadi'?(m.aciklandi?'başlamadı':'saati açıklanmadı'):m.durum==='hukmen'?'hükmen':'bitti'};
+      return baslik(m)+telMacSatiri(Object.assign(r,{evArma:arma(r.evId),depArma:arma(r.depId)}),'data-eylem="csAc" data-tur="mac" data-id="'+yazT(m.id)+'"');}).join('');
 }
 /* iki ev sahibinin ortak lig gezintisi: T'yi değiştirir ve odaklanacak seçiciyi döndürür; eylem bunlardan değilse undefined.
    R3: sayfa yığını T.sayfalar (csAc açar; aynı sayfa üst üste açılmaz; en çok 12), csBolum bölüm seçer, csGeri bir geri; skorHafta hafta değiştirir */

@@ -61,11 +61,14 @@ function csKadro(k,K,kulupId){
 }
 function csMac(k,P,bolum){
   const ev=P.ev,ko=P.konuk,oyn=P.durum!=='baslamadi';
-  const durum=!oyn?'Başlama '+saatYazi(P.dakika):P.durum==='hukmen'?'Hükmen':P.canli&&P.durum!=='bitti'?(P.dk||'Canlı'):'Maç sonu';
+  /* RK7: ertelenen maç (yeni tarihi bekliyorsa “Ertelendi”), saati açıklanmamış maç */
+  const E=P.ertelendi,bekliyor=!oyn&&E&&E.bekliyor,NEDEN={kar:'kar',firtina:'fırtına',olaganustu:'olağanüstü olay'};
+  const durum=bekliyor?'Ertelendi':!oyn?(P.aciklandi===false?'Saati açıklanmadı':'Başlama '+saatYazi(P.dakika)):P.durum==='hukmen'?'Hükmen':P.canli&&P.durum!=='bitti'?(P.dk||'Canlı'):'Maç sonu';
+  const zaman=bekliyor?'ertelendi ('+(NEDEN[E.neden]||E.neden)+'), yeni tarih açıklanacak':P.aciklandi===false?csGun(P.tarih)+' haftası · saati açıklanmadı':csGun(P.tarih)+' '+saatYazi(P.dakika)+(E?' · ertelenmişti ('+(NEDEN[E.neden]||E.neden)+')':'');
   let h='<header class="cs-macBas">'+csKulupDug(k,ev,csArma(k,ev,'buyuk')+'<span>'+csYaz(csKulup(k,ev).ad)+'</span>','cs-takim')+
     '<div class="cs-skor"><b>'+(P.skor?P.skor.join(' – '):'–')+'</b>'+(P.iy?'<small>İY '+P.iy.join('–')+'</small>':'')+'<small'+(P.canli&&P.durum!=='bitti'?' class="cs-canli"':'')+'>'+csYaz(durum)+'</small></div>'+
     csKulupDug(k,ko,csArma(k,ko,'buyuk')+'<span>'+csYaz(csKulup(k,ko).ad)+'</span>','cs-takim')+'</header>'+
-    '<p class="cs-kunye">'+P.hafta+'. hafta · '+csYaz(csGun(P.tarih))+' '+saatYazi(P.dakika)+(P.stat?' · '+csYaz(P.stat):'')+'</p>';
+    '<p class="cs-kunye">'+P.hafta+'. hafta · '+csYaz(zaman)+(P.stat?' · '+csYaz(P.stat):'')+'</p>';
   const b=CS_BOLUM.mac.some(x=>x[0]===bolum)?bolum:'ozet';h+=csSekmeler('mac',b);
   if(b==='tablo')return h+csTablo(k,P.tablo,[ev,ko],k.sezon&&k.sezon.bolgeler);
   if(!oyn){

@@ -34,6 +34,14 @@ function zamanOzeti(k,once,r){
     else if(t==='gelisme'&&s.yazisma){const p=k.kisiler[s.yazisma.kisiId];ekle(g.tarih,g.dakika,(p?p.ad:'Biri')+(s.yazisma.cevapYok?': cevap gelmedi':' yazdı'),t);}
     else if(t==='gelisme'&&s.haber)ekle(g.tarih,g.dakika,'Beklediğin görüş geldi',t);
     else if((t==='gelisme'||t==='ekip')&&typeof s.bilgi==='string')ekle(g.tarih,g.dakika,s.bilgi,t);
+    /* RK7: öbür maçlar kendi saatinde, TFF programı, ertelemeler (js/lig-takvimi.js) */
+    else if(t==='ligMaci'&&!s.atlandi&&Array.isArray(s.skor)){const f=(k.fikstur||[]).find(x=>x.id===s.macId),kisa=id=>((k.kulupler||{})[id]||{}).kisa||id;
+      if(f)ekle(g.tarih,g.dakika,`${kisa(f.ev)} ${s.skor[0]}–${s.skor[1]} ${kisa(f.konuk)}`,t);}
+    else if(t==='program'&&Number.isInteger(s.hafta))ekle(g.tarih,g.dakika,`TFF ${s.hafta}. haftanın programını açıkladı`,t);
+    else if(t==='hava'&&Array.isArray(s.ertelenen)){if(s.metin)ekle(g.tarih,g.dakika,s.metin,t);   /* bizim maç ertelendiyse onun metni; öbürleri birer satır */
+      const biz=ligBizimKulup(k);
+      for(const id of s.ertelenen){const f=(k.fikstur||[]).find(x=>x.id===id),ad=x=>((k.kulupler||{})[x]||{ad:x}).ad;
+        if(f&&!(s.metin&&(f.ev===biz||f.konuk===biz)))ekle(g.tarih,g.dakika,`Ertelendi: ${ad(f.ev)} – ${ad(f.konuk)}`,t);}}
   }
   /* aradaki sabahların gazetesi: manşetiyle (o günün haberini erken gösterir) */
   if(typeof gazeteSayisi==='function')for(let a=Math.floor(bas/1440)*1440+ZAMAN_GAZETE_SAAT;a<=son;a+=1440){

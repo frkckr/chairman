@@ -32,7 +32,7 @@ const LIG_TAKVIM_TEST={
   ilkHaftaDakika:1140,               /* devralınan program: ilk haftanın bütün maçları Cumartesi bu saatte */
   onceden:3,                         /* program kaç hafta önceden açıklanır */
   program:{gun:-5,dakika:600},       /* açıklanan haftadan üç hafta önceki haftanın Cumartesisinden 5 gün önce (Pazartesi) 10:00 */
-  erteleme:{aylar:[12,1,2],olasilik:0.04,yamac:2,olaganustu:0.002,gun:-2,dakika:600,kar:0.6},   /* Perşembe 10:00 */
+  erteleme:{aylar:[12,1,2],olasilik:0.025,yamac:2,olaganustu:0.002,gun:-2,dakika:600,kar:0.6},   /* Perşembe 10:00 */
   yeniTarih:{enAz:2,enCok:5,gun:-3,dakika:1200,onceden:7},   /* Çarşamba 20:00; en az onceden gün sonrası */
   macSure:105
 };
@@ -160,9 +160,10 @@ IS_TURLERI.hava={gizli:true,
       if(!neden)continue;
       macErtele(k,f,neden);R.push(f.id);if(f.ev===biz||f.konuk===biz)bizim=true;
     }
-    if(bizim){macGunuEsle(k);const f=k.fikstur.find(x=>R.includes(x.id)&&(x.ev===biz||x.konuk===biz)),ad=id=>(k.kulupler[id]||{ad:id}).ad;
-      isEkle(k,{tur:'hatirlatma',tarih:k.tarih,dakika:k.gunIciDakika,veri:{metin:LIG_TAKVIM_METIN.bizimErteleme(ad(f.ev),ad(f.konuk),f.ertelendi.neden)}});}
-    return Object.assign({hafta:is.veri.hafta,ertelenen:R},bizim?{dur:true}:{});
+    /* bizim maç ertelendiyse İlerle durur; haber durağın özetinde (metin; ayrı hatırlatma işi durağın arkasında bekleyen iş olarak kalırdı) */
+    if(!bizim)return{hafta:is.veri.hafta,ertelenen:R};
+    macGunuEsle(k);const f=k.fikstur.find(x=>R.includes(x.id)&&(x.ev===biz||x.konuk===biz)),ad=id=>(k.kulupler[id]||{ad:id}).ad;
+    return{hafta:is.veri.hafta,ertelenen:R,dur:true,metin:LIG_TAKVIM_METIN.bizimErteleme(ad(f.ev),ad(f.konuk),f.ertelendi.neden)};
   }
 };
 IS_TURLERI.ligMaci={gizli:true,pay:LIG_TAKVIM_TEST.macSure,
@@ -185,6 +186,21 @@ const LIG_ERTELEME_NEDEN={kar:'kar',firtina:'fırtına',olaganustu:'olağanüst�
 const LIG_TAKVIM_METIN={
   bizimErteleme:(ev,konuk,n)=>`Maç ertelendi: ${ev} – ${konuk} (${LIG_ERTELEME_NEDEN[n]||n}). Yeni tarihi TFF'nin programı açıklayacak.`
 };
+/* gazete (js/gazete.js): haftanın programı (kutu), erteleme ve yeni tarih; önemler TEST */
+GAZETE_KAYNAKLARI.push({ad:'ligTakvimi',haberler:(k,P)=>{
+  const L=[],bizde=f=>!!f&&(f.ev===P.biz||f.konuk===P.biz),bul=id=>(k.fikstur||[]).find(f=>f.id===id);
+  for(const g of k.gecmis||[]){const an=anDakika(g.tarih,g.dakika);if(an<P.bas||an>=P.son)continue;
+    if(g.tur==='ligProgram')L.push({onem:30,an,anahtar:'gz.program',kutu:true,p:{hafta:g.hafta}});
+    else if(g.tur==='macErteleme')L.push({onem:bizde(bul(g.macId))?95:40,an,anahtar:'gz.erteleme',p:{macId:g.macId,neden:g.neden}});
+    else if(g.tur==='macYeniTarih')L.push({onem:bizde(bul(g.macId))?55:20,an,anahtar:'gz.yeniTarih',p:{macId:g.macId,tarih:g.yeniTarih,dakika:g.yeniDakika}});}
+  return L;}});
+const ligGzAd=(k,id)=>(k.kulupler[id]||{ad:id}).ad;
+Object.assign(MESELE_OLAYLARI,{
+  'gz.program':(k,p)=>{const F=(k.fikstur||[]).filter(f=>f.hafta===p.hafta&&!f.ertelendi).sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika));
+    return`TEST: TFF ${p.hafta}. haftanın programını açıkladı: `+F.map(f=>`${macGunAdi(f.tarih)} ${saatYazi(f.dakika)} ${ligGzAd(k,f.ev)} – ${ligGzAd(k,f.konuk)}`).join('; ')+'.';},
+  'gz.erteleme':(k,p)=>{const f=(k.fikstur||[]).find(x=>x.id===p.macId);return f?`TEST: ${ligGzAd(k,f.ev)} – ${ligGzAd(k,f.konuk)} maçı ${LIG_ERTELEME_NEDEN[p.neden]||p.neden} nedeniyle ertelendi.`:'TEST: bir maç ertelendi.';},
+  'gz.yeniTarih':(k,p)=>{const f=(k.fikstur||[]).find(x=>x.id===p.macId);return f?`TEST: Ertelenen ${ligGzAd(k,f.ev)} – ${ligGzAd(k,f.konuk)} maçı ${gunAyYazi(p.tarih)} ${macGunAdi(p.tarih)} ${typeof saatBulunma==='function'?saatBulunma(p.dakika):saatYazi(p.dakika)} oynanacak.`:'TEST: ertelenen maçın yeni tarihi açıklandı.';}
+});
 /* doğrulama: program haftası ve lig maçı işleri */
 function ligTakvimiDogrula(k,h){
   const S=k.sezon;if(!S||S.programAciklanan===undefined)return;

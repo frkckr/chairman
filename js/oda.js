@@ -462,7 +462,8 @@ function odaOdak(ad){ODA.odak=ad&&ODA.nesneler[ad]&&(ODA.yer==='masa'||(ODA.yer=
 /* U1 (2026-10-28): odak kabı açıkken oda bulanık perdenin arkasındadır; masada kamera yerine oturunca 3B çizim durur (js/arayuz.js), kapanınca sürer.
    Balkonda antrenman canlı kalır (yarım odak U6). odaNesneEkrani(ad): nesnenin karedeki yeri {x,y} (0–1), belirme geçişinin kökü */
 function odaPanel(a){ODA.panel=!!a;}
-function odaDondur(){return !!ODA.panel&&ODA.yer==='masa'&&!ODA.yol&&!!ODA.yerlesik&&!(ODA.ziyaret&&ODA.ziyaret.evre!=='oturuyor');}
+function odaDondur(){if(typeof ligHesapSuruyor==='function'&&ligHesapSuruyor())return true;   /* RK7: öbür maçlar hesaplanırken (örtü) çizim durur */
+  return !!ODA.panel&&ODA.yer==='masa'&&!ODA.yol&&!!ODA.yerlesik&&!(ODA.ziyaret&&ODA.ziyaret.evre!=='oturuyor');}
 function odaNesneEkrani(ad){
   const n=ODA.nesneler[ad];if(!n||!n.g.visible||ODA.yer==='yolda')return null;
   const v=n.merkez.clone().project(ODA.kamera);return{x:(v.x+1)/2,y:(1-v.y)/2};

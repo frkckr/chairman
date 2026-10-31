@@ -909,7 +909,21 @@ function odaEkraniKur(kap,oyun,ayarlar){
   }
   /* secim: kararın seçenek kimliği (tek karttan; kartEtkilesimKur), randevu ve maç gününde yok. Komut aynı tek komuttur (ajandaIsiYap); karar bir kez
      uygulanır (iş kapanır), yolda karar gerektiren haber gelirse iş yerinde bekler. git: maç gününde macaGit'e (H2-a TEST: {izle:false}) */
+  /* RK7: zamanı ilerleten komuttan önce o ana dek bitecek öbür maçlar arkada hesaplanır (js/lig-hesap.js; işçiler paralel); sürerken örtü sayıyı yazar,
+     başka komut başlamaz; komut sonra havuzdaki sonuçlarla uygulanır (hesap yoksa hemen) */
+  function ligOnce(komutF,sonra){
+    if(typeof ligMaclariniHazirla!=='function'||!komutF){sonra();return;}
+    let ortu=null;
+    ligMaclariniHazirla(k,komutF,(n,t)=>{if(!ortu||!ortu.isConnected){ortu=document.createElement('div');ortu.className='od-ligHesap';ortu.setAttribute('role','status');kap.appendChild(ortu);}
+        ortu.textContent='Öbür maçlar oynanıyor… '+n+'/'+t;},
+      ()=>{if(ortu)ortu.remove();sonra();});
+  }
   function isiYap(id,secim,git){
+    if(typeof ligHesapSuruyor==='function'&&ligHesapSuruyor())return;
+    let o=null;try{o=ajandaOnizle(k,id,secim);}catch(e){}
+    ligOnce(o&&o.is&&!o.engel.length?x=>ajandaIsiYap(x,id,secim):null,()=>isiYapAsil(id,secim,git));
+  }
+  function isiYapAsil(id,secim,git){
     const is=k.isler[id];if(!is)return;
     const baslik=is.veri.baslik,mac=is.veri.eylem==='macGunu',bas=saatYazi(is.dakika),saatsiz=!!is.veri.saatsiz,karar=!!is.veri.karar;
     /* F1-b: kariyerden açılan maçta maç günü işi odada uygulanmaz, kopyada denenir. Yolda karar gerektiren haber gelirse o ana dek ilerleme normal
@@ -954,6 +968,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       else if(g.isTuru==='ajanda'&&g.sonuc&&g.sonuc.durum==='kacirildi')p.push(g.sonuc.baslik+' kaçırıldı');
       else if(g.isTuru==='ajanda'&&g.sonuc&&g.sonuc.durum==='cevapsiz')p.push(g.sonuc.baslik+': cevapsız kaldı'+(g.sonuc.bilgi?' — '+g.sonuc.bilgi:''));
       else if(g.isTuru==='hatirlatma'&&g.sonuc)p.push(g.sonuc.metin);
+      else if(g.isTuru==='hava'&&g.sonuc&&g.sonuc.metin)p.push(g.sonuc.metin);   /* RK7: bizim maç ertelendi */
       else if((g.isTuru==='maliRapor'||g.isTuru==='ayBasi')&&g.sonuc&&g.sonuc.metin)p.push(g.sonuc.metin);   /* H2-d */
     }
     const y=r.neden==='karar'?kararYeri():null;
@@ -967,6 +982,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
     return r.neden==='karar'?kararMetni(y,'Telefon: karar gerektiren bir haber geldi.','Masada yeni dosya: karar bekleyen bir konu açıldı.','Yeni bir gelişme var; dosyada.'):r.neden==='haber'?(r.biten.some(g=>g.sonuc&&g.sonuc.yazisma)?'Cevap geldi; telefonda.':'Beklediğin görüş geldi; dosyada.'):r.neden==='sonCevap'?'Son cevap saati geldi; karar bekliyor. Cevap vermeden ilerlersen kartta yazan sonuç işler.':r.neden==='cevapsiz'?'Cevap vermediğin karar kartta yazan sonuçla kapandı.':r.neden==='randevu'?'Sıradaki randevuya gelindi.':r.neden==='cakisma'?'Günün işleri çakışıyor; ajandadan seçim yap.':'Bekleyen rutin işler işlendi.';
   }
   function ilerleEylem(){
+    if(typeof ligHesapSuruyor==='function'&&ligHesapSuruyor())return;
+    let o=null;try{o=ilerleOnizle(k);}catch(e){}
+    ligOnce(o&&!o.engel.length?x=>{if(gozlemVar&&x.gozlem)gozlemBitir(x);return duragaIlerle(x);}:null,ilerleAsil);
+  }
+  function ilerleAsil(){
     izleme=null;
     let r;
     const sayi0=izler().sayi,once={tarih:k.tarih,dakika:k.gunIciDakika};

@@ -287,6 +287,9 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 /* RK6: ziyaret — yarım odağın başında durum satırı; alt şeritte bırakılan kartı geri açan düğme */
 .od-zyDurum{margin:0 0 .5em;font-weight:600}
 .od-alt .od-zyDugme{white-space:nowrap}
+/* RK7: İlerle'den önce öbür maçların arkada hesabı (js/lig-hesap.js) */
+.od-ligHesap{position:absolute;left:50%;bottom:6.2em;transform:translateX(-50%);z-index:6;padding:.45em 1em;background:var(--k-zemin);border:1px solid var(--k-cizgi);
+  box-shadow:.2em .25em 0 var(--k-golge);font-weight:600;white-space:nowrap}
 .od-antrenman{position:absolute;left:.9em;top:7.9em;max-width:min(36%,22em);display:grid;gap:.1em;padding:.3em .65em .35em;background:var(--k-zemin);border:1px solid var(--k-cizgi);
   border-left:.3em solid var(--k-yesil);box-shadow:.2em .25em 0 var(--k-golge)}
 .od-antrenman p{margin:0}
@@ -496,6 +499,7 @@ html,body{margin:0}
 <script src="js/hareket-egrileri.js"></script>
 <script src="js/animasyon.js"></script>
 <script src="js/mac-arka.js"></script>
+<script src="js/lig-hesap.js"></script>
 <script src="js/mac-sahnesi.js"></script>
 <script src="js/pul.js"></script>
 <script src="js/kamera.js"></script>
