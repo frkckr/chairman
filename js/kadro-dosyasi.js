@@ -9,7 +9,7 @@
      OYUNCU_NOT_KAYNAKLARI          [{ad, kaynakAd, notlar(k, id) → [{tarih, dakika, anahtar, p, kaynak?}]}] (MESAJ_KAYNAKLARI kalıbı): antrenman
                                        (js/gozlem.js gozlemNotlari), maç (gol, kart, sakatlık; bizim maçta on birde olmayış) ve hocanın “Takım ne durumda?”
                                        cevabı (cevap anının görüntüsü). Metinler MESELE_OLAYLARI['not.*'] (TEST); hiçbir notta gizli değerin sayısı yoktur
-     oyuncuNotlari(k, id)           → [{tarih, dakika, kaynak, metin}] yeniden eskiye (eşitlikte kaynak, sonra kayıt sırası), en çok OYUNCU_NOT_EN_COK
+     oyuncuNotlari(k, id)           → [{tarih, dakika, kaynak, tur, metin}] (tur kaynağın adı: antrenman, mac, hoca, gorus; RK4-a) yeniden eskiye (eşitlikte kaynak, sonra kayıt sırası), en çok OYUNCU_NOT_EN_COK
      oyuncuDosyasi(k, id)           → {kunye, sezon, durum, sozlesme|null, notlar} ya da null */
 'use strict';
 const OYUNCU_NOT_EN_COK=30;
@@ -95,11 +95,11 @@ Object.assign(MESELE_OLAYLARI,{
 });
 function oyuncuNotlari(k,id){
   const L=[];let n=0;
-  OYUNCU_NOT_KAYNAKLARI.forEach((Q,qi)=>{for(const x of Q.notlar(k,id)||[])L.push({x,qi,n:n++,kaynak:x.kaynak||Q.kaynakAd});});
+  OYUNCU_NOT_KAYNAKLARI.forEach((Q,qi)=>{for(const x of Q.notlar(k,id)||[])L.push({x,qi,n:n++,kaynak:x.kaynak||Q.kaynakAd,tur:Q.ad});});
   L.sort((a,b)=>tarihKarsilastir(b.x.tarih,a.x.tarih)||(b.x.dakika|0)-(a.x.dakika|0)||a.qi-b.qi||a.n-b.n);
   const S=[];
   for(const o of L){if(S.length>=OYUNCU_NOT_EN_COK)break;const f=MESELE_OLAYLARI[o.x.anahtar];if(!f)continue;
-    S.push({tarih:o.x.tarih,dakika:o.x.dakika|0,kaynak:o.kaynak,metin:f(k,o.x.p||{})});}
+    S.push({tarih:o.x.tarih,dakika:o.x.dakika|0,kaynak:o.kaynak,tur:o.tur,metin:f(k,o.x.p||{})});}
   return S;
 }
 function oyuncuDosyasi(k,id){

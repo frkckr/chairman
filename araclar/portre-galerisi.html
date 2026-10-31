@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Oyuncu yüzleri</title>
+<!-- RK4-a (2026-10-31): oyuncu yüzlerinin galerisi (geliştirme aracı; oyun yüklemez). Oyunun kural dosyalarını, stil ve arma tarifini ve portre dosyasını
+     yükler (sıra araclar/dosya-gruplari.js OYUN_DOSYALARI'ndan üretildi; liste değişirse bu sayfa yeniden üretilir), tohum 7 kariyerini kurar, dört kulübün
+     ilk on altı oyuncusunu 3× gösterir. Görüntü: python -X utf8 araclar/kontrol.py araclar/portre-galerisi.html -->
+<style>body{margin:0;padding:16px;background:#f2ede2;font:14px/1.3 system-ui,sans-serif;color:#1d1a16}h1{font-size:18px;margin:0 0 8px}h2{font-size:14px;margin:14px 0 6px;letter-spacing:.06em;text-transform:uppercase;color:#6d6353}
+.izgara{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}.yuz{display:grid;justify-items:center;gap:3px}.yuz img{image-rendering:pixelated;border:1px solid #c9bfae;background:#fff}
+.yuz span{font-size:12px;text-align:center}.olcek{display:flex;gap:12px;align-items:end}</style></head><body>
+<h1>Oyuncu yüzleri (TEST, 24×24 piksel)</h1><div id="g"></div>
+<script src="../js/stil-99.js"></script>
+<script src="../js/ortak.js"></script>
+<script src="../js/stadyum-tarifleri.js"></script>
+<script src="../js/kadrolar.js"></script>
+<script src="../js/lig.js"></script>
+<script src="../js/kariyer.js"></script>
+<script src="../js/takvim.js"></script>
+<script src="../js/maliye.js"></script>
+<script src="../js/ajanda.js"></script>
+<script src="../js/mesele.js"></script>
+<script src="../js/yonetim.js"></script>
+<script src="../js/olay.js"></script>
+<script src="../js/soz.js"></script>
+<script src="../js/mesajlar.js"></script>
+<script src="../js/gozlem.js"></script>
+<script src="../js/adlar-test.js"></script>
+<script src="../js/kariyer-kadro.js"></script>
+<script src="../js/fikstur.js"></script>
+<script src="../js/hoca.js"></script>
+<script src="../js/mac-girdi.js"></script>
+<script src="../js/mac-sonuc.js"></script>
+<script src="../js/mac-okuma.js"></script>
+<script src="../js/lig-maclari.js"></script>
+<script src="../js/oyuncu-hafta.js"></script>
+<script src="../js/sozlesme.js"></script>
+<script src="../js/kulup-mali.js"></script>
+<script src="../js/sablon.js"></script>
+<script src="../js/pazarlik.js"></script>
+<script src="../js/transfer.js"></script>
+<script src="../js/icerik-p12.js"></script>
+<script src="../js/yazisma.js"></script>
+<script src="../js/mekan.js"></script>
+<script src="../js/piyasa.js"></script>
+<script src="../js/transfer-alim.js"></script>
+<script src="../js/sponsor.js"></script>
+<script src="../js/mali-rapor.js"></script>
+<script src="../js/kadro-dosyasi.js"></script>
+<script src="../js/canli-skor.js"></script>
+<script src="../js/gazete.js"></script>
+<script src="../js/zaman-ozeti.js"></script>
+<script src="../js/test-gorunum.js"></script>
+<script src="../js/kayit.js"></script>
+<script src="../js/baslangic.js"></script>
+<script src="../js/arma.js"></script>
+<script src="../js/portre.js"></script>
+<script>
+const k=kariyerBaslat({tohum:7}),g=document.getElementById('g');let h='';
+for(const kid of ['demirkapi','akdeniz','yildiztepe','karaova']){const K=k.kulupler[kid],O=(K.kadro?K.kadro.ilk11.concat(K.kadro.yedekler):[]).slice(0,16).map(id=>k.oyuncular[id]).filter(Boolean);
+  h+='<h2>'+K.ad+'</h2><div class="izgara">'+O.map(o=>'<div class="yuz">'+oyuncuPortreHtml(o,'',3)+'<span>'+(o.no||'')+' · '+o.ad+'<br>'+o.mevki+' · '+(2026-Number(String(o.dogumTarihi).slice(0,4)))+'</span></div>').join('')+'</div>';}
+const o=k.oyuncular[k.kulupler.demirkapi.kadro.ilk11[5]];
+h+='<h2>Ölçek (1×, 2×, 3×)</h2><div class="olcek">'+[1,2,3].map(n=>oyuncuPortreHtml(o,'',n)).join('')+'</div>';
+g.innerHTML=h;
+</script></body></html>

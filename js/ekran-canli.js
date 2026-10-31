@@ -105,11 +105,11 @@ function csKulupSayfa(k,P,bolum){
 }
 /* ---- oyuncu sayfası ---- */
 function csOyuncuSayfa(k,P){
-  let h='<header class="cs-oyuncuBas"><span class="cs-forma">'+P.no+'</span><div><h4>'+csYaz(P.ad)+'</h4><small>'+csYaz(P.mevki)+' · '+P.yas+' yaş'+(P.ayak&&CS_AYAK[P.ayak]?' · '+CS_AYAK[P.ayak]:'')+'</small>'+
-    csKulupDug(k,P.kulupId,csArma(k,P.kulupId,'kucuk')+'<span>'+csYaz(P.kulup)+'</span>','cs-oyuncuKulup')+'</div></header>';
-  h+='<p class="cs-durum">'+(P.durum==='sakat'?'Sakat':P.durum==='cezali'?'Cezalı':'Oynayabilir')+'</p>';
-  const S=P.sezon;
-  h+='<h5>Bu sezon</h5><dl class="cs-dl"><dt>Maç</dt><dd>'+(S.mac==null?'—':S.mac)+'</dd><dt>Dakika</dt><dd>'+(S.dk==null?'—':S.dk)+'</dd><dt>Gol</dt><dd>'+S.gol+'</dd><dt>Kart</dt><dd>'+S.sari+' sarı, '+S.kirmizi+' kırmızı</dd></dl>';
+  const kulup=csKulupDug(k,P.kulupId,csArma(k,P.kulupId,'kucuk')+'<span>'+csYaz(P.kulup)+'</span>','cs-oyuncuKulup');
+  /* RK4-a: başta ortak oyuncu kartı (kamu bağlamı: durum yalnız oynayabilir, sakat, cezalı; sözleşme, dönüş ve doğum yok); kart yoksa eski künye */
+  let h=typeof oyuncuKarti==='function'?oyuncuKarti(k,P.id,'kamu',{kulup}):
+    '<header class="cs-oyuncuBas"><span class="cs-forma">'+P.no+'</span><div><h4>'+csYaz(P.ad)+'</h4><small>'+csYaz(P.mevki)+' · '+P.yas+' yaş</small>'+kulup+'</div></header>'+
+    '<p class="cs-durum">'+(P.durum==='sakat'?'Sakat':P.durum==='cezali'?'Cezalı':'Oynayabilir')+'</p>';
   h+='<h5>Maçları <small>'+csIlkHafta(k)+'. haftadan beri</small></h5>'+(P.maclar.length?'<ul class="cs-maclar">'+P.maclar.slice().reverse().map(m=>'<li>'+csMacDug(m.id,'<span class="cs-hafta">'+m.hafta+'.</span><span class="cs-rakip">'+(m.yer==='d'?'@ ':'')+
     csArma(k,m.rakip,'kucuk')+' '+csYaz(csKulup(k,m.rakip).ad)+'</span><b>'+m.a+'–'+m.y+'</b><small>'+m.dk+' dk'+(m.gol?' · '+m.gol+' gol':'')+(m.kartlar.length?' · '+m.kartlar.map(r=>CS_KART[r]).join(', '):'')+'</small>')+'</li>').join('')+'</ul>'
     :'<p class="cs-yok">'+csIlkHafta(k)+'. haftadan beri oynadığı maç yok.</p>');

@@ -446,8 +446,10 @@ KADRO_JS = """(id) => { const s = OYUN.kariyer.maclar[id], K = [...document.quer
     bag: k.querySelectorAll('[data-eylem=csAc][data-tur=oyuncu]').length > 11 })); }"""
 OYUNCU_JS = """([id, macId]) => { const k = OYUN.kariyer, p = k.oyuncular[id], A = document.querySelector('.tlf-is .cs-sayfa[data-tur=oyuncu]'); if (!A) return { ad: false };
   const bu = [...A.querySelectorAll('.cs-maclar [data-eylem=csAc][data-tur=mac]')].find(b => b.dataset.id === macId), s = k.maclar[macId], gol = s.goller.filter(g => g.id === id && !g.kk).length;
-  return { ad: A.querySelector('h4').textContent === p.ad && A.querySelector('.cs-forma').textContent === String(p.no), kulup: !!A.querySelector('[data-eylem=csAc][data-tur=kulup][data-id=' + p.kulupId + ']'),
-    sezon: ['Maç', 'Dakika', 'Gol', 'Kart'].every(x => [...A.querySelectorAll('.cs-dl dt')].some(d => d.textContent === x)),
+  /* RK4-a: başta ortak oyuncu kartı (.ok-kart, kamu bağlamı): ad, forma, yüz; bu sezonun dört sayısı (kısaltmanın açıklaması ya da metni) */
+  return { ad: (A.querySelector('.ok-ad') || {}).textContent === p.ad && (A.querySelector('.ok-forma') || {}).textContent === String(p.no) && !!A.querySelector('.ok-kart[data-baglam=kamu] img.prt-oyuncu'),
+    kulup: !!A.querySelector('[data-eylem=csAc][data-tur=kulup][data-id=' + p.kulupId + ']'),
+    sezon: ['Maç', 'Dakika', 'Gol', 'Kart'].every(x => [...A.querySelectorAll('.ok-sezon dt')].some(d => (d.querySelector('abbr') ? d.querySelector('abbr').title : d.textContent) === x)),
     bu: !!bu && (gol === 0 || bu.textContent.includes(gol + ' gol')) && bu.textContent.includes(' dk'), saglik: A.textContent.includes('Sağlık geçmişi'),
     geri: (A.querySelector('.cs-geri') || {}).textContent || '' }; }"""
 TAKIM_JS = """([id, bol]) => { const k = OYUN.kariyer, A = document.querySelector('.tlf-is .cs-sayfa[data-tur=kulup]'); if (!A) return null; const t = A.textContent;
