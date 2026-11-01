@@ -143,6 +143,8 @@ Her madde tarihli bir özettir; ayrıntı bağlantıdaki belgededir. Daha eski k
 
 78. **2026-11-01 — RK-D Kasım düzeltmeleri (Kasım paketi, oto mod 6; kullanıcının 14 maddesinden sekizi; onay “Onayla, başla”; plan [araclar/plan/kasim-paketi.md](araclar/plan/kasim-paketi.md)).** Telefon ritüelinde ekran evresi yok ve kol omuzdan bağlı iki parça (kenardan girer, karede belirmez); tarih kutusu odada ve balkonda yok, tarih ve saat üst çubukta; balkonda künye yok (günün çalışması ve durum alt şeridin durum satırında, Gördüklerin alt şeritte); takip edilen oyuncuya tık ve çift tık dosyayı açar; telefonda “Mesaj yaz…” kutusu; transfer Geçmiş'te Kaçanlar yok (oyuncunun kâğıdında satır); TV 100'de maç sonucu ve kırmızı kart yok, 200 ve 300 tarihli gün başlıklarıyla. Ayrıntı STIL_REHBERI §6–§7, OYUN_TASARIMI §2, §10, §11; `tur/rkd-duzeltme`.
 
+79. **2026-11-01 — RK1-b balkonda fare (Kasım paketi; kullanıcının notu “mouse ile yakınlaşıp uzaklaşmalı, hareket ettirip izleyebilmeliyim”).** Sürükleme başı döndürür (tut ve çek, bakış sahada kalır), tekerlek imlecin altındaki noktaya kademesiz yaklaşır; izlemede yalnız açı; Z, Esc, oklar, tık ve çift tık aynen. Yalnız görüntü. Ayrıntı STIL_REHBERI §7; `tur/rk1b-fare`.
+
 ## Çalışma biçimi
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz. Planlanmış olmak tamamlanmış olmak değildir; yalnız uygulanıp doğrulanan işler işaretlenir.
