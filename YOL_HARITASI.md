@@ -149,6 +149,8 @@ Her madde tarihli bir özettir; ayrıntı bağlantıdaki belgededir. Daha eski k
 
 81. **2026-11-01 — RK3 arayüz dili taslakları (Kasım paketi; kod değişmedi; seçim kullanıcıda).** İki dil × dört ekran (mali rapor, oyuncu kartı, transfer, gün başı kâğıdı) ve 16 piksellik simge seti: v1 “Kırtasiye” (bugünkü yönün temiz hâli), v2 “Kulüp evrakı 1999” (antetli kâğıt, resmî yazı, sicil fişi, mantar pano, teleks, sarı not); ortak kurallar tek krom çubuk, kâğıt öne, ana eylem kâğıdın alt kenarında, rapor dili (üç rakam, 90 günün seyri, zebralı tablo), gövde 16 px ve kontrast ≥ 4,5:1. Önerilen karışım: iskelet ve yoğun ekranlar v1, belge niteliğindeki kâğıtlar v2. Taslaklar ve dil kuralları `araclar/taslak/rk/` (`DIL.md`, `png/`); kullanıcı ekran başına seçince RK5 giydirir; `tur/rk3-taslak`.
 
+82. **2026-11-01 — R6b-1' transfer bilgi akışı (Kasım paketi; kullanıcının notları “oyuncu arama olsun, klavye ile”, “piyasa ekranı saçma … gerçek hayata göre araştır”; soru 9 varsayılanla).** Piyasa ve Takip kalktı: Pano · Liste · Ara · Geçmiş. Ara kamu künyesinde (yaş, kulüp, boy, sözleşme bitişi) klavyeyle ve süzgeçlerle; Pano'da menajerlerin Pazartesi önerileri (TEST üç menajer, kayda yazılmaz, geçmişten kurulur), satırdan kısa listeye (kaynak menajer); Liste mevkiye göre. Menajeri telefonla aramak, ihtiyaç ilanı ve Canlı Skor'da arama sonraki adım. Ayrıntı OYUN_TASARIMI §2, STIL_REHBERI §7; `tur/r6b1-transfer`.
+
 ## Çalışma biçimi
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz. Planlanmış olmak tamamlanmış olmak değildir; yalnız uygulanıp doğrulanan işler işaretlenir.

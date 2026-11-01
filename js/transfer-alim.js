@@ -516,7 +516,7 @@ SABLONLAR.transferAlim.sonucMetni={imza:'İmzalandı',reddedildi:'İstek reddedi
    transferMasasi(k) → {donem, kasa, dosyalar, teklifler, takip, piyasa, gecmis}
      donem: {acik, bas, bitis, kalanGun, sonGun} (açık dönem ya da sıradaki; yoksa null)
      dosyalar: açık transfer dosyaları {id, baslik, satir, oyuncuId, karar, kaynak}; teklifler: cevap bekleyen gelen teklifler {isId, meseleId, oyuncuId, alici, bedel}
-     takip: {oyuncuId, tarih, kaynak, kanaat|null, dosya|null}; piyasa: piyasaListesi'nin kimlikleri; gecmis: {gelen, giden, kacan} (yeniden eskiye)
+     oneriler: menajerMenuleri (R6b-1'); takip: {oyuncuId, tarih, kaynak, kanaat|null, dosya|null}; piyasa: piyasaListesi'nin kimlikleri; gecmis: {gelen, giden, kacan} (yeniden eskiye)
    transferOyuncu(k, id) → masadaki oyuncu kâğıdı: kimlik (Canlı Skor oyuncu sayfası), bildiklerimiz (kaynaklı satırlar), takipte, dosya, engeller */
 function transferMasasi(k){
   const biz=bizimKulup(k),T=k.transfer||{takip:[],izlenen:[]},D=(k.sezon&&k.sezon.transfer)||[];
@@ -532,7 +532,7 @@ function transferMasasi(k){
   for(let i=G.length-1;i>=0;i--){const g=G[i];if(g.yeni===biz)gelen.push({oyuncuId:g.oyuncuId,tarih:g.tarih,eski:g.eski||null,bedel:g.bedel||0});
     else if(g.eski===biz)giden.push({oyuncuId:g.oyuncuId,tarih:g.tarih,yeni:g.yeni||null,bedel:g.bedel||0});}
   const kacan=taKacanlar(k);
-  return{donem,kasa:k.kulupler[biz].nakit,dosyalar,teklifler,takip,piyasa:{serbest:ids(P.serbest),satilik:ids(P.satilik),bitiyor:ids(P.bitiyor)},gecmis:{gelen,giden,kacan}};
+  return{oneriler:menajerMenuleri(k),donem,kasa:k.kulupler[biz].nakit,dosyalar,teklifler,takip,piyasa:{serbest:ids(P.serbest),satilik:ids(P.satilik),bitiyor:ids(P.bitiyor)},gecmis:{gelen,giden,kacan}};
 }
 /* kaçırdığımız oyuncular: kayıpla kapanan alım dosyaları (yeniden eskiye). RK-D'den beri Geçmiş'te bölüm değil, oyuncunun kâğıdında bir satır */
 const TA_KACAN=['rakibe','kopma','anlasamama','istek','kacti','saglik'];

@@ -315,9 +315,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* S-e (2026-10-27): günlük gazete (js/gazete.js gazeteSayisi): künye, manşet, haberler, kutular ve sayılar arasında gezinti ([ ve ]); altta masadaki
      not (teşekkür kartı) ve eski kayıtların haber kayıtları. gazeteGun: açık sayının tarihi (null: son sayı) */
   let gazeteGun=null;
-  /* R4-k: Transfer masası (js/ekran-transfer.js; okuma transferMasasi). tmBolum: Pano, Takip, Piyasa, Geçmiş; tmOyuncu: açık oyuncu kâğıdı */
-  let tmBolum='pano',tmOyuncu=null;
-  const transferPaneli=()=>typeof transferMasasiGorunumu==='function'?transferMasasiGorunumu(k,{bolum:tmBolum,oyuncu:tmOyuncu},{yaz,tarihYazi:gunAyYazi,paraYazi:tlYazi}):'';
+  /* R4-k: Transfer masası (js/ekran-transfer.js; okuma transferMasasi). tmBolum: Pano, Liste, Ara, Geçmiş (R6b-1'); tmOyuncu: açık oyuncu kâğıdı;
+     tmAra: Ara'nın metni ve süzgeçleri (görüntü durumu; kayda girmez) */
+  let tmBolum='pano',tmOyuncu=null;const tmAra={};
+  const tmY=()=>({yaz,tarihYazi:gunAyYazi,paraYazi:tlYazi});
+  const transferPaneli=()=>typeof transferMasasiGorunumu==='function'?transferMasasiGorunumu(k,{bolum:tmBolum,oyuncu:tmOyuncu,ara:tmAra},tmY()):'';
   const transferKarar=()=>typeof transferMasasi==='function'?transferMasasi(k).dosyalar.filter(x=>x.karar).length:0;
   const gazeteGosterilen=()=>{const son=izler().sayi;return son?(gazeteGun&&gazeteGun<son?gazeteGun:son):null;};
   /* inceleme: sayı değişince odak aynı yöndeki gezinti düğmesinde kalır; uca gelindiyse öbürüne geçer */
@@ -1125,8 +1127,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
     /* R4-k: Transfer masası — bölüm ve oyuncu kâğıdı okumadır; takip menüdür (zaman almaz), araştırma ve izleme iş verir */
     else if(ey==='tmBolum'){tmBolum=b.dataset.bolum;tmOyuncu=null;ciz('.tm-sekmeler [data-bolum="'+tmBolum+'"]');}
     else if(ey==='tmOyuncu'){tmOyuncu=b.dataset.oyuncu;ciz('.tm-eylemler button:not([disabled])');}
-    else if(ey==='tmTakip'||ey==='tmTakipBirak'){const o=b.dataset.oyuncu;try{komut(x=>ey==='tmTakip'?takibeAl(x,o,'baskan'):takiptenCikar(x,o));
-      mesaj=(k.oyuncular[o]||{ad:''}).ad+(ey==='tmTakip'?' takip listesinde.':' takip listesinden çıktı.');ciz('[data-eylem="'+(ey==='tmTakip'?'tmTakipBirak':'tmTakip')+'"]');}catch(x){hataGoster(x);}}
+    else if(ey==='tmTakip'||ey==='tmTakipBirak'){const o=b.dataset.oyuncu,kay=b.dataset.kaynak||'baskan';try{komut(x=>ey==='tmTakip'?takibeAl(x,o,kay):takiptenCikar(x,o));
+      mesaj=(k.oyuncular[o]||{ad:''}).ad+(ey==='tmTakip'?' kısa listede.':' kısa listeden çıktı.');ciz(b.classList.contains('tm-al')?'.tm-sekmeler [data-bolum="pano"]':'[data-eylem="'+(ey==='tmTakip'?'tmTakipBirak':'tmTakip')+'"]');}catch(x){hataGoster(x);}}
+    /* R6b-1': Ara'nın süzgeci (aynı çipe yeniden basmak kaldırır) */
+    else if(ey==='tmCip'){const a=b.dataset.cip,v=b.dataset.deger;tmAra[a]=tmAra[a]===v?undefined:v;ciz('[data-eylem="tmCip"][data-cip="'+a+'"][data-deger="'+v+'"]');}
     else if(ey==='tmArastirt'){const o=b.dataset.oyuncu;try{komut(x=>transferArastirt(x,o));olcuSay('is');mesaj='Hoca '+(k.oyuncular[o]||{ad:''}).ad+' için araştırmaya başladı; görüşünü birkaç gün içinde yazar.';ciz('[data-eylem="tmIzle"]');}catch(x){hataGoster(x);}}
     else if(ey==='tmIzle'){const o=b.dataset.oyuncu;try{const a=komut(x=>izlemeyeGit(x,o));olcuSay('is');mesaj=(k.oyuncular[o]||{ad:''}).ad+' izlemesi defterde: '+gunAyYazi(a.tarih)+' '+saatYazi(a.dakika)+'.';ciz('[data-eylem="tmTakip"],[data-eylem="tmTakipBirak"]');}catch(x){hataGoster(x);}}
     else if(ey==='kayitDisa'){kayitDisaAktar();ciz('[data-eylem="kayitDisa"]');}
@@ -1185,6 +1189,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
   const kareNoktasi=e=>{const c=document.getElementById('view'),r=(c||kap).getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
     return x<0||x>1||y<0||y>1?null:{x:x*2-1,y:-(y*2-1)};};
   kap.addEventListener('change',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('od-iceDosya'))kayitDosyasiSecildi(e.target);});
+  /* R6b-1': Ara'da her tuşta yalnız sonuç bölümü yenilenir (girdi odağını ve imleci kaybetmez) */
+  kap.addEventListener('input',e=>{
+    if(!(e.target&&e.target.classList&&e.target.classList.contains('tm-araGirdi')))return;
+    tmAra.metin=e.target.value;const s=kap.querySelector('.tm-araSonuc');if(s&&typeof transferAraSonucu==='function')s.innerHTML=transferAraSonucu(k,tmAra,tmY());
+  });
   /* RK1-b (2026-11-01, kullanıcı: “mouse'la istediğim bölgeye yakınlaşıp uzaklaşmalı ve hareket ettirip istediğim bölgeyi izleyebilmeliyim”): balkonda
      sahayı sürüklemek başı döndürür (eşikten sonra; bırakınca bakış yumuşak durur, tıklama sayılmaz), tekerlek imlecin altındaki noktaya kademesiz
      yaklaşır. Yalnız görüntü */
@@ -1235,7 +1244,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   },{passive:false});
   addEventListener('keydown',e=>{
     if(kap.hidden||oyun.bozukHata||e.ctrlKey||e.altKey||e.metaKey)return;
-    const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;
+    const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'){if(e.code!=='Escape')return;e.target.blur();}   /* R6b-1': Esc arama kutusundan da geri */
     const ad={Digit1:'telefon',Digit2:'ajanda',Digit3:'dosya',Digit4:'gazete',Digit6:'transfer',Digit7:'tv'}[e.code];   /* RK8-a: 7 TV */
     if(ad){e.preventDefault();if(acik===ad)kapat();else panelAc(ad);}
     else if(e.code==='Digit5'&&balkonVar){e.preventDefault();if(!duraklatmaVar())yerDegistir();}

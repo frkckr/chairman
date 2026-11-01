@@ -2384,6 +2384,34 @@ bolum('RK8-a — haber akışı ve takip: TV\'nin bugünü, takip haberleri ve r
     `${metin(bek.skor)} · ${c1.maclar[f.id]&&metin(c1.maclar[f.id].skor)}`);
 }
 
+bolum('R6b-1\' — transfer bilgi akışı: kamu künyesinde arama, menajer önerileri, kısa liste (js/piyasa.js)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),dog=T('kariyerDogrula'),metin=x=>JSON.stringify(x),biz='demirkapi';
+  let k=T('kariyerBaslat')({tohum:7});
+  const ara=s=>T('oyuncuAra')(k,s);
+  const tum=ara({}),bizde=tum.liste.some(id=>k.oyuncular[id].kulupId===biz);
+  const serbest=ara({serbest:true}),def=ara({mevki:'DEF',yasEnCok:23});
+  const ilk=Object.values(k.oyuncular).find(p=>p.kulupId&&p.kulupId!==biz),onEk=ilk.ad.slice(0,3),adla=ara({metin:onEk.toLocaleLowerCase('tr-TR')});
+  denetle('Arama: bizim oyuncularımız yok; en çok 20; serbest süzgeci yalnız kulüpsüzler (24); mevki ve yaş süzgeci tutar; ad başı eşleşme önde, büyük–küçük harf fark etmez',
+    !bizde&&tum.liste.length===20&&tum.toplam>300&&serbest.toplam===24&&serbest.liste.every(id=>k.oyuncular[id].kulupId===null)
+    &&def.liste.every(id=>k.oyuncular[id].mevki==='DEF'&&T('oyuncuYasi')(k.oyuncular[id],k.tarih)<=23)&&adla.toplam>0&&k.oyuncular[adla.liste[0]].ad.toLocaleLowerCase('tr-TR').startsWith(onEk.toLocaleLowerCase('tr-TR')),
+    `${tum.toplam} · serbest ${serbest.toplam} · DEF≤23 ${def.toplam} · “${onEk}” ${adla.toplam}`);
+  const boy=ara({boyEnAz:185}),bitiyor=ara({bitiyor:true});
+  denetle('Arama: boy süzgeci (cm) ve sözleşmesi bitenler (kamu bilgisi) tutar; arama saf (kariyer değişmez)',
+    boy.liste.every(id=>T('boyCm')(k.oyuncular[id])>=185)&&bitiyor.liste.every(id=>T('sozlesmeBitiyor')(k,k.oyuncular[id]))&&!dog(k).length,`boy ${boy.toplam} · biten ${bitiyor.toplam}`);
+  /* menajer önerileri: dönem dışında üç haftada bir, dönem içinde her Pazartesi; belirlenimci; bizim oyuncu yok */
+  const M0=T('menajerMenuleri')(k);
+  const kk=Object.assign({},k,{tarih:'2027-01-12',gunIciDakika:720});   /* saf okuma: kariyerin tarihi Ocak ortası (transfer dönemi) */
+  const M1=T('menajerMenuleri')(kk),M2=T('menajerMenuleri')(JSON.parse(JSON.stringify(kk)));
+  const hepsi=M1.flatMap(m=>m.oyuncular),pzt=M1.every(m=>new Date(m.tarih+'T00:00:00Z').getUTCDay()===1);
+  denetle('Menajer önerileri: transfer döneminde (Ocak) her Pazartesi 10:00, son üç hafta, en yeni önce; 3–5 oyuncu, bizim oyuncu yok; kaydet–yükle aynı; masada Pano\'da',
+    M1.length>=2&&pzt&&M1.every((m,i)=>!i||m.tarih<M1[i-1].tarih)&&M1.every(m=>m.oyuncular.length>=3&&m.oyuncular.length<=5)&&hepsi.every(x=>kk.oyuncular[x.oyuncuId].kulupId!==biz)
+    &&metin(M1)===metin(M2)&&metin(T('transferMasasi')(kk).oneriler)===metin(M1),`${M0.length} → ${M1.length} öneri · ${M1.map(m=>m.tarih+' '+m.menajer+' '+m.oyuncular.length).join(', ')}`);
+  const o=hepsi[0].oyuncuId;k=KK(k,x=>T('takibeAl')(x,o,'menajer')).kariyer;
+  const L=T('transferMasasi')(k).takip.find(x=>x.oyuncuId===o);
+  denetle('Kısa liste: menajer önerisinden listeye alınan oyuncu kaynağıyla (menajer); kariyer geçerli',!!L&&L.kaynak==='menajer'&&!dog(k).length,L&&L.kaynak);
+}
+
 denetle('Örnek kariyer bütün denemelerden sonra da değişmedi',metin(ORNEK)===ornekMetni);
 console.log(basarisiz?`\n! ${basarisiz} denetim başarısız`:'\nBütün denetimler geçti.');
 process.exit(basarisiz?1:0);

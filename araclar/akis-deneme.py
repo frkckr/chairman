@@ -3601,36 +3601,46 @@ async def bolum_32(tarayici, site, tum_hatalar):
     await pg.keyboard.press("Digit6")
     t = await pg.evaluate(TM_JS)
     o = await odak(pg)
-    denetle("R4-k: masada Transfer (6) odak kabında (geniş, başlık Transfer); Pano · Takip · Piyasa · Geçmiş; dönem kapalıyken açılışa kalan gün ve tarih; kasa; açık iş yok",
+    denetle("R4-k, R6b-1': masada Transfer (6) odak kabında (geniş, başlık Transfer); Pano · Liste · Ara · Geçmiş; dönem kapalıyken açılışa kalan gün ve tarih; kasa; açık iş yok; menajer önerileri bölümü",
             "transfer" in nesne and o["ad"] == "transfer" and o["boy"] == "genis" and o["baslik"] == "Transfer" and bool(t) and t["bolum"] == "pano"
-            and t["sekme"] == "pano*,takip,piyasa,gecmis" and "açılışa" in t["donem"] and "4 Ocak" in t["donem"] and not t["sonGun"] and "Kasa" in t["metin"] and t["dosya"] == 0,
+            and t["sekme"] == "pano*,liste,ara,gecmis" and "açılışa" in t["donem"] and "4 Ocak" in t["donem"] and not t["sonGun"] and "Kasa" in t["metin"] and t["dosya"] == 0
+            and ("menajer" in t["metin"] or "Menajerlerin önerileri" in t["metin"]),
             f"{nesne} · {o.get('ad')} · {t and t['donem']}")
     await pg.screenshot(path=str(ARAC / "son-akis-32-pano.png"))
-    await pg.click('.tm-sekmeler [data-bolum="piyasa"]')
+    await pg.click('.tm-sekmeler [data-bolum="ara"]')
+    t0 = await pg.evaluate(TM_JS)
+    await pg.click('[data-eylem="tmCip"][data-deger="serbest"]')
     t = await pg.evaluate(TM_JS)
-    denetle("R4-k Piyasa: serbestler (ne zamandır boşta, eski yıldız), forma bulamayanlar, sözleşmesi bitecekler; maaş, yetenek ve puan yazmaz",
-            t["bolum"] == "piyasa" and t["oyuncu"] >= 24 and "boşta" in t["metin"] and "Eski yıldız" in t["metin"] and "Sözleşmesi bitecekler" in t["metin"]
-            and not re.search(r"maaş|yetenek|puan", t["metin"], re.I), str(t["oyuncu"]))
-    await pg.screenshot(path=str(ARAC / "son-akis-32-piyasa.png"))
+    denetle("R6b-1' Ara: boşken ipucu; Serbestler süzgeci 24 serbest oyuncunun ilk 20'si (kamu bilgisi: yaş, kulüp, boy); maaş, yetenek ve puan yazmaz",
+            t0["bolum"] == "ara" and t0["oyuncu"] == 0 and "süzgeç" in t0["metin"] and t["bolum"] == "ara" and t["oyuncu"] == 20 and "24 oyuncu" in t["metin"] and "serbest" in t["metin"]
+            and not re.search(r"maaş|yetenek|puan", t["metin"], re.I), f"{t0['oyuncu']} → {t['oyuncu']}")
+    ad0 = await pg.evaluate("() => document.querySelector('#oda .tm-oyuncu b').textContent")
+    await pg.click(".tm-araGirdi")
+    await pg.keyboard.type(ad0[:3])
+    t2 = await pg.evaluate("() => ({ odak: document.activeElement && document.activeElement.classList.contains('tm-araGirdi'), deger: document.querySelector('#oda .tm-araGirdi').value, "
+                           "adlar: [...document.querySelectorAll('#oda .tm-araSonuc .tm-oyuncu b')].map(b => b.textContent) })")
+    denetle("R6b-1' Ara: klavyeyle yazınca sonuç yerinde yenilenir, girdi odağı kaybolmaz; ad başı eşleşen önde (rakam tuşu panel açmaz)",
+            t2["odak"] and t2["deger"] == ad0[:3] and len(t2["adlar"]) >= 1 and t2["adlar"][0].lower().startswith(ad0[:3].lower()), str(t2)[:200])
+    await pg.screenshot(path=str(ARAC / "son-akis-32-ara.png"))
     ilk = await pg.get_attribute(".tm-oyuncu", "data-oyuncu")
     an0 = await pg.evaluate("() => OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika")
     await pg.click(".tm-oyuncu")
     t = await pg.evaluate(TM_JS)
     o = await odak(pg)
-    denetle("R4-k oyuncu kâğıdı: künye, bu sezon, kaynaklı bildiklerimiz; Takibe al, Hocaya araştırt, İzlemeye git; başlıkta ‹ Piyasa",
+    denetle("R4-k oyuncu kâğıdı: künye, bu sezon, kaynaklı bildiklerimiz; Takibe al, Hocaya araştırt, İzlemeye git; başlıkta ‹ Ara",
             t["bolum"] == "oyuncu" and t["kagit"] == ilk and t["eylem"] == "tmTakip,tmArastirt,tmIzle" and "Bu sezon" in t["metin"] and "boşta" in t["metin"]
-            and (o["geri"] or "").strip().endswith("Piyasa"), f"{t['eylem']} · geri {o.get('geri')}")
+            and (o["geri"] or "").strip().endswith("Ara"), f"{t['eylem']} · geri {o.get('geri')}")
     await pg.click('.tm-eylemler [data-eylem="tmTakip"]')
     t = await pg.evaluate(TM_JS)
     an1 = await pg.evaluate("() => OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika")
-    denetle("R4-k Takibe al: zaman almaz; düğme “Takipten çıkar” olur; Takip sekmesinde (1)",
-            an0 == an1 and "tmTakipBirak" in t["eylem"] and "takip*" not in t["sekme"] and "Takip (1)" in t["metin"], f"{an0} → {an1} · {t['eylem']}")
+    denetle("R4-k Takibe al: zaman almaz; düğme “Takipten çıkar” olur; Liste sekmesinde (1)",
+            an0 == an1 and "tmTakipBirak" in t["eylem"] and "liste*" not in t["sekme"] and "Liste (1)" in t["metin"], f"{an0} → {an1} · {t['eylem']}")
     await pg.keyboard.press("Escape")
     t = await pg.evaluate(TM_JS)
-    denetle("R4-k Esc: oyuncu kâğıdından Piyasa listesine", bool(t) and t["bolum"] == "piyasa", str(t and t["bolum"]))
-    await pg.click('.tm-sekmeler [data-bolum="takip"]')
+    denetle("R4-k Esc: oyuncu kâğıdından Ara'ya (süzgeç ve metin yerinde)", bool(t) and t["bolum"] == "ara" and t["oyuncu"] >= 1, str(t and t["bolum"]))
+    await pg.click('.tm-sekmeler [data-bolum="liste"]')
     t = await pg.evaluate(TM_JS)
-    denetle("R4-k Takip: takibe alınan oyuncu tarih ve kaynağıyla", t["bolum"] == "takip" and t["oyuncu"] == 1 and "senin notun" in t["metin"], t["metin"][:200])
+    denetle("R4-k, R6b-1' Liste: listeye alınan oyuncu mevkisinin başlığı altında, tarih ve kaynağıyla", t["bolum"] == "liste" and t["oyuncu"] == 1 and "senin notun" in t["metin"] and " · 1" in t["metin"], t["metin"][:200])
     await pg.click(".tm-oyuncu")
     await pg.click('.tm-eylemler [data-eylem="tmArastirt"]')
     t = await pg.evaluate(TM_JS)
@@ -3654,7 +3664,8 @@ async def bolum_32(tarayici, site, tum_hatalar):
     t = await pg.evaluate(TM_JS)
     denetle("R4-k, RK-D Geçmiş: gelen ve giden (boşken sakin metin); Kaçanlar bölümü yok", t["bolum"] == "gecmis" and "Gelenler" in t["metin"] and "Gidenler" in t["metin"] and "Kaçanlar" not in t["metin"], t["metin"][:160])
     # Duraklat: okuma açık, iş veren eylemler kapalı
-    await pg.click('.tm-sekmeler [data-bolum="piyasa"]')
+    await pg.click('.tm-sekmeler [data-bolum="ara"]')
+    await pg.fill(".tm-araGirdi", "")
     await pg.click(".tm-oyuncu >> nth=1")
     await pg.keyboard.press("KeyP")
     t = await pg.evaluate(TM_JS)
