@@ -1,4 +1,4 @@
-# Arayüz dili — taslak (RK3, 2026-11-01; kullanıcı onayına kadar STIL_REHBERI'ne girmez)
+# Arayüz dili (RK3, 2026-11-01; karar 83 — kullanıcı: “Önerdiğin karışım”; kurallar STIL_REHBERI §7 “Arayüz dili”nde)
 
 Kaynak: kullanıcının 1 Kasım notu (“raporlar okunaksız, düğmelerin yeri, ara geçişler, renkler, ikonlar … sıfırdan planlasan aynısını mı yaparsın”), araştırma ve teşhis [../../plan/kasim-notlari-arastirma.md](../../plan/kasim-notlari-arastirma.md) §6, paket planı [../../plan/kasim-paketi.md](../../plan/kasim-paketi.md) RK3. Bu sayfa iki taslağın ortak kurallarını ve aralarındaki seçimi anlatır; görüntüler `png/` altında (`v1-*` Kırtasiye, `v2-*` Kulüp evrakı 1999; 640, 944, 1186 piksel). Kaynak sayfa `taslak.html?v=1|2&s=mali|kart|transfer|gunbasi|simge`; görüntü ve ölçü `python -X utf8 araclar/taslak/rk/cek.py`.
 
@@ -34,6 +34,10 @@ Odak modeli (masa → nesne → kâğıt, en çok iki derinlik), tek kart ve “
 ## Önerim
 
 Karışım: **iskelet ve yoğun ekranlar v1** (kadro, Canlı Skor, telefon, tablolar), **belge niteliğindeki kâğıtlar v2** (mali rapor ve resmî yazışmalar, oyuncu sicil fişi, transfer panosu, gün başı notu). Böylece her nesnenin kendi dili olur (RK program §3 “nesne başına görsel dil”), okunurluk tabanı ortak kalır.
+
+## Karar (2026-11-01, kullanıcı: “Önerdiğin karışım”; karar 83)
+
+Soru 1: önerilen karışım — iskelet ve yoğun ekranlar v1 Kırtasiye (krom çubuk, odak kabı, kadro, Canlı Skor, telefon, tablolar, ayarlar), belge niteliğindeki kâğıtlar v2 Kulüp evrakı 1999 (mali rapor ve resmî yazışmalar, kulübün oyuncu dosyasında sicil fişi, transfer panosu, gün başı notu). Soru 2 ve 3 önerilen varsayılanla (kullanıcı ayrıca söylemedi): gün başı notu masada rozetle bekler, kendiliğinden açılmaz; mali rapordaki resmî yazı dili kalır (TEST metin). Uygulama RK5 (plan `araclar/plan/rk5-uygulama.md`).
 
 ## Kullanıcıya sorular
 
