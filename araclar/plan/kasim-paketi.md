@@ -137,3 +137,14 @@ Paketin son turundan sonra bir kez: `python -X utf8 araclar/akis-deneme.py` tama
 9. R6b-1' bu pakette ve üç TEST menajer — *evet (zaman kalırsa)*.
 10. Büyük kapı geçince paket `main`'e alınsın mı — **açık onay ister.**
 11. `claude/stat-gorsel` silinsin mi — *hayır, kalsın*.
+
+## 8. Durum (2026-11-01 akşam; paket bitti, `main`'e alınmadı)
+
+Beş tur kapandı, her biri kendi dalında ve etiketinde (`tur/rkd-duzeltme`, `tur/rk1b-fare`, `tur/rk4b-kimlik`, `tur/rk3-taslak`, `tur/r6b1-transfer`); büyük kapı zincirin ucunda geçti (sonuçlar devam notunda). Plandan sapmalar:
+
+- **RK-D:** balkonun durum satırı uzayınca okunurluk ölçüsü kesilmeyi buldu: balkonda iki satıra sarılır; masa takviminin dokusunda da gün kısaltması düzeldi (Pzt). Kaçan transfer gazeteye ayrı “Kulis” olarak eklenmedi: rakibe gidiş zaten `tr.dunya` haberidir.
+- **RK1-b:** ilk ölçümde tekerlekte imlecin altındaki nokta 43–102 px kayıyordu (kamera yoldayken art arda adımlar); çapa çözümü ve izdüşüm düzeltmesiyle 0,4–1,8 px. Sürükleme de aynı çözümle tam tut ve çek.
+- **RK4-b:** kayıt geçişi (sürüm 13) yapılmadı: ten kayıttaki eski alandan değil kimlikten türetilir, kayıt sürümü 12 kaldı ve motor birebir. Galeri incelemesinden sonra Türkiye kökeni koyu zeytuniye kadar (kahve ve daha koyusu başka kökenlerden), kıvırcık saç dokulu. Baş sabit ölçek ve kimlikten ten yalnız balkonda (maçın TEST figürleri ve çizim tabanları değişmedi). Kişi portreleri (16×16) ikinci dilimi yapılmadı. Kadro tablosunda Boy sütunu için sütun genişlikleri daraldı (dar pencerede ad sütunu sıfıra iniyordu).
+- **RK3:** taslak sayfası yüz ve armayı oyunun işlevleriyle çizer; ölçü aracı bir sınıf çakışmasını (transfer tablosunun yazısı beyaz) ve düşük kontrastlı “B” kutucuğunu buldu, düzeldi.
+- **R6b-1':** ilk dilim — arama, menajer önerileri (TEST üç menajer; kişi kaydı değil), kısa liste. Menajeri telefonla aramak, ihtiyaç ilanı (“menajerlere duyur”) ve Canlı Skor'da arama sonraki adım. Öneriler kariyerin başladığı günden önceye gitmez.
+- **Araç notu:** `araclar/KAPILAR.md` ve CLAUDE.md'deki `python -I -X utf8 araclar/akis-2d.py` bu makinede Playwright'ı bulamıyor (yalıtık kip kullanıcı site-packages'ını görmez); `-I`'sız koştu ve geçti.
