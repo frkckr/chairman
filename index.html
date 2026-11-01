@@ -238,6 +238,8 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .od-mesaj,.od-durak{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .od-durak{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.92em);-webkit-line-clamp:1}
 .od-durakUyari{-webkit-line-clamp:2}
+/* RK-D: balkonda durum satırı günün çalışmasını da taşır; iki satıra sarılır */
+.oda[data-yer="balkon"] .od-durak{-webkit-line-clamp:2}
 /* 2.8Q: ajandadaki seçili işin eylemleri alt şeritte; ana düğme sağda */
 .od-altDugmeler{display:flex;align-items:center;gap:.5em;flex:none}
 .oda .od-ikinci{white-space:nowrap;padding:.3em .8em .2em;background:var(--k-zemin)}

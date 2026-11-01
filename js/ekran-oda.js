@@ -622,7 +622,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(r){({durum,dugme,uyari}=isSeridi(r));const bd=balkonDurumu();if(bd)durum=bd+' · '+durum;}   /* RK-D: balkonda günün çalışması işin satırında da */
     /* U1: odakta İlerle yoktur; okurken zaman durur, iş masaya bırakılınca ilerlenir */
     else if(acik){durum=yaz('Okurken zaman durur · Esc: geri · Kapat: masaya bırak');dugme='';}
-    else if(g&&g.tam){durum=balkonDurumu()+' · '+yaz(izleme?'Saat akıyor; telefon çalarsa gözlem durur.':g.uyari||'Karar verirken zaman durur.');dugme=gorDugmesi()+g.dugme;uyari=!!g.uyari;}
+    else if(g&&g.tam){const ek=izleme?'Saat akıyor; telefon çalarsa gözlem durur.':g.uyari;durum=balkonDurumu()+(ek?' · '+yaz(ek):'');dugme=gorDugmesi()+g.dugme;uyari=!!g.uyari;}
     else{
       const o=ilerleOnizle(k),p=[],bd=balkonDurumu();
       if(o.engel.length)p.push('İlerlenemiyor: '+o.engel.join(' · '));
@@ -707,7 +707,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     kap.dataset.yer=balkonVar?ODA.yer:'masa';   /* U6: balkonda yarım odak (CSS) */
     /* RK1: geniş pencerede balkonun bandı yalnız iş açıkken (js/sunum-durumu.js); yürürken ve iş yokken saha tam kare */
     if(typeof ekranBantIste==='function')ekranBantIste(balkonVar&&ODA.yer==='balkon'&&!!acik);
-    odaDurum({tv:typeof tvOzeti==='function'?tvOzeti(k):null,haber:haberSayisi(),isler:bekleyenIsSayisi(),dosyaSayi:acikMeseleler().length,dosya:acikMeseleler().length>0||raporlar().length>0||kadroAcilir(),gun:String(g),ay:AYLAR[a-1].slice(0,3),gunAdi:gunAdi(k.tarih).slice(0,3),dakika:dk,
+    odaDurum({tv:typeof tvOzeti==='function'?tvOzeti(k):null,haber:haberSayisi(),isler:bekleyenIsSayisi(),dosyaSayi:acikMeseleler().length,dosya:acikMeseleler().length>0||raporlar().length>0||kadroAcilir(),gun:String(g),ay:AYLAR[a-1].slice(0,3),gunAdi:GUN_KISA[gunAdi(k.tarih)]||gunAdi(k.tarih).slice(0,3),dakika:dk,
       gazete:!!iz.sayi||!!iz.gazete||!!iz.kart,gazeteYeni:iz.gazeteYeni||iz.yeniHaber>0,kart:!!iz.kart,iskele:iz.iskele,panoNotu:iz.panoNotu});
     odaOdak(acik in NESNE?acik:null);
     if(typeof odaPanel==='function')odaPanel(!!acik&&acik!=='ziyaret');   /* U1: odak açıkken 3B oda kamera yerleşince donar (js/oda.js odaDondur); RK6: ziyarette oda canlı */
