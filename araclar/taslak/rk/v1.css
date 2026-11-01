@@ -1,0 +1,14 @@
+/* RK3 taslağı v1 “Kırtasiye”: bugünkü yönün temiz hâli — krem kâğıt, kahve mürekkep, ince çizgi, kâğıt öne (perde hafif), amber yalnız ana eylem
+   ve seçili, kulüp kırmızısı yalnız kimlik (saat, forma, kırmızı kart), piktogram + kelime, eşit genişlikli rakam, tek renk zebra. */
+:root{--kagit:#fbf7ee;--yazi:#26221c;--soluk:#5c5346;--cizgi:#e4d9bf;--cizgiKoyu:#b9a87f;--zebra:#f3ecdb;--krom:#f6f0e2;--kromYazi:#3a332a;
+  --kulup:#b3261e;--amber:#f2a51e;--mavi:#2c4a7a;--yesil:#2f6b3a;--kirmizi:#b3261e;--girdi:#fffdf8;--perde:rgba(20,14,10,.2)}
+.kagit{border:1px solid var(--cizgiKoyu);border-radius:3px;box-shadow:0 10px 30px rgba(0,0,0,.35),0 1px 0 #fff inset}
+.ana{background:var(--amber);border:1px solid #c98612;color:#1d1a16;box-shadow:0 2px 0 #c98612}
+.ana:disabled{background:var(--zebra);border-color:var(--cizgiKoyu);box-shadow:none;color:var(--soluk)}
+.ikinci,.kucuk{background:var(--kagit);border:1px solid var(--cizgiKoyu)}
+.uc>div{background:var(--zebra);border-radius:3px}
+.donem{background:var(--zebra);border-left:4px solid var(--mavi)}
+.liste-satir{border-bottom:1px solid var(--cizgi)}
+.gb-dun,.gb-kasa,.gb-manset{padding:.7em .9em;background:var(--zebra);border-radius:3px}
+.kart-sag{padding-left:1.4em;border-left:1px solid var(--cizgi)}
+@media (max-width:760px){.kart-sag{padding-left:0;border-left:0;border-top:1px solid var(--cizgi);padding-top:1em}}
