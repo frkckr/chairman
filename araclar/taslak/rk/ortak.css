@@ -46,7 +46,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .cizelge tbody tr:nth-child(even){background:var(--zebra)}
 .cizelge tfoot td{border-top:1.5px solid var(--cizgiKoyu);font-weight:600}
 .sayi{text-align:right!important}
-.dipnot{margin:0;font-size:14px;color:var(--soluk);max-width:62ch}
+.dipnot{margin:0;font-size:15px;color:var(--soluk);max-width:62ch}
 .iki-sutun{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:1.4em;align-items:start}
 .kart-iki{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.6em}
 .kart-bas{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1em;align-items:center}
@@ -62,13 +62,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .son5{display:flex;align-items:center;gap:.3em;margin-top:.3em}
 .son5 .uc-ad{margin-right:.4em}
 .sonuc{display:inline-grid;place-items:center;width:1.6em;height:1.6em;font-style:normal;font-size:13px;font-weight:700;color:#fff;border-radius:2px}
-.sonuc[data-s="G"]{background:#2f6b3a}.sonuc[data-s="B"]{background:#8a8170}.sonuc[data-s="M"]{background:#a32a22}
+.sonuc[data-s="G"]{background:#2f6b3a}.sonuc[data-s="B"]{background:#6b6355}.sonuc[data-s="M"]{background:#a32a22}
 .kart-sag h2,.liste h2,.gb h2{display:flex;align-items:center;gap:.45em;margin:0 0 .5em;font-size:15px;letter-spacing:.06em;text-transform:uppercase}
 .notlar{list-style:none;margin:0;padding:0;display:grid;gap:.6em}
 .notlar li{display:grid;grid-template-columns:4.2em minmax(0,1fr);gap:.1em .7em;padding-left:.7em;border-left:3px solid var(--cizgiKoyu)}
 .notlar li[data-tur="antrenman"]{border-color:var(--yesil)}.notlar li[data-tur="mac"]{border-color:var(--kirmizi)}.notlar li[data-tur="hoca"]{border-color:var(--mavi)}
-.notlar time{grid-row:span 2;color:var(--soluk);font-size:14px}
-.notlar b{font-size:14px}
+.notlar time{grid-row:span 2;color:var(--soluk);font-size:15px}
+.notlar b{font-size:15px}
 .donem{display:flex;align-items:center;gap:.6em;padding:.55em .8em;flex-wrap:wrap}
 .sekmeler{display:flex;gap:.3em;border-bottom:1.5px solid var(--cizgiKoyu)}
 .sekmeler button{padding:.35em .9em;background:transparent;border:0;border-bottom:3px solid transparent;margin-bottom:-1.5px;font-weight:500}
@@ -78,7 +78,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ara-kutu input{flex:1;border:0;background:transparent;font:inherit;font-size:17px;color:var(--yazi);outline:0}
 .ara-kutu kbd{font-family:"IBM Plex Mono",monospace;font-size:12px;padding:.05em .35em;border:1px solid var(--cizgi);border-radius:2px;color:var(--soluk)}
 .cipler{display:flex;flex-wrap:wrap;gap:.4em}
-.cipler button{padding:.2em .7em;font-size:14px;border:1px solid var(--cizgiKoyu);border-radius:1em;background:transparent}
+.cipler button{padding:.2em .7em;font-size:15px;border:1px solid var(--cizgiKoyu);border-radius:1em;background:transparent}
 .cipler button[aria-pressed="true"]{background:var(--yazi);color:var(--kagit);border-color:var(--yazi)}
 .eylem-hucre{display:flex;gap:.3em;justify-content:flex-end}
 .liste-grup{display:grid;gap:.5em;margin-bottom:.8em}
@@ -86,8 +86,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .liste-grup h3 small{font-size:12px}
 .liste-satir{display:grid;gap:.1em;padding:.55em .7em}
 .liste-satir p{margin:0}
-.liste-durum{font-size:14px;color:var(--soluk)}
-.liste-not{font-size:14px}
+.liste-durum{font-size:15px;color:var(--soluk)}
+.liste-not{font-size:15px}
 .kaynak{margin-left:.3em;padding:0 .4em;font-size:12px;font-weight:600;border-radius:2px;background:var(--zebra);color:var(--soluk);letter-spacing:.04em;text-transform:uppercase}
 .gb{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.2em 1.6em}
 .gb section{display:flex;gap:.8em;align-items:flex-start}
@@ -106,7 +106,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .gb-dun p{margin:0}
 .simgeler{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px}
 .simgeler figure{margin:0;display:grid;justify-items:center;gap:6px;padding:10px 4px;border:1px solid var(--cizgi)}
-.simgeler figcaption{font-size:13px}
+.simgeler figcaption{font-size:14px}
 .serit{display:flex;justify-content:space-between;align-items:center;gap:1em;padding:.5em 1.1em;background:var(--krom);color:var(--soluk);font-size:14px;border-top:1px solid var(--cizgiKoyu)}
 .serit p{margin:0}
 @media (max-width:760px){

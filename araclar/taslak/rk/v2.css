@@ -27,7 +27,7 @@
 .imza{justify-self:end;display:grid;justify-items:center;gap:0}
 .imza .paraf{width:120px;height:40px}
 .imza small{color:var(--soluk);font-size:13px}
-.muhur{position:absolute;right:12%;bottom:5.5em;display:grid;justify-items:center;padding:.3em .8em;border:3px double var(--kirmizi);border-radius:4px;color:var(--kirmizi);
+.muhur{position:absolute;right:26%;bottom:.6em;display:grid;justify-items:center;padding:.3em .8em;border:3px double var(--kirmizi);border-radius:4px;color:var(--kirmizi);
   font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:20px;letter-spacing:.14em;transform:rotate(-6deg);opacity:.82}
 .muhur small{font-size:12px;letter-spacing:.05em}
 .muhur-mavi{position:static;justify-self:end;align-self:end;border-color:var(--mavi);color:var(--mavi);font-size:15px;transform:rotate(-4deg)}
@@ -39,7 +39,7 @@
 .lisans-alan{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.3em 1.2em}
 .lisans-alan p{margin:0;display:grid;border-bottom:1px dotted var(--cizgiKoyu)}
 .lisans-alan span{font-size:12px;color:var(--soluk);letter-spacing:.06em;text-transform:uppercase}
-.lisans-alan b{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:16px}
+.lisans-alan b{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:17px}
 .sari-not{padding:1em 1.2em;background:#fbeea4;box-shadow:2px 3px 0 rgba(0,0,0,.12);transform:rotate(.6deg)}
 .sari-not .notlar li{border-left-color:rgba(0,0,0,.25)}
 .kagit-transfer{background:#c9a26a;background-image:radial-gradient(rgba(90,60,25,.35) 1px,transparent 1.5px),radial-gradient(rgba(255,240,210,.25) 1px,transparent 1.5px);background-size:7px 7px,11px 11px;border:10px solid #5a3e24}

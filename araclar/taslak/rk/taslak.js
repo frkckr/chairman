@@ -77,7 +77,7 @@ function transfer(){
   const liste=L.map(([m,O])=>'<section class="liste-grup"><h3>'+m+' <small>'+O.length+'</small></h3>'+O.map(([a,y,d,k,n])=>'<div class="liste-satir"><p><b>'+a+'</b> · '+y+' yaş <span class="kaynak" data-k="'+k+'">'+k+'</span></p><p class="liste-durum">'+yaz(d)+'</p><p class="liste-not">'+yaz(n)+'</p></div>').join('')+'</section>').join('');
   const ara='<div class="ara"><label class="ara-kutu">'+ikon('arama')+'<input value="sol bek" aria-label="Oyuncu ara"><kbd>Enter</kbd></label>'+
     '<div class="cipler"><button aria-pressed="true">Savunma</button><button aria-pressed="true">≤ 25 yaş</button><button>Sözleşmesi bitenler</button><button>Serbestler</button><button>Boy ≥ 1,80</button></div>'+
-    '<table class="cizelge sonuc"><thead><tr><th>Oyuncu</th><th>Kulüp</th><th class="sayi">Yaş</th><th class="sayi">Boy</th><th>Sözleşme</th><th></th></tr></thead><tbody>'+
+    '<table class="cizelge ara-sonuc"><thead><tr><th>Oyuncu</th><th>Kulüp</th><th class="sayi">Yaş</th><th class="sayi">Boy</th><th>Sözleşme</th><th></th></tr></thead><tbody>'+
     [['Kamil','Kocadere İY',21,'1,78','Haziran 2027'],['Taner','Yıldıztepe SK',23,'1,81','Haziran 2028'],['Emre','Akdeniz FK',19,'1,76','Haziran 2027']].map(([a,k,y,b,s])=>
       '<tr><td><b>'+a+'</b></td><td>'+k+'</td><td class="sayi">'+y+'</td><td class="sayi">'+b+'</td><td>'+s+'</td><td class="eylem-hucre"><button class="kucuk">Araştırt</button><button class="kucuk">'+ikon('menajer',12)+'Menajeri</button></td></tr>').join('')+
     '</tbody></table><p class="dipnot">Bildiğimiz kadarı: yaş, kulüp, boy, sözleşme bitişi kamuya açık. Ne kadar iyi olduğunu, isteyip istemediğini ve kaça geleceğini ancak araştırtınca ya da menajerine sorunca öğrenirsin.</p></div>';

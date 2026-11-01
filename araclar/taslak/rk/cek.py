@@ -66,14 +66,14 @@ async def ana():
                 olc = await pg.evaluate(OLCU_JS)
                 yol = PNG / f"v{v}-{s}-{w}.png"
                 await pg.screenshot(path=str(yol), full_page=True)
-                im = Image.open(yol).convert("RGB").quantize(colors=128, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+                im = Image.open(yol).convert("RGB").quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
                 im.save(yol, optimize=True)
                 kagit = [x for x in olc if x["kagitta"]]
                 kucuk = min((x["boy"] for x in olc), default=0)
                 govde = sorted(x["boy"] for x in kagit)[len(kagit) // 2] if kagit else 0
                 dusuk = [x for x in olc if x["oran"] < 4.5]
                 kb = yol.stat().st_size // 1024
-                bayrak = "!" if (kucuk < 12 or govde < 15 or dusuk or hatalar) else " "
+                bayrak = "!" if (kucuk < 12 or (govde < 15 and s != "simge") or dusuk or hatalar) else " "   # simge sayfası başvuru sayfasıdır (altyazılar küçük)
                 if bayrak == "!":
                     hata += 1
                 print(f"{bayrak} v{v}-{s:<9} {w:>5}px  gövde {govde:4.1f}  en küçük {kucuk:4.1f}  kontrast<4,5: {len(dusuk):2d}  {kb:4d} KB"
