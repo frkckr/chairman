@@ -147,6 +147,8 @@ Her madde tarihli bir özettir; ayrıntı bağlantıdaki belgededir. Daha eski k
 
 80. **2026-11-01 — RK4-b yüzler, kimlik, yaş ve boy (Kasım paketi; kullanıcının notları; soru 1–3 varsayılanla: 32×32, köken ve boy türetilir, 3. Lig'de herkes Türkiye kökenli).** Yüz 32×32, ten yedi rampadan köken ağırlığıyla (Türkiye açık ve orta zeytuni ağırlıklı), göz rengi kökenden, kaş ile göz arası her zaman bir satır; yaş katmanı (saç çizgisi, kır, kirli sakal, çizgiler; oyuncu sezonlarla yaşlanır); boy künyede ve kadro listesinde; balkon figürü aynı kimlikten, baş her boyda aynı. Kayıt sürümü ve motor değişmedi. Yabancı kuralı açık karar (OYUN_TASARIMI §9). Ayrıntı STIL_REHBERI §7, TEKNIK_PLAN §6; `tur/rk4b-kimlik`.
 
+81. **2026-11-01 — RK3 arayüz dili taslakları (Kasım paketi; kod değişmedi; seçim kullanıcıda).** İki dil × dört ekran (mali rapor, oyuncu kartı, transfer, gün başı kâğıdı) ve 16 piksellik simge seti: v1 “Kırtasiye” (bugünkü yönün temiz hâli), v2 “Kulüp evrakı 1999” (antetli kâğıt, resmî yazı, sicil fişi, mantar pano, teleks, sarı not); ortak kurallar tek krom çubuk, kâğıt öne, ana eylem kâğıdın alt kenarında, rapor dili (üç rakam, 90 günün seyri, zebralı tablo), gövde 16 px ve kontrast ≥ 4,5:1. Önerilen karışım: iskelet ve yoğun ekranlar v1, belge niteliğindeki kâğıtlar v2. Taslaklar ve dil kuralları `araclar/taslak/rk/` (`DIL.md`, `png/`); kullanıcı ekran başına seçince RK5 giydirir; `tur/rk3-taslak`.
+
 ## Çalışma biçimi
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz. Planlanmış olmak tamamlanmış olmak değildir; yalnız uygulanıp doğrulanan işler işaretlenir.

@@ -7,3 +7,4 @@ Tur planlarının çalışma kopyaları (alt adımlar, durum, ham tasarım çık
 **RB balkonda antrenmanı izlemek** (2026-10-30, karar 68'in ikinci turu): bakış ve yakınlık, “Sahada”, geniş pencere bandı — `rb-uygulama.md`.
 
 **Kasım notları ve paketi** (2026-11-01; kullanıcının 14 maddesi): araştırma, teşhis ve öneriler `kasim-notlari-arastirma.md` (transfer bilgi akışı, yüz/köken/yaş/boy, arayüz okunurluğu ve geçişler, kaynaklar); onaylı oto mod paketi `kasim-paketi.md` (RK-D → RK1-b → RK4-b → RK3 → R6b-1').
+**RK3 taslakları** (2026-11-01): `araclar/taslak/rk/DIL.md` (arayüz dili, iki taslak ve sorular), görüntüler `araclar/taslak/rk/png/`.
