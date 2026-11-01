@@ -140,7 +140,8 @@ function csSayfaHtml(k,T,s){
   if(typeof document==='undefined'||document.getElementById('csStili'))return;
   const st=document.createElement('style');st.id='csStili';
   st.textContent=`
-.cs-sayfa{container:cs / inline-size;display:grid;gap:.55em;min-width:0;color:var(--k-yazi)}
+/* RK5-b: sütun panelden geniş olamaz (gövde tabanı büyüyünce sekme satırının en küçük genişliği paneli aşıyordu) */
+.cs-sayfa{container:cs / inline-size;display:grid;grid-template-columns:minmax(0,1fr);gap:.55em;min-width:0;color:var(--k-yazi)}
 .cs-sayfa p,.cs-sayfa h4,.cs-sayfa h5,.cs-sayfa h6,.cs-sayfa dl,.cs-sayfa ul,.cs-sayfa ol{margin:0}
 .cs-sayfa h5{font-size:max(var(--k-enKucuk,12px),.8em);letter-spacing:.08em;text-transform:uppercase;color:var(--k-vurgu);font-weight:600;display:flex;align-items:center;gap:.35em}
 .cs-sayfa h5 small{text-transform:none;letter-spacing:0;font-weight:400;color:var(--k-soluk)}
@@ -158,7 +159,7 @@ function csSayfaHtml(k,T,s){
 .cs-skor small{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.82em)}
 .cs-skor small.cs-canli{color:var(--k-kirmizi);font-weight:600}
 .cs-kunye{text-align:center;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.84em)}
-.cs-sekmeler{display:flex;gap:.2em;border-bottom:1px solid var(--k-cizgi)}
+.cs-sekmeler{display:flex;flex-wrap:wrap;gap:0 .2em;border-bottom:1px solid var(--k-cizgi)}   /* RK5-b: sığmazsa ikinci satır (yazı kesilmez) */
 .cs-sayfa .cs-sekme{flex:1 1 auto;min-width:0;padding:.3em .15em;border:0;border-bottom:.18em solid transparent;background:transparent;color:var(--k-soluk)!important;cursor:pointer;
   font-size:max(var(--k-enKucuk,12px),.86em);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cs-sayfa .cs-sekme[aria-selected="true"]{color:var(--k-yazi)!important;font-weight:600;border-bottom-color:var(--k-vurgu)}

@@ -3179,8 +3179,10 @@ async def bolum_28(tarayici, site, tum_hatalar):
         pg = await baglam.new_page()
         pg.on("pageerror", lambda e: tum_hatalar.append("Betik hatası: " + str(e)))
         # TEST içerikli sayfa: İlerle'nin maç gününden önce durakları var (öndeki pencere iki kez yazabilsin); maç günündeki Stada git kayıt yazmaz
-        await pg.goto((site / "index-test.html").as_uri() + "?dunya=7&pul=0")
-        await yokla(pg, ODA_HAZIR_JS)
+        # RK5-b: §27'den sonra ikinci pencerenin “load”u bu makinede 20–30 sn sürüyor (önceki sürümde de 21–29,5 sn; ilk pencerenin 3B çizimi yazılım
+        # GPU'sunu tutar): gezinme DOM hazır olunca biter, odanın hazır olması zaten yoklanır (60 sn)
+        await pg.goto((site / "index-test.html").as_uri() + "?dunya=7&pul=0", wait_until="domcontentloaded", timeout=60000)
+        await yokla(pg, ODA_HAZIR_JS, 60)
         sayfalar.append(pg)
     p1, p2 = sayfalar
     a1, a2 = await p1.evaluate(CAKISMA_JS), await p2.evaluate(CAKISMA_JS)

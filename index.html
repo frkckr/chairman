@@ -334,7 +334,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .od-iceOnay p{margin:0}
 /* bilinen tutar ve son tarih kesilmesin: ajanda ve kasa satırları sarar */
 .od-sar .od-ad{white-space:normal;overflow:visible}
-.od-ustSag{display:flex;align-items:center;gap:.8em;min-width:0}
+.od-ustSag{display:flex;align-items:center;gap:.8em;min-width:0;flex:none}   /* RK5-b: sağ grup (tarih, Ayarlar, Duraklat) daralmaz; soldaki ad üç noktayla kısalır */
 /* ---- maç telefonu (js/ekran-mac-telefon.js, 2.8F): sağda okunur boyutta cihaz; açık tonlar STIL.kagit ---- */
 .macTelefon{position:absolute;z-index:5;top:4%;bottom:4%;right:3%;width:36%;font-family:var(--govde);font-size:var(--k-yaziBoyu,max(14px,1.5cqw));line-height:1.35;font-variant-numeric:tabular-nums;color:var(--k-yazi)}
 .mt-cihaz{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:.35em}
