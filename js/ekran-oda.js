@@ -1191,17 +1191,17 @@ function odaEkraniKur(kap,oyun,ayarlar){
   let suru=null,suruBitti=0;
   kap.addEventListener('pointerdown',e=>{
     if(e.button!==0||e.target!==kap||acik||!sahaBakisVar()||ODA.yer!=='balkon'||typeof balkonSurukleBasla!=='function')return;
-    suru={x:e.clientX,y:e.clientY,s:null,id:e.pointerId};
+    suru={x:e.clientX,y:e.clientY,n:kareNoktasi(e),s:null,bas:false,id:e.pointerId};
   });
-  const suruBitir=e=>{if(!suru||e.pointerId!==suru.id)return;if(suru.s){suruBitti=performance.now();kap.style.cursor='';try{kap.releasePointerCapture(e.pointerId);}catch(x){}
+  const suruBitir=e=>{if(!suru||e.pointerId!==suru.id)return;if(suru.bas){suruBitti=performance.now();kap.style.cursor='';try{kap.releasePointerCapture(e.pointerId);}catch(x){}
     const b=balkonBakis();if(b.suru){delete b.suru;}sahadaGuncelle(false);}suru=null;};
   kap.addEventListener('pointerup',suruBitir);kap.addEventListener('pointercancel',suruBitir);
   kap.addEventListener('pointermove',e=>{
     if(suru&&e.pointerId===suru.id){
       if(!(e.buttons&1)||acik||ODA.yer!=='balkon'){suruBitir(e);}
       else{const c=document.getElementById('view'),r=(c||kap).getBoundingClientRect(),dx=e.clientX-suru.x,dy=e.clientY-suru.y;
-        if(!suru.s&&Math.hypot(dx,dy)>=STIL.balkon.fare.esik){suru.s=balkonSurukleBasla();try{kap.setPointerCapture(e.pointerId);}catch(x){}}
-        if(suru.s){balkonSurukle(suru.s,dx/r.width,dy/r.height);kap.style.cursor='grabbing';sonImlec=null;return;}}
+        if(!suru.bas&&Math.hypot(dx,dy)>=STIL.balkon.fare.esik){suru.bas=true;suru.s=suru.n?balkonSurukleBasla(suru.n.x,suru.n.y):null;try{kap.setPointerCapture(e.pointerId);}catch(x){}}
+        if(suru.bas){const n=kareNoktasi(e);if(n)balkonSurukle(suru.s,n.x,n.y);kap.style.cursor='grabbing';sonImlec=null;return;}}
     }
     if(e.target!==kap){sonImlec=null;if(ODA.uzerinde){odaIsaret(null);kap.style.cursor='';}return;}
     const n=kareNoktasi(e),ad=n?odaIsaret(n.x,n.y):odaIsaret(null);

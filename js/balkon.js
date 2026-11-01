@@ -25,8 +25,8 @@
      balkonTakipEkrani()      takip edilen oyuncunun başının karedeki yeri {x, y} (0–1) ya da null
      balkonAktorEkrani(id)    RK1: o oyuncunun başının karedeki yeri {x, y} (0–1) ya da null (imleç etiketi ve sinyal kelimesi)
      balkonGrupEkrani(grup)   RK1: grubun bakılan noktasının üstü {x, y} (0–1) ya da null
-     balkonSurukleBasla()     RK1-b: sürüklemenin başı {sapma, egim, aci, kademe} (hedefin yönü)
-     balkonSurukle(s, dx, dy) RK1-b: başından beri farenin yolu (karenin birimi) kadar baş döner; bakış {tur:'yer', aci, suru} (sahada kalır)
+     balkonSurukleBasla(x, y) RK1-b: sürüklemenin başı {P (tutulan zemin noktası), aci, kademe}
+     balkonSurukle(s, x, y)   RK1-b: tutulan yer imlecin (x, y) altında kalacak bakış {tur:'yer', aci, suru} (sahada kalır)
      balkonTeker(x, y, deltaY) RK1-b: imlecin altındaki noktaya kademesiz yaklaşır ya da uzaklaşır; izlemede yalnız açı; en genişte saha
      balkonOyuncuIsaret(x, y) RK-D: çift tıkta imlecin altındaki oyuncunun kimliği (her yakınlıkta) ya da null
      balkonIsaretEkrani(h)    RK1: imleç etiketinin yeri — oyuncunun ya da imlecin altındaki figürün başının üstü {x, y} (0–1) ya da null
@@ -531,36 +531,50 @@ function balkonBakisHedefi(){
 /* ---- RK1-b (2026-11-01, kullanıcı: “antrenman sahasında mouse'la istediğim bölgeye yakınlaşıp uzaklaşmalı ve hareket ettirip istediğim bölgeyi
    izleyebilmeliyim”): fare — sürükleme başı döndürür (tut ve çek: sürüklenen saha imlecin altında kalır), tekerlek imlecin altındaki noktaya kademesiz
    yaklaşır ya da uzaklaşır. Yalnız görüntü; kayda girmez. Sınırlar STIL.balkon.fare ---- */
-const BLK_V2=new THREE.Vector3(),BLK_V3=new THREE.Vector3();
+const BLK_V2=new THREE.Vector3(),BLK_V3=new THREE.Vector3(),BLK_KAM=new THREE.PerspectiveCamera();
 /* karedeki (x, y: −1…1) saha zemini (saha koordinatı {x, z}) ya da null */
 function blkZeminNoktasi(x,y){
   const K=ODA.kamera,[CX,PY,CZ]=BLK.saha;BLK_ISIN.setFromCamera({x,y},K);BLK_ZEMIN.constant=-PY;
   return BLK_ISIN.ray.intersectPlane(BLK_ZEMIN,BLK_V2)?{x:BLK_V2.x-CX,z:BLK_V2.z-CZ}:null;
 }
-/* sürüklemenin başı: hedefin yönü (sapma, eğim; rad), açısı ve kademesi */
-function balkonSurukleBasla(){
-  const H=balkonBakisHedefi(),P=ODA.kamera.position,d=BLK_V3.subVectors(H.nokta,P);
-  return{sapma:Math.atan2(d.x,-d.z),egim:Math.atan2(d.y,Math.hypot(d.x,d.z)),aci:H.aci,kademe:Math.max(1,BALKON.bakis.kademe)};
+/* çapa çözümü: dünya noktası Pw karede (x, y: −1…1) dursun diye bakışın hedefi (görüş açısı aci'de; göz sabit) — sahadaki yer {x, z} ya da null.
+   Açısal: noktanın yönünden karedeki ötelemesi kadar dönülür; bakış sahanın içinde ve eğim sınırında kalır */
+function blkCapaCoz(Pw,x,y,aci){
+  const K=ODA.kamera,E=K.position,F=BLK.fare,[CX,PY,CZ]=BLK.saha;
+  const dx=Pw.x-E.x,dy=Pw.y-E.y,dz=Pw.z-E.z,v=aci*Math.PI/180,h=2*Math.atan(Math.tan(v/2)*K.aspect);
+  const enAz=-F.egim[1]*Math.PI/180,enCok=-F.egim[0]*Math.PI/180,S=F.saha;
+  let sap=Math.atan2(dx,-dz)-Math.atan(x*Math.tan(h/2)),eg=clamp(Math.atan2(dy,Math.hypot(dx,dz))-Math.atan(y*Math.tan(v/2)),enAz,enCok),r=null;
+  const yer=()=>{const c=Math.cos(eg),s=Math.sin(eg);if(s>=-1e-4)return null;const t=(PY+0.4-E.y)/s;
+    return{x:clamp(E.x+Math.sin(sap)*c*t-CX,-S[0],S[0]),z:clamp(E.z-Math.cos(sap)*c*t-CZ,-S[1],S[1])};};
+  /* sapma ve eğim ayrık yaklaşımdır (kenara yakın noktada birkaç piksel); üç adım izdüşümle düzeltilir */
+  const Q=BLK_KAM;Q.fov=aci;Q.aspect=K.aspect;Q.near=K.near;Q.far=K.far;Q.updateProjectionMatrix();Q.position.copy(E);
+  for(let i=0;i<3;i++){r=yer();if(!r)return null;Q.lookAt(BLK_V3.set(CX+r.x,PY+0.4,CZ+r.z));Q.updateMatrixWorld();
+    const q=BLK_V2.copy(Pw).project(Q);sap+=Math.atan((q.x-x)*Math.tan(h/2));eg=clamp(eg+Math.atan((q.y-y)*Math.tan(v/2)),enAz,enCok);}
+  return yer();
 }
-/* s: balkonSurukleBasla; dx, dy: başından beri farenin yolu (karenin genişliği ve yüksekliği biriminde; sağ ve aşağı artı). Bakış sahanın dışına çıkmaz */
-function balkonSurukle(s,dx,dy){
-  const K=ODA.kamera,F=BLK.fare,v=s.aci*Math.PI/180,h=2*Math.atan(Math.tan(v/2)*K.aspect),[CX,PY,CZ]=BLK.saha;
-  const sapma=s.sapma-dx*h,egim=clamp(s.egim+dy*v,-F.egim[1]*Math.PI/180,-F.egim[0]*Math.PI/180),c=Math.cos(egim),P=K.position;
-  const dy3=Math.sin(egim);if(dy3>=-1e-4)return false;
-  const t=(PY+0.4-P.y)/dy3,S=F.saha;
-  balkonBakis({tur:'yer',x:clamp(P.x+Math.sin(sapma)*c*t-CX,-S[0],S[0]),z:clamp(P.z-Math.cos(sapma)*c*t-CZ,-S[1],S[1]),kademe:s.kademe,aci:s.aci,suru:true});
-  return true;
+const blkZeminDunya=(x,y)=>{const z=blkZeminNoktasi(x,y);if(!z)return null;const [CX,PY,CZ]=BLK.saha;return new THREE.Vector3(CX+z.x,PY,CZ+z.z);};
+/* sürüklemenin başı: imlecin altındaki zemin noktası (tutulan yer), hedefin açısı ve kademesi. x, y: imlecin karedeki yeri */
+function balkonSurukleBasla(x,y){
+  const P=blkZeminDunya(x,y);if(!P)return null;
+  return{P,aci:balkonBakisHedefi().aci,kademe:Math.max(1,BALKON.bakis.kademe)};
 }
-/* tekerlek: deltaY artı uzaklaşır. Yerde ve bütün sahada imlecin altındaki zemin yerinde kalır (yeni merkez = imleç + (merkez − imleç) · oran);
-   oyuncu ya da grup izlenirken yalnız açı değişir (izleme sürer); en geniş açıda bütün saha */
+/* s: balkonSurukleBasla; x, y: imlecin şimdiki yeri. Tut ve çek: tutulan yer imlecin altında kalır; bakış sahanın dışına çıkmaz */
+function balkonSurukle(s,x,y){
+  if(!s)return false;const r=blkCapaCoz(s.P,x,y,s.aci);if(!r)return false;
+  balkonBakis({tur:'yer',x:r.x,z:r.z,kademe:s.kademe,aci:s.aci,suru:true});return true;
+}
+/* tekerlek: deltaY artı uzaklaşır. Yerde ve bütün sahada imlecin altındaki zemin yerinde kalır (çapa: art arda adımlarda imleç kıpırdamadıkça
+   ilk adımın noktası — kamera yoldayken kayan görüntüden yeni nokta alınmaz); oyuncu ya da grup izlenirken yalnız açı değişir; en genişte bütün saha */
 function balkonTeker(x,y,deltaY){
   const b=BALKON.bakis,F=BLK.fare,Y=BLK.yakinlik,a=balkonBakisHedefi().aci,a2=clamp(a*Math.exp(deltaY*F.teker),Y[Y.length-1],Y[0]);
   if(Math.abs(a2-a)<0.01)return b;
   if(b.tur==='oyuncu'||b.tur==='grup'){BALKON.bakis=Object.assign({},b,{aci:a2});delete BALKON.bakis.suru;return BALKON.bakis;}
-  if(a2>=Y[0]-0.01)return balkonBakis({tur:'saha'});
-  const P=blkZeminNoktasi(x,y),C=blkZeminNoktasi(0,0);if(!P||!C)return b;
-  const s=Math.tan(a2*Math.PI/360)/Math.tan(ODA.kamera.fov*Math.PI/360),S=F.saha;
-  return balkonBakis({tur:'yer',x:clamp(P.x+(C.x-P.x)*s,-S[0],S[0]),z:clamp(P.z+(C.z-P.z)*s,-S[1],S[1]),kademe:a2<(Y[1]+Y[2])/2?2:1,aci:a2});
+  if(a2>=Y[0]-0.01){BALKON.tekerCapa=null;return balkonBakis({tur:'saha'});}
+  const su=typeof performance!=='undefined'?performance.now():0,C=BALKON.tekerCapa;
+  const P=C&&Math.abs(C.x-x)<0.01&&Math.abs(C.y-y)<0.01&&su-C.t<F.capaSn*1000?C.P:blkZeminDunya(x,y);if(!P)return b;
+  BALKON.tekerCapa={x,y,P,t:su};
+  const r=blkCapaCoz(P,x,y,a2);if(!r)return b;
+  return balkonBakis({tur:'yer',x:r.x,z:r.z,kademe:a2<(Y[1]+Y[2])/2?2:1,aci:a2});
 }
 /* tıklama: figürler karede izdüşümleriyle seçilir (küçük figürde ışın tutmaz); eşikler karenin yarı yüksekliği biriminde */
 const BLK_ISIN=new THREE.Raycaster(),BLK_ZEMIN=new THREE.Plane(new THREE.Vector3(0,1,0),0),BLK_V=new THREE.Vector3();
