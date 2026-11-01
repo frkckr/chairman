@@ -1123,6 +1123,13 @@ bolum('4.1c — mali işler müdürünün raporu (H2-d; js/mali-rapor.js; oyunun
   {const b=JSON.parse(metin(k1)),i=b.haberler.findIndex(h=>h.tur==='rapor');b.haberler[i].p='x';const b2=JSON.parse(metin(k1));b2.haberler[i].anahtar='mali.yok';
    const H=T('kariyerDogrula')(T('kariyerOlustur')(b)),H2=T('kariyerDogrula')(T('kariyerOlustur')(b2));
    denetle('kariyerDogrula temiz; bozuk rapor kopyaları (parametre nesne değil; bilinmeyen anahtar) yakalanır',!T('kariyerDogrula')(k1).length&&H.some(e=>/parametreler nesne değil/.test(e))&&H2.some(e=>/bilinmeyen anahtar/.test(e)),H.concat(H2).slice(0,2).join(' · '));}
+  {/* RK5-a (karar 83): resmî yazının okumaları — aynı türün önceki raporu, seyrin kayıttaki noktaları, Sayı; saf (kariyer değişmez) */
+   const R=T('maliRaporlari')(k1),ai=R.find(x=>x.h===ay).i,hi=R.find(x=>x.h===hf).i,ilkI=R[R.length-1].i,on=metin(k1);
+   const onc=T('maliRaporOnceki')(k1,hi),S=T('maliRaporSeyri')(ay),sayi=T('maliRaporSayisi')(k1,ai),sayiH=T('maliRaporSayisi')(k1,hi);
+   denetle('RK5-a: önceki rapor aynı türden (30 Kasım haftalığının öncesi 23 Kasım açılış özeti; ilk raporun öncesi yok); seyir rapor anı, en düşük ve 90 gün sonrasıyla (sayılar kayıttan); Sayı yıl/ay-sıra; kariyer değişmez',
+     !!onc&&onc.h.tarih==='2026-11-23'&&T('maliRaporOnceki')(k1,ilkI)===null&&S[0].tur==='bugun'&&S[0].tutar===ay.p.nakit&&S[S.length-1].tur==='son'&&S[S.length-1].tutar===ay.p.son90
+     &&S[S.length-1].tarih===T('tarihEkle')('2026-12-01',90)&&(S.length===2||(S[1].tur==='enDusuk'&&S[1].tutar===ay.p.enDusuk))&&sayi==='2026/12-01'&&sayiH==='2026/11-02'&&metin(k1)===on,
+     `${S.map(s=>s.tur+' '+s.tarih).join(', ')} · ${sayi} · ${sayiH}`);}
   {const d=T('bellekDeposu')();T('kariyerKaydet')(d,'s',k1);const y=T('kariyerYukle')(d,'s');denetle('Kaydet–yükle: raporlar ve zincir aynı',y.tamam&&metin(y.kariyer)===metin(k1));}
 }
 

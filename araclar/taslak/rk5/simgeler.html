@@ -1,0 +1,7 @@
+<!doctype html><meta charset="utf-8"><title>Simgeler</title>
+<style>body{font:15px system-ui;background:#fbf7ee;color:#26221c;margin:16px}div{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+figure{margin:0;display:grid;justify-items:center;gap:6px;padding:8px;border:1px solid #e4d9bf}svg.smg{fill:currentColor;shape-rendering:crispEdges}
+.b16 svg{width:16px;height:16px}.b32 svg{width:32px;height:32px}.b48 svg{width:48px;height:48px}</style>
+<div id="d"></div>
+<script src="../../../js/simge.js"></script>
+<script>d.innerHTML=Object.keys(SIMGE_TANIM).map(a=>'<figure><span class="b48">'+simgeSvg(a)+'</span><span class="b32">'+simgeSvg(a)+'</span><span class="b16">'+simgeSvg(a)+'</span><figcaption>'+a+'</figcaption></figure>').join('')</script>

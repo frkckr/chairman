@@ -60,3 +60,13 @@ Odanın 3B yenilemesi (görsel tur; yalnız dosyanın rengi ve gün notunun kü�
 2. Dosya manila karton olsun (masadaki 3B dosya da) — *evet* (§1.2); alternatif: kırmızı kalsın, çerçevesi incelsin.
 3. Gün başı notu için tuş **8** ve masada küçük sarı kâğıt — *evet* (§1.8).
 4. Gövde yazısı 16 px'e çıksın (bugün 14) — *evet* (§1.9).
+
+## 7. Durum
+
+**RK5-a (dal `claude/rk5a-iskelet`, 2026-11-01):** uygulandı; denetimler aşağıda. Plandan sapmalar ve eklemeler (Claude kararı, gerekçeli):
+
+- **Yazı tabanı:** normal 14 → 16 px; büyük yazı 16 → **17** (18 değil): 640 piksellik karede telefonun iş panelindeki kart büyük yazıda 18 ile kaydırmadan görünmüyordu (akış §3, R2'de kapanan B47 ve B48'in ölçüsü). Geniş karede oran (`yaziBoyu` 1,5 / 1,8 cqw) değişmedi: ~1070 piksellik kareden geniş pencerede gövde zaten 16'nın üstünde. Okunurluk eşiği gövde ≥ 15 px.
+- **Alt şerit tek satır (DIL kural 1):** odak açıkken şeritte son mesaj varsa yalnız o, yoksa yardım cümlesi yalnız oturumun ilk üç açılışında. Dar karede (< 820 px) odak kabı alt şeridin ölçülen yüksekliğinin hemen üstüne iner (`--od-alt`; masa şeridi zaten perdenin altında).
+- **90 günün seyri kayıttaki gerçek noktalardan:** raporun kaydında yalnız sayılar var (rapor anı, en düşük ve tarihi, 90 gün sonrası); ara hareketler saklanmıyor. Çizgi bu üç noktayı birleştirir, noktalar altında yazıyla; kayda alan eklenmedi (`maliRaporSeyri`).
+- **Eklemeler:** rapor yazısının altında kâğıdın kendi eylemi “Müdüre sor: Kasa ne durumda? ▸” (telefondaki konu); odak halkası kırmızıdan mürekkep mavisine (renk disiplini); kartın damgası, dosyanın konu damgası daktilo kalın çift çizgi (piksel yazı yalnız cihaz göstergelerinde); TV 100 ve telefonun Takip listesinde haber türünün simgesi (`haberSimgesi`); üst çubukta kulüp ve başkan adı dar karede tek satır, üç noktayla.
+- **Simge seti:** taslağın 22 simgesine oyunun ihtiyacı olan 11'i eklendi (ayar, belge, arşiv, değişiklik, devir, konum, kapı, kişi, kar, kurum, nokta); kartın ve telefon konusunun eski 24'lük çizgi simgeleri bu sete bağlandı (`SIMGE_KART`).

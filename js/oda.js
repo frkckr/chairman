@@ -181,7 +181,9 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
    N.cv=cv;N.doku=sayfa.material.map;}
   /* dosya: yalnız açık mesele varken masadadır */
   {const N=nesne('dosya',0.6,-0.72,-0.22,0.34,0.06,0.42);
-   const kapak=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.022,0.38),oLAM({color:OD.dosya}));kapak.position.y=0.011;N.g.add(kapak);
+   /* RK5-a: manila karton, solda kırmızı sırt etiketi (STIL.oda.dosyaKapak, dosyaSirt) */
+   const kapak=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.022,0.38),oLAM({color:OD.dosyaKapak||OD.dosya}));kapak.position.y=0.011;N.g.add(kapak);
+   if(OD.dosyaSirt){const s=new THREE.Mesh(new THREE.BoxGeometry(0.022,0.024,0.13),oLAM({color:OD.dosyaSirt}));s.position.set(-0.135,0.012,0.04);N.g.add(s);}
    const kagit=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.008,0.36),oLAM({color:OD.kagit}));kagit.position.set(0.012,0.006,0.006);N.g.add(kagit);
    const etiket=new THREE.Mesh(new THREE.PlaneGeometry(0.17,0.07),oLAM({color:OD.dosyaEtiket}));etiket.rotation.x=-Math.PI/2;etiket.position.set(0,0.0225,-0.08);N.g.add(etiket);
    /* U6 (envanter 16): açık konu arttıkça dosyanın altında taşan kâğıtlar (en çok üç; yalnız sayı, mevcut veriden) */

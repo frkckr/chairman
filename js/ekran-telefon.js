@@ -153,6 +153,7 @@
 .tel-takipSatir.tel-takipYeni{border-left-color:var(--k-vurgu)}
 .tel-takipSatir time{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.85em);font-variant-numeric:tabular-nums}
 .tel-takipSatir small{color:var(--k-vurgu);font-size:max(var(--k-enKucuk,12px),.8em);letter-spacing:.08em;text-transform:uppercase;font-weight:600;justify-self:end}
+.tel-takipSatir small svg.smg{margin-right:.35em}
 .tel-takipSatir span{grid-column:1/-1;min-width:0}
 .tel-takipSatir:hover,.tel-takipSatir:focus-visible{border-color:var(--k-vurgu)}
 /* N2 (2026-10-04): her karşılaşma tek satır: saat ya da dakika/durum · ev sahibi · skor · deplasman; sığmayan ad kesilir, satır kaymaz */
@@ -281,7 +282,7 @@ function telTakip(k){
   const hedef=h=>h.konu.oyuncular.length?['oyuncu',h.konu.oyuncular[0]]:h.konu.maclar.length?['mac',h.konu.maclar[0]]:['kulup',h.konu.kulupler[0]];
   return'<ul class="tel-takip">'+H.map(h=>{const t=anTarih(h.an),[tur,id]=hedef(h);
     return'<li><button type="button" class="tel-takipSatir'+(h.an>o?' tel-takipYeni':'')+'" data-eylem="csAc" data-tur="'+tur+'" data-id="'+yazT(id)+'"><time>'+yazT(telKisaAn(k,t.tarih,t.dakika))+'</time>'+
-      '<small>'+yazT(h.etiket)+'</small><span>'+yazT(String(h.metin).replace(/^TEST: /,''))+'</span></button></li>';}).join('')+'</ul>';
+      '<small>'+(typeof simgeSvg==='function'?simgeSvg(haberSimgesi(h.anahtar)):'')+yazT(h.etiket)+'</small><span>'+yazT(String(h.metin).replace(/^TEST: /,''))+'</span></button></li>';}).join('')+'</ul>';   /* RK5-a: tür simgesi */
 }
 function telPuanTablosu(L){
   /* R3: tarafsız (Demirkapı vurgusu yok), armalı; kulübe dokununca takım sayfası (js/ekran-canli.js) */

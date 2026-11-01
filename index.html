@@ -6,7 +6,7 @@
 <title>Chairman</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Jersey+10&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&family=Jersey+10&display=swap" rel="stylesheet">
 <style>
 :root{
   color-scheme:dark;
@@ -21,7 +21,11 @@
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   /* U0 (2026-10-28): gövde yazısı orantılı; tablo ve sayı sütunları --mono, büyük başlık ve büyük sayılar --display */
   --govde:"IBM Plex Sans",system-ui,"Segoe UI",sans-serif;
+  /* RK5-a (karar 83): belge kâğıtlarının başlıkları ve gazete manşeti serif (Kulüp evrakı 1999); piksel yazı (--display) yalnız cihaz göstergelerinde */
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
 }
+/* RK5-a: 16 piksellik 1-bit simge (js/simge.js); boyu yazıyla, rengi mürekkep; yanında her zaman kelime */
+svg.smg{width:1em;height:1em;flex:none;fill:currentColor;stroke:none;shape-rendering:crispEdges;vertical-align:-.14em;overflow:visible}
 *{box-sizing:border-box}
 html,body{background:var(--room);color:var(--text)}
 body{font-family:var(--govde);font-size:14px;line-height:1.55;padding-inline:16px;padding-block:18px}
@@ -188,11 +192,14 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .oda button{font:inherit;font-size:1em;line-height:1.2;color:var(--k-yazi);background:var(--k-serit);border:1px solid var(--k-cizgi);border-bottom-width:.16em;border-radius:.14em;padding:.3em .7em .22em;cursor:pointer}
 .oda button:hover:not(:disabled){border-color:var(--k-soluk)}
 .oda button:disabled{opacity:.5;cursor:not-allowed}
-.oda button:focus-visible,.oda input:focus-visible{outline:.14em solid var(--k-kulup);outline-offset:.1em}
+/* RK5-a: odak halkası mürekkep mavisi (kulüp kırmızısı yalnız kimlik ve düşüş) */
+.oda button:focus-visible,.oda input:focus-visible{outline:.14em solid var(--k-mavi);outline-offset:.1em}
 .oda button[aria-pressed="true"]{background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:var(--k-vurguYazi)}
 .oda p{margin:0}
-.od-ust{position:absolute;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:center;gap:1em;padding:.3em .9em .25em;background:var(--k-serit);border-bottom:.16em solid var(--k-kulup);
-  color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.82em);letter-spacing:.1em;text-transform:uppercase}
+.od-ust{position:absolute;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:center;gap:1em;padding:.3em .9em .25em;background:var(--k-krom);border-bottom:.14em solid var(--k-kulup);
+  color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.78em);letter-spacing:.1em;text-transform:uppercase}
+/* RK5-a: gövde tabanı 16'ya çıkınca dar karede çubuk sarmasın: kulüp ve başkan tek satır, sığmazsa üç nokta */
+.od-ust>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* RK-D (2026-11-01): tarih kutusu kalktı (odada masa takvimi ve duvar saati var); tarih ve saat üst çubukta, saat kulüp kırmızısı */
 .od-ustTarih{color:var(--k-yazi);letter-spacing:.06em;white-space:nowrap}
 .od-ustSaat{color:var(--k-kulup);font-weight:700;letter-spacing:.04em}
@@ -207,7 +214,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .oda .od-kucuk{font-size:max(var(--k-enKucuk,12px),.82em);font-weight:400;color:var(--k-soluk);min-width:0}
 .od-panel{position:absolute;top:2.5em;right:.7em;bottom:5.3em;width:57%;display:grid;grid-template-rows:auto minmax(0,1fr);background:var(--k-zemin);border:1px solid var(--k-cizgi);box-shadow:.35em .45em 0 var(--k-golge)}
 .od-panel>header{display:flex;justify-content:space-between;align-items:center;gap:1em;padding:.25em .5em .15em .8em;background:var(--k-zeminKoyu);border-bottom:1px solid var(--k-cizgi)}
-.od-panel h3{margin:0;font-family:var(--display);font-weight:400;font-size:2em;line-height:1;letter-spacing:.04em;color:var(--k-kulup)}
+.od-panel h3{margin:0;font-family:var(--govde);font-weight:600;font-size:1.3em;line-height:1.2;letter-spacing:0;color:var(--k-yazi)}
 .od-icerik{padding:.6em .8em .8em;display:grid;gap:.5em;align-content:start;overflow-y:auto}
 .od-icerik h4{margin:.2em 0 0;font-size:max(var(--k-enKucuk,12px),.82em);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu);display:flex;flex-wrap:wrap;gap:.2em .6em;align-items:baseline}
 .od-icerik h4 small{font-weight:400;letter-spacing:.04em;color:var(--k-soluk);text-transform:none}
@@ -233,7 +240,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .od-sekmeler{display:flex;flex-wrap:wrap;gap:.3em}
 .od-dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.1em 1em;margin:0}
 .od-dl dt{color:var(--k-soluk)}.od-dl dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
-.od-alt{position:absolute;inset:auto 0 0 0;display:flex;align-items:center;gap:1em;padding:.45em .9em .4em;background:var(--k-serit);border-top:.16em solid var(--k-cizgi)}
+.od-alt{position:absolute;inset:auto 0 0 0;display:flex;align-items:center;gap:1em;padding:.45em .9em .4em;background:var(--k-krom);border-top:1px solid var(--k-cizgi)}
 .od-altYazi{flex:1;min-width:0;display:grid;gap:.1em}
 .od-mesaj,.od-durak{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .od-durak{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.92em);-webkit-line-clamp:1}
@@ -243,7 +250,9 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 /* 2.8Q: ajandadaki seçili işin eylemleri alt şeritte; ana düğme sağda */
 .od-altDugmeler{display:flex;align-items:center;gap:.5em;flex:none}
 .oda .od-ikinci{white-space:nowrap;padding:.3em .8em .2em;background:var(--k-zemin)}
-.oda .od-ana{font-family:var(--display);font-size:2.1em;line-height:1;letter-spacing:.06em;padding:.18em 1em .08em;background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:var(--k-vurguYazi);white-space:nowrap}
+/* RK5-a: ana eylem gövde yazısıyla (piksel yazı yalnız cihaz göstergelerinde); amber, koyu alt kenar */
+.oda .od-ana{display:inline-flex;align-items:center;gap:.45em;font-family:var(--govde);font-weight:600;font-size:1.3em;line-height:1.2;letter-spacing:.01em;padding:.42em 1.15em .36em;
+  background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:var(--k-vurguYazi);white-space:nowrap;box-shadow:0 .1em 0 var(--k-vurgu)}
 .oda .od-ana:active:not(:disabled){transform:translateY(.06em)}
 .od-bozuk{left:12%;right:12%;width:auto;bottom:auto}
 /* test bilgisi (GEÇİCİ): küçük TEST simgesi; üzerine gelince, odakta ya da tıklayınca hemen altında bilgi kutusu açılır.
@@ -257,7 +266,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .od-tavsiye{display:flex;flex-wrap:wrap;align-items:center;gap:.3em .7em}
 .od-s-tutuldu{color:var(--k-yesil)}.od-s-bozuldu{color:var(--k-kirmizi)}.od-s-acik{color:var(--k-vurgu)}
 .od-gazete{border-left-color:var(--k-yazi)}
-.od-manset{font-family:var(--display);font-size:1.7em;line-height:1;letter-spacing:.02em}
+.od-manset{font-family:var(--serif);font-weight:600;font-size:1.35em;line-height:1.15}
 .od-genis{width:auto;left:.7em}
 .od-kadro{width:100%;border-collapse:collapse;font-size:max(var(--k-enKucuk,12px),.86em);font-variant-numeric:tabular-nums}
 .od-kadro th{font-weight:500;color:var(--k-soluk);text-align:right;border-bottom:1px solid var(--k-cizgi);padding:.1em .25em}
@@ -316,7 +325,8 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .oda .od-gizli:not(:focus):not(:focus-visible){position:absolute;width:1px;height:1px;min-width:0;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0;white-space:nowrap}
 /* ---- 2.8C tek konu ekranları: dosya, kasa, ajanda günleri, telefon uygulamaları, ayar bölümleri ---- */
 .od-kategori{display:inline-flex;align-items:center;gap:.4em;font-size:max(var(--k-enKucuk,12px),.82em);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--k-soluk)}
-.od-kSimge{display:inline-grid;place-items:center;width:1.6em;height:1.6em;font-style:normal;font-weight:600;letter-spacing:0;border-radius:.25em;background:var(--k-kulup);color:var(--k-serit)}
+/* RK5-a: kategori simgesi mürekkep renginde 16 piksellik piktogram (eskiden kırmızı kutuda harf; simge yoksa harf) */
+.od-kSimge{display:inline-grid;place-items:center;flex:none;font-style:normal;font-weight:600;letter-spacing:0;color:var(--k-yazi);font-size:1.15em}
 .od-sekmeler button{font-size:max(var(--k-enKucuk,12px),.92em)}
 .od-ayarSatir{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4em 1em;padding:.35em 0;border-bottom:1px solid var(--k-cizgi)}
 /* R1-b: kayıt dosyasını yükleme onayı */
@@ -509,6 +519,7 @@ html,body{margin:0}
 <script src="js/oda-ziyaret.js"></script>
 <script src="js/arma.js"></script>
 <script src="js/ekran-mac-oncesi.js"></script>
+<script src="js/simge.js"></script>
 <script src="js/portre.js"></script>
 <script src="js/oyuncu-karti.js"></script>
 <script src="js/ekran-kart.js"></script>

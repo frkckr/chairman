@@ -151,6 +151,8 @@ Her madde tarihli bir özettir; ayrıntı bağlantıdaki belgededir. Daha eski k
 
 83. **2026-11-01 — RK3 arayüz dili seçimi (kullanıcı: “Önerdiğin karışım”).** İskelet ve yoğun ekranlar “Kırtasiye”, belge niteliğindeki kâğıtlar (mali rapor ve resmî yazışmalar, kulübün oyuncu dosyasında sicil fişi, transfer panosu, gün başı notu) “Kulüp evrakı 1999”; ortak taban ve ölçüler STIL_REHBERI §7 “Arayüz dili”nde. DIL.md soru 2–3 varsayılanla: gün başı notu masada rozetle bekler, resmî yazı dili kalır. Uygulama RK5 (plan `araclar/plan/rk5-uygulama.md`; kullanıcı 2026-11-01: “Onayla, başla”, dört soru varsayılanla).
 
+84. **2026-11-01 — RK5-a arayüz dili: iskelet, simgeler, mali rapor (karar 83'ün ilk dilimi).** Kırtasiye paleti ve gövde tabanı 16 px (büyük yazı 17: 640 piksellik karede telefonun iş paneli); odak başlığı kâğıdın içinde, perde hafif, alt şerit odakta tek satır; 16 piksellik simge seti (`js/simge.js`) masa şeridinde, sekmelerde, kartta, haber satırlarında; dosya manila (3B de); mali rapor resmî yazı (antet, Sayı, Konu, üç rakam, 90 günün seyri, tablolar, ALINDI, paraf, “Müdüre sor”); gazete serif; piksel yazı yalnız cihaz göstergelerinde. Seyir kayıttaki üç gerçek noktadan (kayda alan yok). Ayrıntı STIL_REHBERI §7, plan §7; `tur/rk5a-iskelet`.
+
 ## Çalışma biçimi
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz. Planlanmış olmak tamamlanmış olmak değildir; yalnız uygulanıp doğrulanan işler işaretlenir.

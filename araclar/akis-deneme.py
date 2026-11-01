@@ -2963,7 +2963,8 @@ async def bolum_26(tarayici, site, tum_hatalar):
     tum_hatalar += hatalar
     await yazi_bekle(pg)
     yt = await pg.evaluate("() => [...new Set([...document.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/\"/g, '')))]")
-    denetle("U0: IBM Plex Sans yüklü (gövde yazısı); Jersey 10 başlıkta", "IBM Plex Sans" in yt and "Jersey 10" in yt, str(yt))
+    # RK5-a (karar 83): piksel yazı (Jersey 10) yalnız cihaz göstergelerinde (telefonun saati, skorbord, forma numarası, TV); odada başlıklar gövde yazısıyla
+    denetle("U0, RK5-a: IBM Plex Sans yüklü (gövde yazısı); odak başlığı gövde yazısıyla (piksel yazı yalnız cihaz göstergelerinde)", "IBM Plex Sans" in yt, str(yt))
     olc = {}
     for yazi, boyut in (("normal", (1100, 810)), ("buyuk", (1100, 810)), ("normal", (672, 600)), ("buyuk", (672, 600))):
         await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
@@ -2976,13 +2977,14 @@ async def bolum_26(tarayici, site, tum_hatalar):
             await masaya_don(pg)
     bilgi = {a: (o["govde"], o["enKucuk"]) for a, o in olc.items() if o}
     print(f"  bilgi: gövde ve en küçük metin (px) {bilgi}")
-    # R1-f (2026-10-29): ölçek piksel tabanlı — max(14 px, 1,5 cqw), büyük yazıda max(16 px, 1,8 cqw)
-    beklenen = lambda a, ekran: max(16 if a.startswith("buyuk") else 14, (1.8 if a.startswith("buyuk") else 1.5) * ekran / 100)
-    denetle("U0/R1-f: odada yazı ölçeği tek değişkenden (--k-yaziBoyu; normal max(14 px, 1,5 cqw), büyük max(16 px, 1,8 cqw)); gövde orantılı yazı (IBM Plex Sans)",
+    # R1-f (2026-10-29): ölçek piksel tabanlı — max(taban, 1,5 cqw), büyük yazıda max(taban, 1,8 cqw); RK5-a (karar 83): taban STIL.kagit.yaziTaban'dan
+    taban = await pg.evaluate("() => STIL.kagit.yaziTaban")
+    beklenen = lambda a, ekran: max(taban["buyuk"] if a.startswith("buyuk") else taban["normal"], (1.8 if a.startswith("buyuk") else 1.5) * ekran / 100)
+    denetle(f"U0/R1-f, RK5-a: odada yazı ölçeği tek değişkenden (--k-yaziBoyu; normal max({taban['normal']} px, 1,5 cqw), büyük max({taban['buyuk']} px, 1,8 cqw)); gövde orantılı yazı (IBM Plex Sans)",
             all(o and o["aile"] == "IBM Plex Sans" for o in olc.values())
             and all(abs(o["govde"] - beklenen(a, o["ekran"])) < 0.15 for a, o in olc.items()), str({a: (o["ekran"], o["govde"]) for a, o in olc.items()}))
-    denetle("R1-f: her genişlikte gövde ≥ 14 px, normal yazıda en küçük metin ≥ 12 px (ayrıntılı ölçü: araclar/okunurluk.py)",
-            all(o["govde"] >= 14 for o in olc.values()) and all(olc[k]["enKucuk"] >= 12 for k in olc if k.startswith("normal")),
+    denetle("R1-f, RK5-a: her genişlikte gövde ≥ 15 px, normal yazıda en küçük metin ≥ 12 px (ayrıntılı ölçü: araclar/okunurluk.py)",
+            all(o["govde"] >= 15 for o in olc.values()) and all(olc[k]["enKucuk"] >= 12 for k in olc if k.startswith("normal")),
             str({a: (o["ekran"], o["govde"], o["enKucuk"]) for a, o in olc.items()}))
     await pg.context.close()
     # bülten ve maç telefonu aynı ölçeği ve büyük yazıyı alır (eskiden sabit 1,3 cqw)
@@ -2997,7 +2999,7 @@ async def bolum_26(tarayici, site, tum_hatalar):
         kart = await pg.evaluate("() => { const k = document.querySelector('.prg-kart'), E = document.getElementById('onEkran').getBoundingClientRect(), r = k.getBoundingClientRect(); return { icinde: r.top >= E.top - 1 && r.bottom <= E.bottom + 1 }; }")
         hedef = 1.8 if yazi == "buyuk" else 1.5
         denetle(f"U0/R1-f: bültende yazı ortak ölçekte (max(taban, {hedef} cqw), {yazi}), orantılı gövde; kart karenin içinde",
-                b and abs(b["govde"] - max(16 if yazi == "buyuk" else 14, hedef * b["ekran"] / 100)) < 0.15 and b["aile"] == "IBM Plex Sans" and kart["icinde"], f"{b} · {kart}")
+                b and abs(b["govde"] - max(taban["buyuk"] if yazi == "buyuk" else taban["normal"], hedef * b["ekran"] / 100)) < 0.15 and b["aile"] == "IBM Plex Sans" and kart["icinde"], f"{b} · {kart}")
         await pg.context.close()
     pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=yok", "#btnMacaGec")
     tum_hatalar += hatalar
@@ -3007,7 +3009,7 @@ async def bolum_26(tarayici, site, tum_hatalar):
     await pg.keyboard.press("KeyT")
     await pg.wait_for_selector("#macTelefon:not([hidden])", timeout=5000)
     m = await pg.evaluate(YAZI_OLCU_JS, "#macTelefon")
-    denetle("U0/R1-f: maç telefonu büyük yazıyı alır (max(16 px, 1,8 cqw)), orantılı gövde", m and abs(m["govde"] - max(16, 1.8 * m["ekran"] / 100)) < 0.15 and m["aile"] == "IBM Plex Sans", str(m))
+    denetle("U0/R1-f: maç telefonu büyük yazıyı alır (max(taban, 1,8 cqw)), orantılı gövde", m and abs(m["govde"] - max(taban["buyuk"], 1.8 * m["ekran"] / 100)) < 0.15 and m["aile"] == "IBM Plex Sans", str(m))
     await pg.evaluate("() => { OYUN.ayarlar.yazi = 'normal'; OYUN.ayarlar.kaydet(); }")
     await pg.context.close()
 
@@ -3049,10 +3051,10 @@ async def bolum_27(tarayici, site, tum_hatalar):
     # kamera nesneye yaklaşıp yerine oturunca 3B çizim durur (başsız tarayıcıda kare hızı düşük: sabit bekleme yerine durumu bekle)
     await pg.wait_for_function("() => typeof odaDondur === 'function' && odaDondur()", timeout=30000)
     d = await odak(pg)
-    denetle("U1: dosya odak kabında (tek kap, geniş); başlık 'Dosya', Kapat başlıkta (sekme satırında değil); perde 7 px bulanık ve %33 karartma, "
+    denetle("U1, RK5-a: dosya odak kabında (tek kap, geniş); başlık 'Dosya', Kapat başlıkta (sekme satırında değil); perde 6 px bulanık ve %22 karartma (RK5-a: kâğıt öne, oda geriye), "
             "bulanıklık canlandırılmıyor; masadaki düğmeler etkileşimsiz; odakta İlerle yok; kamera yerleşince 3B donuk",
             d["n"] == 1 and d["ad"] == "dosya" and d["boy"] == "genis" and d["baslik"] == "Dosya" and d["kapatUstte"] and not d["kapatIcte"]
-            and "blur(7px)" in d["bulanik"] and d["zemin"].replace(" ", "").endswith("0.33)") and "backdrop" not in d["gecis"]
+            and "blur(6px)" in d["bulanik"] and d["zemin"].replace(" ", "").endswith("0.22)") and "backdrop" not in d["gecis"]
             and d["inert"] and not d["ilerle"] and d["dondu"] is True, str(d))
     await pg.screenshot(path=str(ARAC / "son-akis-27-dosya.png"))
     await pg.keyboard.press("Escape")

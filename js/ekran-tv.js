@@ -34,6 +34,7 @@ const tvGunBasligi=t=>{const [y,a,g]=t.split('-').map(Number);return TV_GUN_TAM[
 .tv-satir time{color:${Z.sari}}
 .tv-satir span{min-width:0}
 .tv-etiket{color:${Z.camgobegi};margin-right:.4em;font-size:max(var(--k-enKucuk,12px),.85em);text-transform:uppercase;letter-spacing:.06em}
+.tv-etiket svg.smg{margin-right:.35em}
 .tv-mac{display:grid;grid-template-columns:4.2em minmax(0,1fr) 3.4em minmax(0,1fr) auto;align-items:center;gap:.45em;padding:.15em .25em}
 .tv-mac .tv-ev{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tv-mac .tv-dep{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -66,7 +67,7 @@ function tvSayfasi(k,sayfa,y){
     const H=typeof tvHaberleri==='function'?tvHaberleri(k):[];
     const hedef=h=>h.konu.maclar.length?['mac',h.konu.maclar[0]]:h.konu.oyuncular.length?['oyuncu',h.konu.oyuncular[0]]:h.konu.kulupler.length?['kulup',h.konu.kulupler[0]]:null;
     ic=H.length?'<ol class="tv-liste">'+kes(H.map(h=>{const t=anTarih(h.an),hd=hedef(h);
-      const ic2='<time>'+saatYazi(t.dakika)+'</time><span><span class="tv-etiket">'+yaz(h.etiket)+'</span>'+yaz(String(h.metin).replace(/^TEST: /,''))+'</span>';
+      const ic2='<time>'+saatYazi(t.dakika)+'</time><span><span class="tv-etiket">'+(typeof simgeSvg==='function'?simgeSvg(haberSimgesi(h.anahtar)):'')+yaz(h.etiket)+'</span>'+yaz(String(h.metin).replace(/^TEST: /,''))+'</span>';   /* RK5-a: tür simgesi */
       return'<li>'+(hd?'<button type="button" class="tv-satir" data-eylem="tvAc" data-tur="'+hd[0]+'" data-id="'+yaz(hd[1])+'">'+ic2+'</button>':'<div class="tv-satir">'+ic2+'</div>')+'</li>';}))+'</ol>'
       :'<p class="tv-not">TEST: Bugün önemli haber yok.</p>';
   }else if(s==='skor'){

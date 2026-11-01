@@ -94,6 +94,8 @@ const yazT=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 .kk-cevapBas b{font-size:1.3em;line-height:1.2;font-weight:600;overflow-wrap:anywhere}
 .kk-simge{display:grid;place-items:center;width:2.4em;height:2.4em;border-radius:50%;border:.12em solid var(--k-cizgi);background:var(--k-zemin);color:var(--k-yazi)}
 .kk-simge svg,.tlf-kSimge svg{width:60%;height:60%;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+/* RK5-a: 16 piksellik set (js/simge.js); 24'lük çizgi simgeler yalnız set yüklenmediyse */
+.kk-simge svg.smg,.tlf-kSimge svg.smg,.cs-simge svg.smg{width:1em;height:1em;fill:currentColor;stroke:none}
 .kk-kart[data-hazir] .kk-simge{border-color:var(--k-vurgu);background:var(--k-vurguZemin);color:var(--k-vurguYazi,${K.vurguYazi})}
 .kk-kenarlar[hidden]{display:none}
 .kk-gorusler{display:grid;gap:.2em}
@@ -229,7 +231,8 @@ const KART_SIMGE_CIZ={
   yol:'<path d="M12 21s-6-5.6-6-10.2a6 6 0 0112 0C18 15.4 12 21 12 21z"/><circle cx="12" cy="10.8" r="2.2"/>',
   nokta:'<circle cx="12" cy="12" r="2.5"/>'};
 /* simge (tür adıyla; telefonun konu menüsü de kullanır) ve cevabın simgesi (seçeneğin kimliğiyle) */
-const kartSimgeHtml=(tur,sinif)=>'<i class="'+sinif+'" data-simge="'+tur+'" aria-hidden="true"><svg viewBox="0 0 24 24">'+(KART_SIMGE_CIZ[tur]||KART_SIMGE_CIZ.nokta)+'</svg></i>';
+const kartSimgeHtml=(tur,sinif)=>'<i class="'+sinif+'" data-simge="'+tur+'" aria-hidden="true">'+(typeof simgeSvg==='function'&&typeof SIMGE_KART!=='undefined'?simgeSvg(SIMGE_KART[tur]||'nokta'):
+  '<svg viewBox="0 0 24 24">'+(KART_SIMGE_CIZ[tur]||KART_SIMGE_CIZ.nokta)+'</svg>')+'</i>';
 const kartSimge=id=>kartSimgeHtml(KART_SIMGE_TUR[id]||'nokta','kk-simge');
 
 /* fırsat kartının kalan süresi (künye): bugün, yarın ya da n gün */
@@ -370,9 +373,10 @@ const kartDamga=(()=>{
     if(!kart||typeof document==='undefined')return null;
     const M=STIL.kagit.kart.damga,d=document.createElement('div'),son='translate(-50%,-50%) rotate('+M.egim+'deg)';
     d.className='kk-damga';d.setAttribute('aria-hidden','true');d.textContent=String(metin||'').toLocaleUpperCase('tr-TR');
-    d.style.cssText='position:absolute;left:50%;top:46%;z-index:2;transform:'+son+';box-sizing:border-box;max-width:92%;padding:.14em .5em .06em;border:.16em solid currentColor;'+
-      'border-radius:.3em;color:var(--k-murekkep,'+STIL.kagit.murekkep+');background:transparent;font-family:var(--display);font-size:2.3em;font-weight:400;line-height:1;'+
-      'letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;opacity:.9;mix-blend-mode:multiply';
+    /* RK5-a (karar 83): damga öbür mühürler gibi daktilo kalın harf, çift çizgi (piksel yazı yalnız cihaz göstergelerinde) */
+    d.style.cssText='position:absolute;left:50%;top:46%;z-index:2;transform:'+son+';box-sizing:border-box;max-width:92%;padding:.16em .55em .1em;border:.2em double currentColor;'+
+      'border-radius:.3em;color:var(--k-murekkep,'+STIL.kagit.murekkep+');background:transparent;font-family:var(--mono);font-size:1.55em;font-weight:700;line-height:1.1;'+
+      'letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;opacity:.9;mix-blend-mode:multiply';
     kart.appendChild(d);
     /* dar kartta (telefon) uzun cevap adı sığsın: yazı kartın %88'ine iner (en çok yarıya); yine sığmazsa üç nokta */
     const en=kart.clientWidth*.88;
