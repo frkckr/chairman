@@ -28,7 +28,8 @@ const DEFTER_GORULEN={ilk:true,set:new Set()};
   background-size:100% 1.4em,100% 100%}
 .dft-ust{display:flex;align-items:baseline;justify-content:space-between;gap:.6em;padding-bottom:.2em;border-bottom:.14em solid ${F.kurdele}}
 .oda .dft-ust .od-kapat{font-size:max(var(--k-enKucuk,12px),.85em);align-self:center}
-.dft-ust b{font-family:var(--display);font-weight:400;font-size:1.9em;line-height:1;letter-spacing:.04em;color:var(--k-yazi)}
+/* RK5-b (karar 83 “Kırtasiye”): başlık gövde yazısıyla; piksel yazı yalnız cihaz göstergelerinde */
+.dft-ust b{font-family:var(--govde);font-weight:600;font-size:1.4em;line-height:1.1;letter-spacing:0;color:var(--k-yazi)}
 .dft-ust small{color:var(--k-soluk);letter-spacing:.08em;text-transform:uppercase;font-size:max(var(--k-enKucuk,12px),.82em)}
 .dft-oklar{display:flex;gap:.25em}
 .oda .dft-oklar button{padding:.05em .45em;font-size:max(var(--k-enKucuk,12px),.9em)}
@@ -37,7 +38,7 @@ const DEFTER_GORULEN={ilk:true,set:new Set()};
   background:transparent;border:0;border-bottom:1px solid ${F.cizgi};border-radius:0;color:var(--k-yazi)}
 .oda .dft button.dft-gun[aria-pressed="true"]{background:${F.secili}}
 .dft-gunAd{color:var(--k-soluk);text-transform:uppercase;font-size:max(var(--k-enKucuk,12px),.86em);letter-spacing:.06em}
-.dft-gunNo{font-family:var(--display);font-size:1.55em;line-height:1;justify-self:center;display:grid;place-items:center;width:1.6em;height:1.6em}
+.dft-gunNo{font-family:var(--govde);font-weight:600;font-size:1.3em;line-height:1;font-variant-numeric:tabular-nums;justify-self:center;display:grid;place-items:center;width:1.9em;height:1.9em}
 .dft-bugun .dft-gunNo{border:.13em solid ${F.kurdele};border-radius:50% 45% 50% 40%;color:${F.kurdele};transform:rotate(-6deg)}
 .dft-gecmis .dft-gunAd,.dft-gecmis .dft-gunNo{opacity:.55}
 .dft-isaret{display:flex;gap:.45em;align-items:center;justify-content:flex-end;font-size:max(var(--k-enKucuk,12px),.88em);color:${F.murekkep}}

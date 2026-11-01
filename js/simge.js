@@ -77,7 +77,7 @@ function simgeSvg(ad,sinif){
 /* kartın ve telefonun konu menüsünün eski adları (24'lük çizgi simgeler) → 16'lık set */
 const SIMGE_KART={onay:'onay',takvim:'takvim',para:'kasa',carpi:'kapat',degis:'degis',devir:'devir',top:'mac',takim:'takim',telefon:'telefon',yol:'yol',nokta:'nokta'};
 /* dosya konusunun kategorisi (ad) → simge; bilinmeyen kategori kurum */
-const KATEGORI_SIMGE={Futbol:'mac','Sözleşme':'belge',Kurumsal:'kurum',Transfer:'transfer','Kulüp':'kurum'};
+const KATEGORI_SIMGE={Futbol:'mac','Sözleşme':'belge',Kurumsal:'kurum',Transfer:'transfer','Kulüp':'kurum',Mali:'kasa'};
 const kategoriSimgesi=ad=>KATEGORI_SIMGE[ad]||'kurum';
 /* haberin türü (anahtar) → simge; bilinmeyen haber gazete */
 const HABER_SIMGE={'hb.sonuc':'mac','gz.mac':'mac','gz.sonuclar':'mac','hb.kirmizi':'kart','gz.sakat':'sakatlik','gz.program':'takvim','gz.yaklasan':'takvim',

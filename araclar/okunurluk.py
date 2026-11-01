@@ -121,6 +121,11 @@ async def sahneler_oda(pg, olc):
     await tikla(pg, '.tel [data-eylem="telEv"]')
     await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="skor"]')
     await olc("canli-skor")
+    await akis.masaya_don(pg)
+    await pg.keyboard.press("Digit8")   # RK5-b: gün başı notu
+    await pg.wait_for_selector("#oda .gn", timeout=10000)
+    await olc("gun-notu")
+    await akis.masaya_don(pg)
     await pg.keyboard.press("Digit3")
     await pg.wait_for_selector(".dsy .kk-kart", timeout=10000)
     await olc("dosya-kart")

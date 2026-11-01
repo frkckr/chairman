@@ -452,6 +452,10 @@ const STIL={
        RK5-a (karar 83, “kâğıt öne, oda geriye”): perde hafifledi (%22 karartma, 6 px); kâğıdın gölgesi yumuşak (golge), kenarı ince */
     /* U5 gazete kâğıdı (js/ekran-gazete.js): kâğıt, eskidikçe yaklaştığı sarı, mürekkep, soluk, çizgi, etiket kırmızısı. TEST */
     gazete:{kagit:'#f6f2e7',sari:'#e6d6a8',murekkep:'#1d1a16',soluk:'#5f574b',cizgi:'#b9ae96',kirmizi:'#a3241b'},
+    /* RK5-b (karar 83 “Kulüp evrakı 1999”) mantar pano (js/ekran-transfer.js): mantar ve iki tonlu nokta, ahşap çerçeve, iğne, teleks kâğıdı. TEST */
+    transfer:{mantar:'#bf905a',mantarKoyu:'rgba(90,58,24,.42)',mantarAcik:'rgba(255,240,210,.32)',ahsap:'#6b4a2b',ahsapKoyu:'#4a321c',igne:'#b4241c',teleks:'#f4ecc8'},
+    /* RK5-b gün başı notu (js/ekran-not.js): sarı bloknot, mavi satır çizgisi, kenar, üst bant; sarı not (oyuncu dosyasının notları). TEST */
+    not:{kagit:'#fbf0b3',cizgi:'rgba(70,90,140,.2)',kenar:'#d9c77a',ust:'#e9cf5c',sari:'#fbeea4'},
     /* RK8-a TV sayfası (js/ekran-tv.js): teletext — koyu ekran, kasa, kanal şeridi, yazı, soluk, sarı (saat ve skor), camgöbeği (başlık), canlı kırmızısı. TEST */
     tv:{zemin:'#0f1923',kasa:'#2a2e35',serit:'#c8281e',seritYazi:'#fff7ee',yazi:'#eef2f6',soluk:'#a8b7c5',sari:'#ffd75a',camgobegi:'#86dcec',kirmizi:'#ff7a6b',cizgi:'#3c4c5c',vurgu:'rgba(255,215,90,.14)'},
     /* U4 zaman geçiyor sahnesi (js/ekran-zaman.js): taban + satır başı sn, en çok enCok sn. TEST */

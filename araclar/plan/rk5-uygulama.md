@@ -71,3 +71,10 @@ Odanın 3B yenilemesi (görsel tur; yalnız dosyanın rengi ve gün notunun kü�
 - **Eklemeler:** rapor yazısının altında kâğıdın kendi eylemi “Müdüre sor: Kasa ne durumda? ▸” (telefondaki konu); odak halkası kırmızıdan mürekkep mavisine (renk disiplini); kartın damgası, dosyanın konu damgası daktilo kalın çift çizgi (piksel yazı yalnız cihaz göstergelerinde); TV 100 ve telefonun Takip listesinde haber türünün simgesi (`haberSimgesi`); üst çubukta kulüp ve başkan adı dar karede tek satır, üç noktayla.
 - **Ayarlar üst çubukta (DIL kural 1):** okunurluk ölçüsünde 640 piksellik karede masa şeridi (simge + kelime) sığmıyordu; Ayarlar masa nesnesi olmadığı için Duraklat'ın yanına geçti, dar karede şeritte simgeler gizlenir (kelime kalır), “Kaydedildi” dar karede yalnız uyarıda.
 - **Simge seti:** taslağın 22 simgesine oyunun ihtiyacı olan 11'i eklendi (ayar, belge, arşiv, değişiklik, devir, konum, kapı, kişi, kar, kurum, nokta); kartın ve telefon konusunun eski 24'lük çizgi simgeleri bu sete bağlandı (`SIMGE_KART`).
+
+**RK5-b (dal `claude/rk5b-belgeler`, 2026-11-01):** uygulandı; denetimler aşağıda. Plandan sapmalar ve eklemeler:
+
+- **Gün başı notu:** kural `js/gun-notu.js` (`gunNotu`, `sonraKararlari`, `notYeni`, `notOkundu`, `notDogrula`), görünüm `js/ekran-not.js`; asistanın adı yerine “Özel kalem” (yeni kişi eklenmedi; plan §1.8'in “bugünkü kişi yoksa” yolu). Kayıt alanı `k.notOkunan` (plandaki `notOkunan` adı; isteğe bağlı). Masadaki “Sonra” yığını da aynı kural işlevini okur (tek kaynak). 3B sarı not masanın sağ önünde, dosyanın önünde.
+- **Sicil fişi:** kat satırı “Futbolcu sicil fişi” (eski “Oyuncu dosyası” satırının yeri; TEST kutusu yanında); alanlar fiş darsa tek, genişse iki sütun (adlı kap sorgusu `ok-sicil`; `.ok-alanlar` aynı zamanda `.dsy-kunye` olduğu için kurallar fişe bağlı). Mühür alanların altında, sağda (alanların üstüne binmez).
+- **Kadro tablosu:** dar karede (< 820 px) en az 52 em (RK4-b'den beri yüz ve Boy sütunuyla ad görünmüyordu); liste kendi sayfasında yatay kayar.
+- **Kategori simgesi:** “Mali” (TEST içeriği) kasa simgesiyle.

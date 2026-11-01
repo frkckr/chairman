@@ -207,7 +207,8 @@ function csSayfaHtml(k,T,s){
 .cs-takip[aria-pressed="true"]{background:transparent;color:var(--k-soluk)}
 .cs-takip:hover,.cs-takip:focus-visible{border-color:var(--k-vurgu)}
 .cs-takipKap{margin:0;display:flex;justify-content:flex-end}
-.cs-kulupBas h4,.cs-oyuncuBas h4{font-family:var(--display);font-weight:400;font-size:1.6em;line-height:1}
+/* RK5-b (karar 83 “Kırtasiye”): başlık gövde yazısıyla; piksel yazı yalnız cihaz göstergelerinde */
+.cs-kulupBas h4,.cs-oyuncuBas h4{font-family:var(--govde);font-weight:600;font-size:1.3em;line-height:1.15}
 .cs-kulupBas small,.cs-oyuncuBas small{color:var(--k-soluk)}
 .cs-oyuncuBas div{display:grid;gap:.15em;justify-items:start}
 .cs-forma{flex:none;display:grid;place-items:center;width:2.2em;height:2.2em;border-radius:.3em;background:var(--k-zeminKoyu,#00000014);font-family:var(--display);font-size:1.4em}

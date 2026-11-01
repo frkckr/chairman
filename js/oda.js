@@ -194,6 +194,12 @@ const ODA={sahne:new THREE.Scene(),kamera:new THREE.PerspectiveCamera(OD.aci,RW/
    const govde=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.014,0.24),oLAM({color:OD.gazete}));govde.position.y=0.007;N.g.add(govde);
    const yuz=new THREE.Mesh(new THREE.PlaneGeometry(0.32,0.24),oLAM({map:tx(cv,'n')}));yuz.rotation.x=-Math.PI/2;yuz.position.y=0.0145;N.g.add(yuz);
    N.isik=glow(OD.vurgu,0.3,0);N.isik.position.y=0.05;N.g.add(N.isik);N.g.visible=false;}
+  /* RK5-b: gün başı notu — masanın önünde küçük sarı bloknot (yalnız not varken; okunmamış notta amber ışık) */
+  {const N=nesne('not',0.5,-0.4,0.16,0.16,0.04,0.16),cv=mk(16,16),g=cv.getContext('2d');
+   g.fillStyle=OD.notKagidi;g.fillRect(0,0,16,16);g.fillStyle='#d9b84a';g.fillRect(0,0,16,3);g.fillStyle='#8a94b8';for(let y=6;y<16;y+=3)g.fillRect(2,y,12,1);
+   const govde=new THREE.Mesh(new THREE.BoxGeometry(0.13,0.012,0.13),oLAM({color:OD.notKagidi}));govde.position.y=0.006;N.g.add(govde);
+   const yuz=new THREE.Mesh(new THREE.PlaneGeometry(0.13,0.13),oLAM({map:tx(cv,'n')}));yuz.rotation.x=-Math.PI/2;yuz.position.y=0.0125;N.g.add(yuz);
+   N.isik=glow(OD.vurgu,0.22,0);N.isik.position.y=0.04;N.g.add(N.isik);N.g.visible=false;}
   /* teşekkür kartı: ayakta duran küçük kart; yalnız gelen teşekkürden sonra */
   {const kart=new THREE.Group();kart.position.set(0.16,UST,-1.04);kart.rotation.y=-0.2;
    const a=new THREE.Mesh(new THREE.BoxGeometry(0.13,0.09,0.004),oLAM({color:OD.kagit}));a.position.set(0,0.045,0);a.rotation.x=-0.3;kart.add(a);
@@ -229,6 +235,7 @@ function odaSaatGoster(dk){if(!ODA.akrep)return;ODA.akrep.rotation.z=-((dk/60)%1
 function odaDurum(d){
   const D=Object.assign(ODA.durum,d),N=ODA.nesneler;
   N.dosya.g.visible=!!D.dosya;N.gazete.g.visible=!!D.gazete;ODA.kart.visible=!!D.kart;ODA.panoNotu.visible=!!D.panoNotu;
+  if(N.not)N.not.g.visible=!!D.not;   /* RK5-b */
   /* U4: oturum içinde yeni sayı gelince gazete masaya iner (sayfa açılışında inmez; "hareketi azalt"ta inmez) */
   {const y=!!D.gazete&&!!D.gazeteYeni;if(ODA.gazeteYeniOnce===false&&y&&!(typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches))ODA.gazeteDus=OD.gazeteDus||0.6;ODA.gazeteYeniOnce=y;}
   if(ODA.iskele!==!!D.iskele){ODA.iskele=!!D.iskele;if(ODA.disHep&&typeof balkonIskele==='function')balkonIskele(ODA.iskele);else ODA.pencereCiz(ODA.iskele);}
@@ -519,6 +526,7 @@ function odaKare(dt){
   /* yeni haber: sabit ışık (yanıp sönme yok) */
   N.telefon.isik.material.opacity=ODA.durum.haber?0.42:0;
   N.gazete.isik.material.opacity=ODA.durum.gazete&&ODA.durum.gazeteYeni?0.36:0;
+  if(N.not)N.not.isik.material.opacity=ODA.durum.not&&ODA.durum.notYeni?0.3:0;   /* RK5-b: okunmamış gün başı notu */
   if(ODA.gazeteDus>0){const S=OD.gazeteDus||0.6;ODA.gazeteDus=Math.max(0,ODA.gazeteDus-dt);const t=1-ODA.gazeteDus/S,e=1-(1-t)*(1-t);
     N.gazete.g.position.y=ODA.masaUstu+(1-e)*0.22;N.gazete.g.rotation.z=(1-e)*0.25;}
 }

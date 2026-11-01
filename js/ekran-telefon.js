@@ -95,7 +95,8 @@
 .tel-nav{display:flex;align-items:center;min-height:1.9em}
 .tel button.tel-geri{display:inline-flex;align-items:center;gap:.15em;padding:.15em .1em;background:transparent;border:0;color:${T.baglanti};font-weight:500}
 .tel button.tel-geri::before{content:"";width:.55em;height:.55em;border-left:.13em solid currentColor;border-bottom:.13em solid currentColor;transform:rotate(45deg);margin:0 .15em 0 .2em}
-.tel h4.tel-buyukBaslik{display:block;margin:0;font-family:var(--display);font-weight:400;font-size:2.5em;line-height:1;letter-spacing:.02em;text-transform:none;color:var(--k-yazi);padding:0 .05em .15em}
+/* RK5-b (karar 83 “Kırtasiye”): başlık gövde yazısıyla; piksel yazı yalnız cihaz göstergelerinde */
+.tel h4.tel-buyukBaslik{display:block;margin:0;font-family:var(--govde);font-weight:700;font-size:1.75em;line-height:1.1;letter-spacing:-.01em;text-transform:none;color:var(--k-yazi);padding:0 .05em .2em}
 /* ---- Mesajlar: kişi satırları ---- */
 .tel-portre{width:2.5em;height:2.5em}
 .tel .tel-portre{border-radius:50%;border:1px solid var(--k-cizgi);background:var(--k-serit)}
@@ -202,9 +203,9 @@
 @keyframes tlfIsBelir{from{opacity:0;transform:translateX(1.2em)}to{opacity:1;transform:none}}
 .tlf-is.tlf-isBelir{animation:tlfIsBelir .22s ease-out .06s both}
 .tlf-is{min-height:0;max-height:100%;align-self:start;overflow-y:auto;display:grid;align-content:start;gap:.75em;padding:.85em 1em 1em;color:var(--k-yazi);
-  background:var(--k-zemin);border:1px solid var(--k-cizgi);box-shadow:.35em .45em 0 var(--k-golge);container:tlf / inline-size}
+  background:var(--k-zemin);border:1px solid var(--k-cizgi);border-radius:.2em;box-shadow:${STIL.kagit.odak.golge};container:tlf / inline-size}
 .tlf-is p{margin:0}
-.tlf-is h4{margin:0;font-family:var(--display);font-weight:400;font-size:1.6em;line-height:1;letter-spacing:.02em}
+.tlf-is h4{margin:0;font-family:var(--govde);font-weight:600;font-size:1.3em;line-height:1.15;letter-spacing:0}
 .tlf-is h5{margin:.15em 0 0;font-size:max(var(--k-enKucuk,12px),.8em);letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu);font-weight:600}
 .tlf-bekleme{display:grid;gap:.1em;padding:.55em .75em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-mavi)}
 .tlf-bekleme b{font-weight:600}

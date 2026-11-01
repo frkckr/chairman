@@ -153,6 +153,8 @@ Her madde tarihli bir özettir; ayrıntı bağlantıdaki belgededir. Daha eski k
 
 84. **2026-11-01 — RK5-a arayüz dili: iskelet, simgeler, mali rapor (karar 83'ün ilk dilimi).** Kırtasiye paleti ve gövde tabanı 16 px (büyük yazı 17: 640 piksellik karede telefonun iş paneli); odak başlığı kâğıdın içinde, perde hafif, alt şerit odakta tek satır; 16 piksellik simge seti (`js/simge.js`) masa şeridinde, sekmelerde, kartta, haber satırlarında; dosya manila (3B de); mali rapor resmî yazı (antet, Sayı, Konu, üç rakam, 90 günün seyri, tablolar, ALINDI, paraf, “Müdüre sor”); gazete serif; piksel yazı yalnız cihaz göstergelerinde. Seyir kayıttaki üç gerçek noktadan (kayda alan yok). Ayrıntı STIL_REHBERI §7, plan §7; `tur/rk5a-iskelet`.
 
+85. **2026-11-01 — RK5-b arayüz dili: belge kâğıtları ve yoğun ekranlar (karar 83'ün ikinci dilimi).** Kulübün oyuncu dosyasında sicil fişi (ataşlı fotoğraf, daktilo alanlar, LİSANSLI mührü, notlar sarı kâğıtta; Canlı Skor ve transferde düz kart); transfer mantar pano (iğneli kâğıtlar, menajer önerileri teleks); **gün başı notu** (08:00'den sonra masada sarı not, tuş 8, rozetle bekler, kendiliğinden açılmaz; son maç, bugün, cevap bekleyenler, kasa, manşet; kayıttan kurulur, kayda yalnız `notOkunan`); defter, telefon, Canlı Skor ve zaman sahnesinin başlıkları gövde yazısıyla, kadro zebralı. Ayrıntı STIL_REHBERI §7, OYUN_TASARIMI §2 ve §6, TEKNIK_PLAN §6; `tur/rk5b-belgeler`.
+
 ## Çalışma biçimi
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz. Planlanmış olmak tamamlanmış olmak değildir; yalnız uygulanıp doğrulanan işler işaretlenir.

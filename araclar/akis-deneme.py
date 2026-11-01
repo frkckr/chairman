@@ -51,6 +51,8 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
  35. Zincirler (R6): gazetede başka kulüpler arasındaki transfer; sponsor teklifi telefonda (Fırsat), pazarlık kartının iki aylık rakamı, dosyada aşama.
  37. Oda (RK6, 2026-10-31): TV dolabın üstünde (tvOzeti, Canlı Skor'la aynı); kapı kartı (Sonra gelsin, Esc ve “Kapıda: …”, İlerle kaçırır), Buyursun, Duraklat,
      odaya tıklama atlatır, yenilemede oturan kişi, “Karşında: …”, balkon engeli; balkonda kapı kartı bantta, önce odaya dönülür. Telefonla uçtan uca §21'de.
+ 40. Gün başı notu, sicil fişi ve mantar pano (RK5-b, 2026-11-01): sabah masada Not (rozet), 8 notu açar (zaman almaz, okundu), Defteri aç, Güne başla,
+     yenilemede okunmuş; kulübün oyuncu dosyası sicil fişi; Transfer mantar pano.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız, Durdur ve tarz seçimi (TEST, B4b), eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
@@ -4025,6 +4027,65 @@ TV_JS = """() => { const s = document.querySelector('.tv-sayfa'); return s ? { s
   baslik: [...s.querySelectorAll('h5')].map(h => h.textContent), gun: [...s.querySelectorAll('h6')].map(h => h.textContent), bugun: s.querySelectorAll('h6.tv-bugun').length, metin: s.innerText.slice(0, 400), odak: (document.querySelector('#oda section.odk:not(.odk-cikis)') || {dataset: {}}).dataset.odak } : null; }"""
 
 
+async def bolum_40(tarayici, site, tum_hatalar):
+    """RK5-b (karar 85): gün başı notu, sicil fişi ve mantar pano. Yeni kariyerin sabahı (08:00) masada “Not” “yeni” rozetli; 8 gün başı notunu odak kabında
+    açar (sarı bloknot: Özel kalem, gün; son maç, bugün, cevap bekleyenler, kasa); açmak zamanı değiştirmez, okundu yazar (notOkunan), rozet söner; Defteri aç
+    defteri açar; Güne başla masaya bırakır; yenilemeden sonra okunmuş kalır. Dosya › Kadro › oyuncu: sicil fişi (ataşlı fotoğraf, daktilo alanlar, LİSANSLI
+    mührü; notlar sarı kâğıtta); Canlı Skor oyuncu sayfası düz kart. Transfer: mantar zemin, iğneli bölümler."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.set_viewport_size({"width": 1180, "height": 900})
+    r0 = await pg.evaluate("""() => { const b = document.querySelector('.od-nesne[data-panel="not"]'); const r = b && b.querySelector('.od-rozet');
+      return { var: !!b, rozet: r ? r.dataset.rozet : '', yeni: notYeni(OYUN.kariyer), an: simdikiAn(OYUN.kariyer), uc: !!ODA.nesneler.not && ODA.nesneler.not.g.visible }; }""")
+    await pg.keyboard.press("Digit8")
+    await pg.wait_for_selector('#oda section.odk[data-odak="not"] .gn', timeout=5000)
+    await pg.wait_for_timeout(300)
+    n = await pg.evaluate("""() => { const s = document.querySelector('#oda section.odk[data-odak="not"]:not(.odk-cikis)'), k = OYUN.kariyer;
+      return { baslik: s.querySelector('.odk-ust h3').textContent, kat: (s.querySelector('.gn-kat') || {}).textContent || '', bolum: [...s.querySelectorAll('.gn-izgara h4')].map(h => h.textContent),
+        kasa: !!s.querySelector('.gn-kasa b'), eylem: [...s.querySelectorAll('.gn-eylem button')].map(b => b.dataset.eylem), an: simdikiAn(k), okunan: k.notOkunan, tarih: k.tarih,
+        rozet: !!document.querySelector('.od-nesne[data-panel="not"] .od-rozet'), sari: getComputedStyle(s.querySelector('.odk-kagit')).backgroundColor }; }""")
+    denetle("RK5-b: sabah masada Not “yeni” rozetli (3B sarı not masada); 8 gün başı notunu açar (Özel kalem; son maç, bugün, cevap bekleyenler, kasa; Defteri aç, Güne başla); zaman değişmedi; açınca okundu (notOkunan bugün), rozet söndü",
+            r0["var"] and r0["rozet"] == "yeni" and r0["yeni"] and r0["uc"] and n["baslik"] == "Gün başı notu" and "Özel kalem" in n["kat"] and len(n["bolum"]) >= 4 and n["kasa"]
+            and n["eylem"] == ["notDefter", "notBirak"] and n["an"] == r0["an"] and n["okunan"] == n["tarih"] and not n["rozet"], f"{r0} · {n}")
+    await pg.screenshot(path=str(ARAC / "son-akis-40-not.png"))
+    await pg.click('#oda section.odk[data-odak="not"] [data-eylem="notDefter"]')
+    await pg.wait_for_timeout(300)
+    d = await pg.evaluate("() => (document.querySelector('#oda section.odk:not(.odk-cikis)') || {dataset: {}}).dataset.odak || null")
+    await masaya_don(pg)
+    await pg.keyboard.press("Digit8")
+    await pg.wait_for_selector('#oda section.odk[data-odak="not"] .gn', timeout=5000)
+    await pg.click('#oda section.odk[data-odak="not"] [data-eylem="notBirak"]')
+    await pg.wait_for_timeout(300)
+    b = await pg.evaluate("() => ({ odak: !!document.querySelector('#oda section.odk:not(.odk-cikis)'), an: simdikiAn(OYUN.kariyer) })")
+    await oda_yenile(pg)
+    y = await pg.evaluate("() => ({ rozet: !!document.querySelector('.od-nesne[data-panel=\"not\"] .od-rozet'), okunan: OYUN.kariyer.notOkunan, tarih: OYUN.kariyer.tarih })")
+    denetle("RK5-b: Defteri aç defteri açar; Güne başla notu masaya bırakır (zaman yine aynı); yenilemeden sonra not okunmuş kalır (kayıtta)",
+            d == "ajanda" and not b["odak"] and b["an"] == r0["an"] and not y["rozet"] and y["okunan"] == y["tarih"], f"{d} · {b} · {y}")
+    # sicil fişi: Dosya › Kadro › ilk oyuncu
+    await pg.keyboard.press("Digit3")
+    await pg.wait_for_selector(".dsy", timeout=10000)
+    await pg.click(".dsy-kadroSekme")
+    await pg.click('.dsy-kadro button[data-eylem="oyuncuAc"]')
+    await pg.wait_for_timeout(300)
+    s = await pg.evaluate("""() => { const c = document.querySelector('.dsy .ok-kart'); if (!c) return null;
+      return { sicil: c.classList.contains('ok-sicil'), baglam: c.dataset.baglam, foto: !!c.querySelector('.ok-foto img') && !!c.querySelector('.ok-atas'), muhur: (c.querySelector('.ok-muhur') || {}).textContent || '',
+        alan: [...c.querySelectorAll('.ok-alanlar dt')].map(x => x.textContent), ad: (c.querySelector('h3.ok-ad.dsy-baslik') || {}).textContent || '', kunye: !!c.querySelector('.dsy-kunye'),
+        sari: !!document.querySelector('.dsy-sag .dsy-sariNot h4') }; }""")
+    denetle("RK5-b: kulübün oyuncu dosyası sicil fişi (ataşlı fotoğraf; Forma, Mevki, Doğum, Boy, Ayak, Kulübü, Sözleşme; LİSANSLI mührü; ad .dsy-baslik, künye .dsy-kunye); notlar sarı kâğıtta",
+            bool(s) and s["sicil"] and s["baglam"] == "kulup" and s["foto"] and "LİSANSLI" in s["muhur"] and all(a in s["alan"] for a in ("Forma", "Mevki", "Kulübü", "Sözleşme")) and s["ad"] and s["kunye"] and s["sari"], str(s))
+    await pg.screenshot(path=str(ARAC / "son-akis-40-sicil.png"))
+    await masaya_don(pg)
+    # mantar pano
+    await pg.keyboard.press("Digit6")
+    await pg.wait_for_selector("#oda .tm-masa", timeout=10000)
+    t = await pg.evaluate("""() => { const m = document.querySelector('#oda .tm-masa'), ic = m.closest('.od-icerik');
+      return { pano: m.classList.contains('tm-pano'), doku: getComputedStyle(ic).backgroundImage.includes('radial-gradient'), igne: getComputedStyle(m.querySelector('.tm-bolum'), '::before').content !== 'none',
+        donem: !!m.querySelector('.tm-donem') }; }""")
+    denetle("RK5-b: Transfer mantar pano (zemin nokta dokulu, bölümler iğneli kâğıt); dönem şeridi yerinde", t["pano"] and t["doku"] and t["igne"] and t["donem"], str(t))
+    await pg.screenshot(path=str(ARAC / "son-akis-40-pano.png"))
+    await pg.context.close()
+
+
 async def bolum_39(tarayici, site, tum_hatalar):
     """RK8-a: TV, haber akışı ve takip. Odada TV'ye tıklamak ya da 7 TV sayfasını odak kabında açar (100 Haberler, 200 Skorlar, 300 Puan durumu · Program; düğme ve
     [ ]); haber satırı Canlı Skor'un sayfasını telefonda açar; TV kart açmaz, zamanı değiştirmez; Esc masaya. TV ekranının şeridi (canlı maç ya da başlık). Canlı
@@ -4556,6 +4617,9 @@ async def ana():
         if sec("39"):
             print("\n39. TV, haber akışı, takip ve TV'de maç (RK8-a)")
             await bolum_39(tarayici, site, tum_hatalar)
+        if sec("40"):
+            print("\n40. Gün başı notu, sicil fişi ve mantar pano (RK5-b)")
+            await bolum_40(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

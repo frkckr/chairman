@@ -2419,6 +2419,35 @@ bolum('R6b-1\' — transfer bilgi akışı: kamu künyesinde arama, menajer öne
   denetle('Kısa liste: menajer önerisinden listeye alınan oyuncu kaynağıyla (menajer); kariyer geçerli',!!L&&L.kaynak==='menajer'&&!dog(k).length,L&&L.kaynak);
 }
 
+bolum('RK5-b — gün başı notu: özel kalemin sabah notu (js/gun-notu.js; karar 83)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),dog=T('kariyerDogrula'),metin=x=>JSON.stringify(x),biz='demirkapi';
+  const S={skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}},toh=id=>T('macTohumu')(7,id);
+  const hafta=c=>{let j;({k:c,j}=macGununeGit(T,c));c=KK(c,x=>T('ajandaIsiYap')(x,j.id)).kariyer;const id=j.veri.macId;
+    return KK(c,x=>T('haftaSonuclariUygula')(x,id,S,toh(id),{},T('haftaninDigerMaclari')(x,id).map(f=>({macId:f.id,sonuc:S,tohum:toh(f.id)})))).kariyer;};
+  const k=T('kariyerBaslat')({tohum:7}),N0=T('gunNotu')(k),N0b=T('gunNotu')(JSON.parse(metin(k)));
+  denetle('Not kayıttan kurulur, belirlenimci: açılış sabahı son maç yok; defterin satırları saat sırasıyla (antrenman dahil); kasa ve 90 günün en düşüğü maliOzet ile aynı; okunmadı (rozet)',
+    !!N0&&N0.tarih===k.tarih&&N0.sonMac===null&&N0.ajanda.every((r,i,A)=>!i||A[i-1].saat<=r.saat)&&N0.kasa.nakit===k.kulupler[biz].nakit
+    &&N0.kasa.enDusuk===T('maliOzet')(k,biz).enDusuk&&metin(N0)===metin(N0b)&&T('notYeni')(k),
+    N0&&`${N0.ajanda.map(r=>r.saat+' '+r.baslik).join(', ')} · ${N0.bekleyen.length} bekleyen · manşet ${N0.manset&&N0.manset.metin}`);
+  const once=metin(k),ok=KK(k,x=>T('notOkundu')(x)).kariyer,sade=x=>{const c=JSON.parse(metin(x));delete c.notOkunan;return metin(c);};
+  denetle('Okumak zamanı ve geçmişi değiştirmez; notOkundu yalnız notOkunan yazar; okununca rozet söner; kariyer geçerli',
+    metin(k)===once&&ok.notOkunan===k.tarih&&sade(ok)===once&&!T('notYeni')(ok)&&!dog(ok).length);
+  const k2=KK(ok,x=>{T('zamanIlerlet')(x,1440);}).kariyer;
+  denetle('Ertesi sabah 08:00 yeni not: rozet yine yanar, not o günün; dünkü okuma geçerli',k2.tarih!==ok.tarih&&T('notYeni')(k2)&&T('gunNotu')(k2).tarih===k2.tarih&&!dog(k2).length,k2.tarih);
+  const k3=hafta(k),N3=T('gunNotu')(k3),f3=N3&&N3.sonMac&&k3.fikstur.find(f=>f.id===N3.sonMac.macId);
+  denetle('Maçtan sonra son maç: bizim maç, skor ve sonuç (0–0: B), ligdeki yerimiz (1–16)',
+    !!f3&&(f3.ev===biz||f3.konuk===biz)&&N3.sonMac.sonuc==='B'&&N3.sonMac.skor.join()==='0,0'&&N3.sonMac.sira>=1&&N3.sonMac.sira<=16,N3&&metin(N3.sonMac));
+  const kx=JSON.parse(metin(k));kx.isler['is-deneme']={id:'is-deneme',tur:'ajanda',tarih:kx.tarih,dakika:kx.gunIciDakika+600,
+    veri:{baslik:'Deneme kararı',karar:'deneme',saatsiz:true,sinif:'firsat',zorunluluk:'istege',gelis:{tarih:kx.tarih,dakika:kx.gunIciDakika}}};
+  const Nx=T('gunNotu')(kx);
+  denetle('Cevap bekleyen karar notta (masadaki Sonra yığınıyla aynı kaynak: sonraKararlari): başlık, sınıf, son cevap; saatsiz karar defter satırına girmez',
+    Nx.bekleyen.length===1&&Nx.bekleyen[0].baslik==='Deneme kararı'&&Nx.bekleyen[0].sinif==='firsat'&&T('sonraKararlari')(kx).length===1&&!Nx.ajanda.some(r=>r.baslik==='Deneme kararı'),metin(Nx.bekleyen));
+  const bz=JSON.parse(metin(ok));bz.notOkunan='2027-05-01';
+  const d=T('bellekDeposu')();T('kariyerKaydet')(d,'s',ok);const y=T('kariyerYukle')(d,'s');
+  denetle('Kaydet–yükle: notOkunan aynı; gelecek tarihli notOkunan doğrulamada yakalanır',y.tamam&&y.kariyer.notOkunan===ok.notOkunan&&dog(T('kariyerOlustur')(bz)).some(e=>/Gün başı notu/.test(e)));
+}
+
 denetle('Örnek kariyer bütün denemelerden sonra da değişmedi',metin(ORNEK)===ornekMetni);
 console.log(basarisiz?`\n! ${basarisiz} denetim başarısız`:'\nBütün denetimler geçti.');
 process.exit(basarisiz?1:0);

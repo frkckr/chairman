@@ -47,8 +47,11 @@
 /* R1-f: dar karede tablo küçülmez (Futbolcu sütunu en az ~3,4 em; sabit sütunlar 42,6 em); geniş sayfa dikeyde olduğu gibi yatayda da kayar */
 .dsy-sayfa.dsy-genis{overflow-x:auto}
 .dsy-kadro{width:100%;min-width:46em;table-layout:fixed;border-collapse:collapse;font-size:max(var(--k-enKucuk,12px),.88em)}
-.dsy-kadro th{font-weight:600;color:var(--k-soluk);text-align:left;padding:.15em .3em;border-bottom:1px solid ${D.cizgi};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dsy-kadro td{padding:.16em .3em;border-bottom:1px solid ${D.cizgi};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsy-kadro th{font-family:var(--govde);font-weight:600;color:var(--k-soluk);text-align:left;padding:.2em .3em;border-bottom:.12em solid var(--k-cizgi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsy-kadro td{padding:.2em .3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* RK5-b (Kırtasiye): tek renk zebra, eşit genişlikli rakam; dar karede tablo daha geniş (yüz ve ad sığsın), kendi sayfasında yatay kayar */
+.dsy-kadro tbody tr:nth-child(even){background:var(--k-zeminKoyu)}
+@container (max-width:820px){.dsy-kadro{min-width:52em}}
 .dsy-kadro abbr{text-decoration:none;cursor:help}
 .dsy-kadro .dsy-s{text-align:right}
 .oda .dsy-kadro td button.od-baglanti{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
@@ -91,6 +94,13 @@
 /* RK4-a: notun kaynağı solda renkli şerit (antrenman yeşil, maç kulüp kırmızısı, hoca mavi) */
 .dsy-not[data-tur=antrenman]{border-left:.3em solid var(--k-yesil)}.dsy-not[data-tur=mac]{border-left:.3em solid var(--k-kulup)}.dsy-not[data-tur=hoca],.dsy-not[data-tur=gorus]{border-left:.3em solid var(--k-mavi)}
 .dsy-not small{display:block;margin-top:.2em;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.84em)}
+/* RK5-b (Kulüp evrakı 1999): oyuncu dosyasında notlar sarı not kâğıdında (hafif eğik); notlar kâğıdın üstünde düz satır, kaynak şeridi yerinde */
+.dsy-sariNot{display:grid;gap:.5em;padding:.8em 1em .9em;background:${STIL.kagit.not.sari};box-shadow:.12em .18em 0 rgba(0,0,0,.14);transform:rotate(.5deg)}
+.dsy-sariNot .dsy-not{background:transparent;border:0;border-bottom:1px solid rgba(0,0,0,.12);box-shadow:none;transform:none;padding:.3em .2em .35em .6em}
+.dsy-sariNot .dsy-not:nth-child(even){transform:none}
+.dsy-sariNot .dsy-not::before{display:none}
+.dsy-sariNot .dsy-not[data-tur]{border-left-width:.25em;border-left-style:solid}
+.dsy-sariNot small{color:#4f4632}
 .dsy-gecmis summary{cursor:pointer;color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
 .dsy-gecmis ul{list-style:none;margin:.3em 0 0;padding:0;display:grid;gap:.2em;font-size:max(var(--k-enKucuk,12px),.9em)}
 .dsy-gecmis li{display:grid;grid-template-columns:7.2em minmax(0,1fr);gap:.5em}
@@ -269,14 +279,17 @@ function dosyaGorunumu(k,D,Y){
       const U=O.kunye,Z=O.sezon,Sz=O.sozlesme;
       /* RK4-a: sol sayfa ortak oyuncu kartı (js/oyuncu-karti.js; kulüp bağlamı: durumun ayrıntısı ve sözleşme). Kart yüklenmediyse eski künye */
       const dm=O.durum.sakat?durum(O.durum.sakat,null)+(O.durum.sakat.neden?' — '+O.durum.sakat.neden:''):O.durum.ceza?durum(null,O.durum.ceza)+(O.durum.ceza.neden?' — '+O.durum.ceza.neden:''):'Oynayabilir';
-      sol='<p class="dsy-kat">Oyuncu dosyası'+(Y.oyuncuTest?Y.oyuncuTest(D.seciliOyuncu):'')+'</p>'+
+      /* RK5-b: kart varsa sicil fişidir (başlığı fişin kendisi; kat satırında yalnız TEST kutusu) */
+      sol='<p class="dsy-kat">'+(typeof oyuncuKarti==='function'?'Futbolcu sicil fişi':'Oyuncu dosyası')+(Y.oyuncuTest?Y.oyuncuTest(D.seciliOyuncu):'')+'</p>'+
         (typeof oyuncuKarti==='function'?oyuncuKarti(k,D.seciliOyuncu,'kulup',{sozlesme:Sz,durum:{metin:dm},tl}):
         '<h3 class="dsy-baslik">'+yaz(U.ad)+'</h3><dl class="dsy-kunye"><dt>Forma</dt><dd>'+U.no+'</dd><dt>Mevki</dt><dd>'+yaz(MV[U.mevki]||U.mevki)+'</dd><dt>Yaş</dt><dd>'+U.yas+'</dd></dl>'+
         '<h4>Bu sezon</h4><dl class="od-dl"><dt>Maç</dt><dd>'+sy(Z.mac)+'</dd><dt>Dakika</dt><dd>'+sy(Z.dk)+'</dd><dt>Gol</dt><dd>'+Z.gol+'</dd></dl><p>'+yaz(dm)+'</p>');
       /* R2-e: “Hocaya sor ▸” oyuncu sorusunu doğrudan gönderir (telefondaki konu; cevap birkaç saat sonra gelir ve buraya not düşer) */
       const G=typeof girisimListesi==='function'?girisimListesi(k).find(x=>x.id==='yaz.teknikDirektor.oyuncu'):null;
       sag=(G?'<p class="dsy-sor"><button type="button" class="od-baglanti" data-eylem="girisim" data-girisim="'+yaz(G.id)+'" data-arg="'+yaz(D.seciliOyuncu)+'"'+(G.engel?' disabled':'')+'>Hocaya sor ▸</button>'+
-        '<small>'+yaz(G.engel||'Cevap birkaç saat içinde gelir; buraya not düşer.')+'</small></p>':'')+'<h4>Notlar</h4>'+(O.notlar.length?'<ul class="dsy-notlar">'+O.notlar.map(n=>'<li class="dsy-not" data-tur="'+yaz(n.tur||'')+'">'+yaz(n.metin)+'<small>— '+yaz(n.kaynak)+' · '+yaz(Y.tarihKisa(n.tarih))+'</small></li>').join('')+'</ul>':'<p class="dsy-bos">Henüz not yok.</p>');
+        '<small>'+yaz(G.engel||'Cevap birkaç saat içinde gelir; buraya not düşer.')+'</small></p>':'')+
+        /* RK5-b: notlar sarı not kâğıdında */
+        '<section class="dsy-sariNot"><h4>Notlar</h4>'+(O.notlar.length?'<ul class="dsy-notlar">'+O.notlar.map(n=>'<li class="dsy-not" data-tur="'+yaz(n.tur||'')+'">'+yaz(n.metin)+'<small>— '+yaz(n.kaynak)+' · '+yaz(Y.tarihKisa(n.tarih))+'</small></li>').join('')+'</ul>':'<p class="dsy-bos">Henüz not yok.</p>')+'</section>';
     }
   }else if(raporGor){
     /* RK5-a: tek geniş sayfa — solda raporların listesi, sağda seçili raporun resmî yazısı */

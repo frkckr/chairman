@@ -39,9 +39,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
   const ETIKET={zorunlu:'Zorunlu',ertelenebilir:'Ertelenebilir',istege:'İsteğe bağlı'};
   const DURUM={bekliyor:'',yapildi:'Yapıldı',kacirildi:'Kaçırıldı',ertelendi:'Ertelendi',cevapsiz:'Cevapsız',tamamlandi:''};
   const ROL={baskan:'başkan',teknikDirektor:'teknik direktör',yardimciAntrenor:'yardımcı antrenör',maliMudur:'mali işler müdürü',yonetici:'yönetici',eskiBaskan:'eski başkan'};
-  const NESNE={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',transfer:'Transfer'};
-  const NESNE_SIMGE={telefon:'telefon',ajanda:'defter',dosya:'dosya',gazete:'gazete',transfer:'transfer'};   /* RK5-a: js/simge.js */   /* H2-d: Kasa kalktı (kullanıcı isteği 1–2); R4-k: Transfer masası (duvardaki pano) */
-  const ODAK_BOY={telefon:'cihaz',ajanda:'genis',dosya:'genis',gazete:'genis',transfer:'genis',kadro:'genis',karar:'orta',ayar:'kucuk',gorduklerin:'kucuk',ziyaret:'yarim'};   /* U1: odak kabının genişliği (STIL.kagit.odak.boy); RK1: balkonda Gördüklerin; RK6: ziyaret yarım odakta (oda bulanmaz) */
+  const NESNE={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',not:'Not',transfer:'Transfer'};   /* H2-d: Kasa kalktı (kullanıcı isteği 1–2); R4-k: Transfer masası (duvardaki pano); RK5-b: gün başı notu */
+  const NESNE_SIMGE={telefon:'telefon',ajanda:'defter',dosya:'dosya',gazete:'gazete',not:'not',transfer:'transfer'};   /* RK5-a: js/simge.js */
+  const ODAK_BOY={telefon:'cihaz',ajanda:'genis',dosya:'genis',gazete:'genis',transfer:'genis',kadro:'genis',karar:'orta',not:'orta',ayar:'kucuk',gorduklerin:'kucuk',ziyaret:'yarim'};   /* U1: odak kabının genişliği (STIL.kagit.odak.boy); RK1: balkonda Gördüklerin; RK6: ziyaret yarım odakta (oda bulanmaz) */
   /* ---- RK6 ziyaret (kural js/ziyaret.js, sahne js/oda-ziyaret.js): kabul edilen görüşmenin saati gelince kişi kapıdadır. Kapı kartı yarım odakta kendiliğinden
      açılır (oda bulanmaz, donmaz; bakış kapıya döner). Buyursun: kişi kapıdan girer, karşıdaki koltuğa oturur, görüşme kartı açılır; cevaplanınca kalkar ve çıkar.
      Sonra gelsin: kapı kapalı kalır. Esc kartı bırakır (kişi kapıda bekler; kapıya ya da alttaki “Kapıda: …” düğmesine tıklamak geri açar); İlerle onay ister ve
@@ -344,6 +344,12 @@ function odaEkraniKur(kap,oyun,ayarlar){
   }
   /* RK8-a: TV sayfası (js/ekran-tv.js). TV kart açmaz, zamanı değiştirmez; satır Canlı Skor sayfasını telefonda açar, canlı maçta İzle ▸ */
   function tvPaneli(){return typeof tvSayfasi==='function'?tvSayfasi(k,tvSayfa,{yaz}):'<p class="od-not">TV yok.</p>';}
+  /* RK5-b: gün başı notu (kural js/gun-notu.js, görünüm js/ekran-not.js); masada not varken (08:00'den sonra), rozet okunmamışsa */
+  const notVar=()=>typeof gunNotuTarihi==='function'&&!!gunNotuTarihi(k),notRozet=()=>notVar()&&typeof notYeni==='function'&&notYeni(k);
+  function notPaneli(){
+    return typeof gunNotuGorunumu==='function'?gunNotuGorunumu(k,{yaz,tarihYazi:t=>{const [,a,g]=parca(t);return g+' '+AYLAR[a-1];},saatYazi,
+      tlKisa:typeof rpTl==='function'?rpTl:tlYazi}):'<p class="od-not">Not yok.</p>';
+  }
   /* RK8-a: TV'de maç — oda saatinde oynanan maç TV kipinde izlenir (js/mac-gunu.js ?tv=1). Maçın sonuna dek yolda kalan iş onay ister; zorunlu iş ya da
      bekleyen karar varsa gidilmez (js/lig-takvimi.js tvIzleOnizle). Gitmeden kayıt yazılır (Stada git gibi) */
   function tvIzle(id){
@@ -685,7 +691,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* ---- U3 “Sonra” yığını (envanter 26): masada cevap bekleyen kararlar, son cevabı en yakın olan üstte (durağı gelen öne çıkar), en çok üç kâğıt.
      Masaya bırakmak ertelemektir: kâğıt burada durur, dokununca kararın kendi yerinde açılır (soranın konuşması, dosyası ya da karar paneli) ---- */
   const SONRA_EN_COK=3;
-  const sonraKararlar=()=>Object.values(k.isler).filter(x=>x.tur==='ajanda'&&x.veri.karar&&x.veri.saatsiz&&x.veri.gelis&&anDakika(x.veri.gelis.tarih,x.veri.gelis.dakika)<=simdikiAn(k))
+  /* RK5-b: kaynak kural katmanında (js/gun-notu.js sonraKararlari; gün başı notu da okur) */
+  const sonraKararlar=()=>typeof sonraKararlari==='function'?sonraKararlari(k):Object.values(k.isler).filter(x=>x.tur==='ajanda'&&x.veri.karar&&x.veri.saatsiz&&x.veri.gelis&&anDakika(x.veri.gelis.tarih,x.veri.gelis.dakika)<=simdikiAn(k))
     .sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika)||(a.id<b.id?-1:1));
   const kararYerAdi=is=>mesajKisiAktif(k,is.veri.soran)?'telefonda':is.veri.meseleId&&k.meseleler[is.veri.meseleId]?'dosyada':'defterde';
   function sonraYigini(){
@@ -716,7 +723,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     /* RK1: geniş pencerede balkonun bandı yalnız iş açıkken (js/sunum-durumu.js); yürürken ve iş yokken saha tam kare */
     if(typeof ekranBantIste==='function')ekranBantIste(balkonVar&&ODA.yer==='balkon'&&!!acik);
     odaDurum({tv:typeof tvOzeti==='function'?tvOzeti(k):null,haber:haberSayisi(),isler:bekleyenIsSayisi(),dosyaSayi:acikMeseleler().length,dosya:acikMeseleler().length>0||raporlar().length>0||kadroAcilir(),gun:String(g),ay:AYLAR[a-1].slice(0,3),gunAdi:GUN_KISA[gunAdi(k.tarih)]||gunAdi(k.tarih).slice(0,3),dakika:dk,
-      gazete:!!iz.sayi||!!iz.gazete||!!iz.kart,gazeteYeni:iz.gazeteYeni||iz.yeniHaber>0,kart:!!iz.kart,iskele:iz.iskele,panoNotu:iz.panoNotu});
+      gazete:!!iz.sayi||!!iz.gazete||!!iz.kart,gazeteYeni:iz.gazeteYeni||iz.yeniHaber>0,kart:!!iz.kart,iskele:iz.iskele,panoNotu:iz.panoNotu,not:notVar(),notYeni:notRozet()});   /* RK5-b: masadaki sarı not */
     odaOdak(acik in NESNE?acik:null);
     if(typeof odaPanel==='function')odaPanel(!!acik&&acik!=='ziyaret');   /* U1: odak açıkken 3B oda kamera yerleşince donar (js/oda.js odaDondur); RK6: ziyarette oda canlı */
   }
@@ -779,8 +786,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const dugme=(ad,rozet,sinif,kapali)=>'<button type="button" class="od-nesne" data-eylem="ac" data-panel="'+ad+'" aria-pressed="'+(acik===ad?'true':'false')+'"'+(kapali?' disabled':'')+'>'+
       smg(NESNE_SIMGE[ad])+NESNE[ad]+(rozet?'<i class="od-rozet'+(sinif?' '+sinif:'')+'" data-rozet="'+rozetTuru(rozet)+'">'+rozet+'</i>':'')+'</button>';
     const iz=izler(),gazeteVar=!!iz.sayi||!!iz.gazete||!!iz.kart;   /* S-e: son sayı her sabah masada */
-    const baslik={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',transfer:'Transfer',ayar:'Ayarlar',kadro:'Kadro (TEST)',karar:'Karar',gorduklerin:'Gördüklerin',ziyaret:ziyaretBaslik(),tv:'TV'}[acik];
-    const icerik=acik==='telefon'?telefonPaneli():acik==='ajanda'?ajandaPaneli():acik==='dosya'?dosyaPaneli():acik==='gazete'?gazetePaneli():acik==='tv'?tvPaneli():acik==='transfer'?transferPaneli():acik==='ayar'?ayarPaneli():acik==='kadro'?kadroPaneli():acik==='karar'?kararPaneli():acik==='gorduklerin'?gorduklerinPaneli():acik==='ziyaret'?ziyaretPaneli():'';
+    const baslik={telefon:'Telefon',ajanda:'Ajanda',dosya:'Dosya',gazete:'Gazete',not:'Gün başı notu',transfer:'Transfer',ayar:'Ayarlar',kadro:'Kadro (TEST)',karar:'Karar',gorduklerin:'Gördüklerin',ziyaret:ziyaretBaslik(),tv:'TV'}[acik];
+    const icerik=acik==='telefon'?telefonPaneli():acik==='ajanda'?ajandaPaneli():acik==='dosya'?dosyaPaneli():acik==='gazete'?gazetePaneli():acik==='not'?notPaneli():acik==='tv'?tvPaneli():acik==='transfer'?transferPaneli():acik==='ayar'?ayarPaneli():acik==='kadro'?kadroPaneli():acik==='karar'?kararPaneli():acik==='gorduklerin'?gorduklerinPaneli():acik==='ziyaret'?ziyaretPaneli():'';
     /* aynı görünüm yeniden çizilirken sayfaların okuma yeri korunur; dosyada görünüm konu, rapor, arşiv, kadro ya da oyuncudur (S-c; konu ↔ rapor kayması da kalktı) */
     const gorunum=gorunumAnahtari(),sayfaKaydirma=cizilenPanel===acik&&cizilenGorunum===gorunum?[...kap.querySelectorAll('.dsy-sayfa,.dft-sayfa')].map(x=>x.scrollTop):[];
     /* U1 odak kabı (js/ekran-odak.js): iş açılınca belirme geçişi yalnız ilk çizimde; masaya dönerken açık kabın kopyası söner */
@@ -796,6 +803,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
       '<nav class="od-nesneler" aria-label="Masadakiler"'+odakta+'>'+dugme('telefon',haber?String(haber):'',karar?'od-rozetAcil':'')+dugme('ajanda',is?String(is):'')+
         /* H2-d: dosyanın rozeti önce karar, karar yoksa görülmemiş raporda “yeni” */
         dugme('dosya',karar?'karar':yeniRapor()?'yeni':'',karar?'od-rozetAcil':'',!dosyaVar)+(gazeteVar?dugme('gazete',iz.gazeteYeni||iz.yeniHaber?'yeni':''):'')+
+        /* RK5-b: gün başı notu (08:00'den sonra; okunmadıysa “yeni”) */
+        (notVar()?dugme('not',notRozet()?'yeni':''):'')+
         /* R4-k: Transfer masası her zaman masada (duvardaki pano); rozet: kararı bekleyen transfer dosyası */
         (()=>{const t=transferKarar();return dugme('transfer',t?'karar':'',t?'od-rozetAcil':'');})()+
         /* balkona çıkış kapının kendisidir (tıkla ya da 5); klavye için görünmez, odakta beliren düğme. Balkonda dönüş düğmesi görünür */
@@ -883,6 +892,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       else{const hedef=seciliMesele&&k.meseleler[seciliMesele]?seciliMesele:acikSira()[0]||(meseleler()[0]||{}).id;
       for(const m of meseleler().filter(m=>m.id===hedef))if(m.olaylar.length>m.gorulen)try{komut(x=>meseleGoruldu(x,m.id));}catch(e){mesaj=e.message;}}
     }
+    if(ad==='not'&&notRozet())try{komut(x=>notOkundu(x));}catch(e){mesaj=e.message;}   /* RK5-b: notu açmak okundu yazar (yalnız notOkunan) */
     if(ad==='gazete'){const iz=izler();   /* S-e: son sayıyı açmak okundu yazar (yalnız gazeteOkunan; zaman ve geçmiş değişmez) */
       if(iz.gazeteYeni)try{komut(x=>gazeteOkundu(x,iz.sayi));}catch(e){mesaj=e.message;}
       if(izler().yeniHaber)try{komut(x=>haberlerGoruldu(x));}catch(e){mesaj=e.message;}}
@@ -1154,6 +1164,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='goruntu')goruntuKaydet();
     else if(ey==='olcuSifirla'){try{if(olcuDepo)olcuDepo.sil('haftalar');}catch(e){}olcuAn=null;ciz('[data-eylem="olcuSifirla"]');}
     else if(ey==='kapat')kapat();
+    else if(ey==='notBirak')kapat();   /* RK5-b: “Güne başla” notu masaya bırakır (zaman almaz) */
+    else if(ey==='notDefter')panelAc('ajanda');
     else if(ey==='odakGeri'){const h=odakGeriHedef();if(h)h.f();}
     else if(ey==='yap')isiYap(id);
     else if(ey==='yapSor'){onay='yap:'+id;ciz('[data-eylem="yap"]');}
@@ -1257,7 +1269,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   addEventListener('keydown',e=>{
     if(kap.hidden||oyun.bozukHata||e.ctrlKey||e.altKey||e.metaKey)return;
     const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'){if(e.code!=='Escape')return;e.target.blur();}   /* R6b-1': Esc arama kutusundan da geri */
-    const ad={Digit1:'telefon',Digit2:'ajanda',Digit3:'dosya',Digit4:'gazete',Digit6:'transfer',Digit7:'tv'}[e.code];   /* RK8-a: 7 TV */
+    const ad={Digit1:'telefon',Digit2:'ajanda',Digit3:'dosya',Digit4:'gazete',Digit6:'transfer',Digit7:'tv',Digit8:'not'}[e.code];   /* RK8-a: 7 TV; RK5-b: 8 gün başı notu */
     if(ad){e.preventDefault();if(acik===ad)kapat();else panelAc(ad);}
     else if(e.code==='Digit5'&&balkonVar){e.preventDefault();if(!duraklatmaVar())yerDegistir();}
     else if(e.code==='KeyP'||(e.code==='Space'&&t!=='BUTTON'&&!e.repeat)){e.preventDefault();duraklatDegistir();}

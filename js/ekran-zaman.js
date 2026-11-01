@@ -28,7 +28,8 @@ const ZAMAN_SAHNE={acik:false,evre:null,o:null,t0:0,sure:0,gorunen:-1,saatDk:nul
 .zm-ipucu{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.8em);text-align:right}
 .zm-kapak{display:grid;gap:.1em;padding:.35em .55em;margin:0 -.3em .1em;background:var(--k-zemin);border-left:.3em solid var(--k-kirmizi)}
 .zm-kapak small{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.82em);letter-spacing:.06em;text-transform:uppercase}
-.zm-kapak b{font-family:var(--display);font-weight:400;font-size:1.5em;line-height:1.05;color:var(--k-kulup)}
+/* RK5-b (karar 83 “Kırtasiye”): başlık gövde yazısıyla; piksel yazı yalnız cihaz göstergelerinde */
+.zm-kapak b{font-family:var(--govde);font-weight:700;font-size:1.2em;line-height:1.15;color:var(--k-kulup)}
 .zm-sahne h4{font-weight:600;font-size:1.05em}
 .zm-gecen{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.9em)}
 .zm-durak{padding-top:.3em;border-top:1px dashed var(--k-cizgi)}
