@@ -88,7 +88,7 @@ const STIL={
      (araclar/plan/kasim-notlari-arastirma.md §4); Türkiye kökeninin ağırlığı açık zeytuni ve orta zeytunide. gozRenk: koyu kahve, kahve, ela-yeşil,
      mavi-gri. TEST */
   tenRampa:[['#ffe2c6','#f3cba7','#dca681','#a8704c'],['#f6d3ad','#e4b78c','#c3925f','#86593a'],['#e8c093','#cfa070','#a77a4b','#6b4a2d'],
-    ['#cf9d6c','#ad7a4e','#835a37','#523622'],['#a87444','#855632','#5f3c23','#3a261a'],['#875f45','#634333','#432d23','#251a14'],['#634335','#48322b','#2d211c','#181311']],
+    ['#d6a676','#b98757','#8e6440','#5a3c26'],['#b07a4a','#93603a','#6a4428','#40291b'],['#875f45','#634333','#432d23','#251a14'],['#634335','#48322b','#2d211c','#181311']],
   gozRenk:['#1e1610','#4a2e18','#6a6a34','#4a6e86'],
   /* A5 (2026-10-15; gerçekçilik planı §4 A5): insan modeli (js/oyuncular.js). tur 'kesit' değişken kesitli halkalardan tek kemikli mesh | 'kutu' eski
      kutular (karşılaştırma için; kullanıcı A5'i değerlendirene dek, sonra kalkar); normal 'yumusak' Gouraud | 'duz' dilim başına düz gölge (PS1 gibi; köşe iki katı) — A5-0 titreme

@@ -7,7 +7,7 @@
      tekillik    aynı kariyerde iki oyuncunun kimlik özellik kümesi aynı değil (yaşa bağlı alanlar hariç)
      ortak       yüzün saç tipi ve rengi, bıyığı ve sakalı kayıttakiyle; teni kimliğin teniyle (balkondaki 3B figür aynı işlevi kullanır)
      belirlenim  aynı tohum iki kez aynı yüzleri verir; JSON'dan geri okunan kayıt da (kaydet–yükle)
-     köken       Türkiye kökeninde ten ve göz dağılımı hedef aralığında (en koyu üç rampa ≤ %3, açık ve açık zeytuni ≥ %55, açık göz %28–50)
+     köken       Türkiye kökeninde ten ve göz dağılımı hedef aralığında (en koyu üç rampa yok, açık ve açık zeytuni ≥ %55, açık göz %28–50)
      yaş         yapay 3000 kimlikte belirgin saç açılması (aşama ≥ 2) 25 yaşta %8–24, 35'te %25–45, 40'ta %40–60; 21 yaşından küçükte yok;
                  aynı kişide yaşla saç çizgisi ve kırlaşma azalmaz; kırlaşma 30 yaşından önce yok denecek kadar az
      dağılım     her özelliğin bütün değerleri kullanılıyor (bilgi)
@@ -43,7 +43,7 @@ for(const tohum of T){
 }
 /* köken: bugün ligin herkesi Türkiye kökenli */
 const koyu=tenSay[4]+tenSay[5]+tenSay[6],acik=tenSay[0]+tenSay[1],acikGoz=gozSay[2]+gozSay[3];
-denetle(`köken (Türkiye): ten dağılımı — en koyu üç rampa ${yuzde(koyu,toplam)} (≤ %3), açık ve açık zeytuni ${yuzde(acik,toplam)} (≥ %55)`,koyu/toplam<=0.03&&acik/toplam>=0.55,
+denetle(`köken (Türkiye): ten dağılımı — en koyu üç rampa ${yuzde(koyu,toplam)} (yok), açık ve açık zeytuni ${yuzde(acik,toplam)} (≥ %55)`,koyu===0&&acik/toplam>=0.55,
   'rampalar '+tenSay.map(n=>yuzde(n,toplam)).join(' · '));
 denetle(`köken (Türkiye): açık göz (ela-yeşil, mavi-gri) ${yuzde(acikGoz,toplam)} (%28–50)`,acikGoz/toplam>=0.28&&acikGoz/toplam<=0.5,'gözler '+gozSay.map(n=>yuzde(n,toplam)).join(' · '));
 /* yaş: yapay kimlikler (aynı kişi farklı yaşlarda: doğum yılı değişir, kimlik aynı) */

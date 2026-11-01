@@ -21,7 +21,7 @@
    göz: koyu kahve · kahve · ela-yeşil · mavi-gri (renkleri STIL.gozRenk). kellik: saç dökülmesi yatkınlığının çarpanı; kir: kırlaşmanın başlangıç yılı
    ötelemesi; cekik: göz biçimi */
 const KIMLIK_KOKEN={
-  tr:{ad:'Türkiye',ten:[22,42,28,7,1,0,0],goz:[25,36,26,13],kellik:1,kir:0},
+  tr:{ad:'Türkiye',ten:[24,45,25,6,0,0,0],goz:[25,36,26,13],kellik:1,kir:0},
   balkan:{ad:'Balkanlar',ten:[30,42,22,5,1,0,0],goz:[20,32,24,24],kellik:1,kir:0},
   dogu:{ad:'Doğu Avrupa',ten:[45,38,14,3,0,0,0],goz:[12,24,26,38],kellik:1,kir:0},
   bati:{ad:'Batı ve Kuzey Avrupa',ten:[62,26,8,2,1,1,0],goz:[10,22,24,44],kellik:1.05,kir:0},

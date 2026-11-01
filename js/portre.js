@@ -141,7 +141,7 @@ function oyuncuPortreUrl(o,tarih){
   if(f.cizgi){r(nx-2,my-2,1,2,TG);r(nx+3,my-2,1,2,TG);}
   if(f.iz==='ben')r(bx+bw-4,gy+3,1,1,TC);   /* yanakta ben */
   /* kirli sakal: çene ve yanak altında saçın gölgesi */
-  if(f.kirliSakal&&!f.sakal){const ks=prtKaris(TO,f.sacRenk,koyu?0.18:0.28);for(let j=my-1;j<by+bh-1;j++){const [a,b]=satir(j-by);r(a,j,b-a+1,1,ks);}r(nx-1,my,4,1,dudak);}
+  if(f.kirliSakal&&!f.sakal){const ks=prtKaris(TO,f.sacRenk,koyu?0.1:0.18);for(let j=my;j<by+bh-1;j++){const [a,b]=satir(j-by);r(a,j,b-a+1,1,ks);}r(nx-1,my,4,1,dudak);}
   /* sakal ve bıyık (kayıttan; figürle aynı) */
   if(f.sakal){for(let j=gy+2;j<by+bh;j++){const [a,b]=satir(j-by);if(j<my){r(a,j,2,1,sac);r(b-1,j,2,1,sac);}else r(a,j,b-a+1,1,sac);}}
   if(f.biyik)r(nx-2,my-1,6,1,sac);
@@ -161,8 +161,11 @@ function oyuncuPortreUrl(o,tarih){
     const ust=f.sac==='kivircik'?3:2,hac=genc&&f.sac!=='kel'?1:0;
     const tepe=(y,a,b,c)=>r(a,y,b-a+1,1,c);
     /* tepe satırları: başın biçimini izler, bir sütun taşar */
-    for(let j=-ust-hac;j<=1;j++){const [a,b]=satir(Math.max(0,j));tepe(by+j,a-(j>=0?1:0),b+(j>=0?1:0),st>=3&&j<=0?prtKaris(sac,TO,0.45):sac);}
-    if(f.sac==='kivircik')for(let i=0;i<bw+2;i+=2)r(bx-1+i,by-ust-hac-1+((i>>1)%2),1,1,sac);
+    const kiv=f.sac==='kivircik',kivKoyu=prtKaris(sac,'#000000',0.35);
+    for(let j=-ust-hac;j<=1;j++){const [a,b]=satir(Math.max(0,j)),a2=a-(j>=0?1:0)-(kiv?1:0),b2=b+(j>=0?1:0)+(kiv?1:0),c=st>=3&&j<=0?prtKaris(sac,TO,0.45):sac;
+      if(kiv&&j===-ust-hac){for(let x=a2+1;x<=b2-1;x+=3)r(x,by+j,2,1,c);}   /* kıvırcıkta üst kenar tırtıllı */
+      else tepe(by+j,a2,b2,c);
+      if(kiv&&j>-ust-hac)for(let x=a2;x<=b2;x++)if((x*2+j*3)%5===0)r(x,by+j,1,1,kivKoyu);}   /* kıvrım dokusu */
     /* alnın üstü: ön saç (biçime göre) ya da açılan saç çizgisi */
     if(st===0){if(f.sacV===1)r(bx+2,by+2,5,1,sac);else if(f.sacV===2){r(bx+1,by+2,4,1,sac);r(bx+1,by+3,2,1,sac);}else r(bx+bw-5,by+2,3,1,sac);}   /* perçem, yana tarama, ayrık */
     if(st>=1){r(bx+1,by+1,2,1,TO);r(bx+bw-3,by+1,2,1,TO);}
