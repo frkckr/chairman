@@ -145,6 +145,8 @@ Her madde tarihli bir özettir; ayrıntı bağlantıdaki belgededir. Daha eski k
 
 79. **2026-11-01 — RK1-b balkonda fare (Kasım paketi; kullanıcının notu “mouse ile yakınlaşıp uzaklaşmalı, hareket ettirip izleyebilmeliyim”).** Sürükleme başı döndürür (tut ve çek, bakış sahada kalır), tekerlek imlecin altındaki noktaya kademesiz yaklaşır; izlemede yalnız açı; Z, Esc, oklar, tık ve çift tık aynen. Yalnız görüntü. Ayrıntı STIL_REHBERI §7; `tur/rk1b-fare`.
 
+80. **2026-11-01 — RK4-b yüzler, kimlik, yaş ve boy (Kasım paketi; kullanıcının notları; soru 1–3 varsayılanla: 32×32, köken ve boy türetilir, 3. Lig'de herkes Türkiye kökenli).** Yüz 32×32, ten yedi rampadan köken ağırlığıyla (Türkiye açık ve orta zeytuni ağırlıklı), göz rengi kökenden, kaş ile göz arası her zaman bir satır; yaş katmanı (saç çizgisi, kır, kirli sakal, çizgiler; oyuncu sezonlarla yaşlanır); boy künyede ve kadro listesinde; balkon figürü aynı kimlikten, baş her boyda aynı. Kayıt sürümü ve motor değişmedi. Yabancı kuralı açık karar (OYUN_TASARIMI §9). Ayrıntı STIL_REHBERI §7, TEKNIK_PLAN §6; `tur/rk4b-kimlik`.
+
 ## Çalışma biçimi
 
 Her iş çalışan, incelenebilir bir sonuçla biter. İş sırası bağımlılıkları izler; küçük doğrulama işleri gerekirse öne alınır ve nedeni yazılır. İç test için kısa dönemler kurulması, ticari oyunun uzun kariyer hedefini daraltmaz. Planlanmış olmak tamamlanmış olmak değildir; yalnız uygulanıp doğrulanan işler işaretlenir.

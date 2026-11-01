@@ -92,8 +92,19 @@ BLK.bakis=[0,BLK_STAT.PY+1,BLK_STAT.CZ+6];
     const a={m,g,x,z,yaw:0,faz:h2(BALKON.aktorler.length,3)*6,ev:{x,z},renk:K.shirt||'#3a3a3a'};BALKON.aktorler.push(a);if(BALKON.uzak)blkUzakUygula(a);return a;
   }
   const KD=KADROLAR.demirkapi;
-  /* R5: oyuncu figürleri kimlikle havuzdan (balkonDuzenKur); kaleci kaleci formasıyla, öbürleri antrenman formasıyla */
-  BALKON.oyuncuAktor=(id,o,kaleci)=>{let a=BALKON.havuz.get(id);if(!a){a=aktor(kitKaydi(kaleci?KD.kaleciForma:'yedekEv',o,o.no|0),0,0);BALKON.havuz.set(id,a);}return a;};
+  /* RK4-b (2026-11-01, kullanıcı: “antremanda göreceğimiz oyuncu yüzlerinin sistematiği … oyuncu boyları olsun, antrenmanda seçilebilir olsunlar”):
+   oyuncunun figürü portresiyle aynı kimlikten — ten (köken ağırlığıyla, js/kimlik.js), saçın kırlaşması ve tepe açıklığı (yaş katmanı); boy figürün
+   gövdesini ve bacaklarını ölçekler, baş her boyda aynı büyüklükte kalır (uzun oyuncunun başı büyümez; boy farkı gövdeden okunur). Yalnız balkonda
+   (maçın TEST figürleri ve çizim tabanları değişmez) */
+function blkKimlikKit(kit,o){
+  if(!o||!o.id||typeof kimlik!=='function'||!STIL.tenRampa)return kit;
+  const I=kimlik(o),Y=yasKatmani(o),R=STIL.tenRampa[I.ten]||STIL.tenRampa[1];
+  const gri=typeof prtKaris==='function'&&Y.gri>0?prtKaris(o.sacRenk||'#241a12','#c9c5bd',Y.gri):kit.hair;
+  return Object.assign({},kit,{skin:R[1],hair:gri,style:Y.sacCizgisi>=4&&kit.style!=='long'&&kit.style!=='mullet'?'bald':kit.style});
+}
+function blkBasSabit(a){const r=a&&a.m;if(!r||!r.head)return;const s=r.root.scale;r.head.scale.set(1/(s.x||1),1/(s.y||1),1/(s.z||1));}
+/* R5: oyuncu figürleri kimlikle havuzdan (balkonDuzenKur); kaleci kaleci formasıyla, öbürleri antrenman formasıyla */
+  BALKON.oyuncuAktor=(id,o,kaleci)=>{let a=BALKON.havuz.get(id);if(!a){a=aktor(blkKimlikKit(kitKaydi(kaleci?KD.kaleciForma:'yedekEv',o,o.no|0),o),0,0);blkBasSabit(a);BALKON.havuz.set(id,a);}return a;};
   BALKON.ekip=[aktor(kitKaydi('antrenorEv',KD.td,0),6,29),aktor(kitKaydi('antrenorEv',{ten:2,sac:'kisa',sacRenk:'#241a12',boy:1,yapi:1.04},0),33,-11),aktor(kitKaydi('antrenorEv',{ten:0,sac:'kel',sacRenk:'#8a8680',boy:0.98,yapi:1.08,biyik:true},0),15,23),
     aktor(kitKaydi('antrenorEv',{ten:1,sac:'kisa',sacRenk:'#3a2a1a',boy:0.97,yapi:0.98},0),-20,-29)];   /* R5: dördüncüsü fizyoterapist (ayrı koşu) */
   BALKON.ekip.forEach((a,i)=>{a.kume='ekip';a.kim=blkKimlik('ekip-'+i);});   /* RK1: ekibin de kendi yürüyüşü */
