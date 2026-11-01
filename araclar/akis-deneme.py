@@ -2804,8 +2804,8 @@ async def bolum_22(tarayici, site, tum_hatalar):
     await pg.goto((site / "index.html").as_uri() + loca(""))
     await pg.wait_for_selector("#oda:not([hidden]) .od-ana", timeout=30000)
     await kadro_ac()
-    md = await pg.evaluate("() => [...document.querySelectorAll('.dsy-kadro tbody tr')].map(r => r.children[4].textContent + '/' + r.children[5].textContent)")
-    denetle("S-c: sürüm 10 kaydı geçişle açılır; Kadro'da M ve Dk “—”", len(md) >= 22 and all(x == "—/—" for x in md), str(md[:3]))
+    md = await pg.evaluate("() => [...document.querySelectorAll('.dsy-kadro tbody tr')].map(r => r.children[5].textContent + '/' + r.children[6].textContent)")
+    denetle("S-c: sürüm 10 kaydı geçişle açılır; Kadro'da M ve Dk “—” (RK4-b: Boy sütunundan sonra)", len(md) >= 22 and all(x == "—/—" for x in md), str(md[:3]))
     await pg.context.close()
 
 

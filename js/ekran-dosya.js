@@ -134,7 +134,7 @@ function dosyaGorunumu(k,D,Y){
     const MV={KL:'Kaleci',DEF:'Savunma',OS:'Orta saha',FV:'Forvet'},AY={sag:'Sağ',sol:'Sol',iki:'İki ayak'},ab=(a,t)=>'<abbr title="'+t+'">'+a+'</abbr>';
     if(!O){
       genis='<p class="dsy-kat">Kadro</p><h3 class="dsy-baslik">'+yaz(k.kulupler[biz].ad)+'</h3>'+
-        '<table class="dsy-kadro"><colgroup>'+['2.4em','auto','3em','2.7em','3.4em','2.4em','3.4em','2.3em','3.3em','10.7em','4em','8.4em'].map(w=>'<col'+(w==='auto'?'':' style="width:'+w+'"')+'>').join('')+'</colgroup>'+
+        '<table class="dsy-kadro"><colgroup>'+['2.4em','auto','3em','2.7em','3em','2.4em','3.4em','2.3em','3.3em','8.7em','4em','7.4em'].map(w=>'<col'+(w==='auto'?'':' style="width:'+w+'"')+'>').join('')+'</colgroup>'+
         '<thead><tr><th>'+ab('No','Forma numarası')+'</th><th>Futbolcu</th><th>'+ab('Mvk','Mevki')+'</th><th class="dsy-s">Yaş</th><th class="dsy-s">'+ab('Boy','Boy (m)')+'</th><th class="dsy-s">'+ab('M','Bu sezon maç')+'</th><th class="dsy-s">'+ab('Dk','Bu sezon dakika')+'</th><th class="dsy-s">'+ab('G','Gol')+'</th><th class="dsy-s">'+ab('Kart','Sarı / kırmızı')+'</th><th>Durum</th><th>'+ab('Bitiş','Sözleşme bitişi')+'</th><th class="dsy-s">'+ab('Maaş','Aylık maaş')+'</th></tr></thead><tbody>'+
         Sat.map(x=>'<tr'+(x.sakat||x.ceza?' class="dsy-kadroEksik"':'')+'><td>'+x.no+'</td><td><button type="button" class="od-baglanti dsy-kadroAd" data-eylem="oyuncuAc" data-oyuncu="'+x.id+'" title="'+yaz(x.ad)+'">'+
           (typeof oyuncuPortreHtml==='function'?oyuncuPortreHtml(k.oyuncular[x.id],'dsy-kadroYuz',1):'')+yaz(x.ad)+'</button></td><td>'+x.mevki+'</td><td class="dsy-s">'+x.yas+'</td>'+
