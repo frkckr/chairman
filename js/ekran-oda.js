@@ -1066,6 +1066,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       if(e.target===kap){if(balkonVar&&ODA.yer==='yolda'){if(!duraklatmaVar())odaYuruAtla();return;}
         /* RK6: ziyaretçi yürürken tıklamak sahneyi atlatır (girerken oturur, çıkarken gider) */
         if(ziyaretSahnesi()&&ODA.ziyaret&&(ODA.ziyaret.evre==='giris'||ODA.ziyaret.evre==='cikis')){if(!duraklatmaVar()){odaZiyaretAtla();ciz();}return;}
+        if(ODA.yer==='balkon'&&performance.now()-suruBitti<350)return;   /* RK1-b: sürüklemenin sonu tıklama değildir */
         if(ODA.yer==='balkon'){const n=kareNoktasi(e);odaIsaret(n?n.x:null,n?n.y:null);}   /* RB: sahada figürler kayar; tıklanan an ölçülür */
         /* RK-D (kullanıcı: “oyuncuya tıklayınca dosyası açılmalı”): takip edilen oyuncuya tıklamak dosyasını açar; öbür tıklamalar bakar */
         const ad=ODA.uzerinde;if(ad==='giris'){panelAc('ziyaret');return;}if(ad==='kapi'){if(!duraklatmaVar())yerDegistir();}
@@ -1184,13 +1185,30 @@ function odaEkraniKur(kap,oyun,ayarlar){
   const kareNoktasi=e=>{const c=document.getElementById('view'),r=(c||kap).getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
     return x<0||x>1||y<0||y>1?null:{x:x*2-1,y:-(y*2-1)};};
   kap.addEventListener('change',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('od-iceDosya'))kayitDosyasiSecildi(e.target);});
+  /* RK1-b (2026-11-01, kullanıcı: “mouse'la istediğim bölgeye yakınlaşıp uzaklaşmalı ve hareket ettirip istediğim bölgeyi izleyebilmeliyim”): balkonda
+     sahayı sürüklemek başı döndürür (eşikten sonra; bırakınca bakış yumuşak durur, tıklama sayılmaz), tekerlek imlecin altındaki noktaya kademesiz
+     yaklaşır. Yalnız görüntü */
+  let suru=null,suruBitti=0;
+  kap.addEventListener('pointerdown',e=>{
+    if(e.button!==0||e.target!==kap||acik||!sahaBakisVar()||ODA.yer!=='balkon'||typeof balkonSurukleBasla!=='function')return;
+    suru={x:e.clientX,y:e.clientY,s:null,id:e.pointerId};
+  });
+  const suruBitir=e=>{if(!suru||e.pointerId!==suru.id)return;if(suru.s){suruBitti=performance.now();kap.style.cursor='';try{kap.releasePointerCapture(e.pointerId);}catch(x){}
+    const b=balkonBakis();if(b.suru){delete b.suru;}sahadaGuncelle(false);}suru=null;};
+  kap.addEventListener('pointerup',suruBitir);kap.addEventListener('pointercancel',suruBitir);
   kap.addEventListener('pointermove',e=>{
+    if(suru&&e.pointerId===suru.id){
+      if(!(e.buttons&1)||acik||ODA.yer!=='balkon'){suruBitir(e);}
+      else{const c=document.getElementById('view'),r=(c||kap).getBoundingClientRect(),dx=e.clientX-suru.x,dy=e.clientY-suru.y;
+        if(!suru.s&&Math.hypot(dx,dy)>=STIL.balkon.fare.esik){suru.s=balkonSurukleBasla();try{kap.setPointerCapture(e.pointerId);}catch(x){}}
+        if(suru.s){balkonSurukle(suru.s,dx/r.width,dy/r.height);kap.style.cursor='grabbing';sonImlec=null;return;}}
+    }
     if(e.target!==kap){sonImlec=null;if(ODA.uzerinde){odaIsaret(null);kap.style.cursor='';}return;}
     const n=kareNoktasi(e),ad=n?odaIsaret(n.x,n.y):odaIsaret(null);
     sonImlec=ad==='saha'?n:null;   /* RK1: imleç etiketi her karede bu noktadan (figürler kayar) */
     /* RB: sahada grup ve oyuncu el imleci ve adıyla, boş zemin büyüteçle */
     const h=ad==='saha'?ODA.sahaIsaret:null;
-    kap.style.cursor=h&&h.tur==='yer'?'zoom-in':ad?'pointer':'';
+    kap.style.cursor=h&&h.tur==='yer'?'grab':ad?'pointer':'';   /* RK1-b: boş zemin sürüklenir */
     kap.title=ad==='kapi'?'Balkona çık (5)':h?(h.tur==='oyuncu'?oyuncuEtiketi(h.id):h.tur==='grup'?grupAdi(h.grup):'Buraya bak'):ad?NESNE[ad]:'';
   });
   kap.addEventListener('pointerleave',()=>{sonImlec=null;odaIsaret(null);kap.style.cursor='';});
@@ -1206,15 +1224,14 @@ function odaEkraniKur(kap,oyun,ayarlar){
     const t=e.target.closest&&e.target.closest('.od-takip');if(!t||e.button!==0||!t.dataset.oyuncu)return;
     e.preventDefault();takipBasildi=performance.now();oyuncuDosyasiAc(t.dataset.oyuncu);
   });
-  /* RB: balkonda tekerlek bir kademe yaklaşır ya da uzaklaşır (genişten imlecin altındaki yere); dokunmatik yüzeyin art arda olayları tek adım sayılır */
-  let tekerSon=0;
+  /* RB, RK1-b: balkonda tekerlek imlecin altındaki noktaya kademesiz yaklaşır ya da uzaklaşır (deltaY ölçüsünde; dokunmatik yüzeyin küçük adımları
+     küçük); oyuncu ya da grup izlenirken yalnız açı değişir; en genişte bütün saha */
   kap.addEventListener('wheel',e=>{
     if(!sahaBakisVar()||ODA.yer!=='balkon'||acik||e.target!==kap||!e.deltaY)return;
-    e.preventDefault();const t=performance.now();if(t-tekerSon<220)return;tekerSon=t;
-    const n=kareNoktasi(e),yon=e.deltaY<0?1:-1;if(!n)return;
-    if(yon>0&&balkonBakis().tur==='saha'){const h=balkonIsaret(n.x,n.y);
-      if(h){sahaBak(h.tur==='yer'?Object.assign({kademe:1},h):h);return;}}
-    balkonYakinlik(yon);sahadaGuncelle(false);
+    e.preventDefault();
+    const n=kareNoktasi(e);if(!n)return;
+    const d=e.deltaMode===1?e.deltaY*33:e.deltaMode===2?e.deltaY*400:e.deltaY;
+    balkonTeker(n.x,n.y,clamp(d,-240,240));sahadaGuncelle(false);
   },{passive:false});
   addEventListener('keydown',e=>{
     if(kap.hidden||oyun.bozukHata||e.ctrlKey||e.altKey||e.metaKey)return;

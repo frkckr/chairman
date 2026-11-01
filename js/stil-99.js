@@ -418,6 +418,10 @@ const STIL={
        yaklaşma (1/sn; ~0,6 sn'de yerine oturur); basHiz: başın en çok dönüşü (°/sn, RN-b ile aynı); isaret: tıklamada figürün üstü ve grubun
        yakını (karenin yarı yüksekliği biriminde, en az); bant: geniş pencerede karenin yanındaki kâğıt bandı (px en az; karenin en çok payı). TEST */
     yakinlik:[46,20,9],bakisHiz:5,basHiz:140,isaret:{figur:0.035,grup:0.12},bant:{enAz:300,enCok:0.55},
+    /* RK1-b (2026-11-01): fare — esik: sürüklemenin başladığı yol (px); suruHiz: sürüklerken bakışın izleme hızı (bakisHiz katı); teker: tekerleğin
+       deltaY başına açı çarpanı (üstel; fare tıkı ~100 → %17); egim: sürüklemede bakışın en az ve en çok aşağı eğimi (°); saha: bakışın kaldığı
+       yarım en ve boy (m, saha koordinatı). TEST */
+    fare:{esik:5,suruHiz:4,teker:0.0016,egim:[3,60],saha:[58,38]},
     /* RK1 (2026-10-31): izlerken görülen sinyalin oyuncunun başının üstündeki kelimesi kaç gerçek saniye kalır (Duraklat'ta ve iş açıkken bekler). TEST */
     sinyalSn:6,
     duvar:0xc9bfae,iskele:0x8a8f96,iskeleBranda:0x3d6a8a,iskeleTorba:0xc9b98f,iskeleSerit:0xd8402a},

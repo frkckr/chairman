@@ -494,8 +494,9 @@ function odaKare(dt){
     ODA.bakis.lerp(hedef,a*k>sinir?sinir/a:k);
   }else if(balkonda&&typeof balkonBakisHedefi==='function'){
     /* RB: balkonda bakış seçili hedeftedir (iş açıkken de; telefona dönmez); baş en çok STIL.balkon.basHiz °/sn döner */
-    const H=balkonBakisHedefi(),B=STIL.balkon;hedef=H.nokta;aci=H.aci;k=1-Math.exp(-dt*B.bakisHiz);
-    const P=ODA.kamera.position,a=ODA_YON1.subVectors(ODA.bakis,P).angleTo(ODA_YON2.subVectors(hedef,P)),sinir=B.basHiz*Math.PI/180*dt;
+    /* RK1-b: sürüklerken bakış hızlı izler (H.hiz), baş sınırı iki katı */
+    const H=balkonBakisHedefi(),B=STIL.balkon,hz=H.hiz||1;hedef=H.nokta;aci=H.aci;k=1-Math.exp(-dt*B.bakisHiz*hz);
+    const P=ODA.kamera.position,a=ODA_YON1.subVectors(ODA.bakis,P).angleTo(ODA_YON2.subVectors(hedef,P)),sinir=B.basHiz*(hz>1?2:1)*Math.PI/180*dt;
     ODA.bakis.lerp(hedef,a*k>sinir?sinir/a:k);
   }else{
     const dinlenme=new THREE.Vector3(...(balkonda?STIL.balkon.bakis:OD.bakis));
