@@ -164,7 +164,7 @@ async def sahneler_canli(pg, olc):
 CANLI_SAHNELER = {"canli-hafta", "canli-mac-ozet", "canli-mac-ist", "canli-mac-kadro", "canli-oyuncu", "canli-kulup", "canli-kulup-kadro"}
 
 
-TRANSFER_SAHNELER = {"transfer-pano", "transfer-piyasa", "transfer-oyuncu", "transfer-aday-karti", "transfer-pazarlik-karti"}
+TRANSFER_SAHNELER = {"transfer-pano", "transfer-ara", "transfer-oyuncu", "transfer-aday-karti", "transfer-pazarlik-karti"}
 # R4: şablon kartlarını politikayla cevaplayarak hedef aşamanın kartına dek sürer (öbür kararlar reddet ya da ilk; maç günü yapay 0–0)
 ZINCIR_JS = """async ([hedef, pol]) => {
   const Z = {skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], ist: {}};
@@ -191,8 +191,9 @@ async def sahneler_transfer(pg, olc):
     await pg.keyboard.press("Digit6")
     await pg.wait_for_selector(".tm-masa", timeout=10000)
     await olc("transfer-pano")
-    await tikla(pg, '.tm-sekmeler [data-bolum="piyasa"]')
-    await olc("transfer-piyasa")
+    await tikla(pg, '.tm-sekmeler [data-bolum="ara"]')
+    await tikla(pg, '[data-eylem="tmCip"][data-deger="serbest"]')
+    await olc("transfer-ara")
     await tikla(pg, ".tm-oyuncu")
     await olc("transfer-oyuncu")
     await akis.masaya_don(pg)

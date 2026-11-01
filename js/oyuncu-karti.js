@@ -26,7 +26,7 @@ function oyuncuKarti(k,id,baglam,ek){
         '<h3 class="ok-ad'+(dosya?' dsy-baslik':'')+'">'+okYaz(p.ad)+'</h3>'+
         '<p class="ok-kunye'+(dosya?' dsy-kunye':'')+'"><span class="ok-mevki" data-mevki="'+okYaz(p.mevki)+'">'+okYaz(OK_MEVKI[p.mevki]||p.mevki)+'</span>'+
           (yas!=null?'<span>'+yas+' yaş'+(dosya&&p.dogumTarihi?' <small>('+okYaz(typeof gunAyYazi==='function'?gunAyYazi(p.dogumTarihi)+' '+p.dogumTarihi.slice(0,4):p.dogumTarihi)+')</small>':'')+'</span>':'')+
-          (p.ayak&&OK_AYAK[p.ayak]?'<span>'+OK_AYAK[p.ayak]+'</span>':'')+'</p>'+
+          (p.ayak&&OK_AYAK[p.ayak]?'<span>'+OK_AYAK[p.ayak]+'</span>':'')+(p.boy&&typeof boyYazi==='function'?'<span class="ok-boy">'+boyYazi(p)+'</span>':'')+'</p>'+   /* RK4-b: boy */
         '<p class="ok-kulup">'+(ek.kulup||arma+'<span>'+okYaz(kulupAd)+'</span>')+'</p>'+(ek.test||'')+'</div></header>'+
     '<section class="ok-sezon" aria-label="Bu sezon"><span class="ok-sezonAd">Bu sezon</span><dl><div><dt><abbr title="Maç">M</abbr></dt><dd>'+sy(Z.mac)+'</dd></div><div><dt><abbr title="Dakika">Dk</abbr></dt><dd>'+sy(Z.dk)+'</dd></div>'+
       '<div><dt><abbr title="Gol">G</abbr></dt><dd>'+(Z.gol|0)+'</dd></div><div><dt>Kart</dt><dd>'+(Z.sari|0)+'/'+(Z.kirmizi|0)+'</dd></div></dl>'+

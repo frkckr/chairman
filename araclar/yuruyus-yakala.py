@@ -7,7 +7,9 @@ Başkan odasını başsız Chromium'da elle ilerleyen kare saatiyle açar, odada
     kalkış ve oturma süreleri, adım sayısı, adımdaki dikey ve yanal salınım (araclar/anlar/<onek>yuruyus-<hedef>.json)
   - RN-b (2026-10-30): evreler örtüşen pencerelerse (ODA.yol.an) şerit ve ölçü onlara göre; bakışın açısal hızı (°/sn), yürürken bakışın en düşük
     eğimi (°; yere bakmıyor mu?), yürürken görüş açısının değişimi (°), elin her uçta görünür kaldığı süre (sn)
-  - RK2 (2026-10-31): telefon ritüelinin evreleri (bak, al, ekran, cep; varışta cikar, ekran2, koy, cek) şeritte ve evrelerde
+  - RK2 (2026-10-31): telefon ritüelinin evreleri (bak, al, cep; varışta cikar, koy, cek) şeritte ve evrelerde; RK-D (2026-11-01) ekran evreleri
+    kalktı; ölçü: telefonun gözden en yüksek yeri (m; yüze kalkmıyor mu?), kolun karenin içinde belirdiği ya da kaybolduğu kare sayısı, omzun
+    karede göründüğü kare sayısı (kol kenardan girmeli)
 
 Kullanım:
   python araclar/yuruyus-yakala.py                 # balkona gidiş ve masaya dönüş
@@ -36,17 +38,19 @@ OYNAT_JS = """(hedef) => {
   odaYuru(hedef); const Y = ODA.yol, toplam = Y.toplam, N = Math.ceil(toplam * 60) + 2, iz = [];
   const E = Object.assign({}, Y.E || { yonel: OD.adim.yonel, kalk: OD.adim.kalk, yuru: Y.yuru, otur: OD.adim.otur });
   /* evre sınırları (sn) ve şerit anları; RN-b: örtüşen pencereler (Y.an) varsa onlardan */
-  const sira = ['bak', 'al', 'ekran', 'cep', 'yonel', 'kalk', 'yuru', 'otur', 'cikar', 'ekran2', 'koy', 'cek'].filter(a => Y.an ? !!Y.an[a] : E[a] != null), bas = {}; let t0 = 0;
+  const sira = ['bak', 'al', 'cep', 'yonel', 'kalk', 'yuru', 'otur', 'cikar', 'koy', 'cek'].filter(a => Y.an ? !!Y.an[a] : E[a] != null), bas = {}; let t0 = 0;
   for (const a of sira) { if (Y.an) { bas[a] = Y.an[a][0]; E[a] = Y.an[a][1] - Y.an[a][0]; } else { bas[a] = t0; t0 += E[a]; } }
   const an = (a, u) => bas[a] != null ? bas[a] + E[a] * u : null;
-  /* RK2: ritüelin anları (uzanma, kavrama, ekran, cep; çıkarma, ekran, bırakma) ve yürüyüşün üç anı */
-  const anlar = [an('al', 0.3), an('al', 0.5), an('ekran', 0.5), an('cep', 0.6), an('kalk', 0.6), an('yuru', 0.15), an('yuru', 0.5), an('yuru', 0.85), an('cikar', 0.8), an('ekran2', 0.5), an('koy', 0.6), an('cek', 0.4)]
+  /* RK2, RK-D: ritüelin anları (uzanma, kavrama, kaldırma, cep; çıkarma, bırakma, çekme) ve yürüyüşün üç anı */
+  const anlar = [an('al', 0.3), an('al', 0.5), an('al', 0.85), an('cep', 0.4), an('kalk', 0.6), an('yuru', 0.15), an('yuru', 0.5), an('yuru', 0.85), an('cikar', 0.8), an('koy', 0.4), an('koy', 0.8), an('cek', 0.4)]
     .map((t, i) => t == null ? toplam * (i + 0.5) / 12 : t).sort((a, b) => a - b);
   const view = document.getElementById('view'), W = 480, H = 360, cv = document.createElement('canvas'); cv.width = W * 4; cv.height = H * 3; const g = cv.getContext('2d');
   let k = 0, bitti = null;
   for (let i = 0; i < N; i++) {
     __kare(1); const p = ODA.kamera.position, t = ODA.yol ? ODA.yol.t : toplam, b = ODA.bakis, dx = b.x - p.x, dy = b.y - p.y, dz = b.z - p.z;
-    iz.push([t, p.x, p.y, p.z, ODA.yer, Math.atan2(dx, -dz), Math.atan2(dy, Math.hypot(dx, dz)), ODA.kamera.fov, ODA.el ? ODA.el.g.visible : false]);
+    const ndc = v => { const q = v.clone().project(ODA.kamera); return [q.x, q.y]; }, Tg = ODA.nesneler.telefon.g;
+    iz.push([t, p.x, p.y, p.z, ODA.yer, Math.atan2(dx, -dz), Math.atan2(dy, Math.hypot(dx, dz)), ODA.kamera.fov, ODA.el ? ODA.el.g.visible : false,
+      ODA.el && ODA.el.ust ? ndc(ODA.el.ust.position) : null, ODA.el ? ndc(ODA.el.g.position) : null, Tg.visible ? Tg.position.y - p.y : null]);
     while (k < anlar.length && t >= anlar[k] - 1e-6) { const x = (k % 4) * W, y = Math.floor(k / 4) * H; g.drawImage(view, x, y, W, H);
       g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(x, y, 96, 22); g.fillStyle = '#fff'; g.font = '14px monospace'; g.fillText(t.toFixed(2) + ' sn', x + 6, y + 16); k++; }
     if (!ODA.yol && bitti == null) { bitti = i; break; }
@@ -86,10 +90,24 @@ def olc(v):
             "enBuyukHizSicramasi": round(max(abs(hiz[i] - hiz[i - 1]) for i in range(1, len(hiz))), 3),
             "adimSayisi": tepe, "adimDikeyCm": round((max(ys) - min(ys)) * 100, 1) if ys else 0,
             "bitisYeri": v["yer"], "telefonGorunur": v["telefon"], "elGorunur": v["el"],
-            "bakisAcisalHiz": round(max(aci_hiz), 1) if aci_hiz else None, "bakisAcisalHiz99": round(sorted(aci_hiz)[int(len(aci_hiz) * 0.99)], 1) if aci_hiz else None,
+            "bakisAcisalHiz": round(max(aci_hiz), 1) if aci_hiz else None,
+            "bakisAcisalHizAni": (lambda i: [round(iz[i + 1][0], 2), next((a for a in reversed(sira) if iz[i + 1][0] >= bas[a]), sira[0])])(max(range(len(aci_hiz)), key=lambda i: aci_hiz[i])) if aci_hiz else None,
+            "bakisAcisalHiz99": round(sorted(aci_hiz)[int(len(aci_hiz) * 0.99)], 1) if aci_hiz else None,
             "yururkenEnDusukEgim": round(math.degrees(min(r[6] for r in yuru_ic)), 1) if yuru_ic else None,
             "yururkenAciDegisimi": round(max(r[7] for r in yuru_ic) - min(r[7] for r in yuru_ic), 2) if yuru_ic else None,
-            "elGorunurSn": [round(el_bas, 2), round(el_son, 2)] if el_bas is not None else None}
+            "elGorunurSn": [round(el_bas, 2), round(el_son, 2)] if el_bas is not None else None, **rituel_olc(v["iz"])}
+
+
+def rituel_olc(iz):
+    """RK-D: telefon gözden en çok ne kadar aşağıda (m; yüze kalkmamalı), kolun karenin içinde birden belirdiği ya da kaybolduğu kare, omzun
+    karede göründüğü kare (kol kenardan girmeli)."""
+    if not iz or len(iz[0]) < 12:
+        return {}
+    ic = lambda q: q is not None and abs(q[0]) < 1 and abs(q[1]) < 1
+    belir = sum(1 for i in range(1, len(iz)) if iz[i][8] != iz[i - 1][8] and ic(iz[i][10] if iz[i][8] else iz[i - 1][10]))
+    omuz = sum(1 for r in iz if r[8] and ic(r[9]))
+    tel = [r[11] for r in iz if r[11] is not None]
+    return {"telefonGozdenEnYuksekM": round(max(tel), 3) if tel else None, "kolKaredeBelirdi": belir, "omuzKaredeKare": omuz}
 
 
 def toplam_yari(v):

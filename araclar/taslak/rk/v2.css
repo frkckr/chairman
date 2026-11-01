@@ -1,0 +1,59 @@
+/* RK3 taslağı v2 “Kulüp evrakı 1999”: antetli kâğıt (arma ve kulüp adı), resmî yazı biçimi, daktilo alanlar (Plex Mono), başlıklar serif
+   (Plex Serif; aynı aile), mühür ve paraf, karbon kopya renkleri (sarı not), mantar pano ve teleks şeridi. Ölçüler v1 ile aynı. */
+:root{--kagit:#f9f3e3;--yazi:#231f19;--soluk:#5a5043;--cizgi:#ddd0b0;--cizgiKoyu:#a8946a;--zebra:#efe5cc;--krom:#2b2420;--kromYazi:#efe6d2;
+  --kulup:#c0392b;--amber:#e8a020;--mavi:#2c3e7a;--yesil:#2f6b3a;--kirmizi:#a32a22;--girdi:#fffaf0;--perde:rgba(20,14,10,.28)}
+.krom{border-bottom:3px double #8a6a3a}
+.krom .krom-kayit{color:#c9bc9e}
+.krom-dur{color:#efe6d2;border-color:#8a7a5a}
+.krom-tarih b{color:#ff8a70}
+.serit{background:#2b2420;color:#d8cdb4;border-top:0}
+.kagit{border:1px solid #cdbb90;box-shadow:0 12px 32px rgba(0,0,0,.45);background-image:linear-gradient(transparent 31px,rgba(140,110,60,.08) 32px);background-size:100% 32px}
+.kagit-bas h1{font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;font-size:26px}
+.kat{font-family:"IBM Plex Mono",monospace;letter-spacing:.04em}
+.antet{display:flex;align-items:center;gap:.8em;padding-bottom:.6em;border-bottom:3px double var(--kulup)}
+.antet .arma{font-size:44px}
+.antet b{display:block;font-family:"IBM Plex Serif",Georgia,serif;font-size:19px;letter-spacing:.14em;color:var(--kulup)}
+.antet small{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--soluk)}
+.ana{background:var(--amber);border:1px solid #a87010;color:#1d1a16;box-shadow:0 2px 0 #a87010}
+.ana:disabled{background:var(--zebra);border-color:var(--cizgiKoyu);box-shadow:none;color:var(--soluk)}
+.ikinci,.kucuk{background:#fffaf0;border:1px solid var(--cizgiKoyu)}
+.uc>div{border:1px solid var(--cizgiKoyu);background:#fffaf0}
+.uc b{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:25px}
+.resmi{position:relative;display:grid;gap:.9em}
+.resmi-ust{display:flex;justify-content:space-between;gap:1em;margin:0;font-family:"IBM Plex Mono",monospace;font-size:15px}
+.resmi-hitap{margin:.4em 0 0;font-family:"IBM Plex Serif",serif;font-weight:600;text-align:center;letter-spacing:.06em}
+.resmi-metin,.resmi-kapanis{margin:0;font-family:"IBM Plex Serif",serif;font-size:16px;max-width:66ch}
+.resmi-kapanis{text-align:right}
+.imza{justify-self:end;display:grid;justify-items:center;gap:0}
+.imza .paraf{width:120px;height:40px}
+.imza small{color:var(--soluk);font-size:13px}
+.muhur{position:absolute;right:26%;bottom:.6em;display:grid;justify-items:center;padding:.3em .8em;border:3px double var(--kirmizi);border-radius:4px;color:var(--kirmizi);
+  font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:20px;letter-spacing:.14em;transform:rotate(-6deg);opacity:.82}
+.muhur small{font-size:12px;letter-spacing:.05em}
+.muhur-mavi{position:static;justify-self:end;align-self:end;border-color:var(--mavi);color:var(--mavi);font-size:15px;transform:rotate(-4deg)}
+.cizelge{font-family:"IBM Plex Mono",monospace;font-size:15px}
+.cizelge th{font-family:"IBM Plex Sans",sans-serif}
+.lisans{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:1.2em;padding:1em;border:2px solid var(--yazi);background:#fffaf0}
+.lisans-foto{position:relative;padding:6px;background:#fff;border:1px solid var(--cizgiKoyu);box-shadow:2px 3px 0 rgba(0,0,0,.15);transform:rotate(-2deg)}
+.atas{position:absolute;top:-10px;left:18px;width:14px;height:34px;border:2px solid #8b8f96;border-radius:8px}
+.lisans-alan{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.3em 1.2em}
+.lisans-alan p{margin:0;display:grid;border-bottom:1px dotted var(--cizgiKoyu)}
+.lisans-alan span{font-size:12px;color:var(--soluk);letter-spacing:.06em;text-transform:uppercase}
+.lisans-alan b{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:17px}
+.sari-not{padding:1em 1.2em;background:#fbeea4;box-shadow:2px 3px 0 rgba(0,0,0,.12);transform:rotate(.6deg)}
+.sari-not .notlar li{border-left-color:rgba(0,0,0,.25)}
+.kagit-transfer{background:#c9a26a;background-image:radial-gradient(rgba(90,60,25,.35) 1px,transparent 1.5px),radial-gradient(rgba(255,240,210,.25) 1px,transparent 1.5px);background-size:7px 7px,11px 11px;border:10px solid #5a3e24}
+.kagit-transfer .kagit-bas,.kagit-transfer .kagit-eylem,.kagit-transfer .donem,.kagit-transfer .sekmeler{background:var(--kagit);padding:.6em .9em;border:0}
+.kagit-transfer .kagit-eylem{border-top:0}
+.kagit-transfer .iki-sutun>section{background:var(--kagit);padding:.9em;box-shadow:2px 3px 0 rgba(0,0,0,.25)}
+.kagit-transfer .liste{background:transparent!important;box-shadow:none!important;padding:0!important}
+.kagit-transfer .liste h2{display:inline-flex;background:var(--kagit);padding:.3em .7em}
+.kagit-transfer .liste-satir{position:relative;background:#fffdf6;box-shadow:2px 3px 0 rgba(0,0,0,.22)}
+.kagit-transfer .liste-satir::before{content:"";position:absolute;top:-5px;left:50%;width:10px;height:10px;border-radius:50%;background:#b3261e;box-shadow:1px 1px 0 rgba(0,0,0,.35)}
+.kagit-transfer .liste-grup h3{display:inline-block;background:var(--kagit);padding:.1em .5em;color:var(--yazi)}
+.teleks{font-family:"IBM Plex Mono",monospace;font-size:14px;letter-spacing:.04em;padding:.5em .8em;background:#f4ecc8;border-top:2px dashed #b9a87f;border-bottom:2px dashed #b9a87f}
+.teleks-bas{display:block;font-weight:600;color:var(--kirmizi)}
+.gb-dun,.gb-kasa,.gb-manset{padding:.7em .9em;border:1px solid var(--cizgiKoyu);background:#fffaf0}
+.kagit-gunbasi{background:#fbf3c4;background-image:linear-gradient(transparent 31px,rgba(70,90,140,.18) 32px);background-size:100% 32px}
+.kagit-gunbasi .gb-bugun time{font-family:"IBM Plex Mono",monospace}
+.donem{border:1px solid var(--cizgiKoyu);background:#fffaf0}

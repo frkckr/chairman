@@ -52,7 +52,10 @@ function haberListesi(k,bas,son){
   L.sort((a,b)=>b.h.onem-a.h.onem||a.h.an-b.h.an||a.qi-b.qi||a.i-b.i);
   return L.map(({h})=>Object.assign({},h,{metin:MESELE_OLAYLARI[h.anahtar](k,h.p||{}),etiket:HABER_ETIKET[h.anahtar]||GAZETE_ETIKET[h.anahtar]||'Kulüp',konu:haberKonusu(k,h)}));
 }
-const tvHaberleri=k=>{const W=tvPenceresi(k);return haberListesi(k,W.bas,W.son).slice(0,HABER_TEST.tvEnCok);};
+/* RK-D (2026-11-01, kullanıcı: “teletext haberlerinde goller vs. olmasın, büyük haberler”): TV'nin haber sayfasında maç sonucu ve kırmızı kart
+   satırı yok (sonuçlar Skorlar sayfasında); takip akışında kalırlar (takip edilen kulübün sonucu haberdir) */
+const HABER_TV_ATLA=new Set(['hb.sonuc','hb.kirmizi']);
+const tvHaberleri=k=>{const W=tvPenceresi(k);return haberListesi(k,W.bas,W.son).filter(h=>!HABER_TV_ATLA.has(h.anahtar)).slice(0,HABER_TEST.tvEnCok);};
 /* takip */
 const takipListesi=(k,tur)=>((k.takip||{})[tur==='kulup'?'kulupler':'oyuncular'])||[];
 const takipEdiliyor=(k,tur,id)=>takipListesi(k,tur).includes(id);

@@ -83,6 +83,13 @@ const STIL={
   antrenman:{koni:0xff7a1e,flas:0xfff4dc},
 
   tenler:['#e2b48c','#cf9a70','#b07650','#8a5a3c','#ecc49e'],
+  /* RK4-b (2026-11-01): oyuncu kimliğinin ten rampaları (js/kimlik.js; sıra 0–6: açık, açık zeytuni, orta zeytuni, koyu zeytuni, kahve, koyu kahve,
+     çok koyu). Her rampa dört ton: ışık, orta, gölge, çizgi (yüzün parçaları ve 3B figürün teni ortası). Monk ölçeği ve piksel paletlerinden türetildi
+     (araclar/plan/kasim-notlari-arastirma.md §4); Türkiye kökeninin ağırlığı açık zeytuni ve orta zeytunide. gozRenk: koyu kahve, kahve, ela-yeşil,
+     mavi-gri. TEST */
+  tenRampa:[['#ffe2c6','#f3cba7','#dca681','#a8704c'],['#f6d3ad','#e4b78c','#c3925f','#86593a'],['#e8c093','#cfa070','#a77a4b','#6b4a2d'],
+    ['#d6a676','#b98757','#8e6440','#5a3c26'],['#b07a4a','#93603a','#6a4428','#40291b'],['#875f45','#634333','#432d23','#251a14'],['#634335','#48322b','#2d211c','#181311']],
+  gozRenk:['#1e1610','#4a2e18','#6a6a34','#4a6e86'],
   /* A5 (2026-10-15; gerçekçilik planı §4 A5): insan modeli (js/oyuncular.js). tur 'kesit' değişken kesitli halkalardan tek kemikli mesh | 'kutu' eski
      kutular (karşılaştırma için; kullanıcı A5'i değerlendirene dek, sonra kalkar); normal 'yumusak' Gouraud | 'duz' dilim başına düz gölge (PS1 gibi; köşe iki katı) — A5-0 titreme
      ölçüsünde (A5'in titreme aracı, tur/a5'te; 10 an, aynı pozlar) dama payı kutu %23,0 · düz %20,8 · yumuşak %20,4: yumuşak gölge titremede gürültü yapmıyor; dilim çevredeki köşe sayısı;
@@ -356,17 +363,18 @@ const STIL={
     adim:{hiz:1.6,viraj:0.2,ivme:1.3},
     /* RN-b (2026-10-30, kullanıcı: “çok robotik”; seçenek A — kısa ve insani): evreler örtüşür, bakış ilgi noktalarına gider, görüş açısı yürürken
        sabittir. RK2 (2026-10-31, kullanıcı: “telefonu masadan alma ve bırakma çok robotik, çok hızlı”; karar 69'un kısa ritüel parçasının yerine):
+       RK-D (2026-11-01, kullanıcı: “telefona bakma kısmını kaldır, normal hızda, kol doğal görünsün”): telefon yüze kalkmaz, ekrana bakılmaz; masadan
+       alınıp cebe iner, varışta cepten masaya konur; kol omuzdan bağlı iki parçadır (STIL.yuruyus.el).
        rituel — bak: başın telefona eğildiği süre (sn); alBas: uzanmanın bakın hangi payında başladığı; al: uzanma, kavrama ve kaldırma (sn); tut, kavra:
-       al içinde elin telefona vardığı pay ve kavrama payı; ekran, ekran2: telefona bakılan süre (gidişte, varışta); cep: cebe koyma; kalkOrtusme:
-       kalkışın cebe koymayla örtüşmesi; cikar: varışta cepten yüzün önüne; koy: masaya indirme ve bırakma (birak: bırakmanın koy içindeki payı); cek:
-       elin çekilmesi; koyOrtusme: varış ritüelinin oturmanın sonuyla örtüşmesi (sn); bakAgirlik, elBak, koyBak: bakışın telefona dönme payı (masadaki,
-       eldeki, varışta); ekranUzak, ekranAlt: telefonun yüzün önündeki yeri (gözden ileri ve aşağı, m). kalk, otur: süreler (sn; biçimleri STIL.yuruyus).
+       al içinde elin telefona vardığı pay ve kavrama payı; cep: masanın üstünden cebe; kalkOrtusme: kalkışın cebe koymayla örtüşmesi; cikar: varışta
+       cepten masanın üstüne; koy: masaya indirme ve bırakma (birak: bırakmanın koy içindeki payı); cek: elin çekilmesi; koyOrtusme: varış ritüelinin
+       oturmanın sonuyla örtüşmesi (sn); bakAgirlik, koyBak: bakışın masadaki telefona dönme payı (alırken, bırakırken). kalk, otur: süreler (sn; biçimleri STIL.yuruyus).
        ortusme: kalkışın sonuyla ilk adımın ve son adımlarla oturmanın üst üste bindiği süre (sn). aciYol: yürürken görüş açısı (°; oda 56, balkon 46 — açı farkı kalkışın ve oturmanın içinde kapanır). bakis: ilgi noktaları — önce kapı;
        kapıya kapidanOnce metre kala kapıdan öteye (balkona giderken saha, odaya dönerken arka duvardaki pano), son sonOnce metrede oturulacak yerin bakışına
        geçer; her geçiş gecis metrede tamamlanır. esik: kapı eşiğinde hız sınırı (p merkez, r yarıçap m, v m/sn). adimOyna/adimDalga: adım boyunun yol
        boyunca oynaması (oran, dalga boyu m). TEST değerleri */
-    yuru:{rituel:{bak:0.4,alBas:0.5,al:0.9,tut:0.42,kavra:0.12,ekran:0.32,cep:0.32,kalkOrtusme:0.3,cikar:0.35,ekran2:0.2,koy:0.65,birak:0.7,cek:0.3,koyOrtusme:0.72,
-        bakAgirlik:0.55,elBak:0.75,koyBak:0.55,ekranUzak:0.4,ekranAlt:0.1},
+    yuru:{rituel:{bak:0.35,alBas:0.4,al:0.95,tut:0.5,kavra:0.12,cep:0.45,kalkOrtusme:0.25,cikar:0.45,koy:0.6,birak:0.7,cek:0.45,koyOrtusme:0.72,
+        bakAgirlik:0.4,koyBak:0.3},
       kalk:1.25,otur:1.5,ortusme:{kalkYuru:0.25,yuruOtur:0.4},aciYol:51,
       bakis:{kapi:[1.325,1.4,-3.45],pano:[-0.7,1.7,2.3],kapidanOnce:1.6,sonOnce:1.6,gecis:1.4},esik:{p:[1.33,1.62,-3.45],r:0.45,v:1.05},adimOyna:0.04,adimDalga:3.7},
     /* arka duvar (2.8R): başkanın koltuğunun arkası (z). Masadan bakınca görünmez; kalkınca ve odaya dönerken görünür.
@@ -391,14 +399,15 @@ const STIL={
      egil = gözün öne gittiği yol (m), cok = eğilirken gözün alçaldığı (m). otur: sure, yerPay = koltuğun önüne geçişin bittiği an, basla = alçalmanın
      başladığı, yaslan = yaslanmanın başladığı an, egil/cok = alçalırken öne eğilme (m), geri = yaslanırken geri gidilen yol (m).
      adim: boy = normal hızda adım boyu (m), hiz = o hız (m/sn), dikey = adımda gözün iniş-çıkışı (m), yanal = ağırlık aktarımı (m),
-     nabiz = adım içinde ilerlemenin dalgalanması (adım boyuna oran). el: sure (sn), tut = elin nesneye vardığı an (0–1), bekle = orada kaldığı pay,
-     kavis = uzanırken elin yükseldiği (m), bak = bakışın nesneye dönme payı (0–1), bas = elin çıktığı yer (göze göre: sağ, aşağı, ileri; m).
-     TEST değerleri */
+     nabiz = adım içinde ilerlemenin dalgalanması (adım boyuna oran). el (RK-D): kavis = uzanırken elin yükseldiği (m), bas = cep, elin çıktığı ve
+     döndüğü yer (göze göre: yana, aşağı, ileri; m; görüşün dışında), omuz = kolun bağlandığı yer (yana, ileri; m; yüksekliği karenin alt kenarının
+     omuzPay derece altında, omuzAlt aralığında m), ustKol/onKol = kemik boyları (m; ön kol bilekten dirseğe), kutup = dirseğin kıvrılma yönü (dışa,
+     yukarı; aşağı eksi: yakın masada dirsek gövdenin yanına iner, uzak masada kol neredeyse düzdür). TEST değerleri */
   yuruyus:{yonel:0.5,
     kalk:{sure:1.6,egilPay:0.36,adimPay:0.34,egil:0.18,cok:0.05},
     otur:{sure:2.2,yerPay:0.55,basla:0.25,yaslan:0.82,egil:0.1,cok:0.03,geri:0.04},
     adim:{boy:0.66,hiz:1.4,dikey:0.024,yanal:0.012,nabiz:0.012},
-    el:{sure:0.85,tut:0.45,bekle:0.12,kavis:0.05,bak:0.55,bas:[0.26,-0.5,0.2]}},
+    el:{kavis:0.05,bas:[0.26,-0.5,0.2],omuz:[0.24,0.55],omuzPay:3,omuzAlt:[0.42,0.6],ustKol:0.38,onKol:0.37,kutup:[0.85,-0.4]}},
 
   /* Balkon ve antrenman sahası (js/balkon.js): odanın dışı, gündüz. Ölçüler metre; saha merkezi oda koordinatındadır (balkon sahanın üstünde,
      ana tribünün tepesinde). aci/bakis: balkondaki sandalyeden bakış. TEST değerleri. */
@@ -416,6 +425,10 @@ const STIL={
        yaklaşma (1/sn; ~0,6 sn'de yerine oturur); basHiz: başın en çok dönüşü (°/sn, RN-b ile aynı); isaret: tıklamada figürün üstü ve grubun
        yakını (karenin yarı yüksekliği biriminde, en az); bant: geniş pencerede karenin yanındaki kâğıt bandı (px en az; karenin en çok payı). TEST */
     yakinlik:[46,20,9],bakisHiz:5,basHiz:140,isaret:{figur:0.035,grup:0.12},bant:{enAz:300,enCok:0.55},
+    /* RK1-b (2026-11-01): fare — esik: sürüklemenin başladığı yol (px); suruHiz: sürüklerken bakışın izleme hızı (bakisHiz katı); teker: tekerleğin
+       deltaY başına açı çarpanı (üstel; fare tıkı ~100 → %17); egim: sürüklemede bakışın en az ve en çok aşağı eğimi (°); saha: bakışın kaldığı
+       yarım en ve boy (m, saha koordinatı); capaSn: art arda tekerlek adımlarında imlecin altındaki noktanın korunduğu süre (sn). TEST */
+    fare:{esik:5,suruHiz:4,teker:0.0016,egim:[3,60],saha:[58,38],capaSn:0.6},
     /* RK1 (2026-10-31): izlerken görülen sinyalin oyuncunun başının üstündeki kelimesi kaç gerçek saniye kalır (Duraklat'ta ve iş açıkken bekler). TEST */
     sinyalSn:6,
     duvar:0xc9bfae,iskele:0x8a8f96,iskeleBranda:0x3d6a8a,iskeleTorba:0xc9b98f,iskeleSerit:0xd8402a},

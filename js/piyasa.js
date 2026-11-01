@@ -8,7 +8,9 @@
    Piyasa okumaları (saf): serbestSuresi(k, p) → gün | null, satilikSinyali(k, p) → metin | null (kulübünde forma bulamıyor ve mevkide fazlası var),
      sozlesmeBitiyor(k, p), piyasaListesi(k) → {serbest, satilik, bitiyor} (bizim kulüp hariç; sıralı, sınırlı).
    Takip ve izleme (kayıtta isteğe bağlı k.transfer = {havuz, takip:[{oyuncuId, tarih, kaynak}], izlenen:[{oyuncuId, tarih, kanaat}]}):
-     takibeAl(k, oyuncuId, kaynak) / takiptenCikar(k, oyuncuId) — menü (karar değil); kayıt komutudur, zaman almaz.
+     takibeAl(k, oyuncuId, kaynak) / takiptenCikar(k, oyuncuId) — menü (karar değil); kayıt komutudur, zaman almaz. Kaynak: baskan, hoca, izleme,
+     menajer (R6b-1': menajerin önerisinden listeye alınan).
+   R6b-1' arama ve menajer önerileri: oyuncuAra, menajerMenuleri (aşağıda). piyasaListesi masada kullanılmıyor (Piyasa sekmesi kalktı; araçlar okur).
    Bütün sayılar TEST. */
 'use strict';
 const SERBEST_TEST={sayi:24,mevki:[['KL',2],['DEF',8],['OS',8],['FV',6]],yas:[20,33],ay:[1,14],guc:[-8,8],yildiz:4,yildizYas:[30,34],yildizGuc:9,
@@ -75,6 +77,51 @@ function takibeAl(k,id,kaynak){
 }
 function takiptenCikar(k,id){const T=kariyerTransfer(k),n=T.takip.length;T.takip=T.takip.filter(x=>x.oyuncuId!==id);return T.takip.length<n;}
 const izlemeKaydi=(k,id)=>k.transfer?k.transfer.izlenen.filter(x=>x.oyuncuId===id).slice(-1)[0]||null:null;
+
+/* ---- R6b-1' (2026-11-01, kullanıcı: “oyuncu arama olsun, klavye ile yazalım; piyasa ekranı saçma … gerçek hayatta bu bilgilere anlık
+   ulaşılabiliyor mu, menajer önerileri mi oluyor”; araştırma araclar/plan/kasim-notlari-arastirma.md §5): kamu künyesinde arama ve menajer önerileri.
+   Saf; kayda yazılmaz. Gerçekte anında ve herkese açık olan: yaş, kulüp, boy, sözleşme bitişi (Transfermarkt gerçekliği); kalite, isteklilik ve
+   fiyat ancak araştırmayla ya da menajerle konuşarak öğrenilir. “Forma bulamayanlar” pano değil, kulis ya da menajerin sözüdür.
+     oyuncuAra(k, s) → {toplam, liste: [oyuncuId]} — s: {metin (ad ya da kulüp), mevki, yasEnCok, yasEnAz, serbest, bitiyor, boyEnAz (cm)};
+       bizim oyuncularımız hariç; ad başı eşleşme önde, sonra ad sırası; en çok ARAMA_TEST.enCok
+     menajerMenuleri(k) → [{tarih, dakika, menajer, mevki, oyuncular: [{oyuncuId, not}]}] — son üç haftanın Pazartesi önerileri (dönem içinde her
+       hafta, dışında üç haftada bir), en yeni önce; menajer TEST yer tutucu (kişi kaydı yok, metin); notlar menajerin sözüdür (abartır) */
+const ARAMA_TEST={enCok:20};
+const MENAJER_TEST={kisiler:[{ad:'Cevdet Ural',mevki:'DEF'},{ad:'Selim Akdağ',mevki:'OS'},{ad:'Tarık Yener',mevki:'FV'}],gun:21,donemDisi:3,sayi:[3,5],saat:600,
+  notlar:['“İki kulüp daha soruyor.”','“Bonservisi uygun, hemen gelir.”','“Takımında forma bulamıyor, değişiklik istiyor.”','“Ailesi bu tarafa taşınmak istiyor.”',
+    '“Fiyatı pazarlığa açık.”','“Sezon sonunda serbest kalıyor, şimdi alırsanız ucuz.”','“Antrenmanlarda en çok o çalışıyor.”']};
+const pyKarma=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}h^=h>>>13;h=Math.imul(h,0x5bd1e995);h^=h>>>15;return h>>>0;};
+const pyKucuk=s=>String(s||'').toLocaleLowerCase('tr-TR');
+function oyuncuAra(k,s){
+  s=s||{};const biz=bizimKulup(k),m=pyKucuk(s.metin).trim(),R=[];
+  for(const p of Object.values(k.oyuncular||{})){
+    if(!p||(p.kulupId&&p.kulupId===biz))continue;
+    if(s.mevki&&p.mevki!==s.mevki)continue;
+    const y=oyuncuYasi(p,k.tarih);if(s.yasEnCok&&y>s.yasEnCok)continue;if(s.yasEnAz&&y<s.yasEnAz)continue;
+    if(s.serbest&&p.kulupId!==null)continue;
+    if(s.bitiyor&&!sozlesmeBitiyor(k,p))continue;
+    if(s.boyEnAz&&typeof boyCm==='function'&&boyCm(p)<s.boyEnAz)continue;
+    let puan=1;
+    if(m){const ad=pyKucuk(p.ad),kl=pyKucuk(p.kulupId?(k.kulupler[p.kulupId]||{}).ad:'serbest');puan=ad.startsWith(m)?3:ad.includes(m)?2:kl.includes(m)?1:0;if(!puan)continue;}
+    R.push({id:p.id,ad:pyKucuk(p.ad),puan});}
+  R.sort((a,b)=>b.puan-a.puan||a.ad.localeCompare(b.ad,'tr')||(a.id<b.id?-1:1));
+  return{toplam:R.length,liste:R.slice(0,ARAMA_TEST.enCok).map(x=>x.id)};
+}
+function menajerMenuleri(k){
+  const T=MENAJER_TEST,biz=bizimKulup(k),simdi=anDakika(k.tarih,k.gunIciDakika),L=[];
+  for(let g=0;g<=T.gun;g++){
+    const t=tarihEkle(k.tarih,-g),[y,a,d]=t.split('-').map(Number),gun=Date.UTC(y,a-1,d);
+    if(new Date(gun).getUTCDay()!==1||anDakika(t,T.saat)>simdi)continue;   /* Pazartesi 10:00 */
+    if(typeof BASLANGIC_TARIHI==='string'&&t<BASLANGIC_TARIHI)break;   /* kariyerden önceki Pazartesiler yok */
+    const donem=typeof transferDonemi==='function'&&!!transferDonemi(k,t);
+    if(!donem&&Math.floor(gun/604800000)%T.donemDisi!==0)continue;
+    const M=T.kisiler[pyKarma(t+'|menajer')%T.kisiler.length],n=T.sayi[0]+pyKarma(t+'|sayi')%(T.sayi[1]-T.sayi[0]+1);
+    const aday=Object.values(k.oyuncular||{}).filter(p=>p&&!(p.kulupId&&p.kulupId===biz)&&(p.kulupId===null||sozlesmeBitiyor(k,p)||satilikSinyali(k,p)));
+    aday.sort((p,q)=>(p.mevki===M.mevki?0:1)-(q.mevki===M.mevki?0:1)||pyKarma(t+'|'+p.id)-pyKarma(t+'|'+q.id));
+    L.push({tarih:t,dakika:T.saat,menajer:M.ad,mevki:M.mevki,oyuncular:aday.slice(0,n).map(p=>({oyuncuId:p.id,not:T.notlar[pyKarma(t+'|not|'+p.id)%T.notlar.length]}))});
+  }
+  return L;
+}
 
 /* ---- doğrulama ---- */
 function piyasaDogrula(k,h){

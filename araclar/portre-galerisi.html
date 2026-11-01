@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Oyuncu yüzleri</title>
-<!-- RK4-a (2026-10-31): oyuncu yüzlerinin galerisi (geliştirme aracı; oyun yüklemez). Oyunun kural dosyalarını, stil ve arma tarifini ve portre dosyasını
+<!-- RK4-a (2026-10-31), RK4-b (2026-11-01: 32×32, köken, yaş katmanı, boy): oyuncu yüzlerinin galerisi (geliştirme aracı; oyun yüklemez). Oyunun kural dosyalarını, stil ve arma tarifini ve portre dosyasını
      yükler (sıra araclar/dosya-gruplari.js OYUN_DOSYALARI'ndan üretildi; liste değişirse bu sayfa yeniden üretilir), tohum 7 kariyerini kurar, dört kulübün
-     ilk on altı oyuncusunu 3× gösterir. Görüntü: python -X utf8 araclar/kontrol.py araclar/portre-galerisi.html -->
+     ilk on altı oyuncusunu 3× gösterir; aynı kimlik dört yaşta (19, 26, 33, 38) ve on kökenden örnekler (bugün ligde yalnız Türkiye). Görüntü: python -X utf8 araclar/kontrol.py araclar/portre-galerisi.html -->
 <style>body{margin:0;padding:16px;background:#f2ede2;font:14px/1.3 system-ui,sans-serif;color:#1d1a16}h1{font-size:18px;margin:0 0 8px}h2{font-size:14px;margin:14px 0 6px;letter-spacing:.06em;text-transform:uppercase;color:#6d6353}
 .izgara{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}.yuz{display:grid;justify-items:center;gap:3px}.yuz img{image-rendering:pixelated;border:1px solid #c9bfae;background:#fff}
 .yuz span{font-size:12px;text-align:center}.olcek{display:flex;gap:12px;align-items:end}</style></head><body>
-<h1>Oyuncu yüzleri (TEST, 24×24 piksel)</h1><div id="g"></div>
+<h1>Oyuncu yüzleri (TEST, 32×32 piksel)</h1><div id="g"></div>
 <script src="../js/stil-99.js"></script>
 <script src="../js/ortak.js"></script>
 <script src="../js/stadyum-tarifleri.js"></script>
@@ -47,6 +47,7 @@
 <script src="../js/sponsor.js"></script>
 <script src="../js/mali-rapor.js"></script>
 <script src="../js/kadro-dosyasi.js"></script>
+<script src="../js/kimlik.js"></script>
 <script src="../js/canli-skor.js"></script>
 <script src="../js/gazete.js"></script>
 <script src="../js/haber.js"></script>
@@ -58,9 +59,18 @@
 <script src="../js/portre.js"></script>
 <script>
 const k=kariyerBaslat({tohum:7}),g=document.getElementById('g');let h='';
+const yazi=o=>(o.no||'')+' · '+o.ad+'<br>'+o.mevki+' · '+kimlikYas(o,k.tarih)+' · '+boyYazi(o);
 for(const kid of ['demirkapi','akdeniz','yildiztepe','karaova']){const K=k.kulupler[kid],O=(K.kadro?K.kadro.ilk11.concat(K.kadro.yedekler):[]).slice(0,16).map(id=>k.oyuncular[id]).filter(Boolean);
-  h+='<h2>'+K.ad+'</h2><div class="izgara">'+O.map(o=>'<div class="yuz">'+oyuncuPortreHtml(o,'',3)+'<span>'+(o.no||'')+' · '+o.ad+'<br>'+o.mevki+' · '+(2026-Number(String(o.dogumTarihi).slice(0,4)))+'</span></div>').join('')+'</div>';}
+  h+='<h2>'+K.ad+'</h2><div class="izgara">'+O.map(o=>'<div class="yuz">'+oyuncuPortreHtml(o,'',3,k.tarih)+'<span>'+yazi(o)+'</span></div>').join('')+'</div>';}
+/* aynı kimlik dört yaşta: doğum yılı değişir, kimlik aynı */
+const D=k.kulupler.demirkapi.kadro.ilk11.concat(k.kulupler.akdeniz.kadro.ilk11).slice(0,8).map(id=>k.oyuncular[id]);
+h+='<h2>Yaş (aynı kişi 19, 26, 33, 38 yaşında)</h2><div class="izgara">'+D.flatMap(o=>[19,26,33,38].map(y=>{const c=Object.assign({},o,{dogumTarihi:(2026-y-1)+'-12-01'});
+  return'<div class="yuz">'+oyuncuPortreHtml(c,'',2,k.tarih)+'<span>'+o.ad+' · '+y+'</span></div>';})).join('')+'</div>';
+/* kökenler (yapay kimlikler): bugün ligde yalnız Türkiye; öbürleri tablo olarak hazır */
+h+='<h2>Kökenler (yapay örnek)</h2><div class="izgara">'+Object.keys(KIMLIK_KOKEN).flatMap(kk=>[0,1,2,3].map(i=>{const o={id:'galeri-'+kk+'-'+i,ad:KIMLIK_KOKEN[kk].ad+' '+i,no:i+2,mevki:'OS',kulupId:'demirkapi',
+  dogumTarihi:(2000-i*3)+'-05-01',sac:['kisa','kivircik','kisa','uzun'][i],sacRenk:kk==='bati'||kk==='dogu'?['#8a6a3a','#5a4028','#c8a060','#3c2616'][i]:['#141212','#241a12','#141212','#3c2616'][i],koken:kk,boy:1};
+  return'<div class="yuz">'+oyuncuPortreHtml(o,'',2,k.tarih)+'<span>'+KIMLIK_KOKEN[kk].ad+'</span></div>';})).join('')+'</div>';
 const o=k.oyuncular[k.kulupler.demirkapi.kadro.ilk11[5]];
-h+='<h2>Ölçek (1×, 2×, 3×)</h2><div class="olcek">'+[1,2,3].map(n=>oyuncuPortreHtml(o,'',n)).join('')+'</div>';
+h+='<h2>Ölçek (1×, 2×, 3×)</h2><div class="olcek">'+[1,2,3].map(n=>oyuncuPortreHtml(o,'',n,k.tarih)).join('')+'</div>';
 g.innerHTML=h;
 </script></body></html>

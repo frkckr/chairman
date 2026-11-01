@@ -8,8 +8,8 @@
      yrOtur(s, P0, P1, ileri, out)    oturma (s 0→1): ayakta göz P0 → otururken göz P1; yerine geçer, öne eğilerek alçalır, en son yaslanır
      yrAdimBoyu(v)                    hıza göre adım boyu (m): yavaşken kısa adım
      yrAdim(faz, zarf, yon, P)        adımın göze etkisi: dikey iniş-çıkış ve yana ağırlık aktarımı (faz: adım sayısı, kesirli; zarf 0–1)
-     yrElKur(malzeme)                 kol + manşet + el; ön kol +z'ye uzanır, bilek kökte. {g, parmak}
-     yrElYolu(s, bas, hedef, out)     elin bir nesneye uzanıp dönmesi (s 0→1): tut anında hedeftedir; dönen değer uzanma oranı (0–1)
+     yrElKur(malzeme)                 iki parçalı kol: {g: ön kol + manşet + el (bilek kökte), parmak, ust: üst kol (omuz kökte)}
+     yrKolCoz(O, P, L1, L2, Kt, omuz, dirsek)  iki kemikli kolun dirseği (kutup Kt yönünde); yetişmezse omuz bileğe kayar
    Yol planlayıcısı (N11, 2026-10-04; js/oda.js'ten ortaklaştı, oda yürüyüşü aynen kullanır; locaya giriş de kullanır):
      yrYolKur(noktalar, ayar)         noktalardan geçen yuvarlatılmış yolun zaman çizelgesi. ayar: {hiz, viraj, ivme, merdiven: [[bas, son], …]
                                       (yol metresi), merdivenHiz, basamak: {derinlik, yukseklik}}. Döner: {egri, Q, L, D, VZ, FZ, DTS, yuru (sn)}.
@@ -42,15 +42,22 @@ function yrAdim(faz,zarf,yon,P){
   P.y-=Math.cos(2*Math.PI*faz)*A.dikey*0.5*z;P.x-=yon.z*yanal;P.z+=yon.x*yanal;
   return P;
 }
+/* RK-D: kol iki parçadır — g: bilekte kök, ön kol +z'ye (dirseğe) uzanır, avuç ve parmaklar -z'de; ust: omuzda kök, üst kol +z'ye (dirseğe) */
 function yrElKur(M){
-  const g=new THREE.Group(),B=STIL.baskan,kol=M({color:B.takim}),ten=M({color:B.ten});
-  box(0.096,0.074,0.52,kol,0,0.004,0.29,g);box(0.1,0.078,0.03,M({color:0xf2f0ea}),0,0.004,0.03,g);box(0.08,0.03,0.095,ten,0,-0.008,-0.058,g);
+  const g=new THREE.Group(),ust=new THREE.Group(),B=STIL.baskan,kol=M({color:B.takim}),ten=M({color:B.ten}),on=YR.el.onKol,uz=YR.el.ustKol;
+  box(0.094,0.074,on,kol,0,0.004,0.03+on/2,g);box(0.1,0.078,0.03,M({color:0xf2f0ea}),0,0.004,0.03,g);box(0.08,0.03,0.095,ten,0,-0.008,-0.058,g);
   const parmak=new THREE.Group();parmak.position.set(0,-0.01,-0.105);g.add(parmak);box(0.078,0.024,0.07,ten,0,-0.002,-0.034,parmak);
-  g.rotation.order='YXZ';g.visible=false;return{g,parmak};
+  box(0.104,0.088,uz,kol,0,0,uz/2,ust);box(0.1,0.086,0.1,kol,0,0,uz,ust);
+  g.visible=false;ust.visible=false;return{g,parmak,ust};
 }
-function yrElYolu(s,bas,hedef,out){
-  const E=YR.el,u=s<E.tut?yrYumusak(s/E.tut):s<E.tut+E.bekle?1:1-yrYumusak((s-E.tut-E.bekle)/(1-E.tut-E.bekle));
-  out.lerpVectors(bas,hedef,u);out.y+=Math.sin(Math.PI*u)*E.kavis;return u;
+/* RK-D: iki kemikli kolun çözümü — omuz O'dan bilek P'ye; dirsek kutup yönüne (Kt) kıvrılır. Kol yetişmezse omuz bileğe doğru kayar (eğilme).
+   omuz ve dirsek çıktıdır (THREE.Vector3) */
+function yrKolCoz(O,P,L1,L2,Kt,omuz,dirsek){
+  omuz.copy(O);let dx=P.x-O.x,dy=P.y-O.y,dz=P.z-O.z,D=Math.hypot(dx,dy,dz)||1e-6;const enCok=(L1+L2)*0.995;
+  if(D>enCok){const k=(D-enCok)/D;omuz.x+=dx*k;omuz.y+=dy*k;omuz.z+=dz*k;dx*=1-k;dy*=1-k;dz*=1-k;D=enCok;}
+  const ux=dx/D,uy=dy/D,uz=dz/D,a=(L1*L1-L2*L2+D*D)/(2*D),h=Math.sqrt(Math.max(0,L1*L1-a*a));
+  const kd=Kt.x*ux+Kt.y*uy+Kt.z*uz,kx=Kt.x-kd*ux,ky=Kt.y-kd*uy,kz=Kt.z-kd*uz,kl=Math.hypot(kx,ky,kz)||1;
+  dirsek.set(omuz.x+ux*a+kx/kl*h,omuz.y+uy*a+ky/kl*h,omuz.z+uz*a+kz/kl*h);
 }
 /* ---- yol planlayıcısı (N11'de js/oda.js'ten ortaklaştı; sayısal davranış aynı) ---- */
 function yrAra(D,x){let a=0,b=D.length-1;if(x<=D[0])return[1,0];if(x>=D[b])return[b,1];while(b-a>1){const m=(a+b)>>1;if(D[m]<=x)a=m;else b=m;}return[b,(x-D[a])/Math.max(1e-9,D[b]-D[a])];}

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RK3 arayüz taslakları</title>
+<!-- RK3 (2026-11-01, Kasım paketi): arayüz dilinin iki taslağı — v=1 “Kırtasiye”, v=2 “Kulüp evrakı 1999”; s=mali | kart | transfer | gunbasi | simge.
+     Statik sayfa; oyunu yüklemez. Yüz, arma ve ten rampası oyunun dosyalarından (stil-99, arma, kimlik, portre). Görüntü: python -X utf8 araclar/taslak/rk/cek.py
+     Örnek: taslak.html?v=2&s=mali. Kararı kullanıcı verir (ekran başına seçim ya da karışım); seçilen taslak RK5'in ölçüsüdür. Metinler ve sayılar TEST. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=Jersey+10&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ortak.css">
+<link rel="stylesheet" id="varyant" href="v1.css">
+</head><body>
+<div class="ekran" id="ekran"></div>
+<script src="../../../js/stil-99.js"></script>
+<script src="../../../js/arma.js"></script>
+<script src="../../../js/kimlik.js"></script>
+<script src="../../../js/portre.js"></script>
+<script src="simge.js"></script>
+<script src="taslak.js"></script>
+</body></html>

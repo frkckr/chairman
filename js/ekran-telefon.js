@@ -24,7 +24,7 @@
        kararlar (konu, hazır görüş, geniş tek kart ipucuyla, yanında bağlam: o günün defteri, kasa ya da künye), dosyada bekleyen karar, konular
        (“Yazabileceklerin”; argümanlı konuda oyuncu seçimi: T.oyuncuSec). R2 eki (2026-10-29, karar 62): panel tek iş gösterir — karar varsa yalnız kart
        (cevaplar gizli, kaydırınca yüzünde; bağlam cevabın yüzünde, yandaki tam bağlam kalktı), karar yoksa bekleme satırı ya da T.konuMenu açıkken başlıklı
-       konu menüsü (tlfKonuMenusu; kategori yazışma konusunun alanı); telefonun altında “Yeni konu aç” (data-eylem="konuMenu"). s: {onizleler, testSecenek, kulupId}
+       konu menüsü (tlfKonuMenusu; kategori yazışma konusunun alanı); telefonun altında mesaj kutusu (“Mesaj yaz…”, RK-D; eskiden mesaj kutusu) (data-eylem="konuMenu"). s: {onizleler, testSecenek, kulupId}
        RN-a (2026-10-30, kullanıcı): panel yalnız iş varken açılır; iş yoksa (ana ekran, Mesajlar, Canlı Skor listesi, işsiz konuşma) boş döner ve telefon
        odak kabının ortasında tek cihazdır (.tlf-yalniz); iş çıkınca telefon sola kayar (js/ekran-oda.js). Bekleyenler kalktı.
      Balkonda (iş sağ yarıda, R5) ve maç telefonunda tek telefon sürer. Ortak bekleme engeli (YAZISMA_BEKLEME_ENGELI) iki kipte de konuların altında
@@ -225,7 +225,7 @@
 .tlf-is .tlf-oyuncuDiz button{padding:.25em .55em;font:inherit;color:var(--k-yazi);background:var(--k-zemin);border:1px solid var(--k-cizgi);border-radius:.3em;cursor:pointer}
 .tlf-is .tlf-oyuncuDiz button small{color:var(--k-soluk)}
 .tlf-bos{color:var(--k-soluk)}
-/* R2 eki: karar varken panel yalnız kartı taşır, kart ortada ve dar (Reigns kartı gibi dik); konu menüsü başlıklı tek liste; telefonun altında “Yeni konu aç” */
+/* R2 eki: karar varken panel yalnız kartı taşır, kart ortada ve dar (Reigns kartı gibi dik); konu menüsü başlıklı tek liste; telefonun altında mesaj kutusu */
 .tlf-is.tlf-tekKart{display:flex;flex-direction:column;align-self:stretch;gap:.6em}
 .tlf-is.tlf-tekKart::before,.tlf-is.tlf-tekKart::after{content:"";flex:1 1 0}
 .tlf-tekKart>.tlf-karar{flex:none;display:grid;gap:.5em;justify-items:center;padding:0;border:0}
@@ -236,8 +236,9 @@
 .tlf-kategori{display:flex;align-items:center;gap:.45em}
 .tlf-kSimge{display:grid;place-items:center;flex:none;width:1.7em;height:1.7em;border-radius:50%;border:1px solid var(--k-cizgi);background:var(--k-zemin);color:var(--k-yazi)}
 .tel-yeniKonu{padding:.45em .7em .6em}
-.tel .tel-yeniKonu button{display:flex;align-items:center;justify-content:center;gap:.45em;width:100%;padding:.55em 1em;font:inherit;font-weight:600;color:${T.ekran};background:${T.kasa};border:0;border-radius:2em;cursor:pointer}
-.tel .tel-yeniKonu button i{font-style:normal;font-size:1.25em;line-height:1}
+.tel .tel-yeniKonu button{display:flex;align-items:center;justify-content:space-between;gap:.45em;width:100%;padding:.5em .55em .5em 1em;font:inherit;color:var(--k-soluk);background:#fffdf7;border:1px solid var(--k-cizgi);border-radius:2em;cursor:text;text-align:left}
+.tel .tel-yeniKonu button i{display:inline-grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;background:${T.kasa};color:${T.ekran};flex:none}
+.tel .tel-yeniKonu button i svg{width:.95em;height:.95em}
 .tel .tel-yeniKonu button[aria-expanded="true"]{box-shadow:0 0 0 .14em var(--k-vurgu)}
 .tel .tel-yeniKonu button:disabled{opacity:.45;cursor:default}
 `;
@@ -410,11 +411,12 @@ function telefonCiz(k,T,s={}){
       if(!s.macta)for(const G of c.girisimler.filter(x=>!x.argumanli))ic+='<div class="tel-oneri"><button type="button" data-eylem="girisim" data-girisim="'+G.id+'"'+(G.engel?' disabled':'')+'>'+yazT(G.ad)+' ▸</button><small>'+yazT(telKonuAlti(G))+'</small></div>';
     }
     ic+='</div>';
-    /* R2 eki: iki sütunda telefonun altında, klavyenin yerinde “Yeni konu aç”; konu menüsü sağdaki panelde açılır (maçta yok). Bütün konular
-       kapalıysa düğme de kapalı, nedeni panelde (bekleme satırı ya da kart) */
+    /* R2 eki: iki sütunda telefonun altında, klavyenin yerinde mesaj kutusu; hazır mesajlar (konular) sağdaki panelde açılır (maçta yok). Bütün
+       konular kapalıysa kutu da kapalı, nedeni panelde (bekleme satırı ya da kart). RK-D (2026-11-01, kullanıcı: “yeni konu aç değil, yeni mesaj
+       olur; mesajlaşırken yeni konu açılmaz”): düğme mesaj yazma kutusu görünümünde, “Mesaj yaz…” ve kalem */
     if(s.ikiSutun&&!s.macta&&c.girisimler.length){const kapali=c.girisimler.every(G=>G.engel);
-      alt='<div class="tel-yeniKonu"><button type="button" data-eylem="konuMenu" aria-expanded="'+(T.konuMenu&&!kapali?'true':'false')+'"'+(kapali?' disabled':'')+'>'+
-        '<i aria-hidden="true">+</i> Yeni konu aç</button></div>';}
+      alt='<div class="tel-yeniKonu"><button type="button" data-eylem="konuMenu" aria-label="Mesaj yaz" aria-expanded="'+(T.konuMenu&&!kapali?'true':'false')+'"'+(kapali?' disabled':'')+'>'+
+        '<span>Mesaj yaz…</span><i aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 13l1-3.5L11 2.5l2.5 2.5L6.5 12z"/><path d="M9.5 4l2.5 2.5"/></svg></i></button></div>';}
     const K=s.ikiSutun?[]:c.kararlar.filter(id=>k.isler[id]);
     /* U2: kartın başlığı kartın üst etiketindedir (işin adı; js/ekran-kart.js), alanın üstünde ayrı satır yok */
     if(K.length)alt='<div class="tel-cevap" aria-label="Cevap">'+K.map(id=>
@@ -456,7 +458,7 @@ function tlfKonuMenusu(k,T,c){
   const konu=x=>{const ac=x.argumanli&&T.oyuncuSec===x.id&&!x.engel;
     return'<li><button type="button" class="tlf-konu" data-eylem="'+(x.argumanli?'oyuncuSec':'girisim')+'" data-girisim="'+yazT(x.id)+'"'+(x.engel?' disabled':'')+(x.argumanli?' aria-expanded="'+(ac?'true':'false')+'"':'')+'>'+
       '<b>'+yazT(x.ad)+(x.argumanli?' …':' ▸')+'</b><small>'+yazT(telKonuAlti(x))+'</small></button>'+(ac?tlfOyuncuSecici(k,x.id):'')+'</li>';};
-  return'<section class="tlf-menu" aria-label="Yeni konu"><h4>Yeni konu</h4>'+[...G].map(([kt,L])=>{const [ad,simge]=TLF_KATEGORI[kt]||['Diğer','nokta'];
+  return'<section class="tlf-menu" aria-label="Mesaj"><h4>Mesaj</h4>'+[...G].map(([kt,L])=>{const [ad,simge]=TLF_KATEGORI[kt]||['Diğer','nokta'];
     return'<h5 class="tlf-kategori">'+(typeof kartSimgeHtml==='function'?kartSimgeHtml(simge,'tlf-kSimge'):'')+'<span>'+yazT(ad)+'</span></h5><ul class="tlf-konular">'+L.map(konu).join('')+'</ul>';}).join('')+
     '<p><button type="button" class="od-baglanti" data-eylem="konuMenu">Kapat</button></p></section>';
 }
@@ -477,7 +479,7 @@ function telefonIsPaneli(k,T,s={}){
     ic+='<section class="tlf-karar" aria-label="Karar">'+kararGorusu(k,is.veri)+kararKarti(k,id,{onizle:(s.onizleler||{})[id]||null,ozetsiz:true,dosyaBaglanti:true,testSecenek:s.testSecenek})+'</section>';}
   for(const mid of c.dosyaKarar)ic+='<p class="tlf-not">Bu konuda karar dosyada bekliyor. <button type="button" class="od-baglanti" data-eylem="dosyaAc" data-mesele="'+mid+'" data-donus="telefon">Dosyayı aç ▸</button></p>';
   if(!K.length&&T.konuMenu&&c.girisimler.length&&!c.girisimler.every(G=>G.engel))ic+=tlfKonuMenusu(k,T,c);
-  /* RN-a: iş yoksa panel yok — telefon ortada; “Yeni konu aç” telefonun altında, basınca menü panelde açılır */
+  /* RN-a: iş yoksa panel yok — telefon ortada; mesaj kutusu telefonun altında, basınca menü panelde açılır */
   if(!ic)return'';
   return'<section class="tlf-is'+(K.length?' tlf-tekKart':'')+'" aria-label="'+yazT(c.ad)+' ile işler">'+ic+'</section>';
 }
