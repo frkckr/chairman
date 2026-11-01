@@ -13,6 +13,11 @@
      maliRaporBaslat(k) — yeni kariyer: açılış anında ilk haftalık özet ve zincir (js/baslangic.js)
      maliRaporlari(k) → [{i, h}] (yeniden eskiye) · maliRaporOkumasi(k, h) → {baslik, kaynakAd, tarih, dakika, satirlar, odemeler, hareketler, uyari}
      raporGoruldu(k, i) — yalnız o raporu görüldü işaretler
+   RK5-a (2026-11-01, karar 83; rapor resmî yazı biçiminde, js/ekran-dosya.js): üç saf okuma daha; kayda alan eklemez
+     maliRaporOnceki(k, i) → {i, h} | null — aynı türün bir önceki raporu (kasadaki değişimin oku)
+     maliRaporSeyri(h) → [{tarih, tutar, tur:'bugun'|'enDusuk'|'son'}] — raporun kayıttaki gerçek noktaları (rapor anı, 90 gün içinde en düşük, 90 gün
+       sonra); ara hareketler kayıtta yok, çizim bu noktaları birleştirir. Uyarıda yalnız bugün
+     maliRaporSayisi(k, i) → 'yyyy/aa-ss' — raporun yılı, ayı ve o ayın raporları içindeki sırası (yazının Sayı'sı)
    Eksi kasa uyarısı (G2 kararı 44'ün “eksi kasa işaretlenir” güvencesi; Kasa düğmesinin kırmızı rozeti kalktı): başkanın kulübünün nakdi eksiye düşer ve
      son raporun nakdi eksi değilse (rapor yoksa da) müdür kısa uyarı bırakır; aynı eksi dönemde ikinci uyarı yazılmaz. Kriz içeriği değildir (P01 kullanıcının).
    METİNLER TEST TASLAĞIDIR (karar 35 kipi). */
@@ -87,6 +92,26 @@ function maliRaporOkumasi(k,h){
   return{baslik:RAPOR_BASLIK[tur]||'Rapor',kaynakAd:kisiAdi(k,p.kaynak),tarih:h.tarih,dakika:h.dakika,satirlar:S,odemeler:p.odemeler||[],hareketler,uyari};
 }
 function raporGoruldu(k,i){const h=(k.haberler||[])[i];if(h&&h.tur==='rapor')h.gorulen=true;}
+/* RK5-a: resmî yazının okumaları (saf) */
+function maliRaporOnceki(k,i){
+  const H=k.haberler||[],h=H[i];if(!h||h.tur!=='rapor')return null;
+  for(let j=i-1;j>=0;j--){const x=H[j];if(x&&x.tur==='rapor'&&x.anahtar===h.anahtar)return{i:j,h:x};}
+  return null;
+}
+function maliRaporSeyri(h){
+  const p=h.p,S=[{tarih:h.tarih,tutar:p.nakit,tur:'bugun'}];
+  if(h.anahtar==='mali.uyari'||!Number.isFinite(p.enDusuk)||!Number.isFinite(p.son90))return S;
+  const son=tarihEkle(h.tarih,MALI_TEST.ufukGun);
+  if(p.enDusukTarih&&p.enDusukTarih>h.tarih&&p.enDusukTarih<son&&p.enDusuk!==p.nakit)S.push({tarih:p.enDusukTarih,tutar:p.enDusuk,tur:'enDusuk'});
+  S.push({tarih:son,tutar:p.son90,tur:'son'});
+  return S;
+}
+function maliRaporSayisi(k,i){
+  const H=k.haberler||[],h=H[i];if(!h)return'';
+  const ay=h.tarih.slice(0,7);let n=0;
+  for(let j=0;j<=i;j++){const x=H[j];if(x&&x.tur==='rapor'&&x.tarih.slice(0,7)===ay)n++;}
+  return ay.replace('-','/')+'-'+String(n).padStart(2,'0');
+}
 
 /* telefon: müdüre “Kasa ne durumda?” (günde bir; cevap anındaki sayılar kayda girer, dosyaya ayrı rapor bırakmaz) */
 const kasaCevapMetni=(k,p)=>`Kasada ${paraYazi(p.nakit)}. 90 gün içinde en düşük ${paraYazi(p.enDusuk)} (${gunAyYazi(p.enDusukTarih)}). Aylık maaş yükü ${paraYazi(p.maasYuku)}. Ayrıntısı Pazartesi özetinde.`;

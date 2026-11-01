@@ -60,3 +60,24 @@ Odanın 3B yenilemesi (görsel tur; yalnız dosyanın rengi ve gün notunun kü�
 2. Dosya manila karton olsun (masadaki 3B dosya da) — *evet* (§1.2); alternatif: kırmızı kalsın, çerçevesi incelsin.
 3. Gün başı notu için tuş **8** ve masada küçük sarı kâğıt — *evet* (§1.8).
 4. Gövde yazısı 16 px'e çıksın (bugün 14) — *evet* (§1.9).
+
+## 7. Durum
+
+**RK5-a (dal `claude/rk5a-iskelet`, 2026-11-01):** uygulandı; denetimler aşağıda. Plandan sapmalar ve eklemeler (Claude kararı, gerekçeli):
+
+- **Yazı tabanı:** normal 14 → 16 px; büyük yazı 16 → **17** (18 değil): 640 piksellik karede telefonun iş panelindeki kart büyük yazıda 18 ile kaydırmadan görünmüyordu (akış §3, R2'de kapanan B47 ve B48'in ölçüsü). Geniş karede oran (`yaziBoyu` 1,5 / 1,8 cqw) değişmedi: ~1070 piksellik kareden geniş pencerede gövde zaten 16'nın üstünde. Okunurluk eşiği gövde ≥ 15 px.
+- **Alt şerit tek satır (DIL kural 1):** odak açıkken şeritte son mesaj varsa yalnız o, yoksa yardım cümlesi yalnız oturumun ilk üç açılışında. Dar karede (< 820 px) odak kabı alt şeridin ölçülen yüksekliğinin hemen üstüne iner (`--od-alt`; masa şeridi zaten perdenin altında).
+- **90 günün seyri kayıttaki gerçek noktalardan:** raporun kaydında yalnız sayılar var (rapor anı, en düşük ve tarihi, 90 gün sonrası); ara hareketler saklanmıyor. Çizgi bu üç noktayı birleştirir, noktalar altında yazıyla; kayda alan eklenmedi (`maliRaporSeyri`).
+- **Eklemeler:** rapor yazısının altında kâğıdın kendi eylemi “Müdüre sor: Kasa ne durumda? ▸” (telefondaki konu); odak halkası kırmızıdan mürekkep mavisine (renk disiplini); kartın damgası, dosyanın konu damgası daktilo kalın çift çizgi (piksel yazı yalnız cihaz göstergelerinde); TV 100 ve telefonun Takip listesinde haber türünün simgesi (`haberSimgesi`); üst çubukta kulüp ve başkan adı dar karede tek satır, üç noktayla.
+- **Ayarlar üst çubukta (DIL kural 1):** okunurluk ölçüsünde 640 piksellik karede masa şeridi (simge + kelime) sığmıyordu; Ayarlar masa nesnesi olmadığı için Duraklat'ın yanına geçti, dar karede şeritte simgeler gizlenir (kelime kalır), “Kaydedildi” dar karede yalnız uyarıda.
+- **Simge seti:** taslağın 22 simgesine oyunun ihtiyacı olan 11'i eklendi (ayar, belge, arşiv, değişiklik, devir, konum, kapı, kişi, kar, kurum, nokta); kartın ve telefon konusunun eski 24'lük çizgi simgeleri bu sete bağlandı (`SIMGE_KART`).
+
+**RK5-b (dal `claude/rk5b-belgeler`, 2026-11-01):** uygulandı; denetimler aşağıda. Plandan sapmalar ve eklemeler:
+
+- **Gün başı notu:** kural `js/gun-notu.js` (`gunNotu`, `sonraKararlari`, `notYeni`, `notOkundu`, `notDogrula`), görünüm `js/ekran-not.js`; asistanın adı yerine “Özel kalem” (yeni kişi eklenmedi; plan §1.8'in “bugünkü kişi yoksa” yolu). Kayıt alanı `k.notOkunan` (plandaki `notOkunan` adı; isteğe bağlı). Masadaki “Sonra” yığını da aynı kural işlevini okur (tek kaynak). 3B sarı not masanın sağ önünde, dosyanın önünde.
+- **Sicil fişi:** kat satırı “Futbolcu sicil fişi” (eski “Oyuncu dosyası” satırının yeri; TEST kutusu yanında); alanlar fiş darsa tek, genişse iki sütun (adlı kap sorgusu `ok-sicil`; `.ok-alanlar` aynı zamanda `.dsy-kunye` olduğu için kurallar fişe bağlı). Mühür alanların altında, sağda (alanların üstüne binmez).
+- **Kadro tablosu:** dar karede (< 820 px) en az 52 em (RK4-b'den beri yüz ve Boy sütunuyla ad görünmüyordu); liste kendi sayfasında yatay kayar.
+- **Kategori simgesi:** “Mali” (TEST içeriği) kasa simgesiyle.
+- **Büyük kapıda bulunanlar (düzeltildi):** büyük yazıda 640 piksellik karede Canlı Skor maç sayfası 2–3 px taşıyordu (sekme satırının en küçük genişliği; sayfanın sütunu `minmax(0,1fr)`, sekmeler sığmazsa ikinci satır); üst çubukta sağ grup (tarih, Ayarlar, Duraklat) daralmaz, soldaki ad üç noktayla kısalır. Akış §28 (iki pencere): §27'den sonra ikinci pencerenin yüklenmesi bu makinede 20–30 sn (önceki sürümde de 21–29,5 sn; ilk pencerenin 3B çizimi yazılım GPU'sunu tutar) — gezinme DOM hazır olunca biter, odanın hazırlığı 60 sn yoklanır (yalnız deneme aracı).
+
+**`main`'e alındı (2026-11-01, kullanıcı: “Evet, main'e al”):** RK5-a ve RK5-b büyük kapıdan sonra birlikte; ayrıntı YOL_HARITASI devam notu.

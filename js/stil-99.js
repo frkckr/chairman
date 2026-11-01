@@ -343,7 +343,7 @@ const STIL={
     cerceve:0xf4f1e8,gokUst:'#9fd0ee',gokAlt:'#e8f4f8',cim:'#3a8c33',tribun:'#8a8c90',direk:'#5a5d62',
     dolap:0x7a5634,dolapKoyu:0x5e4026,koltuk:0x7a2420,koltukAyak:0x3a2a1c,lamba:0x2e5a46,lambaIc:0xfff2c8,
     telefon:0x1a1b1f,telefonEkran:'#10202c',telefonHaber:'#ffb530',defter:'#f3ecdc',defterCizgi:'#c9bfa8',defterYazi:'#2a2622',defterSerit:'#c8281e',
-    dosya:0xc8281e,dosyaEtiket:0xf2ede2,kagit:0xf6f1e4,kalemlik:0x2a2c33,saatKasa:0x3a2a1c,saatYuz:0xf4f1e8,saatIbre:0x1c1a18,
+    dosya:0xc8281e,dosyaKapak:0xc9a26a,dosyaSirt:0xb4241c,dosyaEtiket:0xf2ede2,kagit:0xf6f1e4,kalemlik:0x2a2c33,saatKasa:0x3a2a1c,saatYuz:0xf4f1e8,saatIbre:0x1c1a18,
     flama:'#c8281e',flamaSerit:'#f2ede2',vurgu:0xffb530,vurguCizgi:1.5,gunesLekesi:0xfff1c4,gazete:'#e9e4d6',notKagidi:'#f2d96a',iskele:'#4a3a2a',iskeleBranda:'#3a6ea8',
     ortam:{renk:0xfff3df,guc:0.62},gunes:{renk:0xfff0cf,konum:[-3.2,3.6,-2.2]},dolgu:{renk:0xdfe8ff,guc:0.28,konum:[2.5,2,2]},
     gunIsigi:[[6,0.25,0xffc890],[9,0.62,0xfff0cf],[13,0.78,0xfffaf0],[17,0.6,0xffe0b0],[19.5,0.28,0xff9a5a],[22,0.1,0x6a78a8]],
@@ -439,27 +439,37 @@ const STIL={
      mavi: mürekkep ("yeni" noktası, play-off, bağlantı); amber (vurguZemin) yalnız ana eylem ve seçili durum (U0 amber diyeti). TEST değerleri.
      R1-f (2026-10-29) okunurluk tabanı: yaziTaban gövdenin piksel tabanıdır (--k-yaziBoyu = max(taban px, oran cqw)); geniş karede oran, dar karede taban
      geçerlidir: yazı küçülmez, yerleşim değişir. enKucukYazi bütün küçük göreli boyların tabanıdır (--k-enKucuk; 1em'den küçük her yazı boyu
-     max(var(--k-enKucuk), …em)). Eşikler araclar/okunurluk.py'de sınanır (gövde ≥ 14, metin ≥ 12 px). */
-  kagit:{zemin:'#f4eedf',zeminKoyu:'#e9e0cb',serit:'#fbf7ec',cizgi:'#c9b994',yazi:'#26221c',soluk:'#6d6353',vurgu:'#a5620a',vurguZemin:'#ffb530',
+     max(var(--k-enKucuk), …em)). Eşikler araclar/okunurluk.py'de sınanır (gövde ≥ 15, metin ≥ 12 px).
+     RK5-a (2026-11-01, karar 83 “Kırtasiye”): kâğıt daha açık krem (zemin), satır çizgisi ayrı ve açık (cizgiAcik; cizgi kenar ve düğme çizgisidir),
+     zebra satır zeminKoyu, soluk yazı koyulaştı (kontrast ≥ 4,5:1), krom üst çubuk ve alt şerit; gövde tabanı 14 → 16 px (geniş karede oran zaten
+     büyük, değişmedi). */
+  kagit:{zemin:'#fbf7ee',zeminKoyu:'#f3ecdb',serit:'#fffdf8',krom:'#f6f0e2',cizgi:'#b9a87f',cizgiAcik:'#e4d9bf',yazi:'#26221c',soluk:'#5c5346',vurgu:'#a5620a',vurguZemin:'#ffb530',
     kulup:'#b4241c',kirmizi:'#b4241c',yesil:'#2c6f28',golge:'rgba(40,28,12,.28)',vurguYazi:'#1a1203',vurguYaziSoluk:'#3a2a08',mavi:'#22347a',murekkep:'#22347a',
-    yaziBoyu:{normal:1.5,buyuk:1.8},yaziTaban:{normal:14,buyuk:16},enKucukYazi:12,
+    yaziBoyu:{normal:1.5,buyuk:1.8},yaziTaban:{normal:16,buyuk:17},enKucukYazi:12,
     /* U1 (2026-10-28) odak kabı (js/ekran-odak.js): perde bulanıklığı (px; canlandırılmaz) ve karartması, bulanıklık yokken yalnız karartma,
        kabın genişliği (karenin %'si; genis dosya/defter/gazete/kadro, orta karar, kucuk ayarlar, cihaz telefon), belirme ölçeği ve süreler (ms).
-       Araştırma: statik 6–8 px ve %30–35 karartma; açılış 200–300, kapanış 150–200 ms (u-arastirma §6.3). TEST değerleri */
+       Araştırma: statik 6–8 px ve %30–35 karartma; açılış 200–300, kapanış 150–200 ms (u-arastirma §6.3). TEST değerleri.
+       RK5-a (karar 83, “kâğıt öne, oda geriye”): perde hafifledi (%22 karartma, 6 px); kâğıdın gölgesi yumuşak (golge), kenarı ince */
     /* U5 gazete kâğıdı (js/ekran-gazete.js): kâğıt, eskidikçe yaklaştığı sarı, mürekkep, soluk, çizgi, etiket kırmızısı. TEST */
     gazete:{kagit:'#f6f2e7',sari:'#e6d6a8',murekkep:'#1d1a16',soluk:'#5f574b',cizgi:'#b9ae96',kirmizi:'#a3241b'},
+    /* RK5-b (karar 83 “Kulüp evrakı 1999”) mantar pano (js/ekran-transfer.js): mantar ve iki tonlu nokta, ahşap çerçeve, iğne, teleks kâğıdı. TEST */
+    transfer:{mantar:'#bf905a',mantarKoyu:'rgba(90,58,24,.42)',mantarAcik:'rgba(255,240,210,.32)',ahsap:'#6b4a2b',ahsapKoyu:'#4a321c',igne:'#b4241c',teleks:'#f4ecc8'},
+    /* RK5-b gün başı notu (js/ekran-not.js): sarı bloknot, mavi satır çizgisi, kenar, üst bant; sarı not (oyuncu dosyasının notları). TEST */
+    not:{kagit:'#fbf0b3',cizgi:'rgba(70,90,140,.2)',kenar:'#d9c77a',ust:'#e9cf5c',sari:'#fbeea4'},
     /* RK8-a TV sayfası (js/ekran-tv.js): teletext — koyu ekran, kasa, kanal şeridi, yazı, soluk, sarı (saat ve skor), camgöbeği (başlık), canlı kırmızısı. TEST */
     tv:{zemin:'#0f1923',kasa:'#2a2e35',serit:'#c8281e',seritYazi:'#fff7ee',yazi:'#eef2f6',soluk:'#a8b7c5',sari:'#ffd75a',camgobegi:'#86dcec',kirmizi:'#ff7a6b',cizgi:'#3c4c5c',vurgu:'rgba(255,215,90,.14)'},
     /* U4 zaman geçiyor sahnesi (js/ekran-zaman.js): taban + satır başı sn, en çok enCok sn. TEST */
     zaman:{taban:0.8,satir:0.35,enCok:2.5},
-    odak:{goz:{is:55,yan:40,kenar:2},bulanik:7,karartma:'rgba(24,16,8,.33)',yalnizKarartma:'rgba(24,16,8,.5)',boy:{genis:80,orta:60,kucuk:44,cihaz:44,telefon:92,yarim:42},olcek:0.96,
+    odak:{goz:{is:55,yan:40,kenar:2},bulanik:6,karartma:'rgba(20,14,10,.22)',yalnizKarartma:'rgba(20,14,10,.45)',golge:'0 .5em 1.6em rgba(0,0,0,.34)',boy:{genis:80,orta:60,kucuk:44,cihaz:44,telefon:92,yarim:42},olcek:0.96,
       sure:{belir:220,kapan:160,perde:150,perdeKapan:120,azalt:150}},
     /* telefon (2.8I): açık tonlu cihaz; gelen/giden baloncuk ve ana ekran simgeleri. N7 (2026-10-04): cihaz çerçevesi ve kamera adası, ana ekranın
        dikey zemini (üst, orta, alt), alttaki sabit sıranın zemini, geri/okunmamış mavisi, satır ayracı */
     telefon:{kasa:'#1d1e22',cerceve:'#34363c',ada:'#0c0c0e',ekran:'#f7f2e6',anaZemin:['#efe6d0','#f7f2e6','#f1e8d4'],sabit:'rgba(201,185,148,.42)',
       baglanti:'#22347a',ayrac:'rgba(201,185,148,.6)',gelen:'#fbf7ec',giden:'#ffd27a',gidenCizgi:'#c98a1c',mesajSimge:'#2c6f28',skorSimge:'#22347a'},
     /* dosya (2.8M, js/ekran-dosya.js): masada açılan kırmızı karton dosya; perde odayı hafif karartır */
-    dosya:{perde:'rgba(24,16,8,.42)',kapak:'#a8291f',kapakKoyu:'#7a1c15',sekme:'#e9dcc0',sayfa:'#fbf6e8',cizgi:'#d8c9a6',not:'#fffdf6',atas:'#8a8f98',mavi:'#22347a'},
+    /* RK5-a (karar 83): manila karton (kapak, kenarı kapakKoyu, sekme), kırmızı yalnız sırt etiketi (sirt); belge: resmî yazının kâğıdı. Masadaki 3B dosya
+       aynı manila (STIL.oda.dosyaKapak, dosyaSirt). TEST */
+    dosya:{perde:'rgba(24,16,8,.42)',kapak:'#c9a26a',kapakKoyu:'#8a6738',sekme:'#e6d3a6',sirt:'#b4241c',sayfa:'#fbf6e8',belge:'#fffcf3',cizgi:'#d8c9a6',not:'#fffdf6',atas:'#8a8f98',mavi:'#22347a'},
     /* ajanda (2.8M, js/ekran-defter.js): iki sayfalı spiral defter; kayıtlar mürekkep renginde */
     defter:{kapak:'#2c3442',sayfa:'#fbf8ef',cizgi:'#e3d9c2',spiral:'#5a5d62',kurdele:'#b4241c',murekkep:'#22347a',kayit:'#eef1fa',kayitCizgi:'#c4cbe0',secili:'#fff1c4',kart:'#fffdf6'},
     /* tek kart (H1, F4, U2; js/ekran-kart.js): yalnız ölçü ve hareket, renk yok (kâğıt dilinin renkleri). TEST. esik: bırakınca uygulayan kayma

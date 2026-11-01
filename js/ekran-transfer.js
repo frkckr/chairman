@@ -10,14 +10,35 @@
      Geçmiş    gelen ve giden (RK-D'den beri kaçan oyuncunun kâğıdında)
      oyuncu    satıra dokununca oyuncu kâğıdı: künye, bu sezon, bildiklerimiz (kaynaklı); Takibe al / bırak, Hocaya araştırt, İzlemeye git
    Kararlar yine tek karttır (dosyada, telefonda); masa göz atma ve girişim yeridir, başkan listeden “satın al”maz.
+   RK5-b (2026-11-01, karar 83 “Kulüp evrakı 1999”): kâğıdın zemini mantar pano (kodla nokta dokusu, ahşap çerçeve); dönem şeridi, sekmeler ve bölümler
+   pano üstünde iğneli kâğıtlar, Pano'daki satırlar iğneli kart; menajerlerin önerileri teleks şeridi (daktilo, büyük harf başlık; satır yine oyuncuya
+   açılır, Listeye al yanında). Ara ve oyuncu kâğıdı panoda düz kâğıt (Kırtasiye; arama kutusu ve çipler aynen). Renkler STIL.kagit.transfer. Seçiciler
+   aynen (sözleşme yukarıda); yeni: .tm-pano (mantar zemin), .tm-teleks, .tm-teleksBas.
    Seçiciler denemelerle sözleşmedir: .tm-masa[data-bolum], .tm-sekmeler [data-bolum], .tm-donem(.tm-sonGun), .tm-dosya, .tm-oyuncu[data-oyuncu],
    .tm-kagit, .tm-eylemler [data-eylem]. Gizli değer, maaş ve sözleşme tutarı yoktur.
      transferMasasiGorunumu(k, d, y) → html. d: {bolum, oyuncu}. y: {yaz, tarihYazi, paraYazi} */
 'use strict';
 (function transferStili(){
   if(typeof document==='undefined'||document.getElementById('transferStili'))return;
-  const K=STIL.kagit,st=document.createElement('style');st.id='transferStili';
+  const K=STIL.kagit,T=K.transfer,st=document.createElement('style');st.id='transferStili';
   st.textContent=`
+/* RK5-b: mantar pano — odak kâğıdının zemini mantar, kenarı ahşap; üstündeki her şey iğneli kâğıt */
+.oda section.odk[data-odak="transfer"] .odk-kagit{background-color:${T.ahsap};background-image:none;border-color:${T.ahsapKoyu}}
+.oda section.odk[data-odak="transfer"] .odk-kagit>header.odk-ust{background:${K.zemin};border-bottom:.35em solid ${T.ahsap}}
+.oda section.odk[data-odak="transfer"] .od-icerik{margin:0 .45em .45em;background-color:${T.mantar};
+  background-image:radial-gradient(${T.mantarKoyu} .07em,transparent .1em),radial-gradient(${T.mantarAcik} .06em,transparent .09em);background-size:.45em .45em,.7em .7em;background-position:0 0,.2em .3em;
+  box-shadow:inset 0 .15em .4em rgba(40,22,6,.35)}
+.tm-pano .tm-ust,.tm-pano .tm-sekmeler,.tm-pano .tm-bolum,.tm-pano .tm-kagit{position:relative;background:${K.zemin};box-shadow:.12em .18em 0 rgba(40,22,6,.3)}
+.tm-pano .tm-sekmeler{justify-self:start;padding:.3em .4em}
+.tm-pano .tm-bolum{padding:.5em .7em .55em}
+.tm-pano .tm-bolum::before,.tm-pano .tm-kagit::before,.tm-pano .tm-ust::before{content:"";position:absolute;top:-.3em;left:50%;width:.6em;height:.6em;border-radius:50%;
+  background:${T.igne};box-shadow:.06em .1em 0 rgba(0,0,0,.4),inset -.1em -.1em 0 rgba(0,0,0,.25)}
+.tm-pano .tm-bolum:nth-of-type(even){transform:rotate(.25deg)}.tm-pano .tm-bolum:nth-of-type(odd){transform:rotate(-.2deg)}
+.tm-pano .tm-ara,.tm-pano .tm-kagit{transform:none}
+/* teleks: menajerin önerisi — daktilo şerit, kesik kenarlı */
+.tm-pano .tm-bolum.tm-teleks{background:${T.teleks};border-top:.14em dashed ${K.cizgi};border-bottom:.14em dashed ${K.cizgi};font-family:var(--mono)}
+.oda .tm-teleks h4.tm-teleksBas,.tm-teleks h4.tm-teleksBas{color:${K.kirmizi};letter-spacing:.06em}
+.tm-teleks .tm-satir small{font-family:var(--govde)}
 .tm-masa{display:grid;gap:.7em}
 .tm-ust{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:.4em .8em;padding:.45em .6em;background:${K.serit};border:1px solid ${K.cizgi};border-left:.3em solid ${K.murekkep}}
 .tm-donem b{font-variant-numeric:tabular-nums}
@@ -96,7 +117,8 @@ function transferMasasiGorunumu(k,d,y){
     const teklif=x=>{const p=O(x.oyuncuId);return p?'<li><button type="button" class="tm-satir tm-dosya tm-karar" data-eylem="dosyaAc" data-mesele="'+yaz(x.meseleId||'')+'" data-donus="transfer">'+
       '<span><b>'+yaz(p.ad)+'</b> için '+yaz(kulup(x.alici))+' teklifi</span><span class="tm-sag">'+yaz(y.paraYazi(x.bedel))+'</span><small>Cevap bekliyor; karar dosyada.</small></button></li>':'';};
     /* R6b-1': menajerlerin önerileri (Pazartesi; gürültü çoktur, menajer abartır); satırda Listeye al (kaynak menajer) */
-    const oneri=m=>'<section class="tm-bolum tm-oneri"><h4>'+yaz(m.menajer)+' (menajer, TEST) · '+yaz(y.tarihYazi(m.tarih))+' · '+m.oyuncular.length+' oyuncu</h4><ul class="tm-liste">'+
+    /* RK5-b: teleks şeridi — başlık daktilo büyük harf (TELEKS · tarih · menajer · n oyuncu) */
+    const oneri=m=>'<section class="tm-bolum tm-oneri tm-teleks"><h4 class="tm-teleksBas">'+yaz(('Teleks · '+y.tarihYazi(m.tarih)+' · '+m.menajer+' (menajer, TEST) · '+m.oyuncular.length+' oyuncu').toLocaleUpperCase('tr-TR'))+'</h4><ul class="tm-liste">'+
       m.oyuncular.map(x=>{const p=O(x.oyuncuId);if(!p)return'';const sat=satir(p,x.not,null).replace(/^<li>|<\/li>$/g,'');
         return'<li class="tm-oneriSatir">'+sat+(takipte(k,p.id)?'<span class="tm-listede">Listede</span>':'<button type="button" class="tm-al" data-eylem="tmTakip" data-kaynak="menajer" data-oyuncu="'+yaz(p.id)+'">Listeye al</button>')+'</li>';}).join('')+'</ul></section>';
     ic='<section class="tm-bolum"><h4>Açık işler</h4>'+liste(M.dosyalar.map(dosya),'Açık transfer dosyası yok. Hocaya telefondan bir hat için oyuncu isteyebilir ya da Ara’dan bir oyuncu bulup araştırtabilirsin.')+'</section>'+
@@ -126,7 +148,7 @@ function transferMasasiGorunumu(k,d,y){
     /* RK-D (2026-11-01, kullanıcı: “kaçanlar ne? kaldıralım”): Kaçanlar bölümü yok; kapanan alım dosyasının sonucu oyuncunun kâğıdında
        “Bildiklerimiz”de (kaynak Transfer dosyası), rakibe gidişi gazetede (tr.dunya) */
   }
-  return'<div class="tm-masa" data-bolum="'+(d.oyuncu?'oyuncu':bolum)+'">'+ust+sekme+ic+'</div>';
+  return'<div class="tm-masa tm-pano" data-bolum="'+(d.oyuncu?'oyuncu':bolum)+'">'+ust+sekme+ic+'</div>';
 }
 /* oyuncu kâğıdı: künye, bu sezon, bildiklerimiz (kaynaklı), eylemler (engel varsa düğme kapalı ve gerekçesi altında) */
 function transferOyuncuKagidi(k,id,y){

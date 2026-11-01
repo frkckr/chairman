@@ -95,7 +95,8 @@
 .tel-nav{display:flex;align-items:center;min-height:1.9em}
 .tel button.tel-geri{display:inline-flex;align-items:center;gap:.15em;padding:.15em .1em;background:transparent;border:0;color:${T.baglanti};font-weight:500}
 .tel button.tel-geri::before{content:"";width:.55em;height:.55em;border-left:.13em solid currentColor;border-bottom:.13em solid currentColor;transform:rotate(45deg);margin:0 .15em 0 .2em}
-.tel h4.tel-buyukBaslik{display:block;margin:0;font-family:var(--display);font-weight:400;font-size:2.5em;line-height:1;letter-spacing:.02em;text-transform:none;color:var(--k-yazi);padding:0 .05em .15em}
+/* RK5-b (karar 83 “Kırtasiye”): başlık gövde yazısıyla; piksel yazı yalnız cihaz göstergelerinde */
+.tel h4.tel-buyukBaslik{display:block;margin:0;font-family:var(--govde);font-weight:700;font-size:1.75em;line-height:1.1;letter-spacing:-.01em;text-transform:none;color:var(--k-yazi);padding:0 .05em .2em}
 /* ---- Mesajlar: kişi satırları ---- */
 .tel-portre{width:2.5em;height:2.5em}
 .tel .tel-portre{border-radius:50%;border:1px solid var(--k-cizgi);background:var(--k-serit)}
@@ -153,6 +154,7 @@
 .tel-takipSatir.tel-takipYeni{border-left-color:var(--k-vurgu)}
 .tel-takipSatir time{color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.85em);font-variant-numeric:tabular-nums}
 .tel-takipSatir small{color:var(--k-vurgu);font-size:max(var(--k-enKucuk,12px),.8em);letter-spacing:.08em;text-transform:uppercase;font-weight:600;justify-self:end}
+.tel-takipSatir small svg.smg{margin-right:.35em}
 .tel-takipSatir span{grid-column:1/-1;min-width:0}
 .tel-takipSatir:hover,.tel-takipSatir:focus-visible{border-color:var(--k-vurgu)}
 /* N2 (2026-10-04): her karşılaşma tek satır: saat ya da dakika/durum · ev sahibi · skor · deplasman; sığmayan ad kesilir, satır kaymaz */
@@ -201,9 +203,9 @@
 @keyframes tlfIsBelir{from{opacity:0;transform:translateX(1.2em)}to{opacity:1;transform:none}}
 .tlf-is.tlf-isBelir{animation:tlfIsBelir .22s ease-out .06s both}
 .tlf-is{min-height:0;max-height:100%;align-self:start;overflow-y:auto;display:grid;align-content:start;gap:.75em;padding:.85em 1em 1em;color:var(--k-yazi);
-  background:var(--k-zemin);border:1px solid var(--k-cizgi);box-shadow:.35em .45em 0 var(--k-golge);container:tlf / inline-size}
+  background:var(--k-zemin);border:1px solid var(--k-cizgi);border-radius:.2em;box-shadow:${STIL.kagit.odak.golge};container:tlf / inline-size}
 .tlf-is p{margin:0}
-.tlf-is h4{margin:0;font-family:var(--display);font-weight:400;font-size:1.6em;line-height:1;letter-spacing:.02em}
+.tlf-is h4{margin:0;font-family:var(--govde);font-weight:600;font-size:1.3em;line-height:1.15;letter-spacing:0}
 .tlf-is h5{margin:.15em 0 0;font-size:max(var(--k-enKucuk,12px),.8em);letter-spacing:.1em;text-transform:uppercase;color:var(--k-vurgu);font-weight:600}
 .tlf-bekleme{display:grid;gap:.1em;padding:.55em .75em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-mavi)}
 .tlf-bekleme b{font-weight:600}
@@ -281,7 +283,7 @@ function telTakip(k){
   const hedef=h=>h.konu.oyuncular.length?['oyuncu',h.konu.oyuncular[0]]:h.konu.maclar.length?['mac',h.konu.maclar[0]]:['kulup',h.konu.kulupler[0]];
   return'<ul class="tel-takip">'+H.map(h=>{const t=anTarih(h.an),[tur,id]=hedef(h);
     return'<li><button type="button" class="tel-takipSatir'+(h.an>o?' tel-takipYeni':'')+'" data-eylem="csAc" data-tur="'+tur+'" data-id="'+yazT(id)+'"><time>'+yazT(telKisaAn(k,t.tarih,t.dakika))+'</time>'+
-      '<small>'+yazT(h.etiket)+'</small><span>'+yazT(String(h.metin).replace(/^TEST: /,''))+'</span></button></li>';}).join('')+'</ul>';
+      '<small>'+(typeof simgeSvg==='function'?simgeSvg(haberSimgesi(h.anahtar)):'')+yazT(h.etiket)+'</small><span>'+yazT(String(h.metin).replace(/^TEST: /,''))+'</span></button></li>';}).join('')+'</ul>';   /* RK5-a: tür simgesi */
 }
 function telPuanTablosu(L){
   /* R3: tarafsız (Demirkapı vurgusu yok), armalı; kulübe dokununca takım sayfası (js/ekran-canli.js) */

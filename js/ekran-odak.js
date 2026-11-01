@@ -3,8 +3,11 @@
    ayarlar, karar paneli ve kadro (TEST) aynı kapta açılır:
      perde     oda statik bulanık (STIL.kagit.odak.bulanik) ve karartılmış; bulanıklık canlandırılmaz, yalnız perdenin opaklığı gelir. Bulanıklık
                desteklenmezse ya da "saydamlığı azalt" tercihinde yalnız daha koyu karartma. Perdeye tıklamak işi masaya bırakır (ekran-oda.js).
-     başlık    solda ‹ Geri (yalnız bir önceki ekran varsa; etiketi hedefin adı), ortada başlık, sağda Kapat × — her işte aynı yerde.
-     kâğıt     panellerde içeriğe göre boylanan kâğıt (dev boş kâğıt yok); dosya ve defter kendi nesneleriyle, telefon cihazıyla kabı doldurur.
+     başlık    solda ‹ Geri (yalnız bir önceki ekran varsa; etiketi hedefin adı), yanında başlık, sağda Kapat × — her işte aynı yerde. RK5-a (2026-11-01,
+               karar 83 “Kırtasiye”): kâğıtlı işte başlık satırı kâğıdın üst satırıdır (kâğıdın içinde, ince çizgiyle ayrılır); dosya ve defterde nesnenin
+               üstünde ince krem şerit; telefonda yalnız düğmeler. Başlık gövde yazısıyla (piksel yazı yalnız cihaz göstergelerinde).
+     kâğıt     panellerde içeriğe göre boylanan kâğıt (dev boş kâğıt yok); dosya ve defter kendi nesneleriyle, telefon cihazıyla kabı doldurur. Kâğıdın
+               kenarı ince, gölgesi yumuşak (STIL.kagit.odak.golge); kalın kırmızı çerçeve yok.
    Geçiş: kâğıt nesnenin ekrandaki yerinden STIL.kagit.odak.sure.belir ms'de belirir (opaklık ve küçük ölçek), kapanınca çıkış kopyası
    sure.kapan ms'de söner; "hareketi azalt" tercihinde yalnız opaklık (sure.azalt). Her ekran aynı dili kullanır (ekran başına ayrı animasyon yok).
    Kural içermez; durum ve Esc zinciri js/ekran-oda.js'tedir. Eski seçiciler takma ad olarak yaşar (.od-panel, .od-telefonPanel, .od-icerik, .od-perde).
@@ -31,18 +34,25 @@
 .oda section.odk[data-boy="cihaz"]{--odk-en:${O.boy.cihaz}%}
 /* R2 (2026-10-29): odada iki sütunlu telefon — solda telefon, sağda iş paneli (js/ekran-telefon.js .tlf); kâğıt yok, kabın kendisi taşır */
 .oda section.odk[data-boy="telefon"]{--odk-en:${O.boy.telefon}%}
-.oda .odk>header.odk-ust{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.6em;min-height:2.1em;padding:0;background:none;border:0}
-.oda .odk-ust h3{grid-column:2;margin:0;font-family:var(--display);font-weight:400;font-size:1.75em;line-height:1;letter-spacing:.04em;color:var(--k-serit);
-  text-shadow:0 .08em .3em rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.oda .odk-ust .odk-sol{grid-column:1;justify-self:start;min-width:0}
-.oda .odk-ust .odk-sag{grid-column:3;justify-self:end}
-.oda .odk-ust button{box-shadow:.12em .16em 0 rgba(0,0,0,.35)}
+/* RK5-a: başlık satırı — ‹ Geri, başlık (sola yaslı), Kapat × (sağda). Kâğıtlı işte kâğıdın içinde; dosya ve defterde nesnenin üstünde krem şerit */
+.oda section.odk[data-kagit]{grid-template-rows:minmax(0,1fr)}
+.oda .odk header.odk-ust{display:flex;align-items:center;gap:.6em;min-height:2.1em;min-width:0}
+.oda .odk-ust h3{flex:1;min-width:0;margin:0;font-family:var(--govde);font-weight:600;font-size:1.3em;line-height:1.2;letter-spacing:0;color:var(--k-yazi);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oda .odk-ust .odk-sol{flex:none;max-width:45%;min-width:0;display:flex}
+.oda .odk-ust .odk-sol:empty{display:none}
+.oda .odk-ust .odk-sag{flex:none;margin-left:auto}
+.oda .odk-ust button{font-size:max(var(--k-enKucuk,12px),.92em)}
 .oda .odk-ust button.odk-geri{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-.oda .odk-kagit{min-height:0;display:grid;grid-template-rows:minmax(0,1fr);align-self:start;max-height:100%;background:var(--k-zemin);border:1px solid var(--k-cizgi);box-shadow:.35em .45em 0 var(--k-golge)}
+.oda .odk-kagit>header.odk-ust{padding:.5em .7em .45em 1em;border-bottom:1px solid var(--k-cizgiAcik)}
+.oda section.odk:not([data-kagit])>header.odk-ust{padding:.3em .45em .3em .9em;background:var(--k-krom);border:1px solid var(--k-cizgi);border-radius:.2em;box-shadow:${O.golge}}
+.oda .odk:is([data-boy="cihaz"],[data-boy="telefon"]) header.odk-ust{padding:0;background:none;border:0;box-shadow:none}
+.oda .odk:is([data-boy="cihaz"],[data-boy="telefon"]) header.odk-ust button{box-shadow:.12em .16em 0 rgba(0,0,0,.35)}
+.oda .odk-kagit{min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);align-self:start;max-height:100%;background:var(--k-zemin);border:1px solid var(--k-cizgi);border-radius:.2em;box-shadow:${O.golge}}
 .oda .odk-kagit>.od-icerik{min-height:0}
 .oda .odk-govde{min-height:0;display:grid}
 .oda .odk .dsy,.oda .odk .dft{position:relative;inset:auto;left:auto;right:auto;top:auto;bottom:auto;min-height:0;height:100%;z-index:auto}
-.oda .odk:is([data-boy="cihaz"],[data-boy="telefon"])>header.odk-ust h3{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.oda .odk:is([data-boy="cihaz"],[data-boy="telefon"]) header.odk-ust h3{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .oda .odk:is([data-boy="cihaz"],[data-boy="telefon"]) .odk-kagit{align-self:stretch;height:100%;background:none;border:0;box-shadow:none}
 .oda .odk:is([data-boy="cihaz"],[data-boy="telefon"]) .od-icerik{display:block;padding:0;overflow:hidden;height:100%}
 /* U3 göz atma: iş solda daralır, sağda okunan kâğıt */
@@ -55,13 +65,16 @@
 .oda .odk-gozUst{display:flex;align-items:baseline;justify-content:space-between;gap:.6em;min-height:2.1em;color:var(--k-serit);text-shadow:0 .08em .3em rgba(0,0,0,.45)}
 .oda .odk-gozUst h4{margin:0;font-weight:600;font-size:1.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .oda .odk-gozUst small{flex:none;font-size:max(var(--k-enKucuk,12px),.85em);opacity:.9}
-.oda .odk-gozIcerik{min-height:0;align-self:start;max-height:100%;overflow-y:auto;padding:.6em .8em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-mavi);box-shadow:.35em .45em 0 var(--k-golge)}
+.oda .odk-gozIcerik{min-height:0;align-self:start;max-height:100%;overflow-y:auto;padding:.6em .8em;background:var(--k-serit);border:1px solid var(--k-cizgi);border-left:.3em solid var(--k-mavi);border-radius:.2em;box-shadow:${O.golge}}
 @keyframes odkGoz{from{opacity:0;transform:translateX(1.5em)}to{opacity:1;transform:none}}
 /* R1-f (2026-10-29) dar kare (< 820 px): yazı tabanında küçülmez, yerleşim değişir — odak kabı neredeyse tam genişlik; göz atmada yan kâğıt işin
    yanına sığmaz, işin üstüne açılır (‹ Geri ve Esc aynı) */
 @container (max-width:820px){
   .oda section.odk:not([data-boy="cihaz"]):not([data-boy="kucuk"]),.oda section.odk[data-goz]:not([data-boy="cihaz"]){--odk-en:96%;left:2%}
   .oda aside.odk-goz,.oda aside.odk-goz[data-boy="cihaz"]{left:2%;right:2%;width:auto;z-index:3}
+  /* RK5-a: gövde tabanı 16'ya çıkınca dar karede kap alt şeridin hemen üstüne kadar iner (masa şeridi zaten perdenin altında; --od-alt: alt şeridin
+     ölçülen yüksekliği, js/ekran-oda.js); büyük yazıda telefonun iş panelindeki kart kaydırmadan görünür (B47, B48) */
+  .oda section.odk:not([data-boy="yarim"]),.oda aside.odk-goz{bottom:calc(var(--od-alt,4.8em) + .45em)}
 }
 @media (prefers-reduced-motion:reduce){.oda aside.odk-goz.odk-gozBelir{animation:odkPerde ${O.sure.azalt}ms linear both}}
 .oda .odk.odk-belir{animation:odkBelir ${O.sure.belir}ms cubic-bezier(.2,.7,.3,1) both}
@@ -85,11 +98,12 @@ function odakKabi(s){
   const g=s.geri?'<button type="button" class="odk-geri" data-eylem="'+yazOdk(s.geri.eylem)+'"'+Object.entries(s.geri.veri||{}).map(([a,v])=>' data-'+a+'="'+yazOdk(v)+'"').join('')+
     ' title="Geri (Esc)">‹ '+yazOdk(s.geri.etiket)+'</button>':'';
   const ust='<header class="odk-ust"><span class="odk-sol">'+g+'</span><h3>'+yazOdk(s.baslik)+'</h3><span class="odk-sag"><button type="button" class="od-kapat" data-eylem="kapat" title="Masaya bırak (Esc)">Kapat ×</button></span></header>';
-  const govde=s.kagit?'<div class="odk-kagit"><div class="od-icerik">'+s.govde+'</div></div>':'<div class="odk-govde">'+s.govde+'</div>';
+  /* RK5-a: kâğıtlı işte başlık satırı kâğıdın içinde (üst satır) */
+  const govde=s.kagit?'<div class="odk-kagit">'+ust+'<div class="od-icerik">'+s.govde+'</div></div>':ust+'<div class="odk-govde">'+s.govde+'</div>';
   const yan=s.yan?'<aside class="odk-goz'+(s.yan.belir?' odk-gozBelir':'')+'" data-boy="'+(s.boy||'genis')+'" aria-label="Göz at: '+yazOdk(s.yan.baslik)+'"><header class="odk-gozUst"><h4>'+yazOdk(s.yan.baslik)+'</h4><small>yalnız okuma</small></header>'+
     '<div class="odk-gozIcerik">'+s.yan.govde+'</div></aside>':'';
   return(s.boy==='yarim'?'':'<div class="odk-perde od-perde'+(s.belir?' odk-belir':'')+'" data-perde="1"></div>')+
-    '<section class="odk'+(s.sinif?' '+s.sinif:'')+(s.belir?' odk-belir':'')+'" data-odak="'+yazOdk(s.ad)+'" data-boy="'+(s.boy||'genis')+'"'+(s.yan?' data-goz="1"':'')+(s.kagit?' role="dialog" aria-label="'+yazOdk(s.etiket)+'"':'')+'>'+ust+govde+'</section>'+yan;
+    '<section class="odk'+(s.sinif?' '+s.sinif:'')+(s.belir?' odk-belir':'')+'" data-odak="'+yazOdk(s.ad)+'" data-boy="'+(s.boy||'genis')+'"'+(s.yan?' data-goz="1"':'')+(s.kagit?' data-kagit="1" role="dialog" aria-label="'+yazOdk(s.etiket)+'"':'')+'>'+govde+'</section>'+yan;
 }
 /* kapanma: açık kabın kopyası etkileşimsiz, ekran okuyucudan gizli; karta ait kimlik ve sınıflar silinir (kart bileşeni kopyayı bulmasın) */
 function odakCikis(kap){

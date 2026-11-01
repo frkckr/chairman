@@ -19,14 +19,15 @@ const GAZETE_SARARMA=10;
   border:1px solid ${Z.cizgi};box-shadow:inset 0 0 2.5em rgba(120,95,40,calc(var(--gz-yas) * .35))}
 .gz-sayi p{margin:0}
 .gz-ust{display:grid;justify-items:center;gap:.2em}
-.oda .gz-sayi h4.gz-kunye,.gz-kunye{margin:0;display:grid;justify-items:center;gap:.25em;width:100%;font-family:var(--display);font-weight:400;font-size:2.4em;line-height:1;letter-spacing:.06em;text-transform:uppercase;color:${Z.murekkep}}
-.oda .gz-sayi h4.gz-kunye small,.gz-kunye small{display:block;width:100%;padding:.25em 0 .2em;border-top:.12em solid ${Z.murekkep};border-bottom:1px solid ${Z.murekkep};font-family:var(--govde);font-size:max(var(--k-enKucuk,12px),.34em);
+.oda .gz-sayi h4.gz-kunye,.gz-kunye{margin:0;display:grid;justify-items:center;gap:.25em;width:100%;font-family:var(--serif);font-weight:600;font-size:2em;line-height:1.05;letter-spacing:.05em;text-transform:uppercase;color:${Z.murekkep}}
+.oda .gz-sayi h4.gz-kunye small,.gz-kunye small{display:block;width:100%;padding:.25em 0 .2em;border-top:.12em solid ${Z.murekkep};border-bottom:1px solid ${Z.murekkep};font-family:var(--govde);font-size:max(var(--k-enKucuk,12px),.42em);
   letter-spacing:.08em;text-align:center;color:${Z.soluk}}
 .gz-govde{display:grid;grid-template-columns:minmax(0,1fr);gap:.8em}
 .gz-govde.gz-yanli{grid-template-columns:minmax(0,1fr) minmax(0,32%)}
 .gz-ana{display:grid;gap:.6em;align-content:start;min-width:0}
 .gz-etiket{display:block;font-size:max(var(--k-enKucuk,12px),.74em);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:${Z.kirmizi}}
-.gz-manset{font-family:var(--govde);font-weight:700;font-size:1.7em;line-height:1.15;letter-spacing:-.005em}
+/* RK5-a (karar 83): künye ve manşet serif (Plex Serif); piksel yazı yalnız cihaz göstergelerinde */
+.gz-manset{font-family:var(--serif);font-weight:600;font-size:1.7em;line-height:1.15;letter-spacing:-.005em}
 .gz-sutunlar{column-count:2;column-gap:1.2em;column-rule:1px solid ${Z.cizgi};padding-top:.5em;border-top:1px solid ${Z.cizgi}}
 .gz-yazi{break-inside:avoid;margin:0 0 .7em}
 .gz-haber{font-size:max(var(--k-enKucuk,12px),.98em);line-height:1.4}

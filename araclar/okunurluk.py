@@ -16,7 +16,7 @@ Sayılmayanlar: aria-hidden ve etkileşimsiz (inert: odak açıkken arkada bulan
 kalan metin (kaydırılabilir alanda kaydırınca okunur; kesen alanda bilerek gizlenmiştir: ekran okuyucu metni), TEST öğeleri (yayından önce kalkar). Kırpılan metin: en yakın taşmayı kesen atası overflow hidden/clip olan ve kutusunun dışına taşan metin
 (bilinçli üç nokta, text-overflow: ellipsis, sayılmaz) ya da oyun karesinin dışına düşen metin.
 
-Eşikler (R1 Claude kararı): her genişlikte gövde (oyun karesinin yazı ölçeği, --k-yaziBoyu) ≥ 14 px, okunan her metin ≥ 12 px, kırpılan metin yok.
+Eşikler (R1 Claude kararı; RK5-a'dan beri gövde ≥ 15): her genişlikte gövde (oyun karesinin yazı ölçeği, --k-yaziBoyu) ≥ 15 px, okunan her metin ≥ 12 px, kırpılan metin yok.
 Kullanım: python -X utf8 araclar/okunurluk.py [--genislik 640,800] [--sahne oda,dosya] [--json DOSYA]
 Çıkış kodu: eşik dışı bulgu varsa 1. Ekran görüntüleri araclar/son-okunurluk-<genişlik>-<sahne>.png (Git dışı).
 """
@@ -37,7 +37,7 @@ _argv, sys.argv = sys.argv, sys.argv[:1]   # akis-deneme argv'den bölüm seçer
 _spec.loader.exec_module(akis)
 sys.argv = _argv
 
-GOVDE_EN_AZ, METIN_EN_AZ = 14.0, 12.0
+GOVDE_EN_AZ, METIN_EN_AZ = 15.0, 12.0   # RK5-a (karar 83): gövde tabanı 16 px, eşik en az 15
 # kare genişliği → pencere (index.html: kare = min(pencere − 32, max(640, (yükseklik − pay) · 4/3)); RN-c (2026-10-30): pay ölçülür, odada 32 px
 # (js/sunum-durumu.js ekranPayGuncelle; eskiden sabit 190). Üç kare eskisiyle aynı genişlikte kalır (karşılaştırma bozulmaz); iki dizüstü penceresi eklendi:
 # 1366×650 (1366×768 ekran, tarayıcı ve görev çubuğu düşülmüş) → kare 825, 1536×740 (1920×1080 %125) → kare 944
@@ -121,6 +121,11 @@ async def sahneler_oda(pg, olc):
     await tikla(pg, '.tel [data-eylem="telEv"]')
     await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="skor"]')
     await olc("canli-skor")
+    await akis.masaya_don(pg)
+    await pg.keyboard.press("Digit8")   # RK5-b: gün başı notu
+    await pg.wait_for_selector("#oda .gn", timeout=10000)
+    await olc("gun-notu")
+    await akis.masaya_don(pg)
     await pg.keyboard.press("Digit3")
     await pg.wait_for_selector(".dsy .kk-kart", timeout=10000)
     await olc("dosya-kart")

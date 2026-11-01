@@ -51,6 +51,8 @@ Oyunu başsız Chromium'da açar ve gerçek ekranı tıklayarak oynar. 2.8L'den 
  35. Zincirler (R6): gazetede başka kulüpler arasındaki transfer; sponsor teklifi telefonda (Fırsat), pazarlık kartının iki aylık rakamı, dosyada aşama.
  37. Oda (RK6, 2026-10-31): TV dolabın üstünde (tvOzeti, Canlı Skor'la aynı); kapı kartı (Sonra gelsin, Esc ve “Kapıda: …”, İlerle kaçırır), Buyursun, Duraklat,
      odaya tıklama atlatır, yenilemede oturan kişi, “Karşında: …”, balkon engeli; balkonda kapı kartı bantta, önce odaya dönülür. Telefonla uçtan uca §21'de.
+ 40. Gün başı notu, sicil fişi ve mantar pano (RK5-b, 2026-11-01): sabah masada Not (rozet), 8 notu açar (zaman almaz, okundu), Defteri aç, Güne başla,
+     yenilemede okunmuş; kulübün oyuncu dosyası sicil fişi; Transfer mantar pano.
  11. Oyun çerçevesi (2.8A, 2.8J, 2.8O): dış notlar/radyo/ses/çay yok, deneme ayarlarında yalnız hız, Durdur ve tarz seçimi (TEST, B4b), eski ayar kaydı, sessiz maç.
 Site hazırlığı araclar/kontrol.py ile aynıdır (Three.js yerel kopyadan). Başarısız denetim ya da sayfa hatası çıkış kodunu 1 yapar.
 Ekran görüntüleri: araclar/son-akis-*.png (depoya eklenmez).
@@ -2963,7 +2965,8 @@ async def bolum_26(tarayici, site, tum_hatalar):
     tum_hatalar += hatalar
     await yazi_bekle(pg)
     yt = await pg.evaluate("() => [...new Set([...document.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/\"/g, '')))]")
-    denetle("U0: IBM Plex Sans yüklü (gövde yazısı); Jersey 10 başlıkta", "IBM Plex Sans" in yt and "Jersey 10" in yt, str(yt))
+    # RK5-a (karar 83): piksel yazı (Jersey 10) yalnız cihaz göstergelerinde (telefonun saati, skorbord, forma numarası, TV); odada başlıklar gövde yazısıyla
+    denetle("U0, RK5-a: IBM Plex Sans yüklü (gövde yazısı); odak başlığı gövde yazısıyla (piksel yazı yalnız cihaz göstergelerinde)", "IBM Plex Sans" in yt, str(yt))
     olc = {}
     for yazi, boyut in (("normal", (1100, 810)), ("buyuk", (1100, 810)), ("normal", (672, 600)), ("buyuk", (672, 600))):
         await pg.set_viewport_size({"width": boyut[0], "height": boyut[1]})
@@ -2976,13 +2979,14 @@ async def bolum_26(tarayici, site, tum_hatalar):
             await masaya_don(pg)
     bilgi = {a: (o["govde"], o["enKucuk"]) for a, o in olc.items() if o}
     print(f"  bilgi: gövde ve en küçük metin (px) {bilgi}")
-    # R1-f (2026-10-29): ölçek piksel tabanlı — max(14 px, 1,5 cqw), büyük yazıda max(16 px, 1,8 cqw)
-    beklenen = lambda a, ekran: max(16 if a.startswith("buyuk") else 14, (1.8 if a.startswith("buyuk") else 1.5) * ekran / 100)
-    denetle("U0/R1-f: odada yazı ölçeği tek değişkenden (--k-yaziBoyu; normal max(14 px, 1,5 cqw), büyük max(16 px, 1,8 cqw)); gövde orantılı yazı (IBM Plex Sans)",
+    # R1-f (2026-10-29): ölçek piksel tabanlı — max(taban, 1,5 cqw), büyük yazıda max(taban, 1,8 cqw); RK5-a (karar 83): taban STIL.kagit.yaziTaban'dan
+    taban = await pg.evaluate("() => STIL.kagit.yaziTaban")
+    beklenen = lambda a, ekran: max(taban["buyuk"] if a.startswith("buyuk") else taban["normal"], (1.8 if a.startswith("buyuk") else 1.5) * ekran / 100)
+    denetle(f"U0/R1-f, RK5-a: odada yazı ölçeği tek değişkenden (--k-yaziBoyu; normal max({taban['normal']} px, 1,5 cqw), büyük max({taban['buyuk']} px, 1,8 cqw)); gövde orantılı yazı (IBM Plex Sans)",
             all(o and o["aile"] == "IBM Plex Sans" for o in olc.values())
             and all(abs(o["govde"] - beklenen(a, o["ekran"])) < 0.15 for a, o in olc.items()), str({a: (o["ekran"], o["govde"]) for a, o in olc.items()}))
-    denetle("R1-f: her genişlikte gövde ≥ 14 px, normal yazıda en küçük metin ≥ 12 px (ayrıntılı ölçü: araclar/okunurluk.py)",
-            all(o["govde"] >= 14 for o in olc.values()) and all(olc[k]["enKucuk"] >= 12 for k in olc if k.startswith("normal")),
+    denetle("R1-f, RK5-a: her genişlikte gövde ≥ 15 px, normal yazıda en küçük metin ≥ 12 px (ayrıntılı ölçü: araclar/okunurluk.py)",
+            all(o["govde"] >= 15 for o in olc.values()) and all(olc[k]["enKucuk"] >= 12 for k in olc if k.startswith("normal")),
             str({a: (o["ekran"], o["govde"], o["enKucuk"]) for a, o in olc.items()}))
     await pg.context.close()
     # bülten ve maç telefonu aynı ölçeği ve büyük yazıyı alır (eskiden sabit 1,3 cqw)
@@ -2997,7 +3001,7 @@ async def bolum_26(tarayici, site, tum_hatalar):
         kart = await pg.evaluate("() => { const k = document.querySelector('.prg-kart'), E = document.getElementById('onEkran').getBoundingClientRect(), r = k.getBoundingClientRect(); return { icinde: r.top >= E.top - 1 && r.bottom <= E.bottom + 1 }; }")
         hedef = 1.8 if yazi == "buyuk" else 1.5
         denetle(f"U0/R1-f: bültende yazı ortak ölçekte (max(taban, {hedef} cqw), {yazi}), orantılı gövde; kart karenin içinde",
-                b and abs(b["govde"] - max(16 if yazi == "buyuk" else 14, hedef * b["ekran"] / 100)) < 0.15 and b["aile"] == "IBM Plex Sans" and kart["icinde"], f"{b} · {kart}")
+                b and abs(b["govde"] - max(taban["buyuk"] if yazi == "buyuk" else taban["normal"], hedef * b["ekran"] / 100)) < 0.15 and b["aile"] == "IBM Plex Sans" and kart["icinde"], f"{b} · {kart}")
         await pg.context.close()
     pg, hatalar = await sayfa(tarayici, site, "?ekran=mac&tohum=4&rakipBaskan=yok", "#btnMacaGec")
     tum_hatalar += hatalar
@@ -3007,7 +3011,7 @@ async def bolum_26(tarayici, site, tum_hatalar):
     await pg.keyboard.press("KeyT")
     await pg.wait_for_selector("#macTelefon:not([hidden])", timeout=5000)
     m = await pg.evaluate(YAZI_OLCU_JS, "#macTelefon")
-    denetle("U0/R1-f: maç telefonu büyük yazıyı alır (max(16 px, 1,8 cqw)), orantılı gövde", m and abs(m["govde"] - max(16, 1.8 * m["ekran"] / 100)) < 0.15 and m["aile"] == "IBM Plex Sans", str(m))
+    denetle("U0/R1-f: maç telefonu büyük yazıyı alır (max(taban, 1,8 cqw)), orantılı gövde", m and abs(m["govde"] - max(taban["buyuk"], 1.8 * m["ekran"] / 100)) < 0.15 and m["aile"] == "IBM Plex Sans", str(m))
     await pg.evaluate("() => { OYUN.ayarlar.yazi = 'normal'; OYUN.ayarlar.kaydet(); }")
     await pg.context.close()
 
@@ -3049,10 +3053,10 @@ async def bolum_27(tarayici, site, tum_hatalar):
     # kamera nesneye yaklaşıp yerine oturunca 3B çizim durur (başsız tarayıcıda kare hızı düşük: sabit bekleme yerine durumu bekle)
     await pg.wait_for_function("() => typeof odaDondur === 'function' && odaDondur()", timeout=30000)
     d = await odak(pg)
-    denetle("U1: dosya odak kabında (tek kap, geniş); başlık 'Dosya', Kapat başlıkta (sekme satırında değil); perde 7 px bulanık ve %33 karartma, "
+    denetle("U1, RK5-a: dosya odak kabında (tek kap, geniş); başlık 'Dosya', Kapat başlıkta (sekme satırında değil); perde 6 px bulanık ve %22 karartma (RK5-a: kâğıt öne, oda geriye), "
             "bulanıklık canlandırılmıyor; masadaki düğmeler etkileşimsiz; odakta İlerle yok; kamera yerleşince 3B donuk",
             d["n"] == 1 and d["ad"] == "dosya" and d["boy"] == "genis" and d["baslik"] == "Dosya" and d["kapatUstte"] and not d["kapatIcte"]
-            and "blur(7px)" in d["bulanik"] and d["zemin"].replace(" ", "").endswith("0.33)") and "backdrop" not in d["gecis"]
+            and "blur(6px)" in d["bulanik"] and d["zemin"].replace(" ", "").endswith("0.22)") and "backdrop" not in d["gecis"]
             and d["inert"] and not d["ilerle"] and d["dondu"] is True, str(d))
     await pg.screenshot(path=str(ARAC / "son-akis-27-dosya.png"))
     await pg.keyboard.press("Escape")
@@ -3175,8 +3179,10 @@ async def bolum_28(tarayici, site, tum_hatalar):
         pg = await baglam.new_page()
         pg.on("pageerror", lambda e: tum_hatalar.append("Betik hatası: " + str(e)))
         # TEST içerikli sayfa: İlerle'nin maç gününden önce durakları var (öndeki pencere iki kez yazabilsin); maç günündeki Stada git kayıt yazmaz
-        await pg.goto((site / "index-test.html").as_uri() + "?dunya=7&pul=0")
-        await yokla(pg, ODA_HAZIR_JS)
+        # RK5-b: §27'den sonra ikinci pencerenin “load”u bu makinede 20–30 sn sürüyor (önceki sürümde de 21–29,5 sn; ilk pencerenin 3B çizimi yazılım
+        # GPU'sunu tutar): gezinme DOM hazır olunca biter, odanın hazır olması zaten yoklanır (60 sn)
+        await pg.goto((site / "index-test.html").as_uri() + "?dunya=7&pul=0", wait_until="domcontentloaded", timeout=60000)
+        await yokla(pg, ODA_HAZIR_JS, 60)
         sayfalar.append(pg)
     p1, p2 = sayfalar
     a1, a2 = await p1.evaluate(CAKISMA_JS), await p2.evaluate(CAKISMA_JS)
@@ -4023,6 +4029,65 @@ TV_JS = """() => { const s = document.querySelector('.tv-sayfa'); return s ? { s
   baslik: [...s.querySelectorAll('h5')].map(h => h.textContent), gun: [...s.querySelectorAll('h6')].map(h => h.textContent), bugun: s.querySelectorAll('h6.tv-bugun').length, metin: s.innerText.slice(0, 400), odak: (document.querySelector('#oda section.odk:not(.odk-cikis)') || {dataset: {}}).dataset.odak } : null; }"""
 
 
+async def bolum_40(tarayici, site, tum_hatalar):
+    """RK5-b (karar 85): gün başı notu, sicil fişi ve mantar pano. Yeni kariyerin sabahı (08:00) masada “Not” “yeni” rozetli; 8 gün başı notunu odak kabında
+    açar (sarı bloknot: Özel kalem, gün; son maç, bugün, cevap bekleyenler, kasa); açmak zamanı değiştirmez, okundu yazar (notOkunan), rozet söner; Defteri aç
+    defteri açar; Güne başla masaya bırakır; yenilemeden sonra okunmuş kalır. Dosya › Kadro › oyuncu: sicil fişi (ataşlı fotoğraf, daktilo alanlar, LİSANSLI
+    mührü; notlar sarı kâğıtta); Canlı Skor oyuncu sayfası düz kart. Transfer: mantar zemin, iğneli bölümler."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.set_viewport_size({"width": 1180, "height": 900})
+    r0 = await pg.evaluate("""() => { const b = document.querySelector('.od-nesne[data-panel="not"]'); const r = b && b.querySelector('.od-rozet');
+      return { var: !!b, rozet: r ? r.dataset.rozet : '', yeni: notYeni(OYUN.kariyer), an: simdikiAn(OYUN.kariyer), uc: !!ODA.nesneler.not && ODA.nesneler.not.g.visible }; }""")
+    await pg.keyboard.press("Digit8")
+    await pg.wait_for_selector('#oda section.odk[data-odak="not"] .gn', timeout=5000)
+    await pg.wait_for_timeout(300)
+    n = await pg.evaluate("""() => { const s = document.querySelector('#oda section.odk[data-odak="not"]:not(.odk-cikis)'), k = OYUN.kariyer;
+      return { baslik: s.querySelector('.odk-ust h3').textContent, kat: (s.querySelector('.gn-kat') || {}).textContent || '', bolum: [...s.querySelectorAll('.gn-izgara h4')].map(h => h.textContent),
+        kasa: !!s.querySelector('.gn-kasa b'), eylem: [...s.querySelectorAll('.gn-eylem button')].map(b => b.dataset.eylem), an: simdikiAn(k), okunan: k.notOkunan, tarih: k.tarih,
+        rozet: !!document.querySelector('.od-nesne[data-panel="not"] .od-rozet'), sari: getComputedStyle(s.querySelector('.odk-kagit')).backgroundColor }; }""")
+    denetle("RK5-b: sabah masada Not “yeni” rozetli (3B sarı not masada); 8 gün başı notunu açar (Özel kalem; son maç, bugün, cevap bekleyenler, kasa; Defteri aç, Güne başla); zaman değişmedi; açınca okundu (notOkunan bugün), rozet söndü",
+            r0["var"] and r0["rozet"] == "yeni" and r0["yeni"] and r0["uc"] and n["baslik"] == "Gün başı notu" and "Özel kalem" in n["kat"] and len(n["bolum"]) >= 4 and n["kasa"]
+            and n["eylem"] == ["notDefter", "notBirak"] and n["an"] == r0["an"] and n["okunan"] == n["tarih"] and not n["rozet"], f"{r0} · {n}")
+    await pg.screenshot(path=str(ARAC / "son-akis-40-not.png"))
+    await pg.click('#oda section.odk[data-odak="not"] [data-eylem="notDefter"]')
+    await pg.wait_for_timeout(300)
+    d = await pg.evaluate("() => (document.querySelector('#oda section.odk:not(.odk-cikis)') || {dataset: {}}).dataset.odak || null")
+    await masaya_don(pg)
+    await pg.keyboard.press("Digit8")
+    await pg.wait_for_selector('#oda section.odk[data-odak="not"] .gn', timeout=5000)
+    await pg.click('#oda section.odk[data-odak="not"] [data-eylem="notBirak"]')
+    await pg.wait_for_timeout(300)
+    b = await pg.evaluate("() => ({ odak: !!document.querySelector('#oda section.odk:not(.odk-cikis)'), an: simdikiAn(OYUN.kariyer) })")
+    await oda_yenile(pg)
+    y = await pg.evaluate("() => ({ rozet: !!document.querySelector('.od-nesne[data-panel=\"not\"] .od-rozet'), okunan: OYUN.kariyer.notOkunan, tarih: OYUN.kariyer.tarih })")
+    denetle("RK5-b: Defteri aç defteri açar; Güne başla notu masaya bırakır (zaman yine aynı); yenilemeden sonra not okunmuş kalır (kayıtta)",
+            d == "ajanda" and not b["odak"] and b["an"] == r0["an"] and not y["rozet"] and y["okunan"] == y["tarih"], f"{d} · {b} · {y}")
+    # sicil fişi: Dosya › Kadro › ilk oyuncu
+    await pg.keyboard.press("Digit3")
+    await pg.wait_for_selector(".dsy", timeout=10000)
+    await pg.click(".dsy-kadroSekme")
+    await pg.click('.dsy-kadro button[data-eylem="oyuncuAc"]')
+    await pg.wait_for_timeout(300)
+    s = await pg.evaluate("""() => { const c = document.querySelector('.dsy .ok-kart'); if (!c) return null;
+      return { sicil: c.classList.contains('ok-sicil'), baglam: c.dataset.baglam, foto: !!c.querySelector('.ok-foto img') && !!c.querySelector('.ok-atas'), muhur: (c.querySelector('.ok-muhur') || {}).textContent || '',
+        alan: [...c.querySelectorAll('.ok-alanlar dt')].map(x => x.textContent), ad: (c.querySelector('h3.ok-ad.dsy-baslik') || {}).textContent || '', kunye: !!c.querySelector('.dsy-kunye'),
+        sari: !!document.querySelector('.dsy-sag .dsy-sariNot h4') }; }""")
+    denetle("RK5-b: kulübün oyuncu dosyası sicil fişi (ataşlı fotoğraf; Forma, Mevki, Doğum, Boy, Ayak, Kulübü, Sözleşme; LİSANSLI mührü; ad .dsy-baslik, künye .dsy-kunye); notlar sarı kâğıtta",
+            bool(s) and s["sicil"] and s["baglam"] == "kulup" and s["foto"] and "LİSANSLI" in s["muhur"] and all(a in s["alan"] for a in ("Forma", "Mevki", "Kulübü", "Sözleşme")) and s["ad"] and s["kunye"] and s["sari"], str(s))
+    await pg.screenshot(path=str(ARAC / "son-akis-40-sicil.png"))
+    await masaya_don(pg)
+    # mantar pano
+    await pg.keyboard.press("Digit6")
+    await pg.wait_for_selector("#oda .tm-masa", timeout=10000)
+    t = await pg.evaluate("""() => { const m = document.querySelector('#oda .tm-masa'), ic = m.closest('.od-icerik');
+      return { pano: m.classList.contains('tm-pano'), doku: getComputedStyle(ic).backgroundImage.includes('radial-gradient'), igne: getComputedStyle(m.querySelector('.tm-bolum'), '::before').content !== 'none',
+        donem: !!m.querySelector('.tm-donem') }; }""")
+    denetle("RK5-b: Transfer mantar pano (zemin nokta dokulu, bölümler iğneli kâğıt); dönem şeridi yerinde", t["pano"] and t["doku"] and t["igne"] and t["donem"], str(t))
+    await pg.screenshot(path=str(ARAC / "son-akis-40-pano.png"))
+    await pg.context.close()
+
+
 async def bolum_39(tarayici, site, tum_hatalar):
     """RK8-a: TV, haber akışı ve takip. Odada TV'ye tıklamak ya da 7 TV sayfasını odak kabında açar (100 Haberler, 200 Skorlar, 300 Puan durumu · Program; düğme ve
     [ ]); haber satırı Canlı Skor'un sayfasını telefonda açar; TV kart açmaz, zamanı değiştirmez; Esc masaya. TV ekranının şeridi (canlı maç ya da başlık). Canlı
@@ -4554,6 +4619,9 @@ async def ana():
         if sec("39"):
             print("\n39. TV, haber akışı, takip ve TV'de maç (RK8-a)")
             await bolum_39(tarayici, site, tum_hatalar)
+        if sec("40"):
+            print("\n40. Gün başı notu, sicil fişi ve mantar pano (RK5-b)")
+            await bolum_40(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)
