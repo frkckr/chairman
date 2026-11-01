@@ -25,6 +25,7 @@
      balkonTakipEkrani()      takip edilen oyuncunun başının karedeki yeri {x, y} (0–1) ya da null
      balkonAktorEkrani(id)    RK1: o oyuncunun başının karedeki yeri {x, y} (0–1) ya da null (imleç etiketi ve sinyal kelimesi)
      balkonGrupEkrani(grup)   RK1: grubun bakılan noktasının üstü {x, y} (0–1) ya da null
+     balkonOyuncuIsaret(x, y) RK-D: çift tıkta imlecin altındaki oyuncunun kimliği (her yakınlıkta) ya da null
      balkonIsaretEkrani(h)    RK1: imleç etiketinin yeri — oyuncunun ya da imlecin altındaki figürün başının üstü {x, y} (0–1) ya da null
      balkonGruplari()         sahadaki gruplar [{grup, ids}] (BLK_GRUP_SIRA; boş grup yok; teknik ekipte ids boş)
    Renkler ve ölçüler STIL.balkon'dadır. */
@@ -523,13 +524,24 @@ function balkonBakisHedefi(){
 }
 /* tıklama: figürler karede izdüşümleriyle seçilir (küçük figürde ışın tutmaz); eşikler karenin yarı yüksekliği biriminde */
 const BLK_ISIN=new THREE.Raycaster(),BLK_ZEMIN=new THREE.Plane(new THREE.Vector3(0,1,0),0),BLK_V=new THREE.Vector3();
-function balkonIsaret(x,y){
-  const K=ODA.kamera,[CX,PY,CZ]=BLK.saha,asp=K.aspect,tY=Math.tan(K.fov*Math.PI/360),genis=BALKON.bakis.tur==='saha';
+/* karede (x, y: -1…1) en yakın figür, uzaklığı ve figürün kare boyu (yarı yükseklik biriminde) */
+function blkEnYakin(x,y){
+  const K=ODA.kamera,[CX,PY,CZ]=BLK.saha,asp=K.aspect,tY=Math.tan(K.fov*Math.PI/360);
   let en=null,enD=Infinity,enH=0;
   for(const a of blkGorunur()){
     BLK_V.set(CX+a.x,PY+0.9,CZ+a.z);const u=BLK_V.distanceTo(K.position);BLK_V.project(K);if(BLK_V.z>1)continue;
     const d=Math.hypot((BLK_V.x-x)*asp,BLK_V.y-y),h=1.8/(u*tY);
     if(d<enD){en=a;enD=d;enH=h;}}
+  return{en,enD,enH};
+}
+/* RK-D: çift tıkta imlecin altındaki oyuncu (her yakınlıkta; teknik ekip ve adsız figür değil) — kimlik ya da null */
+function balkonOyuncuIsaret(x,y){
+  const {en,enD,enH}=blkEnYakin(x,y),I=BLK.isaret;
+  return en&&en.id&&enD<Math.max(I.figur,0.6*enH)?en.id:null;
+}
+function balkonIsaret(x,y){
+  const K=ODA.kamera,[CX,PY,CZ]=BLK.saha,genis=BALKON.bakis.tur==='saha';
+  const {en,enD,enH}=blkEnYakin(x,y);
   const I=BLK.isaret;
   if(en&&genis&&enD<Math.max(I.grup,1.5*enH))return{tur:'grup',grup:en.kume,fx:en.x,fz:en.z};
   if(en&&!genis&&enD<Math.max(I.figur,0.6*enH))return en.id?{tur:'oyuncu',id:en.id,grup:en.kume}:{tur:'grup',grup:en.kume};

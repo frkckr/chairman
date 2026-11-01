@@ -12,6 +12,9 @@ const TV_SAYFALAR=[['haber','100','Haberler'],['skor','200','Skorlar'],['program
 const TV_SAYFA_EN_COK=30;
 const TV_GUN=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
 const tvGun=t=>{const [y,a,g]=t.split('-').map(Number);return TV_GUN[new Date(Date.UTC(y,a-1,g)).getUTCDay()];};
+/* RK-D (2026-11-01, kullanıcı: “bugün yarın gibi ibareler değil, maçların tarihleri olsun”): gün başlığı tam gün adı ve tarihle (“Cuma 4 Aralık”) */
+const TV_GUN_TAM=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+const tvGunBasligi=t=>{const [y,a,g]=t.split('-').map(Number);return TV_GUN_TAM[new Date(Date.UTC(y,a-1,g)).getUTCDay()]+' '+gunAyYazi(t);};
 (function tvStili(){
   if(typeof document==='undefined'||document.getElementById('tvStili'))return;
   const Z=STIL.kagit.tv,st=document.createElement('style');st.id='tvStili';
@@ -44,6 +47,8 @@ const tvGun=t=>{const [y,a,g]=t.split('-').map(Number);return TV_GUN[new Date(Da
 .tv-tablo td:first-child{color:${Z.sari};width:2em}
 .tv-tablo td:nth-child(n+3){text-align:right;width:2.6em}
 .tv-not{color:${Z.soluk};font-size:max(var(--k-enKucuk,12px),.9em);margin:0}
+.oda .tv-sayfa h6,.tv-sayfa h6{margin:.3em 0 0;padding-bottom:.05em;border-bottom:1px solid ${Z.cizgi};color:${Z.yazi};font-size:max(var(--k-enKucuk,12px),.85em);font-weight:700}
+.oda .tv-sayfa h6.tv-bugun,.tv-sayfa h6.tv-bugun{color:${Z.sari}}
 .tv-devam{color:${Z.soluk};margin:0}
 `;
   document.head.appendChild(st);
@@ -53,6 +58,9 @@ function tvSayfasi(k,sayfa,y){
   const ust='<div class="tv-ust"><span>TEST SPOR · TELETEXT</span><small>'+yaz(tvGun(k.tarih)+' '+gunAyYazi(k.tarih))+' '+saatYazi(k.gunIciDakika)+'</small></div>';
   const sekmeler='<nav class="tv-sekmeler" role="tablist" aria-label="TV sayfaları">'+TV_SAYFALAR.map(([id,no,a])=>'<button type="button" class="tv-sekme" role="tab" data-eylem="tvSayfa" data-tv="'+id+'" aria-selected="'+(id===s?'true':'false')+'"><b>'+no+'</b>'+yaz(a)+'</button>').join('')+'</nav>';
   const kes=L=>L.length>TV_SAYFA_EN_COK?L.slice(0,TV_SAYFA_EN_COK).join('')+'<p class="tv-devam">…</p>':L.join('');
+  /* maçlar gün gün: tarih başlığı (bugünün başlığı sarı, “bugün” kelimesi yok), altında satırlar saat sırasıyla */
+  const gunlu=(F,satir)=>{const L=[];let t=null;for(const f of F){if(f.tarih!==t){t=f.tarih;L.push('<h6'+(t===k.tarih?' class="tv-bugun"':'')+'>'+yaz(tvGunBasligi(t))+'</h6>');}L.push(satir(f));}return L;};
+  const sirali=F=>F.slice().sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika));
   let ic='';
   if(s==='haber'){
     const H=typeof tvHaberleri==='function'?tvHaberleri(k):[];
@@ -60,25 +68,26 @@ function tvSayfasi(k,sayfa,y){
     ic=H.length?'<ol class="tv-liste">'+kes(H.map(h=>{const t=anTarih(h.an),hd=hedef(h);
       const ic2='<time>'+saatYazi(t.dakika)+'</time><span><span class="tv-etiket">'+yaz(h.etiket)+'</span>'+yaz(String(h.metin).replace(/^TEST: /,''))+'</span>';
       return'<li>'+(hd?'<button type="button" class="tv-satir" data-eylem="tvAc" data-tur="'+hd[0]+'" data-id="'+yaz(hd[1])+'">'+ic2+'</button>':'<div class="tv-satir">'+ic2+'</div>')+'</li>';}))+'</ol>'
-      :'<p class="tv-not">TEST: Bugün henüz haber yok.</p>';
+      :'<p class="tv-not">TEST: Bugün önemli haber yok.</p>';
   }else if(s==='skor'){
     const C=new Map((typeof oynananLigMaclari==='function'?oynananLigMaclari(k):[]).map(x=>[x.f.id,x.dk])),bugun=k.tarih;
     const satir=f=>{const m=(k.maclar||{})[f.id],dk=C.get(f.id),aciklandi=typeof saatiAciklandi!=='function'||saatiAciklandi(k,f);
       const sol=m?(m.hukmen?'Hük.':'Bitti'):dk?dk:f.tarihBekliyor?'Ert.':aciklandi?saatYazi(f.dakika):'—';
       return'<div class="tv-mac'+(dk?' tv-canli':'')+'"><small>'+yaz(sol)+'</small><span class="tv-ev">'+yaz(ad(f.ev))+'</span><b>'+(m?m.skor[0]+'–'+m.skor[1]:'–')+'</b><span class="tv-dep">'+yaz(ad(f.konuk))+'</span>'+
         (dk?'<button type="button" class="tv-izle" data-eylem="tvIzle" data-mac="'+yaz(f.id)+'">İzle ▸</button>':'<span></span>')+'</div>';};
-    const F=(k.fikstur||[]).slice().sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika));
-    const bu=F.filter(f=>f.tarih===bugun&&!f.tarihBekliyor),hv=typeof canliVarsayilanHafta==='function'?canliVarsayilanHafta(k):null;
-    const hafta=hv===null?[]:F.filter(f=>f.hafta===hv&&f.tarih!==bugun);
-    ic='<h5>Bugün</h5>'+(bu.length?bu.map(satir).join(''):'<p class="tv-not">TEST: Bugün lig maçı yok.</p>')+(hafta.length?'<h5>'+hv+'. hafta</h5>'+kes(hafta.map(satir)):'');
+    /* RK-D: haftanın maçları gün başlıklarıyla; bugün başka haftanın (ertelenmiş) maçı oynanıyorsa o da kendi gününde */
+    const hv=typeof canliVarsayilanHafta==='function'?canliVarsayilanHafta(k):null;
+    const F=sirali((k.fikstur||[]).filter(f=>!f.tarihBekliyor&&(f.hafta===hv||f.tarih===bugun))),E=(k.fikstur||[]).filter(f=>f.hafta===hv&&f.tarihBekliyor);
+    const L=gunlu(F,satir);if(E.length){L.push('<h6>Ertelendi · yeni tarih açıklanacak</h6>');for(const f of E)L.push(satir(f));}
+    ic=(hv!==null?'<h5>'+hv+'. hafta</h5>':'')+(L.length?kes(L):'<p class="tv-not">TEST: Programda maç yok.</p>');
   }else{
     const T=typeof sezonTablosu==='function'?sezonTablosu(k):[];
     ic='<h5>Puan durumu</h5><table class="tv-tablo"><tbody>'+T.map((t,i)=>'<tr><td>'+(i+1)+'</td><td>'+yaz(t.ad)+'</td><td>'+t.O+'</td><td>'+t.P+'</td></tr>').join('')+'</tbody></table>';
     const S=k.sezon||{},pa=S.programAciklanan|0,F=(k.fikstur||[]).filter(f=>f.hafta>=(S.ilkHafta|0)&&!(k.maclar||{})[f.id]);   /* devralınan haftalar değil */
     const H=[...new Set(F.filter(f=>f.hafta<=pa&&!f.tarihBekliyor).map(f=>f.hafta))].sort((a,b)=>a-b),E=F.filter(f=>f.tarihBekliyor);
     const L=[];
-    for(const h of H){L.push('<h5>'+h+'. hafta</h5>');for(const f of F.filter(x=>x.hafta===h&&!x.tarihBekliyor).sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika)))
-      L.push('<div class="tv-mac"><small>'+yaz(tvGun(f.tarih)+' '+saatYazi(f.dakika))+'</small><span class="tv-ev">'+yaz(ad(f.ev))+'</span><b>–</b><span class="tv-dep">'+yaz(ad(f.konuk))+'</span><span></span></div>');}
+    for(const h of H){L.push('<h5>'+h+'. hafta</h5>');L.push(...gunlu(sirali(F.filter(x=>x.hafta===h&&!x.tarihBekliyor)),f=>
+      '<div class="tv-mac"><small>'+yaz(saatYazi(f.dakika))+'</small><span class="tv-ev">'+yaz(ad(f.ev))+'</span><b>–</b><span class="tv-dep">'+yaz(ad(f.konuk))+'</span><span></span></div>'));}
     if(E.length){L.push('<h5>Ertelenen</h5>');for(const f of E)L.push('<div class="tv-mac"><small>Ert.</small><span class="tv-ev">'+yaz(ad(f.ev))+'</span><b>–</b><span class="tv-dep">'+yaz(ad(f.konuk))+'</span><span></span></div>');}
     ic+=L.length?kes(L):'<p class="tv-not">TEST: Açıklanmış program yok.</p>';
   }

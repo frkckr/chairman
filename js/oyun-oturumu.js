@@ -49,7 +49,7 @@ function oyunYerlestir(o){OYUN.oturum=o;OYUN.kariyer=o.kariyer;}
 function oyunKomut(f,kaydetme){const s=OYUN.oturum.uygula(f,kaydetme);OYUN.kariyer=OYUN.oturum.kariyer;return s;}
 const oyunKayitHata=()=>!OYUN.oturum.durum.tamam||OYUN.depo==='bellek';
 function oyunKayitYazi(){
-  const AY=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'],GUN=['Paz','Paz','Sal','Çar','Per','Cum','Cum'];
+  const AY=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'],GUN=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
   const d=OYUN.oturum.durum;let son=null;
   if(d.tarih){const [y,a,g]=d.tarih.split('-').map(Number);son=g+' '+AY[a-1]+' '+GUN[new Date(Date.UTC(y,a-1,g)).getUTCDay()]+' '+saatYazi(d.dakika);}
   if(d.cakisma)return'Kaydedilmedi: kariyer başka bir pencerede ilerledi';

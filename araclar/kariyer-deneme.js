@@ -2322,12 +2322,14 @@ bolum('RK8-a — haber akışı ve takip: TV\'nin bugünü, takip haberleri ve r
   const f14=k.fikstur.filter(f=>f.hafta===14&&f.ev!==biz&&f.konuk!==biz).sort((a,b)=>AD(a.tarih,a.dakika)-AD(b.tarih,b.dakika));
   const cmt=f14.find(f=>f.dakika===1020&&T('macGunAdi')(f.tarih)==='Cumartesi');
   k=KK(k,x=>{T('zamanIlerlet')(x,AD(cmt.tarih,1200)-T('simdikiAn')(x));}).kariyer;   /* Cumartesi 20:00: 17:00 maçları bitti */
-  const H=T('tvHaberleri')(k),H2=T('tvHaberleri')(k);
-  const sonuc=H.filter(h=>h.anahtar==='hb.sonuc');
-  denetle('TV haberleri: bugünün penceresinde (08:00 → şimdi), belirlenimci (iki kez aynı), önem sırasında; 17:00 maçlarının her biri ayrı “Maç sonucu” haberi (bitiş anında); gazetenin toplu satırı ve kutular yok',
+  const H=T('tvHaberleri')(k),H2=T('tvHaberleri')(k),W=T('tvPenceresi')(k),A=T('haberListesi')(k,W.bas,W.son);
+  const sonuc=A.filter(h=>h.anahtar==='hb.sonuc');
+  /* RK-D (2026-11-01, kullanıcı: “teletext haberlerinde goller vs. olmasın”): TV'nin haber sayfasında maç sonucu ve kırmızı kart yok; haber akışında
+     (takip) maç başına sonuç kalır */
+  denetle('TV haberleri: bugünün penceresinde (08:00 → şimdi), belirlenimci (iki kez aynı), önem sırasında; maç sonucu, kırmızı kart, gazetenin toplu satırı ve kutular yok; haber akışında (takip) 17:00 maçlarının her biri ayrı “Maç sonucu” haberi (bitiş anında)',
     metin(H)===metin(H2)&&sonuc.length===f14.filter(f=>f.tarih===cmt.tarih&&f.dakika===1020).length&&H.every((h,i)=>!i||H[i-1].onem>=h.onem)
-    &&!H.some(h=>h.anahtar==='gz.sonuclar'||h.anahtar==='gz.mac'||h.kutu)&&sonuc.every(h=>h.an===AD(cmt.tarih,1020)+105&&h.konu.maclar.length===1&&h.konu.kulupler.length===2),
-    `${H.length} haber · sonuç ${sonuc.length} · ${H.slice(0,3).map(h=>h.anahtar+h.onem).join(',')}`);
+    &&!H.some(h=>h.anahtar==='gz.sonuclar'||h.anahtar==='gz.mac'||h.anahtar==='hb.sonuc'||h.anahtar==='hb.kirmizi'||h.kutu)&&sonuc.every(h=>h.an===AD(cmt.tarih,1020)+105&&h.konu.maclar.length===1&&h.konu.kulupler.length===2),
+    `${H.length} haber · akışta sonuç ${sonuc.length} · ${H.slice(0,3).map(h=>h.anahtar+h.onem).join(',')}`);
   const G=T('gazeteSayisi');
   denetle('Gazete değişmedi: haber akışı yalnız TV kaynaklarını ekler (gazetenin kaynak defteri aynı uzunlukta)',T('GAZETE_KAYNAKLARI').every(q=>q.ad!=='sonuc'&&q.ad!=='kirmizi'));
   /* takip */

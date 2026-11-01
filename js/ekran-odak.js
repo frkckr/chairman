@@ -27,7 +27,7 @@
 .oda section.odk[data-boy="orta"]{--odk-en:${O.boy.orta}%}
 .oda section.odk[data-boy="kucuk"]{--odk-en:${O.boy.kucuk}%}
 /* RK6: yarım odak (ziyaret) — perde yok, oda bulanmaz; iş sol yarıda, kapı ve karşıdaki koltuk görünür */
-.oda section.odk[data-boy="yarim"]{--odk-en:${O.boy.yarim||42}%;left:3%;top:8.4em}
+.oda section.odk[data-boy="yarim"]{--odk-en:${O.boy.yarim||42}%;left:3%;top:3.2em}
 .oda section.odk[data-boy="cihaz"]{--odk-en:${O.boy.cihaz}%}
 /* R2 (2026-10-29): odada iki sütunlu telefon — solda telefon, sağda iş paneli (js/ekran-telefon.js .tlf); kâğıt yok, kabın kendisi taşır */
 .oda section.odk[data-boy="telefon"]{--odk-en:${O.boy.telefon}%}

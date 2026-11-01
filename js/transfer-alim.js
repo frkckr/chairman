@@ -531,12 +531,16 @@ function transferMasasi(k){
   const G=(k.gecmis||[]).filter(g=>g.tur==='transfer'),gelen=[],giden=[];
   for(let i=G.length-1;i>=0;i--){const g=G[i];if(g.yeni===biz)gelen.push({oyuncuId:g.oyuncuId,tarih:g.tarih,eski:g.eski||null,bedel:g.bedel||0});
     else if(g.eski===biz)giden.push({oyuncuId:g.oyuncuId,tarih:g.tarih,yeni:g.yeni||null,bedel:g.bedel||0});}
-  const KACAN=['rakibe','kopma','anlasamama','istek','kacti','saglik'];
-  const kacan=Object.values(k.meseleler||{}).filter(m=>m.durum==='kapandi'&&m.sablon&&m.sablon.ad==='transferAlim'&&KACAN.includes(m.sablon.sonuc)&&m.sablon.veri.hedef)
+  const kacan=taKacanlar(k);
+  return{donem,kasa:k.kulupler[biz].nakit,dosyalar,teklifler,takip,piyasa:{serbest:ids(P.serbest),satilik:ids(P.satilik),bitiyor:ids(P.bitiyor)},gecmis:{gelen,giden,kacan}};
+}
+/* kaçırdığımız oyuncular: kayıpla kapanan alım dosyaları (yeniden eskiye). RK-D'den beri Geçmiş'te bölüm değil, oyuncunun kâğıdında bir satır */
+const TA_KACAN=['rakibe','kopma','anlasamama','istek','kacti','saglik'];
+function taKacanlar(k){
+  return Object.values(k.meseleler||{}).filter(m=>m.durum==='kapandi'&&m.sablon&&m.sablon.ad==='transferAlim'&&TA_KACAN.includes(m.sablon.sonuc)&&m.sablon.veri.hedef)
     .sort((a,b)=>(b.kapanis?anDakika(b.kapanis.tarih,b.kapanis.dakika):0)-(a.kapanis?anDakika(a.kapanis.tarih,a.kapanis.dakika):0))
     .map(m=>{const p=k.oyuncular[m.sablon.veri.hedef];return{meseleId:m.id,oyuncuId:p?p.id:null,sonuc:SABLONLAR.transferAlim.sonucMetni[m.sablon.sonuc],tarih:m.kapanis?m.kapanis.tarih:null,
       simdi:p?p.kulupId:null,mac:p&&Number.isInteger(p.mac)?p.mac:null,gol:p?p.gol|0:0};}).filter(x=>x.oyuncuId);
-  return{donem,kasa:k.kulupler[biz].nakit,dosyalar,teklifler,takip,piyasa:{serbest:ids(P.serbest),satilik:ids(P.satilik),bitiyor:ids(P.bitiyor)},gecmis:{gelen,giden,kacan}};
 }
 function transferOyuncu(k,id){
   const p=k.oyuncular[id];if(!p)return null;
@@ -547,6 +551,8 @@ function transferOyuncu(k,id){
   const sat=satilikSinyali(k,p);if(sat)B.push({metin:sat,kaynak:'Kulislerden'});
   if(sozlesmeBitiyor(k,p))B.push({metin:'Sözleşmesi bu sezonun sonunda bitiyor.',kaynak:'Kulislerden'});
   if(iz)B.push({metin:TA_KANAAT_METIN[iz.kanaat],kaynak:`İzleme (${gunAyYazi(iz.tarih)})`});
+  /* RK-D: kaçırdığımız transfer (Geçmiş'teki Kaçanlar bölümünün yerine) — kapanan alım dosyasının sonucu, tarihiyle */
+  for(const x of taKacanlar(k).filter(x=>x.oyuncuId===id))B.push({metin:x.sonuc+'.',kaynak:'Transfer dosyası'+(x.tarih?` (${gunAyYazi(x.tarih)})`:'')});
   const m=taAcikDosyalar(k).find(m=>m.sablon.veri.hedef===id||m.sablon.veri.istenen===id)||null;
   const bizim=p.kulupId===biz,h=kulupHocasi(k,biz);
   let arastirt=null;if(bizim)arastirt='Bizim oyuncumuz.';else if(m)arastirt='Bu oyuncu için dosya açık.';else if(!h)arastirt='Kulübün hocası yok.';else arastirt=taAcilisEngeli(k,null);

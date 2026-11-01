@@ -86,8 +86,9 @@ function transferMasasiGorunumu(k,d,y){
   else{
     const G=M.gecmis;
     ic='<section class="tm-bolum"><h4>Gelenler</h4>'+liste(G.gelen.map(x=>satir(O(x.oyuncuId),y.tarihYazi(x.tarih)+' · '+kulup(x.eski)+(x.bedel?' · '+y.paraYazi(x.bedel):' · bedelsiz'),'bizde')),'Bu sezon gelen yok.')+'</section>'+
-      '<section class="tm-bolum"><h4>Gidenler</h4>'+liste(G.giden.map(x=>satir(O(x.oyuncuId),y.tarihYazi(x.tarih)+(x.bedel?' · '+y.paraYazi(x.bedel):''))),'Bu sezon giden yok.')+'</section>'+
-      '<section class="tm-bolum"><h4>Kaçanlar</h4>'+liste(G.kacan.map(x=>{const p=O(x.oyuncuId);return satir(p,x.sonuc+(x.tarih?' ('+y.tarihYazi(x.tarih)+')':'')+'. Bu sezon '+(x.mac===null?'—':x.mac)+' maç, '+x.gol+' gol.');}),'Kaçan oyuncu yok.')+'</section>';
+      '<section class="tm-bolum"><h4>Gidenler</h4>'+liste(G.giden.map(x=>satir(O(x.oyuncuId),y.tarihYazi(x.tarih)+(x.bedel?' · '+y.paraYazi(x.bedel):''))),'Bu sezon giden yok.')+'</section>';
+    /* RK-D (2026-11-01, kullanıcı: “kaçanlar ne? kaldıralım”): Kaçanlar bölümü yok; kapanan alım dosyasının sonucu oyuncunun kâğıdında
+       “Bildiklerimiz”de (kaynak Transfer dosyası), rakibe gidişi gazetede (tr.dunya) */
   }
   return'<div class="tm-masa" data-bolum="'+(d.oyuncu?'oyuncu':bolum)+'">'+ust+sekme+ic+'</div>';
 }
