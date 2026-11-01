@@ -344,6 +344,22 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .macTelefon button:focus-visible{outline:.14em solid var(--k-kulup);outline-offset:.1em}
 .od-kayit{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8}
 .oda button.od-duraklat{font-size:1em;letter-spacing:.1em;text-transform:uppercase;padding:.1em .6em .05em;border-bottom-width:1px}
+/* RK5-a: Ayarlar üst çubukta (Duraklat'la aynı dil); dar karede şeritte simge gizli (kelime kalır), “Kaydedildi” yalnız uyarıda */
+.oda .od-ust button.od-ayar{display:inline-flex;align-items:center;gap:.35em;min-width:0;font-size:1em;font-weight:400;color:var(--k-yazi);letter-spacing:.1em;text-transform:uppercase;
+  padding:.1em .6em .05em;border-bottom-width:1px;background:var(--k-serit);box-shadow:none;white-space:nowrap}
+.oda .od-ust button.od-ayar[aria-pressed="true"]{background:var(--k-vurguZemin);border-color:var(--k-vurgu);color:var(--k-vurguYazi)}
+@container (max-width:820px){
+  .oda .od-nesneler .od-nesne svg.smg{display:none}
+  .oda .od-nesneler .od-nesne{padding:.3em .6em .25em}
+  .oda .od-ust .od-kayit:not(.od-uyari){display:none}
+  /* durum yazısına yer kalmazsa (balkonda üç düğme) düğmeler ikinci satıra iner; masa şeridi ve Sonra yığını şeridin ölçülen yüksekliğinin üstünde
+     (--od-alt, js/ekran-oda.js) */
+  .oda .od-alt{flex-wrap:wrap;row-gap:.3em}
+  .oda .od-altYazi{flex:1 1 14em}
+  .oda .od-altDugmeler{margin-left:auto}
+  .oda .od-nesneler{bottom:calc(var(--od-alt,4.8em) + .5em)}
+  .oda .od-sonra{bottom:calc(var(--od-alt,4.8em) + 3.4em)}
+}
 /* U6 (envanter 20): kâğıtta hafif doku (iki kat ince nokta; statik, okunurluğu bozmaz) */
 .oda .odk-kagit,.oda .dsy-sayfa,.oda .dft-sayfa,.oda .zm-sahne{background-image:radial-gradient(rgba(110,90,50,.06) .06em,transparent .07em),radial-gradient(rgba(110,90,50,.045) .05em,transparent .06em);
   background-size:.33em .33em,.71em .71em;background-position:0 0,.17em .29em}

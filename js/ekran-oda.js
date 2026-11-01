@@ -153,7 +153,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(f){const y=document.createElement('div');y.innerHTML=altSerit();const n=y.firstElementChild,a=f.querySelector('.od-durak'),b=n&&n.querySelector('.od-durak');
       if(a&&b&&a.innerHTML!==b.innerHTML)a.innerHTML=b.innerHTML;
       const g1=f.querySelector('.od-antGor'),g2=n&&n.querySelector('.od-antGor'),D=f.querySelector('.od-altDugmeler'),D2=n&&n.querySelector('.od-altDugmeler');
-      if(D&&D2&&(!!g1!==!!g2||g1&&g2&&g1.textContent!==g2.textContent))D.innerHTML=D2.innerHTML;}
+      if(D&&D2&&(!!g1!==!!g2||g1&&g2&&g1.textContent!==g2.textContent))D.innerHTML=D2.innerHTML;
+      kap.style.setProperty('--od-alt',f.offsetHeight+'px');}   /* RK5-a: şeridin yüksekliği (dar karede masa şeridi ve odak onun üstünde) */
     const y=kap.querySelector('.od-kayit');if(y){y.textContent=kayitKisa();y.title=oyun.kayitYazi();}
     rozetYaz();
     odayiBildir();
@@ -789,6 +790,8 @@ function odaEkraniKur(kap,oyun,ayarlar){
     kap.innerHTML='<header class="od-ust"><span>'+yaz(k.kulupler[kulupId()].ad)+' · Başkan '+yaz(b?b.ad:'')+'</span>'+
       '<span class="od-ustSag"><span class="od-ustTarih" title="Okurken ve düşünürken zaman durur">'+yaz(tarihYazi(k.tarih))+' · <b class="od-ustSaat">'+saatYazi(k.gunIciDakika)+'</b></span>'+
         '<span class="od-kayit'+(oyun.kayitHata()?' od-uyari':'')+'" title="'+yaz(oyun.kayitYazi())+'">'+yaz(kayitKisa())+'</span>'+(oyun.kayitTamam()||(oyun.kayitCakisma&&oyun.kayitCakisma())?'':' <button type="button" class="od-kucuk od-tehlike" data-eylem="kayitDene">Yeniden kaydet</button>')+
+        /* RK5-a (DIL kural 1, tek krom çubuk): Ayarlar masa nesnesi değil, üst çubukta Duraklat'ın yanında (şerit dar karede sığsın) */
+        '<button type="button" class="od-nesne od-kucuk od-ayar" data-eylem="ac" data-panel="ayar" aria-pressed="'+(acik==='ayar'?'true':'false')+'">'+smg('ayar')+'Ayarlar</button>'+
         '<button type="button" class="od-duraklat" data-eylem="duraklat" aria-pressed="'+(duraklatmaVar('elle')?'true':'false')+'" title="Duraklat (P ya da boşluk)">'+(duraklatmaVar('elle')?'Devam ▸':'Duraklat')+'</button></span></header>'+
       '<nav class="od-nesneler" aria-label="Masadakiler"'+odakta+'>'+dugme('telefon',haber?String(haber):'',karar?'od-rozetAcil':'')+dugme('ajanda',is?String(is):'')+
         /* H2-d: dosyanın rozeti önce karar, karar yoksa görülmemiş raporda “yeni” */
@@ -797,8 +800,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
         (()=>{const t=transferKarar();return dugme('transfer',t?'karar':'',t?'od-rozetAcil':'');})()+
         /* balkona çıkış kapının kendisidir (tıkla ya da 5); klavye için görünmez, odakta beliren düğme. Balkonda dönüş düğmesi görünür */
         (balkonVar?(ODA.yer==='balkon'?'<button type="button" class="od-nesne od-yer" data-eylem="yer">'+smg('kapi')+'Odaya dön</button>':
-          '<button type="button" class="od-nesne od-yer od-gizli" data-eylem="yer">Balkona çık (kapı · 5)</button>'):'')+
-        '<button type="button" class="od-nesne od-kucuk" data-eylem="ac" data-panel="ayar" aria-pressed="'+(acik==='ayar'?'true':'false')+'">'+smg('ayar')+'Ayarlar</button></nav>'+
+          '<button type="button" class="od-nesne od-yer od-gizli" data-eylem="yer">Balkona çık (kapı · 5)</button>'):'')+'</nav>'+
       /* U1: her iş aynı odak kabında: oda bulanır, iş ortada; başlıkta ‹ Geri · başlık · Kapat (dosya ve defter kendi nesneleriyle kabı doldurur) */
       (acik?odakKabi({ad:acik,boy:acik==='telefon'&&telIkiSutun()?'telefon':acik==='ziyaret'&&ziyaretSahnesi()&&ODA.yer!=='masa'?'orta':ODAK_BOY[acik]||'genis',etiket:baslik,baslik,belir,kagit:acik!=='dosya'&&acik!=='ajanda',
         sinif:acik==='dosya'||acik==='ajanda'?'':'od-panel'+(acik==='kadro'?' od-genis':acik==='telefon'?' od-telefonPanel':''),
