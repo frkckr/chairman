@@ -8,7 +8,8 @@
    .tv-satir (data-eylem="tvAc" data-tur data-id), .tv-izle (data-eylem="tvIzle" data-mac), .tv-canli.
      tvSayfasi(k, sayfa, y) → html. y: {yaz}. Canlı maçlar js/lig-takvimi.js oynananLigMaclari'ndan (dakika oda saatinden) */
 'use strict';
-const TV_SAYFALAR=[['haber','100','Haberler'],['skor','200','Skorlar'],['program','300','Puan durumu · Program']];
+/* CM1-b (karar 87): 100 Haberler kalktı — haberler tek listede (Haberler ekranı); TV canlı skor ve öbür maçın penceresidir */
+const TV_SAYFALAR=[['skor','200','Skorlar'],['program','300','Puan durumu · Program']];
 const TV_SAYFA_EN_COK=30;
 const TV_GUN=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
 const tvGun=t=>{const [y,a,g]=t.split('-').map(Number);return TV_GUN[new Date(Date.UTC(y,a-1,g)).getUTCDay()];};
@@ -55,7 +56,7 @@ const tvGunBasligi=t=>{const [y,a,g]=t.split('-').map(Number);return TV_GUN_TAM[
   document.head.appendChild(st);
 })();
 function tvSayfasi(k,sayfa,y){
-  const yaz=y.yaz,s=TV_SAYFALAR.some(x=>x[0]===sayfa)?sayfa:'haber',ad=id=>((k.kulupler||{})[id]||{ad:id}).ad;
+  const yaz=y.yaz,s=TV_SAYFALAR.some(x=>x[0]===sayfa)?sayfa:'skor',ad=id=>((k.kulupler||{})[id]||{ad:id}).ad;
   const ust='<div class="tv-ust"><span>TEST SPOR · TELETEXT</span><small>'+yaz(tvGun(k.tarih)+' '+gunAyYazi(k.tarih))+' '+saatYazi(k.gunIciDakika)+'</small></div>';
   const sekmeler='<nav class="tv-sekmeler" role="tablist" aria-label="TV sayfaları">'+TV_SAYFALAR.map(([id,no,a])=>'<button type="button" class="tv-sekme" role="tab" data-eylem="tvSayfa" data-tv="'+id+'" aria-selected="'+(id===s?'true':'false')+'"><b>'+no+'</b>'+yaz(a)+'</button>').join('')+'</nav>';
   const kes=L=>L.length>TV_SAYFA_EN_COK?L.slice(0,TV_SAYFA_EN_COK).join('')+'<p class="tv-devam">…</p>':L.join('');

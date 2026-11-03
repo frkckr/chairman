@@ -7,7 +7,8 @@
    (masadaki nesne açılır, İlerle yeniden ilerler); tuşlardan yalnız Enter ve Esc özeti kaldırır (Sekme, oklar dokunmaz). Akış sırasında İlerle'ye basmak sahneyi bırakıp yeniden ilerler (beklettirmez). Duraklat akışı
    özete atlatır (sahne hareketi durur). "Hareketi azalt" tercihinde akış yoktur, özet hemen gelir.
      zamanSahnesiBaslat(o)  o: {ozet (zamanOzeti), baslik (yeni anın yazısı), durak (şimdiki durak cümlesi), sonraki (sıradaki durak), gunYazi(tarih),
-                            saat(dk) (odanın saat kolları), cizim() (oda yeniden çizer; sahne bitince İlerle düğmesi eski yazısına döner)}
+                            saat(dk) (odanın saat kolları), cizim() (oda yeniden çizer; sahne bitince İlerle düğmesi eski yazısına döner),
+                            bitince() (CM1-b: verilirse akış bitince ya da atlanınca özet kartı açılmaz, sahne kapanır ve bitince çağrılır)}
      zamanSahnesiHtml()     odanın çiziminde sahnenin o anki hâli (yeniden çizimde akış kaldığı yerden sürer)
      zamanSahnesiAtla() · zamanSahnesiKapat() · ZAMAN_SAHNE.acik/evre (denemeler okur) */
 const ZAMAN_SAHNE={acik:false,evre:null,o:null,t0:0,sure:0,gorunen:-1,saatDk:null};
@@ -86,7 +87,10 @@ function zamanSahnesiHtml(){
 }
 /* akış biter ya da atlanır: saat gerçek ana, kart özete döner (oda yeniden çizer: İlerle düğmesi eski yazısına) */
 function zamanBitir(){
-  const S=ZAMAN_SAHNE;if(!S.acik)return;S.evre='ozet';
+  const S=ZAMAN_SAHNE;if(!S.acik)return;
+  /* CM1-b (karar 87): bitince (İlerle'den sonra Haberler) verildiyse özet kartı yerine sahne kapanır ve o iş açılır (durak cümlesi Haberler'in Bugün'ünde) */
+  if(S.o.bitince){if(S.o.saat)S.o.saat(S.o.ozet.son%1440);const f=S.o.bitince;zamanSahnesiKapat();f();return;}
+  S.evre='ozet';
   if(S.o.saat)S.o.saat(S.o.ozet.son%1440);
   if(S.o.cizim)S.o.cizim();
   /* U7 incelemesi: özet kalıcı canlı bölgeden duyurulur (kart yeniden kurulduğu için kendisi duyurulmaz) */

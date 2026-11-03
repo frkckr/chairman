@@ -69,7 +69,8 @@ function odaIzleri(k){
   const H=k.haberler||[],gazete=H.filter(h=>h.tur==='gazete'),kart=H.filter(h=>h.tur==='tesekkur');
   const sayi=typeof gazeteSonTarihi==='function'?gazeteSonTarihi(k):null;
   return{
-    sayi,gazeteYeni:!!sayi&&sayi>(k.gazeteOkunan||''),
+    /* CM1-b (karar 87): boş günde gazete çıkmaz — bugünün sayısı boşsa masada “yeni” yok (ekran son dolu sayıyı açar) */
+    sayi,gazeteYeni:!!sayi&&sayi>(k.gazeteOkunan||'')&&!(typeof gazeteSayisi==='function'&&(gazeteSayisi(k,sayi)||{}).bos),
     gazete:gazete.length?gazete[gazete.length-1]:null,
     kart:kart.length?kart[kart.length-1]:null,
     yeniHaber:H.filter(h=>!h.gorulen&&h.tur!=='rapor').length,
