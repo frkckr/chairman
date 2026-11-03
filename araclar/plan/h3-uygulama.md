@@ -1,5 +1,7 @@
 # H3 — Yeni sezon ve sezon geçişi, kayıpsız sezon arşivi (uygulama planı)
 
+> **CM2-a aldı (2026-11-03, karar 88):** sezon tarifi (`SEZON_TARIFLERI`), yaz ve kış dönemi, devre arası, hazırlık maçı ve sezon öncesi başlangıç uygulandı (kayıt sürümü 13). H3'e kalan: yeni sezon geçişi (`yeniSezonKur`), sezon arşivi, sayaçların sıfırlanması ve kayıt büyümesi; aşağıdaki `sezonTarifi(yil)` maddesi `SEZON_TARIFLERI.yaz`'ın yıl parametreli hâline dönüşür.
+
 > **R programı (2026-10-29, kullanıcı; YOL_HARITASI karar 56):** H3 R7'den sonraya kaldı (önce tek sezon uçtan uca). Gövde ve alttaki notlar sürüm ve bölüm numaraları bakımından eskidir; H3 planlanırken güncel kayıt sürümü, örnekler ve denetimlerle **yeniden yazılır**. Kayıt büyümesi, arşiv ve IndexedDB ölçümü H3'e girer (kullanıcının inceleme raporu, madde 7).
 
 > **Not (2026-10-26 gece, Y0; YOL_HARITASI karar 52):** H2-c kayıt sürümünü 10 yaptığı için bu turun sürümü **11**'dir: aşağıdaki “10”, `KAYIT_GECISLERI[9]` ve “9→10” bir kayar (`KAYIT_GECISLERI[10]`, sürüm 10 sigorta örnekleri H2 koduyla). H3'ten sonra sıra Y1'dir (`y-program.md`). Plan tur başında bu notla yeniden gözden geçirilir ve onaylanır.

@@ -4638,7 +4638,7 @@ async def bolum_43(tarayici, site, tum_hatalar):
     gi = await pg.evaluate("() => window.__gecisIlk")
     bul = await pg.evaluate("() => ({ tur: MAC_GUNU.bulten && MAC_GUNU.bulten.tur, ust: (document.querySelector('#onEkran .prg-ustAd small') || {}).textContent || '', digeri: (MAC_GUNU.digerleri || []).length })")
     denetle("CM2-a: 11 Temmuz 18:00 ilk hazırlık maçı; bilet “Hazırlık maçı”; bültende “Hazırlık maçı”, öbür maç yok",
-            an == "2026-07-11 1080" and bool(gi) and "Hazırlık maçı" in gi and bul["tur"] == "hazirlik" and bul["ust"].startswith("Hazırlık maçı") and bul["digeri"] == 0, f"{an} · {gi} · {bul}")
+            an == "2026-07-11 1080" and bool(gi) and "HAZIRLIK MAÇI" in gi.upper() and bul["tur"] == "hazirlik" and bul["ust"].startswith("Hazırlık maçı") and bul["digeri"] == 0, f"{an} · {gi} · {bul}")
     await pg.click("#btnBeklemedenGec")
     await pg.wait_for_function("() => !ON_EKRAN.acik", timeout=30000)
     await pg.evaluate("() => document.getElementById('btnHizliBitir').click()")

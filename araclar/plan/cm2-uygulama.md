@@ -126,4 +126,17 @@ CM2-a: (1) kariyer-deneme kasim bölümleri birebir, yaz bölümleri geçer; (2)
 
 ## 7. Durum
 
-(uygulama sırasında doldurulur)
+**CM2-a (dal `claude/cm2a-takvim`, 2026-11-03, dizüstü, oto mod):** uygulandı (YOL_HARITASI karar 88). Plandan sapmalar ve eklemeler:
+
+- **Yaş:** tam yaş kuralı yazılmadı (§1.6; `yasUret` 2026). **Kamp alanı** (`f.kamp`) fikstür denetiminde ve bilette tanınır, CM2-b kullanır.
+- **Hazırlıkta cezalı oyuncu kuralı yazılmadı:** yaz tarifinde ön sezonda ceza doğmaz (ceza lig maçında; devralınan eksik yok). **11 uygun çıkmazsa iptal yerine kadro zorla kurulur** (B61; pratikte olmaz).
+- **Geçmiş kaydı:** hazırlık maçı `k.gecmis`'e `mac` satırı yazmaz (gelişme listesi ve haberler maç kaydından kurulur; “on birde yoktu” notu lig maçına özgü).
+- **Gazete:** hazırlık sonucu `gz.hazirlik` (önem 50; boş günde manşet olabilir, lig maçını geçmez), yaklaşan hazırlık maçı önem 40/15; sakatlık haberleri hazırlıktan da. Haberler'de `hb.hazirlik`; kırmızı kart haberi hazırlıkta yok.
+- **Canlı Skor:** hazırlık grubu ilk haftanın görünümünde (ayrı hafta yok); kulüp sayfasının maç listesi ve oyuncunun maç listesi yalnız lig (sezon sayaçlarıyla tutarlı); sağlık geçmişinde hazırlık “Haz.”. Kulüp özetinde `gecenSezon`.
+- **Maç sayfasının seyircisi** (`js/mac-gunu.js` `statKur`) kariyer maçında doğrudan `macDolulugu`'ndan (hazırlık çarpanı; CM2-b'nin kombine eki aynı yoldan) — çizilen = ödeyen seyirci.
+- **B60:** saatli ajanda işi yokken (sezon dışı) en yakın görünür rutin işte durur; sezon içinde maç günü işi hep olduğundan Kasım tabanına etkisi beklenmez.
+- **Araçlar:** `sezon-deneme --tarif` (varsayılan yaz; Kasım tabanları `--tarif kasim`), hazırlık satırları `H1…`, `--kayit-yaz …@tarih=`; akış ve okunurluk her bağlamda `kasim_tarayici` (adreste `tarif=` yoksa Kasım); kariyer-deneme 47 + 6 çağrı `tarif:'kasim'`.
+
+**Ölçüler:** yaz kariyerinin kurulumu doğrulamadan geçer; `sezon-deneme 3 7 --tarif yaz --tek` H1–H4 ve üç lig haftası 264 sn (dizüstü), kasa 22 Haziran 5,2 → 5 Eylül 4,68 milyon ₺ (maaş −1,33, bilet +0,52, lig payı +0,3). Kasım tarifiyle kurulan kariyer CM2-a'dan önceki kodla birebir aynı (`baslangicTarihi` ve `icerik.baslangic` dışında; Node karşılaştırması).
+
+**Denetimler (dizüstü):** `kariyer-deneme` bütün bölümler geçti (yeni CM2-a bölümü 17 denetim; 12→13 geçişi `kayit-s12-hafta14`); ad denetimi temiz; akış 43 geçti (yaz kariyeri, Canlı Skor hazırlık grubu, maç sayfası, geçen sezon, 24 Haziran kartı, bilet, maç sonu, Odaya dön); regresyon akış 1, 19, 25, 38, 42 geçti (Kasım tarifinde, `kasim_tarayici`). Evde: akış tamamı, `--tarif kasim --ayni` tam sezon (t7, t3), okunurluk beş genişlik, kontrol, akis-2d, hız.
