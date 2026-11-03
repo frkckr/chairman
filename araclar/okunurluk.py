@@ -41,7 +41,9 @@ GOVDE_EN_AZ, METIN_EN_AZ = 15.0, 12.0   # RK5-a (karar 83): gövde tabanı 16 px
 # kare genişliği → pencere (index.html: kare = min(pencere − 32, max(640, (yükseklik − pay) · 4/3)); RN-c (2026-10-30): pay ölçülür, odada 32 px
 # (js/sunum-durumu.js ekranPayGuncelle; eskiden sabit 190). Üç kare eskisiyle aynı genişlikte kalır (karşılaştırma bozulmaz); iki dizüstü penceresi eklendi:
 # 1366×650 (1366×768 ekran, tarayıcı ve görev çubuğu düşülmüş) → kare 825, 1536×740 (1920×1080 %125) → kare 944
-GENISLIKLER = {640: (672, 560), 800: (832, 700), 825: (1366, 650), 944: (1536, 740), 1186: (1218, 1000)}
+# CM1-a (2026-11-03, karar 86): odada karenin solunda CM şeridi (karenin %12,5'i, 104–148 px; js/sunum-durumu.js seritGenisligi). Genişlikten sınırlı
+# üç pencere şerit kadar genişler, kare eskisiyle aynı kalır (640 → 672+104, 800 → 832+104, 1186 → 1218+148); 825 ve 944 yükseklikten sınırlı, aynı
+GENISLIKLER = {640: (776, 560), 800: (936, 700), 825: (1366, 650), 944: (1536, 740), 1186: (1366, 1000)}
 
 OLC_JS = r"""() => {
   const E = document.getElementById('screen'), R = E.getBoundingClientRect();
@@ -76,7 +78,8 @@ OLC_JS = r"""() => {
   /* gövde: oyun karesinin ortak yazı ölçeği (--k-yaziBoyu; bütün HTML katmanları okur), sonda öğesiyle */
   const sonda = document.createElement('i'); sonda.style.cssText = 'position:absolute;visibility:hidden;font-size:var(--k-yaziBoyu,1.5cqw)';
   E.appendChild(sonda); const govde = parseFloat(getComputedStyle(sonda).fontSize); sonda.remove();
-  return { kare: Math.round(R.width), govde: Math.round(govde * 10) / 10, metin, kirp };
+  const V = document.getElementById('view'), kareR = V && V.getBoundingClientRect().width > 0 ? V.getBoundingClientRect() : R;   /* CM1-a: kare tuvalin genişliği (şerit hariç) */
+  return { kare: Math.round(kareR.width), govde: Math.round(govde * 10) / 10, metin, kirp };
 }"""
 
 
@@ -94,9 +97,9 @@ async def sahneler_oda(pg, olc):
     await pg.keyboard.press("Digit2")
     await pg.wait_for_selector(".dft", timeout=10000)
     await olc("defter")
-    await tikla(pg, '.od-alt .od-ana[data-eylem="yap"]')
-    if await pg.query_selector('.od-alt .od-ana[data-eylem="yap"]:has-text("Onayla")'):
-        await pg.click('.od-alt .od-ana[data-eylem="yap"]:has-text("Onayla")')
+    await tikla(pg, ':is(.od-alt, .cm-serit) .od-ana[data-eylem="yap"]')
+    if await pg.query_selector(':is(.od-alt, .cm-serit) .od-ana[data-eylem="yap"]:has-text("Onayla")'):
+        await pg.click(':is(.od-alt, .cm-serit) .od-ana[data-eylem="yap"]:has-text("Onayla")')
     await akis.masaya_don(pg)
     for _ in range(4):
         if (await akis.durum(pg))["mesele"]:
@@ -255,7 +258,8 @@ async def sahneler_ziyaret(pg, olc):
     await pg.keyboard.press("Enter")
     await akis.yokla(pg, "() => ODA.ziyaret && ODA.ziyaret.evre === 'giris'", 20)
     await akis.oda_bos_tikla(pg)
-    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=10000)
+    # dar karede yarım odak karenin %96'sıdır: tıklama kabın üstüne düşer, kişi kendi yürüyüşüyle oturur (yavaş makinede 10 sn'yi aşar)
+    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=40000)
     await olc("ziyaret-kart")
 
 
@@ -305,7 +309,7 @@ async def sahneler_sponsor(pg, olc):
 async def sahneler_mac(pg, olc):
     """Boş kariyer: İlerle maç gününe; Stada git → bülten. Ayrı sayfada TEST 'Maçı izleme' → maç sonu kartı."""
     await akis.oda_ilerle(pg)
-    await tikla(pg, '.od-alt .od-ana[data-eylem="yap"]')
+    await tikla(pg, ':is(.od-alt, .cm-serit) .od-ana[data-eylem="yap"]')
     await akis.yokla(pg, "() => typeof MAC_GUNU !== 'undefined' && !!document.querySelector('#onEkran:not([hidden])')", 60)
     await pg.wait_for_timeout(800)
     await olc("bulten")

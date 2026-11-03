@@ -107,7 +107,8 @@ function transferMasasiGorunumu(k,d,y){
   else if(D.acik)ust='<span class="tm-donem'+(D.sonGun?' tm-sonGun':'')+'">'+(D.sonGun?'<b>Transfer döneminin son günü</b>':'Transfer dönemi açık · kapanışa <b>'+D.kalanGun+' gün</b>')+' ('+yaz(y.tarihYazi(D.bitis))+')</span>';
   else ust='<span class="tm-donem">Transfer dönemi kapalı · açılışa <b>'+D.kalanGun+' gün</b> ('+yaz(y.tarihYazi(D.bas))+'). Serbest oyuncu dönem dışında da alınabilir.</span>';
   ust='<div class="tm-ust">'+ust+'<span class="tm-kasa">Kasa '+yaz(y.paraYazi(M.kasa))+'</span></div>';
-  const sekme='<div class="od-sekmeler tm-sekmeler" role="tablist">'+TM_BOLUMLER.map(([a,ad])=>'<button type="button" role="tab" data-eylem="tmBolum" data-bolum="'+a+'" aria-selected="'+(bolum===a&&!d.oyuncu?'true':'false')+'" aria-pressed="'+(bolum===a&&!d.oyuncu?'true':'false')+'">'+ad+
+  /* CM1-a (karar 86): çerçevede bölümler başlık şeridinin altındaki sekme satırında (js/ekran-oda.js sekmeSatiri; aynı .tm-sekmeler seçicisi) */
+  const sekme=d.sekmesiz?'':'<div class="od-sekmeler tm-sekmeler" role="tablist">'+TM_BOLUMLER.map(([a,ad])=>'<button type="button" role="tab" data-eylem="tmBolum" data-bolum="'+a+'" aria-selected="'+(bolum===a&&!d.oyuncu?'true':'false')+'" aria-pressed="'+(bolum===a&&!d.oyuncu?'true':'false')+'">'+ad+
     (a==='liste'&&M.takip.length?' ('+M.takip.length+')':'')+'</button>').join('')+'</div>';
   let ic='';
   if(d.oyuncu&&O(d.oyuncu))ic=transferOyuncuKagidi(k,d.oyuncu,y);

@@ -21,6 +21,15 @@ function yaziBoyuUygula(){
   if(typeof document==='undefined')return;const s=document.getElementById('screen');if(!s)return;
   for(const a in STIL.kagit)if(typeof STIL.kagit[a]==='string')s.style.setProperty('--k-'+a,STIL.kagit[a]);
   s.style.setProperty('--k-yaziBoyu',yaziBoyuDegeri());s.style.setProperty('--k-enKucuk',STIL.kagit.enKucukYazi+'px');
+  cerceveUygula();
+}
+/* CM1-a (karar 86): çerçevenin paleti (STIL.cerceve.palet; OYUN.ayarlar.cerceve 'cm' ya da 'kagit', varsayılan cm) --c-* olarak oyun karesine;
+   #screen[data-palet]. Başlık şeridinin kulüp rengi ekranın kendisinden (js/ekran-oda.js) */
+function cercevePaleti(){return typeof OYUN!=='undefined'&&OYUN.ayarlar&&OYUN.ayarlar.cerceve==='kagit'?'kagit':'cm';}
+function cerceveUygula(){
+  if(typeof document==='undefined'||!STIL.cerceve)return;const s=document.getElementById('screen');if(!s)return;
+  const ad=cercevePaleti(),P=STIL.cerceve.palet[ad];if(s.dataset.palet===ad)return;
+  for(const a in P)s.style.setProperty('--c-'+a,P[a]);s.dataset.palet=ad;
 }
 /* RN-c (2026-10-30): oyun alanının payı ölçülür. Oyun alanı pencereye sığan en büyük 4:3 karedir (STIL_REHBERI §1); pencerenin yüksekliğinden
    yalnız sayfa kenarı ve maç sayfasında alt şerit (#baskanDugmeleri) düşülür. Bülten açıkken şerit gizlidir ama yeri ayrılır: “Maça geç”te alan
@@ -30,8 +39,12 @@ function yaziBoyuUygula(){
    tıklayınca açılsın, iş bitince kapansın”): oda sayfasında başkan balkondayken bir iş açıksa ve 4:3 karenin yanına en az
    STIL.balkon.bant.enAz px sığıyorsa #screen[data-bant] açılır: kare aynı boyda solda, sağında bant (en çok karenin bant.enCok payı).
      ekranBantIste(var)  ekran (js/ekran-oda.js) iş açılıp kapanınca ister (kap çizilmeden önce); açılış ve kapanış kayarak (data-bant-gecis) */
+/* CM1-a (2026-11-03, karar 86): odada karenin solunda CM şeridi (#screen[data-serit], js/ekran-oda.js açar). Şeridin genişliği karenin payıdır
+   (STIL.cerceve.serit: oran, px'te enAz–enCok); kare yükseklikten 4:3 ölçülür, şerit yanına sığmazsa kare daralır (pencere dar: kare + şerit = iç
+   genişlik). Bant varsa karenin sağında. --kare-en, --serit-en px; yazı karenin genişliğinden (--kare-cq, index.html) */
 const EKRAN_PAY={kenar:32,ara:18,serit:52},EKRAN_BANT={istek:false,zaman:0};
 function ekranBantIste(v){v=!!v;if(EKRAN_BANT.istek===v)return;EKRAN_BANT.istek=v;ekranPayGuncelle();}
+function seritGenisligi(kare){const C=STIL.cerceve.serit;return Math.round(Math.min(C.enCok,Math.max(C.enAz,kare*C.oran)));}
 function ekranPayGuncelle(){
   if(typeof document==='undefined')return;
   const d=document.getElementById('baskanDugmeleri'),odada=typeof ON_EKRAN!=='undefined'&&ON_EKRAN.sayfa==='oda';
@@ -39,8 +52,12 @@ function ekranPayGuncelle(){
   const pay=EKRAN_PAY.kenar+(odada?0:EKRAN_PAY.ara+EKRAN_PAY.serit);
   document.documentElement.style.setProperty('--ekran-pay',pay+'px');
   const s=document.getElementById('screen'),w=s&&s.parentElement;if(!s||!w)return;
-  const B=STIL.balkon.bant,ic=w.clientWidth,kare=Math.min(ic,Math.max(640,(document.documentElement.clientHeight-pay)*4/3)),
-    bant=EKRAN_BANT.istek&&odada&&ic-kare>=B.enAz?Math.floor(Math.min(ic-kare,kare*B.enCok)):0,once=s.hasAttribute('data-bant');
+  const B=STIL.balkon.bant,ic=w.clientWidth,serit=odada&&s.hasAttribute('data-serit')&&!!STIL.cerceve;
+  let kare=Math.max(640,(document.documentElement.clientHeight-pay)*4/3),sr=0;
+  if(serit){sr=seritGenisligi(Math.min(ic,kare));if(kare+sr>ic){sr=seritGenisligi(ic/(1+STIL.cerceve.serit.oran));kare=Math.max(0,ic-sr);}}
+  else kare=Math.min(ic,kare);
+  const bant=EKRAN_BANT.istek&&odada&&ic-kare-sr>=B.enAz?Math.floor(Math.min(ic-kare-sr,kare*B.enCok)):0,once=s.hasAttribute('data-bant');
+  if(serit){s.style.setProperty('--serit-en',sr+'px');s.style.setProperty('--kare-en',kare.toFixed(2)+'px');}
   if(bant){s.style.setProperty('--kare-en',kare.toFixed(2)+'px');s.style.setProperty('--bant-en',bant+'px');}
   if(!!bant===once)return;
   s.setAttribute('data-bant-gecis','');clearTimeout(EKRAN_BANT.zaman);EKRAN_BANT.zaman=setTimeout(()=>s.removeAttribute('data-bant-gecis'),600);

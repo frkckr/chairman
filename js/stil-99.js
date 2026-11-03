@@ -269,6 +269,22 @@ const STIL={
   /* maç sonu kartı (F2, 2026-10-23; js/ekran-mac-sonu.js): kartSn düdükten kartın açılmasına motor saniyesi (sevinç ve çöküş izlenir; "Maçı bitir
      (TEST)" ile bitince hemen), kenar kararması (0–1). TEST değerleri. Yazı büyüklüğü U0'dan beri ortak: STIL.kagit.yaziBoyu */
   macSonu:{kartSn:8,kararma:0.3},
+  /* CM1-a (2026-11-03, YOL_HARITASI karar 86; kullanıcı: “CM 01/02 menü tarzı birebir; renkler ileride değişebilir”): odada karenin solunda CM şeridi
+     ve karenin üstünde başlık şeridi (js/ekran-oda.js, js/sunum-durumu.js). serit: genişlik karenin oran payı, px'te enAz–enCok (CM 01/02'de 800'ün
+     ~90'ı); perde: CM çerçevesinde başka ekran açıkken oda canlı zemin olarak arkada (STIL.kagit.odak.karartma'nın yerine). İki palet (Ayarlar ›
+     Okuma › Çerçeve; tarayıcıda, kayda girmez): cm — lacivert şerit, sarı yazı, başlık şeridi kulübün renginde (araştırma: champman0102 ekranları);
+     kagit — krem krom, mürekkep yazı, başlığın altı kulüp rengi (RK5 Kırtasiye). İçerik alanı ikisinde de kâğıt dilinde. Kontrast ≥ 4,5:1 (pasif
+     düğme hariç). TEST değerleri, kullanıcı değiştirir */
+  cerceve:{serit:{oran:0.125,enAz:104,enCok:148},perde:'rgba(20,14,10,.38)',
+    palet:{
+      cm:{zemin:'#14214f',kutu:'#0d1736',cizgi:'#2c3d78',yazi:'#f2cd4b',etkin:'#fff2a6',soluk:'#cfc596',pasif:'#8f98b8',uzerinde:'rgba(255,242,166,.09)',secili:'rgba(255,242,166,.16)',
+        ana:'#f2cd4b',anaYazi:'#14214f',anaKenar:'#a88a1f',anaUzerinde:'#ffe27a',haber:'#c8281e',haberYazi:'#ffffff',
+        baslik:'#22337a',baslikYazi:'#fff2a6',baslikKenar:'#0d1736',baslikGolge:'0 .08em 0 rgba(0,0,0,.45)',
+        sekme:'#14214f',sekmeYazi:'#f2cd4b',sekmeKenar:'#2c3d78',sekmeSecili:'#fbf7ee',sekmeSeciliYazi:'#26221c'},
+      kagit:{zemin:'#f6f0e2',kutu:'#fffdf8',cizgi:'#b9a87f',yazi:'#26221c',etkin:'#7a4606',soluk:'#5c5346',pasif:'#7a7062',uzerinde:'rgba(165,98,10,.08)',secili:'#ffe0a3',
+        ana:'#ffb530',anaYazi:'#1a1203',anaKenar:'#a5620a',anaUzerinde:'#ffc457',haber:'#b4241c',haberYazi:'#ffffff',
+        baslik:'#f6f0e2',baslikYazi:'#26221c',baslikKenar:'#b4241c',baslikGolge:'none',
+        sekme:'#f3ecdb',sekmeYazi:'#26221c',sekmeKenar:'#b9a87f',sekmeSecili:'#fbf7ee',sekmeSeciliYazi:'#26221c'}}},
   /* onMasa (K1, kullanıcı kararı 2026-10-20; kullanıcının 1. maç notu "masa tüm ekranı kaplamasın, önde kare ayaklı bir masa gözüksün"; N5'in
      2,6 m'lik rafının ve altındaki ön duvarın yerini aldı): başkanın önündeki küçük masa, ön plan kamerasına göre metre. en × derinlik = tabla,
      uzak = tablanın yakın kenarının gözden uzaklığı, y = tablanın üst yüzeyi (gözün altında), kalinlik = tabla, etek = tablanın altındaki

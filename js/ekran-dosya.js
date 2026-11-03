@@ -251,7 +251,12 @@ function dosyaGorunumu(k,D,Y){
   const sekme=id=>{const m=k.meseleler[id],[ad,s]=meseleKategorisi(m),sec=!kadroAcik&&!D.arsiv&&!raporGor&&id===D.secili;
     return'<button type="button" class="dsy-sekme" role="tab" data-eylem="dosyaAc" data-mesele="'+id+'" data-gezinti="1" aria-selected="'+(sec?'true':'false')+'" title="'+yaz(m.baslik)+'">'+
       kSimge(ad,s)+'<span>'+yaz(m.baslik)+'</span>'+(m.durum==='kararBekliyor'?'<i class="dsy-nokta" aria-label="cevap bekliyor"></i>':'')+'</button>';};
-  let ic='<nav class="dsy-sekmeler" role="tablist" aria-label="Açık dosyalar">'+sekmeKimlik.map(sekme).join('')+
+  /* CM1-a (karar 86): çerçevede Kadro, Raporlar ve Arşiv başlık şeridinin altındaki sekme satırındadır (js/ekran-oda.js sekmeSatiri); dosyanın
+     kendi sekmeleri yalnız açık konulardır ve yalnız konular görünürken */
+  let ic;
+  if(D.seritSekme){const konuda=!kadroAcik&&!raporGor&&!D.arsiv;
+    ic='<nav class="dsy-sekmeler" role="tablist" aria-label="Açık dosyalar">'+(konuda?sekmeKimlik.map(sekme).join(''):'')+'</nav>';}
+  else ic='<nav class="dsy-sekmeler" role="tablist" aria-label="Açık dosyalar">'+sekmeKimlik.map(sekme).join('')+
     (kadroGor?'<button type="button" class="dsy-sekme dsy-kadroSekme" role="tab" data-eylem="kadroSekme" aria-selected="'+(kadroAcik?'true':'false')+'">'+smg('takim')+'Kadro</button>':'')+
     (R.length?'<button type="button" class="dsy-sekme dsy-raporSekme" role="tab" data-eylem="raporlar" aria-selected="'+(raporGor?'true':'false')+'">'+smg('belge')+'Raporlar ('+R.length+')'+
       (R.some(x=>!x.h.gorulen)?'<i class="dsy-yeniRapor" aria-hidden="true"></i><span class="dsy-gizli"> (yeni rapor)</span>':'')+'</button>':'')+

@@ -1,6 +1,6 @@
 # CM programı — CM 01/02 çerçevesi, haber akışı ve sezon öncesi başlangıç (plan, 2026-11-03, dizüstü)
 
-Durum: **onay bekliyor.** Kaynak: kullanıcının 3 Kasım teşhisi ve isteği, araştırma ve tartışma turu ([cm-arastirma.md](cm-arastirma.md); yedi tercihin tamamı kabul edildi) ve üç kod haritası (ekran iskeleti, akış ve kayıt, sezon ve başlangıç; ajan raporları sohbette, kısıtları §8'de). Onaylanınca: kararlar OYUN_TASARIMI, STIL_REHBERI ve TEKNIK_PLAN'a, tarihli özetleri YOL_HARITASI “Geçerli kararlar”a (86–89), sıra devam notuna; her tur kendi dalında, kapanışta `tur/<ad>` etiketi; `main`'e alma kullanıcının sözüyle (karar 63). Uygulama ayrıntıları Claude'un; kesin kullanıcı kararını değiştirecek bir seçim görünür kılınır.
+Durum: **onaylandı (kullanıcı, 2026-11-03: “Onayla, başla”); CM1-a uygulandı (dal `claude/cm1a-cerceve`, §10).** Kaynak: kullanıcının 3 Kasım teşhisi ve isteği, araştırma ve tartışma turu ([cm-arastirma.md](cm-arastirma.md); yedi tercihin tamamı kabul edildi) ve üç kod haritası (ekran iskeleti, akış ve kayıt, sezon ve başlangıç; ajan raporları sohbette, kısıtları §8'de). Onaylanınca: kararlar OYUN_TASARIMI, STIL_REHBERI ve TEKNIK_PLAN'a, tarihli özetleri YOL_HARITASI “Geçerli kararlar”a (86–89), sıra devam notuna; her tur kendi dalında, kapanışta `tur/<ad>` etiketi; `main`'e alma kullanıcının sözüyle (karar 63). Uygulama ayrıntıları Claude'un; kesin kullanıcı kararını değiştirecek bir seçim görünür kılınır.
 
 ## 0. Bir bakışta
 
@@ -166,4 +166,19 @@ Maç sayfasının çerçeveye alınması; tam CM paleti ve koyu tablo dili içer
 
 ## 10. Durum
 
-(Uygulama başlayınca tur tur doldurulur: sapmalar, ölçüler, denetim sonuçları.)
+**CM1-a (dal `claude/cm1a-cerceve`, 2026-11-03, dizüstü):** uygulandı. Plandan sapmalar ve eklemeler (Claude kararı, gerekçeli):
+
+- **Şeride Balkon eklendi** (plandaki listede yoktu): kullanıcı antrenmanı izlemeyi en önemli özelliklerden sayıyor; masa şeridiyle görünmez “Balkona çık” düğmesi de kalkınca balkona yalnız kapı ve 5 kalıyordu. Balkondayken Ofis odaya döner (eski “Odaya dön”).
+- **Kulüp düğmesi dosyayı Kadro'yla açar** (CM'nin kulüp ekranı kadrodur); 3 tuşu ve 3B dosya eski önceliği korur (karar > yeni rapor > konu). Kulüp düğmesi `data-panel="dosya"` taşımaz: “masadaki dosya” ile “kulüp” iki ayrı giriş.
+- **Cihaz içi sekmeler cihazda kaldı:** Canlı Skor (Maçlar · Puan durumu · Takip) ve TV sayfaları sekme satırına taşınmadı (plan §2 Canlı Skor'u da sayıyordu); telefon ve TV nesnedir, sekmeleri uygulamanındır. Sekme satırı yalnız kâğıt ekranlarda: Kulüp, Transfer, Ayarlar. Lig düğmesi Canlı Skor'u puan durumuyla açar.
+- **Dosyanın konu sekmeleri yalnız Dosyalar bölümünde** (Kadro, Raporlar, Arşiv'de klasör yalnız o bölümü gösterir); Arşiv sekme satırındayken seçiliyse ikinci basış konulara döndürmez (`data-sabit`).
+- **İlerle iş açıkken gizli ama yeri ayrılı** (`visibility:hidden`): şeridin menüsü her açılışta kaymaz. Balkonda izlerken İlerle görünür ve kapalıdır (saat akıyor).
+- **Menü düğmesi açık işi kapatmaz** (`cmAc`; eski masa şeridindeki “aç/kapat” geçişi yok); Telefon düğmesi Canlı Skor açıkken telefonun ana ekranına döner.
+- **Haber var (CM1-a hâli):** cevap bekleyen kararlar (`sonraKararlari`) + yeniler (okunmamış mesaj, görülmemiş rapor, yeni gazete, gün başı notu); dokununca önce en yakın son cevaplı kararın yeri, sonra telefon, rapor, not, gazete. Tek liste CM1-b'de.
+- **Palet seçimi Ayarlar › Okuma'da** (“Çerçeve: CM / Kâğıt”); varsayılan CM. Başlık şeridinin yazı rengi arma renginin parlaklığından (beyaz ya da mürekkep), Ayarlar'da nötr.
+- **Prototip sayfası** (`prototipler/7-dosya-defter.html`; #cmSerit yok) eski masa şeridiyle çalışır.
+- **Masaüstü yazı tipleri ertelendi** (B49): Nunito ve Plex Serif fontsource paketi indirmek gerekiyor; masaüstü kopyasında yedek yazı.
+
+**Ölçüler:** şerit karenin %12,5'i, 104–148 px; 1366×650 (dizüstü) kare 824 + şerit 104; 1280×720 kare 917 + 115; 1366×1000 kare 1186 + 148; 776×560 kare 640 + 104 (genişlikten sınırlı pencere kare + şerit kadar daralır). Şerit yazısı en az 15 px; palet kontrastı CM'de yazı 10,0, etkin 13,6, İlerle 10,0, Haber var 5,6; Kâğıt'ta 13,9 / 6,8 / 10,5 / 6,5 (pasif düğme 5,4 ve 4,3). Kural ve kayıt değişmedi (sürüm 12); motor dosyası değişmedi.
+
+**Denetimler (dizüstü, 2026-11-03):** `node araclar/hizli.js` geçti (ad denetimi, `mac-deneme 4` sonuç aynı, `kariyer-deneme` 691 sn). Akış: 1, 3, 22, 23, 26, 27, 30, 32, 34, 40 ve yeni **41** geçti; 21, 28, 36 ve 37'de yalnız gerçek zaman beklemeleri düştü (bakışın kapıya dönmesi, kişinin girişi, ikinci pencerenin açılışı, görüş açısının oturması) — 21, 28 ve 36 `main`'in kopyasında aynı biçimde düştü (B42). Düzeltilen gerçek hata: balkonda ←/→ bakışı alırken şeritteki odak bırakılmıyordu, ardından basılan Enter İlerle'ye basıyordu. `kontrol.py` index hata yok; prototipteki “hocalariKur is not defined” `main`'de de var (B39). `okunurluk.py` bu dizüstünde tamamlanamadı (başsız Chromium sekmesi çöküyor): beş genişlik masaüstündeki büyük kapıda; yazı ölçeğini sınayan akış 26 ve dar karede taşma denetimleri (3, 22, 41) geçti. Araç değişiklikleri: akışta odaya ait dar pencere denetimleri 672 → 776 px (kare 640), bant bölümleri (36, 37) 1600×900 → 1740×900 (kare aynı 1157, bant 406), eski masa şeridi seçicileri şeride ve sayaca; okunurlukta pencereler şerit kadar geniş (kare aynı), kare tuvalden ölçülür.
