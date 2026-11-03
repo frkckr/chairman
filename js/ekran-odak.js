@@ -37,6 +37,8 @@
 /* RK5-a: başlık satırı — ‹ Geri, başlık (sola yaslı), Kapat × (sağda). Kâğıtlı işte kâğıdın içinde; dosya ve defterde nesnenin üstünde krem şerit */
 .oda section.odk[data-kagit]{grid-template-rows:minmax(0,1fr)}
 .oda .odk header.odk-ust{display:flex;align-items:center;gap:.6em;min-height:2.1em;min-width:0}
+.oda .odk-kagit.odk-ipucuVar{grid-template-rows:auto auto minmax(0,1fr)}
+.oda section.odk[data-ipucu]:not([data-kagit]){grid-template-rows:auto auto minmax(0,1fr)}
 .oda .odk-ipucu{margin:.35em .9em 0;padding:.25em .6em;border-left:.25em solid var(--k-amber,#b8860b);background:var(--k-zemin);color:var(--k-soluk);font-size:max(var(--k-enKucuk,12px),.85em)}
 .oda .odk-ust h3{flex:1;min-width:0;margin:0;font-family:var(--govde);font-weight:600;font-size:1.3em;line-height:1.2;letter-spacing:0;color:var(--k-yazi);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -106,11 +108,11 @@ function odakKabi(s){
   const ust='<header class="odk-ust"><span class="odk-sol">'+g+'</span><h3>'+yazOdk(s.baslik)+'</h3><span class="odk-sag"><button type="button" class="od-kapat" data-eylem="kapat" title="Masaya bırak (Esc)">Kapat ×</button></span></header>';
   /* RK5-a: kâğıtlı işte başlık satırı kâğıdın içinde (üst satır) */
   const ip=s.ipucu?'<p class="odk-ipucu" role="note">'+yazOdk(s.ipucu)+'</p>':'';   /* CM2-b: alıştırma ipucu (tek satır) */
-  const govde=s.kagit?'<div class="odk-kagit">'+ust+ip+'<div class="od-icerik">'+s.govde+'</div></div>':ust+ip+'<div class="odk-govde">'+s.govde+'</div>';
+  const govde=s.kagit?'<div class="odk-kagit'+(ip?' odk-ipucuVar':'')+'">'+ust+ip+'<div class="od-icerik">'+s.govde+'</div></div>':ust+ip+'<div class="odk-govde">'+s.govde+'</div>';
   const yan=s.yan?'<aside class="odk-goz'+(s.yan.belir?' odk-gozBelir':'')+'" data-boy="'+(s.boy||'genis')+'" aria-label="Göz at: '+yazOdk(s.yan.baslik)+'"><header class="odk-gozUst"><h4>'+yazOdk(s.yan.baslik)+'</h4><small>yalnız okuma</small></header>'+
     '<div class="odk-gozIcerik">'+s.yan.govde+'</div></aside>':'';
   return(s.boy==='yarim'?'':'<div class="odk-perde od-perde'+(s.belir?' odk-belir':'')+'" data-perde="1"></div>')+
-    '<section class="odk'+(s.sinif?' '+s.sinif:'')+(s.belir?' odk-belir':'')+'" data-odak="'+yazOdk(s.ad)+'" data-boy="'+(s.boy||'genis')+'"'+(s.yan?' data-goz="1"':'')+(s.kagit?' data-kagit="1" role="dialog" aria-label="'+yazOdk(s.etiket)+'"':'')+'>'+govde+'</section>'+yan;
+    '<section class="odk'+(s.sinif?' '+s.sinif:'')+(s.belir?' odk-belir':'')+'" data-odak="'+yazOdk(s.ad)+'" data-boy="'+(s.boy||'genis')+'"'+(s.yan?' data-goz="1"':'')+(ip&&!s.kagit?' data-ipucu="1"':'')+(s.kagit?' data-kagit="1" role="dialog" aria-label="'+yazOdk(s.etiket)+'"':'')+'>'+govde+'</section>'+yan;
 }
 /* kapanma: açık kabın kopyası etkileşimsiz, ekran okuyucudan gizli; karta ait kimlik ve sınıflar silinir (kart bileşeni kopyayı bulmasın) */
 function odakCikis(kap){

@@ -162,7 +162,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       m('ajanda','Ajanda','cmAc',' data-panel="ajanda" title="Ajanda (2)"')+
       m('kulup','Kulüp','cmKulup',' title="Kulüp: kadro, dosyalar, raporlar (3)"',!dosyaVar)+
       m('lig','Lig','cmLig',' title="Lig: Canlı Skor (0)"')+
-      m('transfer',typeof transferYasagi==='function'&&transferYasagi(k)?'Transfer · yasaklı':'Transfer','cmAc',' data-panel="transfer" title="Transfer (6)"')+   /* CM2-b: alacaklar ödenene dek */
+      m('transfer',typeof transferYasagi==='function'&&transferYasagi(k)?'Transfer<small class="cm-kilit">yasaklı</small>':'Transfer','cmAc',' data-panel="transfer" title="Transfer (6)"')+   /* CM2-b: alacaklar ödenene dek */
       '<span class="cm-ara"></span>'+
       '<button type="button" class="cm-haber" data-eylem="cmHaber"'+(ozet?'':' disabled')+'>'+(ozet?'Haber var<small>'+yaz(ozet)+'</small>':'Haber yok')+'</button>';
   }
