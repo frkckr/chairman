@@ -2448,6 +2448,51 @@ bolum('RK5-b — gün başı notu: özel kalemin sabah notu (js/gun-notu.js; kar
   denetle('Kaydet–yükle: notOkunan aynı; gelecek tarihli notOkunan doğrulamada yakalanır',y.tamam&&y.kariyer.notOkunan===ok.notOkunan&&dog(T('kariyerOlustur')(bz)).some(e=>/Gün başı notu/.test(e)));
 }
 
+bolum('CM1-b — gelişmeler: tek kronolojik liste, bekleyenler, sayaç ve okundu işareti (js/gelismeler.js; karar 87)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),dog=T('kariyerDogrula'),metin=x=>JSON.stringify(x);
+  const S={skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}},toh=id=>T('macTohumu')(7,id);
+  const hafta=c=>{let j;({k:c,j}=macGununeGit(T,c));c=KK(c,x=>T('ajandaIsiYap')(x,j.id)).kariyer;const id=j.veri.macId;
+    return KK(c,x=>T('haftaSonuclariUygula')(x,id,S,toh(id),{},T('haftaninDigerMaclari')(x,id).map(f=>({macId:f.id,sonuc:S,tohum:toh(f.id)})))).kariyer;};
+  let k=T('kariyerBaslat')({tohum:7});k=hafta(k);k=KK(k,x=>{T('zamanIlerlet')(x,3*1440);}).kariyer;
+  const once=metin(k),L=T('gelismeListesi')(k),L2=T('gelismeListesi')(JSON.parse(metin(k)));
+  const sinif=new Set(L.map(x=>x.sinif)),kanal=new Set(L.map(x=>x.kanal)),kat=new Set(L.map(x=>x.kategori));
+  denetle('Liste kayıttan kurulur, belirlenimci (aynı kariyer ve JSON kopyası aynı liste); okumak kariyeri değiştirmez; kimlikler tekil ve an kimlikte; yeniden eskiye',
+    L.length>0&&metin(L)===metin(L2)&&metin(k)===once&&new Set(L.map(x=>x.id)).size===L.length&&L.every(x=>T('gelismeAni')(x.id)===x.an)&&L.every((x,i,A)=>!i||A[i-1].an>=x.an),
+    `${L.length} gelişme · kanal ${[...kanal].join(',')} · sınıf ${[...sinif].join(',')} · kategori ${[...kat].join(',')}`);
+  const mac=L.find(x=>x.anahtar==='hb.sonuc'),biz='demirkapi',bizim=L.find(x=>x.anahtar==='hb.sonuc'&&x.sinif==='okumalik'),obur=L.find(x=>x.anahtar==='hb.sonuc'&&x.sinif==='arka');
+  denetle('Maç sonuçları Lig kategorisinde, kanal lig, hedef Canlı Skor maç sayfası; bizim maç okumalık, öbür maçlar arka; rapor Para kategorisinde dosyada',
+    !!mac&&mac.kategori==='lig'&&mac.kanal==='lig'&&mac.hedef.tur==='mac'&&!!bizim&&!!obur&&L.some(x=>x.id.startsWith('rp:')&&x.kategori==='para'&&x.hedef.tur==='rapor'),
+    `${bizim&&bizim.baslik} · ${obur&&obur.baslik}`);
+  const gc=L.filter(x=>x.id.startsWith('gc:')),GS=T('gecmisOzetSatirlari');
+  denetle('Geçmiş satırları zaman özetiyle aynı metin (gecmisOzetSatirlari); maç, program ve yazışma iki kez yazılmaz (haberde ve telefonda)',
+    gc.every(x=>{const g=k.gecmis.find(y=>y.tur==='is'&&x.id.split(':')[2]===y.isId);return!!g&&GS(k,g).some(s=>T('gelismeKisalt')(s.metin)===x.baslik);})
+    &&!gc.some(x=>{const g=k.gecmis.find(y=>y.tur==='is'&&x.id.split(':')[2]===y.isId);return g&&['ligMaci','program','hava','maliRapor'].includes(g.isTuru);}),`${gc.length} geçmiş satırı`);
+  const S0=T('gelismeSayaci')(k),hb=L.find(x=>x.id.startsWith('hb:')&&!x.okundu&&x.sinif!=='arka')||L.find(x=>x.id.startsWith('hb:')&&!x.okundu);
+  const k1=hb?KK(k,x=>T('gelismeOkundu')(x,hb.id)).kariyer:k,L1=T('gelismeListesi')(k1),S1=T('gelismeSayaci')(k1);
+  const sade=x=>{const c=JSON.parse(metin(x));delete c.gelismeOkunan;return metin(c);};
+  denetle('Okundu işareti yalnız gelismeOkunan yazar; o gelişme okunur, sayaç (okumalıksa) bir azalır; zaman ve geçmiş değişmez; kariyer geçerli',
+    !!hb&&sade(k1)===sade(k)&&L1.find(x=>x.id===hb.id).okundu&&(hb.sinif==='arka'||S1.yeni===S0.yeni-1)&&!dog(k1).length,`${hb&&hb.id} · yeni ${S0.yeni}→${S1.yeni}`);
+  const k2=KK(k1,x=>T('gelismeHepsiOkundu')(x)).kariyer,L2b=T('gelismeListesi')(k2);
+  denetle('Hepsini okundu say: işaret şimdiye çekilir, gazete ve geçmiş satırlarının hepsi okunur; telefon ve rapor kendi okumasıyla kalır',
+    k2.gelismeOkunan.an===T('simdikiAn')(k2)&&k2.gelismeOkunan.idler.length===0&&L2b.filter(x=>x.id.startsWith('hb:')||x.id.startsWith('gc:')).every(x=>x.okundu)
+    &&L2b.filter(x=>x.id.startsWith('rp:')).every((x,i)=>x.okundu===L.filter(y=>y.id.startsWith('rp:'))[i].okundu));
+  const d=T('bellekDeposu')();T('kariyerKaydet')(d,'s',k1);const y=T('kariyerYukle')(d,'s');
+  const bz=JSON.parse(metin(k1));bz.gelismeOkunan={an:null,idler:['bozuk']};const bz2=JSON.parse(metin(k1));bz2.gelismeOkunan={an:T('simdikiAn')(k1)+99,idler:[]};
+  denetle('Kaydet–yükle: gelismeOkunan aynı; bozuk kimlik ve gelecekteki işaret doğrulamada yakalanır',
+    y.tamam&&metin(y.kariyer.gelismeOkunan)===metin(k1.gelismeOkunan)&&dog(T('kariyerOlustur')(bz)).some(e=>/gelismeOkunan/.test(e))&&dog(T('kariyerOlustur')(bz2)).some(e=>/gelismeOkunan/.test(e)));
+  const kx=JSON.parse(metin(k));kx.isler['is-deneme']={id:'is-deneme',tur:'ajanda',tarih:kx.tarih,dakika:kx.gunIciDakika+600,
+    veri:{baslik:'Deneme kararı',karar:'deneme',saatsiz:true,sinif:'firsat',zorunluluk:'istege',gelis:{tarih:kx.tarih,dakika:kx.gunIciDakika}}};
+  const B=T('gelismeBekleyenler')(kx),Sx=T('gelismeSayaci')(kx);
+  denetle('Cevap bekliyor: kararlar Sonra yığınının kaynağından (sonraKararlari), sayaçta cevap; bugünün randevuları ve takipteki işler ayrı',
+    B.kararlar.length===1&&B.kararlar[0].baslik==='Deneme kararı'&&B.kararlar[0].sinif==='firsat'&&Sx.cevap===1&&Array.isArray(B.randevular)&&Array.isArray(B.takipte),metin(B.kararlar));
+  /* boş günde gazete çıkmaz: bugünün sayısı boşsa masada “yeni” yok */
+  const kb=KK(T('kariyerBaslat')({tohum:7}),x=>{T('zamanIlerlet')(x,1440);}).kariyer,Gb=T('gazeteSayisi')(kb,T('gazeteSonTarihi')(kb)),iz=T('odaIzleri')(kb);
+  denetle('Boş günde gazete çıkmaz: bugünün sayısı boşsa masada yeni gazete yok (CM1-b)',!Gb||!Gb.bos||!iz.gazeteYeni,Gb&&`boş ${Gb.bos} · yeni ${iz.gazeteYeni}`);
+  const t0=Date.now();for(let i=0;i<20;i++)T('gelismeListesi')(JSON.parse(once));const ms=(Date.now()-t0)/20;
+  denetle('Liste kurma 14 günde 50 ms'+"'"+'nin altında (önbelleksiz, JSON kopyada)',ms<50,ms.toFixed(1)+' ms');
+}
+
 denetle('Örnek kariyer bütün denemelerden sonra da değişmedi',metin(ORNEK)===ornekMetni);
 console.log(basarisiz?`\n! ${basarisiz} denetim başarısız`:'\nBütün denetimler geçti.');
 process.exit(basarisiz?1:0);

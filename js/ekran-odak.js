@@ -76,6 +76,11 @@
      ölçülen yüksekliği, js/ekran-oda.js); büyük yazıda telefonun iş panelindeki kart kaydırmadan görünür (B47, B48) */
   .oda section.odk:not([data-boy="yarim"]),.oda aside.odk-goz{bottom:calc(var(--od-alt,4.8em) + .45em)}
 }
+/* CM1-a (karar 86): CM çerçevesinde işin üst ve alt sınırı ölçülen şeritlerden (--od-ust: başlık şeridi ve sekme satırı; --od-alt: alt şerit; js/ekran-oda.js);
+   masada başka ekran açıkken oda canlı zemin olarak arkada (perde STIL.cerceve.perde; balkonda yarım odak aynı) */
+.screen[data-serit] .oda section.odk,.screen[data-serit] .oda aside.odk-goz{top:calc(var(--od-ust,2.6em) + .35em);bottom:calc(var(--od-alt,3em) + .35em)}
+.screen[data-serit] .oda section.odk[data-boy="yarim"]{top:calc(var(--od-ust,2.6em) + .6em)}
+.screen[data-serit] .oda:not([data-yer="balkon"]) .odk-perde{background:${STIL.cerceve?STIL.cerceve.perde:O.karartma}}
 @media (prefers-reduced-motion:reduce){.oda aside.odk-goz.odk-gozBelir{animation:odkPerde ${O.sure.azalt}ms linear both}}
 .oda .odk.odk-belir{animation:odkBelir ${O.sure.belir}ms cubic-bezier(.2,.7,.3,1) both}
 .oda .odk-perde.odk-belir{animation:odkPerde ${O.sure.perde}ms ease-out both}

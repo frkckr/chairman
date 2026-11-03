@@ -52,7 +52,7 @@ function gazeteGorunumu(k,G,y){
     '<div class="gz-govde'+(K.length?' gz-yanli':'')+'"><div class="gz-ana">'+etiket(G.manset)+'<p class="gz-manset">'+yaz(G.manset.metin)+'</p>'+konu(G.manset.meseleId)+
       (D.length?'<div class="gz-sutunlar">'+D.map(h=>'<article class="gz-yazi">'+etiket(h)+'<p class="gz-haber">'+yaz(h.metin)+'</p>'+konu(h.meseleId)+'</article>').join('')+'</div>':'')+'</div>'+
       (K.length?'<aside class="gz-yan">'+K.map(h=>'<section class="gz-kutuKap"><h5>'+yaz(h.etiket||'Kutu')+'</h5><p class="gz-kutu">'+yaz(h.metin)+'</p></section>').join('')+'</aside>':'')+'</div>'+
-    '<div class="gz-gezinti"><button type="button" data-eylem="gazeteSayi" data-yon="geri" data-tarih="'+tarihEkle(G.tarih,-1)+'"'+(y.onceVar?'':' disabled')+'>◂ Önceki sayı</button>'+
+    '<div class="gz-gezinti"><button type="button" data-eylem="gazeteSayi" data-yon="geri" data-tarih="'+(y.onceTarih||tarihEkle(G.tarih,-1))+'"'+(y.onceVar?'':' disabled')+'>◂ Önceki sayı</button>'+
       '<span>Sayı '+G.no+(y.sonNo?' / '+y.sonNo:'')+'</span>'+
-      '<button type="button" data-eylem="gazeteSayi" data-yon="ileri" data-tarih="'+tarihEkle(G.tarih,1)+'"'+(y.sonraVar?'':' disabled')+'>Sonraki sayı ▸</button></div></article>';
+      '<button type="button" data-eylem="gazeteSayi" data-yon="ileri" data-tarih="'+(y.sonraTarih||tarihEkle(G.tarih,1))+'"'+(y.sonraVar?'':' disabled')+'>Sonraki sayı ▸</button></div></article>';
 }

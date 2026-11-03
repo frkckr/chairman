@@ -8,7 +8,7 @@
        Geliştirici için adres parametresi: ?dunya=tohum (2.8L'de başlangıç seçenekleri içerikle birlikte kaldırıldı).
      oyunBozuguSakla()       açılamayan kaydı '.bozuk' ekiyle saklar, yeni kariyer başlatır.
      oyunKayitYazi() · oyunKayitHata()  kayıt durumunun oyuncuya gösterilen yazısı.
-   Ayarlar (OYUN.ayarlar: yazi, test, macHizi, otoYavas, locaBakisi) kariyer kaydına girmez; depoda ayrı 'ayarlar' adında tutulur. Ses ayarı 2.8A'da, hareket azaltma
+   Ayarlar (OYUN.ayarlar: yazi, test, macHizi, otoYavas, locaBakisi, herSaat, cerceve — CM1-a: çerçevenin paleti 'cm' ya da 'kagit'; ilerleInis — CM1-b: 'haberler' ya da 'ofis') kariyer kaydına girmez; depoda ayrı 'ayarlar' adında tutulur. Ses ayarı 2.8A'da, hareket azaltma
    2.8J'de kaldırıldı: eski kayıttaki ses/sessiz anahtarları okunurken yok sayılır, açılışta yeniden yazılarak düşer.
    U1 (2026-10-12): macHizi maçın izleme hızı (1, 2, 4; varsayılan 1), otoYavas önemli anlarda normal hıza inme (varsayılan açık; js/mac-izleme.js).
    test: geliştirme aşamasında gizli değerleri gösteren geçici anahtar (js/test-gorunum.js); varsayılan açık, yayından önce kaldırılacak.
@@ -19,8 +19,8 @@
 'use strict';
 const OYUN_YUVA='oyun-1';
 const OYUN={depo:null,kariyer:null,oturum:null,mesaj:'',bozukHata:null,basladi:false,
-  ayarlar:{yazi:'normal',test:true,macHizi:1,otoYavas:true,locaBakisi:false,herSaat:false,
-    kaydet(){try{OYUN_DEPO.yaz('ayarlar',JSON.stringify({yazi:this.yazi,test:this.test,macHizi:this.macHizi,otoYavas:this.otoYavas,locaBakisi:this.locaBakisi,herSaat:this.herSaat}));}catch(e){}}}};
+  ayarlar:{yazi:'normal',test:true,macHizi:1,otoYavas:true,locaBakisi:false,herSaat:false,cerceve:'cm',ilerleInis:'haberler',
+    kaydet(){try{OYUN_DEPO.yaz('ayarlar',JSON.stringify({yazi:this.yazi,test:this.test,macHizi:this.macHizi,otoYavas:this.otoYavas,locaBakisi:this.locaBakisi,herSaat:this.herSaat,cerceve:this.cerceve,ilerleInis:this.ilerleInis}));}catch(e){}}}};
 let OYUN_DEPO=null;
 {
   try{OYUN_DEPO=masaustuDeposu();if(OYUN_DEPO)OYUN.depo='masaustu';}catch(e){OYUN_DEPO=null;}
@@ -34,6 +34,8 @@ let OYUN_DEPO=null;
       if([1,2,4].includes(a.macHizi))OYUN.ayarlar.macHizi=a.macHizi;if(a.otoYavas===false)OYUN.ayarlar.otoYavas=false;   /* U1 */
       if(a.locaBakisi===true)OYUN.ayarlar.locaBakisi=true;   /* P2: maçta loca bakışı (TEST); 2D varsayılan */
       if(a.herSaat===true)OYUN.ayarlar.herSaat=true;   /* R5 (TEST): balkonda her saat antrenman, yalnız görüntü */
+      if(a.cerceve==='kagit')OYUN.ayarlar.cerceve='kagit';
+      if(a.ilerleInis==='ofis')OYUN.ayarlar.ilerleInis='ofis';   /* CM1-b: İlerle'den sonra Haberler (varsayılan) ya da odada durak özeti */   /* CM1-a: çerçevenin paleti (cm ya da kagit; js/sunum-durumu.js cerceveUygula) */
       /* kaldırılan ayarlar (ses 2.8A, hareket azaltma 2.8J) okunmaz; açılışta yeniden yazılarak düşer */
       if('ses' in a||'sessiz' in a||'hareket' in a||'pul' in a)OYUN.ayarlar.kaydet();
     }
