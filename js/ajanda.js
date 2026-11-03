@@ -251,7 +251,10 @@ function ilerleOnizle(k){
     const cakisiyor=ogun.some(a=>ogun.some(b=>a!==b&&anlar.get(a.id)<=anlar.get(b.id)&&anlar.get(b.id)<anlar.get(a.id)+a.veri.sure));
     if(cakisiyor&&gunBasi>simdi&&gunBasi<hedef){hedef=gunBasi;durak=null;neden='cakisma';}
   }else{
-    const son=L.filter(x=>x.tur!=='ajanda'&&isSonAn(x)<=simdi+ILERLE_SINIRI*1440).pop();
+    /* CM2-a (B60): saatli ajanda işi yokken en yakın görünür rutin işte durulur (ay başı, mali özet, hatırlatma: olan görülsün); yalnız gizli iş varsa
+       eskisi gibi penceredeki en uzak işe kadar (oyuncu boş bir anda durdurulmaz). Karar ve beklenen haber durakSorgusu ile zaten keser */
+    const P=L.filter(x=>x.tur!=='ajanda'&&isSonAn(x)<=simdi+ILERLE_SINIRI*1440),V=P.filter(x=>!isGizli(x));
+    const son=V.length?V.reduce((a,b)=>isSonAn(b)<isSonAn(a)?b:a):P[P.length-1];
     if(son){hedef=Math.max(isSonAn(son),simdi+(kacirilacak.length?1:0));neden='sinir';}
     else if(kacirilacak.length){hedef=simdi+1;neden='sinir';}
     else if(!L.some(x=>x.tur==='ajanda'))engel.push(ILERLE_ENGEL_EKLERI.map(f=>f(k)).find(Boolean)||'Takvimde bekleyen bir gelişme yok');

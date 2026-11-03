@@ -18,7 +18,7 @@
      takipDogrula               EK_DENETIMLER
    Önemler, pencere ve sayılar TEST. */
 'use strict';
-const HABER_TEST={tvEnCok:30,takipGun:14,takipEnCok:40,sonuc:{biz:100,fark:45,obur:30},kirmizi:{biz:55,obur:22}};
+const HABER_TEST={tvEnCok:30,takipGun:14,takipEnCok:40,sonuc:{biz:100,fark:45,obur:30},kirmizi:{biz:55,obur:22},hazirlik:50};
 const HABER_KAYNAKLARI=[];
 /* gazetenin TV'de olmayan haberleri: toplu satırlar (TV'de maç başına haber) ve kutular; kaynağı bütünüyle bunlardan olanlar hiç çağrılmaz */
 const HABER_TV_DISI=new Set(['gz.mac','gz.sonuclar','gz.bos','gz.kisa']),HABER_ATLANAN_KAYNAK=new Set(['mac','tablo','golcu']);
@@ -27,10 +27,11 @@ HABER_KAYNAKLARI.push(
   /* maç sonucu: her oynanmış maç bittiği anda (başlama + maç süresi); bizim maç ve büyük farklı galibiyet önde */
   {ad:'sonuc',haberler:(k,P)=>(k.fikstur||[]).filter(f=>(k.maclar||{})[f.id]&&!k.maclar[f.id].hukmen).map(f=>{const s=k.maclar[f.id],an=haberMacSonu(f);
     if(an<P.bas||an>=P.son)return null;const bizde=f.ev===P.biz||f.konuk===P.biz,fark=Math.abs(s.skor[0]-s.skor[1]);
+    if(hazirlikMi(f))return bizde?{onem:HABER_TEST.hazirlik,an,anahtar:'hb.hazirlik',p:{macId:f.id}}:null;   /* CM2-a */
     return{onem:bizde?HABER_TEST.sonuc.biz:fark>=3?HABER_TEST.sonuc.fark:HABER_TEST.sonuc.obur,an,anahtar:'hb.sonuc',p:{macId:f.id}};}).filter(Boolean)},
   /* kırmızı kart: maçın anında (dakikasıyla); oyuncu bir maç ceza alır (TEST kuralı, js/mac-sonuc.js) */
   {ad:'kirmizi',haberler:(k,P)=>{const L=[];
-    for(const f of k.fikstur||[]){const s=(k.maclar||{})[f.id];if(!s||s.hukmen)continue;const a0=anDakika(f.tarih,f.dakika);if(a0>=P.son||a0+200<P.bas)continue;
+    for(const f of k.fikstur||[]){const s=(k.maclar||{})[f.id];if(!s||s.hukmen||hazirlikMi(f))continue;const a0=anDakika(f.tarih,f.dakika);   /* hazırlıkta ceza yok */if(a0>=P.son||a0+200<P.bas)continue;
       for(const x of s.kartlar||[]){if(x.renk!=='kirmizi'&&x.renk!=='ikinciSari')continue;const c=x.takim===0?f.ev:f.konuk,an=a0+Math.min(haberMacSonu(f)-a0-1,(x.dk|0)+(x.yari===2?15:0));
         if(an<P.bas||an>=P.son)continue;
         L.push({onem:c===P.biz?HABER_TEST.kirmizi.biz:HABER_TEST.kirmizi.obur,an,anahtar:'hb.kirmizi',p:{macId:f.id,kulupId:c,oyuncuId:x.id}});}}
@@ -89,8 +90,9 @@ function takipDogrula(k,h=[]){   /* EK_DENETIMLER: bulgular h'ye */
 }
 EK_DENETIMLER.push(takipDogrula);
 /* TV'nin etiketleri ve TEST metinleri (kullanıcı değiştirir) */
-const HABER_ETIKET={'hb.sonuc':'Maç sonucu','hb.kirmizi':'Kırmızı kart'};
+const HABER_ETIKET={'hb.sonuc':'Maç sonucu','hb.kirmizi':'Kırmızı kart','hb.hazirlik':'Hazırlık'};
 Object.assign(MESELE_OLAYLARI,{
   'hb.sonuc':(k,p)=>{const f=(k.fikstur||[]).find(x=>x.id===p.macId),s=f&&(k.maclar||{})[f.id];return f&&s?`TEST: ${f.hafta}. hafta: ${gzSkor(k,f)}.`:'TEST: maç bitti.';},
+  'hb.hazirlik':(k,p)=>{const f=(k.fikstur||[]).find(x=>x.id===p.macId),s=f&&(k.maclar||{})[f.id];return f&&s?`TEST: Hazırlık maçı: ${gzSkor(k,f)}.`:'TEST: hazırlık maçı bitti.';},
   'hb.kirmizi':(k,p)=>{const o=(k.oyuncular||{})[p.oyuncuId],ad=o?o.ad:'bir oyuncu';return`TEST: ${gzAd(k,p.kulupId)}'dan ${ad} kırmızı kart gördü; bir maç yok.`;}
 });

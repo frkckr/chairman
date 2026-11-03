@@ -138,7 +138,7 @@ function oyuncuGoruntusu(k,oyuncuId,kisiId){
   const sakat=!!(p.sakat&&tarihKarsilastir(p.sakat.donus,k.tarih)>0),cezali=!!(p.ceza&&p.ceza.mac>0);
   const kat=sakat?'sakat':cezali?'cezali':kendi&&ilk11.includes(p.id)?'ilk':sira<=yer+1?'rotasyon':'disari';
   /* son maçlar: kulübün oynanmış son T.sonMac maçında oyuncunun dakikası (dakika sayacı yoksa 0) */
-  const oynanan=(k.fikstur||[]).filter(f=>(f.ev===biz||f.konuk===biz)&&(k.maclar||{})[f.id]).slice(-T.sonMac);
+  const oynanan=(k.fikstur||[]).filter(f=>!hazirlikMi(f)&&(f.ev===biz||f.konuk===biz)&&(k.maclar||{})[f.id]).slice(-T.sonMac);
   let sonDk=0,sonMac=0;for(const f of oynanan){const d=typeof macDakikalari==='function'?(macDakikalari(k,f,k.maclar[f.id]).get(p.id)||0):0;if(d>0){sonDk+=d;sonMac++;}}
   const acik=typeof oyuncuHaftasiAcik==='function'&&oyuncuHaftasiAcik();
   return{oyuncuId,kat,enIyi:sira===1&&ayni.length>1,

@@ -1539,7 +1539,7 @@ if(typeof ON_EKRAN!=='undefined'&&typeof OYUN!=='undefined'){
           const k=OYUN.kariyer,f=(k.fikstur||[]).find(x=>x.id===macId),biz=(k.kisiler[k.baskanId]||{}).kulupId;
           if(f&&typeof gecisKartiGoster==='function'){const ad=id=>(k.kulupler[id]||{ad:id}).ad,G=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'],[y,a,g]=f.tarih.split('-').map(Number);
             const stat=typeof kulupStatTarifi==='function'?(kulupStatTarifi(k,f.ev)||{}).ad:null;
-            const o={tur:'bilet',ust:f.hafta+'. hafta'+(k.sezon&&k.sezon.ad?' · '+k.sezon.ad:''),baslik:ad(f.ev)+' – '+ad(f.konuk),alt:G[new Date(Date.UTC(y,a-1,g)).getUTCDay()]+' '+gunAyYazi(f.tarih)+' · '+saatYazi(f.dakika),
+            const o={tur:'bilet',ust:(hazirlikMi(f)?'Hazırlık maçı':f.hafta+'. hafta'+(k.sezon&&k.sezon.ad?' · '+k.sezon.ad:'')),baslik:ad(f.ev)+' – '+ad(f.konuk),alt:G[new Date(Date.UTC(y,a-1,g)).getUTCDay()]+' '+gunAyYazi(f.tarih)+' · '+saatYazi(f.dakika),
               not:(f.konuk===biz?'Deplasman · ':'')+(stat||'')};
             gecisKartiKaydet(o);gecisKartiGoster(o,true);}
           setTimeout(()=>{location.href=adres;},typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches?0:300);return null;}

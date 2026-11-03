@@ -68,9 +68,9 @@ function csMac(k,P,bolum){
   let h='<header class="cs-macBas">'+csKulupDug(k,ev,csArma(k,ev,'buyuk')+'<span>'+csYaz(csKulup(k,ev).ad)+'</span>','cs-takim')+
     '<div class="cs-skor"><b>'+(P.skor?P.skor.join(' – '):'–')+'</b>'+(P.iy?'<small>İY '+P.iy.join('–')+'</small>':'')+'<small'+(P.canli&&P.durum!=='bitti'?' class="cs-canli"':'')+'>'+csYaz(durum)+'</small></div>'+
     csKulupDug(k,ko,csArma(k,ko,'buyuk')+'<span>'+csYaz(csKulup(k,ko).ad)+'</span>','cs-takim')+'</header>'+
-    '<p class="cs-kunye">'+P.hafta+'. hafta · '+csYaz(zaman)+(P.stat?' · '+csYaz(P.stat):'')+'</p>';
+    '<p class="cs-kunye">'+(P.hazirlik?'Hazırlık maçı':P.hafta+'. hafta')+' · '+csYaz(zaman)+(P.stat?' · '+csYaz(P.stat):'')+'</p>';
   const b=CS_BOLUM.mac.some(x=>x[0]===bolum)?bolum:'ozet';h+=csSekmeler('mac',b);
-  if(b==='tablo')return h+csTablo(k,P.tablo,[ev,ko],k.sezon&&k.sezon.bolgeler);
+  if(b==='tablo')return h+(P.tablo?csTablo(k,P.tablo,[ev,ko],k.sezon&&k.sezon.bolgeler):'<p class="cs-yok">Hazırlık maçı puan durumuna girmez.</p>');
   if(!oyn){
     if(b!=='ozet')return h+'<p class="cs-yok">Maçtan sonra.</p>';
     return h+'<div class="cs-onizleme">'+[ev,ko].map((id,i)=>{const O=P.onizleme[i];if(!O)return'';
@@ -93,7 +93,7 @@ function csKulupSayfa(k,P,bolum,s){
   let h='<header class="cs-kulupBas">'+csArma(k,g.id,'buyuk')+'<div><h4>'+csYaz(g.ad)+'</h4><small>'+(g.sira>0?g.sira+'. sıra · ':'')+g.P+' puan</small></div>'+(s&&s.takip?csTakipDug(k,'kulup',g.id):'')+'</header>';
   const b=CS_BOLUM.kulup.some(x=>x[0]===bolum)?bolum:'genel';h+=csSekmeler('kulup',b);
   if(b==='genel'){const sr=g.siradaki;
-    return h+'<dl class="cs-dl"><dt>G-B-M</dt><dd>'+g.G+'-'+g.B+'-'+g.M+'</dd><dt>Goller</dt><dd>'+g.A+' attı, '+g.Y+' yedi · AV '+a(g.AV)+'</dd>'+
+    return h+'<dl class="cs-dl">'+(g.gecenSezon?'<dt>Geçen sezon</dt><dd>'+g.gecenSezon+'. sıra</dd>':'')+'<dt>G-B-M</dt><dd>'+g.G+'-'+g.B+'-'+g.M+'</dd><dt>Goller</dt><dd>'+g.A+' attı, '+g.Y+' yedi · AV '+a(g.AV)+'</dd>'+
       '<dt>Son 5</dt><dd class="cs-son">'+((g.son||[]).map(x=>{const r=x.a>x.y?'G':x.a<x.y?'M':'B';return'<i class="tel-sonuc tel-s'+r+'" title="'+csYaz((x.yer==='i'?'':'@ ')+csKulup(k,x.rakip).ad+' '+x.a+'–'+x.y)+'">'+r+'</i>';}).join('')||'—')+'</dd>'+
       '<dt>Sıradaki</dt><dd>'+(sr?csMacDug(sr.id,(sr.yer==='i'?'':'@ ')+csArma(k,sr.rakip,'kucuk')+' '+csYaz(csKulup(k,sr.rakip).ad)+' · '+csYaz(csGun(sr.tarih))+' '+saatYazi(sr.dakika),'cs-satirKisa'):'—')+'</dd>'+
       '<dt>Teknik direktör</dt><dd>'+(g.hoca?csYaz(g.hoca.ad)+(g.hoca.tarzAdi?' <small>'+csYaz(g.hoca.tarzAdi)+'</small>':''):'—')+'</dd>'+
@@ -119,7 +119,7 @@ function csOyuncuSayfa(k,P,s){
   h+='<h5>Maçları <small>'+csIlkHafta(k)+'. haftadan beri</small></h5>'+(P.maclar.length?'<ul class="cs-maclar">'+P.maclar.slice().reverse().map(m=>'<li>'+csMacDug(m.id,'<span class="cs-hafta">'+m.hafta+'.</span><span class="cs-rakip">'+(m.yer==='d'?'@ ':'')+
     csArma(k,m.rakip,'kucuk')+' '+csYaz(csKulup(k,m.rakip).ad)+'</span><b>'+m.a+'–'+m.y+'</b><small>'+m.dk+' dk'+(m.gol?' · '+m.gol+' gol':'')+(m.kartlar.length?' · '+m.kartlar.map(r=>CS_KART[r]).join(', '):'')+'</small>')+'</li>').join('')+'</ul>'
     :'<p class="cs-yok">'+csIlkHafta(k)+'. haftadan beri oynadığı maç yok.</p>');
-  h+='<h5>Sağlık geçmişi</h5>'+(P.saglik.length?'<ul class="cs-liste">'+P.saglik.map(x=>'<li><span class="cs-dk">'+x.hafta+'.</span><span>'+csYaz(x.bolge||'Sakatlık')+' · '+csYaz(csKulup(k,x.rakip).ad)+' maçı, '+csYaz(x.yazi)+'</span><small>'+(x.derece==='cikis'?'oyundan çıktı':'tedavi gördü')+'</small></li>').join('')+'</ul>'
+  h+='<h5>Sağlık geçmişi</h5>'+(P.saglik.length?'<ul class="cs-liste">'+P.saglik.map(x=>'<li><span class="cs-dk">'+(x.hazirlik?'Haz.':x.hafta+'.')+'</span><span>'+csYaz(x.bolge||'Sakatlık')+' · '+csYaz(csKulup(k,x.rakip).ad)+' maçı, '+csYaz(x.yazi)+'</span><small>'+(x.derece==='cikis'?'oyundan çıktı':'tedavi gördü')+'</small></li>').join('')+'</ul>'
     :'<p class="cs-yok">Maçta görülen sakatlık yok.</p>');
   return h;
 }

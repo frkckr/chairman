@@ -64,7 +64,9 @@ function oyunYeniKariyer(){
   let q=null,yeni;
   try{q=new URLSearchParams(location.search);}catch(e){}
   const al=ad=>(q&&q.get(ad))||undefined,dunya=parseInt(al('dunya'),10);
-  yeni=kariyerBaslat({tohum:Number.isFinite(dunya)?dunya:rastgele()});
+  /* CM2-a: ?tarif=yaz|kasim (geliştirici; deneme araçları eski bölümler için globalThis.OYUN_VARSAYILAN_TARIF='kasim' koyar) */
+  const ta=al('tarif')||(typeof globalThis.OYUN_VARSAYILAN_TARIF==='string'?globalThis.OYUN_VARSAYILAN_TARIF:undefined);
+  yeni=kariyerBaslat({tohum:Number.isFinite(dunya)?dunya:rastgele(),tarif:ta&&SEZON_TARIFLERI[ta]?ta:undefined});
   oyunYerlestir(oyunOturumuKur(yeni,false));OYUN.oturum.kaydet();
   return OYUN.mesaj='Yeni kariyer başladı.';
 }

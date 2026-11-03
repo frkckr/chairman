@@ -10,7 +10,7 @@
    nakitUfku(k, kulüp, gün) → {nakit, kesin:{enDusuk, enDusukTarih, son}, belirsizGelir, adimlar}: bekleyen ödemeler ve gelecek ay başları (maaş ve lig
      payı: kesin), iç saha maçlarının bilet geliri (belirsiz, ayrı). maliDurum'a 'ufuk' ve 'eksi' (kasa eksiye düştü; yalnız işaret) eklenir. */
 'use strict';
-const MALI_TEST={saat:600,ligPayi:10000000,bilet:15000,ufukGun:90,evDoluluk:0.3};
+const MALI_TEST={saat:600,ligPayi:10000000,bilet:15000,ufukGun:90,evDoluluk:0.3,hazirlikCarpan:0.5};   /* CM2-a: hazırlık maçında doluluk yarı */
 /* H2-d: ay başının sonuna eklenen kurallar: (k, iş) → metin | null (js/mali-rapor.js aylık rapor; sonraki ayın işi kurulduktan sonra çağrılır) */
 const AY_BASI_EKLERI=[];
 const AY_ADLARI=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
@@ -18,7 +18,7 @@ const sonrakiAyBasi=tarih=>{const [y,a]=tarih.split('-').map(Number),Y=a===12?y+
 /* maçın doluluğu (TEST; js/mac-gunu.js statKur da bunu kullanır: çizilen seyirci = ödeyen seyirci): başkanın kulübünün statında sabit, öbür statlarda
    kulüp ve haftadan */
 const dolulukTest=(ev,biz,hafta)=>ev===biz?MALI_TEST.evDoluluk:+(0.22+0.13*h2(hafta|0,parseInt(saglamaHesapla('doluluk:'+ev),16)|0)).toFixed(2);
-const macDolulugu=(k,f)=>dolulukTest(f.ev,(k.kisiler[k.baskanId]||{}).kulupId,f.hafta);
+const macDolulugu=(k,f)=>{const d=dolulukTest(f.ev,(k.kisiler[k.baskanId]||{}).kulupId,f.hafta);return typeof hazirlikMi==='function'&&hazirlikMi(f)?+(d*MALI_TEST.hazirlikCarpan).toFixed(2):d;};
 /* S-d: kulübün stat tarifi (başkanın kulübünde kulübün statı, öbürlerinde ev sahibi tarifi; js/fikstur.js kulupOzeti). kulupKapasitesi aynı kuralı okur */
 const kulupStatTarifi=(k,kulupId)=>kulupId===(k.kisiler[k.baskanId]||{}).kulupId?STADYUMLAR.kulup:statTarifiUret(kulupId,k.kulupler[kulupId].ad);
 const kulupKapasitesi=(k,kulupId)=>statKapasitesi(kulupId===(k.kisiler[k.baskanId]||{}).kulupId?STADYUMLAR.kulup:statTarifiUret(kulupId,k.kulupler[kulupId].ad));
@@ -46,9 +46,9 @@ const ayBasiKur=(k,kulupId)=>isEkle(k,{tur:'ayBasi',tarih:/-01$/.test(k.tarih)&&
 /* maç günü geliri: başkanın kulübünün iç saha maçı (hükmen değil) */
 MAC_SONUCU_EKLERI.push((k,f)=>{
   const biz=(k.kisiler[k.baskanId]||{}).kulupId,s=k.maclar[f.id];
-  if(!biz||f.ev!==biz||!s||s.hukmen)return;
+  if(!biz||f.ev!==biz||!s||s.hukmen||f.kamp)return;   /* CM2-b: kamptaki maçta bilet yok */
   const B=macBiletGeliri(k,f),rakip=(k.kulupler[f.konuk]||{ad:f.konuk}).ad;
-  paraHareketi(k,{kulupId:biz,tutar:B.tutar,kalem:'bilet',aciklama:`${rakip} maçı bilet geliri (${B.seyirci.toLocaleString('tr-TR')} seyirci)`});
+  paraHareketi(k,{kulupId:biz,tutar:B.tutar,kalem:'bilet',aciklama:`${rakip} ${hazirlikMi(f)?'hazırlık ':''}maçı bilet geliri (${B.seyirci.toLocaleString('tr-TR')} seyirci)`});
 });
 
 /* H2-d: haricIsId — ay başı zincirinin başını seçerken dışarıda bırakılan iş (ay başının içinde o ay başı yeniden sayılmasın; js/mali-rapor.js) */

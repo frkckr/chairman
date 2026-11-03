@@ -112,7 +112,7 @@ function menajerMenuleri(k){
   for(let g=0;g<=T.gun;g++){
     const t=tarihEkle(k.tarih,-g),[y,a,d]=t.split('-').map(Number),gun=Date.UTC(y,a-1,d);
     if(new Date(gun).getUTCDay()!==1||anDakika(t,T.saat)>simdi)continue;   /* Pazartesi 10:00 */
-    if(typeof BASLANGIC_TARIHI==='string'&&t<BASLANGIC_TARIHI)break;   /* kariyerden önceki Pazartesiler yok */
+    if(typeof kariyerBaslangici==='function'&&t<kariyerBaslangici(k))break;   /* kariyerden önceki Pazartesiler yok */
     const donem=typeof transferDonemi==='function'&&!!transferDonemi(k,t);
     if(!donem&&Math.floor(gun/604800000)%T.donemDisi!==0)continue;
     const M=T.kisiler[pyKarma(t+'|menajer')%T.kisiler.length],n=T.sayi[0]+pyKarma(t+'|sayi')%(T.sayi[1]-T.sayi[0]+1);

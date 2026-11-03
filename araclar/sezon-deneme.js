@@ -178,7 +178,7 @@ function sezon(){
     const tb=sezonTablosu(k),sira=tb.findIndex(t=>t.id===biz)+1,Op=kulupOyunculari(k,biz);
     {const enH=Math.max(...k.fikstur.filter(f=>k.maclar[f.id]).map(f=>f.hafta));
      if(tb.some(t=>t.O>enH)){hatalar.push(`${Gi.hafta}. hafta: bir kulüp oynanmış haftadan çok maç yapmış`);break;}}   /* RK7: hafta içinde eşit olmayabilir */
-    const hzr=Gi.tur==='hazirlik';if(hzr)hz++;else lig++;
+    const hzr=!!(Gi.bulten&&Gi.bulten.tur==='hazirlik');if(hzr)hz++;else lig++;
     satirlar.push({hafta:Gi.hafta,...(hzr?{etiket:'H'+hz}:{}),mac:Gi.macId,gunu,ev:k.kulupler[Gi.ev].kisa,konuk:k.kulupler[Gi.konuk].kisa,skor:S.skor.join('-'),adim:n,ms:Math.round(ms),msHafta:Math.round(msHafta),
       haftaGol:S.goller.length+O.reduce((a,o)=>a+o.sonuc.skor[0]+o.sonuc.skor[1],0),
       gol:S.goller.length,kart:S.kartlar.length,sakatlik:S.sakatliklar.length,cezali:Op.filter(p=>p.ceza).length,sakat:Op.filter(p=>p.sakat).length,

@@ -8,11 +8,13 @@
    antrenman penceresi ona bağlıdır.
    Başka kişi, ödeme, gelişme ya da olay yoktur; telefon ve dosya boş başlar. İçerik eklendiğinde kendi dosyası bu kurulumun ardından
    takvime iş koyabilir (kariyerBaslat'ın sonunda BASLANGIC_EKLERI).
-   kariyerBaslat({tohum}): aynı tohum aynı kariyeri kurar (dünya tohumu kayıtlı rastlantının başlangıcıdır; fikstür ve üretilen kadrolar
-   tohumdan türetilir, kayıtlı rastlantıyı çekmez). Hafta 23 Kasım Pazartesi 08:00'de başlar, Cumartesi 19:00 maç sınırında biter.
+   kariyerBaslat({tohum, tarif}): aynı tohum ve tarif aynı kariyeri kurar (dünya tohumu kayıtlı rastlantının başlangıcıdır; fikstür ve üretilen
+   kadrolar tohumdan türetilir, kayıtlı rastlantıyı çekmez). CM2-a (2026-11-03; karar 88): tarif 'yaz' (varsayılan) — 22 Haziran 2026 Pazartesi 08:00,
+   göreve yeni gelmiş başkan, sezon öncesi (js/fikstur.js SEZON_TARIFLERI); 'kasim' — 23 Kasım Pazartesi 08:00, 13. hafta (araçların ve eski
+   kayıtların TEST tarifi). Kariyerin başladığı gün k.baslangicTarihi'ne yazılır (js/fikstur.js kariyerBaslangici).
    Tutar ve adlar TEST değeridir. */
 'use strict';
-const BASLANGIC_TARIHI='2026-11-23';
+const BASLANGIC_TARIHI=SEZON_TARIFLERI[SEZON_TARIF_VARSAYILAN].baslangic;   /* yeni kariyerin varsayılan başlangıç günü (CM2-a: yaz tarifi) */
 const ACILIS_NAKDI=520000000;               // 5.200.000,00 ₺ (TEST değeri)
 const DUNYA={
   kulupler:{demirkapi:{id:'demirkapi',ad:'Demirkapı SK',kisa:'DEM',kademe:3,baskanId:'kisi-1',acilisNakit:ACILIS_NAKDI,nakit:ACILIS_NAKDI,
@@ -23,24 +25,26 @@ const DUNYA={
 /* içerik dosyalarının yeni kariyere ekleyeceği kurulumlar: (k) => void. Bugün boştur; denemeler TEST içeriğini buradan ekler */
 const BASLANGIC_EKLERI=[];
 
-function kariyerBaslat({tohum}={}){
+function kariyerBaslat({tohum,tarif}={}){
   if(!Number.isInteger(tohum))throw new Error(`Dünya tohumu tamsayı olmalı: ${tohum}`);
+  const T=SEZON_TARIFLERI[tarif===undefined?SEZON_TARIF_VARSAYILAN:tarif];
+  if(!T)throw new Error(`Bilinmeyen sezon tarifi: ${tarif}`);
   tohum=tohum>>>0;
   const D=kariyerOlustur(DUNYA);
-  const k=kariyerOlustur({kayitSurumu:KARIYER_SURUM,dunyaTohumu:tohum,icerik:{surum:ICERIK_SURUM,baslangic:'bos'},kosullar:{},rastlanti:rastlantiBaslat(tohum),
-    olaylar:{},sozler:{},haberler:[],gozlem:null,tarih:BASLANGIC_TARIHI,gunIciDakika:GUN_BASLANGICI,baskanId:D.baskanId,gorevDurumu:'gorevde',final:null,
+  const k=kariyerOlustur({kayitSurumu:KARIYER_SURUM,dunyaTohumu:tohum,icerik:{surum:ICERIK_SURUM,baslangic:T.ad},kosullar:{},rastlanti:rastlantiBaslat(tohum),
+    olaylar:{},sozler:{},haberler:[],gozlem:null,tarih:T.baslangic,baslangicTarihi:T.baslangic,gunIciDakika:GUN_BASLANGICI,baskanId:D.baskanId,gorevDurumu:'gorevde',final:null,
     sonrakiNo:{kisi:2,is:1,hareket:1,mesele:1,olay:1,soz:1,oyuncu:1},meseleler:{},kulupler:D.kulupler,isler:{},gecmis:[],hareketler:[],kisiler:D.kisiler,
     sezon:null,fikstur:[],maclar:{},oyuncular:{}});
   /* ligin öbür kulüpleri: kimlik, ad, kısa ad (TEST: adın ilk üç harfi), kademe; başkan ve para yok */
   for(const t of LIG.takimlar)if(!k.kulupler[t.id])k.kulupler[t.id]={id:t.id,ad:t.ad,kisa:kulupKisaAd(t.ad),kademe:3,baskanId:null,acilisNakit:0,nakit:0};
-  kadrolariKur(k,LIG);
+  kadrolariKur(k,LIG,{sifir:T.ilkHafta===1});
   hocalariKur(k);   /* F3-a: her kulübün hocası (js/hoca.js) */
   personelKur(k);   /* H2-c: yardımcı antrenör ve mali işler müdürü (TEST; js/yazisma.js) */
   const biz=k.kisiler[k.baskanId].kulupId;
-  sezonKur(k,LIG,biz);
+  sezonKur(k,LIG,biz,T);
   sezonTakvimiKur(k,biz);
   /* G2 (2026-10-24 gece): sözleşmeler, ilk ay başı ve transfer dönemi gelişmeleri (js/sozlesme.js, js/kulup-mali.js, js/transfer.js) */
-  sozlesmeleriTamamla(k);ayBasiKur(k,biz);transferTakvimiKur(k);
+  sozlesmeleriTamamla(k);if(T.ad==='yaz')baslangicSozlesmeleri(k);ayBasiKur(k,biz);transferTakvimiKur(k);   /* CM2-a: 30 Haziran'da biten üç sözleşme */
   for(const f of BASLANGIC_EKLERI)f(k);
   if(typeof maliRaporBaslat==='function')maliRaporBaslat(k);   /* H2-d: açılışta ilk haftalık mali özet ve zincir (js/mali-rapor.js) */
   const h=kariyerDogrula(k);

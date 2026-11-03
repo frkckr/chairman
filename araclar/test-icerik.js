@@ -115,7 +115,7 @@ const testDosyasizKarar=k=>donenKarar(k,{baslik:'Dosyasız deneme kararı',sure:
 
 /* yeni kariyere TEST kişilerini ve takvim işlerini ekler */
 function testIcerikKur(k,{sayman=true,gelisme=true,randevu=true}={}){
-  const c=k.kulupler.demirkapi,gun=n=>tarihEkle(BASLANGIC_TARIHI,n);
+  const c=k.kulupler.demirkapi,gun=n=>tarihEkle(kariyerBaslangici(k),n);
   Object.assign(k.kisiler,kariyerOlustur(TEST_KISILER));
   k.sonrakiNo.kisi=Math.max(k.sonrakiNo.kisi,94);   /* F3: kisi-2… hocalardır (js/hoca.js); TEST kişileri 91–93 */
   if(sayman)c.yonetim.sayman='kisi-91';else{k.kisiler['kisi-91'].rol='yoneticiAdayi';}

@@ -107,7 +107,7 @@ function sablonKancasi(k,kanca){
   return n;
 }
 if(typeof AY_BASI_EKLERI!=='undefined')AY_BASI_EKLERI.push(k=>{sablonKancasi(k,'ayBasi');return null;});
-if(typeof MAC_SONUCU_EKLERI!=='undefined')MAC_SONUCU_EKLERI.push(k=>{sablonKancasi(k,'macSonucu');});
+if(typeof MAC_SONUCU_EKLERI!=='undefined')MAC_SONUCU_EKLERI.push((k,f)=>{if(!hazirlikMi(f))sablonKancasi(k,'macSonucu');});
 
 /* ---- kart aşaması: tek karar türü, aşamaya devreder ---- */
 const sablonKartDosyasi=(k,v)=>{const m=(k.meseleler||{})[v.meseleId];return m&&m.sablon&&m.sablon.adim===v.adim?m:null;};

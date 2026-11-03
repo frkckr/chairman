@@ -309,12 +309,17 @@ function telHafta(k,T,L,M){
     return[M].concat(M.digerleri||[]).map(x=>{const r=canliSatir(x);return telMacSatiri(Object.assign(r,{evArma:arma(r.evId),depArma:arma(r.depId)}));}).join('');
   }
   const H=canliHafta(k,T.hafta||(L&&L.hafta)||canliVarsayilanHafta(k)),C=new Map();
-  if(M&&L&&H.hafta===L.hafta)for(const x of [M].concat(M.digerleri||[]))C.set(x.id||x.macId,x);
+  if(M&&L&&(H.hafta===L.hafta||L.hafta===0))for(const x of [M].concat(M.digerleri||[]))C.set(x.id||x.macId,x);   /* CM2-a: canlı hazırlık maçı (hafta 0) */
   const ok=(n,et,yon)=>'<button type="button" class="tel-haftaOk" data-eylem="skorHafta" data-hafta="'+n+'" data-yon="'+yon+'" data-ilk="'+H.ilk+'" data-son="'+H.son+'" aria-label="'+et+'"'+(n<H.ilk||n>H.son?' disabled':'')+'>'+(yon==='geri'?'‹':'›')+'</button>';
   /* RK7: gün başlıklarıyla (Cuma–Pazartesi; ertelenen maç yeni gününde); saati açıklanmamış haftada tek başlık, tarih bekleyen ertelenmişler sonda */
   let bas=null;const baslik=m=>{const b=m.ertelendi&&m.ertelendi.bekliyor?'Ertelendi · yeni tarih açıklanacak':!m.aciklandi?'Program açıklanmadı':telGunAdi(m.tarih)+' '+gunAyYazi(m.tarih);
     if(b===bas)return'';bas=b;return'<h5>'+yazT(b)+'</h5>';};
-  return'<div class="tel-haftaNav">'+ok(H.hafta-1,'Önceki hafta','geri')+'<b>'+H.hafta+'. hafta</b>'+ok(H.hafta+1,'Sonraki hafta','ileri')+'</div>'+
+  /* CM2-a: ilk haftanın görünümünde önce hazırlık maçları (lig puanına girmez) */
+  const hz=(H.hazirlik||[]).length?'<h5>Hazırlık maçları</h5>'+H.hazirlik.map(m=>{const x=C.get(m.id);
+    const r=x?canliSatir(x):{evId:m.ev,depId:m.konuk,sol:m.durum==='baslamadi'?telGunAdi(m.tarih).slice(0,3)+' '+gunAyYazi(m.tarih).replace(/ .*/,''):'Bitti',canli:false,ev:ad(m.ev),dep:ad(m.konuk),
+      orta:m.skor?m.skor[0]+' – '+m.skor[1]:'–',durum:m.durum==='baslamadi'?'hazırlık maçı, '+gunAyYazi(m.tarih)+' '+saatYazi(m.dakika):'hazırlık maçı, bitti'};
+    return telMacSatiri(Object.assign(r,{evArma:arma(r.evId),depArma:arma(r.depId)}),'data-eylem="csAc" data-tur="mac" data-id="'+yazT(m.id)+'"');}).join('')+'<h5>Lig</h5>':'';
+  return'<div class="tel-haftaNav">'+ok(H.hafta-1,'Önceki hafta','geri')+'<b>'+H.hafta+'. hafta</b>'+ok(H.hafta+1,'Sonraki hafta','ileri')+'</div>'+hz+
     H.maclar.map(m=>{const x=C.get(m.id),ert=m.ertelendi&&m.durum!=='bitti'&&m.durum!=='hukmen';
       const r=x?canliSatir(x):{evId:m.ev,depId:m.konuk,sol:ert&&m.ertelendi.bekliyor?'Ert.':m.durum==='baslamadi'?(m.aciklandi?saatYazi(m.dakika):'—'):m.durum==='hukmen'?'Hük.':'Bitti',canli:false,ev:ad(m.ev),dep:ad(m.konuk),
         orta:m.skor?m.skor[0]+' – '+m.skor[1]:'–',durum:ert&&m.ertelendi.bekliyor?'ertelendi':ert?'ertelendi, yeni tarihinde':m.durum==='baslamadi'?(m.aciklandi?'başlamadı':'saati açıklanmadı'):m.durum==='hukmen'?'hükmen':'bitti'};

@@ -58,7 +58,7 @@ function haberlerGorunumu(k,d,y){
   const N=typeof gunNotu==='function'?gunNotu(k):null,b=[];
   if(d.durak)b.push('<p class="hb-durak">'+yaz(d.durak)+'</p>'+(d.sonraki?'<small>Sıradaki: '+yaz(d.sonraki)+'</small>':''));
   if(N&&N.sonMac){const m=N.sonMac,ad=id=>(k.kulupler[id]||{ad:id}).ad,SN={G:'galibiyet',B:'beraberlik',M:'mağlubiyet'};
-    b.push('<p>Son maç: '+yaz(ad(m.ev)+' '+m.skor[0]+'–'+m.skor[1]+' '+ad(m.konuk))+' <small>('+SN[m.sonuc]+(m.sira?', ligde '+m.sira+'.':'')+')</small></p>');}
+    b.push('<p>'+(m.hazirlik?'Hazırlık maçı':'Son maç')+': '+yaz(ad(m.ev)+' '+m.skor[0]+'–'+m.skor[1]+' '+ad(m.konuk))+' <small>('+SN[m.sonuc]+(m.sira?', ligde '+m.sira+'.':'')+')</small></p>');}
   if(N&&N.ajanda.length)b.push('<p>Bugün: '+N.ajanda.filter(x=>x.durum==='bekliyor').slice(0,3).map(x=>yaz(y.saatYazi(x.saat)+' '+x.baslik)).join(' · ')+'</p>');
   if(N)b.push('<p><small>Kasa '+yaz(y.tlYazi(N.kasa.nakit))+(N.kasa.enDusuk!==null&&N.kasa.enDusuk<N.kasa.nakit?' · 90 günde en düşük '+yaz(y.tlYazi(N.kasa.enDusuk)):'')+'</small></p>');
   const bugun='<section class="hb-bugun"><h4>Bugün · '+yaz(y.tarihYazi(k.tarih))+'</h4>'+(b.join('')||'<p class="hb-bos">Sakin bir gün.</p>')+'</section>';

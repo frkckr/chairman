@@ -21,7 +21,7 @@ const GELISME_KATEGORILER=[['kulup','Kulüp'],['transfer','Transfer'],['lig','Li
 /* kanalın simgesi (js/simge.js) */
 const GELISME_SIMGE={telefon:'telefon',gazete:'gazete',lig:'mac',dosya:'dosya',ajanda:'takvim',para:'kasa',kapi:'kapi'};
 /* haberin türü → kategori (bilinmeyen: kulüp) */
-const GELISME_HABER_KATEGORI={'hb.sonuc':'lig','hb.kirmizi':'lig','gz.mac':'lig','gz.sonuclar':'lig','gz.sakat':'lig','gz.yaklasan':'lig','gz.program':'lig','gz.erteleme':'lig',
+const GELISME_HABER_KATEGORI={'hb.sonuc':'lig','hb.hazirlik':'lig','gz.hazirlik':'lig','hb.kirmizi':'lig','gz.mac':'lig','gz.sonuclar':'lig','gz.sakat':'lig','gz.yaklasan':'lig','gz.program':'lig','gz.erteleme':'lig',
   'gz.yeniTarih':'lig','gz.sezonSonu':'lig','tr.haber':'transfer','tr.dunya':'transfer','tr.soylenti':'basin','p12.haber':'kulup'};
 /* mesele kategorisi (js/mesele.js meseleKategorisi adı) → gelişme kategorisi */
 const GELISME_MESELE_KATEGORI={Mali:'para',Transfer:'transfer',Futbol:'kulup','Sözleşme':'kulup',Kurumsal:'kulup','Kulüp':'kulup'};
@@ -78,7 +78,7 @@ function gelismeListesi(k,o){
       if(g.tur!=='is'||ATLA.has(g.isTuru)||g.isTuru==='gelisme'&&g.sonuc&&g.sonuc.yazisma)continue;
       const an=anDakika(g.tarih,g.dakika);if(an<bas||an>=son)continue;
       gecmisOzetSatirlari(k,g).forEach((x,j)=>{const id='gc:'+an+':'+g.isId+':'+j,t=g.isTuru;
-        const kat=t==='odeme'||t==='ayBasi'?'para':x.kapak==='transfer'?'transfer':x.kapak==='sezonSonu'?'lig':'kulup';
+        const kat=t==='odeme'||t==='ayBasi'?'para':x.kapak==='transfer'?'transfer':x.kapak==='sezonSonu'||x.kapak==='ara'?'lig':'kulup';
         ekle(id,an,{kanal:t==='odeme'||t==='ayBasi'?'para':'ajanda',sinif:t==='odeme'?'arka':t==='gelisme'&&g.sonuc&&g.sonuc.haber?'beklenen':'okumalik',kategori:kat,
           baslik:x.metin,hedef:{tur:'ajanda',tarih:g.tarih},okundu:gelismeOkunmus(k,id,an)});});
     }

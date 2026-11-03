@@ -156,12 +156,14 @@ function oyuncuHaftasiYaz(k,f,x){
     const yuk=acik?antrenmanYuku(k,kulup,onceki||tarihEkle(f.tarih,-7),f.tarih):0;
     for(const p of kulupOyunculari(k,kulup)){
       const q=x.al(p.id),dk=dak.get(p.id)||0;
-      if(dk>0&&Number.isInteger(q.mac)&&Number.isInteger(q.dk)){q.mac=Math.min(99,q.mac+1);q.dk=Math.min(9999,q.dk+dk);}
+      if(dk>0&&!x.hazirlik&&Number.isInteger(q.mac)&&Number.isInteger(q.dk)){q.mac=Math.min(99,q.mac+1);q.dk=Math.min(9999,q.dk+dk);}   /* CM2-a: hazırlık sayılmaz */
       if(!acik)continue;
       const kon0=oyuncuKondisyonu(k,p,f.tarih);
       let kon=dk?Math.max(0,Math.round(kon0-kondisyonDususu(p,dk,f.tarih))):kon0;
       if(x.yeniSakat&&x.yeniSakat.has(p.id)&&q.sakat)kon=Math.max(0,kon-Math.min(T.sakatEksik,gunNo(q.sakat.donus)-gunNo(f.tarih)));
       const tav=p.hal&&Number.isInteger(p.hal.tav)?p.hal.tav:tavanKur(k,p,f.tarih);
+      /* CM2-a: hazırlık maçı kondisyonu düşürür, sakatlık yazar; gelişim ve form adımı yalnız lig maçında (haftalık adım sayısı maç sayısıdır) */
+      if(x.hazirlik){q.hal={kon,gun:f.tarih,form:p.hal&&Number.isFinite(p.hal.form)?p.hal.form:0,gel:p.hal?p.hal.gel:0,tav};continue;}
       const g=ohGelisimAdimi(k,Object.assign({},p,{oz:q.oz}),f,dk,yuk,p.hal?p.hal.gel:0,tav);
       if(g.oz!==q.oz)q.oz=g.oz;
       q.hal={kon,gun:f.tarih,form:formAdim(k,p,f.id),gel:g.gel,tav};

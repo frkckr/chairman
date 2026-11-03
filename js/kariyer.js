@@ -29,7 +29,7 @@
    dakika, neden} ve tarihBekliyor; sezonda programAciklanan (açıklanan son hafta); işlerde program, hava ve ligMaci (js/lig-takvimi.js). Sürüm 11 kaydı
    geçişle açılır (js/kayit.js KAYIT_GECISLERI[11]: eski maçlar Cumartesi 19:00'da kalır, sonraki program işi kurulur). */
 'use strict';
-const KARIYER_SURUM=12;
+const KARIYER_SURUM=13;   /* CM2-a (2026-11-03): yaz tarifi — hazırlık maçı kaydı, sezonda tarif/ara/gecenSezon, kariyerde baslangicTarihi */
 const GOREV_DURUMLARI=['taraftar','aday','gorevde','gorevDisi','yenidenAday','kariyerSonu'];
 const KISI_DURUMLARI=['aktif','emekli','ayrildi','vefat'];
 /* sonradan yüklenen kural dosyalarının ek doğrulamaları (ör. js/yonetim.js): (k, hatalar) => void. Dosya yüklü değilse alanı denetlenmez */

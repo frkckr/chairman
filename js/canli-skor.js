@@ -21,7 +21,7 @@ const CANLI_MEVKI_SIRA={KL:0,DEF:1,OS:2,FV:3};
 function canliVarsayilanHafta(k){
   if(!k||!k.sezon||!Array.isArray(k.fikstur)||!k.fikstur.length)return null;
   /* RK7: haftanın ilk maç günü (Cuma–Pazartesi şablonu; ertelenen maçlar sayılmaz) ile son maç gününden iki gün sonrası arası o hafta */
-  const H=[...new Set(k.fikstur.map(f=>f.hafta))].sort((a,b)=>a-b),G=h=>k.fikstur.filter(f=>f.hafta===h&&!f.ertelendi).map(f=>f.tarih).sort(),
+  const H=[...new Set(k.fikstur.filter(f=>!hazirlikMi(f)).map(f=>f.hafta))].sort((a,b)=>a-b),G=h=>k.fikstur.filter(f=>f.hafta===h&&!f.ertelendi).map(f=>f.tarih).sort(),   /* CM2-a: hazırlık hafta değildir */
     gun=h=>G(h)[0]||haftaTarihi(k.sezon,h),sonGun=h=>{const L=G(h);return L[L.length-1]||gun(h);};
   for(const h of H){if(tarihKarsilastir(k.tarih,gun(h))>=0&&tarihKarsilastir(k.tarih,tarihEkle(sonGun(h),2))<=0)return h;}
   const s=H.find(h=>tarihKarsilastir(gun(h),k.tarih)>0);
@@ -33,7 +33,10 @@ function canliHafta(k,hafta){
   const S=k.sezon,ilk=S.ilkHafta,son=S.haftaSayisi,h=Math.max(ilk,Math.min(son,hafta|0||ilk)),sira=new Map(),acik=f=>typeof saatiAciklandi==='function'?saatiAciklandi(k,f):true;
   const F=haftaFiksturu(k,h).map((x,i)=>(sira.set(x.f.id,i),x)).sort((a,b)=>(a.f.tarihBekliyor?1:0)-(b.f.tarihBekliyor?1:0)||anDakika(a.f.tarih,a.f.dakika)-anDakika(b.f.tarih,b.f.dakika)||sira.get(a.f.id)-sira.get(b.f.id));
   const T=F.filter(x=>!x.f.tarihBekliyor);
-  return{hafta:h,ilk,son,tarih:T.length?T[0].f.tarih:F.length?F[0].f.tarih:null,
+  /* CM2-a: hazırlık maçları ilk haftanın görünümünde, lig maçlarından önce (tarih sırasıyla) */
+  const Hz=h===ilk?(k.fikstur||[]).filter(f=>hazirlikMi(f)).map(f=>{const s=(k.maclar||{})[f.id];return{id:f.id,ev:f.ev,konuk:f.konuk,tarih:f.tarih,dakika:f.dakika,
+    durum:s?'bitti':'baslamadi',skor:s?s.skor.slice():null,aciklandi:true,hazirlik:true};}):[];
+  return{hafta:h,ilk,son,tarih:T.length?T[0].f.tarih:F.length?F[0].f.tarih:null,hazirlik:Hz,
     maclar:F.map(({f,s})=>Object.assign({id:f.id,ev:f.ev,konuk:f.konuk,tarih:f.tarih,dakika:f.dakika,durum:s?(s.hukmen?'hukmen':'bitti'):f.tarihBekliyor?'ertelendi':'baslamadi',skor:s?s.skor.slice():null,
       aciklandi:acik(f)},f.ertelendi?{ertelendi:{neden:f.ertelendi.neden,bekliyor:!!f.tarihBekliyor,eskiTarih:f.ertelendi.tarih}}:{}))};
 }
@@ -49,7 +52,7 @@ function tvOzeti(k){
   const bos={kanal:'TEST SPOR',saat:saatYazi((k&&k.gunIciDakika)|0),satirlar:[]};
   if(!k||!k.sezon||!Array.isArray(k.fikstur)||!k.fikstur.length)return bos;
   const biz=((k.kisiler||{})[k.baskanId]||{}).kulupId||null,kisa=id=>((k.kulupler||{})[id]||{}).kisa||String(id).slice(0,3).toLocaleUpperCase('tr-TR');
-  const oynanan=[...new Set(k.fikstur.filter(f=>(k.maclar||{})[f.id]).map(f=>f.hafta))].sort((a,b)=>a-b),h=oynanan[oynanan.length-1],S=[];
+  const oynanan=[...new Set(k.fikstur.filter(f=>(k.maclar||{})[f.id]&&!hazirlikMi(f)).map(f=>f.hafta))].sort((a,b)=>a-b),h=oynanan[oynanan.length-1],S=[];
   if(h!==undefined){const bizde=m=>m.ev===biz||m.konuk===biz?1:0,M=canliHafta(k,h).maclar.filter(m=>m.skor).sort((a,b)=>bizde(b)-bizde(a));
     S.push(h+'. HAFTA');for(const m of M.slice(0,2))S.push(kisa(m.ev)+' '+m.skor[0]+'-'+m.skor[1]+' '+kisa(m.konuk));}
   else{/* kariyerde henüz oynanmış hafta yok: sıradaki haftanın maçları (başkanın kulübünün maçı önce) */
@@ -68,16 +71,16 @@ function tvOzeti(k){
 function macSayfasi(k,macId,canli){
   const f=(k.fikstur||[]).find(x=>x.id===macId);if(!f)return null;
   const s=canli?canli.s:(k.maclar||{})[macId]||null,st=typeof kulupStatTarifi==='function'?kulupStatTarifi(k,f.ev):null;
-  const R={id:f.id,hafta:f.hafta,tarih:f.tarih,dakika:f.dakika,ev:f.ev,konuk:f.konuk,stat:st?st.ad:null,canli:!!canli,
+  const R={id:f.id,hafta:f.hafta,...(hazirlikMi(f)?{hazirlik:true}:{}),tarih:f.tarih,dakika:f.dakika,ev:f.ev,konuk:f.konuk,stat:st?st.ad:null,canli:!!canli,
     aciklandi:typeof saatiAciklandi==='function'?saatiAciklandi(k,f):true,ertelendi:f.ertelendi?{neden:f.ertelendi.neden,bekliyor:!!f.tarihBekliyor,eskiTarih:f.ertelendi.tarih,eskiDakika:f.ertelendi.dakika}:null,   /* RK7 */
     durum:canli?canli.durum||'canli':s?(s.hukmen?'hukmen':'bitti'):'baslamadi',skor:s?s.skor.slice():null,hukmen:s&&s.hukmen||null,
     iy:null,akis:[],satirlar:[],kadro:null,tablo:null,onizleme:null};
   const sonAn=anDakika(tarihEkle(f.tarih,1),0);
   if(!s){
     R.onizleme=[f.ev,f.konuk].map(c=>{const o=kulupOzeti(k,c);return o?{son:o.son,hoca:o.hoca,sira:o.sira,P:o.P}:null;});
-    R.tablo=sezonTablosu(k,anDakika(f.tarih,f.dakika));return R;
+    R.tablo=R.hazirlik?null:sezonTablosu(k,anDakika(f.tarih,f.dakika));return R;
   }
-  R.tablo=canli&&canli.tablo?canli.tablo:sezonTablosu(k,sonAn);
+  R.tablo=R.hazirlik?null:canli&&canli.tablo?canli.tablo:sezonTablosu(k,sonAn);   /* CM2-a: hazırlık maçı puan durumuna girmez */
   if(s.hukmen)return R;
   const L=a=>Array.isArray(a)?a:[],ad=x=>x.ad||(x.id!=null?(k.oyuncular[x.id]||{}).ad:'')||'—',kulup=t=>t===0?f.ev:f.konuk;
   /* yeni biçim: olaylar devre taşır (R3-a); canlı kayıt da taşır */
@@ -146,7 +149,11 @@ function oyuncuSayfasi(k,id){
   for(const f of k.fikstur||[]){const s=(k.maclar||{})[f.id];if(!s||s.hukmen||!Array.isArray(s.ilk11))continue;
     const T=[0,1].find(t=>(s.ilk11[t]||[]).includes(id)||(s.degisiklikler||[]).some(d=>(d.takim===1?1:0)===t&&d.girenId===id));
     if(T===undefined)continue;
-    const dk=typeof macDakikalari==='function'?macDakikalari(k,f,s).get(id)||0:0;
+    const dk=typeof macDakikalari==='function'?macDakikalari(k,f,s).get(id)||0:0,hz=hazirlikMi(f);
+    /* CM2-a: hazırlık maçı sezonun maç listesine girmez (sayaçlar onu saymaz); sağlık geçmişinde “Hazırlık” */
+    for(const x of s.sakatliklar||[])if(hz&&x.id===id&&x.derece!=='agri')saglik.push({macId:f.id,hafta:f.hafta,hazirlik:true,tarih:f.tarih,rakip:T===0?f.konuk:f.ev,
+      yazi:canliDakika(x.dk,x.yari),bolge:typeof sakatlikMetni==='function'?sakatlikMetni(x.tur,x.bolge):'',derece:x.derece});
+    if(hz)continue;
     maclar.push({id:f.id,hafta:f.hafta,tarih:f.tarih,rakip:T===0?f.konuk:f.ev,yer:T===0?'i':'d',a:s.skor[T],y:s.skor[1-T],dk,
       gol:(s.goller||[]).filter(g=>g.id===id&&!g.kk).length,kartlar:(s.kartlar||[]).filter(c=>c.id===id).map(c=>c.renk)});
     for(const x of s.sakatliklar||[])if(x.id===id&&x.derece!=='agri')saglik.push({macId:f.id,hafta:f.hafta,tarih:f.tarih,rakip:T===0?f.konuk:f.ev,

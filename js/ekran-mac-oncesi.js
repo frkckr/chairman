@@ -67,12 +67,12 @@ const ON_EKRAN=(()=>{let e=null;try{e=new URLSearchParams(location.search).get('
   const sonTaraf=T=>'<section class="prg-taraf"><h3>'+yaz(takimAdi(T.id))+' <small>Son 5 maç</small></h3>'+sonMaclar(T)+'</section>';
   const SAYFA_ADI=['Kadrolar','Lig'];
   E.innerHTML='<div class="prg-kart">'+
-    '<header class="prg-ust"><span class="prg-ustAd"><b>'+yaz(takimAdi(TARAF[0].id)+' – '+takimAdi(TARAF[1].id))+'</b><small>'+yaz(B.ligAd+' · '+B.hafta+'. hafta · '+B.gun+' '+B.saat+' · '+STAT.ad)+'</small></span>'+
+    '<header class="prg-ust"><span class="prg-ustAd"><b>'+yaz(takimAdi(TARAF[0].id)+' – '+takimAdi(TARAF[1].id))+'</b><small>'+yaz((B.tur==='hazirlik'?'Hazırlık maçı':B.ligAd+' · '+B.hafta+'. hafta')+' · '+B.gun+' '+B.saat+' · '+STAT.ad)+'</small></span>'+
       '<span class="prg-gosterge" role="tablist" aria-label="Sayfalar">'+SAYFA_ADI.map((a,i)=>'<button type="button" role="tab" data-sayfa="'+i+'" aria-selected="'+(i?'false':'true')+'">'+(i+1)+' · '+a+'</button>').join('')+'</span>'+
       '<b>Maç günü</b></header>'+
     '<div class="prg-yaprak">'+
       '<div class="prg-govde prg-sayfa" data-sayfa="0">'+taraf(TARAF[0])+'<div class="prg-vs"><b>'+yaz(B.saat)+'</b><span>'+yaz(B.gun)+'</span><div class="prg-beklenti" data-yuva="beklenti" hidden></div></div>'+taraf(TARAF[1])+'</div>'+
-      '<div class="prg-lig prg-sayfa" data-sayfa="1" aria-hidden="true"><section class="prg-taraf"><h3>Puan durumu <small>'+yaz(B.sezonAdi+' · '+B.oynanan+' hafta')+'</small></h3>'+tablo+'</section>'+
+      '<div class="prg-lig prg-sayfa" data-sayfa="1" aria-hidden="true"><section class="prg-taraf"><h3>Puan durumu <small>'+yaz(B.sezonAdi+' · '+(B.oynanan?B.oynanan+' hafta':'sezon başlamadı'))+'</small></h3>'+tablo+'</section>'+
         '<div class="prg-sonlar">'+sonTaraf(TARAF[0])+sonTaraf(TARAF[1])+'</div></div>'+
     '</div>'+
     '<footer class="prg-alt"><div class="prg-hazirlik"><span class="prg-etiket">Maç öncesi hazırlık</span><div class="prg-cubuk" role="progressbar" aria-label="Maç öncesi hazırlık" aria-valuemin="0" aria-valuemax="'+STIL.program.hazirlikSn+'" aria-valuenow="0"><i></i></div>'+
