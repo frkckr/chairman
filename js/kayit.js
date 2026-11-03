@@ -93,6 +93,10 @@ KAYIT_GECISLERI[9]=v=>{
     const no=v.sonrakiNo.is,id='is-'+no;v.isler=Object.assign({},v.isler,{[id]:{id,tur:'maliRapor',tarih:v.tarih,dakika:v.gunIciDakika|0,veri:{kulupId:biz}}});v.sonrakiNo=Object.assign({},v.sonrakiNo,{is:no+1});}
   return v;
 };
+/* CM2-a (2026-11-03; karar 88): 12 → 13 — sezon tarifleri. Eski kariyer Kasım tarifiyle sürer: sezonda tarif, devre arası ve geçen sezon alanı yoktur, hazırlık
+   maçı yoktur, kariyerin başlangıç günü kayıtta yoksa 23 Kasım'dır (js/fikstur.js kariyerBaslangici). İçerik başlangıcı 'bos' 'kasim' olur. Yeni sürüm
+   gerekir: sürüm 12'nin kodu hazırlık maçı kaydını tanımaz (fikstür denetimi). Veri dönüşümüdür: kural işlevi çağırmaz */
+KAYIT_GECISLERI[12]=v=>{v.kayitSurumu=13;if(v.icerik&&v.icerik.baslangic==='bos')v.icerik=Object.assign({},v.icerik,{baslangic:'kasim'});return v;};
 const ESKI_KAYIT_SINIRI=8;                   // bu sürümden eski kayıt dönüştürülmez
 /* eski sürümün neden açılmadığı (oyuncuya söylenir); listede olmayan eski sürüm 2.8L nedenini alır */
 const ESKI_KAYIT_NEDENI={6:'lig, fikstür ve kadrolar kariyere geçtiği için',7:'hocalar ve maçın okunması kariyere geçtiği için'};

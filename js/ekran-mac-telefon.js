@@ -58,7 +58,7 @@ const MAC_TELEFON={acik:false,T:{ekran:'ana',kisi:null,skorSekme:'maclar',hafta:
   function ligVerisi(M){
     const B=MAC_GUNU.bulten;if(!B||!Array.isArray(B.tablo))return null;
     const k=typeof OYUN!=='undefined'?OYUN.kariyer:null,kar=!!MAC_GUNU.kariyer&&!!k&&!!k.sezon,R=[M].concat(M.digerleri||[]);
-    const tablo=canliTablo(B.tablo,R.map(x=>({ev:x.evId,konuk:x.depId,skor:x.sk})));
+    const tablo=B.tur==='hazirlik'?B.tablo:canliTablo(B.tablo,R.map(x=>({ev:x.evId,konuk:x.depId,skor:x.sk})));   /* CM2-a: hazırlık puana girmez */
     return{tablo,bolgeler:B.bolgeler,biz:kar?(k.kisiler[k.baskanId]||{}).kulupId:null,dokunur:kar,fikstur:kar,hafta:B.hafta,
       canli:R.some(x=>x.sk)&&!R.every(x=>x.durum==='maç sonu'||x.durum==='hükmen'),ozet:kar?id=>kulupOzeti(k,id,tablo):null,ad:id=>(B.adlar||{})[id]||id};
   }

@@ -46,7 +46,7 @@ function gunNotuGorunumu(k,y){
   const ad=id=>(k.kulupler[id]||{ad:id}).ad,M=N.sonMac;
   const GUN=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'],gunAdi=t=>{const [a,b,c]=t.split('-').map(Number);return GUN[new Date(Date.UTC(a,b-1,c)).getUTCDay()];};
   const SONUC={G:'Galibiyet',B:'Beraberlik',M:'Mağlubiyet'};
-  const mac=M?'<section class="gn-kutu gn-dun"><h4>'+smg('mac')+'Son maç · '+yaz(M.tarih===N.tarih?'bugün':gunAdi(M.tarih)+' '+y.tarihYazi(M.tarih))+'</h4>'+
+  const mac=M?'<section class="gn-kutu gn-dun"><h4>'+smg('mac')+'Son maç'+(M.hazirlik?' (hazırlık)':'')+' · '+yaz(M.tarih===N.tarih?'bugün':gunAdi(M.tarih)+' '+y.tarihYazi(M.tarih))+'</h4>'+
       '<p class="gn-skor"><i class="gn-sonuc" data-s="'+M.sonuc+'" title="'+SONUC[M.sonuc]+'">'+M.sonuc+'</i>'+yaz(ad(M.ev))+' <b>'+M.skor[0]+'–'+M.skor[1]+'</b> '+yaz(ad(M.konuk))+'</p>'+
       (M.sira?'<small>Ligde '+M.sira+'. sıradayız'+(M.hukmen?' · hükmen':'')+'.</small>':'')+'</section>'
     :'<section class="gn-kutu gn-dun"><h4>'+smg('mac')+'Son maç</h4><p class="gn-bos">Henüz maç oynamadık.</p></section>';

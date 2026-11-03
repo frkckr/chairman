@@ -13,7 +13,7 @@
    yoktur (kadro isteğe bağlıdır, maç girdisi kadrosuz kulübü reddeder). Gerçek kariyerin 16 kulübü ve kadroları kariyerBaslat'ta kurulur. */
 'use strict';
 const KARIYER_ORNEK={
-  kayitSurumu:12,
+  kayitSurumu:13,
   dunyaTohumu:20260929,
   icerik:{surum:0,baslangic:null},kosullar:{},rastlanti:{durum:20260929},olaylar:{},sozler:{},haberler:[],gozlem:null,
   tarih:'2026-11-28',gunIciDakika:540,          // 13. hafta maç günü sabahı (LIG.buMac: Cumartesi 19:00)

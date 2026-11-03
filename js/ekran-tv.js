@@ -79,9 +79,12 @@ function tvSayfasi(k,sayfa,y){
         (dk?'<button type="button" class="tv-izle" data-eylem="tvIzle" data-mac="'+yaz(f.id)+'">İzle ▸</button>':'<span></span>')+'</div>';};
     /* RK-D: haftanın maçları gün başlıklarıyla; bugün başka haftanın (ertelenmiş) maçı oynanıyorsa o da kendi gününde */
     const hv=typeof canliVarsayilanHafta==='function'?canliVarsayilanHafta(k):null;
-    const F=sirali((k.fikstur||[]).filter(f=>!f.tarihBekliyor&&(f.hafta===hv||f.tarih===bugun))),E=(k.fikstur||[]).filter(f=>f.hafta===hv&&f.tarihBekliyor);
+    const hz=f=>typeof hazirlikMi==='function'&&hazirlikMi(f);
+    const F=sirali((k.fikstur||[]).filter(f=>!hz(f)&&!f.tarihBekliyor&&(f.hafta===hv||f.tarih===bugun))),E=(k.fikstur||[]).filter(f=>!hz(f)&&f.hafta===hv&&f.tarihBekliyor);
     const L=gunlu(F,satir);if(E.length){L.push('<h6>Ertelendi · yeni tarih açıklanacak</h6>');for(const f of E)L.push(satir(f));}
-    ic=(hv!==null?'<h5>'+hv+'. hafta</h5>':'')+(L.length?kes(L):'<p class="tv-not">TEST: Programda maç yok.</p>');
+    /* CM2-a: ilk lig maçından önce hazırlık maçları ayrı başlıkta */
+    const Hz=k.sezon&&k.tarih<=k.sezon.ilkMacTarihi?sirali((k.fikstur||[]).filter(hz)):[];
+    ic=(Hz.length?'<h5>Hazırlık maçları</h5>'+kes(gunlu(Hz,satir)):'')+(hv!==null?'<h5>'+hv+'. hafta</h5>':'')+(L.length?kes(L):'<p class="tv-not">TEST: Programda maç yok.</p>');
   }else{
     const T=typeof sezonTablosu==='function'?sezonTablosu(k):[];
     ic='<h5>Puan durumu</h5><table class="tv-tablo"><tbody>'+T.map((t,i)=>'<tr><td>'+(i+1)+'</td><td>'+yaz(t.ad)+'</td><td>'+t.O+'</td><td>'+t.P+'</td></tr>').join('')+'</tbody></table>';

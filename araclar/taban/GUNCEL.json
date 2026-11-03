@@ -1,6 +1,7 @@
 {
   "motor": "g1.json",
   "sezon": {"t7": "sezon-rk7-t7.json", "t3": "sezon-rk7-t3.json"},
+  "sezonYaz": {"t7": "sezon-cm2-t7.json"},
   "cizim": ["s1-anm.json", "a5-anm-kaleci.json"],
-  "not": "R1-c (2026-10-29): bugünkü tabanların tek kaydı. Tur kapanışında yalnız bu dosya değişir; araclar/oturum-sonu.js varsayılanı motor alanından okur. Eski tabanlar etiketlerindedir (git show tur/<ad>:araclar/taban/<ad>.json)."
+  "not": "R1-c (2026-10-29): bugünkü tabanların tek kaydı. Tur kapanışında yalnız bu dosya değişir; araclar/oturum-sonu.js varsayılanı motor alanından okur. CM2 (2026-11-03): sezon alanı Kasım tarifinin ölçüsüdür (--tarif kasim); sezonYaz yaz tarifinin (22 Haziran, hazırlık ve ilk 60 gün paketiyle; t3 evde). Eski tabanlar etiketlerindedir (git show tur/<ad>:araclar/taban/<ad>.json)."
 }

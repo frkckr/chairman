@@ -18,7 +18,7 @@
 /* içerik sürümü 4 (2.8L): boş içerik. 3 ve öncesinin paketleri kaldırıldı; o kayıtlar kayıt sürümü 6 ile açılmaz (js/kayit.js).
    İçerik sürümü 5 (F6-a, 2026-10-24): P12 TEST taslağı (js/icerik-p12.js, paket icerik:5). Sürüm 4'te kurulmuş kariyerde P12 açılmaz (kayıt açılır) */
 'use strict';
-const ICERIK_SURUM=5;
+const ICERIK_SURUM=6;
 const OLAY_DURUMLARI=['acik','kapandi','onlendi'];
 /* kanıt kaynakları: anahtar → okunur ad (ör. {defter:'Muhasebe kayıtları'}); içerik dosyaları ekler. Kişi kimliği de kaynak olabilir */
 const OLAY_KAYNAKLARI={};

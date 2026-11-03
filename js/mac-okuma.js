@@ -94,8 +94,9 @@ function macYorumu(k,macId){
 function macGozlemNotu(k,macId){
   const o=macOkumasi(k,macId);if(!o)return null;
   const ad=(k.kulupler[o.rakipId]||{ad:o.rakipId}).ad,I=o.ist;
-  if(o.hukmen)return`${o.hafta}. hafta, ${o.t?'deplasman':'iç saha'} · ${ad}: ${o.skor[0]}–${o.skor[1]} hükmen (oynanmadı).`;
-  return`${o.hafta}. hafta, ${o.t?'deplasman':'iç saha'} · ${ad}: ${o.skor[0]}–${o.skor[1]}. Beklenen gol ${okSayi(o.xg[0],2)} – ${okSayi(o.xg[1],2)}; şut ${I.sut[0]}–${I.sut[1]}, `+
+  const ne=o.hafta?`${o.hafta}. hafta`:'Hazırlık maçı';   /* CM2-a: hazırlık maçında hafta 0 */
+  if(o.hukmen)return`${ne}, ${o.t?'deplasman':'iç saha'} · ${ad}: ${o.skor[0]}–${o.skor[1]} hükmen (oynanmadı).`;
+  return`${ne}, ${o.t?'deplasman':'iç saha'} · ${ad}: ${o.skor[0]}–${o.skor[1]}. Beklenen gol ${okSayi(o.xg[0],2)} – ${okSayi(o.xg[1],2)}; şut ${I.sut[0]}–${I.sut[1]}, `+
     `topa sahip olma %${Math.round(I.sahiplik[0]*100)}. ${GOZLEM_NOTU_METIN[o.sans](o)}`;
 }
 /* H2-b (2026-10-26): Canlı Skor'un istatistik tablosu, 10 satır [ad, ev, konuk] — oda, balkon ve maç telefonu aynı tabloyu kullanır (eskiden

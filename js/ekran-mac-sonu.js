@@ -69,7 +69,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
   kok.appendChild(E);
   /* H2-a: perdenin örtüsü (kartın kâğıt dilinde; yeni görsel dil yok) */
   const O=document.createElement('section');O.className='mac-sonu';O.id='macHesap';O.hidden=true;O.setAttribute('aria-label','Maç hesaplanıyor');
-  O.innerHTML='<div class="ms-kararti"></div><div class="ms-kart ms-hesap"><p class="ms-ust">'+(MAC_GUNU.bulten&&MAC_GUNU.bulten.hafta?String(MAC_GUNU.bulten.hafta).replace(/[&<>"]/g,'')+'. hafta':'Maç')+'</p>'+
+  O.innerHTML='<div class="ms-kararti"></div><div class="ms-kart ms-hesap"><p class="ms-ust">'+(MAC_GUNU.bulten&&MAC_GUNU.bulten.tur==='hazirlik'?'Hazırlık maçı':MAC_GUNU.bulten&&MAC_GUNU.bulten.hafta?String(MAC_GUNU.bulten.hafta).replace(/[&<>"]/g,'')+'. hafta':'Maç')+'</p>'+
     '<p role="status"><b>Maç hesaplanıyor…</b></p><p class="ms-yok ms-hesapAlt"></p></div>';
   kok.appendChild(O);
   const hesapAlt=O.querySelector('.ms-hesapAlt');let hesapYazi=null;
@@ -106,7 +106,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
         ' · arka: '+(Ar.kip==='isci'?'işçi':'ana iplik'+(Ar.hata?' ('+yaz(Ar.hata)+')':''))+' · sonuç ikizi: '+(HIZLI_BITIR.anlik?'kullanıldı':Ar.ikizAyni===null?'—':Ar.ikizAyni?'aynı':'farklı')+'</p>';
     }
     return'<div class="ms-kararti"></div><div class="ms-kart" tabindex="-1">'+
-      '<p class="ms-ust">'+(G.tv?'TV · ':'')+'Maç sonu'+(B.hafta?' · '+yaz((B.ligAd?B.ligAd+' ':'')+B.hafta+'. hafta'):'')+'</p>'+
+      '<p class="ms-ust">'+(G.tv?'TV · ':'')+'Maç sonu'+(B.tur==='hazirlik'?' · Hazırlık maçı':B.hafta?' · '+yaz((B.ligAd?B.ligAd+' ':'')+B.hafta+'. hafta'):'')+'</p>'+
       '<div class="ms-skor"><span class="'+(biz===0?'ms-biz':'')+'" title="'+yaz(adi(0))+'">'+yaz(adi(0))+'</span>'+arma(0)+'<b>'+S.skor[0]+'–'+S.skor[1]+'</b>'+arma(1)+'<span class="'+(biz===1?'ms-biz':'')+'" title="'+yaz(adi(1))+'">'+yaz(adi(1))+'</span></div>'+
       /* F3-b: beklenen gol (motorun şut listesinden; karar 34) */
       (hk?'<p class="ms-yok">'+yaz(hk)+'</p>':'')+(!hk&&Array.isArray(S.sutlar)&&typeof macBeklenenGol==='function'?(xg=>'<p class="ms-yok">Beklenen gol '+xg.map(x=>x.toFixed(2).replace('.',',')).join(' – ')+' · şut '+S.ist.sut[0]+' – '+S.ist.sut[1]+'</p>')(macBeklenenGol(S.sutlar.map(x=>({takim:x.takim,xg:x.xg,pen:x.pen})))):'')+
@@ -154,7 +154,7 @@ const MAC_SONU={acik:false,sonuc:null,uygulandi:false,red:false,redAn:0,isliyor:
     /* replace: tarayıcının Geri tuşu oynanmış maçın adresine dönmesin (F2 incelemesi) */
     if(OYUN.oturum.durum.tamam&&OYUN.depo!=='bellek'){
       /* U4: dönüş kartı — maç sonu skoru odanın ilk boyamasına taşınır (js/gecis-karti.js) */
-      if(typeof gecisKartiGoster==='function'){const o={tur:'donus',ust:'Maç sonu'+(G.bulten&&G.bulten.hafta?' · '+G.bulten.hafta+'. hafta':''),baslik:adi(0)+' '+S.sonuc.skor[0]+' – '+S.sonuc.skor[1]+' '+adi(1),alt:'Odaya dönülüyor…'};
+      if(typeof gecisKartiGoster==='function'){const o={tur:'donus',ust:'Maç sonu'+(G.bulten&&G.bulten.tur==='hazirlik'?' · Hazırlık maçı':G.bulten&&G.bulten.hafta?' · '+G.bulten.hafta+'. hafta':''),baslik:adi(0)+' '+S.sonuc.skor[0]+' – '+S.sonuc.skor[1]+' '+adi(1),alt:'Odaya dönülüyor…'};
         gecisKartiKaydet(o);gecisKartiGoster(o,true);}
       location.replace(location.pathname);return;}
     S.isliyor=false;

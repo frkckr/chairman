@@ -48,10 +48,12 @@ function macGirdisi(k,macId){
   if(k.maclar[macId])throw new Error(`Maç girdisi kurulamadı: ${macId} oynanmış`);
   const S=k.sezon,biz=(k.kisiler[k.baskanId]||{}).kulupId,ad=id=>(k.kulupler[id]||{ad:id}).ad,tohum=macTohumu(k.dunyaTohumu,macId);
   /* G1-a: 11 uygun oyuncu çıkaramayan taraf varsa maç hükmendir (girdi.hukmen); kadro yalnız sayfanın çizimi için zorla kurulur */
-  const hukmen=typeof hukmenKarari==='function'?hukmenKarari(k,f):null,se=hukmen?{zorla:true}:undefined;
+  /* CM2-a: hazırlık maçı hükmen olmaz; 11 uygun oyuncu çıkmazsa kadro zorla kurulur (22 kişilik kadroda ön sezonda pratikte olmaz; borç B61) */
+  const hz=hazirlikMi(f),hukmen=typeof hukmenKarari==='function'?hukmenKarari(k,f):null,
+    se=hukmen||(hz&&typeof kulupHazirMi==='function'&&!(kulupHazirMi(k,f.ev,f.tarih)&&kulupHazirMi(k,f.konuk,f.tarih)))?{zorla:true}:undefined;
   const kadro=[macKadrosu(k,f.ev,f.tarih,tohum,se),macKadrosu(k,f.konuk,f.tarih,tohum,se)];
   const hocalar=[f.ev,f.konuk].map(id=>{const h=kulupHocasi(k,id);return{id:h.id,ad:h.ad,tarz:h.hoca.tarz};});
   return{kariyer:true,macId,hafta:f.hafta,tarih:f.tarih,dakika:f.dakika,ev:f.ev,konuk:f.konuk,biz:f.konuk===biz?1:0,tohum,tarz:hocalar.map(h=>h.tarz),hocalar,kadro,hukmen,
-    bulten:{ligAd:S.ad,sezonAdi:S.sezonAdi,hafta:f.hafta,gun:macGunAdi(f.tarih),saat:saatYazi(f.dakika),oynanan:f.hafta-1,bolgeler:S.bolgeler,
+    bulten:{ligAd:S.ad,sezonAdi:S.sezonAdi,hafta:f.hafta,...(hz?{tur:'hazirlik'}:{}),gun:macGunAdi(f.tarih),saat:saatYazi(f.dakika),oynanan:hz?0:f.hafta-1,bolgeler:S.bolgeler,
       tablo:sezonTablosu(k),son:[sonBesMac(k,f.ev),sonBesMac(k,f.konuk)],adlar:Object.fromEntries(S.takimlar.map(id=>[id,ad(id)])),hocalar}};
 }

@@ -80,6 +80,6 @@ const SIMGE_KART={onay:'onay',takvim:'takvim',para:'kasa',carpi:'kapat',degis:'d
 const KATEGORI_SIMGE={Futbol:'mac','Sözleşme':'belge',Kurumsal:'kurum',Transfer:'transfer','Kulüp':'kurum',Mali:'kasa'};
 const kategoriSimgesi=ad=>KATEGORI_SIMGE[ad]||'kurum';
 /* haberin türü (anahtar) → simge; bilinmeyen haber gazete */
-const HABER_SIMGE={'hb.sonuc':'mac','gz.mac':'mac','gz.sonuclar':'mac','hb.kirmizi':'kart','gz.sakat':'sakatlik','gz.program':'takvim','gz.yaklasan':'takvim',
+const HABER_SIMGE={'hb.sonuc':'mac','hb.hazirlik':'mac','gz.hazirlik':'mac','gz.mac':'mac','gz.sonuclar':'mac','hb.kirmizi':'kart','gz.sakat':'sakatlik','gz.program':'takvim','gz.yaklasan':'takvim',
   'gz.yeniTarih':'takvim','gz.erteleme':'kar','gz.tablo':'belge','gz.golcu':'mac','gz.sezonSonu':'takim'};
 const haberSimgesi=a=>HABER_SIMGE[a]||(/transfer|teklif|kulis|imza/i.test(a)?'transfer':/hoca/i.test(a)?'kisi':/sponsor|mali|kasa/i.test(a)?'kasa':'gazete');

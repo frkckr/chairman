@@ -65,7 +65,7 @@ const macAni=f=>anDakika(f.tarih,f.dakika);
 /* kulübün son oynanan maçı: {f, s} ya da null */
 function kulubunSonMaci(k,kulupId){
   let en=null;
-  for(const f of k.fikstur||[]){const s=(k.maclar||{})[f.id];if(s&&(f.ev===kulupId||f.konuk===kulupId)&&(!en||f.hafta>en.f.hafta))en={f,s};}
+  for(const f of k.fikstur||[]){const s=(k.maclar||{})[f.id];if(s&&!hazirlikMi(f)&&(f.ev===kulupId||f.konuk===kulupId)&&(!en||f.hafta>en.f.hafta))en={f,s};}   /* CM2-a: lig maçı */
   return en;
 }
 /* motor kaydının (takım sırası, forma numarası, ad) kariyer kimliği. zorunlu değilse bulunamayan null olur; ad tutmazsa her zaman hata.
@@ -97,7 +97,8 @@ function kartCezalari(kartlar){
 function macKaydiYaz(k,f,sonuc,tohum,ek,kisa){
   ek=ek||{};const macId=f.id;
   if(k.maclar[macId])throw new Error(`Maç sonucu işlenemedi: ${macId} zaten uygulanmış`);
-  if(f.hafta<k.sezon.ilkHafta)throw new Error(`Maç sonucu işlenemedi: ${f.hafta}. hafta devralınan geçmişte`);
+  const hz=hazirlikMi(f);   /* CM2-a: hazırlık maçı — tablo, sayaç, ceza ve hocanın on biri yazılmaz; sakatlık ve kondisyon yazılır */
+  if(f.hafta<k.sezon.ilkHafta&&!hz)throw new Error(`Maç sonucu işlenemedi: ${f.hafta}. hafta devralınan geçmişte`);
   const tam=(x,a,b)=>Number.isInteger(x)&&x>=a&&x<=b;
   if(!sonuc||sonuc.bitti!==true)throw new Error('Maç sonucu işlenemedi: maç bitmemiş');
   if(!Array.isArray(sonuc.skor)||sonuc.skor.length!==2||!sonuc.skor.every(x=>tam(x,0,99)))throw new Error('Maç sonucu işlenemedi: skor geçersiz');
@@ -154,20 +155,20 @@ function macKaydiYaz(k,f,sonuc,tohum,ek,kisa){
   /* S-a: başkanın kulübünün önceki on biri (bu maçta maç günü uygun olup on birde olmayanlar geçmiş kaydına; js/kadro-dosyasi.js “on birde yoktu”) */
   const bizK=(k.kisiler[k.baskanId]||{}).kulupId,bizT=f.ev===bizK?0:f.konuk===bizK?1:-1;
   const oncekiBiz=!kisa&&ilk11&&bizT>=0&&k.kulupler[bizK].kadro?k.kulupler[bizK].kadro.ilk11.slice():null;
-  if(ilk11)ilk11.forEach((x,t)=>{const D=k.kulupler[t===0?f.ev:f.konuk].kadro;if(!D||k.oyuncular[x[0]].mevki!=='KL')return;
+  if(ilk11&&!hz)ilk11.forEach((x,t)=>{const D=k.kulupler[t===0?f.ev:f.konuk].kadro;if(!D||k.oyuncular[x[0]].mevki!=='KL')return;
     const hepsi=D.ilk11.concat(D.yedekler);D.ilk11=x.slice();D.yedekler=hepsi.filter(id=>!x.includes(id));});
-  if(!kisa){const g={tur:'mac',macId,hafta:f.hafta,ev:f.ev,konuk:f.konuk,skor:sonuc.skor.slice(),tarih:k.tarih,dakika:k.gunIciDakika};
+  if(!kisa&&!hz){const g={tur:'mac',macId,hafta:f.hafta,ev:f.ev,konuk:f.konuk,skor:sonuc.skor.slice(),tarih:k.tarih,dakika:k.gunIciDakika};
     if(oncekiBiz){const bu=new Set(ilk11[bizT]),L=oncekiBiz.filter(id=>!bu.has(id)&&k.oyuncular[id]&&k.oyuncular[id].kulupId===bizK&&oyuncuUygunMu(k.oyuncular[id],f.tarih));if(L.length)g.disarida=L;}
     k.gecmis.push(g);}
   /* oyuncular: her değişen oyuncu için tek yeni kayıt */
   const yeni={},al=id=>yeni[id]||(yeni[id]=Object.assign({},k.oyuncular[id]));
   const kulupler=[f.ev,f.konuk];
   /* 1) bu maçı oynamayan cezalılar (iki kulüp) — yeni cezalardan önce */
-  for(const c of kulupler)for(const p of kulupOyunculari(k,c))if(p.ceza&&p.ceza.mac>0){const q=al(p.id);q.ceza=p.ceza.mac>1?{mac:p.ceza.mac-1,neden:p.ceza.neden}:null;}
+  if(!hz)for(const c of kulupler)for(const p of kulupOyunculari(k,c))if(p.ceza&&p.ceza.mac>0){const q=al(p.id);q.ceza=p.ceza.mac>1?{mac:p.ceza.mac-1,neden:p.ceza.neden}:null;}
   /* 2) goller */
-  for(const g of goller)if(!g.kk&&g.id){const q=al(g.id);q.gol=Math.min(999,q.gol+1);}
+  if(!hz)for(const g of goller)if(!g.kk&&g.id){const q=al(g.id);q.gol=Math.min(999,q.gol+1);}
   /* 3) kartlar: sarı birikimi ve cezalar */
-  for(const [id,o] of kartCezalari(kartlar)){
+  if(!hz)for(const [id,o] of kartCezalari(kartlar)){
     const q=al(id),eski=q.sari,sari=Math.min(99,eski+o.sari);let mac=o.mac;const neden=o.neden.slice();
     if(Math.floor(sari/4)>Math.floor(eski/4)){mac++;neden.push('4 sarı kart');}
     q.sari=sari;
@@ -180,7 +181,7 @@ function macKaydiYaz(k,f,sonuc,tohum,ek,kisa){
     if(buMac.has(s.id)&&q.sakat&&tarihKarsilastir(q.sakat.donus,donus)>=0)continue;
     q.sakat={neden:sakatlikMetni(s.tur,s.bolge),donus};buMac.add(s.id);}
   /* 5) S-a: kancalar (oyuncunun haftası: dakika sayaçları, kondisyon, form, gelişim) */
-  for(const e of MAC_KAYDI_EKLERI)e(k,f,{kisa:!!kisa,hukmen:sonuc.hukmen||null,ilk11,degisiklikler,kartlar,sakatliklar,yeniSakat:buMac,al});
+  for(const e of MAC_KAYDI_EKLERI)e(k,f,{kisa:!!kisa,hukmen:sonuc.hukmen||null,hazirlik:hz,ilk11,degisiklikler,kartlar,sakatliklar,yeniSakat:buMac,al});
   k.oyuncular=Object.assign({},k.oyuncular,yeni);
 }
 function macSonucuUygula(k,macId,sonuc,tohum,ek){

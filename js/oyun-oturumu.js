@@ -19,8 +19,8 @@
 'use strict';
 const OYUN_YUVA='oyun-1';
 const OYUN={depo:null,kariyer:null,oturum:null,mesaj:'',bozukHata:null,basladi:false,
-  ayarlar:{yazi:'normal',test:true,macHizi:1,otoYavas:true,locaBakisi:false,herSaat:false,cerceve:'cm',ilerleInis:'haberler',
-    kaydet(){try{OYUN_DEPO.yaz('ayarlar',JSON.stringify({yazi:this.yazi,test:this.test,macHizi:this.macHizi,otoYavas:this.otoYavas,locaBakisi:this.locaBakisi,herSaat:this.herSaat,cerceve:this.cerceve,ilerleInis:this.ilerleInis}));}catch(e){}}}};
+  ayarlar:{yazi:'normal',test:true,macHizi:1,otoYavas:true,locaBakisi:false,herSaat:false,cerceve:'cm',ilerleInis:'haberler',ipucu:true,ipucuGorulen:[],
+    kaydet(){try{OYUN_DEPO.yaz('ayarlar',JSON.stringify({yazi:this.yazi,test:this.test,macHizi:this.macHizi,otoYavas:this.otoYavas,locaBakisi:this.locaBakisi,herSaat:this.herSaat,cerceve:this.cerceve,ilerleInis:this.ilerleInis,ipucu:this.ipucu,ipucuGorulen:this.ipucuGorulen}));}catch(e){}}}};
 let OYUN_DEPO=null;
 {
   try{OYUN_DEPO=masaustuDeposu();if(OYUN_DEPO)OYUN.depo='masaustu';}catch(e){OYUN_DEPO=null;}
@@ -35,7 +35,8 @@ let OYUN_DEPO=null;
       if(a.locaBakisi===true)OYUN.ayarlar.locaBakisi=true;   /* P2: maçta loca bakışı (TEST); 2D varsayılan */
       if(a.herSaat===true)OYUN.ayarlar.herSaat=true;   /* R5 (TEST): balkonda her saat antrenman, yalnız görüntü */
       if(a.cerceve==='kagit')OYUN.ayarlar.cerceve='kagit';
-      if(a.ilerleInis==='ofis')OYUN.ayarlar.ilerleInis='ofis';   /* CM1-b: İlerle'den sonra Haberler (varsayılan) ya da odada durak özeti */   /* CM1-a: çerçevenin paleti (cm ya da kagit; js/sunum-durumu.js cerceveUygula) */
+      if(a.ilerleInis==='ofis')OYUN.ayarlar.ilerleInis='ofis';
+      if(a.ipucu===false)OYUN.ayarlar.ipucu=false;if(Array.isArray(a.ipucuGorulen))OYUN.ayarlar.ipucuGorulen=a.ipucuGorulen.filter(x=>typeof x==='string').slice(0,20);   /* CM2-b: alıştırma ipuçları */   /* CM1-b: İlerle'den sonra Haberler (varsayılan) ya da odada durak özeti */   /* CM1-a: çerçevenin paleti (cm ya da kagit; js/sunum-durumu.js cerceveUygula) */
       /* kaldırılan ayarlar (ses 2.8A, hareket azaltma 2.8J) okunmaz; açılışta yeniden yazılarak düşer */
       if('ses' in a||'sessiz' in a||'hareket' in a||'pul' in a)OYUN.ayarlar.kaydet();
     }
@@ -64,7 +65,9 @@ function oyunYeniKariyer(){
   let q=null,yeni;
   try{q=new URLSearchParams(location.search);}catch(e){}
   const al=ad=>(q&&q.get(ad))||undefined,dunya=parseInt(al('dunya'),10);
-  yeni=kariyerBaslat({tohum:Number.isFinite(dunya)?dunya:rastgele()});
+  /* CM2-a: ?tarif=yaz|kasim (geliştirici; deneme araçları eski bölümler için globalThis.OYUN_VARSAYILAN_TARIF='kasim' koyar) */
+  const ta=al('tarif')||(typeof globalThis.OYUN_VARSAYILAN_TARIF==='string'?globalThis.OYUN_VARSAYILAN_TARIF:undefined);
+  yeni=kariyerBaslat({tohum:Number.isFinite(dunya)?dunya:rastgele(),tarif:ta&&SEZON_TARIFLERI[ta]?ta:undefined});
   oyunYerlestir(oyunOturumuKur(yeni,false));OYUN.oturum.kaydet();
   return OYUN.mesaj='Yeni kariyer başladı.';
 }

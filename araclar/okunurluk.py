@@ -350,7 +350,7 @@ async def ana():
     sonuc, hatalar = {}, []
     ornek = (ARAC / "ornekler" / "kayit-s11-hafta14.json").read_text(encoding="utf-8")
     async with async_playwright() as p:
-        t = await p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
+        t = akis.kasim_tarayici(await p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]))   # CM2-a: sahneler Kasım tarifinde
         for g in genislikler:
             pencere = GENISLIKLER[g]
 

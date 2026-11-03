@@ -1,6 +1,6 @@
 # CM2 — Takvim, sezon öncesi başlangıç ve ilk 60 gün (uygulama planı, 2026-11-03, dizüstü)
 
-Durum: **onaylandı (kullanıcı, 2026-11-03: “Onayla, başla”); oto mod, dizüstü.** Kaynak: [cm-program.md](cm-program.md) §4–§5 (onaylı program, karar 86), üç kod haritası (takvim ve tarif; hazırlık maçı dokunma noktaları; içerik paketi kancaları — ajan raporları sohbette, kısıtları §6'da) ve kullanıcının 3 Kasım isteği: “CM2-a ve b'yi burada oto modda tamamen bitir, main'e al, push et; eve geçince çeker, kontrol ederim.” Bu belge cm-program.md'nin §4–§5'inin yerine geçer; kesinleşen sapmalar §1'dedir.
+Durum: **onaylandı (kullanıcı, 2026-11-03: “Onayla, başla”); oto mod, dizüstü; CM2-a (`tur/cm2a-takvim`) ve CM2-b (`tur/cm2b-onsezon`) uygulandı, `main`'e alındı (§7).** Kaynak: [cm-program.md](cm-program.md) §4–§5 (onaylı program, karar 86), üç kod haritası (takvim ve tarif; hazırlık maçı dokunma noktaları; içerik paketi kancaları — ajan raporları sohbette, kısıtları §6'da) ve kullanıcının 3 Kasım isteği: “CM2-a ve b'yi burada oto modda tamamen bitir, main'e al, push et; eve geçince çeker, kontrol ederim.” Bu belge cm-program.md'nin §4–§5'inin yerine geçer; kesinleşen sapmalar §1'dedir.
 
 ## 0. Bir bakışta
 
@@ -126,4 +126,34 @@ CM2-a: (1) kariyer-deneme kasim bölümleri birebir, yaz bölümleri geçer; (2)
 
 ## 7. Durum
 
-(uygulama sırasında doldurulur)
+**CM2-a (dal `claude/cm2a-takvim`, 2026-11-03, dizüstü, oto mod):** uygulandı (YOL_HARITASI karar 88). Plandan sapmalar ve eklemeler:
+
+- **Yaş:** tam yaş kuralı yazılmadı (§1.6; `yasUret` 2026). **Kamp alanı** (`f.kamp`) fikstür denetiminde ve bilette tanınır, CM2-b kullanır.
+- **Hazırlıkta cezalı oyuncu kuralı yazılmadı:** yaz tarifinde ön sezonda ceza doğmaz (ceza lig maçında; devralınan eksik yok). **11 uygun çıkmazsa iptal yerine kadro zorla kurulur** (B61; pratikte olmaz).
+- **Geçmiş kaydı:** hazırlık maçı `k.gecmis`'e `mac` satırı yazmaz (gelişme listesi ve haberler maç kaydından kurulur; “on birde yoktu” notu lig maçına özgü).
+- **Gazete:** hazırlık sonucu `gz.hazirlik` (önem 50; boş günde manşet olabilir, lig maçını geçmez), yaklaşan hazırlık maçı önem 40/15; sakatlık haberleri hazırlıktan da. Haberler'de `hb.hazirlik`; kırmızı kart haberi hazırlıkta yok.
+- **Canlı Skor:** hazırlık grubu ilk haftanın görünümünde (ayrı hafta yok); kulüp sayfasının maç listesi ve oyuncunun maç listesi yalnız lig (sezon sayaçlarıyla tutarlı); sağlık geçmişinde hazırlık “Haz.”. Kulüp özetinde `gecenSezon`.
+- **Maç sayfasının seyircisi** (`js/mac-gunu.js` `statKur`) kariyer maçında doğrudan `macDolulugu`'ndan (hazırlık çarpanı; CM2-b'nin kombine eki aynı yoldan) — çizilen = ödeyen seyirci.
+- **B60:** saatli ajanda işi yokken (sezon dışı) en yakın görünür rutin işte durur; sezon içinde maç günü işi hep olduğundan Kasım tabanına etkisi beklenmez.
+- **Araçlar:** `sezon-deneme --tarif` (varsayılan yaz; Kasım tabanları `--tarif kasim`), hazırlık satırları `H1…`, `--kayit-yaz …@tarih=`; akış ve okunurluk her bağlamda `kasim_tarayici` (adreste `tarif=` yoksa Kasım); kariyer-deneme 47 + 6 çağrı `tarif:'kasim'`.
+
+**Ölçüler:** yaz kariyerinin kurulumu doğrulamadan geçer; `sezon-deneme 3 7 --tarif yaz --tek` H1–H4 ve üç lig haftası 264 sn (dizüstü), kasa 22 Haziran 5,2 → 5 Eylül 4,68 milyon ₺ (maaş −1,33, bilet +0,52, lig payı +0,3). Kasım tarifiyle kurulan kariyer CM2-a'dan önceki kodla birebir aynı (`baslangicTarihi` ve `icerik.baslangic` dışında; Node karşılaştırması).
+
+**Denetimler (dizüstü):** `kariyer-deneme` bütün bölümler geçti (yeni CM2-a bölümü 17 denetim; 12→13 geçişi `kayit-s12-hafta14`); ad denetimi temiz; akış 43 geçti (yaz kariyeri, Canlı Skor hazırlık grubu, maç sayfası, geçen sezon, 24 Haziran kartı, bilet, maç sonu, Odaya dön); regresyon akış 1, 19, 25, 38, 42 geçti (Kasım tarifinde, `kasim_tarayici`). Evde: akış tamamı, `--tarif kasim --ayni` tam sezon (t7, t3), okunurluk beş genişlik, kontrol, akis-2d, hız.
+
+**CM2-b (dal `claude/cm2b-onsezon`, 2026-11-03, dizüstü, oto mod):** uygulandı (YOL_HARITASI karar 89). Plandan sapmalar ve eklemeler:
+
+- **Transfer yasağı yalnız açılış engeli** (`TA_ACILIS_ENGELLERI`); şeritte “Transfer” altında küçük “yasaklı”, panoda kırmızı satır. Tahta açılınca düşen hoca isteği ertesi gün 11:00 yeniden gelir (dosya yoksa). Cevapsız ya da “kapalı kalsın”: oyuncular haftada bir yeniden arar (en çok altı kez).
+- **Gizli borç:** imzalayana 30 Haziran'da haciz uyarısı (faizli; cevapsızsa haciz cezalı ve manşet), soranın karşısına 23 Haziran'da ek tutanak (eski başkan kırgın, kulis haberi).
+- **Lisans** şablon motoruyla değil, sıralı kartlarla (sözleşme kalıbı): üç kalem, her kalem iki yol; belediye protokolü 5 gün sonra 11:30 (sabahın adımlarıyla çakışmasın), federasyonun ve belediyenin cevabı tohumdan; son gün 23 Temmuz 18:00, açık kalem başına ceza ödemesi ve manşet. Tamamlanınca son gün işi silinir.
+- **Kamp bir aralık** (`k.kosullar.kamp`), çok günlük ajanda işi değil: antrenman programı `kamp` (yük 1,1; hafta sonu da), balkonda antrenman penceresi yok ve durum satırında “Takım kampta”, gün başı notunda ve Haberler'in Bugün'ünde ilk satır; masraf ve dönüş hatırlatmaları. Hazırlık maçı kampta da ev sahibinin statında oynanır (fikstüre kamp işareti konmadı).
+- **Kombine** iç saha doluluğuna eklenir (`DOLULUK_EKLERI`; bilet ve maç sayfasının seyircisi aynı değer); cevapsızda geçen yılın fiyatı.
+- **Kurul yetkisi** kredi ve dört taksit ödeme işi (Ekim, Aralık, Şubat, Nisan); transfer bütçesine bağlanmadı.
+- **Personel değişimi** eski kişiyi ayrıldı, yeni TEST kişiyi aktif yapar (tazminat); açık devirlerde eski kişi sahip kalabilir (devir kalitesi kişiden okunur; risk küçük).
+- **Taraftar ziyareti** `ZIYARET_KONULARI` ile (konuşma ve iki cevap konuya göre); söz `on.sozZam`. Basın sözü `SOZ_TARAFLARI.basin`.
+- **Sponsor** Temmuz ay başında da açılır; bu sezon bir sponsorla anlaşıldıysa Şubat teklifi yok.
+- **Alıştırma ipuçları:** sekiz ekran, yaz kariyerinde ilk lig maçına dek bir kez; Ayarlar › Okuma › İpuçları (Açık deyince görülenler sıfırlanır). Odak ızgarası ipucu varken üç satır (içerik sıkışmasın; ilk denemede telefon görünmez oluyordu).
+
+**Ölçüler (tohum 7, dizüstü):** hepsi cevaplanırsa (A) 22 Ağustos'ta kasa 4,43 milyon ₺ (kredi +2,0 milyon dahil; alacak −0,78, vergi −0,80, kamp −0,45, maaş −0,97, altyapı −0,40, kombine +0,45); hiçbiri cevaplanmazsa (B) 3,60 milyon ₺ (haciz −0,58, lisans cezası −0,60). `sezon-deneme 2 7 --tarif yaz --tek`: ilk lig maçına dek 16 karar (oynama ölçüsü), H1–H4 skorları paketsizle aynı.
+
+**Denetimler (dizüstü):** `kariyer-deneme` bütün bölümler geçti (CM2-b bölümü 11 denetim: kurulum, tahta kilidi, Kasım'da paket yok, A ve B yolları, gazete, belirlenimcilik, her durakta kaydet–yükle); ad denetimi temiz; akış 44, 43, 41 geçti; `sezon-deneme 2 7 --tarif yaz --tek` geçti. Kasım bütünlüğü: `sezon-deneme 18 7 --tek --tarif kasim --teklif sat --talep onayla --p12 degisim --karsilastir araclar/taban/sezon-rk7-t7.json --ayni` CM2-a koduyla 18 ortak hafta birebir aynı (özet dahil; 41 dk); CM2-b koduyla da 18 ortak hafta birebir aynı (28 dk). Yaz sezon tabanı alındı: `araclar/taban/sezon-cm2-t7.json` (18 hafta + 4 hazırlık, `--teklif sat --talep onayla --p12 degisim`, 36 dk; hatasız; `GUNCEL.json` `sezonYaz`). Evde: akış tamamı, t3 (kaydet–yükle), okunurluk beş genişlik (yeni kartlar ve ipucu), kontrol, akis-2d, hız.

@@ -128,6 +128,22 @@ def loca(sorgu):
     return sorgu + ("&" if "?" in sorgu else "?") + "pul=0"
 
 
+# CM2-a (2026-11-03): yeni kariyer varsayılan olarak yaz tarifinde (22 Haziran) açılır; eski bölümler Kasım tarifi (13. hafta) üzerine yazılmıştır.
+# Her bağlama, adreste tarif= yoksa OYUN_VARSAYILAN_TARIF='kasim' konur (yeni bölümler ?tarif=yaz ile açar)
+KASIM_JS = "if (!/[?&]tarif=/.test(location.search)) globalThis.OYUN_VARSAYILAN_TARIF = 'kasim';"
+
+
+def kasim_tarayici(tarayici):
+    eski = tarayici.new_context
+
+    async def yeni(*a, **kw):
+        b = await eski(*a, **kw)
+        await b.add_init_script(KASIM_JS)
+        return b
+    tarayici.new_context = yeni
+    return tarayici
+
+
 async def sayfa(tarayici, site, sorgu, bekle, ad="index.html"):
     baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
     pg = await baglam.new_page()
@@ -4564,6 +4580,144 @@ async def haber_bekle(pg, sn=30):
     await yokla(pg, "() => !(typeof ZAMAN_SAHNE !== 'undefined' && ZAMAN_SAHNE.acik) && !!document.querySelector('#oda section.odk[data-odak=\"haberler\"]:not(.odk-cikis)')", sn)
 
 
+YAZ_JS = """() => { const k = OYUN.kariyer, T = sezonTablosu(k), s = document.querySelector('#cmSerit .cm-tarih');
+  return { tarih: k.tarih, dk: k.gunIciDakika, bas: k.baslangicTarihi, tarif: k.sezon.tarif || null, serit: s ? s.textContent.replace(/\\s+/g, ' ') : '',
+    sifir: T.every(t => t.O === 0 && t.P === 0), ilk: T[0].id, gecen: (k.sezon.gecenSezon || [])[0] || null,
+    hazirlik: k.fikstur.filter(f => f.tur === 'hazirlik').map(f => f.tarih), mg: (Object.values(k.isler).find(x => x.veri && x.veri.eylem === 'macGunu') || {veri: {}}).veri.macId || null }; }"""
+
+
+ONSEZON_JS = """() => { const k = OYUN.kariyer, O = k.kosullar.onsezon || null, kart = Object.values(k.isler).filter(x => x.tur === 'ajanda' && x.veri.karar && /^on[A-Z]/.test(x.veri.karar));
+  const t = document.querySelector('#cmSerit [data-cm="transfer"]');
+  return { an: k.tarih + ' ' + k.gunIciDakika, yasak: O ? O.yasak : null, kartlar: kart.map(x => x.veri.karar), dosyalar: Object.values(k.meseleler).filter(m => m.tur === 'onsezon').map(m => m.baslik + ':' + m.durum),
+    serit: t ? t.textContent : '', kisi: Object.values(k.kisiler).filter(p => ['eskiBaskan', 'taraftar'].includes(p.rol)).map(p => p.rol).sort().join(',') }; }"""
+
+
+async def onsezon_ilerle(pg, karar, sinir=6):
+    """İlerle'ye basar (ara duraklarda) ta ki verilen türde bir ön sezon kartı gelene dek; o kartın kimliğini döndürür."""
+    for _ in range(sinir):
+        bul = await pg.evaluate(f"() => {{ const x = Object.values(OYUN.kariyer.isler).find(i => i.tur === 'ajanda' && i.veri.karar === '{karar}'); return x ? x.id : null; }}")
+        if bul:
+            return bul
+        await oda_ilerle(pg)
+        await yokla(pg, "() => !(typeof ZAMAN_SAHNE !== 'undefined' && ZAMAN_SAHNE.acik && ZAMAN_SAHNE.evre !== 'ozet')", 40)
+        await masaya_don(pg)
+    return None
+
+
+async def bolum_44(tarayici, site, tum_hatalar):
+    """CM2-b (2026-11-03, karar 89): ilk hafta — göreve başlamanın günü masada devir teslim tutanağı (dosya ve tek kart), gazetenin ilk sayısında mazbata
+    manşet; şeritte “Transfer · yasaklı”, panoda tahta kapalı satırı; ertesi gün futbolcu alacakları kartı, ödeyince tahta açılır; alıştırma ipucu bir
+    ekran ilk açıldığında tek satır, ikinci açılışta yok; kayıt yenilemeden sonra sürer."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7&tarif=yaz")
+    tum_hatalar += hatalar
+    o0 = await pg.evaluate(ONSEZON_JS)
+    gz = await pg.evaluate("() => { const g = gazeteSayisi(OYUN.kariyer, '2026-06-22'); return g ? g.manset.anahtar : null; }")
+    denetle("CM2-b: göreve başlama günü: eski başkan ve taraftar temsilcisi kişilerde, transfer tahtası kapalı (şeritte “Transfer · yasaklı”), gazetenin ilk sayısında mazbata manşet",
+            o0["yasak"] is True and "yasaklı" in o0["serit"] and o0["kisi"] == "eskiBaskan,taraftar" and gz == "on.gz.mazbata", f"{o0} · {gz}")
+    # ipucu: Haberler ilk açılışta tek satır, ikinci açılışta yok
+    await pg.keyboard.press("Digit9")
+    await pg.wait_for_selector('#oda section.odk[data-odak="haberler"]', timeout=5000)
+    ip1 = await pg.evaluate("() => (document.querySelector('#oda .odk-ipucu') || {}).textContent || ''")
+    await masaya_don(pg)
+    await pg.keyboard.press("Digit9")
+    await pg.wait_for_selector('#oda section.odk[data-odak="haberler"]', timeout=5000)
+    ip2 = await pg.evaluate("() => !!document.querySelector('#oda .odk-ipucu')")
+    await masaya_don(pg)
+    denetle("CM2-b: alıştırma ipucu: Haberler ilk açılışta tek satır (en çok sekiz kelime), ikinci açılışta yok", bool(ip1) and len(ip1.split()) <= 8 and not ip2, f"{ip1!r} · {ip2}")
+    # devir teslim kartı (10:00)
+    d = await onsezon_ilerle(pg, "onDevir")
+    o1 = await pg.evaluate(ONSEZON_JS)
+    denetle("CM2-b: İlerle 22 Haziran 10:00'da devir teslim tutanağında durur: dosya ve tek kart", d is not None and o1["an"] == "2026-06-22 600" and "Devir teslim tutanağı:kararBekliyor" in o1["dosyalar"], str(o1))
+    await pg.evaluate(f"() => {{ oyunKomut(x => ajandaIsiYap(x, '{d}', 'imzala')); OYUN.oturum.kaydet(); }}")
+    await oda_yenile(pg)
+    # alacak kartı (23 Haziran 10:00): öde → tahta açılır
+    a = await onsezon_ilerle(pg, "onAlacak")
+    o2 = await pg.evaluate(ONSEZON_JS)
+    await pg.click('#cmSerit [data-cm="transfer"]')
+    await pg.wait_for_selector('#oda section.odk[data-odak="transfer"]', timeout=5000)
+    pano = await pg.evaluate("() => (document.querySelector('#oda section.odk[data-odak=\"transfer\"]') || {}).textContent || ''")
+    await masaya_don(pg)
+    await pg.evaluate(f"() => {{ oyunKomut(x => ajandaIsiYap(x, '{a}', 'ode')); OYUN.oturum.kaydet(); }}")
+    await oda_yenile(pg)
+    o3 = await pg.evaluate(ONSEZON_JS)
+    denetle("CM2-b: 23 Haziran futbolcu alacakları kartı; panoda “Transfer tahtası kapalı”; ödeyince tahta açılır, şeritte yalnız “Transfer”; kayıt yenilemeden sonra sürer",
+            a is not None and o2["an"].startswith("2026-06-23") and "Transfer tahtası kapalı" in pano and o3["yasak"] is False and "Transfer" in o3["serit"] and "yasaklı" not in o3["serit"],
+            f"{o2['an']} · {'Transfer tahtası kapalı' in pano} · {o3}")
+    await pg.screenshot(path=str(ARAC / "son-akis-44-oda.png"))
+    await pg.context.close()
+
+
+async def bolum_43(tarayici, site, tum_hatalar):
+    """CM2-a (2026-11-03, karar 88): yaz tarifi — yeni kariyer 22 Haziran 2026 Pazartesi 08:00, göreve yeni gelmiş başkan. Lig tablosu sıfır (geçen sezonun
+    sırasıyla), Canlı Skor'un ilk haftasında “Hazırlık maçları” grubu, kulüp sayfasında “Geçen sezon”; İlerle 24 Haziran'da sözleşmesi biten oyuncuların
+    kartında durur; ilk hazırlık maçına gidilir (Stada git bileti “Hazırlık maçı”), TEST Maçı bitir, maç sonu kartı “Hazırlık maçı”, Odaya dön: tablo hâlâ
+    sıfır, Canlı Skor'da hazırlık satırı skorlu, sıradaki maç günü ikinci hazırlık."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7&tarif=yaz")
+    tum_hatalar += hatalar
+    y0 = await pg.evaluate(YAZ_JS)
+    denetle("CM2-a: yeni kariyer yaz tarifinde 22 Haziran 2026 Pazartesi 08:00 (başlangıç günü kayıtta); şeritte tarih; tablo sıfır, eşitlikte geçen sezonun sırası; dört hazırlık maçı, maç günü ilkinde",
+            y0["tarih"] == "2026-06-22" and y0["dk"] == 480 and y0["bas"] == "2026-06-22" and y0["tarif"] == "yaz" and "22.06.2026" in y0["serit"] and "Pazartesi" in y0["serit"]
+            and y0["sifir"] and y0["ilk"] == y0["gecen"] and y0["hazirlik"] == ["2026-07-11", "2026-07-18", "2026-08-01", "2026-08-08"] and (y0["mg"] or "").startswith("mac-2627-h1-"), str(y0))
+    # Lig: Canlı Skor Maçlar sekmesi ilk hafta, Hazırlık grubu; kulüp sayfasında geçen sezon
+    await pg.keyboard.press("Digit0")
+    await pg.wait_for_selector('.tel-ekran[data-ekran="skor"]', timeout=5000)
+    await pg.click('[data-eylem="skorSekme"][data-sekme="maclar"]')
+    await pg.wait_for_timeout(200)
+    m = await pg.evaluate("""() => { const E = document.querySelector('.tel-ekran[data-ekran="skor"]'); return { baslik: [...E.querySelectorAll('h5')].map(h => h.textContent),
+      hafta: (E.querySelector('.tel-haftaNav b') || {}).textContent || '', hz: E.querySelectorAll('[data-eylem="csAc"][data-tur="mac"][data-id*="-h"]').length }; }""")
+    denetle("CM2-a: Canlı Skor Maçlar 1. hafta; önce “Hazırlık maçları” (dört satır), sonra Lig", m["hafta"] == "1. hafta" and m["baslik"][:1] == ["Hazırlık maçları"] and "Lig" in m["baslik"] and m["hz"] == 4, str(m))
+    await cs_ac(pg, "mac", y0["mg"])
+    await pg.wait_for_timeout(200)
+    ms = await pg.evaluate("() => ({ kunye: (document.querySelector('.cs-kunye') || {}).textContent || '' })")
+    await cs_bolum(pg, "tablo")
+    ms["tablo"] = await pg.evaluate("() => (document.querySelector('.cs-sayfa .cs-yok') || {}).textContent || ''")
+    denetle("CM2-a: hazırlık maçının sayfası “Hazırlık maçı”; Puan durumu bölümünde “puan durumuna girmez”", ms["kunye"].startswith("Hazırlık maçı") and "puan durumuna girmez" in ms["tablo"], str(ms))
+    await skor_ana(pg)
+    await masaya_don(pg)
+    # kulüp sayfası: geçen sezon
+    gs = await pg.evaluate("() => { const o = kulupOzeti(OYUN.kariyer, 'demirkapi'); return o ? o.gecenSezon : null; }")
+    denetle("CM2-a: kulübün geçen sezonki sırası Canlı Skor'un kulüp özetinde (yaz tarifi)", isinstance(gs, int) and gs >= 1, str(gs))
+    # İlerle: 24 Haziran 10:30 sözleşme kartı (deneme ortamında ayar Ofis; ara duraklar cevapsız geçilir)
+    kart = None
+    for _ in range(8):
+        await oda_ilerle(pg)
+        await yokla(pg, "() => !(typeof ZAMAN_SAHNE !== 'undefined' && ZAMAN_SAHNE.acik && ZAMAN_SAHNE.evre !== 'ozet')", 40)
+        await masaya_don(pg)
+        kart = await pg.evaluate("() => { const k = OYUN.kariyer, x = Object.values(k.isler).find(i => i.tur === 'ajanda' && i.veri.karar === 'sozlesmeYenile'); return x ? { an: k.tarih + ' ' + k.gunIciDakika, son: x.tarih + ' ' + x.dakika, sira: x.veri.sira.length } : null; }")
+        if kart:
+            break
+    denetle("CM2-a: İlerle 24 Haziran 10:30'da sözleşmesi biten oyuncuların kartında durur (son cevap 30 Haziran 18:00, sırada iki oyuncu daha)",
+            kart is not None and kart["an"] == "2026-06-24 630" and kart["son"] == "2026-06-30 1080" and kart["sira"] == 2, str(kart))
+    # ilk hazırlık maçına: kartlar cevapsız geçilir (komutla), sonra oda yenilenir ve Stada git
+    await pg.evaluate("""() => { for (let i = 0; i < 120; i++) { const k = OYUN.kariyer, j = Object.values(k.isler).find(x => x.veri && x.veri.eylem === 'macGunu');
+      if (!j || (k.tarih === j.tarih && k.gunIciDakika === j.dakika)) break; oyunKomut(x => duragaIlerle(x)); } OYUN.oturum.kaydet(); }""")
+    await oda_yenile(pg)
+    an = await pg.evaluate("() => OYUN.kariyer.tarih + ' ' + OYUN.kariyer.gunIciDakika")
+    await pg.add_init_script("document.addEventListener('DOMContentLoaded', () => { const g = document.getElementById('gecisKarti'); window.__gecisIlk = g ? g.innerText.replace(/\\s+/g, ' ') : null; });")
+    await pg.click("#cmSerit .od-ana")
+    await pg.wait_for_selector("#onEkran:not([hidden]) #btnIlerle", timeout=60000)
+    gi = await pg.evaluate("() => window.__gecisIlk")
+    bul = await pg.evaluate("() => ({ tur: MAC_GUNU.bulten && MAC_GUNU.bulten.tur, ust: (document.querySelector('#onEkran .prg-ustAd small') || {}).textContent || '', digeri: (MAC_GUNU.digerleri || []).length })")
+    denetle("CM2-a: 11 Temmuz 18:00 ilk hazırlık maçı; bilet “Hazırlık maçı”; bültende “Hazırlık maçı”, öbür maç yok",
+            an == "2026-07-11 1080" and bool(gi) and "HAZIRLIK MAÇI" in gi.upper() and bul["tur"] == "hazirlik" and bul["ust"].startswith("Hazırlık maçı") and bul["digeri"] == 0, f"{an} · {gi} · {bul}")
+    await pg.click("#btnBeklemedenGec")
+    await pg.wait_for_function("() => !ON_EKRAN.acik", timeout=30000)
+    await pg.evaluate("() => document.getElementById('btnHizliBitir').click()")
+    await pg.wait_for_selector("#macSonu:not([hidden]) [data-eylem='odayaDon']", timeout=240000)
+    ust = await pg.evaluate("() => (document.querySelector('#macSonu .ms-ust') || {}).textContent || ''")
+    denetle("CM2-a: maç sonu kartında “Hazırlık maçı”", "Hazırlık maçı" in ust, ust)
+    await pg.click("#macSonu [data-eylem='odayaDon']")
+    await pg.wait_for_selector(ODA_HAZIR, timeout=240000)
+    o = await pg.evaluate("""() => { const k = OYUN.kariyer, h1 = k.fikstur.find(f => f.tur === 'hazirlik' && f.no === 1), h2 = k.fikstur.find(f => f.tur === 'hazirlik' && f.no === 2),
+      j = Object.values(k.isler).find(x => x.veri && x.veri.eylem === 'macGunu'), H = canliHafta(k, 1).hazirlik;
+      return { skor: k.maclar[h1.id] ? k.maclar[h1.id].skor.join('-') : null, sifir: sezonTablosu(k).every(t => t.O === 0), mg: j ? j.veri.macId === h2.id : false,
+        cs: H.find(x => x.id === h1.id).durum, an: k.tarih + ' ' + k.gunIciDakika, gol: Object.values(k.oyuncular).filter(p => p.kulupId).reduce((a, p) => a + (p.gol | 0), 0) }; }""")
+    denetle("CM2-a: Odaya dön: hazırlık maçı kaydedildi; puan tablosu hâlâ sıfır, gol sayacı 0; Canlı Skor'da hazırlık satırı bitti; sıradaki maç günü ikinci hazırlık",
+            o["skor"] is not None and o["sifir"] and o["gol"] == 0 and o["mg"] and o["cs"] == "bitti", str(o))
+    await pg.screenshot(path=str(ARAC / "son-akis-43-oda.png"))
+    await pg.context.close()
+
+
 async def bolum_42(tarayici, site, tum_hatalar):
     """CM1-b (2026-11-03, karar 87): Haberler — tek kronolojik liste, Cevap bekliyor, Haber var sayacı, İlerle'den sonra Haberler. Şeritteki Haberler (ya da 9)
     listeyi açar (Bugün bölümü, sekme satırında Hepsi · Cevap bekliyor · kategoriler); Haberler açıkken İlerle şeritte; İlerle'nin akışı bitince Haberler açılır,
@@ -4752,8 +4906,8 @@ async def ana():
     (site / "index-test.html").write_text(idx.replace('<script src="js/baslangic.js"></script>', ek), encoding="utf-8")
     tum_hatalar = []
     async with async_playwright() as p:
-        tarayici = await p.chromium.launch(
-            args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
+        tarayici = kasim_tarayici(await p.chromium.launch(
+            args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]))
 
         if sec("1"):
             print("\n1. İçeriksiz yeni kariyer")
@@ -4859,6 +5013,12 @@ async def ana():
         if sec("42"):
             print("\n42. Haberler (CM1-b)")
             await bolum_42(tarayici, site, tum_hatalar)
+        if sec("43"):
+            print("\n43. Yaz tarifi ve hazırlık maçı (CM2-a)")
+            await bolum_43(tarayici, site, tum_hatalar)
+        if sec("44"):
+            print("\n44. İlk hafta: devir teslim, alacak, ipucu (CM2-b)")
+            await bolum_44(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

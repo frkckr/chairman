@@ -98,8 +98,8 @@ function oyuncuUret(r,o){
   return p;
 }
 /* kadrolar.js biçimindeki oyuncudan kariyer kaydı (kimliksiz) */
-function oyuncuKaydi(x,mevki,dogumTarihi){
-  const p={ad:x.ad,no:x.no,mevki,dogumTarihi,ayak:x.ayak||'sag',oz:x.oz.slice(),gol:x.gol||0,sari:x.sari||0,mac:0,dk:0,ceza:null,sakat:null};
+function oyuncuKaydi(x,mevki,dogumTarihi,sifir){   /* CM2-a: sifir — yaz tarifinde sezon sayaçları sıfırdan (kadrolar.js'teki gol ve sarı 13. haftanındır) */
+  const p={ad:x.ad,no:x.no,mevki,dogumTarihi,ayak:x.ayak||'sag',oz:x.oz.slice(),gol:sifir?0:x.gol||0,sari:sifir?0:x.sari||0,mac:0,dk:0,ceza:null,sakat:null};
   for(const a of OYUNCU_GORUNUS)if(x[a]!==undefined)p[a]=x[a];
   for(const a of OYUNCU_BAYRAK)if(x[a])p[a]=true;
   return p;
@@ -137,11 +137,12 @@ function kadroUret(k,kulupId,o){
 function kadroKopyala(k,kulupId,KD,o){
   const r=kadroRastgele(o.tohum,kulupId+':kopya'),M=dizilisMevkileri(KD.taktik.dizilis),S=kadroSablonu();
   if(!M)throw new Error(`Kadro ${kulupId}: diziliş geçersiz (${KD.taktik.dizilis})`);
-  const ilk11=KD.oyuncular.map((x,i)=>oyuncuEkle(k,kulupId,oyuncuKaydi(x,M[i],yasUret(r,M[i]))));
-  const yedekler=(KD.yedekler||[]).map(x=>oyuncuEkle(k,kulupId,oyuncuKaydi(x,x.mevki,yasUret(r,x.mevki))));
+  const ilk11=KD.oyuncular.map((x,i)=>oyuncuEkle(k,kulupId,oyuncuKaydi(x,M[i],yasUret(r,M[i]),o.sifir)));
+  const yedekler=(KD.yedekler||[]).map(x=>oyuncuEkle(k,kulupId,oyuncuKaydi(x,x.mevki,yasUret(r,x.mevki),o.sifir)));
+  /* eksikler 12 Kasım'ın sakat ve cezalılarıdır; yaz tarifinde (CM2-a) sağlam ve cezasız kadrodadırlar */
   for(const e of KD.eksikler||[]){
     const p=oyuncuUret(r,{mevki:e.mevki,sablon:S.mevki[e.mevki],guc:o.guc,ad:e.ad,no:e.no});
-    yedekler.push(oyuncuEkle(k,kulupId,Object.assign(p,eksikDurumu(e,o.tarih))));
+    yedekler.push(oyuncuEkle(k,kulupId,Object.assign(p,o.sifir?{}:eksikDurumu(e,o.tarih))));
   }
   return{ad:KD.ad,forma:KD.forma,kaleciForma:KD.kaleciForma,taktik:Object.assign({},KD.taktik),td:Object.assign({},KD.td),ilk11,yedekler};
 }
@@ -152,11 +153,12 @@ function kulupGucu(lig,kulupId){
 }
 /* bütün kulüplerin kadrosu: başkanın kulübü önce (kimlikler oyuncu-1'den başlar), sonra kulüp sırasıyla. Kulübün gücü devralınan puandan.
    G1-b: bütün kulüpler kurulduktan sonra aynı sırayla genç yedeklerle KADRO_HEDEF'e tamamlanır (önceki oyuncuların kimlikleri değişmez) */
-function kadrolariKur(k,lig){
-  const biz=(k.kisiler[k.baskanId]||{}).kulupId,sira=[biz,...Object.keys(k.kulupler).filter(x=>x!==biz)].filter(id=>k.kulupler[id]);
+function kadrolariKur(k,lig,ek){
+  const biz=(k.kisiler[k.baskanId]||{}).kulupId,sira=[biz,...Object.keys(k.kulupler).filter(x=>x!==biz)].filter(id=>k.kulupler[id]),sifir=!!(ek&&ek.sifir);
   for(const id of sira){
-    const t=lig.takimlar.find(x=>x.id===id)||{G:0,B:0,M:0,A:0};
-    const o={tohum:k.dunyaTohumu,guc:kulupGucu(lig,id),golSayisi:t.A,oynanan:t.G+t.B+t.M,tarih:k.tarih};
+    /* CM2-a: yaz tarifinde (sifir) sezon sıfırdan başlar — oynanmış hafta, gol, sarı ve eksik yok; kulübün gücü yine geçen sezonun tablosundan */
+    const t=sifir?{G:0,B:0,M:0,A:0}:lig.takimlar.find(x=>x.id===id)||{G:0,B:0,M:0,A:0};
+    const o={tohum:k.dunyaTohumu,guc:kulupGucu(lig,id),golSayisi:t.A,oynanan:t.G+t.B+t.M,tarih:k.tarih,sifir};
     k.kulupler[id].kadro=KADROLAR[id]?kadroKopyala(k,id,KADROLAR[id],o):kadroUret(k,id,o);
     devralinanSayaclar(k,id,o.oynanan);
   }
@@ -167,6 +169,7 @@ function kadrolariKur(k,lig){
    Her oyuncuda maç ≥ sarı, gol > 0 ise maç ≥ 1, dk ≤ 90 × maç */
 function devralinanSayaclar(k,kulupId,oynanan){
   const D=k.kulupler[kulupId].kadro,r=kadroRastgele(k.dunyaTohumu,`${kulupId}:sayac`);
+  if(oynanan===0){for(const id of D.ilk11.concat(D.yedekler)){const p=k.oyuncular[id];p.mac=0;p.dk=0;}return;}   /* CM2-a: sezon başı (yaz tarifi) */
   D.ilk11.concat(D.yedekler).forEach((id,i)=>{
     const p=k.oyuncular[id];let mac,dkm;
     if(i===0){mac=oynanan;dkm=90;}

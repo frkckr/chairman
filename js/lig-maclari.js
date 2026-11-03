@@ -29,12 +29,13 @@
 /* RK7 (2026-11-01): bizim maçla aynı anda (aynı gün ve saat) başlayan, oynanmamış öbür maçlar — maç sayfasında canlı oynananlar. Haftanın öbür
    saatlerdeki maçları kendi saatinde lig maçı işi oynar (js/lig-takvimi.js). İlk hafta (bütün maçlar Cumartesi 19:00) eskisi gibi yedi maçtır */
 function haftaninDigerMaclari(k,macId){
-  const f=(k.fikstur||[]).find(x=>x.id===macId);if(!f)return[];
-  return k.fikstur.filter(x=>x.id!==macId&&x.tarih===f.tarih&&x.dakika===f.dakika&&!x.tarihBekliyor&&!(k.maclar||{})[x.id]);
+  const f=(k.fikstur||[]).find(x=>x.id===macId),hz=x=>typeof hazirlikMi==='function'&&hazirlikMi(x);if(!f||hz(f))return[];   /* CM2-a: hazırlıkta öbür maç yok */
+  return k.fikstur.filter(x=>x.id!==macId&&x.tarih===f.tarih&&x.dakika===f.dakika&&!x.tarihBekliyor&&!(k.maclar||{})[x.id]&&!hz(x));
 }
 const HUKMEN_SKOR=3;
 const kulupHazirMi=(k,kulupId,tarih)=>kulupOyunculari(k,kulupId).filter(p=>oyuncuUygunMu(p,tarih)).length>=11;
 function hukmenKarari(k,f){
+  if(typeof hazirlikMi==='function'&&hazirlikMi(f))return null;   /* CM2-a: hazırlık maçı hükmen olmaz */
   const e=kulupHazirMi(k,f.ev,f.tarih),c=kulupHazirMi(k,f.konuk,f.tarih);
   if(e&&c)return null;
   return!e&&!c?{skor:[0,0],neden:'cift'}:!e?{skor:[0,HUKMEN_SKOR],neden:'ev'}:{skor:[HUKMEN_SKOR,0],neden:'konuk'};

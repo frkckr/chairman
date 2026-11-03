@@ -31,10 +31,14 @@ const ZIYARET_METIN={
   cevap:{tesekkur:{metin:'Sağ ol',aciklama:'Görüşme biter; söyledikleri deftere ve oyuncu dosyalarına yazılır.',tepki:'Rahatlamış görünüyordu.'},
     baski:{metin:'Sonuç istiyorum',aciklama:'Görüşme biter; bunu aklında tutar (TEST: bugün etkisi yok).',tepki:'Yüzü biraz asıldı.'}}
 };
+/* CM2-b: ziyaretin konuları (içerik paketleri ekler): konu → {baslik?(k, v), konusma(k, v) → metin, cevaplar:{id:{metin, aciklama, tepki}}, uygula?(k, is, secim)}.
+   Kayıtlı konusu olmayan ziyaret (bugün 'takim': hoca ve yardımcı) eski yoldan: takımın görüntüsü ve iki TEST cevap */
+const ZIYARET_KONULARI={};
 const ziyaretKonusmasi=(k,kisiId,T)=>{const p=k.kisiler[kisiId];return p&&p.rol==='yardimciAntrenor'?YAZISMA_METIN.yardimciTakim(k,T):YAZISMA_METIN.hocaTakim(k,T);};
-function ziyaretRandevuVeri(k,kisiId,erteleme){
-  return{baslik:`Görüşme: ${kisiAdi(k,kisiId)}`,aciklama:ZIYARET_METIN.kapi(k,kisiId),zorunluluk:'istege',sure:YAZISMA_TEST.gorusme.sure,
-    karar:'ziyaret',kisiId,konu:'takim',erteleme:erteleme|0};
+function ziyaretRandevuVeri(k,kisiId,erteleme,konu){
+  const Z=konu&&ZIYARET_KONULARI[konu];
+  return{baslik:Z&&Z.baslik?Z.baslik(k,{kisiId}):`Görüşme: ${kisiAdi(k,kisiId)}`,aciklama:ZIYARET_METIN.kapi(k,kisiId),zorunluluk:'istege',sure:YAZISMA_TEST.gorusme.sure,
+    karar:'ziyaret',kisiId,konu:Z?konu:'takim',erteleme:erteleme|0};
 }
 const ziyaretSaatinde=(k,is)=>!!is&&is.tarih===k.tarih&&is.dakika===k.gunIciDakika;
 const ziyaretBul=(k,tur)=>Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.karar===tur&&ziyaretSaatinde(k,x))||null;
@@ -61,23 +65,24 @@ KARAR_TURLERI.ziyaret={
   uygula:(k,is,secim)=>{
     const v=is.veri,ad=kisiAdi(k,v.kisiId);
     if(secim==='buyursun'){
-      const T=takimGoruntusu(k);
-      isEkle(k,{tur:'ajanda',tarih:k.tarih,dakika:k.gunIciDakika,veri:{baslik:`Görüşme: ${ad}`,aciklama:ziyaretKonusmasi(k,v.kisiId,T),zorunluluk:'istege',
+      const Z=ZIYARET_KONULARI[v.konu],T=Z?{konu:v.konu}:takimGoruntusu(k);
+      isEkle(k,{tur:'ajanda',tarih:k.tarih,dakika:k.gunIciDakika,veri:{baslik:`Görüşme: ${ad}`,aciklama:Z?Z.konusma(k,v):ziyaretKonusmasi(k,v.kisiId,T),zorunluluk:'istege',
         sure:YAZISMA_TEST.gorusme.sure,karar:'ziyaretGorusme',kisiId:v.kisiId,konu:v.konu,p:T}});
       return{bilgi:`${ad} içeri girdi.`};
     }
     const o=(v.erteleme|0)<ZIYARET_TEST.ertelemeEnCok?ziyaretSonrakiAn(k,is):null;
-    if(o){isEkle(k,{tur:'ajanda',tarih:o.tarih,dakika:o.dakika,veri:ziyaretRandevuVeri(k,v.kisiId,(v.erteleme|0)+1)});
+    if(o){isEkle(k,{tur:'ajanda',tarih:o.tarih,dakika:o.dakika,veri:ziyaretRandevuVeri(k,v.kisiId,(v.erteleme|0)+1,v.konu)});
       return{bilgi:`${ad} ${gunAyYazi(o.tarih)} ${saatBulunma(o.dakika)} yeniden gelecek.`};}
     return{bilgi:`${ad} ile görüşme olmadı.`};
   }
 };
 KARAR_TURLERI.ziyaretGorusme={
   denetle:(k,v)=>{const h=[];if(!(k.kisiler||{})[v.kisiId])h.push('ziyaretçi bulunamadı');if(!v.p||typeof v.p!=='object')h.push('görüşmenin görüntüsü yok');return h;},
-  secenekler:(k,is)=>{const G=YAZISMA_TEST.gorusme.sure,C=ZIYARET_METIN.cevap;
+  secenekler:(k,is)=>{const G=YAZISMA_TEST.gorusme.sure,Z=ZIYARET_KONULARI[is.veri.konu],C=Z?Z.cevaplar:ZIYARET_METIN.cevap;
     return Object.keys(C).map(id=>({id,metin:C[id].metin,sure:G,aciklama:[C[id].aciklama]}));},
   uygula:(k,is,secim)=>{
-    const v=is.veri,C=ZIYARET_METIN.cevap[secim];
+    const v=is.veri,Z=ZIYARET_KONULARI[v.konu],C=(Z?Z.cevaplar:ZIYARET_METIN.cevap)[secim];
+    if(Z&&Z.uygula)Z.uygula(k,is,secim);
     k.gecmis.push({tur:'ziyaret',isId:is.id,kisiId:v.kisiId,konu:v.konu,cevap:secim,tarih:k.tarih,dakika:k.gunIciDakika,p:v.p});
     return{bilgi:`${kisiAdi(k,v.kisiId)} ile görüştün: ${v.aciklama} ${C?C.tepki:''}`.trim()};
   }

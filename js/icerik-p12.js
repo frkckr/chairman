@@ -74,7 +74,7 @@ ODA_NOTU_SOZLERI.push('p12.soz');
 function p12Gidisat(k,kulupId,hocaId){
   const L=[];
   for(const f of k.fikstur||[]){
-    const s=(k.maclar||{})[f.id];if(!s||(f.ev!==kulupId&&f.konuk!==kulupId))continue;
+    const s=(k.maclar||{})[f.id];if(!s||hazirlikMi(f)||(f.ev!==kulupId&&f.konuk!==kulupId))continue;   /* CM2-a: hazırlık sayılmaz */
     const t=f.konuk===kulupId?1:0;if(!Array.isArray(s.hocalar)||s.hocalar[t]!==hocaId)continue;
     const o=macOkumasi(k,f.id,kulupId),a=o.skor[0],y=o.skor[1];
     L.push({macId:f.id,hafta:f.hafta,a,y,puan:a>y?3:a===y?1:0,xg:o.xg,uyum:o.tarzIzi.uyum});
@@ -85,7 +85,7 @@ const p12Olaylari=k=>Object.values(k.olaylar||{}).filter(o=>o.paket==='hocaDeger
 /* sabır süresinin sonu: kulübün oynanmamış maçlarından P12_SABIR_MAC'ıncısının (azsa sonuncusunun) akşamı, oda açıldığı an; maç yoksa 21 gün sonra */
 function p12SabirSonu(k,kulupId){
   /* RK7: zamana göre; ertelenip tarih bekleyen maç sayılmaz */
-  const L=(k.fikstur||[]).filter(f=>(f.ev===kulupId||f.konuk===kulupId)&&!(k.maclar||{})[f.id]&&!f.tarihBekliyor&&anDakika(f.tarih,f.dakika)>=simdikiAn(k)).sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika)||a.hafta-b.hafta);
+  const L=(k.fikstur||[]).filter(f=>!hazirlikMi(f)&&(f.ev===kulupId||f.konuk===kulupId)&&!(k.maclar||{})[f.id]&&!f.tarihBekliyor&&anDakika(f.tarih,f.dakika)>=simdikiAn(k)).sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika)||a.hafta-b.hafta);
   const f=L[Math.min(P12_SABIR_MAC,L.length)-1];
   return f?{tarih:f.tarih,dakika:Math.min(1439,f.dakika+MAC_SONRASI_DK),mac:Math.min(P12_SABIR_MAC,L.length)}:{tarih:tarihEkle(k.tarih,21),dakika:600,mac:0};
 }
@@ -93,7 +93,7 @@ function p12SabirSonu(k,kulupId){
 MAC_SONUCU_EKLERI.push((k,f)=>{
   if(k.icerik.surum<PAKETLER.hocaDegerlendirme.icerik||k.gorevDurumu!=='gorevde')return;
   const biz=(k.kisiler[k.baskanId]||{}).kulupId,h=biz?kulupHocasi(k,biz):null;
-  if(!h||(f.ev!==biz&&f.konuk!==biz))return;
+  if(!h||hazirlikMi(f)||(f.ev!==biz&&f.konuk!==biz))return;
   const t=anTarih(Math.max(macAni(f)+MAC_SONRASI_DK+P12_SONRA,simdikiAn(k)));   /* RK7: maçın saatine göre (19:00 maçında 21:30) */
   isEkle(k,{tur:'gelisme',tarih:t.tarih,dakika:t.dakika,veri:{gelisme:'hocaBaskisi',kulupId:biz,hocaId:h.id,macId:f.id}});
 });

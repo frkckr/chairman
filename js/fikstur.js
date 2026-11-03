@@ -22,12 +22,42 @@
      Yeni sezon, takvim ve sayaçların sıfırlanması sonraki turda (5.1).
    Doğrulama: fiksturDogrula (EK_DENETIMLER).
    sezon, fikstur ve maclar paylaşılan alandır (js/kariyer.js PAYLASILAN_ALANLAR): komutlar arasında dondurulur; sonucu yazan komut yeni nesne
-   kurar (k.maclar={...k.maclar,[id]:sonuç}). Dosya katı kiptedir: dondurulmuş nesneye yerinde yazmak hata verir. */
+   kurar (k.maclar={...k.maclar,[id]:sonuç}). Dosya katı kiptedir: dondurulmuş nesneye yerinde yazmak hata verir.
+   CM2-a (2026-11-03; YOL_HARITASI karar 88, plan araclar/plan/cm2-uygulama.md): sezon tarifleri. Yeni kariyer varsayılan olarak 'yaz' tarifiyle açılır:
+     22 Haziran 2026 Pazartesi 08:00, göreve yeni gelmiş başkan; ilk lig maçı 22 Ağustos Cumartesi (1. hafta), devralınan geçmiş yok (tablo sıfır;
+     k.sezon.gecenSezon geçen sezonun sırası = js/lig.js'teki tablo; kulüp gücü oradan), 17. haftadan sonra 4 haftalık devre arası (k.sezon.ara),
+     yaz (22 Haziran–4 Eylül) ve kış (4 Ocak–5 Şubat 2027) transfer dönemleri. 'kasim' bugüne dek tek olan TEST tarifidir (13. hafta, 23 Kasım; araçlar
+     ve eski kayıtlar): k.sezon'a tarif alanı yazılmaz (kayıt ve tabanlar birebir aynı kalır). Kariyerin başlangıç günü k.baslangicTarihi (isteğe bağlı;
+     yoksa Kasım tarifinin günü: CM2'den önceki bütün kariyerler 23 Kasım'da başladı) — gazete arşivi, gün başı notu ve menajer önerileri bunu okur.
+     haftaTarihi devre arasını sayar (ara.sonra'dan sonraki haftalar ara.hafta × 7 gün kayar). */
 'use strict';
-const SEZON_TEST={id:'2026-27',ilkHafta:13,ilkMacTarihi:'2026-11-28',
-  transfer:[{ad:'Kış transfer dönemi',bas:'2027-01-04',bitis:'2027-01-31'}]};
+const SEZON_TARIFLERI={
+  yaz:{ad:'yaz',id:'2026-27',ilkHafta:1,ilkMacTarihi:'2026-08-22',dakika:1140,baslangic:'2026-06-22',ara:{sonra:17,hafta:4},
+    hazirlik:{gun:[-42,-35,-21,-14],dakika:1080,ic:[1,4]},   /* 11 Tem, 18 Tem, 1 Ağu, 8 Ağu Cumartesi 18:00; 1. ve 4. iç saha (TEST) */
+    transfer:[{ad:'Yaz transfer dönemi',bas:'2026-06-22',bitis:'2026-09-04'},{ad:'Kış transfer dönemi',bas:'2027-01-04',bitis:'2027-02-05'}]},
+  kasim:{ad:'kasim',id:'2026-27',ilkHafta:13,ilkMacTarihi:'2026-11-28',baslangic:'2026-11-23',
+    transfer:[{ad:'Kış transfer dönemi',bas:'2027-01-04',bitis:'2027-01-31'}]}
+};
+const SEZON_TARIF_VARSAYILAN='yaz';
+/* kariyerin başladığı gün (CM2-a): yeni kariyerde k.baslangicTarihi; eski kayıtta Kasım tarifinin günü */
+const kariyerBaslangici=k=>k&&typeof k.baslangicTarihi==='string'?k.baslangicTarihi:SEZON_TARIFLERI.kasim.baslangic;
+/* kariyerin sezon tarifi: yaz tarifiyle açılan kariyerin sezonunda tarif alanı vardır */
+const sezonTarifi=k=>k&&k.sezon&&k.sezon.tarif==='yaz'?'yaz':'kasim';
 const macKimligi=(sezon,hafta,ev,konuk)=>`mac-${sezon.kod}-${hafta}-${ev}-${konuk}`;
-const haftaTarihi=(sezon,hafta)=>tarihEkle(sezon.ilkMacTarihi,(hafta-sezon.ilkHafta)*7);
+/* ---- CM2-a: hazırlık maçı (karar 88). Fikstür kaydında tur:'hazirlik', hafta 0, no (sıra), kimlik mac-<kod>-h<no>-<ev>-<konuk>; k.fikstur'un başında
+   (kronolojik). Motor aynı; puan tablosuna, gol ve kart sayaçlarına, ceza düşümüne, hocanın on birine, P12'ye ve oyuncunun maç/dakika sayacına girmez;
+   sakatlık ve kondisyon yazılır, iç sahada küçük bilet geliri (js/kulup-mali.js). Öbür kulüplerin ön sezonu simüle edilmez (rakipler ligin kulüpleri) */
+const hazirlikMi=f=>!!f&&f.tur==='hazirlik';
+const ligMaciMi=f=>!!f&&f.tur!=='hazirlik';
+const hazirlikKimligi=(sezon,no,ev,konuk)=>`mac-${sezon.kod}-h${no}-${ev}-${konuk}`;
+const macEtiketi=f=>hazirlikMi(f)?'Hazırlık maçı':f.hafta+'. hafta';
+function hazirlikFiksturu(k,pivot,H){
+  const r=tohumluRastgele((k.dunyaTohumu^0x4A21A7E5)>>>0),A=k.sezon.takimlar.filter(id=>id!==pivot),L=[];
+  H.gun.forEach((g,i)=>{const no=i+1,rakip=A.splice(Math.floor(r()*A.length),1)[0],ic=H.ic.includes(no),ev=ic?pivot:rakip,konuk=ic?rakip:pivot;
+    L.push({id:hazirlikKimligi(k.sezon,no,ev,konuk),hafta:0,tur:'hazirlik',no,tarih:tarihEkle(k.sezon.ilkMacTarihi,g),dakika:H.dakika,ev,konuk});});
+  return L;
+}
+const haftaTarihi=(sezon,hafta)=>tarihEkle(sezon.ilkMacTarihi,(hafta-sezon.ilkHafta)*7+(sezon.ara&&hafta>sezon.ara.sonra?sezon.ara.hafta*7:0));
 /* maçın motor tohumu: dünya tohumu ve maç kimliğinin FNV-1a özeti (js/kayit.js saglamaHesapla); 32 bit işaretsiz */
 const macTohumu=(dunyaTohumu,macId)=>parseInt(saglamaHesapla(`${dunyaTohumu>>>0}:${macId}`),16)>>>0;
 
@@ -140,9 +170,24 @@ function fiksturUret(takimlar,sabitler,pivot,tohum){
   return haftalar.concat(haftalar.map(E=>E.map(x=>({ev:x.konuk,konuk:x.ev}))));
 }
 
-/* sezonu ve fikstürü kurar (yeni kariyer). lig: js/lig.js biçimi (tablo, son maçlar, ilk haftanın maçı); pivot: başkanın kulübü */
-function sezonKur(k,lig,pivot){
-  const T=SEZON_TEST,B=lig.buMac,[sa,dk]=B.saat.split(':').map(Number),takimlar=lig.takimlar.map(t=>t.id);
+/* sezonu ve fikstürü kurar (yeni kariyer). lig: js/lig.js biçimi (tablo, son maçlar, ilk haftanın maçı); pivot: başkanın kulübü; tarif: SEZON_TARIFLERI
+   kaydı (yoksa Kasım). Yaz tarifinde lig.takimlar geçen sezonun tablosudur: yeni sezon sıfırdan, fikstür sabitsiz kurulur (CM2-a) */
+function sezonKur(k,lig,pivot,tarif){
+  const T=tarif||SEZON_TARIFLERI.kasim,takimlar=lig.takimlar.map(t=>t.id);
+  if(T.ilkHafta===1){
+    const haftalar=fiksturUret(takimlar,[],pivot,(k.dunyaTohumu^0x51A7F00D)>>>0);
+    k.sezon={id:T.id,kod:T.id.replace(/^\d\d(\d\d)-(\d\d)$/,'$1$2'),ad:lig.ad,grup:lig.grup,sezonAdi:lig.sezon,etiket:'TEST',tarif:T.ad,
+      ilkHafta:1,haftaSayisi:haftalar.length,ilkMacTarihi:T.ilkMacTarihi,dakika:T.dakika,ara:Object.assign({},T.ara),
+      bolgeler:JSON.parse(JSON.stringify(lig.bolgeler||{})),takimlar,
+      devralinan:{tablo:Object.fromEntries(takimlar.map(id=>[id,{G:0,B:0,M:0,A:0,Y:0}])),sonMaclar:{}},
+      gecenSezon:puanDurumu(lig).map(t=>t.id),transfer:JSON.parse(JSON.stringify(T.transfer))};
+    k.fikstur=[];
+    haftalar.forEach((E,i)=>{const hafta=i+1,tarih=haftaTarihi(k.sezon,hafta);
+      for(const x of E)k.fikstur.push({id:macKimligi(k.sezon,hafta,x.ev,x.konuk),hafta,tarih,dakika:k.sezon.dakika,ev:x.ev,konuk:x.konuk});});
+    if(T.hazirlik)k.fikstur=hazirlikFiksturu(k,pivot,T.hazirlik).concat(k.fikstur);
+    return;
+  }
+  const B=lig.buMac,[sa,dk]=B.saat.split(':').map(Number);
   if(B.hafta!==T.ilkHafta)throw new Error(`Sezon: ilk oynanacak hafta (${T.ilkHafta}) ligin maçıyla (${B.hafta}) aynı değil`);
   const sabitler=[],gorulen=new Map();
   const ekle=(hafta,ev,konuk)=>{
@@ -162,11 +207,12 @@ function sezonKur(k,lig,pivot){
   haftalar.forEach((E,i)=>{const hafta=i+1,tarih=haftaTarihi(k.sezon,hafta);
     for(const x of E)k.fikstur.push({id:macKimligi(k.sezon,hafta,x.ev,x.konuk),hafta,tarih,dakika:k.sezon.dakika,ev:x.ev,konuk:x.konuk});});
 }
-/* kulübün oynanmamış ilk maçı (ilkHafta ve sonrası; RK7: zamana göre, ertelenip tarih bekleyen maç sayılmaz); yoksa null */
-function siradakiMac(k,kulupId){
-  let en=null,enAn=0;
+/* kulübün oynanmamış ilk maçı (ilkHafta ve sonrası; RK7: zamana göre, ertelenip tarih bekleyen maç sayılmaz); yoksa null. CM2-a: hazırlık maçı da
+   sıradaki maçtır (maç günü işi ona kurulur); o.lig yalnız lig maçına bakar */
+function siradakiMac(k,kulupId,o){
+  let en=null,enAn=0;const lig=!!(o&&o.lig);
   for(const f of k.fikstur){
-    if(f.hafta<k.sezon.ilkHafta||(f.ev!==kulupId&&f.konuk!==kulupId)||k.maclar[f.id]||f.tarihBekliyor)continue;
+    if((hazirlikMi(f)?lig:f.hafta<k.sezon.ilkHafta)||(f.ev!==kulupId&&f.konuk!==kulupId)||k.maclar[f.id]||f.tarihBekliyor)continue;
     const a=anDakika(f.tarih,f.dakika);if(!en||a<enAn||(a===enAn&&f.hafta<en.hafta)){en=f;enAn=a;}
   }
   return en;
@@ -177,7 +223,7 @@ function macGunuIsiKur(k,macId){
   if(!f)throw new Error(`Maç günü kurulamadı: fikstürde ${macId} yok`);
   const ad=id=>(k.kulupler[id]||{ad:id}).ad,ev=f.ev===(k.kisiler[k.baskanId]||{}).kulupId;
   return isEkle(k,{tur:'ajanda',tarih:f.tarih,dakika:f.dakika,veri:{baslik:`Maç: ${ad(f.ev)} – ${ad(f.konuk)}`,
-    aciklama:`${k.sezon.ad} ${f.hafta}. hafta. `+(ev?'Başkan koltuğunda yerini al.':'Deplasmanda konuk başkan locasında yerini al.'),
+    aciklama:(hazirlikMi(f)?'Hazırlık maçı. ':`${k.sezon.ad} ${f.hafta}. hafta. `)+(ev?'Başkan koltuğunda yerini al.':'Deplasmanda konuk başkan locasında yerini al.'),
     zorunluluk:'zorunlu',sure:0,eylem:'macGunu',macId}});
 }
 /* yeni kariyerin sezon takvimi: kulübün sıradaki maç günü ve transfer dönemlerinin açılış ve kapanış hatırlatmaları (TEST metni) */
@@ -188,6 +234,9 @@ function sezonTakvimiKur(k,kulupId){
     isEkle(k,{tur:'hatirlatma',tarih:t.bas,dakika:GUN_BASLANGICI,veri:{metin:`${t.ad} açıldı; ${gunAyYazi(t.bitis)} akşamı kapanır.`,kapak:'transfer'}});
     isEkle(k,{tur:'hatirlatma',tarih:t.bitis,dakika:1200,veri:{metin:`${t.ad} kapandı.`,kapak:'transfer'}});
   }
+  /* CM2-a: devre arası (yaz tarifi) — ara.sonra haftasının maçları Pazartesi biter; Salı 10:00 hatırlatma (TEST metni) */
+  if(k.sezon.ara){const A=k.sezon.ara,bas=tarihEkle(haftaTarihi(k.sezon,A.sonra),3),don=haftaTarihi(k.sezon,A.sonra+1);
+    isEkle(k,{tur:'hatirlatma',tarih:bas,dakika:600,veri:{metin:`Devre arası başladı; lig ${gunAyYazi(don)} günü ${A.sonra+1}. haftayla sürer.`,kapak:'ara'}});}
   /* RK7: ilk üç haftanın programı, öbür maçların işleri ve sıradaki TFF programı (js/lig-takvimi.js) */
   if(typeof ligTakvimiKur==='function')ligTakvimiKur(k);
 }
@@ -215,8 +264,11 @@ const tabloMacIsle=(T,ev,konuk,skor)=>{const isle=(t,a,y)=>{if(!t)return;t.A+=a;
 function sezonTablosu(k,sonAn){
   const S=k.sezon,T={};
   for(const id of S.takimlar){const d=S.devralinan.tablo[id]||{G:0,B:0,M:0,A:0,Y:0};T[id]={id,ad:(k.kulupler[id]||{ad:id}).ad,G:d.G,B:d.B,M:d.M,A:d.A,Y:d.Y};}
-  for(const f of k.fikstur){const s=k.maclar[f.id];if(!s||(sonAn!==undefined&&anDakika(f.tarih,f.dakika)>=sonAn))continue;tabloMacIsle(T,f.ev,f.konuk,s.skor);}
-  return puanDurumu({takimlar:Object.values(T)});
+  for(const f of k.fikstur){const s=k.maclar[f.id];if(!s||hazirlikMi(f)||(sonAn!==undefined&&anDakika(f.tarih,f.dakika)>=sonAn))continue;tabloMacIsle(T,f.ev,f.konuk,s.skor);}
+  const L=puanDurumu({takimlar:Object.values(T)});
+  /* CM2-a: yaz tarifinde puan, averaj ve atılan gol eşitse geçen sezonun sırası (sezon başında tablo geçen sezonun sırasıdır; TEST) */
+  if(Array.isArray(S.gecenSezon)){const g=new Map(S.gecenSezon.map((id,i)=>[id,i]));L.sort((a,b)=>b.P-a.P||b.AV-a.AV||b.A-a.A||(g.has(a.id)?g.get(a.id):99)-(g.has(b.id)?g.get(b.id):99));}
+  return L;
 }
 /* S-d: canlı tablo — puan durumu (sezonTablosu ya da bülten tablosu) + [{ev, konuk, skor:[a, y]|null}] (skorsuz satır sayılmaz); yerinde yazmaz */
 function canliTablo(tablo,sonuclar){
@@ -232,7 +284,7 @@ const ligBolgesi=(Z,n)=>{const ara=r=>!!r&&n>=r[0]&&n<=r[1];Z=Z||{};return ara(Z
    sonAn verilirse o andan (dahil) sonra başlayan maçların golleri düşülür (kendi kalesine sayılmaz) ve kulüp o ana göre bulunur (js/transfer.js) */
 function golSiralamasi(k,o){
   o=o||{};const dus=new Map(),tarihli=o.sonAn!==undefined;
-  if(tarihli)for(const f of k.fikstur||[]){const s=(k.maclar||{})[f.id];if(!s||anDakika(f.tarih,f.dakika)<o.sonAn)continue;
+  if(tarihli)for(const f of k.fikstur||[]){const s=(k.maclar||{})[f.id];if(!s||hazirlikMi(f)||anDakika(f.tarih,f.dakika)<o.sonAn)continue;
     for(const g of s.goller||[])if(g.id&&!g.kk)dus.set(g.id,(dus.get(g.id)||0)+1);}
   const L=[];
   for(const p of Object.values(k.oyuncular||{})){const gol=(p.gol|0)-(dus.get(p.id)||0);if(gol<=0)continue;
@@ -246,9 +298,10 @@ function golSiralamasi(k,o){
 function kulupOzeti(k,kulupId,tablo){
   const c=k.kulupler[kulupId];if(!c)return null;
   const T=tablo||sezonTablosu(k),i=T.findIndex(t=>t.id===kulupId),t=i>=0?T[i]:{P:0,O:0,G:0,B:0,M:0,A:0,Y:0,AV:0};
-  const h=typeof kulupHocasi==='function'?kulupHocasi(k,kulupId):null,st=kulupStatTarifi(k,kulupId),sr=siradakiMac(k,kulupId);
+  const h=typeof kulupHocasi==='function'?kulupHocasi(k,kulupId):null,st=kulupStatTarifi(k,kulupId),sr=siradakiMac(k,kulupId,{lig:true});
   const tarzAdi=h&&typeof TARZ_ARKETIP!=='undefined'&&TARZ_ARKETIP[h.hoca.tarz]?TARZ_ARKETIP[h.hoca.tarz].ad:h?h.hoca.tarz:null;
-  return{id:kulupId,ad:c.ad,kisa:c.kisa||kulupKisaAd(c.ad),sira:i+1,P:t.P,O:t.O,G:t.G,B:t.B,M:t.M,A:t.A,Y:t.Y,AV:t.AV,son:sonBesMac(k,kulupId),
+  const gs=Array.isArray(k.sezon.gecenSezon)?k.sezon.gecenSezon.indexOf(kulupId)+1:0;   /* CM2-a: yaz tarifinde geçen sezonun sırası */
+  return{id:kulupId,ad:c.ad,kisa:c.kisa||kulupKisaAd(c.ad),sira:i+1,gecenSezon:gs||null,P:t.P,O:t.O,G:t.G,B:t.B,M:t.M,A:t.A,Y:t.Y,AV:t.AV,son:sonBesMac(k,kulupId),
     golculer:golSiralamasi(k,{kulupId,enCok:3}),hoca:h?{ad:h.ad,tarz:h.hoca.tarz,tarzAdi}:null,stat:{ad:st.ad,kapasite:statKapasitesi(st)},
     siradaki:sr?{id:sr.id,hafta:sr.hafta,tarih:sr.tarih,dakika:sr.dakika,rakip:sr.ev===kulupId?sr.konuk:sr.ev,yer:sr.ev===kulupId?'i':'d'}:null};
 }
@@ -256,7 +309,7 @@ function kulupOzeti(k,kulupId,tablo){
 function sonBesMac(k,kulupId){
   const L=(k.sezon.devralinan.sonMaclar[kulupId]||[]).map(x=>Object.assign({},x));
   for(const f of k.fikstur){
-    const s=k.maclar[f.id];if(!s||(f.ev!==kulupId&&f.konuk!==kulupId))continue;
+    const s=k.maclar[f.id];if(!s||hazirlikMi(f)||(f.ev!==kulupId&&f.konuk!==kulupId))continue;
     const ev=f.ev===kulupId;L.push({hafta:f.hafta,rakip:ev?f.konuk:f.ev,yer:ev?'i':'d',a:s.skor[ev?0:1],y:s.skor[ev?1:0]});
   }
   return L.sort((a,b)=>a.hafta-b.hafta).slice(-5);
@@ -278,6 +331,10 @@ function fiksturIcDenetim(S,F){
   if(!tarihGecerliMi(S.ilkMacTarihi)){h.push(`Sezon: ilk maç günü geçersiz (${S.ilkMacTarihi})`);return sonuc;}
   if(!duz(S.bolgeler))h.push('Sezon: bölgeler yok');
   if(!Array.isArray(S.transfer)||!S.transfer.every(t=>duz(t)&&typeof t.ad==='string'&&tarihGecerliMi(t.bas)&&tarihGecerliMi(t.bitis)&&t.bas<=t.bitis))h.push('Sezon: transfer dönemleri geçersiz');
+  /* CM2-a: yaz tarifi alanları (Kasım tarifinde yoklar) */
+  if(S.tarif!==undefined&&S.tarif!=='yaz')h.push(`Sezon: tarif geçersiz (${S.tarif})`);
+  if(S.ara!==undefined&&!(duz(S.ara)&&tam(S.ara.sonra,1,S.haftaSayisi-1)&&tam(S.ara.hafta,1,8)))h.push('Sezon: devre arası (ara) geçersiz');
+  if(S.gecenSezon!==undefined&&!(Array.isArray(S.gecenSezon)&&S.gecenSezon.length===n&&new Set(S.gecenSezon).size===n&&S.gecenSezon.every(id=>T.includes(id))))h.push('Sezon: geçen sezonun sırası (gecenSezon) geçersiz');
   const D=duz(S.devralinan)?S.devralinan:null;
   if(!D||!duz(D.tablo)||!duz(D.sonMaclar)){h.push('Sezon: devralınan tablo ya da son maçlar yok');return sonuc;}
   const toplam={G:0,B:0,M:0,A:0,Y:0};
@@ -293,6 +350,15 @@ function fiksturIcDenetim(S,F){
   for(const [i,f] of F.entries()){
     const ad=`Fikstür [${i}]`;
     if(!duz(f)){h.push(`${ad}: kayıt değil`);continue;}
+    /* CM2-a: hazırlık maçı — haftası yok (0), lig sayımına girmez, ilk lig maçından önce */
+    if(f.tur!==undefined){
+      if(f.tur!=='hazirlik'||f.hafta!==0||!tam(f.no,1,9)||!T.includes(f.ev)||!T.includes(f.konuk)||f.ev===f.konuk){h.push(`${ad}: hazırlık maçı geçersiz`);continue;}
+      if(f.id!==hazirlikKimligi(S,f.no,f.ev,f.konuk))h.push(`${ad}: kimlik ${f.id} biçime uymuyor`);
+      if(kimlik.has(f.id))h.push(`${ad}: ${f.id} iki kez`);kimlik.set(f.id,f);
+      if(!tarihGecerliMi(f.tarih)||!tam(f.dakika,0,1439)||!(f.tarih<S.ilkMacTarihi))h.push(`${ad}: hazırlık maçının tarihi geçersiz`);
+      if(f.kamp!==undefined&&f.kamp!==true)h.push(`${ad}: kamp alanı geçersiz`);
+      continue;
+    }
     if(!tam(f.hafta,1,S.haftaSayisi)||!T.includes(f.ev)||!T.includes(f.konuk)||f.ev===f.konuk){h.push(`${ad}: hafta ya da takımlar geçersiz`);continue;}
     if(f.id!==macKimligi(S,f.hafta,f.ev,f.konuk))h.push(`${ad}: kimlik ${f.id} biçime uymuyor`);
     if(kimlik.has(f.id))h.push(`${ad}: ${f.id} iki kez`);kimlik.set(f.id,f);
@@ -338,10 +404,11 @@ function fiksturDogrula(k,h){
   for(const [id,s] of Object.entries(k.maclar)){
     const f=kimlik.get(id);
     if(!f){h.push(`Maç ${id}: fikstürde yok`);continue;}
-    if(f.hafta<ilkHafta)h.push(`Maç ${id}: devralınan haftada sonuç yazılmış`);
+    if(f.hafta<ilkHafta&&!hazirlikMi(f))h.push(`Maç ${id}: devralınan haftada sonuç yazılmış`);
     if(!duz(s)||!Array.isArray(s.skor)||s.skor.length!==2||!s.skor.every(x=>tam(x,0,99)))h.push(`Maç ${id}: skor geçersiz`);
   }
   if(S.sonuc!==undefined&&!sezonTamamMi(k))h.push('Sezon: sezon sonu kaydı var fakat oynanmamış maç kalmış');
+  if(k.baslangicTarihi!==undefined&&!(tarihGecerliMi(k.baslangicTarihi)&&k.baslangicTarihi<=k.tarih))h.push(`Kariyerin başlangıç günü (baslangicTarihi) geçersiz: ${k.baslangicTarihi}`);
   /* maç günü işi: en çok bir bekleyen; fikstürdeki oynanmamış maça, onun anında bağlı */
   const bekleyen=Object.values(k.isler||{}).filter(x=>x&&x.tur==='ajanda'&&x.veri&&x.veri.eylem==='macGunu');
   if(bekleyen.length>1)h.push(`Maç günü: ${bekleyen.length} bekleyen maç günü işi var (en çok bir)`);

@@ -2,7 +2,7 @@
    Karar 83 (kullanıcı: “Önerdiğin karışım”; DIL.md soru 2 varsayılanla): gün başı notu masada rozetle bekler, kendiliğinden açılmaz; okumak zaman almaz.
    Masa gelen kutusudur (OYUN_TASARIMI §2): not ayrı bir ana ekran değil, günün ilk kâğıdıdır. Not saklanmaz: gunNotu(k) notu kayıttan her seferinde
    aynı kurar (gazete gibi, js/gazete.js); kayda yalnız k.notOkunan (son okunan notun tarihi; isteğe bağlı, kayıt sürümü 12'nin içinde) girer.
-     gunNotuTarihi(k)   son notun tarihi: 08:00 geçtiyse bugün, geçmediyse dün; kariyerin başından (BASLANGIC_TARIHI) önce null
+     gunNotuTarihi(k)   son notun tarihi: 08:00 geçtiyse bugün, geçmediyse dün; kariyerin başından (js/fikstur.js kariyerBaslangici) önce null
      gunNotu(k)         → {tarih, kulupId, sonMac, ajanda, bekleyen, kasa, manset} ya da null
        sonMac    {macId, tarih, hafta, ev, konuk, skor:[ev, konuk], biz:0|1, sonuc:'G'|'B'|'M', hukmen, sira} | null — kulübün şimdiye dek son oynanmış maçı;
                  sira: bugünkü puan durumundaki yeri
@@ -20,7 +20,7 @@
 'use strict';
 function gunNotuTarihi(k){
   if(!tarihGecerliMi(k.tarih)||!Number.isInteger(k.gunIciDakika))return null;
-  const t=k.gunIciDakika>=GUN_BASLANGICI?k.tarih:tarihEkle(k.tarih,-1),b=typeof BASLANGIC_TARIHI!=='undefined'?BASLANGIC_TARIHI:null;
+  const t=k.gunIciDakika>=GUN_BASLANGICI?k.tarih:tarihEkle(k.tarih,-1),b=typeof kariyerBaslangici==='function'?kariyerBaslangici(k):null;
   return b&&tarihKarsilastir(t,b)>=0?t:null;
 }
 function sonraKararlari(k){
@@ -37,7 +37,8 @@ function gunNotuSonMac(k,biz){
   if(!s)return null;
   const {f,m}=s,b=f.ev===biz?0:1,biz0=m.skor[b],rak=m.skor[1-b];
   const T=k.sezon&&typeof sezonTablosu==='function'?sezonTablosu(k):[],sira=T.findIndex(x=>x.id===biz)+1;
-  return{macId:f.id,tarih:f.tarih,hafta:f.hafta,ev:f.ev,konuk:f.konuk,skor:m.skor.slice(),biz:b,sonuc:biz0>rak?'G':biz0<rak?'M':'B',hukmen:!!m.hukmen,sira:sira||null};
+  const hz=hazirlikMi(f);   /* CM2-a: hazırlık maçında sıra yazılmaz */
+  return{macId:f.id,tarih:f.tarih,hafta:f.hafta,...(hz?{hazirlik:true}:{}),ev:f.ev,konuk:f.konuk,skor:m.skor.slice(),biz:b,sonuc:biz0>rak?'G':biz0<rak?'M':'B',hukmen:!!m.hukmen,sira:hz?null:sira||null};
 }
 function gunNotu(k){
   const tarih=gunNotuTarihi(k),biz=(k.kisiler[k.baskanId]||{}).kulupId;
@@ -46,6 +47,9 @@ function gunNotu(k){
     .map(r=>{const x={saat:r.saat,baslik:r.baslik,durum:r.durum,tur:'ajanda'};if(r.sure)x.bitis=r.saat+r.sure;if(r.eylem)x.eylem=r.eylem;return x;});
   const p=typeof antrenmanPenceresi==='function'?antrenmanPenceresi(k,tarih):null;
   if(p&&Number.isFinite(p.bas)&&Number.isFinite(p.bit))ajanda.push({saat:p.bas,bitis:p.bit,baslik:'Antrenman',durum:'bekliyor',tur:'antrenman'});
+  /* CM2-b: takım kamptaysa günün başında bir satır (js/oyuncu-hafta.js kulupKampta) */
+  const kp=typeof kulupKampta==='function'?kulupKampta(k,biz,tarih):null;
+  if(kp)ajanda.push({saat:GUN_BASLANGICI,baslik:`Takım kampta (${kp.yer}); ${gunAyYazi(kp.bitis)} akşamı döner`,durum:'bekliyor',tur:'kamp'});
   ajanda.sort((a,b)=>a.saat-b.saat);
   const bekleyen=sonraKararlari(k).map(x=>{const r={isId:x.id,baslik:String(x.veri.baslik||''),tarih:x.tarih,dakika:x.dakika};if(x.veri.sinif)r.sinif=x.veri.sinif;return r;});
   const M=typeof maliOzet==='function'?maliOzet(k,biz):null;

@@ -85,10 +85,41 @@ MESELE_KATEGORILERI.sozlesme=['Sözleşme','S'];
 const yeniSozlesmeMaasi=(k,p)=>Math.round(Math.max(p.sozlesme.maas,maasTahmini(p,k.tarih))*1.1/SOZLESME_TEST.yuvarla)*SOZLESME_TEST.yuvarla;
 function sozlesmeKartiKur(k,v){
   const id=v.sira[0];if(!id)return null;const p=k.oyuncular[id];
-  return isEkle(k,{tur:'ajanda',tarih:tarihEkle(k.tarih,7),dakika:1080,veri:{baslik:`Sözleşme: ${p.ad}`,zorunluluk:'zorunlu',sure:0,saatsiz:true,bekleyebilir:true,
+  /* CM2-a: başlangıçta biten sözleşmeler (v.sonAn: sözleşmenin bittiği akşam; v.bitisYil: yenilemenin bitiş yılı) — son cevap o akşam, çok yakınsa ertesi gün */
+  const S=v.sonAn&&anDakika(v.sonAn.tarih,v.sonAn.dakika)>simdikiAn(k)+120?v.sonAn:{tarih:tarihEkle(k.tarih,v.sonAn?1:7),dakika:1080};
+  return isEkle(k,{tur:'ajanda',tarih:S.tarih,dakika:S.dakika,veri:Object.assign({baslik:`Sözleşme: ${p.ad}`,zorunluluk:'zorunlu',sure:0,saatsiz:true,bekleyebilir:true,
     gelis:{tarih:k.tarih,dakika:k.gunIciDakika},karar:'sozlesmeYenile',meseleId:v.meseleId,kulupId:v.kulupId,oyuncuId:id,sira:v.sira.slice(1),
-    aciklama:`${p.ad}: aylık ${paraYazi(p.sozlesme.maas)}; sözleşmesi ${gunAyYazi(p.sozlesme.bitis)} bitiyor.`}});
+    aciklama:`${p.ad}: aylık ${paraYazi(p.sozlesme.maas)}; sözleşmesi ${gunAyYazi(p.sozlesme.bitis)} bitiyor.`},
+    v.sonAn?{sonAn:v.sonAn}:{},v.bitisYil!==undefined?{bitisYil:v.bitisYil}:{})});
 }
+/* ---- CM2-a: göreve başlarken biten sözleşmeler (yaz tarifi; kariyerBaslat) ----
+   Başkanın kulübünde kaptan ve kaleciler dışından tohumla seçilen SOZLESME_BASLANGIC_TEST.sayi oyuncunun sözleşmesi sezon başında (30 Haziran) biter.
+   Göreve başlamanın üçüncü günü 10:30'da “Sözleşmesi biten oyuncular” dosyası açılır: sıralı Yenile/Bırak kartları, son cevap 30 Haziran 18:00.
+   Yenile iki sezon (bitiş sezonun bitiş yılından bir yıl sonra, 31 Mayıs); cevapsız kalırsa sözleşme biter, kalan oyuncuların hepsi ayrılır (TEST) */
+const SOZLESME_BASLANGIC_TEST={sayi:3,ayGun:'-06-30',gelisGun:2,gelisDakika:630,sonDakika:1080};
+function baslangicSozlesmeleri(k){
+  const biz=(k.kisiler[k.baskanId]||{}).kulupId;if(!biz)return[];
+  const T=SOZLESME_BASLANGIC_TEST,r=kadroRastgele(k.dunyaTohumu,'onsezon:sozlesme'),bitis=k.sezon.id.slice(0,4)+T.ayGun;
+  const A=kulupOyunculari(k,biz).filter(p=>p.mevki!=='KL'&&!p.kaptan&&p.sozlesme).sort((a,b)=>a.no-b.no),sec=[];
+  while(sec.length<T.sayi&&A.length)sec.push(A.splice(Math.floor(r()*A.length),1)[0]);
+  const yeni={};for(const p of sec)yeni[p.id]=Object.assign({},p,{sozlesme:{maas:p.sozlesme.maas,bitis}});
+  k.oyuncular=Object.assign({},k.oyuncular,yeni);
+  const L=sec.sort((a,b)=>a.no-b.no).map(p=>p.id);
+  isEkle(k,{tur:'gelisme',tarih:tarihEkle(k.tarih,T.gelisGun),dakika:T.gelisDakika,veri:{gelisme:'sozlesmeBaslangic',kulupId:biz,oyuncular:L,bitis}});
+  return L;
+}
+Object.assign(MESELE_OLAYLARI,{'sz.basBitiyor':(k,p)=>`Devraldığın kadroda ${p.n} oyuncunun sözleşmesi ${gunAyYazi(p.bitis)} bitiyor; her biri için yenile ya da bırak.`,
+  'sz.basSure':(k,p)=>`Sözleşmeler bitti; cevap verilmeyen ${p.n} oyuncu ayrıldı.`});
+GELISMELER.sozlesmeBaslangic={
+  denetle:(k,v)=>{const h=[];if(!(k.kulupler||{})[v.kulupId])h.push('kulüp bulunamadı');if(!Array.isArray(v.oyuncular)||!v.oyuncular.every(x=>typeof x==='string'))h.push('oyuncu listesi geçersiz');
+    if(!tarihGecerliMi(v.bitis))h.push('bitiş tarihi geçersiz');return h;},
+  uygula:(k,is)=>{const v=is.veri,L=v.oyuncular.filter(id=>{const p=k.oyuncular[id];return p&&p.kulupId===v.kulupId&&p.sozlesme&&p.sozlesme.bitis===v.bitis;});
+    if(!L.length)return{bilgi:null};
+    const id=meseleAc(k,{tur:'sozlesme',baslik:'Sözleşmesi biten oyuncular',sorumluId:k.baskanId,kisiler:[]});
+    meseleOlay(k,id,'sz.basBitiyor',{n:L.length,bitis:v.bitis});
+    sozlesmeKartiKur(k,{kulupId:v.kulupId,meseleId:id,sira:L,sonAn:{tarih:v.bitis,dakika:SOZLESME_BASLANGIC_TEST.sonDakika},bitisYil:1});
+    return{bilgi:'Sözleşmesi biten oyuncuların dosyası açıldı.',dur:true};}
+};
 function sozlesmeAyril(k,v){oyuncuSerbestBirak(k,v.oyuncuId);kadroTamamla(k,v.kulupId,KADRO_HEDEF,'serbest:'+v.oyuncuId);sozlesmeleriTamamla(k);}
 SEZON_SONU_EKLERI.push(k=>{
   const biz=(k.kisiler[k.baskanId]||{}).kulupId,son=sozlesmeBitisi(k,0),uzat={};
@@ -110,14 +141,17 @@ KARAR_TURLERI.sozlesmeYenile={
       {id:'birak',metin:'Bırak',sure:0,aciklama:[`${p?p.ad:''} serbest kalır; kadro gençle tamamlanır.`]}];},
   uygula:(k,is,secim)=>{
     const v=is.veri,p=k.oyuncular[v.oyuncuId];let bilgi;
-    if(secim==='yenile'){const maas=yeniSozlesmeMaasi(k,p),bitis=sozlesmeBitisi(k,2);
+    if(secim==='yenile'){const maas=yeniSozlesmeMaasi(k,p),bitis=sozlesmeBitisi(k,v.bitisYil===undefined?2:v.bitisYil);
       k.oyuncular=Object.assign({},k.oyuncular,{[p.id]:Object.assign({},p,{sozlesme:{maas,bitis}})});bilgi=meseleOlay(k,v.meseleId,'sz.yenile',{oyuncuId:p.id,maas,bitis});}
     else{if(p.kulupId===v.kulupId)sozlesmeAyril(k,v);bilgi=meseleOlay(k,v.meseleId,'sz.birak',{oyuncuId:v.oyuncuId});}
     sozlesmeKartiKur(k,v);
     return{bilgi};
   },
   zamanAsimi:{metin:(k,is)=>`Cevap vermezsen ${(k.oyuncular[is.veri.oyuncuId]||{}).ad} sözleşmesi yenilenmeden ayrılır.`,
-    uygula:(k,is)=>{const v=is.veri,p=k.oyuncular[v.oyuncuId];if(p&&p.kulupId===v.kulupId)sozlesmeAyril(k,v);const bilgi=meseleOlay(k,v.meseleId,'sz.cevapsiz',{oyuncuId:v.oyuncuId});
+    uygula:(k,is)=>{const v=is.veri,p=k.oyuncular[v.oyuncuId];if(p&&p.kulupId===v.kulupId)sozlesmeAyril(k,v);let bilgi=meseleOlay(k,v.meseleId,'sz.cevapsiz',{oyuncuId:v.oyuncuId});
+      /* CM2-a: başlangıçta biten sözleşmede süre dolunca kalanların sözleşmesi de bitmiştir: hepsi ayrılır, kart kurulmaz */
+      if(v.sonAn){let n=1;for(const o of v.sira){const q=k.oyuncular[o];if(q&&q.kulupId===v.kulupId){sozlesmeAyril(k,Object.assign({},v,{oyuncuId:o}));n++;}}
+        bilgi=meseleOlay(k,v.meseleId,'sz.basSure',{n});return{bilgi};}
       sozlesmeKartiKur(k,v);return{bilgi};}}
 };
 /* U3 bağlam (okuma): sözleşme kararında oyuncunun künyesi */

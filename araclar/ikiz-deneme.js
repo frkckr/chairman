@@ -27,7 +27,7 @@ const G=ad=>vm.runInContext(ad,ctx);
 const Match=G('Match'),KADRO=G('MAC_KADRO'),IZLEME=G('IZLEME'),MAC_ONCESI=G('MAC_ONCESI'),MOTOR_AYAR=G('MOTOR_AYAR');
 if(ESIT)IZLEME.onde=0;
 /* RK8-a --kariyer: yeni kariyerin 14. haftasındaki öbür maçların planları (tohum sırası maç sırasıdır) */
-const KPLAN=KARIYER?(()=>{const c=G('kariyerBaslat')({tohum:7}),F=c.fikstur.filter(f=>f.hafta===14&&f.ev!=='demirkapi'&&f.konuk!=='demirkapi');return F.map(f=>G('digerMacPlani')(c,f)).filter(P=>!P.hukmen);})():null;
+const KPLAN=KARIYER?(()=>{const c=G('kariyerBaslat')({tarif:'kasim',tohum:7}),F=c.fikstur.filter(f=>f.hafta===14&&f.ev!=='demirkapi'&&f.konuk!=='demirkapi');return F.map(f=>G('digerMacPlani')(c,f)).filter(P=>!P.hukmen);})():null;
 const secenekler=tohum=>KPLAN?JSON.parse(JSON.stringify(KPLAN[(tohum-1)%KPLAN.length].secenek)):({kadro:KADRO,tohum,tunel:{x:0,z:-6},tarz:'dagilim'});   /* B4: oyundaki gibi tarz tohumdan */
 const dt=1/60,MAKS=60*60*60;
 

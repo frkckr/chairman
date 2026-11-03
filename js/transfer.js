@@ -17,7 +17,7 @@
      kaleciyse önce kadroda iki kaleci kalması sağlanır (js/kariyer-kadro.js kaleciGuvence); kaptan bayrağı gitmez; numara çakışırsa ilk boş numara;
      geçmişe {tur:'transfer'|'ayrilis', oyuncuId, eski, yeni, tarih, dakika}. k.oyuncular kopyala-yaz. */
 'use strict';
-const TRANSFER_TEST={teklifGunleri:[3,12,22],talepGunu:1,saat:660,cevapGun:3,imzaGun:5,bonservis:[40000000,120000000],maasTavanKat:1.3,degerAy:24,kadroAlt:18};
+const TRANSFER_TEST={teklifGunleri:[3,12,22],yazTeklifGunleri:[6,14,24],talepGunu:1,saat:660,cevapGun:3,imzaGun:5,bonservis:[40000000,120000000],maasTavanKat:1.3,degerAy:24,kadroAlt:18};
 Object.assign(OLAY_KAYNAKLARI,{sozlesmeKaydi:'Sözleşme kayıtları'});
 if(!OLAY_KAYNAKLARI.yerelGazete)OLAY_KAYNAKLARI.yerelGazete='Yerel gazete';
 if(!OLAY_KAYNAKLARI.macRaporlari)OLAY_KAYNAKLARI.macRaporlari='Maç raporları';
@@ -48,7 +48,8 @@ function transferTakvimiKur(k){
   if(typeof serbestHavuzKur==='function')serbestHavuzKur(k);   /* R4-f: serbest oyuncu havuzu (bir kez; eski kayıtta ilk ay başında) */
   const T=TRANSFER_TEST,simdi=simdikiAn(k),var_=new Set(Object.values(k.isler).filter(x=>x.tur==='gelisme'&&x.veri.anahtar).map(x=>x.veri.anahtar));let n=0;
   for(const d of k.sezon.transfer){
-    const plan=T.teklifGunleri.map((g,i)=>({gelisme:'gelenTeklif',gun:g,i})).concat([{gelisme:'hocaTalebi',gun:T.talepGunu,i:0}]);
+    /* CM2-a: yaz döneminde (Haziran'da açılan) teklifler seyrek — ilk hafta göreve başlamanın işleriyle dolu */
+    const plan=(d.bas.slice(5,7)==='06'?T.yazTeklifGunleri:T.teklifGunleri).map((g,i)=>({gelisme:'gelenTeklif',gun:g,i})).concat([{gelisme:'hocaTalebi',gun:T.talepGunu,i:0}]);
     for(const p of plan){const tarih=tarihEkle(d.bas,p.gun),anahtar=`${d.bas}:${p.gelisme}:${p.i}`;
       if(tarih>d.bitis||anDakika(tarih,T.saat)<=simdi||var_.has(anahtar))continue;
       isEkle(k,{tur:'gelisme',tarih,dakika:T.saat,veri:{gelisme:p.gelisme,kulupId:biz,anahtar}});n++;}

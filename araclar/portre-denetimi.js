@@ -28,7 +28,7 @@ const [kariyerBaslat,portreOzellik,anahtar,kimlik,yasKatmani]=['kariyerBaslat','
 const say={},tenSay=[0,0,0,0,0,0,0],gozSay=[0,0,0,0];let toplam=0;
 const yuzde=(a,b)=>(100*a/Math.max(1,b)).toFixed(1)+'%';
 for(const tohum of T){
-  const k=kariyerBaslat({tohum}),O=Object.values(k.oyuncular),A=new Map(),cak=[],uymayan=[];
+  const k=kariyerBaslat({tarif:'kasim',tohum}),O=Object.values(k.oyuncular),A=new Map(),cak=[],uymayan=[];
   for(const o of O){const f=portreOzellik(o,k.tarih),a=anahtar(f);toplam++;
     if(A.has(a))cak.push([A.get(a),o.id]);else A.set(a,o.id);
     if(f.ten!==kimlik(o).ten||f.sacRenk!==(o.sacRenk||'#241a12')||(o.sac&&f.sac!==o.sac)||f.biyik!==!!o.biyik||f.sakal!==!!o.sakal)uymayan.push(o.id);
@@ -37,7 +37,7 @@ for(const tohum of T){
   const kulupsuz=O.filter(o=>!o.kulupId).length;
   denetle(`tohum ${tohum}: ${O.length} oyuncuda (${kulupsuz} serbest) aynı yüz yok`,!cak.length,cak.slice(0,3).map(x=>x.join(' = ')).join(', '));
   denetle(`tohum ${tohum}: saç, bıyık ve sakal kayıttakiyle, ten kimliğinkiyle (3B figür) aynı`,!uymayan.length,uymayan.slice(0,5).join(', '));
-  const k2=kariyerBaslat({tohum}),k3=JSON.parse(JSON.stringify(k));
+  const k2=kariyerBaslat({tarif:'kasim',tohum}),k3=JSON.parse(JSON.stringify(k));
   const ayni=O.every(o=>anahtar(portreOzellik(o,k.tarih))===anahtar(portreOzellik(k2.oyuncular[o.id],k.tarih))&&JSON.stringify(portreOzellik(o,k.tarih))===JSON.stringify(portreOzellik(k3.oyuncular[o.id],k.tarih)));
   denetle(`tohum ${tohum}: aynı tohum ve kaydet–yükle aynı yüzleri verir (yaş katmanı dahil)`,ayni);
 }

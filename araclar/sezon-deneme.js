@@ -33,7 +33,10 @@
      --aday 1|2 (varsayılan 1) · --pazarlik temkinli|guclu|devir (guclu; devir: mali işler müdürüne bırak, sonucu onayla) · --oyuncu telefon|git
      (telefon) · --saglik al|vazgec (al). --girisim TARİH[:HAT] o günden sonraki ilk durakta hocaya “<hat> hattına oyuncu bulalım” (HAT DEF|OS|FV,
      varsayılan OS); --serbest TARİH o günden sonraki ilk durakta piyasanın ilk serbest oyuncusunu hocaya araştırtır. Haftada durak sınırı 60.
-   Kullanım:  node araclar/sezon-deneme.js [hafta=3] [tohum=7] [--kaydet] [--tek] [--p12 cevapsiz|sabir|degisim] [--teklif …] [--talep …] [--json DOSYA] [--kayit-yaz DOSYA@hafta=N|DOSYA@sezonSonu] [--karsilastir DOSYA [--ayni]]   (hafta en çok sezonun kalanı: 18)
+   CM2-a (2026-11-03): --tarif yaz|kasim (varsayılan yaz; js/fikstur.js SEZON_TARIFLERI). Yaz tarifinde kariyer 22 Haziran'da açılır, önce dört hazırlık maçı
+     oynanır (satır H1–H4; hafta sayısına girmez), sonra lig haftaları (1–30). Bugünkü sezon tabanları (sezon-rk7-*) Kasım tarifinin ölçüsüdür: --tarif kasim.
+     --kayit-yaz DOSYA@tarih=YYYY-MM-DD: o güne (ya da sonrasına) varılan ilk durakta.
+   Kullanım:  node araclar/sezon-deneme.js [hafta=3] [tohum=7] [--tarif yaz|kasim] [--kaydet] [--tek] [--p12 cevapsiz|sabir|degisim] [--teklif …] [--talep …] [--json DOSYA] [--kayit-yaz DOSYA@hafta=N|DOSYA@sezonSonu] [--karsilastir DOSYA [--ayni]]   (hafta en çok sezonun kalanı: 18)
      --tek   ikinci (belirlenimcilik) koşusunu atlar.   Çıkış kodu: fark ya da doğrulama hatası 1, kullanım hatası 2. */
 'use strict';
 const fs=require('fs'),vm=require('vm');
@@ -51,13 +54,15 @@ if(!['1','2'].includes(ADAY)||!['temkinli','guclu','devir'].includes(PAZ)||!['te
   console.error('--aday 1|2, --pazarlik temkinli|guclu|devir, --oyuncu telefon|git, --saglik al|vazgec, --girisim TARİH[:DEF|OS|FV], --serbest TARİH');process.exit(2);}
 const ZINCIR={ihtiyac:TALEP,aday:ADAY==='2'?'adayB':'adayA',gorus:'gorus',yurutme:PAZ==='devir'?'devret':'kendim',kulupPazarlik:PAZ==='temkinli'?'temkinli':'guclu',
   devirOnay:'imza',bedelArtti:'farkiOde',temas:OYU,oyuncuPazarlik:'guclu',saglikKarari:SAG==='al'?'risk':'vazgec',alternatif:'obur'};
+const TARIF=deger('--tarif')||'yaz';
+if(!['yaz','kasim'].includes(TARIF)){console.error('--tarif yaz | kasim olmalı');process.exit(2);}
 const HAFTA=sayilar[0]||3,TOHUM=sayilar[1]!=null?sayilar[1]:7,KAYDET=bayrak('--kaydet'),TEK=bayrak('--tek'),JSON_DOSYA=deger('--json');
 if(HAFTA<1){console.error('hafta en az 1 olmalı');process.exit(2);}
 /* H2-0: --kayit-yaz DOSYA@hafta=N | DOSYA@sezonSonu */
 const KAYIT_YAZ=(()=>{const v=deger('--kayit-yaz');if(v===null)return null;
-  const i=v?v.lastIndexOf('@'):-1,dosya=i>0?v.slice(0,i):'',an=i>0?v.slice(i+1):'',m=/^hafta=(\d+)$/.exec(an);
-  if(!dosya||!(m||an==='sezonSonu')){console.error('--kayit-yaz DOSYA@hafta=N | DOSYA@sezonSonu olmalı');process.exit(2);}
-  return{dosya,hafta:m?Number(m[1]):null,sezonSonu:an==='sezonSonu',ad:an};})();
+  const i=v?v.lastIndexOf('@'):-1,dosya=i>0?v.slice(0,i):'',an=i>0?v.slice(i+1):'',m=/^hafta=(\d+)$/.exec(an),t=/^tarih=(\d{4}-\d\d-\d\d)$/.exec(an);
+  if(!dosya||!(m||t||an==='sezonSonu')){console.error('--kayit-yaz DOSYA@hafta=N | DOSYA@tarih=YYYY-MM-DD | DOSYA@sezonSonu olmalı');process.exit(2);}
+  return{dosya,hafta:m?Number(m[1]):null,tarih:t?t[1]:null,sezonSonu:an==='sezonSonu',ad:an};})();
 /* S-0: --karsilastir DOSYA [--ayni] ve SEZON_DENEME_AYAR */
 const KARSI=deger('--karsilastir'),AYNI=bayrak('--ayni');
 if(bayrak('--karsilastir')&&!KARSI){console.error('--karsilastir DOSYA olmalı');process.exit(2);}
@@ -99,7 +104,7 @@ function sezon(){
       kararlar:Object.values(x.isler).filter(i=>i.veri&&i.veri.karar).map(i=>`${i.veri.karar} (son cevap ${i.tarih} ${saat(i.dakika)})`),
       sonuc:!!x.sezon.sonuc,engel:G('ilerleOnizle')(x).engel};}
     catch(e){hatalar.push(`--kayit-yaz ${KAYIT_YAZ.ad}: kayıt metni yazılamadı — ${e.message}`);return null;}};
-  let k=kariyerBaslat({tohum:TOHUM});
+  let k=kariyerBaslat({tohum:TOHUM,tarif:TARIF});
   const biz=k.kisiler[k.baskanId].kulupId,satirlar=[],hatalar=[];let hukmenToplam=0,girisimYapildi=false,serbestYapildi=false;
   /* S-a: oyuncunun haftası ölçüleri (gizli, TEST): maç anında ilk 11'in kondisyonu, dinlenen (önceki on birde, maç günü uygun, on birde değil),
      art arda dışarıda kalma, yaş grubuna göre gelişim ölçüsü farkı, form dağılımı, haftanın sakatlıkları */
@@ -111,13 +116,17 @@ function sezon(){
   const KS=new Map(),DS=new Map(),DK=new Map();
   const olcuGor=hi=>{for(const x of Object.values(k.isler))if(x.tur==='ajanda'&&x.veri&&x.veri.karar&&!KS.has(x.id))KS.set(x.id,{h:hi,tur:x.veri.karar});
     for(const m of Object.values(k.meseleler||{})){if(!DS.has(m.id))DS.set(m.id,hi);if(m.durum==='kapandi'&&!DK.has(m.id))DK.set(m.id,hi);}};
-  for(let h=0;h<N;h++){
+  /* CM2-a: hazırlık maçı satırı (H1…) lig haftası sayılmaz */
+  let lig=0,hz=0;
+  for(let h=0;lig<N&&h<N+12;h++){
     olcuGor(h);
     const mgBul=()=>Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu');let is=mgBul();
     if(!is){hatalar.push('maç günü işi yok ama sezon bitmedi');break;}
     /* maç gününe dek İlerle; P12 kararı, aday görüşmesi ve aday kartı --p12'ye göre cevaplanır (F6-a). RK7: iş yolda değişebilir (erteleme, program) */
-    for(let g=0;g<60&&is&&!(k.tarih===is.tarih&&k.gunIciDakika===is.dakika);g++,is=mgBul()){
+    const sinir=k.tarih<k.sezon.ilkMacTarihi?200:60;   /* CM2-a: ilk lig maçından önce (ön sezon) daha çok durak */
+    for(let g=0;g<sinir&&is&&!(k.tarih===is.tarih&&k.gunIciDakika===is.dakika);g++,is=mgBul()){
       olcuGor(h);
+      if(KAYIT_YAZ&&KAYIT_YAZ.tarih&&!kayitAni&&k.tarih>=KAYIT_YAZ.tarih)kayitAni=kayitAl(k);
       const B=t=>Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.karar===t),ad=B('hocaAdayi'),kr=B('hocaKarari');
       const rd=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.etki==='hocaAdayGorusmesi'&&x.tarih===k.tarih&&x.dakika===k.gunIciDakika);
       if(ad){k=KK(k,x=>ajandaIsiYap(x,ad.id,'al')).kariyer;continue;}
@@ -169,7 +178,8 @@ function sezon(){
     const tb=sezonTablosu(k),sira=tb.findIndex(t=>t.id===biz)+1,Op=kulupOyunculari(k,biz);
     {const enH=Math.max(...k.fikstur.filter(f=>k.maclar[f.id]).map(f=>f.hafta));
      if(tb.some(t=>t.O>enH)){hatalar.push(`${Gi.hafta}. hafta: bir kulüp oynanmış haftadan çok maç yapmış`);break;}}   /* RK7: hafta içinde eşit olmayabilir */
-    satirlar.push({hafta:Gi.hafta,mac:Gi.macId,gunu,ev:k.kulupler[Gi.ev].kisa,konuk:k.kulupler[Gi.konuk].kisa,skor:S.skor.join('-'),adim:n,ms:Math.round(ms),msHafta:Math.round(msHafta),
+    const hzr=!!(Gi.bulten&&Gi.bulten.tur==='hazirlik');if(hzr)hz++;else lig++;
+    satirlar.push({hafta:Gi.hafta,...(hzr?{etiket:'H'+hz}:{}),mac:Gi.macId,gunu,ev:k.kulupler[Gi.ev].kisa,konuk:k.kulupler[Gi.konuk].kisa,skor:S.skor.join('-'),adim:n,ms:Math.round(ms),msHafta:Math.round(msHafta),
       haftaGol:S.goller.length+O.reduce((a,o)=>a+o.sonuc.skor[0]+o.sonuc.skor[1],0),
       gol:S.goller.length,kart:S.kartlar.length,sakatlik:S.sakatliklar.length,cezali:Op.filter(p=>p.ceza).length,sakat:Op.filter(p=>p.sakat).length,
       sira,puan:tb[sira-1].P,kasa:k.kulupler[biz].nakit,izOnceki,an:`${k.tarih} ${String(Math.floor(k.gunIciDakika/60)).padStart(2,'0')}:${String(k.gunIciDakika%60).padStart(2,'0')}`,kayit:JSON.stringify(k).length,iz});
@@ -193,7 +203,7 @@ function sezon(){
     if(KAYIT_YAZ&&KAYIT_YAZ.sezonSonu)kayitAni=kayitAl(c);
     sezonSonu=`şampiyon ${ad(R.sampiyon)} (${R.tablo[0].P} puan) · biz ${R.bizimSira}. sıra, ${R.bizimPuan} puan · sözleşmesi biten ${ayr} oyuncu cevapsız kartlarla ayrıldı (${c.tarih}; kadro ${c.kulupler[biz].kadro.ilk11.length+c.kulupler[biz].kadro.yedekler.length}) · İlerle: ${G('ilerleOnizle')(c).engel.join('; ')||'(engel yok)'}`;}
   /* R4: dönem kapanınca kulüplü oyuncu için açık transfer dosyası kalmaz (serbest oyuncunun dosyası dönem dışında da sürebilir) */
-  if(k.tarih>'2027-02-01'){const A=Object.values(k.meseleler||{}).filter(m=>m.durum!=='kapandi'&&m.sablon&&m.sablon.ad==='transferAlim');
+  if(k.tarih>G('tarihEkle')((k.sezon.transfer[k.sezon.transfer.length-1]||{bitis:'2027-01-31'}).bitis,1)){const A=Object.values(k.meseleler||{}).filter(m=>m.durum!=='kapandi'&&m.sablon&&m.sablon.ad==='transferAlim');
     const kulup=A.filter(m=>{const id=m.sablon.veri.hedef||m.sablon.veri.istenen;return!id||(k.oyuncular[id]||{}).kulupId;});
     if(kulup.length)hatalar.push('dönemden sonra açık transfer dosyası: '+kulup.map(m=>m.id+' '+m.sablon.asama).join(', '));}
   /* G2: sezon boyu para (başkanın kulübü; kalem başına) ve transferler */
@@ -221,15 +231,15 @@ function sezon(){
 }
 
 const t0=Date.now();
-console.log(`Chairman sezon denemesi · ${HAFTA} hafta · dünya tohumu ${TOHUM}${KAYDET?' · her hafta kaydet–yükle':''}`);
+console.log(`Chairman sezon denemesi · ${HAFTA} hafta · ${TARIF} tarifi · dünya tohumu ${TOHUM}${KAYDET?' · her hafta kaydet–yükle':''}`);
 const DZ=dizilisTutarliligi();
 if(DZ.fark.length)for(const f of DZ.fark)console.log(`! Diziliş tutarlılığı (H1): ${f}`);
 else console.log(`  Diziliş tutarlılığı (H1): ${DZ.dizilisler.join(', ')} — kariyerin yuva mevkileri = motorun yuva hattı = hocanın yuva rolü`);
 const R=sezon();
 if(HAFTA>R.kalan)console.log(`  (sezonun oynanacak haftası ${R.kalan}; ${HAFTA} yerine ${R.kalan} hafta oynandı, sezon sonunda maç günü işi kalmadı)`);
-console.log('  (RK7: maçımızın günü ve saati: '+R.satirlar.map(s=>s.hafta+' '+s.gunu).join(' · ')+')');
+console.log('  (RK7: maçımızın günü ve saati: '+R.satirlar.map(s=>(s.etiket||s.hafta)+' '+s.gunu).join(' · ')+')');
 console.log('  hafta  maç            skor   adım    ms  hafta ms  hafta gol  gol kart sakat · bizde cezalı/sakat · sıra puan · oda an            kayıt     kasa ₺');
-for(const s of R.satirlar)console.log(`  ${String(s.hafta).padStart(5)}  ${(s.ev+'–'+s.konuk).padEnd(13)} ${s.skor.padEnd(6)} ${String(s.adim).padStart(6)} ${String(s.ms).padStart(5)} ${String(s.msHafta).padStart(8)} ${String(s.haftaGol).padStart(9)}  ${String(s.gol).padStart(3)} ${String(s.kart).padStart(4)} ${String(s.sakatlik).padStart(5)} · ${String(s.cezali).padStart(6)}/${s.sakat}        · ${String(s.sira).padStart(4)} ${String(s.puan).padStart(5)} · ${s.an} ${String(Math.round(s.kayit/1024)).padStart(5)} KB ${String(Math.round(s.kasa/100).toLocaleString('tr-TR')).padStart(10)}`);
+for(const s of R.satirlar)console.log(`  ${String(s.etiket||s.hafta).padStart(5)}  ${(s.ev+'–'+s.konuk).padEnd(13)} ${s.skor.padEnd(6)} ${String(s.adim).padStart(6)} ${String(s.ms).padStart(5)} ${String(s.msHafta).padStart(8)} ${String(s.haftaGol).padStart(9)}  ${String(s.gol).padStart(3)} ${String(s.kart).padStart(4)} ${String(s.sakatlik).padStart(5)} · ${String(s.cezali).padStart(6)}/${s.sakat}        · ${String(s.sira).padStart(4)} ${String(s.puan).padStart(5)} · ${s.an} ${String(Math.round(s.kayit/1024)).padStart(5)} KB ${String(Math.round(s.kasa/100).toLocaleString('tr-TR')).padStart(10)}`);
 const ms=R.satirlar.map(s=>s.ms),ort=ms.length?ms.reduce((a,b)=>a+b,0)/ms.length:0,adim=R.satirlar.reduce((a,s)=>a+s.adim,0),hOrt=R.satirlar.length?R.satirlar.reduce((a,s)=>a+s.msHafta,0)/R.satirlar.length:0;
 console.log(`  Bizim maç ${Math.round(ort)} ms (${R.satirlar.length} hafta; 1000 adım ${adim?(ms.reduce((a,b)=>a+b,0)/adim*1000).toFixed(1):'—'} ms) · aynı saatteki maçlarla ${(hOrt/1000).toFixed(1)} sn · hafta başına gol ${(R.satirlar.reduce((a,s)=>a+s.haftaGol,0)/Math.max(1,R.satirlar.length)).toFixed(1)}`);
 console.log(`  Hükmen (G1-a): ${R.hukmen} maç`);
@@ -252,13 +262,14 @@ if(!TEK&&!R.hatalar.length){const R2=sezon();ayni=R2.metin===R.metin&&!R2.hatala
   console.log(ayni?'  Belirlenimcilik: aynı tohumla ikinci koşu birebir aynı kariyer':'! Belirlenimcilik: ikinci koşu farklı'+(R2.hatalar.length?' ('+R2.hatalar.join('; ')+')':''));}
 for(const h of R.hatalar)console.log('! '+h);
 const OZET={p12:R.p12,degisim:R.degisim,transferler:R.transferler,para:R.para,hukmen:R.hukmen,sezonSonu:R.sezonSonu,raporlar:R.raporlar,ertelenen:R.ertelenen};
-if(JSON_DOSYA)fs.writeFileSync(JSON_DOSYA,JSON.stringify({hafta:HAFTA,tohum:TOHUM,kaydet:KAYDET,satirlar:R.satirlar,ortMs:Math.round(ort),haftaMs:Math.round(hOrt),ayni,hatalar:R.hatalar,dizilis:DZ.fark,raporlar:R.raporlar,ozet:OZET,ayar:AYAR,oyuncuHaftasi:R.oyuncuHaftasi,olcu:R.olcu},null,1));
+if(JSON_DOSYA)fs.writeFileSync(JSON_DOSYA,JSON.stringify({hafta:HAFTA,tohum:TOHUM,tarif:TARIF,kaydet:KAYDET,satirlar:R.satirlar,ortMs:Math.round(ort),haftaMs:Math.round(hOrt),ayni,hatalar:R.hatalar,dizilis:DZ.fark,raporlar:R.raporlar,ozet:OZET,ayar:AYAR,oyuncuHaftasi:R.oyuncuHaftasi,olcu:R.olcu},null,1));
 /* S-0: tabanla karşılaştırma (ms, msHafta ve kayıt bilgi; tabanda olmayan alan atlanır) */
 let farkSay=0;
 if(KARSI){let T;try{T=JSON.parse(fs.readFileSync(KARSI,'utf8'));}catch(e){console.error(`--karsilastir ${KARSI}: okunamadı — ${e.message}`);process.exit(2);}
   const ALAN=['skor','adim','haftaGol','gol','kart','sakatlik','cezali','sakat','sira','puan','kasa','an','iz','izOnceki','gunu'],fark=[];
-  const th=new Map((T.satirlar||[]).map(s=>[s.hafta,s]));let ortak=0;
-  for(const s of R.satirlar){const t=th.get(s.hafta);if(!t)continue;ortak++;
+  const th=new Map((T.satirlar||[]).map(s=>[s.etiket||s.hafta,s]));let ortak=0;
+  if(T.tarif&&T.tarif!==TARIF)console.log(`! Karşılaştırma: taban ${T.tarif} tarifinde, bu koşu ${TARIF}`);
+  for(const s of R.satirlar){const t=th.get(s.etiket||s.hafta);if(!t)continue;ortak++;
     for(const a of ALAN)if(a in t&&JSON.stringify(t[a])!==JSON.stringify(s[a]))fark.push(`hafta ${s.hafta} ${a}: ${JSON.stringify(t[a])} → ${JSON.stringify(s[a])}`);}
   if(T.ozet&&(T.satirlar||[]).length===R.satirlar.length)for(const [a,v] of Object.entries(T.ozet))if(JSON.stringify(v)!==JSON.stringify(OZET[a]))fark.push(`özet ${a}: ${JSON.stringify(v).slice(0,120)} → ${JSON.stringify(OZET[a]).slice(0,120)}`);
   farkSay=fark.length;

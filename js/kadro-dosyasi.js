@@ -21,7 +21,7 @@ function kadroKirmizilari(k){
   const M=k.maclar||{},onbellek=KADRO_KIRMIZI.get(M);
   if(onbellek&&onbellek.fikstur===k.fikstur)return onbellek.say;
   const say=new Map();
-  for(const f of k.fikstur||[]){const s=M[f.id];if(!s)continue;
+  for(const f of k.fikstur||[]){const s=M[f.id];if(!s||hazirlikMi(f))continue;
     for(const x of s.kartlar||[])if(x.id&&(x.renk==='kirmizi'||x.renk==='ikinciSari'))say.set(x.id,(say.get(x.id)||0)+1);}
   if(Object.isFrozen(M))KADRO_KIRMIZI.set(M,{fikstur:k.fikstur,say});
   return say;
@@ -46,8 +46,9 @@ const OYUNCU_NOT_KAYNAKLARI=[
     const L=[];
     for(const f of k.fikstur||[]){const s=(k.maclar||{})[f.id];if(!s)continue;
       const n=(anahtar,taraf,p)=>L.push({tarih:f.tarih,dakika:f.dakika,anahtar,p:Object.assign({rakip:notRakip(k,f,taraf)},p)});
-      for(const g of s.goller||[])if(g.id===id)n(g.kk?'not.kk':'not.gol',g.kk?1-g.takim:g.takim,{dk:g.dk});
-      for(const x of s.kartlar||[])if(x.id===id)n(x.renk==='sari'?'not.sari':x.renk==='ikinciSari'?'not.ikinciSari':'not.kirmizi',x.takim,{dk:x.dk});
+      const hz=hazirlikMi(f);   /* CM2-a: hazırlık maçının golü ve kartı sezona yazılmaz; sakatlık notu kalır */
+      if(!hz)for(const g of s.goller||[])if(g.id===id)n(g.kk?'not.kk':'not.gol',g.kk?1-g.takim:g.takim,{dk:g.dk});
+      if(!hz)for(const x of s.kartlar||[])if(x.id===id)n(x.renk==='sari'?'not.sari':x.renk==='ikinciSari'?'not.ikinciSari':'not.kirmizi',x.takim,{dk:x.dk});
       for(const x of s.sakatliklar||[])if(x.id===id&&(x.derece==='tedavi'||x.derece==='cikis')&&x.gun>0&&x.tur!=='kramp')n('not.sakat',x.takim,{gun:x.gun});
     }
     /* bizim maçta: önceki on birdeydi, maç günü uygundu, bu maçın on birinde yoktu (js/mac-sonuc.js geçmiş kaydı disarida) */

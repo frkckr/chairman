@@ -11,7 +11,7 @@
      sureYazi(dk) → “2 saat 30 dk”, “1 gün 3 saat”
    METİNLER TEST TASLAĞIDIR (karar 35 kipi). */
 'use strict';
-const ZAMAN_KAPAK={ayBasi:'Ay başı',transfer:'Transfer dönemi',sezonSonu:'Sezon sonu'};
+const ZAMAN_KAPAK={ayBasi:'Ay başı',transfer:'Transfer dönemi',sezonSonu:'Sezon sonu',ara:'Devre arası'};   /* CM2-a: devre arası */
 const ZAMAN_GAZETE_SAAT=typeof GUN_BASLANGICI!=='undefined'?GUN_BASLANGICI:480;   /* gazetenin çıktığı an (js/gazete.js penceresiyle aynı) */
 function sureYazi(dk){
   dk=Math.max(0,Math.round(dk));
