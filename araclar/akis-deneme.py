@@ -128,6 +128,22 @@ def loca(sorgu):
     return sorgu + ("&" if "?" in sorgu else "?") + "pul=0"
 
 
+# CM2-a (2026-11-03): yeni kariyer varsayılan olarak yaz tarifinde (22 Haziran) açılır; eski bölümler Kasım tarifi (13. hafta) üzerine yazılmıştır.
+# Her bağlama, adreste tarif= yoksa OYUN_VARSAYILAN_TARIF='kasim' konur (yeni bölümler ?tarif=yaz ile açar)
+KASIM_JS = "if (!/[?&]tarif=/.test(location.search)) globalThis.OYUN_VARSAYILAN_TARIF = 'kasim';"
+
+
+def kasim_tarayici(tarayici):
+    eski = tarayici.new_context
+
+    async def yeni(*a, **kw):
+        b = await eski(*a, **kw)
+        await b.add_init_script(KASIM_JS)
+        return b
+    tarayici.new_context = yeni
+    return tarayici
+
+
 async def sayfa(tarayici, site, sorgu, bekle, ad="index.html"):
     baglam = await tarayici.new_context(viewport={"width": 1180, "height": 1000})
     pg = await baglam.new_page()
@@ -4752,8 +4768,8 @@ async def ana():
     (site / "index-test.html").write_text(idx.replace('<script src="js/baslangic.js"></script>', ek), encoding="utf-8")
     tum_hatalar = []
     async with async_playwright() as p:
-        tarayici = await p.chromium.launch(
-            args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
+        tarayici = kasim_tarayici(await p.chromium.launch(
+            args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]))
 
         if sec("1"):
             print("\n1. İçeriksiz yeni kariyer")
