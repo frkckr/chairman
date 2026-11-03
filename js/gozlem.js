@@ -34,6 +34,7 @@ function antrenmanPenceresi(k,tarih){
   const hg=(gunNo(tarih)+4)%7;                                     // 0 = Pazar
   if(hg===0||hg===6)return null;
   if(Object.values(k.isler).some(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'&&x.tarih===tarih))return null;
+  if(typeof kulupKampta==='function'&&kulupKampta(k,(k.kisiler[k.baskanId]||{}).kulupId,tarih))return null;   /* CM2-b: takım kampta, sahada antrenman yok */
   return{bas:ANTRENMAN_SAATI.bas,bit:ANTRENMAN_SAATI.bit};
 }
 /* şu anki durum (kariyeri değiştirmez): {pencere, suruyor, kalan: antrenmanın bitmesine kalan dakika} */

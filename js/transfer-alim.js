@@ -86,8 +86,11 @@ function taDonemDosyaSayisi(k){
   const bas=tarihEkle(d.bas,-60);
   return Object.values(k.meseleler||{}).filter(m=>m.sablon&&m.sablon.ad==='transferAlim'&&m.olaylar.length&&m.olaylar[0].tarih>=bas&&m.olaylar[0].tarih<=d.bitis).length;
 }
+/* CM2-b: içerik paketlerinin açılış engelleri (k, mevki) → metin | null (ör. futbolcu alacakları ödenmeden transfer tahtası kapalı; js/icerik-onsezon.js) */
+const TA_ACILIS_ENGELLERI=[];
 /* yeni dosya açılabilir mi: engel metni ya da null */
 function taAcilisEngeli(k,mevki){
+  for(const f of TA_ACILIS_ENGELLERI){const m=f(k,mevki);if(m)return m;}
   if(k.sezon&&k.sezon.sonuc)return'Sezon bitti; yeni sezon bu sürümde yok.';
   const A=taAcikDosyalar(k);
   if(mevki&&A.some(m=>m.sablon.veri.mevki===mevki&&!m.sablon.veri.istenen))return'Bu hat için dosya zaten açık.';

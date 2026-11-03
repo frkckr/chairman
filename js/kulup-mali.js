@@ -18,7 +18,10 @@ const sonrakiAyBasi=tarih=>{const [y,a]=tarih.split('-').map(Number),Y=a===12?y+
 /* maçın doluluğu (TEST; js/mac-gunu.js statKur da bunu kullanır: çizilen seyirci = ödeyen seyirci): başkanın kulübünün statında sabit, öbür statlarda
    kulüp ve haftadan */
 const dolulukTest=(ev,biz,hafta)=>ev===biz?MALI_TEST.evDoluluk:+(0.22+0.13*h2(hafta|0,parseInt(saglamaHesapla('doluluk:'+ev),16)|0)).toFixed(2);
-const macDolulugu=(k,f)=>{const d=dolulukTest(f.ev,(k.kisiler[k.baskanId]||{}).kulupId,f.hafta);return typeof hazirlikMi==='function'&&hazirlikMi(f)?+(d*MALI_TEST.hazirlikCarpan).toFixed(2):d;};
+/* CM2-b: içerik paketlerinin doluluk ekleri (k, f) → sayı (ör. kombine kampanyası; js/icerik-onsezon.js) */
+const DOLULUK_EKLERI=[];
+const macDolulugu=(k,f)=>{let d=dolulukTest(f.ev,(k.kisiler[k.baskanId]||{}).kulupId,f.hafta);for(const e of DOLULUK_EKLERI)d+=e(k,f)||0;d=Math.max(0.05,Math.min(1,+d.toFixed(2)));
+  return typeof hazirlikMi==='function'&&hazirlikMi(f)?+(d*MALI_TEST.hazirlikCarpan).toFixed(2):d;};
 /* S-d: kulübün stat tarifi (başkanın kulübünde kulübün statı, öbürlerinde ev sahibi tarifi; js/fikstur.js kulupOzeti). kulupKapasitesi aynı kuralı okur */
 const kulupStatTarifi=(k,kulupId)=>kulupId===(k.kisiler[k.baskanId]||{}).kulupId?STADYUMLAR.kulup:statTarifiUret(kulupId,k.kulupler[kulupId].ad);
 const kulupKapasitesi=(k,kulupId)=>statKapasitesi(kulupId===(k.kisiler[k.baskanId]||{}).kulupId?STADYUMLAR.kulup:statTarifiUret(kulupId,k.kulupler[kulupId].ad));

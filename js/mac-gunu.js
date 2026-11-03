@@ -32,8 +32,8 @@ const MAC_GUNU=(()=>{
       son:[LIG.sonMaclar[B.ev]||[],LIG.sonMaclar[B.konuk]||[]],adlar:Object.fromEntries(LIG.takimlar.map(t=>[t.id,t.ad]))}});
   /* stat: ev sahibinin statı (F1-c). Başkanın kulübü evdeyse kulübün statı (js/stadyum-tarifleri.js STADYUMLAR.kulup), değilse ev sahibinin
      tarifi (statTarifiUret). doluluk (2.8O'dan beri sabit, TEST): kulüpte 0,3; öbür statlarda 0,22–0,35 (kulüp ve haftadan); deplasman payı 0,08 */
-  const statKur=(ev,evAd,biz,hafta,hz)=>{   /* CM2-a: hz — hazırlık maçı (js/kulup-mali.js macDolulugu ile aynı çarpan) */
-    const c=d=>hz?+(d*MALI_TEST.hazirlikCarpan).toFixed(2):d;
+  const statKur=(ev,evAd,biz,hafta,dol)=>{   /* CM2-a/b: dol — kariyer maçında js/kulup-mali.js macDolulugu (hazırlık çarpanı, kombine eki; çizilen = ödeyen seyirci) */
+    const c=d=>typeof dol==='number'?dol:d;
     if(!ev||ev===biz)return{stat:'kulup',statTarifi:STADYUMLAR.kulup,doluluk:c(dolulukTest(biz,biz,hafta)),deplasman:0.08,zemin:STADYUMLAR.kulup.zemin};
     const T=statTarifiUret(ev,evAd);
     return{stat:ev,statTarifi:T,doluluk:c(dolulukTest(ev,biz,hafta)),deplasman:0.08,zemin:T.zemin};   /* G2-b: js/kulup-mali.js (maç günü geliri aynı formül) */
@@ -53,7 +53,7 @@ const MAC_GUNU=(()=>{
       /* üretilen kulüplerin forması aynı (TEST; kulüp formaları görsel turda): çizimde ev sahibi ev formasıyla. Motor seçeneği (tvSecenek) değişmez */
       if(g.kadro[0].forma===g.kadro[1].forma)g.kadro=[Object.assign({},g.kadro[0],{forma:'ev',kaleciForma:'evKaleci'}),g.kadro[1]];
       g.digerleri=k.fikstur.filter(x=>x.id!==macId&&x.tarih===f.tarih&&x.dakika===f.dakika&&!k.maclar[x.id]&&!x.tarihBekliyor&&x.ev!==bz&&x.konuk!==bz).map(x=>digerMacPlani(k,x));
-      return Object.assign(g,statKur(f.ev,k.kulupler[f.ev].ad,bz,f.hafta),{tv:true,biz:0,tohum:P.tohum,tvSecenek:P.secenek,protokol:{rakipBaskan:'yok'},izlemesiz:false});
+      return Object.assign(g,statKur(f.ev,k.kulupler[f.ev].ad,bz,f.hafta,macDolulugu(k,f)),{tv:true,biz:0,tohum:P.tohum,tvSecenek:P.secenek,protokol:{rakipBaskan:'yok'},izlemesiz:false});
     }
     const is=Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.eylem==='macGunu'&&x.veri.macId===macId);
     if(!is)throw new Error('Bu maçın günü kariyerde bekleyen bir iş değil');
@@ -61,7 +61,7 @@ const MAC_GUNU=(()=>{
     girdi.digerleri=haftaninDigerMaclari(k,macId).map(f=>digerMacPlani(k,f));   /* F7; G1-a: hükmen maçta secenek yerine hukmen */
     oyunKomut(x=>ajandaIsiYap(x,is.id),true);
     if(OYUN.kariyer.isler[is.id]){OYUN.oturum.kaydet();throw new Error('Stada giderken yolda karar gerektiren bir haber geldi; maç günü bekliyor');}
-    return Object.assign(girdi,statKur(girdi.ev,k.kulupler[girdi.ev].ad,biz,girdi.hafta,girdi.bulten&&girdi.bulten.tur==='hazirlik'),{protokol:{rakipBaskan:'yok'},izlemesiz:izle==='0'});   /* H2-a */
+    return Object.assign(girdi,statKur(girdi.ev,k.kulupler[girdi.ev].ad,biz,girdi.hafta,macDolulugu(k,k.fikstur.find(x=>x.id===girdi.macId))),{protokol:{rakipBaskan:'yok'},izlemesiz:izle==='0'});   /* H2-a */
   }catch(e){
     try{history.replaceState(null,'',location.pathname);}catch(x){}
     if(typeof OYUN!=='undefined')OYUN.mesaj='Maç günü açılamadı: '+e.message;

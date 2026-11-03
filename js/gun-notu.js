@@ -47,6 +47,9 @@ function gunNotu(k){
     .map(r=>{const x={saat:r.saat,baslik:r.baslik,durum:r.durum,tur:'ajanda'};if(r.sure)x.bitis=r.saat+r.sure;if(r.eylem)x.eylem=r.eylem;return x;});
   const p=typeof antrenmanPenceresi==='function'?antrenmanPenceresi(k,tarih):null;
   if(p&&Number.isFinite(p.bas)&&Number.isFinite(p.bit))ajanda.push({saat:p.bas,bitis:p.bit,baslik:'Antrenman',durum:'bekliyor',tur:'antrenman'});
+  /* CM2-b: takım kamptaysa günün başında bir satır (js/oyuncu-hafta.js kulupKampta) */
+  const kp=typeof kulupKampta==='function'?kulupKampta(k,biz,tarih):null;
+  if(kp)ajanda.push({saat:GUN_BASLANGICI,baslik:`Takım kampta (${kp.yer}); ${gunAyYazi(kp.bitis)} akşamı döner`,durum:'bekliyor',tur:'kamp'});
   ajanda.sort((a,b)=>a.saat-b.saat);
   const bekleyen=sonraKararlari(k).map(x=>{const r={isId:x.id,baslik:String(x.veri.baslik||''),tarih:x.tarih,dakika:x.dakika};if(x.veri.sinif)r.sinif=x.veri.sinif;return r;});
   const M=typeof maliOzet==='function'?maliOzet(k,biz):null;

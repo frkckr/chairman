@@ -7,7 +7,7 @@
      imza (son): sezon sonuna dek her ayın 1'inde kasaya aylık bedel (ödeme işleri dosyaya bağlanmaz; dosya imzayla kapanır)
    Marka adları stattaki TEST tabelalardan (js/ortak.js ADS; kulüp adı değildir), tutarlar SPONSOR_TEST; metinler TEST yer tutucu, kullanıcı değiştirir. */
 'use strict';
-const SPONSOR_TEST={markalar:['Şimşek Pil','Lale Kolonya','Çınar Bisküvi','Karakuş Lastik','Radyo 88'],ay:'02',aylik:[5000000,12000000],ustYari:1.3,
+const SPONSOR_TEST={markalar:['Şimşek Pil','Lale Kolonya','Çınar Bisküvi','Karakuş Lastik','Radyo 88'],ay:'02',aylar:['07','02'],   /* CM2-b: yaz tarifinde Temmuz da */aylik:[5000000,12000000],ustYari:1.3,
   cevapGun:1,kartGun:2,kartSaat:660,beklemeSaat:660};
 MESELE_KATEGORILERI.kurumsal=['Kurumsal','K'];
 const spPara=x=>paraYazi(x).replace(/,\d\d ₺$/,' ₺');
@@ -66,10 +66,11 @@ SABLONLAR.sponsor.sonucMetni={imza:'Anlaşıldı',reddedildi:'Görüşme reddedi
 function ayBasiSonraki(t){const [y,a]=t.split('-').map(Number),Y=a===12?y+1:y,A=a===12?1:a+1;return`${Y}-${String(A).padStart(2,'0')}-01`;}
 /* açılış: ay başında (Şubat), sezon sürerken ve bu sezon sponsor dosyası yoksa; marka ve ilk söz belirlenimci; üst yarıdaki kulübe daha güçlü */
 function sponsorAcilisi(k){
-  const T=SPONSOR_TEST;if(!k.sezon||k.sezon.sonuc||k.tarih.slice(5,7)!==T.ay)return null;
-  if(Object.values(k.meseleler||{}).some(m=>m.sablon&&m.sablon.ad==='sponsor'&&m.sablon.veri.sezon===k.sezon.id))return null;
-  const r=kadroRastgele(k.dunyaTohumu,'sponsor:'+k.sezon.id),marka=T.markalar[Math.floor(r()*T.markalar.length)],tb=sezonTablosu(k),i=tb.findIndex(t=>t.id===bizimKulup(k));
+  const T=SPONSOR_TEST,ay=k.tarih.slice(5,7);if(!k.sezon||k.sezon.sonuc||!(T.aylar||[T.ay]).includes(ay))return null;
+  /* bu sezon bu ayın dosyası açıldıysa ya da bir sponsorla anlaşıldıysa yeni teklif yok (göğüs reklamı tek) */
+  if(Object.values(k.meseleler||{}).some(m=>m.sablon&&m.sablon.ad==='sponsor'&&m.sablon.veri.sezon===k.sezon.id&&((m.sablon.veri.ay||T.ay)===ay||m.sablon.sonuc==='imza')))return null;
+  const r=kadroRastgele(k.dunyaTohumu,'sponsor:'+k.sezon.id+(ay===T.ay?'':':'+ay)),marka=T.markalar[Math.floor(r()*T.markalar.length)],tb=sezonTablosu(k),i=tb.findIndex(t=>t.id===bizimKulup(k));
   const ilk=Math.round((T.aylik[0]+(T.aylik[1]-T.aylik[0])*r())*(i>=0&&i<tb.length/2?T.ustYari:1)/100000)*100000;
-  return sablonAc(k,'sponsor',{baslik:`Sponsor: ${marka}`,kaynak:'dunya',kisiler:spMudur(k)?[spMudur(k).id]:[],veri:{marka,ilk,sezon:k.sezon.id,pazarlik:{},bekliyor:false,aylik:null}});
+  return sablonAc(k,'sponsor',{baslik:`Sponsor: ${marka}`,kaynak:'dunya',kisiler:spMudur(k)?[spMudur(k).id]:[],veri:{marka,ilk,sezon:k.sezon.id,ay,pazarlik:{},bekliyor:false,aylik:null}});
 }
 AY_BASI_EKLERI.push(k=>sponsorAcilisi(k)?'Sponsor teklifi geldi; dosyada.':null);

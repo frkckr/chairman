@@ -19,8 +19,8 @@ const OYUNCU_HAFTA_TEST={kapali:false,
   konEsik:90,konAralik:40,konEnCok:0.05,konYuva:[0,9],
   formOlcek:50,formEnCok:0.03,formYuva:[1,2,3,4,5,6,7],formAr:0.75,formSok:25,
   dusus90:26,kaleciPay:0.35,sakatEksik:15,uzunCapa:60,
-  toparlanma:{mac:3.75,dinlenme:7.5,toparlanma:5.75,hafif:5.25,yogun:7.5},yogunKesinti:0.6,   /* S-a kalibrasyonu (2026-10-27): ilk değerlerin ×1,25'i */
-  yuk:{toparlanma:0.4,hafif:0.5,yogun:1},
+  toparlanma:{mac:3.75,dinlenme:7.5,toparlanma:5.75,hafif:5.25,yogun:7.5,kamp:6.5},yogunKesinti:0.6,   /* CM2-b: kamp (TEST) */   /* S-a kalibrasyonu (2026-10-27): ilk değerlerin ×1,25'i */
+  yuk:{toparlanma:0.4,hafif:0.5,yogun:1,kamp:1.1},
   gelEgri:{18:60,19:60,20:60,21:50,22:40,23:30,24:20,25:12,26:6,27:0,28:0,29:-8,30:-15,31:-22,32:-30,33:-40,34:-50},
   gelSok:40,gelYukNominal:3.9,gelYukSinir:[0.8,1.2],gelOynama:[0.7,0.3],gelYuvaEk:0.03,gelAlt:10,
   potansiyel:[[21,20],[24,10],[27,4],[99,0]],tavanEn:95,
@@ -39,10 +39,13 @@ function kulupMacGunleri(k,kulupId){
     for(const L of M.values())L.sort();OH_FIKSTUR_GUNLERI.set(F,M);}
   return M.get(kulupId)||[];
 }
-/* günün türü ve yükü {tur:'mac'|'dinlenme'|'hafif'|'toparlanma'|'yogun', yuk} */
+/* CM2-b: kulübün kampı (k.kosullar.kamp {kulupId, bas, bitis, yer}; js/icerik-onsezon.js kurar): o gün kamptaysa kayıt, değilse null */
+function kulupKampta(k,kulupId,tarih){const K=k&&k.kosullar&&k.kosullar.kamp;return K&&K.kulupId===kulupId&&tarih>=K.bas&&tarih<=K.bitis?K:null;}
+/* günün türü ve yükü {tur:'mac'|'dinlenme'|'hafif'|'toparlanma'|'yogun'|'kamp', yuk} */
 function antrenmanProgrami(k,kulupId,tarih){
   const G=kulupMacGunleri(k,kulupId),Y=OYUNCU_HAFTA_TEST.yuk;
   if(G.includes(tarih))return{tur:'mac',yuk:0};
+  if(kulupKampta(k,kulupId,tarih))return{tur:'kamp',yuk:Y.kamp};   /* CM2-b: kampta hafta sonu da çalışılır */
   const hg=ohHaftaGunu(tarih);
   if(hg===0||hg===6)return{tur:'dinlenme',yuk:0};
   const sonraki=G.find(t=>t>tarih);
