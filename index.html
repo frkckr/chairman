@@ -47,11 +47,13 @@ body{font-family:var(--govde);font-size:14px;line-height:1.55;padding-inline:16p
 /* CM1-a (2026-11-03, karar 86): odada karenin solunda CM 01/02 şeridi (#cmSerit, js/ekran-oda.js). Kare 4:3 ve 960 ızgarası aynı kalır; şerit HTML
    kromdur, genişliği karenin payı (STIL.cerceve.serit; --serit-en, --kare-en px, js/sunum-durumu.js ekranPayGuncelle). Tuval ve oda kabı şeridin
    sağında; yazı karenin genişliğinden (--kare-cq). Bant (balkon) varsa karenin sağında, şerit solda */
-.screen[data-serit]{width:calc(var(--serit-en) + var(--kare-en));aspect-ratio:auto;height:calc(var(--kare-en) * 3 / 4);max-width:100%;--kare-cq:calc(var(--kare-en) / 100)}
-.screen[data-serit][data-bant]{width:calc(var(--serit-en) + var(--kare-en) + var(--bant-en));background:linear-gradient(90deg,#000 calc(var(--serit-en) + var(--kare-en)),#2a251e 0)}
-.screen[data-serit]>canvas#view{left:var(--serit-en)}
+/* AR1 (2026-11-04, karar 90): CM çerçevesinde oyun alanı pencereyi doldurur (genişlik %100, yükseklik pencere eksi pay: --ekran-yuk); şerit solda, oda katmanı
+   (başlık şeridi, sekme satırı, bölümler, alt şerit) şeridin sağında bütün içerik alanı; 3B kare 4:3 içerik alanında ortalanır (--kare-sol, --kare-ust).
+   Karenin yanları çerçevenin zemini (--c-alan). Bant yok */
+.screen[data-serit]{width:100%;max-width:none;aspect-ratio:auto;height:var(--ekran-yuk,calc(var(--kare-en) * 3 / 4));--kare-cq:calc(var(--kare-en) / 100);background:var(--c-alan,#070b1c)}
+.screen[data-serit]>canvas#view{left:var(--kare-sol,var(--serit-en));top:var(--kare-ust,0px);width:var(--kare-en);height:calc(var(--kare-en) * 3 / 4);bottom:auto}
 .screen[data-serit]>.oda{left:var(--serit-en)}
-.screen[data-serit]>.duraklatildi{left:calc(var(--serit-en) + var(--kare-en) / 2);top:13%}
+.screen[data-serit]>.duraklatildi{left:calc(var(--kare-sol) + var(--kare-en) / 2);top:13%}
 /* 3B görüntü tam sayı katında çizilir (js/goruntu.js); tarayıcı ekrana yumuşak küçültür: pikseller eşit görünür (keskin-çift doğrusal) */
 .screen canvas#view{image-rendering:auto}
 .controls{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 22px}
@@ -371,21 +373,9 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
   .oda .od-sonra{bottom:calc(var(--od-alt,4.8em) + 3.4em)}
 }
 /* U6 (envanter 20): kâğıtta hafif doku (iki kat ince nokta; statik, okunurluğu bozmaz) */
-.oda .odk-kagit,.oda .dsy-sayfa,.oda .dft-sayfa,.oda .zm-sahne{background-image:radial-gradient(rgba(110,90,50,.06) .06em,transparent .07em),radial-gradient(rgba(110,90,50,.045) .05em,transparent .06em);
+.oda .cm-kagit,.oda .dsy-sayfa,.oda .dft-sayfa,.oda .zm-sahne{background-image:radial-gradient(rgba(110,90,50,.06) .06em,transparent .07em),radial-gradient(rgba(110,90,50,.045) .05em,transparent .06em);
   background-size:.33em .33em,.71em .71em;background-position:0 0,.17em .29em}
-/* U6 (envanter 17): balkonda yarım odak — perde yok (antrenman net ve canlı), iş sağ yarıda */
-.oda[data-yer="balkon"] .odk-perde{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(90deg,transparent 35%,rgba(24,16,8,.32) 55%)}
-.oda[data-yer="balkon"] section.odk{left:auto;right:2%}
-.oda[data-yer="balkon"] section.odk:not([data-boy="cihaz"]){--odk-en:50%}
-/* RB: bantlı düzende iş bandın içinde; bant dar kalırsa (dosya ve defterin iki sayfası) sağdan sola genişler ve karenin sağını örter (bakış görünen sola kayar) */
-.screen[data-bant] .oda[data-yer="balkon"] section.odk{right:.7em;width:var(--odk-en);--odk-en:max(calc(var(--bant-en) - 1.4em),min(calc(100% - 1.4em),var(--odk-enAz,46em)))}
-/* RK1: telefon (cihaz, 21em) bandın içinde kalır — genişliği telefon panelinin %41 kuralından değil banttan alır */
-.screen[data-bant] .oda[data-yer="balkon"] section.odk[data-boy="cihaz"]{--odk-enAz:22em}
-.screen[data-bant] .oda[data-yer="balkon"] section.odk[data-boy="kucuk"]{--odk-enAz:30em}
-.screen[data-bant] .oda[data-yer="balkon"] section.odk[data-boy="orta"]{--odk-enAz:36em}
-.screen[data-bant] .oda[data-yer="balkon"] .odk-perde{background:linear-gradient(90deg,transparent calc(var(--kare-en) - 6em),rgba(24,16,8,.32) var(--kare-en))}
-/* RB: bantlı düzende masa şeridi karenin ortasında kalır (bandın altına girmez) */
-.screen[data-bant] .oda .od-nesneler{left:calc(var(--kare-en) / 2);max-width:calc(var(--kare-en) * .96)}
+/* AR1: balkonda iş içerik alanının sağında panelde (js/ekran-cerceve.js); odak kabının balkon ve bant kuralları kalktı */
 /* U4 (envanter 21): basılan kâğıt düğme bir an aşağı iner (gölgesi kalkar); sürüklenen kart ve devre dışı düğme etkilenmez */
 .oda button:not(:disabled):active,.onEkran button:not(:disabled):active,.macTelefon button:not(:disabled):active,.mac-sonu button:not(:disabled):active,.karar-ani button:not(:disabled):active{transform:translateY(.1em);box-shadow:none;filter:brightness(.96)}
 /* ---- CM1-a (karar 86): CM 01/02 çerçevesi — sol şerit (tarih, Geri, İlerle, menü, Haber var) ve karenin üstünde başlık şeridi ile sekme satırı.
@@ -421,7 +411,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .oda .od-ust.od-ustCm{display:grid;grid-template-columns:minmax(0,1fr);justify-content:stretch;align-items:stretch;gap:0;padding:0;background:var(--c-baslik);color:var(--c-baslikYazi);border-bottom:.16em solid var(--c-baslikKenar);font-size:1em;letter-spacing:0;text-transform:none}
 .od-ustCm .od-ustSatir{display:flex;justify-content:space-between;align-items:center;gap:.8em;min-width:0;padding:.28em .8em .26em}
 .od-ustCm .od-ustBaslik{display:flex;align-items:baseline;gap:.6em;min-width:0;overflow:hidden;white-space:nowrap}
-.od-ustCm .od-ustBaslik b{font-family:var(--cerceve);font-weight:800;font-size:1.42em;line-height:1.05;text-shadow:var(--c-baslikGolge);flex:none}
+.od-ustCm .od-ustBaslik b{font-family:var(--cerceve);font-weight:800;font-size:1.42em;line-height:1.4;text-shadow:var(--c-baslikGolge);flex:none}
 .od-ustCm .od-ustBaslik small{font-size:max(12px,.82em);opacity:.92;overflow:hidden;text-overflow:ellipsis;min-width:0}
 /* CM1-b: cevap bekleyen kararların sayısı (dokununca Haberler › Cevap bekliyor) */
 .oda .od-ustCm button.od-ustBekliyor{align-self:center;flex:none;font-family:var(--cerceve);font-weight:800;font-size:max(12px,.8em);padding:.08em .55em;color:#fff;background:var(--c-haber);
@@ -614,9 +604,10 @@ html,body{margin:0}
 <script src="js/ekran-gazete.js"></script>
 <script src="js/ekran-tv.js"></script>
 <script src="js/ekran-transfer.js"></script>
-<script src="js/ekran-not.js"></script>
 <script src="js/ekran-haberler.js"></script>
-<script src="js/ekran-odak.js"></script>
+<script src="js/ekran-cerceve.js"></script>
+<script src="js/ekran-lig.js"></script>
+<script src="js/ekran-finans.js"></script>
 <script src="js/ekran-zaman.js"></script>
 <script src="js/ekran-oda.js"></script>
 <script src="js/ekran-cakisma.js"></script>

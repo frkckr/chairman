@@ -6,7 +6,7 @@
    Kulüp · Transfer · Lig · Basın · Para) başlık şeridinin altındaki sekme satırındadır. “Cevap bekliyor”: kararlar (Sonra yığınının kaynağı), bugünün
    randevuları, takipteki işler (aşama satırıyla).
      haberlerGorunumu(k, d, y)  d: {sekme, gun, durak, sonraki}  y: {yaz, tarihYazi, tarihKisa, saatYazi, tlYazi, smg}
-   Seçiciler denemelerle sözleşmedir: .hb, .hb-bugun, .hb-satir[data-id][data-yeni], .hb-gun, .hb-bekleyen, [data-eylem="hbSonraki"|"hbHepsiOkundu"|"hbDaha"] */
+   Seçiciler denemelerle sözleşmedir: .hb, .hb-satir[data-id][data-yeni], .hb-gun, .hb-bekleyen, [data-eylem="hbSonraki"|"hbHepsiOkundu"|"hbDaha"] */
 'use strict';
 (function haberlerStili(){
   if(typeof document==='undefined'||document.getElementById('haberlerStili'))return;
@@ -54,14 +54,8 @@ const HB_SINIF_ROZET={beklenen:'Cevap geldi'};
 const HB_YER={telefon:'telefonda',dosya:'dosyada',karar:'defterde'};
 function haberlerGorunumu(k,d,y){
   const yaz=y.yaz,gun=d.gun||GELISME_TEST.gun,L=gelismeListesi(k,{gun}),S=gelismeSayaci(k);
-  /* Bugün: gün başı notunun okuması (js/gun-notu.js gunNotu) ve İlerle'nin durduğu yer */
-  const N=typeof gunNotu==='function'?gunNotu(k):null,b=[];
-  if(d.durak)b.push('<p class="hb-durak">'+yaz(d.durak)+'</p>'+(d.sonraki?'<small>Sıradaki: '+yaz(d.sonraki)+'</small>':''));
-  if(N&&N.sonMac){const m=N.sonMac,ad=id=>(k.kulupler[id]||{ad:id}).ad,SN={G:'galibiyet',B:'beraberlik',M:'mağlubiyet'};
-    b.push('<p>'+(m.hazirlik?'Hazırlık maçı':'Son maç')+': '+yaz(ad(m.ev)+' '+m.skor[0]+'–'+m.skor[1]+' '+ad(m.konuk))+' <small>('+SN[m.sonuc]+(m.sira?', ligde '+m.sira+'.':'')+')</small></p>');}
-  if(N&&N.ajanda.length)b.push('<p>Bugün: '+N.ajanda.filter(x=>x.durum==='bekliyor').slice(0,3).map(x=>yaz(y.saatYazi(x.saat)+' '+x.baslik)).join(' · ')+'</p>');
-  if(N)b.push('<p><small>Kasa '+yaz(y.tlYazi(N.kasa.nakit))+(N.kasa.enDusuk!==null&&N.kasa.enDusuk<N.kasa.nakit?' · 90 günde en düşük '+yaz(y.tlYazi(N.kasa.enDusuk)):'')+'</small></p>');
-  const bugun='<section class="hb-bugun"><h4>Bugün · '+yaz(y.tarihYazi(k.tarih))+'</h4>'+(b.join('')||'<p class="hb-bos">Sakin bir gün.</p>')+'</section>';
+  /* AR1 (2026-11-04, karar 90): Bugün kutusu (gün başı notu, kasa) kalktı; kasa Finans'ta, günün tek satırı AR2'de (son maç ve bugünün işleri) */
+  const bugun='';
   if(d.sekme==='cevap'){
     const B=gelismeBekleyenler(k),ic=[];
     if(B.kararlar.length)ic.push('<div class="hb-bekleyen"><h4>Kararlar · '+B.kararlar.length+'</h4>'+B.kararlar.map(x=>

@@ -21,7 +21,7 @@ const GEVSEK_IZINLI=Object.assign(
   Object.fromEntries(['js/mac-motoru.js','js/mac-karar.js','js/mac-kurallar.js','js/mac-dizilis.js','js/mac-takim.js','js/mac-oncesi.js','js/mac-senaryo.js','js/kadrolar.js',
     'js/hareket-egrileri.js'].map(f=>[f,MOTOR_GEVSEK])),
   Object.fromEntries(['js/animasyon.js','js/arayuz.js','js/balkon.js','js/baskan.js','js/efektler.js','js/ekran-an.js','js/ekran-defter.js','js/ekran-dosya.js','js/ekran-gazete.js',
-    'js/ekran-kart.js','js/ekran-mac-oncesi.js','js/ekran-mac-skor.js','js/ekran-mac-sonu.js','js/ekran-mac-telefon.js','js/ekran-oda.js','js/ekran-odak.js','js/ekran-telefon.js',
+    'js/ekran-kart.js','js/ekran-mac-oncesi.js','js/ekran-mac-skor.js','js/ekran-mac-sonu.js','js/ekran-mac-telefon.js','js/ekran-oda.js','js/ekran-telefon.js',
     'js/ekran-zaman.js','js/gecis-karti.js','js/golgeler.js','js/goruntu.js','js/kamera.js','js/karar-ani.js','js/loca-giris.js','js/mac-arka.js','js/mac-gunu.js','js/mac-sahnesi.js',
     'js/oda.js','js/okunurluk.js','js/oyuncular.js','js/portre.js','js/pul.js','js/seyirci.js','js/stadyum-cevre.js','js/stadyum.js','js/stil-99.js','js/sunum-durumu.js',
     'js/yuruyus.js'].map(f=>[f,CIZIM_GEVSEK])));
