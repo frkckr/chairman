@@ -142,6 +142,22 @@ Maçın mevcut gece atmosferi kendi bağlamında kalır. İlk aydınlık oda ve 
 
 ## 7. Arayüz ve bilgi
 
+### Hedef: arayüz yeniden tasarımı (karar 90–91, 2026-11-04; önizleme `prototipler/arayuz-konsept/`)
+
+Kullanıcı kararı (2026-11-04: “menüler ve ekranlar kopuk, baştan planlayalım”; inceleme [araclar/plan/arayuz-inceleme.md](araclar/plan/arayuz-inceleme.md), analiz [araclar/plan/baskanlik-analiz.md](araclar/plan/baskanlik-analiz.md) §5). Aşağıdaki “Bugünkü uygulama (U)” ve CM1-a notları bu hedefle değişecek yerlerde tarihseldir; uygulama planı sonra.
+
+- **Tek krom.** Karenin solunda lacivert şerit (tarih kutusu; ‹ Geri · İleri ›; sarı İlerle; kabartmalı düğmeler Ofis, Haberler, Kulüp, Finans, Lig, Transfer, Ajanda, Telefon, Gazete, ayraç, Balkon; en altta kırmızı Haber var ve Ayarlar), üstte kulüp renginde başlık şeridi (genel ekranlarda nötr; kulüp sayfasında o kulübün rengi; maç sayfasında iki kulübün rengi ve ortada skor), altında sekme satırı. Odak kabı, kabın başlığı, Kapat × ve ipucu satırı yoktur; içerik alanı başlık şeridinin altından pencerenin altına kadar tamdır. **Düğme = ekran;** oda nesneleri (telefon, gazete, defter, dosya, sarı not, TV, balkon kapısı) aynı bölümlere giden kısayoldur.
+- **Koyu CM görünümü.** İçerik alanı: lacivert yarı saydam paneller (`--panel`), panel başlıkları sarı ve büyük harf, gövde beyaz; seçili satır koyu kırmızı; arkada soluk ve durağan oda karesi (bulanıklık yok; Ofis'te oda net). Belgeler (tutanak, mali rapor, sicil fişi, sözleşme, gazete) her görünümde kâğıttır: koyu zemin üstünde kâğıt, nesne hissini verir. Kart her yerde aynı: krem, üstte kırmızı şerit, iki yüz, damga.
+- **Yazı.** En çok üç aile: Nunito 700/800 (şerit, başlık, panel başlığı, büyük sayı), IBM Plex Sans 400–700 (gövde ve tablo; tablolarda `tabular-nums`), IBM Plex Serif yalnız belge ve gazetede. Jersey 10 yalnız cihaz göstergelerinde (telefon, TV, köşe skoru). Gövde 16 px kuralı sürer.
+- **Yoğunluk.** Tablo ekranlarında satır 26–28 px, ekranda 16–20 satır, tablo tam genişlik, her hücre bir yere götürür; kart ve belge ekranlarında kâğıt ölçüsü. HTML ekranlar pencereyi doldurur; 3B sahneler (oda, balkon, maç) 4:3 kalır (karar 8). Dar alanda yan sütunlar alta iner.
+- **Geçiş.** Menü ve sekmede anında; alt sayfa (kulüp, oyuncu, maç) ve sahne (kapı, görüşme) girişinde 120 ms solma. Fiziksel hareket yalnız oda nesnesine tıklanınca ve balkon yürüyüşünde.
+- **Haberler.** Liste tam yükseklik; cevap bekleyenler kırmızı blokla başta; aynı günün arka plan satırları tek satırda; satırda saat, kaynak (kişi yüzü, kulüp arması, kurum kutusu), başlık, rozet; ayrıntı paneli (altta ya da sağda) kanalın görünüşüyle: mesaj balonu, gazete kupürü, resmî yazı, “karşında oturuyor” sahnesi; kart ayrıntıda. “Ulaşılamadı” ve “cevapsız kaldı” satır sınıfları.
+- **Kademe ve bedel.** Kişi düğmeleri kademesini ve bedelini aralık ve kaynakla yazar: “Mesaj yaz”, “Ara”, “Çağır · ~40–70 dk · geçmişinden”, “Git · yarım gün · ~700 ₺”. Ulaşılamayan kişi (mesai dışı) soluk.
+- **Zaman göstergeleri.** Şeritteki saat sahnede döner, masada durur; tarih kutusunun altında günün doluluğu (“bugün 2 sa 40 dk boş”); gece saatlerinde tarih kutusu koyulaşır (“gece · ertesi sabah 10:00”); Ajanda'da saatli bloklar ve gerçekleşen süre; bölümlerde dosya saati (“cevap Per” / “belirsiz”), Ajanda'da son gün kırmızı. Anlık kart sahnenin üstünde köşeden gelir (arayanın yüzü, Bak / Bakma), sahne kartı arkada bekler.
+- **Kaynaklı sayı.** Zamanla gelen her sayının altında kaynak ve tarih (“Nusret Bey · 10 Ara”); eskiyince sararır ve “taze rapor iste ▸” belirir. Personel satırında yük (“3 iş”) ve yetki satırları.
+- **İlişkiler.** Kulüp › İlişkiler tablo: kişi/kurum, son temas, açık dosya, söz, tanıdığın kadarı; tutum için renk, çubuk ya da etiket yok.
+- **Kalkanlar.** Gün başı notu, masadaki “Sonra” yığını, TV'nin 200/300 sayfaları (TV yalnız canlı maç), Haberler'in Bugün kutusu, odak kabı, Canlı Skor'un odadaki kullanımı (balkon ve maçta telefonda kalır), mantar pano ve manila dosyanın liste ekranlarında kullanımı (belge ve kartta kalır).
+
 ### Bugünkü uygulama (U, 2026-10-28)
 
 Kullanıcı kararı (2026-10-28): “O anda ne yapıyorsam yalnız onunla ilgileneyim” — odak modeli ve dokuz tercih ([araclar/plan/u-arastirma.md](araclar/plan/u-arastirma.md) §7). Uygulama ayrıntısı, sapmalar ve denetimler [araclar/plan/u-arayuz.md](araclar/plan/u-arayuz.md) “Durum”da; aşağıdaki eski notlar U'nun değiştirmediği yerler için geçerlidir, değiştirdiği yerlerde tarihseldir.
