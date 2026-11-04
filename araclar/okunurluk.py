@@ -43,7 +43,9 @@ GOVDE_EN_AZ, METIN_EN_AZ = 15.0, 12.0   # RK5-a (karar 83): gövde tabanı 16 px
 # 1366×650 (1366×768 ekran, tarayıcı ve görev çubuğu düşülmüş) → kare 825, 1536×740 (1920×1080 %125) → kare 944
 # CM1-a (2026-11-03, karar 86): odada karenin solunda CM şeridi (karenin %12,5'i, 104–148 px; js/sunum-durumu.js seritGenisligi). Genişlikten sınırlı
 # üç pencere şerit kadar genişler, kare eskisiyle aynı kalır (640 → 672+104, 800 → 832+104, 1186 → 1218+148); 825 ve 944 yükseklikten sınırlı, aynı
-GENISLIKLER = {640: (776, 560), 800: (936, 700), 825: (1366, 650), 944: (1536, 740), 1186: (1366, 1000)}
+# AR1 (2026-11-04, karar 90): oyun alanı pencereyi doldurur (şerit + içerik alanı), 3B kare 4:3 içerik alanında; ölçü beş pencere ölçüsünde (anahtar pencere
+# genişliği; araclar/plan/arayuz-uygulama.md §2 kabul 1). Eski kare genişlikleri (640–1186) tur/cm2b-onsezon etiketindedir
+GENISLIKLER = {1024: (1024, 768), 1280: (1280, 800), 1600: (1600, 900), 1920: (1920, 1080), 2560: (2560, 1440)}
 
 OLC_JS = r"""() => {
   const E = document.getElementById('screen'), R = E.getBoundingClientRect();
@@ -94,7 +96,7 @@ async def tikla(pg, secici):
 async def sahneler_oda(pg, olc):
     """TEST içerikli oda: Salı 10:30 kararına ilerlenir (akış §27 kalıbı); telefon ve dosyada tek kart görünür."""
     await olc("oda")
-    await pg.keyboard.press("Digit2")
+    await pg.keyboard.press("Digit7")   # AR1: 7 Ajanda
     await pg.wait_for_selector(".dft", timeout=10000)
     await olc("defter")
     await tikla(pg, ':is(.od-alt, .cm-serit) .od-ana[data-eylem="yap"]')
@@ -106,14 +108,15 @@ async def sahneler_oda(pg, olc):
             break
         await akis.oda_ilerle(pg)
     await akis.masaya_don(pg)
-    await pg.keyboard.press("Digit1")
+    # AR1: 8 Telefon; odada telefon mesajlarla açılır (ana ekran ve Canlı Skor balkonda ve maçta)
+    await pg.keyboard.press("Digit8")
     await pg.wait_for_selector(".tel-ekran", timeout=10000)
-    await olc("telefon-ana")
-    await tikla(pg, ".tel-bildirim[data-kisi]")
+    await olc("telefon-mesajlar")
+    soran = await pg.evaluate("() => { const B = gelismeBekleyenler(OYUN.kariyer).kararlar, i = B.length && OYUN.kariyer.isler[B[0].isId]; return i ? i.veri.soran : null; }")
+    await tikla(pg, f'.tel [data-eylem="telKisi"][data-kisi="{soran}"]' if soran else '.tel [data-eylem="telKisi"]')
     await pg.wait_for_selector(".tlf-is .kk-kart", timeout=10000)   # R2: kart telefonun sağındaki iş panelinde
     await olc("telefon-konusma")
-    await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="mesajlar"]')
-    await olc("telefon-mesajlar")
+    await tikla(pg, '.tel-kisiBas .tel-geri')
     # R2 eki: konu menüsü (hocanın konuşmasında “Yeni konu aç”)
     hid = await pg.evaluate("() => OYUN.kariyer.kulupler[OYUN.kariyer.kisiler[OYUN.kariyer.baskanId].kulupId].hocaId")
     await tikla(pg, f'.tel [data-eylem="telKisi"][data-kisi="{hid}"]')
@@ -121,34 +124,46 @@ async def sahneler_oda(pg, olc):
     await pg.wait_for_selector(".tlf-menu", timeout=10000)
     await olc("telefon-konu-menusu")
     await tikla(pg, '.tel-kisiBas .tel-geri')
-    await tikla(pg, '.tel [data-eylem="telEv"]')
-    await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="skor"]')
-    await olc("canli-skor")
     await akis.masaya_don(pg)
-    await pg.keyboard.press("Digit8")   # RK5-b: gün başı notu
-    await pg.wait_for_selector("#oda .gn", timeout=10000)
-    await olc("gun-notu")
-    await akis.masaya_don(pg)
-    # CM1-b: Haberler (Hepsi ve Cevap bekliyor; TEST içeriğinde Salı kararı bekliyor)
-    await pg.keyboard.press("Digit9")
+    # CM1-b: Haberler (Hepsi ve Cevap bekliyor; TEST içeriğinde Salı kararı bekliyor). AR1: 2 Haberler; gün başı notu ve odada Canlı Skor kalktı
+    await pg.keyboard.press("Digit2")
     await pg.wait_for_selector("#oda .hb", timeout=10000)
     await olc("haberler-hepsi")
     await tikla(pg, '#oda .hb-sekmeler [data-sekme="cevap"]')
     await pg.wait_for_selector('#oda .hb[data-sekme="cevap"]', timeout=10000)
     await olc("haberler-cevap")
     await akis.masaya_don(pg)
+    # AR1: 3 Kulüp (Kadro önde); dosyanın kartı Dosyalar sekmesinde
     await pg.keyboard.press("Digit3")
+    await pg.wait_for_selector(".dsy-kadro", timeout=10000)
+    await olc("kulup-kadro")
+    await tikla(pg, '#oda .od-sekmeSatir [data-eylem="cmDosyalar"]')
     await pg.wait_for_selector(".dsy .kk-kart", timeout=10000)
     await olc("dosya-kart")
     await tikla(pg, ".dsy-kadroSekme")
     await pg.wait_for_selector(".dsy-kadro", timeout=10000)
-    await olc("kadro")
     await tikla(pg, '.dsy-kadro button[data-eylem="oyuncuAc"]')
     await pg.wait_for_timeout(300)
     await olc("oyuncu-dosyasi")
-    await pg.keyboard.press("Digit4")
+    await pg.keyboard.press("Digit9")   # AR1: 9 Gazete
     await pg.wait_for_timeout(400)
     await olc("gazete")
+    # AR1: Finans (Durum son rapordan, Raporlar) ve Lig (puan durumu, fikstür, kulüp sayfası)
+    await pg.keyboard.press("Digit4")
+    await pg.wait_for_selector("#oda .fn-durum", timeout=10000)
+    await olc("finans-durum")
+    await tikla(pg, '#oda [data-eylem="finSekme"][data-sekme="raporlar"]')
+    await pg.wait_for_timeout(300)
+    await olc("finans-raporlar")
+    await pg.keyboard.press("Digit5")
+    await pg.wait_for_selector("#oda .lg-puan", timeout=10000)
+    await olc("lig-puan")
+    await tikla(pg, '#oda [data-eylem="ligSekme"][data-sekme="fikstur"]')
+    await pg.wait_for_selector("#oda .lg-fikstur", timeout=10000)
+    await olc("lig-fikstur")
+    await tikla(pg, '#oda [data-eylem="ligSekme"][data-sekme="kulupler"]')
+    await pg.wait_for_selector("#oda .lg-kulupler", timeout=10000)
+    await olc("lig-kulupler")
     await akis.masaya_don(pg)
     await tikla(pg, '.od-nesne[data-panel="ayar"]')
     await tikla(pg, '[data-eylem="ayarBolum"][data-bolum="kayit"]')
@@ -158,12 +173,15 @@ async def sahneler_oda(pg, olc):
 async def sahneler_canli(pg, olc):
     """R3: sürüm 11 örnek kaydı (14. hafta sonu, oynanmış iki hafta): hafta görünümü, maç sayfası, oyuncu ve takım sayfası (geniş karede sağ
     panelde, dar karede telefonun içinde)."""
-    await pg.keyboard.press("Digit1")
-    await pg.wait_for_selector(".tel-ekran", timeout=10000)
-    await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="skor"]')
+    # AR1: odada Canlı Skor yok; sayfalar Lig bölümünde (5 › Fikstür › maç)
+    await pg.keyboard.press("Digit5")
+    await pg.wait_for_selector("#oda .lg-puan", timeout=10000)
+    await tikla(pg, '#oda [data-eylem="ligSekme"][data-sekme="fikstur"]')
+    await pg.wait_for_selector("#oda .lg-fikstur", timeout=10000)
     await olc("canli-hafta")
     mid = await pg.evaluate("() => OYUN.kariyer.fikstur.find(f => f.hafta === 14 && (f.ev === 'demirkapi' || f.konuk === 'demirkapi')).id")
-    await tikla(pg, f'.tel [data-eylem="csAc"][data-tur="mac"][data-id="{mid}"]')
+    await pg.evaluate(f"() => {{ const b = document.querySelector('#oda .lg-fikstur [data-eylem=\"csAc\"][data-id=\"{mid}\"]'); if (b) b.click(); else {{ const h = OYUN.kariyer.fikstur.find(f => f.id === '{mid}').hafta; for (const x of document.querySelectorAll('#oda [data-eylem=\"ligHafta\"]')) if (+x.dataset.hafta === h) x.click(); }} }}")
+    await tikla(pg, f'#oda [data-eylem="csAc"][data-tur="mac"][data-id="{mid}"]')
     await olc("canli-mac-ozet")
     await tikla(pg, '.cs-sayfa [data-eylem="csBolum"][data-bolum="ist"]')
     await olc("canli-mac-ist")
@@ -203,7 +221,7 @@ ZINCIR_POL = {"ihtiyac": "onayla", "aday": "adayA", "gorus": "gorus", "yurutme":
 
 
 async def sahneler_transfer(pg, olc):
-    """R4: Transfer masası (yeni kariyer) ve zincirin aday ve pazarlık kartı (kart kendi yerinde, Sonra yığınından)."""
+    """R4: Transfer masası (yeni kariyer) ve zincirin aday ve pazarlık kartı (kart kendi yerinde; AR1: Haberler › Cevap bekliyor'dan)."""
     await pg.keyboard.press("Digit6")
     await pg.wait_for_selector(".tm-masa", timeout=10000)
     await olc("transfer-pano")
@@ -222,7 +240,7 @@ async def sahneler_transfer(pg, olc):
             continue
         await akis.oda_yenile(pg)
         await akis.masaya_don(pg)
-        await tikla(pg, f'.od-sonraKagit[data-is="{kid}"]')
+        await akis.sonra_ac(pg, kid)   # AR1: Sonra yığını yerine Haberler › Cevap bekliyor
         await pg.wait_for_selector(f'.kk-kart[data-is="{kid}"]', timeout=10000)
         await olc(sahne)
         await akis.masaya_don(pg)
@@ -245,9 +263,9 @@ async def sahneler_balkon(pg, olc):
     await pg.wait_for_timeout(1200)
     await olc("balkon-sahada")
     await tikla(pg, '#oda .od-antGor')
-    await pg.wait_for_selector("#oda section.odk .od-gorduklerin", timeout=10000)
+    await pg.wait_for_selector("#oda section.cm-icerik .od-gorduklerin", timeout=10000)
     await olc("balkon-gorduklerin")
-    await tikla(pg, '#oda section.odk .od-gorduklerin [data-eylem="gozlemOyuncu"]')
+    await tikla(pg, '#oda section.cm-icerik .od-gorduklerin [data-eylem="gozlemOyuncu"]')
     await pg.wait_for_selector("#oda .dsy-baslik", timeout=10000)
     await olc("balkon-dosya")
 
@@ -267,34 +285,24 @@ async def sahneler_ziyaret(pg, olc):
     await akis.yokla(pg, "() => ODA.ziyaret && ODA.ziyaret.evre === 'giris'", 20)
     await akis.oda_bos_tikla(pg)
     # dar karede yarım odak karenin %96'sıdır: tıklama kabın üstüne düşer, kişi kendi yürüyüşüyle oturur (yavaş makinede 10 sn'yi aşar)
-    await pg.wait_for_selector('#oda section.odk[data-odak="ziyaret"] .kk-kart', timeout=40000)
+    await pg.wait_for_selector('#oda section.cm-icerik[data-odak="ziyaret"] .kk-kart', timeout=40000)
     await olc("ziyaret-kart")
 
 
-TV_SAHNELER = {"tv-haberler", "tv-skorlar", "tv-program", "canli-takip"}
+TV_SAHNELER = {"tv-canli"}
 
 
 async def sahneler_tv(pg, olc):
-    """RK8-a: 13. hafta yapay sonuçla, 14. haftanın Cumartesi 17:00 maçları sahte sonuçla (20:00); TV sayfası 100, 200, 300 (tv-haberler, tv-skorlar, tv-program);
-    bir kulüp takipte, Canlı Skor'un Takip sekmesi (canli-takip)."""
+    """RK8-a, AR1: 13. hafta yapay sonuçla, 14. haftanın Cumartesi 17:00 maçları sahte sonuçla, oda saati 20:30 (20:00 maçı canlı); odadaki TV'ye tıklamak
+    canlı maç penceresini açar (tv-canli). TV'nin 100/200/300 sayfaları ve odadaki Canlı Skor'un Takip sekmesi AR1'de kalktı."""
     await pg.evaluate(akis.HAFTA_BITIR_JS)
     await pg.evaluate("""() => { LIG_MAC_SAGLAYICI = (k, p) => ({skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], sutlar: [], ist: {}, ilk11: p.secenek.kadro.map(K => K.oyuncular.map(o => o.id))});
       const k = OYUN.kariyer, f = k.fikstur.filter(x => x.hafta === 14 && x.dakika === 1020).sort((a, b) => anDakika(a.tarih, a.dakika) - anDakika(b.tarih, b.dakika))[0];
-      oyunKomut(x => { zamanIlerlet(x, anDakika(f.tarih, 1200) - simdikiAn(x)); takipEt(x, 'kulup', f.ev); }); LIG_MAC_SAGLAYICI = null; }""")
+      oyunKomut(x => { zamanIlerlet(x, anDakika(f.tarih, 1230) - simdikiAn(x)); takipEt(x, 'kulup', f.ev); }); LIG_MAC_SAGLAYICI = null; }""")
     await akis.oda_yenile(pg)
-    await pg.keyboard.press("Digit7")
-    await pg.wait_for_selector(".tv-sayfa", timeout=10000)
-    await olc("tv-haberler")
-    await tikla(pg, '[data-eylem="tvSayfa"][data-tv="skor"]')
-    await olc("tv-skorlar")
-    await tikla(pg, '[data-eylem="tvSayfa"][data-tv="program"]')
-    await olc("tv-program")
-    await akis.masaya_don(pg)
-    await pg.keyboard.press("Digit1")
-    await pg.wait_for_selector(".tel-ekran", timeout=10000)
-    await tikla(pg, '.tel [data-eylem="telUyg"][data-uyg="skor"]')
-    await tikla(pg, '[data-eylem="skorSekme"][data-sekme="takip"]')
-    await olc("canli-takip")
+    await akis.tv_tikla(pg)
+    await pg.wait_for_selector(".tv-sayfa, #oda .lg-fikstur", timeout=10000)
+    await olc("tv-canli")
 
 
 SPONSOR_SAHNELER = {"sponsor-pazarlik-karti"}
@@ -309,7 +317,10 @@ async def sahneler_sponsor(pg, olc):
       const a = B(); oyunKomut(k => ajandaIsiYap(k, a.id, 'gorus')); const b = B(); return b ? b.id : null; }""")
     await akis.oda_yenile(pg)
     await akis.masaya_don(pg)
-    await tikla(pg, f'.od-sonraKagit[data-is="{kid}"]')
+    # AR1: Sonra yığını kalktı; cevap bekleyen kart Haberler › Cevap bekliyor'dan kendi yerinde açılır
+    await pg.keyboard.press("Digit2")
+    await tikla(pg, '#oda .hb-sekmeler [data-sekme="cevap"]')
+    await tikla(pg, f'#oda .hb-bek[data-is="{kid}"]')
     await pg.wait_for_selector(f'.kk-kart[data-is="{kid}"]', timeout=10000)
     await olc("sponsor-pazarlik-karti")
 

@@ -44,6 +44,16 @@ Dallar: `claude/ar1-cerceve` (main'den) → `claude/ar2-haberler` → `claude/ar
 
 **Denetim (KAPILAR):** `hizli.js`; akış 1, 3, 11, 12, 19, 19b, 21, 22, 23, 24, 25, 26, 27, 28, 30, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44 (seçici güncellemesi; 40 ve 39'un kalkan kısımları silinir); `okunurluk.py` tamamı (sahne listesi yeni bölümlere göre yeniden: ofis, haberler, kulup-kadro, finans-durum, lig-puan, lig-fikstur, transfer-durum, ajanda, telefon, gazete, balkon, ayarlar); `kontrol.py`; `ad-denetimi`. Masaüstü kopyası `node masaustu/deneme.js` (B31).
 
+**AR1 uygulama notu (2026-11-04, dizüstü, dal `claude/ar1-cerceve`).** Kapsam uygulandı; Claude'un uygulama kararları ve plandan sapmalar (kesin kullanıcı kararını değiştirmez):
+- *Bölüm kaydı veri ve gezintidir.* `EKRAN_BOLUMLERI` `{id, ad, panel, tus}`; çizim `js/ekran-oda.js`'in panel işlevlerinde kaldı (1570 satırlık oda ekranını tek turda iskelete indirmek, bölümler koyu düzenlerine geçmeden boşa iş olurdu; AR2/AR5/AR6 bölümleri yeniden yazdıkça çizim kayda taşınır). `js/ekran-cerceve.js` krom stilini, içerik alanını (`cmIcerik`) ve koyu panel bileşenlerini taşır.
+- *Yazı ölçeği karenin genişliğinden kaldı* (gövde en az 16 px, her metin en az 12; `clamp(14px, 1vw, 17px)` uygulanmadı): okunurluk ölçüleri ve 16 px kuralı karenin ölçeğine bağlı; geniş pencerede yazı büyümez, alan genişler.
+- *Finans › Durum K2'ye göre:* kasadaki para ve maaş yükü bugünün (kulübün defteri), 90 günlük ufuk, belirsiz ve bekleyen gelir son raporun anının ve tarihli (yedi günden eskisi “eski”). Plan “maliOzet'ten” diyordu; karar 91 K2 ufku rapora bağlar.
+- *Kulüp sekmeleri:* Dosyalar · Kadro · Arşiv (Kadro önde); Dosyalar sekmesi bugünkü dosya görünümünü açar (yönlendirme satırı yerine), Raporlar Finans'ta.
+- *Göz atma kâğıdı kalktı;* kartın bağlam satırındaki bağlantı ilgili bölüme gider (Defter → Ajanda o gün, Kasa → Finans, oyuncu → Kulüp › oyuncu dosyası), şeritteki ‹ Geri döner; AR2'de bağlam satırı yeniden.
+- *TV:* canlı maç yokken TV'ye dokunmak Lig › Fikstür'ü açar. *Takip:* Lig'in kulüp ve oyuncu sayfasında “Takip et”; Takip sekmesi ve rozeti balkonda ve maçta telefonun Canlı Skor'unda (Lig › Takip AR5'te düşünülür).
+- *Lig fikstürünün satır dili* telefonun hafta görünümüyle aynı (durum kısaltması, gün başlıkları, “Program açıklanmadı”, ertelenenler sonda; satır başlığı aynı biçim): iki yerde aynı okuma, aynı denetim.
+- *Ölçü:* `okunurluk.py` beş pencere (1024×768, 1280×800, 1600×900, 1920×1080, 2560×1440); akış §41 dört pencere (776×560 dahil; alçak pencerede şerit sıkışır, taşmaz).
+
 ## 3. AR2 — Haberler ve kart (kesin kapsam)
 
 **Kural (`js/gelismeler.js`):** satıra `kaynak` ({tur:'kisi'|'kulup'|'kurum', id|kisa}) ve `kanal` (zaten var) eklenir; aynı günün `arka` satırları `gelismeGruplari` ile tek satıra toplanır (sayım ve alt liste); `kacan` sınıfı (ulaşılamadı: AR3'ün kaçırılan araması; cevapsız kaldı: `cevapsiz` geçmiş satırı); `gelismeAyrinti(k, satir)` saf okuma: kanalın gövdesi (telefon: mesajın metni ve kişi; kapı: ziyaret işi; gazete: sayının haberi; belge: raporun ilk üç satırı; lig: skor ve maç kimliği; para: hareket) ve eylemleri (`[etiket, bolum, sekme, veri]`). Gün başı notunun gövdesi (`gunNotu`) “Bugün” başlığının altında tek satır: son maç ve bugünün işleri; kasa ve manşet satırı **yok** (karar 90).

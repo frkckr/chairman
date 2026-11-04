@@ -49,18 +49,22 @@ function ligPuan(k,y){
 }
 function ligFikstur(k,D,y){
   const yaz=y.yaz,h0=D.hafta||(typeof canliVarsayilanHafta==='function'?canliVarsayilanHafta(k):null)||k.sezon.ilkHafta,H=canliHafta(k,h0),biz=ligBiz(k);
-  const satir=m=>{const d=m.durum,ust=d==='bitti'?'Bitti':d==='hukmen'?'Hükmen':d==='ertelendi'?'Ert.':m.aciklandi?saatYazi(m.dakika):'—';
-    return'<button type="button" class="cmp-mac'+(m.ev===biz||m.konuk===biz?' cmp-biz':'')+'" data-eylem="csAc" data-tur="mac" data-id="'+yaz(m.id)+'">'+
-      '<span class="cmp-saat">'+yaz(ust)+'</span><span class="cmp-ev"><span>'+yaz(((k.kulupler||{})[m.ev]||{ad:m.ev}).ad)+'</span>'+ligArma(k,m.ev)+'</span>'+
-      '<span class="cmp-skor">'+(m.skor?m.skor[0]+'–'+m.skor[1]:'–')+'</span><span class="cmp-konuk">'+ligArma(k,m.konuk)+'<span>'+yaz(((k.kulupler||{})[m.konuk]||{ad:m.konuk}).ad)+'</span></span></button>';};
-  const gunlu=L=>{const S=[];let t=null;for(const m of L){if(!m.ertelendi||!m.ertelendi.bekliyor){if(m.tarih!==t){t=m.tarih;S.push('<h3 class="cmp-gun">'+yaz(ligGunBasligi(t))+'</h3>');}}S.push(satir(m));}return S.join('');};
-  const lig=H.maclar.filter(m=>!(m.ertelendi&&m.ertelendi.bekliyor)),bek=H.maclar.filter(m=>m.ertelendi&&m.ertelendi.bekliyor);
+  /* satırın durum kısaltması, başlığı (title) ve gün başlıkları telefonun hafta görünümüyle aynı dilde (js/ekran-telefon.js telHafta) */
+  const satir=m=>{const d=m.durum,ert=m.ertelendi&&d!=='bitti'&&d!=='hukmen',bek=ert&&m.ertelendi.bekliyor;
+    const ust=bek?'Ert.':d==='baslamadi'?(m.hazirlik?saatYazi(m.dakika):m.aciklandi?saatYazi(m.dakika):'—'):d==='hukmen'?'Hük.':'Bitti';
+    const dy=m.hazirlik?(d==='baslamadi'?'hazırlık maçı, '+gunAyYazi(m.tarih)+' '+saatYazi(m.dakika):'hazırlık maçı, bitti'):bek?'ertelendi':ert?'ertelendi, yeni tarihinde':d==='baslamadi'?(m.aciklandi?'başlamadı':'saati açıklanmadı'):d==='hukmen'?'hükmen':'bitti';
+    const evAd=((k.kulupler||{})[m.ev]||{ad:m.ev}).ad,koAd=((k.kulupler||{})[m.konuk]||{ad:m.konuk}).ad;
+    return'<button type="button" class="cmp-mac'+(m.ev===biz||m.konuk===biz?' cmp-biz':'')+'" data-eylem="csAc" data-tur="mac" data-id="'+yaz(m.id)+'" title="'+yaz(evAd+' – '+koAd+' · '+dy)+'">'+
+      '<span class="cmp-saat">'+yaz(ust)+'</span><span class="cmp-ev"><span>'+yaz(evAd)+'</span>'+ligArma(k,m.ev)+'</span>'+
+      '<span class="cmp-skor">'+(m.skor?m.skor[0]+'–'+m.skor[1]:'–')+'</span><span class="cmp-konuk">'+ligArma(k,m.konuk)+'<span>'+yaz(koAd)+'</span></span></button>';};
+  const gunlu=L=>{const S=[];let b0=null;for(const m of L){const b=m.ertelendi&&m.ertelendi.bekliyor?'Ertelendi · yeni tarih açıklanacak':!m.aciklandi&&!m.hazirlik?'Program açıklanmadı':ligGunBasligi(m.tarih);
+    if(b!==b0){b0=b;S.push('<h3 class="cmp-gun">'+yaz(b)+'</h3>');}S.push(satir(m));}return S.join('');};
+  const lig=H.maclar;
   const nav='<div class="cmp-hafta"><button type="button" class="cmp-dugme" data-eylem="ligHafta" data-yon="geri" data-hafta="'+(H.hafta-1)+'"'+(H.hafta<=H.ilk?' disabled':'')+' aria-label="Önceki hafta">‹</button>'+
     '<b>'+H.hafta+'. hafta</b><button type="button" class="cmp-dugme" data-eylem="ligHafta" data-yon="ileri" data-hafta="'+(H.hafta+1)+'"'+(H.hafta>=H.son?' disabled':'')+' aria-label="Sonraki hafta">›</button></div>';
   return'<div class="cmp-sayfa lg-fikstur"><section class="cmp-panel"><h2>Fikstür<small>'+yaz(k.sezon.ad||'')+'</small></h2><div class="cmp-ic">'+nav+
-    (H.hazirlik.length?'<h3 class="cmp-gun lg-hazirlik">Hazırlık maçları</h3>'+gunlu(H.hazirlik):'')+
-    (lig.length?gunlu(lig):'<p class="cmp-not">Bu hafta maç yok.</p>')+
-    (bek.length?'<h3 class="cmp-gun">Ertelendi · yeni tarih açıklanacak</h3>'+bek.map(satir).join(''):'')+
+    (H.hazirlik.length?'<h3 class="cmp-gun lg-hazirlik">Hazırlık maçları</h3>'+H.hazirlik.map(satir).join(''):'')+
+    (H.hazirlik.length&&lig.length?'<h3 class="cmp-gun lg-hazirlik">Lig</h3>':'')+(lig.length?gunlu(lig):'<p class="cmp-not">Bu hafta maç yok.</p>')+
     '<p class="cmp-not">Saati açıklanmamış maçlarda “—”: TFF programı her Pazartesi üç hafta sonrasını açıklar.</p></div></section></div>';
 }
 function ligKulupler(k,y){

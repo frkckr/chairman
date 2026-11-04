@@ -162,7 +162,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       B.map(m).join('')+(Bk?'<span class="cm-ayrac" aria-hidden="true"></span>'+m(Bk):'')+
       '<span class="cm-ara"></span>'+
       '<button type="button" class="cm-haber" data-eylem="cmHaber"'+(ozet?'':' disabled')+'>'+(ozet?'Haber var<small>'+yaz(ozet)+'</small>':'Haber yok')+'</button>'+
-      '<button type="button" class="cm-ayar od-ayar" data-eylem="ac" data-panel="ayar" aria-current="'+(acik==='ayar'?'true':'false')+'">Ayarlar</button>';
+      '<button type="button" class="cm-ayar od-ayar od-nesne" data-eylem="ac" data-panel="ayar" aria-current="'+(acik==='ayar'?'true':'false')+'">Ayarlar</button>';
   }
   /* AR1: bölümler arası gezinti geçmişi (şeritteki ‹ Geri · İleri ›, Backspace). Yalnız bölüm değişimleri yazılır (null: Ofis); alt sayfa geri zinciri
      başlıktaki ‹ Geri ve Esc'tedir. Tarayıcıda kalır, kayda girmez */
@@ -585,8 +585,11 @@ function odaEkraniKur(kap,oyun,ayarlar){
         '<button type="button" data-eylem="ilerleInis" data-inis="ofis" aria-pressed="'+(ayarlar.ilerleInis==='ofis'?'true':'false')+'">Ofis (özet)</button></span></div>':'')+
       (k&&k.icerik&&k.icerik.baslangic==='yaz'?'<div class="od-ayarSatir"><span>İpuçları</span><span class="od-dugmeler"><button type="button" data-eylem="ipucu" data-ipucu="acik" aria-pressed="'+(ayarlar.ipucu!==false?'true':'false')+'">Açık</button>'+
         '<button type="button" data-eylem="ipucu" data-ipucu="kapali" aria-pressed="'+(ayarlar.ipucu===false?'true':'false')+'">Kapalı</button></span></div>':'')+   /* CM2-b */
-      (seritAcik()?'<div class="od-ayarSatir"><span>Çerçeve</span><span class="od-dugmeler"><button type="button" data-eylem="cerceve" data-cerceve="cm" aria-pressed="'+(ayarlar.cerceve!=='kagit'?'true':'false')+'">CM</button>'+
-        '<button type="button" data-eylem="cerceve" data-cerceve="kagit" aria-pressed="'+(ayarlar.cerceve==='kagit'?'true':'false')+'">Kâğıt</button></span></div>':'');
+      /* AR1 (kullanıcı onayı 2026-11-04): görünüm koyu CM (varsayılan) ya da Kâğıt; tarayıcıda, kayda girmez. Tuşlar şeridin sırasıyla */
+      (seritAcik()?'<div class="od-ayarSatir"><span>Görünüm</span><span class="od-dugmeler"><button type="button" data-eylem="cerceve" data-cerceve="cm" aria-pressed="'+(ayarlar.cerceve!=='kagit'?'true':'false')+'">Koyu (CM)</button>'+
+        '<button type="button" data-eylem="cerceve" data-cerceve="kagit" aria-pressed="'+(ayarlar.cerceve==='kagit'?'true':'false')+'">Kâğıt</button></span></div>'+
+        '<div class="od-ayarSatir od-tuslar"><span>Tuşlar</span><span>'+EKRAN_BOLUMLERI.filter(x=>x.id!=='balkon'||balkonVar).map(x=>'<kbd>'+x.tus.slice(5)+'</kbd> '+yaz(x.ad)).join(' · ')+
+          ' · <kbd>Esc</kbd> bir üst sayfa · <kbd>Backspace</kbd> geri · <kbd>[</kbd> <kbd>]</kbd> sekme · <kbd>P</kbd> duraklat</span></div>':'');
     else if(ayarBolum==='mac'){const h=[1,2,4].includes(ayarlar.macHizi)?ayarlar.macHizi:1;
       ic+='<div class="od-ayarSatir"><span>Maç hızı</span><span class="od-dugmeler">'+[1,2,4].map(v=>'<button type="button" data-eylem="macHizi" data-hiz="'+v+'" aria-pressed="'+(h===v?'true':'false')+'">×'+v+'</button>').join('')+'</span></div>'+
         '<div class="od-ayarSatir"><span>Önemli anlarda normal hız</span>'+ac('otoYavas',ayarlar.otoYavas!==false)+'</div>'+
@@ -982,7 +985,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     /* CM1-a: çerçevede başlık şeridi (ekranın adı, kulüp · başkan; sağda kayıt, Ayarlar, Duraklat) ve sekme satırı; tarih ve saat şeritte. Masa şeridi yok */
     const cevapN=haberSayaci().cevap;
     /* AR1: başlık şeridinde ‹ Geri (alt sayfanın bir üstü; Esc aynı), ekranın adı, cevap bekleyenler, ipucu (CM2-b; yoksa kulüp · başkan); Ayarlar şeritte */
-    const gh=acik&&acik!=='telefon'?odakGeriHedef():null,ip=acik&&ipucuAcik===acik?IPUCU[acik]:null;
+    const gh0=acik?odakGeriHedef():null,gh=gh0&&(acik!=='telefon'||gh0.etiket==='Haberler')?gh0:null,ip=acik&&ipucuAcik===acik?IPUCU[acik]:null;
     const cmUst=()=>'<header class="od-ust od-ustCm" style="'+baslikRengi(acik==='ayar')+'"><div class="od-ustSatir"><span class="od-ustBaslik">'+
       (gh?'<button type="button" class="od-ustGeri" data-eylem="'+(gh.eylem||'odakGeri')+'" title="Geri (Esc)">‹ '+yaz(gh.etiket)+'</button>':'')+'<b>'+yaz(ekranAdi())+'</b>'+
       (cevapN?'<button type="button" class="od-ustBekliyor" data-eylem="cmHaber" title="Haberler › Cevap bekliyor">'+cevapN+' bekliyor</button>':'')+
@@ -1532,7 +1535,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
        Backspace şeritteki ‹ Geri. Eski eşleme kalktı */
     const kb=seritAcik()&&!e.shiftKey&&typeof EKRAN_BOLUMLERI!=='undefined'?EKRAN_BOLUMLERI.find(x=>x.tus===e.code):null;
     if(kb){e.preventDefault();if(!e.repeat)bolumAc(kb.id);}
-    else if(e.code==='Backspace'&&seritAcik()&&t!=='BUTTON'){e.preventDefault();gezin(-1);}
+    else if(e.code==='Backspace'&&seritAcik()){e.preventDefault();gezin(-1);}
     else if(e.code==='KeyP'||(e.code==='Space'&&t!=='BUTTON'&&!e.repeat)){e.preventDefault();duraklatDegistir();}
     /* U1: Esc bir adım geri (onay → işin iç adımı → kaynak → masaya bırak; N7'nin "uygulamadan ana ekrana" kuralının yerine, u-arayuz §4).
        Masada bekleyen İlerle onayını da bırakır */

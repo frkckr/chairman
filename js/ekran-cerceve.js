@@ -60,6 +60,16 @@ function cmIcerik(s){
 .cm-ayrac{flex:none;height:1px;margin:.15em .1em;background:var(--c-cizgi)}
 .cm-serit button.cm-ayar{text-align:center;font-size:max(12px,.85em);padding:.2em;color:var(--c-soluk);border:1px solid var(--c-cizgi)}
 .cm-serit button.cm-ayar[aria-current="true"]{color:var(--c-etkin);background:var(--c-secili)}
+/* alçak pencerede (oyun alanı < ~670 px) şerit sıkışır: düğmeler ince, tarih kutusu tek satır payı; şerit taşmaz */
+@media (max-height:700px){
+  .cm-serit{gap:.14em;padding:.3em .35em .35em}
+  .cm-serit button.cm-dugme{padding:.18em .45em .16em}
+  .cm-serit .cm-tarih{padding:.15em .3em .2em;margin-bottom:0}
+  .cm-serit .cm-tarih em{font-size:1.05em}
+  .cm-serit button.cm-ilerle{margin:.1em 0 .15em;padding:.22em .4em .18em}
+  .cm-serit button.cm-haber{padding:.18em .3em;margin-top:.1em}
+  .cm-ayrac{margin:.05em .1em}
+}
 /* ---- başlık şeridi: ‹ Geri (alt sayfada), ipucu (CM2-b alıştırma; kulüp · başkan satırının yerinde) ---- */
 .oda .od-ustCm button.od-ustGeri{align-self:center;flex:none;font-family:var(--cerceve);font-weight:800;font-size:max(12px,.86em);padding:.1em .6em;color:inherit;background:rgba(0,0,0,.18);
   border:1px solid rgba(255,255,255,.35);border-radius:.2em;box-shadow:none;max-width:16em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -93,12 +103,13 @@ function cmIcerik(s){
 /* ---- koyu panel bileşenleri (.cmp-*; Lig, Finans; önizlemenin dili: prototipler/arayuz-konsept) ---- */
 .cmp-sayfa{display:grid;gap:.8em;align-content:start;min-height:0;overflow:auto;padding-right:.15em}
 .cmp-iki{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(16em,1fr);gap:.8em;align-items:start}
-@container (max-width:900px){.cmp-iki{grid-template-columns:minmax(0,1fr)}}
+/* içerik alanı ~70 em'den darsa (1280 px'e dek pencere) yan sütun alta iner: puan tablosu tam genişlik */
+@container (max-width:1150px){.cmp-iki{grid-template-columns:minmax(0,1fr)}}
 .cmp-panel{background:var(--c-panel);border:1px solid var(--c-pcizgi);min-width:0;min-height:0;display:flex;flex-direction:column}
 .cmp-panel>h2{margin:0;display:flex;align-items:center;justify-content:space-between;gap:.6em;padding:.55em .9em;font:800 max(12px,.8em) var(--cerceve);letter-spacing:.09em;text-transform:uppercase;
   color:var(--c-pbaslik);background:var(--c-panel2);border-bottom:1px solid var(--c-pcizgi)}
 .cmp-panel>h2 small{font:600 max(12px,1em) var(--govde);letter-spacing:0;text-transform:none;color:var(--c-psoluk)}
-.cmp-ic{padding:.7em .9em;min-height:0}
+.cmp-ic{padding:.7em .9em;min-height:0;overflow-x:auto}
 .cmp-soluk{color:var(--c-psoluk)}
 .cmp-not{margin:0;color:var(--c-psoluk);font-size:max(12px,.9em)}
 .oda .cmp-tablo{width:100%;border-collapse:collapse;font-family:var(--govde);font-variant-numeric:tabular-nums}
