@@ -190,7 +190,6 @@
 .tel-sonuc{display:inline-block;width:1.35em;margin-right:.15em;text-align:center;font-style:normal;font-weight:600;border-radius:.2em;color:#fff}
 .tel-sG{background:var(--k-yesil)}.tel-sB{background:var(--k-soluk)}.tel-sM{background:var(--k-kirmizi)}
 /* ---- R2: odada iki sütun — solda telefon, sağda iş paneli (kâğıt). Telefon sütunu en az 17 em; telefon sütunun sağına yaslanır ---- */
-.oda section.odk[data-boy="telefon"]{width:var(--odk-en)}
 .oda .tlf{height:100%;min-height:0;display:grid;grid-template-columns:minmax(17em,42fr) minmax(0,56fr);gap:2%}
 .oda .tlf-sol{min-width:0;min-height:0}
 .oda .tlf-sol .tel-yer{place-items:center end}
@@ -383,10 +382,11 @@ function telefonCiz(k,T,s={}){
       '<div class="tel-bildirimler" aria-label="Bildirimler">'+B.join('')+'</div>'+
       '<div class="tel-sabit">'+
         '<button type="button" class="tel-uyg tel-uygMesaj" data-eylem="telUyg" data-uyg="mesajlar" aria-label="Mesajlar'+(cevap?', cevap bekleyen '+cevap:okunmamis?', okunmamış '+okunmamis:'')+'">'+telSimge('mesajlar',rozet)+'Mesajlar</button>'+
-        (()=>{const n=!s.macta&&k&&typeof takipYeniSayisi==='function'?takipYeniSayisi(k):0;   /* RK8-a: son bakıştan beri takip haberi */
-          return'<button type="button" class="tel-uyg tel-uygSkor" data-eylem="telUyg" data-uyg="skor" aria-label="Canlı Skor'+(n?', '+n+' yeni takip haberi':'')+'">'+telSimge('skor',n?'<i class="tel-rozet">'+n+'</i>':'')+'Canlı Skor</button></div>';})();
+        /* AR1 (karar 90): odada Canlı Skor yok (Lig bölümü); balkonda ve maçta kalır */
+        (s.canliSkorYok?'</div>':(()=>{const n=!s.macta&&k&&typeof takipYeniSayisi==='function'?takipYeniSayisi(k):0;   /* RK8-a: son bakıştan beri takip haberi */
+          return'<button type="button" class="tel-uyg tel-uygSkor" data-eylem="telUyg" data-uyg="skor" aria-label="Canlı Skor'+(n?', '+n+' yeni takip haberi':'')+'">'+telSimge('skor',n?'<i class="tel-rozet">'+n+'</i>':'')+'Canlı Skor</button></div>';})());
   }else if(ekran==='mesajlar'){
-    ic='<header class="tel-nav">'+geri('telEv','','Ana ekran')+'</header><h4 class="tel-buyukBaslik">Mesajlar</h4>';
+    ic=(s.canliSkorYok?'':'<header class="tel-nav">'+geri('telEv','','Ana ekran')+'</header>')+'<h4 class="tel-buyukBaslik">Mesajlar</h4>';   /* AR1: odada ana ekran yok */
     /* N14 (kullanıcı kararı 2026-10-18): konuşma yoksa liste boş kalır, boş durum yazısı yok (eskiden “Mesaj yok. Telefon sessiz.”) */
     if(L.length)ic+='<ul class="tel-liste">'+L.map(c=>{
       const son=c.mesajlar[c.mesajlar.length-1];

@@ -43,6 +43,7 @@ function cerceveUygula(){
    (STIL.cerceve.serit: oran, px'te enAz–enCok); kare yükseklikten 4:3 ölçülür, şerit yanına sığmazsa kare daralır (pencere dar: kare + şerit = iç
    genişlik). Bant varsa karenin sağında. --kare-en, --serit-en px; yazı karenin genişliğinden (--kare-cq, index.html) */
 const EKRAN_PAY={kenar:32,ara:18,serit:52},EKRAN_BANT={istek:false,zaman:0};
+/* AR1 (2026-11-04, karar 90): CM çerçevesinde balkon bandı yok (iş içerik alanında, karenin yanında panelde); istek yalnız çerçevesiz düzende işler */
 function ekranBantIste(v){v=!!v;if(EKRAN_BANT.istek===v)return;EKRAN_BANT.istek=v;ekranPayGuncelle();}
 function seritGenisligi(kare){const C=STIL.cerceve.serit;return Math.round(Math.min(C.enCok,Math.max(C.enAz,kare*C.oran)));}
 function ekranPayGuncelle(){
@@ -53,11 +54,16 @@ function ekranPayGuncelle(){
   document.documentElement.style.setProperty('--ekran-pay',pay+'px');
   const s=document.getElementById('screen'),w=s&&s.parentElement;if(!s||!w)return;
   const B=STIL.balkon.bant,ic=w.clientWidth,serit=odada&&s.hasAttribute('data-serit')&&!!STIL.cerceve;
-  let kare=Math.max(640,(document.documentElement.clientHeight-pay)*4/3),sr=0;
+  const yuk=Math.max(480,document.documentElement.clientHeight-pay);
+  let kare=Math.max(640,yuk*4/3),sr=0;
   if(serit){sr=seritGenisligi(Math.min(ic,kare));if(kare+sr>ic){sr=seritGenisligi(ic/(1+STIL.cerceve.serit.oran));kare=Math.max(0,ic-sr);}}
   else kare=Math.min(ic,kare);
-  const bant=EKRAN_BANT.istek&&odada&&ic-kare-sr>=B.enAz?Math.floor(Math.min(ic-kare-sr,kare*B.enCok)):0,once=s.hasAttribute('data-bant');
-  if(serit){s.style.setProperty('--serit-en',sr+'px');s.style.setProperty('--kare-en',kare.toFixed(2)+'px');}
+  /* AR1 (2026-11-04, karar 90): CM çerçevesinde oyun alanı pencereyi doldurur — şerit solda, içerik alanı (oda katmanı, bölümler) kalan genişlik ve pencerenin
+     yüksekliği; 3B kare (4:3, 960 ızgarası; karar 8) içerik alanında ortalanır. --ekran-yuk, --kare-sol, --kare-ust px. Yazı karenin genişliğinden (--kare-cq) */
+  const bant=!serit&&EKRAN_BANT.istek&&odada&&ic-kare-sr>=B.enAz?Math.floor(Math.min(ic-kare-sr,kare*B.enCok)):0,once=s.hasAttribute('data-bant');
+  if(serit){const kyuk=Math.min(yuk,kare*3/4);s.style.setProperty('--serit-en',sr+'px');s.style.setProperty('--kare-en',kare.toFixed(2)+'px');
+    s.style.setProperty('--ekran-yuk',Math.round(Math.max(yuk,kyuk))+'px');s.style.setProperty('--kare-sol',(sr+Math.max(0,(ic-sr-kare)/2)).toFixed(2)+'px');
+    s.style.setProperty('--kare-ust',Math.max(0,(Math.max(yuk,kyuk)-kare*3/4)/2).toFixed(2)+'px');}
   if(bant){s.style.setProperty('--kare-en',kare.toFixed(2)+'px');s.style.setProperty('--bant-en',bant+'px');}
   if(!!bant===once)return;
   s.setAttribute('data-bant-gecis','');clearTimeout(EKRAN_BANT.zaman);EKRAN_BANT.zaman=setTimeout(()=>s.removeAttribute('data-bant-gecis'),600);

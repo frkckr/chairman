@@ -8,8 +8,10 @@
    .tv-satir (data-eylem="tvAc" data-tur data-id), .tv-izle (data-eylem="tvIzle" data-mac), .tv-canli.
      tvSayfasi(k, sayfa, y) → html. y: {yaz}. Canlı maçlar js/lig-takvimi.js oynananLigMaclari'ndan (dakika oda saatinden) */
 'use strict';
-/* CM1-b (karar 87): 100 Haberler kalktı — haberler tek listede (Haberler ekranı); TV canlı skor ve öbür maçın penceresidir */
-const TV_SAYFALAR=[['skor','200','Skorlar'],['program','300','Puan durumu · Program']];
+/* CM1-b (karar 87): 100 Haberler kalktı — haberler tek listede (Haberler ekranı); TV canlı skor ve öbür maçın penceresidir.
+   AR1 (2026-11-04, karar 90): 200 Skorlar ve 300 Puan durumu · Program da kalktı (Lig bölümü, js/ekran-lig.js); TV yalnız oda saatinde oynanan maçların
+   penceresidir (dakika, İzle ▸). Canlı maç yokken TV'ye dokunmak Lig'i açar (js/ekran-oda.js tvAc) */
+const TV_SAYFALAR=[['canli','200','Canlı maçlar']];
 const TV_SAYFA_EN_COK=30;
 const TV_GUN=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
 const tvGun=t=>{const [y,a,g]=t.split('-').map(Number);return TV_GUN[new Date(Date.UTC(y,a-1,g)).getUTCDay()];};
@@ -56,45 +58,13 @@ const tvGunBasligi=t=>{const [y,a,g]=t.split('-').map(Number);return TV_GUN_TAM[
   document.head.appendChild(st);
 })();
 function tvSayfasi(k,sayfa,y){
-  const yaz=y.yaz,s=TV_SAYFALAR.some(x=>x[0]===sayfa)?sayfa:'skor',ad=id=>((k.kulupler||{})[id]||{ad:id}).ad;
+  const yaz=y.yaz,ad=id=>((k.kulupler||{})[id]||{ad:id}).ad;
   const ust='<div class="tv-ust"><span>TEST SPOR · TELETEXT</span><small>'+yaz(tvGun(k.tarih)+' '+gunAyYazi(k.tarih))+' '+saatYazi(k.gunIciDakika)+'</small></div>';
-  const sekmeler='<nav class="tv-sekmeler" role="tablist" aria-label="TV sayfaları">'+TV_SAYFALAR.map(([id,no,a])=>'<button type="button" class="tv-sekme" role="tab" data-eylem="tvSayfa" data-tv="'+id+'" aria-selected="'+(id===s?'true':'false')+'"><b>'+no+'</b>'+yaz(a)+'</button>').join('')+'</nav>';
-  const kes=L=>L.length>TV_SAYFA_EN_COK?L.slice(0,TV_SAYFA_EN_COK).join('')+'<p class="tv-devam">…</p>':L.join('');
-  /* maçlar gün gün: tarih başlığı (bugünün başlığı sarı, “bugün” kelimesi yok), altında satırlar saat sırasıyla */
-  const gunlu=(F,satir)=>{const L=[];let t=null;for(const f of F){if(f.tarih!==t){t=f.tarih;L.push('<h6'+(t===k.tarih?' class="tv-bugun"':'')+'>'+yaz(tvGunBasligi(t))+'</h6>');}L.push(satir(f));}return L;};
-  const sirali=F=>F.slice().sort((a,b)=>anDakika(a.tarih,a.dakika)-anDakika(b.tarih,b.dakika));
-  let ic='';
-  if(s==='haber'){
-    const H=typeof tvHaberleri==='function'?tvHaberleri(k):[];
-    const hedef=h=>h.konu.maclar.length?['mac',h.konu.maclar[0]]:h.konu.oyuncular.length?['oyuncu',h.konu.oyuncular[0]]:h.konu.kulupler.length?['kulup',h.konu.kulupler[0]]:null;
-    ic=H.length?'<ol class="tv-liste">'+kes(H.map(h=>{const t=anTarih(h.an),hd=hedef(h);
-      const ic2='<time>'+saatYazi(t.dakika)+'</time><span><span class="tv-etiket">'+(typeof simgeSvg==='function'?simgeSvg(haberSimgesi(h.anahtar)):'')+yaz(h.etiket)+'</span>'+yaz(String(h.metin).replace(/^TEST: /,''))+'</span>';   /* RK5-a: tür simgesi */
-      return'<li>'+(hd?'<button type="button" class="tv-satir" data-eylem="tvAc" data-tur="'+hd[0]+'" data-id="'+yaz(hd[1])+'">'+ic2+'</button>':'<div class="tv-satir">'+ic2+'</div>')+'</li>';}))+'</ol>'
-      :'<p class="tv-not">TEST: Bugün önemli haber yok.</p>';
-  }else if(s==='skor'){
-    const C=new Map((typeof oynananLigMaclari==='function'?oynananLigMaclari(k):[]).map(x=>[x.f.id,x.dk])),bugun=k.tarih;
-    const satir=f=>{const m=(k.maclar||{})[f.id],dk=C.get(f.id),aciklandi=typeof saatiAciklandi!=='function'||saatiAciklandi(k,f);
-      const sol=m?(m.hukmen?'Hük.':'Bitti'):dk?dk:f.tarihBekliyor?'Ert.':aciklandi?saatYazi(f.dakika):'—';
-      return'<div class="tv-mac'+(dk?' tv-canli':'')+'"><small>'+yaz(sol)+'</small><span class="tv-ev">'+yaz(ad(f.ev))+'</span><b>'+(m?m.skor[0]+'–'+m.skor[1]:'–')+'</b><span class="tv-dep">'+yaz(ad(f.konuk))+'</span>'+
-        (dk?'<button type="button" class="tv-izle" data-eylem="tvIzle" data-mac="'+yaz(f.id)+'">İzle ▸</button>':'<span></span>')+'</div>';};
-    /* RK-D: haftanın maçları gün başlıklarıyla; bugün başka haftanın (ertelenmiş) maçı oynanıyorsa o da kendi gününde */
-    const hv=typeof canliVarsayilanHafta==='function'?canliVarsayilanHafta(k):null;
-    const hz=f=>typeof hazirlikMi==='function'&&hazirlikMi(f);
-    const F=sirali((k.fikstur||[]).filter(f=>!hz(f)&&!f.tarihBekliyor&&(f.hafta===hv||f.tarih===bugun))),E=(k.fikstur||[]).filter(f=>!hz(f)&&f.hafta===hv&&f.tarihBekliyor);
-    const L=gunlu(F,satir);if(E.length){L.push('<h6>Ertelendi · yeni tarih açıklanacak</h6>');for(const f of E)L.push(satir(f));}
-    /* CM2-a: ilk lig maçından önce hazırlık maçları ayrı başlıkta */
-    const Hz=k.sezon&&k.tarih<=k.sezon.ilkMacTarihi?sirali((k.fikstur||[]).filter(hz)):[];
-    ic=(Hz.length?'<h5>Hazırlık maçları</h5>'+kes(gunlu(Hz,satir)):'')+(hv!==null?'<h5>'+hv+'. hafta</h5>':'')+(L.length?kes(L):'<p class="tv-not">TEST: Programda maç yok.</p>');
-  }else{
-    const T=typeof sezonTablosu==='function'?sezonTablosu(k):[];
-    ic='<h5>Puan durumu</h5><table class="tv-tablo"><tbody>'+T.map((t,i)=>'<tr><td>'+(i+1)+'</td><td>'+yaz(t.ad)+'</td><td>'+t.O+'</td><td>'+t.P+'</td></tr>').join('')+'</tbody></table>';
-    const S=k.sezon||{},pa=S.programAciklanan|0,F=(k.fikstur||[]).filter(f=>f.hafta>=(S.ilkHafta|0)&&!(k.maclar||{})[f.id]);   /* devralınan haftalar değil */
-    const H=[...new Set(F.filter(f=>f.hafta<=pa&&!f.tarihBekliyor).map(f=>f.hafta))].sort((a,b)=>a-b),E=F.filter(f=>f.tarihBekliyor);
-    const L=[];
-    for(const h of H){L.push('<h5>'+h+'. hafta</h5>');L.push(...gunlu(sirali(F.filter(x=>x.hafta===h&&!x.tarihBekliyor)),f=>
-      '<div class="tv-mac"><small>'+yaz(saatYazi(f.dakika))+'</small><span class="tv-ev">'+yaz(ad(f.ev))+'</span><b>–</b><span class="tv-dep">'+yaz(ad(f.konuk))+'</span><span></span></div>'));}
-    if(E.length){L.push('<h5>Ertelenen</h5>');for(const f of E)L.push('<div class="tv-mac"><small>Ert.</small><span class="tv-ev">'+yaz(ad(f.ev))+'</span><b>–</b><span class="tv-dep">'+yaz(ad(f.konuk))+'</span><span></span></div>');}
-    ic+=L.length?kes(L):'<p class="tv-not">TEST: Açıklanmış program yok.</p>';
-  }
-  return'<section class="tv-sayfa" data-sayfa="'+s+'">'+ust+sekmeler+ic+'</section>';
+  const C=typeof oynananLigMaclari==='function'?oynananLigMaclari(k):[];
+  const satir=x=>{const f=x.f,m=(k.maclar||{})[f.id];
+    return'<div class="tv-mac tv-canli"><small>'+yaz(x.dk)+'</small><span class="tv-ev">'+yaz(ad(f.ev))+'</span><b>'+(m?m.skor[0]+'–'+m.skor[1]:'–')+'</b><span class="tv-dep">'+yaz(ad(f.konuk))+'</span>'+
+      '<button type="button" class="tv-izle" data-eylem="tvIzle" data-mac="'+yaz(f.id)+'">İzle ▸</button></div>';};
+  const ic=(C.length?'<h5>Şimdi oynanıyor</h5>'+C.slice(0,TV_SAYFA_EN_COK).map(satir).join(''):'<p class="tv-not">TEST: Şu an oynanan maç yok.</p>')+
+    '<p class="tv-not"><button type="button" class="tv-lig od-baglanti" data-eylem="cmBolum" data-bolum="lig">Puan durumu ve fikstür: Lig ▸</button></p>';
+  return'<section class="tv-sayfa" data-sayfa="canli">'+ust+ic+'</section>';
 }

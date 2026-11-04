@@ -23,9 +23,8 @@
   const K=STIL.kagit,T=K.transfer,st=document.createElement('style');st.id='transferStili';
   st.textContent=`
 /* RK5-b: mantar pano — odak kâğıdının zemini mantar, kenarı ahşap; üstündeki her şey iğneli kâğıt */
-.oda section.odk[data-odak="transfer"] .odk-kagit{background-color:${T.ahsap};background-image:none;border-color:${T.ahsapKoyu}}
-.oda section.odk[data-odak="transfer"] .odk-kagit>header.odk-ust{background:${K.zemin};border-bottom:.35em solid ${T.ahsap}}
-.oda section.odk[data-odak="transfer"] .od-icerik{margin:0 .45em .45em;background-color:${T.mantar};
+.oda section.cm-icerik[data-odak="transfer"] .cm-kagit{background-color:${T.ahsap};background-image:none;border-color:${T.ahsapKoyu}}
+.oda section.cm-icerik[data-odak="transfer"] .od-icerik{margin:.45em;background-color:${T.mantar};
   background-image:radial-gradient(${T.mantarKoyu} .07em,transparent .1em),radial-gradient(${T.mantarAcik} .06em,transparent .09em);background-size:.45em .45em,.7em .7em;background-position:0 0,.2em .3em;
   box-shadow:inset 0 .15em .4em rgba(40,22,6,.35)}
 .tm-pano .tm-ust,.tm-pano .tm-sekmeler,.tm-pano .tm-bolum,.tm-pano .tm-kagit{position:relative;background:${K.zemin};box-shadow:.12em .18em 0 rgba(40,22,6,.3)}

@@ -274,17 +274,27 @@ const STIL={
      ~90'ı); perde: CM çerçevesinde başka ekran açıkken oda canlı zemin olarak arkada (STIL.kagit.odak.karartma'nın yerine). İki palet (Ayarlar ›
      Okuma › Çerçeve; tarayıcıda, kayda girmez): cm — lacivert şerit, sarı yazı, başlık şeridi kulübün renginde (araştırma: champman0102 ekranları);
      kagit — krem krom, mürekkep yazı, başlığın altı kulüp rengi (RK5 Kırtasiye). İçerik alanı ikisinde de kâğıt dilinde. Kontrast ≥ 4,5:1 (pasif
-     düğme hariç). TEST değerleri, kullanıcı değiştirir */
+     düğme hariç). TEST değerleri, kullanıcı değiştirir. AR1 (2026-11-04, kararlar 90–91): koyu CM görünümü — içerik alanının renkleri (alan: karenin
+     yanları; perde: bölüm açıkken arkadaki oda, bulanıklık yok; panel, panel2, pcizgi, pyazi, psoluk, pbaslik sarı, pvurgu, psecili kırmızı, zebra, link,
+     iyi/kotu/orta) ve şeridin kabartmalı düğmeleri (dugme*; seçili sarı). Kâğıt görünümü ikinci seçenek (Ayarlar › Okuma › Görünüm) */
   cerceve:{serit:{oran:0.125,enAz:104,enCok:148},perde:'rgba(20,14,10,.38)',
     palet:{
       cm:{zemin:'#14214f',kutu:'#0d1736',cizgi:'#2c3d78',yazi:'#f2cd4b',etkin:'#fff2a6',soluk:'#cfc596',pasif:'#8f98b8',uzerinde:'rgba(255,242,166,.09)',secili:'rgba(255,242,166,.16)',
         ana:'#f2cd4b',anaYazi:'#14214f',anaKenar:'#a88a1f',anaUzerinde:'#ffe27a',haber:'#c8281e',haberYazi:'#ffffff',
         baslik:'#22337a',baslikYazi:'#fff2a6',baslikKenar:'#0d1736',baslikGolge:'0 .08em 0 rgba(0,0,0,.45)',
-        sekme:'#14214f',sekmeYazi:'#f2cd4b',sekmeKenar:'#2c3d78',sekmeSecili:'#fbf7ee',sekmeSeciliYazi:'#26221c'},
+        sekme:'#14214f',sekmeYazi:'#f2cd4b',sekmeKenar:'#2c3d78',sekmeSecili:'#f2cd4b',sekmeSeciliYazi:'#0c1638',
+        dugmeUst:'#24387d',dugmeAlt:'#1a2b63',dugmeUzerinde:'#2c4392',dugmeKenar:'#08112e',dugmeSeciliUst:'#ffe37e',dugmeSeciliAlt:'#f1c847',dugmeSeciliYazi:'#0c1638',
+        alan:'#070b1c',perde:'rgba(5,9,26,.84)',panel:'rgba(11,20,50,.94)',panel2:'rgba(22,36,86,.96)',pcizgi:'rgba(150,172,255,.18)',pcizgi2:'rgba(150,172,255,.3)',
+        pyazi:'#e9edf7',psoluk:'#a3aecb',pbaslik:'#f2cd4b',pvurgu:'#f2cd4b',pvurguYazi:'#0c1638',psecili:'#8b1f1a',pseciliYazi:'#ffffff',puzerinde:'rgba(255,255,255,.06)',
+        zebra:'rgba(255,255,255,.03)',link:'#ffe58a',iyi:'#58c27a',kotu:'#ec6a5e',orta:'#9a8a3a'},
       kagit:{zemin:'#f6f0e2',kutu:'#fffdf8',cizgi:'#b9a87f',yazi:'#26221c',etkin:'#7a4606',soluk:'#5c5346',pasif:'#7a7062',uzerinde:'rgba(165,98,10,.08)',secili:'#ffe0a3',
         ana:'#ffb530',anaYazi:'#1a1203',anaKenar:'#a5620a',anaUzerinde:'#ffc457',haber:'#b4241c',haberYazi:'#ffffff',
         baslik:'#f6f0e2',baslikYazi:'#26221c',baslikKenar:'#b4241c',baslikGolge:'none',
-        sekme:'#f3ecdb',sekmeYazi:'#26221c',sekmeKenar:'#b9a87f',sekmeSecili:'#fbf7ee',sekmeSeciliYazi:'#26221c'}}},
+        sekme:'#f3ecdb',sekmeYazi:'#26221c',sekmeKenar:'#b9a87f',sekmeSecili:'#fbf7ee',sekmeSeciliYazi:'#26221c',
+        dugmeUst:'#fffdf8',dugmeAlt:'#efe6d2',dugmeUzerinde:'#fff6e2',dugmeKenar:'#b9a87f',dugmeSeciliUst:'#ffd27a',dugmeSeciliAlt:'#ffb530',dugmeSeciliYazi:'#1a1203',
+        alan:'#e4dcc8',perde:'rgba(228,220,200,.88)',panel:'#fbf8f0',panel2:'#f0e8d6',pcizgi:'#d8cbad',pcizgi2:'#bfae86',
+        pyazi:'#26221c',psoluk:'#5f5646',pbaslik:'#1b2a5e',pvurgu:'#a5620a',pvurguYazi:'#ffffff',psecili:'#ffe2a6',pseciliYazi:'#26221c',puzerinde:'rgba(165,98,10,.07)',
+        zebra:'#f5efe2',link:'#1b2a5e',iyi:'#2f8a4c',kotu:'#b3352b',orta:'#8a7020'}}},
   /* onMasa (K1, kullanıcı kararı 2026-10-20; kullanıcının 1. maç notu "masa tüm ekranı kaplamasın, önde kare ayaklı bir masa gözüksün"; N5'in
      2,6 m'lik rafının ve altındaki ön duvarın yerini aldı): başkanın önündeki küçük masa, ön plan kamerasına göre metre. en × derinlik = tabla,
      uzak = tablanın yakın kenarının gözden uzaklığı, y = tablanın üst yüzeyi (gözün altında), kalinlik = tabla, etek = tablanın altındaki
