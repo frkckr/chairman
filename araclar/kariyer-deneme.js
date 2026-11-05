@@ -2615,6 +2615,34 @@ bolum('AR2 — Haberler: kaynak, aynı günün arka satırları, ayrıntı okuma
   denetle('Liste ve gruplama birlikte 50 ms'+"'"+'nin altında (önbelleksiz, JSON kopyada)',ms<50,ms.toFixed(1)+' ms · '+an);
 }
 
+bolum('Arayüz güncellemesi 2. madde — Haberler destesi: haberler ve kararlar tek destede, tepki tek komut (js/gelismeler.js haberDestesi, gelismeTepki)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),metin=x=>JSON.stringify(x);
+  let k=T('kariyerBaslat')({tohum:7});
+  const D0=T('haberDestesi')(k),once=metin(k);
+  denetle('Yeni kariyerde deste dolu; her kartta iki cevap (ad ve kimlik), kaynak ve soru; olay sırasıyla (eski önce); kimlik haberde d:, kararda k:; okuma saf',
+    D0.length>0&&D0.every(x=>x.sol&&x.sag&&x.sol.ad&&x.sag.ad&&x.sol.id!==x.sag.id&&x.kaynak&&x.soru&&(x.tur==='haber'?/^d:/.test(x.id):/^k:/.test(x.id)))
+    &&D0.every((x,i)=>!i||D0[i-1].an<=x.an)&&metin(k)===once,D0.map(x=>x.id).join(' · '));
+  const h=D0.find(x=>x.tur==='haber'),k1=KK(k,x=>T('gelismeTepki')(x,h.id)).kariyer,D1=T('haberDestesi')(k1);
+  denetle('Tepki kartın satırını okundu yazar: kart desteden düşer, öbürleri aynen; zaman ve para değişmez; kariyer geçerli',
+    !D1.some(x=>x.id===h.id)&&D1.length===D0.length-1&&T('simdikiAn')(k1)===T('simdikiAn')(k)&&k1.kulupler.demirkapi.nakit===k.kulupler.demirkapi.nakit&&!T('kariyerDogrula')(k1).length,
+    D1.map(x=>x.id).join(' · '));
+  denetle('Haber kartı olmayan ya da bulunmayan kimliğe tepki reddedilir', reddeder(()=>KK(k1,x=>T('gelismeTepki')(x,'k:is-1')))&&reddeder(()=>KK(k1,x=>T('gelismeTepki')(x,h.id))));
+  /* birkaç durak: her durakta deste bitirilir (haberlere tepki, kararlara sağ ya da engelsiz cevap) — deste her seferinde boşalır, kariyer geçerli */
+  let c=k1,durak=0,kart=0,karar=0,bos=true;
+  for(let i=0;i<10&&bos;i++){
+    for(let j=0;j<60;j++){const L=T('haberDestesi')(c);if(!L.length)break;const x=L[0];kart++;
+      if(x.tur==='haber')c=KK(c,y=>T('gelismeTepki')(y,x.id)).kariyer;
+      else{karar++;c=KK(c,y=>T('ajandaIsiYap')(y,x.isId,x.sag.engel?x.sol.id:x.sag.id)).kariyer;if(x.meseleId&&c.meseleler[x.meseleId])c=KK(c,y=>T('meseleGoruldu')(y,x.meseleId)).kariyer;}}
+    bos=!T('haberDestesi')(c).length;if(!bos)break;
+    try{c=KK(c,x=>T('duragaIlerle')(x)).kariyer;durak++;}catch(e){break;}
+  }
+  denetle('Duraklar boyunca deste her seferinde biter (haber tepkiyle, karar cevapla); kararın konusunun telefon mesajı ayrı kart değil; kariyer geçerli',
+    bos&&durak>=3&&karar>=1&&!T('kariyerDogrula')(c).length,durak+' durak · '+kart+' kart · '+karar+' karar · '+c.tarih);
+  const t0=Date.now();for(let i=0;i<20;i++)T('haberDestesi')(JSON.parse(once));const ms=(Date.now()-t0)/20;
+  denetle('Deste 50 ms'+"'"+'nin altında kurulur (önbelleksiz, JSON kopyada)',ms<50,ms.toFixed(1)+' ms');
+}
+
 bolum('CM2-a — yaz tarifi: 22 Haziran, devre arası, sıfır tablo, hazırlık maçı, başlangıçta biten sözleşmeler (js/fikstur.js SEZON_TARIFLERI; karar 88)');
 {
   const T=oyunAl,KK=T('kariyerKomut'),dog=T('kariyerDogrula'),metin=x=>JSON.stringify(x),saat=d=>String(Math.floor(d/60)).padStart(2,'0')+':'+String(d%60).padStart(2,'0');

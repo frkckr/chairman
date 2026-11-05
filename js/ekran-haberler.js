@@ -1,57 +1,26 @@
-/* ============ Chairman — Haberler ekranı (görüntü; kural içermez; CM1-b 2026-11-03, karar 87; AR2 2026-11-05, arayuz-uygulama §3) ============
-   AR2 (karar 90; önizleme prototipler/arayuz-konsept, Haberler Düzen 1): koyu CM görünümü — üstte liste, altta ayrıntı (dar alanda da alt alta).
-   Liste: cevap bekleyenler (kararlar, bugünün randevuları) kırmızı blokla başta, sonra gelişmeler güne göre, yeniden eskiye; aynı günün arka plan
-   satırları tek satırda (js/gelismeler.js gelismeGruplari). Satır: saat · kaynak (kişinin yüzü, kulübün arması ya da kurum kutusu) · başlık · rozet;
-   okunmamış kalın, arka soluk, seçili vurgulu. Ayrıntı seçili satırın kanal görünüşüyle (gelismeAyrinti): telefon balonu, gazete kupürü, belge (raporun
-   ilk üç satırı), lig skoru, kapı (“karşında oturacak”), günün satırları. Cevap bekleyen kararın tek kartı ayrıntıdadır: listeden çıkmadan karar
-   (kart bileşeni js/ekran-kart.js; ev sahibi js/ekran-oda.js d.kart). Cevaplanan kararın satırı “Cevaplandı” olur, sonucu ayrıntıda.
-   Bugün: listenin üstünde tek satır (son maç ve bugünün kalan işleri; gelismeBugun). Sekmeler başlık şeridinin altındaki sekme satırındadır.
-     haberSatirlari(k, d)       → {ust, alt, hepsi}: d {sekme, gun, cevaplanan}; satırların kimlikleri: gelişmeninki, 'k:'+isId (karar), 'r:'+isId
-                                  (randevu), 't:'+meseleId (takipte), grup:<tarih>; saf okuma (ekranın seçimi ve okundu işareti bundan)
-     haberlerGorunumu(k, d, y)  d: {sekme, gun, secili, cevaplanan, kart(isId), kapi(isId)}  y: {yaz, tarihYazi, tarihKisa, saatYazi, tlYazi, smg, portre, arma}
-   Seçiciler denemelerle sözleşmedir: .hb, .hb-satir[data-id][data-yeni][data-sinif][aria-current], .hb-gun, .hb-cevapBlok, .hb-ayrinti[data-kanal],
-   .hb-kanal, .hb-kaynak, [data-eylem="hbSec"|"hbSonraki"|"hbHepsiOkundu"|"hbDaha"|"hbGit"|"sonraAc"|"hbAjanda"|"dosyaAc"] */
+/* ============ Chairman — Haberler ekranı (görüntü; kural içermez; CM1-b 2026-11-03, karar 87; AR2 2026-11-05; arayüz güncellemesi 2. madde 2026-11-05) ============
+   2. madde (kullanıcı, 2026-11-05; araclar/plan/arayuz-guncelleme.md §2; önizleme prototipler/arayuz-guncelleme/02-tek-kart/simge/index.html?v=1): Haberler
+   tamamen karttır. Liste ve ayrıntı kalktı: ekranın ortasında tek kart destesi (js/gelismeler.js haberDestesi), üstte sabit soru ve küçük tür etiketi,
+   kartın yüzünde haberin kanalının rengi, kişinin büyük yüzü, kulübün arması ya da kurumun kutusu, altta krem ad plakası (ad, görev · saat). Kart sağa
+   ya da sola kaydırılınca (←/→) üst yarısında o cevabın adı, kısa sonucu ve “neye dokunduğu” simgeleri; bırakınca (Enter) uygulanır, damga yok
+   (js/ekran-kart.js kartEtkilesimKur, damga:false). Kararlar da destededir; haber kartına tepki gelismeTepki komutudur. Erteleme yok, sayı yok:
+   destenin kalınlığı arkadaki kart sırtlarıyla görünür; deste bitmeden İlerle çalışmaz (kapı js/ekran-oda.js). Kartın ekleri altta: Ayrıntı kartın
+   yanında kâğıt açar (haberde kanalın görünüşü — balon, kupür, belge, skor —, kararda hazır görüş ve bağlam), öbürleri gideceği yere götürür.
+     haberDestesiGorunumu(k, d, y)  d: {ek, kilit, gelis}  y: {yaz, tarihYazi, tarihKisa, saatYazi, tlYazi, smg, portre(id)}
+     haberAyrintiHtml(k, x, d, y, h)  kanalın görünüşü (ek kâğıdı; AR2'nin ayrıntı paneli)
+   Seçiciler denemelerle sözleşmedir: .hbd, .hbd-kart[data-is][data-deste][data-kanal], .hbd-soru, .hbd-sirt, .hbd-ekler [data-eylem="hbdEk"|"hbGit"|"sonraAc"],
+   .hbd-ek, .hbd-bos */
 'use strict';
 (function haberlerStili(){
   if(typeof document==='undefined'||document.getElementById('haberlerStili'))return;
   const st=document.createElement('style');st.id='haberlerStili';
   st.textContent=`
-.hb{display:grid;grid-template-rows:minmax(9em,1fr) fit-content(56%);gap:.7em;min-height:0;height:100%;color:var(--c-pyazi)}
-.hb-listePanel{min-height:0}
-.hb[data-kart="1"]{grid-template-rows:fit-content(38%) minmax(0,1fr)}
-.hb-listePanel>h2>span small{margin-left:.6em}
-.hb-listePanel>h2 .hb-arac{display:flex;gap:.4em}
-.hb-kay{overflow:auto;min-height:0;padding:.15em 0 .3em}
-.hb-bugun{margin:0;padding:.45em .9em;border-bottom:1px solid var(--c-pcizgi);color:var(--c-psoluk);font-size:max(12px,.9em)}
-.hb-bugun b{color:var(--c-pyazi);font-weight:700}
-.hb-gun{margin:.55em .9em .15em;font:800 max(12px,.76em) var(--cerceve);letter-spacing:.08em;text-transform:uppercase;color:var(--c-pbaslik)}
-.hb-gun.hb-kirmizi{color:var(--c-kotu)}
-.hb-liste{list-style:none;margin:0;padding:0;display:grid}
-.oda button.hb-satir{display:grid;grid-template-columns:3.6em 1.7em minmax(0,1fr) auto;align-items:center;gap:.55em;width:100%;text-align:left;padding:.32em .9em .3em;
-  font:inherit;color:inherit;background:transparent;border:0;border-bottom:1px solid var(--c-pcizgi);border-radius:0;box-shadow:none;font-weight:400;cursor:pointer}
-.oda button.hb-satir:hover{background:var(--c-puzerinde)}
-.oda button.hb-satir[aria-current="true"]{background:var(--c-psecili);color:var(--c-pseciliYazi)}
-.oda button.hb-satir[aria-current="true"] :is(time,.hb-rozet){color:inherit}
-.hb-satir time{font-family:var(--mono);font-size:max(12px,.86em);color:var(--c-psoluk)}
-.hb-satir .hb-bas{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.oda button.hb-satir[data-yeni="1"] .hb-bas{font-weight:700}
-.oda button.hb-satir[data-sinif="arka"]:not([aria-current="true"]){color:var(--c-psoluk)}
-.oda button.hb-satir.hb-bek{border-left:.25em solid var(--c-kotu)}
-.oda button.hb-satir.hb-bekRandevu{border-left-color:var(--c-pvurgu)}
 .hb-kaynakK{display:inline-grid;place-items:center;width:1.6em;height:1.6em;flex:none}
 .hb-kaynakK img{width:1.6em;height:1.6em;image-rendering:pixelated;border-radius:50%;background:var(--c-panel2)}
 .hb-kaynakK .arma{width:1.3em;height:1.5em}
 .hb-kurum{display:inline-grid;place-items:center;min-width:1.6em;height:1.4em;padding:0 .15em;font:800 max(12px,.62em) var(--cerceve);letter-spacing:.03em;color:var(--c-pyazi);
   background:var(--c-panel2);border:1px solid var(--c-pcizgi2);border-radius:.15em}
-.hb-rozet{font-style:normal;font-size:max(12px,.72em);font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.05em .45em;border:1px solid currentColor;border-radius:.15em;
   white-space:nowrap;color:var(--c-psoluk)}
-.hb-rozet[data-r="cevap"]{color:var(--c-kotu)}
-.hb-rozet[data-r="randevu"],.hb-rozet[data-r="beklenen"]{color:var(--c-pvurgu)}
-.hb-rozet[data-r="kacan"]{color:var(--c-kotu);border-style:dashed}
-.hb-rozet[data-r="cevaplandi"]{color:var(--c-iyi)}
-.hb-nokta{width:.5em;height:.5em;border-radius:50%;background:var(--c-haber)}
-.hb-bos{margin:.6em .9em;color:var(--c-psoluk)}
-.oda .hb-daha{margin:.4em .9em}
 .hb-ayrinti{min-height:0;overflow:auto}
 .hb-ayrinti>.cmp-ic{display:grid;gap:.6em;align-content:start}
 .hb-kaynak{display:flex;align-items:center;gap:.7em}
@@ -87,68 +56,118 @@
 .hb-kapi{display:flex;gap:.8em;align-items:center}
 .hb-kapi .hb-kaynakK{width:3.2em;height:3.2em}
 .hb-kapi .hb-kaynakK img{width:3.2em;height:3.2em}
-.hb-kartAlan{display:grid;gap:.4em;padding:.4em 0}
 .hb-ayrinti .od-dugmeler,.hb-eylemler{display:flex;flex-wrap:wrap;gap:.4em}
-`;
+
+/* ---- 2. madde: deste (Simge kartı · 1 Rafine; prototipler/arayuz-guncelleme/02-tek-kart/simge/index.html?v=1) ---- */
+.hbd{display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;height:100%;min-height:0;font-family:var(--cerceve);color:var(--c-pyazi)}
+.hbd-soru{max-width:46em;margin:0 auto;padding:1.1em 1.2em .2em;text-align:center}
+.hbd-tur{display:block;margin-bottom:.5em;font-size:max(12px,.75em);font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--c-ana)}
+.hbd-soru p{margin:0;font-size:1.45em;font-weight:500;line-height:1.36;color:#F6F1E1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
+.hbd-orta{display:flex;align-items:center;justify-content:center;gap:2em;min-height:0;padding:1em 0 .4em}
+.hbd-yuva{position:relative;height:min(25.5em,100%);aspect-ratio:350/410;flex:none}
+.hbd-sirt{position:absolute;inset:0;border-radius:1.4em;box-sizing:border-box;border:.62em solid #DDD5BF;background:repeating-linear-gradient(45deg,#14214F 0 .75em,#1a2a5e .75em 1.5em);
+  transform:translateY(calc(var(--n) * .38em));box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.hbd .kk-kart.hbd-kart{position:absolute;inset:0;display:flex;flex-direction:column;gap:0;padding:0;box-sizing:border-box;overflow:hidden;border:.62em solid #F6F1E1;border-radius:1.4em;
+  background:#F6F1E1;box-shadow:0 1.4em 2.8em rgba(0,0,0,.5);color:#fff}
+.hbd .kk-kart.hbd-kart[data-hazir]{border-color:#F2C230;box-shadow:0 0 0 .18em #F2C230,0 1.4em 2.8em rgba(0,0,0,.5)}
+.hbd .kk-kart.hbd-kart:focus-visible{outline:.16em solid #fff;outline-offset:.2em}
+.hbd-kart .kk-yuzler{display:block;position:relative;flex:1;min-height:0}
+.hbd-kart .kk-yuzKat{font-size:1em}
+.hbd-kart .kk-yuzKat[data-yuz="notr"]{position:absolute;inset:0;display:flex;flex-direction:column;visibility:visible;gap:0}
+.hbd-kart .kk-yuzKat[data-yuz="sol"],.hbd-kart .kk-yuzKat[data-yuz="sag"]{position:absolute;left:0;right:0;top:0;height:46%;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.35em;padding:0 1em;box-sizing:border-box;text-align:center;background:rgba(10,18,48,.92);color:#fff}
+.hbd-kanal{position:absolute;top:.55em;left:.55em;z-index:1;display:inline-flex;align-items:center;gap:.35em;padding:.25em .65em .25em .5em;border-radius:1em;font-size:max(12px,.7em);font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:#fff;background:rgba(10,18,48,.55)}
+.hbd-yuz{flex:1;display:grid;place-items:center;min-height:0;background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--kanal) 55%,#fff) 0,var(--kanal) 72%)}
+.hbd-kart img,.hbd-kart svg{pointer-events:none;-webkit-user-drag:none;user-select:none}   /* yüz resmi sürüklenmez: kart sürüklenir */
+.hbd-yuz img{width:10.5em;height:10.5em;image-rendering:pixelated;border-radius:.75em;box-shadow:0 .5em 1.1em rgba(0,0,0,.25);background:#c9d3ee}
+.hbd-yuz .arma{font-size:2.6em}
+.hbd-kurum{display:grid;place-items:center;width:7.5em;height:7.5em;border-radius:.75em;background:rgba(10,18,48,.5);box-shadow:0 .5em 1.1em rgba(0,0,0,.25)}
+.hbd-kurum b{font-size:2.6em;font-weight:700;letter-spacing:.04em}
+.hbd-plaka{flex:none;display:flex;flex-direction:column;align-items:center;gap:.1em;padding:.55em .7em .7em;background:#F6F1E1;color:#14214F;text-align:center}
+.hbd-plaka b{font-size:1.3em;font-weight:700;line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbd-plaka small{font-size:max(12px,.88em);color:#3A3A48;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbd-cevapAd{display:flex;align-items:center;gap:.4em;font-size:1.55em;font-weight:700;line-height:1.15}
+.hbd-cevapAd .kk-simge{font-size:.7em;color:var(--c-ana);border-color:currentColor}
+.hbd-cevapNot{font-size:max(12px,.88em);line-height:1.3;color:#DDE3F5}
+.hbd-kart .kk-uyari{margin:0;font-size:max(12px,.82em);color:#FF8A8A}
+.hbd-ipuclari{display:flex;justify-content:center;gap:.6em}
+.hbd-ip{display:flex;flex-direction:column;align-items:center;gap:.15em;font-size:max(12px,.7em);font-weight:600}
+.hbd-ip>span{display:grid;place-items:center;width:2.2em;height:2.2em;border-radius:50%;background:rgba(255,255,255,.14);color:var(--c-ana);overflow:hidden;font-size:1.3em}
+.hbd-ip img{width:100%;height:100%;image-rendering:pixelated}
+.hbd-kilit{margin:0;padding:.3em .6em;font-size:max(12px,.8em);color:#14214F;background:#F2C230}
+.hbd-ek{width:min(22em,40%);max-height:100%;overflow:auto;align-self:center;font-family:var(--govde)}
+.hbd-ekler{display:flex;justify-content:center;flex-wrap:wrap;gap:.5em;padding:.8em 1em .3em}
+.oda .hbd-ekler button{display:inline-flex;align-items:center;gap:.4em;padding:.4em 1em .4em .75em;font:500 max(12px,.88em) var(--cerceve);color:#F6F1E1;background:var(--c-dugmeUst);
+  border:1px solid rgba(255,255,255,.16);border-radius:1em;box-shadow:none}
+.oda .hbd-ekler button[aria-pressed="true"]{color:#14214F;background:var(--c-ana);border-color:var(--c-ana)}
+.hbd-ekler svg{width:1em;height:1em}
+.hbd-ipucu{margin:0;padding:.3em 1em .9em;text-align:center;font-size:max(12px,.8em);color:var(--c-psoluk)}
+.hbd-bos{display:grid;place-items:center;height:100%;text-align:center;font-family:var(--cerceve);color:var(--c-psoluk)}
+.hbd-bos b{display:block;font-size:1.6em;color:#fff;margin-bottom:.3em}
+.hbd-gelis .hbd-kart{animation:hbdCevir .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes hbdCevir{from{transform:translateY(.38em) rotateY(80deg);filter:brightness(.6)}}
+@media (prefers-reduced-motion:reduce){.hbd-gelis .hbd-kart{animation:none}}`;
   document.head.appendChild(st);
 })();
 const HB_KANAL_AD={telefon:'Telefon · mesaj',kapi:'Kapı · yüz yüze',gazete:'Gazete',belge:'Belge',lig:'Lig',para:'Muhasebe',ajanda:'Ajanda',grup:'Ligden',karar:'Karar',dosya:'Dosya'};
 const HB_KAT_AD={kulup:'Kulüp',transfer:'Transfer',lig:'Lig',basin:'Basın',para:'Para',karisik:''};
 const HB_YER={telefon:'telefonda da',dosya:'dosyada da',karar:'defterde de'};
-/* satırlar: ust (cevap bekleyenler ve bu oturumda cevaplananlar), alt (gelişmeler; arka satırlar günde tek); hepsi = ust + alt (seçim ve N sırası) */
-function haberSatirlari(k,d){
-  const gun=d.gun||GELISME_TEST.gun,sekme=d.sekme||'hepsi',C=d.cevaplanan||{};
-  const B=gelismeBekleyenler(k),kat=id=>{const m=id&&k.meseleler[id];return m&&typeof meseleKategorisi==='function'?GELISME_MESELE_KATEGORI[meseleKategorisi(m)[0]]||'kulup':'kulup';};
-  const bekleyen=B.kararlar.map(x=>({id:'k:'+x.isId,tur:'karar',isId:x.isId,baslik:x.baslik,kaynak:x.kaynak,kisiId:x.kisiId,yer:x.yer,sonCevap:x.sonCevap,
-      an:x.gelis?anDakika(x.gelis.tarih,x.gelis.dakika):null,kategori:kat(x.meseleId),meseleId:x.meseleId,sinif:'cevap'}))
-    .concat(B.randevular.map(x=>({id:'r:'+x.isId,tur:'randevu',isId:x.isId,baslik:x.baslik,kaynak:x.kaynak,kisiId:x.kisiId,dakika:x.dakika,sure:x.sure,eylem:x.eylem,
-      an:anDakika(k.tarih,x.dakika),kategori:'kulup',sinif:'randevu'})));
-  /* bu oturumda Haberler'den cevaplananlar (ekranın belleği; kayıtta geçmiş satırı): satırları ustte kalır, “Cevaplandı” */
-  const cevap=Object.keys(C).filter(id=>!B.kararlar.some(x=>x.isId===id)).map(id=>Object.assign({id:'k:'+id,tur:'cevaplandi',isId:id,sinif:'cevaplandi'},C[id]));
-  const takip=B.takipte.map(x=>({id:'t:'+x.meseleId,tur:'takip',meseleId:x.meseleId,baslik:x.baslik,satir:x.satir,kategori:kat(x.meseleId),sinif:'takip',kaynak:null}));
-  const L=gelismeListesi(k,{gun});
-  const uy=x=>sekme==='hepsi'||sekme==='cevap'||x.kategori===sekme;
-  if(sekme==='cevap'){const ust=bekleyen.concat(cevap,takip);return{ust,alt:[],hepsi:ust,L};}
-  const ust=bekleyen.concat(cevap).filter(uy),alt=gelismeGruplari(L.filter(uy));
-  return{ust,alt,hepsi:ust.concat(alt),L};
+/* ---- 2. madde (2026-11-05): deste. d: {ek (açık ekin kartı), kilit (duraklatmanın nedeni), gelis (yeni kart dönerek gelsin)}; y ekran yardımcıları ---- */
+const HBD_KANAL_AD={telefon:'Mesaj',gazete:'Gazete',lig:'Lig',grup:'Ligden',dosya:'Rapor',para:'Kasa',ajanda:'Kulüp',karar:'Karar',kapi:'Kapı'};
+const HBD_KANAL_SIMGE={telefon:'telefon',gazete:'gazete',lig:'mac',grup:'mac',dosya:'dosya',para:'kasa',ajanda:'takvim',karar:'dosya',kapi:'kapi'};
+const HBD_IPUCU={kasa:['kasa','Kasa'],basin:['gazete','Basın'],tribun:['takim','Tribün'],is:['dosya','İş']};
+function haberKaynakAdi(k,q){return!q?'':q.tur==='kisi'?((k.kisiler[q.id]||{}).ad||''):q.tur==='kulup'?((k.kulupler[q.id]||{}).ad||''):q.ad||'';}
+function haberKaynakRolu(k,q){
+  if(!q)return'';if(q.tur==='kisi'){const p=k.kisiler[q.id];return p&&typeof kisiRolu==='function'?kisiRolu(k,p):'';}
+  return q.tur==='kulup'?'Kulüp':q.kisa==='GZT'?'Gazete':q.kisa==='TFF'?'Federasyon':q.kisa==='LİG'?'Lig':q.ad||'';
 }
-function haberlerGorunumu(k,d,y){
-  const yaz=y.yaz,gun=d.gun||GELISME_TEST.gun,S=haberSatirlari(k,d),sec=S.hepsi.find(x=>x.id===d.secili)||null,Sy=gelismeSayaci(k);
-  const kaynakK=q=>{if(!q)return'<span class="hb-kaynakK"><span class="hb-kurum">•</span></span>';
-    if(q.tur==='kisi')return'<span class="hb-kaynakK">'+(y.portre?y.portre(q.id):'')+'</span>';
-    if(q.tur==='kulup')return'<span class="hb-kaynakK">'+(y.arma?y.arma(q.id):'')+'</span>';
-    return'<span class="hb-kaynakK"><span class="hb-kurum" title="'+yaz(q.ad||'')+'">'+yaz(q.kisa||'·')+'</span></span>';};
-  const kaynakAd=q=>!q?'':q.tur==='kisi'?((k.kisiler[q.id]||{}).ad||''):q.tur==='kulup'?((k.kulupler[q.id]||{}).ad||''):q.ad||'';
-  const yeniMi=x=>!x.tur&&!x.grup&&!x.okundu&&x.sinif!=='arka';
-  const saatS=x=>x.tur==='karar'?(x.an!==null?y.saatYazi(x.an%1440):''):x.tur==='randevu'?y.saatYazi(x.dakika):x.tur?'':x.tarih===k.tarih?y.saatYazi(x.dakika):yaz(y.tarihKisa(x.tarih));
-  const rozet=x=>x.tur==='karar'?'<em class="hb-rozet" data-r="cevap">Cevap bekliyor</em>':x.tur==='randevu'?'<em class="hb-rozet" data-r="randevu">Randevu '+y.saatYazi(x.dakika)+'</em>'
-    :x.tur==='cevaplandi'?'<em class="hb-rozet" data-r="cevaplandi">Cevaplandı</em>':x.tur==='takip'?'<em class="hb-rozet">Takipte</em>'
-    :x.sinif==='kacan'?'<em class="hb-rozet" data-r="kacan">'+(x.kacan==='ulasilamadi'?'Ulaşılamadı':'Cevapsız kaldı')+'</em>'
-    :x.sinif==='beklenen'&&!x.okundu?'<em class="hb-rozet" data-r="beklenen">Cevap geldi</em>':yeniMi(x)?'<i class="hb-nokta" title="okunmadı"></i>':x.grup?'<em class="hb-rozet">'+x.sayi+'</em>':'<em></em>';
-  const satir=x=>'<li><button type="button" class="hb-satir'+(x.tur==='karar'?' hb-bek':x.tur==='randevu'?' hb-bek hb-bekRandevu':'')+'" data-eylem="hbSec" data-id="'+yaz(x.id)+'" data-sinif="'+yaz(x.sinif||'')+'"'+
-    ' data-yeni="'+(yeniMi(x)?'1':'0')+'" aria-current="'+(sec&&sec.id===x.id?'true':'false')+'"><time>'+saatS(x)+'</time>'+kaynakK(x.kaynak)+'<span class="hb-bas">'+yaz(x.baslik)+'</span>'+rozet(x)+'</button></li>';
-  /* Bugün: son maç ve bugünün kalan işleri, tek satır */
-  const Bg=typeof gelismeBugun==='function'?gelismeBugun(k):null;let bugun='';
-  if(Bg&&(Bg.sonMac||Bg.isler.length)){const m=Bg.sonMac,ad=id=>((k.kulupler[id]||{}).kisa||(k.kulupler[id]||{}).ad||id);
-    const sm=m?'Son maç <b>'+yaz(ad(m.ev))+' '+m.skor[0]+'–'+m.skor[1]+' '+yaz(ad(m.konuk))+'</b>'+(m.sira?' · '+m.sira+'. sıra':''):'';
-    const is=Bg.isler.length?'Bugün <b>'+Bg.isler.slice(0,3).map(x=>y.saatYazi(x.saat)+' '+yaz(x.baslik)).join(' · ')+'</b>'+(Bg.isler.length>3?' +'+(Bg.isler.length-3):''):'Bugün başka iş yok';
-    bugun='<p class="hb-bugun">'+[sm,is].filter(Boolean).join(' · ')+'</p>';}
-  let liste='';
-  if(S.ust.length){const n=S.ust.filter(x=>x.tur==='karar').length,r=S.ust.filter(x=>x.tur==='randevu').length;   /* sekmenin sayısıyla aynı: kararlar; randevu ayrı */
-    liste+='<div class="hb-cevapBlok"><h4 class="hb-gun'+(n||r?' hb-kirmizi">'+(n?'Cevap bekliyor · '+n:'Bugünün randevuları')+(r&&n?' · '+r+' randevu':r?' · '+r:''):'">Cevaplandı')+'</h4><ol class="hb-liste">'+S.ust.map(satir).join('')+'</ol></div>';}
-  const G=new Map();for(const x of S.alt){if(!G.has(x.tarih))G.set(x.tarih,[]);G.get(x.tarih).push(x);}
-  const dun=tarihEkle(k.tarih,-1),gunAdi=t=>t===k.tarih?'Bugün':t===dun?'Dün':y.tarihYazi(t);
-  liste+=[...G.entries()].map(([t,X])=>'<section><h4 class="hb-gun">'+yaz(gunAdi(t))+'</h4><ol class="hb-liste">'+X.map(satir).join('')+'</ol></section>').join('');
-  if(!S.hepsi.length)liste='<p class="hb-bos">'+(d.sekme==='cevap'?'Cevap bekleyen bir şey yok.':'Son '+gun+' günde gelişme yok.')+'</p>';
-  const daha=d.sekme!=='cevap'&&gun<GELISME_TEST.gun*4?'<button type="button" class="cmp-dugme hb-daha" data-eylem="hbDaha">Daha eski ▸</button>':'';
-  const F=S.alt.filter(yeniMi),yeni=F.length;
-  const baslik=(d.sekme==='cevap'?'Cevap bekliyor':d.sekme&&d.sekme!=='hepsi'?HB_KAT_AD[d.sekme]||d.sekme:'Gelişmeler')+'<small>'+(yeni?yeni+' okunmamış':'hepsi okundu')+(Sy.cevap?' · '+Sy.cevap+' cevap bekliyor':'')+'</small>';
-  const arac='<span class="hb-arac"><button type="button" class="cmp-dugme" data-eylem="hbSonraki" title="N"'+(S.hepsi.some(x=>yeniMi(x)&&x.id!==(sec&&sec.id))?'':' disabled')+'>Sonraki okunmamış ▸</button>'+
-    '<button type="button" class="cmp-dugme" data-eylem="hbHepsiOkundu"'+(S.L.some(x=>!x.okundu&&x.sinif!=='arka')?'':' disabled')+'>Hepsini okundu say</button></span>';
-  const listePanel='<section class="cmp-panel hb-listePanel"><h2><span>'+baslik+'</span>'+arac+'</h2>'+bugun+'<div class="hb-kay">'+liste+daha+'</div></section>';
-  return'<div class="hb" data-sekme="'+yaz(d.sekme||'hepsi')+'"'+(sec&&sec.tur==='karar'?' data-kart="1"':'')+'>'+listePanel+haberAyrintiHtml(k,sec,d,y,{kaynakK,kaynakAd})+'</div>';
-}
-/* ayrıntı paneli: kaynak, başlık, kanalın görünüşü, eylemler; kararın kartı */
+function haberDestesiGorunumu(k,d,y){
+  const yaz=y.yaz,D=typeof haberDestesi==='function'?haberDestesi(k):[],x=D[0];
+  if(!x)return'<div class="hbd hbd-bos"><p><b>Masa boş.</b>Bütün kartlara baktın; İlerle açık.</p></div>';
+  const q=x.kaynak,ad=haberKaynakAdi(k,q),rol0=haberKaynakRolu(k,q),rol=rol0===ad?'':rol0,t=anTarih(x.an),zaman=(t.tarih===k.tarih?'bugün ':y.tarihKisa(t.tarih)+' ')+y.saatYazi(t.dakika);
+  const kanal=(STIL.cerceve.kanal||{})[x.kanal]||'#2C3D7A',smg=a=>y.smg?y.smg(a):'';
+  const yuz=!q?'<span class="hbd-kurum"><b>•</b></span>':q.tur==='kisi'?(y.portre?y.portre(q.id):''):q.tur==='kulup'?(typeof armaSvg==='function'?armaSvg(q.id,'buyuk',((k.kulupler||{})[q.id]||{}).kisa):'')
+    :'<span class="hbd-kurum"><b>'+yaz(q.kisa||'·')+'</b></span>';
+  const ip=L=>(L||[]).map(z=>{
+    if(z.indexOf('kisi:')===0){const p=k.kisiler[z.slice(5)];return p?'<span class="hbd-ip"><span>'+(y.portre?y.portre(p.id):'')+'</span>'+yaz(String(p.ad).split(' ')[0])+'</span>':'';}
+    const I=HBD_IPUCU[z];return I?'<span class="hbd-ip"><span>'+smg(I[0])+'</span>'+I[1]+'</span>':'';}).join('');
+  const cevap=(c,yon)=>'<div class="kk-yuzKat" data-yuz="'+yon+'"'+(c.engel?' data-engel="1"':'')+'><b class="hbd-cevapAd">'+(x.tur==='karar'&&typeof kartSimge==='function'?kartSimge(c.id):'')+yaz(c.ad)+'</b>'+
+    (c.not?'<span class="hbd-cevapNot">'+yaz(c.not)+'</span>':'')+(c.engel?'<p class="kk-uyari">'+yaz(c.engel)+'</p>':'')+(c.ipucu&&c.ipucu.length?'<span class="hbd-ipuclari">'+ip(c.ipucu)+'</span>':'')+'</div>';
+  const kenar=(c,yon)=>'<button type="button" class="kk-kenar" data-yon="'+yon+'" data-secim="'+yaz(c.id)+'"'+(c.engel?' aria-disabled="true" title="'+yaz(c.engel)+'"':'')+'><b>'+yaz(c.ad)+'</b></button>';
+  const veri=x.tur==='karar'?x.isId:x.id,etiket=(x.tur==='karar'?'Karar: ':'Haber: ')+ad;
+  const n=Math.min(5,D.length-1),sirt=Array.from({length:n},(_,i)=>'<i class="hbd-sirt" style="--n:'+(n-i)+'"></i>').join('');
+  const kart='<section class="kk-kart hbd-kart" data-is="'+yaz(veri)+'" data-deste="'+yaz(x.id)+'" data-yuz="notr" data-sol="'+yaz(x.sol.id)+'" data-sag="'+yaz(x.sag.id)+'" data-sol-ad="'+yaz(x.sol.ad)+'" data-sag-ad="'+yaz(x.sag.ad)+'"'+
+    ' data-kanal="'+yaz(x.kanal)+'" style="--kanal:'+kanal+'" tabindex="0" role="group" aria-label="'+yaz(etiket)+'"'+(d.kilit?' aria-disabled="true"':'')+'>'+
+    '<div class="kk-yuzler"><div class="kk-yuzKat kk-yuz" data-yuz="notr"><span class="hbd-kanal">'+(x.tur==='karar'?smg('dosya')+'Karar':smg(HBD_KANAL_SIMGE[x.kanal]||'nokta')+yaz(HBD_KANAL_AD[x.kanal]||''))+'</span>'+
+      '<div class="hbd-yuz">'+yuz+'</div>'+(d.kilit?'<p class="hbd-kilit">'+yaz(d.kilit)+'</p>':'')+'<div class="hbd-plaka"><b>'+yaz(ad)+'</b><small>'+yaz([rol,zaman].filter(Boolean).join(' · '))+'</small></div></div>'+
+      cevap(x.sol,'sol')+cevap(x.sag,'sag')+'</div><div class="kk-kenarlar" hidden>'+kenar(x.sol,'sol')+kenar(x.sag,'sag')+'</div></section>';
+  /* ekler: kartla gelen evrak (kaydırmadan önce bakılır). Ayrıntı kartın yanında kâğıt: haberde kanalın görünüşü, kararda hazır görüş ve bağlam;
+     öbürleri gideceği yere götürür (‹ Geri Haberler'e döner, kart yerinde bekler) */
+  const ekAcik=d.ek===x.id,E=['<button type="button" data-eylem="hbdEk" data-deste="'+yaz(x.id)+'" aria-pressed="'+(ekAcik?'true':'false')+'">'+smg('dosya')+'Ayrıntı</button>'];
+  if(x.tur==='haber'&&typeof gelismeAyrinti==='function'){const A=gelismeAyrinti(k,x.satir);
+    for(const e of (A?A.eylemler:[]))E.push('<button type="button" data-eylem="hbGit" data-bolum="'+yaz(e[1])+'"'+(e[2]?' data-sekme="'+yaz(e[2])+'"':'')+(e[3]?' data-veri="'+yaz(JSON.stringify(e[3]))+'"':'')+'>'+yaz(e[0])+'</button>');}
+  if(x.tur==='karar')E.push('<button type="button" data-eylem="sonraAc" data-is="'+yaz(x.isId)+'">'+(x.yer==='telefon'?'Konuşmada aç ▸':x.yer==='dosya'?'Dosyada aç ▸':'Karar panelinde aç ▸')+'</button>');
+  let ek='';
+  if(ekAcik){
+    if(x.tur==='haber'){
+      const h={kaynakK:z=>!z?'<span class="hb-kaynakK"><span class="hb-kurum">•</span></span>':z.tur==='kisi'?'<span class="hb-kaynakK">'+(y.portre?y.portre(z.id):'')+'</span>'
+        :z.tur==='kulup'?'<span class="hb-kaynakK">'+(typeof armaSvg==='function'?armaSvg(z.id,'kucuk',((k.kulupler||{})[z.id]||{}).kisa):'')+'</span>':'<span class="hb-kaynakK"><span class="hb-kurum">'+yaz(z.kisa||'·')+'</span></span>',
+        kaynakAd:z=>haberKaynakAdi(k,z)};
+      /* AR2 ayrıntısının eylemleri ekler satırındadır (ek kâğıdında tekrarlanmaz) */
+      ek='<aside class="hbd-ek">'+haberAyrintiHtml(k,x.satir,{},y,h).replace(/<div class="hb-eylemler">[\s\S]*?<\/div>(?=<\/div><\/section>$)/,'')+'</aside>';
+    }else{
+      const is=k.isler[x.isId],v=is?is.veri:{};
+      const gor=typeof kararGorusu==='function'?kararGorusu(k,v):'',bg=is&&typeof kartBaglam==='function'?kartBaglam(k,is,null,{}):'';
+      ek='<aside class="hbd-ek"><section class="cmp-panel hb-ayrinti"><div class="cmp-ic"><h3>'+yaz(x.etiket)+'</h3><p>'+yaz(x.soru)+'</p>'+(gor||'')+(bg||'')+
+        (!gor&&!bg?'<p class="cmp-not">Bu kararın başka evrakı yok: bilinen her şey kartta.</p>':'')+'</div></section></aside>';
+    }
+  }
+  return'<div class="hbd'+(d.gelis?' hbd-gelis':'')+'" data-tur="'+x.tur+'"><header class="hbd-soru"><span class="hbd-tur">'+yaz(x.etiket||HBD_KANAL_AD[x.kanal]||'')+'</span><p>'+yaz(x.soru)+'</p></header>'+
+    '<div class="hbd-orta"><div class="hbd-yuva">'+sirt+kart+'</div>'+ek+'</div>'+
+    '<nav class="hbd-ekler" aria-label="Kartın ekleri">'+E.join('')+'</nav>'+
+    '<p class="hbd-ipucu">Kartı sağa ya da sola kaydır · ←/→ önizle, Enter uygula'+(D.length>1?'':' · son kart')+'</p></div>';
+}/* ayrıntı paneli: kaynak, başlık, kanalın görünüşü, eylemler; kararın kartı */
 function haberAyrintiHtml(k,x,d,y,h){
   const yaz=y.yaz;
   if(!x)return'<section class="cmp-panel hb-ayrinti" data-kanal=""><div class="cmp-ic"><p class="cmp-not">Bir satır seç; ayrıntı burada açılır, listeden ayrılmazsın.</p></div></section>';

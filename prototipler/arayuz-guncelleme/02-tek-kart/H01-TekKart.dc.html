@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Haberler 1 – Tek kart odak</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;margin:0;cursor:pointer}
+a{color:#F2C230}a:hover{color:#FFFFFF}
+</style>
+</helmet>
+<div style="width: 1440px; height: 810px; display: grid; grid-template-columns: 184px minmax(0, 1fr); grid-template-rows: 64px minmax(0, 1fr) 48px; background: #0A1230; font-family: 'Rubik', sans-serif; overflow: hidden">
+
+  <aside style="grid-row: 1 / 4; grid-column: 1; box-sizing: border-box; background: #14214F; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+    <div style="background: #0E1838; border: 1px solid #2C3D7A; border-radius: 8px; padding: 10px 0; display: flex; flex-direction: column; align-items: center; gap: 3px">
+      <span style="font-size: 16px; font-weight: 600; color: #F2C230">Pazartesi</span>
+      <span style="font-size: 14px; color: #DDE3F5">22.06.2026</span>
+      <span style="font-size: 28px; font-weight: 700; color: #FFFFFF; line-height: 1.1">10:00</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px">
+      <button style="height: 32px; background: #1E2E66; color: #DDE3F5; border: 0; border-radius: 6px; font-size: 13px">‹ Geri</button>
+      <button style="height: 32px; background: #1E2E66; color: #DDE3F5; border: 0; border-radius: 6px; font-size: 13px">İleri ›</button>
+    </div>
+    <button style="height: 44px; background: #F2C230; color: #14214F; border: 0; border-radius: 8px; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px">İlerle <svg width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M1 1 L9 6 L1 11 Z" fill="#14214F"></path></svg></button>
+
+    <nav aria-label="Ana menü" style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px">
+      <button style="height: 38px; border: 0; border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; text-align: left; background: #1E2E66; color: #F6F1E1">Ofis<span style="font-size: 13px; color: #8E9BC9">1</span></button>
+      <button style="height: 38px; border: 0; border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; text-align: left; background: #F2C230; color: #14214F">Haberler<span style="font-size: 13px">2</span></button>
+      <button style="height: 38px; border: 0; border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; text-align: left; background: #1E2E66; color: #F6F1E1">Kulüp<span style="font-size: 13px; color: #8E9BC9">3</span></button>
+      <button style="height: 38px; border: 0; border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; text-align: left; background: #1E2E66; color: #F6F1E1">Finans<span style="font-size: 13px; color: #8E9BC9">4</span></button>
+      <button style="height: 38px; border: 0; border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; text-align: left; background: #1E2E66; color: #F6F1E1">Lig<span style="font-size: 13px; color: #8E9BC9">5</span></button>
+      <button style="height: 38px; border: 0; border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; text-align: left; background: #1E2E66; color: #F6F1E1"><span style="display: flex; flex-direction: column; line-height: 1.05">Transfer<span style="font-size: 11px; font-weight: 500; color: #FF8A8A">yasaklı</span></span><span style="font-size: 13px; color: #8E9BC9">6</span></button>
+      <button style="height: 38px; border: 0; border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; text-align: left; background: #1E2E66; color: #F6F1E1">Ajanda<span style="font-size: 13px; color: #8E9BC9">7</span></button>
+      <button style="height: 38px; border: 0; border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; text-align: left; background: #1E2E66; color: #F6F1E1">Telefon<span style="font-size: 13px; color: #8E9BC9">8</span></button>
+      <button style="height: 38px; border: 0; border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; text-align: left; background: #1E2E66; color: #F6F1E1">Gazete<span style="font-size: 13px; color: #8E9BC9">9</span></button>
+      <button style="height: 38px; border: 0; border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; text-align: left; background: #1E2E66; color: #F6F1E1">Balkon<span style="font-size: 13px; color: #8E9BC9">0</span></button>
+    </nav>
+
+    <button style="margin-top: auto; background: #C8202F; color: #FFFFFF; border: 0; border-radius: 8px; padding: 10px 0; display: flex; flex-direction: column; align-items: center; gap: 3px">
+      <span style="font-size: 17px; font-weight: 700">Haber var</span>
+      <span style="font-size: 13px">3 cevap · 2 yeni</span>
+    </button>
+    <button style="height: 34px; background: transparent; color: #DDE3F5; border: 1px solid #2C3D7A; border-radius: 6px; font-size: 14px">Ayarlar</button>
+  </aside>
+
+  <header style="grid-row: 1; grid-column: 2; background: #C8202F; padding: 0 24px; display: flex; align-items: center; gap: 16px">
+    <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #FFFFFF">Haberler</h1>
+    <span style="background: #FFFFFF; color: #C8202F; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px">3 bekliyor</span>
+    <span style="font-size: 15px; color: #FFE3E3">Demirkapı SK · Başkan Haluk Demirel</span>
+    <div style="flex: 1"></div>
+    <span style="font-size: 12px; letter-spacing: 0.1em; color: #FFE3E3">KAYDEDİLDİ</span>
+    <button style="height: 36px; background: #FFFFFF; color: #C8202F; border: 0; border-radius: 6px; padding: 0 18px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em">DURAKLAT</button>
+  </header>
+
+  <main style="grid-row: 2; grid-column: 2; position: relative; min-height: 0; overflow: hidden; background: #0A1230">
+<div style="position: absolute; inset: 0; box-sizing: border-box; padding: 26px 32px 22px; display: flex; flex-direction: column; align-items: center">
+  <div style="align-self: stretch; display: flex; align-items: center; justify-content: space-between">
+    <div style="display: flex; align-items: center; gap: 14px">
+      <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.14em; color: #F2C230">CEVAP BEKLEYEN</span>
+      <span style="font-size: 15px; color: #DDE3F5">1 / 3</span>
+      <span aria-hidden="true" style="display: flex; gap: 6px">
+        <span style="width: 22px; height: 8px; border-radius: 4px; background: #F2C230"></span>
+        <span style="width: 8px; height: 8px; border-radius: 4px; background: #2C3D7A"></span>
+        <span style="width: 8px; height: 8px; border-radius: 4px; background: #2C3D7A"></span>
+      </span>
+    </div>
+    <button style="height: 36px; background: transparent; border: 1px solid #2C3D7A; color: #DDE3F5; border-radius: 999px; padding: 0 16px; font-size: 14px">Diğer haberler · 4</button>
+  </div>
+
+  <div style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 36px">
+    <button style="width: 170px; flex-shrink: 0; background: transparent; border: 0; color: #F6F1E1; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 0">
+  <span style="width: 64px; height: 64px; border-radius: 50%; background: #14214F; border: 2px solid #2C3D7A; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" fill="none" stroke="#F2C230" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11 H4 M10 5 L4 11 L10 17"></path></svg></span>
+  <span style="font-size: 17px; font-weight: 600; text-align: center; line-height: 1.25">Denetime gönder</span>
+  <span style="display: flex; gap: 4px"><span style="display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; box-sizing: border-box; padding: 0 6px; border: 1px solid #3A4C8C; border-radius: 5px; font-size: 12px; font-weight: 600; color: #B8C2E6">←</span><span style="display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; box-sizing: border-box; padding: 0 6px; border: 1px solid #3A4C8C; border-radius: 5px; font-size: 12px; font-weight: 600; color: #B8C2E6">A</span></span>
+</button>
+    <article aria-label="Karar kartı: Devir teslim tutanağı" style="width: 640px; box-sizing: border-box; flex-shrink: 0; background: #FFFDF7; border-radius: 14px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35); overflow: hidden; display: flex; flex-direction: column; color: #1B2440">
+  <div aria-hidden="true" style="height: 6px; background: #C8202F"></div>
+  <div style="padding: 24px 30px 24px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <svg width="30" height="34" viewBox="0 0 40 46" aria-hidden="true" style="flex-shrink: 0"><path d="M20 2 L37 7 V22 C37 34 29 41 20 44 C11 41 3 34 3 22 V7 Z" fill="#C8202F"></path><text x="20" y="29" text-anchor="middle" font-family="Rubik, sans-serif" font-weight="700" font-size="17" fill="#FFFFFF">D</text></svg>
+      <div style="display: flex; flex-direction: column; gap: 1px">
+        <span style="font-size: 15px; font-weight: 600">Demirkapı SK</span>
+        <span style="font-size: 13px; color: #5A5F73">Kulüp · bugün 10:00</span>
+      </div>
+      <span style="margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: #C8202F; border: 1.5px solid #C8202F; border-radius: 999px; padding: 3px 9px">CEVAP BEKLİYOR</span>
+    </div>
+    <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: #6B7085">DEVİR TESLİM TUTANAĞI</span>
+    <p style="margin: 0; font-size: 24px; font-weight: 600; line-height: 1.3">Eski yönetimin tutanağı masanda: kasa, borçlar, alacaklar, sözleşmeler, açık işler.</p>
+    <div style="display: flex; align-items: flex-start; gap: 8px; padding-top: 14px; border-top: 1px solid #ECE6D6; font-size: 14px; line-height: 1.4; color: #4A4F63">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink: 0" fill="none" stroke="#5A5F73" stroke-width="1.6"><circle cx="8" cy="8" r="6.5"></circle><path d="M8 4.5 V8 L10.5 9.5" stroke-linecap="round"></path></svg><span><strong style="font-weight: 600; color: #1B2440">Son cevap: 23 Haz Sal 18:00</strong> · Cevap vermezsen tutanak imzasız kalır; devir yine yürür.</span>
+    </div>
+  </div>
+</article>
+    <button style="width: 170px; flex-shrink: 0; background: transparent; border: 0; color: #F6F1E1; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 0">
+  <span style="width: 64px; height: 64px; border-radius: 50%; background: #14214F; border: 2px solid #2C3D7A; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" fill="none" stroke="#F2C230" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 H18 M12 5 L18 11 L12 17"></path></svg></span>
+  <span style="font-size: 17px; font-weight: 600; text-align: center; line-height: 1.25">İmzala</span>
+  <span style="display: flex; gap: 4px"><span style="display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; box-sizing: border-box; padding: 0 6px; border: 1px solid #3A4C8C; border-radius: 5px; font-size: 12px; font-weight: 600; color: #B8C2E6">→</span><span style="display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; box-sizing: border-box; padding: 0 6px; border: 1px solid #3A4C8C; border-radius: 5px; font-size: 12px; font-weight: 600; color: #B8C2E6">D</span></span>
+</button>
+  </div>
+
+  <span style="font-size: 13px; color: #8E9BC9">Kartı tut, sağa ya da sola kaydır</span>
+</div>
+  </main>
+
+  <footer style="grid-row: 3; grid-column: 2; background: #F6F0E2; color: #3A3A48; padding: 0 24px; display: flex; align-items: center; gap: 8px; font-size: 15px">
+    <strong style="font-weight: 600">Sıradaki durak:</strong> 22 Haz Pzt 11:30 · beklediğin cevap gelecek<span style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5A5F73">Kartı yanıtla <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; box-sizing: border-box; padding: 0 6px; border: 1px solid #C9C1AE; border-radius: 5px; font-size: 12px; font-weight: 600; color: #3A3A48">←</span><span style="display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; box-sizing: border-box; padding: 0 6px; border: 1px solid #C9C1AE; border-radius: 5px; font-size: 12px; font-weight: 600; color: #3A3A48">→</span></span>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":810}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

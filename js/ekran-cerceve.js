@@ -42,38 +42,72 @@ function cmIcerik(s){
   if(typeof document==='undefined'||document.getElementById('cerceveStili'))return;
   const st=document.createElement('style');st.id='cerceveStili';
   st.textContent=`
-/* ---- şerit: kabartmalı bölüm düğmeleri (seçili sarı), ‹ Geri · İleri ›, ayraç, Balkon, altta Haber var ve Ayarlar ---- */
-.cm-serit{gap:.26em;padding:.5em .4em .55em}
-.cm-gez{display:grid;grid-template-columns:1fr 1fr;gap:.25em;flex:none}
-.cm-serit .cm-gez button{text-align:center;font-size:max(12px,.82em);padding:.2em 0;color:var(--c-yazi);background:var(--c-kutu);border:1px solid var(--c-cizgi);border-radius:.18em}
-.cm-serit .cm-gez button:disabled{color:var(--c-pasif)}
-.cm-serit button.cm-dugme{display:flex;align-items:center;justify-content:space-between;gap:.35em;padding:.42em .5em .4em;font-weight:800;color:var(--c-yazi);
-  background:linear-gradient(var(--c-dugmeUst),var(--c-dugmeAlt));border:1px solid var(--c-dugmeKenar);border-radius:.2em;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),inset 0 -2px 0 rgba(0,0,0,.22)}
-.cm-serit button.cm-dugme:hover:not(:disabled){color:var(--c-etkin);background:linear-gradient(var(--c-dugmeUzerinde),var(--c-dugmeAlt))}
-.cm-serit button.cm-dugme[aria-current="true"]{color:var(--c-dugmeSeciliYazi);background:linear-gradient(var(--c-dugmeSeciliUst),var(--c-dugmeSeciliAlt));border-color:var(--c-anaKenar);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+/* ---- şerit (arayüz güncellemesi 1. madde, 2026-11-05; kullanıcının “1 · Klasik (rafine)” tasarımı): düz bölüm düğmeleri (seçili düz sarı, yazı
+   krem, tuş numarası soluk), büyük beyaz saatli tarih kutusu, dolu ‹ Geri · İleri ›, düz sarı İlerle, ayraçsız on düğme, altta Haber var (sayısız) ve
+   Ayarlar. Ölçüler 1440 pencerenin pikselinden şeridin yazısına (15 px) oranlı ---- */
+.cm-serit{gap:.27em;padding:.8em .8em .8em}
+.cm-serit .cm-tarih{gap:.2em;padding:.65em .3em;margin-bottom:.27em;border-radius:.55em;background:var(--c-kutu);border:1px solid var(--c-cizgi)}
+.cm-serit .cm-tarih>b{font-weight:600;font-size:1.07em;color:var(--c-ana)}
+.cm-serit .cm-tarih span{font-family:var(--cerceve);font-size:max(12px,.93em);color:var(--c-soluk)}
+.cm-serit .cm-tarih em{font-weight:700;font-size:1.87em;line-height:1.1;color:#fff}
+.cm-gez{display:grid;grid-template-columns:1fr 1fr;gap:.4em;flex:none}
+.cm-serit .cm-gez button{text-align:center;font-size:max(12px,.87em);font-weight:500;padding:.55em 0;color:var(--c-soluk);background:var(--c-dugmeUst);border:0;border-radius:.4em}
+.cm-serit .cm-gez button:disabled{color:var(--c-pasif);opacity:.6}
+.cm-serit button.cm-ilerle{display:flex;align-items:center;justify-content:center;gap:.4em;margin:.27em 0 .4em;padding:.45em .4em;font-size:1.33em;font-weight:700;border-radius:.4em;box-shadow:none;
+  color:var(--c-anaYazi);background:var(--c-ana)}
+.cm-serit button.cm-ilerle:hover:not(:disabled){background:var(--c-anaUzerinde)}
+/* 2. madde: destede kart varken İlerle soluk durur; basınca Haberler'in destesi açılır (kartlar bitmeden İlerle çalışmaz) */
+.cm-serit button.cm-ilerle.cm-bekle{opacity:.45}
+.cm-serit button.cm-dugme{display:flex;align-items:center;justify-content:space-between;gap:.35em;padding:.5em .8em .48em;font-size:1.13em;font-weight:600;color:var(--c-yazi);
+  background:var(--c-dugmeUst);border:0;border-radius:.36em;box-shadow:none}
+.cm-serit button.cm-dugme:hover:not(:disabled){color:var(--c-etkin);background:var(--c-dugmeUzerinde)}
+.cm-serit button.cm-dugme[aria-current="true"]{color:var(--c-dugmeSeciliYazi);background:var(--c-dugmeSeciliUst);box-shadow:none}
 .cm-serit button.cm-dugme:disabled{opacity:.5}
-.cm-serit button.cm-dugme>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
-.cm-serit button.cm-dugme kbd{flex:none;font:700 max(12px,.7em) var(--cerceve);opacity:.6}
-.cm-serit button.cm-dugme small.cm-kilit{display:block}
-.cm-ayrac{flex:none;height:1px;margin:.15em .1em;background:var(--c-cizgi)}
-.cm-serit button.cm-ayar{text-align:center;font-size:max(12px,.85em);padding:.2em;color:var(--c-soluk);border:1px solid var(--c-cizgi)}
+.cm-serit button.cm-dugme>span{min-width:0;overflow:hidden;text-overflow:ellipsis;line-height:1.05}
+.cm-serit button.cm-dugme kbd{flex:none;font:500 max(12px,.77em) var(--cerceve);color:var(--c-tus);opacity:1}
+.cm-serit button.cm-dugme[aria-current="true"] kbd{color:inherit}
+.cm-serit button.cm-dugme small.cm-kilit{display:block;font-family:var(--cerceve);font-weight:500;font-size:max(12px,.65em);color:var(--c-kilit)}
+.cm-serit .cm-dugme[data-cm="ofis"]{margin-top:.35em}
+.cm-ayrac{display:none}
+.cm-serit button.cm-haber{display:flex;align-items:center;justify-content:center;gap:.5em;margin-top:.2em;padding:.75em .3em;font-size:1.13em;font-weight:700;border-radius:.55em;color:var(--c-haberYazi);background:var(--c-haber)}
+.cm-serit button.cm-haber i{width:.5em;height:.5em;border-radius:50%;background:currentColor;animation:cmNabiz 1.6s ease-in-out infinite}
+@keyframes cmNabiz{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.cm-serit button.cm-haber i{animation:none}}
+.cm-serit button.cm-ayar{text-align:center;font-size:max(12px,.93em);font-weight:500;padding:.5em .2em;color:var(--c-soluk);background:transparent;border:1px solid var(--c-cizgi);border-radius:.4em}
 .cm-serit button.cm-ayar[aria-current="true"]{color:var(--c-etkin);background:var(--c-secili)}
 /* alçak pencerede (oyun alanı < ~670 px) şerit sıkışır: düğmeler ince, tarih kutusu tek satır payı; şerit taşmaz */
 @media (max-height:700px){
-  .cm-serit{gap:.14em;padding:.3em .35em .35em}
-  .cm-serit button.cm-dugme{padding:.18em .45em .16em}
-  .cm-serit .cm-tarih{padding:.15em .3em .2em;margin-bottom:0}
-  .cm-serit .cm-tarih em{font-size:1.05em}
-  .cm-serit button.cm-ilerle{margin:.1em 0 .15em;padding:.22em .4em .18em}
-  .cm-serit button.cm-haber{padding:.18em .3em;margin-top:.1em}
-  .cm-ayrac{margin:.05em .1em}
+  .cm-serit{gap:.14em;padding:.4em .45em .45em}
+  .cm-serit button.cm-dugme{padding:.2em .6em .18em}
+  .cm-serit .cm-tarih{padding:.2em .3em .25em;margin-bottom:0}
+  .cm-serit .cm-tarih em{font-size:1.3em}
+  .cm-serit button.cm-ilerle{margin:.1em 0 .15em;padding:.22em .4em .18em;font-size:1.15em}
+  .cm-serit button.cm-haber{padding:.25em .3em;margin-top:.1em}
+  .cm-serit .cm-gez button{padding:.2em 0}
 }
 /* ---- başlık şeridi: ‹ Geri (alt sayfada), ipucu (CM2-b alıştırma; kulüp · başkan satırının yerinde) ---- */
 .oda .od-ustCm button.od-ustGeri{align-self:center;flex:none;font-family:var(--cerceve);font-weight:800;font-size:max(12px,.86em);padding:.1em .6em;color:inherit;background:rgba(0,0,0,.18);
   border:1px solid rgba(255,255,255,.35);border-radius:.2em;box-shadow:none;max-width:16em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .od-ustCm .od-ustBaslik small.od-ustIpucu{font-style:italic;opacity:1}
+/* ---- arayüz güncellemesi 1. madde (2026-11-05): başlık şeridi daha yüksek, ekranın adı büyük (32/15,6), düz; kulüp · başkan açık; KAYDEDİLDİ küçük
+   aralıklı; DURAKLAT beyaz dolu düğme, yazısı başlığın rengi. Cevap bekleyen rozeti yok (2. madde: sayı yok). Alt şerit tek satır: son mesaj, ardından
+   kalın “Sıradaki durak:” ve değeri ---- */
+.oda .od-ust.od-ustCm{font-family:var(--cerceve);border-bottom:0}
+.od-ustCm .od-ustSatir{gap:1em;padding:.6em 1.5em .55em}
+.od-ustCm .od-ustBaslik{align-items:center;gap:1em}
+.od-ustCm .od-ustBaslik b{font-family:var(--cerceve);font-weight:700;font-size:2.05em;line-height:1.2;text-shadow:none}
+.od-ustCm .od-ustBaslik small{font-size:max(12px,.94em);opacity:.9}
+.od-ustCm .od-ustSag{display:flex;align-items:center;gap:1.2em;font-size:max(12px,.75em);letter-spacing:.1em}
+.oda .od-ustCm button.od-duraklat{font-family:var(--cerceve);font-size:max(12px,1.08em);font-weight:700;letter-spacing:.08em;padding:.6em 1.4em;border:0;border-radius:.45em;
+  color:var(--c-baslik);background:#fff;box-shadow:none}
+.oda .od-ustCm button.od-duraklat[aria-pressed="true"]{color:#fff;background:var(--c-baslikKenar)}
+.screen[data-serit] .oda .od-alt{font-family:var(--cerceve);padding:.7em 1.5em;background:#F6F0E2;color:#3A3A48;border-top:0}
+.screen[data-serit] .oda .od-altYazi{display:flex;align-items:baseline;gap:.9em;min-width:0}
+.screen[data-serit] .oda .od-mesaj{flex:none;max-width:45%;font-weight:600;-webkit-line-clamp:1;white-space:nowrap;text-overflow:ellipsis;display:block}
+.screen[data-serit] .oda .od-mesaj:empty{display:none}
+.screen[data-serit] .oda .od-durak{flex:1;min-width:0;color:inherit;font-size:1em;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.screen[data-serit] .oda .od-durak strong{font-weight:600}
+.screen[data-serit] .oda .od-durakUyari{white-space:normal}
 /* ---- içerik alanı: başlık şeridinin altından alt şeridin üstüne; arkada oda %84 koyu (bulanıklık yok, kamera durur: odaPanel) ---- */
 .oda .od-ust,.oda .od-alt{z-index:3}
 .oda .cm-perde{position:absolute;inset:0;z-index:1;background:var(--c-perde)}

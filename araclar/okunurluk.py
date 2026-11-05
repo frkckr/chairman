@@ -125,13 +125,17 @@ async def sahneler_oda(pg, olc):
     await olc("telefon-konu-menusu")
     await tikla(pg, '.tel-kisiBas .tel-geri')
     await akis.masaya_don(pg)
-    # CM1-b: Haberler (Hepsi ve Cevap bekliyor; TEST içeriğinde Salı kararı bekliyor). AR1: 2 Haberler; gün başı notu ve odada Canlı Skor kalktı
+    # 2. madde (karar 96): Haberler kart destesi — üstteki kart, önizlenen cevabın yüzü ve kartın yanındaki ek kâğıdı
     await pg.keyboard.press("Digit2")
-    await pg.wait_for_selector("#oda .hb", timeout=10000)
-    await olc("haberler-hepsi")
-    await tikla(pg, '#oda .hb-sekmeler [data-sekme="cevap"]')
-    await pg.wait_for_selector('#oda .hb[data-sekme="cevap"] .hb-ayrinti .kk-kart', timeout=10000)   # AR2: bekleyen kararın kartı ayrıntıda (haberler-kart)
-    await olc("haberler-cevap")
+    await pg.wait_for_selector("#oda .hbd", timeout=10000)
+    await olc("haberler-deste")
+    if await pg.query_selector("#oda .hbd-kart"):
+        await pg.evaluate("() => document.querySelector('#oda .hbd-kart').focus({preventScroll: true})")
+        await pg.keyboard.press("ArrowRight")
+        await olc("haberler-cevap")
+        await pg.keyboard.press("Escape")
+        await tikla(pg, '#oda .hbd-ekler [data-eylem="hbdEk"]')
+        await olc("haberler-ek")
     await akis.masaya_don(pg)
     # AR1: 3 Kulüp (Kadro önde); dosyanın kartı Dosyalar sekmesinde
     await pg.keyboard.press("Digit3")
@@ -317,11 +321,8 @@ async def sahneler_sponsor(pg, olc):
       const a = B(); oyunKomut(k => ajandaIsiYap(k, a.id, 'gorus')); const b = B(); return b ? b.id : null; }""")
     await akis.oda_yenile(pg)
     await akis.masaya_don(pg)
-    # AR1: Sonra yığını kalktı; cevap bekleyen kart Haberler › Cevap bekliyor'dan kendi yerinde açılır
-    await pg.keyboard.press("Digit2")
-    await tikla(pg, '#oda .hb-sekmeler [data-sekme="cevap"]')
-    await tikla(pg, f'#oda .hb-satir[data-id="k:{kid}"]')   # AR2: satır seçilir; ayrıntıdaki “… aç ▸” kartı yerinde açar
-    await tikla(pg, '#oda .hb-ayrinti [data-eylem="sonraAc"]')
+    # 2. madde (karar 96): cevap bekleyen kart destede; kartın “… aç ▸” ekiyle kendi yerinde açılır (kart destenin üstünde olmayabilir: aynı eylem)
+    await akis.sonra_ac(pg, kid)
     await pg.wait_for_selector(f'.kk-kart[data-is="{kid}"]', timeout=10000)
     await olc("sponsor-pazarlik-karti")
 
@@ -374,6 +375,8 @@ async def ana():
                 pg.on("pageerror", lambda e: hatalar.append(f"{g}: {e}"))
                 await pg.goto((site / ad).as_uri() + sorgu)
                 await akis.yokla(pg, akis.ODA_HAZIR_JS, 60)
+                # arayüz güncellemesi 2. madde (karar 96): sahneler kartları cevaplamadan ilerler — kartlar bitmeden İlerle kapısı kapalı (TEST anahtarı)
+                await pg.evaluate("() => { if (typeof OYUN !== 'undefined' && OYUN.ayarlar && OYUN.ayarlar.desteKapisi !== false) { OYUN.ayarlar.desteKapisi = false; OYUN.ayarlar.kaydet(); } }")
                 return pg
 
             async def olc_kur(pg):

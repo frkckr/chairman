@@ -24,7 +24,7 @@
      gelismeBugun(k)         Haberler'in tek satırı: {sonMac, isler:[{saat, baslik, tur}]} ya da null (gün başı notundan; kasa ve manşet yok, karar 90)
    Önem eşiği, gün sayısı ve sınırlar TEST. */
 'use strict';
-const GELISME_TEST={gun:14,enCok:400,idEnCok:200,okumalikOnem:50,baslikEnCok:140};
+const GELISME_TEST={gun:14,enCok:400,idEnCok:200,okumalikOnem:50,baslikEnCok:140,desteGun:3};
 const GELISME_KATEGORILER=[['kulup','Kulüp'],['transfer','Transfer'],['lig','Lig'],['basin','Basın'],['para','Para']];
 /* kanalın simgesi (js/simge.js) */
 const GELISME_SIMGE={telefon:'telefon',gazete:'gazete',lig:'mac',dosya:'dosya',ajanda:'takvim',para:'kasa',kapi:'kapi'};
@@ -211,5 +211,71 @@ function gelismeDogrula(k,h=[]){
     if(O.idler.length>GELISME_TEST.idEnCok)h.push('gelismeOkunan: çok kimlik');
     for(const x of O.idler)if(typeof x!=='string'||gelismeAni(x)===null){h.push(`gelismeOkunan: geçersiz kimlik ${x}`);break;}}
   return h;
+}
+/* ---- Arayüz güncellemesi 2. madde (2026-11-05, kullanıcı; araclar/plan/arayuz-guncelleme.md §2): Haberler tamamen kart. Düz okuyup geçmek yok: her
+   habere sağa ya da sola kaydırarak bir tepki verilir, cevap bekleyen karar da aynı destededir; kartlarda erteleme yok, deste bitmeden İlerle çalışmaz
+   (kapı ekranda: js/ekran-oda.js). Kural katmanında yalnız destenin kuruluşu (saf) ve tepkinin tek komutu:
+     haberDestesi(k) → [{id, tur:'karar'|'haber', an, kanal, kaynak, etiket, soru, isId?, meseleId?, yer?, satir?, sol, sag}] olay sırasıyla (eski önce).
+       sol/sag: {id, ad, not, ipucu:[…], engel}. Karar: cevap bekleyen ve iki cevaplı (gelismeBekleyenler; seçenekler ajandaOnizle, o seçeneğin
+       kimliğiyle: adı, bilinen ilk sonucu, engeli); kimlik 'k:'+isId. Haber: son GELISME_TEST.desteGun günün okunmamış, arka olmayan gelişmeleri
+       (kimlik 'd:'+satırın kimliği); aynı günün okunmamış arka satırları tek kart ('d:grup:'+tarih). Cevap bekleyen bir kararın konusuna ait telefon
+       mesajı ayrı kart olmaz (kararın kartıdır; karar cevaplanınca ekran konuyu görüldü yazar).
+     gelismeTepki(k, id)  komut: haber kartına tepki — kartın satırlarını okundu yazar (haber ve geçmiş satırı okundu işaretiyle, telefonun mesajı
+       konuşmanın görüldüsüyle, rapor görüldüsüyle). Tepkinin bugün başka etkisi yoktur; metinler TEST (GELISME_TEPKI_TEST; içerik borcu İB7:
+       “boş tepki tamamen boş olmasın” — başkanın sesi, iz ve tohum sonraki işler). Kayıt değişmez (okundu alanları mevcut). */
+const GELISME_TEPKI_TEST={
+  telefon:{sol:[['Bunu yüz yüze konuşalım','Bir dahaki görüşmede açarsın.'],['Bakalım','Ne dediğini anladı mı, belli değil.']],
+    sag:[['Tamamdır, sağ ol','Kısa ve net; o da öyle sever.'],['Haber ver','“Takipteyim başkanım.”']]},
+  gazete:{sol:[['Yine abartmışlar','Basın sözcüsü olsa bunu söylerdi.'],['Kimin işi bu?','Kulisi merak edersin.']],
+    sag:[['Doğru yazmışlar','Gazeteyi katlayıp kenara koyarsın.'],['Hayırlısı','Kahvede de böyle konuşulur.']]},
+  lig:{sol:[['Böyle olmaz','Hoca bunu duyarsa bozulur.'],['Hakem neredeydi?','Kahvede konuşulacak cümle.']],
+    sag:[['Önümüze bakalım','Hafta yeni başlıyor.'],['İyi oyundu','Tribün de öyle düşünüyor olabilir.']]},
+  dosya:{sol:[['Kemerleri sıkalım','Bir dahaki raporda ilk sayfada.'],['Bunu bana anlat','Ayrıntısı Finans’ta.']],
+    sag:[['Okudum, tamam','Rapor dosyaya kalkar.'],['Rakamlar fena değil','Müdür memnun olur.']]},
+  para:{sol:[['Bu ne parası?','Ayrıntısı Finans’ta.']],sag:[['Kasaya işlendi','Muhasebe sessizce çalışır.']]},
+  ajanda:{sol:[['Keşke başka olsaydı','Bir dahakine.'],['Bunu not et','Defterde bir köşede durur.']],sag:[['Güzel','İş kapanır.'],['Tamam','Defter yerinde.']]},
+  grup:{sol:[['Bizi ilgilendirmez','Yalnız kendi maçına bakarsın.']],sag:[['Ligde neler oluyor','Fikstür hareketli.']]}
+};
+const GELISME_TEPKI_IPUCU={gazete:['basin'],lig:['tribun'],grup:['tribun'],dosya:['kasa'],para:['kasa'],ajanda:['is']};
+const gelismeKarisim=s=>{let h=0x811c9dc5;s=String(s);for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return h;};
+function gelismeTepkileri(x){
+  const T=GELISME_TEPKI_TEST[x.kanal]||GELISME_TEPKI_TEST.ajanda,h=gelismeKarisim(x.id),ip=x.kanal==='telefon'&&x.kaynak&&x.kaynak.tur==='kisi'?['kisi:'+x.kaynak.id]:(GELISME_TEPKI_IPUCU[x.kanal]||[]);
+  const al=(L,y)=>{const t=L[h%L.length];return{id:y,ad:t[0],not:t[1],ipucu:ip.slice(),engel:null};};
+  return{sol:al(T.sol,'sol'),sag:al(T.sag,'sag')};
+}
+/* destenin haber satırları: okunmamış, arka olmayan; arka satırlar günde tek kart. Karar konusunun telefon mesajı düşer */
+function gelismeDesteSatirlari(k,haricMesele){
+  const L=gelismeListesi(k,{gun:GELISME_TEST.desteGun}).filter(x=>!x.okundu);
+  const tek=L.filter(x=>x.sinif!=='arka'&&!(x.kanal==='telefon'&&x.meseleId&&haricMesele.has(x.meseleId)));
+  const arka=gelismeGruplari(L.filter(x=>x.sinif==='arka'));
+  return tek.concat(arka);
+}
+function haberDestesi(k){
+  const B=gelismeBekleyenler(k),kararlar=[],harici=new Set();
+  for(const x of B.kararlar){
+    const is=k.isler[x.isId];if(!is||typeof ajandaOnizle!=='function')continue;
+    const v=is.veri,S=ajandaOnizle(k,x.isId).secenekler;if(S.length!==2)continue;   /* iki cevaplı olmayan karar kart olmaz (js/ekran-kart.js ile aynı) */
+    const cevap=c=>{const o=ajandaOnizle(k,x.isId,c.id),xs=o.secenek||c,eng=(o.engel||[]).filter(e=>!/Bir seçenek/.test(e));
+      return{id:c.id,ad:String(xs.metin||''),not:String((xs.aciklama||[]).filter(Boolean)[0]||''),ipucu:[],engel:c.engel||eng[0]||null};};
+    if(x.meseleId)harici.add(x.meseleId);
+    kararlar.push({id:'k:'+x.isId,tur:'karar',isId:x.isId,an:x.gelis?anDakika(x.gelis.tarih,x.gelis.dakika):simdikiAn(k),kanal:x.yer==='telefon'?'telefon':x.yer==='dosya'?'dosya':'karar',
+      kaynak:x.kaynak,etiket:String(v.baslik||'Karar'),soru:String(v.aciklama||v.baslik||''),meseleId:x.meseleId,yer:x.yer,sinif:x.sinif,sol:cevap(S[0]),sag:cevap(S[1])});
+  }
+  const haberler=gelismeDesteSatirlari(k,harici).map(x=>Object.assign({id:'d:'+x.id,tur:'haber',an:x.an,kanal:x.grup?'grup':x.kanal,kaynak:x.kaynak,
+    etiket:x.grup?'Ligden':(GELISME_KATEGORILER.find(c=>c[0]===x.kategori)||[0,''])[1],soru:x.baslik,satir:x},gelismeTepkileri({id:x.id,kanal:x.grup?'grup':x.kanal,kaynak:x.kaynak})));
+  return kararlar.concat(haberler).sort((a,b)=>a.an-b.an||(a.tur===b.tur?0:a.tur==='karar'?-1:1)||(a.id<b.id?-1:1));
+}
+function gelismeTepki(k,id){
+  if(!/^d:/.test(String(id)))throw new Error(`Haber kartı değil: ${id}`);
+  const rid=String(id).slice(2),L=gelismeListesi(k,{gun:GELISME_TEST.desteGun}).filter(x=>!x.okundu);
+  const S=rid.startsWith('grup:')?L.filter(x=>x.sinif==='arka'&&'grup:'+x.tarih===rid):L.filter(x=>x.id===rid);
+  if(!S.length)throw new Error(`Haber kartı bulunamadı: ${id}`);
+  for(const x of S){
+    if(x.hedef&&x.hedef.tur==='rapor'){if(typeof raporGoruldu==='function')raporGoruldu(k,x.hedef.i);}
+    else if(x.kanal==='telefon'){if(x.meseleId&&k.meseleler[x.meseleId])meseleGoruldu(k,x.meseleId);else if(typeof yazismaGoruldu==='function'&&x.hedef)yazismaGoruldu(k,x.hedef.kisi);}
+    else gelismeOkundu(k,x.id);
+  }
+  /* önbellek bu kariyer nesnesiyle kuruldu; raporun ve konunun görüldüsü anahtarda yok: komuttan sonra liste yeniden kurulsun */
+  GELISME_ON.k=null;
 }
 EK_DENETIMLER.push(gelismeDogrula);

@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Haberler — simge kartı, on varyant</title>
+<!-- Arayüz güncellemesi 2. madde (araclar/plan/arayuz-guncelleme.md): kullanıcı 2 · Simge kartı'nı seçti; damga ve oynananlar yığını yok, kaynak satırı
+     okunur olacak. Bu sayfa onun on varyantı; seçilen 1 · Rafine. Kartlarda erteleme yok (aşağı çekme kalktı, 2026-11-05). Önizleme; oyun kodu değil, metinler TEST. Adres: ?v=1..10, ?hepsi=1; &on=sag|sol|alt, &kart=N, &ek=1 -->
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--lac:#14214F;--dug:#1E2E66;--kutu:#0E1838;--cizgi:#2C3D7A;--krem:#F6F1E1;--soluk:#8E9BC9;--acik:#DDE3F5;--sari:#F2C230;--kirmizi:#C8202F;--zemin:#0A1230}
+html,body{margin:0;height:100%;background:#03050f;font-family:Rubik,sans-serif;overflow:hidden}
+button{font:inherit;margin:0;cursor:pointer}
+.secici{position:fixed;z-index:100;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:6px;padding:0 12px;background:#000;color:#aab;font-size:13px;box-sizing:border-box}
+.secici b{color:#fff;font-weight:600;margin-right:6px}
+.secici button{height:30px;min-width:30px;padding:0 9px;border:1px solid #2C3D7A;border-radius:6px;background:#0E1838;color:#DDE3F5}
+.secici button[aria-current="true"]{background:var(--sari);color:var(--lac);border-color:var(--sari);font-weight:700}
+.secici .ac{margin-left:10px;color:#DDE3F5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.secici a{color:#F2C230}
+.kap{position:absolute;top:46px;left:0;right:0;bottom:0;display:grid;place-items:center;overflow:hidden}
+.izgara{display:grid;grid-template-columns:repeat(2,720px);gap:34px 20px;padding:20px;justify-content:center}
+.izgara figure{margin:0;width:720px}
+.izgara figcaption{color:#DDE3F5;font:500 15px Rubik;margin:0 0 6px;min-height:38px}
+.izgara figcaption b{color:#F2C230}
+.izgara .cerceve{width:720px;height:405px;overflow:hidden;position:relative}
+.izgara .artboard{transform:scale(.5);transform-origin:0 0;position:absolute;left:0;top:0}
+
+/* ---- çerçeve: 1. madde ---- */
+.artboard{width:1440px;height:810px;display:grid;grid-template-columns:184px minmax(0,1fr);grid-template-rows:64px minmax(0,1fr) 48px;background:var(--zemin);font-family:Rubik,sans-serif;overflow:hidden;position:relative}
+.serit{grid-row:1/4;grid-column:1;box-sizing:border-box;background:var(--lac);padding:12px;display:flex;flex-direction:column;gap:8px}
+.s-tarih{background:var(--kutu);border:1px solid var(--cizgi);border-radius:8px;padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:3px}
+.s-tarih span:nth-child(1){font-size:16px;font-weight:600;color:var(--sari)}
+.s-tarih span:nth-child(2){font-size:14px;color:var(--acik)}
+.s-tarih span:nth-child(3){font-size:28px;font-weight:700;color:#fff;line-height:1.1}
+.s-gez{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.s-gez button{height:32px;background:var(--dug);color:var(--acik);border:0;border-radius:6px;font-size:13px}
+.s-ilerle{height:44px;background:var(--sari);color:var(--lac);border:0;border-radius:8px;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .2s}
+.s-ilerle:disabled{opacity:.35;cursor:not-allowed}
+.s-menu{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.s-menu button{height:38px;border:0;border-radius:6px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;font-size:17px;font-weight:600;text-align:left;background:var(--dug);color:var(--krem)}
+.s-menu button span{font-size:13px;color:var(--soluk)}
+.s-menu button[aria-current="true"]{background:var(--sari);color:var(--lac)}
+.s-menu button[aria-current="true"] span{color:var(--lac)}
+.s-menu small{display:block;font-size:11px;font-weight:500;color:#FF8A8A;line-height:1}
+.s-haber{margin-top:auto;background:var(--kirmizi);color:#fff;border:0;border-radius:8px;height:46px;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .3s,color .3s}
+.s-haber i{width:8px;height:8px;border-radius:50%;background:#fff;animation:nabiz 1.6s ease-in-out infinite}
+.s-haber.sonuk{background:transparent;color:var(--soluk);box-shadow:inset 0 0 0 1px var(--cizgi)}
+.s-haber.sonuk i{display:none}
+@keyframes nabiz{50%{opacity:.25}}
+.s-ayar{height:34px;background:transparent;color:var(--acik);border:1px solid var(--cizgi);border-radius:6px;font-size:14px}
+.baslik{grid-row:1;grid-column:2;background:var(--kirmizi);padding:0 24px;display:flex;align-items:center;gap:16px}
+.baslik h1{margin:0;font-size:32px;font-weight:700;color:#fff}
+.baslik .b-kulup{font-size:15px;color:#FFE3E3}
+.baslik .b-ara{flex:1}
+.baslik .b-kayit{font-size:12px;letter-spacing:.1em;color:#FFE3E3}
+.baslik .b-dur{height:36px;background:#fff;color:var(--kirmizi);border:0;border-radius:6px;padding:0 18px;font-size:13px;font-weight:700;letter-spacing:.08em}
+.alt{grid-row:3;grid-column:2;background:#F6F0E2;color:#3A3A48;padding:0 24px;display:flex;align-items:center;gap:8px;font-size:15px}
+.alt strong{font-weight:600}
+.alt .a-tus{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;color:#5A5F73}
+kbd{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;box-sizing:border-box;padding:0 6px;border:1px solid #C9C1AE;border-radius:5px;font:600 12px Rubik;color:#3A3A48;background:#fff}
+.alan{grid-row:2;grid-column:2;position:relative;overflow:hidden;min-height:0}
+
+/* ---- sahnenin ortak parçaları ---- */
+.masa{position:absolute;inset:0;--yx:50%;--yy:53%;--ke:350px;--kb:410px;--kr:22px;--p:0;--dx:0px;--dy:0px;--rot:0deg;--dsx:0px;--dsy:6px;--kanalK:color-mix(in srgb,var(--kanal) 30%,#0A1230);
+  background:radial-gradient(ellipse at 50% 55%,#1a2a66 0,#0A1230 66%);transition:background .4s}
+.masa.ek-acik{--yx:36%}
+.kart-yuva,.deste{position:absolute;left:var(--yx);top:var(--yy);width:var(--ke);height:var(--kb);margin-left:calc(var(--ke) / -2);margin-top:calc(var(--kb) / -2);transition:left .3s ease}
+.kart-yuva{perspective:1200px}
+.deste i{position:absolute;inset:0;border-radius:var(--kr);box-sizing:border-box;transform:translate(calc(var(--n) * var(--dsx)),calc(var(--n) * var(--dsy)));
+  background:repeating-linear-gradient(45deg,#14214F 0 12px,#1a2a5e 12px 24px);border:10px solid #DDD5BF;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.kart{position:absolute;inset:0;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;border-radius:var(--kr);
+  transform:translate(var(--dx),var(--dy)) rotate(var(--rot));transition:transform .28s cubic-bezier(.2,.8,.2,1);cursor:grab;touch-action:none;user-select:none;
+  background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--kanal) 55%,#fff) 0,var(--kanal) 72%);border:10px solid #F6F1E1;box-shadow:0 22px 44px rgba(0,0,0,.5);color:#fff}
+.masa.tut .kart{transition:none;cursor:grabbing}
+.masa.ucus .kart{transition:transform .42s cubic-bezier(.55,0,.9,.45),opacity .42s;opacity:.2}
+.masa.gelis .kart{animation:cevir .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes cevir{0%{transform:translate(0,var(--dsy)) rotateY(90deg);filter:brightness(.6)}100%{transform:none}}
+.k-gorsel{flex:1;display:grid;place-items:center;min-height:0}
+.k-gorsel .ks{--ks:190px;border-radius:12px;box-shadow:0 8px 18px rgba(0,0,0,.25)}
+.k-kanal{position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:5px;font:700 11px Rubik;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:rgba(10,18,48,.55);border-radius:999px;padding:4px 10px 4px 7px}
+.k-kanal svg{width:13px;height:13px}
+.k-plaka,.k-soru,.k-ekler{display:none}
+.k-plaka>div{display:flex;flex-direction:column;align-items:inherit;min-width:0}
+.v1 .k-plaka .ks,.v5 .k-plaka .ks,.v7 .k-plaka .ks{display:none}
+.k-cevap{position:absolute;pointer-events:none;opacity:var(--p);box-sizing:border-box;left:0;right:0;top:0;height:44%;background:rgba(10,18,48,.9);color:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:0 18px;z-index:2}
+.k-cevapAd{font-size:26px;font-weight:700;line-height:1.15}
+.k-cevapNot{font-size:14px;color:var(--acik);line-height:1.3}
+.k-ipucu,.dc-ipucu{display:flex;gap:10px;justify-content:center}
+.ip{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600}
+.ik{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);overflow:hidden;color:var(--sari)}
+.ik svg{width:18px;height:18px}
+.ik.ik-kisi svg{width:30px;height:30px}
+.ks{--ks:40px;width:var(--ks);height:var(--ks);flex:none;display:grid;place-items:center;border-radius:8px;overflow:hidden}
+.ks svg{width:100%;height:100%;display:block}
+.ks-kurum{background:var(--kc);color:#fff;font:700 calc(var(--ks) * .3)/1 Rubik;letter-spacing:.04em}
+.ks-kulup{border-radius:0;box-shadow:none!important}
+.soru{position:absolute;top:26px;left:50%;width:780px;margin-left:-390px;text-align:center;color:var(--krem);font:500 24px/1.36 Rubik;transition:opacity .15s}
+.soru .s-tur{display:block;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--sari);margin-bottom:8px}
+.kaynak{position:absolute;left:var(--yx);transform:translateX(-50%);top:calc(var(--yy) + var(--kb) / 2 + 18px);display:flex;flex-direction:column;align-items:center;gap:3px;color:#fff;text-align:center;white-space:nowrap;transition:left .3s}
+.kaynak b{font-size:21px;font-weight:700}
+.kaynak small{font-size:15px;color:var(--acik)}
+.kaynak em{font-style:normal;color:var(--sari)}
+.ekler-dis{position:absolute;left:var(--yx);transform:translateX(-50%);top:calc(var(--yy) + var(--kb) / 2 + 82px);display:flex;gap:8px;transition:left .3s;white-space:nowrap}
+.ekler-dis:empty{display:none}
+.ek{display:inline-flex;align-items:center;gap:6px;font:500 14px Rubik;border-radius:999px;padding:6px 14px 6px 10px;border:1px solid rgba(255,255,255,.16);background:var(--dug);color:var(--krem)}
+.ek svg{width:15px;height:15px;flex:none}
+.dis-cevap{display:none}
+.masada{position:absolute;left:28px;bottom:26px;display:flex;gap:10px;align-items:flex-end;z-index:3}
+.masada .ms-et{position:absolute;top:-24px;left:0;font-size:13px;color:var(--acik);white-space:nowrap}
+.masada button{width:160px;min-height:66px;padding:10px 12px;border:0;border-radius:10px;background:#E8DFC8;color:#1B2440;font:600 14px/1.25 Rubik;text-align:left;transform:rotate(-2deg);box-shadow:0 4px 10px rgba(0,0,0,.35)}
+.masada button small{display:block;font:500 12px Rubik;color:#5A5F73;margin-top:4px}
+.ek-kagit{position:absolute;z-index:6;display:none;width:340px;height:440px;top:50%;margin-top:-220px;left:calc(var(--yx) + var(--ke) / 2 + 36px);box-sizing:border-box;background:#fff;color:#1B2440;border-radius:8px;
+  box-shadow:0 18px 40px rgba(0,0,0,.45);padding:18px 20px;font-size:15px;line-height:1.45;transition:left .3s ease;overflow:hidden}
+.masa.ek-acik .ek-kagit{display:block;animation:ekGir .25s ease}
+@keyframes ekGir{from{transform:translateX(-20px);opacity:0}}
+.ekk-ust{display:flex;align-items:center;gap:8px;border-bottom:1px solid #eee;padding-bottom:10px;margin-bottom:12px}
+.ekk-ust svg{width:16px;height:16px}
+.ekk-ust b{flex:1;font-weight:600}
+.ekk-ust button{border:0;background:#F1ECDF;border-radius:6px;width:28px;height:28px;font-size:16px}
+.ekk-antet{font:700 13px Rubik;letter-spacing:.12em;color:#7a2a1d;border-bottom:1px solid #eee;padding-bottom:6px;margin-bottom:10px}
+.ekk-antet small{display:block;font-weight:500;letter-spacing:.04em;color:#6B7085;margin-top:2px;font-size:12px}
+.ekk-cizgi{height:9px;border-radius:3px;background:#E9E4D8;margin:9px 0}
+.ekk-tablo{width:100%;border-collapse:collapse}
+.ekk-tablo td{padding:6px 0;border-bottom:1px solid #f0ece2}
+.ekk-tablo td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.ekk-not{font:italic 400 19px/1.4 'IBM Plex Serif',serif;color:#1d2c6b;background:#FFF7C2;padding:14px;border-radius:4px}
+.ekk-alinti{border-left:3px solid #2F6FD0;padding:6px 12px;background:#F2F5FC;border-radius:0 6px 6px 0}
+.bos{position:absolute;inset:0;display:none;place-items:center;text-align:center;color:var(--acik);font-size:18px;z-index:2}
+.masa.bitti .bos{display:grid}
+.masa.bitti>*:not(.bos):not(.masada){visibility:hidden}
+.bos b{display:block;font-size:26px;color:#fff;margin-bottom:8px}
+
+/* =====================================================================================
+   1 · RAFİNE — 2'nin kendisi; ad plakası kartın altında, kartın içinde (kartla gider), büyük ve koyu
+   ===================================================================================== */
+.v1 .k-plaka{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none;background:#F6F1E1;color:var(--lac);padding:10px 12px 8px;margin:0 -10px -10px;text-align:center}
+.v1 .k-plaka b{font-size:21px;font-weight:700}
+.v1 .k-plaka small{font-size:14px;color:#3A3A48}
+.v1 .k-plaka{order:2;padding-bottom:16px}
+.v1 .kaynak{display:none}
+.v1 .ekler-dis{top:calc(var(--yy) + var(--kb) / 2 + 22px)}
+.v1 .k-gorsel .ks{--ks:170px}
+
+/* =====================================================================================
+   2 · AD ÜSTTE, CEVAP SORUNUN YERİNDE — kartın tepesinde koyu ad şeridi; kaydırınca soru söner, yerine cevap
+   ===================================================================================== */
+.v2 .k-plaka{display:flex;align-items:center;gap:10px;flex:none;background:rgba(10,18,48,.85);padding:12px 14px;margin:-10px -10px 0;color:#fff}
+.v2 .k-plaka div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.v2 .k-plaka b{font-size:19px;font-weight:700}
+.v2 .k-plaka small{font-size:13px;color:var(--sari);font-weight:600;letter-spacing:.04em}
+.v2 .k-kanal{top:auto;bottom:10px}
+.v2 .kaynak{display:none}
+.v2 .k-cevap{display:none}
+.v2 .soru{opacity:calc(1 - var(--p))}
+.v2 .dis-cevap{display:flex;flex-direction:column;align-items:center;gap:8px;position:absolute;top:20px;left:50%;width:780px;margin-left:-390px;text-align:center;opacity:var(--p);pointer-events:none}
+.v2 .dis-cevap .dc-ad{font-size:34px;font-weight:700;color:var(--sari)}
+.v2 .dis-cevap .dc-not{font-size:17px;color:#fff}
+.v2 .ekler-dis{top:calc(var(--yy) + var(--kb) / 2 + 22px)}
+
+/* =====================================================================================
+   3 · KONUŞMA BALONU — soru, kişinin balonu; adı balonun başında; kart küçük; cevap kartın köşesinde
+   ===================================================================================== */
+.v3 .masa{--ke:300px;--kb:330px;--yy:66%}
+.v3 .k-gorsel .ks{--ks:170px}
+.v3 .soru{top:22px;width:640px;margin-left:-320px;background:#FFFDF7;color:#1B2440;border-radius:18px;padding:18px 26px 20px;box-sizing:border-box;text-align:left;font-size:22px;box-shadow:0 12px 28px rgba(0,0,0,.35)}
+.v3 .soru::after{content:'';position:absolute;left:50%;bottom:-16px;margin-left:-16px;border:16px solid transparent;border-bottom:0;border-top-color:#FFFDF7}
+.v3 .soru .s-tur{color:#8a6a10;margin-bottom:6px}
+.v3 .soru .s-kim{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;font-size:18px;font-weight:700}
+.v3 .soru .s-kim span{font-size:14px;font-weight:500;color:#5A5F73}
+.v3 .soru .s-ekler{display:flex;gap:8px;margin-top:12px}
+.v3 .soru .ek{background:#F1ECDF;color:#1B2440;border-color:#E2DACA;font-size:13px}
+.v3 .kaynak,.v3 .ekler-dis{display:none}
+.v3 .k-cevap{height:auto;top:14px;left:12px;right:auto;max-width:78%;padding:10px 14px;border-radius:10px;align-items:flex-start;text-align:left;transform:rotate(-4deg)}
+.v3 .masa[data-yon="sol"] .k-cevap{left:auto;right:12px;align-items:flex-end;text-align:right;transform:rotate(4deg)}
+.v3 .masa[data-yon="alt"] .k-cevap{top:auto;bottom:14px;left:50%;transform:translateX(-50%);align-items:center;text-align:center}
+.v3 .k-cevapAd{font-size:22px}
+.v3 .k-cevapNot{font-size:13px}
+.v3 .k-ipucu{justify-content:flex-start}
+.v3 .k-kanal{top:auto;bottom:10px}
+
+/* =====================================================================================
+   4 · KANAL ZEMİNİ — sahne haberin rengine bürünür; kart beyaz çerçeveli; cevap alttan yükselir
+   ===================================================================================== */
+.v4 .masa{background:radial-gradient(ellipse at 50% 50%,color-mix(in srgb,var(--kanal) 55%,#0A1230) 0,color-mix(in srgb,var(--kanal) 22%,#060a1c) 75%)}
+.v4 .kart{background:#FFFDF7;border:0;padding:14px}
+.v4 .k-gorsel{border-radius:14px;background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--kanal) 45%,#fff) 0,var(--kanal) 80%)}
+.v4 .k-kanal{top:22px;left:22px}
+.v4 .deste i{border-color:#fff;background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--kanal) 70%,#000) 0 12px,var(--kanal) 12px 24px)}
+.v4 .k-cevap{top:auto;bottom:0;height:46%;background:var(--sari);color:var(--lac)}
+.v4 .k-cevapNot{color:#3A3A48}
+.v4 .k-cevap .ik{background:rgba(20,33,79,.12);color:var(--lac)}
+.v4 .kaynak b{font-size:23px}
+.v4 .kaynak small{display:inline-block;background:rgba(0,0,0,.35);color:#fff;border-radius:999px;padding:3px 12px;margin-top:3px}
+.v4 .ekler-dis{top:calc(var(--yy) + var(--kb) / 2 + 92px)}
+.v4 .ek{background:rgba(0,0,0,.3)}
+
+/* =====================================================================================
+   5 · FOTOĞRAF KART — yüz kartın tamamı; ad, kartın altında koyu geçişin üstünde; çerçevesiz
+   ===================================================================================== */
+.v5 .masa{--ke:330px;--kb:440px;--kr:20px}
+.v5 .kart{border:0;background:var(--kanal)}
+.v5 .deste i{border:0}
+.v5 .k-gorsel{display:block;position:absolute;inset:0}
+.v5 .k-gorsel .ks{--ks:100%;width:100%;height:100%;border-radius:0;box-shadow:none}
+.v5 .k-gorsel .ks-kurum{font-size:96px}
+.v5 .k-gorsel .ks-kulup{padding:60px;box-sizing:border-box;background:radial-gradient(circle,#2a3a7a,#14214F)}
+.v5 .k-plaka{display:flex;flex-direction:column;gap:2px;position:absolute;left:0;right:0;bottom:0;padding:60px 18px 16px;background:linear-gradient(transparent,rgba(6,10,28,.92) 55%);color:#fff}
+.v5 .k-plaka b{font-size:24px;font-weight:700}
+.v5 .k-plaka small{font-size:14px;color:var(--sari);font-weight:600}
+.v5 .kaynak{display:none}
+.v5 .ekler-dis{top:calc(var(--yy) + var(--kb) / 2 + 22px)}
+.v5 .k-cevap{height:46%;background:linear-gradient(rgba(6,10,28,.95) 60%,rgba(6,10,28,0))}
+
+/* =====================================================================================
+   6 · YAN YANA — kart solda, söz sağda: ad, soru, “Sen:” cevabın yeri; ekler sözün altında
+   ===================================================================================== */
+.v6 .masa{--yx:31%;--yy:50%}
+.v6 .masa.ek-acik{--yx:31%}
+.v6 .soru{left:52%;top:20%;width:520px;margin-left:0;text-align:left;font-size:27px;line-height:1.32}
+.v6 .soru .s-kim{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.v6 .soru .s-kim b{font-size:22px;color:#fff}
+.v6 .soru .s-kim span{font-size:15px;color:var(--sari);font-weight:500}
+.v6 .kaynak{display:none}
+.v6 .k-cevap{display:none}
+.v6 .dis-cevap{display:flex;flex-direction:column;gap:6px;position:absolute;left:52%;width:520px;bottom:120px;padding:16px 20px;box-sizing:border-box;border-radius:14px;
+  background:var(--kutu);border:1px dashed var(--cizgi);color:var(--soluk);transition:background .2s,border-color .2s}
+.v6 .masa:not([data-yon=""]) .dis-cevap{background:var(--sari);border:1px solid var(--sari);color:var(--lac)}
+.v6 .dis-cevap .dc-bas{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.v6 .dis-cevap .dc-ad{font-size:26px;font-weight:700}
+.v6 .dis-cevap .dc-not{font-size:15px}
+.v6 .dis-cevap .dc-ipucu{justify-content:flex-start}
+.v6 .dis-cevap .ik{background:rgba(20,33,79,.12);color:var(--lac)}
+.v6 .ekler-dis{left:52%;transform:none;top:auto;bottom:62px}
+.v6 .ek-kagit{left:52%;margin-left:0;z-index:8}
+.v6 .masada{left:auto;right:28px}
+
+/* =====================================================================================
+   7 · HEPSİ KARTTA — büyük kart: üstte soru, ortada yüz, altta ad; cevap sorunun üstüne sarı gelir
+   ===================================================================================== */
+.v7 .masa{--ke:440px;--kb:590px;--yy:50%;--kr:24px}
+.v7 .kart{background:var(--lac);border:8px solid #F6F1E1}
+.v7 .soru,.v7 .kaynak{display:none}
+.v7 .k-soru{display:block;flex:none;padding:18px 20px 16px;background:var(--kutu);font:500 19px/1.36 Rubik;color:var(--krem);min-height:128px;box-sizing:border-box}
+.v7 .k-soru .s-tur{display:block;font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--sari);margin-bottom:6px;text-transform:uppercase}
+.v7 .k-gorsel{background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--kanal) 50%,#fff) 0,var(--kanal) 75%)}
+.v7 .k-gorsel .ks{--ks:170px}
+.v7 .k-kanal{top:142px}
+.v7 .k-plaka{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none;padding:12px;background:#F6F1E1;color:var(--lac)}
+.v7 .k-plaka{order:2}
+.v7 .k-plaka b{font-size:21px;font-weight:700}
+.v7 .k-plaka small{font-size:14px;color:#3A3A48}
+.v7 .k-cevap{height:128px;background:var(--sari);color:var(--lac)}
+.v7 .k-cevapNot{color:#3A3A48}
+.v7 .k-cevap .ik{background:rgba(20,33,79,.12);color:var(--lac)}
+.v7 .ekler-dis{flex-direction:column;align-items:flex-start;left:calc(var(--yx) + var(--ke) / 2 + 24px);transform:none;top:calc(var(--yy) - 40px)}
+.v7 .deste i{border-width:8px}
+
+/* =====================================================================================
+   8 · KÂĞIT VE KARTVİZİT — kart krem kâğıt, yüz oval çerçevede; soru serif; ad kartvizitte; cevap üst kenarda sekme
+   ===================================================================================== */
+.v8 .masa{--yy:57%;--kb:370px;background:radial-gradient(ellipse at 50% 55%,#1b2548 0,#0b1024 70%)}
+.v8 .kart{background:#F4EEDF;border:0;box-shadow:inset 0 0 0 8px #F4EEDF,inset 0 0 0 9px #b9a87f,inset 0 0 0 12px #F4EEDF,inset 0 0 0 13px #b9a87f,0 20px 40px rgba(0,0,0,.5);overflow:visible;color:#2a2420}
+.v8 .deste i{border:0;background:#E2D9C3;box-shadow:0 2px 0 #b9a87f}
+.v8 .k-gorsel .ks{--ks:190px;border-radius:50%;box-shadow:0 0 0 6px #fff,0 0 0 8px #b9a87f}
+.v8 .k-kanal{top:22px;left:22px;background:#2a2420;color:#F4EEDF}
+.v8 .soru{font-family:'IBM Plex Serif',serif;font-size:26px;font-weight:500}
+.v8 .soru .s-tur{font-family:Rubik}
+.v8 .kaynak{background:#fff;color:#1B2440;padding:10px 22px;border-radius:4px;box-shadow:0 6px 14px rgba(0,0,0,.4);transform:translateX(-50%) rotate(-1.5deg);font-family:'IBM Plex Serif',serif;top:calc(var(--yy) + var(--kb) / 2 + 22px)}
+.v8 .kaynak b{font-size:21px;font-weight:700}
+.v8 .kaynak small{font-size:14px;color:#5A5F73;font-style:italic}
+.v8 .kaynak em{color:#8a6a10}
+.v8 .ekler-dis{flex-direction:column;align-items:flex-start;left:calc(var(--yx) + var(--ke) / 2 + 40px);transform:none;top:calc(var(--yy) - 40px)}
+.v8 .soru{top:20px}
+.v8 .k-cevap{top:-50px;left:30px;right:auto;height:auto;min-height:56px;padding:10px 18px;border-radius:10px 10px 0 0;background:var(--sari);color:var(--lac);flex-direction:row;gap:14px;text-align:left;max-width:calc(100% - 60px)}
+.v8 .masa[data-yon="sol"] .k-cevap{left:auto;right:30px}
+.v8 .k-cevap > span:not(.k-ipucu){display:flex;flex-direction:column}
+.v8 .k-cevapAd{font-size:21px;white-space:nowrap}
+.v8 .k-cevapNot{display:none}
+.v8 .k-cevap .ik{background:rgba(20,33,79,.12);color:var(--lac)}
+.v8 .k-cevap .ip small{display:none}
+
+/* =====================================================================================
+   9 · KENAR CEVABI — kart ışık altında; cevap kartın gittiği yanda büyük yazı; ad kartın altında
+   ===================================================================================== */
+.v9 .masa{background:radial-gradient(ellipse 42% 60% at 50% 52%,#25367a 0,#0A1230 100%)}
+.v9 .k-cevap{display:none}
+.v9 .dis-cevap{z-index:5;display:flex;flex-direction:column;gap:8px;position:absolute;top:calc(var(--yy) - 90px);width:300px;opacity:var(--p);pointer-events:none}
+.v9 .masa[data-yon="sag"] .dis-cevap{left:calc(var(--yx) + var(--ke) / 2 + 110px);text-align:left;align-items:flex-start}
+.v9 .masa[data-yon="sol"] .dis-cevap{left:calc(var(--yx) - var(--ke) / 2 - 410px);text-align:right;align-items:flex-end}
+.v9 .masa[data-yon="alt"] .dis-cevap{left:calc(var(--yx) + var(--ke) / 2 + 40px);top:calc(var(--yy) + 20px)}
+.v9 .dis-cevap .k-ok{font-size:30px;color:var(--sari);font-style:normal;font-weight:700}
+.v9 .dis-cevap .k-ok::before{content:'→'}
+.v9 .masa[data-yon="sol"] .dis-cevap .k-ok::before{content:'←'}
+.v9 .masa[data-yon="alt"] .dis-cevap .k-ok::before{content:'↓'}
+.v9 .dis-cevap .dc-ad{font-size:38px;font-weight:700;color:var(--sari);line-height:1.05}
+.v9 .dis-cevap .dc-not{font-size:17px;color:#fff;line-height:1.35}
+.v9 .masa[data-yon="sol"] .dc-ipucu{justify-content:flex-end}
+.v9 .masa:not([data-yon="sol"]) .dc-ipucu{justify-content:flex-start}
+.v9 .kaynak b{font-size:23px}
+.v9 .kaynak small{font-size:15px}
+
+/* =====================================================================================
+   10 · SADE — çerçevesiz kare yüz; üstte imza satırı ve büyük soru; cevap kartın yanında hap
+   ===================================================================================== */
+.v10 .masa{--ke:300px;--kb:300px;--yy:60%;--kr:30px;background:#0A1230}
+.v10 .kart{border:0;box-shadow:0 18px 40px rgba(0,0,0,.45)}
+.v10 .masa.gelis .kart{animation:sol .35s ease}
+@keyframes sol{from{opacity:0;transform:scale(.94)}}
+.v10 .deste{top:calc(var(--yy) + var(--kb) / 2 + 14px);height:0;margin-top:0}
+.v10 .deste i{inset:auto 18% auto 18%;height:3px;border:0;border-radius:2px;background:rgba(255,255,255,.35);box-shadow:none;transform:translateY(calc(var(--n) * 6px)) scaleX(calc(1 - var(--n) * .1))}
+.v10 .k-gorsel .ks{--ks:180px}
+.v10 .k-kanal{left:50%;transform:translateX(-50%);top:12px}
+.v10 .soru{top:30px;font-size:30px;font-weight:600;line-height:1.28;width:860px;margin-left:-430px}
+.v10 .soru .s-kim{display:flex;justify-content:center;align-items:center;gap:10px;font-size:17px;font-weight:600;color:#fff;margin-bottom:14px}
+.v10 .soru .s-kim span{color:var(--sari);font-weight:500}
+.v10 .soru .s-kim i{font-style:normal;font-size:13px;color:var(--acik);border:1px solid var(--cizgi);border-radius:999px;padding:2px 10px}
+.v10 .soru .s-tur{display:none}
+.v10 .kaynak{display:none}
+.v10 .k-cevap{display:none}
+.v10 .dis-cevap{z-index:5;display:flex;flex-direction:column;gap:6px;position:absolute;top:calc(var(--yy) - 40px);width:280px;opacity:var(--p);pointer-events:none}
+.v10 .masa[data-yon="sag"] .dis-cevap,.v10 .masa[data-yon="alt"] .dis-cevap{left:calc(var(--yx) + var(--ke) / 2 + 100px);align-items:flex-start}
+.v10 .masa[data-yon="sol"] .dis-cevap{left:calc(var(--yx) - var(--ke) / 2 - 380px);align-items:flex-end;text-align:right}
+.v10 .dis-cevap .dc-ad{display:inline-block;background:var(--sari);color:var(--lac);font-size:22px;font-weight:700;border-radius:999px;padding:8px 18px}
+.v10 .dis-cevap .k-ok{display:none}
+.v10 .dis-cevap .dc-not{font-size:15px;color:var(--acik)}
+.v10 .ekler-dis{top:calc(var(--yy) + var(--kb) / 2 + 48px)}
+.v10 .ek{background:none;border:0;color:#fff;text-decoration:underline;text-underline-offset:4px}
+</style>
+</head>
+<body>
+<div class="secici" id="secici"></div>
+<script>
+'use strict';
+/* ---------- veriler (TEST; önizleme içindir, oyuna girmez) ---------- */
+const KANAL={belge:'#B8862B',mesaj:'#2F6FD0',kupur:'#6B6F7E',skor:'#2E8B57',resmi:'#8C1D2B',kapi:'#8A5A34'};
+const KANAL_AD={belge:'Teklif',mesaj:'Mesaj',kupur:'Gazete',skor:'Lig',resmi:'Resmî yazı',kapi:'Kapı'};
+const KISI={
+  'Nusret Bey':{rol:'Mali işler müdürü',ten:'#e6bd94',sac:'#a9a9a9',biyik:1,gozluk:1,yaka:'#3A3A48',zemin:'#d9d2be'},
+  'Şükrü Hoca':{rol:'Teknik direktör',ten:'#c98f62',sac:'#2a211b',biyik:1,yaka:'#C8202F',zemin:'#c7d3ef'},
+  'Cemil Usta':{rol:'Saha sorumlusu',ten:'#b57a4f',sac:'#5b4636',yaka:'#2f6b3a',sapka:'#6b5a2a',zemin:'#cfe0c4'}
+};
+const ARMA='<svg viewBox="0 0 40 46"><path d="M20 2 L37 7 V22 C37 34 29 41 20 44 C11 41 3 34 3 22 V7 Z" fill="#C8202F"/><path d="M20 6 L33 10 V22 C33 31 27 37 20 40 C13 37 7 31 7 22 V10 Z" fill="none" stroke="#fff" stroke-width="1.5" opacity=".6"/><text x="20" y="29" text-anchor="middle" font-family="Rubik" font-weight="700" font-size="17" fill="#fff">D</text></svg>';
+const IKON={
+  kasa:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="8"/><path d="M8.5 5.5v9M6.5 9.2l5-1.8M6.5 11.8l5-1.8M8.5 14.5c2.6 0 4.4-1.7 4.4-4"/></svg>',
+  tribun:'<svg viewBox="0 0 20 20" fill="currentColor"><circle cx="5" cy="7" r="2.1"/><circle cx="10" cy="6" r="2.3"/><circle cx="15" cy="7" r="2.1"/><path d="M1.5 15c0-3 2-4.5 3.5-4.5S8 12 8 15zM6.3 16c0-3.4 1.8-5 3.7-5s3.7 1.6 3.7 5zM12 15c0-3 1.6-4.5 3-4.5s3.5 1.5 3.5 4.5z"/></svg>',
+  basin:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="4" width="15" height="12" rx="1.5"/><path d="M5 7.5h5.5M5 10.5h10M5 13h10"/><rect x="12.3" y="6.3" width="3" height="2.6" fill="currentColor" stroke="none"/></svg>',
+  is:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M2.5 5.5h5l1.5 2h8.5v8h-15z"/></svg>',
+  ek:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M13.5 6l-5.6 5.6a1.8 1.8 0 0 0 2.6 2.6l6-6a3.3 3.3 0 0 0-4.7-4.7l-6 6a4.6 4.6 0 0 0 6.5 6.5l5-5"/></svg>',
+  belge:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 2.5h7l3.5 3.5v11.5H5z"/><path d="M8 9h5M8 12h5"/></svg>',
+  mesaj:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 4h14v9H8l-4 3v-3H3z"/></svg>',
+  kupur:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="4" width="15" height="12" rx="1.5"/><path d="M5 7.5h10M5 10.5h10M5 13h6"/></svg>',
+  skor:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="7.5"/><path d="M10 5.5l3 2.2-1.1 3.6H8.1L7 7.7z" fill="currentColor"/></svg>',
+  resmi:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 5h14v11H3z"/><path d="M3 5l7 6 7-6"/></svg>',
+  kapi:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 17.5V2.5h10v15M3 17.5h14"/><circle cx="12" cy="10.5" r="1" fill="currentColor"/></svg>'
+};
+const IPUCU_AD={kasa:'Kasa',tribun:'Tribün',basin:'Basın',is:'İş'};
+function yuz(o){
+  const R=(x,y,w,h,c)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+c+'"/>';
+  let s=R(0,0,12,12,o.zemin||'#c9d3ee')+R(2,10,8,2,o.yaka)+R(4,9,4,1,o.ten)+R(3,2,6,7,o.ten)+R(3,1,6,2,o.sac)+R(2,2,1,4,o.sac)+R(9,2,1,4,o.sac)+R(2,4,1,2,o.ten)+R(9,4,1,2,o.ten);
+  if(o.sapka)s+=R(2,0,8,2,o.sapka)+R(1,2,10,1,o.sapka);
+  s+=R(4,4,1,1,'#1d1a18')+R(7,4,1,1,'#1d1a18');
+  if(o.gozluk)s+=R(3,4,2,1,'#1d1a18')+R(7,4,2,1,'#1d1a18')+R(5,4,2,1,'#5a5a5a');
+  s+=o.biyik?R(4,7,4,1,o.sac==='#a9a9a9'?'#8d8d8d':o.sac):R(5,7,2,1,'#8a4a3a');
+  return '<svg viewBox="0 0 12 12" shape-rendering="crispEdges">'+s+'</svg>';
+}
+function kartlar(){return [
+  {id:'sponsor',kanal:'belge',kaynak:{tur:'kisi',ad:'Nusret Bey'},zaman:'bugün 10:00',tur:'Sponsor teklifi',
+    soru:'Karakuş Lastik forma göğsü için ayda 115.000 ₺ veriyor. “Bir tur daha sıkarız başkanım.”',
+    ekler:[{ad:'Teklif mektubu',tur:'mektup'},{ad:'Haziran mali özeti',tur:'tablo'}],
+    sol:{ad:'Pazarlık et',not:'Nusret Bey 125 ister. Karakuş bozulabilir.',ipucu:['kasa','kisi:Nusret Bey']},
+    sag:{ad:'Kabul et',not:'Ayda 115.000 ₺, her ayın 1’inde kasada.',ipucu:['kasa']},
+    alt:{ad:'Nusret Bey baksın',not:'Yarın görüşüyle döner. Teklif o arada değişebilir.',ipucu:['kisi:Nusret Bey'],
+      donus:{soru:'Beklerken Karakuş bir adım attı: ayda 119.000 ₺. “Ben olsam imzalarım başkanım.”',ekEkle:{ad:'Nusret Bey’in notu',tur:'not'},
+        sag:{ad:'Kabul et',not:'Ayda 119.000 ₺. Nusret Bey göğsünü gerer.',ipucu:['kasa','kisi:Nusret Bey']}}}},
+  {id:'kamp',kanal:'mesaj',kaynak:{tur:'kisi',ad:'Şükrü Hoca'},zaman:'bugün 09:40',tur:'Kamp yeri',
+    soru:'“Başkanım, kamp için Bolu diyorum. Hava serin, şehir uzak; çocuklar dağılmaz.”',
+    sol:{ad:'Antalya olmaz mı?',not:'Hoca bunu sorgu sayabilir.',ipucu:['kisi:Şükrü Hoca'],
+      devam:{id:'kamp2',kanal:'mesaj',kaynak:{tur:'kisi',ad:'Şükrü Hoca'},zaman:'bugün 10:05',tur:'Kamp yeri · devamı',
+        soru:'“Antalya’da herkes var başkanım, rakipler bizi seyreder. Ama siz bilirsiniz.”',ekler:[{ad:'Senin cevabın',tur:'alinti'}],
+        sol:{ad:'Antalya, kararım bu',not:'Hoca gider ama içerler. Kamp pahalıya gelir.',ipucu:['kisi:Şükrü Hoca','kasa']},
+        sag:{ad:'Peki, Bolu',not:'“Eyvallah başkanım.”',ipucu:['kisi:Şükrü Hoca']}}},
+    sag:{ad:'Bolu olsun',not:'“Eyvallah başkanım, kuzu çevirmesi benden.”',ipucu:['kisi:Şükrü Hoca']}},
+  {id:'nail',kanal:'kupur',kaynak:{tur:'kurum',kisa:'GZT',ad:'Demirkapı Postası',alt:'Gazete',renk:'#4b4f5e'},zaman:'bu sabah',tur:'Transfer',
+    soru:'Genç kanat Nail 660 bin liraya Yıldıztepe SK’ya gitti. Kahvede iki görüş var: “ucuz” ve “çok ucuz”.',
+    sol:{ad:'Ucuza gitti',not:'Yarın gazetede bu söz olur.',ipucu:['basin','tribun']},
+    sag:{ad:'Yolu açık olsun',not:'Tribün hoş karşılar.',ipucu:['tribun']}},
+  {id:'skor',kanal:'skor',kaynak:{tur:'kurum',kisa:'LİG',ad:'Hazırlık maçları',alt:'Lig',renk:'#1f6e43'},zaman:'dün akşam',tur:'Haftanın sonuçları',
+    soru:'Hazırlıkta yine gol yok: Demirkapı SK 0–0 Ardıçlı SK. Yıldıztepe iki attı.',
+    sol:{ad:'Gol yok, dert var',not:'Hocaya iletilir; o da sana bir şey iletir.',ipucu:['kisi:Şükrü Hoca']},
+    sag:{ad:'Hazırlık maçı işte',not:'Kimse üstünde durmaz.',ipucu:[]}},
+  {id:'lisans',kanal:'resmi',kaynak:{tur:'kurum',kisa:'TFF',ad:'Federasyon',alt:'Kulüp Lisans Kurulu',renk:'#8C1D2B'},zaman:'bugün 08:30',tur:'Kulüp lisansı',
+    soru:'Lisans başvurusunda eksik var: stat güvenlik raporu. Son gün 30 Haziran.',
+    ekler:[{ad:'Lisans yazısı',tur:'mektup'},{ad:'Eksik belge listesi',tur:'liste'}],
+    sol:{ad:'Ben takip ederim',not:'İş senin üstünde kalır.',ipucu:['is']},
+    sag:{ad:'Nusret Bey halletsin',not:'Devredilir. Sicili: 2 işte 1 tam.',ipucu:['kisi:Nusret Bey','is']},
+    alt:{ad:'Bir gece düşüneyim',not:'Yarın sabah masanın üstünde.',ipucu:[],donus:{}}},
+  {id:'kapi',kanal:'kapi',kaynak:{tur:'kisi',ad:'Cemil Usta'},zaman:'şimdi, kapıda',tur:'Ziyaretçi',
+    soru:'“Başkanım kapıdayım. Zemin yandı, sulama motoru gitti. İki dakikanızı alırım, belki üç.”',
+    sol:{ad:'Sonra gelsin',not:'Söylenerek gider. Zemin bekler mi?',ipucu:['kisi:Cemil Usta']},
+    sag:{ad:'Buyursun',not:'Karşına oturur, şapkasını dizine koyar.',ipucu:['kisi:Cemil Usta','is']}}
+];}
+const VARYANTLAR=[
+  ['Rafine','2’nin kendisi; ad plakası kartın içinde, altta, büyük ve koyu yazıyla (kartla birlikte gider); ekler kartın altında.'],
+  ['Ad üstte, cevap sorunun yerinde','Kartın tepesinde koyu ad şeridi; kaydırınca üstteki soru söner, yerine büyük sarı cevap gelir.'],
+  ['Konuşma balonu','Soru, kişinin balonu; ad ve görevi balonun başında, ekler balonun altında; cevap kartın köşesinde.'],
+  ['Kanal zemini','Sahne haberin rengine bürünür; kart beyaz çerçeveli; cevap alttan sarı yükselir; görev etiket içinde.'],
+  ['Fotoğraf kart','Yüz kartın tamamını kaplar; ad, kartın altında koyu geçişin üstünde; çerçevesiz.'],
+  ['Yan yana','Kart solda; sağda ad, soru ve “Sen:” cevabın yeri; ekler sözün altında.'],
+  ['Hepsi kartta','Büyük kart: üstte soru, ortada yüz, altta ad; cevap sorunun üstüne sarı gelir; ekler kartın sağında.'],
+  ['Kâğıt ve kartvizit','Kart krem kâğıt, yüz oval çerçevede; soru serif; ad kartvizitte; cevap kartın üst kenarında sekme.'],
+  ['Kenar cevabı','Kart ışık altında; cevap, kartın gittiği yanda büyük yazıyla; ad kartın altında.'],
+  ['Sade','Çerçevesiz kare yüz; üstte imza satırı (ad · görev · saat) ve büyük soru; cevap kartın yanında hap; deste alttaki çizgiler.']
+];
+const yaz=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+function ks(c){
+  const k=c.kaynak;
+  if(k.tur==='kisi')return '<span class="ks ks-kisi">'+yuz(KISI[k.ad])+'</span>';
+  if(k.tur==='kulup')return '<span class="ks ks-kulup">'+ARMA+'</span>';
+  return '<span class="ks ks-kurum" style="--kc:'+k.renk+'">'+k.kisa+'</span>';
+}
+const kAd=c=>c.kaynak.ad;
+const kRol=c=>c.kaynak.tur==='kisi'?KISI[c.kaynak.ad].rol:c.kaynak.alt;
+function ipucu(L){
+  return (L||[]).map(x=>{
+    if(x.indexOf('kisi:')===0){const ad=x.slice(5);return '<span class="ip"><span class="ik ik-kisi">'+yuz(KISI[ad])+'</span><small>'+yaz(ad.split(' ')[0])+'</small></span>';}
+    return '<span class="ip"><span class="ik">'+IKON[x]+'</span><small>'+IPUCU_AD[x]+'</small></span>';
+  }).join('');
+}
+const ekDug=c=>(c.ekler||[]).map((e,i)=>'<button class="ek" data-ek="'+i+'">'+IKON.ek+'<span>'+yaz(e.ad)+'</span></button>').join('');
+function kartHtml(c){
+  return '<article class="kart k-'+c.kanal+'">'+
+    '<div class="k-soru"><span class="s-tur">'+yaz(c.tur)+'</span>'+yaz(c.soru)+'</div>'+
+    '<div class="k-plaka">'+ks(c).replace('class="ks','style="--ks:44px" class="ks')+'<div><b>'+yaz(kAd(c))+'</b><small>'+yaz(kRol(c))+' · '+yaz(c.zaman)+'</small></div></div>'+
+    '<div class="k-gorsel">'+ks(c)+'</div>'+
+    '<span class="k-kanal">'+IKON[c.kanal]+KANAL_AD[c.kanal]+'</span>'+
+    '<div class="k-cevap"><b class="k-cevapAd"></b><span class="k-cevapNot"></span><span class="k-ipucu"></span></div></article>';
+}
+function ekKagit(e,c){
+  let g='';
+  if(e.tur==='mektup')g='<div class="ekk-antet">'+(c.id==='lisans'?'FEDERASYON · KULÜP LİSANS KURULU<small>Sayı: KL-2026/114</small>':'KARAKUŞ LASTİK A.Ş.<small>Forma göğüs reklamı</small>')+'</div><p style="margin:0 0 6px">Sayın Başkan,</p>'+'<div class="ekk-cizgi"></div>'.repeat(3)+'<div class="ekk-cizgi" style="width:70%"></div><p style="margin:12px 0 6px">'+yaz(c.soru.replace(/[“”]/g,''))+'</p>'+'<div class="ekk-cizgi"></div>'.repeat(2)+'<p style="margin-top:18px;font-weight:600">Saygılarımızla</p>';
+  else if(e.tur==='tablo')g='<div class="ekk-antet">MALİ İŞLER MÜDÜRLÜĞÜ<small>Haziran özeti (TEST)</small></div><table class="ekk-tablo"><tr><td>Kasa</td><td>4.100.000 ₺</td></tr><tr><td>Aylık maaş yükü</td><td>473.500 ₺</td></tr><tr><td>Lig payı</td><td>100.000 ₺</td></tr><tr><td>Sponsor (teklif)</td><td>115.000 ₺</td></tr><tr><td>Aylık fark</td><td>−258.500 ₺</td></tr></table>';
+  else if(e.tur==='liste')g='<div class="ekk-antet">EKSİK BELGELER<small>KL-2026/114 eki</small></div><p>☐ Stat güvenlik raporu</p><p>☑ Mali tablolar</p><p>☑ Altyapı belgesi</p><p>☑ Sağlık ekibi listesi</p>';
+  else if(e.tur==='not')g='<div class="ekk-not">Başkanım, 119 iyi rakam. 125’i zorlarsak kaçar, ben olsam imzalarım. Öğle yemeğine de götürürler bizi.<br>— N.</div>';
+  else if(e.tur==='alinti')g='<p style="color:#6B7085;font-size:13px">bugün 09:52 · sen yazdın</p><div class="ekk-alinti">Antalya olmaz mı?</div><p style="color:#6B7085;font-size:13px;margin-top:14px">Şükrü Hoca, 09:40</p><div class="ekk-alinti" style="border-color:#C8202F">Başkanım, kamp için Bolu diyorum…</div>';
+  return '<div class="ekk-ust">'+IKON.ek+'<b>'+yaz(e.ad)+'</b><button data-ekkapat title="Kapat (Esc)">×</button></div>'+g;
+}
+const CERCEVE='<aside class="serit"><div class="s-tarih"><span class="gun">Pazartesi</span><span class="tarih">22.06.2026</span><span>10:00</span></div>'+
+  '<div class="s-gez"><button>‹ Geri</button><button>İleri ›</button></div>'+
+  '<button class="s-ilerle" disabled title="Önce destedeki kartlar">İlerle <svg width="10" height="12" viewBox="0 0 10 12"><path d="M1 1 L9 6 L1 11 Z" fill="#14214F"/></svg></button>'+
+  '<nav class="s-menu">'+['Ofis','Haberler','Kulüp','Finans','Lig','Transfer','Ajanda','Telefon','Gazete','Balkon'].map((a,i)=>'<button'+(a==='Haberler'?' aria-current="true"':'')+'>'+(a==='Transfer'?'<span style="display:flex;flex-direction:column;color:inherit;font-size:17px;line-height:1.05">Transfer<small>yasaklı</small></span>':a)+'<span>'+((i+1)%10)+'</span></button>').join('')+'</nav>'+
+  '<button class="s-haber"><i></i>Haber var</button><button class="s-ayar">Ayarlar</button></aside>'+
+  '<header class="baslik"><h1>Haberler</h1><span class="b-kulup">Demirkapı SK · Başkan Haluk Demirel</span><div class="b-ara"></div><span class="b-kayit">KAYDEDİLDİ</span><button class="b-dur">DURAKLAT</button></header>'+
+  '<main class="alan"><div class="masa" data-yon="">'+
+    '<div class="soru"></div><div class="dis-cevap"></div><div class="deste"></div>'+
+    '<div class="kart-yuva"><div class="kart-yer"></div></div>'+
+    '<div class="kaynak"></div><div class="ekler-dis"></div>'+
+    '<div class="masada"></div><div class="ek-kagit"></div>'+
+    '<div class="bos"><div><b>Masa boş.</b>İlerle açıldı.</div></div>'+
+  '</div></main>'+
+  '<footer class="alt"><strong>Sıradaki durak:</strong> 22 Haz Pzt 11:30 · beklediğin cevap gelecek<span class="a-tus"><kbd>←</kbd><kbd>→</kbd> önizle · <kbd>Enter</kbd> uygula<span class="a-alt"></span></span></footer>';
+
+/* ---------- önizleme ---------- */
+class Onizleme{
+  constructor(kok,v,o){
+    this.kok=kok;this.v=v;this.o=o||{};
+    kok.className='artboard v'+v;kok.innerHTML=CERCEVE;
+    const q=s=>kok.querySelector(s);
+    this.masa=q('.masa');this.yer=q('.kart-yer');this.desteEl=q('.deste');this.soruEl=q('.soru');this.kaynakEl=q('.kaynak');this.ekDisEl=q('.ekler-dis');this.disEl=q('.dis-cevap');
+    this.masadaEl=q('.masada');this.ekEl=q('.ek-kagit');this.ilerleEl=q('.s-ilerle');this.haberEl=q('.s-haber');this.aAlt=q('.a-alt');this.gunEl=q('.s-tarih .gun');this.tarihEl=q('.s-tarih .tarih');
+    this.sifirla();
+    if(this.o.kart){this.deste=this.deste.slice(+this.o.kart);this.ciz(false);}
+    this.bagla();
+    if(this.o.on)this.onizle(this.o.on);
+    if(this.o.ek)this.ekAc(0);
+  }
+  sifirla(){this.deste=kartlar().map(c=>Object.assign(c,{alt:null}));   /* 2026-11-05: kartlarda erteleme yok (kullanıcı) */
+    this.masadaL=[];this.yon=undefined;this.p=0;this.kilit=false;this.ekAcik=null;this.ciz(false);}
+  get c(){return this.deste[0];}
+  ciz(gelis){
+    const c=this.c,m=this.masa;
+    m.classList.remove('ek-acik','ucus');this.ekAcik=null;
+    m.classList.toggle('bitti',!c);
+    this.ilerleEl.disabled=!!c;
+    this.haberEl.classList.toggle('sonuk',!c);this.haberEl.lastChild.textContent=c?'Haber var':'Haber yok';
+    this.desteEl.innerHTML=Array.from({length:Math.max(0,Math.min(6,this.deste.length-1))},(_,i)=>'<i style="--n:'+(i+1)+'"></i>').reverse().join('');
+    this.yer.innerHTML=c?kartHtml(c):'';this.kart=this.yer.firstChild;
+    if(c){
+      m.style.setProperty('--kanal',KANAL[c.kanal]);
+      const kim='<span class="s-kim"><b>'+yaz(kAd(c))+'</b><span>'+yaz(kRol(c))+'</span>'+(this.v===10?'<i>'+yaz(c.zaman)+'</i>':'')+'</span>';
+      const kimBalon='<span class="s-kim">'+yaz(kAd(c))+'<span>'+yaz(kRol(c))+' · '+yaz(c.zaman)+'</span></span>';
+      const kimYan='<span class="s-kim"><b>'+yaz(kAd(c))+'</b><span>'+yaz(kRol(c))+' · '+yaz(c.zaman)+'</span></span>';
+      this.soruEl.innerHTML=(this.v===3?kimBalon:this.v===6?kimYan:this.v===10?kim:'')+'<span class="s-tur">'+yaz(c.tur)+'</span>'+yaz(c.soru)+(this.v===3&&c.ekler?'<span class="s-ekler">'+ekDug(c)+'</span>':'');
+      this.kaynakEl.innerHTML='<b>'+yaz(kAd(c))+'</b><small>'+yaz(kRol(c))+' · <em>'+yaz(c.zaman)+'</em></small>';
+      this.ekDisEl.innerHTML=this.v===3?'':ekDug(c);
+      this.aAlt.style.display=c.alt?'':'none';
+    }
+    this.masadaEl.innerHTML=this.masadaL.length?'<span class="ms-et">Masada · yarın döner</span>'+this.masadaL.map(x=>'<button><b>'+yaz(x.tur)+'</b><small>'+yaz(x.alt.ad)+'</small></button>').join(''):'';
+    this.yon=undefined;this.yonAyarla(null,0,0,0);
+    if(gelis){m.classList.remove('gelis');void m.offsetWidth;m.classList.add('gelis');setTimeout(()=>m.classList.remove('gelis'),520);}
+  }
+  yonAyarla(yon,p,dx,dy){
+    const m=this.masa;
+    m.style.setProperty('--dx',dx+'px');m.style.setProperty('--dy',dy+'px');m.style.setProperty('--rot',(yon==='alt'?0:dx*0.05)+'deg');m.style.setProperty('--p',p.toFixed(3));
+    m.dataset.yon=yon||'';
+    if(yon!==this.yon){
+      const a=yon&&this.c?this.c[yon]:null;
+      if(this.kart){
+        this.kart.querySelector('.k-cevapAd').textContent=a?a.ad:'';
+        this.kart.querySelector('.k-cevapNot').textContent=a?a.not:'';
+        this.kart.querySelector('.k-ipucu').innerHTML=a?ipucu(a.ipucu):'';
+      }
+      this.disEl.innerHTML=a?(this.v===6?'<span class="dc-bas">Sen</span>':'<i class="k-ok"></i>')+'<b class="dc-ad">'+yaz(a.ad)+'</b><span class="dc-not">'+yaz(a.not)+'</span><span class="dc-ipucu">'+ipucu(a.ipucu)+'</span>'
+        :(this.v===6?'<span class="dc-bas">Sen</span><span class="dc-not">Kartı sağa ya da sola kaydır; cevabın burada belirir'+(this.c&&this.c.alt?' · aşağı çek: masaya bırak':'')+'</span>':'');
+    }
+    this.yon=yon;this.p=p;
+  }
+  onizle(yon){
+    if(!this.c||this.kilit)return;
+    if(yon==='alt'&&!this.c.alt)return;
+    if(yon==='alt')this.yonAyarla('alt',1,0,70);else this.yonAyarla(yon,1,yon==='sag'?70:-70,0);
+  }
+  uygula(yon){
+    const c=this.c;if(!c||this.kilit)return;const a=c[yon];if(!a)return;
+    this.kilit=true;const m=this.masa;
+    if(this.yon!==yon)this.onizle(yon);
+    m.classList.add('ucus');
+    m.style.setProperty('--dx',(yon==='sag'?1300:yon==='sol'?-1300:0)+'px');m.style.setProperty('--dy',(yon==='alt'?800:80)+'px');m.style.setProperty('--rot',(yon==='sag'?26:yon==='sol'?-26:0)+'deg');
+    setTimeout(()=>{
+      this.deste.shift();
+      if(yon==='alt')this.masadaL.push(c);
+      if(a.devam)this.deste.unshift(a.devam);
+      this.kilit=false;this.ciz(true);
+    },430);
+  }
+  ilerle(){
+    if(this.c)return;
+    if(this.masadaL.length){
+      this.gunEl.textContent='Salı';this.tarihEl.textContent='23.06.2026';
+      this.deste=this.masadaL.map(c=>{const d=c.alt.donus||{};const n=Object.assign({},c,d,{zaman:'bugün 09:00'});
+        if(d.ekEkle)n.ekler=(c.ekler||[]).concat([d.ekEkle]);if(d.sag)n.sag=d.sag;n.alt=null;return n;});
+      this.masadaL=[];this.ciz(true);
+    }else this.sifirla();
+  }
+  ekAc(i){
+    const c=this.c;if(!c||!c.ekler||!c.ekler[i])return;
+    if(this.ekAcik===i){this.ekKapat();return;}
+    this.ekAcik=i;this.ekEl.innerHTML=ekKagit(c.ekler[i],c);this.masa.classList.add('ek-acik');
+  }
+  ekKapat(){this.ekAcik=null;this.masa.classList.remove('ek-acik');}
+  bagla(){
+    const k=this.kok,m=this.masa;
+    k.addEventListener('click',e=>{
+      const t=e.target.closest('[data-ek],[data-ekkapat],.s-ilerle');
+      if(!t)return;
+      if(t.dataset.ekkapat!==undefined)return this.ekKapat();
+      if(t.dataset.ek!==undefined)return this.ekAc(+t.dataset.ek);
+      if(t.classList.contains('s-ilerle'))return this.ilerle();
+    });
+    let bas=null;
+    m.addEventListener('pointerdown',e=>{
+      if(!this.kart||this.kilit||!e.target.closest('.masa > .kart-yuva')||e.target.closest('[data-ek]'))return;
+      bas={x:e.clientX,y:e.clientY,id:e.pointerId,olcek:k.getBoundingClientRect().width/1440};
+      m.classList.add('tut');this.kart.setPointerCapture(e.pointerId);
+    });
+    m.addEventListener('pointermove',e=>{
+      if(!bas||e.pointerId!==bas.id)return;
+      const dx=(e.clientX-bas.x)/bas.olcek,dy=(e.clientY-bas.y)/bas.olcek,c=this.c;
+      if(c.alt&&dy>30&&dy>Math.abs(dx)*1.2)this.yonAyarla('alt',Math.min(1,dy/130),dx*.2,dy);
+      else if(Math.abs(dx)>6)this.yonAyarla(dx>0?'sag':'sol',Math.min(1,Math.abs(dx)/140),dx,Math.max(-40,Math.min(40,dy*.25)));
+      else this.yonAyarla(null,0,dx,dy*.25);
+    });
+    const birak=e=>{
+      if(!bas||e.pointerId!==bas.id)return;
+      bas=null;m.classList.remove('tut');
+      if(this.yon&&this.p>=1)this.uygula(this.yon);else this.yonAyarla(null,0,0,0);
+    };
+    m.addEventListener('pointerup',birak);m.addEventListener('pointercancel',birak);
+  }
+  tus(e){
+    if(e.key==='ArrowRight')this.onizle('sag');
+    else if(e.key==='ArrowLeft')this.onizle('sol');
+    else if(e.key==='ArrowDown')this.onizle('alt');
+    else if(e.key==='ArrowUp')this.yonAyarla(null,0,0,0);
+    else if(e.key==='Enter'){if(this.c&&this.yon&&this.p>=1)this.uygula(this.yon);else if(!this.c)this.ilerle();}
+    else if(e.key==='Escape'){if(this.ekAcik!==null)this.ekKapat();else this.yonAyarla(null,0,0,0);}
+    else return;
+    e.preventDefault();
+  }
+}
+
+/* ---------- sayfa ---------- */
+const P=new URLSearchParams(location.search);
+const secili=Math.max(1,Math.min(10,+(P.get('v')||1)));
+const sec=document.getElementById('secici');
+if(P.get('hepsi')){
+  document.documentElement.style.overflow='auto';document.body.style.overflow='visible';document.body.style.height='auto';
+  sec.innerHTML='<b>Simge kartı · on varyant</b> küçük · <a href="?v=1">tek tek, etkileşimli ›</a>';
+  const iz=document.createElement('div');iz.className='izgara';iz.style.marginTop='46px';document.body.appendChild(iz);
+  VARYANTLAR.forEach(([ad,ac],i)=>{
+    const f=document.createElement('figure');f.innerHTML='<figcaption><b>'+(i+1)+' · '+ad+'</b> — '+ac+'</figcaption><div class="cerceve"><div></div></div>';iz.appendChild(f);
+    new Onizleme(f.querySelector('.cerceve>div'),i+1,{on:P.get('on')||'sag',kart:P.get('kart')});
+  });
+}else{
+  sec.innerHTML='<b>Simge kartı</b>'+VARYANTLAR.map(([ad],i)=>'<button data-v="'+(i+1)+'"'+(i+1===secili?' aria-current="true"':'')+' title="'+ad+'">'+(i+1)+'</button>').join('')+
+    '<button data-bastan>Baştan</button><span class="ac">'+secili+' · <b style="color:#F2C230">'+VARYANTLAR[secili-1][0]+'</b> — '+VARYANTLAR[secili-1][1]+'</span><a href="?hepsi=1">Hepsi ›</a>';
+  const kap=document.createElement('div');kap.className='kap';document.body.appendChild(kap);
+  const ab=document.createElement('div');kap.appendChild(ab);
+  const o=new Onizleme(ab,secili,{on:P.get('on'),ek:P.get('ek'),kart:P.get('kart')});
+  const olcek=()=>{const s=Math.min(1,(innerWidth-16)/1440,(innerHeight-46-16)/810);ab.style.transform='scale('+s+')';ab.style.margin=((810*s-810)/2)+'px '+((1440*s-1440)/2)+'px';};
+  addEventListener('resize',olcek);olcek();
+  sec.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.bastan!==undefined)return o.sifirla();if(b.dataset.v){const q=new URLSearchParams(location.search);q.set('v',b.dataset.v);location.search=q.toString();}});
+  addEventListener('keydown',e=>o.tus(e));
+  window.ONIZLEME=o;
+}
+</script>
+</body>
+</html>

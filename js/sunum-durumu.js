@@ -50,7 +50,9 @@ function ekranPayGuncelle(){
   if(typeof document==='undefined')return;
   const d=document.getElementById('baskanDugmeleri'),odada=typeof ON_EKRAN!=='undefined'&&ON_EKRAN.sayfa==='oda';
   if(d&&!d.hidden&&d.offsetHeight>0)EKRAN_PAY.serit=d.offsetHeight;
-  const pay=EKRAN_PAY.kenar+(odada?0:EKRAN_PAY.ara+EKRAN_PAY.serit);
+  /* arayüz güncellemesi 1. madde (2026-11-05): CM çerçevesinde oyun kenardan kenara (sayfa kenarı yok; index.html body:has(.screen[data-serit])) */
+  const s0=document.getElementById('screen'),cm=odada&&!!s0&&s0.hasAttribute('data-serit');
+  const pay=(cm?0:EKRAN_PAY.kenar)+(odada?0:EKRAN_PAY.ara+EKRAN_PAY.serit);
   document.documentElement.style.setProperty('--ekran-pay',pay+'px');
   const s=document.getElementById('screen'),w=s&&s.parentElement;if(!s||!w)return;
   const B=STIL.balkon.bant,ic=w.clientWidth,serit=odada&&s.hasAttribute('data-serit')&&!!STIL.cerceve;
