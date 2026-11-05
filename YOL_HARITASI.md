@@ -24,7 +24,7 @@ Son güncelleme: 2026-11-03 (dizüstü, oto mod: CM2-a takvim ve sezon öncesi b
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır: `git show tur/<ad>:YOL_HARITASI.md`).
 
-**Makine durumu: dizüstü çalışıyor (2026-11-05 öğleden sonra, oto mod: AR3 zaman modeli C, dal `claude/ar3-zaman`; her dilim commit ve push). Bu gece masaüstünde büyük kapı AR3'süz koşar: `git switch claude/ar2-haberler` (kapı hazırlığı ve AR2 bu dalda; adımlar ve tek komut `node araclar/buyuk-kapi.js` o dalın devam notunda, karar 93). Kapı AR3 dalına dokunmaz; bu satır onu engellemez.**
+**Makine durumu: boşta (2026-11-05 akşam, dizüstü). AR3 durduruldu: kullanıcı zaman tasarımını değiştirdi (karar 95: sahiplik, çakışma ve erteleme; zaman modeli C kalktı). Güncel belgeler ve AR3'ün yeni planı (onay bekliyor) `claude/ar3-zaman` dalında — yeni oturum devam notunu **o daldan** okur (`git show origin/claude/ar3-zaman:YOL_HARITASI.md`); yarım eski kural `claude/ar3-sahne-taslak` dalında (oynanmaz). Bu gece masaüstünde büyük kapı AR3'süz koşar: `git switch claude/ar2-haberler`, `node araclar/buyuk-kapi.js` (adımlar o dalın devam notunda, karar 93).**
 
 **Makine durumu: boşta (2026-11-04, dizüstü; AR1 kapandı, `main`'e alındı ve push edildi — kullanıcı: “main'e al, büyük kontrol kapısını borç olarak yaz, bugünkü durumu normal kabul edelim”; etiket `tur/ar1-cerceve`, birleşen dallar silindi). Evde `main` çekilir (`git fetch --prune --tags`, `git pull --ff-only`); evdeki push edilmemiş yerel görsel denemeler istenmiyor (kullanıcı): önce yerel yedek dala alınır, sonra `main` uzaktakine eşitlenir.**
 
