@@ -200,8 +200,8 @@ MESAJ_GONDEREN['ta.ihtiyac']=(k,p)=>p.kaynak==='hoca'?p.kisiId||null:null;   /* 
 MESAJ_METIN['ta.ihtiyac']=(k,p)=>`Başkanım, ${TA.hatlar[p.mevki].toLocaleLowerCase('tr-TR')} hattına bir oyuncu lazım. Bonservis en çok ${taPara(p.bonservis)}, maaşı ayda en çok ${taPara(p.tavan)} olsun.`;
 MESAJ_GONDEREN['ta.adaylar']=pKisi('kisiId');MESAJ_GONDEREN['ta.devirSonuc']=pKisi('kisiId');MESAJ_GONDEREN['ta.devirKotu']=pKisi('kisiId');MESAJ_GONDEREN['ta.itiraz']=pKisi('kisiId');
 MESAJ_METIN['ta.adaylar']=(k,p)=>`Başkanım, araştırma bitti: ${p.adaylar.map(id=>kisiOyuncuAdi(k,id)).join(' ve ')}. Ayrıntılar dosyada.`;
-MESAJ_METIN['ta.devirSonuc']=(k,p)=>`Başkanım, ${taPara(p.tutar)} bedelde anlaştık. Onayınızı bekliyorum; dosyada.`;
-MESAJ_METIN['ta.devirKotu']=()=>'Başkanım, anlaşamadık; görüşmeyi kestiler.';
+MESAJ_METIN['ta.devirSonuc']=(k,p)=>{const a=p.metin?metinYaz(k,'devir.rapor',p.metin,p):'';return`Başkanım, ${taPara(p.tutar)} bedelde anlaştık.${a?' '+a:''} Onayınızı bekliyorum; dosyada.`;};
+MESAJ_METIN['ta.devirKotu']=(k,p)=>{const a=p&&p.metin?metinYaz(k,'devir.kotu',p.metin,p):'';return'Başkanım, anlaşamadık; görüşmeyi kestiler.'+(a?' '+a:'');};
 MESAJ_METIN['ta.itiraz']=(k,p)=>`Başkanım, açık konuşayım: ${kisiOyuncuAdi(k,p.oyuncuId)} benim oyunuma pek uymuyor.`;
 OLAY_KAYNAKLARI.transferEkibi=OLAY_KAYNAKLARI.transferEkibi||'Transfer ekibi';
 
@@ -299,9 +299,10 @@ SABLONLAR.transferAlim={meseleTuru:'transfer',baslangic:'ihtiyac',asamalar:{
     bitince:taDonemli((k,m,kalite)=>{const V=m.sablon.veri,md=m.sablon.sahip;
       if(!V.pazarlik.bonservis)pazarlikKur(k,m,'bonservis',{deger:taSatisDegeri(k,m),oneren:md,konu:'pazarlik'});
       const P=pazarlikDurumu(m,'bonservis');
-      if(kalite==='kotu')return Object.assign(taKopma(k,m,'ta.devirKotu',{kisiId:md}),{dur:true});
+      /* AR3-b: raporun anlatımı kişinin sesiyle (js/metin.js; seçilen metnin kimliği olayda) */
+      if(kalite==='kotu')return Object.assign(taKopma(k,m,'ta.devirKotu',{kisiId:md,metin:metinSec(k,'devir.kotu',{kisiId:md,anahtar:m.id})}),{dur:true});
       const [a,b]=TA.devirKat[kalite],r=taCekilis(k,m,'devirBedel');V.bedel=pazarlikYuvarla(P.alt*(a+(b-a)*r),P.yuvarla);V.devirKalite=kalite;
-      return{asama:'devirOnay',bilgi:meseleOlay(k,m.id,'ta.devirSonuc',{kisiId:md,tutar:V.bedel}),dur:true};})},
+      return{asama:'devirOnay',bilgi:meseleOlay(k,m.id,'ta.devirSonuc',{kisiId:md,tutar:V.bedel,kalite,metin:metinSec(k,'devir.rapor',{kisiId:md,kalite,anahtar:m.id})}),dur:true};})},
   devirOnay:taKart('firsat',{
     baslik:(k,m)=>`Anlaşma: ${(taOyuncu(k,m)||{ad:''}).ad}`,
     aciklama:(k,m)=>`${kisiAdi(k,m.sablon.sahip||'')} ${taKulupAdi(k,m.sablon.veri.satan)} ile ${taPara(m.sablon.veri.bedel)} bedelde anlaştı.`,
@@ -508,6 +509,8 @@ KATILIM_ETKILERI.izleme={
     return{bilgi:MESELE_OLAYLARI['ta.izleme'](k,{oyuncuId:p.id,mekan:v.mekan,kanaat:kn})};}
 };
 /* ---- dosyadaki aşama satırı ve sonuç metinleri (R4-k; js/sablon.js sablonAsamaSatiri okur; TEST yer tutucu) ---- */
+/* AR3-b (karar 95): kulüple pazarlığı başkan müdüre devredebilir, müdürdeki pazarlığı devralabilir (js/sablon.js sablonSahiplik) */
+SABLONLAR.transferAlim.sahiplik={kisi:k=>(taMudur(k)||{}).id||null,devret:{asamalar:['kulupPazarlik'],hedef:'devir'},devral:{asamalar:['devir'],hedef:'kulupPazarlik'}};
 SABLONLAR.transferAlim.asamaMetni={ihtiyac:'Bütçe onayı bekleniyor',hocaGorus:'Hoca oyuncuya bakıyor',arastirma:'Hoca aday araştırıyor',bekle:'Transfer dönemini bekliyor',
   donemYok:'Dönem kapalı',aday:'Aday seçimi',yurutme:'Pazarlığı kim yürütecek',kulupPazarlik:'Kulüple pazarlık',kulupCevap:'Kulübün cevabı bekleniyor',
   devir:'Mali işler müdürü pazarlıkta',devirOnay:'Anlaşma onayı',bedelArtti:'Bedel arttı',temas:'Oyuncuyla görüşme',oyuncuPazarlik:'Maaş pazarlığı',

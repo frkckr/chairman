@@ -369,6 +369,12 @@ function odaEkraniKur(kap,oyun,ayarlar){
   let cizilenTel=null,cizilenSayfa='';
   /* R3: Canlı Skor'un okuma yerleri (görünüm ve sayfa anahtarına göre): sayfadan geri dönünce liste ve önceki sayfa kaldığı yerden */
   const telSkorYerleri=new Map();
+  /* 2026-11-05 (akış §31, B44'ün Lig'deki karşılığı): Lig'in liste ve alt sayfalarının okuma yeri. Sayfa yığınından geri dönünce (Esc, ‹ Geri) yer korunur,
+     yeni açılan sayfa baştan; aynı sayfa yeniden çizilirken yer kalır. Tarayıcıda kalır */
+  const ligYerleri=new Map();let cizilenLig=null,cizilenLigN=0;
+  const ligAnahtar=()=>{const L=ligD.sayfalar||[],x=L[L.length-1];return x?'s:'+x.tur+':'+x.id+':'+(x.bolum||''):'l:'+ligD.sekme+':'+(ligD.hafta==null?'':ligD.hafta);};
+  function ligKaydirici(){let e=kap.querySelector('.lg-altSayfa .cs-sayfa, .lg-puan, .lg-fikstur, .lg-kulupler');
+    while(e&&e!==kap&&!['auto','scroll'].includes(getComputedStyle(e).overflowY))e=e.parentElement;return e&&e!==kap?e:null;}
   /* telGecis: telefonda ekran değişti (kısa açılış geçişi yalnız o çizimde; N7) */
   let telAlta=false,telGecis=false;
   function telefonPaneli(){
@@ -469,6 +475,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* ---- CM1-b (karar 87): Haberler (js/ekran-haberler.js; kural js/gelismeler.js). hbSekme: Hepsi, Cevap bekliyor ya da kategori; hbGun: listenin gün
      sayısı (Daha eski); haberDonus: iş Haberler'den açıldı (Geri oraya döner); sonDurak: son İlerle'nin durduğu yer ve sıradaki durak (Bugün bölümünde) ---- */
   let hbSekme='hepsi',hbGun=null,haberDonus=false,sonDurak=null;
+  /* AR2 (2026-11-05, arayuz-uygulama §3): hbSecili seçili satırın kimliği (ayrıntı altta); hbCevap bu ziyarette Haberler'den cevaplanan kararlar
+     ({isId: {baslik, kaynak, kategori}}; satır “Cevaplandı” kalır, sonucu ayrıntıda). Tarayıcıda kalır, kayda girmez */
+  let hbSecili=null,hbCevap={};
   /* ---- AR1: Lig (js/ekran-lig.js) ve Finans (js/ekran-finans.js). ligD: sekme, hafta, alt sayfa yığını (Canlı Skor'un sayfaları: {tur, id, bolum};
      eylemler csAc/csBolum/csGeri aynı, js/ekran-telefon.js telGezinti). finSekme ve finRapor (haberler dizisindeki sıra). Odada Canlı Skor açılmaz ---- */
   const ligD={sekme:'puan',hafta:null,sayfalar:[]};
@@ -481,10 +490,50 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* bir Lig alt sayfası (kulüp, oyuncu, maç) Lig bölümünde: Haberler, TV ve kartlardaki bağlantılar */
   function ligSayfaAc(tur,id){ligD.sayfalar=[{tur,id,bolum:null}];panelAc('lig',null,null,true);}
   function raporGor(i){const h=k.haberler[i];if(h&&!h.gorulen)try{komut(x=>raporGoruldu(x,i));}catch(e){mesaj=e.message;}}
+  const hbD=()=>({sekme:hbSekme,gun:hbGun,cevaplanan:hbCevap});
+  /* AR2: satır seçilmemişse (ya da listeden düştüyse) önce cevap bekleyen karar, sonra randevu, sonra ilk okunmamış, sonra ilk satır */
+  function hbSecimi(S){
+    if(hbSecili&&S.hepsi.some(x=>x.id===hbSecili))return hbSecili;
+    const y=S.hepsi.find(x=>x.tur==='karar')||S.hepsi.find(x=>x.tur==='randevu')||S.hepsi.find(x=>!x.tur&&!x.grup&&!x.okundu&&x.sinif!=='arka')||S.hepsi[0];
+    return y?y.id:null;
+  }
+  /* seçilen satır okunur: haber ve geçmiş satırı okundu işaretiyle, telefonun mesajı konuşmanın görüldüsüyle, rapor görüldüsüyle (zaman ve geçmiş değişmez) */
+  function hbOku(x){
+    if(!x||x.tur||x.grup||x.okundu)return;
+    try{
+      if(x.id.startsWith('hb:')||x.id.startsWith('gc:'))komut(y=>gelismeOkundu(y,x.id));
+      else if(x.hedef&&x.hedef.tur==='rapor')raporGor(x.hedef.i);
+      else if(x.hedef&&x.hedef.tur==='konusma'){
+        if(x.meseleId){const m=k.meseleler[x.meseleId];if(m&&m.olaylar.length>m.gorulen)komut(y=>meseleGoruldu(y,x.meseleId));}
+        else if(typeof yazismaGoruldu==='function')komut(y=>yazismaGoruldu(y,x.hedef.kisi));}
+    }catch(e){mesaj=e.message;}
+  }
   function haberlerPaneli(){
     if(typeof haberlerGorunumu!=='function')return'<p class="od-not">Haberler yok.</p>';
-    const so=sonDurak&&sonDurak.an===simdikiAn(k)?sonDurak:null;
-    return haberlerGorunumu(k,{sekme:hbSekme,gun:hbGun,durak:so&&so.durak,sonraki:so&&so.sonraki},{yaz,tarihYazi,tarihKisa,saatYazi,tlYazi,smg:a=>typeof simgeSvg==='function'?simgeSvg(a):''});
+    let S=haberSatirlari(k,hbD());hbSecili=hbSecimi(S);
+    const x=S.hepsi.find(y=>y.id===hbSecili);if(x&&!x.tur&&!x.grup&&!x.okundu){hbOku(x);S=haberSatirlari(k,hbD());}
+    const kz=ziyaretKapi();
+    return haberlerGorunumu(k,Object.assign(hbD(),{secili:hbSecili,kart:id=>isBolumu(id),kapi:id=>!!kz&&kz.id===id}),
+      {yaz,tarihYazi,tarihKisa,saatYazi,tlYazi,smg:a=>typeof simgeSvg==='function'?simgeSvg(a):'',
+        portre:id=>typeof portreHtml==='function'?portreHtml(k.kisiler[id]||null,'hb-yuz'):'',arma:id=>typeof armaSvg==='function'?armaSvg(id,'kucuk',((k.kulupler||{})[id]||{}).kisa):''});
+  }
+  /* AR2: ayrıntının eylemi bölümü (ve alt sayfayı) açar; Geri Haberler'e döner */
+  function hbGit(bolum,sekme,v){
+    v=v||{};
+    if(bolum==='lig'){if(sekme==='mac'||sekme==='kulup'||sekme==='oyuncu'){ligSayfaAc(sekme,v.id);}else{ligD.sekme=sekme||'puan';ligD.sayfalar=[];panelAc('lig',null,null,true);}}
+    else if(bolum==='finans'){finSekme=sekme||'durum';if(sekme==='raporlar'&&v.rapor!=null){finRapor=v.rapor;raporGor(v.rapor);}panelAc('finans',null,null,true);}
+    else if(bolum==='gazete'){panelAc('gazete');gazeteGun=v.tarih||null;}
+    else if(bolum==='ajanda'){panelAc('ajanda');ajandaGun=v.tarih||k.tarih;}
+    else if(bolum==='telefon'&&v.kisi){konusmaAc(v.kisi);panelAc('telefon',null,null,true);}
+    else if(bolum==='kulup'&&v.mesele){dosyaRapor=false;panelAc('dosya',v.mesele);}
+    else return;
+    haberDonus=true;ciz('[data-cm][aria-current="true"]');
+  }
+  /* AR2: sıradaki okunmamış (listenin sırasıyla, seçiliden sonra; sonda başa döner) */
+  function hbSonraki(){
+    const S=haberSatirlari(k,hbD()),L=S.hepsi.filter(x=>!x.tur&&!x.grup&&!x.okundu&&x.sinif!=='arka'&&x.id!==hbSecili);if(!L.length)return;
+    const i=S.hepsi.findIndex(x=>x.id===hbSecili),y=L.find(x=>S.hepsi.indexOf(x)>i)||L[0];
+    hbSecili=y.id;ciz('.hb-satir[data-id="'+y.id.replace(/"/g,'\\"')+'"]');
   }
   /* bir gelişmeyi kendi yerinde açar (telefonda konuşma, gazetenin o sayısı, Canlı Skor'da maç, kulüp ya da oyuncu, dosyada rapor, defterde gün); okundu yazar */
   function gelismeAc(x){
@@ -912,7 +961,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(typeof odaPanel==='function')odaPanel(!!acik&&acik!=='ziyaret');   /* U1: odak açıkken 3B oda kamera yerleşince donar (js/oda.js odaDondur); RK6: ziyarette oda canlı */
   }
   /* duraklatmada süre tüketen ya da dünyayı değiştiren komutlar kapalıdır; okuma ve gezinti açıktır (2.8B) */
-  const DURAKLATMADA_KAPALI=new Set(['yap','yapSor','yapIzlemesiz','ertele','ilerle','ilerleSor','tavsiye','girisim','oyuncuSec','gozlem','gozlemSurdur','gozlemBirak','yer','yeniSor','yeniEvet','bozukYeni',
+  const DURAKLATMADA_KAPALI=new Set(['sahipDevret','sahipDevral','yap','yapSor','yapIzlemesiz','ertele','ilerle','ilerleSor','tavsiye','girisim','oyuncuSec','gozlem','gozlemSurdur','gozlemBirak','yer','yeniSor','yeniEvet','bozukYeni',
     'tmTakip','tmTakipBirak','tmArastirt','tmIzle']);
   const duraklatDegistir=()=>{if(duraklatmaVar('elle'))duraklatmaKaldir('elle');else duraklatmaEkle('elle');};
   let cizilenPanel=null,cizilenGorunum=null,cizilenAlt='';
@@ -951,6 +1000,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     /* RN-a: telefonun çizimden önceki yeri ve panelin varlığı (aynı telefon kabı yeniden çizilirken; ilk açılışta odak belirmesi yeter) */
     const eskiCihaz=cizilenPanel==='telefon'&&acik==='telefon'?kap.querySelector('.tlf-sol .tel'):null,eskiCihazX=eskiCihaz?eskiCihaz.getBoundingClientRect().left:null,
       eskiPanelVar=!!kap.querySelector('.tlf .tlf-is');
+    if(cizilenPanel==='lig'&&cizilenLig){const e=ligKaydirici();if(e)ligYerleri.set(cizilenLig,e.scrollTop);}
     if(eskiTel&&cizilenPanel==='telefon'&&cizilenTel&&cizilenTel.startsWith('skor')){const ei=kap.querySelector('.tlf-is');
       telSkorYerleri.set(cizilenTel,eskiTel.scrollTop);if(ei&&cizilenSayfa)telSkorYerleri.set('panel'+cizilenSayfa,ei.scrollTop);}
     if(eskiTel&&cizilenPanel==='telefon'&&cizilenTel&&cizilenTel.startsWith('konusma:'))
@@ -1003,7 +1053,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       /* AR1: iş içerik alanında (js/ekran-cerceve.js cmIcerik): bugünkü açık ekranlar ortada kâğıtta (ara hâl), dosya, defter, Lig ve Finans alanı kendileri
          doldurur; arkada oda %84 koyu (Ofis'teki kapı kartı ve balkonda yok). Odak kabı, Kapat ×, göz atma ve Sonra yığını kalktı */
       (acik?cmIcerik({ad:acik,boy:acik==='telefon'&&telIkiSutun()?'telefon':acik==='ziyaret'&&ziyaretSahnesi()&&ODA.yer!=='masa'?'orta':ODAK_BOY[acik]||'genis',etiket:baslik,
-        kagit:!['dosya','ajanda','lig','finans'].includes(acik),perde:acik!=='ziyaret'&&!(balkonVar&&ODA.yer==='balkon'),solma,govde:icerik}):'')+
+        kagit:!['dosya','ajanda','lig','finans','haberler'].includes(acik),perde:acik!=='ziyaret'&&!(balkonVar&&ODA.yer==='balkon'),solma,govde:icerik}):'')+
       altSerit()+(!acik&&typeof zamanSahnesiHtml==='function'?zamanSahnesiHtml():'');
     /* U4: akış sürerken İlerle “İlerliyor…” der (basmak sahneyi bırakıp yeniden ilerler) */
     if(typeof ZAMAN_SAHNE!=='undefined'&&ZAMAN_SAHNE.evre==='akis'){const b=kap.querySelector('.od-alt .od-ana[data-eylem="ilerle"]');if(b)b.textContent='İlerliyor…';}
@@ -1018,6 +1068,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(duraklatmaVar())for(const d of [...kap.querySelectorAll('button[data-eylem]'),...(seritAcik()?serit.querySelectorAll('button[data-eylem]'):[])])if(DURAKLATMADA_KAPALI.has(d.dataset.eylem)){d.disabled=true;d.title='Duraklatıldı: devam edince kullanılabilir';}
     const yeni=kap.querySelector('.od-icerik');if(yeni&&kaydirma)yeni.scrollTop=kaydirma;
     kap.querySelectorAll('.dsy-sayfa,.dft-sayfa').forEach((x,i)=>{if(sayfaKaydirma[i])x.scrollTop=sayfaKaydirma[i];});
+    if(acik==='lig'){const e=ligKaydirici(),n=(ligD.sayfalar||[]).length;if(e)e.scrollTop=cizilenPanel==='lig'&&n>cizilenLigN?0:ligYerleri.get(ligAnahtar())||0;}
     /* telefonda konuşma açılınca son mesaj ve cevap kartı görünür; aynı konuşma yeniden çizilirken okuma yeri korunur */
     const tg=kap.querySelector('.tel-govde');
     /* R2-b: konuşma açılışı: yeni mesaj varsa ilk yenisi üstte, yoksa son okunan yer (en alttaysa en alt). Gönderince (telAlta) en alt */
@@ -1041,6 +1092,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ti&&acik==='telefon'&&tel.ekran==='skor'&&telSayfaAnahtar()!==cizilenSayfa&&telSkorYerleri.has('panel'+telSayfaAnahtar()))ti.scrollTop=telSkorYerleri.get('panel'+telSayfaAnahtar());
     /* R2-d: konuşma açılınca iş panelindeki ilk kart (kenarları ve ipucuyla) kaydırmadan görünür; kartın üstü panelin üstünden yukarı çıkmaz */
     else if(ti&&ay){const c=ti.querySelector('.kk-alan');if(c){const a=ti.getBoundingClientRect(),b=c.getBoundingClientRect(),fazla=b.bottom-a.bottom+4;if(fazla>0)ti.scrollTop+=Math.min(fazla,b.top-a.top-4);}}
+    cizilenLig=acik==='lig'?ligAnahtar():null;cizilenLigN=acik==='lig'?(ligD.sayfalar||[]).length:0;
     cizilenPanel=acik;cizilenGorunum=gorunum;cizilenTel=telAnahtar();cizilenSayfa=acik==='telefon'&&tel.ekran==='skor'?telSayfaAnahtar():'';cizilenGoz=gozAnahtar();
     const f=odak&&(kap.querySelector(odak)||(seritAcik()?serit.querySelector(odak):null));if(f&&!f.disabled)f.focus({preventScroll:true});
     /* RK6: ziyaret kartı açıkken odak kartta (←/→ ve Enter hemen çalışır) */
@@ -1085,7 +1137,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     /* R2-b: dosyadan “‹ Mesajlar” ile dönüş de açılış kuralını kullanır (yeni gelen varsa ona, yoksa okunan yere) */
     if(ad==='telefon'&&koru&&tel.ekran==='konusma')konusmaAc(tel.kisi);
     if(ad==='ziyaret'){const x=ziyaretKapi()||ziyaretGor();if(!x)return;ziyaretBirakilan.delete(x.id);}
-    acik=ad;onay=null;goz=null;
+    const acikOnce=acik;acik=ad;onay=null;goz=null;
     if(typeof zamanSahnesiKapat==='function')zamanSahnesiKapat();   /* U4: iş açılınca durak özeti masada kalmaz */
     if(mesele)seciliMesele=mesele;
     if(izleme)izlemeKaydet();
@@ -1096,6 +1148,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
       for(const m of meseleler().filter(m=>m.id===hedef))if(m.olaylar.length>m.gorulen)try{komut(x=>meseleGoruldu(x,m.id));}catch(e){mesaj=e.message;}}
     }
     if(ad==='haberler')haberDonus=false;   /* AR1: notOkunan okunmaz, yazılmaz */
+    if(ad==='haberler'&&!koru&&acikOnce!=='haberler'){hbSecili=null;hbCevap={};}   /* AR2: bölüme yeni girişte seçim yeniden (önce cevap bekleyen) */
     if(ad==='gazete'){const iz=izler();   /* S-e: son sayıyı açmak okundu yazar (yalnız gazeteOkunan; zaman ve geçmiş değişmez) */
       if(iz.gazeteYeni)try{komut(x=>gazeteOkundu(x,iz.sayi));}catch(e){mesaj=e.message;}
       if(izler().yeniHaber)try{komut(x=>haberlerGoruldu(x));}catch(e){mesaj=e.message;}}
@@ -1110,7 +1163,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
   /* U1: Kapat × ve perde işi masaya bırakır (karar paneli de; ajandaya dönüş başlıktaki ‹ Ajanda ve Esc'tir). Odak masadaki nesneye döner */
   /* CM2-b (karar 89): alıştırma ipucu — yaz kariyerinde ilk lig maçına dek, bir ekran ilk açıldığında odak başlığının altında tek satır (en çok sekiz kelime;
      Ayarlar › Okuma › İpuçları; görülenler tarayıcıda, kayda girmez) */
-  const IPUCU={haberler:'Olup bitenler burada; satıra dokun, aç.',dosya:'Kadro ve dosyalar; oyuncuya dokun.',telefon:'Kişiye yaz; cevap birkaç saat sonra gelir.',
+  const IPUCU={haberler:'Olup bitenler burada; satıra dokun, ayrıntısı altta açılır.',dosya:'Kadro ve dosyalar; oyuncuya dokun.',telefon:'Kişiye yaz; cevap birkaç saat sonra gelir.',
     ajanda:'Günün işleri ve randevular burada.',gazete:'Dünün olayları; eski sayılar köşede.',transfer:'Pano, liste, arama: oyuncuya dokun.',lig:'Puan, fikstür, kulüpler: satıra dokun.',finans:'Kasa raporlardan; müdür her Pazartesi yazar.',
     karar:'Kartı kaydır: yüzü cevaba döner.'};
   let ipucuAcik=null;
@@ -1128,7 +1181,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(gozVar())return{etiket:GOZ_IS[acik],f:()=>{goz=null;ciz('.kk-yuz [data-eylem="gozAt"]');}};
     /* CM1-b: Haberler'den açılan iş: önce işin iç adımı (Canlı Skor'un sayfa yığını, oyuncu dosyası, transfer kâğıdı), sonra Haberler */
     if(haberDonus&&acik&&acik!=='haberler'&&!(acik==='lig'&&(ligD.sayfalar||[]).length>1)&&!(acik==='telefon'&&tel.ekran==='skor'&&(tel.sayfalar||[]).length>1)&&!(acik==='dosya'&&kadroGorunur()&&seciliOyuncu)&&!(acik==='transfer'&&tmOyuncu))
-      return{etiket:'Haberler',f:()=>{haberDonus=false;panelAc('haberler');}};
+      return{etiket:'Haberler',f:()=>{haberDonus=false;panelAc('haberler',null,null,true);}};   /* AR2: seçili satır korunur */
     /* AR1: Lig'in alt sayfası bir geri (yığın), sonra bölümün sekmesi */
     if(acik==='lig'&&(ligD.sayfalar||[]).length){const Y=ligD.sayfalar;
       return{etiket:Y.length>1&&typeof csSayfaBasligi==='function'?csSayfaBasligi(k,Y[Y.length-2]):(LIG_SEKMELERI.find(x=>x[0]===ligD.sekme)||[0,'Lig'])[1],f:()=>{const o=telGezinti(ligD,{dataset:{eylem:'csGeri'}});ciz(o);}};}
@@ -1335,6 +1388,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(ey==='testAc'){const u=b.parentNode,a=!u.classList.contains('acik');u.classList.toggle('acik',a);b.setAttribute('aria-expanded',a?'true':'false');return;}
     if(!ey&&id){secili=id;onay=null;ciz('button[data-is="'+id+'"]:not([data-eylem])');return;}
     if(ey==='ac'){if(acik===b.dataset.panel)kapat();else panelAc(b.dataset.panel);}
+    else if(ey==='sahipDevret'||ey==='sahipDevral'){const id=b.dataset.mesele;   /* AR3-b (karar 95): dosyanın sahibi değişir */
+      try{komut(x=>ey==='sahipDevret'?sablonDevret(x,id):sablonDevral(x,id));mesaj=ey==='sahipDevret'?'Dosyayı devrettin; sonuç gelince haber verir.':'Dosyayı devraldın; pazarlık sende.';}catch(e){mesaj=e.message;}
+      ciz(acik==='dosya'?'.dsy-sahip':'[data-cm][aria-current="true"]');}
     else if(ey==='dosyaAc'){const h=acik==='haberler';if(b.dataset.gezinti)donusYeri=null;dosyaRapor=false;panelAc('dosya',ms,b.dataset.donus);if(h){haberDonus=true;ciz();}}
     /* RK8-a: TV sayfası — sayfa düğmesi; satır Canlı Skor'un sayfasını telefonda açar; canlı maçta İzle ▸ */
     else if(ey==='tvSayfa'){tvSayfa=b.dataset.tv;tvOnay=null;ciz('[data-eylem="tvSayfa"][data-tv="'+tvSayfa+'"]');}
@@ -1457,9 +1513,10 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ey==='cmHaber')haberAc();
     /* CM1-b: Haberler */
     else if(ey==='hbSekme'){hbSekme=b.dataset.sekme;ciz('.hb-sekmeler [data-sekme="'+hbSekme+'"]');}
-    else if(ey==='hbAc'){gelismeAc(gelismeListesi(k,{gun:hbGun||GELISME_TEST.gun}).find(x=>x.id===b.dataset.id));}
-    else if(ey==='hbSonraki'){const L=gelismeListesi(k,{gun:hbGun||GELISME_TEST.gun}).filter(x=>!x.okundu&&x.sinif!=='arka'&&x.hedef&&(hbSekme==='hepsi'||hbSekme==='cevap'||x.kategori===hbSekme));
-      gelismeAc(L[L.length-1]);}   /* en eskisi önce: okuma sırası */
+    else if(ey==='hbSec'){hbSecili=b.dataset.id;ciz('.hb-satir[data-id="'+String(b.dataset.id).replace(/"/g,'\\"')+'"]');}   /* AR2: satır ayrıntıyı açar (bölümden çıkılmaz) */
+    else if(ey==='hbGit'){let v=null;try{v=b.dataset.veri?JSON.parse(b.dataset.veri):null;}catch(e){}hbGit(b.dataset.bolum,b.dataset.sekme||null,v);}
+    else if(ey==='hbKapi'){panelAc('ziyaret');}
+    else if(ey==='hbSonraki'){hbSonraki();}
     else if(ey==='hbHepsiOkundu'){try{komut(x=>gelismeHepsiOkundu(x));}catch(e){mesaj=e.message;}ciz('[data-eylem="hbSonraki"]');}
     else if(ey==='hbDaha'){hbGun=Math.min(GELISME_TEST.gun*4,(hbGun||GELISME_TEST.gun)+GELISME_TEST.gun);ciz('[data-eylem="hbDaha"]');}
     else if(ey==='hbAjanda'){panelAc('ajanda');ajandaGun=k.tarih;secili=b.dataset.is;haberDonus=true;ciz('button[data-is="'+b.dataset.is+'"]:not([data-eylem])');}
@@ -1551,6 +1608,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if((e.code==='Enter'||e.code==='NumpadEnter')&&t!=='BUTTON'&&sahaBakisVar()&&ODA.yer==='balkon'&&!acik&&BALKON.antrenman&&bakisSec())e.preventDefault();
     /* S-c: oyuncu dosyasında [ ve ] önceki ve sonraki oyuncu (kadro listesinin sırası); kadro listesinde bir şey yapmaz */
     /* RK8-a: TV'de [ ve ] önceki ve sonraki sayfa */
+    else if(e.code==='KeyN'&&acik==='haberler'&&!e.repeat){e.preventDefault();hbSonraki();}   /* AR2: N sıradaki okunmamış */
     /* AR1: [ ] sekme (Lig, Finans, Haberler) */
     else if((e.code==='BracketLeft'||e.code==='BracketRight')&&(acik==='lig'&&!(ligD.sayfalar||[]).length||acik==='finans'||acik==='haberler')){e.preventDefault();
       const yon=e.code==='BracketLeft'?-1:1,donS=(L,v)=>L[(L.indexOf(v)+yon+L.length)%L.length];
@@ -1572,7 +1630,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
      yoksa odak zincirinde bir adım geri. U2: yüz kartın içinde döner, oda yeniden çizmez (önizleme yalnız kaydedilir; sonraki çizimler aynı yüzü
      kurar), odak kartta kalır. Duraklatmada kart kilitli: önizlenir, uygulanmaz (kart nedenini yüzünde yazar) */
   if(typeof kartEtkilesimKur==='function')kartEtkilesimKur(kap,{
-    uygula:(id,secim)=>isiYap(id,secim),
+    uygula:(id,secim)=>{if(acik==='haberler'&&typeof haberSatirlari==='function'){const x=haberSatirlari(k,hbD()).ust.find(y=>y.tur==='karar'&&y.isId===id);
+        if(x){hbCevap[id]={baslik:x.baslik,kaynak:x.kaynak,kategori:x.kategori};hbSecili='k:'+id;}}   /* AR2: kart ayrıntıda verildi */
+      isiYap(id,secim);},
     onizle:(id,y)=>{if(y)onizleler[id]=y;else delete onizleler[id];},
     kilitli:()=>duraklatmaVar()});
   /* duraklatma değişince düğmeler yeniden çizilir; izlerken o ana kadarki gözlem kaydedilir. Odak kartta (ya da kenar etiketinde) ya da Duraklat

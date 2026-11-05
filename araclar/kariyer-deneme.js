@@ -259,7 +259,7 @@ const oyunAl=ad=>vm.runInContext(ad,oyunCtx);
   denetle('Oyunda yalnız P12 TEST taslağı (F6-a), G2 iskeleti (transfer teklifi, hocanın isteği, imza, sözleşme yenileme) ve H2-c yazışması (cevap, görüşme önerisi, görüşme; girişimler yalnız yaz.*) tanımlı; konuya özgü ekip görevi (genel tavsiye hariç), gözlem notu ve söz tarafı yok',
     adlar('PAKETLER')==='gelenTeklif,hocaDegerlendirme,hocaTalebi'&&adlar('GELISMELER')==='gelenTeklif,hocaBaskisi,hocaTalebi,ikinciTeklif,onsezon,sablonAdim,sozlesmeBaslangic,transferImza,yazismaCevap'
     &&adlar('KARAR_TURLERI')==='gorusmeOnerisi,hocaAdayi,hocaKarari,onAlacak,onBasin,onBorc,onDevir,onHoca,onKamp,onKombine,onKurul,onLisans,onPersonel,onZemin,sablonKarti,sozlesmeYenile,teklifKarari,transferButcesi,ziyaret,ziyaretGorusme'&&adlar('KATILIM_ETKILERI')==='ekipGorusmesi,hocaAdayGorusmesi,izleme'
-    &&G.length===12&&G.every(x=>/^yaz\./.test(x))&&Object.keys(oyunAl('EKIP_GOREVLERI')).filter(x=>x!=='tavsiye').length===0&&oyunAl('GOZLEM_NOTLARI').length===0&&say('SOZ_TARAFLARI')===1,
+    &&G.length===13&&G.includes('yaz.maliMudur.isler')&&G.every(x=>/^yaz\./.test(x))   /* AR3-b: müdüre “İşler nasıl gidiyor?” 13'üncü girişim */&&Object.keys(oyunAl('EKIP_GOREVLERI')).filter(x=>x!=='tavsiye').length===0&&oyunAl('GOZLEM_NOTLARI').length===0&&say('SOZ_TARAFLARI')===1,
     [adlar('PAKETLER'),adlar('GELISMELER'),adlar('KARAR_TURLERI'),adlar('KATILIM_ETKILERI'),G.join(',')].join(' · '));
   denetle('Yeni kariyer geçerli; içerik sürümü 6 (CM2-b), kayıt sürümü 13 (CM2-a)',!h.length&&c.icerik.surum===6&&c.kayitSurumu===13&&c.macOkundu===undefined,h.join('; '));
   const isler=Object.values(c.isler),ajandaIsleri=isler.filter(x=>x.tur==='ajanda');
@@ -2126,6 +2126,79 @@ bolum('R4 — transfer: şablon motoru, pazarlık, alım zinciri, serbest havuz,
      !!g&&g.yeni!=='demirkapi'&&g.eski!=='demirkapi'&&bulundu.d.olaylar.some(o=>o.anahtar==='ta.rakip')&&!dog(bulundu.k).length,g?`${g.eski} → ${g.yeni}`:'rakibe giden yok');}
   denetle('Kayıt defterleri: şablon kartı, şablon adımı, izleme etkisi ve üç transfer girişimi kayıtlı',
     !!T('KARAR_TURLERI').sablonKarti&&!!T('GELISMELER').sablonAdim&&!!T('KATILIM_ETKILERI').izleme&&['DEF','OS','FV'].every(h=>T('GIRISIMLER')['yaz.teknikDirektor.transfer'+h]));
+
+  /* ---- AR3-a/b (karar 95): metin seçici, huylar, sahiplik (devret, devral), sicil, “İşler nasıl gidiyor?” ---- */
+  {const MS=T('metinSec'),MA=T('metinAdaylari'),MY=T('METIN_YUVALARI');
+   MY['deneme.y']=[{id:'ozel',oz:1,kosul:(k,b)=>b.x===1,metin:()=>'özel'},{id:'g1',oz:0,metin:()=>'g1'},{id:'g2',oz:0,metin:()=>'g2'}];
+   const c=JSON.parse(metin(k0)),s1=MS(c,'deneme.y',{x:1}),s2=MS(c,'deneme.y',{x:1}),s3=MS(c,'deneme.y',{x:1}),s4=MS(c,'deneme.y',{x:1});
+   const c2=JSON.parse(metin(k0)),t1=MS(c2,'deneme.y',{x:1});
+   denetle('AR3-a metin seçici: en özel uyan önce; kullanılan bu kariyerde tekrar etmez; genel cümlelere düşer, onlar da bitince susar (null); aynı kariyerde belirlenimci; kariyer geçerli',
+     s1==='ozel'&&['g1','g2'].includes(s2)&&['g1','g2'].includes(s3)&&s2!==s3&&s4===null&&t1===s1&&c.metinKullanilan.length===3&&!dog(c).length,`${s1} ${s2} ${s3} ${s4}`);
+   const bz=JSON.parse(metin(c));bz.metinKullanilan=['bozuk'];
+   denetle('AR3-a: bozuk metinKullanilan doğrulamada yakalanır; tekrar eden metin hep seçilebilir; her örnek yuva tanımı geçerli',
+     dog(T('kariyerOlustur')(bz)).some(e=>/metinKullanilan/.test(e))&&MA(c,'devret.tepki',{kisiId:'yok'}).some(x=>x.tekrar)
+     &&['devir.rapor','devir.kotu','devret.tepki','devral.tepki','devir.ara'].every(y=>!T('metinYuvasiDenetle')(y).length));
+   delete MY['deneme.y'];}
+  {const md=T('personelKisisi')(k0,'maliMudur'),hoca=T('personelKisisi')(k0,'teknikDirektor'),H=T('kisiHuylari');
+   denetle('AR3-a huylar (TEST taslağı): mali işler müdürü kuruşu kuruşuna, yemeğe düşkün, gururlu; hocanın huyları metinde; rakip kulübün kişisinde huy yok',
+     metin(H(k0,md.id))==='["kuruscu","yemekci","gururlu"]'&&H(k0,hoca.id).length===2&&!H(k0,Object.values(k0.kisiler).find(p=>p.kulupId&&p.kulupId!=='demirkapi').id).length,
+     `${H(k0,md.id).join(',')} · ${H(k0,hoca.id).join(',')}`);}
+  /* devret: kulüple pazarlık kartı gelince başkan pazarlığı müdüre bırakır; devral: müdürdeki pazarlığı geri alır */
+  {const SS=T('sablonSahiplik'),md=T('personelKisisi')(kO,'maliMudur').id;
+   const kP=sur(kO,POL,'2027-01-25',k=>dosyalar(k).some(m=>m.sablon.asama==='kulupPazarlik')),dP=dosyalar(kP).find(m=>m.sablon.asama==='kulupPazarlik');
+   const R0=dP?SS(kP,dP):{};
+   const kD=dP?KK(kP,x=>T('sablonDevret')(x,dP.id)).kariyer:kP,dD=kD.meseleler[dP&&dP.id],an=T('anDakika');
+   const devirIs=dD&&Object.values(kD.isler).find(x=>x.veri&&x.veri.meseleId===dD.id&&x.veri.adim===dD.sablon.adim);
+   denetle('AR3-b devret: pazarlık kartındayken devredilebilir; kart kalkar, dosya devir aşamasında, sahip müdür; müdürün telefondaki cevabı huyundan; geçmişte sahiplik satırı; yemeğe düşkünlük devri bir gün uzatır; kariyer geçerli',
+     !!dP&&R0.devret&&!R0.devral&&R0.kisiId===md&&dD.sablon.asama==='devir'&&dD.sablon.sahip===md&&!Object.values(kD.isler).some(x=>x.veri&&x.veri.karar==='sablonKarti'&&x.veri.meseleId===dD.id)
+     &&dD.olaylar.some(o=>o.anahtar==='sahip.devret'&&o.p.metin)&&kD.gecmis.some(g=>g.tur==='sahiplik'&&g.olay==='devret'&&g.kisiId===md)
+     &&!!devirIs&&an(devirIs.tarih,devirIs.dakika)-an(kD.tarih,kD.gunIciDakika)>=1440*(2+1)-24*60&&!dog(kD).length,
+     dP?`${kP.tarih} · ${dD.sablon.asama} · devir işi ${devirIs&&devirIs.tarih} · ${T('MESAJ_METIN')['sahip.devret'](kD,dD.olaylar.find(o=>o.anahtar==='sahip.devret').p)}`:'pazarlık kartı yok');
+   const kR=dD?KK(kD,x=>T('sablonDevral')(x,dD.id)).kariyer:kD,dR=kR.meseleler[dD&&dD.id];
+   const ilk=dR&&T('MESAJ_METIN')['sahip.devral'](kR,dR.olaylar.filter(o=>o.anahtar==='sahip.devral').pop().p);
+   denetle('AR3-b devral: müdürdeki pazarlık geri alınır; devir işi kalkar, pazarlık kartı yeniden başkanda; gururlu müdür bozulur (cevabı huyundan), küslük süresi başlar; sicilde elinden alınan iş',
+     !!dR&&dR.sablon.asama==='kulupPazarlik'&&dR.sablon.sahip===null&&Object.values(kR.isler).some(x=>x.veri&&x.veri.karar==='sablonKarti'&&x.veri.meseleId===dR.id)
+     &&!!T('kisiKus')(kR,md)&&T('kisiSicili')(kR,md).devralinan===1&&/Siz bilirsiniz/.test(ilk)&&!dog(kR).length,`${ilk} · ${T('kisiSicili')(kR,md).satir}`);
+   /* ikinci kez: tırmanan cevap; devral geçersiz aşamada reddedilir */
+   const kD2=dR?KK(kR,x=>T('sablonDevret')(x,dR.id)).kariyer:kR,kR2=dR?KK(kD2,x=>T('sablonDevral')(x,dR.id)).kariyer:kR,dR2=kR2.meseleler[dR&&dR.id];
+   const iki=dR2&&T('MESAJ_METIN')['sahip.devral'](kR2,dR2.olaylar.filter(o=>o.anahtar==='sahip.devral').pop().p);
+   let red=false;try{KK(kR2,x=>T('sablonDevral')(x,dR2.id));}catch(e){red=/devralınamaz/.test(e.message);}
+   denetle('AR3-b: ikinci devralmada cevap bir üst perde (“Yine mi başkanım?”); pazarlık başkandayken devralma reddedilir; anı kaydı iki',
+     /Yine mi/.test(iki||'')&&red&&T('aniSayisi')(kR2,'devral',md)===2,iki);
+   /* devir sonucu: sicil, rapor metni; küslük kaliteyi düşürür (aynı anahtarla) */
+   const kS=sur(kD,Object.assign({},POL,{temas:'telefon'}),'2027-01-30',k=>{const m=k.meseleler[dD.id];return!m||m.sablon.asama!=='devir';}),dS=kS.meseleler[dD&&dD.id];
+   const sic=T('kisiSicili')(kS,md),son=dS&&dS.olaylar.find(o=>o.anahtar==='ta.devirSonuc'||o.anahtar==='ta.devirKotu');
+   denetle('AR3-b: devrin sonucu sicile yazılır (devirSonucu satırı); rapor müdürün sesiyle ve seçilen metinle; sicil satırı olgudan',
+     !!dS&&sic.is===1&&sic.iyi+sic.vasat+sic.kotu===1&&!!son&&typeof son.p.metin==='string'&&/iş/.test(sic.satir),`${son&&T('MESAJ_METIN')[son.anahtar](kS,son.p)} · ${sic.satir}`);
+   const DK=T('devirKalitesi'),Y=T('kisiYetenegi')(kR,md,'pazarlik');let fark=0;
+   for(let i=0;i<40;i++){if(DK(kD,md,'pazarlik','deneme:'+i)!==DK(kR,md,'pazarlik','deneme:'+i))fark++;}
+   denetle('AR3-b: küs müdürün devir kalitesi düşer (aynı çekilişlerde en az biri kötüleşir, hiçbiri iyileşmez); huy payı ve yük eşiği tanımlı',
+     fark>0&&[...Array(40).keys()].every(i=>{const o={iyi:2,vasat:1,kotu:0};return o[DK(kR,md,'pazarlik','deneme:'+i)]<=o[DK(kD,md,'pazarlik','deneme:'+i)];})
+     &&T('huyDevirEtkisi')(kD,md).kalite>0&&T('DEVIR_TEST').yukEsik===3,`yetenek ${Y} · fark ${fark}/40`);
+   /* “İşler nasıl gidiyor?”: yalnız müdürde iş varken; cevap görüntüsü kayda girer; sormak sonucu değiştirmez */
+   const g='yaz.maliMudur.isler',GL=T('GIRISIMLER')[g],kY=kD;
+   const uy0=GL.uygun(kO),uy1=GL.uygun(kY),kQ=uy1===true?KK(kY,x=>T('girisimBaslat')(x,g)).kariyer:kY;
+   const kQ2=sur(kQ,POL,'2027-01-30',k=>k.gecmis.some(x=>x.tur==='is'&&x.isTuru==='gelisme'&&x.sonuc&&x.sonuc.yazisma&&x.sonuc.yazisma.konu==='isler'));
+   const yz=kQ2.gecmis.filter(x=>x.tur==='is'&&x.isTuru==='gelisme'&&x.sonuc&&x.sonuc.yazisma&&x.sonuc.yazisma.konu==='isler').pop();
+   const kQ3=sur(kQ2,Object.assign({},POL,{temas:'telefon'}),'2027-01-30',k=>{const m=k.meseleler[dD.id];return!m||m.sablon.asama!=='devir';});
+   const kalSor=(kQ3.gecmis.find(x=>x.tur==='devirSonucu'&&x.meseleId===dD.id)||{}).kalite,kalSorma=(kS.gecmis.find(x=>x.tur==='devirSonucu'&&x.meseleId===dD.id)||{}).kalite;
+   denetle('AR3-b “İşler nasıl gidiyor?”: müdürde iş yokken menüde yok, iş varken var; cevapta dosya, aşama ve netleşeceği gün (görüntü kayıtta); sormak devrin sonucunu değiştirmez',
+     uy0===false&&uy1===true&&!!yz&&yz.sonuc.yazisma.p.isler.length===1&&/netleşir/.test(T('YAZISMA_METIN').isler(kQ2,yz.sonuc.yazisma))&&!!kalSor&&kalSor===kalSorma,
+     yz?T('YAZISMA_METIN').isler(kQ2,yz.sonuc.yazisma):`uygun ${uy0} ${uy1}`);
+   denetle('AR3-b kaydet–yükle devrin ortasında: devam eden kariyer kesintisizle aynı',metin(sur(yukle(kD),Object.assign({},POL,{temas:'telefon'}),'2027-01-30',k=>{const m=k.meseleler[dD.id];return!m||m.sablon.asama!=='devir';}))===metin(kS));}
+  /* sponsor: pazarlığı müdüre devretmek → onay kartı → imza; şablon tanımı eksiksiz */
+  {const kSp=JSON.parse(metin(k0));const n=T('sponsorAcilisi');
+   denetle('AR3-b sponsor şablonu tanımı eksiksiz (devir ve onay aşamaları dahil)',metin(T('sablonTanimDenetle')('sponsor'))==='[]',metin(T('sablonTanimDenetle')('sponsor')));
+   let k1=KK(k0,x=>{T('zamanIlerlet')(x,T('anDakika')('2027-02-01',600)-T('simdikiAn')(x));}).kariyer;
+   const sp=Object.values(k1.meseleler).find(m=>m.sablon&&m.sablon.ad==='sponsor');
+   if(sp){const tk=Object.values(k1.isler).find(x=>x.veri&&x.veri.meseleId===sp.id&&x.veri.karar==='sablonKarti');k1=KK(k1,x=>T('ajandaIsiYap')(x,tk.id,'gorus')).kariyer;
+     const R=T('sablonSahiplik')(k1,k1.meseleler[sp.id]),k2=KK(k1,x=>T('sablonDevret')(x,sp.id)).kariyer;
+     const k3=sur(k2,{devirOnay:'imza'},'2027-02-10',k=>{const m=k.meseleler[sp.id];return m.durum==='kapandi'||m.sablon.asama==='devirOnay';}),m3=k3.meseleler[sp.id];
+     const k4=m3.sablon.asama==='devirOnay'?KK(k3,x=>T('ajandaIsiYap')(x,Object.values(x.isler).find(i=>i.veri&&i.veri.meseleId===sp.id).id,'imza')).kariyer:k3,m4=k4.meseleler[sp.id];
+     denetle('AR3-b sponsor: pazarlık kartında devredilir; müdür sonuçla döner (onay kartı ya da kopma); onaylanınca imza ve aylık ödemeler; kariyer geçerli',
+       R.devret&&k2.meseleler[sp.id].sablon.asama==='devir'&&(m4.sablon.sonuc==='imza'&&Object.values(k4.isler).some(x=>x.tur==='odeme'&&x.veri.kalem==='sponsor')||m4.sablon.sonuc==='kopma')&&!dog(k4).length,
+       `${m4.sablon.sonuc} · ${m4.sablon.veri.devirTutar||'—'} · ${k4.gecmis.filter(g=>g.tur==='devirSonucu').map(g=>g.kalite).join(',')}`);}
+   else denetle('AR3-b sponsor: Şubat ay başında teklif açılmadı (deneme kurulamadı)',false,'');}
 }
 
 bolum('R5 — balkon: antrenmanın düzeni kadronun kendisinden, hocanın programına göre (js/gozlem.js antrenmanDuzeni)');
@@ -2497,6 +2570,49 @@ bolum('CM1-b — gelişmeler: tek kronolojik liste, bekleyenler, sayaç ve okund
   denetle('Boş günde gazete çıkmaz: bugünün sayısı boşsa masada yeni gazete yok (CM1-b)',!Gb||!Gb.bos||!iz.gazeteYeni,Gb&&`boş ${Gb.bos} · yeni ${iz.gazeteYeni}`);
   const t0=Date.now();for(let i=0;i<20;i++)T('gelismeListesi')(JSON.parse(once));const ms=(Date.now()-t0)/20;
   denetle('Liste kurma 14 günde 50 ms'+"'"+'nin altında (önbelleksiz, JSON kopyada)',ms<50,ms.toFixed(1)+' ms');
+}
+
+bolum('AR2 — Haberler: kaynak, aynı günün arka satırları, ayrıntı okuması ve günün satırı (js/gelismeler.js; arayuz-uygulama §3)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),metin=x=>JSON.stringify(x);
+  const S={skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}},toh=id=>T('macTohumu')(7,id);
+  const hafta=c=>{let j;({k:c,j}=macGununeGit(T,c));c=KK(c,x=>T('ajandaIsiYap')(x,j.id)).kariyer;const id=j.veri.macId;
+    return KK(c,x=>T('haftaSonuclariUygula')(x,id,S,toh(id),{},T('haftaninDigerMaclari')(x,id).map(f=>({macId:f.id,sonuc:S,tohum:toh(f.id)})))).kariyer;};
+  let k=T('kariyerBaslat')({tarif:'kasim',tohum:7});k=hafta(k);k=KK(k,x=>{T('zamanIlerlet')(x,2*1440);}).kariyer;
+  const once=metin(k),L=T('gelismeListesi')(k),kul=k.kulupler,kis=k.kisiler;
+  const kaynakTamam=q=>!!q&&(q.tur==='kisi'?!!kis[q.id]:q.tur==='kulup'?!!kul[q.id]:q.tur==='kurum'&&!!q.kisa&&!!q.ad);
+  denetle('Her satırda kaynak (kişi kayıtta, kulüp kayıtta ya da kısa adlı kurum): telefonda kişi, raporda mali işler müdürü, maç sonucunda Lig',
+    L.length>0&&L.every(x=>kaynakTamam(x.kaynak))&&L.filter(x=>x.kanal==='telefon').every(x=>x.kaynak.tur==='kisi')
+    &&L.filter(x=>x.id.startsWith('rp:')).every(x=>x.kaynak.tur==='kisi'&&kis[x.kaynak.id].rol==='maliMudur')&&L.filter(x=>x.kanal==='lig').every(x=>x.kaynak.kisa==='LİG'),
+    [...new Set(L.map(x=>x.kaynak&&(x.kaynak.tur+':'+(x.kaynak.kisa||x.kaynak.id))))].slice(0,8).join(' · '));
+  const G=T('gelismeGruplari')(L),G2=T('gelismeGruplari')(T('gelismeListesi')(JSON.parse(once))),gr=G.filter(x=>x.grup);
+  const arkaGun=new Set(L.filter(x=>x.sinif==='arka').map(x=>x.tarih));
+  denetle('Aynı günün arka satırları günde tek satır (tek satırlık grup satırın kendisi); arka olmayanlar aynen ve aynı sırada; belirlenimci; başlık sayımı tutar',
+    gr.length>0&&gr.every(g=>g.sayi>1&&g.alt.length===g.sayi&&g.alt.every(x=>x.sinif==='arka'&&x.tarih===g.tarih))&&metin(G)===metin(G2)
+    &&metin(G.filter(x=>!x.grup&&x.sinif!=='arka'))===metin(L.filter(x=>x.sinif!=='arka'))&&G.filter(x=>x.grup||x.sinif==='arka').length===arkaGun.size
+    &&gr.every(g=>{const n=g.alt.filter(x=>x.kanal==='lig').length;return(n?g.baslik.includes(n+' maç sonucu'):true)&&(g.sayi-n?g.baslik.includes((g.sayi-n)+' kısa haber'):true);}),
+    gr.map(g=>g.tarih+' '+g.baslik).join(' · '));
+  const A={};for(const x of G){const a=T('gelismeAyrinti')(k,x);if(a&&!A[a.kanal])A[a.kanal]={x,a};}
+  const bolumler=new Set(['lig','finans','gazete','ajanda','telefon','kulup']);
+  denetle('Ayrıntı okuması saf (kariyer değişmez), her satırda kanal ve eylem; eylemlerin bölümü ekranın bölümlerinden; grupta skorlar, raporda üç satır, maçta skor',
+    metin(k)===once&&G.every(x=>{const a=T('gelismeAyrinti')(k,x);return!!a&&!!a.kanal&&a.eylemler.every(e=>bolumler.has(e[1]));})
+    &&(!A.grup||A.grup.a.govde.maclar.every(m=>Array.isArray(m.skor)))&&(!A.belge||A.belge.a.govde.satirlar.length===3)&&(!A.lig||!!A.lig.a.govde.mac&&Array.isArray(A.lig.a.govde.mac.skor)),
+    Object.keys(A).join(','));
+  const B=T('gelismeBugun')(k);
+  denetle('Günün satırı gün başı notundan: son maç ve bugünün kalan işleri; kasa ve manşet yok (karar 90)',
+    !!B&&!!B.sonMac&&B.sonMac.skor.join('-')!==''&&Array.isArray(B.isler)&&!('kasa' in B)&&!('manset' in B),metin(B).slice(0,160));
+  /* cevapsız kalan karar 'kacan' sınıfında; bekleyende kaynak */
+  const kx=JSON.parse(once),an=T('simdikiAn')(kx);
+  kx.isler['is-ar2']={id:'is-ar2',tur:'ajanda',tarih:kx.tarih,dakika:kx.gunIciDakika+120,veri:{baslik:'Deneme kararı',karar:'deneme',saatsiz:true,sinif:'sorun',zorunluluk:'istege',
+    soran:Object.values(kx.kisiler).find(p=>p.rol==='maliMudur').id,gelis:{tarih:kx.tarih,dakika:kx.gunIciDakika}}};
+  const Bx=T('gelismeBekleyenler')(kx);
+  kx.gecmis.push({tur:'is',isId:'is-ar3',isTuru:'ajanda',tarih:kx.tarih,dakika:kx.gunIciDakika,sonuc:{durum:'cevapsiz',baslik:'Eski karar'}});
+  const Lx=T('gelismeListesi')(kx),kc=Lx.find(x=>x.sinif==='kacan');
+  denetle('Bekleyen kararda kaynak soranın kendisi; cevapsız kalan karar “kacan” sınıfında (kacan: cevapsiz), sayaçta yeni sayılır',
+    Bx.kararlar.length===1&&Bx.kararlar[0].kaynak.tur==='kisi'&&Bx.kararlar[0].kaynak.id===kx.isler['is-ar2'].veri.soran&&!!kc&&kc.kacan==='cevapsiz'&&/cevapsız kaldı/.test(kc.baslik),
+    kc&&kc.baslik);
+  const t0=Date.now();for(let i=0;i<20;i++){const c=JSON.parse(once),Lc=T('gelismeListesi')(c);T('gelismeGruplari')(Lc);}const ms=(Date.now()-t0)/20;
+  denetle('Liste ve gruplama birlikte 50 ms'+"'"+'nin altında (önbelleksiz, JSON kopyada)',ms<50,ms.toFixed(1)+' ms · '+an);
 }
 
 bolum('CM2-a — yaz tarifi: 22 Haziran, devre arası, sıfır tablo, hazırlık maçı, başlangıçta biten sözleşmeler (js/fikstur.js SEZON_TARIFLERI; karar 88)');

@@ -22,7 +22,15 @@
      aşamaya girerken ('giris') ya da bekleme/devir dolarken ('bitis') denenir; koşul dünyanın gerçek durumundan, çekiliş belirlenimci
      (kadroRastgele(dünyaTohumu, 'kivrim:<mesele>:<ad>:<adım>')). Asama döndüren kıvrım akışı o aşamaya çevirir. Yeni senaryo = yeni kıvrım; motor değişmez.
    kisiYetenegi(k, kişi, konu) → 0,20–0,95: kişinin konudaki gizli yeteneği (TEST); dünya tohumundan türetilir, kayda yazılmaz, gösterilmez.
-   sablonAc(k, ad, {baslik, kaynak, sahip?, karsi?, son?, veri?, kisiler?, asama?, p?}) → mesele kimliği; sablonIlerle(k, mesele, aşama, p) → {bilgi, dur}. */
+   sablonAc(k, ad, {baslik, kaynak, sahip?, karsi?, son?, veri?, kisiler?, asama?, p?}) → mesele kimliği; sablonIlerle(k, mesele, aşama, p) → {bilgi, dur}.
+   AR3-b (2026-11-05, karar 95 “Her işin bir sahibi var”): şablon isteğe bağlı sahiplik tanımı taşır:
+     SABLONLAR[ad].sahiplik = {kisi(k, m) → devredilecek kişi, devret:{asamalar:[…], hedef}, devral:{asamalar:[…], hedef}}
+     sablonSahiplik(k, m) → {sahip, kisiId, devret, devral, engel}   saf; dosyada ve Haberler'de düğmeler bundan
+     sablonDevret(k, mesele) · sablonDevral(k, mesele)   komut: bekleyen iş kalkar, dosya hedef aşamaya geçer; geçmişe {tur:'sahiplik', olay, meseleId, kisiId}
+       ve dosyaya kişinin tepkisi (js/metin.js 'devret.tepki' / 'devral.tepki'); devralınan iş temiz sayfa değildir (dosyanın verisi ve sözler durur)
+     devrin kalitesi: gizli yetenek + huyun payı (js/metin.js huyDevirEtkisi) − yük (DEVIR_TEST.yukEsik ve üstü açık iş) − küslük (gururlu kişiden iş
+       alındıysa kus gün); devrin süresine huyun günü eklenir. Her devrin sonucu geçmişe {tur:'devirSonucu', meseleId, kisiId, sablon, kalite} (sicil).
+     kisiYuku(k, kişi) · kisiKus(k, kişi) · kisiSicili(k, kişi) → {is, iyi, vasat, kotu, devralinan, satir}   saf okumalar */
 'use strict';
 const SABLONLAR={};
 const SABLON_KIVRIMLARI={};
@@ -30,11 +38,20 @@ const KART_SINIFLARI={firsat:'Fırsat',pazarlik:'Pazarlık',rutin:'Rutin',sorun:
 const SABLON_ASAMA_TURLERI=['kart','bekleme','devir','uyku','son'];
 const SABLON_KANCALARI=['ayBasi','macSonucu'];
 /* devrin kalitesi (TEST): yetenek y için iyi payı 0,15 + 0,7·y, kötü payı 0,35·(1 − y), kalanı vasat */
-const DEVIR_TEST={iyiTaban:0.15,iyiKat:0.7,kotuKat:0.35};
+const DEVIR_TEST={iyiTaban:0.15,iyiKat:0.7,kotuKat:0.35,yukEsik:3,yukCeza:0.15,kusCeza:0.2};
 
 const kisiYetenegi=(k,kisiId,konu)=>Math.round((0.2+0.75*kadroRastgele(k.dunyaTohumu,'yetenek:'+kisiId+':'+konu)())*100)/100;
-function devirKalitesi(k,kisiId,konu,anahtar){
-  const y=kisiYetenegi(k,kisiId,konu),r=kadroRastgele(k.dunyaTohumu,'devir:'+anahtar)(),T=DEVIR_TEST;
+/* AR3-b: açık dosyalarında sahibi olduğu iş sayısı; gururlu kişiden iş alındıysa küslüğün bittiği an (yoksa null) */
+const kisiYuku=(k,kisiId,haricMesele)=>Object.values(k.meseleler||{}).filter(m=>m.id!==haricMesele&&m.durum!=='kapandi'&&m.sablon&&m.sablon.sahip===kisiId&&m.sablon.sonuc===null).length;
+function kisiKus(k,kisiId){
+  const E=typeof huyDevirEtkisi==='function'?huyDevirEtkisi(k,kisiId):{kus:0};if(!E.kus)return null;
+  const g=(k.gecmis||[]).filter(x=>x.tur==='sahiplik'&&x.olay==='devral'&&x.kisiId===kisiId).pop();if(!g)return null;
+  const son=anDakika(g.tarih,g.dakika)+E.kus*1440;return son>simdikiAn(k)?anTarih(son):null;
+}
+function devirKalitesi(k,kisiId,konu,anahtar,haricMesele){
+  const E=typeof huyDevirEtkisi==='function'?huyDevirEtkisi(k,kisiId):{kalite:0},T=DEVIR_TEST;
+  const y=Math.min(0.98,Math.max(0.05,kisiYetenegi(k,kisiId,konu)+E.kalite-(kisiYuku(k,kisiId,haricMesele)>=T.yukEsik?T.yukCeza:0)-(kisiKus(k,kisiId)?T.kusCeza:0)));
+  const r=kadroRastgele(k.dunyaTohumu,'devir:'+anahtar)();
   return r<T.iyiTaban+T.iyiKat*y?'iyi':r>1-T.kotuKat*(1-y)?'kotu':'vasat';
 }
 const sablonAsama=m=>m&&m.sablon?(SABLONLAR[m.sablon.ad]||{asamalar:{}}).asamalar[m.sablon.asama]||null:null;
@@ -70,8 +87,10 @@ function sablonIlerle(k,id,asamaAd,p,derinlik){
     const s=A.soran?A.soran(k,m):null;if(s)v.soran=s;
     isEkle(k,{tur:'ajanda',tarih:an.tarih,dakika:an.dakika,veri:v});
   }else if(A.tur==='bekleme'||A.tur==='devir'||A.tur==='uyku'){
-    const an=sablonAnSec(k,A.an(k,m),1);
-    if(A.tur==='devir')m.sablon.sahip=A.kisi(k,m);
+    let an=sablonAnSec(k,A.an(k,m),1);
+    if(A.tur==='devir'){m.sablon.sahip=A.kisi(k,m);
+      /* AR3-b: huyun günü (yemeğe düşkün: imza bir gün kayar) */
+      const g=typeof huyDevirEtkisi==='function'?huyDevirEtkisi(k,m.sablon.sahip).gun:0;if(g)an=anTarih(anDakika(an.tarih,an.dakika)+g*1440);}
     isEkle(k,{tur:'gelisme',tarih:an.tarih,dakika:an.dakika,veri:Object.assign({gelisme:'sablonAdim'},v0)});
   }else if(A.tur==='son'){
     m.sablon.sonuc=String(A.sonuc(k,m,p||{})||'tamam');m.sablon.sahip=null;
@@ -134,7 +153,12 @@ GELISMELER.sablonAdim={
     const A=sablonAsama(m);let r;
     if(A.tur==='uyku')r={asama:A.kosul(k,m)?A.sonra:A.kayip};
     else{r=kivrimDene(k,m,'bitis');
-      if(!r||!r.asama){const b=A.tur==='devir'?A.bitince(k,m,devirKalitesi(k,m.sablon.sahip,A.konu,m.id+':'+m.sablon.adim)):A.bitince(k,m);r=Object.assign({},b,{bilgi:b.bilgi||(r&&r.bilgi),dur:b.dur||(r&&r.dur)});}}
+      if(!r||!r.asama){let b;
+        if(A.tur==='devir'){const sahip=m.sablon.sahip,kalite=devirKalitesi(k,sahip,A.konu,m.id+':'+m.sablon.adim,m.id);
+          k.gecmis.push({tur:'devirSonucu',meseleId:m.id,kisiId:sahip,sablon:m.sablon.ad,kalite,tarih:k.tarih,dakika:k.gunIciDakika});   /* AR3-b: sicil */
+          b=A.bitince(k,m,kalite);}
+        else b=A.bitince(k,m);
+        r=Object.assign({},b,{bilgi:b.bilgi||(r&&r.bilgi),dur:b.dur||(r&&r.dur)});}}
     const s=sablonIlerle(k,m.id,r.asama,r.p);
     return{bilgi:r.bilgi||s.bilgi||null,dur:!!(r.dur||s.dur)};
   }
@@ -180,6 +204,52 @@ function sablonTanimDenetle(ad){
   }
   return h;
 }
+/* ---- AR3-b: sahiplik (devret, devral) ---- */
+function sablonSahiplik(k,m){
+  const S=m&&m.sablon?SABLONLAR[m.sablon.ad]:null,H=S&&S.sahiplik,R={sahip:m&&m.sablon?m.sablon.sahip:null,kisiId:null,devret:false,devral:false,engel:null};
+  if(!H||!m.sablon||m.durum==='kapandi'||m.sablon.sonuc!==null)return R;
+  const id=H.kisi(k,m);R.kisiId=id&&(k.kisiler||{})[id]&&k.kisiler[id].durum==='aktif'?id:null;
+  const a=m.sablon.asama;
+  R.devral=!!H.devral&&H.devral.asamalar.includes(a)&&R.sahip!==null;
+  R.devret=!!H.devret&&H.devret.asamalar.includes(a)&&R.sahip===null&&!!R.kisiId;
+  if(H.devret&&H.devret.asamalar.includes(a)&&!R.kisiId)R.engel='Devredecek kimse yok';
+  if((R.devret||R.devral)&&typeof sahneAcik==='function'&&sahneAcik(k))R.engel='Önce görüşmeyi bitir';
+  return R;
+}
+function sablonSahiplikDegis(k,meseleId,olay){
+  const m=(k.meseleler||{})[meseleId];if(!m||!m.sablon)throw new Error(`Şablonlu dosya bulunamadı: ${meseleId}`);
+  const H=SABLONLAR[m.sablon.ad].sahiplik,R=sablonSahiplik(k,m);
+  if(R.engel)throw new Error(R.engel);
+  if(olay==='devret'&&!R.devret)throw new Error('Bu aşamada devredilemez');
+  if(olay==='devral'&&!R.devral)throw new Error('Bu aşamada devralınamaz');
+  const kisiId=olay==='devret'?R.kisiId:R.sahip;
+  sablonIsleriIptal(k,m.id,olay==='devret'?'İş devredildi':'İş devralındı');
+  k.gecmis.push({tur:'sahiplik',olay,meseleId:m.id,kisiId,sablon:m.sablon.ad,tarih:k.tarih,dakika:k.gunIciDakika});
+  const mi=typeof metinSec==='function'?metinSec(k,olay+'.tepki',{kisiId,anahtar:m.id,devral:aniSayisi(k,'devral',kisiId)}):null;
+  if(olay==='devral'&&typeof aniEkle==='function')aniEkle(k,'devral',{kisiId,p:{meseleId:m.id}});
+  meseleOlay(k,m.id,'sahip.'+olay,{kisiId,metin:mi});
+  if(olay==='devral')m.sablon.sahip=null;
+  const s=sablonIlerle(k,m.id,H[olay].hedef);
+  meseleDegerlendir(k);
+  return{bilgi:s.bilgi||null};
+}
+const sablonDevret=(k,meseleId)=>sablonSahiplikDegis(k,meseleId,'devret');
+const sablonDevral=(k,meseleId)=>sablonSahiplikDegis(k,meseleId,'devral');
+/* sicil (saf): kişinin yürüttüğü devirlerin sonuçları ve elinden alınan işler */
+function kisiSicili(k,kisiId){
+  const G=k.gecmis||[],D=G.filter(g=>g.tur==='devirSonucu'&&g.kisiId===kisiId),say=q=>D.filter(g=>g.kalite===q).length;
+  const R={is:D.length,iyi:say('iyi'),vasat:say('vasat'),kotu:say('kotu'),devralinan:G.filter(g=>g.tur==='sahiplik'&&g.olay==='devral'&&g.kisiId===kisiId).length};
+  R.satir=!R.is&&!R.devralinan?'Henüz ona iş vermedin.':[R.is?`${R.is} iş`:'',R.iyi?`${R.iyi}'${R.iyi===1?'i':'si'} istediğin gibi`:'',R.vasat?`${R.vasat}'${R.vasat===1?'i':'si'} pahalı ya da eksik`:'',
+    R.kotu?`${R.kotu}'${R.kotu===1?'i':'si'} kaçtı`:'',R.devralinan?`${R.devralinan} işi elinden aldın`:''].filter(Boolean).join(' · ');
+  return R;
+}
+Object.assign(MESELE_OLAYLARI,{
+  'sahip.devret':(k,p)=>`Dosyayı ${kisiAdi(k,p.kisiId)}'e devrettin.`,
+  'sahip.devral':(k,p)=>`Dosyayı ${kisiAdi(k,p.kisiId)}'den devraldın; bundan sonra sen yürütüyorsun.`});
+MESAJ_GONDEREN['sahip.devret']=pKisi('kisiId');MESAJ_GONDEREN['sahip.devral']=pKisi('kisiId');
+MESAJ_METIN['sahip.devret']=(k,p)=>(typeof metinYaz==='function'&&p.metin?metinYaz(k,'devret.tepki',p.metin,p):'')||'Peki başkanım, ilgileniyorum.';
+MESAJ_METIN['sahip.devral']=(k,p)=>(typeof metinYaz==='function'&&p.metin?metinYaz(k,'devral.tepki',p.metin,p):'')||'Peki başkanım; rakamlar dosyada.';
+
 /* ---- aşama satırı (R4-k; okuma, saf): şablon asamaMetni / sonucMetni tanımlar (yoksa aşamanın adı) ---- */
 /* sablonAsamaSatiri(k, m) → {metin, son} | null — şablonlu konunun üstündeki tek satır (aşama ya da sonuç; sayı ve gizli değer yok) */
 function sablonAsamaSatiri(k,m){

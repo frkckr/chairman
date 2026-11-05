@@ -8,7 +8,8 @@
    Marka adları stattaki TEST tabelalardan (js/ortak.js ADS; kulüp adı değildir), tutarlar SPONSOR_TEST; metinler TEST yer tutucu, kullanıcı değiştirir. */
 'use strict';
 const SPONSOR_TEST={markalar:['Şimşek Pil','Lale Kolonya','Çınar Bisküvi','Karakuş Lastik','Radyo 88'],ay:'02',aylar:['07','02'],   /* CM2-b: yaz tarifinde Temmuz da */aylik:[5000000,12000000],ustYari:1.3,
-  cevapGun:1,kartGun:2,kartSaat:660,beklemeSaat:660};
+  cevapGun:1,kartGun:2,kartSaat:660,beklemeSaat:660,
+  /* AR3-b: devredilen pazarlık (tahsil: markanın gizli üst sınırının oranı) */devirGun:2,devirKat:{iyi:[0.94,1.0],vasat:[0.82,0.9]}};
 MESELE_KATEGORILERI.kurumsal=['Kurumsal','K'];
 const spPara=x=>paraYazi(x).replace(/,\d\d ₺$/,' ₺');
 const spMudur=k=>personelKisisi(k,'maliMudur');
@@ -20,7 +21,13 @@ Object.assign(MESELE_OLAYLARI,{
   'sp.istek':(k,p)=>`Ayda ${spPara(p.tutar)} istedin; cevap yarın.`,
   'sp.karsi':(k,p)=>`${p.marka}: “Ayda ${spPara(p.tutar)} verebiliriz.”`,
   'sp.kopma':(k,p)=>`${p.marka} görüşmeyi kesti.`,
-  'sp.imza':(k,p)=>`${p.marka} ile anlaştın: sezon sonuna dek ayda ${spPara(p.tutar)} (her ayın 1'inde).`});
+  'sp.imza':(k,p)=>`${p.marka} ile anlaştın: sezon sonuna dek ayda ${spPara(p.tutar)} (her ayın 1'inde).`,
+  'sp.devirSonuc':(k,p)=>`${kisiAdi(k,p.kisiId)}: “${p.marka} ayda ${spPara(p.tutar)} veriyor; onayını bekliyorum.”`,
+  'sp.devirKotu':(k,p)=>`${kisiAdi(k,p.kisiId)}: “${p.marka} ile anlaşamadık; görüşmeyi kestiler.”`,
+  'sp.devirVazgec':(k,p)=>`${p.marka} ile anlaşmayı onaylamadın.`});
+MESAJ_GONDEREN['sp.devirSonuc']=pKisi('kisiId');MESAJ_GONDEREN['sp.devirKotu']=pKisi('kisiId');
+MESAJ_METIN['sp.devirSonuc']=(k,p)=>{const a=p.metin?metinYaz(k,'devir.rapor',p.metin,p):'';return`Başkanım, ${p.marka} ayda ${spPara(p.tutar)} veriyor.${a?' '+a:''} Onayınızı bekliyorum.`;};
+MESAJ_METIN['sp.devirKotu']=(k,p)=>{const a=p.metin?metinYaz(k,'devir.kotu',p.metin,p):'';return`Başkanım, ${p.marka} ile anlaşamadık.${a?' '+a:''}`;};
 const spVeri=m=>m.sablon.veri;
 SABLONLAR.sponsor={meseleTuru:'kurumsal',baslangic:'teklif',asamalar:{
   teklif:{tur:'kart',sinif:'firsat',
@@ -52,6 +59,22 @@ SABLONLAR.sponsor={meseleTuru:'kurumsal',baslangic:'teklif',asamalar:{
       if(r==='kabul')return{asama:'imza',p:{tutar:P.son}};
       if(r==='karsi')return{asama:'pazarlik',bilgi:meseleOlay(k,m.id,'sp.karsi',{marka:V.marka,tutar:P.karsi}),dur:true};
       return{asama:'kapandi',p:{sonuc:'kopma'},bilgi:meseleOlay(k,m.id,'sp.kopma',{marka:V.marka}),dur:true};}},
+  /* AR3-b: başkan pazarlığı müdüre devrederse (dosyadaki “Devret”): sonuç müdürün becerisi ve huyuyla; anlaşma onay kartıyla döner */
+  devir:{tur:'devir',konu:'pazarlik',kisi:k=>(spMudur(k)||{}).id,an:k=>({tarih:tarihEkle(k.tarih,SPONSOR_TEST.devirGun),dakika:SPONSOR_TEST.beklemeSaat}),
+    bitince:(k,m,kalite)=>{const V=spVeri(m),md=m.sablon.sahip;
+      if(!(V.pazarlik&&V.pazarlik.aylik))pazarlikKur(k,m,'aylik',{deger:V.ilk,oneren:md,konu:'pazarlik',yon:'tahsil',yuvarla:100000});
+      const P=pazarlikDurumu(m,'aylik');
+      if(kalite==='kotu')return{asama:'kapandi',p:{sonuc:'kopma'},bilgi:meseleOlay(k,m.id,'sp.devirKotu',{kisiId:md,marka:V.marka,metin:metinSec(k,'devir.kotu',{kisiId:md,anahtar:m.id})}),dur:true};
+      const [a,b]=SPONSOR_TEST.devirKat[kalite],r=kadroRastgele(k.dunyaTohumu,'sp:'+m.id+':devir')();V.devirTutar=pazarlikYuvarla(P.alt*(a+(b-a)*r),P.yuvarla);
+      return{asama:'devirOnay',bilgi:meseleOlay(k,m.id,'sp.devirSonuc',{kisiId:md,marka:V.marka,tutar:V.devirTutar,kalite,metin:metinSec(k,'devir.rapor',{kisiId:md,kalite,anahtar:m.id})}),dur:true};}},
+  devirOnay:{tur:'kart',sinif:'firsat',
+    baslik:(k,m)=>`Sponsor: ${spVeri(m).marka}`,
+    aciklama:(k,m)=>`${kisiAdi(k,m.sablon.sahip||'')} ${spVeri(m).marka} ile ayda ${spPara(spVeri(m).devirTutar)}'de anlaştı.`,
+    son:k=>spKartSon(k),soran:(k,m)=>m.sablon.sahip,
+    secenekler:(k,m)=>[{id:'imza',metin:'Anlaşmayı onayla',sure:0,aciklama:[`Sezon sonuna dek ayda ${spPara(spVeri(m).devirTutar)}.`]},{id:'vazgec',metin:'Vazgeç',sure:0,aciklama:['Anlaşma bozulur; forma göğsü boş kalır.']}],
+    uygula:(k,m,s)=>s==='imza'?{asama:'imza',p:{tutar:spVeri(m).devirTutar}}:{asama:'kapandi',p:{sonuc:'reddedildi'},bilgi:meseleOlay(k,m.id,'sp.devirVazgec',{marka:spVeri(m).marka})},
+    cevapsiz:{metin:()=>'Cevap vermezsen anlaşma bozulur.',uygula:(k,m)=>({asama:'kapandi',p:{sonuc:'cevapsiz'},bilgi:meseleOlay(k,m.id,'sp.cevapsiz',{marka:spVeri(m).marka})})},
+    baglam:k=>({tur:'kasa',kulupId:bizimKulup(k)})},
   imza:{tur:'son',
     giris:(k,m,p)=>{const V=spVeri(m),biz=bizimKulup(k),son=`${sezonBitisYili(k)}${SOZLESME_AY_GUN}`;V.aylik=p.tutar;
       for(let t=ayBasiSonraki(k.tarih);tarihKarsilastir(t,son)<=0;t=ayBasiSonraki(t))
@@ -60,7 +83,9 @@ SABLONLAR.sponsor={meseleTuru:'kurumsal',baslangic:'teklif',asamalar:{
     sonuc:()=>'imza'},
   kapandi:{tur:'son',sonuc:(k,m,p)=>p.sonuc||'kapandi'}
 }};
-SABLONLAR.sponsor.asamaMetni={teklif:'Teklif: görüşelim mi',pazarlik:'Aylık bedel pazarlığı',cevap:'Markanın cevabı bekleniyor',imza:'Anlaşıldı; ödemeler her ayın 1\'inde',kapandi:'Kapandı'};
+SABLONLAR.sponsor.asamaMetni={teklif:'Teklif: görüşelim mi',pazarlik:'Aylık bedel pazarlığı',cevap:'Markanın cevabı bekleniyor',devir:'Mali işler müdürü pazarlıkta',devirOnay:'Anlaşma onayı',imza:'Anlaşıldı; ödemeler her ayın 1\'inde',kapandi:'Kapandı'};
+/* AR3-b (karar 95): pazarlığı müdüre devret, müdürdekini devral */
+SABLONLAR.sponsor.sahiplik={kisi:k=>(spMudur(k)||{}).id||null,devret:{asamalar:['pazarlik'],hedef:'devir'},devral:{asamalar:['devir'],hedef:'pazarlik'}};
 SABLONLAR.sponsor.sonucMetni={imza:'Anlaşıldı',reddedildi:'Görüşme reddedildi',cevapsiz:'Cevapsız kaldı',kopma:'Marka görüşmeyi kesti',dustu:'Dosya düştü',kapandi:'Kapandı'};
 /* bir sonraki ayın 1'i (YYYY-MM-01) */
 function ayBasiSonraki(t){const [y,a]=t.split('-').map(Number),Y=a===12?y+1:y,A=a===12?1:a+1;return`${Y}-${String(A).padStart(2,'0')}-01`;}

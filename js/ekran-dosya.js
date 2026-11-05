@@ -79,6 +79,9 @@
 .dsy-devir{justify-self:start;color:${D.mavi};font-weight:600}
 .dsy-asama{margin:0;justify-self:start;padding:.1em .5em;border-left:.25em solid var(--k-vurgu);background:var(--k-serit);font-size:max(var(--k-enKucuk,12px),.92em)}
 .dsy-asama.dsy-asamaSon{border-left-color:var(--k-cizgi);color:var(--k-soluk)}
+/* AR3-b (karar 95): sahiplik satırı — sicil ve Devret / Devral */
+.dsy-sahip{margin:0;display:flex;flex-wrap:wrap;gap:.2em .6em;align-items:baseline;font-size:max(var(--k-enKucuk,12px),.92em)}
+.dsy-sahip small{color:var(--k-soluk)}
 .dsy-damga{justify-self:start;padding:.15em .6em .1em;border:.2em double currentColor;border-radius:.2em;font-family:var(--mono);font-weight:700;font-size:.95em;letter-spacing:.12em;
   text-transform:uppercase;transform:rotate(-4deg);opacity:.85}
 .dsy-d-kararBekliyor{color:var(--k-kirmizi)}.dsy-d-ekipte,.dsy-d-haberBekliyor{color:${D.mavi}}.dsy-d-kapandi{color:var(--k-soluk)}
@@ -316,7 +319,12 @@ function dosyaGorunumu(k,D,Y){
       (()=>{const a=typeof sablonAsamaSatiri==='function'?sablonAsamaSatiri(k,m):null;return a?'<p class="dsy-asama'+(a.son?' dsy-asamaSon':'')+'">'+yaz(a.son?'Sonuç: '+a.metin:a.metin)+'</p>':'';})()+
       /* U3 (envanter 15): devredilen iş kimde ve ne zamana kadar (“Ayla'da · Perşembe'ye kadar”) */
       (()=>{const e=m.durum==='ekipte'&&o.sorumlu&&typeof devirEtiketi==='function'?o.adimlar.find(a=>a.tur==='ekip'):null,t=e&&devirEtiketi(k,o.sorumlu.id,e.tarih);return t?'<span class="dsy-devir">'+yaz(t)+'</span>':'';})()+
-      '<dl class="dsy-kunye"><dt>Yürüten</dt><dd>'+(o.sorumlu?yaz(o.sorumlu.ad):'—')+'</dd>'+(st?'<dt>'+yaz(st.split(': ')[0])+'</dt><dd><b>'+yaz(st.split(': ').slice(1).join(': '))+'</b></dd>':'')+'</dl>';
+      /* AR3-b: şablonlu dosyada yürüten dosyanın sahibidir (başkan ya da devredilen kişi); sicil ve Devret / Devral (js/sablon.js sablonSahiplik) */
+      (()=>{const R=m.sablon&&typeof sablonSahiplik==='function'?sablonSahiplik(k,m):null;if(!R||!(R.devret||R.devral||R.sahip))return'';
+        const S=R.sahip&&typeof kisiSicili==='function'?kisiSicili(k,R.sahip):null,sic=S?(S.is||S.devralinan?S.satir:'ilk işi'):'',d=R.devret?'<button type="button" class="od-baglanti" data-eylem="sahipDevret" data-mesele="'+m.id+'">Devret: '+yaz(kisiAdi(k,R.kisiId))+' ▸</button>'
+          :R.devral?'<button type="button" class="od-baglanti" data-eylem="sahipDevral" data-mesele="'+m.id+'">Devral ▸</button>':'';
+        return'<p class="dsy-sahip">'+(R.sahip?'<span>'+yaz(kisiAdi(k,R.sahip))+' yürütüyor</span>'+(sic?'<small>Sicili: '+yaz(sic)+'</small>':''):'<span>Sen yürütüyorsun</span>')+(R.engel?'<small>'+yaz(R.engel)+'</small>':d)+'</p>';})()+
+      '<dl class="dsy-kunye"><dt>Yürüten</dt><dd>'+(m.sablon&&m.sablon.sonuc===null?yaz(m.sablon.sahip?kisiAdi(k,m.sablon.sahip):'Sen'):o.sorumlu?yaz(o.sorumlu.ad):'—')+'</dd>'+(st?'<dt>'+yaz(st.split(': ')[0])+'</dt><dd><b>'+yaz(st.split(': ').slice(1).join(': '))+'</b></dd>':'')+'</dl>';
     if(o.bilgiler.length)sol+='<h4>Bilinenler</h4><ul class="dsy-notlar">'+o.bilgiler.slice(-4).map(x=>'<li class="dsy-not">'+yaz(x.metin)+'<small>— '+yaz(x.kaynak)+'</small></li>').join('')+'</ul>';
     sol+=Y.sozler(o);
     if(Y.maliBaglantisi&&Y.maliBaglantisi(m)&&R.length)sol+='<p class="od-not">Para durumu: <button type="button" class="od-baglanti" data-eylem="raporlar">Son mali özet ▸</button></p>';
