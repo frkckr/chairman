@@ -24,7 +24,7 @@ Son güncelleme: 2026-11-05 (dizüstü: karar 95 — AR3 durdu, sahiplik, çakı
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır: `git show tur/<ad>:YOL_HARITASI.md`).
 
-**Makine durumu: dizüstü çalışıyor (2026-11-05 akşam, oto mod AR3 — kullanıcı: “Onayla, başla”; dal `claude/ar3-zaman`, her dilim commit ve push).**
+**Makine durumu: boşta (2026-11-05 gece, dizüstü; AR3-a ve AR3-b bitti, `claude/ar3-zaman` push edildi; AR3-c görüşme sıradaki — kapı ziyaretinin ekranını ve akış 21, 37'yi değiştirdiği için temiz noktada durdu).**
 
 **2026-11-05 akşam, dizüstü — AR3-a metin altyapısı ve AR3-b sahiplik ve devir (karar 95; uygulama notu [arayuz-uygulama.md](araclar/plan/arayuz-uygulama.md) §4).**
 - **Oyunda:** dosyada sahiplik satırı ve Devret / Devral (transferde kulüple pazarlık, sponsorda aylık bedel); devredilen iş mali işler müdürünün becerisi ve huyuyla, onun sesiyle döner (onay kartı); işi elinden alınan gururlu müdür bozulur (“Siz bilirsiniz başkanım” → ikincisinde “Yine mi başkanım?”) ve bir süre ağırdan alır; sicil dosyada ve Haberler › Takipte'de; müdüre “İşler nasıl gidiyor?” (sonucu değiştirmez). Huylar TEST taslağı (aşağıda). Kural ve kayıt: sürüm 13, yeni alanlar isteğe bağlı.
