@@ -52,6 +52,7 @@ function personelKisisi(k,rol){
 const yazismaBekleyen=(k,id)=>Object.values(k.isler).some(x=>(x.tur==='gelisme'&&x.veri.gelisme==='yazismaCevap'&&x.veri.muhatap===id)||(x.tur==='ajanda'&&x.veri.karar==='gorusmeOnerisi'&&x.veri.kisiId===id));
 /* bu kişiyle gelecekteki görüşme randevusu */
 /* RK6: kabul edilen görüşme kapı kararıdır (js/ziyaret.js: ziyaret, ziyaretGorusme); eski kayıttaki düz randevu (etki ekipGorusmesi) da sayılır */
+/* AR3: o kişiyle açık sahne (js/sahne.js) randevu sayılmaz; kartları sahnede oynanır */
 const yazismaRandevu=(k,id)=>Object.values(k.isler).find(x=>x.tur==='ajanda'&&(x.veri.etki==='ekipGorusmesi'||x.veri.karar==='ziyaret'||x.veri.karar==='ziyaretGorusme')&&x.veri.kisiId===id)||null;
 /* bu kişiye bu konu (ve maç) daha önce soruldu mu (girişim kaydı) */
 const yazismaSoruldu=(k,id,konu,macId)=>k.gecmis.some(g=>g.tur==='girisim'&&g.kisiId===id&&g.konu===konu&&(macId===undefined||g.macId===macId));

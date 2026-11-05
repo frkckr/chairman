@@ -67,10 +67,11 @@ const OYUNCU_NOT_KAYNAKLARI=[
       for(const tur of yard?['sakat','cezali','yorgun']:['sakat','cezali','yorgun','formda'])
         if(icinde(y.p[tur]))L.push({tarih:g.tarih,dakika:g.dakika,anahtar:(yard?'not.yardimci.':'not.hoca.')+tur,p:{},kaynak:kisi.ad||'—'});}
     /* RK6: odadaki görüşme (js/ziyaret.js geçmiş satırı {tur:'ziyaret', p}): aynı listeler, görüşme anının görüntüsünden */
-    for(const g of k.gecmis||[]){if(g.tur!=='ziyaret'||g.konu!=='takim'||!g.p)continue;
+    /* AR3: görüşme sahnesi (js/sahne.js geçmiş satırı {tur:'sahne', konu:'takim', p:{takim}}) aynı listeler */
+    for(const g of k.gecmis||[]){const P=g.tur==='ziyaret'&&g.konu==='takim'?g.p:g.tur==='sahne'&&g.konu==='takim'&&g.p?g.p.takim:null;if(!P)continue;
       const kisi=k.kisiler[g.kisiId]||{},yard=kisi.rol==='yardimciAntrenor';
       for(const tur of yard?['sakat','cezali','yorgun']:['sakat','cezali','yorgun','formda'])
-        if(icinde(g.p[tur]))L.push({tarih:g.tarih,dakika:g.dakika,anahtar:(yard?'not.yardimci.':'not.hoca.')+tur,p:{},kaynak:kisi.ad||'—'});}
+        if(icinde(P[tur]))L.push({tarih:g.tarih,dakika:g.dakika,anahtar:(yard?'not.yardimci.':'not.hoca.')+tur,p:{},kaynak:kisi.ad||'—'});}
     return L;}},
   /* R2-e: “Oyuncu hakkında sor” cevabı (js/yazisma.js konu 'oyuncu'): o oyuncunun dosyasına kişinin kendi sözüyle, cevap anının görüntüsünden */
   {ad:'gorus',kaynakAd:'Hoca',notlar:(k,id)=>{
@@ -78,6 +79,10 @@ const OYUNCU_NOT_KAYNAKLARI=[
     for(const g of k.gecmis||[]){const y=g.tur==='is'&&g.isTuru==='gelisme'&&g.sonuc&&g.sonuc.yazisma;if(!y||y.konu!=='oyuncu'||y.cevapYok||!y.p||y.p.oyuncuId!==id)continue;
       const kisi=k.kisiler[y.kisiId]||{},f=K.metin[kisi.rol]||K.metin.teknikDirektor;
       L.push({tarih:g.tarih,dakika:g.dakika,anahtar:kisi.rol==='yardimciAntrenor'?'not.yardimci.gorus':'not.hoca.gorus',p:{metin:f(k,y)},kaynak:kisi.ad||'—'});}
+    /* AR3: görüşme sahnesinde dinlenen oyuncu görüşü (kart 'oyuncu' açıldıysa: günlükte 'baska' kartına “Anlat”) */
+    for(const g of k.gecmis||[]){if(g.tur!=='sahne'||g.konu!=='takim'||!g.p||!g.p.oyuncu||g.p.oyuncu.oyuncuId!==id||!(g.log||[]).some(x=>x.kart==='baska'&&x.secim==='anlat'))continue;
+      const kisi=k.kisiler[g.kisiId]||{},f=K.metin[kisi.rol]||K.metin.teknikDirektor;
+      L.push({tarih:g.bitis?g.bitis.tarih:g.tarih,dakika:g.bitis?g.bitis.dakika:g.dakika,anahtar:kisi.rol==='yardimciAntrenor'?'not.yardimci.gorus':'not.hoca.gorus',p:{metin:f(k,{p:g.p.oyuncu,kisiId:g.kisiId})},kaynak:kisi.ad||'—'});}
     return L;}}
 ];
 /* TEST metinleri (kullanıcı değiştirir) */

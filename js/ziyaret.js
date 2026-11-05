@@ -43,7 +43,7 @@ function ziyaretRandevuVeri(k,kisiId,erteleme,konu){
 const ziyaretSaatinde=(k,is)=>!!is&&is.tarih===k.tarih&&is.dakika===k.gunIciDakika;
 const ziyaretBul=(k,tur)=>Object.values(k.isler).find(x=>x.tur==='ajanda'&&x.veri.karar===tur&&ziyaretSaatinde(k,x))||null;
 const ziyaretKapida=k=>{const x=ziyaretBul(k,'ziyaret');return x&&kisiAktif(k,x.veri.kisiId)?x:null;};
-const ziyaretGorusmede=k=>ziyaretBul(k,'ziyaretGorusme');
+const ziyaretGorusmede=k=>ziyaretBul(k,'ziyaretGorusme');   /* AR3'ten beri yalnız eski kayıttaki tek kartlı görüşme; yenisi k.sahne (js/sahne.js) */
 function ziyaretSonrakiAn(k,is){
   const biz=bizimKulup(k),macGunu=new Set((k.fikstur||[]).filter(f=>f.ev===biz||f.konuk===biz).map(f=>f.tarih)),G=YAZISMA_TEST.gorusme;
   for(let d=1;d<=ZIYARET_TEST.gunEnCok;d++){
@@ -65,6 +65,8 @@ KARAR_TURLERI.ziyaret={
   uygula:(k,is,secim)=>{
     const v=is.veri,ad=kisiAdi(k,v.kisiId);
     if(secim==='buyursun'){
+      /* AR3 (js/sahne.js): kişi oturur, sahne açılır (kart zinciri; saat kartla akar). Konunun sahnesi yoksa eski tek kartlı görüşme */
+      if(typeof sahneAc==='function'&&sahneKonusu(v.konu)){sahneAc(k,{tur:'oda',kisiId:v.kisiId,konu:v.konu,kaynak:{isId:is.id}});return{bilgi:`${ad} içeri girdi.`};}
       const Z=ZIYARET_KONULARI[v.konu],T=Z?{konu:v.konu}:takimGoruntusu(k);
       isEkle(k,{tur:'ajanda',tarih:k.tarih,dakika:k.gunIciDakika,veri:{baslik:`Görüşme: ${ad}`,aciklama:Z?Z.konusma(k,v):ziyaretKonusmasi(k,v.kisiId,T),zorunluluk:'istege',
         sure:YAZISMA_TEST.gorusme.sure,karar:'ziyaretGorusme',kisiId:v.kisiId,konu:v.konu,p:T}});

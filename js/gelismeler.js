@@ -101,7 +101,13 @@ function gelismeListesi(k,o){
           gecmis:{isId:g.isId,j}},kacan?{kacan}:{}));});
     }
   }
-  const SIRA={tel:0,rp:1,gc:2,hb:3},sira=x=>SIRA[x.id.slice(0,x.id.indexOf(':'))]||9;
+  /* 5. AR3: biten görüşmeler (js/sahne.js geçmiş satırı; başkan oradaydı: okunmuş). Kanal kapı (odada, dışarıda) ya da telefon */
+  for(const g of k.gecmis||[]){
+    if(g.tur!=='sahne'||!g.bitis)continue;const an=anDakika(g.bitis.tarih,g.bitis.dakika);
+    ekle('sh:'+an+':'+g.id,an,{kanal:g.sahneTur==='telefon'?'telefon':'kapi',sinif:'okumalik',kategori:'kulup',baslik:typeof sahneSatirMetni==='function'?sahneSatirMetni(k,g):'Görüşme',
+      hedef:{tur:'sahne',id:g.id},okundu:true,kaynak:{tur:'kisi',id:g.kisiId},sahne:g.id});
+  }
+  const SIRA={tel:0,rp:1,sh:2,gc:2,hb:3},sira=x=>SIRA[x.id.slice(0,x.id.indexOf(':'))]||9;
   L.sort((a,b)=>b.an-a.an||sira(a)-sira(b)||(a.id<b.id?-1:1));
   const v=L.slice(0,GELISME_TEST.enCok);
   GELISME_ON.k=k;GELISME_ON.anahtar=anahtar;GELISME_ON.v=v;
@@ -151,6 +157,12 @@ function gelismeAyrinti(k,x){
     const maclar=x.alt.filter(y=>y.hedef&&y.hedef.tur==='mac').map(y=>macOzet(y.hedef.id)).filter(Boolean),obur=x.alt.filter(y=>!(y.hedef&&y.hedef.tur==='mac')).map(y=>y.baslik);
     if(maclar.length)E.push(['Fikstür ▸','lig','fikstur',null],['Puan durumu ▸','lig','puan',null]);
     return{kanal:'grup',govde:{maclar,obur},eylemler:E};
+  }
+  if(h.tur==='sahne'){
+    const g=(k.gecmis||[]).find(y=>y.tur==='sahne'&&y.id===h.id);if(!g)return{kanal:'gorusme',govde:{satirlar:[],sure:0,tahmin:null},eylemler:E};
+    E.push(['Ajandada aç ▸','ajanda',null,{tarih:g.tarih}]);
+    return{kanal:'gorusme',govde:{sahneTur:g.sahneTur,kisiId:g.kisiId,sure:g.sure,tahmin:g.tahmin||null,yol:g.yol||0,kesildi:g.kesildi||null,yarida:!!g.yarida,
+      satirlar:(g.log||[]).map(l=>({metin:l.metin,dk:l.dk,bilgi:l.bilgi||null}))},eylemler:E};
   }
   if(x.kanal==='telefon'){
     const c=typeof konusmaListesi==='function'?konusmaListesi(k).find(y=>y.anahtar===h.kisi):null,an=x.an;

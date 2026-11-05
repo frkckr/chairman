@@ -45,6 +45,8 @@ const zamanAsimiVar=x=>x.tur==='ajanda'&&!!x.veri.saatsiz&&!!x.veri.bekleyebilir
 const zamanAsimiMetni=(k,x)=>KARAR_TURLERI[x.veri.karar].zamanAsimi.metin(k,x);
 /* katılım önizlemesine ek engel koyan kural dosyaları: (k, iş, süre) => metin | null (js/gozlem.js: gözlem sürerken uzun iş) */
 const AJANDA_ENGELLERI=[];
+/* AR3: İlerle'yi ve günü bitirmeyi engelleyen kural dosyaları: (k) => metin | null (js/sahne.js: açık görüşme) */
+const ILERLE_ENGELLERI=[];
 
 IS_TURLERI.ajanda={
   pay:1,
@@ -208,6 +210,7 @@ function ajandaErtele(k,id,otomatik){
 /* günü bitirmeden önce: engeller, ertesi güne taşınacak, kaçırılacak ve arada gerçekleşecek işler */
 function gunuBitirOnizle(k){
   const hedef=simdikiAn(k)+1440-k.gunIciDakika+GUN_BASLANGICI,engel=[],tasinacak=[],kacirilacak=[],gerceklesecek=[];
+  for(const f of ILERLE_ENGELLERI){const e=f(k);if(e)engel.push(e);}
   for(const x of bekleyenIsler(k)){
     if(isSonAn(x)>hedef)continue;
     if(x.tur!=='ajanda'){if(!isGizli(x))gerceklesecek.push(x);continue;}
@@ -232,6 +235,7 @@ function gunuBitir(k){
    (neden 'haber': başkanın beklediği görüş gelecek) durak: başlangıcında durulacak iş ya da null, tasinacak, kacirilacak, gerceklesecek: arada işlenecek rutin işler} */
 function ilerleOnizle(k){
   const simdi=simdikiAn(k),engel=[],tasinacak=[],kacirilacak=[],L=bekleyenIsler(k);
+  for(const f of ILERLE_ENGELLERI){const e=f(k);if(e)engel.push(e);}
   const saatli=L.filter(x=>x.tur==='ajanda'&&!x.veri.saatsiz),anlar=new Map();
   for(const x of saatli){
     if(isAn(x)>simdi){anlar.set(x.id,isAn(x));continue;}
@@ -303,6 +307,9 @@ function ajandaGunu(k,tarih){
   }
   for(const g of k.gecmis){
     if(g.tur==='erteleme'&&g.eski===tarih){s.push({id:g.isId,tur:'ajanda',saat:g.saat,durum:'ertelendi',baslik:g.baslik,yeni:g.yeni});continue;}
+    /* AR3: biten görüşme (js/sahne.js) gerçekleşen süresiyle; dışarıdaysa yolu da kaplar */
+    if(g.tur==='sahne'&&g.tarih===tarih){s.push({id:g.id,tur:'ajanda',saat:Math.max(0,g.dakika-(g.yol||0)),durum:'yapildi',baslik:typeof sahneSatirMetni==='function'?sahneSatirMetni(k,g):'Görüşme',
+      zorunluluk:'istege',sure:g.sure+2*(g.yol||0),sahne:g.id});continue;}
     if(g.tur!=='is')continue;
     const r=g.sonuc||{};
     if(g.isTuru==='ajanda'){
