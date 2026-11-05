@@ -1,6 +1,6 @@
 # Chairman — senaryo haritası ve olay kütüphanesi
 
-Son güncelleme: 2026-10-29 (başkanlık deneyiminin temel ilkelerini yazım ve incelemeye bağlama; karar 59; yalnız belge). Önceki: 2026-10-29 (kullanıcının senaryo çalışması: tek ana belge, uzun süreçler, koşula bağlı birleşimler, gündelik akış ve görev dışında devam; karar 58). Önceki: 2026-10-26 gece (Y0: paket ve dosya şablonu). **Senaryo araştırmasının, olay ailelerinin, ara akışların ve aralarındaki bağlantıların ana çalışma dosyası budur.** Yeni bir paralel senaryo haritası açılmaz; dosya adı ve S/P/K kimlikleri korunur. Ortak oyun kuralları [OYUN_TASARIMI](OYUN_TASARIMI.md), teknik sözleşme [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi), uygulama sırası [YOL_HARITASI](YOL_HARITASI.md) içinde kalır. Bu belgeyi genişletmek oyuna içerik eklenmiş veya altyapı tamamlanmış olduğu anlamına gelmez.
+Son güncelleme: 2026-11-05 (§9: karar 95 soruları — sahiplik, çakışma, erteleme, mizah; yalnız belge). Önceki: 2026-10-29 (başkanlık deneyiminin temel ilkelerini yazım ve incelemeye bağlama; karar 59; yalnız belge). Önceki: 2026-10-29 (kullanıcının senaryo çalışması: tek ana belge, uzun süreçler, koşula bağlı birleşimler, gündelik akış ve görev dışında devam; karar 58). Önceki: 2026-10-26 gece (Y0: paket ve dosya şablonu). **Senaryo araştırmasının, olay ailelerinin, ara akışların ve aralarındaki bağlantıların ana çalışma dosyası budur.** Yeni bir paralel senaryo haritası açılmaz; dosya adı ve S/P/K kimlikleri korunur. Ortak oyun kuralları [OYUN_TASARIMI](OYUN_TASARIMI.md), teknik sözleşme [TEKNIK_PLAN §6](TEKNIK_PLAN.md#6-karar-olay-ve-ilişki-sistemi), uygulama sırası [YOL_HARITASI](YOL_HARITASI.md) içinde kalır. Bu belgeyi genişletmek oyuna içerik eklenmiş veya altyapı tamamlanmış olduğu anlamına gelmez.
 
 Katalog bugün 73 kaynaklı tarihsel örnek (S01–S23 çekirdek, §14'te S24–S73 geniş araştırma), 14 olay ailesi ve 12 koşula bağlı birleşim taslağı içerir (K01–K06 çekirdek, §16'da K07–K12 araştırma adayları). Uzun vadeli içerik hedefi yaklaşık 50 büyük hikâye ailesi, bunların ara akışları, olağan işler ve küçük kulüp anlarıdır; bu sayı yazılmış içerik veya aynı kariyerde oynatılacak olay kotası değildir. Tarihsel dayanak ile oyun için kurgu ayrılır. Hikâyeler haftalara, aylara veya sezonlara yayılabilir; kısa ve tek kararda sonuçlanan işler de bulunur.
 
@@ -262,6 +262,17 @@ Kart geliştirilirken önce §7 uyum kararı ve iki cevap sözleşmesi, sonra a�
 - Aradaki günlerde ne yaşanıyor; bir kart ilgili adımı mı değiştiriyor, sonraki görüşmeleri ve beklemeleri gereksizce atlatıyor mu?
 - Başka aileye geçişin ortak kayıtta gerçek nedeni var mı; hiç bağlanmayan ve sorunsuz kapanan yol da yazılmış mı?
 - Görev değişince konu kimde kalıyor; eski başkan hangi bilgiye erişebiliyor ve hangi eylemleri artık yapamıyor?
+
+**Karar 95 soruları (2026-11-05; sahiplik, çakışma, erteleme ve mizah — her kart ve olayda):**
+
+1. Bedel bir tercihe mi bağlı (üstlenmek ya da devretmek, çakışmada seçmek, yarına bırakmak), yoksa rutine mi? Rutine bağlıysa yazılmaz.
+2. Çakışma oyuncunun önceden görebildiği işlerden mi doğuyor; en az bir tarafı kendi taahhüdü mü? Oyunun cezalandırmak için uydurduğu çakışma yazılmaz.
+3. İki cevap da savunulur mu; her biri kimin tarafını tutuyor ve ne kazandırıp ne kaybettiriyor? Devretmek ya da bizzat gitmek hep doğruysa kart bozuktur.
+4. Sonuç bir kişinin ağzından mı geliyor ve bir kancayla mı bitiyor (yeni kişi, yeni kart, bir pürüz)? Yalnız “oldu / olmadı” yazılmaz.
+5. Kayıp önceden bir kişi tarafından söylendi mi, sonra nedeni açıklandı mı? Habersiz kayıp yazılmaz; gece olayı nadirdir ve bazen iyi sürprizdir.
+6. Güldürüyor ya da şaşırtıyor mu; kişinin huyundan ve gerçek veriden mi geliyor; bu kariyerde daha önce kullanıldı mı? Oyuncuyla dalga geçen, güncel olaya yaslanan ya da kelime değiştirerek çoğaltılan şaka yazılmaz.
+
+Mizah yazımı: tam kütüphane baştan yazılmaz; her durum için önce herkesin söyleyebileceği genel cümle, sonra özel hâller (kişi, huy, olay) eklenir; kütüphane senaryolarla ve içerik duraklarında büyür (OYUN_TASARIMI §10 “Mizahın altyapısı”; kaynaklı bulgular ve ton için gerçek anılar [araclar/plan/sahiplik-cakisma-arastirma.md](araclar/plan/sahiplik-cakisma-arastirma.md) §6).
 
 ## 10. Açık kararlar ve bakım
 

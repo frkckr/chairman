@@ -1,5 +1,7 @@
 # Chairman — başkanlık deneyiminin kapsamlı analizi: neredeyiz, neyi neden değiştiriyoruz, oyun nasıl hissedilecek (2026-11-04, dizüstü)
 
+**2026-11-05 — karar 95:** bu belgedeki zaman modeli C (sahnede kartla akan saat, süre tahmini, gün doluluğu, bedelli gece, kesinti, telefon araması) kullanıcı kararıyla kalktı; güncel tasarım [OYUN_TASARIMI §6 “Sahiplik, çakışma ve erteleme”](../../OYUN_TASARIMI.md#zamanın-ilerleme-kuralları), tartışması [sahiplik-cakisma-arastirma.md](sahiplik-cakisma-arastirma.md). Belgenin geri kalanı (pano–kanal–dosya, bilginin iki türü, devir, Haberler) geçerlidir.
+
 Durum: **okuma belgesi (tartışma turu 3); plan değil, kod yok.** Kullanıcının isteği: iki turdur alınan kararları gerekçeleriyle, neyi kaçıp neye yaklaştığımızla, somut örneklerle ve hikâyeleştirerek tek yerde okumak; FM ve CM'ye göre bu oyunun farkını ve neden keyifli olacağını görmek; bugünkü durumu, değişecekleri, kurulacak altyapıyı, görsel konseptin ve menülerin kararları nasıl taşıyacağını, Claude'un tercihlerini ve alternatifleri görmek. Önceki iki tur: [arayuz-inceleme.md](arayuz-inceleme.md) (tespitler, on üç tercih kabul edildi, önizleme) ve [arayuz-akis-mantigi.md](arayuz-akis-mantigi.md) (yedi kural, zaman modeli C). Bu belge onları tekrar etmez, birleştirir ve anlatır. Adlar, rakamlar ve replikler örnek; oyunun TEST kişileri (Haluk Demirel, Şükrü Hoca, Tahsin, Nusret Bey, Rıfat Bey, menajer Tarık Yener) ve kullanıcının kulüp adları kullanıldı.
 
 ---

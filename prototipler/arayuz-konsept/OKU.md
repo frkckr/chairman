@@ -1,6 +1,6 @@
 # Arayüz konsepti — önizleme (2026-11-04)
 
-Oyun kodu değildir; oyuna dokunmaz. Tartışma ve tespitler: [araclar/plan/arayuz-inceleme.md](../../araclar/plan/arayuz-inceleme.md).
+Oyun kodu değildir; oyuna dokunmaz. **2026-11-05 (karar 95):** önizlemedeki görüşme saati, süre tahmini, günün doluluğu, gece, “Ara” düğmesi ve görüşmeyi bölen telefon artık hedef değildir (güncel tasarım OYUN_TASARIMI §6 “Sahiplik, çakışma ve erteleme”); menüler, bölümler ve görünüş geçerlidir. Tartışma ve tespitler: [araclar/plan/arayuz-inceleme.md](../../araclar/plan/arayuz-inceleme.md).
 
 ## Açmak
 
