@@ -24,7 +24,7 @@ Son güncelleme: 2026-11-03 (dizüstü, oto mod: CM2-a takvim ve sezon öncesi b
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır: `git show tur/<ad>:YOL_HARITASI.md`).
 
-**Makine durumu: dizüstü çalışıyor (2026-11-05 akşam, oto mod: AR3 yeni kapsam — karar 95, kullanıcı: “Onayla, başla”; dal `claude/ar3-zaman`, her dilim commit ve push). Güncel devam notu o dalda (`git show origin/claude/ar3-zaman:YOL_HARITASI.md`). Bu gece masaüstünde büyük kapı AR3'süz koşar: `git switch claude/ar2-haberler`, `node araclar/buyuk-kapi.js` (karar 93); bu satır onu engellemez.**
+**Makine durumu: boşta (2026-11-05 gece, dizüstü). AR3-a (metin altyapısı) ve AR3-b (sahiplik ve devir) `claude/ar3-zaman` dalında, push edildi; güncel devam notu o dalda (`git show origin/claude/ar3-zaman:YOL_HARITASI.md`). Bu gece masaüstünde büyük kapı AR3'süz koşar: `git switch claude/ar2-haberler`, `node araclar/buyuk-kapi.js` (karar 93).**
 
 **Makine durumu: boşta (2026-11-04, dizüstü; AR1 kapandı, `main`'e alındı ve push edildi — kullanıcı: “main'e al, büyük kontrol kapısını borç olarak yaz, bugünkü durumu normal kabul edelim”; etiket `tur/ar1-cerceve`, birleşen dallar silindi). Evde `main` çekilir (`git fetch --prune --tags`, `git pull --ff-only`); evdeki push edilmemiş yerel görsel denemeler istenmiyor (kullanıcı): önce yerel yedek dala alınır, sonra `main` uzaktakine eşitlenir.**
 
