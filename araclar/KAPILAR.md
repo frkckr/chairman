@@ -4,6 +4,8 @@ Bu tablo [CLAUDE.md “Kontrol”](../CLAUDE.md#kontrol)'ün kademelerine ekleni
 
 **R1 (2026-10-29):** hızlı kademenin tek komutu `node araclar/hizli.js` (değişen dosyaya göre ad denetimi, `mac-deneme 4` ve `kariyer-deneme`'yi paralel koşar, ekran değiştiyse tarayıcı denetimini yazar; gruplar `araclar/dosya-gruplari.js`). Güncel tabanlar `araclar/taban/GUNCEL.json`'da; bilinen kabul dışı satırlar, zaman aşımları ve ertelenen işler `araclar/BORCLAR.md`'de (oturum sonu ve akış denemesi yalnız defterde olmayan satırla başarısız olur).
 
+**Büyük kapı tek komut (2026-11-05):** `node araclar/buyuk-kapi.js` — hız bütçesi (makine boşken, önce), ad denetimi, `kariyer-deneme`, `oturum-sonu --ayni --seyrek`, dört sezon tabanı (Kasım t7/t3 ve yaz t7 `--ayni`; yaz t3 tabanı yoksa ilk tabanı yazar) paralel, sonra `kontrol.py`, `akis-2d.py`, akışın tamamı ve okunurluk beş pencere ayrı süreçlerde sırayla; düşen adımda durmaz, özet `araclar/son-buyuk-kapi.txt`. Masaüstünde ~3–4 saat; uyku kapalı olmalı.
+
 Tarayıcı denetimleri (`akis-deneme.py`, `kontrol.py`, `akis-2d.py`) tek yürütücüyle sırayla koşar: aynı anda iki tarayıcı denemesi bekleme sınırlarını aşar ve akis 20'nin yerel sunucusu çakışır (H2, 2026-10-26).
 
 Çekirdek senaryolar (motor değişen her oturum sonu ve büyük kapı): `c-1v1`, `c-koru`, `c-temas`, `c-hava`, `c-kanat`, `c-orta`, `b-pas`, `d-sut`, `t-top`, `z-s14`.

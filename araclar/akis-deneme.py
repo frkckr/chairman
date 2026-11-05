@@ -183,10 +183,11 @@ async def lig_hesap_bekle(pg, sn=240):
 
 async def oda_ilerle(pg):
     """İlerle'ye basar; kaçırılacak ya da cevapsız kalacak iş için onay isterse onaylar. RK7: öbür maçların hesabı bitene dek bekler."""
-    await pg.click(".od-ana")
+    # 2026-11-05: file:// adreste (işçi yok) İlerle'nin yolundaki öbür maçlar tıklamanın içinde ana iplikte hesaplanır; dizüstünde 30 sn'yi aşabiliyor (§33)
+    await pg.click(".od-ana", timeout=180000)
     await lig_hesap_bekle(pg)
     if await pg.query_selector('.od-ana[data-eylem="ilerle"]:has-text("Onayla")'):
-        await pg.click(".od-ana")
+        await pg.click(".od-ana", timeout=180000)
         await lig_hesap_bekle(pg)
 
 # ---- U0 (2026-10-28): ortak yardımcılar. Odak modelinde (U1–U6) kap, Esc ve masa şeridi değişince yalnız bunlar güncellenir ----
@@ -445,8 +446,9 @@ async def bolum_2(tarayici, site, tum_hatalar):
     await pg.click('[data-eylem="bozukYeni"]')
     await pg.wait_for_selector(ODA_HAZIR, timeout=20000)
     d = await durum(pg)
+    # 2026-11-05 (B62): içerik sürümü sabit 5 değil, oyunun ICERIK_SURUM'u (CM2-b'den beri 6; §1 ile aynı)
     denetle("Kaydı sakla, yeni kariyer: eski kayıt '.bozuk' olarak saklandı; içeriksiz yeni kariyer kuruldu",
-            await pg.evaluate("localStorage.getItem('chairman:oyun-1.bozuk')") == eski and d["icerik"] == 5 and d["mesele"] == "", str(d))
+            await pg.evaluate("localStorage.getItem('chairman:oyun-1.bozuk')") == eski and d["icerik"] == await pg.evaluate("() => ICERIK_SURUM") and d["mesele"] == "", str(d))
     tum_hatalar += hatalar
     await baglam.close()
 
@@ -536,7 +538,7 @@ OYUNCU_JS = """([id, macId]) => { const k = OYUN.kariyer, p = k.oyuncular[id], A
     kulup: !!A.querySelector('[data-eylem=csAc][data-tur=kulup][data-id=' + p.kulupId + ']'),
     sezon: ['Maç', 'Dakika', 'Gol', 'Kart'].every(x => [...A.querySelectorAll('.ok-sezon dt')].some(d => (d.querySelector('abbr') ? d.querySelector('abbr').title : d.textContent) === x)),
     bu: !!bu && (gol === 0 || bu.textContent.includes(gol + ' gol')) && bu.textContent.includes(' dk'), saglik: A.textContent.includes('Sağlık geçmişi'),
-    geri: (A.querySelector('.cs-geri') || {}).textContent || '' }; }"""
+    geri: (A.querySelector('.cs-geri') || document.querySelector('#oda .od-ustGeri') || {}).textContent || '' }; }"""   # AR1: Lig'de geri başlık şeridinde
 TAKIM_JS = """([id, bol]) => { const k = OYUN.kariyer, A = document.querySelector('.lg-altSayfa .cs-sayfa[data-tur=kulup]'); if (!A) return null; const t = A.textContent;
   if (bol === 'genel') return { ad: A.querySelector('h4').textContent === k.kulupler[id].ad, arma: !!A.querySelector('.cs-kulupBas .arma-buyuk'), sirada: t.includes('Sıradaki'), stat: t.includes('Stat') };
   if (bol === 'maclar') { const L = [...A.querySelectorAll('.cs-maclar li')]; return { n: L.length, beklenen: k.sezon.haftaSayisi - k.sezon.ilkHafta + 1, oynanan: L.filter(l => l.querySelector('b')).length }; }
@@ -544,8 +546,9 @@ TAKIM_JS = """([id, bol]) => { const k = OYUN.kariyer, A = document.querySelecto
   return { kayitli: t.includes('Kayıtlı maç2 '), golculer: t.includes('Golcüler') }; }"""
 KAYDIR_JS = """(ne) => { const s = document.querySelector('.lg-altSayfa .cs-sayfa'); let e = s; while (e && !['auto', 'scroll'].includes(getComputedStyle(e).overflowY)) e = e.parentElement;
   if (!e) return { y: -1, tur: s ? s.dataset.tur : null }; if (ne === 'alt') e.scrollTop = e.scrollHeight; return { y: Math.round(e.scrollTop), tur: s.dataset.tur, h: e.scrollHeight - e.clientHeight }; }"""
-SAYFA_YERI_JS = """() => { const s = document.querySelector('.lg-altSayfa .cs-sayfa'); return [s ? s.dataset.tur : null, (document.querySelector('.tlf-is .cs-sekme[aria-selected=true]') || {dataset: {}}).dataset.bolum || null,
-  (document.querySelector('.tel-ekran') || {dataset: {}}).dataset.ekran || null]; }"""
+# AR1: Lig'in alt sayfası, seçili bölümü ve açık bölüm (Esc zinciri: alt sayfa → Lig → Ofis)
+SAYFA_YERI_JS = """() => { const s = document.querySelector('.lg-altSayfa .cs-sayfa'), a = document.querySelector('#oda section.cm-icerik');
+  return [s ? s.dataset.tur : null, s ? ((s.querySelector('.cs-sekme[aria-selected=true]') || {dataset: {}}).dataset.bolum || null) : null, a ? a.dataset.odak : null]; }"""
 
 
 async def lig_hafta_ac(pg, sekme="fikstur"):
@@ -3519,8 +3522,9 @@ async def bolum_31(tarayici, site, tum_hatalar):
     await lig_hafta_ac(pg)
     hs = await pg.evaluate(LIG_HAFTA_JS)
     bitti = await pg.evaluate("() => [...document.querySelectorAll('#oda .lg-fikstur .cmp-mac .cmp-saat')].filter(e => e.textContent === 'Bitti').length")
-    denetle("R3-c: maç akşamı hafta görünümü 14. haftayla açılır; sekiz maç bitti, her satırda iki arma; Demirkapı'nın satırı öbürleriyle aynı sınıfta (ayrıcalık yok)",
-            hs["h"] == "14. hafta" and hs["n"] == 8 and bitti == 8 and hs["arma"] == 16 , f"{hs['h']} · {hs['n']} · {bitti} bitti · {hs['sinif']}")
+    # AR1 (karar 90): odada hafta görünümü Lig › Fikstür'de; CM gibi bizim maç işaretli (cmp-biz), telefonun Canlı Skor'u (balkon, maç) tarafsız kalır
+    denetle("R3-c, AR1: maç akşamı Lig › Fikstür 14. haftayla açılır; sekiz maç bitti, her satırda iki arma; satırlar taşmıyor",
+            hs["h"] == "14. hafta" and hs["n"] == 8 and bitti == 8 and hs["arma"] == 16 and hs["tasma"] <= 1, f"{hs['h']} · {hs['n']} · {bitti} bitti · biz {hs['biz']}")
     mid = await pg.evaluate("() => OYUN.kariyer.fikstur.find(f => f.hafta === 14 && (f.ev === 'demirkapi' || f.konuk === 'demirkapi')).id")
     metinler = []
     await cs_ac(pg, "mac", mid)
@@ -3572,28 +3576,28 @@ async def bolum_31(tarayici, site, tum_hatalar):
     for _ in range(4):
         await pg.keyboard.press("Escape")
         zincir.append(await pg.evaluate(SAYFA_YERI_JS))
-    denetle("R3-g: Esc sayfa yığınından birer geri: takım → oyuncu → maç (Kadrolar bölümü korunur) → liste → ana ekran",
-            zincir == [["oyuncu", None, "skor"], ["mac", "kadro", "skor"], [None, None, "skor"], [None, None, "ana"]], str(zincir))
+    denetle("R3-g, AR1: Esc Lig'in sayfa yığınından birer geri: takım → oyuncu → maç (Kadrolar bölümü korunur) → Lig → Ofis",
+            [z[0] for z in zincir] == ["oyuncu", "mac", None, None] and zincir[1][1] == "kadro" and [z[2] for z in zincir] == ["lig", "lig", "lig", None], str(zincir))
     # B44: sayfadan sayfaya geçip dönünce okuma yeri (sağ panel)
     await pg.set_viewport_size({"width": 1180, "height": 540})
-    await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
-    await pg.click('.tel [data-eylem="skorSekme"][data-sekme="tablo"]')
+    await lig_hafta_ac(pg, "puan")   # AR1: odada Canlı Skor yok; takım sayfası Lig'de
     await cs_ac(pg, "kulup", "demirkapi")
     await cs_bolum(pg, "maclar")
     y0 = await pg.evaluate(KAYDIR_JS, "alt")
-    son_mac = await pg.evaluate("() => [...document.querySelectorAll('.tlf-is .cs-maclar [data-eylem=csAc][data-tur=mac]')].pop().dataset.id")
+    son_mac = await pg.evaluate("() => [...document.querySelectorAll('.lg-altSayfa .cs-maclar [data-eylem=csAc][data-tur=mac]')].pop().dataset.id")
     await cs_ac(pg, "mac", son_mac, ".cs-sayfa")
     y1 = await pg.evaluate(KAYDIR_JS, "oku")
     await pg.keyboard.press("Escape")
     y2 = await pg.evaluate(KAYDIR_JS, "oku")
-    denetle("R3-g, B44: takım sayfasının okuma yeri korunur: Maçlar'ın sonundan bir maça girip Esc'le dönünce kaydırma yeri aynı; yeni sayfa baştan açılır",
+    denetle("R3-g, B44, AR1: Lig'deki takım sayfasının okuma yeri korunur: Maçlar'ın sonundan bir maça girip Esc'le dönünce kaydırma yeri aynı; yeni sayfa baştan açılır",
             y0["y"] > 0 and y1["y"] == 0 and abs(y2["y"] - y0["y"]) <= 2 and y2["tur"] == "kulup", f"{y0} → {y1} → {y2}")
     await pg.set_viewport_size({"width": 1180, "height": 1000})
     await masaya_don(pg)
     # balkonda tek telefon: sayfa telefonun içinde, telefonun ‹ Geri'siyle (RN: yürüyüş tıklayarak atlanır; yürüyüş §15'te)
     await balkona_atla(pg)
-    await lig_hafta_ac(pg)
-    await cs_ac(pg, "mac", mid)
+    await pg.keyboard.press("Digit8")   # AR1: balkonda telefon ana ekranla, Canlı Skor orada (odada yok)
+    await pg.click('.tel [data-eylem="telUyg"][data-uyg="skor"]')
+    await cs_ac(pg, "mac", mid, ".tel")
     bk = await pg.evaluate("() => ({ ic: !!document.querySelector('.tel .cs-sayfa[data-tur=mac]'), panel: !!document.querySelector('.tlf-is'), liste: document.querySelectorAll('.tel .tel-mac').length, geri: !!document.querySelector('.tel [data-eylem=csGeri]') })")
     tb2 = await pg.evaluate(CS_TASMA_JS)
     await pg.wait_for_timeout(300)  # açılış geçişi bitsin
@@ -3647,7 +3651,7 @@ async def bolum_32(tarayici, site, tum_hatalar):
     pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
     tum_hatalar += hatalar
     await pg.set_viewport_size({"width": 1100, "height": 810})
-    nesne = await pg.evaluate("() => [...document.querySelectorAll(':is(.od-nesneler, #cmSerit) .od-nesne[data-panel]')].map(b => b.dataset.panel).join(',')")   # CM1-a: menü şeritte
+    nesne = await pg.evaluate("() => [...document.querySelectorAll('#cmSerit [data-cm]')].map(b => b.dataset.cm).join(',')")   # AR1: bölüm düğmeleri şeritte (data-cm)
     await pg.keyboard.press("Digit6")
     t = await pg.evaluate(TM_JS)
     o = await odak(pg)

@@ -369,6 +369,12 @@ function odaEkraniKur(kap,oyun,ayarlar){
   let cizilenTel=null,cizilenSayfa='';
   /* R3: Canlı Skor'un okuma yerleri (görünüm ve sayfa anahtarına göre): sayfadan geri dönünce liste ve önceki sayfa kaldığı yerden */
   const telSkorYerleri=new Map();
+  /* 2026-11-05 (akış §31, B44'ün Lig'deki karşılığı): Lig'in liste ve alt sayfalarının okuma yeri. Sayfa yığınından geri dönünce (Esc, ‹ Geri) yer korunur,
+     yeni açılan sayfa baştan; aynı sayfa yeniden çizilirken yer kalır. Tarayıcıda kalır */
+  const ligYerleri=new Map();let cizilenLig=null,cizilenLigN=0;
+  const ligAnahtar=()=>{const L=ligD.sayfalar||[],x=L[L.length-1];return x?'s:'+x.tur+':'+x.id+':'+(x.bolum||''):'l:'+ligD.sekme+':'+(ligD.hafta==null?'':ligD.hafta);};
+  function ligKaydirici(){let e=kap.querySelector('.lg-altSayfa .cs-sayfa, .lg-puan, .lg-fikstur, .lg-kulupler');
+    while(e&&e!==kap&&!['auto','scroll'].includes(getComputedStyle(e).overflowY))e=e.parentElement;return e&&e!==kap?e:null;}
   /* telGecis: telefonda ekran değişti (kısa açılış geçişi yalnız o çizimde; N7) */
   let telAlta=false,telGecis=false;
   function telefonPaneli(){
@@ -951,6 +957,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     /* RN-a: telefonun çizimden önceki yeri ve panelin varlığı (aynı telefon kabı yeniden çizilirken; ilk açılışta odak belirmesi yeter) */
     const eskiCihaz=cizilenPanel==='telefon'&&acik==='telefon'?kap.querySelector('.tlf-sol .tel'):null,eskiCihazX=eskiCihaz?eskiCihaz.getBoundingClientRect().left:null,
       eskiPanelVar=!!kap.querySelector('.tlf .tlf-is');
+    if(cizilenPanel==='lig'&&cizilenLig){const e=ligKaydirici();if(e)ligYerleri.set(cizilenLig,e.scrollTop);}
     if(eskiTel&&cizilenPanel==='telefon'&&cizilenTel&&cizilenTel.startsWith('skor')){const ei=kap.querySelector('.tlf-is');
       telSkorYerleri.set(cizilenTel,eskiTel.scrollTop);if(ei&&cizilenSayfa)telSkorYerleri.set('panel'+cizilenSayfa,ei.scrollTop);}
     if(eskiTel&&cizilenPanel==='telefon'&&cizilenTel&&cizilenTel.startsWith('konusma:'))
@@ -1018,6 +1025,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(duraklatmaVar())for(const d of [...kap.querySelectorAll('button[data-eylem]'),...(seritAcik()?serit.querySelectorAll('button[data-eylem]'):[])])if(DURAKLATMADA_KAPALI.has(d.dataset.eylem)){d.disabled=true;d.title='Duraklatıldı: devam edince kullanılabilir';}
     const yeni=kap.querySelector('.od-icerik');if(yeni&&kaydirma)yeni.scrollTop=kaydirma;
     kap.querySelectorAll('.dsy-sayfa,.dft-sayfa').forEach((x,i)=>{if(sayfaKaydirma[i])x.scrollTop=sayfaKaydirma[i];});
+    if(acik==='lig'){const e=ligKaydirici(),n=(ligD.sayfalar||[]).length;if(e)e.scrollTop=cizilenPanel==='lig'&&n>cizilenLigN?0:ligYerleri.get(ligAnahtar())||0;}
     /* telefonda konuşma açılınca son mesaj ve cevap kartı görünür; aynı konuşma yeniden çizilirken okuma yeri korunur */
     const tg=kap.querySelector('.tel-govde');
     /* R2-b: konuşma açılışı: yeni mesaj varsa ilk yenisi üstte, yoksa son okunan yer (en alttaysa en alt). Gönderince (telAlta) en alt */
@@ -1041,6 +1049,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     else if(ti&&acik==='telefon'&&tel.ekran==='skor'&&telSayfaAnahtar()!==cizilenSayfa&&telSkorYerleri.has('panel'+telSayfaAnahtar()))ti.scrollTop=telSkorYerleri.get('panel'+telSayfaAnahtar());
     /* R2-d: konuşma açılınca iş panelindeki ilk kart (kenarları ve ipucuyla) kaydırmadan görünür; kartın üstü panelin üstünden yukarı çıkmaz */
     else if(ti&&ay){const c=ti.querySelector('.kk-alan');if(c){const a=ti.getBoundingClientRect(),b=c.getBoundingClientRect(),fazla=b.bottom-a.bottom+4;if(fazla>0)ti.scrollTop+=Math.min(fazla,b.top-a.top-4);}}
+    cizilenLig=acik==='lig'?ligAnahtar():null;cizilenLigN=acik==='lig'?(ligD.sayfalar||[]).length:0;
     cizilenPanel=acik;cizilenGorunum=gorunum;cizilenTel=telAnahtar();cizilenSayfa=acik==='telefon'&&tel.ekran==='skor'?telSayfaAnahtar():'';cizilenGoz=gozAnahtar();
     const f=odak&&(kap.querySelector(odak)||(seritAcik()?serit.querySelector(odak):null));if(f&&!f.disabled)f.focus({preventScroll:true});
     /* RK6: ziyaret kartı açıkken odak kartta (←/→ ve Enter hemen çalışır) */
