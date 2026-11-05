@@ -66,6 +66,16 @@ Dallar: `claude/ar1-cerceve` (main'den; `main`'de) → `claude/kapi-hazirlik` (m
 
 **Denetim:** `hizli.js` (kural değişti: kariyer-deneme); akış 3, 19, 21, 30, 40, 42; okunurluk; kontrol.
 
+**AR2 uygulama notu (2026-11-05, dizüstü, dal `claude/ar2-haberler`; kullanıcı: “Evet, başla”, oto mod onayı 2026-11-04).** Kapsam uygulandı; Claude'un uygulama kararları ve plandan sapmalar (kesin kullanıcı kararını değiştirmez):
+- *Kaynak* her satırda `{tur:'kisi'|'kulup'|'kurum'}`: telefonda kişi, raporda mali işler müdürü, maç sonucunda LİG, program ve ertelemede TFF, öbür haberlerde ilgili kulüp (bizimkisi varsa o), kulüpsüz haberde GZT, ödemede ₺; biten işte kulübümüz. Bekleyen kararda kaynak soranın kendisi. Ekranda kişinin yüzü (`portreHtml`), kulübün arması (`armaSvg` küçük) ya da kısa adlı kurum kutusu.
+- *Gruplama:* aynı günün `arka` satırları tek satır (“Ligden: n maç sonucu, m kısa haber”); tek satırlık grup satırın kendisi. Grup okunmuş sayılır (arka satır sayaçta zaten yoktu).
+- *Seçim ve okundu:* liste ekranın belleğinde seçili satırla; Haberler'e girişte önce cevap bekleyen karar, sonra randevu, sonra ilk okunmamış seçilir. **Seçilen satır okunur** (CM'deki gibi): haber ve geçmiş satırı `gelismeOkundu`, telefon mesajı konuşmanın görüldüsü (`meseleGoruldu`/`yazismaGoruldu`), rapor `raporGoruldu`. Plan “satır ortamı açar” diyordu (CM1-b); AR2'de satır ayrıntıyı yerinde açar, ortam ayrıntıdaki eylemle (… ▸) açılır, şeritteki ‹ Geri aynı seçimle Haberler'e döner.
+- *Kart ayrıntıda* oda ekranının kararıyla aynı bölüm (`isBolumu`: kart, görüş iste, erteleme); “Konuşmada / Dosyada / Karar panelinde aç ▸” kartı kendi yerinde açar. Haberler'den cevaplanan karar o ziyarette “Cevaplandı” satırı olarak kalır, ayrıntıda verilen cevap ve sonucu (geçmişten); bölüme yeniden girince düşer. Bağlam satırının yeniden yazımı (U3 göz atmanın yerine) kartın kendi bağlam şeridiyle karşılanıyor; ayrı bir `kartBaglam` yazılmadı.
+- *Kanal görünüşleri:* telefon (konuşmanın o ana dek son üç mesajı balonla), gazete (kupür; sayı çıkmadıysa “yarın sabahki sayıda”), belge (mali raporun ilk üç satırı), lig (skor kutusu), grup (skorlar ve kısa haberler), para, ajanda (biten işin satırları), kapı (randevu: “karşında oturacak”; kapı kartı açıksa “Kapıya bak ▸” — AR3'te sahne). Telefon ve gazetede başlık kanalın içinde.
+- *Bugün:* listenin üstünde tek satır (son maç, sıra; bugünün kalan işleri, en çok üçü). İlerle'nin durduğu yer satırı yazılmadı (şeritte “Sıradaki durak” var).
+- *Koyu düzen:* Haberler artık kâğıtta değil (`.cmp-panel`); liste satırı saat · kaynak · başlık · rozet (Cevap bekliyor, Randevu, Cevaplandı, Cevap geldi, Cevapsız kaldı, okunmamış noktası). N sıradaki okunmamış (listenin sırasıyla, sonda başa).
+- *Denetim:* `kariyer-deneme` AR2 bölümü; akış §42 yeniden yazıldı; §21, §39 ve okunurluk `sponsor-pazarlik-karti` yeni satır davranışına (satır seçer, ayrıntıdaki eylem açar); `sonra_ac` yardımcısı aynı. Okunurluk `haberler-cevap` kartı ayrıntıda bekler (planın `haberler-kart`ı bu sahnede).
+
 ## 4. AR3 — Zaman modeli C (kesin kapsam)
 
 **Kural (yeni `js/sahne.js`, 'use strict', `OYUN_DOSYALARI`'na `ziyaret.js`'ten sonra):**

@@ -130,7 +130,7 @@ async def sahneler_oda(pg, olc):
     await pg.wait_for_selector("#oda .hb", timeout=10000)
     await olc("haberler-hepsi")
     await tikla(pg, '#oda .hb-sekmeler [data-sekme="cevap"]')
-    await pg.wait_for_selector('#oda .hb[data-sekme="cevap"]', timeout=10000)
+    await pg.wait_for_selector('#oda .hb[data-sekme="cevap"] .hb-ayrinti .kk-kart', timeout=10000)   # AR2: bekleyen kararın kartı ayrıntıda (haberler-kart)
     await olc("haberler-cevap")
     await akis.masaya_don(pg)
     # AR1: 3 Kulüp (Kadro önde); dosyanın kartı Dosyalar sekmesinde
@@ -320,7 +320,8 @@ async def sahneler_sponsor(pg, olc):
     # AR1: Sonra yığını kalktı; cevap bekleyen kart Haberler › Cevap bekliyor'dan kendi yerinde açılır
     await pg.keyboard.press("Digit2")
     await tikla(pg, '#oda .hb-sekmeler [data-sekme="cevap"]')
-    await tikla(pg, f'#oda .hb-bek[data-is="{kid}"]')
+    await tikla(pg, f'#oda .hb-satir[data-id="k:{kid}"]')   # AR2: satır seçilir; ayrıntıdaki “… aç ▸” kartı yerinde açar
+    await tikla(pg, '#oda .hb-ayrinti [data-eylem="sonraAc"]')
     await pg.wait_for_selector(f'.kk-kart[data-is="{kid}"]', timeout=10000)
     await olc("sponsor-pazarlik-karti")
 

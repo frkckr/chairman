@@ -2499,6 +2499,49 @@ bolum('CM1-b — gelişmeler: tek kronolojik liste, bekleyenler, sayaç ve okund
   denetle('Liste kurma 14 günde 50 ms'+"'"+'nin altında (önbelleksiz, JSON kopyada)',ms<50,ms.toFixed(1)+' ms');
 }
 
+bolum('AR2 — Haberler: kaynak, aynı günün arka satırları, ayrıntı okuması ve günün satırı (js/gelismeler.js; arayuz-uygulama §3)');
+{
+  const T=oyunAl,KK=T('kariyerKomut'),metin=x=>JSON.stringify(x);
+  const S={skor:[0,0],bitti:true,goller:[],kartlar:[],sakatliklar:[],degisiklikler:[],ist:{}},toh=id=>T('macTohumu')(7,id);
+  const hafta=c=>{let j;({k:c,j}=macGununeGit(T,c));c=KK(c,x=>T('ajandaIsiYap')(x,j.id)).kariyer;const id=j.veri.macId;
+    return KK(c,x=>T('haftaSonuclariUygula')(x,id,S,toh(id),{},T('haftaninDigerMaclari')(x,id).map(f=>({macId:f.id,sonuc:S,tohum:toh(f.id)})))).kariyer;};
+  let k=T('kariyerBaslat')({tarif:'kasim',tohum:7});k=hafta(k);k=KK(k,x=>{T('zamanIlerlet')(x,2*1440);}).kariyer;
+  const once=metin(k),L=T('gelismeListesi')(k),kul=k.kulupler,kis=k.kisiler;
+  const kaynakTamam=q=>!!q&&(q.tur==='kisi'?!!kis[q.id]:q.tur==='kulup'?!!kul[q.id]:q.tur==='kurum'&&!!q.kisa&&!!q.ad);
+  denetle('Her satırda kaynak (kişi kayıtta, kulüp kayıtta ya da kısa adlı kurum): telefonda kişi, raporda mali işler müdürü, maç sonucunda Lig',
+    L.length>0&&L.every(x=>kaynakTamam(x.kaynak))&&L.filter(x=>x.kanal==='telefon').every(x=>x.kaynak.tur==='kisi')
+    &&L.filter(x=>x.id.startsWith('rp:')).every(x=>x.kaynak.tur==='kisi'&&kis[x.kaynak.id].rol==='maliMudur')&&L.filter(x=>x.kanal==='lig').every(x=>x.kaynak.kisa==='LİG'),
+    [...new Set(L.map(x=>x.kaynak&&(x.kaynak.tur+':'+(x.kaynak.kisa||x.kaynak.id))))].slice(0,8).join(' · '));
+  const G=T('gelismeGruplari')(L),G2=T('gelismeGruplari')(T('gelismeListesi')(JSON.parse(once))),gr=G.filter(x=>x.grup);
+  const arkaGun=new Set(L.filter(x=>x.sinif==='arka').map(x=>x.tarih));
+  denetle('Aynı günün arka satırları günde tek satır (tek satırlık grup satırın kendisi); arka olmayanlar aynen ve aynı sırada; belirlenimci; başlık sayımı tutar',
+    gr.length>0&&gr.every(g=>g.sayi>1&&g.alt.length===g.sayi&&g.alt.every(x=>x.sinif==='arka'&&x.tarih===g.tarih))&&metin(G)===metin(G2)
+    &&metin(G.filter(x=>!x.grup&&x.sinif!=='arka'))===metin(L.filter(x=>x.sinif!=='arka'))&&G.filter(x=>x.grup||x.sinif==='arka').length===arkaGun.size
+    &&gr.every(g=>{const n=g.alt.filter(x=>x.kanal==='lig').length;return(n?g.baslik.includes(n+' maç sonucu'):true)&&(g.sayi-n?g.baslik.includes((g.sayi-n)+' kısa haber'):true);}),
+    gr.map(g=>g.tarih+' '+g.baslik).join(' · '));
+  const A={};for(const x of G){const a=T('gelismeAyrinti')(k,x);if(a&&!A[a.kanal])A[a.kanal]={x,a};}
+  const bolumler=new Set(['lig','finans','gazete','ajanda','telefon','kulup']);
+  denetle('Ayrıntı okuması saf (kariyer değişmez), her satırda kanal ve eylem; eylemlerin bölümü ekranın bölümlerinden; grupta skorlar, raporda üç satır, maçta skor',
+    metin(k)===once&&G.every(x=>{const a=T('gelismeAyrinti')(k,x);return!!a&&!!a.kanal&&a.eylemler.every(e=>bolumler.has(e[1]));})
+    &&(!A.grup||A.grup.a.govde.maclar.every(m=>Array.isArray(m.skor)))&&(!A.belge||A.belge.a.govde.satirlar.length===3)&&(!A.lig||!!A.lig.a.govde.mac&&Array.isArray(A.lig.a.govde.mac.skor)),
+    Object.keys(A).join(','));
+  const B=T('gelismeBugun')(k);
+  denetle('Günün satırı gün başı notundan: son maç ve bugünün kalan işleri; kasa ve manşet yok (karar 90)',
+    !!B&&!!B.sonMac&&B.sonMac.skor.join('-')!==''&&Array.isArray(B.isler)&&!('kasa' in B)&&!('manset' in B),metin(B).slice(0,160));
+  /* cevapsız kalan karar 'kacan' sınıfında; bekleyende kaynak */
+  const kx=JSON.parse(once),an=T('simdikiAn')(kx);
+  kx.isler['is-ar2']={id:'is-ar2',tur:'ajanda',tarih:kx.tarih,dakika:kx.gunIciDakika+120,veri:{baslik:'Deneme kararı',karar:'deneme',saatsiz:true,sinif:'sorun',zorunluluk:'istege',
+    soran:Object.values(kx.kisiler).find(p=>p.rol==='maliMudur').id,gelis:{tarih:kx.tarih,dakika:kx.gunIciDakika}}};
+  const Bx=T('gelismeBekleyenler')(kx);
+  kx.gecmis.push({tur:'is',isId:'is-ar3',isTuru:'ajanda',tarih:kx.tarih,dakika:kx.gunIciDakika,sonuc:{durum:'cevapsiz',baslik:'Eski karar'}});
+  const Lx=T('gelismeListesi')(kx),kc=Lx.find(x=>x.sinif==='kacan');
+  denetle('Bekleyen kararda kaynak soranın kendisi; cevapsız kalan karar “kacan” sınıfında (kacan: cevapsiz), sayaçta yeni sayılır',
+    Bx.kararlar.length===1&&Bx.kararlar[0].kaynak.tur==='kisi'&&Bx.kararlar[0].kaynak.id===kx.isler['is-ar2'].veri.soran&&!!kc&&kc.kacan==='cevapsiz'&&/cevapsız kaldı/.test(kc.baslik),
+    kc&&kc.baslik);
+  const t0=Date.now();for(let i=0;i<20;i++){const c=JSON.parse(once),Lc=T('gelismeListesi')(c);T('gelismeGruplari')(Lc);}const ms=(Date.now()-t0)/20;
+  denetle('Liste ve gruplama birlikte 50 ms'+"'"+'nin altında (önbelleksiz, JSON kopyada)',ms<50,ms.toFixed(1)+' ms · '+an);
+}
+
 bolum('CM2-a — yaz tarifi: 22 Haziran, devre arası, sıfır tablo, hazırlık maçı, başlangıçta biten sözleşmeler (js/fikstur.js SEZON_TARIFLERI; karar 88)');
 {
   const T=oyunAl,KK=T('kariyerKomut'),dog=T('kariyerDogrula'),metin=x=>JSON.stringify(x),saat=d=>String(Math.floor(d/60)).padStart(2,'0')+':'+String(d%60).padStart(2,'0');
