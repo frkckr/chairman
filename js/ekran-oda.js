@@ -961,7 +961,7 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(typeof odaPanel==='function')odaPanel(!!acik&&acik!=='ziyaret');   /* U1: odak açıkken 3B oda kamera yerleşince donar (js/oda.js odaDondur); RK6: ziyarette oda canlı */
   }
   /* duraklatmada süre tüketen ya da dünyayı değiştiren komutlar kapalıdır; okuma ve gezinti açıktır (2.8B) */
-  const DURAKLATMADA_KAPALI=new Set(['yap','yapSor','yapIzlemesiz','ertele','ilerle','ilerleSor','tavsiye','girisim','oyuncuSec','gozlem','gozlemSurdur','gozlemBirak','yer','yeniSor','yeniEvet','bozukYeni',
+  const DURAKLATMADA_KAPALI=new Set(['sahipDevret','sahipDevral','yap','yapSor','yapIzlemesiz','ertele','ilerle','ilerleSor','tavsiye','girisim','oyuncuSec','gozlem','gozlemSurdur','gozlemBirak','yer','yeniSor','yeniEvet','bozukYeni',
     'tmTakip','tmTakipBirak','tmArastirt','tmIzle']);
   const duraklatDegistir=()=>{if(duraklatmaVar('elle'))duraklatmaKaldir('elle');else duraklatmaEkle('elle');};
   let cizilenPanel=null,cizilenGorunum=null,cizilenAlt='';
@@ -1388,6 +1388,9 @@ function odaEkraniKur(kap,oyun,ayarlar){
     if(ey==='testAc'){const u=b.parentNode,a=!u.classList.contains('acik');u.classList.toggle('acik',a);b.setAttribute('aria-expanded',a?'true':'false');return;}
     if(!ey&&id){secili=id;onay=null;ciz('button[data-is="'+id+'"]:not([data-eylem])');return;}
     if(ey==='ac'){if(acik===b.dataset.panel)kapat();else panelAc(b.dataset.panel);}
+    else if(ey==='sahipDevret'||ey==='sahipDevral'){const id=b.dataset.mesele;   /* AR3-b (karar 95): dosyanın sahibi değişir */
+      try{komut(x=>ey==='sahipDevret'?sablonDevret(x,id):sablonDevral(x,id));mesaj=ey==='sahipDevret'?'Dosyayı devrettin; sonuç gelince haber verir.':'Dosyayı devraldın; pazarlık sende.';}catch(e){mesaj=e.message;}
+      ciz(acik==='dosya'?'.dsy-sahip':'[data-cm][aria-current="true"]');}
     else if(ey==='dosyaAc'){const h=acik==='haberler';if(b.dataset.gezinti)donusYeri=null;dosyaRapor=false;panelAc('dosya',ms,b.dataset.donus);if(h){haberDonus=true;ciz();}}
     /* RK8-a: TV sayfası — sayfa düğmesi; satır Canlı Skor'un sayfasını telefonda açar; canlı maçta İzle ▸ */
     else if(ey==='tvSayfa'){tvSayfa=b.dataset.tv;tvOnay=null;ciz('[data-eylem="tvSayfa"][data-tv="'+tvSayfa+'"]');}

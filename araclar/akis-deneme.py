@@ -4839,6 +4839,77 @@ async def bolum_42(tarayici, site, tum_hatalar):
     await pg.context.close()
 
 
+# AR3-b (karar 95): dosyanın sahibi — yapay haftalarla 5 Ocak'a, hocanın isteği; kulüple pazarlık kartında Devret, sonra Devral
+SAHIP_SUR_JS = """(n) => { const POL = {ihtiyac: 'onayla', aday: 'adayA', gorus: 'gorus', yurutme: 'kendim'}, Z = {skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], ist: {}};
+  LIG_MAC_SAGLAYICI = (kk, p) => ({skor: [0, 0], bitti: true, goller: [], kartlar: [], sakatliklar: [], degisiklikler: [], sutlar: [], ist: {}, ilk11: p.secenek.kadro.map(K => K.oyuncular.map(o => o.id))});
+  try { for (let i = 0; i < n; i++) { const k = OYUN.kariyer;
+    const sk = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.karar === 'sablonKarti');
+    if (sk) { const a = k.meseleler[sk.veri.meseleId].sablon.asama; if (a === 'kulupPazarlik') return {an: k.tarih, mesele: sk.veri.meseleId};
+      const S = ajandaOnizle(k, sk.id).secenekler; let s = POL[a]; if (!S.some(o => o.id === s && !o.engel)) s = (S.find(o => !o.engel) || S[0]).id; oyunKomut(x => ajandaIsiYap(x, sk.id, s)); continue; }
+    const kr = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.karar && x.veri.karar !== 'sablonKarti' && x.veri.saatsiz && x.veri.gelis && anDakika(x.veri.gelis.tarih, x.veri.gelis.dakika) <= simdikiAn(k));
+    if (kr) { const S = ajandaOnizle(k, kr.id).secenekler; oyunKomut(x => ajandaIsiYap(x, kr.id, (S.find(s => s.id === 'reddet') || S.find(s => !s.engel) || S[0]).id)); continue; }
+    const j = Object.values(k.isler).find(x => x.tur === 'ajanda' && x.veri.eylem === 'macGunu');
+    if (j && j.tarih === k.tarih && j.dakika === k.gunIciDakika) { const id = j.veri.macId; oyunKomut(x => ajandaIsiYap(x, j.id));
+      oyunKomut(x => haftaSonuclariUygula(x, id, Z, macTohumu(7, id), {}, haftaninDigerMaclari(x, id).map(g => ({macId: g.id, sonuc: Z, tohum: macTohumu(7, g.id)})))); continue; }
+    oyunKomut(x => duragaIlerle(x)); } } finally { LIG_MAC_SAGLAYICI = null; OYUN.oturum.kaydet(); }
+  return {an: OYUN.kariyer.tarih, mesele: null}; }"""
+SAHIP_JS = """(id) => { const m = OYUN.kariyer.meseleler[id], s = document.querySelector('#oda .dsy-sahip');
+  return { asama: m.sablon.asama, sahip: m.sablon.sahip, satir: s ? s.textContent : null, devret: !!document.querySelector('#oda [data-eylem="sahipDevret"]'),
+    devral: !!document.querySelector('#oda [data-eylem="sahipDevral"]'), kart: !!Object.values(OYUN.kariyer.isler).find(x => x.veri && x.veri.karar === 'sablonKarti' && x.veri.meseleId === id),
+    hata: kariyerDogrula(OYUN.kariyer).length }; }"""
+
+
+async def bolum_45(tarayici, site, tum_hatalar):
+    """AR3-b (2026-11-05, karar 95; arayuz-uygulama §4): dosyanın sahibi. Yapay haftalarla hocanın isteğine, oradan kulüple pazarlık kartına; dosyada
+    “Sen yürütüyorsun” ve “Devret: <müdür> ▸”; devredince kart kalkar, “<müdür> yürütüyor”, sicili ve “Devral ▸”; müdürün cevabı telefonda kendi sesiyle;
+    Haberler › Cevap bekliyor › Takipte satırının ayrıntısında Devral; devralınca pazarlık kartı yeniden başkanda ve müdür bozulur (gururlu); kayıt geçerli."""
+    pg, hatalar = await oda_ac(tarayici, site, "?dunya=7")
+    tum_hatalar += hatalar
+    await pg.set_viewport_size({"width": 1180, "height": 1000})
+    r = None
+    for _ in range(12):
+        r = await pg.evaluate(SAHIP_SUR_JS, 60)
+        if r["mesele"]:
+            break
+    await oda_yenile(pg)
+    mid = r["mesele"]
+    denetle("AR3-b: yapay haftalarla hocanın isteğinden kulüple pazarlık kartına", bool(mid), str(r))
+    if not mid:
+        await pg.context.close()
+        return
+    await dosya_ac(pg)   # Kulüp › Dosyalar: cevap bekleyen konu (pazarlık kartı) önde
+    await pg.wait_for_timeout(200)
+    a0 = await pg.evaluate(SAHIP_JS, mid)
+    denetle("AR3-b: dosyada “Sen yürütüyorsun” ve “Devret: <müdür> ▸”; pazarlık kartı başkanda", a0["asama"] == "kulupPazarlik" and a0["sahip"] is None and "Sen yürütüyorsun" in (a0["satir"] or "") and a0["devret"] and a0["kart"], str(a0))
+    await pg.click('#oda [data-eylem="sahipDevret"]')
+    await pg.wait_for_timeout(300)
+    a1 = await pg.evaluate(SAHIP_JS, mid)
+    md = await pg.evaluate("() => personelKisisi(OYUN.kariyer, 'maliMudur').id")
+    tel = await pg.evaluate(f"() => {{ const c = konusmaListesi(OYUN.kariyer).find(x => x.anahtar === '{md}'); return c ? c.mesajlar.filter(m => m.yon === 'gelen').map(m => m.metin).pop() : null; }}")
+    denetle("AR3-b Devret: kart kalkar, dosya devir aşamasında ve müdür yürütüyor (sicil satırıyla), Devral düğmesi; müdürün cevabı telefonda kendi sesiyle; kariyer geçerli",
+            a1["asama"] == "devir" and a1["sahip"] == md and "yürütüyor" in (a1["satir"] or "") and "Sicili" in (a1["satir"] or "") and a1["devral"] and not a1["kart"] and bool(tel) and a1["hata"] == 0, f"{a1} · {tel}")
+    await pg.screenshot(path=str(ARAC / "son-akis-45-devret.png"))
+    # Haberler › Cevap bekliyor › Takipte: ayrıntıda Devral
+    await pg.keyboard.press("Digit2")
+    await pg.click('#oda .hb-sekmeler [data-sekme="cevap"]')
+    tk = await pg.query_selector(f'#oda .hb-satir[data-id="t:{mid}"]')
+    if tk:
+        await tk.click()
+        await pg.wait_for_timeout(150)
+    hb = await pg.evaluate("() => ({ devral: !!document.querySelector('#oda .hb-ayrinti [data-eylem=\"sahipDevral\"]'), sicil: ((document.querySelector('#oda .hb-ayrinti') || {}).textContent || '').includes('sicili') })")
+    denetle("AR3-b: Haberler › Cevap bekliyor'da devredilen dosya Takipte; ayrıntısında sicil ve Devral", bool(tk) and hb["devral"] and hb["sicil"], str(hb))
+    await pg.click('#oda .hb-ayrinti [data-eylem="sahipDevral"]')
+    await pg.wait_for_timeout(300)
+    a2 = await pg.evaluate(SAHIP_JS, mid)
+    tel2 = await pg.evaluate(f"() => {{ const c = konusmaListesi(OYUN.kariyer).find(x => x.anahtar === '{md}'); return c ? c.mesajlar.filter(m => m.yon === 'gelen').map(m => m.metin).pop() : null; }}")
+    denetle("AR3-b Devral: pazarlık kartı yeniden başkanda, sahip boş; gururlu müdürün cevabı (“Siz bilirsiniz”); kariyer geçerli",
+            a2["asama"] == "kulupPazarlik" and a2["sahip"] is None and a2["kart"] and "Siz bilirsiniz" in (tel2 or "") and a2["hata"] == 0, f"{a2} · {tel2}")
+    await oda_yenile(pg)
+    a3 = await pg.evaluate(SAHIP_JS, mid)
+    denetle("AR3-b: yenilemeden sonra aynı durum (kayıt)", a3["asama"] == "kulupPazarlik" and a3["sahip"] is None and a3["kart"], str(a3))
+    await pg.context.close()
+
+
 async def bolum_41(tarayici, site, tum_hatalar):
     """CM1-a (karar 86), AR1 (2026-11-04, kararlar 90–91): CM çerçevesi. Oyun alanı pencereyi doldurur: solda şerit (104–148 px), sağında içerik alanı (oda kabı)
     pencerenin kalanı; 3B kare 4:3 içerik alanında ortalanır; sayfada yatay taşma yok, şerit taşmaz; masa şeridi yok, İlerle şeritte (bölüm açıkken yok).
@@ -5097,6 +5168,9 @@ async def ana():
         if sec("44"):
             print("\n44. İlk hafta: devir teslim, alacak, ipucu (CM2-b)")
             await bolum_44(tarayici, site, tum_hatalar)
+        if sec("45"):
+            print("\n45. Dosyanın sahibi: devret, devral (AR3-b)")
+            await bolum_45(tarayici, site, tum_hatalar)
         if sec("11"):
             print("\n11. Oyun çerçevesi")
             await bolum_11(tarayici, site, tum_hatalar)

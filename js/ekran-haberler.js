@@ -178,7 +178,11 @@ function haberAyrintiHtml(k,x,d,y,h){
     return panel('kapi',kanal('kapi','<div class="hb-kapi">'+h.kaynakK(x.kaynak)+'<div><b>'+(p?yaz(p.ad)+' karşında oturacak.':yaz(x.baslik))+'</b><p class="cmp-not">'+
       (kapi?'Kapıda bekliyor.':'Saati gelince İlerle durur, kapıda karşılarsın.')+'</p></div></div>'),E);
   }
-  if(x.tur==='takip')return panel('ajanda',kanal('ajanda','<p>'+yaz(x.satir)+'</p>'),['<button type="button" class="cmp-dugme" data-eylem="dosyaAc" data-mesele="'+yaz(x.meseleId)+'">Dosyayı aç ▸</button>']);
+  if(x.tur==='takip'){const m=k.meseleler[x.meseleId],R=m&&m.sablon&&typeof sablonSahiplik==='function'?sablonSahiplik(k,m):null,E=['<button type="button" class="cmp-dugme" data-eylem="dosyaAc" data-mesele="'+yaz(x.meseleId)+'">Dosyayı aç ▸</button>'];
+    /* AR3-b (karar 95): devredilen işi buradan da geri alırsın; sicil kişinin yürüttüğü işlerin olgusu */
+    if(R&&R.devral&&!R.engel)E.push('<button type="button" class="cmp-dugme" data-eylem="sahipDevral" data-mesele="'+yaz(x.meseleId)+'">Devral ▸</button>');
+    const S=R&&R.sahip&&typeof kisiSicili==='function'?kisiSicili(k,R.sahip):null,sic=S?'<p class="cmp-not">'+yaz(kisiAdi(k,R.sahip))+' · sicili: '+yaz(S.is||S.devralinan?S.satir:'ilk işi')+'</p>':'';
+    return panel('ajanda',kanal('ajanda','<p>'+yaz(x.satir)+'</p>'+sic),E);}
   const A=gelismeAyrinti(k,x);if(!A)return panel('',x.baslik,[]);
   const G=A.govde,E=A.eylemler.map(btn),ad=id=>((k.kulupler[id]||{}).ad||id);
   const skor=m=>'<div class="hb-skor"><span>'+yaz(ad(m.ev))+' '+(y.arma?y.arma(m.ev):'')+'</span><b>'+(m.skor?m.skor[0]+' – '+m.skor[1]:y.saatYazi(m.dakika))+'</b><span>'+(y.arma?y.arma(m.konuk):'')+' '+yaz(ad(m.konuk))+'</span></div>';

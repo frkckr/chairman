@@ -214,6 +214,22 @@ yazismaKonusuEkle('oyuncu',{kategori:'takim',ad:'Oyuncu hakkında sor',roller:['
   goruntu:(k,v)=>oyuncuGoruntusu(k,v.oyuncuId,v.muhatap),
   metin:{teknikDirektor:(k,y)=>YAZISMA_METIN.hocaOyuncu(k,y.p),yardimciAntrenor:(k,y)=>YAZISMA_METIN.yardimciOyuncu(k,y.p)}});
 
+/* AR3-b (karar 95): kişiye bıraktığın işleri sorarsın. Cevap anının görüntüsü kayda girer (dosya, aşama, sonucun beklendiği gün, kişinin cümlesi);
+   sormak bilgi verir, işin sonucunu değiştirmez (bedava ama yararlı iş ödeve dönmesin: OYUN_TASARIMI §6) */
+function islerGoruntusu(k,kisiId){
+  const L=Object.values(k.meseleler||{}).filter(m=>m.durum!=='kapandi'&&m.sablon&&m.sablon.sahip===kisiId&&m.sablon.sonuc===null);
+  return{isler:L.map(m=>{const x=meseleIsleri(k,m.id).find(i=>i.veri&&i.veri.adim===m.sablon.adim),a=typeof sablonAsamaSatiri==='function'?sablonAsamaSatiri(k,m):null;
+    return{meseleId:m.id,baslik:m.baslik,asama:a?a.metin:'',bitis:x?x.tarih:null,metin:typeof metinSec==='function'?metinSec(k,'devir.ara',{kisiId,anahtar:m.id+':'+k.tarih}):null};})};
+}
+YAZISMA_METIN.isler=(k,y)=>{const L=(y.p&&y.p.isler)||[];if(!L.length)return'Bende bekleyen iş yok başkanım.';
+  return L.map(x=>{const a=x.metin?metinYaz(k,'devir.ara',x.metin,{kisiId:y.kisiId,bitis:x.bitis}):'';
+    return`${x.baslik}: ${x.asama.toLocaleLowerCase('tr-TR')}${x.bitis?`; ${gunAyYazi(x.bitis)} gibi netleşir`:''}.${a?' '+a:''}`;}).join(' ');};
+yazismaKonusuEkle('isler',{kategori:'is',ad:'İşler nasıl gidiyor?',roller:['maliMudur'],aralik:0,
+  aciklama:'Ona bıraktığın işleri sorarsın; cevap birkaç saat içinde gelir. Sorman işin sonucunu değiştirmez.',
+  uygun:(k,p)=>typeof kisiYuku==='function'&&kisiYuku(k,p.id)>0,
+  goruntu:(k,v)=>islerGoruntusu(k,v.muhatap),
+  metin:{maliMudur:(k,y)=>YAZISMA_METIN.isler(k,y)}});
+
 /* ---- görüşme önerisi: belirlenimci saat, tek kart, randevu ---- */
 /* o anda (45 dk) başka saatli ajanda işi var mı (haricId hariç) */
 function gorusmeCakisma(k,o,haricId){

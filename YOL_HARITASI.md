@@ -24,7 +24,14 @@ Son güncelleme: 2026-11-05 (dizüstü: karar 95 — AR3 durdu, sahiplik, çakı
 
 Bu not yeni sohbetin başladığı yerdir; her oturum kapanışında güncellenir (eskisi silinir, git'te kalır: `git show tur/<ad>:YOL_HARITASI.md`).
 
-**Makine durumu: boşta (2026-11-05 akşam, dizüstü; AR3 durduruldu, tasarım değişti — karar 95; dallar push edildi; `main` yalnız makine durumu satırıyla değişti).**
+**Makine durumu: dizüstü çalışıyor (2026-11-05 akşam, oto mod AR3 — kullanıcı: “Onayla, başla”; dal `claude/ar3-zaman`, her dilim commit ve push).**
+
+**2026-11-05 akşam, dizüstü — AR3-a metin altyapısı ve AR3-b sahiplik ve devir (karar 95; uygulama notu [arayuz-uygulama.md](araclar/plan/arayuz-uygulama.md) §4).**
+- **Oyunda:** dosyada sahiplik satırı ve Devret / Devral (transferde kulüple pazarlık, sponsorda aylık bedel); devredilen iş mali işler müdürünün becerisi ve huyuyla, onun sesiyle döner (onay kartı); işi elinden alınan gururlu müdür bozulur (“Siz bilirsiniz başkanım” → ikincisinde “Yine mi başkanım?”) ve bir süre ağırdan alır; sicil dosyada ve Haberler › Takipte'de; müdüre “İşler nasıl gidiyor?” (sonucu değiştirmez). Huylar TEST taslağı (aşağıda). Kural ve kayıt: sürüm 13, yeni alanlar isteğe bağlı.
+- **Denetimler (dizüstü, kısa):** `ad-denetimi` geçti; `kariyer-deneme` bütünüyle geçti (AR3-a/b denetimleri R4 bölümünün sonunda; kayıt defteri denetimi 13 girişime güncellendi: yeni `yaz.maliMudur.isler`); akış yeni §45 geçti; Kasım t7 ilk altı hafta `--ayni` birebir aynı (o haftalarda transfer ve sponsor dosyası yok: bu dilimlerin yolu ancak tam sezonda sınanır). Koşmayanlar: tam sezon tabanları, akış 3, 22, 32, 33 (dosya ekranı değişti), okunurluk — **AR3 kapanışında; bu geceki büyük kapı `claude/ar2-haberler`'de koştuğu için AR3'ü kapsamaz.**
+- **Kullanıcıya bakılacak — huy taslağı (İB1):** Nusret Bey kuruşu kuruşuna, yemeğe düşkün, gururlu; Tahsin rakamcı, ağzı gevşek; Şükrü Hoca eski usul, batıl inançlı. Değiştirmek ya da eklemek için söylemeniz yeter (`js/metin.js` `KISI_HUY_TEST`, `HUYLAR`).
+- **Sıradaki:** AR3-c görüşme (kapıdan Buyursun ile birkaç kartlık görüşme; taslak `claude/ar3-sahne-taslak`'tan dakikasız), sonra AR3-d çakışma, AR3-e erteleme ve gece, AR3-f ölçüm; ardından İD1 içerik durağı.
+
 
 **2026-11-05 akşam, dizüstü — AR3 durdu, tasarım yeniden konuşuldu (karar 95; yalnız belge).**
 - **Ne oldu:** AR3 “zaman modeli C” oto modda başladı; kullanıcı ilk dilimde durdurdu (“zaman, arama falan tam istediğim gibi değil”). Konuşma ve üç araştırma turuyla yeni tasarım: **sahiplik, çakışma ve erteleme** ([OYUN_TASARIMI §6](OYUN_TASARIMI.md#zamanın-ilerleme-kuralları)); dakika bedeli, süre tahmini, gün doluluğu, bedelli gece, kesinti ve arama kalktı. Mizah altyapı olarak (OYUN_TASARIMI §10), kontrol listesi [OLAY_KUTUPHANESI §9](OLAY_KUTUPHANESI.md#9-i̇çerik-inceleme-soruları), tartışma ve kaynaklar [sahiplik-cakisma-arastirma.md](araclar/plan/sahiplik-cakisma-arastirma.md).
